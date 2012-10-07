@@ -136,7 +136,8 @@ int init_monomials(const int V, const int even_odd_flag) {
   for(int i = 0; i < no_monomials; i++) {
     if((monomial_list[i].type != GAUGE) && (monomial_list[i].type != SFGAUGE)) no++;
     /* non-degenerate monomials need two pseudo fermion fields */
-    if((monomial_list[i].type == NDPOLY) || (monomial_list[i].type == NDDETRATIO)) no++;
+    if((monomial_list[i].type == NDPOLY) || (monomial_list[i].type == NDDETRATIO) || 
+       (monomial_list[i].type == NDCLOVER)) no++;
   }
   if(no_monomials > 0) {
     if((void*)(_pf = (spinor*)calloc((no+4)*V+1, sizeof(spinor))) == NULL) {
@@ -223,15 +224,21 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].hbfunction = &ndpoly_heatbath;
 	monomial_list[i].accfunction = &ndpoly_acc;
 	monomial_list[i].derivativefunction = &ndpoly_derivative;
+	monomial_list[i].even_odd_flag = 1;
 	monomial_list[i].pf2 = __pf+no*V;
 	no++;
 	retval = init_ndpoly_monomial(i);
       }
       else if(monomial_list[i].type == NDCLOVER) {
+	init_swpm(VOLUME);
 	monomial_list[i].hbfunction = &cloverndpoly_heatbath;
 	monomial_list[i].accfunction = &cloverndpoly_acc;
 	monomial_list[i].derivativefunction = &cloverndpoly_derivative;
 	monomial_list[i].pf2 = __pf+no*V;
+	monomial_list[i].even_odd_flag = 1;
+	//monomial_list[i].Qsq = &Qsw_pm_ndpsi;
+	//monomial_list[i].Qp = &Qsw_ndpsi;
+	//monomial_list[i].Qm = &Qsw_dagger_ndpsi;
 	no++;
 	retval = init_ndpoly_monomial(i);
       }

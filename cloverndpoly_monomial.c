@@ -93,8 +93,8 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
   
   for(k = 1; k < (mnl->MDPolyDegree-1); k++) {
     Qsw_tau1_sub_const_ndpsi(g_chi_up_spinor_field[k], g_chi_dn_spinor_field[k], 
-			     g_chi_up_spinor_field[k-1], g_chi_dn_spinor_field[k-1], 
-			     mnl->MDPolyRoots[k-1]);
+			   g_chi_up_spinor_field[k-1], g_chi_dn_spinor_field[k-1], 
+			   mnl->MDPolyRoots[k-1]);
   }
   
   /* Here comes the remaining fields  chi_k ; k=n,...,2n-1  */
@@ -121,7 +121,7 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
     
     /* Get the even parts of the  (2N-j)-th  chi_spinors */
     H_eo_sw_ndpsi(mnl->w_fields[0], mnl->w_fields[1], 
-	    g_chi_up_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[mnl->MDPolyDegree], EO);
+		  g_chi_up_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[mnl->MDPolyDegree], EO);
     
     /* \delta M_oe sandwitched by  chi[j-1]_o^\dagger  and  chi[2N-j]_e */
     deriv_Sb(OE, g_chi_up_spinor_field[j-1], mnl->w_fields[0], hf, mnl->forcefactor);
@@ -157,15 +157,15 @@ void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   }
 
   Qsw_ndpsi(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
-		  g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0]);
+	    g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0]);
   
   for(j = 1; j < (mnl->MDPolyDegree); j++){
     assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
     assign(g_chi_dn_spinor_field[0], g_chi_dn_spinor_field[1], VOLUME/2);
     
     Qsw_tau1_sub_const_ndpsi(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
-			 g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], 
-			 mnl->MDPolyRoots[mnl->MDPolyDegree-2+j]);
+			     g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], 
+			     mnl->MDPolyRoots[mnl->MDPolyDegree-2+j]);
   }
   Ptilde_ndpsi(g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], mnl->PtildeCoefs, 
 	       mnl->PtildeDegree, g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], &Qsw_pm_ndpsi);

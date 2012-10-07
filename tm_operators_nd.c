@@ -96,7 +96,7 @@ void Qsw_ndpsi(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k_strange);
 
   assign_mul_one_sw_pm_imu_eps(EE, g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+3], 
-			       g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], -g_mubar, g_epsbar);
+			       g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], g_mubar, g_epsbar);
   clover_inv_nd(EE, g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+3]);
 
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+2]);
@@ -105,7 +105,7 @@ void Qsw_ndpsi(spinor * const l_strange, spinor * const l_charm,
   clover_gamma5_nd(OO, g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+3], 
   		   k_charm, k_strange,
   		   g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1],
-  		   -g_mubar, -g_epsbar);
+  		   g_mubar, -g_epsbar);
   mul_r(l_charm, phmc_invmaxev, g_spinor_field[DUM_MATRIX+2], VOLUME/2);
   mul_r(l_strange, phmc_invmaxev, g_spinor_field[DUM_MATRIX+3], VOLUME/2);
   return;
@@ -399,7 +399,7 @@ void Qsw_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], k_charm);
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k_strange);
 
-  assign_mul_one_sw_pm_imu_eps(EE, g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+3], 
+  assign_mul_one_sw_pm_imu_eps(EE, g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], 
 			       g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], -g_mubar, g_epsbar);
   clover_inv_nd(EE, g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+3]);
 
@@ -410,7 +410,7 @@ void Qsw_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
   clover_gamma5_nd(OO, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], 
   		   k_charm, k_strange,
   		   l_strange, l_charm,
-  		   g_mubar, -g_epsbar);
+  		   -g_mubar, -g_epsbar);
 
   /* At the end, the normalisation by the max. eigenvalue  */
   mul_r(l_strange, phmc_invmaxev, g_spinor_field[DUM_MATRIX], VOLUME/2);
@@ -541,9 +541,9 @@ void H_eo_sw_ndpsi(spinor * const l_strange, spinor * const l_charm,
   Hopping_Matrix(ieo, g_spinor_field[DUM_MATRIX], k_strange);
   Hopping_Matrix(ieo, g_spinor_field[DUM_MATRIX+1], k_charm);
   
-  assign_mul_one_sw_pm_imu_eps(EE, l_strange, l_charm, 
+  assign_mul_one_sw_pm_imu_eps(EE, l_charm, l_strange,
 			       g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], 
-			       -g_mubar, g_epsbar);
+			       g_mubar, g_epsbar);
 
   clover_inv_nd(EE, l_strange, l_charm);
 
