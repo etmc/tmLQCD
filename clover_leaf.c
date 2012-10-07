@@ -869,6 +869,7 @@ void sw_deriv(const int ieo, const double mu) {
 // with insertion matrix at site x
 // see equation (22) of hep-lat/9603008                  
 // result is again stored in swm and swp                 
+// includes a gamma5 multiplication for kk
 
 void sw_spinor(const int ieo, const spinor * const kk, const spinor * const ll) {
 #ifdef OMP
@@ -921,7 +922,7 @@ void sw_spinor(const int ieo, const spinor * const kk, const spinor * const ll) 
     _su3_minus_su3(lswm[2],u2,v2);
     _su3_minus_su3(lswm[3],u3,v3);
     
-    /* add up the swm[0] and swp[0] */
+    /* add up to swm[0] and swp[0] */
     _su3_acc(swm[x][0], lswm[0]);
     _su3_acc(swm[x][1], lswm[1]);
     _su3_acc(swm[x][2], lswm[2]);
