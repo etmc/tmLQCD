@@ -15,17 +15,14 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/*******************************************************************************
-*
-* File hybrid.c
-*
-* Main for testing the Eigenvalues computation using bispinors 
-*
-* Author: Thomas Chiarappa
-*         Thomas.Chiarappa@mib.infn.it
-*
-*******************************************************************************/
+ *
+ *
+ * Main for testing the Eigenvalues computation using bispinors 
+ *
+ * Author: Thomas Chiarappa
+ *         Thomas.Chiarappa@mib.infn.it
+ *
+ *******************************************************************************/
 
 #define MAIN_PROGRAM
 
@@ -71,8 +68,7 @@
 #include "boundary.h"
 #include "polyakov_loop.h"
 
-#include "eigenvalues_bi.h"
-#include "max_eigenvalues_bi.h"
+#include "solver/eigenvalues_bi.h"
 
 char * Version = "2.3.5";
 

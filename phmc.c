@@ -29,7 +29,7 @@
 
 #include "read_input.h"
 #include "init_bispinor_field.h"
-#include "eigenvalues_bi.h"
+#include "solver/eigenvalues_bi.h"
 #include "solver/solver.h"
 #include "init_chi_spinor_field.h"
 #include "chebyshev_polynomial_nd.h"
