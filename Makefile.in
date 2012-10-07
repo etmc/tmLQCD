@@ -59,7 +59,7 @@ MODULES = read_input gamma hybrid_update measure_gauge_action start \
 	tm_operators_nd nddetratio_monomial \
 	chebyshev_polynomial_nd Ptilde_nd  \
 	init_chi_spinor_field reweighting_factor_nd \
-	init_bispinor_field eigenvalues_bi D_psi \
+	init_bispinor_field D_psi \
 	xchange_lexicfield xchange_2fields online_measurement \
 	monomial det_monomial detratio_monomial update_momenta \
 	integrator gauge_monomial ndpoly_monomial phmc \
