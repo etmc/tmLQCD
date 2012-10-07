@@ -169,6 +169,17 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       iter = pcg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi);
       Qtm_minus_psi(Odd_new, Odd_new);
     }
+    /* --abdou -- begin*/
+    else if(solver_flag == INCREIGCG) {
+       /* Here we invert the hermitean operator squared */
+       gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);  
+       if(g_proc_id == 0) {printf("# Using Incremental Eig-CG!\n"); fflush(stdout);}
+       
+       iter = incr_eigcg(VOLUME/2,g_eigcg_nrhs,Odd_new, g_spinor_field[DUM_DERI], g_eigcg_ldh, &Qtm_pm_psi,
+ 			 precision, g_eigcg_restolsq , rel_prec, max_iter, g_eigcg_plvl, g_eigcg_nev, g_eigcg_vmax);
+       Qtm_minus_psi(Odd_new, Odd_new);
+     }
+     /* --abdou-- end*/
     else if(solver_flag == MIXEDCG) {
       /* Here we invert the hermitean operator squared */
       gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);

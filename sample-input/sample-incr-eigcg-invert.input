@@ -1,0 +1,39 @@
+L=16
+T=32
+
+NrXProcs = 1
+NrYProcs = 1
+NrZProcs = 1
+
+DebugLevel = 5
+InitialStoreCounter = 200
+Measurements = 1
+2kappamu = 0.0024135
+kappa = 0.160900
+BCAngleT = 1.
+GaugeConfigInputFile = conf
+UseEvenOdd = yes
+UseRelativePrecision = yes
+SourceType = Point
+ReadSource = no
+NoSamples = 1
+DisableIOChecks = yes
+
+EigCGnrhs = 12
+EigCGnev  = 10
+EigCGvmax = 40
+EigCGldh  = 100
+EigCGplvl = 2
+EigCGrestolsq = 1e-8
+
+
+BeginOperator TMWILSON
+  2kappaMu = 0.0024135
+  kappa = 0.160900
+  UseEvenOdd = yes
+  Solver = INCREIGCG
+  SolverPrecision = 1.e-16
+  MaxSolverIterations = 2000
+  AddDownPropagator = no
+EndOperator
+

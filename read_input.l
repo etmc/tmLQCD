@@ -175,6 +175,19 @@ inline void rmQuotes(char *str){
   int dfl_poly_iter;
 
   int use_preconditioning;
+
+  /* --abdou-- begin */
+  int g_eigcg_ldh;
+  int g_eigcg_nev;
+  int g_eigcg_nrhs;
+  int g_eigcg_plvl;
+  int g_eigcg_vmax;
+  double g_eigcg_restolsq;
+  /* --abdou-- end */  
+
+
+
+
 %}
 
 %option never-interactive
@@ -303,6 +316,19 @@ inline void rmQuotes(char *str){
 
 %x PRECONDITIONING
 
+/*  --abdou-- begin */
+%x EIGCGNRHS
+%x EIGCGNEV
+%x EIGCGVMAX
+%x EIGCGLDH
+%x EIGCGPLVL
+%x EIGCGRESTOLSQ
+/*  --abdou-- end */
+
+
+
+
+
 
 %%
 ^SourceFilename{EQL}               BEGIN(SOURCEFILE);
@@ -399,6 +425,15 @@ inline void rmQuotes(char *str){
 ^DflPolyIter{EQL}                  BEGIN(DFLPOLYITER);
 
 ^BeginGPU                          BEGIN(INITGPU);
+
+^EigCGnrhs{EQL}                    BEGIN(EIGCGNRHS);
+^EigCGnev{EQL}                     BEGIN(EIGCGNEV);
+^EigCGvmax{EQL}                    BEGIN(EIGCGVMAX);
+^EigCGldh{EQL}                     BEGIN(EIGCGLDH);
+^EigCGplvl{EQL}                    BEGIN(EIGCGPLVL);
+^EigCGrestolsq{EQL}                BEGIN(EIGCGRESTOLSQ);
+
+
 
 
 
@@ -768,6 +803,14 @@ inline void rmQuotes(char *str){
     if(myverbose) printf("  Solver set to CGMMS line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
+  /* --abdou-- begin */
+  increigcg {
+    optr->solver = 14;
+    if(myverbose) printf("  Solver set to INCR-EIG-CG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  /* --abdou-- end */
+
 }
 
 <OVSOLVER>{
@@ -1524,6 +1567,32 @@ inline void rmQuotes(char *str){
   rlxd_level = atoi(yytext);
   if(myverbose!=0) printf("RanluxdLevel set to %d \n", rlxd_level);
 }
+
+<EIGCGNRHS>{DIGIT}+        {
+  g_eigcg_nrhs = atoi(yytext);
+  if(myverbose!=0) printf("EigCGnrhs set to %d \n", g_eigcg_nrhs);
+}
+<EIGCGNEV>{DIGIT}+         {
+  g_eigcg_nev = atoi(yytext);
+  if(myverbose!=0) printf("EigCGnev set to %d \n", g_eigcg_nev);
+}
+<EIGCGVMAX>{DIGIT}+        {
+  g_eigcg_vmax = atoi(yytext);
+  if(myverbose!=0) printf("EigCGvmax set to %d \n", g_eigcg_vmax);
+}
+<EIGCGLDH>{DIGIT}+         {
+  g_eigcg_ldh = atoi(yytext);
+  if(myverbose!=0) printf("EigCGldh set to %d \n", g_eigcg_ldh);
+}
+<EIGCGPLVL>{DIGIT}+        {
+  g_eigcg_plvl = atoi(yytext);
+  if(myverbose!=0) printf("EigCGplvl set to %d \n", g_eigcg_plvl);
+}
+<EIGCGRESTOLSQ>{FLT}    {
+  g_eigcg_restolsq = atof(yytext);
+  if(myverbose!=0) printf("EigCGrestolsq set to %f \n", g_eigcg_restolsq);
+}
+
 <KAPPA>{FLT}  {
   g_kappa=atof(yytext);
   if(myverbose!=0) printf("kappa=%s \n", yytext);

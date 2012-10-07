@@ -43,6 +43,11 @@
 #define zlapcy CLAPCY
 #define zgetrf CGETRF
 #define zgetrs CGETRS
+/*--abdou-- begin */
+#define zgeqrf ZGEQRF
+#define zunmqr ZUNMQR
+/*--abdou-- end */
+
 extern void _FT(zgels)();
 extern void _FT(zgesv)();
 extern void _FT(zgeevx)();
@@ -59,6 +64,11 @@ extern double _FT(dlamch)();
 extern int _FT(ilaenv)();
 extern void _FT(zgetrf)();
 extern void _FT(zgetrs)();
+/* --abdou -- begin */
+extern void _FT(zgeqrf)();
+extern void _FT(zunmqr)();
+/* --abdou-- end */
+
 #else
 
 void _FT(zgels)(char* transa, int* M, int* N, int* NRHS, _Complex double a[], int* lda, 
@@ -78,8 +88,7 @@ extern void _FT(dsyev)(char* jobz, char* uplo, int* n, double a[],
         int* lda, double w[], double work[], int* lwork, int* info,
         int len_jobz, int len_uplo);
 extern void _FT(zheev)(char* jobz, char* uplo, int* n, _Complex double a[],
-        int* lda, double w[], _Complex double work[], int* lwork, double* rwork, int* info,
-        int len_jobz, int len_uplo);
+        int* lda, double w[], _Complex double work[], int* lwork, double* rwork, int* info,int len_jobz, int len_uplo);
 
 extern void _FT(dgetrs)(char* trans, int* n, int* nrhs, double a[],
         int* lda, int ipiv[], double b[], int* ldb, int* info,
@@ -116,13 +125,23 @@ extern void _FT(dlacpy)(char *UPLO, int *M, int *N, double *A, int *LDA,
 extern void _FT(dlaset)(char *UPLO, int *M, int *N, double *ALPHA, 
 			double *BETA, double *A, int *LDA, int len_uplo );
 extern void _FT(zlaset)(char *UPLO, int *M, int *N, _Complex double *ALPHA, 
-			_Complex double *BETA, _Complex double *A, int *LDA, int len_uplo );
+			_Complex double *BETA, _Complex double *A, 
+                        int *LDA, int len_uplo );
 
 extern double _FT(dlamch)(char* name, int len_name);
 
 extern int _FT(ilaenv)(int *ISPEC, char *NAME, char *OPTS, int *N1, 
 		       int *N2, int *N3, int *N4, int len_name, int len_opts);
 
+/* --abdou-- begin */
+extern void _FT(zgeqrf)(int *M, int *N, _Complex double *A, int *LDA, _Complex double *TAU,
+                         _Complex double  *WORK, int *LWORK, int *INFO);
+
+
+extern void _FT(zunmqr)(char *SIDE, char *TRANS, int *M, int *N, int *K,
+                         _Complex double  *A, int *LDA, _Complex double  *TAU, _Complex double  *C,
+                         int *LDC, _Complex double  *WORK, int *LWORK, int *INFO);
+/* --abdou-- end */
 #endif
 
 #endif

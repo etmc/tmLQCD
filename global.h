@@ -275,6 +275,16 @@ EXTERN int ** g_iup3d;
 EXTERN int ** g_idn3d;
 #endif
 
+
+/* parameters for eigcg solver --abdou-- */
+EXTERN int g_eigcg_nrhs;  /*total number of right-hand sides to be solved*/
+EXTERN int g_eigcg_nev;   /*number of eigenvalues computed from a single right-hand side */
+EXTERN int g_eigcg_vmax;  /*size of the search subspace for eigcg*/
+EXTERN int g_eigcg_ldh;   /*total number of eigenvectors that will be computed and used in deflation */
+EXTERN int g_eigcg_plvl;  /*print level of output 0,1,2 */
+EXTERN double g_eigcg_restolsq; /*tolerance squared for restarting eigcg */
+/*end of parameters for cg solver (abdou) */
+ 
 #undef EXTERN
 /* #undef ALIGN */
 
