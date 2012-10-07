@@ -327,18 +327,19 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
 	Ptilde_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
 		      mnl->PtildeCoefs, mnl->PtildeDegree, 
 		      g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
-	QdaggerQ_poly(g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], 
-		      mnl->MDPolyCoefs, mnl->MDPolyDegree, 
-		      g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j]);
+	Ptilde_ndpsi(g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], 
+		     mnl->MDPolyCoefs, mnl->MDPolyDegree, 
+		     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j]);
+
 	Qtm_dagger_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
 			      g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
       }
       else { /*  Chi[j] = ( Ptilde P Q ) Chi[j-1]  */ 
 	Qtm_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
 			g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
-	QdaggerQ_poly(g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], 
-		      mnl->MDPolyCoefs, mnl->MDPolyDegree, g_chi_up_spinor_field[j], 
-		      g_chi_dn_spinor_field[j]);
+	Ptilde_ndpsi(g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], 
+		     mnl->MDPolyCoefs, mnl->MDPolyDegree, g_chi_up_spinor_field[j], 
+		     g_chi_dn_spinor_field[j]);
 	Ptilde_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
 		      mnl->PtildeCoefs, mnl->PtildeDegree, 
 		      g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
@@ -549,6 +550,7 @@ void ndpoly_set_global_parameter(monomial * const mnl, const int exact) {
   g_mubar = mnl->mubar;
   g_epsbar = mnl->epsbar;
   g_kappa = mnl->kappa;
+  g_c_sw = mnl->c_sw;
   boundary(g_kappa);
 
   if (g_epsbar!=0.0 || exact == 0){

@@ -104,19 +104,19 @@ void Ptilde_cheb_coefs(double aa, double bb, double dd[], int n, double exponent
  **************************************************************************/
 
 void Ptilde_ndpsi(spinor *R_s, spinor *R_c, double *dd, int n, 
-                   spinor *S_s, spinor *S_c){
-
+		  spinor *S_s, spinor *S_c) {
+  
   int j;
   double fact1, fact2, temp1, temp2, temp3, temp4;
-
+  
   spinor *svs_=NULL, *svs=NULL, *ds_=NULL, *ds=NULL, *dds_=NULL, *dds=NULL, 
     *auxs_=NULL, *auxs=NULL, *aux2s_=NULL, *aux2s=NULL, *aux3s_=NULL, 
     *aux3s=NULL;
   spinor *svc_=NULL, *svc=NULL, *dc_=NULL, *dc=NULL, *ddc_=NULL, 
     *ddc=NULL, *auxc_=NULL, *auxc=NULL, *aux2c_=NULL, *aux2c=NULL, 
     *aux3c_=NULL, *aux3c=NULL;
-
-
+  
+  
 #if ( defined SSE || defined SSE2 )
   svs_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
   svs   = (spinor *)(((unsigned long int)(svs_)+ALIGN_BASE)&~ALIGN_BASE);
@@ -168,24 +168,24 @@ void Ptilde_ndpsi(spinor *R_s, spinor *R_c, double *dd, int n,
   aux3c_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
   aux3c = aux3c_;
 #endif
-
+  
   fact1=4/(phmc_cheb_evmax-phmc_cheb_evmin);
   fact2=-2*(phmc_cheb_evmax+phmc_cheb_evmin)/(phmc_cheb_evmax-phmc_cheb_evmin);
-
+  
   zero_spinor_field(&ds[0],VOLUME/2);
   zero_spinor_field(&dds[0],VOLUME/2); 
   zero_spinor_field(&dc[0],VOLUME/2);
   zero_spinor_field(&ddc[0],VOLUME/2); 
-
+  
   /*   sub_low_ev(&aux3[0], &S[0]);  */
   assign(&aux3s[0], &S_s[0],VOLUME/2);  
   assign(&aux3c[0], &S_c[0],VOLUME/2);  
-
+  
   /*  Use the Clenshaw's recursion for the Chebysheff polynomial */
   for (j=n-1; j>=1; j--) {
     assign(&svs[0],&ds[0],VOLUME/2);
     assign(&svc[0],&dc[0],VOLUME/2); 
-
+    
     /*
      * if ( (j%10) == 0 ) {
      *   sub_low_ev(&aux[0], &d[0]);
@@ -351,9 +351,9 @@ void degree_of_Ptilde(int * _degree, double ** coefs,
     random_spinor_field(sc,VOLUME/2, 1);
 
     Ptilde_ndpsi(&auxs[0], &auxc[0], *coefs, degree, &ss[0], &sc[0]);
-    QdaggerQ_poly(&aux2s[0], &aux2c[0], phmc_dop_cheby_coef, phmc_dop_n_cheby, &auxs[0], &auxc[0]);
+    Ptilde_ndpsi(&aux2s[0], &aux2c[0], phmc_dop_cheby_coef, phmc_dop_n_cheby, &auxs[0], &auxc[0]);
     Qtm_pm_ndpsi(&auxs[0], &auxc[0], &aux2s[0], &aux2c[0]);
-    QdaggerQ_poly(&aux2s[0], &aux2c[0], phmc_dop_cheby_coef, phmc_dop_n_cheby, &auxs[0], &auxc[0]);
+    Ptilde_ndpsi(&aux2s[0], &aux2c[0], phmc_dop_cheby_coef, phmc_dop_n_cheby, &auxs[0], &auxc[0]);
     Ptilde_ndpsi(&auxs[0], &auxc[0], *coefs, degree, &aux2s[0], &aux2c[0]);
 
     diff(&aux2s[0],&auxs[0], &ss[0], VOLUME/2);
