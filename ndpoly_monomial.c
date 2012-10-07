@@ -195,7 +195,7 @@ void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
 			mnl->MDPolyRoots[mnl->MDPolyDegree-2+j]);
     }
     Ptilde_ndpsi(g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], mnl->PtildeCoefs, 
-		  mnl->PtildeDegree, g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1]);
+		 mnl->PtildeDegree, g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], &Qtm_pm_ndpsi);
   } 
   else if( phmc_exact_poly==1 && g_epsbar!=0.0) {
     /* Attention this is Q * tau1, up/dn are exchanged in the input spinor  */
@@ -326,10 +326,10 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
       if(j % 2){ /*  Chi[j] = ( Qdag P  Ptilde ) Chi[j-1]  */ 
 	Ptilde_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
 		      mnl->PtildeCoefs, mnl->PtildeDegree, 
-		      g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
+		     g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], &Qtm_pm_ndpsi);
 	Ptilde_ndpsi(g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], 
 		     mnl->MDPolyCoefs, mnl->MDPolyDegree, 
-		     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j]);
+		     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], &Qtm_pm_ndpsi);
 
 	Qtm_dagger_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
 			      g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
@@ -339,10 +339,10 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
 			g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
 	Ptilde_ndpsi(g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], 
 		     mnl->MDPolyCoefs, mnl->MDPolyDegree, g_chi_up_spinor_field[j], 
-		     g_chi_dn_spinor_field[j]);
+		     g_chi_dn_spinor_field[j], &Qtm_pm_ndpsi);
 	Ptilde_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
 		      mnl->PtildeCoefs, mnl->PtildeDegree, 
-		      g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
+		      g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], &Qtm_pm_ndpsi);
       }
 
       Ener[j] = Ener[j-1] + Ener[0];

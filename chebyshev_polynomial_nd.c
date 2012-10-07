@@ -159,9 +159,9 @@ void degree_of_polynomial_nd(int * _degree_of_p, double ** coefs,
   }
 
   /* Here we check the accuracy */
-  Ptilde_ndpsi(&auxs[0], &auxc[0], *coefs, degree_of_p, &ss[0], &sc[0]);
+  Ptilde_ndpsi(&auxs[0], &auxc[0], *coefs, degree_of_p, &ss[0], &sc[0], &Qtm_pm_ndpsi);
   Qtm_pm_ndpsi(&aux2s[0], &aux2c[0], &auxs[0], &auxc[0]);
-  Ptilde_ndpsi(&auxs[0], &auxc[0], *coefs, degree_of_p, &aux2s[0], &aux2c[0]);
+  Ptilde_ndpsi(&auxs[0], &auxc[0], *coefs, degree_of_p, &aux2s[0], &aux2c[0], &Qtm_pm_ndpsi);
 
   diff(&aux2s[0],&auxs[0],&ss[0],VOLUME/2);
   temp=square_norm(&aux2s[0],VOLUME/2, 1)/square_norm(&ss[0],VOLUME/2, 1)/4.0;
