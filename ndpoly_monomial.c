@@ -47,6 +47,9 @@
 #include "boundary.h"
 #include "phmc.h"
 #include "init_chi_spinor_field.h"
+#include "solver/matrix_mult_typedef_nd.h"
+#include "clover_leaf.h"
+#include "clovertm_operators.h"
 #include "ndpoly_monomial.h"
 
 extern int phmc_exact_poly;
@@ -453,11 +456,20 @@ int init_ndpoly_monomial(const int id) {
   FILE * ifs;
   double *phmc_darray;
   char title[100];
+  matrix_mult_nd Qsq = &Qtm_pm_ndpsi;
+
+  if(mnl->type == NDCLOVER) {
+    Qsq = &Qsw_pm_ndpsi;
+    init_sw_fields();
+    sw_term((const su3 **)g_gauge_field, mnl->kappa, mnl->c_sw); 
+    sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
+  }
 
   phmc_invmaxev = 1.0;
   g_mubar = mnl->mubar;
   g_epsbar = mnl->epsbar;
   g_kappa = mnl->kappa;
+  g_c_sw = mnl->c_sw;
   boundary(g_kappa);
   if (g_epsbar!=0.0 || phmc_exact_poly==0){
     phmc_Cpol = sqrt(mnl->MDPolyLocNormConst);
@@ -482,7 +494,7 @@ int init_ndpoly_monomial(const int id) {
   /* Here we prepare the less precise MD polynomial first   */
   degree_of_polynomial_nd(&mnl->MDPolyDegree, &mnl->MDPolyCoefs,
 			  mnl->EVMin, mnl->EVMax,
-			  Qtm_pm_ndpsi);
+			  Qsq);
   phmc_dop_n_cheby = mnl->MDPolyDegree;
   phmc_dop_cheby_coef = mnl->MDPolyCoefs;
   if((g_proc_id == 0) && (g_debug_level > 1)) {
@@ -503,7 +515,7 @@ int init_ndpoly_monomial(const int id) {
   /* Here we prepare the precise polynomial Ptilde */
   degree_of_Ptilde(&mnl->PtildeDegree, &mnl->PtildeCoefs, 
 		   mnl->EVMin, mnl->EVMax, mnl->MDPolyDegree, 
-		   mnl->PrecisionPtilde, &Qtm_pm_ndpsi);
+		   mnl->PrecisionPtilde, Qsq);
   phmc_ptilde_cheby_coef = mnl->PtildeCoefs;
   phmc_ptilde_n_cheby = mnl->PtildeDegree;
 

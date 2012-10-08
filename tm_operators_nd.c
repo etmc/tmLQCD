@@ -535,16 +535,16 @@ void H_eo_tm_ndpsi(spinor * const l_strange, spinor * const l_charm,
 }
 
 void H_eo_sw_ndpsi(spinor * const l_strange, spinor * const l_charm, 
-		   spinor * const k_strange, spinor * const k_charm, 
-		   const int ieo) {
+		   spinor * const k_strange, spinor * const k_charm) {
+
   /* recall:   strange <-> up    while    charm <-> dn   */
-  Hopping_Matrix(ieo, g_spinor_field[DUM_MATRIX], k_strange);
-  Hopping_Matrix(ieo, g_spinor_field[DUM_MATRIX+1], k_charm);
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], k_strange);
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k_charm);
   
   assign_mul_one_sw_pm_imu_eps(EE, l_charm, l_strange,
 			       g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], 
 			       g_mubar, g_epsbar);
-
+  // here the order doesn't matter
   clover_inv_nd(EE, l_strange, l_charm);
 
   return;

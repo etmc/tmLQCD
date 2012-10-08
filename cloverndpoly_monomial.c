@@ -75,9 +75,6 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
   // we invert it for the even sites only
   sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
 
-
-  /* This factor 2 a missing factor 2 in trace_lambda */
-  ndpoly_set_global_parameter(mnl, 0);
   mnl->forcefactor = -phmc_Cpol*mnl->EVMaxInv;
 
   /* Recall:  The GAMMA_5 left of  delta M_eo  is done in  deriv_Sb !!! */
@@ -113,7 +110,7 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
     
     /* Get the even parts of the  (j-1)th  chi_spinors */
     H_eo_sw_ndpsi(mnl->w_fields[0], mnl->w_fields[1], 
-		  g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], EO);
+		  g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
     
     /* \delta M_eo sandwitched by  chi[j-1]_e^\dagger  and  chi[2N-j]_o */
     deriv_Sb(EO, mnl->w_fields[0], g_chi_up_spinor_field[mnl->MDPolyDegree], hf, mnl->forcefactor);/* UP */
@@ -121,22 +118,21 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
 
     /* Get the even parts of the  (2N-j)-th  chi_spinors */
     H_eo_sw_ndpsi(mnl->w_fields[2], mnl->w_fields[3], 
-		  g_chi_up_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[mnl->MDPolyDegree], EO);
+		  g_chi_up_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[mnl->MDPolyDegree]);
     
     /* \delta M_oe sandwitched by  chi[j-1]_o^\dagger  and  chi[2N-j]_e */
     deriv_Sb(OE, g_chi_up_spinor_field[j-1], mnl->w_fields[2], hf, mnl->forcefactor);
     deriv_Sb(OE, g_chi_dn_spinor_field[j-1], mnl->w_fields[3], hf, mnl->forcefactor);
 
     // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
-    sw_spinor(OO, g_chi_up_spinor_field[j-1], g_chi_up_spinor_field[mnl->MDPolyDegree]);
-    // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
     sw_spinor(EE, mnl->w_fields[2], mnl->w_fields[0]);
+    // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
+    sw_spinor(OO, g_chi_up_spinor_field[j-1], g_chi_up_spinor_field[mnl->MDPolyDegree]);
 
     // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
-    sw_spinor(OO, g_chi_dn_spinor_field[j-1], g_chi_dn_spinor_field[mnl->MDPolyDegree]);
-    // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
     sw_spinor(EE, mnl->w_fields[3], mnl->w_fields[1]);
-
+    // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
+    sw_spinor(OO, g_chi_dn_spinor_field[j-1], g_chi_dn_spinor_field[mnl->MDPolyDegree]);
   }
   //to be coded
   //sw_deriv(EE, mnl->mu);
@@ -148,7 +144,6 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
 
 void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   int j;
-  double temp;
   monomial * mnl = &monomial_list[id];
 
   ndpoly_set_global_parameter(mnl, 0);
@@ -186,12 +181,8 @@ void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   assign(mnl->pf, g_chi_up_spinor_field[0], VOLUME/2);
   assign(mnl->pf2, g_chi_dn_spinor_field[0], VOLUME/2);
   
-  temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
-
-  temp += square_norm(g_chi_dn_spinor_field[0], VOLUME/2, 1);
-
   if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called cloverndpoly_heatbath for id %d with g_running_phmc = %d\n", id, g_running_phmc);
+    printf("called cloverndpoly_heatbath for id %d\n", id);
   }
   return;
 }
@@ -199,25 +190,16 @@ void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
 
 double cloverndpoly_acc(const int id, hamiltonian_field_t * const hf) {
   int j, ij=0;
-  double temp, sgn, fact, Diff;
-  double Ener[8];
-  double factor[8];
   monomial * mnl = &monomial_list[id];
   spinor *up0, *dn0, *up1, *dn1, *dummy;
 
   ndpoly_set_global_parameter(mnl, 0);
   g_mu3 = 0.;
-  init_sw_fields();
   sw_term((const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
   sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
 
   mnl->energy1 = 0.;
-  Ener[0] = 0;
-  factor[0] = 1.0;
-  for(j = 1; j < 8; j++){
-    factor[j] = j*factor[j-1];
-    Ener[j] = 0;
-  }
+
   /* IF PHMC */
   up0 = g_chi_up_spinor_field[0];
   up1 = g_chi_up_spinor_field[1];
@@ -242,79 +224,10 @@ double cloverndpoly_acc(const int id, hamiltonian_field_t * const hf) {
     assign(g_chi_dn_spinor_field[ij], dn0, VOLUME/2);
   }
   
-  temp = square_norm(g_chi_up_spinor_field[ij], VOLUME/2, 1);
-  Ener[ij] = temp;
+  mnl->energy1 = square_norm(g_chi_up_spinor_field[ij], VOLUME/2, 1);
+  mnl->energy1 += square_norm(g_chi_dn_spinor_field[ij], VOLUME/2, 1);
   
-  temp = square_norm(g_chi_dn_spinor_field[ij], VOLUME/2, 1);
-  Ener[ij] += temp;
-  
-  if((g_proc_id == g_stdio_proc) && (g_debug_level > 20)) {
-    printf("PHMC: Here comes the computation of H_new with \n \n");
-    
-    printf("PHMC: At j=%d  PHMC Final Energy %e \n", ij, mnl->energy1+Ener[ij]);
-    printf("PHMC: At j=%d  PHMC Only Final Energy %e \n", ij, Ener[ij]);
-  }
-  
-  /* Here comes the loop for the evaluation of A, A^2, ...  */
-  for(j = 1; j < 1; j++){ /* To omit corrections just set  j<1 */
-    
-    if(j % 2){ /*  Chi[j] = ( Qdag P  Ptilde ) Chi[j-1]  */ 
-      Ptilde_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-		   mnl->PtildeCoefs, mnl->PtildeDegree, 
-		   g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], &Qsw_pm_ndpsi);
-      Ptilde_ndpsi(g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], 
-		   mnl->MDPolyCoefs, mnl->MDPolyDegree, 
-		   g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], &Qsw_pm_ndpsi);
-      Qsw_dagger_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-		       g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
-    }
-    else { /*  Chi[j] = ( Ptilde P Q ) Chi[j-1]  */ 
-      Qsw_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-		g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
-      Ptilde_ndpsi(g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], 
-		   mnl->MDPolyCoefs, mnl->MDPolyDegree, g_chi_up_spinor_field[j], 
-		   g_chi_dn_spinor_field[j], &Qsw_pm_ndpsi);
-      Ptilde_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-		   mnl->PtildeCoefs, mnl->PtildeDegree, 
-		   g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], &Qsw_pm_ndpsi);
-    }
-    
-    Ener[j] = Ener[j-1] + Ener[0];
-    sgn = -1.0;
-    for(ij = 1; ij < j; ij++){
-      fact = factor[j] / (factor[ij] * factor[j-ij]);
-      if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
-	printf("PHMC: Here  j=%d  and  ij=%d   sign=%f  fact=%f \n", j ,ij, sgn, fact);
-      }
-      Ener[j] += sgn*fact*Ener[ij];
-      sgn = -sgn;
-    }
-    temp = square_norm(g_chi_up_spinor_field[j], VOLUME/2, 1);
-    temp += square_norm(g_chi_dn_spinor_field[j], VOLUME/2, 1);
-    if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
-      printf("PHMC: Here  j=%d   sign=%f  temp=%e \n", j, sgn, temp);
-    }
-    
-    Ener[j] += sgn*temp;
-    
-    Diff = fabs(Ener[j] - Ener[j-1]);
-    if((g_proc_id == g_stdio_proc) && (g_debug_level > 0)) {
-      printf("PHMC: Correction aftern %d steps: %e \n", j, Diff);
-    }
-    
-    if(Diff < mnl->PrecisionHfinal) {
-      if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
-	printf("PHMC: At j = %d  PHMC Only Final Energy %e \n", j, Ener[j]);
-      }
-      break;
-    }
-  }
-  mnl->energy1 += Ener[ij];  /* this is quite sticky */
-  if((g_proc_id == g_stdio_proc) && (g_debug_level > 20)) {
-    printf("PHMC: At j = %d  P=%e +HMC Final Energy %e \n\n", ij, Ener[ij], mnl->energy1);
-  }
-  
-  if(g_proc_id == 0 && g_debug_level > 3) {
+  if(g_proc_id == 0 && g_debug_level > 0) {
     printf("called cloverndpoly_acc for id %d %d dH = %1.4e\n", id, g_running_phmc, mnl->energy1 - mnl->energy0);
   }
   return(mnl->energy1 - mnl->energy0);

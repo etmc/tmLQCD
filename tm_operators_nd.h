@@ -55,8 +55,8 @@ void H_eo_tm_ndpsi(spinor * const l_strange, spinor * const l_charm,
              spinor * const k_strange, spinor * const k_charm, 
 	     const int ieo);
 void H_eo_sw_ndpsi(spinor * const l_strange, spinor * const l_charm, 
-		   spinor * const k_strange, spinor * const k_charm, 
-		   const int ieo);
+		   spinor * const k_strange, spinor * const k_charm);
+
 
 void M_ee_inv_ndpsi(spinor * const l_strange, spinor * const l_charm, 
 		    spinor * const k_strange, spinor * const k_charm,
