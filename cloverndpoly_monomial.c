@@ -125,14 +125,14 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
     deriv_Sb(OE, g_chi_dn_spinor_field[j-1], mnl->w_fields[3], hf, mnl->forcefactor);
 
     // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
-    sw_spinor(EE, mnl->w_fields[2], mnl->w_fields[0]);
+    sw_spinor(EE, mnl->w_fields[3], mnl->w_fields[0]);
     // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-    sw_spinor(OO, g_chi_up_spinor_field[j-1], g_chi_up_spinor_field[mnl->MDPolyDegree]);
+    sw_spinor(OO, g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[mnl->MDPolyDegree]);
 
     // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
-    sw_spinor(EE, mnl->w_fields[3], mnl->w_fields[1]);
+    sw_spinor(EE, mnl->w_fields[2], mnl->w_fields[1]);
     // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-    sw_spinor(OO, g_chi_dn_spinor_field[j-1], g_chi_dn_spinor_field[mnl->MDPolyDegree]);
+    sw_spinor(OO, g_chi_dn_spinor_field[j-1], g_chi_up_spinor_field[mnl->MDPolyDegree]);
   }
   //to be coded
   //sw_deriv(EE, mnl->mu);
