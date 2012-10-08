@@ -60,9 +60,23 @@ extern int ITER_MAX_CG;
  * This should clearly not be some obscure global, eventually!
  */
 
-stout_control * stout = NULL;
+/* DEBUG BLOCK! */
+double ohnohack_stout_rho = 0.9 / 6.0; /* Think about changing this to alpha -- we need to choose a convention. */
+unsigned int ohnohack_stout_no_iter = 6;
+int ohnohack_stout_calculate_force = 1;
 
-void detratiostout_derivative(const int no, hamiltonian_field_t * const hf) {
+stout_control * ohnohack_stout = NULL;
+/* END */
+
+void detratiostout_derivative(const int no, hamiltonian_field_t * const hf)
+{
+  /* FIXME Local check for smearing */
+  if (!ohnohack_stout)
+    ohnohack_stout = construct_stout_control(ohnohack_stout_rho, ohnohack_stout_no_iter, ohnohack_stout_calculate_force);
+  if (!ohnohack_stout.calculate_force_terms || !ohnohackstout.smearing_performed)
+    fatal_error("Derivative smearing attempted without force terms available in stout control!", "detratiostout_derivative");
+
+  /* FIXME If we're here, we should have all we need to perform the smearing of the force terms. */
   int saveiter = ITER_MAX_BCG;
 
   monomial * mnl = &monomial_list[no];
@@ -209,7 +223,11 @@ void detratiostout_derivative(const int no, hamiltonian_field_t * const hf) {
 }
 
 
-void detratiostout_heatbath(const int id, hamiltonian_field_t * const hf) {
+void detratiostout_heatbath(const int id, hamiltonian_field_t * const hf)
+{
+  if (!ohnohack_stout)
+    ohnohack_stout = construct_stout_control(ohnohack_stout_rho, ohnohack_stout_no_iter, ohnohack_stout_calculate_force);
+
   int saveiter = ITER_MAX_BCG;
   monomial * mnl = &monomial_list[id];
 
@@ -264,10 +282,21 @@ void detratiostout_heatbath(const int id, hamiltonian_field_t * const hf) {
   return;
 }
 
-double detratiostout_acc(const int id, hamiltonian_field_t * const hf) {
+double detratiostout_acc(const int id, hamiltonian_field_t * const hf)
+{
+  /* FIXME Local smearing operation */
+  if (!ohnohack_stout)
+    ohnohack_stout = construct_stout_control(ohnohack_stout_rho, ohnohack_stout_no_iter, ohnohack_stout_calculate_force);
+  stout_smear(&ohnohack_stout, g_gf);
+
+  /* FIXME We now have a properly smeared field in ohnohack_stout.result
+   * We need this field to replace g_gauge_field, so that Hopping_Matrix uses it.
+   * Otherwise, this function should proceed as it would normally! */
+  ohnohack_remap_g_gauge_field(ohnohack_stout.result);
+
   monomial * mnl = &monomial_list[id];
   int saveiter = ITER_MAX_BCG;
-  int save_sloppy = g_sloppy_precision_flag;
+  int save_sloppy = g_sloppy_precision_flag; 
 
   g_mu = mnl->mu2;
   boundary(mnl->kappa2);
@@ -306,5 +335,9 @@ double detratiostout_acc(const int id, hamiltonian_field_t * const hf) {
     printf("called detratiostout_acc for id %d %d dH = %1.4e\n", 
 	   id, mnl->even_odd_flag, mnl->energy1 - mnl->energy0);
   }
+
+  /* FIXME We continue with the flow of the hmc code, so replace g_gauge_field with the original again */
+  ohnohack_remap_g_gauge_field(g_gf);
+
   return(mnl->energy1 - mnl->energy0);
 }

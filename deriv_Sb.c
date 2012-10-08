@@ -433,7 +433,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
 
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
-    update_backward_gauge(hf->gaugefield);
+    update_backward_gauge(_AS_GAUGE_FIELD_T(hf->gaugefield));
   }
 #endif
   /* for parallelization */

@@ -4,6 +4,6 @@
 #include "global.h"
 #include <buffers/gauge.h>
 
-void ohnohack_remap_g_gauge_field(su3_tuple *gf);
+void ohnohack_remap_g_gauge_field(gauge_field_t gf);
 
 #endif
