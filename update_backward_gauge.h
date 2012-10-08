@@ -22,6 +22,6 @@
 
 #include "su3.h"
 
-void update_backward_gauge(su3 ** const gf);
+void update_backward_gauge(gauge_field_t const gf);
 
 #endif

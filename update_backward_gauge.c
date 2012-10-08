@@ -27,7 +27,7 @@
 
 
 #if defined _USE_HALFSPINOR
-void update_backward_gauge(su3 ** const gf) {
+void update_backward_gauge(gauge_field_t const gf) {
   int ix=0, kb=0, iy=0;
 
   for(ix = 0; ix < VOLUME/2; ix++) {
@@ -57,7 +57,7 @@ void update_backward_gauge(su3 ** const gf) {
 
 #elif _USE_TSPLITPAR 
 
-void update_backward_gauge(su3 ** const gf) {
+void update_backward_gauge(gauge_field_t const gf) {
   int ix=0, kb=0, kb2=0;
 
   for(ix = 0; ix < VOLUME/2;ix++) {
@@ -102,7 +102,7 @@ void update_backward_gauge(su3 ** const gf) {
 
 #else
 
-void update_backward_gauge(su3 ** const gf) {
+void update_backward_gauge(gauge_field_t const gf) {
   int ix=0, kb=0, kb2=0;
 
   for(ix = 0; ix < VOLUME/2; ix++) {

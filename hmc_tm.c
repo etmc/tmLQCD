@@ -96,8 +96,8 @@ extern int nstore;
 
 int const rlxdsize = 105;
 
-int main(int argc,char *argv[]) {
-
+int main(int argc,char *argv[])
+{
   FILE *parameterfile=NULL, *countfile=NULL;
   char *filename = NULL;
   char datafilename[50];
@@ -150,7 +150,8 @@ int main(int argc,char *argv[]) {
 #endif
 
 
-  while ((c = getopt(argc, argv, "h?vVf:o:")) != -1) {
+  while ((c = getopt(argc, argv, "h?vVf:o:")) != -1)
+  {
     switch (c) {
     case 'f':
       input_filename = calloc(200, sizeof(char));
