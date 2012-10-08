@@ -104,6 +104,7 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].c1tts = _default_g_C1tts; 
   monomial_list[no_monomials].rngrepro = _default_reproduce_randomnumber_flag;
   /* poly monomial */
+  monomial_list[no_monomials].rec_ev = _default_g_rec_ev;
   monomial_list[no_monomials].MDPolyDegree = _default_MDPolyDegree;
   monomial_list[no_monomials].MDPolyLmin = _default_MDPolyLmin;
   monomial_list[no_monomials].MDPolyLmax = _default_MDPolyLmax;

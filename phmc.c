@@ -37,6 +37,7 @@
 #include "tm_operators_nd.h"
 #include "phmc.h"
 #include "monomial.h"
+#include "solver/matrix_mult_typedef_bi.h"
 #include "gettime.h"
 
 //                                          --> in  monomial
@@ -76,20 +77,20 @@ void init_phmc() {
 
   phmc_invmaxev=1.0;
 
-  if(phmc_compute_evs != 0) {
+  if(phmc_compute_evs != -1) {
     g_mu = g_mu1;
     max_iter_ev = 1000;
     
     no_eigenvalues = 10;   /* Number of lowest eigenvalues to be computed */
     if(g_epsbar!=0.0)
-      phmc_cheb_evmin = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0, &Qtm_pm_ndbipsi);
+      phmc_cheb_evmin = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0, &Qsw_pm_ndbipsi);
     else {
       phmc_cheb_evmin = eigenvalues(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0, 0, nstore, even_odd_flag);
     }
 
     no_eigenvalues = 4;   /* Number of highest eigenvalues to be computed */
     if(g_epsbar!=0.0)
-      phmc_cheb_evmax = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, &Qtm_pm_ndbipsi);
+      phmc_cheb_evmax = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, &Qsw_pm_ndbipsi);
     else
       phmc_cheb_evmax = eigenvalues(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, 0, nstore, even_odd_flag);
        
@@ -203,12 +204,15 @@ void init_phmc() {
 
 
 void phmc_compute_ev(const int trajectory_counter,
-		     const double plaquette_energy) {
+		     const int id,
+		     matrix_mult_bi Qsq) {
   double atime, etime, temp=0., temp2=0.;
   int max_iter_ev, no_eigenvalues;
-  char * phmcfilename = "phmc.data";
+  char buf[100];
+  char * phmcfilename = buf;
   FILE * countfile;
 
+  sprintf(phmcfilename,"monomial-%.2d.data", id);
   atime = gettime();
   
   max_iter_ev = 1000;
@@ -220,31 +224,37 @@ void phmc_compute_ev(const int trajectory_counter,
 
   no_eigenvalues = 1;
 
-  if(g_epsbar!=0.0)
-    temp = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0, &Qtm_pm_ndbipsi);
-  else
-    temp = eigenvalues(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0, 0, nstore, even_odd_flag);
+  //if(g_epsbar!=0.0)
+  temp = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0, Qsq);
+  //else
+  //temp = eigenvalues(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0, 0, nstore, even_odd_flag);
   
   no_eigenvalues = 1;
-  if(g_epsbar!=0.0)
-    temp2 = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, &Qtm_pm_ndbipsi);
-  else
-    temp2 = eigenvalues(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, 0, nstore, even_odd_flag);
+  //  if(g_epsbar!=0.0)
+  temp2 = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, Qsq);
+  //  else
+  //    temp2 = eigenvalues(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, 0, nstore, even_odd_flag);
   
   if((g_proc_id == 0) && (g_debug_level > 0)) {
     printf("# PHMC: lowest eigenvalue end of trajectory %d = %e\n", 
 	   trajectory_counter, temp);
     printf("# PHMC: maximal eigenvalue end of trajectory %d = %e\n", 
 	   trajectory_counter, temp2);
+    if(temp2 > 1.) {
+      fprintf(stderr, "\nWarning: largest eigenvalue larger than upper bound!\n\n");
+    }
+    if(temp < stilde_min/stilde_max) {
+      fprintf(stderr, "\nWarning: smallest eigenvalue smaller than lower bound!\n\n");
+    }
   }
   if(g_proc_id == 0) {
     countfile = fopen(phmcfilename, "a");
-    fprintf(countfile, "%d %1.12f %1.5e %1.5e %1.5e %1.5e\n", 
-	    trajectory_counter, plaquette_energy/(6.*VOLUME*g_nproc), temp, temp2, stilde_min, stilde_max);
+    fprintf(countfile, "%.8d %1.5e %1.5e %1.5e %1.5e\n", 
+	    trajectory_counter, temp, temp2, stilde_min/stilde_max, 1.);
     fclose(countfile);
   }
   etime = gettime();
-  if((g_proc_id == 0)) {
+  if((g_proc_id == 0) && g_debug_level > 4) {
     printf("# PHMC: time/s for eigenvalue computation %e\n", etime-atime);
   }
 }

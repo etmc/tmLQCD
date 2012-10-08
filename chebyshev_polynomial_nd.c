@@ -51,11 +51,6 @@ void chebyshev_coefs(double aa, double bb, double c[], int n, double exponent){
 
   inv_n=1./(double)n;
   f=calloc(n,sizeof(double));/*vector(0,n-1);*/
-  if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
-    printf("PHMC: chebyshev_polynomial\n");
-    printf("PHMC: n= %d inv_n=%e \n",n,inv_n);
-    printf("PHMC: allocation !!!\n");
-  }
   fflush(stdout);
   bma=0.5*(bb-aa);
   bpa=0.5*(bb+aa);
@@ -154,8 +149,8 @@ void degree_of_polynomial_nd(int * _degree_of_p, double ** coefs,
   random_spinor_field(sc,VOLUME/2, 1);
 
   if((g_proc_id == g_stdio_proc) && (g_debug_level > 0)){
-    printf("NDPOLY MD Polynomial: EVmin = %e  EVmax = %e  \n", EVMin, EVMax);
-    printf("NDPOLY MD Polynomial: the degree was set to: %d\n", degree_of_p);
+    printf("# NDPOLY MD Polynomial: EVmin = %e  EVmax = %e  \n", EVMin, EVMax);
+    printf("# NDPOLY MD Polynomial: the degree was set to: %d\n", degree_of_p);
     fflush(stdout);
   }
 
@@ -177,7 +172,7 @@ void degree_of_polynomial_nd(int * _degree_of_p, double ** coefs,
   if(g_proc_id == g_stdio_proc && g_debug_level > 0){
     /* this is || (P S P - 1)X ||^2 /|| 2X ||^2 */
     /* where X is a random spinor field         */
-    printf("NDPOLY MD Polynomial: relative squared accuracy in components:\n UP=%e  DN=%e \n", temp, temp2);
+    printf("# NDPOLY MD Polynomial: relative squared accuracy in components:\n# UP=%e  DN=%e \n", temp, temp2);
     /*     printf("NDPOLY: Sum remaining | c_n | = %e \n", sum); */
     fflush(stdout);
   }
@@ -188,7 +183,7 @@ void degree_of_polynomial_nd(int * _degree_of_p, double ** coefs,
     temp *= cheb_eval(degree_of_p, *coefs, EVMin);
     temp = 0.5*fabs(temp - 1);
     if(g_proc_id == g_stdio_proc) {
-      printf("PHMC: Delta_IR at s=%f:    | P s_low P - 1 |/2 = %e \n", EVMin, temp);
+      printf("# PHMC: Delta_IR at s=%f:    | P s_low P - 1 |/2 = %e \n", EVMin, temp);
     }
   }
   /* RECALL THAT WE NEED AN EVEN DEGREE !!!! */

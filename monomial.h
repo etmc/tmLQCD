@@ -83,6 +83,7 @@ typedef struct {
   /* second one needed for ND monomials */
   spinor * pf, * pf2;
   /* parameters for the POLY Monomial*/
+  int rec_ev;
   int MDPolyDegree, MaxPtildeDegree, PtildeDegree;
   double MDPolyLmin, MDPolyLmax;
   char MDPolyRootsFile[256];

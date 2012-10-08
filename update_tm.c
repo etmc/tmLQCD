@@ -65,7 +65,8 @@
 extern su3 ** g_gauge_field_saved;
 
 int update_tm(double *plaquette_energy, double *rectangle_energy, 
-              char * filename, const int return_check, const int acctest) {
+              char * filename, const int return_check, const int acctest, 
+	      const int traj_counter) {
 
   su3 *v, *w;
   static int ini_g_tmp = 0;
@@ -95,6 +96,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   hf.update_gauge_copy = g_update_gauge_copy;
   hf.update_gauge_energy = g_update_gauge_energy;
   hf.update_rectangle_energy = g_update_rectangle_energy;
+  hf.traj_counter = traj_counter;
   integrator_set_fields(&hf);
 
   strcpy(tmp_filename, ".conf.tmp");
@@ -355,7 +357,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   if(g_proc_id==0) {
     datafile = fopen(filename, "a");
     if (!bc_flag) { /* if Periodic Boundary Conditions */
-      fprintf(datafile, "%14.12f %14.12f %e ",
+      fprintf(datafile, "%.8d %14.12f %14.12f %e ", traj_counter,
               (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
     }
     for(i = 0; i < Integrator.no_timescales; i++) {

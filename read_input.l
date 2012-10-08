@@ -1148,8 +1148,8 @@ inline void rmQuotes(char *str){
   }
   {SPC}*ComputeEVFreq{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    g_rec_ev = a;
-    if(myverbose!=0) printf("  Frequency for computing EV's set to %d in line %d monomial %d\n", g_rec_ev, line_of_file, current_monomial);
+    mnl->rec_ev = a;
+    if(myverbose!=0) printf("  Frequency for computing EV's set to %d in line %d monomial %d\n", mnl->rec_ev, line_of_file, current_monomial);
   }
   {SPC}*ComputeOnlyEVs{EQL}yes {
     phmc_compute_evs=1;
@@ -2023,7 +2023,6 @@ int read_input(char * conf_file){
   dfl_poly_iter = 20;
 
   g_kappa = _default_g_kappa;
-  g_rec_ev = _default_g_rec_ev;
   g_mubar = _default_g_mubar;
   g_epsbar = _default_g_epsbar;
   g_mu = _default_g_mu;

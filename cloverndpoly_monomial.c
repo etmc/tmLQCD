@@ -156,6 +156,11 @@ void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   init_sw_fields();
   sw_term((const su3**)hf->gaugefield, mnl->kappa, mnl->c_sw); 
   sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
+  
+  // we measure before trajectory!
+  if((mnl->rec_ev != 0) || (hf->traj_counter%mnl->rec_ev == 0)) {
+    phmc_compute_ev(hf->traj_counter-1, id, &Qsw_pm_ndbipsi);
+  }
 
   mnl->energy0 = 0.;
   random_spinor_field(g_chi_up_spinor_field[0], VOLUME/2, mnl->rngrepro);
@@ -163,13 +168,6 @@ void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   random_spinor_field(g_chi_dn_spinor_field[0], VOLUME/2, mnl->rngrepro);
   mnl->energy0 += square_norm(g_chi_dn_spinor_field[0], VOLUME/2, 1);
-
-  if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
-    printf("PHMC: Here comes the computation of H_old with \n \n");
-    printf("PHMC: First: random spinors and their norm  \n ");
-    printf("PHMC: OLD Ennergy UP %e \n", mnl->energy0);
-    printf("PHMC: OLD Energy  DN + UP %e \n\n", mnl->energy0);
-  }
 
   Qsw_ndpsi(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
 	    g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0]);
@@ -189,16 +187,9 @@ void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   assign(mnl->pf2, g_chi_dn_spinor_field[0], VOLUME/2);
   
   temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
-  if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
-    printf("PHMC: Then: evaluate Norm of pseudofermion heatbath BHB \n ");
-    printf("PHMC: Norm of BHB up squared %e \n", temp);
-  }
 
   temp += square_norm(g_chi_dn_spinor_field[0], VOLUME/2, 1);
 
-  if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)){
-    printf("PHMC: Norm of BHB up + BHB dn squared %e \n\n", temp);
-  }
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called cloverndpoly_heatbath for id %d with g_running_phmc = %d\n", id, g_running_phmc);
   }
@@ -257,7 +248,7 @@ double cloverndpoly_acc(const int id, hamiltonian_field_t * const hf) {
   temp = square_norm(g_chi_dn_spinor_field[ij], VOLUME/2, 1);
   Ener[ij] += temp;
   
-  if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
+  if((g_proc_id == g_stdio_proc) && (g_debug_level > 20)) {
     printf("PHMC: Here comes the computation of H_new with \n \n");
     
     printf("PHMC: At j=%d  PHMC Final Energy %e \n", ij, mnl->energy1+Ener[ij]);
@@ -319,7 +310,7 @@ double cloverndpoly_acc(const int id, hamiltonian_field_t * const hf) {
     }
   }
   mnl->energy1 += Ener[ij];  /* this is quite sticky */
-  if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
+  if((g_proc_id == g_stdio_proc) && (g_debug_level > 20)) {
     printf("PHMC: At j = %d  P=%e +HMC Final Energy %e \n\n", ij, Ener[ij], mnl->energy1);
   }
   

@@ -210,7 +210,6 @@ EXTERN int g_sf_inc_wrap_sq;
 /*************************/
 
 /* Parameters for non-degenrate case */
-EXTERN int g_rec_ev;
 EXTERN double g_mubar, g_epsbar;
 EXTERN int g_use_clover_flag;
 

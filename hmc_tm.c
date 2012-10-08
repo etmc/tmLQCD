@@ -441,6 +441,7 @@ int main(int argc,char *argv[]) {
     fclose(countfile);
   }
 
+
   /* Loop for measurements */
   for(j = 0; j < Nmeas; j++) {
     if(g_proc_id == 0) {
@@ -449,7 +450,8 @@ int main(int argc,char *argv[]) {
 
     return_check = return_check_flag && (trajectory_counter%return_check_interval == 0);
 
-    accept = update_tm(&plaquette_energy, &rectangle_energy, datafilename, return_check, Ntherm<trajectory_counter);
+    accept = update_tm(&plaquette_energy, &rectangle_energy, datafilename, 
+		       return_check, Ntherm<trajectory_counter, trajectory_counter);
     Rate += accept;
 
     /* Save gauge configuration all Nsave times */
@@ -528,11 +530,6 @@ int main(int argc,char *argv[]) {
         meas->measurefunc(trajectory_counter, imeas, even_odd_flag);
       }
     }
-
-    if((g_rec_ev !=0) && (trajectory_counter%g_rec_ev == 0) && (g_running_phmc)) {
-      phmc_compute_ev(trajectory_counter, plaquette_energy);
-    }
-
 
     if(g_proc_id == 0) {
       verbose = 1;

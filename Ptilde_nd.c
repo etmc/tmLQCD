@@ -71,11 +71,7 @@ void Ptilde_cheb_coefs(double aa, double bb, double dd[], int n, double exponent
 
   inv_n=1./(double)n;
   f=calloc(n,sizeof(double));/*vector(0,n-1);*/
-  if(g_proc_id == g_stdio_proc && g_debug_level > 2){
-    printf("PHMC: PTILDE-chebyshev_polynomial\n");
-    printf("PHMC: n= %d inv_n=%e \n",n,inv_n);
-    printf("PHMC: allocation !!!\n");
-  }
+
   fflush(stdout);
   bma=0.5*(bb-aa);
   bpa=0.5*(bb+aa);
@@ -117,7 +113,6 @@ void Ptilde_ndpsi(spinor *R_s, spinor *R_c, double *dd, int n,
     *aux3c_=NULL, *aux3c=NULL;
   
   
-#if ( defined SSE || defined SSE2 )
   svs_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
   svs   = (spinor *)(((unsigned long int)(svs_)+ALIGN_BASE)&~ALIGN_BASE);
   ds_   = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
@@ -142,32 +137,6 @@ void Ptilde_ndpsi(spinor *R_s, spinor *R_c, double *dd, int n,
   aux2c = (spinor *)(((unsigned long int)(aux2c_)+ALIGN_BASE)&~ALIGN_BASE);
   aux3c_= calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
   aux3c = (spinor *)(((unsigned long int)(aux3c_)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  svs_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  svs = svs_;
-  ds_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  ds = ds_;
-  dds_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  dds = dds_;
-  auxs_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  auxs = auxs_;
-  aux2s_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  aux2s = aux2s_;
-  aux3s_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  aux3s = aux3s_;
-  svc_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  svc = svc_;
-  dc_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  dc = dc_;
-  ddc_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  ddc = ddc_;
-  auxc_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  auxc = auxc_;
-  aux2c_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  aux2c = aux2c_;
-  aux3c_=calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  aux3c = aux3c_;
-#endif
   
   fact1=4/(phmc_cheb_evmax-phmc_cheb_evmin);
   fact2=-2*(phmc_cheb_evmax+phmc_cheb_evmin)/(phmc_cheb_evmax-phmc_cheb_evmin);
@@ -256,7 +225,7 @@ double chebtilde_eval(int M, double *dd, double s){
  *
  * The externally accessible function is
  *
- *   void degree_of_Ptilde(void)
+ *   void degree_of_Ptilde
  *     Computation of (QdaggerQ)^1/4
  *     by using the chebyshev approximation for the function ()^1/4  
  *
@@ -281,7 +250,6 @@ void degree_of_Ptilde(int * _degree, double ** coefs,
 
   *coefs = calloc(phmc_max_ptilde_degree, sizeof(double)); 
 
-#if ( defined SSE || defined SSE2 || defined SSE3)
   ss_   = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
   auxs_ = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
   aux2s_= calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
@@ -295,15 +263,6 @@ void degree_of_Ptilde(int * _degree, double ** coefs,
   sc    = (spinor *)(((unsigned long int)(sc_)+ALIGN_BASE)&~ALIGN_BASE);
   auxc  = (spinor *)(((unsigned long int)(auxc_)+ALIGN_BASE)&~ALIGN_BASE);
   aux2c = (spinor *)(((unsigned long int)(aux2c_)+ALIGN_BASE)&~ALIGN_BASE);
-
-#else
-  ss   =calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
-  auxs =calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
-  aux2s=calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
-  sc   =calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
-  auxc =calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
-  aux2c=calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
-#endif
 
   Ptilde_cheb_coefs(EVMin, EVMax, *coefs, phmc_max_ptilde_degree, -1.0); 
 
@@ -368,7 +327,7 @@ void degree_of_Ptilde(int * _degree, double ** coefs,
     }
     /* || (Ptilde P S P Ptilde - 1)X ||^2 / || 2X ||^2 */
     if(g_proc_id == g_stdio_proc) {
-      printf("# NDPOLY Acceptance Polynomial: relative squared accuracy in components:\n UP=%e  DN=%e \n", temp, temp2);
+      printf("# NDPOLY Acceptance Polynomial: relative squared accuracy in components:\n# UP=%e  DN=%e \n", temp, temp2);
     }
 
     temp = chebtilde_eval(degree, *coefs, EVMin);
@@ -386,20 +345,11 @@ void degree_of_Ptilde(int * _degree, double ** coefs,
   }
 
   *_degree = degree;
-#if ( defined SSE || defined SSE2 || defined SSE3)
   free(ss_);
   free(auxs_);
   free(aux2s_);
   free(sc_);
   free(auxc_);
   free(aux2c_);
-#else
-  free(ss);
-  free(auxs);
-  free(aux2s);
-  free(sc);
-  free(auxc);
-  free(aux2c);
-#endif
   return;
 }

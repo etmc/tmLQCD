@@ -20,6 +20,8 @@
 #ifndef _PHMC_H
 #define _PHMC_H
 
+#include "solver/matrix_mult_typedef_bi.h"
+
 /* the normalisation constant appearing in the product representation of */
 /* the polynomial */
 extern double phmc_Cpol;
@@ -54,7 +56,7 @@ extern phmc_vars *phmc_var_stack;
 void pushPhmcVars();
 void popPhmcVars();
 
-void phmc_compute_ev(const int trajectory_counter,
-		     const double plaquette_energy);
+void phmc_compute_ev(const int trajectory_counter, const int id,
+		     matrix_mult_bi Qsq);
 
 #endif

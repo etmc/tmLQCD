@@ -163,6 +163,12 @@ void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
 
   ndpoly_set_global_parameter(mnl, phmc_exact_poly);
+
+  // we measure before trajectory!
+  if((mnl->rec_ev != 0) || (hf->traj_counter%mnl->rec_ev == 0)) {
+    phmc_compute_ev(hf->traj_counter-1, id, &Qtm_pm_ndbipsi);
+  }
+
   mnl->energy0 = 0.;
   random_spinor_field(g_chi_up_spinor_field[0], VOLUME/2, mnl->rngrepro);
   mnl->energy0 = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);

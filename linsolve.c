@@ -149,8 +149,8 @@ int solve_cg(spinor * const k, spinor * const l, double eps_sq, const int rel_pr
   /* 2*1320.0 because the linalg is over VOLUME/2 */
   flops = (2*(2*1320.0+2*3*4) + 2*3*4 + iteration*(2.*(2*1320.0+2*3*4) + 10*3*4))*VOLUME/2/1.0e6f;
   if(g_proc_id==0 && g_debug_level > 0) {
-    printf("CG: iter: %d eps_sq: %1.4e t/s: %1.4e\n", iteration, eps_sq, etime-atime); 
-    printf("CG: flopcount: t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
+    printf("# CG(linsolve): iter: %d eps_sq: %1.4e t/s: %1.4e\n", iteration, eps_sq, etime-atime); 
+    printf("# CG(linsolve): flopcount: t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
 	   etime-atime, flops/(etime-atime), g_nproc*flops/(etime-atime));
   }
   g_sloppy_precision = save_sloppy;
