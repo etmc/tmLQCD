@@ -116,8 +116,8 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
 		  g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], EO);
     
     /* \delta M_eo sandwitched by  chi[j-1]_e^\dagger  and  chi[2N-j]_o */
-    deriv_Sb(EO, mnl->w_fields[0], g_chi_up_spinor_field[mnl->MDPolyDegree], hf, mnl->forcefactor);      /* UP */
-    deriv_Sb(EO, mnl->w_fields[1], g_chi_dn_spinor_field[mnl->MDPolyDegree], hf, mnl->forcefactor);    /* DN */
+    deriv_Sb(EO, mnl->w_fields[0], g_chi_up_spinor_field[mnl->MDPolyDegree], hf, mnl->forcefactor);/* UP */
+    deriv_Sb(EO, mnl->w_fields[1], g_chi_dn_spinor_field[mnl->MDPolyDegree], hf, mnl->forcefactor);/* DN */
 
     /* Get the even parts of the  (2N-j)-th  chi_spinors */
     H_eo_sw_ndpsi(mnl->w_fields[2], mnl->w_fields[3], 
@@ -128,14 +128,14 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
     deriv_Sb(OE, g_chi_dn_spinor_field[j-1], mnl->w_fields[3], hf, mnl->forcefactor);
 
     // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
-    sw_spinor(EO, g_chi_up_spinor_field[mnl->MDPolyDegree], g_chi_up_spinor_field[j-1]);
+    sw_spinor(OO, g_chi_up_spinor_field[j-1], g_chi_up_spinor_field[mnl->MDPolyDegree]);
     // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-    sw_spinor(OE, mnl->w_fields[0], mnl->w_fields[2]);
+    sw_spinor(EE, mnl->w_fields[2], mnl->w_fields[0]);
 
     // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
-    sw_spinor(EO, g_chi_dn_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[j-1]);
+    sw_spinor(OO, g_chi_dn_spinor_field[j-1], g_chi_dn_spinor_field[mnl->MDPolyDegree]);
     // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-    sw_spinor(OE, mnl->w_fields[1], mnl->w_fields[3]);
+    sw_spinor(EE, mnl->w_fields[3], mnl->w_fields[1]);
 
   }
   //to be coded
