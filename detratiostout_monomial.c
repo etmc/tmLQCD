@@ -52,6 +52,7 @@
 
 #include "dirty_shameful_business.h"
 #include <smearing/stout.h>
+#include <io/utils.h>
 
 extern int ITER_MAX_BCG;
 extern int ITER_MAX_CG;
@@ -233,7 +234,7 @@ void detratiostout_heatbath(const int id, hamiltonian_field_t * const hf)
   /* FIXME Local smearing operation */
   if (!ohnohack_stout)
     ohnohack_stout = construct_stout_control(ohnohack_stout_rho, ohnohack_stout_no_iter, ohnohack_stout_calculate_force);
-  stout_smear(ohnohack_stout, g_gf);
+  stout_smear(ohnohack_stout, _AS_GAUGE_FIELD_T(g_gauge_field));
 
   /* FIXME We now have a properly smeared field in ohnohack_stout.result
    * We need this field to replace g_gauge_field, so that Hopping_Matrix uses it.

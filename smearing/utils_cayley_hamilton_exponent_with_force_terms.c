@@ -33,8 +33,20 @@ void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Com
                       A->c10 * A->c01 + A->c11 * A->c11 + A->c12 * A->c21 +
                       A->c20 * A->c02 + A->c21 * A->c12 + A->c22 * A->c22  );
 
+  /* There is a special, but common (cold start) case where the given matrix is actually 0!
+   * We need to account for it. */
+  if (c0 == 0 && c1 == 0) 
+  {
+    _su3_one(*expA);
+    _su3_one(*B1);
+    _su3_one(*B2);
+    *f1 = 0.0;
+    *f2 = 0.0;
+    return;
+  }
+
   double c0max = 2.0 * pow(fac_1_3 * c1, 1.5);
-  double theta_3 = fac_1_3 * acos(c0 / c0max); 
+  double theta_3 = fac_1_3 * acos(c0 / c0max);
 
   double u = sqrt(fac_1_3 * c1) * cos(theta_3);
   double w = sqrt(c1) * sin(theta_3);
