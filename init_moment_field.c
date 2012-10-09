@@ -59,21 +59,12 @@ int init_moment_field(const int V, const int VR) {
 
   /* FIXME Replacing by an adjoint_field_t setup */
   df = get_adjoint_field();
-  if((void*)(df = (su3adj*)calloc(4*VR+1, sizeof(su3adj))) == NULL){
-    printf ("malloc errno : %d\n",errno); 
-    errno = 0;
-    return(3);
-  }
   if((void*)(df0 = (su3adj**)calloc(VR,sizeof(su3adj*))) == NULL) {
     printf ("malloc errno : %d\n",errno); 
     errno = 0;
     return(4);
   }
-#if ( defined SSE || defined SSE2 || defined SSE3)
-  df0[0] = (su3adj*)(((unsigned long int)(df)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  df0[0] = df;
-#endif
+  df0[0] = *df;
   
   for(i = 1; i < VR; i++) {
     df0[i] = df0[i-1]+4; 
@@ -105,6 +96,6 @@ int init_moment_field(const int V, const int VR) {
 void free_moment_field() {
 
   free(mo);
-  free(df);
+  return_adjoint_field(&df);
   free(du);
 }
