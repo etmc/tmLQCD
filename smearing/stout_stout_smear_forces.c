@@ -12,6 +12,9 @@ void stout_smear_forces(stout_control *control, adjoint_field_t in)
   if (!control->smearing_performed)
     fatal_error("Stout smearing not yet performed.", "stout_smear_forces");
   
+  fprintf(stderr, "[DEBUG] START -- Stout smear forces.\n");
+  fflush(stderr);
+
   gauge_field_t smeared_force = get_gauge_field();
   
   /* We'll need the forces in their tangent space representation, so let's first build this up. */
@@ -22,8 +25,15 @@ void stout_smear_forces(stout_control *control, adjoint_field_t in)
   {
     construct_intermediates(control->trace[iter], control->U[iter + 1] /* = V */, control->U[iter] /* = U */, smeared_force);
     add_stout_terms_to_forces(smeared_force, control->rho, control->trace[iter], control->U[iter + 1] /* = V */, control->U[iter] /* = U */);
+
+    fprintf(stderr, "[DEBUG] ITER %d -- Stout smear forces.\n", iter);
+    fflush(stderr);
   }
 
   /* The force terms are still in the tangent space representation, so project them back to the adjoint one */
   gauge_to_adjoint(control->force_result, smeared_force);
+
+  return_gauge_field(&smeared_force);
+  fprintf(stderr, "[DEBUG] FINISH -- Stout smear forces.\n");
+  fflush(stderr);
 }

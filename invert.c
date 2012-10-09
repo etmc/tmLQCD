@@ -523,7 +523,7 @@ int main(int argc, char *argv[])
   free_dfl_subspace();
   free_geometry_indices();
   free_spinor_field();
-  free_moment_field();
+/*  free_moment_field();*/
   free_chi_spinor_field();
 
   finalize_gauge_buffers();

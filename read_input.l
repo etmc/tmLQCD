@@ -799,6 +799,10 @@ inline void rmQuotes(char *str){
     mnl->type = DETRATIO;
     strcpy((*mnl).name, "DETRATIO");
   }
+  else if(strcmp(yytext, "DETRATIOSTOUT")==0) {
+    mnl->type = DETRATIOSTOUT;
+    strcpy((*mnl).name, "DETRATIOSTOUT");
+  }
   else if(strcmp(yytext, "NDDETRATIO")==0) {
     mnl->type = NDDETRATIO;
     strcpy((*mnl).name, "NDDETRATIO");

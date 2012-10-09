@@ -5,6 +5,9 @@ static void smear_with_force_terms(stout_control *control, gauge_field_t in)
   su3 staples;
   control->U[0] = in; /* Shallow copy intended */
   
+  fprintf(stderr, "[DEBUG] START -- Stout smear with force terms.\n");
+  fflush(stderr);
+
   for(unsigned int iter = 0; iter < control->iterations; ++iter)
   {
     for (unsigned int x = 0; x < VOLUME; ++x)
@@ -15,7 +18,11 @@ static void smear_with_force_terms(stout_control *control, gauge_field_t in)
                                        control->rho, &staples, &control->U[iter][x][mu]);
       }
     exchange_gauge_field(control->U[iter + 1]);
+    fprintf(stderr, "[DEBUG] ITER %d -- Stout smear with force terms.\n", iter);
+    fflush(stderr);
   }
   
   control->smearing_performed = 1;
+  fprintf(stderr, "[DEBUG] FINISH -- Stout smear with force terms.\n");
+  fflush(stderr);
 }
