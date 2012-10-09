@@ -17,8 +17,8 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-#ifndef _DETRATIO_MONOMIAL_H
-#define _DETRATIO_MONOMIAL_H
+#ifndef _DETRATIOSTOUT_MONOMIAL_H
+#define _DETRATIOSTOUT_MONOMIAL_H
 
 #include "hamiltonian_field.h"
 

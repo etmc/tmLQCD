@@ -38,6 +38,7 @@
 #define CLOVERTRLOG 8
 #define CLOVERDET 9
 #define CLOVERDETRATIO 10
+#define DETRATIOSTOUT 11
 
 #define max_no_monomials 20
 
@@ -119,6 +120,7 @@ typedef struct {
 #include "clover_trlog_monomial.h"
 #include "cloverdet_monomial.h"
 #include "cloverdetratio_monomial.h"
+#include "detratiostout_monomial.h"
 
 /* list of all monomials */
 extern monomial monomial_list[max_no_monomials];

@@ -6,7 +6,7 @@ void allocate_ ## NAME ## _buffers(unsigned int count) 								\
 														\
   for (unsigned int ctr = 0; ctr < count; ++ctr)								\
   {														\
-    void *p = aalloc(sizeof(DATATYPE) * VOLUMEPLUSRAND + 1);			                                \
+    void *p = aalloc(sizeof(DATATYPE) * (VOLUMEPLUSRAND + g_dbw2rand) + 1);			                                \
     if (p == NULL)												\
       fatal_error("Could not allocate the requested amount of memory.", "allocate_" #NAME "_buffers");		\
 														\

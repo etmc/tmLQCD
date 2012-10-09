@@ -28,7 +28,10 @@
 #include "su3adj.h"
 #include "sse.h"
 
-su3adj * mo=NULL, *df=NULL, *du=NULL;
+#include <buffers/adjoint.h>
+
+su3adj * mo=NULL, *du=NULL;
+adjoint_field_t df;
 
 int init_moment_field(const int V, const int VR) {
   int i = 0;
@@ -54,7 +57,9 @@ int init_moment_field(const int V, const int VR) {
     moment[i] = moment[i-1]+4;
   } 
 
-  if((void*)(df = (su3adj*)calloc(4*VR+1, sizeof(su3adj))) == NULL) {
+  /* FIXME Replacing by an adjoint_field_t setup */
+  df = get_adjoint_field();
+  if((void*)(df = (su3adj*)calloc(4*VR+1, sizeof(su3adj))) == NULL){
     printf ("malloc errno : %d\n",errno); 
     errno = 0;
     return(3);

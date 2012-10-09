@@ -34,6 +34,4 @@ typedef struct {
   int update_rectangle_energy;
 } hamiltonian_field_t;
 
-
-
 #endif

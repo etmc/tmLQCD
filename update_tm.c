@@ -85,7 +85,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   hamiltonian_field_t hf;
   paramsXlfInfo *xlfInfo;
 
-  /* AD_NOTE -- We can probably use the stouting control here, add it to hf. */
+  /* FIXME -- We can probably use the stouting control here, add it to hf. */
   /* But then how do we smear the forces afterwards? */
   /* If we add the smearing control, then the gauge field is redundant again... */
   /* Could be fixed by adding a NULL control. */

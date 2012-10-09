@@ -50,6 +50,7 @@
 #include "boundary.h"
 #include "detratiostout_monomial.h"
 
+#include "dirty_shameful_business.h"
 #include <smearing/stout.h>
 
 extern int ITER_MAX_BCG;
@@ -70,13 +71,15 @@ stout_control * ohnohack_stout = NULL;
 
 void detratiostout_derivative(const int no, hamiltonian_field_t * const hf)
 {
-  /* FIXME Local check for smearing */
+  /* FIXME Local check for smearing. It will also be checked inside the smear_forces routine, but we want to check sanity 
+   * as early as possible to detect issues as soon as they occur. */
   if (!ohnohack_stout)
     ohnohack_stout = construct_stout_control(ohnohack_stout_rho, ohnohack_stout_no_iter, ohnohack_stout_calculate_force);
-  if (!ohnohack_stout.calculate_force_terms || !ohnohackstout.smearing_performed)
+  if (!ohnohack_stout->calculate_force_terms || !ohnohack_stout->smearing_performed)
     fatal_error("Derivative smearing attempted without force terms available in stout control!", "detratiostout_derivative");
 
-  /* FIXME If we're here, we should have all we need to perform the smearing of the force terms. */
+  /* FIXME If we're here, we should have all we need to perform the smearing of the force terms. 
+   * We'll need it afterwards, though, since the modification operates on the original derivative terms. */
   int saveiter = ITER_MAX_BCG;
 
   monomial * mnl = &monomial_list[no];
@@ -212,12 +215,14 @@ void detratiostout_derivative(const int no, hamiltonian_field_t * const hf)
     /* The sign is opposite!! */
     mul_r(g_spinor_field[DUM_DERI], -1., mnl->pf, VOLUME);
     
-    /* \delta Q sandwitched by Y^\dagger and X */
+    /* \delta Q sandwiched by Y^\dagger and X */
     deriv_Sb_D_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], hf, mnl->forcefactor);
   }
   g_mu = g_mu1;
   boundary(g_kappa);
 
+  stout_smear_forces(ohnohack_stout, (adjoint_field_t)&(*hf->derivative));
+  
   ITER_MAX_BCG = saveiter;
   return;
 }
@@ -225,8 +230,15 @@ void detratiostout_derivative(const int no, hamiltonian_field_t * const hf)
 
 void detratiostout_heatbath(const int id, hamiltonian_field_t * const hf)
 {
+  /* FIXME Local smearing operation */
   if (!ohnohack_stout)
     ohnohack_stout = construct_stout_control(ohnohack_stout_rho, ohnohack_stout_no_iter, ohnohack_stout_calculate_force);
+  stout_smear(ohnohack_stout, g_gf);
+
+  /* FIXME We now have a properly smeared field in ohnohack_stout.result
+   * We need this field to replace g_gauge_field, so that Hopping_Matrix uses it.
+   * Otherwise, this function should proceed as it would normally! */
+  ohnohack_remap_g_gauge_field(ohnohack_stout->result);
 
   int saveiter = ITER_MAX_BCG;
   monomial * mnl = &monomial_list[id];
@@ -279,6 +291,9 @@ void detratiostout_heatbath(const int id, hamiltonian_field_t * const hf)
   g_mu = g_mu1;
   boundary(g_kappa);
   ITER_MAX_BCG = saveiter;
+  
+  /* FIXME We continue with the flow of the hmc code, so replace g_gauge_field with the original again */
+  ohnohack_remap_g_gauge_field(g_gf);
   return;
 }
 
@@ -287,12 +302,12 @@ double detratiostout_acc(const int id, hamiltonian_field_t * const hf)
   /* FIXME Local smearing operation */
   if (!ohnohack_stout)
     ohnohack_stout = construct_stout_control(ohnohack_stout_rho, ohnohack_stout_no_iter, ohnohack_stout_calculate_force);
-  stout_smear(&ohnohack_stout, g_gf);
+  stout_smear(ohnohack_stout, g_gf);
 
   /* FIXME We now have a properly smeared field in ohnohack_stout.result
    * We need this field to replace g_gauge_field, so that Hopping_Matrix uses it.
    * Otherwise, this function should proceed as it would normally! */
-  ohnohack_remap_g_gauge_field(ohnohack_stout.result);
+  ohnohack_remap_g_gauge_field(ohnohack_stout->result);
 
   monomial * mnl = &monomial_list[id];
   int saveiter = ITER_MAX_BCG;
