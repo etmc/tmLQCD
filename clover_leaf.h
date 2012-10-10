@@ -32,7 +32,8 @@ double sw_trace_nd(const int ieo, const double mu, const double eps);
 void sw_invert(const int ieo, const double mu);
 void sw_invert_nd(const double mshift);
 void sw_deriv(const int ieo, const double mu);
-void sw_spinor(const int ieo, const spinor * const kk, const spinor * const ll);
+void sw_deriv_nd(const int ieo);
+void sw_spinor(const int ieo, const spinor * const kk, const spinor * const ll, const double fac);
 void sw_all(hamiltonian_field_t * const hf, const double kappa, const double c_sw);
 int init_swpm(const int V);
 

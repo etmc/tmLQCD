@@ -125,18 +125,29 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
     deriv_Sb(OE, g_chi_dn_spinor_field[j-1], mnl->w_fields[3], hf, mnl->forcefactor);
 
     // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
-    sw_spinor(EE, mnl->w_fields[3], mnl->w_fields[0]);
+    sw_spinor(EE, mnl->w_fields[3], mnl->w_fields[0], mnl->forcefactor);
     // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-    sw_spinor(OO, g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[mnl->MDPolyDegree]);
+    sw_spinor(OO, g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[mnl->MDPolyDegree], mnl->forcefactor);
 
     // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
-    sw_spinor(EE, mnl->w_fields[2], mnl->w_fields[1]);
+    sw_spinor(EE, mnl->w_fields[2], mnl->w_fields[1], mnl->forcefactor);
     // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-    sw_spinor(OO, g_chi_dn_spinor_field[j-1], g_chi_up_spinor_field[mnl->MDPolyDegree]);
+    sw_spinor(OO, g_chi_dn_spinor_field[j-1], g_chi_up_spinor_field[mnl->MDPolyDegree], mnl->forcefactor);
   }
-  //to be coded
-  //sw_deriv(EE, mnl->mu);
-  sw_all(hf, mnl->kappa*mnl->forcefactor, mnl->c_sw);
+  // trlog part does not depend on the normalisation of the polynomial
+  sw_deriv_nd(EE);
+  sw_all(hf, mnl->kappa, mnl->c_sw);
+
+  for(int i = 0; i < VOLUME; i++) { 
+    for(int mu = 0; mu < 4; mu++) { 
+      _su3_zero(swm[i][mu]);
+      _su3_zero(swp[i][mu]);
+    }
+  }
+
+  //sw_invert(EE, mnl->mubar);
+  //sw_deriv(EE, mnl->mubar);
+  //sw_all(hf, mnl->kappa, mnl->c_sw);
 
   return;
 }

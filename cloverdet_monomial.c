@@ -108,10 +108,10 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   // computes the insertion matrices for S_eff
   // result is written to swp and swm
   // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
-  sw_spinor(EE, mnl->w_fields[2], mnl->w_fields[3]);
+  sw_spinor(EE, mnl->w_fields[2], mnl->w_fields[3], mnl->forcefactor);
   
   // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-  sw_spinor(OO, mnl->w_fields[0], mnl->w_fields[1]);
+  sw_spinor(OO, mnl->w_fields[0], mnl->w_fields[1], mnl->forcefactor);
   
   // compute the contribution for the det-part
   // we again compute only the insertion matrices for S_det
@@ -123,7 +123,7 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   // finally, using the insertion matrices stored in swm and swp
   // we compute the terms F^{det} and F^{sw} at once
   // uses the gaugefields in hf and changes the derivative field in hf
-  sw_all(hf, mnl->kappa*mnl->forcefactor, mnl->c_sw);
+  sw_all(hf, mnl->kappa, mnl->c_sw);
 
   g_mu = g_mu1;
   g_mu3 = 0.;

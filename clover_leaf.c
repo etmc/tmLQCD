@@ -588,6 +588,26 @@ void mult_6x6(_Complex double a[6][6], _Complex double b[6][6], _Complex double 
   return;
 }
 
+void add_6x6(_Complex double a[6][6], _Complex double b[6][6], _Complex double d[6][6]) {
+
+  for(int i = 0; i < 6; i++) {
+    for(int j = 0; j < 6; j++) {
+      a[i][j] = b[i][j] + d[i][j];
+    }
+  }
+  return;
+}
+
+void sub_6x6(_Complex double a[6][6], _Complex double b[6][6], _Complex double d[6][6]) {
+
+  for(int i = 0; i < 6; i++) {
+    for(int j = 0; j < 6; j++) {
+      a[i][j] = b[i][j] - d[i][j];
+    }
+  }
+  return;
+}
+
 void copy_6x6(_Complex double a[6][6], const _Complex double b[6][6]) {
   for(int i = 0; i < 6; i++) {
     for(int j = 0; j < 6; j++) {
@@ -813,15 +833,15 @@ void sw_deriv(const int ieo, const double mu) {
 #endif
     x = g_eo2lexic[icx];
     /* compute the insertion matrix */
-    _su3_plus_su3(lswp[0],sw_inv[icy][0][1],sw_inv[icy][0][0]);
-    _su3_plus_su3(lswp[1],sw_inv[icy][1][1],sw_inv[icy][1][0]);
-    _su3_plus_su3(lswp[2],sw_inv[icy][2][1],sw_inv[icy][2][0]);
-    _su3_plus_su3(lswp[3],sw_inv[icy][3][1],sw_inv[icy][3][0]);
+    _su3_plus_su3(lswp[0], sw_inv[icy][0][1], sw_inv[icy][0][0]);
+    _su3_plus_su3(lswp[1], sw_inv[icy][1][1], sw_inv[icy][1][0]);
+    _su3_plus_su3(lswp[2], sw_inv[icy][2][1], sw_inv[icy][2][0]);
+    _su3_plus_su3(lswp[3], sw_inv[icy][3][1], sw_inv[icy][3][0]);
 
-    _su3_minus_su3(lswm[0],sw_inv[icy][0][1],sw_inv[icy][0][0]);
-    _su3_minus_su3(lswm[1],sw_inv[icy][1][1],sw_inv[icy][1][0]);
-    _su3_minus_su3(lswm[2],sw_inv[icy][2][1],sw_inv[icy][2][0]);
-    _su3_minus_su3(lswm[3],sw_inv[icy][3][1],sw_inv[icy][3][0]);
+    _su3_minus_su3(lswm[0], sw_inv[icy][0][1], sw_inv[icy][0][0]);
+    _su3_minus_su3(lswm[1], sw_inv[icy][1][1], sw_inv[icy][1][0]);
+    _su3_minus_su3(lswm[2], sw_inv[icy][2][1], sw_inv[icy][2][0]);
+    _su3_minus_su3(lswm[3], sw_inv[icy][3][1], sw_inv[icy][3][0]);
     
     /* add up to swm[] and swp[] */
     _su3_refac_acc(swm[x][0], fac, lswm[0]);
@@ -834,15 +854,15 @@ void sw_deriv(const int ieo, const double mu) {
     _su3_refac_acc(swp[x][3], fac, lswp[3]);
     if(fabs(mu) > 0.) {
       /* compute the insertion matrix */
-      _su3_plus_su3(lswp[0],sw_inv[icy+VOLUME/2][0][1],sw_inv[icy+VOLUME/2][0][0]);
-      _su3_plus_su3(lswp[1],sw_inv[icy+VOLUME/2][1][1],sw_inv[icy+VOLUME/2][1][0]);
-      _su3_plus_su3(lswp[2],sw_inv[icy+VOLUME/2][2][1],sw_inv[icy+VOLUME/2][2][0]);
-      _su3_plus_su3(lswp[3],sw_inv[icy+VOLUME/2][3][1],sw_inv[icy+VOLUME/2][3][0]); 
+      _su3_plus_su3(lswp[0], sw_inv[icy+VOLUME/2][0][1], sw_inv[icy+VOLUME/2][0][0]);
+      _su3_plus_su3(lswp[1], sw_inv[icy+VOLUME/2][1][1], sw_inv[icy+VOLUME/2][1][0]);
+      _su3_plus_su3(lswp[2], sw_inv[icy+VOLUME/2][2][1], sw_inv[icy+VOLUME/2][2][0]);
+      _su3_plus_su3(lswp[3], sw_inv[icy+VOLUME/2][3][1], sw_inv[icy+VOLUME/2][3][0]); 
 
-      _su3_minus_su3(lswm[0],sw_inv[icy+VOLUME/2][0][1],sw_inv[icy+VOLUME/2][0][0]);
-      _su3_minus_su3(lswm[1],sw_inv[icy+VOLUME/2][1][1],sw_inv[icy+VOLUME/2][1][0]);
-      _su3_minus_su3(lswm[2],sw_inv[icy+VOLUME/2][2][1],sw_inv[icy+VOLUME/2][2][0]);
-      _su3_minus_su3(lswm[3],sw_inv[icy+VOLUME/2][3][1],sw_inv[icy+VOLUME/2][3][0]);
+      _su3_minus_su3(lswm[0], sw_inv[icy+VOLUME/2][0][1], sw_inv[icy+VOLUME/2][0][0]);
+      _su3_minus_su3(lswm[1], sw_inv[icy+VOLUME/2][1][1], sw_inv[icy+VOLUME/2][1][0]);
+      _su3_minus_su3(lswm[2], sw_inv[icy+VOLUME/2][2][1], sw_inv[icy+VOLUME/2][2][0]);
+      _su3_minus_su3(lswm[3], sw_inv[icy+VOLUME/2][3][1], sw_inv[icy+VOLUME/2][3][0]);
       
       /* add up to swm[] and swp[] */
       _su3_refac_acc(swm[x][0], fac, lswm[0]);
@@ -864,6 +884,95 @@ void sw_deriv(const int ieo, const double mu) {
   return;
 }
 
+void sw_deriv_nd(const int ieo) {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+  int icy;
+  int ioff;
+  int x;
+  double fac = 1.0000;
+  su3 ALIGN lswp[4], lswm[4], v;
+  _Complex double ALIGN a0[6][6], a1[6][6], b[6][6], c[6][6];
+
+  /* convention: Tr clover-leaf times insertion */
+  if(ieo == 0) {
+    ioff=0;
+  } 
+  else {
+    ioff = (VOLUME+RAND)/2;
+  }
+
+#ifndef OMP
+  icy = 0;
+#endif
+
+#ifdef OMP
+#pragma omp for
+#endif
+  for(int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
+#ifdef OMP
+    icy = icx - ioff;
+#endif
+    x = g_eo2lexic[icx];
+    /* compute the insertion matrix */
+    populate_6x6_matrix(b, &sw[x][0][0], 0, 0);
+    populate_6x6_matrix(b, &sw[x][1][0], 0, 3);
+    _su3_dagger(v, sw[x][1][0]); 
+    populate_6x6_matrix(b, &v, 3, 0);
+    populate_6x6_matrix(b, &sw[x][2][0], 3, 3);
+
+    populate_6x6_matrix(c, &sw_inv[icy][0][0], 0, 0);
+    populate_6x6_matrix(c, &sw_inv[icy][1][0], 0, 3);
+    populate_6x6_matrix(c, &sw_inv[icy][2][0], 3, 3);
+    populate_6x6_matrix(c, &sw_inv[icy][3][0], 3, 0);
+
+    mult_6x6(a0, b, c);
+
+    populate_6x6_matrix(b, &sw[x][0][1], 0, 0);
+    populate_6x6_matrix(b, &sw[x][1][1], 0, 3);
+    _su3_dagger(v, sw[x][1][1]); 
+    populate_6x6_matrix(b, &v, 3, 0);
+    populate_6x6_matrix(b, &sw[x][2][1], 3, 3);
+
+    populate_6x6_matrix(c, &sw_inv[icy][0][1], 0, 0);
+    populate_6x6_matrix(c, &sw_inv[icy][1][1], 0, 3);
+    populate_6x6_matrix(c, &sw_inv[icy][2][1], 3, 3);
+    populate_6x6_matrix(c, &sw_inv[icy][3][1], 3, 0);
+
+    mult_6x6(a1, b, c);
+    add_6x6(b, a1, a0);
+    get_3x3_block_matrix(&lswp[0], b, 0, 0);
+    get_3x3_block_matrix(&lswp[1], b, 0, 3);
+    get_3x3_block_matrix(&lswp[2], b, 3, 3);
+    get_3x3_block_matrix(&lswp[3], b, 3, 0);
+
+    sub_6x6(b, a1, a0);
+    get_3x3_block_matrix(&lswm[0], b, 0, 0);
+    get_3x3_block_matrix(&lswm[1], b, 0, 3);
+    get_3x3_block_matrix(&lswm[2], b, 3, 3);
+    get_3x3_block_matrix(&lswm[3], b, 3, 0);
+    
+    /* add up to swm[] and swp[] */
+    _su3_refac_acc(swm[x][0], fac, lswm[0]);
+    _su3_refac_acc(swm[x][1], fac, lswm[1]);
+    _su3_refac_acc(swm[x][2], fac, lswm[2]);
+    _su3_refac_acc(swm[x][3], fac, lswm[3]);
+    _su3_refac_acc(swp[x][0], fac, lswp[0]);
+    _su3_refac_acc(swp[x][1], fac, lswp[1]);
+    _su3_refac_acc(swp[x][2], fac, lswp[2]);
+    _su3_refac_acc(swp[x][3], fac, lswp[3]);
+#ifndef OMP
+    ++icy;
+#endif
+  }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+  return;
+}
+
 
 // direct product of Y_e(o) and X_e(o) in colour space   
 // with insertion matrix at site x
@@ -871,7 +980,8 @@ void sw_deriv(const int ieo, const double mu) {
 // result is again stored in swm and swp                 
 // includes a gamma5 multiplication for kk
 
-void sw_spinor(const int ieo, const spinor * const kk, const spinor * const ll) {
+void sw_spinor(const int ieo, const spinor * const kk, const spinor * const ll, 
+	       const double fac) {
 #ifdef OMP
 #pragma omp parallel
   {
@@ -923,14 +1033,14 @@ void sw_spinor(const int ieo, const spinor * const kk, const spinor * const ll) 
     _su3_minus_su3(lswm[3],u3,v3);
     
     /* add up to swm[0] and swp[0] */
-    _su3_acc(swm[x][0], lswm[0]);
-    _su3_acc(swm[x][1], lswm[1]);
-    _su3_acc(swm[x][2], lswm[2]);
-    _su3_acc(swm[x][3], lswm[3]);
-    _su3_acc(swp[x][0], lswp[0]);
-    _su3_acc(swp[x][1], lswp[1]);
-    _su3_acc(swp[x][2], lswp[2]);
-    _su3_acc(swp[x][3], lswp[3]);
+    _su3_refac_acc(swm[x][0], fac, lswm[0]);
+    _su3_refac_acc(swm[x][1], fac, lswm[1]);
+    _su3_refac_acc(swm[x][2], fac, lswm[2]);
+    _su3_refac_acc(swm[x][3], fac, lswm[3]);
+    _su3_refac_acc(swp[x][0], fac, lswp[0]);
+    _su3_refac_acc(swp[x][1], fac, lswp[1]);
+    _su3_refac_acc(swp[x][2], fac, lswp[2]);
+    _su3_refac_acc(swp[x][3], fac, lswp[3]);
   }
 #ifdef OMP
   } /* OpenMP closing brace */
