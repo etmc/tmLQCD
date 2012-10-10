@@ -238,7 +238,7 @@ double cloverndpoly_acc(const int id, hamiltonian_field_t * const hf) {
   mnl->energy1 = square_norm(g_chi_up_spinor_field[ij], VOLUME/2, 1);
   mnl->energy1 += square_norm(g_chi_dn_spinor_field[ij], VOLUME/2, 1);
   
-  if(g_proc_id == 0 && g_debug_level > 0) {
+  if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called cloverndpoly_acc for id %d %d dH = %1.4e\n", id, g_running_phmc, mnl->energy1 - mnl->energy0);
   }
   return(mnl->energy1 - mnl->energy0);
