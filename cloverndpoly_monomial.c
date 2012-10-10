@@ -164,7 +164,7 @@ void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
   
   // we measure before trajectory!
-  if((mnl->rec_ev != 0) || (hf->traj_counter%mnl->rec_ev == 0)) {
+  if((mnl->rec_ev != 0) && (hf->traj_counter%mnl->rec_ev == 0)) {
     phmc_compute_ev(hf->traj_counter-1, id, &Qsw_pm_ndbipsi);
   }
 
