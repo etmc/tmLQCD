@@ -78,7 +78,9 @@ void detratiostout_derivative(const int no, hamiltonian_field_t * const hf)
     ohnohack_stout = construct_stout_control(ohnohack_stout_rho, ohnohack_stout_no_iter, ohnohack_stout_calculate_force);
   if (!ohnohack_stout->calculate_force_terms || !ohnohack_stout->smearing_performed)
     fatal_error("Derivative smearing attempted without force terms available in stout control!", "detratiostout_derivative");
-
+  stout_smear(ohnohack_stout, g_gf);
+  ohnohack_remap_g_gauge_field(ohnohack_stout->result);
+  
   /* FIXME If we're here, we should have all we need to perform the smearing of the force terms. 
    * We'll need it afterwards, though, since the modification operates on the original derivative terms. */
   int saveiter = ITER_MAX_BCG;
@@ -223,6 +225,9 @@ void detratiostout_derivative(const int no, hamiltonian_field_t * const hf)
   boundary(g_kappa);
 
   stout_smear_forces(ohnohack_stout, (adjoint_field_t)&(*hf->derivative));
+  
+  /* FIXME We continue with the flow of the hmc code, so replace g_gauge_field with the original again */
+  ohnohack_remap_g_gauge_field(g_gf);
   
   ITER_MAX_BCG = saveiter;
   return;
