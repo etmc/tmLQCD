@@ -47,6 +47,7 @@ monomial monomial_list[max_no_monomials];
 int no_monomials = 0;
 int no_gauge_monomials = 0;
 int clover_trlog_monomial = 0;
+int clovernd_trlog_monomial = 0;
 static spinor * _pf;
 spinor ** w_fields;
 const int no_wfields = 4;
@@ -134,6 +135,7 @@ int init_monomials(const int V, const int even_odd_flag) {
   int retval;
   spinor * __pf = NULL;
   double sw_mu=0., sw_k=0., sw_c=0.;
+  double swn_mubar=0., swn_epsbar = 0., swn_k=0., swn_c=0.;
   for(int i = 0; i < no_monomials; i++) {
     if((monomial_list[i].type != GAUGE) && (monomial_list[i].type != SFGAUGE)) no++;
     /* non-degenerate monomials need two pseudo fermion fields */
@@ -237,6 +239,11 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].derivativefunction = &cloverndpoly_derivative;
 	monomial_list[i].pf2 = __pf+no*V;
 	monomial_list[i].even_odd_flag = 1;
+	clovernd_trlog_monomial = 1;
+	swn_c = monomial_list[i].c_sw;
+	swn_k = monomial_list[i].kappa;
+	swn_mubar = monomial_list[i].mubar;
+	swn_epsbar = monomial_list[i].epsbar;
 	//monomial_list[i].Qsq = &Qsw_pm_ndpsi;
 	//monomial_list[i].Qp = &Qsw_ndpsi;
 	//monomial_list[i].Qm = &Qsw_dagger_ndpsi;
@@ -296,6 +303,28 @@ int init_monomials(const int V, const int even_odd_flag) {
       printf("# Initialised clover_trlog_monomial, no_monomials= %d\n", no_monomials);
     }
   }
+  if(clovernd_trlog_monomial && even_odd_flag) {
+    monomial_list[no_monomials].type = CLOVERNDTRLOG;
+    strcpy( monomial_list[no_monomials].name, "CLOVERNDTRLOG");
+    add_monomial(CLOVERNDTRLOG);
+    monomial_list[no_monomials-1].pf = NULL;
+    monomial_list[no_monomials-1].id = no_monomials-1;
+    // set the parameters according to cloverdet monomial
+    // this need alltogether a more general approach
+    monomial_list[no_monomials-1].c_sw = swn_c;
+    monomial_list[no_monomials-1].mubar = swn_mubar;
+    monomial_list[no_monomials-1].epsbar = swn_epsbar;
+    monomial_list[no_monomials-1].kappa = swn_k;
+    monomial_list[no_monomials-1].hbfunction = &clovernd_trlog_heatbath;
+    monomial_list[no_monomials-1].accfunction = &clovernd_trlog_acc;
+    monomial_list[no_monomials-1].derivativefunction = NULL;
+    monomial_list[no_monomials-1].timescale = 0;
+    monomial_list[no_monomials-1].even_odd_flag = 1;
+    if(g_proc_id == 0) {
+      printf("# Initialised clovernd_trlog_monomial, no_monomials= %d\n", no_monomials);
+    }
+  }
+
   return(0);
 }
 

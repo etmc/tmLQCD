@@ -38,6 +38,7 @@
 #define CLOVERDET 9
 #define CLOVERDETRATIO 10
 #define NDCLOVER 11
+#define CLOVERNDTRLOG 12
 
 #define max_no_monomials 20
 
@@ -119,6 +120,7 @@ typedef struct {
 #include "gauge_monomial.h"
 #include "sf_gauge_monomial.h"
 #include "clover_trlog_monomial.h"
+#include "clovernd_trlog_monomial.h"
 #include "cloverdet_monomial.h"
 #include "cloverdetratio_monomial.h"
 #include "cloverndpoly_monomial.h"
