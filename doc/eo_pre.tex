@@ -502,14 +502,29 @@ with
 \begin{equation}
   M_{oo|ee}^h = 1+T_{oo|ee}+i\bar\mu\gamma_5\tau^3-\bar\epsilon\tau^1\,.
 \end{equation}
-Because $1+T_{oo|ee}$ is hermitian, we can invert $M_{ee}^h$ by
+Because $1+T_{ee}$ is hermitian, we can invert $M_{ee}^h$ by
 \begin{equation}
   \label{eq:ndSdet}
   (1+T_{ee}+i\bar\mu\gamma_5\tau^3-\bar\epsilon\tau^1)^{-1} =
   \frac{(1+T_{ee}-i\bar\mu\gamma_5\tau^3+\bar\epsilon\tau^1)}
   {(1+T_{ee})^2 + \bar\mu^2 - \bar\epsilon^2}\,.
 \end{equation}
-Therefore, the determinant we have to compute is
+In practice we compute $((1+T_{ee})^2 + \bar\mu^2 -
+\bar\epsilon^2)^{-1}$ and store the result in the first {\ttfamily
+  VOLUME/2} elements of the array {\ttfamily sw\_inv}. Wherever the
+clover terms needs to be applied we then multiply with  $((1+T_{ee})^2
++ \bar\mu^2 - \bar\epsilon^2)^{-1}$ and then with the nominator in
+eq.~(\ref{eq:ndSdet}). One could save computing time here for the
+price of using more memory by storing the full inverse. Actually, it
+would be only slightly more than in the two flavour case: in addition
+we would only have to store $\bar\epsilon((1+T_{ee})^2
++ \bar\mu^2 - \bar\epsilon^2)^{-1}$. This would also allow to re-use a
+lot of the $N_f=2$ flavour implementation.
+
+The clover part $1+T_{ee}$ is identical to the one in the $N_f=2$
+flavour case and stored in the array {\ttfamily sw}. 
+
+The determinant we have to compute is
 \[
 \det(Q^h) =
 \det[\gamma_5(1+T_{ee}+i\bar\mu\gamma_5\tau^3-\bar\epsilon\tau^1)]\
@@ -527,7 +542,6 @@ which is equal to
    \frac{(1+T_{ee}-i\bar\mu\gamma_5\tau^3+\bar\epsilon\tau^1)}
   {(1+T_{ee})^2 + \bar\mu^2 - \bar\epsilon^2}\ \right]\,.
 \end{equation}
-%{\bf is it correct that we take the flvour trace as well??}
 The trace in flavour simplifies the computation to
 \begin{equation}
  \tr_\mathrm{dirac}\left[\ i\sigma_{\mu\nu}
@@ -536,29 +550,6 @@ The trace in flavour simplifies the computation to
 \end{equation}
 This can be treated analogously to the degenerate case described
 above.
-%This is unfortunately a rather large matrix in Dirac and flavour
-%space. However, $[(1+T_{ee})^2 + \bar\mu^2 - \bar\epsilon^2]^{-1}$
-%are two $6\times6$ block matrices, with off diagonal $6\times6$ blocks
-%being identically zero. Therefore, the matrix $T_\mathrm{nddet}$ in
-%2-flavour Dirac space has the form (suppressing colour)
-%\[
-%T_\mathrm{nddet}=
-%\begin{pmatrix}
-%  u_0 & u_1 & 0 & 0 & a_0 & a_1 & 0 & 0\\
-%  u_3 & u_2 & 0 & 0 & a_3 & a_2 & 0 & 0\\
-%  0 & 0 & l_0 & l_1 & 0 & 0 & b_0 & b_1\\
-%  0 & 0 & l_3 & l_2 & 0 & 0 & b_3 & b_2\\
-%  a_0 & a_1 & 0 & 0 & u'_0 & u'_1 & 0 & 0\\
-%  a_3 & a_2 & 0 & 0 & u'_3 & u'_2 & 0 & 0\\
-%  0 & 0 & b_0 & b_1 & 0 & 0 & l'_0 & l'_1\\
-%  0 & 0 & b_3 & b_2 & 0 & 0 & l'_3 & l'_2\\
-%\end{pmatrix}\,.
-%\]
-%Actually, $u_i$ and $u'_i$ and $l_i$ and $l'_i$ differ by $\pm\mu$, so
-%this $\mu$-dependence should cancel in the sum for derivative (the
-%$\mu$-dependence in the denominator of eq.~(\ref{eq:ndSdet}) of course
-%remains). The off-diagonal $4\times4$ blocks are of course simply
-%$\epsilon [(1+T_{ee})^2 + \bar\mu^2 - \bar\epsilon^2]^{-1}$.
 
 \subsection{Inversion}
 
