@@ -168,7 +168,7 @@ void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   ndpoly_set_global_parameter(mnl, phmc_exact_poly);
 
   // we measure before trajectory!
-  if((mnl->rec_ev != 0) || (hf->traj_counter%mnl->rec_ev == 0)) {
+  if((mnl->rec_ev != 0) && (hf->traj_counter%mnl->rec_ev == 0)) {
     phmc_compute_ev(hf->traj_counter-1, id, &Qtm_pm_ndbipsi);
   }
 
