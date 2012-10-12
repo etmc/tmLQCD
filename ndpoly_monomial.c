@@ -104,8 +104,8 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
 		    g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], EO);
       
       /* \delta M_eo sandwitched by  chi[j-1]_e^\dagger  and  chi[2N-j]_o */
-      deriv_Sb(EO, mnl->w_fields[0], g_chi_up_spinor_field[phmc_dop_n_cheby], hf, mnl->forcefactor);      /* UP */
-      deriv_Sb(EO, mnl->w_fields[1], g_chi_dn_spinor_field[phmc_dop_n_cheby], hf, mnl->forcefactor);    /* DN */
+      deriv_Sb(EO, mnl->w_fields[0], g_chi_up_spinor_field[phmc_dop_n_cheby], hf, mnl->forcefactor);/* UP */
+      deriv_Sb(EO, mnl->w_fields[1], g_chi_dn_spinor_field[phmc_dop_n_cheby], hf, mnl->forcefactor);/* DN */
       
       /* Get the even parts of the  (2N-j)-th  chi_spinors */
       H_eo_tm_ndpsi(mnl->w_fields[0], mnl->w_fields[1], 
@@ -184,11 +184,8 @@ void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
     zero_spinor_field(g_chi_dn_spinor_field[0], VOLUME/2);
   }
 
-  if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
-    printf("PHMC: Here comes the computation of H_old with \n \n");
-    printf("PHMC: First: random spinors and their norm  \n ");
-    printf("PHMC: OLD Ennergy UP %e \n", mnl->energy0);
-    printf("PHMC: OLD Energy  DN + UP %e \n\n", mnl->energy0);
+  if((g_proc_id == g_stdio_proc) && (g_debug_level > 5)) {
+    printf("# NDPOLY: OLD Energy  DN + UP %e \n\n", mnl->energy0);
   }
 
   if(phmc_exact_poly==0){
@@ -254,20 +251,6 @@ void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   assign(mnl->pf, g_chi_up_spinor_field[0], VOLUME/2);
   assign(mnl->pf2, g_chi_dn_spinor_field[0], VOLUME/2);
 
-  if(g_debug_level > 2) {
-    temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
-    if(g_proc_id == g_stdio_proc) {
-      printf("PHMC: Then: evaluate Norm of pseudofermion heatbath BHB \n ");
-      printf("PHMC: Norm of BHB up squared %e \n", temp);
-    }
-
-    if(g_epsbar!=0.0 || phmc_exact_poly==0) 
-      temp += square_norm(g_chi_dn_spinor_field[0], VOLUME/2, 1);
-
-    if(g_proc_id == g_stdio_proc){
-      printf("PHMC: Norm of BHB up + BHB dn squared %e \n\n", temp);
-    }
-  }
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called ndpoly_heatbath for id %d \n", id);
   }
@@ -322,15 +305,12 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
     temp = square_norm(g_chi_dn_spinor_field[ij], VOLUME/2, 1);
     Ener[ij] += temp;
 
-    if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
-      printf("PHMC: Here comes the computation of H_new with \n \n");
-
-      printf("PHMC: At j=%d  PHMC Final Energy %e \n", ij, mnl->energy1+Ener[ij]);
-      printf("PHMC: At j=%d  PHMC Only Final Energy %e \n", ij, Ener[ij]);
+    if((g_proc_id == g_stdio_proc) && (g_debug_level > 4)) {
+      printf("# NDPOLY: At j=%d H before H-correction %e \n", ij, Ener[ij]);
     }
     
     /* Here comes the loop for the evaluation of A, A^2, ...  */
-    for(j = 1; j < 1; j++){ /* To omit corrections just set  j<1 */
+    for(j = 1; j < 8; j++){ /* To omit corrections just set  j<1 */
       
       if(j % 2){ /*  Chi[j] = ( Qdag P  Ptilde ) Chi[j-1]  */ 
 	Ptilde_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
@@ -358,29 +338,26 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
       sgn = -1.0;
       for(ij = 1; ij < j; ij++){
 	fact = factor[j] / (factor[ij] * factor[j-ij]);
-	if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
-	  printf("PHMC: Here  j=%d  and  ij=%d   sign=%f  fact=%f \n", j ,ij, sgn, fact);
+	if((g_proc_id == g_stdio_proc) && (g_debug_level > 4)) {
+	  printf("# NDPOLY: Here  j=%d  and  ij=%d   sign=%f  fact=%f \n", j ,ij, sgn, fact);
 	}
 	Ener[j] += sgn*fact*Ener[ij];
 	sgn = -sgn;
       }
       temp = square_norm(g_chi_up_spinor_field[j], VOLUME/2, 1);
       temp += square_norm(g_chi_dn_spinor_field[j], VOLUME/2, 1);
-      if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
-	printf("PHMC: Here  j=%d   sign=%f  temp=%e \n", j, sgn, temp);
+      if((g_proc_id == g_stdio_proc) && (g_debug_level > 4)) {
+	printf("# NDPOLY: Here  j=%d   sign=%f  temp=%e \n", j, sgn, temp);
       }
 
       Ener[j] += sgn*temp;
 
       Diff = fabs(Ener[j] - Ener[j-1]);
       if((g_proc_id == g_stdio_proc) && (g_debug_level > 0)) {
-	printf("PHMC: Correction aftern %d steps: %e \n", j, Diff);
+	printf("# NDPOLY: H-Correction after %d steps: %e \n", j, Diff);
       }
 
       if(Diff < mnl->PrecisionHfinal) {
-	if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
-	  printf("PHMC: At j = %d  PHMC Only Final Energy %e \n", j, Ener[j]);
-	}
 	break;
       }
     }
@@ -406,17 +383,12 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
     temp = square_norm(g_chi_dn_spinor_field[0], VOLUME/2, 1);
     Ener[0] += temp;
 
-    if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
+    if((g_proc_id == g_stdio_proc) && (g_debug_level > 4)) {
       ij=0;
-      printf("PHMC: Here comes the computation of H_new with \n \n");
-      printf("PHMC: At j=%d  P+HMC Final Energy %e \n", ij, mnl->energy1+Ener[0]);
-      printf("PHMC: At j=%d  PHMC Only Final Energy %e \n", ij, Ener[0]);
+      printf("# NDPOLY: At j=%d  PHMC Only Final Energy %e \n", ij, Ener[0]);
     }
 
     mnl->energy1 += Ener[0];
-    if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
-      printf("PHMC: At j = %d  P=%e +HMC Final Energy %e \n\n", ij, Ener[0], mnl->energy1);
-    }
   } 
   else if(phmc_exact_poly == 1 && g_epsbar == 0.0) {
     for(j = 1; j < (mnl->MDPolyDegree); j++) {
@@ -430,16 +402,11 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
     temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
     Ener[0] = temp;
 
-    if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
-      printf("PHMC: Here comes the computation of H_new with \n \n");
-      printf("PHMC: At j=%d  P+HMC Final Energy %e \n", ij, mnl->energy1+Ener[0]);
-      printf("PHMC: At j=%d  PHMC Only Final Energy %e \n", ij, Ener[0]);
+    if((g_proc_id == g_stdio_proc) && (g_debug_level > 4)) {
+      printf("# NDPOLY: At j=%d  PHMC Only Final Energy %e \n", ij, Ener[0]);
     }
 
     mnl->energy1 += Ener[0];
-    if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
-      printf("PHMC: At j = %d  P=%e +HMC Final Energy %e \n\n", ij, Ener[0], mnl->energy1);
-    }
   }
 
   if(g_proc_id == 0 && g_debug_level > 3) {

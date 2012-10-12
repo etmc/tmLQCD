@@ -100,7 +100,7 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
   assign(g_chi_up_spinor_field[mnl->MDPolyDegree], g_chi_up_spinor_field[mnl->MDPolyDegree-2], VOLUME/2);
   assign(g_chi_dn_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[mnl->MDPolyDegree-2], VOLUME/2);
   
-  for(j=(mnl->MDPolyDegree-1); j>=1; j--) {
+  for(j = (mnl->MDPolyDegree-1); j > 0; j--) {
     assign(g_chi_up_spinor_field[mnl->MDPolyDegree-1], g_chi_up_spinor_field[mnl->MDPolyDegree], VOLUME/2);
     assign(g_chi_dn_spinor_field[mnl->MDPolyDegree-1], g_chi_dn_spinor_field[mnl->MDPolyDegree], VOLUME/2);
     
@@ -137,17 +137,6 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
   // trlog part does not depend on the normalisation of the polynomial
   sw_deriv_nd(EE);
   sw_all(hf, mnl->kappa, mnl->c_sw);
-
-  for(int i = 0; i < VOLUME; i++) { 
-    for(int mu = 0; mu < 4; mu++) { 
-      _su3_zero(swm[i][mu]);
-      _su3_zero(swp[i][mu]);
-    }
-  }
-
-  //sw_invert(EE, mnl->mubar);
-  //sw_deriv(EE, mnl->mubar);
-  //sw_all(hf, mnl->kappa, mnl->c_sw);
 
   return;
 }
