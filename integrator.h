@@ -30,6 +30,7 @@
 #define IMPRLEAPFROG 5
 #define MN2 6
 #define MN2p 7
+#define OMF4 8
 
 typedef void (*integratefk)(const double, const int, const int);
 
