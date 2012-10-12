@@ -156,6 +156,7 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
 void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   int j;
   monomial * mnl = &monomial_list[id];
+  spinor *up0, *dn0, *up1, *dn1, *dummy;
 
   ndpoly_set_global_parameter(mnl, 0);
   g_mu3 = 0.;
@@ -177,20 +178,24 @@ void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   Qsw_ndpsi(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
 	    g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0]);
+
+  up0 = g_chi_up_spinor_field[0];
+  up1 = g_chi_up_spinor_field[1];
+  dn0 = g_chi_dn_spinor_field[0];
+  dn1 = g_chi_dn_spinor_field[1];
   
   for(j = 1; j < (mnl->MDPolyDegree); j++){
-    assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
-    assign(g_chi_dn_spinor_field[0], g_chi_dn_spinor_field[1], VOLUME/2);
-    
-    Qsw_tau1_sub_const_ndpsi(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
-			     g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], 
+    Qsw_tau1_sub_const_ndpsi(up0, dn0,
+			     up1, dn1, 
 			     mnl->MDPolyRoots[mnl->MDPolyDegree-2+j]);
+    dummy = up1; up1 = up0; up0 = dummy;
+    dummy = dn1; dn1 = dn0; dn0 = dummy;
   }
-  Ptilde_ndpsi(g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], mnl->PtildeCoefs, 
-	       mnl->PtildeDegree, g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], &Qsw_pm_ndpsi);
+  Ptilde_ndpsi(up0, dn0, mnl->PtildeCoefs, 
+	       mnl->PtildeDegree, up1, dn1, &Qsw_pm_ndpsi);
   
-  assign(mnl->pf, g_chi_up_spinor_field[0], VOLUME/2);
-  assign(mnl->pf2, g_chi_dn_spinor_field[0], VOLUME/2);
+  assign(mnl->pf, up0, VOLUME/2);
+  assign(mnl->pf2, dn0, VOLUME/2);
   
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called cloverndpoly_heatbath for id %d\n", id);
@@ -200,7 +205,7 @@ void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
 
 
 double cloverndpoly_acc(const int id, hamiltonian_field_t * const hf) {
-  int j, ij=0;
+  int j;
   monomial * mnl = &monomial_list[id];
   spinor *up0, *dn0, *up1, *dn1, *dummy;
 
@@ -211,7 +216,6 @@ double cloverndpoly_acc(const int id, hamiltonian_field_t * const hf) {
 
   mnl->energy1 = 0.;
 
-  /* IF PHMC */
   up0 = g_chi_up_spinor_field[0];
   up1 = g_chi_up_spinor_field[1];
   dn0 = g_chi_dn_spinor_field[0];
@@ -221,7 +225,6 @@ double cloverndpoly_acc(const int id, hamiltonian_field_t * const hf) {
   assign(dn0, mnl->pf2, VOLUME/2);
 
   for(j = 1; j <= (mnl->MDPolyDegree-1); j++) {
-    /* Change this name !!*/
     Qsw_tau1_sub_const_ndpsi(up1, dn1, up0, dn0, mnl->MDPolyRoots[j-1]);
     
     dummy = up1; up1 = up0; up0 = dummy;
@@ -229,14 +232,8 @@ double cloverndpoly_acc(const int id, hamiltonian_field_t * const hf) {
     /* result always in up0 and dn0 */
   }
   
-  ij=0;
-  if(up0 != g_chi_up_spinor_field[ij]) {
-    assign(g_chi_up_spinor_field[ij], up0, VOLUME/2);
-    assign(g_chi_dn_spinor_field[ij], dn0, VOLUME/2);
-  }
-  
-  mnl->energy1 = square_norm(g_chi_up_spinor_field[ij], VOLUME/2, 1);
-  mnl->energy1 += square_norm(g_chi_dn_spinor_field[ij], VOLUME/2, 1);
+  mnl->energy1 = square_norm(up0, VOLUME/2, 1);
+  mnl->energy1 += square_norm(dn0, VOLUME/2, 1);
   
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called cloverndpoly_acc for id %d %d dH = %1.4e\n", id, g_running_phmc, mnl->energy1 - mnl->energy0);
