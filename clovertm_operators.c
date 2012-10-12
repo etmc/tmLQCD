@@ -1044,13 +1044,8 @@ void init_sw_fields() {
       sw[i] = sw[i-1]+3;
       sw_inv[i] = sw_inv[i-1]+4;
     }
-#    if (defined SSE || defined SSE2 || defined SSE3)
     sw[0][0] = (su3*)(((unsigned long int)(_sw)+ALIGN_BASE)&~ALIGN_BASE);
     sw_inv[0][0] = (su3*)(((unsigned long int)(_sw_inv)+ALIGN_BASE)&~ALIGN_BASE);
-#    else
-    sw[0][0] = _sw;
-    sw_inv[0][0] = _sw_inv;
-#    endif
     tmp = sw[0][0];
     for(int i = 0; i < V; i++) {
       for(int j = 0; j < 3; j++) {

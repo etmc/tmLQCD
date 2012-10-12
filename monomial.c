@@ -177,6 +177,9 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].hbfunction = &det_heatbath;
 	monomial_list[i].accfunction = &det_acc;
 	monomial_list[i].derivativefunction = &det_derivative;
+	if(g_proc_id == 0 && g_debug_level > 1) {
+	  printf("# Initialised monomial of type DET, no_monomials= %d\n", no_monomials);
+	}
       }
       else if(monomial_list[i].type == CLOVERDET) {
 	monomial_list[i].hbfunction = &cloverdet_heatbath;
@@ -192,6 +195,9 @@ int init_monomials(const int V, const int even_odd_flag) {
 	sw_mu = monomial_list[i].mu;
 	sw_k = monomial_list[i].kappa;
 	sw_c = monomial_list[i].c_sw;
+	if(g_proc_id == 0 && g_debug_level > 1) {
+	  printf("# Initialised monomial of type CLOVERDET, no_monomials= %d\n", no_monomials);
+	}
       }
       else if(monomial_list[i].type == CLOVERDETRATIO) {
 	monomial_list[i].hbfunction = &cloverdetratio_heatbath;
@@ -202,18 +208,29 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].Qp = &Qsw_plus_psi;
 	monomial_list[i].Qm = &Qsw_minus_psi;
 	init_swpm(VOLUME);
+	if(g_proc_id == 0 && g_debug_level > 1) {
+	  printf("# Initialised monomial of type CLOVERDETRATIO, no_monomials= %d\n", no_monomials);
+	}
       }
       else if(monomial_list[i].type == DETRATIO) {
 	monomial_list[i].hbfunction = &detratio_heatbath;
 	monomial_list[i].accfunction = &detratio_acc;
 	monomial_list[i].derivativefunction = &detratio_derivative;
+	if(g_proc_id == 0 && g_debug_level > 1) {
+	  printf("# Initialised monomial of type DETRATIO, no_monomials= %d\n", no_monomials);
+	}
       }
       else if(monomial_list[i].type == POLY) {
 	monomial_list[i].hbfunction = &poly_heatbath;
 	monomial_list[i].accfunction = &poly_acc;
 	monomial_list[i].derivativefunction = &poly_derivative;
 	retval=init_poly_monomial(V,i);
-	if(retval!=0) return retval;
+	if(retval != 0) {
+	  return retval;
+	}
+      	if(g_proc_id == 0 && g_debug_level > 1) {
+	  printf("# Initialised monomial of type POLY, no_monomials= %d\n", no_monomials);
+	}
       }
       else if(monomial_list[i].type == POLYDETRATIO) {
 	monomial_list[i].hbfunction = &poly_heatbath;
@@ -222,6 +239,9 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].MDPolyDetRatio = 1;
 	retval=init_poly_monomial(V,i);
 	if(retval!=0) return retval;
+      	if(g_proc_id == 0 && g_debug_level > 1) {
+	  printf("# Initialised monomial of type POLYDETRATIO, no_monomials= %d\n", no_monomials);
+	}
       }
       else if(monomial_list[i].type == NDPOLY) {
 	monomial_list[i].hbfunction = &ndpoly_heatbath;
@@ -231,6 +251,9 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].pf2 = __pf+no*V;
 	no++;
 	retval = init_ndpoly_monomial(i);
+	if(g_proc_id == 0 && g_debug_level > 1) {
+	  printf("# Initialised monomial of type NDPOLY, no_monomials= %d\n", no_monomials);
+	}
       }
       else if(monomial_list[i].type == NDCLOVER) {
 	init_swpm(VOLUME);
@@ -249,6 +272,9 @@ int init_monomials(const int V, const int even_odd_flag) {
 	//monomial_list[i].Qm = &Qsw_dagger_ndpsi;
 	no++;
 	retval = init_ndpoly_monomial(i);
+	if(g_proc_id == 0 && g_debug_level > 1) {
+	  printf("# Initialised monomial of type NDCLOVER, no_monomials= %d\n", no_monomials);
+	}
       }
       else if(monomial_list[i].type == NDDETRATIO) {
 	monomial_list[i].hbfunction = &dummy_heatbath;
@@ -257,6 +283,9 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].pf2 = __pf+no*V;
 	monomial_list[i].timescale = -5;
 	no++;
+	if(g_proc_id == 0 && g_debug_level > 1) {
+	  printf("# Initialised monomial of type NDDETRATIO, no_monomials= %d\n", no_monomials);
+	}
       }
     }
     else {
@@ -278,6 +307,9 @@ int init_monomials(const int V, const int even_odd_flag) {
 	g_rgi_C1 = monomial_list[i].c1;
 	monomial_list[i].c0 = 1. - 8.*monomial_list[i].c1;
 	g_rgi_C0 = monomial_list[i].c0;
+	if(g_proc_id == 0 && g_debug_level > 1) {
+	  printf("# Initialised monomial of type GAUGE, no_monomials= %d\n", no_monomials);
+	}
       }
     }
     monomial_list[i].id = i;
@@ -299,7 +331,7 @@ int init_monomials(const int V, const int even_odd_flag) {
     monomial_list[no_monomials-1].derivativefunction = NULL;
     monomial_list[no_monomials-1].timescale = 0;
     monomial_list[no_monomials-1].even_odd_flag = even_odd_flag;
-    if(g_proc_id == 0) {
+    if(g_proc_id == 0 && g_debug_level > 1) {
       printf("# Initialised clover_trlog_monomial, no_monomials= %d\n", no_monomials);
     }
   }
@@ -320,7 +352,7 @@ int init_monomials(const int V, const int even_odd_flag) {
     monomial_list[no_monomials-1].derivativefunction = NULL;
     monomial_list[no_monomials-1].timescale = 0;
     monomial_list[no_monomials-1].even_odd_flag = 1;
-    if(g_proc_id == 0) {
+    if(g_proc_id == 0 && g_debug_level > 1) {
       printf("# Initialised clovernd_trlog_monomial, no_monomials= %d\n", no_monomials);
     }
   }
@@ -336,7 +368,7 @@ void free_monomials() {
 
 
 int init_poly_monomial(const int V, const int id){
-
+  
   monomial * mnl = &monomial_list[id];
   int i,j,k;
   FILE* rootsFile=NULL;
@@ -347,32 +379,25 @@ int init_poly_monomial(const int V, const int id){
   double eps;
 
   spinor *_pf=(spinor*)NULL;
-
+  
   if((void*)(_pf = (spinor*)calloc((mnl->MDPolyDegree/2+2)*V+1, sizeof(spinor))) == NULL) {
-      printf ("malloc errno in init_poly_monomial pf fields: %d\n",errno); 
-      errno = 0;
-      return(1);
-    }
-
-    if((void*)(mnl->MDPoly_chi_spinor_fields=(spinor**)calloc(mnl->MDPolyDegree/2+2,sizeof(spinor*))) ==NULL ){
-      printf ("malloc errno in init_poly_monomial pf fields: %d\n",errno); 
-      errno = 0;
-      return(2);
-    }
-
-#if ( defined SSE || defined SSE2 || defined SSE3)
-      (mnl->MDPoly_chi_spinor_fields)[0] = (spinor*)(((unsigned long int)(_pf)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-      (mnl->MDPoly_chi_spinor_fields)[0] = _pf;
-#endif
-
-
+    printf ("malloc errno in init_poly_monomial pf fields: %d\n",errno); 
+    errno = 0;
+    return(1);
+  }
+  
+  if((void*)(mnl->MDPoly_chi_spinor_fields=(spinor**)calloc(mnl->MDPolyDegree/2+2,sizeof(spinor*))) ==NULL ){
+    printf ("malloc errno in init_poly_monomial pf fields: %d\n",errno); 
+    errno = 0;
+    return(2);
+  }
+  
+  (mnl->MDPoly_chi_spinor_fields)[0] = (spinor*)(((unsigned long int)(_pf)+ALIGN_BASE)&~ALIGN_BASE);
+  
   for(i = 1; i < (mnl->MDPolyDegree/2+2); i++){
     mnl->MDPoly_chi_spinor_fields[i] = mnl->MDPoly_chi_spinor_fields[i-1]+V;
   }
-
-
-
+  
   if(strlen(monomial_list[id].MDPolyRootsFile)==0){
     sprintf(monomial_list[id].MDPolyRootsFile,
 	    "%s_deg_%d_eps_%1.16e.roots",
@@ -398,35 +423,33 @@ int init_poly_monomial(const int V, const int id){
     } 
     else {
       fprintf(stderr,"Reading local normalization from file FAILED\n Borting Ab\n");
-      #ifdef MPI
-         MPI_Finalize();
-      #endif
+#ifdef MPI
+      MPI_Finalize();
+#endif
       exit(6);
     }
   }
-
-
+  
   /* read in the roots from the given file */
-
+  
   if((void*)(mnl->MDPolyRoots=(_Complex double*)calloc(mnl->MDPolyDegree,sizeof(_Complex double))) ==NULL ){
     printf ("malloc errno in init_poly_monomial roots array: %d\n",errno); 
     errno = 0;
     return(3);
   }
-
-
+  
+  printf("reading roots...!\n");
   if((rootsFile=fopen(mnl->MDPolyRootsFile,"r")) != (FILE*)NULL) {
-    if (fgets(title, 100, rootsFile) == NULL)
-    {
+    if (fgets(title, 100, rootsFile) == NULL) {
       fprintf(stderr, "Cant read Roots file: %s Aborting...\n", mnl->MDPolyRootsFile);
-      #ifdef MPI
-         MPI_Finalize();
-      #endif
+#ifdef MPI
+      MPI_Finalize();
+#endif
       exit(6);
     }
     
     /* Here we read in the 2n roots needed for the polinomial in sqrt(s) */
-    for(j=0; j<(mnl->MDPolyDegree); j++){
+    for(j = 0; j < (mnl->MDPolyDegree); j++) {
       errcode = fscanf(rootsFile," %d %lf %lf \n", &k, (double*)&(mnl->MDPolyRoots[j]), (double*)&(mnl->MDPolyRoots[j]) + 1);
     }
     fclose(rootsFile);
@@ -438,17 +461,16 @@ int init_poly_monomial(const int V, const int id){
 #endif
     exit(6);
   }
-
-
-
-  printf("Here come the roots\n");
-
+  
+  if(g_proc_id == 0 && g_debug_level > 2) {
+    printf("# the root are:\n");
     for(j=0; j<(mnl->MDPolyDegree); j++){
-      printf("%lf %lf\n",  creal(mnl->MDPolyRoots[j]), cimag(mnl->MDPolyRoots[j]));
+      printf("# %lf %lf\n",  creal(mnl->MDPolyRoots[j]), cimag(mnl->MDPolyRoots[j]));
     }
-
+  }
+  
   return 0;
-
+  
 }
 
 void dummy_derivative(const int id, hamiltonian_field_t * const hf) {

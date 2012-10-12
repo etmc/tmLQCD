@@ -61,13 +61,8 @@ int init_chi_spinor_field(const int V, const int nr) {
       errno = 0;
       return(2);
     }
-#if ( defined SSE || defined SSE2 || defined SSE3)
     g_chi_up_spinor_field[0] = (spinor*)(((unsigned long int)(sp_up)+ALIGN_BASE)&~ALIGN_BASE);
     g_chi_dn_spinor_field[0] = (spinor*)(((unsigned long int)(sp_dn)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-    g_chi_up_spinor_field[0] = sp_up;
-    g_chi_dn_spinor_field[0] = sp_dn;
-#endif
     
     for(i = 1; i < nr; i++){
       g_chi_up_spinor_field[i] = g_chi_up_spinor_field[i-1]+V;
