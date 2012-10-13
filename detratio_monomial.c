@@ -27,36 +27,23 @@
 #include <time.h>
 #include "global.h"
 #include "su3.h"
-#include "su3adj.h"
-#include "su3spinor.h"
-#include "ranlxd.h"
 #include "start.h"
 #include "linalg_eo.h"
-#include "linsolve.h"
 #include "deriv_Sb.h"
 #include "deriv_Sb_D_psi.h"
-#include "gamma.h"
 #include "tm_operators.h"
-#include "hybrid_update.h"
 #include "Hopping_Matrix.h"
 #include "solver/chrono_guess.h"
-#include "solver/bicgstab_complex.h"
 #include "solver/solver.h"
 #include "read_input.h"
-#include "smearing/stout.h"
-#include "clover_leaf.h"
-
+#include "gamma.h"
 #include "monomial.h"
 #include "boundary.h"
 #include "detratio_monomial.h"
 
-extern int ITER_MAX_BCG;
-extern int ITER_MAX_CG;
-
 /* think about chronological solver ! */
 
 void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
-  int saveiter = ITER_MAX_BCG;
 
   monomial * mnl = &monomial_list[no];
 
@@ -197,13 +184,11 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
   g_mu = g_mu1;
   boundary(g_kappa);
 
-  ITER_MAX_BCG = saveiter;
   return;
 }
 
 
 void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
-  int saveiter = ITER_MAX_BCG;
   monomial * mnl = &monomial_list[id];
 
   g_mu = mnl->mu;
@@ -216,20 +201,15 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
     random_spinor_field(mnl->w_fields[0], VOLUME/2, mnl->rngrepro);
     mnl->energy0  = square_norm(mnl->w_fields[0], VOLUME/2, 1);
 
-    Qtm_plus_psi(mnl->w_fields[1], mnl->w_fields[0]);
+    mnl->Qp(mnl->w_fields[1], mnl->w_fields[0]);
     g_mu = mnl->mu2;
     boundary(mnl->kappa2);
-    zero_spinor_field(mnl->pf,VOLUME/2);
-    if(mnl->solver == CG) ITER_MAX_BCG = 0;
-    ITER_MAX_CG = mnl->maxiter;
-    mnl->iter0 += bicg(mnl->pf, mnl->w_fields[1], mnl->accprec, g_relative_precision_flag);
-
-    chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
+    zero_spinor_field(mnl->w_fields[0], VOLUME/2);
+    mnl->iter0 = cg_her(mnl->w_fields[0], mnl->w_fields[1], mnl->maxiter, mnl->accprec, g_relative_precision_flag,
+    			VOLUME/2, mnl->Qsq);
+    mnl->Qm(mnl->pf, mnl->w_fields[0]);
+    chrono_add_solution(mnl->w_fields[0], mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
-    if(mnl->solver != CG) {
-      chrono_add_solution(mnl->pf, mnl->csg_field2, mnl->csg_index_array2,
-			  mnl->csg_N2, &mnl->csg_n2, VOLUME/2);
-    }
   }
   else {
     random_spinor_field(mnl->w_fields[0], VOLUME, mnl->rngrepro);
@@ -253,31 +233,28 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
   }
   g_mu = g_mu1;
   boundary(g_kappa);
-  ITER_MAX_BCG = saveiter;
   return;
 }
 
 double detratio_acc(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
-  int saveiter = ITER_MAX_BCG;
   int save_sloppy = g_sloppy_precision_flag;
 
   g_mu = mnl->mu2;
   boundary(mnl->kappa2);
   if(even_odd_flag) {
-    Qtm_plus_psi(mnl->w_fields[1], mnl->pf);
+    mnl->Qp(mnl->w_fields[1], mnl->pf);
     g_mu = mnl->mu;
     boundary(mnl->kappa);
-    if(mnl->solver == CG) ITER_MAX_BCG = 0;
-    ITER_MAX_CG = mnl->maxiter;
     chrono_guess(mnl->w_fields[0], mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array, 
-		 mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_plus_psi);
-    g_sloppy_precision_flag = 0;    
-    mnl->iter0 += bicg(mnl->w_fields[0], mnl->w_fields[1], mnl->accprec, g_relative_precision_flag); 
+		 mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
+    g_sloppy_precision_flag = 0;
+    mnl->iter0 += cg_her(mnl->w_fields[0], mnl->w_fields[1], mnl->maxiter, mnl->accprec, g_relative_precision_flag,
+			 VOLUME/2, mnl->Qsq);
+    mnl->Qm(mnl->w_fields[1], mnl->w_fields[0]);
     g_sloppy_precision_flag = save_sloppy;
-    /*     ITER_MAX_BCG = *saveiter_max; */
     /* Compute the energy contr. from second field */
-    mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
+    mnl->energy1 = square_norm(mnl->w_fields[1], VOLUME/2, 1);
   }
   else {
     Q_plus_psi(mnl->w_fields[1], mnl->pf);
@@ -288,13 +265,11 @@ double detratio_acc(const int id, hamiltonian_field_t * const hf) {
     mnl->iter0 += bicgstab_complex(mnl->w_fields[0], mnl->w_fields[1], 
 				   mnl->maxiter, mnl->accprec, g_relative_precision_flag, 
 				   VOLUME, Q_plus_psi); 
-    /*     ITER_MAX_BCG = *saveiter_max; */
     /* Compute the energy contr. from second field */
     mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME, 1);
   }
   g_mu = g_mu1;
   boundary(g_kappa);
-  ITER_MAX_BCG = saveiter;
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called detratio_acc for id %d %d dH = %1.4e\n", 
 	   id, mnl->even_odd_flag, mnl->energy1 - mnl->energy0);

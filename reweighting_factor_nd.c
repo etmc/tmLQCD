@@ -24,7 +24,6 @@
 #include <stdio.h>
 #include <math.h>
 #include "global.h"
-#include "linsolve.h"
 #include "linalg_eo.h"
 #include "start.h"
 #include "tm_operators.h"

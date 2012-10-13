@@ -30,7 +30,6 @@
 #include "su3adj.h"
 #include "linalg_eo.h"
 #include "start.h"
-#include "linsolve.h"
 #include "solver/solver.h"
 #include "deriv_Sb.h"
 #include "tm_operators.h"

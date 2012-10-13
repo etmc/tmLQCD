@@ -177,6 +177,9 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].hbfunction = &det_heatbath;
 	monomial_list[i].accfunction = &det_acc;
 	monomial_list[i].derivativefunction = &det_derivative;
+	monomial_list[i].Qsq = &Qtm_pm_psi;
+	monomial_list[i].Qp = &Qtm_plus_psi;
+	monomial_list[i].Qm = &Qtm_minus_psi;
 	if(g_proc_id == 0 && g_debug_level > 1) {
 	  printf("# Initialised monomial of type DET, no_monomials= %d\n", no_monomials);
 	}
@@ -216,6 +219,9 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].hbfunction = &detratio_heatbath;
 	monomial_list[i].accfunction = &detratio_acc;
 	monomial_list[i].derivativefunction = &detratio_derivative;
+	monomial_list[i].Qsq = &Qtm_pm_psi;
+	monomial_list[i].Qp = &Qtm_plus_psi;
+	monomial_list[i].Qm = &Qtm_minus_psi;
 	if(g_proc_id == 0 && g_debug_level > 1) {
 	  printf("# Initialised monomial of type DETRATIO, no_monomials= %d\n", no_monomials);
 	}

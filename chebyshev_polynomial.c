@@ -26,13 +26,11 @@
 #include <stdio.h>
 #include <math.h>
 #include "global.h"
-#include "linsolve.h"
 #include "linalg_eo.h"
 #include "start.h"
 #include "tm_operators.h"
-#include "chebyshev_polynomial.h"
 #include "tm_operators_nd.h"
-
+#include "chebyshev_polynomial.h"
 
 #define PI 3.141592653589793
 
