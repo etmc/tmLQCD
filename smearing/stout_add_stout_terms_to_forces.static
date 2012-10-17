@@ -65,7 +65,7 @@ static void add_stout_terms_to_forces(gauge_field_t smeared_force, double const 
           
           /* Now we plug in the final multiplication and the sign, aggregating in C_der */
           _su3_times_su3d(t1, t2, U[x][mu]);
-          _su3_refac_acc(C_der, -1.0, t1)
+          _su3_refac_acc(C_der, -1.0, t1);
         }
       }
       /* Now add this second half of the calculation to the smeared forces and project back to the tangent space */
