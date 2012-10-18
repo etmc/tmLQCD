@@ -42,7 +42,6 @@
 #include "linalg/diff.h"
 #include "linalg_eo.h"
 #include "deriv_Sb.h"
-#include "linsolve.h"
 #include "tm_operators.h"
 #include "solver/solver.h"
 #include "solver/chrono_guess.h"
@@ -307,17 +306,13 @@ void poly_heatbath(const int id, hamiltonian_field_t * const hf){
       g_mu = mnl->mu2;
       boundary(mnl->kappa2);
       zero_spinor_field(mnl->pf,VOLUME/2);
-      if(mnl->solver == CG) ITER_MAX_BCG = 0;
-      ITER_MAX_CG = mnl->maxiter;
-      mnl->iter0 += bicg(mnl->pf, mnl->w_fields[0], mnl->accprec, g_relative_precision_flag);
-      
-      chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
+      mnl->iter0 = cg_her(mnl->w_fields[1], mnl->w_fields[0], mnl->maxiter, mnl->accprec, g_relative_precision_flag,
+			  VOLUME/2, &Qtm_pm_psi);
+      Qtm_minus_psi(mnl->pf, mnl->w_fields[1]);
+
+      chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
       
-      if(mnl->solver != CG) {
-	chrono_add_solution(mnl->pf, mnl->csg_field2, mnl->csg_index_array2,
-			    mnl->csg_N2, &mnl->csg_n2, VOLUME/2);
-      }
     } else {
       /* store constructed phi field */
       assign(mnl->pf, mnl->w_fields[0], VOLUME/2);

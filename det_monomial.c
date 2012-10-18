@@ -26,30 +26,20 @@
 #include <math.h>
 #include "global.h"
 #include "su3.h"
-#include "su3adj.h"
-#include "su3spinor.h"
-#include "ranlxd.h"
-#include "sse.h"
 #include "start.h"
 #include "linalg_eo.h"
-#include "linsolve.h"
 #include "deriv_Sb.h"
 #include "deriv_Sb_D_psi.h"
-#include "gamma.h"
 #include "tm_operators.h"
 #include "hybrid_update.h"
 #include "Hopping_Matrix.h"
 #include "solver/chrono_guess.h"
-#include "solver/bicgstab_complex.h"
 #include "solver/solver.h"
 #include "read_input.h"
 #include "hamiltonian_field.h"
 #include "boundary.h"
 #include "monomial.h"
 #include "det_monomial.h"
-
-extern int ITER_MAX_BCG;
-extern int ITER_MAX_CG;
 
 /* think about chronological solver ! */
 
@@ -77,14 +67,14 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
     /* Invert Q_{+} Q_{-} */
     /* X_o -> w_fields[1] */
     chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
-		 mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_pm_psi);
+		 mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
     mnl->iter1 += cg_her(mnl->w_fields[1], mnl->pf, mnl->maxiter, mnl->forceprec, 
-			 g_relative_precision_flag, VOLUME/2, &Qtm_pm_psi);
+			 g_relative_precision_flag, VOLUME/2, mnl->Qsq);
     chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
     
     /* Y_o -> w_fields[0]  */
-    Qtm_minus_psi(mnl->w_fields[0], mnl->w_fields[1]);
+    mnl->Qm(mnl->w_fields[0], mnl->w_fields[1]);
     
     /* apply Hopping Matrix M_{eo} */
     /* to get the even sites of X_e */
@@ -128,7 +118,7 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
 		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_plus_psi);
       mnl->iter1 += bicgstab_complex(mnl->w_fields[0], mnl->pf, 
 				     mnl->maxiter, mnl->forceprec, g_relative_precision_flag, 
-				     VOLUME,  Q_plus_psi);
+				     VOLUME, &Q_plus_psi);
       chrono_add_solution(mnl->w_fields[0], mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
       
@@ -139,7 +129,7 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
 		   mnl->csg_index_array2, mnl->csg_N2, mnl->csg_n2, VOLUME/2, &Q_minus_psi);
       mnl->iter1 += bicgstab_complex(mnl->w_fields[1], mnl->w_fields[0], 
 				     mnl->maxiter, mnl->forceprec, g_relative_precision_flag, 
-				     VOLUME, Q_minus_psi);
+				     VOLUME, &Q_minus_psi);
       chrono_add_solution(mnl->w_fields[1], mnl->csg_field2, mnl->csg_index_array2,
 			  mnl->csg_N2, &mnl->csg_n2, VOLUME/2);
       g_mu = -g_mu;   
@@ -169,7 +159,7 @@ void det_heatbath(const int id, hamiltonian_field_t * const hf) {
     random_spinor_field(mnl->w_fields[0], VOLUME/2, mnl->rngrepro);
     mnl->energy0 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
 
-    Qtm_plus_psi(mnl->pf, mnl->w_fields[0]);
+    mnl->Qp(mnl->pf, mnl->w_fields[0]);
     chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
     if(mnl->solver != CG) {
@@ -200,7 +190,6 @@ void det_heatbath(const int id, hamiltonian_field_t * const hf) {
 
 double det_acc(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
-  int save_iter = ITER_MAX_BCG;
   int save_sloppy = g_sloppy_precision_flag;
 
   g_mu = mnl->mu;
@@ -211,12 +200,14 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
       ITER_MAX_BCG = 0;
     }
     chrono_guess(mnl->w_fields[0], mnl->pf, mnl->csg_field, mnl->csg_index_array,
-		 mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_plus_psi);
+    	 mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
     g_sloppy_precision_flag = 0;
-    mnl->iter0 = bicg(mnl->w_fields[0], mnl->pf, mnl->accprec, g_relative_precision_flag);
+    mnl->iter0 = cg_her(mnl->w_fields[0], mnl->pf, mnl->maxiter, mnl->accprec, g_relative_precision_flag,
+    			VOLUME/2, mnl->Qsq);
+    mnl->Qm(mnl->w_fields[1], mnl->w_fields[0]);
     g_sloppy_precision_flag = save_sloppy;
     /* Compute the energy contr. from first field */
-    mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
+    mnl->energy1 = square_norm(mnl->w_fields[1], VOLUME/2, 1);
   }
   else {
     if(mnl->solver == CG) {
@@ -224,7 +215,7 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
 		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_pm_psi);
       mnl->iter0 = cg_her(mnl->w_fields[1], mnl->pf, 
 			  mnl->maxiter, mnl->accprec, g_relative_precision_flag, 
-			  VOLUME, Q_pm_psi);
+			  VOLUME, &Q_pm_psi);
       Q_minus_psi(mnl->w_fields[0], mnl->w_fields[1]);
       /* Compute the energy contr. from first field */
       mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME, 1);
@@ -234,7 +225,7 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
 		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_plus_psi);
       mnl->iter0 += bicgstab_complex(mnl->w_fields[0], mnl->pf, 
 				     mnl->maxiter, mnl->forceprec, g_relative_precision_flag, 
-				     VOLUME,  Q_plus_psi);
+				     VOLUME,  &Q_plus_psi);
       mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME, 1);
     }
   }
@@ -244,6 +235,5 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
     printf("called det_acc for id %d %d dH = %1.4e\n", 
 	   id, mnl->even_odd_flag, mnl->energy1 - mnl->energy0);
   }
-  ITER_MAX_BCG = save_iter;
   return(mnl->energy1 - mnl->energy0);
 }

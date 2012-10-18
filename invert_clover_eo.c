@@ -42,7 +42,6 @@
 #include"Hopping_Matrix.h"
 #include"clovertm_operators.h"
 #include"D_psi.h"
-#include"linsolve.h"
 #include"gamma.h"
 #include"solver/solver.h"
 #include"invert_clover_eo.h"

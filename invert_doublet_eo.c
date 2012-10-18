@@ -40,7 +40,6 @@
 #include"tm_operators.h"
 #include"Hopping_Matrix.h"
 #include"D_psi.h"
-#include"linsolve.h"
 #include"gamma.h"
 #include"solver/solver.h"
 #include"read_input.h"

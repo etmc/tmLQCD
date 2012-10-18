@@ -25,7 +25,6 @@
 #include <stdio.h>
 #include <math.h>
 #include "global.h"
-#include "linsolve.h"
 #include "linalg_eo.h"
 #include "start.h"
 #include "tm_operators.h"
@@ -106,11 +105,8 @@ double cheb_eval(int M, double *c, double s){
 void degree_of_polynomial_nd(int * _degree_of_p, double ** coefs,
 			     const double EVMin, const double EVMax,
 			     matrix_mult_nd Qsq) { 
-  int j;
   double temp, temp2;
   int degree_of_p = *_degree_of_p + 1;
-
-  double sum=0.0;
 
   spinor *ss=NULL, *ss_=NULL, *sc=NULL, *sc_=NULL;
   spinor *auxs=NULL, *auxs_=NULL, *auxc=NULL, *auxc_=NULL;
@@ -118,7 +114,6 @@ void degree_of_polynomial_nd(int * _degree_of_p, double ** coefs,
 
   *coefs = calloc(degree_of_p, sizeof(double));
 
-#if ( defined SSE || defined SSE2 || defined SSE3)
   ss_   = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
   auxs_ = calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
   aux2s_= calloc(VOLUMEPLUSRAND/2+1, sizeof(spinor));
@@ -132,16 +127,6 @@ void degree_of_polynomial_nd(int * _degree_of_p, double ** coefs,
   sc    = (spinor *)(((unsigned long int)(sc_)+ALIGN_BASE)&~ALIGN_BASE);
   auxc  = (spinor *)(((unsigned long int)(auxc_)+ALIGN_BASE)&~ALIGN_BASE);
   aux2c = (spinor *)(((unsigned long int)(aux2c_)+ALIGN_BASE)&~ALIGN_BASE);
-  
-#else
-  ss   =calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
-  auxs =calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
-  aux2s=calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
-  sc   =calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
-  auxc =calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
-  aux2c=calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
-#endif
-  
   
   chebyshev_coefs(EVMin, EVMax, *coefs, degree_of_p, -0.5);
 
@@ -173,7 +158,6 @@ void degree_of_polynomial_nd(int * _degree_of_p, double ** coefs,
     /* this is || (P S P - 1)X ||^2 /|| 2X ||^2 */
     /* where X is a random spinor field         */
     printf("# NDPOLY MD Polynomial: relative squared accuracy in components:\n# UP=%e  DN=%e \n", temp, temp2);
-    /*     printf("NDPOLY: Sum remaining | c_n | = %e \n", sum); */
     fflush(stdout);
   }
 
@@ -189,20 +173,11 @@ void degree_of_polynomial_nd(int * _degree_of_p, double ** coefs,
   /* RECALL THAT WE NEED AN EVEN DEGREE !!!! */
   *_degree_of_p = degree_of_p;
 
-#if ( defined SSE || defined SSE2 || defined SSE3)
   free(ss_);   
   free(auxs_); 
   free(aux2s_);
   free(sc_);   
   free(auxc_); 
   free(aux2c_);
-#else
-  free(ss);   
-  free(auxs); 
-  free(aux2s);
-  free(sc);   
-  free(auxc); 
-  free(aux2c);
-#endif
   return;
 }

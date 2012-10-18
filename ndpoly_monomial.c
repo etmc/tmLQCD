@@ -27,10 +27,8 @@
 #include <time.h>
 #include "global.h"
 #include "su3.h"
-#include "su3adj.h"
 #include "linalg_eo.h"
 #include "start.h"
-#include "linsolve.h"
 #include "solver/solver.h"
 #include "deriv_Sb.h"
 #include "tm_operators.h"
@@ -162,7 +160,6 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
 
 void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   int j;
-  double temp;
   monomial * mnl = &monomial_list[id];
 
   ndpoly_set_global_parameter(mnl, phmc_exact_poly);

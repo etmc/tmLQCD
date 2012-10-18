@@ -36,7 +36,6 @@
 #include "Hopping_Matrix.h"
 #include "phmc.h"
 #include "gamma.h"
-#include "linsolve.h"
 #include "linalg_eo.h"
 #include "tm_operators.h"
 #include "clovertm_operators.h"
