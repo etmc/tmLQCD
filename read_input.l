@@ -1956,11 +1956,6 @@ int read_input(char * conf_file){
   X2 = _default_X2;
   X3 = _default_X3;
   g_rgi_C1 = _default_g_rgi_C1;
-  g_Ct = _default_g_Ct;
-  g_Cs = _default_g_Cs;
-  g_C1ss = _default_g_C1ss;
-  g_C1tss = _default_g_C1tss;
-  g_C1tts = _default_g_C1tts;
   read_source_flag= _default_read_source_flag;
   if(SourceInfo.basename == NULL) SourceInfo.basename = (char*)malloc(100*sizeof(char));
   strcpy(SourceInfo.basename, _default_source_filename);

@@ -289,7 +289,6 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
   y3 = (x3 + LZ) % LZ;
   ix = ((y0*LX + y1)*LY + y2)*LZ + y3;
   
-  y0=x0; /* ?!? */
 #if ((defined PARALLELT) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
   if(x0 == T) {
     ix = VOLUME + y3 + LZ*y2 + LZ*LY*y1;
@@ -1458,22 +1457,6 @@ void geometry(){
   }
 
   Hopping_Matrix_Indices();
-
-  /* This establishes the time-coordinate values. */
-  /* This should only be used for the SFBC because */
-  /* it may eventually vanish. */
-  /* This should be merged into the above. */
-  /* FIX this later, but for now */
-  /* I'm assuming a scalar machine. */
-  for( x0 = 0; x0 <  T; x0++ )
-  for( x1 = 0; x1 < LX; x1++ )
-  for( x2 = 0; x2 < LY; x2++ )
-  for( x3 = 0; x3 < LZ; x3++ )
-  {
-    ix = Index( x0, x1, x2, x3 );
-    assert( ix == g_ipt[ x0 ][ x1 ][ x2 ][ x3 ] );
-    g_t[ix] = x0;
-  }
 
   free(xeven);
 }
