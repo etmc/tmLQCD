@@ -193,22 +193,6 @@ EXTERN double g_kappa, g_c_sw, g_ka_csw_8, g_beta;
 EXTERN double g_mu, g_mu1, g_mu2, g_mu3;
 EXTERN double g_rgi_C0, g_rgi_C1;
 
-/*************************/
-/* SF definitions */
-EXTERN double g_eta;                          /* background field parameter */
-EXTERN double g_Ct, g_Cs;                     /* plaquette part */
-EXTERN double g_C1ss, g_C1tss, g_C1tts;       /* rectangle part */
-EXTERN int g_Tbsf;                            /* it sets at which time slice I want to put the SF b.c. (end point)
-                                                 T = lattice time extent */
-/* variables specifying the value of t,x,y,z for each lattice site ix */
-EXTERN int* g_t;
-EXTERN int* g_x;
-EXTERN int* g_y;
-EXTERN int* g_z;
-EXTERN int g_sf_inc_wrap_sq;
-/* end of SF definitions */
-/*************************/
-
 /* Parameters for non-degenrate case */
 EXTERN double g_mubar, g_epsbar;
 EXTERN int g_use_clover_flag;

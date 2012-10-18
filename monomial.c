@@ -97,12 +97,6 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].c1 = _default_g_rgi_C1;
   monomial_list[no_monomials].c0 = 1.;
   monomial_list[no_monomials].beta = _default_g_beta;
-  monomial_list[no_monomials].eta = _default_g_eta;
-  monomial_list[no_monomials].ct = _default_g_Ct; 
-  monomial_list[no_monomials].cs = _default_g_Cs;
-  monomial_list[no_monomials].c1ss = _default_g_C1ss; 
-  monomial_list[no_monomials].c1tss = _default_g_C1tss; 
-  monomial_list[no_monomials].c1tts = _default_g_C1tts; 
   monomial_list[no_monomials].rngrepro = _default_reproduce_randomnumber_flag;
   /* poly monomial */
   monomial_list[no_monomials].rec_ev = _default_g_rec_ev;

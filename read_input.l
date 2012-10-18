@@ -205,7 +205,6 @@ inline void rmQuotes(char *str){
 %x LLX
 %x LLY
 %x LLZ
-%x TTBSF
 %x NPROCX
 %x NPROCY
 %x NPROCZ
@@ -278,7 +277,6 @@ inline void rmQuotes(char *str){
 %x CLDETMONOMIAL
 %x CLDETRATMONOMIAL
 %x GAUGEMONOMIAL
-%x SFGAUGEMONOMIAL
 %x NDPOLYMONOMIAL
 %x POLYMONOMIAL
 %x CLPOLYMONOMIAL
@@ -313,7 +311,6 @@ inline void rmQuotes(char *str){
 ^LX{EQL}                           BEGIN(LLX);
 ^LY{EQL}                           BEGIN(LLY);
 ^LZ{EQL}                           BEGIN(LLZ);
-^g_Tbsf{EQL}                       BEGIN(TTBSF);
 ^NRXProcs{EQL}                     BEGIN(NPROCX);
 ^NRYProcs{EQL}                     BEGIN(NPROCY);
 ^NRZProcs{EQL}                     BEGIN(NPROCZ);
@@ -839,11 +836,6 @@ inline void rmQuotes(char *str){
     mnl->gtype = 3;
     strcpy((*mnl).name, "GAUGE");
   }
-  else if(strcmp(yytext, "SFGAUGE")==0) {
-    mnl->type = SFGAUGE;
-    mnl->gtype = 6;
-    strcpy((*mnl).name, "SFGAUGE");
-  }
   else {
     fprintf(stderr, "Unknown monomial type %s in line %d\n", yytext, line_of_file);
     exit(1);
@@ -858,7 +850,6 @@ inline void rmQuotes(char *str){
   if(myverbose) printf("monomial has id %d\n", current_monomial);
 
   if(mnl->type == GAUGE) BEGIN(GAUGEMONOMIAL);
-  else if(mnl->type == SFGAUGE) BEGIN(SFGAUGEMONOMIAL);
   else if(mnl->type == NDPOLY) BEGIN(NDPOLYMONOMIAL);
   else if(mnl->type == NDCLOVER) BEGIN(CLPOLYMONOMIAL);
   else if(mnl->type == POLY || mnl->type == POLYDETRATIO)  {
@@ -872,7 +863,7 @@ inline void rmQuotes(char *str){
 
 
 
-<DETMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLPOLYMONOMIAL>{
+<DETMONOMIAL,GAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLPOLYMONOMIAL>{
   {SPC}*Timescale{EQL}{DIGIT}+ {
     if(mnl->type == NDDETRATIO) {
       mnl->timescale = -5;
@@ -1026,80 +1017,7 @@ inline void rmQuotes(char *str){
     g_rgi_C1 = c;
     if(myverbose) printf("  RectangleCoefficient c1  set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*IncludeWrappedSquares{EQL}yes {
-    g_sf_inc_wrap_sq = 1;
-    if(myverbose) printf("  IncludeWrappedSquares set to true line %d monomial %d\n", line_of_file, current_monomial);
-  }
-  {SPC}*IncludeWrappedSquares{EQL}no {
-    g_sf_inc_wrap_sq = 0;
-    if(myverbose) printf("  IncludeWrappedSquares set to false line %d monomial %d\n", line_of_file, current_monomial);
-  }
 }
-
-<SFGAUGEMONOMIAL>{
-  {SPC}*Type{EQL} BEGIN(GTYPE);
-  {SPC}*UseRectangleStaples{EQL}yes {
-    mnl->use_rectangles = 1;
-    g_dbw2rand = 1;
-    if(myverbose) printf("  UseRectangleStaples set to true line %d monomial %d\n", line_of_file, current_monomial);
-  }
-  {SPC}*UseRectangleStaples{EQL}no {
-    mnl->use_rectangles = 0;
-    /* g_dbw2rand = 0; */
-    mnl->c1 = 0.;
-    g_rgi_C1 = 0.;
-    if(myverbose) printf("  UseRectangleStaples set to false line %d monomial %d\n", line_of_file, current_monomial);
-  }
-  {SPC}*Beta{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
-    mnl->beta = c;
-    g_beta = c;
-    if(myverbose) printf("  beta set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*RectangleCoefficient{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
-    mnl->c1 = c;
-    g_rgi_C1 = c;
-    if(myverbose) printf("  RectangleCoefficient c1  set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*Eta{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
-    mnl->eta = c;
-    g_eta = c;
-    if(myverbose) printf("  eta set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*PlaquetteCoefficientT{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
-    mnl->ct = c;
-    g_Ct = c;
-    if(myverbose) printf("  PlaquetteCoefficientT ct set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*PlaquetteCoefficientS{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
-    mnl->cs = c;
-    g_Cs = c;
-    if(myverbose) printf("  PlaquetteCoefficientS cs set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*RectangleCoefficientSS{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
-    mnl->c1ss = c;
-    g_C1ss = c;
-    if(myverbose) printf("  RectangleCoefficientSS c1ss set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*RectangleCoefficientTSS{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
-    mnl->c1tss = c;
-    g_C1tss = c;
-    if(myverbose) printf("  RectangleCoefficientTSS c1tss set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*RectangleCoefficientTTS{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
-    mnl->c1tts = c;
-    g_C1tts = c;
-    if(myverbose) printf("  RectangleCoefficientTTS c1tts set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-}
-
 
 <NDPOLYMONOMIAL>{
   {SPC}*ExactPolynomial{EQL}yes {
@@ -1266,19 +1184,6 @@ inline void rmQuotes(char *str){
     mnl->use_rectangles = 1;
     BEGIN(GAUGEMONOMIAL);
   }
-  sf_Wilson {
-    mnl->gtype = 5;
-    mnl->c1 = 0.;
-    mnl->use_rectangles = 0;
-    g_rgi_C1 = 0.;
-    /* g_dbw2rand = 0; */
-    BEGIN(SFGAUGEMONOMIAL);
-  }
-  sf_user {
-    mnl->gtype = 6;
-    BEGIN(SFGAUGEMONOMIAL);
-  }
-
 }
 
 <INITINTEGRATOR>egrator{SPC}* {
@@ -1477,10 +1382,6 @@ inline void rmQuotes(char *str){
   LZ = atoi(yytext);
   if(myverbose!=0) printf("LZ =%s\n", yytext);
 #endif
-}
-<TTBSF>{DIGIT}+                  {
-  g_Tbsf = atoi(yytext);
-  if(myverbose!=0) printf("g_Tbsf =%s\n", yytext);
 }
 <NPROCX>{DIGIT}+              {
 #ifndef FIXEDVOLUME
@@ -1951,7 +1852,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU>\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU>\n   {
   line_of_file++;
 }
 <*>\n                       {
@@ -2004,7 +1905,6 @@ int read_input(char * conf_file){
   LX = _default_LX;
   LY = _default_LY;
   LZ = _default_LZ;
-  g_Tbsf = _default_g_Tbsf;
   N_PROC_X = _default_N_PROC_X;
   N_PROC_Y = _default_N_PROC_Y;
   N_PROC_Z = _default_N_PROC_Z;
@@ -2033,7 +1933,6 @@ int read_input(char * conf_file){
   g_dbw2rand = 0;
   g_running_phmc = 0;
   g_beta = _default_g_beta;
-  g_eta = _default_g_eta;
   g_N_s = _default_g_N_s;
   g_dflgcr_flag = _default_g_dflgcr_flag;
   random_seed = _default_random_seed;
