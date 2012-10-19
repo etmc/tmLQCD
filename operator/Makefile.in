@@ -4,7 +4,7 @@ top_builddir =  @top_builddir@
 abs_top_builddir = @abs_top_builddir@
 top_srcdir = @top_srcdir@
 abs_top_srcdir = @abs_top_srcdir@
-subdir = linalg
+subdir = operator
 builddir = @builddir@
 
 CFLAGS = @CFLAGS@
@@ -30,7 +30,8 @@ LDADD =
 COMPILE = ${CC} $(DEFS) ${INCLUDES} ${CFLAGS}
 
 LIBRARIES = liboperator
-liboperator_TARGETS = clovertm_operators clover_leaf tm_operators_nd 
+liboperator_TARGETS = clovertm_operators clover_leaf tm_operators_nd clover_term clover_invert \
+	clover_deriv clover_accumulate_deriv clover_det
 
 liboperator_STARGETS = Hopping_Matrix_nocom tm_times_Hopping_Matrix Hopping_Matrix \
 	tm_operators tm_sub_Hopping_Matrix D_psi Dov_psi Dov_proj
