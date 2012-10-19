@@ -16,7 +16,7 @@
 #include "linalg_eo.h"
 #include "start.h"
 #ifdef MPI
-# include "xchange.h"
+# include "xchange/xchange.h"
 #endif
 #include "read_input.h"
 #include "boundary.h"

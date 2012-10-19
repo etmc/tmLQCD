@@ -16,19 +16,26 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-#ifndef _XCHANGE_H
-#define _XCHANGE_H
 
-#include "xchange/xchange_field.h"
-#include "xchange/xchange_gauge.h"
-#include "xchange/xchange_deri.h"
-#include "xchange/xchange_halffield.h"
-#include "xchange/xchange_jacobi.h"
-#include "xchange/xchange_2fields.h"
-#include "xchange/xchange_lexicfield.h"
+#ifndef _INIT_H
+#define _INIT_H
 
-#  ifdef _USE_TSPLITPAR
-#    include "xchange/xchange_field_tslice.h"
-#  endif
+#include "init/init_bispinor_field.h"
+#include "init/init_chi_spinor_field.h"
+#include "init/init_dirac_halfspinor.h"
+#include "init/init_gauge_field.h"
+#include "init/init_gauge_tmp.h"
+#include "init/init_geometry_indices.h"
+#ifdef WITHLAP
+#  include "init/init_jacobi_field.h"
+#endif
+#include "init/init_moment_field.h"
+#include "init/init_spinor_field.h"
+#include "init/init_stout_smear_vars.h"
+#ifdef OMP
+# include <omp.h>
+# include "init/init_omp_accumulators.h"
+#endif
+
 
 #endif

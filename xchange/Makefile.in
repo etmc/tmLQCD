@@ -32,7 +32,7 @@ COMPILE = ${CC} $(DEFS) ${INCLUDES} ${CFLAGS}
 LIBRARIES = libxchange
 libxchange_TARGETS = xchange_deri xchange_field xchange_gauge xchange_halffield \
 	xchange_lexicfield xchange_2fields xchange_field_tslice \
-	xchange_jacobi 
+	xchange_jacobi
 
 libxchange_STARGETS = 
 
