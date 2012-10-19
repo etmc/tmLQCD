@@ -40,7 +40,7 @@
 #include "chebyshev_polynomial_nd.h"
 #include "Ptilde_nd.h"
 #include "reweighting_factor_nd.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 #include "hamiltonian_field.h"
 #include "boundary.h"
 #include "phmc.h"

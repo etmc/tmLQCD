@@ -39,7 +39,7 @@
 #include "read_input.h"
 #include "clovertm_operators.h"
 #include "clover_leaf.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 #include "boundary.h"
 #include "cloverdetratio_monomial.h"
 

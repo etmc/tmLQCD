@@ -27,7 +27,7 @@
 #include "global.h"
 #include "linalg_eo.h"
 #include "start.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 #include "hamiltonian_field.h"
 #include "reweighting_factor.h"
 

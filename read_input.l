@@ -55,7 +55,7 @@ EQL {SPC}*={SPC}*
 #include"global.h"
 #include"read_input.h"
 #include"default_input_values.h"
-#include"monomial.h"
+#include"monomial/monomial.h"
 #include"measurements.h"
 #include"integrator.h"
 #include"operator.h"

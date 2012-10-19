@@ -39,7 +39,7 @@
 #include "linalg_eo.h"
 #include "default_input_values.h"
 #include "read_input.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 
 
 

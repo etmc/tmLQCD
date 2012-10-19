@@ -36,7 +36,7 @@
 #include "Ptilde_nd.h"
 #include "tm_operators_nd.h"
 #include "phmc.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 #include "solver/matrix_mult_typedef_bi.h"
 #include "gettime.h"
 

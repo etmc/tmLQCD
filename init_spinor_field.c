@@ -29,7 +29,7 @@
 #include "global.h"
 #include "su3.h"
 #include "sse.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 
 spinor * sp = NULL;
 spinor * sp_csg = NULL;

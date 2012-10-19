@@ -42,7 +42,7 @@
 #include "read_input.h"
 #include "hamiltonian_field.h"
 #include "boundary.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 #include "clovertm_operators.h"
 #include "cloverdet_monomial.h"
 

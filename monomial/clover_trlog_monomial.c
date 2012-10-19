@@ -31,7 +31,7 @@
 #include "su3spinor.h"
 #include "clovertm_operators.h"
 #include "clover_leaf.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 #include "Hopping_Matrix.h"
 #include "clover_trlog_monomial.h"
 

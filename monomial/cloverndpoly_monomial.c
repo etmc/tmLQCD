@@ -36,7 +36,7 @@
 #include "Hopping_Matrix.h"
 #include "phmc.h"
 #include "Ptilde_nd.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 #include "hamiltonian_field.h"
 #include "boundary.h"
 #include "clovertm_operators.h"

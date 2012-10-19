@@ -38,7 +38,7 @@
 #include "read_input.h"
 #include "hamiltonian_field.h"
 #include "boundary.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 #include "det_monomial.h"
 
 /* think about chronological solver ! */

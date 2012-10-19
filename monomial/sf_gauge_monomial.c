@@ -36,7 +36,7 @@
 #include "read_input.h"
 #include "measure_gauge_action.h"
 #include "measure_rectangles.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 #include "sf_gauge_monomial.h"
 #include "hamiltonian_field.h"
 #include "sf_utils.h"

@@ -26,7 +26,7 @@
 #include <math.h>
 #include <time.h>
 #include "global.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 #include "update_momenta.h"
 #include "update_gauge.h"
 #include "hamiltonian_field.h"

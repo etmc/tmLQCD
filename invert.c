@@ -70,7 +70,7 @@
 #include "xchange_halffield.h"
 #include "smearing/stout.h"
 #include "invert_eo.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 #include "ranlxd.h"
 #include "phmc.h"
 #include "D_psi.h"

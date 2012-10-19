@@ -37,7 +37,7 @@
 #include "solver/solver.h"
 #include "read_input.h"
 #include "gamma.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 #include "boundary.h"
 #include "detratio_monomial.h"
 

@@ -19,7 +19,7 @@
 #include "config.h"
 #include "su3.h"
 #include "sse.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 #include <complex.h>
 #include "dirac_operator_eigenvectors.h"
 #include "geometry_eo.h"

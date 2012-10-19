@@ -30,7 +30,7 @@
 #include "su3.h"
 #include "su3adj.h"
 #include "su3spinor.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 #include "xchange_deri.h"
 #include "clover_leaf.h"
 #include "read_input.h"

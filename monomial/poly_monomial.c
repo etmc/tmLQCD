@@ -33,7 +33,7 @@
 #include "global.h"
 #include "start.h"
 #include "read_input.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 #include "poly_monomial.h"
 #include "boundary.h"
 #include "linalg/square_norm.h"

@@ -112,18 +112,18 @@ typedef struct {
   void (*Qm) (spinor * const, spinor * const);
 } monomial;
 
-#include "det_monomial.h"
-#include "detratio_monomial.h"
-#include "poly_monomial.h"
-#include "ndpoly_monomial.h"
-#include "nddetratio_monomial.h"
-#include "gauge_monomial.h"
-#include "sf_gauge_monomial.h"
-#include "clover_trlog_monomial.h"
-#include "clovernd_trlog_monomial.h"
-#include "cloverdet_monomial.h"
-#include "cloverdetratio_monomial.h"
-#include "cloverndpoly_monomial.h"
+#include "monomial/det_monomial.h"
+#include "monomial/detratio_monomial.h"
+#include "monomial/poly_monomial.h"
+#include "monomial/ndpoly_monomial.h"
+#include "monomial/nddetratio_monomial.h"
+#include "monomial/gauge_monomial.h"
+#include "monomial/sf_gauge_monomial.h"
+#include "monomial/clover_trlog_monomial.h"
+#include "monomial/clovernd_trlog_monomial.h"
+#include "monomial/cloverdet_monomial.h"
+#include "monomial/cloverdetratio_monomial.h"
+#include "monomial/cloverndpoly_monomial.h"
 
 /* list of all monomials */
 extern monomial monomial_list[max_no_monomials];

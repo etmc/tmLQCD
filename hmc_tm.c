@@ -75,7 +75,7 @@
 #include "boundary.h"
 #include "phmc.h"
 #include "solver/solver.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 #include "integrator.h"
 #include "sighandler.h"
 #include "measurements.h"
