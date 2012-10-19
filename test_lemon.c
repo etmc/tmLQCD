@@ -51,7 +51,7 @@
 #include "start.h"
 #include "boundary.h"
 #include "global.h"
-#include "xchange.h"
+#include "xchange/xchange.h"
 #include "init_gauge_field.h"
 #include "init_geometry_indices.h"
 #include "measure_gauge_action.h"

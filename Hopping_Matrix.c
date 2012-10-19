@@ -57,13 +57,7 @@
 #include "global.h"
 #include "su3.h"
 #ifdef MPI
-#  include "xchange_field.h"
-#  ifdef _USE_TSPLITPAR
-#    include "xchange_field_tslice.h"
-#  endif
-#  if defined _USE_HALFSPINOR
-#    include "xchange_halffield.h"
-#  endif
+#  include "xchange/xchange.h"
 #endif
 #include "boundary.h"
 #include "init_dirac_halfspinor.h"

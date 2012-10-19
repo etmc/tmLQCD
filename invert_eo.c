@@ -43,7 +43,7 @@
 #include"gamma.h"
 #include"solver/solver.h"
 #include"read_input.h"
-#include"xchange.h"
+#include"xchange/xchange.h"
 #include"solver/poly_precon.h"
 #include"solver/dfl_projector.h"
 #include"invert_eo.h"

@@ -49,7 +49,7 @@
 #include "geometry_eo.h"
 #include "read_input.h"
 #include "start.h"
-#include "xchange.h"
+#include "xchange/xchange.h"
 #include "init_gauge_field.h"
 #include "init_geometry_indices.h"
 #include "mpi_init.h"

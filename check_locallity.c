@@ -47,7 +47,7 @@
 #include "start.h"
 #include "measure_gauge_action.h"
 #ifdef MPI
-#include "xchange.h"
+#include "xchange/xchange.h"
 #endif
 #include "read_input.h"
 #include "mpi_init.h"
@@ -59,7 +59,6 @@
 #include "init_spinor_field.h"
 #include "init_moment_field.h"
 #include "init_dirac_halfspinor.h"
-#include "xchange_halffield.h"
 #include "smearing/stout.h"
 #include "su3spinor.h"
 #include "invert_eo.h"

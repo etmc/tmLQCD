@@ -27,7 +27,7 @@
 #include "global.h"
 #include "su3.h"
 #include "start.h"
-#include "xchange_jacobi.h"
+#include "xchange/xchange.h"
 #include "init_jacobi_field.h"
 
 #ifdef WITHLAPH

@@ -43,7 +43,7 @@
 #include"gamma.h"
 #include"solver/solver.h"
 #include"read_input.h"
-#include"xchange.h"
+#include"xchange/xchange.h"
 #include"tm_operators_nd.h"
 #include"invert_doublet_eo.h"
 

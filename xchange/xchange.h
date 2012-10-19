@@ -19,13 +19,13 @@
 #ifndef _XCHANGE_H
 #define _XCHANGE_H
 
-#include "xchange_field.h"
-#include "xchange_gauge.h"
-#include "xchange_deri.h"
-#include "xchange_halffield.h"
-#include "xchange_jacobi.h"
+#include "xchange/xchange_field.h"
+#include "xchange/xchange_gauge.h"
+#include "xchange/xchange_deri.h"
+#include "xchange/xchange_halffield.h"
+#include "xchange/xchange_jacobi.h"
 #  ifdef _USE_TSPLITPAR
-#    include "xchange_field_tslice.h"
+#    include "xchange/xchange_field_tslice.h"
 #  endif
 
 #endif

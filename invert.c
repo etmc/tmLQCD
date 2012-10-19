@@ -52,7 +52,7 @@
 /*#include "eigenvalues.h"*/
 #include "measure_gauge_action.h"
 #ifdef MPI
-#include "xchange.h"
+#include "xchange/xchange.h"
 #endif
 #include <io/utils.h>
 #include "read_input.h"
@@ -67,7 +67,6 @@
 #include "init_dirac_halfspinor.h"
 #include "init_bispinor_field.h"
 #include "init_chi_spinor_field.h"
-#include "xchange_halffield.h"
 #include "smearing/stout.h"
 #include "invert_eo.h"
 #include "monomial/monomial.h"

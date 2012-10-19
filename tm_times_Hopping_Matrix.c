@@ -42,10 +42,7 @@
 #  include"DirectPut.h"
 #endif
 #ifdef MPI
-#  include "xchange_field.h"
-#  if defined _USE_HALFSPINOR
-#    include "xchange_halffield.h"
-#  endif
+#  include "xchange/xchange.h"
 #endif
 #include "boundary.h"
 #include "init_dirac_halfspinor.h"

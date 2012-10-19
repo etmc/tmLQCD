@@ -53,7 +53,7 @@
 #include "ranlxd.h"
 #include "read_input.h"
 #include "expo.h"
-#include "xchange.h"
+#include "xchange/xchange.h"
 #include "measure_rectangles.h"
 #include "init_gauge_tmp.h"
 #include "monomial/monomial.h"

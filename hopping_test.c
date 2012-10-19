@@ -56,7 +56,7 @@
 #include "Hopping_Matrix_nocom.h"
 #include "tm_operators.h"
 #include "global.h"
-#include "xchange.h"
+#include "xchange/xchange.h"
 #include "init_gauge_field.h"
 #include "init_geometry_indices.h"
 #include "init_spinor_field.h"

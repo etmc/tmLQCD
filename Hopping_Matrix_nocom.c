@@ -41,7 +41,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "global.h"
-#include "xchange.h"
+#include "xchange/xchange.h"
 #include "su3.h"
 #include "sse.h"
 #include "boundary.h"

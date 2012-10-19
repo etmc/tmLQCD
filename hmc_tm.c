@@ -56,7 +56,7 @@
 #include "measure_gauge_action.h"
 #include "measure_rectangles.h"
 #ifdef MPI
-# include "xchange.h"
+# include "xchange/xchange.h"
 #endif
 #include "read_input.h"
 #include "mpi_init.h"
@@ -70,7 +70,6 @@
 #include "init_dirac_halfspinor.h"
 #include "init_bispinor_field.h"
 #include "init_chi_spinor_field.h"
-#include "xchange_halffield.h"
 #include "test/check_geometry.h"
 #include "boundary.h"
 #include "phmc.h"
