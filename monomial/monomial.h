@@ -74,10 +74,6 @@ typedef struct {
   double accprec;
   /* force normalisation */
   double forcefactor;
-  /* sf */          
-  double eta;             
-  double ct, cs; 
-  double c1ss, c1tss, c1tts;
   /* some book-keeping */
   char name[100];
   /* pseudo fermion field */
