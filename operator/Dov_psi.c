@@ -54,6 +54,7 @@
 #include "solver/eigenvalues.h"
 #include "solver/sub_low_ev.h"
 #include "Dov_psi.h"
+#include "init/init.h"
 #include "solver/dirac_operator_eigenvectors.h"
 
 void addproj_q_invsqrt(spinor * const Q, spinor * const P, const int n, const int N);
