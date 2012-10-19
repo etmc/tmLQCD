@@ -41,11 +41,11 @@
 #include "sse.h"
 #include "boundary.h"
 #ifdef MPI
-# include "xchange_lexicfield.h"
+# include "xchange/xchange.h"
 #endif
 #include "update_backward_gauge.h"
 #include "block.h"
-#include "D_psi.h"
+#include "operator/D_psi.h"
 #include "solver/dirac_operator_eigenvectors.h"
 
 static spinor tmpr;

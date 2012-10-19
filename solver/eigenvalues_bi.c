@@ -52,7 +52,7 @@
 #include "solver/jdher_bi.h"
 #include "solver/matrix_mult_typedef_bi.h"
 #include "eigenvalues_bi.h"
-#include "tm_operators_nd.h"
+#include "operator/tm_operators_nd.h"
 
 
 double eigenvalues_bi(int * nr_of_eigenvalues,  

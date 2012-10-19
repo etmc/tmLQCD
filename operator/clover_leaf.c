@@ -49,8 +49,8 @@
 #include "su3.h"
 #include "sse.h"
 #include "su3adj.h"
-#include "clovertm_operators.h"
-#include "clover_leaf.h"
+#include "operator/clovertm_operators.h"
+#include "operator/clover_leaf.h"
 
 const double tiny_t = 1.0e-20;
 

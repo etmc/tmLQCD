@@ -34,7 +34,7 @@
 #include "init_chi_spinor_field.h"
 #include "chebyshev_polynomial_nd.h"
 #include "Ptilde_nd.h"
-#include "tm_operators_nd.h"
+#include "operator/tm_operators_nd.h"
 #include "phmc.h"
 #include "monomial/monomial.h"
 #include "solver/matrix_mult_typedef_bi.h"

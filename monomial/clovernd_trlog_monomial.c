@@ -29,10 +29,10 @@
 #include "su3.h"
 #include "su3adj.h"
 #include "su3spinor.h"
-#include "clovertm_operators.h"
-#include "clover_leaf.h"
+#include "operator/clovertm_operators.h"
+#include "operator/clover_leaf.h"
 #include "monomial/monomial.h"
-#include "Hopping_Matrix.h"
+#include "operator/Hopping_Matrix.h"
 #include "clovernd_trlog_monomial.h"
 
 void clovernd_trlog_derivative(const int id, hamiltonian_field_t * const hf) {

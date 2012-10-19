@@ -31,14 +31,14 @@
 #include <stdio.h>
 #include "global.h"
 #include "su3.h"
-#include "Hopping_Matrix.h"
-#include "Hopping_Matrix_nocom.h"
-#include "tm_times_Hopping_Matrix.h"
-#include "tm_sub_Hopping_Matrix.h"
+#include "operator/Hopping_Matrix.h"
+#include "operator/Hopping_Matrix_nocom.h"
+#include "operator/tm_times_Hopping_Matrix.h"
+#include "operator/tm_sub_Hopping_Matrix.h"
 #include "sse.h"
 #include "linalg_eo.h"
 #include "gamma.h"
-#include "D_psi.h"
+#include "operator/D_psi.h"
 #ifdef BGL
 #  include "bgl.h"
 #endif

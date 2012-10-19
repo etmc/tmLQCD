@@ -40,13 +40,13 @@ LINKLIBS = ${top_builddir}/linalg/liblinalg.a  \
 
 COMPILE = ${CC} ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
 
-SMODULES = Hopping_Matrix_nocom tm_times_Hopping_Matrix Hopping_Matrix tm_operators tm_sub_Hopping_Matrix
+SMODULES = 
 
 MODULES = read_input gamma hybrid_update measure_gauge_action start \
 	expo get_staples update_backward_gauge \
 	measure_rectangles get_rectangle_staples  \
 	test/check_geometry test/check_xchange \
-	test/overlaptests clovertm_operators clover_leaf \
+	test/overlaptests \
 	invert_eo invert_doublet_eo update_gauge \
 	polyakov_loop getopt sighandler reweighting_factor \
 	source_generation boundary update_tm ranlxd  \
@@ -54,12 +54,12 @@ MODULES = read_input gamma hybrid_update measure_gauge_action start \
 	geometry_eo invert_overlap \
 	init_moment_field init_gauge_tmp prepare_source \
 	init_gauge_field init_geometry_indices init_spinor_field \
-	init_dirac_halfspinor tm_operators_nd \
+	init_dirac_halfspinor \
 	chebyshev_polynomial_nd Ptilde_nd  \
 	init_chi_spinor_field reweighting_factor_nd \
-	init_bispinor_field D_psi \
+	init_bispinor_field \
 	online_measurement update_momenta integrator  phmc \
-	little_D block Dov_psi operator measurements pion_norm Dov_proj \
+	little_D block operator measurements pion_norm \
 	temporalgauge spinor_fft X_psi P_M_eta \
 	jacobi init_jacobi_field \
 	fatal_error invert_clover_eo gettime @SPI_FILES@ init_omp_accumulators

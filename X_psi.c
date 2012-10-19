@@ -29,10 +29,10 @@
 #include "global.h"
 #include "su3.h"
 #include "linalg_eo.h"
-#include "D_psi.h"
+#include "operator/D_psi.h"
 #include "gamma.h"
 #include "X_psi.h"
-#include "tm_operators.h"
+#include "operator/tm_operators.h"
 #include "solver/solver.h"
 #include "read_input.h"
 

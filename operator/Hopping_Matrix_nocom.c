@@ -45,7 +45,7 @@
 #include "su3.h"
 #include "sse.h"
 #include "boundary.h"
-#include "Hopping_Matrix.h"
+#include "operator/Hopping_Matrix.h"
 
 #define Hopping_Matrix Hopping_Matrix_nocom
 #define _NO_COMM 1

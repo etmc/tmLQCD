@@ -33,7 +33,7 @@
 #include "gmres.h"
 #include "solver.h"
 #include "block.h"
-#include "Hopping_Matrix.h"
+#include "operator/Hopping_Matrix.h"
 #include "solver_field.h"
 #include "D_psi.h"
 

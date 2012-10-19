@@ -33,13 +33,13 @@
 #include <math.h>
 #include "global.h"
 #include "su3.h"
-#include "Hopping_Matrix.h"
+#include "operator/Hopping_Matrix.h"
 #include "phmc.h"
 #include "gamma.h"
 #include "linalg_eo.h"
-#include "tm_operators.h"
-#include "clovertm_operators.h"
-#include "tm_operators_nd.h"
+#include "operator/tm_operators.h"
+#include "operator/clovertm_operators.h"
+#include "operator/tm_operators_nd.h"
 
 
 void mul_one_pm_iconst(spinor * const l, spinor * const k, 

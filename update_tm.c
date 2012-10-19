@@ -44,7 +44,7 @@
 #include "global.h"
 #include "start.h"
 #include "sighandler.h"
-#include "tm_operators.h"
+#include "operator/tm_operators.h"
 #include "linalg_eo.h"
 #include "io/gauge.h"
 #include "io/params.h"

@@ -34,7 +34,7 @@
 #include "block.h"
 #include "linalg/blas.h"
 #include "D_psi.h"
-#include "Hopping_Matrix.h"
+#include "operator/Hopping_Matrix.h"
 #include "little_D.h"
 #include "block.h"
 #include "linalg_eo.h"

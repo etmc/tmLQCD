@@ -32,7 +32,7 @@
 #include "su3spinor.h"
 #include "monomial/monomial.h"
 #include "xchange/xchange.h"
-#include "clover_leaf.h"
+#include "operator/clover_leaf.h"
 #include "read_input.h"
 #include "hamiltonian_field.h"
 #include "update_momenta.h"

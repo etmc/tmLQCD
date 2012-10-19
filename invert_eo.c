@@ -37,9 +37,9 @@
 #include<stdlib.h>
 #include"global.h"
 #include"linalg_eo.h"
-#include"tm_operators.h"
-#include"Hopping_Matrix.h"
-#include"D_psi.h"
+#include"operator/tm_operators.h"
+#include"operator/Hopping_Matrix.h"
+#include"operator/D_psi.h"
 #include"gamma.h"
 #include"solver/solver.h"
 #include"read_input.h"

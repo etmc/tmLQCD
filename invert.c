@@ -72,7 +72,7 @@
 #include "monomial/monomial.h"
 #include "ranlxd.h"
 #include "phmc.h"
-#include "D_psi.h"
+#include "operator/D_psi.h"
 #include "little_D.h"
 #include "reweighting_factor.h"
 #include "linalg/convert_eo_to_lexic.h"
@@ -88,8 +88,8 @@
 #include <io/utils.h>
 #include "solver/dirac_operator_eigenvectors.h"
 #include "P_M_eta.h"
-#include "tm_operators.h"
-#include "Dov_psi.h"
+#include "operator/tm_operators.h"
+#include "operator/Dov_psi.h"
 #include "solver/spectral_proj.h"
 void usage()
 {

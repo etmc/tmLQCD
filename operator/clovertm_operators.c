@@ -35,9 +35,9 @@
 #include "su3.h"
 #include "sse.h"
 #include "linalg_eo.h"
-#include "Hopping_Matrix.h"
+#include "operator/Hopping_Matrix.h"
 #include "tm_operators.h"
-#include "clovertm_operators.h"
+#include "operator/clovertm_operators.h"
 
 
 su3 *** sw;

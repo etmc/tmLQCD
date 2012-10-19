@@ -62,7 +62,7 @@
 #include "smearing/stout.h"
 #include "su3spinor.h"
 #include "invert_eo.h"
-#include "D_psi.h"
+#include "operator/D_psi.h"
 #include "linalg/convert_eo_to_lexic.h"
 
 

@@ -65,7 +65,7 @@
 #ifdef BGQ
 #  include"DirectPut.h"
 #endif
-#include "Hopping_Matrix.h"
+#include "operator/Hopping_Matrix.h"
 
 #if defined _USE_HALFSPINOR
 #  include "operator/halfspinor_hopping.h"
