@@ -44,7 +44,7 @@
 #include "hamiltonian_field.h"
 #include "boundary.h"
 #include "phmc.h"
-#include "init_chi_spinor_field.h"
+#include "init/init_chi_spinor_field.h"
 #include "solver/matrix_mult_typedef_nd.h"
 #include "operator/clover_leaf.h"
 #include "operator/clovertm_operators.h"

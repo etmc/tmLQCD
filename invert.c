@@ -41,7 +41,6 @@
 #endif
 #ifdef OMP
 # include <omp.h>
-# include "init_omp_accumulators.h"
 #endif
 #include "global.h"
 #include "git_hash.h"
@@ -60,13 +59,7 @@
 #include "sighandler.h"
 #include "boundary.h"
 #include "solver/solver.h"
-#include "init_gauge_field.h"
-#include "init_geometry_indices.h"
-#include "init_spinor_field.h"
-#include "init_moment_field.h"
-#include "init_dirac_halfspinor.h"
-#include "init_bispinor_field.h"
-#include "init_chi_spinor_field.h"
+#include "init/init.h"
 #include "smearing/stout.h"
 #include "invert_eo.h"
 #include "monomial/monomial.h"

@@ -45,7 +45,6 @@
 #include "invert_overlap.h"
 #include "invert_clover_eo.h"
 #include "boundary.h"
-#include "init_chi_spinor_field.h"
 #include "start.h"
 #include "solver/eigenvalues.h"
 #include "solver/solver.h"

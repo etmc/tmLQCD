@@ -55,7 +55,7 @@
 #include "expo.h"
 #include "xchange/xchange.h"
 #include "measure_rectangles.h"
-#include "init_gauge_tmp.h"
+#include "init/init_gauge_tmp.h"
 #include "monomial/monomial.h"
 #include "integrator.h"
 #include "hamiltonian_field.h"

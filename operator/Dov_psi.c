@@ -55,7 +55,6 @@
 #include "solver/sub_low_ev.h"
 #include "Dov_psi.h"
 #include "solver/dirac_operator_eigenvectors.h"
-#include "init_spinor_field.h"
 
 void addproj_q_invsqrt(spinor * const Q, spinor * const P, const int n, const int N);
 /* |R>=rnorm^2 Q^2 |S> */

@@ -41,7 +41,7 @@
 #endif
 #include "mpi_init.h"
 #include "su3.h"
-#include "init_dirac_halfspinor.h"
+#include "init/init_dirac_halfspinor.h"
 #include "xchange_halffield.h"
 
 #if (defined _USE_HALFSPINOR)

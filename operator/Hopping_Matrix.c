@@ -60,7 +60,7 @@
 #  include "xchange/xchange.h"
 #endif
 #include "boundary.h"
-#include "init_dirac_halfspinor.h"
+#include "init/init_dirac_halfspinor.h"
 #include "update_backward_gauge.h"
 #ifdef BGQ
 #  include"DirectPut.h"

@@ -52,17 +52,12 @@ MODULES = read_input gamma hybrid_update measure_gauge_action start \
 	source_generation boundary update_tm ranlxd  \
 	mpi_init deriv_Sb deriv_Sb_D_psi ranlxs \
 	geometry_eo invert_overlap \
-	init_moment_field init_gauge_tmp prepare_source \
-	init_gauge_field init_geometry_indices init_spinor_field \
-	init_dirac_halfspinor \
-	chebyshev_polynomial_nd Ptilde_nd  \
-	init_chi_spinor_field reweighting_factor_nd \
-	init_bispinor_field \
+	prepare_source chebyshev_polynomial_nd Ptilde_nd  \
+	reweighting_factor_nd \
 	online_measurement update_momenta integrator  phmc \
 	little_D block operator measurements pion_norm \
 	temporalgauge spinor_fft X_psi P_M_eta \
-	jacobi init_jacobi_field \
-	fatal_error invert_clover_eo gettime @SPI_FILES@ init_omp_accumulators
+	jacobi fatal_error invert_clover_eo gettime @SPI_FILES@
 
 ## the GPU modules (all .cu files in $GPUDIR)
 GPUSOURCES := $(wildcard $(srcdir)/$(GPUDIR)/*.cu)

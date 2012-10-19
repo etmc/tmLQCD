@@ -28,10 +28,9 @@
 #include "global.h"
 
 #include "read_input.h"
-#include "init_bispinor_field.h"
 #include "solver/eigenvalues_bi.h"
 #include "solver/solver.h"
-#include "init_chi_spinor_field.h"
+#include "init/init.h"
 #include "chebyshev_polynomial_nd.h"
 #include "Ptilde_nd.h"
 #include "operator/tm_operators_nd.h"
