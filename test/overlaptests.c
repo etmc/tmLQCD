@@ -21,7 +21,7 @@
 #include "read_input.h"
 #include "boundary.h"
 #include "linalg/convert_eo_to_lexic.h"
-#include "Dov_psi.h"
+#include "operator/Dov_psi.h"
 
 #include "overlaptests.h"
 #include "gamma.h"
