@@ -27,10 +27,10 @@
 #include "linalg/lapack.h"
 #include "linalg/blas.h"
 #include "operator.h"
-#include "tm_operators.h"
-#include "D_psi.h"
+#include "operator/tm_operators.h"
+#include "operator/D_psi.h"
 #include "ranlxd.h"
-#include "Dov_psi.h"
+#include "operator/Dov_psi.h"
 #include "init_spinor_field.h"
 
 /*   typedef enum tm_operator_ {PRECWS_DTM,PRECWS_QTM,PRECWS_D_DAGGER_D} tm_operator; */

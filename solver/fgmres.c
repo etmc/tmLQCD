@@ -44,7 +44,7 @@
 #include"su3.h"
 #include"linalg_eo.h"
 #include"gmres_precon.h"
-#include"tm_operators.h"
+#include"operator/tm_operators.h"
 #include"sub_low_ev.h"
 #include"poly_precon.h"
 #include "Msap.h"

@@ -47,7 +47,7 @@
 #include "su3.h"
 #include "linalg_eo.h"
 #include "start.h"
-#include "tm_operators.h"
+#include "operator/tm_operators.h"
 #include "solver/solver.h"
 #include "solver/jdher_bi.h"
 #include "solver/matrix_mult_typedef_bi.h"
