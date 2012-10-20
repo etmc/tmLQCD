@@ -175,30 +175,31 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #ifdef _TM_SUB_HOP
     pn=p+i;
 #endif
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_t_p_post32();
     ix++;
-    
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_t_m_post32();
     ix++;
     U++;
-    
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_x_p_post32();
     ix++;
-    
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_x_m_post32();
     U++;
     ix++;
-    
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_y_p_post32();
     ix++;
-    
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_y_m_post32();
     U++;
     ix++;
-    
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_z_p_post32();
     ix++;
-    
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_z_m_post32();
     
 #ifdef _MUL_G5_CMPLX
@@ -249,32 +250,33 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #ifdef _TM_SUB_HOP
     pn=p+i;
 #endif
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_t_p_post32();
     ix++;
-    
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_t_m_post32();
     ix++;
     U++;
-    
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_x_p_post32();
     ix++;
-    
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_x_m_post32();
     U++;
     ix++;
-    
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_y_p_post32();
     ix++;
-    
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_y_m_post32();
     U++;
     ix++;
-    
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_z_p_post32();
     ix++;
-    
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_z_m_post32();
-    
+
 #ifdef _MUL_G5_CMPLX
     _hop_mul_g5_cmplx_and_store(s);
 #elif defined _TM_SUB_HOP
@@ -411,33 +413,33 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #ifdef _TM_SUB_HOP
      pn=p+i;
 #endif
-     
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_t_p_post();
      ix++;
-     
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_t_m_post();
      ix++;
      U++;
-     
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_x_p_post();
      ix++;
-     
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_x_m_post();
      U++;
      ix++;
-     
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_y_p_post();
      ix++;
-     
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_y_m_post();
      U++;
      ix++;
-     
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_z_p_post();
      ix++;
-     
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_z_m_post();
-     
+
 #ifdef _MUL_G5_CMPLX
      _hop_mul_g5_cmplx_and_store(s);
 #elif defined _TM_SUB_HOP
@@ -488,32 +490,33 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #ifdef _TM_SUB_HOP
      pn=p+i;
 #endif
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_t_p_post();
      ix++;
-     
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_t_m_post();
      ix++;
      U++;
-     
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_x_p_post();
      ix++;
-     
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_x_m_post();
      U++;
      ix++;
-     
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_y_p_post();
      ix++;
-     
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_y_m_post();
      U++;
      ix++;
-     
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_z_p_post();
      ix++;
-     
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_z_m_post();
-     
+
 #ifdef _MUL_G5_CMPLX
      _hop_mul_g5_cmplx_and_store(s);
 #elif defined _TM_SUB_HOP
