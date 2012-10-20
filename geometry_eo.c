@@ -42,8 +42,10 @@
 #include "su3.h"
 #include "su3adj.h"
 #include "mpi_init.h"
+#include "geometry_eo.h"
 
 void Hopping_Matrix_Indices(void);
+int bodysurface(const int j);
 
 #if ((defined PARALLELX) || (defined PARALLELXY) || (defined PARALLELXYZ))
 
@@ -884,6 +886,27 @@ void geometry(){
     }
   }
 
+#ifdef _USE_HALFSPINOR
+  // here we can modify the even/odd order
+  // without changing the lexicographical order
+  //
+  for(int t = 0; t < T; t++) {
+    for(int x = 0; x < LX; x++) {
+      for(int y = 0; y < LY; y++) {
+	for(int z = 0; z < LZ; z++) {
+	  j = g_ipt[t][x][y][z];
+	  // j is the lexicographical index of point (t,x,y,z)
+	  int even = (z+t+x+y+g_proc_coords[0]*T + g_proc_coords[1]*LX + 
+		      g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2;
+	  g_lexic2eosub[j] = bodysurface(j);
+	  g_lexic2eo[j] = g_lexic2eosub[j] + even*(VOLUME+RAND)/2;
+	  g_eo2lexic[ g_lexic2eo[j] ] = j;
+	}
+      }
+    }
+  }
+#endif
+
   for(j=0; j<4; j++){  // NEW GIUPDNEO
     for(ix=0;ix< (VOLUME+RAND);ix++){
       g_iup_eo[ix][j]=g_lexic2eosub[g_iup[g_eo2lexic[ix]][j]];
@@ -1529,3 +1552,47 @@ void Hopping_Matrix_Indices(){
   return;
 }
 
+// expects j in lexicographical order
+// and returns the body-surface even/odd subtracted index
+int bodysurface(const int j) {
+  int t = j/(LX*LY*LZ);
+  int x = (j-t*(LX*LY*LZ))/(LY*LZ);
+  int y = (j-t*(LX*LY*LZ)-x*(LY*LZ))/(LZ);
+  int z = (j-t*(LX*LY*LZ)-x*(LY*LZ) - y*LZ);
+  int ret = 0;
+  int body = (T-2)*(LZ-2)*(LY-2)*(LX-2);
+  if(_IS_BODY) {
+    ret = (z-1)+(LZ-2)*((y-1) + (LY-2)*((x-1) + (LX-2)*(t-1)));
+  }
+  else {
+    ret = body;
+    if(t == 0) {
+      ret += z+LZ*(y + LY*x);
+    }
+    else if(t == T-1) {
+      ret += z+LZ*(y + LY*(x + LX));
+    }
+    else if(x == 0) {
+      ret += 2*LX*LY*LZ + z + LZ*(y + LY*(t-1));
+    }
+    else if(x == LX-1) {
+      ret += 2*LX*LY*LZ + z + LZ*(y + LY*((t-1) + (T-2)));
+    }
+    else if(y == 0) {
+      ret += 2*LX*LY*LZ + 2*LY*LZ*(T-2) + z + LZ*((x-1)+(LX-2)*(t-1));
+    }
+    else if(y == LY-1) {
+      ret += 2*LX*LY*LZ + 2*LY*LZ*(T-2) + z + LZ*((x-1)+(LX-2)*((t-1) +(T-2)));
+    }
+    else if(z == 0) {
+      ret += 2*LX*LY*LZ + 2*LY*LZ*(T-2) + 2*LZ*(LX-2)*(T-2) + (y-1) + (LY-2)*((x-1) + (LX-2)*(t-1));
+    }
+    else if(z == LZ-1) {
+      ret += 2*LX*LY*LZ + 2*LY*LZ*(T-2) + 2*LZ*(LX-2)*(T-2) + (y-1) + (LY-2)*((x-1) + (LX-2)*((t-1)+(T-2)));
+    }
+  }
+  if(g_proc_id == -1) {
+    printf("%d %d (%d, %d, %d, %d) %d %d\n", j, ret, t, x, y, z, _IS_BODY, body);
+  }
+  return(ret/2);
+}

@@ -19,6 +19,8 @@
 #ifndef _GEOMETRY_EO_H
 #define _GEOMETRY_EO_H
 
+#define _IS_BODY (t>0 && t<T-1 && x>0 && x<LX-1 && y>0 && y<LY-1 && z>0 && z<LZ-1)
+
 int Index(const int, const int, const int, const int);
 void geometry();
 
