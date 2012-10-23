@@ -856,7 +856,16 @@ inline void rmQuotes(char *str){
   else BEGIN(DETMONOMIAL);
 }
 
-
+<DETMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL>{
+  {SPC}*UseSmearing{EQL}yes {
+    //mnl->smearing = 1;
+    if(myverbose) printf("  in line %d monomial %d configured to use smearing\n", a, line_of_file, current_monomial);
+  }
+  {SPC}*UseSmearing{EQL}no {
+    //mnl->smearing = 0;
+    if(myverbose) printf("  in line %d monomial %d configured to not use smearing\n", a, line_of_file, current_monomial);
+  }
+}
 
 <DETMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL>{
   {SPC}*Timescale{EQL}{DIGIT}+ {
