@@ -107,14 +107,15 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
     ix++;
 #endif
   }
+
+#if (defined MPI && !defined _NO_COMM)
   
-#ifdef OMP
-#pragma omp single
+#  ifdef OMP
+#  pragma omp single nowait
   {
-#endif
+#  endif
     
-#    if (defined MPI && !defined _NO_COMM)
-#      ifdef SPI
+#    ifdef SPI
     
     // Initialize the barrier, resetting the hardware.
     int rc = MUSPI_GIBarrierInit ( &GIBarrier, 0 /*comm world class route */);
@@ -133,13 +134,13 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 			    j,
 			    &SPIDescriptors32[j]);
     }
-#      else
+#    else
     xchange_halffield32(); 
-#      endif
 #    endif
     
-#ifdef OMP
+#  ifdef OMP
   }
+#  endif
 #endif
   
 #ifndef OMP
@@ -341,14 +342,13 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
      ix++;
 #endif
    }
-   
-#ifdef OMP
-#pragma omp single
+
+#if (defined MPI && !defined _NO_COMM)
+#  ifdef OMP
+#  pragma omp single nowait
    {
-#endif
-     
-#    if (defined MPI && !defined _NO_COMM)
-#      ifdef SPI
+#  endif
+#    ifdef SPI
      
      // Initialize the barrier, resetting the hardware.
      int rc = MUSPI_GIBarrierInit ( &GIBarrier, 0 /*comm world class route */);
@@ -368,13 +368,13 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 			     &SPIDescriptors[j]);
      }
      
-#      else // SPI
+#    else // SPI
      xchange_halffield(); 
-#      endif // SPI
-#    endif
+#    endif // SPI
      
-#ifdef OMP
+#  ifdef OMP
    }
+#  endif
 #endif
    
 #ifndef OMP
