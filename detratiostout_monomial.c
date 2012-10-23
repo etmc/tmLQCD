@@ -362,3 +362,4 @@ double detratiostout_acc(const int id, hamiltonian_field_t * const hf)
 
   return(mnl->energy1 - mnl->energy0);
 }
+

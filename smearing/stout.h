@@ -2,6 +2,7 @@
 
 #include <buffers/adjoint.h>
 #include <buffers/gauge.h>
+#include <buffers/utils.h>
 
 #include <smearing/utils.h>
 

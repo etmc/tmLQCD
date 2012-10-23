@@ -15,7 +15,7 @@ void free_stout_control(stout_control *control)
   for (unsigned int iter = 0; iter < control->iterations; ++iter)
   {
     return_gauge_field(&control->U[iter + 1]);
-    free(control->trace[iter]);
+    afree(control->trace[iter]);
   }
 
   return_adjoint_field(&control->force_result);

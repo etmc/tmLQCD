@@ -40,4 +40,5 @@ static void construct_intermediates(stout_notes_tuple *trace, gauge_field_t cons
       project_traceless_antiherm(&t1);
       _su3d_times_su3(trace[x][mu].Z, U[x][mu], t1);
     }
+  generic_exchange(trace, sizeof(stout_notes_tuple));
 }

@@ -22,7 +22,7 @@ stout_control *construct_stout_control(double rho, unsigned int iterations, int 
   for (unsigned int iter = 0; iter < iterations; ++iter)
   {
     control->U[iter + 1] = get_gauge_field();
-    control->trace[iter] = malloc(VOLUME * sizeof(stout_notes_tuple));
+    control->trace[iter] = aalloc(sizeof(stout_notes_tuple) * (VOLUMEPLUSRAND + g_dbw2rand) + 1);
   }
   
   control->result = control->U[iterations]; /* A shallow copy, just putting the reference in place. */
