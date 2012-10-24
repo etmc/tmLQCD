@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GUARD_SMEARING_STOUT_H
+#define GUARD_SMEARING_STOUT_H
 
 #include <buffers/adjoint.h>
 #include <buffers/gauge.h>
@@ -36,15 +37,7 @@ typedef struct
   /* Parameters */
   double          rho; /* For now, we're going to work with homogeneous smearing coefficients */
   unsigned int    iterations;
-  
-  /* Flags */
-  int             calculate_force_terms;
-  int             smearing_performed;
-  
-  /* Results -- main output for users */
-  gauge_field_t    result; /* For direct access to the result, shallow copy... */
-  adjoint_field_t  force_result;
-  
+    
   /* Intermediate results, stored to enhance locality of the analysis */
   gauge_field_t      *U;     /* The sequence of iterations gauge fields */
   stout_notes_tuple **trace; /* Intermediate results to avoid double calculations */
@@ -55,3 +48,5 @@ void free_stout_control(stout_control *control);
 
 void stout_smear(stout_control *control, gauge_field_t in);
 void stout_smear_forces(stout_control *control, adjoint_field_t in);
+
+#endif
