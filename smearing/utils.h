@@ -1,6 +1,7 @@
 #pragma once
 
 #include <su3.h>
+
 #include <buffers/gauge.h>
 #include <buffers/adjoint.h>
 

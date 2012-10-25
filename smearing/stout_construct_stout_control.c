@@ -5,6 +5,7 @@ stout_control *construct_stout_control(double rho, unsigned int iterations, int 
   stout_control *control = (stout_control*)malloc(sizeof(stout_control));
   control->rho = rho;
   control->iterations = iterations;
+  
   control->calculate_force_terms = calculate_force_terms;
   control->smearing_performed = 0;
 

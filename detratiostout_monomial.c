@@ -51,7 +51,7 @@
 #include "detratiostout_monomial.h"
 
 #include "dirty_shameful_business.h"
-#include <smearing/stout.h>
+#include <smearing/control.h>
 #include <io/utils.h>
 
 extern int ITER_MAX_BCG;
@@ -67,19 +67,19 @@ double ohnohack_stout_rho = 0.9 / 6.0; /* Think about changing this to alpha -- 
 unsigned int ohnohack_stout_no_iter = 6;
 int ohnohack_stout_calculate_force = 1;
 
-stout_control * ohnohack_stout = NULL;
+smearing_control * ohnohack_control = NULL;
 /* END */
 
 void detratiostout_derivative(const int no, hamiltonian_field_t * const hf)
 {
   /* FIXME Local check for smearing. It will also be checked inside the smear_forces routine, but we want to check sanity 
    * as early as possible to detect issues as soon as they occur. */
-  if (!ohnohack_stout)
-    ohnohack_stout = construct_stout_control(ohnohack_stout_rho, ohnohack_stout_no_iter, ohnohack_stout_calculate_force);
-  if (!ohnohack_stout->calculate_force_terms || !ohnohack_stout->smearing_performed)
+  if (!ohnohack_control)
+    ohnohack_control = construct_smearing_control(Stout, ohnohack_stout_calculate_force, ohnohack_stout_rho, ohnohack_stout_no_iter);
+  if (!ohnohack_control->calculate_force_terms || !ohnohack_control->smearing_performed)
     fatal_error("Derivative smearing attempted without force terms available in stout control!", "detratiostout_derivative");
-  stout_smear(ohnohack_stout, g_gf);
-  ohnohack_remap_g_gauge_field(ohnohack_stout->result);
+  smear(ohnohack_control, g_gf);
+  ohnohack_remap_g_gauge_field(ohnohack_control->result);
   
   /* FIXME If we're here, we should have all we need to perform the smearing of the force terms. 
    * We'll need it afterwards, though, since the modification operates on the original derivative terms. */
@@ -224,7 +224,7 @@ void detratiostout_derivative(const int no, hamiltonian_field_t * const hf)
   g_mu = g_mu1;
   boundary(g_kappa);
 
-  stout_smear_forces(ohnohack_stout, (adjoint_field_t)&(*hf->derivative));
+  smear_forces(ohnohack_control, (adjoint_field_t)&(*hf->derivative));
   
   /* FIXME We continue with the flow of the hmc code, so replace g_gauge_field with the original again */
   ohnohack_remap_g_gauge_field(g_gf);
@@ -237,14 +237,14 @@ void detratiostout_derivative(const int no, hamiltonian_field_t * const hf)
 void detratiostout_heatbath(const int id, hamiltonian_field_t * const hf)
 {
   /* FIXME Local smearing operation */
-  if (!ohnohack_stout)
-    ohnohack_stout = construct_stout_control(ohnohack_stout_rho, ohnohack_stout_no_iter, ohnohack_stout_calculate_force);
-  stout_smear(ohnohack_stout, _AS_GAUGE_FIELD_T(g_gauge_field));
+  if (!ohnohack_control)
+    ohnohack_control = construct_smearing_control(Stout, ohnohack_stout_calculate_force, ohnohack_stout_rho, ohnohack_stout_no_iter);
+  smear(ohnohack_control, _AS_GAUGE_FIELD_T(g_gauge_field));
 
   /* FIXME We now have a properly smeared field in ohnohack_stout.result
    * We need this field to replace g_gauge_field, so that Hopping_Matrix uses it.
    * Otherwise, this function should proceed as it would normally! */
-  ohnohack_remap_g_gauge_field(ohnohack_stout->result);
+  ohnohack_remap_g_gauge_field(ohnohack_control->result);
 
   int saveiter = ITER_MAX_BCG;
   monomial * mnl = &monomial_list[id];
@@ -306,14 +306,14 @@ void detratiostout_heatbath(const int id, hamiltonian_field_t * const hf)
 double detratiostout_acc(const int id, hamiltonian_field_t * const hf)
 {
   /* FIXME Local smearing operation */
-  if (!ohnohack_stout)
-    ohnohack_stout = construct_stout_control(ohnohack_stout_rho, ohnohack_stout_no_iter, ohnohack_stout_calculate_force);
-  stout_smear(ohnohack_stout, g_gf);
+  if (!ohnohack_control)
+    ohnohack_control = construct_smearing_control(Stout, ohnohack_stout_calculate_force, ohnohack_stout_rho, ohnohack_stout_no_iter);
+  smear(ohnohack_control, g_gf);
 
   /* FIXME We now have a properly smeared field in ohnohack_stout.result
    * We need this field to replace g_gauge_field, so that Hopping_Matrix uses it.
    * Otherwise, this function should proceed as it would normally! */
-  ohnohack_remap_g_gauge_field(ohnohack_stout->result);
+  ohnohack_remap_g_gauge_field(ohnohack_control->result);
 
   monomial * mnl = &monomial_list[id];
   int saveiter = ITER_MAX_BCG;

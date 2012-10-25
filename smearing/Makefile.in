@@ -34,9 +34,14 @@ LIBRARIES = libsmear
 libsmear_TARGETS = 	ape_ape_smear \
 			ape_construct_ape_control \
 			ape_free_ape_control \
+			control_construct_smearing_control \
+			control_free_smearing_control \
+			control_smear \
+			control_smear_forces \
 			hyp_construct_hyp_control \
 			hyp_free_hyp_control \
 			hyp_hyp_smear \
+			identity_construct_identity_control \
 			stout_construct_stout_control \
 			stout_free_stout_control \
 			stout_stout_smear \

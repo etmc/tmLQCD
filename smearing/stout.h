@@ -34,6 +34,10 @@ typedef stout_notes_t stout_notes_tuple[4];
 
 typedef struct
 {
+  /* Flags */
+  int calculate_force_terms;
+  int smearing_performed;
+  
   /* Parameters */
   double          rho; /* For now, we're going to work with homogeneous smearing coefficients */
   unsigned int    iterations;
@@ -41,6 +45,10 @@ typedef struct
   /* Intermediate results, stored to enhance locality of the analysis */
   gauge_field_t      *U;     /* The sequence of iterations gauge fields */
   stout_notes_tuple **trace; /* Intermediate results to avoid double calculations */
+  
+  /* Final results -- the first is a shallow copy */
+  gauge_field_t    result;
+  adjoint_field_t  force_result;
 } stout_control;
 
 stout_control *construct_stout_control(double rho, unsigned int iterations, int calculate_force_terms);

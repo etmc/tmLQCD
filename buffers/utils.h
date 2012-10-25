@@ -3,6 +3,8 @@
 
 #include <string.h>
 
+#include <global.h>
+
 #include <buffers/adjoint.h>
 #include <buffers/gauge.h>
 #include <buffers/spinor.h>
