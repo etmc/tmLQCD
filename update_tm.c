@@ -58,6 +58,8 @@
 #include "hamiltonian_field.h"
 #include "update_tm.h"
 
+#include "dirty_shameful_business.h"
+
 extern su3 ** g_gauge_field_saved;
 
 int update_tm(double *plaquette_energy, double *rectangle_energy, 
@@ -128,9 +130,16 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
 
   /* heatbath for all monomials */
-  for(i = 0; i < Integrator.no_timescales; i++) {
-    for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
-      monomial_list[ Integrator.mnls_per_ts[i][j] ].hbfunction(Integrator.mnls_per_ts[i][j], &hf);
+  /* FIXME Smearing loop added -- should be made flexible. */
+  for (int s_type = 0; s_type < 2; ++s_type)
+  {
+    for(i = 0; i < Integrator.no_timescales; i++)
+    {
+      for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) 
+      {
+        if (monomial_list[ Integrator.mnls_per_ts[i][j] ].smearing == s_type)
+          monomial_list[ Integrator.mnls_per_ts[i][j] ].hbfunction(Integrator.mnls_per_ts[i][j], &hf);
+      }
     }
   }
 

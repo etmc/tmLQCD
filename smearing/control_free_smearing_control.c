@@ -1,6 +1,6 @@
 #include "control.ih"
 
-void free_smearing_control(smearing_control *control)
+void free_smearing_control(smearing_control_t *control)
 {
   switch (control->type)
   {
@@ -19,4 +19,3 @@ void free_smearing_control(smearing_control *control)
   }
   free(control); 
 }
-

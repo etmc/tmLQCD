@@ -64,6 +64,8 @@
 # include "bgl.h"
 #endif
 
+#include <smearing/control.h>
+
 EXTERN int DUM_DERI, DUM_SOLVER, DUM_MATRIX;
 EXTERN int NO_OF_SPINORFIELDS;
 
@@ -258,6 +260,9 @@ EXTERN int ITER_MAX_BCG;
 EXTERN int ITER_MAX_CG;
 
 EXTERN void* g_precWS;
+
+EXTERN smearing_control_t **smearing_control;
+EXTERN int no_smearing_types;
 
 #ifdef WITHLAPH
 /* Jacobi operator per Laplacian Heaviside (LapH) */

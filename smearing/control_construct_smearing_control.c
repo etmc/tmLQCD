@@ -1,12 +1,12 @@
 #include "control.ih"
 
-smearing_control *construct_smearing_control(smearing_type type, int calculate_force_terms, ...)
+smearing_control_t *construct_smearing_control(smearing_type type, int calculate_force_terms, ...)
 {
   /* Declare some local variables to fill from the variadic arguments */
   double params_double[3];
   unsigned int params_uint[1];
 
-  smearing_control *result = (smearing_control*)malloc(sizeof(smearing_control));
+  smearing_control_t *result = (smearing_control_t*)malloc(sizeof(smearing_control_t));
   result->type = type;
 
   result->calculate_force_terms = calculate_force_terms; 

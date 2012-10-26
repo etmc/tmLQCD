@@ -1,6 +1,6 @@
 #include "control.ih"
 
-void smear(smearing_control *control, gauge_field_t in)
+void smear(smearing_control_t *control, gauge_field_t in)
 {
   switch (control->type)
   {
@@ -22,5 +22,4 @@ void smear(smearing_control *control, gauge_field_t in)
       break;
   }
   control->smearing_performed = 1;
-  
 }

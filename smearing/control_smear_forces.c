@@ -1,6 +1,6 @@
 #include "control.ih"
 
-void smear_forces(smearing_control *control, adjoint_field_t in)
+void smear_forces(smearing_control_t *control, adjoint_field_t in)
 {
   /* General checks can be done here, without the pseudo-dynamic casting code below. */
   if (!control->calculate_force_terms)

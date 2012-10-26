@@ -42,12 +42,12 @@ typedef struct
   adjoint_field_t  force_result;
 
   void* type_control;
-} smearing_control;
+} smearing_control_t;
 
-smearing_control *construct_smearing_control(smearing_type type,  int calculate_force_terms, ...);
-void free_smearing_control(smearing_control *control);
+smearing_control_t *construct_smearing_control(smearing_type type,  int calculate_force_terms, ...);
+void free_smearing_control(smearing_control_t *control);
 
-void smear(smearing_control *control, gauge_field_t in);
-void smear_forces(smearing_control *control, adjoint_field_t in);
+void smear(smearing_control_t *control, gauge_field_t in);
+void smear_forces(smearing_control_t *control, adjoint_field_t in);
 
 #endif

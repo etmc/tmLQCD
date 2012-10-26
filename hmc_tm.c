@@ -66,6 +66,7 @@
 #include "init_dirac_halfspinor.h"
 #include "init_bispinor_field.h"
 #include "init_chi_spinor_field.h"
+#include <init_smearing.h>
 #include "xchange_halffield.h"
 #include "test/check_geometry.h"
 #include "boundary.h"
@@ -304,6 +305,8 @@ int main(int argc,char *argv[])
     }
    }
    init_measurements();
+   
+   init_smearing();
 
   zero_spinor_field(g_spinor_field[DUM_DERI+4],VOLUME);
   zero_spinor_field(g_spinor_field[DUM_DERI+5],VOLUME);
@@ -552,6 +555,7 @@ int main(int argc,char *argv[])
 
   free_gauge_tmp();
   free_gauge_field();
+  free_smearing();
   return_gauge_field(&g_gf);
   free_geometry_indices();
   free_spinor_field();

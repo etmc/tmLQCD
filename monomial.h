@@ -52,6 +52,7 @@ typedef struct {
   int even_odd_flag;
   int rngrepro;
   int solver;
+  int smearing;
   int iter0, iter1, iter2;
   int csg_N, csg_N2;
   int csg_n, csg_n2;

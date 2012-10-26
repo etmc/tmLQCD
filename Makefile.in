@@ -53,7 +53,7 @@ MODULES = read_input gamma hybrid_update measure_gauge_action start \
 	source_generation boundary update_tm ranlxd  \
 	mpi_init linsolve deriv_Sb deriv_Sb_D_psi ranlxs \
 	xchange_deri geometry_eo invert_overlap \
-	init_moment_field init_gauge_tmp \
+	init_moment_field init_gauge_tmp init_smearing \
 	xchange_field xchange_gauge prepare_source \
 	init_gauge_field init_geometry_indices init_spinor_field \
 	init_dirac_halfspinor xchange_halffield \
@@ -63,7 +63,7 @@ MODULES = read_input gamma hybrid_update measure_gauge_action start \
 	init_bispinor_field eigenvalues_bi D_psi \
 	xchange_lexicfield xchange_2fields online_measurement \
 	monomial det_monomial detratio_monomial update_momenta \
-	integrator gauge_monomial ndpoly_monomial phmc detratiostout_monomial \
+	integrator gauge_monomial ndpoly_monomial phmc \
 	clover_trlog_monomial cloverdet_monomial cloverdetratio_monomial \
 	little_D block Dov_psi operator poly_monomial measurements pion_norm Dov_proj \
 	xchange_field_tslice temporalgauge spinor_fft X_psi P_M_eta \
