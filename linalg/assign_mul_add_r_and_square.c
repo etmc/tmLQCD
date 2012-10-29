@@ -27,6 +27,7 @@
 #include <complex.h>
 #ifdef OMP
 # include <omp.h>
+# include <global.h>
 #endif
 #include "su3.h"
 #include "assign_mul_add_r_and_square.h"
@@ -42,15 +43,16 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, spinor * co
 #endif
 
 #ifdef OMP
-#pragma omp parallel reduction(+: res)
+#pragma omp parallel
   {
+  int thread_num = omp_get_thread_num();
 #endif
   vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
   vector4double z0, z1, z2, z3, z4, z5, k;
   vector4double r0, r1, r2, r3, r4, r5;
   double *s, *r;
   double ALIGN _c = c;
-  res = 0.0;
+  double ALIGN ds = 0.0;
 #ifndef OMP
   __prefetch_by_load(S);
   __prefetch_by_load(R);
@@ -72,7 +74,6 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, spinor * co
 #ifdef OMP
 #pragma omp for 
 #endif
-  //#pragma unroll(4)
   for(int i = 0; i < N; i++) {
     s=(double*)((spinor *) S + i);
     r=(double*)((spinor *) R + i);
@@ -114,11 +115,19 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, spinor * co
   x2 = vec_add(r4, r5);
   y0 = vec_add(x0, x1);
   y1 = vec_add(x2, y0);
-  res = y1[0] + y1[1] + y1[2] + y1[3];
+  ds = y1[0] + y1[1] + y1[2] + y1[3];
 
 #ifdef OMP
+  g_omp_acc_re[thread_num] = ds;
   } /* OpenMP closing brace */
-#endif  
+
+  for(int i = 0; i < omp_num_threads; ++i) {
+    res += g_omp_acc_re[i];
+  }
+#else
+  res = ds;
+#endif
+
 #  ifdef MPI
   if(parallel) {
     MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -141,12 +150,14 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, const spino
 #endif
 
 #ifdef OMP
-#pragma omp parallel reduction(+ : res)
+#pragma omp parallel
   {
+  int thread_num = omp_get_thread_num();
 #endif
   spinor *r;
   const spinor *s;
-  res = 0.0;
+  double ALIGN ds = 0.0;
+
   /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
 #ifdef OMP
 #pragma omp for 
@@ -156,36 +167,45 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, const spino
     s = S + ix;
     
     r->s0.c0 = c * r->s0.c0 + s->s0.c0;
-    res += creal(r->s0.c0)*creal(r->s0.c0) + cimag(r->s0.c0)*cimag(r->s0.c0);
+    ds += creal(r->s0.c0)*creal(r->s0.c0) + cimag(r->s0.c0)*cimag(r->s0.c0);
     r->s0.c1 = c * r->s0.c1 + s->s0.c1;
-    res += creal(r->s0.c1)*creal(r->s0.c1) + cimag(r->s0.c1)*cimag(r->s0.c1);
+    ds += creal(r->s0.c1)*creal(r->s0.c1) + cimag(r->s0.c1)*cimag(r->s0.c1);
     r->s0.c2 = c * r->s0.c2 + s->s0.c2;    
-    res += creal(r->s0.c2)*creal(r->s0.c2) + cimag(r->s0.c2)*cimag(r->s0.c2);
+    ds += creal(r->s0.c2)*creal(r->s0.c2) + cimag(r->s0.c2)*cimag(r->s0.c2);
 
     r->s1.c0 = c * r->s1.c0 + s->s1.c0;
-    res += creal(r->s1.c0)*creal(r->s1.c0) + cimag(r->s1.c0)*cimag(r->s1.c0);
+    ds += creal(r->s1.c0)*creal(r->s1.c0) + cimag(r->s1.c0)*cimag(r->s1.c0);
     r->s1.c1 = c * r->s1.c1 + s->s1.c1;
-    res += creal(r->s1.c1)*creal(r->s1.c1) + cimag(r->s1.c1)*cimag(r->s1.c1);
+    ds += creal(r->s1.c1)*creal(r->s1.c1) + cimag(r->s1.c1)*cimag(r->s1.c1);
     r->s1.c2 = c * r->s1.c2 + s->s1.c2;    
-    res += creal(r->s1.c2)*creal(r->s1.c2) + cimag(r->s1.c2)*cimag(r->s1.c2);
+    ds += creal(r->s1.c2)*creal(r->s1.c2) + cimag(r->s1.c2)*cimag(r->s1.c2);
 
     r->s2.c0 = c * r->s2.c0 + s->s2.c0;
-    res += creal(r->s2.c0)*creal(r->s2.c0) + cimag(r->s2.c0)*cimag(r->s2.c0);
+    ds += creal(r->s2.c0)*creal(r->s2.c0) + cimag(r->s2.c0)*cimag(r->s2.c0);
     r->s2.c1 = c * r->s2.c1 + s->s2.c1;
-    res += creal(r->s2.c1)*creal(r->s2.c1) + cimag(r->s2.c1)*cimag(r->s2.c1);
+    ds += creal(r->s2.c1)*creal(r->s2.c1) + cimag(r->s2.c1)*cimag(r->s2.c1);
     r->s2.c2 = c * r->s2.c2 + s->s2.c2;    
-    res += creal(r->s2.c2)*creal(r->s2.c2) + cimag(r->s2.c2)*cimag(r->s2.c2);
+    ds += creal(r->s2.c2)*creal(r->s2.c2) + cimag(r->s2.c2)*cimag(r->s2.c2);
 
     r->s3.c0 = c * r->s3.c0 + s->s3.c0;
-    res += creal(r->s3.c0)*creal(r->s3.c0) + cimag(r->s3.c0)*cimag(r->s3.c0);
+    ds += creal(r->s3.c0)*creal(r->s3.c0) + cimag(r->s3.c0)*cimag(r->s3.c0);
     r->s3.c1 = c * r->s3.c1 + s->s3.c1;
-    res += creal(r->s3.c1)*creal(r->s3.c1) + cimag(r->s3.c1)*cimag(r->s3.c1);
+    ds += creal(r->s3.c1)*creal(r->s3.c1) + cimag(r->s3.c1)*cimag(r->s3.c1);
     r->s3.c2 = c * r->s3.c2 + s->s3.c2;   
-    res += creal(r->s3.c2)*creal(r->s3.c2) + cimag(r->s3.c2)*cimag(r->s3.c2);
+    ds += creal(r->s3.c2)*creal(r->s3.c2) + cimag(r->s3.c2)*cimag(r->s3.c2);
   }
+
 #ifdef OMP
+  g_omp_acc_re[thread_num] = ds;
   } /* OpenMP closing brace */
+
+  for(int i = 0; i < omp_num_threads; ++i) {
+    res += g_omp_acc_re[i];
+  }
+#else
+  res = ds;
 #endif
+
 #  ifdef MPI
   if(parallel) {
     MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
