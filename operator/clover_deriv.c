@@ -51,6 +51,7 @@
 #include "su3adj.h"
 #include "operator/clovertm_operators.h"
 #include "operator/clover_leaf.h"
+#include "operator/clover_inline.h"
 
 // this is (-tr(1+T_ee(+mu)) -tr(1+T_ee(-mu)))      
 // (or T_oo of course)
