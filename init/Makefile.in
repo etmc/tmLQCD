@@ -78,7 +78,7 @@ libinit.a: ${libinit_OBJECTS} ${libinit_SOBJECTS} Makefile
 # rule to generate .d files
 
 $(addsuffix .d, $(libinit_TARGETS) ${libinit_STARGETS}): %.d: ${srcdir}/%.c Makefile
-	@${CCDEP} ${DEPFLAGS} ${INCLUDES} $< > $@
+	@${CCDEP} ${DEFS} ${DEPFLAGS} ${INCLUDES} $< > $@
 
 # rule to make dependencies
 

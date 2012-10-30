@@ -59,7 +59,7 @@ libcu.a: ${libcu_OBJECTS} Makefile
 # rule to generate .d files
 
 $(addsuffix .d,$(libcu_TARGETS)): %.d: ${srcdir}/%.c Makefile
-	@$(CCDEP) ${DEPFLAGS} ${INCLUDES} $< > $@
+	@$(CCDEP) ${DEFS} ${DEPFLAGS} ${INCLUDES} $< > $@
 
 # rule to make dependencies
 

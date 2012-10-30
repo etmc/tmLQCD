@@ -77,7 +77,7 @@ libxchange.a: ${libxchange_OBJECTS} ${libxchange_SOBJECTS} Makefile
 # rule to generate .d files
 
 $(addsuffix .d, $(libxchange_TARGETS) ${libxchange_STARGETS}): %.d: ${srcdir}/%.c Makefile
-	@${CCDEP} ${DEPFLAGS} ${INCLUDES} $< > $@
+	@${CCDEP} ${DEFS} ${DEPFLAGS} ${INCLUDES} $< > $@
 
 # rule to make dependencies
 

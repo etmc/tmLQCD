@@ -77,7 +77,8 @@ liboperator.a: ${liboperator_OBJECTS} ${liboperator_SOBJECTS} Makefile
 # rule to generate .d files
 
 $(addsuffix .d, $(liboperator_TARGETS) ${liboperator_STARGETS}): %.d: ${srcdir}/%.c Makefile
-	@${CCDEP} ${DEPFLAGS} ${INCLUDES} $< > $@
+	@${CCDEP} ${DEFS} ${DEPFLAGS} ${INCLUDES} $< > $@
+
 
 # rule to make dependencies
 

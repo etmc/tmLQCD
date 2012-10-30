@@ -78,7 +78,7 @@ libmonomial.a: ${libmonomial_OBJECTS} ${libmonomial_SOBJECTS} Makefile
 # rule to generate .d files
 
 $(addsuffix .d, $(libmonomial_TARGETS) ${libmonomial_STARGETS}): %.d: ${srcdir}/%.c Makefile
-	@${CCDEP} ${DEPFLAGS} ${INCLUDES} $< > $@
+	@${CCDEP} ${DEFS} ${DEPFLAGS} ${INCLUDES} $< > $@
 
 # rule to make dependencies
 
