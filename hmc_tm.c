@@ -297,16 +297,16 @@ int main(int argc,char *argv[])
     }
   }
 
-   /* list and initialize measurements*/
-   if(g_proc_id == 0) {
+  /* list and initialize measurements*/
+  if(g_proc_id == 0) {
     printf("\n");
     for(j = 0; j < no_measurements; j++) {
       printf("# measurement id %d, type = %d: Frequency %d\n", j, measurement_list[j].type, measurement_list[j].freq);
     }
-   }
-   init_measurements();
-   
-   init_smearing();
+  }
+  init_measurements();
+  
+  init_smearing(no_smearing_types); /* FIXME This will have to be more sophisticated and dynamical -- probably moved to init_monomials! */
 
   zero_spinor_field(g_spinor_field[DUM_DERI+4],VOLUME);
   zero_spinor_field(g_spinor_field[DUM_DERI+5],VOLUME);

@@ -128,11 +128,17 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       _su3_assign(*w,*v);
     }
   }
-
+  
+  /* Construct the smeared gauge fields needed for this updating step */
+  for (int s_type = 0; s_type < no_smearing_types; ++s_type)
+    smear(smearing_control[s_type], g_gf);
+  
   /* heatbath for all monomials */
-  /* FIXME Smearing loop added -- should be made flexible. */
-  for (int s_type = 0; s_type < 2; ++s_type)
+  /* FIXME Smearing loop added -- should be made flexible. 
+     Specifically, we should determine the number of smearing types actually used here dynamically! */
+  for (int s_type = 0; s_type < no_smearing_types; ++s_type)
   {
+    ohnohack_remap_g_gauge_field(smearing_control[s_type]->result);
     for(i = 0; i < Integrator.no_timescales; i++)
     {
       for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) 

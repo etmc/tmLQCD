@@ -4,7 +4,7 @@
 smearing_control_t **smearing_control = NULL;
 int no_smearing_types = 2; /* FIXME Hardcoded, but a future argument. */
 
-void init_smearing(/* Will take arguments in the future. */)
+void init_smearing(int no_smearing_types)
 {
   /* FIXME We'll use a hardcoded setup for now, but anticipate multiple smearing constructs. */
   smearing_control = malloc(no_smearing_types * sizeof(smearing_control_t*)); 
@@ -15,7 +15,6 @@ void init_smearing(/* Will take arguments in the future. */)
 
   smearing_control[0] = construct_smearing_control(Identity, ohnohack_stout_calculate_force);
   smearing_control[1] = construct_smearing_control(Stout, ohnohack_stout_calculate_force, ohnohack_stout_rho, ohnohack_stout_no_iter);
-
 }
 
 void finalize_smearing()
