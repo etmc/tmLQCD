@@ -148,6 +148,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       }
     }
   }
+  ohnohack_remap_g_gauge_field(g_gf);
 
   /* initialize the momenta  */
   enep = init_momenta(reproduce_randomnumber_flag, hf.momenta);
@@ -155,6 +156,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   g_sloppy_precision = 1;
 
   /* run the trajectory */
+  /* FIXME We need to push the monomial loop into the integrator */
   Integrator.integrate[Integrator.no_timescales-1](Integrator.tau, 
                        Integrator.no_timescales-1, 1);
 
@@ -162,11 +164,18 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 
   /* compute the final energy contributions for all monomials */
   dh = 0.;
-  for(i = 0; i < Integrator.no_timescales; i++) {
-    for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
-      dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j], &hf);
+  for (int s_type = 0; s_type < no_smearing_types; ++s_type)
+  {
+    ohnohack_remap_g_gauge_field(smearing_control[s_type]->result);
+    for(i = 0; i < Integrator.no_timescales; i++) {
+      for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) 
+      {
+        if (monomial_list[ Integrator.mnls_per_ts[i][j] ].smearing == s_type)
+          dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j], &hf);
+      }
     }
   }
+  ohnohack_remap_g_gauge_field(g_gf);
 
   enepx = moment_energy(hf.momenta);
 
@@ -229,6 +238,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
     g_sloppy_precision = 1;
     /* run the trajectory back */
+    /* FIXME Smearing loop needed in integrator */
     Integrator.integrate[Integrator.no_timescales-1](-Integrator.tau, 
                          Integrator.no_timescales-1, 1);
 
@@ -236,11 +246,16 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 
     /*   compute the energy contributions from the pseudo-fermions  */
     ret_dh = 0.;
-    for(i = 0; i < Integrator.no_timescales; i++) {
-      for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
-        ret_dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j], &hf);
+    for (int s_type = 0; s_type < no_smearing_types; ++s_type)
+    {
+      ohnohack_remap_g_gauge_field(smearing_control[s_type]->result);
+      for(i = 0; i < Integrator.no_timescales; i++) {
+        for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
+          ret_dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j], &hf);
+        }
       }
     }
+    ohnohack_remap_g_gauge_field(g_gf);
 
     ret_enep = moment_energy(hf.momenta);
 
@@ -276,11 +291,17 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 #endif
     /* compute the total H */
     tmp = enep;
-    for(i = 0; i < Integrator.no_timescales; i++) {
-      for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
-        tmp += monomial_list[ Integrator.mnls_per_ts[i][j] ].energy0;
+    for (int s_type = 0; s_type < no_smearing_types; ++s_type)
+    {
+      ohnohack_remap_g_gauge_field(smearing_control[s_type]->result);
+      for(i = 0; i < Integrator.no_timescales; i++) {
+        for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
+          tmp += monomial_list[ Integrator.mnls_per_ts[i][j] ].energy0;
+        }
       }
     }
+    ohnohack_remap_g_gauge_field(g_gf);
+    
     /* Output */
     if(g_proc_id == 0) {
       ret_check_file = fopen("return_check.data","a");
