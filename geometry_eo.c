@@ -1,6 +1,7 @@
 /*****************************************************************************
  * Copyright (C) 2001 Martin Hasenbusch
  *               2002,2003,2004,2005,2006,2007,2008,2012 Carsten Urbach
+ *               2012 Bartosz Kostrzewa
  *
  * Modified by Jenifer Gonzalez Lopez 31.03.2009
  *
@@ -1560,36 +1561,57 @@ int bodysurface(const int j) {
   int y = (j-t*(LX*LY*LZ)-x*(LY*LZ))/(LZ);
   int z = (j-t*(LX*LY*LZ)-x*(LY*LZ) - y*LZ);
   int ret = 0;
-  int body = (T-2)*(LZ-2)*(LY-2)*(LX-2);
-  if(_IS_BODY) {
-    ret = (z-1)+(LZ-2)*((y-1) + (LY-2)*((x-1) + (LX-2)*(t-1)));
-  }
-  else {
-    ret = body;
+#ifdef PARALLELXYZT
+  ret = (z-1)+(LZ-2)*((y-1) + (LY-2)*((x-1) + (LX-2)*(t-1)));
+#elif defined PARALLELXYT
+  ret = (z)+(LZ)*((y-1) + (LY-2)*((x-1) + (LX-2)*(t-1)));
+#elif defined PARALLELXT
+  ret = (z)+(LZ)*((y) + (LY)*((x-1) + (LX-2)*(t-1)));
+#elif defined PARALLELT
+  ret = (z)+(LZ)*((y) + (LY)*((x) + (LX)*(t-1)));
+#endif
+  if( !(_IS_BODY) ) {
+#ifdef PARALLELXYZT
+    ret = (T-2)*(LZ-2)*(LY-2)*(LX-2);
+#elif defined PARALLELXYT
+    ret = (T-2)*(LZ)*(LY-2)*(LX-2);
+#elif defined PARALLELXT
+    ret = (T-2)*(LZ)*(LY)*(LX-2);
+#elif defined PARALLELT
+    ret = (T-2)*(LZ)*(LY)*(LX);
+#endif
+#if (defined PARALLELT || defined  PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
     if(t == 0) {
       ret += z+LZ*(y + LY*x);
     }
     else if(t == T-1) {
       ret += z+LZ*(y + LY*(x + LX));
     }
+#endif
+#if (defined  PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
     else if(x == 0) {
       ret += 2*LX*LY*LZ + z + LZ*(y + LY*(t-1));
     }
     else if(x == LX-1) {
       ret += 2*LX*LY*LZ + z + LZ*(y + LY*((t-1) + (T-2)));
     }
+#endif
+#if (defined PARALLELXYT || defined PARALLELXYZT)
     else if(y == 0) {
       ret += 2*LX*LY*LZ + 2*LY*LZ*(T-2) + z + LZ*((x-1)+(LX-2)*(t-1));
     }
     else if(y == LY-1) {
       ret += 2*LX*LY*LZ + 2*LY*LZ*(T-2) + z + LZ*((x-1)+(LX-2)*((t-1) +(T-2)));
     }
+#endif
+#if (defined PARALLELXYZT)
     else if(z == 0) {
       ret += 2*LX*LY*LZ + 2*LY*LZ*(T-2) + 2*LZ*(LX-2)*(T-2) + (y-1) + (LY-2)*((x-1) + (LX-2)*(t-1));
     }
     else if(z == LZ-1) {
       ret += 2*LX*LY*LZ + 2*LY*LZ*(T-2) + 2*LZ*(LX-2)*(T-2) + (y-1) + (LY-2)*((x-1) + (LX-2)*((t-1)+(T-2)));
     }
+#endif
   }
   if(g_proc_id == -1) {
     printf("%d %d (%d, %d, %d, %d) %d %d\n", j, ret, t, x, y, z, _IS_BODY, body);
