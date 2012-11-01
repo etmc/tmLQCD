@@ -60,7 +60,17 @@ int init_dirac_halfspinor() {
 #ifdef MPI
   int k;
 #endif
+#ifdef PARALLELXYZT
   bodyV = (T-2)*(LZ-2)*(LY-2)*(LX-2)/2;
+#elif defined PARALLELXYT
+  bodyV = (T-2)*(LZ)*(LY-2)*(LX-2)/2;
+#elif defined PARALLELXT
+  bodyV = (T-2)*(LZ)*(LY)*(LX-2)/2;
+#elif defined PARALLELT
+  bodyV = (T-2)*(LZ)*(LY)*(LX)/2;
+#else
+  bodyV = VOLUME/2;
+#endif
   surfaceV = VOLUME/2-bodyV;
 
   NBPointer = (halfspinor***) calloc(4,sizeof(halfspinor**));
