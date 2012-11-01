@@ -111,7 +111,7 @@ libio.a: ${libio_OBJECTS} Makefile
 # rule to generate .d files
 
 $(addsuffix .d,$(libio_TARGETS)): %.d: ${srcdir}/%.c Makefile
-	@$(CCDEP) ${DEPFLAGS} ${INCLUDES} $< > $@
+	@$(CCDEP) ${DEFS} ${DEPFLAGS} ${INCLUDES} $< > $@
 
 # rule to make dependencies
 

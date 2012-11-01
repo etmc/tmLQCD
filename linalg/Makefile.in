@@ -88,7 +88,7 @@ liblinalg.a: ${liblinalg_OBJECTS} ${liblinalg_SOBJECTS} Makefile
 # rule to generate .d files
 
 $(addsuffix .d, $(liblinalg_TARGETS) ${liblinalg_STARGETS}): %.d: ${srcdir}/%.c Makefile
-	@${CCDEP} ${DEPFLAGS} ${INCLUDES} $< > $@
+	@${CCDEP} ${DEFS} ${DEPFLAGS} ${INCLUDES} $< > $@
 
 # rule to make dependencies
 
