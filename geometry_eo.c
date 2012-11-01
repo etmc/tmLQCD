@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Copyright (C) 2001 Martin Hasenbusch
- *               2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ *               2002,2003,2004,2005,2006,2007,2008,2012 Carsten Urbach
  *
  * Modified by Jenifer Gonzalez Lopez 31.03.2009
  *
