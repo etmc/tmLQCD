@@ -31,12 +31,8 @@ USESUBDIRS = @USESUBDIRS@
 NVCC = @NVCC@
 GPUMPICOMPILER = @GPUMPICOMPILER@
 
-
 INCLUDES = @INCLUDES@
 LINK = $(CCLD) -o $@ ${LDFLAGS}
-LINKLIBS = ${top_builddir}/linalg/liblinalg.a  \
-	${top_builddir}/solver/libsolver.a ${top_builddir}/io/libio.a \
-	${top_builddir}/buffers/libbuffers.a $(top_builddir)/cu/libcu.a
 
 COMPILE = ${CC} ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
 
@@ -66,7 +62,6 @@ GPUOBJECTS := $(patsubst $(srcdir)/$(GPUDIR)/%.cu, $(GPUDIR)/%.o, $(GPUSOURCES))
 #GPUSOURCES_C := $(wildcard $(srcdir)/$(GPUDIR)/*.c)
 #GPUOBJECTS_C := $(patsubst $(srcdir)/$(GPUDIR)/%.c, $(GPUDIR)/%.o, $(GPUSOURCES_C))
 
-
 NOOPTMOD = test/check_xchange test/check_geometry
 
 PROGRAMS = hmc_tm benchmark invert gen_sources  \
@@ -78,18 +73,15 @@ SUBDIRS = ${USESUBDIRS}
 # delete the default suffix rules
 .SUFFIXES:
 
-all: Makefile all-recursive dep hmc_tm invert
+all: Makefile dep $(SUBDIRS) hmc_tm invert benchmark
 
-#ifneq (,$(findstring lapack,${LIBS}))
-#all: Makefile all-recursive dep hmc_tm invert
-#else
-#all: Makefile all-recursive dep hmc_tm invert
-#endif
+$(SUBDIRS):
+	$(MAKE) --directory=$@
 
 # run the GIT-VERSION-GEN script to generate version information in git_hash.h
 # making sure that we run in the correct directory
 ${top_srcdir}/git_hash.h:
-	@cd @srcdir@ && sh GIT-VERSION-GEN
+	@ ( cd @srcdir@ && sh GIT-VERSION-GEN )
 
 -include $(addsuffix .d,$(ALLOBJ))
 
@@ -106,9 +98,6 @@ libhmc.a: ${addsuffix .o, ${MODULES} ${SMODULES}} Makefile
 	@$(RANLIB) libhmc.a
 	@cp libhmc.a ${top_builddir}/lib/libhmc.a
 
-#${addsuffix .o, ${ALLOBJ}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h
-#	${COMPILE} ${OPTARGS} -c $<
-
 $(addsuffix .o,$(filter-out ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h
 	${COMPILE} ${OPTARGS} -c $<
 
@@ -122,7 +111,7 @@ ${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir
 ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h ${top_srcdir}/git_hash.h
 	${COMPILE} ${OPTARGS} -c $<
 
-${PROGRAMS}: %: %.o libhmc.a all-recursive
+${PROGRAMS}: %: %.o libhmc.a $(SUBDIRS)
 	 ${LINK} $@.o $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS)
 
 # The rules for unit tests are kept in a separate file for tidyness
@@ -152,15 +141,13 @@ compile-clean: compile-clean-recursive Makefile
 	rm -f *.o *.d test/*.o test/*.d tests/*.o tests/*.d
 
 clean: clean-recursive Makefile
-	rm -f hmc_tm invert *.o *.d test/*.o test/*.d tests/*.o tests/*.d
+	rm -f benchmark hmc_tm invert *.o *.d test/*.o test/*.d tests/*.o tests/*.d
 
 distclean: distclean-recursive Makefile
-	rm -f hmc_tm hybrid *.o *.d *~ Makefile config.log config.status fixed_volume.h
+	rm -f benchmark hmc_tm invert *.o *.d *~ Makefile config.log config.status fixed_volume.h
 	rm -f config.h
 
-.PHONY: all ${top_srcdir}/git_hash.h clean compile-clean distclean dep install \
-	$(PROGRAMS) all-recursive \
-	all-debug-recursive all-profile-recursive \
+.PHONY: all ${SUBDIRS} ${top_srcdir}/git_hash.h clean compile-clean distclean dep install \
+	all-recursive all-debug-recursive all-profile-recursive \
 	clean-recursive distclean-recursive \
-	compile-clean-recursive $(LINKLIBS) \
-	tests libhmc.a
+	compile-clean-recursive
