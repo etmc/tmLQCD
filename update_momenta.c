@@ -39,33 +39,52 @@
 
 /* Updates the momenta: equation 16 of Gottlieb */
 void update_momenta(int * mnllist, double step, const int no, 
-		    hamiltonian_field_t * const hf) {
+		    hamiltonian_field_t * const hf)
+{
   int i,mu, k;
   double atime=0., etime=0.;
 
+  adjoint_field_t tmp_derivative = get_adjoint_field();
+  
   for(i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand);i++) { 
     for(mu=0;mu<4;mu++) { 
       _zero_su3adj(hf->derivative[i][mu]);
     }
   }
 
-  for(k = 0; k < no; k++) {
-    if(monomial_list[ mnllist[k] ].derivativefunction != NULL) {
+  for (int s_type = 0; s_type < no_smearing_types; ++s_type)
+    smear(smearing_control[s_type], g_gf);
+
+  for(k = 0; k < no; k++)
+  {
+    for (int s_type = 0; s_type < no_smearing_types; ++s_type)
+    {
+      ohnohack_remap_g_gauge_field(smearing_control[s_type]->result);
+      ohnohack_remap_moment(tmp_derivative); /* FIXME Such that we can aggregate results per smearing type. */
+      zero_adjoint_field(tmp_derivative);
+      if (monomial_list[ mnllist[k] ].smearing == s_type))
+      {
+        
+        if(monomial_list[ mnllist[k] ].derivativefunction != NULL)
+        {
 #ifdef MPI
-      atime = MPI_Wtime();
+          atime = MPI_Wtime();
 #else
-      atime = (double)clock()/(double)(CLOCKS_PER_SEC);
+          atime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
 
-      monomial_list[ mnllist[k] ].derivativefunction(mnllist[k], hf);
+          monomial_list[ mnllist[k] ].derivativefunction(mnllist[k], hf);
 
 #ifdef MPI
-      etime = MPI_Wtime();
+          etime = MPI_Wtime();
 #else
-      etime = (double)clock()/(double)(CLOCKS_PER_SEC);
+          etime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
+        }
+      }
     }
   }
+    
 #ifdef MPI
   xchange_deri(hf->derivative);
 #endif
@@ -75,6 +94,9 @@ void update_momenta(int * mnllist, double step, const int no,
       _su3adj_minus_const_times_su3adj(hf->momenta[i][mu], step, hf->derivative[i][mu]); 
     }
   }
+  
+  return_adjoint_field(&tmp_derivative);
+  
   return;
 }
 

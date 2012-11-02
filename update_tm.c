@@ -87,10 +87,10 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   hamiltonian_field_t hf;
   paramsXlfInfo *xlfInfo;
 
-  /* FIXME -- We can probably use the stouting control here, add it to hf. */
-  /* But then how do we smear the forces afterwards? */
-  /* If we add the smearing control, then the gauge field is redundant again... */
-  /* Could be fixed by adding a NULL control. */
+  /* FIXME -- Note that hf.momenta, hf.derivative and hf.gaugefield are set permanently here.
+   * Until we have an implementation that will run on gauge_field_t and adjoint_field_t natively,
+   * updating (i.e. reindexing) these underlying field is probably the cleanest method of changing
+   * arguments. */
   hf.gaugefield = g_gauge_field;
   hf.momenta = moment;
   hf.derivative = df0;
@@ -167,6 +167,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   for (int s_type = 0; s_type < no_smearing_types; ++s_type)
   {
     ohnohack_remap_g_gauge_field(smearing_control[s_type]->result);
+    /* NOTE hf->gaugefield is always set to g_gauge_field, I believe, so it needs no further changing */
     for(i = 0; i < Integrator.no_timescales; i++) {
       for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) 
       {

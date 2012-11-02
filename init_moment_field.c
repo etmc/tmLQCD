@@ -30,62 +30,43 @@
 
 #include <buffers/adjoint.h>
 
-su3adj * mo=NULL, *du=NULL;
-adjoint_field_t df;
+
+adjoint_field_t df, du, mo;
 
 int init_moment_field(const int V, const int VR) {
   int i = 0;
 
-/*   posix_memalign(void **memptr, size_t alignment, size_t size) */
-  if( (int*)(mo = (su3adj*)calloc(4*V+1, sizeof(su3adj))) == NULL){ 
-    printf ("malloc errno : %d\n",errno); 
-    errno = 0;
-    return(1);
-  }
+  df = get_adjoint_field();
+  du = get_adjoint_field();
+  mo = get_adjoint_field();
+  
   if((void*)(moment = (su3adj**)calloc(V,sizeof(su3adj*))) == NULL) {
     printf ("malloc errno : %d\n",errno); 
     errno = 0;
     return(2);
   }
-#if ( defined SSE || defined SSE2 || defined SSE3)
-  moment[0] = (su3adj*)(((unsigned long int)(mo)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  moment[0] = mo; 
-#endif
   
-  for(i = 1; i < V; i++){
+  moment[0] = (su3adj*)mo[0];
+  for(i = 1; i < V; i++)
     moment[i] = moment[i-1]+4;
-  } 
-
-  /* FIXME Replacing by an adjoint_field_t setup */
-  df = get_adjoint_field();
+ 
   if((void*)(df0 = (su3adj**)calloc(VR,sizeof(su3adj*))) == NULL) {
     printf ("malloc errno : %d\n",errno); 
     errno = 0;
     return(4);
   }
-  df0[0] = *df;
   
-  for(i = 1; i < VR; i++) {
+  df0[0] = (su3adj*)df[0];
+  for(i = 1; i < VR; i++)
     df0[i] = df0[i-1]+4; 
-  }
   
-  if((void*)(du = (su3adj*)calloc(4*VR+1, sizeof(su3adj))) == NULL) {
-    printf ("malloc errno : %d\n",errno); 
-    errno = 0;
-    return(5);
-  }
   if((void*)(ddummy = (su3adj**)calloc(VR,sizeof(su3adj*))) == NULL) {
     printf ("malloc errno : %d\n",errno); 
     errno = 0;
     return(6);
   }
-#if ( defined SSE || defined SSE2 || defined SSE3)
-  ddummy[0] = (su3adj*)(((unsigned long int)(du)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  ddummy[0] = du;
-#endif
-  
+
+  ddummy[0] = (su3adj*)du[0];
   for(i = 1; i < VR; i++){
     ddummy[i] = ddummy[i-1]+4;
   }
@@ -93,9 +74,13 @@ int init_moment_field(const int V, const int VR) {
   return(0);
 }
 
-void free_moment_field() {
-
-  free(mo);
+void free_moment_field()
+{
   return_adjoint_field(&df);
-  free(du);
+  return_adjoint_field(&du);
+  return_adjoint_field(&mo);
+  
+  free(df0);
+  free(ddummy);
+  free(moment);
 }

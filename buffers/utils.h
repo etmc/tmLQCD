@@ -27,7 +27,7 @@ inline void swap_adjoint_field(adjoint_field_t *left, adjoint_field_t *right);
 inline void swap_gauge_field(gauge_field_t *left, gauge_field_t *right);
 // inline void swap_spinor_field(spinor_field_t *left, spinor_field_t *right);
 
-inline void zero_adjoint_field(adjoint_field_t target);
+inline void zero_adjoint_field(adjoint_field_t target); /* FIXME This should take a pointer, since the fields are modified! */
 inline void zero_gauge_field(gauge_field_t target);
 // inline void zero_spinor_field(spinor_field_t target);
 
