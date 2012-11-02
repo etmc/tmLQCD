@@ -366,6 +366,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != SFGAUGE 
 	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != NDPOLY
 	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != NDCLOVER
+	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != CLOVERNDTRLOG
 	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != CLOVERTRLOG ) {
           fprintf(datafile,"%d %d ",  monomial_list[ Integrator.mnls_per_ts[i][j] ].iter0, 
                   monomial_list[ Integrator.mnls_per_ts[i][j] ].iter1);
