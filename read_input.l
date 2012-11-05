@@ -799,10 +799,6 @@ inline void rmQuotes(char *str){
     mnl->type = DETRATIO;
     strcpy((*mnl).name, "DETRATIO");
   }
-  else if(strcmp(yytext, "DETRATIOSTOUT")==0) {
-    mnl->type = DETRATIOSTOUT;
-    strcpy((*mnl).name, "DETRATIOSTOUT");
-  }
   else if(strcmp(yytext, "NDDETRATIO")==0) {
     mnl->type = NDDETRATIO;
     strcpy((*mnl).name, "NDDETRATIO");
@@ -859,11 +855,11 @@ inline void rmQuotes(char *str){
 <DETMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL>{
   {SPC}*UseSmearing{EQL}yes {
     //mnl->smearing = 1;
-    if(myverbose) printf("  in line %d monomial %d configured to use smearing\n", a, line_of_file, current_monomial);
+    if(myverbose) printf("  in line %d monomial %d configured to use smearing\n", line_of_file, current_monomial);
   }
   {SPC}*UseSmearing{EQL}no {
     //mnl->smearing = 0;
-    if(myverbose) printf("  in line %d monomial %d configured to not use smearing\n", a, line_of_file, current_monomial);
+    if(myverbose) printf("  in line %d monomial %d configured to not use smearing\n", line_of_file, current_monomial);
   }
 }
 

@@ -187,6 +187,8 @@ EXTERN su3 ** g_gauge_field_copy;
 /*for temporalgauge in GPU part*/
 EXTERN su3 ** g_tempgauge_field;
 
+EXTERN adjoint_field_t df;
+
 EXTERN su3adj ** moment;
 EXTERN su3adj ** df0;
 EXTERN su3adj ** ddummy;
@@ -275,8 +277,6 @@ EXTERN int ** g_idn3d;
 
 #undef EXTERN
 /* #undef ALIGN */
-
-void fatal_error(char const *error, char const *function);
 
 #ifdef MAIN_PROGRAM
 #endif

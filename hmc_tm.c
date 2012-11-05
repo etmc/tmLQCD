@@ -555,7 +555,7 @@ int main(int argc,char *argv[])
 
   free_gauge_tmp();
   free_gauge_field();
-  free_smearing();
+  finalize_smearing();
   return_gauge_field(&g_gf);
   free_geometry_indices();
   free_spinor_field();

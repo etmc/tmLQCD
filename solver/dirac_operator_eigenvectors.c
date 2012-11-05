@@ -1486,7 +1486,7 @@ _Complex double calcMatrixElement(spinor *field1,spinor *field2,_Complex double 
 
 void diagMatrixElement(_Complex double mat[144]){
 
-  const int const N=12;
+  int const N=12;
 
   char  JOBVL[]="N";
   char  JOBVR[]="N";

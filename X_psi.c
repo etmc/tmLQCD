@@ -23,6 +23,9 @@
 #endif
 #include <stdlib.h>
 #ifdef HAVE_CONFIG_H
+
+#include <math.h>
+
 # include<config.h>
 #endif
 #include "global.h"

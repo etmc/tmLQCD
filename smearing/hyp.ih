@@ -22,6 +22,8 @@
 #include <smearing/hyp.h>
 #include <smearing/utils.h>
 
+#include <fatal_error.h>
+
 enum I0
 {
   I0_0 = 0, I0_1 = 1, I0_2 = 2, I0_3 = 3

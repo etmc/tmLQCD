@@ -37,6 +37,10 @@
 #include "hamiltonian_field.h"
 #include "update_momenta.h"
 
+#include <buffers/utils.h>
+
+#include <dirty_shameful_business.h>
+
 /* Updates the momenta: equation 16 of Gottlieb */
 void update_momenta(int * mnllist, double step, const int no, 
 		    hamiltonian_field_t * const hf)
@@ -46,23 +50,19 @@ void update_momenta(int * mnllist, double step, const int no,
 
   adjoint_field_t tmp_derivative = get_adjoint_field();
   
-  for(i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand);i++) { 
-    for(mu=0;mu<4;mu++) { 
-      _zero_su3adj(hf->derivative[i][mu]);
-    }
-  }
+  zero_adjoint_field(&df);
 
   for (int s_type = 0; s_type < no_smearing_types; ++s_type)
     smear(smearing_control[s_type], g_gf);
 
-  for(k = 0; k < no; k++)
+  ohnohack_remap_df0(tmp_derivative); /* FIXME Such that we can aggregate results per smearing type. */
+  for (int s_type = 0; s_type < no_smearing_types; ++s_type)
   {
-    for (int s_type = 0; s_type < no_smearing_types; ++s_type)
+    for(k = 0; k < no; k++)
     {
+      zero_adjoint_field(&tmp_derivative);
       ohnohack_remap_g_gauge_field(smearing_control[s_type]->result);
-      ohnohack_remap_moment(tmp_derivative); /* FIXME Such that we can aggregate results per smearing type. */
-      zero_adjoint_field(tmp_derivative);
-      if (monomial_list[ mnllist[k] ].smearing == s_type))
+      if (monomial_list[ mnllist[k] ].smearing == s_type)
       {
         
         if(monomial_list[ mnllist[k] ].derivativefunction != NULL)
@@ -81,6 +81,15 @@ void update_momenta(int * mnllist, double step, const int no,
           etime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
         }
+      }
+    }
+    smear_forces(smearing_control[s_type], tmp_derivative);
+
+    for(i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand); ++i)
+    { 
+      for(mu = 0; mu < 4; ++mu)
+      {
+        _add_su3adj(df[i][mu], tmp_derivative[i][mu]);
       }
     }
   }

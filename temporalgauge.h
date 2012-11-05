@@ -32,7 +32,7 @@ void apply_inv_gtrafo_spinor_odd(spinor * spin, su3 * trafofield);
 void apply_gtrafo_spinor_even(spinor * spin, su3 * trafofield);
 void apply_inv_gtrafo_spinor_even(spinor * spin, su3 * trafofield);
 
-void copy_gauge_field(su3** to, su3** from);
+void copy_gauge_field_no_buffer(su3** to, su3** from);
 
 #endif
 

@@ -18,6 +18,8 @@
 #include <io/gauge.h>
 #include <update_backward_gauge.h>
 
+#include <fatal_error.h>
+
 #include <buffers/utils.h>
 #include <smearing/utils.h>
 #include <smearing/stout.h>

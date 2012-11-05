@@ -38,7 +38,6 @@
 #define CLOVERTRLOG 8
 #define CLOVERDET 9
 #define CLOVERDETRATIO 10
-#define DETRATIOSTOUT 11
 
 #define max_no_monomials 20
 

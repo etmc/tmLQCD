@@ -2,5 +2,7 @@
 # include<config.h>
 #endif
 
+#include <fatal_error.h>
+
 #include <buffers/alignment.h>
 

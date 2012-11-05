@@ -35,7 +35,7 @@ static su3 unit_su3 (void)
 
 /*copy a complete gauge field*/
 /* THINK OF PARALLELIZATION (RAND!!!)*/
-void copy_gauge_field (su3 ** to, su3 ** from)
+void copy_gauge_field_no_buffer (su3 ** to, su3 ** from)
 {
   for (int ix = 0; ix < VOLUME; ix++)
   {
@@ -261,7 +261,7 @@ int init_temporalgauge_trafo (const int V, su3** gfield) {
   }
 
   /* copy the original field */
-  copy_gauge_field(g_tempgauge_field, g_gauge_field);
+  copy_gauge_field_no_buffer(g_tempgauge_field, g_gauge_field);
   
   return(0);
   
@@ -446,7 +446,7 @@ int init_temporalgauge_trafo_mpi (const int V, su3 ** gfield) {				// will initi
   }
   
   // copy the original field
-  copy_gauge_field(g_tempgauge_field, g_gauge_field);
+  copy_gauge_field_no_buffer(g_tempgauge_field, g_gauge_field);
   
   
   return(0);

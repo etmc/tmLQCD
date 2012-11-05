@@ -7,5 +7,7 @@
 #include <string.h>
 
 #include <global.h>
+#include <fatal_error.h>
+
 #include <buffers/gauge.h>
 

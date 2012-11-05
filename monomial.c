@@ -188,11 +188,6 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].accfunction = &detratio_acc;
 	monomial_list[i].derivativefunction = &detratio_derivative;
       }
-      else if(monomial_list[i].type == DETRATIOSTOUT) {
-	monomial_list[i].hbfunction = &detratiostout_heatbath;
-	monomial_list[i].accfunction = &detratiostout_acc;
-	monomial_list[i].derivativefunction = &detratiostout_derivative;
-      }
       else if(monomial_list[i].type == POLY) {
 	monomial_list[i].hbfunction = &poly_heatbath;
 	monomial_list[i].accfunction = &poly_acc;
