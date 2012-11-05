@@ -25,7 +25,7 @@ void ape_smear(ape_control *control, gauge_field_t in)
 
     /* Prepare for the next iteration -- the last result is now input! */
     swap_gauge_field(&control->U[1], &buffer);
-    exchange_gauge_field(control->U[1]);
+    exchange_gauge_field(&control->U[1]);
     in = control->U[1];
   }
   control->smearing_performed = 1;

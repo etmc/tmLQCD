@@ -93,6 +93,8 @@ void update_momenta(int * mnllist, double step, const int no,
       }
     }
   }
+  ohnohack_remap_df0(df);
+  ohnohack_remap_g_gauge_field(g_gf);
     
 #ifdef MPI
   xchange_deri(hf->derivative);
