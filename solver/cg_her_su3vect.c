@@ -38,6 +38,7 @@
 #include "su3.h"
 #include "linalg_eo.h"
 #include "start.h"
+#include "gettime.h"
 #include "solver/matrix_mult_typedef.h"
 #include "cg_her_su3vect.h"
 
@@ -52,11 +53,7 @@ int cg_her_su3vect(su3_vector * const P, su3_vector * const Q, const int max_ite
   double atime, etime;
 
 
-#ifdef MPI
-  atime = MPI_Wtime();
-#else
-  atime = ((double)clock())/((double)(CLOCKS_PER_SEC));
-#endif
+  atime = gettime();
   squarenorm = square_norm_su3vect(Q, N, 1);
 
   f(g_jacobi_field[0],P,tslice);
@@ -88,11 +85,7 @@ int cg_her_su3vect(su3_vector * const P, su3_vector * const Q, const int max_ite
     assign_su3vect(g_jacobi_field[1], g_jacobi_field[0], N);
     normsq = err;
   }
-#ifdef MPI
-  etime = MPI_Wtime();
-#else
-  etime = ((double)clock())/((double)(CLOCKS_PER_SEC));
-#endif
+  etime = gettime();
   g_sloppy_precision = save_sloppy;
   /* FLOPS= 2 A + 2 Nc Ns + N_Count ( 2 A + 10 Nc Ns ) */
   if(g_debug_level > 0  && g_proc_id == 0) {

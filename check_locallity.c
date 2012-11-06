@@ -47,23 +47,18 @@
 #include "start.h"
 #include "measure_gauge_action.h"
 #ifdef MPI
-#include "xchange.h"
+#include "xchange/xchange.h"
 #endif
 #include "read_input.h"
 #include "mpi_init.h"
 #include "sighandler.h"
 #include "boundary.h"
 #include "solver/solver.h"
-#include "init_gauge_field.h"
-#include "init_geometry_indices.h"
-#include "init_spinor_field.h"
-#include "init_moment_field.h"
-#include "init_dirac_halfspinor.h"
-#include "xchange_halffield.h"
+#include "init/init.h"
 #include "smearing/stout.h"
 #include "su3spinor.h"
 #include "invert_eo.h"
-#include "D_psi.h"
+#include "operator/D_psi.h"
 #include "linalg/convert_eo_to_lexic.h"
 
 

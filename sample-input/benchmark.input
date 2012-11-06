@@ -1,0 +1,7 @@
+T=48
+L=24
+NrXProcs = 1
+NrYProcs = 1
+NrZProcs = 1
+
+OMPNumThreads = 1

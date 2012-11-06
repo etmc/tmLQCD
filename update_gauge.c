@@ -34,7 +34,7 @@
 #include "su3spinor.h"
 #include "expo.h"
 #include "sse.h"
-#include "xchange.h"
+#include "xchange/xchange.h"
 #include "hamiltonian_field.h"
 #include "update_gauge.h"
 
@@ -47,7 +47,11 @@
 
 
 void update_gauge(const double step, hamiltonian_field_t * const hf) {
-
+#ifdef OMP
+#define static
+#pragma omp parallel
+  {
+#endif
   int i,mu;
   static su3 v,w;
   su3 *z;
@@ -57,17 +61,29 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
 #pragma pomp inst begin(updategauge)
 #endif
 
+#ifdef OMP
+#undef static
+#endif
+
+#ifdef OMP
+#pragma omp for
+#endif
   for(i = 0; i < VOLUME; i++) { 
     for(mu = 0; mu < 4; mu++){
       /* moment[i][mu] = h_{i,mu}^{alpha} */
       xm = &hf->momenta[i][mu];
       z = &hf->gaugefield[i][mu];
       _su3adj_assign_const_times_su3adj(deriv, step, *xm);
-      v = restoresu3( exposu3(deriv) );
+      exposu3(&w,&deriv);
+      restoresu3(&v,&w);
       _su3_times_su3(w, v, *z);
       _su3_assign(*z, w);
     }
   }
+
+#ifdef OMP
+  } /* OpenMP parallel closing brace */
+#endif
   
 #ifdef MPI
   /* for parallelization */

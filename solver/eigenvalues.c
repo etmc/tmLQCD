@@ -44,14 +44,14 @@
 #include <io/gauge.h>
 #include <io/spinor.h>
 #include <io/utils.h>
-#include "tm_operators.h"
+#include "operator/tm_operators.h"
 #include "solver/solver.h"
 #include "solver/jdher.h"
 #include "solver/matrix_mult_typedef.h"
 #include "linalg_eo.h"
-#include "Dov_psi.h"
+#include "operator/Dov_psi.h"
 #include "eigenvalues.h"
-
+#include "gettime.h"
 
 spinor  *eigenvectors = NULL;
 double * eigenvls = NULL;
@@ -74,9 +74,7 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
   static int allocated = 0;
   char filename[200];
   FILE * ofs;
-#ifdef MPI
   double atime, etime;
-#endif
 
   /**********************
    * For Jacobi-Davidson 
@@ -203,9 +201,8 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
   }
 
   if(readwrite != 2) {
-#ifdef MPI
-    atime = MPI_Wtime();
-#endif
+    atime = gettime();
+    
     /* (re-) compute minimal eigenvalues */
     converged = 0;
     solver_it_max = 200;
@@ -231,12 +228,10 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
 	  &returncode, JD_MINIMAL, 1,
 	  f);
     
-#ifdef MPI
-    etime = MPI_Wtime();
+    etime = gettime();
     if(g_proc_id == 0) {
-      printf("Eigenvalues computed in %e sec. (MPI_Wtime)\n", etime-atime);
+      printf("Eigenvalues computed in %e sec. gettime)\n", etime-atime);
     }
-#endif
   }
   else {
     sprintf(filename, eigenvalue_prefix, maxmin ? "max" : "min", nstore); 

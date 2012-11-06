@@ -28,8 +28,16 @@
 
 #if defined _USE_HALFSPINOR
 void update_backward_gauge(gauge_field_t const gf) {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
   int ix=0, kb=0, iy=0;
 
+#ifdef OMP
+#pragma omp for
+#endif 
   for(ix = 0; ix < VOLUME/2; ix++) {
     iy = (VOLUME+RAND)/2+ix;
     kb = g_idn[ g_eo2lexic[iy] ][0];
@@ -40,8 +48,7 @@ void update_backward_gauge(gauge_field_t const gf) {
     _su3_assign(g_gauge_field_copy[0][ix][2], gf[kb][2]);
     kb = g_idn[ g_eo2lexic[iy] ][3];
     _su3_assign(g_gauge_field_copy[0][ix][3], gf[kb][3]);
-  }
-  for(ix = 0; ix < VOLUME/2; ix++) {
+
     kb = g_idn[ g_eo2lexic[ix] ][0];
     _su3_assign(g_gauge_field_copy[1][ix][0], gf[kb][0]);
     kb = g_idn[ g_eo2lexic[ix] ][1];
@@ -51,15 +58,28 @@ void update_backward_gauge(gauge_field_t const gf) {
     kb = g_idn[ g_eo2lexic[ix] ][3];
     _su3_assign(g_gauge_field_copy[1][ix][3], gf[kb][3]);
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
   g_update_gauge_copy = 0;
   return;
 }
 
 #elif _USE_TSPLITPAR 
 
+
 void update_backward_gauge(gauge_field_t const gf) {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   int ix=0, kb=0, kb2=0;
 
+#ifdef OMP
+#pragma omp for
+#endif
   for(ix = 0; ix < VOLUME/2;ix++) {
     kb2=g_eo2lexic[ix];
     _su3_assign(g_gauge_field_copyt[ix][0],gf[kb2][0]);
@@ -78,6 +98,9 @@ void update_backward_gauge(gauge_field_t const gf) {
     kb=g_idn[g_eo2lexic[ix]][3];
     _su3_assign(g_gauge_field_copys[ix][5],gf[kb][3]);
   }
+#ifdef OMP
+#pragma omp for
+#endif
   for(ix = (VOLUME+RAND)/2; ix < (VOLUME+RAND)/2+VOLUME/2;ix++) {
     kb2=g_eo2lexic[ix];
     _su3_assign(g_gauge_field_copyt[ix][0],gf[kb2][0]);
@@ -96,15 +119,28 @@ void update_backward_gauge(gauge_field_t const gf) {
     kb=g_idn[g_eo2lexic[ix]][3];
     _su3_assign(g_gauge_field_copys[ix][5],gf[kb][3]);
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
   g_update_gauge_copy = 0;
   return;
 }
 
 #else
 
+
 void update_backward_gauge(gauge_field_t const gf) {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   int ix=0, kb=0, kb2=0;
 
+#ifdef OMP
+#pragma omp for
+#endif
   for(ix = 0; ix < VOLUME/2; ix++) {
     kb2=g_eo2lexic[ix];
     _su3_assign(g_gauge_field_copy[ix][0],gf[kb2][0]);
@@ -123,6 +159,9 @@ void update_backward_gauge(gauge_field_t const gf) {
     kb=g_idn[g_eo2lexic[ix]][3];
     _su3_assign(g_gauge_field_copy[ix][7],gf[kb][3]);
   }
+#ifdef OMP
+#pragma omp for
+#endif
   for(ix = (VOLUME+RAND)/2; ix < (VOLUME+RAND)/2+VOLUME/2; ix++) {
     kb2=g_eo2lexic[ix];
     _su3_assign(g_gauge_field_copy[ix][0],gf[kb2][0]);
@@ -141,6 +180,11 @@ void update_backward_gauge(gauge_field_t const gf) {
     kb=g_idn[g_eo2lexic[ix]][3];
     _su3_assign(g_gauge_field_copy[ix][7],gf[kb][3]);
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
   g_update_gauge_copy = 0;
   return;
 }

@@ -18,21 +18,19 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/*******************************************************************************
-*
-* File su3.h
-*
-* Type definitions and macros for SU(3) matrices and spinors  
-*
-* Version: 1.0
-* Author: Martin Luescher <luscher@mail.desy.de>
-* Date: 24.10.2000
-*
-* Extended by Martin Hasenbusch 2001.  <Martin.Hasenbusch@desy.de>
-* Rewritten for C99 complex by Albert Deuzeman 2012 <deuzeman@itp.unibe.ch>
-*
-*******************************************************************************/
+ *
+ * File su3.h
+ *
+ * Type definitions and macros for SU(3) matrices and spinors  
+ *
+ * Version: 1.0
+ * Author: Martin Luescher <luscher@mail.desy.de>
+ * Date: 24.10.2000
+ *
+ * Extended by Martin Hasenbusch 2001.  <Martin.Hasenbusch@desy.de>
+ * Rewritten for C99 complex by Albert Deuzeman 2012 <deuzeman@itp.unibe.ch>
+ *
+ *******************************************************************************/
 
 #include <complex.h>
 #include <string.h>
@@ -580,6 +578,18 @@ _sse_store_up(r);
   (t).c20 = (u).c2 * conj((v).c0);	\
   (t).c21 = (u).c2 * conj((v).c1);	\
   (t).c22 = (u).c2 * conj((v).c2);
+
+#define _mvector_tensor_vector(t,u,v)	\
+  (t).c00 = -(u).c0 * conj((v).c0);	\
+  (t).c01 = -(u).c0 * conj((v).c1);	\
+  (t).c02 = -(u).c0 * conj((v).c2);	\
+  (t).c10 = -(u).c1 * conj((v).c0);	\
+  (t).c11 = -(u).c1 * conj((v).c1);	\
+  (t).c12 = -(u).c1 * conj((v).c2);	\
+  (t).c20 = -(u).c2 * conj((v).c0);	\
+  (t).c21 = -(u).c2 * conj((v).c1);	\
+  (t).c22 = -(u).c2 * conj((v).c2);
+
 
 #define _vector_tensor_vector_add(t, u, v, w, z) \
   (t).c00 = (u).c0 * conj((v).c0) + (w).c0 * conj((z).c0);	\

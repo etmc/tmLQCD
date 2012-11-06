@@ -39,6 +39,9 @@
 #ifdef MPI
 #include <mpi.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include "global.h"
 #include "git_hash.h"
 #include "getopt.h"
@@ -48,7 +51,7 @@
 /*#include "eigenvalues.h"*/
 #include "measure_gauge_action.h"
 #ifdef MPI
-#include "xchange.h"
+#include "xchange/xchange.h"
 #endif
 #include <io/utils.h>
 #include "read_input.h"
@@ -56,20 +59,13 @@
 #include "sighandler.h"
 #include "boundary.h"
 #include "solver/solver.h"
-#include "init_gauge_field.h"
-#include "init_geometry_indices.h"
-#include "init_spinor_field.h"
-#include "init_moment_field.h"
-#include "init_dirac_halfspinor.h"
-#include "init_bispinor_field.h"
-#include "init_chi_spinor_field.h"
-#include "xchange_halffield.h"
+#include "init/init.h"
 #include <smearing/stout.h>
 #include "invert_eo.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 #include "ranlxd.h"
 #include "phmc.h"
-#include "D_psi.h"
+#include "operator/D_psi.h"
 #include "little_D.h"
 #include "reweighting_factor.h"
 #include "linalg/convert_eo_to_lexic.h"
@@ -85,8 +81,8 @@
 #include <io/utils.h>
 #include "solver/dirac_operator_eigenvectors.h"
 #include "P_M_eta.h"
-#include "tm_operators.h"
-#include "Dov_psi.h"
+#include "operator/tm_operators.h"
+#include "operator/Dov_psi.h"
 #include "solver/spectral_proj.h"
 void usage()
 {
@@ -131,13 +127,27 @@ int main(int argc, char *argv[])
 
   DUM_DERI = 8;
   DUM_MATRIX = DUM_DERI + 5;
-  NO_OF_SPINORFIELDS = DUM_MATRIX + 2;
+#if ((defined BGL && defined XLC) || defined _USE_TSPLITPAR)
+  NO_OF_SPINORFIELDS = DUM_MATRIX + 3;
+#else
+  NO_OF_SPINORFIELDS = DUM_MATRIX + 3;
+#endif
 
   verbose = 0;
   g_use_clover_flag = 0;
 
 #ifdef MPI
+
+#  ifdef OMP
+  int mpi_thread_provided;
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
+#  else
   MPI_Init(&argc, &argv);
+#  endif
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
+#else
+  g_proc_id = 0;
 #endif
 
   while ((c = getopt(argc, argv, "h?vVf:o:")) != -1) {
@@ -178,15 +188,25 @@ int main(int argc, char *argv[])
   }
 
 #ifdef OMP
-  if(omp_num_threads > 0)
+  if(omp_num_threads > 0) 
   {
+     omp_set_num_threads(omp_num_threads);
+  }
+  else {
+    if( g_proc_id == 0 )
+      printf("# No value provided for OmpNumThreads, running in single-threaded mode!\n");
+
+    omp_num_threads = 1;
     omp_set_num_threads(omp_num_threads);
   }
+
+  init_omp_accumulators(omp_num_threads);
 #endif
 
   /* Allocate needed memory */
   initialize_gauge_buffers(5);
   initialize_adjoint_buffers(5);
+
 
   /* this DBW2 stuff is not needed for the inversion ! */
   if (g_dflgcr_flag == 1) {
@@ -348,7 +368,6 @@ int main(int argc, char *argv[])
       g_update_gauge_copy = 1;
       g_update_gauge_energy = 1;
       g_update_rectangle_energy = 1;
-
       plaquette_energy = measure_gauge_action(smear_control->result);
 
       if (g_cart_id == 0) {
@@ -519,6 +538,14 @@ int main(int argc, char *argv[])
 
   free_stout_control(smear_control);
   return_gauge_field(&g_gf);
+
+#ifdef MPI
+  MPI_Finalize();
+#endif
+#ifdef OMP
+  free_omp_accumulators();
+#endif
+
   free_blocks();
   free_dfl_subspace();
   free_geometry_indices();
@@ -528,11 +555,6 @@ int main(int argc, char *argv[])
 
   finalize_gauge_buffers();
   finalize_adjoint_buffers();
-
-  
-#ifdef MPI
-  MPI_Finalize();
-#endif
 
   return(0);
   

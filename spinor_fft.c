@@ -20,7 +20,7 @@
 
 #include "spinor_fft.h"
 #include "mpi_init.h"
-#include "init_spinor_field.h"
+#include "init/init.h"
 
 #ifdef HAVE_FFTW
   #include <fftw3.h>

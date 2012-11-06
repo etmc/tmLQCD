@@ -37,7 +37,7 @@
 #include "global.h"
 #include "geometry_eo.h"
 #include "start.h"
-#include "xchange.h"
+#include "xchange/xchange.h"
 
 void set_deri_point();
 int check_geometry();

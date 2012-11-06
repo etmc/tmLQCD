@@ -14,8 +14,14 @@
 /* Define to 1 if you have the `lemon' library (-llemon). */
 #undef HAVE_LIBLEMON
 
+/* 1 if clock_gettime is available for use in benchmark */
+#undef HAVE_CLOCK_GETTIME
+
 /* Compile with MPI support */
 #undef MPI
+
+/* Compile with OpenMP support */
+#undef OMP
 
 /* Compile with FFTW support */
 #undef HAVE_FFTW
@@ -95,6 +101,12 @@
 /* Optimize for Blue Gene/P */
 #undef BGP
 
+/* Compile with QPX intrinsics */
+#undef BGQ
+
+/* Compile with SPI for communications */
+#undef SPI
+
 /* Are we using the IBM xlc compiler? */
 #undef XLC
 
@@ -171,12 +183,6 @@
 
 /* Define to 1 if non-blocking MPI calls for spinor and gauge should be used */
 #undef _NON_BLOCKING
-
-/* Define to 1 if BGL dram window should be used */
-#undef _USE_BGLDRAM
-
-/* Define to 1 for rts_get_dram_window usage for halfspinor on BG/L */
-#undef BGL2
 
 /* Define if we want to use CUDA GPU */
 #undef HAVE_GPU

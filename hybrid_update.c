@@ -35,7 +35,7 @@
 #include "su3spinor.h"
 #include "expo.h"
 #include "sse.h"
-#include "xchange.h"
+#include "xchange/xchange.h"
 #include "get_rectangle_staples.h"
 #include "gamma.h"
 #include "get_staples.h"

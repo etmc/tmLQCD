@@ -43,6 +43,8 @@
 #include "su3adj.h"
 #include "mpi_init.h"
 
+void Hopping_Matrix_Indices(void);
+
 #if ((defined PARALLELX) || (defined PARALLELXY) || (defined PARALLELXYZ))
 
 /* This is the version of the function Index  introduced for Aurora-like parallelizations (mainly xyz)  */
@@ -287,7 +289,6 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
   y3 = (x3 + LZ) % LZ;
   ix = ((y0*LX + y1)*LY + y2)*LZ + y3;
   
-  y0=x0; /* ?!? */
 #if ((defined PARALLELT) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
   if(x0 == T) {
     ix = VOLUME + y3 + LZ*y2 + LZ*LY*y1;
@@ -769,64 +770,6 @@ void geometry(){
 #if (defined PARALLELXYZT || defined PARALLELXYZ )
   startvaluez = 1;
 #endif
-
-  /*** Coordinates for SFBC ***/
-
-  /* it finds which are the values of t,x,y,z (x0,x1,x2,x3) for each lattice site x (ix) */
-  /* the result is written in the global variables g_t[ix], g_x[ix], g_y[ix], g_z[ix], respectively */
-
-  g_t=(int*)malloc(sizeof(int)*VOLUME);
-
-  if(g_t==NULL) {
-    fprintf(stderr,"allocation of memory failed");
-    exit(-1);
-  }
-
-  g_x=(int*)malloc(sizeof(int)*VOLUME);
-
-  if(g_x==NULL) {
-    fprintf(stderr,"allocation of memory failed");
-    exit(-1);
-  }
-
-  g_y=(int*)malloc(sizeof(int)*VOLUME);
-
-  if(g_y==NULL) {
-    fprintf(stderr,"allocation of memory failed");
-    exit(-1);
-  }
-
-  g_z=(int*)malloc(sizeof(int)*VOLUME);
-
-  if(g_z==NULL) {
-    fprintf(stderr,"allocation of memory failed");
-    exit(-1);
-  }
-
-  
-  for (x0 = 0 ; x0 < T ; x0++) {
-    
-    for (x1 = 0 ; x1 < LX ; x1++) {
-      
-      for (x2 = 0 ; x2 < LY ; x2++) {
-	
-	for (x3 = 0 ; x3 < LZ ; x3++) {
-	  
-
-	  ix = Index(x0, x1, x2, x3);
-
-	  g_t[ix] = x0;
-	  g_x[ix] = x1;
-	  g_y[ix] = x2;
-	  g_z[ix] = x3;
-	
-  
-	}
-      }
-    }
-  }
-  
-  /*** END OF coordinates SFBC ***/
 
   /* extended for boundary slices */
   for (x0 = -startvaluet; x0 < (T+startvaluet); x0++){
@@ -1513,24 +1456,76 @@ void geometry(){
 #endif
   }
 
-  /* This establishes the time-coordinate values. */
-  /* This should only be used for the SFBC because */
-  /* it may eventually vanish. */
-  /* This should be merged into the above. */
-  /* FIX this later, but for now */
-  /* I'm assuming a scalar machine. */
-  for( x0 = 0; x0 <  T; x0++ )
-  for( x1 = 0; x1 < LX; x1++ )
-  for( x2 = 0; x2 < LY; x2++ )
-  for( x3 = 0; x3 < LZ; x3++ )
-  {
-    ix = Index( x0, x1, x2, x3 );
-    assert( ix == g_ipt[ x0 ][ x1 ][ x2 ][ x3 ] );
-    g_t[ix] = x0;
-  }
+  Hopping_Matrix_Indices();
 
   free(xeven);
 }
 
 
+void Hopping_Matrix_Indices(){
+  int ix;
+  int ioff = (VOLUME+RAND)/2;
+  /**************** loop over all lattice sites ****************/
+  for (int icx = 0, icy = (VOLUME+RAND)/2; icx < VOLUME/2; icx++, icy++)
+  {
+    ix=g_eo2lexic[icx];
+    /*********************** direction +0 ************************/
+    g_hi[(16*icx)] = g_iup[ix][0];
+    g_hi[(16*icx)+1] = g_lexic2eosub[g_hi[(16*icx)]];
+    g_hi[(16*icx)] = ix;
+    /*********************** direction -0 ************************/
+    g_hi[(16*icx)+2] = g_idn[ix][0];
+    g_hi[(16*icx)+3] = g_lexic2eosub[g_hi[(16*icx)+2]];
+    /*********************** direction +1 ************************/
+    g_hi[(16*icx)+4] = g_iup[ix][1];
+    g_hi[(16*icx)+5] = g_lexic2eosub[g_hi[(16*icx)+4]];
+    /*********************** direction -1 ************************/
+    g_hi[(16*icx)+6] = g_idn[ix][1];
+    g_hi[(16*icx)+7] = g_lexic2eosub[g_hi[(16*icx)+6]];
+    /*********************** direction +2 ************************/
+    g_hi[(16*icx)+8] = g_iup[ix][2];
+    g_hi[(16*icx)+9] = g_lexic2eosub[g_hi[(16*icx)+8]];
+    /*********************** direction -2 ************************/
+    g_hi[(16*icx)+10] = g_idn[ix][2];
+    g_hi[(16*icx)+11] = g_lexic2eosub[g_hi[(16*icx)+10]];
+    /*********************** direction +3 ************************/
+    g_hi[(16*icx)+12] = g_iup[ix][3];
+    g_hi[(16*icx)+13] = g_lexic2eosub[g_hi[(16*icx)+12]];
+    /*********************** direction -3 ************************/
+    g_hi[(16*icx)+14] = g_idn[ix][3];
+    g_hi[(16*icx)+15] = g_lexic2eosub[g_hi[(16*icx)+14]];
+    /************************ end of loop ************************/
+    ix=g_eo2lexic[icx+ioff];
+    /*********************** direction +0 ************************/
+    g_hi[(16*icy)] = g_iup[ix][0];
+    g_hi[(16*icy)+1] = g_lexic2eosub[g_hi[(16*icy)]];
+    g_hi[(16*icy)] = ix;
+    /*********************** direction -0 ************************/
+    g_hi[(16*icy)+2] = g_idn[ix][0];
+    g_hi[(16*icy)+3] = g_lexic2eosub[g_hi[(16*icy)+2]];
+    /*********************** direction +1 ************************/
+    g_hi[(16*icy)+4] = g_iup[ix][1];
+    g_hi[(16*icy)+5] = g_lexic2eosub[g_hi[(16*icy)+4]];
+    /*********************** direction -1 ************************/
+    g_hi[(16*icy)+6] = g_idn[ix][1];
+    g_hi[(16*icy)+7] = g_lexic2eosub[g_hi[(16*icy)+6]];
+    /*********************** direction +2 ************************/
+    g_hi[(16*icy)+8] = g_iup[ix][2];
+    g_hi[(16*icy)+9] = g_lexic2eosub[g_hi[(16*icy)+8]];
+    /*********************** direction -2 ************************/
+    g_hi[(16*icy)+10] = g_idn[ix][2];
+    g_hi[(16*icy)+11] = g_lexic2eosub[g_hi[(16*icy)+10]];
+    /*********************** direction +3 ************************/
+    g_hi[(16*icy)+12] = g_iup[ix][3];
+    g_hi[(16*icy)+13] = g_lexic2eosub[g_hi[(16*icy)+12]];
+    /*********************** direction -3 ************************/
+    g_hi[(16*icy)+14] = g_idn[ix][3];
+    g_hi[(16*icy)+15] = g_lexic2eosub[g_hi[(16*icy)+14]];
+    /************************ end of loop ************************/
+
+  }
+  g_hi[(16*(VOLUME+RAND))] = 0;
+  g_hi[(16*(VOLUME+RAND))+1] = 0;
+  return;
+}
 

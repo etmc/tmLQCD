@@ -46,6 +46,7 @@
 #include "start.h"
 #include "mpi_init.h"
 #include "polyakov_loop.h"
+#include "gettime.h"
 
 void polyakov_loop(_Complex double * pl_, const int mu) {
 
@@ -183,12 +184,7 @@ int polyakov_loop_0(const int nstore, _Complex double *pl) {
   /**************
    * local part *
    **************/
-#ifdef MPI
-    ratime = MPI_Wtime();
-#else
-    ratime = (double)clock()/(double)(CLOCKS_PER_SEC);
-#endif
-
+    ratime = gettime();
 
   VOL3 = L0*L1*L2;
   tmp_loc = (su3 *)calloc(VOL3, sizeof(su3));
@@ -214,11 +210,7 @@ int polyakov_loop_0(const int nstore, _Complex double *pl) {
       }
     }
   }
-#ifdef MPI
-  retime = MPI_Wtime();
-#else
-  retime = (double)clock()/(double)(CLOCKS_PER_SEC);
-#endif
+  retime = gettime();
   if(g_debug_level>0) {
     fprintf(stdout, "[polyakov_loop_0 | %3d] time for calculating local part = %e seconds\n", g_cart_id, retime-ratime);
   }
@@ -361,11 +353,7 @@ int polyakov_loop_dir(
   /**************
    * local part *
    **************/
-#ifdef MPI
-  ratime = MPI_Wtime();
-#else
-  ratime = (double)clock()/(double)(CLOCKS_PER_SEC);
-#endif
+  ratime = gettime();
 
   if(dir==0) {
     VOL3 = LX*LY*LZ;
@@ -438,11 +426,7 @@ int polyakov_loop_dir(
     }
 
   }
-#ifdef MPI
-  retime = MPI_Wtime();
-#else
-  retime = (double)clock()/(double)(CLOCKS_PER_SEC);
-#endif
+  retime = gettime();
   if(g_debug_level > 0 && g_proc_id == 0) {
     fprintf(stdout, "# [pl02 dir%1d proc%.2d] time for calculating local part"\
 	    " = %e seconds\n", dir, g_cart_id, retime-ratime);

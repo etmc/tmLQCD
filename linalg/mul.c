@@ -28,6 +28,9 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -35,8 +38,16 @@
 #include "mul.h"
 
 void mul(spinor * const R, const _Complex double c, spinor * const S, const int N){
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
   spinor *r,*s;
   
+#ifdef OMP
+#pragma omp for
+#endif
   for (int ix = 0; ix < N; ++ix)
   {
     r=(spinor *) R + ix;
@@ -58,4 +69,7 @@ void mul(spinor * const R, const _Complex double c, spinor * const S, const int 
     r->s3.c1 = c * s->s3.c1;
     r->s3.c2 = c * s->s3.c2;
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
 }

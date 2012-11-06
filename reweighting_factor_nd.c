@@ -24,10 +24,10 @@
 #include <stdio.h>
 #include <math.h>
 #include "global.h"
-#include "linsolve.h"
 #include "linalg_eo.h"
 #include "start.h"
-#include "tm_operators.h"
+#include "operator/tm_operators.h"
+#include "operator/tm_operators_nd.h"
 #include "Ptilde_nd.h"
 #include "phmc.h"
 #include "reweighting_factor_nd.h"
@@ -56,7 +56,7 @@ double reweighting_factor_nd(const int N)
     temp1 = phmc_ptilde_cheby_coef[0];
     phmc_ptilde_cheby_coef[0] = temp1 - 1;
 
-    Poly_tilde_ND(g_chi_up_spinor_field[3], g_chi_dn_spinor_field[3], phmc_ptilde_cheby_coef, phmc_ptilde_n_cheby, g_chi_up_spinor_field[2], g_chi_dn_spinor_field[2]);
+    Ptilde_ndpsi(g_chi_up_spinor_field[3], g_chi_dn_spinor_field[3], phmc_ptilde_cheby_coef, phmc_ptilde_n_cheby, g_chi_up_spinor_field[2], g_chi_dn_spinor_field[2], &Qtm_pm_ndpsi);
 
     phmc_ptilde_cheby_coef[0] = temp1;
 

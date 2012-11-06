@@ -1,0 +1,92 @@
+
+srcdir = @srcdir@
+top_builddir =  @top_builddir@
+abs_top_builddir = @abs_top_builddir@
+top_srcdir = @top_srcdir@
+abs_top_srcdir = @abs_top_srcdir@
+subdir = operator
+builddir = @builddir@
+
+CFLAGS = @CFLAGS@
+DEPFLAGS = @DEPFLAGS@
+LDFLAGS = @LDFLAGS@
+DEFS = @DEFS@
+OPTARGS = @OPTARGS@
+SOPTARGS = @SOPTARGS@
+
+AR = @AR@
+RANLIB = @RANLIB@
+CC = @CC@
+CCDEP = @CCDEP@
+CCLD = ${CC}
+LINK = ${CCLD} ${CFLAGS} ${LDFLAGS} ${OPTARGS} -o $@
+LEX = @LEX@
+AUTOCONF = @AUTOCONF@
+DEFS = @DEFS@
+
+INCLUDES = @INCLUDES@
+LDADD =
+#COMPILE = ${CC} ${DEFS} ${INCLUDES} ${CFLAGS}
+COMPILE = ${CC} $(DEFS) ${INCLUDES} ${CFLAGS}
+
+LIBRARIES = liboperator
+liboperator_TARGETS = clover_accumulate_deriv clover_deriv clovertm_operators clover_leaf \
+  tm_operators_nd clover_term clover_invert clover_det
+
+liboperator_STARGETS = Hopping_Matrix_nocom tm_times_Hopping_Matrix Hopping_Matrix \
+	tm_operators tm_sub_Hopping_Matrix D_psi Dov_psi Dov_proj
+
+liboperator_OBJECTS = $(addsuffix .o, ${liboperator_TARGETS})
+liboperator_SOBJECTS = $(addsuffix .o, ${liboperator_STARGETS})
+
+# default rule
+
+all: Makefile dep liboperator.a
+
+# rules for debugging
+debug all-debug: CFLAGS := $(CFLAGS) @DEBUG_FLAG@
+debug all-debug: all
+
+# rules for profiling information
+profile all-profile: CFLAGS := $(filter-out -fomit-frame-pointer,${CFLAGS}) @PROFILE_FLAG@
+profile all-profile: all
+
+#include dep rules
+-include $(addsuffix .d,${liboperator_TARGETS})
+
+include ${top_srcdir}/Makefile.global
+
+# rule to compile objects
+${liboperator_OBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/config.h
+	$(COMPILE) ${OPTARGS} -c $<
+
+${liboperator_SOBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/config.h
+	$(COMPILE) ${SOPTARGS} -c $<
+
+# rule to make liboperator
+liboperator.a: ${liboperator_OBJECTS} ${liboperator_SOBJECTS} Makefile
+	@rm -f liboperator.a
+	@${AR} cru liboperator.a ${liboperator_OBJECTS} ${liboperator_SOBJECTS}
+	@$(RANLIB) liboperator.a
+	@cp liboperator.a ../lib/liboperator.a
+
+# rule to generate .d files
+$(addsuffix .d, $(liboperator_TARGETS) ${liboperator_STARGETS}): %.d: ${srcdir}/%.c Makefile
+	@${CCDEP} ${DEFS} ${DEPFLAGS} ${INCLUDES} $< > $@
+
+# rule to make dependencies
+dep: ${addsuffix .d, ${liboperator_TARGETS} ${liboperator_STARGETS}}
+
+# rules to clean
+
+compile-clean: Makefile
+	rm -f ${$(addsuffix _OBJECTS, ${LIBRARIES})} ${$(addsuffix _SOBJECTS, ${LIBRARIES})} *.d
+
+clean: compile-clean 
+	rm -f $(addsuffix .a, ${LIBRARIES})
+	rm -f ../lib/liboperator.a
+
+distclean: clean
+	rm -f Makefile
+
+.PHONY: all dep clean compile-clean distclean profile all-profile debug all-debug

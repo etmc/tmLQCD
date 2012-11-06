@@ -53,7 +53,7 @@
 #include "gamma.h"
 #include "solver/eigenvalues.h"
 #include "solver/sub_low_ev.h"
-#include "Dov_psi.h"
+#include "operator/Dov_psi.h"
 #include "solver_field.h"
 #include "sumr.h"
 

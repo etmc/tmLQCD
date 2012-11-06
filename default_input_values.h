@@ -153,13 +153,15 @@
 #define _default_MDPolyDegree 123
 #define _default_MDPolyLmin 0.1
 #define _default_MDPolyLmax 3.0
-#define _default_MDPolyRootsFile ""
+#define _default_MDPolyRootsFile "Square_root_BR_roots.dat"
 #define _default_MDPolyLocNormConst -1.0
 #define _default_MDPolyDetRatio 0
 
 /* default GPU values */
 #define _default_device_num -1
 
+/* default OpenMP values */
+#define _default_omp_num_threads 0
 
 #define _default_use_preconditioning 0
 

@@ -15,9 +15,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-
-/****************************************************************
  *
  * invert_eo makes an inversion with EO preconditioned
  * tm Operator
@@ -40,14 +37,13 @@
 #include<stdlib.h>
 #include"global.h"
 #include"linalg_eo.h"
-#include"tm_operators.h"
-#include"Hopping_Matrix.h"
-#include"D_psi.h"
-#include"linsolve.h"
+#include"operator/tm_operators.h"
+#include"operator/Hopping_Matrix.h"
+#include"operator/D_psi.h"
 #include"gamma.h"
 #include"solver/solver.h"
 #include"read_input.h"
-#include"xchange.h"
+#include"xchange/xchange.h"
 #include"solver/poly_precon.h"
 #include"solver/dfl_projector.h"
 #include"invert_eo.h"

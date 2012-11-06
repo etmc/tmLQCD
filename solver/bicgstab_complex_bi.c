@@ -70,14 +70,14 @@ int bicgstab_complex_bi(bispinor * const P, bispinor * const Q, const int max_it
   t = bisolver_field[5];
 
   f(r, P);
-  diff_bi(p, Q, r, N);
-  assign_bi(r, p, N);
-  assign_bi(hatr, p, N);
-  rho0 = scalar_prod_bi(hatr, r, N);
-  squarenorm = square_norm_bi(Q, N);
+  diff((spinor*)p, (spinor*)Q, (spinor*)r, 2*N);
+  assign((spinor*)r, (spinor*)p, 2*N);
+  assign((spinor*)hatr, (spinor*)p, 2*N);
+  rho0 = scalar_prod((spinor*)hatr, (spinor*)r, 2*N, 1);
+  squarenorm = square_norm((spinor*)Q, 2*N, 1);
 
   for(i = 0; i < max_iter; i++){
-    err = square_norm_bi(r, N);
+    err = square_norm((spinor*)r, 2*N, 1);
     if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
       printf("%d %e\n", i, err);
       fflush(stdout);
@@ -88,22 +88,22 @@ int bicgstab_complex_bi(bispinor * const P, bispinor * const Q, const int max_it
       return(i);
     }
     f(v, p);
-    denom = scalar_prod_bi(hatr, v, N);
+    denom = scalar_prod((spinor*)hatr, (spinor*)v, 2*N, 1);
     alpha = rho0 / denom;
-    assign_bi(s, r, N);
-    assign_diff_mul_bi(s, v, alpha, N);
+    assign((spinor*)s, (spinor*)r, 2*N);
+    assign_diff_mul((spinor*)s, (spinor*)v, alpha, 2*N);
     f(t, s);
-    omega = scalar_prod_bi(t,s, N);
-    omega /= square_norm_bi(t, N);
-    assign_add_mul_add_mul_bi(P, p, s, alpha, omega, N);
-    assign_bi(r, s, N);
-    assign_diff_mul_bi(r, t, omega, N);
-    rho1 = scalar_prod_bi(hatr, r, N);
+    omega = scalar_prod((spinor*)t, (spinor*)s, 2*N, 1);
+    omega /= square_norm((spinor*)t, 2*N, 1);
+    assign_add_mul_add_mul((spinor*)P, (spinor*)p, (spinor*)s, alpha, omega, 2*N);
+    assign((spinor*)r, (spinor*)s, 2*N);
+    assign_diff_mul((spinor*)r, (spinor*)t, omega, 2*N);
+    rho1 = scalar_prod((spinor*)hatr, (spinor*)r, 2*N, 1);
     nom = alpha * rho1;
     denom = omega * rho0;
     beta = nom / denom;
     omega = -omega;
-    assign_mul_bra_add_mul_ket_add_bi(p, v, r, omega, beta, N);
+    assign_mul_bra_add_mul_ket_add((spinor*)p, (spinor*)v, (spinor*)r, omega, beta, 2*N);
     rho0 = rho1;
   }
   finalize_bisolver(bisolver_field, nr_sf);

@@ -56,16 +56,21 @@ int write_first_messages(FILE * parameterfile, const int inv) {
   printf("# The code is compiled for Blue Gene/L\n");
   fprintf(parameterfile, 
 	  "# The code is compiled for Blue Gene/L\n");
-#  if (defined _USE_BGLDRAM)
-  printf("# The code is compiled for Blue Gene/L dram window\n");
-  fprintf(parameterfile, 
-	  "# The code is compiled for Blue Gene/L dram window\n");
-#  endif
 #endif
 #ifdef BGP
   printf("# The code is compiled for Blue Gene/P\n");
   fprintf(parameterfile,
           "# The code is compiled for Blue Gene/P\n");
+#endif
+#if (defined BGQ && defined XLC)
+  printf("# The code is compiled with QPX intrinsics for Blue Gene/Q\n");
+  fprintf(parameterfile,
+          "# The code is compiled with QPX intrinsics for Blue Gene/Q\n");
+#endif
+#ifdef SPI
+  printf("# Compiled with BG/Q SPI communication\n");
+  fprintf(parameterfile,
+	  "# Compiled with IBM Blue Gene/Q SPI communication\n");
 #endif
 #ifdef OPTERON
   printf("# The code is compiled for AMD Opteron\n");
@@ -104,6 +109,11 @@ int write_first_messages(FILE * parameterfile, const int inv) {
 	  "# the code is compiled with MPI IO / Lemon\n");
 #  endif
 #endif
+#ifdef OMP
+  printf("# the code is compiled with openMP support\n");
+  fprintf(parameterfile,
+          "# the code is compiled with openMP support\n");
+#endif
   if( bc_flag == 0 ) {
     printf("# Periodic boundary conditions are used\n");
     fprintf(parameterfile, "# Periodic boundary conditions are used\n");
@@ -129,10 +139,6 @@ int write_first_messages(FILE * parameterfile, const int inv) {
   if(inv != 1) {
     printf("# mu = %f\n", g_mu/2./g_kappa);
     printf("# g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
-    printf("# SFBC parameters (gauge):\n");
-    printf("# g_Ct = %f, g_Cs = %f\n", g_Ct, g_Cs);
-    printf("# g_C1ss = %f, g_C1tss = %f, g_C1tts = %f\n", g_C1ss, g_C1tss, g_C1tts);
-    printf("# g_eta = %f\n", g_eta);
     printf("# Using %s precision for the inversions!\n", 
 	   g_relative_precision_flag ? "relative" : "absolute");
   }
@@ -147,10 +153,6 @@ int write_first_messages(FILE * parameterfile, const int inv) {
 	    Nmeas,Nsave);
     fprintf(parameterfile, "# mu = %f\n", g_mu/2./g_kappa);
     fprintf(parameterfile, "# g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
-    fprintf(parameterfile, "# SFBC parameters (gauge):\n");
-    fprintf(parameterfile, "# g_Ct = %f, g_Cs = %f\n", g_Ct, g_Cs);
-    fprintf(parameterfile, "# g_C1ss = %f, g_C1tss = %f, g_C1tts = %f\n", g_C1ss, g_C1tss, g_C1tts);
-    fprintf(parameterfile, "# g_eta = %f\n", g_eta);
     fprintf(parameterfile, "# Using %s precision for the inversions!\n", 
 	    g_relative_precision_flag ? "relative" : "absolute");
   }

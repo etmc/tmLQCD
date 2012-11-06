@@ -27,10 +27,10 @@
 #include "solver/cgs_real.h"
 #include "operator.h"
 #include "invert_overlap.h"
-#include "Dov_psi.h"
+#include "operator/Dov_psi.h"
 #include "linalg_eo.h"
 #include "read_input.h"
-#include "tm_operators.h"
+#include "operator/tm_operators.h"
 #include "gamma.h"
 #include "solver/cg_her.h"
 

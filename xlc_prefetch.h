@@ -15,8 +15,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/***********************************************
  *
  * Prefetch macros for the xlc compiler
  * on the ibm for power4 processors
@@ -53,6 +51,12 @@ __dcbt((void*)(addr2));
 #define _prefetch_su3_by_load(addr1, addr2) \
 __prefetch_by_load((void*)(addr1)); \
 __prefetch_by_load((void*)(addr2)); 
+
+#else
+
+#define _prefetch_spinor(addr)
+
+#define _prefetch_su3(addr)
 
 #endif
 

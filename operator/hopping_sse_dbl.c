@@ -27,414 +27,367 @@
  **********************************************************************/
 
 
+#    if (defined _USE_TSPLITPAR) /* needs also SSE */
+
+/***********************************
+ * 
+ * Aurora version
+ * Author: Luigi Scorzato (scorzato@ect.it)
+ * (last modified 20.4.2009)
+ * The strategy of the code is explained in the file Strategy.txt
+ *
+ ************************************/
+
+/* 4. */
 /* input on k; output on l */
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
-  int icx,icy,icz,ioff,ioff2;
-  int ix,iy,iz;
+  int icx,icz,ioff;
+  int ix,iz;
+  int x0,icx0,jj;
   su3 *restrict up;
   su3 * restrict um;
   spinor * restrict sp;
   spinor * restrict sm;
   spinor * restrict rn;
-  static spinor rs;
-  
-  /* for parallelization */
+
+# if (defined MPI)
+#  ifdef PARALLELX
+#   define  REQC 4
+#  elif defined PARALLELXY
+#   define  REQC 8
+#  elif defined PARALLELXYZ
+#   define  REQC 12
+#  endif
+  MPI_Request requests[REQC];
+  MPI_Status status[REQC];
+# endif
+
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
-    update_backward_gauge();
+    update_backward_gauge(g_gauge_field);
   }
 #endif
 
-#    if (defined MPI && !defined _NO_COMM)
-  xchange_field(k, ieo);
-#    endif
-
-  if(k == l){
-    printf("Error in subroutine D_psi: improper arguments\n");
-    printf("Program aborted\n");
-    exit(1);
-  }
-  if(ieo == 0){
+  if(ieo == 0){ /* even out - odd in */
     ioff = 0;
   } 
-  else{
+  else{ /* odd out - even in */
     ioff = (VOLUME+RAND)/2;
   }
-  ioff2 = (VOLUME+RAND)/2-ioff;
 
-  ix=g_eo2lexic[ioff];
-  iy=g_iup[ix][0]; 
-  icy=g_lexic2eosub[iy];
+  /* Loop over time direction. This is the outmost loop */
+  for(x0=0;x0<T;x0++){
 
-  sp=k+icy;
-#    if ((defined _GAUGE_COPY))
-  up=&g_gauge_field_copy[ioff][0];
-#    else
-  up=&g_gauge_field[ix][0];
+    /* start the communication of the timslice borders (non-blocking send and receive)*/
+#    if (defined MPI && !defined _NO_COMM)
+   xchange_field_open(k, ieo, x0, requests, status);
 #    endif
-   
-  /**************** loop over all lattice sites ******************/
-  for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
-    ix=g_eo2lexic[icx];
+    
+
+  /* loop over timeslice. At: contribution of timelike links  */
+   icx0=g_1st_eot[x0][ieo];
+   jj =0;
+   um=&g_gauge_field_copyt[icx0][0]-1; /* allowed? */
+   for(icx = icx0; icx < icx0+TEOSLICE; icx++){
+     rn=l+(icx-ioff);
     /*********************** direction +0 ************************/
 
-    iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
+    sp=k+g_iup_eo[icx][0]; /* all sp,sm,up,um could be moved up */
+    up=um+1;
 
-    sm=k+icy;
-    _prefetch_spinor(sm);
-
-#    if ((defined _GAUGE_COPY))
-    um=up+1;
-#    else
-    um=&g_gauge_field[iy][0]; 
-#    endif
-    _prefetch_su3(um);
-      
-    _sse_load((*sp).s0);
-    _sse_load_up((*sp).s2);
+    _sse_load(sp->s0);
+    _sse_load_up(sp->s2);
     _sse_vector_add();
 
     _sse_su3_multiply((*up));
     _sse_vector_cmplx_mul(ka0);
-    _sse_store_up(rs.s0);
-    _sse_store_up(rs.s2);      
+    _sse_store_up(rn->s0);
+    _sse_store_up(rn->s2);      
       
-    _sse_load((*sp).s1);
-    _sse_load_up((*sp).s3);
+    _sse_load(sp->s1);
+    _sse_load_up(sp->s3);
     _sse_vector_add();
       
     _sse_su3_multiply((*up));
     _sse_vector_cmplx_mul(ka0);
-    _sse_store_up(rs.s1);
-    _sse_store_up(rs.s3); 
+    _sse_store_up(rn->s1);
+    _sse_store_up(rn->s3); 
 
     /*********************** direction -0 ************************/
 
-    iy=g_iup[ix][1]; icy=g_lexic2eosub[iy];
-      
-    sp=k+icy;
-    _prefetch_spinor(sp);
+    sm=k+g_idn_eo[icx][0];
+    um=up+1;
 
-#    if ((defined _GAUGE_COPY))
-    up = um + 1;
-#    else
-    up+=1;
-#    endif
-    _prefetch_su3(up);
-
-    _sse_load((*sm).s0);
-    _sse_load_up((*sm).s2);
+    _sse_load(sm->s0);
+    _sse_load_up(sm->s2);
     _sse_vector_sub();
       
     _sse_su3_inverse_multiply((*um));
     _sse_vector_cmplxcg_mul(ka0);
       
-    _sse_load(rs.s0);
+    _sse_load(rn->s0);
     _sse_vector_add();
-    _sse_store(rs.s0);
+    _sse_store(rn->s0);
 
-    _sse_load(rs.s2);
+    _sse_load(rn->s2);
     _sse_vector_sub();
-    _sse_store(rs.s2);
+    _sse_store(rn->s2);
       
-    _sse_load((*sm).s1);
-    _sse_load_up((*sm).s3);
+    _sse_load(sm->s1);
+    _sse_load_up(sm->s3);
     _sse_vector_sub();
       
     _sse_su3_inverse_multiply((*um));
     _sse_vector_cmplxcg_mul(ka0);
       
-    _sse_load(rs.s1);
+    _sse_load(rn->s1);
     _sse_vector_add();
-    _sse_store(rs.s1);
+    _sse_store(rn->s1);
 
-    _sse_load(rs.s3);
+    _sse_load(rn->s3);
     _sse_vector_sub();
-    _sse_store(rs.s3);
-      
+    _sse_store(rn->s3);
+    jj++;
+   } /* end of loop over timeslice (At)*/
+
+       
+   /* complete the communication of the timslice borders (and wait) */
+#if (defined MPI && !defined _NO_COMM)
+   xchange_field_close(requests, status, REQC); /*    MPI_Waitall */
+#endif
+
+   /* loop over timeslice. Bt: contribution of spacelike links  */
+   um=&g_gauge_field_copys[icx0][0]-1;
+   for(icx = icx0; icx < icx0+TEOSLICE; icx++){
+    ix=g_eo2lexic[icx];
+    rn=l+(icx-ioff);
     /*********************** direction +1 ************************/
 
-    iy=g_idn[ix][1]; icy=g_lexic2eosub[iy];
+    sp=k+g_iup_eo[icx][1];
+    up=um+1;
 
-    sm=k+icy;
-    _prefetch_spinor(sm);
-
-#    ifndef _GAUGE_COPY
-    um=&g_gauge_field[iy][1]; 
-#    else
-    um=up+1;
-#    endif
-    _prefetch_su3(um);
-
-    _sse_load((*sp).s0);
-    _sse_load_up((*sp).s3);
+    _sse_load(sp->s0);
+    _sse_load_up(sp->s3);
     _sse_vector_i_mul();
     _sse_vector_add();
 
     _sse_su3_multiply((*up));
     _sse_vector_cmplx_mul(ka1);
 
-    _sse_load(rs.s0);
+    _sse_load(rn->s0);
     _sse_vector_add();
-    _sse_store(rs.s0);
+    _sse_store(rn->s0);
 
-    _sse_load(rs.s3);
+    _sse_load(rn->s3);
     _sse_vector_i_mul();      
     _sse_vector_sub();
-    _sse_store(rs.s3); 
+    _sse_store(rn->s3); 
       
-    _sse_load((*sp).s1);
-    _sse_load_up((*sp).s2);
+    _sse_load(sp->s1);
+    _sse_load_up(sp->s2);
     _sse_vector_i_mul();
     _sse_vector_add();
 
     _sse_su3_multiply((*up));
     _sse_vector_cmplx_mul(ka1);
 
-    _sse_load(rs.s1);
+    _sse_load(rn->s1);
     _sse_vector_add();
-    _sse_store(rs.s1);
+    _sse_store(rn->s1);
 
-    _sse_load(rs.s2);
+    _sse_load(rn->s2);
     _sse_vector_i_mul();      
     _sse_vector_sub();
-    _sse_store(rs.s2);       
+    _sse_store(rn->s2);       
 
     /*********************** direction -1 ************************/
 
-    iy=g_iup[ix][2]; icy=g_lexic2eosub[iy];
+    sm=k+g_idn_eo[icx][1];
+    um=up+1;
 
-    sp=k+icy;
-    _prefetch_spinor(sp);
-
-#    if ((defined _GAUGE_COPY))
-    up = um + 1;
-#    else
-    up+=1;
-#    endif
-    _prefetch_su3(up);
-
-    _sse_load((*sm).s0);
-    _sse_load_up((*sm).s3);
+    _sse_load(sm->s0);
+    _sse_load_up(sm->s3);
     _sse_vector_i_mul();
     _sse_vector_sub();
       
     _sse_su3_inverse_multiply((*um));
     _sse_vector_cmplxcg_mul(ka1);
       
-    _sse_load(rs.s0);
+    _sse_load(rn->s0);
     _sse_vector_add();
-    _sse_store(rs.s0);
+    _sse_store(rn->s0);
 
-    _sse_load(rs.s3);
+    _sse_load(rn->s3);
     _sse_vector_i_mul();      
     _sse_vector_add();
-    _sse_store(rs.s3);
+    _sse_store(rn->s3);
 
-    _sse_load((*sm).s1);
-    _sse_load_up((*sm).s2);
+    _sse_load(sm->s1);
+    _sse_load_up(sm->s2);
     _sse_vector_i_mul();
     _sse_vector_sub();
       
     _sse_su3_inverse_multiply((*um));
     _sse_vector_cmplxcg_mul(ka1);
       
-    _sse_load(rs.s1);
+    _sse_load(rn->s1);
     _sse_vector_add();
-    _sse_store(rs.s1);
+    _sse_store(rn->s1);
 
-    _sse_load(rs.s2);
+    _sse_load(rn->s2);
     _sse_vector_i_mul();      
     _sse_vector_add();
-    _sse_store(rs.s2);
+    _sse_store(rn->s2);
 
     /*********************** direction +2 ************************/
 
-    iy=g_idn[ix][2]; icy=g_lexic2eosub[iy];
+    sp=k+g_iup_eo[icx][2];
+    up=um+1;
 
-    sm=k+icy;
-    _prefetch_spinor(sm);
-
-#    ifndef _GAUGE_COPY
-    um=&g_gauge_field[iy][2]; 
-#    else
-    um=up+1;
-#    endif
-    _prefetch_su3(um);
-
-    _sse_load((*sp).s0);
-    _sse_load_up((*sp).s3);
+    _sse_load(sp->s0);
+    _sse_load_up(sp->s3);
     _sse_vector_add();
 
     _sse_su3_multiply((*up));
     _sse_vector_cmplx_mul(ka2);
 
-    _sse_load(rs.s0);
+    _sse_load(rn->s0);
     _sse_vector_add();
-    _sse_store(rs.s0);
+    _sse_store(rn->s0);
 
-    _sse_load(rs.s3);
+    _sse_load(rn->s3);
     _sse_vector_add();
-    _sse_store(rs.s3);
+    _sse_store(rn->s3);
       
-    _sse_load((*sp).s1);
-    _sse_load_up((*sp).s2);
+    _sse_load(sp->s1);
+    _sse_load_up(sp->s2);
     _sse_vector_sub();
 
     _sse_su3_multiply((*up));
     _sse_vector_cmplx_mul(ka2);
 
-    _sse_load(rs.s1);
+    _sse_load(rn->s1);
     _sse_vector_add();
-    _sse_store(rs.s1);
+    _sse_store(rn->s1);
 
-    _sse_load(rs.s2);
+    _sse_load(rn->s2);
     _sse_vector_sub();
-    _sse_store(rs.s2);      
+    _sse_store(rn->s2);      
 
     /*********************** direction -2 ************************/
 
-    iy=g_iup[ix][3]; icy=g_lexic2eosub[iy];
+    sm=k+g_idn_eo[icx][2];
+    um=up+1;
 
-    sp=k+icy;
-    _prefetch_spinor(sp);
-
-#    if ((defined _GAUGE_COPY))
-    up = um + 1;
-#    else
-    up+=1;
-#    endif
-    _prefetch_su3(up);
-
-    _sse_load((*sm).s0);
-    _sse_load_up((*sm).s3);
+    _sse_load(sm->s0);
+    _sse_load_up(sm->s3);
     _sse_vector_sub();
       
     _sse_su3_inverse_multiply((*um));
     _sse_vector_cmplxcg_mul(ka2);
       
-    _sse_load(rs.s0);
+    _sse_load(rn->s0);
     _sse_vector_add();
-    _sse_store(rs.s0);
+    _sse_store(rn->s0);
 
-    _sse_load(rs.s3);
+    _sse_load(rn->s3);
     _sse_vector_sub();
-    _sse_store(rs.s3);
+    _sse_store(rn->s3);
       
-    _sse_load((*sm).s1);
-    _sse_load_up((*sm).s2);
+    _sse_load(sm->s1);
+    _sse_load_up(sm->s2);
     _sse_vector_add();
       
     _sse_su3_inverse_multiply((*um));
     _sse_vector_cmplxcg_mul(ka2);
       
-    _sse_load(rs.s1);
+    _sse_load(rn->s1);
     _sse_vector_add();
-    _sse_store(rs.s1);
+    _sse_store(rn->s1);
 
-    _sse_load(rs.s2);
+    _sse_load(rn->s2);
     _sse_vector_add();
-    _sse_store(rs.s2);      
+    _sse_store(rn->s2);      
       
     /*********************** direction +3 ************************/
 
-    iy=g_idn[ix][3]; icy=g_lexic2eosub[iy];
+    sp=k+g_iup_eo[icx][3];
+    up=um+1;
 
-    sm=k+icy;
-    _prefetch_spinor(sm);
-
-#    ifndef _GAUGE_COPY
-    um=&g_gauge_field[iy][3]; 
-#    else
-    um=up+1;
-#    endif
-    _prefetch_su3(um);
-
-    _sse_load((*sp).s0);
-    _sse_load_up((*sp).s2);
+    _sse_load(sp->s0);
+    _sse_load_up(sp->s2);
     _sse_vector_i_mul();
     _sse_vector_add();
 
     _sse_su3_multiply((*up));
     _sse_vector_cmplx_mul(ka3);
 
-    _sse_load(rs.s0);
+    _sse_load(rn->s0);
     _sse_vector_add();
-    _sse_store(rs.s0);
+    _sse_store(rn->s0);
 
-    _sse_load(rs.s2);
+    _sse_load(rn->s2);
     _sse_vector_i_mul();      
     _sse_vector_sub();
-    _sse_store(rs.s2);
+    _sse_store(rn->s2);
       
-    _sse_load((*sp).s1);
-    _sse_load_up((*sp).s3);
+    _sse_load(sp->s1);
+    _sse_load_up(sp->s3);
     _sse_vector_i_mul();
     _sse_vector_sub();
 
     _sse_su3_multiply((*up));
     _sse_vector_cmplx_mul(ka3);
 
-    _sse_load(rs.s1);
+    _sse_load(rn->s1);
     _sse_vector_add();
-    _sse_store(rs.s1);
+    _sse_store(rn->s1);
 
-    _sse_load(rs.s3);
+    _sse_load(rn->s3);
     _sse_vector_i_mul();      
     _sse_vector_add();
-    _sse_store(rs.s3);
+    _sse_store(rn->s3);
       
     /*********************** direction -3 ************************/
 
-    icz=icx+1;
-    if(icz==((VOLUME+RAND)/2+ioff)) icz=ioff;
-    iz=g_eo2lexic[icz];
-    iy=g_iup[iz][0]; icy=g_lexic2eosub[iy];
-      
-    sp=k+icy;
-    _prefetch_spinor(sp);
+    sm=k+g_idn_eo[icx][3];
+    um=up+1;
 
-#    if ((defined _GAUGE_COPY))
-    up=&g_gauge_field_copy[icz][0];
-#    else
-    up=&g_gauge_field[iz][0];
-#    endif
-    _prefetch_su3(up);
-
-    _sse_load((*sm).s0);
-    _sse_load_up((*sm).s2);
+    _sse_load(sm->s0);
+    _sse_load_up(sm->s2);
     _sse_vector_i_mul();
     _sse_vector_sub();
       
     _sse_su3_inverse_multiply((*um));
     _sse_vector_cmplxcg_mul(ka3);
 
-    rn=l+(icx-ioff);
-      
-    _sse_load(rs.s0);
+    _sse_load(rn->s0);
     _sse_vector_add();
-    _sse_store_nt((*rn).s0);
+    _sse_store(rn->s0);
 
-    _sse_load(rs.s2);
-    _sse_vector_i_mul();      
+    _sse_load(rn->s2);
+    _sse_vector_i_mul();
     _sse_vector_add();
-    _sse_store_nt((*rn).s2);
+    _sse_store(rn->s2);
 
-    _sse_load((*sm).s1);
-    _sse_load_up((*sm).s3);
+    _sse_load(sm->s1);
+    _sse_load_up(sm->s3);
     _sse_vector_i_mul();
     _sse_vector_add();
       
     _sse_su3_inverse_multiply((*um));
     _sse_vector_cmplxcg_mul(ka3);
 
-    _sse_load(rs.s1);
+    _sse_load(rn->s1);
     _sse_vector_add();
-    _sse_store_nt((*rn).s1);
+    _sse_store(rn->s1);
 
-    _sse_load(rs.s3);
+    _sse_load(rn->s3);
     _sse_vector_i_mul();      
     _sse_vector_sub();
-    _sse_store_nt((*rn).s3);
-  }
+    _sse_store(rn->s3);
+   }  /* end of loop over timeslice (Bt)*/
+  } /* x0=0; x0<T */
 }
+
+#    endif

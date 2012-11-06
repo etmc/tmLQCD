@@ -34,7 +34,7 @@
 #include <complex.h>
 #include "start.h"
 #include "ranlxs.h"
-#include "D_psi.h"
+#include "operator/D_psi.h"
 #include "poly_precon.h"
 #include "Msap.h"
 #include "gmres_precon.h"

@@ -34,7 +34,7 @@ libsolver_TARGETS = bicgstab_complex gmres \
 	            bicgstabell bicgstab2 eigenvalues fgmres \
 	            gcr gcr4complex diagonalise_general_matrix \
 	            quicksort gmres_dr lu_solve jdher Msap \
-                    jdher_bi gram-schmidt_bi gram-schmidt \
+                    jdher_bi gram-schmidt eigenvalues_bi \
                     bicgstab_complex_bi cg_her_bi pcg_her \
                     sub_low_ev cg_her_nd poly_precon \
                     generate_dfl_subspace dfl_projector \
@@ -80,7 +80,7 @@ libsolver.a: ${libsolver_OBJECTS} Makefile
 # rule to generate .d files
 
 $(addsuffix .d,$(libsolver_TARGETS)): %.d: ${srcdir}/%.c Makefile
-	@$(CCDEP) ${DEPFLAGS} ${INCLUDES} $< > $@
+	@$(CCDEP) ${DEFS} ${DEPFLAGS} ${INCLUDES} $< > $@
 
 # rule to make dependencies
 
