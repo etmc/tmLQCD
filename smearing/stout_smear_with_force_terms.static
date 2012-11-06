@@ -14,7 +14,7 @@ static void smear_with_force_terms(stout_control *control, gauge_field_t in)
         fatten_links_with_force_terms(&control->U[iter + 1][x][mu], &control->trace[iter][x][mu], 
                                        control->rho, &staples, &control->U[iter][x][mu]);
       }
-    exchange_gauge_field(control->U[iter + 1]);
+    exchange_gauge_field(&control->U[iter + 1]);
   }
   
   control->smearing_performed = 1;
