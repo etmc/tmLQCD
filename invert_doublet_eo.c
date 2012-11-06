@@ -153,7 +153,7 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
   }
   gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
   gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], VOLUME/2);
-  
+#endif  
   
 #ifdef HAVE_GPU
   if (usegpu_flag) {	// GPU, mixed precision solver

@@ -49,7 +49,7 @@ MODULES = read_input gamma hybrid_update measure_gauge_action start \
 	mpi_init deriv_Sb deriv_Sb_D_psi ranlxs \
 	geometry_eo invert_overlap \
 	prepare_source chebyshev_polynomial_nd Ptilde_nd  \
-	reweighting_factor_nd fatal_error dirty_shameful_business\
+	reweighting_factor_nd dirty_shameful_business\
 	online_measurement update_momenta integrator  phmc \
 	little_D block operator measurements pion_norm \
 	temporalgauge spinor_fft X_psi P_M_eta \

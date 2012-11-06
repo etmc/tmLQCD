@@ -62,8 +62,6 @@
 #include "sighandler.h"
 #include "update_tm.h"
 #include "init/init.h"
-#include <init_smearing.h>
-#include "xchange_halffield.h"
 #include "test/check_geometry.h"
 #include "boundary.h"
 #include "phmc.h"

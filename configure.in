@@ -895,12 +895,7 @@ if test ! -e tests/regressions; then
   mkdir tests/regressions
 fi
 
-
-<<<<<<< HEAD
-LIBS="-lhmc -lsolver -llinalg -lsmear -lbuffers -lio -lhmc $LIBS"
-=======
-LIBS="-lhmc -lmonomial -loperator -lsolver -linit -llinalg -lhmc -lxchange -lio $LIBS"
->>>>>>> urbach/NDTwistedClover
+LIBS="-lhmc -lmonomial -loperator -lsolver -linit -llinalg -lsmear -lbuffers -lhmc -lxchange -lio $LIBS"
 AUTOCONF=autoconf
 
 for i in $USESUBDIRS
