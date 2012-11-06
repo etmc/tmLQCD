@@ -28,3 +28,4 @@ doc/main.pdf
 bin
 *.mod.c
 *.opari.inc
+benchmark

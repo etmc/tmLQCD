@@ -179,9 +179,9 @@ int cg_mms_tm(spinor * const P, spinor * const Q, const int max_iter,
 
         if(SourceInfo.type != 1) {
           if (PropInfo.splitted) {
-            sprintf(filename, "%s.%.2d.%.4d.%.2d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im+1);
+            sprintf(filename, "%s.%.2d.%.4d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im+1);
           } else {
-            sprintf(filename, "%s.%.2d.%.4d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.t, im+1);
+            sprintf(filename, "%s.%.2d.%.4d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.t, im+1);
           }
         }
         else {

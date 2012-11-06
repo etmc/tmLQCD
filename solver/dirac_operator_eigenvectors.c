@@ -23,6 +23,7 @@
 #include <complex.h>
 #include "dirac_operator_eigenvectors.h"
 #include "geometry_eo.h"
+#include "init/init_spinor_field.h"
 #include "linalg_eo.h"
 #include "linalg/lapack.h"
 #include "linalg/blas.h"

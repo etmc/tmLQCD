@@ -75,7 +75,7 @@ void tm_sub_Hopping_Matrix(const int ieo, spinor * const l, spinor * const p, sp
   
 #  ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
-    update_backward_gauge(g_gauge_field);
+    update_backward_gauge(g_gf);
   }
 #  endif
   
@@ -126,7 +126,7 @@ void tm_sub_Hopping_Matrix(const int ieo, spinor * const l, spinor * p, spinor *
 #  endif
 #  ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
-    update_backward_gauge(g_gauge_field);
+    update_backward_gauge(g_gf);
   }
 #  endif
 
