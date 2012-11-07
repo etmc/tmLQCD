@@ -245,7 +245,7 @@ int main(int argc,char *argv[])
   
   g_mu = g_mu1;
   
-  initialize_gauge_buffers(5);
+  initialize_gauge_buffers(8);
   initialize_adjoint_buffers(6);
 
   #ifdef _GAUGE_COPY
