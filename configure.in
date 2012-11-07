@@ -359,39 +359,32 @@ AC_SUBST(SPI_FILES)
 INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${abs_top_builddir}/  -I\${abs_top_srcdir}/ -I${lime_dir}/include/ -I${lemon_dir}/include/"
 DEPFLAGS="$DEPFLAGS"
 
-  AC_MSG_CHECKING(what alignment we want for arrays)
-  AC_ARG_WITH(alignment,
-    [AS_HELP_STRING([--with-alignment[=n]], [Automatically or expliclty align arrays to byte number: auto, none, 2, 4, 8, 16 [default=auto]])],
-    withalign=$withval, withalign=auto)
-  if test "$withalign" = "none"; then
-    AC_MSG_RESULT(none)
-    AC_DEFINE(ALIGN_BASE, 0x00, [Align base])
-    AC_DEFINE(ALIGN, [])
-  elif test $withalign = 2; then
-    AC_MSG_RESULT(2 bytes)
-    AC_DEFINE(ALIGN_BASE, 0x01, [Align base])
-    AC_DEFINE(ALIGN, [__attribute__ ((aligned (2)))])
-  elif test $withalign = 4; then
-    AC_MSG_RESULT(4 bytes)
-    AC_DEFINE(ALIGN_BASE, 0x03, [Align base])
-    AC_DEFINE(ALIGN, [__attribute__ ((aligned (4)))])
-  elif test $withalign = 8; then
-    AC_MSG_RESULT(8 bytes)
-    AC_DEFINE(ALIGN_BASE, 0x07, [Align base])
-    AC_DEFINE(ALIGN, [__attribute__ ((aligned (8)))])
-  elif test $withalign = 16; then
-    AC_MSG_RESULT(16 bytes)
-    AC_DEFINE(ALIGN_BASE, 0x0F, [Align base])
-    AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
-  elif test $withalign = auto; then
-    withautoalign=1
-    AC_MSG_RESULT(auto)
-    AC_DEFINE(ALIGN_BASE, 0x00, [Align base])
-    AC_DEFINE(ALIGN, [], [])
-  else
-    AC_MSG_RESULT(Unusable value for array alignment)
-    AC_MSG_ERROR([Allowed values are: auto, none, 2, 4, 8 16])
-  fi
+AC_MSG_CHECKING(what alignment we want for arrays)
+AC_ARG_WITH(alignment,
+  [AS_HELP_STRING([--with-alignment[=n]], [Automatically or expliclty align arrays to byte number: auto, none, 16, 32 [default=auto]])],
+  withalign=$withval, withalign=auto)
+if test "$withalign" = "none"; then
+  AC_MSG_RESULT(none)
+  withalign=1
+  AC_DEFINE(ALIGN_BASE, 0x00, [Align base])
+  AC_DEFINE(ALIGN, [])
+elif test $withalign = 16; then
+  AC_MSG_RESULT(16 bytes)
+  AC_DEFINE(ALIGN_BASE, 0x0F, [Align base])
+  AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
+elif test $withalign = 32; then
+  AC_MSG_RESULT(32 bytes)
+  AC_DEFINE(ALIGN_BASE, 0x1F, [Align base])
+  AC_DEFINE(ALIGN, [__attribute__ ((aligned (32)))])
+elif test $withalign = auto; then
+  withautoalign=1
+  AC_MSG_RESULT(auto)
+  AC_DEFINE(ALIGN_BASE, 0x00, [Align base])
+  AC_DEFINE(ALIGN, [], [])
+else
+  AC_MSG_RESULT(Unusable value for array alignment)
+  AC_MSG_ERROR([Allowed values are: auto, none, 16, 32])
+fi
 
 
 dnl in the following we check for extra options
@@ -405,14 +398,14 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(P4,1,Use Pentium4 instructions)
     if test $withalign = auto; then
-      if test $withautoalign = 1 || test $withautoalign = 2 ||test $withautoalign = 4; then
-        AC_MSG_RESULT(changing array alignment to 8 bytes for P4 instructions)
-        AC_DEFINE(ALIGN_BASE, 0x07, [Align base])
-        AC_DEFINE(ALIGN, [__attribute__ ((aligned (8)))])
-        withautoalign=8
+      if test $withautoalign -lt 16; then
+        AC_MSG_RESULT(changing array alignment to 16 bytes for P4 instructions)
+        AC_DEFINE(ALIGN_BASE, 0x0F, [Align base])
+        AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
+        withautoalign=16
       fi
-    elif test $withalign = none || test $withalign = 2 ||test $withalign = 4; then
-      AC_MSG_ERROR([alignment incompatible with P4 instructions (8 bytes minimum required)!])
+    elif test $withalign -lt 16; then
+      AC_MSG_ERROR([alignment incompatible with P4 instructions (16 bytes required)!])
     fi
   else
     AC_MSG_RESULT(no)
@@ -426,14 +419,14 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(OPTERON,1,Use Opteron instructions)
     if test $withalign = auto; then
-      if test $withautoalign = 1 || test $withautoalign = 2; then
-        AC_MSG_RESULT(changing array alignment to 4 bytes for Opteron instructions)
-        AC_DEFINE(ALIGN_BASE, 0x03, [Align base])
-        AC_DEFINE(ALIGN, [__attribute__ ((aligned (4)))])
-        withautoalign=4
+      if test $withautoalign -lt 16; then
+        AC_MSG_RESULT(changing array alignment to 16 bytes for Opteron instructions)
+        AC_DEFINE(ALIGN_BASE, 0x0F, [Align base])
+        AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
+        withautoalign=16
       fi
-    elif test $withalign = none || test $withalign = 2; then
-      AC_MSG_ERROR([alignment incompatible with Opteron instructions (4 bytes required)!])
+    elif test $withalign -lt 16; then
+      AC_MSG_ERROR([alignment incompatible with Opteron instructions (16 bytes required)!])
     fi
   else
     AC_MSG_RESULT(no)
@@ -445,15 +438,8 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     enable_sse2=$enableval, enable_sse2=no)
   if test $enable_sse2 = yes; then
     AC_MSG_RESULT(yes)
-    if test $withalign = auto; then
-      if test $withautoalign = 1 || test $withautoalign = 2; then
-        AC_MSG_WARN(changing array alignment to 4 bytes for SSE2 instructions)
-        AC_DEFINE(ALIGN_BASE, 0x03, [Align base])
-        AC_DEFINE(ALIGN, [__attribute__ ((aligned (4)))])
-        withautoalign=4
-      fi
-    elif test $withalign = none || test $withalign = 2; then
-      AC_MSG_ERROR([alignment incompatible with SSE2 instructions (4 bytes required)]!)
+    if test $withalign != auto && test $withalign -lt 16; then
+      AC_MSG_ERROR([alignment incompatible with SSE2 instructions (16 bytes required)])
     fi
   else
     AC_MSG_RESULT(no)
@@ -465,18 +451,36 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
     enable_sse3=$enableval, enable_sse3=no)
   if test $enable_sse3 = yes; then
     AC_MSG_RESULT(yes)
-    if test $withalign = auto; then
-      if test $withautoalign = 1 || test $withautoalign = 2; then
-        AC_MSG_RESULT(changing array alignment to 4 bytes for SSE3 instructions)
-        AC_DEFINE(ALIGN_BASE, 0x03, [Align base])
-        AC_DEFINE(ALIGN, [__attribute__ ((aligned (4)))])
-        withautoalign=4
-      fi
-    elif test $withalign = none || test $withalign = 2; then
-      AC_MSG_ERROR([alignment incompatible with SSE2 instructions (4 bytes required)])
+    if test $withalign != auto && $withalign -lt 16; then
+      AC_MSG_ERROR([alignment incompatible with SSE3 instructions (16 bytes required)])
     fi
   else
     AC_MSG_RESULT(no)
+  fi
+
+  if test "$enable_sse2" = "yes" || test "$enable_sse3" = "yes"; then
+    if test $withalign = auto; then
+      if test $withautoalign -lt 16; then
+        AC_MSG_RESULT(changing array alignment to 16 bytes for SSE instructions)
+        AC_DEFINE(ALIGN_BASE, 0x0F, [Align base])
+        AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
+        withautoalign=16
+      fi
+    fi
+  fi
+fi
+
+dnl We here check for alignment issues with QPX instructions -- this flag has been set earlier
+if test $enable_qpx = yes; then
+  if test $withalign = auto; then
+    if test $withautoalign -lt 32; then
+      AC_MSG_RESULT(changing array alignment to 32 bytes for use of QPX instructions on BG/Q)
+      AC_DEFINE(ALIGN_BASE, 0x1F, [Align base])
+      AC_DEFINE(ALIGN, [__attribute__ ((aligned (32)))])
+      withautoalign=32
+    fi
+  elif test $withalign -lt 32; then
+    AC_MSG_ERROR([alignment incompatible with QPX instructions (32 bytes required)])
   fi
 fi
 
