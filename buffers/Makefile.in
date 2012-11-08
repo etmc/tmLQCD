@@ -30,7 +30,7 @@ COMPILE = ${CC} ${DEFS} ${INCLUDES} ${CFLAGS} ${OPTARGS}
 LIBRARIES = libbuffers
 
 libbuffers_TARGETS = 	adjoint \
-			adjoint_allocate_adjoint_buffers \
+			adjoint_allocate_adjoint_buffer \
 			adjoint_finalize_adjoint_buffers \
 			adjoint_free_unused_adjoint_buffers \
 			adjoint_get_adjoint_field \
@@ -38,14 +38,14 @@ libbuffers_TARGETS = 	adjoint \
 			adjoint_return_adjoint_field \
 			alignment_aalloc \
 			gauge \
-			gauge_allocate_gauge_buffers \
+			gauge_allocate_gauge_buffer \
 			gauge_finalize_gauge_buffers \
 			gauge_free_unused_gauge_buffers \
 			gauge_get_gauge_field \
 			gauge_initialize_gauge_buffers \
 			gauge_return_gauge_field \
 			spinor \
-			spinor_allocate_spinor_buffers \
+			spinor_allocate_spinor_buffer \
 			spinor_finalize_spinor_buffers \
 			spinor_free_unused_spinor_buffers \
 			spinor_get_spinor_field \
