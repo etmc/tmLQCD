@@ -83,8 +83,6 @@ typedef struct
   _Complex double sc0,sc1,sc2,sc3;
 } complex_spinor;
 
-#include "su3_func.static"
-
 /*******************************************************************************
 *
 * Macros for SU(3) vectors
