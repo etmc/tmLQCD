@@ -486,6 +486,37 @@ if test $enable_qpx = yes; then
   fi
 fi
 
+dnl Check for alignment associated with (non-QPX) BG optimization.
+dnl This will also result in using 32 byte alignment on MareNostrum, but that should be fairly innocuous.
+if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" = "blrts"; then
+  if test $withalign = auto; then
+    if test $withautoalign -lt 16; then
+      AC_MSG_RESULT(increasing array alignment to 16 bytes for BG/L optimization)
+      AC_DEFINE(ALIGN_BASE, 0x0F, [Align base])
+      AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
+      withautoalign=16
+    fi
+  fi
+elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" = "bprts"; then
+  if test $withalign = auto; then
+    if test $withautoalign -lt 16; then
+      AC_MSG_RESULT(increasing array alignment to 16 bytes for BG/P optimization)
+      AC_DEFINE(ALIGN_BASE, 0x0F, [Align base])
+      AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
+      withautoalign=16
+    fi
+  fi
+elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "$host_os" = "linux-gnu"; then
+  if test $withalign = auto; then
+    if test $withautoalign -lt 32; then
+      AC_MSG_RESULT(increasing array alignment to 32 bytes for BG/Q and generic POWER optimization)
+      AC_DEFINE(ALIGN_BASE, 0x1F, [Align base])
+      AC_DEFINE(ALIGN, [__attribute__ ((aligned (32)))])
+      withautoalign=32
+    fi
+  fi
+fi
+
 AC_MSG_CHECKING(whether we want to use gprof as profiler)
 AC_ARG_WITH(gprof,
   AS_HELP_STRING([--with-gprof], [use of gprof profiler [default=no]]),
@@ -621,16 +652,6 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_
   OPTARGS="-O3"
   SOPTARGS="-O3"
   AC_DEFINE(BGL,1,[Optimize for Blue Gene/L])
-  if test $withalign = auto; then
-    if test $withautoalign = 1; then
-      AC_MSG_RESULT(changing array alignment to 2 bytes for BGL instructions)
-      AC_DEFINE(ALIGN_BASE, 0x01, [Align base])
-      AC_DEFINE(ALIGN, [__attribute__ ((aligned (2)))])
-      withautoalign=2
-    fi
-  elif test $withalign = none; then
-    AC_MSG_ERROR([alignment incompatible with BGL instructions (2 bytes required)!])
-  fi
 
   if test "$XLC" = "yes"; then
     CFLAGS="-qsrcmsg $CFLAGS"
@@ -662,16 +683,6 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_
   SOPTARGS="-O3"
   AC_DEFINE(BGL,1,[Optimize for Blue Gene/L])
   AC_DEFINE(BGP,1,[Optimize for Blue Gene/P])
-  if test $withalign = auto; then
-    if test $withautoalign = 1; then
-      AC_MSG_RESULT(changing array alignment to 2 bytes for BGP instructions)
-      AC_DEFINE(ALIGN_BASE, 0x01, [Align base])
-      AC_DEFINE(ALIGN, [__attribute__ ((aligned (2)))])
-      withautoalign=2
-    fi
-  elif test $withalign = none; then
-    AC_MSG_ERROR([alignment incompatible with BGP instructions (2 bytes required)!])
-  fi
 
   if test "$XLC" = "yes"; then
     CFLAGS="-qsrcmsg $CFLAGS"
