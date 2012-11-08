@@ -13,6 +13,7 @@
 // #include <smearing/unitary.h>
 // #include <smearing/hex.h>
 // #include <smearing/gradient.h>
+// #include <smearing/jacobi.h>
 
 
 typedef enum 
@@ -29,6 +30,7 @@ typedef enum
 typedef struct
 {  
   smearing_type type;
+  int id;
 
   /* Flags */
   /* FIXME These currently mirror flags in the separate control structs.

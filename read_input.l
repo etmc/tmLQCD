@@ -60,7 +60,8 @@ EQL {SPC}*={SPC}*
 #include"integrator.h"
 #include"operator.h"
 #include"phmc.h"
-#include<io/params.h>
+#include <io/params.h>
+#include <smearing/control.h>
 
 inline void rmQuotes(char *str){
   char* strsave=str;
@@ -94,6 +95,13 @@ inline void rmQuotes(char *str){
   monomial * mnl = NULL;
   measurement * meas = NULL;
   operator * optr = NULL;
+
+  /* (temporary) storage for smearing parameters */
+  extern int no_smearings;
+  double       smear_params[3];
+  unsigned int smear_iterations;
+  unsigned int smear_id;
+
   int comment_caller;
   int name_caller;
   int a,b;
@@ -303,6 +311,16 @@ inline void rmQuotes(char *str){
 
 %x PRECONDITIONING
 
+%x SMEARING_INIT
+%x SMEARING_IDENTITY
+%x SMEARING_APE
+%x SMEARING_HYP
+%x SMEARING_STOUT
+%x SMEARING_UNITARY
+%x SMEARING_HEX
+%x SMEARING_GRADIENT
+%x SMEARING_JACOBI
+%x SMEARING_FORCES
 
 %%
 ^SourceFilename{EQL}               BEGIN(SOURCEFILE);
@@ -383,6 +401,7 @@ inline void rmQuotes(char *str){
 ^BeginMonomial{SPC}+               BEGIN(INITMONOMIAL);
 ^BeginInt                          BEGIN(INITINTEGRATOR);
 ^BeginOperator{SPC}+               BEGIN(INITOPERATOR);
+^BeginSmearing{SPC}+               BEGIN(SMEARING_INIT)
 
 ^PropagatorComparison{EQL}         BEGIN(PCOMP);
 ^NbCoresPerNode{EQL}               BEGIN(NBCORES);
@@ -1861,7 +1880,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU>\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,SMEARING_IDENTITY,SMEARING_APE,SMEARING_HYP,SMEARING_STOUT,SMEARING_UNITARY,SMEARING_HEX,SMEARING_GRADIENT,SMEARING_JACOBI>\n   {
   line_of_file++;
 }
 <*>\n                       {
@@ -1878,6 +1897,83 @@ inline void rmQuotes(char *str){
   exit(1);
 }
 
+<SMEARING_INIT>{TYPE} {
+  /* First, extend the smearing array to make room for the new control struct. */
+  smearing_control_t **old_array = smearing_control;
+  smearing_control = calloc(no_smearings + 1, sizeof(smearing_control_t*), 
+  for (int ctr = 0; ctr < no_smearings; ++ctr)
+    smearing_control[ctr] = old_array[ctr];
+  ++no_smearings;
+  free(old_array);
+  
+  /* Now switch to the parser and constructor for the relevant smearing type */
+  if (strcmp(yytext, "IDENTITY"))
+  {
+    BEGIN SMEARING_IDENTITY;
+  }
+  else if (strcmp(yytext, "APE"))
+  {
+    BEGIN SMEARING_APE;
+  }
+  else if (strcmp(yytext, "HYP"))
+  {
+    BEGIN SMEARING_HYP;
+  }
+  else if (strcmp(yytext, "STOUT"))
+  {
+    BEGIN SMEARING_STOUT;
+  }
+  else if (strcmp(yytext, "UNITARY"))
+  {
+    BEGIN SMEARING_UNITARY;
+  }
+  else if (strcmp(yytext, "HEX"))
+  {
+    BEGIN SMEARING_HEX;
+  }
+  else if (strcmp(yytext, "GRADIENT"))
+  {
+    BEGIN SMEARING_GRADIENT;
+  }
+  else if (strcmp(yytext, "JACOBI"))
+  {
+    BEGIN SMEARING_JACOBI;
+  }
+}
+
+<SMEARING_IDENTITY,SMEARING_APE,SMEARING_HYP,SMEARING_STOUT,SMEARING_UNITARY,SMEARING_HEX,SMEARING_GRADIENT,SMEARING_JACOBI>id{EQL}[[:digit:]]+ {
+  sscanf (sentence,"%*s = %u", yytext, &smear_id);
+}
+
+<SMEARING_IDENTITY,SMEARING_APE,SMEARING_HYP,SMEARING_STOUT,SMEARING_UNITARY,SMEARING_HEX,SMEARING_GRADIENT,SMEARING_JACOBI>forces{EQL}{
+  BEGIN SMEARING_FORCES;
+}
+
+<SMEARING_FORCES>yes{
+}
+
+<SMEARING_FORCES>yes{
+}
+
+<SMEARING_IDENTITY,SMEARING_APE,SMEARING_HYP,SMEARING_STOUT,SMEARING_UNITARY,SMEARING_HEX,SMEARING_JACOBI>iterations{EQL}[[:digit:]]+ {
+  sscanf (sentence,"%*s = %u", yytext, &smear_iterations);
+}
+
+<SMEARING_APE,SMEARING_STOUT,SMEARING_JACOBI,SMEARING_UNITARY>rho{EQL}{FLT} {
+  sscanf (sentence,"%*s = %f", yytext, &smear_params[0]);
+}
+
+<SMEARING_HEX,SMEARING_HYP>rho_1{EQL}{FLT} {
+  sscanf (sentence,"%*s = %f", yytext, &smear_params[0]);
+}
+
+<SMEARING_HEX,SMEARING_HYP>rho_2{EQL}{FLT} {
+  sscanf (sentence,"%*s = %f", yytext, &smear_params[1]);
+}
+
+<SMEARING_HEX,SMEARING_HYP>rho_3{EQL}{FLT} {
+  sscanf (sentence,"%*s = %f", yytext, &smear_params[2]);
+}
 
 %%
 
