@@ -1,6 +1,6 @@
 #include "identity.ih"
 
-identity_control *construct_identity_control()
+identity_control *construct_identity_control(int calculate_force_terms)
 {
   identity_control *control = (identity_control*)malloc(sizeof(identity_control));
 

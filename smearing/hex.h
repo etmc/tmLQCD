@@ -38,7 +38,7 @@ typedef struct
   
 } hex_control;
 
-hex_control *construct_hex_control(double const alpha_1, double const alpha_2, double const alpha_3,  unsigned int iterations, int calculate_force_terms);
+hex_control *construct_hex_control(int calculate_force_terms, unsigned int iterations, double const alpha_1, double const alpha_2, double const alpha_3);
 void free_hex_control(hex_control *control);
 
 void hex_smear(hex_control *control, gauge_field_t in);

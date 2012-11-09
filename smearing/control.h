@@ -15,7 +15,6 @@
 // #include <smearing/gradient.h>
 // #include <smearing/jacobi.h>
 
-
 typedef enum 
 {
   Identity = 0, 
@@ -45,6 +44,9 @@ typedef struct
 
   void* type_control;
 } smearing_control_t;
+
+extern smearing_control_t **smearing_control;
+extern int no_smearing_types;
 
 smearing_control_t *construct_smearing_control(smearing_type type,  int calculate_force_terms, ...);
 void free_smearing_control(smearing_control_t *control);

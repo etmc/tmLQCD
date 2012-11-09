@@ -253,9 +253,6 @@ EXTERN int ITER_MAX_CG;
 
 EXTERN void* g_precWS;
 
-EXTERN smearing_control_t **smearing_control;
-EXTERN int no_smearing_types;
-
 #ifdef WITHLAPH
 /* Jacobi operator per Laplacian Heaviside (LapH) */
 EXTERN su3_vector ** g_jacobi_field;

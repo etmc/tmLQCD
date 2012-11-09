@@ -16,7 +16,7 @@ typedef struct
   adjoint_field_t  force_result; /* In this particular case, also a shallow copy... */
 } identity_control;
 
-identity_control *construct_identity_control();
+identity_control *construct_identity_control(int calculate_force_terms);
 inline void free_identity_control(identity_control *control);
 
 inline void identity_smear(identity_control *control, gauge_field_t in);

@@ -51,7 +51,7 @@ typedef struct
   adjoint_field_t  force_result;
 } stout_control;
 
-stout_control *construct_stout_control(double rho, unsigned int iterations, int calculate_force_terms);
+stout_control *construct_stout_control(int calculate_force_terms, unsigned int iterations, double rho);
 void free_stout_control(stout_control *control);
 
 void stout_smear(stout_control *control, gauge_field_t in);

@@ -1,6 +1,6 @@
 #include "hex.ih"
 
-hex_control *construct_hex_control(double const alpha_1, double const alpha_2, double const alpha_3, unsigned int iterations, int calculate_force_terms)
+hex_control *construct_hex_control(int calculate_force_terms, unsigned int iterations, double const alpha_1, double const alpha_2, double const alpha_3)
 {
   hex_control *control = (hex_control*)malloc(sizeof(hex_control));
   control->alpha[0] = alpha_1;

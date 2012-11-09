@@ -1,6 +1,6 @@
 #include "ape.ih"
 
-ape_control *construct_ape_control(double rho, unsigned int iterations)
+ape_control *construct_ape_control(unsigned int iterations, double rho)
 {
   ape_control *control = (ape_control*)malloc(sizeof(ape_control));
   control->rho = rho;

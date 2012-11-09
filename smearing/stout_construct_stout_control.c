@@ -1,6 +1,6 @@
 #include "stout.ih"
 
-stout_control *construct_stout_control(double rho, unsigned int iterations, int calculate_force_terms)
+stout_control *construct_stout_control(int calculate_force_terms, unsigned int iterations, double rho)
 {
   stout_control *control = (stout_control*)malloc(sizeof(stout_control));
   control->rho = rho;

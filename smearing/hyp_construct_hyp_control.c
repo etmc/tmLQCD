@@ -1,6 +1,6 @@
 #include "hyp.ih"
 
-hyp_control *construct_hyp_control(double const alpha_1, double const alpha_2, double const alpha_3,  unsigned int iterations)
+hyp_control *construct_hyp_control(unsigned int iterations, double const alpha_1, double const alpha_2, double const alpha_3)
 {
   hyp_control *control = (hyp_control*)malloc(sizeof(hyp_control));
   control->alpha[0] = alpha_1;

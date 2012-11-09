@@ -357,24 +357,18 @@ int main(int argc, char *argv[])
     }
 
     /* DEBUG BLOCK! */
-    use_stout_flag = 1;
-    stout_rho = 0.9 / 6.0; /* Think about changing this to alpha -- we need to choose a convention. */
-    stout_no_iter = 1;
-    /* END */
+    smear_control = construct_stout_control(0.1 /* rho */, 3 /* iterartions */, 1 /* calculate_force_terms */);
+    stout_smear(smear_control, _AS_GAUGE_FIELD_T(g_gauge_field));
+    g_update_gauge_copy = 1;
+    g_update_gauge_energy = 1;
+    g_update_rectangle_energy = 1;
+    plaquette_energy = measure_gauge_action(smear_control->result);
 
-    if (use_stout_flag == 1){
-      smear_control = construct_stout_control(stout_rho, stout_no_iter, 1 /* calculate_force_terms */);
-      stout_smear(smear_control, _AS_GAUGE_FIELD_T(g_gauge_field));
-      g_update_gauge_copy = 1;
-      g_update_gauge_energy = 1;
-      g_update_rectangle_energy = 1;
-      plaquette_energy = measure_gauge_action(smear_control->result);
-
-      if (g_cart_id == 0) {
-        printf("# The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
-        fflush(stdout);
-      }
+    if (g_cart_id == 0) {
+      printf("# The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
+      fflush(stdout);
     }
+    /* ~DEBUG BLOCK! */
 
     if (reweighting_flag == 1) {
       reweighting_factor(reweighting_samples, nstore);
