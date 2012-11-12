@@ -1614,7 +1614,7 @@ int bodysurface(const int j) {
 #endif
   }
   if(g_proc_id == -1) {
-    printf("%d %d (%d, %d, %d, %d) %d %d\n", j, ret, t, x, y, z, _IS_BODY, body);
+    printf("%d %d (%d, %d, %d, %d) %d\n", j, ret, t, x, y, z, _IS_BODY);
   }
   return(ret/2);
 }
