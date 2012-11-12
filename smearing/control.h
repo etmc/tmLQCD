@@ -27,6 +27,15 @@ typedef enum
 } smearing_type;
 
 typedef struct
+{
+    smearing_type type;
+    int    id;
+    int    iterations;
+    double params[3]; 
+    int    set[6];
+} smearing_params_t;
+
+typedef struct
 {  
   smearing_type type;
   int id;
@@ -45,10 +54,14 @@ typedef struct
   void* type_control;
 } smearing_control_t;
 
-extern smearing_control_t **smearing_control;
-extern int no_smearing_types;
+extern int no_smearings_monomial;
+extern smearing_control_t **smearing_control_monomial;
+  
+extern int no_smearings_meas;
+extern smearing_control_t **smearing_control_meas;
 
 smearing_control_t *construct_smearing_control(smearing_type type,  int calculate_force_terms, ...);
+smearing_control_t *construct_smearing_control_from_params(smearing_params_t const *params,  int calculate_force_terms);
 void free_smearing_control(smearing_control_t *control);
 
 void smear(smearing_control_t *control, gauge_field_t in);
