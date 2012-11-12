@@ -23,7 +23,8 @@ typedef enum
   Stout = 3,
   Unitary = 4,
   HEX = 5,
-  Gradient = 6
+  Gradient = 6,
+  Jacobi = 7
 } smearing_type;
 
 typedef struct
@@ -32,7 +33,7 @@ typedef struct
     int    id;
     int    iterations;
     double params[3]; 
-    int    set[6];
+    int    set[5];
 } smearing_params_t;
 
 typedef struct

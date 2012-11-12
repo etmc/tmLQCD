@@ -305,8 +305,6 @@ int main(int argc,char *argv[])
   }
   init_measurements();
 
-  init_smearing(no_smearing_types); /* FIXME This will have to be more sophisticated and dynamical -- probably moved to init_monomials! */
-
   zero_spinor_field(g_spinor_field[DUM_DERI+4],VOLUME);
   zero_spinor_field(g_spinor_field[DUM_DERI+5],VOLUME);
   zero_spinor_field(g_spinor_field[DUM_DERI+6],VOLUME);
@@ -574,7 +572,6 @@ int main(int argc,char *argv[])
 #endif
   free_gauge_tmp();
   free_gauge_field();
-  finalize_smearing();
   return_gauge_field(&g_gf);
   free_geometry_indices();
   free_spinor_field();

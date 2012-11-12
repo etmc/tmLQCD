@@ -17,7 +17,7 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 /* 
- *  Routine for the computation of the Jacobi operator (for use into LapH_ev)
+ *  Routine for the computation of the jacobi operator (for use into LapH_ev)
  *  Authors Luigi Scorzato, Marco Cristoforetti
  *
  *
@@ -27,6 +27,6 @@
 
 #include "su3.h"
 
-void Jacobi(su3_vector * const l, su3_vector * const k,int t);
+void jacobi(su3_vector * const l, su3_vector * const k,int t);
 
 #endif

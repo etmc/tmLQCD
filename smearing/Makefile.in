@@ -35,6 +35,7 @@ libsmear_TARGETS = 	ape_ape_smear \
 			ape_construct_ape_control \
 			ape_free_ape_control \
 			control_construct_smearing_control \
+			control_construct_smearing_control_from_params \
 			control_free_smearing_control \
 			control_smear \
 			control_smear_forces \

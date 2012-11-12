@@ -52,16 +52,16 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
   
   zero_adjoint_field(&df);
 
-  for (int s_type = 0; s_type < no_smearing_types; ++s_type)
-    smear(smearing_control[s_type], g_gf);
+  for (int s_type = 0; s_type < no_smearings_monomial; ++s_type)
+    smear(smearing_control_monomial[s_type], g_gf);
 
   ohnohack_remap_df0(tmp_derivative); /* FIXME Such that we can aggregate results per smearing type. */
-  for (int s_type = 0; s_type < no_smearing_types; ++s_type)
+  for (int s_type = 0; s_type < no_smearings_monomial; ++s_type)
   {
     for(k = 0; k < no; k++)
     {
       zero_adjoint_field(&tmp_derivative);
-      ohnohack_remap_g_gauge_field(smearing_control[s_type]->result);
+      ohnohack_remap_g_gauge_field(smearing_control_monomial[s_type]->result);
       if (monomial_list[ mnllist[k] ].smearing == s_type)
       {
         
@@ -83,7 +83,7 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
         }
       }
     }
-    smear_forces(smearing_control[s_type], tmp_derivative);
+    smear_forces(smearing_control_monomial[s_type], tmp_derivative);
 
     for(i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand); ++i)
     { 

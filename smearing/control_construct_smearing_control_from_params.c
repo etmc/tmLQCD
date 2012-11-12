@@ -18,4 +18,5 @@ smearing_control_t *construct_smearing_control_from_params(smearing_params_t con
     default:
       fatal_error("Requested smearing type not implemented.", "construct_smearing_control");
   }
+  return NULL;
 }
