@@ -250,7 +250,7 @@ EQL {SPC}*={SPC}*
       int id = monomial_list[ctr].smearing;
       int idx = 0;
       // Check if the smearing control already exists.
-      while ((id != smearing_control_monomial[idx]->id) && (idx < no_smearings_monomial))
+      while ((idx < no_smearings_monomial) && (id != smearing_control_monomial[idx]->id))
         ++idx;
       if (idx != no_smearings_monomial)
         monomial_list[ctr].smearing = idx;
@@ -258,7 +258,7 @@ EQL {SPC}*={SPC}*
       {
         // If the smearing id does not yet exist, check if it has been declared at least
         idx = 0;
-        while ((id != smearing_declarations[idx].id) && (idx < no_smearings_declared))
+        while ((idx < no_smearings_declared) && (id != smearing_declarations[idx].id))
           ++idx;
         if (idx != no_smearings_declared)
         {
@@ -283,7 +283,7 @@ EQL {SPC}*={SPC}*
       int id = measurement_list[ctr].smearing;
       int idx = 0;
       // Check if the smearing control already exists.
-      while ((id != smearing_control_meas[idx]->id) && (idx < no_smearings_meas))
+      while ((idx < no_smearings_meas) && (id != smearing_control_meas[idx]->id))
         ++idx;
       if (idx != no_smearings_meas)
         measurement_list[ctr].smearing = idx;
@@ -291,7 +291,7 @@ EQL {SPC}*={SPC}*
       {
         // If the smearing id does not yet exist, check if it has been declared at least
         idx = 0;
-        while ((id != smearing_declarations[idx].id) && (idx < no_smearings_declared))
+        while ((idx < no_smearings_declared) && (id != smearing_declarations[idx].id))
           ++idx;
         if (idx != no_smearings_declared)
         {
