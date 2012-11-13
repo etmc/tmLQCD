@@ -35,6 +35,6 @@
 # include <omp.h>
 # include "init/init_omp_accumulators.h"
 #endif
-
+#include "init/init_smearing.h"
 
 #endif

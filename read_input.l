@@ -85,10 +85,6 @@ EQL {SPC}*={SPC}*
   operator * optr = NULL;
 
   /* These parameters are exported through smearing/control.h */
-  int no_smearings_monomial = 0;
-  smearing_control_t **smearing_control_monomial = NULL;
-  int no_smearings_meas = 0;
-  smearing_control_t **smearing_control_meas = NULL;
   int no_smearings_declared = 0;
   smearing_params_t* smearing_declarations = NULL;
   smearing_params_t* cur_sm_dec = NULL;
@@ -192,19 +188,19 @@ EQL {SPC}*={SPC}*
     memset(params, 0, sizeof(smearing_params_t));
   }
   
-  static void check_smearing_cache(smearing_type type)
+  static void check_smearing_params(smearing_type type)
   {
     char error_string[128];
       
     if (!cur_sm_dec->set[0])
-      fatal_error("No valid smearing id (id = ...) provided for one of the smearing blocks in the input file!", "check_smearing_cache");
+      fatal_error("No valid smearing id (id = ...) provided for one of the smearing blocks in the input file!", "check_smearing_params");
 
     /* First a check on the uniqueness of the provided id value. */
     for (int ctr = 0; ctr < (no_smearings_declared - 1); ++ctr)
       if (smearing_declarations[ctr].id == cur_sm_dec->id)
       {
         sprintf(error_string, "Smearing id %d is not unique!", cur_sm_dec->id);
-        fatal_error(error_string, "check_smearing_cache");
+        fatal_error(error_string, "check_smearing_params");
       }
 
     switch (type)
@@ -214,113 +210,33 @@ EQL {SPC}*={SPC}*
         if (!cur_sm_dec->set[4])
         {
           sprintf(error_string, "Smearing parameter 'rho_3' missing in input file for smearing id %d!", cur_sm_dec->id);
-          fatal_error(error_string, "check_smearing_cache");
+          fatal_error(error_string, "check_smearing_params");
         }
         if (!cur_sm_dec->set[3])
         {
           sprintf(error_string, "Smearing parameter 'rho_2' missing in input file for smearing id %d!", cur_sm_dec->id);
-          fatal_error(error_string, "check_smearing_cache");
+          fatal_error(error_string, "check_smearing_params");
         }
         if (!cur_sm_dec->set[2])
         {
           sprintf(error_string, "Smearing parameter 'rho_1' missing in input file for smearing id %d!", cur_sm_dec->id);
-          fatal_error(error_string, "check_smearing_cache");
+          fatal_error(error_string, "check_smearing_params");
         }
       case APE:
       case Stout:
         if (!cur_sm_dec->set[2])
         {
           sprintf(error_string, "Smearing parameter 'rho' missing in input file for smearing id %d!", cur_sm_dec->id);
-          fatal_error(error_string, "check_smearing_cache");
+          fatal_error(error_string, "check_smearing_params");
         }
         if (!cur_sm_dec->set[1])
         {
           sprintf(error_string, "Smearing parameter 'iterations' missing in input file for smearing id %d!", cur_sm_dec->id);
-          fatal_error(error_string, "check_smearing_cache");
+          fatal_error(error_string, "check_smearing_params");
         }
     }   
   }
 
-  static void cross_reference_smearing_ids()
-  {
-    /* The idea here is to convert the 'smearing declaration' array into a set of actual smearing control structs.
-     * We can separate these out for the different applications. Monomials will need force calculations, for example,
-     * whereas observables generally wouldn't. By setting up separate arrays containing just those smearing types that
-     * are actually needed, we can later on just loop over these arrays without performing wasteful computations. The
-     * freeing of the control structs is a secondary issue. But given how the information is now bound to monomials and
-     * measurements, we can probably perform the clean up in those routines. After all, this would also guarantee that 
-     * the smearing can be performed as long as the associated objects exist. */
-    char error_string[256];
-    
-    for (int ctr = 0; ctr < no_monomials; ++ctr)
-    {
-      int id = monomial_list[ctr].smearing;
-      int idx = 0;
-      // Check if the smearing control already exists.
-      while ((idx < no_smearings_monomial) && (id != smearing_control_monomial[idx]->id))
-        ++idx;
-      if (idx != no_smearings_monomial)
-        monomial_list[ctr].smearing = idx;
-      else
-      {
-        // If the smearing id does not yet exist, check if it has been declared at least
-        idx = 0;
-        while ((idx < no_smearings_declared) && (id != smearing_declarations[idx].id))
-          ++idx;
-        if (idx != no_smearings_declared)
-        {
-          smearing_control_t **old_array = smearing_control_monomial;
-          smearing_control_monomial = (smearing_control_t**)calloc(no_smearings_monomial + 1, sizeof(smearing_control_t*));
-          memmove(smearing_control_monomial, old_array, no_smearings_monomial * sizeof(smearing_control_t*));
-          free(old_array);
-          smearing_control_monomial[no_smearings_monomial] = construct_smearing_control_from_params(smearing_declarations + idx, 1 /* calculate_force_terms */);
-          smearing_control_monomial[no_smearings_monomial]->id = id;
-          monomial_list[ctr].smearing = no_smearings_monomial;
-          ++no_smearings_monomial;
-        }
-        else
-        {
-          sprintf(error_string, "Smearing id %d given for monomial %d is not defined!", id, ctr);
-          fatal_error(error_string, "cross_reference_smearing_ids");
-        }
-      }
-    }
-    
-    for (int ctr = 0; ctr < no_measurements; ++ctr)
-    {
-      int id = measurement_list[ctr].smearing;
-      int idx = 0;
-      // Check if the smearing control already exists.
-      while ((idx < no_smearings_meas) && (id != smearing_control_meas[idx]->id))
-        ++idx;
-      if (idx != no_smearings_meas)
-        measurement_list[ctr].smearing = idx;
-      else
-      {
-        // If the smearing id does not yet exist, check if it has been declared at least
-        idx = 0;
-        while ((idx < no_smearings_declared) && (id != smearing_declarations[idx].id))
-          ++idx;
-        if (idx != no_smearings_declared)
-        {
-          smearing_control_t **old_array = smearing_control_meas;
-          smearing_control_meas = (smearing_control_t**)calloc(no_smearings_meas + 1, sizeof(smearing_control_t*));
-          memmove(smearing_control_meas, old_array, no_smearings_meas * sizeof(smearing_control_t*));
-          free(old_array);
-          smearing_control_meas[no_smearings_meas] = construct_smearing_control_from_params(smearing_declarations + idx, 0 /* calculate_force_terms */);
-          smearing_control_meas[no_smearings_meas]->id = id;
-          measurement_list[ctr].smearing = no_smearings_meas;
-          ++no_smearings_meas;
-        }
-        else
-        {
-          sprintf(error_string, "Smearing id %d given for monomial %d is not defined!", id, ctr);
-          fatal_error(error_string, "cross_reference_smearing_ids");
-        }
-      }
-    }
-    free(smearing_declarations);
-  }
 %}
 
 %option never-interactive
@@ -2098,22 +2014,22 @@ EQL {SPC}*={SPC}*
 }
 
 <SMEARING_IDENTITY>{SPC}*EndSmearing{SPC}* {
-  check_smearing_cache(Identity);
+  check_smearing_params(Identity);
   BEGIN INITIAL;
 }
 
 <SMEARING_APE>{SPC}*EndSmearing{SPC}* {
-  check_smearing_cache(APE);
+  check_smearing_params(APE);
   BEGIN INITIAL;
 }
 
 <SMEARING_HYP>{SPC}*EndSmearing{SPC}* {
-  check_smearing_cache(HYP);
+  check_smearing_params(HYP);
   BEGIN INITIAL;
 }
 
 <SMEARING_STOUT>{SPC}*EndSmearing{SPC}* {
-  check_smearing_cache(Stout);
+  check_smearing_params(Stout);
   BEGIN INITIAL;
 }
 
@@ -2269,8 +2185,6 @@ int read_input(char * conf_file){
   yyout = fopen("/dev/null", "w");
 
   parse_config();  
-  
-  cross_reference_smearing_ids();
   
 #ifndef FIXEDVOLUME
   if(LX == 0) {

@@ -58,10 +58,10 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
   ohnohack_remap_df0(tmp_derivative); /* FIXME Such that we can aggregate results per smearing type. */
   for (int s_type = 0; s_type < no_smearings_monomial; ++s_type)
   {
+    zero_adjoint_field(&tmp_derivative);
+    ohnohack_remap_g_gauge_field(smearing_control_monomial[s_type]->result);
     for(k = 0; k < no; k++)
     {
-      zero_adjoint_field(&tmp_derivative);
-      ohnohack_remap_g_gauge_field(smearing_control_monomial[s_type]->result);
       if (monomial_list[ mnllist[k] ].smearing == s_type)
       {
         

@@ -38,6 +38,7 @@ typedef struct {
   /* ID of the operator */
   int type;
   int id;
+  
   /* for overlap */
   int n_cheby;
   int deg_poly;
@@ -106,6 +107,7 @@ typedef struct {
 
   spinorPrecWS *precWS;
   
+  int smearing;
 } operator;
 
 /* operator list defined in operator.c */

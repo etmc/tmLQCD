@@ -213,6 +213,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
 #endif
 
+  fprintf(stdout, "[DEBUG] >>> %e -> %e\n", dh, expmdh);
   accept = (!acctest | (expmdh > yy[0]));
   if(g_proc_id == 0) {
     fprintf(stdout, "# Trajectory is %saccepted.\n", (accept ? "" : "not "));

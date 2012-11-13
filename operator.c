@@ -135,7 +135,7 @@ int add_operator(const int type) {
   }
   
   optr->precWS=NULL;
-
+  optr->smearing = 0;
   optr->initialised = 1;
 
   no_operators++;

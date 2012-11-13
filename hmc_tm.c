@@ -184,9 +184,6 @@ int main(int argc,char *argv[])
     filename = "output";
   }
 
-  initialize_gauge_buffers(6);
-  initialize_adjoint_buffers(6);
-
   /* Read the input file */
   if( (status = read_input(input_filename)) != 0) {
     fprintf(stderr, "Could not find input file: %s\nAborting...\n", input_filename);
@@ -209,7 +206,7 @@ int main(int argc,char *argv[])
 
   init_omp_accumulators(omp_num_threads);
 #endif
-
+ 
   DUM_DERI = 4;
   DUM_SOLVER = DUM_DERI+1;
   DUM_MATRIX = DUM_SOLVER+6;
@@ -227,6 +224,10 @@ int main(int argc,char *argv[])
 
   tmlqcd_mpi_init(argc, argv);
 
+  initialize_gauge_buffers(6);
+  initialize_adjoint_buffers(6);
+  init_smearing();
+  
   if(nstore == -1) {
     countfile = fopen(nstore_filename, "r");
     if(countfile != NULL) {
@@ -581,7 +582,7 @@ int main(int argc,char *argv[])
     free_bispinor_field();
     free_chi_spinor_field();
   }
-  
+  finalize_smearing();
   finalize_gauge_buffers();
   finalize_adjoint_buffers();
 

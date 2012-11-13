@@ -55,11 +55,18 @@ typedef struct
   void* type_control;
 } smearing_control_t;
 
+/* FIXME So many globals! */
+extern int no_smearings_declared;
+extern smearing_params_t* smearing_declarations;
+
 extern int no_smearings_monomial;
 extern smearing_control_t **smearing_control_monomial;
   
-extern int no_smearings_meas;
-extern smearing_control_t **smearing_control_meas;
+extern int no_smearings_measurement;
+extern smearing_control_t **smearing_control_measurement;
+
+extern int no_smearings_operator;
+extern smearing_control_t **smearing_control_operator;
 
 smearing_control_t *construct_smearing_control(smearing_type type,  int calculate_force_terms, ...);
 smearing_control_t *construct_smearing_control_from_params(smearing_params_t const *params,  int calculate_force_terms);
