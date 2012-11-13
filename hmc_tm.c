@@ -184,6 +184,9 @@ int main(int argc,char *argv[])
     filename = "output";
   }
 
+  initialize_gauge_buffers(6);
+  initialize_adjoint_buffers(6);
+
   /* Read the input file */
   if( (status = read_input(input_filename)) != 0) {
     fprintf(stderr, "Could not find input file: %s\nAborting...\n", input_filename);
@@ -245,9 +248,6 @@ int main(int argc,char *argv[])
   
   g_mu = g_mu1;
   
-  initialize_gauge_buffers(8);
-  initialize_adjoint_buffers(6);
-
   #ifdef _GAUGE_COPY
   status = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else

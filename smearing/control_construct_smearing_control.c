@@ -8,6 +8,7 @@ smearing_control_t *construct_smearing_control(smearing_type type, int calculate
 
   smearing_control_t *result = (smearing_control_t*)malloc(sizeof(smearing_control_t));
   result->type = type;
+  result->id = -1;
 
   result->calculate_force_terms = calculate_force_terms; 
   result->smearing_performed = 0;

@@ -40,7 +40,7 @@ typedef struct
 {  
   smearing_type type;
   int id;
-
+  
   /* Flags */
   /* FIXME These currently mirror flags in the separate control structs.
      A better solution should be found. */

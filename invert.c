@@ -357,7 +357,7 @@ int main(int argc, char *argv[])
     }
 
     /* DEBUG BLOCK! */
-    smear_control = construct_stout_control(0.1 /* rho */, 3 /* iterartions */, 1 /* calculate_force_terms */);
+    smear_control = construct_stout_control(0.1 /* rho */, 3 /* iterations */, 1 /* calculate_force_terms */);
     stout_smear(smear_control, _AS_GAUGE_FIELD_T(g_gauge_field));
     g_update_gauge_copy = 1;
     g_update_gauge_energy = 1;
