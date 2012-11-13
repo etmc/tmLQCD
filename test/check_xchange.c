@@ -3424,7 +3424,7 @@ int check_xchange()
 
     /* The edges */
 #  if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
-    fprintf(stdout, "# Rank: %d, (c0, c1, c2, c3) = (%d, %d, %d, %d)\n",g_proc_id,g_proc_coords[0],g_proc_coords[1],g_proc_coords[2],g_proc_coords[3]);
+    if(g_debug_level > 2) fprintf(stdout, "# Rank: %d, (c0, c1, c2, c3) = (%d, %d, %d, %d)\n",g_proc_id,g_proc_coords[0],g_proc_coords[1],g_proc_coords[2],g_proc_coords[3]);
     fflush(stdout);
 
     di[0] = (g_proc_coords[0] - 1)%g_nproc_t;
