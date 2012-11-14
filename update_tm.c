@@ -139,8 +139,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     smear(smearing_control_monomial[s_type], g_gf);
   
   /* heatbath for all monomials */
-  /* FIXME Smearing loop added -- should be made flexible. 
-     Specifically, we should determine the number of smearing types actually used here dynamically! */
   for (int s_type = 0; s_type < no_smearings_monomial; ++s_type)
   {
     ohnohack_remap_g_gauge_field(smearing_control_monomial[s_type]->result);
@@ -161,9 +159,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   g_sloppy_precision = 1;
 
   /* run the trajectory */
-  /* FIXME We need to push the monomial loop into the integrator */
-  Integrator.integrate[Integrator.no_timescales-1](Integrator.tau, 
-                       Integrator.no_timescales-1, 1);
+  Integrator.integrate[Integrator.no_timescales-1](Integrator.tau, Integrator.no_timescales-1, 1);
 
   g_sloppy_precision = 0;
 
@@ -173,11 +169,15 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   {
     ohnohack_remap_g_gauge_field(smearing_control_monomial[s_type]->result);
     /* NOTE hf->gaugefield is always set to g_gauge_field, I believe, so it needs no further changing */
-    for(i = 0; i < Integrator.no_timescales; i++) {
+    for(i = 0; i < Integrator.no_timescales; i++)
+    {
       for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) 
       {
         if (monomial_list[ Integrator.mnls_per_ts[i][j] ].smearing == s_type)
+        {
           dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j], &hf);
+        }
+        fprintf(stdout, "[DEBUG] >>> i, j, dh:    %d %d %14.12e\n", i, j, dh); fflush(stdout);
       }
     }
   }
@@ -192,7 +192,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
   }
   /* Compute the energy difference */
-  dh = dh + (enepx - enep);
+  dh += (enepx - enep);
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called momenta_acc dH = %e\n", (enepx - enep));
   }
@@ -213,6 +213,11 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
 #endif
 
+  fprintf(stdout, "[DEBUG] >>> Old plaquette: %14.12f\n", *plaquette_energy /(6.*VOLUME*g_nproc));
+  fprintf(stdout, "[DEBUG] >>> New plaquette: %14.12f\n", new_plaquette_energy /(6.*VOLUME*g_nproc));
+  fprintf(stdout, "[DEBUG] >>> Enepx: %14.12e\n", enepx);
+  fprintf(stdout, "[DEBUG] >>> Enep:  %14.12e\n", enep);
+  fprintf(stdout, "[DEBUG] >>> Delta: %14.12e\n", (enepx - enep));
   fprintf(stdout, "[DEBUG] >>> %e -> %e\n", dh, expmdh);
   accept = (!acctest | (expmdh > yy[0]));
   if(g_proc_id == 0) {
@@ -245,9 +250,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
     g_sloppy_precision = 1;
     /* run the trajectory back */
-    /* FIXME Smearing loop needed in integrator */
-    Integrator.integrate[Integrator.no_timescales-1](-Integrator.tau, 
-                         Integrator.no_timescales-1, 1);
+    Integrator.integrate[Integrator.no_timescales-1](-Integrator.tau, Integrator.no_timescales-1, 1);
 
     g_sloppy_precision = 0;
 
@@ -290,7 +293,8 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
         w=&gauge_tmp[ix][mu];
         /* NOTE Should this perhaps be some function or macro? */
         ds = sqrt(conj(v->c00 - w->c00) * (v->c00 - w->c00) + conj(v->c01 - w->c01) * (v->c01 - w->c01) + conj(v->c02 - w->c02) * (v->c02 - w->c02) +
-                  conj(v->c10 - w->c10) * (v->c10 - w->c10) + conj(v->c11 - w->c11) * (v->c11 - w->c11) + conj(v->c12 - w->c12) * (v->c12 - w->c12) +             conj(v->c20 - w->c20) * (v->c20 - w->c20) + conj(v->c21 - w->c21) * (v->c21 - w->c21) + conj(v->c22 - w->c22) * (v->c22 - w->c22));
+                  conj(v->c10 - w->c10) * (v->c10 - w->c10) + conj(v->c11 - w->c11) * (v->c11 - w->c11) + conj(v->c12 - w->c12) * (v->c12 - w->c12) +
+                  conj(v->c20 - w->c20) * (v->c20 - w->c20) + conj(v->c21 - w->c21) * (v->c21 - w->c21) + conj(v->c22 - w->c22) * (v->c22 - w->c22));
 
         tr = ds + kc;
         ts = tr + ks;

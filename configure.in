@@ -601,8 +601,8 @@ dnl check for icc
     elif test "$ICC" != ""; then
       echo "We are using the Intel C compiler!"
       DEPFLAGS="-M"
-      OPTARGS="-O3"
-      SOPTARGS="-O3"
+      OPTARGS=""
+      SOPTARGS=""
       DEBUG_FLAG="-g"
       PROFILE_FLAG="-p -g"
       CCDEP="$CC"
