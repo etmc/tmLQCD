@@ -224,7 +224,7 @@ int main(int argc,char *argv[])
 
   tmlqcd_mpi_init(argc, argv);
 
-  initialize_gauge_buffers(6);
+  initialize_gauge_buffers(12);
   initialize_adjoint_buffers(6);
   init_smearing();
   

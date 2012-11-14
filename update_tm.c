@@ -177,7 +177,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
         {
           dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j], &hf);
         }
-        fprintf(stdout, "[DEBUG] >>> i, j, dh:    %d %d %14.12e\n", i, j, dh); fflush(stdout);
       }
     }
   }
@@ -213,12 +212,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
 #endif
 
-  fprintf(stdout, "[DEBUG] >>> Old plaquette: %14.12f\n", *plaquette_energy /(6.*VOLUME*g_nproc));
-  fprintf(stdout, "[DEBUG] >>> New plaquette: %14.12f\n", new_plaquette_energy /(6.*VOLUME*g_nproc));
-  fprintf(stdout, "[DEBUG] >>> Enepx: %14.12e\n", enepx);
-  fprintf(stdout, "[DEBUG] >>> Enep:  %14.12e\n", enep);
-  fprintf(stdout, "[DEBUG] >>> Delta: %14.12e\n", (enepx - enep));
-  fprintf(stdout, "[DEBUG] >>> %e -> %e\n", dh, expmdh);
   accept = (!acctest | (expmdh > yy[0]));
   if(g_proc_id == 0) {
     fprintf(stdout, "# Trajectory is %saccepted.\n", (accept ? "" : "not "));
