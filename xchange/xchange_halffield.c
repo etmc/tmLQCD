@@ -45,6 +45,7 @@
 #include "xchange_halffield.h"
 
 #if (defined _USE_HALFSPINOR)
+
 #if (defined _PERSISTENT)
 
 MPI_Request prequests[16];
@@ -263,25 +264,21 @@ void xchange_halffield() {
 
 # else /* _INDEX_INDEP_GEOM */
 
-#ifdef MPI
-MPI_Request requests[16];
-MPI_Status hstatus[16];
-int reqcount;
-#endif
-
 /* 4. */
 void xchange_halffield() {
 
 #  ifdef MPI
 
+  MPI_Request requests[16];
+  MPI_Status status[16];
 #  ifdef PARALLELT
-  reqcount = 4;
+  int reqcount = 4;
 #  elif defined PARALLELXT
-  reqcount = 8;
+  int reqcount = 8;
 #  elif defined PARALLELXYT
-  reqcount = 12;
+  int reqcount = 12;
 #  elif defined PARALLELXYZT
-  reqcount = 16;
+  int reqcount = 16;
 #  endif
 #  if (defined XLC && defined BGL)
   __alignx(16, HalfSpinor);
@@ -296,23 +293,23 @@ void xchange_halffield() {
 	    g_nb_t_up, 81, g_cart_grid, &requests[0]);
   MPI_Irecv((void*)(recvBuffer + LX*LY*LZ/2), LX*LY*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_t_dn, 81, g_cart_grid, &requests[1]);
-  
+
   /* send the data to the neighbour on the left in t direction */
   /* recieve the data from the neighbour on the right in t direction */
   MPI_Isend((void*)(sendBuffer+ LX*LY*LZ/2), LX*LY*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_t_dn, 82, g_cart_grid, &requests[2]);
   MPI_Irecv((void*)(recvBuffer), LX*LY*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_t_up, 82, g_cart_grid, &requests[3]);
-  
+
 #    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
-  
+
   /* send the data to the neighbour on the right in x direction */
   /* recieve the data from the neighbour on the left in x direction */
   MPI_Isend((void*)(sendBuffer + LX*LY*LZ), T*LY*LZ*12/2, MPI_DOUBLE, 
 	    g_nb_x_up, 91, g_cart_grid, &requests[4]);
   MPI_Irecv((void*)(recvBuffer+ LX*LY*LZ + T*LY*LZ/2), T*LY*LZ*12/2, MPI_DOUBLE,
 	    g_nb_x_dn, 91, g_cart_grid, &requests[5]);
-  
+
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */  
   MPI_Isend((void*)(sendBuffer + LX*LY*LZ + T*LY*LZ/2), T*LY*LZ*12/2, MPI_DOUBLE,
@@ -320,7 +317,7 @@ void xchange_halffield() {
   MPI_Irecv((void*)(recvBuffer + LX*LY*LZ), T*LY*LZ*12/2, MPI_DOUBLE,
  	    g_nb_x_up, 92, g_cart_grid, &requests[7]);
 #    endif
-  
+    
 #    if (defined PARALLELXYT || defined PARALLELXYZT)
   /* send the data to the neighbour on the right in y direction */
   /* recieve the data from the neighbour on the left in y direction */
@@ -353,20 +350,13 @@ void xchange_halffield() {
 	    T*LX*LY*12/2, MPI_DOUBLE, g_nb_z_up, 504, g_cart_grid, &requests[15]); 
 #    endif
   
-  //MPI_Waitall(reqcount, requests, status); 
+  MPI_Waitall(reqcount, requests, status); 
 #  endif /* MPI */
   return;
   
 #ifdef _KOJAK_INST
 #pragma pomp inst end(xchangehalf)
 #endif
-}
-
-void wait_halffield() {
-#  ifdef MPI
-  MPI_Waitall(reqcount, requests, hstatus); 
-#  endif /* MPI */
-  return;
 }
 
 # endif /* _INDEX_INDEP_GEOM */
