@@ -20,7 +20,6 @@ CGMaxIter = 1000
 UseEvenOdd = yes
 ReversibilityCheck = yes
 ReversibilityCheckIntervall = 100
-InitialStoreCounter = readin
 DebugLevel = 1
 StartCondition = hot
 ComputeEVs = no
