@@ -45,22 +45,37 @@
 /* Updates the momenta: equation 16 of Gottlieb */
 void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_t * const hf)
 {
-  int i,mu, k;
   double atime=0., etime=0.;
-
+  int *relevant_smearings = malloc(no_smearings_monomial * sizeof(int));
+  int no_relevant_smearings = 0;
+  
+  for(int k = 0; k < no; k++)
+  {
+    int current_idx = 0;
+    while ((current_idx < no_relevant_smearings) && (monomial_list[ mnllist[k] ].smearing != relevant_smearings[current_idx]))
+      ++current_idx;
+    if (current_idx == no_relevant_smearings)
+    {
+      relevant_smearings[current_idx] = monomial_list[ mnllist[k] ].smearing;
+      ++no_relevant_smearings;
+    }
+  }
+  
   adjoint_field_t tmp_derivative = get_adjoint_field();
   
   zero_adjoint_field(&df);
 
-  for (int s_type = 0; s_type < no_smearings_monomial; ++s_type)
-    smear(smearing_control_monomial[s_type], g_gf);
+  for (int s_ctr = 0; s_ctr < no_relevant_smearings; ++s_ctr)
+    smear(smearing_control_monomial[relevant_smearings[s_ctr]], g_gf);
+    
 
   ohnohack_remap_df0(tmp_derivative); /* FIXME Such that we can aggregate results per smearing type. */
-  for (int s_type = 0; s_type < no_smearings_monomial; ++s_type)
+  for (int s_ctr = 0; s_ctr < no_relevant_smearings; ++s_ctr)
   {
+    int s_type = relevant_smearings[s_ctr];
     zero_adjoint_field(&tmp_derivative);
     ohnohack_remap_g_gauge_field(smearing_control_monomial[s_type]->result);
-    for(k = 0; k < no; k++)
+    for(int k = 0; k < no; k++)
     {
       if (monomial_list[ mnllist[k] ].smearing == s_type)
       {
@@ -85,9 +100,9 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
     }
     smear_forces(smearing_control_monomial[s_type], tmp_derivative);
 
-    for(i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand); ++i)
+    for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand); ++i)
     { 
-      for(mu = 0; mu < 4; ++mu)
+      for(int mu = 0; mu < 4; ++mu)
       {
         _add_su3adj(df[i][mu], tmp_derivative[i][mu]);
       }
@@ -110,6 +125,7 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
     }
   }
   return_adjoint_field(&tmp_derivative);
+  free(relevant_smearings);
   return;
 }
 

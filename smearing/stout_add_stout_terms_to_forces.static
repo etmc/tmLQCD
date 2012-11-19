@@ -9,7 +9,7 @@ static void add_stout_terms_to_forces(gauge_field_t smeared_force, double const 
     {     
       /* t2 = Z * C */
       generic_staples(&t1, x, mu, U);
-      _su3d_times_su3_acc(t2, trace[x][mu].Z, t1);
+      _su3d_times_su3(t2, trace[x][mu].Z, t1);
      
       /* t1 = Sigma * V */
       _su3_times_su3(t1, trace[x][mu].Sigma, V[x][mu]);
