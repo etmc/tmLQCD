@@ -104,7 +104,7 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
     { 
       for(int mu = 0; mu < 4; ++mu)
       {
-        _add_su3adj(df[i][mu], tmp_derivative[i][mu]);
+        _add_su3adj(df[i][mu], smearing_control_monomial[s_type]->force_result[i][mu]);
       }
     }
   }

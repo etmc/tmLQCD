@@ -56,7 +56,7 @@ static void add_stout_terms_to_forces(gauge_field_t smeared_force, double const 
           /* The remaining lines are multiplied by the same matrix from the right, so we can aggregate them too */
           
           /* Line 3 */
-          _su3_times_su3d(t1, U[g_idn[x][nu]][mu], U[g_idn[g_iup[x][mu]][nu]][nu]);
+          _su3_times_su3(t1, U[g_idn[x][nu]][mu], U[g_idn[g_iup[x][mu]][nu]][nu]); /* NOTE Corrected daggering of last matrix here. */
           _su3_times_su3(t2, trace[g_idn[x][nu]][nu].Z, t1);
 
           /* Line 4 */

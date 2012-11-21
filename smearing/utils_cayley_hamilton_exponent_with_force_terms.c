@@ -10,7 +10,7 @@ void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Com
   /* The value of f0 is never needed beyond this function, unlike f1 and f2. We make scoped room for all three,
    * in case f1 and f2 are not requested.  NOTE We want to check the performance impact of this -- this function is
    * called on the full volume of a lattice, after all. */
-  static _Complex double f0[3];
+  _Complex double f0[3];
   
   if (!f1)
   {
@@ -78,6 +78,10 @@ void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Com
   /* To also provide a replacement for plain su3_expo, we add a check on a request for B1 and B2 calculation and quit if they're not needed. */
   if (!B1)
     return;
+  
+  /* FIXME Are we certain about factors of i absorbed in Q and the definition of B1 and B2? 
+   * Note that there are factors of i included in the exponent from coefficients routine. 
+   * Otherwise, the code here agrees fully with the Peardon & Morningstar.                  */
   
   double xi1 = (w > 0.05) ? (w * cw - sin(w)) / (w * w2) 
                           : -fac_1_3 * (1 - 0.10 * w2 * (1 - 0.03571428571428571 * w2 * (1 - 0.01851851851851852 * w2)));
