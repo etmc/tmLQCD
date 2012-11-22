@@ -46,8 +46,10 @@
 monomial monomial_list[max_no_monomials];
 int no_monomials = 0;
 int no_gauge_monomials = 0;
-int clover_trlog_monomial = 0;
-int clovernd_trlog_monomial = 0;
+int clover_monomials[max_no_monomials];
+int clovernd_monomials[max_no_monomials];
+int no_clover_monomials = 0;
+int no_clovernd_monomials = 0;
 static spinor * _pf;
 spinor ** w_fields;
 const int no_wfields = 4;
@@ -187,11 +189,8 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].Qp = &Qsw_plus_psi;
 	monomial_list[i].Qm = &Qsw_minus_psi;
 	init_swpm(VOLUME);
-	clover_trlog_monomial = 1;
-	// the following we need to save for the trlog monomial
-	sw_mu = monomial_list[i].mu;
-	sw_k = monomial_list[i].kappa;
-	sw_c = monomial_list[i].c_sw;
+  clover_monomials[no_clover_monomials] = i;
+  no_clover_monomials++;
 	if(g_proc_id == 0 && g_debug_level > 1) {
 	  printf("# Initialised monomial of type CLOVERDET, no_monomials= %d\n", no_monomials);
 	}
@@ -262,11 +261,8 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].derivativefunction = &cloverndpoly_derivative;
 	monomial_list[i].pf2 = __pf+no*V;
 	monomial_list[i].even_odd_flag = 1;
-	clovernd_trlog_monomial = 1;
-	swn_c = monomial_list[i].c_sw;
-	swn_k = monomial_list[i].kappa;
-	swn_mubar = monomial_list[i].mubar;
-	swn_epsbar = monomial_list[i].epsbar;
+	clovernd_monomials[no_clovernd_monomials] = i;
+  no_clovernd_monomials++;
 	//monomial_list[i].Qsq = &Qsw_pm_ndpsi;
 	//monomial_list[i].Qp = &Qsw_ndpsi;
 	//monomial_list[i].Qm = &Qsw_dagger_ndpsi;
@@ -315,45 +311,48 @@ int init_monomials(const int V, const int even_odd_flag) {
     monomial_list[i].id = i;
     monomial_list[i].even_odd_flag = even_odd_flag;
   }
-  if(clover_trlog_monomial && even_odd_flag) {
-    monomial_list[no_monomials].type = CLOVERTRLOG;
-    strcpy( monomial_list[no_monomials].name, "CLOVERTRLOG");
-    add_monomial(CLOVERTRLOG);
-    monomial_list[no_monomials-1].pf = NULL;
-    monomial_list[no_monomials-1].id = no_monomials-1;
-    // set the parameters according to cloverdet monomial
-    // this need alltogether a more general approach
-    monomial_list[no_monomials-1].c_sw = sw_c;
-    monomial_list[no_monomials-1].mu = sw_mu;
-    monomial_list[no_monomials-1].kappa = sw_k;
-    monomial_list[no_monomials-1].hbfunction = &clover_trlog_heatbath;
-    monomial_list[no_monomials-1].accfunction = &clover_trlog_acc;
-    monomial_list[no_monomials-1].derivativefunction = NULL;
-    monomial_list[no_monomials-1].timescale = 0;
-    monomial_list[no_monomials-1].even_odd_flag = even_odd_flag;
-    if(g_proc_id == 0 && g_debug_level > 1) {
-      printf("# Initialised clover_trlog_monomial, no_monomials= %d\n", no_monomials);
+  /* initialize clovertrlog and cloverndtrlog monomials for all clover and clovernd monomials*/
+  if( even_odd_flag ) {
+    for( int j = 0; j < no_clover_monomials; j++ ) {
+      monomial_list[no_monomials].type = CLOVERTRLOG;
+      strcpy( monomial_list[no_monomials].name, "CLOVERTRLOG");
+      add_monomial(CLOVERTRLOG);
+      monomial_list[no_monomials-1].pf = NULL;
+      monomial_list[no_monomials-1].id = no_monomials-1;
+      // set the parameters according to cloverdet monomial
+      // this need alltogether a more general approach
+      monomial_list[no_monomials-1].c_sw = monomial_list[clover_monomials[j]].c_sw;
+      monomial_list[no_monomials-1].mu = monomial_list[clover_monomials[j]].mu;
+      monomial_list[no_monomials-1].kappa = monomial_list[clover_monomials[j]].kappa;
+      monomial_list[no_monomials-1].hbfunction = &clover_trlog_heatbath;
+      monomial_list[no_monomials-1].accfunction = &clover_trlog_acc;
+      monomial_list[no_monomials-1].derivativefunction = NULL;
+      monomial_list[no_monomials-1].timescale = 0;
+      monomial_list[no_monomials-1].even_odd_flag = even_odd_flag;
+      if(g_proc_id == 0 && g_debug_level > 1) {
+        printf("# Initialised clover_trlog_monomial, no_monomials= %d\n", no_monomials);
+      }
     }
-  }
-  if(clovernd_trlog_monomial && even_odd_flag) {
-    monomial_list[no_monomials].type = CLOVERNDTRLOG;
-    strcpy( monomial_list[no_monomials].name, "CLOVERNDTRLOG");
-    add_monomial(CLOVERNDTRLOG);
-    monomial_list[no_monomials-1].pf = NULL;
-    monomial_list[no_monomials-1].id = no_monomials-1;
-    // set the parameters according to cloverdet monomial
-    // this need alltogether a more general approach
-    monomial_list[no_monomials-1].c_sw = swn_c;
-    monomial_list[no_monomials-1].mubar = swn_mubar;
-    monomial_list[no_monomials-1].epsbar = swn_epsbar;
-    monomial_list[no_monomials-1].kappa = swn_k;
-    monomial_list[no_monomials-1].hbfunction = &clovernd_trlog_heatbath;
-    monomial_list[no_monomials-1].accfunction = &clovernd_trlog_acc;
-    monomial_list[no_monomials-1].derivativefunction = NULL;
-    monomial_list[no_monomials-1].timescale = 0;
-    monomial_list[no_monomials-1].even_odd_flag = 1;
-    if(g_proc_id == 0 && g_debug_level > 1) {
-      printf("# Initialised clovernd_trlog_monomial, no_monomials= %d\n", no_monomials);
+   for( int j = 0; j < no_clovernd_monomials; j++ ) { 
+      monomial_list[no_monomials].type = CLOVERNDTRLOG;
+      strcpy( monomial_list[no_monomials].name, "CLOVERNDTRLOG");
+      add_monomial(CLOVERNDTRLOG);
+      monomial_list[no_monomials-1].pf = NULL;
+      monomial_list[no_monomials-1].id = no_monomials-1;
+      // set the parameters according to cloverdet monomial
+      // this need alltogether a more general approach
+      monomial_list[no_monomials-1].c_sw = monomial_list[clovernd_monomials[j]].c_sw;
+      monomial_list[no_monomials-1].mubar = monomial_list[clovernd_monomials[j]].mubar;
+      monomial_list[no_monomials-1].epsbar = monomial_list[clovernd_monomials[j]].epsbar;
+      monomial_list[no_monomials-1].kappa = monomial_list[clovernd_monomials[j]].kappa;
+      monomial_list[no_monomials-1].hbfunction = &clovernd_trlog_heatbath;
+      monomial_list[no_monomials-1].accfunction = &clovernd_trlog_acc;
+      monomial_list[no_monomials-1].derivativefunction = NULL;
+      monomial_list[no_monomials-1].timescale = 0;
+      monomial_list[no_monomials-1].even_odd_flag = 1;
+      if(g_proc_id == 0 && g_debug_level > 1) {
+        printf("# Initialised clovernd_trlog_monomial, no_monomials= %d\n", no_monomials);
+      }
     }
   }
 
