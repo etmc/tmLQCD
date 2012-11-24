@@ -183,7 +183,7 @@ EQL {SPC}*={SPC}*
     *strsave='\0';
   }
   
-  inline wipe_smearing_params(smearing_params_t* params)
+  static inline void wipe_smearing_params(smearing_params_t* params)
   {
     memset(params, 0, sizeof(smearing_params_t));
   }

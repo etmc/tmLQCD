@@ -17,10 +17,10 @@ typedef struct
 } identity_control;
 
 identity_control *construct_identity_control(int calculate_force_terms);
-inline void free_identity_control(identity_control *control);
+static inline void free_identity_control(identity_control *control);
 
-inline void identity_smear(identity_control *control, gauge_field_t in);
-inline void identity_smear_forces(identity_control *control, adjoint_field_t in);
+static inline void identity_smear(identity_control *control, gauge_field_t in);
+static inline void identity_smear_forces(identity_control *control, adjoint_field_t in);
 
 #include "identity.inlines"
 

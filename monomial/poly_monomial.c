@@ -53,7 +53,7 @@
 
 
 
-inline void setPhmcVars(monomial *mnl){
+static inline void setPhmcVars(monomial *mnl){
   phmc_invmaxev=1.0/mnl->MDPolyLmax;
   phmc_dop_n_cheby=(mnl->MDPolyDegree/2)+1;
   phmc_Cpol=mnl->MDPolyLocNormConst;
