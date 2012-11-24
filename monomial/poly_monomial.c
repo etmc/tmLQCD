@@ -51,8 +51,6 @@
 #include "hamiltonian_field.h"
 #include "phmc.h"
 
-
-
 static inline void setPhmcVars(monomial *mnl){
   phmc_invmaxev=1.0/mnl->MDPolyLmax;
   phmc_dop_n_cheby=(mnl->MDPolyDegree/2)+1;

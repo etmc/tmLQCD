@@ -24,9 +24,6 @@ void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Com
   double c0 = I * (A->c00 * (A->c11 * A->c22 - A->c12 * A->c21) + 
                    A->c01 * (A->c12 * A->c20 - A->c10 * A->c22) +
                    A->c02 * (A->c10 * A->c21 - A->c11 * A->c20)  );
-  double sign_c0 = copysign(1.0, c0);
-  
-  c0 = fabs(c0);
   
   /* c1 = 0.5 * Tr[AA] */
   double c1 = -0.5 * (A->c00 * A->c00 + A->c01 * A->c10 + A->c02 * A->c20 +
@@ -45,6 +42,11 @@ void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Com
     return;
   }
 
+  /* P&M give symmetry relations that can be used when c0 < 0, to avoid the numerically problematic c0 -> -c0_max limit.
+     We note the sign here for future reference, then continue with c0 as if it were positive. */
+  int c0_negative = (c0 < 0);
+  c0 = fabs(c0);
+
   double c0max = 2.0 * pow(fac_1_3 * c1, 1.5);
   double theta_3 = fac_1_3 * acos(c0 / c0max);
 
@@ -54,9 +56,8 @@ void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Com
   /* Calculate and cache some repeating factors. *
    * We can fold in the sign immediately -- c.f. f_j(-c0, c1) = -1^j * conj(f_j(c0, c1)) 
    * This should just amount to potentially adding a minus to all imaginary components and an overall phase for f1. */
-  _Complex double sI = sign_c0 * I;
-  _Complex double ma = cexp(2 * sI * u);
-  _Complex double mb = cexp(-sI * u);
+  _Complex double ma = cexp(2 * I * u);
+  _Complex double mb = cexp(-I * u);
   double cw = cos(w);
   double u2 = u * u;
   double w2 = w * w;
@@ -66,12 +67,17 @@ void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Com
                           : 1 - 0.16666666666666667 *  w2 * (1 - 0.05 *  w2 * (1 - 0.023809523809523808 *  w2));
   double divisor = 1.0 / (9.0 * u2 -  w2);
 
-  *f0 = ma * (u * u -  w * w) + mb * (8 * u * u * cw + 2 * sI * u * (3 * u * u +  w * w) * xi0);
-  *f0 *= divisor;
-  *f1 = sign_c0 * (2 * u * ma - mb * (2 * u * cw - sI * (3 * u * u -  w * w) * xi0));
-  *f1 *= divisor;
-  *f2 = ma - mb * (cw + 3 * sI * u * xi0);
-  *f2 *= divisor;
+  *f0 = divisor * (ma * (u * u -  w * w) + mb * (8 * u * u * cw + 2 * I * u * (3 * u * u +  w * w) * xi0));
+  *f1 = divisor * (2 * u * ma - mb * (2 * u * cw - I * (3 * u * u -  w * w) * xi0));
+  *f2 = divisor * (ma - mb * (cw + 3 * I * u * xi0));
+
+  /* The first point where we use the symmetry relations to calculate the negative c0 possibility */
+  if (c0_negative)
+  {
+    *f0 = conj(*f0);
+    *f1 = -conj(*f1);
+    *f2 = conj(*f2);
+  }
   
   exponent_from_coefficients(expA,  *f0, *f1, *f2, A);
   
@@ -79,33 +85,43 @@ void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Com
   if (!B1)
     return;
   
-  /* FIXME Are we certain about factors of i absorbed in Q and the definition of B1 and B2? 
-   * Note that there are factors of i included in the exponent from coefficients routine. 
-   * Otherwise, the code here agrees fully with the Peardon & Morningstar.                  */
-  
   double xi1 = (w > 0.05) ? (w * cw - sin(w)) / (w * w2) 
                           : -fac_1_3 * (1 - 0.10 * w2 * (1 - 0.03571428571428571 * w2 * (1 - 0.01851851851851852 * w2)));
   
-  _Complex double r10 = 2 * (u + sI * (u2 - w2)) * ma + 2 * mb * ((4 * u * (2 - sI * u) * cw) + sI * (9 * u2 + w2 - sI * u * (3 * u2 + w2)) * xi0);
-  _Complex double r11 = 2 * (1 + 2 * sI * u) * ma + mb * (-2 * (1 - sI * u) * cw + sI * (6 * u + sI * (w2 - 3 * u2)) * xi0);
-  _Complex double r12 = 2 * sI * ma + sI * mb * (cw - 3 * (1 - sI * u) * xi0);
-  _Complex double r20 = - 2 * ma + 2 * sI * u * mb * (cw + (1 + 4 * sI * u) * xi0 + 3 * u2 * xi1);
-  _Complex double r21 = -I * mb * (cw + (1 + 2 * sI * u) * xi0 - 3 * u2 * xi1);
-  _Complex double r22 = mb * (xi0 - 3 * sI * u * xi1);
-    
-  double bdiv = 0.5 * divisor * divisor;
+  _Complex double r10 = 2 * (u + I * (u2 - w2)) * ma + 2 * mb * ((4 * u * (2 - I * u) * cw) + I * (9 * u2 + w2 - I * u * (3 * u2 + w2)) * xi0);
+  _Complex double r11 = 2 * (1 + 2 * I * u) * ma + mb * (-2 * (1 - I * u) * cw + I * (6 * u + I * (w2 - 3 * u2)) * xi0);
+  _Complex double r12 = 2 * I * ma + I * mb * (cw - 3 * (1 - I * u) * xi0);
+  _Complex double r20 = - 2 * ma + 2 * I * u * mb * (cw + (1 + 4 * I * u) * xi0 + 3 * u2 * xi1);
+  _Complex double r21 = -I * mb * (cw + (1 + 2 * I * u) * xi0 - 3 * u2 * xi1);
+  _Complex double r22 = mb * (xi0 - 3 * I * u * xi1);
+
+  divisor = 0.5 * divisor * divisor;
   double mr2 = (3 * u2 - w2);
   double mf  = 2 * (15 * u2 + w2);
   
-  _Complex double bn0 = bdiv * (2 * u * r10 + mr2 * r20 - mf * *f0);
-  _Complex double bn1 = bdiv * (2 * u * r11 + mr2 * r21 - mf * *f1);
-  _Complex double bn2 = bdiv * (2 * u * r12 + mr2 * r22 - mf * *f2);
+  _Complex double bn0 = divisor * (2 * u * r10 + mr2 * r20 - mf * *f0);
+  _Complex double bn1 = divisor * (2 * u * r11 + mr2 * r21 - mf * *f1);
+  _Complex double bn2 = divisor * (2 * u * r12 + mr2 * r22 - mf * *f2);
+  
+  if (c0_negative)
+  {
+    bn0 = conj(bn0);
+    bn1 = -conj(bn1);
+    bn2 = conj(bn2);
+  }
   
   exponent_from_coefficients(B1,    bn0, bn1, bn2, A);
   
-  bn0 = bdiv * (r10 - 3 * u * r20 - 24 * u * *f0);
-  bn1 = bdiv * (r11 - 3 * u * r21 - 24 * u * *f1);
-  bn2 = bdiv * (r12 - 3 * u * r22 - 24 * u * *f2);
+  bn0 = divisor * (r10 - 3 * u * r20 - 24 * u * *f0);
+  bn1 = divisor * (r11 - 3 * u * r21 - 24 * u * *f1);
+  bn2 = divisor * (r12 - 3 * u * r22 - 24 * u * *f2);
+  
+  if (c0_negative)
+  {
+    bn0 = -conj(bn0);
+    bn1 = conj(bn1);
+    bn2 = -conj(bn2);
+  }
   
   exponent_from_coefficients(B2,    bn0, bn1, bn2, A);
 }
