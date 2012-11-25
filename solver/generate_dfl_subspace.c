@@ -117,7 +117,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
   random_fields(Ns);
   if(g_debug_level > 4) {
     for(e = 0.; e < 1.; e=e+0.05) {
-      random_spinor_field(dfl_fields[0], N, 0);
+      random_spinor_field_lexic(dfl_fields[0], repro);
       nrm = sqrt(square_norm(dfl_fields[0], N, 1));
       mul_r(dfl_fields[0], 1./nrm, dfl_fields[0], N);
       d = 1.1;

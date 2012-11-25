@@ -169,8 +169,6 @@ double init_momenta(const int repro, su3adj ** const momenta) {
     kc=0.5*(ks+kc);
   }
   else {
-    kc=0.; 
-    ks=0.;
     for(i = 0; i < VOLUME; i++) { 
       for(mu = 0; mu < 4; mu++) {
 	sum=0.;
