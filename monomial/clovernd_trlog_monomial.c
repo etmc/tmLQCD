@@ -67,7 +67,7 @@ double clovernd_trlog_acc(const int id, hamiltonian_field_t * const hf) {
   /*compute the contribution from the clover trlog term */
   mnl->energy1 = -sw_trace_nd(EE, mnl->mubar, mnl->epsbar);
   if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called clovernd_trlog_acc for id %d dH = %1.4e\n", 
+    printf("called clovernd_trlog_acc for id %d dH = %1.10e\n", 
 	   id, mnl->energy1 - mnl->energy0);
   }
   return(mnl->energy1 - mnl->energy0);

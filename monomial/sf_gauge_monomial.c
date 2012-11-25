@@ -154,7 +154,7 @@ double sf_gauge_acc( const int id, hamiltonian_field_t * const hf)
 
   if( ( g_proc_id == 0 ) & ( g_debug_level > 3 ) )
   {
-    printf( "called sf_gauge_acc for id %d %d dH = %1.4e\n", 
+    printf( "called sf_gauge_acc for id %d %d dH = %1.10e\n", 
 	    id, mnl->even_odd_flag, mnl->energy0 - mnl->energy1 );
   }
 

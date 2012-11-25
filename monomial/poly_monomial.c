@@ -279,7 +279,7 @@ void poly_heatbath(const int id, hamiltonian_field_t * const hf){
   if(mnl->even_odd_flag) {
 
 
-    random_spinor_field(mnl->w_fields[0], VOLUME/2, mnl->rngrepro);
+    random_spinor_field_eo(mnl->w_fields[0], mnl->rngrepro);
     mnl->energy0 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
 
     if(g_proc_id == 0 && g_debug_level > 3) {

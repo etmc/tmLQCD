@@ -391,7 +391,7 @@ void Check_Approximation(double const mstar) {
   Sin   =calloc(VOLUMEPLUSRAND, sizeof(spinor));
 #endif
 
-  random_spinor_field(Sin, VOLUME, 1);
+  random_spinor_field_lexic(Sin, 0);
 
   s_ = calloc(4*VOLUMEPLUSRAND+1, sizeof(spinor));
   s  = calloc(4, sizeof(spinor*));

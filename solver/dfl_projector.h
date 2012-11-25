@@ -26,9 +26,9 @@ void project_left(spinor * const out, spinor * const in);
 void project_right(spinor * const out, spinor * const in);
 void project_left_D(spinor * const out, spinor * const in);
 void D_project_right(spinor * const out, spinor * const in);
-int check_projectors();
-void check_little_D_inversion();
-void check_local_D();
+int check_projectors(const int repro);
+void check_little_D_inversion(const int repro);
+void check_local_D(const int repro);
 void free_dfl_projector();
 
 void little_project(_Complex double * const out, _Complex double * const in, const int  N);

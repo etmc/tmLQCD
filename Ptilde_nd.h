@@ -34,6 +34,6 @@ double chebtilde_eval(int M, double *dd, double s);
 void degree_of_Ptilde(int * _degree, double ** coefs, 
 		      const double EVMin, const double EVMax,
 		      const int sloppy_degree, const double acc,
-		      matrix_mult_nd Qsw);
+		      matrix_mult_nd Qsw, const int repro);
 
 #endif

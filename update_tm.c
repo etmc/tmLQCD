@@ -162,6 +162,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       new_rectangle_energy = measure_rectangles( (const su3**) hf.gaugefield);
     }
   }
+  if(g_proc_id == 0 && g_debug_level > 3) printf("called moment_energy: dh = %1.10e\n", (enepx - enep));
   /* Compute the energy difference */
   dh = dh + (enepx - enep);
   if(g_proc_id == 0 && g_debug_level > 3) {
@@ -170,8 +171,8 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   expmdh = exp(-dh);
   /* the random number is only taken at node zero and then distributed to 
      the other sites */
+  ranlxd(yy,1);
   if(g_proc_id==0) {
-    ranlxd(yy,1);
 #ifdef MPI
     for(i = 1; i < g_nproc; i++) {
       MPI_Send(&yy[0], 1, MPI_DOUBLE, i, 31, MPI_COMM_WORLD);

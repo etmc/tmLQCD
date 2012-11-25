@@ -268,7 +268,7 @@ int main(int argc,char *argv[])
     j_max=2048;
     sdt=0.;
     for (k = 0; k < k_max; k++) {
-      random_spinor_field(g_spinor_field[k], VOLUME/2, 0);
+      random_spinor_field_eo(g_spinor_field[k], reproduce_randomnumber_flag);
     }
     
     while(sdt < 30.) {
@@ -366,7 +366,7 @@ int main(int argc,char *argv[])
     j_max=1;
     sdt=0.;
     for (k=0;k<k_max;k++) {
-      random_spinor_field(g_spinor_field[k], VOLUME, 0);
+      random_spinor_field_lexic(g_spinor_field[k], reproduce_randomnumber_flag);
     }
     
     while(sdt < 3.) {

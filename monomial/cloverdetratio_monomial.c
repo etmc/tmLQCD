@@ -240,7 +240,7 @@ void cloverdetratio_heatbath(const int id, hamiltonian_field_t * const hf) {
   sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
   sw_invert(EE, mnl->mu);
 
-  random_spinor_field(mnl->w_fields[0], VOLUME/2, mnl->rngrepro);
+  random_spinor_field_eo(mnl->w_fields[0], mnl->rngrepro);
   mnl->energy0  = square_norm(mnl->w_fields[0], VOLUME/2, 1);
   
   g_mu3 = mnl->rho;
@@ -291,7 +291,7 @@ double cloverdetratio_acc(const int id, hamiltonian_field_t * const hf) {
   g_mu3 = 0.;
   boundary(g_kappa);
   if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called cloverdetratio_acc for id %d dH = %1.4e\n", 
+    printf("called cloverdetratio_acc for id %d dH = %1.10e\n", 
 	   id, mnl->energy1 - mnl->energy0);
   }
   return(mnl->energy1 - mnl->energy0);

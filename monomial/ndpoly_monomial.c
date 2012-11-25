@@ -170,11 +170,11 @@ void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   }
 
   mnl->energy0 = 0.;
-  random_spinor_field(g_chi_up_spinor_field[0], VOLUME/2, mnl->rngrepro);
+  random_spinor_field_eo(g_chi_up_spinor_field[0], mnl->rngrepro);
   mnl->energy0 = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
 
   if(g_epsbar!=0.0 || phmc_exact_poly == 0) {
-    random_spinor_field(g_chi_dn_spinor_field[0], VOLUME/2, mnl->rngrepro);
+    random_spinor_field_eo(g_chi_dn_spinor_field[0], mnl->rngrepro);
     mnl->energy0 += square_norm(g_chi_dn_spinor_field[0], VOLUME/2, 1);
   } 
   else {
@@ -407,7 +407,7 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
   }
 
   if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called ndpoly_acc for id %d %d dH = %1.4e\n", id, g_running_phmc, mnl->energy1 - mnl->energy0);
+    printf("called ndpoly_acc for id %d %d dH = %1.10e\n", id, g_running_phmc, mnl->energy1 - mnl->energy0);
   }
   /* END IF PHMC */
   return(mnl->energy1 - mnl->energy0);
@@ -458,7 +458,7 @@ int init_ndpoly_monomial(const int id) {
   /* Here we prepare the less precise MD polynomial first   */
   degree_of_polynomial_nd(&mnl->MDPolyDegree, &mnl->MDPolyCoefs,
 			  mnl->EVMin, mnl->EVMax,
-			  Qsq);
+			  Qsq, mnl->rngrepro);
   phmc_dop_n_cheby = mnl->MDPolyDegree;
   phmc_dop_cheby_coef = mnl->MDPolyCoefs;
   if((g_proc_id == 0) && (g_debug_level > 1)) {
@@ -479,7 +479,7 @@ int init_ndpoly_monomial(const int id) {
   /* Here we prepare the precise polynomial Ptilde */
   degree_of_Ptilde(&mnl->PtildeDegree, &mnl->PtildeCoefs, 
 		   mnl->EVMin, mnl->EVMax, mnl->MDPolyDegree, 
-		   mnl->PrecisionPtilde, Qsq);
+		   mnl->PrecisionPtilde, Qsq, mnl->rngrepro);
   phmc_ptilde_cheby_coef = mnl->PtildeCoefs;
   phmc_ptilde_n_cheby = mnl->PtildeDegree;
 

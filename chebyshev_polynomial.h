@@ -31,6 +31,6 @@ void chebyshev_polynomial(double a, double b, double c[], int n, double exponent
 
 void QdaggerQ_power(spinor *R_s, spinor *R_c, double *c, int n, spinor *S_s, spinor *S_c);
 
-void degree_of_polynomial();
+void degree_of_polynomial(const int repro);
 
 #endif

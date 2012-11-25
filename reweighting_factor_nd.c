@@ -32,7 +32,7 @@
 #include "phmc.h"
 #include "reweighting_factor_nd.h"
 
-double reweighting_factor_nd(const int N)
+double reweighting_factor_nd(const int N, const int repro)
 {
   int i, n_iter;
   double sq_norm, corr, sum=0., sq_sum = 0., temp1;
@@ -48,8 +48,8 @@ double reweighting_factor_nd(const int N)
 
   for(i = 0; i < N; ++i)
   {
-    random_spinor_field(g_chi_up_spinor_field[2], VOLUME/2, 1);
-    random_spinor_field(g_chi_dn_spinor_field[2], VOLUME/2, 1);
+    random_spinor_field_eo(g_chi_up_spinor_field[2], repro);
+    random_spinor_field_eo(g_chi_dn_spinor_field[2], repro);
     zero_spinor_field(g_chi_up_spinor_field[3], VOLUME/2);
     zero_spinor_field(g_chi_dn_spinor_field[3], VOLUME/2);
 
