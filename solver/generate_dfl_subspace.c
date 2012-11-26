@@ -85,7 +85,7 @@ static void random_fields(const int Ns) {
   return;
 }
 
-int generate_dfl_subspace(const int Ns, const int N) {
+int generate_dfl_subspace(const int Ns, const int N, const int repro) {
   int ix, i_o,i, j, k, p, blk, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(_Complex double),
     vol = VOLUME*sizeof(spinor)/sizeof(_Complex double);
   spinor **psi;

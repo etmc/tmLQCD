@@ -443,7 +443,7 @@ int main(int argc, char *argv[])
 
       /*       g_mu = 0.; */
       /*       boundary(0.125); */
-      generate_dfl_subspace(g_N_s, reproduce_randomnumber_flag);
+      generate_dfl_subspace(g_N_s, VOLUME, reproduce_randomnumber_flag);
       /*       boundary(g_kappa); */
       /*       g_mu = g_mu1; */
 
