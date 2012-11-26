@@ -8,7 +8,8 @@ static void add_stout_terms_to_forces(gauge_field_t smeared_force, double const 
     for (unsigned int mu = 0; mu < 4; ++mu)
     {     
       /* t2 = Z * C */
-      generic_staples(&t1, x, mu, U);
+      generic_staples(&t1, x, mu, U); /* NOTE C contains rho!*/
+      _real_times_su3(t1, rho, t1);
       _su3d_times_su3(t2, trace[x][mu].Z, t1);
      
       /* t1 = Sigma * V */
