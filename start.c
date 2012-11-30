@@ -819,13 +819,15 @@ void start_ranlux(int level, int seed)
 {
    unsigned int max_seed,loc_seed;
    unsigned int step = g_proc_coords[0]*g_nproc_x*g_nproc_y*g_nproc_z +
-     g_nproc_y*g_proc_coords[1]*g_nproc_y*g_nproc_z +
+     g_proc_coords[1]*g_nproc_y*g_nproc_z +
      g_proc_coords[2]*g_nproc_z + g_proc_coords[3];
 
    max_seed = 2147483647 / g_nproc;
    loc_seed = (seed + step*max_seed) % 2147483647;
 
    if(loc_seed == 0) loc_seed++;
+ 
+   printf("Local seed is %d  proc_id = %d\n", loc_seed, g_proc_id);
 
    rlxs_init(level-1,loc_seed);
    rlxd_init(level,loc_seed);
