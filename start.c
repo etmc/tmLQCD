@@ -827,10 +827,12 @@ void start_ranlux(int level, int seed)
 
    if(loc_seed == 0) loc_seed++;
  
-   printf("Local seed is %d  proc_id = %d\n", loc_seed, g_proc_id);
+   if(g_debug_level > 3) {
+     printf("Local seed is %d  proc_id = %d\n", loc_seed, g_proc_id);
+   }
 
-   rlxs_init(level-1,loc_seed);
-   rlxd_init(level,loc_seed);
+   rlxs_init(level-1, loc_seed);
+   rlxd_init(level, loc_seed);
 }
 
 void gen_test_spinor_field(spinor * const k, const int eoflag) {
