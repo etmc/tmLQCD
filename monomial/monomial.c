@@ -163,11 +163,11 @@ int init_monomials(const int V, const int even_odd_flag) {
 
   no = 0;
   for(int i = 0; i < no_monomials; i++) {
+    monomial_list[i].rngrepro = reproduce_randomnumber_flag;
     if((monomial_list[i].type != GAUGE) && (monomial_list[i].type != SFGAUGE)) {
       monomial_list[i].w_fields = w_fields;
       monomial_list[i].pf = __pf+no*V;
       no++;
-      monomial_list[i].rngrepro = reproduce_randomnumber_flag;
 
       if(monomial_list[i].type == DET) {
 	monomial_list[i].hbfunction = &det_heatbath;
@@ -319,6 +319,7 @@ int init_monomials(const int V, const int even_odd_flag) {
       add_monomial(CLOVERTRLOG);
       monomial_list[no_monomials-1].pf = NULL;
       monomial_list[no_monomials-1].id = no_monomials-1;
+      monomial_list[no_monomials-1].rngrepro = reproduce_randomnumber_flag;
       // set the parameters according to cloverdet monomial
       // this need alltogether a more general approach
       monomial_list[no_monomials-1].c_sw = monomial_list[clover_monomials[j]].c_sw;
@@ -339,6 +340,7 @@ int init_monomials(const int V, const int even_odd_flag) {
       add_monomial(CLOVERNDTRLOG);
       monomial_list[no_monomials-1].pf = NULL;
       monomial_list[no_monomials-1].id = no_monomials-1;
+      monomial_list[no_monomials-1].rngrepro = reproduce_randomnumber_flag;
       // set the parameters according to cloverdet monomial
       // this need alltogether a more general approach
       monomial_list[no_monomials-1].c_sw = monomial_list[clovernd_monomials[j]].c_sw;
