@@ -26,6 +26,7 @@ void stout_smear_forces(stout_control *control, adjoint_field_t in)
 
   /* The force terms are still in the tangent space representation, so project them back to the adjoint one */
   gauge_to_adjoint(&control->force_result, smeared_force);
+  generic_exchange(&control->force_result, sizeof(su3adj_tuple));
 
   return_gauge_field(&smeared_force);
 }
