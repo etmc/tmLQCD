@@ -255,7 +255,8 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       ohnohack_remap_g_gauge_field(smearing_control_monomial[s_type]->result);
       for(i = 0; i < Integrator.no_timescales; i++) {
         for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
-          ret_dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j], &hf);
+          if (monomial_list[ Integrator.mnls_per_ts[i][j] ].smearing == s_type)
+            ret_dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j], &hf);
         }
       }
     }
