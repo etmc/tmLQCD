@@ -111,7 +111,7 @@ double gauge_acc(const int id, hamiltonian_field_t * const hf) {
     mnl->energy1 += g_beta*(mnl->c1 * measure_rectangles( (const su3**) hf->gaugefield));
     }
   if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called gauge_acc for id %d %d dH = %1.4e\n", 
+    printf("called gauge_acc for id %d %d dH = %1.10e\n", 
 	   id, mnl->even_odd_flag, mnl->energy0 - mnl->energy1);
   }
   return(mnl->energy0 - mnl->energy1);

@@ -54,12 +54,14 @@
 
 void online_measurement(const int traj, const int id, const int ieo) {
   int i, j, t, tt, t0;
-  double *Cpp, *Cpa, *Cp4;
+  double *Cpp = NULL, *Cpa = NULL, *Cp4 = NULL;
   double res = 0., respa = 0., resp4 = 0.;
   double atime, etime;
   float tmp;
 #ifdef MPI
   double mpi_res = 0., mpi_respa = 0., mpi_resp4 = 0.;
+  // send buffer for MPI_Gather
+  double *sCpp = NULL, *sCpa = NULL, *sCp4 = NULL;
 #endif
   FILE *ofs;
   char *filename;
@@ -83,10 +85,20 @@ void online_measurement(const int traj, const int id, const int ieo) {
   }
   atime = gettime();
 
-  Cpp = (double*) calloc(g_nproc_t*T, sizeof(double));
-  Cpa = (double*) calloc(g_nproc_t*T, sizeof(double));
-  Cp4 = (double*) calloc(g_nproc_t*T, sizeof(double));
-
+#ifdef MPI
+  sCpp = (double*) calloc(T, sizeof(double));
+  sCpa = (double*) calloc(T, sizeof(double));
+  sCp4 = (double*) calloc(T, sizeof(double));
+  if(g_mpi_time_rank == 0) {
+    Cpp = (double*) calloc(g_nproc_t*T, sizeof(double));
+    Cpa = (double*) calloc(g_nproc_t*T, sizeof(double));
+    Cp4 = (double*) calloc(g_nproc_t*T, sizeof(double));
+  }
+#else
+  Cpp = (double*) calloc(T, sizeof(double));
+  Cpa = (double*) calloc(T, sizeof(double));
+  Cp4 = (double*) calloc(T, sizeof(double));
+#endif
   source_generation_pion_only(g_spinor_field[0], g_spinor_field[1], 
 			      t0, 0, traj);
 
@@ -119,18 +131,22 @@ void online_measurement(const int traj, const int id, const int ieo) {
     respa = mpi_respa;
     MPI_Reduce(&resp4, &mpi_resp4, 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
     resp4 = mpi_resp4;
+    sCpp[t] = +res/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)*2.;
+    sCpa[t] = -respa/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)*2.;
+    sCp4[t] = +resp4/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)*2.;
+#else
+    Cpp[t] = +res/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)*2.;
+    Cpa[t] = -respa/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)*2.;
+    Cp4[t] = +resp4/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)*2.;
 #endif
-    Cpp[t+g_proc_coords[0]*T] = +res/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)*2.;
-    Cpa[t+g_proc_coords[0]*T] = -respa/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)*2.;
-    Cp4[t+g_proc_coords[0]*T] = +resp4/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)*2.;
   }
 
 #ifdef MPI
   /* some gymnastics needed in case of parallelisation */
   if(g_mpi_time_rank == 0) {
-    MPI_Gather(&Cpp[g_proc_coords[0]*T], T, MPI_DOUBLE, Cpp, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
-    MPI_Gather(&Cpa[g_proc_coords[0]*T], T, MPI_DOUBLE, Cpa, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
-    MPI_Gather(&Cp4[g_proc_coords[0]*T], T, MPI_DOUBLE, Cp4, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
+    MPI_Gather(sCpp, T, MPI_DOUBLE, Cpp, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
+    MPI_Gather(sCpa, T, MPI_DOUBLE, Cpa, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
+    MPI_Gather(sCp4, T, MPI_DOUBLE, Cp4, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
   }
 #endif
 
@@ -168,8 +184,14 @@ void online_measurement(const int traj, const int id, const int ieo) {
     fprintf( ofs, "6  1  %d  %e  %e\n", t, Cp4[tt], 0.);
     fclose(ofs);
   }
+#ifdef MPI
+  if(g_mpi_time_rank == 0) {
+    free(Cpp); free(Cpa); free(Cp4);
+  }
+  free(sCpp); free(sCpa); free(sCp4);
+#else
   free(Cpp); free(Cpa); free(Cp4);
-  
+#endif
   etime = gettime();
   
   if(g_proc_id == 0 && g_debug_level > 0) {

@@ -241,7 +241,7 @@ double stopeps=5.0e-16;
 int dop_n_cheby=0;
 double * dop_cheby_coef;
 
-void degree_of_polynomial(){
+void degree_of_polynomial(const int repro){
   int i;
   double temp;
   static int ini=0;
@@ -289,11 +289,11 @@ void degree_of_polynomial(){
    aux3c=calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
 #endif
 
-chebyshev_polynomial(cheb_evmin, cheb_evmax, dop_cheby_coef, N_CHEBYMAX, 0.25);
+   chebyshev_polynomial(cheb_evmin, cheb_evmax, dop_cheby_coef, N_CHEBYMAX, 0.25);
 
    temp=1.0;
-   random_spinor_field(ss,VOLUME/2);
-   random_spinor_field(sc,VOLUME/2);
+   random_spinor_field_eo(ss, repro);
+   random_spinor_field_eo(sc, repro);
 /*   assign(&sc[0], &ss[0],VOLUME/2);
 
   Qtm_pm_psi(&auxs[0], &ss[0]);

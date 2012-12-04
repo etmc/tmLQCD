@@ -71,7 +71,8 @@ libio_TARGETS = utils_engineering \
 		utils DML_crc32 dml \
 		eospinor_write \
 		eospinor_read \
-		io_cm
+		io_cm \
+		deri_write_stdout
 
 libio_OBJECTS = $(addsuffix .o, ${libio_TARGETS})
 

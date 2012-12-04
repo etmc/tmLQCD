@@ -87,7 +87,8 @@ void xchange_deri(su3adj ** const df)
     }
   }
 
-  /* send the data to the neighbour on the right is not needed*/
+  /* send the data to the neighbour on the right is needed for the */
+  /* clover case, so this needs fixing here! */
 #    endif /* (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT ) */
 #    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELX || defined PARALLELXY || defined PARALLELXYZ )
 
@@ -114,7 +115,8 @@ void xchange_deri(su3adj ** const df)
       }
     }
   }
-  /* send the data to the neighbour on the right is not needed*/  
+  /* send the data to the neighbour on the right is needed for the */
+  /* clover case, so this needs fixing here! */
 #    endif /* (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELX || defined PARALLELXY || defined PARALLELXYZ ) */
 
 #    if (defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELXY || defined PARALLELXYZ )
@@ -143,7 +145,8 @@ void xchange_deri(su3adj ** const df)
       }
     }
   }
-  /* send the data to the neighbour on the right is not needed*/  
+  /* send the data to the neighbour on the right is needed for the */
+  /* clover case, so this needs fixing here! */
 #    endif /* (defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELXY || defined PARALLELXYZ ) */
 
 #    if (defined PARALLELXYZT || defined PARALLELXYZ )
@@ -172,7 +175,8 @@ void xchange_deri(su3adj ** const df)
       }
     }
   }
-  /* send the data to the neighbour on the right is not needed*/  
+  /* send the data to the neighbour on the right is needed for the */
+  /* clover case, so this needs fixing here! */
 #    endif /* (defined PARALLELXYZT || defined PARALLELXYZ ) */
 #  endif /* MPI */
   return;

@@ -447,18 +447,18 @@ int main(int argc, char *argv[])
 
       /*       g_mu = 0.; */
       /*       boundary(0.125); */
-      generate_dfl_subspace(g_N_s, VOLUME);
+      generate_dfl_subspace(g_N_s, VOLUME, reproduce_randomnumber_flag);
       /*       boundary(g_kappa); */
       /*       g_mu = g_mu1; */
 
       /* Compute little Dirac operators */
       /*       alt_block_compute_little_D(); */
       if (g_debug_level > 0) {
-        check_projectors();
-        check_local_D();
+        check_projectors(reproduce_randomnumber_flag);
+        check_local_D(reproduce_randomnumber_flag);
       }
       if (g_debug_level > 1) {
-        check_little_D_inversion();
+        check_little_D_inversion(reproduce_randomnumber_flag);
       }
 
     }

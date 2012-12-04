@@ -156,7 +156,7 @@ void det_heatbath(const int id, hamiltonian_field_t * const hf) {
   mnl->iter1 = 0;
 
   if(mnl->even_odd_flag) {
-    random_spinor_field(mnl->w_fields[0], VOLUME/2, mnl->rngrepro);
+    random_spinor_field_eo(mnl->w_fields[0], mnl->rngrepro);
     mnl->energy0 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
 
     mnl->Qp(mnl->pf, mnl->w_fields[0]);
@@ -168,7 +168,7 @@ void det_heatbath(const int id, hamiltonian_field_t * const hf) {
     }
   }
   else {
-    random_spinor_field(mnl->w_fields[0], VOLUME, mnl->rngrepro);
+    random_spinor_field_lexic(mnl->w_fields[0], mnl->rngrepro);
     mnl->energy0 = square_norm(mnl->w_fields[0], VOLUME, 1);
 
     Q_plus_psi(mnl->pf, mnl->w_fields[0]);
@@ -232,7 +232,7 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
   g_mu = g_mu1;
   boundary(g_kappa);
   if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called det_acc for id %d %d dH = %1.4e\n", 
+    printf("called det_acc for id %d %d dH = %1.10e\n", 
 	   id, mnl->even_odd_flag, mnl->energy1 - mnl->energy0);
   }
   return(mnl->energy1 - mnl->energy0);

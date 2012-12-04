@@ -270,7 +270,7 @@ int main(int argc,char *argv[])
     /*initialize the pseudo-fermion fields*/
     j_max=1;
     for (k = 0; k < k_max; k++) {
-      random_spinor_field(g_spinor_field[k], VOLUME/2, 0);
+      random_spinor_field_eo(g_spinor_field[k], reproduce_randomnumber_flag);
     }
 
     if (read_source_flag == 2) { /* save */

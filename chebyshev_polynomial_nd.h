@@ -29,6 +29,6 @@ double cheb_eval(int M, double *c, double s);
 
 void degree_of_polynomial_nd(int * _degree_of_p, double ** coefs,
 			     const double EVMin, const double EVMax,
-			     matrix_mult_nd Qsq);
+			     matrix_mult_nd Qsq, const int repro);
 
 #endif
