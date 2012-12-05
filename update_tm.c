@@ -133,14 +133,11 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       _su3_assign(*w,*v);
     }
   }
-  
-  /* Construct the smeared gauge fields needed for this updating step */
-  for (int s_type = 0; s_type < no_smearings_monomial; ++s_type)
-    smear(smearing_control_monomial[s_type], g_gf);
-  
+   
   /* heatbath for all monomials */
   for (int s_type = 0; s_type < no_smearings_monomial; ++s_type)
   {
+    smear(smearing_control_monomial[s_type], g_gf);
     ohnohack_remap_g_gauge_field(smearing_control_monomial[s_type]->result);
     for(i = 0; i < Integrator.no_timescales; i++)
     {
@@ -165,8 +162,10 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 
   /* compute the final energy contributions for all monomials */
   dh = 0.;
+  
   for (int s_type = 0; s_type < no_smearings_monomial; ++s_type)
   {
+    smear(smearing_control_monomial[s_type], g_gf);
     ohnohack_remap_g_gauge_field(smearing_control_monomial[s_type]->result);
     /* NOTE hf->gaugefield is always set to g_gauge_field, I believe, so it needs no further changing */
     for(i = 0; i < Integrator.no_timescales; i++)
@@ -250,6 +249,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     ret_dh = 0.;
     for (int s_type = 0; s_type < no_smearings_monomial; ++s_type)
     {
+      smear(smearing_control_monomial[s_type], g_gf);
       ohnohack_remap_g_gauge_field(smearing_control_monomial[s_type]->result);
       for(i = 0; i < Integrator.no_timescales; i++) {
         for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
@@ -317,6 +317,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     tmp = enep;
     for (int s_type = 0; s_type < no_smearings_monomial; ++s_type)
     {
+      smear(smearing_control_monomial[s_type], g_gf);
       ohnohack_remap_g_gauge_field(smearing_control_monomial[s_type]->result);
       for(i = 0; i < Integrator.no_timescales; i++) {
         for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
