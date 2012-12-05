@@ -167,7 +167,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   {
     smear(smearing_control_monomial[s_type], g_gf);
     ohnohack_remap_g_gauge_field(smearing_control_monomial[s_type]->result);
-    /* NOTE hf->gaugefield is always set to g_gauge_field, I believe, so it needs no further changing */
+
     for(i = 0; i < Integrator.no_timescales; i++)
     {
       for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) 

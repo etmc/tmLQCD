@@ -70,7 +70,7 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
   {
     int s_type = relevant_smearings[s_ctr];
     
-    smear(smearing_control_monomial[relevant_smearings[s_type]], g_gf);
+    smear(smearing_control_monomial[s_type], g_gf);
     zero_adjoint_field(&tmp_derivative);
     ohnohack_remap_g_gauge_field(smearing_control_monomial[s_type]->result);
     
@@ -113,6 +113,13 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
 #ifdef MPI
   xchange_deri(hf->derivative);
 #endif
+
+  /* Debugging code inserted here */
+  calculate_forces_numerically();
+  double *ar_result = (double*)&df[0][0];
+  fprintf(stderr, "\n[DEBUG] Result of analytical force calculation!\n");
+  for (int component = 0; component < 8; ++component)
+    fprintf(stderr, "        F[%d] = %f\n", component, ar_result[component]);
 
 #ifdef OMP
 #pragma omp parallel for
