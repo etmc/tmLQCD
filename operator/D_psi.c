@@ -501,7 +501,7 @@ void D_psi(spinor * const P, spinor * const Q){
 
 #ifdef _GAUGE_COPY2
   if(g_update_gauge_copy) {
-      update_backward_gauge(g_gf);
+      update_backward_gauge(_AS_GAUGE_FIELD_T(g_gauge_field));
   }
 #endif
 
@@ -899,7 +899,7 @@ void D_psi(spinor * const P, spinor * const Q){
 
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
-    update_backward_gauge(g_gf);
+    update_backward_gauge(_AS_GAUGE_FIELD_T(g_gauge_field));
   }
 #endif
 
@@ -1148,7 +1148,7 @@ void D_psi(spinor * const P, spinor * const Q){
   }
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
-      update_backward_gauge(g_gf);
+      update_backward_gauge(_AS_GAUGE_FIELD_T(g_gauge_field));
   }
 #endif
 
