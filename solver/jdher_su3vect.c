@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <errno.h>
+#include <complex.h>
 #include "global.h"
 #include "su3.h"
 #include "linalg/fortran.h"
@@ -61,7 +62,7 @@
 static void print_status_su3vect(int clvl, int it, int k, int j, int kmax, 
 				 int blksize, int actblksize,
 				 double *s, double *resnrm, int *actcorrits);
-static void sorteig_su3vect(int j, double S[], complex U[], int ldu, double tau,
+static void sorteig_su3vect(int j, double S[], _Complex double U[], int ldu, double tau,
 			    double dtemp[], int idx1[], int idx2[], int strategy);
 
 /* Projection routines */
@@ -83,14 +84,14 @@ void jderrorhandler_su3vect(const int i, char * message)
  ****************************************************************************/
 /* static double DMONE = -1.0, DZER = 0.0, DONE = 1.0; */
 static int MONE = -1, ONE = 1;
-static complex CONE, CZERO, CMONE;
+static _Complex double CONE, CZERO, CMONE;
 
 /* Projector variables */
 
 static int p_n, p_n2, p_k, p_lda;
 static double p_theta;
-complex * p_Q;
-complex * p_work;
+_Complex double * p_Q;
+_Complex double * p_work;
 matrix_mult_su3vect p_A_psi_s3;
 
 static char * fupl_u = "U", * fupl_c = "C", *fupl_n = "N", * fupl_a = "A", *fupl_v = "V", *filaenv = "zhetrd", *fvu = "VU";
@@ -98,11 +99,11 @@ static char * fupl_u = "U", * fupl_c = "C", *fupl_n = "N", * fupl_a = "A", *fupl
 void jdher_su3vect(int n, int lda, double tau, double tol, 
 	   int kmax, int jmax, int jmin, int itmax,
 	   int blksize, int blkwise, 
-	   int V0dim, complex *V0, 
+	   int V0dim, _Complex double *V0, 
 	   int solver_flag, 
 	   int linitmax, double eps_tr, double toldecay,
 	   int verbosity,
-	   int *k_conv, complex *Q, double *lambda, int *it,
+	   int *k_conv, _Complex double *Q, double *lambda, int *it,
 	   int maxmin, int shift_mode, int tslice,
 	   matrix_mult_su3vect A_psi)
 {
@@ -114,18 +115,19 @@ void jdher_su3vect(int n, int lda, double tau, double tol,
 /* allocatables:                                              *
  * initialize with NULL, so we can free even unallocated ptrs */
 double *s = NULL, *resnrm = NULL, *resnrm_old = NULL, *dtemp = NULL, *rwork = NULL;
-volatile complex *V_ = NULL;
-volatile complex  *V; 
-complex *Vtmp = NULL, *U = NULL, *M = NULL, *Z = NULL, *Res_ = NULL, *Res, *eigwork = NULL, *temp1_ = NULL, *temp1;
+_Complex double *V_ = NULL; 
+_Complex double  *V; 
+_Complex double *Vtmp = NULL, *U = NULL, *M = NULL, *Z = NULL, *Res_ = NULL, *Res, *eigwork = NULL, 
+  *temp1_ = NULL, *temp1;
 int *idx1 = NULL, *idx2 = NULL, *convind = NULL, *keepind = NULL, *solvestep = NULL, *actcorrits = NULL;
 
 /* non-allocated ptrs */
-complex *q, *v, *u, *r = NULL;  
+_Complex double *q, *v, *u, *r = NULL;  
 /* scalar vars */
 double theta, alpha, it_tol;
 int i, k, j, actblksize, eigworklen, found, conv, keep, n2;
 int act, cnt, idummy, info, CntCorrIts=0, endflag=0;
-int N=n*sizeof(complex)/sizeof(su3_vector);
+int N=n*sizeof(_Complex double)/sizeof(su3_vector);
 int IDIST = 1;
 int ISEED[4] = {2, 3, 5, 7};
  ISEED[0] = 2;
@@ -162,22 +164,25 @@ int ISEED[4] = {2, 3, 5, 7};
  if(eps_tr < 0.) jderrorhandler(500,"");
  if(toldecay <= 1.0) jderrorhandler(501,"");
  
- CONE.re=1.; CONE.im=0.;
+/* CONE.re=1.; CONE.im=0.;
  CZERO.re=0.; CZERO.im=0.;
- CMONE.re=-1.; CMONE.im=0.;
+ CMONE.re=-1.; CMONE.im=0.; */
+ CONE=(_Complex double)1.0;
+ CZERO=(_Complex double)0.0;
+ CMONE=_Complex_I;
  
  /* Get hardware-dependent values:
    * Opt size of workspace for ZHEEV is (NB+1)*j, where NB is the opt.
    * block size... */
  eigworklen = (2 + _FT(ilaenv)(&ONE, filaenv, fvu, &jmax, &MONE, &MONE, &MONE, 6, 2)) * jmax;
 
- if((void*)(V_ = (complex *)malloc((lda * jmax + 4) * sizeof(complex))) == NULL) 
+ if((void*)(V_ = (_Complex double *)malloc((lda * jmax + 4) * sizeof(_Complex double))) == NULL) 
    {
      errno = 0;
      jderrorhandler(300,"V in jdher");
   }
  V = V_;
- if((void*)(U = (complex *)malloc(jmax * jmax * sizeof(complex))) == NULL) 
+ if((void*)(U = (_Complex double *)malloc(jmax * jmax * sizeof(_Complex double))) == NULL) 
    {
      jderrorhandler(300,"U in jdher");
    }
@@ -185,7 +190,7 @@ int ISEED[4] = {2, 3, 5, 7};
    {
      jderrorhandler(300,"s in jdher");
    }
- if((void*)(Res_ = (complex *)malloc((lda * blksize+4) * sizeof(complex))) == NULL) 
+ if((void*)(Res_ = (_Complex double *)malloc((lda * blksize+4) * sizeof(_Complex double))) == NULL) 
    {
      jderrorhandler(300,"Res in jdher");
    }
@@ -199,15 +204,15 @@ int ISEED[4] = {2, 3, 5, 7};
    {
      jderrorhandler(300,"resnrm_old in jdher");
    }
- if((void*)(M = (complex *)malloc(jmax * jmax * sizeof(complex))) == NULL) 
+ if((void*)(M = (_Complex double *)malloc(jmax * jmax * sizeof(_Complex double))) == NULL) 
    {
      jderrorhandler(300,"M in jdher");
    }
- if((void*)(Vtmp = (complex *)malloc(jmax * jmax * sizeof(complex))) == NULL) 
+ if((void*)(Vtmp = (_Complex double *)malloc(jmax * jmax * sizeof(_Complex double))) == NULL) 
    {
      jderrorhandler(300,"Vtmp in jdher");
    }
- if((void*)(p_work = (complex *)malloc(lda * sizeof(complex))) == NULL) 
+ if((void*)(p_work = (_Complex double *)malloc(lda * sizeof(_Complex double))) == NULL) 
    {
      jderrorhandler(300,"p_work in jdher");
    }
@@ -240,7 +245,7 @@ int ISEED[4] = {2, 3, 5, 7};
      jderrorhandler(300,"actcorrits in jdher");
    }
  
- if((void*)(eigwork = (complex *)malloc(eigworklen * sizeof(complex))) == NULL) 
+ if((void*)(eigwork = (_Complex double *)malloc(eigworklen * sizeof(_Complex double))) == NULL) 
    {
      jderrorhandler(300,"eigwork in jdher");
    }
@@ -248,12 +253,12 @@ int ISEED[4] = {2, 3, 5, 7};
    {
      jderrorhandler(300,"rwork in jdher");
    }
- if((void*)(temp1_ = (complex *)malloc((lda+4) * sizeof(complex))) == NULL) 
+ if((void*)(temp1_ = (_Complex double *)malloc((lda+4) * sizeof(_Complex double))) == NULL) 
    {
      jderrorhandler(300,"temp1 in jdher");
    }
  temp1 = temp1_;
- if((void*)(dtemp = (double *)malloc(lda * sizeof(complex))) == NULL) 
+ if((void*)(dtemp = (double *)malloc(lda * sizeof(_Complex double))) == NULL) 
    {
      jderrorhandler(300,"dtemp in jdher");
    }
@@ -445,7 +450,7 @@ int ISEED[4] = {2, 3, 5, 7};
 	      _FT(zlaset)(fupl_u, &j, &j, &CZERO, &CZERO, M, &jmax, 1);
 	      for (act = 0; act < j; act++)
 		{
-		  M[act*jmax + act].re = s[act];
+		  M[act*jmax + act] = s[act];
 		}
 	      /* ... and U the Identity(jnew,jnew) */
 	      _FT(zlaset)(fupl_a, &j, &j, &CZERO, &CONE, U, &jmax, 1);
@@ -517,7 +522,7 @@ int ISEED[4] = {2, 3, 5, 7};
 	      _FT(zlaset)(fupl_a, &j, &j, &CZERO, &CONE, U, &jmax, 1);
 	      _FT(zlaset)(fupl_u, &j, &j, &CZERO, &CZERO, M, &jmax, 1);
 	      for (act = 0; act < j; act++)
-		M[act*jmax + act].re = s[act];
+		M[act*jmax + act] = s[act];
 	    }
 	} /* while(found) */    
       
@@ -540,8 +545,7 @@ int ISEED[4] = {2, 3, 5, 7};
 	  v = V + j*lda;
 	  for (cnt = 0; cnt < n; cnt ++)
 	    { 
-	      v[cnt].re = 0.;
-	      v[cnt].im = 0.;
+	      v[cnt] = (_Complex double)0.;
 	    }
 	  /* Adaptive accuracy and shift for the lin.solver. In case the
 	     residual is big, we don't need a too precise solution for the
@@ -579,7 +583,7 @@ int ISEED[4] = {2, 3, 5, 7};
 	  if(solver_flag == CG)
 	    {
 	      info = cg_her_su3vect((su3_vector*) v, (su3_vector*) r, linitmax, it_tol*it_tol, 0, 
-				    n*sizeof(complex)/sizeof(su3_vector),tslice, &Proj_A_psi_su3vect);
+				    n*sizeof(_Complex double)/sizeof(su3_vector),tslice, &Proj_A_psi_su3vect);
 	    }
 	  g_sloppy_precision = 0;
 	  
@@ -760,7 +764,7 @@ static void print_status_su3vect(int verbosity, int it, int k, int j, int kmax,
  *   avoid computation of zero eigenvalues.
  */
 
-static void sorteig_su3vect(int j, double S[], complex U[], int ldu, double tau,
+static void sorteig_su3vect(int j, double S[], _Complex double U[], int ldu, double tau,
 			    double dtemp[], int idx1[], int idx2[], int strategy){
   int i;
 
@@ -798,9 +802,9 @@ static void sorteig_su3vect(int j, double S[], complex U[], int ldu, double tau,
   /* sort eigenvectors (in place) */
   for (i = 0; i < j; i ++) {
     if (i != idx1[i]) {
-      memcpy(dtemp, U+i*ldu, j*sizeof(complex));
-      memcpy(U+i*ldu, U+idx1[i]*ldu, j*sizeof(complex));
-      memcpy(U+idx1[i]*ldu, dtemp, j*sizeof(complex));
+      memcpy(dtemp, U+i*ldu, j*sizeof(_Complex double));
+      memcpy(U+i*ldu, U+idx1[i]*ldu, j*sizeof(_Complex double));
+      memcpy(U+idx1[i]*ldu, dtemp, j*sizeof(_Complex double));
       idx1[idx2[i]] = idx1[i];
       idx2[idx1[i]] = idx2[i];
     }
@@ -819,10 +823,10 @@ void Proj_A_psi_su3vect(su3_vector * const y, su3_vector * const x, int tslice){
   _FT(daxpy)(&p_n2, &mtheta, (double*) x, &ONE, (double*) y, &ONE);
   /* p_work = Q^dagger*y */ 
   for(i = 0; i < p_k; i++) {
-    p_work[i] = scalar_prod_su3vect((su3_vector*) (p_Q+i*p_lda), (su3_vector*) y, p_n*sizeof(complex)/sizeof(su3_vector), 1);
+    p_work[i] = scalar_prod_su3vect((su3_vector*) (p_Q+i*p_lda), (su3_vector*) y, p_n*sizeof(_Complex double)/sizeof(su3_vector), 1);
   }
   /* y = y - Q*p_work */ 
-  _FT(zgemv)(fupl_n, &p_n, &p_k, &CMONE, p_Q, &p_lda, (complex*) p_work, &ONE, &CONE, (complex*) y, &ONE, 1);
+  _FT(zgemv)(fupl_n, &p_n, &p_k, &CMONE, p_Q, &p_lda, (_Complex double*) p_work, &ONE, &CONE, (_Complex double*) y, &ONE, 1);
 }
 
 #endif // WITHLAPH
