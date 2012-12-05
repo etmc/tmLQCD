@@ -163,7 +163,7 @@ discussed previously. Only the vectors $X$ and $Y$ need to be modified
 to  
 \begin{equation}
   \begin{split}
-    \label{eq:eo9}
+    \label{eq:sym9}
     X &= 
     \begin{pmatrix}
       -(M_{ee}^-)^{-1}M_{eo}(M_{oo}^-)^{-1}X_o \\ X_o\\
@@ -194,37 +194,41 @@ the even/odd decomposition is as follows
   \begin{split}
     Q^h &=
     \begin{pmatrix}
-      (\gamma_5+i\bar\mu\tau^3 -\bar\epsilon\tau^1) & Q^h_{eo}\\
-      Q^h_{oe} & (\gamma_5+i\bar\mu\tau^3 -\bar\epsilon\tau^1)\\
+      (\gamma_5+i\bar\mu\tau^3 -\bar\epsilon\gamma_5\tau^1) & Q^h_{eo}\\
+      Q^h_{oe} & (\gamma_5+i\bar\mu\tau^3 -\bar\epsilon\gamma_5\tau^1)\\
     \end{pmatrix} \\
     &=
     \begin{pmatrix}
       Q^h_{ee} & 0 \\
-      Q^h_{oe} & 0 \\
+      Q^h_{oe} & 1 \\
     \end{pmatrix}
     \cdot
     \begin{pmatrix}
       1 & (Q^h_{ee})^{-1}Q_{eo} \\
-      0 & Q^h_{oo} \\
+      0 & \hat Q^h_{oo} \\
     \end{pmatrix} \\
   \end{split}
 \end{equation}
-where $Q^h_{oo}$ is given in flavour space by
+where $\hat Q^h_{oo}$ is given in flavour space by
 \begin{equation*}
-  Q^h_{oo} = \gamma_5
+  \hat Q^h_{oo} = \gamma_5
   \begin{pmatrix}
     1 + i\bar\mu\gamma_5 -
     \frac{M_{oe}(1-i\bar\mu\gamma_5)M_{eo}}{1+\bar\mu^2-\bar\epsilon^2} & 
     -\bar\epsilon\left(1+\frac{M_{oe}M_{eo}}{1+\bar\mu^2-\bar\epsilon^2}\right) \\
     -\bar\epsilon\left(1+\frac{M_{oe}M_{eo}}{1+\bar\mu^2-\bar\epsilon^2}\right) & 
     1 - i\bar\mu\gamma_5 -
-    \frac{M_{oe}(1-i\bar\mu\gamma_5)M_{eo}}{1+\bar\mu^2-\bar\epsilon^2}\\
+    \frac{M_{oe}(1+i\bar\mu\gamma_5)M_{eo}}{1+\bar\mu^2-\bar\epsilon^2}\\
   \end{pmatrix}
 \end{equation*}
 with the previous definitions of $M_{eo}$ etc. The inplementation for
-the HMC is very similar to the mass degenerate case.
+the HMC is very similar to the mass degenerate case. $\hat Q^h$ has
+again a hermitian conjugate given by
+\[
+(\hat Q^h)^\dagger = \tau^1\ \hat Q^h\ \tau^1
+\]
 
-\subsubsection{Clover term and Twisted mass term}
+\subsubsection{Combining Clover and Twisted mass term}
 
 We start again with the lattice fermion action in the hopping
 parameter representation in the $\chi$-basis now including the clover
@@ -404,7 +408,7 @@ for this task needs to be devised.
 For the implementation it is useful to compute the term
 \begin{equation}
   \label{eq:Tee}
-  1 + \frac{i}{2} c_\mathrm{sw}
+  1+T_{a\alpha,b\beta} = 1 + \frac{i}{2} c_\mathrm{sw}
   \kappa\sigma_{\mu\nu}^{\alpha\beta}F_{\mu\nu}^{\alpha\beta}(x)
 \end{equation}  
 once for all $x$. This is implemented in {\ttfamily clover\_leaf.c} in
@@ -414,9 +418,10 @@ plus and minus $\mu$, respectively. It is easier to add the twisted
 mass term in later on. 
 
 The term in eq.~(\ref{eq:Tee}) represents two complex $6\times6$ matrices
-per site. As the off-diagonal $3\times3$ matrices are just inverse to
-each other, we get away with storing two times three $3\times3$
-complex matrices. These are stored in the array {\ttfamily
+per site. As for each $6\times6$ matrix the off-diagonal $3\times3$
+matrices are just hermitian conjugate to each other -- $1+T$ is
+hermitian --, we get away with storing two times three 
+$3\times3$ complex matrices. These are stored in the array {\ttfamily
   sw[VOLUME][3][2]} of type {\ttfamily su3}. Here, {\ttfamily
   sw[x][0][0]} is the upper diagonal $3\times3$ matrix, {\ttfamily
   sw[x][1][0]} the upper off-diagnoal $3\times3$ matrix and {\ttfamily
@@ -485,6 +490,66 @@ The $m_i$ and $p_i$ are then passed on to the function {\ttfamily
 whereafter the traceless antihermitian part of it is
 computed. Finally, $\delta T_{ee}$ is computed and combined with the
 insertion matrices.
+
+\subsubsection{Combining Clover and Nondegenerate Twisted mass term}
+
+Now we have
+\[
+\hat Q^h_{oo} = \gamma_5(M_{oo}^h -
+(M_{oe}^h\ (M_{ee}^h)^{-1}\ M_{eo}^h)\,,
+\]
+with
+\begin{equation}
+  M_{oo|ee}^h = 1+T_{oo|ee}+i\bar\mu\gamma_5\tau^3-\bar\epsilon\tau^1\,.
+\end{equation}
+Because $1+T_{ee}$ is hermitian, we can invert $M_{ee}^h$ by
+\begin{equation}
+  \label{eq:ndSdet}
+  (1+T_{ee}+i\bar\mu\gamma_5\tau^3-\bar\epsilon\tau^1)^{-1} =
+  \frac{(1+T_{ee}-i\bar\mu\gamma_5\tau^3+\bar\epsilon\tau^1)}
+  {(1+T_{ee})^2 + \bar\mu^2 - \bar\epsilon^2}\,.
+\end{equation}
+In practice we compute $((1+T_{ee})^2 + \bar\mu^2 -
+\bar\epsilon^2)^{-1}$ and store the result in the first {\ttfamily
+  VOLUME/2} elements of the array {\ttfamily sw\_inv}. Wherever the
+clover terms needs to be applied we then multiply with  $((1+T_{ee})^2
++ \bar\mu^2 - \bar\epsilon^2)^{-1}$ and then with the nominator in
+eq.~(\ref{eq:ndSdet}). One could save computing time here for the
+price of using more memory by storing the full inverse. Actually, it
+would be only slightly more than in the two flavour case: in addition
+we would only have to store $\bar\epsilon((1+T_{ee})^2
++ \bar\mu^2 - \bar\epsilon^2)^{-1}$. This would also allow to re-use a
+lot of the $N_f=2$ flavour implementation.
+
+The clover part $1+T_{ee}$ is identical to the one in the $N_f=2$
+flavour case and stored in the array {\ttfamily sw}. 
+
+The determinant we have to compute is
+\[
+\det(Q^h) =
+\det[\gamma_5(1+T_{ee}+i\bar\mu\gamma_5\tau^3-\bar\epsilon\tau^1)]\
+\det[\hat Q^h_{oo}]
+\]
+For the variation of the first term we have to compute now
+\begin{equation}
+  \label{eq:ndtrdiracdet}
+  \tr_\mathrm{dirac, flavour}[\ i\sigma_{\mu\nu}(1+T_{ee}(x) +
+  i\bar\mu\gamma_5\tau^3 - \bar\epsilon\tau^1)^{-1}\ ]\, ,
+\end{equation}
+which is equal to
+\begin{equation}
+ \tr_\mathrm{dirac,flavour}\left[\ i\sigma_{\mu\nu}
+   \frac{(1+T_{ee}-i\bar\mu\gamma_5\tau^3+\bar\epsilon\tau^1)}
+  {(1+T_{ee})^2 + \bar\mu^2 - \bar\epsilon^2}\ \right]\,.
+\end{equation}
+The trace in flavour simplifies the computation to
+\begin{equation}
+ \tr_\mathrm{dirac}\left[\ i\sigma_{\mu\nu}
+   \frac{2(1+T_{ee})}
+  {(1+T_{ee})^2 + \bar\mu^2 - \bar\epsilon^2}\ \right]\,.
+\end{equation}
+This can be treated analogously to the degenerate case described
+above.
 
 \subsection{Inversion}
 

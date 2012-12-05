@@ -23,15 +23,16 @@
 void gauss_vector(double v[],int n);
 su3_vector random_su3_vector(void);
 su3_vector unif_su3_vector(void);
-spinor random_spinor(void);
+void random_spinor(spinor * const s);
 void unit_spinor_field(const int k);
 
-void random_spinor_field_lexic(spinor * const k);
+void random_spinor_field_lexic(spinor * const k, const int repro);
 void random_spinor_field(spinor * const k, const int V, const int repro);
+void random_spinor_field_eo(spinor * const k, const int repro);
 void z2_random_spinor_field(spinor * const k, const int N);
 void zero_spinor_field(spinor * const k, const int N);
 void constant_spinor_field(spinor * const k, const int p, const int N);
-su3 random_su3(void);
+void random_su3(su3 * const u);
 void unit_g_gauge_field(void);
 void random_gauge_field(const int repro);
 void set_spinor_field(int k, const double c);

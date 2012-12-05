@@ -35,7 +35,7 @@
 #include "su3spinor.h"
 #include "expo.h"
 #include "sse.h"
-#include "xchange.h"
+#include "xchange/xchange.h"
 #include "get_rectangle_staples.h"
 #include "gamma.h"
 #include "get_staples.h"
@@ -105,120 +105,86 @@ double moment_energy(su3adj ** const momenta) {
 double init_momenta(const int repro, su3adj ** const momenta) {
   
   su3adj *xm;
-  int i, mu;
+  int i, mu, t0, x, y, z, X, Y, Z, t, id = 0;
+  int coords[4];
 #ifdef MPI
   int k;
   int rlxd_state[105];
 #endif
-  static double y[8];
-  static double tt,tr,ts,kc,ks,sum;
+  double ALIGN yy[8];
+  double ALIGN tt, tr, ts, kc = 0., ks = 0., sum;
   
-  if(repro == 1) {
-    if(g_proc_id==0){
-      kc=0.; 
-      ks=0.;
-      for(i=0;i<VOLUME;i++){ 
-	for(mu=0;mu<4;mu++){
-	  sum=0.;
-	  xm=&momenta[i][mu];
-	  gauss_vector(y,8);
-	  /* from the previous line we get exp(-y^2) distribution */
-	  /* this means that <y^2> = sigma^2 = 1/2 */
-	  /* in order to get <y^2> = 1 distribution ==> *sqrt(2) */
-	  (*xm).d1=1.4142135623731*y[0];
-	  (*xm).d2=1.4142135623731*y[1];
-	  sum+=(*xm).d1*(*xm).d1+(*xm).d2*(*xm).d2;
-	  (*xm).d3=1.4142135623731*y[2];
-	  (*xm).d4=1.4142135623731*y[3];
-	  sum+=(*xm).d3*(*xm).d3+(*xm).d4*(*xm).d4;
-	  (*xm).d5=1.4142135623731*y[4];
-	  (*xm).d6=1.4142135623731*y[5];
-	  sum+=(*xm).d5*(*xm).d5+(*xm).d6*(*xm).d6;
-	  (*xm).d7=1.4142135623731*y[6];
-	  (*xm).d8=1.4142135623731*y[7];
-	  sum+=(*xm).d7*(*xm).d7+(*xm).d8*(*xm).d8;
-	  tr=sum+kc;
-	  ts=tr+ks;
-	  tt=ts-ks;
-	  ks=ts;
-	  kc=tr-tt;
+  if(repro) {
+#ifdef MPI
+    if(g_proc_id == 0) {
+      rlxd_get(rlxd_state);
+    }
+    MPI_Bcast(rlxd_state, 105, MPI_INT, 0, MPI_COMM_WORLD);
+    rlxd_reset(rlxd_state);
+#endif
+    for(t0 = 0; t0 < g_nproc_t*T; t0++) {
+      t = t0 - T*g_proc_coords[0];
+      coords[0] = t0 / T;
+      for(x = 0; x < g_nproc_x*LX; x++) {
+	X = x - g_proc_coords[1]*LX;
+	coords[1] = x / LX;
+	for(y = 0; y < g_nproc_y*LY; y++) {
+	  Y = y - g_proc_coords[2]*LY;
+	  coords[2] = y / LY;
+	  for(z = 0; z < g_nproc_z*LZ; z++) {
+	    Z = z - g_proc_coords[3]*LZ;
+	    coords[3] = z / LZ;
+#ifdef MPI
+	    MPI_Cart_rank(g_cart_grid, coords, &id);
+#endif
+	    if(g_cart_id == id) i = g_ipt[t][X][Y][Z];
+	    for(mu = 0; mu < 4; mu++) {
+	      gauss_vector(yy,8);
+	      if(g_cart_id == id) {
+		sum = 0.;
+		xm = &momenta[i][mu];
+		(*xm).d1 = 1.4142135623731*yy[0];
+		(*xm).d2 = 1.4142135623731*yy[1];
+		sum += (*xm).d1*(*xm).d1+(*xm).d2*(*xm).d2;
+		(*xm).d3 = 1.4142135623731*yy[2];
+		(*xm).d4 = 1.4142135623731*yy[3];
+		sum += (*xm).d3*(*xm).d3+(*xm).d4*(*xm).d4;
+		(*xm).d5 = 1.4142135623731*yy[4];
+		(*xm).d6 = 1.4142135623731*yy[5];
+		sum += (*xm).d5*(*xm).d5+(*xm).d6*(*xm).d6;
+		(*xm).d7 = 1.4142135623731*yy[6];
+		(*xm).d8 = 1.4142135623731*yy[7];
+		sum += (*xm).d7*(*xm).d7+(*xm).d8*(*xm).d8;
+		tr = sum+kc;
+		ts = tr+ks;
+		tt = ts-ks;
+		ks = ts;
+		kc = tr-tt;
+	      }
+	    }
+	  }
 	}
       }
-#ifdef MPI
-      /* send the state for the random-number generator to 1 */
-      rlxd_get(rlxd_state);
-      MPI_Send(&rlxd_state[0], 105, MPI_INT, 1, 101, MPI_COMM_WORLD);
-#endif
     }
-    
-#ifdef MPI
-    if(g_proc_id != 0){
-      MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_proc_id-1, 101, MPI_COMM_WORLD, &status);
-      rlxd_reset(rlxd_state);
-      kc=0.; ks=0.;
-      for(i=0;i<VOLUME;i++){ 
-	for(mu=0;mu<4;mu++){
-	  sum=0.;
-	  xm=&momenta[i][mu];
-	  gauss_vector(y,8);
-	  (*xm).d1=1.4142135623731*y[0];
-	  (*xm).d2=1.4142135623731*y[1];
-	  sum+=(*xm).d1*(*xm).d1+(*xm).d2*(*xm).d2;
-	  (*xm).d3=1.4142135623731*y[2];
-	  (*xm).d4=1.4142135623731*y[3];
-	  sum+=(*xm).d3*(*xm).d3+(*xm).d4*(*xm).d4;
-	  (*xm).d5=1.4142135623731*y[4];
-	  (*xm).d6=1.4142135623731*y[5];
-	  sum+=(*xm).d5*(*xm).d5+(*xm).d6*(*xm).d6;
-	  (*xm).d7=1.4142135623731*y[6];
-	  (*xm).d8=1.4142135623731*y[7];
-	  sum+=(*xm).d7*(*xm).d7+(*xm).d8*(*xm).d8;
-	  tr=sum+kc;
-	  ts=tr+ks;
-	  tt=ts-ks;
-	  ks=ts;
-	  kc=tr-tt;
-	}
-      }
-      /* send the state fo the random-number 
-	 generator to next processor */
-      
-      k=g_proc_id+1; 
-      if(k==g_nproc){ 
-	k=0;
-      }
-      rlxd_get(rlxd_state);
-      MPI_Send(&rlxd_state[0], 105, MPI_INT, k, 101, MPI_COMM_WORLD);
-    }
-#endif
     kc=0.5*(ks+kc);
-    
-#ifdef MPI
-    if(g_proc_id == 0){
-      MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_nproc-1, 101, MPI_COMM_WORLD, &status);
-      rlxd_reset(rlxd_state);
-    }
-#endif
   }
   else {
-    kc=0.; 
-    ks=0.;
-    for(i=0;i<VOLUME;i++){ 
-      for(mu=0;mu<4;mu++){
+    for(i = 0; i < VOLUME; i++) { 
+      for(mu = 0; mu < 4; mu++) {
 	sum=0.;
 	xm=&momenta[i][mu];
-	gauss_vector(y,8);
-	(*xm).d1=1.4142135623731*y[0];
-	(*xm).d2=1.4142135623731*y[1];
+	gauss_vector(yy,8);
+	(*xm).d1=1.4142135623731*yy[0];
+	(*xm).d2=1.4142135623731*yy[1];
 	sum+=(*xm).d1*(*xm).d1+(*xm).d2*(*xm).d2;
-	(*xm).d3=1.4142135623731*y[2];
-	(*xm).d4=1.4142135623731*y[3];
+	(*xm).d3=1.4142135623731*yy[2];
+	(*xm).d4=1.4142135623731*yy[3];
 	sum+=(*xm).d3*(*xm).d3+(*xm).d4*(*xm).d4;
-	(*xm).d5=1.4142135623731*y[4];
-	(*xm).d6=1.4142135623731*y[5];
+	(*xm).d5=1.4142135623731*yy[4];
+	(*xm).d6=1.4142135623731*yy[5];
 	sum+=(*xm).d5*(*xm).d5+(*xm).d6*(*xm).d6;
-	(*xm).d7=1.4142135623731*y[6];
-	(*xm).d8=1.4142135623731*y[7];
+	(*xm).d7=1.4142135623731*yy[6];
+	(*xm).d8=1.4142135623731*yy[7];
 	sum+=(*xm).d7*(*xm).d7+(*xm).d8*(*xm).d8;
 	tr=sum+kc;
 	ts=tr+ks;
@@ -228,8 +194,6 @@ double init_momenta(const int repro, su3adj ** const momenta) {
       }
     }
     kc=0.5*(ks+kc);
-    
-
   }
 #ifdef MPI
   MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);

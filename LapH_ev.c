@@ -49,12 +49,10 @@
 #include "geometry_eo.h"
 #include "read_input.h"
 #include "start.h"
-#include "xchange.h"
-#include "init_gauge_field.h"
-#include "init_geometry_indices.h"
+#include "xchange/xchange.h"
+#include "init/init.h"
 #include "mpi_init.h"
 #include "solver/eigenvalues_Jacobi.h"
-#include "init_jacobi_field.h"
 
 int main(int argc,char *argv[])
 {

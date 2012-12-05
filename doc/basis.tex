@@ -1,0 +1,75 @@
+\subsection{QCD on a lattice}
+
+Quantum Chromodynamics on a hyper-cubic Euclidean space-time lattice
+of size $L^3\times T$ with lattice spacing $a$ is formally described
+by the action
+\begin{equation}
+  \label{eq:action}
+  S = S_\mathrm{G}[U] + a^4 \sum_x \bar\psi\ D[U]\ \psi
+\end{equation}
+with $S_\mathrm{G}$ some suitable discretisation of the the Yang-Mills
+action $F_{\mu\nu}^2/4$~\cite{Yang:1954ek}. The particular
+implementation we are  using can be found below in section 4.2 and
+consists of  plaquette and rectangular shaped Wilson loops with
+particular  coefficients. $D$ is a discretisation of the Dirac
+operator, for which Wilson originally proposed~\cite{Wilson:1974sk} to
+use the 
+so called Wilson Dirac operator
+\begin{equation}
+  \label{eq:DW}
+  D_W[U] = \frac{1}{2}\left[\gamma_\mu\left(\nabla_\mu +
+    \nabla^*_\mu\right) -a\nabla^*_\mu\nabla_\mu \right]
+\end{equation}
+with $\nabla_\mu$ and $\nabla_\mu^*$
+the forward and backward gauge covariant difference operators,
+respectively:
+\begin{equation}
+  \label{eq:covariant}
+  \begin{split}
+  \nabla_\mu\psi(x) &= \frac{1}{a}\Bigl[U(x,x+a\hat \mu)\psi(x+a \hat \mu) -
+  \psi(x)\Bigr]\, , \\    
+  \nabla_\mu^* \psi(x) &=
+  \frac{1}{a}\Bigl[\psi(x)-U^\dagger(x,x-a\hat\mu)\psi(x-a\hat\mu)\Bigr]\, ,\\
+  \end{split}
+\end{equation}
+where we denote the $\mathrm{SU}(3)$ link variables by $U_{x,\mu}$.
+We shall set $a\equiv 1$ in the following for convenience. 
+Discretising the theory is by far not a unique procedure. Instead of Wilson's
+original formulation one may equally well chose the 
+Wilson twisted mass formulation and the corresponding Dirac
+operator~\cite{Frezzotti:2000nk}
+\begin{equation}
+  \label{eq:Dtm}
+  D_\mathrm{tm} = (D_W[U] + m_0)\ 1_f + i \mu_q\gamma_5\tau^3
+\end{equation}
+for a mass degenerate doublet of quarks. We denote by $m_0$ the bare
+(Wilson) quark mass, $\mu_q$ is the bare twisted
+mass parameter, $\tau^i$ the $i$-th Pauli matrix and $1_f$ the
+unit matrix acting in flavour space (see appendix~\ref{sec:gammas} for
+our convention). In the framework of Wilson twisted mass QCD only
+flavour doublets of quarks can be simulated, however, the two quarks
+do not need to be degenerate in mass. The corresponding mass
+non-degenerate flavour doublet reads~\cite{Frezzotti:2003xj}
+\begin{equation}
+  \label{eq:Dh}
+  D_h(\bar\mu, \bar\epsilon)  = D_\mathrm{W}\ 1_f +
+  i\bar\mu\gamma_5\tau^3 - \bar\epsilon \tau^1 \, .
+\end{equation}
+It has the property
+\[
+D_h^\dagger = \tau^1\gamma_5 D_h \gamma_5 \tau^1\,.
+\]
+Note that this notation is not unique. Equivalently -- as used in
+Ref.~\cite{Chiarappa:2006ae} -- one may write
+\begin{equation}
+  \label{eq:altDh}
+  D_h'(\mu_\sigma,\mu_\delta) = D_\mathrm{W}\cdot 1_f +
+  i\gamma_5\mu_\sigma\tau^1 + \mu_\delta \tau^3\, ,
+\end{equation}
+which is related to $D_h$ by $D_h' = (1+i\tau^2)D_h(1-i\tau^2)/2$
+and $(\mu_\sigma,\mu_\delta)\to(\bar\mu, -\bar\epsilon)$. 
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End: 
