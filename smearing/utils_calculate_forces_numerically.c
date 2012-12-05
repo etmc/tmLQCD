@@ -23,18 +23,17 @@
 
 #include <dirty_shameful_business.h>
 
-void calculate_forces_numerically()
+void calculate_forces_numerically(su3adj *result, int * mnllist, const int no)
 {
   /* Set up the hamiltonian field */
   hamiltonian_field_t hf;
   hf.gaugefield = g_gauge_field;
-  hf.momenta = moment;
-  hf.derivative = df0;
+  hf.momenta = 0;
+  hf.derivative = 0;
   hf.update_gauge_copy = g_update_gauge_copy;
   hf.update_gauge_energy = g_update_gauge_energy;
   hf.update_rectangle_energy = g_update_rectangle_energy;
   hf.traj_counter = 0;
-  integrator_set_fields(&hf);
   
   /* Get some memory set aside for gauge fields and copy our current field */
   gauge_field_t original = get_gauge_field();
@@ -50,21 +49,19 @@ void calculate_forces_numerically()
     smear(smearing_control_monomial[s_type], original);
     ohnohack_remap_g_gauge_field(smearing_control_monomial[s_type]->result);
     
-    for(int i = 0; i < Integrator.no_timescales; i++)
-    {
-      for(int j = 0; j < Integrator.no_mnls_per_ts[i]; j++) 
+    for(int i = 0; i < no; ++i)
+      if (monomial_list[ mnllist[i] ].smearing == s_type)
       {
-        if (monomial_list[ Integrator.mnls_per_ts[i][j] ].smearing == s_type)
-          h_initial += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j], &hf);
+        g_update_gauge_energy = 1;
+        g_update_gauge_copy = 1;
+        h_initial += monomial_list[ mnllist[i] ].accfunction(mnllist[i], &hf);
       }
-    }
   }
   ohnohack_remap_g_gauge_field(original);
   
   su3adj rotation;
-  su3adj result;
   double *ar_rotation = (double*)&rotation;
-  double *ar_result = (double*)&result;
+  double *ar_result = (double*)result;
   double const epsilon = 1e-5;
    
   memmove(rotated, original, sizeof(su3_tuple) * (VOLUMEPLUSRAND + g_dbw2rand) + 1);
@@ -82,7 +79,7 @@ void calculate_forces_numerically()
     
     _su3_times_su3(rotated[0][0], mat_rotation, old_value);
     
-    /* Calculate the action on the rotated field */
+    /* Calculate the action on the rotated field for the relevant monomials */
     double h_rotated = 0.;
     
     for (int s_type = 0; s_type < no_smearings_monomial; ++s_type)
@@ -90,23 +87,18 @@ void calculate_forces_numerically()
       smear(smearing_control_monomial[s_type], rotated);
       ohnohack_remap_g_gauge_field(smearing_control_monomial[s_type]->result);
       
-      for(int i = 0; i < Integrator.no_timescales; i++)
-      {
-        for(int j = 0; j < Integrator.no_mnls_per_ts[i]; j++) 
+      for(int i = 0; i < no; ++i)
+        if (monomial_list[ mnllist[i] ].smearing == s_type)
         {
-          if (monomial_list[ Integrator.mnls_per_ts[i][j] ].smearing == s_type)
-            h_rotated += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j], &hf);
+          g_update_gauge_energy = 1;
+          g_update_gauge_copy = 1;
+          h_rotated += monomial_list[ mnllist[i] ].accfunction(mnllist[i], &hf);
         }
-      }
     }
     ohnohack_remap_g_gauge_field(g_gf);
     
     ar_result[component] = (h_rotated - h_initial) / epsilon;
   }
-
-  fprintf(stderr, "\n[DEBUG] Result of numerical force calculation!\n");
-  for (int component = 0; component < 8; ++component)
-    fprintf(stderr, "        F[%d] = %f\n", component, ar_result[component]);
   
   return_gauge_field(&rotated);
   return_gauge_field(&original);  

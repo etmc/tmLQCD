@@ -115,11 +115,14 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
 #endif
 
   /* Debugging code inserted here */
-  calculate_forces_numerically();
-  double *ar_result = (double*)&df[0][0];
-  fprintf(stderr, "\n[DEBUG] Result of analytical force calculation!\n");
+  su3adj num_eval;
+  calculate_forces_numerically(&num_eval, mnllist, no);
+  double *ar_df = (double*)&df[0][0];
+  double *ar_ne = (double*)&num_eval;
+  fprintf(stderr, "[DEBUG] Comparison of force calculation!\n");
+  fprintf(stderr,   "        Analytical vs. numerical\n");
   for (int component = 0; component < 8; ++component)
-    fprintf(stderr, "        F[%d] = %f\n", component, ar_result[component]);
+    fprintf(stderr, "    [%d]  %+6.4f <-> %+6.4f\n", component, ar_df[component], ar_ne[component]);
 
 #ifdef OMP
 #pragma omp parallel for

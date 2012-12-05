@@ -20,6 +20,6 @@ void cayley_hamilton_exponent_with_force_terms(su3 *expiQ, su3 *B1, su3 *B2, _Co
 void print_su3(su3 *in);
 void print_config_to_screen(gauge_field_t in);
 
-void calculate_forces_numerically();
+void calculate_forces_numerically(su3adj *result, int * mnllist, const int no);
 
 #include "utils.inline"
