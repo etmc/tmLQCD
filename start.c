@@ -78,7 +78,7 @@
 #include "ranlxs.h"
 #include "start.h"
 
-void gauss_vector(double v[],int n)
+static void gauss_vector(double v[],int n)
 {
    int k;
    double r[2];
@@ -106,6 +106,17 @@ void gauss_vector(double v[],int n)
    }
 }
 
+/* produce a double array of z2 noise of length N */
+static void z2_vector(double *v, const int N) {
+  ranlxd(v,N);
+  for (int i = 0; i < N; ++i) {
+    if(v[i] < 0.5)
+      v[i]=1/sqrt(2);
+    else
+      v[i]=-1/sqrt(2);
+  }
+  return;
+} 
 
 static su3 unit_su3(void)
 {
@@ -255,8 +266,7 @@ void random_spinor_field_lexic(spinor * const k, const int repro) {
 	      gauss_vector(v, 24);
 	      s = k + g_ipt[tt][X][Y][Z];
 	      memcpy(s, v, 24*sizeof(double));
-	    }
-	    else {
+	    } else {
 	      ranlxd(v,24);
 	    }
 	  }
@@ -417,42 +427,64 @@ void random_spinor_field(spinor * const k, const int V, const int repro) {
   return;
 }
 
-/* Function provides a z2 random spinor field of length N with */
-void z2_random_spinor_field(spinor * const k, const int N) {
+/* Function provides a spinor field of length VOLUME
+   filled with Z2 noise */
 
-  int ix;
+void z2_random_spinor_field_lexic(spinor * const k, const int repro) {
+  int x, y, z, t, X, Y, Z, tt, id=0;
+#ifdef MPI
+  int rlxd_state[105];
+#endif
+  int coords[4];
   spinor *s;
-  double r[24];
-  double z2noise[24];
-  int rv=0;
+  double v[24];
 
-  s = k;
-  for (ix = 0;ix < N; ix++) {
-    ranlxd(r,24);
-
-    for (rv = 0  ; rv < 24; rv++){
-      if(r[rv] < 0.5)
-        z2noise[rv]=1/sqrt(2);
-      else
-        z2noise[rv]=-1/sqrt(2);
+  if(repro) {
+#ifdef MPI
+    if(g_proc_id == 0) {
+      rlxd_get(rlxd_state);
     }
-    s->s0.c0 = z2noise[0] + z2noise[1] * I;
-    s->s0.c1 = z2noise[2] + z2noise[3] * I;
-    s->s0.c2 = z2noise[4] + z2noise[5] * I;
-    s->s1.c0 = z2noise[6] + z2noise[7] * I;
-    s->s1.c1 = z2noise[8] + z2noise[9] * I;
-    s->s1.c2 = z2noise[10] + z2noise[11] * I;
-    s->s2.c0 = z2noise[12] + z2noise[13] * I;
-    s->s2.c1 = z2noise[14] + z2noise[15] * I;
-    s->s2.c2 = z2noise[16] + z2noise[17] * I;
-    s->s3.c0 = z2noise[18] + z2noise[19] * I;
-    s->s3.c1 = z2noise[20] + z2noise[21] * I;
-    s->s3.c2 = z2noise[22] + z2noise[23] * I;
-    s++;
+    MPI_Bcast(rlxd_state, 105, MPI_INT, 0, MPI_COMM_WORLD);
+    if(g_proc_id != 0) {
+      rlxd_reset(rlxd_state);
+    }
+#endif
+    for(t = 0; t < g_nproc_t*T; t++) {
+      tt = t - g_proc_coords[0]*T;
+      coords[0] = t / T;
+      for(x = 0; x < g_nproc_x*LX; x++) {
+	X = x - g_proc_coords[1]*LX; 
+	coords[1] = x / LX;
+	for(y = 0; y < g_nproc_y*LY; y++) {
+	  Y = y - g_proc_coords[2]*LY;
+	  coords[2] = y / LY;
+	  for(z = 0; z < g_nproc_z*LZ; z++) {
+	    Z = z - g_proc_coords[3]*LZ;
+	    coords[3] = z / LZ;
+#ifdef MPI
+	    MPI_Cart_rank(g_cart_grid, coords, &id);
+#endif
+	    if(g_cart_id == id) {
+	      z2_vector(v, 24);
+	      s = k + g_ipt[tt][X][Y][Z];
+	      memcpy(s, v, 24*sizeof(double));
+	    } else {
+	      ranlxd(v,24);
+	    }
+	  }
+	}
+      }
+    }
+  }
+  else {
+    for(x = 0; x < VOLUME; x++) {
+      z2_vector(v, 24);
+      s = k + x;
+      memcpy(s, v, 24*sizeof(double));
+    }
   }
   return;
 }
-
 
 /* Function provides a zero spinor field of length N with */
 void zero_spinor_field(spinor * const k, const int N)
@@ -594,6 +626,104 @@ void random_gauge_field(const int repro) {
   g_update_gauge_energy = 1;
   g_update_rectangle_energy = 1;
   return;
+}
+
+/* writes gaussian distributed random momenta of length VOLUME into momenta array
+   and returns their energy contribution */
+double random_su3adj_field(const int repro, su3adj ** const momenta) {
+  su3adj *xm;
+  int i, mu, t0, x, y, z, X, Y, Z, t, id = 0;
+  int coords[4];
+#ifdef MPI
+  int k;
+  int rlxd_state[105];
+#endif
+  double ALIGN yy[8];
+  double ALIGN tt, tr, ts, kc = 0., ks = 0., sum;
+  
+  if(repro) {
+#ifdef MPI
+    if(g_proc_id == 0) {
+      rlxd_get(rlxd_state);
+    }
+    MPI_Bcast(rlxd_state, 105, MPI_INT, 0, MPI_COMM_WORLD);
+    rlxd_reset(rlxd_state);
+#endif
+    for(t0 = 0; t0 < g_nproc_t*T; t0++) {
+      t = t0 - T*g_proc_coords[0];
+      coords[0] = t0 / T;
+      for(x = 0; x < g_nproc_x*LX; x++) {
+	X = x - g_proc_coords[1]*LX;
+	coords[1] = x / LX;
+	for(y = 0; y < g_nproc_y*LY; y++) {
+	  Y = y - g_proc_coords[2]*LY;
+	  coords[2] = y / LY;
+	  for(z = 0; z < g_nproc_z*LZ; z++) {
+	    Z = z - g_proc_coords[3]*LZ;
+	    coords[3] = z / LZ;
+#ifdef MPI
+	    MPI_Cart_rank(g_cart_grid, coords, &id);
+#endif
+	    if(g_cart_id == id) i = g_ipt[t][X][Y][Z];
+	    for(mu = 0; mu < 4; mu++) {
+	      gauss_vector(yy,8);
+	      if(g_cart_id == id) {
+		sum = 0.;
+		xm = &momenta[i][mu];
+		(*xm).d1 = 1.4142135623731*yy[0];
+		(*xm).d2 = 1.4142135623731*yy[1];
+		sum += (*xm).d1*(*xm).d1+(*xm).d2*(*xm).d2;
+		(*xm).d3 = 1.4142135623731*yy[2];
+		(*xm).d4 = 1.4142135623731*yy[3];
+		sum += (*xm).d3*(*xm).d3+(*xm).d4*(*xm).d4;
+		(*xm).d5 = 1.4142135623731*yy[4];
+		(*xm).d6 = 1.4142135623731*yy[5];
+		sum += (*xm).d5*(*xm).d5+(*xm).d6*(*xm).d6;
+		tr = sum+kc;
+		ts = tr+ks;
+		tt = ts-ks;
+		ks = ts;
+		kc = tr-tt;
+	      }
+	    }
+	  }
+	}
+      }
+    }
+    kc=0.5*(ks+kc);
+  }
+  else {
+    for(i = 0; i < VOLUME; i++) { 
+      for(mu = 0; mu < 4; mu++) {
+	sum=0.;
+	xm=&momenta[i][mu];
+	gauss_vector(yy,8);
+	(*xm).d1=1.4142135623731*yy[0];
+	(*xm).d2=1.4142135623731*yy[1];
+	sum+=(*xm).d1*(*xm).d1+(*xm).d2*(*xm).d2;
+	(*xm).d3=1.4142135623731*yy[2];
+	(*xm).d4=1.4142135623731*yy[3];
+	sum+=(*xm).d3*(*xm).d3+(*xm).d4*(*xm).d4;
+	(*xm).d5=1.4142135623731*yy[4];
+	(*xm).d6=1.4142135623731*yy[5];
+	sum+=(*xm).d5*(*xm).d5+(*xm).d6*(*xm).d6;
+	(*xm).d7=1.4142135623731*yy[6];
+	(*xm).d8=1.4142135623731*yy[7];
+	sum+=(*xm).d7*(*xm).d7+(*xm).d8*(*xm).d8;
+	tr=sum+kc;
+	ts=tr+ks;
+	tt=ts-ks;
+	ks=ts;
+	kc=tr-tt;
+      }
+    }
+    kc=0.5*(ks+kc);
+  }
+#ifdef MPI
+  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  return ks;
+#endif
+  return kc;
 }
 
 void set_spinor_point(spinor * s, const double c)
