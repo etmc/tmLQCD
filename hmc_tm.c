@@ -338,7 +338,7 @@ int main(int argc,char *argv[]) {
 #endif
 
   /* Initialise random number generator */
-  start_ranlux(rlxd_level, random_seed^(nstore+1) );
+  start_ranlux(rlxd_level, random_seed^nstore );
 
   /* Set up the gauge field */
   /* continue and restart */
