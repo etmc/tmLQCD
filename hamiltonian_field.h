@@ -32,6 +32,7 @@ typedef struct {
   int update_gauge_copy;
   int update_gauge_energy;
   int update_rectangle_energy;
+  int traj_counter;
 } hamiltonian_field_t;
 
 

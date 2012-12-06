@@ -24,7 +24,7 @@
 #include "solver/solver.h"
 #include "solver/jdher.h"
 #include "solver/eigenvalues.h"
-#include "Dov_proj.h"
+#include "operator/Dov_proj.h"
 #include "gamma.h"
 #include "index_jd.h"
 

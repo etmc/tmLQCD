@@ -653,6 +653,18 @@ _sse_store_up(r);
   (t).c21 = (u).c2 * conj((v).c1);	\
   (t).c22 = (u).c2 * conj((v).c2);
 
+#define _mvector_tensor_vector(t,u,v)	\
+  (t).c00 = -(u).c0 * conj((v).c0);	\
+  (t).c01 = -(u).c0 * conj((v).c1);	\
+  (t).c02 = -(u).c0 * conj((v).c2);	\
+  (t).c10 = -(u).c1 * conj((v).c0);	\
+  (t).c11 = -(u).c1 * conj((v).c1);	\
+  (t).c12 = -(u).c1 * conj((v).c2);	\
+  (t).c20 = -(u).c2 * conj((v).c0);	\
+  (t).c21 = -(u).c2 * conj((v).c1);	\
+  (t).c22 = -(u).c2 * conj((v).c2);
+
+
 #define _vector_tensor_vector_add(t, u, v, w, z) \
   (t).c00 = (u).c0 * conj((v).c0) + (w).c0 * conj((z).c0) ;	\
   (t).c01 = (u).c0 * conj((v).c1) + (w).c0 * conj((z).c1);	\

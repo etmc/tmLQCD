@@ -26,13 +26,11 @@
 #include <stdio.h>
 #include <math.h>
 #include "global.h"
-#include "linsolve.h"
 #include "linalg_eo.h"
 #include "start.h"
-#include "tm_operators.h"
+#include "operator/tm_operators.h"
+#include "operator/tm_operators_nd.h"
 #include "chebyshev_polynomial.h"
-#include "Nondegenerate_Matrix.h"
-
 
 #define PI 3.141592653589793
 
@@ -173,8 +171,8 @@ void QdaggerQ_power(spinor *R_s, spinor *R_c, double *c, int n, spinor *S_s, spi
 	 assign(&auxc[0], &dc[0], VOLUME/2);
 /*       }  */
        
-       QdaggerNon_degenerate(&aux2s[0], &aux2c[0], &auxs[0], &auxc[0]);
-       QNon_degenerate(&R_s[0], &R_c[0], &aux2s[0], &aux2c[0]);
+       Qtm_dagger_ndpsi(&aux2s[0], &aux2c[0], &auxs[0], &auxc[0]);
+       Qtm_ndpsi(&R_s[0], &R_c[0], &aux2s[0], &aux2c[0]);
        temp1=-1.0;
        temp2=c[j];
        assign_mul_add_mul_add_mul_add_mul_r(&ds[0] , &R_s[0], &dds[0], &aux3s[0], fact2, fact1, temp1, temp2,VOLUME/2);
@@ -187,8 +185,8 @@ void QdaggerQ_power(spinor *R_s, spinor *R_c, double *c, int n, spinor *S_s, spi
      assign(&R_s[0], &ds[0],VOLUME/2);   
      assign(&R_c[0], &dc[0],VOLUME/2);  
      
-     QdaggerNon_degenerate(&aux2s[0], &aux2c[0], &R_s[0], &R_c[0]);
-     QNon_degenerate(&auxs[0], &auxc[0], &aux2s[0], &aux2c[0]);
+     Qtm_dagger_ndpsi(&aux2s[0], &aux2c[0], &R_s[0], &R_c[0]);
+     Qtm_ndpsi(&auxs[0], &auxc[0], &aux2s[0], &aux2c[0]);
 
      temp1=-1.0;
      temp2=c[0]/2;
@@ -243,7 +241,7 @@ double stopeps=5.0e-16;
 int dop_n_cheby=0;
 double * dop_cheby_coef;
 
-void degree_of_polynomial(){
+void degree_of_polynomial(const int repro){
   int i;
   double temp;
   static int ini=0;
@@ -291,19 +289,19 @@ void degree_of_polynomial(){
    aux3c=calloc(VOLUMEPLUSRAND/2, sizeof(spinor));
 #endif
 
-chebyshev_polynomial(cheb_evmin, cheb_evmax, dop_cheby_coef, N_CHEBYMAX, 0.25);
+   chebyshev_polynomial(cheb_evmin, cheb_evmax, dop_cheby_coef, N_CHEBYMAX, 0.25);
 
    temp=1.0;
-   random_spinor_field(ss,VOLUME/2);
-   random_spinor_field(sc,VOLUME/2);
+   random_spinor_field_eo(ss, repro);
+   random_spinor_field_eo(sc, repro);
 /*   assign(&sc[0], &ss[0],VOLUME/2);
 
   Qtm_pm_psi(&auxs[0], &ss[0]);
     temp=square_norm(&auxs[0],VOLUME/2, 1);
       printf("||auxs Carsten||=%e\n",temp);
 
-  QdaggerNon_degenerate(&aux3s[0], &aux3c[0], &ss[0], &sc[0]);
-  QNon_degenerate(&auxs[0], &auxc[0], &aux3s[0], &aux3c[0]);
+  Qtm_dagger_ndpsi(&aux3s[0], &aux3c[0], &ss[0], &sc[0]);
+  Qtm_ndpsi(&auxs[0], &auxc[0], &aux3s[0], &aux3c[0]);
     temp=square_norm(&auxs[0],VOLUME/2, 1);
       printf("||auxs own||=%e\n",temp);
     temp=square_norm(&auxc[0],VOLUME/2, 1);
@@ -337,8 +335,8 @@ chebyshev_polynomial(cheb_evmin, cheb_evmax, dop_cheby_coef, N_CHEBYMAX, 0.25);
     printf("||auxc||=%e\n",temp); */
 
 
-  QdaggerNon_degenerate(&aux2s[0], &aux2c[0], &ss[0], &sc[0]);
-  QNon_degenerate(&aux3s[0], &aux3c[0], &aux2s[0], &aux2c[0]);
+  Qtm_dagger_ndpsi(&aux2s[0], &aux2c[0], &ss[0], &sc[0]);
+  Qtm_ndpsi(&aux3s[0], &aux3c[0], &aux2s[0], &aux2c[0]);
 
 /*    temp=square_norm(&aux3s[0],VOLUME/2, 1);
       printf("||auxs_3||=%e\n",temp);

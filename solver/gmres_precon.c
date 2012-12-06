@@ -51,7 +51,6 @@
 #include"su3.h"
 #include"linalg_eo.h"
 #include"start.h"
-#include"xchange_field.h"
 #include "solver_field.h"
 #include"gmres_precon.h"
 

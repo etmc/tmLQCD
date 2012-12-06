@@ -45,4 +45,11 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
 /* 	    spinor * const Even, spinor * const Odd); */
 /* void M_minus_1_timesC(spinor * const Even_new, spinor * const Odd_new,  */
 /* 		      spinor * const Even, spinor * const Odd); */
+
+int invert_cloverdoublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s, 
+			    spinor * const Even_new_c, spinor * const Odd_new_c, 
+			    spinor * const Even_s, spinor * const Odd_s,
+			    spinor * const Even_c, spinor * const Odd_c,
+			    const double precision, const int max_iter,
+			    const int solver_flag, const int rel_prec);
 #endif

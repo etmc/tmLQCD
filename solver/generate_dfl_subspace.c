@@ -34,7 +34,7 @@
 #include <complex.h>
 #include "start.h"
 #include "ranlxs.h"
-#include "D_psi.h"
+#include "operator/D_psi.h"
 #include "poly_precon.h"
 #include "Msap.h"
 #include "gmres_precon.h"
@@ -85,7 +85,7 @@ static void random_fields(const int Ns) {
   return;
 }
 
-int generate_dfl_subspace(const int Ns, const int N) {
+int generate_dfl_subspace(const int Ns, const int N, const int repro) {
   int ix, i_o,i, j, k, p, blk, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(_Complex double),
     vol = VOLUME*sizeof(spinor)/sizeof(_Complex double);
   spinor **psi;
@@ -117,7 +117,7 @@ int generate_dfl_subspace(const int Ns, const int N) {
   random_fields(Ns);
   if(g_debug_level > 4) {
     for(e = 0.; e < 1.; e=e+0.05) {
-      random_spinor_field(dfl_fields[0], N, 0);
+      random_spinor_field_lexic(dfl_fields[0], repro);
       nrm = sqrt(square_norm(dfl_fields[0], N, 1));
       mul_r(dfl_fields[0], 1./nrm, dfl_fields[0], N);
       d = 1.1;

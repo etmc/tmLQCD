@@ -40,7 +40,8 @@ AC_CHECK_PROG(CCDEP, gcc, "gcc", "$CC")
 LDFLAGS="$LDFLAGS -L\${HOME}/lib -L\${top_builddir}/lib"
 CCLD=${CC}
 
-USESUBDIRS="buffers cu io solver linalg"
+# compilation in operator is slowest so we do it first, saves time in parallel compiles
+USESUBDIRS="operator linalg solver monomial buffers cu io xchange init"
 
 AC_CHECK_HEADERS([stdint.h],
 [ dnl for inttypes.h and stdint.h for uint_xxx types
@@ -908,7 +909,7 @@ if test ! -e tests/regressions; then
 fi
 
 
-LIBS="-lhmc -lsolver -llinalg -lhmc -lio $LIBS"
+LIBS="-lhmc -lmonomial -loperator -lsolver -linit -llinalg -lhmc -lxchange -lio $LIBS"
 AUTOCONF=autoconf
 
 for i in $USESUBDIRS

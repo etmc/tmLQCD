@@ -15,17 +15,14 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/*******************************************************************************
-*
-* File hybrid.c
-*
-* Main for testing the Eigenvalues computation using bispinors 
-*
-* Author: Thomas Chiarappa
-*         Thomas.Chiarappa@mib.infn.it
-*
-*******************************************************************************/
+ *
+ *
+ * Main for testing the Eigenvalues computation using bispinors 
+ *
+ * Author: Thomas Chiarappa
+ *         Thomas.Chiarappa@mib.infn.it
+ *
+ *******************************************************************************/
 
 #define MAIN_PROGRAM
 
@@ -61,18 +58,12 @@
 #include "sighandler.h"
 #include "hybrid_update.h"
 #include "update_tm.h"
-#include "init_gauge_field.h"
-#include "init_geometry_indices.h"
-#include "init_spinor_field.h"
-#include "init_bispinor_field.h"
-#include "init_moment_field.h"
-#include "init_gauge_tmp.h"
+#include "init/init.h"
 #include "test/check_geometry.h"
 #include "boundary.h"
 #include "polyakov_loop.h"
 
-#include "eigenvalues_bi.h"
-#include "max_eigenvalues_bi.h"
+#include "solver/eigenvalues_bi.h"
 
 char * Version = "2.3.5";
 
