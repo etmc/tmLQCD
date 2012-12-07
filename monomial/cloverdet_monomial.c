@@ -149,7 +149,7 @@ void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
   sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
   sw_invert(EE, mnl->mu);
 
-  random_spinor_field_eo(mnl->w_fields[0], mnl->rngrepro);
+  random_spinor_field_eo(mnl->w_fields[0], mnl->rngrepro, RN_GAUSS);
   mnl->energy0 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
   
   mnl->Qp(mnl->pf, mnl->w_fields[0]);

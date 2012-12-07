@@ -48,8 +48,8 @@ double reweighting_factor_nd(const int N, const int repro)
 
   for(i = 0; i < N; ++i)
   {
-    random_spinor_field_eo(g_chi_up_spinor_field[2], repro);
-    random_spinor_field_eo(g_chi_dn_spinor_field[2], repro);
+    random_spinor_field_eo(g_chi_up_spinor_field[2], repro, RN_GAUSS);
+    random_spinor_field_eo(g_chi_dn_spinor_field[2], repro, RN_GAUSS);
     zero_spinor_field(g_chi_up_spinor_field[3], VOLUME/2);
     zero_spinor_field(g_chi_dn_spinor_field[3], VOLUME/2);
 

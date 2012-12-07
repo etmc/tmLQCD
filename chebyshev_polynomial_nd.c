@@ -130,8 +130,8 @@ void degree_of_polynomial_nd(int * _degree_of_p, double ** coefs,
   
   chebyshev_coefs(EVMin, EVMax, *coefs, degree_of_p, -0.5);
 
-  random_spinor_field_eo(ss, repro);
-  random_spinor_field_eo(sc, repro);
+  random_spinor_field_eo(ss, repro, RN_GAUSS);
+  random_spinor_field_eo(sc, repro, RN_GAUSS);
 
   if((g_proc_id == g_stdio_proc) && (g_debug_level > 0)){
     printf("# NDPOLY MD Polynomial: EVmin = %e  EVmax = %e  \n", EVMin, EVMax);
