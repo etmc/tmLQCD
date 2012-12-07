@@ -28,7 +28,6 @@ void random_spinor_field_lexic(spinor * const k, const int repro);
 void random_spinor_field_eo(spinor * const k, const int repro);
 
 void z2_random_spinor_field_lexic(spinor * const k, const int repro);
-void random_spinor_field(spinor * const k, const int V, const int repro);
 
 void unit_g_gauge_field(void);
 
