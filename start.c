@@ -227,7 +227,7 @@ void unit_spinor_field(const int k)
 }
 
 /* Function provides a spinor field of length VOLUME with
-   Gaussian distribution */
+   distributions given by rn_type as defined in start.h */
 void random_spinor_field_lexic(spinor * const k, const int repro, const int rn_type) {
   int x, y, z, t, X, Y, Z, tt, id=0;
 
@@ -304,6 +304,8 @@ void random_spinor_field_lexic(spinor * const k, const int repro, const int rn_t
   }
   return;
 }
+/* Function provides a spinor field of length VOLUME/2 for even odd preconditioning 
+   with distributions given by rn_type as defined in start.h */
 
 void random_spinor_field_eo(spinor * const k, const int repro, const int rn_type ) {
   int x, X, y, Y, z, Z, t, t0, id = 0;
