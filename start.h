@@ -20,14 +20,14 @@
 #ifndef _START_H
 #define _START_H
 
+enum RN_TYPE { RN_GAUSS, RN_Z2 };
+
 void unit_spinor_field(const int k);
 void zero_spinor_field(spinor * const k, const int N);
 void constant_spinor_field(spinor * const k, const int p, const int N);
 
-void random_spinor_field_lexic(spinor * const k, const int repro);
-void random_spinor_field_eo(spinor * const k, const int repro);
-
-void z2_random_spinor_field_lexic(spinor * const k, const int repro);
+void random_spinor_field_lexic(spinor * const k, const int repro, const int rn_type);
+void random_spinor_field_eo(spinor * const k, const int repro, const int rn_type);
 
 void unit_g_gauge_field(void);
 

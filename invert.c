@@ -403,7 +403,7 @@ int main(int argc, char *argv[])
         s[i] = s_+i*VOLUMEPLUSRAND;
 #endif
 	
-        z2_random_spinor_field_lexic(s[i], reproduce_randomnumber_flag);
+        random_spinor_field_lexic(s[i], reproduce_randomnumber_flag,RN_Z2);
 	
 /* 	what is this here needed for?? */
 /*         spinor *aux_,*aux; */

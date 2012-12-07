@@ -498,7 +498,7 @@ int check_projectors(const int repro) {
   phi = malloc(nb_blocks*sizeof(spinor *));
   wphi = malloc(nb_blocks*sizeof(spinor *));
 
-  random_spinor_field_lexic(work_fields[0], repro);
+  random_spinor_field_lexic(work_fields[0], repro, RN_GAUSS);
   nrm = square_norm(work_fields[0], VOLUME, 1);
   if(g_cart_id == 0) {
     printf("\nNow we check the DFL projection routines!\n\n");
@@ -816,7 +816,7 @@ void check_little_D_inversion(const int repro) {
   const int nr_wf = 1;
 
   init_solver_field(&work_fields, VOLUMEPLUSRAND, nr_wf);
-  random_spinor_field_lexic(work_fields[0], repro);
+  random_spinor_field_lexic(work_fields[0], repro, RN_GAUSS);
   if(init_dfl_projector == 0) {
     alloc_dfl_projector();
   }
@@ -950,7 +950,7 @@ void check_local_D(const int repro)
     }
   }
   /* check Msap and Msap_eo on a radom vector */
-  random_spinor_field_lexic(work_fields[0], repro);
+  random_spinor_field_lexic(work_fields[0], repro, RN_GAUSS);
   zero_spinor_field(work_fields[1], VOLUME);
   Msap(work_fields[1], work_fields[0], 2);
   D_psi(work_fields[2], work_fields[1]);

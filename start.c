@@ -228,8 +228,21 @@ void unit_spinor_field(const int k)
 
 /* Function provides a spinor field of length VOLUME with
    Gaussian distribution */
-void random_spinor_field_lexic(spinor * const k, const int repro) {
+void random_spinor_field_lexic(spinor * const k, const int repro, const int rn_type) {
   int x, y, z, t, X, Y, Z, tt, id=0;
+
+  void (*random_vector)(double*,int) = NULL;
+
+  switch( rn_type ) {
+    case RN_Z2:
+      random_vector = z2_vector;
+      break;
+    case RN_GAUSS:
+    default:
+      random_vector = gauss_vector;
+      break;
+  }
+
 #ifdef MPI
   int rlxd_state[105];
   int rlxd_state_backup[105];
@@ -266,7 +279,7 @@ void random_spinor_field_lexic(spinor * const k, const int repro) {
 	    MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
 	    if(g_cart_id == id) {
-	      gauss_vector(v, 24);
+	      random_vector(v, 24);
 	      s = k + g_ipt[tt][X][Y][Z];
 	      memcpy(s, v, 24*sizeof(double));
 	    } else {
@@ -284,7 +297,7 @@ void random_spinor_field_lexic(spinor * const k, const int repro) {
   }
   else {
     for(x = 0; x < VOLUME; x++) {
-      gauss_vector(v, 24);
+      random_vector(v, 24);
       s = k + x;
       memcpy(s, v, 24*sizeof(double));
     }
@@ -292,8 +305,21 @@ void random_spinor_field_lexic(spinor * const k, const int repro) {
   return;
 }
 
-void random_spinor_field_eo(spinor * const k, const int repro) {
+void random_spinor_field_eo(spinor * const k, const int repro, const int rn_type ) {
   int x, X, y, Y, z, Z, t, t0, id = 0;
+
+  void (*random_vector)(double*,int) = NULL;
+
+  switch( rn_type ) {
+    case RN_Z2:
+      random_vector = z2_vector;
+      break;
+    case RN_GAUSS:
+    default:
+      random_vector = gauss_vector;
+      break;
+  }
+
 #ifdef MPI
   int rlxd_state[105];
   int rlxd_state_backup[105];
@@ -330,7 +356,7 @@ void random_spinor_field_eo(spinor * const k, const int repro) {
 	    MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
 	    if((t0+x+y+z)%2 == 0) {
-	      gauss_vector(v, 24);
+	      random_vector(v, 24);
 	      if(g_cart_id == id) {
 		s = k + g_lexic2eosub[ g_ipt[t][X][Y][Z] ];
 		memcpy(s, v, 24*sizeof(double));
@@ -349,74 +375,7 @@ void random_spinor_field_eo(spinor * const k, const int repro) {
   else {
     for (x = 0; x < VOLUME/2; x++) {
       s = k + x;
-      gauss_vector(v, 24);
-      memcpy(s, v, 24*sizeof(double));
-    }
-  }
-  return;
-}
-
-/* Function provides a spinor field of length VOLUME
-   filled with Z2 noise */
-
-void z2_random_spinor_field_lexic(spinor * const k, const int repro) {
-  int x, y, z, t, X, Y, Z, tt, id=0;
-#ifdef MPI
-  int rlxd_state[105];
-  int rlxd_state_backup[105];
-#endif
-  int coords[4];
-  spinor *s;
-  double v[24];
-
-  if(repro) {
-#ifdef MPI
-    if(g_proc_id != 0) {
-      rlxd_get(rlxd_state_backup);
-    } else if(g_proc_id == 0) {
-      rlxd_get(rlxd_state);
-    }
-    MPI_Bcast(rlxd_state, 105, MPI_INT, 0, MPI_COMM_WORLD);
-    if(g_proc_id != 0) {
-      rlxd_reset(rlxd_state);
-    }
-#endif
-    for(t = 0; t < g_nproc_t*T; t++) {
-      tt = t - g_proc_coords[0]*T;
-      coords[0] = t / T;
-      for(x = 0; x < g_nproc_x*LX; x++) {
-	X = x - g_proc_coords[1]*LX; 
-	coords[1] = x / LX;
-	for(y = 0; y < g_nproc_y*LY; y++) {
-	  Y = y - g_proc_coords[2]*LY;
-	  coords[2] = y / LY;
-	  for(z = 0; z < g_nproc_z*LZ; z++) {
-	    Z = z - g_proc_coords[3]*LZ;
-	    coords[3] = z / LZ;
-#ifdef MPI
-	    MPI_Cart_rank(g_cart_grid, coords, &id);
-#endif
-	    if(g_cart_id == id) {
-	      z2_vector(v, 24);
-	      s = k + g_ipt[tt][X][Y][Z];
-	      memcpy(s, v, 24*sizeof(double));
-	    } else {
-	      ranlxd(v,24);
-	    }
-	  }
-	}
-      }
-    }
-#ifdef MPI
-  if(g_proc_id != 0) {
-    rlxd_reset(rlxd_state_backup);
-  }
-#endif
-  }
-  else {
-    for(x = 0; x < VOLUME; x++) {
-      z2_vector(v, 24);
-      s = k + x;
+      random_vector(v, 24);
       memcpy(s, v, 24*sizeof(double));
     }
   }
