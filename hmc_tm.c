@@ -306,7 +306,7 @@ int main(int argc,char *argv[]) {
 
   if(g_proc_id == 0){
     parameterfile = fopen(parameterfilename, "a");
-    write_first_messages(parameterfile, 0);
+    write_first_messages(parameterfile, "hmc", git_hash);
   }
 
   /* define the geometry */

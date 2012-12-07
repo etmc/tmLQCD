@@ -286,7 +286,7 @@ int main(int argc, char *argv[])
     strcat(parameterfilename, ".para");
 
     parameterfile = fopen(parameterfilename, "w");
-    write_first_messages(parameterfile, 1);
+    write_first_messages(parameterfile, "invert", git_hash);
     fclose(parameterfile);
   }
 
