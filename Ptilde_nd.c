@@ -307,8 +307,8 @@ void degree_of_Ptilde(int * _degree, double ** coefs,
   if(g_debug_level > 0) {
     /* Ptilde P S P  Ptilde X - X */
     /* for random spinor X        */
-    random_spinor_field_eo(ss, repro);
-    random_spinor_field_eo(sc, repro);
+    random_spinor_field_eo(ss, repro, RN_GAUSS);
+    random_spinor_field_eo(sc, repro, RN_GAUSS);
 
     Ptilde_ndpsi(&auxs[0], &auxc[0], *coefs, degree, &ss[0], &sc[0], Qsq);
     Ptilde_ndpsi(&aux2s[0], &aux2c[0], phmc_dop_cheby_coef, phmc_dop_n_cheby, &auxs[0], &auxc[0], Qsq);

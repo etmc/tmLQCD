@@ -198,7 +198,7 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
   mnl->iter0 = 0;
   mnl->iter1 = 0;
   if(mnl->even_odd_flag) {
-    random_spinor_field_eo(mnl->w_fields[0], mnl->rngrepro);
+    random_spinor_field_eo(mnl->w_fields[0], mnl->rngrepro, RN_GAUSS);
     mnl->energy0  = square_norm(mnl->w_fields[0], VOLUME/2, 1);
 
     mnl->Qp(mnl->w_fields[1], mnl->w_fields[0]);
@@ -212,7 +212,7 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
   }
   else {
-    random_spinor_field_lexic(mnl->w_fields[0], mnl->rngrepro);
+    random_spinor_field_lexic(mnl->w_fields[0], mnl->rngrepro,RN_GAUSS);
     mnl->energy0 = square_norm(mnl->w_fields[0], VOLUME, 1);
 
     Q_plus_psi(mnl->w_fields[1], mnl->w_fields[0]);
