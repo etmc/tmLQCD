@@ -232,6 +232,7 @@ void random_spinor_field_lexic(spinor * const k, const int repro) {
   int x, y, z, t, X, Y, Z, tt, id=0;
 #ifdef MPI
   int rlxd_state[105];
+  int rlxd_state_backup[105];
 #endif
   int coords[4];
   spinor *s;
@@ -239,7 +240,9 @@ void random_spinor_field_lexic(spinor * const k, const int repro) {
 
   if(repro) {
 #ifdef MPI
-    if(g_proc_id == 0) {
+    if(g_proc_id != 0) {
+      rlxd_get(rlxd_state_backup);
+    } else if(g_proc_id == 0) {
       rlxd_get(rlxd_state);
     }
     MPI_Bcast(rlxd_state, 105, MPI_INT, 0, MPI_COMM_WORLD);
@@ -273,6 +276,11 @@ void random_spinor_field_lexic(spinor * const k, const int repro) {
 	}
       }
     }
+#ifdef MPI
+    if(g_proc_id != 0) {
+      rlxd_reset(rlxd_state_backup);
+    }
+#endif
   }
   else {
     for(x = 0; x < VOLUME; x++) {
@@ -288,6 +296,7 @@ void random_spinor_field_eo(spinor * const k, const int repro) {
   int x, X, y, Y, z, Z, t, t0, id = 0;
 #ifdef MPI
   int rlxd_state[105];
+  int rlxd_state_backup[105];
 #endif
   int coords[4];
   spinor *s;
@@ -295,7 +304,9 @@ void random_spinor_field_eo(spinor * const k, const int repro) {
 
   if(repro) {
 #ifdef MPI
-    if(g_proc_id == 0) {
+    if(g_proc_id != 0) {
+      rlxd_get(rlxd_state_backup);
+    } else if(g_proc_id == 0) {
       rlxd_get(rlxd_state);
     }
     MPI_Bcast(rlxd_state, 105, MPI_INT, 0, MPI_COMM_WORLD);
@@ -329,6 +340,11 @@ void random_spinor_field_eo(spinor * const k, const int repro) {
 	}
       }
     }
+#ifdef MPI
+    if(g_proc_id != 0) {
+      rlxd_reset(rlxd_state_backup);
+    }
+#endif
   }
   else {
     for (x = 0; x < VOLUME/2; x++) {
@@ -347,6 +363,7 @@ void z2_random_spinor_field_lexic(spinor * const k, const int repro) {
   int x, y, z, t, X, Y, Z, tt, id=0;
 #ifdef MPI
   int rlxd_state[105];
+  int rlxd_state_backup[105];
 #endif
   int coords[4];
   spinor *s;
@@ -354,7 +371,9 @@ void z2_random_spinor_field_lexic(spinor * const k, const int repro) {
 
   if(repro) {
 #ifdef MPI
-    if(g_proc_id == 0) {
+    if(g_proc_id != 0) {
+      rlxd_get(rlxd_state_backup);
+    } else if(g_proc_id == 0) {
       rlxd_get(rlxd_state);
     }
     MPI_Bcast(rlxd_state, 105, MPI_INT, 0, MPI_COMM_WORLD);
@@ -388,6 +407,11 @@ void z2_random_spinor_field_lexic(spinor * const k, const int repro) {
 	}
       }
     }
+#ifdef MPI
+  if(g_proc_id != 0) {
+    rlxd_reset(rlxd_state_backup);
+  }
+#endif
   }
   else {
     for(x = 0; x < VOLUME; x++) {
@@ -488,11 +512,14 @@ void random_gauge_field(const int repro) {
   su3 ALIGN tmp;
 #ifdef MPI
   int rlxd_state[105];
+  int rlxd_state_backup[105];
 #endif
 
   if(repro) {
 #ifdef MPI
-    if(g_proc_id == 0) {
+    if(g_proc_id != 0) {
+      rlxd_get(rlxd_state_backup);
+    } else if(g_proc_id == 0) {
       rlxd_get(rlxd_state);
     }
     MPI_Bcast(rlxd_state, 105, MPI_INT, 0, MPI_COMM_WORLD);
@@ -526,6 +553,11 @@ void random_gauge_field(const int repro) {
 	}
       }
     }
+#ifdef MPI
+    if(g_proc_id != 0) {
+      rlxd_get(rlxd_state_backup);
+    }
+#endif
   }
   else {
     for (ix = 0; ix < VOLUME; ix++) {
@@ -550,13 +582,16 @@ double random_su3adj_field(const int repro, su3adj ** const momenta) {
 #ifdef MPI
   int k;
   int rlxd_state[105];
+  int rlxd_state_backup[105];
 #endif
   double ALIGN yy[8];
   double ALIGN tt, tr, ts, kc = 0., ks = 0., sum;
   
   if(repro) {
 #ifdef MPI
-    if(g_proc_id == 0) {
+    if(g_proc_id != 0) {
+      rlxd_get(rlxd_state_backup);
+    } else if(g_proc_id == 0) {
       rlxd_get(rlxd_state);
     }
     MPI_Bcast(rlxd_state, 105, MPI_INT, 0, MPI_COMM_WORLD);
@@ -592,6 +627,10 @@ double random_su3adj_field(const int repro, su3adj ** const momenta) {
 		(*xm).d5 = 1.4142135623731*yy[4];
 		(*xm).d6 = 1.4142135623731*yy[5];
 		sum += (*xm).d5*(*xm).d5+(*xm).d6*(*xm).d6;
+	  (*xm).d7 = 1.4142135623731*yy[6];
+	  (*xm).d8 = 1.4142135623731*yy[7];
+	  sum+=(*xm).d7*(*xm).d7+(*xm).d8*(*xm).d8;
+	  tr=sum+kc;
 		tr = sum+kc;
 		ts = tr+ks;
 		tt = ts-ks;
@@ -604,6 +643,11 @@ double random_su3adj_field(const int repro, su3adj ** const momenta) {
       }
     }
     kc=0.5*(ks+kc);
+#ifdef MPI
+    if(g_proc_id != 0) {
+      rlxd_reset(rlxd_state_backup);
+    }
+#endif
   }
   else {
     for(i = 0; i < VOLUME; i++) { 
