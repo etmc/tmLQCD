@@ -29,6 +29,7 @@
 #include "global.h"
 #include "su3.h"
 #include "start.h"
+#include "gettime.h"
 #include "linalg_eo.h"
 #include "deriv_Sb.h"
 #include "gamma.h"
@@ -47,7 +48,8 @@
 
 void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[no];
-
+  double atime, etime;
+  atime = gettime();
   /* This factor 2* a missing factor 2 in trace_lambda */
   mnl->forcefactor = 1.;
 
@@ -139,7 +141,10 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
   g_mu = g_mu1;
   g_mu3 = 0.;
   boundary(g_kappa);
-
+  etime = gettime();
+  if(g_debug_level > 0 && g_proc_id == 0) {
+    printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
+  }
   return;
 }
 

@@ -29,6 +29,7 @@
 #include "su3.h"
 #include "linalg_eo.h"
 #include "start.h"
+#include "gettime.h"
 #include "solver/solver.h"
 #include "deriv_Sb.h"
 #include "operator/tm_operators.h"
@@ -52,7 +53,8 @@
 void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
   int j, k;
   monomial * mnl = &monomial_list[id];
-
+  double atime, etime;
+  atime = gettime();
   for(int i = 0; i < VOLUME; i++) { 
     for(int mu = 0; mu < 4; mu++) { 
       _su3_zero(swm[i][mu]);
@@ -128,7 +130,10 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
   // trlog part does not depend on the normalisation of the polynomial
   sw_deriv_nd(EE);
   sw_all(hf, mnl->kappa, mnl->c_sw);
-
+  etime = gettime();
+  if(g_debug_level > 0 && g_proc_id == 0) {
+    printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
+  }
   return;
 }
 
