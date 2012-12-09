@@ -428,7 +428,9 @@ int init_ndpoly_monomial(const int id) {
   double *phmc_darray;
   char title[100];
   matrix_mult_nd Qsq = &Qtm_pm_ndpsi;
+  double atime, etime;
 
+  atime = gettime();
   if(mnl->type == NDCLOVER) {
     Qsq = &Qsw_pm_ndpsi;
     init_sw_fields();
@@ -531,7 +533,10 @@ int init_ndpoly_monomial(const int id) {
 #endif
     exit(6);
   }
-  
+  etime = gettime();
+  if(g_debug_level > 0 && g_proc_id == 0) {
+    printf("# Time for init %s monomial: %e s\n", mnl->name, etime-atime);
+  }
   return(0);
 }
 
