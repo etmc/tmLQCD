@@ -507,7 +507,7 @@ int main(int argc, char *argv[])
           /* 0-3 in case of 1 flavour  */
           /* 0-7 in case of 2 flavours */
           prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location);
-          operator_list[op_id].inverter(op_id, index_start);
+          operator_list[op_id].inverter(op_id, index_start, 1);
         }
       }
 

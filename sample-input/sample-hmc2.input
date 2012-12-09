@@ -24,8 +24,6 @@ StartCondition = hot
 kappa = 0.170
 NSave = 500000
 ThetaT = 1
-BCGstabMaxIter = 0
-CGMaxIter = 1000
 GaugeConfigInputFile = conf.save
 UseEvenOdd = yes
 ReversibilityCheck = yes
@@ -75,3 +73,12 @@ BeginIntegrator
   Lambda0 = 0.19
   NumberOfTimescales = 2
 EndIntegrator
+
+BeginOperator TMWILSON
+  2kappaMu = 0.01
+  kappa = 0.177
+  UseEvenOdd = yes
+  Solver = CG
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 1000
+EndOperator

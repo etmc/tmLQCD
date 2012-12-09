@@ -144,7 +144,6 @@ int write_first_messages(FILE * parameterfile, const char const *executable, con
   fprintf(parameterfile, "# g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f \n",g_beta,g_kappa,g_ka_csw_8);
   fprintf(parameterfile, "# boundary conditions for fermion fields (t,x,y,z) * pi: %f %f %f %f \n",X0,X1,X2,X3);
   if( strcmp(executable,"hmc") == 0 ) {
-    fprintf(parameterfile, "# ITER_MAX_BCG=%d\n", ITER_MAX_BCG);
     fprintf(parameterfile, "# Nmeas=%d, Nsave=%d \n",
 	    Nmeas,Nsave);
     fprintf(parameterfile, "# mu = %f\n", g_mu/2./g_kappa);
