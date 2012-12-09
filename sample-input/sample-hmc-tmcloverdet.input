@@ -53,12 +53,10 @@ BeginIntegrator
   NumberOfTimescales = 2
 EndIntegrator
 
-BeginOperator TMCLOVER
+BeginOperator CLOVER
   2KappaMu = 0.01
   CSW = 1.00
   kappa = 0.138
-  UseEvenOdd = yes
-  Solver = CG
   SolverPrecision = 1e-14
   MaxSolverIterations = 1000
 EndOperator

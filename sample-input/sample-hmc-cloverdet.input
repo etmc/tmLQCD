@@ -54,8 +54,6 @@ EndIntegrator
 BeginOperator CLOVER
   CSW = 1.76
   kappa = 0.208333
-  UseEvenOdd = yes
-  Solver = CG
   SolverPrecision = 1e-14
   MaxSolverIterations = 1000
 EndOperator
