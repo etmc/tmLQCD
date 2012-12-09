@@ -14,8 +14,6 @@ CSW = 1.76
 kappa = 0.138
 NSave = 500000
 ThetaT = 1.0
-BCGstabMaxIter = 0
-CGMaxIter = 1000
 UseEvenOdd = yes
 ReversibilityCheck = yes
 ReversibilityCheckIntervall = 100
@@ -54,3 +52,13 @@ BeginIntegrator
   Lambda1 = 0.20
   NumberOfTimescales = 2
 EndIntegrator
+
+BeginOperator TMCLOVER
+  2KappaMu = 0.01
+  CSW = 1.00
+  kappa = 0.138
+  UseEvenOdd = yes
+  Solver = CG
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 1000
+EndOperator

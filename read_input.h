@@ -62,8 +62,6 @@ extern "C"
   extern int index_end;
   extern int random_seed;
   extern int rlxd_level;
-  extern int ITER_MAX_BCG;
-  extern int ITER_MAX_CG;
   extern double X0, X1, X2, X3;
   extern int read_source_flag;
   extern int return_check_flag;

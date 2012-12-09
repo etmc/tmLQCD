@@ -17,8 +17,6 @@ ThermalisationSweeps=100
 kappa = 0.208333
 NSave = 10000
 ThetaT = 1
-BCGstabMaxIter = 0
-CGMaxIter = 1000
 UseEvenOdd = yes
 ReversibilityCheck = no
 ReversibilityCheckIntervall = 1
@@ -57,3 +55,12 @@ BeginIntegrator
   Lambda1 = 0.21
   NumberOfTimescales = 2
 EndIntegrator
+
+BeginOperator TMWILSON
+  2KappaMu = 0.083333
+  kappa = 0.208333
+  UseEvenOdd = yes
+  Solver = CG
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 1000
+EndOperator
