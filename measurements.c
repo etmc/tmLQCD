@@ -32,18 +32,20 @@
 #include "pion_norm.h"
 #include "online_measurement.h"
 #include "polyakov_loop.h"
+#include "measure_oriented_plaquettes.h"
 #include "measurements.h"
 
 measurement measurement_list[max_no_measurements];
 int no_measurements = 0;
 
-int add_measurement(const int type) {
+int add_measurement(const enum MEAS_TYPE meas_type) {
  
   if(no_measurements == max_no_measurements) {
     fprintf(stderr, "maximal number of measurementss %d exceeded!\n", max_no_measurements);
     exit(-1);
   }
   measurement_list[no_measurements].measurefunc = &dummy_meas;
+  measurement_list[no_measurements].type = meas_type;
   measurement_list[no_measurements].initialised = 1;
   no_measurements++;
   return(no_measurements);
@@ -65,6 +67,10 @@ int init_measurements(){
     
     if(measurement_list[i].type == POLYAKOV) {
       measurement_list[i].measurefunc = &polyakov_loop_measurement;
+    }
+
+    if(measurement_list[i].type == ORIENTED_PLAQUETTES) {
+      measurement_list[i].measurefunc = oriented_plaquettes_measurement;
     }
     
     measurement_list[i].id = i;

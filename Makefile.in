@@ -88,9 +88,11 @@ ${top_srcdir}/git_hash.h:
 
 include ${top_srcdir}/Makefile.global
 
-ifneq (,$(findstring lex,${LEX}))
 ${top_srcdir}/read_input.c: ${top_srcdir}/read_input.l
-	@${LEX} -Ptmlqcd -i -t ${top_srcdir}/read_input.l > ${top_srcdir}/read_input.c
+ifneq (,$(findstring lex,${LEX}))
+	${LEX} -Ptmlqcd -i -t ${top_srcdir}/read_input.l > ${top_srcdir}/read_input.c
+else
+	$(error Unable to find (f)lex, read_input.c not built. Please install (f)lex!)
 endif
 
 libhmc.a: ${addsuffix .o, ${MODULES} ${SMODULES}} Makefile

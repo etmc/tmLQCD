@@ -1,6 +1,6 @@
 /***********************************************************************
- *
- * Copyright (C) 2001 Martin Hasenbusch, 2012 Bartosz Kostrzewa
+ *  
+ * Copyright (C) 2012 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -18,22 +18,12 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _MEASURE_ORIENTED_PLAQUETTES_H
-#define _MEASURE_ORIENTED_PLAQUETTES_H
+#ifndef _FATAL_ERROR_H
+#define _FATAL_ERROR_H
 
-#include "su3.h"
+/* Function to cleanly exit the program with an error messages. The two parameters
+   are strings describing the error and identifying the originating function respectively */
 
-/* measures the lattice average of plaquettes oriented in the 6
-   hyperplanes TX, TY, TZ, XY, XZ, YZ and stores them in this
-   order in the plaq array (of 6 elements) 
-   
-   the caller must provide the memory for plaq */
+void fatal_error(char const *error, char const *function);
 
-void measure_oriented_plaquettes(const su3 ** const gf, double *plaq);
-
-/* implements the online measurement function for the oriented
-   plaquettes, writes (in append mode) into "oriented_plaquettes.data" */
-
-void oriented_plaquettes_measurement(const int traj, const int id, const int ieo);
-
-#endif  
+#endif
