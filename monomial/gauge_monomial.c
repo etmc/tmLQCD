@@ -33,6 +33,7 @@
 #include "ranlxd.h"
 #include "sse.h"
 #include "start.h"
+#include "gettime.h"
 #include "get_rectangle_staples.h"
 #include "gamma.h"
 #include "get_staples.h"
@@ -45,7 +46,9 @@
 
 /* this function calculates the derivative of the momenta: equation 13 of Gottlieb */
 void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
-
+  monomial * mnl = &monomial_list[id];
+  double atime, etime;
+  atime = gettime();
 #ifdef OMP
 #pragma omp parallel
   {
@@ -85,6 +88,10 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
 #ifdef OMP
   } /* OpenMP closing brace */
 #endif
+  etime = gettime();
+  if(g_debug_level > 0 && g_proc_id == 0) {
+    printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
+  }
   return;
 }
 

@@ -29,6 +29,7 @@
 #include "su3.h"
 #include "linalg_eo.h"
 #include "start.h"
+#include "gettime.h"
 #include "solver/solver.h"
 #include "deriv_Sb.h"
 #include "operator/tm_operators.h"
@@ -59,9 +60,10 @@ extern int phmc_exact_poly;
  ********************************************/
 
 void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
+  double atime, etime;
   int j, k;
   monomial * mnl = &monomial_list[id];
-
+  atime = gettime();
   /* This factor 2 a missing factor 2 in trace_lambda */
   ndpoly_set_global_parameter(mnl, phmc_exact_poly);
   mnl->forcefactor = -phmc_Cpol*mnl->EVMaxInv;
@@ -155,6 +157,11 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
     Normalisation by the largest  EW  is done in update_momenta
     using mnl->forcefactor
   */ 
+  etime = gettime();
+  if(g_debug_level > 0 && g_proc_id == 0) {
+    printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
+  }
+  return;
 }
 
 
@@ -421,7 +428,9 @@ int init_ndpoly_monomial(const int id) {
   double *phmc_darray;
   char title[100];
   matrix_mult_nd Qsq = &Qtm_pm_ndpsi;
+  double atime, etime;
 
+  atime = gettime();
   if(mnl->type == NDCLOVER) {
     Qsq = &Qsw_pm_ndpsi;
     init_sw_fields();
@@ -524,7 +533,10 @@ int init_ndpoly_monomial(const int id) {
 #endif
     exit(6);
   }
-  
+  etime = gettime();
+  if(g_debug_level > 0 && g_proc_id == 0) {
+    printf("# Time for init %s monomial: %e s\n", mnl->name, etime-atime);
+  }
   return(0);
 }
 

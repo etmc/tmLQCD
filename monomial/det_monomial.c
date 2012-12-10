@@ -27,6 +27,7 @@
 #include "global.h"
 #include "su3.h"
 #include "start.h"
+#include "gettime.h"
 #include "linalg_eo.h"
 #include "deriv_Sb.h"
 #include "deriv_Sb_D_psi.h"
@@ -45,7 +46,8 @@
 
 void det_derivative(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
-
+  double atime, etime;
+  atime = gettime();
   (*mnl).forcefactor = 1.;
 
   if(mnl->even_odd_flag) {
@@ -140,7 +142,10 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
   }
   g_mu = g_mu1;
   boundary(g_kappa);
-
+  etime = gettime();
+  if(g_debug_level > 0 && g_proc_id == 0) {
+    printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
+  }
   return;
 }
 

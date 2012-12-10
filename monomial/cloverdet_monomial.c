@@ -31,6 +31,7 @@
 #include "ranlxd.h"
 #include "sse.h"
 #include "start.h"
+#include "gettime.h"
 #include "linalg_eo.h"
 #include "deriv_Sb.h"
 #include "gamma.h"
@@ -50,7 +51,8 @@
 
 void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
-
+  double atime, etime;
+  atime = gettime();
   for(int i = 0; i < VOLUME; i++) { 
     for(int mu = 0; mu < 4; mu++) { 
       _su3_zero(swm[i][mu]);
@@ -128,7 +130,10 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   g_mu = g_mu1;
   g_mu3 = 0.;
   boundary(g_kappa);
-
+  etime = gettime();
+  if(g_debug_level > 0 && g_proc_id == 0) {
+    printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
+  }
   return;
 }
 
