@@ -24,14 +24,16 @@
 
 #define max_no_measurements 20
 
-
-/* Give the measurements a unambiguous number*/
-#define ONLINE 0
-#define PIONNORM 1
-#define POLYAKOV 2
+/* Give the measurement types an unambiguous ID*/
+enum MEAS_TYPE { 
+  ONLINE, 
+  PIONNORM, 
+  POLYAKOV, 
+  ORIENTED_PLAQUETTES 
+  };
 
 typedef struct {
-  int type;
+  enum MEAS_TYPE type;
   int initialised;
   int id;
   
@@ -61,7 +63,7 @@ extern measurement measurement_list[max_no_measurements];
 extern int no_measurements;
 
 /* add a new measurement to the list of measurements */
-int add_measurement(const int type);
+int add_measurement(const enum MEAS_TYPE);
 /* initialise all measurements in the list */
 int init_measurements();
 /* free space again */
