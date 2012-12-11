@@ -201,9 +201,6 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
   boundary(mnl->kappa);
   if(mnl->even_odd_flag) {
 
-    if(mnl->solver == CG) {
-      ITER_MAX_BCG = 0;
-    }
     chrono_guess(mnl->w_fields[0], mnl->pf, mnl->csg_field, mnl->csg_index_array,
     	 mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
     g_sloppy_precision_flag = 0;

@@ -24,8 +24,6 @@ DebugLevel = 1
 # hmc_tm parameters: #
 ######################
 StartCondition = hot
-BCGstabMaxIter = 0
-CGMaxIter = 1000
 ReversibilityCheck = no
 ReversibilityCheckIntervall = 100
 PerformOnlineMeasurements = no
