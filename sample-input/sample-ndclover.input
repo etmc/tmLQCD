@@ -1,0 +1,75 @@
+# this sample corresponds to a 2+1+1 test case
+# roots and the normalisation are in Square_root_BR_roots.dat
+# and normierungLocal.dat in this directory
+# they were generated using the chebyRoot.H file, which can also
+# be found in this directory
+L=4
+T=4
+Measurements = 1
+StartCondition = hot
+2KappaMu = 0.01
+2Kappamubar = 0.1105
+2Kappaepsbar = 0.0935
+kappa = 0.170
+NSave = 500000
+ThetaT = 1
+GaugeConfigInputFile = conf.save
+UseEvenOdd = yes
+ReversibilityCheck = yes
+ReversibilityCheckIntervall = 100
+DebugLevel = 1
+
+BeginMeasurement CORRELATORS
+  Frequency = 1
+EndMeasurement
+
+BeginMonomial GAUGE
+  Type = tlsym
+  beta = 3.30
+  Timescale = 0
+EndMonomial
+
+BeginMonomial DET
+  Timescale = 1
+  2KappaMu = 0.01
+  kappa = 0.170
+  AcceptancePrecision =  1e-20
+  ForcePrecision = 1e-12
+  Name = det
+  Solver = CG
+EndMonomial
+
+BeginMonomial NDCLOVER
+  Timescale = 1
+  StildeMin = 0.01225
+  StildeMax = 3.5
+  LocNormConst = 3.3775885577830275786
+  PrecisionPtilde = 1e-05
+  DegreeOfMDPolynomial = 48
+  PrecisionHfinal = 1e-10
+  ComputeEVFreq = 1
+  2KappaEpsBar = 0.0935
+  2Kappamubar = 0.1105
+  kappa = 0.170
+  CSW = 1.0
+  RootsFile = "clover_roots.dat"
+EndMonomial
+
+BeginIntegrator 
+  Type0 = 2MN
+  Type1 = 2MN
+  IntegrationSteps0 = 2
+  IntegrationSteps1 = 12
+  Tau = 1
+  Lambda0 = 0.19
+  NumberOfTimescales = 2
+EndIntegrator
+
+BeginOperator TMWILSON
+  2KappaMu = 0.01
+  kappa = 0.170
+  UseEvenOdd = yes
+  Solver = CG
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 1000
+EndOperator

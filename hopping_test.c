@@ -52,19 +52,14 @@
 #include "read_input.h"
 #include "start.h"
 #include "boundary.h"
-#include "Hopping_Matrix.h"
-#include "Hopping_Matrix_nocom.h"
-#include "tm_operators.h"
+#include "operator/Hopping_Matrix.h"
+#include "operator/Hopping_Matrix_nocom.h"
+#include "operator/tm_operators.h"
 #include "global.h"
-#include "xchange.h"
-#include "init_gauge_field.h"
-#include "init_geometry_indices.h"
-#include "init_spinor_field.h"
-#include "init_moment_field.h"
-#include "init_dirac_halfspinor.h"
+#include "xchange/xchange.h"
+#include "init/init.h"
 #include "test/check_geometry.h"
-#include "xchange_halffield.h"
-#include "D_psi.h"
+#include "operator/D_psi.h"
 #include "phmc.h"
 #include "mpi_init.h"
 #include "io/io_cm.h"
@@ -275,7 +270,7 @@ int main(int argc,char *argv[])
     /*initialize the pseudo-fermion fields*/
     j_max=1;
     for (k = 0; k < k_max; k++) {
-      random_spinor_field(g_spinor_field[k], VOLUME/2, 0);
+      random_spinor_field_eo(g_spinor_field[k], reproduce_randomnumber_flag, RN_GAUSS);
     }
 
     if (read_source_flag == 2) { /* save */

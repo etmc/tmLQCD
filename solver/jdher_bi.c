@@ -61,7 +61,7 @@
 #include "linalg_eo.h"
 #include <complex.h>
 #include "solver/solver.h"
-#include "solver/gram-schmidt_bi.h"
+#include "solver/gram-schmidt.h"
 #include "solver/quicksort.h"
 #include "jdher.h"
 #include "jdher_bi.h"
@@ -312,8 +312,8 @@ void jdher_bi(int n, int lda, double tau, double tol,
     j = blksize;
   }
   for (cnt = 0; cnt < j; cnt ++) {
-    ModifiedGS_bi(V + cnt*lda, n, cnt, V, lda);
-    alpha = sqrt(square_norm_bi((bispinor*)(V+cnt*lda), N));
+    ModifiedGS(V + cnt*lda, n, cnt, V, lda);
+    alpha = sqrt(square_norm((spinor*)(V+cnt*lda), 2*N, 1));
     alpha = 1.0 / alpha;
     _FT(dscal)(&n2, &alpha, (double *)(V + cnt*lda), &ONE);
   }
@@ -323,7 +323,7 @@ void jdher_bi(int n, int lda, double tau, double tol,
     A_psi((bispinor*) temp1, (bispinor*)(V+cnt*lda));
     idummy = cnt+1;
     for(i = 0; i < idummy; i++) {
-      M[cnt*jmax+i] = scalar_prod_bi((bispinor*)(V+i*lda), (bispinor*) temp1, N);
+      M[cnt*jmax+i] = scalar_prod((spinor*)(V+i*lda), (spinor*) temp1, 2*N, 1);
     }
   }
   /* Other initializations */
@@ -405,7 +405,7 @@ void jdher_bi(int n, int lda, double tau, double tol,
 
 	/* Compute norm of the residual and update arrays convind/keepind*/
 	resnrm_old[act] = resnrm[act];
-	resnrm[act] = sqrt(square_norm_bi((bispinor*) r, N));
+	resnrm[act] = sqrt(square_norm((spinor*) r, 2*N, 1));
 	if (resnrm[act] < tol){
 	  convind[conv] = act; 
 	  conv = conv + 1; 
@@ -594,7 +594,7 @@ void jdher_bi(int n, int lda, double tau, double tol,
       solvestep[act] = solvestep[act] + 1;
 
       /* equation and project if necessary */
-      ModifiedGS_bi(r, n, k + actblksize, Q, lda);
+      ModifiedGS(r, n, k + actblksize, Q, lda);
 
       g_sloppy_precision = 1;
       /* Solve the correction equation ...  */
@@ -626,8 +626,8 @@ void jdher_bi(int n, int lda, double tau, double tol,
 	 apply "IteratedCGS" to prevent numerical breakdown 
          in order to orthogonalize v to V */
 
-      ModifiedGS_bi(v, n, k+actblksize, Q, lda);
-      IteratedClassicalGS_bi(v, &alpha, n, j, V, temp1, lda);
+      ModifiedGS(v, n, k+actblksize, Q, lda);
+      IteratedClassicalGS(v, &alpha, n, j, V, temp1, lda);
 
       alpha = 1.0 / alpha;
       _FT(dscal)(&n2, &alpha, (double*) v, &ONE);
@@ -636,7 +636,7 @@ void jdher_bi(int n, int lda, double tau, double tol,
       A_psi((bispinor*) temp1, (bispinor*) v);
       idummy = j+1;
       for(i = 0; i < idummy; i++){
- 	M[j*jmax+i] = scalar_prod_bi((bispinor*)(V+i*lda), (bispinor*) temp1, N);
+ 	M[j*jmax+i] = scalar_prod((spinor*)(V+i*lda), (spinor*) temp1, 2*N, 1);
       }
       /* Increasing SearchSpaceSize j */
       j ++;
@@ -678,7 +678,7 @@ void jdher_bi(int n, int lda, double tau, double tol,
       theta = -lambda[act];
       A_psi((bispinor*) r, (bispinor*) q);
       _FT(daxpy)(&n2, &theta, (double*) q, &ONE, (double*) r, &ONE);
-      alpha = sqrt(square_norm_bi((bispinor*) r, N));
+      alpha = sqrt(square_norm((spinor*) r, 2*N, 1));
       if(g_proc_id == 0) {
 	printf("%3d %22.15e %12.5e\n", act+1, lambda[act],
 	       alpha);
@@ -853,8 +853,8 @@ void Proj_A_psi_bi(bispinor * const y, bispinor * const x){
   _FT(daxpy)(&p_n2, &mtheta, (double*) x, &ONE, (double*) y, &ONE);
   /* p_work_bi = Q^dagger*y */ 
   for(i = 0; i < p_k; i++) {
-    p_work_bi[i] = scalar_prod_bi((bispinor*)(p_Q_bi+i*p_lda), (bispinor*) y, 
-				  p_n*sizeof(_Complex double)/sizeof(bispinor));
+    p_work_bi[i] = scalar_prod((spinor*)(p_Q_bi+i*p_lda), (spinor*) y, 
+			       p_n*sizeof(_Complex double)/sizeof(spinor), 1);
   }
   /* y = y - Q*p_work_bi */ 
   _FT(zgemv)(fupl_n, &p_n, &p_k, &CMONE, p_Q_bi, &p_lda, (_Complex double*) p_work_bi, 

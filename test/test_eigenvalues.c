@@ -15,17 +15,14 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/*******************************************************************************
-*
-* File hybrid.c
-*
-* Main for testing the Eigenvalues computation using bispinors 
-*
-* Author: Thomas Chiarappa
-*         Thomas.Chiarappa@mib.infn.it
-*
-*******************************************************************************/
+ *
+ *
+ * Main for testing the Eigenvalues computation using bispinors 
+ *
+ * Author: Thomas Chiarappa
+ *         Thomas.Chiarappa@mib.infn.it
+ *
+ *******************************************************************************/
 
 #define MAIN_PROGRAM
 
@@ -61,18 +58,12 @@
 #include "sighandler.h"
 #include "hybrid_update.h"
 #include "update_tm.h"
-#include "init_gauge_field.h"
-#include "init_geometry_indices.h"
-#include "init_spinor_field.h"
-#include "init_bispinor_field.h"
-#include "init_moment_field.h"
-#include "init_gauge_tmp.h"
+#include "init/init.h"
 #include "test/check_geometry.h"
 #include "boundary.h"
 #include "polyakov_loop.h"
 
-#include "eigenvalues_bi.h"
-#include "max_eigenvalues_bi.h"
+#include "solver/eigenvalues_bi.h"
 
 char * Version = "2.3.5";
 
@@ -193,7 +184,7 @@ int main(int argc,char *argv[]) {
     g_csg_N[0] = g_csg_N[4];
     g_csg_N[4] = j;
     g_csg_N[6] = j;
-    if(ITER_MAX_BCG == 0 || fabs(g_mu3) > 0) {
+    if(fabs(g_mu3) > 0) {
       g_csg_N[6] = 0;
     }
 
@@ -212,7 +203,7 @@ int main(int argc,char *argv[]) {
     g_csg_N[4] = g_csg_N[0];
     g_csg_N[0] = g_csg_N[2];
     g_csg_N[2] = g_csg_N[4];
-    if(ITER_MAX_BCG == 0 || fabs(g_mu2) > 0) {
+    if(fabs(g_mu2) > 0) {
       g_csg_N[4] = 0;
     }
     g_csg_N[6] = 0;
@@ -221,7 +212,7 @@ int main(int argc,char *argv[]) {
   }
   else {
     g_csg_N[2] = g_csg_N[0];
-    if(ITER_MAX_BCG == 0 || fabs(g_mu2) > 0) {
+    if(fabs(g_mu2) > 0) {
       g_csg_N[2] = 0;
     }
     g_csg_N[4] = 0;
@@ -348,8 +339,8 @@ int main(int argc,char *argv[]) {
     fprintf(parameterfile, "The local lattice size is %d x %d x %d x %d\n", (int)(T), (int)(LX), (int)(LY), (int)(LZ));
     fprintf(parameterfile, "g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f \n",g_beta,g_kappa,g_ka_csw_8);
     fprintf(parameterfile, "boundary of fermion fields (t,x,y,z): %f %f %f %f \n",X0,X1,X2,X3);
-    fprintf(parameterfile, "ITER_MAX_BCG=%d, EPS_SQ0=%e, EPS_SQ1=%e EPS_SQ2=%e, EPS_SQ3=%e \n"
-	    ,ITER_MAX_BCG,EPS_SQ0,EPS_SQ1,EPS_SQ2,EPS_SQ3);
+    fprintf(parameterfile, "EPS_SQ0=%e, EPS_SQ1=%e EPS_SQ2=%e, EPS_SQ3=%e \n"
+	    ,EPS_SQ0,EPS_SQ1,EPS_SQ2,EPS_SQ3);
     fprintf(parameterfile, "g_eps_sq_force = %e, g_eps_sq_acc = %e\n", g_eps_sq_force, g_eps_sq_acc);
     fprintf(parameterfile, "dtau=%f, Nsteps=%d, Nmeas=%d, Nsave=%d, integtyp=%d, nsmall=%d \n",
 	    dtau,Nsteps,Nmeas,Nsave,integtyp,nsmall);

@@ -34,7 +34,7 @@
 #include "su3spinor.h"
 #include "expo.h"
 #include "sse.h"
-#include "xchange.h"
+#include "xchange/xchange.h"
 #include "hamiltonian_field.h"
 #include "update_gauge.h"
 

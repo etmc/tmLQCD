@@ -24,15 +24,15 @@
 #include <stdio.h>
 #include <math.h>
 #include "global.h"
-#include "linsolve.h"
 #include "linalg_eo.h"
 #include "start.h"
-#include "tm_operators.h"
+#include "operator/tm_operators.h"
+#include "operator/tm_operators_nd.h"
 #include "Ptilde_nd.h"
 #include "phmc.h"
 #include "reweighting_factor_nd.h"
 
-double reweighting_factor_nd(const int N)
+double reweighting_factor_nd(const int N, const int repro)
 {
   int i, n_iter;
   double sq_norm, corr, sum=0., sq_sum = 0., temp1;
@@ -48,15 +48,15 @@ double reweighting_factor_nd(const int N)
 
   for(i = 0; i < N; ++i)
   {
-    random_spinor_field(g_chi_up_spinor_field[2], VOLUME/2, 1);
-    random_spinor_field(g_chi_dn_spinor_field[2], VOLUME/2, 1);
+    random_spinor_field_eo(g_chi_up_spinor_field[2], repro, RN_GAUSS);
+    random_spinor_field_eo(g_chi_dn_spinor_field[2], repro, RN_GAUSS);
     zero_spinor_field(g_chi_up_spinor_field[3], VOLUME/2);
     zero_spinor_field(g_chi_dn_spinor_field[3], VOLUME/2);
 
     temp1 = phmc_ptilde_cheby_coef[0];
     phmc_ptilde_cheby_coef[0] = temp1 - 1;
 
-    Poly_tilde_ND(g_chi_up_spinor_field[3], g_chi_dn_spinor_field[3], phmc_ptilde_cheby_coef, phmc_ptilde_n_cheby, g_chi_up_spinor_field[2], g_chi_dn_spinor_field[2]);
+    Ptilde_ndpsi(g_chi_up_spinor_field[3], g_chi_dn_spinor_field[3], phmc_ptilde_cheby_coef, phmc_ptilde_n_cheby, g_chi_up_spinor_field[2], g_chi_dn_spinor_field[2], &Qtm_pm_ndpsi);
 
     phmc_ptilde_cheby_coef[0] = temp1;
 

@@ -24,8 +24,6 @@ StartCondition = hot
 kappa = 0.170
 NSave = 500000
 ThetaT = 1
-BCGstabMaxIter = 0
-CGMaxIter = 1000
 GaugeConfigInputFile = conf.save
 UseEvenOdd = yes
 ReversibilityCheck = yes
@@ -56,9 +54,13 @@ BeginMonomial NDPOLY
   Timescale = 1
   StildeMin = 0.013577
   StildeMax = 3.096935
+  LocNormConst = 3.3394134092406311254
   PrecisionPtilde = 1e-05
   DegreeOfMDPolynomial = 48
   PrecisionHfinal = 1e-10
+  2Kappamubar = 0.1105
+  2Kappaepsbar = 0.0935
+  kappa = 0.170
   ComputeEVFreq = 2
 EndMonomial
 
@@ -71,3 +73,12 @@ BeginIntegrator
   Lambda0 = 0.19
   NumberOfTimescales = 2
 EndIntegrator
+
+BeginOperator TMWILSON
+  2kappaMu = 0.01
+  kappa = 0.177
+  UseEvenOdd = yes
+  Solver = CG
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 1000
+EndOperator

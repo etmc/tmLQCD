@@ -27,7 +27,7 @@
 #include "global.h"
 #include "linalg_eo.h"
 #include "start.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 #include "hamiltonian_field.h"
 #include "reweighting_factor.h"
 
@@ -55,12 +55,15 @@ void reweighting_factor(const int N, const int nstore) {
       mnl = &monomial_list[j];
       if(mnl->type != GAUGE) {
 	if(mnl->even_odd_flag) {
-	  n = VOLUME/2;
+	  random_spinor_field_eo(mnl->pf, mnl->rngrepro, RN_GAUSS);
 	}
-	random_spinor_field(mnl->pf, n, mnl->rngrepro);
+	else random_spinor_field_lexic(mnl->pf, mnl->rngrepro, RN_GAUSS);
 	mnl->energy0 = square_norm(mnl->pf, n, 1);
 	if(mnl->type == NDDETRATIO) {
-	  random_spinor_field(mnl->pf2, n, mnl->rngrepro);
+	  if(mnl->even_odd_flag) {
+	    random_spinor_field_eo(mnl->pf2, mnl->rngrepro, RN_GAUSS);
+	  }
+	  else random_spinor_field_lexic(mnl->pf, mnl->rngrepro, RN_GAUSS);
 	  mnl->energy0 += square_norm(mnl->pf2, n, 1);
 	}
       }

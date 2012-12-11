@@ -41,7 +41,6 @@
 #endif
 #ifdef OMP
 # include <omp.h>
-# include "init_omp_accumulators.h"
 #endif
 #include "global.h"
 #include "git_hash.h"
@@ -52,7 +51,7 @@
 /*#include "eigenvalues.h"*/
 #include "measure_gauge_action.h"
 #ifdef MPI
-#include "xchange.h"
+#include "xchange/xchange.h"
 #endif
 #include <io/utils.h>
 #include "read_input.h"
@@ -60,20 +59,13 @@
 #include "sighandler.h"
 #include "boundary.h"
 #include "solver/solver.h"
-#include "init_gauge_field.h"
-#include "init_geometry_indices.h"
-#include "init_spinor_field.h"
-#include "init_moment_field.h"
-#include "init_dirac_halfspinor.h"
-#include "init_bispinor_field.h"
-#include "init_chi_spinor_field.h"
-#include "xchange_halffield.h"
+#include "init/init.h"
 #include "smearing/stout.h"
 #include "invert_eo.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 #include "ranlxd.h"
 #include "phmc.h"
-#include "D_psi.h"
+#include "operator/D_psi.h"
 #include "little_D.h"
 #include "reweighting_factor.h"
 #include "linalg/convert_eo_to_lexic.h"
@@ -89,8 +81,8 @@
 #include <io/utils.h>
 #include "solver/dirac_operator_eigenvectors.h"
 #include "P_M_eta.h"
-#include "tm_operators.h"
-#include "Dov_psi.h"
+#include "operator/tm_operators.h"
+#include "operator/Dov_psi.h"
 #include "solver/spectral_proj.h"
 void usage()
 {
@@ -294,7 +286,7 @@ int main(int argc, char *argv[])
     strcat(parameterfilename, ".para");
 
     parameterfile = fopen(parameterfilename, "w");
-    write_first_messages(parameterfile, 1);
+    write_first_messages(parameterfile, "invert", git_hash);
     fclose(parameterfile);
   }
 
@@ -411,7 +403,7 @@ int main(int argc, char *argv[])
         s[i] = s_+i*VOLUMEPLUSRAND;
 #endif
 	
-        z2_random_spinor_field(s[i], VOLUME);
+        random_spinor_field_lexic(s[i], reproduce_randomnumber_flag,RN_Z2);
 	
 /* 	what is this here needed for?? */
 /*         spinor *aux_,*aux; */
@@ -451,18 +443,18 @@ int main(int argc, char *argv[])
 
       /*       g_mu = 0.; */
       /*       boundary(0.125); */
-      generate_dfl_subspace(g_N_s, VOLUME);
+      generate_dfl_subspace(g_N_s, VOLUME, reproduce_randomnumber_flag);
       /*       boundary(g_kappa); */
       /*       g_mu = g_mu1; */
 
       /* Compute little Dirac operators */
       /*       alt_block_compute_little_D(); */
       if (g_debug_level > 0) {
-        check_projectors();
-        check_local_D();
+        check_projectors(reproduce_randomnumber_flag);
+        check_local_D(reproduce_randomnumber_flag);
       }
       if (g_debug_level > 1) {
-        check_little_D_inversion();
+        check_little_D_inversion(reproduce_randomnumber_flag);
       }
 
     }
@@ -515,7 +507,7 @@ int main(int argc, char *argv[])
           /* 0-3 in case of 1 flavour  */
           /* 0-7 in case of 2 flavours */
           prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location);
-          operator_list[op_id].inverter(op_id, index_start);
+          operator_list[op_id].inverter(op_id, index_start, 1);
         }
       }
 

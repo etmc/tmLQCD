@@ -1,0 +1,31 @@
+# This is an example of input file for the LapH program.
+# Configure with --enable-laph, (lapack also needed. If parallel, --enable-indexindepgeom --enable-tsplitpar are also needed)
+# e.g., (parallel):
+# ./configure --enable-sse3 --enable-mpi --with-mpidimension=XYZ  --disable-halfspinor --enable-indexindepgeom --enable-tsplitpar --enable-laph --with-limedir=${limedir} --with-lemondir=${lemondir} --with-lapack=${lapacklib} CC="${mpicomp} -O3" CFLAGS="-msse3 -O3"
+# e.g. serial:
+# ./configure --enable-sse3 --disable-mpi --disable-halfspinor  --enable-laph --with-limedir=${limedir} --with-lapack=${lapacklib}
+# Compile with make LapH_ev
+# Executable LapH_ev 
+# Use this file as an example of input.
+# The code will write out the eigenvalues and eigenvectors (7 in this example) of the LapH operator (see 0905.2160).
+# The eigenvalues are written in text files eigenvalue.TT.CCCC (TT=timeslice, CCCC= configuration number).
+# The eigenvectors are written in binary files eigenvector.NN.TT.CCC (NN=eigenvalue number, TT, CC as above),
+# and have size L^3*Nc*2*sizeof(double).
+
+L=16
+T=32
+
+DisableIOChecks = yes
+DebugLevel = 5
+InitialStoreCounter = 20
+NoEigenvalues = 7
+Measurements = 1
+2kappaMu = 0.001286848
+kappa = 0.160856
+NrXProcs = 2
+NrYProcs = 1
+NrZProcs = 2
+BCAngleT = 1.
+GaugeConfigInputFile = conf
+UseEvenOdd = yes
+

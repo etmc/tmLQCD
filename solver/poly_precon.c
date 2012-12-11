@@ -27,9 +27,9 @@
 #include "su3.h"
 #include "start.h"
 #include "linalg_eo.h"
-#include "tm_operators.h"
+#include "operator/tm_operators.h"
 #include "boundary.h"
-#include "D_psi.h"
+#include "operator/D_psi.h"
 #include "poly_precon.h"
 
 

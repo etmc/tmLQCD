@@ -1,4 +1,4 @@
-TESTS = tests/test_sample tests/test_su3 tests/test_buffers tests/test_qpx tests/test_linalg
+TESTS = tests/test_sample tests/test_su3 tests/test_buffers tests/test_qpx tests/test_linalg tests/test_clover
 
 TEMP = $(patsubst %.c,%,$(wildcard $(top_srcdir)/tests/*.c))
 TESTMODULES = $(patsubst $(top_srcdir)/%,%,$(TEMP))
@@ -46,6 +46,12 @@ TEST_BUFFERS_FLAGS:=-lbuffers -L$(top_builddir)/buffers/
 TEST_BUFFERS_LIBS:=$(top_builddir)/cu/libcu.a $(top_builddir)/buffers/libbuffers.a
 tests/test_buffers: $(TEST_BUFFERS_OBJECTS) $(TEST_BUFFERS_LIBS)
 	${LINK} $(TEST_BUFFERS_OBJECTS) $(TESTFLAGS) $(TEST_BUFFERS_FLAGS)
+
+TEST_CLOVER_OBJECTS:=$(patsubst $(top_srcdir)/%.c,%.o,$(wildcard $(top_srcdir)/tests/test_clover*.c)) clover_leaf.o
+TEST_CLOVER_FLAGS:=-lm -lhmc -llinalg
+TEST_CLOVER_LIBS:=$(top_builddir)/cu/libcu.a
+tests/test_clover: $(TEST_CLOVER_OBJECTS) $(TEST_CLOVER_LIBS)
+	${LINK} $(TEST_CLOVER_OBJECTS) $(TESTFLAGS) $(TEST_CLOVER_FLAGS)
 
 tests: ${TESTS}
 

@@ -1,0 +1,98 @@
+
+srcdir = @srcdir@
+top_builddir =  @top_builddir@
+abs_top_builddir = @abs_top_builddir@
+top_srcdir = @top_srcdir@
+abs_top_srcdir = @abs_top_srcdir@
+subdir = xchange
+builddir = @builddir@
+
+CFLAGS = @CFLAGS@
+DEPFLAGS = @DEPFLAGS@
+LDFLAGS = @LDFLAGS@
+DEFS = @DEFS@
+OPTARGS = @OPTARGS@
+SOPTARGS = @SOPTARGS@
+
+AR = @AR@
+RANLIB = @RANLIB@
+CC = @CC@
+CCDEP = @CCDEP@
+CCLD = ${CC}
+LINK = ${CCLD} ${CFLAGS} ${LDFLAGS} ${OPTARGS} -o $@
+LEX = @LEX@
+AUTOCONF = @AUTOCONF@
+DEFS = @DEFS@
+
+INCLUDES = @INCLUDES@
+LDADD =
+#COMPILE = ${CC} ${DEFS} ${INCLUDES} ${CFLAGS}
+COMPILE = ${CC} $(DEFS) ${INCLUDES} ${CFLAGS}
+
+LIBRARIES = libxchange
+libxchange_TARGETS = xchange_deri xchange_field xchange_gauge xchange_halffield \
+	xchange_lexicfield xchange_2fields xchange_field_tslice \
+	xchange_jacobi
+
+libxchange_STARGETS = 
+
+libxchange_OBJECTS = $(addsuffix .o, ${libxchange_TARGETS})
+libxchange_SOBJECTS = $(addsuffix .o, ${libxchange_STARGETS})
+
+# default rule
+
+all: Makefile dep libxchange.a
+
+# rules for debugging
+debug all-debug: CFLAGS := $(CFLAGS) @DEBUG_FLAG@
+debug all-debug: all
+
+# rules for profiling information
+profile all-profile: CFLAGS := $(filter-out -fomit-frame-pointer,${CFLAGS}) @PROFILE_FLAG@
+profile all-profile: all
+
+
+#include dep rules
+
+-include $(addsuffix .d,${libxchange_TARGETS})
+
+include ${top_srcdir}/Makefile.global
+
+# rule to compile objects
+
+${libxchange_OBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/config.h
+	$(COMPILE) ${OPTARGS} -c $<
+
+${libxchange_SOBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/config.h
+	$(COMPILE) ${SOPTARGS} -c $<
+
+# rule to make libxchange
+
+libxchange.a: ${libxchange_OBJECTS} ${libxchange_SOBJECTS} Makefile
+	@rm -f libxchange.a
+	@${AR} cru libxchange.a ${libxchange_OBJECTS} ${libxchange_SOBJECTS}
+	@$(RANLIB) libxchange.a
+	@cp libxchange.a ../lib/libxchange.a
+
+# rule to generate .d files
+
+$(addsuffix .d, $(libxchange_TARGETS) ${libxchange_STARGETS}): %.d: ${srcdir}/%.c Makefile
+	@${CCDEP} ${DEFS} ${DEPFLAGS} ${INCLUDES} $< > $@
+
+# rule to make dependencies
+
+dep: ${addsuffix .d, ${libxchange_TARGETS} ${libxchange_STARGETS}}
+
+# rules to clean
+
+compile-clean: Makefile
+	rm -f ${$(addsuffix _OBJECTS, ${LIBRARIES})} ${$(addsuffix _SOBJECTS, ${LIBRARIES})} *.d
+
+clean: compile-clean 
+	rm -f $(addsuffix .a, ${LIBRARIES})
+	rm -f ../lib/libxchange.a
+
+distclean: clean
+	rm -f Makefile
+
+.PHONY: all dep clean compile-clean distclean profile all-profile debug all-debug

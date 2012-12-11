@@ -28,10 +28,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include "global.h"
-#include "D_psi.h"
+#include "operator/D_psi.h"
 #include "linalg_eo.h"
 #include "start.h"
-#include "xchange_lexicfield.h"
+#include "xchange/xchange.h"
 #include "block.h"
 #include "solver/lu_solve.h"
 #include "su3.h"

@@ -43,7 +43,6 @@
 #endif
 #ifdef OMP
 # include <omp.h>
-# include "init_omp_accumulators.h"
 #endif
 #include "global.h"
 #include "git_hash.h"
@@ -56,26 +55,18 @@
 #include "measure_gauge_action.h"
 #include "measure_rectangles.h"
 #ifdef MPI
-# include "xchange.h"
+# include "xchange/xchange.h"
 #endif
 #include "read_input.h"
 #include "mpi_init.h"
 #include "sighandler.h"
 #include "update_tm.h"
-#include "init_gauge_field.h"
-#include "init_geometry_indices.h"
-#include "init_spinor_field.h"
-#include "init_moment_field.h"
-#include "init_gauge_tmp.h"
-#include "init_dirac_halfspinor.h"
-#include "init_bispinor_field.h"
-#include "init_chi_spinor_field.h"
-#include "xchange_halffield.h"
+#include "init/init.h"
 #include "test/check_geometry.h"
 #include "boundary.h"
 #include "phmc.h"
 #include "solver/solver.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 #include "integrator.h"
 #include "sighandler.h"
 #include "measurements.h"
@@ -126,7 +117,7 @@ int main(int argc,char *argv[]) {
 /* For online measurements */
   measurement * meas;
   int imeas;
-
+  
 #ifdef _KOJAK_INST
 #pragma pomp inst init
 #pragma pomp inst begin(main)
@@ -212,8 +203,8 @@ int main(int argc,char *argv[]) {
   init_omp_accumulators(omp_num_threads);
 #endif
 
-  DUM_DERI = 6;
-  DUM_SOLVER = DUM_DERI+8;
+  DUM_DERI = 4;
+  DUM_SOLVER = DUM_DERI+1;
   DUM_MATRIX = DUM_SOLVER+6;
   if(g_running_phmc) {
     NO_OF_SPINORFIELDS = DUM_MATRIX+8;
@@ -229,25 +220,6 @@ int main(int argc,char *argv[]) {
 
   tmlqcd_mpi_init(argc, argv);
 
-  if(even_odd_flag) {
-    j = init_monomials(VOLUMEPLUSRAND/2, even_odd_flag);
-  }
-  else {
-    j = init_monomials(VOLUMEPLUSRAND, even_odd_flag);
-  }
-  if (j != 0) {
-    fprintf(stderr, "Not enough memory for monomial pseudo fermion fields! Aborting...\n");
-    exit(0);
-  }
-
-  init_integrator();
-
-  if(g_proc_id == 0) {
-    for(j = 0; j < no_monomials; j++) {
-      printf("# monomial id %d type = %d timescale %d\n", j, monomial_list[j].type, monomial_list[j].timescale);
-    }
-  }
-
   if(nstore == -1) {
     countfile = fopen(nstore_filename, "r");
     if(countfile != NULL) {
@@ -261,14 +233,14 @@ int main(int argc,char *argv[]) {
       trajectory_counter = 0;
     }
   }
-
+  
 #ifndef MPI
   g_dbw2rand = 0;
 #endif
-
-
+  
+  
   g_mu = g_mu1;
-
+  
 #ifdef _GAUGE_COPY
   status = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
@@ -317,26 +289,24 @@ int main(int argc,char *argv[]) {
     }
   }
 
-   /* list and initialize measurements*/
-   if(g_proc_id == 0) {
+  /* list and initialize measurements*/
+  if(g_proc_id == 0) {
     printf("\n");
     for(j = 0; j < no_measurements; j++) {
       printf("# measurement id %d, type = %d: Frequency %d\n", j, measurement_list[j].type, measurement_list[j].freq);
     }
-   }
-   init_measurements();
-
-  zero_spinor_field(g_spinor_field[DUM_DERI+4],VOLUME);
-  zero_spinor_field(g_spinor_field[DUM_DERI+5],VOLUME);
-  zero_spinor_field(g_spinor_field[DUM_DERI+6],VOLUME);
+  }
+  init_measurements();
 
   /*construct the filenames for the observables and the parameters*/
-  strcpy(datafilename,filename);  strcat(datafilename,".data");
-  strcpy(parameterfilename,filename);  strcat(parameterfilename,".para");
+  strcpy(datafilename,filename);  
+  strcat(datafilename,".data");
+  strcpy(parameterfilename,filename);  
+  strcat(parameterfilename,".para");
 
   if(g_proc_id == 0){
     parameterfile = fopen(parameterfilename, "a");
-    write_first_messages(parameterfile, 0);
+    write_first_messages(parameterfile, "hmc", git_hash);
   }
 
   /* define the geometry */
@@ -368,7 +338,7 @@ int main(int argc,char *argv[]) {
 #endif
 
   /* Initialise random number generator */
-  start_ranlux(rlxd_level, random_seed^(nstore+1) );
+  start_ranlux(rlxd_level, random_seed^nstore );
 
   /* Set up the gauge field */
   /* continue and restart */
@@ -402,8 +372,23 @@ int main(int argc,char *argv[]) {
   xchange_gauge(g_gauge_field);
 #endif
 
-  if(g_running_phmc) {
-    init_phmc();
+  if(even_odd_flag) {
+    j = init_monomials(VOLUMEPLUSRAND/2, even_odd_flag);
+  }
+  else {
+    j = init_monomials(VOLUMEPLUSRAND, even_odd_flag);
+  }
+  if (j != 0) {
+    fprintf(stderr, "Not enough memory for monomial pseudo fermion fields! Aborting...\n");
+    exit(0);
+  }
+
+  init_integrator();
+
+  if(g_proc_id == 0) {
+    for(j = 0; j < no_monomials; j++) {
+      printf("# monomial id %d type = %d timescale %d\n", j, monomial_list[j].type, monomial_list[j].timescale);
+    }
   }
 
   plaquette_energy = measure_gauge_action( (const su3**) g_gauge_field);
@@ -420,10 +405,9 @@ int main(int argc,char *argv[]) {
     printf("# Computed plaquette value: %14.12f.\n", plaquette_energy/(6.*VOLUME*g_nproc));
     fclose(parameterfile);
   }
- 
 
   /* set ddummy to zero */
-  for(ix = 0; ix < VOLUME+RAND; ix++){
+  for(ix = 0; ix < VOLUMEPLUSRAND; ix++){
     for(mu=0; mu<4; mu++){
       ddummy[ix][mu].d1=0.;
       ddummy[ix][mu].d2=0.;
@@ -448,6 +432,7 @@ int main(int argc,char *argv[]) {
     fclose(countfile);
   }
 
+
   /* Loop for measurements */
   for(j = 0; j < Nmeas; j++) {
     if(g_proc_id == 0) {
@@ -456,7 +441,8 @@ int main(int argc,char *argv[]) {
 
     return_check = return_check_flag && (trajectory_counter%return_check_interval == 0);
 
-    accept = update_tm(&plaquette_energy, &rectangle_energy, datafilename, return_check, Ntherm<trajectory_counter);
+    accept = update_tm(&plaquette_energy, &rectangle_energy, datafilename, 
+		       return_check, Ntherm<trajectory_counter, trajectory_counter);
     Rate += accept;
 
     /* Save gauge configuration all Nsave times */
@@ -535,11 +521,6 @@ int main(int argc,char *argv[]) {
         meas->measurefunc(trajectory_counter, imeas, even_odd_flag);
       }
     }
-
-    if((g_rec_ev !=0) && (trajectory_counter%g_rec_ev == 0) && (g_running_phmc)) {
-      phmc_compute_ev(trajectory_counter, plaquette_energy);
-    }
-
 
     if(g_proc_id == 0) {
       verbose = 1;
