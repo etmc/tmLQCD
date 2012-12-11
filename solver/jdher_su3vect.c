@@ -133,7 +133,7 @@ int ISEED[4] = {2, 3, 5, 7};
  ISEED[0] = 2;
   
 	/* print info header */
- if ((verbosity > 0) && (g_proc_id == 0)){
+ if ((verbosity > 2) && (g_proc_id == 0)){
    printf("Jacobi-Davidson method for hermitian Matrices\n");
    printf("Solving  A*x = lambda*x \n\n");
    printf("  N=      %10d  ITMAX=%4d\n", n, itmax);
@@ -654,7 +654,7 @@ int ISEED[4] = {2, 3, 5, 7};
     A_psi((su3_vector*) r, (su3_vector*) q,tslice);
     _FT(daxpy)(&n2, &theta, (double*) q, &ONE, (double*) r, &ONE);
     alpha = sqrt(square_norm_su3vect((su3_vector*) r, N, 1));
-    if(g_proc_id == 0 && verbosity > 0) {
+    if(g_proc_id == 0 && verbosity > 1) {
       printf("%3d %22.15e %12.5e\n", act+1, lambda[act], alpha);
     }
   }
@@ -690,7 +690,7 @@ static void print_status_su3vect(int verbosity, int it, int k, int j, int kmax,
 
   int i, idummy;
 
-  if (verbosity >= 2) {
+  if (verbosity > 2) {
     if (blksize == 1) {
       if (it == 0) {
 	printf("  IT   K   J       RES LINIT RITZ-VALUES(1:5)\n");
