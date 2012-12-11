@@ -1,6 +1,6 @@
 /***********************************************************************
- *  
- * Copyright (C) 2012 Carsten Urbach
+ *
+ * Copyright (C) 2001 Martin Hasenbusch, 2012 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -18,40 +18,22 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#ifndef _MEASURE_ORIENTED_PLAQUETTES_H
+#define _MEASURE_ORIENTED_PLAQUETTES_H
 
-#include <stdio.h>
-#include <global.h>
+#include "su3.h"
 
-#ifdef MPI
-#include <mpi.h>
-#endif
+/* measures the lattice average of plaquettes oriented in the 6
+   hyperplanes TX, TY, TZ, XY, XZ, YZ and stores them in this
+   order in the plaq array (of 6 elements) 
+   
+   the caller must provide the memory for plaq */
 
-#include "fatal_error.h"
+void measure_oriented_plaquettes(const su3 ** const gf, double *plaq);
 
-void fatal_error(char const *error, char const *function)
-{
-  if (error != NULL)
-  {
-    fprintf(stderr, "FATAL ERROR\n");
-    if (function != NULL)
-    {
-#ifdef MPI
-      fprintf(stderr, "  Within %s (reported by node %d):\n", function, g_proc_id);
-#else
-      fprintf(stderr, "  Within %s:\n", function);
-#endif
-    }
-    fprintf(stderr, "    %s\n", error);
-    fflush(stderr);
-  }
-  
-#ifdef MPI
-  MPI_Abort(MPI_COMM_WORLD, 1);
-  MPI_Finalize();
-#endif
+/* implements the online measurement function for the oriented
+   plaquettes, writes (in append mode) into "oriented_plaquettes.data" */
 
-  exit(500);
-}
+void oriented_plaquettes_measurement(const int traj, const int id, const int ieo);
+
+#endif  
