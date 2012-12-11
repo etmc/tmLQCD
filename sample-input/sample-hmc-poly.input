@@ -15,8 +15,6 @@ Measurements = 10000
 kappa = 0.177
 NSave = 10000
 ThetaT = 1
-BCGstabMaxIter = 0
-CGMaxIter = 1000
 UseEvenOdd = yes
 ReversibilityCheck = yes
 ReversibilityCheckIntervall = 100
@@ -58,3 +56,12 @@ BeginIntegrator
   Lambda1 = 0.20
   NumberOfTimescales = 2
 EndIntegrator
+
+BeginOperator TMWILSON
+  2KappaMu = 0.177
+  kappa = 0.177
+  UseEvenOdd = yes
+  Solver = CG
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 1000
+EndOperator
