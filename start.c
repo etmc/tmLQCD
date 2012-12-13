@@ -538,7 +538,8 @@ void unit_g_gauge_field(void)
 
 void random_gauge_field(const int repro) {
 
-  int ix, mu, t0, t, x, X, y, Y, z, Z, id;
+  int ix, mu, t0, t, x, X, y, Y, z, Z;
+  int id = 0; /* May not be initialized for scalar builds! */
   int coords[4];
   su3 ALIGN tmp;
 #ifdef MPI
