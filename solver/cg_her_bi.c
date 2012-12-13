@@ -116,7 +116,7 @@ int cg_her_bi(bispinor * const P, bispinor * const Q, const int max_iter,
     /* Check whether the precision is reached ... */
     err=square_norm((spinor*)bisolver_field[1], 2*N, 1);
 
-    if((g_proc_id == g_stdio_proc) && (g_debug_level > 1)) {
+    if((g_proc_id == g_stdio_proc) && (g_debug_level > 2)) {
       printf("%d\t%g\n",iteration,err); fflush( stdout);
     }
     

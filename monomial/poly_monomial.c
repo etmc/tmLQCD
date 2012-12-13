@@ -24,14 +24,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-/*
-.
-.
-.
-*/
-
 #include "global.h"
 #include "start.h"
+#include "gettime.h"
 #include "read_input.h"
 #include "monomial/monomial.h"
 #include "poly_monomial.h"
@@ -59,14 +54,14 @@ static inline void setPhmcVars(monomial *mnl){
 }
 
 void poly_derivative(const int id, hamiltonian_field_t * const hf){
-
+  double atime, etime;
   monomial * mnl = &monomial_list[id];
   int k,j;
   int degreehalf=mnl->MDPolyDegree/2;
 
   spinor** chi_spinor_field=mnl->MDPoly_chi_spinor_fields;
 
-
+  atime = gettime();
   (*mnl).forcefactor = -mnl->MDPolyLocNormConst/mnl->MDPolyLmax;
 
 
@@ -176,8 +171,11 @@ void poly_derivative(const int id, hamiltonian_field_t * const hf){
   g_mu = g_mu1;
   boundary(g_kappa);
   popPhmcVars();
-
-
+  etime = gettime();
+  if(g_debug_level > 1 && g_proc_id == 0) {
+    printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
+  }
+  return;
 }
 
 double poly_acc(const int id, hamiltonian_field_t * const hf){
@@ -277,7 +275,7 @@ void poly_heatbath(const int id, hamiltonian_field_t * const hf){
   if(mnl->even_odd_flag) {
 
 
-    random_spinor_field_eo(mnl->w_fields[0], mnl->rngrepro);
+    random_spinor_field_eo(mnl->w_fields[0], mnl->rngrepro, RN_GAUSS);
     mnl->energy0 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
 
     if(g_proc_id == 0 && g_debug_level > 3) {

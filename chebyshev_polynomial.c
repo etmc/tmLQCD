@@ -292,8 +292,8 @@ void degree_of_polynomial(const int repro){
    chebyshev_polynomial(cheb_evmin, cheb_evmax, dop_cheby_coef, N_CHEBYMAX, 0.25);
 
    temp=1.0;
-   random_spinor_field_eo(ss, repro);
-   random_spinor_field_eo(sc, repro);
+   random_spinor_field_eo(ss, repro, RN_GAUSS);
+   random_spinor_field_eo(sc, repro, RN_GAUSS);
 /*   assign(&sc[0], &ss[0],VOLUME/2);
 
   Qtm_pm_psi(&auxs[0], &ss[0]);

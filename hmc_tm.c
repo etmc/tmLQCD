@@ -318,7 +318,7 @@ int main(int argc,char *argv[])
 
   if(g_proc_id == 0){
     parameterfile = fopen(parameterfilename, "a");
-    write_first_messages(parameterfile, 0);
+    write_first_messages(parameterfile, "hmc", git_hash);
   }
 
   /* define the geometry */
@@ -350,7 +350,7 @@ int main(int argc,char *argv[])
 #endif
 
   /* Initialise random number generator */
-  start_ranlux(rlxd_level, random_seed^(nstore+1) );
+  start_ranlux(rlxd_level, random_seed^nstore );
 
   /* Set up the gauge field */
   /* continue and restart */

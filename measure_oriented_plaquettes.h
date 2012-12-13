@@ -1,6 +1,6 @@
 /***********************************************************************
  *
- * Copyright (C) 2011 Elena Garcia-Ramos
+ * Copyright (C) 2001 Martin Hasenbusch, 2012 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -18,27 +18,22 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _P_M_ETA_H
-#define _P_M_ETA_H
+#ifndef _MEASURE_ORIENTED_PLAQUETTES_H
+#define _MEASURE_ORIENTED_PLAQUETTES_H
 
 #include "su3.h"
 
-extern int x_n_cheby;
-extern double * x_cheby_coef;
+/* measures the lattice average of plaquettes oriented in the 6
+   hyperplanes TX, TY, TZ, XY, XZ, YZ and stores them in this
+   order in the plaq array (of 6 elements) 
+   
+   the caller must provide the memory for plaq */
 
-void norm_X_sqr_psi(spinor * const R, spinor * const S, double const mstar);
+void measure_oriented_plaquettes(const su3 ** const gf, double *plaq);
 
-void norm_X_n_psi(spinor * const R, spinor * const S, const int n, double const mstar);
+/* implements the online measurement function for the oriented
+   plaquettes, writes (in append mode) into "oriented_plaquettes.data" */
 
-void X_over_sqrt_X_sqr(spinor * const R, double * const c, const int n, spinor * const S, const double minev, double const mstar);
+void oriented_plaquettes_measurement(const int traj, const int id, const int ieo);
 
-void h_X_sqr_eta(spinor * const R1,spinor * const R2,spinor * const S, double const mstar);
-
-void h_X_eta(spinor * const R,spinor * const S, double const mstar);
-
-void h_X_4_eta(spinor * const R1, spinor * const R2, spinor * const S, double const mstar);
-
-void Check_Approximation(double const mstar, const int repro);
-
-#endif
-
+#endif  

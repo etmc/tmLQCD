@@ -62,7 +62,7 @@
 
 void dummy_D(spinor * const, spinor * const);
 void dummy_DbD(spinor * const s, spinor * const r, spinor * const p, spinor * const q);
-void op_invert(const int op_id, const int index_start);
+void op_invert(const int op_id, const int index_start, const int write_prop);
 void op_write_prop(const int op_id, const int index_start, const int append_);
 
 operator operator_list[max_no_operators];
@@ -143,57 +143,60 @@ int add_operator(const int type) {
 }
 
 int init_operators() {
-  int i;
+  static int oinit = 0;
   operator * optr;
-  for(i = 0; i < no_operators; i++) {
-    optr = operator_list + i;
-    /* This is a hack, it should be set on an operator basis. */
-    optr->rel_prec = g_relative_precision_flag;
-    if(optr->type == TMWILSON || optr->type == WILSON) {
-      if(optr->c_sw > 0) {
-	init_sw_fields();
+  if(!oinit) {
+    oinit = 1;
+    for(int i = 0; i < no_operators; i++) {
+      optr = operator_list + i;
+      /* This is a hack, it should be set on an operator basis. */
+      optr->rel_prec = g_relative_precision_flag;
+      if(optr->type == TMWILSON || optr->type == WILSON) {
+	if(optr->c_sw > 0) {
+	  init_sw_fields();
+	}
+	if(optr->even_odd_flag) {
+	  optr->applyQp = &Qtm_plus_psi;
+	  optr->applyQm = &Qtm_minus_psi;
+	  optr->applyQsq = &Qtm_pm_psi;
+	  optr->applyMp = &Mtm_plus_psi;
+	  optr->applyMm = &Mtm_minus_psi;
+	}
+	else {
+	  optr->applyQp = &Q_plus_psi;
+	  optr->applyQm = &Q_minus_psi;
+	  optr->applyQsq = &Q_pm_psi;
+	  optr->applyMp = &D_psi;
+	  optr->applyMm = &D_psi;
+	}
+	if(optr->solver == 12) {
+	  if (g_cart_id == 0 && optr->even_odd_flag == 1)
+	    fprintf(stderr, "CG Multiple mass solver works only without even/odd! Forcing!\n");
+	  optr->even_odd_flag = 0;
+	  if (g_cart_id == 0 && optr->DownProp)
+	    fprintf(stderr, "CGMMS doesn't need AddDownPropagator! Switching Off!\n");
+	  optr->DownProp = 0;
+	}
       }
-      if(optr->even_odd_flag) {
-        optr->applyQp = &Qtm_plus_psi;
-        optr->applyQm = &Qtm_minus_psi;
-        optr->applyQsq = &Qtm_pm_psi;
-        optr->applyMp = &Mtm_plus_psi;
-        optr->applyMm = &Mtm_minus_psi;
+      else if(optr->type == OVERLAP) {
+	optr->even_odd_flag = 0;
+	optr->applyM = &Dov_psi;
+	optr->applyQ = &Qov_psi;
       }
-      else {
-        optr->applyQp = &Q_plus_psi;
-        optr->applyQm = &Q_minus_psi;
-        optr->applyQsq = &Q_pm_psi;
-        optr->applyMp = &D_psi;
-        optr->applyMm = &D_psi;
+      else if(optr->type == DBTMWILSON) {
+	optr->even_odd_flag = 1;
+	optr->applyDbQsq = &Qtm_pm_ndpsi;
+	/* TODO: this should be here!       */
+	/* Chi`s-spinors  memory allocation */
+	/*       if(init_chi_spinor_field(VOLUMEPLUSRAND/2, 20) != 0) { */
+	/* 	fprintf(stderr, "Not enough memory for 20 NDPHMC Chi fields! Aborting...\n"); */
+	/* 	exit(0); */
+	/*       } */
       }
-      if(optr->solver == 12) {
-        if (g_cart_id == 0 && optr->even_odd_flag == 1)
-          fprintf(stderr, "CG Multiple mass solver works only without even/odd! Forcing!\n");
-        optr->even_odd_flag = 0;
-        if (g_cart_id == 0 && optr->DownProp)
-          fprintf(stderr, "CGMMS doesn't need AddDownPropagator! Switching Off!\n");
-        optr->DownProp = 0;
+      else if(optr->type == DBCLOVER) {
+	optr->even_odd_flag = 1;
+	optr->applyDbQsq = &Qtm_pm_ndpsi;
       }
-    }
-    else if(optr->type == OVERLAP) {
-      optr->even_odd_flag = 0;
-      optr->applyM = &Dov_psi;
-      optr->applyQ = &Qov_psi;
-    }
-    else if(optr->type == DBTMWILSON) {
-      optr->even_odd_flag = 1;
-      optr->applyDbQsq = &Qtm_pm_ndpsi;
-      /* TODO: this should be here!       */
-      /* Chi`s-spinors  memory allocation */
-      /*       if(init_chi_spinor_field(VOLUMEPLUSRAND/2, 20) != 0) { */
-      /* 	fprintf(stderr, "Not enough memory for 20 NDPHMC Chi fields! Aborting...\n"); */
-      /* 	exit(0); */
-      /*       } */
-    }
-    else if(optr->type == DBCLOVER) {
-      optr->even_odd_flag = 1;
-      optr->applyDbQsq = &Qtm_pm_ndpsi;
     }
   }
   return(0);
@@ -213,7 +216,7 @@ void dummy_DbD(spinor * const s, spinor * const r, spinor * const p, spinor * co
   return;
 }
 
-void op_invert(const int op_id, const int index_start) {
+void op_invert(const int op_id, const int index_start, const int write_prop) {
   operator * optr = &operator_list[op_id];
   double atime = 0., etime = 0., nrm1 = 0., nrm2 = 0.;
   int i;
@@ -279,7 +282,7 @@ void op_invert(const int op_id, const int index_start) {
         mul_r(optr->prop0, (2*optr->kappa), optr->prop0, VOLUME / 2);
         mul_r(optr->prop1, (2*optr->kappa), optr->prop1, VOLUME / 2);
       }
-      if (optr->solver != CGMMS) /* CGMMS handles its own I/O */
+      if (optr->solver != CGMMS && write_prop) /* CGMMS handles its own I/O */
         optr->write_prop(op_id, index_start, i);
       if(optr->DownProp) {
         optr->mu = -optr->mu;
@@ -361,7 +364,7 @@ void op_invert(const int op_id, const int index_start) {
       mul_one_pm_itau2(optr->prop1, optr->prop3, g_spinor_field[DUM_DERI+1], 
                        g_spinor_field[DUM_DERI+3], -1., VOLUME/2);
       /* write propagator */
-      optr->write_prop(op_id, index_start, i);
+      if(write_prop) optr->write_prop(op_id, index_start, i);
 
       mul_r(optr->prop0, 1./(2*optr->kappa), g_spinor_field[DUM_DERI], VOLUME/2);
       mul_r(optr->prop1, 1./(2*optr->kappa), g_spinor_field[DUM_DERI+1], VOLUME/2);
@@ -403,7 +406,7 @@ void op_invert(const int op_id, const int index_start) {
 
     invert_overlap(op_id, index_start); 
 
-    optr->write_prop(op_id, index_start, 0);
+    if(write_prop) optr->write_prop(op_id, index_start, 0);
   }
   etime = gettime();
   if (g_cart_id == 0 && g_debug_level > 0) {

@@ -292,7 +292,7 @@ int main(int argc, char *argv[])
     strcat(parameterfilename, ".para");
 
     parameterfile = fopen(parameterfilename, "w");
-    write_first_messages(parameterfile, 1);
+    write_first_messages(parameterfile, "invert", git_hash);
     fclose(parameterfile);
   }
 
@@ -407,7 +407,7 @@ int main(int argc, char *argv[])
         s[i] = s_+i*VOLUMEPLUSRAND;
 #endif
 	
-        z2_random_spinor_field(s[i], VOLUME);
+        random_spinor_field_lexic(s[i], reproduce_randomnumber_flag,RN_Z2);
 	
 /* 	what is this here needed for?? */
 /*         spinor *aux_,*aux; */
@@ -511,7 +511,7 @@ int main(int argc, char *argv[])
           /* 0-3 in case of 1 flavour  */
           /* 0-7 in case of 2 flavours */
           prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location);
-          operator_list[op_id].inverter(op_id, index_start);
+          operator_list[op_id].inverter(op_id, index_start, 1);
         }
       }
 

@@ -28,6 +28,7 @@
 #include "global.h"
 #include "su3.h"
 #include "start.h"
+#include "gettime.h"
 #include "linalg_eo.h"
 #include "deriv_Sb.h"
 #include "deriv_Sb_D_psi.h"
@@ -44,9 +45,10 @@
 /* think about chronological solver ! */
 
 void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
-
+  double atime, etime;
   monomial * mnl = &monomial_list[no];
-
+  
+  atime = gettime();
   mnl->forcefactor = 1.;
 
   if(mnl->even_odd_flag) {
@@ -183,7 +185,10 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
   }
   g_mu = g_mu1;
   boundary(g_kappa);
-
+  etime = gettime();
+  if(g_debug_level > 1 && g_proc_id == 0) {
+    printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
+  }
   return;
 }
 
@@ -198,7 +203,7 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
   mnl->iter0 = 0;
   mnl->iter1 = 0;
   if(mnl->even_odd_flag) {
-    random_spinor_field_eo(mnl->w_fields[0], mnl->rngrepro);
+    random_spinor_field_eo(mnl->w_fields[0], mnl->rngrepro, RN_GAUSS);
     mnl->energy0  = square_norm(mnl->w_fields[0], VOLUME/2, 1);
 
     mnl->Qp(mnl->w_fields[1], mnl->w_fields[0]);
@@ -212,7 +217,7 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
   }
   else {
-    random_spinor_field_lexic(mnl->w_fields[0], mnl->rngrepro);
+    random_spinor_field_lexic(mnl->w_fields[0], mnl->rngrepro,RN_GAUSS);
     mnl->energy0 = square_norm(mnl->w_fields[0], VOLUME, 1);
 
     Q_plus_psi(mnl->w_fields[1], mnl->w_fields[0]);

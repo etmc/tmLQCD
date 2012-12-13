@@ -71,8 +71,6 @@
 #define _default_g_stdio_proc 0
 #define _default_index_start 0
 #define _default_index_end 12
-#define _default_ITER_MAX_BCG 5000
-#define _default_ITER_MAX_CG 5000
 #define _default_X0 0.
 #define _default_X1 0.
 #define _default_X2 0.

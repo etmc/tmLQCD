@@ -170,7 +170,7 @@ void jdher(int n, int lda, double tau, double tol,
 
 
   /* print info header */
-  if ((verbosity >= 2) && (g_proc_id == 0)){
+  if ((verbosity > 2) && (g_proc_id == 0)){
     printf("Jacobi-Davidson method for hermitian Matrices\n");
     printf("Solving  A*x = lambda*x \n\n");
     printf("  N=      %10d  ITMAX=%4d\n", n, itmax);
@@ -735,7 +735,7 @@ static void print_status(int verbosity, int it, int k, int j, int kmax,
 
   int i, idummy;
 
-  if (verbosity >= 2) {
+  if (verbosity > 2) {
     if (blksize == 1) {
       if (it == 0) {
 	printf("  IT   K   J       RES LINIT RITZ-VALUES(1:5)\n");

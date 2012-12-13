@@ -26,10 +26,11 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
-#include "su3adj.h"
-#include "io/deri_write_stdout.h"
+#include "su3.h"
+#include "io/spinor_write_stdout.h"
 
-void deri_write_stdout(su3adj** const df) {
+
+void spinor_write_stdout(spinor * const s) {
   int X, Y, Z, t0, id = 0, ix, iy;
   int coords[4];
 
@@ -48,23 +49,15 @@ void deri_write_stdout(su3adj** const df) {
 #ifdef MPI
 	  MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
-	  if(g_cart_id == id) {
-	    ix = g_ipt[t0][X][Y][Z];
+	  if((t+x+y+z)%2 == 0 && g_cart_id == id) {
+	    ix = g_lexic2eosub[ g_ipt[t0][X][Y][Z] ];
 	    iy = t*(g_nproc_x*LX*g_nproc_y*LY*g_nproc_z*LZ) +
 	      x*(g_nproc_y*LY*g_nproc_z*LZ) +
 	      y*(g_nproc_z*LZ) + z;
-	    for(int mu = 0; mu < 4; mu++) {
-/* 	      printf(" %d %d %d %d %d, %d %d %d %d: %d %e %e %e %e %e %e %e %e\n",  */
-/* 		     iy, t, x, y, z, t0, X, Y, Z,  */
-/* 		     mu, df[ix][mu].d1, df[ix][mu].d2,  */
-/* 		     df[ix][mu].d3, df[ix][mu].d4, df[ix][mu].d5, df[ix][mu].d6,  */
-/* 		     df[ix][mu].d7, df[ix][mu].d8); */
-	      printf(" %d %d %d %d %d, %d %d %d %d: %d %e %e de\n",
-		     iy, t, x, y, z, t0, X, Y, Z, 
-		     mu, df[ix][mu].d1, df[ix][mu].d2);
-
-	      fflush(stdout);
-	    }
+	    printf(" %d %d %d %d %d, %d %d %d %d: %e %e sp\n",
+		   iy, t, x, y, z, t0, X, Y, Z, 
+		   creal(s[ix].s0.c0), cimag(s[ix].s0.c0));
+	    fflush(stdout);
 	  }
 #ifdef MPI
 	  MPI_Barrier(MPI_COMM_WORLD);

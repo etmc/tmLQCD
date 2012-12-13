@@ -80,7 +80,7 @@ void single2double_cm(spinor * const R, float * const S);
 void double2single_cm(float * const S, spinor * const R);
 void zero_spinor(spinor * const R);
 
-int write_first_messages(FILE * parameterfile, const int inv);
+int write_first_messages(FILE * parameterfile, const char const *executable, const char const *git_hash);
 int parse_propagator_type(READER * reader);
 
 int parse_ildgformat_xml(char *message, paramsIldgFormat *ildgformat);

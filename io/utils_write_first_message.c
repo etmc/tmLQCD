@@ -17,21 +17,17 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+#include <string.h>
+
 #include "utils.ih"
 #include <read_input.h>
 
-int write_first_messages(FILE * parameterfile, const int inv) {
+int write_first_messages(FILE * parameterfile, const char const *executable, const char const *git_hash) {
+  char message[1024];
+  snprintf(message, 1024, "This is the %s code for twisted mass Wilson QCD\n\nVersion %s, commit %s\n",executable,PACKAGE_VERSION,git_hash);
+  printf("%s",message);
+  fprintf(parameterfile,"%s",message);
 
-  if(inv != 1) {
-    printf("# This is the hmc code for twisted Mass Wilson QCD\n\nVersion %s\n", PACKAGE_VERSION);
-    fprintf(parameterfile, 
-	    "# This is the hmc code for twisted Mass Wilson QCD\n\nVersion %s\n", PACKAGE_VERSION);
-  }
-  else {
-    printf("# This is the invert code for twisted Mass Wilson QCD\n\nVersion %s\n", PACKAGE_VERSION);
-    fprintf(parameterfile, 
-	    "# This is the invert code for twisted Mass Wilson QCD\n\nVersion %s\n", PACKAGE_VERSION);
-  }
 #ifdef SSE
   printf("# The code is compiled with SSE instructions\n");
   fprintf(parameterfile, 
@@ -136,7 +132,7 @@ int write_first_messages(FILE * parameterfile, const int inv) {
   }
   printf("# beta = %f , kappa= %f\n", g_beta, g_kappa);
   printf("# boundary conditions for fermion fields (t,x,y,z) * pi: %f %f %f %f \n",X0,X1,X2,X3);
-  if(inv != 1) {
+  if( strcmp(executable,"hmc") == 0 ) {
     printf("# mu = %f\n", g_mu/2./g_kappa);
     printf("# g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
     printf("# Using %s precision for the inversions!\n", 
@@ -147,8 +143,7 @@ int write_first_messages(FILE * parameterfile, const int inv) {
   fprintf(parameterfile, "# The local lattice size is %d x %d x %d x %d\n", (int)(T), (int)(LX), (int)(LY), (int)(LZ));
   fprintf(parameterfile, "# g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f \n",g_beta,g_kappa,g_ka_csw_8);
   fprintf(parameterfile, "# boundary conditions for fermion fields (t,x,y,z) * pi: %f %f %f %f \n",X0,X1,X2,X3);
-  if(inv != 1) {
-    fprintf(parameterfile, "# ITER_MAX_BCG=%d\n", ITER_MAX_BCG);
+  if( strcmp(executable,"hmc") == 0 ) {
     fprintf(parameterfile, "# Nmeas=%d, Nsave=%d \n",
 	    Nmeas,Nsave);
     fprintf(parameterfile, "# mu = %f\n", g_mu/2./g_kappa);
@@ -156,7 +151,7 @@ int write_first_messages(FILE * parameterfile, const int inv) {
     fprintf(parameterfile, "# Using %s precision for the inversions!\n", 
 	    g_relative_precision_flag ? "relative" : "absolute");
   }
-  if(inv == 1) {
+  if( strcmp(executable,"invert") == 0 ) {
     printf("# beta = %f, mu = %f, kappa = %f\n", g_beta, g_mu/2./g_kappa, g_kappa);
     fprintf(parameterfile,
 	    "# beta = %f, mu = %f, kappa = %f\n", g_beta, g_mu/2./g_kappa, g_kappa);

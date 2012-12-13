@@ -65,7 +65,7 @@ double eigenvalues_Jacobi(int * nr_of_eigenvalues, const int max_iterations,
   int verbosity = 1, converged = 0, blocksize = 1 , blockwise=0;
   int solver_it_max = 50, j_max, j_min;
   double decay_min = 1.7, decay_max = 1.5, prec, threshold_min = 1.e-3, threshold_max = 5.e-2;
-volatile  int v0dim = 0;
+  int v0dim = 0;
   matrix_mult_su3vect f;
   int N=SPACEVOLUME, N2=(SPACEVOLUME + SPACERAND);
   su3_vector * max_eigenvector_ = NULL, *max_eigenvector;
@@ -129,12 +129,12 @@ volatile  int v0dim = 0;
   solver_it_max = 64;
   /* compute the maximal one first */
   /* DEBUG 
-  jdher_su3vect(N*sizeof(su3_vector)/sizeof(complex), N2*sizeof(su3_vector)/sizeof(complex),
+  jdher_su3vect(N*sizeof(su3_vector)/sizeof(_Complex double), N2*sizeof(su3_vector)/sizeof(_Complex double),
 		50., 1.e-12, 
 		1, 15, 8, max_iterations, 1, 0, 0, NULL,
 		CG, solver_it_max,
 		threshold_max, decay_max, verbosity,
-		&converged, (complex*) max_eigenvector, (double*) &max_eigenvalue_su3v,
+		&converged, (_Complex double*) max_eigenvector, (double*) &max_eigenvalue_su3v,
 		&returncode2, JD_MAXIMAL, 1,tslice,f);
   */
   
@@ -145,23 +145,23 @@ volatile  int v0dim = 0;
   solver_it_max = 256;
   
   if(maxmin)
-    jdher_su3vect(N*sizeof(su3_vector)/sizeof(complex), N2*sizeof(su3_vector)/sizeof(complex),
+    jdher_su3vect(N*sizeof(su3_vector)/sizeof(_Complex double), N2*sizeof(su3_vector)/sizeof(_Complex double),
 		  50., prec, 
 		  (*nr_of_eigenvalues), j_max, j_min, 
-		  max_iterations, blocksize, blockwise, v0dim, (complex*) eigenvectors_su3v,
+		  max_iterations, blocksize, blockwise, v0dim, (_Complex double*) eigenvectors_su3v,
 		  CG, solver_it_max,
 		  threshold_max, decay_max, verbosity,
-		  &converged, (complex*) eigenvectors_su3v, eigenvls_su3v,
+		  &converged, (_Complex double*) eigenvectors_su3v, eigenvls_su3v,
 		  &returncode, JD_MAXIMAL, 1,tslice,
 		  f);
   else
-    jdher_su3vect(N*sizeof(su3_vector)/sizeof(complex), N2*sizeof(su3_vector)/sizeof(complex),
+    jdher_su3vect(N*sizeof(su3_vector)/sizeof(_Complex double), N2*sizeof(su3_vector)/sizeof(_Complex double),
 		  0., prec, 
 		  (*nr_of_eigenvalues), j_max, j_min, 
-		  max_iterations, blocksize, blockwise, v0dim, (complex*) eigenvectors_su3v,
+		  max_iterations, blocksize, blockwise, v0dim, (_Complex double*) eigenvectors_su3v,
 		  CG, solver_it_max,
 		  threshold_min, decay_min, verbosity,
-		  &converged, (complex*) eigenvectors_su3v, eigenvls_su3v,
+		  &converged, (_Complex double*) eigenvectors_su3v, eigenvls_su3v,
 		  &returncode, JD_MINIMAL, 1,tslice,
 		  f);
   
@@ -191,7 +191,7 @@ volatile  int v0dim = 0;
 
     MPI_File_open(g_cart_grid, filename, MPI_MODE_WRONLY | MPI_MODE_CREATE, MPI_INFO_NULL, &fp);
     writer = lemonCreateWriter(&fp, g_cart_grid);
-    header = lemonCreateHeader(1 /* MB */, 1 /* ME */, "lattice-su3_vector-data",SPACEVOLUME*3*sizeof(complex));
+    header = lemonCreateHeader(1 /* MB */, 1 /* ME */, "lattice-su3_vector-data",SPACEVOLUME*3*sizeof(_Complex double));
     lemonWriteRecordHeader(header, writer);
     lemonDestroyHeader(header);
     lemonWriteLatticeParallel(writer, s, siteSize, dims);
