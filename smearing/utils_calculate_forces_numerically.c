@@ -62,7 +62,7 @@ void calculate_forces_numerically(su3adj *result, int * mnllist, const int no)
   su3adj rotation;
   double *ar_rotation = (double*)&rotation;
   double *ar_result = (double*)result;
-  double const epsilon = 1e-5;
+  double const epsilon = 1e-6;
    
   memmove(rotated, original, sizeof(su3_tuple) * (VOLUMEPLUSRAND + g_dbw2rand) + 1);
   

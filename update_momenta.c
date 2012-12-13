@@ -120,7 +120,11 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
   double *ar_df = (double*)&df[0][0];
   double *ar_ne = (double*)&num_eval;
   fprintf(stderr, "[DEBUG] Comparison of force calculation!\n");
-  fprintf(stderr,   "        Analytical vs. numerical\n");
+  fprintf(stderr, "        Involves monomial types: ");
+  for (int monnum = 0; monnum < no; ++monnum)
+    fprintf(stderr, "%d ", monomial_list[ mnllist[monnum] ].type);
+  fprintf(stderr, "\n");
+  fprintf(stderr, "        Analytical vs. numerical\n");
   for (int component = 0; component < 8; ++component)
     fprintf(stderr, "    [%d]  %+6.4f <-> %+6.4f\n", component, ar_df[component], ar_ne[component]);
 
