@@ -17,8 +17,6 @@ StartCondition = hot
 kappa = 0.177
 NSave = 500000
 ThetaT = 1
-BCGstabMaxIter = 0
-CGMaxIter = 1000
 UseEvenOdd = yes
 ReversibilityCheck = yes
 ReversibilityCheckIntervall = 100
@@ -67,3 +65,12 @@ BeginIntegrator
   Lambda0 = 0.19
   NumberOfTimescales = 3
 EndIntegrator
+
+BeginOperator TMWILSON
+  2kappaMu = 0.177
+  kappa = 0.177
+  UseEvenOdd = yes
+  Solver = CG
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 1000
+EndOperator

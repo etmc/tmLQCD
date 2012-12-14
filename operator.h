@@ -99,7 +99,7 @@ typedef struct {
   void (*applyMm) (spinor * const, spinor * const);
   void (*applyDbQsq) (spinor * const, spinor * const, spinor * const, spinor * const);
   /* the generic invert function */
-  void (*inverter) (const int op_id, const int index_start);
+  void (*inverter) (const int op_id, const int index_start, const int write_prop);
   /* write the propagator */
   void (*write_prop) (const int op_id, const int index_start, const int append_);
   char * conf_input;

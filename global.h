@@ -246,9 +246,6 @@ EXTERN double DeltaTtot, DeltaTcd, DeltaTev;
 EXTERN int counter_Spsi;
 /* end of the something ... */
 
-EXTERN int ITER_MAX_BCG;
-EXTERN int ITER_MAX_CG;
-
 EXTERN void* g_precWS;
 
 #ifdef WITHLAPH

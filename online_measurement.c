@@ -30,6 +30,7 @@
 #include "ranlxs.h"
 #include "su3spinor.h"
 #include "source_generation.h"
+#include "operator.h"
 #include "invert_eo.h"
 #include "solver/solver.h"
 #include "geometry_eo.h"
@@ -58,6 +59,7 @@ void online_measurement(const int traj, const int id, const int ieo) {
   double res = 0., respa = 0., resp4 = 0.;
   double atime, etime;
   float tmp;
+  operator * optr;
 #ifdef MPI
   double mpi_res = 0., mpi_respa = 0., mpi_resp4 = 0.;
   // send buffer for MPI_Gather
@@ -69,6 +71,27 @@ void online_measurement(const int traj, const int id, const int ieo) {
   spinor phi;
   filename=buf;
   sprintf(filename,"%s%.6d", "onlinemeas." ,traj);
+
+  init_operators();
+  if(no_operators < 1 && g_proc_id == 0) {
+    if(g_proc_id == 0) {
+      fprintf(stderr, "Warning! no operators defined in input file, cannot perform online correlator mesurements!\n");
+    }
+    return;
+  }
+  if(no_operators > 1 && g_proc_id == 0) {
+    fprintf(stderr, "Warning! number of operators defined larger than 1, using only the first!\n");
+  }
+  optr = &operator_list[0];
+  // we don't want to do inversion twice for this purpose here
+  optr->DownProp = 0;
+  if(optr->type != TMWILSON && optr->type != WILSON && optr->type != CLOVER) {
+    if(g_proc_id == 0) {
+      fprintf(stderr, "Warning! correlator online measurement currently only implemented for TMWILSON, WILSON and CLOVER\n");
+      fprintf(stderr, "Cannot perform online measurement!\n");
+    }
+    return;
+  }
 
   /* generate random timeslice */
   if(ranlxs_init == 0) {
@@ -101,10 +124,13 @@ void online_measurement(const int traj, const int id, const int ieo) {
 #endif
   source_generation_pion_only(g_spinor_field[0], g_spinor_field[1], 
 			      t0, 0, traj);
+  optr->sr0 = g_spinor_field[0];
+  optr->sr1 = g_spinor_field[1];
+  optr->prop0 = g_spinor_field[2];
+  optr->prop1 = g_spinor_field[3];
 
-  invert_eo(g_spinor_field[2], g_spinor_field[3], 
-	    g_spinor_field[0], g_spinor_field[1],
-	    1.e-14, measurement_list[id].max_iter, CG, 1, 0, ieo, 0, NULL, -1);
+  // op_id = 0, index_start = 0, write_prop = 0
+  optr->inverter(0, 0, 0);
 
   /* now we bring it to normal format */
   /* here we use implicitly DUM_MATRIX and DUM_MATRIX+1 */

@@ -228,7 +228,7 @@ void unit_spinor_field(const int k)
 
 /* Function provides a spinor field of length VOLUME with
    distributions given by rn_type as defined in start.h */
-void random_spinor_field_lexic(spinor * const k, const int repro, const int rn_type) {
+void random_spinor_field_lexic(spinor * const k, const int repro, const enum RN_TYPE rn_type) {
   int x, y, z, t, X, Y, Z, tt, id=0;
 
   void (*random_vector)(double*,int) = NULL;
@@ -307,7 +307,7 @@ void random_spinor_field_lexic(spinor * const k, const int repro, const int rn_t
 /* Function provides a spinor field of length VOLUME/2 for even odd preconditioning 
    with distributions given by rn_type as defined in start.h */
 
-void random_spinor_field_eo(spinor * const k, const int repro, const int rn_type ) {
+void random_spinor_field_eo(spinor * const k, const int repro, const enum RN_TYPE rn_type ) {
   int x, X, y, Y, z, Z, t, t0, id = 0;
 
   void (*random_vector)(double*,int) = NULL;
@@ -468,7 +468,8 @@ void unit_g_gauge_field(void)
 
 void random_gauge_field(const int repro) {
 
-  int ix, mu, t0, t, x, X, y, Y, z, Z, id;
+  int ix, mu, t0, t, x, X, y, Y, z, Z;
+  int id = 0; /* May not be initialized for scalar builds! */
   int coords[4];
   su3 ALIGN tmp;
 #ifdef MPI

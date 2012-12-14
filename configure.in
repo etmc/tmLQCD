@@ -117,7 +117,7 @@ if test $enable_qpx = yes; then
   AC_MSG_RESULT(yes)
   AC_DEFINE(BGQ,1,Compile with QPX intrinsics)
   AC_MSG_NOTICE([Compiling with QPX intrinsics on BGQ, enabling compiler optimizations for XLC.])
-  OPTARGS="-O3 -qstrict=all -qtune=qp -qarch=qp -qmaxmem=-1"
+  OPTARGS="-O2 -qstrict=all -qtune=qp -qarch=qp -qmaxmem=-1"
   SOPTARGS="$OPTARGS" 
 else
   AC_MSG_RESULT(no)
@@ -623,7 +623,7 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "
     DEBUGFLAG="$DEBUGFLAG -qfullpath"
   fi
 
-  OPTARGS="$OPTARGS -O3"
+  OPTARGS="$OPTARGS"
   SOPTARGS="$OPTARGS"
   if test "$CCDEP" = "gcc"; then
     DEPFLAGS="-MM"
@@ -710,8 +710,8 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_
 elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
   CFLAGS="$CFLAGS -q64 -qsrcmsg"
   LDFLAGS="$LDFLAGS -q64"
-  OPTARGS="-O3 -qhot"
-  SOPTARGS="-O3 -qhot"
+  OPTARGS="-O2"
+  SOPTARGS="-O2"
   DEBUG_FLAG="-qfullpath -g"
   if test "$CCDEP" = "gcc"; then
     DEPFLAGS="-MM"

@@ -210,8 +210,6 @@ inline void rmQuotes(char *str){
 %x NPROCZ
 %x IOPROC
 %x IDX
-%x CGMAX
-%x BCGMAX
 %x BOUNDT
 %x BOUNDX
 %x BOUNDY
@@ -251,6 +249,7 @@ inline void rmQuotes(char *str){
 %x ONLINEMEAS
 %x PIONNORMMEAS
 %x PLOOP
+%x ORIENTEDPLAQUETTESMEAS
 
 %x REWEIGH
 %x REWSAMPLES
@@ -336,8 +335,6 @@ inline void rmQuotes(char *str){
 ^InitialStoreCounter{EQL}          BEGIN(NSTORE);
 ^StdIOProcessor{EQL}               BEGIN(IOPROC);
 ^Indices{EQL}                      BEGIN(IDX);
-^BCGstabMaxIter{EQL}               BEGIN(BCGMAX);
-^CGMaxIter{EQL}                    BEGIN(CGMAX);
 ^BCAngleT{EQL}                     BEGIN(BOUNDT);
 ^ThetaT{EQL}                       BEGIN(BOUNDT);
 ^ThetaX{EQL}                       BEGIN(BOUNDX);
@@ -1303,6 +1300,10 @@ inline void rmQuotes(char *str){
   else if(strcmp(yytext, "POLYAKOVLOOP")==0) {
     meas->type = POLYAKOV;
     strcpy((*meas).name, "POLYAKOV");
+  } 
+  else if(strcmp(yytext, "ORIENTEDPLAQUETTES")==0) {
+    meas->type = ORIENTED_PLAQUETTES;
+    strcpy(meas->name, "ORIENTEDPLAQUETTES");
   }
   else {
     fprintf(stderr, "Unknown measurement type %s in line %d\n", yytext, line_of_file);
@@ -1323,9 +1324,10 @@ inline void rmQuotes(char *str){
   if(meas->type == ONLINE) BEGIN(ONLINEMEAS);
   else if(meas->type == PIONNORM) BEGIN(PIONNORMMEAS);
   else if(meas->type == POLYAKOV) BEGIN(PLOOP);
+  else if(meas->type == ORIENTED_PLAQUETTES) BEGIN(ORIENTEDPLAQUETTESMEAS);
 }
 
-<ONLINEMEAS,PIONNORMMEAS,PLOOP>{
+<ONLINEMEAS,PIONNORMMEAS,PLOOP,ORIENTEDPLAQUETTESMEAS>{
   ^EndMeasurement{SPC}* {
     if(myverbose) printf("Measurement with id %d parsed in line %d\n\n", meas->id, line_of_file);
     BEGIN(0);
@@ -1583,14 +1585,6 @@ inline void rmQuotes(char *str){
   }
   if(myverbose!=0) printf("inverting up to spin-color index %d\n", index_end);
   index_end+=1;
-}
-<BCGMAX>{DIGIT}+ {
-  ITER_MAX_BCG = atoi(yytext);
-  if(myverbose != 0) printf("Maximal number of iterations for BCGstab set ro %d\n", ITER_MAX_BCG);
-}
-<CGMAX>{DIGIT}+  {
-  ITER_MAX_CG = atoi(yytext);
-  if(myverbose != 0) printf("Maximal number of iterations for CG set ro %d\n", ITER_MAX_CG);
 }
 <BOUNDT>{FLT} {
   X0 = atof(yytext);
@@ -1852,7 +1846,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU>\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU>\n   {
   line_of_file++;
 }
 <*>\n                       {
@@ -1949,8 +1943,6 @@ int read_input(char * conf_file){
   g_stdio_proc = _default_g_stdio_proc;
   index_start = _default_index_start;
   index_end = _default_index_end;
-  ITER_MAX_CG = _default_ITER_MAX_CG;
-  ITER_MAX_BCG = _default_ITER_MAX_BCG;
   X0 = _default_X0;
   X1 = _default_X1;
   X2 = _default_X2;
