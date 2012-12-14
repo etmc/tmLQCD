@@ -103,7 +103,7 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
   hf->update_rectangle_energy = 1;
   g_update_rectangle_energy = 1;
   etime = gettime();
-  if(g_debug_level > 0 && g_proc_id == 0) {
+  if(g_debug_level > 1 && g_proc_id == 0) {
     printf("# Time gauge update: %e s\n", etime-atime); 
   } 
   return;

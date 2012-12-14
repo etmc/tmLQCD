@@ -100,7 +100,7 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
     err = assign_mul_add_r_and_square(solver_field[0], -alpha_cg, solver_field[1], N, 1);
 #endif
 
-    if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
+    if(g_proc_id == g_stdio_proc && g_debug_level > 2) {
       printf("CG: iterations: %d res^2 %e\n", iteration, err);
       fflush(stdout);
     }

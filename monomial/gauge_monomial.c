@@ -89,7 +89,7 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
   } /* OpenMP closing brace */
 #endif
   etime = gettime();
-  if(g_debug_level > 0 && g_proc_id == 0) {
+  if(g_debug_level > 1 && g_proc_id == 0) {
     printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
   }
   return;
