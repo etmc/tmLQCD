@@ -118,7 +118,7 @@ static void z2_vector(double *v, const int N) {
   return;
 }
 
-/* produce a uniformly distributed vector of length N */
+/* produce a vector of length N with components uniformly distributed in the interval [0,2PI] */
 static void unif_vector(double *v, const int N) {
   ranlxd(v,N);
   for(int i = 0; i < N; ++i)
