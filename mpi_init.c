@@ -744,6 +744,8 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   T = T_global;
   VOLUME = (T*LX*LY*LZ);
   SPACEVOLUME = VOLUME/T;
+  BODY = VOLUME;
+  SURFACE = 0;
 #    ifdef _USE_TSPLITPAR
   TEOSLICE = (LX*LY*LZ)/2;
 #    endif
