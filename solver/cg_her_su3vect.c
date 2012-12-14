@@ -72,7 +72,7 @@ int cg_her_su3vect(su3_vector * const P, su3_vector * const Q, const int max_ite
     assign_mul_add_r_su3vect(g_jacobi_field[0], -alpha_cg, g_jacobi_field[1], N);
     err=square_norm_su3vect(g_jacobi_field[0], N, 1);
 
-    if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
+    if(g_proc_id == g_stdio_proc && g_debug_level > 2) {
       printf("CG: iterations: %d res^2 %e\n", iteration, err);
       fflush(stdout);
     }

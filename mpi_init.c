@@ -321,32 +321,41 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
 #    ifdef PARALLELT  
   RAND = (2*LX*LY*LZ);
   EDGES = 0;
+  BODY = LX*LY*LZ*(T-2);
 #    elif defined PARALLELX  
   RAND = (2*T*LY*LZ);
   EDGES = 0;
+  BODY = T*LY*LZ*(LX-2);
 #    elif defined PARALLELXT
   RAND = 2*LZ*(LY*LX + T*LY);
   EDGES = 4*LZ*LY;
+  BODY = LY*LZ*(T-2)*(LX-2);
 #    elif defined PARALLELXY
   RAND = 2*LZ*T*(LX + LY);
   EDGES = 4*LZ*T;
+  BODY = T*LZ*(LX-2)*(LY-2);
 #    elif defined PARALLELXYT
   RAND = 2*LZ*(LY*LX + T*LY + T*LX);
   EDGES = 4*LZ*(LY + T + LX);
+  BODY = LZ*(LX-2)*(LY-2)*(T-2);
 #    elif defined PARALLELXYZ
   RAND = 2*T*(LY*LZ + LX*LZ + LX*LY);
   EDGES = 4*T*(LX + LY + LZ);
+  BODY = T*(LX-2)*(LY-2)*(LZ-2);
 #    elif defined PARALLELXYZT
   RAND = 2*LZ*LY*LX + 2*LZ*T*LY + 2*LZ*T*LX + 2*T*LX*LY;
   EDGES = 4*LZ*LY + 4*LZ*T + 4*LZ*LX + 4*LY*T + 4*LY*LX + 4*T*LX;
+  BODY = (T-2)*(LX-2)*(LY-2)*(LZ-2);
 #    else /* ifdef PARALLELT */
   RAND = 0;
   EDGES = 0;
+  BODY = VOLUME;
 #    endif /* ifdef PARALLELT */
   /* Note that VOLUMEPLUSRAND is not always equal to VOLUME+RAND */
   /* VOLUMEPLUSRAND rather includes the edges */
   VOLUMEPLUSRAND = VOLUME + RAND + EDGES;
   SPACERAND=RAND/T;
+  SURFACE = VOLUME-BODY;
 #  endif /* ifndef FIXEDVOLUME */
   g_dbw2rand = (RAND + 2*EDGES);
 
@@ -735,6 +744,8 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   T = T_global;
   VOLUME = (T*LX*LY*LZ);
   SPACEVOLUME = VOLUME/T;
+  BODY = VOLUME;
+  SURFACE = 0;
 #    ifdef _USE_TSPLITPAR
   TEOSLICE = (LX*LY*LZ)/2;
 #    endif
