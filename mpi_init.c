@@ -329,7 +329,7 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
 #    elif defined PARALLELXT
   RAND = 2*LZ*(LY*LX + T*LY);
   EDGES = 4*LZ*LY;
-  BODY = LY*LZ*(T-2)*(X-2);
+  BODY = LY*LZ*(T-2)*(LX-2);
 #    elif defined PARALLELXY
   RAND = 2*LZ*T*(LX + LY);
   EDGES = 4*LZ*T;
