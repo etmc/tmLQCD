@@ -116,7 +116,15 @@ static void z2_vector(double *v, const int N) {
       v[i]=-1/sqrt(2);
   }
   return;
-} 
+}
+
+/* produce a uniformly distributed vector of length N */
+static void unif_vector(double *v, const int N) {
+  ranlxd(v,N);
+  for(int i = 0; i < N; ++i)
+    v[i] *= 6.2831853071796;
+  return;
+}
 
 static su3 unit_su3(void)
 {

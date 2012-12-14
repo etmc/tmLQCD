@@ -26,7 +26,7 @@
       rn_fn_ptr = z2_vector; \
       break; \
     case RN_UNIF: \
-      rn_fn_ptr = ranlxd; \
+      rn_fn_ptr = unif_vector; \
       break; \
     case RN_GAUSS: \
     default: \
