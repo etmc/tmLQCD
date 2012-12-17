@@ -196,7 +196,7 @@ int main(int argc,char *argv[])
 #endif
 
   for (k=0 ; k<3 ; k++)
-    random_jacobi_field(g_jacobi_field[k],SPACEVOLUME);
+    random_jacobi_field(g_jacobi_field[k]);
 
 
   /* Compute LapH Eigensystem */

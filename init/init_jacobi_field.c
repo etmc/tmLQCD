@@ -66,38 +66,4 @@ void free_jacobi_field(){
 	free(jacobi_field);
 }
 
-
-void random_gauss_jacobi_field(su3_vector * const k, const int V)
-{
-int ix;
-su3_vector *s;
-double v[6];
-
- for (ix=0; ix<V ;ix++) {
-     s=k+ix;
-     gauss_vector(v,6);
-     s->c0 = v[0] + v[1] * I;
-     s->c1 = v[2] + v[3] * I;
-     s->c2 = v[4] + v[5] * I;
- }
-#ifdef MPI
- xchange_jacobi(k);
-#endif
-}
-
-void random_jacobi_field(su3_vector * const k, const int V)
-{
-int ix;
-su3_vector *s;
-double v[6];
-
- for (ix=0; ix<V ;ix++)
-   {
-     s=k+ix;
-     *s=unif_su3_vector();
-   }
-#ifdef MPI
- xchange_jacobi(k);
-#endif
-}
 #endif // WITHLAPH

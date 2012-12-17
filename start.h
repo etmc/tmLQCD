@@ -47,4 +47,9 @@ void start_ranlux(int level,int seed);
 
 void gen_test_spinor_field(spinor * const k , const int eoflag);
 void write_test_spinor_field(spinor * const k , const int eoflag, char * postfix);
+
+# ifdef WITHLAPH
+void random_jacobi_field(su3_vector * const k);
+# endif
+
 #endif
