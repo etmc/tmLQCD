@@ -922,8 +922,6 @@ void random_jacobi_field(su3_vector * const k) {
   su3_vector *s;
   double v[6];
 
-  // SEGNO
-
   for (ix=0; ix<SPACEVOLUME ;ix++)
     {
       s=k+ix;
