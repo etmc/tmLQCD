@@ -33,6 +33,7 @@
 #include "operator/clover_leaf.h"
 #include "monomial/monomial.h"
 #include "operator/Hopping_Matrix.h"
+#include "gettime.h"
 #include "clover_trlog_monomial.h"
 
 void clover_trlog_derivative(const int id, hamiltonian_field_t * const hf) {
@@ -48,27 +49,43 @@ void clover_trlog_derivative(const int id, hamiltonian_field_t * const hf) {
 
 void clover_trlog_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
+  double atime, etime;
+  atime = gettime();
   mnl->energy0 = 0.;
 
   init_sw_fields();
   sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
   /*compute the contribution from the clover trlog term */
   mnl->energy0 = -sw_trace(EO, mnl->mu);
-  if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called clover_trlog_heatbath for id %d E = %e\n", id, mnl->energy0);
+  etime = gettime();
+  if(g_proc_id == 0) {
+    if(g_debug_level > 1) {
+      printf("# Time for %s monomial heatbath: %e s\n", mnl->name, etime-atime);
+    }
+    if(g_debug_level > 3) {
+      printf("called clover_trlog_heatbath for id %d E = %e\n", id, mnl->energy0);
+    }
   }
   return;
 }
 
 double clover_trlog_acc(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
+  double atime, etime;
+  atime = gettime();
   mnl->energy1 = 0.;
   sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
   /*compute the contribution from the clover trlog term */
   mnl->energy1 = -sw_trace(EO, mnl->mu);
+  etime = gettime();
   if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called clover_trlog_acc for id %d dH = %1.10e\n", 
-	   id, mnl->energy1 - mnl->energy0);
+    if(g_debug_level > 1) {
+      printf("# Time for %s monomial acc step: %e s\n", mnl->name, etime-atime);
+    }
+    if(g_debug_level > 3) {
+      printf("called clover_trlog_acc for id %d dH = %1.10e\n", 
+	     id, mnl->energy1 - mnl->energy0);
+    }
   }
   return(mnl->energy1 - mnl->energy0);
 }

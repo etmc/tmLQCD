@@ -78,7 +78,7 @@
 #include "global.h"
 #include "su3.h"
 #include "su3adj.h"
-#include "hybrid_update.h"
+#include "monomial/moment_energy.h"
 #include "ranlxd.h"
 #include "sse.h"
 #include "get_staples.h"
