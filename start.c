@@ -116,7 +116,15 @@ static void z2_vector(double *v, const int N) {
       v[i]=-1/sqrt(2);
   }
   return;
-} 
+}
+
+/* produce a vector of length N with components uniformly distributed in the interval [0,2PI] */
+static void unif_vector(double *v, const int N) {
+  ranlxd(v,N);
+  for(int i = 0; i < N; ++i)
+    v[i] *= 6.2831853071796;
+  return;
+}
 
 static su3 unit_su3(void)
 {
@@ -130,16 +138,18 @@ su3_vector unit_su3_vector()
   return s;
 }
 
-
-su3_vector random_su3_vector(void)
+static void random_su3_vector( su3_vector * const s, const enum RN_TYPE rn_type )
 {
    int i;
    double v[6],norm,fact;
-   su3_vector s;
+
+   void (*random_vector)(double*,int) = NULL;
+
+   _rn_switch(rn_type,random_vector)
 
    while (1)
    {
-      gauss_vector(v,6);
+      random_vector(v,6);
       norm=0.0;
 
       for (i = 0; i < 6; ++i)
@@ -152,49 +162,18 @@ su3_vector random_su3_vector(void)
    }
 
    fact = 1.0 / norm;
-   s.c0 = fact * (v[0] + I * v[1]);
-   s.c1 = fact * (v[2] + I * v[3]);
-   s.c2 = fact * (v[4] + I * v[5]);
+   s->c0 = fact * (v[0] + I * v[1]);
+   s->c1 = fact * (v[2] + I * v[3]);
+   s->c2 = fact * (v[4] + I * v[5]);
 
-   return(s);
+   return;
 }
 
-su3_vector unif_su3_vector(void)
-{
-   int i;
-   double v[6],norm,fact;
-   su3_vector s;
-
-   for (;;)
-   {
-      ranlxd(v,6);
-      norm=0.0;
-
-      for (i=0;i<6;i++){
-	v[i] *= 6.2831853071796;
-        norm+=v[i]*v[i];
-     }
-
-      norm=sqrt(norm);
-
-      if (1.0!=(1.0+norm))
-         break;
-   }
-
-   fact = 1.0 / norm;
-   s.c0 = fact * (v[0] + I * v[1]);
-   s.c1 = fact * (v[2] + I * v[3]);
-   s.c2 = fact * (v[4] + I * v[5]);
-
-   return(s);
-}
-
-
-void random_spinor(spinor * const s) {
-   s->s0 = random_su3_vector();
-   s->s1 = random_su3_vector();
-   s->s2 = random_su3_vector();
-   s->s3 = random_su3_vector();
+static void random_spinor(spinor * const s, const enum RN_TYPE rn_type) {
+   random_su3_vector(&s->s0, rn_type);
+   random_su3_vector(&s->s1, rn_type);
+   random_su3_vector(&s->s2, rn_type);
+   random_su3_vector(&s->s3, rn_type);
 
    _vector_mul(s->s0, 0.5, s->s0);
    _vector_mul(s->s1, 0.5, s->s1);
@@ -233,15 +212,7 @@ void random_spinor_field_lexic(spinor * const k, const int repro, const enum RN_
 
   void (*random_vector)(double*,int) = NULL;
 
-  switch( rn_type ) {
-    case RN_Z2:
-      random_vector = z2_vector;
-      break;
-    case RN_GAUSS:
-    default:
-      random_vector = gauss_vector;
-      break;
-  }
+  _rn_switch(rn_type,random_vector)
 
 #ifdef MPI
   int rlxd_state[105];
@@ -304,6 +275,7 @@ void random_spinor_field_lexic(spinor * const k, const int repro, const enum RN_
   }
   return;
 }
+
 /* Function provides a spinor field of length VOLUME/2 for even odd preconditioning 
    with distributions given by rn_type as defined in start.h */
 
@@ -312,15 +284,7 @@ void random_spinor_field_eo(spinor * const k, const int repro, const enum RN_TYP
 
   void (*random_vector)(double*,int) = NULL;
 
-  switch( rn_type ) {
-    case RN_Z2:
-      random_vector = z2_vector;
-      break;
-    case RN_GAUSS:
-    default:
-      random_vector = gauss_vector;
-      break;
-  }
+  _rn_switch(rn_type,random_vector)
 
 #ifdef MPI
   int rlxd_state[105];
@@ -413,10 +377,10 @@ void random_su3(su3 * const u) {
    _Complex double z;
    su3_vector z1,z2,z3;
 
-   z1=unif_su3_vector();
+   random_su3_vector(&z1,RN_UNIF);
    for (;;)
    {
-      z2=unif_su3_vector();
+      random_su3_vector(&z2,RN_UNIF);
 
       z = conj(z1.c0) * z2.c0 + conj(z1.c1) * z2.c1 + conj(z1.c2) * z2.c2;
 
