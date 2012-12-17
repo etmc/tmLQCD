@@ -794,12 +794,10 @@ inline void rmQuotes(char *str){
   else if(strcmp(yytext, "CLOVERDET")==0) {
     mnl->type = CLOVERDET;
     strcpy((*mnl).name, "CLOVERDET");
-    g_dbw2rand = 1;
   }
   else if(strcmp(yytext, "CLOVERDETRATIO")==0) {
     mnl->type = CLOVERDETRATIO;
     strcpy((*mnl).name, "CLOVERDETRATIO");
-    g_dbw2rand = 1;
   }
   else if(strcmp(yytext, "DETRATIO")==0) {
     mnl->type = DETRATIO;
