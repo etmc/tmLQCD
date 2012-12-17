@@ -32,7 +32,6 @@
 #include "deriv_Sb.h"
 #include "deriv_Sb_D_psi.h"
 #include "operator/tm_operators.h"
-#include "hybrid_update.h"
 #include "operator/Hopping_Matrix.h"
 #include "solver/chrono_guess.h"
 #include "solver/solver.h"

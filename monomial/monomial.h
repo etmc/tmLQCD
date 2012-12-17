@@ -120,6 +120,7 @@ typedef struct {
 #include "monomial/cloverdet_monomial.h"
 #include "monomial/cloverdetratio_monomial.h"
 #include "monomial/cloverndpoly_monomial.h"
+#include "monomial/moment_energy.h"
 
 /* list of all monomials */
 extern monomial monomial_list[max_no_monomials];

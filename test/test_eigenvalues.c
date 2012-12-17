@@ -56,7 +56,7 @@
 #include "read_input.h"
 #include "mpi_init.h"
 #include "sighandler.h"
-#include "hybrid_update.h"
+#include "monomial/moment_energy.h"
 #include "update_tm.h"
 #include "init/init.h"
 #include "test/check_geometry.h"
