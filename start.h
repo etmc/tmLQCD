@@ -20,14 +20,28 @@
 #ifndef _START_H
 #define _START_H
 
-enum RN_TYPE { RN_GAUSS, RN_Z2 };
+#define _rn_switch(type,rn_fn_ptr) \
+  switch( type ) { \
+    case RN_Z2: \
+      rn_fn_ptr = z2_vector; \
+      break; \
+    case RN_UNIF: \
+      rn_fn_ptr = unif_vector; \
+      break; \
+    case RN_GAUSS: \
+    default: \
+      rn_fn_ptr = gauss_vector; \
+      break; \
+  } \
+
+enum RN_TYPE { RN_GAUSS, RN_UNIF, RN_Z2 };
 
 void unit_spinor_field(const int k);
 void zero_spinor_field(spinor * const k, const int N);
 void constant_spinor_field(spinor * const k, const int p, const int N);
 
-void random_spinor_field_lexic(spinor * const k, const int repro, const enum RN_TYPE);
-void random_spinor_field_eo(spinor * const k, const int repro, const enum RN_TYPE);
+void random_spinor_field_lexic(spinor * const k, const int repro, const enum RN_TYPE rn_type);
+void random_spinor_field_eo(spinor * const k, const int repro, const enum RN_TYPE rn_type);
 
 void unit_g_gauge_field(void);
 
