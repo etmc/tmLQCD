@@ -16,10 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-#ifndef _HYBRID_UPDATE_H
-#define _HYBRID_UPDATE_H
+#ifndef _MOMENT_ENERGY_H
+#define _MOMENT_ENERGY_H
 
 double moment_energy(su3adj ** const momenta);
-double init_momenta(const int repro, su3adj ** const momenta);
 
 #endif

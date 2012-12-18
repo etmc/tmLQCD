@@ -33,6 +33,7 @@
 #include "ranlxd.h"
 #include "sse.h"
 #include "start.h"
+#include "gettime.h"
 #include "get_rectangle_staples.h"
 #include "gamma.h"
 #include "get_staples.h"
@@ -45,7 +46,9 @@
 
 /* this function calculates the derivative of the momenta: equation 13 of Gottlieb */
 void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
-
+  monomial * mnl = &monomial_list[id];
+  double atime, etime;
+  atime = gettime();
 #ifdef OMP
 #pragma omp parallel
   {
@@ -85,33 +88,52 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
 #ifdef OMP
   } /* OpenMP closing brace */
 #endif
+  etime = gettime();
+  if(g_debug_level > 1 && g_proc_id == 0) {
+    printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
+  }
   return;
 }
 
 void gauge_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
-  
+  double atime, etime;
+  atime = gettime();
   if(mnl->use_rectangles) mnl->c0 = 1. - 8.*mnl->c1;
   
   mnl->energy0 = g_beta*(mnl->c0 * measure_gauge_action( (const su3**) hf->gaugefield));
   if(mnl->use_rectangles) {
     mnl->energy0 += g_beta*(mnl->c1 * measure_rectangles( (const su3**) hf->gaugefield));
   }
-  if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called gauge_heatbath for id %d %d\n", id, mnl->even_odd_flag);
+  etime = gettime();
+  if(g_proc_id == 0) {
+    if(g_debug_level > 1) {
+      printf("# Time for %s monomial heatbath: %e s\n", mnl->name, etime-atime);
+    }
+    if(g_debug_level > 3) {
+      printf("called gauge_heatbath for id %d energy %f\n", id, mnl->energy0);
+    }
   }
+  return;
 }
 
 double gauge_acc(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
-  
+  double atime, etime;
+  atime = gettime();
   mnl->energy1 = g_beta*(mnl->c0 * measure_gauge_action( (const su3**) hf->gaugefield));
   if(mnl->use_rectangles) {
     mnl->energy1 += g_beta*(mnl->c1 * measure_rectangles( (const su3**) hf->gaugefield));
+  }
+  etime = gettime();
+  if(g_proc_id == 0) {
+    if(g_debug_level > 1) {
+      printf("# Time for %s monomial acc step: %e s\n", mnl->name, etime-atime);
     }
-  if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called gauge_acc for id %d %d dH = %1.10e\n", 
-	   id, mnl->even_odd_flag, mnl->energy0 - mnl->energy1);
+    if(g_debug_level > 3) {
+      printf("called gauge_acc for id %d dH = %1.10e\n", 
+	     id, mnl->energy0 - mnl->energy1);
+    }
   }
   return(mnl->energy0 - mnl->energy1);
 }

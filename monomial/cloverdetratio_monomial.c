@@ -29,6 +29,7 @@
 #include "global.h"
 #include "su3.h"
 #include "start.h"
+#include "gettime.h"
 #include "linalg_eo.h"
 #include "deriv_Sb.h"
 #include "gamma.h"
@@ -47,7 +48,8 @@
 
 void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[no];
-
+  double atime, etime;
+  atime = gettime();
   /* This factor 2* a missing factor 2 in trace_lambda */
   mnl->forcefactor = 1.;
 
@@ -139,14 +141,18 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
   g_mu = g_mu1;
   g_mu3 = 0.;
   boundary(g_kappa);
-
+  etime = gettime();
+  if(g_debug_level > 1 && g_proc_id == 0) {
+    printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
+  }
   return;
 }
 
 
 void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[no];
-
+  double atime, etime;
+  atime = gettime();
   for(int i = 0; i < VOLUME; i++) { 
     for(int mu = 0; mu < 4; mu++) { 
       _su3_zero(swm[i][mu]);
@@ -220,14 +226,18 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   g_mu = g_mu1;
   g_mu3 = 0.;
   boundary(g_kappa);
-
+  etime = gettime();
+    if(g_debug_level > 1 && g_proc_id == 0) {
+    printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
+  }
   return;
 }
 
 
 void cloverdetratio_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
-
+  double atime, etime;
+  atime = gettime();
   g_mu = mnl->mu;
   g_c_sw = mnl->c_sw;
   boundary(mnl->kappa);
@@ -254,9 +264,14 @@ void cloverdetratio_heatbath(const int id, hamiltonian_field_t * const hf) {
   chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 		      mnl->csg_N, &mnl->csg_n, VOLUME/2);
   mnl->Qm(mnl->pf, mnl->pf);
-
-  if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called cloverdetratio_heatbath for id %d \n", id);
+  etime = gettime();
+  if(g_proc_id == 0) {
+    if(g_debug_level > 1) {
+      printf("# Time for %s monomial heatbath: %e s\n", mnl->name, etime-atime);
+    }
+    if(g_debug_level > 3) {
+      printf("called cloverdetratio_heatbath for id %d energy %f\n", id, mnl->energy0);
+    }
   }
   g_mu3 = 0.;
   g_mu = g_mu1;
@@ -267,7 +282,8 @@ void cloverdetratio_heatbath(const int id, hamiltonian_field_t * const hf) {
 double cloverdetratio_acc(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   int save_sloppy = g_sloppy_precision_flag;
-
+  double atime, etime;
+  atime = gettime();
   g_mu = mnl->mu;
   boundary(mnl->kappa);
   
@@ -290,9 +306,15 @@ double cloverdetratio_acc(const int id, hamiltonian_field_t * const hf) {
   g_mu = g_mu1;
   g_mu3 = 0.;
   boundary(g_kappa);
-  if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called cloverdetratio_acc for id %d dH = %1.10e\n", 
-	   id, mnl->energy1 - mnl->energy0);
+  etime = gettime();
+  if(g_proc_id == 0) {
+    if(g_debug_level > 1) {
+      printf("# Time for %s monomial acc step: %e s\n", mnl->name, etime-atime);
+    }
+    if(g_debug_level > 3) {
+      printf("called cloverdetratio_acc for id %d dH = %1.10e\n", 
+	     id, mnl->energy1 - mnl->energy0);
+    }
   }
   return(mnl->energy1 - mnl->energy0);
 }

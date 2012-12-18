@@ -78,7 +78,7 @@ int bicgstab_complex(spinor * const P,spinor * const Q, const int max_iter,
 
   for(i = 0; i < max_iter; i++){
     err = square_norm(r, N, 1);
-    if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
+    if(g_proc_id == g_stdio_proc && g_debug_level > 2) {
       printf("%d %e\n", i, err);
       fflush(stdout);
     }

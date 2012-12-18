@@ -29,6 +29,7 @@
 #include <math.h>
 #include <time.h>
 #include "global.h"
+#include "gettime.h"
 #include "su3.h"
 #include "su3adj.h"
 #include "su3spinor.h"
@@ -47,6 +48,8 @@
 
 
 void update_gauge(const double step, hamiltonian_field_t * const hf) {
+  double atime, etime;
+  atime = gettime();
 #ifdef OMP
 #define static
 #pragma omp parallel
@@ -99,6 +102,10 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
   g_update_gauge_energy = 1;
   hf->update_rectangle_energy = 1;
   g_update_rectangle_energy = 1;
+  etime = gettime();
+  if(g_debug_level > 1 && g_proc_id == 0) {
+    printf("# Time gauge update: %e s\n", etime-atime); 
+  } 
   return;
 #ifdef _KOJAK_INST
 #pragma pomp inst end(updategauge)
