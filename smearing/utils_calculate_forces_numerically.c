@@ -91,7 +91,7 @@ void calculate_forces_numerically(su3adj *result, int * mnllist, const int no)
         if (monomial_list[ mnllist[i] ].smearing == s_type)
         {
           g_update_gauge_energy = 1;
-          // g_update_gauge_copy = 1;
+          g_update_gauge_copy = 1;
           h_rotated += monomial_list[ mnllist[i] ].accfunction(mnllist[i], &hf);
         }
     }
