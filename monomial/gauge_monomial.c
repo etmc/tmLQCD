@@ -47,6 +47,12 @@
 /* this function calculates the derivative of the momenta: equation 13 of Gottlieb */
 void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
+  double factor = -1. * g_beta/3.0;
+  if(mnl->use_rectangles) {
+    mnl->forcefactor = 1.;
+    factor = -mnl->c0 * g_beta/3.0;
+  }
+  
   double atime, etime;
   atime = gettime();
 #ifdef OMP
@@ -58,14 +64,7 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
   int i, mu;
   su3 *z;
   su3adj *xm;
-  monomial * mnl = &monomial_list[id];
-  double factor = -1. * g_beta/3.0;
 
-  if(mnl->use_rectangles) {
-    mnl->forcefactor = 1.;
-    factor = -mnl->c0 * g_beta/3.0;
-  }
-  
 #ifdef OMP
 #pragma omp for
 #endif
