@@ -920,12 +920,11 @@ void write_test_spinor_field(spinor * const k, const int eoflag, char * postfix)
 void random_jacobi_field(su3_vector * const k) {
   int ix;
   su3_vector *s;
-  double v[6];
 
   for (ix=0; ix<SPACEVOLUME ;ix++)
     {
       s=k+ix;
-      *s=unif_su3_vector();
+      random_su3_vector(s,RN_UNIF);
     }
 #ifdef MPI
   xchange_jacobi(k);
