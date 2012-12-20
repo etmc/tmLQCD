@@ -80,9 +80,9 @@ double eigenvalues_Jacobi(int * nr_of_eigenvalues, const int max_iterations,
   //  int dims[]={T*g_nproc_t, LX*g_nproc_x, LY*g_nproc_y, LZ*g_nproc_z};
   int dims[]={1, LX*g_nproc_x, LY*g_nproc_y, LZ*g_nproc_z};
   FILE *efp;
+  double atime, etime;
 
 #ifdef MPI
-  double atime, etime;
   MPI_File fp;
   MPI_Offset siteSize=3*2*sizeof(double);
   LemonRecordHeader *header;
