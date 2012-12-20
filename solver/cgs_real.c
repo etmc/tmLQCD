@@ -64,7 +64,7 @@ int cgs_real(spinor * const P, spinor * const Q, const int max_iter,
   /* loop! */
   for(i=0;i<=max_iter;i++) {
     res_sq=square_norm(solver_field[0], N, 1);
-    if(g_proc_id == g_stdio_proc && g_debug_level > 0) {
+    if(g_proc_id == g_stdio_proc && g_debug_level > 2) {
       printf("%d\t%g\n",i,res_sq); 
       fflush( stdout );
     }

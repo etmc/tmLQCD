@@ -29,6 +29,7 @@
 #include "su3.h"
 #include "linalg_eo.h"
 #include "start.h"
+#include "gettime.h"
 #include "solver/solver.h"
 #include "deriv_Sb.h"
 #include "operator/tm_operators.h"
@@ -52,7 +53,8 @@
 void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
   int j, k;
   monomial * mnl = &monomial_list[id];
-
+  double atime, etime;
+  atime = gettime();
   for(int i = 0; i < VOLUME; i++) { 
     for(int mu = 0; mu < 4; mu++) { 
       _su3_zero(swm[i][mu]);
@@ -128,7 +130,10 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
   // trlog part does not depend on the normalisation of the polynomial
   sw_deriv_nd(EE);
   sw_all(hf, mnl->kappa, mnl->c_sw);
-
+  etime = gettime();
+  if(g_debug_level > 1 && g_proc_id == 0) {
+    printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
+  }
   return;
 }
 
@@ -137,7 +142,8 @@ void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   int j;
   monomial * mnl = &monomial_list[id];
   spinor *up0, *dn0, *up1, *dn1, *dummy;
-
+  double atime, etime;
+  atime = gettime();
   ndpoly_set_global_parameter(mnl, 0);
   g_mu3 = 0.;
   init_sw_fields();
@@ -176,9 +182,14 @@ void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   
   assign(mnl->pf, up0, VOLUME/2);
   assign(mnl->pf2, dn0, VOLUME/2);
-  
-  if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called cloverndpoly_heatbath for id %d\n", id);
+  etime = gettime();
+  if(g_proc_id == 0) {
+    if(g_debug_level > 1) {
+      printf("# Time for %s monomial heatbath: %e s\n", mnl->name, etime-atime);
+    }
+    if(g_debug_level > 3) {
+      printf("called cloverndpoly_heatbath for id %d energy %f\n", id, mnl->energy0);
+    }
   }
   return;
 }
@@ -188,7 +199,8 @@ double cloverndpoly_acc(const int id, hamiltonian_field_t * const hf) {
   int j;
   monomial * mnl = &monomial_list[id];
   spinor *up0, *dn0, *up1, *dn1, *dummy;
-
+  double atime, etime;
+  atime = gettime();
   ndpoly_set_global_parameter(mnl, 0);
   g_mu3 = 0.;
   sw_term((const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
@@ -214,9 +226,14 @@ double cloverndpoly_acc(const int id, hamiltonian_field_t * const hf) {
   
   mnl->energy1 = square_norm(up0, VOLUME/2, 1);
   mnl->energy1 += square_norm(dn0, VOLUME/2, 1);
-  
-  if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called cloverndpoly_acc for id %d %d dH = %1.10e\n", id, g_running_phmc, mnl->energy1 - mnl->energy0);
+  etime = gettime();
+  if(g_proc_id == 0) {
+    if(g_debug_level > 1) {
+      printf("# Time for %s monomial acc step: %e s\n", mnl->name, etime-atime);
+    }
+    if(g_debug_level > 3) {
+      printf("called cloverndpoly_acc for id %d dH = %1.10e\n", id, mnl->energy1 - mnl->energy0);
+    }
   }
   return(mnl->energy1 - mnl->energy0);
 }

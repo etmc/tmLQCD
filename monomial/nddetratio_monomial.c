@@ -42,6 +42,7 @@
 #include "operator/tm_operators_nd.h"
 #include "chebyshev_polynomial_nd.h"
 #include "Ptilde_nd.h"
+#include "gettime.h"
 #include "reweighting_factor_nd.h"
 #include "monomial/monomial.h"
 #include "hamiltonian_field.h"
@@ -52,7 +53,8 @@
 double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
   int iter;
   monomial * mnl = &monomial_list[id];
-
+  double atime, etime;
+  atime = gettime();
   
   g_mubar = mnl->mubar;
   g_epsbar = mnl->epsbar;
@@ -73,6 +75,15 @@ double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
   
   mnl->energy1  = scalar_prod_r(mnl->pf , mnl->w_fields[0], VOLUME/2, 1);
   mnl->energy1 += scalar_prod_r(mnl->pf2, mnl->w_fields[1], VOLUME/2, 1);
-
+  etime = gettime();
+  if(g_proc_id == 0) {
+    if(g_debug_level > 1) {
+      printf("# Time for %s monomial acc step: %e s\n", mnl->name, etime-atime);
+    }
+    if(g_debug_level > 3) {
+      printf("called nddetratio_acc for id %d dH = %1.10e\n", 
+	     id, mnl->energy0 - mnl->energy1);
+    }
+  }
   return(mnl->energy1 - mnl->energy0);
 }
