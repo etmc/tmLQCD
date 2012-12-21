@@ -47,8 +47,12 @@ void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Com
   int c0_negative = (c0 < 0);
   c0 = fabs(c0);
 
+  /* The call to fmin below is needed, because for small deviations alpha from zero -- O(10e-12) -- rounding errors can cause c0 > c0max by epsilon.
+     In that case, acos(c0/c0max) will produce NaNs, whereas the mathematically correct conclusion would be that theta is zero to machine precision! 
+     Note that this approach will *not* produce identity and zero for all output, but rather the correct answer of order (I + alpha) for exp(iQ). */
+  
   double c0max = 2.0 * pow(fac_1_3 * c1, 1.5);
-  double theta_3 = fac_1_3 * acos(c0 / c0max);
+  double theta_3 = fac_1_3 * acos(fmin(c0 / c0max, 1.0));
 
   double u = sqrt(fac_1_3 * c1) * cos(theta_3);
   double w = sqrt(c1) * sin(theta_3);
