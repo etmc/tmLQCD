@@ -73,7 +73,7 @@ void online_measurement(const int traj, const int id, const int ieo) {
   sprintf(filename,"%s%.6d", "onlinemeas." ,traj);
 
   init_operators();
-  if(no_operators < 1 && g_proc_id == 0) {
+  if(no_operators < 1) {
     if(g_proc_id == 0) {
       fprintf(stderr, "Warning! no operators defined in input file, cannot perform online correlator mesurements!\n");
     }
