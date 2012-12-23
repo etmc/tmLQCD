@@ -295,16 +295,12 @@ void degree_of_Ptilde(int * _degree, double ** coefs,
       printf("# NDPOLY Acceptance Polynomial: coef[degree] = %e\n", (*coefs)[degree]);
     }
     if(sum < acc) { 
-/*     if(fabs(*coefs[degree]) < acc) { */
-      if((g_proc_id == g_stdio_proc) && (g_debug_level > 1)) {
-        printf(" sum %e, coef %e\n", sum, (*coefs)[degree]);
-      }
       break;
     }
     degree= (int)(degree*1.2);
   }
 
-  if(g_debug_level > 0) {
+  if(g_debug_level > 2) {
     /* Ptilde P S P  Ptilde X - X */
     /* for random spinor X        */
     random_spinor_field_eo(ss, repro, RN_GAUSS);
