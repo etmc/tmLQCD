@@ -30,22 +30,10 @@
 #include <math.h>
 #include <time.h>
 #include "global.h"
-#include "su3.h"
 #include "su3adj.h"
 #include "su3spinor.h"
-#include "expo.h"
-#include "sse.h"
-#include "xchange/xchange.h"
-#include "get_rectangle_staples.h"
-#include "gamma.h"
-#include "get_staples.h"
-#include "read_input.h"
-#include "smearing/stout.h"
-
-#include "ranlxd.h"
-#include "start.h"
-#include "phmc.h"
-#include "hybrid_update.h"
+#include "gettime.h"
+#include "moment_energy.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -56,7 +44,8 @@
  *
  *******************************************/
 double moment_energy(su3adj ** const momenta) {
-
+  double atime, etime;
+  atime = gettime();
   su3adj *xm;
   int i,mu;
   static double tt,tr,ts,kc,ks,sum;
@@ -84,10 +73,18 @@ double moment_energy(su3adj ** const momenta) {
   /* the contribution to the E is however (p^2)/2: */
   kc=0.5*(ks+kc);
 #ifdef MPI
-  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  return ks;
-#else
-  return kc;
+  ks = kc;
+  MPI_Allreduce(&ks, &kc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #endif
+  etime = gettime();
+  if(g_proc_id == 0) {
+    if(g_debug_level > 1) {
+      printf("# Time for moment_energy: %e s\n", etime-atime);
+    }
+    if(g_debug_level > 3) {
+      printf("called moment_energy: energy %f\n", kc);
+    }
+  }
+  return kc;
 }
 

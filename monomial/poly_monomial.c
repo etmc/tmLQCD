@@ -184,7 +184,8 @@ double poly_acc(const int id, hamiltonian_field_t * const hf){
   int j;
   double diff;
   int no_eigenvalues=-1;
-
+  double atime, etime;
+  atime = gettime();
   if(mnl->even_odd_flag) {
     if(mnl->MDPolyDetRatio==1) {
       g_mu = mnl->mu2;
@@ -240,26 +241,35 @@ double poly_acc(const int id, hamiltonian_field_t * const hf){
       diff = mnl->energy1 - mnl->energy0;
       fprintf(stderr," Poly energy diff = %e \n" , diff);
     }
-    
-    return (mnl->energy1 - mnl->energy0);
-  } else {
+  } 
+  else {
     if(g_proc_id == 0) {
       fprintf(stderr,"Error: PHMC for light quarks not implementeted for non even/odd preconditioning\n");
     }
-
+    
     g_mu = g_mu1;
     boundary(g_kappa);
 
     return NAN;
   }
-
-
+  etime = gettime();
+  if(g_proc_id == 0) {
+    if(g_debug_level > 1) {
+      printf("# Time for %s monomial acc step: %e s\n", mnl->name, etime-atime);
+    }
+    if(g_debug_level > 3) {
+      printf("called poly_acc for id %d dH = %1.10e\n", 
+	     id, mnl->energy1 - mnl->energy0);
+    }
+  }
+  return (mnl->energy1 - mnl->energy0);
 }
 
 void poly_heatbath(const int id, hamiltonian_field_t * const hf){
   monomial * mnl = &monomial_list[id];
   int j;
-
+  double atime, etime;
+  atime = gettime();
   mnl->csg_n = 0;
   mnl->csg_n2 = 0;
   mnl->iter0 = 0;
@@ -324,10 +334,14 @@ void poly_heatbath(const int id, hamiltonian_field_t * const hf){
   boundary(g_kappa);
   popPhmcVars();
 
-  if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called poly_heatbath for id %d %d\n", id, mnl->even_odd_flag);
+  etime = gettime();
+  if(g_proc_id == 0) {
+    if(g_debug_level > 1) {
+      printf("# Time for %s monomial heatbath: %e s\n", mnl->name, etime-atime);
+    }
+    if(g_debug_level > 3) {
+      printf("called poly_heatbath for id %d energy %f\n", id, mnl->energy0);
+    }
   }
-
-
   return;
 }

@@ -49,7 +49,6 @@
 #include "io/gauge.h"
 #include "io/params.h"
 #include "measure_gauge_action.h"
-#include "hybrid_update.h"
 #include "ranlxd.h"
 #include "read_input.h"
 #include "expo.h"
@@ -77,7 +76,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   double yy[1];
   double dh, expmdh, ret_dh=0., ret_gauge_diff=0., tmp;
   double atime=0., etime=0.;
-  double ks,kc,ds,tr,ts,tt;
+  double ks = 0., kc = 0., ds, tr, ts, tt;
 
   char tmp_filename[50];
 

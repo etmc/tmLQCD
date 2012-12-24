@@ -32,7 +32,6 @@
 #include "deriv_Sb.h"
 #include "deriv_Sb_D_psi.h"
 #include "operator/tm_operators.h"
-#include "hybrid_update.h"
 #include "operator/Hopping_Matrix.h"
 #include "solver/chrono_guess.h"
 #include "solver/solver.h"
@@ -153,6 +152,8 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
 void det_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   monomial * mnl = &monomial_list[id];
+  double atime, etime;
+  atime = gettime();
   g_mu = mnl->mu;
   boundary(mnl->kappa);
   mnl->csg_n = 0;
@@ -186,8 +187,14 @@ void det_heatbath(const int id, hamiltonian_field_t * const hf) {
   }
   g_mu = g_mu1;
   boundary(g_kappa);
-  if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called det_heatbath for id %d %d\n", id, mnl->even_odd_flag);
+  etime = gettime();
+  if(g_proc_id == 0) {
+    if(g_debug_level > 1) {
+      printf("# Time for %s monomial heatbath: %e s\n", mnl->name, etime-atime);
+    }
+    if(g_debug_level > 3) {
+      printf("called det_heatbath for id %d energey %f\n", id, mnl->energy0);
+    }
   }
   return;
 }
@@ -196,7 +203,8 @@ void det_heatbath(const int id, hamiltonian_field_t * const hf) {
 double det_acc(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   int save_sloppy = g_sloppy_precision_flag;
-
+  double atime, etime;
+  atime = gettime();
   g_mu = mnl->mu;
   boundary(mnl->kappa);
   if(mnl->even_odd_flag) {
@@ -233,9 +241,15 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
   }
   g_mu = g_mu1;
   boundary(g_kappa);
-  if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called det_acc for id %d %d dH = %1.10e\n", 
-	   id, mnl->even_odd_flag, mnl->energy1 - mnl->energy0);
+  etime = gettime();
+  if(g_proc_id == 0) {
+    if(g_debug_level > 1) {
+      printf("# Time for %s monomial acc step: %e s\n", mnl->name, etime-atime);
+    }
+    if(g_debug_level > 3) {
+      printf("called det_acc for id %d dH = %1.10e\n", 
+	     id, mnl->energy1 - mnl->energy0);
+    }
   }
   return(mnl->energy1 - mnl->energy0);
 }

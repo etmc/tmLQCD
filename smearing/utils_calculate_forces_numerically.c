@@ -8,7 +8,6 @@
 #include <io/gauge.h>
 #include <io/params.h>
 #include <measure_gauge_action.h>
-#include <hybrid_update.h>
 #include <ranlxd.h>
 #include <read_input.h>
 #include <expo.h>

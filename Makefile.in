@@ -38,8 +38,8 @@ COMPILE = ${CC} ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
 
 SMODULES = 
 
-MODULES = read_input gamma hybrid_update measure_gauge_action start \
-  measure_oriented_plaquettes \
+MODULES = read_input gamma measure_gauge_action start \
+	measure_oriented_plaquettes \
 	expo get_staples update_backward_gauge \
 	measure_rectangles get_rectangle_staples  \
 	test/check_geometry test/check_xchange \
