@@ -139,35 +139,35 @@ void degree_of_polynomial_nd(int * _degree_of_p, double ** coefs,
     fflush(stdout);
   }
 
-  /* Here we check the accuracy */
-  Ptilde_ndpsi(&auxs[0], &auxc[0], *coefs, degree_of_p, &ss[0], &sc[0], Qsq);
-  Qsq(&aux2s[0], &aux2c[0], &auxs[0], &auxc[0]);
-  Ptilde_ndpsi(&auxs[0], &auxc[0], *coefs, degree_of_p, &aux2s[0], &aux2c[0], Qsq);
-
-  diff(&aux2s[0],&auxs[0],&ss[0],VOLUME/2);
-  temp=square_norm(&aux2s[0],VOLUME/2, 1)/square_norm(&ss[0],VOLUME/2, 1)/4.0;
-
-  diff(&aux2c[0],&auxc[0],&sc[0],VOLUME/2);
-  temp2 = square_norm(&aux2c[0],VOLUME/2, 1)/square_norm(&sc[0],VOLUME/2, 1)/4.0;
-
-  if(g_epsbar == 0.){ 
-    temp2 = 0.0;
-  }
-
-  if(g_proc_id == g_stdio_proc && g_debug_level > 0){
-    /* this is || (P S P - 1)X ||^2 /|| 2X ||^2 */
-    /* where X is a random spinor field         */
-    printf("# NDPOLY MD Polynomial: relative squared accuracy in components:\n# UP=%e  DN=%e \n", temp, temp2);
-    fflush(stdout);
-  }
-
   if(g_debug_level > 1) {
+    /* Here we check the accuracy */
+    Ptilde_ndpsi(&auxs[0], &auxc[0], *coefs, degree_of_p, &ss[0], &sc[0], Qsq);
+    Qsq(&aux2s[0], &aux2c[0], &auxs[0], &auxc[0]);
+    Ptilde_ndpsi(&auxs[0], &auxc[0], *coefs, degree_of_p, &aux2s[0], &aux2c[0], Qsq);
+    
+    diff(&aux2s[0],&auxs[0],&ss[0],VOLUME/2);
+    temp=square_norm(&aux2s[0],VOLUME/2, 1)/square_norm(&ss[0],VOLUME/2, 1)/4.0;
+    
+    diff(&aux2c[0],&auxc[0],&sc[0],VOLUME/2);
+    temp2 = square_norm(&aux2c[0],VOLUME/2, 1)/square_norm(&sc[0],VOLUME/2, 1)/4.0;
+    
+    if(g_epsbar == 0.){ 
+      temp2 = 0.0;
+    }
+    
+    if(g_proc_id == g_stdio_proc){
+      /* this is || (P S P - 1)X ||^2 /|| 2X ||^2 */
+      /* where X is a random spinor field         */
+      printf("# NDPOLY MD Polynomial: relative squared accuracy in components:\n# UP=%e  DN=%e \n", temp, temp2);
+      fflush(stdout);
+    }
+
     temp = cheb_eval(degree_of_p, *coefs, EVMin);
     temp *= EVMin;
     temp *= cheb_eval(degree_of_p, *coefs, EVMin);
     temp = 0.5*fabs(temp - 1);
     if(g_proc_id == g_stdio_proc) {
-      printf("# PHMC: Delta_IR at s=%f:    | P s_low P - 1 |/2 = %e \n", EVMin, temp);
+      printf("# NDPOLY MD Polynomial: Delta_IR at s=%f:    | P s_low P - 1 |/2 = %e \n", EVMin, temp);
     }
   }
   /* RECALL THAT WE NEED AN EVEN DEGREE !!!! */
