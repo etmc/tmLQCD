@@ -13,7 +13,6 @@ void project_traceless_antiherm(su3 *in)
   in->c01 *= 0.50;
   in->c10  = -conj(in->c01);
 
-
   in->c02 -= conj(in->c20);
   in->c02 *= 0.50;
   in->c20  = -conj(in->c02);
