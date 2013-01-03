@@ -24,7 +24,9 @@
 #endif
 #include <time.h>
 #ifdef HAVE_CLOCK_GETTIME
-#  define _POSIX_C_SOURCE 199309L
+#  ifndef _POSIX_C_SOURCE
+#    define _POSIX_C_SOURCE 199309L
+#  endif
 #  include <sys/time.h>
 #  include <bits/time.h>
 #endif
