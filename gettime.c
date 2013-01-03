@@ -24,8 +24,9 @@
 #endif
 #include <time.h>
 #ifdef HAVE_CLOCK_GETTIME
-#include <sys/time.h>
-#include <bits/time.h>
+#  define _POSIX_C_SOURCE 199309L
+#  include <sys/time.h>
+#  include <bits/time.h>
 #endif
 #if (defined BGL && !defined BGP)
 #  include <rts.h>
