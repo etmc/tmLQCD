@@ -60,7 +60,8 @@
 #include <stdio.h>
 #include <math.h>
 #include <float.h>
-#include "rational/elliptic.h"
+//#include "rational/elliptic.h"
+#include "elliptic.h"
 
 
 static double agm(double x,double y)
@@ -175,11 +176,12 @@ static void landen(double u,double rk,double *sn,double *cn)
 }
 
 
-void sncndn(const double u, const double rk,double *sn,double *cn,double *dn)
+void sncndn(const double _u, const double rk,double *sn,double *cn,double *dn)
 {
    int n,flip;
    double k,kp,K,delta,cd,sd,nd;
    double sgn_sn,sgn_cn;
+   double u = _u;
 
    if (rk<0.0)
      {

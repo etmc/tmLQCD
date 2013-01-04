@@ -55,7 +55,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "rationa/zolotarev.h"
+//#include "rational/zolotarev.h"
+#include "elliptic.h"
+#include "zolotarev.h"
 
 void zolotarev(const int n, const double eps,
 	       double * A, double *ar, double *delta)
