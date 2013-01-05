@@ -6,10 +6,10 @@ void  print_su3adj(su3adj const *in)
   printf("[");
   for (int ctr = 0; ctr < 8; ++ctr)
   {
-    printf("%c %8.6f", (in_as_array[ctr] > 0 ? '+' : '-'), fabs(in_as_array[ctr]));
+    printf("%c %14.12f", (in_as_array[ctr] > 0 ? '+' : '-'), fabs(in_as_array[ctr]));
     if (ctr < 7)
-      printf(";\n ");
+      printf(", ");
     else
-      printf(" ]\n");
+      printf("];\n");
   }
 }

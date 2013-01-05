@@ -11,18 +11,18 @@ static void construct_intermediates(stout_notes_tuple *trace, gauge_field_t cons
       _su3d_times_su3(trace[x][mu].Sigma, V[x][mu], smeared_force[x][mu]);
           
       /* t2 == Tr[U * Sigma * B2] * A */
-      _su3_times_su3(t1, trace[x][mu].Sigma, trace[x][mu].B2);
+      _su3_times_su3(t1, smeared_force[x][mu], trace[x][mu].B2);
       _trace_su3_times_su3(mat_trace, U[x][mu], t1);
       _complex_times_su3(t2, mat_trace, trace[x][mu].A);
 
       /* Z == ( Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * A ) * A */
-      _su3_times_su3(t1, trace[x][mu].Sigma, trace[x][mu].B1);
+      _su3_times_su3(t1, smeared_force[x][mu], trace[x][mu].B1);
       _trace_su3_times_su3(mat_trace, U[x][mu], t1);
       _su3_add_equals_complex_identity(t2, mat_trace);
       _su3_times_su3(trace[x][mu].Z, t2, trace[x][mu].A);
 
       /* Z == ( Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * A ) * A  + f_1 * U * Sigma */
-      _su3_times_su3(t1, U[x][mu], trace[x][mu].Sigma);
+      _su3_times_su3(t1, U[x][mu], smeared_force[x][mu]);
       _complex_times_su3(t2, trace[x][mu].f1, t1);
       _su3_plus_su3(trace[x][mu].Z, t2, trace[x][mu].Z);
 
