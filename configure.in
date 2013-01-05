@@ -41,7 +41,7 @@ LDFLAGS="$LDFLAGS -L\${HOME}/lib -L\${top_builddir}/lib"
 CCLD=${CC}
 
 # compilation in operator is slowest so we do it first, saves time in parallel compiles
-USESUBDIRS="operator linalg solver monomial buffers cu io xchange init"
+USESUBDIRS="operator linalg solver monomial buffers cu io xchange init rational"
 
 AC_CHECK_HEADERS([stdint.h],
 [ dnl for inttypes.h and stdint.h for uint_xxx types
