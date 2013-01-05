@@ -55,7 +55,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-//#include "rational/zolotarev.h"
 #include "elliptic.h"
 #include "zolotarev.h"
 

@@ -22,14 +22,17 @@
 #define _RATIONAL_H
 
 typedef struct {
-  int order;
+  int order, np;
+  int crange[2];
   double range[2];
-  double epssq;
+  double eps;
   double A, delta;
   double *mu,*rmu;
   double *nu,*rnu;
 } rational_t;
 
-
+int init_rational(rational_t * rat, const int order, 
+		  const double a, const double b, 
+		  const int ca, const int cb);
 
 #endif

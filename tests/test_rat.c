@@ -4,10 +4,10 @@
 #include<config.h>
 #endif
 #include "../global.h"
-#include "test_linalg_spinor.h"
+#include "test_rat_init.h"
 
 TEST_SUITES {
-  TEST_SUITE_ADD(LINALG),
+  TEST_SUITE_ADD(RAT),
   TEST_SUITES_CLOSURE
 };
 
@@ -18,3 +18,5 @@ int main(int argc,char *argv[]){
 }
 
 #undef MAIN_PROGRAM
+
+

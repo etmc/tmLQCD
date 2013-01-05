@@ -18,42 +18,58 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include "global.h"
 #include "zolotarev.h"
 #include "rational.h"
 
-// apply rational approximation as partial fraction
-double apply_R(const int order, const double y, const double A, double * rs, double * as) {
-  double x = 1.;
-  
-  for(int i = 0; i < order; i++) {
-    x += rs[i]/(y+as[i]);
-  }
-  return(A*x);
-}
+// init a rational approximation in range [a:b]
+// a,b should be the spectral range of the squared operator already
+// order is the order n of the rational approximation [n,n]
+// ca and cb specify the range of monomials to use (0 to order-1)
 
-// init a rational approximation of order order in range [a:b]
-int init_rational(rational_t * rat, const int order, const double a, const double b) {
+int init_rational(rational_t * rat, const int order, const double a, const double b, 
+		  const int ca, const int cb) {
   double * ars = malloc(2*order*sizeof(double));
-  double pmu, pnu, np = order;
+  double * ar;
+  double pmu, pnu, np;
+
+  // sanity check of input parameters
+  if(ca > order-1 || cb > order-1 || ca < 0 || cb < 0 || ca > cb || order < 1) {
+    fprintf(stderr, "parameters to init_rational out of range\n");
+    return(-1);
+  }
+  np = cb - ca + 1;
 
   rat->order = order;
-  rat->mu = (double*)malloc(order*sizeof(double));
-  rat->rmu = (double*)malloc(order*sizeof(double));
-  rat->nu = (double*)malloc(order*sizeof(double));
-  rat->rnu = (double*)malloc(order*sizeof(double));
-  rat->epssq = a*a/b/b;
+  rat->np = np;
+  rat->crange[0] = ca;
+  rat->crange[1] = cb;
+  if(((rat->mu = (double*)malloc(np*sizeof(double))) == NULL)  ||
+     ((rat->rmu = (double*)malloc(np*sizeof(double))) == NULL) ||
+     ((rat->nu = (double*)malloc(np*sizeof(double))) == NULL)  ||
+     ((rat->rnu = (double*)malloc(np*sizeof(double))) == NULL)) {
+    fprintf(stderr, "Could not allocate memory for coefficients in init_rational\n");
+    return(-2);
+  }
+  rat->eps = a/b;
   rat->range[0] = a;
   rat->range[1] = b;
 
-  zolotarev(order, rat->epssq, &rat->A, ars, &rat->delta);
-
-  // compute mu[] and nu[] = M*sqrt(ar), mu: r even, nu: r odd
+  // compute optimal zolotarev approximation
+  zolotarev(order, rat->eps, &rat->A, ars, &rat->delta);
+  // FIX: do we have to divide A by sqrt(b)
+  // restrict to relevant coefficients [2*ca:2*cb]
+  ar = ars + 2*ca;
+  // compute mu[] and nu[] = M*sqrt(ar), mu: r even, nu: r odd (M = sqrt(b))
   for (int i = 0; i < np; i++) {
-    rat->mu[i] = b * sqrt(ars[2*i + 1]);
-    rat->nu[i] = b * sqrt(ars[2*i]);
+    rat->mu[i] = sqrt(b * ar[2*i + 1]);
+    rat->nu[i] = sqrt(b * ar[2*i]);
   }
   // compute the partial fraction coefficients rmu and rnu
   for (int i = 0; i < np; i++) {  
@@ -62,12 +78,12 @@ int init_rational(rational_t * rat, const int order, const double a, const doubl
 
     for (int j = 0; j < np; j++) {
       if (j!=i) {
-	pmu*=((ars[2*j]-ars[2*i+1])/(ars[2*j+1]-ars[2*i+1]));
+	pmu*=((ar[2*j]-ar[2*i+1])/(ar[2*j+1]-ar[2*i+1]));
 	pnu*=((rat->mu[j]-rat->nu[i])/(rat->nu[j]-rat->nu[i]));
       }
     }
 
-    rat->rmu[i]=b*b*(ars[2*i]-ars[2*i+1])*pmu;
+    rat->rmu[i]=b*(ars[2*i]-ars[2*i+1])*pmu;
     rat->rnu[i]=(rat->mu[i]-rat->nu[i])*pnu;
   }
 
@@ -75,22 +91,4 @@ int init_rational(rational_t * rat, const int order, const double a, const doubl
   return(0);
 }
 
-int main() {
-  int order = 10;
-  double A, eps = 1.e-4, delta;
-  double ra = eps, rb = 1.;
-  rational_t rat;
-  double * ar = malloc(order*sizeof(double));
-  
-  init_rational(&rat, order, ra, rb);
 
-  for(int i = 0; i < order; i++) {
-    ar[i] = (rat.mu[i]/rb)*(rat.mu[i]/rb);
-  }
-  for(double y = eps*eps; y < 1.; y += eps) {
-    double x = apply_R(rat.order, y, rat.A, rat.rmu, ar);
-    printf("%e %e %e\n", y, x, 1./sqrt(y));
-  }
-
-  return(0);
-}
