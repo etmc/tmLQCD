@@ -912,7 +912,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<DETMONOMIAL,POLYMONOMIAL,NDPOLYMONOMIAL,CLPOLYMONOMIAL,NDRATMONMIAL>{
+<DETMONOMIAL,POLYMONOMIAL,NDPOLYMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL>{
   {SPC}*2KappaMu2{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mu2 = c;

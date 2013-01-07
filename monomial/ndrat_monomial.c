@@ -32,11 +32,10 @@
 #include "gettime.h"
 #include "solver/solver.h"
 #include "deriv_Sb.h"
+#include "init/init_chi_spinor_field.h"
 #include "operator/tm_operators.h"
 #include "operator/tm_operators_nd.h"
 #include "operator/Hopping_Matrix.h"
-#include "phmc.h"
-#include "Ptilde_nd.h"
 #include "monomial/monomial.h"
 #include "hamiltonian_field.h"
 #include "boundary.h"
@@ -154,6 +153,7 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
 
 void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
+  solver_pm_t solver_pm;
   spinor *up0, *dn0, *up1, *dn1, *dummy;
   double atime, etime;
   atime = gettime();
@@ -164,7 +164,7 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
     sw_term((const su3**)hf->gaugefield, mnl->kappa, mnl->c_sw); 
     sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
   }
-  // we measure before trajectory!
+  // we measure before the trajectory!
   if((mnl->rec_ev != 0) && (hf->traj_counter%mnl->rec_ev == 0)) {
     phmc_compute_ev(hf->traj_counter-1, id, &Qtm_pm_ndbipsi);
   }
@@ -175,27 +175,23 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   random_spinor_field_eo(g_chi_dn_spinor_field[0], mnl->rngrepro, RN_GAUSS);
   mnl->energy0 += square_norm(g_chi_dn_spinor_field[0], VOLUME/2, 1);
+  solver_pm.max_iter = mnl->maxiter;
+  solver_pm.eps_sq = mnl->accprec;
+  solver_pm.no_shifts = mnl->rat.np;
+  solver_pm.shifts = mnl->rat.mu;
+  solver_pm.type = CGMMSND;
+  solver_pm.g = &Qtm_pm_ndpsi;
+  solver_pm.N = VOLUME/2;
+  cg_mms_tm_nd(&g_chi_up_spinor_field[1], &g_chi_dn_spinor_field[1],
+	       g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], 
+	       &solver_pm);
 
-  Qsw_ndpsi(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
-	    g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0]);
+  for(int j = 0; j < (mnl->rat.np); j++){
 
-  up0 = g_chi_up_spinor_field[0];
-  up1 = g_chi_up_spinor_field[1];
-  dn0 = g_chi_dn_spinor_field[0];
-  dn1 = g_chi_dn_spinor_field[1];
-  
-  for(int j = 1; j < (mnl->MDPolyDegree); j++){
-    Qsw_tau1_sub_const_ndpsi(up0, dn0,
-			     up1, dn1, 
-			     mnl->MDPolyRoots[mnl->MDPolyDegree-2+j]);
-    dummy = up1; up1 = up0; up0 = dummy;
-    dummy = dn1; dn1 = dn0; dn0 = dummy;
   }
-  Ptilde_ndpsi(up0, dn0, mnl->PtildeCoefs, 
-	       mnl->PtildeDegree, up1, dn1, &Qsw_pm_ndpsi);
   
-  assign(mnl->pf, up0, VOLUME/2);
-  assign(mnl->pf2, dn0, VOLUME/2);
+  //assign(mnl->pf, up0, VOLUME/2);
+  //assign(mnl->pf2, dn0, VOLUME/2);
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
@@ -258,6 +254,12 @@ int init_ndrat_monomial(const int id) {
   monomial * mnl = &monomial_list[id];  
   
   init_rational(&mnl->rat);
+
+  if(init_chi_spinor_field(VOLUMEPLUSRAND/2, (mnl->rat.np+1)) != 0) {
+    fprintf(stderr, "Not enough memory for Chi fields! Aborting...\n");
+    exit(0);
+  }
+
 
   return(0);
 }

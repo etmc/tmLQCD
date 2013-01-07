@@ -34,6 +34,7 @@
 #define DFLFGMRES 11
 #define CGMMS 12
 #define MIXEDCG 13
+#define CGMMSND 14
 
 #include"solver/matrix_mult_typedef.h"
 
@@ -64,4 +65,12 @@
 #include "solver/cg_her_nd.h"
 
 #include "solver/generate_dfl_subspace.h"
+
+typedef struct {
+  int max_iter, rel_prec, type, no_shifts, N;
+  double eps_sq;
+  matrix_mult f;
+  matrix_mult_nd g;
+  double * shifts;
+} solver_pm_t;
 #endif

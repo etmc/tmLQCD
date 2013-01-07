@@ -37,7 +37,7 @@
 #if ( defined SSE2 || defined SSE3 )
 #include "sse.h"
 
-/*   (*P) = (*P) + c(*Q)        c is a complex constant   */
+/*   (*P) = (*P) + c(*Q)        c is a real constant   */
 
 void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const int N)
 {
@@ -341,7 +341,7 @@ void assign_add_mul_r(spinor * const R, spinor * const S, const double c, const 
 
 #else
 
-/*   (*P) = (*P) + c(*Q)        c is a complex constant   */
+/*   (*P) = (*P) + c(*Q)        c is a real constant   */
 
 void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const int N)
 {
