@@ -33,23 +33,22 @@
 // order is the order n of the rational approximation [n,n]
 // ca and cb specify the range of monomials to use (0 to order-1)
 
-int init_rational(rational_t * rat, const int order, const double a, const double b, 
-		  const int ca, const int cb) {
+int init_rational(rational_t * rat) {
+  int order = rat->order;
   double * ars = malloc(2*order*sizeof(double));
   double * ar;
-  double pmu, pnu, np;
+  double pmu, pnu;
+  double a = rat->range[0], b = rat->range[1];
+  int ca = rat->crange[0], cb = rat->crange[1];
 
   // sanity check of input parameters
   if(ca > order-1 || cb > order-1 || ca < 0 || cb < 0 || ca > cb || order < 1) {
     fprintf(stderr, "parameters to init_rational out of range\n");
     return(-1);
   }
-  np = cb - ca + 1;
+  double np = ca - cb + 1;
 
-  rat->order = order;
   rat->np = np;
-  rat->crange[0] = ca;
-  rat->crange[1] = cb;
   if(((rat->mu = (double*)malloc(np*sizeof(double))) == NULL)  ||
      ((rat->rmu = (double*)malloc(np*sizeof(double))) == NULL) ||
      ((rat->nu = (double*)malloc(np*sizeof(double))) == NULL)  ||
@@ -58,11 +57,12 @@ int init_rational(rational_t * rat, const int order, const double a, const doubl
     return(-2);
   }
   rat->eps = a/b;
-  rat->range[0] = a;
-  rat->range[1] = b;
 
   // compute optimal zolotarev approximation
   zolotarev(order, rat->eps, &rat->A, ars, &rat->delta);
+  if(g_proc_id == 0 && g_debug_level > 0) {
+    printf("# rational approximation of order %d generated with max deviation delta = %e\n", rat->order, rat->delta);
+  }
   // FIX: do we have to divide A by sqrt(b)
   // restrict to relevant coefficients [2*ca:2*cb]
   ar = ars + 2*ca;

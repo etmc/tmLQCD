@@ -365,12 +365,22 @@ EndMonomial
     -\re\tr(U^{1\times2}_{x,\mu,\nu})\}\right)\,  ,
   \]
 \item {\ttfamily NDPOLY}: polynomial representation of the (possibly
-  non-degenerate) Wilson twisted mass doublet\\
+  non-degenerate) Wilson twisted mass doublet
   \[
   [\det(Q_{nd}(\bar\epsilon, \bar\mu)^2)]^{1/2}
   \]
+\item {\ttfamily NDRAT}: rational representation of the (possibly
+  non-degenerate) Wilson twisted mass doublet
+  \[
+  [\det(Q_{nd}(\bar\epsilon, \bar\mu)^2)]^{1/2}
+  \]
+  with an approximation
+  \[
+  R(Q_{nd}^2)\ = \ \prod_{i = 1}^N \frac{Q_{nd}^2 +
+    a_{2i}}{Q_{nd}^2 + a_{2i-1})\approx\quad\frac{1}{\sqrt{Q_{nd}^2}}
+  \]
 \item {\ttfamily NDCLOVER}: polynomial representation of the (possibly
-  non-degenerate) clover twisted mass doublet\\
+  non-degenerate) clover twisted mass doublet
   \[
   [\det(Q_{nd}(\bar\epsilon, \bar\mu)^2), c_\mathrm{sw}]^{1/2}
   \]
@@ -447,13 +457,16 @@ Each of them has different options:
     effective only for {\ttfamily type = user}.
   \end{itemize}
   There is maximally one instance allowed of this type.
-
-
-\item {\ttfamily NDPOLY}: more a dummy monomial so far, but switches
+  
+  
+\item {\ttfamily NDPOLY}: switches
   on the PHMC part for the non-degenerate heavy doublet and lets you
   specify the timescale on which to integrate this and the parameters.
   \begin{itemize}
-
+  \item {\ttfamily 2KappaMubar}: $2\kappa\bar\mu$ the heavy twisted mass
+  \item {\ttfamily 2KappaEpsbar}: $2\kappa\bar\epsilon$ the heavy
+    splitting
+  \item {\ttfamily Kappa}: the $\kappa$ value
   \item {\ttfamily Timescale}: the timescale on which to integrate
     this monomial. Counting starts from zero up to the total number of
     timescales minus 1.
@@ -494,6 +507,31 @@ Each of them has different options:
   \end{itemize}
   So far, there is maximally one instance allowed for this type. This
   might change in the future.
+
+\item {\ttfamily NDRAT}: like {\ttfamily NDPOLY}, but with a rational
+  approximation. 
+  \begin{itemize}
+  \item {\ttfamily 2KappaMubar}: $2\kappa\bar\mu$ the heavy twisted mass
+  \item {\ttfamily 2KappaEpsbar}: $2\kappa\bar\epsilon$ the heavy
+    splitting
+  \item {\ttfamily Kappa}: the $\kappa$ value
+  \item {\ttfamily DegreeOfRational}: the order $N$ of the rational approximation
+  \item {\ttfamily StildeMin}: lower bound for the approximation
+    interval of the rational approximation
+
+  \item {\ttfamily StildeMax}:
+    upper bound for the approximation interval of the rational approximation
+  \item {\ttfamily Cmin}: it is possible to use only pairs of coefficients
+    in the range from $[c_a,c_b]$ in order to introduce an frequency
+    splitting. {\ttfamily Cmin} corresponds to $0<c_a\leq N$, where
+    $N$ is the order of the rational approxiamtion.
+  \item {\ttfamily Cmax}: $c_b$, see {\ttfamily Cmin}.
+  \item {\ttfamily ComputeOnlyEVs}: Computes only once at the very
+    beginning of the run the eigenvalues of the heavy split operator
+    and exits.
+
+  \end{itemize}
+
 \item {\ttfamily POLY, POLYDETRATIO}:
   \begin{itemize}
   \item {\ttfamily Degree}:

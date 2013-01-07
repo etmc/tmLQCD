@@ -26,8 +26,13 @@ TEST(rat_init) {
   double ra = eps, rb = 1.;
   rational_t rat;
   double * ar = malloc(order*sizeof(double));
-  
-  ret = init_rational(&rat, order, ra, rb, 0, order-1);
+  rat.order = order;
+  rat.range[0] = ra;
+  rat.range[1] = rb;
+  rat.crange[0] = 0;
+  rat.crange[1] = order-1;
+ 
+  ret = init_rational(&rat);
   assertFalseM(ret, "rat_init failed\n");
   printf("%d\n", ret);
 

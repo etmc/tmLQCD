@@ -116,6 +116,12 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].PrecisionHfinal = _default_g_acc_Hfin;
   monomial_list[no_monomials].PrecisionPtilde = _default_g_acc_Ptilde;
 
+  monomial_list[no_monomials].rat.order = 12;
+  monomial_list[no_monomials].rat.range[0] = _default_stilde_min;
+  monomial_list[no_monomials].rat.range[1] = _default_stilde_max;
+  monomial_list[no_monomials].rat.crange[0] = 0;
+  monomial_list[no_monomials].rat.crange[1] = 11;
+
   monomial_list[no_monomials].initialised = 1;
   if(monomial_list[no_monomials].type == NDDETRATIO) {
     monomial_list[no_monomials].timescale = -5;
@@ -136,7 +142,7 @@ int init_monomials(const int V, const int even_odd_flag) {
     if((monomial_list[i].type != GAUGE) && (monomial_list[i].type != SFGAUGE)) no++;
     /* non-degenerate monomials need two pseudo fermion fields */
     if((monomial_list[i].type == NDPOLY) || (monomial_list[i].type == NDDETRATIO) || 
-       (monomial_list[i].type == NDCLOVER)) no++;
+       (monomial_list[i].type == NDCLOVER) || (monomial_list[i].type == NDRAT)) no++;
   }
   if(no_monomials > 0) {
     if((void*)(_pf = (spinor*)calloc((no+4)*V+1, sizeof(spinor))) == NULL) {
@@ -145,11 +151,7 @@ int init_monomials(const int V, const int even_odd_flag) {
       return(1);
     }
     else {
-#if ( defined SSE || defined SSE2 || defined SSE3)
       __pf = (spinor*)(((unsigned long int)(_pf)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-      __pf = _pf;
-#endif
     }
     if((void*)(w_fields = (spinor**)calloc(no_wfields, sizeof(spinor*))) == NULL) {
       printf ("malloc errno in monomial  w_fields: %d\n",errno); 
@@ -270,6 +272,18 @@ int init_monomials(const int V, const int even_odd_flag) {
 	retval = init_ndpoly_monomial(i);
 	if(g_proc_id == 0 && g_debug_level > 1) {
 	  printf("# Initialised monomial of type NDCLOVER, no_monomials= %d\n", no_monomials);
+	}
+      }
+      else if(monomial_list[i].type == NDRAT) {
+	monomial_list[i].hbfunction = &ndrat_heatbath;
+	monomial_list[i].accfunction = &ndrat_acc;
+	//monomial_list[i].derivativefunction = &ndrat_derivative;
+	monomial_list[i].even_odd_flag = 1;
+	monomial_list[i].pf2 = __pf+no*V;
+	no++;
+	retval = init_ndrat_monomial(i);
+	if(g_proc_id == 0 && g_debug_level > 1) {
+	  printf("# Initialised monomial of type NDRAT, no_monomials= %d\n", no_monomials);
 	}
       }
       else if(monomial_list[i].type == NDDETRATIO) {

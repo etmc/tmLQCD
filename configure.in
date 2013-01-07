@@ -909,7 +909,7 @@ if test ! -e tests/regressions; then
 fi
 
 
-LIBS="-lhmc -lmonomial -loperator -lsolver -linit -llinalg -lhmc -lxchange -lio $LIBS"
+LIBS="-lhmc -lmonomial -loperator -lsolver -linit -llinalg -lhmc -lxchange -lrational -lio $LIBS"
 AUTOCONF=autoconf
 
 for i in $USESUBDIRS

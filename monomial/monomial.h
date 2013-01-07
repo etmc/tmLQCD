@@ -24,7 +24,7 @@
 #include "su3.h"
 #include "su3spinor.h"
 #include "hamiltonian_field.h"
-
+#include "rational/rational.h"
 
 #define DET 0
 #define DETRATIO 1
@@ -39,6 +39,8 @@
 #define CLOVERDETRATIO 10
 #define NDCLOVER 11
 #define CLOVERNDTRLOG 12
+#define NDRAT 13
+#define NDCLOVERRAT 14
 
 #define max_no_monomials 20
 
@@ -94,6 +96,8 @@ typedef struct {
   double StildeMin, StildeMax;
   double EVMin, EVMax, EVMaxInv;
   double * MDPolyCoefs, * PtildeCoefs;
+  /* rational approximation */
+  rational_t rat;
   /* chronological solver fields */
   spinor ** csg_field;
   spinor ** csg_field2;
@@ -120,6 +124,7 @@ typedef struct {
 #include "monomial/cloverdet_monomial.h"
 #include "monomial/cloverdetratio_monomial.h"
 #include "monomial/cloverndpoly_monomial.h"
+#include "monomial/ndrat_monomial.h"
 #include "monomial/moment_energy.h"
 
 /* list of all monomials */
