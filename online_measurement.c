@@ -104,7 +104,7 @@ void online_measurement(const int traj, const int id, const int ieo) {
 #endif
   if(g_debug_level > 1 && g_proc_id == 0) {
     printf("# timeslice set to %d (T=%d) for online measurement\n", t0, g_nproc_t*T);
-    printf("# online measurements parameters: kappa = %g, mu = %g\n", g_kappa, g_mu/2./g_kappa);
+    printf("# online measurements parameters: kappa = %g, mu = %g\n", optr->kappa, optr->mu/2./optr->kappa);
   }
   atime = gettime();
 
@@ -157,13 +157,13 @@ void online_measurement(const int traj, const int id, const int ieo) {
     respa = mpi_respa;
     MPI_Reduce(&resp4, &mpi_resp4, 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
     resp4 = mpi_resp4;
-    sCpp[t] = +res/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)*2.;
-    sCpa[t] = -respa/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)*2.;
-    sCp4[t] = +resp4/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)*2.;
+    sCpp[t] = +res/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
+    sCpa[t] = -respa/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
+    sCp4[t] = +resp4/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
 #else
-    Cpp[t] = +res/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)*2.;
-    Cpa[t] = -respa/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)*2.;
-    Cp4[t] = +resp4/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)*2.;
+    Cpp[t] = +res/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
+    Cpa[t] = -respa/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
+    Cp4[t] = +resp4/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
 #endif
   }
 
