@@ -22,7 +22,6 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
-#include <time.h>
 #ifdef HAVE_CLOCK_GETTIME
 #  ifndef _POSIX_C_SOURCE
 #    define _POSIX_C_SOURCE 199309L
@@ -30,6 +29,7 @@
 #  include <sys/time.h>
 #  include <bits/time.h>
 #endif
+#include <time.h>
 #if (defined BGL && !defined BGP)
 #  include <rts.h>
 #endif
