@@ -65,6 +65,28 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
   
   zero_adjoint_field(&df);
 
+  /* FIXME Further debugging -- replace the field by something that is manageable analytically */
+  for (int loc = 0; loc < (VOLUMEPLUSRAND + g_dbw2rand); ++loc)
+    for (int nu = 0; nu < 4; ++nu)
+    {
+      _su3_one(g_gf[loc][nu]);
+    }
+
+//  /* FIXME Enter some arbitrary random SU(3). Random to avoid accidental agreements. */
+//   g_gf[0][0].c00 = -0.281674601208749 - 0.196755446881004 * I;
+//   g_gf[0][0].c01 =  0.097906948456113 + 0.909672287338323 * I;
+//   g_gf[0][0].c02 =  0.085554250669676 + 0.193746593367662 * I;
+//   g_gf[0][0].c10 =  0.255396409335753 - 0.282878184149928 * I;
+//   g_gf[0][0].c11 = -0.057616138763708 - 0.068813232780069 * I;
+//   g_gf[0][0].c12 =  0.919668327134945 + 0.030131290107975 * I;
+//   g_gf[0][0].c20 =  0.054229296057200 - 0.856597048580097 * I;
+//   g_gf[0][0].c21 =  0.329775646781283 - 0.214717725004200 * I;
+//   g_gf[0][0].c22 = -0.279641903356002 + 0.173912067032302 * I;
+
+  /* FIXME Enter the simplest deviation from identity that will work */
+  g_gf[0][0].c00 = 0.540302305868140 + 0.841470984807897 * I;
+  g_gf[0][0].c11 = 0.540302305868140 - 0.841470984807897 * I;
+  
   ohnohack_remap_df0(tmp_derivative); /* FIXME Such that we can aggregate results per smearing type. */
   for (int s_ctr = 0; s_ctr < no_relevant_smearings; ++s_ctr)
   {
@@ -97,6 +119,54 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
         }
       }
     }
+    
+//     for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand); ++i)
+//       for (int mu = 0; mu < 4; ++mu)
+//       {
+// 	printf("Sigma_mat(%d, %d, :) = ", i + 1, mu + 1);
+// 	print_su3adj(&tmp_derivative[i][mu]);
+//       }
+// 
+//     for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand); ++i)
+//       for (int mu = 0; mu < 4; ++mu)
+//       {
+// 	printf("U_mat(%d, %d, :, :) = ", i + 1, mu + 1);
+// 	print_su3(&g_gf[i][mu]);
+//       }
+//       
+//     for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand); ++i)
+//       for (int mu = 0; mu < 4; ++mu)
+//       {
+// 	printf("V_mat(%d, %d, :, :) = ", i + 1, mu + 1);
+// 	print_su3(&smearing_control_monomial[s_type]->result[i][mu]);
+//       }
+//
+//     for(int x = 0; x < 2; ++x)
+//       for(int y = 0; y < 2; ++y)
+//         for(int z = 0; z < 2; ++z)
+//           for(int t = 0; t < 2; ++t)
+//             printf("g_ipt(%d, %d, %d, %d) = %d;\n", x+1, y+1, z+1, t+1, g_ipt[x][y][z][t] + 1);
+//     
+//     for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand); ++i)
+//       for (int mu = 0; mu < 4; ++mu)
+//       {
+//         su3 C_mat;
+//         generic_staples(&C_mat, i, mu, g_gf);
+//         printf("C_mat(%d, %d, :, :) = ", i + 1, mu + 1);
+//         print_su3(&C_mat);
+//       }
+// 
+//     stout_control * tt = (stout_control*)(smearing_control_monomial[s_type]->type_control);
+//     printf("\nA[0][0]:\n");
+//     print_su3(&tt->trace[0][0][0].A);
+//     printf("\nexpA[0][0]:\n");
+//     print_su3(&tt->trace[0][0][0].expA);
+//     printf("\nf1 = %f + i%f, f2 = %f + i%f\n", creal(tt->trace[0][0][0].f1), cimag(tt->trace[0][0][0].f1), creal(tt->trace[0][0][0].f2), cimag(tt->trace[0][0][0].f2));
+//     printf("\nB1[0][0]:\n");
+//     print_su3(&tt->trace[0][0][0].B1);
+//     printf("\nB2[0][0]:\n");
+//     print_su3(&tt->trace[0][0][0].B2);
+    
     smear_forces(smearing_control_monomial[s_type], tmp_derivative);
 
     for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand); ++i)
