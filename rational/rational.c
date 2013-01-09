@@ -44,9 +44,10 @@ int init_rational(rational_t * rat) {
   // sanity check of input parameters
   if(ca > order-1 || cb > order-1 || ca < 0 || cb < 0 || ca > cb || order < 1) {
     fprintf(stderr, "parameters to init_rational out of range\n");
+    fprintf(stderr, "ca = %d, cb = %d, order = %d\n", ca, cb, order);
     return(-1);
   }
-  double np = ca - cb + 1;
+  double np = cb - ca + 1;
 
   rat->np = np;
   if(((rat->mu = (double*)malloc(np*sizeof(double))) == NULL)  ||

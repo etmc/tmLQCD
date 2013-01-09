@@ -42,6 +42,7 @@
 #include "operator/clovertm_operators.h"
 #include "operator/clover_leaf.h"
 #include "rational/rational.h"
+#include "phmc.h"
 #include "ndrat_monomial.h"
 
 static void nd_set_global_parameter(monomial * const mnl) {
@@ -51,6 +52,9 @@ static void nd_set_global_parameter(monomial * const mnl) {
   g_kappa = mnl->kappa;
   g_c_sw = mnl->c_sw;
   boundary(g_kappa);
+  phmc_cheb_evmin = mnl->EVMin;
+  phmc_invmaxev = mnl->EVMaxInv;
+  phmc_cheb_evmax = 1.;
 
   return;
 }
@@ -178,7 +182,7 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   solver_pm.max_iter = mnl->maxiter;
   solver_pm.eps_sq = mnl->accprec;
   solver_pm.no_shifts = mnl->rat.np;
-  solver_pm.shifts = mnl->rat.mu;
+  solver_pm.shifts = mnl->rat.nu;
   solver_pm.type = CGMMSND;
   solver_pm.g = &Qtm_pm_ndpsi;
   solver_pm.N = VOLUME/2;
@@ -190,8 +194,8 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   }
   
-  //assign(mnl->pf, up0, VOLUME/2);
-  //assign(mnl->pf2, dn0, VOLUME/2);
+  assign(mnl->pf, g_chi_up_spinor_field[0], VOLUME/2);
+  assign(mnl->pf2, g_chi_dn_spinor_field[0], VOLUME/2);
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
@@ -206,7 +210,7 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
 
 
 double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
-  int j;
+  solver_pm_t solver_pm;
   monomial * mnl = &monomial_list[id];
   spinor *up0, *dn0, *up1, *dn1, *dummy;
   double atime, etime;
@@ -219,24 +223,24 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
   }
   mnl->energy1 = 0.;
 
-  up0 = g_chi_up_spinor_field[0];
-  up1 = g_chi_up_spinor_field[1];
-  dn0 = g_chi_dn_spinor_field[0];
-  dn1 = g_chi_dn_spinor_field[1];
-  /* This is needed if we consider only "1" in eq. 9 */
-  assign(up0, mnl->pf , VOLUME/2);
-  assign(dn0, mnl->pf2, VOLUME/2);
+  solver_pm.max_iter = mnl->maxiter;
+  solver_pm.eps_sq = mnl->accprec;
+  solver_pm.no_shifts = mnl->rat.np;
+  solver_pm.shifts = mnl->rat.mu;
+  solver_pm.type = CGMMSND;
+  solver_pm.g = &Qtm_pm_ndpsi;
+  solver_pm.N = VOLUME/2;
+  cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+	       mnl->pf, mnl->pf2,
+	       &solver_pm);
 
-  for(j = 1; j <= (mnl->MDPolyDegree-1); j++) {
-    Qsw_tau1_sub_const_ndpsi(up1, dn1, up0, dn0, mnl->MDPolyRoots[j-1]);
-    
-    dummy = up1; up1 = up0; up0 = dummy;
-    dummy = dn1; dn1 = dn0; dn0 = dummy;
-    /* result always in up0 and dn0 */
+
+  for(int j = 1; j <= (mnl->MDPolyDegree-1); j++) {
+
   }
   
-  mnl->energy1 = square_norm(up0, VOLUME/2, 1);
-  mnl->energy1 += square_norm(dn0, VOLUME/2, 1);
+  //mnl->energy1 = square_norm(up0, VOLUME/2, 1);
+  //mnl->energy1 += square_norm(dn0, VOLUME/2, 1);
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
@@ -255,9 +259,16 @@ int init_ndrat_monomial(const int id) {
   
   init_rational(&mnl->rat);
 
+  mnl->EVMin = mnl->StildeMin / mnl->StildeMax;
+  mnl->EVMax = 1.;
+  mnl->EVMaxInv = 1./(sqrt(mnl->StildeMax));
+
   if(init_chi_spinor_field(VOLUMEPLUSRAND/2, (mnl->rat.np+1)) != 0) {
     fprintf(stderr, "Not enough memory for Chi fields! Aborting...\n");
     exit(0);
+  }
+  else {
+    printf("Initialised %d chi fields\n",mnl->rat.np+1 );
   }
 
 

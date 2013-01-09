@@ -556,7 +556,6 @@ void ndpoly_set_global_parameter(monomial * const mnl, const int exact) {
   }
 
   phmc_root = mnl->MDPolyRoots;
-  phmc_invmaxev = mnl->EVMaxInv;
   phmc_cheb_evmin = mnl->EVMin;
   phmc_invmaxev = mnl->EVMaxInv;
   phmc_cheb_evmax = 1.0;

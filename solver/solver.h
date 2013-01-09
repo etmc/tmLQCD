@@ -37,6 +37,16 @@
 #define CGMMSND 14
 
 #include"solver/matrix_mult_typedef.h"
+#include "solver/matrix_mult_typedef_bi.h"
+#include "solver/matrix_mult_typedef_nd.h"
+
+typedef struct {
+  int max_iter, rel_prec, type, no_shifts, N;
+  double eps_sq;
+  matrix_mult f;
+  matrix_mult_nd g;
+  double * shifts;
+} solver_pm_t;
 
 #include"solver/gmres.h"
 #include"solver/gmres_dr.h"
@@ -57,20 +67,13 @@
 #include"solver/gmres_precon.h"
 #include"solver/poly_precon.h"
 
-#include "solver/matrix_mult_typedef_bi.h"
 #include "solver/bicgstab_complex_bi.h"
 #include "solver/cg_her_bi.h"
 
-#include "solver/matrix_mult_typedef_nd.h"
 #include "solver/cg_her_nd.h"
+#include"solver/cg_mms_tm_nd.h"
 
 #include "solver/generate_dfl_subspace.h"
 
-typedef struct {
-  int max_iter, rel_prec, type, no_shifts, N;
-  double eps_sq;
-  matrix_mult f;
-  matrix_mult_nd g;
-  double * shifts;
-} solver_pm_t;
+
 #endif

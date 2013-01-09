@@ -139,12 +139,12 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
 
     err = square_norm(solver_field[0], N, 1) + square_norm(solver_field[1], N, 1);
 
-    if(g_debug_level > 2 && g_proc_id == g_stdio_proc) {
+    if(g_debug_level > 0 && g_proc_id == g_stdio_proc) {
       printf("# CGMMS iteration: %d residue: %g\n", iteration, err); fflush( stdout );
     }
 
     if( ((err <= solver_pm->eps_sq) && (solver_pm->rel_prec == 0)) ||
-      ((err <= solver_pm->eps_sq*squarenorm) && (solver_pm->rel_prec == 1)) ) {
+	((err <= solver_pm->eps_sq*squarenorm) && (solver_pm->rel_prec == 1)) ) {
 
       if(g_debug_level > 2) {
 	solver_pm->g(solver_field[2], solver_field[3], Pup[0], Pdn[0]);
@@ -166,7 +166,7 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
 	assign_mul_add_mul_r(ps_mms_solver[2*im], solver_field[0], betas[im], zita[im], N);
 	assign_mul_add_mul_r(ps_mms_solver[2*im+1], solver_field[1], betas[im], zita[im], N);
       }
-      finalize_solver(solver_field, nr_sf);
+      finalize_solver(solver_field, 2*nr_sf);
       return(iteration+1);
     }
 
@@ -186,7 +186,7 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
     }
   }
   g_sloppy_precision = 0;
-  finalize_solver(solver_field, nr_sf);
+  finalize_solver(solver_field, 2*nr_sf);
   return(-1);
 }
 
