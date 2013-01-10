@@ -53,8 +53,8 @@ C\ =\ 1 + i\sum_{i=1}^N \frac{r_i}{\hat Q_h + i\nu_i}\,,
 \]
 with
 \[
-r_i = (\mu_i^2 - \nu_i^2)\prod_{m=1, m\neq i}^N \frac{\mu_m^2 -
-  \nu_i^2}{\nu_m^2 - \nu_i^2}\,,\quad i = 1,...,N\, .
+r_i = (\mu_i - \nu_i)\prod_{m=1, m\neq i}^N \frac{\mu_m -
+  \nu_i}{\nu_m - \nu_i}\,,\quad i = 1,...,N\, .
 \]
 The rational approximation $\mathcal{R}$ can be applied to a vector
 using a multi-mass solver and the partial fraction representation. The
