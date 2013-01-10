@@ -187,60 +187,87 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   solver_pm.type = CGMMSND;
   solver_pm.g = &Qtm_pm_ndpsi;
   solver_pm.N = VOLUME/2;
-  cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-	       mnl->pf, mnl->pf2, &solver_pm);
+  mnl->iter0 = cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+			     mnl->pf, mnl->pf2, &solver_pm);
   // check the MMS solver
   if(g_debug_level > 0) {
     for(int j = 0; j < (mnl->rat.np); j++) {
-      //Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
-      //		     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j],
-      //		     0*I*mnl->rat.nu[j]);
-      //Q_tau1_sub_const_ndpsi(mnl->w_fields[0], mnl->w_fields[1], 
-      //		     g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
-      //		     -0*I*mnl->rat.nu[j]);
-      Qtm_dagger_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
-		       g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j]);
+      // Q_h tau_1 (interchanged up/dn source fields)
+      Qtm_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
+		g_chi_dn_spinor_field[j], g_chi_up_spinor_field[j]);
       assign_add_mul(g_chi_up_spinor_field[mnl->rat.np], g_chi_up_spinor_field[j], -I*mnl->rat.nu[j], VOLUME/2);
       assign_add_mul(g_chi_dn_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[j], -I*mnl->rat.nu[j], VOLUME/2);
-
+      
+      // Q_h tau_1
       Qtm_ndpsi(mnl->w_fields[0], mnl->w_fields[1],
-		g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np]);
+		g_chi_dn_spinor_field[mnl->rat.np], g_chi_up_spinor_field[mnl->rat.np]);
       assign_add_mul(mnl->w_fields[0], g_chi_up_spinor_field[mnl->rat.np], I*mnl->rat.nu[j], VOLUME/2);
       assign_add_mul(mnl->w_fields[1], g_chi_dn_spinor_field[mnl->rat.np], I*mnl->rat.nu[j], VOLUME/2);
 
       //Qtm_pm_ndpsi(mnl->w_fields[0], mnl->w_fields[1], g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j]);
       //assign_add_mul_r(mnl->w_fields[0], g_chi_up_spinor_field[j], mnl->rat.nu[j]*mnl->rat.nu[j], VOLUME/2);
       //assign_add_mul_r(mnl->w_fields[1], g_chi_dn_spinor_field[j], mnl->rat.nu[j]*mnl->rat.nu[j], VOLUME/2);
-      diff(mnl->w_fields[2], mnl->w_fields[0], mnl->pf, VOLUME/2);
-      diff(mnl->w_fields[3], mnl->w_fields[1], mnl->pf2, VOLUME/2);
-      double resi = square_norm(mnl->w_fields[2], VOLUME/2, 1);
-      resi += square_norm(mnl->w_fields[3], VOLUME/2, 1);
+      diff(mnl->w_fields[0], mnl->w_fields[0], mnl->pf, VOLUME/2);
+      diff(mnl->w_fields[1], mnl->w_fields[1], mnl->pf2, VOLUME/2);
+      double resi = square_norm(mnl->w_fields[0], VOLUME/2, 1);
+      resi += square_norm(mnl->w_fields[1], VOLUME/2, 1);
       if(g_proc_id == 0) {
 	printf("residuum for shift %d (%e) is %e\n", j, mnl->rat.nu[j]*mnl->rat.nu[j], resi);
       }
     }
   }
-
+  assign(mnl->w_fields[2], mnl->pf, VOLUME/2);
+  assign(mnl->w_fields[3], mnl->pf2, VOLUME/2);
 
   // apply C to the random field to generate pseudo-fermion fields
   for(int j = (mnl->rat.np-1); j > -1; j--) {
-    //Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
-    //			   g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j],
-    //			   I*mnl->rat.nu[j]);
-    Qtm_dagger_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
-		     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j]);
+    // Q_h * tau^1 - i nu_j
+    Qtm_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
+	      g_chi_dn_spinor_field[j], g_chi_up_spinor_field[j]);
     assign_add_mul(g_chi_up_spinor_field[mnl->rat.np], g_chi_up_spinor_field[j], -I*mnl->rat.nu[j], VOLUME/2);
     assign_add_mul(g_chi_dn_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[j], -I*mnl->rat.nu[j], VOLUME/2);
     assign_add_mul(mnl->pf, g_chi_up_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
     assign_add_mul(mnl->pf2, g_chi_dn_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
   }
-
+  if(g_debug_level > 3) {
+    //apply R
+    solver_pm.shifts = mnl->rat.mu;
+    cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+		 mnl->pf, mnl->pf2,
+		 &solver_pm);
+    assign(mnl->w_fields[0], mnl->pf, VOLUME/2);
+    assign(mnl->w_fields[1], mnl->pf2, VOLUME/2);
+    for(int j = (mnl->rat.np-1); j > -1; j--) {
+      assign_add_mul_r(mnl->w_fields[0], g_chi_up_spinor_field[j], 
+		       mnl->rat.rmu[j], VOLUME/2);
+      assign_add_mul_r(mnl->w_fields[1], g_chi_dn_spinor_field[j], 
+		       mnl->rat.rmu[j], VOLUME/2);
+    }
+    // apply C^dagger
+    solver_pm.shifts = mnl->rat.nu;
+    cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+		 mnl->w_fields[0], mnl->w_fields[1], &solver_pm);
+    for(int j = (mnl->rat.np-1); j > -1; j--) {
+      // Q_h * tau^1 + i nu_j
+      Qtm_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
+		g_chi_dn_spinor_field[j], g_chi_up_spinor_field[j]);
+      assign_add_mul(g_chi_up_spinor_field[mnl->rat.np], g_chi_up_spinor_field[j], I*mnl->rat.nu[j], VOLUME/2);
+      assign_add_mul(g_chi_dn_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[j], I*mnl->rat.nu[j], VOLUME/2);
+      assign_add_mul(mnl->w_fields[0], g_chi_up_spinor_field[mnl->rat.np], -I*mnl->rat.rnu[j], VOLUME/2);
+      assign_add_mul(mnl->w_fields[1], g_chi_dn_spinor_field[mnl->rat.np], -I*mnl->rat.rnu[j], VOLUME/2);
+    }
+    diff(mnl->w_fields[0], mnl->w_fields[0], mnl->w_fields[2], VOLUME/2);  
+    diff(mnl->w_fields[1],mnl->w_fields[1], mnl->w_fields[3], VOLUME/2);  
+    double resi = square_norm(mnl->w_fields[0], VOLUME/2, 1);
+    resi += square_norm(mnl->w_fields[1], VOLUME/2, 1);
+    if(g_proc_id == 0) printf("|| (1-C^dagger R C)*phi|| = %e\n", resi);
+  }
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
       printf("# Time for %s monomial heatbath: %e s\n", mnl->name, etime-atime);
     }
-    if(g_debug_level > 0) { // should be 3
+    if(g_debug_level > 3) { 
       printf("called ndrat_heatbath for id %d energy %f\n", id, mnl->energy0);
     }
   }
@@ -268,9 +295,9 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
   solver_pm.type = CGMMSND;
   solver_pm.g = &Qtm_pm_ndpsi;
   solver_pm.N = VOLUME/2;
-  cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-	       mnl->pf, mnl->pf2,
-	       &solver_pm);
+  mnl->iter0 += cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+			     mnl->pf, mnl->pf2,
+			     &solver_pm);
   if(g_debug_level > 3) {
     for(int j = 0; j < (mnl->rat.np); j++) {
       Qtm_pm_ndpsi(mnl->w_fields[0], mnl->w_fields[1], g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j]);
@@ -296,7 +323,7 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
 		     mnl->rat.rmu[j], VOLUME/2);
   }
 
-  if(g_debug_level > 0) {
+  if(g_debug_level > 3) {
     // here we test the rational by applying it a second time,
     // then multiplying by Q^2 and computing the residue
     cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
@@ -344,8 +371,8 @@ int init_ndrat_monomial(const int id) {
 
   mnl->EVMin = mnl->StildeMin / mnl->StildeMax;
   mnl->EVMax = 1.;
-  //mnl->EVMaxInv = 1./(sqrt(mnl->StildeMax));
-  mnl->EVMaxInv = 1.;
+  mnl->EVMaxInv = 1./(sqrt(mnl->StildeMax));
+  //mnl->EVMaxInv = 1.;
 
   if(init_chi_spinor_field(VOLUMEPLUSRAND/2, (mnl->rat.np+1)) != 0) {
     fprintf(stderr, "Not enough memory for Chi fields! Aborting...\n");

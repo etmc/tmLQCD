@@ -28,8 +28,9 @@
 #include "zolotarev.h"
 #include "rational.h"
 
-// init a rational approximation in range [a:b]
-// a,b should be the spectral range of the squared operator already
+// init a rational approximation in the range [eps:1]
+// rat->range[0,1] should be the spectral range of the squared operator
+// eps is computed to be range[0]/range[1]
 // order is the order n of the rational approximation [n,n]
 // ca and cb specify the range of monomials to use (0 to order-1)
 
@@ -64,28 +65,27 @@ int init_rational(rational_t * rat) {
   if(g_proc_id == 0 && g_debug_level > 0) {
     printf("# rational approximation of order %d generated with max deviation delta = %e\n", rat->order, rat->delta);
   }
-  rat->A /= sqrt(b);
   // restrict to relevant coefficients [2*ca:2*cb]
   ar = ars + 2*ca;
-  // compute mu[] and nu[] = M*sqrt(ar), mu: r even, nu: r odd (M = sqrt(b))
+  // compute mu[] and nu[] = sqrt(ar), mu: r even, nu: r odd
   for (int i = 0; i < np; i++) {
-    rat->mu[np-i-1] = sqrt(b * ar[2*i + 1]);
-    rat->nu[np-i-1] = sqrt(b * ar[2*i]);
+    rat->mu[np-i-1] = sqrt(ar[2*i + 1]);
+    rat->nu[np-i-1] = sqrt(ar[2*i]);
   }
   // compute the partial fraction coefficients rmu and rnu
   for (int i = 0; i < np; i++) {  
-    pmu=1.0;
-    pnu=1.0;
+    pmu = 1.0;
+    pnu = 1.0;
 
     for (int j = 0; j < np; j++) {
-      if (j!=i) {
-	pmu*=((ar[2*j]-ar[2*i+1])/(ar[2*j+1]-ar[2*i+1]));
-	pnu*=((rat->mu[j]-rat->nu[i])/(rat->nu[j]-rat->nu[i]));
+      if (j != i) {
+	pmu *= ((ar[2*j]-ar[2*i+1]) / (ar[2*j+1]-ar[2*i+1]));
+	pnu *= ((rat->mu[j]-rat->nu[i]) / (rat->nu[j]-rat->nu[i]));
       }
     }
 
-    rat->rmu[np-i-1]=b*(ars[2*i]-ars[2*i+1])*pmu;
-    rat->rnu[np-i-1]=(rat->mu[i]-rat->nu[i])*pnu;
+    rat->rmu[np-i-1] = (ars[2*i]-ars[2*i+1])*pmu;
+    rat->rnu[i] = (rat->mu[i]-rat->nu[i])*pnu;
   }
 
   free(ars);
