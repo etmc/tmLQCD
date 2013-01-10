@@ -1,0 +1,63 @@
+\subsection{Rational HMC}
+
+For the heavy doublet one may alternatively use a rational
+approximation 
+\[
+\mathcal{R}(\hat Q_h^2)\ = \ \prod_{i = 1}^N \frac{\hat Q_h^2 +
+  a_{2i-1}}{\hat Q_h^2 + a_{2i}}\approx\quad\frac{1}{\sqrt{\hat Q_h^2}}
+\]
+where we used the shorthand notation
+\[
+\hat Q_h^2\ =\ \tau^1\hat Q_h \tau^1 \hat Q_h = \hat Q_h^\dagger \hat Q_h
+\]
+and $\hat Q_h=\gamma_5\hat D_h$ is the even/odd preconditioned version
+of $Q_h$ defined
+in Eq.~(\ref{eq:Dh}). We are using the Zolotarev solution for the
+optimal rational approximation to $1/\sqrt{y}$. The coefficients $a_i$
+fulfill the property
+\[
+a_1 > a_2 > ... > a_{2N} > 0\, .
+\]
+We use the partial fraction expansion to re-express
+\[
+\mathcal{R}(\hat Q_h^2)\ = \ 1 + \sum_{i=1}^{N} \frac{q_i}{\hat Q_h^2 +
+  \mu_i^2}\, .
+\]
+The coefficients $r_i$ are given as
+\[
+q_i = (a_{2i-1}^2 - a_{2i}^2) \prod_{m=1, m\neq i}^N \frac{a_{2m-1}^2
+  - a_{2i}^2}{a_{2m}^2 - a_{2i}^2}\,,\quad i = 1,...,N\,.
+\]
+If we defined -- following L{\"u}scher -- $\mu_i = \sqrt{a_{2i}}$ and $\nu_i
+= \sqrt{a_{2i-1}}$, we may rewrite $q_i$ as
+\[
+q_i = (\nu_i^2 - \mu_i^2)\prod_{m=1, m\neq i}^N \frac{\nu_m^2 -
+  \mu_i^2}{\mu_m^2 - \mu_i^2}\,,\quad i = 1,...,N\, .
+\]
+For the heatbath step we need to generate pseudo-fermion fields from
+Gaussian random fields $R$
+\[
+R^\dagger R = \phi^\dagger \mathcal{R} \phi
+\]
+and, therefore, we need operators $C^\dagger, C$ with
+\[
+\mathcal{R}^{-1} = C^\dagger\ \cdot\ C\,,\qquad \phi = C\cdot R\,.
+\]
+$C$ is given by (inspired by twisted mass)
+\[
+C\ =\ \prod_{i=1}^N \frac{\hat Q_h + i\mu_i}{\hat Q_h + i\nu_i}
+\]
+which can again be written as a partial fraction
+\[
+C\ =\ 1 + i\sum_{i=1}^N \frac{r_i}{\hat Q_h + i\nu_i}\,,
+\]
+with
+\[
+r_i = (\mu_i^2 - \nu_i^2)\prod_{m=1, m\neq i}^N \frac{\mu_m^2 -
+  \nu_i^2}{\nu_m^2 - \nu_i^2}\,,\quad i = 1,...,N\, .
+\]
+The rational approximation $\mathcal{R}$ can be applied to a vector
+using a multi-mass solver and the partial fraction representation. The
+same works for $C$: after solving $N$ equations simultaneously for
+$(\hat Q_h^2 + \nu_i^2)^{-1},\quad i = 1,...,N$, we have to multiply
+every term with $r_i(\hat Q_h^\dagger - i\nu_i)$.
