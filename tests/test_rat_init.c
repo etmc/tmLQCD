@@ -6,7 +6,7 @@
 #include <math.h>
 #include "../rational/rational.h"
 
-#define EPS 1e-7
+#define EPS 1e-8
 
 // apply rational approximation as partial fraction
 double apply_R(const int order, const double y, const double A, double * rs, double * as) {
@@ -34,7 +34,6 @@ TEST(rat_init) {
  
   ret = init_rational(&rat);
   assertFalseM(ret, "rat_init failed\n");
-  printf("%d\n", ret);
 
   for(int i = 0; i < order; i++) {
     ar[i] = (rat.mu[i])*(rat.mu[i])/rb;
@@ -42,9 +41,9 @@ TEST(rat_init) {
   
   for(double y = eps; y < 1.; y += eps) {
     double x = apply_R(rat.order, y, rat.A, rat.rmu, ar);
-    if(fabs(fabs(x - 1./sqrt(y)) - rat.delta) > EPS) {
+    if(fabs(1 - x*sqrt(y)) > rat.delta + EPS) {
       t++;
-      printf("%e %e %e %e %e\n", y, x, 1./sqrt(y), fabs(fabs(x - 1./sqrt(y)) - rat.delta), rat.delta);
+      printf("%e %e %e %e %e\n", y, x, 1./sqrt(y), fabs(1 - x*sqrt(y)), rat.delta);
     }
   }
   assertFalseM(t, "rational approximation not as accurate as expected\n.");
