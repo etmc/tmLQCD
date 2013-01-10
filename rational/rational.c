@@ -47,7 +47,7 @@ int init_rational(rational_t * rat) {
     fprintf(stderr, "ca = %d, cb = %d, order = %d\n", ca, cb, order);
     return(-1);
   }
-  double np = cb - ca + 1;
+  int np = cb - ca + 1;
 
   rat->np = np;
   if(((rat->mu = (double*)malloc(np*sizeof(double))) == NULL)  ||
@@ -64,13 +64,13 @@ int init_rational(rational_t * rat) {
   if(g_proc_id == 0 && g_debug_level > 0) {
     printf("# rational approximation of order %d generated with max deviation delta = %e\n", rat->order, rat->delta);
   }
-  // FIX: do we have to divide A by sqrt(b)
+  rat->A /= sqrt(b);
   // restrict to relevant coefficients [2*ca:2*cb]
   ar = ars + 2*ca;
   // compute mu[] and nu[] = M*sqrt(ar), mu: r even, nu: r odd (M = sqrt(b))
   for (int i = 0; i < np; i++) {
-    rat->mu[i] = sqrt(b * ar[2*i + 1]);
-    rat->nu[i] = sqrt(b * ar[2*i]);
+    rat->mu[np-i-1] = sqrt(b * ar[2*i + 1]);
+    rat->nu[np-i-1] = sqrt(b * ar[2*i]);
   }
   // compute the partial fraction coefficients rmu and rnu
   for (int i = 0; i < np; i++) {  
@@ -84,8 +84,8 @@ int init_rational(rational_t * rat) {
       }
     }
 
-    rat->rmu[i]=b*(ars[2*i]-ars[2*i+1])*pmu;
-    rat->rnu[i]=(rat->mu[i]-rat->nu[i])*pnu;
+    rat->rmu[np-i-1]=b*(ars[2*i]-ars[2*i+1])*pmu;
+    rat->rnu[np-i-1]=(rat->mu[i]-rat->nu[i])*pnu;
   }
 
   free(ars);

@@ -38,6 +38,7 @@ TEST(rat_init) {
   for(int i = 0; i < order; i++) {
     ar[i] = (rat.mu[i])*(rat.mu[i])/rb;
   }
+  rat.A *= sqrt(rb);
   
   for(double y = eps; y < 1.; y += eps) {
     double x = apply_R(rat.order, y, rat.A, rat.rmu, ar);

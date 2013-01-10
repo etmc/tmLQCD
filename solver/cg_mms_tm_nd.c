@@ -69,11 +69,17 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
 
   // don't need boundaries, because we never apply f to them
   // so N is enough
-  init_mms_tm_nd(solver_pm->no_shifts, solver_pm->N);
+  //init_mms_tm_nd(solver_pm->no_shifts, solver_pm->N);
+  init_mms_tm_nd(solver_pm->no_shifts, VOLUMEPLUSRAND/2);
+  zero_spinor_field(Pup[0], N);
+  zero_spinor_field(Pdn[0], N);
+  alphas[0] = 1.0;
+  betas[0] = 0.0;
+  sigma[0] = solver_pm->shifts[0]*solver_pm->shifts[0];
 
   /* currently only implemented for P=0 */
-  for(int im = 0; im < solver_pm->no_shifts; im++) {
-    sigma[im] = solver_pm->shifts[im]*solver_pm->shifts[im];
+  for(int im = 1; im < solver_pm->no_shifts; im++) {
+    sigma[im] = solver_pm->shifts[im]*solver_pm->shifts[im] - sigma[0];
     // these will be the result spinor fields
     zero_spinor_field(Pup[im], N);
     zero_spinor_field(Pdn[im], N);
@@ -139,14 +145,14 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
 
     err = square_norm(solver_field[0], N, 1) + square_norm(solver_field[1], N, 1);
 
-    if(g_debug_level > 0 && g_proc_id == g_stdio_proc) {
+    if(g_debug_level > 2 && g_proc_id == g_stdio_proc) {
       printf("# CGMMS iteration: %d residue: %g\n", iteration, err); fflush( stdout );
     }
 
     if( ((err <= solver_pm->eps_sq) && (solver_pm->rel_prec == 0)) ||
 	((err <= solver_pm->eps_sq*squarenorm) && (solver_pm->rel_prec == 1)) ) {
 
-      if(g_debug_level > 2) {
+      if(g_debug_level > 200) {
 	solver_pm->g(solver_field[2], solver_field[3], Pup[0], Pdn[0]);
 	diff(solver_field[4], solver_field[2], Qup, N);
 	diff(solver_field[5], solver_field[3], Qdn, N);
@@ -158,14 +164,6 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
       }
       g_sloppy_precision = 0;
 
-      /* save all the results of (Q^dagger Q)^(-1) \gamma_5 \phi */
-      /* here ... */
-      /* when im == -1 save the base mass*/
-      for(int im = 1; im < solver_pm->no_shifts; im++) {
-	betas[im] = betas[0]*zita[im]*alphas[im]/(zitam1[im]*alphas[0]);
-	assign_mul_add_mul_r(ps_mms_solver[2*im], solver_field[0], betas[im], zita[im], N);
-	assign_mul_add_mul_r(ps_mms_solver[2*im+1], solver_field[1], betas[im], zita[im], N);
-      }
       finalize_solver(solver_field, 2*nr_sf);
       return(iteration+1);
     }
