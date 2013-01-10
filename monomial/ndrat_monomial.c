@@ -94,23 +94,19 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   /* in  g_chi_up_spinor_field[0] (g_chi_dn_spinor_field[0] we expect */
   /* to find the phi field, the pseudo fermion field                  */
   /* i.e. must be equal to mnl->pf (mnl->pf2)                         */
+
+  solver_pm.max_iter = mnl->maxiter;
+  solver_pm.eps_sq = mnl->accprec;
+  solver_pm.no_shifts = mnl->rat.np;
+  solver_pm.shifts = mnl->rat.mu;
+  solver_pm.type = CGMMSND;
+  solver_pm.g = &Qtm_pm_ndpsi;
+  solver_pm.N = VOLUME/2;
+  mnl->iter1 += cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+			     mnl->pf, mnl->pf2,
+			     &solver_pm);
   
-  assign(g_chi_up_spinor_field[0], mnl->pf, VOLUME/2);
-  assign(g_chi_dn_spinor_field[0], mnl->pf2, VOLUME/2);
-  
-  for(k = 1; k < (mnl->MDPolyDegree-1); k++) {
-    Qsw_tau1_sub_const_ndpsi(g_chi_up_spinor_field[k], g_chi_dn_spinor_field[k], 
-			   g_chi_up_spinor_field[k-1], g_chi_dn_spinor_field[k-1], 
-			   mnl->MDPolyRoots[k-1]);
-  }
-  
-  /* Here comes the remaining fields  chi_k ; k=n,...,2n-1  */
-  /*They are evaluated step-by-step overwriting the same field (mnl->MDPolyDegree)*/
-  
-  assign(g_chi_up_spinor_field[mnl->MDPolyDegree], g_chi_up_spinor_field[mnl->MDPolyDegree-2], VOLUME/2);
-  assign(g_chi_dn_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[mnl->MDPolyDegree-2], VOLUME/2);
-  
-  for(j = (mnl->MDPolyDegree-1); j > 0; j--) {
+  for(j = (mnl->rat.np-1); j > 0; j--) {
     assign(g_chi_up_spinor_field[mnl->MDPolyDegree-1], g_chi_up_spinor_field[mnl->MDPolyDegree], VOLUME/2);
     assign(g_chi_dn_spinor_field[mnl->MDPolyDegree-1], g_chi_dn_spinor_field[mnl->MDPolyDegree], VOLUME/2);
     
@@ -133,20 +129,23 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
     /* \delta M_oe sandwitched by  chi[j-1]_o^\dagger  and  chi[2N-j]_e */
     deriv_Sb(OE, g_chi_up_spinor_field[j-1], mnl->w_fields[2], hf, mnl->forcefactor);
     deriv_Sb(OE, g_chi_dn_spinor_field[j-1], mnl->w_fields[3], hf, mnl->forcefactor);
-
-    // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
-    sw_spinor(EE, mnl->w_fields[3], mnl->w_fields[0], mnl->forcefactor);
-    // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-    sw_spinor(OO, g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[mnl->MDPolyDegree], mnl->forcefactor);
-
-    // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
-    sw_spinor(EE, mnl->w_fields[2], mnl->w_fields[1], mnl->forcefactor);
-    // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-    sw_spinor(OO, g_chi_dn_spinor_field[j-1], g_chi_up_spinor_field[mnl->MDPolyDegree], mnl->forcefactor);
+    if(mnl->type == NDCLOVERRAT) {
+      // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
+      sw_spinor(EE, mnl->w_fields[3], mnl->w_fields[0], mnl->forcefactor);
+      // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
+      sw_spinor(OO, g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[mnl->MDPolyDegree], mnl->forcefactor);
+      
+      // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
+      sw_spinor(EE, mnl->w_fields[2], mnl->w_fields[1], mnl->forcefactor);
+      // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
+      sw_spinor(OO, g_chi_dn_spinor_field[j-1], g_chi_up_spinor_field[mnl->MDPolyDegree], mnl->forcefactor);
+    }
   }
-  // trlog part does not depend on the normalisation of the polynomial
-  sw_deriv_nd(EE);
-  sw_all(hf, mnl->kappa, mnl->c_sw);
+  // trlog part does not depend on the normalisation
+  if(mnl->type == NDCLOVERRAT) {
+    sw_deriv_nd(EE);
+    sw_all(hf, mnl->kappa, mnl->c_sw);
+  }
   etime = gettime();
   if(g_debug_level > 1 && g_proc_id == 0) {
     printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
