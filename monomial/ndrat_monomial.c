@@ -68,7 +68,6 @@ static void nd_set_global_parameter(monomial * const mnl) {
  ********************************************/
 
 void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
-  int j, k;
   monomial * mnl = &monomial_list[id];
   solver_pm_t solver_pm;
   double atime, etime;
@@ -95,13 +94,14 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   solver_pm.shifts = mnl->rat.mu;
   solver_pm.type = CGMMSND;
   solver_pm.g = &Qtm_pm_ndpsi;
+  if(mnl->type == NDCLOVERRAT) solver_pm.g = &Qsw_pm_ndpsi;
   solver_pm.N = VOLUME/2;
   // this generates all X_j,o (odd sites only) -> g_chi_up|dn_spinor_field
   mnl->iter1 += cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 			     mnl->pf, mnl->pf2,
 			     &solver_pm);
   
-  for(j = (mnl->rat.np-1); j > 0; j--) {
+  for(int j = (mnl->rat.np-1); j > 0; j--) {
     // multiply with Q_h * tau^1 + i nu_j to get Y_j,o (odd sites)
     // needs phmc_Cpol = 1 to work for ndrat!
     Q_tau1_sub_const_ndpsi(mnl->w_fields[0], mnl->w_fields[1],

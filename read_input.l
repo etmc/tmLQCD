@@ -950,6 +950,24 @@ inline void rmQuotes(char *str){
   }
 }
 
+<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDRATMONOMIAL>{
+  {SPC}*ForcePrecision{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
+    mnl->forceprec = c;
+    if(myverbose) printf("  ForcePrecision set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*AcceptancePrecision{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
+    mnl->accprec = c;
+    if(myverbose) printf("  AcceptancePrecision set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*MaxSolverIterations{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mnl->maxiter = a;
+    if(myverbose) printf("  MaxSolverIterations set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+  }
+}
+
 <DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL>{
   {SPC}*2KappaMu{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
@@ -971,21 +989,6 @@ inline void rmQuotes(char *str){
     mnl->csg_N2 = a;
     if(myverbose) printf("  csg history2 length (for bicgstab) set to %d line %d monomial %d\n", 
                        a, line_of_file, current_monomial);
-  }
-  {SPC}*ForcePrecision{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
-    mnl->forceprec = c;
-    if(myverbose) printf("  ForcePrecision set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*AcceptancePrecision{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
-    mnl->accprec = c;
-    if(myverbose) printf("  AcceptancePrecision set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*MaxSolverIterations{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    mnl->maxiter = a;
-    if(myverbose) printf("  MaxSolverIterations set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
   }
   {SPC}*Solver{EQL} {
    solver_caller=YY_START;
