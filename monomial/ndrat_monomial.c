@@ -69,6 +69,7 @@ static void nd_set_global_parameter(monomial * const mnl) {
 void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   int j, k;
   monomial * mnl = &monomial_list[id];
+  solver_pm_t solver_pm;
   double atime, etime;
   atime = gettime();
   nd_set_global_parameter(mnl);
@@ -85,7 +86,7 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
     // we invert it for the even sites only
     sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
   }
-  mnl->forcefactor = -mnl->EVMaxInv;
+  mnl->forcefactor = 1.;
 
   /* Recall:  The GAMMA_5 left of  delta M_eo  is done in  deriv_Sb !!! */
 
@@ -107,28 +108,33 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
 			     &solver_pm);
   
   for(j = (mnl->rat.np-1); j > 0; j--) {
-    assign(g_chi_up_spinor_field[mnl->MDPolyDegree-1], g_chi_up_spinor_field[mnl->MDPolyDegree], VOLUME/2);
-    assign(g_chi_dn_spinor_field[mnl->MDPolyDegree-1], g_chi_dn_spinor_field[mnl->MDPolyDegree], VOLUME/2);
+    // Q_h * tau^1 - i nu_j
+    Qtm_ndpsi(mnl->w_fields[0], mnl->w_fields[1],
+	      g_chi_dn_spinor_field[j], g_chi_up_spinor_field[j]);
+    assign_add_mul(mnl->w_fields[0], g_chi_up_spinor_field[j], -I*mnl->rat.mu[j], VOLUME/2);
+    assign_add_mul(mnl->w_fields[1], g_chi_dn_spinor_field[j], -I*mnl->rat.mu[j], VOLUME/2);
     
-    Qsw_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[mnl->MDPolyDegree], 
-			     g_chi_up_spinor_field[mnl->MDPolyDegree-1], g_chi_dn_spinor_field[mnl->MDPolyDegree-1], 
-			     mnl->MDPolyRoots[2*mnl->MDPolyDegree-3-j]);
     
-    /* Get the even parts of the  (j-1)th  chi_spinors */
-    H_eo_sw_ndpsi(mnl->w_fields[0], mnl->w_fields[1], 
-		  g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
+    /* Get the even parts of the  (j)th  chi_spinors */
+    H_eo_tm_ndpsi(mnl->w_fields[2], mnl->w_fields[3], 
+		  g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], EO);
     
-    /* \delta M_eo sandwitched by  chi[j-1]_e^\dagger  and  chi[2N-j]_o */
-    deriv_Sb(EO, mnl->w_fields[0], g_chi_up_spinor_field[mnl->MDPolyDegree], hf, mnl->forcefactor);/* UP */
-    deriv_Sb(EO, mnl->w_fields[1], g_chi_dn_spinor_field[mnl->MDPolyDegree], hf, mnl->forcefactor);/* DN */
+    /* \delta M_eo */
+    deriv_Sb(EO, mnl->w_fields[2], mnl->w_fields[0], 
+	     hf, mnl->rat.rmu[j]*mnl->forcefactor);
+    deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1],
+	     hf, mnl->rat.rmu[j]*mnl->forcefactor);
 
-    /* Get the even parts of the  (2N-j)-th  chi_spinors */
-    H_eo_sw_ndpsi(mnl->w_fields[2], mnl->w_fields[3], 
-		  g_chi_up_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[mnl->MDPolyDegree]);
+    /* Get the even parts */
+    H_eo_tm_ndpsi(mnl->w_fields[2], mnl->w_fields[3], 
+		  mnl->w_fields[0], mnl->w_fields[1], EO);
     
     /* \delta M_oe sandwitched by  chi[j-1]_o^\dagger  and  chi[2N-j]_e */
-    deriv_Sb(OE, g_chi_up_spinor_field[j-1], mnl->w_fields[2], hf, mnl->forcefactor);
-    deriv_Sb(OE, g_chi_dn_spinor_field[j-1], mnl->w_fields[3], hf, mnl->forcefactor);
+    deriv_Sb(OE, g_chi_up_spinor_field[j], mnl->w_fields[2], 
+	     hf, mnl->rat.rmu[j]*mnl->forcefactor);
+    deriv_Sb(OE, g_chi_dn_spinor_field[j], mnl->w_fields[3], 
+	     hf, mnl->rat.rmu[j]*mnl->forcefactor);
+
     if(mnl->type == NDCLOVERRAT) {
       // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
       sw_spinor(EE, mnl->w_fields[3], mnl->w_fields[0], mnl->forcefactor);
@@ -189,7 +195,7 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   mnl->iter0 = cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 			     mnl->pf, mnl->pf2, &solver_pm);
   // check the MMS solver
-  if(g_debug_level > 0) {
+  if(g_debug_level > 3) {
     for(int j = 0; j < (mnl->rat.np); j++) {
       // Q_h tau_1 (interchanged up/dn source fields)
       Qtm_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],

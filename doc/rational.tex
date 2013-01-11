@@ -8,11 +8,12 @@ approximation
 \]
 where we used the shorthand notation
 \[
-\hat Q_h^2\ =\ \hat Q_h \tau^1\hat Q_h \tau^1 = \hat Q_h \hat Q_h^\dagger
+\hat Q_h^2\ =\ \gamma_5 \hat D_h \tau^1\gamma_5\hat D_h \tau^1 
 \]
-and $\hat Q_h=\gamma_5\hat D_h$ is the even/odd preconditioned version
-of $Q_h$ defined
-in Eq.~(\ref{eq:Dh}). We are using the Zolotarev solution for the
+and $\hat Q_h=\gamma_5\hat D_h\tau^1$ is the even/odd preconditioned version
+of $Q_h$ defined in Eq.~(\ref{eq:Dh}). Obviously, we have $\hat
+Q_h^\dagger = \hat Q_h$. 
+We are using the Zolotarev solution for the
 optimal rational approximation to $1/\sqrt{y}$. The coefficients $a_i$
 fulfill the property
 \[
@@ -60,4 +61,28 @@ The rational approximation $\mathcal{R}$ can be applied to a vector
 using a multi-mass solver and the partial fraction representation. The
 same works for $C$: after solving $N$ equations simultaneously for
 $(\hat Q_h^2 + \nu_i^2)^{-1},\quad i = 1,...,N$, we have to multiply
-every term with $r_i(\hat Q_h^\dagger - i\nu_i)$.
+every term with $(\hat Q_h - i\nu_i)$. The hermitian conjugate of $C$
+is given by
+\[
+C^\dagger\ =\ 1 - i\sum_{i=1}^N \frac{r_i}{\hat Q_h - i\nu_i}\,,
+\]
+using $\hat Q_h^\dagger = \hat Q_h$.
+
+\subsubsection{Force Computation}
+
+For the derivative and the force computation we have to consider terms
+of the form
+\[      
+\phi^\dagger \frac{q_i}{\hat Q_h^2 + \mu_i^2}\phi\,,
+\]
+and its variation with respect to the gauge fields:
+\[      
+\begin{split}   
+\delta_U\  \phi^\dagger \frac{q_i}{\hat Q_h^2 + \mu_i^2}\phi &=
+q_i\phi^\dagger\frac{1}{\hat Q_h + i\mu_i}\frac{1}{\hat Q_h -
+i\mu_i}(-\delta_U \hat Q_h)\frac{1}{\hat Q_h -i\mu_i}\phi\ +\
+\textrm{h.c.}\\
+&= -2 \re\left( q_i\phi^\dagger\frac{1}{\hat Q_h^2 + \mu_i^2}
+(\delta_U \hat Q_h)\frac{1}{\hat Q_h -i\mu_i}\phi\ \right)
+\end{split}
+\]

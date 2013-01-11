@@ -277,7 +277,7 @@ int init_monomials(const int V, const int even_odd_flag) {
       else if(monomial_list[i].type == NDRAT) {
 	monomial_list[i].hbfunction = &ndrat_heatbath;
 	monomial_list[i].accfunction = &ndrat_acc;
-	//monomial_list[i].derivativefunction = &ndrat_derivative;
+	monomial_list[i].derivativefunction = &ndrat_derivative;
 	monomial_list[i].even_odd_flag = 1;
 	monomial_list[i].pf2 = __pf+no*V;
 	no++;
