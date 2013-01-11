@@ -104,8 +104,8 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
 		    g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], EO);
       
       /* \delta M_eo sandwitched by  chi[j-1]_e^\dagger  and  chi[2N-j]_o */
-      deriv_Sb(EO, mnl->w_fields[0], g_chi_up_spinor_field[phmc_dop_n_cheby], hf, mnl->forcefactor);/* UP */
-      deriv_Sb(EO, mnl->w_fields[1], g_chi_dn_spinor_field[phmc_dop_n_cheby], hf, mnl->forcefactor);/* DN */
+      deriv_Sb(EO, mnl->w_fields[0], g_chi_up_spinor_field[mnl->MDPolyDegree], hf, mnl->forcefactor);/* UP */
+      deriv_Sb(EO, mnl->w_fields[1], g_chi_dn_spinor_field[mnl->MDPolyDegree], hf, mnl->forcefactor);/* DN */
       
       /* Get the even parts of the  (2N-j)-th  chi_spinors */
       H_eo_tm_ndpsi(mnl->w_fields[0], mnl->w_fields[1], 

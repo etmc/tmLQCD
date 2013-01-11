@@ -55,6 +55,7 @@ static void nd_set_global_parameter(monomial * const mnl) {
   phmc_cheb_evmin = mnl->EVMin;
   phmc_invmaxev = mnl->EVMaxInv;
   phmc_cheb_evmax = 1.;
+  phmc_Cpol = 1.;
 
   return;
 }
@@ -86,50 +87,42 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
     // we invert it for the even sites only
     sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
   }
-  mnl->forcefactor = 1.;
-
-  /* Recall:  The GAMMA_5 left of  delta M_eo  is done in  deriv_Sb !!! */
-
-  /* Here comes the definitions for the chi_j fields */
-  /* from  j=0  (chi_0 = phi)  .....  to j = n-1 */
-  /* in  g_chi_up_spinor_field[0] (g_chi_dn_spinor_field[0] we expect */
-  /* to find the phi field, the pseudo fermion field                  */
-  /* i.e. must be equal to mnl->pf (mnl->pf2)                         */
+  mnl->forcefactor = mnl->EVMaxInv;
 
   solver_pm.max_iter = mnl->maxiter;
-  solver_pm.eps_sq = mnl->accprec;
+  solver_pm.eps_sq = mnl->forceprec;
   solver_pm.no_shifts = mnl->rat.np;
   solver_pm.shifts = mnl->rat.mu;
   solver_pm.type = CGMMSND;
   solver_pm.g = &Qtm_pm_ndpsi;
   solver_pm.N = VOLUME/2;
+  // this generates all X_j,o (odd sites only) -> g_chi_up|dn_spinor_field
   mnl->iter1 += cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 			     mnl->pf, mnl->pf2,
 			     &solver_pm);
   
   for(j = (mnl->rat.np-1); j > 0; j--) {
-    // Q_h * tau^1 - i nu_j
-    Qtm_ndpsi(mnl->w_fields[0], mnl->w_fields[1],
-	      g_chi_dn_spinor_field[j], g_chi_up_spinor_field[j]);
-    assign_add_mul(mnl->w_fields[0], g_chi_up_spinor_field[j], -I*mnl->rat.mu[j], VOLUME/2);
-    assign_add_mul(mnl->w_fields[1], g_chi_dn_spinor_field[j], -I*mnl->rat.mu[j], VOLUME/2);
+    // multiply with Q_h * tau^1 + i nu_j to get Y_j,o (odd sites)
+    // needs phmc_Cpol = 1 to work for ndrat!
+    Q_tau1_sub_const_ndpsi(mnl->w_fields[0], mnl->w_fields[1],
+			   g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
+			   -I*mnl->rat.mu[j]);
     
-    
-    /* Get the even parts of the  (j)th  chi_spinors */
+    /* Get the even parts X_j,e */
     H_eo_tm_ndpsi(mnl->w_fields[2], mnl->w_fields[3], 
 		  g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], EO);
     
-    /* \delta M_eo */
+    /* X_j,e^dagger \delta M_eo Y_j,o */
     deriv_Sb(EO, mnl->w_fields[2], mnl->w_fields[0], 
 	     hf, mnl->rat.rmu[j]*mnl->forcefactor);
     deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1],
 	     hf, mnl->rat.rmu[j]*mnl->forcefactor);
 
-    /* Get the even parts */
+    /* Get the even parts Y_j,e */
     H_eo_tm_ndpsi(mnl->w_fields[2], mnl->w_fields[3], 
 		  mnl->w_fields[0], mnl->w_fields[1], EO);
     
-    /* \delta M_oe sandwitched by  chi[j-1]_o^\dagger  and  chi[2N-j]_e */
+    /* X_j,o \delta M_oe Y_j,e */
     deriv_Sb(OE, g_chi_up_spinor_field[j], mnl->w_fields[2], 
 	     hf, mnl->rat.rmu[j]*mnl->forcefactor);
     deriv_Sb(OE, g_chi_dn_spinor_field[j], mnl->w_fields[3], 
@@ -137,14 +130,18 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
 
     if(mnl->type == NDCLOVERRAT) {
       // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
-      sw_spinor(EE, mnl->w_fields[3], mnl->w_fields[0], mnl->forcefactor);
+      sw_spinor(EE, mnl->w_fields[3], mnl->w_fields[0], 
+		mnl->rat.rmu[j]*mnl->forcefactor);
       // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-      sw_spinor(OO, g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[mnl->MDPolyDegree], mnl->forcefactor);
+      sw_spinor(OO, g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[mnl->MDPolyDegree], 
+		mnl->rat.rmu[j]*mnl->forcefactor);
       
       // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
-      sw_spinor(EE, mnl->w_fields[2], mnl->w_fields[1], mnl->forcefactor);
+      sw_spinor(EE, mnl->w_fields[2], mnl->w_fields[1], 
+		mnl->rat.rmu[j]*mnl->forcefactor);
       // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-      sw_spinor(OO, g_chi_dn_spinor_field[j-1], g_chi_up_spinor_field[mnl->MDPolyDegree], mnl->forcefactor);
+      sw_spinor(OO, g_chi_dn_spinor_field[j-1], g_chi_up_spinor_field[mnl->MDPolyDegree], 
+		mnl->rat.rmu[j]*mnl->forcefactor);
     }
   }
   // trlog part does not depend on the normalisation
@@ -227,10 +224,10 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   // apply C to the random field to generate pseudo-fermion fields
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     // Q_h * tau^1 - i nu_j
-    Qtm_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
-	      g_chi_dn_spinor_field[j], g_chi_up_spinor_field[j]);
-    assign_add_mul(g_chi_up_spinor_field[mnl->rat.np], g_chi_up_spinor_field[j], -I*mnl->rat.nu[j], VOLUME/2);
-    assign_add_mul(g_chi_dn_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[j], -I*mnl->rat.nu[j], VOLUME/2);
+    // this needs phmc_Cpol = 1 to work!
+    Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
+			   g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
+			   I*mnl->rat.nu[j]);
     assign_add_mul(mnl->pf, g_chi_up_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
     assign_add_mul(mnl->pf2, g_chi_dn_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
   }
@@ -254,10 +251,9 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
 		 mnl->w_fields[0], mnl->w_fields[1], &solver_pm);
     for(int j = (mnl->rat.np-1); j > -1; j--) {
       // Q_h * tau^1 + i nu_j
-      Qtm_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
-		g_chi_dn_spinor_field[j], g_chi_up_spinor_field[j]);
-      assign_add_mul(g_chi_up_spinor_field[mnl->rat.np], g_chi_up_spinor_field[j], I*mnl->rat.nu[j], VOLUME/2);
-      assign_add_mul(g_chi_dn_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[j], I*mnl->rat.nu[j], VOLUME/2);
+      Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
+			     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
+			     -I*mnl->rat.nu[j]);
       assign_add_mul(mnl->w_fields[0], g_chi_up_spinor_field[mnl->rat.np], -I*mnl->rat.rnu[j], VOLUME/2);
       assign_add_mul(mnl->w_fields[1], g_chi_dn_spinor_field[mnl->rat.np], -I*mnl->rat.rnu[j], VOLUME/2);
     }

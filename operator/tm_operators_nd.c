@@ -290,7 +290,7 @@ void Qsw_pm_ndpsi(spinor * const l_strange, spinor * const l_charm,
  *
  * This is the implementation of 
  *
- *  Q_tau1_sub_const_ndpsi =  M - z_k 
+ *  Q_tau1_sub_const_ndpsi =  phmc_Cpol*( M - z_k )
  *
  *  with M = Qhat(2x2) tau_1   and z_k \in Complex
  *
@@ -511,7 +511,7 @@ void Qsw_pm_ndbipsi(bispinor * const bisp_l, bispinor * const bisp_k) {
  *
  * This is the implementation of
  *
- * (M_{ee}^\pm)^{-1}M_{eo}
+ * (M_{ee}^\pm)^{-1}M_{eo} tau^1
  *
  * see documentation for details
  * k is the number of the input field
@@ -520,6 +520,7 @@ void Qsw_pm_ndbipsi(bispinor * const bisp_l, bispinor * const bisp_k) {
  * it acts only on the odd part or only 
  * on a half spinor
  ******************************************/
+
 void H_eo_tm_ndpsi(spinor * const l_strange, spinor * const l_charm, 
              spinor * const k_strange, spinor * const k_charm, 
 	     const int ieo) {
