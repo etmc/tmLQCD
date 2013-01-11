@@ -101,14 +101,15 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
 			     mnl->pf, mnl->pf2,
 			     &solver_pm);
   
-  for(int j = (mnl->rat.np-1); j > 0; j--) {
-    // multiply with Q_h * tau^1 + i nu_j to get Y_j,o (odd sites)
+  for(int j = (mnl->rat.np-1); j > -1; j--) {
+    // multiply with Q_h * tau^1 + i mu_j to get Y_j,o (odd sites)
     // needs phmc_Cpol = 1 to work for ndrat!
     Q_tau1_sub_const_ndpsi(mnl->w_fields[0], mnl->w_fields[1],
 			   g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
 			   -I*mnl->rat.mu[j]);
     
     /* Get the even parts X_j,e */
+    /* H_eo_... includes tau_1 */
     H_eo_tm_ndpsi(mnl->w_fields[2], mnl->w_fields[3], 
 		  g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], EO);
     
@@ -338,8 +339,10 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
       assign_add_mul_r(g_chi_dn_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[j], 
 		       mnl->rat.rmu[j], VOLUME/2);
     }
-    mul_r(g_chi_up_spinor_field[mnl->rat.np], mnl->rat.A*mnl->rat.A, g_chi_up_spinor_field[mnl->rat.np], VOLUME/2);
-    mul_r(g_chi_dn_spinor_field[mnl->rat.np], mnl->rat.A*mnl->rat.A, g_chi_dn_spinor_field[mnl->rat.np], VOLUME/2);
+    mul_r(g_chi_up_spinor_field[mnl->rat.np], mnl->rat.A*mnl->rat.A, 
+	  g_chi_up_spinor_field[mnl->rat.np], VOLUME/2);
+    mul_r(g_chi_dn_spinor_field[mnl->rat.np], mnl->rat.A*mnl->rat.A, 
+	  g_chi_dn_spinor_field[mnl->rat.np], VOLUME/2);
     // apply Q^2 and compute the residue
     Qtm_pm_ndpsi(mnl->w_fields[2], mnl->w_fields[3],
 		 g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np]);
