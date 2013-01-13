@@ -33,7 +33,7 @@ LIBRARIES = libmonomial
 libmonomial_TARGETS =  nddetratio_monomial monomial det_monomial detratio_monomial \
 	gauge_monomial ndpoly_monomial clover_trlog_monomial cloverdet_monomial cloverdetratio_monomial \
 	clovernd_trlog_monomial poly_monomial cloverndpoly_monomial moment_energy \
-	ndrat_monomial
+	ndrat_monomial ndratcor_monomial
 
 
 libmonomial_STARGETS = 

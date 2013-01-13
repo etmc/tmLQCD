@@ -41,8 +41,10 @@
 #define CLOVERNDTRLOG 12
 #define NDRAT 13
 #define NDCLOVERRAT 14
+#define NDRATCOR 15
+#define NDCLOVERRATCOR 16
 
-#define max_no_monomials 20
+#define max_no_monomials 30
 
 typedef struct {
   int type;
@@ -125,6 +127,7 @@ typedef struct {
 #include "monomial/cloverdetratio_monomial.h"
 #include "monomial/cloverndpoly_monomial.h"
 #include "monomial/ndrat_monomial.h"
+#include "monomial/ndratcor_monomial.h"
 #include "monomial/moment_energy.h"
 
 /* list of all monomials */

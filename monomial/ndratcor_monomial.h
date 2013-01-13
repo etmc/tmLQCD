@@ -17,15 +17,13 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-#ifndef _NDRAT_MONOMIAL_H
-#define _NDRAT_MONOMIAL_H
+#ifndef _NDRATCOR_MONOMIAL_H
+#define _NDRATCOR_MONOMIAL_H
 
 #include "hamiltonian_field.h"
 
-void ndrat_derivative(const int id, hamiltonian_field_t * const hf);
-double ndrat_acc(const int id, hamiltonian_field_t * const hf);
-void ndrat_heatbath(const int id, hamiltonian_field_t * const hf);
-void nd_set_global_parameter(monomial * const mnl);
-int init_ndrat_monomial(const int id);
+double ndratcor_acc(const int id, hamiltonian_field_t * const hf);
+void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf);
+int init_ndratcor_monomial(const int id);
 
 #endif

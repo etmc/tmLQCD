@@ -278,6 +278,7 @@ inline void rmQuotes(char *str){
 %x GAUGEMONOMIAL
 %x NDPOLYMONOMIAL
 %x NDRATMONOMIAL
+%x NDRATCORMONOMIAL
 %x POLYMONOMIAL
 %x CLPOLYMONOMIAL
 %x MNAME
@@ -819,6 +820,16 @@ inline void rmQuotes(char *str){
     strcpy((*mnl).name, "NDRAT");
     g_running_phmc = 1;
   }
+  else if(strcmp(yytext, "NDCLOVERRAT")==0) {
+    mnl->type = NDCLOVERRAT;
+    strcpy((*mnl).name, "NDCLOVERRAT");
+    g_running_phmc = 1;
+  }
+  else if(strcmp(yytext, "NDRATCOR")==0) {
+    mnl->type = NDRATCOR;
+    strcpy((*mnl).name, "NDRATCOR");
+    g_running_phmc = 1;
+  }
   else if(strcmp(yytext, "NDCLOVER")==0) {
     mnl->type = NDCLOVER;
     strcpy((*mnl).name, "NDCLOVER");
@@ -854,6 +865,7 @@ inline void rmQuotes(char *str){
   else if(mnl->type == NDPOLY) BEGIN(NDPOLYMONOMIAL);
   else if(mnl->type == NDCLOVER) BEGIN(CLPOLYMONOMIAL);
   else if(mnl->type == NDRAT) BEGIN(NDRATMONOMIAL);
+  else if(mnl->type == NDRATCOR) BEGIN(NDRATCORMONOMIAL);
   else if(mnl->type == POLY || mnl->type == POLYDETRATIO)  {
           fprintf(stderr,"starting to parse poly(detratio) monomial\n");
           BEGIN(POLYMONOMIAL); 
@@ -865,7 +877,7 @@ inline void rmQuotes(char *str){
 
 
 
-<DETMONOMIAL,GAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL>{
+<DETMONOMIAL,GAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL>{
   {SPC}*Timescale{EQL}{DIGIT}+ {
     if(mnl->type == NDDETRATIO) {
       mnl->timescale = -5;
@@ -911,8 +923,15 @@ inline void rmQuotes(char *str){
   }
 }
 
+<DETMONOMIAL,POLYMONOMIAL,NDPOLYMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL>{
+  {SPC}*Kappa{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mnl->kappa = c;
+    if(myverbose) printf("  Kappa set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+}
 
-<DETMONOMIAL,POLYMONOMIAL,NDPOLYMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL>{
+<DETMONOMIAL,POLYMONOMIAL>{
   {SPC}*2KappaMu2{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mu2 = c;
@@ -923,34 +942,22 @@ inline void rmQuotes(char *str){
     mnl->kappa2 = c;
     if(myverbose) printf("  kappa2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
+}
+
+<NDPOLYMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL>{
   {SPC}*2KappaMubar{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mubar = c;
     if(myverbose) printf("  2KappaMubar set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*2KappaMubar2{EQL}{FLT} {
-    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
-    mnl->mubar2 = c;
-    if(myverbose) printf("  2KappaMubar2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*2KappaEpsbar{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->epsbar = c;
     if(myverbose) printf("  2KappaEpsbar set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*2KappaEpsbar2{EQL}{FLT} {
-    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
-    mnl->epsbar2 = c;
-    if(myverbose) printf("  2KappaEpsbar2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*Kappa{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
-    mnl->kappa = c;
-    if(myverbose) printf("  Kappa set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
 }
 
-<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDRATMONOMIAL>{
+<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL>{
   {SPC}*ForcePrecision{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     mnl->forceprec = c;
@@ -973,11 +980,6 @@ inline void rmQuotes(char *str){
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mu = c;
     if(myverbose) printf("  2KappaMu set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*Kappa{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
-    mnl->kappa = c;
-    if(myverbose) printf("  Kappa set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*CSGHistory{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
@@ -1035,11 +1037,6 @@ inline void rmQuotes(char *str){
   }
 }
 <NDRATMONOMIAL>{
-  {SPC}*DegreeOfRational{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    mnl->rat.order = a;
-    if(myverbose!=0) printf("  Degree of rational approximation set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
-  }
   {SPC}*Cmin{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->rat.crange[0] = a;
@@ -1051,7 +1048,15 @@ inline void rmQuotes(char *str){
     if(myverbose!=0) printf("  Coefficient range of rational ends at coefficient %d line %d monomial %d\n", a, line_of_file, current_monomial);
   }
 }
-<NDPOLYMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL>{
+
+<NDRATMONOMIAL,NDRATCORMONOMIAL>{
+  {SPC}*DegreeOfRational{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mnl->rat.order = a;
+    if(myverbose!=0) printf("  Degree of rational approximation set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+  }
+}
+<NDPOLYMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL>{
   {SPC}*StildeMax{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     stilde_max = c;
@@ -1875,7 +1880,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU>\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU>\n   {
   line_of_file++;
 }
 <*>\n                       {

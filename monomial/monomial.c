@@ -142,7 +142,8 @@ int init_monomials(const int V, const int even_odd_flag) {
     if((monomial_list[i].type != GAUGE) && (monomial_list[i].type != SFGAUGE)) no++;
     /* non-degenerate monomials need two pseudo fermion fields */
     if((monomial_list[i].type == NDPOLY) || (monomial_list[i].type == NDDETRATIO) || 
-       (monomial_list[i].type == NDCLOVER) || (monomial_list[i].type == NDRAT)) no++;
+       (monomial_list[i].type == NDCLOVER) || (monomial_list[i].type == NDRAT)||
+       (monomial_list[i].type == NDRATCOR)) no++;
   }
   if(no_monomials > 0) {
     if((void*)(_pf = (spinor*)calloc((no+4)*V+1, sizeof(spinor))) == NULL) {
@@ -284,6 +285,18 @@ int init_monomials(const int V, const int even_odd_flag) {
 	retval = init_ndrat_monomial(i);
 	if(g_proc_id == 0 && g_debug_level > 1) {
 	  printf("# Initialised monomial of type NDRAT, no_monomials= %d\n", no_monomials);
+	}
+      }
+      else if(monomial_list[i].type == NDRATCOR) {
+	monomial_list[i].hbfunction = &ndratcor_heatbath;
+	monomial_list[i].accfunction = &ndratcor_acc;
+	monomial_list[i].derivativefunction = NULL;
+	monomial_list[i].even_odd_flag = 1;
+	monomial_list[i].pf2 = __pf+no*V;
+	no++;
+	retval = init_ndrat_monomial(i);
+	if(g_proc_id == 0 && g_debug_level > 1) {
+	  printf("# Initialised monomial of type NDRATCOR, no_monomials= %d\n", no_monomials);
 	}
       }
       else if(monomial_list[i].type == NDDETRATIO) {
