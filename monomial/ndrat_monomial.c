@@ -106,7 +106,7 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
     // needs phmc_Cpol = 1 to work for ndrat!
     Q_tau1_sub_const_ndpsi(mnl->w_fields[0], mnl->w_fields[1],
 			   g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-			   -I*mnl->rat.mu[j]);
+			   -I*mnl->rat.mu[j], 1., mnl->EVMaxInv);
     
     /* Get the even parts X_j,e */
     /* H_eo_... includes tau_1 */
@@ -228,7 +228,7 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
     // this needs phmc_Cpol = 1 to work!
     Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
 			   g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-			   I*mnl->rat.nu[j]);
+			   I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
     assign_add_mul(mnl->pf, g_chi_up_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
     assign_add_mul(mnl->pf2, g_chi_dn_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
   }
@@ -254,7 +254,7 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
       // Q_h * tau^1 + i nu_j
       Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
 			     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-			     -I*mnl->rat.nu[j]);
+			     -I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
       assign_add_mul(mnl->w_fields[0], g_chi_up_spinor_field[mnl->rat.np], -I*mnl->rat.rnu[j], VOLUME/2);
       assign_add_mul(mnl->w_fields[1], g_chi_dn_spinor_field[mnl->rat.np], -I*mnl->rat.rnu[j], VOLUME/2);
     }
