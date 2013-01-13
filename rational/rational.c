@@ -84,7 +84,7 @@ int init_rational(rational_t * rat) {
       }
     }
 
-    rat->rmu[np-i-1] = (ars[2*i]-ars[2*i+1])*pmu;
+    rat->rmu[np-i-1] = (ar[2*i]-ar[2*i+1])*pmu;
     rat->rnu[i] = (rat->mu[i]-rat->nu[i])*pnu;
   }
 
