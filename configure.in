@@ -310,7 +310,9 @@ dnl only when using POSIX 199309, we set this explicitly here
 dnl this should not cause problems on any relatively modern (post y2k) machine!
 if ( test "$ac_cv_lib_rt_clock_gettime" = "yes" || test "$ac_cv_func_clock_gettime" = "yes" ); then
   AC_DEFINE(HAVE_CLOCK_GETTIME,1)
-  CFLAGS="$CFLAGS -D_POSIX_C_SOURCE=199309L"
+dnl  we set this in gettime.c explicitly for the time being 
+dnl  due to endian problem on BG/Q
+dnl  CFLAGS="$CFLAGS -D_POSIX_C_SOURCE=199309L"
   AC_MSG_NOTICE([Instructing the compiler to use POSIX 199309L])
 fi
 
