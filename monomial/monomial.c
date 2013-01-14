@@ -52,7 +52,7 @@ int no_clover_monomials = 0;
 int no_clovernd_monomials = 0;
 static spinor * _pf;
 spinor ** w_fields;
-const int no_wfields = 4;
+const int no_wfields = 6;
 
 int add_monomial(const int type) {
   
@@ -146,7 +146,7 @@ int init_monomials(const int V, const int even_odd_flag) {
        (monomial_list[i].type == NDRATCOR)) no++;
   }
   if(no_monomials > 0) {
-    if((void*)(_pf = (spinor*)calloc((no+4)*V+1, sizeof(spinor))) == NULL) {
+    if((void*)(_pf = (spinor*)calloc((no+no_wfields)*V+1, sizeof(spinor))) == NULL) {
       printf ("malloc errno in monomial pf fields: %d\n",errno); 
       errno = 0;
       return(1);
@@ -293,6 +293,9 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].derivativefunction = NULL;
 	monomial_list[i].even_odd_flag = 1;
 	monomial_list[i].pf2 = __pf+no*V;
+	monomial_list[i].rat.crange[0] = 0;
+        monomial_list[i].rat.crange[1] = monomial_list[i].rat.order-1;
+
 	no++;
 	retval = init_ndrat_monomial(i);
 	if(g_proc_id == 0 && g_debug_level > 1) {
