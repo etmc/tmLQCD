@@ -150,7 +150,7 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
     }
 
     if( ((err <= solver_pm->eps_sq) && (solver_pm->rel_prec == 0)) ||
-	((err <= solver_pm->eps_sq*squarenorm) && (solver_pm->rel_prec == 1)) ) {
+	((err <= solver_pm->eps_sq*squarenorm) && (solver_pm->rel_prec > 0)) ) {
 
       if(g_debug_level > 200) {
 	solver_pm->g(solver_field[2], solver_field[3], Pup[0], Pdn[0]);
@@ -163,6 +163,11 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
 	}
       }
       g_sloppy_precision = 0;
+      if(g_debug_level > 0 && g_proc_id == 0) {
+	printf("# CGMMS (%d shifts): iter: %d eps_sq: %1.4e t/s\n", solver_pm->no_shifts, iteration, solver_pm->eps_sq); 
+	//printf("# CG: flopcount (for e/o tmWilson only): t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
+	//       etime-atime, flops/(etime-atime), g_nproc*flops/(etime-atime));
+      }
 
       finalize_solver(solver_field, 2*nr_sf);
       return(iteration+1);
