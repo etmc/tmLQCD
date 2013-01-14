@@ -92,6 +92,7 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   solver_pm.eps_sq = mnl->forceprec;
   solver_pm.no_shifts = mnl->rat.np;
   solver_pm.shifts = mnl->rat.mu;
+  solver_pm.rel_prec = g_relative_precision_flag;
   solver_pm.type = CGMMSND;
   solver_pm.g = &Qtm_pm_ndpsi;
   if(mnl->type == NDCLOVERRAT) solver_pm.g = &Qsw_pm_ndpsi;
@@ -164,6 +165,7 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   double atime, etime;
   atime = gettime();
   nd_set_global_parameter(mnl);
+  mnl->iter1 = 0;
   g_mu3 = 0.;
   if(mnl->type == NDCLOVERRAT) {
     init_sw_fields();
@@ -190,6 +192,7 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   solver_pm.type = CGMMSND;
   solver_pm.g = &Qtm_pm_ndpsi;
   solver_pm.N = VOLUME/2;
+  solver_pm.rel_prec = g_relative_precision_flag;
   mnl->iter0 = cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 			     mnl->pf, mnl->pf2, &solver_pm);
 
@@ -206,38 +209,7 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
     assign_add_mul(mnl->pf, g_chi_up_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
     assign_add_mul(mnl->pf2, g_chi_dn_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
   }
-  if(g_debug_level > 3) {
-    //apply R
-    solver_pm.shifts = mnl->rat.mu;
-    cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-		 mnl->pf, mnl->pf2,
-		 &solver_pm);
-    assign(mnl->w_fields[0], mnl->pf, VOLUME/2);
-    assign(mnl->w_fields[1], mnl->pf2, VOLUME/2);
-    for(int j = (mnl->rat.np-1); j > -1; j--) {
-      assign_add_mul_r(mnl->w_fields[0], g_chi_up_spinor_field[j], 
-		       mnl->rat.rmu[j], VOLUME/2);
-      assign_add_mul_r(mnl->w_fields[1], g_chi_dn_spinor_field[j], 
-		       mnl->rat.rmu[j], VOLUME/2);
-    }
-    // apply C^dagger
-    solver_pm.shifts = mnl->rat.nu;
-    cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-		 mnl->w_fields[0], mnl->w_fields[1], &solver_pm);
-    for(int j = (mnl->rat.np-1); j > -1; j--) {
-      // Q_h * tau^1 + i nu_j
-      Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
-			     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-			     -I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
-      assign_add_mul(mnl->w_fields[0], g_chi_up_spinor_field[mnl->rat.np], -I*mnl->rat.rnu[j], VOLUME/2);
-      assign_add_mul(mnl->w_fields[1], g_chi_dn_spinor_field[mnl->rat.np], -I*mnl->rat.rnu[j], VOLUME/2);
-    }
-    diff(mnl->w_fields[0], mnl->w_fields[0], mnl->w_fields[2], VOLUME/2);  
-    diff(mnl->w_fields[1],mnl->w_fields[1], mnl->w_fields[3], VOLUME/2);  
-    double resi = square_norm(mnl->w_fields[0], VOLUME/2, 1);
-    resi += square_norm(mnl->w_fields[1], VOLUME/2, 1);
-    if(g_proc_id == 0) printf("|| (1-C^dagger R C)*phi|| = %e\n", resi);
-  }
+
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
@@ -271,6 +243,7 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
   solver_pm.type = CGMMSND;
   solver_pm.g = &Qtm_pm_ndpsi;
   solver_pm.N = VOLUME/2;
+  solver_pm.rel_prec = g_relative_precision_flag;
   mnl->iter0 += cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 			     mnl->pf, mnl->pf2,
 			     &solver_pm);
@@ -285,8 +258,8 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
 		     mnl->rat.rmu[j], VOLUME/2);
   }
 
-  mnl->energy1 = scalar_prod(mnl->pf, mnl->w_fields[0], VOLUME/2, 1);
-  mnl->energy1 += scalar_prod(mnl->pf2, mnl->w_fields[1], VOLUME/2, 1);
+  mnl->energy1 = scalar_prod_r(mnl->pf, mnl->w_fields[0], VOLUME/2, 1);
+  mnl->energy1 += scalar_prod_r(mnl->pf2, mnl->w_fields[1], VOLUME/2, 1);
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
@@ -302,7 +275,7 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
 
 int init_ndrat_monomial(const int id) {
   monomial * mnl = &monomial_list[id];  
-  
+
   init_rational(&mnl->rat);
 
   mnl->EVMin = mnl->StildeMin / mnl->StildeMax;
