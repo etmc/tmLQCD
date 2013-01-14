@@ -289,6 +289,7 @@ int init_monomials(const int V, const int even_odd_flag) {
 	}
       }
       else if(monomial_list[i].type == NDCLOVERRAT) {
+	init_swpm(VOLUME);
 	monomial_list[i].hbfunction = &ndrat_heatbath;
 	monomial_list[i].accfunction = &ndrat_acc;
 	monomial_list[i].derivativefunction = &ndrat_derivative;
@@ -298,7 +299,7 @@ int init_monomials(const int V, const int even_odd_flag) {
 	no++;
 	retval = init_ndrat_monomial(i);
 	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# Initialised monomial of type NDRAT, no_monomials= %d\n", no_monomials);
+	  printf("# Initialised monomial of type NDCLOVERRAT, no_monomials= %d\n", no_monomials);
 	}
       }
       else if(monomial_list[i].type == NDRATCOR) {
@@ -328,7 +329,7 @@ int init_monomials(const int V, const int even_odd_flag) {
 	no++;
 	retval = init_ndrat_monomial(i);
 	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# Initialised monomial of type NDRATCOR, no_monomials= %d\n", no_monomials);
+	  printf("# Initialised monomial of type NDCLOVERRATCOR, no_monomials= %d\n", no_monomials);
 	}
       }
       else if(monomial_list[i].type == NDDETRATIO) {
