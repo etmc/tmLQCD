@@ -53,17 +53,17 @@ void check_C(spinor * const k_up, spinor * const k_dn,
 	     solver_pm_t * solver_pm);
 
 // applies (Q^2 R^2 -1) phi
-void apply_Z(spinor * const k_up, spinor * const k_dn,
-	     spinor * const l_up, spinor * const l_dn,
-	     const int id, hamiltonian_field_t * const hf,
-	     solver_pm_t * solver_pm);
+double apply_Z(spinor * const k_up, spinor * const k_dn,
+	       spinor * const l_up, spinor * const l_dn,
+	       const int id, hamiltonian_field_t * const hf,
+	       solver_pm_t * solver_pm);
 
 
 
 void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   solver_pm_t solver_pm;
-  double atime, etime;
+  double atime, etime, delta;
   spinor * up0, * dn0, * up1, * dn1, * tup, * tdn;
   double coefs[6] = {1./4., -3./32., 7./122., -77./2048., 231./8192., -1463./65536.};
   atime = gettime();
@@ -102,10 +102,11 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
   up0 = mnl->w_fields[0]; dn0 = mnl->w_fields[1];
   up1 = mnl->w_fields[2]; dn1 = mnl->w_fields[3];
 	 
-  for(int i = 1; i < 3; i++) {
-    apply_Z(up1, dn1, up0, dn0, id, hf, &solver_pm);
+  for(int i = 1; i < 8; i++) {
+    delta = apply_Z(up1, dn1, up0, dn0, id, hf, &solver_pm);
     assign_add_mul_r(mnl->pf, up1, coefs[i-1], VOLUME/2);
     assign_add_mul_r(mnl->pf2, dn1, coefs[i-1], VOLUME/2);
+    if(delta < mnl->accprec) break;
     tup = up0; tdn = dn0;
     up0 = up1; dn0 = dn1;
     up1 = tup; dn1 = tdn;
@@ -126,7 +127,7 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
 double ndratcor_acc(const int id, hamiltonian_field_t * const hf) {
   solver_pm_t solver_pm;
   monomial * mnl = &monomial_list[id];
-  double atime, etime;
+  double atime, etime, delta;
   spinor * up0, * dn0, * up1, * dn1, * tup, * tdn;
   double coefs[6] = {-1./2., 3./8., -5./16., 35./128., -63./256., 231./1024.};
   atime = gettime();
@@ -153,12 +154,13 @@ double ndratcor_acc(const int id, hamiltonian_field_t * const hf) {
   up0 = mnl->w_fields[0]; dn0 = mnl->w_fields[1];
   up1 = mnl->w_fields[2]; dn1 = mnl->w_fields[3];
 
-  apply_Z(up0, dn0, mnl->pf, mnl->pf2, id, hf, &solver_pm);
+  delta = apply_Z(up0, dn0, mnl->pf, mnl->pf2, id, hf, &solver_pm);
   assign_add_mul_r(mnl->w_fields[4], up0, coefs[0], VOLUME/2);
   assign_add_mul_r(mnl->w_fields[5], dn0, coefs[0], VOLUME/2);
 
-  for(int i = 2; i < 3; i++) {
-    apply_Z(up1, dn1, up0, dn0, id, hf, &solver_pm);
+  for(int i = 2; i < 8; i++) {
+    if(delta < mnl->accprec) break;
+    delta = apply_Z(up1, dn1, up0, dn0, id, hf, &solver_pm);
     assign_add_mul_r(mnl->w_fields[4], up1, coefs[i-1], VOLUME/2);
     assign_add_mul_r(mnl->w_fields[5], dn1, coefs[i-1], VOLUME/2);
     tup = up0; tdn = dn0;
@@ -182,7 +184,7 @@ double ndratcor_acc(const int id, hamiltonian_field_t * const hf) {
 
 // applies ((Q_h\tau_1 * R)^2 - 1)
 
-void apply_Z(spinor * const k_up, spinor * const k_dn,
+double apply_Z(spinor * const k_up, spinor * const k_dn,
 	     spinor * const l_up, spinor * const l_dn,
 	     const int id, hamiltonian_field_t * const hf,
 	     solver_pm_t * solver_pm) {
@@ -221,13 +223,11 @@ void apply_Z(spinor * const k_up, spinor * const k_dn,
 	       g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np]);
   diff(k_up, k_up, l_up, VOLUME/2);
   diff(k_dn, k_dn, l_dn, VOLUME/2);
-  if(g_debug_level > 2) {
-    double resi = square_norm(k_up, VOLUME/2, 1) + square_norm(k_dn, VOLUME/2, 1);
-    if(g_proc_id == 0) {
-      printf("# NDRATCOR: ||Z * phi|| = %e\n", resi);
-    }
+  double resi = square_norm(k_up, VOLUME/2, 1) + square_norm(k_dn, VOLUME/2, 1);
+  if(g_debug_level > 2 && g_proc_id == 0) {
+    printf("# NDRATCOR: ||Z * phi|| = %e\n", resi);
   }
-  return;
+  return(resi);
 }
 
 // computes ||(1 - C^dagger R C) phi||
