@@ -56,6 +56,20 @@ BeginMonomial NDRAT
   2Kappamubar = 0.1105
 EndMonomial
 
+# correction monomial for approximation error
+BeginMonomial NDRATCOR
+  Timescale = 1
+  kappa = 0.170
+  AcceptancePrecision =  1e-20
+  ForcePrecision = 1e-12
+  StildeMin = 0.013577
+  StildeMax = 3.096935
+  Name = ndratcor
+  DegreeOfRational = 12
+  ComputeEVFreq = 0
+  2KappaEpsBar = 0.0935
+  2Kappamubar = 0.1105
+EndMonomial
 
 BeginIntegrator 
   Type0 = 2MN

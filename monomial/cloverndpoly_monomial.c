@@ -117,14 +117,14 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
     deriv_Sb(OE, g_chi_up_spinor_field[j-1], mnl->w_fields[2], hf, mnl->forcefactor);
     deriv_Sb(OE, g_chi_dn_spinor_field[j-1], mnl->w_fields[3], hf, mnl->forcefactor);
 
-    // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
+    // even/even sites sandwiched by tau_1 gamma_5 Y_e and gamma_5 X_e
     sw_spinor(EE, mnl->w_fields[3], mnl->w_fields[0], mnl->forcefactor);
-    // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
+    // odd/odd sites sandwiched by tau_1 gamma_5 Y_o and gamma_5 X_o
     sw_spinor(OO, g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[mnl->MDPolyDegree], mnl->forcefactor);
 
-    // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
+    // even/even sites sandwiched by tau_1 gamma_5 Y_e and gamma_5 X_e
     sw_spinor(EE, mnl->w_fields[2], mnl->w_fields[1], mnl->forcefactor);
-    // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
+    // odd/odd sites sandwiched by tau_1 gamma_5 Y_o and gamma_5 X_o
     sw_spinor(OO, g_chi_dn_spinor_field[j-1], g_chi_up_spinor_field[mnl->MDPolyDegree], mnl->forcefactor);
   }
   // trlog part does not depend on the normalisation of the polynomial

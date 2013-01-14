@@ -103,50 +103,72 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
 			     &solver_pm);
   
   for(int j = (mnl->rat.np-1); j > -1; j--) {
-    // multiply with Q_h * tau^1 + i mu_j to get Y_j,o (odd sites)
-    // needs phmc_Cpol = 1 to work for ndrat!
-    Q_tau1_sub_const_ndpsi(mnl->w_fields[0], mnl->w_fields[1],
-			   g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-			   -I*mnl->rat.mu[j], 1., mnl->EVMaxInv);
-    
-    /* Get the even parts X_j,e */
-    /* H_eo_... includes tau_1 */
-    H_eo_tm_ndpsi(mnl->w_fields[2], mnl->w_fields[3], 
-		  g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], EO);
-    
+    if(mnl->type == NDCLOVERRAT) {
+      // multiply with Q_h * tau^1 + i mu_j to get Y_j,o (odd sites)
+      // needs phmc_Cpol = 1 to work for ndrat!
+      Qsw_tau1_sub_const_ndpsi(mnl->w_fields[0], mnl->w_fields[1],
+			       g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
+			       -I*mnl->rat.mu[j], 1., mnl->EVMaxInv);
+      
+      /* Get the even parts X_j,e */
+      /* H_eo_... includes tau_1 */
+      H_eo_sw_ndpsi(mnl->w_fields[2], mnl->w_fields[3], 
+		    g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j]);
+
+    }
+    else {
+      // multiply with Q_h * tau^1 + i mu_j to get Y_j,o (odd sites)
+      // needs phmc_Cpol = 1 to work for ndrat!
+      Q_tau1_sub_const_ndpsi(mnl->w_fields[0], mnl->w_fields[1],
+			     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
+			     -I*mnl->rat.mu[j], 1., mnl->EVMaxInv);
+      
+      /* Get the even parts X_j,e */
+      /* H_eo_... includes tau_1 */
+      H_eo_tm_ndpsi(mnl->w_fields[2], mnl->w_fields[3], 
+		    g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], EO);
+    }
     /* X_j,e^dagger \delta M_eo Y_j,o */
     deriv_Sb(EO, mnl->w_fields[2], mnl->w_fields[0], 
 	     hf, mnl->rat.rmu[j]*mnl->forcefactor);
     deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1],
 	     hf, mnl->rat.rmu[j]*mnl->forcefactor);
 
-    /* Get the even parts Y_j,e */
-    H_eo_tm_ndpsi(mnl->w_fields[2], mnl->w_fields[3], 
-		  mnl->w_fields[0], mnl->w_fields[1], EO);
-    
+    if(mnl->type == NDCLOVERRAT) {
+      /* Get the even parts Y_j,e */
+      H_eo_sw_ndpsi(mnl->w_fields[4], mnl->w_fields[5], 
+		    mnl->w_fields[0], mnl->w_fields[1]);
+    }
+    else {
+      /* Get the even parts Y_j,e */
+      H_eo_tm_ndpsi(mnl->w_fields[4], mnl->w_fields[5], 
+		    mnl->w_fields[0], mnl->w_fields[1], EO);
+
+    }
     /* X_j,o \delta M_oe Y_j,e */
-    deriv_Sb(OE, g_chi_up_spinor_field[j], mnl->w_fields[2], 
+    deriv_Sb(OE, g_chi_up_spinor_field[j], mnl->w_fields[4], 
 	     hf, mnl->rat.rmu[j]*mnl->forcefactor);
-    deriv_Sb(OE, g_chi_dn_spinor_field[j], mnl->w_fields[3], 
+    deriv_Sb(OE, g_chi_dn_spinor_field[j], mnl->w_fields[5], 
 	     hf, mnl->rat.rmu[j]*mnl->forcefactor);
 
     if(mnl->type == NDCLOVERRAT) {
-      // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
-      sw_spinor(EE, mnl->w_fields[3], mnl->w_fields[0], 
+      // even/even sites sandwiched by tau_1 gamma_5 Y_e and gamma_5 X_e
+      sw_spinor(EE, mnl->w_fields[5], mnl->w_fields[2], 
 		mnl->rat.rmu[j]*mnl->forcefactor);
-      // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-      sw_spinor(OO, g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[mnl->MDPolyDegree], 
+      // odd/odd sites sandwiched by tau_1 gamma_5 Y_o and gamma_5 X_o
+      sw_spinor(OO, g_chi_up_spinor_field[j], mnl->w_fields[1],
 		mnl->rat.rmu[j]*mnl->forcefactor);
       
-      // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
-      sw_spinor(EE, mnl->w_fields[2], mnl->w_fields[1], 
+      // even/even sites sandwiched by tau_1 gamma_5 Y_e and gamma_5 X_e
+      sw_spinor(EE, mnl->w_fields[4], mnl->w_fields[3], 
 		mnl->rat.rmu[j]*mnl->forcefactor);
-      // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-      sw_spinor(OO, g_chi_dn_spinor_field[j-1], g_chi_up_spinor_field[mnl->MDPolyDegree], 
+      // odd/odd sites sandwiched by tau_1 gamma_5 Y_o and gamma_5 X_o
+      sw_spinor(OO, g_chi_dn_spinor_field[j], mnl->w_fields[0],
 		mnl->rat.rmu[j]*mnl->forcefactor);
     }
   }
   // trlog part does not depend on the normalisation
+  // here we need another mechanism!
   if(mnl->type == NDCLOVERRAT) {
     sw_deriv_nd(EE);
     sw_all(hf, mnl->kappa, mnl->c_sw);
@@ -191,6 +213,7 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   solver_pm.shifts = mnl->rat.nu;
   solver_pm.type = CGMMSND;
   solver_pm.g = &Qtm_pm_ndpsi;
+  if(mnl->type == NDCLOVERRAT) solver_pm.g = &Qsw_pm_ndpsi;
   solver_pm.N = VOLUME/2;
   solver_pm.rel_prec = g_relative_precision_flag;
   mnl->iter0 = cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
@@ -203,9 +226,16 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     // Q_h * tau^1 - i nu_j
     // this needs phmc_Cpol = 1 to work!
-    Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
-			   g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-			   I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
+    if(mnl->type == NDCLOVERRAT) {
+      Qsw_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
+			       g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
+			       I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
+    }
+    else {
+      Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
+			     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
+			     I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
+    }
     assign_add_mul(mnl->pf, g_chi_up_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
     assign_add_mul(mnl->pf2, g_chi_dn_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
   }
@@ -242,6 +272,7 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
   solver_pm.shifts = mnl->rat.mu;
   solver_pm.type = CGMMSND;
   solver_pm.g = &Qtm_pm_ndpsi;
+  if(mnl->type == NDCLOVERRAT) solver_pm.g = &Qsw_pm_ndpsi;
   solver_pm.N = VOLUME/2;
   solver_pm.rel_prec = g_relative_precision_flag;
   mnl->iter0 += cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
