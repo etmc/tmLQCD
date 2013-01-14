@@ -1,5 +1,8 @@
 # this is identical to sample-hmc2.input, just
 # using NDRAT instead of NDPOLY
+# and a different gauge action
+#
+# plaquette value should be 0.64875(5)
 
 L=4
 T=4
