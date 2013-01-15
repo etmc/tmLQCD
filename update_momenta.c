@@ -84,8 +84,8 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
 //   g_gf[0][0].c22 = -0.279641903356002 + 0.173912067032302 * I;
 
   /* FIXME Enter the simplest deviation from identity that will work */
-  g_gf[0][0].c00 = 0.540302305868140 + 0.841470984807897 * I;
-  g_gf[0][0].c11 = 0.540302305868140 - 0.841470984807897 * I;
+  g_gf[0][0].c00 = I;
+  g_gf[0][0].c11 = -I;
   
   ohnohack_remap_df0(tmp_derivative); /* FIXME Such that we can aggregate results per smearing type. */
   for (int s_ctr = 0; s_ctr < no_relevant_smearings; ++s_ctr)
