@@ -34,6 +34,7 @@
 #include "gamma.h"
 #include "linalg_eo.h"
 #include "start.h"
+#include "gettime.h"
 #include "solver/solver.h"
 #include "solver_field.h"
 #include "cg_mms_tm_nd.h"
@@ -58,8 +59,10 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
   int iteration, N = solver_pm->N;
   static double gamma, alpham1;
   spinor ** solver_field = NULL;
+  double atime, etime;
   const int nr_sf = 4;
 
+  atime = gettime();
   if(solver_pm->N == VOLUME) {
     init_solver_field(&solver_field, VOLUMEPLUSRAND, 2*nr_sf);
   } 
@@ -151,26 +154,7 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
 
     if( ((err <= solver_pm->eps_sq) && (solver_pm->rel_prec == 0)) ||
 	((err <= solver_pm->eps_sq*squarenorm) && (solver_pm->rel_prec > 0)) ) {
-
-      if(g_debug_level > 200) {
-	solver_pm->g(solver_field[2], solver_field[3], Pup[0], Pdn[0]);
-	diff(solver_field[4], solver_field[2], Qup, N);
-	diff(solver_field[5], solver_field[3], Qdn, N);
-	err = square_norm(solver_field[4], N, 1) + square_norm(solver_field[5], N, 1);
-	if(g_proc_id == g_stdio_proc) {
-	  printf("# CG MMS true residue at final iteration (%d) was %g.\n", iteration, err); 
-	  fflush( stdout);
-	}
-      }
-      g_sloppy_precision = 0;
-      if(g_debug_level > 0 && g_proc_id == 0) {
-	printf("# CGMMS (%d shifts): iter: %d eps_sq: %1.4e t/s\n", solver_pm->no_shifts, iteration, solver_pm->eps_sq); 
-	//printf("# CG: flopcount (for e/o tmWilson only): t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
-	//       etime-atime, flops/(etime-atime), g_nproc*flops/(etime-atime));
-      }
-
-      finalize_solver(solver_field, 2*nr_sf);
-      return(iteration+1);
+      break;
     }
 
     /* Compute betas[0](i+1) = (r(i+1),r(i+1))/(r(i),r(i))
@@ -188,9 +172,15 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
       assign_mul_add_mul_r(ps_mms_solver[2*im+1], solver_field[1], betas[im], zita[im], N);
     }
   }
+  etime = gettime();
   g_sloppy_precision = 0;
+  if(g_debug_level > 0 && g_proc_id == 0) {
+    printf("# CGMMS (%d shifts): iter: %d eps_sq: %1.4e %1.4e t/s\n", solver_pm->no_shifts, iteration, solver_pm->eps_sq, atime - etime); 
+  }
+  
   finalize_solver(solver_field, 2*nr_sf);
-  return(-1);
+  if(iteration > solver_pm->max_iter) return(-1);
+  return(iteration);
 }
 
 
