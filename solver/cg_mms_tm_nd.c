@@ -56,7 +56,7 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
 		 solver_pm_t * solver_pm) {
 
   static double normsq, pro, err, squarenorm;
-  int iteration, N = solver_pm->N;
+  int iteration, N = solver_pm->N, shifts = solver_pm->no_shifts;
   static double gamma, alpham1;
   spinor ** solver_field = NULL;
   double atime, etime;
@@ -72,17 +72,21 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
 
   // don't need boundaries, because we never apply f to them
   // so N is enough
-  //init_mms_tm_nd(solver_pm->no_shifts, solver_pm->N);
-  init_mms_tm_nd(solver_pm->no_shifts, VOLUMEPLUSRAND/2);
+  //init_mms_tm_nd(shifts, solver_pm->N);
+  init_mms_tm_nd(shifts, VOLUMEPLUSRAND/2);
   zero_spinor_field(Pup[0], N);
   zero_spinor_field(Pdn[0], N);
+  assign(ps_mms_solver[0], Qup, N);
+  assign(ps_mms_solver[1], Qdn, N);
   alphas[0] = 1.0;
   betas[0] = 0.0;
   sigma[0] = solver_pm->shifts[0]*solver_pm->shifts[0];
+  if(g_proc_id == 0 && g_debug_level > 2) printf("shift %d is %e\n", 0, sigma[0]);
 
   /* currently only implemented for P=0 */
-  for(int im = 1; im < solver_pm->no_shifts; im++) {
+  for(int im = 1; im < shifts; im++) {
     sigma[im] = solver_pm->shifts[im]*solver_pm->shifts[im] - sigma[0];
+    if(g_proc_id == 0 && g_debug_level > 2) printf("shift %d is %e\n", im, sigma[im]);
     // these will be the result spinor fields
     zero_spinor_field(Pup[im], N);
     zero_spinor_field(Pdn[im], N);
@@ -120,7 +124,7 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
 
     /* Compute alphas[0](i+1) */
     alphas[0] = normsq/pro;
-    for(int im = 1; im < solver_pm->no_shifts; im++) {
+    for(int im = 1; im < shifts; im++) {
 
       /* Now gamma is a temp variable that corresponds to zita(i+1) */ 
       gamma = zita[im]*alpham1/(alphas[0]*betas[0]*(1.-zita[im]/zitam1[im]) 
@@ -132,9 +136,12 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
       zita[im] = gamma;
       /* Update of alphas(i) = alphas[0](i)*zita(i+1)/zita(i) */ 
       alphas[im] = alphas[0]*zita[im]/zitam1[im];
+      //if(g_proc_id == 0) printf("cgmms %d %e %e %e %e\n", im, zita[im], zitam1[im], alphas[im], betas[im]);
       /* Compute xs(i+1) = xs(i) + alphas(i)*ps(i) */
       assign_add_mul_r(Pup[im], ps_mms_solver[2*im], alphas[im], N); 
-      assign_add_mul_r(Pdn[im], ps_mms_solver[2*im+1], alphas[im], N); 
+      assign_add_mul_r(Pdn[im], ps_mms_solver[2*im+1], alphas[im], N);
+      // this is currently arbitrary
+      if(fabs(zita[shifts-1]) < 1.e-60) shifts--;
     }
 
     /*  Compute x_(i+1) = x_i + alphas[0](i+1) p_i    */
@@ -149,12 +156,12 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
     err = square_norm(solver_field[0], N, 1) + square_norm(solver_field[1], N, 1);
 
     if(g_debug_level > 2 && g_proc_id == g_stdio_proc) {
-      printf("# CGMMS iteration: %d residue: %g\n", iteration, err); fflush( stdout );
+      printf("# CGMMS iteration: %d residue: %g %e\n", iteration, err); fflush( stdout );
     }
 
     if( ((err <= solver_pm->eps_sq) && (solver_pm->rel_prec == 0)) ||
 	((err <= solver_pm->eps_sq*squarenorm) && (solver_pm->rel_prec > 0)) ||
-	(iteration == solver_pm->max_iter -1) ) {
+        (iteration == solver_pm->max_iter -1) ) {
       break;
     }
 
@@ -167,7 +174,7 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
 
     /* Compute betas(i+1) = betas[0](i)*(zita(i+1)*alphas(i))/(zita(i)*alphas[0](i))
        Compute ps(i+1) = zita(i+1)*r(i+1) + betas(i+1)*ps(i)  */
-    for(int im = 1; im < solver_pm->no_shifts; im++) {
+    for(int im = 1; im < shifts; im++) {
       betas[im] = betas[0]*zita[im]*alphas[im]/(zitam1[im]*alphas[0]);
       assign_mul_add_mul_r(ps_mms_solver[2*im], solver_field[0], betas[im], zita[im], N);
       assign_mul_add_mul_r(ps_mms_solver[2*im+1], solver_field[1], betas[im], zita[im], N);
@@ -175,12 +182,13 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
   }
   etime = gettime();
   g_sloppy_precision = 0;
+  if(iteration == solver_pm->max_iter -1) iteration = -1;
+  else iteration++;
   if(g_debug_level > 0 && g_proc_id == 0) {
     printf("# CGMMS (%d shifts): iter: %d eps_sq: %1.4e %1.4e t/s\n", solver_pm->no_shifts, iteration, solver_pm->eps_sq, etime - atime); 
   }
   
   finalize_solver(solver_field, 2*nr_sf);
-  if(iteration > solver_pm->max_iter) return(-1);
   return(iteration);
 }
 
