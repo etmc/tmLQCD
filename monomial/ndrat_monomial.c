@@ -318,10 +318,6 @@ int init_ndrat_monomial(const int id) {
     fprintf(stderr, "Not enough memory for Chi fields! Aborting...\n");
     exit(0);
   }
-  else {
-    printf("Initialised %d chi fields\n",mnl->rat.np+1 );
-  }
-
 
   return(0);
 }

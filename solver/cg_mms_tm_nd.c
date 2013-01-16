@@ -153,7 +153,8 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
     }
 
     if( ((err <= solver_pm->eps_sq) && (solver_pm->rel_prec == 0)) ||
-	((err <= solver_pm->eps_sq*squarenorm) && (solver_pm->rel_prec > 0)) ) {
+	((err <= solver_pm->eps_sq*squarenorm) && (solver_pm->rel_prec > 0)) ||
+	(iteration == solver_pm->max_iter -1) ) {
       break;
     }
 
@@ -175,7 +176,7 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
   etime = gettime();
   g_sloppy_precision = 0;
   if(g_debug_level > 0 && g_proc_id == 0) {
-    printf("# CGMMS (%d shifts): iter: %d eps_sq: %1.4e %1.4e t/s\n", solver_pm->no_shifts, iteration, solver_pm->eps_sq, atime - etime); 
+    printf("# CGMMS (%d shifts): iter: %d eps_sq: %1.4e %1.4e t/s\n", solver_pm->no_shifts, iteration, solver_pm->eps_sq, etime - atime); 
   }
   
   finalize_solver(solver_field, 2*nr_sf);
