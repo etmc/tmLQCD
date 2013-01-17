@@ -76,7 +76,7 @@ EndIntegrator
 
 BeginOperator TMWILSON
   2kappaMu = 0.01
-  kappa = 0.177
+  kappa = 0.170
   UseEvenOdd = yes
   Solver = CG
   SolverPrecision = 1e-14

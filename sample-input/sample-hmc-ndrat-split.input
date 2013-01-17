@@ -1,17 +1,23 @@
 # this is identical to sample-hmc2.input, just
-# using NDRAT instead of NDPOLY
+# using two NDRAT instead of NDPOLY
 #
-# identical physical run to sample-hmc-ndrat.input
-# but different algorithmic parameters
+# the expected plaquette value is 0.53347(17)
+# the expected rect. plaq. value is 0.30393(22)
 #
-# plaquette value should be 0.64876(3)
+# PP correlator
+# 1.963(2)
+# 0.2846(2)
+# 0.1078(2)
+#
+# smallest EV: 0.01890(3)
+# largest EV: 0.82744(4)
 
 L=4
 T=4
 Measurements = 20
 StartCondition = hot
-2KappaMu = 0.177
-kappa = 0.177
+2KappaMu = 0.01
+kappa = 0.170
 NSave = 500000
 ThetaT = 1
 UseEvenOdd = yes
@@ -27,8 +33,8 @@ BeginMeasurement CORRELATORS
 EndMeasurement
 
 BeginMonomial GAUGE
-  Type = Wilson
-  beta = 6.00
+  Type = tlsym
+  beta = 3.30
   Timescale = 0
 EndMonomial
 
@@ -49,10 +55,10 @@ BeginMonomial NDRAT
   ForcePrecision = 1e-12
   StildeMin = 0.013577
   StildeMax = 3.096935
-  Name = ndrat1
+  Name = ndrat
   DegreeOfRational = 12
   Cmin = 0
-  Cmax = 6
+  Cmax = 5
   ComputeEVFreq = 1
   2KappaEpsBar = 0.0935
   2Kappamubar = 0.1105
@@ -65,9 +71,9 @@ BeginMonomial NDRAT
   ForcePrecision = 1e-12
   StildeMin = 0.013577
   StildeMax = 3.096935
-  Name = ndrat2
+  Name = ndrat
   DegreeOfRational = 12
-  Cmin = 7
+  Cmin = 6
   Cmax = 11
   ComputeEVFreq = 1
   2KappaEpsBar = 0.0935
@@ -89,7 +95,6 @@ BeginMonomial NDRATCOR
   2Kappamubar = 0.1105
 EndMonomial
 
-
 BeginIntegrator 
   Type0 = 2MN
   Type1 = 2MN
@@ -103,7 +108,7 @@ EndIntegrator
 
 BeginOperator TMWILSON
   2kappaMu = 0.01
-  kappa = 0.177
+  kappa = 0.170
   UseEvenOdd = yes
   Solver = CG
   SolverPrecision = 1e-14

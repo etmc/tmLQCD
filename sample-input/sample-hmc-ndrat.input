@@ -1,15 +1,23 @@
 # this is identical to sample-hmc2.input, just
 # using NDRAT instead of NDPOLY
-# and a different gauge action
 #
-# plaquette value should be 0.64876(3)
+# the expected plaquette value is 0.53347(17)
+# the expected rect. plaq. value is 0.30393(22)
+#
+# PP correlator
+# 1.963(2)
+# 0.2846(2)
+# 0.1078(2)
+#
+# smallest EV: 0.01890(3)
+# largest EV: 0.82744(4)
 
 L=4
 T=4
 Measurements = 20
 StartCondition = hot
-2KappaMu = 0.177
-kappa = 0.177
+2KappaMu = 0.01
+kappa = 0.170
 NSave = 500000
 ThetaT = 1
 UseEvenOdd = yes
@@ -25,8 +33,8 @@ BeginMeasurement CORRELATORS
 EndMeasurement
 
 BeginMonomial GAUGE
-  Type = Wilson
-  beta = 6.00
+  Type = tlsym
+  beta = 3.30
   Timescale = 0
 EndMonomial
 
@@ -84,7 +92,7 @@ EndIntegrator
 
 BeginOperator TMWILSON
   2kappaMu = 0.01
-  kappa = 0.177
+  kappa = 0.170
   UseEvenOdd = yes
   Solver = CG
   SolverPrecision = 1e-14
