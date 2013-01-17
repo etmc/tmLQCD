@@ -189,7 +189,6 @@ double eigenvalues_Jacobi(int * nr_of_eigenvalues, const int max_iterations,
 	_Complex double resc = scalar_prod_su3vect(&eigenvectors_su3v[i*N2], &eigenvectors_su3v[j*N2], N, 1);
 	if(g_proc_id == 0) {
 	  printf("<%d,%d> = (%e , %e)\n", i, j, creal(resc), cimag(resc));
-	  printf("%e %e\n", creal(eigenvectors_su3v[i*N2].c0), cimag(eigenvectors_su3v[i*N2].c0));
 	}
       }
     }
