@@ -103,7 +103,7 @@ _Complex double scalar_prod(const spinor * const S, const spinor * const R, cons
 #ifdef WITHLAPH
 _Complex double scalar_prod_su3vect(su3_vector * const S, su3_vector * const R, const int N, const int parallel)
 {
-  double ALIGN ks, ds, tr, ts, tt;
+  _Complex double ALIGN ks, ds, tr, ts, tt;
   su3_vector *s, *r;
   _Complex double c;
 #ifdef MPI
