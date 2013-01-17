@@ -8,8 +8,8 @@ L=4
 T=4
 Measurements = 20
 StartCondition = hot
-2KappaMu = 0.177
-kappa = 0.177
+2KappaMu = 0.01
+kappa = 0.170
 NSave = 500000
 ThetaT = 1
 UseEvenOdd = yes
@@ -25,8 +25,8 @@ BeginMeasurement CORRELATORS
 EndMeasurement
 
 BeginMonomial GAUGE
-  Type = Wilson
-  beta = 6.00
+  Type = tlsym
+  beta = 3.30
   Timescale = 0
 EndMonomial
 
@@ -46,8 +46,8 @@ BeginMonomial NDCLOVERRAT
   CSW = 1.
   AcceptancePrecision =  1e-20
   ForcePrecision = 1e-12
-  StildeMin = 0.013577
-  StildeMax = 3.096935
+  StildeMin = 0.01225
+  StildeMax = 3.5
   Name = ndrat
   DegreeOfRational = 12
   Cmin = 0
@@ -64,8 +64,8 @@ BeginMonomial NDCLOVERRATCOR
   CSW = 1.
   AcceptancePrecision =  1e-20
   ForcePrecision = 1e-12
-  StildeMin = 0.013577
-  StildeMax = 3.096935
+  StildeMin = 0.01225
+  StildeMax = 3.5
   Name = ndratcor
   DegreeOfRational = 12
   ComputeEVFreq = 0
@@ -77,7 +77,7 @@ BeginIntegrator
   Type0 = 2MN
   Type1 = 2MN
   IntegrationSteps0 = 2
-  IntegrationSteps1 = 6
+  IntegrationSteps1 = 10
   Tau = 1
   Lambda0 = 0.19
   Lambda1 = 0.20
@@ -86,7 +86,7 @@ EndIntegrator
 
 BeginOperator TMWILSON
   2kappaMu = 0.01
-  kappa = 0.177
+  kappa = 0.170
   UseEvenOdd = yes
   Solver = CG
   SolverPrecision = 1e-14
