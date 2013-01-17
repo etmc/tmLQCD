@@ -1,6 +1,5 @@
 /***********************************************************************
  *
- *
  * Copyright (C) 2004 Andrea Shindler
  *               2009 Carsten Urbach
  *
@@ -21,6 +20,17 @@
  * 
  * Author: Andrea Shindler <shindler@ifh.de> Jan 2004
  * 
+ * This is a Multi-Shift CG solver
+ * it expects that the shifts fulfil
+ *
+ * shift[0] < shift[1] < shift{2] < ... < shift[no_shifts-1]
+ *
+ * in modulus. The code will use shift[i]^2, which are all >0
+ *
+ * parameters:
+ * shifts are given to the solver in solver_pm->shifts
+ * number of shifts is in solver_pm->no_shifts
+ * the operator to invert in solver_pm->g
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -130,20 +140,33 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
       gamma = zita[im]*alpham1/(alphas[0]*betas[0]*(1.-zita[im]/zitam1[im]) 
 				+ alpham1*(1.+sigma[im]*alphas[0]));
 
-      /* Now zita(i-1) is put equal to the old zita(i) */
+      // Now zita(i-1) is put equal to the old zita(i)
       zitam1[im] = zita[im];
-      /* Now zita(i+1) is updated */
+      // Now zita(i+1) is updated 
       zita[im] = gamma;
-      /* Update of alphas(i) = alphas[0](i)*zita(i+1)/zita(i) */ 
+      // Update of alphas(i) = alphas[0](i)*zita(i+1)/zita(i) 
       alphas[im] = alphas[0]*zita[im]/zitam1[im];
-      //if(g_proc_id == 0) printf("cgmms %d %e %e %e %e\n", im, zita[im], zitam1[im], alphas[im], betas[im]);
-      /* Compute xs(i+1) = xs(i) + alphas(i)*ps(i) */
+
+      // Compute xs(i+1) = xs(i) + alphas(i)*ps(i) 
       assign_add_mul_r(Pup[im], ps_mms_solver[2*im], alphas[im], N); 
       assign_add_mul_r(Pdn[im], ps_mms_solver[2*im+1], alphas[im], N);
-      // this is currently arbitrary
-      if(fabs(zita[shifts-1]) < 1.e-60) shifts--;
+      // in the CG the corrections are decreasing with the iteration number increasing
+      // therefore, we can remove shifts when the norm of the correction vector
+      // falls below a threshold
+      // this is useful for computing time and needed, because otherwise
+      // zita might get smaller than DOUBLE_EPS and, hence, zero
+      if(iteration > 0 && (iteration % 20 == 0) && (im == shifts-1)) {
+	double sn = square_norm(ps_mms_solver[2*im], N, 1);
+	sn += square_norm(ps_mms_solver[2*im+1], N, 1);
+	if(alphas[shifts-1]*alphas[shifts-1]*sn <= solver_pm->eps_sq) {
+	  if(g_debug_level > 1 && g_proc_id == 0) {
+	    printf("# CGMMS: at iteration %d removed one shift, %d remaining\n", iteration, shifts);
+	  }
+	  shifts--;
+	}
+      }
     }
-
+    
     /*  Compute x_(i+1) = x_i + alphas[0](i+1) p_i    */
     assign_add_mul_r(Pup[0], solver_field[2],  alphas[0], N);
     assign_add_mul_r(Pdn[0], solver_field[3],  alphas[0], N);
@@ -156,7 +179,7 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
     err = square_norm(solver_field[0], N, 1) + square_norm(solver_field[1], N, 1);
 
     if(g_debug_level > 2 && g_proc_id == g_stdio_proc) {
-      printf("# CGMMS iteration: %d residue: %g %e\n", iteration, err); fflush( stdout );
+      printf("# CGMMS iteration: %d residue: %g\n", iteration, err); fflush( stdout );
     }
 
     if( ((err <= solver_pm->eps_sq) && (solver_pm->rel_prec == 0)) ||
