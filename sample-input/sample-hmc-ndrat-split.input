@@ -1,5 +1,10 @@
 # this is identical to sample-hmc2.input, just
 # using NDRAT instead of NDPOLY
+#
+# identical physical run to sample-hmc-ndrat.input
+# but different algorithmic parameters
+#
+# plaquette value should be 0.64876(3)
 
 L=4
 T=4

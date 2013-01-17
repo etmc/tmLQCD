@@ -312,7 +312,6 @@ int init_ndrat_monomial(const int id) {
   mnl->EVMin = mnl->StildeMin / mnl->StildeMax;
   mnl->EVMax = 1.;
   mnl->EVMaxInv = 1./(sqrt(mnl->StildeMax));
-  //mnl->EVMaxInv = 1.;
 
   if(init_chi_spinor_field(VOLUMEPLUSRAND/2, (mnl->rat.np+1)) != 0) {
     fprintf(stderr, "Not enough memory for Chi fields! Aborting...\n");

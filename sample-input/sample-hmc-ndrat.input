@@ -2,7 +2,7 @@
 # using NDRAT instead of NDPOLY
 # and a different gauge action
 #
-# plaquette value should be 0.64875(5)
+# plaquette value should be 0.64876(3)
 
 L=4
 T=4
