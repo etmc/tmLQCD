@@ -431,18 +431,14 @@ void Qsw_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
     r=l_charm + ix;
     s=k_charm + ix;
     
-    _complex_times_vector(phi1, z, s->s0);
+    _complex_times_vector(phi1, Cpol*z, s->s0);
     _vector_sub_assign(r->s0, phi1);
-    _vector_mul(r->s0, Cpol, r->s0);
-    _complex_times_vector(phi1, z, s->s1);
+    _complex_times_vector(phi1, Cpol*z, s->s1);
     _vector_sub_assign(r->s1, phi1);
-    _vector_mul(r->s1, Cpol, r->s1);
-    _complex_times_vector(phi1, z, s->s2);
+    _complex_times_vector(phi1, Cpol*z, s->s2);
     _vector_sub_assign(r->s2, phi1);
-    _vector_mul(r->s2, Cpol, r->s2);
-    _complex_times_vector(phi1, z, s->s3);
+    _complex_times_vector(phi1, Cpol*z, s->s3);
     _vector_sub_assign(r->s3, phi1);    
-    _vector_mul(r->s3, Cpol, r->s3);
   }
   return;
 }
