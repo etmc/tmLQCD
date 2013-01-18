@@ -119,54 +119,7 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
         }
       }
     }
-    
-//     for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand); ++i)
-//       for (int mu = 0; mu < 4; ++mu)
-//       {
-// 	printf("Sigma_mat(%d, %d, :) = ", i + 1, mu + 1);
-// 	print_su3adj(&tmp_derivative[i][mu]);
-//       }
-// 
-//     for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand); ++i)
-//       for (int mu = 0; mu < 4; ++mu)
-//       {
-// 	printf("U_mat(%d, %d, :, :) = ", i + 1, mu + 1);
-// 	print_su3(&g_gf[i][mu]);
-//       }
-//       
-//     for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand); ++i)
-//       for (int mu = 0; mu < 4; ++mu)
-//       {
-// 	printf("V_mat(%d, %d, :, :) = ", i + 1, mu + 1);
-// 	print_su3(&smearing_control_monomial[s_type]->result[i][mu]);
-//       }
-//
-//     for(int x = 0; x < 2; ++x)
-//       for(int y = 0; y < 2; ++y)
-//         for(int z = 0; z < 2; ++z)
-//           for(int t = 0; t < 2; ++t)
-//             printf("g_ipt(%d, %d, %d, %d) = %d;\n", x+1, y+1, z+1, t+1, g_ipt[x][y][z][t] + 1);
-//     
-//     for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand); ++i)
-//       for (int mu = 0; mu < 4; ++mu)
-//       {
-//         su3 C_mat;
-//         generic_staples(&C_mat, i, mu, g_gf);
-//         printf("C_mat(%d, %d, :, :) = ", i + 1, mu + 1);
-//         print_su3(&C_mat);
-//       }
-// 
-//     stout_control * tt = (stout_control*)(smearing_control_monomial[s_type]->type_control);
-//     printf("\nA[0][0]:\n");
-//     print_su3(&tt->trace[0][0][0].A);
-//     printf("\nexpA[0][0]:\n");
-//     print_su3(&tt->trace[0][0][0].expA);
-//     printf("\nf1 = %f + i%f, f2 = %f + i%f\n", creal(tt->trace[0][0][0].f1), cimag(tt->trace[0][0][0].f1), creal(tt->trace[0][0][0].f2), cimag(tt->trace[0][0][0].f2));
-//     printf("\nB1[0][0]:\n");
-//     print_su3(&tt->trace[0][0][0].B1);
-//     printf("\nB2[0][0]:\n");
-//     print_su3(&tt->trace[0][0][0].B2);
-    
+      
     smear_forces(smearing_control_monomial[s_type], tmp_derivative);
 
     for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand); ++i)
@@ -186,17 +139,19 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
 
   /* Debugging code inserted here */
   su3adj num_eval;
-  calculate_forces_numerically(&num_eval, mnllist, no);
-  double *ar_df = (double*)&df[0][0];
+  int xref = 1;
+  int muref = 1;
+  calculate_forces_numerically(&num_eval, xref, muref, mnllist, no);
+  double *ar_df = (double*)&df[xref][muref];
   double *ar_ne = (double*)&num_eval;
-  fprintf(stderr, "[DEBUG] Comparison of force calculation!\n");
+  fprintf(stderr, "[DEBUG] Comparison of force calculation at (%d, %d)!\n", xref, muref);
   fprintf(stderr, "        Involves monomial types: ");
   for (int monnum = 0; monnum < no; ++monnum)
     fprintf(stderr, "%d ", monomial_list[ mnllist[monnum] ].type);
   fprintf(stderr, "\n");
   fprintf(stderr, "        Analytical vs. numerical\n");
   for (int component = 0; component < 8; ++component)
-    fprintf(stderr, "    [%d]  %+6.4f <-> %+6.4f\n", component, ar_df[component], ar_ne[component]);
+    fprintf(stderr, "    [%d]  %+9.7f <-> %+9.7f\n", component, ar_df[component], ar_ne[component]);
 
 #ifdef OMP
 #pragma omp parallel for

@@ -21,6 +21,6 @@ void print_su3(su3 *in);
 void print_su3adj(su3adj *in);
 void print_config_to_screen(gauge_field_t in);
 
-void calculate_forces_numerically(su3adj *result, int * mnllist, const int no);
+void calculate_forces_numerically(su3adj *result, int const x, int const mu, int * mnllist, const int no);
 
 #include "utils.inline"

@@ -127,5 +127,5 @@ void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Com
     bn2 = -conj(bn2);
   }
   
-  exponent_from_coefficients(B2,    bn0, bn1, bn2, A);
+  exponent_from_coefficients(B2, bn0, bn1, bn2, A);
 }
