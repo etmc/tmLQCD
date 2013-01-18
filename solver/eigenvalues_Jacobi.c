@@ -46,6 +46,7 @@
 #ifdef WITHLAPH
 
 su3_vector *eigenvectors_su3v = NULL;
+su3_vector *_eigenvectors_su3v = NULL;
 double *eigenvls_su3v = NULL;
 double max_eigenvalue_su3v;
 double * inv_eigenvls_su3v = NULL;
@@ -62,7 +63,7 @@ double eigenvalues_Jacobi(int * nr_of_eigenvalues, const int max_iterations,
 #ifdef HAVE_LAPACK
 
 
-  int verbosity = 1, converged = 0, blocksize = 1 , blockwise=0;
+  int verbosity = g_debug_level, converged = 0, blocksize = 1 , blockwise=0;
   int solver_it_max = 50, j_max, j_min;
   double decay_min = 1.7, decay_max = 1.5, prec, threshold_min = 1.e-3, threshold_max = 5.e-2;
   int v0dim = 0;
@@ -121,7 +122,8 @@ double eigenvalues_Jacobi(int * nr_of_eigenvalues, const int max_iterations,
   if(allocated == 0) 
     {
       allocated = 1;
-      eigenvectors_su3v = calloc(N2*(*nr_of_eigenvalues), sizeof(su3_vector));;
+      _eigenvectors_su3v = calloc(N2*(*nr_of_eigenvalues)+1, sizeof(su3_vector));
+      eigenvectors_su3v = (su3_vector*)(((unsigned long int)(_eigenvectors_su3v)+ALIGN_BASE)&~ALIGN_BASE);
       eigenvls_su3v = (double*)malloc((*nr_of_eigenvalues)*sizeof(double));
       inv_eigenvls_su3v = (double*)malloc((*nr_of_eigenvalues)*sizeof(double));
     }
@@ -168,7 +170,7 @@ double eigenvalues_Jacobi(int * nr_of_eigenvalues, const int max_iterations,
   etime = gettime();
   if(g_proc_id == 0) {
     printf("Eigenvalues computed in %e sec. (gettime)\n", etime-atime);
-    }
+  }
 
   
   /* Printout eigenvalues.  */
@@ -179,6 +181,17 @@ double eigenvalues_Jacobi(int * nr_of_eigenvalues, const int max_iterations,
       fprintf(efp,"%e\n",eigenvls_su3v[v0dim]);
     }
     fclose(efp);    
+  }
+
+  if(g_debug_level > 2) {
+    for(int i = 0; i < (*nr_of_eigenvalues); i++) {
+      for(int j = i; j < (*nr_of_eigenvalues); j++) {
+	_Complex double resc = scalar_prod_su3vect(&eigenvectors_su3v[i*N2], &eigenvectors_su3v[j*N2], N, 1);
+	if(g_proc_id == 0) {
+	  printf("<%d,%d> = (%e , %e)\n", i, j, creal(resc), cimag(resc));
+	}
+      }
+    }
   }
 
   /* Printout eigenvectors.  */
