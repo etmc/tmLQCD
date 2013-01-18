@@ -86,3 +86,26 @@ i\mu_i}(-\delta_U \hat Q_h)\frac{1}{\hat Q_h -i\mu_i}\phi\ +\
 (\delta_U \hat Q_h)\frac{1}{\hat Q_h -i\mu_i}\phi\ \right)
 \end{split}
 \]
+
+\subsubsection{Splitting of the Rational}
+
+For preconditioning the fermion determinant it is useful to split the
+rational into several products
+\[
+\mathcal{R}(\hat Q_h^2)\ = r_{0}^{l}(\hat Q_h^2)\cdot r_{l}^{k}(\hat
+Q_h^2)\cdot ...
+\]
+with terms
+\[
+r_{c_0}^{c_1} = \ \prod_{i = c_0}^{c_1} \frac{\hat Q_h^2 +
+  a_{2i-1}}{\hat Q_h^2 + a_{2i}}\,.
+\]
+Every term $r_{c_0}^{c_1}$ can then again be written as a partial
+fraction with the same coefficients as given above. In
+Ref.~\cite{Clark:2006fx} it was shown that the different partial 
+fractions contribute quite differently in their magnitude of the
+corresponding force to the MD evolution: the smallest shifts and,
+therefore, most expensive ones contribute the least to the
+force. Hence, those can be integrated on a larger timescale than the
+larger shifts, which contribute significantly more to the total MD
+force.
