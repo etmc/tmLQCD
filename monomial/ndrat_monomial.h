@@ -1,6 +1,6 @@
 /***********************************************************************
  * 
- * Copyright (C) 2008 Carsten Urbach
+ * Copyright (C) 2013 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
