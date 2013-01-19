@@ -117,7 +117,7 @@ if test $enable_qpx = yes; then
   AC_MSG_RESULT(yes)
   AC_DEFINE(BGQ,1,Compile with QPX intrinsics)
   AC_MSG_NOTICE([Compiling with QPX intrinsics on BGQ, enabling compiler optimizations for XLC.])
-  OPTARGS="-O3 -qstrict=all -qtune=qp -qarch=qp -qmaxmem=-1"
+  OPTARGS="-O2 -qstrict=all -qtune=qp -qarch=qp -qmaxmem=-1"
   SOPTARGS="$OPTARGS" 
 else
   AC_MSG_RESULT(no)
@@ -302,15 +302,17 @@ dnl for the case of other configure scripts
 dnl AC_CONFIG_SUBDIRS( rng )
 
 dnl check for clock_gettime and set correct library flag if one is required
-dnl (as done by AC_CHECK_LIB)
+dnl (this is done by AC_CHECK_LIB)
 AC_CHECK_FUNCS(clock_gettime, [], [AC_CHECK_LIB(rt, clock_gettime)])
 
-
-dnl with glibc and c99 mode the timespec required for clock_gettime is only
-dnl available in POSIX 199309L compatibility mode when clock_gettime is in librt
-if test "$ac_cv_lib_rt_clock_gettime" = "yes"; then
+dnl in principle clock_gettime and CLOCK_MONOTONIC/CLOCK_REALTIME should be available
+dnl only when using POSIX 199309, we set this explicitly here
+dnl this should not cause problems on any relatively modern (post y2k) machine!
+if ( test "$ac_cv_lib_rt_clock_gettime" = "yes" || test "$ac_cv_func_clock_gettime" = "yes" ); then
   AC_DEFINE(HAVE_CLOCK_GETTIME,1)
-  CFLAGS="$CFLAGS -D_POSIX_C_SOURCE=199309L"
+dnl  we set this in gettime.c explicitly for the time being 
+dnl  due to endian problem on BG/Q
+dnl  CFLAGS="$CFLAGS -D_POSIX_C_SOURCE=199309L"
   AC_MSG_NOTICE([Instructing the compiler to use POSIX 199309L])
 fi
 
@@ -623,7 +625,7 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "
     DEBUGFLAG="$DEBUGFLAG -qfullpath"
   fi
 
-  OPTARGS="$OPTARGS -O3"
+  OPTARGS="$OPTARGS"
   SOPTARGS="$OPTARGS"
   if test "$CCDEP" = "gcc"; then
     DEPFLAGS="-MM"
@@ -710,8 +712,8 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_
 elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
   CFLAGS="$CFLAGS -q64 -qsrcmsg"
   LDFLAGS="$LDFLAGS -q64"
-  OPTARGS="-O3 -qhot"
-  SOPTARGS="-O3 -qhot"
+  OPTARGS="-O2"
+  SOPTARGS="-O2"
   DEBUG_FLAG="-qfullpath -g"
   if test "$CCDEP" = "gcc"; then
     DEPFLAGS="-MM"
