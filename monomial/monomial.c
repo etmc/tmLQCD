@@ -100,6 +100,7 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].c0 = 1.;
   monomial_list[no_monomials].beta = _default_g_beta;
   monomial_list[no_monomials].rngrepro = _default_reproduce_randomnumber_flag;
+  monomial_list[no_monomials].ndtrlog = 0;
   /* poly monomial */
   monomial_list[no_monomials].rec_ev = _default_g_rec_ev;
   monomial_list[no_monomials].MDPolyDegree = _default_MDPolyDegree;
@@ -295,8 +296,11 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].derivativefunction = &ndrat_derivative;
 	monomial_list[i].even_odd_flag = 1;
 	monomial_list[i].pf2 = __pf+no*V;
-	no_clovernd_monomials++;
 	no++;
+	if(monomial_list[i].ndtrlog) {
+	  clovernd_monomials[no_clovernd_monomials] = i;
+	  no_clovernd_monomials++;
+	}
 	retval = init_ndrat_monomial(i);
 	if(g_proc_id == 0 && g_debug_level > 1) {
 	  printf("# Initialised monomial of type NDCLOVERRAT, no_monomials= %d\n", no_monomials);
@@ -394,7 +398,7 @@ int init_monomials(const int V, const int even_odd_flag) {
         printf("# Initialised clover_trlog_monomial, no_monomials= %d\n", no_monomials);
       }
     }
-   for( int j = 0; j < no_clovernd_monomials; j++ ) { 
+    for( int j = 0; j < no_clovernd_monomials; j++ ) { 
       monomial_list[no_monomials].type = CLOVERNDTRLOG;
       strcpy( monomial_list[no_monomials].name, "CLOVERNDTRLOG");
       add_monomial(CLOVERNDTRLOG);
@@ -417,7 +421,6 @@ int init_monomials(const int V, const int even_odd_flag) {
       }
     }
   }
-
   return(0);
 }
 

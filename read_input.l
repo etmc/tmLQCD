@@ -953,6 +953,17 @@ inline void rmQuotes(char *str){
   }
 }
 
+<NDCLRATMONOMIAL>{
+  {SPC}*AddTrLog{EQL}yes {
+    mnl->ndtrlog = 1;
+    if(myverbose) printf("  Added NDtrlog monomial in line %d to monomial %d\n", line_of_file, current_monomial);
+  }
+  {SPC}*AddTrLog{EQL}no {
+    mnl->ndtrlog = 0;
+    if(myverbose) printf("  No NDtrlog monomial (default) in line %d for monomial %d\n", line_of_file, current_monomial);
+  }
+}
+
 <NDPOLYMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL>{
   {SPC}*2KappaMubar{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);

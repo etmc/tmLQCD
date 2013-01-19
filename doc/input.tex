@@ -589,7 +589,15 @@ Each of them has different options:
   
 \item {\ttfamily NDCLOVERRAT, NDCLOVERRATCOR}:
   The same as {\ttfamily NDRAT, NDRATCOR}, but with the additional
-  parameter {\ttfamily CSW}.
+  parameter {\ttfamily CSW} and only for {\ttfamily NDCLOVERRAT}
+  \begin{itemize}
+  \item {\ttfamily AddTrLog =yes|no}: adds a clover trlog monomial
+    with the parameters of this monomial. {\ttfamily no} is
+    default. One needs only one trlog monomial per non-degenerate
+    doublet, so one needs to take care in case of frequency splitting
+    of the rational approximation to have this set to {\ttfamily yes}
+    only once.
+  \end{itemize}
 
 \item {\ttfamily POLY, POLYDETRATIO}:
   \begin{itemize}

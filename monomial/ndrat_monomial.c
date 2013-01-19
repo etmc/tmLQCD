@@ -168,8 +168,7 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
     }
   }
   // trlog part does not depend on the normalisation
-  // here we need another mechanism!
-  if(mnl->type == NDCLOVERRAT) {
+  if(mnl->type == NDCLOVERRAT && mnl->ndtrlog) {
     sw_deriv_nd(EE);
     sw_all(hf, mnl->kappa, mnl->c_sw);
   }

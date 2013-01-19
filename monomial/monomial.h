@@ -43,6 +43,10 @@
 #define NDCLOVERRAT 14
 #define NDRATCOR 15
 #define NDCLOVERRATCOR 16
+#define RAT 17
+#define RATCOR 18
+#define CLOVERRAT 19
+#define CLOVERRATCOR 20
 
 #define max_no_monomials 30
 
@@ -60,6 +64,8 @@ typedef struct {
   int csg_N, csg_N2;
   int csg_n, csg_n2;
   int use_rectangles;
+  /* ndtrlog */
+  int ndtrlog;
   int * csg_index_array, *csg_index_array2;
   /* det or detratio related */
   double mu, mu2, kappa, kappa2;
