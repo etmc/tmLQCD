@@ -55,6 +55,7 @@ BeginMonomial NDCLOVERRAT
   ComputeEVFreq = 1
   2KappaEpsBar = 0.0935
   2Kappamubar = 0.1105
+  AddTrLog = yes
 EndMonomial
 
 # correction monomial for approximation error
