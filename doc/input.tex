@@ -367,18 +367,25 @@ EndMonomial
 \item {\ttfamily NDPOLY}: polynomial representation of the (possibly
   non-degenerate) Wilson twisted mass doublet
   \[
-  [\det(Q_{nd}(\bar\epsilon, \bar\mu)^2)]^{1/2}
+  [\det(\hat Q_{h}(\bar\epsilon, \bar\mu)^2)]^{1/2} \approx \det(\mathcal{R}^{-1})
   \]
 \item {\ttfamily NDRAT}: rational representation of the (possibly
   non-degenerate) Wilson twisted mass doublet
   \[
-  [\det(Q_{nd}(\bar\epsilon, \bar\mu)^2)]^{1/2}
+  [\det(\hat Q_{h}(\bar\epsilon, \bar\mu)^2)]^{1/2}
   \]
   with an approximation
   \[
-  R(Q_{nd}^2)\ = \ \prod_{i = 1}^N \frac{Q_{nd}^2 +
-    a_{2i}}{Q_{nd}^2 + a_{2i-1}}\approx\quad\frac{1}{\sqrt{Q_{nd}^2}}
+  \mathcal{R}(Q_{nd}^2)\ = \ \prod_{i = 1}^N \frac{Q_{nd}^2 +
+    a_{2i}}{\hat Q_{h}^2 + a_{2i-1}}\approx\quad\frac{1}{\sqrt{\hat Q_{h}^2}}
   \]
+\item {\ttfamily NDRATCOR}: correction monomial for approximation
+  errors in the rational approximation used in {\ttfamily NDRAT}
+  \[
+  \det\left( \hat Q_h \mathcal{R} \right)\,.
+  \]
+\item {\ttfamily NDCLOVERRAT, NDCLOVERRATCOR}: clover versions of
+  {\ttfamily NDRAT} and {\ttfamily NDRATCOR}, respectively.
 \item {\ttfamily NDCLOVER}: polynomial representation of the (possibly
   non-degenerate) clover twisted mass doublet
   \[
@@ -523,14 +530,66 @@ Each of them has different options:
     upper bound for the approximation interval of the rational approximation
   \item {\ttfamily Cmin}: it is possible to use only pairs of coefficients
     in the range from $[c_a,c_b]$ in order to introduce an frequency
-    splitting. {\ttfamily Cmin} corresponds to $0<c_a\leq N$, where
-    $N$ is the order of the rational approxiamtion.
-  \item {\ttfamily Cmax}: $c_b$, see {\ttfamily Cmin}.
+    splitting. {\ttfamily Cmin} corresponds to $0<c_a< N$, where
+    $N$ is the order of the rational approximation. The ordering of
+    the partial fractions in the rational approximation is such that 
+    \[
+    \mu_0 > \mu_1 > ... > \mu_{N-1}\,,
+    \]
+    and hence $c_a = N-1$ and $c_b = N-1$ would generate a rational
+    with only the smallest and, therefore, most expensive shift (which
+    one would typically integrate on a coarse timescale). $c_a
+    = 0$ and $c_b = k < N$ would correspond to a rational with the
+    $k+1$ largest shifts.
+  \item {\ttfamily Cmax}: $c_b\geq c_a$, see {\ttfamily Cmin}.
   \item {\ttfamily ComputeOnlyEVs}: Computes only once at the very
     beginning of the run the eigenvalues of the heavy split operator
     and exits.
-
+  \item {\ttfamily ForcePrecision}: the CGMMS solver precision used in the
+    force computation
+  \item {\ttfamily AcceptancePrecision}: the CGMMS solver precision used in the
+    acceptance and heatbath
+  \item {\ttfamily MaxSolverIterations}: maximal number of CGMMS
+    solver iterations, default is $5000$.
   \end{itemize}
+  It is important to realise that if the splitting is used, then every
+  partial fraction \emph{must appear once and only once}. Otherwise, the
+  algorithm will not describe the desired physics! Consequently, also
+  the different {\ttfamily NDRAT} monomials from the same rational
+  approximation used for frequency splitting have to have identical
+  order.
+
+\item {\ttfamily NDRATCOR}: correction monomial for approximation
+  errors in the rational approximation for the heavy doublet. This
+  monomial has no derivative part and it is only used in the heatbath
+  and acceptance steps.
+  \begin{itemize}
+  \item {\ttfamily 2KappaMubar}: $2\kappa\bar\mu$ the heavy twisted mass
+  \item {\ttfamily 2KappaEpsbar}: $2\kappa\bar\epsilon$ the heavy
+    splitting
+  \item {\ttfamily Kappa}: the $\kappa$ value
+  \item {\ttfamily DegreeOfRational}: the order $N$ of the rational
+    approximation. \emph{The order must match the order of the corresponding
+    (splitted) {\ttfamily NDRAT} monomial(s).}
+  \item {\ttfamily StildeMin}: lower bound for the approximation
+    interval of the rational approximation
+
+  \item {\ttfamily StildeMax}:
+    upper bound for the approximation interval of the rational approximation
+  \item {\ttfamily ComputeOnlyEVs}: Computes only once at the very
+    beginning of the run the eigenvalues of the heavy split operator
+    and exits.
+  \item {\ttfamily ForcePrecision}: the CGMMS solver precision used in the
+    force computation
+  \item {\ttfamily AcceptancePrecision}: the CGMMS solver precision used in the
+    acceptance and heatbath
+  \item {\ttfamily MaxSolverIterations}: maximal number of CGMMS
+    solver iterations, default is $5000$.
+  \end{itemize}
+  
+\item {\ttfamily NDCLOVERRAT, NDCLOVERRATCOR}:
+  The same as {\ttfamily NDRAT, NDRATCOR}, but with the additional
+  parameter {\ttfamily CSW}.
 
 \item {\ttfamily POLY, POLYDETRATIO}:
   \begin{itemize}
@@ -660,7 +719,9 @@ where {\ttfamily TYPE} can be currently one of the following:
   \begin{itemize}
   \item {\ttfamily MaxSolverIterations}
   \end{itemize}
-  this is for zero temperature, so the stochastic source is at fixed $t$.
+  this is for zero temperature, so the stochastic source is at fixed
+  $t$. In addition it needs an operator defined in the input file,
+  otherwise it will do nothing.
 \item {\ttfamily PIONNORM}:
   \begin{itemize}
   \item {\ttfamily MaxSolverIterations}
@@ -693,8 +754,6 @@ kappa = 0.090
 PhmcRecEVInterval = 1
 Nsave = 50
 ThetaT = 1.
-BCGstabMaxIter = 5000
-CGMaxIter = 1000
 InitialStoreCounter = readin
 UseEvenOdd = yes
 ReversibilityCheck = no
@@ -754,6 +813,16 @@ BeginIntegrator
   Lambda0 = 0.19
   NumberOfTimescales = 3
 EndIntegrator
+
+# for the CORRELATORS online measurement
+BeginOperator TMWILSON
+  2kappaMu = 0.177
+  kappa = 0.177
+  UseEvenOdd = yes
+  Solver = CG
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 1000
+EndOperator
 \end{verbatim}
 
 There are realistic small volume sample input files in the
