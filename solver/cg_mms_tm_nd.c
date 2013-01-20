@@ -91,12 +91,12 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
   alphas[0] = 1.0;
   betas[0] = 0.0;
   sigma[0] = solver_pm->shifts[0]*solver_pm->shifts[0];
-  if(g_proc_id == 0 && g_debug_level > 2) printf("shift %d is %e\n", 0, sigma[0]);
+  if(g_proc_id == 0 && g_debug_level > 2) printf("# CGMMSND: shift %d is %e\n", 0, sigma[0]);
 
   /* currently only implemented for P=0 */
   for(int im = 1; im < shifts; im++) {
     sigma[im] = solver_pm->shifts[im]*solver_pm->shifts[im] - sigma[0];
-    if(g_proc_id == 0 && g_debug_level > 2) printf("shift %d is %e\n", im, sigma[im]);
+    if(g_proc_id == 0 && g_debug_level > 2) printf("# CGMMSND: shift %d is %e\n", im, sigma[im]);
     // these will be the result spinor fields
     zero_spinor_field(Pup[im], N);
     zero_spinor_field(Pdn[im], N);
@@ -159,10 +159,10 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
 	double sn = square_norm(ps_mms_solver[2*im], N, 1);
 	sn += square_norm(ps_mms_solver[2*im+1], N, 1);
 	if(alphas[shifts-1]*alphas[shifts-1]*sn <= solver_pm->eps_sq) {
-	  if(g_debug_level > 1 && g_proc_id == 0) {
-	    printf("# CGMMS: at iteration %d removed one shift, %d remaining\n", iteration, shifts);
-	  }
 	  shifts--;
+	  if(g_debug_level > 2 && g_proc_id == 0) {
+	    printf("# CGMMSND: at iteration %d removed one shift, %d remaining\n", iteration, shifts);
+	  }
 	}
       }
     }
@@ -179,7 +179,7 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
     err = square_norm(solver_field[0], N, 1) + square_norm(solver_field[1], N, 1);
 
     if(g_debug_level > 2 && g_proc_id == g_stdio_proc) {
-      printf("# CGMMS iteration: %d residue: %g\n", iteration, err); fflush( stdout );
+      printf("# CGMMSND iteration: %d residue: %g\n", iteration, err); fflush( stdout );
     }
 
     if( ((err <= solver_pm->eps_sq) && (solver_pm->rel_prec == 0)) ||
