@@ -32,5 +32,6 @@ typedef struct {
 } rational_t;
 
 int init_rational(rational_t * rat);
+int free_rational(rational_t * rat);
 
 #endif

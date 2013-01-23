@@ -93,3 +93,14 @@ int init_rational(rational_t * rat) {
 }
 
 
+int free_rational(rational_t * rat) {
+  free(rat->mu);
+  free(rat->nu);
+  free(rat->rmu);
+  free(rat->rnu);
+  rat->mu = NULL;
+  rat->nu = NULL;
+  rat->rmu = NULL;
+  rat->rnu = NULL;
+  return(0);
+}
