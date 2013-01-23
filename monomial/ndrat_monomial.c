@@ -56,6 +56,8 @@ void nd_set_global_parameter(monomial * const mnl) {
   phmc_invmaxev = mnl->EVMaxInv;
   phmc_cheb_evmax = 1.;
   phmc_Cpol = 1.;
+  // used for preconditioning in cloverdetrat
+  g_mu3 = 0.;
 
   return;
 }
@@ -187,7 +189,6 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   atime = gettime();
   nd_set_global_parameter(mnl);
   mnl->iter1 = 0;
-  g_mu3 = 0.;
   if(mnl->type == NDCLOVERRAT) {
     init_sw_fields();
     sw_term((const su3**)hf->gaugefield, mnl->kappa, mnl->c_sw); 
@@ -259,7 +260,6 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
   double atime, etime;
   atime = gettime();
   nd_set_global_parameter(mnl);
-  g_mu3 = 0.;
   if(mnl->type == NDCLOVERRAT) {
     sw_term((const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
     sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
