@@ -7,7 +7,13 @@ static void construct_intermediates(stout_notes_tuple *trace, gauge_field_t cons
      Eventually, perhaps we can modify the cayley_hamilton_exponent_with_force_terms, the exponent_from_coefficients and this routine consistently
      so that the different parameters absorb the coefficients correctly. We need to be careful with the symmetry properties used code when we do,
      however, and B1 and B2 still need to be shifted by overall factors. Another option is simply rewriting everything in terms of the hermitian
-     matrix Q... */
+     matrix Q... 
+  
+  /* NOTE #2
+     Still another issue... P&M have a hermitian projection, whereas BMW use an anti-hermitian projection. This is an irreducable difference
+     between the two algorithms. One possibility is, that all the coefficients pick up an additional factor of I. We'll experiment with this.
+     It appears one also needs to add a factor i to Z, presumably coming from the chain derivative of Q to A.
+  */
   
   _Complex double mat_trace;
   su3 ALIGN t1;
@@ -16,13 +22,15 @@ static void construct_intermediates(stout_notes_tuple *trace, gauge_field_t cons
   for (unsigned int x = 0; x < VOLUME; ++x)
     for (unsigned int mu = 0; mu < 4; ++mu)
     {
-      /* Construct the BMW Sigma (V^\dagger * \frac{\partial S}{\partial V} */
-      _su3d_times_su3(trace[x][mu].Sigma, V[x][mu], smeared_force[x][mu]);
+      /* The factor of V[x][mu] has been taken out earlier, but we still need a copy of the forces.
+         We're moving it into Sigma for that reason.
+      */
+      memmove(&trace[x][mu].Sigma, &smeared_force[x][mu], sizeof(su3));
 
       /* t2 == - Tr[U * Sigma * B2] * A */
       _su3_times_su3(t1, trace[x][mu].Sigma, trace[x][mu].B2);
       _trace_su3_times_su3(mat_trace, U[x][mu], t1);
-      _complex_times_su3(t2, -mat_trace, trace[x][mu].A);
+      _complex_times_su3(t2, - mat_trace, trace[x][mu].A);
 
       /* Z == ( -i * Tr[U * Sigma * B1] - Tr[U * Sigma * B2] * A ) * A */
       _su3_times_su3(t1, trace[x][mu].Sigma, trace[x][mu].B1);
@@ -35,7 +43,7 @@ static void construct_intermediates(stout_notes_tuple *trace, gauge_field_t cons
       _complex_times_su3(t2, trace[x][mu].f1, t1);
       _su3_plus_su3(trace[x][mu].Z, t2, trace[x][mu].Z);
 
-      /* Z == (-i * Tr[U * Sigma * B1] - Tr[U * Sigma * B2] * A ) * A  + f_1 * U * Sigma - i * f2 * U * Sigma * A */
+      /* Z == ( -i * Tr[U * Sigma * B1] - Tr[U * Sigma * B2] * A ) * A  + f_1 * U * Sigma - i * f2 * U * Sigma * A */
       _su3_times_su3(t2, t1, trace[x][mu].A);
       _complex_times_su3(t2, -I * trace[x][mu].f2, t2);
       _su3_plus_su3(trace[x][mu].Z, t2, trace[x][mu].Z);

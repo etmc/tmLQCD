@@ -86,21 +86,20 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
   /* FIXME Enter the simplest deviation from identity that will work */
   g_gf[0][0].c00 = I;
   g_gf[0][0].c11 = -I;
-  
+
   ohnohack_remap_df0(tmp_derivative); /* FIXME Such that we can aggregate results per smearing type. */
   for (int s_ctr = 0; s_ctr < no_relevant_smearings; ++s_ctr)
   {
     int s_type = relevant_smearings[s_ctr];
-    
+
     smear(smearing_control_monomial[s_type], g_gf);
     zero_adjoint_field(&tmp_derivative);
     ohnohack_remap_g_gauge_field(smearing_control_monomial[s_type]->result);
-    
+
     for(int k = 0; k < no; k++)
     {
       if (monomial_list[ mnllist[k] ].smearing == s_type)
       {
-        
         if(monomial_list[ mnllist[k] ].derivativefunction != NULL)
         {
 #ifdef MPI
@@ -119,7 +118,7 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
         }
       }
     }
-      
+
     smear_forces(smearing_control_monomial[s_type], tmp_derivative);
 
     for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand); ++i)
@@ -139,8 +138,8 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
 
   /* Debugging code inserted here */
   su3adj num_eval;
-  int xref = 1;
-  int muref = 1;
+  int xref = 0;
+  int muref = 0;
   calculate_forces_numerically(&num_eval, xref, muref, mnllist, no);
   double *ar_df = (double*)&df[xref][muref];
   double *ar_ne = (double*)&num_eval;
@@ -149,9 +148,9 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
   for (int monnum = 0; monnum < no; ++monnum)
     fprintf(stderr, "%d ", monomial_list[ mnllist[monnum] ].type);
   fprintf(stderr, "\n");
-  fprintf(stderr, "        Analytical vs. numerical\n");
+  fprintf(stderr, "           Analytical  vs.  numerical\n");
   for (int component = 0; component < 8; ++component)
-    fprintf(stderr, "    [%d]  %+9.7f <-> %+9.7f\n", component, ar_df[component], ar_ne[component]);
+    fprintf(stderr, "    [%d]  %+12.7f <-> %+12.7f\n", component, ar_df[component], ar_ne[component]);
 
 #ifdef OMP
 #pragma omp parallel for

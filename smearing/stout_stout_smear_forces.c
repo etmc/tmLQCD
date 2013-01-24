@@ -16,7 +16,8 @@ void stout_smear_forces(stout_control *control, adjoint_field_t in)
   
   /* We'll need the forces in their tangent space representation, so let's first build this up. */
   adjoint_to_gauge(&smeared_force, in);
-  
+  unfold_field(&smeared_force, control->U[control->iterations]);
+      
   /* The modifications are done backwards, all the time peeling off one layer of stouting... */
   for (unsigned int iter = control->iterations; iter > 0; --iter)
   {
@@ -25,6 +26,7 @@ void stout_smear_forces(stout_control *control, adjoint_field_t in)
   }
 
   /* The force terms are still in the tangent space representation, so project them back to the adjoint one */
+  fold_field(&smeared_force, control->U[0]);
   gauge_to_adjoint(&control->force_result, smeared_force);
   generic_exchange(&control->force_result, sizeof(su3adj_tuple));
 

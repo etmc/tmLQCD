@@ -49,12 +49,14 @@ libsmear_TARGETS = 	ape_ape_smear \
 			stout_stout_smear_forces \
 			utils_cayley_hamilton_exponent_with_force_terms \
 			utils_calculate_forces_numerically \
+			utils_fold_field \
 			utils_generic_staples \
 			utils_print_config_to_screen \
 			utils_print_su3 \
 			utils_print_su3adj \
 			utils_project_traceless_antiherm \
-			utils_reunitarize
+			utils_reunitarize \
+			utils_unfold_field
 
 libsmear_OBJECTS = $(addsuffix .o, ${libsmear_TARGETS})
 

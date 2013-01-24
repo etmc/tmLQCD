@@ -543,7 +543,7 @@ _sse_store_up(r);
 #define _su3d_times_su3(u,v,w) _sse_su3d_times_su3(u,v,w)
 #define _su3d_times_su3_acc(u,v,w) _sse_su3d_times_su3_acc(u,v,w)
 #define _su3_times_su3d(u,v,w) _sse_su3_times_su3d(u,v,w)
-#define _su3_times_su3d_acc(u,v,w) _sse_su3_times_su3d_acc(u,v,w)  
+#define _su3_times_su3d_acc(u,v,w) _sse_su3_times_su3d_acc(u,v,w)
 
 #else
 
@@ -614,6 +614,18 @@ _sse_store_up(r);
   (u).c22 += conj((v).c02) * (w).c02 + conj((v).c12) * (w).c12 + conj((v).c22) * (w).c22;
 
 #endif
+
+#define _su3d_times_su3d(u,v,w)						\
+  (u).c00 =  conj((v).c00) * conj((w).c00) + conj((v).c10) * conj((w).c01) + conj((v).c20) * conj((w).c02); \
+  (u).c01 =  conj((v).c00) * conj((w).c10) + conj((v).c10) * conj((w).c11) + conj((v).c20) * conj((w).c12); \
+  (u).c02 =  conj((v).c00) * conj((w).c20) + conj((v).c10) * conj((w).c21) + conj((v).c20) * conj((w).c22); \
+  (u).c10 =  conj((v).c01) * conj((w).c00) + conj((v).c11) * conj((w).c01) + conj((v).c21) * conj((w).c02); \
+  (u).c11 =  conj((v).c01) * conj((w).c10) + conj((v).c11) * conj((w).c11) + conj((v).c21) * conj((w).c12); \
+  (u).c12 =  conj((v).c01) * conj((w).c20) + conj((v).c11) * conj((w).c21) + conj((v).c21) * conj((w).c22); \
+  (u).c20 =  conj((v).c02) * conj((w).c00) + conj((v).c12) * conj((w).c01) + conj((v).c22) * conj((w).c02); \
+  (u).c21 =  conj((v).c02) * conj((w).c10) + conj((v).c12) * conj((w).c11) + conj((v).c22) * conj((w).c12); \
+  (u).c22 =  conj((v).c02) * conj((w).c20) + conj((v).c12) * conj((w).c21) + conj((v).c22) * conj((w).c22);
+
 
 #define _trace_su3_times_su3d(x,v,w)	\
   x =   (v).c00 * conj((w).c00)		\
