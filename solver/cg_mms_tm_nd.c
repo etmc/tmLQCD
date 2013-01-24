@@ -30,7 +30,7 @@
  * parameters:
  * shifts are given to the solver in solver_pm->shifts
  * number of shifts is in solver_pm->no_shifts
- * the operator to invert in solver_pm->g
+ * the operator to invert in solver_pm->M_ndpsi
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -66,14 +66,14 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
 		 solver_pm_t * solver_pm) {
 
   static double normsq, pro, err, squarenorm;
-  int iteration, N = solver_pm->N, shifts = solver_pm->no_shifts;
+  int iteration, N = solver_pm->sdim, shifts = solver_pm->no_shifts;
   static double gamma, alpham1;
   spinor ** solver_field = NULL;
   double atime, etime;
   const int nr_sf = 4;
 
   atime = gettime();
-  if(solver_pm->N == VOLUME) {
+  if(solver_pm->sdim == VOLUME) {
     init_solver_field(&solver_field, VOLUMEPLUSRAND, 2*nr_sf);
   } 
   else {
@@ -121,7 +121,7 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
   for(iteration = 0; iteration < solver_pm->max_iter; iteration++) {
 
     /*   Q^2*p and then (p,Q^2*p)  */
-    solver_pm->g(solver_field[6], solver_field[7], solver_field[2], solver_field[3]);
+    solver_pm->M_ndpsi(solver_field[6], solver_field[7], solver_field[2], solver_field[3]);
     // add the zero's shift
     assign_add_mul_r(solver_field[6], solver_field[2], sigma[0], N);
     assign_add_mul_r(solver_field[7], solver_field[3], sigma[0], N);
@@ -158,7 +158,7 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
       if(iteration > 0 && (iteration % 20 == 0) && (im == shifts-1)) {
 	double sn = square_norm(ps_mms_solver[2*im], N, 1);
 	sn += square_norm(ps_mms_solver[2*im+1], N, 1);
-	if(alphas[shifts-1]*alphas[shifts-1]*sn <= solver_pm->eps_sq) {
+	if(alphas[shifts-1]*alphas[shifts-1]*sn <= solver_pm->squared_solver_prec) {
 	  shifts--;
 	  if(g_debug_level > 2 && g_proc_id == 0) {
 	    printf("# CGMMSND: at iteration %d removed one shift, %d remaining\n", iteration, shifts);
@@ -182,8 +182,8 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
       printf("# CGMMSND iteration: %d residue: %g\n", iteration, err); fflush( stdout );
     }
 
-    if( ((err <= solver_pm->eps_sq) && (solver_pm->rel_prec == 0)) ||
-	((err <= solver_pm->eps_sq*squarenorm) && (solver_pm->rel_prec > 0)) ||
+    if( ((err <= solver_pm->squared_solver_prec) && (solver_pm->rel_prec == 0)) ||
+	((err <= solver_pm->squared_solver_prec*squarenorm) && (solver_pm->rel_prec > 0)) ||
         (iteration == solver_pm->max_iter -1) ) {
       break;
     }
@@ -208,7 +208,7 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
   if(iteration == solver_pm->max_iter -1) iteration = -1;
   else iteration++;
   if(g_debug_level > 0 && g_proc_id == 0) {
-    printf("# CGMMS (%d shifts): iter: %d eps_sq: %1.4e %1.4e t/s\n", solver_pm->no_shifts, iteration, solver_pm->eps_sq, etime - atime); 
+    printf("# CGMMS (%d shifts): iter: %d eps_sq: %1.4e %1.4e t/s\n", solver_pm->no_shifts, iteration, solver_pm->squared_solver_prec, etime - atime); 
   }
   
   finalize_solver(solver_field, 2*nr_sf);

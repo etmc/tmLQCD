@@ -91,14 +91,14 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   mnl->forcefactor = mnl->EVMaxInv;
 
   solver_pm.max_iter = mnl->maxiter;
-  solver_pm.eps_sq = mnl->forceprec;
+  solver_pm.squared_solver_prec = mnl->forceprec;
   solver_pm.no_shifts = mnl->rat.np;
   solver_pm.shifts = mnl->rat.mu;
   solver_pm.rel_prec = g_relative_precision_flag;
   solver_pm.type = CGMMSND;
-  solver_pm.g = &Qtm_pm_ndpsi;
-  if(mnl->type == NDCLOVERRAT) solver_pm.g = &Qsw_pm_ndpsi;
-  solver_pm.N = VOLUME/2;
+  solver_pm.M_ndpsi = &Qtm_pm_ndpsi;
+  if(mnl->type == NDCLOVERRAT) solver_pm.M_ndpsi = &Qsw_pm_ndpsi;
+  solver_pm.sdim = VOLUME/2;
   // this generates all X_j,o (odd sites only) -> g_chi_up|dn_spinor_field
   mnl->iter1 += cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 			     mnl->pf, mnl->pf2,
@@ -209,13 +209,13 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   mnl->energy0 += square_norm(mnl->pf2, VOLUME/2, 1);
   // set solver parameters
   solver_pm.max_iter = mnl->maxiter;
-  solver_pm.eps_sq = mnl->accprec;
+  solver_pm.squared_solver_prec = mnl->accprec;
   solver_pm.no_shifts = mnl->rat.np;
   solver_pm.shifts = mnl->rat.nu;
   solver_pm.type = CGMMSND;
-  solver_pm.g = &Qtm_pm_ndpsi;
-  if(mnl->type == NDCLOVERRAT) solver_pm.g = &Qsw_pm_ndpsi;
-  solver_pm.N = VOLUME/2;
+  solver_pm.M_ndpsi = &Qtm_pm_ndpsi;
+  if(mnl->type == NDCLOVERRAT) solver_pm.M_ndpsi = &Qsw_pm_ndpsi;
+  solver_pm.sdim = VOLUME/2;
   solver_pm.rel_prec = g_relative_precision_flag;
   mnl->iter0 = cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 			     mnl->pf, mnl->pf2, &solver_pm);
@@ -267,13 +267,13 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
   mnl->energy1 = 0.;
 
   solver_pm.max_iter = mnl->maxiter;
-  solver_pm.eps_sq = mnl->accprec;
+  solver_pm.squared_solver_prec = mnl->accprec;
   solver_pm.no_shifts = mnl->rat.np;
   solver_pm.shifts = mnl->rat.mu;
   solver_pm.type = CGMMSND;
-  solver_pm.g = &Qtm_pm_ndpsi;
-  if(mnl->type == NDCLOVERRAT) solver_pm.g = &Qsw_pm_ndpsi;
-  solver_pm.N = VOLUME/2;
+  solver_pm.M_ndpsi = &Qtm_pm_ndpsi;
+  if(mnl->type == NDCLOVERRAT) solver_pm.M_ndpsi = &Qsw_pm_ndpsi;
+  solver_pm.sdim = VOLUME/2;
   solver_pm.rel_prec = g_relative_precision_flag;
   mnl->iter0 += cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 			     mnl->pf, mnl->pf2,

@@ -41,10 +41,23 @@
 #include "solver/matrix_mult_typedef_nd.h"
 
 typedef struct {
-  int max_iter, rel_prec, type, no_shifts, N;
-  double eps_sq;
-  matrix_mult f;
-  matrix_mult_nd g;
+  // solver type
+  int type;
+  // maximal number of iterations
+  int max_iter;
+  // use relative precision
+  int rel_prec;
+  // number of shifts in multi shift solvers
+  int no_shifts;
+  // dimension of spinors
+  int sdim;
+  // squared desired residue
+  double squared_solver_prec;
+  // single flavour matrix to invert
+  matrix_mult M_psi;
+  // flavour doublet matrix to invert
+  matrix_mult_nd M_ndpsi;
+  // pointer to array of shifts
   double * shifts;
 } solver_pm_t;
 
