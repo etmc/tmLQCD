@@ -289,6 +289,37 @@ int init_monomials(const int V, const int even_odd_flag) {
 	  printf("# Initialised monomial of type NDRAT, no_monomials= %d\n", no_monomials);
 	}
       }
+      else if(monomial_list[i].type == RAT) {
+	monomial_list[i].hbfunction = &rat_heatbath;
+	monomial_list[i].accfunction = &rat_acc;
+	monomial_list[i].derivativefunction = &rat_derivative;
+	monomial_list[i].even_odd_flag = 1;
+	monomial_list[i].mu = 0.;
+	monomial_list[i].Qsq = &Qtm_pm_psi;
+	monomial_list[i].Qp = &Qtm_plus_psi;
+	monomial_list[i].Qm = &Qtm_minus_psi;
+	retval = init_ndrat_monomial(i);
+	if(g_proc_id == 0 && g_debug_level > 1) {
+	  printf("# Initialised monomial of type RAT, no_monomials= %d\n", no_monomials);
+	}
+      }
+      else if(monomial_list[i].type == CLOVERRAT) {
+	monomial_list[i].hbfunction = &rat_heatbath;
+	monomial_list[i].accfunction = &rat_acc;
+	monomial_list[i].derivativefunction = &rat_derivative;
+	monomial_list[i].even_odd_flag = 1;
+	monomial_list[i].mu = 0.;
+	monomial_list[i].Qsq = &Qsw_pm_psi;
+	monomial_list[i].Qp = &Qsw_plus_psi;
+	monomial_list[i].Qm = &Qsw_minus_psi;
+	init_swpm(VOLUME);
+	clover_monomials[no_clover_monomials] = i;
+	no_clover_monomials++;
+	retval = init_ndrat_monomial(i);
+	if(g_proc_id == 0 && g_debug_level > 1) {
+	  printf("# Initialised monomial of type CLOVERRAT, no_monomials= %d\n", no_monomials);
+	}
+      }
       else if(monomial_list[i].type == NDCLOVERRAT) {
 	init_swpm(VOLUME);
 	monomial_list[i].hbfunction = &ndrat_heatbath;
@@ -322,6 +353,7 @@ int init_monomials(const int V, const int even_odd_flag) {
 	}
       }
       else if(monomial_list[i].type == NDCLOVERRATCOR) {
+	init_swpm(VOLUME);
 	monomial_list[i].hbfunction = &ndratcor_heatbath;
 	monomial_list[i].accfunction = &ndratcor_acc;
 	monomial_list[i].derivativefunction = NULL;
@@ -334,6 +366,39 @@ int init_monomials(const int V, const int even_odd_flag) {
 	retval = init_ndrat_monomial(i);
 	if(g_proc_id == 0 && g_debug_level > 1) {
 	  printf("# Initialised monomial of type NDCLOVERRATCOR, no_monomials= %d\n", no_monomials);
+	}
+      }
+      else if(monomial_list[i].type == RATCOR) {
+	monomial_list[i].hbfunction = &ratcor_heatbath;
+	monomial_list[i].accfunction = &ratcor_acc;
+	monomial_list[i].derivativefunction = NULL;
+	monomial_list[i].even_odd_flag = 1;
+	monomial_list[i].Qsq = &Qtm_pm_psi;
+	monomial_list[i].Qp = &Qtm_plus_psi;
+	monomial_list[i].Qm = &Qtm_minus_psi;	
+	monomial_list[i].rat.crange[0] = 0;
+        monomial_list[i].rat.crange[1] = monomial_list[i].rat.order-1;
+	monomial_list[i].mu = 0.;
+	retval = init_ndrat_monomial(i);
+	if(g_proc_id == 0 && g_debug_level > 1) {
+	  printf("# Initialised monomial of type RATCOR, no_monomials= %d\n", no_monomials);
+	}
+      }
+      else if(monomial_list[i].type == CLOVERRATCOR) {
+	init_swpm(VOLUME);
+	monomial_list[i].hbfunction = &ratcor_heatbath;
+	monomial_list[i].accfunction = &ratcor_acc;
+	monomial_list[i].derivativefunction = NULL;
+	monomial_list[i].even_odd_flag = 1;
+	monomial_list[i].Qsq = &Qsw_pm_psi;
+	monomial_list[i].Qp = &Qsw_plus_psi;
+	monomial_list[i].Qm = &Qsw_minus_psi;
+	monomial_list[i].mu = 0.;
+	monomial_list[i].rat.crange[0] = 0;
+        monomial_list[i].rat.crange[1] = monomial_list[i].rat.order-1;
+	retval = init_ndrat_monomial(i);
+	if(g_proc_id == 0 && g_debug_level > 1) {
+	  printf("# Initialised monomial of type CLOVERRATCOR, no_monomials= %d\n", no_monomials);
 	}
       }
       else if(monomial_list[i].type == NDDETRATIO) {

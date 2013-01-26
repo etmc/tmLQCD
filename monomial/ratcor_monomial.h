@@ -1,5 +1,5 @@
 /***********************************************************************
- *
+ * 
  * Copyright (C) 2013 Carsten Urbach
  *
  * This file is part of tmLQCD.
@@ -17,21 +17,12 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
+#ifndef _RATCOR_MONOMIAL_H
+#define _RATCOR_MONOMIAL_H
 
-#ifndef _RATIONAL_H
-#define _RATIONAL_H
+#include "hamiltonian_field.h"
 
-typedef struct {
-  int order, np;
-  int crange[2];
-  double range[2];
-  double eps;
-  double A, delta;
-  double *mu,*rmu;
-  double *nu,*rnu;
-} rational_t;
-
-int init_rational(rational_t * rat, const unsigned int scale);
-int free_rational(rational_t * rat);
+double ratcor_acc(const int id, hamiltonian_field_t * const hf);
+void ratcor_heatbath(const int id, hamiltonian_field_t * const hf);
 
 #endif

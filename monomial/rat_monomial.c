@@ -45,15 +45,6 @@
 #include "phmc.h"
 #include "rat_monomial.h"
 
-// DEBUG: we should use here the not normalised operators
-//        and, therefore, rescale the coefficients in the rational
-//        approximation!
-//
-// DEBUG: light CGMMS solver needs to be re-written for 
-//        this here
-//
-// This monomial can only work for mnl->mu = 0!
-// Hence, we have to ensure it in init_monomial
 
 /********************************************
  *
@@ -64,13 +55,14 @@
 void rat_derivative(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   solver_pm_t solver_pm;
-  double atime, etime;
+  double atime, etime, dummy;
   atime = gettime();
   g_mu = 0;
   g_mu3 = 0.;
   boundary(mnl->kappa);
 
   if(mnl->type == CLOVERRAT) {
+    g_c_sw = mnl->c_sw;
     for(int i = 0; i < VOLUME; i++) { 
       for(int mu = 0; mu < 4; mu++) { 
 	_su3_zero(swm[i][mu]);
@@ -95,8 +87,8 @@ void rat_derivative(const int id, hamiltonian_field_t * const hf) {
   solver_pm.M_psi = mnl->Qsq;
   solver_pm.sdim = VOLUME/2;
   // this generates all X_j,o (odd sites only) -> g_chi_up|dn_spinor_field
-  //mnl->iter1 += cg_mms_tm(g_chi_up_spinor_field, mnl->pf,
-  //		     &solver_pm);
+  mnl->iter1 += cg_mms_tm(g_chi_up_spinor_field, mnl->pf,
+			  &solver_pm, &dummy);
   
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     mnl->Qp(mnl->w_fields[0], g_chi_up_spinor_field[j]);
@@ -152,17 +144,17 @@ void rat_derivative(const int id, hamiltonian_field_t * const hf) {
 void rat_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   solver_pm_t solver_pm;
-  double atime, etime;
+  double atime, etime, dummy;
   atime = gettime();
   // only for non-twisted operators
   g_mu = 0.;
   g_mu3 = 0.;
-  mnl->mu = 0.;
   boundary(mnl->kappa);
 
   mnl->iter1 = 0;
   g_mu3 = 0.;
   if(mnl->type == CLOVERRAT) {
+    g_c_sw = mnl->c_sw;
     init_sw_fields();
     sw_term((const su3**)hf->gaugefield, mnl->kappa, mnl->c_sw); 
     sw_invert(EE, mnl->mu);
@@ -187,14 +179,14 @@ void rat_heatbath(const int id, hamiltonian_field_t * const hf) {
   solver_pm.M_psi = mnl->Qsq;
   solver_pm.sdim = VOLUME/2;
   solver_pm.rel_prec = g_relative_precision_flag;
-  //mnl->iter0 = cg_mms_tm_nd(g_chi_up_spinor_field, mnl->pf,
-  //			     &solver_pm);
+  mnl->iter0 = cg_mms_tm(g_chi_up_spinor_field, mnl->pf,
+			 &solver_pm, &dummy);
 
   assign(mnl->w_fields[2], mnl->pf, VOLUME/2);
 
   // apply C to the random field to generate pseudo-fermion fields
   for(int j = (mnl->rat.np-1); j > -1; j--) {
-    // Q^m - i nu_j
+    // Q - i nu_j (not twisted mass term, so Qp=Qm=Q
     mnl->Qp(g_chi_up_spinor_field[mnl->rat.np], g_chi_up_spinor_field[j]);
     assign_add_mul(g_chi_up_spinor_field[mnl->rat.np], g_chi_up_spinor_field[j], -I*mnl->rat.nu[j], VOLUME/2);
     assign_add_mul(mnl->pf, g_chi_up_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
@@ -216,13 +208,14 @@ void rat_heatbath(const int id, hamiltonian_field_t * const hf) {
 double rat_acc(const int id, hamiltonian_field_t * const hf) {
   solver_pm_t solver_pm;
   monomial * mnl = &monomial_list[id];
-  double atime, etime;
+  double atime, etime, dummy;
   atime = gettime();
   // only for non-twisted operators
   g_mu = 0.;
   g_mu3 = 0.;
   boundary(mnl->kappa);
   if(mnl->type == CLOVERRAT) {
+    g_c_sw = mnl->c_sw;
     sw_term((const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
     sw_invert(EE, mnl->mu);
   }
@@ -236,8 +229,8 @@ double rat_acc(const int id, hamiltonian_field_t * const hf) {
   solver_pm.M_psi = mnl->Qsq;
   solver_pm.sdim = VOLUME/2;
   solver_pm.rel_prec = g_relative_precision_flag;
-  //mnl->iter0 += cg_mms_tm_nd(g_chi_up_spinor_field, mnl->pf,
-  //		     &solver_pm);
+  mnl->iter0 += cg_mms_tm(g_chi_up_spinor_field, mnl->pf,
+			  &solver_pm, &dummy);
 
   // apply R to the pseudo-fermion fields
   assign(mnl->w_fields[0], mnl->pf, VOLUME/2);
