@@ -373,11 +373,12 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       shifts[0]=g_mu;
       for(int i = 0; i < no_extra_masses; ++i)
         shifts[i+1] = extra_masses[i];
-    
+      g_mu = 0;
       solver_pm_t solver_params;
       solver_params.shifts = shifts;
       solver_params.no_shifts = no_extra_masses+1;
       solver_params.rel_prec = rel_prec;
+      solver_params.max_iter = max_iter;
       solver_params.squared_solver_prec = precision;
       solver_params.sdim = VOLUME;
       solver_params.M_psi = &Q_pm_psi;
@@ -392,6 +393,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       
       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
       iter = cg_mms_tm(P, g_spinor_field[DUM_DERI+1],&solver_params,&cgmms_reached_prec);
+      g_mu = shifts[0];
       Q_minus_psi(g_spinor_field[DUM_DERI+1], P[0]);
       
       cgmms_write_props(P,shifts,no_extra_masses+1,id,iter);
