@@ -34,22 +34,26 @@
 // order is the order n of the rational approximation [n,n]
 // ca and cb specify the range of monomials to use (0 to order-1)
 
-int init_rational(rational_t * rat) {
+int init_rational(rational_t * rat, const unsigned int scale) {
   int order = rat->order;
   double * ars = malloc(2*order*sizeof(double));
   double * ar;
   double pmu, pnu;
   double a = rat->range[0], b = rat->range[1];
+  double sb = 1.;
   int ca = rat->crange[0], cb = rat->crange[1];
 
   // sanity check of input parameters
-  if(ca > order-1 || cb > order-1 || ca < 0 || cb < 0 || ca > cb || order < 1) {
+  if(ca > order-1 || cb > order-1 || ca < 0 || cb < 0 || ca > cb || order < 1||
+     b < a || b < 0 || a < 0) {
     fprintf(stderr, "parameters to init_rational out of range\n");
-    fprintf(stderr, "ca = %d, cb = %d, order = %d\n", ca, cb, order);
+    fprintf(stderr, "ca = %d, cb = %d, order = %d, a = %e, b = %e\n", ca, cb, order, a, b);
     return(-1);
   }
   int np = cb - ca + 1;
-
+  if(scale) {
+    sb = sqrt(b);
+  }
   rat->np = np;
   if(((rat->mu = (double*)malloc(np*sizeof(double))) == NULL)  ||
      ((rat->rmu = (double*)malloc(np*sizeof(double))) == NULL) ||
@@ -62,6 +66,7 @@ int init_rational(rational_t * rat) {
 
   // compute optimal zolotarev approximation
   zolotarev(order, rat->eps, &rat->A, ars, &rat->delta);
+  rat->A /= sb;
   if(g_proc_id == 0 && g_debug_level > 0) {
     printf("# rational approximation of order %d generated with max deviation delta = %e\n", rat->order, rat->delta);
   }
@@ -69,8 +74,8 @@ int init_rational(rational_t * rat) {
   ar = ars + 2*ca;
   // compute mu[] and nu[] = sqrt(ar), mu: r even, nu: r odd
   for (int i = 0; i < np; i++) {
-    rat->mu[np-i-1] = sqrt(ar[2*i + 1]);
-    rat->nu[np-i-1] = sqrt(ar[2*i]);
+    rat->mu[np-i-1] = sb*sqrt(ar[2*i + 1]);
+    rat->nu[np-i-1] = sb*sqrt(ar[2*i]);
   }
   // compute the partial fraction coefficients rmu and rnu
   for (int i = 0; i < np; i++) {  
@@ -84,7 +89,7 @@ int init_rational(rational_t * rat) {
       }
     }
 
-    rat->rmu[np-i-1] = (ar[2*i]-ar[2*i+1])*pmu;
+    rat->rmu[np-i-1] = sb*sb*(ar[2*i]-ar[2*i+1])*pmu;
     rat->rnu[i] = (rat->mu[i]-rat->nu[i])*pnu;
   }
 
