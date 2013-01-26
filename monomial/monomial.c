@@ -100,7 +100,7 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].c0 = 1.;
   monomial_list[no_monomials].beta = _default_g_beta;
   monomial_list[no_monomials].rngrepro = _default_reproduce_randomnumber_flag;
-  monomial_list[no_monomials].ndtrlog = 0;
+  monomial_list[no_monomials].trlog = 0;
   /* poly monomial */
   monomial_list[no_monomials].rec_ev = _default_g_rec_ev;
   monomial_list[no_monomials].MDPolyDegree = _default_MDPolyDegree;
@@ -313,8 +313,10 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].Qp = &Qsw_plus_psi;
 	monomial_list[i].Qm = &Qsw_minus_psi;
 	init_swpm(VOLUME);
-	clover_monomials[no_clover_monomials] = i;
-	no_clover_monomials++;
+	if(monomial_list[i].trlog) {
+	  clover_monomials[no_clover_monomials] = i;
+	  no_clover_monomials++;
+	}
 	retval = init_ndrat_monomial(i);
 	if(g_proc_id == 0 && g_debug_level > 1) {
 	  printf("# Initialised monomial of type CLOVERRAT, no_monomials= %d\n", no_monomials);
@@ -328,7 +330,7 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].even_odd_flag = 1;
 	monomial_list[i].pf2 = __pf+no*V;
 	no++;
-	if(monomial_list[i].ndtrlog) {
+	if(monomial_list[i].trlog) {
 	  clovernd_monomials[no_clovernd_monomials] = i;
 	  no_clovernd_monomials++;
 	}

@@ -170,8 +170,10 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
     }
   }
   // trlog part does not depend on the normalisation
-  if(mnl->type == NDCLOVERRAT && mnl->ndtrlog) {
+  if(mnl->type == NDCLOVERRAT && mnl->trlog) {
     sw_deriv_nd(EE);
+  }
+  if(mnl->type == NDCLOVERRAT) {
     sw_all(hf, mnl->kappa, mnl->c_sw);
   }
   etime = gettime();
@@ -307,7 +309,9 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
 int init_ndrat_monomial(const int id) {
   monomial * mnl = &monomial_list[id];  
 
-
+  mnl->EVMin = mnl->StildeMin / mnl->StildeMax;
+  mnl->EVMax = 1.;
+  mnl->EVMaxInv = 1./(sqrt(mnl->StildeMax));
 
   if(mnl->type == RAT || mnl->type == CLOVERRAT ||
      mnl->type == RATCOR || mnl->type == CLOVERRATCOR) {

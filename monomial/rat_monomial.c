@@ -73,9 +73,9 @@ void rat_derivative(const int id, hamiltonian_field_t * const hf) {
     // we compute the clover term (1 + T_ee(oo)) for all sites x
     sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
     // we invert it for the even sites only
-    sw_invert(EE, mnl->mu);
+    sw_invert(EE, 0.);
   }
-  //mnl->forcefactor = mnl->EVMaxInv;
+  //mnl->forcefactor = mnl->EVMaxInv*mnl->EVMaxInv;
   mnl->forcefactor = 1.;
 
   solver_pm.max_iter = mnl->maxiter;
@@ -86,7 +86,7 @@ void rat_derivative(const int id, hamiltonian_field_t * const hf) {
   solver_pm.type = CGMMS;
   solver_pm.M_psi = mnl->Qsq;
   solver_pm.sdim = VOLUME/2;
-  // this generates all X_j,o (odd sites only) -> g_chi_up|dn_spinor_field
+  // this generates all X_j,o (odd sites only) -> g_chi_up_spinor_field
   mnl->iter1 += cg_mms_tm(g_chi_up_spinor_field, mnl->pf,
 			  &solver_pm, &dummy);
   
@@ -97,13 +97,21 @@ void rat_derivative(const int id, hamiltonian_field_t * const hf) {
       // to get the even sites of X_e
       H_eo_sw_inv_psi(mnl->w_fields[2], g_chi_up_spinor_field[j], EO, -mnl->mu);
       // \delta Q sandwitched by Y_o^\dagger and X_e
-      deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
+      deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, 
+	       mnl->rat.rmu[j]*mnl->forcefactor); 
       
       // to get the even sites of Y_e
       H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, mnl->mu);
       // \delta Q sandwitched by Y_e^\dagger and X_o
       // uses the gauge field in hf and changes the derivative fields in hf
-      deriv_Sb(EO, mnl->w_fields[3], g_chi_up_spinor_field[j], hf, mnl->forcefactor);
+      deriv_Sb(EO, mnl->w_fields[3], g_chi_up_spinor_field[j], hf, 
+	       mnl->rat.rmu[j]*mnl->forcefactor);
+
+      // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
+      sw_spinor(EE, mnl->w_fields[2], mnl->w_fields[3], mnl->rat.rmu[j]*mnl->forcefactor);
+  
+      // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
+      sw_spinor(OO, mnl->w_fields[0], g_chi_up_spinor_field[j], mnl->rat.rmu[j]*mnl->forcefactor);
 
     }
     else {
@@ -111,26 +119,20 @@ void rat_derivative(const int id, hamiltonian_field_t * const hf) {
       /* to get the even sites of X_e */
       H_eo_tm_inv_psi(mnl->w_fields[2], g_chi_up_spinor_field[j], EO, -1.);
       /* \delta Q sandwitched by Y_o^\dagger and X_e */
-      deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
+      deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, 
+	       mnl->rat.rmu[j]*mnl->forcefactor); 
       
       /* to get the even sites of Y_e */
       H_eo_tm_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1);
       /* \delta Q sandwitched by Y_e^\dagger and X_o */
-      deriv_Sb(EO, mnl->w_fields[3], g_chi_up_spinor_field[j], hf, mnl->forcefactor);
-    }
-
-    if(mnl->type == CLOVERRAT) {
-      // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
-      sw_spinor(EE, mnl->w_fields[2], mnl->w_fields[3], mnl->forcefactor);
-  
-      // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-      sw_spinor(OO, mnl->w_fields[0], g_chi_up_spinor_field[j], mnl->forcefactor);
+      deriv_Sb(EO, mnl->w_fields[3], g_chi_up_spinor_field[j], hf, 
+	       mnl->rat.rmu[j]*mnl->forcefactor);
     }
   }
-  // trlog part does not depend on the normalisation
-  // here we need another mechanism!
+  if(mnl->type == CLOVERRAT  && mnl->trlog) {
+    sw_deriv(EE, 0.);
+  }
   if(mnl->type == CLOVERRAT) {
-    sw_deriv(EE, mnl->mu);
     sw_all(hf, mnl->kappa, mnl->c_sw);
   }
   etime = gettime();
@@ -157,11 +159,11 @@ void rat_heatbath(const int id, hamiltonian_field_t * const hf) {
     g_c_sw = mnl->c_sw;
     init_sw_fields();
     sw_term((const su3**)hf->gaugefield, mnl->kappa, mnl->c_sw); 
-    sw_invert(EE, mnl->mu);
+    sw_invert(EE, 0.);
   }
   // we measure before the trajectory!
   if((mnl->rec_ev != 0) && (hf->traj_counter%mnl->rec_ev == 0)) {
-    //if(mnl->type != NDCLOVERRAT) phmc_compute_ev(hf->traj_counter-1, id, &Qtm_pm_ndbipsi);
+    //if(mnl->type != CLOVERRAT) phmc_compute_ev(hf->traj_counter-1, id, &Qtm_pm_ndbipsi);
     //else phmc_compute_ev(hf->traj_counter-1, id, &Qsw_pm_ndbipsi);
   }
 
@@ -198,7 +200,7 @@ void rat_heatbath(const int id, hamiltonian_field_t * const hf) {
       printf("# Time for %s monomial heatbath: %e s\n", mnl->name, etime-atime);
     }
     if(g_debug_level > 3) { 
-      printf("called ndrat_heatbath for id %d energy %f\n", id, mnl->energy0);
+      printf("called rat_heatbath for id %d energy %f\n", id, mnl->energy0);
     }
   }
   return;
@@ -217,7 +219,7 @@ double rat_acc(const int id, hamiltonian_field_t * const hf) {
   if(mnl->type == CLOVERRAT) {
     g_c_sw = mnl->c_sw;
     sw_term((const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
-    sw_invert(EE, mnl->mu);
+    sw_invert(EE, 0.);
   }
   mnl->energy1 = 0.;
 
@@ -246,7 +248,7 @@ double rat_acc(const int id, hamiltonian_field_t * const hf) {
       printf("# Time for %s monomial acc step: %e s\n", mnl->name, etime-atime);
     }
     if(g_debug_level > 0) { // shoud be 3
-      printf("called ndrat_acc for id %d dH = %1.10e\n", id, mnl->energy1 - mnl->energy0);
+      printf("called rat_acc for id %d dH = %1.10e\n", id, mnl->energy1 - mnl->energy0);
     }
   }
   return(mnl->energy1 - mnl->energy0);

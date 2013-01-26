@@ -65,7 +65,10 @@ void ratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
   double coefs[6] = {1./4., -3./32., 7./122., -77./2048., 231./8192., -1463./65536.};
   atime = gettime();
   nd_set_global_parameter(mnl);
+  g_mu = 0.;
   g_mu3 = 0.;
+  g_kappa = mnl->kappa;
+  boundary(mnl->kappa);
   if(mnl->type == CLOVERRATCOR) {
     g_c_sw = mnl->c_sw;
     init_sw_fields();
@@ -126,7 +129,10 @@ double ratcor_acc(const int id, hamiltonian_field_t * const hf) {
   double coefs[6] = {-1./2., 3./8., -5./16., 35./128., -63./256., 231./1024.};
   atime = gettime();
   nd_set_global_parameter(mnl);
+  g_mu = 0.;
   g_mu3 = 0.;
+  g_kappa = mnl->kappa;
+  boundary(mnl->kappa);
   if(mnl->type == CLOVERRATCOR) {
     g_c_sw = mnl->c_sw;
     sw_term((const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 

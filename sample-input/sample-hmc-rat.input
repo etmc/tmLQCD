@@ -1,0 +1,86 @@
+
+L=4
+T=4
+Measurements = 10
+StartCondition = hot
+2KappaMu = 0.01
+kappa = 0.170
+NSave = 500000
+ThetaT = 1
+UseEvenOdd = yes
+ReversibilityCheck = yes
+ReversibilityCheckIntervall = 100
+InitialStoreCounter = 0
+DebugLevel = 4
+OmpNumThreads = 1
+ReproduceRandomNumbers = yes
+
+BeginMeasurement CORRELATORS
+  Frequency = 2
+EndMeasurement
+
+BeginMonomial GAUGE
+  Type = tlsym
+  beta = 3.30
+  Timescale = 0
+EndMonomial
+
+BeginMonomial DET
+  Timescale = 1
+  2KappaMu = 0.01
+  kappa = 0.170
+  AcceptancePrecision =  1e-20
+  ForcePrecision = 1e-12
+  Name = det
+  Solver = CG
+EndMonomial
+
+# single Wilson or Wilson clover fermion
+# not for twisted fermions
+BeginMonomial RAT
+  Timescale = 1
+  kappa = 0.170
+  AcceptancePrecision =  1e-20
+  ForcePrecision = 1e-12
+  StildeMin = 0.013577
+  StildeMax = 3.096935
+  Name = rat
+  DegreeOfRational = 12
+  Cmin = 0
+  Cmax = 11
+  ComputeEVFreq = 1
+EndMonomial
+
+# correction monomial for approximation error
+BeginMonomial RATCOR
+  Timescale = 1
+  kappa = 0.170
+  AcceptancePrecision =  1e-20
+  ForcePrecision = 1e-12
+  StildeMin = 0.013577
+  StildeMax = 3.096935
+  Name = ratcor
+  DegreeOfRational = 12
+  ComputeEVFreq = 0
+EndMonomial
+
+BeginIntegrator 
+  Type0 = 2MN
+  Type1 = 2MN
+  IntegrationSteps0 = 2
+  IntegrationSteps1 = 8
+  Tau = 1
+  Lambda0 = 0.19
+  Lambda1 = 0.20
+  NumberOfTimescales = 2
+EndIntegrator
+
+BeginOperator TMWILSON
+  2kappaMu = 0.0
+  kappa = 0.170
+  UseEvenOdd = yes
+  Solver = CG
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 1000
+EndOperator
+

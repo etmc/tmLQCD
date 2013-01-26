@@ -64,8 +64,8 @@ typedef struct {
   int csg_N, csg_N2;
   int csg_n, csg_n2;
   int use_rectangles;
-  /* ndtrlog */
-  int ndtrlog;
+  /* trlog */
+  int trlog;
   int * csg_index_array, *csg_index_array2;
   /* det or detratio related */
   double mu, mu2, kappa, kappa2;

@@ -983,12 +983,12 @@ inline void rmQuotes(char *str){
 
 <NDCLRATMONOMIAL,CLRATMONOMIAL>{
   {SPC}*AddTrLog{EQL}yes {
-    mnl->ndtrlog = 1;
-    if(myverbose) printf("  Added NDtrlog monomial in line %d to monomial %d\n", line_of_file, current_monomial);
+    mnl->trlog = 1;
+    if(myverbose) printf("  Added trlog monomial in line %d to monomial %d\n", line_of_file, current_monomial);
   }
   {SPC}*AddTrLog{EQL}no {
-    mnl->ndtrlog = 0;
-    if(myverbose) printf("  No NDtrlog monomial (default) in line %d for monomial %d\n", line_of_file, current_monomial);
+    mnl->trlog = 0;
+    if(myverbose) printf("  No trlog monomial (default) in line %d for monomial %d\n", line_of_file, current_monomial);
   }
 }
 
