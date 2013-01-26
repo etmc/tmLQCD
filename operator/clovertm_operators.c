@@ -202,10 +202,10 @@ void clover_inv(const int ieo, spinor * const l, const double mu) {
     _vector_assign(phi1,(*rn).s0);
     _vector_assign(phi3,(*rn).s2);
 
-    w1=&sw_inv[icy][0][0];
-    w2=w1+2;  /* &sw_inv[icy][1][0]; */
-    w3=w1+4;  /* &sw_inv[icy][2][0]; */
-    w4=w1+6;  /* &sw_inv[icy][3][0]; */
+    w1 = &sw_inv[icy][0][0];
+    w2 = &sw_inv[icy][0][1];
+    w3 = &sw_inv[icy][0][2];
+    w4 = &sw_inv[icy][0][3];
     _su3_multiply(psi,*w1,phi1); 
     _su3_multiply(chi,*w2,(*rn).s1);
     _vector_add((*rn).s0,psi,chi);
@@ -213,10 +213,10 @@ void clover_inv(const int ieo, spinor * const l, const double mu) {
     _su3_multiply(chi,*w3,(*rn).s1);
     _vector_add((*rn).s1,psi,chi);
 
-    w1++; /* &sw_inv[icy][0][1]; */
-    w2++; /* &sw_inv[icy][1][1]; */
-    w3++; /* &sw_inv[icy][2][1]; */
-    w4++; /* &sw_inv[icy][3][1]; */
+    w1 = &sw_inv[icy][1][0];
+    w2 = &sw_inv[icy][1][1];
+    w3 = &sw_inv[icy][1][2];
+    w4 = &sw_inv[icy][1][3];
     _su3_multiply(psi,*w1,phi3); 
     _su3_multiply(chi,*w2,(*rn).s3);
     _vector_add((*rn).s2,psi,chi);
@@ -266,10 +266,10 @@ void clover_inv_nd(const int ieo, spinor * const l_c, spinor * const l_s) {
     rn_c = l_c + icx;
     _vector_assign(phi1,(*rn_s).s0);
 
-    w1=&sw_inv[icy][0][0];
-    w2=w1+2;  /* &sw_inv[icy][1][0]; */
-    w3=w1+4;  /* &sw_inv[icy][2][0]; */
-    w4=w1+6;  /* &sw_inv[icy][3][0]; */
+    w1 = &sw_inv[icy][0][0];
+    w2 = &sw_inv[icy][0][1];
+    w3 = &sw_inv[icy][0][2];
+    w4 = &sw_inv[icy][0][3];
     _su3_multiply(psi, *w1, phi1); 
     _su3_multiply(chi, *w2, (*rn_s).s1);
     _vector_add((*rn_s).s0, psi,chi);
@@ -288,10 +288,10 @@ void clover_inv_nd(const int ieo, spinor * const l_c, spinor * const l_s) {
 
     _vector_assign(phi3,(*rn_s).s2);
 
-    w1++; /* &sw_inv[icy][0][1]; */
-    w2++; /* &sw_inv[icy][1][1]; */
-    w3++; /* &sw_inv[icy][2][1]; */
-    w4++; /* &sw_inv[icy][3][1]; */
+    w1 = &sw_inv[icy][1][0];
+    w2 = &sw_inv[icy][1][1];
+    w3 = &sw_inv[icy][1][2];
+    w4 = &sw_inv[icy][1][3];
     _su3_multiply(psi, *w1, phi3); 
     _su3_multiply(chi, *w2, (*rn_s).s3);
     _vector_add((*rn_s).s2, psi, chi);
@@ -364,9 +364,9 @@ void clover_gamma5(const int ieo,
     s = k + icx-ioff;
     t = j + icx-ioff;
     
-    w1=&sw[ix][0][0];
-    w2=w1+2; /*&sw[ix][1][0];*/
-    w3=w1+4; /*&sw[ix][2][0];*/
+    w1 = &sw[ix][0][0];
+    w2 = &sw[ix][0][1];
+    w3 = &sw[ix][0][2];
     _su3_multiply(psi1,*w1,(*s).s0); 
     _su3_multiply(chi,*w2,(*s).s1);
     _vector_add_assign(psi1,chi);
@@ -380,9 +380,9 @@ void clover_gamma5(const int ieo,
     _vector_sub((*r).s0,psi1,(*t).s0);
     _vector_sub((*r).s1,psi2,(*t).s1);
     
-    w1++; /*=&sw[ix][0][1];*/
-    w2++; /*=&sw[ix][1][1];*/
-    w3++; /*=&sw[ix][2][1];*/
+    w1 = &sw[ix][1][0];
+    w2 = &sw[ix][1][1];
+    w3 = &sw[ix][1][2];
     _su3_multiply(psi1,*w1,(*s).s2); _su3_multiply(chi,*w2,(*s).s3);
     _vector_add_assign(psi1,chi); 
     _su3_inverse_multiply(psi2,*w2,(*s).s2); _su3_multiply(chi,*w3,(*s).s3);
@@ -445,9 +445,9 @@ void clover(const int ieo,
     t = j + icx-ioff;
 
     // upper two spin components first
-    w1=&sw[ix][0][0];
-    w2=w1+2; /*&sw[ix][1][0];*/
-    w3=w1+4; /*&sw[ix][2][0];*/
+    w1 = &sw[ix][0][0];
+    w2 = &sw[ix][0][1];
+    w3 = &sw[ix][0][2];
     _su3_multiply(psi1,*w1,(*s).s0); 
     _su3_multiply(chi,*w2,(*s).s1);
     _vector_add_assign(psi1,chi);
@@ -463,9 +463,9 @@ void clover(const int ieo,
     _vector_sub((*r).s1,psi2,(*t).s1);
 
     // now lower to spin components
-    w1++; /*=&sw[ix][0][1];*/
-    w2++; /*=&sw[ix][1][1];*/
-    w3++; /*=&sw[ix][2][1];*/
+    w1 = &sw[ix][1][0];
+    w2 = &sw[ix][1][1];
+    w3 = &sw[ix][1][2];
     _su3_multiply(psi1,*w1,(*s).s2); 
     _su3_multiply(chi,*w2,(*s).s3);
     _vector_add_assign(psi1,chi); 
@@ -534,9 +534,9 @@ void clover_nd(const int ieo,
     t_c = j_c + icx-ioff;
 
     // upper two spin components first
-    w1=&sw[ix][0][0];
-    w2=w1+2; /*&sw[ix][1][0];*/
-    w3=w1+4; /*&sw[ix][2][0];*/
+    w1 = &sw[ix][0][0];
+    w2 = &sw[ix][0][1];
+    w3 = &sw[ix][0][2];
     _su3_multiply(psi1, *w1, (*s_s).s0); 
     _su3_multiply(chi, *w2, (*s_s).s1);
     _vector_add_assign(psi1, chi);
@@ -573,9 +573,9 @@ void clover_nd(const int ieo,
 
 
     // now lower to spin components
-    w1++; /*=&sw[ix][0][1];*/
-    w2++; /*=&sw[ix][1][1];*/
-    w3++; /*=&sw[ix][2][1];*/
+    w1 = &sw[ix][1][0];
+    w2 = &sw[ix][1][1];
+    w3 = &sw[ix][1][2];
     _su3_multiply(psi1, *w1, (*s_s).s2); 
     _su3_multiply(chi, *w2, (*s_s).s3);
     _vector_add_assign(psi1, chi); 
@@ -653,9 +653,9 @@ void clover_gamma5_nd(const int ieo,
     t_c = j_c + icx-ioff;
 
     // upper two spin components first
-    w1=&sw[ix][0][0];
-    w2=w1+2; /*&sw[ix][1][0];*/
-    w3=w1+4; /*&sw[ix][2][0];*/
+    w1 = &sw[ix][0][0];
+    w2 = &sw[ix][0][1];
+    w3 = &sw[ix][0][2];
     _su3_multiply(psi1, *w1, (*s_s).s0); 
     _su3_multiply(chi, *w2, (*s_s).s1);
     _vector_add_assign(psi1, chi);
@@ -692,9 +692,9 @@ void clover_gamma5_nd(const int ieo,
 
 
     // now lower to spin components
-    w1++; /*=&sw[ix][0][1];*/
-    w2++; /*=&sw[ix][1][1];*/
-    w3++; /*=&sw[ix][2][1];*/
+    w1 = &sw[ix][1][0];
+    w2 = &sw[ix][1][1];
+    w3 = &sw[ix][1][2];
     _su3_multiply(psi1, *w1, (*s_s).s2); 
     _su3_multiply(chi, *w2, (*s_s).s3);
     _vector_add_assign(psi1, chi); 
@@ -779,9 +779,9 @@ void assign_mul_one_sw_pm_imu(const int ieo,
     s = l + icx-ioff;
 
     // upper two spin components first
-    w1=&sw[ix][0][0];
-    w2=w1+2; /*&sw[ix][1][0];*/
-    w3=w1+4; /*&sw[ix][2][0];*/
+    w1 = &sw[ix][0][0];
+    w2 = &sw[ix][0][1];
+    w3 = &sw[ix][0][2];
     _su3_multiply(psi1,*w1,(*s).s0); 
     _su3_multiply(chi,*w2,(*s).s1);
     _vector_add_assign(psi1,chi);
@@ -797,9 +797,9 @@ void assign_mul_one_sw_pm_imu(const int ieo,
     _vector_assign((*r).s1, psi2);
 
     // now lower to spin components
-    w1++; /*=&sw[ix][0][1];*/
-    w2++; /*=&sw[ix][1][1];*/
-    w3++; /*=&sw[ix][2][1];*/
+    w1 = &sw[ix][1][0];
+    w2 = &sw[ix][1][1];
+    w3 = &sw[ix][1][2];
     _su3_multiply(psi1,*w1,(*s).s2); 
     _su3_multiply(chi,*w2,(*s).s3);
     _vector_add_assign(psi1,chi); 
@@ -867,9 +867,9 @@ void assign_mul_one_sw_pm_imu_eps(const int ieo,
     s_c = l_c + icx-ioff;
 
     // upper two spin components first
-    w1=&sw[ix][0][0];
-    w2=w1+2; /*&sw[ix][1][0];*/
-    w3=w1+4; /*&sw[ix][2][0];*/
+    w1 = &sw[ix][0][0];
+    w2 = &sw[ix][1][0];
+    w3 = &sw[ix][2][0];
     _su3_multiply(psi1, *w1, (*s_s).s0); 
     _su3_multiply(chi, *w2, (*s_s).s1);
     _vector_add_assign(psi1, chi);
@@ -905,9 +905,9 @@ void assign_mul_one_sw_pm_imu_eps(const int ieo,
     _vector_assign((*r_c).s1, psi2);
 
     // now lower two spin components
-    w1++; /*=&sw[ix][0][1];*/
-    w2++; /*=&sw[ix][1][1];*/
-    w3++; /*=&sw[ix][2][1];*/
+    w1 = &sw[ix][0][1];
+    w2 = &sw[ix][1][1];
+    w3 = &sw[ix][2][1];
     _su3_multiply(psi1, *w1, (*s_s).s2); 
     _su3_multiply(chi, *w2, (*s_s).s3);
     _vector_add_assign(psi1, chi); 
@@ -974,10 +974,10 @@ void assign_mul_one_sw_pm_imu_inv(const int ieo,
     _vector_assign(phi1,(*rn).s0);
     _vector_assign(phi3,(*rn).s2);
 
-    w1=&sw_inv[icx][0][0];
-    w2=w1+2;  /* &sw_inv[icx][1][0]; */
-    w3=w1+4;  /* &sw_inv[icx][2][0]; */
-    w4=w1+6;  /* &sw_inv[icx][3][0]; */
+    w1 = &sw_inv[icx][0][0];
+    w2 = &sw_inv[icx][0][1];
+    w3 = &sw_inv[icx][0][2];
+    w4 = &sw_inv[icx][0][3];
     _su3_multiply(psi,*w1,phi1); 
     _su3_multiply(chi,*w2,(*rn).s1);
     _vector_add((*s).s0,psi,chi);
@@ -985,10 +985,10 @@ void assign_mul_one_sw_pm_imu_inv(const int ieo,
     _su3_multiply(chi,*w3,(*rn).s1);
     _vector_add((*s).s1,psi,chi);
 
-    w1++; /* &sw_inv[icx][0][1]; */
-    w2++; /* &sw_inv[icx][1][1]; */
-    w3++; /* &sw_inv[icx][2][1]; */
-    w4++; /* &sw_inv[icx][3][1]; */
+    w1 = &sw_inv[icx][1][0];
+    w2 = &sw_inv[icx][1][1];
+    w3 = &sw_inv[icx][1][2];
+    w4 = &sw_inv[icx][1][3];
     _su3_multiply(psi,*w1,phi3); 
     _su3_multiply(chi,*w2,(*rn).s3);
     _vector_add((*s).s2,psi,chi);
@@ -1026,10 +1026,10 @@ void init_sw_fields() {
     if((void*)(sw_inv = (su3***)calloc(V, sizeof(su3**))) == NULL) {
       fprintf (stderr, "sw_inv malloc err\n"); 
     }
-    if((void*)(sw1 = (su3**)calloc(3*V, sizeof(su3*))) == NULL) {
+    if((void*)(sw1 = (su3**)calloc(2*V, sizeof(su3*))) == NULL) {
       fprintf (stderr, "sw1 malloc err\n"); 
     }
-    if((void*)(sw_inv1 = (su3**)calloc(4*V, sizeof(su3*))) == NULL) {
+    if((void*)(sw_inv1 = (su3**)calloc(2*V, sizeof(su3*))) == NULL) {
       fprintf (stderr, "sw_inv1 malloc err\n"); 
     }
     if((void*)(_sw = (su3*)calloc(3*2*V+1, sizeof(su3))) == NULL) {
@@ -1041,24 +1041,24 @@ void init_sw_fields() {
     sw[0] = sw1;
     sw_inv[0] = sw_inv1;
     for(int i = 1; i < V; i++) {
-      sw[i] = sw[i-1]+3;
-      sw_inv[i] = sw_inv[i-1]+4;
+      sw[i] = sw[i-1]+2;
+      sw_inv[i] = sw_inv[i-1]+2;
     }
     sw[0][0] = (su3*)(((unsigned long int)(_sw)+ALIGN_BASE)&~ALIGN_BASE);
     sw_inv[0][0] = (su3*)(((unsigned long int)(_sw_inv)+ALIGN_BASE)&~ALIGN_BASE);
     tmp = sw[0][0];
     for(int i = 0; i < V; i++) {
-      for(int j = 0; j < 3; j++) {
+      for(int j = 0; j < 2; j++) {
 	sw[i][j] = tmp;
-	tmp = tmp+2;
+	tmp = tmp+3;
       }
     }
     
     tmp = sw_inv[0][0];
     for(int i = 0; i < V; i++) {
-      for(int j = 0; j < 4; j++) {
+      for(int j = 0; j < 2; j++) {
 	sw_inv[i][j] = tmp;
-	tmp = tmp+2;
+	tmp = tmp+4;
       }
     }
     sw_init = 1;

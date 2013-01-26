@@ -147,11 +147,11 @@ double sw_trace(const int ieo, const double mu) {
   for(int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
     x = g_eo2lexic[icx];
     for(i=0;i<2;i++) {
-      populate_6x6_matrix(a, &sw[x][0][i], 0, 0);
-      populate_6x6_matrix(a, &sw[x][1][i], 0, 3);
-      _su3_dagger(v, sw[x][1][i]); 
+      populate_6x6_matrix(a, &sw[x][i][0], 0, 0);
+      populate_6x6_matrix(a, &sw[x][i][1], 0, 3);
+      _su3_dagger(v, sw[x][i][1]); 
       populate_6x6_matrix(a, &v, 3, 0);
-      populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
+      populate_6x6_matrix(a, &sw[x][i][2], 3, 3);
       // we add the twisted mass term
       if(i == 0) add_tm(a, mu);
       else add_tm(a, -mu);
@@ -235,11 +235,11 @@ double sw_trace_nd(const int ieo, const double mu, const double eps) {
   for(unsigned int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
     x = g_eo2lexic[icx];
     for(unsigned int i = 0; i < 2; i++) {
-      populate_6x6_matrix(a, &sw[x][0][i], 0, 0);
-      populate_6x6_matrix(a, &sw[x][1][i], 0, 3);
-      _su3_dagger(v, sw[x][1][i]); 
+      populate_6x6_matrix(a, &sw[x][i][0], 0, 0);
+      populate_6x6_matrix(a, &sw[x][i][1], 0, 3);
+      _su3_dagger(v, sw[x][i][1]); 
       populate_6x6_matrix(a, &v, 3, 0);
-      populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
+      populate_6x6_matrix(a, &sw[x][i][2], 3, 3);
       // we add the twisted mass term prop to tau^3
       if(i == 0) add_tm(a, mu);
       else add_tm(a, -mu);
