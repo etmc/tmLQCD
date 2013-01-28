@@ -54,7 +54,7 @@ void random_spinor_field_eo(spinor * const k, const int repro, const enum RN_TYP
 
 void unit_g_gauge_field(void);
 
-void random_gauge_field(const int repro);
+void random_gauge_field(const int repro, su3 ** const gf);
 
 double random_su3adj_field(const int repro, su3adj ** const momenta);
 
