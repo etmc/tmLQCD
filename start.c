@@ -426,7 +426,7 @@ void unit_g_gauge_field(void)
 }
 
 
-void random_gauge_field(const int repro) {
+void random_gauge_field(const int repro, su3 ** const gf) {
 
   int ix, mu, t0, t, x, X, y, Y, z, Z;
   int id = 0; /* May not be initialized for scalar builds! */
@@ -465,7 +465,7 @@ void random_gauge_field(const int repro) {
 	    for(mu = 0; mu < 4; mu++) {
 	      if(g_cart_id == id) {
 		ix = g_ipt[t][X][Y][Z];
-		random_su3(&g_gauge_field[ix][mu]);
+		random_su3(&gf[ix][mu]);
 	      }
 	      else {
 		random_su3(&tmp);
@@ -484,7 +484,7 @@ void random_gauge_field(const int repro) {
   else {
     for (ix = 0; ix < VOLUME; ix++) {
       for (mu = 0; mu < 4; mu++) {
-	random_su3(&g_gauge_field[ix][mu]);
+	random_su3(&gf[ix][mu]);
       }
     }
   }

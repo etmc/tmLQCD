@@ -250,7 +250,7 @@ int main(int argc,char *argv[])
 
   xlfInfo = construct_paramsXlfInfo(0.5, 0);
 
-  random_gauge_field(reproduce_randomnumber_flag);
+  random_gauge_field(reproduce_randomnumber_flag, g_gauge_field);
   if ( startoption == 2 ) {  /* restart */ 
     write_gauge_field(gauge_input_filename,gauge_precision_write_flag,xlfInfo);
   } else if ( startoption == 0 ) { /* cold */
