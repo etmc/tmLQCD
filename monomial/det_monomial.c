@@ -47,7 +47,7 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   double atime, etime;
   atime = gettime();
-  (*mnl).forcefactor = 1.;
+  mnl->forcefactor = 1.;
 
   if(mnl->even_odd_flag) {
     /*********************************************************************

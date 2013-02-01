@@ -29,7 +29,6 @@
 #include "init_chi_spinor_field.h"
 
 spinor * sp_up = NULL;
-spinor * sp_dn = NULL;
 
 static int chi_initialised = 0;
 
@@ -41,20 +40,15 @@ int init_chi_spinor_field(const int V, const int nr) {
     free_chi_spinor_field();
     _nr = nr;
     chi_initialised = 1;
-    if((void*)(sp_up = (spinor*)calloc(nr*V+1, sizeof(spinor))) == NULL) {
+    if((void*)(sp_up = (spinor*)calloc(2*nr*V+1, sizeof(spinor))) == NULL) {
       printf ("malloc errno : %d\n",errno); 
       errno = 0;
       return(1);
     }
-    if((void*)(g_chi_up_spinor_field = malloc(nr*sizeof(spinor*))) == NULL) {
+    if((void*)(g_chi_up_spinor_field = malloc(2*nr*sizeof(spinor*))) == NULL) {
       printf ("malloc errno : %d\n",errno); 
       errno = 0;
       return(2);
-    }
-    if((void*)(sp_dn = (spinor*)calloc(nr*V+1, sizeof(spinor))) == NULL) {
-      printf ("malloc errno : %d\n",errno); 
-      errno = 0;
-      return(1);
     }
     if((void*)(g_chi_dn_spinor_field = malloc(nr*sizeof(spinor*))) == NULL) {
       printf ("malloc errno : %d\n",errno); 
@@ -62,12 +56,14 @@ int init_chi_spinor_field(const int V, const int nr) {
       return(2);
     }
     g_chi_up_spinor_field[0] = (spinor*)(((unsigned long int)(sp_up)+ALIGN_BASE)&~ALIGN_BASE);
-    g_chi_dn_spinor_field[0] = (spinor*)(((unsigned long int)(sp_dn)+ALIGN_BASE)&~ALIGN_BASE);
     
-    for(i = 1; i < nr; i++){
+    for(int i = 1; i < 2*nr; i++){
       g_chi_up_spinor_field[i] = g_chi_up_spinor_field[i-1]+V;
-      g_chi_dn_spinor_field[i] = g_chi_dn_spinor_field[i-1]+V;
     }
+    for(int i = 0; i < nr; i++){
+      g_chi_dn_spinor_field[i] = g_chi_up_spinor_field[nr+i];
+    }
+
   }
   return(0);
 }
@@ -75,7 +71,6 @@ int init_chi_spinor_field(const int V, const int nr) {
 void free_chi_spinor_field() {
   if(chi_initialised) {
     free(sp_up);
-    free(sp_dn);
     free(g_chi_dn_spinor_field);
     free(g_chi_up_spinor_field);
   }

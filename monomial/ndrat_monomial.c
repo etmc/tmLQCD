@@ -170,8 +170,10 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
     }
   }
   // trlog part does not depend on the normalisation
-  if(mnl->type == NDCLOVERRAT && mnl->ndtrlog) {
+  if(mnl->type == NDCLOVERRAT && mnl->trlog) {
     sw_deriv_nd(EE);
+  }
+  if(mnl->type == NDCLOVERRAT) {
     sw_all(hf, mnl->kappa, mnl->c_sw);
   }
   etime = gettime();
@@ -307,15 +309,29 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
 int init_ndrat_monomial(const int id) {
   monomial * mnl = &monomial_list[id];  
 
-  init_rational(&mnl->rat);
-
   mnl->EVMin = mnl->StildeMin / mnl->StildeMax;
   mnl->EVMax = 1.;
   mnl->EVMaxInv = 1./(sqrt(mnl->StildeMax));
 
-  if(init_chi_spinor_field(VOLUMEPLUSRAND/2, (mnl->rat.np+1)) != 0) {
-    fprintf(stderr, "Not enough memory for Chi fields! Aborting...\n");
-    exit(0);
+  if(mnl->type == RAT || mnl->type == CLOVERRAT ||
+     mnl->type == RATCOR || mnl->type == CLOVERRATCOR) {
+    init_rational(&mnl->rat, 1);
+
+    if(init_chi_spinor_field(VOLUMEPLUSRAND/2, (mnl->rat.np+2)/2) != 0) {
+      fprintf(stderr, "Not enough memory for Chi fields! Aborting...\n");
+      exit(0);
+    }
+  }
+  else {
+    init_rational(&mnl->rat, 0);
+    mnl->EVMin = mnl->StildeMin / mnl->StildeMax;
+    mnl->EVMax = 1.;
+    mnl->EVMaxInv = 1./(sqrt(mnl->StildeMax));
+    
+    if(init_chi_spinor_field(VOLUMEPLUSRAND/2, (mnl->rat.np+1)) != 0) {
+      fprintf(stderr, "Not enough memory for Chi fields! Aborting...\n");
+      exit(0);
+    }
   }
 
   return(0);

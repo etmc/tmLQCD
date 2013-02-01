@@ -31,7 +31,7 @@ typedef struct {
   double *nu,*rnu;
 } rational_t;
 
-int init_rational(rational_t * rat);
+int init_rational(rational_t * rat, const unsigned int scale);
 int free_rational(rational_t * rat);
 
 #endif

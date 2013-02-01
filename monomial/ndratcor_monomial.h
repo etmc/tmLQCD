@@ -24,6 +24,5 @@
 
 double ndratcor_acc(const int id, hamiltonian_field_t * const hf);
 void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf);
-int init_ndratcor_monomial(const int id);
 
 #endif
