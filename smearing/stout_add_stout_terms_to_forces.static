@@ -4,6 +4,9 @@ static void add_stout_terms_to_forces(gauge_field_t smeared_force, double const 
   su3 ALIGN t2;
   su3 ALIGN C_der;
   
+  int xref = 0;
+  int muref = 0;
+  
   for (unsigned int x = 0; x < VOLUME; ++x)
     for (unsigned int mu = 0; mu < 4; ++mu)
     {     
@@ -12,15 +15,15 @@ static void add_stout_terms_to_forces(gauge_field_t smeared_force, double const 
       _real_times_su3(t1, rho, t1);
       _su3_times_su3(t2, trace[x][mu].Z, t1);
 
-      if ((x == 0) && (mu == 1))
+      if ((x == xref) && (mu == muref))
       {
-        printf("[DEBUG] Sigma at (0,1):\n");
+        printf("[DEBUG] Sigma at (%d,%d):\n", xref, muref);
         print_su3(&trace[x][mu].Sigma);
       }
 
-      if ((x == 0) && (mu == 1))
+      if ((x == xref) && (mu == muref))
       {
-        printf("[DEBUG] Z at (0,1):\n");
+        printf("[DEBUG] Z at (%d,%d):\n", xref, muref);
         print_su3(&trace[x][mu].Z);
       }
      
@@ -30,9 +33,9 @@ static void add_stout_terms_to_forces(gauge_field_t smeared_force, double const 
       /* t1 = Sigma * V - Z * C */
       _su3_refac_acc(t1, -1.0, t2);
 
-      if ((x == 0) && (mu == 1))
+      if ((x == xref) && (mu == muref))
       {
-        printf("[DEBUG] Sigma * V - Z * C at (0,1):\n");
+        printf("[DEBUG] Sigma * V - Z * C at (%d,%d):\n", xref, muref);
         print_su3(&t1);
       }
      
@@ -41,9 +44,9 @@ static void add_stout_terms_to_forces(gauge_field_t smeared_force, double const 
       
       /* This completes the first half of our calculation -- note that smeared_force can be overwritten.
          The data it contained is encapsulated in trace->Sigma at this point. */    
-      if ((x == 0) && (mu == 1))
+      if ((x == xref) && (mu == muref))
       {
-        printf("[DEBUG] Smeared force before staple derivative at (0,1):\n");
+        printf("[DEBUG] Smeared force before staple derivative at at (%d,%d):\n", xref, muref);
         print_su3(&smeared_force[x][mu]);
       }
       

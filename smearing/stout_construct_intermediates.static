@@ -23,7 +23,7 @@ static void construct_intermediates(stout_notes_tuple *trace, gauge_field_t cons
     for (unsigned int mu = 0; mu < 4; ++mu)
     {
       /* The factor of V[x][mu] has been taken out earlier, but we still need a copy of the forces.
-         We're moving it into Sigma for that reason.
+         We're still moving it into Sigma for that reason.
       */
       memmove(&trace[x][mu].Sigma, &smeared_force[x][mu], sizeof(su3));
 
