@@ -118,14 +118,6 @@ static void z2_vector(double *v, const int N) {
   return;
 }
 
-/* produce a vector of length N with components uniformly distributed in the interval [0,2PI] */
-static void unif_vector(double *v, const int N) {
-  ranlxd(v,N);
-  for(int i = 0; i < N; ++i)
-    v[i] *= 6.2831853071796;
-  return;
-}
-
 static su3 unit_su3(void)
 {
    su3 u = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
@@ -138,6 +130,7 @@ su3_vector unit_su3_vector()
   return s;
 }
 
+/* produce a su3 vector with components distributed according to rn_type and unit norm */
 static void random_su3_vector( su3_vector * const s, const enum RN_TYPE rn_type )
 {
    int i;
@@ -348,13 +341,13 @@ void random_spinor_field_eo(spinor * const k, const int repro, const enum RN_TYP
   return;
 }
 
-/* Function provides a zero spinor field of length N with */
+/* Function provides a zero spinor field of length N */
 void zero_spinor_field(spinor * const k, const int N)
 {
   memset(k, 0, sizeof(spinor) * N);
 }
 
-/* Function provides a constant spinor field of length N with */
+/* Function provides a constant spinor field of length N */
 void constant_spinor_field(spinor * const k, const int p, const int N)
 {
   int ix;
@@ -371,7 +364,10 @@ void constant_spinor_field(spinor * const k, const int p, const int N)
   return;
 }
 
-
+/* a random su3 matrix. two unit norm su3 vectors with components drawn from a uniform ditribution
+   are used to construct an orthogonal third vector. The three vectors then make up the rows
+   of the matrix */
+   
 void random_su3(su3 * const u) {
    double norm,fact;
    _Complex double z;
@@ -430,7 +426,7 @@ void unit_g_gauge_field(void)
 }
 
 
-void random_gauge_field(const int repro) {
+void random_gauge_field(const int repro, su3 ** const gf) {
 
   int ix, mu, t0, t, x, X, y, Y, z, Z;
   int id = 0; /* May not be initialized for scalar builds! */
@@ -469,7 +465,7 @@ void random_gauge_field(const int repro) {
 	    for(mu = 0; mu < 4; mu++) {
 	      if(g_cart_id == id) {
 		ix = g_ipt[t][X][Y][Z];
-		random_su3(&g_gauge_field[ix][mu]);
+		random_su3(&gf[ix][mu]);
 	      }
 	      else {
 		random_su3(&tmp);
@@ -488,7 +484,7 @@ void random_gauge_field(const int repro) {
   else {
     for (ix = 0; ix < VOLUME; ix++) {
       for (mu = 0; mu < 4; mu++) {
-	random_su3(&g_gauge_field[ix][mu]);
+	random_su3(&gf[ix][mu]);
       }
     }
   }

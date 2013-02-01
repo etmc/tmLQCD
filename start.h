@@ -20,19 +20,28 @@
 #ifndef _START_H
 #define _START_H
 
+
+/* functions requesting random numbers can request different distributions by calling _rn_switch
+   with the first argument set to a random number type as defined below and a function pointer
+   (see start.c for examples) */
+
 #define _rn_switch(type,rn_fn_ptr) \
   switch( type ) { \
     case RN_Z2: \
       rn_fn_ptr = z2_vector; \
       break; \
     case RN_UNIF: \
-      rn_fn_ptr = unif_vector; \
+      rn_fn_ptr = ranlxd; \
       break; \
     case RN_GAUSS: \
     default: \
       rn_fn_ptr = gauss_vector; \
       break; \
   } \
+
+/* RN_GAUSS: gaussian ditributed random numbers
+   RN_UNIF:  random numbers drawn from a uniform distribution (this is a simple call to ranlxd!)
+   RN_Z2:    z2 noise */
 
 enum RN_TYPE { RN_GAUSS, RN_UNIF, RN_Z2 };
 
@@ -45,7 +54,7 @@ void random_spinor_field_eo(spinor * const k, const int repro, const enum RN_TYP
 
 void unit_g_gauge_field(void);
 
-void random_gauge_field(const int repro);
+void random_gauge_field(const int repro, su3 ** const gf);
 
 double random_su3adj_field(const int repro, su3adj ** const momenta);
 

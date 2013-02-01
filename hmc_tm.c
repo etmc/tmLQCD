@@ -372,7 +372,7 @@ int main(int argc,char *argv[])
   }
   else if (startoption == 1) {
     /* hot */
-    random_gauge_field(reproduce_randomnumber_flag);
+    random_gauge_field(reproduce_randomnumber_flag, g_gauge_field);
   }
   else if(startoption == 0) {
     /* cold */
