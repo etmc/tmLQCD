@@ -20,4 +20,5 @@
 
 #include <fatal_error.h>
 
+#include <buffers/alignment.h>
 #include <smearing/utils.h>

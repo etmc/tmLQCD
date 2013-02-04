@@ -86,6 +86,8 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
   /* FIXME Enter the simplest deviation from identity that will work */
   g_gf[0][0].c00 = I;
   g_gf[0][0].c11 = -I;
+  
+  rnd_gauge_trafo(&g_gf, g_gf);
 
   ohnohack_remap_df0(tmp_derivative); /* FIXME Such that we can aggregate results per smearing type. */
   for (int s_ctr = 0; s_ctr < no_relevant_smearings; ++s_ctr)

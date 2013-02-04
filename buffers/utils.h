@@ -2,6 +2,7 @@
 #define _BUFFERS_UTILS_H
 
 #include <string.h>
+#include <start.h>
 
 #include <buffers/adjoint.h>
 #include <buffers/gauge.h>
@@ -13,6 +14,7 @@ void generic_exchange(void *field_in, int bytes_per_site);
 
 static inline void zero_adjoint_field(adjoint_field_t *target);
 static inline void zero_gauge_field(gauge_field_t *target);
+static inline void randomize_gauge_field(gauge_field_t *target);
 
 static inline void exchange_adjoint_field(adjoint_field_t *target);
 static inline void exchange_gauge_field(gauge_field_t *target);
@@ -56,5 +58,15 @@ __DEFINE_BUFFER_INLINES(su3_tuple, gauge)
 // __DEFINE_BUFFER_INLINES(spinor, spinor)
 
 #undef __DEFINE_BUFFER_INLINES
+
+static inline void randomize_gauge_field(gauge_field_t *target)
+{
+  for (unsigned int x = 0; x < VOLUMEPLUSRAND; ++x)
+    for (unsigned int mu = 0; mu < 4; ++mu)
+    {
+      random_su3(&(*target)[x][mu]);
+    }
+  exchange_gauge_field(target);
+}
 
 #endif

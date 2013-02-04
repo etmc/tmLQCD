@@ -51,7 +51,6 @@ MODULES = read_input gamma measure_gauge_action start \
 	geometry_eo invert_overlap \
 	prepare_source chebyshev_polynomial_nd Ptilde_nd  \
 	reweighting_factor_nd dirty_shameful_business\
-	rnd_gauge_trafo \
 	online_measurement update_momenta integrator  phmc \
 	little_D block operator measurements pion_norm \
 	temporalgauge spinor_fft X_psi P_M_eta \

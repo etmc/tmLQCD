@@ -55,6 +55,7 @@ libsmear_TARGETS = 	ape_ape_smear \
 			utils_print_su3 \
 			utils_print_su3adj \
 			utils_project_traceless_antiherm \
+			utils_rnd_gauge_trafo \
 			utils_reunitarize \
 			utils_unfold_field
 

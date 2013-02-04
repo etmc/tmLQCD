@@ -19,6 +19,7 @@ void cayley_hamilton_exponent_with_force_terms(su3 *expiQ, su3 *B1, su3 *B2, _Co
 
 void unfold_field(gauge_field_t *target, gauge_field_t const base);
 void fold_field(gauge_field_t *target, gauge_field_t const base);
+void rnd_gauge_trafo(gauge_field_t * target, gauge_field_t const src);
 
 void print_su3(su3 *in);
 void print_su3adj(su3adj *in);

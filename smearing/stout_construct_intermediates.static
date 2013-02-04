@@ -22,10 +22,8 @@ static void construct_intermediates(stout_notes_tuple *trace, gauge_field_t cons
   for (unsigned int x = 0; x < VOLUME; ++x)
     for (unsigned int mu = 0; mu < 4; ++mu)
     {
-      /* The factor of V[x][mu] has been taken out earlier, but we still need a copy of the forces.
-         We're still moving it into Sigma for that reason.
-      */
-      memmove(&trace[x][mu].Sigma, &smeared_force[x][mu], sizeof(su3));
+      /* A factor of V[x][mu] has to be taken out. This can't be done outside of the smearing loop, since there are projections involved at each step. */
+      _su3d_times_su3(trace[x][mu].Sigma, V[x][mu], smeared_force[x][mu]);
 
       /* t2 == - Tr[U * Sigma * B2] * A */
       _su3_times_su3(t1, trace[x][mu].Sigma, trace[x][mu].B2);

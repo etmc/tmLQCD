@@ -39,10 +39,11 @@ static void add_stout_terms_to_forces(gauge_field_t smeared_force, double const 
         print_su3(&t1);
       }
      
-      /* smeared_force = (Sigma * V - Z * C) * U^\dagger */
-      _su3_times_su3d(smeared_force[x][mu], t1, U[x][mu]);
+      /* smeared_force = U * (Sigma * V - Z * C) * U^\dagger */
+      _su3_times_su3d(t2, t1, U[x][mu]);
+      _su3_times_su3(smeared_force[x][mu], U[x][mu], t2);
       
-      /* This completes the first half of our calculation -- note that smeared_force can be overwritten.
+      /* This completes the first half of our calculation -- note that smeared_force can be safely overwritten.
          The data it contained is encapsulated in trace->Sigma at this point. */    
       if ((x == xref) && (mu == muref))
       {
@@ -78,8 +79,11 @@ static void add_stout_terms_to_forces(gauge_field_t smeared_force, double const 
           
           /* Line 6 */
           _su3d_times_su3(t1, U[g_idn[x][nu]][mu], U[xmnu][nu]);
-          _su3_times_su3_acc(C_der, trace[xmnu_pmu][nu].Z, t1);
+          _su3_times_su3_acc(t2, trace[xmnu_pmu][nu].Z, t1);
 
+          /* Now add the final multiplication from the left */
+          _su3_times_su3(C_der, U[x][mu], t2);
+          
           /* The remaining lines are multiplied by the same matrix from the right, so we can aggregate them too */
           
           /* Line 3 */
@@ -92,8 +96,7 @@ static void add_stout_terms_to_forces(gauge_field_t smeared_force, double const 
           
           /* Now we plug in the final multiplication and the sign, aggregating in C_der */
           _su3_times_su3d(t1, t2, U[x][mu]);
-          _su3d_times_su3(t2, U[x][mu], t1);
-          _su3_refac_acc(C_der, -1.0, t2);
+          _su3_refac_acc(C_der, -1.0, t1);
         }
       }      
 
