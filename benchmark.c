@@ -256,7 +256,7 @@ int main(int argc,char *argv[])
 #endif
 
   start_ranlux(1, 123456);
-  random_gauge_field(reproduce_randomnumber_flag);
+  random_gauge_field(reproduce_randomnumber_flag, g_gauge_field);
 
 #ifdef MPI
   /*For parallelization: exchange the gaugefield */

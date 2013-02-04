@@ -144,13 +144,13 @@ int cg_mms_tm(spinor ** const P, spinor * const Q,
       // this is useful for computing time and needed, because otherwise
       // zita might get smaller than DOUBLE_EPS and, hence, zero
       if(iteration > 0 && (iteration % 20 == 0) && (im == no_shifts-1)) {
-	      double sn = square_norm(ps_mms_solver[im-1], N, 1);
-      	if(alphas[no_shifts-1]*alphas[no_shifts-1]*sn <= solver_pm->squared_solver_prec) {
-	        no_shifts--;
-      	  if(g_debug_level > 2 && g_proc_id == 0) {
-	          printf("# CGMMS: at iteration %d removed one shift, %d remaining\n", iteration, no_shifts);
+	double sn = square_norm(ps_mms_solver[im-1], N, 1);
+	if(alphas[no_shifts-1]*alphas[no_shifts-1]*sn <= solver_pm->squared_solver_prec) {
+	  no_shifts--;
+	  if(g_debug_level > 2 && g_proc_id == 0) {
+	    printf("# CGMMS: at iteration %d removed one shift, %d remaining\n", iteration, no_shifts);
       	  }
-	      }
+	}
       }
     }
     
@@ -170,8 +170,8 @@ int cg_mms_tm(spinor ** const P, spinor * const Q,
     if( ((err <= solver_pm->squared_solver_prec) && (solver_pm->rel_prec == 0)) ||
         ((err <= solver_pm->squared_solver_prec*squarenorm) && (solver_pm->rel_prec > 0)) ||
         (iteration == solver_pm->max_iter -1) ) {
-        /* FIXME temporary output of precision until a better solution can be found */
-        *cgmms_reached_prec = err;
+      /* FIXME temporary output of precision until a better solution can be found */
+      *cgmms_reached_prec = err;
       break;
     }
 
