@@ -42,7 +42,7 @@ void rnd_gauge_trafo(const int repro, su3 ** const gf){
     fprintf(stderr, "Could not allocate memory in rnd_gauge_trafo. Exiting!\n");
     exit(0);
   }
-  gauge_trafo = (su3*)(((unsigned long int)(gauge_trafo)+ALIGN_BASE)&~ALIGN_BASE);
+  gauge_trafo = (su3*)(((unsigned long int)(_gauge_trafo)+ALIGN_BASE)&~ALIGN_BASE);
 
   random_gauge_field(repro, gauge_trafo);
 
