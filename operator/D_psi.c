@@ -537,14 +537,8 @@ static inline void local_H(spinor * const rr, spinor const * const s, su3 const 
 
 #if (defined SSE2 || defined SSE3)
 
-static spinor rs __attribute__ ((aligned (16)));
-
 /* Serially Checked ! */
 void D_psi(spinor * const P, spinor * const Q){
-  int ix,iy,iz;
-  su3 *up,*um;
-  spinor *s,*sp,*sm,*rn;
-  static _Complex double fact1, fact2;
 
   if(P==Q){
     printf("Error in D_psi (operator.c):\n");
@@ -563,16 +557,35 @@ void D_psi(spinor * const P, spinor * const Q){
   xchange_lexicfield(Q);
 # endif
 
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+  int ix,iy,iz;
+  su3 *up,*um;
+  spinor *s,*sp,*sm,*rn;
+  _Complex double fact1, fact2;
+  spinor rs __attribute__ ((aligned (16)));
+
   fact1 = 1. + g_mu * I;
   fact2 = conj(fact1);
 
+#ifndef OMP
   iy=g_iup[0][0];
   sp=(spinor *) Q + iy;
   up=&g_gauge_field[0][0];
+#endif
 
   /************************ loop over all lattice sites *************************/
-   
+#ifdef OMP
+#pragma omp for
+#endif
   for (ix=0;ix<VOLUME;ix++){
+#ifdef OMP
+    iy=g_iup[ix][0];
+    up=&g_gauge_field[ix][0];
+    sp=(spinor *) Q + iy;
+#endif
     s=(spinor *) Q + ix;
     _prefetch_spinor(s);
 
@@ -923,6 +936,9 @@ void D_psi(spinor * const P, spinor * const Q){
     /******************************** end of loop *********************************/
 
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
 }
 
 #elif ((defined BGL) && (defined XLC))
