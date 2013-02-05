@@ -66,28 +66,13 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
   zero_adjoint_field(&df);
 
   /* FIXME Further debugging -- replace the field by something that is manageable analytically */
-  for (int loc = 0; loc < (VOLUMEPLUSRAND + g_dbw2rand); ++loc)
-    for (int nu = 0; nu < 4; ++nu)
-    {
-      _su3_one(g_gf[loc][nu]);
-    }
-
-//  /* FIXME Enter some arbitrary random SU(3). Random to avoid accidental agreements. */
-//   g_gf[0][0].c00 = -0.281674601208749 - 0.196755446881004 * I;
-//   g_gf[0][0].c01 =  0.097906948456113 + 0.909672287338323 * I;
-//   g_gf[0][0].c02 =  0.085554250669676 + 0.193746593367662 * I;
-//   g_gf[0][0].c10 =  0.255396409335753 - 0.282878184149928 * I;
-//   g_gf[0][0].c11 = -0.057616138763708 - 0.068813232780069 * I;
-//   g_gf[0][0].c12 =  0.919668327134945 + 0.030131290107975 * I;
-//   g_gf[0][0].c20 =  0.054229296057200 - 0.856597048580097 * I;
-//   g_gf[0][0].c21 =  0.329775646781283 - 0.214717725004200 * I;
-//   g_gf[0][0].c22 = -0.279641903356002 + 0.173912067032302 * I;
-
-  /* FIXME Enter the simplest deviation from identity that will work */
-   g_gf[0][0].c00 = I;
-   g_gf[0][0].c11 = -I;
-  
-  //rnd_gauge_trafo(&g_gf, g_gf);
+//   for (int loc = 0; loc < (VOLUMEPLUSRAND + g_dbw2rand); ++loc)
+//     for (int nu = 0; nu < 4; ++nu)
+//     {
+//       _su3_one(g_gf[loc][nu]);
+//     }
+//    g_gf[0][0].c00 = I;
+//    g_gf[0][0].c11 = -I;
 
   ohnohack_remap_df0(tmp_derivative); /* FIXME Such that we can aggregate results per smearing type. */
   for (int s_ctr = 0; s_ctr < no_relevant_smearings; ++s_ctr)
@@ -138,21 +123,21 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
   xchange_deri(hf->derivative);
 #endif
 
-  /* Debugging code inserted here */
-  su3adj num_eval;
-  int xref = 0;
-  int muref = 0;
-  calculate_forces_numerically(&num_eval, xref, muref, mnllist, no);
-  double *ar_df = (double*)&df[xref][muref];
-  double *ar_ne = (double*)&num_eval;
-  fprintf(stderr, "[DEBUG] Comparison of force calculation at (%d, %d)!\n", xref, muref);
-  fprintf(stderr, "        Involves monomial types: ");
-  for (int monnum = 0; monnum < no; ++monnum)
-    fprintf(stderr, "%d ", monomial_list[ mnllist[monnum] ].type);
-  fprintf(stderr, "\n");
-  fprintf(stderr, "           Analytical  vs.  numerical\n");
-  for (int component = 0; component < 8; ++component)
-    fprintf(stderr, "    [%d]  %+12.7f <-> %+12.7f\n", component, ar_df[component], ar_ne[component]);
+  /* FIXME Debugging code inserted here */
+//   su3adj num_eval;
+//   int xref = 1;
+//   int muref = 1;
+//   calculate_forces_numerically(&num_eval, xref, muref, mnllist, no);
+//   double *ar_df = (double*)&df[xref][muref];
+//   double *ar_ne = (double*)&num_eval;
+//   fprintf(stderr, "[DEBUG] Comparison of force calculation at (%d, %d)!\n", xref, muref);
+//   fprintf(stderr, "        Involves monomial types: ");
+//   for (int monnum = 0; monnum < no; ++monnum)
+//     fprintf(stderr, "%d ", monomial_list[ mnllist[monnum] ].type);
+//   fprintf(stderr, "\n");
+//   fprintf(stderr, "           Analytical  vs.  numerical\n");
+//   for (int component = 0; component < 8; ++component)
+//     fprintf(stderr, "    [%d]  %+12.7f <-> %+12.7f\n", component, ar_df[component], ar_ne[component]);
 
 #ifdef OMP
 #pragma omp parallel for

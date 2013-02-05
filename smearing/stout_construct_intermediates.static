@@ -23,19 +23,19 @@ static void construct_intermediates(stout_notes_tuple *trace, gauge_field_t cons
   int muref = 1;
   
   for (unsigned int x = 0; x < VOLUME; ++x)
-    for (unsigned int mu = 0; mu < 4; ++mu)
+    for (unsigned int mu =0; mu < 4; ++mu)
     {
       /* FIXME Debugging manipulations -- absorbing the difference between Q and A... */
-      _complex_times_su3(trace[x][mu].B1, -I, trace[x][mu].B1);
-      _complex_times_su3(trace[x][mu].B2, -1.0, trace[x][mu].B2);
-      trace[x][mu].f1 *= 1.0;
-      trace[x][mu].f2 *= -I;
+//      _complex_times_su3(trace[x][mu].B1, -I, trace[x][mu].B1);
+//      _complex_times_su3(trace[x][mu].B2, -1.0, trace[x][mu].B2);
+//      trace[x][mu].f1 *= 1.0;
+//      trace[x][mu].f2 *= -I;
 
       /* FIXME Debugging manipulations -- adding abitrary phases to fix code */
-      _complex_times_su3(trace[x][mu].B1, I, trace[x][mu].B1)
+      _complex_times_su3(trace[x][mu].B1, -1.0, trace[x][mu].B1)
       _complex_times_su3(trace[x][mu].B2, -I, trace[x][mu].B2)
       trace[x][mu].f1 *= -I;
-      trace[x][mu].f2 *= I;
+      trace[x][mu].f2 *= -1;
       
       if ((x == xref) && (mu == muref))
       {

@@ -4,8 +4,8 @@ static void add_stout_terms_to_forces(gauge_field_t smeared_force, double const 
   su3 ALIGN t2;
   su3 ALIGN C_der;
   
-  int xref = 0;
-  int muref = 0;
+  int xref = VOLUME;
+  int muref = 1;
   
   for (unsigned int x = 0; x < VOLUME; ++x)
     for (unsigned int mu = 0; mu < 4; ++mu)
@@ -25,6 +25,12 @@ static void add_stout_terms_to_forces(gauge_field_t smeared_force, double const 
       {
         printf("[DEBUG] Z at (%d,%d):\n", xref, muref);
         print_su3(&trace[x][mu].Z);
+      }
+     
+      if ((x == xref) && (mu == muref))
+      {
+        printf("[DEBUG] A at (%d,%d):\n", xref, muref);
+        print_su3(&trace[x][mu].A);
       }
      
       /* t1 = Sigma * V */

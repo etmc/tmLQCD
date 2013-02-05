@@ -35,10 +35,10 @@ void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Com
   if (c0 == 0 && c1 == 0) 
   {
     _su3_one(*expA);
-    _su3_one(*B1);
-    _su3_one(*B2);
-    *f1 = 0.0;
-    *f2 = 0.0;
+    _su3_zero(*B1);
+    _su3_zero(*B2); /* FIXME Not quite sure about this one, check the limit for A->0 explicitly. */
+    *f1 = I;
+    *f2 = -0.5;
     return;
   }
 
