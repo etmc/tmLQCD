@@ -19,41 +19,92 @@ static void construct_intermediates(stout_notes_tuple *trace, gauge_field_t cons
   su3 ALIGN t1;
   su3 ALIGN t2;
   
+  int xref = VOLUME;
+  int muref = 1;
+  
   for (unsigned int x = 0; x < VOLUME; ++x)
     for (unsigned int mu = 0; mu < 4; ++mu)
     {
+      /* FIXME Debugging manipulations -- absorbing the difference between Q and A... */
+      _complex_times_su3(trace[x][mu].B1, -I, trace[x][mu].B1);
+      _complex_times_su3(trace[x][mu].B2, -1.0, trace[x][mu].B2);
+      trace[x][mu].f1 *= 1.0;
+      trace[x][mu].f2 *= -I;
+
+      /* FIXME Debugging manipulations -- adding abitrary phases to fix code */
+      _complex_times_su3(trace[x][mu].B1, I, trace[x][mu].B1)
+      _complex_times_su3(trace[x][mu].B2, -I, trace[x][mu].B2)
+      trace[x][mu].f1 *= -I;
+      trace[x][mu].f2 *= I;
+      
+      if ((x == xref) && (mu == muref))
+      {
+        printf("[DEBUG] B1 at (%d,%d):\n", xref, muref);
+        print_su3(&trace[x][mu].B1);
+        printf("[DEBUG] B2 at (%d,%d):\n", xref, muref);
+        print_su3(&trace[x][mu].B2);
+        printf("[DEBUG] f1 at (%d,%d):\n  %f %+fi\n", xref, muref, creal(trace[x][mu].f1), cimag(trace[x][mu].f1));
+        printf("[DEBUG] f2 at (%d,%d):\n  %f %+fi\n", xref, muref, creal(trace[x][mu].f2), cimag(trace[x][mu].f2));
+      } 
+      
       /* A factor of V[x][mu] has to be taken out. This can't be done outside of the smearing loop, since there are projections involved at each step. */
       _su3d_times_su3(trace[x][mu].Sigma, V[x][mu], smeared_force[x][mu]);
 
-      /* t2 == - Tr[U * Sigma * B2] * A */
+      /* t2 == Tr[U * Sigma * B2] * A */
       _su3_times_su3(t1, trace[x][mu].Sigma, trace[x][mu].B2);
       _trace_su3_times_su3(mat_trace, U[x][mu], t1);
-      _complex_times_su3(t2, - mat_trace, trace[x][mu].A);
-
-      /* Z == ( -i * Tr[U * Sigma * B1] - Tr[U * Sigma * B2] * A ) * A */
+      _complex_times_su3(t2, mat_trace, trace[x][mu].A);
+      if ((x == xref) && (mu == muref))
+      {
+        printf("[DEBUG] Tr[U * Sigma * B2] * A at (%d,%d):\n", xref, muref);
+        print_su3(&t2);
+      }     
+      
+      /* Z == (Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * A ) * A */
       _su3_times_su3(t1, trace[x][mu].Sigma, trace[x][mu].B1);
       _trace_su3_times_su3(mat_trace, U[x][mu], t1);
-      _su3_add_equals_complex_identity(t2, -I * mat_trace);
+      _su3_add_equals_complex_identity(t2, mat_trace);
       _su3_times_su3(trace[x][mu].Z, t2, trace[x][mu].A);
-
-      /* Z == ( -i * Tr[U * Sigma * B1] - Tr[U * Sigma * B2] * A ) * A  + f_1 * U * Sigma */
+      if ((x == xref) && (mu == muref))
+      {
+        printf("[DEBUG] (Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * A ) * A at (%d,%d):\n", xref, muref);
+        print_su3(&trace[x][mu].Z);
+      }
+      
+      /* Z == (Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * A ) * A  + f_1 * U * Sigma */
       _su3_times_su3(t1, U[x][mu], trace[x][mu].Sigma);
       _complex_times_su3(t2, trace[x][mu].f1, t1);
       _su3_plus_su3(trace[x][mu].Z, t2, trace[x][mu].Z);
-
-      /* Z == ( -i * Tr[U * Sigma * B1] - Tr[U * Sigma * B2] * A ) * A  + f_1 * U * Sigma - i * f2 * U * Sigma * A */
+      if ((x == xref) && (mu == muref))
+      {
+        printf("[DEBUG] (Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * A ) * A  + f_1 * U * Sigma at (%d,%d):\n", xref, muref);
+        print_su3(&trace[x][mu].Z);
+      }
+      
+      /* Z == (Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * A ) * A  + f_1 * U * Sigma - i * f2 * U * Sigma * A */
       _su3_times_su3(t2, t1, trace[x][mu].A);
-      _complex_times_su3(t2, -I * trace[x][mu].f2, t2);
+      _complex_times_su3(t2, trace[x][mu].f2, t2);
       _su3_plus_su3(trace[x][mu].Z, t2, trace[x][mu].Z);
 
-      /* t1 == (-i * Tr[U * Sigma * B1] - Tr[U * Sigma * B2] * A ) * A  + f_1 * U * Sigma - i * f2 * ( U * Sigma * A + A * U * Sigma ) */
+      /* t1 == (Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * A ) * A  + f_1 * U * Sigma + f2 * ( U * Sigma * A + A * U * Sigma ) */
       _su3_times_su3(t2, trace[x][mu].A, t1);
-      _complex_times_su3(t2, -I * trace[x][mu].f2, t2);
+      _complex_times_su3(t2, trace[x][mu].f2, t2);
       _su3_plus_su3(t1, t2, trace[x][mu].Z);
-
+      if ((x == xref) && (mu == muref))
+      {
+        printf("[DEBUG] (Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * A ) * A  + f_1 * U * Sigma + f2 * ( U * Sigma * A + A * U * Sigma )  at (%d,%d):\n", xref, muref);
+        print_su3(&t1);
+      }
+      
       /* Z = U^\dagger * P_TA(t1) == Z */
       project_traceless_antiherm(&t1);
       _su3d_times_su3(trace[x][mu].Z, U[x][mu], t1);
+      if ((x == xref) && (mu == muref))
+      {
+        printf("[DEBUG] Z at (%d,%d):\n", xref, muref);
+        print_su3(&trace[x][mu].Z);
+      }
+      
     }
   generic_exchange(trace, sizeof(stout_notes_tuple));
 }
