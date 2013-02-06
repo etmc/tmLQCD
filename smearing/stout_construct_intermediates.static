@@ -25,7 +25,7 @@ static void construct_intermediates(stout_notes_tuple *trace, gauge_field_t cons
     {
       /* FIXME Debugging manipulations -- adding abitrary phases to fix code */
       _complex_times_su3(trace[x][mu].B1, -1.0, trace[x][mu].B1)
-      _complex_times_su3(trace[x][mu].B2, -I, trace[x][mu].B2)
+      _complex_times_su3(trace[x][mu].B2, I, trace[x][mu].B2)
       trace[x][mu].f1 *= -I;
       trace[x][mu].f2 *= -1;     
      
