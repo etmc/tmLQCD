@@ -21,8 +21,8 @@ void unfold_field(gauge_field_t *target, gauge_field_t const base);
 void fold_field(gauge_field_t *target, gauge_field_t const base);
 void rnd_gauge_trafo(gauge_field_t * target, gauge_field_t const src);
 
-void print_su3(su3 *in);
-void print_su3adj(su3adj *in);
+void print_su3(su3 const *in);
+void print_su3adj(su3adj const *in);
 void print_config_to_screen(gauge_field_t in);
 
 void calculate_forces_numerically(su3adj *result, int const x, int const mu, int * mnllist, const int no);

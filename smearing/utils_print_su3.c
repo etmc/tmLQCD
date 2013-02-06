@@ -1,6 +1,6 @@
 #include "utils.ih"
 
-void  print_su3(su3 *in)
+void  print_su3(su3 const *in)
 {
   printf("[ %c %14.12f %c %14.12f * 1i, %c %14.12f %c %14.12f * 1i, %c %14.12f %c %14.12f * 1i;\n",
           (creal(in->c00) > 0 ? '+' : '-'), fabs(creal(in->c00)), (cimag(in->c00) > 0 ? '+' : '-'), fabs(cimag(in->c00)), 
