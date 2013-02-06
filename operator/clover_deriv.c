@@ -53,6 +53,8 @@
 #include "operator/clover_leaf.h"
 #include "operator/clover_inline.h"
 
+      
+
 // this is (-tr(1+T_ee(+mu)) -tr(1+T_ee(-mu)))      
 // (or T_oo of course)
 // 
@@ -78,7 +80,6 @@ void sw_deriv(const int ieo, const double mu) {
   int ioff;
   int x;
   double fac = 1.0000;
-  su3 ALIGN lswp[4], lswm[4];
 
   /* convention: Tr clover-leaf times insertion */
   if(ieo == 0) {
@@ -102,46 +103,27 @@ void sw_deriv(const int ieo, const double mu) {
 #endif
     x = g_eo2lexic[icx];
     /* compute the insertion matrix */
-    _su3_plus_su3(lswp[0], sw_inv[icy][1][0], sw_inv[icy][0][0]);
-    _su3_plus_su3(lswp[1], sw_inv[icy][1][1], sw_inv[icy][0][1]);
-    _su3_plus_su3(lswp[2], sw_inv[icy][1][2], sw_inv[icy][0][2]);
-    _su3_plus_su3(lswp[3], sw_inv[icy][1][3], sw_inv[icy][0][3]);
+    colour_plus_colour_addto_su3(&swp[x][0], sw_inv[icy][1], sw_inv[icy][0], fac, 0, 0);
+    colour_plus_colour_addto_su3(&swp[x][1], sw_inv[icy][1], sw_inv[icy][0], fac, 0, 3);
+    colour_plus_colour_addto_su3(&swp[x][2], sw_inv[icy][1], sw_inv[icy][0], fac, 3, 3);
+    colour_plus_colour_addto_su3(&swp[x][3], sw_inv[icy][1], sw_inv[icy][0], fac, 3, 0);
 
-    _su3_minus_su3(lswm[0], sw_inv[icy][1][0], sw_inv[icy][0][0]);
-    _su3_minus_su3(lswm[1], sw_inv[icy][1][1], sw_inv[icy][0][1]);
-    _su3_minus_su3(lswm[2], sw_inv[icy][1][2], sw_inv[icy][0][2]);
-    _su3_minus_su3(lswm[3], sw_inv[icy][1][3], sw_inv[icy][0][3]);
-    
-    /* add up to swm[] and swp[] */
-    _su3_refac_acc(swm[x][0], fac, lswm[0]);
-    _su3_refac_acc(swm[x][1], fac, lswm[1]);
-    _su3_refac_acc(swm[x][2], fac, lswm[2]);
-    _su3_refac_acc(swm[x][3], fac, lswm[3]);
-    _su3_refac_acc(swp[x][0], fac, lswp[0]);
-    _su3_refac_acc(swp[x][1], fac, lswp[1]);
-    _su3_refac_acc(swp[x][2], fac, lswp[2]);
-    _su3_refac_acc(swp[x][3], fac, lswp[3]);
+    colour_minus_colour_addto_su3(&swm[x][0], sw_inv[icy][1], sw_inv[icy][0], fac, 0, 0);
+    colour_minus_colour_addto_su3(&swm[x][1], sw_inv[icy][1], sw_inv[icy][0], fac, 0, 3);
+    colour_minus_colour_addto_su3(&swm[x][2], sw_inv[icy][1], sw_inv[icy][0], fac, 3, 3);
+    colour_minus_colour_addto_su3(&swm[x][3], sw_inv[icy][1], sw_inv[icy][0], fac, 3, 0);
+
     if(fabs(mu) > 0.) {
       /* compute the insertion matrix */
-      _su3_plus_su3(lswp[0], sw_inv[icy+VOLUME/2][1][0], sw_inv[icy+VOLUME/2][0][0]);
-      _su3_plus_su3(lswp[1], sw_inv[icy+VOLUME/2][1][1], sw_inv[icy+VOLUME/2][0][1]);
-      _su3_plus_su3(lswp[2], sw_inv[icy+VOLUME/2][1][2], sw_inv[icy+VOLUME/2][0][2]);
-      _su3_plus_su3(lswp[3], sw_inv[icy+VOLUME/2][1][3], sw_inv[icy+VOLUME/2][0][3]); 
-
-      _su3_minus_su3(lswm[0], sw_inv[icy+VOLUME/2][1][0], sw_inv[icy+VOLUME/2][0][0]);
-      _su3_minus_su3(lswm[1], sw_inv[icy+VOLUME/2][1][1], sw_inv[icy+VOLUME/2][0][1]);
-      _su3_minus_su3(lswm[2], sw_inv[icy+VOLUME/2][1][2], sw_inv[icy+VOLUME/2][0][2]);
-      _su3_minus_su3(lswm[3], sw_inv[icy+VOLUME/2][1][3], sw_inv[icy+VOLUME/2][0][3]);
+      colour_plus_colour_addto_su3(&swp[x][0], sw_inv[icy+VOLUME/2][1], sw_inv[icy+VOLUME/2][0], fac, 0, 0);
+      colour_plus_colour_addto_su3(&swp[x][1], sw_inv[icy+VOLUME/2][1], sw_inv[icy+VOLUME/2][0], fac, 0, 3);
+      colour_plus_colour_addto_su3(&swp[x][2], sw_inv[icy+VOLUME/2][1], sw_inv[icy+VOLUME/2][0], fac, 3, 3);
+      colour_plus_colour_addto_su3(&swp[x][3], sw_inv[icy+VOLUME/2][1], sw_inv[icy+VOLUME/2][0], fac, 3, 0);
       
-      /* add up to swm[] and swp[] */
-      _su3_refac_acc(swm[x][0], fac, lswm[0]);
-      _su3_refac_acc(swm[x][1], fac, lswm[1]);
-      _su3_refac_acc(swm[x][2], fac, lswm[2]);
-      _su3_refac_acc(swm[x][3], fac, lswm[3]);
-      _su3_refac_acc(swp[x][0], fac, lswp[0]);
-      _su3_refac_acc(swp[x][1], fac, lswp[1]);
-      _su3_refac_acc(swp[x][2], fac, lswp[2]);
-      _su3_refac_acc(swp[x][3], fac, lswp[3]);
+      colour_minus_colour_addto_su3(&swm[x][0], sw_inv[icy+VOLUME/2][1], sw_inv[icy+VOLUME/2][0], fac, 0, 0);
+      colour_minus_colour_addto_su3(&swm[x][1], sw_inv[icy+VOLUME/2][1], sw_inv[icy+VOLUME/2][0], fac, 0, 3);
+      colour_minus_colour_addto_su3(&swm[x][2], sw_inv[icy+VOLUME/2][1], sw_inv[icy+VOLUME/2][0], fac, 3, 3);
+      colour_minus_colour_addto_su3(&swm[x][3], sw_inv[icy+VOLUME/2][1], sw_inv[icy+VOLUME/2][0], fac, 3, 0);
     }
 #ifndef OMP
     ++icy;
@@ -192,11 +174,7 @@ void sw_deriv_nd(const int ieo) {
     populate_6x6_matrix(b, &v, 3, 0);
     populate_6x6_matrix(b, &sw[x][0][2], 3, 3);
 
-    populate_6x6_matrix(c, &sw_inv[icy][0][0], 0, 0);
-    populate_6x6_matrix(c, &sw_inv[icy][0][1], 0, 3);
-    populate_6x6_matrix(c, &sw_inv[icy][0][2], 3, 3);
-    populate_6x6_matrix(c, &sw_inv[icy][0][3], 3, 0);
-
+    memcpy(c[0], sw_inv[icy][0], 36*sizeof(_Complex double));
     mult_6x6(a0, b, c);
 
     populate_6x6_matrix(b, &sw[x][1][0], 0, 0);
@@ -205,11 +183,7 @@ void sw_deriv_nd(const int ieo) {
     populate_6x6_matrix(b, &v, 3, 0);
     populate_6x6_matrix(b, &sw[x][1][2], 3, 3);
 
-    populate_6x6_matrix(c, &sw_inv[icy][1][0], 0, 0);
-    populate_6x6_matrix(c, &sw_inv[icy][1][1], 0, 3);
-    populate_6x6_matrix(c, &sw_inv[icy][1][2], 3, 3);
-    populate_6x6_matrix(c, &sw_inv[icy][1][3], 3, 0);
-
+    memcpy(c[0], sw_inv[icy][1], 36*sizeof(_Complex double));
     mult_6x6(a1, b, c);
     add_6x6(b, a1, a0);
     get_3x3_block_matrix(&lswp[0], b, 0, 0);

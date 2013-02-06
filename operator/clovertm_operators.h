@@ -26,7 +26,7 @@
 #include "su3.h"
 
 extern su3 *** sw;
-extern su3 *** sw_inv;
+extern _Complex double *** sw_inv;
 extern su3 ** swm, ** swp;
 
 void assign_mul_one_sw_pm_imu(const int ieo, spinor * const k, const spinor * const l, const double mu);

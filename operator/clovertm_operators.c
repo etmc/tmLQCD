@@ -41,7 +41,7 @@
 
 
 su3 *** sw;
-su3 *** sw_inv;
+_Complex double *** sw_inv;
 
 void clover_gamma5(const int ieo, 
 		   spinor * const l, const spinor * const k, const spinor * const j,
@@ -160,6 +160,17 @@ void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const do
   return;
 }
 
+// s = w*r
+
+#define _mul_colourmatrix_add(s, w, r)		\
+  for(int c0 = 0; c0 < 6; c0++) {		\
+    s[c0] = w[c0*6] * r[0];			\
+    for(int c1 = 1; c1 < 6; c1++) {		\
+      s[c0] += w[c0*6 + c1] * r[c1];		\
+    }						\
+  }
+
+
 
 /**********************************************************
  *
@@ -178,10 +189,9 @@ void clover_inv(const int ieo, spinor * const l, const double mu) {
   {
 #endif
   int icy;
-  su3_vector ALIGN psi, chi, phi1, phi3;
   int ioff = 0;
-  const su3 *w1, *w2, *w3, *w4;
-  spinor *rn;
+  _Complex double * restrict w, * restrict r;
+  _Complex double s[6];
 
 
   if(mu < 0) ioff = VOLUME/2;
@@ -198,31 +208,15 @@ void clover_inv(const int ieo, spinor * const l, const double mu) {
     icy = ioff + icx;
 #endif
 
-    rn = l + icx;
-    _vector_assign(phi1,(*rn).s0);
-    _vector_assign(phi3,(*rn).s2);
+    r = (_Complex double *) (l + icx);
+    w = sw_inv[icy][0];
+    _mul_colourmatrix_add(s, w, r);
+    memcpy(r, s, 6*sizeof(_Complex double));
 
-    w1 = &sw_inv[icy][0][0];
-    w2 = &sw_inv[icy][0][1];
-    w3 = &sw_inv[icy][0][2];
-    w4 = &sw_inv[icy][0][3];
-    _su3_multiply(psi,*w1,phi1); 
-    _su3_multiply(chi,*w2,(*rn).s1);
-    _vector_add((*rn).s0,psi,chi);
-    _su3_multiply(psi,*w4,phi1); 
-    _su3_multiply(chi,*w3,(*rn).s1);
-    _vector_add((*rn).s1,psi,chi);
-
-    w1 = &sw_inv[icy][1][0];
-    w2 = &sw_inv[icy][1][1];
-    w3 = &sw_inv[icy][1][2];
-    w4 = &sw_inv[icy][1][3];
-    _su3_multiply(psi,*w1,phi3); 
-    _su3_multiply(chi,*w2,(*rn).s3);
-    _vector_add((*rn).s2,psi,chi);
-    _su3_multiply(psi,*w4,phi3); 
-    _su3_multiply(chi,*w3,(*rn).s3);
-    _vector_add((*rn).s3,psi,chi);
+    r += 6;
+    w = sw_inv[icy][1];
+    _mul_colourmatrix_add(s, w, r);
+    memcpy(r, s, 6*sizeof(_Complex double));
 
 #ifndef OMP
     ++icy;
@@ -242,10 +236,9 @@ void clover_inv_nd(const int ieo, spinor * const l_c, spinor * const l_s) {
   {
 #endif
   int icy;
-  su3_vector ALIGN psi, chi, phi1, phi3;
   int ioff = 0;
-  const su3 *w1, *w2, *w3, *w4;
-  spinor *rn_s, *rn_c;
+  _Complex double ALIGN s[6];
+  _Complex double * restrict w, * restrict rn_s, * restrict rn_c;
 
 
   if(ieo == 1) ioff = VOLUME/2;
@@ -262,51 +255,23 @@ void clover_inv_nd(const int ieo, spinor * const l_c, spinor * const l_s) {
     icy = ioff + icx;
 #endif
 
-    rn_s = l_s + icx;
-    rn_c = l_c + icx;
-    _vector_assign(phi1,(*rn_s).s0);
+    rn_s = (_Complex double *) (l_s + icx);
+    rn_c = (_Complex double *) (l_c + icx);
+    w = sw_inv[icy][0];
+    _mul_colourmatrix_add(s, w, rn_s);
+    memcpy(rn_s, s, 6*sizeof(_Complex double));
 
-    w1 = &sw_inv[icy][0][0];
-    w2 = &sw_inv[icy][0][1];
-    w3 = &sw_inv[icy][0][2];
-    w4 = &sw_inv[icy][0][3];
-    _su3_multiply(psi, *w1, phi1); 
-    _su3_multiply(chi, *w2, (*rn_s).s1);
-    _vector_add((*rn_s).s0, psi,chi);
-    _su3_multiply(psi, *w4, phi1); 
-    _su3_multiply(chi, *w3, (*rn_s).s1);
-    _vector_add((*rn_s).s1, psi, chi);
+    _mul_colourmatrix_add(s, w, rn_c);
+    memcpy(rn_c, s, 6*sizeof(_Complex double));
 
-    _vector_assign(phi1,(*rn_c).s0);
+    rn_s += 6;
+    rn_c += 6;
+    w = sw_inv[icy][1];
+    _mul_colourmatrix_add(s, w, rn_s);
+    memcpy(rn_s, s, 6*sizeof(_Complex double));
 
-    _su3_multiply(psi, *w1, phi1); 
-    _su3_multiply(chi, *w2, (*rn_c).s1);
-    _vector_add((*rn_c).s0, psi,chi);
-    _su3_multiply(psi, *w4, phi1); 
-    _su3_multiply(chi, *w3, (*rn_c).s1);
-    _vector_add((*rn_c).s1, psi, chi);
-
-    _vector_assign(phi3,(*rn_s).s2);
-
-    w1 = &sw_inv[icy][1][0];
-    w2 = &sw_inv[icy][1][1];
-    w3 = &sw_inv[icy][1][2];
-    w4 = &sw_inv[icy][1][3];
-    _su3_multiply(psi, *w1, phi3); 
-    _su3_multiply(chi, *w2, (*rn_s).s3);
-    _vector_add((*rn_s).s2, psi, chi);
-    _su3_multiply(psi, *w4, phi3); 
-    _su3_multiply(chi, *w3, (*rn_s).s3);
-    _vector_add((*rn_s).s3, psi, chi);
-
-    _vector_assign(phi3,(*rn_c).s2);
-
-    _su3_multiply(psi, *w1, phi3); 
-    _su3_multiply(chi, *w2, (*rn_c).s3);
-    _vector_add((*rn_c).s2, psi, chi);
-    _su3_multiply(psi, *w4, phi3); 
-    _su3_multiply(chi, *w3, (*rn_c).s3);
-    _vector_add((*rn_c).s3, psi, chi);
+    _mul_colourmatrix_add(s, w, rn_c);
+    memcpy(rn_c, s, 6*sizeof(_Complex double));
 
 #ifndef OMP
     ++icy;
@@ -958,45 +923,22 @@ void assign_mul_one_sw_pm_imu_inv(const int ieo,
 #pragma omp parallel
   {
 #endif
-  su3_vector ALIGN psi, chi, phi1, phi3;
-  const su3 *w1, *w2, *w3, *w4;
-  const spinor *rn;
-  spinor *s;
+  _Complex double * restrict w, * restrict r, * restrict s;
 
-  /************************ loop over all lattice sites *************************/
 #ifdef OMP
 #pragma omp for
 #endif
   for(int icx = 0; icx < (VOLUME/2); icx++) {
 
-    rn = l + icx;
-    s = k + icx;
-    _vector_assign(phi1,(*rn).s0);
-    _vector_assign(phi3,(*rn).s2);
+    r = (_Complex double *) (l + icx);
+    s = (_Complex double *) (k + icx);
+    w = sw_inv[icx][0];
+    _mul_colourmatrix_add(s, w, r);
 
-    w1 = &sw_inv[icx][0][0];
-    w2 = &sw_inv[icx][0][1];
-    w3 = &sw_inv[icx][0][2];
-    w4 = &sw_inv[icx][0][3];
-    _su3_multiply(psi,*w1,phi1); 
-    _su3_multiply(chi,*w2,(*rn).s1);
-    _vector_add((*s).s0,psi,chi);
-    _su3_multiply(psi,*w4,phi1); 
-    _su3_multiply(chi,*w3,(*rn).s1);
-    _vector_add((*s).s1,psi,chi);
-
-    w1 = &sw_inv[icx][1][0];
-    w2 = &sw_inv[icx][1][1];
-    w3 = &sw_inv[icx][1][2];
-    w4 = &sw_inv[icx][1][3];
-    _su3_multiply(psi,*w1,phi3); 
-    _su3_multiply(chi,*w2,(*rn).s3);
-    _vector_add((*s).s2,psi,chi);
-    _su3_multiply(psi,*w4,phi3); 
-    _su3_multiply(chi,*w3,(*rn).s3);
-    _vector_add((*s).s3,psi,chi);
-
-    /******************************** end of loop *********************************/
+    r += 6;
+    s += 6;
+    w = sw_inv[icx][1];
+    _mul_colourmatrix_add(s, w, r);
   }
 #ifdef OMP
   } /* OpenMP closing brace */
@@ -1011,31 +953,32 @@ void assign_mul_one_sw_pm_imu_inv(const int ieo,
  *
  ********/
 
-su3 ** sw1, ** sw_inv1;
-su3 * _sw, *_sw_inv;
+su3 ** sw1, * _sw;
+_Complex double **  sw_inv1, *_sw_inv;
 
 void init_sw_fields() {
   int V = VOLUME;
   su3 * tmp;
+  _Complex double * ctmp;
   static int sw_init = 0;
 
   if(!sw_init) {
     if((void*)(sw = (su3***)calloc(V, sizeof(su3**))) == NULL) {
       fprintf (stderr, "sw malloc err\n"); 
     }
-    if((void*)(sw_inv = (su3***)calloc(V, sizeof(su3**))) == NULL) {
+    if((void*)(sw_inv = (_Complex double***)calloc(V, sizeof(_Complex double**))) == NULL) {
       fprintf (stderr, "sw_inv malloc err\n"); 
     }
     if((void*)(sw1 = (su3**)calloc(2*V, sizeof(su3*))) == NULL) {
       fprintf (stderr, "sw1 malloc err\n"); 
     }
-    if((void*)(sw_inv1 = (su3**)calloc(2*V, sizeof(su3*))) == NULL) {
+    if((void*)(sw_inv1 = (_Complex double**)calloc(2*V, sizeof(_Complex double*))) == NULL) {
       fprintf (stderr, "sw_inv1 malloc err\n"); 
     }
     if((void*)(_sw = (su3*)calloc(3*2*V+1, sizeof(su3))) == NULL) {
       fprintf (stderr, "_sw malloc err\n"); 
     }
-    if((void*)(_sw_inv = (su3*)calloc(4*2*V+1, sizeof(su3))) == NULL) {
+    if((void*)(_sw_inv = (_Complex double*)calloc(36*2*V+1, sizeof(_Complex double))) == NULL) {
       fprintf (stderr, "_sw_inv malloc err\n"); 
     }
     sw[0] = sw1;
@@ -1045,7 +988,7 @@ void init_sw_fields() {
       sw_inv[i] = sw_inv[i-1]+2;
     }
     sw[0][0] = (su3*)(((unsigned long int)(_sw)+ALIGN_BASE)&~ALIGN_BASE);
-    sw_inv[0][0] = (su3*)(((unsigned long int)(_sw_inv)+ALIGN_BASE)&~ALIGN_BASE);
+    sw_inv[0][0] = (_Complex double*)(((unsigned long int)(_sw_inv)+ALIGN_BASE)&~ALIGN_BASE);
     tmp = sw[0][0];
     for(int i = 0; i < V; i++) {
       for(int j = 0; j < 2; j++) {
@@ -1054,11 +997,11 @@ void init_sw_fields() {
       }
     }
     
-    tmp = sw_inv[0][0];
+    ctmp = sw_inv[0][0];
     for(int i = 0; i < V; i++) {
       for(int j = 0; j < 2; j++) {
-	sw_inv[i][j] = tmp;
-	tmp = tmp+4;
+	sw_inv[i][j] = ctmp;
+	ctmp = ctmp + 36;
       }
     }
     sw_init = 1;

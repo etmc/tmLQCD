@@ -214,10 +214,11 @@ void sw_invert(const int ieo, const double mu) {
       }
 
       /*  copy "a" back to sw_inv */
-      get_3x3_block_matrix(&sw_inv[icy][i][0], a, 0, 0);
-      get_3x3_block_matrix(&sw_inv[icy][i][1], a, 0, 3);
-      get_3x3_block_matrix(&sw_inv[icy][i][2], a, 3, 3);
-      get_3x3_block_matrix(&sw_inv[icy][i][3], a, 3, 0);
+      memcpy(sw_inv[icy][i], a[0], 36*sizeof(_Complex double));
+      //get_3x3_block_matrix(&sw_inv[icy][i][0], a, 0, 0);
+      //get_3x3_block_matrix(&sw_inv[icy][i][1], a, 0, 3);
+      //get_3x3_block_matrix(&sw_inv[icy][i][2], a, 3, 3);
+      //get_3x3_block_matrix(&sw_inv[icy][i][3], a, 3, 0);
     }
 
     if(fabs(mu) > 0.) {
@@ -240,10 +241,11 @@ void sw_invert(const int ieo, const double mu) {
 	}
 
 	/*  copy "a" back to sw_inv */
-	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][i][0], a, 0, 0);
-	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][i][1], a, 0, 3);
-	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][i][2], a, 3, 3);
-	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][i][3], a, 3, 0);
+	memcpy(sw_inv[icy+VOLUME/2][i], a[0], 36*sizeof(_Complex double));
+	//get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][i][0], a, 0, 0);
+	//get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][i][1], a, 0, 3);
+	//get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][i][2], a, 3, 3);
+	//get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][i][3], a, 3, 0);
       }
     }
 #ifndef OMP
@@ -306,10 +308,11 @@ void sw_invert_nd(const double mshift) {
       }
 
       /*  copy "a" back to sw_inv */
-      get_3x3_block_matrix(&sw_inv[icx][i][0], b, 0, 0);
-      get_3x3_block_matrix(&sw_inv[icx][i][1], b, 0, 3);
-      get_3x3_block_matrix(&sw_inv[icx][i][2], b, 3, 3);
-      get_3x3_block_matrix(&sw_inv[icx][i][3], b, 3, 0);
+      memcpy(sw_inv[icx][i], b[0], 36*sizeof(_Complex double));
+      //get_3x3_block_matrix(&sw_inv[icx][i][0], b, 0, 0);
+      //get_3x3_block_matrix(&sw_inv[icx][i][1], b, 0, 3);
+      //get_3x3_block_matrix(&sw_inv[icx][i][2], b, 3, 3);
+      //get_3x3_block_matrix(&sw_inv[icx][i][3], b, 3, 0);
     }
   }
 #ifdef OMP

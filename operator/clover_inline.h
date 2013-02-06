@@ -1,7 +1,6 @@
 /***********************************************************************
  *
- * Copyright (C) 2005 Martin Hasenbusch
- *               2011 Carsten Urbach
+ * Copyright (C) 2011 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -44,6 +43,34 @@ static inline void get_3x3_block_matrix(su3 * const C, _Complex double a[6][6], 
   C->c21 = a[2+row][1+col];
   C->c22 = a[2+row][2+col];
   return;
+}
+
+static inline void colour_plus_colour_addto_su3(su3 * const C, 
+						_Complex double * a, _Complex double * b, 
+						const double fac, const int row, const int col) {
+  C->c00 += fac*( a[(0+row)*6 + 0+col] + b[(0+row)*6 + 0+col] );
+  C->c01 += fac*( a[(0+row)*6 + 1+col] + b[(0+row)*6 + 1+col] );
+  C->c02 += fac*( a[(0+row)*6 + 2+col] + b[(0+row)*6 + 2+col] );
+  C->c10 += fac*( a[(1+row)*6 + 0+col] + b[(1+row)*6 + 0+col] );
+  C->c11 += fac*( a[(1+row)*6 + 1+col] + b[(1+row)*6 + 1+col] );
+  C->c12 += fac*( a[(1+row)*6 + 2+col] + b[(1+row)*6 + 2+col] );
+  C->c20 += fac*( a[(2+row)*6 + 0+col] + b[(2+row)*6 + 0+col] );
+  C->c21 += fac*( a[(2+row)*6 + 1+col] + b[(2+row)*6 + 1+col] );
+  C->c22 += fac*( a[(2+row)*6 + 2+col] + b[(2+row)*6 + 2+col] );
+}
+
+static inline void colour_minus_colour_addto_su3(su3 * const C, 
+						 _Complex double * a, _Complex double * b, 
+						 const double fac, const int row, const int col) {
+  C->c00 += fac*( a[(0+row)*6 + 0+col] - b[(0+row)*6 + 0+col] );
+  C->c01 += fac*( a[(0+row)*6 + 1+col] - b[(0+row)*6 + 1+col] );
+  C->c02 += fac*( a[(0+row)*6 + 2+col] - b[(0+row)*6 + 2+col] );
+  C->c10 += fac*( a[(1+row)*6 + 0+col] - b[(1+row)*6 + 0+col] );
+  C->c11 += fac*( a[(1+row)*6 + 1+col] - b[(1+row)*6 + 1+col] );
+  C->c12 += fac*( a[(1+row)*6 + 2+col] - b[(1+row)*6 + 2+col] );
+  C->c20 += fac*( a[(2+row)*6 + 0+col] - b[(2+row)*6 + 0+col] );
+  C->c21 += fac*( a[(2+row)*6 + 1+col] - b[(2+row)*6 + 1+col] );
+  C->c22 += fac*( a[(2+row)*6 + 2+col] - b[(2+row)*6 + 2+col] );
 }
 
 // This function computes the trace-log part of the clover term
