@@ -123,22 +123,6 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
   xchange_deri(hf->derivative);
 #endif
 
-  /* FIXME Debugging code inserted here */
-//   su3adj num_eval;
-//   int xref = 1;
-//   int muref = 1;
-//   calculate_forces_numerically(&num_eval, xref, muref, mnllist, no);
-//   double *ar_df = (double*)&df[xref][muref];
-//   double *ar_ne = (double*)&num_eval;
-//   fprintf(stderr, "[DEBUG] Comparison of force calculation at (%d, %d)!\n", xref, muref);
-//   fprintf(stderr, "        Involves monomial types: ");
-//   for (int monnum = 0; monnum < no; ++monnum)
-//     fprintf(stderr, "%d ", monomial_list[ mnllist[monnum] ].type);
-//   fprintf(stderr, "\n");
-//   fprintf(stderr, "           Analytical  vs.  numerical\n");
-//   for (int component = 0; component < 8; ++component)
-//     fprintf(stderr, "    [%d]  %+12.7f <-> %+12.7f\n", component, ar_df[component], ar_ne[component]);
-
 #ifdef OMP
 #pragma omp parallel for
 #endif
