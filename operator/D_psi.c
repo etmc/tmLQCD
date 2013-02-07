@@ -266,9 +266,8 @@ void local_H(spinor * const rr, spinor * const s, su3 * u, int * _idx) {
 #else
 
 
-static inline void p0add(spinor const * restrict const s, 
-			 su3 const * restrict const u, const _Complex double phase,
-       spinor * restrict const tmpr) {
+static inline void p0add(spinor * restrict const tmpr , spinor const * restrict const s, 
+			 su3 const * restrict const u, const _Complex double phase) {
 
 #ifdef OMP
 #define static
@@ -296,9 +295,8 @@ static inline void p0add(spinor const * restrict const s,
 }
 
 
-static inline void m0add(spinor const * restrict const s, 
-			 su3 const * restrict const u, const _Complex double phase,
-       spinor * restrict const tmpr) {
+static inline void m0add(spinor * restrict const tmpr, spinor const * restrict const s, 
+			 su3 const * restrict const u, const _Complex double phase) {
 #ifdef OMP
 #define static
 #endif
@@ -324,9 +322,8 @@ static inline void m0add(spinor const * restrict const s,
   return;
 }
 
-static inline void p1add(spinor const * restrict const s, 
-			 su3 const * restrict const u, const _Complex double phase,
-       spinor * restrict const tmpr) {
+static inline void p1add(spinor * restrict const tmpr, spinor const * restrict const s, 
+			 su3 const * restrict const u, const _Complex double phase) {
 #ifdef OMP
 #define static
 #endif
@@ -352,9 +349,8 @@ static inline void p1add(spinor const * restrict const s,
   return;
 }
 
-static inline void m1add(spinor const * restrict const s, 
-			 su3 const * restrict const u, const _Complex double phase,
-       spinor * restrict const tmpr) {
+static inline void m1add(spinor * restrict const tmpr, spinor const * restrict const s, 
+			 su3 const * restrict const u, const _Complex double phase) {
 #ifdef OMP
 #define static
 #endif
@@ -380,9 +376,8 @@ static inline void m1add(spinor const * restrict const s,
   return;
 }
 
-static inline void p2add(spinor const * restrict const s, 
-			 su3 const * restrict const u, const _Complex double phase,
-       spinor * restrict const tmpr) {
+static inline void p2add(spinor * restrict const tmpr, spinor const * restrict const s, 
+			 su3 const * restrict const u, const _Complex double phase) {
 #ifdef OMP
 #define static
 #endif
@@ -409,9 +404,8 @@ static inline void p2add(spinor const * restrict const s,
   return;
 }
 
-static inline void m2add(spinor const * restrict const s, 
-			 su3 const * restrict const u, const _Complex double phase,
-       spinor * restrict const tmpr) {
+static inline void m2add(spinor * restrict const tmpr, spinor const * restrict const s, 
+			 su3 const * restrict const u, const _Complex double phase) {
 #ifdef OMP
 #define static
 #endif
@@ -437,9 +431,8 @@ static inline void m2add(spinor const * restrict const s,
   return;
 }
 
-static inline void p3add(spinor const * restrict const s, 
-			 su3 const * restrict const u, const _Complex double phase,
-       spinor * restrict const tmpr) {
+static inline void p3add(spinor * restrict const tmpr, spinor const * restrict const s, 
+			 su3 const * restrict const u, const _Complex double phase) {
 #ifdef OMP
 #define static
 #endif
@@ -499,35 +492,35 @@ static inline void local_H(spinor * const rr, spinor const * const s, su3 const 
   int * idx = _idx;
 
   /****** direction +0 ******/
-  p0add(s + (*idx), u, phase_0,tmpr);
+  p0add(tmpr, s + (*idx), u, phase_0);
   u++;
   idx++;
   /****** direction -0 ******/
-  m0add(s + (*idx), u, phase_0,tmpr);
+  m0add(tmpr, s + (*idx), u, phase_0);
   u++;
   idx++;
   /****** direction +1 ******/
-  p1add(s + (*idx), u, phase_1,tmpr);
+  p1add(tmpr, s + (*idx), u, phase_1);
   u++;
   idx++;
   /****** direction -1 ******/
-  m1add(s + (*idx), u, phase_1,tmpr);
+  m1add(tmpr, s + (*idx), u, phase_1);
   u++;
   idx++;
   /****** direction +2 ******/
-  p2add(s + (*idx), u, phase_2,tmpr);
+  p2add(tmpr, s + (*idx), u, phase_2);
   u++;
   idx++;
   /****** direction -2 ******/
-  m2add(s + (*idx), u, phase_2,tmpr);
+  m2add(tmpr, s + (*idx), u, phase_2);
   u++;
   idx++;
   /****** direction +3 ******/
-  p3add(s + (*idx), u, phase_3,tmpr);
+  p3add(tmpr, s + (*idx), u, phase_3);
   u++;
   idx++;
   /****** direction -3 ******/
-  m3addandstore(rr, s + (*idx), u, phase_3,tmpr);
+  m3addandstore(rr, s + (*idx), u, phase_3, tmpr);
 
   return;
 }
@@ -1255,49 +1248,49 @@ void D_psi(spinor * const P, spinor * const Q){
     iy=g_iup[ix][0];
     sp = (spinor *) Q +iy;
     up=&g_gauge_field[ix][0];
-    p0add(sp, up, phase_0,&tmpr);
+    p0add(&tmpr, sp, up, phase_0);
 
     /******************************* direction -0 *********************************/
     iy=g_idn[ix][0];
     sm  = (spinor *) Q +iy;
     um=&g_gauge_field[iy][0];
-    m0add(sm, um, phase_0,&tmpr);
+    m0add(&tmpr, sm, um, phase_0);
 
     /******************************* direction +1 *********************************/
     iy=g_iup[ix][1];
     sp = (spinor *) Q +iy;
     up=&g_gauge_field[ix][1];
-    p1add(sp, up, phase_1,&tmpr);
+    p1add(&tmpr, sp, up, phase_1);
 
     /******************************* direction -1 *********************************/
     iy=g_idn[ix][1];
     sm = (spinor *) Q +iy;
     um=&g_gauge_field[iy][1];
-    m1add(sm, um, phase_1,&tmpr);
+    m1add(&tmpr, sm, um, phase_1);
 
     /******************************* direction +2 *********************************/
     iy=g_iup[ix][2];
     sp = (spinor *) Q +iy;
     up=&g_gauge_field[ix][2];
-    p2add(sp, up, phase_2,&tmpr);
+    p2add(&tmpr, sp, up, phase_2);
 
     /******************************* direction -2 *********************************/
     iy=g_idn[ix][2];
     sm = (spinor *) Q +iy;
     um=&g_gauge_field[iy][2];
-    m2add(sm, um, phase_2,&tmpr);
+    m2add(&tmpr, sm, um, phase_2);
 
     /******************************* direction +3 *********************************/
     iy=g_iup[ix][3];
     sp = (spinor *) Q +iy;
     up=&g_gauge_field[ix][3];
-    p3add(sp, up, phase_3,&tmpr);
+    p3add(&tmpr, sp, up, phase_3);
 
     /******************************* direction -3 *********************************/
     iy=g_idn[ix][3];
     sm = (spinor *) Q +iy;
     um=&g_gauge_field[iy][3];
-    m3addandstore(rr, sm, um, phase_3,&tmpr);
+    m3addandstore(rr, sm, um, phase_3, &tmpr);
   }
 #ifdef OMP
   } /* OpenMP closing brace */
@@ -1404,7 +1397,7 @@ void Block_H_psi(block * blk, spinor * const rr, spinor * const s, const int eo)
     _spinor_null(tmpr);
 #endif
 
-    local_H(r, s, u, eoidx,&tmpr);
+    local_H(r, s, u, eoidx, &tmpr);
 
     r++;
     eoidx += 8;
