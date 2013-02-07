@@ -190,6 +190,7 @@ which can be done in different ways:
     \STATE $x_{n+1} = x_n + \alpha_n p_n$
     \STATE $\biggl.\biggr.r_{n+1} = r_n - \alpha_n Ap_n$
     \STATE $\beta_{n+1} = (r_{n+1}, r_{n+1}) / (r_n, r_n)$
+    \STATE $\beta_{n+1}^k = \frac{\beta_{n+1} \zeta_{n+1}^k \alpha_n^k}{\zeta_{n}^k\alpha_n}$
     \STATE $\biggl.\biggr.p_{n+1}^k = \zeta_{n+1}^k r_{n+1} + \beta_{n+1}^k p_n^k$
     \STATE $n=n+1$
     \UNTIL{$\|r_n\|<\epsilon$}
@@ -222,7 +223,7 @@ when
 \[
 \|\alpha^\sigma p^\sigma\| < \delta\,,
 \]
-where one could for instance chose $\epsilon =
+where one could for instance chose $\delta =
 c\cdot\epsilon$. $\epsilon$ is the desired precision of the CGMMS
 solve and $0<c\leq1$ some suitably chosen constant. Removing converged
 solutions has the side effect of speeding up the CGMMS solve in terms

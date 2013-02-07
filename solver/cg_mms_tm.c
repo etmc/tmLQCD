@@ -181,7 +181,7 @@ int cg_mms_tm(spinor ** const P, spinor * const Q,
     assign_mul_add_r(solver_field[1], betas[0], solver_field[0], N);
     normsq = err;
 
-    /* Compute betas(i+1) = betas[0](i)*(zita(i+1)*alphas(i))/(zita(i)*alphas[0](i))
+    /* Compute betas(i+1) = betas[0](i+1)*(zita(i+1)*alphas(i))/(zita(i)*alphas[0](i))
        Compute ps(i+1) = zita(i+1)*r(i+1) + betas(i+1)*ps(i)  */
     for(int im = 1; im < no_shifts; im++) {
       betas[im] = betas[0]*zita[im]*alphas[im]/(zitam1[im]*alphas[0]);
