@@ -60,7 +60,7 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
     }
   }
 
-  (*mnl).forcefactor = 1.;
+  mnl->forcefactor = 1.;
   /*********************************************************************
    * 
    * even/odd version 
