@@ -3,13 +3,12 @@
 #include "utils_exponent_from_coefficients.static"
 
 /* This is a convenience function with a fairly ugly interface -- sorry about that. */
-void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Complex double *f1, _Complex double *f2, su3 const *A)
+void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Complex double *f1, _Complex double *f2, su3 *A)
 {
   static double const fac_1_3 = 1 / 3.0;
-    
+  
   /* The value of f0 is never needed beyond this function, unlike f1 and f2. We make scoped room for all three,
-   * in case f1 and f2 are not requested.  NOTE We want to check the performance impact of this -- this function is
-   * called on the full volume of a lattice, after all. */
+   * in case f1 and f2 are not requested. */
   _Complex double f0[3];
   
   if (!f1)
@@ -17,8 +16,6 @@ void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Com
     f1 = f0 + 1;
     f2 = f0 + 2;
   }
-  
-  /* NOTE The expressions below are adapted from Peardon-Morningstar. Note that there is a factor -I between A and Q! */
   
   /* c0 = det[A] */
   double c0 = I * (A->c00 * (A->c11 * A->c22 - A->c12 * A->c21) + 
@@ -41,7 +38,7 @@ void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Com
     *f2 = -0.5;
     return;
   }
-
+  
   /* P&M give symmetry relations that can be used when c0 < 0, to avoid the numerically problematic c0 -> -c0_max limit.
      We note the sign here for future reference, then continue with c0 as if it were positive. */
   int c0_negative = (c0 < 0);
@@ -72,14 +69,14 @@ void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Com
   double divisor = 1.0 / (9.0 * u2 -  w2);
 
   *f0 = divisor * (ma * (u * u -  w * w) + mb * (8 * u * u * cw + 2 * I * u * (3 * u * u +  w * w) * xi0));
-  *f1 = divisor * (2 * u * ma - mb * (2 * u * cw - I * (3 * u * u -  w * w) * xi0));
-  *f2 = divisor * (ma - mb * (cw + 3 * I * u * xi0));
+  *f1 = divisor * (-2 * I * u * ma + mb * (2 * I * u * cw + (3 * u * u -  w * w) * xi0));
+  *f2 = divisor * (mb * (cw + 3 * I * u * xi0) - ma);
 
   /* The first point where we use the symmetry relations to calculate the negative c0 possibility */
   if (c0_negative)
   {
     *f0 = conj(*f0);
-    *f1 = -conj(*f1);
+    *f1 = conj(*f1);
     *f2 = conj(*f2);
   }
   
@@ -102,30 +99,30 @@ void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Com
   divisor = 0.5 * divisor * divisor;
   double mr2 = (3 * u2 - w2);
   double mf  = 2 * (15 * u2 + w2);
-  
-  _Complex double bn0 = divisor * (2 * u * r10 + mr2 * r20 - mf * *f0);
-  _Complex double bn1 = divisor * (2 * u * r11 + mr2 * r21 - mf * *f1);
-  _Complex double bn2 = divisor * (2 * u * r12 + mr2 * r22 - mf * *f2);
+   
+  _Complex double bn0 = divisor * (mf * *f0 - 2 * u * r10 - mr2 * r20);
+  _Complex double bn1 = divisor * (mf * *f1 + (2 * u * r11 + mr2 * r21) * I);
+  _Complex double bn2 = divisor * (mf * *f2 + 2 * u * r12 + mr2 * r22);
+ 
+  if (c0_negative)
+  {
+    bn0 = conj(bn0);
+    bn1 = conj(bn1);
+    bn2 = conj(bn2);
+  }
+
+  exponent_from_coefficients(B1, bn0, bn1, bn2, A);
+   
+  bn0 = divisor * (r10 - 3 * u * r20 - 24 * u * *f0) * I;
+  bn1 = divisor * (r11 - 3 * u * r21 - 24 * u * *f1 * I);
+  bn2 = divisor * (3 * u * r22 - 24 * u * *f2 - r12) * I;
   
   if (c0_negative)
   {
     bn0 = conj(bn0);
-    bn1 = -conj(bn1);
+    bn1 = conj(bn1);
     bn2 = conj(bn2);
   }
-  
-  exponent_from_coefficients(B1,    bn0, bn1, bn2, A);
-  
-  bn0 = divisor * (r10 - 3 * u * r20 - 24 * u * *f0);
-  bn1 = divisor * (r11 - 3 * u * r21 - 24 * u * *f1);
-  bn2 = divisor * (r12 - 3 * u * r22 - 24 * u * *f2);
-  
-  if (c0_negative)
-  {
-    bn0 = -conj(bn0);
-    bn1 = conj(bn1);
-    bn2 = -conj(bn2);
-  }
-  
+
   exponent_from_coefficients(B2, bn0, bn1, bn2, A);
 }

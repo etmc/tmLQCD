@@ -1,34 +1,13 @@
 static void construct_intermediates(stout_notes_tuple *trace, gauge_field_t const V, gauge_field_t const U, gauge_field_t const smeared_force)
 {
-  /* NOTE
-     The following constructs the variable Z on the whole field. Note that we have an anti-hermitian matrix A incoming, rather than a hermitian
-     matrix Q. We need the derivative of exp(A), rather than exp(i Q), introducing phase factors in the polynomial. We should probably still
-     clean all of this up, but for the time being, I'm introducing -i A as the expansion parameter and explicitly absorbing the phase factors here.
-     Eventually, perhaps we can modify the cayley_hamilton_exponent_with_force_terms, the exponent_from_coefficients and this routine consistently
-     so that the different parameters absorb the coefficients correctly. We need to be careful with the symmetry properties used code when we do,
-     however, and B1 and B2 still need to be shifted by overall factors. Another option is simply rewriting everything in terms of the hermitian
-     matrix Q... 
-  
-  /* NOTE #2
-     Still another issue... P&M have a hermitian projection, whereas BMW use an anti-hermitian projection. This is an irreducable difference
-     between the two algorithms. One possibility is, that all the coefficients pick up an additional factor of I. We'll experiment with this.
-     It appears one also needs to add a factor i to Z, presumably coming from the chain derivative of Q to A.
-  */
-  
   _Complex double mat_trace;
   su3 ALIGN t1;
   su3 ALIGN t2;
   
   #pragma omp parallel for
   for (unsigned int x = 0; x < VOLUME; ++x)
-    for (unsigned int mu =0; mu < 4; ++mu)
-    {
-      /* FIXME Debugging manipulations -- adding abitrary phases to fix code */
-      _complex_times_su3(trace[x][mu].B1, -1.0, trace[x][mu].B1)
-      _complex_times_su3(trace[x][mu].B2, I, trace[x][mu].B2)
-      trace[x][mu].f1 *= -I;
-      trace[x][mu].f2 *= -1;     
-     
+    for (unsigned int mu = 0; mu < 4; ++mu)
+    {    
       /* A factor of V[x][mu] has to be taken out. This can't be done outside of the smearing loop, since there are projections involved at each step. */
       _su3d_times_su3(trace[x][mu].Sigma, V[x][mu], smeared_force[x][mu]);
 
