@@ -134,89 +134,21 @@ void finalize_dev_observables(){
 
 
 
-#ifndef HALF
-// this is a reduction algorithm for float based on the CUDA SDK 
-__global__ void reduce_float(float *g_idata, float *g_odata, unsigned int n)
-{
-    extern __shared__ float sdata[];
-
-    // load shared mem
-    unsigned int tid = threadIdx.x;
-    unsigned int i = blockIdx.x*blockDim.x + threadIdx.x;
-    
-    sdata[tid] = (i < n) ? g_idata[i] : 0;
-    
-    __syncthreads();
-
-    // do reduction in shared mem
-    for(unsigned int s=blockDim.x/2; s>0; s>>=1) 
-    {
-        if (tid < s) 
-        {
-            sdata[tid] += sdata[tid + s];
-        }
-        __syncthreads();
-    }
-
-    // write result for this block to global mem
-    if (tid == 0) g_odata[blockIdx.x] = sdata[0];
-}
-
-
-
-
-// this is the version for float2 
-__global__ void reduce_float2(float2 *g_idata, float2 *g_odata, unsigned int n)
-{
-    extern __shared__ float2 sdata2[];
-
-    // load shared mem
-    unsigned int tid = threadIdx.x;
-    unsigned int i = blockIdx.x*blockDim.x + threadIdx.x;
-    
-    sdata2[tid].x = (i < n) ? g_idata[i].x : 0;
-    sdata2[tid].y = (i < n) ? g_idata[i].y : 0;
-    
-    __syncthreads();
-
-    // do reduction in shared mem
-    for(unsigned int s=blockDim.x/2; s>0; s>>=1) 
-    {
-        if (tid < s) 
-        {
-            sdata2[tid].x += sdata2[tid + s].x;
-            sdata2[tid].y += sdata2[tid + s].y;
-        }
-        __syncthreads();
-    }
-
-    // write result for this block to global mem
-    if (tid == 0) {
-      g_odata[blockIdx.x].x = sdata2[0].x;
-      g_odata[blockIdx.x].y = sdata2[0].y;
-    }
-}
-
-#endif
-
-
-
 
 
 // update the global device gaugefield with host gaugefield given by gf
 // this is all single precision!
-template<class RealT>
-void update_dev_gaugefield(su3** gf,MixedsolveParameter<RealT>& mixedsolveParameter){
+void update_dev_gaugefield(su3** gf){
 
   size_t dev_gfsize;
   #ifdef GF_8
-    dev_gfsize = 2*4*VOLUME * sizeof(typename dev_su3_8T<RealT>::type);
-    su3to8<RealT>(gf,mixedsolveParameter.h2d_gf);  
+    dev_gfsize = 2*4*VOLUME * sizeof(dev_su3_8);
+    su3to8(gf,h2d_gf);  
   #else
-    dev_gfsize = 3*4*VOLUME * sizeof(typename dev_su3_2vT<RealT>::type);
-    su3to2vf4<RealT>(gf,mixedsolveParameter.h2d_gf);
+    dev_gfsize = 3*4*VOLUME * sizeof(dev_su3_2v);
+    su3to2vf4(gf,h2d_gf);
   #endif
-  cudaMemcpy(mixedsolveParameter.dev_gf, mixedsolveParameter.h2d_gf, dev_gfsize, cudaMemcpyHostToDevice);
+  cudaMemcpy(dev_gf, h2d_gf, dev_gfsize, cudaMemcpyHostToDevice);
 }
 
 
@@ -232,7 +164,6 @@ void update_dev_gaugefield(su3** gf,MixedsolveParameter<RealT>& mixedsolveParame
 
 // calculates the mean plaquette of the gauge field
 __global__ void dev_mean_plaq(float* reductionfield, int * dev_nn, dev_su3_2v * gf){
-  typedef REAL RealT;
   float mplaq = 0.0;
   int x0pos, x1pos, x2pos ; /* x0pos = basepoint of plaquette, x1pos = x0pos + e_mu, x2pos = x0pos + e_nu */
   int t,mu,nu;
@@ -242,6 +173,8 @@ __global__ void dev_mean_plaq(float* reductionfield, int * dev_nn, dev_su3_2v * 
  #ifdef TEMPORALGAUGE
   int spatialvol = dev_LX*dev_LY*dev_LZ;
  #endif
+
+ int gaugevol = dev_VOLUME;
  
  
  if(x0pos < dev_VOLUME){
@@ -255,9 +188,9 @@ __global__ void dev_mean_plaq(float* reductionfield, int * dev_nn, dev_su3_2v * 
 
 /* U_mu(x) */
             #ifdef GF_8
-              dev_reconstructgf_8texref<RealT>(gf, (4*x0pos+mu),&M1);
+              dev_reconstructgf_8texref(gf, x0pos, mu, gaugevol ,&M1);
             #else
-              dev_reconstructgf_2vtexref<RealT>(gf, (4*x0pos+mu),&M1);
+              dev_reconstructgf_2vtexref(gf, x0pos, mu, gaugevol ,&M1);
             #endif
 /* U_nu(x+e_mu) */
      #ifdef TEMPORALGAUGE
@@ -267,25 +200,25 @@ __global__ void dev_mean_plaq(float* reductionfield, int * dev_nn, dev_su3_2v * 
        }
        else{
          #ifdef GF_8
-           dev_reconstructgf_8texref<RealT>(gf, (4*x1pos+nu),&M2);
+           dev_reconstructgf_8texref(gf, x1pos, nu, gaugevol ,&M2);
          #else
-           dev_reconstructgf_2vtexref<RealT>(gf, (4*x1pos+nu),&M2);
+           dev_reconstructgf_2vtexref(gf, x1pos, nu, gaugevol ,&M2);
          #endif
        }
      #else
             #ifdef GF_8
-              dev_reconstructgf_8texref<RealT>(gf, (4*x1pos+nu),&M2);
+              dev_reconstructgf_8texref(gf, x1pos, nu, gaugevol ,&M2);
             #else
-              dev_reconstructgf_2vtexref<RealT>(gf, (4*x1pos+nu),&M2);
+              dev_reconstructgf_2vtexref(gf, x1pos, nu, gaugevol ,&M2);
             #endif
      #endif /*TEMPORALGAUGE*/
      dev_su3_ti_su3(&su3matrix, &M1,&M2);
      
 /* Udagger_mu(x+e_nu) */
             #ifdef GF_8
-              dev_reconstructgf_8texref_dagger<RealT>(gf, (4*x2pos+mu),&M3);
+              dev_reconstructgf_8texref_dagger(gf, x2pos, mu, gaugevol ,&M3);
             #else
-              dev_reconstructgf_2vtexref_dagger<RealT>(gf, (4*x2pos+mu),&M3);
+              dev_reconstructgf_2vtexref_dagger(gf, x2pos, mu, gaugevol ,&M3);
             #endif
     dev_su3_ti_su3(&su3matrix2, &su3matrix,&M3);
 /* Udagger_nu(x)*/
@@ -295,16 +228,16 @@ __global__ void dev_mean_plaq(float* reductionfield, int * dev_nn, dev_su3_2v * 
        }
        else{
          #ifdef GF_8
-           dev_reconstructgf_8texref_dagger<RealT>(gf, (4*x0pos+nu),&M4);
+           dev_reconstructgf_8texref_dagger(gf, x0pos, nu, gaugevol ,&M4);
          #else
-           dev_reconstructgf_2vtexref_dagger<RealT>(gf, (4*x0pos+nu),&M4);
+           dev_reconstructgf_2vtexref_dagger(gf, x0pos, nu, gaugevol,&M4);
          #endif
        }
      #else
        #ifdef GF_8
-         dev_reconstructgf_8texref_dagger<RealT>(gf, (4*x0pos+nu),&M4);
+         dev_reconstructgf_8texref_dagger(gf, x0pos, nu, gaugevol ,&M4);
        #else
-         dev_reconstructgf_2vtexref_dagger<RealT>(gf, (4*x0pos+nu),&M4);
+         dev_reconstructgf_2vtexref_dagger(gf, x0pos, nu, gaugevol,&M4);
        #endif
      #endif  /*TEMPORALGAUGE*/
      dev_su3_ti_su3(&su3matrix, &su3matrix2,&M4);
@@ -329,29 +262,29 @@ __global__ void dev_mean_plaq(float* reductionfield, int * dev_nn, dev_su3_2v * 
 
 /* U_nu(x) */
             #ifdef GF_8
-              dev_reconstructgf_8texref<RealT>(gf, (4*x0pos+mu),&M1);
+              dev_reconstructgf_8texref(gf, x0pos, mu, gaugevol ,&M1);
             #else
-              dev_reconstructgf_2vtexref<RealT>(gf, (4*x0pos+mu),&M1);
+              dev_reconstructgf_2vtexref(gf, x0pos, mu, gaugevol ,&M1);
             #endif
 /* U_mu(x+e_mu) */
             #ifdef GF_8
-              dev_reconstructgf_8texref<RealT>(gf, (4*x1pos+nu),&M2);
+              dev_reconstructgf_8texref(gf, x1pos, nu, gaugevol ,&M2);
             #else
-              dev_reconstructgf_2vtexref<RealT>(gf, (4*x1pos+nu),&M2);
+              dev_reconstructgf_2vtexref(gf, x1pos, nu, gaugevol ,&M2);
             #endif
             dev_su3_ti_su3(&su3matrix, &M1,&M2);
 /* Udagger_nu(x+e_nu) */
             #ifdef GF_8
-              dev_reconstructgf_8texref_dagger<RealT>(gf, (4*x2pos+mu),&M3);
+              dev_reconstructgf_8texref_dagger(gf, x2pos, mu, gaugevol ,&M3);
             #else
-              dev_reconstructgf_2vtexref_dagger<RealT>(gf, (4*x2pos+mu),&M3);
+              dev_reconstructgf_2vtexref_dagger(gf, x2pos, mu, gaugevol ,&M3);
             #endif
             dev_su3_ti_su3(&su3matrix2, &su3matrix,&M3);
 /* Udagger_mu(x)*/
             #ifdef GF_8
-              dev_reconstructgf_8texref_dagger<RealT>(gf, (4*x0pos+nu),&M4);
+              dev_reconstructgf_8texref_dagger(gf, x0pos, nu, gaugevol ,&M4);
             #else
-              dev_reconstructgf_2vtexref_dagger<RealT>(gf, (4*x0pos+nu),&M4);
+              dev_reconstructgf_2vtexref_dagger(gf, x0pos, nu, gaugevol ,&M4);
             #endif
             dev_su3_ti_su3(&su3matrix, &su3matrix2,&M4);
             mplaq += dev_su3Retrace(&su3matrix)/3.0;
@@ -458,35 +391,36 @@ float calc_plaquette(dev_su3_2v * U, int* nn){
 //        x
 __device__ float dev_onerect(int * dev_nn, dev_su3_2v * gf, int tid,
  				int x0pos, int mu, int nu ){
-            typedef REAL RealT;
             int x1pos, x2pos;
             dev_su3  M1,M2, su3matrix;
-             
+            int gaugevol = dev_VOLUME; 
+
             __shared__ dev_su3 su3matrix2[BLOCK]; 
             
-              
+            
+
               x1pos = dev_nn[8*x0pos + mu];
               x2pos = dev_nn[8*x1pos + mu];          
 
 /* U_mu(x) */
             #ifdef GF_8
-              dev_reconstructgf_8texref<RealT>(gf, (4*x0pos+mu),&M1);
+              dev_reconstructgf_8texref(gf, x0pos, mu, gaugevol ,&M1);
             #else
-              dev_reconstructgf_2vtexref<RealT>(gf, (4*x0pos+mu),&M1);
+              dev_reconstructgf_2vtexref(gf, x0pos, mu, gaugevol ,&M1);
             #endif
 /* U_mu(x+e_mu) */
             #ifdef GF_8
-              dev_reconstructgf_8texref<RealT>(gf, (4*x1pos+mu),&M2);
+              dev_reconstructgf_8texref(gf, x1pos, mu, gaugevol ,&M2);
             #else
-              dev_reconstructgf_2vtexref<RealT>(gf, (4*x1pos+mu),&M2);
+              dev_reconstructgf_2vtexref(gf, x1pos, mu, gaugevol,&M2);
             #endif
             dev_su3_ti_su3(&su3matrix2[tid], &M1,&M2);
             
 /* U_nu(x+ 2 e_mu) */
             #ifdef GF_8
-              dev_reconstructgf_8texref<RealT>(gf, (4*x2pos+nu),&M1);
+              dev_reconstructgf_8texref(gf, x2pos, nu, gaugevol ,&M1);
             #else
-              dev_reconstructgf_2vtexref<RealT>(gf, (4*x2pos+nu),&M1);
+              dev_reconstructgf_2vtexref(gf, x2pos, nu, gaugevol ,&M1);
             #endif
             dev_su3_ti_su3(&su3matrix, &su3matrix2[tid], &M1);
 
@@ -500,23 +434,23 @@ __device__ float dev_onerect(int * dev_nn, dev_su3_2v * gf, int tid,
 
 /* Udagger_mu(x+e_nu+e_mu)*/
             #ifdef GF_8
-              dev_reconstructgf_8texref_dagger<RealT>(gf, (4*x2pos+mu),&M1);
+              dev_reconstructgf_8texref_dagger(gf, x2pos, mu, gaugevol ,&M1);
             #else
-              dev_reconstructgf_2vtexref_dagger<RealT>(gf, (4*x2pos+mu),&M1);
+              dev_reconstructgf_2vtexref_dagger(gf, x2pos, mu, gaugevol ,&M1);
             #endif
             dev_su3_ti_su3(&su3matrix2[tid], &su3matrix , &M1);
  /* Udagger_mu(x+e_nu) */
             #ifdef GF_8
-              dev_reconstructgf_8texref_dagger<RealT>(gf, (4*x1pos+mu),&M2);
+              dev_reconstructgf_8texref_dagger(gf, x1pos, mu, gaugevol ,&M2);
             #else
-              dev_reconstructgf_2vtexref_dagger<RealT>(gf, (4*x1pos+mu),&M2);
+              dev_reconstructgf_2vtexref_dagger(gf, x1pos, mu, gaugevol ,&M2);
             #endif 
             dev_su3_ti_su3(&su3matrix, &su3matrix2[tid] , &M2);
 /* Udagger_nu(x)*/
             #ifdef GF_8
-              dev_reconstructgf_8texref_dagger<RealT>(gf, (4*x0pos+nu),&M1);
+              dev_reconstructgf_8texref_dagger(gf, x0pos, nu, gaugevol ,&M1);
             #else
-              dev_reconstructgf_2vtexref_dagger<RealT>(gf, (4*x0pos+nu),&M1);
+              dev_reconstructgf_2vtexref_dagger(gf, x0pos, nu, gaugevol ,&M1);
             #endif  
             dev_su3_ti_su3(&su3matrix2[tid], &su3matrix , &M1);
   
@@ -637,10 +571,10 @@ float calc_rectangle(dev_su3_2v * U, int* nn){
 
 // calculates the polyakov loop in time direction
 __global__ void dev_polyakov_0(float2* reductionfield, int * dev_nn, dev_su3_2v * gf){
-  typedef REAL RealT;
   float2 poly;
   poly.x = 0.0; poly.y = 0.0;
-  
+  int gaugevol = dev_VOLUME;
+
   int t, newpos, spatialpos;
   dev_su3 M1,  gather, tmp;
   
@@ -660,9 +594,9 @@ __global__ void dev_polyakov_0(float2* reductionfield, int * dev_nn, dev_su3_2v 
                  
 /* U_0(x) */
             #ifdef GF_8
-              dev_reconstructgf_8texref<RealT>(gf, (4*actualpos),&M1);
+              dev_reconstructgf_8texref(gf, actualpos, 0, gaugevol ,&M1);
             #else
-              dev_reconstructgf_2vtexref<RealT>(gf, (4*actualpos),&M1);
+              dev_reconstructgf_2vtexref(gf, actualpos, 0, gaugevol ,&M1);
             #endif
           
         //multiply 

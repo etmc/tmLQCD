@@ -26,8 +26,8 @@
 
 // benchmarks
 
-#define OPERATOR_BENCHMARK 100	// refers to only matrix applications
-#define ALGORITHM_BENCHMARK	// counts the number of effective flops
+#define OPERATOR_BENCHMARK 1000	// refers to only matrix applications
+//#define ALGORITHM_BENCHMARK	// counts the number of effective flops
 
 
 
@@ -43,7 +43,7 @@
 
 #define DEVICE_EQUAL_RANK	// for MPI: cudaSetDevice(mpi-rank)
 #define ASYNC 1			// overlaps computation and communication	// 0, 1, 2, 3
-#define ASYNC_TSLICES 1		// determines workload af kernels
+//#define ASYNC_TSLICES 1		// determines workload af kernels
 #define ASYNC_OPTIMIZED	1	// CUDA streams					// needs ASYNC == 3
 //#define ASYNC_TIMING		// profiling the ASYNC_OPTIMIZED code		// needs ASYNC == 1,2
 
@@ -52,11 +52,11 @@
 
 // CUDA parameters
 
-#define BLOCKSIZE1 64		// here:	dev_zero_spinor_field , dev_copy_spinor_field
-#define BLOCKSIZE2 64		// passed:	dev_Hopping_Matrix
-#define BLOCKSIZE3 64		// passed:	dev_mul_one_pm_imubar_gamma5
-#define BLOCKSIZE4 64		// passed:	dev_gamma5
-#define BLOCKSIZE5 64		// passed:	dev_copy_spinor_field
+#define BLOCKSIZE1 512		// here:	dev_zero_spinor_field , dev_copy_spinor_field
+#define BLOCKSIZE2 384		// passed:	dev_Hopping_Matrix
+#define BLOCKSIZE3 512		// passed:	dev_mul_one_pm_imubar_gamma5
+#define BLOCKSIZE4 512		// passed:	dev_gamma5
+#define BLOCKSIZE5 512		// passed:	dev_copy_spinor_field
 
 
 
