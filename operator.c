@@ -258,7 +258,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 				      0, optr->even_odd_flag,optr->no_extra_masses, optr->extra_masses, optr->id );
 	
 	/* check result */
-	M_full(g_spinor_field[4], g_spinor_field[5], optr->prop0, optr->prop1);
+	M_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
       }
       else {
 	optr->iterations = invert_clover_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
@@ -266,14 +266,14 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 					    optr->solver, optr->rel_prec,
 					    &g_gauge_field, &Qsw_pm_psi, &Qsw_minus_psi);
 	/* check result */
- 	Msw_full(g_spinor_field[4], g_spinor_field[5], optr->prop0, optr->prop1);
+ 	Msw_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
       }
 
-      diff(g_spinor_field[4], g_spinor_field[4], optr->sr0, VOLUME / 2);
-      diff(g_spinor_field[5], g_spinor_field[5], optr->sr1, VOLUME / 2);
+      diff(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], optr->sr0, VOLUME / 2);
+      diff(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], optr->sr1, VOLUME / 2);
 
-      nrm1 = square_norm(g_spinor_field[4], VOLUME / 2, 1);
-      nrm2 = square_norm(g_spinor_field[5], VOLUME / 2, 1);
+      nrm1 = square_norm(g_spinor_field[DUM_DERI], VOLUME / 2, 1);
+      nrm2 = square_norm(g_spinor_field[DUM_DERI+1], VOLUME / 2, 1);
       optr->reached_prec = nrm1 + nrm2;
 
       /* convert to standard normalisation  */

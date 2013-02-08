@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script
 #
 AC_PREREQ(2.59)
-AC_INIT(tmLQCD, 5.1.6, curbach@gmx.de)
+AC_INIT(tmLQCD, 5.2.0, curbach@gmx.de)
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_SRCDIR([hmc_tm.c])
 AC_CANONICAL_HOST()
@@ -41,7 +41,7 @@ LDFLAGS="$LDFLAGS -L\${HOME}/lib -L\${top_builddir}/lib"
 CCLD=${CC}
 
 # compilation in operator is slowest so we do it first, saves time in parallel compiles
-USESUBDIRS="operator linalg solver monomial buffers cu io xchange init"
+USESUBDIRS="operator linalg solver monomial buffers cu io xchange init rational"
 
 AC_CHECK_HEADERS([stdint.h],
 [ dnl for inttypes.h and stdint.h for uint_xxx types
@@ -911,7 +911,7 @@ if test ! -e tests/regressions; then
 fi
 
 
-LIBS="-lhmc -lmonomial -loperator -lsolver -linit -llinalg -lhmc -lxchange -lio $LIBS"
+LIBS="-lhmc -lmonomial -loperator -lsolver -linit -llinalg -lhmc -lxchange -lrational -lio $LIBS"
 AUTOCONF=autoconf
 
 for i in $USESUBDIRS
