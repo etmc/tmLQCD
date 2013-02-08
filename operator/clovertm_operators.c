@@ -160,17 +160,138 @@ void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const do
   return;
 }
 
-// s = w*r
-
-#define _mul_colourmatrix_add(s, w, r)		\
+#if (defined BGQ && defined XLC)
+// r = w*r
+// w a 6x6 colour matrix, r upper or lower half of a spinor
+# define _mul_colourmatrix(w, r)		\
+  r0 = vec_ld(0L, (double*) r);			\
+  r1 = vec_ld(32L, (double*) r);		\
+  r2 = vec_ld(64L, (double*) r);		\
+  _Pragma("unroll(6)")				\
   for(int c0 = 0; c0 < 6; c0++) {		\
-    s[c0] = w[c0*6] * r[0];			\
-    for(int c1 = 1; c1 < 6; c1++) {		\
-      s[c0] += w[c0*6 + c1] * r[c1];		\
-    }						\
+    w0 = vec_ld(0L, (double*) &w[6*c0]);	\
+    w1 = vec_ld(32L, (double*) &w[6*c0]);	\
+    w2 = vec_ld(64L, (double*) &w[6*c0]);	\
+    r3 = vec_xmul(r0, w0);			\
+    r4 = vec_xmul(r1, w1);			\
+    r5 = vec_xmul(r2, w2);			\
+    r3 = vec_xxnpmadd(w0, r0, r3);		\
+    r4 = vec_xxnpmadd(w1, r1, r4);		\
+    r5 = vec_xxnpmadd(w2, r2, r5);		\
+    r6 = vec_add(r3, r4);			\
+    r3 = vec_add(r5, r6);			\
+    /* there must a smarter solution for this */	\
+    r[c0] = r3[0] + I*r3[1] + r3[2] + I*r3[3];	\
   }
 
+#else
+// needs temporary space _Complex double s[6]
+# define _mul_colourmatrix(w, r)		\
+  for(int c0 = 0; c0 < 6; c0++) {		\
+    s[c0] = w[c0*6] * r[0];			\
+    s[c0] += w[c0*6 + 1] * r[1];		\
+    s[c0] += w[c0*6 + 2] * r[2];		\
+    s[c0] += w[c0*6 + 3] * r[3];		\
+    s[c0] += w[c0*6 + 4] * r[4];		\
+    s[c0] += w[c0*6 + 5] * r[5];		\
+  }						\
+  memcpy(r, s, 6*sizeof(_Complex double));
+#endif
 
+#if (defined BGQ && defined XLC)
+// r = w*r
+// w a 6x6 colour matrix, r_s and r_c upper or lower halfs of a spinor
+# define _mul_colourmatrix_nd(w, r_s, r_c)		\
+  r0 = vec_ld(0L, (double*) r_s);			\
+  r6 = vec_ld(0L, (double*) r_c);			\
+  r1 = vec_ld(32L, (double*) r_s);			\
+  r2 = vec_ld(64L, (double*) r_s);			\
+  r7 = vec_ld(32L, (double*) r_c);			\
+  r8 = vec_ld(64L, (double*) r_c);			\
+  _Pragma("unroll(6)")					\
+  for(int c0 = 0; c0 < 6; c0++) {			\
+    w0 = vec_ld(0L, (double*) &w[6*c0]);		\
+    w1 = vec_ld(32L, (double*) &w[6*c0]);		\
+    w2 = vec_ld(64L, (double*) &w[6*c0]);		\
+    r3  = vec_xmul(r0, w0);				\
+    r4  = vec_xmul(r1, w1);				\
+    r5  = vec_xmul(r2, w2);				\
+    r9  = vec_xmul(r6, w0);				\
+    r10 = vec_xmul(r7, w1);				\
+    r11 = vec_xmul(r8, w2);				\
+    r3  = vec_xxnpmadd(w0, r0, r3);			\
+    r4  = vec_xxnpmadd(w1, r1, r4);			\
+    r5  = vec_xxnpmadd(w2, r2, r5);			\
+    r9  = vec_xxnpmadd(w0, r6, r9);			\
+    r10 = vec_xxnpmadd(w1, r7, r10);			\
+    r11 = vec_xxnpmadd(w2, r8, r11);			\
+    r3 = vec_add(r3, r4);				\
+    r9 = vec_add(r9, r10);				\
+    r3 = vec_add(r5, r3);				\
+    r9 = vec_add(r11, r9);				\
+    /* there must a smarter solution for this */	\
+    r_s[c0] = r3[0] + I*r3[1] + r3[2] + I*r3[3];	\
+    r_c[c0] = r9[0] + I*r9[1] + r9[2] + I*r9[3];	\
+  }
+
+#else
+// needs temporary space _Complex double s[6]
+# define _mul_colourmatrix_nd(w, r_s, r_c)		\
+  for(int c0 = 0; c0 < 6; c0++) {			\
+    s[c0] = w[c0*6] * r_s[0];				\
+    s[c0+6] = w[c0*6] * r_c[0];				\
+    s[c0] += w[c0*6 + 1] * r_s[1];			\
+    s[c0+6] += w[c0*6 + 1] * r_c[1];			\
+    s[c0] += w[c0*6 + 2] * r_s[2];			\
+    s[c0+6] += w[c0*6 + 2] * r_c[2];			\
+    s[c0] += w[c0*6 + 3] * r_s[3];			\
+    s[c0+6] += w[c0*6 + 3] * r_c[3];			\
+    s[c0] += w[c0*6 + 4] * r_s[4];			\
+    s[c0+6] += w[c0*6 + 4] * r_c[4];			\
+    s[c0] += w[c0*6 + 5] * r_s[5];			\
+    s[c0+6] += w[c0*6 + 5] * r_c[5];			\
+  }							\
+  memcpy(r_s, s, 6*sizeof(_Complex double));		\
+  memcpy(r_s, s+6, 6*sizeof(_Complex double));
+#endif
+
+
+#if (defined BGQ && defined XLC)
+// s = w*r
+// w a 6x6 colour matrix, r,s upper or lower half of a spinor
+# define _mul_colourmatrix_assign(s, w, r)		\
+  r0 = vec_ld(0L, (double*) r);			\
+  r1 = vec_ld(32L, (double*) r);		\
+  r2 = vec_ld(64L, (double*) r);		\
+  _Pragma("unroll(6)") 
+  for(int c0 = 0; c0 < 6; c0++) {		\
+    w0 = vec_ld(0L, (double*) &w[6*c0]);	\
+    w1 = vec_ld(32L, (double*) &w[6*c0]);	\
+    w2 = vec_ld(64L, (double*) &w[6*c0]);	\
+    r3 = vec_xmul(r0, w0);			\
+    r4 = vec_xmul(r1, w1);			\
+    r5 = vec_xmul(r2, w2);			\
+    r3 = vec_xxnpmadd(w0, r0, r3);		\
+    r4 = vec_xxnpmadd(w1, r1, r4);		\
+    r5 = vec_xxnpmadd(w2, r2, r5);		\
+    r6 = vec_add(r3, r4);			\
+    r3 = vec_add(r5, r6);			\
+    s[c0] = r3[0] + I*r3[1] + r3[2] + I*r3[3];	\
+  }
+
+#else
+
+# define _mul_colourmatrix_assign(s, w, r)	\
+  for(int c0 = 0; c0 < 6; c0++) {		\
+    s[c0] = w[c0*6] * r[0];			\
+    s[c0] += w[c0*6 + 1] * r[1];		\
+    s[c0] += w[c0*6 + 2] * r[2];		\
+    s[c0] += w[c0*6 + 3] * r[3];		\
+    s[c0] += w[c0*6 + 4] * r[4];		\
+    s[c0] += w[c0*6 + 5] * r[5];		\
+  }
+
+#endif
 
 /**********************************************************
  *
@@ -191,8 +312,13 @@ void clover_inv(const int ieo, spinor * const l, const double mu) {
   int icy;
   int ioff = 0;
   _Complex double * restrict w, * restrict r;
-  _Complex double s[6];
 
+#if (defined BGQ && defined XLC)
+  vector4double r0, r1, r2, r3, r4, r5, r6;
+  vector4double w0, w1, w2;
+#else 
+  _Complex double s[6];
+#endif
 
   if(mu < 0) ioff = VOLUME/2;
 
@@ -210,13 +336,11 @@ void clover_inv(const int ieo, spinor * const l, const double mu) {
 
     r = (_Complex double *) (l + icx);
     w = sw_inv[icy][0];
-    _mul_colourmatrix_add(s, w, r);
-    memcpy(r, s, 6*sizeof(_Complex double));
+    _mul_colourmatrix(w, r);
 
     r += 6;
     w = sw_inv[icy][1];
-    _mul_colourmatrix_add(s, w, r);
-    memcpy(r, s, 6*sizeof(_Complex double));
+    _mul_colourmatrix(w, r);
 
 #ifndef OMP
     ++icy;
@@ -237,7 +361,13 @@ void clover_inv_nd(const int ieo, spinor * const l_c, spinor * const l_s) {
 #endif
   int icy;
   int ioff = 0;
-  _Complex double ALIGN s[6];
+#if (defined BGQ && defined XLC)
+  vector4double r0, r1, r2, r3, r4, r5;
+  vector4double r6, r7, r8, r9, r10, r11;
+  vector4double w0, w1, w2;
+#else 
+  _Complex double ALIGN s[12];
+#endif
   _Complex double * restrict w, * restrict rn_s, * restrict rn_c;
 
 
@@ -258,20 +388,12 @@ void clover_inv_nd(const int ieo, spinor * const l_c, spinor * const l_s) {
     rn_s = (_Complex double *) (l_s + icx);
     rn_c = (_Complex double *) (l_c + icx);
     w = sw_inv[icy][0];
-    _mul_colourmatrix_add(s, w, rn_s);
-    memcpy(rn_s, s, 6*sizeof(_Complex double));
-
-    _mul_colourmatrix_add(s, w, rn_c);
-    memcpy(rn_c, s, 6*sizeof(_Complex double));
+    _mul_colourmatrix_nd(w, rn_s, rn_c);
 
     rn_s += 6;
     rn_c += 6;
     w = sw_inv[icy][1];
-    _mul_colourmatrix_add(s, w, rn_s);
-    memcpy(rn_s, s, 6*sizeof(_Complex double));
-
-    _mul_colourmatrix_add(s, w, rn_c);
-    memcpy(rn_c, s, 6*sizeof(_Complex double));
+    _mul_colourmatrix_nd(w, rn_s, rn_c);
 
 #ifndef OMP
     ++icy;
@@ -924,6 +1046,10 @@ void assign_mul_one_sw_pm_imu_inv(const int ieo,
   {
 #endif
   _Complex double * restrict w, * restrict r, * restrict s;
+#if (defined BGQ && defined XLC)
+  vector4double r0, r1, r2, r3, r4, r5, r6;
+  vector4double w0, w1, w2;
+#endif
 
 #ifdef OMP
 #pragma omp for
@@ -933,12 +1059,12 @@ void assign_mul_one_sw_pm_imu_inv(const int ieo,
     r = (_Complex double *) (l + icx);
     s = (_Complex double *) (k + icx);
     w = sw_inv[icx][0];
-    _mul_colourmatrix_add(s, w, r);
+    _mul_colourmatrix_assign(s, w, r);
 
     r += 6;
     s += 6;
     w = sw_inv[icx][1];
-    _mul_colourmatrix_add(s, w, r);
+    _mul_colourmatrix_assign(s, w, r);
   }
 #ifdef OMP
   } /* OpenMP closing brace */
