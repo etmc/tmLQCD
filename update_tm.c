@@ -140,8 +140,10 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   g_sloppy_precision = 1;
 
   /* run the trajectory */
-  Integrator.integrate[Integrator.no_timescales-1](Integrator.tau, 
-                       Integrator.no_timescales-1, 1);
+  if(Integrator.n_int[Integrator.no_timescales-1] > 0) {
+    Integrator.integrate[Integrator.no_timescales-1](Integrator.tau, 
+						     Integrator.no_timescales-1, 1);
+  }
 
   g_sloppy_precision = 0;
 

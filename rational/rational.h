@@ -1,8 +1,6 @@
 /***********************************************************************
  *
- *
- * Copyright (C) 2004 Andrea Shindler
- *               2009 Carsten Urbach
+ * Copyright (C) 2013 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -18,16 +16,22 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- *
  ***********************************************************************/
 
-#ifndef _CG_MMS_TM_H
-#define _CG_MMS_TM_H
+#ifndef _RATIONAL_H
+#define _RATIONAL_H
 
-#include "solver.h"
-#include "matrix_mult_typedef.h"
-#include "su3.h"
+typedef struct {
+  int order, np;
+  int crange[2];
+  double range[2];
+  double eps;
+  double A, delta;
+  double *mu,*rmu;
+  double *nu,*rnu;
+} rational_t;
 
-int cg_mms_tm(spinor ** const P,spinor * const Q, solver_pm_t * const params, double * reached_prec);
+int init_rational(rational_t * rat, const unsigned int scale);
+int free_rational(rational_t * rat);
 
 #endif

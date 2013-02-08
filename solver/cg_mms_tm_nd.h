@@ -21,13 +21,14 @@
  *
  ***********************************************************************/
 
-#ifndef _CG_MMS_TM_H
-#define _CG_MMS_TM_H
+#ifndef _CG_MMS_TM_ND_H
+#define _CG_MMS_TM_ND_H
 
-#include "solver.h"
-#include "matrix_mult_typedef.h"
-#include "su3.h"
+#include"su3.h"
+#include"solver.h"
 
-int cg_mms_tm(spinor ** const P,spinor * const Q, solver_pm_t * const params, double * reached_prec);
+int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn, 
+		 spinor * const Qup, spinor * const Qdn, 
+		 solver_pm_t * solver_pm);
 
 #endif

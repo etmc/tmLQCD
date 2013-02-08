@@ -4,7 +4,7 @@ top_builddir =  @top_builddir@
 abs_top_builddir = @abs_top_builddir@
 top_srcdir = @top_srcdir@
 abs_top_srcdir = @abs_top_srcdir@
-subdir = monomial
+subdir = rational
 builddir = @builddir@
 
 CFLAGS = @CFLAGS@
@@ -29,21 +29,17 @@ LDADD =
 #COMPILE = ${CC} ${DEFS} ${INCLUDES} ${CFLAGS}
 COMPILE = ${CC} $(DEFS) ${INCLUDES} ${CFLAGS}
 
-LIBRARIES = libmonomial
-libmonomial_TARGETS =  nddetratio_monomial monomial det_monomial detratio_monomial \
-	gauge_monomial ndpoly_monomial clover_trlog_monomial cloverdet_monomial cloverdetratio_monomial \
-	clovernd_trlog_monomial poly_monomial cloverndpoly_monomial moment_energy \
-	ndrat_monomial ndratcor_monomial rat_monomial ratcor_monomial 
+LIBRARIES = librational
+librational_TARGETS = zolotarev elliptic rational
 
+librational_STARGETS =
 
-libmonomial_STARGETS = 
-
-libmonomial_OBJECTS = $(addsuffix .o, ${libmonomial_TARGETS})
-libmonomial_SOBJECTS = $(addsuffix .o, ${libmonomial_STARGETS})
+librational_OBJECTS = $(addsuffix .o, ${librational_TARGETS})
+librational_SOBJECTS = $(addsuffix .o, ${librational_STARGETS})
 
 # default rule
 
-all: Makefile dep libmonomial.a
+all: Makefile dep librational.a
 
 # rules for debugging
 debug all-debug: CFLAGS := $(CFLAGS) @DEBUG_FLAG@
@@ -56,34 +52,34 @@ profile all-profile: all
 
 #include dep rules
 
--include $(addsuffix .d,${libmonomial_TARGETS})
+-include $(addsuffix .d,${librational_TARGETS})
 
 include ${top_srcdir}/Makefile.global
 
 # rule to compile objects
 
-${libmonomial_OBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/config.h
+${librational_OBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/config.h
 	$(COMPILE) ${OPTARGS} -c $<
 
-${libmonomial_SOBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/config.h
+${librational_SOBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/config.h
 	$(COMPILE) ${SOPTARGS} -c $<
 
-# rule to make libmonomial
+# rule to make librational
 
-libmonomial.a: ${libmonomial_OBJECTS} ${libmonomial_SOBJECTS} Makefile
-	@rm -f libmonomial.a
-	@${AR} cru libmonomial.a ${libmonomial_OBJECTS} ${libmonomial_SOBJECTS}
-	@$(RANLIB) libmonomial.a
-	@cp libmonomial.a ../lib/libmonomial.a
+librational.a: ${librational_OBJECTS} ${librational_SOBJECTS} Makefile
+	@rm -f librational.a
+	@${AR} cru librational.a ${librational_OBJECTS} ${librational_SOBJECTS}
+	@$(RANLIB) librational.a
+	@cp librational.a ../lib/librational.a
 
 # rule to generate .d files
 
-$(addsuffix .d, $(libmonomial_TARGETS) ${libmonomial_STARGETS}): %.d: ${srcdir}/%.c Makefile
+$(addsuffix .d, $(librational_TARGETS) ${librational_STARGETS}): %.d: ${srcdir}/%.c Makefile
 	@${CCDEP} ${DEFS} ${DEPFLAGS} ${INCLUDES} $< > $@
 
 # rule to make dependencies
 
-dep: ${addsuffix .d, ${libmonomial_TARGETS} ${libmonomial_STARGETS}}
+dep: ${addsuffix .d, ${librational_TARGETS} ${librational_STARGETS}}
 
 # rules to clean
 
@@ -92,7 +88,7 @@ compile-clean: Makefile
 
 clean: compile-clean 
 	rm -f $(addsuffix .a, ${LIBRARIES})
-	rm -f ../lib/libmonomial.a
+	rm -f ../lib/librational.a
 
 distclean: clean
 	rm -f Makefile
