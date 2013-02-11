@@ -23,6 +23,7 @@
 #include "hamiltonian_field.h"
 
 void gauge_derivative(const int id, hamiltonian_field_t * const hf);
+void gauge_EMderivative(const int id, hamiltonian_field_t * const hf);
 void gauge_heatbath(const int id, hamiltonian_field_t * const hf);
 double gauge_acc(const int id, hamiltonian_field_t * const hf);
 

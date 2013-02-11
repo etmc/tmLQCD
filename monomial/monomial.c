@@ -99,6 +99,7 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].c1 = _default_g_rgi_C1;
   monomial_list[no_monomials].c0 = 1.;
   monomial_list[no_monomials].beta = _default_g_beta;
+  monomial_list[no_monomials].glambda = 0.;
   monomial_list[no_monomials].rngrepro = _default_reproduce_randomnumber_flag;
   monomial_list[no_monomials].trlog = 0;
   /* poly monomial */
@@ -426,7 +427,14 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].accfunction = &gauge_acc;
 	monomial_list[i].derivativefunction = &gauge_derivative;
 	no_gauge_monomials++;
-	
+	// this is only for Wilson plaquette
+	if(monomial_list[i].gtype != 0) {
+	  monomial_list[i].glambda = 0.;
+	}
+	else if(fabs( monomial_list[i].glambda) > 0) {
+	  monomial_list[i].derivativefunction = &gauge_EMderivative;
+	  monomial_list[i].use_rectangles = 0;
+	}
 	if(!monomial_list[i].use_rectangles) {
 	  monomial_list[i].c1 = 0.;
 	  monomial_list[i].c0 = 1.;

@@ -1072,6 +1072,11 @@ inline void rmQuotes(char *str){
     g_rgi_C1 = c;
     if(myverbose) printf("  RectangleCoefficient c1  set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
+  {SPC}*Lambda{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
+    mnl->glambda = c;
+    if(myverbose) printf("  Gauge lambda parameter (Wilson plaquette only) set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
 }
 
 <NDPOLYMONOMIAL>{
