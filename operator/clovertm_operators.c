@@ -263,7 +263,7 @@ void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const do
   r0 = vec_ld(0L, (double*) r);			\
   r1 = vec_ld(32L, (double*) r);		\
   r2 = vec_ld(64L, (double*) r);		\
-  _Pragma("unroll(6)") 
+  _Pragma("unroll(6)")				\
   for(int c0 = 0; c0 < 6; c0++) {		\
     w0 = vec_ld(0L, (double*) &w[6*c0]);	\
     w1 = vec_ld(32L, (double*) &w[6*c0]);	\
