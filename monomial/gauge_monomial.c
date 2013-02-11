@@ -94,13 +94,65 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
   return;
 }
 
+/* this function calculates the derivative of the momenta: equation 13 of Gottlieb */
+void gauge_EMderivative(const int id, hamiltonian_field_t * const hf) {
+  monomial * mnl = &monomial_list[id];
+  double factor = -1. * g_beta/3.0;
+  
+  double atime, etime;
+  atime = gettime();
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
+  su3 ALIGN v, w;
+  int i, mu;
+  su3 *z;
+  su3adj *xm;
+
+#ifdef OMP
+#pragma omp for
+#endif
+  for(i = 0; i < VOLUME; i++) { 
+    // electric part
+    z=&hf->gaugefield[i][0];
+    xm=&hf->derivative[i][0];
+    get_staples(&v, i, 0, (const su3**) hf->gaugefield); 
+    _su3_times_su3d(w,*z,v);
+    _trace_lambda_mul_add_assign((*xm), (1.+mnl->glambda)*factor, w);
+    // magnetic part
+    for(mu=1;mu<4;mu++) {
+      z=&hf->gaugefield[i][mu];
+      xm=&hf->derivative[i][mu];
+
+      get_spacelike_staples(&v, i, mu, (const su3**) hf->gaugefield); 
+      _su3_times_su3d(w, *z, v);
+      _trace_lambda_mul_add_assign((*xm), (1.-mnl->glambda)*factor, w);
+
+      get_timelike_staples(&v, i, mu, (const su3**) hf->gaugefield); 
+      _su3_times_su3d(w, *z, v);
+      _trace_lambda_mul_add_assign((*xm), (1.+mnl->glambda)*factor, w);
+    }
+  }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+  etime = gettime();
+  if(g_debug_level > 1 && g_proc_id == 0) {
+    printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
+  }
+  return;
+}
+
 void gauge_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   double atime, etime;
   atime = gettime();
   if(mnl->use_rectangles) mnl->c0 = 1. - 8.*mnl->c1;
   
-  mnl->energy0 = g_beta*(mnl->c0 * measure_gauge_action( (const su3**) hf->gaugefield));
+  mnl->energy0 = g_beta*(mnl->c0 * measure_gauge_action( (const su3**) hf->gaugefield, mnl->glambda));
   if(mnl->use_rectangles) {
     mnl->energy0 += g_beta*(mnl->c1 * measure_rectangles( (const su3**) hf->gaugefield));
   }
@@ -120,7 +172,7 @@ double gauge_acc(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   double atime, etime;
   atime = gettime();
-  mnl->energy1 = g_beta*(mnl->c0 * measure_gauge_action( (const su3**) hf->gaugefield));
+  mnl->energy1 = g_beta*(mnl->c0 * measure_gauge_action( (const su3**) hf->gaugefield, mnl->glambda));
   if(mnl->use_rectangles) {
     mnl->energy1 += g_beta*(mnl->c1 * measure_rectangles( (const su3**) hf->gaugefield));
   }

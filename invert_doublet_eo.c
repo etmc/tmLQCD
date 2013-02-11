@@ -88,9 +88,9 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
     }
     
     /* do trafo */
-    plaquette1 = measure_gauge_action(g_gauge_field);
+    plaquette1 = measure_plaquette(g_gauge_field);
     apply_gtrafo(g_gauge_field, g_trafo);								// transformation of the gauge field
-    plaquette2 = measure_gauge_action(g_gauge_field);
+    plaquette2 = measure_plaquette(g_gauge_field);
     if (g_proc_id == 0) printf("\tPlaquette before gauge fixing: %.16e\n", plaquette1/6./VOLUME);
     if (g_proc_id == 0) printf("\tPlaquette after gauge fixing:  %.16e\n", plaquette2/6./VOLUME);
     
@@ -207,10 +207,10 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
     /* undo trafo */
     /* apply_inv_gtrafo(g_gauge_field, g_trafo);*/
     /* copy back the saved original field located in g_tempgauge_field -> update necessary*/
-    plaquette1 = measure_gauge_action(g_gauge_field);
+    plaquette1 = measure_plaquette(g_gauge_field);
     copy_gauge_field(g_gauge_field, g_tempgauge_field);
     g_update_gauge_copy = 1;
-    plaquette2 = measure_gauge_action(g_gauge_field);
+    plaquette2 = measure_plaquette(g_gauge_field);
     if (g_proc_id == 0) printf("\tPlaquette before inverse gauge fixing: %.16e\n", plaquette1/6./VOLUME);
     if (g_proc_id == 0) printf("\tPlaquette after inverse gauge fixing:  %.16e\n", plaquette2/6./VOLUME);
     

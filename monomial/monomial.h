@@ -77,7 +77,7 @@ typedef struct {
   double energy0; 
   double energy1;
   /* gauge related */
-  double c0, c1, beta;
+  double c0, c1, beta, glambda;
   /* solver related*/
   double epsilon;
   double forceprec;
