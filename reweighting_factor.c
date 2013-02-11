@@ -43,7 +43,6 @@ void reweighting_factor(const int N, const int nstore) {
   hf.momenta = NULL;
   hf.derivative = NULL;
   hf.update_gauge_copy = g_update_gauge_copy;
-  hf.update_gauge_energy = g_update_gauge_energy;
   hf.update_rectangle_energy = g_update_rectangle_energy;
 
   sum = (double*)calloc(no_monomials, sizeof(double));

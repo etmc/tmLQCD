@@ -96,7 +96,6 @@ void integrator_set_fields(hamiltonian_field_t * hf) {
   Integrator.hf.momenta = hf->momenta;
   Integrator.hf.derivative = hf->derivative;
   Integrator.hf.update_gauge_copy = hf->update_gauge_copy;
-  Integrator.hf.update_gauge_energy = hf->update_gauge_energy;
   Integrator.hf.update_rectangle_energy = hf->update_rectangle_energy;
   return;
 }

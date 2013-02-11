@@ -70,7 +70,6 @@ EXTERN int DUM_BI_DERI, DUM_BI_SOLVER, DUM_BI_MATRIX;
 EXTERN int NO_OF_BISPINORFIELDS;
 
 EXTERN int g_update_gauge_copy;
-EXTERN int g_update_gauge_energy;
 EXTERN int g_update_rectangle_energy;
 EXTERN int g_relative_precision_flag;
 EXTERN int g_debug_level;

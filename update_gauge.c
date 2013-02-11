@@ -98,8 +98,6 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
    */
   hf->update_gauge_copy = 1;
   g_update_gauge_copy = 1;
-  hf->update_gauge_energy = 1;
-  g_update_gauge_energy = 1;
   hf->update_rectangle_energy = 1;
   g_update_rectangle_energy = 1;
   etime = gettime();
