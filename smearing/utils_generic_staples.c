@@ -2,7 +2,7 @@
 
 void generic_staples(su3 *out, unsigned int x, unsigned int mu, gauge_field_t in)
 {
-  su3 tmp;
+  su3 ALIGN tmp;
 
   memset(out, 0, sizeof(su3));
 
