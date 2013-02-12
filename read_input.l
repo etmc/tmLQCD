@@ -991,9 +991,9 @@ EQL {SPC}*={SPC}*
       if(myverbose) printf("  timescales set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
     }
   }
-  {SPC}*Smearing{EQL}{DIGIT}+ {
+  {SPC}*SmearingID{EQL}{DIGIT}+ {
     sscanf(yytext, "%*s = %d", &mnl->smearing);
-    if(myverbose) printf("  in line %d monomial %d configured to use smearing id %d\n", line_of_file, current_monomial, mnl->smearing);
+    if(myverbose) printf("  smearing id set to %d line %d monomial %d\n", line_of_file, current_monomial, mnl->smearing);
   }
   {SPC}*Name{EQL} {
     name_caller = YY_START;
