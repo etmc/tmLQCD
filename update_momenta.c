@@ -65,15 +65,6 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
   
   zero_adjoint_field(&df);
 
-  /* FIXME Further debugging -- replace the field by something that is manageable analytically */
-//   for (int loc = 0; loc < (VOLUMEPLUSRAND + g_dbw2rand); ++loc)
-//     for (int nu = 0; nu < 4; ++nu)
-//     {
-//       _su3_one(g_gf[loc][nu]);
-//     }
-//    g_gf[0][0].c00 = I;
-//    g_gf[0][0].c11 = -I;
-
   ohnohack_remap_df0(tmp_derivative); /* FIXME Such that we can aggregate results per smearing type. */
   for (int s_ctr = 0; s_ctr < no_relevant_smearings; ++s_ctr)
   {

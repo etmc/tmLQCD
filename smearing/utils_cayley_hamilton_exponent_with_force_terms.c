@@ -3,10 +3,10 @@
 #include "utils_exponent_from_coefficients.static"
 
 /* This is a convenience function with a fairly ugly interface -- sorry about that. */
-void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Complex double *f1, _Complex double *f2, su3 *A)
+void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Complex double *f1, _Complex double *f2, su3 const *A)
 {
   static double const fac_1_3 = 1 / 3.0;
-  
+    
   /* The value of f0 is never needed beyond this function, unlike f1 and f2. We make scoped room for all three,
    * in case f1 and f2 are not requested. */
   _Complex double f0[3];
@@ -33,7 +33,7 @@ void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Com
   {
     _su3_one(*expA);
     _su3_zero(*B1);
-    _su3_zero(*B2); /* FIXME Not quite sure about this one, check the limit for A->0 explicitly. */
+    _su3_zero(*B2); /* FIXME Not quite sure about this one, check the limit for A->0 explicitly. But it only multiplies A anyway. */
     *f1 = I;
     *f2 = -0.5;
     return;
@@ -81,7 +81,7 @@ void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Com
   }
   
   exponent_from_coefficients(expA,  *f0, *f1, *f2, A);
-  
+   
   /* To also provide a replacement for plain su3_expo, we add a check on a request for B1 and B2 calculation and quit if they're not needed. */
   if (!B1)
     return;
@@ -100,9 +100,9 @@ void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Com
   double mr2 = (3 * u2 - w2);
   double mf  = 2 * (15 * u2 + w2);
    
-  _Complex double bn0 = divisor * (mf * *f0 - 2 * u * r10 - mr2 * r20);
+  _Complex double bn0 = divisor * (mf * *f0 - (2 * u * r10 + mr2 * r20)    );
   _Complex double bn1 = divisor * (mf * *f1 + (2 * u * r11 + mr2 * r21) * I);
-  _Complex double bn2 = divisor * (mf * *f2 + 2 * u * r12 + mr2 * r22);
+  _Complex double bn2 = divisor * (mf * *f2 + (2 * u * r12 + mr2 * r22)    );
  
   if (c0_negative)
   {
@@ -112,10 +112,12 @@ void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Com
   }
 
   exponent_from_coefficients(B1, bn0, bn1, bn2, A);
+  
+  _Complex double B2_divisor = -I * divisor;
    
-  bn0 = divisor * (r10 - 3 * u * r20 - 24 * u * *f0) * I;
-  bn1 = divisor * (r11 - 3 * u * r21 - 24 * u * *f1 * I);
-  bn2 = divisor * (3 * u * r22 - 24 * u * *f2 - r12) * I;
+  bn0 = B2_divisor * (24 * u * *f0 - (r10 - 3 * u * r20)    );
+  bn1 = B2_divisor * (24 * u * *f1 + (r11 - 3 * u * r21) * I);
+  bn2 = B2_divisor * (24 * u * *f2 + (r12 - 3 * u * r22)    );
   
   if (c0_negative)
   {
