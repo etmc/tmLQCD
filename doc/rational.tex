@@ -1,0 +1,231 @@
+\subsection{Rational HMC}
+
+For the heavy doublet one may alternatively use a rational
+approximation 
+\[
+\mathcal{R}(\hat Q_h^2)\ = \ \prod_{i = 1}^N \frac{\hat Q_h^2 +
+  a_{2i-1}}{\hat Q_h^2 + a_{2i}}\approx\quad\frac{1}{\sqrt{\hat Q_h^2}}
+\]
+where we used the shorthand notation
+\[
+\hat Q_h^2\ =\ \gamma_5 \hat D_h \tau^1\gamma_5\hat D_h \tau^1 
+\]
+and $\hat Q_h=\gamma_5\hat D_h\tau^1$ is the even/odd preconditioned version
+of $Q_h$ defined in Eq.~(\ref{eq:Dh}). Obviously, we have $\hat
+Q_h^\dagger = \hat Q_h$. 
+We are using the Zolotarev solution for the
+optimal rational approximation to $1/\sqrt{y}$. The coefficients $a_i$
+fulfill the property
+\[
+a_1 > a_2 > ... > a_{2N} > 0\, .
+\]
+We use the partial fraction expansion to re-express
+\[
+\mathcal{R}(\hat Q_h^2)\ = \ 1 + \sum_{i=1}^{N} \frac{q_i}{\hat Q_h^2 +
+  \mu_i^2}\, .
+\]
+The coefficients $r_i$ are given as
+\[
+q_i = (a_{2i-1} - a_{2i}) \prod_{m=1, m\neq i}^N \frac{a_{2m-1}
+  - a_{2i}}{a_{2m} - a_{2i}}\,,\quad i = 1,...,N\,.
+\]
+If we defined -- following L{\"u}scher -- $\mu_i = \sqrt{a_{2i}}$ and $\nu_i
+= \sqrt{a_{2i-1}}$, we may rewrite $q_i$ as
+\[
+q_i = (\nu_i^2 - \mu_i^2)\prod_{m=1, m\neq i}^N \frac{\nu_m^2 -
+  \mu_i^2}{\mu_m^2 - \mu_i^2}\,,\quad i = 1,...,N\, .
+\]
+For the heatbath step we need to generate pseudo-fermion fields from
+Gaussian random fields $R$
+\[
+R^\dagger R = \phi^\dagger \mathcal{R} \phi
+\]
+and, therefore, we need operators $C^\dagger, C$ with
+\[
+\mathcal{R}^{-1} = C^\dagger\ \cdot\ C\,,\qquad \phi = C\cdot R\,.
+\]
+$C$ is given by (inspired by twisted mass)
+\[
+C\ =\ \prod_{i=1}^N \frac{\hat Q_h + i\mu_i}{\hat Q_h + i\nu_i}
+\]
+which can again be written as a partial fraction
+\[
+C\ =\ 1 + i\sum_{i=1}^N \frac{r_i}{\hat Q_h + i\nu_i}\,,
+\]
+with
+\[
+r_i = (\mu_i - \nu_i)\prod_{m=1, m\neq i}^N \frac{\mu_m -
+  \nu_i}{\nu_m - \nu_i}\,,\quad i = 1,...,N\, .
+\]
+The rational approximation $\mathcal{R}$ can be applied to a vector
+using a multi-mass solver and the partial fraction representation. The
+same works for $C$: after solving $N$ equations simultaneously for
+$(\hat Q_h^2 + \nu_i^2)^{-1},\quad i = 1,...,N$, we have to multiply
+every term with $(\hat Q_h - i\nu_i)$. The hermitian conjugate of $C$
+is given by
+\[
+C^\dagger\ =\ 1 - i\sum_{i=1}^N \frac{r_i}{\hat Q_h - i\nu_i}\,,
+\]
+using $\hat Q_h^\dagger = \hat Q_h$.
+
+For the acceptance step one just needs an application of $\mathcal{R}$.
+
+\subsubsection{Force Computation}
+
+For the derivative and the force computation we have to consider terms
+of the form
+\[      
+\phi^\dagger \frac{q_i}{\hat Q_h^2 + \mu_i^2}\phi\,,
+\]
+and its variation with respect to the gauge fields:
+\[      
+\begin{split}   
+\delta_U\  \phi^\dagger \frac{q_i}{\hat Q_h^2 + \mu_i^2}\phi &=
+q_i\phi^\dagger\frac{1}{\hat Q_h + i\mu_i}\frac{1}{\hat Q_h -
+i\mu_i}(-\delta_U \hat Q_h)\frac{1}{\hat Q_h -i\mu_i}\phi\ +\
+\textrm{h.c.}\\
+&= -2 \re\left( q_i\phi^\dagger\frac{1}{\hat Q_h^2 + \mu_i^2}
+(\delta_U \hat Q_h)\frac{1}{\hat Q_h -i\mu_i}\phi\ \right)
+\end{split}
+\]
+
+\subsubsection{Splitting of the Rational}
+
+For preconditioning the fermion determinant it is useful to split the
+rational into several products
+\[
+\mathcal{R}(\hat Q_h^2)\ = r_{0}^{l}(\hat Q_h^2)\cdot r_{l}^{k}(\hat
+Q_h^2)\cdot ...
+\]
+with terms
+\[
+r_{c_0}^{c_1} = \ \prod_{i = c_0}^{c_1} \frac{\hat Q_h^2 +
+  a_{2i-1}}{\hat Q_h^2 + a_{2i}}\,.
+\]
+Every term $r_{c_0}^{c_1}$ can then again be written as a partial
+fraction with the same coefficients as given above. In
+Ref.~\cite{Clark:2006fx} it was shown that the different partial 
+fractions contribute quite differently in their magnitude of the
+corresponding force to the MD evolution: the smallest shifts and,
+therefore, most expensive ones contribute the least to the
+force. Hence, those can be integrated on a larger timescale than the
+larger shifts, which contribute significantly more to the total MD
+force.
+
+\subsubsection{Correction Monomial}
+
+The rational approximation has a finite precision. In the HMC one can
+account for this effect by estimating
+\[
+1 - |\hat Q_h| R\,,
+\]
+which can be done in different ways:
+\begin{itemize}
+\item we include an additional monomial for
+  \[
+  \det (|\hat Q_h| R)
+  \]
+  in the Hamiltonian. If the rational apprximation is precise enough,
+  it is sufficient to only include this in the heatbath and acceptance
+  step and ignore the contribution to the derivative. For generating
+  the pseudo-fermion field for this monomial, one needs to find
+  \[
+  B\cdot B^\dagger = |\hat Q_h| \mathcal{R},
+  \]
+  which, following Ref.~\cite{Luscher:2010ae}, can be expanded in
+  terms of
+  \[
+  Z = \hat Q_h^2\mathcal{R}^2 -1\,.
+  \]
+  The series
+  \[
+  B = (1+Z)^{1/4} =  1 + \frac{1}{4} Z - \frac{3}{32} Z^2 + \frac{7}{122} Z^3 + ...
+  \]
+  is rapidly converging and can usually be truncated after the $Z^2$
+  or latest $Z^3$ term, see
+  Refs.~\cite{Luscher:2010ae,Luscher:2012av}. We then obtain the
+  pseudo-fermion field $\phi$ by
+  \[
+  \phi = B\cdot R\,,
+  \]
+  where $R$ is again a random Gaussian field. For the acceptance step
+  one needs to compute
+  \[
+  \phi^\dagger (|\hat Q_h|\mathcal{R})^{-1}\phi\,,
+  \]
+  which, again expanding in $Z$ is obtained by
+  \[
+  \phi^\dagger (1+Z)^{-1/2} \phi = \phi^\dagger (1 - \frac{1}{2}Z +
+  \frac{3}{8}Z^3 + ...) \phi\, .
+  \]
+  Also here the series can be truncated after the first few terms.
+\item the second possibility is to include this correction as a
+  reweighting factor.
+\item the third is to use a more precise rational approximation for
+  the heatbath and acceptance steps.
+\end{itemize}
+
+\subsubsection{CGMMS Solver}
+
+\begin{algorithm}
+  \caption{CGMMS algorithm}
+  \label{alg:cgm}
+  \begin{algorithmic}[1]
+    \vspace{.2cm}
+    \STATE $n=0, x_0^k = 0, r_0 = p_0 = p_0^k = b, k_\mathrm{max},
+    \delta, \epsilon$
+    \STATE  $\biggl.\biggr.\alpha_{-1} = \zeta_{-1}^k = \zeta_0^k = 1, \beta_0^k = \beta_0 = 0$
+    \REPEAT
+    \STATE $\alpha_n = (r_n, r_n) / (p_n, A p_n)$
+    \FOR{$k = 1$ to $k_\mathrm{max}$}
+    \STATE $\biggl.\biggr.\zeta_{n+1}^k = (\zeta^k_n  \alpha_{n-1}) / 
+      (\alpha_n \beta_n(1 - \zeta_n^k / \zeta^k_{n-1}) + \alpha_{n-1}
+      (1-\sigma_k\alpha_n))$
+    \STATE $\alpha^k_n = (\alpha_n \zeta_{n+1}^k)/ \zeta_n^k$
+    \STATE $\biggl.\biggr.x_{n+1}^k = x_n^k + \alpha_n^k p_n^k$
+    \IF{$\|\alpha^{k_\mathrm{max}} p^{k_\mathrm{max}}\| < \delta$}
+    \STATE $k_\mathrm{max} = k_\mathrm{max} -1$
+    \ENDIF
+    \ENDFOR
+    \STATE $x_{n+1} = x_n + \alpha_n p_n$
+    \STATE $\biggl.\biggr.r_{n+1} = r_n - \alpha_n Ap_n$
+    \STATE $\beta_{n+1} = (r_{n+1}, r_{n+1}) / (r_n, r_n)$
+    \STATE $\beta_{n+1}^k = \frac{\beta_{n+1} \zeta_{n+1}^k \alpha_n^k}{\zeta_{n}^k\alpha_n}$
+    \STATE $\biggl.\biggr.p_{n+1}^k = \zeta_{n+1}^k r_{n+1} + \beta_{n+1}^k p_n^k$
+    \STATE $n=n+1$
+    \UNTIL{$\|r_n\|<\epsilon$}
+  \end{algorithmic}
+\end{algorithm}
+
+
+For evaluating the rational approximation $\mathcal{R}$ applied to a
+spinor field $\psi$ a multi-mass or multi-shift solver (see
+algorithm~\ref{alg:cgm}) can be used, see Ref.~\cite{Chiarappa:2006hz}
+and references therein. However, a little care is needed
+as the shift vary over several orders of magnitudes.
+
+The original Krylov space is build for the shift smallest in
+modulus. This will converge slowest and, therefore, the other shifts
+will have the same or better precision guaranteed. But, if the
+range in the shifts is too large, one needs to remove the highest
+shifts in the course of the CG solve before the smallest shift is
+converged. This will prevent the appearance of double precision
+underflow and hence the appearance of exact zeros in
+$\zeta^{k_\mathrm{max}}$, which would lead to 
+NaNs in the solution vectors.
+
+In order to avoid to compute the residue for all the shift frequently
+during the CGMMS solve, one can rather monitor the norm of the
+correction vector $p^\sigma$ of the currently biggest shift $\sigma$
+still in the process. The CG works such that the correction decreases
+with decreasing residue. Therefore, one can remove the shift $\sigma$
+when
+\[
+\|\alpha^\sigma p^\sigma\| < \delta\,,
+\]
+where one could for instance chose $\delta =
+c\cdot\epsilon$. $\epsilon$ is the desired precision of the CGMMS
+solve and $0<c\leq1$ some suitably chosen constant. Removing converged
+solutions has the side effect of speeding up the CGMMS solve in terms
+of computing time.
+

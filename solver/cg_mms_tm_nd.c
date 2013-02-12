@@ -1,7 +1,7 @@
 /***********************************************************************
  *
  * Copyright (C) 2004 Andrea Shindler
- *               2013 Carsten Urbach
+ *               2009 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -47,8 +47,7 @@
 #include "gettime.h"
 #include "solver/solver.h"
 #include "solver_field.h"
-#include "cg_mms_tm.h"
-#include <io/params.h>
+#include "cg_mms_tm_nd.h"
 
 static spinor * ps_qmms;
 static spinor ** ps_mms_solver;
@@ -58,64 +57,76 @@ static double * alphas, * betas;
 
 extern int index_start;
 
-static void init_mms_tm(const unsigned int nr, const unsigned int N);
-static void free_mms_tm();
+static void init_mms_tm_nd(const unsigned int nr, const unsigned int N);
+static void free_mms_tm_nd();
 
 /* P output = solution , Q input = source */
-int cg_mms_tm(spinor ** const P, spinor * const Q,
-		 solver_pm_t * solver_pm, double * cgmms_reached_prec) {
+int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn, 
+		 spinor * const Qup, spinor * const Qdn, 
+		 solver_pm_t * solver_pm) {
 
   static double normsq, pro, err, squarenorm;
-  int iteration, N = solver_pm->sdim, no_shifts = solver_pm->no_shifts;
+  int iteration, N = solver_pm->sdim, shifts = solver_pm->no_shifts;
   static double gamma, alpham1;
   spinor ** solver_field = NULL;
   double atime, etime;
-  const int nr_sf = 3;
+  const int nr_sf = 4;
 
   atime = gettime();
   if(solver_pm->sdim == VOLUME) {
-    init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
-    init_mms_tm(no_shifts, VOLUMEPLUSRAND);
+    init_solver_field(&solver_field, VOLUMEPLUSRAND, 2*nr_sf);
   } 
   else {
-    init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf); 
-    init_mms_tm(no_shifts, VOLUMEPLUSRAND/2);
+    init_solver_field(&solver_field, VOLUMEPLUSRAND/2, 2*nr_sf); 
   } 
 
-  zero_spinor_field(P[0], N);
+  // don't need boundaries, because we never apply f to them
+  // so N is enough
+  //init_mms_tm_nd(shifts, solver_pm->N);
+  init_mms_tm_nd(shifts, VOLUMEPLUSRAND/2);
+  zero_spinor_field(Pup[0], N);
+  zero_spinor_field(Pdn[0], N);
+  assign(ps_mms_solver[0], Qup, N);
+  assign(ps_mms_solver[1], Qdn, N);
   alphas[0] = 1.0;
   betas[0] = 0.0;
   sigma[0] = solver_pm->shifts[0]*solver_pm->shifts[0];
-  if(g_proc_id == 0 && g_debug_level > 2) printf("# CGMMS: shift %d is %e\n", 0, sigma[0]);
+  if(g_proc_id == 0 && g_debug_level > 2) printf("# CGMMSND: shift %d is %e\n", 0, sigma[0]);
 
-  for(int im = 1; im < no_shifts; im++) {
+  /* currently only implemented for P=0 */
+  for(int im = 1; im < shifts; im++) {
     sigma[im] = solver_pm->shifts[im]*solver_pm->shifts[im] - sigma[0];
-    if(g_proc_id == 0 && g_debug_level > 2) printf("# CGMMS: shift %d is %e\n", im, sigma[im]);
+    if(g_proc_id == 0 && g_debug_level > 2) printf("# CGMMSND: shift %d is %e\n", im, sigma[im]);
     // these will be the result spinor fields
-    zero_spinor_field(P[im], N);
+    zero_spinor_field(Pup[im], N);
+    zero_spinor_field(Pdn[im], N);
     // these are intermediate fields
-    assign(ps_mms_solver[im-1], Q, N);
+    assign(ps_mms_solver[2*im], Qup, N);
+    assign(ps_mms_solver[2*im+1], Qdn, N);
     zitam1[im] = 1.0;
     zita[im] = 1.0;
     alphas[im] = 1.0;
     betas[im] = 0.0;
   }
 
-  /* currently only implemented for P=0 */
-  squarenorm = square_norm(Q, N, 1);
+  squarenorm = square_norm(Qup, N, 1) + square_norm(Qdn, N, 1);
   /* if a starting solution vector equal to zero is chosen */
-  assign(solver_field[0], Q, N);
-  assign(solver_field[1], Q, N);
+  assign(solver_field[0], Qup, N);
+  assign(solver_field[1], Qdn, N);
+  assign(solver_field[2], Qup, N);
+  assign(solver_field[3], Qdn, N);
   normsq = squarenorm;
 
   /* main loop */
   for(iteration = 0; iteration < solver_pm->max_iter; iteration++) {
 
     /*   Q^2*p and then (p,Q^2*p)  */
-    solver_pm->M_psi(solver_field[2], solver_field[1]);
+    solver_pm->M_ndpsi(solver_field[6], solver_field[7], solver_field[2], solver_field[3]);
     // add the zero's shift
-    assign_add_mul_r(solver_field[2], solver_field[1], sigma[0], N);
-    pro = scalar_prod_r(solver_field[1], solver_field[2], N, 1);
+    assign_add_mul_r(solver_field[6], solver_field[2], sigma[0], N);
+    assign_add_mul_r(solver_field[7], solver_field[3], sigma[0], N);
+    pro = scalar_prod_r(solver_field[2], solver_field[6], N, 1);
+    pro += scalar_prod_r(solver_field[3], solver_field[7], N, 1);
 
     /* For the update of the coeff. of the shifted pol. we need alphas[0](i-1) and alpha_cg(i).
        This is the reason why we need this double definition of alpha */
@@ -123,7 +134,7 @@ int cg_mms_tm(spinor ** const P, spinor * const Q,
 
     /* Compute alphas[0](i+1) */
     alphas[0] = normsq/pro;
-    for(int im = 1; im < no_shifts; im++) {
+    for(int im = 1; im < shifts; im++) {
 
       /* Now gamma is a temp variable that corresponds to zita(i+1) */ 
       gamma = zita[im]*alpham1/(alphas[0]*betas[0]*(1.-zita[im]/zitam1[im]) 
@@ -137,55 +148,59 @@ int cg_mms_tm(spinor ** const P, spinor * const Q,
       alphas[im] = alphas[0]*zita[im]/zitam1[im];
 
       // Compute xs(i+1) = xs(i) + alphas(i)*ps(i) 
-      assign_add_mul_r(P[im], ps_mms_solver[im-1], alphas[im], N); 
+      assign_add_mul_r(Pup[im], ps_mms_solver[2*im], alphas[im], N); 
+      assign_add_mul_r(Pdn[im], ps_mms_solver[2*im+1], alphas[im], N);
       // in the CG the corrections are decreasing with the iteration number increasing
       // therefore, we can remove shifts when the norm of the correction vector
       // falls below a threshold
       // this is useful for computing time and needed, because otherwise
       // zita might get smaller than DOUBLE_EPS and, hence, zero
-      if(iteration > 0 && (iteration % 20 == 0) && (im == no_shifts-1)) {
-	double sn = square_norm(ps_mms_solver[im-1], N, 1);
-	if(alphas[no_shifts-1]*alphas[no_shifts-1]*sn <= solver_pm->squared_solver_prec) {
-	  no_shifts--;
+      if(iteration > 0 && (iteration % 20 == 0) && (im == shifts-1)) {
+	double sn = square_norm(ps_mms_solver[2*im], N, 1);
+	sn += square_norm(ps_mms_solver[2*im+1], N, 1);
+	if(alphas[shifts-1]*alphas[shifts-1]*sn <= solver_pm->squared_solver_prec) {
+	  shifts--;
 	  if(g_debug_level > 2 && g_proc_id == 0) {
-	    printf("# CGMMS: at iteration %d removed one shift, %d remaining\n", iteration, no_shifts);
-      	  }
+	    printf("# CGMMSND: at iteration %d removed one shift, %d remaining\n", iteration, shifts);
+	  }
 	}
       }
     }
     
     /*  Compute x_(i+1) = x_i + alphas[0](i+1) p_i    */
-    assign_add_mul_r(P[0], solver_field[1],  alphas[0], N);
+    assign_add_mul_r(Pup[0], solver_field[2],  alphas[0], N);
+    assign_add_mul_r(Pdn[0], solver_field[3],  alphas[0], N);
     /*  Compute r_(i+1) = r_i - alphas[0](i+1) Qp_i   */
-    assign_add_mul_r(solver_field[0], solver_field[2], -alphas[0], N);
+    assign_add_mul_r(solver_field[0], solver_field[6], -alphas[0], N);
+    assign_add_mul_r(solver_field[1], solver_field[7], -alphas[0], N);
 
     /* Check whether the precision eps_sq is reached */
 
-    err = square_norm(solver_field[0], N, 1);
+    err = square_norm(solver_field[0], N, 1) + square_norm(solver_field[1], N, 1);
 
     if(g_debug_level > 2 && g_proc_id == g_stdio_proc) {
-      printf("# CGMMS iteration: %d residue: %g\n", iteration, err); fflush( stdout );
+      printf("# CGMMSND iteration: %d residue: %g\n", iteration, err); fflush( stdout );
     }
 
     if( ((err <= solver_pm->squared_solver_prec) && (solver_pm->rel_prec == 0)) ||
-        ((err <= solver_pm->squared_solver_prec*squarenorm) && (solver_pm->rel_prec > 0)) ||
+	((err <= solver_pm->squared_solver_prec*squarenorm) && (solver_pm->rel_prec > 0)) ||
         (iteration == solver_pm->max_iter -1) ) {
-      /* FIXME temporary output of precision until a better solution can be found */
-      *cgmms_reached_prec = err;
       break;
     }
 
     /* Compute betas[0](i+1) = (r(i+1),r(i+1))/(r(i),r(i))
        Compute p(i+1) = r(i+1) + beta(i+1)*p(i)  */
     betas[0] = err/normsq;
-    assign_mul_add_r(solver_field[1], betas[0], solver_field[0], N);
+    assign_mul_add_r(solver_field[2], betas[0], solver_field[0], N);
+    assign_mul_add_r(solver_field[3], betas[0], solver_field[1], N);
     normsq = err;
 
-    /* Compute betas(i+1) = betas[0](i+1)*(zita(i+1)*alphas(i))/(zita(i)*alphas[0](i))
+    /* Compute betas(i+1) = betas[0](i)*(zita(i+1)*alphas(i))/(zita(i)*alphas[0](i))
        Compute ps(i+1) = zita(i+1)*r(i+1) + betas(i+1)*ps(i)  */
-    for(int im = 1; im < no_shifts; im++) {
+    for(int im = 1; im < shifts; im++) {
       betas[im] = betas[0]*zita[im]*alphas[im]/(zitam1[im]*alphas[0]);
-      assign_mul_add_mul_r(ps_mms_solver[im-1], solver_field[0], betas[im], zita[im], N);
+      assign_mul_add_mul_r(ps_mms_solver[2*im], solver_field[0], betas[im], zita[im], N);
+      assign_mul_add_mul_r(ps_mms_solver[2*im+1], solver_field[1], betas[im], zita[im], N);
     }
   }
   etime = gettime();
@@ -196,38 +211,38 @@ int cg_mms_tm(spinor ** const P, spinor * const Q,
     printf("# CGMMS (%d shifts): iter: %d eps_sq: %1.4e %1.4e t/s\n", solver_pm->no_shifts, iteration, solver_pm->squared_solver_prec, etime - atime); 
   }
   
-  finalize_solver(solver_field, nr_sf);
+  finalize_solver(solver_field, 2*nr_sf);
   return(iteration);
 }
 
 
-static unsigned int ini_mms = 0;
-static unsigned int mms_nr_allocated = 0;
+static unsigned int ini_mms_nd = 0;
+static unsigned int nr_nd = 0;
 
-static void init_mms_tm(const unsigned int _nr, const unsigned int N) {
-  if(ini_mms == 0 || _nr > mms_nr_allocated) {
-    if(mms_nr_allocated != 0) {
-      free_mms_tm();
+static void init_mms_tm_nd(const unsigned int _nr, const unsigned int N) {
+  if(ini_mms_nd == 0 || _nr > nr_nd) {
+    if(nr_nd != 0) {
+      free_mms_tm_nd();
     }
+    nr_nd = _nr;
 
-    sigma = (double*)calloc((_nr), sizeof(double));
-    zitam1 = (double*)calloc((_nr), sizeof(double));
-    zita = (double*)calloc((_nr), sizeof(double));
-    alphas = (double*)calloc((_nr), sizeof(double));
-    betas = (double*)calloc((_nr), sizeof(double));
+    sigma = (double*)calloc((nr_nd), sizeof(double));
+    zitam1 = (double*)calloc((nr_nd), sizeof(double));
+    zita = (double*)calloc((nr_nd), sizeof(double));
+    alphas = (double*)calloc((nr_nd), sizeof(double));
+    betas = (double*)calloc((nr_nd), sizeof(double));
 
-    ps_qmms = (spinor*)calloc(N*_nr,sizeof(spinor));
-    ps_mms_solver = (spinor**)calloc(_nr,sizeof(spinor*));
+    ps_qmms = (spinor*)calloc(N*(2*nr_nd)+1,sizeof(spinor));
+    ps_mms_solver = (spinor**)calloc((2*nr_nd)+1,sizeof(spinor*));
 
-    for(int i = 0; i < _nr; i++) {
+    for(int i = 0; i < 2*nr_nd; i++) {
       ps_mms_solver[i]=(spinor*)(((unsigned long int)(ps_qmms)+ALIGN_BASE)&~ALIGN_BASE) + i*N;
     }
-    mms_nr_allocated = _nr;
-    ini_mms = 1;
+    ini_mms_nd = 1;
   }
 }
 
-static void free_mms_tm() {
+static void free_mms_tm_nd() {
   free(sigma);
   free(zitam1);
   free(zita);
@@ -235,7 +250,7 @@ static void free_mms_tm() {
   free(betas);
   free(ps_qmms);
   free(ps_mms_solver);
-  mms_nr_allocated = 0;
-  ini_mms = 0;
+  nr_nd = 0;
+  ini_mms_nd = 0;
   return;
 }

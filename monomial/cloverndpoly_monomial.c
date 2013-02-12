@@ -83,8 +83,8 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
   
   for(k = 1; k < (mnl->MDPolyDegree-1); k++) {
     Qsw_tau1_sub_const_ndpsi(g_chi_up_spinor_field[k], g_chi_dn_spinor_field[k], 
-			   g_chi_up_spinor_field[k-1], g_chi_dn_spinor_field[k-1], 
-			   mnl->MDPolyRoots[k-1]);
+			     g_chi_up_spinor_field[k-1], g_chi_dn_spinor_field[k-1], 
+			     mnl->MDPolyRoots[k-1], phmc_Cpol, phmc_invmaxev);
   }
   
   /* Here comes the remaining fields  chi_k ; k=n,...,2n-1  */
@@ -99,7 +99,7 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
     
     Qsw_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->MDPolyDegree], g_chi_dn_spinor_field[mnl->MDPolyDegree], 
 			     g_chi_up_spinor_field[mnl->MDPolyDegree-1], g_chi_dn_spinor_field[mnl->MDPolyDegree-1], 
-			     mnl->MDPolyRoots[2*mnl->MDPolyDegree-3-j]);
+			     mnl->MDPolyRoots[2*mnl->MDPolyDegree-3-j], phmc_Cpol, phmc_invmaxev);
     
     /* Get the even parts of the  (j-1)th  chi_spinors */
     H_eo_sw_ndpsi(mnl->w_fields[0], mnl->w_fields[1], 
@@ -117,14 +117,14 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
     deriv_Sb(OE, g_chi_up_spinor_field[j-1], mnl->w_fields[2], hf, mnl->forcefactor);
     deriv_Sb(OE, g_chi_dn_spinor_field[j-1], mnl->w_fields[3], hf, mnl->forcefactor);
 
-    // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
+    // even/even sites sandwiched by tau_1 gamma_5 Y_e and gamma_5 X_e
     sw_spinor(EE, mnl->w_fields[3], mnl->w_fields[0], mnl->forcefactor);
-    // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
+    // odd/odd sites sandwiched by tau_1 gamma_5 Y_o and gamma_5 X_o
     sw_spinor(OO, g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[mnl->MDPolyDegree], mnl->forcefactor);
 
-    // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
+    // even/even sites sandwiched by tau_1 gamma_5 Y_e and gamma_5 X_e
     sw_spinor(EE, mnl->w_fields[2], mnl->w_fields[1], mnl->forcefactor);
-    // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
+    // odd/odd sites sandwiched by tau_1 gamma_5 Y_o and gamma_5 X_o
     sw_spinor(OO, g_chi_dn_spinor_field[j-1], g_chi_up_spinor_field[mnl->MDPolyDegree], mnl->forcefactor);
   }
   // trlog part does not depend on the normalisation of the polynomial
@@ -173,7 +173,7 @@ void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   for(j = 1; j < (mnl->MDPolyDegree); j++){
     Qsw_tau1_sub_const_ndpsi(up0, dn0,
 			     up1, dn1, 
-			     mnl->MDPolyRoots[mnl->MDPolyDegree-2+j]);
+			     mnl->MDPolyRoots[mnl->MDPolyDegree-2+j], phmc_Cpol, phmc_invmaxev);
     dummy = up1; up1 = up0; up0 = dummy;
     dummy = dn1; dn1 = dn0; dn0 = dummy;
   }
@@ -217,7 +217,7 @@ double cloverndpoly_acc(const int id, hamiltonian_field_t * const hf) {
   assign(dn0, mnl->pf2, VOLUME/2);
 
   for(j = 1; j <= (mnl->MDPolyDegree-1); j++) {
-    Qsw_tau1_sub_const_ndpsi(up1, dn1, up0, dn0, mnl->MDPolyRoots[j-1]);
+    Qsw_tau1_sub_const_ndpsi(up1, dn1, up0, dn0, mnl->MDPolyRoots[j-1], phmc_Cpol, phmc_invmaxev);
     
     dummy = up1; up1 = up0; up0 = dummy;
     dummy = dn1; dn1 = dn0; dn0 = dummy;

@@ -24,7 +24,7 @@
 #include "su3.h"
 #include "su3spinor.h"
 #include "hamiltonian_field.h"
-
+#include "rational/rational.h"
 
 #define DET 0
 #define DETRATIO 1
@@ -39,8 +39,16 @@
 #define CLOVERDETRATIO 10
 #define NDCLOVER 11
 #define CLOVERNDTRLOG 12
+#define NDRAT 13
+#define NDCLOVERRAT 14
+#define NDRATCOR 15
+#define NDCLOVERRATCOR 16
+#define RAT 17
+#define RATCOR 18
+#define CLOVERRAT 19
+#define CLOVERRATCOR 20
 
-#define max_no_monomials 20
+#define max_no_monomials 30
 
 typedef struct {
   int type;
@@ -57,6 +65,8 @@ typedef struct {
   int csg_N, csg_N2;
   int csg_n, csg_n2;
   int use_rectangles;
+  /* trlog */
+  int trlog;
   int * csg_index_array, *csg_index_array2;
   /* det or detratio related */
   double mu, mu2, kappa, kappa2;
@@ -95,6 +105,8 @@ typedef struct {
   double StildeMin, StildeMax;
   double EVMin, EVMax, EVMaxInv;
   double * MDPolyCoefs, * PtildeCoefs;
+  /* rational approximation */
+  rational_t rat;
   /* chronological solver fields */
   spinor ** csg_field;
   spinor ** csg_field2;
@@ -122,6 +134,10 @@ typedef struct {
 #include "monomial/cloverdet_monomial.h"
 #include "monomial/cloverdetratio_monomial.h"
 #include "monomial/cloverndpoly_monomial.h"
+#include "monomial/ndrat_monomial.h"
+#include "monomial/rat_monomial.h"
+#include "monomial/ndratcor_monomial.h"
+#include "monomial/ratcor_monomial.h"
 #include "monomial/moment_energy.h"
 
 /* list of all monomials */

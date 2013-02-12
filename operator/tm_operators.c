@@ -101,28 +101,28 @@ void tm_sub_H_eo_gamma5(spinor* const l, spinor * const p, spinor * const k,
 void M_full(spinor * const Even_new, spinor * const Odd_new, 
 	    spinor * const Even, spinor * const Odd) {
   /* Even sites */
-  Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd);
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], Odd);
   assign_mul_one_pm_imu(Even_new, Even, 1., VOLUME/2); 
-  assign_add_mul_r(Even_new, g_spinor_field[DUM_DERI], -1., VOLUME/2);
+  assign_add_mul_r(Even_new, g_spinor_field[DUM_MATRIX], -1., VOLUME/2);
 
   /* Odd sites */
-  Hopping_Matrix(OE, g_spinor_field[DUM_DERI], Even);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], Even);
   assign_mul_one_pm_imu(Odd_new, Odd, 1., VOLUME/2); 
-  assign_add_mul_r(Odd_new, g_spinor_field[DUM_DERI], -1., VOLUME/2);
+  assign_add_mul_r(Odd_new, g_spinor_field[DUM_MATRIX], -1., VOLUME/2);
 }
 
 void Q_full(spinor * const Even_new, spinor * const Odd_new, 
 	    spinor * const Even, spinor * const Odd) {
   /* Even sites */
-  Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd);
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], Odd);
   assign_mul_one_pm_imu(Even_new, Even, 1., VOLUME/2); 
-  assign_add_mul_r(Even_new, g_spinor_field[DUM_DERI], -1., VOLUME/2);
+  assign_add_mul_r(Even_new, g_spinor_field[DUM_MATRIX], -1., VOLUME/2);
   gamma5(Even_new, Even_new, VOLUME/2);
 
   /* Odd sites */
-  Hopping_Matrix(OE, g_spinor_field[DUM_DERI], Even);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], Even);
   assign_mul_one_pm_imu(Odd_new, Odd, 1., VOLUME/2); 
-  assign_add_mul_r(Odd_new, g_spinor_field[DUM_DERI], -1., VOLUME/2);
+  assign_add_mul_r(Odd_new, g_spinor_field[DUM_MATRIX], -1., VOLUME/2);
   gamma5(Odd_new, Odd_new, VOLUME/2);
 }
 

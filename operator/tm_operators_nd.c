@@ -290,7 +290,7 @@ void Qsw_pm_ndpsi(spinor * const l_strange, spinor * const l_charm,
  *
  * This is the implementation of 
  *
- *  Q_tau1_sub_const_ndpsi =  M - z_k 
+ *  Q_tau1_sub_const_ndpsi =  Cpol*( M - z_k )
  *
  *  with M = Qhat(2x2) tau_1   and z_k \in Complex
  *
@@ -310,7 +310,7 @@ void Qsw_pm_ndpsi(spinor * const l_strange, spinor * const l_charm,
  ******************************************/
 void Q_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
 			    spinor * const k_strange, spinor * const k_charm, 
-			    const _Complex double z) {
+			    const _Complex double z, const double Cpol, const double invev) {
 
   spinor *r, *s;
   su3_vector ALIGN phi1;
@@ -336,8 +336,8 @@ void Q_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
   		    -g_mubar, -g_epsbar);
 
   /* At the end, the normalisation by the max. eigenvalue  */
-  mul_r(l_strange, phmc_invmaxev, g_spinor_field[DUM_MATRIX], VOLUME/2);
-  mul_r(l_charm, phmc_invmaxev, g_spinor_field[DUM_MATRIX+1], VOLUME/2);
+  mul_r(l_strange, Cpol*invev, g_spinor_field[DUM_MATRIX], VOLUME/2);
+  mul_r(l_charm, Cpol*invev, g_spinor_field[DUM_MATRIX+1], VOLUME/2);
 
   /* Finally, we add k to l and multiply all */
   /* by the constant  phmc_Cpol  */
@@ -351,41 +351,33 @@ void Q_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
     r=l_strange + ix;
     s=k_strange + ix;
     
-    _complex_times_vector(phi1, z, s->s0);
+    _complex_times_vector(phi1, Cpol*z, s->s0);
     _vector_sub_assign(r->s0, phi1);
-    _vector_mul(r->s0, phmc_Cpol, r->s0);
-    _complex_times_vector(phi1, z, s->s1);
+    _complex_times_vector(phi1, Cpol*z, s->s1);
     _vector_sub_assign(r->s1, phi1);
-    _vector_mul(r->s1, phmc_Cpol, r->s1);
-    _complex_times_vector(phi1, z, s->s2);
+    _complex_times_vector(phi1, Cpol*z, s->s2);
     _vector_sub_assign(r->s2, phi1);
-    _vector_mul(r->s2, phmc_Cpol, r->s2);
-    _complex_times_vector(phi1, z, s->s3);
+    _complex_times_vector(phi1, Cpol*z, s->s3);
     _vector_sub_assign(r->s3, phi1);
-    _vector_mul(r->s3, phmc_Cpol, r->s3);
 
     r=l_charm + ix;
     s=k_charm + ix;
     
-    _complex_times_vector(phi1, z, s->s0);
+    _complex_times_vector(phi1, Cpol*z, s->s0);
     _vector_sub_assign(r->s0, phi1);
-    _vector_mul(r->s0, phmc_Cpol, r->s0);
-    _complex_times_vector(phi1, z, s->s1);
+    _complex_times_vector(phi1, Cpol*z, s->s1);
     _vector_sub_assign(r->s1, phi1);
-    _vector_mul(r->s1, phmc_Cpol, r->s1);
-    _complex_times_vector(phi1, z, s->s2);
+    _complex_times_vector(phi1, Cpol*z, s->s2);
     _vector_sub_assign(r->s2, phi1);
-    _vector_mul(r->s2, phmc_Cpol, r->s2);
-    _complex_times_vector(phi1, z, s->s3);
+    _complex_times_vector(phi1, Cpol*z, s->s3);
     _vector_sub_assign(r->s3, phi1);    
-    _vector_mul(r->s3, phmc_Cpol, r->s3);
   }
   return;
 }
 
 void Qsw_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
 			      spinor * const k_strange, spinor * const k_charm, 
-			      const _Complex double z) {
+			      const _Complex double z, const double Cpol, const double invev) {
 
   spinor *r, *s;
   su3_vector ALIGN phi1;
@@ -412,8 +404,8 @@ void Qsw_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
   		   -g_mubar, -g_epsbar);
 
   /* At the end, the normalisation by the max. eigenvalue  */
-  mul_r(l_strange, phmc_invmaxev, g_spinor_field[DUM_MATRIX], VOLUME/2);
-  mul_r(l_charm, phmc_invmaxev, g_spinor_field[DUM_MATRIX+1], VOLUME/2);
+  mul_r(l_strange, Cpol*invev, g_spinor_field[DUM_MATRIX], VOLUME/2);
+  mul_r(l_charm, Cpol*invev, g_spinor_field[DUM_MATRIX+1], VOLUME/2);
 
   /* Finally, we add k to l and multiply all */
   /* by the constant  phmc_Cpol  */
@@ -427,34 +419,26 @@ void Qsw_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
     r=l_strange + ix;
     s=k_strange + ix;
     
-    _complex_times_vector(phi1, z, s->s0);
+    _complex_times_vector(phi1, Cpol*z, s->s0);
     _vector_sub_assign(r->s0, phi1);
-    _vector_mul(r->s0, phmc_Cpol, r->s0);
-    _complex_times_vector(phi1, z, s->s1);
+    _complex_times_vector(phi1, Cpol*z, s->s1);
     _vector_sub_assign(r->s1, phi1);
-    _vector_mul(r->s1, phmc_Cpol, r->s1);
-    _complex_times_vector(phi1, z, s->s2);
+    _complex_times_vector(phi1, Cpol*z, s->s2);
     _vector_sub_assign(r->s2, phi1);
-    _vector_mul(r->s2, phmc_Cpol, r->s2);
-    _complex_times_vector(phi1, z, s->s3);
+    _complex_times_vector(phi1, Cpol*z, s->s3);
     _vector_sub_assign(r->s3, phi1);
-    _vector_mul(r->s3, phmc_Cpol, r->s3);
 
     r=l_charm + ix;
     s=k_charm + ix;
     
-    _complex_times_vector(phi1, z, s->s0);
+    _complex_times_vector(phi1, Cpol*z, s->s0);
     _vector_sub_assign(r->s0, phi1);
-    _vector_mul(r->s0, phmc_Cpol, r->s0);
-    _complex_times_vector(phi1, z, s->s1);
+    _complex_times_vector(phi1, Cpol*z, s->s1);
     _vector_sub_assign(r->s1, phi1);
-    _vector_mul(r->s1, phmc_Cpol, r->s1);
-    _complex_times_vector(phi1, z, s->s2);
+    _complex_times_vector(phi1, Cpol*z, s->s2);
     _vector_sub_assign(r->s2, phi1);
-    _vector_mul(r->s2, phmc_Cpol, r->s2);
-    _complex_times_vector(phi1, z, s->s3);
+    _complex_times_vector(phi1, Cpol*z, s->s3);
     _vector_sub_assign(r->s3, phi1);    
-    _vector_mul(r->s3, phmc_Cpol, r->s3);
   }
   return;
 }
@@ -511,7 +495,7 @@ void Qsw_pm_ndbipsi(bispinor * const bisp_l, bispinor * const bisp_k) {
  *
  * This is the implementation of
  *
- * (M_{ee}^\pm)^{-1}M_{eo}
+ * (M_{ee}^\pm)^{-1}M_{eo} tau^1
  *
  * see documentation for details
  * k is the number of the input field
@@ -520,6 +504,7 @@ void Qsw_pm_ndbipsi(bispinor * const bisp_l, bispinor * const bisp_k) {
  * it acts only on the odd part or only 
  * on a half spinor
  ******************************************/
+
 void H_eo_tm_ndpsi(spinor * const l_strange, spinor * const l_charm, 
              spinor * const k_strange, spinor * const k_charm, 
 	     const int ieo) {
@@ -792,7 +777,7 @@ void P_ndpsi(spinor * const l_strange, spinor * const l_charm,
     
     Q_tau1_sub_const_ndpsi(l_strange, l_charm,
 			   dum_up, dum_dn,
-			   phmc_root[j]);
+			   phmc_root[j], phmc_Cpol, phmc_invmaxev);
   }
   return;
 }

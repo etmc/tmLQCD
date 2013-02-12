@@ -1,8 +1,6 @@
 /***********************************************************************
- *
- *
- * Copyright (C) 2004 Andrea Shindler
- *               2009 Carsten Urbach
+ * 
+ * Copyright (C) 2013 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -18,16 +16,16 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- *
  ***********************************************************************/
+#ifndef _NDRAT_MONOMIAL_H
+#define _NDRAT_MONOMIAL_H
 
-#ifndef _CG_MMS_TM_H
-#define _CG_MMS_TM_H
+#include "hamiltonian_field.h"
 
-#include "solver.h"
-#include "matrix_mult_typedef.h"
-#include "su3.h"
-
-int cg_mms_tm(spinor ** const P,spinor * const Q, solver_pm_t * const params, double * reached_prec);
+void ndrat_derivative(const int id, hamiltonian_field_t * const hf);
+double ndrat_acc(const int id, hamiltonian_field_t * const hf);
+void ndrat_heatbath(const int id, hamiltonian_field_t * const hf);
+void nd_set_global_parameter(monomial * const mnl);
+int init_ndrat_monomial(const int id);
 
 #endif
