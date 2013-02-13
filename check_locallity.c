@@ -249,7 +249,6 @@ int main(int argc,char *argv[]) {
       if (stout_smear((su3_tuple*)(g_gauge_field[0]), &params_smear, (su3_tuple*)(g_gauge_field[0])) != 0)
         exit(1) ;
       g_update_gauge_copy = 1;
-      g_update_rectangle_energy = 1;
       plaquette_energy = measure_plaquette(g_gauge_field);
 
       if (g_proc_id == 0) {

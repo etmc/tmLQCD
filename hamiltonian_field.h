@@ -30,7 +30,6 @@ typedef struct {
   su3adj ** momenta;
   su3adj ** derivative;
   int update_gauge_copy;
-  int update_rectangle_energy;
   int traj_counter;
 } hamiltonian_field_t;
 

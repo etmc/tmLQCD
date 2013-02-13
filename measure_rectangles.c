@@ -65,82 +65,76 @@ double measure_rectangles(const su3 ** const gf) {
   const su3 *v = NULL , *w = NULL;
   double ALIGN ac, ks, kc, tr, ts, tt;
 
-  if(g_update_rectangle_energy) {
-    kc = 0.0;
-    ks = 0.0;
+  kc = 0.0;
+  ks = 0.0;
 #ifdef OMP
 #pragma omp for
 #endif
-    for (i = 0; i < VOLUME; i++) {
-      for (mu = 0; mu < 4; mu++) {
-	for (nu = 0; nu < 4; nu++) { 
-	  if(nu != mu) {
-	    /*
-	      ^
-	      |
-	      ^
-	      |
-	      ->
-	    */
-	    j = g_iup[i][mu];
-	    k = g_iup[j][nu];
-	    v = &gf[i][mu];
-	    w = &gf[j][nu];
-	    _su3_times_su3(tmp, *v, *w);
-	    v = &gf[k][nu];
-	    _su3_times_su3(pr1, tmp, *v);
-	    /*
-	      ->
-	      ^
-	      |
-	      ^
-	      |
-	    */
-	    j = g_iup[i][nu];
-	    k = g_iup[j][nu];
-	    v = &gf[i][nu];
-	    w = &gf[j][nu];
-	    _su3_times_su3(tmp, *v, *w);
-	    v = &gf[k][mu];
-	    _su3_times_su3(pr2, tmp, *v);
-	    
-	    /* Trace it */
-	    _trace_su3_times_su3d(ac,pr1,pr2);
-	    /* 	  printf("i mu nu: %d %d %d, ac = %e\n", i, mu, nu, ac); */
-	    /* Kahan summation */
-	    tr=ac+kc;
-	    ts=tr+ks;
-	    tt=ts-ks;
-	    ks=ts;
-	    kc=tr-tt;
-	  }
+  for (i = 0; i < VOLUME; i++) {
+    for (mu = 0; mu < 4; mu++) {
+      for (nu = 0; nu < 4; nu++) { 
+	if(nu != mu) {
+	  /*
+	    ^
+	    |
+	    ^
+	    |
+	    ->
+	  */
+	  j = g_iup[i][mu];
+	  k = g_iup[j][nu];
+	  v = &gf[i][mu];
+	  w = &gf[j][nu];
+	  _su3_times_su3(tmp, *v, *w);
+	  v = &gf[k][nu];
+	  _su3_times_su3(pr1, tmp, *v);
+	  /*
+	    ->
+	    ^
+	    |
+	    ^
+	    |
+	  */
+	  j = g_iup[i][nu];
+	  k = g_iup[j][nu];
+	  v = &gf[i][nu];
+	  w = &gf[j][nu];
+	  _su3_times_su3(tmp, *v, *w);
+	  v = &gf[k][mu];
+	  _su3_times_su3(pr2, tmp, *v);
+	  
+	  /* Trace it */
+	  _trace_su3_times_su3d(ac,pr1,pr2);
+	  /* 	  printf("i mu nu: %d %d %d, ac = %e\n", i, mu, nu, ac); */
+	  /* Kahan summation */
+	  tr=ac+kc;
+	  ts=tr+ks;
+	  tt=ts-ks;
+	  ks=ts;
+	  kc=tr-tt;
 	}
       }
     }
-    kc=(kc+ks)/3.0;
-#ifdef OMP
-    g_omp_acc_re[thread_num] = kc;
-#else
-    res = kc;
-#endif
   }
+  kc=(kc+ks)/3.0;
+#ifdef OMP
+  g_omp_acc_re[thread_num] = kc;
+#else
+  res = kc;
+#endif
 
 #ifdef OMP
   } /* OpenMP parallel closing brace */
   
-  if(g_update_rectangle_energy) {
-    res = 0.0;
-    for(int i = 0; i < omp_num_threads; ++i)
-      res += g_omp_acc_re[i];
+  res = 0.0;
+  for(int i = 0; i < omp_num_threads; ++i)
+    res += g_omp_acc_re[i];
 #else
-  if(g_update_rectangle_energy) {
 #endif
 #ifdef MPI
-    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    res = mres;
+  MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  res = mres;
 #endif
-    g_update_rectangle_energy = 0;
-  }
 
   return res;
 }
