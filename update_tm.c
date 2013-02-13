@@ -93,7 +93,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   hf.momenta = moment;
   hf.derivative = df0;
   hf.update_gauge_copy = g_update_gauge_copy;
-  hf.update_rectangle_energy = g_update_rectangle_energy;
   hf.traj_counter = traj_counter;
   integrator_set_fields(&hf);
 
@@ -345,8 +344,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
   hf.update_gauge_copy = 1;
   g_update_gauge_copy = 1;
-  hf.update_rectangle_energy = 1;
-  g_update_rectangle_energy = 1;
 #ifdef MPI
   xchange_gauge(hf.gaugefield);
 #endif
