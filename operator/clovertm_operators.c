@@ -296,7 +296,7 @@ void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const do
 #if (defined BGQ && defined XLC)
 // r = w*r
 // w a 6x6 colour matrix, r_s and r_c upper or lower halfs of a spinor
-# define _mul_colourmatrix_nd(s_s, s_c, w, r_s, r_c)	\
+# define _mul_colourmatrix_assign_nd(s_s, s_c, w, r_s, r_c)	\
   r0 = vec_ld(0L, (double*) r_s);			\
   r6 = vec_ld(0L, (double*) r_c);			\
   r1 = vec_ld(32L, (double*) r_s);			\
