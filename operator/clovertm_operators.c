@@ -293,6 +293,44 @@ void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const do
 
 #endif
 
+#if (defined BGQ && defined XLC)
+// r = w*r
+// w a 6x6 colour matrix, r_s and r_c upper or lower halfs of a spinor
+# define _mul_colourmatrix_nd(s_s, s_c, w, r_s, r_c)	\
+  r0 = vec_ld(0L, (double*) r_s);			\
+  r6 = vec_ld(0L, (double*) r_c);			\
+  r1 = vec_ld(32L, (double*) r_s);			\
+  r2 = vec_ld(64L, (double*) r_s);			\
+  r7 = vec_ld(32L, (double*) r_c);			\
+  r8 = vec_ld(64L, (double*) r_c);			\
+  _Pragma("unroll(6)")					\
+  for(int c0 = 0; c0 < 6; c0++) {			\
+    w0 = vec_ld(0L, (double*) &w[6*c0]);		\
+    w1 = vec_ld(32L, (double*) &w[6*c0]);		\
+    w2 = vec_ld(64L, (double*) &w[6*c0]);		\
+    r3  = vec_xmul(r0, w0);				\
+    r4  = vec_xmul(r1, w1);				\
+    r5  = vec_xmul(r2, w2);				\
+    r9  = vec_xmul(r6, w0);				\
+    r10 = vec_xmul(r7, w1);				\
+    r11 = vec_xmul(r8, w2);				\
+    r3  = vec_xxnpmadd(w0, r0, r3);			\
+    r4  = vec_xxnpmadd(w1, r1, r4);			\
+    r5  = vec_xxnpmadd(w2, r2, r5);			\
+    r9  = vec_xxnpmadd(w0, r6, r9);			\
+    r10 = vec_xxnpmadd(w1, r7, r10);			\
+    r11 = vec_xxnpmadd(w2, r8, r11);			\
+    r3 = vec_add(r3, r4);				\
+    r9 = vec_add(r9, r10);				\
+    r3 = vec_add(r5, r3);				\
+    r9 = vec_add(r11, r9);				\
+    /* there must a smarter solution for this */	\
+    s_s[c0] = r3[0] + I*r3[1] + r3[2] + I*r3[3];	\
+    s_c[c0] = r9[0] + I*r9[1] + r9[2] + I*r9[3];	\
+  }
+
+#else
+
 # define _mul_colourmatrix_assign_nd(s_s, s_c, w, r_s, r_c)	\
   for(int c0 = 0; c0 < 6; c0++) {				\
     s_s[c0] = w[c0*6] * r_s[0];					\
@@ -308,6 +346,7 @@ void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const do
     s_s[c0] += w[c0*6 + 5] * r_s[5];				\
     s_c[c0] += w[c0*6 + 5] * r_c[5];				\
   }
+#endif
 
 #define _mul_colourmatrix_add_i_mul_assign(s, w, mu, r)		\
   for(int c0 = 0; c0 < 6; c0++) {				\
@@ -320,6 +359,42 @@ void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const do
     s[c0] += I*mu*r[c0];				\
   }
 
+#if (defined BGQ && defined XLC)
+#define _mul_colourmatrix_add_i_mul_sub_assign(s, w, mu, r, t)	\
+  r0 = vec_ld(0L, (double*) r);			\
+  r1 = vec_ld(32L, (double*) r);		\
+  r2 = vec_ld(64L, (double*) r);		\
+  r6 = vec_ld(0L, (double*) t);			\
+  r7 = vec_ld(32L, (double*) t);		\
+  r8 = vec_ld(64L, (double*) t);		\
+  tmp = vec_splats(mu);				\
+  r6 = vec_neg(r6);				\
+  r7 = vec_neg(r7);				\
+  r8 = vec_neg(r8);				\
+  r3 = vec_xxnpmadd(r0, tmp, r6);		\
+  r4 = vec_xxnpmadd(r1, tmp, r7);		\
+  r5 = vec_xxnpmadd(r2, tmp, r8);		\
+  vec_st(r3, 0L, (double*) s);			\
+  vec_st(r4, 32L, (double*) s);			\
+  vec_st(r5, 64L, (double*) s);			\
+  _Pragma("unroll(6)")				\
+  for(int c0 = 0; c0 < 6; c0++) {		\
+    w0 = vec_ld(0L, (double*) &w[6*c0]);	\
+    w1 = vec_ld(32L, (double*) &w[6*c0]);	\
+    w2 = vec_ld(64L, (double*) &w[6*c0]);	\
+    r3 = vec_xmul(r0, w0);			\
+    r4 = vec_xmul(r1, w1);			\
+    r5 = vec_xmul(r2, w2);			\
+    r3 = vec_xxnpmadd(w0, r0, r3);		\
+    r4 = vec_xxnpmadd(w1, r1, r4);		\
+    r5 = vec_xxnpmadd(w2, r2, r5);		\
+    r3 = vec_add(r3, r4);			\
+    r3 = vec_add(r5, r3);			\
+    s[c0] += r3[0] + I*r3[1] + r3[2] + I*r3[3];	\
+  }
+
+#else
+
 #define _mul_colourmatrix_add_i_mul_sub_assign(s, w, mu, r, t)	\
   for(int c0 = 0; c0 < 6; c0++) {				\
     s[c0] = w[c0*6] * r[0];					\
@@ -330,6 +405,43 @@ void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const do
     s[c0] += w[c0*6 + 5] * r[5];				\
     s[c0] += I*mu*r[c0] - t[c0];				\
   }
+#endif
+
+#if (defined BGQ && defined XLC)
+#define _mul_colourmatrix_add_i_mul_sub_nassign(s, w, mu, r, t)	\
+  r0 = vec_ld(0L, (double*) r);			\
+  r1 = vec_ld(32L, (double*) r);		\
+  r2 = vec_ld(64L, (double*) r);		\
+  r6 = vec_ld(0L, (double*) t);			\
+  r7 = vec_ld(32L, (double*) t);		\
+  r8 = vec_ld(64L, (double*) t);		\
+  tmp = vec_splats(mu);				\
+  r0 = vec_neg(r0);				\
+  r1 = vec_neg(r1);				\
+  r2 = vec_neg(r2);				\
+  r3 = vec_xxnpmadd(r0, tmp, r6);		\
+  r4 = vec_xxnpmadd(r1, tmp, r7);		\
+  r5 = vec_xxnpmadd(r2, tmp, r8);		\
+  vec_st(r3, 0L, (double*) s);			\
+  vec_st(r4, 32L, (double*) s);			\
+  vec_st(r5, 64L, (double*) s);			\
+  _Pragma("unroll(6)")				\
+  for(int c0 = 0; c0 < 6; c0++) {		\
+    w0 = vec_ld(0L, (double*) &w[6*c0]);	\
+    w1 = vec_ld(32L, (double*) &w[6*c0]);	\
+    w2 = vec_ld(64L, (double*) &w[6*c0]);	\
+    r3 = vec_xmul(r0, w0);			\
+    r4 = vec_xmul(r1, w1);			\
+    r5 = vec_xmul(r2, w2);			\
+    r3 = vec_xxnpmadd(w0, r0, r3);		\
+    r4 = vec_xxnpmadd(w1, r1, r4);		\
+    r5 = vec_xxnpmadd(w2, r2, r5);		\
+    r3 = vec_add(r3, r4);			\
+    r3 = vec_add(r5, r3);			\
+    s[c0] += r3[0] + I*r3[1] + r3[2] + I*r3[3];	\
+  }
+
+#else
 
 #define _mul_colourmatrix_add_i_mul_sub_nassign(s, w, mu, r, t)	\
   for(int c0 = 0; c0 < 6; c0++) {				\
@@ -341,6 +453,7 @@ void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const do
     s[c0] -= w[c0*6 + 5] * r[5];				\
     s[c0] -= I*mu*r[c0] - t[c0];				\
   }
+#endif
 
 #define _add_nd_massterm_sub(r_s, r_c, mubar, epsbar, s_s, s_c, t_s, t_c) \
   for(int c0 = 0; c0 < 6; c0++) {					\
@@ -496,6 +609,11 @@ void clover_gamma5(const int ieo,
 #endif
   int ix;
   int ioff;
+#if (defined BGQ && defined XLC)
+  vector4double r0, r1, r2, r3, r4, r5;
+  vector4double r6, r7, r8, tmp;
+  vector4double w0, w1, w2;
+#endif
   _Complex double * restrict w;
   _Complex double * restrict r, * restrict s, * restrict t;
 
@@ -556,6 +674,11 @@ void clover(const int ieo,
 #endif
   int ix;
   int ioff;
+#if (defined BGQ && defined XLC)
+  vector4double r0, r1, r2, r3, r4, r5;
+  vector4double r6, r7, r8, tmp;
+  vector4double w0, w1, w2;
+#endif
   _Complex double * restrict w;
   _Complex double * restrict r, * restrict s, * restrict t;
 
