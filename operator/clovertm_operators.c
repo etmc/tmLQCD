@@ -739,6 +739,11 @@ void clover_nd(const int ieo,
 #endif
   int ix;
   int ioff;
+#if (defined BGQ && defined XLC)
+  vector4double r0, r1, r2, r3, r4, r5;
+  vector4double r6, r7, r8;
+  vector4double w0, w1, w2;
+#endif
   _Complex double * restrict w;
   _Complex double  *r_s, *r_c, *s_s, *s_c, *t_s, *t_c;
   
@@ -792,6 +797,11 @@ void clover_gamma5_nd(const int ieo,
 #endif
   int ix;
   int ioff;
+#if (defined BGQ && defined XLC)
+  vector4double r0, r1, r2, r3, r4, r5;
+  vector4double r6, r7, r8;
+  vector4double w0, w1, w2;
+#endif
   _Complex double * restrict w;
   _Complex double  *r_s, *r_c, *s_s, *s_c, *t_s, *t_c;
   
