@@ -2688,7 +2688,10 @@ extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_it
   double timeelapsed = 0.0;
   double sourcesquarenorm;
   int iter;
-  
+  spinor ** solver_field = NULL;
+  const int nr_sf = 4;
+  init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);  
+
   size_t dev_spinsize = 6*VOLUME * sizeof(dev_spinor); // float4 
   //update the gpu single gauge_field
   update_gpu_gf(g_gauge_field);  
@@ -2698,10 +2701,10 @@ extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_it
   
   rk = square_norm(Q, N, 0);
   sourcesquarenorm = rk; // for relative precision
-  assign(g_spinor_field[DUM_SOLVER],Q,N);
+  assign(solver_field[0],Q,N);
   printf("Initial residue: %.16e\n",rk);
-  zero_spinor_field(g_spinor_field[DUM_SOLVER+1],  N);//spin2 = x_k
-  zero_spinor_field(g_spinor_field[DUM_SOLVER+2],  N);
+  zero_spinor_field(solver_field[1],  N);//spin2 = x_k
+  zero_spinor_field(solver_field[2],  N);
   printf("The VOLUME is: %d\n",N);
   
   
@@ -2710,11 +2713,11 @@ for(iter=0; iter<max_iter; iter++){
 
    printf("Applying double precision Dirac-Op...\n");
    
-   Q_pm_psi_gpu(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2]);
-   diff(g_spinor_field[DUM_SOLVER],g_spinor_field[DUM_SOLVER],g_spinor_field[DUM_SOLVER+3],N);
+   Q_pm_psi_gpu(solver_field[3], solver_field[2]);
+   diff(solver_field[0],solver_field[0],solver_field[3],N);
     // r_k = b - D x_k
    
-   rk = square_norm(g_spinor_field[DUM_SOLVER], N, 0);
+   rk = square_norm(solver_field[0], N, 0);
   
    #ifdef GF_8
     if(isnan(rk)){
@@ -2728,20 +2731,21 @@ for(iter=0; iter<max_iter; iter++){
    {
      printf("Reached solver precision of eps=%.2e\n",eps);
      //multiply with D^dagger
-     Q_minus_psi_gpu(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1]);
-     assign(P, g_spinor_field[DUM_SOLVER+3], N);
+     Q_minus_psi_gpu(solver_field[3], solver_field[1]);
+     assign(P, solver_field[3], N);
   
 
     stop = clock();
     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
     printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
     finalize_mixedsolve();
+    finalize_solver(solver_field, nr_sf);
     return(totalcount);  
    }
    
 
   //initialize spin fields on device
-  convert2REAL4_spin(g_spinor_field[DUM_SOLVER],h2d_spin);
+  convert2REAL4_spin(solver_field[0],h2d_spin);
   
   cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
@@ -2760,9 +2764,9 @@ for(iter=0; iter<max_iter; iter++){
    cudaMemcpy(h2d_spin, dev_spinout, dev_spinsize, cudaMemcpyDeviceToHost);
    printf("%s\n", cudaGetErrorString(cudaGetLastError()));
    
-   convert2double_spin(h2d_spin, g_spinor_field[DUM_SOLVER+2]);
+   convert2double_spin(h2d_spin, solver_field[2]);
    
-   add(g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+2],N);
+   add(solver_field[1],solver_field[1],solver_field[2],N);
    // x_(k+1) = x_k + p_k
    
    outercount ++;
@@ -2771,14 +2775,14 @@ for(iter=0; iter<max_iter; iter++){
 
      printf("Did NOT reach solver precision of eps=%.2e\n",eps);
      //multiply with D^dagger
-     Q_minus_psi_gpu(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1]);
-     assign(P, g_spinor_field[DUM_SOLVER+3], N);
+     Q_minus_psi_gpu(solver_field[3], solver_field[1]);
+     assign(P, solver_field[3], N);
   
 
     stop = clock();
     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
     printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
-
+    finalize_solver(solver_field, nr_sf);
   return(-1);
 }
 
@@ -3162,11 +3166,11 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
   #ifdef OPERATOR_BENCHMARK
     #ifndef HALF
     // small benchmark
-      assign(g_spinor_field[DUM_SOLVER],Q,N);
+      assign(solver_field[0],Q,N);
       #ifndef MPI
-        benchmark(g_spinor_field[DUM_SOLVER]);
+        benchmark(solver_field[0]);
       #else
-        benchmark2(g_spinor_field[DUM_SOLVER]); 
+        benchmark2(solver_field[0]); 
       #endif
     // end small benchmark
     #endif //not HALF
@@ -3184,7 +3188,11 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
   else{
     finaleps = eps;
   }
-  
+
+  spinor ** solver_field = NULL;
+  const int nr_sf = 4;
+  init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);  
+
   
   #ifdef GPU_DOUBLE
     double testnorm;
@@ -3207,9 +3215,9 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
     cudaMemcpy(dev_spin2_d, P, dev_spinsize_d, cudaMemcpyHostToDevice);    
   */ 
   #else  
-    assign(g_spinor_field[DUM_SOLVER],Q,N);
-    zero_spinor_field(g_spinor_field[DUM_SOLVER+1],  N);//spin2 = x_k
-    zero_spinor_field(g_spinor_field[DUM_SOLVER+2],  N);
+    assign(solver_field[0],Q,N);
+    zero_spinor_field(solver_field[1],  N);//spin2 = x_k
+    zero_spinor_field(solver_field[2],  N);
   #endif
     
   #ifndef LOWOUTPUT
@@ -3232,10 +3240,10 @@ for(iter=0; iter<max_iter; iter++){
      dev_diff_d<<<griddim4,blockdim4>>>(dev_spin0_d,dev_spin0_d,dev_spin3_d);
      rk = double_dotprod(dev_spin0_d,dev_spin0_d);
    #else   
-     Qtm_pm_psi(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2]);
-     diff(g_spinor_field[DUM_SOLVER],g_spinor_field[DUM_SOLVER],g_spinor_field[DUM_SOLVER+3],N);
+     Qtm_pm_psi(solver_field[3], solver_field[2]);
+     diff(solver_field[0],solver_field[0],solver_field[3],N);
 
-     rk = square_norm(g_spinor_field[DUM_SOLVER], N, 1);
+     rk = square_norm(solver_field[0], N, 1);
    #endif
    
    #ifdef GF_8
@@ -3251,11 +3259,11 @@ for(iter=0; iter<max_iter; iter++){
    {
     #ifdef GPU_DOUBLE
       cudaMemcpy(h2d_spin_d, dev_spin1_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
-      unorder_spin_gpu(h2d_spin_d, g_spinor_field[DUM_SOLVER+1]);    
+      unorder_spin_gpu(h2d_spin_d, solver_field[1]);    
     #endif
      //multiply with Qtm_minus_psi (for non gpu done in invert_eo.c)
-     Qtm_minus_psi(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1]);
-     assign(P, g_spinor_field[DUM_SOLVER+3], N);
+     Qtm_minus_psi(solver_field[3], solver_field[1]);
+     assign(P, solver_field[3], N);
 
      stop = clock();
      timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
@@ -3264,7 +3272,7 @@ for(iter=0; iter<max_iter; iter++){
       if(g_proc_id==0) printf("Reached solver precision of eps=%.2e\n",eps);
       if(g_proc_id==0) printf("EO Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
      #endif
-   
+     finalize_solver(solver_field, nr_sf);
      return(totalcount);  
    }
    
@@ -3278,15 +3286,15 @@ for(iter=0; iter<max_iter; iter++){
         exit(100);
       }      
     #else   
-      convert2REAL4_spin(g_spinor_field[DUM_SOLVER],h2d_spin);
+      convert2REAL4_spin(solver_field[0],h2d_spin);
       cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);     
     #endif
   #else
-    convert2REAL4_spin_half(g_spinor_field[DUM_SOLVER],h2d_spin, h2d_spin_norm); 
+    convert2REAL4_spin_half(solver_field[0],h2d_spin, h2d_spin_norm); 
     cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice); 
   // also copy half spinor norm and reliable (float) source
     cudaMemcpy(dev_spinin_norm, h2d_spin_norm, dev_normsize, cudaMemcpyHostToDevice);
-    convert2REAL4_spin(g_spinor_field[DUM_SOLVER],h2d_spin_reliable);
+    convert2REAL4_spin(solver_field[0],h2d_spin_reliable);
     cudaMemcpy(dev_spin1_reliable, h2d_spin_reliable, dev_spinsize_reliable, cudaMemcpyHostToDevice); 
   #endif
 
@@ -3337,13 +3345,13 @@ for(iter=0; iter<max_iter; iter++){
        printf("%s\n", cudaGetErrorString(cudaGetLastError()));
      }
      #ifndef HALF
-       convert2double_spin(h2d_spin, g_spinor_field[DUM_SOLVER+2]);
+       convert2double_spin(h2d_spin, solver_field[2]);
      #else
-       convert2double_spin_half(h2d_spin, h2d_spin_norm, g_spinor_field[DUM_SOLVER+2]);
+       convert2double_spin_half(h2d_spin, h2d_spin_norm, solver_field[2]);
      #endif
    
      // x_(k+1) = x_k + p_k
-     add(g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+2],N);
+     add(solver_field[1],solver_field[1],solver_field[2],N);
    #endif
    outercount ++;   
 }// outer loop 
@@ -3352,17 +3360,17 @@ for(iter=0; iter<max_iter; iter++){
      //multiply with Qtm_minus_psi (for non gpu done in invert_eo.c)
    #ifdef GPU_DOUBLE
       cudaMemcpy(h2d_spin_d, dev_spin1_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
-      unorder_spin_gpu(h2d_spin_d, g_spinor_field[DUM_SOLVER+1]);   
+      unorder_spin_gpu(h2d_spin_d, solver_field[1]);   
    #endif      
-     Qtm_minus_psi(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1]);
-     assign(P, g_spinor_field[DUM_SOLVER+3], N);
+     Qtm_minus_psi(solver_field[3], solver_field[1]);
+     assign(P, solver_field[3], N);
     
 
     assert((stop = clock())!=-1);
     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
     if(g_proc_id==0) printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
 
-  
+    finalize_solver(solver_field, nr_sf);
   return(-1);
 }
 
@@ -3415,25 +3423,27 @@ extern "C" int mixed_solve_eo_reliable (spinor * const P, spinor * const Q, cons
   else{
     finaleps = eps;
   }
-  assign(g_spinor_field[DUM_SOLVER],Q,N);
-  zero_spinor_field(g_spinor_field[DUM_SOLVER+1],  N);//spin2 = x_k
-  zero_spinor_field(g_spinor_field[DUM_SOLVER+2],  N);
+  assign(solver_field[0],Q,N);
+  zero_spinor_field(solver_field[1],  N);//spin2 = x_k
+  zero_spinor_field(solver_field[2],  N);
   
   #ifndef LOWOUTPUT
     printf("Initial residue: %.16e\n",rk);
     printf("The VOLUME/2 is: %d\n",N);
   #endif
-
+  spinor ** solver_field = NULL;
+  const int nr_sf = 4;
+  init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);  
 
 for(iter=0; iter<max_iter; iter++){
    #ifndef LOWOUTPUT
    printf("Applying double precision EO Dirac-Op Q_{-}Q{+}...\n");
    #endif
-   Qtm_pm_psi(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2]);
-   diff(g_spinor_field[DUM_SOLVER],g_spinor_field[DUM_SOLVER],g_spinor_field[DUM_SOLVER+3],N);
+   Qtm_pm_psi(solver_field[3], solver_field[2]);
+   diff(solver_field[0],solver_field[0],solver_field[3],N);
     // r_k = b - D x_k
    
-   rk = square_norm(g_spinor_field[DUM_SOLVER], N, 1);
+   rk = square_norm(solver_field[0], N, 1);
    #ifdef GF_8
     if(isnan(rk)){
       fprintf(stderr, "Error in mixed_solve_eo: Residue is NaN.\n  May happen with GF 8 reconstruction. Aborting ...\n");
@@ -3447,8 +3457,8 @@ for(iter=0; iter<max_iter; iter++){
    {
      
      //multiply with Qtm_minus_psi (for non gpu done in invert_eo.c)
-     Qtm_minus_psi(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1]);
-     assign(P, g_spinor_field[DUM_SOLVER+3], N);
+     Qtm_minus_psi(solver_field[3], solver_field[1]);
+     assign(P, solver_field[3], N);
      stop = clock();
      timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
      
@@ -3456,20 +3466,20 @@ for(iter=0; iter<max_iter; iter++){
       printf("Reached solver precision of eps=%.2e\n",eps);
       printf("EO Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
      #endif
-   
+     finalize_solver(solver_field, nr_sf);
      return(totalcount);  
    }
    
   //initialize spin fields on device
   #ifndef HALF
-    convert2REAL4_spin(g_spinor_field[DUM_SOLVER],h2d_spin);
+    convert2REAL4_spin(solver_field[0],h2d_spin);
     cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
   #else
-    convert2REAL4_spin_half(g_spinor_field[DUM_SOLVER],h2d_spin, h2d_spin_norm);
+    convert2REAL4_spin_half(solver_field[0],h2d_spin, h2d_spin_norm);
     // also copy half spinor norm and reliable (float) source
     cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
     cudaMemcpy(dev_spinin_norm, h2d_spin_norm, dev_normsize, cudaMemcpyHostToDevice);
-    convert2REAL4_spin(g_spinor_field[DUM_SOLVER],h2d_spin_reliable);
+    convert2REAL4_spin(solver_field[0],h2d_spin_reliable);
     cudaMemcpy(dev_spin1_reliable, h2d_spin_reliable, dev_spinsize_reliable, cudaMemcpyHostToDevice);    
  #endif
   
@@ -3519,26 +3529,26 @@ for(iter=0; iter<max_iter; iter++){
      printf("%s\n", cudaGetErrorString(cudaGetLastError()));
    }
 
-   convert2double_spin(h2d_spin_reliable, g_spinor_field[DUM_SOLVER+2]);
+   convert2double_spin(h2d_spin_reliable, solver_field[2]);
    
 
    // x_(k+1) = x_k + p_k
-   add(g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+2],N);
+   add(solver_field[1],solver_field[1],solver_field[2],N);
 
    outercount ++;   
 }// outer loop 
     
      printf("Did NOT reach solver precision of eps=%.2e\n",eps);
      //multiply with Qtm_minus_psi (for non gpu done in invert_eo.c)
-     Qtm_minus_psi(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+1]);
-     assign(P, g_spinor_field[DUM_SOLVER+3], N);
+     Qtm_minus_psi(solver_field[3], solver_field[1]);
+     assign(P, solver_field[3], N);
     
 
     assert((stop = clock())!=-1);
     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
     printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
 
-  
+    finalize_solver(solver_field, nr_sf);
   return(-1);
 }
 
@@ -3642,7 +3652,11 @@ extern "C" int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int ma
   else{
     finaleps = eps;
   }
-  
+
+  spinor ** solver_field = NULL;
+  const int nr_sf = 4;
+  init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);  
+
   #ifdef GPU_DOUBLE
     double testnorm;
     
@@ -3658,18 +3672,11 @@ extern "C" int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int ma
     cudaMemcpy(dev_spin1_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice); 
     cudaMemcpy(dev_spin2_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);     
     cudaMemcpy(dev_spin3_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice); 
-   /*
-    cudaMemcpy(dev_spin0_d, Q, dev_spinsize_d, cudaMemcpyHostToDevice);
-    cudaMemcpy(dev_spin1_d, P, dev_spinsize_d, cudaMemcpyHostToDevice); 
-    cudaMemcpy(dev_spin2_d, P, dev_spinsize_d, cudaMemcpyHostToDevice);    
-  */ 
     #else
-    assign(g_spinor_field[DUM_SOLVER],Q,N);
-    //zero_spinor_field(g_spinor_field[DUM_SOLVER+1],  N);//spin2 = x_k
-    //zero_spinor_field(g_spinor_field[DUM_SOLVER+2],  N);
+    assign(solver_field[0],Q,N);
     /* set initial guess*/
-    assign(g_spinor_field[DUM_SOLVER+1],P,N);    
-    assign(g_spinor_field[DUM_SOLVER+2],P,N);
+    assign(solver_field[1],P,N);    
+    assign(solver_field[2],P,N);
   #endif
   
   #ifndef LOWOUTPUT
@@ -3692,10 +3699,10 @@ for(iter=0; iter<max_iter; iter++){
      dev_diff_d<<<griddim4,blockdim4>>>(dev_spin0_d,dev_spin0_d,dev_spin3_d);
      rk = double_dotprod(dev_spin0_d,dev_spin0_d);
    #else
-     Qtm_pm_psi(g_spinor_field[DUM_SOLVER+3], g_spinor_field[DUM_SOLVER+2]);
-     diff(g_spinor_field[DUM_SOLVER],g_spinor_field[DUM_SOLVER],g_spinor_field[DUM_SOLVER+3],N);
+     Qtm_pm_psi(solver_field[3], solver_field[2]);
+     diff(solver_field[0],solver_field[0],solver_field[3],N);
       // r_k = b - D x_k  
-     rk = square_norm(g_spinor_field[DUM_SOLVER], N, 1);
+     rk = square_norm(solver_field[0], N, 1);
    #endif
    
    #ifdef GF_8
@@ -3713,7 +3720,7 @@ for(iter=0; iter<max_iter; iter++){
       cudaMemcpy(h2d_spin_d, dev_spin1_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
       unorder_spin_gpu(h2d_spin_d, P);    
     #else  
-     assign(P, g_spinor_field[DUM_SOLVER+1], N);
+     assign(P, solver_field[1], N);
     #endif
      stop = clock();
      timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
@@ -3723,6 +3730,7 @@ for(iter=0; iter<max_iter; iter++){
       if (g_proc_id == 0) printf("EO Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
      #endif
      if (g_proc_id == 0) printf("Number of inner (single) solver iterations: %d\n",totalcount);
+     finalize_solver(solver_field, nr_sf);
      return(totalcount);  
    }
    
@@ -3736,11 +3744,11 @@ for(iter=0; iter<max_iter; iter++){
         exit(100);
       }      
     #else 
-      convert2REAL4_spin(g_spinor_field[DUM_SOLVER],h2d_spin);
+      convert2REAL4_spin(solver_field[0],h2d_spin);
       cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);      
     #endif
   #else
-    convert2REAL4_spin_half(g_spinor_field[DUM_SOLVER],h2d_spin, h2d_spin_norm);
+    convert2REAL4_spin_half(solver_field[0],h2d_spin, h2d_spin_norm);
     cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);    
     // also copy half spinor norm   
       cudaMemcpy(dev_spinin_norm, h2d_spin_norm, dev_normsize, cudaMemcpyHostToDevice);
@@ -3794,13 +3802,13 @@ for(iter=0; iter<max_iter; iter++){
        if (g_proc_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
      }
      #ifndef HALF
-       convert2double_spin(h2d_spin, g_spinor_field[DUM_SOLVER+2]);
+       convert2double_spin(h2d_spin, solver_field[2]);
      #else
-       convert2double_spin_half(h2d_spin, h2d_spin_norm, g_spinor_field[DUM_SOLVER+2]);
+       convert2double_spin_half(h2d_spin, h2d_spin_norm, solver_field[2]);
      #endif
    
      // x_(k+1) = x_k + p_k
-     add(g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+1],g_spinor_field[DUM_SOLVER+2],N);
+     add(solver_field[1],solver_field[1],solver_field[2],N);
    #endif
    outercount ++;   
 }// outer loop 
@@ -3810,14 +3818,14 @@ for(iter=0; iter<max_iter; iter++){
       cudaMemcpy(h2d_spin_d, dev_spin1_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
       unorder_spin_gpu(h2d_spin_d, P);   
    #else 
-     assign(P, g_spinor_field[DUM_SOLVER+1], N);
+     assign(P, solver_field[1], N);
    #endif 
 
     assert((stop = clock())!=-1);
     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
     if (g_proc_id == 0) printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
 
-  
+    finalize_solver(solver_field, nr_sf);
   return(-1);
 }
 
