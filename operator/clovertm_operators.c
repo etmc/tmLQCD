@@ -922,6 +922,11 @@ void assign_mul_one_sw_pm_imu_eps(const int ieo,
 #endif
   int ix;
   int ioff;
+#if (defined BGQ && defined XLC)
+  vector4double r0, r1, r2, r3, r4, r5;
+  vector4double r6, r7, r8, r9, r10, r11;
+  vector4double w0, w1, w2;
+#endif
   _Complex double * restrict r_s, * restrict r_c, * restrict s_s, * restrict s_c, * restrict w;
   
   if(ieo == 0) {
