@@ -144,7 +144,7 @@ void sw_deriv_nd(const int ieo) {
   int ioff;
   int x;
   double fac = 1.0000;
-  su3 ALIGN lswp[4], lswm[4], v;
+  su3 ALIGN lswp[4], lswm[4];
   _Complex double ALIGN a0[6][6], a1[6][6], b[6][6], c[6][6];
 
   /* convention: Tr clover-leaf times insertion */
@@ -168,21 +168,11 @@ void sw_deriv_nd(const int ieo) {
 #endif
     x = g_eo2lexic[icx];
     /* compute the insertion matrix */
-    populate_6x6_matrix(b, &sw[x][0][0], 0, 0);
-    populate_6x6_matrix(b, &sw[x][0][1], 0, 3);
-    _su3_dagger(v, sw[x][0][1]); 
-    populate_6x6_matrix(b, &v, 3, 0);
-    populate_6x6_matrix(b, &sw[x][0][2], 3, 3);
-
+    memcpy(b[0], sw[x][0], 36*sizeof(_Complex double));
     memcpy(c[0], sw_inv[icy][0], 36*sizeof(_Complex double));
     mult_6x6(a0, b, c);
 
-    populate_6x6_matrix(b, &sw[x][1][0], 0, 0);
-    populate_6x6_matrix(b, &sw[x][1][1], 0, 3);
-    _su3_dagger(v, sw[x][1][1]); 
-    populate_6x6_matrix(b, &v, 3, 0);
-    populate_6x6_matrix(b, &sw[x][1][2], 3, 3);
-
+    memcpy(b[0], sw_inv[x][1], 36*sizeof(_Complex double));
     memcpy(c[0], sw_inv[icy][1], 36*sizeof(_Complex double));
     mult_6x6(a1, b, c);
     add_6x6(b, a1, a0);

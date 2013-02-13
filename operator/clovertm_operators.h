@@ -25,7 +25,7 @@
 
 #include "su3.h"
 
-extern su3 *** sw;
+extern _Complex double *** sw;
 extern _Complex double *** sw_inv;
 extern su3 ** swm, ** swp;
 

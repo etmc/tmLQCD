@@ -172,7 +172,6 @@ void sw_invert(const int ieo, const double mu) {
   int icy;
   int ioff, err=0;
   int i, x;
-  su3 ALIGN v;
   _Complex double ALIGN a[6][6];
 
   if(ieo==0) {
@@ -196,11 +195,7 @@ void sw_invert(const int ieo, const double mu) {
     x = g_eo2lexic[icx];
 
     for(i = 0; i < 2; i++) {
-      populate_6x6_matrix(a, &sw[x][i][0], 0, 0);
-      populate_6x6_matrix(a, &sw[x][i][1], 0, 3);
-      _su3_dagger(v, sw[x][i][1]); 
-      populate_6x6_matrix(a, &v, 3, 0);
-      populate_6x6_matrix(a, &sw[x][i][2], 3, 3);
+      memcpy(a[0], sw[x][i], 36*sizeof(_Complex double));
       // we add the twisted mass term
       if(i == 0) add_tm(a, +mu);
       else add_tm(a, -mu);
@@ -223,12 +218,7 @@ void sw_invert(const int ieo, const double mu) {
 
     if(fabs(mu) > 0.) {
       for(i = 0; i < 2; i++) {
-	populate_6x6_matrix(a, &sw[x][i][0], 0, 0);
-	populate_6x6_matrix(a, &sw[x][i][1], 0, 3);
-	_su3_dagger(v, sw[x][i][1]); 
-	populate_6x6_matrix(a, &v, 3, 0);
-	populate_6x6_matrix(a, &sw[x][i][2], 3, 3);
-
+	memcpy(a[0], sw[x][i], 36*sizeof(_Complex double));
 	// we add the twisted mass term
 	if(i == 0) add_tm(a, -mu);
 	else add_tm(a, +mu);
@@ -278,7 +268,6 @@ void sw_invert_nd(const double mshift) {
 #endif
   int err=0;
   int i, x;
-  su3 ALIGN v;
   _Complex double ALIGN a[6][6], b[6][6];
 
 #ifdef OMP
@@ -288,12 +277,7 @@ void sw_invert_nd(const double mshift) {
     x = g_eo2lexic[icx];
 
     for(i = 0; i < 2; i++) {
-      populate_6x6_matrix(a, &sw[x][i][0], 0, 0);
-      populate_6x6_matrix(a, &sw[x][i][1], 0, 3);
-      _su3_dagger(v, sw[x][i][1]); 
-      populate_6x6_matrix(a, &v, 3, 0);
-      populate_6x6_matrix(a, &sw[x][i][2], 3, 3);
-
+      memcpy(a[0], sw[x][i], 36*sizeof(_Complex double));
       // compute (1+T)^2 and store in b
       mult_6x6(b, a, a);
       // we add the mass shift term, which is a real number

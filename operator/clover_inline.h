@@ -32,6 +32,33 @@ static inline void populate_6x6_matrix(_Complex double a[6][6], const su3 * cons
   return;
 }
 
+static inline void populate_6x6_matrix2(_Complex double * a, const su3 * const C, const int row, const int col) {
+  a[(0+row)*6 + 0+col] = C->c00;
+  a[(0+row)*6 + 1+col] = C->c01;
+  a[(0+row)*6 + 2+col] = C->c02;
+  a[(1+row)*6 + 0+col] = C->c10;
+  a[(1+row)*6 + 1+col] = C->c11;
+  a[(1+row)*6 + 2+col] = C->c12;
+  a[(2+row)*6 + 0+col] = C->c20;
+  a[(2+row)*6 + 1+col] = C->c21;
+  a[(2+row)*6 + 2+col] = C->c22;
+  return;
+}
+
+static inline void populate_6x6_hc_matrix(_Complex double * a, const su3 * const C, const int row, const int col) {
+  a[(0+row)*6 + 0+col] = conj(C->c00);
+  a[(0+row)*6 + 1+col] = conj(C->c10);
+  a[(0+row)*6 + 2+col] = conj(C->c20);
+  a[(1+row)*6 + 0+col] = conj(C->c01);
+  a[(1+row)*6 + 1+col] = conj(C->c11);
+  a[(1+row)*6 + 2+col] = conj(C->c21);
+  a[(2+row)*6 + 0+col] = conj(C->c02);
+  a[(2+row)*6 + 1+col] = conj(C->c12);
+  a[(2+row)*6 + 2+col] = conj(C->c22);
+  return;
+}
+
+
 static inline void get_3x3_block_matrix(su3 * const C, _Complex double a[6][6], const int row, const int col) {
   C->c00 = a[0+row][0+col];
   C->c01 = a[0+row][1+col];
