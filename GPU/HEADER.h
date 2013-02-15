@@ -253,8 +253,9 @@ extern "C" void dev_Qtm_pm_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinout,
 				 int* dev_nn_eo, int* dev_nn_oe);
 				 
 				 
-extern "C" void gpu_deriv_Sb(const int ieo, spinor * const l, spinor * const k);				 
-				 
+extern "C" void gpu_deriv_Sb(const int ieo, spinor * const l, spinor * const k,
+                               hamiltonian_field_t * const hf, const double factor);				 
+extern "C" void gpu_gauge_derivative(int withrectangles, hamiltonian_field_t * const hf, double c_gauge, double c_rect);				 
 #define _MIXED_SOLVE_H_
 
 #endif

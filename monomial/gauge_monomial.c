@@ -44,6 +44,10 @@
 #include "hamiltonian_field.h"
 #include "gauge_monomial.h"
 
+#ifdef HAVE_GPU
+extern void gpu_gauge_derivative(int withrectangles, hamiltonian_field_t * const hf, double c_gauge, double c_rect);
+#endif 
+
 /* this function calculates the derivative of the momenta: equation 13 of Gottlieb */
 void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
@@ -55,6 +59,57 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
   
   double atime, etime;
   atime = gettime();
+
+#ifdef HAVE_GPU
+    if(usegpu_flag)
+    {
+      if(mnl->use_rectangles) {
+        gpu_gauge_derivative(1, hf, factor, factor*mnl->c1/mnl->c0);
+      }
+      else{
+        gpu_gauge_derivative(0, hf, factor, 0.0);
+      }
+    }
+    else{
+    
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
+  su3 ALIGN v, w;
+  int i, mu;
+  su3 *z;
+  su3adj *xm;
+
+#ifdef OMP
+#pragma omp for
+#endif
+  for(i = 0; i < VOLUME; i++) { 
+    for(mu=0;mu<4;mu++) {
+      z=&hf->gaugefield[i][mu];
+      xm=&hf->derivative[i][mu];
+      get_staples(&v,i,mu, (const su3**) hf->gaugefield); 
+      _su3_times_su3d(w,*z,v);
+      _trace_lambda_mul_add_assign((*xm), factor, w);
+      
+      if(mnl->use_rectangles) {
+	get_rectangle_staples(&v, i, mu);
+	_su3_times_su3d(w, *z, v);
+	_trace_lambda_mul_add_assign((*xm), factor*mnl->c1/mnl->c0, w);
+      }
+    }
+  }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif   
+    }
+
+
+#else //HAVE_GPU
+    
+    
 #ifdef OMP
 #pragma omp parallel
   {
@@ -87,6 +142,9 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
 #ifdef OMP
   } /* OpenMP closing brace */
 #endif
+
+#endif //HAVE_GPU
+
   etime = gettime();
   if(g_debug_level > 1 && g_proc_id == 0) {
     printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);

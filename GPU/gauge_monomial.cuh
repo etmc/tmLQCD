@@ -445,7 +445,7 @@ extern "C" void finalize_gpu_fields(){
 
 
 
-void to_host_mom_df0(){
+void to_host_mom(hamiltonian_field_t * const hf){
   cudaError_t cudaerr;
   int i, mu;
   size_t dev_momsize = 4*VOLUME * sizeof(dev_su3adj);
@@ -456,21 +456,21 @@ void to_host_mom_df0(){
   
   for(i=0; i<VOLUME; i++){
     for(mu=0; mu<4; mu++){
-      df0[i][mu].d1 = h2d_df0_d[4*i+mu].d1;
-      df0[i][mu].d2 = h2d_df0_d[4*i+mu].d2;
-      df0[i][mu].d3 = h2d_df0_d[4*i+mu].d3;
-      df0[i][mu].d4 = h2d_df0_d[4*i+mu].d4;
-      df0[i][mu].d5 = h2d_df0_d[4*i+mu].d5;
-      df0[i][mu].d6 = h2d_df0_d[4*i+mu].d6;
-      df0[i][mu].d7 = h2d_df0_d[4*i+mu].d7;
-      df0[i][mu].d8 = h2d_df0_d[4*i+mu].d8;
+      &hf->derivative[i][mu].d1 = h2d_df0_d[4*i+mu].d1;
+      &hf->derivative[i][mu].d2 = h2d_df0_d[4*i+mu].d2;
+      &hf->derivative[i][mu].d3 = h2d_df0_d[4*i+mu].d3;
+      &hf->derivative[i][mu].d4 = h2d_df0_d[4*i+mu].d4;
+      &hf->derivative[i][mu].d5 = h2d_df0_d[4*i+mu].d5;
+      &hf->derivative[i][mu].d6 = h2d_df0_d[4*i+mu].d6;
+      &hf->derivative[i][mu].d7 = h2d_df0_d[4*i+mu].d7;
+      &hf->derivative[i][mu].d8 = h2d_df0_d[4*i+mu].d8;
     }
   }
 }
 
 
 
-void to_host_mom(su3adj** mom, dev_su3adj* dev_mom){
+void to_host_mom_field(su3adj** mom, dev_su3adj* dev_mom){
   cudaError_t cudaerr;
   int i, mu;
   size_t dev_momsize = 4*VOLUME * sizeof(dev_su3adj);
@@ -553,14 +553,15 @@ for(i=VOLUME-1; i<VOLUME; i++){
 
 
 
-__global__ void dev_gauge_derivative(int * dev_nn, dev_su3_2v_d * gf, dev_su3adj* mom){
+__global__ void dev_gauge_derivative(int * dev_nn, dev_su3_2v_d * gf, dev_su3adj* mom, double c){
   
   int pos, mu, nu; /* pos = basepoint of loop */
   int help, gather, old, thispos, nextpos;
   dev_su3_d M[2];
   dev_su3_d newM;
   dev_su3_d w;
-  
+  __shared__ dev_su3adj newmom[BLOCKGAUGE];
+
   pos= threadIdx.x + blockDim.x*blockIdx.x;  
 
   if(pos < dev_VOL2){
@@ -685,7 +686,16 @@ __global__ void dev_gauge_derivative(int * dev_nn, dev_su3_2v_d * gf, dev_su3adj
    
    dev_get_matrix(gf, pos, mu, &(newM));
    dev_su3_ti_su3d_d(&(M[gather]), &(newM), &(w) );
-   dev_add_tr_lambda(&(mom[4*pos+mu]), &(M[gather]));
+   dev_tr_lambda(&(newmom[ix]), &(M[gather]));
+   
+   mom[4*pos+mu].d1 += c*newmom[ix].d1;
+   mom[4*pos+mu].d2 += c*newmom[ix].d2;
+   mom[4*pos+mu].d3 += c*newmom[ix].d3;
+   mom[4*pos+mu].d4 += c*newmom[ix].d4;
+   mom[4*pos+mu].d5 += c*newmom[ix].d5;
+   mom[4*pos+mu].d6 += c*newmom[ix].d6;
+   mom[4*pos+mu].d7 += c*newmom[ix].d7;
+   mom[4*pos+mu].d8 += c*newmom[ix].d8;
    
 
  
@@ -1420,7 +1430,7 @@ __global__ void dev_rect_deri_three(int * dev_nn, dev_su3_2v_d * gf, dev_su3adj*
 
 
 
-extern "C" void gpu_gauge_derivative(int withrectangles, double c){
+extern "C" void gpu_gauge_derivative(int withrectangles, hamiltonian_field_t * const hf, double c_gauge, double c_rect){
 cudaError_t cudaerr;
 printf("GPU gauge derivative..\n");
 int host_check_VOL2;
@@ -1438,7 +1448,7 @@ int host_check_VOL2;
   printf("\tOn device:\n");
   printf("\tdev_VOL2 = %i\n", host_check_VOL2);  
 
-update_gpu_fields(g_gauge_field, df0,1);
+  update_gpu_fields(&hf->gaugefield, &hf->derivative,1);
   if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
         printf("%s\n", cudaGetErrorString(cudaPeekAtLastError()));
   }
@@ -1449,7 +1459,7 @@ update_gpu_fields(g_gauge_field, df0,1);
 //plaquette
 cudaFuncSetCacheConfig(dev_gauge_derivative, cudaFuncCachePreferL1);
 dev_gauge_derivative <<<griddimgauge, blockdimgauge >>> 
-            (dev_nn2, dev_gf_d, dev_df0_d);   
+            (dev_nn2, dev_gf_d, dev_df0_d, c_gauge);   
 if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
    printf("%s\n", cudaGetErrorString(cudaGetLastError()));
 }           
@@ -1471,7 +1481,7 @@ if(withrectangles){
   //  ||__ __|         and      |__ __||
   //                             
     dev_rect_deri_one <<<griddimgauge, blockdimgauge >>> 
-            (dev_nn2, dev_gf_d, dev_df0_d, c, mu);  
+            (dev_nn2, dev_gf_d, dev_df0_d, c_rect, mu);  
     if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
        printf("%s\n", cudaGetErrorString(cudaGetLastError()));
     }
@@ -1481,7 +1491,7 @@ if(withrectangles){
   //  ||__|            and        |__|
   //                          
     dev_rect_deri_two <<<griddimgauge, blockdimgauge >>> 
-              (dev_nn2, dev_gf_d, dev_df0_d, c, mu);  
+              (dev_nn2, dev_gf_d, dev_df0_d, c_rect, mu);  
     if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
        printf("%s\n", cudaGetErrorString(cudaGetLastError()));
     }
@@ -1491,7 +1501,7 @@ if(withrectangles){
   //  |__||                      |__|   
   //     
     dev_rect_deri_three <<<griddimgauge, blockdimgauge >>> 
-              (dev_nn2, dev_gf_d, dev_df0_d, c, mu);  
+              (dev_nn2, dev_gf_d, dev_df0_d, c_rect, mu);  
     if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
        printf("%s\n", cudaGetErrorString(cudaGetLastError()));
     }
@@ -1501,7 +1511,7 @@ if(withrectangles){
   cudaMemcpyFromSymbol(&host_check_VOL2, dev_VOL2, sizeof(int)); 
   printf("\tOn device:\n");
   printf("\tdev_VOL2 = %i\n", host_check_VOL2); 
-to_host_mom_df0();
+  to_host_mom(hf);
 
   if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
         printf("%s\n", cudaGetErrorString(cudaPeekAtLastError()));
@@ -1514,14 +1524,14 @@ printf("finished: GPU gauge derivative..\n");
 
 
 
-extern "C" void benchmark_gpu_gauge_derivative(int withrectangles, double c){
+extern "C" void benchmark_gpu_gauge_derivative(int withrectangles, hamiltonian_field_t * const hf,double c){
 cudaError_t cudaerr;
 
   clock_t start, stop; 
   double timeelapsed = 0.0;
 
 
-update_gpu_fields(g_gauge_field, df0,1);
+update_gpu_fields(&hf->gaugefield, &hf->derivative,1);
 //printf("griddim (gauge_monomial): %d, blockdim: %d\n", griddimgauge, blockdimgauge);
 
 int i;
@@ -1584,7 +1594,7 @@ printf(" done\n");
 timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
 printf("Time elapsed: %e sec\n",timeelapsed);
 
-to_host_mom_df0();
+to_host_mom(hf);
 exit(0);
 }
 
