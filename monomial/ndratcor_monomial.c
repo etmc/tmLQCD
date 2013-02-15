@@ -69,6 +69,7 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
   atime = gettime();
   nd_set_global_parameter(mnl);
   g_mu3 = 0.;
+  mnl->iter0 = 0;
   if(mnl->type == NDCLOVERRATCOR) {
     init_sw_fields();
     sw_term((const su3**)hf->gaugefield, mnl->kappa, mnl->c_sw); 
