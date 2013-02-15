@@ -687,6 +687,9 @@
   _complexcjg_times_vector(chi, cfactor, pn->s3);	\
   _vector_sub(rn->s3, temp.s3, chi);
 
+#define _hop_mul_swinv_and_store()		\
+
+
 #define _store_res()				\
   _vector_assign(rn->s0, temp.s0);		\
   _vector_assign(rn->s1, temp.s1);		\
