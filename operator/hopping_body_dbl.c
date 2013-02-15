@@ -175,7 +175,7 @@
     _hop_mul_g5_cmplx_and_store();
 #elif defined _TM_SUB_HOP
     _g5_cmplx_sub_hop_and_g5store();
-#elif define _MUL_SWINV
+#elif defined _MUL_SWINV
     _hop_mul_swinv_and_store();
 #else
     _store_res();

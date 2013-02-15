@@ -1,5 +1,5 @@
 /***********************************************************************
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ * Copyright (C) 2013 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -17,11 +17,11 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _TM_TIMES_HOPPING_MATRIX_H
-#  define _TM_TIMES_HOPPING_MATRIX_H
+#ifndef _SWINV_TIMES_HOPPING_MATRIX_H
+#  define _SWINV_TIMES_HOPPING_MATRIX_H
 
 #  include "su3.h"
 
-void tm_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k, complex double const cfactor);
+void swinv_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k, const double mu);
 
 #endif

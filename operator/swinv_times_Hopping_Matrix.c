@@ -1,6 +1,6 @@
 /**********************************************************************
  *
- * Copyright (C) 2012 Carsten Urbach
+ * Copyright (C) 2013 Carsten Urbach
  *
  * This file is based on an implementation of the Dirac operator 
  * written by Martin Luescher, modified by Martin Hasenbusch in 2002 
@@ -47,6 +47,7 @@
 #include "boundary.h"
 #include "init/init_dirac_halfspinor.h"
 #include "update_backward_gauge.h"
+#include "operator/clovertm_operators.h"
 #include "swinv_times_Hopping_Matrix.h"
 
 // now comes the definition of tm_times_Hopping_Matrix
@@ -110,7 +111,7 @@ void swinv_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const 
 #    include"xlc_prefetch.h"
 
 #  endif
-void tm_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
+void swinv_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k, const double mu) {
 #  ifdef XLC
 #    pragma disjoint(*l, *k)
 #  endif
@@ -128,6 +129,10 @@ void tm_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) 
 #    pragma omp parallel
   {
 #  endif
+    
+    _Complex double * restrict w, * restrict r, * restrict s;
+    int swoff = 0;
+    if(mu < 0) swoff = VOLUME/2;
 #  define _MUL_SWINV
 #  include "operator/hopping_body_dbl.c"
 #  undef _MUL_SWINV

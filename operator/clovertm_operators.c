@@ -36,6 +36,7 @@
 #include "sse.h"
 #include "linalg_eo.h"
 #include "operator/Hopping_Matrix.h"
+#include "operator/swinv_times_Hopping_Matrix.h"
 #include "operator/tm_operators.h"
 #include "operator/clover_inline.h"
 #include "operator/clovertm_operators.h"
@@ -121,8 +122,9 @@ void Qsw_sq_psi(spinor * const l, spinor * const k) {
 
 void Qsw_pm_psi(spinor * const l, spinor * const k) {
   /* \hat Q_{-} */
-  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
-  clover_inv(EE, g_spinor_field[DUM_MATRIX+1], -g_mu);
+  //Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
+  //clover_inv(EE, g_spinor_field[DUM_MATRIX+1], -g_mu);
+  swinv_times_Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k, -g_mu);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
   clover_gamma5(OO, g_spinor_field[DUM_MATRIX], k, g_spinor_field[DUM_MATRIX], -(g_mu + g_mu3));
   /* \hat Q_{+} */

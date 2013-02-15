@@ -34,7 +34,7 @@ liboperator_TARGETS = clover_accumulate_deriv clover_deriv clovertm_operators cl
   tm_operators_nd clover_term clover_invert clover_det
 
 liboperator_STARGETS = Hopping_Matrix_nocom tm_times_Hopping_Matrix Hopping_Matrix \
-	tm_operators tm_sub_Hopping_Matrix D_psi Dov_psi Dov_proj
+	tm_operators tm_sub_Hopping_Matrix D_psi Dov_psi Dov_proj swinv_times_Hopping_Matrix
 
 liboperator_OBJECTS = $(addsuffix .o, ${liboperator_TARGETS})
 liboperator_SOBJECTS = $(addsuffix .o, ${liboperator_STARGETS})
