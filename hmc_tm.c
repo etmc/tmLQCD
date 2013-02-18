@@ -72,29 +72,20 @@
 #include "sighandler.h"
 #include "measurements.h"
 
-void usage(){
-  fprintf(stdout, "HMC for Wilson twisted mass QCD\n");
-  fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
-  fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
-  fprintf(stdout, "Usage:   hmc_tm [options]\n");
-  fprintf(stdout, "Options: [-f input-filename]  default: hmc.input\n");
-  fprintf(stdout, "         [-o output-filename] default: output\n");
-  fprintf(stdout, "         [-v] more verbosity\n");
-  fprintf(stdout, "         [-V] print version information and exit\n");
-  fprintf(stdout, "         [-h|-? this help]\n");
-  exit(0);
-}
-
 extern int nstore;
 
 int const rlxdsize = 105;
+
+static void usage();
+static void process_args(int argc, char *argv[], char ** input_filename, char ** filename);
+static void set_default_filenames(char ** input_filename, char ** filename);
 
 int main(int argc,char *argv[]) {
 
   FILE *parameterfile=NULL, *countfile=NULL;
   char *filename = NULL;
-  char datafilename[50];
-  char parameterfilename[50];
+  char datafilename[206];
+  char parameterfilename[206];
   char gauge_filename[50];
   char nstore_filename[50];
   char tmp_filename[50];
@@ -149,37 +140,8 @@ int main(int argc,char *argv[]) {
   g_proc_id = 0;
 #endif
 
-
-  while ((c = getopt(argc, argv, "h?vVf:o:")) != -1) {
-    switch (c) {
-    case 'f':
-      input_filename = calloc(200, sizeof(char));
-      strcpy(input_filename,optarg);
-      break;
-    case 'o':
-      filename = calloc(200, sizeof(char));
-      strcpy(filename,optarg);
-      break;
-    case 'v':
-      verbose = 1;
-      break;
-    case 'V':
-      fprintf(stdout,"%s %s\n",PACKAGE_STRING,git_hash);
-      exit(0);
-      break;
-    case 'h':
-    case '?':
-    default:
-      usage();
-      break;
-    }
-  }
-  if(input_filename == NULL){
-    input_filename = "hmc.input";
-  }
-  if(filename == NULL){
-    filename = "output";
-  }
+  process_args(argc,argv,&input_filename,&filename);
+  set_default_filenames(&input_filename,&filename);
 
   /* Read the input file */
   if( (status = read_input(input_filename)) != 0) {
@@ -287,9 +249,9 @@ int main(int argc,char *argv[]) {
   init_measurements();
 
   /*construct the filenames for the observables and the parameters*/
-  strcpy(datafilename,filename);  
+  strncpy(datafilename,filename,200);  
   strcat(datafilename,".data");
-  strcpy(parameterfilename,filename);  
+  strncpy(parameterfilename,filename,200);  
   strcat(parameterfilename,".para");
 
   if(g_proc_id == 0){
@@ -555,10 +517,68 @@ int main(int argc,char *argv[]) {
     free_bispinor_field();
     free_chi_spinor_field();
   }
-
+  free(input_filename);
+  free(filename);
   return(0);
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)
 #endif
+}
+
+static void usage(){
+  fprintf(stdout, "HMC for Wilson twisted mass QCD\n");
+  fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
+  fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
+  fprintf(stdout, "Usage:   hmc_tm [options]\n");
+  fprintf(stdout, "Options: [-f input-filename]  default: hmc.input\n");
+  fprintf(stdout, "         [-o output-filename] default: output\n");
+  fprintf(stdout, "         [-v] more verbosity\n");
+  fprintf(stdout, "         [-V] print version information and exit\n");
+  fprintf(stdout, "         [-h|-? this help]\n");
+  exit(0);
+}
+
+static void process_args(int argc, char *argv[], char ** input_filename, char ** filename) {
+  int c;
+  while ((c = getopt(argc, argv, "h?vVf:o:")) != -1) {
+    switch (c) {
+      case 'f':
+        *input_filename = calloc(200, sizeof(char));
+        strncpy(*input_filename, optarg, 200);
+        break;
+      case 'o':
+        *filename = calloc(200, sizeof(char));
+        strncpy(*filename, optarg, 200);
+        break;
+      case 'v':
+        verbose = 1;
+        break;
+      case 'V':
+        if(g_proc_id == 0) {
+          fprintf(stdout,"%s %s\n",PACKAGE_STRING,git_hash);
+        }
+        exit(0);
+        break;
+      case 'h':
+      case '?':
+      default:
+        if( g_proc_id == 0 ) {
+          usage();
+        }
+        break;
+    }
+  }
+}
+
+static void set_default_filenames(char ** input_filename, char ** filename) {
+  if( *input_filename == NULL ) {
+    *input_filename = calloc(13, sizeof(char));
+    strcpy(*input_filename,"hmc.input");
+  }
+  
+  if( *filename == NULL ) {
+    *filename = calloc(7, sizeof(char));
+    strcpy(*filename,"output");
+  } 
 }
 
