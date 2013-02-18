@@ -41,6 +41,7 @@
 #endif
 #ifdef OMP
 # include <omp.h>
+# include "init/init_openmp.h"
 #endif
 #include "global.h"
 #include "git_hash.h"
@@ -84,6 +85,7 @@
 #include "operator/tm_operators.h"
 #include "operator/Dov_psi.h"
 #include "solver/spectral_proj.h"
+
 void usage()
 {
   fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
@@ -187,19 +189,7 @@ int main(int argc, char *argv[])
   }
 
 #ifdef OMP
-  if(omp_num_threads > 0) 
-  {
-     omp_set_num_threads(omp_num_threads);
-  }
-  else {
-    if( g_proc_id == 0 )
-      printf("# No value provided for OmpNumThreads, running in single-threaded mode!\n");
-
-    omp_num_threads = 1;
-    omp_set_num_threads(omp_num_threads);
-  }
-
-  init_omp_accumulators(omp_num_threads);
+  init_openmp();
 #endif
 
   /* this DBW2 stuff is not needed for the inversion ! */
