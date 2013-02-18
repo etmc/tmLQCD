@@ -9,7 +9,7 @@
 #include "temporalgauge.h"
 #include "stdio.h"
 #include "stdlib.h"
-#include"observables.h"
+#include"measure_gauge_action.h"
 #include"linalg_eo.h"
 #ifdef MPI
   #include<mpi.h>
@@ -30,26 +30,17 @@ static su3 unit_su3 (void) {
 
    su3 u;
 
-   u.c00.re = 1.0;
-   u.c00.im = 0.0;
-   u.c01.re = 0.0;
-   u.c01.im = 0.0;
-   u.c02.re = 0.0;
-   u.c02.im = 0.0;
+   u.c00 = 1.0 + 0.0*I;
+   u.c01 = 0.0 + 0.0*I;
+   u.c02 = 0.0 + 0.0*I;
 
-   u.c10.re = 0.0;
-   u.c10.im = 0.0;
-   u.c11.re = 1.0;
-   u.c11.im = 0.0;
-   u.c12.re = 0.0;
-   u.c12.im = 0.0;
+   u.c10 = 0.0 + 0.0*I;
+   u.c11 = 1.0 + 0.0*I;
+   u.c12 = 0.0 + 0.0*I;
 
-   u.c20.re = 0.0;
-   u.c20.im = 0.0;
-   u.c21.re = 0.0;
-   u.c21.im = 0.0;
-   u.c22.re = 1.0;
-   u.c22.im = 0.0;
+   u.c20 = 0.0 + 0.0*I;
+   u.c21 = 0.0 + 0.0*I;
+   u.c22 = 1.0 + 0.0*I;
 
    return(u);
    
@@ -726,13 +717,12 @@ void to_temporalgauge_invert_eo( su3** gfield, spinor * const spineven, spinor *
 #endif // MPI
 
     /* initialize temporal gauge here */
-    int retval;
     double dret;
     double plaquette = 0.0;
 
     
       if (g_debug_level > 0) {
-        plaquette = measure_gauge_action();
+        plaquette = measure_gauge_action(g_gauge_field);
         if(g_proc_id == 0) printf("Plaquette before gauge fixing: %.16e\n", 
                                   plaquette/6./VOLUME);
       }  
@@ -744,7 +734,7 @@ void to_temporalgauge_invert_eo( su3** gfield, spinor * const spineven, spinor *
       apply_gtrafo(g_gauge_field, g_trafo);
       
       if (g_debug_level > 0) {
-        plaquette = measure_gauge_action();
+        plaquette = measure_gauge_action(g_gauge_field);
         if(g_proc_id == 0) printf("Plaquette after gauge fixing: %.16e\n", 
                                 plaquette/6./VOLUME);
       
@@ -818,7 +808,7 @@ void from_temporalgauge(spinor * const spin1, spinor * const spin2) {
 void from_temporalgauge_invert_eo(spinor * const spineven, spinor * const spinodd, spinor * const spineven_new, spinor * const spinodd_new) {
 
 double plaquette, dret;
-      plaquette = measure_gauge_action();
+      plaquette = measure_gauge_action(g_gauge_field);
       if(g_proc_id == 0) printf("Plaquette before inverse gauge fixing: %.16e\n",      
                          plaquette/6./VOLUME);
     
@@ -830,7 +820,7 @@ double plaquette, dret;
       g_update_gauge_copy = 1;
     
      if (g_debug_level > 0) {   
-        plaquette = measure_gauge_action();
+        plaquette = measure_gauge_action(g_gauge_field);
         if(g_proc_id == 0) printf("Plaquette after inverse gauge fixing: %.16e\n",
         plaquette/6./VOLUME);
         dret = square_norm(spineven, VOLUME/2 , 1);

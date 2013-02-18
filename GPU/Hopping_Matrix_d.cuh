@@ -558,7 +558,10 @@ extern "C" void dev_Qtm_pm_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinout,
   dev_mul_one_pm_imu_sub_mul_gamma5_d<<<gridsize2, blocksize2>>>(spin_eo2_d, spin_eo1_d,  spinout , +1.); 
 
   if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-    if (g_proc_id == 0) printf("Error in dev_Qtm_pm_psi_d: %s\n", cudaGetErrorString(cudaGetLastError()));
+    if (g_proc_id == 0){
+      printf("Error in dev_Qtm_pm_psi_d: %s\n", cudaGetErrorString(cudaGetLastError()));
+      printf("Error code is: %f\n",cudaerr);
+    }
     exit(100);
   }
 }
@@ -591,7 +594,10 @@ extern "C" void dev_H_eo_tm_inv_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinou
 
 
   if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-    if (g_proc_id == 0) printf("Error in dev_H_eo_tm_inv_psi_d: %s\n", cudaGetErrorString(cudaGetLastError()));
+    if (g_proc_id == 0){
+      printf("Error in dev_H_eo_tm_inv_psi_d: %s\n", cudaGetErrorString(cudaGetLastError()));
+      printf("Error code is: %f\n",cudaerr);
+    }
     exit(100);
   }
 }

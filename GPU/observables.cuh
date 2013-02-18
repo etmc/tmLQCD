@@ -64,7 +64,10 @@ int init_dev_observables(){
   cudaMalloc((void **) &dev_ssredfield, ssredsize*sizeof(float));
 
   if((cudaerr=cudaGetLastError())!=cudaSuccess){
-    fprintf(stderr, "Error in init_dev_observables(): GPU memory allocation of reduction fields failed. Aborting...\n");
+    if(g_proc_id==0) {
+      fprintf(stderr, "Error in init_dev_observables(): GPU memory allocation of reduction fields failed. Aborting...\n");
+      fprintf(stderr, "Error code is: %f\n",cudaerr);
+    }
     return(2);
   }
   
@@ -166,7 +169,7 @@ void update_dev_gaugefield(su3** gf){
 __global__ void dev_mean_plaq(float* reductionfield, int * dev_nn, dev_su3_2v * gf){
   float mplaq = 0.0;
   int x0pos, x1pos, x2pos ; /* x0pos = basepoint of plaquette, x1pos = x0pos + e_mu, x2pos = x0pos + e_nu */
-  int t,mu,nu;
+  int mu,nu;
   dev_su3 su3matrix,su3matrix2, M1,M2,M3,M4;
   
  x0pos = threadIdx.x + blockDim.x*blockIdx.x;  
@@ -468,7 +471,7 @@ return(help);
 __global__ void dev_rectangle(float* reductionfield, 
             int * dev_nn, dev_su3_2v * gf){
   float mrect = 0.0;
-  int x0pos,mu,nu, ix;
+  int x0pos,ix;
 
   ix = threadIdx.x;
   x0pos = threadIdx.x + blockDim.x*blockIdx.x;  
@@ -575,7 +578,7 @@ __global__ void dev_polyakov_0(float2* reductionfield, int * dev_nn, dev_su3_2v 
   poly.x = 0.0; poly.y = 0.0;
   int gaugevol = dev_VOLUME;
 
-  int t, newpos, spatialpos;
+  int t, spatialpos;
   dev_su3 M1,  gather, tmp;
   
  spatialpos = threadIdx.x + blockDim.x*blockIdx.x;  

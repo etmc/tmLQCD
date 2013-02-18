@@ -51,6 +51,7 @@
 #include <assert.h>
 
 #include "../global.h"
+#include "../hamiltonian_field.h"
 #include "cudaglobal.h"
 //#include "mixed_solve.h"
 #include "HEADER.h"
@@ -59,7 +60,7 @@
 
 
 extern "C" {
-#include "../tm_operators.h"
+#include "../operator/tm_operators.h"
 #include "../linalg_eo.h"
 #include "../start.h"
 #include "../complex.h"
@@ -68,11 +69,11 @@ extern "C" {
 #include "../boundary.h"
 #include "../su3.h"
 #include "../temporalgauge.h"
-#include "../observables.h"
+#include "../measure_gauge_action.h"
 #include "../measure_rectangles.h"
 #include "../polyakov_loop.h"
 #include "../su3spinor.h"
-
+#include "../solver/solver_field.h"
 #ifdef MPI
   #include "../xchange.h"
 #endif 
@@ -212,17 +213,17 @@ float * dev_output;
 int havedevice = 0;
 
 
-REAL hostr;
-REAL hostkappa;
-REAL hostm;
-REAL hostmu;
+float hostr;
+float hostkappa;
+float hostm;
+float hostmu;
 
 /*********** float constants on GPU *********************/
-__device__  REAL m;
-__device__  REAL mu;
-__device__  REAL r=1.0; // this is implicitly assumed to be 1.0 in the host code!!!
-__device__  REAL kappa;
-__device__ REAL twokappamu;
+__device__  float m;
+__device__  float mu;
+__device__  float r=1.0; // this is implicitly assumed to be 1.0 in the host code!!!
+__device__  float kappa;
+__device__ float twokappamu;
 
 __device__ dev_complex dev_k0;
 __device__ dev_complex dev_k1;
@@ -374,13 +375,13 @@ EXTERN int g_nb_z_up, g_nb_z_dn;
 
 // computes sout = 1/(1 +- mutilde gamma5) sin = (1 -+ i mutilde gamma5)/(1+mutilde^2) sin
 // mutilde = 2 kappa mu
-__global__ void dev_mul_one_pm_imu_inv(dev_spinor* sin, dev_spinor* sout, const REAL sign){
+__global__ void dev_mul_one_pm_imu_inv(dev_spinor* sin, dev_spinor* sout, const float sign){
    
    dev_spinor slocal[6];
    //need the inverse sign in the numerator because of inverse
    dev_complex pm_imu = dev_initcomplex(0.0,-1.0*sign*twokappamu);
    
-   REAL one_plus_musquare_inv = 1.0/(1.0 + twokappamu*twokappamu);
+   float one_plus_musquare_inv = 1.0/(1.0 + twokappamu*twokappamu);
    int pos;
    pos= threadIdx.x + blockDim.x*blockIdx.x;  
 
@@ -400,7 +401,7 @@ __global__ void dev_mul_one_pm_imu_inv(dev_spinor* sin, dev_spinor* sout, const 
 
 
 // sout = gamma_5*((1\pm i\mutilde \gamma_5)*sin1 - sin2)
-__global__ void dev_mul_one_pm_imu_sub_mul_gamma5(dev_spinor* sin1, dev_spinor* sin2, dev_spinor* sout, const REAL sign){
+__global__ void dev_mul_one_pm_imu_sub_mul_gamma5(dev_spinor* sin1, dev_spinor* sin2, dev_spinor* sout, const float sign){
    dev_spinor slocal[6];
    dev_complex pm_imu = dev_initcomplex(0.0, sign*twokappamu); // i mutilde
    int pos;
@@ -549,7 +550,7 @@ extern "C" void dev_Qtm_pm_psi_mpi(dev_spinor* spinin, dev_spinor* spinout, int 
 // computes sout = 1/(1 +- mutilde gamma5) sin = (1 -+ i mutilde gamma5)/(1+mutilde^2) sin
 // mutilde = 2 kappa mu
 // uses shared local memory for manipulation
-__global__ void dev_mul_one_pm_imu_inv_half(dev_spinor_half* sin, float* sin_norm, dev_spinor_half* sout, float* sout_norm, const REAL sign){
+__global__ void dev_mul_one_pm_imu_inv_half(dev_spinor_half* sin, float* sin_norm, dev_spinor_half* sout, float* sout_norm, const float sign){
    
    dev_spinor slocal[6];
    dev_spinor s[6];
@@ -558,7 +559,7 @@ __global__ void dev_mul_one_pm_imu_inv_half(dev_spinor_half* sin, float* sin_nor
    //need the inverse sign in the numerator because of inverse
    dev_complex pm_imu = dev_initcomplex(0.0,-1.0*sign*twokappamu);
    
-   REAL one_plus_musquare_inv = 1.0/(1.0 + twokappamu*twokappamu);
+   float one_plus_musquare_inv = 1.0/(1.0 + twokappamu*twokappamu);
    int pos;
    pos= threadIdx.x + blockDim.x*blockIdx.x;  
    int ix = threadIdx.x;
@@ -584,7 +585,7 @@ __global__ void dev_mul_one_pm_imu_inv_half(dev_spinor_half* sin, float* sin_nor
 
 // sout = gamma_5*((1\pm i\mutilde \gamma_5)*sin1 - sin2)
 // uses shared local memory for manipulation
-__global__ void dev_mul_one_pm_imu_sub_mul_gamma5_half(dev_spinor_half* sin1, float* sin1_norm, dev_spinor_half* sin2, float* sin2_norm, dev_spinor_half* sout, float* sout_norm, const REAL sign){
+__global__ void dev_mul_one_pm_imu_sub_mul_gamma5_half(dev_spinor_half* sin1, float* sin1_norm, dev_spinor_half* sin2, float* sin2_norm, dev_spinor_half* sout, float* sout_norm, const float sign){
    dev_spinor slocal[6];
    dev_spinor s1[6];
    dev_spinor s2[6];
@@ -740,7 +741,7 @@ __global__ void dev_copy_spinor_field(dev_spinor* s1, dev_spinor* s2){
 
 
 
-__global__ void dev_skalarmult_add_assign_spinor_field(dev_spinor* s1, REAL lambda, dev_spinor* s2, dev_spinor* so){
+__global__ void dev_skalarmult_add_assign_spinor_field(dev_spinor* s1, float lambda, dev_spinor* s2, dev_spinor* so){
   int pos;
   pos= threadIdx.x + blockDim.x*blockIdx.x;  
   if(pos < dev_VOLUME){
@@ -750,7 +751,7 @@ __global__ void dev_skalarmult_add_assign_spinor_field(dev_spinor* s1, REAL lamb
 
 
 
-__global__ void dev_skalarmult_spinor_field(dev_spinor* s1, REAL lambda, dev_spinor* so){
+__global__ void dev_skalarmult_spinor_field(dev_spinor* s1, float lambda, dev_spinor* so){
   int pos;
   pos= threadIdx.x + blockDim.x*blockIdx.x;  
   if(pos < dev_VOLUME){
@@ -774,7 +775,7 @@ __global__ void dev_complexmult_spinor_field(dev_spinor* s1, dev_complex lambda,
 
 
 // init the gpu inner solver, assigen constants etc.
-__global__ void he_cg_init (int* grid, REAL param_kappa, REAL param_mu, dev_complex k0, dev_complex k1, dev_complex k2, dev_complex k3){
+__global__ void he_cg_init (int* grid, float param_kappa, float param_mu, dev_complex k0, dev_complex k1, dev_complex k2, dev_complex k3){
   dev_LX = grid[0];
   dev_LY = grid[1];
   dev_LZ = grid[2];
@@ -841,15 +842,15 @@ void update_constants(int *grid){
     sign=1.0;
   }
     
-  h0.re = (float)ka0.re;    h0.im = sign*(float)ka0.im;
-  h1.re = (float)ka1.re;    h1.im = sign*(float)ka1.im;
-  h2.re = (float)ka2.re;    h2.im = sign*(float)ka2.im;
-  h3.re = (float)ka3.re;    h3.im = sign*(float)ka3.im;
+  h0.re = (float)creal(ka0);    h0.im = sign*(float)cimag(ka0);
+  h1.re = (float)creal(ka1);    h1.im = sign*(float)cimag(ka1);
+  h2.re = (float)creal(ka2);    h2.im = sign*(float)cimag(ka2);
+  h3.re = (float)creal(ka3);    h3.im = sign*(float)cimag(ka3);
   
-  mh0.re = -(REAL)ka0.re;    mh0.im = (REAL)ka0.im;
-  mh1.re = -(REAL)ka1.re;    mh1.im = (REAL)ka1.im;
-  mh2.re = -(REAL)ka2.re;    mh2.im = (REAL)ka2.im;
-  mh3.re = -(REAL)ka3.re;    mh3.im = (REAL)ka3.im;
+  mh0.re = -(float)creal(ka0);    mh0.im = (float)cimag(ka0);
+  mh1.re = -(float)creal(ka1);    mh1.im = (float)cimag(ka1);
+  mh2.re = -(float)creal(ka2);    mh2.im = (float)cimag(ka2);
+  mh3.re = -(float)creal(ka3);    mh3.im = (float)cimag(ka3);
   
   // try using constant mem for kappas
   cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex)) ; 
@@ -862,7 +863,7 @@ void update_constants(int *grid){
   cudaMemcpyToSymbol("dev_mk2c", &mh2, sizeof(dev_complex)) ; 
   cudaMemcpyToSymbol("dev_mk3c", &mh3, sizeof(dev_complex)) ;  
   
-  he_cg_init<<< 1, 1 >>> (grid, (REAL) g_kappa, (REAL)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
+  he_cg_init<<< 1, 1 >>> (grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
   // BEWARE in dev_tm_dirac_kappa we need the true mu (not 2 kappa mu!)
 }
 
@@ -954,7 +955,7 @@ extern "C" int find_devices() {
 
 
 extern "C" void test_operator(dev_su3_2v * gf,dev_spinor* spinin, dev_spinor* spinout, 
-dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_spinor* spin4, int *grid, int * nn_grid, REAL* output,REAL* erg, int xsize, int ysize){
+dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_spinor* spin4, int *grid, int * nn_grid, float* output,float* erg, int xsize, int ysize){
  
  int  gridsize;
 
@@ -981,7 +982,7 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
  
  update_constants(grid);
  
-  REAL scaleparam = sqrt(1.0/(2.0 * (REAL) hostkappa));
+  float scaleparam = sqrt(1.0/(2.0 * (float) hostkappa));
   dev_skalarmult_spinor_field<<<griddim2, blockdim2 >>>(spinin,scaleparam*scaleparam, spin4);
  
  #ifdef USETEXTURE
@@ -1015,14 +1016,14 @@ extern "C" int dev_cg(
        int *grid, int * nn_grid, int rescalekappa){
  
  
- REAL host_alpha, host_beta, host_dotprod, host_rk, sourcesquarenorm;
- REAL * dotprod, * dotprod2, * rk, * alpha, *beta;
+ float host_alpha, host_beta, host_dotprod, host_rk, sourcesquarenorm;
+ float * dotprod, * dotprod2, * rk, * alpha, *beta;
  
  
  cudaError_t cudaerr;
  int i, gridsize;
  int maxit = max_innersolver_it;
- REAL eps = (REAL) innersolver_precision;
+ float eps = (float) innersolver_precision;
  int N_recalcres = 30; // after N_recalcres iterations calculate r = A x_k - b
  
  
@@ -1067,11 +1068,11 @@ extern "C" int dev_cg(
  
  // Init x,p,r for k=0
  // Allocate some numbers for host <-> device interaction
- cudaMalloc((void **) &dotprod, sizeof(REAL));
- cudaMalloc((void **) &dotprod2, sizeof(REAL));
- cudaMalloc((void **) &rk, sizeof(REAL));
- cudaMalloc((void **) &alpha, sizeof(REAL));
- cudaMalloc((void **) &beta, sizeof(REAL));
+ cudaMalloc((void **) &dotprod, sizeof(float));
+ cudaMalloc((void **) &dotprod2, sizeof(float));
+ cudaMalloc((void **) &rk, sizeof(float));
+ cudaMalloc((void **) &alpha, sizeof(float));
+ cudaMalloc((void **) &beta, sizeof(float));
  printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
  
  
@@ -1293,17 +1294,17 @@ extern "C" int dev_cg_eo(
       dev_spinor* spin2, 
       dev_spinor* spin3, 
       dev_spinor* spin4, 
-      int *grid, int * nn_grid, REAL epsfinal){
+      int *grid, int * nn_grid, float epsfinal){
  
  
- REAL host_alpha, host_beta, host_dotprod, host_rk, sourcesquarenorm;
- REAL * dotprod, * dotprod2, * rk, * alpha, *beta;
+ float host_alpha, host_beta, host_dotprod, host_rk, sourcesquarenorm;
+ float * dotprod, * dotprod2, * rk, * alpha, *beta;
  
  
  
  int i, gridsize;
  int maxit = max_innersolver_it;
- REAL eps = (REAL) innersolver_precision;
+ float eps = (float) innersolver_precision;
  int N_recalcres = 40; // after N_recalcres iterations calculate r = A x_k - b
  
  cudaError_t cudaerr;
@@ -1412,11 +1413,11 @@ extern "C" int dev_cg_eo(
  
  // Init x,p,r for k=0
  // Allocate some numbers for host <-> device interaction
- cudaMalloc((void **) &dotprod, sizeof(REAL));
- cudaMalloc((void **) &dotprod2, sizeof(REAL));
- cudaMalloc((void **) &rk, sizeof(REAL));
- cudaMalloc((void **) &alpha, sizeof(REAL));
- cudaMalloc((void **) &beta, sizeof(REAL));
+ cudaMalloc((void **) &dotprod, sizeof(float));
+ cudaMalloc((void **) &dotprod2, sizeof(float));
+ cudaMalloc((void **) &rk, sizeof(float));
+ cudaMalloc((void **) &alpha, sizeof(float));
+ cudaMalloc((void **) &beta, sizeof(float));
  #ifndef LOWOUTPUT 
  if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
    if (g_proc_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
@@ -1901,10 +1902,10 @@ cudaError_t cudaerr;
   }  
   
   #ifdef GF_8
-  h2d_gf = (dev_su3_8 *)malloc(dev_gfsize); // Allocate REAL conversion gf on host
+  h2d_gf = (dev_su3_8 *)malloc(dev_gfsize); // Allocate float conversion gf on host
   su3to8(gf,h2d_gf);  
   #else
-  h2d_gf = (dev_su3_2v *)malloc(dev_gfsize); // Allocate REAL conversion gf on host
+  h2d_gf = (dev_su3_2v *)malloc(dev_gfsize); // Allocate float conversion gf on host
   su3to2vf4(gf,h2d_gf);
   #endif
   cudaMemcpy(dev_gf, h2d_gf, dev_gfsize, cudaMemcpyHostToDevice);
@@ -1968,6 +1969,7 @@ cudaError_t cudaerr;
 
   if((cudaerr=cudaGetLastError())!=cudaSuccess){
     printf("Error in init_mixedsolve(): Memory allocation of spinor fields failed. Aborting...\n");
+    printf("Error code is: %f\n",cudaerr);    
     exit(200);
   }
   else{
@@ -2026,7 +2028,8 @@ void update_gpu_gf(su3** gf){
   
   if((cudaerr=cudaMemcpy(dev_gf, h2d_gf, dev_gfsize, cudaMemcpyHostToDevice))!=cudaSuccess){
           printf("Error in update_gpu_gf(): Could not transfer gf to device. Aborting...\n");
-          exit(200);
+          printf("Error code is: %f\n",cudaerr);
+	  exit(200);
    }
 }
 
@@ -2039,7 +2042,7 @@ __global__ void DummyKernel(){}
 extern "C" void init_mixedsolve_eo(su3** gf){
 
   cudaError_t cudaerr;
-  dev_complex help;
+
 
   if (havedevice == 0) {
   
@@ -2169,10 +2172,10 @@ extern "C" void init_mixedsolve_eo(su3** gf){
   }
   
   #ifdef GF_8
-    h2d_gf = (dev_su3_8 *)malloc(dev_gfsize); // Allocate REAL conversion gf on host
+    h2d_gf = (dev_su3_8 *)malloc(dev_gfsize); // Allocate float conversion gf on host
     su3to8(gf,h2d_gf);
   #else
-    h2d_gf = (dev_su3_2v *)malloc(dev_gfsize); // Allocate REAL conversion gf on host
+    h2d_gf = (dev_su3_2v *)malloc(dev_gfsize); // Allocate float conversion gf on host
     su3to2vf4(gf,h2d_gf);
   #endif
   //bring to device
@@ -2827,15 +2830,15 @@ void benchmark(spinor * const Q){
  //Initialize some stuff
   printf("mu = %f\n", g_mu);
   dev_complex h0,h1,h2,h3,mh0, mh1, mh2, mh3;
-  h0.re = (REAL)ka0.re;    h0.im = -(REAL)ka0.im;
-  h1.re = (REAL)ka1.re;    h1.im = -(REAL)ka1.im;
-  h2.re = (REAL)ka2.re;    h2.im = -(REAL)ka2.im;
-  h3.re = (REAL)ka3.re;    h3.im = -(REAL)ka3.im;
+  h0.re = (float)creal(ka0);    h0.im = -(float)cimag(ka0);
+  h1.re = (float)creal(ka1);    h1.im = -(float)cimag(ka1);
+  h2.re = (float)creal(ka2);    h2.im = -(float)cimag(ka2);
+  h3.re = (float)creal(ka3);    h3.im = -(float)cimag(ka3);
   
-  mh0.re = -(REAL)ka0.re;    mh0.im = (REAL)ka0.im;
-  mh1.re = -(REAL)ka1.re;    mh1.im = (REAL)ka1.im;
-  mh2.re = -(REAL)ka2.re;    mh2.im = (REAL)ka2.im;
-  mh3.re = -(REAL)ka3.re;    mh3.im = (REAL)ka3.im;
+  mh0.re = -(float)creal(ka0);    mh0.im = (float)cimag(ka0);
+  mh1.re = -(float)creal(ka1);    mh1.im = (float)cimag(ka1);
+  mh2.re = -(float)creal(ka2);    mh2.im = (float)cimag(ka2);
+  mh3.re = -(float)creal(ka3);    mh3.im = (float)cimag(ka3);
   
   // try using constant mem for kappas
   cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex)) ; 
@@ -2873,7 +2876,7 @@ void benchmark(spinor * const Q){
     int griddim3=gridsize; 
   #endif
   
-  he_cg_init<<< 1, 1 >>> (dev_grid, (REAL) g_kappa, (REAL)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3); 
+  he_cg_init<<< 1, 1 >>> (dev_grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3); 
   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
   printf("Applying H %d times\n", ibench);
   for(i=0; i<ibench; i++){
@@ -2974,15 +2977,15 @@ void benchmark2(spinor * const Q){
  //Initialize some stuff
   printf("mu = %f\n", g_mu);
   dev_complex h0,h1,h2,h3,mh0, mh1, mh2, mh3;
-  h0.re = (REAL)ka0.re;    h0.im = -(REAL)ka0.im;
-  h1.re = (REAL)ka1.re;    h1.im = -(REAL)ka1.im;
-  h2.re = (REAL)ka2.re;    h2.im = -(REAL)ka2.im;
-  h3.re = (REAL)ka3.re;    h3.im = -(REAL)ka3.im;
+  h0.re = (float)creal(ka0);    h0.im = -(float)cimag(ka0);
+  h1.re = (float)creal(ka1);    h1.im = -(float)cimag(ka1);
+  h2.re = (float)creal(ka2);    h2.im = -(float)cimag(ka2);
+  h3.re = (float)creal(ka3);    h3.im = -(float)cimag(ka3);
   
-  mh0.re = -(REAL)ka0.re;    mh0.im = (REAL)ka0.im;
-  mh1.re = -(REAL)ka1.re;    mh1.im = (REAL)ka1.im;
-  mh2.re = -(REAL)ka2.re;    mh2.im = (REAL)ka2.im;
-  mh3.re = -(REAL)ka3.re;    mh3.im = (REAL)ka3.im;
+  mh0.re = -(float)creal(ka0);    mh0.im = (float)cimag(ka0);
+  mh1.re = -(float)creal(ka1);    mh1.im = (float)cimag(ka1);
+  mh2.re = -(float)creal(ka2);    mh2.im = (float)cimag(ka2);
+  mh3.re = -(float)creal(ka3);    mh3.im = (float)cimag(ka3);
   
   // try using constant mem for kappas
   cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex)) ; 
@@ -3019,7 +3022,7 @@ void benchmark2(spinor * const Q){
   
   
   
-  he_cg_init<<< 1, 1 >>> (dev_grid, (REAL) g_kappa, (REAL)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3); 
+  he_cg_init<<< 1, 1 >>> (dev_grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3); 
   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
   printf("Applying dev_Qtm_pm_psi %d times\n",ibench);
   
@@ -3110,7 +3113,7 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
   clock_t start, stop, startinner, stopinner; 
   double timeelapsed = 0.0;
   double sourcesquarenorm;
-  int iter, retval;
+  int iter;
   cudaError_t cudaerr;
   
   size_t dev_spinsize;
@@ -3162,6 +3165,11 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
     update_gpu_gf_d(g_gauge_field);
   #endif 
   
+  //initialize solver fields 
+  spinor ** solver_field = NULL;
+  const int nr_sf = 4;
+  init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);  
+
   
   #ifdef OPERATOR_BENCHMARK
     #ifndef HALF
@@ -3189,9 +3197,6 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
     finaleps = eps;
   }
 
-  spinor ** solver_field = NULL;
-  const int nr_sf = 4;
-  init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);  
 
   
   #ifdef GPU_DOUBLE
@@ -3310,7 +3315,7 @@ for(iter=0; iter<max_iter; iter++){
    #endif
    assert((startinner = clock())!=-1);
    #ifndef HALF
-      totalcount += dev_cg_eo(dev_gf, dev_spinin, dev_spinout, dev_spin1, dev_spin2, dev_spin3, dev_spin4, dev_spin5, dev_grid,dev_nn, (REAL) finaleps);
+      totalcount += dev_cg_eo(dev_gf, dev_spinin, dev_spinout, dev_spin1, dev_spin2, dev_spin3, dev_spin4, dev_spin5, dev_grid,dev_nn, (float) finaleps);
    #else
      
      totalcount += dev_cg_eo_half(dev_gf, 
@@ -3321,7 +3326,7 @@ for(iter=0; iter<max_iter; iter++){
                  dev_spin3, dev_spin3_norm,
                  dev_spin4, dev_spin4_norm,
                  dev_spin5, dev_spin5_norm,
-                 dev_grid,dev_nn, (REAL) finaleps); 
+                 dev_grid,dev_nn, (float) finaleps); 
 
 
 		 
@@ -3343,6 +3348,7 @@ for(iter=0; iter<max_iter; iter++){
      #endif
      if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
        printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+       printf("Error code is: %f\n",cudaerr);       
      }
      #ifndef HALF
        convert2double_spin(h2d_spin, solver_field[2]);
@@ -3394,14 +3400,13 @@ extern "C" int mixed_solve_eo_reliable (spinor * const P, spinor * const Q, cons
   clock_t start, stop, startinner, stopinner; 
   double timeelapsed = 0.0;
   double sourcesquarenorm;
-  int iter, retval;
+  int iter;
   cudaError_t cudaerr;
   
   size_t dev_spinsize;
   #ifndef HALF
     dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor); // float4 even-odd !
     size_t dev_spinsize_reliable = 6*VOLUME/2 * sizeof(dev_spinor); //float4 eo !
-    size_t dev_normsize = VOLUME/2 * sizeof(float);
   #else
     dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor_half); //short4 eo !
     size_t dev_spinsize_reliable = 6*VOLUME/2 * sizeof(dev_spinor); //float4 eo !
@@ -3411,7 +3416,11 @@ extern "C" int mixed_solve_eo_reliable (spinor * const P, spinor * const Q, cons
   //update the gpu single gauge_field
   update_gpu_gf(g_gauge_field);
   
-
+  //initialize solver fields
+  spinor ** solver_field = NULL;
+  const int nr_sf = 4;
+  init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);  
+  
   // Start timer
   assert((start = clock())!=-1);
   rk = square_norm(Q, N, 1);
@@ -3431,9 +3440,8 @@ extern "C" int mixed_solve_eo_reliable (spinor * const P, spinor * const Q, cons
     printf("Initial residue: %.16e\n",rk);
     printf("The VOLUME/2 is: %d\n",N);
   #endif
-  spinor ** solver_field = NULL;
-  const int nr_sf = 4;
-  init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);  
+  
+
 
 for(iter=0; iter<max_iter; iter++){
    #ifndef LOWOUTPUT
@@ -3496,7 +3504,7 @@ for(iter=0; iter<max_iter; iter++){
    #endif
    assert((startinner = clock())!=-1);
    #ifndef HALF
-      totalcount += dev_cg_eo(dev_gf, dev_spinin, dev_spinout, dev_spin1, dev_spin2, dev_spin3, dev_spin4, dev_spin5, dev_grid,dev_nn, (REAL) finaleps);
+      totalcount += dev_cg_eo(dev_gf, dev_spinin, dev_spinout, dev_spin1, dev_spin2, dev_spin3, dev_spin4, dev_spin5, dev_grid,dev_nn, (float) finaleps);
    #else
      
 
@@ -3511,7 +3519,7 @@ for(iter=0; iter<max_iter; iter++){
 		 dev_spin1_reliable,
 		 dev_spin2_reliable,
 		 dev_spin3_reliable,		 
-                 dev_grid,dev_nn, (REAL) finaleps, 0.05); 
+                 dev_grid,dev_nn, (float) finaleps, 0.05); 
 		 
    #endif
    stopinner = clock();
@@ -3527,6 +3535,7 @@ for(iter=0; iter<max_iter; iter++){
 
    if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
      printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+     printf("Error code is: %f\n",cudaerr);     
    }
 
    convert2double_spin(h2d_spin_reliable, solver_field[2]);
@@ -3591,7 +3600,7 @@ extern "C" int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int ma
   clock_t start, stop, startinner, stopinner; 
   double timeelapsed = 0.0;
   double sourcesquarenorm;
-  int iter, retval;
+  int iter;
   cudaError_t cudaerr;
   
   size_t dev_spinsize;
@@ -3741,7 +3750,8 @@ for(iter=0; iter<max_iter; iter++){
       //cudaThreadSynchronize();
       if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
         if (g_proc_id == 0) printf("Error in linsolve_eo_gpu: %s\n", cudaGetErrorString(cudaGetLastError()));
-        exit(100);
+        if (g_proc_id == 0) printf("Error code is: %f\n",cudaerr);
+	exit(100);
       }      
     #else 
       convert2REAL4_spin(solver_field[0],h2d_spin);
@@ -3756,6 +3766,7 @@ for(iter=0; iter<max_iter; iter++){
 
   if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
     if (g_proc_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+    if (g_proc_id == 0) printf("Error code is: %f\n",cudaerr);   
   }
    // solve in single prec on device
    // D p_k = r_k
@@ -3769,7 +3780,7 @@ for(iter=0; iter<max_iter; iter++){
 			      dev_spin1, dev_spin2, 
 			      dev_spin3, dev_spin4, 
 			      dev_spin5, dev_grid,
-			      dev_nn, (REAL) finaleps);
+			      dev_nn, (float) finaleps);
    #else
      totalcount += dev_cg_eo_half(dev_gf, 
                  dev_spinin, dev_spinin_norm,
@@ -3779,7 +3790,7 @@ for(iter=0; iter<max_iter; iter++){
                  dev_spin3, dev_spin3_norm,
                  dev_spin4, dev_spin4_norm,
                  dev_spin5, dev_spin5_norm,
-                 dev_grid,dev_nn, (REAL) finaleps); 
+                 dev_grid,dev_nn, (float) finaleps); 
    #endif
    stopinner = clock();
    timeelapsed = (double) (stopinner-startinner)/CLOCKS_PER_SEC;

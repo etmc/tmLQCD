@@ -315,25 +315,20 @@ void to_host_gf(su3** gf, dev_su3_2v_d* h2d){
   cudaMemcpy(h2d, dev_gf_d, dev_gfsize, cudaMemcpyDeviceToHost);
   if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
      printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+     printf("Error code is: %f\n",cudaerr);
   }
 
   for (i=0;i<VOLUME;i++){
     for(j=0; j<4; j++){
        
      //first row
-      gf[i][j].c00.re = h2d[6*(4*i+j)].x;
-      gf[i][j].c00.im = h2d[6*(4*i+j)].y;
-      gf[i][j].c01.re = h2d[6*(4*i+j)+1].x;
-      gf[i][j].c01.im = h2d[6*(4*i+j)+1].y;
-      gf[i][j].c02.re = h2d[6*(4*i+j)+2].x;
-      gf[i][j].c02.im = h2d[6*(4*i+j)+2].y;      
+      gf[i][j].c00 = h2d[6*(4*i+j)].x   + I* h2d[6*(4*i+j)].y;
+      gf[i][j].c01 = h2d[6*(4*i+j)+1].x + I* h2d[6*(4*i+j)+1].y;
+      gf[i][j].c02 = h2d[6*(4*i+j)+2].x + I* h2d[6*(4*i+j)+2].y;      
    //second row
-      gf[i][j].c10.re = h2d[6*(4*i+j)+3].x;
-      gf[i][j].c10.im = h2d[6*(4*i+j)+3].y;
-      gf[i][j].c11.re = h2d[6*(4*i+j)+4].x;
-      gf[i][j].c11.im = h2d[6*(4*i+j)+4].y;
-      gf[i][j].c12.re = h2d[6*(4*i+j)+5].x;
-      gf[i][j].c12.im = h2d[6*(4*i+j)+5].y;      
+      gf[i][j].c10 = h2d[6*(4*i+j)+3].x + I* h2d[6*(4*i+j)+3].y;
+      gf[i][j].c11 = h2d[6*(4*i+j)+4].x + I* h2d[6*(4*i+j)+4].y;
+      gf[i][j].c12 = h2d[6*(4*i+j)+5].x + I* h2d[6*(4*i+j)+5].y;      
    //restore the third row -> reconstructgf_2v defined in gauge_reconstruction.cuh
       reconstructgf_2v_host(&gf[i][j]);
       
@@ -355,6 +350,7 @@ dev_gauge_update <<<griddimgauge, blockdimgauge >>>
             (dev_gf_d, dev_df0_d, step);   
 if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
    printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+   printf("Error code is: %f\n",cudaerr);
 }           
        
 to_host_gf(g_gauge_field, h2d_gf_d);

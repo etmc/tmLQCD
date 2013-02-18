@@ -451,11 +451,11 @@ int host_check_VOL2, Vol;
   // this is needed as update_constants_d gives an 
   // extra sign to the imaginary part of all kappas
   // this is compensated by a sign in GPU Hopping matrices
-  ka0.im=-ka0.im;
+  ka0 = conj(ka0);
 
   //update constants, gauge field and momentum field
   update_constants_d(dev_grid);
-  update_gpu_fields(&hf->gaugefield, &hf->derivative,1);
+  update_gpu_fields(hf->gaugefield, hf->derivative,1);
 
 
 //   dev_complex_d h0;
@@ -528,11 +528,12 @@ if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
 
   if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
         printf("%s\n", cudaGetErrorString(cudaPeekAtLastError()));
+        printf("Error code is: %f\n",cudaerr);
   }
 
 
   // FLIP BACK IMAGINARY OF ka0
-  ka0.im=-ka0.im;
+  ka0= conj(ka0);
 
 printf("finished: GPU deriv_Sb.\n");
 
@@ -614,11 +615,11 @@ dev_H_eo_tm_inv_psi_d(dev_spin1_d, dev_spin_eo1_d, dev_spin_eo2_d,
   // this is needed as update_constants_d gives an 
   // extra sign to the imaginary part of all kappas
   // this is compensated by a sign in GPU Hopping matrices
-  ka0.im=-ka0.im;
+  ka0 = conj(ka0);
 
   //update constants, gauge field and momentum field
   update_constants_d(dev_grid);
-  update_gpu_fields(&hf->gaugefield, &hf->derivative,1);
+  update_gpu_fields(hf->gaugefield, hf->derivative,1);
 dev_deriv_Sb<<<griddimgauge, blockdimgauge >>>(dev_df0_d, dev_gf_d, 
                                                dev_spin_eo1_d, dev_spin0_d,
                                                dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, 0, Vol);   
@@ -633,10 +634,10 @@ dev_H_eo_tm_inv_psi_d(dev_spin1_d, dev_spin_eo1_d, dev_spin_eo2_d,
   // this is needed as update_constants_d gives an 
   // extra sign to the imaginary part of all kappas
   // this is compensated by a sign in GPU Hopping matrices
-  ka0.im=-ka0.im;
+  ka0 = conj(ka0);
   //update constants, gauge field and momentum field
   update_constants_d(dev_grid);
-  update_gpu_fields(&hf->gaugefield, &hf->derivative,1);
+  update_gpu_fields(hf->gaugefield, hf->derivative,1);
   dev_deriv_Sb<<<griddimgauge, blockdimgauge >>>(dev_df0_d, dev_gf_d, 
                                                dev_spin_eo1_d, dev_spin0_d,   
                                                dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, 0, Vol);   
@@ -656,11 +657,12 @@ if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
 
   if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
         printf("%s\n", cudaGetErrorString(cudaPeekAtLastError()));
+        printf("Error code is: %f\n",cudaerr);
   }
 
 
   // FLIP BACK IMAGINARY OF ka0
-  ka0.im=-ka0.im;
+  ka0 = conj(ka0);
 
 printf("finished: GPU H_deriv_Sb.\n");
 

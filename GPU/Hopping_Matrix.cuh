@@ -539,12 +539,10 @@ __global__ void dev_Hopping_Matrix(const dev_su3_2v * gf, const dev_spinor * sin
     dev_su3_pad gfsmem;  
     pos = start  
           + (threadIdx.z + blockDim.z*(threadIdx.y + blockDim.y*(threadIdx.x))) 
-          + blockDim.z*blockDim.y*blockDim.x*blockIdx.x;
-    int ix = threadIdx.z + blockDim.z*(threadIdx.y + blockDim.y*(threadIdx.x));       
+          + blockDim.z*blockDim.y*blockDim.x*blockIdx.x;     
   #else
     dev_su3_pad gfsmem;  
     pos = start  +  threadIdx.x + blockDim.x * blockIdx.x;  
-    int ix = threadIdx.x;
   #endif
 
   

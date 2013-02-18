@@ -1854,36 +1854,33 @@ __device__ void dev_reconstructgf_2vtexref_dagger_d (dev_su3_2v_d * field, int p
 void reconstructgf_2v_host (su3* gf){
   
  
-  complex help1;
-  complex help2;
+  double complex help1;
   //third row from cconj(cross product of first and second row)
-  _mult_assign_complex(help1,(*gf).c01,(*gf).c12);
-  _mult_assign_complex(help2,(*gf).c02,(*gf).c11);
-  _diff_complex(help1,help2);
-  (*gf).c20.re = help1.re;
-  (*gf).c20.im = -help1.im;
+  help1 = (*gf).c01 * (*gf).c12;
+  help1 -= (*gf).c02 * (*gf).c11;
+  (*gf).c20 = conj(help1);
+
   
-  _mult_assign_complex(help1,(*gf).c02,(*gf).c10);
-  _mult_assign_complex(help2,(*gf).c00,(*gf).c12);
-  _diff_complex(help1,help2);
-  (*gf).c21.re = help1.re;
-  (*gf).c21.im = -help1.im;
+  help1 = (*gf).c02 * (*gf).c10;
+  help1 -= (*gf).c00 * (*gf).c12;
+  (*gf).c21 = conj(help1);
+
   
-  _mult_assign_complex(help1,(*gf).c00,(*gf).c11);
-  _mult_assign_complex(help2,(*gf).c01,(*gf).c10);
-  _diff_complex(help1,help2);
-  (*gf).c22.re = help1.re;
-  (*gf).c22.im = -help1.im;
+  help1 = (*gf).c00 * (*gf).c11;
+  help1 -= (*gf).c01 * (*gf).c10;
+  (*gf).c22 = conj(help1);
   //normalize third row, too
   
-  double norm = (*gf).c20.re * (*gf).c20.re + (*gf).c20.im * (*gf).c20.im
-    + (*gf).c21.re * (*gf).c21.re + (*gf).c21.im * (*gf).c21.im
-    + (*gf).c22.re * (*gf).c22.re + (*gf).c22.im * (*gf).c22.im;
+  double norm = creal( 
+                (*gf).c20 *conj((*gf).c20)
+              + (*gf).c21 *conj((*gf).c21)
+              + (*gf).c22 *conj((*gf).c22)
+              );
   norm=1.0/sqrt(norm);
   
-  (*gf).c20.re*=norm; (*gf).c20.im*=norm;
-  (*gf).c21.re*=norm; (*gf).c21.im*=norm; 
-  (*gf).c22.re*=norm; (*gf).c22.im*=norm;
+  (*gf).c20*=norm; 
+  (*gf).c21*=norm;  
+  (*gf).c22*=norm; 
   
   return;
 }
@@ -1954,14 +1951,20 @@ void init_blas_d(int vol){
     blas_redblocks_d = vol/REDUCTION_N;
   }
   else{
-    if(g_proc_id==0) fprintf(stderr,"Error in init_blas_d(): Volume is not a multiple of REDUCTION_N (%d). Aborting...\n", REDUCTION_N);
-    exit(100);
+    if(g_proc_id==0) {
+      fprintf(stderr,"Error in init_blas_d(): Volume is not a multiple of REDUCTION_N (%d). Aborting...\n", REDUCTION_N);
+      fprintf(stderr,"Error code is: %f\n",cudaerr);
+    }
+      exit(100);
   }
   
   // initialize small redfields
   size = blas_redblocks_d * sizeof(double);
   if((cudaerr=cudaMalloc((void **) &dev_blas_sredfield_d, size)) != cudaSuccess){
-    if(g_proc_id==0) printf("Error in init_blas_d(): Memory allocation of small double reduction field failed. Aborting...\n");
+    if(g_proc_id==0) {
+      printf("Error in init_blas_d(): Memory allocation of small double reduction field failed. Aborting...\n");
+      printf("Error code is: %f\n",cudaerr);
+    }
     exit(200);
   }   // Allocate array on device
   else{
@@ -1971,7 +1974,10 @@ void init_blas_d(int vol){
   }  
   
   if((void*)(blas_sredfield_d = (double *)malloc(size)) == NULL){
-    if(g_proc_id==0) printf("Error in init_blas_d(): Could not allocate memory for double blas small redfield on host. Aborting...\n");
+    if(g_proc_id==0){
+      printf("Error in init_blas_d(): Could not allocate memory for double blas small redfield on host. Aborting...\n");
+      printf("Error code is: %f\n",cudaerr);
+    }
     exit(200);
   } 
   
@@ -2215,7 +2221,9 @@ __global__ void dev_dot_d( double* redfield, dev_spinor_d* x,dev_spinor_d* y){
 // calculates the dot product of x and y
 extern "C" double double_dotprod(dev_spinor_d* x, dev_spinor_d* y){
    int i;
+   #ifdef MPI  
    double result;
+   #endif
    cudaError_t cudaerr;
    
    dev_dot_d<<< blas_gridsize_d, blas_blocksize_d >>> 

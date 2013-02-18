@@ -67,8 +67,8 @@
 #endif
 
 extern "C" {
-#include "../Nondegenerate_Matrix.h"
-#include "../Hopping_Matrix.h"
+#include "../operator/tm_operators_nd.h"
+#include "../operator/Hopping_Matrix.h"
 #include "../solver/cg_her_nd.h"
 }
 #include "../global.h"
@@ -593,18 +593,10 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
   /////////////////////
   
   cudaError_t cudaerr;		// CUDA errors
-  int ndev;			// number of devices
-  //size_t dev_gfsize;		// size of the gauge-field on device memory	// put to global	// non-MPI: VOLUME/2	// MPI: (VOLUME+RAND)/2
-  size_t nnsize;		// size of memory for nn-table
-  size_t idxsize;		// size of memory for even/odd-positions
-  //size_t dev_spinsize;	// size of memory for spinors			// put to global
   int grid[6];			// array for grid specifications
-  float * host_output;		// ??
   
   
-  
- 
-  
+
   /////////////////
   // GAUGE FIELD //
   /////////////////
@@ -1343,7 +1335,7 @@ __global__ void dev_mul_one_pm_imubar_gamma5 (dev_spinor * sin,
 // MATRIX MULTIPLICATION //
 ///////////////////////////
 
-// the GPU implementation of  Q_Qdagger_ND(...)  from Nondegenerate_Matrix.c
+// the GPU implementation of  Qtm_ndpsi(...)  from tm_operators_nd.c
 //	Flo's equivalent function for the standard and non-nd case is  dev_Qtm_pm_psi
 
 void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
@@ -1371,7 +1363,7 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   
   
   ////////////////////////////////////
-  //   MATCHING with Q_Qdagger_ND   //
+  //   MATCHING with  Qtm_ndpsi     //
   ////////////////////////////////////
   //                                //
   // _strange = _up                 //
@@ -1662,7 +1654,7 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
 // MATRIX MULTIPLICATION //
 ///////////////////////////
 
-// the GPU implementation of  Q_Qdagger_ND(...)  from Nondegenerate_Matrix.c
+// the GPU implementation of  Qtm_ndpsi(...)  tm_operators_nd.c
 //	Flo's equivalent function for the standard and non-nd case is  dev_Qtm_pm_psi
 
 void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
@@ -1690,7 +1682,7 @@ void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_
   
   
   ////////////////////////////////////
-  //   MATCHING with Q_Qdagger_ND   //
+  //   MATCHING with  Qtm_ndpsi     //
   ////////////////////////////////////
   //                                //
   // _strange = _up                 //
@@ -2181,7 +2173,7 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   
   // CUDA errors
   cudaError_t cudaerr;
-  cublasStatus cublasstatus;
+
   
   // size of a spinor
   /*
@@ -2262,17 +2254,7 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   
   int blocksize;		// auxiliary
   
-  blocksize = BLOCKSIZE1;
-  int blockdim1, griddim1;					// here:	dev_zero_spinor_field , dev_copy_spinor_field
-  if ( (VOLUME/2) % blocksize == 0 ) {
-    blockdim1 = blocksize;
-    griddim1  = VOLUME/2/blocksize;
-  }
-  else {
-    blockdim1 = blocksize;
-    griddim1  = (int) ((VOLUME/2/blocksize) + 1);
-  }
-  
+ 
   blocksize = BLOCK;
   int blockdim2, griddim2;					// passed:	dev_Hopping_Matrix
   if ( (VOLUME/2) % blocksize == 0 ) {
@@ -2763,7 +2745,7 @@ int cg_eo_nd (dev_su3_2v * gf,
   		  cublasInit();
   		#endif
 
-  
+  if(g_debug_level > 3) printf("cublasstatus = %f\n", cublasstatus);
   
   
   
@@ -2891,11 +2873,11 @@ int cg_eo_nd (dev_su3_2v * gf,
     		
     		// matrix multiplication
     		#ifndef MPI
-    		  printf("This is Q_Qdagger_ND(). ");
+    		  printf("This is Qtm_ndpsi(). ");
     		#else
-    		  if (g_proc_id == 0) printf("This is Q_Qdagger_ND(). ");
+    		  if (g_proc_id == 0) printf("This is Qtm_ndpsi(). ");
     		#endif
-    		Q_Qdagger_ND(up_field[4], dn_field[4],			// normally:  Q_Qdagger_ND()
+    		Qtm_ndpsi(up_field[4], dn_field[4],			// normally:  Qtm_ndpsi()
     		             up_field[3], dn_field[3] );		// debugging: matrix_debug2(), Zwitter1(), Zwitter2(), Zwitter3()
     															//       mpi: matrix_mpi_debug10()
     		// host/device interaction
@@ -2995,11 +2977,11 @@ int cg_eo_nd (dev_su3_2v * gf,
     		
     		// matrix multiplication
     		#ifndef MPI
-    		  printf("This is Q_Qdagger_ND(). ");
+    		  printf("This is Qtm_ndpsi(). ");
     		#else
-    		  if (g_proc_id == 0) printf("This is Q_Qdagger_ND(). ");
+    		  if (g_proc_id == 0) printf("This is Qtm_ndpsi(). ");
     		#endif
-    		Q_Qdagger_ND(up_field[4], dn_field[4],			// normally:       Q_Qdagger_ND()
+    		Qtm_ndpsi(up_field[4], dn_field[4],			// normally:       Qtm_ndpsi()
     		             up_field[3], dn_field[3] );		// debugging, mpi: matrix_mpi_debug10()
     		
     		// host/device interaction
@@ -3213,7 +3195,6 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   int i = 0;					// iteration counter
   int innercount;				// latest inner solver iterations
   int outercount = 0;				// total inner solver iterations
-  double flops;
   #ifdef ALGORITHM_BENCHMARK
     double effectiveflops;			// will used to count the "effective" flop's (from the algorithmic perspective)
     // double hoppingflops = 1488.0;
@@ -3250,7 +3231,14 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
          *  x_up, *  x_dn,
          *  d_up, *  d_dn,
          * Ax_up, * Ax_dn;
-  
+
+  spinor ** up_field = NULL;
+  spinor ** dn_field = NULL;
+  const int nr_sf = 5;
+
+  init_solver_field(&up_field, VOLUMEPLUSRAND/2, nr_sf);
+  init_solver_field(&dn_field, VOLUMEPLUSRAND/2, nr_sf);	 
+	 
   // formal parameters
   /*
   size_t dev_spinsize_int   =  6*VOLUME/2*sizeof(dev_spinor);		// 24 floats per spinor per even lattice site
@@ -3300,17 +3288,19 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   // the following initializations are moved from cg_eo_nd():
   
   // Initialize some stuff
-  dev_complex h0, h1, h2, h3, mh0, mh1, mh2, mh3;
+  dev_complex h0, h1, h2, h3; 
+
   
-  h0.re  =  (float) ka0.re;	h0.im  = -(float) ka0.im;	// ka{0-4} are defined in boundary.c
-  h1.re  =  (float) ka1.re;	h1.im  = -(float) ka1.im;	// what is the meaning?
-  h2.re  =  (float) ka2.re;	h2.im  = -(float) ka2.im;
-  h3.re  =  (float) ka3.re;	h3.im  = -(float) ka3.im;
+  h0.re  =  (float) creal(ka0);	h0.im  = -(float) cimag(ka0);	// ka{0-4} are defined in boundary.c
+  h1.re  =  (float) creal(ka1);	h1.im  = -(float) cimag(ka1);	// what is the meaning?
+  h2.re  =  (float) creal(ka2);	h2.im  = -(float) cimag(ka2);
+  h3.re  =  (float) creal(ka3);	h3.im  = -(float) cimag(ka3);
   
-  mh0.re = -(float) ka0.re;	mh0.im =  (float) ka0.im;
-  mh1.re = -(float) ka1.re;	mh1.im =  (float) ka1.im;
-  mh2.re = -(float) ka2.re;	mh2.im =  (float) ka2.im;
-  mh3.re = -(float) ka3.re;	mh3.im =  (float) ka3.im;
+//    dev_complex mh0, mh1, mh2, mh3;
+//   mh0.re = -(float) creal(ka0);	mh0.im =  (float) cimag(ka0);
+//   mh1.re = -(float) creal(ka1);	mh1.im =  (float) cimag(ka1);
+//   mh2.re = -(float) creal(ka2);	mh2.im =  (float) cimag(ka2);
+//   mh3.re = -(float) creal(ka3);	mh3.im =  (float) cimag(ka3);
 
   //update the gpu single gauge_field
   update_gpu_gf(g_gauge_field); 
@@ -3459,7 +3449,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   		#endif
   */
   
-  
+
   
   #ifdef OPERATOR_BENCHMARK
     benchmark_eo_nd(Q_up, Q_dn, OPERATOR_BENCHMARK);
@@ -3560,7 +3550,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       #endif
     }
     else {
-      Q_Qdagger_ND(Ax_up, Ax_dn, P_up, P_dn);
+      Qtm_ndpsi(Ax_up, Ax_dn, P_up, P_dn);
       diff(r_up, Q_up, Ax_up, N_sites_int);
       diff(r_dn, Q_dn, Ax_dn, N_sites_int);
       #ifndef MPI
@@ -3699,7 +3689,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     		
     		innercount = cg_her_nd(d_up, d_dn, r_up, r_dn,		// MISTAKE, was: r_up, r_dn, d_up, d_dn,
 				       1000, eps_sq/2, 0,
-				       VOLUME/2, &Q_Qdagger_ND, 0, 1000);
+				       VOLUME/2, &Qtm_ndpsi, 0, 1000);
     		
     		outercount = outercount + innercount;
     		
@@ -3732,7 +3722,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     // r(k+1)
     if (rbAx) {				// r(k+1) = b - A*x(k+1)
       // A*x(k+1)
-      Q_Qdagger_ND(Ax_up, Ax_dn, x_up, x_dn);
+      Qtm_ndpsi(Ax_up, Ax_dn, x_up, x_dn);
       		// debug
       		#ifndef MPI
       		  printf("The matrix was applied on CPU in double precision. r = b - Ax\n");
@@ -3744,7 +3734,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     }
     else {				// r(k+1) = r(k) - A*d(k+1)	// makes actually no sense ;)
       // A*d(k+1)
-      Q_Qdagger_ND(Ad_up, Ad_dn, d_up, d_dn);
+      Qtm_ndpsi(Ad_up, Ad_dn, d_up, d_dn);
     		// debug
     		#ifndef MPI
     		  printf("The matrix was applied on CPU in double precision. r = r - Ad\n");
@@ -3786,7 +3776,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       // timer
       stopouter = clock();
       totalouterclocks = stopouter-startouter - totalinnerclocks;
-      
+      if(g_debug_level > 3) printf("totalouterclocks = %d\n", totalouterclocks);
       #ifdef ALGORITHM_BENCHMARK
         #ifndef MPI
           stopeffective = ((double)clock()) / ((double)(CLOCKS_PER_SEC));
@@ -3877,7 +3867,8 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       		#else
       		  if (g_cart_id == 0) printf("\n");
       		#endif
-      
+      finalize_solver(up_field, nr_sf);
+      finalize_solver(dn_field, nr_sf);      
       return(outercount);
       
     }
@@ -3985,7 +3976,9 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   		#else
   		  if (g_cart_id == 0) printf("\n");
   		#endif
-  
+
+  finalize_solver(up_field, nr_sf);
+  finalize_solver(dn_field, nr_sf);
   return(outercount);
   
   

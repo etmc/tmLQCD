@@ -846,7 +846,7 @@ __device__ inline void dev_read_spinor_d2(dev_spinor_d *i1, dev_spinor_d *i2){
 
 __global__ void dev_d2f(dev_spinor* spinfloat, dev_spinor_d* spindouble){
 
-   int pos,i;
+   int pos;
    pos= threadIdx.x + blockDim.x*blockIdx.x;  
    
    double4 help[6]; 
@@ -925,7 +925,7 @@ __global__ void dev_d2f(dev_spinor* spinfloat, dev_spinor_d* spindouble){
 
 __global__ void dev_f2d(dev_spinor_d* spindouble, dev_spinor* spinfloat){
 
-   int pos,i;
+   int pos;
    pos= threadIdx.x + blockDim.x*blockIdx.x;  
    
    float4 help[6]; 
@@ -4547,7 +4547,10 @@ void init_blas(int vol){
   size_t size = vol * sizeof(float);
   
   if((cudaerr=cudaMalloc((void **) &dev_blas_redfield, size)) != cudaSuccess){
-    if(g_proc_id==0) printf("Error in init_blas(): Memory allocation of reduction field failed. Aborting...\n");
+    if(g_proc_id==0){
+      printf("Error in init_blas(): Memory allocation of reduction field failed. Aborting...\n");
+      printf("Error code is: %f\n",cudaerr);
+    }
     exit(200);
   }   // Allocate array on device
   else{
@@ -4569,7 +4572,10 @@ void init_blas(int vol){
   // initialize small redfields
   size = blas_redblocks * sizeof(float);
   if((cudaerr=cudaMalloc((void **) &dev_blas_sredfield, size)) != cudaSuccess){
-    if(g_proc_id==0) printf("Error in init_blas(): Memory allocation of small reduction field failed. Aborting...\n");
+    if(g_proc_id==0) {
+      printf("Error in init_blas(): Memory allocation of small reduction field failed. Aborting...\n");
+      printf("Error code is: %f\n",cudaerr);
+    }
     exit(200);
   }   // Allocate array on device
   else{
@@ -4579,7 +4585,10 @@ void init_blas(int vol){
   }  
   
   if((void*)(blas_sredfield = (float *)malloc(size)) == NULL){
-    if(g_proc_id==0) printf("Could not allocate memory for blas small redfield on host. Aborting...\n");
+    if(g_proc_id==0) {
+      printf("Could not allocate memory for blas small redfield on host. Aborting...\n");
+      printf("Error code is: %f\n",cudaerr);
+    }
     exit(200);
   } 
   
@@ -4877,35 +4886,23 @@ void convert2double_spin (dev_spinor* spin, spinor* h2d) {
   
   for (i = 0; i < Vol; i++) {
   
-        h2d[i].s0.c0.re = (double) spin[i+0*offset].x;
-        h2d[i].s0.c0.im = (double) spin[i+0*offset].y;
-        h2d[i].s0.c1.re = (double) spin[i+0*offset].z;
-        h2d[i].s0.c1.im = (double) spin[i+0*offset].w;
+        h2d[i].s0.c0 = (double) spin[i+0*offset].x + I*(double) spin[i+0*offset].y;
+        h2d[i].s0.c1 = (double) spin[i+0*offset].z + I*(double) spin[i+0*offset].w;
         
-        h2d[i].s0.c2.re = (double) spin[i+1*offset].x;
-        h2d[i].s0.c2.im = (double) spin[i+1*offset].y;
-        h2d[i].s1.c0.re = (double) spin[i+1*offset].z;
-        h2d[i].s1.c0.im = (double) spin[i+1*offset].w;   
+        h2d[i].s0.c2 = (double) spin[i+1*offset].x + I*(double) spin[i+1*offset].y;
+        h2d[i].s1.c0 = (double) spin[i+1*offset].z + I*(double) spin[i+1*offset].w;   
         
-        h2d[i].s1.c1.re = (double) spin[i+2*offset].x;
-        h2d[i].s1.c1.im = (double) spin[i+2*offset].y;
-        h2d[i].s1.c2.re = (double) spin[i+2*offset].z;
-        h2d[i].s1.c2.im = (double) spin[i+2*offset].w;  
+        h2d[i].s1.c1 = (double) spin[i+2*offset].x + I*(double) spin[i+2*offset].y;
+        h2d[i].s1.c2 = (double) spin[i+2*offset].z + I*(double) spin[i+2*offset].w;  
         
-        h2d[i].s2.c0.re = (double) spin[i+3*offset].x;
-        h2d[i].s2.c0.im = (double) spin[i+3*offset].y;
-        h2d[i].s2.c1.re = (double) spin[i+3*offset].z;
-        h2d[i].s2.c1.im = (double) spin[i+3*offset].w;  
+        h2d[i].s2.c0 = (double) spin[i+3*offset].x + I*(double) spin[i+3*offset].y;
+        h2d[i].s2.c1 = (double) spin[i+3*offset].z + I*(double) spin[i+3*offset].w;  
         
-        h2d[i].s2.c2.re = (double) spin[i+4*offset].x;
-        h2d[i].s2.c2.im = (double) spin[i+4*offset].y;
-        h2d[i].s3.c0.re = (double) spin[i+4*offset].z;
-        h2d[i].s3.c0.im = (double) spin[i+4*offset].w; 
+        h2d[i].s2.c2 = (double) spin[i+4*offset].x + I*(double) spin[i+4*offset].y;
+        h2d[i].s3.c0 = (double) spin[i+4*offset].z + I*(double) spin[i+4*offset].w; 
         
-        h2d[i].s3.c1.re = (double) spin[i+5*offset].x;
-        h2d[i].s3.c1.im = (double) spin[i+5*offset].y;
-        h2d[i].s3.c2.re = (double) spin[i+5*offset].z;
-        h2d[i].s3.c2.im = (double) spin[i+5*offset].w; 
+        h2d[i].s3.c1 = (double) spin[i+5*offset].x + I*(double) spin[i+5*offset].y;
+        h2d[i].s3.c2 = (double) spin[i+5*offset].z + I*(double) spin[i+5*offset].w; 
         
   }
 }
@@ -4939,35 +4936,35 @@ void convert2REAL4_spin(spinor* spin, dev_spinor* h2d){
   
   for (i = 0; i < Vol; i++) {
     
-        h2d[i+0*offset].x = (REAL) spin[i].s0.c0.re;
-        h2d[i+0*offset].y = (REAL) spin[i].s0.c0.im;
-        h2d[i+0*offset].z = (REAL) spin[i].s0.c1.re;
-        h2d[i+0*offset].w = (REAL) spin[i].s0.c1.im;
+        h2d[i+0*offset].x = (REAL) creal(spin[i].s0.c0);
+        h2d[i+0*offset].y = (REAL) cimag(spin[i].s0.c0);
+        h2d[i+0*offset].z = (REAL) creal(spin[i].s0.c1);
+        h2d[i+0*offset].w = (REAL) cimag(spin[i].s0.c1);
         
-        h2d[i+1*offset].x = (REAL) spin[i].s0.c2.re;
-        h2d[i+1*offset].y = (REAL) spin[i].s0.c2.im;
-        h2d[i+1*offset].z = (REAL) spin[i].s1.c0.re;
-        h2d[i+1*offset].w = (REAL) spin[i].s1.c0.im;
+        h2d[i+1*offset].x = (REAL) creal(spin[i].s0.c2);
+        h2d[i+1*offset].y = (REAL) cimag(spin[i].s0.c2);
+        h2d[i+1*offset].z = (REAL) creal(spin[i].s1.c0);
+        h2d[i+1*offset].w = (REAL) cimag(spin[i].s1.c0);
         
-        h2d[i+2*offset].x = (REAL) spin[i].s1.c1.re;
-        h2d[i+2*offset].y = (REAL) spin[i].s1.c1.im;
-        h2d[i+2*offset].z = (REAL) spin[i].s1.c2.re;
-        h2d[i+2*offset].w = (REAL) spin[i].s1.c2.im;
+        h2d[i+2*offset].x = (REAL) creal(spin[i].s1.c1);
+        h2d[i+2*offset].y = (REAL) cimag(spin[i].s1.c1);
+        h2d[i+2*offset].z = (REAL) creal(spin[i].s1.c2);
+        h2d[i+2*offset].w = (REAL) cimag(spin[i].s1.c2);
         
-        h2d[i+3*offset].x = (REAL) spin[i].s2.c0.re;
-        h2d[i+3*offset].y = (REAL) spin[i].s2.c0.im;
-        h2d[i+3*offset].z = (REAL) spin[i].s2.c1.re;
-        h2d[i+3*offset].w = (REAL) spin[i].s2.c1.im;
+        h2d[i+3*offset].x = (REAL) creal(spin[i].s2.c0);
+        h2d[i+3*offset].y = (REAL) cimag(spin[i].s2.c0);
+        h2d[i+3*offset].z = (REAL) creal(spin[i].s2.c1);
+        h2d[i+3*offset].w = (REAL) cimag(spin[i].s2.c1);
         
-        h2d[i+4*offset].x = (REAL) spin[i].s2.c2.re;
-        h2d[i+4*offset].y = (REAL) spin[i].s2.c2.im;
-        h2d[i+4*offset].z = (REAL) spin[i].s3.c0.re;
-        h2d[i+4*offset].w = (REAL) spin[i].s3.c0.im;
+        h2d[i+4*offset].x = (REAL) creal(spin[i].s2.c2);
+        h2d[i+4*offset].y = (REAL) cimag(spin[i].s2.c2);
+        h2d[i+4*offset].z = (REAL) creal(spin[i].s3.c0);
+        h2d[i+4*offset].w = (REAL) cimag(spin[i].s3.c0);
         
-        h2d[i+5*offset].x = (REAL) spin[i].s3.c1.re;
-        h2d[i+5*offset].y = (REAL) spin[i].s3.c1.im;
-        h2d[i+5*offset].z = (REAL) spin[i].s3.c2.re;
-        h2d[i+5*offset].w = (REAL) spin[i].s3.c2.im;
+        h2d[i+5*offset].x = (REAL) creal(spin[i].s3.c1);
+        h2d[i+5*offset].y = (REAL) cimag(spin[i].s3.c1);
+        h2d[i+5*offset].z = (REAL) creal(spin[i].s3.c2);
+        h2d[i+5*offset].w = (REAL) cimag(spin[i].s3.c2);
     
   }
 }
@@ -5000,35 +4997,35 @@ void order_spin_gpu(spinor* spin, dev_spinor_d* h2d){
   
   for (i = 0; i < Vol; i++) {
     
-        h2d[i+0*offset].x = spin[i].s0.c0.re;
-        h2d[i+0*offset].y = spin[i].s0.c0.im;
-        h2d[i+0*offset].z = spin[i].s0.c1.re;
-        h2d[i+0*offset].w = spin[i].s0.c1.im;
+        h2d[i+0*offset].x = creal(spin[i].s0.c0);
+        h2d[i+0*offset].y = cimag(spin[i].s0.c0);
+        h2d[i+0*offset].z = creal(spin[i].s0.c1);
+        h2d[i+0*offset].w = cimag(spin[i].s0.c1);
         
-        h2d[i+1*offset].x = spin[i].s0.c2.re;
-        h2d[i+1*offset].y = spin[i].s0.c2.im;
-        h2d[i+1*offset].z = spin[i].s1.c0.re;
-        h2d[i+1*offset].w = spin[i].s1.c0.im;
+        h2d[i+1*offset].x = creal(spin[i].s0.c2);
+        h2d[i+1*offset].y = cimag(spin[i].s0.c2);
+        h2d[i+1*offset].z = creal(spin[i].s1.c0);
+        h2d[i+1*offset].w = cimag(spin[i].s1.c0);
         
-        h2d[i+2*offset].x = spin[i].s1.c1.re;
-        h2d[i+2*offset].y = spin[i].s1.c1.im;
-        h2d[i+2*offset].z = spin[i].s1.c2.re;
-        h2d[i+2*offset].w = spin[i].s1.c2.im;
+        h2d[i+2*offset].x = creal(spin[i].s1.c1);
+        h2d[i+2*offset].y = cimag(spin[i].s1.c1);
+        h2d[i+2*offset].z = creal(spin[i].s1.c2);
+        h2d[i+2*offset].w = cimag(spin[i].s1.c2);
         
-        h2d[i+3*offset].x = spin[i].s2.c0.re;
-        h2d[i+3*offset].y = spin[i].s2.c0.im;
-        h2d[i+3*offset].z = spin[i].s2.c1.re;
-        h2d[i+3*offset].w = spin[i].s2.c1.im;
+        h2d[i+3*offset].x = creal(spin[i].s2.c0);
+        h2d[i+3*offset].y = cimag(spin[i].s2.c0);
+        h2d[i+3*offset].z = creal(spin[i].s2.c1);
+        h2d[i+3*offset].w = cimag(spin[i].s2.c1);
         
-        h2d[i+4*offset].x = spin[i].s2.c2.re;
-        h2d[i+4*offset].y = spin[i].s2.c2.im;
-        h2d[i+4*offset].z = spin[i].s3.c0.re;
-        h2d[i+4*offset].w = spin[i].s3.c0.im;
+        h2d[i+4*offset].x = creal(spin[i].s2.c2);
+        h2d[i+4*offset].y = cimag(spin[i].s2.c2);
+        h2d[i+4*offset].z = creal(spin[i].s3.c0);
+        h2d[i+4*offset].w = cimag(spin[i].s3.c0);
         
-        h2d[i+5*offset].x = spin[i].s3.c1.re;
-        h2d[i+5*offset].y = spin[i].s3.c1.im;
-        h2d[i+5*offset].z = spin[i].s3.c2.re;
-        h2d[i+5*offset].w = spin[i].s3.c2.im;
+        h2d[i+5*offset].x = creal(spin[i].s3.c1);
+        h2d[i+5*offset].y = cimag(spin[i].s3.c1);
+        h2d[i+5*offset].z = creal(spin[i].s3.c2);
+        h2d[i+5*offset].w = cimag(spin[i].s3.c2);
     
   }
 }
@@ -5058,35 +5055,23 @@ void unorder_spin_gpu (dev_spinor_d* spin, spinor* h2d) {
   
   for (i = 0; i < Vol; i++) {
   
-        h2d[i].s0.c0.re = spin[i+0*offset].x;
-        h2d[i].s0.c0.im = spin[i+0*offset].y;
-        h2d[i].s0.c1.re = spin[i+0*offset].z;
-        h2d[i].s0.c1.im = spin[i+0*offset].w;
+        h2d[i].s0.c0 = spin[i+0*offset].x + I* spin[i+0*offset].y;
+        h2d[i].s0.c1 = spin[i+0*offset].z + I* spin[i+0*offset].w;
         
-        h2d[i].s0.c2.re = spin[i+1*offset].x;
-        h2d[i].s0.c2.im = spin[i+1*offset].y;
-        h2d[i].s1.c0.re = spin[i+1*offset].z;
-        h2d[i].s1.c0.im = spin[i+1*offset].w;   
+        h2d[i].s0.c2 = spin[i+1*offset].x + I* spin[i+1*offset].y;
+        h2d[i].s1.c0 = spin[i+1*offset].z + I* spin[i+1*offset].w;   
         
-        h2d[i].s1.c1.re = spin[i+2*offset].x;
-        h2d[i].s1.c1.im = spin[i+2*offset].y;
-        h2d[i].s1.c2.re = spin[i+2*offset].z;
-        h2d[i].s1.c2.im = spin[i+2*offset].w;  
+        h2d[i].s1.c1 = spin[i+2*offset].x + I* spin[i+2*offset].y;
+        h2d[i].s1.c2 = spin[i+2*offset].z + I* spin[i+2*offset].w;  
         
-        h2d[i].s2.c0.re = spin[i+3*offset].x;
-        h2d[i].s2.c0.im = spin[i+3*offset].y;
-        h2d[i].s2.c1.re = spin[i+3*offset].z;
-        h2d[i].s2.c1.im = spin[i+3*offset].w;  
+        h2d[i].s2.c0 = spin[i+3*offset].x + I* spin[i+3*offset].y;
+        h2d[i].s2.c1 = spin[i+3*offset].z + I* spin[i+3*offset].w;  
         
-        h2d[i].s2.c2.re = spin[i+4*offset].x;
-        h2d[i].s2.c2.im = spin[i+4*offset].y;
-        h2d[i].s3.c0.re = spin[i+4*offset].z;
-        h2d[i].s3.c0.im = spin[i+4*offset].w; 
+        h2d[i].s2.c2 = spin[i+4*offset].x + I* spin[i+4*offset].y;
+        h2d[i].s3.c0 = spin[i+4*offset].z + I* spin[i+4*offset].w; 
         
-        h2d[i].s3.c1.re = spin[i+5*offset].x;
-        h2d[i].s3.c1.im = spin[i+5*offset].y;
-        h2d[i].s3.c2.re = spin[i+5*offset].z;
-        h2d[i].s3.c2.im = spin[i+5*offset].w; 
+        h2d[i].s3.c1 = spin[i+5*offset].x + I* spin[i+5*offset].y;
+        h2d[i].s3.c2 = spin[i+5*offset].z + I* spin[i+5*offset].w; 
         
   }
 }

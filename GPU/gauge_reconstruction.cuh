@@ -1481,19 +1481,19 @@ void su3to2vf4(su3** gf, dev_su3_2v* h2d_gf){
   #endif
    for(j=0;j<4;j++){
    //first row
-    h2d_gf[pos+VOL*(0 + COL*j)].x = (REAL) gf[i][j].c00.re;
-    h2d_gf[pos+VOL*(0 + COL*j)].y = (REAL) gf[i][j].c00.im;
-    h2d_gf[pos+VOL*(0 + COL*j)].z = (REAL) gf[i][j].c01.re;
-    h2d_gf[pos+VOL*(0 + COL*j)].w = (REAL) gf[i][j].c01.im;
-    h2d_gf[pos+VOL*(1 + COL*j)].x = (REAL) gf[i][j].c02.re;
-    h2d_gf[pos+VOL*(1 + COL*j)].y = (REAL) gf[i][j].c02.im;      
+    h2d_gf[pos+VOL*(0 + COL*j)].x = (REAL) creal(gf[i][j].c00);
+    h2d_gf[pos+VOL*(0 + COL*j)].y = (REAL) cimag(gf[i][j].c00);
+    h2d_gf[pos+VOL*(0 + COL*j)].z = (REAL) creal(gf[i][j].c01);
+    h2d_gf[pos+VOL*(0 + COL*j)].w = (REAL) cimag(gf[i][j].c01);
+    h2d_gf[pos+VOL*(1 + COL*j)].x = (REAL) creal(gf[i][j].c02);
+    h2d_gf[pos+VOL*(1 + COL*j)].y = (REAL) cimag(gf[i][j].c02);      
    //second row
-    h2d_gf[pos+VOL*(1 + COL*j)].z = (REAL) gf[i][j].c10.re;
-    h2d_gf[pos+VOL*(1 + COL*j)].w = (REAL) gf[i][j].c10.im;
-    h2d_gf[pos+VOL*(2 + COL*j)].x = (REAL) gf[i][j].c11.re;
-    h2d_gf[pos+VOL*(2 + COL*j)].y = (REAL) gf[i][j].c11.im;
-    h2d_gf[pos+VOL*(2 + COL*j)].z = (REAL) gf[i][j].c12.re;
-    h2d_gf[pos+VOL*(2 + COL*j)].w = (REAL) gf[i][j].c12.im;      
+    h2d_gf[pos+VOL*(1 + COL*j)].z = (REAL) creal(gf[i][j].c10);
+    h2d_gf[pos+VOL*(1 + COL*j)].w = (REAL) cimag(gf[i][j].c10);
+    h2d_gf[pos+VOL*(2 + COL*j)].x = (REAL) creal(gf[i][j].c11);
+    h2d_gf[pos+VOL*(2 + COL*j)].y = (REAL) cimag(gf[i][j].c11);
+    h2d_gf[pos+VOL*(2 + COL*j)].z = (REAL) creal(gf[i][j].c12);
+    h2d_gf[pos+VOL*(2 + COL*j)].w = (REAL) cimag(gf[i][j].c12);      
   }
   pos++;
  }
@@ -1519,19 +1519,19 @@ void su3to8(su3** gf, dev_su3_8* h2d_gf){
   #endif
       for(j=0;j<4;j++){
       // a2, a3 
-      h2d_gf[pos+VOL*(0 + COL*j)].x = (REAL) gf[i][j].c01.re;
-      h2d_gf[pos+VOL*(0 + COL*j)].y = (REAL) gf[i][j].c01.im;
-      h2d_gf[pos+VOL*(0 + COL*j)].z = (REAL) gf[i][j].c02.re;
-      h2d_gf[pos+VOL*(0 + COL*j)].w = (REAL) gf[i][j].c02.im;
+      h2d_gf[pos+VOL*(0 + COL*j)].x = (REAL) creal(gf[i][j].c01);
+      h2d_gf[pos+VOL*(0 + COL*j)].y = (REAL) cimag(gf[i][j].c01);
+      h2d_gf[pos+VOL*(0 + COL*j)].z = (REAL) creal(gf[i][j].c02);
+      h2d_gf[pos+VOL*(0 + COL*j)].w = (REAL) cimag(gf[i][j].c02);
       
       // theta_a1, theta_c1
       // use atan2 for this: following the reference, atan2 should give an angle -pi < phi < +pi  
-      h2d_gf[pos+VOL*(1 + COL*j)].x = (REAL)( atan2((REAL) gf[i][j].c00.im,(REAL) gf[i][j].c00.re ));
-      h2d_gf[pos+VOL*(1 + COL*j)].y = (REAL) ( atan2((REAL) gf[i][j].c20.im,(REAL)gf[i][j].c20.re ));
+      h2d_gf[pos+VOL*(1 + COL*j)].x = (REAL)( atan2((REAL) cimag(gf[i][j].c00),(REAL) creal(gf[i][j].c00) ));
+      h2d_gf[pos+VOL*(1 + COL*j)].y = (REAL) ( atan2((REAL) cimag(gf[i][j].c20),(REAL) creal(gf[i][j].c20) ));
       
       // b1
-      h2d_gf[pos+VOL*(1 + COL*j)].z = (REAL) gf[i][j].c10.re ;
-      h2d_gf[pos+VOL*(1 + COL*j)].w = (REAL) gf[i][j].c10.im ;
+      h2d_gf[pos+VOL*(1 + COL*j)].z = (REAL) creal(gf[i][j].c10) ;
+      h2d_gf[pos+VOL*(1 + COL*j)].w = (REAL) cimag(gf[i][j].c10) ;
      
      } 
    pos++;
@@ -1542,12 +1542,15 @@ void su3to8(su3** gf, dev_su3_8* h2d_gf){
 
 
 
+/*
+//FIXME!!
+//below code cannot be compiled any more due to c99 complex used now
 
 // this is to reconstruct the gf on the host from 2 rows of the link
 // may be used for tests
 void reconstructgf_2v (dev_su3* gf){
-  complex help1;
-  complex help2;
+  dev_complex help1;
+  dev_complex help2;
   //third row from cconj(cross product of first and second row)
   _mult_assign_complex(help1,(*gf)[0][1],(*gf)[1][2]);
   _mult_assign_complex(help2,(*gf)[0][2],(*gf)[1][1]);
@@ -1895,7 +1898,7 @@ void showcompare_gf(int t, int x, int y, int z, int mu){
 
 
 
-
+*/
 
 
 
