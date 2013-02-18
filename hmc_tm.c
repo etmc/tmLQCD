@@ -381,7 +381,7 @@ int main(int argc,char *argv[])
 
   /*For parallelization: exchange the gaugefield */
 #ifdef MPI
-  exchange_gauge_field(g_gf);
+  exchange_gauge_field(&g_gf);
   // xchange_gauge(g_gauge_field);
 #endif
 
