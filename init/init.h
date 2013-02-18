@@ -35,7 +35,7 @@
 #ifdef OMP
 # include <omp.h>
 # include "init/init_omp_accumulators.h"
+# include "init/init_openmp.h"
 #endif
-
 
 #endif

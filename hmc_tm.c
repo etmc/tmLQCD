@@ -43,7 +43,6 @@
 #endif
 #ifdef OMP
 # include <omp.h>
-# include "init/init_openmp.h"
 #endif
 #include "global.h"
 #include "git_hash.h"
