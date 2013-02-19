@@ -62,11 +62,15 @@ void update_momenta(int * mnllist, double step, const int no,
   xchange_deri(hf->derivative);
 #endif
     
+  // if we want to monitor the force magnitudes
+  // the logics is a bit more involved for openMP
+  // the debug level might need to be adjusted
+  // if this turns out to be performance critical
   if(g_debug_level > 0) {
 #ifdef OMP
 #pragma omp parallel shared(max) private(sum2) firstprivate(tmax)
     {
-      max = 0.; tmax = 0.;
+      max = 0.;
 #pragma omp for reduction(+ : sum) nowait
 #endif
       for(int i = 0; i < VOLUME; i++) {
@@ -88,6 +92,7 @@ void update_momenta(int * mnllist, double step, const int no,
     max = tmax;
 #endif
   }
+  // no monitoring of force magnitudes
   else {
 #ifdef OMP
 #pragma omp parallel for
@@ -99,7 +104,7 @@ void update_momenta(int * mnllist, double step, const int no,
       }
     }
   }
-
+  // output for force monitoring
   if(g_debug_level > 0) {
 #ifdef MPI
     MPI_Reduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
