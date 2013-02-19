@@ -38,7 +38,7 @@
 #include "su3adj.h"
 #include "xchange_deri.h"
 
-inline void addup_ddummy(su3adj** const df, const int ix, const int iy) {
+static inline void addup_ddummy(su3adj** const df, const int ix, const int iy) {
   for(int mu = 0; mu < 4; mu++) {
     df[ix][mu].d1 += ddummy[iy][mu].d1;
     df[ix][mu].d2 += ddummy[iy][mu].d2;
