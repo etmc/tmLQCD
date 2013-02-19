@@ -34,6 +34,9 @@ void init_openmp(void) {
   if(omp_num_threads > 0) 
   {
      omp_set_num_threads(omp_num_threads);
+     if( g_debug_level > 0 && g_proc_id == 0 ) {
+       printf("# Instructing OpenMP to use %d threads.\n",omp_num_threads);
+     }
   }
   else {
     if( g_proc_id == 0 )
@@ -45,6 +48,6 @@ void init_openmp(void) {
 
   init_omp_accumulators(omp_num_threads);
 
-  return(0);
+  return;
 }
 
