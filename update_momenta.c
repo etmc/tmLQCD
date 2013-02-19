@@ -42,32 +42,81 @@
 void update_momenta(int * mnllist, double step, const int no, 
 		    hamiltonian_field_t * const hf) {
 
+  double sum = 0., max = 0., sum2 = 0., tmax = 0.;
+
 #ifdef OMP
+#pragma omp parallel shared(max) private(sum2) firstprivate(tmax)
+  {
+    sum = 0.; max = 0.; tmax = 0.;
 #pragma omp parallel for
 #endif
-  for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand);i++) { 
-    for(int mu=0;mu<4;mu++) { 
-      _zero_su3adj(hf->derivative[i][mu]);
+    for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand);i++) { 
+      for(int mu=0;mu<4;mu++) { 
+	_zero_su3adj(hf->derivative[i][mu]);
+      }
     }
-  }
-
-  for(int k = 0; k < no; k++) {
-    if(monomial_list[ mnllist[k] ].derivativefunction != NULL) {
-      monomial_list[ mnllist[k] ].derivativefunction(mnllist[k], hf);
+    
+    for(int k = 0; k < no; k++) {
+      if(monomial_list[ mnllist[k] ].derivativefunction != NULL) {
+	monomial_list[ mnllist[k] ].derivativefunction(mnllist[k], hf);
+      }
     }
-  }
-
+    
 #ifdef MPI
-  xchange_deri(hf->derivative);
+    xchange_deri(hf->derivative);
 #endif
-
+    
+    if(g_debug_level > 0) {
+#ifdef OMP
+#pragma omp for reduction(+ : sum) nowait
+#endif
+      for(int i = 0; i < VOLUME; i++) {
+	for(int mu = 0; mu < 4; mu++) {
+	  /* the minus comes from an extra minus in trace_lambda */
+	  _su3adj_minus_const_times_su3adj(hf->momenta[i][mu], step, hf->derivative[i][mu]); 
+	  sum2 = _su3adj_square_norm(hf->derivative[i][mu]); 
+          sum += sum2;
+          if(fabs(sum2) > tmax) tmax = sum2;
+	}
+      }
+#ifdef OMP
+#pragma omp critical 
+      {
+	if(tmax > max) max = tmax;
+      }
+#else
+      max = tmax;
+#endif
+    }
+    else {
 #ifdef OMP
 #pragma omp parallel for
 #endif
-  for(int i = 0; i < VOLUME; i++) {
-    for(int mu = 0; mu < 4; mu++) {
-      /* the minus comes from an extra minus in trace_lambda */
-      _su3adj_minus_const_times_su3adj(hf->momenta[i][mu], step, hf->derivative[i][mu]); 
+      for(int i = 0; i < VOLUME; i++) {
+	for(int mu = 0; mu < 4; mu++) {
+	  /* the minus comes from an extra minus in trace_lambda */
+	  _su3adj_minus_const_times_su3adj(hf->momenta[i][mu], step, hf->derivative[i][mu]); 
+	}
+      }
+    }
+#ifdef OMP
+  }
+#endif
+    
+
+  if(g_debug_level > 0) {
+#ifdef MPI
+    MPI_Reduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    sum = sum2;
+    MPI_Reduce(&max, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+    max = sum2;
+#endif
+    if(g_proc_id == 0) {
+      printf("# force on timescale %d: aver: %1.2e max: %1.2e dt*aver: %1.2e dt*max: %1.2e dt=%1.4e\n", 
+	     monomial_list[ mnllist[0] ].timescale,
+	     fabs(sum/((double)(VOLUME*g_nproc))/4.), max,
+	     fabs(step*sum/((double)(VOLUME*g_nproc))/4.), fabs(step*max), step);
+      fflush(stdout);
     }
   }
 
