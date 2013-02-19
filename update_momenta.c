@@ -43,31 +43,30 @@ void update_momenta(int * mnllist, double step, const int no,
 		    hamiltonian_field_t * const hf) {
 
   double sum = 0., max = 0., sum2 = 0., tmax = 0.;
-
 #ifdef OMP
-#pragma omp parallel shared(max) private(sum2) firstprivate(tmax)
-  {
-    sum = 0.; max = 0.; tmax = 0.;
 #pragma omp parallel for
 #endif
-    for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand);i++) { 
-      for(int mu=0;mu<4;mu++) { 
-	_zero_su3adj(hf->derivative[i][mu]);
-      }
+  for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand);i++) { 
+    for(int mu=0;mu<4;mu++) { 
+      _zero_su3adj(hf->derivative[i][mu]);
     }
-    
-    for(int k = 0; k < no; k++) {
-      if(monomial_list[ mnllist[k] ].derivativefunction != NULL) {
-	monomial_list[ mnllist[k] ].derivativefunction(mnllist[k], hf);
-      }
+  }
+  
+  for(int k = 0; k < no; k++) {
+    if(monomial_list[ mnllist[k] ].derivativefunction != NULL) {
+      monomial_list[ mnllist[k] ].derivativefunction(mnllist[k], hf);
     }
-    
+  }
+  
 #ifdef MPI
-    xchange_deri(hf->derivative);
+  xchange_deri(hf->derivative);
 #endif
     
-    if(g_debug_level > 0) {
+  if(g_debug_level > 0) {
 #ifdef OMP
+#pragma omp parallel shared(max) private(sum2) firstprivate(tmax)
+    {
+      max = 0.; tmax = 0.;
 #pragma omp for reduction(+ : sum) nowait
 #endif
       for(int i = 0; i < VOLUME; i++) {
@@ -84,25 +83,22 @@ void update_momenta(int * mnllist, double step, const int no,
       {
 	if(tmax > max) max = tmax;
       }
-#else
-      max = tmax;
-#endif
     }
-    else {
+#else
+    max = tmax;
+#endif
+  }
+  else {
 #ifdef OMP
 #pragma omp parallel for
 #endif
-      for(int i = 0; i < VOLUME; i++) {
-	for(int mu = 0; mu < 4; mu++) {
-	  /* the minus comes from an extra minus in trace_lambda */
-	  _su3adj_minus_const_times_su3adj(hf->momenta[i][mu], step, hf->derivative[i][mu]); 
-	}
+    for(int i = 0; i < VOLUME; i++) {
+      for(int mu = 0; mu < 4; mu++) {
+	/* the minus comes from an extra minus in trace_lambda */
+	_su3adj_minus_const_times_su3adj(hf->momenta[i][mu], step, hf->derivative[i][mu]); 
       }
     }
-#ifdef OMP
   }
-#endif
-    
 
   if(g_debug_level > 0) {
 #ifdef MPI
