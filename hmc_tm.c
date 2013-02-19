@@ -74,22 +74,8 @@
 #include <buffers/gauge.h>
 #include <buffers/utils.h>
 
-void usage(){
-  fprintf(stdout, "HMC for Wilson twisted mass QCD\n");
-  fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
-  fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
-  fprintf(stdout, "Usage:   hmc_tm [options]\n");
-  fprintf(stdout, "Options: [-f input-filename]  default: hmc.input\n");
-  fprintf(stdout, "         [-o output-filename] default: output\n");
-  fprintf(stdout, "         [-v] more verbosity\n");
-  fprintf(stdout, "         [-V] print version information and exit\n");
-  fprintf(stdout, "         [-h|-? this help]\n");
-  exit(0);
-}
 extern int nstore;
-
 int const rlxdsize = 105;
-
 
 int main(int argc,char *argv[])
 {
