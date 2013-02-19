@@ -210,12 +210,12 @@ void phmc_compute_ev(const int trajectory_counter,
   char buf[100];
   char * phmcfilename = buf;
   FILE * countfile;
+  monomial * mnl = &monomial_list[id];;
 
   sprintf(phmcfilename,"monomial-%.2d.data", id);
   atime = gettime();
   
   max_iter_ev = 1000;
-  g_mu = g_mu1;
   
   if((g_proc_id == 0) && (g_debug_level > 0)) {
     printf("# Computing eigenvalues for heavy doublet\n");
@@ -223,38 +223,32 @@ void phmc_compute_ev(const int trajectory_counter,
 
   no_eigenvalues = 1;
 
-  //if(g_epsbar!=0.0)
   temp = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0, Qsq);
-  //else
-  //temp = eigenvalues(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0, 0, nstore, even_odd_flag);
   
   no_eigenvalues = 1;
-  //  if(g_epsbar!=0.0)
   temp2 = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, Qsq);
-  //  else
-  //    temp2 = eigenvalues(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, 0, nstore, even_odd_flag);
   
-  if((g_proc_id == 0) && (g_debug_level > 0)) {
-    printf("# PHMC: lowest eigenvalue end of trajectory %d = %e\n", 
-	   trajectory_counter, temp);
-    printf("# PHMC: maximal eigenvalue end of trajectory %d = %e\n", 
-	   trajectory_counter, temp2);
-    if(temp2 > 1.) {
-      fprintf(stderr, "\nWarning: largest eigenvalue larger than upper bound!\n\n");
-    }
-    if(temp < stilde_min/stilde_max) {
-      fprintf(stderr, "\nWarning: smallest eigenvalue smaller than lower bound!\n\n");
-    }
+  if((g_proc_id == 0) && (g_debug_level > 1)) {
+    printf("# %s: lowest eigenvalue end of trajectory %d = %e\n", 
+	   mnl->name, trajectory_counter, temp);
+    printf("# %s: maximal eigenvalue end of trajectory %d = %e\n", 
+	   mnl->name, trajectory_counter, temp2);
   }
   if(g_proc_id == 0) {
+    if(temp2 > 1.) {
+      fprintf(stderr, "\nWarning: largest eigenvalue for monomial %s larger than upper bound!\n\n", mnl->name);
+    }
+    if(temp < mnl->EVMin) {
+      fprintf(stderr, "\nWarning: smallest eigenvalue for monomial %s smaller than lower bound!\n\n", mnl->name);
+    }
     countfile = fopen(phmcfilename, "a");
     fprintf(countfile, "%.8d %1.5e %1.5e %1.5e %1.5e\n", 
-	    trajectory_counter, temp, temp2, stilde_min/stilde_max, 1.);
+	    trajectory_counter, temp, temp2, mnl->EVMin, 1.);
     fclose(countfile);
   }
   etime = gettime();
-  if((g_proc_id == 0) && g_debug_level > 4) {
-    printf("# PHMC: time/s for eigenvalue computation %e\n", etime-atime);
+  if((g_proc_id == 0) && g_debug_level > 1) {
+    printf("# %s: time/s for eigenvalue computation %e\n", mnl->name, etime-atime);
   }
 }
 

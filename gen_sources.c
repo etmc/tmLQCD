@@ -40,6 +40,9 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include "global.h"
 #include "getopt.h"
 #include "geometry_eo.h"
@@ -51,7 +54,6 @@
 #include "init/init.h"
 #include "linalg_eo.h"
 #include "phmc.h"
-
 
 void usage() {
   fprintf(stdout, "Code to generate stochastic sources\n");
@@ -78,7 +80,6 @@ void usage() {
   exit(0);
 }
 
-
 extern int nstore;
 const int rlxdsize = 105;
 
@@ -102,6 +103,14 @@ int main(int argc,char *argv[]) {
   MPI_Init(&argc, &argv);
 #endif
 
+#ifdef OMP
+  /* FIXME: in principle this should not be set like this as it could result
+    in thread oversubscription when more than one process is run locally
+    unfortunately, there does not seem to be a standard way to determine
+    the number of "local" MPI processes  */
+  omp_num_threads = omp_get_max_threads();
+  init_openmp();
+#endif
 
   while ((c = getopt(argc, argv, "h?NCpOEdao:L:T:n:t:s:S:P:")) != -1) {
     switch (c) {
