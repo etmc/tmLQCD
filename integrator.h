@@ -40,6 +40,8 @@ typedef struct {
   int type[10];
   /* number of timescales */
   int no_timescales;
+  /* monitor forces */
+  int monitor_forces;
   /* steps per timescale */
   int n_int[10];
   /* trajectory length */

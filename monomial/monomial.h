@@ -137,6 +137,7 @@ typedef struct {
 #include "monomial/ndratcor_monomial.h"
 #include "monomial/ratcor_monomial.h"
 #include "monomial/moment_energy.h"
+#include "monomial/monitor_forces.h"
 
 /* list of all monomials */
 extern monomial monomial_list[max_no_monomials];
