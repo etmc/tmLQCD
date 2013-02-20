@@ -106,21 +106,12 @@ dev_spinor * dev_spin2_up;
 dev_spinor * dev_spin2_dn;
 dev_spinor * dev_spin3_up;
 dev_spinor * dev_spin3_dn;
-/*
-dev_spinor * dev_spin4_up;
-dev_spinor * dev_spin4_dn;
-dev_spinor * dev_spin5_up;
-dev_spinor * dev_spin5_dn;
-*/
-
 dev_spinor * dev_spinin_up;		// host/device interaction	// mixedsolve_eo_nd()  <-->  cg_eo_nd()
 dev_spinor * dev_spinin_dn;		// inner/outer interaction
 dev_spinor * dev_spinout_up;
 dev_spinor * dev_spinout_dn;
-
 dev_spinor * h2d_spin_up;		// for transferring in double precision on host to single precision on device (pointing to host)
 dev_spinor * h2d_spin_dn;
-
 dev_spinor * dev_spin_eo1_up;		// auxiliary for  matrix_multiplication32()  called by  dev_cg_eo_nd()
 dev_spinor * dev_spin_eo1_dn;
 dev_spinor * dev_spin_eo2_up;
@@ -135,13 +126,7 @@ __device__ float mubar, epsbar;
 
 #ifdef MPI					// collecting variables for the MPI implementation
   						// put to mixed_solve.cu
-  /*
-  __device__ int dev_RAND;			// not used, maybe later ...
-  __device__ int dev_VOLUMEPLUSRAND;		// is now used in dev_Hopping_Matrix_mpi()
-  __device__ int dev_rank;			// was for the moment put to mixed_solve.cu ...
-  __device__ int dev_nproc;
-  */
-  
+ 
   int * iseven;
   int * dev_g_iup;
   int * dev_g_idn;
@@ -188,15 +173,6 @@ __device__ float mubar, epsbar;
   #endif
    
 #endif
-
-
-
-
-
-//#include "communication.cuh"
-//#include "index_fields.cuh"
-
-
 
 
 
@@ -288,9 +264,6 @@ void init_iseven() {
         }}}}
      
 }
-
-
-
 
 
 
@@ -597,41 +570,11 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
   
   
 
-  /////////////////
-  // GAUGE FIELD //
-  /////////////////
-  
-  cudaMemcpy(dev_gf, h2d_gf, dev_gfsize, cudaMemcpyHostToDevice);
-  								// dev_gf = h2d_gf  on device memory
-  
-  		// debug	// CUDA
-  		#ifdef CUDA_DEBUG
-  		  #ifndef MPI
-  		    CUDA_CHECK("CUDA error in init_mixedsolve_eo_nd(). Copying dev_gf to device failed.", "Copied dev_gf to device.");
-  		  #else
-  		    CUDA_CHECK("CUDA error in init_mixedsolve_eo_nd(). Copying dev_gf to device failed.", "Copied dev_gf to devices.");
-  		  #endif
-  		#endif
-  
-  
-  
-  
-
-  
-  
   /////////////
   // SPINORS //							// allocates device memory for the odd part of the spinor fields (24 = 4*6 floats per odd lattice sites)
   /////////////							// now we have to consider 2 flavors: up, dn
   
-  /*
-  #ifndef MPI
-    dev_spinsize = 6*VOLUME/2*sizeof(dev_spinor);		// remember: dev_spinor = float4
-  #else
-    dev_spinsize = (VOLUME+RAND)/2 * 6*sizeof(dev_spinor);	// NOTICE: this refers to the memory requirements for the device, host needs twice the memory !!
-  #endif
-  */
-  
-  
+
   #ifndef MPI
   
     cudaMalloc((void **) &dev_spin1_up, dev_spinsize_int);   	// allocates device memory for the fields spinor fields used in dev_cg_eo_nd(...)
@@ -640,12 +583,6 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
     cudaMalloc((void **) &dev_spin2_dn, dev_spinsize_int);
     cudaMalloc((void **) &dev_spin3_up, dev_spinsize_int);
     cudaMalloc((void **) &dev_spin3_dn, dev_spinsize_int);
-    /*
-    cudaMalloc((void **) &dev_spin4_up, dev_spinsize_int);	// not needed
-    cudaMalloc((void **) &dev_spin4_dn, dev_spinsize_int);
-    cudaMalloc((void **) &dev_spin5_up, dev_spinsize_int);
-    cudaMalloc((void **) &dev_spin5_dn, dev_spinsize_int);
-    */
     cudaMalloc((void **) &dev_spinin_up , dev_spinsize_int);	// host/device interaction
     cudaMalloc((void **) &dev_spinin_dn , dev_spinsize_int);	// inner/outer interaction
     cudaMalloc((void **) &dev_spinout_up, dev_spinsize_int);
@@ -659,12 +596,6 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
     cudaMalloc((void **) &dev_spin2_dn, dev_spinsize_ext);
     cudaMalloc((void **) &dev_spin3_up, dev_spinsize_ext);
     cudaMalloc((void **) &dev_spin3_dn, dev_spinsize_ext);
-    /*
-    cudaMalloc((void **) &dev_spin4_up, dev_spinsize_ext);
-    cudaMalloc((void **) &dev_spin4_dn, dev_spinsize_ext);
-    cudaMalloc((void **) &dev_spin5_up, dev_spinsize_ext);
-    cudaMalloc((void **) &dev_spin5_dn, dev_spinsize_ext);
-    */
     cudaMalloc((void **) &dev_spinin_up , dev_spinsize_ext);
     cudaMalloc((void **) &dev_spinin_dn , dev_spinsize_ext);
     cudaMalloc((void **) &dev_spinout_up, dev_spinsize_ext);
@@ -704,22 +635,14 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
     cudaMalloc((void **) &dev_spin_eo1_dn, dev_spinsize_int);
     cudaMalloc((void **) &dev_spin_eo3_up, dev_spinsize_int);
     cudaMalloc((void **) &dev_spin_eo3_dn, dev_spinsize_int);
-    /*
-    cudaMalloc((void **) &dev_spin_eo2_up, dev_spinsize_int);		// no memory allocation needed
-    cudaMalloc((void **) &dev_spin_eo2_dn, dev_spinsize_int);		// will point to already allocated memory when used in matrix_multiplication
-    */
-  
+
   #else
   
     cudaMalloc((void **) &dev_spin_eo1_up, dev_spinsize_ext);
     cudaMalloc((void **) &dev_spin_eo1_dn, dev_spinsize_ext);
     cudaMalloc((void **) &dev_spin_eo3_up, dev_spinsize_ext);
     cudaMalloc((void **) &dev_spin_eo3_dn, dev_spinsize_ext);
-    /*
-    cudaMalloc((void **) &dev_spin_eo2_up, dev_spinsize_ext);
-    cudaMalloc((void **) &dev_spin_eo2_dn, dev_spinsize_ext);
-    */
-  
+ 
   #endif
   
   		// debug	// CUDA
@@ -731,10 +654,7 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
   		  #endif
   		#endif
   
-  
-  
-  
-  
+
   #ifdef MPI
   
   	#ifdef HOPPING_DEBUG													// Hopping_Matrix() is applied upon these spinor fields
@@ -750,9 +670,7 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
   		}
   	#endif
   
-  
-  
-  
+
   	#if defined(ALTERNATE_FIELD_XCHANGE) || ASYNC > 0
   	  int tSliceEO = LX*LY*LZ/2;
   	#endif
@@ -818,8 +736,8 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
    grid[5] = VOLUME/2;
   #endif
 
-
-  cudaMalloc((void **) &dev_grid, 6*sizeof(int));				// dev_grid
+  //done in init_mixedsolve_eo
+  //cudaMalloc((void **) &dev_grid, 6*sizeof(int));				// dev_grid
   cudaMemcpy(dev_grid, &(grid[0]), 6*sizeof(int), cudaMemcpyHostToDevice);
   
   
@@ -868,13 +786,6 @@ void finalize_mixedsolve_eo_nd(void) {
   cudaFree(dev_spin2_dn);
   cudaFree(dev_spin3_up);
   cudaFree(dev_spin3_dn);
-  /*
-  cudaFree(dev_spin4_up);
-  cudaFree(dev_spin4_dn);
-  cudaFree(dev_spin5_up);
-  cudaFree(dev_spin5_dn);
-  */
-  
   cudaFree(dev_spinin_up);
   cudaFree(dev_spinin_dn);
   cudaFree(dev_spinout_up);
@@ -901,12 +812,7 @@ void finalize_mixedsolve_eo_nd(void) {
   cudaFree(dev_spin_eo1_dn);
   cudaFree(dev_spin_eo3_up);
   cudaFree(dev_spin_eo3_dn);
-  /*
-  cudaFree(dev_spin_eo2_up);
-  cudaFree(dev_spin_eo2_dn);
-  */
-  
-  
+
   
   #ifdef MPI
   	#ifdef ALTERNATE_HOPPING_MATRIX
@@ -937,7 +843,7 @@ void finalize_mixedsolve_eo_nd(void) {
   
   
   // Clean up CUDA API for calling thread	// ??
-  cudaThreadExit();				// is essential
+  //cudaThreadExit();				// is essential
   
   
   		// debug	// CUDA
@@ -1335,7 +1241,7 @@ __global__ void dev_mul_one_pm_imubar_gamma5 (dev_spinor * sin,
 // MATRIX MULTIPLICATION //
 ///////////////////////////
 
-// the GPU implementation of  Qtm_ndpsi(...)  from tm_operators_nd.c
+// the GPU implementation of  Qtm_pm_ndpsi(...)  from tm_operators_nd.c
 //	Flo's equivalent function for the standard and non-nd case is  dev_Qtm_pm_psi
 
 void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
@@ -1363,7 +1269,7 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   
   
   ////////////////////////////////////
-  //   MATCHING with  Qtm_ndpsi     //
+  //   MATCHING with  Qtm_pm_ndpsi  //
   ////////////////////////////////////
   //                                //
   // _strange = _up                 //
@@ -1654,7 +1560,7 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
 // MATRIX MULTIPLICATION //
 ///////////////////////////
 
-// the GPU implementation of  Qtm_ndpsi(...)  tm_operators_nd.c
+// the GPU implementation of  Qtm_pm_ndpsi(...)  tm_operators_nd.c
 //	Flo's equivalent function for the standard and non-nd case is  dev_Qtm_pm_psi
 
 void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
@@ -1682,7 +1588,7 @@ void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_
   
   
   ////////////////////////////////////
-  //   MATCHING with  Qtm_ndpsi     //
+  //   MATCHING with  Qtm_pm_ndpsi  //
   ////////////////////////////////////
   //                                //
   // _strange = _up                 //
@@ -2800,13 +2706,10 @@ int cg_eo_nd (dev_su3_2v * gf,
   // LOOP //
   //////////
   
-  
-  		// debug
-  		#ifndef MPI
-    		  printf("\nEntering inner loop.\n");
-    		#else
-    		  if (g_cart_id == 0) printf("\nEntering inner loop.\n");
-    		#endif
+               
+                #ifndef LOWOUTPUT
+    		if (g_proc_id == 0) printf("\nEntering inner loop.\n");
+	        #endif
   
   		// debug	// CUBLAS core function
 		#ifdef CUDA_DEBUG
@@ -2814,21 +2717,11 @@ int cg_eo_nd (dev_su3_2v * gf,
 		  CUBLAS_CORE_CHECK_NO_SUCCESS_MSG("CUBLAS error in cg_eo_nd(). Calculating initial residue failed.");
 		#endif
   
-  		// debug
-  		#ifndef MPI
-  		  printf("Initial inner residue: %.6e\n", r0r0);
-  		#else
-  		  if (g_cart_id == 0) printf("Initial inner residue: %.6e\n", r0r0);
-  		#endif
-  
-  
+  		if (g_proc_id == 0) printf("Initial inner residue: %.6e\n", r0r0);
   
   
   for (j = 0; j < max_iter; j++) {
-    
-    
-    #ifndef MATRIX_DEBUG
-    
+
       // A*d(k)
       #ifndef MPI
       		matrix_multiplication32(Ad_up, Ad_dn,										// normally:  matrix_multiplication32()
@@ -2861,39 +2754,7 @@ int cg_eo_nd (dev_su3_2v * gf,
   		  CUDA_CHECK("CUDA error in matrix_muliplication32(). Applying the matrix on GPU failed.", "The matrix was applied on GPU.");
   		  //CUDA_CHECK_NO_SUCCESS_MSG("CUDA error in matrix_muliplication32(). Applying the matrix on GPU failed.");
   		#endif
-    		
-    
-    #else
-    
-    		// debug	// apply the host matrix on trial
-    		
-    		// host/device interaction
-    		to_host(up_field[3], d_up, h2d_spin_up, dev_spinsize_int);
-    		to_host(dn_field[3], d_dn, h2d_spin_dn, dev_spinsize_int);
-    		
-    		// matrix multiplication
-    		#ifndef MPI
-    		  printf("This is Qtm_ndpsi(). ");
-    		#else
-    		  if (g_proc_id == 0) printf("This is Qtm_ndpsi(). ");
-    		#endif
-    		Qtm_ndpsi(up_field[4], dn_field[4],			// normally:  Qtm_ndpsi()
-    		             up_field[3], dn_field[3] );		// debugging: matrix_debug2(), Zwitter1(), Zwitter2(), Zwitter3()
-    															//       mpi: matrix_mpi_debug10()
-    		// host/device interaction
-    		to_device(Ad_up, up_field[4], h2d_spin_up, dev_spinsize_int);
-    		to_device(Ad_dn, dn_field[4], h2d_spin_dn, dev_spinsize_int);
-    		
-    		
-    				// debug	// CUDA
-  				#ifdef CUDA_DEBUG
-  			  	// CUDA_CHECK("CUDA error in cg_eo_nd(). Applying the matrix on CPU failed.", "The matrix was applied on CPU.");
-  			  	CUDA_CHECK_NO_SUCCESS_MSG("CUDA error in cg_eo_nd(). Applying the matrix on CPU failed.");
-  				#endif
-    
-    #endif	// MATRIX_DEBUG
-    
-    
+
     // alpha = r(k)*r(k) / d(k)*A*d(k)
     #ifndef MPI
       dAd_up = cublasSdot(N_floats_int, (float *) d_up, 1, (float *) Ad_up, 1);
@@ -2912,22 +2773,15 @@ int cg_eo_nd (dev_su3_2v * gf,
     
     alpha  = rr_old / dAd;	// rr_old is taken from the last iteration respectively
     
-
-    
-    
     // x(k+1) = x(k) + alpha*d(k)
     cublasSaxpy(N_floats_int, alpha, (float *) d_up, 1, (float *) x_up, 1);
     cublasSaxpy(N_floats_int, alpha, (float *) d_dn, 1, (float *) x_dn, 1);
-    
-
-    
     
     // r(k+1)
     if ( (j+1) % N_recalc_res != 0 ) {	// r(k+1) = r(k) - alpha*A*d(k)
       cublasSaxpy(N_floats_int, -1.0*alpha, (float *) Ad_up, 1, (float *) r_up, 1);
       cublasSaxpy(N_floats_int, -1.0*alpha, (float *) Ad_dn, 1, (float *) r_dn, 1);
     }
-    
     else {				// recalculate residue r(k+1) = b - A*x(k+1)
     					//	"feedback"
       		// debug
@@ -2939,9 +2793,7 @@ int cg_eo_nd (dev_su3_2v * gf,
       
       
       // A*x(k+1)
-      
-      #ifndef MATRIX_DEBUG
-      
+
       	#ifndef MPI
         	matrix_multiplication32(Ax_up, Ax_dn,
         	                         x_up,  x_dn,
@@ -2967,51 +2819,16 @@ int cg_eo_nd (dev_su3_2v * gf,
         	#endif
         #endif	// MPI
         
-      #else
-      
-      		// debug	// apply the host matrix on trial
-    		
-    		// host/device interaction
-    		to_host(up_field[3], x_up, h2d_spin_up, dev_spinsize_int);
-    		to_host(dn_field[3], x_dn, h2d_spin_dn, dev_spinsize_int);
-    		
-    		// matrix multiplication
-    		#ifndef MPI
-    		  printf("This is Qtm_ndpsi(). ");
-    		#else
-    		  if (g_proc_id == 0) printf("This is Qtm_ndpsi(). ");
-    		#endif
-    		Qtm_ndpsi(up_field[4], dn_field[4],			// normally:       Qtm_ndpsi()
-    		             up_field[3], dn_field[3] );		// debugging, mpi: matrix_mpi_debug10()
-    		
-    		// host/device interaction
-    		to_device(Ax_up, up_field[4], h2d_spin_up, dev_spinsize_int);
-    		to_device(Ax_dn, dn_field[4], h2d_spin_dn, dev_spinsize_int);
-    		
-    		
-    				// debug	// CUDA
-  				#ifdef CUDA_DEBUG
-  			  	// CUDA_CHECK("CUDA error in cg_eo_nd(). Applying the matrix on CPU failed.", "The matrix was applied on CPU.");
-  			  	CUDA_CHECK_NO_SUCCESS_MSG("CUDA error in cg_eo_nd(). Applying the matrix on CPU failed.");
-  				#endif
-      
-      #endif	// MATRIX_DEBUG
-      
-      
-      
-      
+
       // r(k+1) = b - A*x(k+1)
       cublasScopy(N_floats_int, (float *) Q_up, 1, (float *) r_up, 1);		// r_up = Q_up
       cublasScopy(N_floats_int, (float *) Q_dn, 1, (float *) r_dn, 1);		// r_dn = Q_dn
       cublasSaxpy(N_floats_int, -1.0, (float *) Ax_up, 1, (float *) r_up, 1);	// r_up = Q_up - Ax_up
       cublasSaxpy(N_floats_int, -1.0, (float *) Ax_dn, 1, (float *) r_dn, 1);	// r_dn = Q_dn - Ax_dn
     
-    
     } // recalculate residue
     
-    
-    
-    
+
     // r(k+1)*r(k+1)
     #ifndef MPI
       rr_up  = cublasSdot(N_floats_int, (float *) r_up, 1, (float *) r_up, 1);
@@ -3028,13 +2845,11 @@ int cg_eo_nd (dev_su3_2v * gf,
 		#endif
     
     
-    		// debug
-    		#ifndef MPI
-    		  printf("inner iteration j = %i: rr = %.6e\n", j, rr);
-    		#else
+               #ifndef LOWOUTPUT
     		  if (g_proc_id == 0) printf("inner iteration j = %i: rr = %.6e\n", j, rr);
-    		#endif
-    		
+	       #endif
+		 
+	
     		// debug	// is NaN ?
     		if isnan(rr) {
     		  printf("Error in cg_eo_nd(). Inner residue is NaN.\n");
@@ -3046,23 +2861,17 @@ int cg_eo_nd (dev_su3_2v * gf,
     if ( (check_abs)&&(rr <= eps_abs) || (check_rel)&&(rr <= eps_rel*r0r0) ) {
     
       #ifdef MPI
-        if (g_cart_id == 0) {
+        if (g_proc_id == 0) {
       #endif
       
-      		// debug
-      		printf("Finished inner loop because of reached precision.\n");
-      
       if ((check_rel)&&(rr <= eps_rel*r0r0)) {
-      		// debug
-      		printf("Reached relative inner solver precision of eps_rel = %.2e\n", eps_rel);
+      	printf("Reached relative inner solver precision of eps_rel = %.2e\n", eps_rel);
       }
       if ((check_abs)&&(rr <= eps_abs)) {
-      		// debug
-      		printf("Reached absolute inner solver precision of eps_abs = %.2e\n", eps_abs);
+      	printf("Reached absolute inner solver precision of eps_abs = %.2e\n", eps_abs);
       }
       
-      		//debug
-      		printf("Final inner residue: %.6e\n", rr);
+      printf("Final inner residue: %.6e\n", rr);
       
       #ifdef MPI
         }
@@ -3101,14 +2910,11 @@ int cg_eo_nd (dev_su3_2v * gf,
   }//LOOP
   
   
-  		// debug
-  		#ifndef MPI
-  		  printf("Finished inner loop beacuse of maximal number of inner iterations.\n");
-  		  printf("Final inner residue: %.6e\n", rr);
-  		#else
-  		  if (g_cart_id == 0) printf("Finished inner loop beacuse of maximal number of inner iterations.\n");
-  		  if (g_cart_id == 0) printf("Final inner residue: %.6e\n", rr);
-  		#endif
+  #ifndef LOWOUTPUT
+  if (g_proc_id == 0) printf("Finished inner loop because of maximal number of inner iterations.\n");
+  #endif
+  if (g_proc_id == 0) printf("Final inner residue: %.6e\n", rr);
+
 
 
       #ifdef RELATIVISTIC_BASIS 
@@ -3146,7 +2952,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   //	Q_up/dn  is not used later in the calling  invert_doublet_eo.c
   //		but will be used as feedback in r(k+1) = b - A*x(k+1)
   
-  
+  #ifndef LOWOUTPUT
   		// debug
   		#ifdef MPI
   		  if (g_proc_id == 0) {
@@ -3171,7 +2977,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   		#ifdef MPI
   		  }
   		#endif
-  
+  #endif
   
   
   
@@ -3239,38 +3045,17 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   init_solver_field(&up_field, VOLUMEPLUSRAND/2, nr_sf);
   init_solver_field(&dn_field, VOLUMEPLUSRAND/2, nr_sf);	 
 	 
-  // formal parameters
-  /*
-  size_t dev_spinsize_int   =  6*VOLUME/2*sizeof(dev_spinor);		// 24 floats per spinor per even lattice site
-  int N_sites_int           =    VOLUME/2;				// Carsten's functions get the number of lattice points as input
-  int N_floats_int          = 24*VOLUME/2;
-  #ifdef MPI
-    size_t dev_spinsize_ext =  6*(VOLUME+RAND)/2*sizeof(dev_spinor);
-    int N_sites_ext         =    (VOLUME+RAND)/2;
-    int N_floats_ext        = 24*(VOLUME+RAND)/2;
-  #endif
-  */
-  
+
   // algorithm control parameters
   bool rbAx = true;						// choose how to calculate r(k+1)
   bool initial_guess = false;					// choose if initial guess
   
-  
-  
-  
+
   //////////////////
   // INITIALIZING //
   //////////////////
   
-  
-  		//debug
-  		#ifndef MPI
-  		  printf("init_mixedsolve_eo_nd():\n");
-  		#else
-  		  if (g_cart_id == 0) printf("init_mixedsolve_eo_nd_mpi():\n");
-  		#endif
-  
-  
+
     init_mixedsolve_eo_nd(g_gauge_field);			// initializes and allocates all quantities for the mixed solver
   								// more precise:
   								//	puts the gauge field on device as "2 rows" or "8 floats" per SU(3)-matrix
@@ -3437,26 +3222,11 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   
   
   
-  
-  /*		// necessary ??
-  // cublasInit();
-  
-  		// debug	// CUBLAS helper function
-  		#ifdef CUDA_DEBUG
-  		  CUBLAS_HELPER_CHECK(cublasInit(), "CUBLAS error in cublasInit(). Couldn't initialize CUBLAS.", "CUBLAS initialized.");
-  		#else
-  		  cublasInit();
-  		#endif
-  */
-  
-
-  
   #ifdef OPERATOR_BENCHMARK
     benchmark_eo_nd(Q_up, Q_dn, OPERATOR_BENCHMARK);
   #endif
   
-  
-  
+
   
   /////////////////
   // ASSIGNMENTS //
@@ -3466,9 +3236,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   x_up = P_up;							// can use the output spinors also as auxiliary fields
   x_dn = P_dn;							//	can use as initial guess at the same time
   
-  
-  #ifndef CG_DEBUG
-  
+
     r_up  = up_field[0];			// use the pre-allocated memory on host memory
     r_dn  = dn_field[0];			// allocated by  init_chi_spinor_field.c  and  invert_doublet.c  !?
     d_up  = up_field[1];		// the fields  up_field/dn_field[{0 , 1, ... , 5}]  are used in  cg_her_nd()
@@ -3478,35 +3246,9 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     Ax_up = Ad_up;
     Ax_dn = Ad_dn;
     
-  		// debug
-  		#ifndef MPI
-  		  printf("Now using the fields up_field/dn_field[{0 , 1, 2}] in the mixedsolve_eo_nd().\n");
-  		#else
-  		  if (g_cart_id == 0) printf("Now using the fields up_field/dn_field[{0 , 1, 2}] in the mixedsolve_eo_nd().\n");
-  		#endif
-  
-  #else
-  
-  		r_up  = (spinor *) malloc(24*N_sites_int*sizeof(double));		// if using cg_her_nd() as the CG, we cannot use the g_chi_up/dn-fields at the same time
-  		r_dn  = (spinor *) malloc(24*N_sites_int*sizeof(double));
-  		d_up  = (spinor *) malloc(24*N_sites_int*sizeof(double));
-  		d_dn  = (spinor *) malloc(24*N_sites_int*sizeof(double));
-  		Ad_up = (spinor *) malloc(24*N_sites_int*sizeof(double));
-  		Ad_dn = (spinor *) malloc(24*N_sites_int*sizeof(double));
-  		Ax_up = Ad_up;
-  		Ax_dn = Ad_dn;
-  				// debug
-  				#ifndef MPI
-  				  printf("Now allocating new host space for the fields in mixedsolve_eo_nd().\n");
-  				#else
-  				  if (g_cart_id == 0) printf("Now allocating new host space for the fields in mixedsolve_eo_nd().\n");
-  				#endif
-  
-  #endif
-  
-  
-  
-  
+
+
+
   ///////////////
   // ALGORITHM //
   ///////////////
@@ -3527,37 +3269,17 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   if (!initial_guess) {		// r(0) = b = Q	// for x(0) = 0
     assign(r_up, Q_up, N_sites_int);
     assign(r_dn, Q_dn, N_sites_int);
-    #ifndef MPI
-      printf("x(0) = 0\n");
-    #else
-      if (g_cart_id == 0) printf("x(0) = 0\n");
-    #endif
   }
   else {			// r(0) = b - A*x(0) = Q - A*P
     bb = square_norm(P_up, N_sites_int, 1) + square_norm(P_dn, N_sites_int, 1);
-    #ifndef MPI
-      printf("bb = %.10e\n", bb);
-    #else
-      if (g_cart_id == 0) printf("bb = %.10e\n", bb);
-    #endif
     if (bb == 0) {
       assign(r_up, Q_up, N_sites_int);
       assign(r_dn, Q_dn, N_sites_int);
-      #ifndef MPI
-        printf("x(0) = 0\n");
-      #else
-        if (g_cart_id == 0) printf("x(0) = 0\n");
-      #endif
     }
     else {
-      Qtm_ndpsi(Ax_up, Ax_dn, P_up, P_dn);
+      Qtm_pm_ndpsi(Ax_up, Ax_dn, P_up, P_dn);
       diff(r_up, Q_up, Ax_up, N_sites_int);
       diff(r_dn, Q_dn, Ax_dn, N_sites_int);
-      #ifndef MPI
-        printf("x(0) != 0\n");
-      #else
-        if (g_cart_id == 0) printf("x(0) != 0\n");
-      #endif
     }
   }
   
@@ -3571,49 +3293,27 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   r0r0   = rr; // for relative precision
   rr_old = rr; // for the first iteration
   
-  		// debug
-  		#ifndef MPI
-  		  printf("Initial outer residue: %.10e\n", rr_old);
-  		#else
-  		  if (g_cart_id == 0) printf("Initial outer residue: %.10e\n", rr_old);
-  		#endif
-  
-  
+
+  if (g_proc_id == 0) printf("Initial outer residue: %.10e\n", rr_old);
+
   // set to zero	// x_up, x_dn  will be added up		// as  x_up/dn = P_up/dn  up to here  P_up/dn  was not changed
   zero_spinor_field(x_up, N_sites_int);
   zero_spinor_field(x_dn, N_sites_int);
   
-  
-  
-  
+
   ////////////////
   // OUTER LOOP //
   ////////////////
   
-  		// debug
-  		#ifndef MPI
-    		  printf("\nEntering outer loop.");
-    		#else
-    		  if (g_cart_id == 0) printf("\nEntering outer loop.");
-    		#endif
-  
-  
+
   do {		// for (i = 0; i < max_iter; i++) {
     
     i++;
   
-    		// debug
-    		#ifndef MPI
-    		  printf("\nouter iteration i = %i\n", i);
-    		#else
-    		  if (g_cart_id == 0) printf("\nouter iteration i = %i\n", i);
-    		#endif
-    
-    
-    
-    
-    #ifndef CG_DEBUG
-    
+    #ifndef LOWOUTPUT
+    if (g_proc_id == 0) printf("Outer iteration i = %i\n", i);
+    #endif
+
     // host/device interaction
     to_device(dev_spinin_up, r_up, h2d_spin_up, dev_spinsize_int);		// notice: for MPI communicateion the boundary exchange takes place when the hopping matrix is applied
     to_device(dev_spinin_dn, r_dn, h2d_spin_dn, dev_spinsize_int);
@@ -3624,9 +3324,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     		  CUDA_CHECK_NO_SUCCESS_MSG("CUDA error in mixedsolve_eo_nd(). Host to device interaction failed.");
     		#endif
     
-    
-    
-    
+ 
     ////////////////////////////////////
     // INNER LOOP, CONJUGATE GRADIENT //
     ////////////////////////////////////
@@ -3634,14 +3332,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     // timer
     startinner = clock();
     
-    		// debug
-    		#ifndef MPI
-    		  printf("cg_eo_nd():\n");
-    		#else
-    		  if (g_cart_id == 0) printf("cg_eo_nd():\n");
-    		#endif
-    
-    
+
     // solves A*p(k+1) = r(k)
     //        A*p(0)   = r(0) = b
     innercount = cg_eo_nd(dev_gf,
@@ -3658,14 +3349,9 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     innerclocks = stopinner-startinner;
     totalinnerclocks = totalinnerclocks + innerclocks;
     
-    		// debug
-    		#ifndef MPI
-    		  printf("Inner solver done in: %.4e sec\n", double(innerclocks) / double(CLOCKS_PER_SEC));
-    		#else
-    		  if (g_cart_id == 0) printf("Inner solver done in: %.4e sec\n", double(innerclocks) / double(CLOCKS_PER_SEC));
-    		#endif
-    
-    
+    #ifndef LOWOUTPUT
+    if (g_proc_id == 0) printf("Inner solver done in: %.4e sec\n", double(innerclocks) / double(CLOCKS_PER_SEC));
+    #endif
     // host/device interaction
     to_host(d_up, dev_spinout_up, h2d_spin_up, dev_spinsize_int);
     to_host(d_dn, dev_spinout_dn, h2d_spin_dn, dev_spinsize_int);
@@ -3676,100 +3362,55 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     		  CUDA_CHECK_NO_SUCCESS_MSG("CUDA error in mixedsolve_eo_nd(). Device to host interaction failed.");
     		#endif
     
-    
-    #else
-    
-    
-    				// debug
-    				#ifndef MPI
-    				  printf("cg_her_nd():\n");
-    				#else
-    				  if (g_cart_id == 0) printf("cg_her_nd():\n");
-    				#endif
-    		
-    		innercount = cg_her_nd(d_up, d_dn, r_up, r_dn,		// MISTAKE, was: r_up, r_dn, d_up, d_dn,
-				       1000, eps_sq/2, 0,
-				       VOLUME/2, &Qtm_ndpsi, 0, 1000);
-    		
-    		outercount = outercount + innercount;
-    		
-    				// debug
-    				#ifndef MPI
-    				  printf("cg_her_nd() on host was used for debugging purposes.\n");
-    				#else
-    				  if (g_cart_id == 0) printf("cg_her_nd() on host was used for debugging purposes.\n");
-    				#endif
-    
-    
-    #endif
-    
-    
-    		// debug
-    		#ifndef MPI
-    		  printf("mixedsolve_eo_nd():\n");
-    		#else
-    		  if (g_cart_id == 0) printf("mixedsolve_eo_nd():\n");
-    		#endif
-    
+   
     
     // x(k+1) = x(k) + d(k+1)
     add(x_up, x_up, d_up, N_sites_int);
     add(x_dn, x_dn, d_dn, N_sites_int);
     
-
-    
-    
+ 
     // r(k+1)
     if (rbAx) {				// r(k+1) = b - A*x(k+1)
       // A*x(k+1)
-      Qtm_ndpsi(Ax_up, Ax_dn, x_up, x_dn);
-      		// debug
-      		#ifndef MPI
-      		  printf("The matrix was applied on CPU in double precision. r = b - Ax\n");
-      		#else
-      		  if (g_cart_id == 0) printf("The matrix was applied on CPU in double precision. r = b - Ax\n");
-      		#endif
+      Qtm_pm_ndpsi(Ax_up, Ax_dn, x_up, x_dn);
+      #ifndef LOWOUTPUT
+      if (g_proc_id == 0) printf("The matrix was applied on CPU in double precision. r = b - Ax\n");
+      #endif
       diff(r_up, Q_up, Ax_up, N_sites_int);
       diff(r_dn, Q_dn, Ax_dn, N_sites_int);
     }
     else {				// r(k+1) = r(k) - A*d(k+1)	// makes actually no sense ;)
       // A*d(k+1)
-      Qtm_ndpsi(Ad_up, Ad_dn, d_up, d_dn);
+      Qtm_pm_ndpsi(Ad_up, Ad_dn, d_up, d_dn);
     		// debug
-    		#ifndef MPI
-    		  printf("The matrix was applied on CPU in double precision. r = r - Ad\n");
-    		#else
-    		  if (g_cart_id == 0) printf("The matrix was applied on CPU in double precision. r = r - Ad\n");
-    		#endif
+      #ifndef LOWOUTPUT
+      if (g_cart_id == 0) printf("The matrix was applied on CPU in double precision. r = r - Ad\n");
+      #endif
       // r(k+1) = r(k) - A*d(k+1)
       diff(r_up, r_up, Ad_up, N_sites_int);
       diff(r_dn, r_dn, Ad_dn, N_sites_int);
     }
     
-    
-    
-    
+
     // rr = (rr_up)^2 + (r_dn)^2
     rr_up = square_norm(r_up, N_sites_int, 1);
     rr_dn = square_norm(r_dn, N_sites_int, 1);
     rr    = rr_up + rr_dn;
     
-    		// debug
-    		#ifndef MPI
-    		  printf("Outer residue in the outer iteration i = %i after %i total inner iterations : %.10e\n", i, outercount, rr);
-    		#else
-    		  if (g_cart_id == 0) printf("Outer residue in the outer iteration i = %i after %i total inner iterations : %.10e\n", i, outercount, rr);
-    		#endif
-    		
-    		// debug	// is NaN ?
-    		if isnan(rr) {
-    		  printf("Error in mixedsolve_eo_nd(). Outer residue is NaN.\n");
-    		  exit(-1);
-    		}
+
+    if (g_proc_id == 0){ 
+      printf("Outer residue at iteration i = %i : %.10e\n", i, rr);
+      #ifndef LOWOUTPUT
+       printf("No inner solver iterations: %i\n", outercount);
+      #endif
+    }		
+    // debug	// is NaN ?
+    if isnan(rr) {
+    	printf("Error in mixedsolve_eo_nd(). Outer residue is NaN.\n");
+    	exit(-1);
+    }
     		
 
-    
-    
     // aborting ?? // check wether precision is reached ...
     if ( ((rr <= eps_sq) && (rel_prec == 0))  ||  ((rr <= eps_sq*r0r0) && (rel_prec == 1)) ) {
       
@@ -3788,7 +3429,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       
       		// debug
       		#ifdef MPI
-      		  if (g_cart_id == 0) {
+      		  if (g_proc_id == 0) {
       		#endif
       		printf("\nEO inversion done in mixed precision.\n");
       		if (rel_prec == 0) printf("Finished outer loop because of reached absolute outer solver precision.\n");
@@ -3840,42 +3481,16 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   		#ifdef CUDA_DEBUG
   		  CUDA_CHECK("CUDA error in unbind_texture(). Unbindung the GF texture failed.", "GF texture unbound.");
   		#endif
-      
-      /*
-      // cublasShutdown();
-      
-      		// debug	// CUBLAS helper function
-  		#ifdef CUDA_DEBUG
-  		  CUBLAS_HELPER_CHECK(cublasShutdown(), "CUBLAS error in cublasShutdown(). Couldn't shut down CUBLAS.", "CUBLAS is shutted down.");
-  		#else
-  		  cublasShutdown();
-  		#endif
-      */
-      
-      		// debug
-      		#ifndef MPI
-      		  printf("finalize_mixedsolve_eo_nd():\n");
-      		#else
-      		  if (g_cart_id == 0) printf("finalize_mixedsolve_eo_nd():\n");
-      		#endif
-      
+ 
       finalize_mixedsolve_eo_nd();
-      
-      		// debug
-      		#ifndef MPI
-      		  printf("\n");
-      		#else
-      		  if (g_cart_id == 0) printf("\n");
-      		#endif
       finalize_solver(up_field, nr_sf);
-      finalize_solver(dn_field, nr_sf);      
+      finalize_solver(dn_field, nr_sf);  
+      
       return(outercount);
       
     }
     
-    
-    
-    
+  
   }//OUTER LOOP
   while (outercount <= max_iter);
   
@@ -3950,23 +3565,6 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   		  CUDA_CHECK("CUDA error in unbind_texture(). Unbindung the GF texture failed.", "GF texture unbound.");
   		#endif
       
-      /*
-      // cublasShutdown();
-      
-      		// debug	// CUBLAS helper function
-  		#ifdef CUDA_DEBUG
-  		  CUBLAS_HELPER_CHECK(cublasShutdown(), "CUBLAS error in cublasShutdown(). Couldn't shut down CUBLAS.", "CUBLAS is shutted down.");
-  		#else
-  		  cublasShutdown();
-  		#endif
-      */
-  
-  		// debug
-  		#ifndef MPI
-  		  printf("finalize_mixedsolve_eo_nd():\n");  
-  		#else
-  		  if (g_cart_id == 0) printf("finalize_mixedsolve_eo_nd():\n");
-  		#endif
   
   finalize_mixedsolve_eo_nd();
   

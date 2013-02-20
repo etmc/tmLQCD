@@ -7,12 +7,12 @@
 
 #define GF_8
 //#define TEMPORALGAUGE
-//#define USETEXTURE
+#define USETEXTURE
 //#define HALF
-//#define GPU_DOUBLE
+#define GPU_DOUBLE
 //#define RELATIVISTIC_BASIS 
 //#define GPU_3DBLOCK
-//#define LOWOUTPUT
+#define LOWOUTPUT
 
 
 

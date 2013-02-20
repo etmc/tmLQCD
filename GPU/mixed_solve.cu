@@ -63,7 +63,6 @@ extern "C" {
 #include "../operator/tm_operators.h"
 #include "../linalg_eo.h"
 #include "../start.h"
-#include "../complex.h"
 #include "../read_input.h"
 #include "../geometry_eo.h"
 #include "../boundary.h"
@@ -841,7 +840,7 @@ void update_constants(int *grid){
   else{
     sign=1.0;
   }
-    
+ 
   h0.re = (float)creal(ka0);    h0.im = sign*(float)cimag(ka0);
   h1.re = (float)creal(ka1);    h1.im = sign*(float)cimag(ka1);
   h2.re = (float)creal(ka2);    h2.im = sign*(float)cimag(ka2);
@@ -851,6 +850,11 @@ void update_constants(int *grid){
   mh1.re = -(float)creal(ka1);    mh1.im = (float)cimag(ka1);
   mh2.re = -(float)creal(ka2);    mh2.im = (float)cimag(ka2);
   mh3.re = -(float)creal(ka3);    mh3.im = (float)cimag(ka3);
+
+  printf("ka0.re = %f\n",  h0.re);
+  printf("ka0.im = %f\n",  h0.im);   
+  printf("mu = %f\n", g_mu/(2.0*g_kappa));
+  printf("2kappamu = %f\n", g_mu);
   
   // try using constant mem for kappas
   cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex)) ; 
@@ -2004,18 +2008,18 @@ void update_gpu_gf(su3** gf){
   #ifndef MPI
         #ifdef GF_8
           /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
-          size_t dev_gfsize = 2*4*VOLUME * sizeof(dev_su3_8);
+          size_t dev_gsize = 2*4*VOLUME * sizeof(dev_su3_8);
         #else
           /* allocate 2 rows of gf = 3*4*VOLUME float4's*/
-          size_t dev_gfsize = 3*4*VOLUME * sizeof(dev_su3_2v);
+          size_t dev_gsize = 3*4*VOLUME * sizeof(dev_su3_2v);
         #endif
   #else
         #ifdef GF_8
           /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
-          size_t dev_gfsize = 2*4*(VOLUME+RAND) * sizeof(dev_su3_8);
+          size_t dev_gsize = 2*4*(VOLUME+RAND) * sizeof(dev_su3_8);
         #else
           /* allocate 2 rows of gf = 3*4*VOLUME float4's*/
-          size_t dev_gfsize = 3*4*(VOLUME+RAND) * sizeof(dev_su3_2v);
+          size_t dev_gsize = 3*4*(VOLUME+RAND) * sizeof(dev_su3_2v);
         #endif
   
   #endif  
@@ -2026,9 +2030,10 @@ void update_gpu_gf(su3** gf){
   #endif
   //bring to device
   
-  if((cudaerr=cudaMemcpy(dev_gf, h2d_gf, dev_gfsize, cudaMemcpyHostToDevice))!=cudaSuccess){
+  if((cudaerr=cudaMemcpy(dev_gf, h2d_gf, dev_gsize, cudaMemcpyHostToDevice))!=cudaSuccess){
           printf("Error in update_gpu_gf(): Could not transfer gf to device. Aborting...\n");
-          printf("Error code is: %f\n",cudaerr);
+          printf("%s\n", cudaGetErrorString(cudaerr));
+	  printf("Error code is: %d\n",cudaerr);
 	  exit(200);
    }
 }
@@ -3168,7 +3173,7 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
   //initialize solver fields 
   spinor ** solver_field = NULL;
   const int nr_sf = 4;
-  init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);  
+  init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);  
 
   
   #ifdef OPERATOR_BENCHMARK
@@ -3419,7 +3424,7 @@ extern "C" int mixed_solve_eo_reliable (spinor * const P, spinor * const Q, cons
   //initialize solver fields
   spinor ** solver_field = NULL;
   const int nr_sf = 4;
-  init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);  
+  init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);  
   
   // Start timer
   assert((start = clock())!=-1);
@@ -3664,7 +3669,7 @@ extern "C" int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int ma
 
   spinor ** solver_field = NULL;
   const int nr_sf = 4;
-  init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);  
+  init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);  
 
   #ifdef GPU_DOUBLE
     double testnorm;
