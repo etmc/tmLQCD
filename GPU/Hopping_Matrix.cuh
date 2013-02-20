@@ -772,9 +772,9 @@ __global__ void dev_Hopping_Matrix(const dev_su3_2v * gf, const dev_spinor * sin
               //-kappa(r - gamma_mu), no spin projection optimization yet  
               //dev_kappaP3_plus(&(ssum[0]), &(shelp1[0]), dev_k3.re);
 	      
-              dev_su3MtV_kappaP3_plus_spintex(gfsmem.m,hoppos, &(ssum[0]), dev_k3.re);	      
+              dev_su3MtV_kappaP3_plus_spintex(gfsmem.m,hoppos, &(ssum[0]), dev_k3);	      
 	    #else
-              dev_su3MtV_kappaP3_plus(gfsmem.m,&(sin[hoppos]), &(ssum[0]), dev_k3.re);
+              dev_su3MtV_kappaP3_plus(gfsmem.m,&(sin[hoppos]), &(ssum[0]), dev_k3);
             #endif
             
 
@@ -794,9 +794,9 @@ __global__ void dev_Hopping_Matrix(const dev_su3_2v * gf, const dev_spinor * sin
               //-kappa(r + gamma_mu), no spin projection optimization yet 
               //dev_kappaP3_minus(&(ssum[0]), &(shelp1[0]), dev_k3.re);
 	      
-	      dev_su3MtV_kappaP3_minus_spintex(gfsmem.m,hoppos, &(ssum[0]), dev_k3.re);	      
+	      dev_su3MtV_kappaP3_minus_spintex(gfsmem.m,hoppos, &(ssum[0]), dev_k3);	      
 	    #else
-	      dev_su3MtV_kappaP3_minus(gfsmem.m,&(sin[hoppos]), &(ssum[0]), dev_k3.re);
+	      dev_su3MtV_kappaP3_minus(gfsmem.m,&(sin[hoppos]), &(ssum[0]), dev_k3);
             #endif
             
 
@@ -819,9 +819,9 @@ __global__ void dev_Hopping_Matrix(const dev_su3_2v * gf, const dev_spinor * sin
               //-kappa(r - gamma_mu), no spin projection optimization yet
               //dev_kappaP2_plus(&(ssum[0]), &(shelp1[0]), dev_k2.re);
 	      
-	      dev_su3MtV_kappaP2_plus_spintex(gfsmem.m,hoppos, &(ssum[0]), dev_k2.re);	      
+	      dev_su3MtV_kappaP2_plus_spintex(gfsmem.m,hoppos, &(ssum[0]), dev_k2);	      
 	    #else
-	      dev_su3MtV_kappaP2_plus(gfsmem.m,&(sin[hoppos]), &(ssum[0]), dev_k2.re);
+	      dev_su3MtV_kappaP2_plus(gfsmem.m,&(sin[hoppos]), &(ssum[0]), dev_k2);
             #endif
             
 
@@ -843,9 +843,9 @@ __global__ void dev_Hopping_Matrix(const dev_su3_2v * gf, const dev_spinor * sin
               //-kappa(r + gamma_mu), no spin projection optimization yet
               //dev_kappaP2_minus(&(ssum[0]), &(shelp1[0]), dev_k2.re);
 	      
-	      dev_su3MtV_kappaP2_minus_spintex(gfsmem.m,hoppos, &(ssum[0]), dev_k2.re);	      
+	      dev_su3MtV_kappaP2_minus_spintex(gfsmem.m,hoppos, &(ssum[0]), dev_k2);	      
 	    #else
-	      dev_su3MtV_kappaP2_minus(gfsmem.m,&(sin[hoppos]), &(ssum[0]), dev_k2.re);
+	      dev_su3MtV_kappaP2_minus(gfsmem.m,&(sin[hoppos]), &(ssum[0]), dev_k2);
             #endif
             
             
@@ -867,9 +867,9 @@ __global__ void dev_Hopping_Matrix(const dev_su3_2v * gf, const dev_spinor * sin
               //-kappa(r - gamma_mu), no spin projection optimization yet
               //dev_kappaP1_plus(&(ssum[0]), &(shelp1[0]), dev_k1.re);
 	      
-	      dev_su3MtV_kappaP1_plus_spintex(gfsmem.m,hoppos, &(ssum[0]), dev_k1.re);	      
+	      dev_su3MtV_kappaP1_plus_spintex(gfsmem.m,hoppos, &(ssum[0]), dev_k1);	      
 	    #else
-	      dev_su3MtV_kappaP1_plus(gfsmem.m,&(sin[hoppos]), &(ssum[0]), dev_k1.re);
+	      dev_su3MtV_kappaP1_plus(gfsmem.m,&(sin[hoppos]), &(ssum[0]), dev_k1);
             #endif
             
             
@@ -891,9 +891,9 @@ __global__ void dev_Hopping_Matrix(const dev_su3_2v * gf, const dev_spinor * sin
               //-kappa(r + gamma_mu), no spin projection optimization yet
               //dev_kappaP1_minus(&(ssum[0]), &(shelp1[0]), dev_k1.re);
 	      
-	      dev_su3MtV_kappaP1_minus_spintex(gfsmem.m,hoppos, &(ssum[0]), dev_k1.re);	      
+	      dev_su3MtV_kappaP1_minus_spintex(gfsmem.m,hoppos, &(ssum[0]), dev_k1);	      
 	    #else
-	      dev_su3MtV_kappaP1_minus(gfsmem.m,&(sin[hoppos]), &(ssum[0]), dev_k1.re);
+	      dev_su3MtV_kappaP1_minus(gfsmem.m,&(sin[hoppos]), &(ssum[0]), dev_k1);
             #endif
             
             

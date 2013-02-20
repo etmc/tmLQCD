@@ -842,19 +842,30 @@ void update_constants(int *grid){
   }
  
   h0.re = (float)creal(ka0);    h0.im = sign*(float)cimag(ka0);
-  h1.re = (float)creal(ka1);    h1.im = sign*(float)cimag(ka1);
-  h2.re = (float)creal(ka2);    h2.im = sign*(float)cimag(ka2);
-  h3.re = (float)creal(ka3);    h3.im = sign*(float)cimag(ka3);
+  h1.re = (float)creal(ka1);    h1.im = (float)cimag(ka1);
+  h2.re = (float)creal(ka2);    h2.im = (float)cimag(ka2);
+  h3.re = (float)creal(ka3);    h3.im = (float)cimag(ka3);
   
   mh0.re = -(float)creal(ka0);    mh0.im = (float)cimag(ka0);
   mh1.re = -(float)creal(ka1);    mh1.im = (float)cimag(ka1);
   mh2.re = -(float)creal(ka2);    mh2.im = (float)cimag(ka2);
   mh3.re = -(float)creal(ka3);    mh3.im = (float)cimag(ka3);
 
-  printf("ka0.re = %f\n",  h0.re);
-  printf("ka0.im = %f\n",  h0.im);   
-  printf("mu = %f\n", g_mu/(2.0*g_kappa));
-  printf("2kappamu = %f\n", g_mu);
+  #ifndef LOWOUTPUT
+  if(g_proc_id==0){
+    printf("ka0.re = %f\n",  h0.re);
+    printf("ka0.im = %f\n",  h0.im); 
+    printf("ka1.re = %f\n",  h1.re);
+    printf("ka1.im = %f\n",  h1.im); 
+    printf("ka2.re = %f\n",  h2.re);
+    printf("ka2.im = %f\n",  h2.im);    
+    printf("ka3.re = %f\n",  h3.re);
+    printf("ka3.im = %f\n",  h3.im);      
+    
+    printf("mu = %f\n", g_mu/(2.0*g_kappa));
+    printf("2kappamu = %f\n", g_mu);
+  }
+  #endif
   
   // try using constant mem for kappas
   cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex)) ; 
@@ -2923,14 +2934,14 @@ void benchmark(spinor * const Q){
     assert((stop = clock())!=-1);
     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
     // x2 because 2x Hopping per iteration
-    double benchres = 1320.0*2*(VOLUME/2)* ibench / timeelapsed / 1.0e9;
+    double benchres = 1608.0*2*(VOLUME/2)* ibench / timeelapsed / 1.0e9;
     printf("Elapsed time was: %f sec\n", timeelapsed); 
     printf("Benchmark: %f Gflops\n", benchres); 
   #else
     stop = MPI_Wtime();
     timeelapsed = (double) (stop-start);
     // x2 because 2x Hopping per iteration
-    double benchres = 1320.0*2*(g_nproc*VOLUME/2)* ibench / timeelapsed / 1.0e9;
+    double benchres = 1608.0*2*(g_nproc*VOLUME/2)* ibench / timeelapsed / 1.0e9;
     if (g_proc_id == 0) {
       printf("Benchmark: %f Gflops\n", benchres); 
     }
@@ -3048,13 +3059,13 @@ void benchmark2(spinor * const Q){
     assert((stop = clock())!=-1);
     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
     // x8 because 8x Hopping per iteration
-    double benchres = 1320.0*8*(VOLUME/2)* ibench / timeelapsed / 1.0e9;
+    double benchres = 1608.0*8*(VOLUME/2)* ibench / timeelapsed / 1.0e9;
     printf("Benchmark: %f Gflops\n", benchres); 
   #else
     stop = MPI_Wtime();
     timeelapsed = (double) (stop-start);
     // 8 because 8x Hopping per iteration
-    double benchres = 1320.0*8*(g_nproc*VOLUME/2)* ibench / timeelapsed / 1.0e9;
+    double benchres = 1608.0*8*(g_nproc*VOLUME/2)* ibench / timeelapsed / 1.0e9;
     if (g_proc_id == 0) {
       printf("Benchmark: %f Gflops\n", benchres); 
     }
@@ -3165,7 +3176,7 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
        gridsize = (int) VOLUME/2/blockdim4 + 1;
      }
      int griddim4 = gridsize;  
-     printf("gd3: %d\t bd3: %d\t gd4: %d\t bd4: %d\n", griddim3, blockdim3, griddim4, blockdim4);
+     //printf("gd3: %d\t bd3: %d\t gd4: %d\t bd4: %d\n", griddim3, blockdim3, griddim4, blockdim4);
     update_constants_d(dev_grid);
     update_gpu_gf_d(g_gauge_field);
   #endif 

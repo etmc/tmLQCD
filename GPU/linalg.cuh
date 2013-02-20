@@ -1755,22 +1755,27 @@ __device__ void dev_su3MtV(dev_su3 M, const dev_spinor * s, dev_spinor * out){
 // second half spinor is proportional to first one!!!
 //
 //-kappa(r - gamma_mu) kappa reell !!!!
-__device__ void dev_su3MtV_kappaP3_plus(dev_su3 M, const dev_spinor * s, dev_spinor * out, REAL kappa){
+__device__ void dev_su3MtV_kappaP3_plus(dev_su3 M, const dev_spinor * s, dev_spinor * out, dev_complex kappa){
 
   
   dev_spinor sh0,sh1,sh2,zh0,zh1,zh2;
   
   
   //first apply Projector on upper halfspinor 
-     sh0.x = kappa*( (*(s+0*DEVOFF)).x - (*(s+3*DEVOFF)).y);
-     sh0.y = kappa*( (*(s+0*DEVOFF)).y + (*(s+3*DEVOFF)).x);
+     sh0.x = kappa.re*( (*(s+0*DEVOFF)).x - (*(s+3*DEVOFF)).y);
+     sh0.x -= kappa.im*( (*(s+0*DEVOFF)).y + (*(s+3*DEVOFF)).x);
+     sh0.y = kappa.re*( (*(s+0*DEVOFF)).y + (*(s+3*DEVOFF)).x);
+     sh0.y += kappa.im*( (*(s+0*DEVOFF)).x - (*(s+3*DEVOFF)).y);
    
-     sh0.z = kappa*( (*(s+0*DEVOFF)).z - (*(s+3*DEVOFF)).w);
-     sh0.w = kappa*( (*(s+0*DEVOFF)).w + (*(s+3*DEVOFF)).z);
-   
-     sh1.x = kappa*( (*(s+1*DEVOFF)).x - (*(s+4*DEVOFF)).y);
-     sh1.y = kappa*( (*(s+1*DEVOFF)).y + (*(s+4*DEVOFF)).x);
-        
+     sh0.z = kappa.re*( (*(s+0*DEVOFF)).z - (*(s+3*DEVOFF)).w);
+     sh0.z -= kappa.im*( (*(s+0*DEVOFF)).w + (*(s+3*DEVOFF)).z);
+     sh0.w = kappa.re*( (*(s+0*DEVOFF)).w + (*(s+3*DEVOFF)).z);
+     sh0.w += kappa.im*( (*(s+0*DEVOFF)).z - (*(s+3*DEVOFF)).w);
+     
+     sh1.x = kappa.re*( (*(s+1*DEVOFF)).x - (*(s+4*DEVOFF)).y);
+     sh1.x -= kappa.im*( (*(s+1*DEVOFF)).y + (*(s+4*DEVOFF)).x);
+     sh1.y = kappa.re*( (*(s+1*DEVOFF)).y + (*(s+4*DEVOFF)).x);
+     sh1.y += kappa.im*( (*(s+1*DEVOFF)).x - (*(s+4*DEVOFF)).y);  
 
 
   
@@ -1792,15 +1797,20 @@ zh1.y =  ( M[2][0].re*sh0.y + M[2][0].im*sh0.x ) + ( M[2][1].re*sh0.w + M[2][1].
 (*(out+1)).y -= zh1.y;
 
 
-     sh1.z = kappa*( (*(s+1*DEVOFF)).z + (*(s+4*DEVOFF)).w);
-     sh1.w = kappa*( (*(s+1*DEVOFF)).w - (*(s+4*DEVOFF)).z);
+     sh1.z = kappa.re*( (*(s+1*DEVOFF)).z + (*(s+4*DEVOFF)).w);
+     sh1.z -= kappa.im*( (*(s+1*DEVOFF)).w - (*(s+4*DEVOFF)).z);
+     sh1.w = kappa.re*( (*(s+1*DEVOFF)).w - (*(s+4*DEVOFF)).z);
+     sh1.w += kappa.im*( (*(s+1*DEVOFF)).z + (*(s+4*DEVOFF)).w);
          
-     sh2.x = kappa*( (*(s+2*DEVOFF)).x + (*(s+5*DEVOFF)).y);
-     sh2.y = kappa*( (*(s+2*DEVOFF)).y - (*(s+5*DEVOFF)).x);
+     sh2.x = kappa.re*( (*(s+2*DEVOFF)).x + (*(s+5*DEVOFF)).y);
+     sh2.x -= kappa.im*( (*(s+2*DEVOFF)).y - (*(s+5*DEVOFF)).x);
+     sh2.y = kappa.re*( (*(s+2*DEVOFF)).y - (*(s+5*DEVOFF)).x);
+     sh2.y += kappa.im*( (*(s+2*DEVOFF)).x + (*(s+5*DEVOFF)).y);
        
-     sh2.z = kappa*( (*(s+2*DEVOFF)).z + (*(s+5*DEVOFF)).w);
-     sh2.w = kappa*( (*(s+2*DEVOFF)).w - (*(s+5*DEVOFF)).z);
-
+     sh2.z = kappa.re*( (*(s+2*DEVOFF)).z + (*(s+5*DEVOFF)).w);
+     sh2.z -= kappa.im*( (*(s+2*DEVOFF)).w - (*(s+5*DEVOFF)).z);
+     sh2.w = kappa.re*( (*(s+2*DEVOFF)).w - (*(s+5*DEVOFF)).z);
+     sh2.w += kappa.im*( (*(s+2*DEVOFF)).z + (*(s+5*DEVOFF)).w);
 
 zh1.z =  ( M[0][0].re*sh1.z - M[0][0].im*sh1.w ) + ( M[0][1].re*sh2.x - M[0][1].im*sh2.y ) + ( M[0][2].re*sh2.z - M[0][2].im*sh2.w );
 zh1.w =  ( M[0][0].re*sh1.w + M[0][0].im*sh1.z ) + ( M[0][1].re*sh2.y + M[0][1].im*sh2.x ) + ( M[0][2].re*sh2.w + M[0][2].im*sh2.z );
@@ -1842,7 +1852,7 @@ zh2.w =  ( M[2][0].re*sh1.w + M[2][0].im*sh1.z ) + ( M[2][1].re*sh2.y + M[2][1].
      
 }
 
-__device__ void dev_su3MtV_kappaP3_plus_spintex(dev_su3 M, int pos, dev_spinor * out, REAL kappa){
+__device__ void dev_su3MtV_kappaP3_plus_spintex(dev_su3 M, int pos, dev_spinor * out, dev_complex kappa){
 
   
   dev_spinor sh0,sh1,sh2,zh0,zh1,zh2;
@@ -1855,15 +1865,20 @@ __device__ void dev_su3MtV_kappaP3_plus_spintex(dev_su3 M, int pos, dev_spinor *
   s4 = tex1Dfetch(spin_tex4,pos); 
   s5 = tex1Dfetch(spin_tex5,pos);  
   //first apply Projector on upper halfspinor 
-     sh0.x = kappa*(s0.x - s3.y);
-     sh0.y = kappa*(s0.y + s3.x);
+     sh0.x = kappa.re*(s0.x - s3.y);
+     sh0.x -= kappa.im*(s0.y + s3.x);
+     sh0.y = kappa.re*(s0.y + s3.x);
+     sh0.y += kappa.im*(s0.x - s3.y);
+     
+     sh0.z = kappa.re*(s0.z - s3.w);
+     sh0.z -= kappa.im*(s0.w + s3.z);
+     sh0.w = kappa.re*(s0.w + s3.z);
+     sh0.w += kappa.im*(s0.z - s3.w);
    
-     sh0.z = kappa*(s0.z - s3.w);
-     sh0.w = kappa*(s0.w + s3.z);
-   
-     sh1.x = kappa*(s1.x - s4.y);
-     sh1.y = kappa*(s1.y + s4.x);
-        
+     sh1.x = kappa.re*(s1.x - s4.y);
+     sh1.x -= kappa.im*(s1.y + s4.x);
+     sh1.y = kappa.re*(s1.y + s4.x);
+     sh1.y += kappa.im*(s1.x - s4.y);   
 
 
   
@@ -1921,15 +1936,20 @@ zh1.y += M[2][2].im*sh1.x;
 (*(out+1)).y -= zh1.y;
 
 
-     sh1.z = kappa*(s1.z + s4.w);
-     sh1.w = kappa*(s1.w - s4.z);
+     sh1.z = kappa.re*(s1.z + s4.w);
+     sh1.z -= kappa.im*(s1.w - s4.z);
+     sh1.w = kappa.re*(s1.w - s4.z);
+     sh1.w += kappa.im*(s1.z + s4.w);
          
-     sh2.x = kappa*(s2.x + s5.y);
-     sh2.y = kappa*(s2.y - s5.x);
+     sh2.x = kappa.re*(s2.x + s5.y);
+     sh2.x -= kappa.im*(s2.y - s5.x);
+     sh2.y = kappa.re*(s2.y - s5.x);
+     sh2.y += kappa.im*(s2.x + s5.y);
        
-     sh2.z = kappa*(s2.z + s5.w);
-     sh2.w = kappa*(s2.w - s5.z);
-
+     sh2.z = kappa.re*(s2.z + s5.w);
+     sh2.z -= kappa.im*(s2.w - s5.z);
+     sh2.w = kappa.re*(s2.w - s5.z);
+     sh2.w += kappa.im*(s2.z + s5.w);
 
 zh1.z  = M[0][0].re*sh1.z;
 zh1.z -= M[0][0].im*sh1.w;
@@ -2022,22 +2042,27 @@ zh2.w += M[2][2].im*sh2.z;
 //
 // second half spinor is proportional to first one!!!
 //
-//-kappa(r + gamma_mu) kappa reell !!!
-__device__ void dev_su3MtV_kappaP3_minus(dev_su3 M, const dev_spinor * s, dev_spinor * out, REAL kappa){
+//-conj(kappa)(r + gamma_mu) kappa reell !!!
+__device__ void dev_su3MtV_kappaP3_minus(dev_su3 M, const dev_spinor * s, dev_spinor * out, dev_complex kappa){
 
   dev_spinor sh0,sh1,sh2,zh0,zh1,zh2;
   
   
   //first apply Projector on upper halfspinor 
-     sh0.x = kappa*( (*(s+0*DEVOFF)).x + (*(s+3*DEVOFF)).y);
-     sh0.y = kappa*( (*(s+0*DEVOFF)).y - (*(s+3*DEVOFF)).x);
+     sh0.x = kappa.re*( (*(s+0*DEVOFF)).x + (*(s+3*DEVOFF)).y);
+     sh0.x += kappa.im*( (*(s+0*DEVOFF)).y - (*(s+3*DEVOFF)).x);
+     sh0.y = kappa.re*( (*(s+0*DEVOFF)).y - (*(s+3*DEVOFF)).x);
+     sh0.y -= kappa.im*( (*(s+0*DEVOFF)).x + (*(s+3*DEVOFF)).y);
    
-     sh0.z = kappa*( (*(s+0*DEVOFF)).z + (*(s+3*DEVOFF)).w);
-     sh0.w = kappa*( (*(s+0*DEVOFF)).w - (*(s+3*DEVOFF)).z);
+     sh0.z = kappa.re*( (*(s+0*DEVOFF)).z + (*(s+3*DEVOFF)).w);
+     sh0.z += kappa.im*( (*(s+0*DEVOFF)).w - (*(s+3*DEVOFF)).z);
+     sh0.w = kappa.re*( (*(s+0*DEVOFF)).w - (*(s+3*DEVOFF)).z);
+     sh0.w -= kappa.im*( (*(s+0*DEVOFF)).z + (*(s+3*DEVOFF)).w);
    
-     sh1.x = kappa*( (*(s+1*DEVOFF)).x + (*(s+4*DEVOFF)).y);
-     sh1.y = kappa*( (*(s+1*DEVOFF)).y - (*(s+4*DEVOFF)).x);
-        
+     sh1.x = kappa.re*( (*(s+1*DEVOFF)).x + (*(s+4*DEVOFF)).y);
+     sh1.x += kappa.im*( (*(s+1*DEVOFF)).y - (*(s+4*DEVOFF)).x);
+     sh1.y = kappa.re*( (*(s+1*DEVOFF)).y - (*(s+4*DEVOFF)).x);
+     sh1.y -= kappa.im*( (*(s+1*DEVOFF)).x + (*(s+4*DEVOFF)).y);  
 
 
   
@@ -2059,15 +2084,20 @@ zh1.y =  ( M[2][0].re*sh0.y + M[2][0].im*sh0.x ) + ( M[2][1].re*sh0.w + M[2][1].
 (*(out+1)).y -= zh1.y;
 
 
-     sh1.z = kappa*( (*(s+1*DEVOFF)).z - (*(s+4*DEVOFF)).w);
-     sh1.w = kappa*( (*(s+1*DEVOFF)).w + (*(s+4*DEVOFF)).z);
-         
-     sh2.x = kappa*( (*(s+2*DEVOFF)).x - (*(s+5*DEVOFF)).y);
-     sh2.y = kappa*( (*(s+2*DEVOFF)).y + (*(s+5*DEVOFF)).x);
-       
-     sh2.z = kappa*( (*(s+2*DEVOFF)).z - (*(s+5*DEVOFF)).w);
-     sh2.w = kappa*( (*(s+2*DEVOFF)).w + (*(s+5*DEVOFF)).z);
-
+     sh1.z = kappa.re*( (*(s+1*DEVOFF)).z - (*(s+4*DEVOFF)).w);
+     sh1.z += kappa.im*( (*(s+1*DEVOFF)).w + (*(s+4*DEVOFF)).z);
+     sh1.w = kappa.re*( (*(s+1*DEVOFF)).w + (*(s+4*DEVOFF)).z);
+     sh1.w -= kappa.im*( (*(s+1*DEVOFF)).z - (*(s+4*DEVOFF)).w);
+     
+     sh2.x = kappa.re*( (*(s+2*DEVOFF)).x - (*(s+5*DEVOFF)).y);
+     sh2.x += kappa.im*( (*(s+2*DEVOFF)).y + (*(s+5*DEVOFF)).x);
+     sh2.y = kappa.re*( (*(s+2*DEVOFF)).y + (*(s+5*DEVOFF)).x);
+     sh2.y -= kappa.im*( (*(s+2*DEVOFF)).x - (*(s+5*DEVOFF)).y);  
+     
+     sh2.z = kappa.re*( (*(s+2*DEVOFF)).z - (*(s+5*DEVOFF)).w);
+     sh2.z += kappa.im*( (*(s+2*DEVOFF)).w + (*(s+5*DEVOFF)).z);
+     sh2.w = kappa.re*( (*(s+2*DEVOFF)).w + (*(s+5*DEVOFF)).z);
+     sh2.w -= kappa.im*( (*(s+2*DEVOFF)).z - (*(s+5*DEVOFF)).w);
      
 zh1.z =  ( M[0][0].re*sh1.z - M[0][0].im*sh1.w ) + ( M[0][1].re*sh2.x - M[0][1].im*sh2.y ) + ( M[0][2].re*sh2.z - M[0][2].im*sh2.w );
 zh1.w =  ( M[0][0].re*sh1.w + M[0][0].im*sh1.z ) + ( M[0][1].re*sh2.y + M[0][1].im*sh2.x ) + ( M[0][2].re*sh2.w + M[0][2].im*sh2.z );
@@ -2110,7 +2140,7 @@ zh2.w =  ( M[2][0].re*sh1.w + M[2][0].im*sh1.z ) + ( M[2][1].re*sh2.y + M[2][1].
 }
 
 
-__device__ void dev_su3MtV_kappaP3_minus_spintex(dev_su3 M, int pos, dev_spinor * out, REAL kappa){
+__device__ void dev_su3MtV_kappaP3_minus_spintex(dev_su3 M, int pos, dev_spinor * out, dev_complex kappa){
 
   dev_spinor sh0,sh1,sh2,zh0,zh1,zh2;
   
@@ -2123,15 +2153,20 @@ __device__ void dev_su3MtV_kappaP3_minus_spintex(dev_su3 M, int pos, dev_spinor 
   s5 = tex1Dfetch(spin_tex5,pos); 
   
   //first apply Projector on upper halfspinor 
-     sh0.x = kappa*(s0.x + s3.y);
-     sh0.y = kappa*(s0.y - s3.x);
+     sh0.x = kappa.re*(s0.x + s3.y);
+     sh0.x += kappa.im*(s0.y - s3.x);
+     sh0.y = kappa.re*(s0.y - s3.x);
+     sh0.y -= kappa.im*(s0.x + s3.y);
    
-     sh0.z = kappa*(s0.z + s3.w);
-     sh0.w = kappa*(s0.w - s3.z);
+     sh0.z = kappa.re*(s0.z + s3.w);
+     sh0.z += kappa.im*(s0.w - s3.z);
+     sh0.w = kappa.re*(s0.w - s3.z);
+     sh0.w -= kappa.im*(s0.z + s3.w);
    
-     sh1.x = kappa*(s1.x + s4.y);
-     sh1.y = kappa*(s1.y - s4.x);
-        
+     sh1.x = kappa.re*(s1.x + s4.y);
+     sh1.x += kappa.im*(s1.y - s4.x);
+     sh1.y = kappa.re*(s1.y - s4.x);
+     sh1.y -= kappa.im*(s1.x + s4.y);   
 
 
   
@@ -2188,14 +2223,20 @@ zh1.y += M[2][2].im*sh1.x;
 (*(out+1)).y -= zh1.y;
 
 
-     sh1.z = kappa*(s1.z - s4.w);
-     sh1.w = kappa*(s1.w + s4.z);
+     sh1.z = kappa.re*(s1.z - s4.w);
+     sh1.z += kappa.im*(s1.w + s4.z);
+     sh1.w = kappa.re*(s1.w + s4.z);
+     sh1.w -= kappa.im*(s1.z - s4.w);
          
-     sh2.x = kappa*(s2.x - s5.y);
-     sh2.y = kappa*(s2.y + s5.x);
+     sh2.x = kappa.re*(s2.x - s5.y);
+     sh2.x += kappa.im*(s2.y + s5.x);
+     sh2.y = kappa.re*(s2.y + s5.x);
+     sh2.y -= kappa.im*(s2.x - s5.y);
        
-     sh2.z = kappa*(s2.z - s5.w);
-     sh2.w = kappa*(s2.w + s5.z);
+     sh2.z = kappa.re*(s2.z - s5.w);
+     sh2.z += kappa.im*(s2.w + s5.z);
+     sh2.w = kappa.re*(s2.w + s5.z);
+     sh2.w -= kappa.im*(s2.z - s5.w);
 
      
 zh1.z  = M[0][0].re*sh1.z;
@@ -2292,21 +2333,28 @@ zh2.w += M[2][2].im*sh2.z;
 // second half spinor is proportional to first one!!!
 //
 //-kappa(r - gamma_mu) kappa reell !!!!
-__device__ void dev_su3MtV_kappaP2_plus(dev_su3 M, const dev_spinor * s, dev_spinor * out, REAL kappa){
+__device__ void dev_su3MtV_kappaP2_plus(dev_su3 M, const dev_spinor * s, dev_spinor * out, dev_complex kappa){
 
   
   dev_spinor sh0,sh1,sh2,zh0,zh1,zh2;
 
 
-     sh0.x = kappa*( (*(s+0*DEVOFF)).x + (*(s+4*DEVOFF)).z);
-     sh0.y = kappa*( (*(s+0*DEVOFF)).y + (*(s+4*DEVOFF)).w);
+     sh0.x = kappa.re*( (*(s+0*DEVOFF)).x + (*(s+4*DEVOFF)).z);
+     sh0.x -= kappa.im*( (*(s+0*DEVOFF)).y + (*(s+4*DEVOFF)).w);
+     sh0.y = kappa.re*( (*(s+0*DEVOFF)).y + (*(s+4*DEVOFF)).w);
+     sh0.y += kappa.im*( (*(s+0*DEVOFF)).x + (*(s+4*DEVOFF)).z);
    
-     sh0.z = kappa*( (*(s+0*DEVOFF)).z + (*(s+5*DEVOFF)).x);
-     sh0.w = kappa*( (*(s+0*DEVOFF)).w + (*(s+5*DEVOFF)).y);
-       
-     sh1.x = kappa*( (*(s+1*DEVOFF)).x + (*(s+5*DEVOFF)).z);
-     sh1.y = kappa*( (*(s+1*DEVOFF)).y + (*(s+5*DEVOFF)).w);
      
+     sh0.z = kappa.re*( (*(s+0*DEVOFF)).z + (*(s+5*DEVOFF)).x);
+     sh0.z -= kappa.im*( (*(s+0*DEVOFF)).w + (*(s+5*DEVOFF)).y);
+     sh0.w = kappa.re*( (*(s+0*DEVOFF)).w + (*(s+5*DEVOFF)).y);
+     sh0.w += kappa.im*( (*(s+0*DEVOFF)).z + (*(s+5*DEVOFF)).x);
+       
+     
+     sh1.x = kappa.re*( (*(s+1*DEVOFF)).x + (*(s+5*DEVOFF)).z);
+     sh1.x -= kappa.im*( (*(s+1*DEVOFF)).y + (*(s+5*DEVOFF)).w);
+     sh1.y = kappa.re*( (*(s+1*DEVOFF)).y + (*(s+5*DEVOFF)).w);
+     sh1.y += kappa.im*( (*(s+1*DEVOFF)).x + (*(s+5*DEVOFF)).z);
 
 
      
@@ -2328,15 +2376,23 @@ zh1.y =  ( M[2][0].re*sh0.y + M[2][0].im*sh0.x ) + ( M[2][1].re*sh0.w + M[2][1].
 (*(out+1)).y -= zh1.y;
 
 
-     sh1.z = kappa*( (*(s+1*DEVOFF)).z - (*(s+3*DEVOFF)).x);
-     sh1.w = kappa*( (*(s+1*DEVOFF)).w - (*(s+3*DEVOFF)).y);
+     sh1.z = kappa.re*( (*(s+1*DEVOFF)).z - (*(s+3*DEVOFF)).x);
+     sh1.z -= kappa.im*( (*(s+1*DEVOFF)).w - (*(s+3*DEVOFF)).y);
+     sh1.w = kappa.re*( (*(s+1*DEVOFF)).w - (*(s+3*DEVOFF)).y);
+     sh1.w += kappa.im*( (*(s+1*DEVOFF)).z - (*(s+3*DEVOFF)).x);
      
-     sh2.x = kappa*( (*(s+2*DEVOFF)).x - (*(s+3*DEVOFF)).z);
-     sh2.y = kappa*( (*(s+2*DEVOFF)).y - (*(s+3*DEVOFF)).w);
+     
+     sh2.x = kappa.re*( (*(s+2*DEVOFF)).x - (*(s+3*DEVOFF)).z);
+     sh2.x -= kappa.im*( (*(s+2*DEVOFF)).y - (*(s+3*DEVOFF)).w);
+     sh2.y = kappa.re*( (*(s+2*DEVOFF)).y - (*(s+3*DEVOFF)).w);
+     sh2.y += kappa.im*( (*(s+2*DEVOFF)).x - (*(s+3*DEVOFF)).z);
           
-     sh2.z = kappa*( (*(s+2*DEVOFF)).z - (*(s+4*DEVOFF)).x);
-     sh2.w = kappa*( (*(s+2*DEVOFF)).w - (*(s+4*DEVOFF)).y);
-
+     
+     sh2.z = kappa.re*( (*(s+2*DEVOFF)).z - (*(s+4*DEVOFF)).x);
+     sh2.z -= kappa.im*( (*(s+2*DEVOFF)).w - (*(s+4*DEVOFF)).y);
+     sh2.w = kappa.re*( (*(s+2*DEVOFF)).w - (*(s+4*DEVOFF)).y);
+     sh2.w += kappa.im*( (*(s+2*DEVOFF)).z - (*(s+4*DEVOFF)).x);
+     
      
 zh1.z =  ( M[0][0].re*sh1.z - M[0][0].im*sh1.w ) + ( M[0][1].re*sh2.x - M[0][1].im*sh2.y ) + ( M[0][2].re*sh2.z - M[0][2].im*sh2.w );
 zh1.w =  ( M[0][0].re*sh1.w + M[0][0].im*sh1.z ) + ( M[0][1].re*sh2.y + M[0][1].im*sh2.x ) + ( M[0][2].re*sh2.w + M[0][2].im*sh2.z );
@@ -2379,7 +2435,7 @@ zh2.w =  ( M[2][0].re*sh1.w + M[2][0].im*sh1.z ) + ( M[2][1].re*sh2.y + M[2][1].
 }
 
 
-__device__ void dev_su3MtV_kappaP2_plus_spintex(dev_su3 M, int pos, dev_spinor * out, REAL kappa){
+__device__ void dev_su3MtV_kappaP2_plus_spintex(dev_su3 M, int pos, dev_spinor * out, dev_complex kappa){
 
   
   dev_spinor sh0,sh1,sh2,zh0,zh1,zh2;
@@ -2392,15 +2448,22 @@ __device__ void dev_su3MtV_kappaP2_plus_spintex(dev_su3 M, int pos, dev_spinor *
   s4 = tex1Dfetch(spin_tex4,pos); 
   s5 = tex1Dfetch(spin_tex5,pos); 
 
-     sh0.x = kappa*(s0.x + s4.z);
-     sh0.y = kappa*(s0.y + s4.w);
+     sh0.x = kappa.re*(s0.x + s4.z);
+     sh0.x -= kappa.im*(s0.y + s4.w);
+     sh0.y = kappa.re*(s0.y + s4.w);
+     sh0.y += kappa.im*(s0.x + s4.z);
    
-     sh0.z = kappa*(s0.z + s5.x);
-     sh0.w = kappa*(s0.w + s5.y);
-       
-     sh1.x = kappa*(s1.x + s5.z);
-     sh1.y = kappa*(s1.y + s5.w);
      
+     sh0.z = kappa.re*(s0.z + s5.x);
+     sh0.z -= kappa.im*(s0.w + s5.y);
+     sh0.w = kappa.re*(s0.w + s5.y);
+     sh0.w += kappa.im*(s0.z + s5.x);
+       
+     
+     sh1.x = kappa.re*(s1.x + s5.z);
+     sh1.x -= kappa.im*(s1.y + s5.w);
+     sh1.y = kappa.re*(s1.y + s5.w);
+     sh1.y += kappa.im*(s1.x + s5.z);
 
 
      
@@ -2422,14 +2485,22 @@ zh1.y =  ( M[2][0].re*sh0.y + M[2][0].im*sh0.x ) + ( M[2][1].re*sh0.w + M[2][1].
 (*(out+1)).y -= zh1.y;
 
 
-     sh1.z = kappa*(s1.z - s3.x);
-     sh1.w = kappa*(s1.w - s3.y);
+     sh1.z = kappa.re*(s1.z - s3.x);
+     sh1.z -= kappa.im*(s1.w - s3.y);
+     sh1.w = kappa.re*(s1.w - s3.y);
+     sh1.w += kappa.im*(s1.z - s3.x);
      
-     sh2.x = kappa*(s2.x - s3.z);
-     sh2.y = kappa*(s2.y - s3.w);
+     
+     sh2.x = kappa.re*(s2.x - s3.z);
+     sh2.x -= kappa.im*(s2.y - s3.w);
+     sh2.y = kappa.re*(s2.y - s3.w);
+     sh2.y += kappa.im*(s2.x - s3.z);
+     
           
-     sh2.z = kappa*(s2.z - s4.x);
-     sh2.w = kappa*(s2.w - s4.y);
+     sh2.z = kappa.re*(s2.z - s4.x);
+     sh2.z -= kappa.im*(s2.w - s4.y);
+     sh2.w = kappa.re*(s2.w - s4.y);
+     sh2.w += kappa.im*(s2.z - s4.x); 
 
      
 zh1.z =  ( M[0][0].re*sh1.z - M[0][0].im*sh1.w ) + ( M[0][1].re*sh2.x - M[0][1].im*sh2.y ) + ( M[0][2].re*sh2.z - M[0][2].im*sh2.w );
@@ -2487,22 +2558,29 @@ zh2.w =  ( M[2][0].re*sh1.w + M[2][0].im*sh1.z ) + ( M[2][1].re*sh2.y + M[2][1].
 //
 // second half spinor is proportional to first one!!!
 //
-//-kappa(r + gamma_mu) kappa reell !!!!
-__device__ void dev_su3MtV_kappaP2_minus(dev_su3 M, const dev_spinor * s, dev_spinor * out, REAL kappa){
+//-cconj(kappa)(r + gamma_mu) kappa reell !!!!
+__device__ void dev_su3MtV_kappaP2_minus(dev_su3 M, const dev_spinor * s, dev_spinor * out, dev_complex kappa){
 
   
   dev_spinor sh0,sh1,sh2,zh0,zh1,zh2;
 
 
-     sh0.x = kappa*( (*(s+0*DEVOFF)).x - (*(s+4*DEVOFF)).z);
-     sh0.y = kappa*( (*(s+0*DEVOFF)).y - (*(s+4*DEVOFF)).w);
+     sh0.x = kappa.re*( (*(s+0*DEVOFF)).x - (*(s+4*DEVOFF)).z);
+     sh0.x += kappa.im*( (*(s+0*DEVOFF)).y - (*(s+4*DEVOFF)).w);
+     sh0.y = kappa.re*( (*(s+0*DEVOFF)).y - (*(s+4*DEVOFF)).w);
+     sh0.y -= kappa.im*( (*(s+0*DEVOFF)).x - (*(s+4*DEVOFF)).z);
    
-     sh0.z = kappa*( (*(s+0*DEVOFF)).z - (*(s+5*DEVOFF)).x);
-     sh0.w = kappa*( (*(s+0*DEVOFF)).w - (*(s+5*DEVOFF)).y);
-       
-     sh1.x = kappa*( (*(s+1*DEVOFF)).x - (*(s+5*DEVOFF)).z);
-     sh1.y = kappa*( (*(s+1*DEVOFF)).y - (*(s+5*DEVOFF)).w);
      
+     sh0.z = kappa.re*( (*(s+0*DEVOFF)).z - (*(s+5*DEVOFF)).x);
+     sh0.z += kappa.im*( (*(s+0*DEVOFF)).w - (*(s+5*DEVOFF)).y);
+     sh0.w = kappa.re*( (*(s+0*DEVOFF)).w - (*(s+5*DEVOFF)).y);
+     sh0.w -= kappa.im*( (*(s+0*DEVOFF)).z - (*(s+5*DEVOFF)).x);
+     
+       
+     sh1.x = kappa.re*( (*(s+1*DEVOFF)).x - (*(s+5*DEVOFF)).z);
+     sh1.x += kappa.im*( (*(s+1*DEVOFF)).y - (*(s+5*DEVOFF)).w);
+     sh1.y = kappa.re*( (*(s+1*DEVOFF)).y - (*(s+5*DEVOFF)).w);
+     sh1.y -= kappa.im*( (*(s+1*DEVOFF)).x - (*(s+5*DEVOFF)).z);
 
 
      
@@ -2524,14 +2602,21 @@ zh1.y =  ( M[2][0].re*sh0.y + M[2][0].im*sh0.x ) + ( M[2][1].re*sh0.w + M[2][1].
 (*(out+1)).y -= zh1.y;
 
 
-     sh1.z = kappa*( (*(s+1*DEVOFF)).z + (*(s+3*DEVOFF)).x);
-     sh1.w = kappa*( (*(s+1*DEVOFF)).w + (*(s+3*DEVOFF)).y);
+     sh1.z = kappa.re*( (*(s+1*DEVOFF)).z + (*(s+3*DEVOFF)).x);
+     sh1.z += kappa.im*( (*(s+1*DEVOFF)).w + (*(s+3*DEVOFF)).y);
+     sh1.w = kappa.re*( (*(s+1*DEVOFF)).w + (*(s+3*DEVOFF)).y);
+     sh1.w -= kappa.im*( (*(s+1*DEVOFF)).z + (*(s+3*DEVOFF)).x);
      
-     sh2.x = kappa*( (*(s+2*DEVOFF)).x + (*(s+3*DEVOFF)).z);
-     sh2.y = kappa*( (*(s+2*DEVOFF)).y + (*(s+3*DEVOFF)).w);
+     sh2.x = kappa.re*( (*(s+2*DEVOFF)).x + (*(s+3*DEVOFF)).z);
+     sh2.x += kappa.im*( (*(s+2*DEVOFF)).y + (*(s+3*DEVOFF)).w);
+     sh2.y = kappa.re*( (*(s+2*DEVOFF)).y + (*(s+3*DEVOFF)).w);
+     sh2.y -= kappa.im*( (*(s+2*DEVOFF)).x + (*(s+3*DEVOFF)).z);
           
-     sh2.z = kappa*( (*(s+2*DEVOFF)).z + (*(s+4*DEVOFF)).x);
-     sh2.w = kappa*( (*(s+2*DEVOFF)).w + (*(s+4*DEVOFF)).y);
+     
+     sh2.z = kappa.re*( (*(s+2*DEVOFF)).z + (*(s+4*DEVOFF)).x);
+     sh2.z += kappa.im*( (*(s+2*DEVOFF)).w + (*(s+4*DEVOFF)).y);
+     sh2.w = kappa.re*( (*(s+2*DEVOFF)).w + (*(s+4*DEVOFF)).y);
+     sh2.w -= kappa.im*( (*(s+2*DEVOFF)).z + (*(s+4*DEVOFF)).x);
 
      
 zh1.z =  ( M[0][0].re*sh1.z - M[0][0].im*sh1.w ) + ( M[0][1].re*sh2.x - M[0][1].im*sh2.y ) + ( M[0][2].re*sh2.z - M[0][2].im*sh2.w );
@@ -2575,7 +2660,7 @@ zh2.w =  ( M[2][0].re*sh1.w + M[2][0].im*sh1.z ) + ( M[2][1].re*sh2.y + M[2][1].
 }
 
 
-__device__ void dev_su3MtV_kappaP2_minus_spintex(dev_su3 M, int pos, dev_spinor * out, REAL kappa){
+__device__ void dev_su3MtV_kappaP2_minus_spintex(dev_su3 M, int pos, dev_spinor * out, dev_complex kappa){
 
   
   dev_spinor sh0,sh1,sh2,zh0,zh1,zh2;
@@ -2588,14 +2673,22 @@ __device__ void dev_su3MtV_kappaP2_minus_spintex(dev_su3 M, int pos, dev_spinor 
   s4 = tex1Dfetch(spin_tex4,pos); 
   s5 = tex1Dfetch(spin_tex5,pos); 
   
-     sh0.x = kappa*(s0.x - s4.z);
-     sh0.y = kappa*(s0.y - s4.w);
+     sh0.x = kappa.re*(s0.x - s4.z);
+     sh0.x += kappa.im*(s0.y - s4.w);
+     sh0.y = kappa.re*(s0.y - s4.w);
+     sh0.y -= kappa.im*(s0.x - s4.z);
+     
    
-     sh0.z = kappa*(s0.z - s5.x);
-     sh0.w = kappa*(s0.w - s5.y);
+     sh0.z = kappa.re*(s0.z - s5.x);
+     sh0.z += kappa.im*(s0.w - s5.y); 
+     sh0.w = kappa.re*(s0.w - s5.y);
+     sh0.w -= kappa.im*(s0.z - s5.x);
+     
        
-     sh1.x = kappa*(s1.x - s5.z);
-     sh1.y = kappa*(s1.y - s5.w);
+     sh1.x = kappa.re*(s1.x - s5.z);
+     sh1.x += kappa.im*(s1.y - s5.w);
+     sh1.y = kappa.re*(s1.y - s5.w);
+     sh1.y -= kappa.im*(s1.x - s5.z);
      
 
 
@@ -2618,14 +2711,22 @@ zh1.y =  ( M[2][0].re*sh0.y + M[2][0].im*sh0.x ) + ( M[2][1].re*sh0.w + M[2][1].
 (*(out+1)).y -= zh1.y;
 
 
-     sh1.z = kappa*(s1.z + s3.x);
-     sh1.w = kappa*(s1.w + s3.y);
+     sh1.z = kappa.re*(s1.z + s3.x);
+     sh1.z += kappa.im*(s1.w + s3.y);
+     sh1.w = kappa.re*(s1.w + s3.y);
+     sh1.w -= kappa.im*(s1.z + s3.x);
      
-     sh2.x = kappa*(s2.x + s3.z);
-     sh2.y = kappa*(s2.y + s3.w);
+     
+     sh2.x = kappa.re*(s2.x + s3.z);
+     sh2.x += kappa.im*(s2.y + s3.w);
+     sh2.y = kappa.re*(s2.y + s3.w);
+     sh2.y -= kappa.im*(s2.x + s3.z);
+     
           
-     sh2.z = kappa*(s2.z + s4.x);
-     sh2.w = kappa*(s2.w + s4.y);
+     sh2.z = kappa.re*(s2.z + s4.x);
+     sh2.z += kappa.im*(s2.w + s4.y);
+     sh2.w = kappa.re*(s2.w + s4.y);
+     sh2.w -= kappa.im*(s2.z + s4.x);
 
      
 zh1.z =  ( M[0][0].re*sh1.z - M[0][0].im*sh1.w ) + ( M[0][1].re*sh2.x - M[0][1].im*sh2.y ) + ( M[0][2].re*sh2.z - M[0][2].im*sh2.w );
@@ -2686,20 +2787,28 @@ zh2.w =  ( M[2][0].re*sh1.w + M[2][0].im*sh1.z ) + ( M[2][1].re*sh2.y + M[2][1].
 // second half spinor is proportional to first one!!!
 //
 //-kappa(r - gamma_mu) kappa reell !!!!
-__device__ void dev_su3MtV_kappaP1_plus(dev_su3 M, const dev_spinor * s, dev_spinor * out, REAL kappa){
+__device__ void dev_su3MtV_kappaP1_plus(dev_su3 M, const dev_spinor * s, dev_spinor * out, dev_complex kappa){
 
   
   dev_spinor sh0,sh1,sh2,zh0,zh1,zh2;
 
 
-     sh0.x = kappa*( (*(s+0*DEVOFF)).x - (*(s+4*DEVOFF)).w);
-     sh0.y = kappa*( (*(s+0*DEVOFF)).y + (*(s+4*DEVOFF)).z);
+     sh0.x = kappa.re*( (*(s+0*DEVOFF)).x - (*(s+4*DEVOFF)).w);
+     sh0.x -= kappa.im*( (*(s+0*DEVOFF)).y + (*(s+4*DEVOFF)).z); 
+     sh0.y = kappa.re*( (*(s+0*DEVOFF)).y + (*(s+4*DEVOFF)).z);
+     sh0.y += kappa.im*( (*(s+0*DEVOFF)).x - (*(s+4*DEVOFF)).w);
      
-     sh0.z = kappa*( (*(s+0*DEVOFF)).z - (*(s+5*DEVOFF)).y);
-     sh0.w = kappa*( (*(s+0*DEVOFF)).w + (*(s+5*DEVOFF)).x);    
+     
+     sh0.z = kappa.re*( (*(s+0*DEVOFF)).z - (*(s+5*DEVOFF)).y);
+     sh0.z -= kappa.im*( (*(s+0*DEVOFF)).w + (*(s+5*DEVOFF)).x); 
+     sh0.w = kappa.re*( (*(s+0*DEVOFF)).w + (*(s+5*DEVOFF)).x); 
+     sh0.w += kappa.im*( (*(s+0*DEVOFF)).z - (*(s+5*DEVOFF)).y);
+     
 
-     sh1.x = kappa*((*(s+1*DEVOFF)).x - (*(s+5*DEVOFF)).w);
-     sh1.y = kappa*((*(s+1*DEVOFF)).y + (*(s+5*DEVOFF)).z); 
+     sh1.x = kappa.re*((*(s+1*DEVOFF)).x - (*(s+5*DEVOFF)).w);
+     sh1.x -= kappa.im*((*(s+1*DEVOFF)).y + (*(s+5*DEVOFF)).z);
+     sh1.y = kappa.re*((*(s+1*DEVOFF)).y + (*(s+5*DEVOFF)).z); 
+     sh1.y += kappa.im*((*(s+1*DEVOFF)).x - (*(s+5*DEVOFF)).w);
      
      
      
@@ -2723,14 +2832,22 @@ zh1.y =  ( M[2][0].re*sh0.y + M[2][0].im*sh0.x ) + ( M[2][1].re*sh0.w + M[2][1].
 (*(out+1)).y -= zh1.y;
 
 
-     sh1.z = kappa*((*(s+1*DEVOFF)).z - (*(s+3*DEVOFF)).y);
-     sh1.w = kappa*((*(s+1*DEVOFF)).w + (*(s+3*DEVOFF)).x); 
+     sh1.z = kappa.re*((*(s+1*DEVOFF)).z - (*(s+3*DEVOFF)).y);
+     sh1.z -= kappa.im*((*(s+1*DEVOFF)).w + (*(s+3*DEVOFF)).x);
+     sh1.w = kappa.re*((*(s+1*DEVOFF)).w + (*(s+3*DEVOFF)).x); 
+     sh1.w += kappa.im*((*(s+1*DEVOFF)).z - (*(s+3*DEVOFF)).y);
      
-     sh2.x = kappa*((*(s+2*DEVOFF)).x - (*(s+3*DEVOFF)).w);
-     sh2.y = kappa*((*(s+2*DEVOFF)).y + (*(s+3*DEVOFF)).z);
      
-     sh2.z = kappa*((*(s+2*DEVOFF)).z - (*(s+4*DEVOFF)).y);
-     sh2.w = kappa*((*(s+2*DEVOFF)).w + (*(s+4*DEVOFF)).x);
+     sh2.x = kappa.re*((*(s+2*DEVOFF)).x - (*(s+3*DEVOFF)).w);
+     sh2.x -= kappa.im*((*(s+2*DEVOFF)).y + (*(s+3*DEVOFF)).z);
+     sh2.y = kappa.re*((*(s+2*DEVOFF)).y + (*(s+3*DEVOFF)).z);
+     sh2.y += kappa.im*((*(s+2*DEVOFF)).x - (*(s+3*DEVOFF)).w);
+     
+     
+     sh2.z = kappa.re*((*(s+2*DEVOFF)).z - (*(s+4*DEVOFF)).y);
+     sh2.z -= kappa.im*((*(s+2*DEVOFF)).w + (*(s+4*DEVOFF)).x);
+     sh2.w = kappa.re*((*(s+2*DEVOFF)).w + (*(s+4*DEVOFF)).x);
+     sh2.w += kappa.im*((*(s+2*DEVOFF)).z - (*(s+4*DEVOFF)).y);
 
      
 zh1.z =  ( M[0][0].re*sh1.z - M[0][0].im*sh1.w ) + ( M[0][1].re*sh2.x - M[0][1].im*sh2.y ) + ( M[0][2].re*sh2.z - M[0][2].im*sh2.w );
@@ -2774,7 +2891,7 @@ zh2.w =  ( M[2][0].re*sh1.w + M[2][0].im*sh1.z ) + ( M[2][1].re*sh2.y + M[2][1].
 }
 
 
-__device__ void dev_su3MtV_kappaP1_plus_spintex(dev_su3 M, int pos, dev_spinor * out, REAL kappa){
+__device__ void dev_su3MtV_kappaP1_plus_spintex(dev_su3 M, int pos, dev_spinor * out, dev_complex kappa){
 
   
   dev_spinor sh0,sh1,sh2,zh0,zh1,zh2;
@@ -2787,18 +2904,23 @@ __device__ void dev_su3MtV_kappaP1_plus_spintex(dev_su3 M, int pos, dev_spinor *
   s4 = tex1Dfetch(spin_tex4,pos); 
   s5 = tex1Dfetch(spin_tex5,pos); 
   
-     sh0.x = kappa*(s0.x - s4.w);
-     sh0.y = kappa*(s0.y + s4.z);
+     sh0.x = kappa.re*(s0.x - s4.w);
+     sh0.x -= kappa.im*(s0.y + s4.z);
+     sh0.y = kappa.re*(s0.y + s4.z);
+     sh0.y += kappa.im*(s0.x - s4.w);
      
-     sh0.z = kappa*(s0.z - s5.y);
-     sh0.w = kappa*(s0.w + s5.x);    
+     
+     sh0.z = kappa.re*(s0.z - s5.y);
+     sh0.z -= kappa.im*(s0.w + s5.x);
+     sh0.w = kappa.re*(s0.w + s5.x);    
+     sh0.w += kappa.im*(s0.z - s5.y);
+     
 
-     sh1.x = kappa*(s1.x - s5.w);
-     sh1.y = kappa*(s1.y + s5.z); 
+     sh1.x = kappa.re*(s1.x - s5.w);
+     sh1.x -= kappa.im*(s1.y + s5.z); 
+     sh1.y = kappa.re*(s1.y + s5.z); 
+     sh1.y += kappa.im*(s1.x - s5.w);
      
-     
-     
-
      
      
 //Multiply by gauge field  
@@ -2818,14 +2940,22 @@ zh1.y =  ( M[2][0].re*sh0.y + M[2][0].im*sh0.x ) + ( M[2][1].re*sh0.w + M[2][1].
 (*(out+1)).y -= zh1.y;
 
 
-     sh1.z = kappa*(s1.z - s3.y);
-     sh1.w = kappa*(s1.w + s3.x); 
+     sh1.z = kappa.re*(s1.z - s3.y);
+     sh1.z -= kappa.im*(s1.w + s3.x); 
+     sh1.w = kappa.re*(s1.w + s3.x); 
+     sh1.w += kappa.im*(s1.z - s3.y);
      
-     sh2.x = kappa*(s2.x - s3.w);
-     sh2.y = kappa*(s2.y + s3.z);
      
-     sh2.z = kappa*(s2.z - s4.y);
-     sh2.w = kappa*(s2.w + s4.x);
+     sh2.x = kappa.re*(s2.x - s3.w);
+     sh2.x -= kappa.im*(s2.y + s3.z);
+     sh2.y = kappa.re*(s2.y + s3.z);
+     sh2.y += kappa.im*(s2.x - s3.w);
+     
+     
+     sh2.z = kappa.re*(s2.z - s4.y);
+     sh2.z -= kappa.im*(s2.w + s4.x);
+     sh2.w = kappa.re*(s2.w + s4.x);
+     sh2.w += kappa.im*(s2.z - s4.y);
 
      
 zh1.z =  ( M[0][0].re*sh1.z - M[0][0].im*sh1.w ) + ( M[0][1].re*sh2.x - M[0][1].im*sh2.y ) + ( M[0][2].re*sh2.z - M[0][2].im*sh2.w );
@@ -2882,22 +3012,29 @@ zh2.w =  ( M[2][0].re*sh1.w + M[2][0].im*sh1.z ) + ( M[2][1].re*sh2.y + M[2][1].
 //
 // second half spinor is proportional to first one!!!
 //
-//-kappa(r + gamma_mu) kappa reell !!!!
-__device__ void dev_su3MtV_kappaP1_minus(dev_su3 M, const dev_spinor * s, dev_spinor * out, REAL kappa){
+//-cconj(kappa)(r + gamma_mu) kappa reell !!!!
+__device__ void dev_su3MtV_kappaP1_minus(dev_su3 M, const dev_spinor * s, dev_spinor * out, dev_complex kappa){
 
   
   dev_spinor sh0,sh1,sh2,zh0,zh1,zh2;
 
 
-     sh0.x = kappa*( (*(s+0*DEVOFF)).x + (*(s+4*DEVOFF)).w);
-     sh0.y = kappa*( (*(s+0*DEVOFF)).y - (*(s+4*DEVOFF)).z);
+     sh0.x = kappa.re*( (*(s+0*DEVOFF)).x + (*(s+4*DEVOFF)).w);
+     sh0.x += kappa.im*( (*(s+0*DEVOFF)).y - (*(s+4*DEVOFF)).z);
+     sh0.y = kappa.re*( (*(s+0*DEVOFF)).y - (*(s+4*DEVOFF)).z);
+     sh0.y -= kappa.im*( (*(s+0*DEVOFF)).x + (*(s+4*DEVOFF)).w);
      
-     sh0.z = kappa*( (*(s+0*DEVOFF)).z + (*(s+5*DEVOFF)).y);
-     sh0.w = kappa*( (*(s+0*DEVOFF)).w - (*(s+5*DEVOFF)).x);    
+     
+     sh0.z = kappa.re*( (*(s+0*DEVOFF)).z + (*(s+5*DEVOFF)).y);
+     sh0.z += kappa.im*( (*(s+0*DEVOFF)).w - (*(s+5*DEVOFF)).x);  
+     sh0.w = kappa.re*( (*(s+0*DEVOFF)).w - (*(s+5*DEVOFF)).x);    
+     sh0.w -= kappa.im*( (*(s+0*DEVOFF)).z + (*(s+5*DEVOFF)).y);
+     
 
-     sh1.x = kappa*((*(s+1*DEVOFF)).x + (*(s+5*DEVOFF)).w);
-     sh1.y = kappa*((*(s+1*DEVOFF)).y - (*(s+5*DEVOFF)).z); 
-     
+     sh1.x = kappa.re*((*(s+1*DEVOFF)).x + (*(s+5*DEVOFF)).w);
+     sh1.x += kappa.im*((*(s+1*DEVOFF)).y - (*(s+5*DEVOFF)).z);
+     sh1.y = kappa.re*((*(s+1*DEVOFF)).y - (*(s+5*DEVOFF)).z); 
+     sh1.y -= kappa.im*((*(s+1*DEVOFF)).x + (*(s+5*DEVOFF)).w);
      
 
      
@@ -2919,16 +3056,24 @@ zh1.y =  ( M[2][0].re*sh0.y + M[2][0].im*sh0.x ) + ( M[2][1].re*sh0.w + M[2][1].
 (*(out+1)).y -= zh1.y;
 
 
-     sh1.z = kappa*((*(s+1*DEVOFF)).z + (*(s+3*DEVOFF)).y);
-     sh1.w = kappa*((*(s+1*DEVOFF)).w - (*(s+3*DEVOFF)).x); 
+     sh1.z = kappa.re*((*(s+1*DEVOFF)).z + (*(s+3*DEVOFF)).y);
+     sh1.z += kappa.im*((*(s+1*DEVOFF)).w - (*(s+3*DEVOFF)).x);
+     sh1.w = kappa.re*((*(s+1*DEVOFF)).w - (*(s+3*DEVOFF)).x);
+     sh1.w -= kappa.im*((*(s+1*DEVOFF)).z + (*(s+3*DEVOFF)).y);
      
-     sh2.x = kappa*((*(s+2*DEVOFF)).x + (*(s+3*DEVOFF)).w);
-     sh2.y = kappa*((*(s+2*DEVOFF)).y - (*(s+3*DEVOFF)).z);
      
-     sh2.z = kappa*((*(s+2*DEVOFF)).z + (*(s+4*DEVOFF)).y);
-     sh2.w = kappa*((*(s+2*DEVOFF)).w - (*(s+4*DEVOFF)).x);
+     sh2.x = kappa.re*((*(s+2*DEVOFF)).x + (*(s+3*DEVOFF)).w);
+     sh2.x += kappa.im*((*(s+2*DEVOFF)).y - (*(s+3*DEVOFF)).z);
+     sh2.y = kappa.re*((*(s+2*DEVOFF)).y - (*(s+3*DEVOFF)).z);
+     sh2.y -= kappa.im*((*(s+2*DEVOFF)).x + (*(s+3*DEVOFF)).w);
+     
+     
+     sh2.z = kappa.re*((*(s+2*DEVOFF)).z + (*(s+4*DEVOFF)).y);
+     sh2.z += kappa.im*((*(s+2*DEVOFF)).w - (*(s+4*DEVOFF)).x);
+     sh2.w = kappa.re*((*(s+2*DEVOFF)).w - (*(s+4*DEVOFF)).x);
+     sh2.w -= kappa.im*((*(s+2*DEVOFF)).z + (*(s+4*DEVOFF)).y);
 
-
+     
 zh1.z =  ( M[0][0].re*sh1.z - M[0][0].im*sh1.w ) + ( M[0][1].re*sh2.x - M[0][1].im*sh2.y ) + ( M[0][2].re*sh2.z - M[0][2].im*sh2.w );
 zh1.w =  ( M[0][0].re*sh1.w + M[0][0].im*sh1.z ) + ( M[0][1].re*sh2.y + M[0][1].im*sh2.x ) + ( M[0][2].re*sh2.w + M[0][2].im*sh2.z );
 (*(out+1)).z -= zh1.z;
@@ -2970,7 +3115,7 @@ zh2.w =  ( M[2][0].re*sh1.w + M[2][0].im*sh1.z ) + ( M[2][1].re*sh2.y + M[2][1].
 }
 
 
-__device__ void dev_su3MtV_kappaP1_minus_spintex(dev_su3 M, int pos, dev_spinor * out, REAL kappa){
+__device__ void dev_su3MtV_kappaP1_minus_spintex(dev_su3 M, int pos, dev_spinor * out, dev_complex kappa){
 
   
   dev_spinor sh0,sh1,sh2,zh0,zh1,zh2;
@@ -2984,15 +3129,22 @@ __device__ void dev_su3MtV_kappaP1_minus_spintex(dev_su3 M, int pos, dev_spinor 
   s4 = tex1Dfetch(spin_tex4,pos); 
   s5 = tex1Dfetch(spin_tex5,pos); 
   
-     sh0.x = kappa*(s0.x + s4.w);
-     sh0.y = kappa*(s0.y - s4.z);
+     sh0.x = kappa.re*(s0.x + s4.w);
+     sh0.x += kappa.im*(s0.y - s4.z);
+     sh0.y = kappa.re*(s0.y - s4.z);
+     sh0.y -= kappa.im*(s0.x + s4.w);
      
-     sh0.z = kappa*(s0.z + s5.y);
-     sh0.w = kappa*(s0.w - s5.x);    
+     
+     sh0.z = kappa.re*(s0.z + s5.y);
+     sh0.z += kappa.im*(s0.w - s5.x); 
+     sh0.w = kappa.re*(s0.w - s5.x);
+     sh0.w -= kappa.im*(s0.z + s5.y);
+     
 
-     sh1.x = kappa*(s1.x + s5.w);
-     sh1.y = kappa*(s1.y - s5.z); 
-     
+     sh1.x = kappa.re*(s1.x + s5.w);
+     sh1.x += kappa.im*(s1.y - s5.z);
+     sh1.y = kappa.re*(s1.y - s5.z); 
+     sh1.y -= kappa.im*(s1.x + s5.w);
      
 
      
@@ -3014,14 +3166,22 @@ zh1.y =  ( M[2][0].re*sh0.y + M[2][0].im*sh0.x ) + ( M[2][1].re*sh0.w + M[2][1].
 (*(out+1)).y -= zh1.y;
 
 
-     sh1.z = kappa*(s1.z + s3.y);
-     sh1.w = kappa*(s1.w - s3.x); 
+     sh1.z = kappa.re*(s1.z + s3.y);
+     sh1.z += kappa.im*(s1.w - s3.x);
+     sh1.w = kappa.re*(s1.w - s3.x); 
+     sh1.w -= kappa.im*(s1.z + s3.y);
      
-     sh2.x = kappa*(s2.x + s3.w);
-     sh2.y = kappa*(s2.y - s3.z);
      
-     sh2.z = kappa*(s2.z + s4.y);
-     sh2.w = kappa*(s2.w - s4.x);
+     sh2.x = kappa.re*(s2.x + s3.w);
+     sh2.x += kappa.im*(s2.y - s3.z);
+     sh2.y = kappa.re*(s2.y - s3.z);
+     sh2.y -= kappa.im*(s2.x + s3.w);
+     
+     
+     sh2.z = kappa.re*(s2.z + s4.y);
+     sh2.z += kappa.im*(s2.w - s4.x);
+     sh2.w = kappa.re*(s2.w - s4.x);
+     sh2.w -= kappa.im*(s2.z + s4.y);
 
 
 zh1.z =  ( M[0][0].re*sh1.z - M[0][0].im*sh1.w ) + ( M[0][1].re*sh2.x - M[0][1].im*sh2.y ) + ( M[0][2].re*sh2.z - M[0][2].im*sh2.w );
