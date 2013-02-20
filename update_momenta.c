@@ -113,10 +113,9 @@ void update_momenta(int * mnllist, double step, const int no,
     max = sum2;
 #endif
     if(g_proc_id == 0) {
-      printf("# force on timescale %d: aver: %1.2e max: %1.2e dt*aver: %1.2e dt*max: %1.2e dt: %1.4e\n", 
+      printf("# squared force on timescale %d: aver: %1.2e max: %1.2e dt: %1.4e\n", 
 	     monomial_list[ mnllist[0] ].timescale,
-	     fabs(sum/((double)(VOLUME*g_nproc))/4.), max,
-	     fabs(step*sum/((double)(VOLUME*g_nproc))/4.), fabs(step*max), step);
+	     sum/((double)(VOLUME*g_nproc))/4., max, step);
       fflush(stdout);
     }
   }
