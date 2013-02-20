@@ -175,6 +175,7 @@ __global__ void dev_mean_plaq(float* reductionfield, int * dev_nn, dev_su3_2v * 
  x0pos = threadIdx.x + blockDim.x*blockIdx.x;  
  #ifdef TEMPORALGAUGE
   int spatialvol = dev_LX*dev_LY*dev_LZ;
+  int t;
  #endif
 
  int gaugevol = dev_VOLUME;

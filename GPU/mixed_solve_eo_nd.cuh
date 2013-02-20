@@ -112,7 +112,7 @@ dev_spinor * dev_spinout_up;
 dev_spinor * dev_spinout_dn;
 dev_spinor * h2d_spin_up;		// for transferring in double precision on host to single precision on device (pointing to host)
 dev_spinor * h2d_spin_dn;
-dev_spinor * dev_spin_eo1_up;		// auxiliary for  matrix_multiplication32()  called by  dev_cg_eo_nd()
+dev_spinor * dev_spin_eo1_up;		// auxiliary for  dev_Qtm_pm_ndpsi()  called by  dev_cg_eo_nd()
 dev_spinor * dev_spin_eo1_dn;
 dev_spinor * dev_spin_eo2_up;
 dev_spinor * dev_spin_eo2_dn;
@@ -631,7 +631,7 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
   
   #ifndef MPI
   
-    cudaMalloc((void **) &dev_spin_eo1_up, dev_spinsize_int);		// used for matrix_multiplication32(...)
+    cudaMalloc((void **) &dev_spin_eo1_up, dev_spinsize_int);		// used for dev_Qtm_pm_ndpsi(...)
     cudaMalloc((void **) &dev_spin_eo1_dn, dev_spinsize_int);
     cudaMalloc((void **) &dev_spin_eo3_up, dev_spinsize_int);
     cudaMalloc((void **) &dev_spin_eo3_dn, dev_spinsize_int);
@@ -1045,7 +1045,7 @@ void xchange_field_wrapper (dev_spinor * dev_spin, int ieo) {
 
 
 
-// copies the boundary t-slices t=0 and t=T-1 to host		// will be used in matrix_multiplication32_mpi(), not ASYNC
+// copies the boundary t-slices t=0 and t=T-1 to host		// will be used in dev_Qtm_pm_ndpsi_mpi(), not ASYNC
 //	exchanges						// provides a wrapped version of Carsten's xchange_field()
 //		copies RAND back to device			//	and not asynchronous version of ASYNC.cuh
 
@@ -1244,7 +1244,7 @@ __global__ void dev_mul_one_pm_imubar_gamma5 (dev_spinor * sin,
 // the GPU implementation of  Qtm_pm_ndpsi(...)  from tm_operators_nd.c
 //	Flo's equivalent function for the standard and non-nd case is  dev_Qtm_pm_psi
 
-void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
+void dev_Qtm_pm_ndpsi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
                               dev_spinor * spinin_up , dev_spinor * spinin_dn ,
                               int gridsize1, int blocksize1, int gridsize2, int blocksize2,
                               int gridsize3, int blocksize3, int gridsize4, int blocksize4) {
@@ -1547,7 +1547,7 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   
   return;
   
-}//matrix_multiplication32()
+}//dev_Qtm_pm_ndpsi()
 
 
 
@@ -1563,7 +1563,7 @@ void matrix_multiplication32 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
 // the GPU implementation of  Qtm_pm_ndpsi(...)  tm_operators_nd.c
 //	Flo's equivalent function for the standard and non-nd case is  dev_Qtm_pm_psi
 
-void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
+void dev_Qtm_pm_ndpsi_mpi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
                                   dev_spinor * spinin_up , dev_spinor * spinin_dn ,
                                   int gridsize1, int blocksize1, int gridsize2, int blocksize2,
                                   int gridsize3, int blocksize3, int gridsize4, int blocksize4) {
@@ -1995,7 +1995,7 @@ void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_
   
   return;
   
-}//matrix_multiplication32_mpi()
+}//dev_Qtm_pm_ndpsi_mpi()
 
 
 #endif	// MPI
@@ -2273,7 +2273,7 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   
   
     #ifndef MPI
-    	matrix_multiplication32(A_up, A_dn,					// A = (matrix)*B
+    	dev_Qtm_pm_ndpsi(A_up, A_dn,					// A = (matrix)*B
     	                        B_up, B_dn,
     	                        griddim2, blockdim2,
     	                        griddim3, blockdim3,
@@ -2281,14 +2281,14 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
     	                        griddim5, blockdim5);
     #else
     	#ifndef ASYNC
-    	  matrix_multiplication32_mpi(A_up, A_dn,				// A = (matrix)*B
+    	  dev_Qtm_pm_ndpsi_mpi(A_up, A_dn,				// A = (matrix)*B
     	                              B_up, B_dn,
     	                              griddim2, blockdim2,
     	                              griddim3, blockdim3,
     	                              griddim4, blockdim4,
     	                              griddim5, blockdim5);
     	#else
-    	  matrix_multiplication32_mpi_ASYNC(A_up, A_dn,				// A = (matrix)*B
+    	  dev_Qtm_pm_ndpsi_mpi_ASYNC(A_up, A_dn,				// A = (matrix)*B
     	                                    B_up, B_dn,
     	                                    griddim2, blockdim2,
     	                                    griddim3, blockdim3,
@@ -2724,7 +2724,7 @@ int cg_eo_nd (dev_su3_2v * gf,
 
       // A*d(k)
       #ifndef MPI
-      		matrix_multiplication32(Ad_up, Ad_dn,										// normally:  matrix_multiplication32()
+      		dev_Qtm_pm_ndpsi(Ad_up, Ad_dn,										// normally:  dev_Qtm_pm_ndpsi()
       		                         d_up,  d_dn,										// debugging: matrix_debug1(), matrix_multiplication_test()
       		                        griddim2, blockdim2,
       		                        griddim3, blockdim3,
@@ -2732,14 +2732,14 @@ int cg_eo_nd (dev_su3_2v * gf,
       		                        griddim5, blockdim5);
       #else
       	#ifndef ASYNC
-        	matrix_multiplication32_mpi(Ad_up, Ad_dn,									// normally:  matrix_multiplication32_mpi()
+        	dev_Qtm_pm_ndpsi_mpi(Ad_up, Ad_dn,									// normally:  dev_Qtm_pm_ndpsi_mpi()
         	                             d_up,  d_dn,									// debugging: matrix_mpi_debug1/2/3/4()
         	                            griddim2, blockdim2,
         	                            griddim3, blockdim3,
         	                            griddim4, blockdim4,
         	                            griddim5, blockdim5);
       	#else															// tries to overlap computation and communication
-        	matrix_multiplication32_mpi_ASYNC(Ad_up, Ad_dn,
+        	dev_Qtm_pm_ndpsi_mpi_ASYNC(Ad_up, Ad_dn,
         	                                   d_up,  d_dn,
         	                                  griddim2, blockdim2,
         	                                  griddim3, blockdim3,
@@ -2795,7 +2795,7 @@ int cg_eo_nd (dev_su3_2v * gf,
       // A*x(k+1)
 
       	#ifndef MPI
-        	matrix_multiplication32(Ax_up, Ax_dn,
+        	dev_Qtm_pm_ndpsi(Ax_up, Ax_dn,
         	                         x_up,  x_dn,
         	                        griddim2, blockdim2,
         	                        griddim3, blockdim3,
@@ -2803,14 +2803,14 @@ int cg_eo_nd (dev_su3_2v * gf,
         	                        griddim5, blockdim5);
         #else
         	#ifndef ASYNC
-        	  matrix_multiplication32_mpi(Ax_up, Ax_dn,									// normally:  matrix_multiplication32_mpi()
+        	  dev_Qtm_pm_ndpsi_mpi(Ax_up, Ax_dn,									// normally:  dev_Qtm_pm_ndpsi_mpi()
         	                               x_up,  x_dn,									// debugging: matrix_mpi_debug1/2/3/4()
         	                              griddim2, blockdim2,
         	                              griddim3, blockdim3,
         	                              griddim4, blockdim4,
         	                              griddim5, blockdim5);
         	#else
-        	  matrix_multiplication32_mpi_ASYNC(Ax_up, Ax_dn,									// normally:  matrix_multiplication32_mpi()
+        	  dev_Qtm_pm_ndpsi_mpi_ASYNC(Ax_up, Ax_dn,									// normally:  dev_Qtm_pm_ndpsi_mpi()
         	                                     x_up,  x_dn,									// debugging: matrix_mpi_debug1/2/3/4()
         	                                    griddim2, blockdim2,
         	                                    griddim3, blockdim3,

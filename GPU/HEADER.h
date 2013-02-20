@@ -24,7 +24,7 @@ void init_mixedsolve_eo_nd(su3** gf);
 void finalize_mixedsolve_eo_nd(void);
 void update_gpu_gf(su3** gf);
 
-void matrix_multiplication32 (dev_spinor * , dev_spinor * , dev_spinor * , dev_spinor * , int, int, int, int, int, int, int, int);
+void dev_Qtm_pm_ndpsi(dev_spinor * , dev_spinor * , dev_spinor * , dev_spinor * , int, int, int, int, int, int, int, int);
 
 void flopcount(unsigned long long int& total, int add);
 
@@ -69,7 +69,7 @@ __global__ void dev_Hopping_Matrix_mpi (const dev_su3_2v * gf, const dev_spinor 
                                         int * dev_iup, int * dev_idn, int * dev_eo2lexic, int * dev_lexic2eosub,
                                         int ieo);
 
-void matrix_multiplication32_mpi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
+void dev_Qtm_pm_ndpsi_mpi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
                                   dev_spinor * spinin_up , dev_spinor * spinin_dn ,
                                   int gridsize1, int blocksize1, int gridsize2, int blocksize2,
                                   int gridsize3, int blocksize3, int gridsize4, int blocksize4);
@@ -102,7 +102,7 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
                     int ieo,
                     int gridsize, int blocksize);
 
-void matrix_multiplication32_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * spinout_dn,
+void dev_Qtm_pm_ndpsi_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * spinout_dn,
                                         dev_spinor * spinin_up , dev_spinor * spinin_dn ,
                                         int gridsize1, int blocksize1, int gridsize2, int blocksize2,
                                         int gridsize3, int blocksize3, int gridsize4, int blocksize4);
