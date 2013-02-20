@@ -1299,12 +1299,12 @@ inline void rmQuotes(char *str){
   }
   {SPC}*MonitorForces{EQL}yes {
     Integrator.monitor_forces = 1;
-    if(myverbose) printf("  Force monitoring switched on line %d\n", line_of_file);
+    if(myverbose) printf("  Force monitoring switched on in line %d\n", line_of_file);
     BEGIN(INTEGRATOR);
   }
   {SPC}*MonitorForces{EQL}no {
     Integrator.monitor_forces = 0;
-    if(myverbose) printf("  Force monitoring switched on line %d\n", line_of_file);
+    if(myverbose) printf("  Force monitoring switched off in line %d\n", line_of_file);
     BEGIN(INTEGRATOR);
   }
   {SPC}*IntegrationSteps{DIGIT}{EQL}{DIGIT}+ {
