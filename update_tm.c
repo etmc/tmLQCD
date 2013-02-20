@@ -149,6 +149,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
   ohnohack_remap_g_gauge_field(g_gf);
 
+  if(Integrator.monitor_forces) monitor_forces(&hf);
   /* initialize the momenta  */
   enep = random_su3adj_field(reproduce_randomnumber_flag, hf.momenta);
 
@@ -276,7 +277,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     {
     int thread_num = omp_get_thread_num();
 #endif
-
+    su3 ALIGN v0;
 #ifdef OMP
 #pragma omp for
 #endif
@@ -286,12 +287,11 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       {
         v=&hf.gaugefield[ix][mu];
         w=&gauge_tmp[ix][mu];
-        /* NOTE Should this perhaps be some function or macro? */
-        ds = sqrt(conj(v->c00 - w->c00) * (v->c00 - w->c00) + conj(v->c01 - w->c01) * (v->c01 - w->c01) + conj(v->c02 - w->c02) * (v->c02 - w->c02) +
-                  conj(v->c10 - w->c10) * (v->c10 - w->c10) + conj(v->c11 - w->c11) * (v->c11 - w->c11) + conj(v->c12 - w->c12) * (v->c12 - w->c12) +
-                  conj(v->c20 - w->c20) * (v->c20 - w->c20) + conj(v->c21 - w->c21) * (v->c21 - w->c21) + conj(v->c22 - w->c22) * (v->c22 - w->c22));
 
-        tr = ds + kc;
+        _su3_minus_su3(v0, *v, *w);
+        _su3_square_norm(ds, v0);
+
+        tr = sqrt(ds) + kc;
         ts = tr + ks;
         tt = ts-ks;
         ks = ts;

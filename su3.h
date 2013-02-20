@@ -536,6 +536,11 @@ _sse_store_up(r);
    (u).c21 += I * a * (v).c21; \
    (u).c22 += I * a * (v).c22;
 
+#define _su3_square_norm(s, v) \
+  s = conj(v.c00) * (v.c00) + conj(v.c01) * (v.c01) + conj(v.c02) * (v.c02) + \
+    conj(v.c10) * (v.c10) + conj(v.c11) * (v.c11) + conj(v.c12) * (v.c12) + \
+    conj(v.c20) * (v.c20) + conj(v.c21) * (v.c21) + conj(v.c22) * (v.c22);
+
 #if ((defined SSE2) || (defined SSE3))
 
 #define _su3_times_su3(u,v,w) _sse_su3_times_su3(u,v,w)

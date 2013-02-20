@@ -113,7 +113,7 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
 #ifdef MPI
   xchange_deri(hf->derivative);
 #endif
-
+    
 #ifdef OMP
 #pragma omp parallel for
 #endif
