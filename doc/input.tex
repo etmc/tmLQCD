@@ -180,6 +180,12 @@ supported general input paramters:
   Whether or not to use even/odd preconditioning in the invert
   executable.
 
+\item {\ttfamily OMPNumThreads}:\\
+  Number of OpenMP threads to use per process when compiled with 
+  OpenMP support. On some architectures, the {\ttfamily OMP\_NUM\_THREADS}
+  environment variable needs to be set to the same value for correct
+  operation. The default is 1.
+
 \end{enumerate}
 
 The following input parameters are {\ttfamily invert} specific:
@@ -300,8 +306,8 @@ The following input parameters are {\ttfamily invert} specific:
 
 The following input parameters are {\ttfamily hmc\_tm} specific:
 \begin{enumerate}
-\item {ThermalisationSweeps}:\\
-  As longer as the number of trajectories is smaller than this number
+\item {\ttfamily ThermalisationSweeps}:\\
+  As long as the number of trajectories is smaller than this number
   the acceptance test will be discarded. This might help to faster
   equilibrate the system.
 
@@ -709,11 +715,23 @@ All of them provide the following options available:
 \item {\ttfamily kappa}:
 \item {\ttfamily Solver}:\\
   Sets the solver to be used. Possible values are among others
-  {\ttfamily CG, BiCGstab, CGS, GMRES, PCG}.
+  {\ttfamily CG, BiCGstab, CGS, GMRES, PCG and CGMMS}.
 \item {\ttfamily MaxSolverIterations}:
 \item {\ttfamily PropagatorPrecision}:
 \item {\ttfamily SolverPrecision}:
 \end{itemize}
+
+The {\ttfamily CGMMS} solver can be used to invert the operator for 
+multiple masses at the same time. To this end a list of masses needs
+to be provided either as a comma-separated list or as the filename of a
+text file which lists one mass per line. The masses must be provided in the
+format $2 \kappa \mu_n$. The normal mass specified for the operator is
+used as $\mu_0$. The masses must be ordered such that $\mu_0 < \mu_1 < ... < \mu_n$.:
+
+\begin{itemize}
+  \item{ {\ttfamily ExtraMasses = 0.12, 0.14, 0.17, 0.21, 0.30} }
+  \item{ {\ttfamily ExtraMasses = extra\_masses.input } }	
+\end{itemize} 
 
 \subsubsection{Online Measurements}
 
@@ -732,7 +750,7 @@ where {\ttfamily TYPE} can be currently one of the following:
   \end{itemize}
   this is for zero temperature, so the stochastic source is at fixed
   $t$. In addition it needs an operator defined in the input file,
-  otherwise it will do nothing.
+  otherwise it will do nothing. (see input keywords for {\ttfamily invert} above)
 \item {\ttfamily PIONNORM}:
   \begin{itemize}
   \item {\ttfamily MaxSolverIterations}
