@@ -22,7 +22,7 @@
 #include "utils.ih"
 #include <read_input.h>
 
-int write_first_messages(FILE * parameterfile, const char const *executable, const char const *git_hash) {
+int write_first_messages(FILE * parameterfile, char const * const executable, char const * const git_hash) {
   char message[1024];
   snprintf(message, 1024, "This is the %s code for twisted mass Wilson QCD\n\nVersion %s, commit %s\n",executable,PACKAGE_VERSION,git_hash);
   printf("%s",message);

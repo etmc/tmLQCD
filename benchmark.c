@@ -44,6 +44,7 @@
 #endif
 #ifdef OMP
 # include <omp.h>
+# include "init/init_openmp.h"
 #endif
 #include "gettime.h"
 #include "su3.h"
@@ -122,19 +123,7 @@ int main(int argc,char *argv[])
   }
 
 #ifdef OMP
-  if(omp_num_threads > 0) 
-  {
-     omp_set_num_threads(omp_num_threads);
-  }
-  else {
-    if( g_proc_id == 0 )
-      printf("# No value provided for OmpNumThreads, running in single-threaded mode!\n");
-
-    omp_num_threads = 1;
-    omp_set_num_threads(omp_num_threads);
-  }
-
-  init_omp_accumulators(omp_num_threads);
+  init_openmp();
 #endif
 
   tmlqcd_mpi_init(argc, argv);

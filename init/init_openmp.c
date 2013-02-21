@@ -1,5 +1,5 @@
 /***********************************************************************
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ * Copyright (C) 2013 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -17,25 +17,37 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _INIT_H
-#define _INIT_H
-
-#include "init/init_bispinor_field.h"
-#include "init/init_chi_spinor_field.h"
-#include "init/init_dirac_halfspinor.h"
-#include "init/init_gauge_field.h"
-#include "init/init_gauge_tmp.h"
-#include "init/init_geometry_indices.h"
-#ifdef WITHLAP
-#  include "init/init_jacobi_field.h"
+#ifdef HAVE_CONFIG_H
+# include<config.h>
 #endif
-#include "init/init_moment_field.h"
-#include "init/init_spinor_field.h"
-#include "init/init_stout_smear_vars.h"
 #ifdef OMP
-# include <omp.h>
-# include "init/init_omp_accumulators.h"
-# include "init/init_openmp.h"
+#include <omp.h>
 #endif
+#include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
+#include "global.h"
+#include "init_omp_accumulators.h"
 
-#endif
+void init_openmp(void) {
+  
+  if(omp_num_threads > 0) 
+  {
+     omp_set_num_threads(omp_num_threads);
+     if( g_debug_level > 0 && g_proc_id == 0 ) {
+       printf("# Instructing OpenMP to use %d threads.\n",omp_num_threads);
+     }
+  }
+  else {
+    if( g_proc_id == 0 )
+      printf("# No value provided for OmpNumThreads, running in single-threaded mode!\n");
+
+    omp_num_threads = 1;
+    omp_set_num_threads(omp_num_threads);
+  }
+
+  init_omp_accumulators(omp_num_threads);
+
+  return;
+}
+

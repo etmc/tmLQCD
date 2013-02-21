@@ -50,17 +50,17 @@ void update_momenta(int * mnllist, double step, const int no,
       _zero_su3adj(hf->derivative[i][mu]);
     }
   }
-
+  
   for(int k = 0; k < no; k++) {
     if(monomial_list[ mnllist[k] ].derivativefunction != NULL) {
       monomial_list[ mnllist[k] ].derivativefunction(mnllist[k], hf);
     }
   }
-
+  
 #ifdef MPI
   xchange_deri(hf->derivative);
 #endif
-
+    
 #ifdef OMP
 #pragma omp parallel for
 #endif

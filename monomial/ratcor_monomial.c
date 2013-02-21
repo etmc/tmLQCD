@@ -68,6 +68,7 @@ void ratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
   g_mu = 0.;
   g_mu3 = 0.;
   g_kappa = mnl->kappa;
+  mnl->iter0 = 0;
   boundary(mnl->kappa);
   if(mnl->type == CLOVERRATCOR) {
     g_c_sw = mnl->c_sw;

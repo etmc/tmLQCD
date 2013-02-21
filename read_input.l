@@ -1268,6 +1268,7 @@ inline void rmQuotes(char *str){
 <INITINTEGRATOR>egrator{SPC}* {
   Integrator.no_timescales = -1;
   Integrator.tau = 1.;
+  Integrator.monitor_forces = 0;
   for(i = 0; i < 10; i++) {
     Integrator.lambda[i] = _default_2mn_lambda;
     Integrator.type[i] = MN2;
@@ -1295,6 +1296,16 @@ inline void rmQuotes(char *str){
 
     if(myverbose) printf("  timescale %d type = %s line %d\n", a, type, line_of_file);
     free(type);
+  }
+  {SPC}*MonitorForces{EQL}yes {
+    Integrator.monitor_forces = 1;
+    if(myverbose) printf("  Force monitoring switched on in line %d\n", line_of_file);
+    BEGIN(INTEGRATOR);
+  }
+  {SPC}*MonitorForces{EQL}no {
+    Integrator.monitor_forces = 0;
+    if(myverbose) printf("  Force monitoring switched off in line %d\n", line_of_file);
+    BEGIN(INTEGRATOR);
   }
   {SPC}*IntegrationSteps{DIGIT}{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z]%d = %d", name, &a, &b);
