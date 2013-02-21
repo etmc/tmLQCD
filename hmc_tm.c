@@ -77,12 +77,12 @@
 extern int nstore;
 int const rlxdsize = 105;
 
+static void usage();
+static void process_args(int argc, char *argv[], char ** input_filename, char ** filename);
+static void set_default_filenames(char ** input_filename, char ** filename);
+
 int main(int argc,char *argv[])
 {
-  static void usage();
-  static void process_args(int argc, char *argv[], char ** input_filename, char ** filename);
-  static void set_default_filenames(char ** input_filename, char ** filename);
-
   FILE *parameterfile=NULL, *countfile=NULL;
   char *filename = NULL;
   char datafilename[206];
