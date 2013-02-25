@@ -22,15 +22,15 @@
 #endif
 #ifdef OMP
 #include <omp.h>
+#include "init_omp_accumulators.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
 #include "global.h"
-#include "init_omp_accumulators.h"
 
 void init_openmp(void) {
-  
+#ifdef OMP  
   if(omp_num_threads > 0) 
   {
      omp_set_num_threads(omp_num_threads);
@@ -47,7 +47,7 @@ void init_openmp(void) {
   }
 
   init_omp_accumulators(omp_num_threads);
-
+#endif
   return;
 }
 
