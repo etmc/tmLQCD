@@ -38,7 +38,7 @@ static inline void zero_ ## NAME ##_field(NAME ## _field_t *target)             
                                                                                                 \
 static inline void exchange_ ## NAME ## _field(NAME ## _field_t *target)                                \
 {                                                                                               \
-  generic_exchange(*target, sizeof(DATATYPE));                                            \
+  generic_exchange(target, sizeof(DATATYPE));                                            \
 }                                                                                               \
                                                                                                 \
 static inline void swap_ ## NAME ## _field(NAME ## _field_t *left, NAME ## _field_t *right)            \
