@@ -78,7 +78,7 @@ return erg;
 
 __device__ inline dev_complex_d dev_cdiv_d(dev_complex_d c1, dev_complex_d c2) { /* dividiert c1 durch c2 */
   dev_complex_d erg;
-  REAL oneovernenner = 1.0/(c2.re*c2.re + c2.im*c2.im);
+  double oneovernenner = 1.0/(c2.re*c2.re + c2.im*c2.im);
   erg.re = oneovernenner*(c1.re*c2.re + c1.im*c2.im);
   erg.im = oneovernenner*(c1.im*c2.re - c1.re*c2.im);
 return erg;
@@ -2265,7 +2265,13 @@ extern "C" double double_dotprod(dev_spinor_d* x, dev_spinor_d* y){
 
 
 
-
+__global__ void dev_zero_spinor_field_d(dev_spinor_d* s1){
+  int pos;
+  pos= threadIdx.x + blockDim.x*blockIdx.x;  
+  if(pos < dev_VOLUME){
+          dev_zero_spinor_d(&(s1[pos]));
+  }
+}
 
 
 

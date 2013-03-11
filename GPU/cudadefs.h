@@ -4,26 +4,25 @@
 
 #define ACCUM_N 2048
 #define DOTPROD_DIM 128
-
 #define GF_8
-//#define TEMPORALGAUGE
+#define TEMPORALGAUGE
 #define USETEXTURE
 //#define HALF
 #define GPU_DOUBLE
-//#define RELATIVISTIC_BASIS 
+#define RELATIVISTIC_BASIS 
 //#define GPU_3DBLOCK
-#define LOWOUTPUT
+//#define LOWOUTPUT
 
 
 
 #define REAL float
-#define BLOCK 384 // Block Size	
+#define BLOCK 288 // Block Size	
 					// dev_Hopping_Matrix<<<>>>()
 #define BLOCKSUB 8
 
 
-#define BLOCK2 512 // Block Size 2 for dev_mul_one_pm...		// dev_mul_one_pm_imu_inv<<<>>>()
-#define BLOCK3 128							// dev_copy_spinor_field<<<>>>(), dev_zero_spinor_field<<<>>>()
+#define BLOCK2 256 // Block Size 2 for dev_mul_one_pm...		// dev_mul_one_pm_imu_inv<<<>>>()
+#define BLOCK3 512							// dev_copy_spinor_field<<<>>>(), dev_zero_spinor_field<<<>>>()
 #define REDUCTION_N 128 // Block size for reduction operations
 
 #define BLOCKGAUGE 128

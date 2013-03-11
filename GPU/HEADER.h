@@ -15,7 +15,7 @@ void to_device (dev_spinor * device, spinor * host, dev_spinor * auxiliary, int 
 
 void to_host (spinor * host, dev_spinor * device, dev_spinor * auxiliary, int size);
 
-__global__ void he_cg_init_nd_additional (float param_mubar, float param_epsbar);
+__global__ void he_cg_init_nd_additional (double param_mubar, double param_epsbar);
 
 __global__ void dev_mul_one_pm_imubar_gamma5 (dev_spinor * sin, dev_spinor * sout, REAL sign);
 
@@ -30,15 +30,16 @@ void flopcount(unsigned long long int& total, int add);
 
 extern "C" void benchmark_eo_nd (spinor * const Q_up, spinor * const Q_dn, int N);
 
-int cg_eo_nd (dev_su3_2v * gf,
+int dev_cg_eo_nd (dev_su3_2v * gf,
               dev_spinor * P_up, dev_spinor * P_dn,
               dev_spinor * Q_up, dev_spinor * Q_dn,
+	      float shift,
               int max_iter,
               int check_abs , int check_rel,
               double eps_abs, double eps_rel       );
 
 extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
-                                 spinor * Q_up, spinor * Q_dn,
+                                 spinor * Q_up, spinor * Q_dn, double shift,
                                  int max_iter, double eps_sq, int rel_prec);
 
 void set_global_sizes();
@@ -70,7 +71,7 @@ __global__ void dev_Hopping_Matrix_mpi (const dev_su3_2v * gf, const dev_spinor 
                                         int ieo);
 
 void dev_Qtm_pm_ndpsi_mpi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
-                                  dev_spinor * spinin_up , dev_spinor * spinin_dn ,
+                                  dev_spinor * spinin_up , dev_spinor * spinin_dn , 
                                   int gridsize1, int blocksize1, int gridsize2, int blocksize2,
                                   int gridsize3, int blocksize3, int gridsize4, int blocksize4);
 
@@ -82,10 +83,12 @@ int cg_eo_nd_mpi (dev_su3_2v * gf,
                   double eps_abs, double eps_rel       );
 
 extern "C" int mixedsolve_eo_nd_mpi (spinor * P_up, spinor * P_dn,
-                                     spinor * Q_up, spinor * Q_dn,
+                                     spinor * Q_up, spinor * Q_dn, double shift,
                                      int max_iter, double eps_sq, int rel_prec);
 
-
+extern "C" int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn, 
+		 spinor * const Qup, spinor * const Qdn, 
+		 solver_pm_t * solver_pm);
 
 
 // ASYNC
@@ -210,7 +213,9 @@ float float_dotprod(dev_spinor* x, dev_spinor* y);
 
 extern "C" int find_devices();
 extern "C" int bind_texture_spin(dev_spinor* s, int i);
+extern "C" int bind_texture_spin_dn(dev_spinor* s, int i);
 extern "C" int unbind_texture_spin(int i);
+extern "C" int unbind_texture_spin_dn(int i);
 extern "C" int bind_texture_gf(dev_su3_2v * gf);
 extern "C" int unbind_texture_gf();
 extern "C" int bind_texture_nn(int* nn);
@@ -251,11 +256,18 @@ extern "C" void dev_Qtm_pm_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinout,
 				 int gridsize, int blocksize, int gridsize2, int blocksize2,
 				 int* dev_eoidx_even, int* dev_eoidx_odd, 
 				 int* dev_nn_eo, int* dev_nn_oe);
-				 
+
+extern "C" void dev_Qtm_minus_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinout,dev_spinor_d* spin_eo1_d, 
+				 int gridsize, int blocksize, int gridsize2, int blocksize2,
+				 int* dev_eoidx_even, int* dev_eoidx_odd, 
+				 int* dev_nn_eo, int* dev_nn_oe);				 
 				 
 extern "C" void gpu_deriv_Sb(const int ieo, spinor * const l, spinor * const k,
                                hamiltonian_field_t * const hf, const double factor);				 
 extern "C" void gpu_gauge_derivative(int withrectangles, hamiltonian_field_t * const hf, double c_gauge, double c_rect);				 
+
+
+
 #define _MIXED_SOLVE_H_
 
 #endif

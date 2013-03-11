@@ -44,7 +44,15 @@
 
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include "cublas.h"
+
+#ifdef CUDA_45  
+  #include "cublas_v2.h"
+#else
+  #include "cublas.h"
+#endif 
+
+
+
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -53,7 +61,7 @@
 #include "../global.h"
 #include "../hamiltonian_field.h"
 #include "cudaglobal.h"
-//#include "mixed_solve.h"
+#include "../solver/solver.h"
 #include "HEADER.h"
 #include "cudadefs.h"
 #include <math.h>
@@ -73,6 +81,8 @@ extern "C" {
 #include "../polyakov_loop.h"
 #include "../su3spinor.h"
 #include "../solver/solver_field.h"
+
+#include "../gettime.h"
 #ifdef MPI
   #include "../xchange.h"
 #endif 
@@ -134,7 +144,12 @@ dev_spinor_d* dev_spin_eo1_d;
 dev_spinor_d* dev_spin_eo2_d;
 dev_spinor_d * h2d_spin_d;
 
-
+dev_spinor_d * dev_spin_eo1_up_d;
+dev_spinor_d * dev_spin_eo1_dn_d;
+dev_spinor_d * dev_spin_eo2_up_d;
+dev_spinor_d * dev_spin_eo2_dn_d;
+dev_spinor_d * dev_spin_eo3_up_d;
+dev_spinor_d * dev_spin_eo3_dn_d;
 
 //spinor fields for reliable update solver
 dev_spinor* dev_spin1_reliable;
@@ -246,7 +261,8 @@ __constant__ __device__ dev_complex dev_mk2c;
 __constant__ __device__ dev_complex dev_mk3c;
 
 
-
+// physical parameters (on device)
+__device__ float mubar, epsbar;
 
 
 
@@ -258,6 +274,8 @@ __device__  int  dev_LX,dev_LY,dev_LZ,dev_T,dev_VOLUME,dev_Offset,dev_VOLUMEPLUS
 int host_Offset;
 
 
+int nStreams_nd = 2;
+cudaStream_t stream_nd[2];
 
 
 // include files with other GPU code as all GPU code has to reside in one file 
@@ -367,8 +385,8 @@ EXTERN int g_nb_z_up, g_nb_z_dn;
   #include "ASYNC.cuh"
 #endif 
 
-
-
+// nd-mms solver based on single mass solver and polynomial initial guess
+#include "nd_mms.cuh"
 
 
 
@@ -435,7 +453,7 @@ __global__ void dev_mul_one_pm_imu_sub_mul_gamma5(dev_spinor* sin1, dev_spinor* 
 
 
 // aequivalent to Qtm_pm_psi in tm_operators.c, this is NON-MPI version
-extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int gridsize, dim3 blocksize, int gridsize2, int blocksize2){
+extern "C" void dev_Qtm_pm_psi_old(dev_spinor* spinin, dev_spinor* spinout, int gridsize, dim3 blocksize, int gridsize2, int blocksize2){
   //spinin == odd
   //spinout == odd
   
@@ -494,6 +512,70 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
   #endif
   dev_mul_one_pm_imu_sub_mul_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo2, dev_spin_eo1,  spinout , +1.); 
 }
+
+
+
+
+
+// aequivalent to Qtm_pm_psi in tm_operators.c, this is NON-MPI version
+// fused hopping and linalg kernels to be more efficient on kepler
+extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int gridsize, dim3 blocksize, int gridsize2, int blocksize2){
+  //spinin == odd
+  //spinout == odd
+  
+  int VolumeEO = VOLUME/2;
+  //Q_{-}
+  #ifdef USETEXTURE
+    bind_texture_spin(spinin,1);
+  #endif
+    dev_Hopping_Matrix_ext3<<<gridsize, blocksize>>>
+             (dev_gf, spinin, spinout, -1.0, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, 0, VolumeEO); //dev_spin_eo1 == even -> 0           
+  //unbind_texture_nn();           
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+  #endif
+
+  
+
+  #ifdef USETEXTURE
+    bind_texture_spin(spinout,1);
+  #endif
+    dev_Hopping_Matrix_ext2<<<gridsize, blocksize>>>
+            (dev_gf, spinout, dev_spin_eo2, -1.0, spinin, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, 0, VolumeEO); 
+  //unbind_texture_nn();
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+  #endif
+
+  
+  //Q_{+}
+
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo2,1);
+  #endif
+    dev_Hopping_Matrix_ext3<<<gridsize, blocksize>>>
+          (dev_gf, dev_spin_eo2, dev_spin_eo1, +1.0, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, 0, VolumeEO); //dev_spin_eo1 == even -> 0
+  //unbind_texture_nn();      
+  #ifdef USETEXTURE  
+    unbind_texture_spin(1);
+  #endif
+
+  
+
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo1,1);
+  #endif
+  //bind_texture_nn(dev_nn_oe);
+    dev_Hopping_Matrix_ext2<<<gridsize, blocksize>>>
+             (dev_gf, dev_spin_eo1, spinout, 1.0, dev_spin_eo2,  dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, 0, VolumeEO); 
+  //unbind_texture_nn();  
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+  #endif
+
+}
+
+
 
 
 
@@ -719,55 +801,6 @@ extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
 
 
 
-__global__ void dev_zero_spinor_field(dev_spinor* s1){
-  int pos;
-  pos= threadIdx.x + blockDim.x*blockIdx.x;  
-  if(pos < dev_VOLUME){
-          dev_zero_spinor(&(s1[pos]));
-  }
-}
-
-
-
-
-__global__ void dev_copy_spinor_field(dev_spinor* s1, dev_spinor* s2){
-    int pos;
-  pos= threadIdx.x + blockDim.x*blockIdx.x;  
-  if(pos < dev_VOLUME){
-      dev_copy_spinor(&(s1[pos]),&(s2[pos]));
-  } 
-}
-
-
-
-__global__ void dev_skalarmult_add_assign_spinor_field(dev_spinor* s1, float lambda, dev_spinor* s2, dev_spinor* so){
-  int pos;
-  pos= threadIdx.x + blockDim.x*blockIdx.x;  
-  if(pos < dev_VOLUME){
-    dev_skalarmult_add_assign_spinor(&(s1[pos]), lambda ,&(s2[pos]), &(so[pos]) );
-  }
-}
-
-
-
-__global__ void dev_skalarmult_spinor_field(dev_spinor* s1, float lambda, dev_spinor* so){
-  int pos;
-  pos= threadIdx.x + blockDim.x*blockIdx.x;  
-  if(pos < dev_VOLUME){
-    dev_skalarmult_spinor(&(s1[pos]), dev_initcomplex(lambda,0.0) , &(so[pos]) );
-  }
-}  
-
-
-
-__global__ void dev_complexmult_spinor_field(dev_spinor* s1, dev_complex lambda, dev_spinor* so){
-  int pos;
-  pos= threadIdx.x + blockDim.x*blockIdx.x;  
-  if(pos < dev_VOLUME){
-    dev_skalarmult_spinor(&(s1[pos]), lambda , &(so[pos]) );
-  }
-}
-
 
 
 
@@ -830,7 +863,7 @@ __global__ void dev_init_grid (int* grid){
 void update_constants(int *grid){
   dev_complex h0,h1,h2,h3,mh0, mh1, mh2, mh3;
   
-  //Hopping Matrix and tm_Dirac_op are defined with a relative in the imaginary parts of kappa
+  //Hopping Matrix and tm_Dirac_op are defined with a relative minus in the imaginary parts of kappa
   //Of course both comply with the cpu part thus no harm done
   // FIXME
   float sign;
@@ -868,6 +901,7 @@ void update_constants(int *grid){
   #endif
   
   // try using constant mem for kappas
+  /*
   cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex)) ; 
   cudaMemcpyToSymbol("dev_k1c", &h1, sizeof(dev_complex)) ; 
   cudaMemcpyToSymbol("dev_k2c", &h2, sizeof(dev_complex)) ; 
@@ -877,7 +911,7 @@ void update_constants(int *grid){
   cudaMemcpyToSymbol("dev_mk1c", &mh1, sizeof(dev_complex)) ; 
   cudaMemcpyToSymbol("dev_mk2c", &mh2, sizeof(dev_complex)) ; 
   cudaMemcpyToSymbol("dev_mk3c", &mh3, sizeof(dev_complex)) ;  
-  
+  */
   he_cg_init<<< 1, 1 >>> (grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
   // BEWARE in dev_tm_dirac_kappa we need the true mu (not 2 kappa mu!)
 }
@@ -1092,7 +1126,14 @@ extern "C" int dev_cg(
  
  
  //init blas
+#ifdef CUDA_45
+ cublasHandle_t handle;
+ cublasCreate(&handle);
+#else
  cublasInit();
+#endif 
+
+
  printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
  printf("have initialized cublas\n");
  
@@ -1272,7 +1313,13 @@ extern "C" int dev_cg(
   cudaFree(rk);
   cudaFree(alpha);
   cudaFree(beta);
+  
+#ifdef CUDA_45  
+  cublasDestroy(handle);
+#else
   cublasShutdown();
+#endif
+  
   return(i);
 }
 
@@ -1440,7 +1487,12 @@ extern "C" int dev_cg_eo(
  #endif
  //init blas
  #ifndef MPI
-  cublasInit();
+    #ifdef CUDA_45
+      cublasHandle_t handle;
+      cublasCreate(&handle);
+    #else
+      cublasInit();
+    #endif 
  #else
   init_blas(VOLUME/2);
  #endif 
@@ -1499,6 +1551,20 @@ extern "C" int dev_cg_eo(
         printf("%s\n", cudaGetErrorString(cudaGetLastError()));
       }
     }
+
+
+  #ifdef ALGORITHM_BENCHMARK
+    double effectiveflops;	// will used to count the "effective" flop's (from the algorithmic perspective)
+    double hoppingflops = 1608.0;
+    double matrixflops  = 2*(2*hoppingflops + 120.0 + 132.0); //that is for dev_Qtm_pm_psi
+    #ifdef MPI
+      double allflops;				// flops added for all processes
+    #endif
+      double starteffective;
+      double stopeffective;
+   // timer
+   starteffective = gettime();
+  #endif
 
 
  
@@ -1615,6 +1681,26 @@ extern "C" int dev_cg_eo(
     
     if (g_proc_id == 0) printf("Final residue: %.6e\n",host_dotprod);
  
+  #ifdef ALGORITHM_BENCHMARK
+    cudaThreadSynchronize();
+    stopeffective = gettime();
+      // will now count the number of effective flops
+      // effectiveflops  =  #(inner iterations)*(matrixflops+linalgflops)*VOLUME/2  +  #(outer iterations)*(matrixflops+linalgflops)*VOLUME/2
+      // outer loop: linalg  =  flops for calculating  r(k+1) and x(k+1)
+      // inner loop: linalg  =  flops for calculating  alpha, x(k+1), r(k+1), beta, d(k+1)
+     #ifndef MPI
+       int proccount = g_nproc;
+     #else
+       int proccount = 1;
+     #endif 
+     if(g_proc_id == 0){
+      	effectiveflops = i*proccount*(matrixflops + 2*2*24 + 2*24 + 2*24 + 2*2*24 + 2*24)*VOLUME/2;
+      	printf("effective BENCHMARK:\n");
+      	printf("\ttotal mixed solver time:   %.4e sec\n", double(stopeffective-starteffective));
+      	printf("\tfloating point operations: %.4e flops\n", effectiveflops);
+      	printf("\tinner solver performance:  %.4e Gflop/s\n", double(effectiveflops) / double(stopeffective-starteffective) / 1.0e9);
+     }
+#endif
   
   // x_result = spin1 !
   
@@ -1635,7 +1721,11 @@ extern "C" int dev_cg_eo(
   cudaFree(alpha);
   cudaFree(beta);
   #ifndef MPI
-   cublasShutdown(); 
+    #ifdef CUDA_45  
+      cublasDestroy(handle);
+    #else
+      cublasShutdown();
+    #endif 
   #else
    finalize_blas();
   #endif 
@@ -2127,8 +2217,8 @@ extern "C" void init_mixedsolve_eo(su3** gf){
     
   }
 //set cache configuration
-  if (g_cart_id == 0) printf("Setting GPU cache configuration to prefer L1 cache\n");
-  cudaFuncSetCacheConfig(DummyKernel, cudaFuncCachePreferL1);
+  //if (g_cart_id == 0) printf("Setting GPU cache configuration to prefer L1 cache\n");
+  //cudaFuncSetCacheConfig(DummyKernel, cudaFuncCachePreferL1);
 //  
   
   
@@ -2153,7 +2243,13 @@ extern "C" void init_mixedsolve_eo(su3** gf){
   #ifdef MPI
     }
   #endif
-  
+  #ifndef LOWOUTPUT
+    #ifdef RELATIVISTIC_BASIS
+      if (g_proc_id == 0) printf("Using RELATIVISTIC gamma basis.\n");
+    #else
+      if (g_proc_id == 0) printf("Using TMLQCD gamma basis.\n");    
+    #endif
+  #endif
   #ifndef MPI
   	#ifdef GF_8
   	  /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
@@ -2857,6 +2953,7 @@ void benchmark(spinor * const Q){
   mh3.re = -(float)creal(ka3);    mh3.im = (float)cimag(ka3);
   
   // try using constant mem for kappas
+  /*
   cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex)) ; 
   cudaMemcpyToSymbol("dev_k1c", &h1, sizeof(dev_complex)) ; 
   cudaMemcpyToSymbol("dev_k2c", &h2, sizeof(dev_complex)) ; 
@@ -2866,7 +2963,7 @@ void benchmark(spinor * const Q){
   cudaMemcpyToSymbol("dev_mk1c", &mh1, sizeof(dev_complex)) ; 
   cudaMemcpyToSymbol("dev_mk2c", &mh2, sizeof(dev_complex)) ; 
   cudaMemcpyToSymbol("dev_mk3c", &mh3, sizeof(dev_complex)) ;  
-  
+  */
   #ifdef GPU_3DBLOCK
     dim3 blockdim3(BLOCK,BLOCKSUB,BLOCKSUB);
     int gridsize;
@@ -3004,6 +3101,7 @@ void benchmark2(spinor * const Q){
   mh3.re = -(float)creal(ka3);    mh3.im = (float)cimag(ka3);
   
   // try using constant mem for kappas
+  /*
   cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex)) ; 
   cudaMemcpyToSymbol("dev_k1c", &h1, sizeof(dev_complex)) ; 
   cudaMemcpyToSymbol("dev_k2c", &h2, sizeof(dev_complex)) ; 
@@ -3013,7 +3111,7 @@ void benchmark2(spinor * const Q){
   cudaMemcpyToSymbol("dev_mk1c", &mh1, sizeof(dev_complex)) ; 
   cudaMemcpyToSymbol("dev_mk2c", &mh2, sizeof(dev_complex)) ; 
   cudaMemcpyToSymbol("dev_mk3c", &mh3, sizeof(dev_complex)) ;  
-  
+  */
   
   int blockdim3=BLOCK;
   int gridsize;
@@ -3108,7 +3206,80 @@ extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_it
 
 
 
+void test_double_operator(spinor* const Q, const int N){
+   
+   size_t dev_spinsize_d = 6*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !   
+   int gridsize;
+     //this is the partitioning for the HoppingMatrix kernel
+     int blockdim3 = BLOCKD;
+     if( VOLUME/2 % blockdim3 == 0){
+       gridsize = (int) VOLUME/2/blockdim3;
+     }
+     else{
+       gridsize = (int) VOLUME/2/blockdim3 + 1;
+     }
+     int griddim3 = gridsize;
+   
+     //this is the partitioning for dev_mul_one_pm...
+     int blockdim4 = BLOCK2D;
+     if( VOLUME/2 % blockdim4 == 0){
+       gridsize = (int) VOLUME/2/blockdim4;
+     }
+     else{
+       gridsize = (int) VOLUME/2/blockdim4 + 1;
+     }
+     int griddim4 = gridsize;    
+     
+     
+  spinor ** solver_field = NULL;
+  const int nr_sf = 3;
+  init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);  
 
+  //apply cpu matrix
+  Qtm_pm_psi(solver_field[0], Q);  
+  
+  //apply gpu matrix
+  order_spin_gpu(Q, h2d_spin_d);
+  cudaMemcpy(dev_spin0_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);
+  dev_Qtm_pm_psi_d(dev_spin0_d, dev_spin1_d,  
+		      dev_spin_eo1_d, dev_spin_eo2_d, 
+		      griddim3, blockdim3, griddim4, blockdim4,
+		      dev_eoidx_even, dev_eoidx_odd, 
+		      dev_nn_eo, dev_nn_oe); 
+		
+  cudaMemcpy(h2d_spin_d, dev_spin1_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
+  unorder_spin_gpu(h2d_spin_d, solver_field[1]);      
+
+  diff(solver_field[2], solver_field[1], solver_field[0],N);
+  double rk = square_norm(solver_field[2], N, 1);
+    
+  printf("Testing double matrix:\n");
+  printf("cpu: Squared difference is: %.8e\n", rk);
+  printf("cpu: Squared difference per spinor component is: %.8e\n", rk/N/24.0);  
+  
+  //now test dev_diff...
+  order_spin_gpu(solver_field[0], h2d_spin_d);
+  cudaMemcpy(dev_spin0_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);
+
+
+  dev_diff_d<<<griddim4,blockdim4>>>(dev_spin2_d,dev_spin0_d,dev_spin1_d);
+  double rk_gpu = double_dotprod(dev_spin2_d,dev_spin2_d);
+  
+  printf("Testing double linalg:\n");
+  printf("gpu: Squared difference is: %.8e\n", rk_gpu);
+  printf("gpu: Squared difference per spinor component is: %.8e\n", rk_gpu/N/24.0); 
+  
+  //fetch back gpu diff 
+  cudaMemcpy(h2d_spin_d, dev_spin2_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
+  unorder_spin_gpu(h2d_spin_d, solver_field[0]); 
+  
+  diff(solver_field[1], solver_field[2], solver_field[0],N);
+  rk = square_norm(solver_field[1], N, 1);
+  printf("gpu <-> cpu diff operation is: %.8e\n", rk); 
+  
+  
+  finalize_solver(solver_field, nr_sf);  
+}
 
 
 
@@ -3216,6 +3387,8 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
 
   
   #ifdef GPU_DOUBLE
+  
+    test_double_operator(Q,N);
     double testnorm;
     
     /*!!!!  WHY IS P NONZERO????? */
@@ -3278,6 +3451,24 @@ for(iter=0; iter<max_iter; iter++){
    
    if(((rk <= eps) && (rel_prec == 0)) || ((rk <= eps*sourcesquarenorm) && (rel_prec == 1)))
    {
+/*     
+
+    #ifdef GPU_DOUBLE
+      dev_Qtm_minus_psi_d(dev_spin1_d, dev_spin2_d,  
+		      dev_spin_eo1_d, 
+		      griddim3, blockdim3, griddim4, blockdim4,
+		      dev_eoidx_even, dev_eoidx_odd, 
+		      dev_nn_eo, dev_nn_oe);       
+      cudaMemcpy(h2d_spin_d, dev_spin2_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
+      unorder_spin_gpu(h2d_spin_d, solver_field[3]);  
+      assign(P, solver_field[3], N);     
+    #else
+     //multiply with Qtm_minus_psi (for non gpu done in invert_eo.c)
+     Qtm_minus_psi(solver_field[3], solver_field[1]);
+     assign(P, solver_field[3], N);
+    #endif
+
+*/
     #ifdef GPU_DOUBLE
       cudaMemcpy(h2d_spin_d, dev_spin1_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
       unorder_spin_gpu(h2d_spin_d, solver_field[1]);    
@@ -3661,7 +3852,7 @@ extern "C" int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int ma
        gridsize = (int) VOLUME/2/blockdim4 + 1;
      }
      int griddim4 = gridsize;  
-     printf("gd3: %d\t bd3: %d\t gd4: %d\t bd4: %d\n", griddim3, blockdim3, griddim4, blockdim4);
+     //printf("gd3: %d\t bd3: %d\t gd4: %d\t bd4: %d\n", griddim3, blockdim3, griddim4, blockdim4);
     update_constants_d(dev_grid);
     update_gpu_gf_d(g_gauge_field);
   #endif

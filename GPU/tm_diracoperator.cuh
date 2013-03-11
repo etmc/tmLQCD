@@ -303,41 +303,68 @@ __global__ void dev_gamma5_rel(dev_spinor * sin, dev_spinor * sout){
   int pos;
   pos= threadIdx.x + blockDim.x*blockIdx.x;  
   if(pos < dev_VOLUME){
- 
- sout[pos+3*DEVOFF].x  = -sin[pos].x; 
- sout[pos+3*DEVOFF].y  = -sin[pos].y;
- sout[pos+3*DEVOFF].z  = -sin[pos].z;
- sout[pos+3*DEVOFF].w  = -sin[pos].w;
- sout[pos+4*DEVOFF].x  = -sin[pos+1*DEVOFF].x;
- sout[pos+4*DEVOFF].y  = -sin[pos+1*DEVOFF].y;
+  dev_spinor shelp[6];
+  
+  shelp[0].x = sin[pos+0*DEVOFF].x;
+  shelp[0].y = sin[pos+0*DEVOFF].y;
+  shelp[0].z = sin[pos+0*DEVOFF].z;
+  shelp[0].w = sin[pos+0*DEVOFF].w;
+  
+  shelp[1].x = sin[pos+1*DEVOFF].x;
+  shelp[1].y = sin[pos+1*DEVOFF].y;
+  shelp[1].z = sin[pos+1*DEVOFF].z;
+  shelp[1].w = sin[pos+1*DEVOFF].w;
+  
+  shelp[2].x = sin[pos+2*DEVOFF].x;
+  shelp[2].y = sin[pos+2*DEVOFF].y;
+  shelp[2].z = sin[pos+2*DEVOFF].z;
+  shelp[2].w = sin[pos+2*DEVOFF].w; 
+  
+  shelp[3].x = sin[pos+3*DEVOFF].x;
+  shelp[3].y = sin[pos+3*DEVOFF].y;
+  shelp[3].z = sin[pos+3*DEVOFF].z;
+  shelp[3].w = sin[pos+3*DEVOFF].w;   
+  
+  shelp[4].x = sin[pos+4*DEVOFF].x;
+  shelp[4].y = sin[pos+4*DEVOFF].y;
+  shelp[4].z = sin[pos+4*DEVOFF].z;
+  shelp[4].w = sin[pos+4*DEVOFF].w;  
+  
+  shelp[5].x = sin[pos+5*DEVOFF].x;
+  shelp[5].y = sin[pos+5*DEVOFF].y;
+  shelp[5].z = sin[pos+5*DEVOFF].z;
+  shelp[5].w = sin[pos+5*DEVOFF].w;  
+  
+  
+ sout[pos+3*DEVOFF].x  = -shelp[0].x; 
+ sout[pos+3*DEVOFF].y  = -shelp[0].y;
+ sout[pos+3*DEVOFF].z  = -shelp[0].z;
+ sout[pos+3*DEVOFF].w  = -shelp[0].w;
+ sout[pos+4*DEVOFF].x  = -shelp[1].x;
+ sout[pos+4*DEVOFF].y  = -shelp[1].y;
  
 
- sout[pos+4*DEVOFF].z  = -sin[pos+1*DEVOFF].z;
- sout[pos+4*DEVOFF].w  = -sin[pos+1*DEVOFF].w;
- sout[pos+5*DEVOFF].x  = -sin[pos+2*DEVOFF].x;
- sout[pos+5*DEVOFF].y  = -sin[pos+2*DEVOFF].y;
- sout[pos+5*DEVOFF].z  = -sin[pos+2*DEVOFF].z;
- sout[pos+5*DEVOFF].w  = -sin[pos+2*DEVOFF].w;
+ sout[pos+4*DEVOFF].z  = -shelp[1].z;
+ sout[pos+4*DEVOFF].w  = -shelp[1].w;
+ sout[pos+5*DEVOFF].x  = -shelp[2].x;
+ sout[pos+5*DEVOFF].y  = -shelp[2].y;
+ sout[pos+5*DEVOFF].z  = -shelp[2].z;
+ sout[pos+5*DEVOFF].w  = -shelp[2].w;
 
-
- //this is the lower spinor
- //re and im parts are interchanged w.r.t. above
- //same sign as above 
-
- sout[pos+0*DEVOFF].x = -sin[pos+3*DEVOFF].x;
- sout[pos+0*DEVOFF].y = -sin[pos+3*DEVOFF].y; 
- sout[pos+0*DEVOFF].z = -sin[pos+3*DEVOFF].z;
- sout[pos+0*DEVOFF].w = -sin[pos+3*DEVOFF].w;
- sout[pos+1*DEVOFF].x = -sin[pos+4*DEVOFF].x;
- sout[pos+1*DEVOFF].y = -sin[pos+4*DEVOFF].y;
+ sout[pos+0*DEVOFF].x = -shelp[3].x;
+ sout[pos+0*DEVOFF].y = -shelp[3].y; 
+ sout[pos+0*DEVOFF].z = -shelp[3].z;
+ sout[pos+0*DEVOFF].w = -shelp[3].w;
+ sout[pos+1*DEVOFF].x = -shelp[4].x;
+ sout[pos+1*DEVOFF].y = -shelp[4].y;
  
  
- sout[pos+1*DEVOFF].z = -sin[pos+4*DEVOFF].z;
- sout[pos+1*DEVOFF].w = -sin[pos+4*DEVOFF].w; 
- sout[pos+2*DEVOFF].x = -sin[pos+5*DEVOFF].x;
- sout[pos+2*DEVOFF].y = -sin[pos+5*DEVOFF].y; 
- sout[pos+2*DEVOFF].z = -sin[pos+5*DEVOFF].z;
- sout[pos+2*DEVOFF].w = -sin[pos+5*DEVOFF].w;
+ sout[pos+1*DEVOFF].z = -shelp[4].z;
+ sout[pos+1*DEVOFF].w = -shelp[4].w; 
+ sout[pos+2*DEVOFF].x = -shelp[5].x;
+ sout[pos+2*DEVOFF].y = -shelp[5].y; 
+ sout[pos+2*DEVOFF].z = -shelp[5].z;
+ sout[pos+2*DEVOFF].w = -shelp[5].w;
 
                
   } 

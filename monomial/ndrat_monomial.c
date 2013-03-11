@@ -45,6 +45,19 @@
 #include "phmc.h"
 #include "ndrat_monomial.h"
 
+
+#ifdef HAVE_GPU
+#include"../GPU/cudadefs.h"
+extern int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn, 
+		 spinor * const Qup, spinor * const Qdn, 
+		 solver_pm_t * solver_pm);
+   #ifdef TEMPORALGAUGE
+     #include "../temporalgauge.h" 
+   #endif
+#include "read_input.h"   
+#endif
+
+
 void nd_set_global_parameter(monomial * const mnl) {
 
   g_mubar = mnl->mubar;
@@ -100,10 +113,35 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   if(mnl->type == NDCLOVERRAT) solver_pm.M_ndpsi = &Qsw_pm_ndpsi;
   solver_pm.sdim = VOLUME/2;
   // this generates all X_j,o (odd sites only) -> g_chi_up|dn_spinor_field
-  mnl->iter1 += cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+
+#ifdef HAVE_GPU
+  if(usegpu_flag){
+    
+   #ifdef TEMPORALGAUGE
+     //FIXME
+     //all spinors of mms should be treated
+     //to_temporalgauge_mms(g_gauge_field,mnl->pf, mnl->w_fields[1]);
+   #endif        
+   mnl->iter1 += dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+			     mnl->pf, mnl->pf2,
+			     &solver_pm);  
+   #ifdef TEMPORALGAUGE
+     //FIXME   
+     //all spinors of mms should be treated   
+     //from_temporalgauge_mms( mnl->pf, mnl->w_fields[1]);
+   #endif 			     
+  }
+  else{
+   mnl->iter1 += cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+			     mnl->pf, mnl->pf2,
+			     &solver_pm);  
+  }
+#else
+   mnl->iter1 += cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 			     mnl->pf, mnl->pf2,
 			     &solver_pm);
-  
+#endif
+			     
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     if(mnl->type == NDCLOVERRAT) {
       // multiply with Q_h * tau^1 + i mu_j to get Y_j,o (odd sites)
@@ -219,9 +257,30 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   if(mnl->type == NDCLOVERRAT) solver_pm.M_ndpsi = &Qsw_pm_ndpsi;
   solver_pm.sdim = VOLUME/2;
   solver_pm.rel_prec = g_relative_precision_flag;
-  mnl->iter0 = cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-			     mnl->pf, mnl->pf2, &solver_pm);
 
+ #ifdef HAVE_GPU
+  if(usegpu_flag){ 
+   #ifdef TEMPORALGAUGE
+     //FIXME
+     //all spinors of mms should be treated
+     //to_temporalgauge_mms(g_gauge_field,mnl->pf, mnl->w_fields[1]);
+   #endif        
+   mnl->iter1 += dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+			     mnl->pf, mnl->pf2, &solver_pm); 
+   #ifdef TEMPORALGAUGE
+     //FIXME   
+     //all spinors of mms should be treated   
+     //from_temporalgauge_mms( mnl->pf, mnl->w_fields[1]);
+   #endif 			     
+  }
+  else{
+    mnl->iter0 = cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+			     mnl->pf, mnl->pf2, &solver_pm);
+  }
+ #else
+    mnl->iter0 = cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+			     mnl->pf, mnl->pf2, &solver_pm); 
+ #endif //HAVE_GPU
   assign(mnl->w_fields[2], mnl->pf, VOLUME/2);
   assign(mnl->w_fields[3], mnl->pf2, VOLUME/2);
 
@@ -277,10 +336,31 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
   if(mnl->type == NDCLOVERRAT) solver_pm.M_ndpsi = &Qsw_pm_ndpsi;
   solver_pm.sdim = VOLUME/2;
   solver_pm.rel_prec = g_relative_precision_flag;
+  
+  #ifdef HAVE_GPU
+  if(usegpu_flag){ 
+   #ifdef TEMPORALGAUGE
+     //FIXME
+     //all spinors of mms should be treated
+     //to_temporalgauge_mms(g_gauge_field,mnl->pf, mnl->w_fields[1]);
+   #endif        
+   mnl->iter1 += dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+			     mnl->pf, mnl->pf2, &solver_pm); 
+   #ifdef TEMPORALGAUGE
+     //FIXME   
+     //all spinors of mms should be treated   
+     //from_temporalgauge_mms( mnl->pf, mnl->w_fields[1]);
+   #endif 			     
+  }
+  else{
+    mnl->iter0 = cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+			     mnl->pf, mnl->pf2, &solver_pm);
+  }
+ #else 
   mnl->iter0 += cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 			     mnl->pf, mnl->pf2,
 			     &solver_pm);
-
+ #endif //HAVE_GPU
   // apply R to the pseudo-fermion fields
   assign(mnl->w_fields[0], mnl->pf, VOLUME/2);
   assign(mnl->w_fields[1], mnl->pf2, VOLUME/2);

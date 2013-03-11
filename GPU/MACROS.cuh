@@ -26,8 +26,8 @@
 
 // benchmarks
 
-//#define OPERATOR_BENCHMARK 1000	// refers to only matrix applications
-//#define ALGORITHM_BENCHMARK	// counts the number of effective flops
+#define OPERATOR_BENCHMARK 100	// refers to only matrix applications
+#define ALGORITHM_BENCHMARK	// counts the number of effective flops
 
 
 
@@ -183,6 +183,9 @@
 
 
 // debug	// CUBLAS core function
+
+
+
 
 #define CUBLAS_CORE_CHECK(errorMessage, successMessage) {				\
           if ( (cublasstatus = cublasGetError()) != CUBLAS_STATUS_SUCCESS ) {		\

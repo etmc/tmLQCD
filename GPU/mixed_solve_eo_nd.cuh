@@ -1,6 +1,7 @@
 /**************************************************************************
  *
  * Copyright (C) 2010 Joseph Nagel
+ *               2012 Florian Burger
  *
  * This file is part of tmLQCD.
  *
@@ -100,13 +101,13 @@ int N_floats_int;			// _ext: internal sites + additional boundaries
 
 
 // spinor fields (pointing to device)
-dev_spinor * dev_spin1_up;		// auxiliary fields for cg_eo_nd()
+dev_spinor * dev_spin1_up;		// auxiliary fields for dev_cg_eo_nd()
 dev_spinor * dev_spin1_dn;
 dev_spinor * dev_spin2_up;
 dev_spinor * dev_spin2_dn;
 dev_spinor * dev_spin3_up;
 dev_spinor * dev_spin3_dn;
-dev_spinor * dev_spinin_up;		// host/device interaction	// mixedsolve_eo_nd()  <-->  cg_eo_nd()
+dev_spinor * dev_spinin_up;		// host/device interaction	// mixedsolve_eo_nd()  <-->  dev_cg_eo_nd()
 dev_spinor * dev_spinin_dn;		// inner/outer interaction
 dev_spinor * dev_spinout_up;
 dev_spinor * dev_spinout_dn;
@@ -120,8 +121,8 @@ dev_spinor * dev_spin_eo3_up;
 dev_spinor * dev_spin_eo3_dn;
 
 
-// physical parameters (on device)
-__device__ float mubar, epsbar;
+
+
 
 
 #ifdef MPI					// collecting variables for the MPI implementation
@@ -200,11 +201,12 @@ __device__ float mubar, epsbar;
 
 
 // puts the additional nd parameters mubar and epsbar on the device
-__global__ void he_cg_init_nd_additional (float param_mubar, float param_epsbar) {
+__global__ void he_cg_init_nd_additional (double param_mubar, double param_epsbar) {
 
-  mubar  = param_mubar;
-  epsbar = param_epsbar;
-
+  mubar  = (float) param_mubar;
+  epsbar = (float) param_epsbar;
+  mubar_d  = param_mubar;
+  epsbar_d = param_epsbar; 
 }
 
 
@@ -602,8 +604,27 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
     cudaMalloc((void **) &dev_spinout_dn, dev_spinsize_ext);
   
   #endif
+  if((cudaerr=cudaGetLastError())!=cudaSuccess){
+    if(g_proc_id==0) printf("Error in init_mixedsolve_eo(): Memory allocation of nd additional double spinor fields failed. Aborting...\n");
+    exit(200);
+  }
   
   
+  //allocate additional eo3 fields needed in dev_Qtm_pm_ndpsi_d
+  #ifdef GPU_DOUBLE
+   	  size_t dev_spinsize_d = 6*VOLUME/2 * sizeof(dev_spinor_d); /* double4 */
+  	  cudaMalloc((void **) &dev_spin_eo1_up_d, dev_spinsize_d);	
+  	  cudaMalloc((void **) &dev_spin_eo1_dn_d, dev_spinsize_d);	  
+  	  cudaMalloc((void **) &dev_spin_eo3_up_d, dev_spinsize_d);	
+  	  cudaMalloc((void **) &dev_spin_eo3_dn_d, dev_spinsize_d);
+  	  if((cudaerr=cudaGetLastError())!=cudaSuccess){
+              if(g_proc_id==0) printf("Error in init_mixedsolve_eo(): Memory allocation of nd additional double spinor fields failed. Aborting...\n");
+              exit(200);
+          }
+   #endif
+ 
+ 
+ 
   #ifndef MPI
   		// debug	// host code
   		if ( (void *) (h2d_spin_up = (dev_spinor *) malloc(dev_spinsize_int) ) == NULL) {
@@ -653,7 +674,10 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
   		    CUDA_CHECK("CUDA error in init_mixedsolve_eo_nd(). Memory allocation of spinor fields failed.", "Allocated spinor fields on devices.");
   		  #endif
   		#endif
-  
+
+  for (int i = 0; i < 2; i++) {
+        cudaStreamCreate(&stream_nd[i]);
+  }   
 
   #ifdef MPI
   
@@ -790,7 +814,12 @@ void finalize_mixedsolve_eo_nd(void) {
   cudaFree(dev_spinin_dn);
   cudaFree(dev_spinout_up);
   cudaFree(dev_spinout_dn);
-  
+  #ifdef GPU_DOUBLE  
+    cudaFree(dev_spin_eo1_up_d);
+    cudaFree(dev_spin_eo1_dn_d);     
+    cudaFree(dev_spin_eo3_up_d);
+    cudaFree(dev_spin_eo3_dn_d);    
+  #endif
   free(h2d_spin_up);
   free(h2d_spin_dn);
   
@@ -812,7 +841,10 @@ void finalize_mixedsolve_eo_nd(void) {
   cudaFree(dev_spin_eo1_dn);
   cudaFree(dev_spin_eo3_up);
   cudaFree(dev_spin_eo3_dn);
-
+  
+  for (int i = 0; i < 2; i++) {
+    cudaStreamDestroy(stream_nd[i]);
+  }
   
   #ifdef MPI
   	#ifdef ALTERNATE_HOPPING_MATRIX
@@ -1234,6 +1266,834 @@ __global__ void dev_mul_one_pm_imubar_gamma5 (dev_spinor * sin,
 
 
 
+//s2_up = s2_up -epsbar s3_dn - s1_up
+//s2_dn = s2_dn -epsbar s3_up - s1_dn
+__global__ void dev_nd_linalg1 (dev_spinor * s1_up, dev_spinor * s1_dn,
+				dev_spinor * s3_up, dev_spinor * s3_dn,  
+				dev_spinor * s2_up, dev_spinor * s2_dn,	float epsbar			
+				) {
+  dev_spinor s1[6], s3[6], sout[6];	
+  int pos = threadIdx.x + blockDim.x*blockIdx.x;
+  
+  if (pos < dev_VOLUME) {
+    //upper output spinor
+    dev_read_spinor(&(sout[0]), &(s2_up[pos]));
+    dev_read_spinor(&(s1[0]), &(s1_up[pos]));    
+    dev_read_spinor(&(s3[0]), &(s3_up[pos])); 
+    
+    sout[0].x -= epsbar*s3[0].x;
+    sout[0].x -= s1[0].x;
+    sout[0].y -= epsbar*s3[0].y;
+    sout[0].y -= s1[0].y;    
+    sout[0].z -= epsbar*s3[0].z;
+    sout[0].z -= s1[0].z;    
+    sout[0].w -= epsbar*s3[0].w;
+    sout[0].w -= s1[0].w;       
+    
+    sout[1].x -= epsbar*s3[1].x;
+    sout[1].x -= s1[1].x;
+    sout[1].y -= epsbar*s3[1].y;
+    sout[1].y -= s1[1].y;    
+    sout[1].z -= epsbar*s3[1].z;
+    sout[1].z -= s1[1].z;    
+    sout[1].w -= epsbar*s3[1].w;
+    sout[1].w -= s1[1].w;       
+    
+    sout[2].x -= epsbar*s3[2].x;
+    sout[2].x -= s1[2].x;
+    sout[2].y -= epsbar*s3[2].y;
+    sout[2].y -= s1[2].y;    
+    sout[2].z -= epsbar*s3[2].z;
+    sout[2].z -= s1[2].z;    
+    sout[2].w -= epsbar*s3[2].w;
+    sout[2].w -= s1[2].w;       
+    
+    sout[3].x -= epsbar*s3[3].x;
+    sout[3].x -= s1[3].x;
+    sout[3].y -= epsbar*s3[3].y;
+    sout[3].y -= s1[3].y;    
+    sout[3].z -= epsbar*s3[3].z;
+    sout[3].z -= s1[3].z;    
+    sout[3].w -= epsbar*s3[3].w;
+    sout[3].w -= s1[3].w;   
+    
+    sout[4].x -= epsbar*s3[4].x;
+    sout[4].x -= s1[4].x;
+    sout[4].y -= epsbar*s3[4].y;
+    sout[4].y -= s1[4].y;    
+    sout[4].z -= epsbar*s3[4].z;
+    sout[4].z -= s1[4].z;    
+    sout[4].w -= epsbar*s3[4].w;
+    sout[4].w -= s1[4].w;       
+    
+    sout[5].x -= epsbar*s3[5].x;
+    sout[5].x -= s1[5].x;
+    sout[5].y -= epsbar*s3[5].y;
+    sout[5].y -= s1[5].y;    
+    sout[5].z -= epsbar*s3[5].z;
+    sout[5].z -= s1[5].z;    
+    sout[5].w -= epsbar*s3[5].w;
+    sout[5].w -= s1[5].w;       
+    
+    dev_write_spinor(&(sout[0]),&(s2_up[pos]));    
+    
+    
+    //lower output spinor
+    dev_read_spinor(&(sout[0]), &(s2_dn[pos]));
+    dev_read_spinor(&(s1[0]), &(s1_dn[pos]));    
+    dev_read_spinor(&(s3[0]), &(s3_dn[pos]));    
+    
+
+    sout[0].x -= epsbar*s3[0].x;
+    sout[0].x -= s1[0].x;
+    sout[0].y -= epsbar*s3[0].y;
+    sout[0].y -= s1[0].y;    
+    sout[0].z -= epsbar*s3[0].z;
+    sout[0].z -= s1[0].z;    
+    sout[0].w -= epsbar*s3[0].w;
+    sout[0].w -= s1[0].w;       
+    
+    sout[1].x -= epsbar*s3[1].x;
+    sout[1].x -= s1[1].x;
+    sout[1].y -= epsbar*s3[1].y;
+    sout[1].y -= s1[1].y;    
+    sout[1].z -= epsbar*s3[1].z;
+    sout[1].z -= s1[1].z;    
+    sout[1].w -= epsbar*s3[1].w;
+    sout[1].w -= s1[1].w;       
+    
+    sout[2].x -= epsbar*s3[2].x;
+    sout[2].x -= s1[2].x;
+    sout[2].y -= epsbar*s3[2].y;
+    sout[2].y -= s1[2].y;    
+    sout[2].z -= epsbar*s3[2].z;
+    sout[2].z -= s1[2].z;    
+    sout[2].w -= epsbar*s3[2].w;
+    sout[2].w -= s1[2].w;       
+    
+    sout[3].x -= epsbar*s3[3].x;
+    sout[3].x -= s1[3].x;
+    sout[3].y -= epsbar*s3[3].y;
+    sout[3].y -= s1[3].y;    
+    sout[3].z -= epsbar*s3[3].z;
+    sout[3].z -= s1[3].z;    
+    sout[3].w -= epsbar*s3[3].w;
+    sout[3].w -= s1[3].w;   
+    
+    sout[4].x -= epsbar*s3[4].x;
+    sout[4].x -= s1[4].x;
+    sout[4].y -= epsbar*s3[4].y;
+    sout[4].y -= s1[4].y;    
+    sout[4].z -= epsbar*s3[4].z;
+    sout[4].z -= s1[4].z;    
+    sout[4].w -= epsbar*s3[4].w;
+    sout[4].w -= s1[4].w;       
+    
+    sout[5].x -= epsbar*s3[5].x;
+    sout[5].x -= s1[5].x;
+    sout[5].y -= epsbar*s3[5].y;
+    sout[5].y -= s1[5].y;    
+    sout[5].z -= epsbar*s3[5].z;
+    sout[5].z -= s1[5].z;    
+    sout[5].w -= epsbar*s3[5].w;
+    sout[5].w -= s1[5].w;         
+    
+    
+    dev_write_spinor(&(sout[0]),&(s2_dn[pos]));       
+  }
+}
+
+
+
+
+
+
+
+
+//s2_up = gamma5*(s2_up -epsbar s3_up - s1_up)
+//s2_dn = gamma5*(s2_dn -epsbar s3_dn - s1_dn)
+__global__ void dev_nd_linalg1_gamma5 (dev_spinor * s1_up, dev_spinor * s1_dn,
+				dev_spinor * s3_up, dev_spinor * s3_dn,  
+				dev_spinor * s2_up, dev_spinor * s2_dn,	float epsbar			
+				) {
+  dev_spinor s1[6], s3[6], sout[6];	
+  int pos = threadIdx.x + blockDim.x*blockIdx.x;
+  
+  if (pos < dev_VOLUME) {
+    //upper output spinor
+    dev_read_spinor(&(sout[0]), &(s2_up[pos]));
+    dev_read_spinor(&(s1[0]), &(s1_up[pos]));    
+    dev_read_spinor(&(s3[0]), &(s3_up[pos])); 
+    
+    sout[0].x -= epsbar*s3[0].x;
+    sout[0].x -= s1[0].x;
+    sout[0].y -= epsbar*s3[0].y;
+    sout[0].y -= s1[0].y;    
+    sout[0].z -= epsbar*s3[0].z;
+    sout[0].z -= s1[0].z;    
+    sout[0].w -= epsbar*s3[0].w;
+    sout[0].w -= s1[0].w;       
+    
+    sout[1].x -= epsbar*s3[1].x;
+    sout[1].x -= s1[1].x;
+    sout[1].y -= epsbar*s3[1].y;
+    sout[1].y -= s1[1].y;    
+    sout[1].z -= epsbar*s3[1].z;
+    sout[1].z -= s1[1].z;    
+    sout[1].w -= epsbar*s3[1].w;
+    sout[1].w -= s1[1].w;       
+    
+    sout[2].x -= epsbar*s3[2].x;
+    sout[2].x -= s1[2].x;
+    sout[2].y -= epsbar*s3[2].y;
+    sout[2].y -= s1[2].y;    
+    sout[2].z -= epsbar*s3[2].z;
+    sout[2].z -= s1[2].z;    
+    sout[2].w -= epsbar*s3[2].w;
+    sout[2].w -= s1[2].w;       
+    
+    sout[3].x -= epsbar*s3[3].x;
+    sout[3].x -= s1[3].x;
+    sout[3].y -= epsbar*s3[3].y;
+    sout[3].y -= s1[3].y;    
+    sout[3].z -= epsbar*s3[3].z;
+    sout[3].z -= s1[3].z;    
+    sout[3].w -= epsbar*s3[3].w;
+    sout[3].w -= s1[3].w;   
+    
+    sout[4].x -= epsbar*s3[4].x;
+    sout[4].x -= s1[4].x;
+    sout[4].y -= epsbar*s3[4].y;
+    sout[4].y -= s1[4].y;    
+    sout[4].z -= epsbar*s3[4].z;
+    sout[4].z -= s1[4].z;    
+    sout[4].w -= epsbar*s3[4].w;
+    sout[4].w -= s1[4].w;       
+    
+    sout[5].x -= epsbar*s3[5].x;
+    sout[5].x -= s1[5].x;
+    sout[5].y -= epsbar*s3[5].y;
+    sout[5].y -= s1[5].y;    
+    sout[5].z -= epsbar*s3[5].z;
+    sout[5].z -= s1[5].z;    
+    sout[5].w -= epsbar*s3[5].w;
+    sout[5].w -= s1[5].w;       
+    
+    #ifdef RELATIVISTIC_BASIS
+      dev_Gamma5_assign_rel(&(s1[0]), &(sout[0]));
+    #else
+      dev_Gamma5_assign(&(s1[0]), &(sout[0]));    
+    #endif   
+    dev_write_spinor(&(s1[0]),&(s2_up[pos]));    
+    
+    
+    //lower output spinor
+    dev_read_spinor(&(sout[0]), &(s2_dn[pos]));
+    dev_read_spinor(&(s1[0]), &(s1_dn[pos]));    
+    dev_read_spinor(&(s3[0]), &(s3_dn[pos]));    
+    
+
+     sout[0].x -= epsbar*s3[0].x;
+    sout[0].x -= s1[0].x;
+    sout[0].y -= epsbar*s3[0].y;
+    sout[0].y -= s1[0].y;    
+    sout[0].z -= epsbar*s3[0].z;
+    sout[0].z -= s1[0].z;    
+    sout[0].w -= epsbar*s3[0].w;
+    sout[0].w -= s1[0].w;       
+    
+    sout[1].x -= epsbar*s3[1].x;
+    sout[1].x -= s1[1].x;
+    sout[1].y -= epsbar*s3[1].y;
+    sout[1].y -= s1[1].y;    
+    sout[1].z -= epsbar*s3[1].z;
+    sout[1].z -= s1[1].z;    
+    sout[1].w -= epsbar*s3[1].w;
+    sout[1].w -= s1[1].w;       
+    
+    sout[2].x -= epsbar*s3[2].x;
+    sout[2].x -= s1[2].x;
+    sout[2].y -= epsbar*s3[2].y;
+    sout[2].y -= s1[2].y;    
+    sout[2].z -= epsbar*s3[2].z;
+    sout[2].z -= s1[2].z;    
+    sout[2].w -= epsbar*s3[2].w;
+    sout[2].w -= s1[2].w;       
+    
+    sout[3].x -= epsbar*s3[3].x;
+    sout[3].x -= s1[3].x;
+    sout[3].y -= epsbar*s3[3].y;
+    sout[3].y -= s1[3].y;    
+    sout[3].z -= epsbar*s3[3].z;
+    sout[3].z -= s1[3].z;    
+    sout[3].w -= epsbar*s3[3].w;
+    sout[3].w -= s1[3].w;   
+    
+    sout[4].x -= epsbar*s3[4].x;
+    sout[4].x -= s1[4].x;
+    sout[4].y -= epsbar*s3[4].y;
+    sout[4].y -= s1[4].y;    
+    sout[4].z -= epsbar*s3[4].z;
+    sout[4].z -= s1[4].z;    
+    sout[4].w -= epsbar*s3[4].w;
+    sout[4].w -= s1[4].w;       
+    
+    sout[5].x -= epsbar*s3[5].x;
+    sout[5].x -= s1[5].x;
+    sout[5].y -= epsbar*s3[5].y;
+    sout[5].y -= s1[5].y;    
+    sout[5].z -= epsbar*s3[5].z;
+    sout[5].z -= s1[5].z;    
+    sout[5].w -= epsbar*s3[5].w;
+    sout[5].w -= s1[5].w;         
+    
+    #ifdef RELATIVISTIC_BASIS
+      dev_Gamma5_assign_rel(&(s1[0]), &(sout[0]));
+    #else
+      dev_Gamma5_assign(&(s1[0]), &(sout[0]));    
+    #endif    
+    dev_write_spinor(&(s1[0]),&(s2_dn[pos]));       
+  }
+}
+
+
+
+//sout_up = gamma5*((1+imubar gamma5) s2_dn - epsbar s2_up - s1_up)
+//sout_dn = gamma5*((1+imubar gamma5) s2_up - epsbar s2_dn - s1_dn)
+__global__ void dev_nd_linalg3_gamma5 (dev_spinor * s1_up, dev_spinor * s1_dn,
+				dev_spinor * s2_up, dev_spinor * s2_dn,  
+				dev_spinor * sout_up, dev_spinor * sout_dn, float epsbar, float sign
+				) {
+  dev_spinor s1[6], s3[6], sout[6], slocal[6], save_up[6], save_dn[6];	
+  int pos = threadIdx.x + blockDim.x*blockIdx.x;
+  dev_complex pm_imu = dev_initcomplex(0.0, sign * mubar);
+  
+  if (pos < dev_VOLUME) {
+    //upper output spinor
+
+    dev_read_spinor(&(s1[0]), &(s1_up[pos]));    
+
+    #ifdef USETEXTURE
+      dev_read_spinor_tex_up(&(s3[0]), pos);  
+      dev_read_spinor_tex_dn(&(slocal[0]), pos);      
+    #else
+      dev_read_spinor(&(s3[0]), &(s2_up[pos]));  
+      dev_read_spinor(&(slocal[0]), &(s2_dn[pos])); 
+    #endif
+    //store s2_up/dn in local variables
+    //dev_copy_spinor_local(&(slocal[0]), &(save_dn[0]));
+    //dev_copy_spinor_local(&(s3[0]), &(save_up[0]));    
+    
+    #ifdef RELATIVISTIC_BASIS
+      dev_skalarmult_gamma5_spinor_rel(&(sout[0]), pm_imu, &(slocal[0]) );
+    #else
+      dev_skalarmult_gamma5_spinor(&(sout[0]), pm_imu, &(slocal[0]) );
+    #endif
+    dev_add_spinor_assign(&(sout[0]), &(slocal[0]));
+    
+ 
+    
+    sout[0].x -= epsbar*s3[0].x;
+    sout[0].x -= s1[0].x;
+    sout[0].y -= epsbar*s3[0].y;
+    sout[0].y -= s1[0].y;    
+    sout[0].z -= epsbar*s3[0].z;
+    sout[0].z -= s1[0].z;    
+    sout[0].w -= epsbar*s3[0].w;
+    sout[0].w -= s1[0].w;       
+    
+    sout[1].x -= epsbar*s3[1].x;
+    sout[1].x -= s1[1].x;
+    sout[1].y -= epsbar*s3[1].y;
+    sout[1].y -= s1[1].y;    
+    sout[1].z -= epsbar*s3[1].z;
+    sout[1].z -= s1[1].z;    
+    sout[1].w -= epsbar*s3[1].w;
+    sout[1].w -= s1[1].w;       
+    
+    sout[2].x -= epsbar*s3[2].x;
+    sout[2].x -= s1[2].x;
+    sout[2].y -= epsbar*s3[2].y;
+    sout[2].y -= s1[2].y;    
+    sout[2].z -= epsbar*s3[2].z;
+    sout[2].z -= s1[2].z;    
+    sout[2].w -= epsbar*s3[2].w;
+    sout[2].w -= s1[2].w;       
+    
+    sout[3].x -= epsbar*s3[3].x;
+    sout[3].x -= s1[3].x;
+    sout[3].y -= epsbar*s3[3].y;
+    sout[3].y -= s1[3].y;    
+    sout[3].z -= epsbar*s3[3].z;
+    sout[3].z -= s1[3].z;    
+    sout[3].w -= epsbar*s3[3].w;
+    sout[3].w -= s1[3].w;   
+    
+    sout[4].x -= epsbar*s3[4].x;
+    sout[4].x -= s1[4].x;
+    sout[4].y -= epsbar*s3[4].y;
+    sout[4].y -= s1[4].y;    
+    sout[4].z -= epsbar*s3[4].z;
+    sout[4].z -= s1[4].z;    
+    sout[4].w -= epsbar*s3[4].w;
+    sout[4].w -= s1[4].w;       
+    
+    sout[5].x -= epsbar*s3[5].x;
+    sout[5].x -= s1[5].x;
+    sout[5].y -= epsbar*s3[5].y;
+    sout[5].y -= s1[5].y;    
+    sout[5].z -= epsbar*s3[5].z;
+    sout[5].z -= s1[5].z;    
+    sout[5].w -= epsbar*s3[5].w;
+    sout[5].w -= s1[5].w;       
+    
+    #ifdef RELATIVISTIC_BASIS
+      dev_Gamma5_assign_rel(&(s1[0]), &(sout[0]));
+    #else
+      dev_Gamma5_assign(&(s1[0]), &(sout[0]));    
+    #endif   
+    dev_write_spinor(&(s1[0]),&(sout_up[pos]));    
+    
+    
+    //lower output spinor
+    
+    pm_imu = dev_initcomplex(0.0, -sign * mubar);
+
+    dev_read_spinor(&(s1[0]), &(s1_dn[pos]));    
+    #ifdef USETEXTURE
+      dev_read_spinor_tex_dn(&(s3[0]), pos);  
+      dev_read_spinor_tex_up(&(slocal[0]), pos);      
+    #else
+      dev_read_spinor(&(s3[0]), &(s2_dn[pos]));  
+      dev_read_spinor(&(slocal[0]), &(s2_up[pos]));    
+    #endif
+    //restore s2_up/dn from local variables
+    //dev_copy_spinor_local(&(save_dn[0]), &(s3[0]));
+    //dev_copy_spinor_local(&(save_up[0]), &(slocal[0])); 
+    
+    #ifdef RELATIVISTIC_BASIS
+      dev_skalarmult_gamma5_spinor_rel(&(sout[0]), pm_imu, &(slocal[0]) );
+    #else
+      dev_skalarmult_gamma5_spinor(&(sout[0]), pm_imu, &(slocal[0]) );
+    #endif
+    dev_add_spinor_assign(&(sout[0]), &(slocal[0]));
+    
+
+    
+
+    sout[0].x -= epsbar*s3[0].x;
+    sout[0].x -= s1[0].x;
+    sout[0].y -= epsbar*s3[0].y;
+    sout[0].y -= s1[0].y;    
+    sout[0].z -= epsbar*s3[0].z;
+    sout[0].z -= s1[0].z;    
+    sout[0].w -= epsbar*s3[0].w;
+    sout[0].w -= s1[0].w;       
+    
+    sout[1].x -= epsbar*s3[1].x;
+    sout[1].x -= s1[1].x;
+    sout[1].y -= epsbar*s3[1].y;
+    sout[1].y -= s1[1].y;    
+    sout[1].z -= epsbar*s3[1].z;
+    sout[1].z -= s1[1].z;    
+    sout[1].w -= epsbar*s3[1].w;
+    sout[1].w -= s1[1].w;       
+    
+    sout[2].x -= epsbar*s3[2].x;
+    sout[2].x -= s1[2].x;
+    sout[2].y -= epsbar*s3[2].y;
+    sout[2].y -= s1[2].y;    
+    sout[2].z -= epsbar*s3[2].z;
+    sout[2].z -= s1[2].z;    
+    sout[2].w -= epsbar*s3[2].w;
+    sout[2].w -= s1[2].w;       
+    
+    sout[3].x -= epsbar*s3[3].x;
+    sout[3].x -= s1[3].x;
+    sout[3].y -= epsbar*s3[3].y;
+    sout[3].y -= s1[3].y;    
+    sout[3].z -= epsbar*s3[3].z;
+    sout[3].z -= s1[3].z;    
+    sout[3].w -= epsbar*s3[3].w;
+    sout[3].w -= s1[3].w;   
+    
+    sout[4].x -= epsbar*s3[4].x;
+    sout[4].x -= s1[4].x;
+    sout[4].y -= epsbar*s3[4].y;
+    sout[4].y -= s1[4].y;    
+    sout[4].z -= epsbar*s3[4].z;
+    sout[4].z -= s1[4].z;    
+    sout[4].w -= epsbar*s3[4].w;
+    sout[4].w -= s1[4].w;       
+    
+    sout[5].x -= epsbar*s3[5].x;
+    sout[5].x -= s1[5].x;
+    sout[5].y -= epsbar*s3[5].y;
+    sout[5].y -= s1[5].y;    
+    sout[5].z -= epsbar*s3[5].z;
+    sout[5].z -= s1[5].z;    
+    sout[5].w -= epsbar*s3[5].w;
+    sout[5].w -= s1[5].w;         
+    
+    #ifdef RELATIVISTIC_BASIS
+      dev_Gamma5_assign_rel(&(s1[0]), &(sout[0]));
+    #else
+      dev_Gamma5_assign(&(s1[0]), &(sout[0]));    
+    #endif    
+    dev_write_spinor(&(s1[0]),&(sout_dn[pos]));   
+    
+  }
+}
+
+
+
+
+
+
+//sout_up = gamma5*((1+imubar gamma5) s2_up - epsbar s2_dn - s1_up)
+//sout_dn = gamma5*((1+imubar gamma5) s2_dn - epsbar s2_up - s1_dn)
+__global__ void dev_nd_linalg4_gamma5 (dev_spinor * s1_up, dev_spinor * s1_dn,
+				dev_spinor * s2_up, dev_spinor * s2_dn,  
+				dev_spinor * sout_up, dev_spinor * sout_dn, float epsbar, float sign
+				) {
+  dev_spinor s1[6], s3[6], sout[6], slocal[6], save_up[6], save_dn[6];	
+  int pos = threadIdx.x + blockDim.x*blockIdx.x;
+  dev_complex pm_imu = dev_initcomplex(0.0, sign * mubar);
+  
+  if (pos < dev_VOLUME) {
+    //upper output spinor
+
+    dev_read_spinor(&(s1[0]), &(s1_up[pos]));    
+    #ifdef USETEXTURE
+      dev_read_spinor_tex_dn(&(s3[0]), pos);  
+      dev_read_spinor_tex_up(&(slocal[0]), pos);      
+    #else
+      dev_read_spinor(&(slocal[0]), &(s2_up[pos]));    
+      dev_read_spinor(&(s3[0]), &(s2_dn[pos]));  
+    #endif 
+    //store s2_up/dn in local variables
+    //dev_copy_spinor_local(&(slocal[0]), &(save_up[0]));
+    //dev_copy_spinor_local(&(s3[0]), &(save_dn[0]));       
+    
+    #ifdef RELATIVISTIC_BASIS
+      dev_skalarmult_gamma5_spinor_rel(&(sout[0]), pm_imu, &(slocal[0]) );
+    #else
+      dev_skalarmult_gamma5_spinor(&(sout[0]), pm_imu, &(slocal[0]) );
+    #endif
+    dev_add_spinor_assign(&(sout[0]), &(slocal[0]));
+    
+ 
+    
+    sout[0].x -= epsbar*s3[0].x;
+    sout[0].x -= s1[0].x;
+    sout[0].y -= epsbar*s3[0].y;
+    sout[0].y -= s1[0].y;    
+    sout[0].z -= epsbar*s3[0].z;
+    sout[0].z -= s1[0].z;    
+    sout[0].w -= epsbar*s3[0].w;
+    sout[0].w -= s1[0].w;       
+    
+    sout[1].x -= epsbar*s3[1].x;
+    sout[1].x -= s1[1].x;
+    sout[1].y -= epsbar*s3[1].y;
+    sout[1].y -= s1[1].y;    
+    sout[1].z -= epsbar*s3[1].z;
+    sout[1].z -= s1[1].z;    
+    sout[1].w -= epsbar*s3[1].w;
+    sout[1].w -= s1[1].w;       
+    
+    sout[2].x -= epsbar*s3[2].x;
+    sout[2].x -= s1[2].x;
+    sout[2].y -= epsbar*s3[2].y;
+    sout[2].y -= s1[2].y;    
+    sout[2].z -= epsbar*s3[2].z;
+    sout[2].z -= s1[2].z;    
+    sout[2].w -= epsbar*s3[2].w;
+    sout[2].w -= s1[2].w;       
+    
+    sout[3].x -= epsbar*s3[3].x;
+    sout[3].x -= s1[3].x;
+    sout[3].y -= epsbar*s3[3].y;
+    sout[3].y -= s1[3].y;    
+    sout[3].z -= epsbar*s3[3].z;
+    sout[3].z -= s1[3].z;    
+    sout[3].w -= epsbar*s3[3].w;
+    sout[3].w -= s1[3].w;   
+    
+    sout[4].x -= epsbar*s3[4].x;
+    sout[4].x -= s1[4].x;
+    sout[4].y -= epsbar*s3[4].y;
+    sout[4].y -= s1[4].y;    
+    sout[4].z -= epsbar*s3[4].z;
+    sout[4].z -= s1[4].z;    
+    sout[4].w -= epsbar*s3[4].w;
+    sout[4].w -= s1[4].w;       
+    
+    sout[5].x -= epsbar*s3[5].x;
+    sout[5].x -= s1[5].x;
+    sout[5].y -= epsbar*s3[5].y;
+    sout[5].y -= s1[5].y;    
+    sout[5].z -= epsbar*s3[5].z;
+    sout[5].z -= s1[5].z;    
+    sout[5].w -= epsbar*s3[5].w;
+    sout[5].w -= s1[5].w;       
+    
+    #ifdef RELATIVISTIC_BASIS
+      dev_Gamma5_assign_rel(&(s1[0]), &(sout[0]));
+    #else
+      dev_Gamma5_assign(&(s1[0]), &(sout[0]));    
+    #endif   
+    dev_write_spinor(&(s1[0]),&(sout_up[pos]));    
+    
+    
+    //lower output spinor
+    
+    pm_imu = dev_initcomplex(0.0, -sign * mubar);
+
+    dev_read_spinor(&(s1[0]), &(s1_dn[pos]));
+    #ifdef USETEXTURE
+      dev_read_spinor_tex_dn(&(slocal[0]), pos);     
+      dev_read_spinor_tex_up(&(s3[0]), pos);  
+    #else    
+      dev_read_spinor(&(slocal[0]), &(s2_dn[pos]));    
+      dev_read_spinor(&(s3[0]), &(s2_up[pos]));  
+    #endif
+    //restore s2_up/dn from local variables
+    //dev_copy_spinor_local(&(save_dn[0]), &(slocal[0]));
+    //dev_copy_spinor_local(&(save_up[0]), &(s3[0]));     
+    
+    
+    #ifdef RELATIVISTIC_BASIS
+      dev_skalarmult_gamma5_spinor_rel(&(sout[0]), pm_imu, &(slocal[0]) );
+    #else
+      dev_skalarmult_gamma5_spinor(&(sout[0]), pm_imu, &(slocal[0]) );
+    #endif
+    dev_add_spinor_assign(&(sout[0]), &(slocal[0]));
+    
+
+    
+
+    sout[0].x -= epsbar*s3[0].x;
+    sout[0].x -= s1[0].x;
+    sout[0].y -= epsbar*s3[0].y;
+    sout[0].y -= s1[0].y;    
+    sout[0].z -= epsbar*s3[0].z;
+    sout[0].z -= s1[0].z;    
+    sout[0].w -= epsbar*s3[0].w;
+    sout[0].w -= s1[0].w;       
+    
+    sout[1].x -= epsbar*s3[1].x;
+    sout[1].x -= s1[1].x;
+    sout[1].y -= epsbar*s3[1].y;
+    sout[1].y -= s1[1].y;    
+    sout[1].z -= epsbar*s3[1].z;
+    sout[1].z -= s1[1].z;    
+    sout[1].w -= epsbar*s3[1].w;
+    sout[1].w -= s1[1].w;       
+    
+    sout[2].x -= epsbar*s3[2].x;
+    sout[2].x -= s1[2].x;
+    sout[2].y -= epsbar*s3[2].y;
+    sout[2].y -= s1[2].y;    
+    sout[2].z -= epsbar*s3[2].z;
+    sout[2].z -= s1[2].z;    
+    sout[2].w -= epsbar*s3[2].w;
+    sout[2].w -= s1[2].w;       
+    
+    sout[3].x -= epsbar*s3[3].x;
+    sout[3].x -= s1[3].x;
+    sout[3].y -= epsbar*s3[3].y;
+    sout[3].y -= s1[3].y;    
+    sout[3].z -= epsbar*s3[3].z;
+    sout[3].z -= s1[3].z;    
+    sout[3].w -= epsbar*s3[3].w;
+    sout[3].w -= s1[3].w;   
+    
+    sout[4].x -= epsbar*s3[4].x;
+    sout[4].x -= s1[4].x;
+    sout[4].y -= epsbar*s3[4].y;
+    sout[4].y -= s1[4].y;    
+    sout[4].z -= epsbar*s3[4].z;
+    sout[4].z -= s1[4].z;    
+    sout[4].w -= epsbar*s3[4].w;
+    sout[4].w -= s1[4].w;       
+    
+    sout[5].x -= epsbar*s3[5].x;
+    sout[5].x -= s1[5].x;
+    sout[5].y -= epsbar*s3[5].y;
+    sout[5].y -= s1[5].y;    
+    sout[5].z -= epsbar*s3[5].z;
+    sout[5].z -= s1[5].z;    
+    sout[5].w -= epsbar*s3[5].w;
+    sout[5].w -= s1[5].w;         
+    
+    #ifdef RELATIVISTIC_BASIS
+      dev_Gamma5_assign_rel(&(s1[0]), &(sout[0]));
+    #else
+      dev_Gamma5_assign(&(s1[0]), &(sout[0]));    
+    #endif    
+    dev_write_spinor(&(s1[0]),&(sout_dn[pos]));   
+    
+  }
+}
+
+
+
+
+
+
+
+//s2_up = nrm*(s2_up +epsbar s1_dn)
+//s2_dn = nrm*(s2_dn +epsbar s1_up)
+__global__ void dev_nd_linalg2 (dev_spinor * s1_up, dev_spinor * s1_dn, 
+				dev_spinor * s2_up, dev_spinor * s2_dn,	float epsbar, float nrm			
+				) {
+  dev_spinor s1[6], sout[6];	
+  int pos = threadIdx.x + blockDim.x*blockIdx.x;
+  
+  if (pos < dev_VOLUME) {
+    //upper output spinor
+    dev_read_spinor(&(sout[0]), &(s2_up[pos]));
+    #ifdef USETEXTURE
+      dev_read_spinor_tex_dn(&(s1[0]), pos);      
+    #else
+      dev_read_spinor(&(s1[0]), &(s1_dn[pos]));    
+    #endif
+    
+    sout[0].x += epsbar*s1[0].x;
+    sout[0].x *= nrm;
+    sout[0].y += epsbar*s1[0].y;
+    sout[0].y *= nrm;       
+    sout[0].z += epsbar*s1[0].z;
+    sout[0].z *= nrm;      
+    sout[0].w += epsbar*s1[0].w;
+    sout[0].w *= nrm;
+       
+    sout[1].x += epsbar*s1[1].x;
+    sout[1].x *= nrm;
+    sout[1].y += epsbar*s1[1].y;
+    sout[1].y *= nrm;       
+    sout[1].z += epsbar*s1[1].z;
+    sout[1].z *= nrm;      
+    sout[1].w += epsbar*s1[1].w;
+    sout[1].w *= nrm;    
+    
+    sout[2].x += epsbar*s1[2].x;
+    sout[2].x *= nrm;
+    sout[2].y += epsbar*s1[2].y;
+    sout[2].y *= nrm;       
+    sout[2].z += epsbar*s1[2].z;
+    sout[2].z *= nrm;      
+    sout[2].w += epsbar*s1[2].w;
+    sout[2].w *= nrm;    
+
+    sout[3].x += epsbar*s1[3].x;
+    sout[3].x *= nrm;
+    sout[3].y += epsbar*s1[3].y;
+    sout[3].y *= nrm;       
+    sout[3].z += epsbar*s1[3].z;
+    sout[3].z *= nrm;      
+    sout[3].w += epsbar*s1[3].w;
+    sout[3].w *= nrm;    
+
+    sout[4].x += epsbar*s1[4].x;
+    sout[4].x *= nrm;
+    sout[4].y += epsbar*s1[4].y;
+    sout[4].y *= nrm;       
+    sout[4].z += epsbar*s1[4].z;
+    sout[4].z *= nrm;      
+    sout[4].w += epsbar*s1[4].w;
+    sout[4].w *= nrm;    
+    
+    sout[5].x += epsbar*s1[5].x;
+    sout[5].x *= nrm;
+    sout[5].y += epsbar*s1[5].y;
+    sout[5].y *= nrm;       
+    sout[5].z += epsbar*s1[5].z;
+    sout[5].z *= nrm;      
+    sout[5].w += epsbar*s1[5].w;
+    sout[5].w *= nrm;    
+    
+    dev_write_spinor(&(sout[0]),&(s2_up[pos]));  
+    
+    
+    //upper output spinor
+    dev_read_spinor(&(sout[0]), &(s2_dn[pos]));
+    #ifdef USETEXTURE
+      dev_read_spinor_tex_up(&(s1[0]), pos);      
+    #else
+     dev_read_spinor(&(s1[0]), &(s1_up[pos]));    
+    #endif
+    
+    sout[0].x += epsbar*s1[0].x;
+    sout[0].x *= nrm;
+    sout[0].y += epsbar*s1[0].y;
+    sout[0].y *= nrm;       
+    sout[0].z += epsbar*s1[0].z;
+    sout[0].z *= nrm;      
+    sout[0].w += epsbar*s1[0].w;
+    sout[0].w *= nrm;
+       
+    sout[1].x += epsbar*s1[1].x;
+    sout[1].x *= nrm;
+    sout[1].y += epsbar*s1[1].y;
+    sout[1].y *= nrm;       
+    sout[1].z += epsbar*s1[1].z;
+    sout[1].z *= nrm;      
+    sout[1].w += epsbar*s1[1].w;
+    sout[1].w *= nrm;    
+    
+    sout[2].x += epsbar*s1[2].x;
+    sout[2].x *= nrm;
+    sout[2].y += epsbar*s1[2].y;
+    sout[2].y *= nrm;       
+    sout[2].z += epsbar*s1[2].z;
+    sout[2].z *= nrm;      
+    sout[2].w += epsbar*s1[2].w;
+    sout[2].w *= nrm;    
+
+    sout[3].x += epsbar*s1[3].x;
+    sout[3].x *= nrm;
+    sout[3].y += epsbar*s1[3].y;
+    sout[3].y *= nrm;       
+    sout[3].z += epsbar*s1[3].z;
+    sout[3].z *= nrm;      
+    sout[3].w += epsbar*s1[3].w;
+    sout[3].w *= nrm;    
+
+    sout[4].x += epsbar*s1[4].x;
+    sout[4].x *= nrm;
+    sout[4].y += epsbar*s1[4].y;
+    sout[4].y *= nrm;       
+    sout[4].z += epsbar*s1[4].z;
+    sout[4].z *= nrm;      
+    sout[4].w += epsbar*s1[4].w;
+    sout[4].w *= nrm;    
+    
+    sout[5].x += epsbar*s1[5].x;
+    sout[5].x *= nrm;
+    sout[5].y += epsbar*s1[5].y;
+    sout[5].y *= nrm;       
+    sout[5].z += epsbar*s1[5].z;
+    sout[5].z *= nrm;      
+    sout[5].w += epsbar*s1[5].w;
+    sout[5].w *= nrm;    
+    
+    dev_write_spinor(&(sout[0]),&(s2_dn[pos]));     
+    
+    
+    
+  }
+}
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1242,10 +2102,9 @@ __global__ void dev_mul_one_pm_imubar_gamma5 (dev_spinor * sin,
 ///////////////////////////
 
 // the GPU implementation of  Qtm_pm_ndpsi(...)  from tm_operators_nd.c
-//	Flo's equivalent function for the standard and non-nd case is  dev_Qtm_pm_psi
-
-void dev_Qtm_pm_ndpsi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
-                              dev_spinor * spinin_up , dev_spinor * spinin_dn ,
+// we have the possibility to add a constant shift > 0 
+void dev_Qtm_pm_ndpsi_old (dev_spinor * spinout_up, dev_spinor * spinout_dn,
+                              dev_spinor * spinin_up , dev_spinor * spinin_dn , 
                               int gridsize1, int blocksize1, int gridsize2, int blocksize2,
                               int gridsize3, int blocksize3, int gridsize4, int blocksize4) {
   
@@ -1254,9 +2113,6 @@ void dev_Qtm_pm_ndpsi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   // and set  dev_spin_eo2_up/dn  equal  spinout_up/dn
   // spinin_up/dn  have to remain unchanged !!
   // spinout_up/dn  can be freely used
-  
-  
-  
   
   /////////////////////
   // LOCAL VARIABLES //
@@ -1313,7 +2169,7 @@ void dev_Qtm_pm_ndpsi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   // (M_oe) (Mee^-1) (M_eo) //
   ////////////////////////////
   
-  // Flo:
+  // Hopping:
   #ifdef USETEXTURE
     bind_texture_spin(spinin_dn,1);
   #endif
@@ -1329,26 +2185,14 @@ void dev_Qtm_pm_ndpsi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   #ifdef USETEXTURE
     unbind_texture_spin(1);
   #endif
-  
-  
-  // written:
+
   dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo1_up, dev_spin_eo2_up, -1.0);		// dev_spin_eo2_up  =  (1 - imubar) * dev_spin_eo1_up  =  (1 - imubar)*(M_eo) * spinin_dn
   dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo1_dn, dev_spin_eo2_dn, +1.0);		// dev_spin_eo2_dn  =  (1 + imubar) * dev_spin_eo1_dn  =  (1 + imubar)*(M_eo) * spinin_up
-  
-  
-  // CUBLAS:
-  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_up, 1);
-  										// dev_spin_eo2_up  =  dev_spin_eo2_up  +  epsbar * dev_spin_eo1_dn  =  (1 - imubar)*(M_eo) * spinin_dn  +  epsbar * (M_eo) * spinin_up
-  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_dn, 1);
-  										// dev_spin_eo2_dn  =  dev_spin_eo2_dn  +  epsbar * dev_spin_eo1_up  =  (1 + imubar)*(M_eo) * spinin_up  +  epsbar * (M_eo) * spinin_dn
-  
-  // CUBLAS:
-  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_up, 1);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * spinin_dn  +  nrm*epsbar*(M_eo) * spinin_up
-  
-  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_dn, 1);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * spinin_up  +  nrm*epsbar*(M_eo) * spinin_dn
-  
-  
-  // Flo:
+
+  dev_nd_linalg2<<<gridsize2, blocksize2>>>(dev_spin_eo1_up, dev_spin_eo1_dn, dev_spin_eo2_up, dev_spin_eo2_dn, g_epsbar, nrm); 
+
+
+  // Hopping:
   #ifdef USETEXTURE
     bind_texture_spin(dev_spin_eo2_up,1);									// remember: this is ((M_oe)(Mee^-1)(M_eo)) * (spinin_dn, spinin_up):
   #endif
@@ -1365,78 +2209,36 @@ void dev_Qtm_pm_ndpsi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
     unbind_texture_spin(1);							// dev_spin_eo1_dn  =  (M_oe) * dev_spin_eo2_dn  =  (M_oe)*nrm*(1+imubar)*(M_eo) * spinin_up  +  (M_oe)*nrm*epsbar*(M_eo) * spinin_dn
   #endif
   
-  
-  
-  
+ 
   ////////////
   // (M_oo) //
   ////////////
   
-  
-  // written:
   dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(spinin_dn, dev_spin_eo2_up, +1.0);			// dev_spin_eo2_up = (1 + imubar) * spinin_dn
   dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(spinin_up, dev_spin_eo2_dn, -1.0);			// dev_spin_eo2_dn = (1 - imubar) * spinin_up
-  
-  
-  // CUBLAS:													// remember: this is (M_oo) * (spinin_dn, spinin_up):
-  cublasSaxpy (N_floats, -g_epsbar, (float *) spinin_up, 1, (float *) dev_spin_eo2_up, 1);
-  												// dev_spin_eo2_up  =  dev_spin_eo2_up - epsbar*spinin_up  =  (1+imubar)*spinin_dn - epsbar*spinin_up
-  cublasSaxpy (N_floats, -g_epsbar, (float *) spinin_dn, 1, (float *) dev_spin_eo2_dn, 1);
-  												// dev_spin_eo2_dn  =  dev_spin_eo2_dn - epsbar*spinin_dn  =  (1-imubar)*spinin_up - epsbar*spinin_dn
-  
-  
   
   ///////////////////////////////////////
   // (M_oo)  -  (M_oe) (Mee^-1) (M_eo) //
   ///////////////////////////////////////
-  
-  // CUBLAS:													// this is ((M_oo) - (M_oe)(Mee^-1)(M_eo)) * (spinin_dn, spinin_up):
-  cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_up, 1);
-  							// dev_spin_eo2_up  =  dev_spin_eo2_up  -  dev_spin_eo1_up  =                      (1+imubar) * spinin_dn  -                    epsbar * spinin_up
-  							//                                                             - (M_oe)*nrm*(1-imubar)*(M_eo) * spinin_dn  -  (M_oe)*nrm*epsbar*(M_eo) * spinin_up
-  cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_dn, 1);
-  							// dev_spin_eo2_dn  =  dev_spin_eo2_dn  -  dev_spin_eo1_dn  =                      (1-imubar) * spinin_up  -                    epsbar * spinin_dn
-  							//                                                             - (M_oe)*nrm*(1+imubar)*(M_eo) * spinin_up  -  (M_oe)*nrm*epsbar*(M_eo) * spinin_dn
-  
-  
-  ////////////
-  // gamma5 //
-  ////////////
-  
-  // Flo:
-  #ifdef RELATIVISTIC_BASIS
-    dev_gamma5_rel<<<gridsize3, blocksize3>>>(dev_spin_eo2_up, dev_spin_eo2_up);					// dev_spin_eo2_up = gamma5 * dev_spin_eo2_up 
-    dev_gamma5_rel<<<gridsize3, blocksize3>>>(dev_spin_eo2_dn, dev_spin_eo2_dn);					// dev_spin_eo2_dn = gamma5 * dev_spin_eo2_dn  
-  #else
-    dev_gamma5<<<gridsize3, blocksize3>>>(dev_spin_eo2_up, dev_spin_eo2_up);					// dev_spin_eo2_up = gamma5 * dev_spin_eo2_up 
-    dev_gamma5<<<gridsize3, blocksize3>>>(dev_spin_eo2_dn, dev_spin_eo2_dn);					// dev_spin_eo2_dn = gamma5 * dev_spin_eo2_dn
-  #endif
-  
-  
-  
-  
-  
+   
+  dev_nd_linalg1_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo1_up, dev_spin_eo1_dn, spinin_up, spinin_dn, dev_spin_eo2_up, dev_spin_eo2_dn, g_epsbar ); 
+    
+
   ////////////////////
   // (a,b) -> (b,a) //
   ////////////////////
   dev_copy_spinor_field<<<gridsize4, blocksize4>>>(dev_spin_eo2_dn, dev_spin_eo3_up);			// dev_spin_eo3_up = dev_spin_eo2_dn
   dev_copy_spinor_field<<<gridsize4, blocksize4>>>(dev_spin_eo2_up, dev_spin_eo3_dn);			// dev_spin_eo3_dn = dev_spin_eo2_up
-  
-  
-  
-  
-  
-  
+
   ///////////////////////////////////								///////////////////////
   //        Q_tilde(2x2)           //								// (Q_tilde) * (b,a) //
   ///////////////////////////////////								///////////////////////
-  
   
   ////////////////////////////
   // (M_oe) (Mee^-1) (M_eo) //
   ////////////////////////////
   
-  // Flo:
+  // Hopping:
   #ifdef USETEXTURE
     bind_texture_spin(dev_spin_eo3_up,1);
   #endif
@@ -1453,25 +2255,11 @@ void dev_Qtm_pm_ndpsi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
     unbind_texture_spin(1);
   #endif
   
-  
-  // written:
   dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo1_up, dev_spin_eo2_up, -1.0);			// dev_spin_eo2_up  =  (1 - imubar) * dev_spin_eo1_up  =  (1 - imubar)*(M_eo) * dev_spin_eo3_up
   dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo1_dn, dev_spin_eo2_dn, +1.0);			// dev_spin_eo2_dn  =  (1 + imubar) * dev_spin_eo1_dn  =  (1 + imubar)*(M_eo) * dev_spin_eo3_dn
+  dev_nd_linalg2<<<gridsize2, blocksize2>>>(dev_spin_eo1_up, dev_spin_eo1_dn, dev_spin_eo2_up, dev_spin_eo2_dn, g_epsbar, nrm); 
   
-  
-  // CUBLAS:
-  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_up, 1);
-  										// dev_spin_eo2_up  =  dev_spin_eo2_up  +  epsbar * dev_spin_eo1_dn  =  (1 - imubar)*(M_eo) * dev_spin_eo3_up  +  epsbar * (M_eo) * dev_spin_eo3_dn
-  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_dn, 1);
-  										// dev_spin_eo2_dn  =  dev_spin_eo2_dn  +  epsbar * dev_spin_eo1_up  =  (1 + imubar)*(M_eo) * dev_spin_eo3_dn  +  epsbar * (M_eo) * dev_spin_eo3_up
-  
-  // CUBLAS:
-  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_up, 1);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  +  nrm*epsbar*(M_eo) * dev_spin_eo3_dn
-  
-  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_dn, 1);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  +  nrm*epsbar*(M_eo) * dev_spin_eo3_up
-  
-  
-  // Flo:
+  // Hopping:
   #ifdef USETEXTURE
     bind_texture_spin(dev_spin_eo2_up,1);									// remember: this is ((M_oe) (Mee^-1) (M_eo)) * (dev_spin_eo3_up, dev_spin_eo3_dn):
   #endif
@@ -1488,43 +2276,349 @@ void dev_Qtm_pm_ndpsi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
     unbind_texture_spin(1);							// dev_spin_eo1_dn  =  (M_oe) * dev_spin_eo2_dn  =  (M_oe)*nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  +  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_up
   #endif
   
-  
-  
   ////////////
   // (M_oo) //
   ////////////
   
-  // written:
   dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo3_up, dev_spin_eo2_up, +1.0);				// dev_spin_eo2_up = (1 + imubar) * dev_spin_eo3_up
   dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo3_dn, dev_spin_eo2_dn, -1.0);				// dev_spin_eo2_dn = (1 - imubar) * dev_spin_eo3_dn
   
-  
-  // CUBLAS:											// remember: this is (M_oo) * (dev_spin_eo3_up, dev_spin_eo3_dn):
-  cublasSaxpy (N_floats, -g_epsbar, (float *) dev_spin_eo3_dn, 1, (float *) dev_spin_eo2_up, 1);
-  												// dev_spin_eo2_up  =  dev_spin_eo2_up - epsbar*dev_spin_eo3_dn  =  (1+imubar)*dev_spin_eo3_up - epsbar*dev_spin_eo3_dn
-  cublasSaxpy (N_floats, -g_epsbar, (float *) dev_spin_eo3_up, 1, (float *) dev_spin_eo2_dn, 1);
-  												// dev_spin_eo2_dn  =  dev_spin_eo2_dn - epsbar*dev_spin_eo3_up  =  (1-imubar)*dev_spin_eo3_dn - epsbar*dev_spin_eo3_up
+  //dev_spin_eo3_up <-> dev_spin_eo3_dn here!! 
+  dev_nd_linalg1_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo1_up, dev_spin_eo1_dn, dev_spin_eo3_dn, dev_spin_eo3_up, dev_spin_eo2_up, dev_spin_eo2_dn, g_epsbar ); 
   
   
+  ////////////
+  // output //	output is already done by setting  dev_spin_eo2_up/dn = spinout_up/dn
+  ////////////
+ 
+  return;
+  
+}//dev_Qtm_pm_ndpsi_old()
+
+
+
+
+
+
+
+
+
+void dev_Qtm_pm_ndpsi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
+                              dev_spinor * spinin_up , dev_spinor * spinin_dn , 
+                              int gridsize1, int blocksize1, int gridsize2, int blocksize2,
+                              int gridsize3, int blocksize3, int gridsize4, int blocksize4) {
+  
+  
+  // we will use the auxiliary fields  dev_spin_eo{1,2}_up/dn  for working on and buffering
+  // and set  dev_spin_eo2_up/dn  equal  spinout_up/dn
+  // spinin_up/dn  have to remain unchanged !!
+  // spinout_up/dn  can be freely used
+  
+  /////////////////////
+  // LOCAL VARIABLES //
+  /////////////////////
+  
+  int N_sites  =    VOLUME/2;		// #lattice sites
+  int N_floats = 24*VOLUME/2;		// #floats
+  
+  
+  
+  
+  ////////////////////////////////////
+  //   MATCHING with  Qtm_pm_ndpsi  //
+  ////////////////////////////////////
+  //                                //
+  // _strange = _up                 //
+  // _charm   = _dn                 //
+  //                                //
+  // DUM_MATRIX   = dev_spin_eo1_up //
+  // DUM_MATRIX+1 = dev_spin_eo1_dn //
+  //                                //
+  // DUM_MATRIX+2 = dev_spin_eo2_up //
+  // DUM_MATRIX+3 = dev_spin_eo2_dn //
+  //                                //
+  ////////////////////////////////////
+  
+  
+  
+  
+  ///////////////////////////////////
+  // INITIALIZATIONS & ASSIGNMENTS //	// have to use (one) other auxiliary field(s) than the calling function dev_cg_eo_nd
+  ///////////////////////////////////
+  
+  dev_spin_eo2_up = spinout_up;		// need no memory allocated
+  dev_spin_eo2_dn = spinout_dn;
+  												///////////// THEORY ////////////////////////////////////////////////////////////////
+  												//                                                                                 //
+  												//  (Q_tilde) = gamma5 * ((M_oo) - (M_oe)(Mee^-1)(M_eo))                           //
+  												//  (Q_tilde)(Q_tilde_dagger) * (up,dn) = (Q_tilde) * (b,a)                        //
+  ///////////////										//                                                    (a,b) = (Q_tilde) * (dn,up)  //
+  // MAIN BODY //										//                                                                                 //
+  ///////////////										/////////////////////////////////////////////////////////////////////////////////////
+  
+  
+  double nrm = 1.0 / (1.0 + g_mubar*g_mubar - g_epsbar*g_epsbar);
+  
+  
+  ///////////////////////////////////////							/////////////////////////////////
+  //        Q_tilde_dagger(2x2)        //							// (a,b) = (Q_tilde) * (dn,up) //
+  ///////////////////////////////////////							/////////////////////////////////
+  
+  
+  ////////////////////////////
+  // (M_oe) (Mee^-1) (M_eo) //
+  ////////////////////////////
+  
+  // Hopping:
+  #ifdef USETEXTURE
+    bind_texture_spin(spinin_dn,1);
+  #endif
+    dev_Hopping_Matrix_ext<<<gridsize1, blocksize1, 0, stream_nd[0]>>>(dev_gf, spinin_dn, dev_spin_eo1_up, dev_spin_eo2_up, -1.0, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,0,N_sites);	// dev_spin_eo1_up = (M_eo) * spinin_dn
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+  #endif
+  
+  #ifdef USETEXTURE
+    bind_texture_spin(spinin_up,1);
+  #endif
+    dev_Hopping_Matrix_ext<<<gridsize1, blocksize1, 0, stream_nd[1]>>>(dev_gf, spinin_up, dev_spin_eo1_dn, dev_spin_eo2_dn, 1.0, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,0,N_sites);	// dev_spin_eo1_dn = (M_eo) * spinin_up
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+  #endif
+
+  cudaStreamSynchronize(stream_nd[0]);
+  cudaStreamSynchronize(stream_nd[1]);  
+
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo1_up,1);
+    bind_texture_spin_dn(dev_spin_eo1_dn,1);   
+  #endif  
+  dev_nd_linalg2<<<gridsize2, blocksize2>>>(dev_spin_eo1_up, dev_spin_eo1_dn, dev_spin_eo2_up, dev_spin_eo2_dn, g_epsbar, nrm); 
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+    unbind_texture_spin_dn(1);    
+  #endif
+  
+
+  // Hopping:
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo2_up,1);									// remember: this is ((M_oe)(Mee^-1)(M_eo)) * (spinin_dn, spinin_up):
+  #endif
+    dev_Hopping_Matrix<<<gridsize1, blocksize1, 0, stream_nd[0]>>>(dev_gf, dev_spin_eo2_up, dev_spin_eo1_up, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,0,N_sites);
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);							// dev_spin_eo1_up  =  (M_oe) * dev_spin_eo2_up  =  (M_oe)*nrm*(1-imubar)*(M_eo) * spinin_dn  +  (M_oe)*nrm*epsbar*(M_eo) * spinin_up
+  #endif									
+  
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo2_dn,1);
+  #endif
+    dev_Hopping_Matrix<<<gridsize1, blocksize1, 0, stream_nd[1]>>>(dev_gf, dev_spin_eo2_dn, dev_spin_eo1_dn, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,0,N_sites);
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);							// dev_spin_eo1_dn  =  (M_oe) * dev_spin_eo2_dn  =  (M_oe)*nrm*(1+imubar)*(M_eo) * spinin_up  +  (M_oe)*nrm*epsbar*(M_eo) * spinin_dn
+  #endif
+  
+ 
+  ////////////
+  // (M_oo) //
+  ////////////
   
   ///////////////////////////////////////
   // (M_oo)  -  (M_oe) (Mee^-1) (M_eo) //
-  ///////////////////////////////////////
+  ///////////////////////////////////////  
   
-  // CUBLAS:											// this is ( (M_oo) - (M_oe) (Mee^-1) (M_eo) ) * (dev_spin_eo3_up, dev_spin_eo3_dn)
+  cudaStreamSynchronize(stream_nd[0]);
+  cudaStreamSynchronize(stream_nd[1]);  
+  
+  #ifdef USETEXTURE
+    bind_texture_spin(spinin_up,1);
+    bind_texture_spin_dn(spinin_dn,1);   
+  #endif     
+  dev_nd_linalg3_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo1_up, dev_spin_eo1_dn, spinin_up, spinin_dn, dev_spin_eo2_up, dev_spin_eo2_dn, g_epsbar, +1.0 ); 
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+    unbind_texture_spin_dn(1);    
+  #endif 
+ 
+  
+
+  ////////////////////
+  // (a,b) -> (b,a) //
+  ////////////////////
+  dev_copy_spinor_field<<<gridsize4, blocksize4, 0, stream_nd[0]>>>(dev_spin_eo2_dn, dev_spin_eo3_up);			// dev_spin_eo3_up = dev_spin_eo2_dn
+  dev_copy_spinor_field<<<gridsize4, blocksize4, 0, stream_nd[1]>>>(dev_spin_eo2_up, dev_spin_eo3_dn);			// dev_spin_eo3_dn = dev_spin_eo2_up
+
+  ///////////////////////////////////								///////////////////////
+  //        Q_tilde(2x2)           //								// (Q_tilde) * (b,a) //
+  ///////////////////////////////////								///////////////////////
+  
+  ////////////////////////////
+  // (M_oe) (Mee^-1) (M_eo) //
+  ////////////////////////////
+  
+  // Hopping:
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo3_up,1);
+  #endif
+    dev_Hopping_Matrix_ext<<<gridsize1, blocksize1, 0, stream_nd[0]>>>(dev_gf, dev_spin_eo3_up, dev_spin_eo1_up, dev_spin_eo2_up, -1.0, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,0,N_sites);	// dev_spin_eo1_up = (M_eo) * dev_spin_eo3_up
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+  #endif
+  
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo3_dn,1);
+  #endif
+    dev_Hopping_Matrix_ext<<<gridsize1, blocksize1, 0, stream_nd[1]>>>(dev_gf, dev_spin_eo3_dn, dev_spin_eo1_dn, dev_spin_eo2_dn, +1.0, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,0,N_sites);	// dev_spin_eo1_dn = (M_eo) * dev_spin_eo3_dn
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+  #endif
+  
+  cudaStreamSynchronize(stream_nd[0]);
+  cudaStreamSynchronize(stream_nd[1]);  
+  
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo1_up,1);
+    bind_texture_spin_dn(dev_spin_eo1_dn,1);   
+  #endif    
+  dev_nd_linalg2<<<gridsize2, blocksize2>>>(dev_spin_eo1_up, dev_spin_eo1_dn, dev_spin_eo2_up, dev_spin_eo2_dn, g_epsbar, nrm); 
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+    unbind_texture_spin_dn(1);    
+  #endif 
+  
+  // Hopping:
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo2_up,1);									// remember: this is ((M_oe) (Mee^-1) (M_eo)) * (dev_spin_eo3_up, dev_spin_eo3_dn):
+  #endif
+    dev_Hopping_Matrix<<<gridsize1, blocksize1, 0, stream_nd[0]>>>(dev_gf, dev_spin_eo2_up, dev_spin_eo1_up, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,0,N_sites);
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);							// dev_spin_eo1_up  =  (M_oe) * dev_spin_eo2_up  =  (M_oe)*nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  +  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_dn
+  #endif
+  
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo2_dn,1);
+  #endif
+    dev_Hopping_Matrix<<<gridsize1, blocksize1, 0, stream_nd[1]>>>(dev_gf, dev_spin_eo2_dn, dev_spin_eo1_dn, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,0,N_sites);
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);							// dev_spin_eo1_dn  =  (M_oe) * dev_spin_eo2_dn  =  (M_oe)*nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  +  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_up
+  #endif
+  
+  ////////////
+  // (M_oo) //
+  ////////////
+  cudaStreamSynchronize(stream_nd[0]);
+  cudaStreamSynchronize(stream_nd[1]);   
+
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo3_up,1);
+    bind_texture_spin_dn(dev_spin_eo3_dn,1);   
+  #endif    
+    dev_nd_linalg4_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo1_up, dev_spin_eo1_dn, dev_spin_eo3_up, dev_spin_eo3_dn, dev_spin_eo2_up, dev_spin_eo2_dn, g_epsbar, +1.0 ); 
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+    unbind_texture_spin_dn(1);    
+  #endif 
+  
+  ////////////
+  // output //	output is already done by setting  dev_spin_eo2_up/dn = spinout_up/dn
+  ////////////
+ 
+  return;
+  
+}//dev_Qtm_pm_ndpsi()
+
+
+
+
+
+
+
+
+
+///////////////////////////
+// MATRIX MULTIPLICATION //
+///////////////////////////
+
+// the GPU implementation of  Qtm_pm_ndpsi(...)  from tm_operators_nd.c
+// we have the possibility to add a constant shift > 0 
+void dev_Qtm_pm_ndpsi_updn (dev_spinor * spinout_up, dev_spinor * spinout_dn,
+                              dev_spinor * spinin_up , dev_spinor * spinin_dn , 
+                              int gridsize1, int blocksize1, int gridsize2, int blocksize2,
+                              int gridsize3, int blocksize3, int gridsize4, int blocksize4) {
+  
+  
+  // we will use the auxiliary fields  dev_spin_eo{1,2}_up/dn  for working on and buffering
+  // and set  dev_spin_eo2_up/dn  equal  spinout_up/dn
+  // spinin_up/dn  have to remain unchanged !!
+  // spinout_up/dn  can be freely used
+  
+
+  int N_sites  =    VOLUME/2;		// #lattice sites
+  int N_floats = 24*VOLUME/2;		// #floats
+
+  dev_spin_eo2_up = spinout_up;		// need no memory allocated
+  dev_spin_eo2_dn = spinout_dn;
+
+ 
+  double nrm = 1.0 / (1.0 + g_mubar*g_mubar - g_epsbar*g_epsbar);
+  
+  #ifdef USETEXTURE
+    bind_texture_spin(spinin_dn,1);
+    bind_texture_spin_dn(spinin_up,1);    
+  #endif
+    dev_Hopping_Matrix_updn<<<gridsize1, blocksize1>>>(dev_gf, spinin_dn, spinin_up, dev_spin_eo1_up, dev_spin_eo1_dn,dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,0,N_sites);	// dev_spin_eo1_up = (M_eo) * spinin_dn
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+    unbind_texture_spin_dn(1);   
+  #endif
+  
+  dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo1_up, dev_spin_eo2_up, -1.0);		// dev_spin_eo2_up  =  (1 - imubar) * dev_spin_eo1_up  =  (1 - imubar)*(M_eo) * spinin_dn
+  dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo1_dn, dev_spin_eo2_dn, +1.0);		// dev_spin_eo2_dn  =  (1 + imubar) * dev_spin_eo1_dn  =  (1 + imubar)*(M_eo) * spinin_up
+
+  /*
+  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_up, 1);
+  										// dev_spin_eo2_up  =  dev_spin_eo2_up  +  epsbar * dev_spin_eo1_dn  =  (1 - imubar)*(M_eo) * spinin_dn  +  epsbar * (M_eo) * spinin_up
+  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_dn, 1);
+  										// dev_spin_eo2_dn  =  dev_spin_eo2_dn  +  epsbar * dev_spin_eo1_up  =  (1 + imubar)*(M_eo) * spinin_up  +  epsbar * (M_eo) * spinin_dn
+  
+
+  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_up, 1);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * spinin_dn  +  nrm*epsbar*(M_eo) * spinin_up
+  
+  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_dn, 1);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * spinin_up  +  nrm*epsbar*(M_eo) * spinin_dn
+  */
+  dev_nd_linalg2<<<gridsize2, blocksize2>>>(dev_spin_eo1_up, dev_spin_eo1_dn, dev_spin_eo2_up, dev_spin_eo2_dn, g_epsbar, nrm); 
+
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo2_up,1);									// remember: this is ((M_oe)(Mee^-1)(M_eo)) * (spinin_dn, spinin_up):
+    bind_texture_spin_dn(dev_spin_eo2_dn,1);									// remember: this is ((M_oe)(Mee^-1)(M_eo)) * (spinin_dn, spinin_up):    
+  #endif
+    dev_Hopping_Matrix_updn<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo2_up, dev_spin_eo2_dn, dev_spin_eo1_up, dev_spin_eo1_dn, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,0,N_sites);
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);	
+    unbind_texture_spin_dn(1);
+  #endif									
+
+  
+  dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(spinin_dn, dev_spin_eo2_up, +1.0);			// dev_spin_eo2_up = (1 + imubar) * spinin_dn
+  dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(spinin_up, dev_spin_eo2_dn, -1.0);			// dev_spin_eo2_dn = (1 - imubar) * spinin_up
+  
+  /*
+  cublasSaxpy (N_floats, -g_epsbar, (float *) spinin_up, 1, (float *) dev_spin_eo2_up, 1);
+  												// dev_spin_eo2_up  =  dev_spin_eo2_up - epsbar*spinin_up  =  (1+imubar)*spinin_dn - epsbar*spinin_up
+  cublasSaxpy (N_floats, -g_epsbar, (float *) spinin_dn, 1, (float *) dev_spin_eo2_dn, 1);
+  												// dev_spin_eo2_dn  =  dev_spin_eo2_dn - epsbar*spinin_dn  =  (1-imubar)*spinin_up - epsbar*spinin_dn
+  
+  													// this is ((M_oo) - (M_oe)(Mee^-1)(M_eo)) * (spinin_dn, spinin_up):
   cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_up, 1);
-  							// dev_spin_eo2_up  =  dev_spin_eo2_up  -  dev_spin_eo1_up  =                      (1+imubar) * dev_spin_eo3_up  -                    epsbar * dev_spin_eo3_dn
-  							//                                                             - (M_oe)*nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  -  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_dn
+  							// dev_spin_eo2_up  =  dev_spin_eo2_up  -  dev_spin_eo1_up  =                      (1+imubar) * spinin_dn  -                    epsbar * spinin_up
+  							//                                                             - (M_oe)*nrm*(1-imubar)*(M_eo) * spinin_dn  -  (M_oe)*nrm*epsbar*(M_eo) * spinin_up
   cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_dn, 1);
-  							// dev_spin_eo2_dn  =  dev_spin_eo2_dn  -  dev_spin_eo1_dn  =                      (1-imubar) * dev_spin_eo3_dn  -                    epsbar * dev_spin_eo3_up
-  							//                                                             - (M_oe)*nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  -  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_up
+  							// dev_spin_eo2_dn  =  dev_spin_eo2_dn  -  dev_spin_eo1_dn  =                      (1-imubar) * spinin_up  -                    epsbar * spinin_dn
+  							//                                                             - (M_oe)*nrm*(1+imubar)*(M_eo) * spinin_up  -  (M_oe)*nrm*epsbar*(M_eo) * spinin_dn
+  */
+  
+  dev_nd_linalg1<<<gridsize2, blocksize2>>>(dev_spin_eo1_up, dev_spin_eo1_dn, spinin_up, spinin_dn, dev_spin_eo2_up, dev_spin_eo2_dn, g_epsbar ); 
   
   
-  ////////////
-  // gamma5 //
-  ////////////
-  
-  // Flo:
   #ifdef RELATIVISTIC_BASIS
     dev_gamma5_rel<<<gridsize3, blocksize3>>>(dev_spin_eo2_up, dev_spin_eo2_up);					// dev_spin_eo2_up = gamma5 * dev_spin_eo2_up 
     dev_gamma5_rel<<<gridsize3, blocksize3>>>(dev_spin_eo2_dn, dev_spin_eo2_dn);					// dev_spin_eo2_dn = gamma5 * dev_spin_eo2_dn  
@@ -1535,19 +2629,95 @@ void dev_Qtm_pm_ndpsi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   
   
   
-  /*
-  ////////////
-  // output //										// output is already done by setting  dev_spin_eo2_up/dn = spinout_up/dn
-  ////////////
+  ////////////////////
+  // (a,b) -> (b,a) //
+  ////////////////////
+  dev_copy_spinor_field<<<gridsize4, blocksize4>>>(dev_spin_eo2_dn, dev_spin_eo3_up);			// dev_spin_eo3_up = dev_spin_eo2_dn
+  dev_copy_spinor_field<<<gridsize4, blocksize4>>>(dev_spin_eo2_up, dev_spin_eo3_dn);			// dev_spin_eo3_dn = dev_spin_eo2_up
   
-  dev_copy_spinor_field<<<griddim2, blockdim2 >>>(dev_spin_eo2_up, spinout_up);		// spinout_up = dev_spin_eo2_up
-  dev_copy_spinor_field<<<griddim2, blockdim2 >>>(dev_spin_eo2_dn, spinout_dn);		// spinout_dn = dev_spin_eo2_dn
+  
+  
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo3_up,1);
+    bind_texture_spin_dn(dev_spin_eo3_dn,1);   
+  #endif
+    dev_Hopping_Matrix_updn<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo3_up, dev_spin_eo3_dn, dev_spin_eo1_up, dev_spin_eo1_dn, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,0,N_sites);	// dev_spin_eo1_up = (M_eo) * dev_spin_eo3_up
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+    unbind_texture_spin_dn(1);    
+  #endif
+  
+  dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo1_up, dev_spin_eo2_up, -1.0);			// dev_spin_eo2_up  =  (1 - imubar) * dev_spin_eo1_up  =  (1 - imubar)*(M_eo) * dev_spin_eo3_up
+  dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo1_dn, dev_spin_eo2_dn, +1.0);			// dev_spin_eo2_dn  =  (1 + imubar) * dev_spin_eo1_dn  =  (1 + imubar)*(M_eo) * dev_spin_eo3_dn
+
+  /*
+  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_up, 1);
+  										// dev_spin_eo2_up  =  dev_spin_eo2_up  +  epsbar * dev_spin_eo1_dn  =  (1 - imubar)*(M_eo) * dev_spin_eo3_up  +  epsbar * (M_eo) * dev_spin_eo3_dn
+  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_dn, 1);
+  										// dev_spin_eo2_dn  =  dev_spin_eo2_dn  +  epsbar * dev_spin_eo1_up  =  (1 + imubar)*(M_eo) * dev_spin_eo3_dn  +  epsbar * (M_eo) * dev_spin_eo3_up
+  
+  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_up, 1);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  +  nrm*epsbar*(M_eo) * dev_spin_eo3_dn
+  
+  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_dn, 1);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  +  nrm*epsbar*(M_eo) * dev_spin_eo3_up
   */
   
+  dev_nd_linalg2<<<gridsize2, blocksize2>>>(dev_spin_eo1_up, dev_spin_eo1_dn, dev_spin_eo2_up, dev_spin_eo2_dn, g_epsbar, nrm); 
+
+  
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo2_up,1);	
+    bind_texture_spin_dn(dev_spin_eo2_dn,1);    
+  #endif
+    dev_Hopping_Matrix_updn<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo2_up, dev_spin_eo2_dn, dev_spin_eo1_up,dev_spin_eo1_dn, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,0,N_sites);
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+    unbind_texture_spin_dn(1);
+  #endif
+  
+
+  dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo3_up, dev_spin_eo2_up, +1.0);				// dev_spin_eo2_up = (1 + imubar) * dev_spin_eo3_up
+  dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo3_dn, dev_spin_eo2_dn, -1.0);				// dev_spin_eo2_dn = (1 - imubar) * dev_spin_eo3_dn
+  
+  /*											// remember: this is (M_oo) * (dev_spin_eo3_up, dev_spin_eo3_dn):
+  cublasSaxpy (N_floats, -g_epsbar, (float *) dev_spin_eo3_dn, 1, (float *) dev_spin_eo2_up, 1);
+  												// dev_spin_eo2_up  =  dev_spin_eo2_up - epsbar*dev_spin_eo3_dn  =  (1+imubar)*dev_spin_eo3_up - epsbar*dev_spin_eo3_dn
+  cublasSaxpy (N_floats, -g_epsbar, (float *) dev_spin_eo3_up, 1, (float *) dev_spin_eo2_dn, 1);
+  												// dev_spin_eo2_dn  =  dev_spin_eo2_dn - epsbar*dev_spin_eo3_up  =  (1-imubar)*dev_spin_eo3_dn - epsbar*dev_spin_eo3_up
+  
+  
+
+  											// this is ( (M_oo) - (M_oe) (Mee^-1) (M_eo) ) * (dev_spin_eo3_up, dev_spin_eo3_dn)
+  cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_up, 1);
+  							// dev_spin_eo2_up  =  dev_spin_eo2_up  -  dev_spin_eo1_up  =                      (1+imubar) * dev_spin_eo3_up  -                    epsbar * dev_spin_eo3_dn
+  							//                                                             - (M_oe)*nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  -  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_dn
+  cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_dn, 1);
+  							// dev_spin_eo2_dn  =  dev_spin_eo2_dn  -  dev_spin_eo1_dn  =                      (1-imubar) * dev_spin_eo3_dn  -                    epsbar * dev_spin_eo3_up
+  							//                                                             - (M_oe)*nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  -  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_up
+  */
+  dev_nd_linalg1<<<gridsize2, blocksize2>>>(dev_spin_eo1_up, dev_spin_eo1_dn, dev_spin_eo3_dn, dev_spin_eo3_up, dev_spin_eo2_up, dev_spin_eo2_dn, g_epsbar ); 
+
+  
+  #ifdef RELATIVISTIC_BASIS
+    dev_gamma5_rel<<<gridsize3, blocksize3>>>(dev_spin_eo2_up, dev_spin_eo2_up);					// dev_spin_eo2_up = gamma5 * dev_spin_eo2_up 
+    dev_gamma5_rel<<<gridsize3, blocksize3>>>(dev_spin_eo2_dn, dev_spin_eo2_dn);					// dev_spin_eo2_dn = gamma5 * dev_spin_eo2_dn  
+  #else
+    dev_gamma5<<<gridsize3, blocksize3>>>(dev_spin_eo2_up, dev_spin_eo2_up);					// dev_spin_eo2_up = gamma5 * dev_spin_eo2_up 
+    dev_gamma5<<<gridsize3, blocksize3>>>(dev_spin_eo2_dn, dev_spin_eo2_dn);					// dev_spin_eo2_dn = gamma5 * dev_spin_eo2_dn
+  #endif
   
   return;
   
 }//dev_Qtm_pm_ndpsi()
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1874,18 +3044,13 @@ void dev_Qtm_pm_ndpsi_mpi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo1_up, dev_spin_eo2_up, -1.0);			// dev_spin_eo2_up  =  (1 - imubar) * dev_spin_eo1_up  =  (1 - imubar)*(M_eo) * dev_spin_eo3_up
   dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo1_dn, dev_spin_eo2_dn, +1.0);			// dev_spin_eo2_dn  =  (1 + imubar) * dev_spin_eo1_dn  =  (1 + imubar)*(M_eo) * dev_spin_eo3_dn
   
-  
   // linear algebra
-  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_up, 1);
-  										// dev_spin_eo2_up  =  dev_spin_eo2_up  +  epsbar * dev_spin_eo1_dn  =  (1 - imubar)*(M_eo) * dev_spin_eo3_up  +  epsbar * (M_eo) * dev_spin_eo3_dn
+  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_up, 1);										// dev_spin_eo2_up  =  dev_spin_eo2_up  +  epsbar * dev_spin_eo1_dn  =  (1 - imubar)*(M_eo) * dev_spin_eo3_up  +  epsbar * (M_eo) * dev_spin_eo3_dn
   cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_dn, 1);
   										// dev_spin_eo2_dn  =  dev_spin_eo2_dn  +  epsbar * dev_spin_eo1_up  =  (1 + imubar)*(M_eo) * dev_spin_eo3_dn  +  epsbar * (M_eo) * dev_spin_eo3_up
-  
   // lineare algebra
   cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_up, 1);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  +  nrm*epsbar*(M_eo) * dev_spin_eo3_dn
-  
   cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_dn, 1);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  +  nrm*epsbar*(M_eo) * dev_spin_eo3_up
-  
   
   		// xchange
   		#ifndef HOPPING_DEBUG
@@ -1910,7 +3075,6 @@ void dev_Qtm_pm_ndpsi_mpi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   #ifdef USETEXTURE
     unbind_texture_spin(1);							// dev_spin_eo1_up  =  (M_oe) * dev_spin_eo2_up  =  (M_oe)*nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  +  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_dn
   #endif
-  
   
   		// xchange
   		#ifndef HOPPING_DEBUG
@@ -1937,7 +3101,6 @@ void dev_Qtm_pm_ndpsi_mpi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   #endif
   
   
-  
   ////////////
   // (M_oo) //
   ////////////
@@ -1948,12 +3111,9 @@ void dev_Qtm_pm_ndpsi_mpi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   
   
   // lineare algebra										// remember: this is (M_oo) * (dev_spin_eo3_up, dev_spin_eo3_dn):
-  cublasSaxpy (N_floats, -g_epsbar, (float *) dev_spin_eo3_dn, 1, (float *) dev_spin_eo2_up, 1);
-  												// dev_spin_eo2_up  =  dev_spin_eo2_up - epsbar*dev_spin_eo3_dn  =  (1+imubar)*dev_spin_eo3_up - epsbar*dev_spin_eo3_dn
+  cublasSaxpy (N_floats, -g_epsbar, (float *) dev_spin_eo3_dn, 1, (float *) dev_spin_eo2_up, 1);												// dev_spin_eo2_up  =  dev_spin_eo2_up - epsbar*dev_spin_eo3_dn  =  (1+imubar)*dev_spin_eo3_up - epsbar*dev_spin_eo3_dn
   cublasSaxpy (N_floats, -g_epsbar, (float *) dev_spin_eo3_up, 1, (float *) dev_spin_eo2_dn, 1);
   												// dev_spin_eo2_dn  =  dev_spin_eo2_dn - epsbar*dev_spin_eo3_up  =  (1-imubar)*dev_spin_eo3_dn - epsbar*dev_spin_eo3_up
-  
-  
   
   ///////////////////////////////////////
   // (M_oo)  -  (M_oe) (Mee^-1) (M_eo) //
@@ -1961,13 +3121,11 @@ void dev_Qtm_pm_ndpsi_mpi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   
   // lineare algebra										// this is ( (M_oo) - (M_oe) (Mee^-1) (M_eo) ) * (dev_spin_eo3_up, dev_spin_eo3_dn)
   cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_up, 1);
-  							// dev_spin_eo2_up  =  dev_spin_eo2_up  -  dev_spin_eo1_up  =                      (1+imubar) * dev_spin_eo3_up  -                    epsbar * dev_spin_eo3_dn
-  							//                                                             - (M_oe)*nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  -  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_dn
+  							// dev_spin_eo2_up  =  dev_spin_eo2_up  -  dev_spin_eo1_up  =                      (1+imubar) * dev_spin_eo3_up  -                    epsbar * dev_spin_eo3_dn						//                                                             - (M_oe)*nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  -  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_dn
   cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_dn, 1);
   							// dev_spin_eo2_dn  =  dev_spin_eo2_dn  -  dev_spin_eo1_dn  =                      (1-imubar) * dev_spin_eo3_dn  -                    epsbar * dev_spin_eo3_up
   							//                                                             - (M_oe)*nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  -  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_up
-  
-  
+ 
   ////////////
   // gamma5 //
   ////////////
@@ -1980,18 +3138,12 @@ void dev_Qtm_pm_ndpsi_mpi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
     dev_gamma5<<<gridsize3, blocksize3>>>(dev_spin_eo2_up, dev_spin_eo2_up);					// dev_spin_eo2_up = gamma5 * dev_spin_eo2_up 
     dev_gamma5<<<gridsize3, blocksize3>>>(dev_spin_eo2_dn, dev_spin_eo2_dn);					// dev_spin_eo2_dn = gamma5 * dev_spin_eo2_dn
   #endif
-  
-  
-  
-  /*
+
+
   ////////////
-  // output //										// output is already done by setting  dev_spin_eo2_up/dn = spinout_up/dn
+  // output //	output is already done by setting  dev_spin_eo2_up/dn = spinout_up/dn
   ////////////
-  
-  dev_copy_spinor_field<<<griddim2, blockdim2 >>>(dev_spin_eo2_up, spinout_up);		// spinout_up = dev_spin_eo2_up
-  dev_copy_spinor_field<<<griddim2, blockdim2 >>>(dev_spin_eo2_dn, spinout_dn);		// spinout_dn = dev_spin_eo2_dn
-  */
-  
+
   
   return;
   
@@ -2026,7 +3178,7 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   // FLOPS per lattice site and application of the function,						//
   // count the floating point op's on device:								//
   //													//
-  // dev_Hopping_Matrix	          = 4136								//
+  // dev_Hopping_Matrix	          = 1608								//
   // dev_mul_one_pm_imubar_gamma5 = 120									//
   // dev_gamma5                   = 12									//
   //													//
@@ -2034,7 +3186,7 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   // cublasSscal                  = 24*1 = 24								//
   //													//
   //													//
-  // (FLOPS/matrix application)  =  2 * (4*4136 + 4*120 + 6*48 + 2*24 + 2*12)  =  2 * 17384  =  34768	//
+  // (FLOPS/matrix application)  =  2 * (4*1608 + 4*120 + 6*48 + 2*24 + 2*12)  =  2 * 7224  =  14448	//
   //													//
   ////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -2057,21 +3209,13 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   double realFlopsPerApp = 34768.0;
   */
   // double effectiveFlopsPerApp = 23984.0;	// hopping = 1488
-  double effectiveFlopsPerApp = 21296.0;	// per lattice site
+  //double effectiveFlopsPerApp = 21296.0;	// per lattice site
+  double effectiveFlopsPerApp = 14448.0; // hopping = 1608
   
   #ifndef MPI
-    /*
-    double realDeviceFlops;
-    double realFlops;
-    */
     double effectiveDeviceFlops;
     double effectiveFlops;
   #else
-    /*
-    double realDeviceFlops;
-    double allRealDeviceFlops;
-    double realFlops;
-    */
     double effectiveDeviceFlops;
     double allEffectiveDeviceFlops;
     double effectiveFlops;
@@ -2080,23 +3224,12 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   // CUDA errors
   cudaError_t cudaerr;
 
-  
-  // size of a spinor
-  /*
-  size_t dev_spinsize_int = 6*VOLUME/2 * sizeof(dev_spinor);
-  #ifdef MPI
-    size_t dev_spinsize_ext = 6*(VOLUME+RAND)/2 * sizeof(dev_spinor);
-  #endif
-  */
-  
+
   // formal parameters
   int staticsource = 0;		// 1: applies matrix every time on the same source
   				// 0: applies matrix consecutively ...
   
-  
-  // init_mixedsolve_eo_nd(g_gauge_field);		// only when externally called
-  
-  
+
   dev_spinor * A_up;
   dev_spinor * A_dn;
   dev_spinor * B_up;
@@ -2121,46 +3254,9 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   		#ifdef CUDA_DEBUG
   		  CUDA_CHECK_NO_SUCCESS_MSG("CUDA error in benchmark_eo_nd(). Memory allocation of spinor fields failed.");
   		#endif
-  
-  
-  /*
-  #ifdef USETEXTURE
-    bind_texture_gf(dev_gf);
-  #endif
-  */
-  
-  
-  /*		// only when externally called
-  //Initialize some stuff
-  dev_complex h0,h1,h2,h3,mh0, mh1, mh2, mh3;
-  
-  h0.re = (float)ka0.re;    h0.im = -(float)ka0.im;
-  h1.re = (float)ka1.re;    h1.im = -(float)ka1.im;
-  h2.re = (float)ka2.re;    h2.im = -(float)ka2.im;
-  h3.re = (float)ka3.re;    h3.im = -(float)ka3.im;
-  
-  mh0.re = -(float)ka0.re;    mh0.im = (float)ka0.im;
-  mh1.re = -(float)ka1.re;    mh1.im = (float)ka1.im;
-  mh2.re = -(float)ka2.re;    mh2.im = (float)ka2.im;
-  mh3.re = -(float)ka3.re;    mh3.im = (float)ka3.im;
-  
-  // try using constant mem for kappas
-  cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex)); 
-  cudaMemcpyToSymbol("dev_k1c", &h1, sizeof(dev_complex)); 
-  cudaMemcpyToSymbol("dev_k2c", &h2, sizeof(dev_complex)); 
-  cudaMemcpyToSymbol("dev_k3c", &h3, sizeof(dev_complex));
-  
-  cudaMemcpyToSymbol("dev_mk0c", &mh0, sizeof(dev_complex)); 
-  cudaMemcpyToSymbol("dev_mk1c", &mh1, sizeof(dev_complex)); 
-  cudaMemcpyToSymbol("dev_mk2c", &mh2, sizeof(dev_complex)); 
-  cudaMemcpyToSymbol("dev_mk3c", &mh3, sizeof(dev_complex));
-  */
-  
-  
-  
+
   int blocksize;		// auxiliary
   
- 
   blocksize = BLOCK;
   int blockdim2, griddim2;					// passed:	dev_Hopping_Matrix
   if ( (VOLUME/2) % blocksize == 0 ) {
@@ -2172,7 +3268,7 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
     griddim2  = (int) ((VOLUME/2/blocksize) + 1);
   }
   
-  blocksize = BLOCKSIZE3;
+  blocksize = BLOCK2;
   int blockdim3, griddim3;					// passed:	dev_mul_one_pm_imubar_gamma5
   if ( (VOLUME/2) % blocksize == 0 ) {
     blockdim3 = blocksize;
@@ -2212,40 +3308,7 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   		#else
   		  if (g_proc_id == 0) printf("\nStarting a little BENCHMARK. benchmark_eo_nd_mpi().\n");
   		#endif
-  
-  
-  
-  
-  /*		// only when externally called
-  he_cg_init<<< 1, 1 >>> (dev_grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0, h1, h2, h3);
-  
-  		// debug	// kernel
-  		#ifdef CUDA_DEBUG
-  		  CUDA_KERNEL_CHECK_NO_SUCCESS_MSG("Kernel error in he_cg_init(). Couldn't initialize some stuff.");
-  		#endif
-  
-  
-  he_cg_init_nd_additional<<<1,1>>> (g_mubar, g_epsbar);
-  
-  		// debug	// kernel
-  		#ifdef CUDA_DEBUG
-  		  CUDA_KERNEL_CHECK_NO_SUCCESS_MSG("Kernel error in he_cg_init_nd_additional(). Couldn't initialize some stuff.");
-  		#endif
-  */
-  
-  
-  
-  		/*
-  		// debug	// CUBLAS helper function
-  		#ifdef CUDA_DEBUG
-  		  CUBLAS_HELPER_CHECK_NO_SUCCESS_MSG(cublasInit(), "CUBLAS error in benchmark_eo_nd(). Couldn't initialize CUBLAS.");
-  		#else
-  		  cublasInit();
-  		#endif
-  		*/
-  
-  
-  
+
   
   		// debug
   		#ifndef MPI
@@ -2260,21 +3323,16 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   
   
   // timer
-  #ifndef MPI
-    startBenchmark = double(clock()) / double(CLOCKS_PER_SEC);
-  #else
-    startBenchmark = MPI_Wtime();
-  #endif
+    startBenchmark = gettime();
+
   
-  
-  
-  
+
   for (i = 0; i < N; i++) {
   
   
     #ifndef MPI
     	dev_Qtm_pm_ndpsi(A_up, A_dn,					// A = (matrix)*B
-    	                        B_up, B_dn,
+    	                        B_up, B_dn, 
     	                        griddim2, blockdim2,
     	                        griddim3, blockdim3,
     	                        griddim4, blockdim4,
@@ -2282,14 +3340,14 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
     #else
     	#ifndef ASYNC
     	  dev_Qtm_pm_ndpsi_mpi(A_up, A_dn,				// A = (matrix)*B
-    	                              B_up, B_dn,
+    	                              B_up, B_dn, 
     	                              griddim2, blockdim2,
     	                              griddim3, blockdim3,
     	                              griddim4, blockdim4,
     	                              griddim5, blockdim5);
     	#else
     	  dev_Qtm_pm_ndpsi_mpi_ASYNC(A_up, A_dn,				// A = (matrix)*B
-    	                                    B_up, B_dn,
+    	                                    B_up, B_dn, 
     	                                    griddim2, blockdim2,
     	                                    griddim3, blockdim3,
     	                                    griddim4, blockdim4,
@@ -2307,10 +3365,7 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
       A_up = C_up;
       A_dn = C_dn;
     }
-    //else {
-      // do nothing
-    //}
-    
+
   }
   
   printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
@@ -2322,33 +3377,17 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   		#ifdef CUDA_DEBUG
   		  CUDA_CHECK_NO_SUCCESS_MSG("CUDA error in matrix_muliplication32(). Applying the matrix on GPU failed.");
   		#endif
-  
-  
-  
+
   // timer
-  #ifndef MPI
-    stopBenchmark = double(clock()) / double(CLOCKS_PER_SEC);
-  #else
-    stopBenchmark = MPI_Wtime();
-  #endif
+    stopBenchmark = gettime();
+
   
   
   #ifndef MPI
   
   	timeElapsed = stopBenchmark - startBenchmark;
-  	/*
-  	realDeviceFlops      = N * VOLUME/2 * realFlopsPerApp;
-  	realFlops            = N * VOLUME/2 * realFlopsPerApp / timeElapsed / 1.0e9;
-  	*/
   	effectiveDeviceFlops = N * VOLUME/2 * effectiveFlopsPerApp;
   	effectiveFlops       = N * VOLUME/2 * effectiveFlopsPerApp / timeElapsed / 1.0e9;
-  	
-  	/*
-  	printf("REAL:\n");
-  	printf("\ttime:        %.2e sec\n", timeElapsed);
-  	printf("\tflop's:      %.2e flops\n", realDeviceFlops);
-  	printf("\tperformance: %.2e Gflop/s\n\n", realFlops);
-  	*/
   	printf("EFFECTIVE:\n");
   	printf("\ttime:        %.4e sec\n", timeElapsed);
   	printf("\tflop's:      %.4e flops\n", effectiveDeviceFlops);
@@ -2358,28 +3397,13 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   	
   	singleTimeElapsed = stopBenchmark - startBenchmark;
   	MPI_Allreduce(&singleTimeElapsed, &maxTimeElapsed, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
-  	/*
-  	realDeviceFlops      = N * VOLUME/2 * realFlopsPerApp;
-  	MPI_Allreduce(&realDeviceFlops, &allRealDeviceFlops, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  	realFlops            = allRealDeviceFlops / maxTimeElapsed / 1.0e9;
-  	*/
   	effectiveDeviceFlops = N * VOLUME/2 * effectiveFlopsPerApp;
   	MPI_Allreduce(&effectiveDeviceFlops, &allEffectiveDeviceFlops, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   	effectiveFlops       = allEffectiveDeviceFlops / maxTimeElapsed / 1.0e9;
   	
   	
   	if (g_proc_id == 0) {
-  	  /*
-  	  printf("\tTEST:\n");
-  	  printf("\ttime:        %.2e sec\n", singleTimeElapsed);
-  	  printf("\tflop's:      %.2e flops\n", realDeviceFlops);
-  	  printf("\tperformance: %.2e Gflop/s\n\n", realDeviceFlops / singleTimeElapsed / 1.0e9);
-  	
-  	  printf("\tREAL:\n");
-  	  printf("\ttime:        %.2e sec\n", maxTimeElapsed);
-  	  printf("\tflop's:      %.2e flops\n", allRealDeviceFlops);
-  	  printf("\tperformance: %.2e Gflop/s\n\n", realFlops);
-  	  */
+
   	  printf("\tEFFECTIVE:\n");
   	  printf("\ttime:        %.4e sec\n", maxTimeElapsed);
   	  printf("\tflop's:      %.4e flops\n", allEffectiveDeviceFlops);
@@ -2439,24 +3463,7 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   cudaFree(B_up);
   cudaFree(B_dn);
   
-  
-  // finalize_mixedsolve_eo_nd();		// only when externally called
-  
-  /*
-  #ifdef USETEXTURE
-    unbind_texture_gf();
-  #endif
-  
-  
-  		// debug	// CUBLAS helper function
-  		#ifdef CUDA_DEBUG
-  		  CUBLAS_HELPER_CHECK_NO_SUCCESS_MSG(cublasShutdown(), "CUBLAS error in benchmark_eo_nd(). Couldn't shut down CUBLAS.");
-  		#else
-  		  cublasShutdown();
-  		#endif
-  */
-  
-  
+
 }//benchmark_eo_nd()
 
 
@@ -2480,9 +3487,10 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
 // for the odd field after even/odd-preconditioning
 // single precision on GPU
 
-int cg_eo_nd (dev_su3_2v * gf,
+int dev_cg_eo_nd (dev_su3_2v * gf,
               dev_spinor * P_up, dev_spinor * P_dn,
               dev_spinor * Q_up, dev_spinor * Q_dn,
+	      float shift,
               int max_iter,
               int check_abs , int check_rel,
               double eps_abs, double eps_rel       ) {
@@ -2565,7 +3573,7 @@ int cg_eo_nd (dev_su3_2v * gf,
     griddim2  = (int) ((VOLUME/2/blocksize) + 1);
   }
   
-  blocksize = BLOCKSIZE3;
+  blocksize = BLOCK2;
   int blockdim3, griddim3;					// passed:	dev_mul_one_pm_imubar_gamma5
   if ( (VOLUME/2) % blocksize == 0 ) {
     blockdim3 = blocksize;
@@ -2648,7 +3656,12 @@ int cg_eo_nd (dev_su3_2v * gf,
   		#ifdef CUDA_DEBUG
   		  CUBLAS_HELPER_CHECK(cublasInit(), "CUBLAS error in cublasInit(). Couldn't initialize CUBLAS.", "CUBLAS initialized.");
   		#else
-  		  cublasInit();
+		  #ifdef CUDA_45
+		    cublasHandle_t handle;
+		    cublasCreate(&handle);
+		  #else
+		    cublasInit();
+		  #endif 
   		#endif
 
   if(g_debug_level > 3) printf("cublasstatus = %f\n", cublasstatus);
@@ -2677,7 +3690,7 @@ int cg_eo_nd (dev_su3_2v * gf,
   
   		// debug	// kernel
   		#ifdef CUDA_DEBUG
-  		  CUDA_KERNEL_CHECK("Kernel error in cg_eo_nd(). Initializing spinor fields on device failed.", "Spinor fields initialized on device.");
+  		  CUDA_KERNEL_CHECK("Kernel error in dev_cg_eo_nd(). Initializing spinor fields on device failed.", "Spinor fields initialized on device.");
   		#endif
   
   
@@ -2714,7 +3727,7 @@ int cg_eo_nd (dev_su3_2v * gf,
   		// debug	// CUBLAS core function
 		#ifdef CUDA_DEBUG
 		  // CUBLAS_CORE_CHECK("CUBLAS error in cg_eo_nd(). Calculating initial residue failed.", "Initial inner residue calculated.");
-		  CUBLAS_CORE_CHECK_NO_SUCCESS_MSG("CUBLAS error in cg_eo_nd(). Calculating initial residue failed.");
+		  CUBLAS_CORE_CHECK_NO_SUCCESS_MSG("CUBLAS error in dev_cg_eo_nd(). Calculating initial residue failed.");
 		#endif
   
   		if (g_proc_id == 0) printf("Initial inner residue: %.6e\n", r0r0);
@@ -2730,17 +3743,19 @@ int cg_eo_nd (dev_su3_2v * gf,
       		                        griddim3, blockdim3,
       		                        griddim4, blockdim4,
       		                        griddim5, blockdim5);
+
+    
       #else
       	#ifndef ASYNC
         	dev_Qtm_pm_ndpsi_mpi(Ad_up, Ad_dn,									// normally:  dev_Qtm_pm_ndpsi_mpi()
-        	                             d_up,  d_dn,									// debugging: matrix_mpi_debug1/2/3/4()
+        	                             d_up,  d_dn, 									// debugging: matrix_mpi_debug1/2/3/4()
         	                            griddim2, blockdim2,
         	                            griddim3, blockdim3,
         	                            griddim4, blockdim4,
         	                            griddim5, blockdim5);
       	#else															// tries to overlap computation and communication
-        	dev_Qtm_pm_ndpsi_mpi_ASYNC(Ad_up, Ad_dn,
-        	                                   d_up,  d_dn,
+        	dev_Qtm_pm_ndpsi_mpi_ASYNC(Ad_up, Ad_dn, 
+        	                                   d_up,  d_dn, 
         	                                  griddim2, blockdim2,
         	                                  griddim3, blockdim3,
         	                                  griddim4, blockdim4,
@@ -2748,6 +3763,17 @@ int cg_eo_nd (dev_su3_2v * gf,
       	#endif
       #endif	// MPI
       
+      
+	if(shift != 0.0f){
+           //add constant shift if nonzero
+           // CUBLAS:
+          cublasSaxpy (N_floats_int, shift, (float *) d_up, 1, (float *) Ad_up, 1);
+          cublasSaxpy (N_floats_int, shift, (float *) d_dn, 1, (float *) Ad_dn, 1);
+        }      
+        if((cudaerr=cudaGetLastError()) != cudaSuccess){
+           printf("%s\n", cudaGetErrorString(cudaerr));
+           exit(200);
+        }
       
   		// debug	// CUDA		// also other stuff ?!
   		#ifdef CUDA_DEBUG
@@ -2767,7 +3793,7 @@ int cg_eo_nd (dev_su3_2v * gf,
     
     		// debug	// is NaN ?
     		if isnan(dAd) {
-    		  printf("Error in cg_eo_nd(). dAd is NaN.\n");
+    		  printf("Error in dev_cg_eo_nd(). dAd is NaN.\n");
     		  exit(-1);
     		}
     
@@ -2796,7 +3822,7 @@ int cg_eo_nd (dev_su3_2v * gf,
 
       	#ifndef MPI
         	dev_Qtm_pm_ndpsi(Ax_up, Ax_dn,
-        	                         x_up,  x_dn,
+        	                         x_up,  x_dn, 
         	                        griddim2, blockdim2,
         	                        griddim3, blockdim3,
         	                        griddim4, blockdim4,
@@ -2804,21 +3830,26 @@ int cg_eo_nd (dev_su3_2v * gf,
         #else
         	#ifndef ASYNC
         	  dev_Qtm_pm_ndpsi_mpi(Ax_up, Ax_dn,									// normally:  dev_Qtm_pm_ndpsi_mpi()
-        	                               x_up,  x_dn,									// debugging: matrix_mpi_debug1/2/3/4()
+        	                               x_up,  x_dn, 									// debugging: matrix_mpi_debug1/2/3/4()
         	                              griddim2, blockdim2,
         	                              griddim3, blockdim3,
         	                              griddim4, blockdim4,
         	                              griddim5, blockdim5);
         	#else
         	  dev_Qtm_pm_ndpsi_mpi_ASYNC(Ax_up, Ax_dn,									// normally:  dev_Qtm_pm_ndpsi_mpi()
-        	                                     x_up,  x_dn,									// debugging: matrix_mpi_debug1/2/3/4()
+        	                                     x_up,  x_dn, 									// debugging: matrix_mpi_debug1/2/3/4()
         	                                    griddim2, blockdim2,
         	                                    griddim3, blockdim3,
         	                                    griddim4, blockdim4,
         	                                    griddim5, blockdim5);
         	#endif
         #endif	// MPI
-        
+	if(shift != 0.0f){
+           //add constant shift if nonzero
+           // CUBLAS:
+          cublasSaxpy (N_floats_int, shift, (float *) d_up, 1, (float *) Ad_up, 1);
+          cublasSaxpy (N_floats_int, shift, (float *) d_dn, 1, (float *) Ad_dn, 1);
+        }    
 
       // r(k+1) = b - A*x(k+1)
       cublasScopy(N_floats_int, (float *) Q_up, 1, (float *) r_up, 1);		// r_up = Q_up
@@ -2841,7 +3872,7 @@ int cg_eo_nd (dev_su3_2v * gf,
     
 		// debug	// CUBLAS core function
 		#ifdef CUDA_DEBUG
-		  CUBLAS_CORE_CHECK_NO_SUCCESS_MSG("CUBLAS error in cg_eo_nd(). CUBLAS function failed.");
+		  CUBLAS_CORE_CHECK_NO_SUCCESS_MSG("CUBLAS error in dev_cg_eo_nd(). CUBLAS function failed.");
 		#endif
     
     
@@ -2852,7 +3883,7 @@ int cg_eo_nd (dev_su3_2v * gf,
 	
     		// debug	// is NaN ?
     		if isnan(rr) {
-    		  printf("Error in cg_eo_nd(). Inner residue is NaN.\n");
+    		  printf("Error in dev_cg_eo_nd(). Inner residue is NaN.\n");
     		  exit(-1);
     		}
     
@@ -2883,6 +3914,12 @@ int cg_eo_nd (dev_su3_2v * gf,
 	 to_tmlqcd_basis<<<griddim4, blockdim4>>> (x_dn);
       #endif
       
+      #ifdef CUDA_45  
+	cublasDestroy(handle);
+      #else
+	cublasShutdown();
+      #endif 
+      
       return(j+1);
     }
     
@@ -2903,7 +3940,7 @@ int cg_eo_nd (dev_su3_2v * gf,
     
     		// debug	// CUBLAS core function
     		#ifdef CUDA_DEBUG
-    		  CUBLAS_CORE_CHECK_NO_SUCCESS_MSG("CUBLAS error in cg_eo_nd(). Error in CUBLAS function.");
+    		  CUBLAS_CORE_CHECK_NO_SUCCESS_MSG("CUBLAS error in dev_cg_eo_nd(). Error in CUBLAS function.");
     		#endif
     		
   
@@ -2922,11 +3959,93 @@ int cg_eo_nd (dev_su3_2v * gf,
          to_tmlqcd_basis<<<griddim4, blockdim4>>> (x_up);
 	 to_tmlqcd_basis<<<griddim4, blockdim4>>> (x_dn);
       #endif
-
+    
+    #ifdef CUDA_45  
+      cublasDestroy(handle);
+    #else
+      cublasShutdown();
+    #endif 
   return(j+1);
   
-}//cg_eo_nd()
+}//dev_cg_eo_nd()
 
+
+
+
+
+void test_double_nd_operator(spinor* const Q_up, spinor* const Q_dn, const int N){
+   
+   size_t dev_spinsize_d = 6*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !   
+   int gridsize;
+     //this is the partitioning for the HoppingMatrix kernel
+     int blockdim3 = BLOCKD;
+     if( VOLUME/2 % blockdim3 == 0){
+       gridsize = (int) VOLUME/2/blockdim3;
+     }
+     else{
+       gridsize = (int) VOLUME/2/blockdim3 + 1;
+     }
+     int griddim3 = gridsize;
+   
+     //this is the partitioning for dev_mul_one_pm...
+     int blockdim4 = BLOCK2D;
+     if( VOLUME/2 % blockdim4 == 0){
+       gridsize = (int) VOLUME/2/blockdim4;
+     }
+     else{
+       gridsize = (int) VOLUME/2/blockdim4 + 1;
+     }
+     int griddim4 = gridsize;    
+     
+      dev_spinor_d * x_up_d = dev_spin0_d;
+      dev_spinor_d * x_dn_d = dev_spin1_d;
+      dev_spinor_d * Ax_up_d = dev_spin2_d;
+      dev_spinor_d * Ax_dn_d = dev_spin3_d;
+      dev_spinor_d * Q_up_d = dev_spin_eo1_d;
+      dev_spinor_d * Q_dn_d = dev_spin_eo2_d;     
+      
+  spinor ** solver_field_up = NULL;
+  spinor ** solver_field_dn = NULL;  
+  const int nr_sf = 3;
+  init_solver_field(&solver_field_up, VOLUMEPLUSRAND/2, nr_sf);  
+  init_solver_field(&solver_field_dn, VOLUMEPLUSRAND/2, nr_sf); 
+
+  //apply cpu matrix
+
+  Qtm_pm_ndpsi(solver_field_up[0], solver_field_dn[0], Q_up, Q_dn);
+  
+  //apply gpu matrix
+  order_spin_gpu(Q_up, h2d_spin_d);
+  cudaMemcpy(x_up_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);      
+  order_spin_gpu(Q_dn, h2d_spin_d);
+  cudaMemcpy(x_dn_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);	  
+  // r_up/dn = Q-A*x_up/dn
+  dev_Qtm_pm_ndpsi_d(Ax_up_d, Ax_dn_d,  
+		      x_up_d, x_dn_d, 
+		      griddim3, blockdim3, griddim4, blockdim4,
+		      griddim4, blockdim4, griddim4, blockdim4);  
+  	
+  cudaMemcpy(h2d_spin_d, Ax_up_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
+  unorder_spin_gpu(h2d_spin_d, solver_field_up[1]);      
+
+  cudaMemcpy(h2d_spin_d, Ax_dn_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
+  unorder_spin_gpu(h2d_spin_d, solver_field_dn[1]);     
+  
+  diff(solver_field_up[2], solver_field_up[1], solver_field_up[0],N);
+  diff(solver_field_dn[2], solver_field_dn[1], solver_field_dn[0],N);  
+  
+  double rk_up = square_norm(solver_field_up[2], N, 1);
+  double rk_dn = square_norm(solver_field_dn[2], N, 1);  
+  double rk = rk_up + rk_dn;
+  printf("Testing double matrix:\n");
+  printf("cpu: Squared difference is   UP: %.8e\n", rk_up);
+  printf("cpu: Squared difference is DOWN: %.8e\n", rk_dn);  
+  printf("cpu: Squared difference per spinor component is: %.8e\n", rk/N/24.0);  
+  
+
+  finalize_solver(solver_field_up, nr_sf); 
+  finalize_solver(solver_field_dn, nr_sf);  
+}
 
 
 
@@ -2943,7 +4062,7 @@ int cg_eo_nd (dev_su3_2v * gf,
 //	multiplying by  Qhat(2x2)^dagger  is done in  invert_doublet_eo.c
 
 extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
-                                 spinor * Q_up, spinor * Q_dn,
+                                 spinor * Q_up, spinor * Q_dn, double shift,
                                  int max_iter, double eps_sq, int rel_prec) {
   
   
@@ -2951,7 +4070,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   //	P_up/dn  is the output field (and can be used as initial guess)
   //	Q_up/dn  is not used later in the calling  invert_doublet_eo.c
   //		but will be used as feedback in r(k+1) = b - A*x(k+1)
-  
+  // with shift a positive shift can be given to the matrix dev_Qtm_pm_ndpsi
   #ifndef LOWOUTPUT
   		// debug
   		#ifdef MPI
@@ -3002,22 +4121,21 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   int innercount;				// latest inner solver iterations
   int outercount = 0;				// total inner solver iterations
   #ifdef ALGORITHM_BENCHMARK
-    double effectiveflops;			// will used to count the "effective" flop's (from the algorithmic perspective)
-    // double hoppingflops = 1488.0;
-    double hoppingflops = 1320.0;
-    double matrixflops  = 2  *  (  2 * ( (2*hoppingflops+12+3) + (2*hoppingflops+3) + (12+2) + 12 )  );
+    double effectiveflops;
+    //double hoppingflops = 1608.0;
+    double matrixflops  = 14448;
     #ifdef MPI
       double allflops;				// flops added for all processes
     #endif
   #endif
   
   // timing
-  clock_t startouter, stopouter;
-  clock_t startinner, stopinner;
+  double startouter, stopouter;
+  double startinner, stopinner;
   // double timeelapsed;
-  clock_t innerclocks;
-  clock_t totalinnerclocks = 0;
-  clock_t totalouterclocks = 0;
+  double innerclocks;
+  double totalinnerclocks = 0;
+  double totalouterclocks = 0;
   
   #ifdef ALGORITHM_BENCHMARK
     #ifndef MPI
@@ -3046,11 +4164,6 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   init_solver_field(&dn_field, VOLUMEPLUSRAND/2, nr_sf);	 
 	 
 
-  // algorithm control parameters
-  bool rbAx = true;						// choose how to calculate r(k+1)
-  bool initial_guess = false;					// choose if initial guess
-  
-
   //////////////////
   // INITIALIZING //
   //////////////////
@@ -3070,7 +4183,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   		#endif
   
   
-  // the following initializations are moved from cg_eo_nd():
+  // the following initializations are moved from dev_cg_eo_nd():
   
   // Initialize some stuff
   dev_complex h0, h1, h2, h3; 
@@ -3089,6 +4202,55 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
 
   //update the gpu single gauge_field
   update_gpu_gf(g_gauge_field); 
+
+  #ifdef GPU_DOUBLE
+      
+      //dev_spin0_d == x_up
+      //dev_spin1_d == x_dn
+      //dev_spin2_d == Ax_up
+      //dev_spin3_d == Ax_dn
+      //dev_spin_eo1_d == Q_up
+      //dev_spin_eo2_d == Q_dn
+      //dev_spin_eo3_up_d  == r_up == diff (Q-Ax) and used in dev_Qtm_pm_ndpsi_d
+      //dev_spin_eo3_dn_d  == r_dn == diff (Q-Ax) and used in dev_Qtm_pm_ndpsi_d    
+      
+      dev_spinor_d * x_up_d = dev_spin0_d;
+      dev_spinor_d * x_dn_d = dev_spin1_d;
+      dev_spinor_d * Ax_up_d = dev_spin2_d;
+      dev_spinor_d * Ax_dn_d = dev_spin3_d;
+      dev_spinor_d * Q_up_d = dev_spin_eo1_d;
+      dev_spinor_d * Q_dn_d = dev_spin_eo2_d;  
+      dev_spinor_d * r_up_d = dev_spin_eo3_up_d;  
+      dev_spinor_d * r_dn_d = dev_spin_eo3_dn_d;      
+      
+       size_t dev_spinsize_d = 6*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !   
+   int gridsize;
+     //this is the partitioning for the HoppingMatrix kernel
+     int blockdim3 = BLOCKD;
+     if( VOLUME/2 % blockdim3 == 0){
+       gridsize = (int) VOLUME/2/blockdim3;
+     }
+     else{
+       gridsize = (int) VOLUME/2/blockdim3 + 1;
+     }
+     int griddim3 = gridsize;
+   
+     //this is the partitioning for dev_mul_one_pm...
+     int blockdim4 = BLOCK2D;
+     if( VOLUME/2 % blockdim4 == 0){
+       gridsize = (int) VOLUME/2/blockdim4;
+     }
+     else{
+       gridsize = (int) VOLUME/2/blockdim4 + 1;
+     }
+     int griddim4 = gridsize;  
+    update_constants_d(dev_grid);
+    update_gpu_gf_d(g_gauge_field);
+    
+
+  #endif  
+  
+  
   
   // bind texture gf
   #ifdef USETEXTURE						// needed for subfunctions of dev_Hopping_Matrix(...)
@@ -3174,9 +4336,9 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   			  if (g_proc_id == 0) {
   			#endif
   			
-  			// printf("\tOn host:\n");
-  			// printf("\tg_mubar = %f\n", g_mubar);
-  			// printf("\tg_epsbar = %f\n", g_epsbar);
+  			printf("\tOn host:\n");
+  			printf("\tg_mubar = %f\n", g_mubar);
+  			printf("\tg_epsbar = %f\n", g_epsbar);
   			
   			float host_check_mubar, host_check_epsbar;
   			cudaMemcpyFromSymbol(&host_check_mubar, mubar, sizeof(float));
@@ -3226,8 +4388,9 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     benchmark_eo_nd(Q_up, Q_dn, OPERATOR_BENCHMARK);
   #endif
   
-
-  
+  #ifdef GPU_DOUBLE
+  test_double_nd_operator(Q_up, Q_dn, N_sites_int);
+  #endif
   /////////////////
   // ASSIGNMENTS //
   /////////////////
@@ -3254,52 +4417,80 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   ///////////////
   
   // timer
-  startouter = clock();
+  startouter = gettime();
   
   #ifdef ALGORITHM_BENCHMARK
-    #ifndef MPI
-      starteffective = ((double)clock()) / ((double)(CLOCKS_PER_SEC));
-    #else
-      starteffective = MPI_Wtime();
-    #endif
+      starteffective = gettime();
   #endif
   
+  #ifdef GPU_DOUBLE
+    // r(0)
+    // r(0) = b - A*x(0) = Q - A*P
+      bb = square_norm(P_up, N_sites_int, 1) + square_norm(P_dn, N_sites_int, 1);
+      order_spin_gpu(Q_up, h2d_spin_d);
+      cudaMemcpy(Q_up_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);      
+      order_spin_gpu(Q_dn, h2d_spin_d);
+      cudaMemcpy(Q_dn_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);	
+      if (bb != 0) { 
+	  //set x_up/dn to initial guess in P_up/dn
+          order_spin_gpu(P_up, h2d_spin_d);
+          cudaMemcpy(x_up_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);      
+          order_spin_gpu(P_dn, h2d_spin_d);
+          cudaMemcpy(x_dn_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);	  
+          // r_up/dn = Q-A*x_up/dn
+	  dev_Qtm_pm_ndpsi_d(Ax_up_d, Ax_dn_d,  
+		      x_up_d, x_dn_d, 
+		      griddim3, blockdim3, griddim4, blockdim4,
+		      griddim4, blockdim4, griddim4, blockdim4);
+          if(shift != 0.0) {
+	    //FIXME
+	    //assign_add_mul_r(Ax_up, x_up , shift, N_sites_int);
+	    //assign_add_mul_r(Ax_dn, x_dn , shift, N_sites_int);
+          }        
+        
+          dev_diff_d<<<griddim4,blockdim4>>>(r_up_d,Q_up_d,Ax_up_d);         
+          dev_diff_d<<<griddim4,blockdim4>>>(r_dn_d,Q_dn_d,Ax_dn_d); 
+	
+     }
+    
+    // rr = (r_up)^2 + (r_dn)^2
+    rr_up = double_dotprod(r_up_d, r_up_d);
+    rr_dn = double_dotprod(r_dn_d, r_dn_d);
+    rr = rr_up + rr_dn;
+    rr_old = rr; // for the first iteration  
+    
+    r0r0   = double_dotprod(Q_up_d, Q_up_d) 
+           + double_dotprod(Q_dn_d, Q_dn_d);    
+  #else
   
-  // r(0)
-  if (!initial_guess) {		// r(0) = b = Q	// for x(0) = 0
-    assign(r_up, Q_up, N_sites_int);
-    assign(r_dn, Q_dn, N_sites_int);
-  }
-  else {			// r(0) = b - A*x(0) = Q - A*P
-    bb = square_norm(P_up, N_sites_int, 1) + square_norm(P_dn, N_sites_int, 1);
-    if (bb == 0) {
-      assign(r_up, Q_up, N_sites_int);
-      assign(r_dn, Q_dn, N_sites_int);
-    }
-    else {
-      Qtm_pm_ndpsi(Ax_up, Ax_dn, P_up, P_dn);
-      diff(r_up, Q_up, Ax_up, N_sites_int);
-      diff(r_dn, Q_dn, Ax_dn, N_sites_int);
-    }
-  }
-  
-  
-  // rr = (r_up)^2 + (r_dn)^2
-  rr_up = square_norm(r_up, N_sites_int, 1);
-  rr_dn = square_norm(r_dn, N_sites_int, 1);
-  rr = rr_up + rr_dn;
-  
-  
-  r0r0   = rr; // for relative precision
-  rr_old = rr; // for the first iteration
-  
+      // P==0 -> no initial guess
+      bb = square_norm(P_up, N_sites_int, 1) + square_norm(P_dn, N_sites_int, 1);
+      if (bb == 0) {
+	assign(r_up, Q_up, N_sites_int);
+	assign(r_dn, Q_dn, N_sites_int);
+      }
+      else {	
+	Qtm_pm_ndpsi(Ax_up, Ax_dn, P_up, P_dn);
+	if(shift != 0.0) {
+	  assign_add_mul_r(Ax_up, P_up , shift, N_sites_int);
+	  assign_add_mul_r(Ax_dn, P_dn , shift, N_sites_int);
+	}
+	diff(r_up, Q_up, Ax_up, N_sites_int);
+	diff(r_dn, Q_dn, Ax_dn, N_sites_int);
+      }
+    
+    
+    // rr = (r_up)^2 + (r_dn)^2
+    rr_up = square_norm(r_up, N_sites_int, 1);
+    rr_dn = square_norm(r_dn, N_sites_int, 1); 
+    rr = rr_up + rr_dn;
+    rr_old = rr; // for the first iteration
+    //relative precision: norm of source
+    r0r0   = square_norm(Q_up, N_sites_int, 1) + square_norm(Q_dn, N_sites_int, 1);   
+  #endif //GPU_DOUBLE
 
   if (g_proc_id == 0) printf("Initial outer residue: %.10e\n", rr_old);
 
-  // set to zero	// x_up, x_dn  will be added up		// as  x_up/dn = P_up/dn  up to here  P_up/dn  was not changed
-  zero_spinor_field(x_up, N_sites_int);
-  zero_spinor_field(x_dn, N_sites_int);
-  
 
   ////////////////
   // OUTER LOOP //
@@ -3314,10 +4505,14 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     if (g_proc_id == 0) printf("Outer iteration i = %i\n", i);
     #endif
 
-    // host/device interaction
-    to_device(dev_spinin_up, r_up, h2d_spin_up, dev_spinsize_int);		// notice: for MPI communicateion the boundary exchange takes place when the hopping matrix is applied
-    to_device(dev_spinin_dn, r_dn, h2d_spin_dn, dev_spinsize_int);
-    
+    // host/device interaction    
+    #ifdef GPU_DOUBLE
+      dev_d2f<<<griddim4,blockdim4>>>(dev_spinin_up, r_up_d);
+      dev_d2f<<<griddim4,blockdim4>>>(dev_spinin_dn, r_dn_d);     
+    #else
+      to_device(dev_spinin_up, r_up, h2d_spin_up, dev_spinsize_int);		// notice: for MPI communicateion the boundary exchange takes place when the hopping matrix is applied
+      to_device(dev_spinin_dn, r_dn, h2d_spin_dn, dev_spinsize_int);
+    #endif
     		// debug	// CUDA
     		#ifdef CUDA_DEBUG
     		  // CUDA_CHECK("CUDA error in mixedsolve_eo_nd(). Host to device interaction failed.", "Fields copied to device.");
@@ -3329,15 +4524,23 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     // INNER LOOP, CONJUGATE GRADIENT //
     ////////////////////////////////////
     
-    // timer
-    startinner = clock();
+    // SHIFT?
+    // solves (A + shift)*p(k+1) = r(k)
+    //        (A + shift)*p(0)   = r(0) = b
+    float shift_single;
+    if(shift==0.0){
+      shift_single = 0.0f;
+    }
+    else{
+      shift_single = (float) shift;
+    }
+    printf("SHIFT single = %f\n", shift_single);
     
-
-    // solves A*p(k+1) = r(k)
-    //        A*p(0)   = r(0) = b
-    innercount = cg_eo_nd(dev_gf,
+    // timer
+    startinner = gettime(); 
+    innercount = dev_cg_eo_nd(dev_gf,
                           dev_spinout_up, dev_spinout_dn,
-                          dev_spinin_up , dev_spinin_dn,
+                          dev_spinin_up , dev_spinin_dn, shift_single,
                           max_innersolver_it,
                           innersolver_precision_check_abs, innersolver_precision_check_rel,
                           innersolver_precision_abs      , innersolver_precision_rel      );
@@ -3345,58 +4548,80 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     outercount = outercount + innercount;
     
     // timer
-    stopinner = clock();
+    stopinner = gettime();
     innerclocks = stopinner-startinner;
+    #ifdef ALGORITHM_BENCHMARK
+      effectiveflops = innercount*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/2;   
+      printf("inner solver BENCHMARK:\n");
+      printf("\ttotal mixed solver time:   %.4e sec\n", innerclocks);
+      printf("\tfloating point operations: %.4e flops\n", effectiveflops);
+      printf("\tinner solver performance:  %.4e Gflop/s\n", double(effectiveflops)/innerclocks/ 1.0e9);
+    #endif
+      
     totalinnerclocks = totalinnerclocks + innerclocks;
     
     #ifndef LOWOUTPUT
-    if (g_proc_id == 0) printf("Inner solver done in: %.4e sec\n", double(innerclocks) / double(CLOCKS_PER_SEC));
+    if (g_proc_id == 0) printf("Inner solver done in: %.4e sec\n", double(innerclocks));
     #endif
-    // host/device interaction
-    to_host(d_up, dev_spinout_up, h2d_spin_up, dev_spinsize_int);
-    to_host(d_dn, dev_spinout_dn, h2d_spin_dn, dev_spinsize_int);
+
+    #ifdef GPU_DOUBLE
+      dev_add_f2d<<<griddim4,blockdim4>>>(x_up_d,x_up_d,dev_spinout_up); 
+      dev_add_f2d<<<griddim4,blockdim4>>>(x_dn_d,x_dn_d,dev_spinout_dn);       
+
+      dev_Qtm_pm_ndpsi_d(Ax_up_d, Ax_dn_d,  
+		      x_up_d, x_dn_d, 
+		      griddim3, blockdim3, griddim4, blockdim4,
+		      griddim4, blockdim4, griddim4, blockdim4);
+        if(shift != 0.0) {
+	  //FIXME
+	  //assign_add_mul_r(Ax_up, x_up , shift, N_sites_int);
+	  //assign_add_mul_r(Ax_dn, x_dn , shift, N_sites_int);
+        }        
+        
+      dev_diff_d<<<griddim4,blockdim4>>>(r_up_d,Q_up_d,Ax_up_d);         
+      dev_diff_d<<<griddim4,blockdim4>>>(r_dn_d,Q_dn_d,Ax_dn_d); 
+ 
+      rr_up = double_dotprod(r_up_d, r_up_d);
+      rr_dn = double_dotprod(r_dn_d, r_dn_d);
+      rr    = rr_up + rr_dn;
+      
+    #else
+      // host/device interaction
+      to_host(d_up, dev_spinout_up, h2d_spin_up, dev_spinsize_int);
+      to_host(d_dn, dev_spinout_dn, h2d_spin_dn, dev_spinsize_int);
     
     		// debug	// CUDA
     		#ifdef CUDA_DEBUG
     		  // CUDA_CHECK("CUDA error in mixedsolve_eo_nd(). Device to host interaction failed.", "Fields copied back to device.");
     		  CUDA_CHECK_NO_SUCCESS_MSG("CUDA error in mixedsolve_eo_nd(). Device to host interaction failed.");
     		#endif
-    
+  
    
-    
-    // x(k+1) = x(k) + d(k+1)
-    add(x_up, x_up, d_up, N_sites_int);
-    add(x_dn, x_dn, d_dn, N_sites_int);
-    
- 
-    // r(k+1)
-    if (rbAx) {				// r(k+1) = b - A*x(k+1)
-      // A*x(k+1)
-      Qtm_pm_ndpsi(Ax_up, Ax_dn, x_up, x_dn);
-      #ifndef LOWOUTPUT
-      if (g_proc_id == 0) printf("The matrix was applied on CPU in double precision. r = b - Ax\n");
-      #endif
-      diff(r_up, Q_up, Ax_up, N_sites_int);
-      diff(r_dn, Q_dn, Ax_dn, N_sites_int);
-    }
-    else {				// r(k+1) = r(k) - A*d(k+1)	// makes actually no sense ;)
-      // A*d(k+1)
-      Qtm_pm_ndpsi(Ad_up, Ad_dn, d_up, d_dn);
-    		// debug
-      #ifndef LOWOUTPUT
-      if (g_cart_id == 0) printf("The matrix was applied on CPU in double precision. r = r - Ad\n");
-      #endif
-      // r(k+1) = r(k) - A*d(k+1)
-      diff(r_up, r_up, Ad_up, N_sites_int);
-      diff(r_dn, r_dn, Ad_dn, N_sites_int);
-    }
-    
 
-    // rr = (rr_up)^2 + (r_dn)^2
-    rr_up = square_norm(r_up, N_sites_int, 1);
-    rr_dn = square_norm(r_dn, N_sites_int, 1);
-    rr    = rr_up + rr_dn;
-    
+    // x(k+1) = x(k) + d(k+1)
+      add(x_up, x_up, d_up, N_sites_int);
+      add(x_dn, x_dn, d_dn, N_sites_int);
+
+      // r(k+1)
+      // r(k+1) = b - (A + shift)*x(k+1)
+      // (A + shift)*x(k+1)
+        Qtm_pm_ndpsi(Ax_up, Ax_dn, x_up, x_dn);
+        if(shift != 0.0) {
+	  printf("Adding shift %f on host\n", shift);
+	  assign_add_mul_r(Ax_up, x_up , shift, N_sites_int);
+	  assign_add_mul_r(Ax_dn, x_dn , shift, N_sites_int);
+        }          
+        #ifndef LOWOUTPUT
+        if (g_proc_id == 0) printf("The matrix was applied on CPU in double precision. r = b - Ax\n");
+        #endif
+        diff(r_up, Q_up, Ax_up, N_sites_int);
+        diff(r_dn, Q_dn, Ax_dn, N_sites_int);
+
+      // rr = (rr_up)^2 + (r_dn)^2
+      rr_up = square_norm(r_up, N_sites_int, 1);
+      rr_dn = square_norm(r_dn, N_sites_int, 1);
+      rr    = rr_up + rr_dn;
+    #endif //GPU_DOUBLE 
 
     if (g_proc_id == 0){ 
       printf("Outer residue at iteration i = %i : %.10e\n", i, rr);
@@ -3413,17 +4638,22 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
 
     // aborting ?? // check wether precision is reached ...
     if ( ((rr <= eps_sq) && (rel_prec == 0))  ||  ((rr <= eps_sq*r0r0) && (rel_prec == 1)) ) {
+ 
+     #ifdef GPU_DOUBLE
+       //for GPU_DOUBLE we have to assign P_up/dn 
+       //(for cpu outer solver this is not necessary, as P_up/dn == x_up/dn
+        cudaMemcpy(h2d_spin_d, x_up_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
+        unorder_spin_gpu(h2d_spin_d, P_up); 
+        cudaMemcpy(h2d_spin_d, x_dn_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
+        unorder_spin_gpu(h2d_spin_d, P_dn); 	
+     #endif       
       
       // timer
-      stopouter = clock();
+      stopouter = gettime();
       totalouterclocks = stopouter-startouter - totalinnerclocks;
       if(g_debug_level > 3) printf("totalouterclocks = %d\n", totalouterclocks);
       #ifdef ALGORITHM_BENCHMARK
-        #ifndef MPI
-          stopeffective = ((double)clock()) / ((double)(CLOCKS_PER_SEC));
-        #else
-          stopeffective = MPI_Wtime();
-        #endif
+          stopeffective = gettime();
       #endif
       
       
@@ -3437,7 +4667,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       		printf("Total number of inner iterations: %i\n", outercount);
       		printf("Total number of outer iterations: %i\n", i+1);
       		printf("Squared residue: %.10e\n", rr); 
-      		printf("Outer solver done in: %.4e sec\n", double(stopouter-startouter) / double(CLOCKS_PER_SEC));
+      		printf("Outer solver done in: %.4e sec\n", double(stopouter-startouter));
       		#ifdef MPI
       		  }
       		#endif
@@ -3463,12 +4693,6 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       		  	if (g_proc_id == 0) printf("\ttotal mixed solver time:   %.4e sec\n", double(maxtime));
       		  	if (g_proc_id == 0) printf("\tfloating point operations: %.4e flops\n", double(allflops));
       		  	if (g_proc_id == 0) printf("\tinner solver performance:  %.4e Gflop/s\n", double(allflops) / double(maxtime) / 1.0e9);
-      		  	/*
-      		  	printf("this is for checking:\n");
-      		  	printf("\ttotal mixed solver time:   %.2e sec\n", double(stopeffective-starteffective));
-      		  	printf("\tfloating point operations: %.2e flops\n", effectiveflops);
-      		  	printf("\tinner solver performance:  %.2e Gflop/s\n", double(effectiveflops) / double(stopeffective-starteffective) / 1.0e9);
-      		  	*/
       		  #endif
       		#endif
       		
@@ -3503,11 +4727,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   totalouterclocks = stopouter-startouter - totalinnerclocks;
   
   #ifdef ALGORITHM_BENCHMARK
-    #ifndef MPI
-      stopeffective = ((double)clock()) / ((double)(CLOCKS_PER_SEC));
-    #else
-      stopeffective = MPI_Wtime();
-    #endif
+      stopeffective = gettime();
   #endif
   
   
@@ -3520,7 +4740,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       		printf("Total number of inner iterations: %i\n", outercount);
       		printf("Total number of outer iterations: %i\n", i+1);
       		printf("Squared residue: %.10e\n", rr); 
-      		printf("Outer solver done in: %.4e sec\n", double(stopouter-startouter)/CLOCKS_PER_SEC);
+      		printf("Outer solver done in: %.4e sec\n", double(stopouter-startouter));
       		#ifdef MPI
       		  }
       		#endif
@@ -3546,12 +4766,6 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       		  	if (g_proc_id == 0) printf("\ttotal mixed solver time:   %.4e sec\n", double(maxtime));
       		  	if (g_proc_id == 0) printf("\tfloating point operations: %.4e flops\n", double(allflops));
       		  	if (g_proc_id == 0) printf("\tinner solver performance:  %.4e Gflop/s\n", double(allflops) / double(maxtime) / 1.0e9);
-      		  	/*
-      		  	printf("this is for checking:\n");
-      		  	printf("\ttotal mixed solver time:   %.2e sec\n", double(stopeffective-starteffective));
-      		  	printf("\tfloating point operations: %.2e flops\n", effectiveflops);
-      		  	printf("\tinner solver performance:  %.2e Gflop/s\n", double(effectiveflops) / double(stopeffective-starteffective) / 1.0e9);
-      		  	*/
       		  #endif
       		#endif
   
