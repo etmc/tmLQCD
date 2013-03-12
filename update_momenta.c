@@ -97,6 +97,10 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
       }
     }
 
+#ifdef MPI
+    xchange_deri(hf->derivative);
+#endif
+
     smear_forces(smearing_control_monomial[s_type], tmp_derivative);
 
     for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand); ++i)
@@ -110,10 +114,6 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
   ohnohack_remap_df0(df);
   ohnohack_remap_g_gauge_field(g_gf);
 
-#ifdef MPI
-  xchange_deri(hf->derivative);
-#endif
-    
 #ifdef OMP
 #pragma omp parallel for
 #endif
