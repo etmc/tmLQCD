@@ -272,7 +272,7 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
     if (g_proc_id == 0) printf("\tsquare norm before gauge fixing: %.16e\n", dret1); 
     if (g_proc_id == 0) printf("\tsquare norm after gauge fixing:  %.16e\n", dret2); 
     
-    finalize_temporalgauge();
+
     
 #    ifdef MPI
     xchange_gauge(g_gauge_field);
