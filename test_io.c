@@ -71,6 +71,7 @@ enum enum_failure_enum
 {
   FAIL_READ_CHKSUM,
   FAIL_READ_PLAQ,
+  FAIL_REREAD_READ_CHKSUM,
   FAIL_REREAD_CHKSUM,
   FAIL_REREAD_PLAQ,
   FAIL_WRITE
@@ -276,7 +277,7 @@ int main(int argc,char *argv[]) {
           printf("\nReading gauge field %s. Iteration %d, reread %d\n",test_confs[confnum].filename_orig,j,num_rereads);
         if( (status = read_gauge_field(test_confs[confnum].filename_orig)) != 0 && g_proc_id == 0) {        
           fprintf(stdout, "Error %d while reading gauge field from %s\n", status, test_confs[confnum].filename_orig);
-          add_failure(&failures,FAIL_READ_CHKSUM,j,num_rereads);
+          add_failure(&failures,FAIL_READ_REREAD_CHKSUM,j,num_rereads);
         }
         //plaquette_energy = measure_gauge_action();
         xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), num_rereads);
@@ -405,7 +406,14 @@ static void add_failure(failure_flex_array_t* failures, const enum_failure_t fai
 static void output_failures(const failure_flex_array_t* const failures) {
   if( g_proc_id == 0 ) {
     if( failures->length > 0 ) {
-      char failure_names[5][50] = { {"read checksum\0"}, {"read plaq\0"}, {"reread checksum\0"}, {"reread plaq\0"}, {"write\0"} };
+      char failure_names[6][50] = { 
+        {"read checksum\0"}, 
+        {"read plaq\0"}, 
+        {"reread read checksum\0"}, 
+        {"reread checksum\0"}, 
+        {"reread plaq\0"}, 
+        {"write\0"} };
+
       printf("Failures:\n");
       for(int i = 0; i < failures->length; ++i) {
         printf("%s at iteration %d, sub iteration %d\n", failure_names[ failures->ptr[i].fail_type ], 
