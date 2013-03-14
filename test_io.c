@@ -135,18 +135,14 @@ int main(int argc,char *argv[]) {
   failures.length = 0;
   
   test_conf_t test_confs[NUM_TESTCONFS];
-  
-  strncpy(test_confs[0].filename_orig,"conf.0000",199);
-  strncpy(test_confs[1].filename_orig,"conf.0001",199);
-  strncpy(test_confs[2].filename_orig,"conf.0002",199);
-  strncpy(test_confs[3].filename_orig,"conf.0003",199);
-  strncpy(test_confs[4].filename_orig,"conf.0004",199);
-  
-  strncpy(test_confs[0].filename_copy,"conf.0000.copy",199);
-  strncpy(test_confs[1].filename_copy,"conf.0001.copy",199);
-  strncpy(test_confs[2].filename_copy,"conf.0002.copy",199);
-  strncpy(test_confs[3].filename_copy,"conf.0003.copy",199);
-  strncpy(test_confs[4].filename_copy,"conf.0004.copy",199);
+ 
+
+  char* testconf_filename_base = "conf";
+
+  for( int i = 0; i < NUM_TESTCONFS; ++i) {
+    snprintf(test_confs[i].filename_orig,200,"%s.%04d",testconf_filename_base,i+100);
+    snprintf(test_confs[i].filename_copy,200,"%s.%04d.copy",testconf_filename_base,i+100);
+  }
   
   /* Energy corresponding to the Gauge part */
   double plaquette_energy = 0.;
