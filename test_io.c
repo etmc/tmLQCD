@@ -19,6 +19,7 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
+
 #define MAIN_PROGRAM
 #include "lime.h"
 #if HAVE_CONFIG_H
@@ -54,16 +55,9 @@
 #include "read_input.h"
 #include "mpi_init.h"
 #include "sighandler.h"
-#include "update_tm.h"
 #include "init/init.h"
 #include "test/check_geometry.h"
 #include "boundary.h"
-#include "phmc.h"
-#include "solver/solver.h"
-#include "monomial/monomial.h"
-#include "integrator.h"
-#include "sighandler.h"
-#include "measurements.h"
 
 extern int nstore;
 
@@ -111,10 +105,10 @@ typedef struct
 static void add_failure(failure_flex_array_t*, const enum_failure_t, const int iteration, const int sub_iteration);
 static void output_failures(const failure_flex_array_t* const);
 
-#define ITERATIONS 1
+#define ITERATIONS 10
 #define NUM_TESTCONFS 5
-#define NUM_READS 2
-#define NUM_REREADS 2
+#define NUM_READS 20
+#define NUM_REREADS 20
 
 int main(int argc,char *argv[]) {
 
@@ -278,6 +272,13 @@ int main(int argc,char *argv[]) {
 
     for(int num_rereads = 0; num_rereads < NUM_REREADS; ++num_rereads) {
       for(int confnum = 0; confnum < NUM_TESTCONFS; ++confnum){
+        if( g_proc_id == 0 )
+          printf("\nReading gauge field %s. Iteration %d, reread %d\n",test_confs[confnum].filename_orig,j,num_rereads);
+        if( (status = read_gauge_field(test_confs[confnum].filename_orig)) != 0 && g_proc_id == 0) {        
+          fprintf(stdout, "Error %d while reading gauge field from %s\n", status, test_confs[confnum].filename_orig);
+          add_failure(&failures,FAIL_READ_CHKSUM,j,num_rereads);
+        }
+        //plaquette_energy = measure_gauge_action();
         xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), num_rereads);
         if (g_proc_id == 0) {
           fprintf(stdout, "\n# Writing gauge field to %s. Iteration %d, reread %d\n", test_confs[confnum].filename_copy,j,num_rereads);
