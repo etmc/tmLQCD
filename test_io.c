@@ -294,7 +294,7 @@ int main(int argc,char *argv[]) {
       if(delay < MAX_DELAY)
         ++delay;
       else
-        delay = 0;
+        delay = MIN_DELAY;
 
       /* now reread in random order */
       shuffle(conf_indices,NUM_TESTCONFS);
