@@ -436,8 +436,8 @@ int main(int argc,char *argv[])
           fprintf(stderr, "Error %d while writing gauge field to %s\nAborting...\n", status, tmp_filename);
           exit(-2);
         }
+
         if (!g_disable_IO_checks) {
-#ifdef HAVE_LIBLEMON
           /* Read gauge field back to verify the writeout */
           if (g_proc_id == 0) {
             fprintf(stdout, "# Write completed, verifying write...\n");
@@ -450,11 +450,10 @@ int main(int argc,char *argv[])
           if (g_proc_id == 0) {
             fprintf(stdout, "# Write successfully verified.\n");
           }
-#else
+        } else {
           if (g_proc_id == 0) {
-            fprintf(stdout, "# Write completed successfully.\n");
+            fprintf(stdout, "# Write completed successfully. Write not verified!\n");
           }
-#endif
         }
         free(xlfInfo);
       }
