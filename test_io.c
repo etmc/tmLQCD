@@ -233,7 +233,8 @@ int main(int argc,char *argv[]) {
 
   /*For parallelization: exchange the gaugefield (not really necessary in this test...) */
 #ifdef MPI
-  xchange_gauge(&g_gf);
+  exchange_gauge_field(&g_gf);
+  //xchange_gauge(&g_gf);
 #endif
 
   /* Loop for tests */
