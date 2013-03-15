@@ -248,8 +248,9 @@ int main(int argc,char *argv[]) {
       if( g_proc_id == 0 )
         printf("\nReading gauge field %s. Iteration %d\n",test_confs[confnum].filename_orig,j);
       if( (status = read_gauge_field_checksum( test_confs[confnum].filename_orig, 
-                                               &test_confs[confnum].checksum_orig)) != 0 && g_proc_id == 0) {        
-        fprintf(stdout, "Error %d while reading gauge field from %s\n", status, test_confs[confnum].filename_orig);
+                                               &test_confs[confnum].checksum_orig)) != 0) {
+        if( g_proc_id == 0 )      
+          fprintf(stdout, "Error %d while reading gauge field from %s\n", status, test_confs[confnum].filename_orig);
         add_failure(&failures,FAIL_READ,j,-1);
       }
     }
