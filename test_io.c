@@ -119,7 +119,6 @@ static void shuffle(int* array,size_t n);
 
 #define ITERATIONS 1
 #define NUM_TESTCONFS 50
-#define NUM_READS 20
 #define NUM_REREADS 20
 #define MIN_DELAY 0
 #define MAX_DELAY 5
