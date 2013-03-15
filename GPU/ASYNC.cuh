@@ -247,7 +247,7 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
                     dev_spinor * spinin, dev_spinor * spinout,
                     int * gfindex_site, int * gfindex_nextsite, int * nn_evenodd,
                     int ieo,
-                    int gridsize, int blocksize) {
+                    int gridsize, dim3 blocksize_in) {
   
   
   // for even/odd
@@ -258,6 +258,13 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   // gridsizes
   int gridsize1;
   int gridsize2;
+  
+  #ifdef GPU_3DBLOCK
+    fprintf(stderr, "Error in HOPPING_ASYNC: 3D blocks not implemented for MPI! Aborting...\n");
+    exit(200);
+  #else
+    int blocksize = blocksize_in.x;
+  #endif
   
   #ifndef ASYNC_TSLICES
     int tSlices = 1; 
@@ -557,9 +564,9 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
 // the GPU implementation of  Q_Qdagger_ND(...)  from Nondegenerate_Matrix.c
 //	Flo's equivalent function for the standard and non-nd case is  dev_Qtm_pm_psi
 
-void matrix_multiplication32_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * spinout_dn,
+void dev_Qtm_pm_ndpsi_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * spinout_dn,
                                         dev_spinor * spinin_up , dev_spinor * spinin_dn ,
-                                        int gridsize1, int blocksize1, int gridsize2, int blocksize2,
+                                        int gridsize1, dim3 blocksize1, int gridsize2, int blocksize2,
                                         int gridsize3, int blocksize3, int gridsize4, int blocksize4) {
   
   

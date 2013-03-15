@@ -914,35 +914,23 @@ void convert2double_spin_mpi (dev_spinor * spin, spinor * h2d, int start, int en
   
   for (i = start; i < end; i++) {
   
-        h2d[i].s0.c0.re = (double) spin[6*i+0].x;
-        h2d[i].s0.c0.im = (double) spin[6*i+0].y;
-        h2d[i].s0.c1.re = (double) spin[6*i+0].z;
-        h2d[i].s0.c1.im = (double) spin[6*i+0].w;
+        h2d[i].s0.c0 = spin[6*i+0].x + I* spin[6*i+0].y;
+        h2d[i].s0.c1 = spin[6*i+0].z + I* spin[6*i+0].w;
         
-        h2d[i].s0.c2.re = (double) spin[6*i+1].x;
-        h2d[i].s0.c2.im = (double) spin[6*i+1].y;
-        h2d[i].s1.c0.re = (double) spin[6*i+1].z;
-        h2d[i].s1.c0.im = (double) spin[6*i+1].w;   
+        h2d[i].s0.c2 = spin[6*i+1].x + I* spin[6*i+1].y;
+        h2d[i].s1.c0 = spin[6*i+1].z + I* spin[6*i+1].w;   
         
-        h2d[i].s1.c1.re = (double) spin[6*i+2].x;
-        h2d[i].s1.c1.im = (double) spin[6*i+2].y;
-        h2d[i].s1.c2.re = (double) spin[6*i+2].z;
-        h2d[i].s1.c2.im = (double) spin[6*i+2].w;  
+        h2d[i].s1.c1 = spin[6*i+2].x + I* spin[6*i+2].y;
+        h2d[i].s1.c2 = spin[6*i+2].z + I* spin[6*i+2].w;  
         
-        h2d[i].s2.c0.re = (double) spin[6*i+3].x;
-        h2d[i].s2.c0.im = (double) spin[6*i+3].y;
-        h2d[i].s2.c1.re = (double) spin[6*i+3].z;
-        h2d[i].s2.c1.im = (double) spin[6*i+3].w;  
+        h2d[i].s2.c0 = spin[6*i+3].x + I* spin[6*i+3].y;
+        h2d[i].s2.c1 = spin[6*i+3].z + I* spin[6*i+3].w;  
         
-        h2d[i].s2.c2.re = (double) spin[6*i+4].x;
-        h2d[i].s2.c2.im = (double) spin[6*i+4].y;
-        h2d[i].s3.c0.re = (double) spin[6*i+4].z;
-        h2d[i].s3.c0.im = (double) spin[6*i+4].w; 
+        h2d[i].s2.c2 = spin[6*i+4].x + I* spin[6*i+4].y;
+        h2d[i].s3.c0 = spin[6*i+4].z + I* spin[6*i+4].w; 
         
-        h2d[i].s3.c1.re = (double) spin[6*i+5].x;
-        h2d[i].s3.c1.im = (double) spin[6*i+5].y;
-        h2d[i].s3.c2.re = (double) spin[6*i+5].z;
-        h2d[i].s3.c2.im = (double) spin[6*i+5].w; 
+        h2d[i].s3.c1 = spin[6*i+5].x + I* spin[6*i+5].y;
+        h2d[i].s3.c2 = spin[6*i+5].z + I* spin[6*i+5].w; 
         
   }
 }
@@ -957,35 +945,35 @@ void convert2REAL4_spin_mpi (spinor * spin, dev_spinor * h2d, int start, int end
   
   for (i = start; i < end; i++) {
     
-        h2d[6*i+0].x = (float) spin[i].s0.c0.re;
-        h2d[6*i+0].y = (float) spin[i].s0.c0.im;
-        h2d[6*i+0].z = (float) spin[i].s0.c1.re;
-        h2d[6*i+0].w = (float) spin[i].s0.c1.im;
+        h2d[6*i+0].x = creal(spin[i].s0.c0);
+        h2d[6*i+0].y = cimag(spin[i].s0.c0);
+        h2d[6*i+0].z = creal(spin[i].s0.c1);
+        h2d[6*i+0].w = cimag(spin[i].s0.c1);
         
-        h2d[6*i+1].x = (float) spin[i].s0.c2.re;
-        h2d[6*i+1].y = (float) spin[i].s0.c2.im;
-        h2d[6*i+1].z = (float) spin[i].s1.c0.re;
-        h2d[6*i+1].w = (float) spin[i].s1.c0.im;
+        h2d[6*i+1].x = creal(spin[i].s0.c2);
+        h2d[6*i+1].y = cimag(spin[i].s0.c2);
+        h2d[6*i+1].z = creal(spin[i].s1.c0);
+        h2d[6*i+1].w = cimag(spin[i].s1.c0);
         
-        h2d[6*i+2].x = (float) spin[i].s1.c1.re;
-        h2d[6*i+2].y = (float) spin[i].s1.c1.im;
-        h2d[6*i+2].z = (float) spin[i].s1.c2.re;
-        h2d[6*i+2].w = (float) spin[i].s1.c2.im;
+        h2d[6*i+2].x = creal(spin[i].s1.c1);
+        h2d[6*i+2].y = cimag(spin[i].s1.c1);
+        h2d[6*i+2].z = creal(spin[i].s1.c2);
+        h2d[6*i+2].w = cimag(spin[i].s1.c2);
         
-        h2d[6*i+3].x = (float) spin[i].s2.c0.re;
-        h2d[6*i+3].y = (float) spin[i].s2.c0.im;
-        h2d[6*i+3].z = (float) spin[i].s2.c1.re;
-        h2d[6*i+3].w = (float) spin[i].s2.c1.im;
+        h2d[6*i+3].x = creal(spin[i].s2.c0);
+        h2d[6*i+3].y = cimag(spin[i].s2.c0);
+        h2d[6*i+3].z = creal(spin[i].s2.c1);
+        h2d[6*i+3].w = cimag(spin[i].s2.c1);
         
-        h2d[6*i+4].x = (float) spin[i].s2.c2.re;
-        h2d[6*i+4].y = (float) spin[i].s2.c2.im;
-        h2d[6*i+4].z = (float) spin[i].s3.c0.re;
-        h2d[6*i+4].w = (float) spin[i].s3.c0.im;
+        h2d[6*i+4].x = creal(spin[i].s2.c2);
+        h2d[6*i+4].y = cimag(spin[i].s2.c2);
+        h2d[6*i+4].z = creal(spin[i].s3.c0);
+        h2d[6*i+4].w = cimag(spin[i].s3.c0);
         
-        h2d[6*i+5].x = (float) spin[i].s3.c1.re;
-        h2d[6*i+5].y = (float) spin[i].s3.c1.im;
-        h2d[6*i+5].z = (float) spin[i].s3.c2.re;
-        h2d[6*i+5].w = (float) spin[i].s3.c2.im;
+        h2d[6*i+5].x = creal(spin[i].s3.c1);
+        h2d[6*i+5].y = cimag(spin[i].s3.c1);
+        h2d[6*i+5].z = creal(spin[i].s3.c2);
+        h2d[6*i+5].w = cimag(spin[i].s3.c2);
     
   }
 }
@@ -1945,6 +1933,179 @@ __global__ void dev_nd_linalg4_gamma5 (dev_spinor * s1_up, dev_spinor * s1_dn,
 
 //s2_up = nrm*(s2_up +epsbar s1_dn)
 //s2_dn = nrm*(s2_dn +epsbar s1_up)
+// __global__ void dev_nd_linalg2 (dev_spinor * s1_up, dev_spinor * s1_dn, 
+// 				dev_spinor * s2_up, dev_spinor * s2_dn,	float epsbar, float nrm			
+// 				) {
+//   dev_spinor s1[6], sout[6];	
+//   int pos = threadIdx.x + blockDim.x*blockIdx.x;
+//   
+//   if (pos < dev_VOLUME) {
+//     //upper output spinor
+//     dev_read_spinor(&(sout[0]), &(s2_up[pos]));
+//     #ifdef USETEXTURE
+//       dev_read_spinor_tex_dn(&(s1[0]), pos);      
+//     #else
+//       dev_read_spinor(&(s1[0]), &(s1_dn[pos]));    
+//     #endif
+//     
+//     sout[0].x += epsbar*s1[0].x;
+//     sout[0].x *= nrm;
+//     sout[0].y += epsbar*s1[0].y;
+//     sout[0].y *= nrm;       
+//     sout[0].z += epsbar*s1[0].z;
+//     sout[0].z *= nrm;      
+//     sout[0].w += epsbar*s1[0].w;
+//     sout[0].w *= nrm;
+//        
+//     sout[1].x += epsbar*s1[1].x;
+//     sout[1].x *= nrm;
+//     sout[1].y += epsbar*s1[1].y;
+//     sout[1].y *= nrm;       
+//     sout[1].z += epsbar*s1[1].z;
+//     sout[1].z *= nrm;      
+//     sout[1].w += epsbar*s1[1].w;
+//     sout[1].w *= nrm;    
+//     
+//     sout[2].x += epsbar*s1[2].x;
+//     sout[2].x *= nrm;
+//     sout[2].y += epsbar*s1[2].y;
+//     sout[2].y *= nrm;       
+//     sout[2].z += epsbar*s1[2].z;
+//     sout[2].z *= nrm;      
+//     sout[2].w += epsbar*s1[2].w;
+//     sout[2].w *= nrm;    
+// 
+//     sout[3].x += epsbar*s1[3].x;
+//     sout[3].x *= nrm;
+//     sout[3].y += epsbar*s1[3].y;
+//     sout[3].y *= nrm;       
+//     sout[3].z += epsbar*s1[3].z;
+//     sout[3].z *= nrm;      
+//     sout[3].w += epsbar*s1[3].w;
+//     sout[3].w *= nrm;    
+// 
+//     sout[4].x += epsbar*s1[4].x;
+//     sout[4].x *= nrm;
+//     sout[4].y += epsbar*s1[4].y;
+//     sout[4].y *= nrm;       
+//     sout[4].z += epsbar*s1[4].z;
+//     sout[4].z *= nrm;      
+//     sout[4].w += epsbar*s1[4].w;
+//     sout[4].w *= nrm;    
+//     
+//     sout[5].x += epsbar*s1[5].x;
+//     sout[5].x *= nrm;
+//     sout[5].y += epsbar*s1[5].y;
+//     sout[5].y *= nrm;       
+//     sout[5].z += epsbar*s1[5].z;
+//     sout[5].z *= nrm;      
+//     sout[5].w += epsbar*s1[5].w;
+//     sout[5].w *= nrm;    
+//     
+//     dev_write_spinor(&(sout[0]),&(s2_up[pos]));  
+//     
+//     
+//     //upper output spinor
+//     dev_read_spinor(&(sout[0]), &(s2_dn[pos]));
+//     #ifdef USETEXTURE
+//       dev_read_spinor_tex_up(&(s1[0]), pos);      
+//     #else
+//      dev_read_spinor(&(s1[0]), &(s1_up[pos]));    
+//     #endif
+//     
+//     sout[0].x += epsbar*s1[0].x;
+//     sout[0].x *= nrm;
+//     sout[0].y += epsbar*s1[0].y;
+//     sout[0].y *= nrm;       
+//     sout[0].z += epsbar*s1[0].z;
+//     sout[0].z *= nrm;      
+//     sout[0].w += epsbar*s1[0].w;
+//     sout[0].w *= nrm;
+//        
+//     sout[1].x += epsbar*s1[1].x;
+//     sout[1].x *= nrm;
+//     sout[1].y += epsbar*s1[1].y;
+//     sout[1].y *= nrm;       
+//     sout[1].z += epsbar*s1[1].z;
+//     sout[1].z *= nrm;      
+//     sout[1].w += epsbar*s1[1].w;
+//     sout[1].w *= nrm;    
+//     
+//     sout[2].x += epsbar*s1[2].x;
+//     sout[2].x *= nrm;
+//     sout[2].y += epsbar*s1[2].y;
+//     sout[2].y *= nrm;       
+//     sout[2].z += epsbar*s1[2].z;
+//     sout[2].z *= nrm;      
+//     sout[2].w += epsbar*s1[2].w;
+//     sout[2].w *= nrm;    
+// 
+//     sout[3].x += epsbar*s1[3].x;
+//     sout[3].x *= nrm;
+//     sout[3].y += epsbar*s1[3].y;
+//     sout[3].y *= nrm;       
+//     sout[3].z += epsbar*s1[3].z;
+//     sout[3].z *= nrm;      
+//     sout[3].w += epsbar*s1[3].w;
+//     sout[3].w *= nrm;    
+// 
+//     sout[4].x += epsbar*s1[4].x;
+//     sout[4].x *= nrm;
+//     sout[4].y += epsbar*s1[4].y;
+//     sout[4].y *= nrm;       
+//     sout[4].z += epsbar*s1[4].z;
+//     sout[4].z *= nrm;      
+//     sout[4].w += epsbar*s1[4].w;
+//     sout[4].w *= nrm;    
+//     
+//     sout[5].x += epsbar*s1[5].x;
+//     sout[5].x *= nrm;
+//     sout[5].y += epsbar*s1[5].y;
+//     sout[5].y *= nrm;       
+//     sout[5].z += epsbar*s1[5].z;
+//     sout[5].z *= nrm;      
+//     sout[5].w += epsbar*s1[5].w;
+//     sout[5].w *= nrm;    
+//     
+// /*    s2_dn[pos+0*DEVOFF].x = sout[0].x;
+//     s2_dn[pos+0*DEVOFF].y = sout[0].y;
+//     s2_dn[pos+0*DEVOFF].z = sout[0].z;
+//     s2_dn[pos+0*DEVOFF].w = sout[0].w;   
+//     
+//     s2_dn[pos+1*DEVOFF].x = sout[1].x;
+//     s2_dn[pos+1*DEVOFF].y = sout[1].y;
+//     s2_dn[pos+1*DEVOFF].z = sout[1].z;
+//     s2_dn[pos+1*DEVOFF].w = sout[1].w;       
+//     
+//     s2_dn[pos+2*DEVOFF].x = sout[2].x;
+//     s2_dn[pos+2*DEVOFF].y = sout[2].y;
+//     s2_dn[pos+2*DEVOFF].z = sout[2].z;
+//     s2_dn[pos+2*DEVOFF].w = sout[2].w;      
+//     
+//     s2_dn[pos+3*DEVOFF].x = sout[3].x;
+//     s2_dn[pos+3*DEVOFF].y = sout[3].y;
+//     s2_dn[pos+3*DEVOFF].z = sout[3].z;
+//     s2_dn[pos+3*DEVOFF].w = sout[3].w;      
+//     
+//     s2_dn[pos+4*DEVOFF].x = sout[4].x;
+//     s2_dn[pos+4*DEVOFF].y = sout[4].y;
+//     s2_dn[pos+4*DEVOFF].z = sout[4].z;
+//     s2_dn[pos+4*DEVOFF].w = sout[4].w;    
+//     
+//     s2_dn[pos+5*DEVOFF].x = sout[5].x;
+//     s2_dn[pos+5*DEVOFF].y = sout[5].y;
+//     s2_dn[pos+5*DEVOFF].z = sout[5].z;
+//     s2_dn[pos+5*DEVOFF].w = sout[5].w;    */  
+//     
+//     dev_write_spinor(&(sout[0]),&(s2_dn[pos]));     
+//     
+//     
+//     
+//   }
+// }
+// 
+
+
 __global__ void dev_nd_linalg2 (dev_spinor * s1_up, dev_spinor * s1_dn, 
 				dev_spinor * s2_up, dev_spinor * s2_dn,	float epsbar, float nrm			
 				) {
@@ -1961,60 +2122,60 @@ __global__ void dev_nd_linalg2 (dev_spinor * s1_up, dev_spinor * s1_dn,
     #endif
     
     sout[0].x += epsbar*s1[0].x;
-    sout[0].x *= nrm;
+    s2_up[pos+0*DEVOFF].x = sout[0].x*nrm;    
     sout[0].y += epsbar*s1[0].y;
-    sout[0].y *= nrm;       
+    s2_up[pos+0*DEVOFF].y = sout[0].y*nrm;    
     sout[0].z += epsbar*s1[0].z;
-    sout[0].z *= nrm;      
+    s2_up[pos+0*DEVOFF].z = sout[0].z*nrm;      
     sout[0].w += epsbar*s1[0].w;
-    sout[0].w *= nrm;
+    s2_up[pos+0*DEVOFF].w = sout[0].w*nrm; 
        
     sout[1].x += epsbar*s1[1].x;
-    sout[1].x *= nrm;
+    s2_up[pos+1*DEVOFF].x = sout[1].x*nrm; 
     sout[1].y += epsbar*s1[1].y;
-    sout[1].y *= nrm;       
+    s2_up[pos+1*DEVOFF].y = sout[1].y*nrm;      
     sout[1].z += epsbar*s1[1].z;
-    sout[1].z *= nrm;      
+    s2_up[pos+1*DEVOFF].z = sout[1].z*nrm;       
     sout[1].w += epsbar*s1[1].w;
-    sout[1].w *= nrm;    
+    s2_up[pos+1*DEVOFF].w = sout[1].w*nrm;    
     
     sout[2].x += epsbar*s1[2].x;
-    sout[2].x *= nrm;
+    s2_up[pos+2*DEVOFF].x = sout[2].x*nrm; 
     sout[2].y += epsbar*s1[2].y;
-    sout[2].y *= nrm;       
+    s2_up[pos+2*DEVOFF].y = sout[2].y*nrm;  
     sout[2].z += epsbar*s1[2].z;
-    sout[2].z *= nrm;      
+    s2_up[pos+2*DEVOFF].z = sout[2].z*nrm;    
     sout[2].w += epsbar*s1[2].w;
-    sout[2].w *= nrm;    
+    s2_up[pos+2*DEVOFF].w = sout[2].w*nrm;   
 
     sout[3].x += epsbar*s1[3].x;
-    sout[3].x *= nrm;
+    s2_up[pos+3*DEVOFF].x = sout[3].x*nrm;
     sout[3].y += epsbar*s1[3].y;
-    sout[3].y *= nrm;       
+    s2_up[pos+3*DEVOFF].y = sout[3].y*nrm;   
     sout[3].z += epsbar*s1[3].z;
-    sout[3].z *= nrm;      
+    s2_up[pos+3*DEVOFF].z = sout[3].z*nrm;     
     sout[3].w += epsbar*s1[3].w;
-    sout[3].w *= nrm;    
+    s2_up[pos+3*DEVOFF].w = sout[3].w*nrm;   
 
     sout[4].x += epsbar*s1[4].x;
-    sout[4].x *= nrm;
+    s2_up[pos+4*DEVOFF].x = sout[4].x*nrm;
     sout[4].y += epsbar*s1[4].y;
-    sout[4].y *= nrm;       
+    s2_up[pos+4*DEVOFF].y = sout[4].y*nrm;      
     sout[4].z += epsbar*s1[4].z;
-    sout[4].z *= nrm;      
+    s2_up[pos+4*DEVOFF].z = sout[4].z*nrm;    
     sout[4].w += epsbar*s1[4].w;
-    sout[4].w *= nrm;    
+    s2_up[pos+4*DEVOFF].w = sout[4].w*nrm;   
     
     sout[5].x += epsbar*s1[5].x;
-    sout[5].x *= nrm;
+    s2_up[pos+5*DEVOFF].x = sout[5].x*nrm;
     sout[5].y += epsbar*s1[5].y;
-    sout[5].y *= nrm;       
+    s2_up[pos+5*DEVOFF].y = sout[5].y*nrm;      
     sout[5].z += epsbar*s1[5].z;
-    sout[5].z *= nrm;      
+    s2_up[pos+5*DEVOFF].z = sout[5].z*nrm;   
     sout[5].w += epsbar*s1[5].w;
-    sout[5].w *= nrm;    
+    s2_up[pos+5*DEVOFF].w = sout[5].w*nrm;   
     
-    dev_write_spinor(&(sout[0]),&(s2_up[pos]));  
+
     
     
     //upper output spinor
@@ -2026,67 +2187,61 @@ __global__ void dev_nd_linalg2 (dev_spinor * s1_up, dev_spinor * s1_dn,
     #endif
     
     sout[0].x += epsbar*s1[0].x;
-    sout[0].x *= nrm;
+    s2_dn[pos+0*DEVOFF].x = sout[0].x*nrm;
     sout[0].y += epsbar*s1[0].y;
-    sout[0].y *= nrm;       
+    s2_dn[pos+0*DEVOFF].y = sout[0].y*nrm;        
     sout[0].z += epsbar*s1[0].z;
-    sout[0].z *= nrm;      
+    s2_dn[pos+0*DEVOFF].z = sout[0].z*nrm;             
     sout[0].w += epsbar*s1[0].w;
-    sout[0].w *= nrm;
+    s2_dn[pos+0*DEVOFF].w = sout[0].w*nrm;  
        
     sout[1].x += epsbar*s1[1].x;
-    sout[1].x *= nrm;
+    s2_dn[pos+1*DEVOFF].x = sout[1].x*nrm;    
     sout[1].y += epsbar*s1[1].y;
-    sout[1].y *= nrm;       
+    s2_dn[pos+1*DEVOFF].y = sout[1].y*nrm; 
     sout[1].z += epsbar*s1[1].z;
-    sout[1].z *= nrm;      
+    s2_dn[pos+1*DEVOFF].z = sout[1].z*nrm; 
     sout[1].w += epsbar*s1[1].w;
-    sout[1].w *= nrm;    
+    s2_dn[pos+1*DEVOFF].w = sout[1].w*nrm; 
     
     sout[2].x += epsbar*s1[2].x;
-    sout[2].x *= nrm;
+    s2_dn[pos+2*DEVOFF].x = sout[2].x*nrm; 
     sout[2].y += epsbar*s1[2].y;
-    sout[2].y *= nrm;       
+    s2_dn[pos+2*DEVOFF].y = sout[2].y*nrm;     
     sout[2].z += epsbar*s1[2].z;
-    sout[2].z *= nrm;      
+    s2_dn[pos+2*DEVOFF].z = sout[2].z*nrm; 
     sout[2].w += epsbar*s1[2].w;
-    sout[2].w *= nrm;    
+    s2_dn[pos+2*DEVOFF].w = sout[2].w*nrm;  
 
     sout[3].x += epsbar*s1[3].x;
-    sout[3].x *= nrm;
+    s2_dn[pos+3*DEVOFF].x = sout[3].x*nrm; 
     sout[3].y += epsbar*s1[3].y;
-    sout[3].y *= nrm;       
+    s2_dn[pos+3*DEVOFF].y = sout[3].y*nrm;  
     sout[3].z += epsbar*s1[3].z;
-    sout[3].z *= nrm;      
+    s2_dn[pos+3*DEVOFF].z = sout[3].z*nrm;      
     sout[3].w += epsbar*s1[3].w;
-    sout[3].w *= nrm;    
+    s2_dn[pos+3*DEVOFF].w = sout[3].w*nrm;     
 
     sout[4].x += epsbar*s1[4].x;
-    sout[4].x *= nrm;
+    s2_dn[pos+4*DEVOFF].x = sout[4].x*nrm; 
     sout[4].y += epsbar*s1[4].y;
-    sout[4].y *= nrm;       
+    s2_dn[pos+4*DEVOFF].y = sout[4].y*nrm;    
     sout[4].z += epsbar*s1[4].z;
-    sout[4].z *= nrm;      
+    s2_dn[pos+4*DEVOFF].z = sout[4].z*nrm;      
     sout[4].w += epsbar*s1[4].w;
-    sout[4].w *= nrm;    
+    s2_dn[pos+4*DEVOFF].w = sout[4].w*nrm;    
     
     sout[5].x += epsbar*s1[5].x;
-    sout[5].x *= nrm;
+    s2_dn[pos+5*DEVOFF].x = sout[5].x*nrm; 
     sout[5].y += epsbar*s1[5].y;
-    sout[5].y *= nrm;       
+    s2_dn[pos+5*DEVOFF].y = sout[5].y*nrm; 
     sout[5].z += epsbar*s1[5].z;
-    sout[5].z *= nrm;      
+    s2_dn[pos+5*DEVOFF].z = sout[5].z*nrm;    
     sout[5].w += epsbar*s1[5].w;
-    sout[5].w *= nrm;    
-    
-    dev_write_spinor(&(sout[0]),&(s2_dn[pos]));     
-    
-    
-    
+    s2_dn[pos+5*DEVOFF].w = sout[5].w*nrm;    
+
   }
 }
-
-
 
 
 
@@ -3258,13 +3413,14 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   int blocksize;		// auxiliary
   
   blocksize = BLOCK;
-  int blockdim2, griddim2;					// passed:	dev_Hopping_Matrix
+  int griddim2;					// passed:	dev_Hopping_Matrix
+  dim3 blockdim2 (0,0,0);
   if ( (VOLUME/2) % blocksize == 0 ) {
-    blockdim2 = blocksize;
+    blockdim2.x = blocksize;
     griddim2  = VOLUME/2/blocksize;
   }
   else {
-    blockdim2 = blocksize;
+    blockdim2.x = blocksize;
     griddim2  = (int) ((VOLUME/2/blocksize) + 1);
   }
   
@@ -4415,6 +4571,12 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   ///////////////
   // ALGORITHM //
   ///////////////
+  
+  //ONLY FOR TESTS
+  //FIXME
+  //shift=0.1;
+  //
+  ////////////////
   
   // timer
   startouter = gettime();

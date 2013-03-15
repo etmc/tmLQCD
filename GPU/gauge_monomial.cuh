@@ -1,7 +1,7 @@
 
 #ifdef MPI
 extern "C"{
- #include "../xchange_gauge.h"
+ #include "../xchange/xchange_gauge.h"
  #include "../geometry_eo.h"
  }
 #endif //MPI

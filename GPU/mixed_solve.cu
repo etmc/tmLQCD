@@ -84,7 +84,7 @@ extern "C" {
 
 #include "../gettime.h"
 #ifdef MPI
-  #include "../xchange.h"
+  #include "../xchange/xchange.h"
 #endif 
 
 }
@@ -278,26 +278,6 @@ int nStreams_nd = 2;
 cudaStream_t stream_nd[2];
 
 
-// include files with other GPU code as all GPU code has to reside in one file 
-// the texture references and functions
-#include "textures.cuh"
-// if we want to use half precision
-#ifdef HALF 
- #include "half.cuh"
-#endif
-// linear algebra functions and gamma-multiplications
-#include "linalg.cuh"
-// reconstruction of the gauge field
-#include "gauge_reconstruction.cuh"
-// the device su3 functions
-#include "su3.cuh"
-// the plaquette and rectangle routines
-#include "observables.cuh"
-//gauge staple calculations in double plus all other double operations
-#include "gauge_monomial.cuh"
-
-
-
 
 #ifdef MPI
 
@@ -372,6 +352,26 @@ EXTERN int g_nb_z_up, g_nb_z_dn;
 #endif //MPI
 
 
+
+
+
+// include files with other GPU code as all GPU code has to reside in one file 
+// the texture references and functions
+#include "textures.cuh"
+// if we want to use half precision
+#ifdef HALF 
+ #include "half.cuh"
+#endif
+// linear algebra functions and gamma-multiplications
+#include "linalg.cuh"
+// reconstruction of the gauge field
+#include "gauge_reconstruction.cuh"
+// the device su3 functions
+#include "su3.cuh"
+// the plaquette and rectangle routines
+#include "observables.cuh"
+//gauge staple calculations in double plus all other double operations
+#include "gauge_monomial.cuh"
 
 // the device Hopping_Matrix
 #include "Hopping_Matrix.cuh"
@@ -1688,7 +1688,7 @@ extern "C" int dev_cg_eo(
       // effectiveflops  =  #(inner iterations)*(matrixflops+linalgflops)*VOLUME/2  +  #(outer iterations)*(matrixflops+linalgflops)*VOLUME/2
       // outer loop: linalg  =  flops for calculating  r(k+1) and x(k+1)
       // inner loop: linalg  =  flops for calculating  alpha, x(k+1), r(k+1), beta, d(k+1)
-     #ifndef MPI
+     #ifdef MPI
        int proccount = g_nproc;
      #else
        int proccount = 1;
