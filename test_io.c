@@ -279,17 +279,20 @@ int main(int argc,char *argv[]) {
         free(xlfInfo);
       }
 
+      if( delay > 0) {
 #ifdef MPI
-      MPI_Barrier(MPI_COMM_WORLD);
+        MPI_Barrier(MPI_COMM_WORLD);
 #endif
-      sleep(delay);
+        sleep(delay);
+#ifdef MPI
+        MPI_Barrier(MPI_COMM_WORLD);
+#endif
+      }
+                  
       if(delay < MAX_DELAY)
         ++delay;
       else
         delay = 0;
-#ifdef MPI
-      MPI_Barrier(MPI_COMM_WORLD);
-#endif            
 
       /* now reread in random order */
       shuffle(conf_indices,NUM_TESTCONFS);
