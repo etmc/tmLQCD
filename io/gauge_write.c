@@ -19,7 +19,11 @@
 
 #include "gauge.ih"
 
-int write_gauge_field(char * filename, const int prec, paramsXlfInfo const *xlfInfo)
+int write_gauge_field(char * filename, const int prec, paramsXlfInfo const *xlfInfo) {
+  return( write_gauge_field_checksum(filename, prec, xlfInfo, NULL ) );
+}
+
+int write_gauge_field_checksum(char * filename, const int prec, paramsXlfInfo const *xlfInfo, DML_Checksum *checksum_out )
 {
   WRITER * writer = NULL;
   uint64_t bytes;
@@ -42,6 +46,10 @@ int write_gauge_field(char * filename, const int prec, paramsXlfInfo const *xlfI
   write_header(writer, 0, 0, "ildg-binary-data", bytes);
   status = write_binary_gauge_data(writer, prec, &checksum);
   write_checksum(writer, &checksum, NULL);
+
+  if( (void*) checksum_out != NULL ) {
+    *checksum_out = checksum;
+  }
 
   if (g_cart_id == 0 && g_debug_level > 0)
   {
