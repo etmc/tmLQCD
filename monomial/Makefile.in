@@ -1,0 +1,100 @@
+
+srcdir = @srcdir@
+top_builddir =  @top_builddir@
+abs_top_builddir = @abs_top_builddir@
+top_srcdir = @top_srcdir@
+abs_top_srcdir = @abs_top_srcdir@
+subdir = monomial
+builddir = @builddir@
+
+CFLAGS = @CFLAGS@
+DEPFLAGS = @DEPFLAGS@
+LDFLAGS = @LDFLAGS@
+DEFS = @DEFS@
+OPTARGS = @OPTARGS@
+SOPTARGS = @SOPTARGS@
+
+AR = @AR@
+RANLIB = @RANLIB@
+CC = @CC@
+CCDEP = @CCDEP@
+CCLD = ${CC}
+LINK = ${CCLD} ${CFLAGS} ${LDFLAGS} ${OPTARGS} -o $@
+LEX = @LEX@
+AUTOCONF = @AUTOCONF@
+DEFS = @DEFS@
+
+INCLUDES = @INCLUDES@
+LDADD =
+#COMPILE = ${CC} ${DEFS} ${INCLUDES} ${CFLAGS}
+COMPILE = ${CC} $(DEFS) ${INCLUDES} ${CFLAGS}
+
+LIBRARIES = libmonomial
+libmonomial_TARGETS =  nddetratio_monomial monomial det_monomial detratio_monomial \
+	gauge_monomial ndpoly_monomial clover_trlog_monomial cloverdet_monomial cloverdetratio_monomial \
+	clovernd_trlog_monomial poly_monomial cloverndpoly_monomial moment_energy \
+	ndrat_monomial ndratcor_monomial rat_monomial ratcor_monomial monitor_forces
+
+
+libmonomial_STARGETS = 
+
+libmonomial_OBJECTS = $(addsuffix .o, ${libmonomial_TARGETS})
+libmonomial_SOBJECTS = $(addsuffix .o, ${libmonomial_STARGETS})
+
+# default rule
+
+all: Makefile dep libmonomial.a
+
+# rules for debugging
+debug all-debug: CFLAGS := $(CFLAGS) @DEBUG_FLAG@
+debug all-debug: all
+
+# rules for profiling information
+profile all-profile: CFLAGS := $(filter-out -fomit-frame-pointer,${CFLAGS}) @PROFILE_FLAG@
+profile all-profile: all
+
+
+#include dep rules
+
+-include $(addsuffix .d,${libmonomial_TARGETS})
+
+include ${top_srcdir}/Makefile.global
+
+# rule to compile objects
+
+${libmonomial_OBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/config.h
+	$(COMPILE) ${OPTARGS} -c $<
+
+${libmonomial_SOBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/config.h
+	$(COMPILE) ${SOPTARGS} -c $<
+
+# rule to make libmonomial
+
+libmonomial.a: ${libmonomial_OBJECTS} ${libmonomial_SOBJECTS} Makefile
+	@rm -f libmonomial.a
+	@${AR} cru libmonomial.a ${libmonomial_OBJECTS} ${libmonomial_SOBJECTS}
+	@$(RANLIB) libmonomial.a
+	@cp libmonomial.a ../lib/libmonomial.a
+
+# rule to generate .d files
+
+$(addsuffix .d, $(libmonomial_TARGETS) ${libmonomial_STARGETS}): %.d: ${srcdir}/%.c Makefile
+	@${CCDEP} ${DEFS} ${DEPFLAGS} ${INCLUDES} $< > $@
+
+# rule to make dependencies
+
+dep: ${addsuffix .d, ${libmonomial_TARGETS} ${libmonomial_STARGETS}}
+
+# rules to clean
+
+compile-clean: Makefile
+	rm -f ${$(addsuffix _OBJECTS, ${LIBRARIES})} ${$(addsuffix _SOBJECTS, ${LIBRARIES})} *.d
+
+clean: compile-clean 
+	rm -f $(addsuffix .a, ${LIBRARIES})
+	rm -f ../lib/libmonomial.a
+
+distclean: clean
+	rm -f Makefile
+
+.PHONY: all dep clean compile-clean distclean profile all-profile debug all-debug

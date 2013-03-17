@@ -30,9 +30,9 @@
 #include "su3.h"
 #include "su3adj.h"
 #include "su3spinor.h"
-#include "monomial.h"
-#include "xchange_deri.h"
-#include "clover_leaf.h"
+#include "monomial/monomial.h"
+#include "xchange/xchange.h"
+#include "operator/clover_leaf.h"
 #include "read_input.h"
 #include "hamiltonian_field.h"
 #include "update_momenta.h"
@@ -50,17 +50,17 @@ void update_momenta(int * mnllist, double step, const int no,
       _zero_su3adj(hf->derivative[i][mu]);
     }
   }
-
+  
   for(int k = 0; k < no; k++) {
     if(monomial_list[ mnllist[k] ].derivativefunction != NULL) {
       monomial_list[ mnllist[k] ].derivativefunction(mnllist[k], hf);
     }
   }
-
+  
 #ifdef MPI
   xchange_deri(hf->derivative);
 #endif
-
+    
 #ifdef OMP
 #pragma omp parallel for
 #endif

@@ -28,14 +28,14 @@
 #include "su3.h"
 #include "start.h"
 #include "linalg_eo.h"
-#include "tm_operators.h"
+#include "operator/tm_operators.h"
 #include "boundary.h"
 #include "gmres.h"
 #include "solver.h"
 #include "block.h"
-#include "Hopping_Matrix.h"
+#include "operator/Hopping_Matrix.h"
 #include "solver_field.h"
-#include "D_psi.h"
+#include "operator/D_psi.h"
 
 void dummy_Di(spinor * const P, spinor * const Q, const int i) {
   Block_D_psi(&block_list[i], P, Q);

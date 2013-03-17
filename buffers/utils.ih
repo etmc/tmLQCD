@@ -5,7 +5,6 @@
 #include <string.h>
 
 #include <global.h>
-#include <xchange_gauge.h>
-#include <xchange.h>
+#include <xchange/xchange.h>
 
 #include <buffers/utils.h>

@@ -1,0 +1,101 @@
+# this is identical to sample-hmc2.input, just
+# using NDRAT instead of NDPOLY
+#
+# the expected plaquette value is 0.53347(17)
+# the expected rect. plaq. value is 0.30393(22)
+#
+# PP correlator
+# 1.963(2)
+# 0.2846(2)
+# 0.1078(2)
+#
+# smallest EV: 0.01890(3)
+# largest EV: 0.82744(4)
+
+L=4
+T=4
+Measurements = 20
+StartCondition = hot
+2KappaMu = 0.01
+kappa = 0.170
+NSave = 500000
+ThetaT = 1
+UseEvenOdd = yes
+ReversibilityCheck = yes
+ReversibilityCheckIntervall = 100
+InitialStoreCounter = 0
+DebugLevel = 1
+OmpNumThreads = 1
+ReproduceRandomNumbers = yes
+
+BeginMeasurement CORRELATORS
+  Frequency = 2
+EndMeasurement
+
+BeginMonomial GAUGE
+  Type = tlsym
+  beta = 3.30
+  Timescale = 0
+EndMonomial
+
+BeginMonomial DET
+  Timescale = 1
+  2KappaMu = 0.01
+  kappa = 0.170
+  AcceptancePrecision =  1e-20
+  ForcePrecision = 1e-12
+  Name = det
+  Solver = CG
+EndMonomial
+
+BeginMonomial NDRAT
+  Timescale = 1
+  kappa = 0.170
+  AcceptancePrecision =  1e-20
+  ForcePrecision = 1e-12
+  StildeMin = 0.013577
+  StildeMax = 3.096935
+  Name = ndrat
+  DegreeOfRational = 12
+  Cmin = 0
+  Cmax = 11
+  ComputeEVFreq = 1
+  2KappaEpsBar = 0.0935
+  2Kappamubar = 0.1105
+EndMonomial
+
+# correction monomial for approximation error
+BeginMonomial NDRATCOR
+  Timescale = 1
+  kappa = 0.170
+  AcceptancePrecision =  1e-20
+  ForcePrecision = 1e-12
+  StildeMin = 0.013577
+  StildeMax = 3.096935
+  Name = ndratcor
+  DegreeOfRational = 12
+  ComputeEVFreq = 0
+  2KappaEpsBar = 0.0935
+  2Kappamubar = 0.1105
+EndMonomial
+
+BeginIntegrator 
+  Type0 = 2MN
+  Type1 = 2MN
+  IntegrationSteps0 = 2
+  IntegrationSteps1 = 6
+  Tau = 1
+  Lambda0 = 0.19
+  Lambda1 = 0.20
+  NumberOfTimescales = 2
+EndIntegrator
+
+BeginOperator TMWILSON
+  2kappaMu = 0.01
+  kappa = 0.170
+  UseEvenOdd = yes
+  Solver = CG
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 1000
+EndOperator
+

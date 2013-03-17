@@ -36,7 +36,7 @@
 #endif
 #include "global.h"
 #include "su3.h"
-#include "xchange_jacobi.h"
+#include "xchange/xchange.h"
 
 #ifdef WITHLAPH
 

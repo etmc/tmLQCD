@@ -47,7 +47,7 @@
 #include "global.h"
 #include "su3.h"
 #include "boundary.h"
-#include "xchange_2fields.h"
+#include "xchange/xchange.h"
 #include "sse.h"
 #include "update_backward_gauge.h"
 #include "hamiltonian_field.h"

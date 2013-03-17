@@ -48,7 +48,7 @@ void chrono_add_solution(spinor * const trial, spinor ** const v, int index_arra
 
   if(N > 0) {
     if(g_proc_id == 0 && g_debug_level > 1) {
-      printf("CSG: adding vector %d to the list of length %d\n", (*_n)+1, N);
+      printf("# CSG: adding vector %d to the list of length %d\n", (*_n)+1, N);
       fflush(stdout);
     }
     if((*_n) < N) {
@@ -91,7 +91,7 @@ int chrono_guess(spinor * const trial, spinor * const phi, spinor ** const v, in
 
   if(N > 0) {
     if(g_proc_id == 0 && g_debug_level > 1) {
-      printf("CSG: preparing  trial vector \n");
+      printf("# CSG: preparing  trial vector \n");
       fflush(stdout);
     }
     if(init_csg == 0) {
@@ -108,7 +108,7 @@ int chrono_guess(spinor * const trial, spinor * const phi, spinor ** const v, in
 	if(g_debug_level > 2) {
 	  s = scalar_prod(v[index_array[i]], v[index_array[j]], V, 1);
 	  if(g_proc_id == 0) {
-	    printf("CSG: <%d,%d> = %e +i %e \n", i, j, creal(s), cimag(s));fflush(stdout);
+	    printf("# CSG: <%d,%d> = %e +i %e \n", i, j, creal(s), cimag(s));fflush(stdout);
 	  }
 	}
       }
@@ -128,7 +128,7 @@ int chrono_guess(spinor * const trial, spinor * const phi, spinor ** const v, in
 	  (G[j*N + i]) = conj(G[i*N + j]);
 	}
 	if(g_proc_id == 0 && g_debug_level > 2) {
-	  printf("CSG: G[%d*N + %d]= %e + i %e  \n", i, j, creal(G[i*N + j]), cimag(G[i*N + j]));
+	  printf("# CSG: G[%d*N + %d]= %e + i %e  \n", i, j, creal(G[i*N + j]), cimag(G[i*N + j]));
 	  fflush(stdout);
 	}
       }
@@ -143,12 +143,12 @@ int chrono_guess(spinor * const trial, spinor * const phi, spinor ** const v, in
     if(info == 0) {
       mul(trial, bn[n-1], v[index_array[n-1]], V); 
       if(g_proc_id == 0 && g_debug_level > 2) {
-	printf("CSG: bn[%d] = %f %f\n", index_array[n-1], creal(bn[index_array[n-1]]), cimag(bn[index_array[n-1]]));
+	printf("# CSG: bn[%d] = %f %f\n", index_array[n-1], creal(bn[index_array[n-1]]), cimag(bn[index_array[n-1]]));
       }
       for(i = n-2; i > -1; i--) {
 	assign_add_mul(trial, v[index_array[i]], bn[i], V);
 	if(g_proc_id == 0 && g_debug_level > 2) {
-	  printf("CSG: bn[%d] = %f %f\n", index_array[i], creal(bn[index_array[i]]), cimag(bn[index_array[i]]));
+	  printf("# CSG: bn[%d] = %f %f\n", index_array[i], creal(bn[index_array[i]]), cimag(bn[index_array[i]]));
 	}
       }
     }
@@ -157,12 +157,12 @@ int chrono_guess(spinor * const trial, spinor * const phi, spinor ** const v, in
     }
 
     if(g_proc_id == 0 && g_debug_level > 1) {
-      printf("CSG: done! n= %d N=%d \n", n, N);fflush(stdout);
+      printf("# CSG: done! n= %d N=%d \n", n, N);fflush(stdout);
     }
   }
   else {
-    if(g_proc_id == 0 && g_debug_level > 1) {
-      printf("CSG: using zero trial vector \n");
+    if(g_proc_id == 0 && g_debug_level > 2) {
+      printf("# CSG: using zero trial vector \n");
       fflush(stdout);
     }
     zero_spinor_field(trial, V);

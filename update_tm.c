@@ -44,19 +44,18 @@
 #include "global.h"
 #include "start.h"
 #include "sighandler.h"
-#include "tm_operators.h"
+#include "operator/tm_operators.h"
 #include "linalg_eo.h"
 #include "io/gauge.h"
 #include "io/params.h"
 #include "measure_gauge_action.h"
-#include "hybrid_update.h"
 #include "ranlxd.h"
 #include "read_input.h"
 #include "expo.h"
-#include "xchange.h"
+#include "xchange/xchange.h"
 #include "measure_rectangles.h"
-#include "init_gauge_tmp.h"
-#include "monomial.h"
+#include "init/init_gauge_tmp.h"
+#include "monomial/monomial.h"
 #include "integrator.h"
 #include "hamiltonian_field.h"
 #include "update_tm.h"
@@ -65,7 +64,8 @@
 extern su3 ** g_gauge_field_saved;
 
 int update_tm(double *plaquette_energy, double *rectangle_energy, 
-              char * filename, const int return_check, const int acctest) {
+              char * filename, const int return_check, const int acctest, 
+	      const int traj_counter) {
 
   su3 *v, *w;
   static int ini_g_tmp = 0;
@@ -74,7 +74,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   double yy[1];
   double dh, expmdh, ret_dh=0., ret_gauge_diff=0., tmp;
   double atime=0., etime=0.;
-  double ks,kc,ds,tr,ts,tt;
+  double ks = 0., kc = 0., ds, tr, ts, tt;
 
   char tmp_filename[50];
 
@@ -95,6 +95,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   hf.update_gauge_copy = g_update_gauge_copy;
   hf.update_gauge_energy = g_update_gauge_energy;
   hf.update_rectangle_energy = g_update_rectangle_energy;
+  hf.traj_counter = traj_counter;
   integrator_set_fields(&hf);
 
   strcpy(tmp_filename, ".conf.tmp");
@@ -133,14 +134,17 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
   }
 
+  if(Integrator.monitor_forces) monitor_forces(&hf);
   /* initialize the momenta  */
-  enep = init_momenta(reproduce_randomnumber_flag, hf.momenta);
+  enep = random_su3adj_field(reproduce_randomnumber_flag, hf.momenta);
 
   g_sloppy_precision = 1;
 
   /* run the trajectory */
-  Integrator.integrate[Integrator.no_timescales-1](Integrator.tau, 
-                       Integrator.no_timescales-1, 1);
+  if(Integrator.n_int[Integrator.no_timescales-1] > 0) {
+    Integrator.integrate[Integrator.no_timescales-1](Integrator.tau, 
+						     Integrator.no_timescales-1, 1);
+  }
 
   g_sloppy_precision = 0;
 
@@ -160,6 +164,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       new_rectangle_energy = measure_rectangles( (const su3**) hf.gaugefield);
     }
   }
+  if(g_proc_id == 0 && g_debug_level > 3) printf("called moment_energy: dh = %1.10e\n", (enepx - enep));
   /* Compute the energy difference */
   dh = dh + (enepx - enep);
   if(g_proc_id == 0 && g_debug_level > 3) {
@@ -168,8 +173,8 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   expmdh = exp(-dh);
   /* the random number is only taken at node zero and then distributed to 
      the other sites */
+  ranlxd(yy,1);
   if(g_proc_id==0) {
-    ranlxd(yy,1);
 #ifdef MPI
     for(i = 1; i < g_nproc; i++) {
       MPI_Send(&yy[0], 1, MPI_DOUBLE, i, 31, MPI_COMM_WORLD);
@@ -240,7 +245,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     {
     int thread_num = omp_get_thread_num();
 #endif
-
+    su3 ALIGN v0;
 #ifdef OMP
 #pragma omp for
 #endif
@@ -250,11 +255,10 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       {
         v=&hf.gaugefield[ix][mu];
         w=&gauge_tmp[ix][mu];
-        /* NOTE Should this perhaps be some function or macro? */
-        ds = sqrt(conj(v->c00 - w->c00) * (v->c00 - w->c00) + conj(v->c01 - w->c01) * (v->c01 - w->c01) + conj(v->c02 - w->c02) * (v->c02 - w->c02) +
-                  conj(v->c10 - w->c10) * (v->c10 - w->c10) + conj(v->c11 - w->c11) * (v->c11 - w->c11) + conj(v->c12 - w->c12) * (v->c12 - w->c12) +             conj(v->c20 - w->c20) * (v->c20 - w->c20) + conj(v->c21 - w->c21) * (v->c21 - w->c21) + conj(v->c22 - w->c22) * (v->c22 - w->c22));
+	_su3_minus_su3(v0, *v, *w);
+	_su3_square_norm(ds, v0);
 
-        tr = ds + kc;
+        tr = sqrt(ds) + kc;
         ts = tr + ks;
         tt = ts-ks;
         ks = ts;
@@ -355,7 +359,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   if(g_proc_id==0) {
     datafile = fopen(filename, "a");
     if (!bc_flag) { /* if Periodic Boundary Conditions */
-      fprintf(datafile, "%14.12f %14.12f %e ",
+      fprintf(datafile, "%.8d %14.12f %14.12f %e ", traj_counter,
               (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
     }
     for(i = 0; i < Integrator.no_timescales; i++) {
@@ -363,6 +367,8 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
         if(monomial_list[ Integrator.mnls_per_ts[i][j] ].type != GAUGE
 	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != SFGAUGE 
 	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != NDPOLY
+	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != NDCLOVER
+	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != CLOVERNDTRLOG
 	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != CLOVERTRLOG ) {
           fprintf(datafile,"%d %d ",  monomial_list[ Integrator.mnls_per_ts[i][j] ].iter0, 
                   monomial_list[ Integrator.mnls_per_ts[i][j] ].iter1);

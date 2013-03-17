@@ -33,14 +33,14 @@
 #include <complex.h>
 #include "block.h"
 #include "linalg/blas.h"
-#include "D_psi.h"
-#include "Hopping_Matrix.h"
+#include "operator/D_psi.h"
+#include "operator/Hopping_Matrix.h"
 #include "little_D.h"
 #include "block.h"
 #include "linalg_eo.h"
 #include "gcr4complex.h"
 #include "generate_dfl_subspace.h"
-#include "tm_operators.h"
+#include "operator/tm_operators.h"
 #include "boundary.h"
 #include "Msap.h"
 #include "mr.h"
@@ -485,7 +485,7 @@ void little_D_P_R(_Complex double * const out, _Complex double * const in) {
 }
 
 
-int check_projectors() {
+int check_projectors(const int repro) {
   double nrm = 0.;
   int i,j;
   spinor **phi;
@@ -498,7 +498,7 @@ int check_projectors() {
   phi = malloc(nb_blocks*sizeof(spinor *));
   wphi = malloc(nb_blocks*sizeof(spinor *));
 
-  random_spinor_field(work_fields[0], VOLUME, 1);
+  random_spinor_field_lexic(work_fields[0], repro, RN_GAUSS);
   nrm = square_norm(work_fields[0], VOLUME, 1);
   if(g_cart_id == 0) {
     printf("\nNow we check the DFL projection routines!\n\n");
@@ -806,7 +806,7 @@ int check_projectors() {
   return(0);
 }
 
-void check_little_D_inversion() {
+void check_little_D_inversion(const int repro) {
   int i,j,ctr_t;
   int contig_block = LZ / nb_blocks;
   int vol = block_list[0].volume;
@@ -816,7 +816,7 @@ void check_little_D_inversion() {
   const int nr_wf = 1;
 
   init_solver_field(&work_fields, VOLUMEPLUSRAND, nr_wf);
-  random_spinor_field(work_fields[0], VOLUME, 1);
+  random_spinor_field_lexic(work_fields[0], repro, RN_GAUSS);
   if(init_dfl_projector == 0) {
     alloc_dfl_projector();
   }
@@ -895,7 +895,7 @@ void check_little_D_inversion() {
   return;
 }
 
-void check_local_D()
+void check_local_D(const int repro)
 {
   spinor * r[8];
   int j, vol = block_list[0].volume/2, i;
@@ -950,7 +950,7 @@ void check_local_D()
     }
   }
   /* check Msap and Msap_eo on a radom vector */
-  random_spinor_field(work_fields[0], VOLUME, 1);
+  random_spinor_field_lexic(work_fields[0], repro, RN_GAUSS);
   zero_spinor_field(work_fields[1], VOLUME);
   Msap(work_fields[1], work_fields[0], 2);
   D_psi(work_fields[2], work_fields[1]);

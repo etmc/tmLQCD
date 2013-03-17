@@ -55,7 +55,7 @@ EQL {SPC}*={SPC}*
 #include"global.h"
 #include"read_input.h"
 #include"default_input_values.h"
-#include"monomial.h"
+#include"monomial/monomial.h"
 #include"measurements.h"
 #include"integrator.h"
 #include"operator.h"
@@ -218,14 +218,11 @@ inline void rmQuotes(char *str){
 %x LLX
 %x LLY
 %x LLZ
-%x TTBSF
 %x NPROCX
 %x NPROCY
 %x NPROCZ
 %x IOPROC
 %x IDX
-%x CGMAX
-%x BCGMAX
 %x BOUNDT
 %x BOUNDX
 %x BOUNDY
@@ -265,6 +262,7 @@ inline void rmQuotes(char *str){
 %x ONLINEMEAS
 %x PIONNORMMEAS
 %x PLOOP
+%x ORIENTEDPLAQUETTESMEAS
 
 %x REWEIGH
 %x REWSAMPLES
@@ -281,6 +279,7 @@ inline void rmQuotes(char *str){
 %x WILSONOP
 %x OVERLAPOP
 %x CLOVEROP
+%x DBCLOVEROP
 %x TMSOLVER
 %x DBTMSOLVER
 %x OVSOLVER
@@ -290,9 +289,17 @@ inline void rmQuotes(char *str){
 %x CLDETMONOMIAL
 %x CLDETRATMONOMIAL
 %x GAUGEMONOMIAL
-%x SFGAUGEMONOMIAL
 %x NDPOLYMONOMIAL
+%x NDRATMONOMIAL
+%x RATMONOMIAL
+%x CLRATMONOMIAL
+%x RATCORMONOMIAL
+%x CLRATCORMONOMIAL
+%x NDCLRATMONOMIAL
+%x NDRATCORMONOMIAL
+%x NDCLRATCORMONOMIAL
 %x POLYMONOMIAL
+%x CLPOLYMONOMIAL
 %x MNAME
 %x MCSTR
 %x MSOLVER
@@ -337,7 +344,6 @@ inline void rmQuotes(char *str){
 ^LX{EQL}                           BEGIN(LLX);
 ^LY{EQL}                           BEGIN(LLY);
 ^LZ{EQL}                           BEGIN(LLZ);
-^g_Tbsf{EQL}                       BEGIN(TTBSF);
 ^NRXProcs{EQL}                     BEGIN(NPROCX);
 ^NRYProcs{EQL}                     BEGIN(NPROCY);
 ^NRZProcs{EQL}                     BEGIN(NPROCZ);
@@ -363,8 +369,6 @@ inline void rmQuotes(char *str){
 ^InitialStoreCounter{EQL}          BEGIN(NSTORE);
 ^StdIOProcessor{EQL}               BEGIN(IOPROC);
 ^Indices{EQL}                      BEGIN(IDX);
-^BCGstabMaxIter{EQL}               BEGIN(BCGMAX);
-^CGMaxIter{EQL}                    BEGIN(CGMAX);
 ^BCAngleT{EQL}                     BEGIN(BOUNDT);
 ^ThetaT{EQL}                       BEGIN(BOUNDT);
 ^ThetaX{EQL}                       BEGIN(BOUNDX);
@@ -500,6 +504,9 @@ inline void rmQuotes(char *str){
   else if(strcmp(yytext, "CLOVER")==0) {
     optr->type = CLOVER;
   }
+  else if(strcmp(yytext, "DBCLOVER")==0) {
+    optr->type = DBCLOVER;
+  }
   else if(strcmp(yytext, "DBTMWILSON")==0) {
     optr->type = DBTMWILSON;
   }
@@ -523,10 +530,11 @@ inline void rmQuotes(char *str){
   else if(optr->type == CLOVER) BEGIN(CLOVEROP);
   else if(optr->type == TMWILSON) BEGIN(TMOP);
   else if(optr->type == DBTMWILSON) BEGIN(DBTMOP);
+  else if(optr->type == DBCLOVER) BEGIN(DBCLOVEROP);
   else BEGIN(OVERLAPOP);
 }
 
-<WILSONOP,TMOP,OVERLAPOP,DBTMOP,CLOVEROP>{
+<WILSONOP,TMOP,OVERLAPOP,DBTMOP,CLOVEROP,DBCLOVEROP>{
   {SPC}*kappa{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->kappa = c;
@@ -596,7 +604,7 @@ inline void rmQuotes(char *str){
     optr->no_extra_masses = 0;
     char * token = NULL;
     if( strtok(yytext,"\n\t =,\\") != NULL ) {
-      /* drop the first token, it is ExtraMasses" */
+      /* drop the first token, it is ExtraMasses */
       token = strtok(NULL," =\t");
       if( token != NULL ) {
         printf("  CGMMS Reading extra masses input file %s\n",token);
@@ -652,7 +660,7 @@ inline void rmQuotes(char *str){
   }
 }
 
-<DBTMOP>{
+<DBTMOP,DBCLOVEROP>{
   {SPC}*2KappaMubar{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->mubar = c;
@@ -685,7 +693,7 @@ inline void rmQuotes(char *str){
   }
 }
 
-<CLOVEROP>{
+<CLOVEROP,DBCLOVEROP>{
   {SPC}*csw{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->c_sw = c;
@@ -837,12 +845,10 @@ inline void rmQuotes(char *str){
   else if(strcmp(yytext, "CLOVERDET")==0) {
     mnl->type = CLOVERDET;
     strcpy((*mnl).name, "CLOVERDET");
-    g_dbw2rand = 1;
   }
   else if(strcmp(yytext, "CLOVERDETRATIO")==0) {
     mnl->type = CLOVERDETRATIO;
     strcpy((*mnl).name, "CLOVERDETRATIO");
-    g_dbw2rand = 1;
   }
   else if(strcmp(yytext, "DETRATIO")==0) {
     mnl->type = DETRATIO;
@@ -858,6 +864,51 @@ inline void rmQuotes(char *str){
     strcpy((*mnl).name, "NDPOLY");
     g_running_phmc = 1;
   }
+  else if(strcmp(yytext, "NDRAT")==0) {
+    mnl->type = NDRAT;
+    strcpy((*mnl).name, "NDRAT");
+    g_running_phmc = 1;
+  }
+  else if(strcmp(yytext, "RAT")==0) {
+    mnl->type = RAT;
+    strcpy((*mnl).name, "RAT");
+    g_running_phmc = 1;
+  }
+  else if(strcmp(yytext, "CLOVERRAT")==0) {
+    mnl->type = CLOVERRAT;
+    strcpy((*mnl).name, "CLOVERRAT");
+    g_running_phmc = 1;
+  }
+  else if(strcmp(yytext, "RATCOR")==0) {
+    mnl->type = RATCOR;
+    strcpy((*mnl).name, "RATCOR");
+    g_running_phmc = 1;
+  }
+  else if(strcmp(yytext, "CLOVERRATCOR")==0) {
+    mnl->type = CLOVERRATCOR;
+    strcpy((*mnl).name, "CLOVERRATCOR");
+    g_running_phmc = 1;
+  }
+  else if(strcmp(yytext, "NDCLOVERRAT")==0) {
+    mnl->type = NDCLOVERRAT;
+    strcpy((*mnl).name, "NDCLOVERRAT");
+    g_running_phmc = 1;
+  }
+  else if(strcmp(yytext, "NDRATCOR")==0) {
+    mnl->type = NDRATCOR;
+    strcpy((*mnl).name, "NDRATCOR");
+    g_running_phmc = 1;
+  }
+  else if(strcmp(yytext, "NDCLOVERRATCOR")==0) {
+    mnl->type = NDCLOVERRATCOR;
+    strcpy((*mnl).name, "NDCLOVERRATCOR");
+    g_running_phmc = 1;
+  }
+  else if(strcmp(yytext, "NDCLOVER")==0) {
+    mnl->type = NDCLOVER;
+    strcpy((*mnl).name, "NDCLOVER");
+    g_running_phmc = 1;
+  }
   else if(strcmp(yytext, "POLY")==0) {
     mnl->type = POLY;
     strcpy((*mnl).name, "POLY");
@@ -870,11 +921,6 @@ inline void rmQuotes(char *str){
     mnl->type = GAUGE;
     mnl->gtype = 3;
     strcpy((*mnl).name, "GAUGE");
-  }
-  else if(strcmp(yytext, "SFGAUGE")==0) {
-    mnl->type = SFGAUGE;
-    mnl->gtype = 6;
-    strcpy((*mnl).name, "SFGAUGE");
   }
   else {
     fprintf(stderr, "Unknown monomial type %s in line %d\n", yytext, line_of_file);
@@ -890,8 +936,16 @@ inline void rmQuotes(char *str){
   if(myverbose) printf("monomial has id %d\n", current_monomial);
 
   if(mnl->type == GAUGE) BEGIN(GAUGEMONOMIAL);
-  else if(mnl->type == SFGAUGE) BEGIN(SFGAUGEMONOMIAL);
   else if(mnl->type == NDPOLY) BEGIN(NDPOLYMONOMIAL);
+  else if(mnl->type == NDCLOVER) BEGIN(CLPOLYMONOMIAL);
+  else if(mnl->type == NDRAT) BEGIN(NDRATMONOMIAL);
+  else if(mnl->type == RAT) BEGIN(RATMONOMIAL);
+  else if(mnl->type == NDCLOVERRAT) BEGIN(NDCLRATMONOMIAL);
+  else if(mnl->type == CLOVERRAT) BEGIN(CLRATMONOMIAL);
+  else if(mnl->type == NDRATCOR) BEGIN(NDRATCORMONOMIAL);
+  else if(mnl->type == RATCOR) BEGIN(RATCORMONOMIAL);
+  else if(mnl->type == NDCLOVERRATCOR) BEGIN(NDCLRATCORMONOMIAL);
+  else if(mnl->type == CLOVERRATCOR) BEGIN(CLRATCORMONOMIAL);
   else if(mnl->type == POLY || mnl->type == POLYDETRATIO)  {
           fprintf(stderr,"starting to parse poly(detratio) monomial\n");
           BEGIN(POLYMONOMIAL); 
@@ -903,7 +957,7 @@ inline void rmQuotes(char *str){
 
 
 
-<DETMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL>{
+<DETMONOMIAL,GAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,CLRATMONOMIAL,RATCORMONOMIAL,CLRATCORMONOMIAL>{
   {SPC}*Timescale{EQL}{DIGIT}+ {
     if(mnl->type == NDDETRATIO) {
       mnl->timescale = -5;
@@ -925,12 +979,15 @@ inline void rmQuotes(char *str){
   }
 }
 
-<CLDETMONOMIAL,CLDETRATMONOMIAL>{
+<CLDETMONOMIAL,CLDETRATMONOMIAL,CLPOLYMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
   {SPC}*CSW{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mnl->c_sw = c;
     if(myverbose) printf("  CSW set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
+}
+
+<CLDETMONOMIAL,CLDETRATMONOMIAL>{
   {SPC}*rho{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mnl->rho = c;
@@ -946,6 +1003,13 @@ inline void rmQuotes(char *str){
   }
 }
 
+<DETMONOMIAL,POLYMONOMIAL,NDPOLYMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,RATMONOMIAL,CLRATMONOMIAL,RATCORMONOMIAL,CLRATCORMONOMIAL>{
+  {SPC}*Kappa{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mnl->kappa = c;
+    if(myverbose) printf("  Kappa set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+}
 
 <DETMONOMIAL,POLYMONOMIAL>{
   {SPC}*2KappaMu2{EQL}{FLT} {
@@ -958,50 +1022,33 @@ inline void rmQuotes(char *str){
     mnl->kappa2 = c;
     if(myverbose) printf("  kappa2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
+}
+
+<NDCLRATMONOMIAL,CLRATMONOMIAL>{
+  {SPC}*AddTrLog{EQL}yes {
+    mnl->trlog = 1;
+    if(myverbose) printf("  Added trlog monomial in line %d to monomial %d\n", line_of_file, current_monomial);
+  }
+  {SPC}*AddTrLog{EQL}no {
+    mnl->trlog = 0;
+    if(myverbose) printf("  No trlog monomial (default) in line %d for monomial %d\n", line_of_file, current_monomial);
+  }
+}
+
+<NDPOLYMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL>{
   {SPC}*2KappaMubar{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mubar = c;
     if(myverbose) printf("  2KappaMubar set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*2KappaMubar2{EQL}{FLT} {
-    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
-    mnl->mubar2 = c;
-    if(myverbose) printf("  2KappaMubar2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*2KappaEpsbar{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->epsbar = c;
     if(myverbose) printf("  2KappaEpsbar set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*2KappaEpsbar2{EQL}{FLT} {
-    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
-    mnl->epsbar2 = c;
-    if(myverbose) printf("  2KappaEpsbar2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
 }
 
-<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL>{
-  {SPC}*2KappaMu{EQL}{FLT} {
-    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
-    mnl->mu = c;
-    if(myverbose) printf("  2KappaMu set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*Kappa{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
-    mnl->kappa = c;
-    if(myverbose) printf("  Kappa set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*CSGHistory{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    mnl->csg_N = a;
-    if(myverbose) printf("  csg history length set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
-  }
-  {SPC}*CSGHistory2{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z2] = %d", name , &a);
-    mnl->csg_N2 = a;
-    if(myverbose) printf("  csg history2 length (for bicgstab) set to %d line %d monomial %d\n", 
-                       a, line_of_file, current_monomial);
-  }
+<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
   {SPC}*ForcePrecision{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     mnl->forceprec = c;
@@ -1016,6 +1063,25 @@ inline void rmQuotes(char *str){
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->maxiter = a;
     if(myverbose) printf("  MaxSolverIterations set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+  }
+}
+
+<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL>{
+  {SPC}*2KappaMu{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    mnl->mu = c;
+    if(myverbose) printf("  2KappaMu set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*CSGHistory{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mnl->csg_N = a;
+    if(myverbose) printf("  csg history length set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+  }
+  {SPC}*CSGHistory2{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z2] = %d", name , &a);
+    mnl->csg_N2 = a;
+    if(myverbose) printf("  csg history2 length (for bicgstab) set to %d line %d monomial %d\n", 
+                       a, line_of_file, current_monomial);
   }
   {SPC}*Solver{EQL} {
    solver_caller=YY_START;
@@ -1049,80 +1115,7 @@ inline void rmQuotes(char *str){
     g_rgi_C1 = c;
     if(myverbose) printf("  RectangleCoefficient c1  set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*IncludeWrappedSquares{EQL}yes {
-    g_sf_inc_wrap_sq = 1;
-    if(myverbose) printf("  IncludeWrappedSquares set to true line %d monomial %d\n", line_of_file, current_monomial);
-  }
-  {SPC}*IncludeWrappedSquares{EQL}no {
-    g_sf_inc_wrap_sq = 0;
-    if(myverbose) printf("  IncludeWrappedSquares set to false line %d monomial %d\n", line_of_file, current_monomial);
-  }
 }
-
-<SFGAUGEMONOMIAL>{
-  {SPC}*Type{EQL} BEGIN(GTYPE);
-  {SPC}*UseRectangleStaples{EQL}yes {
-    mnl->use_rectangles = 1;
-    g_dbw2rand = 1;
-    if(myverbose) printf("  UseRectangleStaples set to true line %d monomial %d\n", line_of_file, current_monomial);
-  }
-  {SPC}*UseRectangleStaples{EQL}no {
-    mnl->use_rectangles = 0;
-    /* g_dbw2rand = 0; */
-    mnl->c1 = 0.;
-    g_rgi_C1 = 0.;
-    if(myverbose) printf("  UseRectangleStaples set to false line %d monomial %d\n", line_of_file, current_monomial);
-  }
-  {SPC}*Beta{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
-    mnl->beta = c;
-    g_beta = c;
-    if(myverbose) printf("  beta set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*RectangleCoefficient{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
-    mnl->c1 = c;
-    g_rgi_C1 = c;
-    if(myverbose) printf("  RectangleCoefficient c1  set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*Eta{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
-    mnl->eta = c;
-    g_eta = c;
-    if(myverbose) printf("  eta set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*PlaquetteCoefficientT{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
-    mnl->ct = c;
-    g_Ct = c;
-    if(myverbose) printf("  PlaquetteCoefficientT ct set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*PlaquetteCoefficientS{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
-    mnl->cs = c;
-    g_Cs = c;
-    if(myverbose) printf("  PlaquetteCoefficientS cs set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*RectangleCoefficientSS{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
-    mnl->c1ss = c;
-    g_C1ss = c;
-    if(myverbose) printf("  RectangleCoefficientSS c1ss set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*RectangleCoefficientTSS{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
-    mnl->c1tss = c;
-    g_C1tss = c;
-    if(myverbose) printf("  RectangleCoefficientTSS c1tss set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*RectangleCoefficientTTS{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
-    mnl->c1tts = c;
-    g_C1tts = c;
-    if(myverbose) printf("  RectangleCoefficientTTS c1tts set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-}
-
 
 <NDPOLYMONOMIAL>{
   {SPC}*ExactPolynomial{EQL}yes {
@@ -1133,18 +1126,49 @@ inline void rmQuotes(char *str){
     phmc_exact_poly = 0;
     if(myverbose!=0) printf("  phmc_exact_poly set to false line %d monomial %d\n", line_of_file, current_monomial);
   }
+}
+<NDRATMONOMIAL,NDCLRATMONOMIAL,RATMONOMIAL,CLRATMONOMIAL>{
+  {SPC}*Cmin{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mnl->rat.crange[0] = a;
+    if(myverbose!=0) printf("  Coefficient range of rational starts at coefficient %d line %d monomial %d\n", a, line_of_file, current_monomial);
+  }
+  {SPC}*Cmax{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mnl->rat.crange[1] = a;
+    if(myverbose!=0) printf("  Coefficient range of rational ends at coefficient %d line %d monomial %d\n", a, line_of_file, current_monomial);
+  }
+}
+
+<NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
+  {SPC}*DegreeOfRational{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mnl->rat.order = a;
+    if(myverbose!=0) printf("  Degree of rational approximation set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+  }
+}
+<NDPOLYMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
   {SPC}*StildeMax{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     stilde_max = c;
     mnl->StildeMax = c;
+    mnl->rat.range[1] = c;
     if(myverbose!=0) printf("  Stilde max set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*StildeMin{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     mnl->StildeMin = c;
     stilde_min = c;
+    mnl->rat.range[0] = c;
     if(myverbose!=0) printf("  Stilde min set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
+  {SPC}*ComputeEVFreq{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mnl->rec_ev = a;
+    if(myverbose!=0) printf("  Frequency for computing EV's set to %d in line %d monomial %d\n", mnl->rec_ev, line_of_file, current_monomial);
+  }
+}
+<NDPOLYMONOMIAL,CLPOLYMONOMIAL>{
   {SPC}*MaxPtildeDegree{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->MaxPtildeDegree = a;
@@ -1159,20 +1183,13 @@ inline void rmQuotes(char *str){
   }
   {SPC}*PrecisionPtilde{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
-    g_acc_Ptilde = c;
     mnl->PrecisionPtilde = c;
     if(myverbose!=0) printf("  Precision for Ptilde set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*PrecisionHfinal{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     mnl->PrecisionHfinal = c;
-    g_acc_Hfin = c;
     if(myverbose!=0) printf("  Precision for final H set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
-  }
-  {SPC}*ComputeEVFreq{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    g_rec_ev = a;
-    if(myverbose!=0) printf("  Frequency for computing EV's set to %d in line %d monomial %d\n", g_rec_ev, line_of_file, current_monomial);
   }
   {SPC}*ComputeOnlyEVs{EQL}yes {
     phmc_compute_evs=1;
@@ -1207,7 +1224,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<POLYMONOMIAL,NDPOLYMONOMIAL>{
+<POLYMONOMIAL,NDPOLYMONOMIAL,CLPOLYMONOMIAL>{
   {SPC}*LocNormConst{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mnl->MDPolyLocNormConst = c;
@@ -1289,24 +1306,12 @@ inline void rmQuotes(char *str){
     mnl->use_rectangles = 1;
     BEGIN(GAUGEMONOMIAL);
   }
-  sf_Wilson {
-    mnl->gtype = 5;
-    mnl->c1 = 0.;
-    mnl->use_rectangles = 0;
-    g_rgi_C1 = 0.;
-    /* g_dbw2rand = 0; */
-    BEGIN(SFGAUGEMONOMIAL);
-  }
-  sf_user {
-    mnl->gtype = 6;
-    BEGIN(SFGAUGEMONOMIAL);
-  }
-
 }
 
 <INITINTEGRATOR>egrator{SPC}* {
   Integrator.no_timescales = -1;
   Integrator.tau = 1.;
+  Integrator.monitor_forces = 0;
   for(i = 0; i < 10; i++) {
     Integrator.lambda[i] = _default_2mn_lambda;
     Integrator.type[i] = MN2;
@@ -1334,6 +1339,16 @@ inline void rmQuotes(char *str){
 
     if(myverbose) printf("  timescale %d type = %s line %d\n", a, type, line_of_file);
     free(type);
+  }
+  {SPC}*MonitorForces{EQL}yes {
+    Integrator.monitor_forces = 1;
+    if(myverbose) printf("  Force monitoring switched on in line %d\n", line_of_file);
+    BEGIN(INTEGRATOR);
+  }
+  {SPC}*MonitorForces{EQL}no {
+    Integrator.monitor_forces = 0;
+    if(myverbose) printf("  Force monitoring switched off in line %d\n", line_of_file);
+    BEGIN(INTEGRATOR);
   }
   {SPC}*IntegrationSteps{DIGIT}{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z]%d = %d", name, &a, &b);
@@ -1421,6 +1436,10 @@ inline void rmQuotes(char *str){
   else if(strcmp(yytext, "POLYAKOVLOOP")==0) {
     meas->type = POLYAKOV;
     strcpy((*meas).name, "POLYAKOV");
+  } 
+  else if(strcmp(yytext, "ORIENTEDPLAQUETTES")==0) {
+    meas->type = ORIENTED_PLAQUETTES;
+    strcpy(meas->name, "ORIENTEDPLAQUETTES");
   }
   else {
     fprintf(stderr, "Unknown measurement type %s in line %d\n", yytext, line_of_file);
@@ -1441,9 +1460,10 @@ inline void rmQuotes(char *str){
   if(meas->type == ONLINE) BEGIN(ONLINEMEAS);
   else if(meas->type == PIONNORM) BEGIN(PIONNORMMEAS);
   else if(meas->type == POLYAKOV) BEGIN(PLOOP);
+  else if(meas->type == ORIENTED_PLAQUETTES) BEGIN(ORIENTEDPLAQUETTESMEAS);
 }
 
-<ONLINEMEAS,PIONNORMMEAS,PLOOP>{
+<ONLINEMEAS,PIONNORMMEAS,PLOOP,ORIENTEDPLAQUETTESMEAS>{
   ^EndMeasurement{SPC}* {
     if(myverbose) printf("Measurement with id %d parsed in line %d\n\n", meas->id, line_of_file);
     BEGIN(0);
@@ -1500,10 +1520,6 @@ inline void rmQuotes(char *str){
   LZ = atoi(yytext);
   if(myverbose!=0) printf("LZ =%s\n", yytext);
 #endif
-}
-<TTBSF>{DIGIT}+                  {
-  g_Tbsf = atoi(yytext);
-  if(myverbose!=0) printf("g_Tbsf =%s\n", yytext);
 }
 <NPROCX>{DIGIT}+              {
 #ifndef FIXEDVOLUME
@@ -1731,14 +1747,6 @@ inline void rmQuotes(char *str){
   }
   if(myverbose!=0) printf("inverting up to spin-color index %d\n", index_end);
   index_end+=1;
-}
-<BCGMAX>{DIGIT}+ {
-  ITER_MAX_BCG = atoi(yytext);
-  if(myverbose != 0) printf("Maximal number of iterations for BCGstab set ro %d\n", ITER_MAX_BCG);
-}
-<CGMAX>{DIGIT}+  {
-  ITER_MAX_CG = atoi(yytext);
-  if(myverbose != 0) printf("Maximal number of iterations for CG set ro %d\n", ITER_MAX_CG);
 }
 <BOUNDT>{FLT} {
   X0 = atof(yytext);
@@ -2000,7 +2008,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU>\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>\n   {
   line_of_file++;
 }
 <*>\n                       {
@@ -2053,7 +2061,6 @@ int read_input(char * conf_file){
   LX = _default_LX;
   LY = _default_LY;
   LZ = _default_LZ;
-  g_Tbsf = _default_g_Tbsf;
   N_PROC_X = _default_N_PROC_X;
   N_PROC_Y = _default_N_PROC_Y;
   N_PROC_Z = _default_N_PROC_Z;
@@ -2072,9 +2079,6 @@ int read_input(char * conf_file){
   dfl_poly_iter = 20;
 
   g_kappa = _default_g_kappa;
-  g_acc_Ptilde = _default_g_acc_Ptilde;
-  g_acc_Hfin = _default_g_acc_Hfin;
-  g_rec_ev = _default_g_rec_ev;
   g_mubar = _default_g_mubar;
   g_epsbar = _default_g_epsbar;
   g_mu = _default_g_mu;
@@ -2085,7 +2089,6 @@ int read_input(char * conf_file){
   g_dbw2rand = 0;
   g_running_phmc = 0;
   g_beta = _default_g_beta;
-  g_eta = _default_g_eta;
   g_N_s = _default_g_N_s;
   g_dflgcr_flag = _default_g_dflgcr_flag;
   random_seed = _default_random_seed;
@@ -2102,18 +2105,11 @@ int read_input(char * conf_file){
   g_stdio_proc = _default_g_stdio_proc;
   index_start = _default_index_start;
   index_end = _default_index_end;
-  ITER_MAX_CG = _default_ITER_MAX_CG;
-  ITER_MAX_BCG = _default_ITER_MAX_BCG;
   X0 = _default_X0;
   X1 = _default_X1;
   X2 = _default_X2;
   X3 = _default_X3;
   g_rgi_C1 = _default_g_rgi_C1;
-  g_Ct = _default_g_Ct;
-  g_Cs = _default_g_Cs;
-  g_C1ss = _default_g_C1ss;
-  g_C1tss = _default_g_C1tss;
-  g_C1tts = _default_g_C1tts;
   read_source_flag= _default_read_source_flag;
   if(SourceInfo.basename == NULL) SourceInfo.basename = (char*)malloc(100*sizeof(char));
   strcpy(SourceInfo.basename, _default_source_filename);

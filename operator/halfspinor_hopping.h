@@ -1149,6 +1149,7 @@
 #else
 
 #define _prefetch_spinor(s)
+#define _prefetch_halfspinor(hs)
 #define _prefetch_su3(U)
 
 #define _hop_t_p_pre32()				\

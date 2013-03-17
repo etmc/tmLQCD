@@ -1,5 +1,9 @@
 #define MAIN_PROGRAM
 
+#if HAVE_CONFIG_H
+#include<config.h>
+#endif
+#include "../global.h"
 #include "test_linalg_spinor.h"
 
 TEST_SUITES {

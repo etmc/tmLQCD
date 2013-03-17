@@ -1,0 +1,67 @@
+# the expected plaquette value is 0.62450(5)
+#
+# The PP correlator is (2KappaMu = 0.177, kappa = 0.177)
+# still to be measured
+# t  C(t)
+# 0  ?
+# 1  ?
+# 2  ?
+
+L=4
+T=4
+
+Measurements = 10000
+2KappaMu = 0.177
+kappa = 0.177
+NSave = 10000
+ThetaT = 1
+UseEvenOdd = yes
+ReversibilityCheck = yes
+ReversibilityCheckIntervall = 100
+DebugLevel = 1
+StartCondition = hot
+ComputeEVs = no
+
+BeginMeasurement CORRELATORS
+  Frequency = 5
+EndMeasurement
+
+BeginMonomial GAUGE
+  Type = Wilson
+  Beta = 6.00
+  Timescale = 0
+EndMonomial
+
+
+BeginMonomial POLY
+ Timescale = 1
+ Degree = 90
+ Lmin = 0.1
+ Lmax = 4.0
+ LocNormConst = 3.0187720224543191
+ 2KappaMu = 0.177
+ Kappa = 0.177
+ RootsFile = "Square_root_BR_roots.dat.oox.90.2.5000000000000001e-02"
+ AcceptancePrecision =  1.e-20
+ ForcePrecision = 1.e-12
+EndMonomial
+
+BeginIntegrator 
+  Type0 = 2MN
+  Type1 = 2MN
+  IntegrationSteps0 = 3
+  IntegrationSteps1 = 20
+  Tau = 2.
+  Lambda0 = 0.19
+  Lambda1 = 0.20
+  NumberOfTimescales = 2
+EndIntegrator
+
+BeginOperator TMWILSON
+  2KappaMu = 0.177
+  kappa = 0.177
+  UseEvenOdd = yes
+  Solver = CG
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 1000
+EndOperator

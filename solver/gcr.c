@@ -28,10 +28,10 @@
 #include"linalg_eo.h"
 #include"solver/gmres_precon.h"
 #include"start.h"
-#include"tm_operators.h"
+#include"operator/tm_operators.h"
 #include"solver/poly_precon.h"
 #include"solver/cg_her.h"
-#include"D_psi.h"
+#include"operator/D_psi.h"
 #include"Msap.h"
 #include"dfl_projector.h"
 #include "solver_field.h"
@@ -84,7 +84,7 @@ int gcr(spinor * const P, spinor * const Q,
     f(tmp, P);
     diff(rho, Q, tmp, N);
     err = square_norm(rho, N, 1);
-    if(g_proc_id == g_stdio_proc && g_debug_level > 2){
+    if(g_proc_id == g_stdio_proc && g_debug_level > 1){
       printf("GCR: iteration number: %d, true residue: %g\n", iter, err); 
       fflush(stdout);
     }
@@ -118,7 +118,7 @@ int gcr(spinor * const P, spinor * const Q,
       assign_diff_mul(rho, chi[k], c[k], N);
       err = square_norm(rho, N, 1);
       iter ++;
-      if(g_proc_id == g_stdio_proc && g_debug_level > 0){
+      if(g_proc_id == g_stdio_proc && g_debug_level > 2){
         if(rel_prec == 1) printf("# GCR: %d\t%g >= %g iterated residue\n", iter, err, eps_sq*norm_sq); 
         else printf("# GCR: %d\t%g >= %giterated residue\n", iter, err, eps_sq);
         fflush(stdout);

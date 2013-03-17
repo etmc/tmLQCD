@@ -34,18 +34,17 @@
 #include "default_input_values.h"
 #include "read_input.h"
 #include "su3.h"
-#include "tm_operators.h"
+#include "operator/tm_operators.h"
 #include "linalg_eo.h"
-#include "D_psi.h"
-#include "Dov_psi.h"
-#include "Nondegenerate_Matrix.h"
-#include "Hopping_Matrix.h"
+#include "operator/D_psi.h"
+#include "operator/Dov_psi.h"
+#include "operator/tm_operators_nd.h"
+#include "operator/Hopping_Matrix.h"
 #include "invert_eo.h"
 #include "invert_doublet_eo.h"
 #include "invert_overlap.h"
 #include "invert_clover_eo.h"
 #include "boundary.h"
-#include "init_chi_spinor_field.h"
 #include "start.h"
 #include "solver/eigenvalues.h"
 #include "solver/solver.h"
@@ -55,15 +54,15 @@
 #include <io/utils.h>
 #include "test/overlaptests.h"
 #include "solver/index_jd.h"
-#include "clover.h"
-#include "clover_leaf.h"
+#include "operator/clovertm_operators.h"
+#include "operator/clover_leaf.h"
 #include "operator.h"
 #include "gettime.h"
 
 
 void dummy_D(spinor * const, spinor * const);
 void dummy_DbD(spinor * const s, spinor * const r, spinor * const p, spinor * const q);
-void op_invert(const int op_id, const int index_start);
+void op_invert(const int op_id, const int index_start, const int write_prop);
 void op_write_prop(const int op_id, const int index_start, const int append_);
 
 operator operator_list[max_no_operators];
@@ -130,7 +129,7 @@ int add_operator(const int type) {
     optr->m = 0.;
     optr->inverter = &op_invert;
   }
-  if(optr->type == DBTMWILSON) {
+  if(optr->type == DBTMWILSON || optr->type == DBCLOVER) {
     optr->no_flavours = 2;
     g_running_phmc = 1;
   }
@@ -144,54 +143,60 @@ int add_operator(const int type) {
 }
 
 int init_operators() {
-  FILE * ifs;
-  int i;
+  static int oinit = 0;
   operator * optr;
-  for(i = 0; i < no_operators; i++) {
-    optr = operator_list + i;
-    /* This is a hack, it should be set on an operator basis. */
-    optr->rel_prec = g_relative_precision_flag;
-    if(optr->type == TMWILSON || optr->type == WILSON) {
-      if(optr->c_sw > 0) {
-	init_sw_fields();
+  if(!oinit) {
+    oinit = 1;
+    for(int i = 0; i < no_operators; i++) {
+      optr = operator_list + i;
+      /* This is a hack, it should be set on an operator basis. */
+      optr->rel_prec = g_relative_precision_flag;
+      if(optr->type == TMWILSON || optr->type == WILSON) {
+	if(optr->c_sw > 0) {
+	  init_sw_fields();
+	}
+	if(optr->even_odd_flag) {
+	  optr->applyQp = &Qtm_plus_psi;
+	  optr->applyQm = &Qtm_minus_psi;
+	  optr->applyQsq = &Qtm_pm_psi;
+	  optr->applyMp = &Mtm_plus_psi;
+	  optr->applyMm = &Mtm_minus_psi;
+	}
+	else {
+	  optr->applyQp = &Q_plus_psi;
+	  optr->applyQm = &Q_minus_psi;
+	  optr->applyQsq = &Q_pm_psi;
+	  optr->applyMp = &D_psi;
+	  optr->applyMm = &D_psi;
+	}
+	if(optr->solver == 12) {
+	  if (g_cart_id == 0 && optr->even_odd_flag == 1)
+	    fprintf(stderr, "CG Multiple mass solver works only without even/odd! Forcing!\n");
+	  optr->even_odd_flag = 0;
+	  if (g_cart_id == 0 && optr->DownProp)
+	    fprintf(stderr, "CGMMS doesn't need AddDownPropagator! Switching Off!\n");
+	  optr->DownProp = 0;
+	}
       }
-      if(optr->even_odd_flag) {
-        optr->applyQp = &Qtm_plus_psi;
-        optr->applyQm = &Qtm_minus_psi;
-        optr->applyQsq = &Qtm_pm_psi;
-        optr->applyMp = &Mtm_plus_psi;
-        optr->applyMm = &Mtm_minus_psi;
+      else if(optr->type == OVERLAP) {
+	optr->even_odd_flag = 0;
+	optr->applyM = &Dov_psi;
+	optr->applyQ = &Qov_psi;
       }
-      else {
-        optr->applyQp = &Q_plus_psi;
-        optr->applyQm = &Q_minus_psi;
-        optr->applyQsq = &Q_pm_psi;
-        optr->applyMp = &D_psi;
-        optr->applyMm = &D_psi;
+      else if(optr->type == DBTMWILSON) {
+	optr->even_odd_flag = 1;
+	optr->applyDbQsq = &Qtm_pm_ndpsi;
+	/* TODO: this should be here!       */
+	/* Chi`s-spinors  memory allocation */
+	/*       if(init_chi_spinor_field(VOLUMEPLUSRAND/2, 20) != 0) { */
+	/* 	fprintf(stderr, "Not enough memory for 20 NDPHMC Chi fields! Aborting...\n"); */
+	/* 	exit(0); */
+	/*       } */
       }
-      if(optr->solver == 12) {
-        if (g_cart_id == 0 && optr->even_odd_flag == 1)
-          fprintf(stderr, "CG Multiple mass solver works only without even/odd! Forcing!\n");
-        optr->even_odd_flag = 0;
-        if (g_cart_id == 0 && optr->DownProp)
-          fprintf(stderr, "CGMMS doesn't need AddDownPropagator! Switching Off!\n");
-        optr->DownProp = 0;
+      else if(optr->type == DBCLOVER) {
+	optr->even_odd_flag = 1;
+	optr->applyDbQsq = &Qtm_pm_ndpsi;
       }
-    }
-    else if(optr->type == OVERLAP) {
-      optr->even_odd_flag = 0;
-      optr->applyM = &Dov_psi;
-      optr->applyQ = &Qov_psi;
-    }
-    else if(optr->type == DBTMWILSON) {
-      optr->even_odd_flag = 1;
-      optr->applyDbQsq = &Q_Qdagger_ND;
-      /* TODO: this should be here!       */
-      /* Chi`s-spinors  memory allocation */
-      /*       if(init_chi_spinor_field(VOLUMEPLUSRAND/2, 20) != 0) { */
-      /* 	fprintf(stderr, "Not enough memory for 20 NDPHMC Chi fields! Aborting...\n"); */
-      /* 	exit(0); */
-      /*       } */
     }
   }
   return(0);
@@ -211,7 +216,7 @@ void dummy_DbD(spinor * const s, spinor * const r, spinor * const p, spinor * co
   return;
 }
 
-void op_invert(const int op_id, const int index_start) {
+void op_invert(const int op_id, const int index_start, const int write_prop) {
   operator * optr = &operator_list[op_id];
   double atime = 0., etime = 0., nrm1 = 0., nrm2 = 0.;
   int i;
@@ -253,7 +258,7 @@ void op_invert(const int op_id, const int index_start) {
 				      0, optr->even_odd_flag,optr->no_extra_masses, optr->extra_masses, optr->id );
 	
 	/* check result */
-	M_full(g_spinor_field[4], g_spinor_field[5], optr->prop0, optr->prop1);
+	M_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
       }
       else {
 	optr->iterations = invert_clover_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
@@ -261,14 +266,14 @@ void op_invert(const int op_id, const int index_start) {
 					    optr->solver, optr->rel_prec,
 					    &g_gauge_field, &Qsw_pm_psi, &Qsw_minus_psi);
 	/* check result */
- 	Msw_full(g_spinor_field[4], g_spinor_field[5], optr->prop0, optr->prop1);
+ 	Msw_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
       }
 
-      diff(g_spinor_field[4], g_spinor_field[4], optr->sr0, VOLUME / 2);
-      diff(g_spinor_field[5], g_spinor_field[5], optr->sr1, VOLUME / 2);
+      diff(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], optr->sr0, VOLUME / 2);
+      diff(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], optr->sr1, VOLUME / 2);
 
-      nrm1 = square_norm(g_spinor_field[4], VOLUME / 2, 1);
-      nrm2 = square_norm(g_spinor_field[5], VOLUME / 2, 1);
+      nrm1 = square_norm(g_spinor_field[DUM_DERI], VOLUME / 2, 1);
+      nrm2 = square_norm(g_spinor_field[DUM_DERI+1], VOLUME / 2, 1);
       optr->reached_prec = nrm1 + nrm2;
 
       /* convert to standard normalisation  */
@@ -277,7 +282,7 @@ void op_invert(const int op_id, const int index_start) {
         mul_r(optr->prop0, (2*optr->kappa), optr->prop0, VOLUME / 2);
         mul_r(optr->prop1, (2*optr->kappa), optr->prop1, VOLUME / 2);
       }
-      if (optr->solver != CGMMS) /* CGMMS handles its own I/O */
+      if (optr->solver != CGMMS && write_prop) /* CGMMS handles its own I/O */
         optr->write_prop(op_id, index_start, i);
       if(optr->DownProp) {
         optr->mu = -optr->mu;
@@ -285,22 +290,50 @@ void op_invert(const int op_id, const int index_start) {
         break;
     }
   }
-  else if(optr->type == DBTMWILSON) {
+  else if(optr->type == DBTMWILSON || optr->type == DBCLOVER) {
     g_mubar = optr->mubar;
     g_epsbar = optr->epsbar;
-    for(i = 0; i < SourceInfo.no_flavours; i++) {
-      optr->iterations = invert_doublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3, 
-                                            optr->sr0, optr->sr1, optr->sr2, optr->sr3,
-                                            optr->eps_sq, optr->maxiter,
-                                            optr->solver, optr->rel_prec);
+    g_c_sw = 0.;
+    if(optr->type == DBCLOVER) {
+      g_c_sw = optr->c_sw;
+      if (g_cart_id == 0 && g_debug_level > 1) {
+	printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
+      }
+      init_sw_fields(VOLUME);
+      sw_term( (const su3**) g_gauge_field, optr->kappa, optr->c_sw); 
+      sw_invert_nd(optr->mubar*optr->mubar-optr->epsbar*optr->epsbar);
+    }
 
+    for(i = 0; i < SourceInfo.no_flavours; i++) {
+      if(optr->type != DBCLOVER) {
+	optr->iterations = invert_doublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3, 
+					      optr->sr0, optr->sr1, optr->sr2, optr->sr3,
+					      optr->eps_sq, optr->maxiter,
+					      optr->solver, optr->rel_prec);
+      }
+      else {
+	optr->iterations = invert_cloverdoublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3, 
+						    optr->sr0, optr->sr1, optr->sr2, optr->sr3,
+						    optr->eps_sq, optr->maxiter,
+						    optr->solver, optr->rel_prec);
+      }
       g_mu = optr->mubar;
-      M_full(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], optr->prop0, optr->prop1); 
+      if(optr->type != DBCLOVER) {
+	M_full(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], optr->prop0, optr->prop1); 
+      }
+      else {
+	Msw_full(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], optr->prop0, optr->prop1); 
+      }
       assign_add_mul_r(g_spinor_field[DUM_DERI+1], optr->prop2, -optr->epsbar, VOLUME/2);
       assign_add_mul_r(g_spinor_field[DUM_DERI+2], optr->prop3, -optr->epsbar, VOLUME/2);
 
       g_mu = -g_mu;
-      M_full(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+4], optr->prop2, optr->prop3); 
+      if(optr->type != DBCLOVER) {
+	M_full(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+4], optr->prop2, optr->prop3); 
+      }
+      else {
+	Msw_full(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+4], optr->prop2, optr->prop3);
+      }
       assign_add_mul_r(g_spinor_field[DUM_DERI+3], optr->prop0, -optr->epsbar, VOLUME/2);
       assign_add_mul_r(g_spinor_field[DUM_DERI+4], optr->prop1, -optr->epsbar, VOLUME/2);
 
@@ -331,7 +364,7 @@ void op_invert(const int op_id, const int index_start) {
       mul_one_pm_itau2(optr->prop1, optr->prop3, g_spinor_field[DUM_DERI+1], 
                        g_spinor_field[DUM_DERI+3], -1., VOLUME/2);
       /* write propagator */
-      optr->write_prop(op_id, index_start, i);
+      if(write_prop) optr->write_prop(op_id, index_start, i);
 
       mul_r(optr->prop0, 1./(2*optr->kappa), g_spinor_field[DUM_DERI], VOLUME/2);
       mul_r(optr->prop1, 1./(2*optr->kappa), g_spinor_field[DUM_DERI+1], VOLUME/2);
@@ -373,7 +406,7 @@ void op_invert(const int op_id, const int index_start) {
 
     invert_overlap(op_id, index_start); 
 
-    optr->write_prop(op_id, index_start, 0);
+    if(write_prop) optr->write_prop(op_id, index_start, 0);
   }
   etime = gettime();
   if (g_cart_id == 0 && g_debug_level > 0) {
@@ -396,7 +429,7 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
   paramsSourceFormat *sourceFormat = NULL;
   paramsPropagatorFormat *propagatorFormat = NULL;
   paramsInverterInfo *inverterInfo = NULL;
-  if(optr->type == DBTMWILSON) {
+  if(optr->type == DBTMWILSON || optr->type == DBCLOVER) {
     strcpy(ending, "hinverted");
   }
   else if(optr->type == OVERLAP) {

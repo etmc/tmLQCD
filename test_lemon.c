@@ -51,9 +51,8 @@
 #include "start.h"
 #include "boundary.h"
 #include "global.h"
-#include "xchange.h"
-#include "init_gauge_field.h"
-#include "init_geometry_indices.h"
+#include "xchange/xchange.h"
+#include "init/init.h"
 #include "measure_gauge_action.h"
 #include "mpi_init.h"
 
@@ -100,7 +99,7 @@ int main(int argc,char *argv[]) {
 
   /* generate a random gauge field */
   start_ranlux(1, 123456);
-  random_gauge_field(reproduce_randomnumber_flag);
+  random_gauge_field(reproduce_randomnumber_flag, g_gauge_field);
 
 #ifdef MPI
   /*For parallelization: exchange the gaugefield */
