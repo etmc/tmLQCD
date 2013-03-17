@@ -35,9 +35,7 @@
 #define CGMMS 12
 #define MIXEDCG 13
 #define CGMMSND 14
-//<<<<<<< HEAD
 #define INCREIGCG 15
-//>>>>>>> FETCH_HEAD
 
 #include"solver/matrix_mult_typedef.h"
 #include "solver/matrix_mult_typedef_bi.h"
