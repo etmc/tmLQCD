@@ -241,6 +241,8 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
     }
 
     for(i = 0; i < 2; i++) {
+      // we need this here again for the sign switch at i == 1
+      g_mu = optr->mu;
       if (g_cart_id == 0) {
         printf("#\n# 2 kappa mu = %e, kappa = %e, c_sw = %e\n", g_mu, g_kappa, g_c_sw);
       }
