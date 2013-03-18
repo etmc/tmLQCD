@@ -176,16 +176,12 @@ inline void rmQuotes(char *str){
 
   int use_preconditioning;
 
-  /* --abdou-- begin */
-  int g_eigcg_ldh;
-  int g_eigcg_nev;
-  int g_eigcg_nrhs;
-  int g_eigcg_plvl;
-  int g_eigcg_vmax;
-  double g_eigcg_restolsq;
-  /* --abdou-- end */  
-
-
+  //int g_eigcg_ldh;
+  //int g_eigcg_nev;
+  //int g_eigcg_nrhs;
+  //int g_eigcg_plvl;
+  //int g_eigcg_vmax;
+  //double g_eigcg_restolsq;
 
 
 %}
@@ -323,16 +319,6 @@ inline void rmQuotes(char *str){
 
 %x PRECONDITIONING
 
-/*  --abdou-- begin */
-%x EIGCGNRHS
-%x EIGCGNEV
-%x EIGCGVMAX
-%x EIGCGLDH
-%x EIGCGPLVL
-%x EIGCGRESTOLSQ
-/*  --abdou-- end */
-
-
 
 
 
@@ -430,12 +416,6 @@ inline void rmQuotes(char *str){
 
 ^BeginGPU                          BEGIN(INITGPU);
 
-^EigCGnrhs{EQL}                    BEGIN(EIGCGNRHS);
-^EigCGnev{EQL}                     BEGIN(EIGCGNEV);
-^EigCGvmax{EQL}                    BEGIN(EIGCGVMAX);
-^EigCGldh{EQL}                     BEGIN(EIGCGLDH);
-^EigCGplvl{EQL}                    BEGIN(EIGCGPLVL);
-^EigCGrestolsq{EQL}                BEGIN(EIGCGRESTOLSQ);
 
 
 
@@ -570,6 +550,43 @@ inline void rmQuotes(char *str){
     optr->rel_prec = 0;
     if(myverbose) printf("  SolverRelativePrecision set to NO line %d operator %d\n",  line_of_file, current_operator);
   }
+  {SPC}*EigCGnrhs{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).eigcg_nrhs = a;
+    //g_eigcg_nrhs = a;
+    if(myverbose) printf("  EigCGnrhs set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EigCGnev{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).eigcg_nev = a;
+    //g_eigcg_nev = a;
+    if(myverbose) printf("  EigCGnev set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EigCGvmax{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).eigcg_vmax = a;
+    //g_eigcg_vmax = a;
+    if(myverbose) printf("  EigCGvmax set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EigCGldh{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).eigcg_ldh = a;
+    //g_eigcg_ldh = a;
+    if(myverbose) printf("  EigCGldh set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EigCGplvl{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).eigcg_plvl = a;
+    //g_eigcg_plvl = a;
+    if(myverbose) printf("  EigCGplvl set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EigCGrestolsq{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    (optr->solver_params).eigcg_restolsq = c;
+    //g_eigcg_restolsq = c;
+    if(myverbose) printf("  EigCGrestolsq set to %f line %d operator %d\n", a, line_of_file, current_operator);
+  }
+
   {SPC}*ExtraMasses{EQL}{FLTLIST} {
     char * token = NULL;
     optr->no_extra_masses = 0;
@@ -811,13 +828,11 @@ inline void rmQuotes(char *str){
     if(myverbose) printf("  Solver set to CGMMS line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
-  /* --abdou-- begin */
   increigcg {
-    optr->solver = 14;
+    optr->solver = 15;
     if(myverbose) printf("  Solver set to INCR-EIG-CG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
-  /* --abdou-- end */
 
 }
 
@@ -1583,32 +1598,6 @@ inline void rmQuotes(char *str){
   rlxd_level = atoi(yytext);
   if(myverbose!=0) printf("RanluxdLevel set to %d \n", rlxd_level);
 }
-
-<EIGCGNRHS>{DIGIT}+        {
-  g_eigcg_nrhs = atoi(yytext);
-  if(myverbose!=0) printf("EigCGnrhs set to %d \n", g_eigcg_nrhs);
-}
-<EIGCGNEV>{DIGIT}+         {
-  g_eigcg_nev = atoi(yytext);
-  if(myverbose!=0) printf("EigCGnev set to %d \n", g_eigcg_nev);
-}
-<EIGCGVMAX>{DIGIT}+        {
-  g_eigcg_vmax = atoi(yytext);
-  if(myverbose!=0) printf("EigCGvmax set to %d \n", g_eigcg_vmax);
-}
-<EIGCGLDH>{DIGIT}+         {
-  g_eigcg_ldh = atoi(yytext);
-  if(myverbose!=0) printf("EigCGldh set to %d \n", g_eigcg_ldh);
-}
-<EIGCGPLVL>{DIGIT}+        {
-  g_eigcg_plvl = atoi(yytext);
-  if(myverbose!=0) printf("EigCGplvl set to %d \n", g_eigcg_plvl);
-}
-<EIGCGRESTOLSQ>{FLT}    {
-  g_eigcg_restolsq = atof(yytext);
-  if(myverbose!=0) printf("EigCGrestolsq set to %f \n", g_eigcg_restolsq);
-}
-
 <KAPPA>{FLT}  {
   g_kappa=atof(yytext);
   if(myverbose!=0) printf("kappa=%s \n", yytext);
@@ -2134,6 +2123,13 @@ int read_input(char * conf_file){
   use_preconditioning = _default_use_preconditioning;
   stout_rho = _default_stout_rho;
   stout_no_iter = _default_stout_no_iter;
+
+  (optr->solver_params).eigcg_nrhs=1;
+  (optr->solver_params).eigcg_nev=0;
+  (optr->solver_params).eigcg_vmax=0;
+  (optr->solver_params).eigcg_ldh=0;
+  (optr->solver_params).eigcg_restolsq=0;
+
   /* check for reread ! */ 
   phmc_compute_evs = _default_phmc_compute_evs;
   compute_evs = _default_compute_evs;

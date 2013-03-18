@@ -45,29 +45,6 @@ typedef struct {
                              Typically this is the square root of the tolerance squared requested for the linear system.
                              Example, to solve the linear systems to res_sq=1e-16, one chooses eigcg_restolsq=1e-8 or smaller 
                              This will specify how many times deflated CG restaretd in hte second phase (after eigenvectors has been computed)*/
-
-
-  /*****************************
-   *This part is for the CGMMS
-   *****************************/
-  // solver type
-  int type;
-  // maximal number of iterations
-  int max_iter;
-  // use relative precision
-  int rel_prec;
-  // number of shifts in multi shift solvers
-  int no_shifts;
-  // dimension of spinors
-  int sdim;
-  // squared desired residue
-  double squared_solver_prec;
-  // single flavour matrix to invert
-  matrix_mult M_psi;
-  // flavour doublet matrix to invert
-  matrix_mult_nd M_ndpsi;
-  // pointer to array of shifts
-  double * shifts;
 } solver_params_t;
 
 
