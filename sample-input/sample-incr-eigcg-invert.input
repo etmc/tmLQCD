@@ -19,6 +19,14 @@ ReadSource = no
 NoSamples = 1
 DisableIOChecks = yes
 
+EigCGnrhs = 12
+EigCGnev  = 10
+EigCGvmax = 40
+EigCGldh  = 100
+EigCGplvl = 1
+EigCGrestolsq = 1e-8
+
+
 
 BeginOperator TMWILSON
 
@@ -29,12 +37,6 @@ BeginOperator TMWILSON
   Solver = INCREIGCG
   SolverPrecision = 1.e-16
   MaxSolverIterations = 2000
-  EigCGnrhs = 12
-  EigCGnev  = 10
-  EigCGvmax = 40
-  EigCGldh  = 100
-  EigCGplvl = 2
-  EigCGrestolsq = 1e-8
 
   AddDownPropagator = no
 

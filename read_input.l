@@ -176,13 +176,6 @@ inline void rmQuotes(char *str){
 
   int use_preconditioning;
 
-  //int g_eigcg_ldh;
-  //int g_eigcg_nev;
-  //int g_eigcg_nrhs;
-  //int g_eigcg_plvl;
-  //int g_eigcg_vmax;
-  //double g_eigcg_restolsq;
-
 
 %}
 
@@ -553,37 +546,31 @@ inline void rmQuotes(char *str){
   {SPC}*EigCGnrhs{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     (optr->solver_params).eigcg_nrhs = a;
-    //g_eigcg_nrhs = a;
     if(myverbose) printf("  EigCGnrhs set to %d line %d operator %d\n", a, line_of_file, current_operator);
   }
   {SPC}*EigCGnev{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     (optr->solver_params).eigcg_nev = a;
-    //g_eigcg_nev = a;
     if(myverbose) printf("  EigCGnev set to %d line %d operator %d\n", a, line_of_file, current_operator);
   }
   {SPC}*EigCGvmax{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     (optr->solver_params).eigcg_vmax = a;
-    //g_eigcg_vmax = a;
     if(myverbose) printf("  EigCGvmax set to %d line %d operator %d\n", a, line_of_file, current_operator);
   }
   {SPC}*EigCGldh{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     (optr->solver_params).eigcg_ldh = a;
-    //g_eigcg_ldh = a;
     if(myverbose) printf("  EigCGldh set to %d line %d operator %d\n", a, line_of_file, current_operator);
   }
   {SPC}*EigCGplvl{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     (optr->solver_params).eigcg_plvl = a;
-    //g_eigcg_plvl = a;
     if(myverbose) printf("  EigCGplvl set to %d line %d operator %d\n", a, line_of_file, current_operator);
   }
   {SPC}*EigCGrestolsq{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     (optr->solver_params).eigcg_restolsq = c;
-    //g_eigcg_restolsq = c;
     if(myverbose) printf("  EigCGrestolsq set to %f line %d operator %d\n", a, line_of_file, current_operator);
   }
 
@@ -2127,6 +2114,7 @@ int read_input(char * conf_file){
   (optr->solver_params).eigcg_nrhs=1;
   (optr->solver_params).eigcg_nev=0;
   (optr->solver_params).eigcg_vmax=0;
+  (optr->solver_params).eigcg_plvl=1;
   (optr->solver_params).eigcg_ldh=0;
   (optr->solver_params).eigcg_restolsq=0;
 
