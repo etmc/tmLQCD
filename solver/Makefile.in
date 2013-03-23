@@ -41,7 +41,7 @@ libsolver_TARGETS = bicgstab_complex gmres \
                     cg_mms_tm solver_field sumr mixed_cg_her index_jd \
                     dirac_operator_eigenvectors	spectral_proj \
                     jdher_su3vect cg_her_su3vect eigenvalues_Jacobi \
-		    mcr cr mcr4complex
+		    mcr cr mcr4complex bicg_complex
 
 libsolver_OBJECTS = $(addsuffix .o, ${libsolver_TARGETS})
 
