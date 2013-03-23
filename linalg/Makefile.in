@@ -45,7 +45,7 @@ liblinalg_TARGETS = assign_add_mul_r_add_mul \
         scalar_prod_r_bi assign_add_mul_r_bi assign_mul_add_r_bi \
 	convert_eo_to_lexic assign_mul_add_mul_r mul_add_mul_r \
 	assign_mul_add_mul_add_mul_r mattimesvec \
-	scalar_prod_su3spinor
+	scalar_prod_su3spinor assign_mul_add_mul
 
 liblinalg_STARGETS = diff assign_add_mul_r assign_mul_add_r square_norm
 
