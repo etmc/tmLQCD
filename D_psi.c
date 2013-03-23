@@ -40,6 +40,7 @@
 #include "su3.h"
 #include "sse.h"
 #include "boundary.h"
+#include "gamma.h"
 #ifdef MPI
 # include "xchange_lexicfield.h"
 #endif
@@ -1219,6 +1220,10 @@ void D_psi(spinor * const P, spinor * const Q){
     um=&g_gauge_field[iy][3];
     m3addandstore(rr, sm, um, phase_3);
   }
+
+  /* Use Q=gamma5 D for DFL*/
+  if(use_iQ_dfl)
+    gamma5(P, Q, VOLUME);
 }
 
 #endif
@@ -1284,6 +1289,11 @@ void Block_D_psi(block * blk, spinor * const rr, spinor * const s) {
     idx += 8;
     u += 8;
   }
+
+  /* Use Q=gamma5 D for DFL */
+  if(use_iQ_dfl)
+    gamma5(rr, s, blk->volume);
+
   return;
 }
 
@@ -1325,6 +1335,10 @@ void Block_H_psi(block * blk, spinor * const rr, spinor * const s, const int eo)
     eoidx += 8;
     u += 8;
   }
+
+  /* Use Q=gamma5 D for DFL */
+  if (use_iQ_dfl)
+    gamma5(rr, s, blk->volume/2);
   return;
 }
 
