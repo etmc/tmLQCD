@@ -73,7 +73,8 @@ int bicg_complex(spinor * const P,spinor * const Q, const int max_iter,
 	//assign(phat, rhat, N);
 
 	// make rhat different from r, otherwise it won't work
-	random_spinor_field(tmp2, N, 1);
+	//random_spinor_field(tmp2, N, 1);
+        random_spinor_field_eo(tmp2, 0, RN_GAUSS);
 	assign(rhat, tmp2, N);  
 	assign(phat, tmp2, N);  
 
