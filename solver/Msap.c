@@ -99,22 +99,23 @@ void Msap(spinor * const P, spinor * const Q, const int Ncy) {
       D_psi(r, P);
       diff(r, Q, r, VOLUME);
       nrm = square_norm(r, VOLUME, 1);
-      if(g_proc_id == 0 && g_debug_level > 1 && eo == 1) {
+      if(g_proc_id == 0 && g_debug_level > 3 && eo == 1) {  /*  GG, was 1 */
 	printf("Msap: %d %1.3e\n", ncy, nrm);
+	fflush(stdout);
       }
       /* choose the even (odd) block */
-      
+
       /*blk = eolist[eo];*/
-      
+
       for (blk = 0; blk < nb_blocks; blk++) {
-      	if(block_list[blk].evenodd == eo) {
+	if(block_list[blk].evenodd == eo) {
 	  vol = block_list[blk].volume;
-	  
+
 	  /* get part of r corresponding to block blk into b */
 	  copy_global_to_block(b, r, blk);
-	  
+
 	  mrblk(a, b, 16, 1.e-31, 1, vol, &dummy_Di, blk);
-	  
+
 	  /* add a up to full spinor P */
 	  add_block_to_global(P, a, blk);
 	}
@@ -126,7 +127,7 @@ void Msap(spinor * const P, spinor * const Q, const int Ncy) {
 }
 
 
-void Msap_eo(spinor * const P, spinor * const Q, const int Ncy) {
+void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter) {
   int blk, ncy = 0, eo, vol;
   spinor * r, * a, * b;
   double nrm;
@@ -157,22 +158,23 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy) {
       D_psi(r, P);
       diff(r, Q, r, VOLUME);
       nrm = square_norm(r, VOLUME, 1);
-      if(g_proc_id == 0 && g_debug_level > 1 && eo == 1) {
+      if(g_proc_id == 0 && g_debug_level > 3 && eo == 1) {  /*  GG, was 1 */
 	printf("Msap: %d %1.3e\n", ncy, nrm);
+	fflush(stdout);
       }
       /* choose the even (odd) block */
-      
+
       for (blk = 0; blk < nb_blocks; blk++) {
-      	if(block_list[blk].evenodd == eo) {
+	if(block_list[blk].evenodd == eo) {
 	  /* get part of r corresponding to block blk into b_even and b_odd */
 	  copy_global_to_block_eo(b_even, b_odd, r, blk);
-	  
+
 	  assign_mul_one_pm_imu_inv(a_even, b_even, +1., vol);
 	  Block_H_psi(&block_list[blk], a_odd, a_even, OE);
 	  /* a_odd = a_odd - b_odd */
 	  assign_mul_add_r(a_odd, -1., b_odd, vol);
-	  
-	  mrblk(b_odd, a_odd, 3, 1.e-31, 1, vol, &Mtm_plus_block_psi, blk);
+
+	  mrblk(b_odd, a_odd, Niter, 1.e-31, 1, vol, &Mtm_plus_block_psi, blk);
 
 	  Block_H_psi(&block_list[blk], b_even, b_odd, EO);
 	  mul_one_pm_imu_inv(b_even, +1., vol);
