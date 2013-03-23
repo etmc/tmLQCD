@@ -543,6 +543,7 @@ inline void rmQuotes(char *str){
     optr->rel_prec = 0;
     if(myverbose) printf("  SolverRelativePrecision set to NO line %d operator %d\n",  line_of_file, current_operator);
   }
+
   {SPC}*EigCGnrhs{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     (optr->solver_params).eigcg_nrhs = a;
@@ -2110,13 +2111,6 @@ int read_input(char * conf_file){
   use_preconditioning = _default_use_preconditioning;
   stout_rho = _default_stout_rho;
   stout_no_iter = _default_stout_no_iter;
-
-  (optr->solver_params).eigcg_nrhs=1;
-  (optr->solver_params).eigcg_nev=0;
-  (optr->solver_params).eigcg_vmax=0;
-  (optr->solver_params).eigcg_plvl=1;
-  (optr->solver_params).eigcg_ldh=0;
-  (optr->solver_params).eigcg_restolsq=0;
 
   /* check for reread ! */ 
   phmc_compute_evs = _default_phmc_compute_evs;
