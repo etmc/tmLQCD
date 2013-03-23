@@ -416,10 +416,13 @@ int main(int argc, char *argv[])
     }
 
 
-    /* move to operators as well */
+    if (Msap_precon == 1 || g_dflgcr_flag == 1)	/*  set up blocks if Msap_eo or deflation is used  */
+		init_blocks(nblocks_t, nblocks_x, nblocks_y, nblocks_z);
+    
+	/* move to operators as well */
     if (g_dflgcr_flag == 1) {
       /* set up deflation blocks */
-      init_blocks(nblocks_t, nblocks_x, nblocks_y, nblocks_z);
+      //init_blocks(nblocks_t, nblocks_x, nblocks_y, nblocks_z);
 
       /* the can stay here for now, but later we probably need */
       /* something like init_dfl_solver called somewhere else  */
