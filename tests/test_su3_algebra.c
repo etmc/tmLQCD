@@ -251,7 +251,7 @@ TEST(su3_expo_positivedet) {
   U.c22 = -0.5279 -0.0022*I;
 
   _trace_lambda(T,Q);
-  Q = exposu3(T);
+  exposu3(&Q,&T);
 
   if( creal(Q.c00 - U.c00) > EPS && creal(Q.c01 - U.c01) > EPS && creal(Q.c02 - U.c02) > EPS &&
       creal(Q.c10 - U.c10) > EPS && creal(Q.c11 - U.c11) > EPS && creal(Q.c12 - U.c12) > EPS &&   

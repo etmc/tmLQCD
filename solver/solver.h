@@ -37,8 +37,32 @@
 #define MCR 14
 #define BICG 15
 #define CR 16
+#define CGMMSND 17
 
 #include"solver/matrix_mult_typedef.h"
+#include "solver/matrix_mult_typedef_bi.h"
+#include "solver/matrix_mult_typedef_nd.h"
+
+typedef struct {
+  // solver type
+  int type;
+  // maximal number of iterations
+  int max_iter;
+  // use relative precision
+  int rel_prec;
+  // number of shifts in multi shift solvers
+  int no_shifts;
+  // dimension of spinors
+  int sdim;
+  // squared desired residue
+  double squared_solver_prec;
+  // single flavour matrix to invert
+  matrix_mult M_psi;
+  // flavour doublet matrix to invert
+  matrix_mult_nd M_ndpsi;
+  // pointer to array of shifts
+  double * shifts;
+} solver_pm_t;
 
 #include"solver/gmres.h"
 #include"solver/gmres_dr.h"
@@ -62,12 +86,13 @@
 #include"solver/gmres_precon.h"
 #include"solver/poly_precon.h"
 
-#include "solver/matrix_mult_typedef_bi.h"
 #include "solver/bicgstab_complex_bi.h"
 #include "solver/cg_her_bi.h"
 
-#include "solver/matrix_mult_typedef_nd.h"
 #include "solver/cg_her_nd.h"
+#include"solver/cg_mms_tm_nd.h"
 
 #include "solver/generate_dfl_subspace.h"
+
+
 #endif

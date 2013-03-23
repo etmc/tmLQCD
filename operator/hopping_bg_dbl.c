@@ -35,15 +35,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   spinor * restrict sp ALIGN;
   spinor * restrict sm ALIGN;
   spinor * restrict rn ALIGN;
-  /* We have 32 registers available */
-  double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
-  double _Complex reg10, reg11, reg12, reg13, reg14, reg15;
-  /* For the gauge field, reuse the first three!*/
-  double _Complex u00, u01, u02, u10, u11, u12;
-  double _Complex reg20, reg21;
-  /* The following contains the result spinor (12 regs) */
-  double _Complex rs00, rs01, rs02, rs10, rs11, rs12, rs20, rs21, rs22, 
-    rs30, rs31, rs32;
+  _declare_regs();
 
 #pragma disjoint(*sp, *sm, *rn, *up, *um, *l, *k)
 
@@ -91,24 +83,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #    else
     um=up+1;
 #    endif
-    _prefetch_su3(um); 
     sm=k+icy;
-    _prefetch_spinor(sm); 
 
-    _bgl_load_reg0(sp->s0);
-    _bgl_load_reg1(sp->s1);
-    _bgl_load_reg0_up(sp->s2);
-    _bgl_load_reg1_up(sp->s3);
-    _bgl_vector_add_reg0();
-    _bgl_vector_add_reg1();
-    /* result is now in regx0, regx1, regx2 x = 0,1 */
-
-    _bgl_su3_multiply_double((*up));
-    _bgl_vector_cmplx_mul_double(ka0);
-    _bgl_store_reg0_up_rs0();
-    _bgl_store_reg0_up_rs2();
-    _bgl_store_reg1_up_rs1();
-    _bgl_store_reg1_up_rs3();
+    _hop_t_p();
 
     /*********************** direction -0 ************************/
 
@@ -120,24 +97,10 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #    else
     up+=1;
 #    endif
-    _prefetch_su3(up); 
     sp=k+icy;
-    _prefetch_spinor(sp); 
 
-    _bgl_load_reg0(sm->s0);
-    _bgl_load_reg1(sm->s1);
-    _bgl_load_reg0_up(sm->s2);
-    _bgl_load_reg1_up(sm->s3);
-    _bgl_vector_sub_reg0();
-    _bgl_vector_sub_reg1();
 
-    _bgl_su3_inverse_multiply_double((*um));
-    _bgl_vector_cmplxcg_mul_double(ka0);
-
-    _bgl_add_to_rs0_reg0();
-    _bgl_sub_from_rs2_reg0();
-    _bgl_add_to_rs1_reg1();
-    _bgl_sub_from_rs3_reg1();
+    _hop_t_m();
 
     /*********************** direction +1 ************************/
 
@@ -149,24 +112,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #    else
     um = up+1;
 #    endif
-    _prefetch_su3(um); 
     sm=k+icy;
-    _prefetch_spinor(sm); 
-
-    _bgl_load_reg0(sp->s0);
-    _bgl_load_reg1(sp->s1);
-    _bgl_load_reg0_up(sp->s3);
-    _bgl_load_reg1_up(sp->s2);
-    _bgl_vector_i_mul_add_reg0();
-    _bgl_vector_i_mul_add_reg1();
-
-    _bgl_su3_multiply_double((*up));
-    _bgl_vector_cmplx_mul_double(ka1);
-
-    _bgl_add_to_rs0_reg0();
-    _bgl_i_mul_sub_from_rs3_reg0();
-    _bgl_add_to_rs1_reg1();
-    _bgl_i_mul_sub_from_rs2_reg1();
+    _hop_x_p();
 
     /*********************** direction -1 ************************/
 
@@ -178,24 +125,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #    else
     up+=1;
 #    endif
-    _prefetch_su3(up); 
     sp=k+icy;
-    _prefetch_spinor(sp); 
 
-    _bgl_load_reg0(sm->s0);
-    _bgl_load_reg1(sm->s1);
-    _bgl_load_reg0_up(sm->s3);
-    _bgl_load_reg1_up(sm->s2);
-    _bgl_vector_i_mul_sub_reg0();
-    _bgl_vector_i_mul_sub_reg1();
-      
-    _bgl_su3_inverse_multiply_double((*um));
-    _bgl_vector_cmplxcg_mul_double(ka1);
-      
-    _bgl_add_to_rs0_reg0();
-    _bgl_add_to_rs1_reg1();
-    _bgl_i_mul_add_to_rs3_reg0();
-    _bgl_i_mul_add_to_rs2_reg1();      
+    _hop_x_m();
 
     /*********************** direction +2 ************************/
 
@@ -207,24 +139,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #    else
     um= up+1;
 #    endif
-    _prefetch_su3(um); 
     sm=k+icy;
-    _prefetch_spinor(sm); 
 
-    _bgl_load_reg0(sp->s0);
-    _bgl_load_reg1(sp->s1);
-    _bgl_load_reg1_up(sp->s2);
-    _bgl_load_reg0_up(sp->s3);
-    _bgl_vector_add_reg0();
-    _bgl_vector_sub_reg1();
-
-    _bgl_su3_multiply_double((*up));
-    _bgl_vector_cmplx_mul_double(ka2);
-
-    _bgl_add_to_rs0_reg0();
-    _bgl_add_to_rs1_reg1();
-    _bgl_sub_from_rs2_reg1();
-    _bgl_add_to_rs3_reg0();
+    _hop_y_p();
 
 
     /*********************** direction -2 ************************/
@@ -237,24 +154,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #    else
     up+=1;
 #    endif
-    _prefetch_su3(up); 
     sp=k+icy;
-    _prefetch_spinor(sp); 
-
-    _bgl_load_reg0(sm->s0);
-    _bgl_load_reg1(sm->s1);
-    _bgl_load_reg1_up(sm->s2);
-    _bgl_load_reg0_up(sm->s3);
-    _bgl_vector_sub_reg0();
-    _bgl_vector_add_reg1();
-      
-    _bgl_su3_inverse_multiply_double((*um));
-    _bgl_vector_cmplxcg_mul_double(ka2);
-      
-    _bgl_add_to_rs0_reg0();
-    _bgl_add_to_rs1_reg1();
-    _bgl_add_to_rs2_reg1();
-    _bgl_sub_from_rs3_reg0();
+    _hop_y_m();
 
     /*********************** direction +3 ************************/
 
@@ -266,24 +167,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #    else
     um=up+1;
 #    endif
-    _prefetch_su3(um); 
     sm=k+icy;
-    _prefetch_spinor(sm); 
-
-    _bgl_load_reg0(sp->s0);
-    _bgl_load_reg1(sp->s1);
-    _bgl_load_reg0_up(sp->s2);
-    _bgl_load_reg1_up(sp->s3);
-    _bgl_vector_i_mul_add_reg0();
-    _bgl_vector_i_mul_sub_reg1();
-
-    _bgl_su3_multiply_double((*up));
-    _bgl_vector_cmplx_mul_double(ka3);
-
-    _bgl_add_to_rs0_reg0();
-    _bgl_add_to_rs1_reg1();
-    _bgl_i_mul_sub_from_rs2_reg0();
-    _bgl_i_mul_add_to_rs3_reg1();
+    _hop_z_p();
 
     /*********************** direction -3 ************************/
 
@@ -299,31 +184,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #    else
     up=&g_gauge_field[iz][0];
 #    endif
-    _prefetch_su3(up); 
     sp=k+icy;
-    _prefetch_spinor(sp); 
-
-    _bgl_load_reg0(sm->s0);
-    _bgl_load_reg1(sm->s1);
-    _bgl_load_reg0_up(sm->s2);
-    _bgl_load_reg1_up(sm->s3);
-    _bgl_vector_i_mul_sub_reg0();
-    _bgl_vector_i_mul_add_reg1();
-      
-    _bgl_su3_inverse_multiply_double((*um));
-    _bgl_vector_cmplxcg_mul_double(ka3);
-
-
-      
-    _bgl_add_to_rs0_reg0();
-    _bgl_store_rs0(rn->s0);
-    _bgl_i_mul_add_to_rs2_reg0();
-    _bgl_store_rs2(rn->s2);
-
-    _bgl_add_to_rs1_reg1();
-    _bgl_store_rs1(rn->s1);
-    _bgl_i_mul_sub_from_rs3_reg1();
-    _bgl_store_rs3(rn->s3);
+    _hop_z_m();
+    _store_res();
 
     /************************ end of loop ************************/
   }

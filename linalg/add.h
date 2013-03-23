@@ -23,7 +23,7 @@
 #include "su3.h"
 
 /* Makes the sum (*Q) = (*R) + (*S) */
-void add(spinor * const Q,spinor * const R,spinor * const S, const int N);
+void add(spinor * const Q, const spinor * const R, const spinor * const S, const int N);
 
 
 #endif

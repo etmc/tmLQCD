@@ -180,6 +180,12 @@ supported general input paramters:
   Whether or not to use even/odd preconditioning in the invert
   executable.
 
+\item {\ttfamily OMPNumThreads}:\\
+  Number of OpenMP threads to use per process when compiled with 
+  OpenMP support. On some architectures, the {\ttfamily OMP\_NUM\_THREADS}
+  environment variable needs to be set to the same value for correct
+  operation. The default is 1.
+
 \end{enumerate}
 
 The following input parameters are {\ttfamily invert} specific:
@@ -300,8 +306,8 @@ The following input parameters are {\ttfamily invert} specific:
 
 The following input parameters are {\ttfamily hmc\_tm} specific:
 \begin{enumerate}
-\item {ThermalisationSweeps}:\\
-  As longer as the number of trajectories is smaller than this number
+\item {\ttfamily ThermalisationSweeps}:\\
+  As long as the number of trajectories is smaller than this number
   the acceptance test will be discarded. This might help to faster
   equilibrate the system.
 
@@ -314,12 +320,6 @@ The following input parameters are {\ttfamily hmc\_tm} specific:
   where to read the gauge and the random number status. If this file
   does not exist (its written in the course of the HMC) then the input
   parameter described here are used instead.
-
-\item {\ttfamily BCGstabMaxIter}:\\
-  The maximal number of iterations in the BiCGstab solver.
-
-\item {\ttfamily CGMaxIter}:\\
-  The maximal number of iterations in the CG solver.
 
 \item {\ttfamily ReversibilityCheck}:\\
   If set to {\ttfamily yes} the program will perform a check of
@@ -371,9 +371,31 @@ EndMonomial
     -\re\tr(U^{1\times2}_{x,\mu,\nu})\}\right)\,  ,
   \]
 \item {\ttfamily NDPOLY}: polynomial representation of the (possibly
-  non-degenerate) doublet\\
+  non-degenerate) Wilson twisted mass doublet
   \[
-  [\det(Q_{nd}(\bar\epsilon, \bar\mu)^2)]^{1/2}
+  [\det(\hat Q_{h}(\bar\epsilon, \bar\mu)^2)]^{1/2} \approx \det(\mathcal{R}^{-1})
+  \]
+\item {\ttfamily NDRAT}: rational representation of the (possibly
+  non-degenerate) Wilson twisted mass doublet
+  \[
+  [\det(\hat Q_{h}(\bar\epsilon, \bar\mu)^2)]^{1/2}
+  \]
+  with an approximation
+  \[
+  \mathcal{R}(Q_{nd}^2)\ = \ \prod_{i = 1}^N \frac{Q_{nd}^2 +
+    a_{2i}}{\hat Q_{h}^2 + a_{2i-1}}\approx\quad\frac{1}{\sqrt{\hat Q_{h}^2}}
+  \]
+\item {\ttfamily NDRATCOR}: correction monomial for approximation
+  errors in the rational approximation used in {\ttfamily NDRAT}
+  \[
+  \det\left( \hat Q_h \mathcal{R} \right)\,.
+  \]
+\item {\ttfamily NDCLOVERRAT, NDCLOVERRATCOR}: clover versions of
+  {\ttfamily NDRAT} and {\ttfamily NDRATCOR}, respectively.
+\item {\ttfamily NDCLOVER}: polynomial representation of the (possibly
+  non-degenerate) clover twisted mass doublet
+  \[
+  [\det(Q_{nd}(\bar\epsilon, \bar\mu)^2), c_\mathrm{sw}]^{1/2}
   \]
 \item {\ttfamily POLY}: polynomial approximation ($P_n(x) \approx \frac{1}{x}$) of the mass degenerate determinant\\
   \[
@@ -448,13 +470,16 @@ Each of them has different options:
     effective only for {\ttfamily type = user}.
   \end{itemize}
   There is maximally one instance allowed of this type.
-
-
-\item {\ttfamily NDPOLY}: more a dummy monomial so far, but switches
+  
+  
+\item {\ttfamily NDPOLY}: switches
   on the PHMC part for the non-degenerate heavy doublet and lets you
   specify the timescale on which to integrate this and the parameters.
   \begin{itemize}
-
+  \item {\ttfamily 2KappaMubar}: $2\kappa\bar\mu$ the heavy twisted mass
+  \item {\ttfamily 2KappaEpsbar}: $2\kappa\bar\epsilon$ the heavy
+    splitting
+  \item {\ttfamily Kappa}: the $\kappa$ value
   \item {\ttfamily Timescale}: the timescale on which to integrate
     this monomial. Counting starts from zero up to the total number of
     timescales minus 1.
@@ -495,6 +520,91 @@ Each of them has different options:
   \end{itemize}
   So far, there is maximally one instance allowed for this type. This
   might change in the future.
+
+\item {\ttfamily NDRAT}: like {\ttfamily NDPOLY}, but with a rational
+  approximation. 
+  \begin{itemize}
+  \item {\ttfamily 2KappaMubar}: $2\kappa\bar\mu$ the heavy twisted mass
+  \item {\ttfamily 2KappaEpsbar}: $2\kappa\bar\epsilon$ the heavy
+    splitting
+  \item {\ttfamily Kappa}: the $\kappa$ value
+  \item {\ttfamily DegreeOfRational}: the order $N$ of the rational approximation
+  \item {\ttfamily StildeMin}: lower bound for the approximation
+    interval of the rational approximation
+
+  \item {\ttfamily StildeMax}:
+    upper bound for the approximation interval of the rational approximation
+  \item {\ttfamily Cmin}: it is possible to use only pairs of coefficients
+    in the range from $[c_a,c_b]$ in order to introduce an frequency
+    splitting. {\ttfamily Cmin} corresponds to $0<c_a< N$, where
+    $N$ is the order of the rational approximation. The ordering of
+    the partial fractions in the rational approximation is such that 
+    \[
+    \mu_0 > \mu_1 > ... > \mu_{N-1}\,,
+    \]
+    and hence $c_a = N-1$ and $c_b = N-1$ would generate a rational
+    with only the smallest and, therefore, most expensive shift (which
+    one would typically integrate on a coarse timescale). $c_a
+    = 0$ and $c_b = k < N$ would correspond to a rational with the
+    $k+1$ largest shifts.
+  \item {\ttfamily Cmax}: $c_b\geq c_a$, see {\ttfamily Cmin}.
+  \item {\ttfamily ComputeOnlyEVs}: Computes only once at the very
+    beginning of the run the eigenvalues of the heavy split operator
+    and exits.
+  \item {\ttfamily ForcePrecision}: the CGMMS solver precision used in the
+    force computation
+  \item {\ttfamily AcceptancePrecision}: the CGMMS solver precision used in the
+    acceptance and heatbath
+  \item {\ttfamily MaxSolverIterations}: maximal number of CGMMS
+    solver iterations, default is $5000$.
+  \end{itemize}
+  It is important to realise that if the splitting is used, then every
+  partial fraction \emph{must appear once and only once}. Otherwise, the
+  algorithm will not describe the desired physics! Consequently, also
+  the different {\ttfamily NDRAT} monomials from the same rational
+  approximation used for frequency splitting have to have identical
+  order.
+
+\item {\ttfamily NDRATCOR}: correction monomial for approximation
+  errors in the rational approximation for the heavy doublet. This
+  monomial has no derivative part and it is only used in the heatbath
+  and acceptance steps.
+  \begin{itemize}
+  \item {\ttfamily 2KappaMubar}: $2\kappa\bar\mu$ the heavy twisted mass
+  \item {\ttfamily 2KappaEpsbar}: $2\kappa\bar\epsilon$ the heavy
+    splitting
+  \item {\ttfamily Kappa}: the $\kappa$ value
+  \item {\ttfamily DegreeOfRational}: the order $N$ of the rational
+    approximation. \emph{The order must match the order of the corresponding
+    (splitted) {\ttfamily NDRAT} monomial(s).}
+  \item {\ttfamily StildeMin}: lower bound for the approximation
+    interval of the rational approximation
+
+  \item {\ttfamily StildeMax}:
+    upper bound for the approximation interval of the rational approximation
+  \item {\ttfamily ComputeOnlyEVs}: Computes only once at the very
+    beginning of the run the eigenvalues of the heavy split operator
+    and exits.
+  \item {\ttfamily ForcePrecision}: the CGMMS solver precision used in the
+    force computation
+  \item {\ttfamily AcceptancePrecision}: the CGMMS solver precision used in the
+    acceptance and heatbath
+  \item {\ttfamily MaxSolverIterations}: maximal number of CGMMS
+    solver iterations, default is $5000$.
+  \end{itemize}
+  
+\item {\ttfamily NDCLOVERRAT, NDCLOVERRATCOR}:
+  The same as {\ttfamily NDRAT, NDRATCOR}, but with the additional
+  parameter {\ttfamily CSW} and only for {\ttfamily NDCLOVERRAT}
+  \begin{itemize}
+  \item {\ttfamily AddTrLog =yes|no}: adds a clover trlog monomial
+    with the parameters of this monomial. {\ttfamily no} is
+    default. One needs only one trlog monomial per non-degenerate
+    doublet, so one needs to take care in case of frequency splitting
+    of the rational approximation to have this set to {\ttfamily yes}
+    only once.
+  \end{itemize}
+
 \item {\ttfamily POLY, POLYDETRATIO}:
   \begin{itemize}
   \item {\ttfamily Degree}:
@@ -527,6 +637,9 @@ with the following options available:
 \begin{itemize}
 \item {\ttfamily Tau}: total trajectory length.
 \item {\ttfamily NumberOfTimescales}: total number of timescales.
+\item {\ttfamily MonitorForces}: setting this to {\ttfamily yes}
+  enables the computation of the forces per monomial at the beginning
+  of each trajectory.
 \item {\ttfamily IntegrationStepsN = M} where {\ttfamily N} is the
   timescale (as integer value, counting starts from zero and goes up
   to the number of timescales minus 1) and {\ttfamily M} is the number
@@ -568,9 +681,23 @@ EndOperator
   \item {\ttfamily 2KappaMu}
   \item {\ttfamily UseEvenOdd}
   \end{itemize}
+\item {\ttfamily CLOVER}: Clover Twisted Mass Dirac operator, with
+  options:
+  \begin{itemize}
+  \item {\ttfamily 2KappaMu}
+  \item {\ttfamily UseEvenOdd}
+  \item {\ttfamily CSW}
+  \end{itemize}
 \item {\ttfamily DBTMWILSON}: two flavour mass non-degenerate Wilson
   Twisted Mass Dirac operator:
   \begin{itemize}
+  \item {\ttfamily 2KappaMubar}
+  \item {\ttfamily 2KappaEpsbar}
+  \end{itemize}
+\item {\ttfamily DBCLOVER}: two flavour mass non-degenerate Clover
+  Twisted Mass Dirac operator:
+  \begin{itemize}
+  \item {\ttfamily CSW}
   \item {\ttfamily 2KappaMubar}
   \item {\ttfamily 2KappaEpsbar}
   \end{itemize}
@@ -588,11 +715,23 @@ All of them provide the following options available:
 \item {\ttfamily kappa}:
 \item {\ttfamily Solver}:\\
   Sets the solver to be used. Possible values are among others
-  {\ttfamily CG, BiCGstab, CGS, GMRES, PCG}.
+  {\ttfamily CG, BiCGstab, CGS, GMRES, PCG and CGMMS}.
 \item {\ttfamily MaxSolverIterations}:
 \item {\ttfamily PropagatorPrecision}:
 \item {\ttfamily SolverPrecision}:
 \end{itemize}
+
+The {\ttfamily CGMMS} solver can be used to invert the operator for 
+multiple masses at the same time. To this end a list of masses needs
+to be provided either as a comma-separated list or as the filename of a
+text file which lists one mass per line. The masses must be provided in the
+format $2 \kappa \mu_n$. The normal mass specified for the operator is
+used as $\mu_0$. The masses must be ordered such that $\mu_0 < \mu_1 < ... < \mu_n$.:
+
+\begin{itemize}
+  \item{ {\ttfamily ExtraMasses = 0.12, 0.14, 0.17, 0.21, 0.30} }
+  \item{ {\ttfamily ExtraMasses = extra\_masses.input } }	
+\end{itemize} 
 
 \subsubsection{Online Measurements}
 
@@ -609,7 +748,9 @@ where {\ttfamily TYPE} can be currently one of the following:
   \begin{itemize}
   \item {\ttfamily MaxSolverIterations}
   \end{itemize}
-  this is for zero temperature, so the stochastic source is at fixed $t$.
+  this is for zero temperature, so the stochastic source is at fixed
+  $t$. In addition it needs an operator defined in the input file,
+  otherwise it will do nothing. (see input keywords for {\ttfamily invert} above)
 \item {\ttfamily PIONNORM}:
   \begin{itemize}
   \item {\ttfamily MaxSolverIterations}
@@ -642,8 +783,6 @@ kappa = 0.090
 PhmcRecEVInterval = 1
 Nsave = 50
 ThetaT = 1.
-BCGstabMaxIter = 5000
-CGMaxIter = 1000
 InitialStoreCounter = readin
 UseEvenOdd = yes
 ReversibilityCheck = no
@@ -703,6 +842,16 @@ BeginIntegrator
   Lambda0 = 0.19
   NumberOfTimescales = 3
 EndIntegrator
+
+# for the CORRELATORS online measurement
+BeginOperator TMWILSON
+  2kappaMu = 0.177
+  kappa = 0.177
+  UseEvenOdd = yes
+  Solver = CG
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 1000
+EndOperator
 \end{verbatim}
 
 There are realistic small volume sample input files in the

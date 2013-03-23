@@ -13,7 +13,7 @@ LDFLAGS = @LDFLAGS@
 DEFS = @DEFS@
 OPTARGS = @OPTARGS@
 
-AR = ar
+AR = @AR@
 RANLIB = @RANLIB@
 CC = @CC@
 CCDEP = @CCDEP@
@@ -71,7 +71,8 @@ libio_TARGETS = utils_engineering \
 		utils DML_crc32 dml \
 		eospinor_write \
 		eospinor_read \
-		io_cm
+		io_cm \
+		deri_write_stdout spinor_write_stdout sw_write_stdout
 
 libio_OBJECTS = $(addsuffix .o, ${libio_TARGETS})
 
@@ -111,7 +112,7 @@ libio.a: ${libio_OBJECTS} Makefile
 # rule to generate .d files
 
 $(addsuffix .d,$(libio_TARGETS)): %.d: ${srcdir}/%.c Makefile
-	@$(CCDEP) ${DEPFLAGS} ${INCLUDES} $< > $@
+	@$(CCDEP) ${DEFS} ${DEPFLAGS} ${INCLUDES} $< > $@
 
 # rule to make dependencies
 

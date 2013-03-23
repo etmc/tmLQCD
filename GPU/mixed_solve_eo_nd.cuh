@@ -3486,7 +3486,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   #ifdef ALGORITHM_BENCHMARK
     double effectiveflops;			// will used to count the "effective" flop's (from the algorithmic perspective)
     // double hoppingflops = 1488.0;
-    double hoppingflops = 1320.0;
+    double hoppingflops = 1608.0;
     double matrixflops  = 2  *  (  2 * ( (2*hoppingflops+12+3) + (2*hoppingflops+3) + (12+2) + 12 )  );
     #ifdef MPI
       double allflops;				// flops added for all processes

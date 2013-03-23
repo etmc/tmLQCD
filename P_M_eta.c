@@ -359,7 +359,7 @@ void X_over_sqrt_X_sqr(spinor * const R, double * const c,
 }
 
 
-void Check_Approximation(double const mstar) {
+void Check_Approximation(double const mstar, const int repro) {
 
   if(g_proc_id == 0) {
   printf("Checking the approximation of X/sqrt(X^2) in the mode number: \n");
@@ -391,7 +391,7 @@ void Check_Approximation(double const mstar) {
   Sin   =calloc(VOLUMEPLUSRAND, sizeof(spinor));
 #endif
 
-  random_spinor_field(Sin, VOLUME, 1);
+  random_spinor_field_lexic(Sin, repro, RN_GAUSS);
 
   s_ = calloc(4*VOLUMEPLUSRAND+1, sizeof(spinor));
   s  = calloc(4, sizeof(spinor*));

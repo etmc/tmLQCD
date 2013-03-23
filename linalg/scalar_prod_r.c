@@ -29,6 +29,10 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+# include <global.h>
+#endif
 #include "su3.h"
 #include "scalar_prod_r.h"
 
@@ -38,7 +42,17 @@
 
 #if (defined BGQ && defined XLC)
 
-double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int parallel) {
+double scalar_prod_r(const spinor * const S, const spinor * const R, const int N, const int parallel) {
+  double ALIGN res = 0.0;
+#ifdef MPI
+  double ALIGN mres;
+#endif
+
+#ifdef OMP
+#pragma omp parallel
+  {
+  int thread_num = omp_get_thread_num();
+#endif
   vector4double ks, kc, ds, tr, ts, tt;
   vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
   vector4double z0, z1, z2, z3, z4, z5;
@@ -55,7 +69,11 @@ double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int 
   ks = vec_splats(0.0);
   kc = vec_splats(0.0);
 
+#ifndef OMP
 #pragma unroll(2)
+#else
+#pragma omp for
+#endif
   for (int ix = 0; ix < N; ++ix) {
     s=(double*)((spinor *) S + ix);
     r=(double*)((spinor *) R + ix);
@@ -92,34 +110,57 @@ double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int 
     kc = vec_sub(tr, tt);
   }
   buffer = vec_add(kc, ks);
+
+#ifdef OMP
+  g_omp_acc_re[thread_num] = buffer[0] + buffer[1] + buffer[2] + buffer[3];
+  } /* OpenMP parallel closing brace */
+  for( int i = 0; i < omp_num_threads; ++i)
+    res += g_omp_acc_re[i];
+#else
+  res = buffer[0] + buffer[1] + buffer[2] + buffer[3]; 
+#endif
+
 #if defined MPI
   if(parallel) {
-    MPI_Allreduce(&buffer, &kc, 4, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    return(kc[0] + kc[1] + kc[2] + kc[3]);
+    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    return(mres);
   }
 #endif
-  return (buffer[0] + buffer[1] + buffer[2] + buffer[3]);
+
+  return (res);
 }
 
 #else
 
-double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int parallel)
+double scalar_prod_r(const spinor * const S, const spinor * const R, const int N, const int parallel)
 {
-  
-  static double ks,kc,ds,tr,ts,tt;
-  spinor *s,*r;
-  
-  ks=0.0;
-  kc=0.0;
-  
+  double ALIGN res = 0.0;
+#ifdef MPI
+  double ALIGN mres;
+#endif
+
+#ifdef OMP
+#pragma omp parallel
+  {
+  int thread_num = omp_get_thread_num();
+#endif
+  double ALIGN kc,ks,ds,tr,ts,tt;
+  const spinor *s,*r;
+
+  ks = 0.0;
+  kc = 0.0;
+
 #if (defined BGL && defined XLC)
   __alignx(16, S);
   __alignx(16, R);
 #endif
 
+#ifdef OMP
+#pragma omp for
+#endif
   for (int ix = 0; ix < N; ++ix) {
-    s=(spinor *) S + ix;
-    r=(spinor *) R + ix;
+    s = S + ix;
+    r = R + ix;
     
     ds = creal(r->s0.c0 * conj(s->s0.c0)) + creal(r->s0.c1 * conj(s->s0.c1)) + creal(r->s0.c2 * conj(s->s0.c2)) +
       creal(r->s1.c0 * conj(s->s1.c0)) + creal(r->s1.c1 * conj(s->s1.c1)) + creal(r->s1.c2 * conj(s->s1.c2)) +
@@ -134,16 +175,25 @@ double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int 
   }
   kc=ks+kc;
 
+#ifdef OMP
+  g_omp_acc_re[thread_num] = kc;
+
+  } /* OpenMP closing brace */
+
+  for(int i = 0; i < omp_num_threads; ++i)
+    res += g_omp_acc_re[i];
+#else
+  res = kc;
+#endif
+
 #if defined MPI
   if(parallel)
   {
-    double buffer = kc;
-    MPI_Allreduce(&buffer, &kc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    return mres;
   }
 #endif
-
-  return kc;
-
+  return res;
 }
 
 
@@ -153,7 +203,7 @@ double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int 
 double scalar_prod_r_su3vect(su3_vector * const S,su3_vector * const R, const int N, const int parallel)
 {
   int ix;
-  static double ks,kc,ds,tr,ts,tt;
+  double ALIGN ks,kc,ds,tr,ts,tt;
   su3_vector *s,*r;
 
   ks=0.0;

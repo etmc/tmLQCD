@@ -1,4 +1,4 @@
-TESTS = tests/test_sample tests/test_su3 tests/test_buffers tests/test_qpx tests/test_linalg
+TESTS = tests/test_sample tests/test_su3 tests/test_buffers tests/test_qpx tests/test_linalg tests/test_clover tests/test_rat
 
 TEMP = $(patsubst %.c,%,$(wildcard $(top_srcdir)/tests/*.c))
 TESTMODULES = $(patsubst $(top_srcdir)/%,%,$(TEMP))
@@ -6,7 +6,7 @@ TESTMODULES = $(patsubst $(top_srcdir)/%,%,$(TEMP))
 TESTFLAGS = -L$(top_builddir)/cu/ -lcu
 
 $(addsuffix .o,$(TESTMODULES)): %.o : $(top_srcdir)/%.c
-	${COMPILE} -c $(OPTARGS) $<
+	${COMPILE} -c $(OPTARGS) ${DEFS} $<
 
 # The linking stage needs to be differentiated because different tests rely on
 # different modules from the codebase
@@ -46,6 +46,19 @@ TEST_BUFFERS_FLAGS:=-lbuffers -L$(top_builddir)/buffers/
 TEST_BUFFERS_LIBS:=$(top_builddir)/cu/libcu.a $(top_builddir)/buffers/libbuffers.a
 tests/test_buffers: $(TEST_BUFFERS_OBJECTS) $(TEST_BUFFERS_LIBS)
 	${LINK} $(TEST_BUFFERS_OBJECTS) $(TESTFLAGS) $(TEST_BUFFERS_FLAGS)
+
+TEST_CLOVER_OBJECTS:=$(patsubst $(top_srcdir)/%.c,%.o,$(wildcard $(top_srcdir)/tests/test_clover*.c)) operator/clover_leaf.o
+TEST_CLOVER_FLAGS:=-lm -lhmc -llinalg
+TEST_CLOVER_LIBS:=$(top_builddir)/cu/libcu.a
+tests/test_clover: $(TEST_CLOVER_OBJECTS) $(TEST_CLOVER_LIBS)
+	${LINK} $(TEST_CLOVER_OBJECTS) $(TESTFLAGS) $(TEST_CLOVER_FLAGS)
+
+TEST_RAT_OBJECTS:=$(patsubst $(top_srcdir)/%.c,%.o,$(wildcard $(top_srcdir)/tests/test_rat*.c)) 
+TEST_RAT_FLAGS:=-lm -lrational
+TEST_RAT_LIBS:=$(top_builddir)/cu/libcu.a
+tests/test_rat: $(TEST_RAT_OBJECTS) $(TEST_RAT_LIBS)
+	${LINK} $(TEST_RAT_OBJECTS) $(TESTFLAGS) $(TEST_RAT_FLAGS)
+
 
 tests: ${TESTS}
 

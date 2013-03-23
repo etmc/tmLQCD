@@ -40,7 +40,7 @@
 #include "su3.h"
 #include "operator.h"
 #include "linalg_eo.h"
-#include "Nondegenerate_Matrix.h"
+#include "operator/tm_operators_nd.h"
 #include "source_generation.h"
 #include "prepare_source.h"
 
@@ -62,7 +62,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
   SourceInfo.sample = isample;
   SourceInfo.ix = ix;
 
-  if(optr->type != DBTMWILSON) {
+  if(optr->type != DBTMWILSON && optr->type != DBCLOVER) {
     SourceInfo.no_flavours = 1;
     /* no volume sources */
     if(source_type != 1) {

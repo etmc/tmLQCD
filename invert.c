@@ -40,7 +40,7 @@
 #include <mpi.h>
 #endif
 #ifdef OMP
-#include <omp.h>
+# include <omp.h>
 #endif
 #include "global.h"
 #include "git_hash.h"
@@ -51,7 +51,7 @@
 /*#include "eigenvalues.h"*/
 #include "measure_gauge_action.h"
 #ifdef MPI
-#include "xchange.h"
+#include "xchange/xchange.h"
 #endif
 #include <io/utils.h>
 #include "read_input.h"
@@ -59,20 +59,13 @@
 #include "sighandler.h"
 #include "boundary.h"
 #include "solver/solver.h"
-#include "init_gauge_field.h"
-#include "init_geometry_indices.h"
-#include "init_spinor_field.h"
-#include "init_moment_field.h"
-#include "init_dirac_halfspinor.h"
-#include "init_bispinor_field.h"
-#include "init_chi_spinor_field.h"
-#include "xchange_halffield.h"
+#include "init/init.h"
 #include "smearing/stout.h"
 #include "invert_eo.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 #include "ranlxd.h"
 #include "phmc.h"
-#include "D_psi.h"
+#include "operator/D_psi.h"
 #include "little_D.h"
 #include "reweighting_factor.h"
 #include "linalg/convert_eo_to_lexic.h"
@@ -88,35 +81,26 @@
 #include <io/utils.h>
 #include "solver/dirac_operator_eigenvectors.h"
 #include "P_M_eta.h"
-#include "tm_operators.h"
-#include "Dov_psi.h"
+#include "operator/tm_operators.h"
+#include "operator/Dov_psi.h"
 #include "solver/spectral_proj.h"
-void usage()
-{
-  fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
-  fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
-  fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
-  fprintf(stdout, "Usage:   invert [options]\n");
-  fprintf(stdout, "Options: [-f input-filename]\n");
-  fprintf(stdout, "         [-o output-filename]\n");
-  fprintf(stdout, "         [-v] more verbosity\n");
-  fprintf(stdout, "         [-h|-? this help]\n");
-  fprintf(stdout, "         [-V] print version information and exit\n");
-  exit(0);
-}
 
 extern int nstore;
 int check_geometry();
 
+static void usage();
+static void process_args(int argc, char *argv[], char ** input_filename, char ** filename);
+static void set_default_filenames(char ** input_filename, char ** filename);
+
 int main(int argc, char *argv[])
 {
   FILE *parameterfile = NULL;
-  int c, j, i, ix = 0, isample = 0, op_id = 0;
-  char * filename = NULL;
-  char datafilename[50];
-  char parameterfilename[50];
+  int j, i, ix = 0, isample = 0, op_id = 0;
+  char datafilename[206];
+  char parameterfilename[206];
   char conf_filename[50];
   char * input_filename = NULL;
+  char * filename = NULL;
   double plaquette_energy;
   struct stout_parameters params_smear;
   spinor **s, *s_;
@@ -125,7 +109,6 @@ int main(int argc, char *argv[])
 #pragma pomp inst init
 #pragma pomp inst begin(main)
 #endif
-  
 
 #if (defined SSE || defined SSE2 || SSE3)
   signal(SIGILL, &catch_ill_inst);
@@ -133,45 +116,31 @@ int main(int argc, char *argv[])
 
   DUM_DERI = 8;
   DUM_MATRIX = DUM_DERI + 5;
-  NO_OF_SPINORFIELDS = DUM_MATRIX + 2;
+#if ((defined BGL && defined XLC) || defined _USE_TSPLITPAR)
+  NO_OF_SPINORFIELDS = DUM_MATRIX + 3;
+#else
+  NO_OF_SPINORFIELDS = DUM_MATRIX + 3;
+#endif
 
   verbose = 0;
   g_use_clover_flag = 0;
 
 #ifdef MPI
+
+#  ifdef OMP
+  int mpi_thread_provided;
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
+#  else
   MPI_Init(&argc, &argv);
+#  endif
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
+#else
+  g_proc_id = 0;
 #endif
 
-  while ((c = getopt(argc, argv, "h?vVf:o:")) != -1) {
-    switch (c) {
-      case 'f':
-        input_filename = calloc(200, sizeof(char));
-        strcpy(input_filename, optarg);
-        break;
-      case 'o':
-        filename = calloc(200, sizeof(char));
-        strcpy(filename, optarg);
-        break;
-      case 'v':
-        verbose = 1;
-        break;
-      case 'V':
-        fprintf(stdout,"%s %s\n",PACKAGE_STRING,git_hash);
-        exit(0);
-        break;
-      case 'h':
-      case '?':
-      default:
-        usage();
-        break;
-    }
-  }
-  if (input_filename == NULL) {
-    input_filename = "invert.input";
-  }
-  if (filename == NULL) {
-    filename = "output";
-  }
+  process_args(argc,argv,&input_filename,&filename);
+  set_default_filenames(&input_filename, &filename);
 
   /* Read the input file */
   if( (j = read_input(input_filename)) != 0) {
@@ -180,10 +149,7 @@ int main(int argc, char *argv[])
   }
 
 #ifdef OMP
-  if(omp_num_threads > 0)
-  {
-    omp_set_num_threads(omp_num_threads);
-  }
+  init_openmp();
 #endif
 
   /* this DBW2 stuff is not needed for the inversion ! */
@@ -262,15 +228,16 @@ int main(int argc, char *argv[])
   }
 
   g_mu = g_mu1;
+
   if (g_cart_id == 0) {
     /*construct the filenames for the observables and the parameters*/
-    strcpy(datafilename, filename);
+    strncpy(datafilename, filename, 200);
     strcat(datafilename, ".data");
-    strcpy(parameterfilename, filename);
+    strncpy(parameterfilename, filename, 200);
     strcat(parameterfilename, ".para");
 
     parameterfile = fopen(parameterfilename, "w");
-    write_first_messages(parameterfile, 1);
+    write_first_messages(parameterfile, "invert", git_hash);
     fclose(parameterfile);
   }
 
@@ -327,7 +294,7 @@ int main(int argc, char *argv[])
 #endif
 
     /*compute the energy of the gauge field*/
-    plaquette_energy = measure_gauge_action(g_gauge_field);
+    plaquette_energy = measure_gauge_action( (const su3**) g_gauge_field);
 
     if (g_cart_id == 0) {
       printf("# The computed plaquette value is %e.\n", plaquette_energy / (6.*VOLUME*g_nproc));
@@ -342,7 +309,7 @@ int main(int argc, char *argv[])
       g_update_gauge_copy = 1;
       g_update_gauge_energy = 1;
       g_update_rectangle_energy = 1;
-      plaquette_energy = measure_gauge_action(g_gauge_field);
+      plaquette_energy = measure_gauge_action( (const su3**) g_gauge_field);
 
       if (g_cart_id == 0) {
         printf("# The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
@@ -387,7 +354,7 @@ int main(int argc, char *argv[])
         s[i] = s_+i*VOLUMEPLUSRAND;
 #endif
 	
-        z2_random_spinor_field(s[i], VOLUME);
+        random_spinor_field_lexic(s[i], reproduce_randomnumber_flag,RN_Z2);
 	
 /* 	what is this here needed for?? */
 /*         spinor *aux_,*aux; */
@@ -430,18 +397,18 @@ int main(int argc, char *argv[])
 
       /*       g_mu = 0.; */
       /*       boundary(0.125); */
-      generate_dfl_subspace(g_N_s, VOLUME);
+      generate_dfl_subspace(g_N_s, VOLUME, reproduce_randomnumber_flag);
       /*       boundary(g_kappa); */
       /*       g_mu = g_mu1; */
 
       /* Compute little Dirac operators */
       /*       alt_block_compute_little_D(); */
       if (g_debug_level > 0) {
-        check_projectors();
-        check_local_D();
+        check_projectors(reproduce_randomnumber_flag);
+        check_local_D(reproduce_randomnumber_flag);
       }
       if (g_debug_level > 1) {
-        check_little_D_inversion();
+        check_little_D_inversion(reproduce_randomnumber_flag);
       }
 
     }
@@ -494,7 +461,7 @@ int main(int argc, char *argv[])
           /* 0-3 in case of 1 flavour  */
           /* 0-7 in case of 2 flavours */
           prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location);
-          operator_list[op_id].inverter(op_id, index_start);
+          operator_list[op_id].inverter(op_id, index_start, 1);
         }
       }
 
@@ -516,6 +483,9 @@ int main(int argc, char *argv[])
 #ifdef MPI
   MPI_Finalize();
 #endif
+#ifdef OMP
+  free_omp_accumulators();
+#endif
   free_blocks();
   free_dfl_subspace();
   free_gauge_field();
@@ -523,8 +493,69 @@ int main(int argc, char *argv[])
   free_spinor_field();
   free_moment_field();
   free_chi_spinor_field();
+  free(filename);
+  free(input_filename);
   return(0);
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)
 #endif
 }
+
+static void usage()
+{
+  fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
+  fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
+  fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
+  fprintf(stdout, "Usage:   invert [options]\n");
+  fprintf(stdout, "Options: [-f input-filename]\n");
+  fprintf(stdout, "         [-o output-filename]\n");
+  fprintf(stdout, "         [-v] more verbosity\n");
+  fprintf(stdout, "         [-h|-? this help]\n");
+  fprintf(stdout, "         [-V] print version information and exit\n");
+  exit(0);
+}
+
+static void process_args(int argc, char *argv[], char ** input_filename, char ** filename) {
+  int c;
+  while ((c = getopt(argc, argv, "h?vVf:o:")) != -1) {
+    switch (c) {
+      case 'f':
+        *input_filename = calloc(200, sizeof(char));
+        strncpy(*input_filename, optarg, 200);
+        break;
+      case 'o':
+        *filename = calloc(200, sizeof(char));
+        strncpy(*filename, optarg, 200);
+        break;
+      case 'v':
+        verbose = 1;
+        break;
+      case 'V':
+        if(g_proc_id == 0) {
+          fprintf(stdout,"%s %s\n",PACKAGE_STRING,git_hash);
+        }
+        exit(0);
+        break;
+      case 'h':
+      case '?':
+      default:
+        if( g_proc_id == 0 ) {
+          usage();
+        }
+        break;
+    }
+  }
+}
+
+static void set_default_filenames(char ** input_filename, char ** filename) {
+  if( *input_filename == NULL ) {
+    *input_filename = calloc(13, sizeof(char));
+    strcpy(*input_filename,"invert.input");
+  }
+  
+  if( *filename == NULL ) {
+    *filename = calloc(7, sizeof(char));
+    strcpy(*filename,"output");
+  } 
+}
+

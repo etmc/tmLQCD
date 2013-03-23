@@ -317,7 +317,7 @@ int polyakov_loop_0(const int nstore, _Complex double *pl) {
    z- (dir==3) direction
    the reduction operation is defined in mpi_init.h
 */
-void polyakov_loop_measurement(const int nstore, const int id) {
+void polyakov_loop_measurement(const int nstore, const int id, const int ieo) {
   polyakov_loop_dir(nstore, measurement_list[id].direction);
 }
 

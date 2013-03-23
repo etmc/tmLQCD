@@ -29,12 +29,13 @@
 #include <math.h>
 #include <time.h>
 #include "global.h"
+#include "gettime.h"
 #include "su3.h"
 #include "su3adj.h"
 #include "su3spinor.h"
 #include "expo.h"
 #include "sse.h"
-#include "xchange.h"
+#include "xchange/xchange.h"
 #include "hamiltonian_field.h"
 #include "update_gauge.h"
 
@@ -47,7 +48,13 @@
 
 
 void update_gauge(const double step, hamiltonian_field_t * const hf) {
-
+  double atime, etime;
+  atime = gettime();
+#ifdef OMP
+#define static
+#pragma omp parallel
+  {
+#endif
   int i,mu;
   static su3 v,w;
   su3 *z;
@@ -57,17 +64,29 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
 #pragma pomp inst begin(updategauge)
 #endif
 
+#ifdef OMP
+#undef static
+#endif
+
+#ifdef OMP
+#pragma omp for
+#endif
   for(i = 0; i < VOLUME; i++) { 
     for(mu = 0; mu < 4; mu++){
       /* moment[i][mu] = h_{i,mu}^{alpha} */
       xm = &hf->momenta[i][mu];
       z = &hf->gaugefield[i][mu];
       _su3adj_assign_const_times_su3adj(deriv, step, *xm);
-      v = restoresu3( exposu3(deriv) );
+      exposu3(&w,&deriv);
+      restoresu3(&v,&w);
       _su3_times_su3(w, v, *z);
       _su3_assign(*z, w);
     }
   }
+
+#ifdef OMP
+  } /* OpenMP parallel closing brace */
+#endif
   
 #ifdef MPI
   /* for parallelization */
@@ -83,6 +102,10 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
   g_update_gauge_energy = 1;
   hf->update_rectangle_energy = 1;
   g_update_rectangle_energy = 1;
+  etime = gettime();
+  if(g_debug_level > 1 && g_proc_id == 0) {
+    printf("# Time gauge update: %e s\n", etime-atime); 
+  } 
   return;
 #ifdef _KOJAK_INST
 #pragma pomp inst end(updategauge)

@@ -37,6 +37,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#ifdef OMP
+# include <omp.h>
+#endif
 #include "global.h"
 #include "sse.h"
 #include "su3.h"
@@ -45,38 +48,28 @@
 #include "measure_rectangles.h"
 
 
-double measure_rectangles(su3 ** const gf) {
-/* there is a reduction on ks and kc, so we need to make these OMP shared
- * also, we keep the static keyword because this function relies on the data
- * retention on ga, as can be seen below (it always returns ga) */
-  static double ks,kc,ga;
-
-#ifdef OMP
-#define static
-#endif
-
+double measure_rectangles(const su3 ** const gf) {
+  static double res;
 #ifdef MPI
-  static double gas;
+  double ALIGN mres;
 #endif
-
-  ks=0.0; kc=0.0;
 
 #ifdef OMP
 #pragma omp parallel
   {
+  int thread_num = omp_get_thread_num();
 #endif
-  int i, j, k, mu, nu;
-  static su3 pr1, pr2, tmp; 
-  su3 *v = NULL , *w = NULL;
-  static double ac, tr, ts, tt;
 
-#ifdef OMP
-#undef static
-#endif
+  int i, j, k, mu, nu;
+  su3 ALIGN pr1, pr2, tmp; 
+  const su3 *v = NULL , *w = NULL;
+  double ALIGN ac, ks, kc, tr, ts, tt;
 
   if(g_update_rectangle_energy) {
+    kc = 0.0;
+    ks = 0.0;
 #ifdef OMP
-#pragma omp for reduction(+:kc) reduction(+:ks)
+#pragma omp for
 #endif
     for (i = 0; i < VOLUME; i++) {
       for (mu = 0; mu < 4; mu++) {
@@ -124,23 +117,30 @@ double measure_rectangles(su3 ** const gf) {
 	}
       }
     }
+    kc=(kc+ks)/3.0;
+#ifdef OMP
+    g_omp_acc_re[thread_num] = kc;
+#else
+    res = kc;
+#endif
+  }
 
 #ifdef OMP
-  } /* if g_update_rectangle_energy */
-  } /* OpenMP closing brace */
-
-  /* this construct is unfortunately necessary for OpenMP because the closing brace must
-   * come before the calculation of ga */
+  } /* OpenMP parallel closing brace */
+  
+  if(g_update_rectangle_energy) {
+    res = 0.0;
+    for(int i = 0; i < omp_num_threads; ++i)
+      res += g_omp_acc_re[i];
+#else
   if(g_update_rectangle_energy) {
 #endif
-
-    ga=(kc+ks)/3.0;
-  
 #ifdef MPI
-    MPI_Allreduce(&ga, &gas, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    ga = gas;
+    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    res = mres;
 #endif
     g_update_rectangle_energy = 0;
   }
-  return ga;
+
+  return res;
 }

@@ -24,14 +24,16 @@
 
 #define max_no_measurements 20
 
-
-/* Give the measurements a unambiguous number*/
-#define ONLINE 0
-#define PIONNORM 1
-#define POLYAKOV 2
+/* Give the measurement types an unambiguous ID*/
+enum MEAS_TYPE { 
+  ONLINE, 
+  PIONNORM, 
+  POLYAKOV, 
+  ORIENTED_PLAQUETTES 
+  };
 
 typedef struct {
-  int type;
+  enum MEAS_TYPE type;
   int initialised;
   int id;
   
@@ -52,7 +54,7 @@ typedef struct {
   int max_source_slice;
   
   /* functions for the measurement */
-  void (*measurefunc) (const int traj, const int id);
+  void (*measurefunc) (const int traj, const int id, const int ieo);
 } measurement;
 
 
@@ -61,12 +63,12 @@ extern measurement measurement_list[max_no_measurements];
 extern int no_measurements;
 
 /* add a new measurement to the list of measurements */
-int add_measurement(const int type);
+int add_measurement(const enum MEAS_TYPE);
 /* initialise all measurements in the list */
 int init_measurements();
 /* free space again */
 void free_measurements();
 
-void dummy_meas(const int traj, const int id);
+void dummy_meas(const int traj, const int id, const int ieo);
 
 #endif

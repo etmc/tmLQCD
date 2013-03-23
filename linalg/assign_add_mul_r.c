@@ -37,7 +37,7 @@
 #if ( defined SSE2 || defined SSE3 )
 #include "sse.h"
 
-/*   (*P) = (*P) + c(*Q)        c is a complex constant   */
+/*   (*P) = (*P) + c(*Q)        c is a real constant   */
 
 void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const int N)
 {
@@ -90,10 +90,14 @@ void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const 
 #elif (defined BGQ && defined XLC)
 
 void assign_add_mul_r(spinor * const R, spinor * const S, const double c, const int N) {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
   vector4double z0, z1, z2, z3, z4, z5, k;
   double *s, *r;
-  double _c __attribute__ ((aligned (32)));
+  double ALIGN _c;
   _c = c;
   __prefetch_by_load(S);
   __prefetch_by_load(R);
@@ -104,7 +108,11 @@ void assign_add_mul_r(spinor * const R, spinor * const S, const double c, const 
   __alignx(32, S);
   __alignx(32, R);
 
+#ifdef OMP
+#pragma omp for
+#else
 #pragma unroll(2)
+#endif
   for(int i = 0; i < N; i++) {
     s=(double*)((spinor *) S + i);
     r=(double*)((spinor *) R + i);
@@ -135,6 +143,9 @@ void assign_add_mul_r(spinor * const R, spinor * const S, const double c, const 
     vec_st(z4, 0, r+16);
     vec_st(z5, 0, r+20);
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }
 
@@ -330,7 +341,7 @@ void assign_add_mul_r(spinor * const R, spinor * const S, const double c, const 
 
 #else
 
-/*   (*P) = (*P) + c(*Q)        c is a complex constant   */
+/*   (*P) = (*P) + c(*Q)        c is a real constant   */
 
 void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const int N)
 {

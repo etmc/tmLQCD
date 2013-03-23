@@ -11,6 +11,12 @@
   r4 = vec_ld(128L, (double*) &(phi).c0);		\
   r5 = vec_ld(160L, (double*) &(phi).c0);
 
+#define _vec_load_halfspinor(r0, r1, r2, phi)	\
+  r0 = vec_ld(0L, (double*) &(phi).c0);			\
+  r1 = vec_ld(32L, (double*) &(phi).c0);		\
+  r2 = vec_ld(64L, (double*) &(phi).c0);
+
+
 #define _vec_store_spinor(phi, r0, r1, r2, r3, r4, r5) \
   vec_st(r0, 0L, (double*) &(phi).c0);		       \
   vec_st(r1, 32L, (double*) &(phi).c0);		       \
@@ -55,6 +61,19 @@
 #define _vec_store(phi, r0, r1)			\
   vec_st((r0), 0L, (double*) &(phi).c0);	\
   vec_st2((r1), 0L, (double*) &(phi).c2);
+
+// requires 16 (and must not be 32) byte alignment of phi
+#define _vec_store16(phi, r0, r1, tmp)		\
+  vec_st2((r0), 0L, (double*) &(phi).c0);	\
+  tmp = vec_gpci(02345);			\
+  r0 = vec_perm(r0, r1, tmp);			\
+  vec_st((r0), 0L, (double *) &(phi).c1);
+
+// requires 32 byte alignment of phi
+#define _vec_store_halfspinor(phi, r0, r1, r2)	\
+  vec_st((r0), 0L, (double*) &(phi).c0);	\
+  vec_st((r1), 32L, (double*) &(phi).c0);	\
+  vec_st((r2), 64L, (double*) &(phi).c0);
 
 #define _vec_add(rs0, rs1, r0, r1, s0, s1) \
   rs0 = vec_add(r0, s0);		   \

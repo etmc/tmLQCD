@@ -67,6 +67,7 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
   int save_sloppy = g_sloppy_precision;
   double atime, etime, flops;
   spinor ** solver_field = NULL;
+  spinor * stmp;
   const int nr_sf = 3;
 
   if(N == VOLUME) {
@@ -92,10 +93,14 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
     alpha_cg = normsq / pro;
     assign_add_mul_r(P, solver_field[2], alpha_cg, N);
 
+#if (defined SSE2 || defined SSE3)
     assign_mul_add_r(solver_field[0], -alpha_cg, solver_field[1], N);
-    err=square_norm(solver_field[0], N, 1);
+    err = square_norm(solver_field[0], N, 1);
+#else
+    err = assign_mul_add_r_and_square(solver_field[0], -alpha_cg, solver_field[1], N, 1);
+#endif
 
-    if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
+    if(g_proc_id == g_stdio_proc && g_debug_level > 2) {
       printf("CG: iterations: %d res^2 %e\n", iteration, err);
       fflush(stdout);
     }
@@ -106,7 +111,7 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
 #ifdef _USE_HALFSPINOR
     if(((err*err <= eps_sq) && (rel_prec == 0)) || ((err*err <= eps_sq*squarenorm) && (rel_prec == 1))) {
       g_sloppy_precision = 1;
-      if(g_debug_level > 2 && g_proc_id == g_stdio_proc) {
+      if(g_debug_level > 2 && g_proc_id == g_stdio_proc && g_sloppy_precision_flag == 1) {
         printf("sloppy precision on\n"); fflush( stdout);
       }
     }
@@ -114,17 +119,19 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
 
     beta_cg = err / normsq;
     assign_mul_add_r(solver_field[2], beta_cg, solver_field[0], N);
-    assign(solver_field[1], solver_field[0], N);
+    stmp = solver_field[0];
+    solver_field[0] = solver_field[1];
+    solver_field[1] = stmp;
     normsq = err;
   }
   etime = gettime();
   g_sloppy_precision = save_sloppy;
   /* 2 A + 2 Nc Ns + N_Count ( 2 A + 10 Nc Ns ) */
-  /* 2*1320.0 because the linalg is over VOLUME/2 */
-  flops = (2*(2*1320.0+2*3*4) + 2*3*4 + iteration*(2.*(2*1320.0+2*3*4) + 10*3*4))*N/1.0e6f;
+  /* 2*1608.0 because the linalg is over VOLUME/2 */
+  flops = (2*(2*1608.0+2*3*4) + 2*3*4 + iteration*(2.*(2*1608.0+2*3*4) + 10*3*4))*N/1.0e6f;
   if(g_debug_level > 0 && g_proc_id == 0 && N != VOLUME) {
     printf("# CG: iter: %d eps_sq: %1.4e t/s: %1.4e\n", iteration, eps_sq, etime-atime); 
-    printf("# CG: flopcount (for tmWilson only): t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
+    printf("# CG: flopcount (for e/o tmWilson only): t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
            etime-atime, flops/(etime-atime), g_nproc*flops/(etime-atime));
   }
   finalize_solver(solver_field, nr_sf);

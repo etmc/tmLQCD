@@ -26,8 +26,6 @@
  *
  **********************************************************************/
 
-#include "bgq2.h"
-#include "xlc_prefetch.h"
 
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   int ix;
@@ -36,10 +34,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   halfspinor * restrict * phi ALIGN;
   halfspinor32 * restrict * phi32 ALIGN;
   /* We have 32 registers available */
-  vector4double ALIGN r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11;
-  vector4double ALIGN rs0, rs1, rs2, rs3, rs4, rs5, rs6, rs7, rs8, rs9, rs10, rs11;
-  vector4double ALIGN U0, U1, U2, U3, U4, U6, U7;
-  vector4double ALIGN rtmp;
+  _declare_hregs();
 
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(hoppingmatrix)
@@ -55,15 +50,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   __alignx(16, l);
   __alignx(16, k);
   if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
-    /* Take the 64 Bit precision part and replace */
-    /* _bgl_load_reg0|1 with _bgl_load_reg0|1_32 */
-    /* _bgl_load_rs0|1|2|3 with _bgl_load_rs0|1|2|3_32*/
-    /* phi with phi32*/
-    /* _bgl_store_reg0|1 with _bgl_store_reg0|1_32 */
-    /* _bgl_store_reg0|1_up with _bgl_store_reg0|1_up_32 */
-    /* HalfSpinor with Halfspinor32 */
-    /* _bgl_load_rs0|1 with _bgl_load_rs0|1_32*/
-    /* xchange_halffield with xchange_halffield_32 */
     __alignx(16, HalfSpinor32);
     /* We will run through the source vector now */
     /* instead of the solution vector            */
@@ -84,95 +70,42 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     /**************** loop over all lattice sites ******************/
     ix=0;
     for(int i = 0; i < (VOLUME)/2; i++){
-
-      _vec_load2(rs0, rs1, rs2, s->s0);
-      _vec_load2(rs3, rs4, rs5, s->s1);
-      _vec_load2(rs6, rs7, rs8, s->s2);
-      _vec_load2(rs9, rs10, rs11, s->s3);
-      s++; 
-      _prefetch_spinor(s); 
       /*********************** direction +0 ************************/
-      _prefetch_su3(U+1);
-
-      _vec_add_to2(r0, r1, r2, rs0, rs1, rs2, rs6, rs7, rs8);
-      _vec_add_to2(r3, r4, r5, rs3, rs4, rs5, rs9, rs10, rs11);
-      _vec_su3_multiply_double2(U);
-      _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0,ka0);
-      
-      _vec_store2_32(phi32[ix]->s0, r6, r7, r8);
-      _vec_store2_32(phi32[ix]->s1, r9, r10, r11);
+      _hop_t_p_pre32();
+      s++; 
       U++;
       ix++;
 
       /*********************** direction -0 ************************/
-      _vec_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs6, rs7, rs8);
-      _vec_sub_to2(r3, r4, r5, rs3, rs4, rs5, rs9, rs10, rs11);
-
-      _vec_store2_32(phi32[ix]->s0, r0, r1, r2);
-      _vec_store2_32(phi32[ix]->s1, r3, r4, r5);
+      _hop_t_m_pre32();
       ix++;
 
       /*********************** direction +1 ************************/
-      _prefetch_su3(U+1);
-      _vec_i_mul_add_to2(r0, r1, r2, rs0, rs1, rs2, rs9, rs10, rs11, U0);
-      _vec_i_mul_add_to2(r3, r4, r5, rs3, rs4, rs5, rs6, rs7, rs8, U0);
-
-      _vec_su3_multiply_double2(U);
-      _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0,ka1);
-      
-      _vec_store2_32(phi32[ix]->s0, r6, r7, r8);
-      _vec_store2_32(phi32[ix]->s1, r9, r10, r11);
+      _hop_x_p_pre32();
       ix++;
       U++;
 
       /*********************** direction -1 ************************/
-      _vec_i_mul_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs9, rs10, rs11, U0);
-      _vec_i_mul_sub_to2(r3, r4, r5, rs3, rs4, rs5, rs6, rs7, rs8, U0);
-
-      _vec_store2_32(phi32[ix]->s0, r0, r1, r2);
-      _vec_store2_32(phi32[ix]->s1, r3, r4, r5);
+      _hop_x_m_pre32();
       ix++;
 
-
       /*********************** direction +2 ************************/
-      _prefetch_su3(U+1);
+      _hop_y_p_pre32();
 
-      _vec_add_to2(r0, r1, r2, rs0, rs1, rs2, rs9, rs10, rs11);
-      _vec_sub_to2(r3, r4, r5, rs3, rs4, rs5, rs6, rs7, rs8);
-      _vec_su3_multiply_double2(U);
-      _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0,ka2);
-
-      _vec_store2_32(phi32[ix]->s0, r6, r7, r8);
-      _vec_store2_32(phi32[ix]->s1, r9, r10, r11);
       ix++;
       U++;
 
       /*********************** direction -2 ************************/
-      _vec_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs9, rs10, rs11);
-      _vec_sub_to2(r3, r4, r5, rs3, rs4, rs5, rs6, rs7, rs8);
-
-      _vec_store2_32(phi32[ix]->s0, r0, r1, r2);
-      _vec_store2_32(phi32[ix]->s1, r3, r4, r5);
+      _hop_y_m_pre32();
       ix++;
 
       /*********************** direction +3 ************************/
-      _prefetch_su3(U+1); 
-      _vec_i_mul_add_to2(r0, r1, r2, rs0, rs1, rs2, rs6, rs7, rs8, U0);
-      _vec_i_mul_sub_to2(r3, r4, r5, rs3, rs4, rs5, rs9, rs10, rs11, U0);
-      _vec_su3_multiply_double2(U);
-      _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0,ka3);
-
-      _vec_store2_32(phi32[ix]->s0, r6, r7, r8);
-      _vec_store2_32(phi32[ix]->s1, r9, r10, r11);
+      _hop_z_p_pre32();
       ix++;
       U++;
 
       /*********************** direction -3 ************************/
-      _vec_i_mul_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs6, rs7, rs8, U0);
-      _vec_i_mul_add_to2(r3, r4, r5, rs3, rs4, rs5, rs9, rs10, rs11, U0);
-
-      _vec_store2_32(phi32[ix]->s0, r0, r1, r2);
-      _vec_store2_32(phi32[ix]->s1, r3, r4, r5);
+      _hop_z_m_pre32();
       ix++;
 
       /************************ end of loop ************************/
@@ -200,95 +133,31 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
       /*     _prefetch_spinor_for_store(s); */
       //_prefetch_halfspinor(phi32[ix+1]);
       /*********************** direction +0 ************************/
-      _vec_load2_32(rs0, rs1, rs2, phi32[ix]->s0);
-      rs6 = rs0;
-      rs7 = rs1;
-      rs8 = rs2;
-      _vec_load2_32(rs3, rs4, rs5, phi32[ix]->s1);
-      rs9 = rs3;
-      rs10= rs4;
-      rs11= rs5;
+      _hop_t_p_post32();
       ix++;
       /*********************** direction -0 ************************/
-      _prefetch_su3(U+1);
-
-      _vec_load2_32(r0, r1, r2, phi32[ix]->s0);
-      _vec_load2_32(r3, r4, r5, phi32[ix]->s1);
-      _vec_su3_inverse_multiply_double2(U);
-      _vec_cmplxcg_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0,ka0);
-
-      _vec_add2(rs0, rs1, rs2, r0, r1, r2);
-      _vec_sub2(rs6, rs7, rs8, r0, r1, r2);
-      _vec_add2(rs3, rs4, rs5, r3, r4, r5);
-      _vec_sub2(rs9, rs10, rs11, r3, r4, r5);
+      _hop_t_m_post32();
       U++;
       ix++;
       /*********************** direction +1 ************************/
-      _vec_load2_32(r0, r1, r2, phi32[ix]->s0);
-      _vec_load2_32(r3, r4, r5, phi32[ix]->s1);
-
-      _vec_add2(rs0, rs1, rs2, r0, r1, r2);
-      _vec_i_mul_sub2(rs9, rs10, rs11, r0, r1, r2, U0);
-      _vec_add2(rs3, rs4, rs5, r3, r4, r5);
-      _vec_i_mul_sub2(rs6, rs7, rs8, r3, r4, r5, U0);
+      _hop_x_p_post32();
       ix++;
       /*********************** direction -1 ************************/
-      _prefetch_su3(U+1);
-      _vec_load2_32(r0, r1, r2, phi32[ix]->s0);
-      _vec_load2_32(r3, r4, r5, phi32[ix]->s1);
-      _vec_su3_inverse_multiply_double2(U);
-      _vec_cmplxcg_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0,ka1);
-
-      _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5);
-      _vec_i_mul_add_double2(rs6, rs7, rs8, rs9, rs10, rs11, r0, r1, r2, r3, r4, r5, U0);
+      _hop_x_m_post32();
       U++;
       ix++;
       /*********************** direction +2 ************************/
-      _vec_load2_32(r0, r1, r2, phi32[ix]->s0);
-      _vec_load2_32(r3, r4, r5, phi32[ix]->s1);
-
-      _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5);
-      _vec_sub2(rs6, rs7, rs8, r3, r4, r5);
-      _vec_add2(rs9, rs10, rs11, r0, r1, r2);
+      _hop_y_p_post32();
       ix++;
       /*********************** direction -2 ************************/
-      _prefetch_su3(U+1);
-
-      _vec_load2_32(r0, r1, r2, phi32[ix]->s0);
-      _vec_load2_32(r3, r4, r5, phi32[ix]->s1);
-      _vec_su3_inverse_multiply_double2(U);
-      _vec_cmplxcg_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0,ka2);
-
-      _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5);
-      _vec_add2(rs6, rs7, rs8, r3, r4, r5);
-      _vec_sub2(rs9, rs10, rs11, r0, r1, r2);
+      _hop_y_m_post32();
       U++;
       ix++;
       /*********************** direction +3 ************************/
-      _vec_load2_32(r0, r1, r2, phi32[ix]->s0);
-      _vec_load2_32(r3, r4, r5, phi32[ix]->s1);
-
-      _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5);
-      _vec_i_mul_sub2(rs6, rs7, rs8, r0, r1, r2, U0);
-      _vec_i_mul_add2(rs9, rs10, rs11, r3, r4, r5, U0);
+      _hop_z_p_post32();
       ix++;
       /*********************** direction -3 ************************/
-      _prefetch_su3(U+1);
-
-      _vec_load2_32(r0, r1, r2, phi32[ix]->s0);
-      _vec_load2_32(r3, r4, r5, phi32[ix]->s1);
-      _vec_su3_inverse_multiply_double2(U);
-      _vec_cmplxcg_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0,ka2);
-
-      _vec_add2(rs0, rs1, rs2, r0, r1, r2);
-      _vec_store2(s->s0, rs0, rs1, rs2);
-      _vec_i_mul_add2(rs6, rs7, rs8, r0, r1, r2, U0);
-      _vec_store2(s->s2, rs6, rs7, rs8);
-
-      _vec_add2(rs3, rs4, rs5, r3, r4, r5);
-      _vec_store2(s->s1, rs3, rs4, rs5);
-      _vec_i_mul_sub2(rs9, rs10, rs11, r3, r4, r5, U0);
-      _vec_store2(s->s3, rs9, rs10, rs11);
+      _hop_z_m_post32();
       U++;
       ix++;
       s++;
@@ -315,94 +184,42 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     /**************** loop over all lattice sites ******************/
     ix=0;
     for(int i = 0; i < (VOLUME)/2; i++){
-      _vec_load2(rs0, rs1, rs2, s->s0);
-      _vec_load2(rs3, rs4, rs5, s->s1);
-      _vec_load2(rs6, rs7, rs8, s->s2);
-      _vec_load2(rs9, rs10, rs11, s->s3);
-      s++; 
-      _prefetch_spinor(s); 
       /*********************** direction +0 ************************/
-      _prefetch_su3(U+1);
-
-      _vec_add_to2(r0, r1, r2, rs0, rs1, rs2, rs6, rs7, rs8);
-      _vec_add_to2(r3, r4, r5, rs3, rs4, rs5, rs9, rs10, rs11);
-      _vec_su3_multiply_double2(U);
-      _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0,ka0);
-      
-      _vec_store2(phi[ix]->s0, r6, r7, r8);
-      _vec_store2(phi[ix]->s1, r9, r10, r11);
+      _hop_t_p_pre();
+      s++; 
       U++;
       ix++;
 
       /*********************** direction -0 ************************/
-      _vec_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs6, rs7, rs8);
-      _vec_sub_to2(r3, r4, r5, rs3, rs4, rs5, rs9, rs10, rs11);
-
-      _vec_store2(phi[ix]->s0, r0, r1, r2);
-      _vec_store2(phi[ix]->s1, r3, r4, r5);
+      _hop_t_m_pre();
       ix++;
 
       /*********************** direction +1 ************************/
-      _prefetch_su3(U+1);
-      _vec_i_mul_add_to2(r0, r1, r2, rs0, rs1, rs2, rs9, rs10, rs11, U0);
-      _vec_i_mul_add_to2(r3, r4, r5, rs3, rs4, rs5, rs6, rs7, rs8, U0);
-
-      _vec_su3_multiply_double2(U);
-      _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0,ka1);
-      
-      _vec_store2(phi[ix]->s0, r6, r7, r8);
-      _vec_store2(phi[ix]->s1, r9, r10, r11);
+      _hop_x_p_pre();
       ix++;
       U++;
 
       /*********************** direction -1 ************************/
-      _vec_i_mul_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs9, rs10, rs11, U0);
-      _vec_i_mul_sub_to2(r3, r4, r5, rs3, rs4, rs5, rs6, rs7, rs8, U0);
-
-      _vec_store2(phi[ix]->s0, r0, r1, r2);
-      _vec_store2(phi[ix]->s1, r3, r4, r5);
+      _hop_x_m_pre();
       ix++;
 
 
       /*********************** direction +2 ************************/
-      _prefetch_su3(U+1);
-
-      _vec_add_to2(r0, r1, r2, rs0, rs1, rs2, rs9, rs10, rs11);
-      _vec_sub_to2(r3, r4, r5, rs3, rs4, rs5, rs6, rs7, rs8);
-      _vec_su3_multiply_double2(U);
-      _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0,ka2);
-
-      _vec_store2(phi[ix]->s0, r6, r7, r8);
-      _vec_store2(phi[ix]->s1, r9, r10, r11);
+      _hop_y_p_pre();
       ix++;
       U++;
 
       /*********************** direction -2 ************************/
-      _vec_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs9, rs10, rs11);
-      _vec_sub_to2(r3, r4, r5, rs3, rs4, rs5, rs6, rs7, rs8);
-
-      _vec_store2(phi[ix]->s0, r0, r1, r2);
-      _vec_store2(phi[ix]->s1, r3, r4, r5);
+      _hop_y_m_pre();
       ix++;
 
       /*********************** direction +3 ************************/
-      _prefetch_su3(U+1); 
-      _vec_i_mul_add_to2(r0, r1, r2, rs0, rs1, rs2, rs6, rs7, rs8, U0);
-      _vec_i_mul_sub_to2(r3, r4, r5, rs3, rs4, rs5, rs9, rs10, rs11, U0);
-      _vec_su3_multiply_double2(U);
-      _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0,ka3);
-
-      _vec_store2(phi[ix]->s0, r6, r7, r8);
-      _vec_store2(phi[ix]->s1, r9, r10, r11);
+      _hop_z_p_pre();
       ix++;
       U++;
 
       /*********************** direction -3 ************************/
-      _vec_i_mul_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs6, rs7, rs8, U0);
-      _vec_i_mul_add_to2(r3, r4, r5, rs3, rs4, rs5, rs9, rs10, rs11, U0);
-
-      _vec_store2(phi[ix]->s0, r0, r1, r2);
-      _vec_store2(phi[ix]->s1, r3, r4, r5);
+      _hop_z_m_pre();
       ix++;
 
       /************************ end of loop ************************/
@@ -431,95 +248,31 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
       /*     _prefetch_spinor_for_store(s); */
       //_prefetch_halfspinor(phi[ix+1]);
       /*********************** direction +0 ************************/
-      _vec_load2(rs0, rs1, rs2, phi[ix]->s0);
-      rs6 = rs0;
-      rs7 = rs1;
-      rs8 = rs2;
-      _vec_load2(rs3, rs4, rs5, phi[ix]->s1);
-      rs9 = rs3;
-      rs10= rs4;
-      rs11= rs5;
+      _hop_t_p_post();
       ix++;
       /*********************** direction -0 ************************/
-      _prefetch_su3(U+1);
-
-      _vec_load2(r0, r1, r2, phi[ix]->s0);
-      _vec_load2(r3, r4, r5, phi[ix]->s1);
-      _vec_su3_inverse_multiply_double2(U);
-      _vec_cmplxcg_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0,ka0);
-
-      _vec_add2(rs0, rs1, rs2, r0, r1, r2);
-      _vec_sub2(rs6, rs7, rs8, r0, r1, r2);
-      _vec_add2(rs3, rs4, rs5, r3, r4, r5);
-      _vec_sub2(rs9, rs10, rs11, r3, r4, r5);
+      _hop_t_m_post();
       U++;
       ix++;
       /*********************** direction +1 ************************/
-      _vec_load2(r0, r1, r2, phi[ix]->s0);
-      _vec_load2(r3, r4, r5, phi[ix]->s1);
-
-      _vec_add2(rs0, rs1, rs2, r0, r1, r2);
-      _vec_i_mul_sub2(rs9, rs10, rs11, r0, r1, r2, U0);
-      _vec_add2(rs3, rs4, rs5, r3, r4, r5);
-      _vec_i_mul_sub2(rs6, rs7, rs8, r3, r4, r5, U0);
+      _hop_x_p_post();
       ix++;
       /*********************** direction -1 ************************/
-      _prefetch_su3(U+1);
-      _vec_load2(r0, r1, r2, phi[ix]->s0);
-      _vec_load2(r3, r4, r5, phi[ix]->s1);
-      _vec_su3_inverse_multiply_double2(U);
-      _vec_cmplxcg_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0,ka1);
-
-      _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5);
-      _vec_i_mul_add_double2(rs6, rs7, rs8, rs9, rs10, rs11, r0, r1, r2, r3, r4, r5, U0);
+      _hop_x_m_post();
       U++;
       ix++;
       /*********************** direction +2 ************************/
-      _vec_load2(r0, r1, r2, phi[ix]->s0);
-      _vec_load2(r3, r4, r5, phi[ix]->s1);
-
-      _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5);
-      _vec_sub2(rs6, rs7, rs8, r3, r4, r5);
-      _vec_add2(rs9, rs10, rs11, r0, r1, r2);
+      _hop_y_p_post();
       ix++;
       /*********************** direction -2 ************************/
-      _prefetch_su3(U+1);
-
-      _vec_load2(r0, r1, r2, phi[ix]->s0);
-      _vec_load2(r3, r4, r5, phi[ix]->s1);
-      _vec_su3_inverse_multiply_double2(U);
-      _vec_cmplxcg_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0,ka2);
-
-      _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5);
-      _vec_add2(rs6, rs7, rs8, r3, r4, r5);
-      _vec_sub2(rs9, rs10, rs11, r0, r1, r2);
+      _hop_y_m_post();
       U++;
       ix++;
       /*********************** direction +3 ************************/
-      _vec_load2(r0, r1, r2, phi[ix]->s0);
-      _vec_load2(r3, r4, r5, phi[ix]->s1);
-
-      _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5);
-      _vec_i_mul_sub2(rs6, rs7, rs8, r0, r1, r2, U0);
-      _vec_i_mul_add2(rs9, rs10, rs11, r3, r4, r5, U0);
+      _hop_z_p_post();
       ix++;
       /*********************** direction -3 ************************/
-      _prefetch_su3(U+1);
-
-      _vec_load2(r0, r1, r2, phi[ix]->s0);
-      _vec_load2(r3, r4, r5, phi[ix]->s1);
-      _vec_su3_inverse_multiply_double2(U);
-      _vec_cmplxcg_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, U0,ka2);
-
-      _vec_add2(rs0, rs1, rs2, r0, r1, r2);
-      _vec_store2(s->s0, rs0, rs1, rs2);
-      _vec_i_mul_add2(rs6, rs7, rs8, r0, r1, r2, U0);
-      _vec_store2(s->s2, rs6, rs7, rs8);
-
-      _vec_add2(rs3, rs4, rs5, r3, r4, r5);
-      _vec_store2(s->s1, rs3, rs4, rs5);
-      _vec_i_mul_sub2(rs9, rs10, rs11, r3, r4, r5, U0);
-      _vec_store2(s->s3, rs9, rs10, rs11);
+      _hop_z_m_post();
       U++;
       ix++;
       s++;

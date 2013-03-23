@@ -1,0 +1,99 @@
+
+srcdir = @srcdir@
+top_builddir =  @top_builddir@
+abs_top_builddir = @abs_top_builddir@
+top_srcdir = @top_srcdir@
+abs_top_srcdir = @abs_top_srcdir@
+subdir = init
+builddir = @builddir@
+
+CFLAGS = @CFLAGS@
+DEPFLAGS = @DEPFLAGS@
+LDFLAGS = @LDFLAGS@
+DEFS = @DEFS@
+OPTARGS = @OPTARGS@
+SOPTARGS = @SOPTARGS@
+
+AR = @AR@
+RANLIB = @RANLIB@
+CC = @CC@
+CCDEP = @CCDEP@
+CCLD = ${CC}
+LINK = ${CCLD} ${CFLAGS} ${LDFLAGS} ${OPTARGS} -o $@
+LEX = @LEX@
+AUTOCONF = @AUTOCONF@
+DEFS = @DEFS@
+
+INCLUDES = @INCLUDES@
+LDADD =
+#COMPILE = ${CC} ${DEFS} ${INCLUDES} ${CFLAGS}
+COMPILE = ${CC} $(DEFS) ${INCLUDES} ${CFLAGS}
+
+LIBRARIES = libinit
+libinit_TARGETS = init_moment_field init_gauge_tmp init_gauge_field \
+	init_geometry_indices init_spinor_field init_dirac_halfspinor \
+	init_chi_spinor_field init_bispinor_field init_jacobi_field \
+	init_omp_accumulators init_openmp
+
+libinit_STARGETS = 
+
+libinit_OBJECTS = $(addsuffix .o, ${libinit_TARGETS})
+libinit_SOBJECTS = $(addsuffix .o, ${libinit_STARGETS})
+
+# default rule
+
+all: Makefile dep libinit.a
+
+# rules for debugging
+debug all-debug: CFLAGS := $(CFLAGS) @DEBUG_FLAG@
+debug all-debug: all
+
+# rules for profiling information
+profile all-profile: CFLAGS := $(filter-out -fomit-frame-pointer,${CFLAGS}) @PROFILE_FLAG@
+profile all-profile: all
+
+
+#include dep rules
+
+-include $(addsuffix .d,${libinit_TARGETS})
+
+include ${top_srcdir}/Makefile.global
+
+# rule to compile objects
+
+${libinit_OBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/config.h
+	$(COMPILE) ${OPTARGS} -c $<
+
+${libinit_SOBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/config.h
+	$(COMPILE) ${SOPTARGS} -c $<
+
+# rule to make libinit
+
+libinit.a: ${libinit_OBJECTS} ${libinit_SOBJECTS} Makefile
+	@rm -f libinit.a
+	@${AR} cru libinit.a ${libinit_OBJECTS} ${libinit_SOBJECTS}
+	@$(RANLIB) libinit.a
+	@cp libinit.a ../lib/libinit.a
+
+# rule to generate .d files
+
+$(addsuffix .d, $(libinit_TARGETS) ${libinit_STARGETS}): %.d: ${srcdir}/%.c Makefile
+	@${CCDEP} ${DEFS} ${DEPFLAGS} ${INCLUDES} $< > $@
+
+# rule to make dependencies
+
+dep: ${addsuffix .d, ${libinit_TARGETS} ${libinit_STARGETS}}
+
+# rules to clean
+
+compile-clean: Makefile
+	rm -f ${$(addsuffix _OBJECTS, ${LIBRARIES})} ${$(addsuffix _SOBJECTS, ${LIBRARIES})} *.d
+
+clean: compile-clean 
+	rm -f $(addsuffix .a, ${LIBRARIES})
+	rm -f ../lib/libinit.a
+
+distclean: clean
+	rm -f Makefile
+
+.PHONY: all dep clean compile-clean distclean profile all-profile debug all-debug

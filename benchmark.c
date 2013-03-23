@@ -44,6 +44,7 @@
 #endif
 #ifdef OMP
 # include <omp.h>
+# include "init/init_openmp.h"
 #endif
 #include "gettime.h"
 #include "su3.h"
@@ -53,19 +54,14 @@
 #include "read_input.h"
 #include "start.h"
 #include "boundary.h"
-#include "Hopping_Matrix.h"
-#include "Hopping_Matrix_nocom.h"
-#include "tm_operators.h"
+#include "operator/Hopping_Matrix.h"
+#include "operator/Hopping_Matrix_nocom.h"
+#include "operator/tm_operators.h"
 #include "global.h"
-#include "xchange.h"
-#include "init_gauge_field.h"
-#include "init_geometry_indices.h"
-#include "init_spinor_field.h"
-#include "init_moment_field.h"
-#include "init_dirac_halfspinor.h"
+#include "xchange/xchange.h"
+#include "init/init.h"
 #include "test/check_geometry.h"
-#include "xchange_halffield.h"
-#include "D_psi.h"
+#include "operator/D_psi.h"
 #include "phmc.h"
 #include "mpi_init.h"
 
@@ -97,6 +93,7 @@ int main(int argc,char *argv[])
   
   static double t1,t2,dt,sdt,dts,qdt,sqdt;
   double antioptaway=0.0;
+
 #ifdef MPI
   static double dt2;
   
@@ -105,9 +102,18 @@ int main(int argc,char *argv[])
   DUM_MATRIX = DUM_SOLVER+6;
   NO_OF_SPINORFIELDS = DUM_MATRIX+2;
 
-  
+#  ifdef OMP
+  int mpi_thread_provided;
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
+#  else
   MPI_Init(&argc, &argv);
+#  endif
+  MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
+
+#else
+  g_proc_id = 0;
 #endif
+
   g_rgi_C1 = 1.; 
   
     /* Read the input file */
@@ -117,10 +123,7 @@ int main(int argc,char *argv[])
   }
 
 #ifdef OMP
-  if(omp_num_threads > 0)
-  {
-    omp_set_num_threads(omp_num_threads);
-  }
+  init_openmp();
 #endif
 
   tmlqcd_mpi_init(argc, argv);
@@ -242,7 +245,7 @@ int main(int argc,char *argv[])
 #endif
 
   start_ranlux(1, 123456);
-  random_gauge_field(reproduce_randomnumber_flag);
+  random_gauge_field(reproduce_randomnumber_flag, g_gauge_field);
 
 #ifdef MPI
   /*For parallelization: exchange the gaugefield */
@@ -251,10 +254,10 @@ int main(int argc,char *argv[])
 
   if(even_odd_flag) {
     /*initialize the pseudo-fermion fields*/
-    j_max=1;
+    j_max=2048;
     sdt=0.;
     for (k = 0; k < k_max; k++) {
-      random_spinor_field(g_spinor_field[k], VOLUME/2, 0);
+      random_spinor_field_eo(g_spinor_field[k], reproduce_randomnumber_flag, RN_GAUSS);
     }
     
     while(sdt < 30.) {
@@ -295,9 +298,9 @@ int main(int argc,char *argv[])
     if(g_proc_id==0) {
       printf("# The following result is just to make sure that the calculation is not optimized away: %e\n", antioptaway);
       printf("# Total compute time %e sec, variance of the time %e sec. (%d iterations).\n", sdt, sqdt, j_max);
-      printf("# Communication switched on:\n# (%d Mflops [%d bit arithmetic])\n", (int)(1320.0f/sdt),(int)sizeof(spinor)/3);
+      printf("# Communication switched on:\n# (%d Mflops [%d bit arithmetic])\n", (int)(1608.0f/sdt),(int)sizeof(spinor)/3);
 #ifdef OMP
-      printf("# Mflops per OpenMP thread ~ %d\n",(int)(1320.0f/(omp_num_threads*sdt)));
+      printf("# Mflops per OpenMP thread ~ %d\n",(int)(1608.0f/(omp_num_threads*sdt)));
 #endif
       printf("\n");
       fflush(stdout);
@@ -325,9 +328,9 @@ int main(int argc,char *argv[])
     dt=1.0e6f*dt/((double)(k_max*j_max*(VOLUME)));
     if(g_proc_id==0) {
       printf("# The following result is printed just to make sure that the calculation is not optimized away: %e\n",antioptaway);
-      printf("# Communication switched off: \n# (%d Mflops [%d bit arithmetic])\n", (int)(1320.0f/dt),(int)sizeof(spinor)/3);
+      printf("# Communication switched off: \n# (%d Mflops [%d bit arithmetic])\n", (int)(1608.0f/dt),(int)sizeof(spinor)/3);
 #ifdef OMP
-      printf("# Mflops per OpenMP thread ~ %d\n",(int)(1320.0f/(omp_num_threads*dt)));
+      printf("# Mflops per OpenMP thread ~ %d\n",(int)(1608.0f/(omp_num_threads*dt)));
 #endif
       printf("\n"); 
       fflush(stdout);
@@ -352,7 +355,7 @@ int main(int argc,char *argv[])
     j_max=1;
     sdt=0.;
     for (k=0;k<k_max;k++) {
-      random_spinor_field(g_spinor_field[k], VOLUME, 0);
+      random_spinor_field_lexic(g_spinor_field[k], reproduce_randomnumber_flag, RN_GAUSS);
     }
     
     while(sdt < 3.) {
@@ -391,9 +394,9 @@ int main(int argc,char *argv[])
     if(g_proc_id==0) {
       printf("# The following result is just to make sure that the calculation is not optimized away: %e\n", antioptaway);
       printf("# Total compute time %e sec, variance of the time %e sec. (%d iterations).\n", sdt, sqdt, j_max);
-      printf("\n# (%d Mflops [%d bit arithmetic])\n", (int)(1392.0f/sdt),(int)sizeof(spinor)/3);
+      printf("\n# (%d Mflops [%d bit arithmetic])\n", (int)(1680.0f/sdt),(int)sizeof(spinor)/3);
 #ifdef OMP
-      printf("# Mflops per OpenMP thread ~ %d\n",(int)(1320.0f/(omp_num_threads*sdt)));
+      printf("# Mflops per OpenMP thread ~ %d\n",(int)(1680.0f/(omp_num_threads*sdt)));
 #endif
       printf("\n"); 
       fflush(stdout);
@@ -414,6 +417,9 @@ int main(int argc,char *argv[])
 
 #ifdef MPI
   MPI_Finalize();
+#endif
+#ifdef OMP
+  free_omp_accumulators();
 #endif
   free_gauge_field();
   free_geometry_indices();

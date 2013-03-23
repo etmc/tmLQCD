@@ -38,39 +38,43 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include "global.h"
 #include "start.h"
 #include "sighandler.h"
-#include "tm_operators.h"
+#include "operator/tm_operators.h"
 #include "linalg_eo.h"
 #include "io/gauge.h"
 #include "io/params.h"
 #include "measure_gauge_action.h"
-#include "hybrid_update.h"
 #include "ranlxd.h"
 #include "read_input.h"
 #include "expo.h"
-#include "xchange.h"
+#include "xchange/xchange.h"
 #include "measure_rectangles.h"
-#include "init_gauge_tmp.h"
-#include "monomial.h"
+#include "init/init_gauge_tmp.h"
+#include "monomial/monomial.h"
 #include "integrator.h"
 #include "hamiltonian_field.h"
 #include "update_tm.h"
+#include "gettime.h"
 
 extern su3 ** g_gauge_field_saved;
 
 int update_tm(double *plaquette_energy, double *rectangle_energy, 
-              char * filename, const int return_check, const int acctest) {
+              char * filename, const int return_check, const int acctest, 
+	      const int traj_counter) {
 
   su3 *v, *w;
   static int ini_g_tmp = 0;
-  int ix, mu, accept, i=0, j=0, iostatus=0;
+  int accept, i=0, j=0, iostatus=0;
 
   double yy[1];
   double dh, expmdh, ret_dh=0., ret_gauge_diff=0., tmp;
   double atime=0., etime=0.;
-  double ks,kc,ds,tr,ts,tt;
+  double ks = 0., kc = 0., ds, tr, ts, tt;
 
   char tmp_filename[50];
 
@@ -91,6 +95,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   hf.update_gauge_copy = g_update_gauge_copy;
   hf.update_gauge_energy = g_update_gauge_energy;
   hf.update_rectangle_energy = g_update_rectangle_energy;
+  hf.traj_counter = traj_counter;
   integrator_set_fields(&hf);
 
   strcpy(tmp_filename, ".conf.tmp");
@@ -101,11 +106,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
     ini_g_tmp = 1;
   }
-#ifdef MPI
-  atime = MPI_Wtime();
-#else
-  atime = (double)clock()/((double)(CLOCKS_PER_SEC));
-#endif
+  atime = gettime();
 
   /*
    *  here the momentum and spinor fields are initialized 
@@ -115,8 +116,11 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   /* 
    *  copy the gauge field to gauge_tmp 
    */
-  for(ix=0;ix<VOLUME;ix++) { 
-    for(mu=0;mu<4;mu++) {
+#ifdef OMP
+#pragma omp parallel for private(w,v)
+#endif
+  for(int ix=0;ix<VOLUME;ix++) { 
+    for(int mu=0;mu<4;mu++) {
       v=&hf.gaugefield[ix][mu];
       w=&gauge_tmp[ix][mu];
       _su3_assign(*w,*v);
@@ -130,14 +134,17 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
   }
 
+  if(Integrator.monitor_forces) monitor_forces(&hf);
   /* initialize the momenta  */
-  enep = init_momenta(reproduce_randomnumber_flag, hf.momenta);
+  enep = random_su3adj_field(reproduce_randomnumber_flag, hf.momenta);
 
   g_sloppy_precision = 1;
 
   /* run the trajectory */
-  Integrator.integrate[Integrator.no_timescales-1](Integrator.tau, 
-                       Integrator.no_timescales-1, 1);
+  if(Integrator.n_int[Integrator.no_timescales-1] > 0) {
+    Integrator.integrate[Integrator.no_timescales-1](Integrator.tau, 
+						     Integrator.no_timescales-1, 1);
+  }
 
   g_sloppy_precision = 0;
 
@@ -152,11 +159,12 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   enepx = moment_energy(hf.momenta);
 
   if (!bc_flag) { /* if PBC */
-    new_plaquette_energy = measure_gauge_action(hf.gaugefield);
+    new_plaquette_energy = measure_gauge_action( (const su3**) hf.gaugefield);
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
-      new_rectangle_energy = measure_rectangles(hf.gaugefield);
+      new_rectangle_energy = measure_rectangles( (const su3**) hf.gaugefield);
     }
   }
+  if(g_proc_id == 0 && g_debug_level > 3) printf("called moment_energy: dh = %1.10e\n", (enepx - enep));
   /* Compute the energy difference */
   dh = dh + (enepx - enep);
   if(g_proc_id == 0 && g_debug_level > 3) {
@@ -165,8 +173,8 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   expmdh = exp(-dh);
   /* the random number is only taken at node zero and then distributed to 
      the other sites */
+  ranlxd(yy,1);
   if(g_proc_id==0) {
-    ranlxd(yy,1);
 #ifdef MPI
     for(i = 1; i < g_nproc; i++) {
       MPI_Send(&yy[0], 1, MPI_DOUBLE, i, 31, MPI_COMM_WORLD);
@@ -232,25 +240,44 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     ks = 0.;
     kc = 0.;
 
-    for(ix = 0; ix < VOLUME; ++ix)
+#ifdef OMP
+#pragma omp parallel private(w,v,tt,tr,ts,ds,ks,kc)
     {
-      for(mu = 0; mu < 4; ++mu)
+    int thread_num = omp_get_thread_num();
+#endif
+    su3 ALIGN v0;
+#ifdef OMP
+#pragma omp for
+#endif
+    for(int ix = 0; ix < VOLUME; ++ix)
+    {
+      for(int mu = 0; mu < 4; ++mu)
       {
-        tmp = 0.;
         v=&hf.gaugefield[ix][mu];
         w=&gauge_tmp[ix][mu];
-        /* NOTE Should this perhaps be some function or macro? */
-        ds = sqrt(conj(v->c00 - w->c00) * (v->c00 - w->c00) + conj(v->c01 - w->c01) * (v->c01 - w->c01) + conj(v->c02 - w->c02) * (v->c02 - w->c02) +
-                  conj(v->c10 - w->c10) * (v->c10 - w->c10) + conj(v->c11 - w->c11) * (v->c11 - w->c11) + conj(v->c12 - w->c12) * (v->c12 - w->c12) +             conj(v->c20 - w->c20) * (v->c20 - w->c20) + conj(v->c21 - w->c21) * (v->c21 - w->c21) + conj(v->c22 - w->c22) * (v->c22 - w->c22));
-             
-        tr = ds + kc;
+	_su3_minus_su3(v0, *v, *w);
+	_su3_square_norm(ds, v0);
+
+        tr = sqrt(ds) + kc;
         ts = tr + ks;
         tt = ts-ks;
         ks = ts;
         kc = tr-tt;
       }
     }
-    ret_gauge_diff = ks + kc;
+    kc=ks+kc;
+#ifdef OMP
+    g_omp_acc_re[thread_num] = kc;
+      
+    } /* OpenMP parallel section closing brace */
+
+    /* sum up contributions from thread-local kahan summations */
+    for(int k = 0; k < omp_num_threads; ++k)
+      ret_gauge_diff += g_omp_acc_re[k];
+#else
+    ret_gauge_diff = kc;
+#endif
+
 #ifdef MPI
     tmp = ret_gauge_diff;
     MPI_Reduce(&tmp, &ret_gauge_diff, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
@@ -294,17 +321,23 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     *rectangle_energy = new_rectangle_energy;
     /* put the links back to SU(3) group */
     if (!bc_flag) { /* periodic boundary conditions */
-      for(ix=0;ix<VOLUME;ix++) { 
-        for(mu=0;mu<4;mu++) { 
+#ifdef OMP
+#pragma omp parallel for private(v)
+#endif
+      for(int ix=0;ix<VOLUME;ix++) { 
+        for(int mu=0;mu<4;mu++) { 
           v=&hf.gaugefield[ix][mu];
-          *v=restoresu3(*v); 
+          restoresu3_in_place(v); 
         }
       }
     }
   }
   else { /* reject: copy gauge_tmp to hf.gaugefield */
-    for(ix=0;ix<VOLUME;ix++) {
-      for(mu=0;mu<4;mu++){
+#ifdef OMP
+#pragma omp parallel for private(w) private(v)
+#endif
+    for(int ix=0;ix<VOLUME;ix++) {
+      for(int mu=0;mu<4;mu++){
         v=&hf.gaugefield[ix][mu];
         w=&gauge_tmp[ix][mu];
         _su3_assign(*v,*w);
@@ -319,16 +352,14 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   g_update_rectangle_energy = 1;
 #ifdef MPI
   xchange_gauge(hf.gaugefield);
-  etime = MPI_Wtime();
-#else
-  etime = (double)clock()/((double)(CLOCKS_PER_SEC));
 #endif
+  etime=gettime();
 
   /* printing data in the .data file */
   if(g_proc_id==0) {
     datafile = fopen(filename, "a");
     if (!bc_flag) { /* if Periodic Boundary Conditions */
-      fprintf(datafile, "%14.12f %14.12f %e ",
+      fprintf(datafile, "%.8d %14.12f %14.12f %e ", traj_counter,
               (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
     }
     for(i = 0; i < Integrator.no_timescales; i++) {
@@ -336,6 +367,8 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
         if(monomial_list[ Integrator.mnls_per_ts[i][j] ].type != GAUGE
 	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != SFGAUGE 
 	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != NDPOLY
+	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != NDCLOVER
+	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != CLOVERNDTRLOG
 	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != CLOVERTRLOG ) {
           fprintf(datafile,"%d %d ",  monomial_list[ Integrator.mnls_per_ts[i][j] ].iter0, 
                   monomial_list[ Integrator.mnls_per_ts[i][j] ].iter1);

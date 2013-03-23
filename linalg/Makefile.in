@@ -14,7 +14,7 @@ DEFS = @DEFS@
 OPTARGS = @OPTARGS@
 SOPTARGS = @SOPTARGS@
 
-AR = ar
+AR = @AR@
 RANLIB = @RANLIB@
 CC = @CC@
 CCDEP = @CCDEP@
@@ -39,13 +39,11 @@ liblinalg_TARGETS = assign_add_mul_r_add_mul \
 	assign_diff_mul mul_add_mul mul assign_add_mul_add_mul \
 	assign_mul_bra_add_mul_ket_add assign_mul_add_mul_add_mul_add_mul_r \
 	mul_diff_mul_r assign_add_mul_add_mul_r \
-        comp_decomp square_norm_bi assign_bi scalar_prod_bi diff_bi \
-        assign_diff_mul_bi assign_add_mul_add_mul_bi \
-        assign_mul_bra_add_mul_ket_add_bi mul_r_bi \
-        scalar_prod_r_bi assign_add_mul_r_bi assign_mul_add_r_bi \
+        comp_decomp \
 	convert_eo_to_lexic assign_mul_add_mul_r mul_add_mul_r \
 	assign_mul_add_mul_add_mul_r mattimesvec \
-	scalar_prod_su3spinor assign_mul_add_mul
+	scalar_prod_su3spinor assign_mul_add_mul \
+	assign_mul_add_r_and_square
 
 liblinalg_STARGETS = diff assign_add_mul_r assign_mul_add_r square_norm
 
@@ -90,7 +88,7 @@ liblinalg.a: ${liblinalg_OBJECTS} ${liblinalg_SOBJECTS} Makefile
 # rule to generate .d files
 
 $(addsuffix .d, $(liblinalg_TARGETS) ${liblinalg_STARGETS}): %.d: ${srcdir}/%.c Makefile
-	@${CCDEP} ${DEPFLAGS} ${INCLUDES} $< > $@
+	@${CCDEP} ${DEFS} ${DEPFLAGS} ${INCLUDES} $< > $@
 
 # rule to make dependencies
 

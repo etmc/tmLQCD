@@ -44,12 +44,12 @@
 #include <io/gauge.h>
 #include <io/spinor.h>
 #include <io/utils.h>
-#include "tm_operators.h"
+#include "operator/tm_operators.h"
 #include "solver/solver.h"
 #include "solver/jdher.h"
 #include "solver/matrix_mult_typedef.h"
 #include "linalg_eo.h"
-#include "Dov_psi.h"
+#include "operator/Dov_psi.h"
 #include "eigenvalues.h"
 #include "gettime.h"
 

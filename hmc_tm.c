@@ -55,53 +55,36 @@
 #include "measure_gauge_action.h"
 #include "measure_rectangles.h"
 #ifdef MPI
-# include "xchange.h"
+# include "xchange/xchange.h"
 #endif
 #include "read_input.h"
 #include "mpi_init.h"
 #include "sighandler.h"
 #include "update_tm.h"
-#include "init_gauge_field.h"
-#include "init_geometry_indices.h"
-#include "init_spinor_field.h"
-#include "init_moment_field.h"
-#include "init_gauge_tmp.h"
-#include "init_dirac_halfspinor.h"
-#include "init_bispinor_field.h"
-#include "init_chi_spinor_field.h"
-#include "xchange_halffield.h"
+#include "init/init.h"
 #include "test/check_geometry.h"
 #include "boundary.h"
 #include "phmc.h"
 #include "solver/solver.h"
-#include "monomial.h"
+#include "monomial/monomial.h"
 #include "integrator.h"
 #include "sighandler.h"
 #include "measurements.h"
-
-void usage(){
-  fprintf(stdout, "HMC for Wilson twisted mass QCD\n");
-  fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
-  fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
-  fprintf(stdout, "Usage:   hmc_tm [options]\n");
-  fprintf(stdout, "Options: [-f input-filename]  default: hmc.input\n");
-  fprintf(stdout, "         [-o output-filename] default: output\n");
-  fprintf(stdout, "         [-v] more verbosity\n");
-  fprintf(stdout, "         [-V] print version information and exit\n");
-  fprintf(stdout, "         [-h|-? this help]\n");
-  exit(0);
-}
 
 extern int nstore;
 
 int const rlxdsize = 105;
 
+static void usage();
+static void process_args(int argc, char *argv[], char ** input_filename, char ** filename);
+static void set_default_filenames(char ** input_filename, char ** filename);
+
 int main(int argc,char *argv[]) {
 
   FILE *parameterfile=NULL, *countfile=NULL;
   char *filename = NULL;
-  char datafilename[50];
-  char parameterfilename[50];
+  char datafilename[206];
+  char parameterfilename[206];
   char gauge_filename[50];
   char nstore_filename[50];
   char tmp_filename[50];
@@ -125,7 +108,7 @@ int main(int argc,char *argv[]) {
 /* For online measurements */
   measurement * meas;
   int imeas;
-
+  
 #ifdef _KOJAK_INST
 #pragma pomp inst init
 #pragma pomp inst begin(main)
@@ -143,43 +126,21 @@ int main(int argc,char *argv[]) {
   g_use_clover_flag = 0;
 
 #ifdef MPI
+
+#  ifdef OMP
+  int mpi_thread_provided;
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
+#  else
   MPI_Init(&argc, &argv);
+#  endif
+
   MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
 #else
   g_proc_id = 0;
 #endif
 
-
-  while ((c = getopt(argc, argv, "h?vVf:o:")) != -1) {
-    switch (c) {
-    case 'f':
-      input_filename = calloc(200, sizeof(char));
-      strcpy(input_filename,optarg);
-      break;
-    case 'o':
-      filename = calloc(200, sizeof(char));
-      strcpy(filename,optarg);
-      break;
-    case 'v':
-      verbose = 1;
-      break;
-    case 'V':
-      fprintf(stdout,"%s %s\n",PACKAGE_STRING,git_hash);
-      exit(0);
-      break;
-    case 'h':
-    case '?':
-    default:
-      usage();
-      break;
-    }
-  }
-  if(input_filename == NULL){
-    input_filename = "hmc.input";
-  }
-  if(filename == NULL){
-    filename = "output";
-  }
+  process_args(argc,argv,&input_filename,&filename);
+  set_default_filenames(&input_filename,&filename);
 
   /* Read the input file */
   if( (status = read_input(input_filename)) != 0) {
@@ -187,16 +148,12 @@ int main(int argc,char *argv[]) {
     exit(-1);
   }
 
-  /* set number of omp threads to be used */
 #ifdef OMP
-  if(omp_num_threads > 0)
-  {
-    omp_set_num_threads(omp_num_threads);
-  }
+  init_openmp();
 #endif
 
-  DUM_DERI = 6;
-  DUM_SOLVER = DUM_DERI+8;
+  DUM_DERI = 4;
+  DUM_SOLVER = DUM_DERI+1;
   DUM_MATRIX = DUM_SOLVER+6;
   if(g_running_phmc) {
     NO_OF_SPINORFIELDS = DUM_MATRIX+8;
@@ -212,25 +169,6 @@ int main(int argc,char *argv[]) {
 
   tmlqcd_mpi_init(argc, argv);
 
-  if(even_odd_flag) {
-    j = init_monomials(VOLUMEPLUSRAND/2, even_odd_flag);
-  }
-  else {
-    j = init_monomials(VOLUMEPLUSRAND, even_odd_flag);
-  }
-  if (j != 0) {
-    fprintf(stderr, "Not enough memory for monomial pseudo fermion fields! Aborting...\n");
-    exit(0);
-  }
-
-  init_integrator();
-
-  if(g_proc_id == 0) {
-    for(j = 0; j < no_monomials; j++) {
-      printf("# monomial id %d type = %d timescale %d\n", j, monomial_list[j].type, monomial_list[j].timescale);
-    }
-  }
-
   if(nstore == -1) {
     countfile = fopen(nstore_filename, "r");
     if(countfile != NULL) {
@@ -244,14 +182,14 @@ int main(int argc,char *argv[]) {
       trajectory_counter = 0;
     }
   }
-
+  
 #ifndef MPI
   g_dbw2rand = 0;
 #endif
-
-
+  
+  
   g_mu = g_mu1;
-
+  
 #ifdef _GAUGE_COPY
   status = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
@@ -300,26 +238,24 @@ int main(int argc,char *argv[]) {
     }
   }
 
-   /* list and initialize measurements*/
-   if(g_proc_id == 0) {
+  /* list and initialize measurements*/
+  if(g_proc_id == 0) {
     printf("\n");
     for(j = 0; j < no_measurements; j++) {
       printf("# measurement id %d, type = %d: Frequency %d\n", j, measurement_list[j].type, measurement_list[j].freq);
     }
-   }
-   init_measurements();
-
-  zero_spinor_field(g_spinor_field[DUM_DERI+4],VOLUME);
-  zero_spinor_field(g_spinor_field[DUM_DERI+5],VOLUME);
-  zero_spinor_field(g_spinor_field[DUM_DERI+6],VOLUME);
+  }
+  init_measurements();
 
   /*construct the filenames for the observables and the parameters*/
-  strcpy(datafilename,filename);  strcat(datafilename,".data");
-  strcpy(parameterfilename,filename);  strcat(parameterfilename,".para");
+  strncpy(datafilename,filename,200);  
+  strcat(datafilename,".data");
+  strncpy(parameterfilename,filename,200);  
+  strcat(parameterfilename,".para");
 
   if(g_proc_id == 0){
     parameterfile = fopen(parameterfilename, "a");
-    write_first_messages(parameterfile, 0);
+    write_first_messages(parameterfile, "hmc", git_hash);
   }
 
   /* define the geometry */
@@ -351,7 +287,7 @@ int main(int argc,char *argv[]) {
 #endif
 
   /* Initialise random number generator */
-  start_ranlux(rlxd_level, random_seed^nstore);
+  start_ranlux(rlxd_level, random_seed^nstore );
 
   /* Set up the gauge field */
   /* continue and restart */
@@ -373,7 +309,7 @@ int main(int argc,char *argv[]) {
   }
   else if (startoption == 1) {
     /* hot */
-    random_gauge_field(reproduce_randomnumber_flag);
+    random_gauge_field(reproduce_randomnumber_flag, g_gauge_field);
   }
   else if(startoption == 0) {
     /* cold */
@@ -385,13 +321,28 @@ int main(int argc,char *argv[]) {
   xchange_gauge(g_gauge_field);
 #endif
 
-  if(g_running_phmc) {
-    init_phmc();
+  if(even_odd_flag) {
+    j = init_monomials(VOLUMEPLUSRAND/2, even_odd_flag);
+  }
+  else {
+    j = init_monomials(VOLUMEPLUSRAND, even_odd_flag);
+  }
+  if (j != 0) {
+    fprintf(stderr, "Not enough memory for monomial pseudo fermion fields! Aborting...\n");
+    exit(0);
   }
 
-  plaquette_energy = measure_gauge_action(g_gauge_field);
+  init_integrator();
+
+  if(g_proc_id == 0) {
+    for(j = 0; j < no_monomials; j++) {
+      printf("# monomial id %d type = %d timescale %d\n", j, monomial_list[j].type, monomial_list[j].timescale);
+    }
+  }
+
+  plaquette_energy = measure_gauge_action( (const su3**) g_gauge_field);
   if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
-    rectangle_energy = measure_rectangles(g_gauge_field);
+    rectangle_energy = measure_rectangles( (const su3**) g_gauge_field);
     if(g_proc_id == 0){
       fprintf(parameterfile,"# Computed rectangle value: %14.12f.\n",rectangle_energy/(12.*VOLUME*g_nproc));
     }
@@ -403,10 +354,9 @@ int main(int argc,char *argv[]) {
     printf("# Computed plaquette value: %14.12f.\n", plaquette_energy/(6.*VOLUME*g_nproc));
     fclose(parameterfile);
   }
- 
 
   /* set ddummy to zero */
-  for(ix = 0; ix < VOLUME+RAND; ix++){
+  for(ix = 0; ix < VOLUMEPLUSRAND; ix++){
     for(mu=0; mu<4; mu++){
       ddummy[ix][mu].d1=0.;
       ddummy[ix][mu].d2=0.;
@@ -431,6 +381,7 @@ int main(int argc,char *argv[]) {
     fclose(countfile);
   }
 
+
   /* Loop for measurements */
   for(j = 0; j < Nmeas; j++) {
     if(g_proc_id == 0) {
@@ -439,7 +390,8 @@ int main(int argc,char *argv[]) {
 
     return_check = return_check_flag && (trajectory_counter%return_check_interval == 0);
 
-    accept = update_tm(&plaquette_energy, &rectangle_energy, datafilename, return_check, Ntherm<trajectory_counter);
+    accept = update_tm(&plaquette_energy, &rectangle_energy, datafilename, 
+		       return_check, Ntherm<trajectory_counter, trajectory_counter);
     Rate += accept;
 
     /* Save gauge configuration all Nsave times */
@@ -472,8 +424,8 @@ int main(int argc,char *argv[]) {
           fprintf(stderr, "Error %d while writing gauge field to %s\nAborting...\n", status, tmp_filename);
           exit(-2);
         }
+
         if (!g_disable_IO_checks) {
-#ifdef HAVE_LIBLEMON
           /* Read gauge field back to verify the writeout */
           if (g_proc_id == 0) {
             fprintf(stdout, "# Write completed, verifying write...\n");
@@ -486,11 +438,10 @@ int main(int argc,char *argv[]) {
           if (g_proc_id == 0) {
             fprintf(stdout, "# Write successfully verified.\n");
           }
-#else
+        } else {
           if (g_proc_id == 0) {
-            fprintf(stdout, "# Write completed successfully.\n");
+            fprintf(stdout, "# Write completed successfully. Write not verified!\n");
           }
-#endif
         }
         free(xlfInfo);
       }
@@ -515,14 +466,9 @@ int main(int argc,char *argv[]) {
         if (g_proc_id == 0) {
           fprintf(stdout, "#\n# Beginning online measurement.\n");
         }
-        meas->measurefunc(trajectory_counter, imeas);
+        meas->measurefunc(trajectory_counter, imeas, even_odd_flag);
       }
     }
-
-    if((g_rec_ev !=0) && (trajectory_counter%g_rec_ev == 0) && (g_running_phmc)) {
-      phmc_compute_ev(trajectory_counter, plaquette_energy);
-    }
-
 
     if(g_proc_id == 0) {
       verbose = 1;
@@ -556,6 +502,9 @@ int main(int argc,char *argv[]) {
 #ifdef MPI
   MPI_Finalize();
 #endif
+#ifdef OMP
+  free_omp_accumulators();
+#endif
   free_gauge_tmp();
   free_gauge_field();
   free_geometry_indices();
@@ -566,10 +515,68 @@ int main(int argc,char *argv[]) {
     free_bispinor_field();
     free_chi_spinor_field();
   }
-
+  free(input_filename);
+  free(filename);
   return(0);
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)
 #endif
+}
+
+static void usage(){
+  fprintf(stdout, "HMC for Wilson twisted mass QCD\n");
+  fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
+  fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
+  fprintf(stdout, "Usage:   hmc_tm [options]\n");
+  fprintf(stdout, "Options: [-f input-filename]  default: hmc.input\n");
+  fprintf(stdout, "         [-o output-filename] default: output\n");
+  fprintf(stdout, "         [-v] more verbosity\n");
+  fprintf(stdout, "         [-V] print version information and exit\n");
+  fprintf(stdout, "         [-h|-? this help]\n");
+  exit(0);
+}
+
+static void process_args(int argc, char *argv[], char ** input_filename, char ** filename) {
+  int c;
+  while ((c = getopt(argc, argv, "h?vVf:o:")) != -1) {
+    switch (c) {
+      case 'f':
+        *input_filename = calloc(200, sizeof(char));
+        strncpy(*input_filename, optarg, 200);
+        break;
+      case 'o':
+        *filename = calloc(200, sizeof(char));
+        strncpy(*filename, optarg, 200);
+        break;
+      case 'v':
+        verbose = 1;
+        break;
+      case 'V':
+        if(g_proc_id == 0) {
+          fprintf(stdout,"%s %s\n",PACKAGE_STRING,git_hash);
+        }
+        exit(0);
+        break;
+      case 'h':
+      case '?':
+      default:
+        if( g_proc_id == 0 ) {
+          usage();
+        }
+        break;
+    }
+  }
+}
+
+static void set_default_filenames(char ** input_filename, char ** filename) {
+  if( *input_filename == NULL ) {
+    *input_filename = calloc(13, sizeof(char));
+    strcpy(*input_filename,"hmc.input");
+  }
+  
+  if( *filename == NULL ) {
+    *filename = calloc(7, sizeof(char));
+    strcpy(*filename,"output");
+  } 
 }
 

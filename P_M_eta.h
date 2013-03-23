@@ -38,7 +38,7 @@ void h_X_eta(spinor * const R,spinor * const S, double const mstar);
 
 void h_X_4_eta(spinor * const R1, spinor * const R2, spinor * const S, double const mstar);
 
-void Check_Approximation(double const mstar);
+void Check_Approximation(double const mstar, const int repro);
 
 #endif
 

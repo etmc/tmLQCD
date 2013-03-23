@@ -108,7 +108,7 @@ int bicgstabell(spinor * const x0, spinor * const b, const int max_iter,
       /* x = x + \alpha u_0 */
       assign_add_mul_r(x, u[0], alpha, N);
       err = square_norm(r[j+1], N, 1);
-      if(g_proc_id == 0 && g_debug_level > 1) {printf("%d %d err = %e\n", k, j, err);fflush(stdout);}
+      if(g_proc_id == 0 && g_debug_level > 2) {printf("%d %d err = %e\n", k, j, err);fflush(stdout);}
     }
 
     /* The MR part */

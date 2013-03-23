@@ -18,21 +18,19 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-/*******************************************************************************
-*
-* File su3.h
-*
-* Type definitions and macros for SU(3) matrices and spinors  
-*
-* Version: 1.0
-* Author: Martin Luescher <luscher@mail.desy.de>
-* Date: 24.10.2000
-*
-* Extended by Martin Hasenbusch 2001.  <Martin.Hasenbusch@desy.de>
-* Rewritten for C99 complex by Albert Deuzeman 2012 <deuzeman@itp.unibe.ch>
-*
-*******************************************************************************/
+ *
+ * File su3.h
+ *
+ * Type definitions and macros for SU(3) matrices and spinors  
+ *
+ * Version: 1.0
+ * Author: Martin Luescher <luscher@mail.desy.de>
+ * Date: 24.10.2000
+ *
+ * Extended by Martin Hasenbusch 2001.  <Martin.Hasenbusch@desy.de>
+ * Rewritten for C99 complex by Albert Deuzeman 2012 <deuzeman@itp.unibe.ch>
+ *
+ *******************************************************************************/
 
 #include <complex.h>
 #if (defined XLC && defined BGL)
@@ -538,6 +536,11 @@ _sse_store_up(r);
    (u).c21 += I * a * (v).c21; \
    (u).c22 += I * a * (v).c22;
 
+#define _su3_square_norm(s, v) \
+  s = conj(v.c00) * (v.c00) + conj(v.c01) * (v.c01) + conj(v.c02) * (v.c02) + \
+    conj(v.c10) * (v.c10) + conj(v.c11) * (v.c11) + conj(v.c12) * (v.c12) + \
+    conj(v.c20) * (v.c20) + conj(v.c21) * (v.c21) + conj(v.c22) * (v.c22);
+
 #if ((defined SSE2) || (defined SSE3))
 
 #define _su3_times_su3(u,v,w) _sse_su3_times_su3(u,v,w)
@@ -655,6 +658,18 @@ _sse_store_up(r);
   (t).c21 = (u).c2 * conj((v).c1);	\
   (t).c22 = (u).c2 * conj((v).c2);
 
+#define _mvector_tensor_vector(t,u,v)	\
+  (t).c00 = -(u).c0 * conj((v).c0);	\
+  (t).c01 = -(u).c0 * conj((v).c1);	\
+  (t).c02 = -(u).c0 * conj((v).c2);	\
+  (t).c10 = -(u).c1 * conj((v).c0);	\
+  (t).c11 = -(u).c1 * conj((v).c1);	\
+  (t).c12 = -(u).c1 * conj((v).c2);	\
+  (t).c20 = -(u).c2 * conj((v).c0);	\
+  (t).c21 = -(u).c2 * conj((v).c1);	\
+  (t).c22 = -(u).c2 * conj((v).c2);
+
+
 #define _vector_tensor_vector_add(t, u, v, w, z) \
   (t).c00 = (u).c0 * conj((v).c0) + (w).c0 * conj((z).c0) ;	\
   (t).c01 = (u).c0 * conj((v).c1) + (w).c0 * conj((z).c1);	\
@@ -665,5 +680,7 @@ _sse_store_up(r);
   (t).c20 = (u).c2 * conj((v).c0) + (w).c2 * conj((z).c0);	\
   (t).c21 = (u).c2 * conj((v).c1) + (w).c2 * conj((z).c1);	\
   (t).c22 = (u).c2 * conj((v).c2) + (w).c2 * conj((z).c2);
+
+
 
 #endif

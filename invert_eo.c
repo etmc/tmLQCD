@@ -15,9 +15,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
-
-/****************************************************************
  *
  * invert_eo makes an inversion with EO preconditioned
  * tm Operator
@@ -40,18 +37,24 @@
 #include<stdlib.h>
 #include"global.h"
 #include"linalg_eo.h"
-#include"tm_operators.h"
-#include"Hopping_Matrix.h"
-#include"D_psi.h"
-#include"linsolve.h"
+#include"operator/tm_operators.h"
+#include"operator/Hopping_Matrix.h"
+#include"operator/D_psi.h"
 #include"gamma.h"
 #include"solver/solver.h"
 #include"read_input.h"
-#include"xchange.h"
+#include"xchange/xchange.h"
 #include"solver/poly_precon.h"
 #include"solver/dfl_projector.h"
 #include"invert_eo.h"
 #include "solver/dirac_operator_eigenvectors.h"
+
+/* FIXME temporary includes and declarations until IO and interface for invert and CGMMS are generelized */
+#include "init/init_spinor_field.h"
+#include <io/params.h>
+#include <io/spinor.h>
+static double cgmms_reached_prec = 0.0; 
+static void cgmms_write_props(spinor ** const P, double const * const extra_masses, const int no_extra_masses, const int id, const int iteration);
 
 #ifdef HAVE_GPU
 #include"GPU/cudadefs.h"
@@ -66,8 +69,6 @@ extern  int mixed_solve_eo (spinor * const P, spinor * const Q, const int max_it
 extern su3* g_trafo;
 #endif
 #endif
-
-
 
 int invert_eo(spinor * const Even_new, spinor * const Odd_new, 
 	      spinor * const Even, spinor * const Odd,
@@ -417,11 +418,39 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       add(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], VOLUME);
     }
     else if (solver_flag == CGMMS) {
+      /* FIXME temporary workaround for the multiple masses interface */
+      double * shifts = (double*)calloc(no_extra_masses+1,sizeof(double));
+      shifts[0]=g_mu;
+      for(int i = 0; i < no_extra_masses; ++i)
+        shifts[i+1] = extra_masses[i];
+      g_mu = 0;
+      solver_pm_t solver_params;
+      solver_params.shifts = shifts;
+      solver_params.no_shifts = no_extra_masses+1;
+      solver_params.rel_prec = rel_prec;
+      solver_params.max_iter = max_iter;
+      solver_params.squared_solver_prec = precision;
+      solver_params.sdim = VOLUME;
+      solver_params.M_psi = &Q_pm_psi;
+      solver_params.type = solver_flag; 
+
+      /* FIXME temporary workaround for the multiple shift solver interface and integration of IO */
+      spinor * P_memory;
+      spinor ** P;
+      allocate_spinor_field_array(&P,&P_memory,VOLUME,no_extra_masses+1);
+
       if(g_proc_id == 0) {printf("# Using multi mass CG!\n"); fflush(stdout);}
+      
       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
-      iter = cg_mms_tm(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], 
-                       max_iter, precision, rel_prec, VOLUME, &Q_pm_psi, no_extra_masses, extra_masses, id);
-      Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
+      iter = cg_mms_tm(P, g_spinor_field[DUM_DERI+1],&solver_params,&cgmms_reached_prec);
+      g_mu = shifts[0];
+      Q_minus_psi(g_spinor_field[DUM_DERI+1], P[0]);
+      
+      cgmms_write_props(P,shifts,no_extra_masses+1,id,iter);
+    
+      free_spinor_field_array(&P_memory);
+      free(P);
+      free(shifts);
     }
     else {
       if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
@@ -479,5 +508,59 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     convert_lexic_to_eo(Even_new, Odd_new, g_spinor_field[DUM_DERI+1]);
   }
   return(iter);
+}
+
+/* FIXME temporary solution for the writing of CGMMS propagators until the input/output interface for
+ invert_eo has been generalized
+ NOTE that no_shifts = no_extra_masses+1 */
+static void cgmms_write_props(spinor ** const P, double const * const shifts, const int no_shifts, const int id, const int iteration) {
+  int append = 0;
+  char filename[300];
+  WRITER * writer = NULL;
+  paramsInverterInfo *inverterInfo = NULL;
+  paramsPropagatorFormat *propagatorFormat = NULL;
+  
+  spinor * temp_eo_spinors_memory;
+  spinor ** temp_eo_spinors;
+  
+  allocate_spinor_field_array(&temp_eo_spinors, &temp_eo_spinors_memory, VOLUME/2, 2);
+
+  /* save all the results of (Q^dagger Q)^(-1) \gamma_5 \phi */
+  for(int im = 0; im < no_shifts; im++) {
+    if(SourceInfo.type != 1) {
+      if (PropInfo.splitted) {
+        sprintf(filename, "%s.%.2d.%.4d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im);
+      } else {
+        sprintf(filename, "%s.%.2d.%.4d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.t, im);
+      }
+    } else {
+      sprintf(filename, "%s.%.2d.%.4d.%.5d.cgmms.%.2d.0", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.sample, im);
+    }
+    
+    if(g_kappa != 0) {
+      mul_r(P[im], (2*g_kappa)*(2*g_kappa), P[im], VOLUME);
+    }
+
+    append = !PropInfo.splitted;
+
+    construct_writer(&writer, filename, append);
+
+    if (PropInfo.splitted || SourceInfo.ix == index_start) {
+      //Create the inverter info NOTE: always set to TWILSON=12 and 1 flavour (to be adjusted)
+      inverterInfo = construct_paramsInverterInfo(cgmms_reached_prec, iteration+1, 12, 1);
+      inverterInfo->cgmms_mass = shifts[im]/(2 * inverterInfo->kappa);
+      write_spinor_info(writer, PropInfo.format, inverterInfo, append);
+      //Create the propagatorFormat NOTE: always set to 1 flavour (to be adjusted)
+      propagatorFormat = construct_paramsPropagatorFormat(PropInfo.precision, 1);
+      write_propagator_format(writer, propagatorFormat);
+      free(inverterInfo);
+      free(propagatorFormat);
+    }
+    convert_lexic_to_eo(temp_eo_spinors[1], temp_eo_spinors[0], P[im]);
+    write_spinor(writer, &temp_eo_spinors[1], &temp_eo_spinors[0], 1, PropInfo.precision);
+    destruct_writer(writer);
+  }
+  free_spinor_field_array(&temp_eo_spinors_memory);
+  free(temp_eo_spinors);
 }
 

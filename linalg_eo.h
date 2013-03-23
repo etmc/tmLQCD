@@ -35,6 +35,7 @@
 #include "linalg/assign.h"
 /* #include "linalg/deri_linalg.h" */
 #include "linalg/assign_mul_add_r.h"
+#include "linalg/assign_mul_add_r_and_square.h"
 #include "linalg/scalar_prod.h"
 #include "linalg/mul_diff_mul.h"
 #include "linalg/assign_add_mul.h"
@@ -49,17 +50,6 @@
 #include "linalg/mul_add_mul_r.h"
 
 #include "linalg/comp_decomp.h"
-#include "linalg/square_norm_bi.h"
-#include "linalg/assign_bi.h"
-#include "linalg/scalar_prod_bi.h"
-#include "linalg/diff_bi.h"
-#include "linalg/assign_diff_mul_bi.h"
-#include "linalg/assign_add_mul_add_mul_bi.h"
-#include "linalg/assign_mul_bra_add_mul_ket_add_bi.h"
-#include "linalg/mul_r_bi.h"
-#include "linalg/scalar_prod_r_bi.h"
-#include "linalg/assign_add_mul_r_bi.h"
-#include "linalg/assign_mul_add_r_bi.h"
 
 #include "linalg/mattimesvec.h"
 
