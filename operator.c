@@ -252,10 +252,6 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 	  g_precWS=NULL;
 	}
 	
-	//optr->iterations = invert_eo( optr->prop0, optr->prop1, optr->sr0, optr->sr1,
-	//			      optr->eps_sq, optr->maxiter,
-	//			      optr->solver, optr->rel_prec,
-	//			      0, optr->even_odd_flag,optr->no_extra_masses, optr->extra_masses, optr->id );
 	optr->iterations = invert_eo( optr->prop0, optr->prop1, optr->sr0, optr->sr1,
 				      optr->eps_sq, optr->maxiter,
 				      optr->solver, optr->rel_prec,
