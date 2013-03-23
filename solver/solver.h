@@ -34,6 +34,9 @@
 #define DFLFGMRES 11
 #define CGMMS 12
 #define MIXEDCG 13
+#define MCR 14
+#define BICG 15
+#define CR 16
 
 #include"solver/matrix_mult_typedef.h"
 
@@ -41,6 +44,7 @@
 #include"solver/gmres_dr.h"
 #include"solver/fgmres.h"
 #include"solver/bicgstab_complex.h"
+#include"solver/bicg_complex.h"
 #include"solver/cgs_real.h"
 #include"solver/bicgstabell.h"
 #include"solver/bicgstab2.h"
@@ -51,6 +55,8 @@
 #include"solver/eigenvalues.h"
 #include"solver/cg_mms_tm.h"
 #include"solver/mixed_cg_her.h"
+#include"solver/mcr.h"
+#include"solver/cr.h"
 
 #include"solver/sub_low_ev.h"
 #include"solver/gmres_precon.h"
