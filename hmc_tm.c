@@ -38,6 +38,7 @@
 #include <sys/time.h>
 #include <string.h>
 #include <signal.h>
+#include <unistd.h>
 #ifdef MPI
 # include <mpi.h>
 #endif
@@ -91,6 +92,8 @@ int main(int argc,char *argv[]) {
   char *input_filename = NULL;
   int status = 0, accept = 0;
   int j,ix,mu, trajectory_counter=0;
+  unsigned int const io_max_attempts = 5; /* Make this configurable? */
+  unsigned int const io_timeout = 5; /* Make this configurable? */
   struct timeval t1;
 
   /* Energy corresponding to the Gauge part */
@@ -414,37 +417,59 @@ int main(int argc,char *argv[]) {
        * then the configuration is currently stored in .conf.tmp, written out by update_tm.
        * In that case also a readback was performed, so no need to test .conf.tmp
        * In all other cases the gauge configuration still needs to be written out here. */
-      if (!(return_check && accept)) {
-        xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
-        if (g_proc_id == 0) {
-          fprintf(stdout, "# Writing gauge field to %s.\n", tmp_filename);
-        }
-        if((status = write_gauge_field( tmp_filename, gauge_precision_write_flag, xlfInfo) != 0 )) {
-          /* Writing the gauge field failed directly */
-          fprintf(stderr, "Error %d while writing gauge field to %s\nAborting...\n", status, tmp_filename);
-          exit(-2);
-        }
+      if (!(return_check && accept))
+        for (unsigned int attempt = 1; attempt <= io_max_attempts; ++attempt)
+        {
+          if (g_proc_id == 0)
+            fprintf(stdout, "# Writing gauge field to %s.\n", tmp_filename);
 
-        if (!g_disable_IO_checks) {
-          /* Read gauge field back to verify the writeout */
-          if (g_proc_id == 0) {
-            fprintf(stdout, "# Write completed, verifying write...\n");
+          xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
+          status = write_gauge_field( tmp_filename, gauge_precision_write_flag, xlfInfo);
+          free(xlfInfo);
+          
+          if (status) {
+            /* Writing the gauge field failed directly */
+            fprintf(stderr, "Error %d while writing gauge field to %s\nAborting...\n", status, tmp_filename);
+            exit(-2);
           }
-          if( (status = read_gauge_field(tmp_filename)) != 0) {
-            fprintf(stderr, "WARNING, writeout of %s returned no error, but verification discovered errors.\n", tmp_filename);
-            fprintf(stderr, "Potential disk or MPI I/O error. Aborting...\n");
+          
+          if (g_disable_IO_checks) {
+            if (g_proc_id == 0)
+              fprintf(stdout, "# Write completed successfully. Write not verified!\n");
+            break;
+          }
+
+          /* Read gauge field back to verify the writeout */
+          if (g_proc_id == 0) 
+            fprintf(stdout, "# Write completed, verifying write...\n");
+
+          status = read_gauge_field(tmp_filename);
+          
+          if (!status) {
+            if (g_proc_id == 0)
+              fprintf(stdout, "# Write successfully verified.\n");
+            break;
+          }
+
+          if (g_proc_id == 0) {
+            fprintf(stdout, "# Writeout of %s returned no error, but verification discovered errors.\n", tmp_filename);
+            fprintf(stdout, "# Potential disk or MPI I/O error.\n");
+            fprintf(stdout, "# This was attempt %d out of %d.\n", attempt, io_max_attempts);
+          }
+
+          if (attempt == io_max_attempts)
+          {
+            if (g_proc_id == 0)
+              fprintf(stdout, "# Too many I/O failures, will abort.\n");
             exit(-3);
           }
-          if (g_proc_id == 0) {
-            fprintf(stdout, "# Write successfully verified.\n");
-          }
-        } else {
-          if (g_proc_id == 0) {
-            fprintf(stdout, "# Write completed successfully. Write not verified!\n");
-          }
+
+          if (g_proc_id == 0)
+            fprintf(stdout, "# Will attempt to write again in %d seconds.\n", io_timeout);
+          
+          sleep(io_timeout);
+          MPI_Barrier(MPI_COMM_WORLD);
         }
-        free(xlfInfo);
-      }
       /* Now move .conf.tmp into place */
       if(g_proc_id == 0) {
         fprintf(stdout, "# Renaming %s to %s.\n", tmp_filename, gauge_filename);
