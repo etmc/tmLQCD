@@ -286,6 +286,9 @@ double cloverdetratio_acc(const int id, hamiltonian_field_t * const hf) {
   atime = gettime();
   g_mu = mnl->mu;
   boundary(mnl->kappa);
+
+  sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
+  sw_invert(EE, mnl->mu);
   
   g_mu3 = mnl->rho2;
   mnl->Qp(mnl->w_fields[1], mnl->pf);
