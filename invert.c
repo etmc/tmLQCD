@@ -264,6 +264,7 @@ int main(int argc, char *argv[])
   init_operators();
 
   #ifdef HAVE_GPU
+   if(usegpu_flag){
     if(even_odd_flag){
        init_mixedsolve_eo(g_gauge_field);
     }
@@ -281,6 +282,7 @@ int main(int argc, char *argv[])
 	exit(200);
       }
     #endif
+   }//usegpu_flag
   #endif  
   
   /* this could be maybe moved to init_operators */
@@ -517,6 +519,7 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef HAVE_GPU
+ if(usegpu_flag){
   finalize_mixedsolve();
   #ifdef GPU_DOUBLE
     finalize_gpu_fields();
@@ -524,6 +527,7 @@ int main(int argc, char *argv[])
     #ifdef TEMPORALGAUGE
       finalize_temporalgauge();
     #endif
+ }
 #endif
 
 

@@ -3489,7 +3489,7 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
     #ifndef MPI
     	dev_Qtm_pm_ndpsi(A_up, A_dn,					// A = (matrix)*B
     	                        B_up, B_dn, 
-    	                        griddim2, blockdim2,
+    	                        griddim2, blockdim2.x,
     	                        griddim3, blockdim3,
     	                        griddim4, blockdim4,
     	                        griddim5, blockdim5);

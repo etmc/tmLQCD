@@ -103,11 +103,11 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
                     dev_spinor * spinin, dev_spinor * spinout,
                     int * gfindex_site, int * gfindex_nextsite, int * nn_evenodd,
                     int ieo,
-                    int gridsize, int blocksize);
+                    int gridsize, dim3 blocksize);
 
 void dev_Qtm_pm_ndpsi_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * spinout_dn,
                                         dev_spinor * spinin_up , dev_spinor * spinin_dn ,
-                                        int gridsize1, int blocksize1, int gridsize2, int blocksize2,
+                                        int gridsize1, dim3 blocksize1, int gridsize2, int blocksize2,
                                         int gridsize3, int blocksize3, int gridsize4, int blocksize4);
 
 
