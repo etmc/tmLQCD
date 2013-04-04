@@ -11,7 +11,7 @@ static void smear_plain(stout_control *control, gauge_field_t in)
 
   control->U[0] = in; /* Shallow copy intended */
   
-#pragma omp parallel private(iter, mu, staples)
+#pragma omp parallel private(staples)
   for(unsigned int iter = 0; iter < control->iterations; ++iter)
   {
 #pragma omp for
@@ -23,7 +23,7 @@ static void smear_plain(stout_control *control, gauge_field_t in)
       }
     /* Prepare for the next iteration, swap and exchange fields */
     /* There should be an implicit OMP barrier here */
-#pragma omp cricital
+#pragma omp critical
     {
       swap_gauge_field(&control->U[1], &buffer);
       exchange_gauge_field(&control->U[1]); /* The edge terms will have changed by now */
