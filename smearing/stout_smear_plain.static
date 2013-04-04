@@ -2,7 +2,7 @@
 
 static void smear_plain(stout_control *control, gauge_field_t in)
 {
-  su3 staples;
+  su3 ALIGN staples;
   /* Staple calculation isn't local, so we cannot store changes per site immediately
    * and need a separate input and output. Since the result of one iteration becomes 
    * the input of the next, that means we'll actually need an additional field of 
@@ -11,8 +11,10 @@ static void smear_plain(stout_control *control, gauge_field_t in)
 
   control->U[0] = in; /* Shallow copy intended */
   
+#pragma omp parallel private(iter, mu, staples)
   for(unsigned int iter = 0; iter < control->iterations; ++iter)
   {
+#pragma omp for
     for (unsigned int x = 0; x < VOLUME; ++x)
       for (unsigned int mu = 0; mu < 4; ++mu)
       {
@@ -20,9 +22,13 @@ static void smear_plain(stout_control *control, gauge_field_t in)
         fatten_links(&buffer[x][mu], control->rho, &staples, &in[x][mu]);
       }
     /* Prepare for the next iteration, swap and exchange fields */
-    swap_gauge_field(&control->U[1], &buffer);
-    exchange_gauge_field(&control->U[1]); /* The edge terms will have changed by now */
-    in = control->result; /* Shallow copy intended */
+    /* There should be an implicit OMP barrier here */
+#pragma omp cricital
+    {
+      swap_gauge_field(&control->U[1], &buffer);
+      exchange_gauge_field(&control->U[1]); /* The edge terms will have changed by now */
+      in = control->result; /* Shallow copy intended */
+    }
   }
   control->smearing_performed = 1;
   control->result = control->U[1];

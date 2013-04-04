@@ -1,6 +1,6 @@
 static void fatten_links(su3 *out, double rho, su3 const *staples, su3 const *in)
 {
-  static su3 tmp;
+  su3 ALIGN tmp;
   
   _su3_times_su3d(tmp, *staples, *in);
   project_traceless_antiherm(&tmp);
