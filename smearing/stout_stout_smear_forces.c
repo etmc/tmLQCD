@@ -18,10 +18,12 @@ void stout_smear_forces(stout_control *control, adjoint_field_t in)
   adjoint_to_gauge(&smeared_force, in);
       
   /* The modifications are done backwards, all the time peeling off one layer of stouting... */
+#pragma omp parallel
   for (unsigned int iter = control->iterations; iter > 0; --iter)
   {
     construct_intermediates(control->trace[iter - 1], control->U[iter] /* = V */, control->U[iter - 1] /* = U */, smeared_force);
     add_stout_terms_to_forces(smeared_force, control->rho, control->trace[iter - 1], control->U[iter] /* = V */, control->U[iter - 1] /* = U */);
+    /* Barrier unnecessary from implicit barrier of critical section in add_stout_terms_to_forces */
   }
 
   /* The force terms are still in the tangent space representation, so project them back to the adjoint one */
