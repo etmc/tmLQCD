@@ -23,7 +23,7 @@ void stout_smear_forces(stout_control *control, adjoint_field_t in)
   {
     construct_intermediates(control->trace[iter - 1], control->U[iter] /* = V */, control->U[iter - 1] /* = U */, smeared_force);
     add_stout_terms_to_forces(smeared_force, control->rho, control->trace[iter - 1], control->U[iter] /* = V */, control->U[iter - 1] /* = U */);
-    /* Barrier unnecessary from implicit barrier of critical section in add_stout_terms_to_forces */
+    /* Barrier unnecessary from implicit barrier of single section in add_stout_terms_to_forces */
   }
 
   /* The force terms are still in the tangent space representation, so project them back to the adjoint one */

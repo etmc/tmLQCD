@@ -42,6 +42,6 @@ static void construct_intermediates(stout_notes_tuple *trace, gauge_field_t cons
       _su3d_times_su3(trace[x][mu].Z, U[x][mu], t1);
     }
   
-#pragma omp critical
+#pragma omp single
   generic_exchange(&trace, sizeof(stout_notes_tuple));
 }
