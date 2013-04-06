@@ -1,0 +1,38 @@
+static void smear_stage_one(su3_outer *out, double const rho, gauge_field_t in)
+{
+  su3 ALIGN tmp;
+  su3 ALIGN staples;
+  
+  #define _HEX_SMEAR_COMPONENT(component, principal, via, x) \
+  { \
+    _su3_times_su3d(tmp, in[g_iup[x][via]][principal], in[g_iup[x][principal]][via]); \
+    _su3_times_su3(staples, in[x][via], tmp); \
+    _su3_times_su3(tmp, in[g_idn[x][via]][principal], in[g_idn[g_iup[x][principal]][via]][via]); \
+    _su3d_times_su3_acc(staples, in[g_idn[x][via]][via], tmp); \
+    fatten_links_with_force_terms(&out[x][component], rho, &staples, &orig[x][principal]); \
+  }
+
+#pragma omp for private(tmp, staples)
+  for (int x = 0; x < VOLUME; ++x)
+  {
+    _HEX_SMEAR_COMPONENT(I2_0_12, I0_0, 3, x);  
+    _HEX_SMEAR_COMPONENT(I2_0_13, I0_0, 2, x);
+    _HEX_SMEAR_COMPONENT(I2_0_23, I0_0, 1, x);
+
+    _HEX_SMEAR_COMPONENT(I2_1_02, I0_1, 3, x);
+    _HEX_SMEAR_COMPONENT(I2_1_03, I0_1, 2, x);
+    _HEX_SMEAR_COMPONENT(I2_1_23, I0_1, 0, x);
+
+    _HEX_SMEAR_COMPONENT(I2_2_01, I0_2, 3, x);
+    _HEX_SMEAR_COMPONENT(I2_2_03, I0_2, 1, x);
+    _HEX_SMEAR_COMPONENT(I2_2_13, I0_2, 0, x);
+
+    _HEX_SMEAR_COMPONENT(I2_3_01, I0_3, 2, x);
+    _HEX_SMEAR_COMPONENT(I2_3_02, I0_3, 1, x);
+    _HEX_SMEAR_COMPONENT(I2_3_12, I0_3, 0, x);
+  }
+  
+#pragma omp single
+  generic_exchange(out, sizeof(su3_outer));
+#undef _HEX_SMEAR_COMPONENT
+}
