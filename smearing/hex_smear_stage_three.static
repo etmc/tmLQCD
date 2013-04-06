@@ -1,16 +1,15 @@
-static void smear_third_stage(gauge_field_t out, double const alpha_3, su3_outer *in, gauge_field_t const orig)
+static void smear_stage_three(hex_control *control, gauge_field_t in)
 {
-  su3 tmp;
-  su3 staples;
-  
-  double const coeff   = alpha_3 / 6.0;
+  su3 ALIGN tmp;
+  su3 ALIGN staples;
   
 #define _HEX_SMEAR_COMPONENT(component, to, via, x) \
   _su3_times_su3d(tmp, in[g_iup[x][via]][I1_ ## to ## _ ## via], in[g_iup[x][to]][I1_ ## via ## _ ## to]); \
   _su3_times_su3_acc(staples, in[x][I1_ ## via ## _ ## to], tmp); \
   _su3_times_su3(tmp, in[g_idn[x][via]][I1_ ## to ## _ ## via], in[g_iup[g_idn[x][via]][to]][I1_ ## via ## _ ## to]); \
   _su3d_times_su3_acc(staples, in[g_idn[x][via]][I1_ ## via ## _ ## to], tmp);
-  
+
+#pragma omp for private(tmp, staples)
   for (unsigned int x = 0; x < VOLUME; ++x)
   {
     _su3_zero(staples);
@@ -31,9 +30,9 @@ static void smear_third_stage(gauge_field_t out, double const alpha_3, su3_outer
     _HEX_SMEAR_COMPONENT(I0_3, 3, 2, x);
     
     for (unsigned int mu = 0; mu < 4; ++mu)
-      fatten_links(&out[x][mu], coeff, &staples, &orig.[x][mu]);
+      fatten_links(&out[x][mu], rho_3, &staples, &orig.[x][mu]);
   }  
-  
+#pragma omp single  
   exchange_gauge_field(out);
 #undef _HEX_SMEAR_COMPONENT
 }
