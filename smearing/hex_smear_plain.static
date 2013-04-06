@@ -5,28 +5,24 @@
 
 static void smear_plain(hex_control *control, gauge_field_t in)
 {
+  gauge_field_t buffer = get_gauge_field();
+  
+#pragma omp parallel
   for (int iter = 0; iter < params->iterations; ++iter)
   {
-    /* First level of contractions */
-    hyp_staples_exclude_two(gamma, m_field_in);
-    stout_exclude_two(v, params->alpha[2], gamma, m_field_in);
-    exchange_gauge_field_array(v);
-
-    /* Second level of contractions */
-    hyp_staples_exclude_one(gamma, v);
-    stout_exclude_one(v, params->alpha[1], gamma, m_field_in);
-    exchange_gauge_field_array(v);
-
-    /* Final level of contractions  */
-    hyp_staples_exclude_none(gamma_array[0], v);
-    stout_links(m_field_out, params->alpha[0], gamma_array[0], m_field_in);
-    exchange_gauge_field(m_field_out);
+    smear_stage_one(control->V_stage_one[iter], control->rho_1, in);
+    smear_stage_two(control->V_stage_two[iter], control->rho_2, in);   
+    smear_stage_three(buffer, control->rho_3, in);
     
-    m_field_in = m_field_out; /* Prepare for next iteration */
+#pragma omp single
+    {
+      swap_gauge_field(&control->U[1], &buffer); /* FIXME Is this going to be control->U[1] or something higher? */
+      exchange_gauge_field(&control->U[1]); /* The edge terms will have changed by now */
+      in = control->result; /* Shallow copy intended */
+    }
   }
 
-  return_gauge_field_array(&v);
-  return_gauge_field_array(&gamma);
+  return_gauge_field(&buffer);
   
   return 0;
 }

@@ -1,11 +1,11 @@
 #include "hex.ih"
 
-hex_control *construct_hex_control(int calculate_force_terms, unsigned int iterations, double const alpha_1, double const alpha_2, double const alpha_3)
+hex_control *construct_hex_control(int calculate_force_terms, unsigned int iterations, double const rho_1, double const rho_2, double const rho_3)
 {
   hex_control *control = (hex_control*)malloc(sizeof(hex_control));
-  control->alpha[0] = alpha_1;
-  control->alpha[1] = alpha_2;
-  control->alpha[2] = alpha_3;
+  control->rho[0] = rho_1;
+  control->rho[1] = rho_2;
+  control->rho[2] = rho_3;
   control->iterations = iterations;
   control->smearing_performed = 0;
   
