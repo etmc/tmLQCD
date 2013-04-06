@@ -11,14 +11,13 @@ static void smear_plain(hex_control *control, gauge_field_t in)
 #pragma omp parallel
   for (int iter = 0; iter < params->iterations; ++iter)
   {
-    smear_stage_one(*control->V_stage_one, control->rho[0], in);
-    smear_stage_two(*control->V_stage_two, control->rho[1], in);   
-    smear_stage_three(buffer, control->rho[2], in);
+    smear_stage_0(*control->V_stage_0, control->rho[0], in);
+    smear_stage_1(*control->V_stage_1, control->rho[1], in);   
+    smear_stage_2(buffer,              control->rho[2], in);
     
 #pragma omp single
     {
       swap_gauge_field(&control->U[1], &buffer);
-      exchange_gauge_field(&control->U[1]); /* The edge terms will have changed by now */
       in = control->result; /* Shallow copy intended */
     }
   }
