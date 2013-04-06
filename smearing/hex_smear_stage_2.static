@@ -1,4 +1,4 @@
-static void smear_stage_2(hex_control *control, gauge_field_t in)
+static void smear_stage_2(su3_outer *out, double const rho, gauge_field_t in)
 {
   su3 ALIGN tmp;
   su3 ALIGN staples;
@@ -30,7 +30,7 @@ static void smear_stage_2(hex_control *control, gauge_field_t in)
     _HEX_SMEAR_COMPONENT(I0_3, 3, 2, x);
     
     for (unsigned int mu = 0; mu < 4; ++mu)
-      fatten_links(&out[x][mu], rho_3, &staples, &orig.[x][mu]);
+      fatten_links(&out[x][mu], rho, &staples, &orig.[x][mu]);
   }  
 #pragma omp single  
   exchange_gauge_field(out);
