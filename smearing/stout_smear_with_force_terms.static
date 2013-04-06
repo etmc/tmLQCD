@@ -5,7 +5,7 @@ static void smear_with_force_terms(stout_control *control, gauge_field_t in)
   su3 ALIGN staples;
   control->U[0] = in; /* Shallow copy intended */
 
-#pragma omp parallel private(staples) /* x is private by default ?! */
+#pragma omp parallel private(staples)
   for(unsigned int iter = 0; iter < control->iterations; ++iter)
   {
 #pragma omp for
