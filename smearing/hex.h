@@ -23,13 +23,13 @@ typedef struct
   /* Intermediate results, stored to enhance locality of the analysis */
   gauge_field_t      *U;     /* The sequence of iterations gauge fields */
    
-  su3_outer         **V_stage_one;
-  stout_notes_outer **trace_stage_one;
+  su3_outer         **V_stage_0;
+  stout_notes_outer **trace_stage_0;
   
-  su3_outer         **V_stage_two;
-  stout_notes_outer **trace_stage_two;
+  su3_outer         **V_stage_1;
+  stout_notes_outer **trace_stage_1;
   
-  stout_notes_tuple **trace_stage_three; /* Intermediate results to avoid double calculations */
+  stout_notes_tuple **trace_stage_2; /* Intermediate results to avoid double calculations */
 
   /* Final results -- the first is a shallow copy */
   gauge_field_t    result;

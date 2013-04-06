@@ -1,4 +1,4 @@
-static void smear_stage_three(gauge_field_t out, double const rho, gauge_field_t in)
+static void smear_stage_2_with_force_terms(gauge_field_t out, double const rho, gauge_field_t in)
 {
   su3 ALIGN tmp;
   su3 ALIGN staples;
