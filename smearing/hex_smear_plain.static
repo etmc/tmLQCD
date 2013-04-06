@@ -6,6 +6,7 @@
 static void smear_plain(hex_control *control, gauge_field_t in)
 {
   gauge_field_t buffer = get_gauge_field();
+  control->U[0] = in; /* Shallow copy intended */
   
 #pragma omp parallel
   for (int iter = 0; iter < params->iterations; ++iter)

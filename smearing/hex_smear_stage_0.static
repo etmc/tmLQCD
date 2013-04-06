@@ -1,4 +1,4 @@
-static void smear_stage_one(su3_outer *out, double const rho, gauge_field_t in)
+static void smear_stage_0(hex_control *control, gauge_field_t in)
 {
   su3 ALIGN tmp;
   su3 ALIGN staples;
@@ -9,7 +9,7 @@ static void smear_stage_one(su3_outer *out, double const rho, gauge_field_t in)
     _su3_times_su3(staples, in[x][via], tmp); \
     _su3_times_su3(tmp, in[g_idn[x][via]][principal], in[g_idn[g_iup[x][principal]][via]][via]); \
     _su3d_times_su3_acc(staples, in[g_idn[x][via]][via], tmp); \
-    fatten_links_with_force_terms(&out[x][component], rho, &staples, &orig[x][principal]); \
+    fatten_links(&out[x][component], rho_1, &staples, &orig[x][principal]); \
   }
 
 #pragma omp for private(tmp, staples)
