@@ -1,4 +1,4 @@
-static void smear_stage_1(su3_outer *out, double const rho, gauge_field_t in)
+static void smear_stage_1(su3_outer *out, double const rho, su3_outer *in, gauge_field_t orig)
 {
   su3 ALIGN tmp;
   su3 ALIGN staples;
