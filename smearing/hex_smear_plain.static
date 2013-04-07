@@ -5,24 +5,18 @@
 
 static void smear_plain(hex_control *control, gauge_field_t in)
 {
-  gauge_field_t buffer = get_gauge_field();
   control->U[0] = in; /* Shallow copy intended */
   
 #pragma omp parallel
   for (int iter = 0; iter < params->iterations; ++iter)
   {
-    smear_stage_0(*control->V_stage_0, control->rho[0], in);
-    smear_stage_1(*control->V_stage_1, control->rho[1], in);   
-    smear_stage_2(buffer,              control->rho[2], in);
+    smear_stage_0(*control->V_stage_0, control->rho[0],                      in);
+    smear_stage_1(*control->V_stage_1, control->rho[1], *control->V_stage_0, in);   
+    smear_stage_2( control->U[1],      control->rho[2], *control->V_stage_1, in);
     
 #pragma omp single
-    {
-      swap_gauge_field(&control->U[1], &buffer);
-      in = control->result; /* Shallow copy intended */
-    }
+    in = control->U[1]; /* Shallow copy intended */
   }
-
-  return_gauge_field(&buffer);
   
   return 0;
 }
