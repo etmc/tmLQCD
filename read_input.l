@@ -1289,6 +1289,9 @@ inline void rmQuotes(char *str){
     else if(strcmp(type, "2MNPOSITION")==0) {
       Integrator.type[a] = MN2p;
     }
+    else if(strcmp(type, "OMF4")==0) {
+      Integrator.type[a] = OMF4;
+    }
     else {
       fprintf(stderr, "Unknown integrator type %s in line %d\n", yytext, line_of_file);
       exit(1);
