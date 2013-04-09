@@ -458,17 +458,15 @@ int main(int argc,char *argv[]) {
           }
 
           if (attempt == io_max_attempts)
-          {
-            if (g_proc_id == 0)
-              fprintf(stdout, "# Too many I/O failures, will abort.\n");
-            exit(-3);
-          }
+            kill_with_error(NULL, g_proc_id, "Persistent I/O failures!\n");
 
           if (g_proc_id == 0)
             fprintf(stdout, "# Will attempt to write again in %d seconds.\n", io_timeout);
           
           sleep(io_timeout);
+#ifdef MPI
           MPI_Barrier(MPI_COMM_WORLD);
+#endif
         }
       /* Now move .conf.tmp into place */
       if(g_proc_id == 0) {
