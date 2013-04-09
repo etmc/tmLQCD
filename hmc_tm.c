@@ -90,7 +90,7 @@ int main(int argc,char *argv[]) {
   char tmp_filename[50];
   char *input_filename = NULL;
   int status = 0, accept = 0;
-  int j,ix,mu, trajectory_counter=1;
+  int j,ix,mu, trajectory_counter=0;
   struct timeval t1;
 
   /* Energy corresponding to the Gauge part */
@@ -287,7 +287,7 @@ int main(int argc,char *argv[]) {
 #endif
 
   /* Initialise random number generator */
-  start_ranlux(rlxd_level, random_seed^nstore );
+  start_ranlux(rlxd_level, random_seed^trajectory_counter);
 
   /* Set up the gauge field */
   /* continue and restart */
