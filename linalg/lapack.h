@@ -43,10 +43,8 @@
 #define zlapcy CLAPCY
 #define zgetrf CGETRF
 #define zgetrs CGETRS
-/*--abdou-- begin */
 #define zgeqrf ZGEQRF
 #define zunmqr ZUNMQR
-/*--abdou-- end */
 
 extern void _FT(zgels)();
 extern void _FT(zgesv)();
@@ -64,10 +62,8 @@ extern double _FT(dlamch)();
 extern int _FT(ilaenv)();
 extern void _FT(zgetrf)();
 extern void _FT(zgetrs)();
-/* --abdou -- begin */
 extern void _FT(zgeqrf)();
 extern void _FT(zunmqr)();
-/* --abdou-- end */
 
 #else
 
@@ -133,7 +129,6 @@ extern double _FT(dlamch)(char* name, int len_name);
 extern int _FT(ilaenv)(int *ISPEC, char *NAME, char *OPTS, int *N1, 
 		       int *N2, int *N3, int *N4, int len_name, int len_opts);
 
-/* --abdou-- begin */
 extern void _FT(zgeqrf)(int *M, int *N, _Complex double *A, int *LDA, _Complex double *TAU,
                          _Complex double  *WORK, int *LWORK, int *INFO);
 
@@ -141,7 +136,6 @@ extern void _FT(zgeqrf)(int *M, int *N, _Complex double *A, int *LDA, _Complex d
 extern void _FT(zunmqr)(char *SIDE, char *TRANS, int *M, int *N, int *K,
                          _Complex double  *A, int *LDA, _Complex double  *TAU, _Complex double  *C,
                          int *LDC, _Complex double  *WORK, int *LWORK, int *INFO);
-/* --abdou-- end */
 #endif
 
 #endif
