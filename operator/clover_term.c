@@ -50,6 +50,7 @@
 #include "sse.h"
 #include "su3adj.h"
 #include "operator/clovertm_operators.h"
+#include "operator/clover_inline.h"
 #include "operator/clover_leaf.h"
 
 // the clover term is written as
@@ -63,14 +64,14 @@
 // As the off-diagonal 3x3 matrices are just inverse to
 // each other, we get away with two times three 3x3 complex matrices
 //
-// these are stored in the array sw[VOLUME][3][2] of type su3
+// these are stored in the array sw[VOLUME][2][3] of type su3
 // where x is the space time index
 // a runs from 0 to 2
 // b runs from 0 to 1
 // sw[x][0][0] is the upper diagonal 3x3 matrix 
-// sw[x][1][0] the upper off-diagnoal 3x3 matrix
-// sw[x][2][0] the lower diagonal 3x3 matrix
-// the lower off-diagonal 3x3 matrix would be the inverser of sw[x][1][0]
+// sw[x][0][1] the upper off-diagnoal 3x3 matrix
+// sw[x][0][2] the lower diagonal 3x3 matrix
+// the lower off-diagonal 3x3 matrix would be the inverse of sw[x][0][1]
 // 
 // identical convention for the second six-by-six matrix
 // just with second index set to 1
@@ -78,7 +79,7 @@
 // so the application of the clover term 
 // plus twisted mass term to a spinor would just be
 // 
-// r_0 = sw[0][0] s_0 + sw[1][0] s_1 + i mu s_0
+// r_0 = sw[0][0] s_0 + sw[0][1] s_1 + i mu s_0
 // r_1 = sw[1][0]^-1 s_0 + sw[2][0] s_1 + i mu s_1
 // r_2 = sw[0][1] s_2 + sw[1][1] s_3 - i mu s_2
 // r_3 = sw[1][1]^-1 s_2 + sw[2][1] s_3 - i mu s_3
@@ -99,6 +100,7 @@ void sw_term(const su3 ** const gf, const double kappa, const double c_sw) {
   su3 ALIGN fkl[4][4];
   su3 ALIGN magnetic[4],electric[4];
   su3 ALIGN aux;
+  su3 ALIGN swt[2][3];
   
 
   /*  compute the clover-leave */
@@ -158,10 +160,10 @@ void sw_term(const su3 ** const gf, const double kappa, const double c_sw) {
     // this is the one in flavour and colour space
     // twisted mass term is treated in clover, sw_inv and
     // clover_gamma5 and the corresponding nd versions
-    _su3_one(sw[x][0][0]);
-    _su3_one(sw[x][2][0]);
-    _su3_one(sw[x][0][1]);
-    _su3_one(sw[x][2][1]);
+    _su3_one(swt[0][0]);
+    _su3_one(swt[0][2]);
+    _su3_one(swt[1][0]);
+    _su3_one(swt[1][2]);
     
     for(k = 1; k < 4; k++)
     {
@@ -174,28 +176,36 @@ void sw_term(const su3 ** const gf, const double kappa, const double c_sw) {
     /*  upper left block 6x6 matrix  */
     
     _itimes_su3_minus_su3(aux,electric[3],magnetic[3]);
-    _su3_refac_acc(sw[x][0][0],ka_csw_8,aux);
+    _su3_refac_acc(swt[0][0],ka_csw_8,aux);
     
     _itimes_su3_minus_su3(aux,electric[1],magnetic[1]);
     _su3_minus_su3(v2,electric[2],magnetic[2]); 
     _su3_acc(aux,v2);
-    _real_times_su3(sw[x][1][0],ka_csw_8,aux);
+    _real_times_su3(swt[0][1],ka_csw_8,aux);
     
     _itimes_su3_minus_su3(aux,magnetic[3],electric[3]);
-    _su3_refac_acc(sw[x][2][0],ka_csw_8,aux);
-
+    _su3_refac_acc(swt[0][2],ka_csw_8,aux);
+    populate_6x6_matrix2(sw[x][0], &swt[0][0], 0, 0);
+    populate_6x6_matrix2(sw[x][0], &swt[0][1], 0, 3);
+    populate_6x6_matrix2(sw[x][0], &swt[0][2], 3, 3);
+    populate_6x6_hc_matrix(sw[x][0], &swt[0][1], 3, 0);
     /*  lower right block 6x6 matrix */
     
     _itimes_su3_plus_su3(aux,electric[3],magnetic[3]);
-    _su3_refac_acc(sw[x][0][1],(-ka_csw_8),aux);
+    _su3_refac_acc(swt[1][0],(-ka_csw_8),aux);
 
     _itimes_su3_plus_su3(aux,electric[1],magnetic[1]);
     _su3_plus_su3(v2,electric[2],magnetic[2]); 
     _su3_acc(aux,v2);
-    _real_times_su3(sw[x][1][1],(-ka_csw_8),aux);
+    _real_times_su3(swt[1][1],(-ka_csw_8),aux);
 
     _itimes_su3_plus_su3(aux,magnetic[3],electric[3]);
-    _su3_refac_acc(sw[x][2][1],ka_csw_8,aux);
+    _su3_refac_acc(swt[1][2],ka_csw_8,aux);
+    populate_6x6_matrix2(sw[x][1], &swt[1][0], 0, 0);
+    populate_6x6_matrix2(sw[x][1], &swt[1][1], 0, 3);
+    populate_6x6_matrix2(sw[x][1], &swt[1][2], 3, 3);
+    populate_6x6_hc_matrix(sw[x][1], &swt[1][1], 3, 0);
+
   }
 #ifdef OMP
   } /* OpenMP closing brace */

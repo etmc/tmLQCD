@@ -523,9 +523,9 @@ void mul_one_pm_imu_inv(spinor * const l, const double _sign, const int N){
   int ix;
   double sign=-1.; 
   spinor *r;
-
+#if ( !defined SSE2 || !defined SSE3 )
   su3_vector ALIGN phi1;
-
+#endif
   double ALIGN nrm = 1./(1.+g_mu*g_mu);
 
   if(_sign < 0.){

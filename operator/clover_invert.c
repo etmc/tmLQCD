@@ -172,7 +172,6 @@ void sw_invert(const int ieo, const double mu) {
   int icy;
   int ioff, err=0;
   int i, x;
-  su3 ALIGN v;
   _Complex double ALIGN a[6][6];
 
   if(ieo==0) {
@@ -196,11 +195,7 @@ void sw_invert(const int ieo, const double mu) {
     x = g_eo2lexic[icx];
 
     for(i = 0; i < 2; i++) {
-      populate_6x6_matrix(a, &sw[x][0][i], 0, 0);
-      populate_6x6_matrix(a, &sw[x][1][i], 0, 3);
-      _su3_dagger(v, sw[x][1][i]); 
-      populate_6x6_matrix(a, &v, 3, 0);
-      populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
+      memcpy(a[0], sw[x][i], 36*sizeof(_Complex double));
       // we add the twisted mass term
       if(i == 0) add_tm(a, +mu);
       else add_tm(a, -mu);
@@ -214,20 +209,16 @@ void sw_invert(const int ieo, const double mu) {
       }
 
       /*  copy "a" back to sw_inv */
-      get_3x3_block_matrix(&sw_inv[icy][0][i], a, 0, 0);
-      get_3x3_block_matrix(&sw_inv[icy][1][i], a, 0, 3);
-      get_3x3_block_matrix(&sw_inv[icy][2][i], a, 3, 3);
-      get_3x3_block_matrix(&sw_inv[icy][3][i], a, 3, 0);
+      memcpy(sw_inv[icy][i], a[0], 36*sizeof(_Complex double));
+      //get_3x3_block_matrix(&sw_inv[icy][i][0], a, 0, 0);
+      //get_3x3_block_matrix(&sw_inv[icy][i][1], a, 0, 3);
+      //get_3x3_block_matrix(&sw_inv[icy][i][2], a, 3, 3);
+      //get_3x3_block_matrix(&sw_inv[icy][i][3], a, 3, 0);
     }
 
     if(fabs(mu) > 0.) {
       for(i = 0; i < 2; i++) {
-	populate_6x6_matrix(a, &sw[x][0][i], 0, 0);
-	populate_6x6_matrix(a, &sw[x][1][i], 0, 3);
-	_su3_dagger(v, sw[x][1][i]); 
-	populate_6x6_matrix(a, &v, 3, 0);
-	populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
-
+	memcpy(a[0], sw[x][i], 36*sizeof(_Complex double));
 	// we add the twisted mass term
 	if(i == 0) add_tm(a, -mu);
 	else add_tm(a, +mu);
@@ -240,10 +231,11 @@ void sw_invert(const int ieo, const double mu) {
 	}
 
 	/*  copy "a" back to sw_inv */
-	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][0][i], a, 0, 0);
-	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][1][i], a, 0, 3);
-	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][2][i], a, 3, 3);
-	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][3][i], a, 3, 0);
+	memcpy(sw_inv[icy+VOLUME/2][i], a[0], 36*sizeof(_Complex double));
+	//get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][i][0], a, 0, 0);
+	//get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][i][1], a, 0, 3);
+	//get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][i][2], a, 3, 3);
+	//get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][i][3], a, 3, 0);
       }
     }
 #ifndef OMP
@@ -276,7 +268,6 @@ void sw_invert_nd(const double mshift) {
 #endif
   int err=0;
   int i, x;
-  su3 ALIGN v;
   _Complex double ALIGN a[6][6], b[6][6];
 
 #ifdef OMP
@@ -286,12 +277,7 @@ void sw_invert_nd(const double mshift) {
     x = g_eo2lexic[icx];
 
     for(i = 0; i < 2; i++) {
-      populate_6x6_matrix(a, &sw[x][0][i], 0, 0);
-      populate_6x6_matrix(a, &sw[x][1][i], 0, 3);
-      _su3_dagger(v, sw[x][1][i]); 
-      populate_6x6_matrix(a, &v, 3, 0);
-      populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
-
+      memcpy(a[0], sw[x][i], 36*sizeof(_Complex double));
       // compute (1+T)^2 and store in b
       mult_6x6(b, a, a);
       // we add the mass shift term, which is a real number
@@ -306,10 +292,11 @@ void sw_invert_nd(const double mshift) {
       }
 
       /*  copy "a" back to sw_inv */
-      get_3x3_block_matrix(&sw_inv[icx][0][i], b, 0, 0);
-      get_3x3_block_matrix(&sw_inv[icx][1][i], b, 0, 3);
-      get_3x3_block_matrix(&sw_inv[icx][2][i], b, 3, 3);
-      get_3x3_block_matrix(&sw_inv[icx][3][i], b, 3, 0);
+      memcpy(sw_inv[icx][i], b[0], 36*sizeof(_Complex double));
+      //get_3x3_block_matrix(&sw_inv[icx][i][0], b, 0, 0);
+      //get_3x3_block_matrix(&sw_inv[icx][i][1], b, 0, 3);
+      //get_3x3_block_matrix(&sw_inv[icx][i][2], b, 3, 3);
+      //get_3x3_block_matrix(&sw_inv[icx][i][3], b, 3, 0);
     }
   }
 #ifdef OMP

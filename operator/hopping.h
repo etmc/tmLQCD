@@ -167,6 +167,50 @@
   _vec_store2(rn->s2, rs6, rs7, rs8);					\
   _vec_store2(rn->s3, rs9, rs10, rs11);
   
+#define _hop_mul_swinv_and_store()		\
+  r = (_Complex double *) &rn->s0.c0;		\
+  w = (_Complex double *) sw_inv[icx+swoff][0];	\
+  tmp = vec_gpci(00145);			\
+  r0 = vec_perm(rs0, rs1, tmp);			\
+  r1 = vec_perm(rs2, rs3, tmp);			\
+  r2 = vec_perm(rs4, rs5, tmp);			\
+  _Pragma("unroll(6)")				\
+  for(int c0 = 0; c0 < 6; c0++) {		\
+    U0 = vec_ld(0L, (double*) &w[6*c0]);	\
+    U1 = vec_ld(32L, (double*) &w[6*c0]);	\
+    U2 = vec_ld(64L, (double*) &w[6*c0]);	\
+    r3 = vec_xmul(r0, U0);			\
+    r4 = vec_xmul(r1, U1);			\
+    r5 = vec_xmul(r2, U2);			\
+    r3 = vec_xxnpmadd(U0, r0, r3);		\
+    r4 = vec_xxnpmadd(U1, r1, r4);		\
+    r5 = vec_xxnpmadd(U2, r2, r5);		\
+    r3 = vec_add(r3, r4);			\
+    r3 = vec_add(r5, r3);			\
+    r[c0] = r3[0] + I*r3[1] + r3[2] + I*r3[3];	\
+  }						\
+  r = (_Complex double *) &rn->s2.c0;		\
+  w = (_Complex double *) sw_inv[icx+swoff][1];	\
+  tmp = vec_gpci(00145);			\
+  r0 = vec_perm(rs6, rs7, tmp);			\
+  r1 = vec_perm(rs8, rs9, tmp);			\
+  r2 = vec_perm(rs10, rs11, tmp);			\
+  _Pragma("unroll(6)")				\
+  for(int c0 = 0; c0 < 6; c0++) {		\
+    U0 = vec_ld(0L, (double*) &w[6*c0]);	\
+    U1 = vec_ld(32L, (double*) &w[6*c0]);	\
+    U2 = vec_ld(64L, (double*) &w[6*c0]);	\
+    r3 = vec_xmul(r0, U0);			\
+    r4 = vec_xmul(r1, U1);			\
+    r5 = vec_xmul(r2, U2);			\
+    r3 = vec_xxnpmadd(U0, r0, r3);		\
+    r4 = vec_xxnpmadd(U1, r1, r4);		\
+    r5 = vec_xxnpmadd(U2, r2, r5);		\
+    r3 = vec_add(r3, r4);			\
+    r3 = vec_add(r5, r3);			\
+    r[c0] = r3[0] + I*r3[1] + r3[2] + I*r3[3];	\
+  }
+
 
 #define _store_res()				\
   _vec_store2(rn->s0, rs0, rs1, rs2);		\
@@ -311,6 +355,8 @@
   _bgl_i_mul_add_to_rs2_reg0();			\
   _bgl_add_to_rs1_reg1();			\
   _bgl_i_mul_sub_from_rs3_reg1();
+
+#define _hop_mul_swinv_and_store()	\
 
 #define _store_res()				\
   _bgl_store_rs0(rn->s0);			\
@@ -567,6 +613,8 @@
   _sse_vector_sub();					\
   _sse_store_nt(rn->s3);
   
+#define _hop_mul_swinv_and_store()	\
+
 #define _store_res()
 
 #  else
@@ -686,6 +734,30 @@
   _vector_sub(rn->s2, temp.s2, psi);			\
   _complexcjg_times_vector(chi, cfactor, pn->s3);	\
   _vector_sub(rn->s3, temp.s3, chi);
+
+#define _hop_mul_swinv_and_store()	\
+  w = sw_inv[icx+swoff][0];		\
+  r = (_Complex double*)&temp.s0;	\
+  s = (_Complex double*)&rn->s0;	\
+  for(int c0 = 0; c0 < 6; c0++) {	\
+    s[c0] = w[c0*6] * r[0];		\
+    s[c0] += w[c0*6 + 1] * r[1];	\
+    s[c0] += w[c0*6 + 2] * r[2];	\
+    s[c0] += w[c0*6 + 3] * r[3];	\
+    s[c0] += w[c0*6 + 4] * r[4];	\
+    s[c0] += w[c0*6 + 5] * r[5];	\
+  }					\
+  w = sw_inv[icx+swoff][1];		\
+  r = (_Complex double*)&temp.s2;	\
+  s = (_Complex double*)&rn->s2;	\
+  for(int c0 = 0; c0 < 6; c0++) {	\
+    s[c0] = w[c0*6] * r[0];		\
+    s[c0] += w[c0*6 + 1] * r[1];	\
+    s[c0] += w[c0*6 + 2] * r[2];	\
+    s[c0] += w[c0*6 + 3] * r[3];	\
+    s[c0] += w[c0*6 + 4] * r[4];	\
+    s[c0] += w[c0*6 + 5] * r[5];	\
+  }
 
 #define _store_res()				\
   _vector_assign(rn->s0, temp.s0);		\
