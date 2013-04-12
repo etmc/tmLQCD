@@ -95,7 +95,7 @@ void gaussian_volume_source(spinor * const P, spinor * const Q,
   /* Compute the seed */
   seed =(int) abs(1 + sample + f*10*97 + nstore*100*53 + g_cart_id*13);
 
-  rlxd_init(1, seed);
+  rlxd_init(2, seed);
 
   for(t = 0; t < T; t++) {
     for(x = 0; x < LX; x++) {
@@ -192,9 +192,9 @@ void source_generation_pion_only(spinor * const P, spinor * const Q,
   }
 
   /* Compute the seed */
-  seed =(int) abs(1 + sample + t*10*97 + nstore*100*53 + g_cart_id*13);
+  seed =(int) abs(1 + sample + t*10*97 + nstore*100*53);
 
-  rlxd_init(1, seed);
+  rlxd_init(2, seed);
 
   lt = t - g_proc_coords[0]*T;
   coords[0] = t / T;
@@ -279,9 +279,9 @@ void source_generation_pion_zdir(spinor * const P, spinor * const Q,
   }
 
   /* Compute the seed */
-  seed =(int) abs(1 + sample + z*10*97 + nstore*100*53 + g_cart_id*13);
+  seed =(int) abs(1 + sample + z*10*97 + nstore*100*53);
 
-  rlxd_init(1, seed);
+  rlxd_init(2, seed);
   lz = z - g_proc_coords[3]*LZ;
   coords[3] = z / LZ;
  for(t = 0; t < T*g_nproc_t; t++) {
@@ -380,7 +380,7 @@ void source_generation_nucleon(spinor * const P, spinor * const Q,
   /* Compute the seed */
   seed =(int) abs(1 + sample + t*10*97 + nstore*100*53);
 
-  rlxd_init(1, seed);
+  rlxd_init(2, seed);
 
   for(tt = t; tt < T*g_nproc_t; tt+=nt) {
     lt = tt - g_proc_coords[0]*T;
