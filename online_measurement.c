@@ -143,11 +143,11 @@ void online_measurement(const int traj, const int id, const int ieo) {
     respa = 0.;
     resp4 = 0.;
     for(i = j; i < j+LX*LY*LZ; i++) {
-      res += _spinor_prod_re(g_spinor_field[DUM_MATRIX][j], g_spinor_field[DUM_MATRIX][j]);
-      _gamma0(phi, g_spinor_field[DUM_MATRIX][j]);
-      respa += _spinor_prod_re(g_spinor_field[DUM_MATRIX][j], phi);
+      res += _spinor_prod_re(g_spinor_field[DUM_MATRIX][i], g_spinor_field[DUM_MATRIX][i]);
+      _gamma0(phi, g_spinor_field[DUM_MATRIX][i]);
+      respa += _spinor_prod_re(g_spinor_field[DUM_MATRIX][i], phi);
       _gamma5(phi, phi);
-      resp4 += _spinor_prod_im(g_spinor_field[DUM_MATRIX][j], phi);
+      resp4 += _spinor_prod_im(g_spinor_field[DUM_MATRIX][i], phi);
     }
 
 #if defined MPI
