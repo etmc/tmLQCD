@@ -1,6 +1,6 @@
-static void fatten_links_with_force_terms(su3 *out, stout_notes_t *notes, double rho, su3 const *staples, su3 const *in)
+static void fatten_links_with_force_terms(su3 *out, stout_notes_t *notes, double rho, su3 const *in)
 {
-  _su3_times_su3d(notes->A, *staples, *in);
+  _su3_times_su3d(notes->A, notes->C, *in);
   project_traceless_antiherm(&notes->A);
   _real_times_su3(notes->A, rho, notes->A);
   cayley_hamilton_exponent_with_force_terms(&notes->expA, &notes->B1, &notes->B2, &notes->f1, &notes->f2, &notes->A);

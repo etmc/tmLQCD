@@ -16,6 +16,7 @@
 
 typedef struct
 {
+  su3    C;
   su3    A;
   su3    expA;
   su3    B1;

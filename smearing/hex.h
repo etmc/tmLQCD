@@ -30,7 +30,7 @@ typedef struct
   stout_notes_outer **trace_stage_1;
   
   stout_notes_tuple **trace_stage_2; /* Intermediate results to avoid double calculations */
-
+  
   /* Final results -- the first is a shallow copy */
   gauge_field_t    result;
   adjoint_field_t  force_result;
