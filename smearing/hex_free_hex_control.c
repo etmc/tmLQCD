@@ -9,11 +9,11 @@ void free_hex_control(hex_control *control)
     return_gauge_field(&control->U[1]);
     free(control->U);
     
-    afree(control->V_stage_one[0]);
-    afree(control->V_stage_two[0]);
+    afree(control->V_stage_0[0]);
+    afree(control->V_stage_1[0]);
     
-    free(control->V_stage_one);
-    free(control->V_stage_two);
+    free(control->V_stage_0);
+    free(control->V_stage_1);
     
     free(control);
     return;
@@ -21,19 +21,21 @@ void free_hex_control(hex_control *control)
 
   for (unsigned int iter = 0; iter < control->iterations; ++iter)
   {
-    afree(control->trace_stage_one[iter]);
-    afree(control->V_stage_one[iter]);
-    afree(control->trace_stage_two[iter]);
-    afree(control->V_stage_two[iter]);
-    afree(control->trace_stage_three[iter]);
+    afree(control->trace_stage_0[iter]);
+    afree(control->V_stage_0[iter]);
+    afree(control->trace_stage_1[iter]);
+    afree(control->V_stage_1[iter]);
+    afree(control->trace_stage_2[iter]);
     return_gauge_field(&control->U[iter + 1]);
   }
 
-  free(control->trace_stage_one);
-  free(control->V_stage_one);
-  free(control->trace_stage_two);
-  free(control->V_stage_two);
-  free(control->trace_stage_three);
+  free(control->trace_stage_0);
+  free(control->V_stage_0);
+  free(control->trace_stage_1);
+  free(control->V_stage_1);
+  free(control->trace_stage_2);
+  
+  afree(control->split_forces);
 
   free(control->U);  
   return_adjoint_field(&control->force_result);

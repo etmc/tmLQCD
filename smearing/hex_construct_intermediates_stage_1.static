@@ -1,4 +1,4 @@
-static void construct_intermediates_stage_0(stout_notes_outer *trace, su3_outer *const V, gauge_field_t const U, su3_outer *const smeared_force)
+static void construct_intermediates_stage_1(stout_notes_outer *trace, su3_outer *const V, gauge_field_t const U, su3_outer *const smeared_force)
 {
   _Complex double ALIGN mat_trace;
   su3 ALIGN t1;
