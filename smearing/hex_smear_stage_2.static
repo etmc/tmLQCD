@@ -2,28 +2,33 @@ static void smear_stage_2(su3_outer *out, double const rho, su3_outer *in, gauge
 {
   su3 ALIGN tmp;
   su3 ALIGN staples;
-  
-#define _HEX_SMEAR_COMPONENT(to, via, x) \
-  _su3_times_su3d(tmp, in[g_iup[x][via]][I1_ ## to ## _ ## via], in[g_iup[x][to]][I1_ ## via ## _ ## to]); \
-  _su3_times_su3_acc(staples, in[x][I1_ ## via ## _ ## to], tmp); \
-  _su3_times_su3(tmp, in[g_idn[x][via]][I1_ ## to ## _ ## via], in[g_iup[g_idn[x][via]][to]][I1_ ## via ## _ ## to]); \
-  _su3d_times_su3_acc(staples, in[g_idn[x][via]][I1_ ## via ## _ ## to], tmp);
 
 #pragma omp for private(tmp, staples)
   for (unsigned int x = 0; x < VOLUME; ++x)
-    for (unsigned int mu = 0; mu < 4; ++mu)
+    for (int mu = 0; mu < 4; ++mu)
     {
       _su3_zero(staples);
-      for (unsigned int nu = 0; nu < 4; ++nu)
-      {
-        if (mu == nu)
+      for (int nu = 0; nu < 4; ++nu)
+      {       
+        int cmn = hyp_index_two[mu][nu];
+        int cnm = hyp_index_two[nu][mu];
+        
+        if (cmn < 0)
           continue;
-        _HEX_SMEAR_COMPONENT(mu, nu, x);
+        
+        int xmnu = g_idn[x][nu];
+        int xpnu = g_iup[x][nu];
+        int xpmu = g_iup[x][mu];
+        int xmnu_pmu = g_idn[ xpmu ][nu];
+        
+        _su3_times_su3d(tmp, in[xpnu][cmn], in[xpmu][cnm]);
+        _su3_times_su3_acc(staples, in[x][cnm], tmp);
+        _su3_times_su3(tmp, in[xmnu][cmn], in[xmnu_pmu][cnm]);
+        _su3d_times_su3_acc(staples, in[xmnu][cnm], tmp);
       }
       fatten_links(&out[x][mu], rho, &staples, &orig.[x][mu]);
     }
 
 #pragma omp single  
   exchange_gauge_field(out);
-#undef _HEX_SMEAR_COMPONENT
 }
