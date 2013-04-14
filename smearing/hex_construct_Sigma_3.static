@@ -1,0 +1,7 @@
+static void construct_Sigma_3(stout_notes_tuple *trace, gauge_field_t const V, gauge_field_t const smeared_force)
+{
+#pragma omp for
+  for (unsigned int x = 0; x < VOLUME; ++x)
+    for (unsigned int mu = 0; mu < 4; ++mu)
+      _su3d_times_su3(trace[x][mu].Sigma, V[x][mu], smeared_force[x][mu]);
+}

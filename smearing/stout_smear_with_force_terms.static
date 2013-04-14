@@ -2,19 +2,17 @@
 
 static void smear_with_force_terms(stout_control *control, gauge_field_t in)
 {
-  su3 ALIGN staples;
   control->U[0] = in; /* Shallow copy intended */
 
-#pragma omp parallel private(staples)
+#pragma omp parallel
   for(unsigned int iter = 0; iter < control->iterations; ++iter)
   {
 #pragma omp for
     for (unsigned int x = 0; x < VOLUME; ++x)
       for (unsigned int mu = 0; mu < 4; ++mu)
       {         
-        generic_staples(&staples, x, mu, control->U[iter]);
-        fatten_links_with_force_terms(&control->U[iter + 1][x][mu], &control->trace[iter][x][mu], 
-                                       control->rho, &staples, &control->U[iter][x][mu]);
+        generic_staples(&control->trace[iter][x][mu].C, x, mu, control->U[iter]);
+        fatten_links_with_force_terms(&control->U[iter + 1][x][mu], &control->trace[iter][x][mu], control->rho, &control->U[iter][x][mu]);
       }
 #pragma omp single
     exchange_gauge_field(&control->U[iter + 1]);

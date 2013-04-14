@@ -25,14 +25,19 @@ void hex_smear_forces(hex_control *control, adjoint_field_t in)
 #pragma omp parallel
   for (unsigned int iter = control->iterations; iter > 0; --iter)
   {
-    construct_intermediates(control->trace_stage_2[iter - 1], control->U[iter] /* = V_3 */, control->U[iter - 1] /* = U */, smeared_force);
-    add_hex_terms_to_forces_stage_2(smeared_force, control->rho[2], control->trace_stage_2[iter - 1], control->U[iter] /* = V_3 */, control->U[iter - 1] /* = U */);
-
-    construct_intermediates_stage_1(control->trace_stage_1[iter - 1], control->V_stage_1[iter - 1] /* = V_2 */, control->U[iter - 1] /* = U */, smeared_force);
-    add_hex_terms_to_forces_stage_1(smeared_force, control->rho, control->trace[iter - 1], control->U[iter] /* = V */, control->U[iter - 1] /* = U */);
-
-    construct_intermediates_stage_0(control->trace_stage_0[iter - 1], control->V_stage_0[iter - 1] /* = V_1 */, control->U[iter - 1] /* = U */, smeared_force);
-    add_hex_terms_to_forces_stage_0(smeared_force, control->rho, control->trace[iter - 1], control->U[iter] /* = V */, control->U[iter - 1] /* = U */);
+    construct_Sigma_3();
+    construct_Z_3();
+    construct_Sigma_2();
+    construct_Z_2();
+    construct_Sigma_1();
+    construct_Z_1();
+    construct_Sigma_0();
+   
+//    construct_intermediates(control->trace_stage_2[iter - 1], control->U[iter] /* = V_3 */, control->U[iter - 1] /* = U */, smeared_force);
+//     construct_intermediates_stage_1(control->trace_stage_1[iter - 1], control->V_stage_1[iter - 1] /* = V_2 */, control->U[iter - 1] /* = U */, control->trace_stage_2[iter - 1]);
+//     construct_intermediates_stage_0(control->trace_stage_0[iter - 1], control->V_stage_0[iter - 1] /* = V_1 */, control->U[iter - 1] /* = U */, control->trace_stage_1[iter - 1]);
+    
+    add_hex_terms_to_forces(smeared_force, control->rho, control->trace[iter - 1], control->U[iter] /* = V */, control->U[iter - 1] /* = U */);
   }
 
   /* The force terms are still in the tangent space representation, so project them back to the adjoint one */
