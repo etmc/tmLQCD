@@ -1,69 +1,53 @@
-static void construct_Sigma_1(stout_notes_outer *trace_out, double const rho_2, su3_outer const *V_1, stout_notes_outer *trace_in)
+static void construct_Sigma_1(stout_notes_outer *trace_out, double const alpha, su3_outer const *V_1, stout_notes_outer *trace_in)
 {
-  /* FIXME I'm all the time assuming symmetry between nu and tau. But what happens to Z in these cases? Because I get Z[I1_mu_tau] or Z[I1_mu_nu]. Those are not identical!*/
-  /* Of course, I will address both at some point. After all, I will get Z[I1_mu_tau] for tau < mu */
-  /* But that won't do! We'll always miss out on, e.g., I1_2_0. */
   su3 ALIGN t1;
   su3 ALIGN t2;
+  
   #pragma omp for private(t1, t2)
   for (unsigned int x = 0; x < VOLUME; ++x)
-    for (unsigned int mu = 0; mu < 4; ++mu)
-      for (unsigned int nu = 0; nu < 3; ++nu)
-      {
-        if (mu == nu)
-          continue;
-        
-        for (unsigned int tau = nu; tau < 4; ++tau)
-        {
-          /* NOTE Sigma_{mu, nu, tau} and Sigma_{mu, tau, nu} are symmetric! */
-          /* That means we'll have to explicitly skip nu == mu and mu == tau, but we can set tau > nu. */
+    for (unsigned int comp = 0; comp < hyp_perm_full; ++comp)
+    { 
+      
+      unsigned int cmr  = hyp_staple_full[comp].cmr;
+      unsigned int cnr  = hyp_staple_full[comp].cnr;
+      unsigned int cnmr = hyp_staple_full[comp].cnmr;
 
-          if (mu == tau)
-            continue;
-          
-          /* Calculate the right index in the 'outer' counting -- we know mu =/= nu =/= tau and tau > nu*/
-          unsigned int I1_mu_tau = mu * 3 + ((tau > mu) ? (tau - 1) : tau);
-          unsigned int I1_nu_tau = nu * 3 + ((tau > nu) ? (tau - 1) : tau);
-          unsigned int I2_mu_nu_tau = mu * 3 + ((nu > mu) ? (nu - 1) : nu); + ((tau > mu) ? (tau - 2) : (tau - 1));
-          unsigned int I2_nu_mu_tau = nu * 3 + ((mu > nu) ? (mu - 1) : mu); + ((tau > nu) ? (tau - 2) : (tau - 1));
-
-          /* Prefetch the indices */
-          unsigned int xmnu = g_idn[x][nu];
-          unsigned int xpnu = g_iup[x][nu];
-          unsigned int xpmu = g_iup[x][mu];
-          unsigned int xmnu_pmu = g_idn[ xpmu ][nu];
-          
-          /* Line 1 */
-          _su3d_times_su3(t1, V2[xpnu][I2_mu_nu_tau], trace_in[x][I1_nu_tau].Z);
-          _su3_times_su3(trace_out[x][I2_mu_nu_tau].Sigma, V2[xpmu][I2_nu_mu_tau], t1);
-          
-          /* Line 2 */
-          _su3_times_su3(t1, trace_in[xmnu][I1_mu_tau].Z, V2[xmnu][I2_nu_mu_tau]);
-          _su3d_times_su3_acc(trace_out[x][I2_mu_nu_tau].Sigma, V2[xmnu_pmu][I2_nu_mu_tau], t1);
-          
-          /* Line 3 */
-          _su3_times_su3d(t1, V2[xmnu_pmu][I2_nu_mu_tau], V2[x][I2_mu_nu_tau]);
-          _su3_times_su3(t2, V2[xmnu][I2_mu_nu_tau], t1);
-          _su3_times_su3(t1, trace_in[xmnu][I1_nu_tau].Z, t2);
-          _su3d_times_su3(t2, V2[x][I2_mu_nu_tau], t1);
-          _su3_refac_acc(trace_out[x][I2_mu_nu_tau].Sigma, -1.0, t2);
-          
-          /* Line 4 */
-          _su3_times_su3d(t1, trace_in[xpmu][I1_nu_tau].Z, V2[x][I2_mu_nu_tau]);
-          _su3_times_su3(t2, V2[xpmu][I2_mu_nu_tau], t1);
-          _su3_times_su3(t1,V2[x][I2_nu_mu_tau] , t2);
-          _su3d_times_su3(t2, V2[x][I2_mu_nu_tau], t1);
-          _su3_refac_acc(trace_out[x][I2_mu_nu_tau].Sigma, -1.0, t2);       
-          
-          /* Line 5 */
-          _su3_times_su3d(t1, trace_in[xpnu][I1_mu_tau].Z, V2[x][I2_nu_mu_tau]);
-          _su3_times_su3_acc(trace_out[x][I2_mu_nu_tau].Sigma, V2[xpmu][I2_nu_mu_tau], t1);
-          
-          /* Line 6 */
-          _su3d_times_su3(t1, V2[xmnu][I2_mu_nu_tau], V2[xmnu][I2_nu_mu_tau]);
-          _su3_times_su3_acc(trace_out[x][I2_mu_nu_tau].Sigma, trace_in[xmnu_pmu][I1_nu_tau].Z, t1);
-          
-          _su3_refac_acc(trace_out[x][I2_mu_nu_tau].Sigma, rho_3, trace_out[x][I2_mu_nu_tau].Sigma);
-        }
-      }
+      /* Prefetch the indices */
+      unsigned int xmn   = g_idn[x][nu];
+      unsigned int xpn   = g_iup[x][nu];
+      unsigned int xpm   = g_iup[x][mu];
+      unsigned int xpmmn = g_idn[xpm][nu];
+      
+      /* Line 1 */
+      _su3d_times_su3(t1, V2[xpn][comp], trace_in[x][cnr].Z);
+      _su3_times_su3(trace_out[x][comp].Sigma, V2[xpm][cnmr], t1);
+      
+      /* Line 2 */
+      _su3_times_su3(t1, trace_in[xmn][cmr].Z, V2[xmn][cnmr]);
+      _su3d_times_su3_acc(trace_out[x][comp].Sigma, V2[xpmmn][cnmr], t1);
+      
+      /* Line 3 */
+      _su3_times_su3d(t1, V2[xpmmn][cnmr], V2[x][comp]);
+      _su3_times_su3(t2, V2[xmn][comp], t1);
+      _su3_times_su3(t1, trace_in[xmn][cnr].Z, t2);
+      _su3d_times_su3(t2, V2[x][comp], t1);
+      _su3_refac_acc(trace_out[x][comp].Sigma, -1.0, t2);
+      
+      /* Line 4 */
+      _su3_times_su3d(t1, trace_in[xpm][cnr].Z, V2[x][comp]);
+      _su3_times_su3(t2, V2[xpm][comp], t1);
+      _su3_times_su3(t1,V2[x][cnmr] , t2);
+      _su3d_times_su3(t2, V2[x][comp], t1);
+      _su3_refac_acc(trace_out[x][comp].Sigma, -1.0, t2);       
+      
+      /* Line 5 */
+      _su3_times_su3d(t1, trace_in[xpn][cmr].Z, V2[x][cnmr]);
+      _su3_times_su3_acc(trace_out[x][comp].Sigma, V2[xpm][cnmr], t1);
+      
+      /* Line 6 */
+      _su3d_times_su3(t1, V2[xmn][comp], V2[xmn][cnmr]);
+      _su3_times_su3_acc(trace_out[x][comp].Sigma, trace_in[xpmmn][cnr].Z, t1);
+      
+      _su3_refac_acc(trace_out[x][comp].Sigma, alpha, trace_out[x][comp].Sigma);
+    }
 }
