@@ -1,4 +1,4 @@
-static void construct_Sigma_1(stout_notes_outer *trace_out, double const alpha, su3_outer const *V_1, stout_notes_outer *trace_in)
+static void construct_Sigma_1(stout_notes_three_index *trace_out, double const alpha, su3_outer const *V_1, stout_notes_two_index *trace_in)
 {
   su3 ALIGN t1;
   su3 ALIGN t2;
@@ -7,10 +7,11 @@ static void construct_Sigma_1(stout_notes_outer *trace_out, double const alpha, 
   for (unsigned int x = 0; x < VOLUME; ++x)
     for (unsigned int comp = 0; comp < hyp_perm_full; ++comp)
     { 
-      
-      unsigned int cmr  = hyp_staple_full[comp].cmr;
-      unsigned int cnr  = hyp_staple_full[comp].cnr;
-      unsigned int cnmr = hyp_staple_full[comp].cnmr;
+      /* Only the trace_out has the full 24 components, and we'll go through it linearly,
+         just following comp. Hyp_staple_full provides mappings into the 12 component input fields. */
+      unsigned int cmr = hyp_staple_full[comp].cmr;
+      unsigned int cnr = hyp_staple_full[comp].cnr;
+      unsigned int cnm = hyp_staple_full[comp].cnm;  
 
       /* Prefetch the indices */
       unsigned int xmn   = g_idn[x][nu];
@@ -19,33 +20,33 @@ static void construct_Sigma_1(stout_notes_outer *trace_out, double const alpha, 
       unsigned int xpmmn = g_idn[xpm][nu];
       
       /* Line 1 */
-      _su3d_times_su3(t1, V2[xpn][comp], trace_in[x][cnr].Z);
-      _su3_times_su3(trace_out[x][comp].Sigma, V2[xpm][cnmr], t1);
+      _su3d_times_su3(t1, V1[xpn][comp], trace_in[x][cnr].Z);
+      _su3_times_su3(trace_out[x][comp].Sigma, V1[xpm][cnm], t1);
       
       /* Line 2 */
-      _su3_times_su3(t1, trace_in[xmn][cmr].Z, V2[xmn][cnmr]);
-      _su3d_times_su3_acc(trace_out[x][comp].Sigma, V2[xpmmn][cnmr], t1);
+      _su3_times_su3(t1, trace_in[xmn][cmr].Z, V1[xmn][cnm]);
+      _su3d_times_su3_acc(trace_out[x][comp].Sigma, V1[xpmmn][cnm], t1);
       
       /* Line 3 */
-      _su3_times_su3d(t1, V2[xpmmn][cnmr], V2[x][comp]);
-      _su3_times_su3(t2, V2[xmn][comp], t1);
+      _su3_times_su3d(t1, V1[xpmmn][cnm], V1[x][comp]);
+      _su3_times_su3(t2, V1[xmn][comp], t1);
       _su3_times_su3(t1, trace_in[xmn][cnr].Z, t2);
-      _su3d_times_su3(t2, V2[x][comp], t1);
+      _su3d_times_su3(t2, V1[x][comp], t1);
       _su3_refac_acc(trace_out[x][comp].Sigma, -1.0, t2);
       
       /* Line 4 */
-      _su3_times_su3d(t1, trace_in[xpm][cnr].Z, V2[x][comp]);
-      _su3_times_su3(t2, V2[xpm][comp], t1);
-      _su3_times_su3(t1,V2[x][cnmr] , t2);
-      _su3d_times_su3(t2, V2[x][comp], t1);
+      _su3_times_su3d(t1, trace_in[xpm][cnr].Z, V1[x][comp]);
+      _su3_times_su3(t2, V1[xpm][comp], t1);
+      _su3_times_su3(t1,V1[x][cnm] , t2);
+      _su3d_times_su3(t2, V1[x][comp], t1);
       _su3_refac_acc(trace_out[x][comp].Sigma, -1.0, t2);       
       
       /* Line 5 */
-      _su3_times_su3d(t1, trace_in[xpn][cmr].Z, V2[x][cnmr]);
-      _su3_times_su3_acc(trace_out[x][comp].Sigma, V2[xpm][cnmr], t1);
+      _su3_times_su3d(t1, trace_in[xpn][cmr].Z, V1[x][cnm]);
+      _su3_times_su3_acc(trace_out[x][comp].Sigma, V1[xpm][cnm], t1);
       
       /* Line 6 */
-      _su3d_times_su3(t1, V2[xmn][comp], V2[xmn][cnmr]);
+      _su3d_times_su3(t1, V1[xmn][comp], V1[xmn][cnm]);
       _su3_times_su3_acc(trace_out[x][comp].Sigma, trace_in[xpmmn][cnr].Z, t1);
       
       _su3_refac_acc(trace_out[x][comp].Sigma, alpha, trace_out[x][comp].Sigma);

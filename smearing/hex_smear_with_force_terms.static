@@ -10,9 +10,9 @@ static void smear_with_force_terms(hex_control *control, gauge_field_t in)
 #pragma omp parallel
   for (int iter = 0; iter < params->iterations; ++iter)
   {
-    smear_stage_0(*control->V_stage_0[iter], control->rho[0],                           control->U[iter]);
-    smear_stage_1(*control->V_stage_1[iter], control->rho[1], control->V_stage_0[iter], control->U[iter]);   
-    smear_stage_2( control->U[iter + 1],     control->rho[2], control->V_stage_1[iter], control->U[iter]);
+    smear_stage_0_with_force_terms(*control->V_stage_0[iter], control->rho[0],                           control->U[iter]);
+    smear_stage_1_with_force_terms(*control->V_stage_1[iter], control->rho[1], control->V_stage_0[iter], control->U[iter]);   
+    smear_stage_2_with_force_terms( control->U[iter + 1],     control->rho[2], control->V_stage_1[iter], control->U[iter]);
   }
   
   return 0;
