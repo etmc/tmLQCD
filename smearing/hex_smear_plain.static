@@ -1,7 +1,7 @@
 #include "stout_fatten_links.static"
-#include "hex_smear_first_stage.static"
-#include "hex_smear_second_stage.static"
-#include "hex_smear_third_stage.static"
+#include "hex_smear_stage_1.static"
+#include "hex_smear_stage_2.static"
+#include "hex_smear_stage_3.static"
 
 static void smear_plain(hex_control *control, gauge_field_t in)
 {
@@ -10,9 +10,9 @@ static void smear_plain(hex_control *control, gauge_field_t in)
 #pragma omp parallel
   for (int iter = 0; iter < params->iterations; ++iter)
   {
-    smear_stage_0(*control->V_stage_0, control->rho[0],                      in);
-    smear_stage_1(*control->V_stage_1, control->rho[1], *control->V_stage_0, in);   
-    smear_stage_2( control->U[1],      control->rho[2], *control->V_stage_1, in);
+    smear_stage_1(*control->V_stage_0, control->rho[0],                      in);
+    smear_stage_2(*control->V_stage_1, control->rho[1], *control->V_stage_0, in);   
+    smear_stage_3( control->U[1],      control->rho[2], *control->V_stage_1, in);
     
 #pragma omp single
     in = control->U[1]; /* Shallow copy intended */

@@ -1,0 +1,15 @@
+static void add_terms_to_forces_stage_0(gauge_field_t smeared_force, gauge_field_t Sigma_0, gauge_field_t const U)
+{
+  su3 ALIGN t1;
+  
+#pragma omp for private(t1, t2)
+  for (unsigned int x = 0; x < VOLUME; ++x)
+    for (unsigned int mu = 0; mu < 4; ++mu)
+    {     
+      /* t1 = Sigma * V */
+      _su3_times_su3(t1, Sigma_0[x][mu], U[x][mu]);
+      
+      /* t1 = U * Sigma * U * U^dagger = U * Sigma */
+      _su3_times_su3_acc(smeared_force[x][mu], U[x][mu], t1);
+    }
+}

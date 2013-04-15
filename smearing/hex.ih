@@ -105,7 +105,7 @@ typedef struct hyp_staple_full_t
   unsigned int cnr;
   unsigned int cnm;
   unsigned int cnmr;
-  unsigend int cnrs;
+  unsigned int cnrs;
 }
 
 static const hyp_staple_full_t hyp_staple_full[24] = {

@@ -1,0 +1,16 @@
+#include "hex_inner_Z_loop.ih"
+
+static void construct_Z_2(stout_notes_two_index *trace, gauge_field_t const U)
+{
+  _Complex double ALIGN mat_trace;
+  su3 ALIGN t1;
+  su3 ALIGN t2;
+  
+#pragma omp for private(mat_trace, t1, t2)
+  for (unsigned int x = 0; x < VOLUME; ++x)
+    for (unsigned int comp = 0; comp < hyp_comp_symm; ++comp)
+      _INNER_Z_LOOP(x, comp, t1, t2, mat_trace);
+  
+#pragma omp single
+  generic_exchange(&trace, sizeof(stout_notes_two_index));
+}

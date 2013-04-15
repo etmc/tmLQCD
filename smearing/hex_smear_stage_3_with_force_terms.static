@@ -1,0 +1,32 @@
+static void smear_stage_3_with_force_terms(su3_outer *out, stout_notes_tuple *trace, double const alpha, su3_outer *in, gauge_field_t orig)
+{
+  su3 ALIGN tmp;
+  
+#pragma omp for private(tmp)
+  for (unsigned int x = 0; x < VOLUME; ++x)
+    for (unsigned int comp = 0; comp < hyp_perm_symm; ++comp)
+    {
+      int const mu = hyp_comp_symm[comp].mu;
+      int const nu = hyp_comp_symm[comp].nu;
+      int const cnm = hyp_staple_symm[comp].cnm;
+      
+      int const xpm   = g_iup[x][mu];
+      int const xmn   = g_idn[x][nu];
+      int const xpn   = g_iup[x][nu];
+      int const xpmmn = g_idn[xpm][nu];
+
+      if ((comp % 3) == 0)
+        _su3_zero(trace[x][mu].C);
+      
+      _su3_times_su3d(tmp, in[xpn][cmn], in[xpm][cnm]);
+      _su3_times_su3_acc(trace[x][mu].C, in[x][cnm], tmp);
+      _su3_times_su3(tmp, in[xmn][cmn], in[xpmmn][cnm]);
+      _su3d_times_su3_acc(trace[x][mu].C, in[xmn][cnm], tmp);
+
+      if ((comp % 3) == 2)
+        fatten_links_with_force_terms(&out[x][mu], &trace[x][mu], alpha, &orig[x][mu]);
+    }
+
+#pragma omp single  
+  exchange_gauge_field(out);
+}
