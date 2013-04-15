@@ -1,33 +1,26 @@
 static void smear_stage_0_with_force_terms(su3_outer *out, stout_notes_outer *trace, double const rho, gauge_field_t in)
 {
   su3 ALIGN tmp;
-  su3 ALIGN staples;
 
 #pragma omp for private(tmp, staples)
-  for (int x = 0; x < VOLUME; ++x)
-    for (int mu = 0; mu < 4; ++mu)
-      for (int nu = 0; nu < 3; ++nu)
-        for (int tau = nu; tau < 4; ++tau)
-        {
-          int component = hyp_index_three_sym[mu][nu][tau];
-          
-          if (component < 0)
-            continue;
+  for (unsigned int x = 0; x < VOLUME; ++x)
+    for (unsigned int comp = 0; comp < hyp_perm_symm; ++comp)
+    {
+      int const mu = hyp_comp_symm[comp].mu;      
+      int const sigma = hyp_comp_symm[comp].sigma;
+      
+      int const xps = g_iup[x][sigma];
+      int const xms = g_iup[x][sigma];
+      int const xpm = g_iup[x][mu];
+      int const xpmms = g_idn[xpmu][sigma];
 
-          int via = hyp_dir_three[mu][nu][tau];          
-          int xpvia = g_iup[x][nu];
-          int xmvia = g_iup[x][nu];
-          int xpmu = g_iup[x][mu];
-          int xmviapmu = g_idn[xpmu][via];
-
-          _su3_times_su3d(tmp, in[xpvia][mu], in[xpmu][via]);
-          _su3_times_su3(staples, in[x][via], tmp);
-          _su3_times_su3(tmp, in[xmvia][mu], in[xmviapmu][via]);
-          _su3d_times_su3_acc(staples, in[xmvia][via], tmp);
-          
-          fatten_links_with_force_terms(&out[x][component], &trace[x][component], rho, &staples, &orig[x][mu]);
-        }
-      }
+      _su3_times_su3d(tmp, in[xps][mu], in[xpm][sigma]);
+      _su3_times_su3(trace[x][comp].C, in[x][sigma], tmp);
+      _su3_times_su3(tmp, in[xms][mu], in[xpmms][sigma]);
+      _su3d_times_su3_acc(trace[x][comp].C, in[xms][sigma], tmp);
+      
+      fatten_links_with_force_terms(&out[x][comp], &trace[x][comp], alpha, &orig[x][mu]);
+    }
   
 #pragma omp single
   generic_exchange(out, sizeof(su3_outer));
