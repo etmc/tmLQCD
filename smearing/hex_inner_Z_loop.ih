@@ -1,0 +1,35 @@
+#ifndef GUARD_INNER_Z_LOOP
+#define GUARD_INNER_Z_LOOP
+#define _INNER_Z_LOOP (x, comp, t1, t2, mat_trace) \
+  { \
+      /* t2 == Tr[U * Sigma * B2] * A */ \
+    _su3_times_su3(t1, trace[x][comp].Sigma, trace[x][comp].B2); \
+    _trace_su3_times_su3(mat_trace, U[x][comp], t1); \
+    _complex_times_su3(t2, mat_trace, trace[x][comp].A); \
+    \
+    /* Z == (Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * A ) * A */ \
+    _su3_times_su3(t1, trace[x][comp].Sigma, trace[x][comp].B1); \
+    _trace_su3_times_su3(mat_trace, U[x][comp], t1); \
+    _su3_add_equals_complex_identity(t2, mat_trace); \
+    _su3_times_su3(trace[x][comp].Z, t2, trace[x][comp].A); \
+    \
+    /* Z == (Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * A ) * A  + f_1 * U * Sigma */ \
+    _su3_times_su3(t1, U[x][comp], trace[x][comp].Sigma); \
+    _complex_times_su3(t2, trace[x][comp].f1, t1); \
+    _su3_plus_su3(trace[x][comp].Z, t2, trace[x][comp].Z); \
+    \
+    /* Z == (Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * A ) * A  + f_1 * U * Sigma - i * f2 * U * Sigma * A */ \
+    _su3_times_su3(t2, t1, trace[x][comp].A); \
+    _complex_times_su3(t2, trace[x][comp].f2, t2); \
+    _su3_plus_su3(trace[x][comp].Z, t2, trace[x][comp].Z); \
+    \
+    /* t1 == (Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * A ) * A  + f_1 * U * Sigma + f2 * ( U * Sigma * A + A * U * Sigma ) */ \
+    _su3_times_su3(t2, trace[x][comp].A, t1); \
+    _complex_times_su3(t2, trace[x][comp].f2, t2); \
+    _su3_plus_su3(t1, t2, trace[x][comp].Z); \
+    \
+    /* Z = U^\dagger * P_TA(t1) == Z */ \
+    project_traceless_antiherm(&t1); \
+    _su3d_times_su3(trace[x][comp].Z, U[x][comp], t1); \
+  }
+#endif
