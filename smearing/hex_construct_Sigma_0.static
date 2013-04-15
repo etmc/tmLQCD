@@ -8,6 +8,8 @@ static void construct_Sigma_0(stout_notes_tuple *trace_out, double const alpha, 
     for (unsigned int comp = 0; comp < hyp_perm_full; ++comp)
     { 
       unsigned int mu = hyp_comp_full[comp].mu;
+	  unsigned int nu = hyp_comp_full[comp].nu;
+	  unsigned int cnrs = hyp_staple_full[comp].cnrs;
 
       /* Prefetch the indices */
       unsigned int xmn   = g_idn[x][nu];
@@ -15,13 +17,16 @@ static void construct_Sigma_0(stout_notes_tuple *trace_out, double const alpha, 
       unsigned int xpm   = g_iup[x][mu];
       unsigned int xpmmn = g_idn[xpm][nu];
       
+	  if ((comp % 6) == 0)
+        _su3_zero(trace_out[x][mu]);
+	  
       /* Line 1 */
-      _su3d_times_su3(t1, U[xpn][comp], trace_in[x][cnr].Z);
-      _su3_times_su3(trace_out[x][comp].Sigma, U[xpm][cnmr], t1);
+      _su3d_times_su3(t1, U[xpn][mu], trace_in[x][cnrs].Z);
+      _su3_times_su3_acc(trace_out[x][comp].Sigma, U[xpm][nu], t1);
       
       /* Line 2 */
-      _su3_times_su3(t1, trace_in[xmn][cmr].Z, U[xmn][cnmr]);
-      _su3d_times_su3_acc(trace_out[x][comp].Sigma, U[xpmmn][cnmr], t1);
+      _su3_times_su3(t1, trace_in[xmn][comp].Z, U[xmn][nu]);
+      _su3d_times_su3_acc(trace_out[x][comp].Sigma, U[xpmmn][nu], t1);
       
       /* Line 3 */
       _su3_times_su3d(t1, U[xpmmn][cnmr], U[x][comp]);
@@ -45,6 +50,7 @@ static void construct_Sigma_0(stout_notes_tuple *trace_out, double const alpha, 
       _su3d_times_su3(t1, U[xmn][comp], U[xmn][cnmr]);
       _su3_times_su3_acc(trace_out[x][comp].Sigma, trace_in[xpmmn][cnr].Z, t1);
       
-      _su3_refac_acc(trace_out[x][comp].Sigma, alpha, trace_out[x][comp].Sigma);
+	  if ((comp % 6) == 5)
+		_su3_refac_acc(trace_out[x][comp].Sigma, alpha, trace_out[x][comp].Sigma);
     }
 }
