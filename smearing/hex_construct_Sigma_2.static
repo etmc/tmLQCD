@@ -1,4 +1,4 @@
-static void construct_Sigma_2(stout_notes_outer *trace_out, double const alpha, su3_outer const *V_2, stout_notes_tuple *trace_in)
+static void construct_Sigma_2(stout_notes_two_index *trace_out, double const alpha, su3_outer const *V_2, stout_notes_tuple *trace_in)
 {
   su3 ALIGN t1;
   su3 ALIGN t2;
