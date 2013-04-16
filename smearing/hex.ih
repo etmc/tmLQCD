@@ -24,13 +24,13 @@
 
 static const unsigned int hyp_perm_symm = 12;
 
-typedef struct hyp_indices_t
+typedef struct
 {
   unsigned int mu;
   unsigned int nu;
   unsigned int rho;
   unsigned int sigma;
-};
+} hyp_indices_t;
 
 static const hyp_indices_t hyp_comp_symm[12] = {
                                                  {0, 1, 2, 3}, //  0
@@ -76,12 +76,12 @@ static const hyp_indices_t hyp_comp_full[24] = {
                                                  {3, 2, 1, 0}  // 23
                                                };
 
-typedef struct hyp_staple_t
+typedef struct 
 {
   unsigned int cnm;
   unsigned int crmn;
   unsigned int csmn;
-}
+} hyp_staple_t;
 
 static const hyp_staple_t hyp_staple_symm[12] = {
                                                   { 3,  6,  9}, //  0
@@ -99,14 +99,14 @@ static const hyp_staple_t hyp_staple_symm[12] = {
                                                 };
 
 
-typedef struct hyp_staple_full_t
+typedef struct 
 {
   unsigned int cmr;
   unsigned int cnr;
   unsigned int cnm;
   unsigned int cnmr;
   unsigned int cnrs;
-}
+} hyp_staple_full_t;
 
 static const hyp_staple_full_t hyp_staple_full[24] = {
                                                        { 1,  4,  3,  6,  9}, //  0
