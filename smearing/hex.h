@@ -17,10 +17,6 @@ typedef struct
   /* Parameters */
   double          rho[3];
   unsigned int    iterations;
-   
-  /* Results -- main output for users */
-  gauge_field_t    result; /* For direct access to the result, shallow copy... */
-  adjoint_field_t  force_result;
   
   /* Intermediate results, stored to enhance locality of the analysis */
   gauge_field_t *U;       /* The sequence of iterations gauge fields */
