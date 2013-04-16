@@ -1,4 +1,4 @@
-static void smear_stage_3(su3_outer *out, double const alpha, su3_outer *in, gauge_field_t orig)
+static void smear_stage_3(gauge_field_t out, double const alpha, su3_outer *in, gauge_field_t const orig)
 {
   su3 ALIGN tmp;
   su3 ALIGN staples;
@@ -19,9 +19,9 @@ static void smear_stage_3(su3_outer *out, double const alpha, su3_outer *in, gau
       if ((comp % 3) == 0)
         _su3_zero(staples);
       
-      _su3_times_su3d(tmp, in[xpn][cmn], in[xpm][cnm]);
+      _su3_times_su3d(tmp, in[xpn][comp], in[xpm][cnm]);
       _su3_times_su3_acc(staples, in[x][cnm], tmp);
-      _su3_times_su3(tmp, in[xmn][cmn], in[xpmmn][cnm]);
+      _su3_times_su3(tmp, in[xmn][comp], in[xpmmn][cnm]);
       _su3d_times_su3_acc(staples, in[xmn][cnm], tmp);
 
       if ((comp % 3) == 2)
@@ -29,5 +29,5 @@ static void smear_stage_3(su3_outer *out, double const alpha, su3_outer *in, gau
     }
 
 #pragma omp single  
-  exchange_gauge_field(out);
+  generic_exchange(out, sizeof(su3_outer));
 }

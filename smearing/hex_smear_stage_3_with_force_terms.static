@@ -1,32 +1,59 @@
-static void smear_stage_3_with_force_terms(su3_outer *out, stout_notes_tuple *trace, double const alpha, su3_outer *in, gauge_field_t orig)
+static void smear_stage_3_with_force_terms(gauge_field_t out, stout_notes_tuple *trace, double const alpha, su3_outer *in, gauge_field_t orig)
 {
   su3 ALIGN tmp;
   
+  /* The loop over the indices has been manually unrolled here,
+     to make the aggregation in mu more straightforward and clear. */
 #pragma omp for private(tmp)
   for (unsigned int x = 0; x < VOLUME; ++x)
-    for (unsigned int comp = 0; comp < hyp_perm_symm; ++comp)
+    for (unsigned int mu = 0; mu < 4; ++mu)
     {
-      int const mu = hyp_comp_symm[comp].mu;
-      int const nu = hyp_comp_symm[comp].nu;
-      int const cnm = hyp_staple_symm[comp].cnm;
+      /* We lift from one to two indices using the permutation tables. */
+      int const nu    = hyp_comp_sing[mu].nu;
+      int const rho   = hyp_comp_sing[mu].rho;
+      int const sigma = hyp_comp_sing[mu].sigma;
+      
+      int const cmn   = hyp_staple_sing[mu].cmn;
+      int const cnm   = hyp_staple_sing[mu].cmn;
+      
+      int const cmr   = hyp_staple_sing[mu].cmr;
+      int const crm   = hyp_staple_sing[mu].crm;
+      
+      int const cms   = hyp_staple_sing[mu].cms;
+      int const csm   = hyp_staple_sing[mu].csm;
       
       int const xpm   = g_iup[x][mu];
+
       int const xmn   = g_idn[x][nu];
       int const xpn   = g_iup[x][nu];
       int const xpmmn = g_idn[xpm][nu];
-
-      if ((comp % 3) == 0)
-        _su3_zero(trace[x][mu].C);
       
+      int const xmr   = g_idn[x][rho];
+      int const xpr   = g_iup[x][rho];
+      int const xpmmr = g_idn[xpm][rho];
+
+      int const xms   = g_idn[x][sigma];
+      int const xps   = g_iup[x][sigma];
+      int const xpmms = g_idn[xpm][sigma];
+         
       _su3_times_su3d(tmp, in[xpn][cmn], in[xpm][cnm]);
-      _su3_times_su3_acc(trace[x][mu].C, in[x][cnm], tmp);
+      _su3_times_su3(trace[x][mu].C, in[x][cnm], tmp);
       _su3_times_su3(tmp, in[xmn][cmn], in[xpmmn][cnm]);
       _su3d_times_su3_acc(trace[x][mu].C, in[xmn][cnm], tmp);
 
-      if ((comp % 3) == 2)
-        fatten_links_with_force_terms(&out[x][mu], &trace[x][mu], alpha, &orig[x][mu]);
+      _su3_times_su3d(tmp, in[xpr][cmr], in[xpm][crm]);
+      _su3_times_su3_acc(trace[x][mu].C, in[x][crm], tmp);
+      _su3_times_su3(tmp, in[xmr][cmr], in[xpmmr][crm]);
+      _su3d_times_su3_acc(trace[x][mu].C, in[xmr][crm], tmp);
+
+      _su3_times_su3d(tmp, in[xps][cms], in[xpm][csm]);
+      _su3_times_su3_acc(trace[x][mu].C, in[x][csm], tmp);
+      _su3_times_su3(tmp, in[xms][cms], in[xpmms][csm]);
+      _su3d_times_su3_acc(trace[x][mu].C, in[xms][csm], tmp);
+
+      fatten_links_with_force_terms(&out[x][mu], &trace[x][mu], alpha, &orig[x][mu]);
     }
 
 #pragma omp single  
-  exchange_gauge_field(out);
+  exchange_gauge_field(&out);
 }

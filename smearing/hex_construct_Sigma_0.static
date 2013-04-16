@@ -1,3 +1,25 @@
+#define _staple_derivative(l1, l2, l3, l1l) \
+{ \
+      _su3d_times_su3(t1, U[xp ## l1][mu], trace_in[x][c ## l1 ## r ## s].Z);   /* Line 1 */ \
+      _su3_times_su3_acc(Sigma[x][mu], U[xpm][l1l], t1); \
+      _su3_times_su3(t1, trace_in[xm ## l1][cm ## l2 ## l3].Z, U[xm ## l1][l1l]);  /* Line 2 */ \
+      _su3d_times_su3_acc(Sigma[x][mu], U[xpmm ## l1][l1l], t1); \
+      _su3_times_su3d(t1, U[xpmm ## l1][l1l], U[x][mu]);            /* Line 3 */ \
+      _su3_times_su3(t2, U[xm ## l1][mu], t1); \
+      _su3_times_su3(t1, trace_in[xm ## l1][c ## l1 ## l2 ## l3].Z, t2); \
+      _su3d_times_su3(t2, U[x][mu], t1); \
+      _su3_refac_acc(Sigma[x][mu], -1.0, t2); \
+      _su3_times_su3d(t1, trace_in[xpm][c ## l1 ## l2 ## l3].Z, U[x][mu]);   /* Line 4 */ \
+      _su3_times_su3(t2, U[xpm][mu], t1); \
+      _su3_times_su3(t1,U[x][l1l] , t2); \
+      _su3d_times_su3(t2, U[x][mu], t1); \
+      _su3_refac_acc(Sigma[x][mu], -1.0, t2); \
+      _su3_times_su3d(t1, trace_in[xp ## l1][cm ## l2 ## l3].Z, U[x][l1l]);   /* Line 5 */ \
+      _su3_times_su3_acc(Sigma[x][mu], U[xpm][l1l], t1); \
+      _su3d_times_su3(t1, U[xm ## l1][mu], U[xm ## l1][l1l]);            /* Line 6 */ \
+      _su3_times_su3_acc(Sigma[x][mu], trace_in[xpmm ## l1][c ## l1 ## l2 ## l3].Z, t1); \
+}
+
 static void construct_Sigma_0(gauge_field_t Sigma, double const alpha, gauge_field_t const U, stout_notes_three_index *trace_in)
 {
   su3 ALIGN t1;
@@ -5,52 +27,25 @@ static void construct_Sigma_0(gauge_field_t Sigma, double const alpha, gauge_fie
   
   #pragma omp for private(t1, t2)
   for (unsigned int x = 0; x < VOLUME; ++x)
-    for (unsigned int comp = 0; comp < hyp_perm_full; ++comp)
+    for (unsigned int mu = 0; mu < 4; ++mu)
     { 
-      unsigned int mu = hyp_comp_full[comp].mu;
-                  unsigned int nu = hyp_comp_full[comp].nu;
-                  unsigned int cnrs = hyp_staple_full[comp].cnrs;
+      unsigned int const nu    = hyp_comp_sing[mu].nu;
+      unsigned int const rho   = hyp_comp_sing[mu].rho;
+      unsigned int const sigma = hyp_comp_sing[mu].sigma;
+      
+      unsigned int const cnrs  = hyp_staple_sing[mu].cnrs;
+      unsigned int const cmrs  = hyp_staple_sing[mu].cmrs;
 
-      /* Prefetch the indices */
-      unsigned int xmn   = g_idn[x][nu];
-      unsigned int xpn   = g_iup[x][nu];
-      unsigned int xpm   = g_iup[x][mu];
-      unsigned int xpmmn = g_idn[xpm][nu];
+      _su3_zero(Sigma[x][mu]);
       
-      if ((comp % 6) == 0)
-        _su3_zero(trace_out[x][mu]);
-                  
-      /* Line 1 */
-      _su3d_times_su3(t1, U[xpn][mu], trace_in[x][cnrs].Z);
-      _su3_times_su3_acc(Sigma[x][mu], U[xpm][nu], t1);
+      /* nu, rho, sigma */
+      _staple_derivative(n, r, s, nu);
+      _staple_derivative(n, s, r, nu);
+      _staple_derivative(r, n, s, rho);
+      _staple_derivative(r, s, n, rho);
+      _staple_derivative(s, n, r, sigma);
+      _staple_derivative(s, r, n, sigma);
       
-      /* Line 2 */
-      _su3_times_su3(t1, trace_in[xmn][comp].Z, U[xmn][nu]);
-      _su3d_times_su3_acc(Sigma[x][mu], U[xpmmn][nu], t1);
-      
-      /* Line 3 */
-      _su3_times_su3d(t1, U[xpmmn][nu], U[x][mu]);
-      _su3_times_su3(t2, U[xmn][mu], t1);
-      _su3_times_su3(t1, trace_in[xmn][cnrs].Z, t2);
-      _su3d_times_su3(t2, U[x][mu], t1);
-      _su3_refac_acc(Sigma[x][mu], -1.0, t2);
-      
-      /* Line 4 */
-      _su3_times_su3d(t1, trace_in[xpm][cnrs].Z, U[x][mu]);
-      _su3_times_su3(t2, U[xpm][mu], t1);
-      _su3_times_su3(t1,U[x][nu] , t2);
-      _su3d_times_su3(t2, U[x][mu], t1);
-      _su3_refac_acc(Sigma[x][mu], -1.0, t2);       
-      
-      /* Line 5 */
-      _su3_times_su3d(t1, trace_in[xpn][comp].Z, U[x][nu]);
-      _su3_times_su3_acc(Sigma[x][mu], U[xpm][nu], t1);
-      
-      /* Line 6 */
-      _su3d_times_su3(t1, U[xmn][mu], U[xmn][nu]);
-      _su3_times_su3_acc(Sigma[x][mu], trace_in[xpmmn][cnrs].Z, t1);
-      
-      if ((comp % 6) == 5)
-        _su3_refac_acc(Sigma[x][mu], alpha, Sigma[x][mu]);
+      _su3_refac_acc(Sigma[x][mu], alpha, Sigma[x][mu]);
     }
 }

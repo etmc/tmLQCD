@@ -15,7 +15,7 @@ typedef struct
   int             smearing_performed;
   
   /* Parameters */
-  double          rho[3];
+  double          alpha[3];
   unsigned int    iterations;
   
   /* Intermediate results, stored to enhance locality of the analysis */
@@ -34,7 +34,7 @@ typedef struct
   adjoint_field_t  force_result;
 } hex_control;
 
-hex_control *construct_hex_control(int calculate_force_terms, unsigned int iterations, double const rho_1, double const rho_2, double const rho_3);
+hex_control *construct_hex_control(int calculate_force_terms, unsigned int iterations, double const alpha_1, double const alpha_2, double const alpha_3);
 void free_hex_control(hex_control *control);
 
 void hex_smear(hex_control *control, gauge_field_t in);
