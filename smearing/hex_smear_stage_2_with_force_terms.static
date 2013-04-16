@@ -2,7 +2,7 @@ static void smear_stage_2_with_force_terms(su3_outer *out, stout_notes_two_index
 {
   su3 ALIGN tmp;
 
-#pragma omp for private(tmp, trace[x][comp].C)
+#pragma omp for private(tmp)
   for (unsigned int x = 0; x < VOLUME; ++x)
     for (unsigned int comp = 0; comp < hyp_perm_symm; ++comp)
     {
@@ -20,10 +20,10 @@ static void smear_stage_2_with_force_terms(su3_outer *out, stout_notes_two_index
       int const xms   = g_idn[x][sigma];
       int const xpmms = g_idn[xpm][sigma];
         
-      _su3_times_su3d(tmp, in[xpr][comp], in[xpm][ctmn]); 
-      _su3_times_su3(trace[x][comp].C, in[x][ctmn], tmp); 
-      _su3_times_su3(tmp, in[xmr][comp], in[xpmmr][ctmn]); 
-      _su3d_times_su3_acc(trace[x][comp].C, in[xmr][ctmn], tmp); 
+      _su3_times_su3d(tmp, in[xpr][comp], in[xpm][crmn]); 
+      _su3_times_su3(trace[x][comp].C, in[x][crmn], tmp); 
+      _su3_times_su3(tmp, in[xmr][comp], in[xpmmr][crmn]); 
+      _su3d_times_su3_acc(trace[x][comp].C, in[xmr][crmn], tmp); 
       
       _su3_times_su3d(tmp, in[xps][comp], in[xpm][csmn]); 
       _su3_times_su3_acc(trace[x][comp].C, in[x][csmn], tmp); 
