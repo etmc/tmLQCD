@@ -4,6 +4,7 @@
 #include "hex_construct_Sigma_1.static"
 #include "hex_construct_Sigma_2.static"
 #include "hex_construct_Sigma_3.static"
+#include "hex_inner_Z_loop.static"
 #include "hex_construct_Z_1.static"
 #include "hex_construct_Z_2.static"
 #include "hex_construct_Z_3.static"
