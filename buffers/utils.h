@@ -10,7 +10,7 @@
 
 extern int VOLUMEPLUSRAND;
 
-void generic_exchange(void * const field_in, unsigned int const bytes_per_site);
+void generic_exchange(void * field_in, unsigned int const bytes_per_site);
 
 static inline void zero_adjoint_field(adjoint_field_t *target);
 static inline void zero_gauge_field(gauge_field_t *target);
