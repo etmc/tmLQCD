@@ -2,7 +2,7 @@ static void add_terms_to_forces_stage_0(gauge_field_t smeared_force, gauge_field
 {
   su3 ALIGN t1;
   
-#pragma omp for private(t1, t2)
+#pragma omp for private(t1)
   for (unsigned int x = 0; x < VOLUME; ++x)
     for (unsigned int mu = 0; mu < 4; ++mu)
     {     
