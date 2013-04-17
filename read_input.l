@@ -2121,7 +2121,12 @@ EQL {SPC}*={SPC}*
   BEGIN INITIAL;
 }
 
-<SMEARING_HEX,SMEARING_GRADIENT,SMEARING_UNITARY,SMEARING_JACOBI>{SPC}*EndSmearing{SPC}+ {
+<SMEARING_HEX>{SPC}*EndSmearing{SPC}* {
+  check_smearing_params(HEX);
+  BEGIN INITIAL;
+}
+
+<SMEARING_GRADIENT,SMEARING_UNITARY,SMEARING_JACOBI>{SPC}*EndSmearing{SPC}+ {
   fatal_error("HEX, GRADIENT, UNITARY and JACOBI smearing are not yet fully implemented!", "read_input");  
 }
 
