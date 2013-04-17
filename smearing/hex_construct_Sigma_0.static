@@ -1,8 +1,3 @@
-#define _staple_derivative(l1, l2, l3, l1l) \
-{ \
-
-}
-
 static void construct_Sigma_0(gauge_field_t Sigma, double const alpha, gauge_field_t const U, stout_notes_three_index *trace_in)
 {
   su3 ALIGN t1;
@@ -30,7 +25,7 @@ static void construct_Sigma_0(gauge_field_t Sigma, double const alpha, gauge_fie
         _su3_times_su3(t1, trace_in[xmn][cmrs].Z, U[xmn][nu]);  /* Line 2 */
         _su3d_times_su3_acc(Sigma[x][mu], U[xpmmn][nu], t1);
         _su3_times_su3d(t1, U[xpmmn][nu], U[x][mu]);            /* Line 3 */
-        _su3_times_su3(t2, U[xmn][mu], t1); \
+        _su3_times_su3(t2, U[xmn][mu], t1);
         _su3_times_su3(t1, trace_in[xmn][cnrs].Z, t2);
         _su3d_times_su3(t2, U[x][mu], t1);
         _su3_refac_acc(Sigma[x][mu], -1.0, t2);
