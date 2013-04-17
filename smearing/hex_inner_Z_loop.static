@@ -1,0 +1,36 @@
+static void inner_Z_loop(stout_notes_t *notes, su3 *U)
+{
+  _Complex double ALIGN mat_trace;
+  su3 ALIGN t1;
+  su3 ALIGN t2;
+  
+  /* t2 == Tr[U * Sigma * B2] * A */
+  _su3_times_su3(t1, notes->Sigma, notes->B2);
+  _trace_su3_times_su3(mat_trace, *U, t1);
+  _complex_times_su3(t2, mat_trace, notes->A);
+
+  /* Z == (Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * A ) * A */
+  _su3_times_su3(t1, notes->Sigma, notes->B1);
+  _trace_su3_times_su3(mat_trace, *U, t1);
+  _su3_add_equals_complex_identity(t2, mat_trace);
+  _su3_times_su3(notes->Z, t2, notes->A);
+
+  /* Z == (Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * A ) * A  + f_1 * U * Sigma */
+  _su3_times_su3(t1, *U, notes->Sigma);
+  _complex_times_su3(t2, notes->f1, t1);
+  _su3_plus_su3(notes->Z, t2, notes->Z);
+
+  /* Z == (Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * A ) * A  + f_1 * U * Sigma - i * f2 * U * Sigma * A */
+  _su3_times_su3(t2, t1, notes->A);
+  _complex_times_su3(t2, notes->f2, t2);
+  _su3_plus_su3(notes->Z, t2, notes->Z);
+
+  /* t1 == (Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * A ) * A  + f_1 * U * Sigma + f2 * ( U * Sigma * A + A * U * Sigma ) */
+  _su3_times_su3(t2, notes->A, t1);
+  _complex_times_su3(t2, notes->f2, t2);
+  _su3_plus_su3(t1, t2, notes->Z);
+
+  /* Z = U^\dagger * P_TA(t1) == Z */
+  project_traceless_antiherm(&t1);
+  _su3d_times_su3(notes->Z, *U, t1)
+}
