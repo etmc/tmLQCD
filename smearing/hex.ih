@@ -137,6 +137,7 @@ typedef struct
   unsigned int cmrn;
   unsigned int cnmr;
   unsigned int cnrs;
+  unsigned int cmrs; /* FIXME To be added still! */
 } hyp_staple_full_t;
 
 static const hyp_staple_full_t hyp_staple_full[24] = {
