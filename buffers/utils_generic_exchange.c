@@ -1,10 +1,10 @@
 #include "utils.ih"
 
 #ifndef MPI /*Let's deal with this case once and for all*/
-void generic_exchange(void *field_in, int bytes_per_site)
+void generic_exchange(void * const field_in, unsigned int const bytes_per_site)
 {}
 #else /* MPI */
-void generic_exchange(void *field_in, int bytes_per_site)
+void generic_exchange(void * const field_in, unsigned int const bytes_per_site)
 {
 #if defined _NON_BLOCKING
   int cntr=0;
