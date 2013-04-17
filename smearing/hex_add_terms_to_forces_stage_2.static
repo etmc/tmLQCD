@@ -5,26 +5,26 @@ static void add_terms_to_forces_stage_2(gauge_field_t smeared_force, stout_notes
   
 #pragma omp for private(t1, t2)
   for (unsigned int x = 0; x < VOLUME; ++x)
-    for (unsigned int comp = 0; comp < hyp_perm_symm; ++comp)
+    for (unsigned int mu = 0; mu < 4; ++mu)
     {
-      if (comp % 3 == 0)
-        _su3_zero(t1);
-      
-      /* t2 = Z * C */
-      _su3_times_su3(t2, trace[x][comp].Z, trace[x][comp].C);
-
-      /* t1 = Sigma * V */
-      _su3_times_su3_acc(t1, trace[x][comp].Sigma, V[x][comp]);
-           
-      /* t1 = Sigma * V - Z * C */
-      _su3_refac_acc(t1, -1.0, t2);
-
-      if (comp % 3 == 2)
+      _su3_zero(t1);
+      for (unsigned int comp = 3 * mu; comp < (3 * mu + 3); ++comp)
       {
+        if (comp % 3 == 0)
+          _su3_zero(t1);
+        
+        /* t2 = Z * C */
+        _su3_times_su3(t2, trace[x][comp].Z, trace[x][comp].C);
+
+        /* t1 = Sigma * V */
+        _su3_times_su3_acc(t1, trace[x][comp].Sigma, V[x][comp]);
+            
+        /* t1 = Sigma * V - Z * C */
+        _su3_refac_acc(t1, -1.0, t2);
+
+        }
         /* smeared_force = U * (Sigma * V - Z * C) * U^\dagger */
-        unsigned int const mu = hyp_comp_symm[comp].mu;
         _su3_times_su3d(t2, t1, U[x][mu]);
         _su3_times_su3_acc(smeared_force[x][mu], U[x][mu], t2);
-      }
     }
 }
