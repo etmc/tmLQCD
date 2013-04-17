@@ -60,8 +60,8 @@ void destruct_reader(READER * reader);
 void kill_with_error(LIME_FILE *fh, int const rank, char const *error);
 
 int read_message(READER *reader, char **buffer);
-int write_message(WRITER * writer, char const *buffer, uint64_t bytes);
-void write_header(WRITER * writer, int MB, int ME, char const *type, uint64_t bytes);
+int write_message(WRITER * writer, char const *buffer, MPI_Offset const bytes);
+void write_header(WRITER * writer, int MB, int ME, char const *type, MPI_Offset bytes);
 
 void write_checksum(WRITER *writer, DML_Checksum const *checksum, char const *name);
 void write_xlf_info(WRITER *writer, paramsXlfInfo const *info);
