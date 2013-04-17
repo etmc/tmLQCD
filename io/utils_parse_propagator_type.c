@@ -21,7 +21,7 @@
 
 int parse_propagator_type(READER * reader) {
   char *prop_type_string = NULL;
-  char *header_type = NULL;
+  char const *header_type = NULL;
   int prop_type = -1;
   int status = 0;
   int proptypefound = 0, sourcetypefound = 0;

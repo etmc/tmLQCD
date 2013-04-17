@@ -29,7 +29,7 @@ int read_gauge_field(char *filename) {
 
 int read_gauge_field_checksum(char * filename, DML_Checksum *checksum_out) {
   int status = 0;
-  char *header_type = NULL;
+  char const *header_type = NULL;
   READER *reader = NULL;
 
   paramsIldgFormat ildgformat_read;

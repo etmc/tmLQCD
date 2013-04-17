@@ -19,7 +19,7 @@
 
 #include "utils.ih"
 
-int write_message(WRITER * writer, char const *buffer, uint64_t bytes)
+int write_message(WRITER * writer, char const *buffer, MPI_Offset bytes)
 {
   int status;
   n_uint64_t bytesWritten = bytes;

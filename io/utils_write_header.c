@@ -19,7 +19,7 @@
 
 #include "utils.ih"
 
-void write_header(WRITER * writer, int MB, int ME, char const *type, uint64_t bytes)
+void write_header(WRITER * writer, int MB, int ME, char const *type, MPI_Offset bytes)
 {
   int status;
   RECORD_HEADER *header;
