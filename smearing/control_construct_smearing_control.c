@@ -15,6 +15,9 @@ smearing_control_t *construct_smearing_control(smearing_type type, int calculate
  
   va_list smearing_args;
   va_start(smearing_args, calculate_force_terms);
+  
+  char err[128];
+  
   switch (type)
   {
     case Identity:
@@ -26,6 +29,13 @@ smearing_control_t *construct_smearing_control(smearing_type type, int calculate
       params_uint[0] = va_arg(smearing_args, unsigned int);
       params_double[0] = va_arg(smearing_args, double);
       result->type_control = (void*)construct_ape_control(params_uint[0], params_double[0]);
+      break;
+    case HEX:
+      params_uint[0] = va_arg(smearing_args, unsigned int);
+      params_double[0] = va_arg(smearing_args, double);
+      params_double[1] = va_arg(smearing_args, double);
+      params_double[2] = va_arg(smearing_args, double);
+      result->type_control = (void*)construct_hex_control(calculate_force_terms, params_uint[0], params_double[0], params_double[1], params_double[2]);
       break;
     case HYP:
       if (calculate_force_terms)
@@ -42,7 +52,8 @@ smearing_control_t *construct_smearing_control(smearing_type type, int calculate
       result->type_control = (void*)construct_stout_control(calculate_force_terms, params_uint[0], params_double[0]);
       break;
     default:
-      fatal_error("Requested smearing type not implemented.", "construct_smearing_control");
+      sprintf(err, "Requested smearing type %d NOT implemented.", type);
+      fatal_error(err, "construct_smearing_control");
   }
   va_end(smearing_args);
 

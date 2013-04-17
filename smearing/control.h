@@ -11,7 +11,7 @@
 #include <smearing/hyp.h>
 #include <smearing/stout.h>
 // #include <smearing/unitary.h>
-// #include <smearing/hex.h>
+#include <smearing/hex.h>
 // #include <smearing/gradient.h>
 // #include <smearing/jacobi.h>
 
