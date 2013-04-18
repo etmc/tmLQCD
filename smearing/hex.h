@@ -12,7 +12,6 @@ typedef struct
 {
   /* Flags */
   int             calculate_force_terms;
-  int             smearing_performed;
   
   /* Parameters */
   double          alpha[3];

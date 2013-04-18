@@ -52,7 +52,7 @@ smearing_control_t *construct_smearing_control(smearing_type type, int calculate
       result->type_control = (void*)construct_stout_control(calculate_force_terms, params_uint[0], params_double[0]);
       break;
     default:
-      sprintf(err, "Requested smearing type %d NOT implemented.", type);
+      sprintf(err, "Requested smearing type (%d) implemented.", type);
       fatal_error(err, "construct_smearing_control");
   }
   va_end(smearing_args);

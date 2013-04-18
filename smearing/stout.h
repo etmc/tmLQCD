@@ -37,7 +37,6 @@ typedef struct
 {
   /* Flags */
   int calculate_force_terms;
-  int smearing_performed;
   
   /* Parameters */
   double          rho; /* For now, we're going to work with homogeneous smearing coefficients */

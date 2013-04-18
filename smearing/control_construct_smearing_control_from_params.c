@@ -18,7 +18,8 @@ smearing_control_t *construct_smearing_control_from_params(smearing_params_t con
     case HEX:
       return(construct_smearing_control(params->type, calculate_force_terms, params->iterations, params->params[0], params->params[1], params->params[2]));
     default:
-      fatal_error("Requested smearing type not implemented.", "construct_smearing_control");
+      sprintf(err, "Requested smearing type (%d) implemented.", type);
+      fatal_error(err, "construct_smearing_control");
   }
   return NULL;
 }
