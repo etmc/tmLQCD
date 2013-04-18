@@ -22,7 +22,7 @@
 int write_message(WRITER * writer, char const *buffer, MPI_Offset bytes)
 {
   int status;
-  n_uint64_t bytesWritten = bytes;
+  MPI_Offset bytesWritten = bytes;
 
 #ifndef HAVE_LIBLEMON
   if(g_cart_id == 0){

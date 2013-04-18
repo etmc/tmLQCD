@@ -44,7 +44,7 @@
 #endif
 
 #ifndef MPI
-typedef int64_t MPI_Offset;
+typedef n_uint64_t  MPI_Offset;
 #endif
 
 /* These are factory functions, since the constructors for c-lime and lemon are different
