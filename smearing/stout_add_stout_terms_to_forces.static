@@ -9,8 +9,8 @@ static void add_stout_terms_to_forces(gauge_field_t smeared_force, double const 
     for (unsigned int mu = 0; mu < 4; ++mu)
     {
       /* t2 = Z * C */
-      _real_times_su3(t1, rho, t1);
-      _su3_times_su3(t2, trace[x][mu].Z, trace[x][mu].C);
+      _real_times_su3(t1, rho, trace[x][mu].C);
+      _su3_times_su3(t2, trace[x][mu].Z, t1);
 
       /* t1 = Sigma * V */
       _su3_times_su3(t1, trace[x][mu].Sigma, V[x][mu]);
