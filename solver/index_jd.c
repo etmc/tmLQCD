@@ -137,7 +137,7 @@ void index_jd(int * nr_of_eigenvalues_ov,
        *
        ********************************************************************/
       for(i = 0; i < first_blocksize; i++) {
-	random_spinor_field_lexic(&lowvectors[(first_blocksize*intsign+i)*VOLUMEPLUSRAND],N2,0);
+	random_spinor_field(&lowvectors[(first_blocksize*intsign+i)*VOLUMEPLUSRAND],N2,0);
 	Proj(&lowvectors[(first_blocksize*intsign+i)*VOLUMEPLUSRAND], 
 	     &lowvectors[(first_blocksize*intsign+i)*VOLUMEPLUSRAND],N2, intsign);
       }
@@ -278,7 +278,7 @@ void index_jd(int * nr_of_eigenvalues_ov,
       /* Fill up the rest with random spinor fields  */
       /* and project it to the corresponding sector  */
       for(v0dim = i; v0dim < i+blocksize; v0dim++){
-	random_spinor_field_lexic(&eigenvectors_ov[v0dim*VOLUMEPLUSRAND],N2,0);
+	random_spinor_field(&eigenvectors_ov[v0dim*VOLUMEPLUSRAND],N2,0);
 	Proj(&eigenvectors_ov[v0dim*VOLUMEPLUSRAND], &eigenvectors_ov[v0dim*VOLUMEPLUSRAND],N2, intsign);
       }
       v0dim = blocksize;
