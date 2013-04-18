@@ -15,6 +15,8 @@ smearing_control_t *construct_smearing_control_from_params(smearing_params_t con
       if (calculate_force_terms)
         fatal_error("HYP smearing cannot be used for smearing forces (use HEX instead).", "construct_smearing_control");
       return(construct_smearing_control(params->type, calculate_force_terms, params->iterations, params->params[0], params->params[1], params->params[2]));
+    case HEX:
+      return(construct_smearing_control(params->type, calculate_force_terms, params->iterations, params->params[0], params->params[1], params->params[2]));
     default:
       fatal_error("Requested smearing type not implemented.", "construct_smearing_control");
   }
