@@ -16,8 +16,6 @@ smearing_control_t *construct_smearing_control(smearing_type type, int calculate
   va_list smearing_args;
   va_start(smearing_args, calculate_force_terms);
   
-  char err[128];
-  
   switch (type)
   {
     case Identity:
@@ -52,8 +50,7 @@ smearing_control_t *construct_smearing_control(smearing_type type, int calculate
       result->type_control = (void*)construct_stout_control(calculate_force_terms, params_uint[0], params_double[0]);
       break;
     default:
-      sprintf(err, "Requested smearing type (%d) implemented.", type);
-      fatal_error(err, "construct_smearing_control");
+      fatal_error("Requested smearing type not implemented.", "construct_smearing_control");
   }
   va_end(smearing_args);
 

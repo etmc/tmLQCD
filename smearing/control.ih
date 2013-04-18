@@ -1,4 +1,2 @@
-#include <stdio.h>
-
 #include <fatal_error.h>
 #include <smearing/control.h>

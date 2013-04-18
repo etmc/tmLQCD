@@ -30,7 +30,6 @@ static void smear_plain(stout_control *control, gauge_field_t in)
       in = control->result; /* Shallow copy intended */
     }
   }
-  control->smearing_performed = 1;
   control->result = control->U[1];
   return_gauge_field(&buffer); 
 }
