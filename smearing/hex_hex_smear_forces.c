@@ -15,12 +15,8 @@
 
 void hex_smear_forces(hex_control *control, adjoint_field_t in)
 {
-  /* Check sanity of the call */
   if (!control->calculate_force_terms)
-    fatal_error("Hex control structure not setup for calculating force terms.", "hex_smear_forces");
-
-  if (!control->smearing_performed)
-    fatal_error("Hex smearing not yet performed.", "hex_smear_forces");
+    fatal_error("Smearing control not set up for calculating forces.", "hex_smear_forces");
   
   gauge_field_t smeared_force = get_gauge_field();
   gauge_field_t Sigma_0 = get_gauge_field();

@@ -3,8 +3,6 @@
 void smear_forces(smearing_control_t *control, adjoint_field_t in)
 {
   /* General checks can be done here, without the pseudo-dynamic casting code below. */
-  if (!control->calculate_force_terms)
-    fatal_error("Smearing control not set up for calculating forces.", "smear_forces");
   if (!control->smearing_performed)
     fatal_error("Need to smear a gauge field before smearing associated forces.", "smear_forces");
   
@@ -17,6 +15,10 @@ void smear_forces(smearing_control_t *control, adjoint_field_t in)
     case Stout:
       stout_smear_forces((stout_control*)control->type_control, in);
       control->force_result = ((stout_control*)control->type_control)->force_result;
+      break;
+    case HEX:
+      hex_smear_forces((hex_control*)control->type_control, in);
+      control->force_result = ((hex_control*)control->type_control)->force_result;
       break;
   }
 }

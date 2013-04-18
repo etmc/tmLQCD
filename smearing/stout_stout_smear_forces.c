@@ -5,12 +5,8 @@
 
 void stout_smear_forces(stout_control *control, adjoint_field_t in)
 {
-  /* Check sanity of the call */
   if (!control->calculate_force_terms)
-    fatal_error("Stout control structure not setup for calculating force terms.", "stout_smear_forces");
-
-  if (!control->smearing_performed)
-    fatal_error("Stout smearing not yet performed.", "stout_smear_forces");
+    fatal_error("Smearing control not set up for calculating forces.", "stout_smear_forces");
   
   gauge_field_t smeared_force = get_gauge_field();
   

@@ -20,6 +20,10 @@ void smear(smearing_control_t *control, gauge_field_t in)
       stout_smear((stout_control*)control->type_control, in);
       control->result = ((stout_control*)control->type_control)->result;
       break;
+    case HEX:
+      hex_smear((hex_control*)control->type_control, in);
+      control->result = ((hex_control*)control->type_control)->result;
+      break;
   }
   control->smearing_performed = 1;
 }
