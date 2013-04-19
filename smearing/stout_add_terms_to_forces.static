@@ -3,7 +3,7 @@ static void inner_force_addition(su3 *t1, stout_notes_t * const notes, double co
   su3 ALIGN t2;
 
   _su3_times_su3(t2, notes->Z, notes->C);   /* t2 = Z * C */
-  _su3_times_su3_acc(*t1, notes->Sigma, V[x][cmn]); /* t1 = Sigma * V */
+  _su3_times_su3_acc(*t1, notes->Sigma, *V); /* t1 = Sigma * V */
   _su3_refac_acc(*t1, -rho, t2);                          /* t1 = Sigma * V - Z * C */
 }
 
