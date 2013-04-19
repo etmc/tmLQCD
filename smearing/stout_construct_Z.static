@@ -34,3 +34,14 @@ static void inner_Z_loop(stout_notes_t *notes, su3 *U)
   project_traceless_antiherm(&t1);
   _su3d_times_su3(notes->Z, *U, t1)
 }
+
+static void construct_Z_V(stout_notes_tuple * const trace, gauge_field_t const U)
+{
+#pragma omp for
+  for (unsigned int x = 0; x < VOLUME; ++x)
+    for (unsigned int mu = 0; mu < 4; ++mu)
+      inner_Z_loop(&trace[x][mu], &U[x][mu]);
+  
+#pragma omp single
+  generic_exchange((stout_notes_tuple **)(&trace), sizeof(stout_notes_tuple));
+}
