@@ -1,4 +1,14 @@
-static void construct_Sigma_0(gauge_field_t Sigma, double const alpha, gauge_field_t const U, stout_notes_three_index * const trace_in)
+static void construct_Sigma_V(stout_notes_tuple * const trace, gauge_field_t const V, gauge_field_t const smeared_force)
+{
+#pragma omp for
+  for (unsigned int x = 0; x < VOLUME; ++x)
+    for (unsigned int mu = 0; mu < 4; ++mu)
+    {
+      _su3d_times_su3(trace[x][mu].Sigma, V[x][mu], smeared_force[x][mu]);
+    }
+}
+
+static void construct_Sigma_U(gauge_field_t Sigma, double const rho, gauge_field_t const U, stout_notes_tuple * const trace)
 {
   su3 ALIGN t1;
   su3 ALIGN t2;
@@ -8,11 +18,10 @@ static void construct_Sigma_0(gauge_field_t Sigma, double const alpha, gauge_fie
     for (unsigned int mu = 0; mu < 4; ++mu)
     {
       _su3_zero(Sigma[x][mu]);
-      for (unsigned int comp = 6 * mu; comp < (6 * mu + 6); ++comp)
-      {  
-        unsigned int const nu    = hyp_comp_full[comp].nu;       
-        unsigned int const cnrs  = hyp_staple_full[comp].cnrs;
-        unsigned int const cmrs  = hyp_staple_full[comp].cmrs;
+      for (unsigned int nu = 0; nu < 4; ++nu)
+      {
+        if (mu == nu)
+          continue;
 
         /* Prefetch the indices */
         int const xpm   = g_iup[x][mu];
@@ -20,25 +29,25 @@ static void construct_Sigma_0(gauge_field_t Sigma, double const alpha, gauge_fie
         int const xpn   = g_iup[x][nu];
         int const xpmmn = g_idn[xpm][nu];
       
-        _su3d_times_su3(t1, U[xpn][mu], trace_in[x][cnrs].Z);   /* Line 1 */
+        _su3d_times_su3(t1, U[xpn][mu], trace[x][nu].Z);   /* Line 1 */
         _su3_times_su3_acc(Sigma[x][mu], U[xpm][nu], t1);
-        _su3_times_su3(t1, trace_in[xmn][cmrs].Z, U[xmn][nu]);  /* Line 2 */
+        _su3_times_su3(t1, trace[xmn][mu].Z, U[xmn][nu]);  /* Line 2 */
         _su3d_times_su3_acc(Sigma[x][mu], U[xpmmn][nu], t1);
         _su3_times_su3d(t1, U[xpmmn][nu], U[x][mu]);            /* Line 3 */
         _su3_times_su3(t2, U[xmn][mu], t1);
-        _su3_times_su3(t1, trace_in[xmn][cnrs].Z, t2);
+        _su3_times_su3(t1, trace[xmn][nu].Z, t2);
         _su3d_times_su3(t2, U[x][mu], t1);
         _su3_refac_acc(Sigma[x][mu], -1.0, t2);
-        _su3_times_su3d(t1, trace_in[xpm][cnrs].Z, U[x][mu]);   /* Line 4 */
+        _su3_times_su3d(t1, trace[xpm][nu].Z, U[x][mu]);   /* Line 4 */
         _su3_times_su3(t2, U[xpm][mu], t1);
         _su3_times_su3(t1,U[x][nu] , t2);
         _su3d_times_su3(t2, U[x][mu], t1);
         _su3_refac_acc(Sigma[x][mu], -1.0, t2);
-        _su3_times_su3d(t1, trace_in[xpn][cmrs].Z, U[x][nu]);   /* Line 5 */
+        _su3_times_su3d(t1, trace[xpn][mu].Z, U[x][nu]);   /* Line 5 */
         _su3_times_su3_acc(Sigma[x][mu], U[xpm][nu], t1);
         _su3d_times_su3(t1, U[xmn][mu], U[xmn][nu]);            /* Line 6 */
-        _su3_times_su3_acc(Sigma[x][mu], trace_in[xpmmn][cnrs].Z, t1);
+        _su3_times_su3_acc(Sigma[x][mu], trace[xpmmn][nu].Z, t1);
     }
-    _su3_refac_acc(Sigma[x][mu], alpha, Sigma[x][mu]);
+    _su3_refac_acc(Sigma[x][mu], rho, Sigma[x][mu]);
   }
 }
