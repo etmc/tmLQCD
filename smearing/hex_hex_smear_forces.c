@@ -31,15 +31,15 @@ void hex_smear_forces(hex_control *control, adjoint_field_t in)
     /* Since the U's are fields after full smearing steps, U[iter - 1] == U, U[iter] == V */
     construct_Sigma_3(control->trace_stage_3[iter - 1], control->U[iter], smeared_force);
     construct_Z_3(control->trace_stage_3[iter - 1], control->U[iter - 1]);
-    add_terms_to_forces_stage_3(smeared_force, control->trace_stage_3[iter - 1], control->U[iter], control->U[iter - 1]);
+    add_terms_to_forces_stage_3(smeared_force, control->trace_stage_3[iter - 1], control->alpha[2], control->U[iter], control->U[iter - 1]);
     
     construct_Sigma_2(control->trace_stage_2[iter - 1], control->alpha[2], control->V_stage_2[iter - 1], control->trace_stage_3[iter - 1]);
     construct_Z_2(control->trace_stage_2[iter - 1], control->U[iter - 1] );
-    add_terms_to_forces_stage_2(smeared_force, control->trace_stage_2[iter - 1], control->V_stage_2[iter - 1], control->U[iter - 1]);
+    add_terms_to_forces_stage_2(smeared_force, control->trace_stage_2[iter - 1], control->alpha[1], control->V_stage_2[iter - 1], control->U[iter - 1]);
     
     construct_Sigma_1(control->trace_stage_1[iter - 1], control->alpha[1], control->V_stage_1[iter - 1], control->trace_stage_2[iter - 1]);
     construct_Z_1(control->trace_stage_1[iter - 1], control->U[iter - 1]);
-    add_terms_to_forces_stage_1(smeared_force, control->trace_stage_1[iter - 1], control->V_stage_1[iter - 1], control->U[iter - 1]);
+    add_terms_to_forces_stage_1(smeared_force, control->trace_stage_1[iter - 1], control->alpha[0], control->V_stage_1[iter - 1], control->U[iter - 1]);
     
     construct_Sigma_0(Sigma_0, control->alpha[0], control->U[iter - 1], control->trace_stage_1[iter - 1]);
     add_terms_to_forces_stage_0(smeared_force, Sigma_0, control->U[iter - 1]);
