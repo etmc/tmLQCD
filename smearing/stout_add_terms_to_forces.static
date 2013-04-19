@@ -2,13 +2,16 @@ static void inner_force_addition(su3 *t1, stout_notes_t * const notes, double co
 {
   su3 ALIGN t2;
 
-  _su3_times_su3(t2, notes->Z, notes->C);   /* t2 = Z * C */
+  _su3_times_su3(t2, notes->Z, notes->C);    /* t2 = Z * C */
   _su3_times_su3_acc(*t1, notes->Sigma, *V); /* t1 = Sigma * V */
-  _su3_refac_acc(*t1, -rho, t2);                          /* t1 = Sigma * V - Z * C */
+  _su3_refac_acc(*t1, -rho, t2);             /* t1 = Sigma * V - Z * C */
 }
 
 static void add_terms_to_forces_U(gauge_field_t smeared_force, gauge_field_t Sigma_U, gauge_field_t const U)
 {
+  /* This is always the last step of the gathering algorithm, so we can perform the final projection here. 
+     It's linear, so we don't have to bother for the intermediate steps. Might even save precision! */
+  
   su3 ALIGN t1;
   
 #pragma omp for private(t1)
@@ -20,11 +23,15 @@ static void add_terms_to_forces_U(gauge_field_t smeared_force, gauge_field_t Sig
       
       /* t1 = U * Sigma * U * U^dagger = U * Sigma */
       _su3_times_su3_acc(smeared_force[x][mu], U[x][mu], t1);
+      
+      project_traceless_antiherm(&smeared_force[x][mu]);
     }
 }
 
 static void add_terms_to_forces_V(gauge_field_t smeared_force, stout_notes_tuple *trace, double const rho, gauge_field_t V, gauge_field_t U)
 {
+  /* This is always the first step of the gathering algorithm, so we can overwrite the smeared_force here. */
+  
   su3 ALIGN t1;
   su3 ALIGN t2;
   
