@@ -1,10 +1,10 @@
 static void construct_intermediates(stout_notes_tuple *trace, gauge_field_t const V, gauge_field_t const U, gauge_field_t const smeared_force)
 {
-  _Complex double mat_trace;
+  _Complex double ALIGN mat_trace;
   su3 ALIGN t1;
   su3 ALIGN t2;
   
-  #pragma omp parallel for
+#pragma omp for private(mat_trace, t1, t2)
   for (unsigned int x = 0; x < VOLUME; ++x)
     for (unsigned int mu = 0; mu < 4; ++mu)
     {    
@@ -41,5 +41,7 @@ static void construct_intermediates(stout_notes_tuple *trace, gauge_field_t cons
       project_traceless_antiherm(&t1);
       _su3d_times_su3(trace[x][mu].Z, U[x][mu], t1);
     }
+  
+#pragma omp single
   generic_exchange(&trace, sizeof(stout_notes_tuple));
 }
