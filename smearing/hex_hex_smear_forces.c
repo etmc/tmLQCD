@@ -32,7 +32,7 @@ void hex_smear_forces(hex_control *control, adjoint_field_t in)
     construct_Z_1(control->trace_stage_1[iter - 1], control->U[iter - 1]);
     add_terms_to_forces_1(smeared_force, control->trace_stage_1[iter - 1], control->alpha[0], control->V_stage_1[iter - 1], control->U[iter - 1]);
     
-    construct_Sigma_U(Sigma_U, control->alpha[0], control->U[iter - 1], control->trace_stage_1[iter - 1]);
+    construct_Sigma_0(Sigma_U, control->alpha[0], control->U[iter - 1], control->trace_stage_1[iter - 1]);
     add_terms_to_forces_U(smeared_force, Sigma_U, control->U[iter - 1]);
   }
 
