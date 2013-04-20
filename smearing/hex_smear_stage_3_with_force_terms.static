@@ -14,7 +14,7 @@ static void smear_stage_3_with_force_terms(gauge_field_t out, stout_notes_tuple 
       int const sigma = hyp_comp_sing[mu].sigma;
       
       int const cmn   = hyp_staple_sing[mu].cmn;
-      int const cnm   = hyp_staple_sing[mu].cmn;
+      int const cnm   = hyp_staple_sing[mu].cnm;
       
       int const cmr   = hyp_staple_sing[mu].cmr;
       int const crm   = hyp_staple_sing[mu].crm;
