@@ -17,7 +17,7 @@ void stout_smear_forces(stout_control *control, adjoint_field_t in)
       
   /* The modifications are done backwards, all the time peeling off one layer of stouting... */
 #pragma omp parallel
-  for (int iter = control->iterations; iter >= 0; --iter)
+  for (int iter = control->iterations - 1; iter >= 0; --iter)
   {
     /* Since the U's are fields after full smearing steps, U[iter] == U, U[iter + 1] == V */
     construct_Sigma_V(control->trace[iter], control->U[iter + 1], smeared_force);
