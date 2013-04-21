@@ -13,10 +13,11 @@ static void smear_stage_1_with_force_terms(su3_outer *out, stout_notes_three_ind
       /* Mapping to the two identical components. */
       unsigned int const cmnr = hp2[comp].cmnr;
       unsigned int const cmrn = hp2[comp].cmrn;      
-            
-      unsigned int const xps   = g_iup[x][sigma];
-      unsigned int const xms   = g_iup[x][sigma];
+
       unsigned int const xpm   = g_iup[x][mu];
+      
+      unsigned int const xps   = g_iup[x][sigma];
+      unsigned int const xms   = g_idn[x][sigma];
       unsigned int const xpmms = g_idn[xpm][sigma];
 
       _su3_times_su3d(tmp, orig[xps][mu], orig[xpm][sigma]);

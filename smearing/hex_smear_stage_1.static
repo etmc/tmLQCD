@@ -12,7 +12,7 @@ static void smear_stage_1(su3_outer *out, double const alpha, gauge_field_t orig
 
       int const xpm = g_iup[x][mu];
       int const xps = g_iup[x][sigma];
-      int const xms = g_iup[x][sigma];
+      int const xms = g_idn[x][sigma];
       int const xpmms = g_idn[xpm][sigma];
 
       _su3_times_su3d(tmp, orig[xps][mu], orig[xpm][sigma]);

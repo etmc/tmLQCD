@@ -9,25 +9,31 @@ static void smear_stage_2_with_force_terms(su3_outer *out, stout_notes_two_index
       int const mu    = hi2[comp].mu;
       int const rho   = hi2[comp].rho;
       int const sigma = hi2[comp].sigma;
+
       int const crmn  = hp2[comp].crmn;
+      int const cmrn  = hp2[comp].cmrn;
+      
       int const csmn  = hp2[comp].csmn;
+      int const cmsn  = hp2[comp].cmsn;
                        
       int const xpm   = g_iup[x][mu];            
+      
       int const xpr   = g_iup[x][rho];
       int const xmr   = g_idn[x][rho];
       int const xpmmr = g_idn[xpm][rho];          
+
       int const xps   = g_iup[x][sigma];
       int const xms   = g_idn[x][sigma];
       int const xpmms = g_idn[xpm][sigma];
         
-      _su3_times_su3d(tmp, in[xpr][comp], in[xpm][crmn]); 
+      _su3_times_su3d(tmp, in[xpr][cmrn], in[xpm][crmn]); 
       _su3_times_su3(trace[x][comp].C, in[x][crmn], tmp); 
-      _su3_times_su3(tmp, in[xmr][comp], in[xpmmr][crmn]); 
+      _su3_times_su3(tmp, in[xmr][cmrn], in[xpmmr][crmn]); 
       _su3d_times_su3_acc(trace[x][comp].C, in[xmr][crmn], tmp); 
       
-      _su3_times_su3d(tmp, in[xps][comp], in[xpm][csmn]); 
+      _su3_times_su3d(tmp, in[xps][cmsn], in[xpm][csmn]); 
       _su3_times_su3_acc(trace[x][comp].C, in[x][csmn], tmp); 
-      _su3_times_su3(tmp, in[xms][comp], in[xpmms][csmn]); 
+      _su3_times_su3(tmp, in[xms][cmsn], in[xpmms][csmn]); 
       _su3d_times_su3_acc(trace[x][comp].C, in[xms][csmn], tmp); 
 
       fatten_links_with_force_terms(&out[x][comp], &trace[x][comp], alpha, &orig[x][mu]);
