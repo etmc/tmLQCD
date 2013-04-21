@@ -12,7 +12,7 @@ static void add_terms_to_forces_1(gauge_field_t smeared_force, stout_notes_three
       _su3_zero(t1);
       
       for (unsigned int comp = 6 * mu; comp < (6 * mu + 6); ++comp)
-        inner_force_addition(&t1, &trace[x][comp], alpha, &V[x][hyp_staple_full[comp].cmn]);
+        inner_force_addition(&t1, &trace[x][comp], alpha, &V[x][hp3[comp].cmn]);
 
       /* smeared_force = U * (Sigma * V - Z * C) * U^\dagger */
       _su3_times_su3d(t2, t1, U[x][mu]);

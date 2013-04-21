@@ -52,7 +52,7 @@ static void construct_Sigma_1(stout_notes_three_index * const trace_out, double 
   
   #pragma omp for private(t1, t2)
   for (unsigned int x = 0; x < VOLUME; ++x)
-    for (unsigned int comp = 0; comp < hyp_perm_full; ++comp)
+    for (unsigned int comp = 0; comp < 24; ++comp)
     { 
       /* Only the trace_out has the full 24 components, and we'll go through it linearly,
          just following comp. Hyp_staple_full provides mappings into the 12 component input fields. */
@@ -110,7 +110,7 @@ static void construct_Sigma_2(stout_notes_two_index * const trace_out, double co
 
   #pragma omp for private(t1, t2)
   for (unsigned int x = 0; x < VOLUME; ++x)
-    for (unsigned int comp = 0; comp < hyp_perm_symm; ++comp)
+    for (unsigned int comp = 0; comp < 12; ++comp)
     {      
       /* Calculate the right index in the 'outer' counting.
          Since this is a two-index affair, we can just use the

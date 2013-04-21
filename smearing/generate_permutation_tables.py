@@ -115,7 +115,7 @@ for ctr, ind in enumerate(i3):
   print('                                   %s' % ist) 
 print('                                 };\n')
 
-print('static const hyp_ind_t hp1[%2d] = {' % len(d1))
+print('static const hyp_perm_t hp1[%2d] = {' % len(d1))
 for ctr, ind in enumerate(d1):
   ist = '{' + ','.join(' %2d' % x for x in ind) + '}'
   if ctr != len(d1) - 1:
@@ -123,7 +123,7 @@ for ctr, ind in enumerate(d1):
   print('                                   %s' % ist) 
 print('                                 };\n')
 
-print('static const hyp_ind_t hp2[%2d] = {' % len(d2))
+print('static const hyp_perm_t hp2[%2d] = {' % len(d2))
 for ctr, ind in enumerate(d2):
   ist = '{' + ','.join(' %2d' % x for x in ind) + '}'
   if ctr != len(d2) - 1:
@@ -131,7 +131,7 @@ for ctr, ind in enumerate(d2):
   print('                                   %s' % ist) 
 print('                                 };\n')
 
-print('static const hyp_ind_t hp3[%2d] = {' % len(d3))
+print('static const hyp_perm_t hp3[%2d] = {' % len(d3))
 for ctr, ind in enumerate(d3):
   ist = '{' + ','.join(' %2d' % x for x in ind) + '}'
   if ctr != len(d3) - 1:

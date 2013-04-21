@@ -5,7 +5,7 @@ static void smear_stage_1(su3_outer *out, double const alpha, gauge_field_t orig
 
 #pragma omp for private(tmp, staples)
   for (unsigned int x = 0; x < VOLUME; ++x)
-    for (unsigned int comp = 0; comp < hyp_perm_symm; ++comp)
+    for (unsigned int comp = 0; comp < 12; ++comp)
     {
       int const mu    = hi2[comp].mu;      
       int const sigma = hi2[comp].sigma;
