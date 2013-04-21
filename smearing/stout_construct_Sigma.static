@@ -28,7 +28,7 @@ static void construct_Sigma_U(gauge_field_t Sigma, double const rho, gauge_field
         int const xmn   = g_idn[x][nu];
         int const xpn   = g_iup[x][nu];
         int const xpmmn = g_idn[xpm][nu];
-      
+
         _su3d_times_su3(t1, U[xpn][mu], trace[x][nu].Z);   /* Line 1 */
         _su3_times_su3_acc(Sigma[x][mu], U[xpm][nu], t1);
         

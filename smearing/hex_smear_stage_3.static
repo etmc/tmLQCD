@@ -7,9 +7,9 @@ static void smear_stage_3(gauge_field_t out, double const alpha, su3_outer *in, 
   for (unsigned int x = 0; x < VOLUME; ++x)
     for (unsigned int comp = 0; comp < hyp_perm_symm; ++comp)
     {    
-      int const mu = hyp_comp_symm[comp].mu;
-      int const nu = hyp_comp_symm[comp].nu;
-      int const cnm = hyp_staple_symm[comp].cnm;
+      int const mu  = hi2[comp].mu;
+      int const nu  = hi2[comp].nu;
+      int const cnm = hp2[comp].cnm;
       
       int const xpm   = g_iup[x][mu];
       int const xmn   = g_idn[x][nu];

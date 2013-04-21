@@ -9,18 +9,18 @@ static void smear_stage_3_with_force_terms(gauge_field_t out, stout_notes_tuple 
     for (unsigned int mu = 0; mu < 4; ++mu)
     {
       /* We lift from one to two indices using the permutation tables. */
-      int const nu    = hyp_comp_sing[mu].nu;
-      int const rho   = hyp_comp_sing[mu].rho;
-      int const sigma = hyp_comp_sing[mu].sigma;
+      int const nu    = hi1[mu].nu;
+      int const rho   = hi1[mu].rho;
+      int const sigma = hi1[mu].sigma;
       
-      int const cmn   = hyp_staple_sing[mu].cmn;
-      int const cnm   = hyp_staple_sing[mu].cnm;
+      int const cmn   = hp1[mu].cmn;
+      int const cnm   = hp1[mu].cnm;
       
-      int const cmr   = hyp_staple_sing[mu].cmr;
-      int const crm   = hyp_staple_sing[mu].crm;
+      int const cmr   = hp1[mu].cmr;
+      int const crm   = hp1[mu].crm;
       
-      int const cms   = hyp_staple_sing[mu].cms;
-      int const csm   = hyp_staple_sing[mu].csm;
+      int const cms   = hp1[mu].cms;
+      int const csm   = hp1[mu].csm;
       
       int const xpm   = g_iup[x][mu];
 
