@@ -3,7 +3,7 @@
 i1 = [[0, 1, 2, 3], [1, 2, 3, 0], [2, 3, 0, 1], [3, 0, 1, 2]] 
 i2 = [[0, 1, 2, 3], [0, 2, 3, 1], [0, 3, 1, 2], [1, 0, 2, 3], [1, 2, 3, 0], [1, 3, 0, 2], [2, 0, 1, 3], [2, 1, 3, 0], [2, 3, 0, 1], [3, 0, 1, 2], [3, 1, 2, 0], [3, 2, 0, 1]] 
 i3 = [[0, 1, 2, 3], [0, 1, 3, 2], [0, 2, 1, 3], [0, 2, 3, 1], [0, 3, 1, 2], [0, 3, 2, 1], [1, 0, 2, 3], [1, 0, 3, 2], [1, 2, 0, 3], [1, 2, 3, 0], [1, 3, 0, 2], [1, 3, 2, 0], [2, 0, 1, 3], [2, 0, 3, 1], [2, 1, 0, 3], [2, 1, 3, 0], [2, 3, 0, 1], [2, 3, 1, 0], [3, 0, 1, 2], [3, 0, 2, 1], [3, 1, 0, 2], [3, 1, 2, 0], [3, 2, 0, 1], [3, 2, 1, 0]] 
-mnames = ['cm', 'cn', 'cr', 'cs', 'cmn', 'cmr', 'cms', 'cnm', 'cnr', 'cns', 'crm', 'crn', 'crs', 'csm', 'csn', 'csr', 'cmnr', 'cmns', 'cmrn', 'cmrs', 'cmsn', 'cmsr', 'cnmr', 'cnms', 'cnrm', 'cnrs', 'cnsm', 'cnsr', 'crmn', 'crms', 'crnm', 'crns', 'crsm', 'crsn', 'csmn', 'csmr', 'csnm', 'csnr', 'csrm', 'csrn'] 
+mnames = ['cm', 'cn', 'cr', 'cs', 'cmn', 'cmr', 'cms', 'cnm', 'cnr', 'cns', 'crm', 'crn', 'crs', 'csm', 'csn', 'csr', 'cmnr', 'cmns', 'cmrn', 'cmrs', 'cmsn', 'cmsr', 'cnmr', 'cnms', 'cnrm', 'cnrs', 'cnsm', 'cnsr', 'crmn', 'crms', 'crnm', 'crns', 'crsm', 'crsn', 'csmn', 'csmr', 'csnm', 'csnr', 'csrm', 'csrn', 'vmap'] 
 mappings = [[0], [1], [2], [3], [0, 1], [0, 2], [0, 3], [1, 0], [1, 2], [1, 3], [2, 0], [2, 1], [2, 3], [3, 0], [3, 1], [3, 2], [0, 1, 2], [0, 1, 3], [0, 2, 1], [0, 2, 3], [0, 3, 1], [0, 3, 2], [1, 0, 2], [1, 0, 3], [1, 2, 0], [1, 2, 3], [1, 3, 0], [1, 3, 2], [2, 0, 1], [2, 0, 3], [2, 1, 0], [2, 1, 3], [2, 3, 0], [2, 3, 1], [3, 0, 1], [3, 0, 2], [3, 1, 0], [3, 1, 2], [3, 2, 0], [3, 2, 1]]
 
 d1 = []
@@ -27,6 +27,11 @@ for seq in i1:
         if pseq == sm[:-1]:
           plist.append(si)
           break
+  seqrm = [seq[i] for i in [0, 2, 1, 3]]
+  for si, sm in enumerate(i2):
+    if (seq == sm) or (seqrm == sm):
+      plist.append(si)
+      break
   d1.append(plist)
 
 d2 = []
@@ -50,6 +55,11 @@ for seq in i2:
         if pseq == sm[:-1]:
           plist.append(si)
           break
+  seqrm = [seq[i] for i in [0, 2, 1, 3]]
+  for si, sm in enumerate(i2):
+    if (seq == sm) or (seqrm == sm):
+      plist.append(si)
+      break
   d2.append(plist)
 
 d3 = []
@@ -73,6 +83,11 @@ for seq in i3:
         if pseq == sm[:-1]:
           plist.append(si)
           break
+  seqrm = [seq[i] for i in [0, 2, 1, 3]]
+  for si, sm in enumerate(i2):
+    if (seq == sm) or (seqrm == sm):
+      plist.append(si)
+      break
   d3.append(plist)
 
 print('typedef struct')
