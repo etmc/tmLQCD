@@ -10,11 +10,11 @@ static void smear_stage_2_with_force_terms(su3_outer *out, stout_notes_two_index
       unsigned int const rho   = hi2[comp].rho;
       unsigned int const sigma = hi2[comp].sigma;
 
-      unsigned int const crmn  = hp2[hp2[comp].crmn].vmap;
-      unsigned int const cmrn  = hp2[hp2[comp].cmrn].vmap;
+      unsigned int const crmn  = hp3[hp2[comp].crmn].vmap;
+      unsigned int const cmrn  = hp3[hp2[comp].cmrn].vmap;
       
-      unsigned int const csmn  = hp2[hp2[comp].csmn].vmap;
-      unsigned int const cmsn  = hp2[hp2[comp].cmsn].vmap;
+      unsigned int const csmn  = hp3[hp2[comp].csmn].vmap;
+      unsigned int const cmsn  = hp3[hp2[comp].cmsn].vmap;
                        
       unsigned int const xpm   = g_iup[x][mu];            
       
