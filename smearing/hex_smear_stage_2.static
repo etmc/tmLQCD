@@ -5,31 +5,37 @@ static void smear_stage_2(su3_outer *out, double const alpha, su3_outer *in, gau
 
 #pragma omp for private(tmp, staples)
   for (unsigned int x = 0; x < VOLUME; ++x)
-    for (unsigned int comp = 0; comp < hyp_perm_symm; ++comp)
+    for (unsigned int comp = 0; comp < 12; ++comp)
     {
-      int const mu    = hyp_comp_symm[comp].mu;
-      int const rho   = hyp_comp_symm[comp].rho;
-      int const sigma = hyp_comp_symm[comp].sigma;
-      int const crmn  = hyp_staple_symm[comp].crmn;
-      int const csmn  = hyp_staple_symm[comp].csmn;
+      int const mu    = hi2[comp].mu;
+      int const rho   = hi2[comp].rho;
+      int const sigma = hi2[comp].sigma;
+
+      int const crmn  = hp2[comp].crmn;
+      int const cmrn  = hp2[comp].cmrn;
+      
+      int const csmn  = hp2[comp].csmn;
+      int const cmsn  = hp2[comp].cmsn;
                        
       int const xpm   = g_iup[x][mu];            
+      
       int const xpr   = g_iup[x][rho];
       int const xmr   = g_idn[x][rho];
       int const xpmmr = g_idn[xpm][rho];          
+
       int const xps   = g_iup[x][sigma];
       int const xms   = g_idn[x][sigma];
       int const xpmms = g_idn[xpm][sigma];
         
-      _su3_times_su3d(tmp, in[xpr][comp], in[xpm][crmn]); 
-      _su3_times_su3(staples, in[x][crmn], tmp); 
-      _su3_times_su3(tmp, in[xmr][comp], in[xpmmr][crmn]); 
-      _su3d_times_su3_acc(staples, in[xmr][crmn], tmp); 
+      _su3_times_su3d(tmp, in[xpr][cmrn], in[xpm][crmn]); 
+      _su3_times_su3(trace[x][comp].C, in[x][crmn], tmp); 
+      _su3_times_su3(tmp, in[xmr][cmrn], in[xpmmr][crmn]); 
+      _su3d_times_su3_acc(trace[x][comp].C, in[xmr][crmn], tmp); 
       
-      _su3_times_su3d(tmp, in[xps][comp], in[xpm][csmn]); 
-      _su3_times_su3_acc(staples, in[x][csmn], tmp); 
-      _su3_times_su3(tmp, in[xms][comp], in[xpmms][csmn]); 
-      _su3d_times_su3_acc(staples, in[xms][csmn], tmp); 
+      _su3_times_su3d(tmp, in[xps][cmsn], in[xpm][csmn]); 
+      _su3_times_su3_acc(trace[x][comp].C, in[x][csmn], tmp); 
+      _su3_times_su3(tmp, in[xms][cmsn], in[xpmms][csmn]); 
+      _su3d_times_su3_acc(trace[x][comp].C, in[xms][csmn], tmp);
 
       fatten_links(&out[x][comp], alpha, &staples, &orig[x][mu]);
     }

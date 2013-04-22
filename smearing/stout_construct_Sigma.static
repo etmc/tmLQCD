@@ -28,26 +28,31 @@ static void construct_Sigma_U(gauge_field_t Sigma, double const rho, gauge_field
         int const xmn   = g_idn[x][nu];
         int const xpn   = g_iup[x][nu];
         int const xpmmn = g_idn[xpm][nu];
-      
+
         _su3d_times_su3(t1, U[xpn][mu], trace[x][nu].Z);   /* Line 1 */
         _su3_times_su3_acc(Sigma[x][mu], U[xpm][nu], t1);
+        
         _su3_times_su3(t1, trace[xmn][mu].Z, U[xmn][nu]);  /* Line 2 */
         _su3d_times_su3_acc(Sigma[x][mu], U[xpmmn][nu], t1);
+        
         _su3_times_su3d(t1, U[xpmmn][nu], U[x][mu]);            /* Line 3 */
         _su3_times_su3(t2, U[xmn][mu], t1);
         _su3_times_su3(t1, trace[xmn][nu].Z, t2);
         _su3d_times_su3(t2, U[x][mu], t1);
         _su3_refac_acc(Sigma[x][mu], -1.0, t2);
+        
         _su3_times_su3d(t1, trace[xpm][nu].Z, U[x][mu]);   /* Line 4 */
-        _su3_times_su3(t2, U[xpm][mu], t1);
+        _su3_times_su3(t2, U[xpn][mu], t1);
         _su3_times_su3(t1,U[x][nu] , t2);
         _su3d_times_su3(t2, U[x][mu], t1);
         _su3_refac_acc(Sigma[x][mu], -1.0, t2);
+        
         _su3_times_su3d(t1, trace[xpn][mu].Z, U[x][nu]);   /* Line 5 */
         _su3_times_su3_acc(Sigma[x][mu], U[xpm][nu], t1);
+        
         _su3d_times_su3(t1, U[xmn][mu], U[xmn][nu]);            /* Line 6 */
         _su3_times_su3_acc(Sigma[x][mu], trace[xpmmn][nu].Z, t1);
     }
-    _su3_refac_acc(Sigma[x][mu], rho, Sigma[x][mu]);
+    _real_times_su3(Sigma[x][mu], rho, Sigma[x][mu]);
   }
 }

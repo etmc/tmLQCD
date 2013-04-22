@@ -30,6 +30,7 @@
 #include <string.h>
 
 #include "su3.h"
+#include "su3adj.h"
 #include <io/selector.h>
 #include <io/params.h>
 #include <io/dml.h>

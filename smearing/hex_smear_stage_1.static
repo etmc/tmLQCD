@@ -5,14 +5,14 @@ static void smear_stage_1(su3_outer *out, double const alpha, gauge_field_t orig
 
 #pragma omp for private(tmp, staples)
   for (unsigned int x = 0; x < VOLUME; ++x)
-    for (unsigned int comp = 0; comp < hyp_perm_symm; ++comp)
+    for (unsigned int comp = 0; comp < 12; ++comp)
     {
-      int const mu = hyp_comp_symm[comp].mu;      
-      int const sigma = hyp_comp_symm[comp].sigma;
+      int const mu    = hi2[comp].mu;      
+      int const sigma = hi2[comp].sigma;
 
       int const xpm = g_iup[x][mu];
       int const xps = g_iup[x][sigma];
-      int const xms = g_iup[x][sigma];
+      int const xms = g_idn[x][sigma];
       int const xpmms = g_idn[xpm][sigma];
 
       _su3_times_su3d(tmp, orig[xps][mu], orig[xpm][sigma]);

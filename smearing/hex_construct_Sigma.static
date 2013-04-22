@@ -12,9 +12,9 @@ static void construct_Sigma_0(gauge_field_t Sigma, double const alpha, gauge_fie
       _su3_zero(Sigma[x][mu]);
       for (unsigned int comp = 6 * mu; comp < (6 * mu + 6); ++comp)
       {  
-        unsigned int const nu    = hyp_comp_full[comp].nu;       
-        unsigned int const cnrs  = hyp_staple_full[comp].cnrs;
-        unsigned int const cmrs  = hyp_staple_full[comp].cmrs;
+        unsigned int const nu    = hi3[comp].nu;       
+        unsigned int const cnrs  = hp3[comp].cnrs;
+        unsigned int const cmrs  = hp3[comp].cmrs;
 
         /* Prefetch the indices */
         int const xpm   = g_iup[x][mu];
@@ -52,16 +52,16 @@ static void construct_Sigma_1(stout_notes_three_index * const trace_out, double 
   
   #pragma omp for private(t1, t2)
   for (unsigned int x = 0; x < VOLUME; ++x)
-    for (unsigned int comp = 0; comp < hyp_perm_full; ++comp)
+    for (unsigned int comp = 0; comp < 24; ++comp)
     { 
       /* Only the trace_out has the full 24 components, and we'll go through it linearly,
          just following comp. Hyp_staple_full provides mappings into the 12 component input fields. */
-      unsigned int const  cmr = hyp_staple_full[comp].cmr;
-      unsigned int const  cnr = hyp_staple_full[comp].cnr;
-      unsigned int const  cnm = hyp_staple_full[comp].cnm;  
+      unsigned int const mu = hi3[comp].mu;
+      unsigned int const nu = hi3[comp].nu;
 
-      unsigned int const mu = hyp_comp_full[comp].mu;
-      unsigned int const nu = hyp_comp_full[comp].nu;
+      unsigned int const cmr = hp3[comp].cmr;
+      unsigned int const cnr = hp3[comp].cnr;
+      unsigned int const cnm = hp3[comp].cnm;  
       
       /* Prefetch the indices */
       unsigned int const  xmn   = g_idn[x][nu];
@@ -110,14 +110,14 @@ static void construct_Sigma_2(stout_notes_two_index * const trace_out, double co
 
   #pragma omp for private(t1, t2)
   for (unsigned int x = 0; x < VOLUME; ++x)
-    for (unsigned int comp = 0; comp < hyp_perm_symm; ++comp)
+    for (unsigned int comp = 0; comp < 12; ++comp)
     {      
       /* Calculate the right index in the 'outer' counting.
          Since this is a two-index affair, we can just use the
          symmetric values -- those are one-to-one equivalent.  */
-      int const mu = hyp_comp_symm[comp].mu;
-      int const nu = hyp_comp_symm[comp].nu;
-      int const cnm = hyp_staple_symm[comp].cnm;
+      int const mu  = hi2[comp].mu;
+      int const nu  = hi2[comp].nu;
+      int const cnm = hp2[comp].cnm;
       
       /* Prefetch the indices */
       int const xpm   = g_iup[x][mu];
