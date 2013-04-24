@@ -18,29 +18,33 @@ smearing_control_t **smearing_control_operator = NULL;
 static void build_targeted_array(type_flag_t type)
 {
   char error_string[256];
-  
-  int *no_smearings;
-  smearing_control_t ***smearing_control;
+
+  int no_blocks = 0;
+  int *no_smearings = NULL;
+  smearing_control_t ***smearing_control = NULL;
   int calculate_force_terms = 0;
   int *id = 0;
   
   switch (type)
   {
     case FLAG_MONOMIAL:
+      no_blocks = no_monomials;
       no_smearings = &no_smearings_monomial;
       smearing_control = &smearing_control_monomial;
       calculate_force_terms = 1;
       break;
     case FLAG_MEASUREMENT:
+      no_blocks = no_measurements;
       no_smearings = &no_smearings_measurement;
       smearing_control = &smearing_control_measurement;
       break;
     case FLAG_OPERATOR:
+      no_blocks = no_operators;
       no_smearings = &no_smearings_operator;
       smearing_control = &smearing_control_operator;
   };
   
-  for (int ctr = 0; ctr < no_monomials; ++ctr)
+  for (int ctr = 0; ctr < no_blocks; ++ctr)
   {
     switch (type)
     {
@@ -90,6 +94,7 @@ void init_smearing()
     * freeing of the control structs is a secondary issue. But given how the information is now bound to monomials and
     * measurements, we can probably perform the clean up in those routines. After all, this would also guarantee that 
     * the smearing can be performed as long as the associated objects exist. */
+
   build_targeted_array(FLAG_MONOMIAL);
   build_targeted_array(FLAG_MEASUREMENT);
   build_targeted_array(FLAG_OPERATOR);

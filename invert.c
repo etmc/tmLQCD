@@ -60,7 +60,8 @@
 #include "boundary.h"
 #include "solver/solver.h"
 #include "init/init.h"
-#include <smearing/stout.h>
+#include "dirty_shameful_business.h"
+#include <smearing/control.h>
 #include "invert_eo.h"
 #include "monomial/monomial.h"
 #include "ranlxd.h"
@@ -102,9 +103,7 @@ int main(int argc, char *argv[])
   char * input_filename = NULL;
   char * filename = NULL;
   double plaquette_energy;
-  /* struct stout_parameters params_smear; */
   spinor **s, *s_;
-  stout_control *smear_control = NULL;
 
 #ifdef _KOJAK_INST
 #pragma pomp inst init
@@ -154,9 +153,9 @@ int main(int argc, char *argv[])
 #endif
 
   /* Allocate needed memory */
-  initialize_gauge_buffers(5);
-  initialize_adjoint_buffers(5);
-
+  initialize_gauge_buffers(12);
+  initialize_adjoint_buffers(6);
+  init_smearing();
 
   /* this DBW2 stuff is not needed for the inversion ! */
   if (g_dflgcr_flag == 1) {
@@ -307,20 +306,6 @@ int main(int argc, char *argv[])
       fflush(stdout);
     }
 
-    /* DEBUG BLOCK! */
-    smear_control = construct_stout_control(0.1 /* rho */, 3 /* iterations */, 1 /* calculate_force_terms */);
-    stout_smear(smear_control, _AS_GAUGE_FIELD_T(g_gauge_field));
-    g_update_gauge_copy = 1;
-    g_update_gauge_energy = 1;
-    g_update_rectangle_energy = 1;
-    plaquette_energy = measure_gauge_action(smear_control->result);
-
-    if (g_cart_id == 0) {
-      printf("# The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
-      fflush(stdout);
-    }
-    /* ~DEBUG BLOCK! */
-
     if (reweighting_flag == 1) {
       reweighting_factor(reweighting_samples, nstore);
     }
@@ -431,57 +416,78 @@ int main(int argc, char *argv[])
     if (g_cart_id == 0) {
       fprintf(stdout, "#\n"); /*Indicate starting of the operator part*/
     }
-    for(op_id = 0; op_id < no_operators; op_id++) {
-      boundary(operator_list[op_id].kappa);
-      g_kappa = operator_list[op_id].kappa; 
-      g_mu = 0.;
+    
+    /* We will aggregate the operators by smearing type, to avoid performing
+       the same smearing operation multiple times. */
+    for (int stype = 0; stype < no_smearings_operator; ++stype)
+    {
+      smear(smearing_control_operator[stype], g_gf);
+      double new_plaquette = measure_gauge_action(smearing_control_operator[stype]->result);
 
-      if(use_preconditioning==1 && PRECWSOPERATORSELECT[operator_list[op_id].solver]!=PRECWS_NO ){
-        printf("# Using preconditioning with treelevel preconditioning operator: %s \n",
-              precWSOpToString(PRECWSOPERATORSELECT[operator_list[op_id].solver]));
-        /* initial preconditioning workspace */
-        operator_list[op_id].precWS=(spinorPrecWS*)malloc(sizeof(spinorPrecWS));
-        spinorPrecWS_Init(operator_list[op_id].precWS,
-                  operator_list[op_id].kappa,
-                  operator_list[op_id].mu/2./operator_list[op_id].kappa,
-                  -(0.5/operator_list[op_id].kappa-4.),
-                  PRECWSOPERATORSELECT[operator_list[op_id].solver]);
-        g_precWS = operator_list[op_id].precWS;
-
-        if(PRECWSOPERATORSELECT[operator_list[op_id].solver] == PRECWS_D_DAGGER_D) {
-          fitPrecParams(op_id);
-        }
+      if (g_cart_id == 0)
+      {
+        printf("# After smearing type %d, the plaquette value is %e.\n", stype, new_plaquette / (6.*VOLUME*g_nproc));
+        fflush(stdout);
       }
 
-      for(isample = 0; isample < no_samples; isample++) {
-        for (ix = index_start; ix < index_end; ix++) {
-          if (g_cart_id == 0) {
-            fprintf(stdout, "#\n"); /*Indicate starting of new index*/
+      ohnohack_remap_g_gauge_field(smearing_control_operator[stype]->result);
+       
+      for(op_id = 0; op_id < no_operators; op_id++)
+      {
+        if (operator_list[op_id].smearing != stype)
+        {
+          continue; /* Only interested in one smearing type right now. */
+        }
+        boundary(operator_list[op_id].kappa);
+        g_kappa = operator_list[op_id].kappa; 
+        g_mu = 0.;
+
+        if(use_preconditioning==1 && PRECWSOPERATORSELECT[operator_list[op_id].solver]!=PRECWS_NO ){
+          printf("# Using preconditioning with treelevel preconditioning operator: %s \n",
+                precWSOpToString(PRECWSOPERATORSELECT[operator_list[op_id].solver]));
+          /* initial preconditioning workspace */
+          operator_list[op_id].precWS=(spinorPrecWS*)malloc(sizeof(spinorPrecWS));
+          spinorPrecWS_Init(operator_list[op_id].precWS,
+                    operator_list[op_id].kappa,
+                    operator_list[op_id].mu/2./operator_list[op_id].kappa,
+                    -(0.5/operator_list[op_id].kappa-4.),
+                    PRECWSOPERATORSELECT[operator_list[op_id].solver]);
+          g_precWS = operator_list[op_id].precWS;
+
+          if(PRECWSOPERATORSELECT[operator_list[op_id].solver] == PRECWS_D_DAGGER_D) {
+            fitPrecParams(op_id);
           }
-          /* we use g_spinor_field[0-7] for sources and props for the moment */
-          /* 0-3 in case of 1 flavour  */
-          /* 0-7 in case of 2 flavours */
-          prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location);
-          operator_list[op_id].inverter(op_id, index_start, 1);
+        }
+
+        for(isample = 0; isample < no_samples; isample++) {
+          for (ix = index_start; ix < index_end; ix++) {
+            if (g_cart_id == 0) {
+              fprintf(stdout, "#\n"); /*Indicate starting of new index*/
+            }
+            /* we use g_spinor_field[0-7] for sources and props for the moment */
+            /* 0-3 in case of 1 flavour  */
+            /* 0-7 in case of 2 flavours */
+            prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location);
+            operator_list[op_id].inverter(op_id, index_start, 1);
+          }
+        }
+
+
+        if(use_preconditioning==1 && operator_list[op_id].precWS!=NULL ){
+          /* free preconditioning workspace */
+          spinorPrecWS_Free(operator_list[op_id].precWS);
+          free(operator_list[op_id].precWS);
+        }
+
+        if(operator_list[op_id].type == OVERLAP){
+          free_Dov_WS();
         }
       }
-
-
-      if(use_preconditioning==1 && operator_list[op_id].precWS!=NULL ){
-        /* free preconditioning workspace */
-        spinorPrecWS_Free(operator_list[op_id].precWS);
-        free(operator_list[op_id].precWS);
-      }
-
-      if(operator_list[op_id].type == OVERLAP){
-        free_Dov_WS();
-      }
-
+      ohnohack_remap_g_gauge_field(g_gf);
     }
     nstore += Nsave;
   }
 
-  free_stout_control(smear_control);
   return_gauge_field(&g_gf);
 
 #ifdef MPI
@@ -497,6 +503,7 @@ int main(int argc, char *argv[])
   free_spinor_field();
 /*  free_moment_field();*/
   free_chi_spinor_field();
+  finalize_smearing();
   finalize_gauge_buffers();
   finalize_adjoint_buffers();
 

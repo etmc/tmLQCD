@@ -601,6 +601,10 @@ EQL {SPC}*={SPC}*
     optr->rel_prec = 0;
     if(myverbose) printf("  SolverRelativePrecision set to NO line %d operator %d\n",  line_of_file, current_operator);
   }
+  {SPC}*SmearingID{EQL}{DIGIT}+ {
+    sscanf(yytext, "%*s = %d", &optr->smearing);
+    if(myverbose) printf("  smearing id set to %d line %d operator %d\n", line_of_file, current_operator, optr->smearing);
+  }
   {SPC}*ExtraMasses{EQL}{FLTLIST} {
     char * token = NULL;
     optr->no_extra_masses = 0;
