@@ -6,3 +6,4 @@
 
 #include <buffers/alignment.h>
 
+extern int allocation_id_ctr;

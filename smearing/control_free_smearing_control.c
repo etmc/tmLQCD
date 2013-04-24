@@ -16,6 +16,10 @@ void free_smearing_control(smearing_control_t *control)
     case Stout:
       free_stout_control((stout_control*)(control->type_control));
       break;
+    case HEX:
+      free_hex_control((hex_control*)(control->type_control));
+      break;
+
   }
   free(control); 
 }
