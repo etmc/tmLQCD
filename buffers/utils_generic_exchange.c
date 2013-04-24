@@ -25,7 +25,7 @@ void generic_exchange(void *field_in, unsigned int const bytes_per_site)
   static MPI_Datatype edge_XY_cont_type, edge_XZ_cont_type, edge_XT_cont_type, edge_YZ_cont_type, edge_YT_cont_type, edge_ZT_cont_type;
   static MPI_Datatype edge_XY_gath_type, edge_XZ_gath_type, edge_XT_gath_type, edge_YZ_gath_type, edge_YT_gath_type, edge_ZT_gath_type;
 
-  unsigned char(*buffer)[bytes_per_site] = (unsigned char (*)[bytes_per_site])field_in; /* To allow for pointer arithmetic */
+  unsigned char(*buffer)[bytes_per_site] = *(unsigned char**)field_in; /* To allow for pointer arithmetic */
 
   // To avoid continuous MPI operations on these local variables, let's declare them static.
   // That means we should only initialize if this is the first use of the function, or if

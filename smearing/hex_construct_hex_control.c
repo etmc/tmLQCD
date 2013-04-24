@@ -7,6 +7,7 @@ hex_control *construct_hex_control(int calculate_force_terms, unsigned int itera
   control->alpha[1] = alpha_2;
   control->alpha[2] = alpha_3;
   control->iterations = iterations;
+  control->calculate_force_terms = calculate_force_terms;
   
   /* We can keep this quite simple if we don't need any forces anyway. */
   if (!calculate_force_terms)

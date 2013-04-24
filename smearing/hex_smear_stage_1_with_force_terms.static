@@ -30,5 +30,5 @@ static void smear_stage_1_with_force_terms(su3_outer *out, stout_notes_three_ind
     }
   
 #pragma omp single
-  generic_exchange(out, sizeof(su3_outer));
+  generic_exchange(&out, sizeof(su3_outer));
 }

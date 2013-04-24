@@ -44,7 +44,6 @@ typedef struct
   /* Flags */
   /* FIXME These currently mirror flags in the separate control structs.
      A better solution should be found. */
-  int calculate_force_terms;
   int smearing_performed;
   
   /* Results -- main output for users */

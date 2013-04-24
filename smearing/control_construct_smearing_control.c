@@ -10,7 +10,6 @@ smearing_control_t *construct_smearing_control(smearing_type type, int calculate
   result->type = type;
   result->id = -1;
 
-  result->calculate_force_terms = calculate_force_terms; 
   result->smearing_performed = 0;
  
   va_list smearing_args;

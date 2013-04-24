@@ -24,5 +24,5 @@ static void smear_stage_1(su3_outer *out, double const alpha, gauge_field_t orig
     }
   
 #pragma omp single
-  generic_exchange(out, sizeof(su3_outer));
+  generic_exchange(&out, sizeof(su3_outer));
 }
