@@ -167,12 +167,6 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
   static void *_IPIV;
   static int *IPIV;        /*integer array to store permutations when solving the small linear system*/
 
- //do we really need this. I think we can replace this by storing only the latest residuals. For output
- //we can always print this out.
-  static void *_reshist;   /* square of the norm of the residual */
-  static double *reshist;  
-
-
   /* some constants */
   char cU='U'; char cN='N';  char cV='V'; 
   _Complex double  tpone= 1.0e+00;
@@ -218,6 +212,8 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
   nrsf=4;  /*number of solver fields */
   
   int lwork=3*ldh;
+
+  double cur_res; //current residual squared (initial value will be computed in eigcg)
 
   /*increment the RHS counter*/
   ncurRHS = ncurRHS +1;  
@@ -268,10 +264,6 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
     evals = (double *)(((unsigned long int)(_evals)+ALIGN_BASE)&~ALIGN_BASE);
 
 
-    //_reshist = malloc(maxit*sizeof(double)+ALIGN_BASE);
-    _reshist = calloc(maxit+ALIGN_BASE,sizeof(double));
-    reshist = (double *)(((unsigned long int)(_reshist)+ALIGN_BASE)&~ALIGN_BASE);
-
     #else
 
     V = (spinor *) calloc(LDN*v_max,sizeof(spinor));
@@ -283,7 +275,6 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
     rwork= calloc(3*ldh,sizeof(double));
     IPIV = calloc(ldh, sizeof(int));
     evals = (double *) calloc(ldh, sizeof(double));
-    reshist = (double *) calloc(maxit, sizeof(double));
 
     #endif
     
@@ -379,12 +370,12 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
       /* if convergence seems before next restart do not restart again */
       if(rel_prec)
       {
-	       if (reshist[numIts-1]*(restart_eps_sq) < eps_sq*normb*normb) 
+	       if (cur_res*(restart_eps_sq) < eps_sq*normb*normb) 
 	           restart_eps_sq=0.0;
       }
       else
       {
-	       if (reshist[numIts-1]*(restart_eps_sq) < eps_sq) 
+	       if (cur_res*(restart_eps_sq) < eps_sq) 
 	          restart_eps_sq=0.0;
       } /* if(rel_prec) */
 	  
@@ -409,7 +400,7 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
     #endif
        
     eigcg( N, LDN, x, b, &normb, eps_sq, restart_eps_sq, maxit_remain, 
-	     &numIts, &reshist[numIts], &flag, solver_field, f, 
+	     &numIts, &cur_res, &flag, solver_field, f, 
 	     nev_used, v_max, V, esize, ework);
      
     //if(g_proc_id == g_stdio_proc) 
@@ -444,7 +435,7 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
     fprintf(stdout, "Total initCG Wallclock : %-f\n", wI);
     fprintf(stdout, "Total eigpcg Wallclock : %-f\n", wE);
     fprintf(stdout, "Iterations: %-d\n", numIts); 
-    fprintf(stdout, "Residual: %e, Actual Resid of LinSys  : %e\n", reshist[numIts-1],normsq);
+    fprintf(stdout, "Residual: %e, Actual Resid of LinSys  : %e\n", cur_res,normsq);
     if (flag != 0) {
       fprintf(stderr, "Error: eigcg returned with nonzero exit status\n");
       return flag;
@@ -580,7 +571,6 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
      free(_initwork);
      free(_IPIV);
      free(_evals);
-     free(_reshist);
      free(_rwork);
      free(_work);
      #else
@@ -591,7 +581,6 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
      free(initwork);
      free(IPIV);
      free(evals);
-     free(reshist);
      free(rwork);
      free(work);
      #endif

@@ -49,7 +49,7 @@
   eps_sq    (IN) error tolerance ||r|| < sqrt(eps_sq)*||b|| where r is the residual
   restart_eps_sq (IN) restart CG when ||r|| < sqrt(restart_eps_sq)*||b-Ax0||
   maxit     (IN) maximum number of iterations
-  reshist   (OUT) convergence history of residual norms (*of size maxit*)
+  reshist   (OUT) achievd residual squared value
   iter      (IN/OUT) number CG iterations performed in previous restarts (IN) 
   		     and previous+current iterations total (OUT)
   flag      (OUT) exit status (see below)
@@ -337,6 +337,7 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
   Ap_prev = work[3];
   
 
+
   /*--------------------------------------------------------------------
      Initialization phase 
     --------------------------------------------------------------------*/
@@ -362,9 +363,9 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
       }       
     
       *flag = 0;		
-      reshist[0] = 0.0;
+      *reshist = 0.0;
       if( g_proc_id == g_stdio_proc)
-        displayInfo(eps_sq,maxit,*flag,*iter,reshist[0]);
+        displayInfo(eps_sq,maxit,*flag,*iter,*reshist);
       return;
      }
      
@@ -383,6 +384,10 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
   beta = 0.0;
   v_size = 0;
 
+  double reshist_init=square_norm(r,n,parallel);
+
+  //if( g_proc_id == g_stdio_proc )
+    //fprintf(stdout, "reshist init %f\n", reshist_init);
   
   /*--------------------------------------------------------------------
      main CG loop
@@ -391,12 +396,12 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
    
     rhoprev = rho;
     rho=square_norm(r,n,parallel);
-    reshist[it] = rho;
+    *reshist = rho;
     if ( (g_debug_level >= 1) && (g_proc_id == g_stdio_proc) )
-    { fprintf(stdout, " Linsys res( %d ): %g\n",*iter+it,reshist[it]); fflush(stdout); }
+    { fprintf(stdout, " Linsys res( %d ): %g\n",*iter+it,*reshist); fflush(stdout); }
 
     /* Convergence test */
-    if (reshist[it] < tolb) { 
+    if (*reshist < tolb) { 
        *flag = 0;
        break;  /* break do not return */
     }
@@ -404,7 +409,7 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
     /* Restart test */
     if(nev==0)
     {
-       if (reshist[it] < restart_eps_sq*reshist[0] ) {  
+       if (*reshist < restart_eps_sq*reshist_init ) {  
            *flag = 3;
             break;  /* break do not return */
        }
@@ -577,7 +582,7 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
   
   *iter = *iter + it+1; /* record the number of CG iterations plus any older */
   if( g_proc_id == g_stdio_proc && g_debug_level >= 0)
-    displayInfo(eps_sq,maxit,*flag,*iter-1,reshist[it]);
+    displayInfo(eps_sq,maxit,*flag,*iter-1,*reshist);
 
   
   if(nev > 0 )
