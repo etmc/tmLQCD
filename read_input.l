@@ -602,7 +602,7 @@ EQL {SPC}*={SPC}*
     if(myverbose) printf("  SolverRelativePrecision set to NO line %d operator %d\n",  line_of_file, current_operator);
   }
   {SPC}*SmearingID{EQL}{DIGIT}+ {
-    sscanf(yytext, "%*s = %d", &optr->smearing);
+    sscanf(yytext, "%*[^=]= %d", &optr->smearing);
     if(myverbose) printf("  smearing id set to %d line %d operator %d\n", line_of_file, current_operator, optr->smearing);
   }
   {SPC}*ExtraMasses{EQL}{FLTLIST} {
@@ -996,7 +996,7 @@ EQL {SPC}*={SPC}*
     }
   }
   {SPC}*SmearingID{EQL}{DIGIT}+ {
-    sscanf(yytext, "%*s = %d", &mnl->smearing);
+    sscanf(yytext, "%*[^=]= %d", &mnl->smearing);
     if(myverbose) printf("  smearing id set to %d line %d monomial %d\n", line_of_file, current_monomial, mnl->smearing);
   }
   {SPC}*Name{EQL} {
@@ -2068,7 +2068,7 @@ EQL {SPC}*={SPC}*
 }
 
 <SMEARING_IDENTITY,SMEARING_APE,SMEARING_HYP,SMEARING_STOUT,SMEARING_UNITARY,SMEARING_HEX,SMEARING_GRADIENT,SMEARING_JACOBI>{SPC}*id{EQL}[[:digit:]]+ {
-  sscanf(yytext, "%*s = %d", &cur_sm_dec->id);
+  sscanf(yytext, "%*[^=]= %d", &cur_sm_dec->id);
   if (cur_sm_dec->id == 0)
     fatal_error("The id 0 is reserved for default identity smearing and should not be used elsewhere!", "read_input");
   cur_sm_dec->set[0] = 1;
@@ -2076,31 +2076,31 @@ EQL {SPC}*={SPC}*
 }
 
 <SMEARING_IDENTITY,SMEARING_APE,SMEARING_HYP,SMEARING_STOUT,SMEARING_UNITARY,SMEARING_HEX,SMEARING_GRADIENT,SMEARING_JACOBI>{SPC}*iterations{EQL}[[:digit:]]+ {
-  sscanf(yytext, "%*s = %u", &cur_sm_dec->iterations);
+  sscanf(yytext, "%*[^=]= %u", &cur_sm_dec->iterations);
   cur_sm_dec->set[1] = 1;
   if(myverbose) printf("  smearing block %d number of iterations set to %u\n", no_smearings_declared - 1, cur_sm_dec->iterations);
 }
 
 <SMEARING_APE,SMEARING_STOUT,SMEARING_JACOBI,SMEARING_UNITARY>{SPC}*rho{EQL}{FLT} {
-  sscanf(yytext, "%*s = %lf", &cur_sm_dec->params[0]);
+  sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[0]);
   cur_sm_dec->set[2] = 1;
   if(myverbose) printf("  smearing block %d rho set to %lf\n", no_smearings_declared - 1, cur_sm_dec->params[0]);
 }
 
 <SMEARING_HEX,SMEARING_HYP>{SPC}*rho_1{EQL}{FLT} {
-  sscanf(yytext, "%*s = %lf", &cur_sm_dec->params[0]);
+  sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[0]);
   cur_sm_dec->set[2] = 1;
   if(myverbose) printf("  smearing block %d rho_1 set to %lf\n", no_smearings_declared - 1, cur_sm_dec->params[0]);
 }
 
 <SMEARING_HEX,SMEARING_HYP>{SPC}*rho_2{EQL}{FLT} {
-  sscanf(yytext, "%*s = %lf", &cur_sm_dec->params[1]);
+  sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[1]);
   cur_sm_dec->set[3] = 1;
   if(myverbose) printf("  smearing block %d rho_2 set to %lf\n", no_smearings_declared - 1, cur_sm_dec->params[1]);
 }
 
 <SMEARING_HEX,SMEARING_HYP>{SPC}*rho_3{EQL}{FLT} {
-  sscanf(yytext, "%*s = %lf", &cur_sm_dec->params[2]);
+  sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[2]);
   cur_sm_dec->set[4] = 1;
   if(myverbose) printf("  smearing block %d rho_3 set to %lf\n", no_smearings_declared - 1, cur_sm_dec->params[2]);
 }
