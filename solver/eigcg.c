@@ -53,7 +53,6 @@
   iter      (IN/OUT) number CG iterations performed in previous restarts (IN) 
   		     and previous+current iterations total (OUT)
   flag      (OUT) exit status (see below)
-  plvl      print info level (0,1)
   work      (IN/OUT) work array. Must be of size 4*lde >= 4*n
   f         function that performs matrix-vector multiplication with matrix A
   ----------------------------------
@@ -83,7 +82,7 @@
      Note: r(1)=b-Ax0 could be << r(0)=norm(b) 
 
    ----------------------------------
-   plvl  
+   g_debug_level  
    	 0 prints CG linear system info on exit (num its/ flag)
 	 1 prints linear system residuals at every iteration 
    ----------------------------------*/
@@ -106,9 +105,7 @@
 #include "linalg/blas.h"
 #include "linalg/lapack.h"
 #include "solver/restart_X.h"
-
 #include "solver/eigcg.h"
-
 
 
 /* print information about iteration */
@@ -117,40 +114,38 @@ static void displayInfo(float tol,
 		    int flag,
 		    int iter,
 		    float resnorm) {
-  if (flag != 0) {
-    printf("eigCG stopped at iteration %d with flag %d. ", iter, flag);
-  }
-  
-  switch(flag) {
-  case 0:
-    if (iter == 0)
-      printf("The initial guess has relative residual %0.2g which is within\nthe desired tolerance %0.2g\n", resnorm, tol);
-    else
-      printf("eigCG converged at iteration %d to a solution with residual norm %0.2g", iter, resnorm);
-    break;
-  case 1:
-    printf("\nbecause the maximum number of iterations was reached.");
-    break;
-  case 2:
-    printf("\nbecause a scalar quantity became too small.");
-    break;
-  }
-  
-  if (flag != 0)
-    printf("\nThe iterate returned at iteration %d has residual norm %0.2g",iter,resnorm);
 
-  printf("\n");
+     if (flag != 0) {
+        fprintf(stdout,"eigCG stopped at iteration %d with flag %d. ", iter, flag);
+     }
+  
+     switch(flag) {
+     case 0:
+        if (iter == 0)
+           fprintf(stdout,"The initial guess has relative residual %0.2g which is within\nthe desired tolerance %0.2g\n", resnorm, tol);
+        else
+           fprintf(stdout,"eigCG converged at iteration %d to a solution with residual norm %0.2g", iter, resnorm);
+        break;
+     case 1:
+        fprintf(stdout,"\nbecause the maximum number of iterations was reached.");
+        break;
+     case 2:
+        fprintf(stdout,"\nbecause a scalar quantity became too small.");
+        break;
+     }
+  
+     if (flag != 0)
+        fprintf(stdout,"\nThe iterate returned at iteration %d has residual norm %0.2g",iter,resnorm);
+
+     fprintf(stdout,"\n");
+     fflush(stdout);
 
 }
 
 
-
-
-
-/* EIGCG *******************************************************************/
 void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb, 
            const double eps_sq, double restart_eps_sq, int maxit, int *iter, 
-           double *reshist, int *flag, int plvl, spinor **work, matrix_mult f, 
+           double *reshist, int *flag, spinor **work, matrix_mult f, 
            int nev, int v_max, spinor *V, int esize, _Complex double *ework)
 {
   double tolb;        
@@ -211,73 +206,65 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
   if(nev > 0)   /*allocate memory only if eigenvalues will be used */
   {
     #if (defined SSE || defined SSE2 || defined SSE3)
-    //if ((_h = malloc(v_max*v_max*zs+ALIGN_BASE)) == NULL)
     if ((_h = calloc(v_max*v_max+ALIGN_BASE,zs)) == NULL)
     {
       if( g_proc_id == g_stdio_proc) 
-      {printf("ERROR Could not allocate H\n"); exit(1);}  
+      {fprintf(stderr,"ERROR Could not allocate H\n"); exit(1);}  
     }
     else
       H = (_Complex double *)(((unsigned long int)(_h)+ALIGN_BASE)&~ALIGN_BASE);
   
   
-    //if ((_hevecs = malloc(v_max*v_max*zs+ALIGN_BASE)) == NULL)
     if ((_hevecs = calloc(v_max*v_max+ALIGN_BASE,zs)) == NULL)
     {
       if( g_proc_id == g_stdio_proc ) 
-      {printf("ERROR Could not allocate Hevecs\n"); exit(1);}
+      {fprintf(stderr, "ERROR Could not allocate Hevecs\n"); exit(1);}
     }else
       Hevecs = (_Complex double *)(((unsigned long int)(_hevecs)+ALIGN_BASE)&~ALIGN_BASE);
   
-    //if ((_hevecsold = malloc(v_max*v_max*zs+ALIGN_BASE)) == NULL)
     if ((_hevecsold = calloc(v_max*v_max+ALIGN_BASE,zs)) == NULL)
     {
       if( g_proc_id == g_stdio_proc ) 
-        {printf("ERROR Could not allocate Hevecsold\n"); exit(1);}  
+        {fprintf(stderr, "ERROR Could not allocate Hevecsold\n"); exit(1);}  
     }else
       Hevecsold = (_Complex double *)(((unsigned long int)(_hevecsold)+ALIGN_BASE)&~ALIGN_BASE);
   
-    //if ((_hevals = malloc(v_max*ds+ALIGN_BASE)) == NULL)
     if ((_hevals = calloc(v_max+ALIGN_BASE,ds)) == NULL)
     {
       if( g_proc_id == g_stdio_proc) 
-        {printf("ERROR Could not allocate Hevals\n"); exit(1);}
+        {fprintf(stderr, "ERROR Could not allocate Hevals\n"); exit(1);}
     
     }else
       Hevals = (double *)(((unsigned long int)(_hevals)+ALIGN_BASE)&~ALIGN_BASE);
   
-    //if ((_hevalsold = malloc(v_max*ds+ALIGN_BASE)) == NULL)
     if ((_hevalsold = calloc(v_max+ALIGN_BASE,ds)) == NULL) 
     {
       if( g_proc_id == g_stdio_proc)
-        {printf("ERROR Could not allocate Hevalsold\n"); exit(1); }
+        {fprintf(stderr, "ERROR Could not allocate Hevalsold\n"); exit(1); }
     
     }else
       Hevalsold = (double *)(((unsigned long int)(_hevalsold)+ALIGN_BASE)&~ALIGN_BASE);
   
-    //if ((_tau = malloc(2*nev*zs+ALIGN_BASE)) == NULL)
     if ((_tau = calloc(2*nev+ALIGN_BASE,zs)) == NULL)  
     {
       if( g_proc_id == g_stdio_proc ) 
-        {printf("ERROR Could not allocate TAU\n"); exit(1); }
+        {fprintf(stderr, "ERROR Could not allocate TAU\n"); exit(1); }
     
     }else
       TAU = (_Complex double *)(((unsigned long int)(_tau)+ALIGN_BASE)&~ALIGN_BASE);
   
-    //if ((_zwork = malloc(lwork*zs+ALIGN_BASE)) == NULL) 
     if ((_zwork = calloc(lwork+ALIGN_BASE,zs)) == NULL)   
     {
       if( g_proc_id == g_stdio_proc)
-      {printf("ERROR Could not allocate zwork\n"); exit(1);}
+      {fprintf(stderr, "ERROR Could not allocate zwork\n"); exit(1);}
     
     }else
       zwork = (_Complex double *)(((unsigned long int)(_zwork)+ALIGN_BASE)&~ALIGN_BASE);
   
-    //if ((_rwork = malloc(3*v_max*ds+ALIGN_BASE)) == NULL) 
     if ((_rwork = calloc(3*v_max+ALIGN_BASE,ds)) == NULL) 
     {
       if( g_proc_id == g_stdio_proc)
-        {printf("ERROR Could not allocate rwork\n"); exit(1);}
+        {fprintf(stderr, "ERROR Could not allocate rwork\n"); exit(1);}
     
     }else
       rwork = (double *)(((unsigned long int)(_rwork)+ALIGN_BASE)&~ALIGN_BASE);
@@ -287,39 +274,39 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
     if ((H = (_Complex double *) calloc(v_max*v_max, zs)) == NULL)
     {
       if( g_proc_id == g_stdio_proc) 
-        {printf("ERROR Could not allocate H\n"); exit(1);}
+        {fprintf(stderr, "ERROR Could not allocate H\n"); exit(1);}
     }
 
     if ((Hevecs = (_Complex double *) calloc(v_max*v_max, zs)) == NULL)
     {
       if( g_proc_id == g_stdio_proc ) 
-        {printf("ERROR Could not allocate Hevecs\n"); exit(1);}
+        {fprintf(stderr, "ERROR Could not allocate Hevecs\n"); exit(1);}
     }
 
     if ((Hevecsold = (_Complex double *) calloc(v_max*v_max, zs)) == NULL)
     {
       if( g_proc_id == g_stdio_proc ) 
-      {printf("ERROR Could not allocate Hevecsold\n"); exit(1);}
+      {fprintf(stderr, "ERROR Could not allocate Hevecsold\n"); exit(1);}
     }
 
     if ((Hevals = (double *) calloc(v_max, ds)) == NULL)
     {
       if( g_proc_id == g_stdio_proc) 
-        {printf("ERROR Could not allocate Hevals\n"); exit(1);}
+        {fprintf(stderr, "ERROR Could not allocate Hevals\n"); exit(1);}
     }
      
 
     if ((Hevalsold = (double *) calloc(v_max, ds)) == NULL) 
     {
       if( g_proc_id == g_stdio_proc)
-        {printf("ERROR Could not allocate Hevalsold\n"); exit(1); }
+        {fprintf(stderr, "ERROR Could not allocate Hevalsold\n"); exit(1); }
     }
 
 
     if ((TAU = (_Complex double *) calloc(2*nev, zs)) == NULL)
     {
       if( g_proc_id == g_stdio_proc ) 
-       {printf("ERROR Could not allocate TAU\n"); exit(1); }
+       {fprintf(stderr, "ERROR Could not allocate TAU\n"); exit(1); }
     
     }
   
@@ -327,14 +314,14 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
     if ((zwork = (_Complex double *) calloc(lwork, zs)) == NULL) 
     {
       if( g_proc_id == g_stdio_proc)
-      {printf("ERROR Could not allocate zwork\n"); exit(1);}
+      {fprintf(stderr, "ERROR Could not allocate zwork\n"); exit(1);}
     
     }
   
     if ((rwork = (double *) calloc(3*v_max, ds)) == NULL) 
     {
       if( g_proc_id == g_stdio_proc)
-      {printf("ERROR Could not allocate rwork\n"); exit(1);}
+      {fprintf(stderr, "ERROR Could not allocate rwork\n"); exit(1);}
     
     }
 
@@ -405,8 +392,8 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
     rhoprev = rho;
     rho=square_norm(r,n,parallel);
     reshist[it] = rho;
-    if ( (plvl >= 1) && (g_proc_id == g_stdio_proc) )
-    { printf(" Linsys res( %d ): %g\n",*iter+it,reshist[it]); fflush(stdout); }
+    if ( (g_debug_level >= 1) && (g_proc_id == g_stdio_proc) )
+    { fprintf(stdout, " Linsys res( %d ): %g\n",*iter+it,reshist[it]); fflush(stdout); }
 
     /* Convergence test */
     if (reshist[it] < tolb) { 
@@ -459,14 +446,14 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
 	_FT(zcopy)(&allelems, H, &ONE, Hevecs, &ONE);
 	_FT(zheev)(&cV,&cU,&tempi,Hevecs,&v_max,Hevals,zwork,&lwork,rwork,&info,1,1);
 	if( (info != 0 ) && (g_proc_id==g_stdio_proc))
-	{printf("Error: ZHEEV in eigcg at v_max step, info %d\n",info); exit(1);}
+	{fprintf(stderr, "Error: ZHEEV in eigcg at v_max step, info %d\n",info); exit(1);}
 	
 	tempi = v_max-1;
 	_FT(zcopy)(&allelems, H, &ONE, Hevecsold, &ONE);
 	_FT(zheev)(&cV,&cU,&tempi,Hevecsold,&v_max,Hevalsold,zwork,&lwork,rwork,&info,1,1);
 	       
 	if( (info != 0 ) && (g_proc_id==g_stdio_proc))
-	{printf("Error: ZHEEV in eigcg at (v_max-1) step, info %d\n",info); exit(1);}
+	{fprintf(stderr, "Error: ZHEEV in eigcg at (v_max-1) step, info %d\n",info); exit(1);}
 	       
 	
 	/* fill 0s in vmax-th elem of oldevecs to match Hevecs */
@@ -482,7 +469,7 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
 	_FT(zgeqrf)(&v_max,&v_size,Hevecs,&v_max,TAU,zwork,&lwork,&info) ;
  
 	if( (info != 0 ) && (g_proc_id==g_stdio_proc))
-	{printf("Error: ZGEQRF in eigcg info %d\n",info); exit(1);}
+	{fprintf(stderr, "Error: ZGEQRF in eigcg info %d\n",info); exit(1);}
 	
 	/* use as a temp space Hevecsold = Q^THQ */
 	_FT(zcopy)(&allelems,H,&ONE,Hevecsold,&ONE); 
@@ -490,18 +477,18 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
 		               TAU,Hevecsold,&v_max,zwork,&lwork,&info);
 	
 	if( (info != 0 ) && (g_proc_id==g_stdio_proc))
-	{printf("Error: ZGEQRF call 1 in eigcg info %d\n",info); exit(1);}
+	{fprintf(stderr, "Error: ZGEQRF call 1 in eigcg info %d\n",info); exit(1);}
 	
 	_FT(zunmqr)(&cL,&cC,&v_max,&v_size,&v_size,Hevecs,&v_max,
 		               TAU,Hevecsold,&v_max,zwork,&lwork,&info);
 	
 	if( (info != 0 ) && (g_proc_id==g_stdio_proc))
-	{printf("Error: ZGEQRF call 2 in eigcg info %d\n",info); exit(1);}
+	{fprintf(stderr, "Error: ZGEQRF call 2 in eigcg info %d\n",info); exit(1);}
 
         /* solve the small Hevecsold v_size x v_size eigenproblem */
 	_FT(zheev)(&cV,&cU,&v_size,Hevecsold,&v_max,Hevals, zwork,&lwork,rwork,&info,1,1);
 	if( (info != 0 ) && (g_proc_id==g_stdio_proc))
-	{printf("Error: ZHEEV in eigcg info %d\n",info); exit(1);}
+	{fprintf(stderr, "Error: ZHEEV in eigcg info %d\n",info); exit(1);}
 
 
 
@@ -522,7 +509,7 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
 
 	           
 	if( (info != 0 ) && (g_proc_id==g_stdio_proc))
-	{printf("Error: ZUNMQR, info %d\n",info); exit(1);}   
+	{fprintf(stderr, "Error: ZUNMQR, info %d\n",info); exit(1);}   
 	      
 	  
 	/* Restart V = V(n,v_max)*Hevecsold(v_max,v_size) */
@@ -589,7 +576,7 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
   } /* for it = 0 : maxit-1 */
   
   *iter = *iter + it+1; /* record the number of CG iterations plus any older */
-  if( g_proc_id == g_stdio_proc)
+  if( g_proc_id == g_stdio_proc && g_debug_level >= 0)
     displayInfo(eps_sq,maxit,*flag,*iter-1,reshist[it]);
 
   

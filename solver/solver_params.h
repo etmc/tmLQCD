@@ -40,11 +40,10 @@ typedef struct {
   int eigcg_nev;           /*number of eigenvalues computed from a single right-hand side */
   int eigcg_vmax;          /*size of the search subspace for eigcg*/
   int eigcg_ldh;           /*total number of eigenvectors that will be computed and used in deflation */
-  int eigcg_plvl;          /*print level of output 0,1,2 */
   double eigcg_restolsq;   /*tolerance squared for restarting eigcg after eigenvectors has been computed
                              Typically this is the square root of the tolerance squared requested for the linear system.
                              Example, to solve the linear systems to res_sq=1e-16, one chooses eigcg_restolsq=1e-8 or smaller 
-                             This will specify how many times deflated CG restaretd in hte second phase (after eigenvectors has been computed)*/
+                             This will specify how many times deflated CG restaretd in the second phase (after eigenvectors has been computed)*/
 } solver_params_t;
 
 

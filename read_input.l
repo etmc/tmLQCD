@@ -564,11 +564,6 @@ inline void rmQuotes(char *str){
     (optr->solver_params).eigcg_ldh = a;
     if(myverbose) printf("  EigCGldh set to %d line %d operator %d\n", a, line_of_file, current_operator);
   }
-  {SPC}*EigCGplvl{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    (optr->solver_params).eigcg_plvl = a;
-    if(myverbose) printf("  EigCGplvl set to %d line %d operator %d\n", a, line_of_file, current_operator);
-  }
   {SPC}*EigCGrestolsq{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     (optr->solver_params).eigcg_restolsq = c;

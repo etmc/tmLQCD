@@ -129,7 +129,7 @@
 
 int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b, 
                const int ldh, matrix_mult f, const double eps_sq, double restart_eps_sq,  
-               const int rel_prec, const int maxit, const int plvl, int nev, const int v_max) 
+               const int rel_prec, const int maxit, int nev, const int v_max) 
 { 
   /*Static variables and arrays.*/
   static spinor **solver_field; /*4 spinor fields*/
@@ -167,6 +167,8 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
   static void *_IPIV;
   static int *IPIV;        /*integer array to store permutations when solving the small linear system*/
 
+ //do we really need this. I think we can replace this by storing only the latest residuals. For output
+ //we can always print this out.
   static void *_reshist;   /* square of the norm of the residual */
   static double *reshist;  
 
@@ -288,8 +290,8 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
   } /*if(ncurRHS==1)*/
 
   
-  if(g_proc_id == g_stdio_proc) {
-    printf("System %d\n",ncurRHS); 
+  if(g_proc_id == g_stdio_proc && g_debug_level >= 0) {
+    fprintf(stdout, "System %d\n",ncurRHS); 
     fflush(stdout);
   } 
   
@@ -344,8 +346,8 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
       if(info != 0)
       {
          if(g_proc_id == g_stdio_proc) {
-            printf("Error in ZGESV:, info =  %d\n",info); 
-            fflush(stdout);
+            fprintf(stderr, "Error in ZGESV:, info =  %d\n",info); 
+            fflush(stderr);
          }
          exit(1);
       }
@@ -407,7 +409,7 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
     #endif
        
     eigcg( N, LDN, x, b, &normb, eps_sq, restart_eps_sq, maxit_remain, 
-	     &numIts, &reshist[numIts], &flag, plvl, solver_field, f, 
+	     &numIts, &reshist[numIts], &flag, solver_field, f, 
 	     nev_used, v_max, V, esize, ework);
      
     //if(g_proc_id == g_stdio_proc) 
@@ -438,14 +440,15 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
   normsq=square_norm(solver_field[1],N,parallel);
   if(g_proc_id == g_stdio_proc)
   {
-    printf("For this rhs:\n");
-    printf("Total initCG Wallclock : %-f\n", wI);
-    printf("Total eigpcg Wallclock : %-f\n", wE);
-    printf("Iterations: %-d\n", numIts); 
-    printf("Residual: %e, Actual Resid of LinSys  : %e\n", reshist[numIts-1],normsq);
+    fprintf(stdout, "For this rhs:\n");
+    fprintf(stdout, "Total initCG Wallclock : %-f\n", wI);
+    fprintf(stdout, "Total eigpcg Wallclock : %-f\n", wE);
+    fprintf(stdout, "Iterations: %-d\n", numIts); 
+    fprintf(stdout, "Residual: %e, Actual Resid of LinSys  : %e\n", reshist[numIts-1],normsq);
     if (flag != 0) {
-      printf("Error: eigcg returned with nonzero exit status\n");
+      fprintf(stderr, "Error: eigcg returned with nonzero exit status\n");
       return flag;
+      fflush(stderr);
     }
     fflush(stdout);
   }
@@ -494,23 +497,18 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
        wt2 = ((double)clock())/((double)(CLOCKS_PER_SEC));
     #endif
     
-    if(g_proc_id == g_stdio_proc)
+    if(g_proc_id == g_stdio_proc && g_debug_level >= 0)
     {
-      printf("ncurRHS %d\n",ncurRHS);
-      printf("ncurEvals %d \n",ncurEvals);
-    }
-
-    if(g_proc_id == g_stdio_proc)
-    {
-      //printf("ncurRHS %d\n",ncurRHS);
-      //printf("ncurEvals %d \n",ncurEvals);
-      printf("Update\n");
-      printf("Added %d vecs\n",nAdded);
-      printf("U Wallclock : %-f\n", wt2-wt1);
-      printf("Note: Update Wall time doesn't include time for computing eigenvalues and their residuals.\n");      
+      fprintf(stdout,"ncurRHS %d\n",ncurRHS);
+      fprintf(stdout,"ncurEvals %d \n",ncurEvals);
+      fprintf(stdout,"Update\n");
+      fprintf(stdout,"Added %d vecs\n",nAdded);
+      fprintf(stdout,"U Wallclock : %-f\n", wt2-wt1);
+      fprintf(stdout,"Note: Update Wall time doesn't include time for computing eigenvalues and their residuals.\n"); 
+      fflush(stdout);     
     }
     
-    if(plvl >= 2)  /*compute eigenvalues and their residuals if requested*/
+    if(g_debug_level >= 2)  /*compute eigenvalues and their residuals if requested*/
     {
       /* copy H into HU */
       tmpsize=ldh*ncurEvals;
@@ -523,8 +521,8 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
       {
 	if(g_proc_id == g_stdio_proc) 
 	{
-	  printf("Error in ZHEEV:, info =  %d\n",info); 
-          fflush(stdout);
+	  fprintf(stderr,"Error in ZHEEV:, info =  %d\n",info); 
+          fflush(stderr);
 	}
 	exit(1);
       }
@@ -556,7 +554,7 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
             tmpd= sqrt(tmpd2/normsq);
 	    
 	    if(g_proc_id == g_stdio_proc)
-	    {printf("RR Eval[%d]: %22.15E rnorm: %22.15E\n", i+1, evals[i], tmpd); fflush(stdout);}
+	    {fprintf(stdout,"RR Eval[%d]: %22.15E rnorm: %22.15E\n", i+1, evals[i], tmpd); fflush(stdout);}
 	
       } 
        

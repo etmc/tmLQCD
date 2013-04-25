@@ -8,7 +8,7 @@ NrZProcs = 1
 OmpNumThreads = 1
 
 
-DebugLevel = 5
+DebugLevel = 0
 InitialStoreCounter = 200
 Measurements = 1
 2kappamu = 0.0024135
@@ -37,7 +37,6 @@ BeginOperator TMWILSON
   EigCGnev  = 10
   EigCGvmax = 40
   EigCGldh  = 100
-  EigCGplvl = 2
   EigCGrestolsq = 1e-8
   AddDownPropagator = no
 

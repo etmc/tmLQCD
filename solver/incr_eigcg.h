@@ -46,16 +46,8 @@ int incr_eigcg(
      const int rel_preq,    /*(IN)0 for using absoute error for convergence
                                   1 for using relative error for convergence*/
      const int maxit,       /*(IN) Maximum allowed number of iterations to solution*/
-     const int plvl, 
-        /*(IN) printing level:
-        0  only print the final squared residual at the end of solving the linear system.
-        >= 1  print the squared residual after every iteration
-        >= 2  print the squared residual of the linear system after every 
-              iteration and the computed eignvalues and their residuals 
-              after every system (requires addtional matrix-vector multiplications).*/
-     int nev,    /*(IN)number of eigenvectors to be computed while solving
-                       every right-hand side until the maximum number ldh is reached*/
-     const int v_max); /*(IN) subspace size used to compute nev vectors*/
-
+     int nev,               /*(IN)number of eigenvectors to be computed while solving
+                                  every right-hand side until the maximum number ldh is reached*/
+     const int v_max);  /*(IN) subspace size used to compute nev vectors*/
 
 #endif

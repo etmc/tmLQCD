@@ -1,4 +1,4 @@
-/***********************************************************************
+/****************************************************************************
  * Copyright (C) 2008,2009,2010,2011,2012  
  * Andreas Stathopoulos, Kostas Orginos, Abdou M. Abdel-Rehim
  *
@@ -21,7 +21,7 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
+ ******************************************************************************/
 
 #ifndef _EIGCG_H
 #define _EIGCG_H
@@ -31,7 +31,7 @@
 
 
 void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb, const double eps_sq, 
-           double restart_eps_sq, int maxit, int *iter, double *reshist, int *flag, int plvl, 
+           double restart_eps_sq, int maxit, int *iter, double *reshist, int *flag,  
            spinor **work, matrix_mult f, int nev, int v_max, spinor *V, int esize, _Complex double *ework);
 
 
