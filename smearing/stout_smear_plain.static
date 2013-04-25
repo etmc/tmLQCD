@@ -25,11 +25,11 @@ static void smear_plain(stout_control *control, gauge_field_t in)
     /* There should be an implicit OMP barrier here */
 #pragma omp single
     {
-      swap_gauge_field(&control->U[1], &buffer);
-      exchange_gauge_field(&control->U[1]); /* The edge terms will have changed by now */
+      swap_gauge_field(&control->result, &buffer);
+
+      exchange_gauge_field(&control->result); /* The edge terms will have changed by now */
       in = control->result; /* Shallow copy intended */
     }
   }
-  control->result = control->U[1];
   return_gauge_field(&buffer); 
 }
