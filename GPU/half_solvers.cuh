@@ -126,17 +126,17 @@ extern "C" int dev_cg_eo_half(
      dev_spinor_half* spin3, float* spin3_norm,
      dev_spinor_half* spin4, float* spin4_norm,
      int *grid, int * nn_grid,
-     REAL epsfinal){
+     float epsfinal){
  
  
- REAL host_alpha, host_beta, host_dotprod, host_rk, sourcesquarenorm;
- REAL * dotprod, * dotprod2, * rk, * alpha, *beta;
+ float host_alpha, host_beta, host_dotprod, host_rk, sourcesquarenorm;
+ float * dotprod, * dotprod2, * rk, * alpha, *beta;
  
  
  
  int i, gridsize;
  int maxit = max_innersolver_it;
- REAL eps = (REAL) innersolver_precision;
+ float eps = (float) innersolver_precision;
  int N_recalcres = 20; // after N_recalcres iterations calculate r = A x_k - b
  
  cudaError_t cudaerr;
@@ -178,15 +178,15 @@ extern "C" int dev_cg_eo_half(
  //Initialize some stuff
   printf("mu = %f\n", g_mu);
   dev_complex h0,h1,h2,h3,mh0, mh1, mh2, mh3;
-  h0.re = (REAL)ka0.re;    h0.im = -(REAL)ka0.im;
-  h1.re = (REAL)ka1.re;    h1.im = -(REAL)ka1.im;
-  h2.re = (REAL)ka2.re;    h2.im = -(REAL)ka2.im;
-  h3.re = (REAL)ka3.re;    h3.im = -(REAL)ka3.im;
+  h0.re = (float)ka0.re;    h0.im = -(float)ka0.im;
+  h1.re = (float)ka1.re;    h1.im = -(float)ka1.im;
+  h2.re = (float)ka2.re;    h2.im = -(float)ka2.im;
+  h3.re = (float)ka3.re;    h3.im = -(float)ka3.im;
   
-  mh0.re = -(REAL)ka0.re;    mh0.im = (REAL)ka0.im;
-  mh1.re = -(REAL)ka1.re;    mh1.im = (REAL)ka1.im;
-  mh2.re = -(REAL)ka2.re;    mh2.im = (REAL)ka2.im;
-  mh3.re = -(REAL)ka3.re;    mh3.im = (REAL)ka3.im;
+  mh0.re = -(float)ka0.re;    mh0.im = (float)ka0.im;
+  mh1.re = -(float)ka1.re;    mh1.im = (float)ka1.im;
+  mh2.re = -(float)ka2.re;    mh2.im = (float)ka2.im;
+  mh3.re = -(float)ka3.re;    mh3.im = (float)ka3.im;
   
   // try using constant mem for kappas
   cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex)) ; 
@@ -199,7 +199,7 @@ extern "C" int dev_cg_eo_half(
   cudaMemcpyToSymbol("dev_mk2c", &mh2, sizeof(dev_complex)) ; 
   cudaMemcpyToSymbol("dev_mk3c", &mh3, sizeof(dev_complex)) ;  
   
-  he_cg_init<<< 1, 1 >>> (grid, (REAL) g_kappa, (REAL)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
+  he_cg_init<<< 1, 1 >>> (grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
   // BEWARE in dev_tm_dirac_kappa we need the true mu (not 2 kappa mu!)
 
 
@@ -236,11 +236,11 @@ extern "C" int dev_cg_eo_half(
  
  // Init x,p,r for k=0
  // Allocate some numbers for host <-> device interaction
- cudaMalloc((void **) &dotprod, sizeof(REAL));
- cudaMalloc((void **) &dotprod2, sizeof(REAL));
- cudaMalloc((void **) &rk, sizeof(REAL));
- cudaMalloc((void **) &alpha, sizeof(REAL));
- cudaMalloc((void **) &beta, sizeof(REAL));
+ cudaMalloc((void **) &dotprod, sizeof(float));
+ cudaMalloc((void **) &dotprod2, sizeof(float));
+ cudaMalloc((void **) &rk, sizeof(float));
+ cudaMalloc((void **) &alpha, sizeof(float));
+ cudaMalloc((void **) &beta, sizeof(float));
  printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
  
  
@@ -448,17 +448,17 @@ extern "C" int dev_cg_eo_half_reliable(
      dev_spinor* spin0_f,
      dev_spinor* spin1_f,
      int *grid, int * nn_grid,
-     REAL epsfinal, REAL delta){
+     float epsfinal, float delta){
  
  
- REAL host_alpha, host_beta, host_dotprod, host_rk, sourcesquarenorm;
- REAL * dotprod, * dotprod2, * rk, * alpha, *beta;
+ float host_alpha, host_beta, host_dotprod, host_rk, sourcesquarenorm;
+ float * dotprod, * dotprod2, * rk, * alpha, *beta;
  
  
  
  int i, gridsize;
  int maxit = max_innersolver_it;
- REAL eps = (REAL) innersolver_precision;
+ float eps = (float) innersolver_precision;
  int N_recalcres = 20; // after N_recalcres iterations calculate r = A x_k - b
  
  float max = 0.0f;
@@ -503,15 +503,15 @@ extern "C" int dev_cg_eo_half_reliable(
  //Initialize some stuff
   printf("mu = %f\n", g_mu);
   dev_complex h0,h1,h2,h3,mh0, mh1, mh2, mh3;
-  h0.re = (REAL)ka0.re;    h0.im = -(REAL)ka0.im;
-  h1.re = (REAL)ka1.re;    h1.im = -(REAL)ka1.im;
-  h2.re = (REAL)ka2.re;    h2.im = -(REAL)ka2.im;
-  h3.re = (REAL)ka3.re;    h3.im = -(REAL)ka3.im;
+  h0.re = (float)ka0.re;    h0.im = -(float)ka0.im;
+  h1.re = (float)ka1.re;    h1.im = -(float)ka1.im;
+  h2.re = (float)ka2.re;    h2.im = -(float)ka2.im;
+  h3.re = (float)ka3.re;    h3.im = -(float)ka3.im;
   
-  mh0.re = -(REAL)ka0.re;    mh0.im = (REAL)ka0.im;
-  mh1.re = -(REAL)ka1.re;    mh1.im = (REAL)ka1.im;
-  mh2.re = -(REAL)ka2.re;    mh2.im = (REAL)ka2.im;
-  mh3.re = -(REAL)ka3.re;    mh3.im = (REAL)ka3.im;
+  mh0.re = -(float)ka0.re;    mh0.im = (float)ka0.im;
+  mh1.re = -(float)ka1.re;    mh1.im = (float)ka1.im;
+  mh2.re = -(float)ka2.re;    mh2.im = (float)ka2.im;
+  mh3.re = -(float)ka3.re;    mh3.im = (float)ka3.im;
   
   // try using constant mem for kappas
   cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex)) ; 
@@ -524,7 +524,7 @@ extern "C" int dev_cg_eo_half_reliable(
   cudaMemcpyToSymbol("dev_mk2c", &mh2, sizeof(dev_complex)) ; 
   cudaMemcpyToSymbol("dev_mk3c", &mh3, sizeof(dev_complex)) ;  
   
-  he_cg_init<<< 1, 1 >>> (grid, (REAL) g_kappa, (REAL)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
+  he_cg_init<<< 1, 1 >>> (grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
   // BEWARE in dev_tm_dirac_kappa we need the true mu (not 2 kappa mu!)
 
 
@@ -561,11 +561,11 @@ extern "C" int dev_cg_eo_half_reliable(
  
  // Init x,p,r for k=0
  // Allocate some numbers for host <-> device interaction
- cudaMalloc((void **) &dotprod, sizeof(REAL));
- cudaMalloc((void **) &dotprod2, sizeof(REAL));
- cudaMalloc((void **) &rk, sizeof(REAL));
- cudaMalloc((void **) &alpha, sizeof(REAL));
- cudaMalloc((void **) &beta, sizeof(REAL));
+ cudaMalloc((void **) &dotprod, sizeof(float));
+ cudaMalloc((void **) &dotprod2, sizeof(float));
+ cudaMalloc((void **) &rk, sizeof(float));
+ cudaMalloc((void **) &alpha, sizeof(float));
+ cudaMalloc((void **) &beta, sizeof(float));
 #ifndef LOWOUTPUT
  printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
 #endif 
@@ -789,17 +789,17 @@ extern "C" int dev_cg_half_reliable_update(
      dev_spinor_half* spin3, float* spin3_norm,
      dev_spinor_half* spin4, float* spin4_norm,
      int *grid, int * nn_grid,
-     REAL epsfinal){
+     float epsfinal){
  
  
- REAL host_alpha, host_beta, host_dotprod, host_rk, sourcesquarenorm;
- REAL * dotprod, * dotprod2, * rk, * alpha, *beta;
+ float host_alpha, host_beta, host_dotprod, host_rk, sourcesquarenorm;
+ float * dotprod, * dotprod2, * rk, * alpha, *beta;
  
  
  
  int i, gridsize;
  int maxit = max_innersolver_it;
- REAL eps = (REAL) innersolver_precision;
+ float eps = (float) innersolver_precision;
  int N_recalcres = 1000; // after N_recalcres iterations calculate r = A x_k - b
  
  cudaError_t cudaerr;
@@ -841,15 +841,15 @@ extern "C" int dev_cg_half_reliable_update(
  //Initialize some stuff
   printf("mu = %f\n", g_mu);
   dev_complex h0,h1,h2,h3,mh0, mh1, mh2, mh3;
-  h0.re = (REAL)ka0.re;    h0.im = -(REAL)ka0.im;
-  h1.re = (REAL)ka1.re;    h1.im = -(REAL)ka1.im;
-  h2.re = (REAL)ka2.re;    h2.im = -(REAL)ka2.im;
-  h3.re = (REAL)ka3.re;    h3.im = -(REAL)ka3.im;
+  h0.re = (float)ka0.re;    h0.im = -(float)ka0.im;
+  h1.re = (float)ka1.re;    h1.im = -(float)ka1.im;
+  h2.re = (float)ka2.re;    h2.im = -(float)ka2.im;
+  h3.re = (float)ka3.re;    h3.im = -(float)ka3.im;
   
-  mh0.re = -(REAL)ka0.re;    mh0.im = (REAL)ka0.im;
-  mh1.re = -(REAL)ka1.re;    mh1.im = (REAL)ka1.im;
-  mh2.re = -(REAL)ka2.re;    mh2.im = (REAL)ka2.im;
-  mh3.re = -(REAL)ka3.re;    mh3.im = (REAL)ka3.im;
+  mh0.re = -(float)ka0.re;    mh0.im = (float)ka0.im;
+  mh1.re = -(float)ka1.re;    mh1.im = (float)ka1.im;
+  mh2.re = -(float)ka2.re;    mh2.im = (float)ka2.im;
+  mh3.re = -(float)ka3.re;    mh3.im = (float)ka3.im;
   
   // try using constant mem for kappas
   cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex)) ; 
@@ -862,7 +862,7 @@ extern "C" int dev_cg_half_reliable_update(
   cudaMemcpyToSymbol("dev_mk2c", &mh2, sizeof(dev_complex)) ; 
   cudaMemcpyToSymbol("dev_mk3c", &mh3, sizeof(dev_complex)) ;  
   
-  he_cg_init<<< 1, 1 >>> (grid, (REAL) g_kappa, (REAL)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
+  he_cg_init<<< 1, 1 >>> (grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
   // BEWARE in dev_tm_dirac_kappa we need the true mu (not 2 kappa mu!)
 
 
@@ -890,11 +890,11 @@ extern "C" int dev_cg_half_reliable_update(
  
  // Init x,p,r for k=0
  // Allocate some numbers for host <-> device interaction
- cudaMalloc((void **) &dotprod, sizeof(REAL));
- cudaMalloc((void **) &dotprod2, sizeof(REAL));
- cudaMalloc((void **) &rk, sizeof(REAL));
- cudaMalloc((void **) &alpha, sizeof(REAL));
- cudaMalloc((void **) &beta, sizeof(REAL));
+ cudaMalloc((void **) &dotprod, sizeof(float));
+ cudaMalloc((void **) &dotprod2, sizeof(float));
+ cudaMalloc((void **) &rk, sizeof(float));
+ cudaMalloc((void **) &alpha, sizeof(float));
+ cudaMalloc((void **) &beta, sizeof(float));
  printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
  
  

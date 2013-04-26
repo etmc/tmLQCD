@@ -38,6 +38,7 @@
 // -> thats why complexmult and complexcgmult are interchanged in dev_HoppingMatrix and in 
 // dev_tm_dirac_kappa
 __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor * sout, int * dev_nn){
+/*
     int pos,hoppos;
     dev_spinor shelp1[6], ssum[6];
     __shared__ dev_su3 gfsmem[BLOCK];
@@ -254,6 +255,7 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
 	  #endif
           dev_complexmult_add_assign_writetoglobal_spinor(&(ssum[0]),dev_initcomplex(0.0,2.0*kappa*mu),&(shelp1[0]), &(sout[pos]));
   }
+*/
 }
 
 
@@ -374,7 +376,7 @@ __global__ void dev_gamma5_rel(dev_spinor * sin, dev_spinor * sout){
 
 
 extern "C" void dev_tm_dirac_dagger_kappa(dev_su3_2v * gf,dev_spinor* spinin, dev_spinor* spinout, 
- int *grid, int * nn_grid, REAL* output,REAL* erg, int xsize, int ysize){
+ int *grid, int * nn_grid, float* output, float* erg, int xsize, int ysize){
  int gridsize;
  if( VOLUME >= 128){
    gridsize =VOLUME/128;

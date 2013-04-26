@@ -32,7 +32,7 @@
 
 
 //-kappa(r - gamma_mu)
-__device__ void dev_kappaP1_plus(dev_spinor * out, dev_spinor * in, REAL kappa){
+__device__ void dev_kappaP1_plus(dev_spinor * out, dev_spinor * in, float kappa){
 
      (*(out+0)).x -= kappa*( (*(in+0)).x - (*(in+4)).w);
      (*(out+0)).y -= kappa*( (*(in+0)).y + (*(in+4)).z);
@@ -68,7 +68,7 @@ __device__ void dev_kappaP1_plus(dev_spinor * out, dev_spinor * in, REAL kappa){
 
 
 //-kappa(r + gamma_mu)
-__device__ void dev_kappaP1_minus(dev_spinor * out, dev_spinor * in, REAL kappa){
+__device__ void dev_kappaP1_minus(dev_spinor * out, dev_spinor * in, float kappa){
 
      (*(out+0)).x -= kappa*( (*(in+0)).x + (*(in+4)).w);
      (*(out+0)).y -= kappa*( (*(in+0)).y - (*(in+4)).z);
@@ -107,7 +107,7 @@ __device__ void dev_kappaP1_minus(dev_spinor * out, dev_spinor * in, REAL kappa)
 
 
 //-kappa(r - gamma_mu)
-__device__ void dev_kappaP2_plus(dev_spinor * out, dev_spinor * in, REAL kappa){
+__device__ void dev_kappaP2_plus(dev_spinor * out, dev_spinor * in, float kappa){
 
 
      (*(out+0)).x -= kappa*( (*(in+0)).x + (*(in+4)).z);
@@ -150,7 +150,7 @@ __device__ void dev_kappaP2_plus(dev_spinor * out, dev_spinor * in, REAL kappa){
 
 
 //-kappa(r + gamma_mu)  kappa reell !!!!
-__device__ void dev_kappaP2_minus(dev_spinor * out, dev_spinor * in, REAL kappa){
+__device__ void dev_kappaP2_minus(dev_spinor * out, dev_spinor * in, float kappa){
 
 
      (*(out+0)).x -= kappa*( (*(in+0)).x - (*(in+4)).z);
@@ -194,7 +194,7 @@ __device__ void dev_kappaP2_minus(dev_spinor * out, dev_spinor * in, REAL kappa)
 
 
 //-kappa(r - gamma_mu) kappa reell !!!!
-__device__ void dev_kappaP3_plus(dev_spinor * out, dev_spinor * in, REAL kappa){
+__device__ void dev_kappaP3_plus(dev_spinor * out, dev_spinor * in, float kappa){
 
      (*(out+0)).x -= kappa*( (*(in+0)).x - (*(in+3)).y);
      (*(out+0)).y -= kappa*( (*(in+0)).y + (*(in+3)).x);
@@ -235,7 +235,7 @@ __device__ void dev_kappaP3_plus(dev_spinor * out, dev_spinor * in, REAL kappa){
 
 
 //-kappa(r + gamma_mu) kappa reell !!!
-__device__ void dev_kappaP3_minus(dev_spinor * out, dev_spinor * in, REAL kappa){
+__device__ void dev_kappaP3_minus(dev_spinor * out, dev_spinor * in, float kappa){
 
      (*(out+0)).x -= kappa*( (*(in+0)).x + (*(in+3)).y);
      (*(out+0)).y -= kappa*( (*(in+0)).y - (*(in+3)).x);

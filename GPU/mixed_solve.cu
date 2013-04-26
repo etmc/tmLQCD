@@ -41,7 +41,6 @@
  **************************************************************************/
 
 
-
 #include <cuda.h>
 #include <cuda_runtime.h>
 
@@ -58,7 +57,9 @@
 #include <stdio.h>
 #include <assert.h>
 
+extern "C" {
 #include "../global.h"
+}
 #include "../hamiltonian_field.h"
 #include "cudaglobal.h"
 #include "../solver/solver.h"
@@ -90,19 +91,10 @@ extern "C" {
 }
 
 
-
 #ifdef HAVE_CONFIG_H
   #include<config.h>
 #endif
 
-
-#ifdef MPI
-  #undef MPI
-  #undef REAL
-    #include <mpi.h>
-  #define MPI
-  #define REAL float
-#endif
 
 #include "MACROS.cuh"
 

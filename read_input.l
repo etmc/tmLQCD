@@ -2085,6 +2085,8 @@ int read_input(char * conf_file){
   mstarsq = _default_mstarsq;
   no_sources_z2 = _default_no_sources_z2;
   device_num = _default_device_num;
+  innersolver_precision_rel = 1.e-4;
+  innersolver_precision_abs = 1.e-4;
   /* Put -1 in PropInfo.format to see if parse_config() will
   change the value. If not then set it to source_format_flag */
   PropInfo.format = -1;

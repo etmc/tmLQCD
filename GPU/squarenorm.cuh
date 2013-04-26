@@ -1,8 +1,8 @@
 
 
 
-__device__ inline REAL dev_skalarprod_spinor(dev_spinor * s1, dev_spinor * s2){
-  REAL skalprod = 0.0;
+__device__ inline float dev_skalarprod_spinor(dev_spinor * s1, dev_spinor * s2){
+  float skalprod = 0.0;
   int i;
   #pragma unroll 6
   for(i=0;i<6;i++){ //color + spin
@@ -14,8 +14,8 @@ __device__ inline REAL dev_skalarprod_spinor(dev_spinor * s1, dev_spinor * s2){
 
 
 
-__device__ inline REAL dev_squarenorm_spinor(dev_spinor * s1){
-  REAL skalprod = 0.0;
+__device__ inline float dev_squarenorm_spinor(dev_spinor * s1){
+  float skalprod = 0.0;
   int i;
   #pragma unroll 6
   for(i=0;i<6;i++){ //color + spin
@@ -26,8 +26,8 @@ __device__ inline REAL dev_squarenorm_spinor(dev_spinor * s1){
 
 
 
-__device__ inline REAL dev_squarenorm_spinor_tex(int pos){
-  REAL skalprod = 0.0;
+__device__ inline float dev_squarenorm_spinor_tex(int pos){
+  float skalprod = 0.0;
   int i;
   float4 help;
   
@@ -43,10 +43,10 @@ __device__ inline REAL dev_squarenorm_spinor_tex(int pos){
 
 
 //only 1 dim parallel possible, because need __syncthread !
-__global__ void dev_skalarprod_spinor_field2(dev_spinor* s1, dev_spinor* s2, REAL* erg){
-  __shared__ REAL shrinkarray[ACCUM_N];
+__global__ void dev_skalarprod_spinor_field2(dev_spinor* s1, dev_spinor* s2, float* erg){
+  __shared__ float shrinkarray[ACCUM_N];
   int pos,stepwidth;
-  REAL ks,kc,ds,tr,ts,tt;
+  float ks,kc,ds,tr,ts,tt;
   
    
    // ADD ERROR HERE if t > maxblockdim
@@ -108,10 +108,10 @@ __global__ void dev_skalarprod_spinor_field2(dev_spinor* s1, dev_spinor* s2, REA
 
 
 //only 1 dim parallel possible, because need __syncthread !
-__global__ void dev_squarenorm_spinor_field(dev_spinor* s1, REAL* erg){
-  __shared__ REAL shrinkarray[ACCUM_N];
+__global__ void dev_squarenorm_spinor_field(dev_spinor* s1, float* erg){
+  __shared__ float shrinkarray[ACCUM_N];
   int pos,stepwidth;
-  REAL ks,kc,ds,tr,ts,tt;
+  float ks,kc,ds,tr,ts,tt;
   
    
    // ADD ERROR HERE if t > maxblockdim
@@ -172,10 +172,10 @@ __global__ void dev_squarenorm_spinor_field(dev_spinor* s1, REAL* erg){
 
 
 //only 1 dim parallel, because need __syncthread !
-__global__ void dev_skalarprod_spinor_field(dev_spinor* s1, dev_spinor* s2, REAL* erg){
-  __shared__ REAL shrinkarray[ACCUM_N];
+__global__ void dev_skalarprod_spinor_field(dev_spinor* s1, dev_spinor* s2, float* erg){
+  __shared__ float shrinkarray[ACCUM_N];
   int pos,stepwidth, sweepsperthread;
-  REAL ks,kc,ds,tr,ts,tt;
+  float ks,kc,ds,tr,ts,tt;
    
    // ADD ERROR HERE if t > maxblockdim
    

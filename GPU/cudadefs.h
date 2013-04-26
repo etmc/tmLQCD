@@ -15,7 +15,6 @@
 
 
 
-#define REAL float
 #define BLOCK 288 // Block Size	
 					// dev_Hopping_Matrix<<<>>>()
 #define BLOCKSUB 8

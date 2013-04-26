@@ -308,7 +308,7 @@ __device__ void dev_reconstructgf_8texref (const dev_su3_2v * field, int pos, in
 #ifdef USETEXTURE
 #define dev_reconstructgf_8texref(field, pos, mu, VOL, gf)\
 {  float4 gfin;\
-  REAL one_over_N, help;\
+  float one_over_N, help;\
   dev_complex p1,p2;\
   int COL = 2;\
   gfin = tex1Dfetch(gf_tex,pos+VOL*(0 + COL*mu));\
@@ -372,7 +372,7 @@ __device__ void dev_reconstructgf_8texref (const dev_su3_2v * field, int pos, in
 
 #define dev_reconstructgf_8texref_dagger(field, pos, mu, VOL, gf)\
 {  float4 gfin;\
-  REAL one_over_N, help;\
+  float one_over_N, help;\
   dev_complex p1,p2;\
   int COL = 2;\
   gfin = tex1Dfetch(gf_tex,pos+VOL*(0 + COL*mu));\
@@ -529,7 +529,7 @@ __device__ void dev_reconstructgf_8texref (const dev_su3_2v * field, int pos, in
 #else
 #define dev_reconstructgf_8texref(field, pos, mu, VOL, gf)\
 {  float4 gfin;\
-  REAL one_over_N, help;\
+  float one_over_N, help;\
   dev_complex p1,p2;\
   int COL = 2;\
   gfin = field[pos+VOL*(0 + COL*mu)];\
@@ -593,7 +593,7 @@ __device__ void dev_reconstructgf_8texref (const dev_su3_2v * field, int pos, in
 
 #define dev_reconstructgf_8texref_dagger(field, pos, mu, VOL, gf)\
 {  float4 gfin;\
-  REAL one_over_N, help;\
+  float one_over_N, help;\
   dev_complex p1,p2;\
   int COL = 2;\
   gfin = field[pos+VOL*(0 + COL*mu)];\
@@ -761,7 +761,7 @@ __device__ void dev_reconstructgf_8texref (const dev_su3_2v * field, int pos, in
 __device__ void dev_reconstructgf_8texref (const dev_su3_2v * field, int pos, int mu, int VOL, dev_su3* gf){
 
   float4 gfin;
-  REAL one_over_N, help;
+  float one_over_N, help;
   dev_complex p1,p2;
   int COL = 2;
   #ifdef USETEXTURE
@@ -889,7 +889,7 @@ __device__ void dev_reconstructgf_8texref_dagger (const dev_su3_2v* field,int po
 
 
   float4 gfin;
-  REAL one_over_N, help;
+  float one_over_N, help;
   dev_complex p1,p2;
   int COL = 2;
   
@@ -1178,7 +1178,7 @@ __device__ void dev_reconstructgf_2vtexref_dagger_half (const dev_su3_2v_half* f
 __device__ void dev_reconstructgf_8texref_half (const dev_su3_2v_half * field, int pos, int mu, int VOL, dev_su3* gf){
 
   float4 gfin;
-  REAL one_over_N, help;
+  float one_over_N, help;
   dev_complex p1,p2;
   int COL = 2;
   #ifdef USETEXTURE
@@ -1335,7 +1335,7 @@ __device__ void dev_reconstructgf_8texref_dagger_half (const dev_su3_2v_half* fi
 
 
   float4 gfin;
-  REAL one_over_N, help;
+  float one_over_N, help;
   dev_complex p1,p2;
   int COL = 2;
   #ifdef USETEXTURE
@@ -1481,19 +1481,19 @@ void su3to2vf4(su3** gf, dev_su3_2v* h2d_gf){
   #endif
    for(j=0;j<4;j++){
    //first row
-    h2d_gf[pos+VOL*(0 + COL*j)].x = (REAL) creal(gf[i][j].c00);
-    h2d_gf[pos+VOL*(0 + COL*j)].y = (REAL) cimag(gf[i][j].c00);
-    h2d_gf[pos+VOL*(0 + COL*j)].z = (REAL) creal(gf[i][j].c01);
-    h2d_gf[pos+VOL*(0 + COL*j)].w = (REAL) cimag(gf[i][j].c01);
-    h2d_gf[pos+VOL*(1 + COL*j)].x = (REAL) creal(gf[i][j].c02);
-    h2d_gf[pos+VOL*(1 + COL*j)].y = (REAL) cimag(gf[i][j].c02);      
+    h2d_gf[pos+VOL*(0 + COL*j)].x = (float) creal(gf[i][j].c00);
+    h2d_gf[pos+VOL*(0 + COL*j)].y = (float) cimag(gf[i][j].c00);
+    h2d_gf[pos+VOL*(0 + COL*j)].z = (float) creal(gf[i][j].c01);
+    h2d_gf[pos+VOL*(0 + COL*j)].w = (float) cimag(gf[i][j].c01);
+    h2d_gf[pos+VOL*(1 + COL*j)].x = (float) creal(gf[i][j].c02);
+    h2d_gf[pos+VOL*(1 + COL*j)].y = (float) cimag(gf[i][j].c02);      
    //second row
-    h2d_gf[pos+VOL*(1 + COL*j)].z = (REAL) creal(gf[i][j].c10);
-    h2d_gf[pos+VOL*(1 + COL*j)].w = (REAL) cimag(gf[i][j].c10);
-    h2d_gf[pos+VOL*(2 + COL*j)].x = (REAL) creal(gf[i][j].c11);
-    h2d_gf[pos+VOL*(2 + COL*j)].y = (REAL) cimag(gf[i][j].c11);
-    h2d_gf[pos+VOL*(2 + COL*j)].z = (REAL) creal(gf[i][j].c12);
-    h2d_gf[pos+VOL*(2 + COL*j)].w = (REAL) cimag(gf[i][j].c12);      
+    h2d_gf[pos+VOL*(1 + COL*j)].z = (float) creal(gf[i][j].c10);
+    h2d_gf[pos+VOL*(1 + COL*j)].w = (float) cimag(gf[i][j].c10);
+    h2d_gf[pos+VOL*(2 + COL*j)].x = (float) creal(gf[i][j].c11);
+    h2d_gf[pos+VOL*(2 + COL*j)].y = (float) cimag(gf[i][j].c11);
+    h2d_gf[pos+VOL*(2 + COL*j)].z = (float) creal(gf[i][j].c12);
+    h2d_gf[pos+VOL*(2 + COL*j)].w = (float) cimag(gf[i][j].c12);      
   }
   pos++;
  }
@@ -1519,19 +1519,19 @@ void su3to8(su3** gf, dev_su3_8* h2d_gf){
   #endif
       for(j=0;j<4;j++){
       // a2, a3 
-      h2d_gf[pos+VOL*(0 + COL*j)].x = (REAL) creal(gf[i][j].c01);
-      h2d_gf[pos+VOL*(0 + COL*j)].y = (REAL) cimag(gf[i][j].c01);
-      h2d_gf[pos+VOL*(0 + COL*j)].z = (REAL) creal(gf[i][j].c02);
-      h2d_gf[pos+VOL*(0 + COL*j)].w = (REAL) cimag(gf[i][j].c02);
+      h2d_gf[pos+VOL*(0 + COL*j)].x = (float) creal(gf[i][j].c01);
+      h2d_gf[pos+VOL*(0 + COL*j)].y = (float) cimag(gf[i][j].c01);
+      h2d_gf[pos+VOL*(0 + COL*j)].z = (float) creal(gf[i][j].c02);
+      h2d_gf[pos+VOL*(0 + COL*j)].w = (float) cimag(gf[i][j].c02);
       
       // theta_a1, theta_c1
       // use atan2 for this: following the reference, atan2 should give an angle -pi < phi < +pi  
-      h2d_gf[pos+VOL*(1 + COL*j)].x = (REAL)( atan2((REAL) cimag(gf[i][j].c00),(REAL) creal(gf[i][j].c00) ));
-      h2d_gf[pos+VOL*(1 + COL*j)].y = (REAL) ( atan2((REAL) cimag(gf[i][j].c20),(REAL) creal(gf[i][j].c20) ));
+      h2d_gf[pos+VOL*(1 + COL*j)].x = (float)( atan2((float) cimag(gf[i][j].c00),(float) creal(gf[i][j].c00) ));
+      h2d_gf[pos+VOL*(1 + COL*j)].y = (float) ( atan2((float) cimag(gf[i][j].c20),(float) creal(gf[i][j].c20) ));
       
       // b1
-      h2d_gf[pos+VOL*(1 + COL*j)].z = (REAL) creal(gf[i][j].c10) ;
-      h2d_gf[pos+VOL*(1 + COL*j)].w = (REAL) cimag(gf[i][j].c10) ;
+      h2d_gf[pos+VOL*(1 + COL*j)].z = (float) creal(gf[i][j].c10) ;
+      h2d_gf[pos+VOL*(1 + COL*j)].w = (float) cimag(gf[i][j].c10) ;
      
      } 
    pos++;
@@ -1584,7 +1584,7 @@ void reconstructgf_2v (dev_su3* gf){
 void reconstructgf_8 (dev_su3_8 * h2d_gf, dev_su3* gf){
 
   float4 gfin;
-  REAL N, one_over_N, help;
+  float N, one_over_N, help;
   complex p1,p2, chelp1, chelp2, chelp3, chelpconj, chelpconj2;
   
   gfin = h2d_gf[0];

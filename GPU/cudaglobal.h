@@ -3,8 +3,8 @@
 /* GPU Stuff */
 
 typedef struct  {
-  REAL re;
-  REAL im;
+  float re;
+  float im;
 } dev_complex;
 
 
@@ -31,7 +31,7 @@ typedef float4 dev_su3_8 ;  /* 8 numbers to reconstruct the gauge field as descr
 typedef float4 dev_spinor;
 typedef struct dev_spinor_smem{
   dev_spinor spin;
-  REAL dummy;
+  float dummy;
 } dev_spinor_smem;
 typedef dev_complex dev_propmatrix[12][12];
 typedef dev_complex dev_fbyf[4][4];

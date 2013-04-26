@@ -75,11 +75,7 @@ extern "C" {
 #include "../global.h"
 #include "HEADER.h"
 #ifdef MPI
-  #undef MPI
-  #undef REAL
     #include <mpi.h>
-  #define MPI
-  #define REAL float
 #endif
 
 
@@ -4221,7 +4217,16 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
                                  spinor * Q_up, spinor * Q_dn, double shift,
                                  int max_iter, double eps_sq, int rel_prec) {
   
-  
+  if(rel_prec) {
+    innersolver_precision_check_rel = 1;
+    innersolver_precision_check_abs = 0;
+  }
+  else {
+    innersolver_precision_check_rel = 0;
+    innersolver_precision_check_abs = 1;
+  }
+
+
   // basically  P_up/dn  and  Q_up/dn  could be used as auxiliary fields
   //	P_up/dn  is the output field (and can be used as initial guess)
   //	Q_up/dn  is not used later in the calling  invert_doublet_eo.c

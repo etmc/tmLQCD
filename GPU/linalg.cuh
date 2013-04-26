@@ -41,16 +41,16 @@ __device__ inline void dev_ccopy(dev_complex* von, dev_complex* nach){/*kopiert 
   nach->im = von->im;
 }
 
-__device__ inline REAL dev_cabssquare (dev_complex c){ /*gibt abs^2 einer komplexen Zahl zurück*/
+__device__ inline float dev_cabssquare (dev_complex c){ /*gibt abs^2 einer komplexen Zahl zurück*/
  return c.re*c.re + c.im*c.im;
 }
 
-__device__ inline REAL dev_cabsolute (dev_complex c){/*gibt Betrag einer kompl. zahl zurück*/
+__device__ inline float dev_cabsolute (dev_complex c){/*gibt Betrag einer kompl. zahl zurück*/
  return sqrt(c.re*c.re + c.im*c.im);
 }
 
 
-__device__ inline  dev_complex dev_crealmult(dev_complex c1, REAL real){ /*multipliziert c1 mit reeller zahl re*/
+__device__ inline  dev_complex dev_crealmult(dev_complex c1, float real){ /*multipliziert c1 mit reeller zahl re*/
   dev_complex erg;
   erg.re = real*c1.re;
   erg.im = real*c1.im;
@@ -132,7 +132,7 @@ return erg;
 
 __device__ inline dev_complex dev_cdiv(dev_complex c1, dev_complex c2) { /* dividiert c1 durch c2 */
   dev_complex erg;
-  REAL oneovernenner = 1.0f/(c2.re*c2.re + c2.im*c2.im);
+  float oneovernenner = 1.0f/(c2.re*c2.re + c2.im*c2.im);
   erg.re = oneovernenner*(c1.re*c2.re + c1.im*c2.im);
   erg.im = oneovernenner*(c1.im*c2.re - c1.re*c2.im);
 return erg;
@@ -147,7 +147,7 @@ return erg;
 }
 
 
-__device__ inline dev_complex dev_initcomplex(REAL re, REAL im){/* gibt komplexe Zahl mit Realt re und Imt im zurück*/
+__device__ inline dev_complex dev_initcomplex(float re, float im){/* gibt komplexe Zahl mit Realt re und Imt im zurück*/
     dev_complex erg;
     erg.re = re;
     erg.im = im;
@@ -393,7 +393,7 @@ __device__ inline void dev_zero_spinor_local(dev_spinor *sin){
 
 
 //out = in + lambda in2
-__device__ inline void dev_skalarmult_add_assign_spinor(dev_spinor *in, REAL lambda,dev_spinor * in2, dev_spinor * out){
+__device__ inline void dev_skalarmult_add_assign_spinor(dev_spinor *in, float lambda,dev_spinor * in2, dev_spinor * out){
   int i; 
   #pragma unroll 6
 for(i=0;i<6;i++){ //color + spin
@@ -820,7 +820,7 @@ __device__ void inline dev_skalarmult_gamma5_spinor_rel(dev_spinor * out, dev_co
 
 
 
-__device__ void inline dev_realmult_spinor(dev_spinor * in, REAL lambda){
+__device__ void inline dev_realmult_spinor(dev_spinor * in, float lambda){
   int i;
   #pragma unroll 6
   for(i=0;i<6;i++){ //color + spin
@@ -834,7 +834,7 @@ __device__ void inline dev_realmult_spinor(dev_spinor * in, REAL lambda){
 }
 
 
-__device__ void inline dev_realmult_spinor_assign(dev_spinor* out, REAL lambda, dev_spinor* in){
+__device__ void inline dev_realmult_spinor_assign(dev_spinor* out, float lambda, dev_spinor* in){
 int i;
 #pragma unroll 6
   for(i=0;i<6;i++){ //color + spin
@@ -848,7 +848,7 @@ int i;
 }
 
 
-__device__ void inline dev_realmult_spinor_assigntoglobal(dev_spinor* out, REAL lambda, dev_spinor* in){
+__device__ void inline dev_realmult_spinor_assigntoglobal(dev_spinor* out, float lambda, dev_spinor* in){
 int i;
 
   //out[i] = in[i]*lambda;
@@ -884,9 +884,9 @@ int i;
   
 }
 
-__device__ void dev_assign_realmult_add_spinor(dev_spinor* out, REAL lambda, dev_spinor* in1,  dev_spinor* in2){
+__device__ void dev_assign_realmult_add_spinor(dev_spinor* out, float lambda, dev_spinor* in1,  dev_spinor* in2){
 int i;
-REAL help;
+float help;
 //out = lambda*(in1 + in2)
 #pragma unroll 6
   for(i=0;i<6;i++){ //color + spin
@@ -6759,7 +6759,7 @@ help1.im = M[0][2].re*(*(s+4)).w - M[0][2].im*(*(s+4)).z + M[1][2].re*(*(s+5)).y
 
 // Gamma t
 __device__ void dev_Gamma0(dev_spinor * in){
-  REAL tempre,tempim;
+  float tempre,tempim;
      tempre = (*(in+0)).x;
      tempim = (*(in+0)).y;
      (*(in+0)).x = -(*(in+3)).x;
@@ -6810,7 +6810,7 @@ __device__ void dev_Gamma0(dev_spinor * in){
 
 //Gamma z
 __device__ void dev_Gamma3(dev_spinor * in){
-  REAL tempre,tempim;
+  float tempre,tempim;
      tempre = (*(in+0)).x;
      tempim = (*(in+0)).y;
      (*(in+0)).x = (*(in+3)).y;
@@ -6864,7 +6864,7 @@ __device__ void dev_Gamma3(dev_spinor * in){
 
 //Gamma y
 __device__ void dev_Gamma2(dev_spinor * in){
-  REAL tempre,tempim;
+  float tempre,tempim;
      tempre = (*(in+0)).x;
      tempim = (*(in+0)).y;
      (*(in+0)).x = -(*(in+4)).z;
@@ -6914,7 +6914,7 @@ __device__ void dev_Gamma2(dev_spinor * in){
 
 //Gamma x
 __device__ void dev_Gamma1(dev_spinor * in){
-  REAL tempre,tempim;
+  float tempre,tempim;
      tempre = (*(in+0)).x;
      tempim = (*(in+0)).y;
      (*(in+0)).x = (*(in+4)).w;
@@ -7156,7 +7156,7 @@ __device__ void dev_Gamma5_assigntoglobal_rel(dev_spinor* out, dev_spinor* in){
 
 // older version, all in one function
 __device__ void dev_GammatV(int mu, dev_spinor * in){//multipliziert Gamma(mu)*V effizientes ausnutzen der Nullen 
- REAL tempre,tempim;
+ float tempre,tempim;
  /* ORDER: t, z, y, x*/
  switch (mu){
  
@@ -7918,35 +7918,35 @@ void convert2REAL4_spin(spinor* spin, dev_spinor* h2d){
   
   for (i = 0; i < Vol; i++) {
     
-        h2d[i+0*offset].x = (REAL) creal(spin[i].s0.c0);
-        h2d[i+0*offset].y = (REAL) cimag(spin[i].s0.c0);
-        h2d[i+0*offset].z = (REAL) creal(spin[i].s0.c1);
-        h2d[i+0*offset].w = (REAL) cimag(spin[i].s0.c1);
+        h2d[i+0*offset].x = (float) creal(spin[i].s0.c0);
+        h2d[i+0*offset].y = (float) cimag(spin[i].s0.c0);
+        h2d[i+0*offset].z = (float) creal(spin[i].s0.c1);
+        h2d[i+0*offset].w = (float) cimag(spin[i].s0.c1);
         
-        h2d[i+1*offset].x = (REAL) creal(spin[i].s0.c2);
-        h2d[i+1*offset].y = (REAL) cimag(spin[i].s0.c2);
-        h2d[i+1*offset].z = (REAL) creal(spin[i].s1.c0);
-        h2d[i+1*offset].w = (REAL) cimag(spin[i].s1.c0);
+        h2d[i+1*offset].x = (float) creal(spin[i].s0.c2);
+        h2d[i+1*offset].y = (float) cimag(spin[i].s0.c2);
+        h2d[i+1*offset].z = (float) creal(spin[i].s1.c0);
+        h2d[i+1*offset].w = (float) cimag(spin[i].s1.c0);
         
-        h2d[i+2*offset].x = (REAL) creal(spin[i].s1.c1);
-        h2d[i+2*offset].y = (REAL) cimag(spin[i].s1.c1);
-        h2d[i+2*offset].z = (REAL) creal(spin[i].s1.c2);
-        h2d[i+2*offset].w = (REAL) cimag(spin[i].s1.c2);
+        h2d[i+2*offset].x = (float) creal(spin[i].s1.c1);
+        h2d[i+2*offset].y = (float) cimag(spin[i].s1.c1);
+        h2d[i+2*offset].z = (float) creal(spin[i].s1.c2);
+        h2d[i+2*offset].w = (float) cimag(spin[i].s1.c2);
         
-        h2d[i+3*offset].x = (REAL) creal(spin[i].s2.c0);
-        h2d[i+3*offset].y = (REAL) cimag(spin[i].s2.c0);
-        h2d[i+3*offset].z = (REAL) creal(spin[i].s2.c1);
-        h2d[i+3*offset].w = (REAL) cimag(spin[i].s2.c1);
+        h2d[i+3*offset].x = (float) creal(spin[i].s2.c0);
+        h2d[i+3*offset].y = (float) cimag(spin[i].s2.c0);
+        h2d[i+3*offset].z = (float) creal(spin[i].s2.c1);
+        h2d[i+3*offset].w = (float) cimag(spin[i].s2.c1);
         
-        h2d[i+4*offset].x = (REAL) creal(spin[i].s2.c2);
-        h2d[i+4*offset].y = (REAL) cimag(spin[i].s2.c2);
-        h2d[i+4*offset].z = (REAL) creal(spin[i].s3.c0);
-        h2d[i+4*offset].w = (REAL) cimag(spin[i].s3.c0);
+        h2d[i+4*offset].x = (float) creal(spin[i].s2.c2);
+        h2d[i+4*offset].y = (float) cimag(spin[i].s2.c2);
+        h2d[i+4*offset].z = (float) creal(spin[i].s3.c0);
+        h2d[i+4*offset].w = (float) cimag(spin[i].s3.c0);
         
-        h2d[i+5*offset].x = (REAL) creal(spin[i].s3.c1);
-        h2d[i+5*offset].y = (REAL) cimag(spin[i].s3.c1);
-        h2d[i+5*offset].z = (REAL) creal(spin[i].s3.c2);
-        h2d[i+5*offset].w = (REAL) cimag(spin[i].s3.c2);
+        h2d[i+5*offset].x = (float) creal(spin[i].s3.c1);
+        h2d[i+5*offset].y = (float) cimag(spin[i].s3.c1);
+        h2d[i+5*offset].z = (float) creal(spin[i].s3.c2);
+        h2d[i+5*offset].w = (float) cimag(spin[i].s3.c2);
     
   }
 }
