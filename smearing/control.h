@@ -24,7 +24,9 @@ typedef enum
   Unitary = 4,
   HEX = 5,
   Gradient = 6,
-  Jacobi = 7
+  Jacobi = 7,
+  APE_3D = 8,
+  Stout_3D = 9
 } smearing_type;
 
 extern char const * smearing_type_names[12];
