@@ -6,9 +6,6 @@ typedef struct
 {
   double rho;
   unsigned int iterations;
-
-  /* Flags */
-  int             smearing_performed;
   
   /* Result -- main output for users */
   gauge_field_t    result; /* For direct access to the result, shallow copy... */

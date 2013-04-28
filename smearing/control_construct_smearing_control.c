@@ -27,6 +27,13 @@ smearing_control_t *construct_smearing_control(smearing_type type, int calculate
       params_double[0] = va_arg(smearing_args, double);
       result->type_control = (void*)construct_ape_control(params_uint[0], params_double[0]);
       break;
+    case APE_3D:
+      if (calculate_force_terms)
+        fatal_error("APE smearing cannot be used for smearing forces (use Stout instead).", "construct_smearing_control");
+      params_uint[0] = va_arg(smearing_args, unsigned int);
+      params_double[0] = va_arg(smearing_args, double);
+      result->type_control = (void*)construct_ape_control(params_uint[0], params_double[0]);
+      break;
     case HEX:
       params_uint[0] = va_arg(smearing_args, unsigned int);
       params_double[0] = va_arg(smearing_args, double);
@@ -43,7 +50,14 @@ smearing_control_t *construct_smearing_control(smearing_type type, int calculate
       params_double[2] = va_arg(smearing_args, double);
       result->type_control = (void*)construct_hyp_control(params_uint[0], params_double[0], params_double[1], params_double[2]);
       break;
-    case Stout:
+    case Stout:      
+      params_uint[0] = va_arg(smearing_args, unsigned int);
+      params_double[0] = va_arg(smearing_args, double);
+      result->type_control = (void*)construct_stout_control(calculate_force_terms, params_uint[0], params_double[0]);
+      break;
+    case Stout_3D:
+      if (calculate_force_terms)
+        fatal_error("Spatial stout smearing is not currently implemented.", "construct_smearing_control");
       params_uint[0] = va_arg(smearing_args, unsigned int);
       params_double[0] = va_arg(smearing_args, double);
       result->type_control = (void*)construct_stout_control(calculate_force_terms, params_uint[0], params_double[0]);
