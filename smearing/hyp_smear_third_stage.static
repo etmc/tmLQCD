@@ -1,4 +1,4 @@
-static void smear_third_stage(gauge_field_t out, double const alpha_3, su3_outer *in, gauge_field_t const orig)
+static void smear_third_stage(gauge_field_t out, double const alpha_3, su3_two_index *in, gauge_field_t const orig)
 {
   su3 tmp;
   su3 staples;

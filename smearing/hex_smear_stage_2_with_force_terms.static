@@ -1,4 +1,4 @@
-static void smear_stage_2_with_force_terms(su3_outer *out, stout_notes_two_index *trace, double const alpha, su3_outer *in, gauge_field_t orig)
+static void smear_stage_2_with_force_terms(su3_two_index *out, stout_notes_two_index *trace, double const alpha, su3_two_index *in, gauge_field_t orig)
 {
   su3 ALIGN tmp;
 
@@ -40,5 +40,5 @@ static void smear_stage_2_with_force_terms(su3_outer *out, stout_notes_two_index
     }
 
 #pragma omp single
-  generic_exchange(&out, sizeof(su3_outer));
+  generic_exchange(&out, sizeof(su3_two_index));
 }

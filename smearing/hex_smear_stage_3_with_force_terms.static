@@ -1,4 +1,4 @@
-static void smear_stage_3_with_force_terms(gauge_field_t out, stout_notes_tuple *trace, double const alpha, su3_outer *in, gauge_field_t orig)
+static void smear_stage_3_with_force_terms(gauge_field_t out, stout_notes_tuple *trace, double const alpha, su3_two_index *in, gauge_field_t orig)
 {
   su3 ALIGN tmp;
   

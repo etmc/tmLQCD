@@ -3,8 +3,6 @@
 #include <smearing/stout.h>
 #include <smearing/hyp.h>
 
-typedef su3 su3_two_index[12];
-
 typedef stout_notes_t stout_notes_two_index[12];
 typedef stout_notes_t stout_notes_three_index[24];
 

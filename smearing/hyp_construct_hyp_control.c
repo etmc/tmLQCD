@@ -9,9 +9,9 @@ hyp_control *construct_hyp_control(unsigned int iterations, double const alpha_1
   control->iterations = iterations;
   control->smearing_performed = 0;
 
-  control->staples = (su3_outer**)malloc(2 * sizeof(su3_outer*));
-  control->staples[0] = aalloc(VOLUMEPLUSRAND * sizeof(su3_outer));
-  control->staples[1] = aalloc(VOLUMEPLUSRAND * sizeof(su3_outer));
+  control->staples = (su3_two_index**)malloc(2 * sizeof(su3_two_index*));
+  control->staples[0] = aalloc(VOLUMEPLUSRAND * sizeof(su3_two_index));
+  control->staples[1] = aalloc(VOLUMEPLUSRAND * sizeof(su3_two_index));
   
   control->U = (gauge_field_t*)malloc(2 * sizeof(gauge_field_t));
   control->U[1] = get_gauge_field();

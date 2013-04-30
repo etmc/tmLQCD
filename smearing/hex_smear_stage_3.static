@@ -1,4 +1,4 @@
-static void smear_stage_3(gauge_field_t out, double const alpha, su3_outer *in, gauge_field_t const orig)
+static void smear_stage_3(gauge_field_t out, double const alpha, su3_two_index *in, gauge_field_t const orig)
 {
   su3 ALIGN tmp;
   su3 ALIGN staples;
@@ -54,5 +54,5 @@ static void smear_stage_3(gauge_field_t out, double const alpha, su3_outer *in, 
     }
 
 #pragma omp single  
-  generic_exchange(&out, sizeof(su3_outer));
+  generic_exchange(&out, sizeof(su3_two_index));
 }

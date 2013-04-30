@@ -11,12 +11,12 @@ void ape_smear(ape_control *control, gauge_field_t in)
 
   double const rho_principal = 1.0 - control->rho;
   double const rho_staples = control->rho / 6.0;
-  
+
   /* start of the the stout smearing **/
   for(unsigned int iter = 0; iter < control->iterations; ++iter)
   {
     for (unsigned int x = 0; x < VOLUME; ++x)
-      for (unsigned int mu = 0; mu < 4; ++x)
+      for (unsigned int mu = 0; mu < 4; ++mu)
       {
         generic_staples(&staples, x, mu, in);
         _real_times_su3_plus_real_times_su3(buffer[x][mu], rho_principal, in[x][mu], rho_staples, staples);

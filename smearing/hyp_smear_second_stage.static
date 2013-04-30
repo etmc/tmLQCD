@@ -1,4 +1,4 @@
-static void smear_second_stage(su3_outer *out, double const alpha_2, su3_outer *in, gauge_field_t const orig)
+static void smear_second_stage(su3_two_index *out, double const alpha_2, su3_two_index *in, gauge_field_t const orig)
 {
   su3 tmp;
   su3 staples;
@@ -39,6 +39,6 @@ static void smear_second_stage(su3_outer *out, double const alpha_2, su3_outer *
     _HYP_SMEAR_COMPONENT(I1_3_2, 3, 2, 0, 1, x);
   }
 
-  generic_exchange(out, sizeof(su3_outer));
+  generic_exchange(out, sizeof(su3_two_index));
   #undef _HYP_SMEAR_COMPONENT
 }
