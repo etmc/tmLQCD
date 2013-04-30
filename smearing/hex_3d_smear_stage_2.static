@@ -1,0 +1,58 @@
+static void smear_stage_2(gauge_field_t out, double const alpha, su3_two_index *in, gauge_field_t const orig)
+{
+  su3 ALIGN tmp;
+  su3 ALIGN staples;
+
+#pragma omp for private(tmp, staples)
+  for (unsigned int x = 0; x < VOLUME; ++x)
+    for (unsigned int mu = 0; mu < 4; ++mu)
+    {
+      /* We lift from one to two indices using the permutation tables. */
+      unsigned int const nu    = hi1[mu].nu;
+      unsigned int const rho   = hi1[mu].rho;
+      unsigned int const sigma = hi1[mu].sigma;
+      
+      unsigned int const cmn   = hp1[mu].cmn;
+      unsigned int const cnm   = hp1[mu].cnm;
+      
+      unsigned int const cmr   = hp1[mu].cmr;
+      unsigned int const crm   = hp1[mu].crm;
+      
+      unsigned int const cms   = hp1[mu].cms;
+      unsigned int const csm   = hp1[mu].csm;
+      
+      unsigned int const xpm   = g_iup[x][mu];
+
+      unsigned int const xmn   = g_idn[x][nu];
+      unsigned int const xpn   = g_iup[x][nu];
+      unsigned int const xpmmn = g_idn[xpm][nu];
+      
+      unsigned int const xmr   = g_idn[x][rho];
+      unsigned int const xpr   = g_iup[x][rho];
+      unsigned int const xpmmr = g_idn[xpm][rho];
+
+      unsigned int const xms   = g_idn[x][sigma];
+      unsigned int const xps   = g_iup[x][sigma];
+      unsigned int const xpmms = g_idn[xpm][sigma];
+         
+      _su3_times_su3d(tmp, in[xpn][cmn], in[xpm][cnm]);
+      _su3_times_su3(staples, in[x][cnm], tmp);
+      _su3_times_su3(tmp, in[xmn][cmn], in[xpmmn][cnm]);
+      _su3d_times_su3_acc(staples, in[xmn][cnm], tmp);
+
+      _su3_times_su3d(tmp, in[xpr][cmr], in[xpm][crm]);
+      _su3_times_su3_acc(staples, in[x][crm], tmp);
+      _su3_times_su3(tmp, in[xmr][cmr], in[xpmmr][crm]);
+      _su3d_times_su3_acc(staples, in[xmr][crm], tmp);
+
+      _su3_times_su3d(tmp, in[xps][cms], in[xpm][csm]);
+      _su3_times_su3_acc(staples, in[x][csm], tmp);
+      _su3_times_su3(tmp, in[xms][cms], in[xpmms][csm]);
+      _su3d_times_su3_acc(staples, in[xms][csm], tmp);
+
+      fatten_links(&out[x][mu], alpha, &staples, &orig[x][mu]);
+    }
+
+#pragma omp single  
+  generic_exchange(&out, sizeof(su3_outer));
+}

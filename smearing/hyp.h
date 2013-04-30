@@ -2,7 +2,7 @@
 
 #include <buffers/gauge.h>
 
-typedef su3 su3_outer[12];
+typedef su3 su3_two_index[12];
 
 typedef struct
 {
@@ -16,7 +16,7 @@ typedef struct
   gauge_field_t    result; /* For direct access to the result, shallow copy... */
 
   /* Intermediate results, stored to enhance locality of the analysis */
-  su3_outer         **staples; /* Scratch space, available here so it is persistent */
+  su3_two_index     **staples; /* Scratch space, available here so it is persistent */
   gauge_field_t      *U;     /* The sequence of iterations gauge fields */
 } hyp_control;
 

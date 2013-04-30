@@ -57,7 +57,7 @@ smearing_control_t *construct_smearing_control(smearing_type type, int calculate
       break;
     case Stout_3D:
       if (calculate_force_terms)
-        fatal_error("Spatial stout smearing is not currently implemented.", "construct_smearing_control");
+        fatal_error("Spatial stout smearing of forces is not currently implemented.", "construct_smearing_control");
       params_uint[0] = va_arg(smearing_args, unsigned int);
       params_double[0] = va_arg(smearing_args, double);
       result->type_control = (void*)construct_stout_control(calculate_force_terms, params_uint[0], params_double[0]);

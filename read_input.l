@@ -41,7 +41,7 @@ FLT {SIGN}?{DIGIT}+(".")?{DIGIT}*(e("-"|"+")?{DIGIT}+)?
 FILENAME [a-zA-Z0-9_".""-""/"][a-zA-Z0-9"."_"-""/"]+
 NAME [a-zA-Z0-9_]+
 CSTR \"[a-zA-Z0-9\-\._]+\"
-TYPE [0-9A-Z]+
+TYPE [0-9A-Z_]+
 FLTLIST [0-9"."","" "]*
 EQL {SPC}*={SPC}*
 
@@ -369,15 +369,19 @@ EQL {SPC}*={SPC}*
 
 %x PRECONDITIONING
 
-%x SMEARING_INIT
-%x SMEARING_IDENTITY
 %x SMEARING_APE
-%x SMEARING_HYP
-%x SMEARING_STOUT
-%x SMEARING_UNITARY
-%x SMEARING_HEX
+%x SMEARING_APE_3D
 %x SMEARING_GRADIENT
+%x SMEARING_HEX
+%x SMEARING_HEX_3D
+%x SMEARING_HYP
+%x SMEARING_HYP_3D
+%x SMEARING_IDENTITY
+%x SMEARING_INIT
 %x SMEARING_JACOBI
+%x SMEARING_STOUT
+%x SMEARING_STOUT_3D
+%x SMEARING_UNITARY
 
 %%
 ^SourceFilename{EQL}               BEGIN(SOURCEFILE);
@@ -2115,13 +2119,23 @@ EQL {SPC}*={SPC}*
   if(myverbose) printf("  smearing block %d rho_3 set to %lf\n", no_smearings_declared - 1, cur_sm_dec->params[2]);
 }
 
-<SMEARING_IDENTITY>{SPC}*EndSmearing{SPC}* {
-  check_smearing_params(Identity);
+<SMEARING_APE>{SPC}*EndSmearing{SPC}* {
+  check_smearing_params(APE);
   BEGIN INITIAL;
 }
 
-<SMEARING_APE>{SPC}*EndSmearing{SPC}* {
-  check_smearing_params(APE);
+<SMEARING_APE_3D>{SPC}*EndSmearing{SPC}* {
+  check_smearing_params(APE_3D);
+  BEGIN INITIAL;
+}
+
+<SMEARING_HEX>{SPC}*EndSmearing{SPC}* {
+  check_smearing_params(HEX);
+  BEGIN INITIAL;
+}
+
+<SMEARING_HEX_3D>{SPC}*EndSmearing{SPC}* {
+  check_smearing_params(HEX_3D);
   BEGIN INITIAL;
 }
 
@@ -2130,13 +2144,23 @@ EQL {SPC}*={SPC}*
   BEGIN INITIAL;
 }
 
+<SMEARING_HYP_3D>{SPC}*EndSmearing{SPC}* {
+  check_smearing_params(HYP_3D);
+  BEGIN INITIAL;
+}
+
+<SMEARING_IDENTITY>{SPC}*EndSmearing{SPC}* {
+  check_smearing_params(Identity);
+  BEGIN INITIAL;
+}
+
 <SMEARING_STOUT>{SPC}*EndSmearing{SPC}* {
   check_smearing_params(Stout);
   BEGIN INITIAL;
 }
 
-<SMEARING_HEX>{SPC}*EndSmearing{SPC}* {
-  check_smearing_params(HEX);
+<SMEARING_STOUT_3D>{SPC}*EndSmearing{SPC}* {
+  check_smearing_params(Stout_3D);
   BEGIN INITIAL;
 }
 
