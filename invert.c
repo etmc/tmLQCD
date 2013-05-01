@@ -152,11 +152,6 @@ int main(int argc, char *argv[])
   init_openmp();
 #endif
 
-  /* Allocate needed memory */
-  initialize_gauge_buffers(12);
-  initialize_adjoint_buffers(6);
-  init_smearing();
-
   /* this DBW2 stuff is not needed for the inversion ! */
   if (g_dflgcr_flag == 1) {
     even_odd_flag = 0;
@@ -172,6 +167,11 @@ int main(int argc, char *argv[])
 
   tmlqcd_mpi_init(argc, argv);
 
+  /* Allocate needed memory */
+  initialize_gauge_buffers(12);
+  initialize_adjoint_buffers(6);
+  init_smearing(); 
+ 
   g_dbw2rand = 0;
 
   /* starts the single and double precision random number */

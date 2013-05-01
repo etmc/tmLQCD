@@ -43,9 +43,9 @@ static inline void exchange_ ## NAME ## _field(NAME ## _field_t *target)        
                                                                                                 \
 static inline void swap_ ## NAME ## _field(NAME ## _field_t *left, NAME ## _field_t *right)            \
 {                                                                                               \
-   DATATYPE *tmp = *left;                                                                       \
+   NAME ## _field_t tmp = *left;                                                                       \
    *left = *right;					 \
-   *right = tmp;                                                                                \
+   *right = tmp;                                                                              \
 }                                                                                               \
                                                                                                 \
 static inline void copy_ ## NAME ## _field(NAME ## _field_t *copy, NAME ## _field_t const original)    \
