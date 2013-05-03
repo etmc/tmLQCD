@@ -31,7 +31,10 @@ COMPILE = ${CC} ${DEFS} ${INCLUDES} ${CFLAGS} ${OPTARGS}
 
 LIBRARIES = libsmear
 
-libsmear_TARGETS = 	ape_ape_smear \
+libsmear_TARGETS = 	ape_3d_construct_control \
+			ape_3d_free_control \
+			ape_3d_smear \
+			ape_ape_smear \
 			ape_construct_ape_control \
 			ape_free_ape_control \
 			control \
@@ -48,6 +51,9 @@ libsmear_TARGETS = 	ape_ape_smear \
 			hyp_free_hyp_control \
 			hyp_hyp_smear \
 			identity_construct_identity_control \
+			stout_3d_construct_control \
+			stout_3d_free_control \
+			stout_3d_smear \
 			stout_construct_stout_control \
 			stout_free_stout_control \
 			stout_stout_smear \

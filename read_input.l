@@ -206,7 +206,9 @@ EQL {SPC}*={SPC}*
     switch (type)
     {
       case HYP:
+      case HYP_3D:
       case HEX:
+      case HEX_3D:
         if (!cur_sm_dec->set[4])
         {
           sprintf(error_string, "Smearing parameter 'rho_3' missing in input file for smearing id %d!", cur_sm_dec->id);
@@ -223,7 +225,9 @@ EQL {SPC}*={SPC}*
           fatal_error(error_string, "check_smearing_params");
         }
       case APE:
+      case APE_3D:
       case Stout:
+      case Stout_3D:
         if (!cur_sm_dec->set[2])
         {
           sprintf(error_string, "Smearing parameter 'rho' missing in input file for smearing id %d!", cur_sm_dec->id);

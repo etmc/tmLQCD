@@ -16,12 +16,15 @@ void ape_3d_smear(ape_3d_control *control, gauge_field_t in)
   for(unsigned int iter = 0; iter < control->iterations; ++iter)
   {
     for (unsigned int x = 0; x < VOLUME; ++x)
+    {
+      _su3_assign(buffer[x][0], in[x][0]); // Left untouched, but still needed for future calculations!
       for (unsigned int mu = 1; mu < 4; ++x)
       {
         generic_staples_3d(&staples, x, mu, in);
         _real_times_su3_plus_real_times_su3(buffer[x][mu], rho_principal, in[x][mu], rho_staples, staples);
         reunitarize(&buffer[x][mu]);
       }
+    }
 
     /* Prepare for the next iteration -- the last result is now input! */
     swap_gauge_field(&control->U[1], &buffer);

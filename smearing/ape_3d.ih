@@ -19,7 +19,7 @@
 
 #include <fatal_error.h>
 
-#include <smearing/ape3d.h>
+#include <smearing/ape_3d.h>
 #include <smearing/utils.h>
 #include <buffers/gauge.h>
 #include <buffers/utils.h>

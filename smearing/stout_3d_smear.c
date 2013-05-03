@@ -18,11 +18,14 @@ void stout_3d_smear(stout_3d_control *control, gauge_field_t in)
   {
 #pragma omp for
     for (unsigned int x = 0; x < VOLUME; ++x)
+    {
+      _su3_assign(buffer[x][0], in[x][0]); // Left untouched, but still needed for future calculations!
       for (unsigned int mu = 1; mu < 4; ++mu)
       {
         generic_staples_3d(&staples, x, mu, in);
         fatten_links(&buffer[x][mu], control->rho, &staples, &in[x][mu]);
       }
+    }
     /* Prepare for the next iteration, swap and exchange fields */
     /* There should be an implicit OMP barrier here */
 #pragma omp single
