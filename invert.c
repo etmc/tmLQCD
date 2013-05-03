@@ -426,65 +426,64 @@ int main(int argc, char *argv[])
 
       if (g_cart_id == 0)
       {
-        printf("# After smearing type %d, the plaquette value is %e.\n", stype, new_plaquette / (6.*VOLUME*g_nproc));
+        printf("# After smearing of type %s (id %d), the plaquette value is %e.\n", smearing_type_names[smearing_control_operator[stype]->type], 
+                                                                                    smearing_control_operator[stype]->id, new_plaquette / (6.*VOLUME*g_nproc));
         fflush(stdout);
       }
-
-      ohnohack_remap_g_gauge_field(smearing_control_operator[stype]->result);
+    }  
        
-      for(op_id = 0; op_id < no_operators; op_id++)
-      {
-        if (operator_list[op_id].smearing != stype)
-        {
-          continue; /* Only interested in one smearing type right now. */
-        }
-        boundary(operator_list[op_id].kappa);
-        g_kappa = operator_list[op_id].kappa; 
-        g_mu = 0.;
+    for(op_id = 0; op_id < no_operators; op_id++)
+    {
+      ohnohack_remap_g_gauge_field(smearing_control_operator[operator_list[op_id].smearing]->result);
 
-        if(use_preconditioning==1 && PRECWSOPERATORSELECT[operator_list[op_id].solver]!=PRECWS_NO ){
-          printf("# Using preconditioning with treelevel preconditioning operator: %s \n",
-                precWSOpToString(PRECWSOPERATORSELECT[operator_list[op_id].solver]));
-          /* initial preconditioning workspace */
-          operator_list[op_id].precWS=(spinorPrecWS*)malloc(sizeof(spinorPrecWS));
-          spinorPrecWS_Init(operator_list[op_id].precWS,
-                    operator_list[op_id].kappa,
-                    operator_list[op_id].mu/2./operator_list[op_id].kappa,
-                    -(0.5/operator_list[op_id].kappa-4.),
-                    PRECWSOPERATORSELECT[operator_list[op_id].solver]);
-          g_precWS = operator_list[op_id].precWS;
+      boundary(operator_list[op_id].kappa);
+      g_kappa = operator_list[op_id].kappa; 
+      g_mu = 0.;
 
-          if(PRECWSOPERATORSELECT[operator_list[op_id].solver] == PRECWS_D_DAGGER_D) {
-            fitPrecParams(op_id);
-          }
-        }
+      if(use_preconditioning==1 && PRECWSOPERATORSELECT[operator_list[op_id].solver]!=PRECWS_NO ){
+        printf("# Using preconditioning with treelevel preconditioning operator: %s \n",
+              precWSOpToString(PRECWSOPERATORSELECT[operator_list[op_id].solver]));
+              
+        /* initial preconditioning workspace */
+        operator_list[op_id].precWS=(spinorPrecWS*)malloc(sizeof(spinorPrecWS));
+        spinorPrecWS_Init(operator_list[op_id].precWS,
+                  operator_list[op_id].kappa,
+                  operator_list[op_id].mu/2./operator_list[op_id].kappa,
+                  -(0.5/operator_list[op_id].kappa-4.),
+                  PRECWSOPERATORSELECT[operator_list[op_id].solver]);
+        g_precWS = operator_list[op_id].precWS;
 
-        for(isample = 0; isample < no_samples; isample++) {
-          for (ix = index_start; ix < index_end; ix++) {
-            if (g_cart_id == 0) {
-              fprintf(stdout, "#\n"); /*Indicate starting of new index*/
-            }
-            /* we use g_spinor_field[0-7] for sources and props for the moment */
-            /* 0-3 in case of 1 flavour  */
-            /* 0-7 in case of 2 flavours */
-            prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location);
-            operator_list[op_id].inverter(op_id, index_start, 1);
-          }
-        }
-
-
-        if(use_preconditioning==1 && operator_list[op_id].precWS!=NULL ){
-          /* free preconditioning workspace */
-          spinorPrecWS_Free(operator_list[op_id].precWS);
-          free(operator_list[op_id].precWS);
-        }
-
-        if(operator_list[op_id].type == OVERLAP){
-          free_Dov_WS();
+        if(PRECWSOPERATORSELECT[operator_list[op_id].solver] == PRECWS_D_DAGGER_D) {
+          fitPrecParams(op_id);
         }
       }
-      ohnohack_remap_g_gauge_field(g_gf);
+
+      for(isample = 0; isample < no_samples; isample++) {
+        for (ix = index_start; ix < index_end; ix++) {
+          if (g_cart_id == 0) {
+            fprintf(stdout, "#\n"); /*Indicate starting of new index*/
+          }
+          /* we use g_spinor_field[0-7] for sources and props for the moment */
+          /* 0-3 in case of 1 flavour  */
+          /* 0-7 in case of 2 flavours */
+          prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location);
+          operator_list[op_id].inverter(op_id, index_start, 1);
+        }
+      }
+
+
+      if(use_preconditioning==1 && operator_list[op_id].precWS!=NULL ){
+        /* free preconditioning workspace */
+        spinorPrecWS_Free(operator_list[op_id].precWS);
+        free(operator_list[op_id].precWS);
+      }
+
+      if(operator_list[op_id].type == OVERLAP){
+        free_Dov_WS();
+      }
     }
+    ohnohack_remap_g_gauge_field(g_gf);
+
     nstore += Nsave;
   }
 

@@ -27,6 +27,8 @@ typedef enum
   Jacobi = 7
 } smearing_type;
 
+extern char const * smearing_type_names[12];
+
 typedef struct
 {
     smearing_type type;
