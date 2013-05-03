@@ -1,6 +1,6 @@
 #include "stout_3d.ih"
 
-#include "stout_smear_plain.static"
+#include "stout_fatten_links.static"
 
 void stout_3d_smear(stout_3d_control *control, gauge_field_t in)
 {

@@ -62,6 +62,7 @@ libsmear_TARGETS = 	ape_3d_construct_control \
 			utils_calculate_forces_numerically \
 			utils_fold_field \
 			utils_generic_staples \
+			utils_generic_staples_3d \
 			utils_print_config_to_screen \
 			utils_print_su3 \
 			utils_print_su3adj \
