@@ -422,6 +422,7 @@ int main(int argc, char *argv[])
     for (int stype = 0; stype < no_smearings_operator; ++stype)
     {
       smear(smearing_control_operator[stype], g_gf);
+      g_update_gauge_energy = 1;
       double new_plaquette = measure_gauge_action(smearing_control_operator[stype]->result);
 
       if (g_cart_id == 0)

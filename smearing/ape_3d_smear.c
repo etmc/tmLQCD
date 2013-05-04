@@ -18,7 +18,7 @@ void ape_3d_smear(ape_3d_control *control, gauge_field_t in)
     for (unsigned int x = 0; x < VOLUME; ++x)
     {
       _su3_assign(buffer[x][0], in[x][0]); // Left untouched, but still needed for future calculations!
-      for (unsigned int mu = 1; mu < 4; ++x)
+      for (unsigned int mu = 1; mu < 4; ++mu)
       {
         generic_staples_3d(&staples, x, mu, in);
         _real_times_su3_plus_real_times_su3(buffer[x][mu], rho_principal, in[x][mu], rho_staples, staples);
