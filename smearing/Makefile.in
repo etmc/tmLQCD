@@ -47,6 +47,9 @@ libsmear_TARGETS = 	ape_3d_construct_control \
 			hex_free_hex_control \
 			hex_hex_smear \
 			hex_hex_smear_forces \
+			hex_3d_construct_control \
+			hex_3d_free_control \
+			hex_3d_smear \
 			hyp_construct_hyp_control \
 			hyp_free_hyp_control \
 			hyp_hyp_smear \

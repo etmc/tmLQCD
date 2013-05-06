@@ -17,4 +17,6 @@ static void smear_plain(hex_control *control, gauge_field_t in)
 #pragma omp single
     in = control->U[1]; /* Shallow copy intended */
   }
+  
+  control->result = control->U[1];
 }

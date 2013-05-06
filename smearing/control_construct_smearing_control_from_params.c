@@ -15,13 +15,14 @@ smearing_control_t *construct_smearing_control_from_params(smearing_params_t con
         fatal_error("Spatial stouting for the HMC algorithm has not yet been implemented.", "construct_smearing_control");      
     case Stout:
       return construct_smearing_control(params->type, calculate_force_terms, params->iterations, params->params[0]);
-    case HYP:
     case HYP_3D:
       if (calculate_force_terms)
         fatal_error("HYP smearing cannot be used for smearing forces (use HEX instead).", "construct_smearing_control");
     case HEX_3D:
       if (calculate_force_terms)
         fatal_error("Spatial HEX smearing for the HMC algorithm has not yet been implemented.", "construct_smearing_control");            
+      return construct_smearing_control(params->type, calculate_force_terms, params->iterations, params->params[0], params->params[1]);
+    case HYP:
     case HEX:
       return construct_smearing_control(params->type, calculate_force_terms, params->iterations, params->params[0], params->params[1], params->params[2]);
     default:

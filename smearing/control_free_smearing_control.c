@@ -25,6 +25,9 @@ void free_smearing_control(smearing_control_t *control)
     case HEX:
       free_hex_control((hex_control*)(control->type_control));
       break;
+    case HEX_3D:
+      free_hex_3d_control((hex_3d_control*)(control->type_control));
+      break;
     default:
       fatal_error("Freeing of smearing type not implemented.", "free_smearing_control");
   }

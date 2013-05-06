@@ -15,5 +15,6 @@ void hyp_smear(hyp_control *control, gauge_field_t in)
     smear_third_stage(control->U[1], control->alpha[2], control->staples[1], in);
     in = control->U[1];
   }
-  control->smearing_performed = 1;
+  
+  control->result = control->U[1];
 }

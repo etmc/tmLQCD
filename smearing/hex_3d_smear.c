@@ -1,5 +1,6 @@
 #include "hex_3d.ih"
 
+#include "stout_fatten_links.static"
 #include "hex_3d_smear_stage_1.static"
 #include "hex_3d_smear_stage_2.static"
 
@@ -16,4 +17,6 @@ void hex_3d_smear(hex_3d_control *control, gauge_field_t in)
 #pragma omp single
     in = control->U[1]; /* Shallow copy intended */
   }
+  
+  control->result = control->U[1];
 }

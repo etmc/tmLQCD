@@ -2006,7 +2006,7 @@ EQL {SPC}*={SPC}*
   BEGIN(comment_caller);
 }
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,SMEARING_IDENTITY,SMEARING_APE,SMEARING_APE_3D,SMEARING_HYP,SMEARING_STOUT,SMEARING_STOUT_3D,SMEARING_UNITARY,SMEARING_HEX,SMEARING_GRADIENT,SMEARING_JACOBI>{SPC}*\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,SMEARING_IDENTITY,SMEARING_APE,SMEARING_APE_3D,SMEARING_HYP,SMEARING_STOUT,SMEARING_STOUT_3D,SMEARING_UNITARY,SMEARING_HEX,SMEARING_HEX_3D,SMEARING_GRADIENT,SMEARING_JACOBI>{SPC}*\n   {
   line_of_file++;
 }
 <*>{SPC}*\n                       {
@@ -2038,35 +2038,40 @@ EQL {SPC}*={SPC}*
     cur_sm_dec->type = Identity;
     BEGIN SMEARING_IDENTITY;
   }
-  else if (!strcmp(yytext, "APE"))
-  {
-    cur_sm_dec->type = APE;
-    BEGIN SMEARING_APE;
-  }
   else if (!strcmp(yytext, "APE_3D"))
   {
     cur_sm_dec->type = APE_3D;
     BEGIN SMEARING_APE_3D;
+  }
+  else if (!strcmp(yytext, "APE"))
+  {
+    cur_sm_dec->type = APE;
+    BEGIN SMEARING_APE;
   }
   else if (!strcmp(yytext, "HYP"))
   {
     cur_sm_dec->type = HYP;
     BEGIN SMEARING_HYP;
   }
-  else if (!strcmp(yytext, "STOUT"))
-  {
-    cur_sm_dec->type = Stout;
-    BEGIN SMEARING_STOUT;
-  }
   else if (!strcmp(yytext, "STOUT_3D"))
   {
     cur_sm_dec->type = Stout_3D;
     BEGIN SMEARING_STOUT_3D;
   }
+  else if (!strcmp(yytext, "STOUT"))
+  {
+    cur_sm_dec->type = Stout;
+    BEGIN SMEARING_STOUT;
+  }
   else if (!strcmp(yytext, "UNITARY"))
   {
     cur_sm_dec->type = Unitary;
     BEGIN SMEARING_UNITARY;
+  }
+  else if (!strcmp(yytext, "HEX_3D"))
+  {
+    cur_sm_dec->type = HEX_3D;
+    BEGIN SMEARING_HEX_3D;
   }
   else if (!strcmp(yytext, "HEX"))
   {
@@ -2085,7 +2090,7 @@ EQL {SPC}*={SPC}*
   }
 }
 
-<SMEARING_IDENTITY,SMEARING_APE,SMEARING_APE_3D,SMEARING_HYP,SMEARING_STOUT,SMEARING_STOUT_3D,SMEARING_UNITARY,SMEARING_HEX,SMEARING_GRADIENT,SMEARING_JACOBI>{SPC}*id{EQL}[[:digit:]]+ {
+<SMEARING_IDENTITY,SMEARING_APE,SMEARING_APE_3D,SMEARING_HYP,SMEARING_STOUT,SMEARING_STOUT_3D,SMEARING_UNITARY,SMEARING_HEX,SMEARING_HEX_3D,SMEARING_GRADIENT,SMEARING_JACOBI>{SPC}*id{EQL}[[:digit:]]+ {
   sscanf(yytext, "%*[^=]= %d", &cur_sm_dec->id);
   if (cur_sm_dec->id == 0)
     fatal_error("The id 0 is reserved for default identity smearing and should not be used elsewhere!", "read_input");
@@ -2093,7 +2098,7 @@ EQL {SPC}*={SPC}*
   if(myverbose) printf("  smearing block %d configured to use smearing id %d\n", no_smearings_declared - 1, cur_sm_dec->id);
 }
 
-<SMEARING_IDENTITY,SMEARING_APE,SMEARING_APE_3D,SMEARING_HYP,SMEARING_STOUT,SMEARING_STOUT_3D,SMEARING_UNITARY,SMEARING_HEX,SMEARING_GRADIENT,SMEARING_JACOBI>{SPC}*iterations{EQL}[[:digit:]]+ {
+<SMEARING_IDENTITY,SMEARING_APE,SMEARING_APE_3D,SMEARING_HYP,SMEARING_STOUT,SMEARING_STOUT_3D,SMEARING_UNITARY,SMEARING_HEX,SMEARING_HEX_3D,SMEARING_GRADIENT,SMEARING_JACOBI>{SPC}*iterations{EQL}[[:digit:]]+ {
   sscanf(yytext, "%*[^=]= %u", &cur_sm_dec->iterations);
   cur_sm_dec->set[1] = 1;
   if(myverbose) printf("  smearing block %d number of iterations set to %u\n", no_smearings_declared - 1, cur_sm_dec->iterations);
@@ -2105,19 +2110,19 @@ EQL {SPC}*={SPC}*
   if(myverbose) printf("  smearing block %d rho set to %lf\n", no_smearings_declared - 1, cur_sm_dec->params[0]);
 }
 
-<SMEARING_HEX,SMEARING_HYP>{SPC}*rho_1{EQL}{FLT} {
+<SMEARING_HEX,SMEARING_HEX_3D,SMEARING_HYP>{SPC}*rho_1{EQL}{FLT} {
   sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[0]);
   cur_sm_dec->set[2] = 1;
   if(myverbose) printf("  smearing block %d rho_1 set to %lf\n", no_smearings_declared - 1, cur_sm_dec->params[0]);
 }
 
-<SMEARING_HEX,SMEARING_HYP>{SPC}*rho_2{EQL}{FLT} {
+<SMEARING_HEX,SMEARING_HEX_3D,SMEARING_HYP>{SPC}*rho_2{EQL}{FLT} {
   sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[1]);
   cur_sm_dec->set[3] = 1;
   if(myverbose) printf("  smearing block %d rho_2 set to %lf\n", no_smearings_declared - 1, cur_sm_dec->params[1]);
 }
 
-<SMEARING_HEX,SMEARING_HYP>{SPC}*rho_3{EQL}{FLT} {
+<SMEARING_HEX,SMEARING_HEX_3D,SMEARING_HYP>{SPC}*rho_3{EQL}{FLT} {
   sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[2]);
   cur_sm_dec->set[4] = 1;
   if(myverbose) printf("  smearing block %d rho_3 set to %lf\n", no_smearings_declared - 1, cur_sm_dec->params[2]);
@@ -2133,13 +2138,13 @@ EQL {SPC}*={SPC}*
   BEGIN INITIAL;
 }
 
-<SMEARING_HEX>{SPC}*EndSmearing{SPC}* {
-  check_smearing_params(HEX);
+<SMEARING_HEX_3D>{SPC}*EndSmearing{SPC}* {
+  check_smearing_params(HEX_3D);
   BEGIN INITIAL;
 }
 
-<SMEARING_HEX_3D>{SPC}*EndSmearing{SPC}* {
-  check_smearing_params(HEX_3D);
+<SMEARING_HEX>{SPC}*EndSmearing{SPC}* {
+  check_smearing_params(HEX);
   BEGIN INITIAL;
 }
 

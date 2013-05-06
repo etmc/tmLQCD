@@ -9,9 +9,6 @@ typedef struct
   double alpha[3];
   unsigned int iterations;
 
-  /* Flags */
-  int             smearing_performed;
-
   /* Result -- main output for users */
   gauge_field_t    result; /* For direct access to the result, shallow copy... */
 

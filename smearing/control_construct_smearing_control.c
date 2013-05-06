@@ -41,6 +41,13 @@ smearing_control_t *construct_smearing_control(smearing_type type, int calculate
       params_double[2] = va_arg(smearing_args, double);
       result->type_control = (void*)construct_hex_control(calculate_force_terms, params_uint[0], params_double[0], params_double[1], params_double[2]);
       break;
+    case HEX_3D:
+      params_uint[0] = va_arg(smearing_args, unsigned int);
+      params_double[0] = va_arg(smearing_args, double);
+      params_double[1] = va_arg(smearing_args, double);
+      params_double[2] = va_arg(smearing_args, double);
+      result->type_control = (void*)construct_hex_3d_control(params_uint[0], params_double[0], params_double[1]);
+      break;
     case HYP:
       if (calculate_force_terms)
         fatal_error("HYP smearing cannot be used for smearing forces (use HEX instead).", "construct_smearing_control");
