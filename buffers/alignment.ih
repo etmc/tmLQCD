@@ -2,6 +2,7 @@
 # include<config.h>
 #endif
 
+#include <string.h>
 #include <fatal_error.h>
 
 #include <buffers/alignment.h>

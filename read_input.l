@@ -205,15 +205,15 @@ EQL {SPC}*={SPC}*
 
     switch (type)
     {
-      case HYP:
-      case HYP_3D:
       case HEX:
-      case HEX_3D:
+      case HYP:
         if (!cur_sm_dec->set[4])
         {
           sprintf(error_string, "Smearing parameter 'rho_3' missing in input file for smearing id %d!", cur_sm_dec->id);
           fatal_error(error_string, "check_smearing_params");
         }
+      case HEX_3D:
+      case HYP_3D:
         if (!cur_sm_dec->set[3])
         {
           sprintf(error_string, "Smearing parameter 'rho_2' missing in input file for smearing id %d!", cur_sm_dec->id);
@@ -2122,7 +2122,7 @@ EQL {SPC}*={SPC}*
   if(myverbose) printf("  smearing block %d rho_2 set to %lf\n", no_smearings_declared - 1, cur_sm_dec->params[1]);
 }
 
-<SMEARING_HEX,SMEARING_HEX_3D,SMEARING_HYP>{SPC}*rho_3{EQL}{FLT} {
+<SMEARING_HEX,SMEARING_HYP>{SPC}*rho_3{EQL}{FLT} {
   sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[2]);
   cur_sm_dec->set[4] = 1;
   if(myverbose) printf("  smearing block %d rho_3 set to %lf\n", no_smearings_declared - 1, cur_sm_dec->params[2]);

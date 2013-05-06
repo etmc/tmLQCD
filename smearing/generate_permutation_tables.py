@@ -231,7 +231,7 @@ with open("hex_3d.ih", "w") as header_file:
   header_file.write('#include <time.h>\n')
   header_file.write('#include <errno.h>\n\n')
 
-    header_file.write('#include <global.h>\n')
+  header_file.write('#include <global.h>\n')
   header_file.write('#include <su3adj.h>\n')
   header_file.write('#include <expo.h>\n')
   header_file.write('#include <ranlxd.h>\n')

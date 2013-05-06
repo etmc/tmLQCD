@@ -43,5 +43,6 @@ void smear(smearing_control_t *control, gauge_field_t in)
     default:
       fatal_error("Smearing type not implemented.", "smear");
   }
+  
   control->smearing_performed = 1;
 }

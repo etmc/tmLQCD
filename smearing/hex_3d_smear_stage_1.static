@@ -7,13 +7,13 @@ static void smear_stage_1(su3_two_index *out, double const alpha, gauge_field_t 
   for (unsigned int x = 0; x < VOLUME; ++x)
     for (unsigned int comp = 0; comp < 6; ++comp)
     {
-      int const mu  = hi2_3d[comp].mu;      
-      int const rho = hi2_3d[comp].rho;
+      unsigned int const mu    = hi2_3d[comp].mu;      
+      unsigned int const rho   = hi2_3d[comp].rho;
 
-      int const xpm = g_iup[x][mu];
-      int const xpr = g_iup[x][rho];
-      int const xmr = g_idn[x][rho];
-      int const xpmmr = g_idn[xpm][rho];
+      unsigned int const xpm   = g_iup[x][mu];
+      unsigned int const xpr   = g_iup[x][rho];
+      unsigned int const xmr   = g_idn[x][rho];
+      unsigned int const xpmmr = g_idn[xpm][rho];
 
       _su3_times_su3d(tmp, orig[xpr][mu], orig[xpm][rho]);
       _su3_times_su3(staples, orig[x][rho], tmp);

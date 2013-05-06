@@ -5,17 +5,20 @@ static void smear_stage_2(gauge_field_t out, double const alpha, su3_two_index *
 
 #pragma omp for private(tmp, staples)
   for (unsigned int x = 0; x < VOLUME; ++x)
-    for (unsigned int mu = 0; mu < 4; ++mu)
+  {
+    memmove(out[x], orig[x], sizeof(su3));
+    for (unsigned int comp = 0; comp < 3; ++comp)
     {
-      /* We lift from one to two indices using the permutation tables. */
-      unsigned int const nu    = hi1_3d[mu].nu;
-      unsigned int const rho   = hi1_3d[mu].rho;
-      
-      unsigned int const cmn   = hp1_3d[mu].cmn;
-      unsigned int const cnm   = hp1_3d[mu].cnm;
-      
-      unsigned int const cmr   = hp1_3d[mu].cmr;
-      unsigned int const crm   = hp1_3d[mu].crm;
+      unsigned int const mu    = hi1_3d[comp].mu;
+      unsigned int const nu    = hi1_3d[comp].nu;
+      unsigned int const rho   = hi1_3d[comp].rho;
+
+      /* We lift from one to two indices using the permutation tables. */      
+      unsigned int const cmn   = hp1_3d[comp].cmn;
+      unsigned int const cnm   = hp1_3d[comp].cnm;
+
+      unsigned int const cmr   = hp1_3d[comp].cmr;
+      unsigned int const crm   = hp1_3d[comp].crm;
       
       unsigned int const xpm   = g_iup[x][mu];
 
@@ -39,7 +42,8 @@ static void smear_stage_2(gauge_field_t out, double const alpha, su3_two_index *
 
       fatten_links(&out[x][mu], alpha, &staples, &orig[x][mu]);
     }
-
+  }
+  
 #pragma omp single  
-  generic_exchange(&out, sizeof(su3_two_index));
+  generic_exchange(&out, sizeof(su3_tuple));
 }

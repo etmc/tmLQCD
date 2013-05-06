@@ -9,6 +9,8 @@ hex_control *construct_hex_control(int calculate_force_terms, unsigned int itera
   control->iterations = iterations;
   control->calculate_force_terms = calculate_force_terms;
   
+  control->result = NULL; /* A shallow copy, just putting the reference in place. */
+  
   /* We can keep this quite simple if we don't need any forces anyway. */
   if (!calculate_force_terms)
   {
@@ -50,7 +52,6 @@ hex_control *construct_hex_control(int calculate_force_terms, unsigned int itera
     control->U[iter + 1]          = get_gauge_field();
   }
   
-  control->result = control->U[iterations]; /* A shallow copy, just putting the reference in place. */
   control->force_result = get_adjoint_field();
   
   return control;

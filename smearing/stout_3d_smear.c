@@ -9,7 +9,7 @@ void stout_3d_smear(stout_3d_control *control, gauge_field_t in)
    * and need a separate input and output. Since the result of one iteration becomes 
    * the input of the next, that means we'll actually need an additional field of 
    * buffer space. */
-  gauge_field_t buffer = get_gauge_field();
+  gauge_field_t buffer = get_gauge_field_annotated("STOUT 3D BUFFER");
 
   control->U[0] = in; /* Shallow copy intended */
   
@@ -30,11 +30,12 @@ void stout_3d_smear(stout_3d_control *control, gauge_field_t in)
     /* There should be an implicit OMP barrier here */
 #pragma omp single
     {
-      swap_gauge_field(&control->result, &buffer);
-
-      exchange_gauge_field(&control->result); /* The edge terms will have changed by now */
-      in = control->result; /* Shallow copy intended */
+      swap_gauge_field(&control->U[1], &buffer);
+      exchange_gauge_field(&control->U[1]); /* The edge terms will have changed by now */
+      in = control->U[1]; /* Shallow copy intended */
     }
   }
-  return_gauge_field(&buffer); 
+  
+  control->result = control->U[1];
+  return_gauge_field(&buffer);
 }

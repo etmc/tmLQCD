@@ -3,7 +3,7 @@
 #include <smearing/stout.h>
 #include <smearing/hyp.h>
 
-typedef su3 su3_two_index[12];
+typedef su3 su3_two_index_3d[6];
 
 typedef struct
 { 
@@ -12,8 +12,7 @@ typedef struct
   unsigned int    iterations;
   
   /* Intermediate results, stored to enhance locality of the analysis */
-  gauge_field_t  *U;       /* The sequence of iterations gauge fields */
-   
+  gauge_field_t  *U; /* The sequence of iterations gauge fields */
   su3_two_index  *V;
   
   /* Final results -- the first is a shallow copy */

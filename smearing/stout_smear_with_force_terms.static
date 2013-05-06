@@ -17,4 +17,6 @@ static void smear_with_force_terms(stout_control *control, gauge_field_t in)
 #pragma omp single
     exchange_gauge_field(&control->U[iter + 1]);
   }
+  
+  control->result = control->U[control->iterations];
 }

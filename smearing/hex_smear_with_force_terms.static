@@ -15,5 +15,5 @@ static void smear_with_force_terms(hex_control *control, gauge_field_t in)
     smear_stage_3_with_force_terms(control->U[iter + 1],     control->trace_stage_3[iter], control->alpha[2], control->V_stage_2[iter], control->U[iter]);
   }
   
-  control->result = control->U[1];
+  control->result = control->U[control->iterations];
 }

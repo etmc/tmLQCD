@@ -297,7 +297,7 @@ int main(int argc, char *argv[])
 #ifdef MPI
     xchange_gauge(g_gauge_field);
 #endif
-
+   
     /*compute the energy of the gauge field*/
     plaquette_energy = measure_gauge_action(_AS_GAUGE_FIELD_T(g_gauge_field));
 
@@ -416,7 +416,7 @@ int main(int argc, char *argv[])
     if (g_cart_id == 0) {
       fprintf(stdout, "#\n"); /*Indicate starting of the operator part*/
     }
-    
+
     /* We will aggregate the operators by smearing type, to avoid performing
        the same smearing operation multiple times. */
     for (int stype = 0; stype < no_smearings_operator; ++stype)

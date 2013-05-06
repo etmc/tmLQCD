@@ -2,7 +2,7 @@
 
 int allocation_id_ctr = 0;
 
-void *aalloc(size_t const bytes)
+void *aalloc_annotated(size_t const bytes, char const *note)
 {
   void *raw = malloc(sizeof(void*) + ALIGN_BASE + sizeof(meta_data_t) + bytes);
 
@@ -15,6 +15,7 @@ void *aalloc(size_t const bytes)
   meta_data_t *meta_data = (meta_data_t*)raw;
   meta_data->bytes = bytes;
   meta_data->id = allocation_id_ctr++;
-  strncpy(meta_data->note, "NONE", 4);
+  strncpy(meta_data->note, note, 255);
+  meta_data->note[255] = '\0';
   return (void*)ptr;
 }

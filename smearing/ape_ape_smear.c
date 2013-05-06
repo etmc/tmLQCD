@@ -28,7 +28,8 @@ void ape_smear(ape_control *control, gauge_field_t in)
     exchange_gauge_field(&control->U[1]);
     in = control->U[1];
   }
-  control->smearing_performed = 1;
+
   control->result = control->U[1];
+  
   return_gauge_field(&buffer);
 }
