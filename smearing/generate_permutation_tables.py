@@ -92,6 +92,29 @@ for seq in i3:
   d3.append(plist)
 
 with open("hex.ih", "w") as header_file:
+  header_file.write('#ifdef HAVE_CONFIG_H\n')
+  header_file.write('# include <config.h>\n')
+  header_file.write('#endif\n\n')
+
+  header_file.write('#include <stdio.h>\n')
+  header_file.write('#include <math.h>\n')
+  header_file.write('#include <time.h>\n')
+  header_file.write('#include <errno.h>\n\n')
+
+  header_file.write('#include <global.h>\n')
+  header_file.write('#include <su3adj.h>\n')
+  header_file.write('#include <expo.h>\n')
+  header_file.write('#include <ranlxd.h>\n')
+  header_file.write('#include <sse.h>\n')
+  header_file.write('#include <get_staples.h>\n')
+  header_file.write('#include <xchange/xchange_gauge.h>\n')
+  header_file.write('#include <xchange/xchange.h>\n')
+  header_file.write('#include <io/gauge.h>\n')
+  header_file.write('#include <update_backward_gauge.h>\n')
+  header_file.write('#include <fatal_error.h>\n\n')
+  
+  header_file.write('#include <smearing/hex.h>\n\n')
+  
   header_file.write('typedef struct\n')
   header_file.write('{\n')
   for st in ['mu', 'nu', 'rho', 'sigma']:
@@ -198,7 +221,30 @@ for seq in i2:
           break
   d2.append(plist)
   
-with open("hex_3d.ih", "w") as header_file:
+with open("hex_3d.ih", "w") as header_file: 
+  header_file.write('#ifdef HAVE_CONFIG_H\n')
+  header_file.write('# include <config.h>\n')
+  header_file.write('#endif\n\n')
+
+  header_file.write('#include <stdio.h>\n')
+  header_file.write('#include <math.h>\n')
+  header_file.write('#include <time.h>\n')
+  header_file.write('#include <errno.h>\n\n')
+
+    header_file.write('#include <global.h>\n')
+  header_file.write('#include <su3adj.h>\n')
+  header_file.write('#include <expo.h>\n')
+  header_file.write('#include <ranlxd.h>\n')
+  header_file.write('#include <sse.h>\n')
+  header_file.write('#include <get_staples.h>\n')
+  header_file.write('#include <xchange/xchange_gauge.h>\n')
+  header_file.write('#include <xchange/xchange.h>\n')
+  header_file.write('#include <io/gauge.h>\n')
+  header_file.write('#include <update_backward_gauge.h>\n')
+  header_file.write('#include <fatal_error.h>\n\n')
+
+  header_file.write('#include <smearing/hex_3d.h>\n\n')
+  
   header_file.write('typedef struct\n')
   header_file.write('{\n')
   for st in ['mu', 'nu', 'rho']:

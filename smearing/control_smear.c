@@ -36,10 +36,10 @@ void smear(smearing_control_t *control, gauge_field_t in)
       hex_smear((hex_control*)control->type_control, in);
       control->result = ((hex_control*)control->type_control)->result;
       break;
-//     case HEX_3D:
-//       hex_3d_smear((hex_3d_control*)control->type_control, in);
-//       control->result = ((hex_3d_control*)control->type_control)->result;
-//       break;
+    case HEX_3D:
+      hex_3d_smear((hex_3d_control*)control->type_control, in);
+      control->result = ((hex_3d_control*)control->type_control)->result;
+      break;
     default:
       fatal_error("Smearing type not implemented.", "smear");
   }
