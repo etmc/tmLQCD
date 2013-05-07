@@ -1,4 +1,4 @@
-static void smear_stage_1_with_force_terms(su3_two_index *out, stout_notes_three_index *trace, double const coef, gauge_field_t orig)
+static void smear_stage_1_with_force_terms(su3_two_index *out, stout_notes_three_index *trace, double const coeff, gauge_field_t orig)
 {
   su3 ALIGN tmp;
 
@@ -24,7 +24,7 @@ static void smear_stage_1_with_force_terms(su3_two_index *out, stout_notes_three
       _su3_times_su3(trace[x][cmnr].C, orig[x][sigma], tmp);
       _su3_times_su3(tmp, orig[xms][mu], orig[xpmms][sigma]);
       _su3d_times_su3_acc(trace[x][cmnr].C, orig[xms][sigma], tmp);
-      fatten_links_with_force_terms(&out[x][comp], &trace[x][cmnr], coef, &orig[x][mu]);
+      fatten_links_with_force_terms(&out[x][comp], &trace[x][cmnr], coeff, &orig[x][mu]);
       
       memmove(&trace[x][cmrn], &trace[x][cmnr], sizeof(stout_notes_t));
     }

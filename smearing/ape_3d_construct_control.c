@@ -1,9 +1,9 @@
 #include "ape_3d.ih"
 
-ape_3d_control *construct_ape_3d_control(unsigned int iterations, double coef)
+ape_3d_control *construct_ape_3d_control(unsigned int iterations, double coeff)
 {
   ape_3d_control *control = (ape_3d_control*)malloc(sizeof(ape_3d_control));
-  control->coef = coef;
+  control->coeff = coeff;
   control->iterations = iterations;
   control->result = NULL;
 

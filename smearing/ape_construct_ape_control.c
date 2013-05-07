@@ -1,9 +1,9 @@
 #include "ape.ih"
 
-ape_control *construct_ape_control(unsigned int iterations, double coef)
+ape_control *construct_ape_control(unsigned int iterations, double coeff)
 {
   ape_control *control = (ape_control*)malloc(sizeof(ape_control));
-  control->coef = coef;
+  control->coeff = coeff;
   control->iterations = iterations;
   control->result = NULL;
 

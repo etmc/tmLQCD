@@ -13,7 +13,7 @@ typedef struct
   int calculate_force_terms;
   
   /* Parameters */
-  double          coef; /* For now, we're going to work with homogeneous smearing coefficients */
+  double          coeff; /* For now, we're going to work with homogeneous smearing coefficients */
   unsigned int    iterations;
     
   /* Intermediate results, stored to enhance locality of the analysis */
@@ -23,7 +23,7 @@ typedef struct
   gauge_field_t    result;
 } stout_3d_control;
 
-stout_3d_control *construct_stout_3d_control(int calculate_force_terms, unsigned int iterations, double coef);
+stout_3d_control *construct_stout_3d_control(int calculate_force_terms, unsigned int iterations, double coeff);
 void free_stout_3d_control(stout_3d_control *control);
 
 void stout_3d_smear(stout_3d_control *control, gauge_field_t in);

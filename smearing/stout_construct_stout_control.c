@@ -1,9 +1,9 @@
 #include "stout.ih"
 
-stout_control *construct_stout_control(int calculate_force_terms, unsigned int iterations, double coef)
+stout_control *construct_stout_control(int calculate_force_terms, unsigned int iterations, double coeff)
 {
   stout_control *control = (stout_control*)malloc(sizeof(stout_control));
-  control->coef = coef;
+  control->coeff = coeff;
   control->iterations = iterations;
   
   control->calculate_force_terms = calculate_force_terms;

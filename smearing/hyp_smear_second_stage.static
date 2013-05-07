@@ -1,10 +1,10 @@
-static void smear_second_stage(su3_two_index *out, double const coef_2, su3_two_index *in, gauge_field_t const orig)
+static void smear_second_stage(su3_two_index *out, double const coeff_2, su3_two_index *in, gauge_field_t const orig)
 {
   su3 tmp;
   su3 staples;
 
-  double const coeff_principal = 1.0 - coef_2;
-  double const coeff_staples   = coef_2 / 4.0;
+  double const coeff_principal = 1.0 - coeff_2;
+  double const coeff_staples   = coeff_2 / 4.0;
     
   #define _HYP_SMEAR_COMPONENT(component, to, excl, via_1, via_2, x) \
   { \

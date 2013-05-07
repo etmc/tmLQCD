@@ -1,4 +1,4 @@
-static void smear_stage_2_with_force_terms(su3_two_index *out, stout_notes_two_index *trace, double const coef, su3_two_index *in, gauge_field_t orig)
+static void smear_stage_2_with_force_terms(su3_two_index *out, stout_notes_two_index *trace, double const coeff, su3_two_index *in, gauge_field_t orig)
 {
   su3 ALIGN tmp;
 
@@ -36,7 +36,7 @@ static void smear_stage_2_with_force_terms(su3_two_index *out, stout_notes_two_i
       _su3_times_su3(tmp, in[xms][cmsn], in[xpmms][csmn]); 
       _su3d_times_su3_acc(trace[x][comp].C, in[xms][csmn], tmp); 
 
-      fatten_links_with_force_terms(&out[x][comp], &trace[x][comp], coef, &orig[x][mu]);
+      fatten_links_with_force_terms(&out[x][comp], &trace[x][comp], coeff, &orig[x][mu]);
     }
 
 #pragma omp single

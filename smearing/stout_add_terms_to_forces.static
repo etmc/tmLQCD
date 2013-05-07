@@ -1,10 +1,10 @@
-static void inner_force_addition(su3 *t1, stout_notes_t * const notes, double const coef, su3 * const V)
+static void inner_force_addition(su3 *t1, stout_notes_t * const notes, double const coeff, su3 * const V)
 {
   su3 ALIGN t2;
 
   _su3_times_su3_acc(*t1, notes->Sigma, *V);  /* t1 = t1_input + Sigma * V */
   _su3_times_su3(t2, notes->Z, notes->C); /* t2 = Z * C */
-  _su3_refac_acc(*t1, -coef, t2);          /* t1 = t1_input + (Sigma * V - Z * C) */
+  _su3_refac_acc(*t1, -coeff, t2);          /* t1 = t1_input + (Sigma * V - Z * C) */
 }
 
 static void add_terms_to_forces_U(gauge_field_t smeared_force, gauge_field_t Sigma_U, gauge_field_t const U)
@@ -24,7 +24,7 @@ static void add_terms_to_forces_U(gauge_field_t smeared_force, gauge_field_t Sig
     }
 }
 
-static void add_terms_to_forces_V(gauge_field_t smeared_force, stout_notes_tuple *trace, double const coef, gauge_field_t V, gauge_field_t U)
+static void add_terms_to_forces_V(gauge_field_t smeared_force, stout_notes_tuple *trace, double const coeff, gauge_field_t V, gauge_field_t U)
 {
   /* This is always the first step of the gathering algorithm, so we can overwrite the smeared_force here. */
   
@@ -35,7 +35,7 @@ static void add_terms_to_forces_V(gauge_field_t smeared_force, stout_notes_tuple
     for (unsigned int mu = 0; mu < 4; ++mu)
     {
       _su3_zero(smeared_force[x][mu]);
-      inner_force_addition(&smeared_force[x][mu], &trace[x][mu], coef, &V[x][mu]);
+      inner_force_addition(&smeared_force[x][mu], &trace[x][mu], coeff, &V[x][mu]);
 
       /* smeared_force = U * (Sigma * V - Z * C) * U^\dagger */
       _su3_times_su3d(t1, smeared_force[x][mu], U[x][mu]);

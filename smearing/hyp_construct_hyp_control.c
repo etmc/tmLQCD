@@ -1,11 +1,11 @@
 #include "hyp.ih"
 
-hyp_control *construct_hyp_control(unsigned int iterations, double const coef_1, double const coef_2, double const coef_3)
+hyp_control *construct_hyp_control(unsigned int iterations, double const coeff_1, double const coeff_2, double const coeff_3)
 {
   hyp_control *control = (hyp_control*)malloc(sizeof(hyp_control));
-  control->coef[0] = coef_1;
-  control->coef[1] = coef_2;
-  control->coef[2] = coef_3;
+  control->coeff[0] = coeff_1;
+  control->coeff[1] = coeff_2;
+  control->coeff[2] = coeff_3;
   control->iterations = iterations;
 
   control->staples = (su3_two_index**)malloc(2 * sizeof(su3_two_index*));

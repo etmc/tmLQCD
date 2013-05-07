@@ -1,4 +1,4 @@
-static void smear_stage_2(gauge_field_t out, double const coef, su3_two_index *in, gauge_field_t const orig)
+static void smear_stage_2(gauge_field_t out, double const coeff, su3_two_index *in, gauge_field_t const orig)
 {
   su3 ALIGN tmp;
   su3 ALIGN staples;
@@ -40,7 +40,7 @@ static void smear_stage_2(gauge_field_t out, double const coef, su3_two_index *i
       _su3_times_su3(tmp, in[xmr][cmr], in[xpmmr][crm]);
       _su3d_times_su3_acc(staples, in[xmr][crm], tmp);
 
-      fatten_links(&out[x][mu], coef, &staples, &orig[x][mu]);
+      fatten_links(&out[x][mu], coeff, &staples, &orig[x][mu]);
     }
   }
   

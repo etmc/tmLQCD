@@ -12,7 +12,7 @@ typedef struct
   int             calculate_force_terms;
   
   /* Parameters */
-  double          coef[3];
+  double          coeff[3];
   unsigned int    iterations;
   
   /* Intermediate results, stored to enhance locality of the analysis */
@@ -31,7 +31,7 @@ typedef struct
   adjoint_field_t  force_result;
 } hex_control;
 
-hex_control *construct_hex_control(int calculate_force_terms, unsigned int iterations, double const coef_0, double const coef_1, double const coef_2);
+hex_control *construct_hex_control(int calculate_force_terms, unsigned int iterations, double const coeff_0, double const coeff_1, double const coeff_2);
 void free_hex_control(hex_control *control);
 
 void hex_smear(hex_control *control, gauge_field_t in);
