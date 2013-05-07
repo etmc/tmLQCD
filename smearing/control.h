@@ -52,8 +52,6 @@ typedef struct
   int id;
   
   /* Flags */
-  /* FIXME These currently mirror flags in the separate control structs.
-     A better solution should be found. */
   int smearing_performed;
   
   /* Results -- main output for users */
@@ -64,7 +62,6 @@ typedef struct
   void* type_control;
 } smearing_control_t;
 
-/* FIXME So many globals! */
 extern int no_smearings_declared;
 extern smearing_params_t* smearing_declarations;
 

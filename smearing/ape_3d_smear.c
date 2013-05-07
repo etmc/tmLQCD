@@ -9,8 +9,8 @@ void ape_3d_smear(ape_3d_control *control, gauge_field_t in)
   /* We need to take staples, so we need some working memory... */
   gauge_field_t buffer = get_gauge_field();
 
-  double const rho_principal = 1.0 - control->rho;
-  double const rho_staples = control->rho / 4.0;
+  double const coef_principal = 1.0 - control->coef;
+  double const coef_staples = control->coef / 4.0;
   
   /* start of the the stout smearing **/
   for(unsigned int iter = 0; iter < control->iterations; ++iter)
@@ -21,7 +21,7 @@ void ape_3d_smear(ape_3d_control *control, gauge_field_t in)
       for (unsigned int mu = 1; mu < 4; ++mu)
       {
         generic_staples_3d(&staples, x, mu, in);
-        _real_times_su3_plus_real_times_su3(buffer[x][mu], rho_principal, in[x][mu], rho_staples, staples);
+        _real_times_su3_plus_real_times_su3(buffer[x][mu], coef_principal, in[x][mu], coef_staples, staples);
         reunitarize(&buffer[x][mu]);
       }
     }

@@ -8,7 +8,7 @@ static void construct_Sigma_V(stout_notes_tuple * const trace, gauge_field_t con
     }
 }
 
-static void construct_Sigma_U(gauge_field_t Sigma, double const rho, gauge_field_t const U, stout_notes_tuple * const trace)
+static void construct_Sigma_U(gauge_field_t Sigma, double const coef, gauge_field_t const U, stout_notes_tuple * const trace)
 {
   su3 ALIGN t1;
   su3 ALIGN t2;
@@ -53,6 +53,6 @@ static void construct_Sigma_U(gauge_field_t Sigma, double const rho, gauge_field
         _su3d_times_su3(t1, U[xmn][mu], U[xmn][nu]);            /* Line 6 */
         _su3_times_su3_acc(Sigma[x][mu], trace[xpmmn][nu].Z, t1);
     }
-    _real_times_su3(Sigma[x][mu], rho, Sigma[x][mu]);
+    _real_times_su3(Sigma[x][mu], coef, Sigma[x][mu]);
   }
 }

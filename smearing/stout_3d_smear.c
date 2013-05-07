@@ -23,7 +23,7 @@ void stout_3d_smear(stout_3d_control *control, gauge_field_t in)
       for (unsigned int mu = 1; mu < 4; ++mu)
       {
         generic_staples_3d(&staples, x, mu, in);
-        fatten_links(&buffer[x][mu], control->rho, &staples, &in[x][mu]);
+        fatten_links(&buffer[x][mu], control->coef, &staples, &in[x][mu]);
       }
     }
     /* Prepare for the next iteration, swap and exchange fields */

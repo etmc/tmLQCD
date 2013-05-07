@@ -1,4 +1,4 @@
-static void smear_stage_1(su3_two_index *out, double const alpha, gauge_field_t orig)
+static void smear_stage_1(su3_two_index *out, double const coef, gauge_field_t orig)
 {
   su3 ALIGN tmp;
   su3 ALIGN staples;
@@ -20,7 +20,7 @@ static void smear_stage_1(su3_two_index *out, double const alpha, gauge_field_t 
       _su3_times_su3(tmp, orig[xmr][mu], orig[xpmmr][rho]);
       _su3d_times_su3_acc(staples, orig[xmr][rho], tmp);
       
-      fatten_links(&out[x][comp], alpha, &staples, &orig[x][mu]);
+      fatten_links(&out[x][comp], coef, &staples, &orig[x][mu]);
     }
   
 #pragma omp single

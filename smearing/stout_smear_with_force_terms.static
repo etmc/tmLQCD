@@ -12,7 +12,7 @@ static void smear_with_force_terms(stout_control *control, gauge_field_t in)
       for (unsigned int mu = 0; mu < 4; ++mu)
       {         
         generic_staples(&control->trace[iter][x][mu].C, x, mu, control->U[iter]);
-        fatten_links_with_force_terms(&control->U[iter + 1][x][mu], &control->trace[iter][x][mu], control->rho, &control->U[iter][x][mu]);
+        fatten_links_with_force_terms(&control->U[iter + 1][x][mu], &control->trace[iter][x][mu], control->coef, &control->U[iter][x][mu]);
       }
 #pragma omp single
     exchange_gauge_field(&control->U[iter + 1]);

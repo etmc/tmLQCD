@@ -39,7 +39,7 @@ typedef struct
   int calculate_force_terms;
   
   /* Parameters */
-  double          rho; /* For now, we're going to work with homogeneous smearing coefficients */
+  double          coef; /* For now, we're going to work with homogeneous smearing coefficients */
   unsigned int    iterations;
     
   /* Intermediate results, stored to enhance locality of the analysis */
@@ -51,7 +51,7 @@ typedef struct
   adjoint_field_t  force_result;
 } stout_control;
 
-stout_control *construct_stout_control(int calculate_force_terms, unsigned int iterations, double rho);
+stout_control *construct_stout_control(int calculate_force_terms, unsigned int iterations, double coef);
 void free_stout_control(stout_control *control);
 
 void stout_smear(stout_control *control, gauge_field_t in);

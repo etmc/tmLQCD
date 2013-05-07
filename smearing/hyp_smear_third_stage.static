@@ -1,10 +1,10 @@
-static void smear_third_stage(gauge_field_t out, double const alpha_3, su3_two_index *in, gauge_field_t const orig)
+static void smear_third_stage(gauge_field_t out, double const coef_3, su3_two_index *in, gauge_field_t const orig)
 {
   su3 tmp;
   su3 staples;
   
-  double const coeff_principal = 1.0 - alpha_3;
-  double const coeff_staples   = alpha_3 / 6.0;
+  double const coeff_principal = 1.0 - coef_3;
+  double const coeff_staples   = coef_3 / 6.0;
   
 #define _HYP_SMEAR_COMPONENT(component, to, via, x) \
   _su3_times_su3d(tmp, in[g_iup[x][via]][I1_ ## to ## _ ## via], in[g_iup[x][to]][I1_ ## via ## _ ## to]); \

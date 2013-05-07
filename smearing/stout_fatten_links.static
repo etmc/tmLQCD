@@ -1,10 +1,10 @@
-static void fatten_links(su3 *out, double rho, su3 const *staples, su3 const *in)
+static void fatten_links(su3 *out, double coef, su3 const *staples, su3 const *in)
 {
   su3 ALIGN tmp;
   
   _su3_times_su3d(tmp, *staples, *in);
   project_traceless_antiherm(&tmp);
-  _real_times_su3(tmp, rho, tmp);
+  _real_times_su3(tmp, coef, tmp);
   exposu3_in_place(&tmp);
   _su3_times_su3(*out, tmp, *in);
 }

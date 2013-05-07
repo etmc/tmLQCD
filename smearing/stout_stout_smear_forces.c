@@ -22,9 +22,9 @@ void stout_smear_forces(stout_control *control, adjoint_field_t in)
     /* Since the U's are fields after full smearing steps, U[iter] == U, U[iter + 1] == V */
     construct_Sigma_V(control->trace[iter], control->U[iter + 1], smeared_force);
     construct_Z_V(control->trace[iter], control->U[iter]);
-    add_terms_to_forces_V(smeared_force, control->trace[iter], control->rho, control->U[iter + 1], control->U[iter]);
+    add_terms_to_forces_V(smeared_force, control->trace[iter], control->coef, control->U[iter + 1], control->U[iter]);
 
-    construct_Sigma_U(Sigma_U, control->rho, control->U[iter], control->trace[iter]);
+    construct_Sigma_U(Sigma_U, control->coef, control->U[iter], control->trace[iter]);
     add_terms_to_forces_U(smeared_force, Sigma_U, control->U[iter]);
     /* Barrier unnecessary from implicit barrier of single section in add_terms_to_forces */
   }

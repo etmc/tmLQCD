@@ -11,8 +11,8 @@ void hex_3d_smear(hex_3d_control *control, gauge_field_t in)
 #pragma omp parallel
   for (int iter = 0; iter < control->iterations; ++iter)
   {
-    smear_stage_1(control->V,    control->alpha[0],             in);
-    smear_stage_2(control->U[1], control->alpha[1], control->V, in);
+    smear_stage_1(control->V,    control->coef[0],             in);
+    smear_stage_2(control->U[1], control->coef[1], control->V, in);
 
 #pragma omp single
     in = control->U[1]; /* Shallow copy intended */

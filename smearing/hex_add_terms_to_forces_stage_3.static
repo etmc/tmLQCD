@@ -1,4 +1,4 @@
-static void add_terms_to_forces_stage_3(gauge_field_t smeared_force, stout_notes_tuple *trace, double const alpha, gauge_field_t V, gauge_field_t U)
+static void add_terms_to_forces_stage_3(gauge_field_t smeared_force, stout_notes_tuple *trace, double const coef, gauge_field_t V, gauge_field_t U)
 {
   su3 ALIGN t1;
   su3 ALIGN t2;
@@ -14,7 +14,7 @@ static void add_terms_to_forces_stage_3(gauge_field_t smeared_force, stout_notes
       _su3_times_su3(t1, trace[x][mu].Sigma, V[x][mu]);
            
       /* t1 = Sigma * V - Z * C */
-      _su3_refac_acc(t1, -alpha, t2);
+      _su3_refac_acc(t1, -coef, t2);
 
       /* smeared_force = U * (Sigma * V - Z * C) * U^\dagger */
       _su3_times_su3d(t2, t1, U[x][mu]);

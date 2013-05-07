@@ -1,10 +1,10 @@
 #include "hex_3d.ih"
 
-hex_3d_control *construct_hex_3d_control(unsigned int iterations, double const alpha_1, double const alpha_2)
+hex_3d_control *construct_hex_3d_control(unsigned int iterations, double const coef_1, double const coef_2)
 {
   hex_3d_control *control = (hex_3d_control*)malloc(sizeof(hex_3d_control));
-  control->alpha[0] = alpha_1;
-  control->alpha[1] = alpha_2;
+  control->coef[0] = coef_1;
+  control->coef[1] = coef_2;
   control->iterations = iterations;
   
   /* We can keep this quite simple if we don't need any forces anyway. */

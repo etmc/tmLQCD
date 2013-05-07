@@ -1,6 +1,6 @@
 #include "stout_construct_Sigma.static"
 
-static void construct_Sigma_0(gauge_field_t Sigma, double const alpha, gauge_field_t const U, stout_notes_three_index * const trace_in)
+static void construct_Sigma_0(gauge_field_t Sigma, double const coef, gauge_field_t const U, stout_notes_three_index * const trace_in)
 {
   su3 ALIGN t1;
   su3 ALIGN t2;
@@ -52,11 +52,11 @@ static void construct_Sigma_0(gauge_field_t Sigma, double const alpha, gauge_fie
         _su3d_times_su3(t1, U[xmn][mu], U[xmn][nu]);            
         _su3_times_su3_acc(Sigma[x][mu], trace_in[xpmmn][cnrs].Z, t1);
     }
-    _real_times_su3(Sigma[x][mu], alpha, Sigma[x][mu]);
+    _real_times_su3(Sigma[x][mu], coef, Sigma[x][mu]);
   }
 }
 
-static void construct_Sigma_1(stout_notes_three_index * const trace_out, double const alpha, su3_two_index * const V1, stout_notes_two_index * const trace_in)
+static void construct_Sigma_1(stout_notes_three_index * const trace_out, double const coef, su3_two_index * const V1, stout_notes_two_index * const trace_in)
 {
   su3 ALIGN t1;
   su3 ALIGN t2;
@@ -111,11 +111,11 @@ static void construct_Sigma_1(stout_notes_three_index * const trace_out, double 
       _su3d_times_su3(t1, V1[xmn][cv], V1[xmn][cnmr]);
       _su3_times_su3_acc(trace_out[x][comp].Sigma, trace_in[xpmmn][cnr].Z, t1);
       
-      _real_times_su3(trace_out[x][comp].Sigma, alpha, trace_out[x][comp].Sigma);
+      _real_times_su3(trace_out[x][comp].Sigma, coef, trace_out[x][comp].Sigma);
     }
 }
 
-static void construct_Sigma_2(stout_notes_two_index * const trace_out, double const alpha, su3_two_index * const V2, stout_notes_tuple * const trace_in)
+static void construct_Sigma_2(stout_notes_two_index * const trace_out, double const coef, su3_two_index * const V2, stout_notes_tuple * const trace_in)
 {
   su3 ALIGN t1;
   su3 ALIGN t2;
@@ -164,6 +164,6 @@ static void construct_Sigma_2(stout_notes_two_index * const trace_out, double co
       _su3d_times_su3(t1, V2[xmn][comp], V2[xmn][cnm]);
       _su3_times_su3_acc(trace_out[x][comp].Sigma, trace_in[xpmmn][nu].Z, t1);
       
-      _real_times_su3(trace_out[x][comp].Sigma, alpha, trace_out[x][comp].Sigma);
+      _real_times_su3(trace_out[x][comp].Sigma, coef, trace_out[x][comp].Sigma);
     }
 }
