@@ -14,7 +14,6 @@ stout_control *construct_stout_control(int calculate_force_terms, unsigned int i
   {
     control->U = (gauge_field_t*)malloc(2 * sizeof(gauge_field_t));
     control->U[1] = get_gauge_field_annotated("STOUT CONTROL U[1]");
-    printf("Field being cleared: id -- %d, bytes -- %llu, note -- %s.\n", ameta_id(control->U[1]), ameta_bytes(control->U[1]), ameta_note(control->U[1]));
     return control;
   }
 
