@@ -1,44 +1,37 @@
 #pragma once
 
-#include <buffers/gauge.h>
+#include <smearing/stout.h>
+#include <smearing/hyp.h>
+
+typedef stout_notes_t stout_notes_two_index[12];
+typedef stout_notes_t stout_notes_three_index[24];
 
 typedef struct
 {
-  su3    Q;
-  su3    expiQ;
-  su3    B1;
-  su3    B2;
-  double f1;
-  double f2;
-} hex_notes_t;
-
-typedef hex_notes_t hex_notes[4];
-typedef su3 su3_outer[12];
-typedef hex_notes_t hex_notes_outer[12];
-
-typedef struct
-{
-  double alpha[3];
-  unsigned int    iterations;
-  
   /* Flags */
   int             calculate_force_terms;
-  int             smearing_performed;
   
-  /* Results -- main output for users */
-  gauge_field_t    result; /* For direct access to the result, shallow copy... */
-  adjoint_field_t  force_result;
+  /* Parameters */
+  double          coeff[3];
+  unsigned int    iterations;
   
   /* Intermediate results, stored to enhance locality of the analysis */
-  gauge_field_t    *U;     /* The sequence of iterations gauge fields */
-  hex_notes **trace; /* Intermediate results to avoid double calculations */
+  gauge_field_t *U;       /* The sequence of iterations gauge fields */
   
-  su3_outer       **U_outer;     /* The sequence of iterations gauge fields */
-  hex_notes_outer **trace_outer; /* Intermediate results to avoid double calculations */
+  su3_two_index           **V_stage_1;
+  stout_notes_three_index **trace_stage_1;
   
+  su3_two_index           **V_stage_2;
+  stout_notes_two_index   **trace_stage_2;
+
+  stout_notes_tuple       **trace_stage_3; /* Intermediate results to avoid double calculations */
+  
+  /* Final results -- the first is a shallow copy */
+  gauge_field_t    result;
+  adjoint_field_t  force_result;
 } hex_control;
 
-hex_control *construct_hex_control(int calculate_force_terms, unsigned int iterations, double const alpha_1, double const alpha_2, double const alpha_3);
+hex_control *construct_hex_control(int calculate_force_terms, unsigned int iterations, double const coeff_0, double const coeff_1, double const coeff_2);
 void free_hex_control(hex_control *control);
 
 void hex_smear(hex_control *control, gauge_field_t in);

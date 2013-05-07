@@ -38,10 +38,10 @@ ZT [0-9(10)(11)]
 IDXEX ("-"{DIGIT}+)
 SIGN ("+"|"-")
 FLT {SIGN}?{DIGIT}+(".")?{DIGIT}*(e("-"|"+")?{DIGIT}+)?
-FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
+FILENAME [a-zA-Z0-9_".""-""/"][a-zA-Z0-9"."_"-""/"]+
 NAME [a-zA-Z0-9_]+
 CSTR \"[a-zA-Z0-9\-\._]+\"
-TYPE [0-9A-Z]+
+TYPE [0-9A-Z_]+
 FLTLIST [0-9"."","" "]*
 EQL {SPC}*={SPC}*
 
@@ -190,7 +190,7 @@ EQL {SPC}*={SPC}*
   
   static void check_smearing_params(smearing_type type)
   {
-    char error_string[128];
+    char error_string[256];
       
     if (!cur_sm_dec->set[0])
       fatal_error("No valid smearing id (id = ...) provided for one of the smearing blocks in the input file!", "check_smearing_params");
@@ -203,40 +203,56 @@ EQL {SPC}*={SPC}*
         fatal_error(error_string, "check_smearing_params");
       }
 
+    if (!cur_sm_dec->set[1])
+    {
+      sprintf(error_string, "The 'iterations' parameter is missing in input file for smearing id %d!", cur_sm_dec->id);
+      fatal_error(error_string, "check_smearing_params");
+    }
+
     switch (type)
     {
-      case HYP:
       case HEX:
-        if (!cur_sm_dec->set[4])
+      case HYP:
+        if (!cur_sm_dec->set[2])
         {
-          sprintf(error_string, "Smearing parameter 'rho_3' missing in input file for smearing id %d!", cur_sm_dec->id);
+          sprintf(error_string, "Smearing coefficient 3 ('alpha_3' or 'rho_3') missing in input file for smearing id %d!", cur_sm_dec->id);
           fatal_error(error_string, "check_smearing_params");
         }
         if (!cur_sm_dec->set[3])
         {
-          sprintf(error_string, "Smearing parameter 'rho_2' missing in input file for smearing id %d!", cur_sm_dec->id);
+          sprintf(error_string, "Smearing coefficient 2 ('alpha_2' or 'rho_2') missing in input file for smearing id %d!", cur_sm_dec->id);
           fatal_error(error_string, "check_smearing_params");
         }
+        if (!cur_sm_dec->set[4])
+        {
+          sprintf(error_string, "Smearing coefficient 1 ('alpha_1' or 'rho_1') missing in input file for smearing id %d!", cur_sm_dec->id);
+          fatal_error(error_string, "check_smearing_params");
+        }
+        break;
+      case HEX_3D:
+      case HYP_3D:
         if (!cur_sm_dec->set[2])
         {
-          sprintf(error_string, "Smearing parameter 'rho_1' missing in input file for smearing id %d!", cur_sm_dec->id);
+          sprintf(error_string, "Smearing coefficient 1 ('alpha_1' or 'rho_1') missing in input file for smearing id %d!", cur_sm_dec->id);
           fatal_error(error_string, "check_smearing_params");
         }
+        if (!cur_sm_dec->set[3])
+        {
+          sprintf(error_string, "Smearing coefficient 2 ('alpha_2' or 'rho_2') missing in input file for smearing id %d!", cur_sm_dec->id);
+          fatal_error(error_string, "check_smearing_params");
+        }
+        break;
       case APE:
+      case APE_3D:
       case Stout:
+      case Stout_3D:
         if (!cur_sm_dec->set[2])
         {
-          sprintf(error_string, "Smearing parameter 'rho' missing in input file for smearing id %d!", cur_sm_dec->id);
-          fatal_error(error_string, "check_smearing_params");
-        }
-        if (!cur_sm_dec->set[1])
-        {
-          sprintf(error_string, "Smearing parameter 'iterations' missing in input file for smearing id %d!", cur_sm_dec->id);
+          sprintf(error_string, "Smearing coefficient ('alpha' or 'rho') missing in input file for smearing id %d!", cur_sm_dec->id);
           fatal_error(error_string, "check_smearing_params");
         }
     }   
   }
-
 %}
 
 %option never-interactive
@@ -369,15 +385,19 @@ EQL {SPC}*={SPC}*
 
 %x PRECONDITIONING
 
-%x SMEARING_INIT
-%x SMEARING_IDENTITY
 %x SMEARING_APE
-%x SMEARING_HYP
-%x SMEARING_STOUT
-%x SMEARING_UNITARY
-%x SMEARING_HEX
+%x SMEARING_APE_3D
 %x SMEARING_GRADIENT
+%x SMEARING_HEX
+%x SMEARING_HEX_3D
+%x SMEARING_HYP
+%x SMEARING_HYP_3D
+%x SMEARING_IDENTITY
+%x SMEARING_INIT
 %x SMEARING_JACOBI
+%x SMEARING_STOUT
+%x SMEARING_STOUT_3D
+%x SMEARING_UNITARY
 
 %%
 ^SourceFilename{EQL}               BEGIN(SOURCEFILE);
@@ -600,6 +620,10 @@ EQL {SPC}*={SPC}*
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->rel_prec = 0;
     if(myverbose) printf("  SolverRelativePrecision set to NO line %d operator %d\n",  line_of_file, current_operator);
+  }
+  {SPC}*SmearingID{EQL}{DIGIT}+ {
+    sscanf(yytext, "%*[^=]= %d", &optr->smearing);
+    if(myverbose) printf("  smearing id set to %d line %d operator %d\n", line_of_file, current_operator, optr->smearing);
   }
   {SPC}*ExtraMasses{EQL}{FLTLIST} {
     char * token = NULL;
@@ -992,7 +1016,7 @@ EQL {SPC}*={SPC}*
     }
   }
   {SPC}*SmearingID{EQL}{DIGIT}+ {
-    sscanf(yytext, "%*s = %d", &mnl->smearing);
+    sscanf(yytext, "%*[^=]= %d", &mnl->smearing);
     if(myverbose) printf("  smearing id set to %d line %d monomial %d\n", line_of_file, current_monomial, mnl->smearing);
   }
   {SPC}*Name{EQL} {
@@ -1994,7 +2018,7 @@ EQL {SPC}*={SPC}*
   BEGIN(comment_caller);
 }
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,SMEARING_IDENTITY,SMEARING_APE,SMEARING_HYP,SMEARING_STOUT,SMEARING_UNITARY,SMEARING_HEX,SMEARING_GRADIENT,SMEARING_JACOBI>{SPC}*\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,SMEARING_IDENTITY,SMEARING_APE,SMEARING_APE_3D,SMEARING_HYP,SMEARING_STOUT,SMEARING_STOUT_3D,SMEARING_UNITARY,SMEARING_HEX,SMEARING_HEX_3D,SMEARING_GRADIENT,SMEARING_JACOBI>{SPC}*\n   {
   line_of_file++;
 }
 <*>{SPC}*\n                       {
@@ -2021,93 +2045,271 @@ EQL {SPC}*={SPC}*
   ++no_smearings_declared;
    
   /* Now switch to the parser and constructor for the relevant smearing type */
-  if (!strcmp(yytext, "IDENTITY"))
-  {
-    cur_sm_dec->type = Identity;
-    BEGIN SMEARING_IDENTITY;
-  }
-  else if (!strcmp(yytext, "APE"))
+  if (!strcmp(yytext, "APE"))
   {
     cur_sm_dec->type = APE;
     BEGIN SMEARING_APE;
   }
-  else if (!strcmp(yytext, "HYP"))
+  else if (!strcmp(yytext, "APE_3D"))
   {
-    cur_sm_dec->type = HYP;
-    BEGIN SMEARING_HYP;
-  }
-  else if (!strcmp(yytext, "STOUT"))
-  {
-    cur_sm_dec->type = Stout;
-    BEGIN SMEARING_STOUT;
-  }
-  else if (!strcmp(yytext, "UNITARY"))
-  {
-    cur_sm_dec->type = Unitary;
-    BEGIN SMEARING_UNITARY;
-  }
-  else if (!strcmp(yytext, "HEX"))
-  {
-    cur_sm_dec->type = HEX;
-    BEGIN SMEARING_HEX;
+    cur_sm_dec->type = APE_3D;
+    BEGIN SMEARING_APE_3D;
   }
   else if (!strcmp(yytext, "GRADIENT"))
   {
     cur_sm_dec->type = Gradient;
     BEGIN SMEARING_GRADIENT;
   }
+  else if (!strcmp(yytext, "HEX"))
+  {
+    cur_sm_dec->type = HEX;
+    BEGIN SMEARING_HEX;
+  }
+  else if (!strcmp(yytext, "HEX_3D"))
+  {
+    cur_sm_dec->type = HEX_3D;
+    BEGIN SMEARING_HEX_3D;
+  }
+  else if (!strcmp(yytext, "HYP"))
+  {
+    cur_sm_dec->type = HYP;
+    BEGIN SMEARING_HYP;
+  }
+  else if (!strcmp(yytext, "IDENTITY"))
+  {
+    cur_sm_dec->type = Identity;
+    BEGIN SMEARING_IDENTITY;
+  }
   else if (!strcmp(yytext, "JACOBI"))
   {
     cur_sm_dec->type = Jacobi;
     BEGIN SMEARING_JACOBI;
   }
+  else if (!strcmp(yytext, "STOUT"))
+  {
+    cur_sm_dec->type = Stout;
+    BEGIN SMEARING_STOUT;
+  }
+  else if (!strcmp(yytext, "STOUT_3D"))
+  {
+    cur_sm_dec->type = Stout_3D;
+    BEGIN SMEARING_STOUT_3D;
+  }
+  else if (!strcmp(yytext, "UNITARY"))
+  {
+    cur_sm_dec->type = Unitary;
+    BEGIN SMEARING_UNITARY;
+  }
 }
 
-<SMEARING_IDENTITY,SMEARING_APE,SMEARING_HYP,SMEARING_STOUT,SMEARING_UNITARY,SMEARING_HEX,SMEARING_GRADIENT,SMEARING_JACOBI>{SPC}*id{EQL}[[:digit:]]+ {
-  sscanf(yytext, "%*s = %d", &cur_sm_dec->id);
+<SMEARING_IDENTITY,SMEARING_APE,SMEARING_APE_3D,SMEARING_HYP,SMEARING_STOUT,SMEARING_STOUT_3D,SMEARING_UNITARY,SMEARING_HEX,SMEARING_HEX_3D,SMEARING_GRADIENT,SMEARING_JACOBI>{SPC}*id{EQL}[[:digit:]]+ {
+  sscanf(yytext, "%*[^=]= %d", &cur_sm_dec->id);
   if (cur_sm_dec->id == 0)
     fatal_error("The id 0 is reserved for default identity smearing and should not be used elsewhere!", "read_input");
   cur_sm_dec->set[0] = 1;
-  if(myverbose) printf("  smearing block %d configured to use smearing id %d\n", no_smearings_declared - 1, cur_sm_dec->id);
+  if(myverbose) printf("  smearing block %d: configured to use smearing id %d\n", no_smearings_declared - 1, cur_sm_dec->id);
 }
 
-<SMEARING_IDENTITY,SMEARING_APE,SMEARING_HYP,SMEARING_STOUT,SMEARING_UNITARY,SMEARING_HEX,SMEARING_GRADIENT,SMEARING_JACOBI>{SPC}*iterations{EQL}[[:digit:]]+ {
-  sscanf(yytext, "%*s = %u", &cur_sm_dec->iterations);
+<SMEARING_IDENTITY,SMEARING_APE,SMEARING_APE_3D,SMEARING_HYP,SMEARING_STOUT,SMEARING_STOUT_3D,SMEARING_UNITARY,SMEARING_HEX,SMEARING_HEX_3D,SMEARING_GRADIENT,SMEARING_JACOBI>{SPC}*iterations{EQL}[[:digit:]]+ {
+  sscanf(yytext, "%*[^=]= %u", &cur_sm_dec->iterations);
   cur_sm_dec->set[1] = 1;
-  if(myverbose) printf("  smearing block %d number of iterations set to %u\n", no_smearings_declared - 1, cur_sm_dec->iterations);
+  if(myverbose) printf("  smearing block %d: number of iterations set to %u\n", no_smearings_declared - 1, cur_sm_dec->iterations);
 }
+
+<SMEARING_APE,SMEARING_STOUT,SMEARING_JACOBI,SMEARING_UNITARY>{SPC}*alpha{EQL}{FLT} {
+  if (cur_sm_dec->set[2])
+  {
+    char err_string[256];
+    sprintf(err_string, "A smearing coefficient is set more than once in block %d (note that alpha and rho are mutually exclusive)!", no_smearings_declared - 1);
+    fatal_error(err_string, "read_input");
+  }
+  sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[0]);
+  cur_sm_dec->params[0] /= 6.0;
+  cur_sm_dec->set[2] = 1;
+  if(myverbose) printf("  smearing block %d: alpha set to %lf (rho = %lf)\n", no_smearings_declared - 1, 6.0 * cur_sm_dec->params[0], cur_sm_dec->params[0]);
+}
+
 
 <SMEARING_APE,SMEARING_STOUT,SMEARING_JACOBI,SMEARING_UNITARY>{SPC}*rho{EQL}{FLT} {
-  sscanf(yytext, "%*s = %lf", &cur_sm_dec->params[0]);
+  if (cur_sm_dec->set[2])
+  {
+    char err_string[256];
+    sprintf(err_string, "A smearing coefficient is set more than once in block %d (note that alpha and rho are mutually exclusive)!", no_smearings_declared - 1);
+    fatal_error(err_string, "read_input");
+  }
+  sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[0]);
   cur_sm_dec->set[2] = 1;
-  if(myverbose) printf("  smearing block %d rho set to %lf\n", no_smearings_declared - 1, cur_sm_dec->params[0]);
+    if(myverbose) printf("  smearing block %d: alpha set to %lf (rho = %lf)\n", no_smearings_declared - 1, 6.0 * cur_sm_dec->params[0], cur_sm_dec->params[0]);
 }
 
-<SMEARING_HEX,SMEARING_HYP>{SPC}*rho_1{EQL}{FLT} {
-  sscanf(yytext, "%*s = %lf", &cur_sm_dec->params[0]);
+<SMEARING_APE_3D,SMEARING_STOUT_3D>{SPC}*alpha{EQL}{FLT} {
+  if (cur_sm_dec->set[2])
+  {
+    char err_string[256];
+    sprintf(err_string, "A smearing coefficient is set more than once in block %d (note that alpha and rho are mutually exclusive)!", no_smearings_declared - 1);
+    fatal_error(err_string, "read_input");
+  }
+  sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[0]);
+  cur_sm_dec->params[0] /= 4.0;
   cur_sm_dec->set[2] = 1;
-  if(myverbose) printf("  smearing block %d rho_1 set to %lf\n", no_smearings_declared - 1, cur_sm_dec->params[0]);
+  if(myverbose) printf("  smearing block %d: alpha set to %lf (rho = %lf)\n", no_smearings_declared - 1, 4.0 * cur_sm_dec->params[0], cur_sm_dec->params[0]);
 }
 
-<SMEARING_HEX,SMEARING_HYP>{SPC}*rho_2{EQL}{FLT} {
-  sscanf(yytext, "%*s = %lf", &cur_sm_dec->params[1]);
+
+<SMEARING_APE_3D,SMEARING_STOUT_3D>{SPC}*rho{EQL}{FLT} {
+  if (cur_sm_dec->set[2])
+  {
+    char err_string[256];
+    sprintf(err_string, "A smearing coefficient is set more than once in block %d (note that alpha and rho are mutually exclusive)!", no_smearings_declared - 1);
+    fatal_error(err_string, "read_input");
+  }
+  sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[0]);
+  cur_sm_dec->set[2] = 1;
+  if(myverbose) printf("  smearing block %d: alpha set to %lf (rho = %lf)\n", no_smearings_declared - 1, 4.0 * cur_sm_dec->params[0], cur_sm_dec->params[0]);
+}
+
+<SMEARING_HEX,SMEARING_HYP>{SPC}*alpha_3{EQL}{FLT} {
+  if (cur_sm_dec->set[2])
+  {
+    char err_string[256];
+    sprintf(err_string, "A smearing coefficient is set more than once in block %d (note that alpha_3 and rho_3 are mutually exclusive)!", no_smearings_declared - 1);
+    fatal_error(err_string, "read_input");
+  }
+  sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[0]);
+  cur_sm_dec->params[0] /= 2.0;
+  cur_sm_dec->set[2] = 1;
+  if(myverbose) printf("  smearing block %d: alpha_3 set to %lf (rho_3 = %lf)\n", no_smearings_declared - 1, 2.0 * cur_sm_dec->params[0], cur_sm_dec->params[0]);
+}
+
+<SMEARING_HEX,SMEARING_HYP>{SPC}*alpha_2{EQL}{FLT} {
+  if (cur_sm_dec->set[3])
+  {
+    char err_string[256];
+    sprintf(err_string, "A smearing coefficient is set more than once in block %d (note that alpha_2 and rho_2 are mutually exclusive)!", no_smearings_declared - 1);
+    fatal_error(err_string, "read_input");
+  }
+  sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[1]);
+  cur_sm_dec->params[1] /= 4.0;
   cur_sm_dec->set[3] = 1;
-  if(myverbose) printf("  smearing block %d rho_2 set to %lf\n", no_smearings_declared - 1, cur_sm_dec->params[1]);
+  if(myverbose) printf("  smearing block %d: alpha_2 set to %lf (rho_2 = %lf)\n", no_smearings_declared - 1, 4.0 * cur_sm_dec->params[1], cur_sm_dec->params[1]);
+}
+
+<SMEARING_HEX,SMEARING_HYP>{SPC}*alpha_1{EQL}{FLT} {
+  if (cur_sm_dec->set[4])
+  {
+    char err_string[256];
+    sprintf(err_string, "A smearing coefficient is set more than once in block %d (note that alpha_1 and rho_1 are mutually exclusive)!", no_smearings_declared - 1);
+    fatal_error(err_string, "read_input");
+  }
+  sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[2]);
+  cur_sm_dec->params[2] /= 6.0;
+  cur_sm_dec->set[4] = 1;
+  if(myverbose) printf("  smearing block %d: alpha_1 set to %lf (rho_1 = %lf)\n", no_smearings_declared - 1, 6.0 * cur_sm_dec->params[2], cur_sm_dec->params[2]);
 }
 
 <SMEARING_HEX,SMEARING_HYP>{SPC}*rho_3{EQL}{FLT} {
-  sscanf(yytext, "%*s = %lf", &cur_sm_dec->params[2]);
-  cur_sm_dec->set[4] = 1;
-  if(myverbose) printf("  smearing block %d rho_3 set to %lf\n", no_smearings_declared - 1, cur_sm_dec->params[2]);
+  if (cur_sm_dec->set[2])
+  {
+    char err_string[256];
+    sprintf(err_string, "A smearing coefficient is set more than once in block %d (note that alpha_3 and rho_3 are mutually exclusive)!", no_smearings_declared - 1);
+    fatal_error(err_string, "read_input");
+  }
+  sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[0]);
+  cur_sm_dec->set[2] = 1;
+  if(myverbose) printf("  smearing block %d: alpha_3 set to %lf (rho_3 = %lf)\n", no_smearings_declared - 1, 2.0 * cur_sm_dec->params[0], cur_sm_dec->params[0]);
 }
 
-<SMEARING_IDENTITY>{SPC}*EndSmearing{SPC}* {
-  check_smearing_params(Identity);
-  BEGIN INITIAL;
+<SMEARING_HEX,SMEARING_HYP>{SPC}*rho_2{EQL}{FLT} {
+  if (cur_sm_dec->set[3])
+  {
+    char err_string[256];
+    sprintf(err_string, "A smearing coefficient is set more than once in block %d (note that alpha_2 and rho_2 are mutually exclusive)!", no_smearings_declared - 1);
+    fatal_error(err_string, "read_input");
+  }
+  sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[1]);
+  cur_sm_dec->set[3] = 1;
+  if(myverbose) printf("  smearing block %d: alpha_2 set to %lf (rho_2 = %lf)\n", no_smearings_declared - 1, 4.0 * cur_sm_dec->params[1], cur_sm_dec->params[1]);
+}
+
+<SMEARING_HEX,SMEARING_HYP>{SPC}*rho_1{EQL}{FLT} {
+  if (cur_sm_dec->set[4])
+  {
+    char err_string[256];
+    sprintf(err_string, "A smearing coefficient is set more than once in block %d (note that alpha_1 and rho_1 are mutually exclusive)!", no_smearings_declared - 1);
+    fatal_error(err_string, "read_input");
+  }
+  sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[2]);
+  cur_sm_dec->set[4] = 1;
+  if(myverbose) printf("  smearing block %d: alpha_1 set to %lf (rho_1 = %lf)\n", no_smearings_declared - 1, 6.0 * cur_sm_dec->params[2], cur_sm_dec->params[2]);
+}
+
+<SMEARING_HEX_3D>{SPC}*alpha_2{EQL}{FLT} {
+  if (cur_sm_dec->set[2])
+  {
+    char err_string[256];
+    sprintf(err_string, "A smearing coefficient is set more than once in block %d (note that alpha_2 and rho_2 are mutually exclusive)!", no_smearings_declared - 1);
+    fatal_error(err_string, "read_input");
+  }
+  sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[0]);
+  cur_sm_dec->params[0] /= 2.0;
+  cur_sm_dec->set[2] = 1;
+  if(myverbose) printf("  smearing block %d: alpha_2 set to %lf (rho_2 = %lf)\n", no_smearings_declared - 1, 2.0 * cur_sm_dec->params[0], cur_sm_dec->params[0]);
+}
+
+<SMEARING_HEX_3D>{SPC}*alpha_1{EQL}{FLT} {
+  if (cur_sm_dec->set[3])
+  {
+    char err_string[256];
+    sprintf(err_string, "A smearing coefficient is set more than once in block %d (note that alpha_1 and rho_1 are mutually exclusive)!", no_smearings_declared - 1);
+    fatal_error(err_string, "read_input");
+  }
+  sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[1]);
+  cur_sm_dec->params[1] /= 4.0;
+  cur_sm_dec->set[3] = 1;
+  if(myverbose) printf("  smearing block %d: alpha_1 set to %lf (rho_1 = %lf)\n", no_smearings_declared - 1, 4.0 * cur_sm_dec->params[1], cur_sm_dec->params[1]);
+}
+
+<SMEARING_HEX_3D>{SPC}*rho_2{EQL}{FLT} {
+  if (cur_sm_dec->set[2])
+  {
+    char err_string[256];
+    sprintf(err_string, "A smearing coefficient is set more than once in block %d (note that alpha_2 and rho_2 are mutually exclusive)!", no_smearings_declared - 1);
+    fatal_error(err_string, "read_input");
+  }
+  sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[0]);
+  cur_sm_dec->set[2] = 1;
+  if(myverbose) printf("  smearing block %d: alpha_2 set to %lf (rho_2 = %lf)\n", no_smearings_declared - 1, 2.0 * cur_sm_dec->params[0], cur_sm_dec->params[0]);
+}
+
+<SMEARING_HEX_3D>{SPC}*rho_1{EQL}{FLT} {
+  if (cur_sm_dec->set[3])
+  {
+    char err_string[256];
+    sprintf(err_string, "A smearing coefficient is set more than once in block %d (note that alpha_1 and rho_1 are mutually exclusive)!", no_smearings_declared - 1);
+    fatal_error(err_string, "read_input");
+  }
+  sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[1]);
+  cur_sm_dec->set[3] = 1;
+  if(myverbose) printf("  smearing block %d: alpha_1 set to %lf (rho_1 = %lf)\n", no_smearings_declared - 1, 4.0 * cur_sm_dec->params[1], cur_sm_dec->params[1]);
 }
 
 <SMEARING_APE>{SPC}*EndSmearing{SPC}* {
   check_smearing_params(APE);
+  BEGIN INITIAL;
+}
+
+<SMEARING_APE_3D>{SPC}*EndSmearing{SPC}* {
+  check_smearing_params(APE_3D);
+  BEGIN INITIAL;
+}
+
+<SMEARING_HEX_3D>{SPC}*EndSmearing{SPC}* {
+  check_smearing_params(HEX_3D);
+  BEGIN INITIAL;
+}
+
+<SMEARING_HEX>{SPC}*EndSmearing{SPC}* {
+  check_smearing_params(HEX);
   BEGIN INITIAL;
 }
 
@@ -2116,13 +2318,28 @@ EQL {SPC}*={SPC}*
   BEGIN INITIAL;
 }
 
+<SMEARING_HYP_3D>{SPC}*EndSmearing{SPC}* {
+  check_smearing_params(HYP_3D);
+  BEGIN INITIAL;
+}
+
+<SMEARING_IDENTITY>{SPC}*EndSmearing{SPC}* {
+  check_smearing_params(Identity);
+  BEGIN INITIAL;
+}
+
 <SMEARING_STOUT>{SPC}*EndSmearing{SPC}* {
   check_smearing_params(Stout);
   BEGIN INITIAL;
 }
 
-<SMEARING_HEX,SMEARING_GRADIENT,SMEARING_UNITARY,SMEARING_JACOBI>{SPC}*EndSmearing{SPC}+ {
-  fatal_error("HEX, GRADIENT, UNITARY and JACOBI smearing are not yet fully implemented!", "read_input");  
+<SMEARING_STOUT_3D>{SPC}*EndSmearing{SPC}* {
+  check_smearing_params(Stout_3D);
+  BEGIN INITIAL;
+}
+
+<SMEARING_GRADIENT,SMEARING_UNITARY,SMEARING_JACOBI>{SPC}*EndSmearing{SPC}+ {
+  fatal_error("GRADIENT, UNITARY and JACOBI smearing are not yet fully implemented!", "read_input");  
 }
 
 %%

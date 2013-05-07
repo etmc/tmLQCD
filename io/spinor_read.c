@@ -25,7 +25,7 @@ paramsSourceInfo SourceInfo = {0, _default_propagator_splitted, _default_source_
 
 int read_spinor(spinor * const s, spinor * const r, char * filename, const int position_) {
   int status = 0, getpos = 0, bytes = 0, prec = 0, prop_type, position = position_, rstat=0;
-  char *header_type = NULL;
+  char const *header_type = NULL;
   READER *reader = NULL;
   DML_Checksum checksum;
   construct_reader(&reader, filename);

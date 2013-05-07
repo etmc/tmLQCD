@@ -1,0 +1,19 @@
+#include "stout_fatten_links_with_force_terms.static"
+#include "hex_smear_stage_1_with_force_terms.static"
+#include "hex_smear_stage_2_with_force_terms.static"
+#include "hex_smear_stage_3_with_force_terms.static"
+
+static void smear_with_force_terms(hex_control *control, gauge_field_t in)
+{
+  control->U[0] = in; /* Shallow copy intended */
+  
+#pragma omp parallel
+  for (int iter = 0; iter < control->iterations; ++iter)
+  {
+    smear_stage_1_with_force_terms(control->V_stage_1[iter], control->trace_stage_1[iter], control->coeff[0],                           control->U[iter]);
+    smear_stage_2_with_force_terms(control->V_stage_2[iter], control->trace_stage_2[iter], control->coeff[1], control->V_stage_1[iter], control->U[iter]);   
+    smear_stage_3_with_force_terms(control->U[iter + 1],     control->trace_stage_3[iter], control->coeff[2], control->V_stage_2[iter], control->U[iter]);
+  }
+  
+  control->result = control->U[control->iterations];
+}

@@ -60,7 +60,8 @@
 #include "boundary.h"
 #include "solver/solver.h"
 #include "init/init.h"
-#include <smearing/stout.h>
+#include "dirty_shameful_business.h"
+#include <smearing/control.h>
 #include "invert_eo.h"
 #include "monomial/monomial.h"
 #include "ranlxd.h"
@@ -102,9 +103,7 @@ int main(int argc, char *argv[])
   char * input_filename = NULL;
   char * filename = NULL;
   double plaquette_energy;
-  /* struct stout_parameters params_smear; */
   spinor **s, *s_;
-  stout_control *smear_control = NULL;
 
 #ifdef _KOJAK_INST
 #pragma pomp inst init
@@ -153,11 +152,6 @@ int main(int argc, char *argv[])
   init_openmp();
 #endif
 
-  /* Allocate needed memory */
-  initialize_gauge_buffers(5);
-  initialize_adjoint_buffers(5);
-
-
   /* this DBW2 stuff is not needed for the inversion ! */
   if (g_dflgcr_flag == 1) {
     even_odd_flag = 0;
@@ -173,6 +167,11 @@ int main(int argc, char *argv[])
 
   tmlqcd_mpi_init(argc, argv);
 
+  /* Allocate needed memory */
+  initialize_gauge_buffers(12);
+  initialize_adjoint_buffers(6);
+  init_smearing(); 
+ 
   g_dbw2rand = 0;
 
   /* starts the single and double precision random number */
@@ -298,7 +297,7 @@ int main(int argc, char *argv[])
 #ifdef MPI
     xchange_gauge(g_gauge_field);
 #endif
-
+   
     /*compute the energy of the gauge field*/
     plaquette_energy = measure_gauge_action(_AS_GAUGE_FIELD_T(g_gauge_field));
 
@@ -306,20 +305,6 @@ int main(int argc, char *argv[])
       printf("# The computed plaquette value is %e.\n", plaquette_energy / (6.*VOLUME*g_nproc));
       fflush(stdout);
     }
-
-    /* DEBUG BLOCK! */
-    smear_control = construct_stout_control(0.1 /* rho */, 3 /* iterations */, 1 /* calculate_force_terms */);
-    stout_smear(smear_control, _AS_GAUGE_FIELD_T(g_gauge_field));
-    g_update_gauge_copy = 1;
-    g_update_gauge_energy = 1;
-    g_update_rectangle_energy = 1;
-    plaquette_energy = measure_gauge_action(smear_control->result);
-
-    if (g_cart_id == 0) {
-      printf("# The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
-      fflush(stdout);
-    }
-    /* ~DEBUG BLOCK! */
 
     if (reweighting_flag == 1) {
       reweighting_factor(reweighting_samples, nstore);
@@ -431,7 +416,27 @@ int main(int argc, char *argv[])
     if (g_cart_id == 0) {
       fprintf(stdout, "#\n"); /*Indicate starting of the operator part*/
     }
-    for(op_id = 0; op_id < no_operators; op_id++) {
+
+    /* We will aggregate the operators by smearing type, to avoid performing
+       the same smearing operation multiple times. */
+    for (int stype = 0; stype < no_smearings_operator; ++stype)
+    {
+      smear(smearing_control_operator[stype], g_gf);
+      g_update_gauge_energy = 1;
+      double new_plaquette = measure_gauge_action(smearing_control_operator[stype]->result);
+
+      if (g_cart_id == 0)
+      {
+        printf("# After smearing of type %s (id %d), the plaquette value is %e.\n", smearing_type_names[smearing_control_operator[stype]->type], 
+                                                                                    smearing_control_operator[stype]->id, new_plaquette / (6.*VOLUME*g_nproc));
+        fflush(stdout);
+      }
+    }  
+       
+    for(op_id = 0; op_id < no_operators; op_id++)
+    {
+      ohnohack_remap_g_gauge_field(smearing_control_operator[operator_list[op_id].smearing]->result);
+
       boundary(operator_list[op_id].kappa);
       g_kappa = operator_list[op_id].kappa; 
       g_mu = 0.;
@@ -439,6 +444,7 @@ int main(int argc, char *argv[])
       if(use_preconditioning==1 && PRECWSOPERATORSELECT[operator_list[op_id].solver]!=PRECWS_NO ){
         printf("# Using preconditioning with treelevel preconditioning operator: %s \n",
               precWSOpToString(PRECWSOPERATORSELECT[operator_list[op_id].solver]));
+              
         /* initial preconditioning workspace */
         operator_list[op_id].precWS=(spinorPrecWS*)malloc(sizeof(spinorPrecWS));
         spinorPrecWS_Init(operator_list[op_id].precWS,
@@ -476,12 +482,12 @@ int main(int argc, char *argv[])
       if(operator_list[op_id].type == OVERLAP){
         free_Dov_WS();
       }
-
     }
+    ohnohack_remap_g_gauge_field(g_gf);
+
     nstore += Nsave;
   }
 
-  free_stout_control(smear_control);
   return_gauge_field(&g_gf);
 
 #ifdef MPI
@@ -497,6 +503,7 @@ int main(int argc, char *argv[])
   free_spinor_field();
 /*  free_moment_field();*/
   free_chi_spinor_field();
+  finalize_smearing();
   finalize_gauge_buffers();
   finalize_adjoint_buffers();
 

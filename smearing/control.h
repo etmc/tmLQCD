@@ -6,26 +6,36 @@
 #include <buffers/gauge.h>
 #include <buffers/adjoint.h>
 
-#include <smearing/identity.h>
 #include <smearing/ape.h>
-#include <smearing/hyp.h>
-#include <smearing/stout.h>
-// #include <smearing/unitary.h>
-// #include <smearing/hex.h>
+#include <smearing/ape_3d.h>
 // #include <smearing/gradient.h>
+#include <smearing/hex.h>
+#include <smearing/hex_3d.h>
+#include <smearing/hyp.h>
+// #include <smearing/hyp_3d.h>
+#include <smearing/identity.h>
 // #include <smearing/jacobi.h>
+#include <smearing/stout.h>
+#include <smearing/stout_3d.h>
+// #include <smearing/unitary.h>
 
 typedef enum 
 {
-  Identity = 0, 
-  APE = 1,
-  HYP = 2,
-  Stout = 3,
-  Unitary = 4,
-  HEX = 5,
-  Gradient = 6,
-  Jacobi = 7
+  APE,
+  APE_3D,
+  Gradient,
+  HEX,
+  HEX_3D,
+  HYP,
+  HYP_3D,
+  Identity,
+  Jacobi,
+  Stout,
+  Stout_3D,
+  Unitary
 } smearing_type;
+
+extern char const * smearing_type_names[12];
 
 typedef struct
 {
@@ -42,9 +52,6 @@ typedef struct
   int id;
   
   /* Flags */
-  /* FIXME These currently mirror flags in the separate control structs.
-     A better solution should be found. */
-  int calculate_force_terms;
   int smearing_performed;
   
   /* Results -- main output for users */
@@ -55,7 +62,6 @@ typedef struct
   void* type_control;
 } smearing_control_t;
 
-/* FIXME So many globals! */
 extern int no_smearings_declared;
 extern smearing_params_t* smearing_declarations;
 
