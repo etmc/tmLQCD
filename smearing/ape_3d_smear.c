@@ -12,8 +12,10 @@ void ape_3d_smear(ape_3d_control *control, gauge_field_t in)
   double const coeff_principal = 1.0 - 4.0 * control->coeff;
   
   /* start of the the stout smearing **/
+#pragma omp parallel private(staples)
   for(unsigned int iter = 0; iter < control->iterations; ++iter)
   {
+#pragma omp for
     for (unsigned int x = 0; x < VOLUME; ++x)
     {
       _su3_assign(buffer[x][0], in[x][0]); // Left untouched, but still needed for future calculations!
@@ -25,10 +27,13 @@ void ape_3d_smear(ape_3d_control *control, gauge_field_t in)
       }
     }
 
-    /* Prepare for the next iteration -- the last result is now input! */
-    swap_gauge_field(&control->U[1], &buffer);
-    exchange_gauge_field(&control->U[1]);
-    in = control->U[1];
+#pragma omp single
+    {
+      /* Prepare for the next iteration -- the last result is now input! */
+      swap_gauge_field(&control->U[1], &buffer);
+      exchange_gauge_field(&control->U[1]);
+      in = control->U[1];
+    }
   }
   control->result = control->U[1];
   return_gauge_field(&buffer);

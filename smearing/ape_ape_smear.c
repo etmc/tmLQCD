@@ -12,8 +12,10 @@ void ape_smear(ape_control *control, gauge_field_t in)
   double const coeff_principal = 1.0 - 6.0 * control->coeff;
 
   /* start of the the stout smearing **/
+#pragma omp parallel private(staples)
   for(unsigned int iter = 0; iter < control->iterations; ++iter)
   {
+#pragma omp for
     for (unsigned int x = 0; x < VOLUME; ++x)
       for (unsigned int mu = 0; mu < 4; ++mu)
       {
@@ -22,10 +24,13 @@ void ape_smear(ape_control *control, gauge_field_t in)
         reunitarize(&buffer[x][mu]);
       }
 
-    /* Prepare for the next iteration -- the last result is now input! */
-    swap_gauge_field(&control->U[1], &buffer);
-    exchange_gauge_field(&control->U[1]);
-    in = control->U[1];
+#pragma omp single
+    {
+      /* Prepare for the next iteration -- the last result is now input! */
+      swap_gauge_field(&control->U[1], &buffer);
+      exchange_gauge_field(&control->U[1]);
+      in = control->U[1];
+    }
   }
 
   control->result = control->U[1];
