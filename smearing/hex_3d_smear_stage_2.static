@@ -1,0 +1,49 @@
+static void smear_stage_2(gauge_field_t out, double const coeff, su3_two_index *in, gauge_field_t const orig)
+{
+  su3 ALIGN tmp;
+  su3 ALIGN staples;
+
+#pragma omp for private(tmp, staples)
+  for (unsigned int x = 0; x < VOLUME; ++x)
+  {
+    memmove(out[x], orig[x], sizeof(su3));
+    for (unsigned int comp = 0; comp < 3; ++comp)
+    {
+      unsigned int const mu    = hi1_3d[comp].mu;
+      unsigned int const nu    = hi1_3d[comp].nu;
+      unsigned int const rho   = hi1_3d[comp].rho;
+
+      /* We lift from one to two indices using the permutation tables. */      
+      unsigned int const cmn   = hp1_3d[comp].cmn;
+      unsigned int const cnm   = hp1_3d[comp].cnm;
+
+      unsigned int const cmr   = hp1_3d[comp].cmr;
+      unsigned int const crm   = hp1_3d[comp].crm;
+      
+      unsigned int const xpm   = g_iup[x][mu];
+
+      unsigned int const xmn   = g_idn[x][nu];
+      unsigned int const xpn   = g_iup[x][nu];
+      unsigned int const xpmmn = g_idn[xpm][nu];
+      
+      unsigned int const xmr   = g_idn[x][rho];
+      unsigned int const xpr   = g_iup[x][rho];
+      unsigned int const xpmmr = g_idn[xpm][rho];
+         
+      _su3_times_su3d(tmp, in[xpn][cmn], in[xpm][cnm]);
+      _su3_times_su3(staples, in[x][cnm], tmp);
+      _su3_times_su3(tmp, in[xmn][cmn], in[xpmmn][cnm]);
+      _su3d_times_su3_acc(staples, in[xmn][cnm], tmp);
+
+      _su3_times_su3d(tmp, in[xpr][cmr], in[xpm][crm]);
+      _su3_times_su3_acc(staples, in[x][crm], tmp);
+      _su3_times_su3(tmp, in[xmr][cmr], in[xpmmr][crm]);
+      _su3d_times_su3_acc(staples, in[xmr][crm], tmp);
+
+      fatten_links(&out[x][mu], coeff, &staples, &orig[x][mu]);
+    }
+  }
+  
+#pragma omp single  
+  generic_exchange(&out, sizeof(su3_tuple));
+}

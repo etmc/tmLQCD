@@ -1,29 +1,32 @@
 #include "stout.ih"
 
-#include "stout_add_stout_terms_to_forces.static"
-#include "stout_construct_intermediates.static"
+#include "stout_construct_Sigma.static"
+#include "stout_construct_Z.static"
+#include "stout_add_terms_to_forces.static"
 
 void stout_smear_forces(stout_control *control, adjoint_field_t in)
 {
-  /* Check sanity of the call */
   if (!control->calculate_force_terms)
-    fatal_error("Stout control structure not setup for calculating force terms.", "stout_smear_forces");
-
-  if (!control->smearing_performed)
-    fatal_error("Stout smearing not yet performed.", "stout_smear_forces");
+    fatal_error("Smearing control not set up for calculating forces.", "stout_smear_forces");
   
   gauge_field_t smeared_force = get_gauge_field();
+  gauge_field_t Sigma_U = get_gauge_field();
   
   /* We'll need the forces in their tangent space representation, so let's first build this up. */
   adjoint_to_gauge(&smeared_force, in);
       
   /* The modifications are done backwards, all the time peeling off one layer of stouting... */
 #pragma omp parallel
-  for (unsigned int iter = control->iterations; iter > 0; --iter)
+  for (int iter = control->iterations - 1; iter >= 0; --iter)
   {
-    construct_intermediates(control->trace[iter - 1], control->U[iter] /* = V */, control->U[iter - 1] /* = U */, smeared_force);
-    add_stout_terms_to_forces(smeared_force, control->rho, control->trace[iter - 1], control->U[iter] /* = V */, control->U[iter - 1] /* = U */);
-    /* Barrier unnecessary from implicit barrier of single section in add_stout_terms_to_forces */
+    /* Since the U's are fields after full smearing steps, U[iter] == U, U[iter + 1] == V */
+    construct_Sigma_V(control->trace[iter], control->U[iter + 1], smeared_force);
+    construct_Z_V(control->trace[iter], control->U[iter]);
+    add_terms_to_forces_V(smeared_force, control->trace[iter], control->coeff, control->U[iter + 1], control->U[iter]);
+
+    construct_Sigma_U(Sigma_U, control->coeff, control->U[iter], control->trace[iter]);
+    add_terms_to_forces_U(smeared_force, Sigma_U, control->U[iter]);
+    /* Barrier unnecessary from implicit barrier of single section in add_terms_to_forces */
   }
 
   /* The force terms are still in the tangent space representation, so project them back to the adjoint one */
@@ -31,4 +34,5 @@ void stout_smear_forces(stout_control *control, adjoint_field_t in)
   generic_exchange(&control->force_result, sizeof(su3adj_tuple));
 
   return_gauge_field(&smeared_force);
+  return_gauge_field(&Sigma_U);
 }

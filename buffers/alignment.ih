@@ -2,7 +2,9 @@
 # include<config.h>
 #endif
 
+#include <string.h>
 #include <fatal_error.h>
 
 #include <buffers/alignment.h>
 
+extern int allocation_id_ctr;

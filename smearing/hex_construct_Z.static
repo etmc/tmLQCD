@@ -1,0 +1,24 @@
+#include "stout_construct_Z.static"
+
+static void construct_Z_1(stout_notes_three_index * const trace, gauge_field_t const U)
+{
+#pragma omp for
+  for (unsigned int x = 0; x < VOLUME; ++x)
+    for (unsigned int comp = 0; comp < 24; ++comp)
+      inner_Z_loop(&trace[x][comp], &U[x][hi3[comp].mu]);
+  
+#pragma omp single
+  generic_exchange((stout_notes_three_index**)(&trace), sizeof(stout_notes_three_index));
+}
+
+static void construct_Z_2(stout_notes_two_index * const trace, gauge_field_t const U)
+{
+#pragma omp for
+  for (unsigned int x = 0; x < VOLUME; ++x)
+    for (unsigned int comp = 0; comp < 12; ++comp)
+      inner_Z_loop(&trace[x][comp], &U[x][hi2[comp].mu]);
+    
+#pragma omp single
+  generic_exchange((stout_notes_two_index **)(&trace), sizeof(stout_notes_two_index));
+}
+

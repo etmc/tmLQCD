@@ -1,0 +1,34 @@
+static void smear_stage_1_with_force_terms(su3_two_index *out, stout_notes_three_index *trace, double const coeff, gauge_field_t orig)
+{
+  su3 ALIGN tmp;
+
+  /* C_mnrs and C_mrns are identical, so we need the loop over half the points. */
+#pragma omp for private(tmp)
+  for (unsigned int x = 0; x < VOLUME; ++x)
+    for (unsigned int comp = 0; comp < 12; ++comp) 
+    {
+      unsigned int const mu    = hi2[comp].mu;      
+      unsigned int const sigma = hi2[comp].sigma;
+
+      /* Mapping to the two identical components. */
+      unsigned int const cmnr = hp2[comp].cmnr;
+      unsigned int const cmrn = hp2[comp].cmrn;      
+
+      unsigned int const xpm   = g_iup[x][mu];
+      
+      unsigned int const xps   = g_iup[x][sigma];
+      unsigned int const xms   = g_idn[x][sigma];
+      unsigned int const xpmms = g_idn[xpm][sigma];
+
+      _su3_times_su3d(tmp, orig[xps][mu], orig[xpm][sigma]);
+      _su3_times_su3(trace[x][cmnr].C, orig[x][sigma], tmp);
+      _su3_times_su3(tmp, orig[xms][mu], orig[xpmms][sigma]);
+      _su3d_times_su3_acc(trace[x][cmnr].C, orig[xms][sigma], tmp);
+      fatten_links_with_force_terms(&out[x][comp], &trace[x][cmnr], coeff, &orig[x][mu]);
+      
+      memmove(&trace[x][cmrn], &trace[x][cmnr], sizeof(stout_notes_t));
+    }
+  
+#pragma omp single
+  generic_exchange(&out, sizeof(su3_two_index));
+}

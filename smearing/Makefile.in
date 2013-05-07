@@ -31,18 +31,32 @@ COMPILE = ${CC} ${DEFS} ${INCLUDES} ${CFLAGS} ${OPTARGS}
 
 LIBRARIES = libsmear
 
-libsmear_TARGETS = 	ape_ape_smear \
+libsmear_TARGETS = 	ape_3d_construct_control \
+			ape_3d_free_control \
+			ape_3d_smear \
+			ape_ape_smear \
 			ape_construct_ape_control \
 			ape_free_ape_control \
+			control \
 			control_construct_smearing_control \
 			control_construct_smearing_control_from_params \
 			control_free_smearing_control \
 			control_smear \
 			control_smear_forces \
+			hex_construct_hex_control \
+			hex_free_hex_control \
+			hex_hex_smear \
+			hex_hex_smear_forces \
+			hex_3d_construct_control \
+			hex_3d_free_control \
+			hex_3d_smear \
 			hyp_construct_hyp_control \
 			hyp_free_hyp_control \
 			hyp_hyp_smear \
 			identity_construct_identity_control \
+			stout_3d_construct_control \
+			stout_3d_free_control \
+			stout_3d_smear \
 			stout_construct_stout_control \
 			stout_free_stout_control \
 			stout_stout_smear \
@@ -51,6 +65,7 @@ libsmear_TARGETS = 	ape_ape_smear \
 			utils_calculate_forces_numerically \
 			utils_fold_field \
 			utils_generic_staples \
+			utils_generic_staples_3d \
 			utils_print_config_to_screen \
 			utils_print_su3 \
 			utils_print_su3adj \

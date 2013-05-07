@@ -19,7 +19,7 @@ static void smear_plain(stout_control *control, gauge_field_t in)
       for (unsigned int mu = 0; mu < 4; ++mu)
       {
         generic_staples(&staples, x, mu, in);
-        fatten_links(&buffer[x][mu], control->rho, &staples, &in[x][mu]);
+        fatten_links(&buffer[x][mu], control->coeff, &staples, &in[x][mu]);
       }
     /* Prepare for the next iteration, swap and exchange fields */
     /* There should be an implicit OMP barrier here */
@@ -27,10 +27,10 @@ static void smear_plain(stout_control *control, gauge_field_t in)
     {
       swap_gauge_field(&control->U[1], &buffer);
       exchange_gauge_field(&control->U[1]); /* The edge terms will have changed by now */
-      in = control->result; /* Shallow copy intended */
+      in = control->U[1]; /* Shallow copy intended */
     }
   }
-  control->smearing_performed = 1;
+  
   control->result = control->U[1];
   return_gauge_field(&buffer); 
 }

@@ -1,0 +1,43 @@
+#include "stout_add_terms_to_forces.static"
+
+static void add_terms_to_forces_1(gauge_field_t smeared_force, stout_notes_three_index *trace, double const coeff, su3_two_index * const V, gauge_field_t const U)
+{
+  su3 ALIGN t1;
+  su3 ALIGN t2;
+  
+#pragma omp for private(t1, t2)
+  for (unsigned int x = 0; x < VOLUME; ++x)
+    for (unsigned int mu = 0; mu < 4; ++mu)
+    {
+      _su3_zero(t1);
+      
+      for (unsigned int comp = 6 * mu; comp < (6 * mu + 6); ++comp)
+        inner_force_addition(&t1, &trace[x][comp], coeff, &V[x][hp3[comp].cmn]);
+
+      /* smeared_force = U * (Sigma * V - Z * C) * U^\dagger */
+      _su3_times_su3d(t2, t1, U[x][mu]);
+      _su3_times_su3_acc(smeared_force[x][mu], U[x][mu], t2);
+    }
+}
+
+static void add_terms_to_forces_2(gauge_field_t smeared_force, stout_notes_two_index *trace, double const coeff, su3_two_index * const V, gauge_field_t const U)
+{
+  su3 ALIGN t1;
+  su3 ALIGN t2;
+  
+#pragma omp for private(t1, t2)
+  for (unsigned int x = 0; x < VOLUME; ++x)
+    for (unsigned int mu = 0; mu < 4; ++mu)
+    {
+      _su3_zero(t1);
+      
+      for (unsigned int comp = 3 * mu; comp < (3 * mu + 3); ++comp)
+        inner_force_addition(&t1, &trace[x][comp], coeff, &V[x][comp]);
+      
+      /* smeared_force = U * (Sigma * V - Z * C) * U^\dagger */
+      _su3_times_su3d(t2, t1, U[x][mu]);
+      _su3_times_su3_acc(smeared_force[x][mu], U[x][mu], t2);
+    }
+}
+
+
