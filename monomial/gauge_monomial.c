@@ -98,6 +98,10 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
 void gauge_EMderivative(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   double factor = -1. * g_beta/3.0;
+  if(mnl->use_rectangles) {
+    mnl->forcefactor = 1.;
+    factor = -mnl->c0 * g_beta/3.0;
+  }
   
   double atime, etime;
   atime = gettime();
@@ -121,6 +125,12 @@ void gauge_EMderivative(const int id, hamiltonian_field_t * const hf) {
     get_staples(&v, i, 0, (const su3**) hf->gaugefield); 
     _su3_times_su3d(w,*z,v);
     _trace_lambda_mul_add_assign((*xm), (1.+mnl->glambda)*factor, w);
+    // lambda only acts on the plaquette, effectively changing c0 in the spatial and temporal parts, c1 remains untouched
+    if(mnl->use_rectangles) {
+	    get_rectangle_staples(&v, i, 0);
+	    _su3_times_su3d(w, *z, v);
+	    _trace_lambda_mul_add_assign((*xm), factor*mnl->c1/mnl->c0, w);
+    }
     // magnetic part
     for(mu=1;mu<4;mu++) {
       z=&hf->gaugefield[i][mu];
@@ -133,6 +143,11 @@ void gauge_EMderivative(const int id, hamiltonian_field_t * const hf) {
       get_timelike_staples(&v, i, mu, (const su3**) hf->gaugefield); 
       _su3_times_su3d(w, *z, v);
       _trace_lambda_mul_add_assign((*xm), (1.+mnl->glambda)*factor, w);
+      if(mnl->use_rectangles) {
+      	get_rectangle_staples(&v, i, mu);
+      	_su3_times_su3d(w, *z, v);
+      	_trace_lambda_mul_add_assign((*xm), factor*mnl->c1/mnl->c0, w);
+      }
     }
   }
 

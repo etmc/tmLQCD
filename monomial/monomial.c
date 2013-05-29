@@ -427,13 +427,8 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].accfunction = &gauge_acc;
 	monomial_list[i].derivativefunction = &gauge_derivative;
 	no_gauge_monomials++;
-	// this is only for Wilson plaquette
-	if(monomial_list[i].gtype != 0) {
-	  monomial_list[i].glambda = 0.;
-	}
-	else if(fabs( monomial_list[i].glambda) > 0) {
+	if(fabs( monomial_list[i].glambda) > 0) {
 	  monomial_list[i].derivativefunction = &gauge_EMderivative;
-	  monomial_list[i].use_rectangles = 0;
 	}
 	if(!monomial_list[i].use_rectangles) {
 	  monomial_list[i].c1 = 0.;
