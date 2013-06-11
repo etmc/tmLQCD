@@ -83,7 +83,7 @@ void Msw_full(spinor * const Even_new, spinor * const Odd_new,
 // this is the clover Qhat with mu = 0
 void Qsw_psi(spinor * const l, spinor * const k) {
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
-  clover_inv(g_spinor_field[DUM_MATRIX+1], 0., +1);
+  clover_inv(g_spinor_field[DUM_MATRIX+1], +1);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
   clover_gamma5(OO, l, k, g_spinor_field[DUM_MATRIX], 0.);
 }
@@ -91,7 +91,7 @@ void Qsw_psi(spinor * const l, spinor * const k) {
 // this is the twisted clover Qhat with -mu
 void Qsw_minus_psi(spinor * const l, spinor * const k) {
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
-  clover_inv(g_spinor_field[DUM_MATRIX+1], g_mu, -1);
+  clover_inv(g_spinor_field[DUM_MATRIX+1], -1);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
   clover_gamma5(OO, l, k, g_spinor_field[DUM_MATRIX], -(g_mu + g_mu3));
 }
@@ -99,7 +99,7 @@ void Qsw_minus_psi(spinor * const l, spinor * const k) {
 // this is the twisted clover Qhat with +mu
 void Qsw_plus_psi(spinor * const l, spinor * const k) {
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
-  clover_inv(g_spinor_field[DUM_MATRIX+1], g_mu, +1);
+  clover_inv(g_spinor_field[DUM_MATRIX+1], +1);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
   clover_gamma5(OO, l, k, g_spinor_field[DUM_MATRIX], +(g_mu + g_mu3));
 }
@@ -108,12 +108,12 @@ void Qsw_plus_psi(spinor * const l, spinor * const k) {
 void Qsw_sq_psi(spinor * const l, spinor * const k) {
   /* \hat Q_{-} */
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
-  clover_inv(g_spinor_field[DUM_MATRIX+1], 0., +1);
+  clover_inv(g_spinor_field[DUM_MATRIX+1], +1);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
   clover_gamma5(OO, g_spinor_field[DUM_MATRIX], k, g_spinor_field[DUM_MATRIX], 0.);
   /* \hat Q_{+} */
   Hopping_Matrix(EO, l, g_spinor_field[DUM_MATRIX]);
-  clover_inv(l, 0., +1); 
+  clover_inv(l, +1); 
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], l);
   clover_gamma5(OO, l, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], 0.);
 }
@@ -121,12 +121,12 @@ void Qsw_sq_psi(spinor * const l, spinor * const k) {
 void Qsw_pm_psi(spinor * const l, spinor * const k) {
   /* \hat Q_{-} */
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
-  clover_inv(g_spinor_field[DUM_MATRIX+1], g_mu, -1);
+  clover_inv(g_spinor_field[DUM_MATRIX+1], -1);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
   clover_gamma5(OO, g_spinor_field[DUM_MATRIX], k, g_spinor_field[DUM_MATRIX], -(g_mu + g_mu3));
   /* \hat Q_{+} */
   Hopping_Matrix(EO, l, g_spinor_field[DUM_MATRIX]);
-  clover_inv(l, g_mu, +1); 
+  clover_inv(l, +1); 
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], l);
   clover_gamma5(OO, l, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], +(g_mu + g_mu3));
 }
@@ -134,29 +134,29 @@ void Qsw_pm_psi(spinor * const l, spinor * const k) {
 // this is the clover Mhat with mu = 0
 void Msw_psi(spinor * const l, spinor * const k) {
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
-  clover_inv(g_spinor_field[DUM_MATRIX+1], 0., +1);
+  clover_inv(g_spinor_field[DUM_MATRIX+1], +1);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
   clover(OO, l, k, g_spinor_field[DUM_MATRIX], 0.);
 }
 
 void Msw_plus_psi(spinor * const l, spinor * const k) {
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
-  clover_inv(g_spinor_field[DUM_MATRIX+1], g_mu, +1);
+  clover_inv(g_spinor_field[DUM_MATRIX+1], +1);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
   clover(OO, l, k, g_spinor_field[DUM_MATRIX], +(g_mu + g_mu3));
 }
 
 void Msw_minus_psi(spinor * const l, spinor * const k) {
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
-  clover_inv(g_spinor_field[DUM_MATRIX+1], g_mu, -1);
+  clover_inv(g_spinor_field[DUM_MATRIX+1], -1);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
   clover(OO, l, k, g_spinor_field[DUM_MATRIX], -(g_mu + g_mu3));
 }
 
 
-void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const double mu) {
+void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const int tau3sign) {
   Hopping_Matrix(ieo, l, k);
-  clover_inv(l, mu, +1);
+  clover_inv(l, tau3sign);
   return;
 }
 
@@ -172,7 +172,7 @@ void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const do
  *
  **********************************************************/
 
-void clover_inv(spinor * const l, const double _mu, const int _tau3sign) {
+void clover_inv(spinor * const l, const int tau3sign) {
 #ifdef OMP
 #pragma omp parallel
   {
@@ -182,11 +182,9 @@ void clover_inv(spinor * const l, const double _mu, const int _tau3sign) {
   int ioff = 0;
   const su3 *w1, *w2, *w3, *w4;
   spinor *rn;
-  double mu = _mu;
 
-  if(_tau3sign < 0) {
+  if(tau3sign < 0) {
     ioff = VOLUME/2;
-    mu = -_mu;
   }
 
 #ifndef OMP

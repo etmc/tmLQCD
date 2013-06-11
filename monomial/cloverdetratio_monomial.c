@@ -92,12 +92,12 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
   
   /* apply Hopping Matrix M_{eo} */
   /* to get the even sites of X */
-  H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EO, -mnl->mu);
+  H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EO, -1);
   /* \delta Q sandwitched by Y_o^\dagger and X_e */
   deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
   
   /* to get the even sites of Y */
-  H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, mnl->mu);
+  H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1);
   /* \delta Q sandwitched by Y_e^\dagger and X_o */
   deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor); 
 
@@ -118,12 +118,12 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
   
   /* apply Hopping Matrix M_{eo} */
   /* to get the even sites of X */
-  H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EO, -mnl->mu);
+  H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EO, -1);
   /* \delta Q sandwitched by Y_o^\dagger and X_e */
   deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
   
   /* to get the even sites of Y */
-  H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, mnl->mu);
+  H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1);
   /* \delta Q sandwitched by Y_e^\dagger and X_o */
   deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor);
 
@@ -203,12 +203,12 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
 
   /* apply Hopping Matrix M_{eo} */
   /* to get the even sites of X */
-  H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EE, -mnl->mu);
+  H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EE, -1);
   /* \delta Q sandwitched by Y_o^\dagger and X_e */
   deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
   
   /* to get the even sites of Y */
-  H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EE, mnl->mu);
+  H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EE, +1);
   /* \delta Q sandwitched by Y_e^\dagger and X_o */
   deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor); 
 
