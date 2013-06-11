@@ -95,13 +95,13 @@ void rat_derivative(const int id, hamiltonian_field_t * const hf) {
     if(mnl->type == CLOVERRAT) {
       // apply Hopping Matrix M_{eo}
       // to get the even sites of X_e
-      H_eo_sw_inv_psi(mnl->w_fields[2], g_chi_up_spinor_field[j], EO, -1);
+      H_eo_sw_inv_psi(mnl->w_fields[2], g_chi_up_spinor_field[j], EO, -1, mnl->mu);
       // \delta Q sandwitched by Y_o^\dagger and X_e
       deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, 
 	       mnl->rat.rmu[j]*mnl->forcefactor); 
       
       // to get the even sites of Y_e
-      H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1);
+      H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1, mnl->mu);
       // \delta Q sandwitched by Y_e^\dagger and X_o
       // uses the gauge field in hf and changes the derivative fields in hf
       deriv_Sb(EO, mnl->w_fields[3], g_chi_up_spinor_field[j], hf, 
