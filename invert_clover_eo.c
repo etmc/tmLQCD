@@ -83,7 +83,7 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
 
   /* Reconstruct the even sites                */
   Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd_new);
-  clover_inv(EE, g_spinor_field[DUM_DERI], +g_mu);
+  clover_inv(g_spinor_field[DUM_DERI], +1, g_mu);
   /* The sign is plus, since in Hopping_Matrix */
   /* the minus is missing                      */
   assign_add_mul_r(Even_new, g_spinor_field[DUM_DERI], +1., VOLUME/2);

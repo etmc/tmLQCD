@@ -96,12 +96,12 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   
   // apply Hopping Matrix M_{eo}
   // to get the even sites of X_e
-  H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EO, -mnl->mu);
+  H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EO, -1, mnl->mu);
   // \delta Q sandwitched by Y_o^\dagger and X_e
   deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
   
   // to get the even sites of Y_e
-  H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, mnl->mu);
+  H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1, mnl->mu);
   // \delta Q sandwitched by Y_e^\dagger and X_o
   // uses the gauge field in hf and changes the derivative fields in hf
   deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor);
