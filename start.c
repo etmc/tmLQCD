@@ -318,7 +318,7 @@ void random_spinor_field_eo(spinor * const k, const int repro, const enum RN_TYP
 	      random_vector(v, 24);
 	      if(g_cart_id == id) {
 		s = k + g_lexic2eosub[ g_ipt[t][X][Y][Z] ];
-		memcpy(s, v, 24*sizeof(double));
+		memmove(s, v, 24*sizeof(double));
 	      }
 	    }
 	  }

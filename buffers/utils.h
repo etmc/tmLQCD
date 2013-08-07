@@ -10,7 +10,7 @@
 
 extern int VOLUMEPLUSRAND;
 
-void generic_exchange(void *field_in, int bytes_per_site);
+void generic_exchange(void * field_in, unsigned int const bytes_per_site);
 
 static inline void zero_adjoint_field(adjoint_field_t *target);
 static inline void zero_gauge_field(gauge_field_t *target);
@@ -43,9 +43,9 @@ static inline void exchange_ ## NAME ## _field(NAME ## _field_t *target)        
                                                                                                 \
 static inline void swap_ ## NAME ## _field(NAME ## _field_t *left, NAME ## _field_t *right)            \
 {                                                                                               \
-   DATATYPE *tmp = *left;                                                                       \
+   NAME ## _field_t tmp = *left;                                                                       \
    *left = *right;					 \
-   *right = tmp;                                                                                \
+   *right = tmp;                                                                              \
 }                                                                                               \
                                                                                                 \
 static inline void copy_ ## NAME ## _field(NAME ## _field_t *copy, NAME ## _field_t const original)    \

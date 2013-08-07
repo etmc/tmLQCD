@@ -105,8 +105,6 @@ int main(int argc,char *argv[])
   /* Do we want to perform reversibility checks */
   /* See also return_check_flag in read_input.h */
   int return_check = 0;
-  /* For getopt */
-  int c;
 
   paramsXlfInfo *xlfInfo;
 
@@ -332,7 +330,6 @@ int main(int argc,char *argv[])
   /*For parallelization: exchange the gaugefield */
 #ifdef MPI
   exchange_gauge_field(&g_gf);
-  // xchange_gauge(g_gauge_field);
 #endif
 
   if(even_odd_flag) {

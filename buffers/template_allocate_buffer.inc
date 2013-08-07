@@ -1,4 +1,4 @@
-#define __DEFINE_ALLOCATE_BUFFERS(DATATYPE, NAME) 					\
+#define __DEFINE_ALLOCATE_BUFFER(DATATYPE, NAME) 					\
 void allocate_ ## NAME ## _buffer() 					\
 {								\
   if (g_ ## NAME ## _buffers.allocated == g_ ## NAME ## _buffers.max)			\
