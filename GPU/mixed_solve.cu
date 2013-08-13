@@ -380,7 +380,7 @@ EXTERN int g_nb_z_up, g_nb_z_dn;
 // nd-mms solver based on single mass solver and polynomial initial guess
 #include "nd_mms.cuh"
 
-
+#include "tmclover.cuh"
 
 // computes sout = 1/(1 +- mutilde gamma5) sin = (1 -+ i mutilde gamma5)/(1+mutilde^2) sin
 // mutilde = 2 kappa mu

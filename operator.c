@@ -285,7 +285,8 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       if (optr->solver != CGMMS && write_prop) /* CGMMS handles its own I/O */
         optr->write_prop(op_id, index_start, i);
       if(optr->DownProp) {
-        optr->mu = -optr->mu;
+	g_mu = -optr->mu;      
+	optr->mu = -optr->mu;
       } else 
         break;
     }

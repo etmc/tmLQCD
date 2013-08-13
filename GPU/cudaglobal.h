@@ -63,7 +63,7 @@ dev_complex_d c1;
 dev_complex_d c2;
 } dev_su3_vec_d;
 
-
+typedef dev_complex dev_su3_vec [3];
 
 /*double spinors*/
 // typedef struct  {
