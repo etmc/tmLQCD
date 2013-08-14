@@ -1292,18 +1292,16 @@ void D_psi(spinor * const P, spinor * const Q){
     sm = (spinor *) Q +iy;
     um=&g_gauge_field[iy][3];
     m3addandstore(rr, sm, um, phase_3, &tmpr);
+    // this is for using Q in deflation FIXME
+    if(use_iQ_dfl) {
+      _vector_mul(rr->s2, -1, rr->s2);
+      _vector_mul(rr->s3, -1, rr->s3);
+    }
+    // FIXME
   }
 #ifdef OMP
   } /* OpenMP closing brace */
 #endif
-
-// FIXME
-// the following comes from deflation branch, but it cannot work!
-//  /* Use Q=gamma5 D for DFL*/
-//  if(use_iQ_dfl)
-//    gamma5(P, Q, VOLUME);
-// FIXME
-
 }
 
 #endif
