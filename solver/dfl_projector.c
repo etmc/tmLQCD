@@ -155,7 +155,7 @@ void project(spinor * const out, spinor * const in) {
 	  }
 	}
       }
-      if(g_proc_id == 0 && g_debug_level > 0) {/*CT: was "g_debug_level > -1" */
+      if(g_proc_id == 0 && g_debug_level > 4) {/*CT: was "g_debug_level > -1" */
 	printf("lgcr evenodd number of iterations %d (no P_L)\n", iter);
       }
     }

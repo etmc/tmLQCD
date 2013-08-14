@@ -118,53 +118,50 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
   boundary(g_kappa);
   // Use current g_mu rather than 0 here for generating deflation subspace
   // g_mu = 0.;
-  /*
-    CT: We try to read dfl_fields[i] from file if it exists, 
-    otherwise we recalculate it                               
-  */
-  /* CU: reading and writing should be done with lemon! */
-  for(p = 0; p < Ns; p++) {
-    sprintf(file_name,"dfl_fields.%.2d", p);
-    if((fp_dfl_fields = fopen(file_name,  "r")) == NULL) {
-      break;
-    }
-    else {
-      fclose(fp_dfl_fields);
-      if((i = read_spinor(dfl_fields[p], NULL, file_name, 0)) != 0) {
-	if(g_proc_id == 0) {
-	  fprintf(stderr, "Could not read from file %s err = %d\n", file_name, i);
-	}
-	break;
-      }
-    }
-  }
 
-  if((g_proc_id == 0) && (p < Ns) && (g_debug_level > 0))  printf("Compute remaining fields from scratch\n");
-  /*CT: We do Ns x 80 x 20 evaluation of Dpsi */
-  /*      ModifiedGS((_Complex double*)dfl_fields[i], vol, i, (_Complex double*)dfl_fields[0], vpr); */
-  /*      nrm = sqrt(square_norm(dfl_fields[i], N, 1)); */
-  /*      mul_r(dfl_fields[i], 1./nrm, dfl_fields[i], N); */
+  if((g_proc_id == 0) && (p < Ns) && (g_debug_level > 0)) {
+    printf("Compute remaining fields from scratch\n");
+  }
   if(p < Ns) {
-    for(i = 0; i < Ns; i++) {
-      /*    ModifiedGS((_Complex double*)dfl_fields[i], vol, i, (_Complex double*)dfl_fields[0], vpr);
-	    nrm = sqrt(square_norm(dfl_fields[i], N, 1));
-	    mul_r(dfl_fields[i], 1./nrm, dfl_fields[i], N);
-      */
-      for(j = 0; j < NsmoothMsap_dflgen; j++) {
+    for(j = 0; j < 3; j++) {
+      for(i = 0; i < Ns; i++) {
 	zero_spinor_field(g_spinor_field[0],VOLUME);  
 	g_sloppy_precision = 1;
-	//Msap_eo(g_spinor_field[0], dfl_fields[i], j+1); 
-	Msap_eo(g_spinor_field[0], dfl_fields[i], NcycleMsap_dflgen, NiterMsap_dflgen); 
-	//Msap(g_spinor_field[0], dfl_fields[i], NcycleMsap_dflgen, NiterMsap_dflgen); 
-	/*      poly_nonherm_precon(g_spinor_field[0], dfl_fields[i], e, d, 2, N);*/
-	/*       gmres_precon(work_fields[0], dfl_fields[i], 20, 1, 1.e-20, 0, N, &D_psi); */
-
+	Msap_eo(g_spinor_field[0], dfl_fields[i], j+1, NiterMsap_dflgen); 
+	
 	for (ix=0;ix<VOLUME;ix++) {
 	  _spinor_assign((*(dfl_fields[i] + ix)),(*(g_spinor_field[0]+ix)));
 	}
-
+	
 	g_sloppy_precision = 0;
-	/*       for (i=0;i<Ns; i++) { */
+	ModifiedGS((_Complex double*)g_spinor_field[0], vol, i, (_Complex double*)dfl_fields[0], vpr);
+	nrm = sqrt(square_norm(g_spinor_field[0], N, 1));
+	mul_r(dfl_fields[i], 1./nrm, g_spinor_field[0], N);
+      }
+    }
+    for(j = 0; j < NsmoothMsap_dflgen; j++) {
+      // little D automatically when little_D is called and dfl_subspace_updated == 1
+      for (i = 0; i < Ns; i++) {
+	/* add it to the basis */
+	split_global_field_GEN_ID(block_list, i, dfl_fields[i], nb_blocks);
+      }
+      /* perform local orthonormalization */
+      for(i = 0; i < nb_blocks; i++) {
+	block_orthonormalize(block_list+i);
+      }
+      dfl_subspace_updated = 1;
+      
+      for(i = 0; i < Ns; i++) {
+	g_sloppy_precision = 1;
+	D_psi(g_spinor_field[0],  dfl_fields[i]);
+	diff(g_spinor_field[0], dfl_fields[i], g_spinor_field[0], VOLUME);
+	mg_precon(g_spinor_field[1], g_spinor_field[0], 5, 3);
+	//	Msap_eo(g_spinor_field[0], dfl_fields[i], NcycleMsap_dflgen, NiterMsap_dflgen); 
+
+	for (ix=0;ix<VOLUME;ix++) {
+	  _spinor_add_assign((*(dfl_fields[i] + ix)),(*(g_spinor_field[1]+ix)));
+	}
+	g_sloppy_precision = 0;
 	ModifiedGS((_Complex double*)g_spinor_field[0], vol, i, (_Complex double*)dfl_fields[0], vpr);
 	nrm = sqrt(square_norm(g_spinor_field[0], N, 1));
 	mul_r(dfl_fields[i], 1./nrm, g_spinor_field[0], N);
@@ -173,7 +170,7 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
 
     for (i=0; i<Ns; i++) {
       /* test quality */
-      if(g_debug_level > -1) {
+      if(g_debug_level > 0) {
 	D_psi(work_fields[0], dfl_fields[i]);
 	nrm = sqrt(square_norm(work_fields[0], N, 1));
 	if(g_proc_id == 0) {
@@ -184,28 +181,12 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
 	}
       }
     }
-
-    /* GG */
-#if 0
-    for(i = 0; i < Ns; i++) {
-      /*
-	CT: We save dfl_fields[i] in a binary file, 
-	using a generic nomenclature proc_i__dfl_fields for later reads                               
-      */
-      sprintf(file_name,"dfl_fields.%.2d", i);
-      construct_writer(&writer, file_name, 0);
-      write_propagator_type(writer, 4);
-      write_spinor(writer, &dfl_fields[i], NULL, 1, 64);
-      destruct_writer(writer);
-    }
-#endif
-
-
   }
   // g_mu = musave;
   g_sloppy_precision = 0;
   boundary(g_kappa);
-  if(g_debug_level > 2) {
+  if(g_debug_level > 4) {
+    printf("Checking orthonormality of dfl_fields\n");
     for(i = 0; i < Ns; i++) {
       for(j = 0; j < Ns; j++) {
 	s = scalar_prod(dfl_fields[i], dfl_fields[j], N, 1);
@@ -222,8 +203,9 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
   }
 
   /* perform local orthonormalization */
-  for(i = 0; i < nb_blocks; i++) block_orthonormalize(block_list+i);
-  /* block_orthonormalize(block_list+1); */
+  for(i = 0; i < nb_blocks; i++) {
+    block_orthonormalize(block_list+i);
+  }
 
   dfl_subspace_updated = 1;
 
@@ -260,7 +242,8 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
     s = lsquare_norm(little_dfl_fields[i], nb_blocks*Ns, 1);
     lmul_r(little_dfl_fields[i], 1./sqrt(creal(s)), little_dfl_fields[i], nb_blocks*Ns);
   }
-  if(g_debug_level > 0) {
+  if(g_debug_level > 4) {
+    printf("Checking orthonormality of little dfl fields\n");
     for(i = 0; i < Ns; i++) {
       for(j = 0; j < Ns; j++) {
 	s = lscalar_prod(little_dfl_fields[i], little_dfl_fields[j], nb_blocks*Ns, 1);
@@ -285,7 +268,6 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
   /* the precision in the inversion is not yet satisfactory! */
   LUInvert(Ns, little_A, Ns);
   /* inverse of little little D now in little_A */
-
 
   for(j = 0; j < Ns; j++) {
     for(i = 0; i < nb_blocks*9*Ns; i++) {
@@ -322,7 +304,8 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
     s = lsquare_norm(little_dfl_fields_eo[i], nb_blocks*Ns, 1);
     lmul_r(little_dfl_fields_eo[i], 1./sqrt(creal(s)), little_dfl_fields_eo[i], nb_blocks*Ns);
   }
-  if(g_debug_level > 0) {
+  if(g_debug_level > 4) {
+    printf("Checking orthonormality of littel_dfl_fields_eo\n");
     for(i = 0; i < Ns; i++) {
       for(j = 0; j < Ns; j++) {
 	s = lscalar_prod(little_dfl_fields_eo[i], little_dfl_fields_eo[j], nb_blocks*Ns, 1);

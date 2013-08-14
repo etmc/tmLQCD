@@ -221,7 +221,7 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
 			     block_list[i].coordinate[2] + block_list[i].coordinate[3]) % 2;
 
     /* block_list[i].evenodd = i % 2; */
-    if(g_proc_id == 0 && g_debug_level > 1) {
+    if(g_proc_id == 0 && g_debug_level > 4) {
       printf("%d %d (%d %d %d %d)\n", i, block_list[i].evenodd, block_list[i].coordinate[0], block_list[i].coordinate[1], block_list[i].coordinate[2], block_list[i].coordinate[3]);
     }
     if ((void*)(block_idx = calloc(8 * (VOLUME/nb_blocks), sizeof(int))) == NULL)
@@ -498,7 +498,7 @@ int check_blocks_geometry(block * blk) {
     }
   }
 
-  if(g_proc_id == 0 && g_debug_level > 1) {
+  if(g_proc_id == 0 && g_debug_level > 4) {
     printf("# block geometry checked successfully for block %d !\n", blk->id);
   }
   for(i = 0; i < blk->volume; i++) {
@@ -618,7 +618,7 @@ int check_blocks_geometry(block * blk) {
     }
   }
 
-  if(g_proc_id == 0 && g_debug_level > 1) {
+  if(g_proc_id == 0 && g_debug_level > 4) {
     printf("# block eo geometry checked successfully for block %d !\n", blk->id);
   }
 
@@ -973,8 +973,7 @@ void compute_little_D() {
   int dT, dX, dY, dZ;
   dT = T/nblks_t; dX = LX/nblks_x; dY = LY/nblks_y; dZ = LZ/nblks_z;
 
-  if(g_proc_id == 0) printf("||-----------------------\n||compute_little_D\n||-----------------------\n");
-
+  if(g_proc_id == 0 && g_debug_level > 4) printf("||-----------------------\n||compute_little_D\n||-----------------------\n");
 
   /* for a full spinor field we need VOLUMEPLUSRAND                 */
   /* because we use the same geometry as for the                    */
