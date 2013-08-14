@@ -121,8 +121,6 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
   if(g_proc_id == 0 && g_debug_level > 0) {
     printf("# Number of deflation blocks = %d\n  n_block_t = %d\n  n_block_x = %d\n  n_block_y = %d\n  n_block_z = %d\n",
 	   nb_blocks, nblks_t, nblks_x, nblks_y, nblks_z);
-    /*     printf("# Number of iteration with the polynomial preconditioner = %d \n", dfl_field_iter); */
-    /*     printf("# Number of iteration in the polynomial preconditioner   = %d \n", dfl_poly_iter); */
   }
   
   free_blocks();

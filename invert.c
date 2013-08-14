@@ -390,20 +390,12 @@ int main(int argc, char *argv[])
       /* the can stay here for now, but later we probably need */
       /* something like init_dfl_solver called somewhere else  */
       /* create set of approximate lowest eigenvectors ("global deflation subspace") */
-
-      /*       g_mu = 0.; */
-      /*       boundary(0.125); */
+      /* at the same time little_D is computed                 */
       generate_dfl_subspace(g_N_s, VOLUME, reproduce_randomnumber_flag);
-      /*       boundary(g_kappa); */
-      /*       g_mu = g_mu1; */
-
-      /* Compute little Dirac operators */
-      /*       alt_block_compute_little_D(); */
-      if (g_debug_level > 0) {
+      /* Cross-checks */
+      if (g_debug_level > 4) {
         check_projectors(reproduce_randomnumber_flag);
         check_local_D(reproduce_randomnumber_flag);
-      }
-      if (g_debug_level > 1) {
         check_little_D_inversion(reproduce_randomnumber_flag);
       }
 
