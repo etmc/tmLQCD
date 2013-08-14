@@ -120,12 +120,12 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
   // g_mu = 0.;
 
   if((g_proc_id == 0) && (p < Ns) && (g_debug_level > 0)) {
-    printf("Compute remaining fields from scratch\n");
+    printf("Compute approximate eigenvectors from scratch\n");
   }
   if(p < Ns) {
     for(j = 0; j < 3; j++) {
       for(i = 0; i < Ns; i++) {
-	zero_spinor_field(g_spinor_field[0],VOLUME);  
+	zero_spinor_field(g_spinor_field[0], VOLUME);  
 	g_sloppy_precision = 1;
 	Msap_eo(g_spinor_field[0], dfl_fields[i], j+1, NiterMsap_dflgen); 
 	
@@ -155,7 +155,7 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
 	g_sloppy_precision = 1;
 	D_psi(g_spinor_field[0],  dfl_fields[i]);
 	diff(g_spinor_field[0], dfl_fields[i], g_spinor_field[0], VOLUME);
-	mg_precon(g_spinor_field[1], g_spinor_field[0], 5, 3);
+	mg_precon(g_spinor_field[1], g_spinor_field[0], NcycleMsap_dflgen, NiterMsap_dflgen);
 	//	Msap_eo(g_spinor_field[0], dfl_fields[i], NcycleMsap_dflgen, NiterMsap_dflgen); 
 
 	for (ix=0;ix<VOLUME;ix++) {
