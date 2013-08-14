@@ -7443,6 +7443,47 @@ __global__ void to_relativistic_basis(dev_spinor* spinin){
 
 
 
+__device__ void to_relativistic_basis_spinor(dev_spinor* spinin){
+   float4 outhelp[6];
+
+   const float sq2 = rsqrtf(2.0f);
+   
+   
+    outhelp[0].x = sq2*(spinin[0].x + spinin[3].x);
+    outhelp[0].y = sq2*(spinin[0].y + spinin[3].y);
+    outhelp[0].z = sq2*(spinin[0].z + spinin[3].z);
+    outhelp[0].w = sq2*(spinin[0].w + spinin[3].w);
+    outhelp[1].x = sq2*(spinin[1].x + spinin[4].x);
+    outhelp[1].y = sq2*(spinin[1].y + spinin[4].y);
+    
+    
+    outhelp[1].z = sq2*(spinin[1].z + spinin[4].z);
+    outhelp[1].w = sq2*(spinin[1].w + spinin[4].w);
+    outhelp[2].x = sq2*(spinin[2].x + spinin[5].x);
+    outhelp[2].y = sq2*(spinin[2].y + spinin[5].y);
+    outhelp[2].z = sq2*(spinin[2].z + spinin[5].z);
+    outhelp[2].w = sq2*(spinin[2].w + spinin[5].w); 
+    
+    
+    outhelp[3].x = sq2*(spinin[3].x - spinin[0].x);
+    outhelp[3].y = sq2*(spinin[3].y - spinin[0].y);
+    outhelp[3].z = sq2*(spinin[3].z - spinin[0].z);
+    outhelp[3].w = sq2*(spinin[3].w - spinin[0].w);
+    outhelp[4].x = sq2*(spinin[4].x - spinin[1].x);
+    outhelp[4].y = sq2*(spinin[4].y - spinin[1].y);   
+    
+    
+    outhelp[4].z = sq2*(spinin[4].z - spinin[1].z);
+    outhelp[4].w = sq2*(spinin[4].w - spinin[1].w);
+    outhelp[5].x = sq2*(spinin[5].x - spinin[2].x);
+    outhelp[5].y = sq2*(spinin[5].y - spinin[2].y);
+    outhelp[5].z = sq2*(spinin[5].z - spinin[2].z);
+    outhelp[5].w = sq2*(spinin[5].w - spinin[2].w);    
+
+   dev_copy_spinor_local(&(outhelp[0]), spinin);
+
+}
+
 
 __global__ void to_tmlqcd_basis(dev_spinor* spinin){
   
@@ -7494,6 +7535,45 @@ __global__ void to_tmlqcd_basis(dev_spinor* spinin){
 }
 
 
+__device__ void to_tmlqcd_basis_spinor(dev_spinor* spinin){
+   float4 outhelp[6];
+   
+   const float sq2 = rsqrtf(2.0f);
+   
+    outhelp[0].x = sq2*(spinin[0].x - spinin[3].x);
+    outhelp[0].y = sq2*(spinin[0].y - spinin[3].y);
+    outhelp[0].z = sq2*(spinin[0].z - spinin[3].z);
+    outhelp[0].w = sq2*(spinin[0].w - spinin[3].w);
+    outhelp[1].x = sq2*(spinin[1].x - spinin[4].x);
+    outhelp[1].y = sq2*(spinin[1].y - spinin[4].y);
+    
+    
+    outhelp[1].z = sq2*(spinin[1].z - spinin[4].z);
+    outhelp[1].w = sq2*(spinin[1].w - spinin[4].w);
+    outhelp[2].x = sq2*(spinin[2].x - spinin[5].x);
+    outhelp[2].y = sq2*(spinin[2].y - spinin[5].y);
+    outhelp[2].z = sq2*(spinin[2].z - spinin[5].z);
+    outhelp[2].w = sq2*(spinin[2].w - spinin[5].w); 
+    
+    
+    outhelp[3].x = sq2*(spinin[3].x + spinin[0].x);
+    outhelp[3].y = sq2*(spinin[3].y + spinin[0].y);
+    outhelp[3].z = sq2*(spinin[3].z + spinin[0].z);
+    outhelp[3].w = sq2*(spinin[3].w + spinin[0].w);
+    outhelp[4].x = sq2*(spinin[4].x + spinin[1].x);
+    outhelp[4].y = sq2*(spinin[4].y + spinin[1].y);   
+    
+    
+    outhelp[4].z = sq2*(spinin[4].z + spinin[1].z);
+    outhelp[4].w = sq2*(spinin[4].w + spinin[1].w);
+    outhelp[5].x = sq2*(spinin[5].x + spinin[2].x);
+    outhelp[5].y = sq2*(spinin[5].y + spinin[2].y);
+    outhelp[5].z = sq2*(spinin[5].z + spinin[2].z);
+    outhelp[5].w = sq2*(spinin[5].w + spinin[2].w);    
+
+    //copy to output spinor
+    dev_copy_spinor_local(&(outhelp[0]), spinin);
+}
 
 
 

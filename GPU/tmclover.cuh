@@ -585,6 +585,7 @@ void init_gpu_clover_fields(){
   order_sw_inv_gpu(h2d_sw_inv);
   cudaMemcpy(dev_sw_inv, h2d_sw_inv, sw_inv_size, cudaMemcpyHostToDevice);   
 
+  
   printf("Finished clover gpu initialisation\n");   
 }
 
@@ -625,6 +626,10 @@ __global__ void dev_clover_inv(dev_spinor* sin,  float2* sw_inv, const float mu_
    if(pos < dev_VOLUME){
 
      dev_read_spinor(&(slocal[0]), &(sin[pos]));
+#ifdef RELATIVISTIC_BASIS 
+     //rotate to tmlqcd basis, as clover term is defined in that basis
+     to_tmlqcd_basis_spinor(&(slocal[0])); 
+#endif     
      dev_get_su3_vec0(phi0, &(slocal[0]));
      dev_get_su3_vec1(phi1, &(slocal[0]));
      dev_get_su3_vec2(phi2, &(slocal[0]));
@@ -690,6 +695,12 @@ __global__ void dev_clover_inv(dev_spinor* sin,  float2* sw_inv, const float mu_
      dev_su3vec_add(r3,psi,chi);
 
      dev_store_spinor_from_vec(&(slocal[0]), r0, r1, r2, r3);
+     
+#ifdef RELATIVISTIC_BASIS 
+     //rotate to tmlqcd basis, as clover term is defined in that basis
+     to_relativistic_basis_spinor(&(slocal[0])); 
+#endif      
+     
      dev_write_spinor(&(slocal[0]),&(sin[pos]));    
 
    }
@@ -740,6 +751,12 @@ __global__ void dev_clover_gamma5(const int ieo, const int * index_site, dev_spi
 */
      //load k
      dev_read_spinor(&(slocal[0]), &(k[pos]));
+     
+#ifdef RELATIVISTIC_BASIS 
+     //rotate to tmlqcd basis, as clover term is defined in that basis
+     to_tmlqcd_basis_spinor(&(slocal[0])); 
+#endif        
+     
      dev_get_su3_vec0(phi0, &(slocal[0]));
      dev_get_su3_vec1(phi1, &(slocal[0]));
      dev_get_su3_vec2(phi2, &(slocal[0]));
@@ -762,6 +779,12 @@ __global__ void dev_clover_gamma5(const int ieo, const int * index_site, dev_spi
     
      //load j
      dev_read_spinor(&(slocal[0]), &(j[pos]));
+     
+#ifdef RELATIVISTIC_BASIS 
+     //rotate to tmlqcd basis, as clover term is defined in that basis
+     to_tmlqcd_basis_spinor(&(slocal[0])); 
+#endif         
+     
      dev_get_su3_vec0(tau0, &(slocal[0]));
      dev_get_su3_vec1(tau1, &(slocal[0]));
      dev_get_su3_vec2(tau2, &(slocal[0]));
@@ -809,6 +832,12 @@ __global__ void dev_clover_gamma5(const int ieo, const int * index_site, dev_spi
 
      //write to l
      dev_store_spinor_from_vec(&(slocal[0]), rho0, rho1, rho2, rho3);
+     
+ #ifdef RELATIVISTIC_BASIS 
+     //rotate to tmlqcd basis, as clover term is defined in that basis
+     to_relativistic_basis_spinor(&(slocal[0])); 
+#endif       
+     
      dev_write_spinor(&(slocal[0]),&(l[pos]));  
 
    }
@@ -826,10 +855,18 @@ extern "C" void dev_Qsw_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
   //spinout == odd
   
   int VolumeEO = VOLUME/2;
+  
+  #ifdef USETEXTURE
+    bind_texture_sw(dev_sw);
+    bind_texture_sw_inv(dev_sw_inv);  
+  #endif
+    
   //Q_{-}
   #ifdef USETEXTURE
     bind_texture_spin(spinin,1);
   #endif
+    
+    
   //bind_texture_nn(dev_nn_eo);
     dev_Hopping_Matrix<<<gridsize, blocksize>>>
              (dev_gf, spinin, dev_spin_eo1, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, 0, VolumeEO); //dev_spin_eo1 == even -> 0           
@@ -878,9 +915,113 @@ extern "C" void dev_Qsw_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
     unbind_texture_spin(1);
   #endif
   dev_clover_gamma5<<<gridsize, blocksize>>>(1,dev_eoidx_odd, spinout, dev_spin_eo2, dev_spin_eo1,  dev_sw, (float)(+(g_mu+g_mu3))); 
-
-
+ 
+  #ifdef USETEXTURE
+    unbind_texture_sw();
+    unbind_texture_sw_inv();  
+  #endif
+    
 }
+
+
+
+
+
+#ifdef MPI
+
+
+// aequivalent to Qsw_pm_psi in clovertm_operators.c, this is MPI version
+extern "C" void dev_Qsw_pm_psi_mpi(dev_spinor* spinin, dev_spinor* spinout, int gridsize, dim3 blocksize, int gridsize2, int blocksize2){
+  //spinin == odd
+  //spinout == odd
+  
+  int VolumeEO = VOLUME/2;
+  
+  #ifdef USETEXTURE
+    bind_texture_sw(dev_sw);
+    bind_texture_sw_inv(dev_sw_inv);  
+  #endif
+    
+  //Q_{-}
+  #ifdef USETEXTURE
+    bind_texture_spin(spinin,1);
+  #endif
+    
+    
+  //bind_texture_nn(dev_nn_eo);
+    HOPPING_ASYNC(dev_gf, spinin, dev_spin_eo1, 
+		  dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 
+		  0, gridsize, blocksize); //dev_spin_eo1 == even -> 0           
+  //unbind_texture_nn();           
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+  #endif
+  dev_clover_inv<<<gridsize, blocksize>>>(dev_spin_eo1, dev_sw_inv, -1.0);
+  
+
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo1,1);
+  #endif
+  //bind_texture_nn(dev_nn_oe);
+    HOPPING_ASYNC(dev_gf, dev_spin_eo1, dev_spin_eo2, 
+		  dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 
+		  1, gridsize, blocksize); 
+  //unbind_texture_nn();
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+  #endif
+  dev_clover_gamma5<<<gridsize, blocksize>>>(1,dev_eoidx_odd, dev_spin_eo2, spinin, dev_spin_eo2,  dev_sw, (float)(-(g_mu+g_mu3))); 
+  
+  //Q_{+}
+
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo2,1);
+  #endif
+  //bind_texture_nn(dev_nn_eo);
+    HOPPING_ASYNC(dev_gf, dev_spin_eo2, spinout, 
+		  dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 
+		  0, gridsize, blocksize); //dev_spin_eo1 == even -> 0
+  //unbind_texture_nn();      
+  #ifdef USETEXTURE  
+    unbind_texture_spin(1);
+  #endif
+  dev_clover_inv<<<gridsize, blocksize>>>(spinout, dev_sw_inv, +1.0);
+  
+
+  #ifdef USETEXTURE
+    bind_texture_spin(spinout,1);
+  #endif
+  //bind_texture_nn(dev_nn_oe);
+    HOPPING_ASYNC(dev_gf, spinout, dev_spin_eo1, 
+		  dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 
+		  1, gridsize, blocksize); 
+  //unbind_texture_nn();  
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+  #endif
+  dev_clover_gamma5<<<gridsize, blocksize>>>(1,dev_eoidx_odd, spinout, dev_spin_eo2, dev_spin_eo1,  dev_sw, (float)(+(g_mu+g_mu3))); 
+ 
+  #ifdef USETEXTURE
+    unbind_texture_sw();
+    unbind_texture_sw_inv();  
+  #endif
+    
+}
+
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 extern "C" void clover_gamma5(const int ieo, 
@@ -949,6 +1090,13 @@ void test_clover_operator(spinor* const Q, const int N){
   cudaMalloc((void **) &dev_grid, 6*sizeof(int));
   cudaMemcpy(dev_grid, &(grid[0]), 6*sizeof(int), cudaMemcpyHostToDevice);
   update_constants(dev_grid);    
+  
+  
+  #ifdef USETEXTURE
+    bind_texture_sw(dev_sw);
+    bind_texture_sw_inv(dev_sw_inv);  
+  #endif
+  
 //   size_t idxsize = VOLUME/2*sizeof(int);
 //   size_t nnsize = 8*VOLUME*sizeof(int);
 //   initnn();
@@ -1072,6 +1220,16 @@ void test_clover_operator(spinor* const Q, const int N){
   printf("%.6e %.6e\n", creal(sw[1][1][0].c20), cimag(sw[1][1][0].c20));
   printf("%.6e %.6e\n", creal(sw[1][1][0].c21), cimag(sw[1][1][0].c21));  
   printf("%.6e %.6e\n", creal(sw[1][1][0].c22), cimag(sw[1][1][0].c22));   
+  
+  
+  
+  
+    
+  #ifdef USETEXTURE
+    unbind_texture_sw();
+    unbind_texture_sw_inv();  
+  #endif
+  
   
   finalize_solver(solver_field, nr_sf);  
 }

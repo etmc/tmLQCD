@@ -52,6 +52,8 @@
  texture<float4,1, cudaReadModeElementType> spin_tex_dn4;
  texture<float4,1, cudaReadModeElementType> spin_tex_dn5;
  
+ texture<float2,1,cudaReadModeElementType> sw_tex;
+ texture<float2,1,cudaReadModeElementType> sw_inv_tex;
  
 #ifndef HALF
  /* texture for gauge field */
@@ -96,6 +98,57 @@ extern "C" int bind_texture_spin(dev_spinor* s, int i){
   
   return(0);
 }
+
+
+extern "C" int bind_texture_sw(float2* sw){
+  
+  size_t size;
+  int offset;
+  #ifdef MPI
+      size = sizeof(float2)*6*9*(VOLUME+RAND);
+  #else
+      size = sizeof(float2)*6*9*VOLUME;
+  #endif
+   
+
+  //printf("Binding texture to spinorfield 1\n");
+    cudaBindTexture(0, sw_tex, sw, size);
+  //printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
+  
+  return(0);
+}
+
+
+extern "C" int unbind_texture_sw(){
+  cudaUnbindTexture(sw_tex);
+}
+
+
+
+
+extern "C" int bind_texture_sw_inv(float2* sw_inv){
+  
+  size_t size;
+  int offset;
+  #ifdef MPI
+      size = sizeof(float2)*8*9*(VOLUME+RAND);
+  #else
+      size = sizeof(float2)*8*9*VOLUME;
+  #endif
+   
+
+  //printf("Binding texture to spinorfield 1\n");
+    cudaBindTexture(0, sw_inv_tex, sw_inv, size);
+  //printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
+  
+  return(0);
+}
+
+extern "C" int unbind_texture_sw_inv(){
+  cudaUnbindTexture(sw_inv_tex);
+}
+
+
 
 
 
