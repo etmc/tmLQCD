@@ -59,7 +59,7 @@
 #define _default_usePL 0
 #define _default_little_solver 0
 #define _default_little_gmres_m_parameter 50
-#define _default_little_solver_low_prec 1.0e-6
+#define _default_little_solver_low_prec 1.0e-2
 #define _default_little_solver_high_prec 1.0e-10
 
 #define _default_Msap_precon 1

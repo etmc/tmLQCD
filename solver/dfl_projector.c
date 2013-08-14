@@ -48,7 +48,7 @@
 #include "solver_field.h"
 #include "dfl_projector.h"
 
-int dfl_sloppy_prec = 0;
+int dfl_sloppy_prec = 1;
 int init_dfl_projector = 0;
 spinor **psi;
 _Complex double *inprod;
@@ -75,7 +75,7 @@ static void alloc_dfl_projector();
 /* this is phi_k A^{-1}_{kl} (phi_k, in) */
 void project(spinor * const out, spinor * const in) {
   int i,j, i_e, i_o, iter;
-  int evenodd = 0;
+  int evenodd = 1;
   int usePL = 0;
   int little_m = little_gmres_m_parameter;
   int vol = block_list[0].volume;
@@ -127,7 +127,7 @@ void project(spinor * const out, spinor * const in) {
   }
 
 
-  if(dfl_sloppy_prec) prec = little_solver_high_prec;
+  if(!dfl_sloppy_prec) prec = little_solver_high_prec;
   else prec = little_solver_low_prec;
 
   if(!usePL) {
@@ -299,6 +299,27 @@ void project2(spinor * const out, spinor * const in) {
 
   /* reconstruct global field */
   reconstruct_global_field_GEN(out, psi, nb_blocks);
+  return;
+}
+
+// This is a preconditioner for D in Multi-Grid spirit
+// following equation (4.2) in arXiv:1303.1377
+// C^(nu) psi = D[M_sap(psi - phi) + phi]
+// with phi = P A^{-1} P^dagger   (A = little D)
+// and nu the M_sap cycles here called Ncy
+
+void mg_precon(spinor * const out, spinor * const in, const int Ncy, const int Niter) {
+  // phi = PD_c^{-1} P^dagger in
+  project(out, in);
+  // in - D*phi 
+  // need to DUM_MATRIX+2,3 because in Msap_eo DUM_MATRIX+0,1 is used
+  D_psi(g_spinor_field[DUM_MATRIX+2], out);
+  diff(g_spinor_field[DUM_MATRIX+2], in, g_spinor_field[DUM_MATRIX+2], VOLUME);
+  // apply M_SAP
+  zero_spinor_field(g_spinor_field[DUM_MATRIX+3], VOLUME);
+  Msap_eo(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], Ncy, Niter);
+  // sum with phi
+  add(out, g_spinor_field[DUM_MATRIX+3], out, VOLUME);
   return;
 }
 
@@ -962,7 +983,7 @@ void check_local_D(const int repro)
   /* check Msap and Msap_eo on a radom vector */
   random_spinor_field_lexic(work_fields[0], repro, RN_GAUSS);
   zero_spinor_field(work_fields[1], VOLUME);
-  Msap(work_fields[1], work_fields[0], 2);
+  Msap(work_fields[1], work_fields[0], 2, 16);
   D_psi(work_fields[2], work_fields[1]);
   diff(work_fields[3], work_fields[2], work_fields[0], VOLUME);
   nrm = square_norm(work_fields[3], VOLUME, 1);

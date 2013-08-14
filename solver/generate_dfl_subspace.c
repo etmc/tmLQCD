@@ -114,24 +114,6 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
   if(init_little_subspace == 0) i = init_little_dfl_subspace(Ns);
 
   random_fields(Ns);
-  if(g_debug_level > 4) {
-    for(e = 0.; e < 1.; e=e+0.05) {
-      random_spinor_field_lexic(dfl_fields[0], repro, RN_GAUSS);
-      nrm = sqrt(square_norm(dfl_fields[0], N, 1));
-      mul_r(dfl_fields[0], 1./nrm, dfl_fields[0], N);
-      d = 1.1;
-      /*       gmres_precon(work_fields[0], dfl_fields[0], 20, 1, 1.e-20, 0, N, &D_psi); */
-      poly_nonherm_precon(work_fields[0], dfl_fields[0], e, d, 30, N);
-      D_psi(work_fields[1], work_fields[0]);
-      diff(work_fields[0], work_fields[1], dfl_fields[0], N);
-      nrm = square_norm(work_fields[0], N, 1);
-      if(g_proc_id == 0) {
-	printf(" e= %f d= %f nrm = %1.5e\n", e, d, nrm);
-      }
-    }
-    d = 1.1;
-    e=0.3;
-  }
 
   boundary(g_kappa);
   // Use current g_mu rather than 0 here for generating deflation subspace
@@ -173,6 +155,7 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
 	g_sloppy_precision = 1;
 	//Msap_eo(g_spinor_field[0], dfl_fields[i], j+1); 
 	Msap_eo(g_spinor_field[0], dfl_fields[i], NcycleMsap_dflgen, NiterMsap_dflgen); 
+	//Msap(g_spinor_field[0], dfl_fields[i], NcycleMsap_dflgen, NiterMsap_dflgen); 
 	/*      poly_nonherm_precon(g_spinor_field[0], dfl_fields[i], e, d, 2, N);*/
 	/*       gmres_precon(work_fields[0], dfl_fields[i], 20, 1, 1.e-20, 0, N, &D_psi); */
 

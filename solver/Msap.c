@@ -75,7 +75,7 @@ void dummy_D1(spinor * const P, spinor * const Q) {
   return;
 }
 
-void Msap(spinor * const P, spinor * const Q, const int Ncy) {
+void Msap(spinor * const P, spinor * const Q, const int Ncy, const int Niter) {
   int blk, ncy = 0, eo, vol;
   spinor * r, * a, * b;
   double nrm;
@@ -99,7 +99,7 @@ void Msap(spinor * const P, spinor * const Q, const int Ncy) {
       D_psi(r, P);
       diff(r, Q, r, VOLUME);
       nrm = square_norm(r, VOLUME, 1);
-      if(g_proc_id == 0 && g_debug_level > 3 && eo == 1) {  /*  GG, was 1 */
+      if(g_proc_id == 0 && g_debug_level > 2 && eo == 1) {  /*  GG, was 1 */
 	printf("Msap: %d %1.3e\n", ncy, nrm);
 	fflush(stdout);
       }
@@ -114,7 +114,7 @@ void Msap(spinor * const P, spinor * const Q, const int Ncy) {
 	  /* get part of r corresponding to block blk into b */
 	  copy_global_to_block(b, r, blk);
 
-	  mrblk(a, b, 16, 1.e-31, 1, vol, &dummy_Di, blk);
+	  mrblk(a, b, Niter, 1.e-31, 1, vol, &dummy_Di, blk);
 
 	  /* add a up to full spinor P */
 	  add_block_to_global(P, a, blk);
@@ -158,8 +158,8 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
       D_psi(r, P);
       diff(r, Q, r, VOLUME);
       nrm = square_norm(r, VOLUME, 1);
-      if(g_proc_id == 0 && g_debug_level > 3 && eo == 1) {  /*  GG, was 1 */
-	printf("Msap: %d %1.3e\n", ncy, nrm);
+      if(g_proc_id == 0 && g_debug_level > 2 && eo == 1) {  /*  GG, was 1 */
+	printf("Msap_eo: %d %1.3e\n", ncy, nrm);
 	fflush(stdout);
       }
       /* choose the even (odd) block */

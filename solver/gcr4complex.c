@@ -61,7 +61,7 @@ int gcr4complex(_Complex double * const P, _Complex double * const Q,
   if(norm_sq < 1.e-20) {
     norm_sq = 1.;
   }
-  if(g_proc_id == g_stdio_proc && g_debug_level > 1){/*CT: was "g_debug_level > 0" */
+  if(g_proc_id == g_stdio_proc && g_debug_level > 2) {
     printf("lGCR solver precision: %g\n", eps_sq); 
     fflush(stdout);
   }
@@ -71,12 +71,12 @@ int gcr4complex(_Complex double * const P, _Complex double * const Q,
     f(tmp, P);
     ldiff(rho, Q, tmp, N);
     err = lsquare_norm(rho, N, parallel);
-    if(g_proc_id == g_stdio_proc && g_debug_level > 1){/*CT: was "g_debug_level > 0" */
+    if(g_proc_id == g_stdio_proc && g_debug_level > 2){
       printf("lGCR: %d\t%g true residue\n", p, err); 
       fflush(stdout);
     }
     if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq * norm_sq) && (rel_prec == 1))) {
-      if(g_proc_id == 0 && g_debug_level > 1) printf("lgcr: %d %e %e %e %e\n", p, err, norm_sq, err/norm_sq, eps_sq);
+      if(g_proc_id == 0 && g_debug_level > 2) printf("lgcr: %d %e %e %e %e\n", p, err, norm_sq, err/norm_sq, eps_sq);
       return (p);
     }
     for(k = 0; k < m ; k++) {
@@ -93,7 +93,7 @@ int gcr4complex(_Complex double * const P, _Complex double * const Q,
       c[k] = lscalar_prod(chi[k], rho, N, parallel);
       lassign_diff_mul(rho, chi[k], c[k], N);
       err = lsquare_norm(rho, N, parallel);
-      if(g_proc_id == g_stdio_proc && g_debug_level > 1){
+      if(g_proc_id == g_stdio_proc && g_debug_level > 2){
 	printf("lGCR: %d\t%g iterated residue\n", p, err); 
 	fflush(stdout);
       }
@@ -117,7 +117,6 @@ int gcr4complex(_Complex double * const P, _Complex double * const Q,
 	lassign_add_mul(P, xi[l], c[l], N);
       }
   }
-  if(g_proc_id == 0 && g_debug_level > 1) printf("lgcr: for -1 %d %e %e %e %e\n", p, err, norm_sq, err/norm_sq, eps_sq);
   return(-1);
 }
 
