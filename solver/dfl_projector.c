@@ -308,7 +308,7 @@ void project2(spinor * const out, spinor * const in) {
 // with phi = P A^{-1} P^dagger   (A = little D)
 // and nu the M_sap cycles here called Ncy
 
-void mg_precon(spinor * const out, spinor * const in, const int Ncy, const int Niter) {
+void mg_precon(spinor * const out, spinor * const in) {
   // phi = PD_c^{-1} P^dagger in
   project(out, in);
   // in - D*phi 
@@ -317,7 +317,7 @@ void mg_precon(spinor * const out, spinor * const in, const int Ncy, const int N
   diff(g_spinor_field[DUM_MATRIX+2], in, g_spinor_field[DUM_MATRIX+2], VOLUME);
   // apply M_SAP
   zero_spinor_field(g_spinor_field[DUM_MATRIX+3], VOLUME);
-  Msap_eo(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], Ncy, Niter);
+  Msap_eo(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], NcycleMsap, NiterMsap);
   // sum with phi
   add(out, g_spinor_field[DUM_MATRIX+3], out, VOLUME);
   return;
@@ -983,7 +983,7 @@ void check_local_D(const int repro)
   /* check Msap and Msap_eo on a radom vector */
   random_spinor_field_lexic(work_fields[0], repro, RN_GAUSS);
   zero_spinor_field(work_fields[1], VOLUME);
-  Msap(work_fields[1], work_fields[0], 2, 16);
+  Msap(work_fields[1], work_fields[0], 5, 3);
   D_psi(work_fields[2], work_fields[1]);
   diff(work_fields[3], work_fields[2], work_fields[0], VOLUME);
   nrm = square_norm(work_fields[3], VOLUME, 1);
@@ -992,7 +992,7 @@ void check_local_D(const int repro)
   }
 
   zero_spinor_field(work_fields[1], VOLUME);
-  Msap_eo(work_fields[1], work_fields[0], 2, 3);
+  Msap_eo(work_fields[1], work_fields[0], 5, 3);
   D_psi(work_fields[2], work_fields[1]);
   diff(work_fields[3], work_fields[2], work_fields[0], VOLUME);
   nrm = square_norm(work_fields[3], VOLUME, 1);

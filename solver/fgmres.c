@@ -126,7 +126,7 @@ int fgmres(spinor * const P,spinor * const Q,
 	Msap_eo(Z[j], V[j], 5, 3);
       }
       else {
-	mg_precon(Z[j], V[j], 5, 3);
+	mg_precon(Z[j], V[j]);
       }
       f(r0, Z[j]); 
       /* Set h_ij and omega_j */
