@@ -119,8 +119,9 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
   dY = LY/nblks_y; 
   dZ = LZ/nblks_z;
   if(g_proc_id == 0 && g_debug_level > 0) {
-    printf("# Number of deflation blocks = %d\n  n_block_t = %d\n  n_block_x = %d\n  n_block_y = %d\n  n_block_z = %d\n",
+    printf("# Number of deflation blocks per MPI process = %d\n  n_block_t = %d\n  n_block_x = %d\n  n_block_y = %d\n  n_block_z = %d\n",
 	   nb_blocks, nblks_t, nblks_x, nblks_y, nblks_z);
+    printf("# Block size: %d x %d x %d x %d\n", dT, dX, dY, dZ);
   }
   
   free_blocks();
@@ -1119,8 +1120,12 @@ void compute_little_D() {
             for(by = 0; by < nblks_y; by++) {
 	      for(bz = 0; bz < nblks_z; bz++){
 		block_list[block_id].little_dirac_operator[ iy ] = 0.0;
-		if (block_list[block_id].evenodd==0) {block_list[block_id_e].little_dirac_operator_eo[ iy ] = 0.0;}
- 		if (block_list[block_id].evenodd==1) {block_list[block_id_o+nb_blocks/2].little_dirac_operator_eo[ iy ] = 0.0;}
+		if (block_list[block_id].evenodd==0) {
+		  block_list[block_id_e].little_dirac_operator_eo[ iy ] = 0.0;
+		}
+ 		if (block_list[block_id].evenodd==1) {
+		  block_list[block_id_o+nb_blocks/2].little_dirac_operator_eo[ iy ] = 0.0;
+		}
 		/* We need to contract g_N_s times with the same set of fields */
 		for(t = t_start; t < t_end; t++) {
 		  for(x = x_start; x < x_end; x++) {
@@ -1128,17 +1133,15 @@ void compute_little_D() {
 		      for(z = z_start; z < z_end; z++) {
 			ix = index_b(t, x, y, z); // TO BE INLINED
 			s = &block_list[block_id].basis[j][ ix ];
-			c = scalar_prod(s, r, 1, 0);// TO BE INLINED
 			block_list[block_id].little_dirac_operator[ iy ] += c;
-		if (block_list[block_id].evenodd==0) {
-		block_list[block_id_e].little_dirac_operator_eo[ iy ] += c;
-		}
-		if (block_list[block_id].evenodd==1) {
-		block_list[block_id_o+nb_blocks/2].little_dirac_operator_eo[ iy ] += c;
-		}
+			if (block_list[block_id].evenodd==0) {
+			  block_list[block_id_e].little_dirac_operator_eo[ iy ] += c;
+			}
+			if (block_list[block_id].evenodd==1) {
+			  block_list[block_id_o+nb_blocks/2].little_dirac_operator_eo[ iy ] += c;
+			}
 			r++;
 		      }
-			   
 		    }
 		  }
 		}
