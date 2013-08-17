@@ -31,7 +31,7 @@ void check_little_D_inversion(const int repro);
 void check_local_D(const int repro);
 void free_dfl_projector();
 void mg_precon(spinor * const out, spinor * const in);
-
+void mg_Qsq_precon(spinor * const out, spinor * const in);
 
 void little_project(_Complex double * const out, _Complex double * const in, const int  N);
 void little_project_eo(_Complex double * const out, _Complex double * const in, const int N);

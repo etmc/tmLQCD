@@ -46,6 +46,7 @@
 #include "Msap.h"
 #include "mr.h"
 #include "solver_field.h"
+#include "solver.h"
 #include "dfl_projector.h"
 
 int dfl_sloppy_prec = 1;
@@ -320,6 +321,17 @@ void mg_precon(spinor * const out, spinor * const in) {
   Msap_eo(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], NcycleMsap, NiterMsap);
   // sum with phi
   add(out, g_spinor_field[DUM_MATRIX+3], out, VOLUME);
+  return;
+}
+
+void mg_Qsq_precon(spinor * const out, spinor * const in) {
+
+  double mu_save = g_mu;
+  g_mu = 1.;
+  zero_spinor_field(out, VOLUME);
+  cg_her(out, in, 10, 1.e-14, 
+	 1, VOLUME, &Q_pm_psi);
+  g_mu = mu_save;
   return;
 }
 

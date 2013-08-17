@@ -440,6 +440,13 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       free(P);
       free(shifts);
     }
+    else if(solver_flag == PCG) {
+      if(g_proc_id == 0) {printf("# Using PCG!\n"); fflush(stdout);}
+      gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
+      iter = pcg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
+		     rel_prec, VOLUME, &Q_pm_psi);
+      Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
+    }
     else {
       if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
 #ifdef HAVE_GPU 
