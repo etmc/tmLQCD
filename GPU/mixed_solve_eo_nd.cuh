@@ -71,6 +71,7 @@ extern "C" {
 #include "../operator/tm_operators_nd.h"
 #include "../operator/Hopping_Matrix.h"
 #include "../solver/cg_her_nd.h"
+#include "../phmc.h"
 }
 #include "../global.h"
 #include "HEADER.h"
@@ -2669,6 +2670,9 @@ void dev_Qtm_pm_ndpsi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
     unbind_texture_spin_dn(1);    
   #endif 
   
+  cublasSscal (N_floats, phmc_invmaxev*phmc_invmaxev, (float *) dev_spin_eo2_up, 1);
+  cublasSscal (N_floats, phmc_invmaxev*phmc_invmaxev, (float *) dev_spin_eo2_dn, 1);
+  
   ////////////
   // output //	output is already done by setting  dev_spin_eo2_up/dn = spinout_up/dn
   ////////////
@@ -2856,9 +2860,12 @@ void dev_Qtm_pm_ndpsi_updn (dev_spinor * spinout_up, dev_spinor * spinout_dn,
     dev_gamma5<<<gridsize3, blocksize3>>>(dev_spin_eo2_dn, dev_spin_eo2_dn);					// dev_spin_eo2_dn = gamma5 * dev_spin_eo2_dn
   #endif
   
+  cublasSscal (N_floats, phmc_invmaxev*phmc_invmaxev, (float *) dev_spin_eo2_up, 1);
+  cublasSscal (N_floats, phmc_invmaxev*phmc_invmaxev, (float *) dev_spin_eo2_dn, 1);
+  
   return;
   
-}//dev_Qtm_pm_ndpsi()
+}//dev_Qtm_pm_ndpsi_updn()
 
 
 
@@ -3290,6 +3297,8 @@ void dev_Qtm_pm_ndpsi_mpi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
     dev_gamma5<<<gridsize3, blocksize3>>>(dev_spin_eo2_dn, dev_spin_eo2_dn);					// dev_spin_eo2_dn = gamma5 * dev_spin_eo2_dn
   #endif
 
+  cublasSscal (N_floats, phmc_invmaxev*phmc_invmaxev, (float *) dev_spin_eo2_up, 1);
+  cublasSscal (N_floats, phmc_invmaxev*phmc_invmaxev, (float *) dev_spin_eo2_dn, 1);   
 
   ////////////
   // output //	output is already done by setting  dev_spin_eo2_up/dn = spinout_up/dn
@@ -3999,8 +4008,8 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
 	if(shift != 0.0f){
            //add constant shift if nonzero
            // CUBLAS:
-          cublasSaxpy (N_floats_int, shift, (float *) d_up, 1, (float *) Ad_up, 1);
-          cublasSaxpy (N_floats_int, shift, (float *) d_dn, 1, (float *) Ad_dn, 1);
+          cublasSaxpy (N_floats_int, shift, (float *) x_up, 1, (float *) Ad_up, 1);
+          cublasSaxpy (N_floats_int, shift, (float *) x_dn, 1, (float *) Ad_dn, 1);
         }    
 
       // r(k+1) = b - A*x(k+1)
@@ -4232,7 +4241,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   //	Q_up/dn  is not used later in the calling  invert_doublet_eo.c
   //		but will be used as feedback in r(k+1) = b - A*x(k+1)
   // with shift a positive shift can be given to the matrix dev_Qtm_pm_ndpsi
-  #ifndef LOWOUTPUT
+  #ifdef STUFF_DEBUG
   		// debug
   		#ifdef MPI
   		  if (g_proc_id == 0) {
@@ -4579,9 +4588,11 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   
   //ONLY FOR TESTS
   //FIXME
-  //shift=0.1;
+//   shift=0.005;
   //
   ////////////////
+
+  printf("phmc_invmaxev = %f\n",phmc_invmaxev);  
   
   // timer
   startouter = gettime();
@@ -4644,7 +4655,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
 	}
 	diff(r_up, Q_up, Ax_up, N_sites_int);
 	diff(r_dn, Q_dn, Ax_dn, N_sites_int);
-      }
+       }
     
     
     // rr = (r_up)^2 + (r_dn)^2
@@ -4701,7 +4712,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     else{
       shift_single = (float) shift;
     }
-    printf("SHIFT single = %f\n", shift_single);
+
     
     // timer
     startinner = gettime(); 
@@ -4774,7 +4785,6 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       // (A + shift)*x(k+1)
         Qtm_pm_ndpsi(Ax_up, Ax_dn, x_up, x_dn);
         if(shift != 0.0) {
-	  printf("Adding shift %f on host\n", shift);
 	  assign_add_mul_r(Ax_up, x_up , shift, N_sites_int);
 	  assign_add_mul_r(Ax_dn, x_dn , shift, N_sites_int);
         }          

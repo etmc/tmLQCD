@@ -802,6 +802,8 @@ void dev_Qtm_pm_ndpsi_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * spinout_d
   dev_gamma5<<<gridsize3, blocksize3>>>(dev_spin_eo2_dn, dev_spin_eo2_dn);					// dev_spin_eo2_dn = gamma5 * dev_spin_eo2_dn
   
   
+  cublasSscal (N_floats, phmc_invmaxev*phmc_invmaxev, (float *) dev_spin_eo2_up, 1);
+  cublasSscal (N_floats, phmc_invmaxev*phmc_invmaxev, (float *) dev_spin_eo2_dn, 1);
   
   
   /*

@@ -43,11 +43,12 @@ extern "C" int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
   //invert with zero'th shift
   if(g_debug_level > 0 && g_proc_id == 0) {
     use_shift = solver_pm->shifts[0]*solver_pm->shifts[0];
+  }
     printf("# dev_CGMMS inverting with first shift s = %f\n",use_shift);
     iteration += mixedsolve_eo_nd(Pup[0], Pdn[0], Qup, Qdn, use_shift,
 			    solver_pm->max_iter, solver_pm->squared_solver_prec, solver_pm->rel_prec);
 
-  }
+  
 
   //now invert the other shifts
   for(int im = 1; im < shifts; im++) {
