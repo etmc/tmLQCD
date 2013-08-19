@@ -6983,34 +6983,66 @@ __device__ void dev_Gamma5(dev_spinor * in){
 //this works in the relativistic basis
 //gamma5 NOT diagonal!!
 __device__ void dev_Gamma5_rel(dev_spinor* in){
-  (*(in+0)).x = -1.0*(*(in+3)).x;
-  (*(in+0)).y = -1.0*(*(in+3)).y;
-  (*(in+0)).z = -1.0*(*(in+3)).z;
-  (*(in+0)).w = -1.0*(*(in+3)).w;
-  (*(in+1)).x = -1.0*(*(in+4)).x;
-  (*(in+1)).y = -1.0*(*(in+4)).y;
 
-  (*(in+1)).z = -1.0*(*(in+4)).z;
-  (*(in+1)).w = -1.0*(*(in+4)).w;
-  (*(in+2)).x = -1.0*(*(in+5)).x;
-  (*(in+2)).y = -1.0*(*(in+5)).y;
-  (*(in+2)).z = -1.0*(*(in+5)).z;
-  (*(in+2)).w = -1.0*(*(in+5)).w;
+dev_spinor help[6]; 
+  help[0].x = -1.0*(*(in+3)).x;
+  help[0].y = -1.0*(*(in+3)).y;
+  help[0].z = -1.0*(*(in+3)).z;
+  help[0].w = -1.0*(*(in+3)).w;
+  help[1].x = -1.0*(*(in+4)).x;
+  help[1].y = -1.0*(*(in+4)).y;
 
-  (*(in+3)).x = -1.0*(*(in+0)).x;
-  (*(in+3)).y = -1.0*(*(in+0)).y;
-  (*(in+3)).z = -1.0*(*(in+0)).z;
-  (*(in+3)).w = -1.0*(*(in+0)).w;
-  (*(in+4)).x = -1.0*(*(in+1)).x;
-  (*(in+4)).y = -1.0*(*(in+1)).y;
+  help[1].z = -1.0*(*(in+4)).z;
+  help[1].w = -1.0*(*(in+4)).w;
+  help[2].x = -1.0*(*(in+5)).x;
+  help[2].y = -1.0*(*(in+5)).y;
+  help[2].z = -1.0*(*(in+5)).z;
+  help[2].w = -1.0*(*(in+5)).w;
 
-  (*(in+4)).z = -1.0*(*(in+1)).z;
-  (*(in+4)).w = -1.0*(*(in+1)).w;
-  (*(in+5)).x = -1.0*(*(in+2)).x;
-  (*(in+5)).y = -1.0*(*(in+2)).y;
-  (*(in+5)).z = -1.0*(*(in+2)).z;
-  (*(in+5)).w = -1.0*(*(in+2)).w;
+  help[3].x = -1.0*(*(in+0)).x;
+  help[3].y = -1.0*(*(in+0)).y;
+  help[3].z = -1.0*(*(in+0)).z;
+  help[3].w = -1.0*(*(in+0)).w;
+  help[4].x = -1.0*(*(in+1)).x;
+  help[4].y = -1.0*(*(in+1)).y;
 
+  help[4].z = -1.0*(*(in+1)).z;
+  help[4].w = -1.0*(*(in+1)).w;
+  help[5].x = -1.0*(*(in+2)).x;
+  help[5].y = -1.0*(*(in+2)).y;
+  help[5].z = -1.0*(*(in+2)).z;
+  help[5].w = -1.0*(*(in+2)).w;
+  
+  (*(in+0)).x = help[0].x;
+  (*(in+0)).y = help[0].y; 
+  (*(in+0)).z = help[0].z;  
+  (*(in+0)).w = help[0].w;  
+  
+  (*(in+1)).x = help[1].x;
+  (*(in+1)).y = help[1].y; 
+  (*(in+1)).z = help[1].z;  
+  (*(in+1)).w = help[1].w;   
+  
+  (*(in+2)).x = help[2].x;
+  (*(in+2)).y = help[2].y; 
+  (*(in+2)).z = help[2].z;  
+  (*(in+2)).w = help[2].w;   
+  
+  (*(in+3)).x = help[3].x;
+  (*(in+3)).y = help[3].y; 
+  (*(in+3)).z = help[3].z;  
+  (*(in+3)).w = help[3].w;    
+
+  (*(in+4)).x = help[4].x;
+  (*(in+4)).y = help[4].y; 
+  (*(in+4)).z = help[4].z;  
+  (*(in+4)).w = help[4].w;    
+  
+  (*(in+5)).x = help[5].x;
+  (*(in+5)).y = help[5].y; 
+  (*(in+5)).z = help[5].z;  
+  (*(in+5)).w = help[5].w;    
+  
 }
 
 

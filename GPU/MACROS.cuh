@@ -26,8 +26,8 @@
 
 // benchmarks
 
-//#define OPERATOR_BENCHMARK 100	// refers to only matrix applications
-#define ALGORITHM_BENCHMARK	// counts the number of effective flops
+#define OPERATOR_BENCHMARK 100	// refers to only matrix applications
+//#define ALGORITHM_BENCHMARK	// counts the number of effective flops
 
 
 

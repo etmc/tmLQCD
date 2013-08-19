@@ -5,11 +5,11 @@
 #define ACCUM_N 2048
 #define DOTPROD_DIM 128
 #define GF_8
-//#define TEMPORALGAUGE
-//#define USETEXTURE
+#define TEMPORALGAUGE
+#define USETEXTURE
 //#define HALF
 //#define GPU_DOUBLE
-//#define RELATIVISTIC_BASIS 
+#define RELATIVISTIC_BASIS 
 //#define GPU_3DBLOCK
 //#define LOWOUTPUT
 

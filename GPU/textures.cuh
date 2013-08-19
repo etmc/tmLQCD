@@ -105,7 +105,7 @@ extern "C" int bind_texture_sw(float2* sw){
   size_t size;
   int offset;
   #ifdef MPI
-      size = sizeof(float2)*6*9*(VOLUME+RAND);
+      size = sizeof(float2)*6*9*(VOLUME);
   #else
       size = sizeof(float2)*6*9*VOLUME;
   #endif
@@ -131,7 +131,7 @@ extern "C" int bind_texture_sw_inv(float2* sw_inv){
   size_t size;
   int offset;
   #ifdef MPI
-      size = sizeof(float2)*8*9*(VOLUME+RAND);
+      size = sizeof(float2)*8*9*(VOLUME);
   #else
       size = sizeof(float2)*8*9*VOLUME;
   #endif

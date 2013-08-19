@@ -244,7 +244,8 @@ extern "C" void init_mixedsolve_eo(su3** gf);
 extern "C" void finalize_mixedsolve();
 extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_iter, double eps, const int rel_prec,const int N);
 void dummy (dev_spinor* a, dev_spinor* b);
-void benchmark(spinor * const Q);
+void benchmark_eo(spinor * const Q);
+void benchmark_eo_mpi(spinor * const Q);
 extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max_iter, double eps, const int rel_prec, const int N);
 
 

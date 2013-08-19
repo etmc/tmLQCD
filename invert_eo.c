@@ -224,6 +224,16 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
   }
 
   else {
+    
+#ifdef HAVE_GPU
+#ifdef TEMPORALGAUGE
+    /* initialize temporal gauge here */
+    if(usegpu_flag){
+      to_temporalgauge_invert_eo(g_gauge_field, Even, Odd);   
+    } 
+#endif  
+#endif /* HAVE_GPU*/      
+    
     /* here comes the inversion not using even/odd preconditioning */
     if(g_proc_id == 0) {printf("# Not using even/odd preconditioning!\n"); fflush(stdout);}
     convert_eo_to_lexic(g_spinor_field[DUM_DERI], Even, Odd);
@@ -387,6 +397,16 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 #endif
     }
     convert_lexic_to_eo(Even_new, Odd_new, g_spinor_field[DUM_DERI+1]);
+    
+#ifdef HAVE_GPU  
+    /* return from temporal gauge again */
+#ifdef TEMPORALGAUGE
+    if(usegpu_flag){ 
+      from_temporalgauge_invert_eo(Even, Odd, Even_new, Odd_new);
+    }
+#endif
+#endif       
+  
   }
   return(iter);
 }

@@ -1461,7 +1461,7 @@ extern "C" int dev_cg_eo_clover(
   #ifdef ALGORITHM_BENCHMARK
     double effectiveflops;	// will used to count the "effective" flop's (from the algorithmic perspective)
     double hoppingflops = 1608.0;
-    double matrixflops  = 2*(2*hoppingflops + 120.0 + 132.0); //that is for dev_Qtm_pm_psi
+    double matrixflops  = 2*(2*(hoppingflops + 984)); //that is for dev_Qsw_pm_psi
     #ifdef MPI
       double allflops;				// flops added for all processes
     #endif
@@ -1722,16 +1722,16 @@ extern "C" int mixed_solve_eo_clover (spinor * const P, spinor * const Q, const 
 
   
   
-  test_clover_operator(Q, N);
+  //test_clover_operator(Q, N);
   
   #ifdef OPERATOR_BENCHMARK
     #ifndef HALF
     // small benchmark
       assign(solver_field[0],Q,N);
       #ifndef MPI
-        benchmark(solver_field[0]);
+        benchmark_eo(solver_field[0]);
       #else
-        benchmark2(solver_field[0]); 
+        benchmark_eo_mpi(solver_field[0]); 
       #endif
     // end small benchmark
     #endif //not HALF

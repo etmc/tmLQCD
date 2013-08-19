@@ -863,7 +863,7 @@ void update_constants(int *grid){
     sign=-1.0;
   }
   else{
-    sign=1.0;
+    sign=-1.0;
   }
  
   h0.re = (float)creal(ka0);    h0.im = sign*(float)cimag(ka0);
@@ -1095,6 +1095,18 @@ extern "C" int dev_cg(
  }
  dim3 griddim3(gridsize,1,1); 
  
+ //this is the partitioning for dev_mul_one_pm...
+ int blockdim4 = BLOCK2;
+ if( VOLUME % blockdim4 == 0){
+   gridsize = (int) VOLUME/blockdim4;
+ }
+ else{
+   gridsize = (int) VOLUME/blockdim4 + 1;
+ }
+ int griddim4 = gridsize;
+  
+ 
+ 
  size_t size2 = sizeof(float4)*6*VOLUME;
  
  #ifdef USETEXTURE
@@ -1136,6 +1148,19 @@ extern "C" int dev_cg(
  //dev_skalarmult_spinor_field<<<griddim2, blockdim2 >>>(spinin,scaleparam, spin1);
  //dev_copy_spinor_field<<<griddim2, blockdim2 >>>(spin1, spinin);
  
+  #ifdef RELATIVISTIC_BASIS 
+   //transform to relativistic gamma basis
+   to_relativistic_basis<<<griddim4, blockdim4>>> (spinin);
+
+   if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
+     if (g_proc_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+   }
+   else{
+     #ifndef LOWOUTPUT 
+     if (g_proc_id == 0) printf("Switched to relativistic basis\n");
+     #endif
+   }
+ #endif
  
  dev_copy_spinor_field<<<griddim2, blockdim2 >>>(spinin, spin0);
  dev_zero_spinor_field<<<griddim2, blockdim2 >>>(spin1); // x_0 = 0
@@ -1162,7 +1187,11 @@ extern "C" int dev_cg(
     unbind_texture_spin(1);
   #endif
      // GAMMA5, mu -> -mu
-     dev_gamma5 <<<griddim2, blockdim2 >>> (spin2,spin4);
+  #ifdef RELATIVISTIC_BASIS 
+     dev_gamma5_rel <<<griddim2, blockdim2 >>> (spin2,spin4);
+  #else
+     dev_gamma5 <<<griddim2, blockdim2 >>> (spin2,spin4);     
+  #endif
      dev_swapmu <<<1,1>>> ();
   #ifdef USETEXTURE
    bind_texture_spin(spin4,1);
@@ -1173,7 +1202,12 @@ extern "C" int dev_cg(
    unbind_texture_spin(1);
   #endif
      //GAMMA5 mu -> -mu
-     dev_gamma5 <<<griddim2, blockdim2 >>>(spin3,spin4);
+  #ifdef RELATIVISTIC_BASIS    
+     dev_gamma5_rel <<<griddim2, blockdim2 >>>(spin3,spin4);
+  #else
+     dev_gamma5 <<<griddim2, blockdim2 >>> (spin3,spin4);     
+  #endif
+     
      dev_swapmu <<<1,1>>> ();
   #ifdef USETEXTURE
    bind_texture_spin(spin4,1);
@@ -1230,7 +1264,11 @@ extern "C" int dev_cg(
     #ifdef USETEXTURE
      unbind_texture_spin(1);
     #endif
-      dev_gamma5 <<<griddim2, blockdim2 >>> (spin1,spin4);
+    #ifdef RELATIVISTIC_BASIS  
+      dev_gamma5_rel <<<griddim2, blockdim2 >>> (spin1,spin4);
+    #else
+      dev_gamma5 <<<griddim2, blockdim2 >>> (spin1,spin4);      
+    #endif
       dev_swapmu <<<1,1>>> ();
     #ifdef USETEXTURE
      bind_texture_spin(spin4,1);
@@ -1238,7 +1276,11 @@ extern "C" int dev_cg(
    
       //D_tm GAMMA5, mu -> -mu
       dev_tm_dirac_kappa <<<griddim3, blockdim3 >>> (gf, spin4, spin3, dev_nn);
-      dev_gamma5 <<<griddim2, blockdim2 >>>(spin3,spinout);
+    #ifdef RELATIVISTIC_BASIS        
+      dev_gamma5_rel <<<griddim2, blockdim2 >>>(spin3,spinout);
+    #else
+       dev_gamma5 <<<griddim2, blockdim2 >>>(spin3,spinout);     
+    #endif
       dev_swapmu <<<1,1>>> ();
   
     //printf("Unbinding texture of spinorfield\n");
@@ -1274,13 +1316,21 @@ extern "C" int dev_cg(
     #ifdef USETEXTURE
      unbind_texture_spin(1);
     #endif
-      dev_gamma5 <<<griddim2, blockdim2 >>> (spin1,spin4);
+  #ifdef RELATIVISTIC_BASIS      
+      dev_gamma5_rel <<<griddim2, blockdim2 >>> (spin1,spin4);
+  #else
+      dev_gamma5 <<<griddim2, blockdim2 >>> (spin1,spin4); 
+  #endif
       dev_swapmu <<<1,1>>> ();
     #ifdef USETEXTURE
      bind_texture_spin(spin4,1);
     #endif
       dev_tm_dirac_kappa <<<griddim3, blockdim3 >>> (gf, spin4, spin3, dev_nn);
-      dev_gamma5 <<<griddim2, blockdim2 >>>(spin3,spin1);
+  #ifdef RELATIVISTIC_BASIS       
+      dev_gamma5_rel <<<griddim2, blockdim2 >>>(spin3,spin1);
+  #else
+        dev_gamma5 <<<griddim2, blockdim2 >>>(spin3,spin1);    
+  #endif
       dev_swapmu <<<1,1>>> ();
     #ifdef USETEXTURE
      unbind_texture_spin(1);
@@ -1289,12 +1339,20 @@ extern "C" int dev_cg(
 
  //go over to non-kappa, Ddagger = g5 D g5
  dev_skalarmult_spinor_field<<<griddim2, blockdim2 >>>(spin1,1.0/(scaleparam*scaleparam), spinout);  
- 
-  // times operator == source ?? 
-  //dev_tm_dirac_kappa<<<griddim3, blockdim3 >>>(gf, spin3, spinout, nn_grid);
+ // times operator == source ?? 
+ //dev_tm_dirac_kappa<<<griddim3, blockdim3 >>>(gf, spin3, spinout, nn_grid);
+  #ifdef RELATIVISTIC_BASIS 
+   //transform back to tmlqcd gamma basis
+   to_tmlqcd_basis<<<griddim4, blockdim4>>> (spinout);
+  #endif  
   }
   else{
-   dev_copy_spinor_field<<<griddim2, blockdim2 >>>(spin1,spinout);
+   dev_copy_spinor_field<<<griddim2, blockdim2 >>>(spin1,spinout);  
+   #ifdef RELATIVISTIC_BASIS 
+   //transform back to tmlqcd gamma basis
+   to_tmlqcd_basis<<<griddim4, blockdim4>>> (spinout);
+  #endif   
+
   }
   
   #ifdef USETEXTURE
@@ -2789,6 +2847,121 @@ extern "C" void finalize_mixedsolve(){
 
 
 #ifndef HALF
+
+
+
+
+void benchmark(spinor * const Q){
+  
+  double timeelapsed = 0.0;
+  clock_t start, stop;
+  int i;
+  
+  int ibench;
+  #ifdef OPERATOR_BENCHMARK
+   ibench = OPERATOR_BENCHMARK;
+  #else
+    ibench = 100;
+  #endif
+  
+  size_t dev_spinsize = 6*VOLUME*sizeof(dev_spinor); // float4 even-odd !
+  convert2REAL4_spin(Q,h2d_spin);
+  cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
+  printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+  
+  #ifndef MPI
+    assert((start = clock())!=-1);
+  #else
+    start = MPI_Wtime();
+  #endif  
+  
+ 
+  int VolumeEO = VOLUME;
+  
+
+ #ifdef USETEXTURE
+  //Bind texture gf
+  bind_texture_gf(dev_gf);
+ #endif
+
+ //Initialize some stuff
+  printf("mu = %f\n", g_mu);
+  dev_complex h0,h1,h2,h3,mh0, mh1, mh2, mh3;
+  h0.re = (float)creal(ka0);    h0.im = -(float)cimag(ka0);
+  h1.re = (float)creal(ka1);    h1.im = -(float)cimag(ka1);
+  h2.re = (float)creal(ka2);    h2.im = -(float)cimag(ka2);
+  h3.re = (float)creal(ka3);    h3.im = -(float)cimag(ka3);
+  
+  mh0.re = -(float)creal(ka0);    mh0.im = (float)cimag(ka0);
+  mh1.re = -(float)creal(ka1);    mh1.im = (float)cimag(ka1);
+  mh2.re = -(float)creal(ka2);    mh2.im = (float)cimag(ka2);
+  mh3.re = -(float)creal(ka3);    mh3.im = (float)cimag(ka3);
+
+  
+  #ifdef GPU_3DBLOCK
+    dim3 blockdim3(BLOCK,BLOCKSUB,BLOCKSUB);
+    int gridsize;
+    int blocksize = (BLOCK*BLOCKSUB*BLOCKSUB);
+    if( VOLUME >= blocksize){
+      gridsize = (int)(VOLUME/blocksize) + 1;
+    }
+    else{
+      gridsize=1;
+    }
+    printf("gridsize = %d\n", gridsize);
+    int griddim3=gridsize;  
+  #else
+    dim3 blockdim3(BLOCK);
+    int gridsize;
+    if( VOLUME >= BLOCK){
+      gridsize = (int)(VOLUME/BLOCK) + 1;
+    }
+    else{
+      gridsize=1;
+    }
+    printf("gridsize = %d\n", gridsize);
+    int griddim3=gridsize; 
+  #endif
+  
+  he_cg_init<<< 1, 1 >>> (dev_grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3); 
+  printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+  printf("Applying H %d times\n", ibench);
+  for(i=0; i<ibench; i++){
+  
+    #ifdef USETEXTURE
+         bind_texture_spin(dev_spinin,1);
+    #endif
+     dev_tm_dirac_kappa <<<griddim3, blockdim3 >>> (dev_gf, dev_spinout, dev_spinin, dev_nn);
+    #ifdef USETEXTURE             
+      unbind_texture_spin(1);
+    #endif
+
+
+  }  
+  printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
+  printf("Done\n"); 
+  
+  cudaThreadSynchronize();
+
+    assert((stop = clock())!=-1);
+    timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
+    double benchres = 1608.0*(VOLUME)* ibench / timeelapsed / 1.0e9;
+    printf("Elapsed time was: %f sec\n", timeelapsed); 
+    printf("Benchmark: %f Gflops\n", benchres); 
+
+
+  #ifdef USETEXTURE
+    unbind_texture_gf();
+  #endif
+}
+
+
+
+
+
+
+
+
 extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_iter, 
 	   double eps, const int rel_prec,const int N){
   
@@ -2819,7 +2992,13 @@ extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_it
   zero_spinor_field(solver_field[2],  N);
   printf("The VOLUME is: %d\n",N);
   
-  
+  #ifdef OPERATOR_BENCHMARK
+    // small benchmark
+      assign(solver_field[0],Q,N);
+        benchmark(solver_field[0]);
+    // end small benchmark
+  #endif
+ 
   
 for(iter=0; iter<max_iter; iter++){
 
@@ -2850,7 +3029,6 @@ for(iter=0; iter<max_iter; iter++){
     stop = clock();
     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
     printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
-    finalize_mixedsolve();
     finalize_solver(solver_field, nr_sf);
     return(totalcount);  
    }
@@ -2903,7 +3081,7 @@ for(iter=0; iter<max_iter; iter++){
 
 
 
-void benchmark(spinor * const Q){
+void benchmark_eo(spinor * const Q){
   
   double timeelapsed = 0.0;
   clock_t start, stop;
@@ -3053,7 +3231,7 @@ void benchmark(spinor * const Q){
 
 
 #ifdef MPI
-void benchmark2(spinor * const Q){
+void benchmark_eo_mpi(spinor * const Q){
   
   double timeelapsed = 0.0;
   clock_t start, stop;
@@ -3360,9 +3538,9 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
     // small benchmark
       assign(solver_field[0],Q,N);
       #ifndef MPI
-        benchmark(solver_field[0]);
+        benchmark_eo(solver_field[0]);
       #else
-        benchmark2(solver_field[0]); 
+        benchmark_eo_mpi(solver_field[0]); 
       #endif
     // end small benchmark
     #endif //not HALF
