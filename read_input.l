@@ -160,6 +160,7 @@ inline void rmQuotes(char *str){
   double innersolver_precision_rel;
   int innersolver_precision_check_abs;
   int innersolver_precision_check_rel;
+  int num_gpu_per_node;
 
   int propagator_comparison;
   int nb_cores;
@@ -422,6 +423,11 @@ inline void rmQuotes(char *str){
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
     max_innersolver_it = a;
     if(myverbose) printf("  Inner solver iterations set to %d line %d\n", a, line_of_file);
+  }
+  {SPC}*GpuPerNode{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
+    num_gpu_per_node = a;
+    if(myverbose) printf("  Number of GPUs per node is %d line %d\n", a, line_of_file);
   }
   {SPC}*DeviceNum{EQL}{DIGIT}+ {
       sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
@@ -2090,6 +2096,7 @@ int read_input(char * conf_file){
   device_num = _default_device_num;
   innersolver_precision_rel = 1.e-4;
   innersolver_precision_abs = 1.e-4;
+  num_gpu_per_node = _default_num_gpu_per_node;
   /* Put -1 in PropInfo.format to see if parse_config() will
   change the value. If not then set it to source_format_flag */
   PropInfo.format = -1;

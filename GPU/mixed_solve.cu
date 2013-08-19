@@ -2098,6 +2098,10 @@ cudaError_t cudaerr;
 
 void update_gpu_gf(su3** gf){
   cudaError_t cudaerr;
+  #ifndef LOWOUTPUT
+    if(g_proc_id == 0) printf("Updating device single gauge field.\n");
+  #endif
+  
   #ifndef MPI
         #ifdef GF_8
           /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
@@ -2190,10 +2194,11 @@ extern "C" void init_mixedsolve_eo(su3** gf){
           } 
   	#else
     	  // device number = mpi rank
-    	  if (g_cart_id < ndev) {
-    	    printf("Process %d of %d: Setting active device to: %d\n", g_proc_id, g_nproc, g_cart_id);
-    	    cudaSetDevice(g_cart_id);
-    	  }
+          printf("num_gpu_per_node = %d\n", num_gpu_per_node);
+    	  if ((g_cart_id%num_gpu_per_node) < ndev) {
+    	    printf("Process %d of %d: Setting active device to: %d\n", g_proc_id, g_nproc, g_cart_id%num_gpu_per_node);
+    	    cudaSetDevice((g_cart_id%num_gpu_per_node));
+	  }
     	  else {
     	    fprintf(stderr, "Process %d of %d: Error: There is no CUDA device with No. %d. Aborting...\n", g_proc_id, g_nproc, g_cart_id);
     	    exit(301);
