@@ -235,6 +235,25 @@ _Complex double lscalar_prod(_Complex double * const R, _Complex double * const 
   return(res);
 }
 
+double lscalar_prod_r(_Complex double * const R, _Complex double * const S, const int N, const int parallel) 
+{
+  double res = 0.0;
+
+  for(int i = 0; i < N; ++i) {
+    res += creal(conj(R[i]) * S[i]);
+  }
+
+#ifdef MPI
+  if(parallel) {
+    double res2 = res;
+    MPI_Allreduce(&res2, &res, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  }
+#endif
+
+  return(res);
+}
+
+
 void lmul_r(_Complex double * const R, const double c, _Complex double * const S, const int N) 
 {
   for(int i = 0; i < N; ++i)
@@ -251,6 +270,18 @@ void lassign_add_mul(_Complex double * const R, _Complex double * const S, const
 {
   for(int i = 0; i < N; ++i)
     R[i] += c * S[i];
+}
+
+void lassign_add_mul_r(_Complex double * const R, _Complex double * const S, const double c, const int N)
+{
+  for(int i = 0; i < N; ++i)
+    R[i] += c * S[i];
+}
+
+void lassign_mul_add_r(_Complex double * const R, const double c, _Complex double * const S, const int N)
+{
+  for(int i = 0; i < N; ++i)
+    R[i] = c * R[i] + S[i];
 }
 
 void lassign_diff_mul(_Complex double * const R, _Complex double * const S, const _Complex double c, const int N) 

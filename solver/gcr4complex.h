@@ -27,10 +27,13 @@ void ldiff(_Complex double * Q, _Complex double * const R, _Complex double * con
 void ladd(_Complex double * Q, _Complex double * const R, _Complex double * const S, const int N);
 double lsquare_norm(_Complex double * const Q, const int N, const int parallel);
 _Complex double lscalar_prod(_Complex double * const R, _Complex double * const S, const int N, const int parallel);
+double lscalar_prod_r(_Complex double * const R, _Complex double * const S, const int N, const int parallel);
 void lmul_r(_Complex double * const R, const double c, _Complex double * const S, const int N);
 void lmul(_Complex double * const R, const _Complex double c, _Complex double * const S, const int N);
 void lassign_diff_mul(_Complex double * const R, _Complex double * const S, const _Complex double c, const int N);
 void lassign_add_mul(_Complex double * const R, _Complex double * const S, const _Complex double c, const int N);
+void lassign_add_mul_r(_Complex double * const R, _Complex double * const S, const double c, const int N);
+void lassign_mul_add_r(_Complex double * const R, const double c, _Complex double * const S, const int N);
 void ldiff_assign(_Complex double * const Q, _Complex double * const S, 
 		  const int N);
 void ladd_assign(_Complex double * const Q, _Complex double * const S, 
