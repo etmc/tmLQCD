@@ -1294,8 +1294,7 @@ void D_psi(spinor * const P, spinor * const Q){
     m3addandstore(rr, sm, um, phase_3, &tmpr);
     // this is for using Q in deflation FIXME
     if(use_iQ_dfl) {
-      _vector_mul(rr->s2, -1, rr->s2);
-      _vector_mul(rr->s3, -1, rr->s3);
+      gamma5(rr, rr, 1);
     }
     // FIXME
   }
@@ -1362,16 +1361,13 @@ void Block_D_psi(block * blk, spinor * const rr, spinor * const s) {
 #endif
 
     local_H(r, s, u, idx, &tmpr);
+    if(use_iQ_dfl) gamma5(r, r, 1);
 
     r++;
     t++;
     idx += 8;
     u += 8;
   }
-
-  /* Use Q=gamma5 D for DFL */
-  if(use_iQ_dfl)
-    gamma5(rr, s, blk->volume);
 
   return;
 }
@@ -1410,15 +1406,13 @@ void Block_H_psi(block * blk, spinor * const rr, spinor * const s, const int eo)
 #endif
 
     local_H(r, s, u, eoidx, &tmpr);
+    if (use_iQ_dfl) gamma5(r, r, 1);
 
     r++;
     eoidx += 8;
     u += 8;
   }
 
-  /* Use Q=gamma5 D for DFL */
-  if (use_iQ_dfl)
-    gamma5(rr, s, blk->volume/2);
   return;
 }
 
