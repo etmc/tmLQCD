@@ -76,8 +76,8 @@ void block_convert_eo_to_lexic(spinor * const P, spinor * const s, spinor * cons
 void block_orthonormalize(block *parent);
 void block_orthonormalize_free(block *parent);
 
-void compute_little_D();
-void compute_little_D_diagonal();
+void compute_little_D(const int mu_g5);
+void compute_little_D_diagonal(const int mul_g5);
 void alt_block_compute_little_D();
 
 extern int dfl_field_iter;

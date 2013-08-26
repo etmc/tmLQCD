@@ -35,6 +35,7 @@
 #include "solver/gcr4complex.h"
 #include "solver/generate_dfl_subspace.h"
 #include "block.h"
+#include "gamma.h"
 #include "linalg_eo.h"
 #include "little_D.h"
 
@@ -649,7 +650,7 @@ void little_D(_Complex double * v, _Complex double *w) {
   CZERO = 0.0;
 
   if(dfl_subspace_updated) {
-    compute_little_D();
+    compute_little_D(0);
     dfl_subspace_updated = 0;
   }
   
@@ -674,6 +675,52 @@ void little_D(_Complex double * v, _Complex double *w) {
 }
 
 
+void little_Qtm(_Complex double * v, _Complex double *w, const double mu) {
+  int i, j, sq = g_N_s*g_N_s;
+  CONE = 1.0;
+  CMONE = -1.0;
+  CZERO = 0.0;
+  double musave = g_mu;
+
+  if(dfl_subspace_updated) {
+    g_mu = 0.;
+    compute_little_D(1);
+    g_mu = musave;
+    dfl_subspace_updated = 0;
+  }
+  
+#ifdef MPI
+  /*init_little_field_exchange(w);*/
+  little_field_gather(w);
+#endif
+  
+  /* all the mpilocal stuff first */
+  for(i = 0; i < nb_blocks; i++) {
+    /* diagonal term */
+    _FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, block_list[i].little_dirac_operator,
+               &g_N_s, w + i * g_N_s, &ONE, &CZERO, v + i * g_N_s, &ONE, 1);
+    
+    /* offdiagonal terms */
+    for(j = 1; j < 9; j++) {
+      _FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, block_list[i].little_dirac_operator + j * sq,
+		 &g_N_s, w + (nb_blocks * j + i) * g_N_s, &ONE, &CONE, v + i * g_N_s, &ONE, 1);
+    }
+  }
+  lassign_add_mul(v, w, mu, nb_blocks*9*g_N_s);
+
+  g_mu = musave;
+  return;
+}
+
+void little_Q_pm(_Complex double * v, _Complex double *w) {
+  _Complex double * tmp = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
+  little_Qtm(tmp, w, -g_mu);
+  little_Qtm(v, tmp, +g_mu);
+  free(tmp);
+  //memcpy(v, w, nb_blocks * 9 * g_N_s*sizeof(_Complex double));
+}
+
+
 void little_D_sym(_Complex double * v, _Complex double *w) {
   
   _Complex double* tmpc1, * tmpc2, * tmpc3;
@@ -682,7 +729,7 @@ void little_D_sym(_Complex double * v, _Complex double *w) {
   tmpc3 = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
   
   if(dfl_subspace_updated) {
-    compute_little_D();
+    compute_little_D(0);
     dfl_subspace_updated = 0;
   }
   

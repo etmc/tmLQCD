@@ -98,6 +98,11 @@ void tm_sub_H_eo_gamma5(spinor* const l, spinor * const p, spinor * const k,
 
 /* external functions */
 
+void Q_psi(spinor * const P, spinor * const Q) {
+  D_psi(P, Q);
+  gamma5(P, P, VOLUME);
+}
+
 void M_full(spinor * const Even_new, spinor * const Odd_new, 
 	    spinor * const Even, spinor * const Odd) {
   /* Even sites */

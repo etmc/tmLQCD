@@ -27,10 +27,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <complex.h>
 #include "global.h"
 #include "operator/D_psi.h"
 #include "linalg_eo.h"
 #include "start.h"
+#include "gamma.h"
 #include "xchange/xchange.h"
 #include "block.h"
 #include "solver/lu_solve.h"
@@ -926,7 +928,7 @@ void alt_block_compute_little_D() {
 
 
 /* checked CU */
-void compute_little_D_diagonal() {
+void compute_little_D_diagonal(const int mul_g5) {
   int i,j, blk;
   spinor * tmp, * _tmp;
   _Complex double * M;
@@ -941,12 +943,50 @@ void compute_little_D_diagonal() {
     M = block_list[blk].little_dirac_operator;
     for(i = 0; i < g_N_s; i++) {
       Block_D_psi(&block_list[blk], tmp, block_list[blk].basis[i]);
+      if(mul_g5) gamma5(tmp, tmp, block_list[blk].volume);
       for(j = 0; j < g_N_s; j++) {
 	M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], tmp, block_list[blk].volume, 0);
 	block_list[blk].little_dirac_operator32[i*g_N_s + j] = M[i * g_N_s + j];
       }
     }
   }
+
+  if(g_debug_level > 2) {
+    if (g_N_s <= 5 && !g_cart_id){
+      printf("\n\n  *** CHECKING LITTLE D ***\n");
+      printf("\n  ** node 0, lower block **\n");
+      for (i = 0*g_N_s; i < 9 * g_N_s; ++i){
+        printf(" [ ");
+        for (j = 0; j < g_N_s; ++j){
+          printf("%s%1.3e %s %1.3e i", creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[0].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[0].little_dirac_operator[i * g_N_s + j]), cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[0].little_dirac_operator[i * g_N_s + j]));
+          if (j != g_N_s - 1){
+            printf(",\t");
+          }
+        }
+        printf(" ]\n");
+        if ((i % g_N_s) == (g_N_s - 1))
+          printf("\n");
+      }
+      
+      printf("\n\n  *** CHECKING LITTLE D ***\n");
+      printf("\n  ** node 0, upper block **\n");
+      for (i = 0*g_N_s; i < 9 * g_N_s; ++i){
+        printf(" [ ");
+        for (j = 0; j < g_N_s; ++j){
+          printf("%s%1.3e %s %1.3e i", creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[1].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[1].little_dirac_operator[i * g_N_s + j]), cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[1].little_dirac_operator[i * g_N_s + j]));
+          if (j != g_N_s - 1){
+            printf(",\t");
+          }
+        }
+        printf(" ]\n");
+        if ((i % g_N_s) == (g_N_s - 1))
+          printf("\n");
+	
+      }
+    }
+  }
+
+
   free(_tmp);
   return;
 }
@@ -955,7 +995,7 @@ void compute_little_D_diagonal() {
 /* what happens if this routine is called in a one dimensional parallelisation? */
 /* or even serially ?                                                           */
 /* checked CU */
-void compute_little_D() {
+void compute_little_D(const int mul_g5) {
   /* 
      This is the little dirac routine rewritten according to multidimensional blocking
      Adaptation by Claude Tadonki (claude.tadonki@u-psud.fr)
@@ -972,7 +1012,7 @@ void compute_little_D() {
   int dT, dX, dY, dZ;
   dT = T/nblks_t; dX = LX/nblks_x; dY = LY/nblks_y; dZ = LZ/nblks_z;
 
-  if(g_proc_id == 0 && g_debug_level > 4) printf("||-----------------------\n||compute_little_D\n||-----------------------\n");
+  if(g_proc_id == 0 && g_debug_level > 1) printf("# compute_little_D called with mul_g5 = %d\n", mul_g5);
 
   /* for a full spinor field we need VOLUMEPLUSRAND                 */
   /* because we use the same geometry as for the                    */
@@ -992,6 +1032,7 @@ void compute_little_D() {
     M = block_list[blk].little_dirac_operator;
     for(i = 0; i < g_N_s; i++) {
       Block_D_psi(&block_list[blk], scratch, block_list[blk].basis[i]);
+      if(mul_g5) gamma5(scratch, scratch, block_list[blk].volume);
       for(j = 0; j < g_N_s; j++) {
 	M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], scratch, block_list[blk].volume, 0);
 	
@@ -1053,7 +1094,7 @@ void compute_little_D() {
 		      /* We treat the case when we need to cross between blocks                             */
 		      /* We are in block (bt, bx, by, bz) and compute direction pm                          */
 		      /* We check inner block statement by ( b_ > 0 )&&( b_ < nblks_ - 1 )                  */
-		      /* Other cases are threated in a standard way using the boundary of the scracth array */
+		      /* Other cases are treated in a standard way using the boundary of the scracth array */
 		      ib = -1; /* ib is the index of the selected block if any */
 		      if((pm==0)&&(bt<nblks_t-1)&&(t==t_end-1)){ //direction +t
 			iy = index_b(0, x, y, z); /* lowest edge of upper block needed */
@@ -1098,6 +1139,7 @@ void compute_little_D() {
 		      }
 		      if(ib >= 0) s = &block_list[ib].basis[ i ][ iy ] ; 
 		      boundary_D[pm](r, s, u);
+		      if(mul_g5) gamma5(r, r, 1);
 		      r++;
 		    }
 		  }
@@ -1133,7 +1175,9 @@ void compute_little_D() {
 		      for(z = z_start; z < z_end; z++) {
 			ix = index_b(t, x, y, z); // TO BE INLINED
 			s = &block_list[block_id].basis[j][ ix ];
+			c = scalar_prod(s, r, 1, 0);
 			block_list[block_id].little_dirac_operator[ iy ] += c;
+			//printf("%e %e\n", creal(c), cimag(c));
 			if (block_list[block_id].evenodd==0) {
 			  block_list[block_id_e].little_dirac_operator_eo[ iy ] += c;
 			}
@@ -1159,7 +1203,7 @@ void compute_little_D() {
     for(j = 0; j < 9 * g_N_s * g_N_s; j++)
       block_list[i].little_dirac_operator32[j] = (_Complex float)block_list[i].little_dirac_operator[ iy ];
 
-  if(g_debug_level > 3) {
+  if(g_debug_level > 2) {
     if (g_N_s <= 5 && !g_cart_id){
       printf("\n\n  *** CHECKING LITTLE D ***\n");
       printf("\n  ** node 0, lower block **\n");

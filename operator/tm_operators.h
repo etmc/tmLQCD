@@ -23,6 +23,7 @@
 #include "su3.h"
 
 /* This is the full matrix multiplication */
+void Q_psi(spinor * const P, spinor * const Q);
 void M_full(spinor * const Even_new, spinor * const Odd_new, 
 	    spinor * const Even, spinor * const Odd);
 void Q_full(spinor * const Even_new, spinor * const Odd_new, 
