@@ -178,11 +178,12 @@ int generate_dfl_subspace_Q(const int Ns, const int N, const int repro) {
     block_orthonormalize(block_list+i);
   }
   // here we generate little_Q with argument = 1
+  dfl_subspace_updated = 0;
   compute_little_D(1);
 
-  for (int i=0; i<Ns; i++) {
-    /* test quality */
-    if(g_debug_level > 0) {
+  if(g_debug_level > 1) {
+    for (int i=0; i<Ns; i++) {
+      /* test quality */
       Q_psi(work_fields[0], dfl_fields[i]);
       nrm = sqrt(square_norm(work_fields[0], N, 1));
       if(g_proc_id == 0) {
@@ -202,7 +203,17 @@ int generate_dfl_subspace_Q(const int Ns, const int N, const int repro) {
       }
     }
   }
-  check_little_Qsq_inversion(1);
+  if(g_debug_level > 2) check_little_Qsq_inversion(0);
+#ifdef MPI
+  etime = MPI_Wtime();
+#else
+  etime = (double)clock()/(double)(CLOCKS_PER_SEC);
+#endif
+  if(g_proc_id == 0) {
+    printf("time for subspace generation %1.3e s\n", etime-atime);
+    fflush(stdout);
+  }
+
   return(0);
 }
 
@@ -240,8 +251,6 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
   random_fields(Ns);
 
   boundary(g_kappa);
-  // Use current g_mu rather than 0 here for generating deflation subspace
-  // g_mu = 0.;
 
   if((g_proc_id == 0) && (p < Ns) && (g_debug_level > 0)) {
     printf("Compute approximate eigenvectors from scratch\n");
@@ -292,9 +301,9 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
       }
     }
 
-    for (i=0; i<Ns; i++) {
-      /* test quality */
-      if(g_debug_level > 0) {
+    if(g_debug_level > 1) {
+      for (i=0; i<Ns; i++) {
+	/* test quality */
 	D_psi(work_fields[0], dfl_fields[i]);
 	nrm = sqrt(square_norm(work_fields[0], N, 1));
 	if(g_proc_id == 0) {

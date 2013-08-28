@@ -59,6 +59,7 @@ int cgne4complex(_Complex double * const P, _Complex double * const Q,
     pro = lscalar_prod_r(w_f[2], w_f[0], N, 1);
     alpha_cg = normsq / pro;
     lassign_add_mul_r(P, w_f[2], alpha_cg, N);
+
     lassign_mul_add_r(w_f[0], -alpha_cg, w_f[1], N);
     err = lsquare_norm(w_f[0], N, 1);
     if(g_proc_id == g_stdio_proc && g_debug_level > 2) {

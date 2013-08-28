@@ -1035,7 +1035,7 @@ void compute_little_D(const int mul_g5) {
       if(mul_g5) gamma5(scratch, scratch, block_list[blk].volume);
       for(j = 0; j < g_N_s; j++) {
 	M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], scratch, block_list[blk].volume, 0);
-	
+		
 	if (block_list[blk].evenodd==0) {
 	  block_list[block_id_e].little_dirac_operator_eo[i * g_N_s + j] = M[i * g_N_s + j];
 	}

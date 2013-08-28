@@ -849,7 +849,8 @@ inline void rmQuotes(char *str){
  
   pcg {
     optr->solver=9;
-    if(myverbose) printf("  Solver set to PCG line %d operator %d\n", line_of_file, current_operator);
+    g_dflgcr_flag = 1;
+    if(myverbose) printf("  Solver set to DFL-PCG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   gmres {

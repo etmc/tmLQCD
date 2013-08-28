@@ -231,7 +231,6 @@ void project(spinor * const out, spinor * const in) {
 
   /* reconstruct global field */
   reconstruct_global_field_GEN(out, psi, nb_blocks);
-  free_dfl_projector();
   return;
 }
 
@@ -268,10 +267,9 @@ void project_Qsq(spinor * const out, spinor * const in) {
   }
 
   if(!dfl_sloppy_prec) prec = little_solver_high_prec;
-  else prec = little_solver_low_prec;
+  else prec = little_solver_high_prec;
 
-  iter = cgne4complex(invvec, inprod, 100, prec, 1, nb_blocks * g_N_s, nb_blocks * 9 * g_N_s, &little_Q_pm);
-  //memcpy(invvec, inprod, nb_blocks * g_N_s*sizeof(_Complex double));
+  iter = cgne4complex(invvec, inprod, 50, prec, 1, nb_blocks * g_N_s, nb_blocks * 9 * g_N_s, &little_Q_pm);
 
   /* sum up */
   for(int j = 0 ; j < nb_blocks ; j++) {
@@ -285,48 +283,50 @@ void project_Qsq(spinor * const out, spinor * const in) {
 
   /* reconstruct global field */
   reconstruct_global_field_GEN(out, psi, nb_blocks);
-  free_dfl_projector();
   return;
 }
 
 static void alloc_dfl_projector() {
-  int i;
-
-  psi = calloc(2*nb_blocks, sizeof(spinor*)); /*block local version of global spinor */
-  inprod = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
-  inprod_eo = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
-  inprod_o = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
-  inprod_e = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
-  ctmp = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
-  invvec = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
-  invvec_eo = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
-  work_block = calloc(dfl_work_size * nb_blocks * 9 * g_N_s, sizeof(_Complex double));
-  for(i = 0; i < dfl_work_size; ++i) {
-    work[i] = work_block + i * nb_blocks * 9 * g_N_s;
+  if(!init_dfl_projector) {
+    
+    psi = calloc(2*nb_blocks, sizeof(spinor*)); /*block local version of global spinor */
+    inprod = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
+    inprod_eo = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
+    inprod_o = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
+    inprod_e = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
+    ctmp = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
+    invvec = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
+    invvec_eo = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
+    work_block = calloc(dfl_work_size * nb_blocks * 9 * g_N_s, sizeof(_Complex double));
+    for(int i = 0; i < dfl_work_size; ++i) {
+      work[i] = work_block + i * nb_blocks * 9 * g_N_s;
+    }
+    
+    /* no loop below because further down we also don't take this cleanly into account */
+    psi[0] = calloc(nb_blocks*(block_list[0].volume + block_list[0].spinpad), sizeof(spinor));
+    for(int i = 1 ;i < 2*nb_blocks ;i++) {
+      psi[i] = psi[i-1] + (block_list[0].volume + block_list[0].spinpad);
+    }
+    init_dfl_projector = 1;
   }
-
-  /* no loop below because further down we also don't take this cleanly into account */
-  psi[0] = calloc(nb_blocks*(block_list[0].volume + block_list[0].spinpad), sizeof(spinor));
-  for(i = 1 ;i < nb_blocks ;i++) {
-    psi[i] = psi[i-1] + (block_list[0].volume + block_list[0].spinpad);
-  }
-  init_dfl_projector = 1;
   return;
 }
 
 
 void free_dfl_projector() {
-  free(*psi);
-  free(psi);
-  free(invvec);
-  free(invvec_eo);
-  free(inprod);
-  free(inprod_eo);
-  free(inprod_e);
-  free(inprod_o);
-  free(ctmp);
-  free(work_block);
-  init_dfl_projector = 0;
+  if(init_dfl_projector) {
+    free(*psi);
+    free(psi);
+    free(invvec);
+    free(invvec_eo);
+    free(inprod);
+    free(inprod_eo);
+    free(inprod_e);
+    free(inprod_o);
+    free(ctmp);
+    free(work_block);
+    init_dfl_projector = 0;
+  }
   return;
 }
 
@@ -401,7 +401,7 @@ void mg_Qsq_precon(spinor * const out, spinor * const in) {
   // apply (Q^2)^-1
   zero_spinor_field(g_spinor_field[DUM_MATRIX+3], VOLUME);
 
-  g_mu = 1.;
+  g_mu = .15;
   cg_her(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], 10, 1.e-14, 
 	 1, VOLUME, &Q_pm_psi);
   g_mu = mu_save;
@@ -1016,7 +1016,7 @@ void check_little_Qsq_inversion(const int repro) {
   int i,j,ctr_t;
   int contig_block = LZ / nb_blocks;
   int vol = block_list[0].volume;
-  _Complex double *result, *v, *w;
+  _Complex double *result;
   double dif;
   spinor ** work_fields = NULL;
   const int nr_wf = 1;
@@ -1026,71 +1026,35 @@ void check_little_Qsq_inversion(const int repro) {
   if(init_dfl_projector == 0) {
     alloc_dfl_projector();
   }
-  v = work[11];
-  w = work[12];
+  result = work[0];
 
-  result = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
+  split_global_field_GEN(psi, work_fields[0], nb_blocks);
 
-  /* no loop below because further down we also don't take this cleanly into account */
-
-  /*initialize the local (block) parts of the spinor*/
-  for (ctr_t = 0; ctr_t < (VOLUME / LZ); ++ctr_t) {
-    for(i=0; i< nb_blocks; i++) {
-      memcpy(psi[i] + ctr_t * contig_block, work_fields[0] + (nb_blocks * ctr_t + i) * contig_block, contig_block * sizeof(spinor));
-    }
-  }
   for (i = 0; i < nb_blocks; ++i) {/* loop over blocks */
     /* compute inner product */
     for (j = 0; j < g_N_s; ++j) {/*loop over block.basis */
-      /*       inprod[j + i*g_N_s] = block_scalar_prod(block_list[i].basis[j], psi[i], vol); */
       inprod[j + i*g_N_s] = scalar_prod(psi[i], block_list[i].basis[j], vol, 0);
-      inprod[j + i*g_N_s] = 1.;
       invvec[j + i*g_N_s] = 0.;
+      result[j + i*g_N_s] = 0.;
     }
   }
 
   cgne4complex(invvec, inprod, 1000, 1.e-24, 1, nb_blocks * g_N_s, nb_blocks * 9 * g_N_s, &little_Q_pm);
-  //gcr4complex(invvec, inprod, 10, 1000, 1.e-24, 1, nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, &little_Q_pm);
   little_Q_pm(result, invvec); /* This should be a proper inverse now */
-
-  dif = 0.0;
-  for(ctr_t = 0; ctr_t < nb_blocks * g_N_s; ++ctr_t){
-    dif += (creal(inprod[ctr_t]) - creal(result[ctr_t])) * (creal(inprod[ctr_t]) - creal(result[ctr_t]));
-    dif += (cimag(inprod[ctr_t]) - cimag(result[ctr_t])) * (cimag(inprod[ctr_t]) - cimag(result[ctr_t]));
-  }
-  dif = sqrt(dif);
-
-  if (dif > 1e-8 * VOLUME){
-    printf("[WARNING] check_little_D_inversion: deviation found of size %1.5e!\n", dif);
-  }
-#ifdef MPI
-  MPI_Barrier(MPI_COMM_WORLD);
-#endif
-
-  if ((g_debug_level > 4) && !g_proc_id){
-    printf("Inversion check on little_D\nStart:\n");
-    for(ctr_t = 0; ctr_t < nb_blocks * g_N_s; ++ctr_t){
-      printf("%1.9e + %1.9e I   ", creal(inprod[ctr_t]), cimag(inprod[ctr_t]));
-      if (ctr_t == g_N_s - 1)
-	printf("\n");
+  ldiff(invvec, result, inprod, nb_blocks*g_N_s);
+  dif = lsquare_norm(invvec, nb_blocks*g_N_s, 1);
+  for (i = 0; i < nb_blocks; ++i) {/* loop over blocks */
+    /* compute inner product */
+    for (j = 0; j < 9*g_N_s; ++j) {/*loop over block.basis */
+      invvec[j + i*g_N_s] = 0.;
+      inprod[j + i*g_N_s] = 0.;
     }
-    printf("\nInverted:\n");
-    for(ctr_t = 0; ctr_t < nb_blocks * g_N_s; ++ctr_t){
-      printf("%1.9e + %19e I   ", creal(invvec[ctr_t]), cimag(invvec[ctr_t]));
-      if (ctr_t == g_N_s - 1 )
-	printf("\n");
-    }
-    printf("\nResult:\n");
-    for(ctr_t = 0; ctr_t < nb_blocks * g_N_s; ++ctr_t){
-      printf("%1.9e + %1.9e I   ", creal(result[ctr_t]), cimag(result[ctr_t]));
-      if (ctr_t == g_N_s - 1)
-	printf("\n");
-    }
-    printf("\n");
   }
 
+  if(g_proc_id == g_stdio_proc) {
+    printf("# check_little_Qsq_inversion: squared residue found of size %1.5e!\n", dif);
+  }
   finalize_solver(work_fields, nr_wf);
-  free(result);
   return;
 }
 
