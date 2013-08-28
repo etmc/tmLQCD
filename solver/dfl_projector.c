@@ -231,6 +231,7 @@ void project(spinor * const out, spinor * const in) {
 
   /* reconstruct global field */
   reconstruct_global_field_GEN(out, psi, nb_blocks);
+  free_dfl_projector();
   return;
 }
 
@@ -283,11 +284,12 @@ void project_Qsq(spinor * const out, spinor * const in) {
 
   /* reconstruct global field */
   reconstruct_global_field_GEN(out, psi, nb_blocks);
+  free_dfl_projector();
   return;
 }
 
 static void alloc_dfl_projector() {
-  if(!init_dfl_projector) {
+  if(init_dfl_projector == 0) {
     
     psi = calloc(2*nb_blocks, sizeof(spinor*)); /*block local version of global spinor */
     inprod = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
@@ -1054,6 +1056,7 @@ void check_little_Qsq_inversion(const int repro) {
   if(g_proc_id == g_stdio_proc) {
     printf("# check_little_Qsq_inversion: squared residue found of size %1.5e!\n", dif);
   }
+  free_dfl_projector();
   finalize_solver(work_fields, nr_wf);
   return;
 }
