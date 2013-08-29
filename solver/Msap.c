@@ -46,21 +46,21 @@ void dummy_Di(spinor * const P, spinor * const Q, const int i) {
 void Mtm_plus_block_psi(spinor * const l, spinor * const k, const int i) {
   block * blk = &block_list[i];
   int vol = (*blk).volume/2;
-  Block_H_psi(blk, g_spinor_field[DUM_MATRIX+1], k, EO);
-  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], +1., vol);
-  Block_H_psi(blk, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], OE);
-  mul_one_pm_imu_sub_mul(l, k, g_spinor_field[DUM_MATRIX], +1., vol);
+  Block_H_psi(blk, &g_spinor_field[DUM_MATRIX+1][i*vol], k, EO);
+  mul_one_pm_imu_inv(&g_spinor_field[DUM_MATRIX+1][i*vol], +1., vol);
+  Block_H_psi(blk, &g_spinor_field[DUM_MATRIX][i*vol], &g_spinor_field[DUM_MATRIX+1][i*vol], OE);
+  mul_one_pm_imu_sub_mul(l, k, &g_spinor_field[DUM_MATRIX][i*vol], +1., vol);
   return;
 }
 
 void Mtm_plus_sym_block_psi(spinor * const l, spinor * const k, const int i) {
   block * blk = &block_list[i];
   int vol = (*blk).volume/2;
-  Block_H_psi(blk, g_spinor_field[DUM_MATRIX+1], k, EO);
-  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], +1., vol);
-  Block_H_psi(blk, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], OE);
-  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX], +1., vol);
-  diff(l, k, g_spinor_field[DUM_MATRIX], vol);
+  Block_H_psi(blk, &g_spinor_field[DUM_MATRIX+1][i*vol], k, EO);
+  mul_one_pm_imu_inv(&g_spinor_field[DUM_MATRIX+1][i*vol], +1., vol);
+  Block_H_psi(blk, &g_spinor_field[DUM_MATRIX][i*vol], &g_spinor_field[DUM_MATRIX+1][i*vol], OE);
+  mul_one_pm_imu_inv(&g_spinor_field[DUM_MATRIX][i*vol], +1., vol);
+  diff(l, k, &g_spinor_field[DUM_MATRIX][i*vol], vol);
   return;
 }
 
@@ -158,12 +158,18 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
       D_psi(r, P);
       diff(r, Q, r, VOLUME);
       nrm = square_norm(r, VOLUME, 1);
-      if(g_proc_id == 0 && g_debug_level > 2 && eo == 1) {  /*  GG, was 1 */
+      if(g_proc_id == 0 && g_debug_level > 2 && eo == 0) {
 	printf("Msap_eo: %d %1.3e\n", ncy, nrm);
 	fflush(stdout);
       }
       /* choose the even (odd) block */
 
+      //#ifdef OMP
+      //# pragma omp parallel for
+      //#endif
+      // OMP doesn't work right now because a_even, a_odd, b_even, b_odd are not threadsafe
+      // also need to make sure that e.g. assign_mul_... and the linalg stuff do not 
+      // start threads again...
       for (blk = 0; blk < nb_blocks; blk++) {
 	if(block_list[blk].evenodd == eo) {
 	  /* get part of r corresponding to block blk into b_even and b_odd */
@@ -172,14 +178,14 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
 	  assign_mul_one_pm_imu_inv(a_even, b_even, +1., vol);
 	  Block_H_psi(&block_list[blk], a_odd, a_even, OE);
 	  /* a_odd = a_odd - b_odd */
-	  assign_mul_add_r(a_odd, -1., b_odd, vol);
+	  diff(a_odd, b_odd, a_odd, vol);
 
 	  mrblk(b_odd, a_odd, Niter, 1.e-31, 1, vol, &Mtm_plus_block_psi, blk);
 
 	  Block_H_psi(&block_list[blk], b_even, b_odd, EO);
 	  mul_one_pm_imu_inv(b_even, +1., vol);
 	  /* a_even = a_even - b_even */
-	  assign_add_mul_r(a_even, b_even, -1., vol);
+	  diff(a_even, a_even, b_even, vol);
 
 	  /* add even and odd part up to full spinor P */
 	  add_eo_block_to_global(P, a_even, b_odd, blk);
