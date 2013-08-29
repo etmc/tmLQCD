@@ -61,11 +61,6 @@ int gcr4complex(_Complex double * const P, _Complex double * const Q,
   if(norm_sq < 1.e-20) {
     norm_sq = 1.;
   }
-  if(g_proc_id == g_stdio_proc && g_debug_level > 2) {
-    printf("lGCR solver precision: %g\n", eps_sq); 
-    fflush(stdout);
-  }
-
 
   for(restart = 0; restart < max_restarts; restart++) {
     f(tmp, P);
