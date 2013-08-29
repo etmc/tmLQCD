@@ -141,7 +141,7 @@ void project(spinor * const out, spinor * const in) {
 	iter = mcr4complex(invvec_eo, inprod_o, 1000, 1000, prec, 1, nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, &little_D_sym);
       }
       else
-	iter = mr4complex(invvec_eo, inprod_o, 20, prec, 1, nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, &little_D_sym);
+	iter = mr4complex(invvec_eo, inprod_o, 8, prec, 1, nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, &little_D_sym);
 
       little_D_hop(0,ctmp, invvec_eo);
       little_D_ee_inv(invvec_eo,ctmp);
@@ -279,7 +279,7 @@ void project_Qsq(spinor * const out, spinor * const in) {
   if(!dfl_sloppy_prec) prec = little_solver_high_prec;
   else prec = little_solver_high_prec;
 
-  iter = cgne4complex(invvec, inprod, 50, prec, 1, nb_blocks * g_N_s, nb_blocks * 9 * g_N_s, &little_Q_pm);
+  iter = cgne4complex(invvec, inprod, 5, prec, 1, nb_blocks * g_N_s, nb_blocks * 9 * g_N_s, &little_Q_pm);
 
   /* sum up */
   for(int j = 0 ; j < nb_blocks ; j++) {
@@ -392,9 +392,9 @@ void mg_precon(spinor * const out, spinor * const in) {
 
 void mg_Qsq_precon2(spinor * const out, spinor * const in) {
   double mu_save = g_mu;
-  g_mu = 1.;
+  //g_mu = 1.;
   zero_spinor_field(out, VOLUME);
-  cg_her(out, in, 2, 1.e-14, 
+  cg_her(out, in, 10, 1.e-14, 
 	 1, VOLUME, &Q_pm_psi);
   g_mu = mu_save;
   return;
@@ -412,7 +412,7 @@ void mg_Qsq_precon(spinor * const out, spinor * const in) {
   // apply (Q^2)^-1
   zero_spinor_field(g_spinor_field[DUM_MATRIX+3], VOLUME);
 
-  g_mu = .15;
+  g_mu = .25;
   cg_her(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], 10, 1.e-14, 
 	 1, VOLUME, &Q_pm_psi);
   g_mu = mu_save;
