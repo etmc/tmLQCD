@@ -40,6 +40,7 @@
 #include "linalg_eo.h"
 #include "gcr4complex.h"
 #include "mcr4complex.h"
+#include "mr4complex.h"
 #include "cgne4complex.h"
 #include "generate_dfl_subspace.h"
 #include "operator/tm_operators.h"
@@ -78,7 +79,6 @@ static void alloc_dfl_projector();
 void project(spinor * const out, spinor * const in) {
   int i,j, i_e, i_o, iter;
   int evenodd = 1;
-  int usePL = 0;
   int little_m = little_gmres_m_parameter;
   int vol = block_list[0].volume;
   _Complex double * v, * w;
@@ -134,10 +134,14 @@ void project(spinor * const out, spinor * const in) {
 
   if(!usePL) {
     if(evenodd) {
-      if (little_solver == 0)
+      if (little_solver == 0) {
 	iter = gcr4complex(invvec_eo, inprod_o, little_m, 1000, prec, 1, nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, &little_D_sym);
-      else
+      }
+      else if(little_solver == 1) {
 	iter = mcr4complex(invvec_eo, inprod_o, 1000, 1000, prec, 1, nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, &little_D_sym);
+      }
+      else
+	iter = mr4complex(invvec_eo, inprod_o, 20, prec, 1, nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, &little_D_sym);
 
       little_D_hop(0,ctmp, invvec_eo);
       little_D_ee_inv(invvec_eo,ctmp);
@@ -157,23 +161,28 @@ void project(spinor * const out, spinor * const in) {
 	  }
 	}
       }
-      if(g_proc_id == 0 && g_debug_level > 4) {/*CT: was "g_debug_level > -1" */
-	printf("lgcr evenodd number of iterations %d (no P_L)\n", iter);
+      if(g_proc_id == 0 && g_debug_level > 2) {
+	printf("little solver (evenodd) number of iterations %d (no P_L)\n", iter);
       }
     }
     else {
       if (little_solver == 0) {
 	iter = gcr4complex(invvec, inprod, little_m, 1000, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);
-	if(g_proc_id == 0 && g_debug_level > 0) {
+	if(g_proc_id == 0 && g_debug_level > 2) {
 	  printf("lgcr number of iterations %d (no P_L)\n", iter);
 	}	
       }
-      else { 
+      else if(little_solver == 1) { 
 	iter = mcr4complex(invvec, inprod, 1000, 1000, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);	
-	if(g_proc_id == 0 && g_debug_level > 0) {
+	if(g_proc_id == 0 && g_debug_level > 2) {
 	  printf("lmcr number of iterations %d (no P_L)\n", iter);
 	}	
-	
+      }
+      else {
+	iter = mr4complex(invvec, inprod, 20, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);
+	if(g_proc_id == 0 && g_debug_level > 2) {
+	  printf("lmr number of iterations %d (no P_L)\n", iter);
+	}	
       }
     }
   }
@@ -385,7 +394,7 @@ void mg_Qsq_precon2(spinor * const out, spinor * const in) {
   double mu_save = g_mu;
   g_mu = 1.;
   zero_spinor_field(out, VOLUME);
-  cg_her(out, in, 10, 1.e-14, 
+  cg_her(out, in, 2, 1.e-14, 
 	 1, VOLUME, &Q_pm_psi);
   g_mu = mu_save;
   return;
