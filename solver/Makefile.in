@@ -33,7 +33,7 @@ libsolver_TARGETS = bicgstab_complex gmres \
 	            cgs_real cg_her mr chrono_guess \
 	            bicgstabell bicgstab2 eigenvalues fgmres \
 	            gcr gcr4complex diagonalise_general_matrix \
-	            cgne4complex \
+	            cgne4complex mr4complex \
 	            quicksort gmres_dr lu_solve jdher Msap \
                     jdher_bi gram-schmidt eigenvalues_bi \
                     bicgstab_complex_bi cg_her_bi pcg_her \
