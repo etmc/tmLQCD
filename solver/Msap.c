@@ -26,6 +26,7 @@
 #include <string.h>
 #include "global.h"
 #include "su3.h"
+#include "gamma.h"
 #include "start.h"
 #include "linalg_eo.h"
 #include "operator/tm_operators.h"
@@ -126,6 +127,43 @@ void Msap(spinor * const P, spinor * const Q, const int Ncy, const int Niter) {
   return;
 }
 
+// This is a smoother based on the even/odd preconditioned CG
+// it applies Ncy iterations of even/odd CG to spinor Q
+// and stores the result in P
+
+void CGeoSmoother(spinor * const P, spinor * const Q, const int Ncy, const int dummy) {
+  spinor ** solver_field = NULL;
+  const int nr_sf = 5;
+  double musave = g_mu;
+  g_mu += 0.;
+  init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);
+
+  convert_lexic_to_eo(solver_field[0], solver_field[1], Q);
+  assign_mul_one_pm_imu_inv(solver_field[2], solver_field[0], +1., VOLUME/2);
+    
+  Hopping_Matrix(OE, solver_field[4], solver_field[2]); 
+  /* The sign is plus, since in Hopping_Matrix */
+  /* the minus is missing                      */
+  assign_mul_add_r(solver_field[4], +1., solver_field[1], VOLUME/2);
+  /* Do the inversion with the preconditioned  */
+  /* matrix to get the odd sites               */
+  gamma5(solver_field[4], solver_field[4], VOLUME/2);
+  cg_her(solver_field[3], solver_field[4], Ncy, 1.e-8, 1, 
+	 VOLUME/2, &Qtm_pm_psi);
+  Qtm_minus_psi(solver_field[3], solver_field[3]);
+
+  /* Reconstruct the even sites                */
+  Hopping_Matrix(EO, solver_field[4], solver_field[3]);
+  mul_one_pm_imu_inv(solver_field[4], +1., VOLUME/2);
+  /* The sign is plus, since in Hopping_Matrix */
+  /* the minus is missing                      */
+  assign_add_mul_r(solver_field[2], solver_field[4], +1., VOLUME/2);
+
+  convert_eo_to_lexic(P, solver_field[2], solver_field[3]); 
+  g_mu = musave;
+  finalize_solver(solver_field, nr_sf);
+  return;  
+}
 
 void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter) {
   int blk, ncy = 0, eo, vol;
