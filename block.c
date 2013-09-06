@@ -1018,12 +1018,11 @@ void compute_little_D(const int mul_g5) {
   /* because we use the same geometry as for the                    */
   /* gauge field                                                    */
   /* It is VOLUME + 2*LZ*(LY*LX + T*LY + T*LX) + 4*LZ*(LY + T + LX) */
-  _scratch = calloc(2*VOLUMEPLUSRAND+1, sizeof(spinor));
-#if ( defined SSE || defined SSE2 || defined SSE3)
+  if( (_scratch = calloc(2*VOLUMEPLUSRAND+1, sizeof(spinor))) == NULL) {
+    fprintf(stderr, "not enough memory for scratch in compute_little_D! Aborting...\n");
+    exit(-1);
+  }
   scratch = (spinor*)(((unsigned long int)(_scratch)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  scratch = _scratch;
-#endif
   temp = scratch + VOLUMEPLUSRAND;
   // NEED TO BE REWRITTEN
   block_id_e = 0;
