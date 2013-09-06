@@ -51,6 +51,7 @@
 #include"gamma.h"
 #include "start.h"
 #include "solver_field.h"
+#include "dfl_projector.h"
 #include"fgmres.h"
 
 static void init_gmres(const int _M, const int _V);
@@ -125,8 +126,14 @@ int fgmres(spinor * const P,spinor * const Q,
 	zero_spinor_field(Z[j], N);
 	Msap_eo(Z[j], V[j], 5, 3);
       }
-      else {
+      else if(precon == 2) {
 	mg_precon(Z[j], V[j]);
+      }
+      else if(precon == 4) {
+	mg_precon_cg(Z[j], V[j]);
+      }
+      else {
+	mg_Qsq_precon(Z[j], V[j]);
       }
       f(r0, Z[j]); 
       /* Set h_ij and omega_j */

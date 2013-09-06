@@ -276,10 +276,10 @@ void project_Qsq(spinor * const out, spinor * const in) {
     }
   }
 
-  if(!dfl_sloppy_prec) prec = little_solver_high_prec;
-  else prec = little_solver_high_prec;
+  if(!dfl_sloppy_prec) prec = little_solver_low_prec;
+  else prec = little_solver_low_prec;
 
-  iter = cgne4complex(invvec, inprod, 5, prec, 1, nb_blocks * g_N_s, nb_blocks * 9 * g_N_s, &little_Q_pm);
+  iter = cgne4complex(invvec, inprod, 1500, prec, 1, nb_blocks * g_N_s, nb_blocks * 9 * g_N_s, &little_Q_pm);
 
   /* sum up */
   for(int j = 0 ; j < nb_blocks ; j++) {
@@ -390,12 +390,42 @@ void mg_precon(spinor * const out, spinor * const in) {
   return;
 }
 
-void mg_Qsq_precon2(spinor * const out, spinor * const in) {
+void mg_precon_cg(spinor * const out, spinor * const in) {
+  // phi = PD_c^{-1} P^dagger in
+  project(out, in);
+  // in - D*phi 
+  // need to DUM_MATRIX+2,3 because in Msap_eo DUM_MATRIX+0,1 is used
+  D_psi(g_spinor_field[DUM_MATRIX+2], out);
+  diff(g_spinor_field[DUM_MATRIX+2], in, g_spinor_field[DUM_MATRIX+2], VOLUME);
+  // apply M_SAP
+  zero_spinor_field(g_spinor_field[DUM_MATRIX+3], VOLUME);
+  CGeoSmoother(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], NcycleMsap, NiterMsap);
+  // sum with phi
+  add(out, g_spinor_field[DUM_MATRIX+3], out, VOLUME);
+  return;
+}
+
+void mg_Qsq_precon1(spinor * const out, spinor * const in) {
   double mu_save = g_mu;
-  //g_mu = 1.;
+  g_mu = g_mu1;
   zero_spinor_field(out, VOLUME);
   cg_her(out, in, 10, 1.e-14, 
 	 1, VOLUME, &Q_pm_psi);
+  g_mu = mu_save;
+  return;
+}
+
+void mg_Qsq_precon3(spinor * const out, spinor * const in) {
+  double mu_save = g_mu;
+  g_mu = g_mu1;
+  zero_spinor_field(g_spinor_field[DUM_MATRIX+3], VOLUME);
+  cg_her(g_spinor_field[DUM_MATRIX+3], in, 30, g_mu*g_mu, 
+	 1, VOLUME, &Q_pm_psi);
+  zero_spinor_field(g_spinor_field[DUM_MATRIX+2], VOLUME);
+  cg_her(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+3], 30, g_mu*g_mu, 
+	 1, VOLUME, &Q_pm_psi);
+  mul_r(g_spinor_field[DUM_MATRIX+2], g_mu*g_mu-mu_save*mu_save, g_spinor_field[DUM_MATRIX+2], VOLUME);
+  add(out, g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], VOLUME);
   g_mu = mu_save;
   return;
 }
@@ -412,10 +442,39 @@ void mg_Qsq_precon(spinor * const out, spinor * const in) {
   // apply (Q^2)^-1
   zero_spinor_field(g_spinor_field[DUM_MATRIX+3], VOLUME);
 
-  g_mu = .25;
+  g_mu = g_mu1;
   cg_her(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], 10, 1.e-14, 
 	 1, VOLUME, &Q_pm_psi);
   g_mu = mu_save;
+  add(out, g_spinor_field[DUM_MATRIX+3], out, VOLUME);
+  return;
+}
+
+void mg_Qsq_precon2(spinor * const out, spinor * const in) {
+  double mu_save = g_mu;
+  project_Qsq(out, in);
+  //assign(out, in, VOLUME);
+  // in - Q_pm*phi 
+  // need to DUM_MATRIX+2,3 because in Msap_eo DUM_MATRIX+0,1 is used
+  Q_pm_psi(g_spinor_field[DUM_MATRIX+3], out);
+  diff(g_spinor_field[DUM_MATRIX+2], in, g_spinor_field[DUM_MATRIX+3], VOLUME);
+  // apply (Q^2)^-1
+  zero_spinor_field(g_spinor_field[DUM_MATRIX+3], VOLUME);
+
+  g_mu = g_mu1;
+  //cg_her(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], 10, 1.e-14, 
+  //	 1, VOLUME, &Q_pm_psi);
+
+  zero_spinor_field(g_spinor_field[DUM_MATRIX+3], VOLUME);
+  cg_her(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], 30, g_mu*g_mu, 
+	 1, VOLUME, &Q_pm_psi);
+  zero_spinor_field(g_spinor_field[DUM_MATRIX+2], VOLUME);
+  cg_her(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+3], 30, g_mu*g_mu, 
+	 1, VOLUME, &Q_pm_psi);
+  mul_r(g_spinor_field[DUM_MATRIX+2], g_mu*g_mu-mu_save*mu_save, g_spinor_field[DUM_MATRIX+2], VOLUME);
+  add(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], VOLUME);
+  g_mu = mu_save;
+
   add(out, g_spinor_field[DUM_MATRIX+3], out, VOLUME);
   return;
 }
@@ -953,14 +1012,9 @@ void check_little_D_inversion(const int repro) {
 
   result = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
 
-  /* no loop below because further down we also don't take this cleanly into account */
-
   /*initialize the local (block) parts of the spinor*/
-  for (ctr_t = 0; ctr_t < (VOLUME / LZ); ++ctr_t) {
-    for(i=0; i< nb_blocks; i++) {
-      memcpy(psi[i] + ctr_t * contig_block, work_fields[0] + (nb_blocks * ctr_t + i) * contig_block, contig_block * sizeof(spinor));
-    }
-  }
+  split_global_field_GEN(psi, work_fields[0], nb_blocks);
+
   for (i = 0; i < nb_blocks; ++i) {/* loop over blocks */
     /* compute inner product */
     for (j = 0; j < g_N_s; ++j) {/*loop over block.basis */
@@ -982,16 +1036,6 @@ void check_little_D_inversion(const int repro) {
   }
   little_D(result, invvec); /* This should be a proper inverse now */
 
-  dif = 0.0;
-  for(ctr_t = 0; ctr_t < nb_blocks * g_N_s; ++ctr_t){
-    dif += (creal(inprod[ctr_t]) - creal(result[ctr_t])) * (creal(inprod[ctr_t]) - creal(result[ctr_t]));
-    dif += (cimag(inprod[ctr_t]) - cimag(result[ctr_t])) * (cimag(inprod[ctr_t]) - cimag(result[ctr_t]));
-  }
-  dif = sqrt(dif);
-
-  if (dif > 1e-8 * VOLUME){
-    printf("[WARNING] check_little_D_inversion: deviation found of size %1.5e!\n", dif);
-  }
 #ifdef MPI
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
@@ -1017,6 +1061,21 @@ void check_little_D_inversion(const int repro) {
     }
     printf("\n");
   }
+
+  ldiff(invvec, result, inprod, nb_blocks*g_N_s);
+  dif = lsquare_norm(invvec, nb_blocks*g_N_s, 1);
+  for (i = 0; i < nb_blocks; ++i) {/* loop over blocks */
+    /* compute inner product */
+    for (j = 0; j < 9*g_N_s; ++j) {/*loop over block.basis */
+      invvec[j + i*g_N_s] = 0.;
+      inprod[j + i*g_N_s] = 0.;
+    }
+  }
+
+  if(g_proc_id == g_stdio_proc) {
+    printf("# check_little_D_inversion: squared residue found of size %1.5e!\n", dif);
+  }
+
 
   finalize_solver(work_fields, nr_wf);
   free(result);

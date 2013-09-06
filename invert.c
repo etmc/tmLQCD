@@ -415,7 +415,7 @@ int main(int argc, char *argv[])
 	}
       }
       // deflated PCG
-      if(operator_list[op_id].solver == PCG) {
+      if(operator_list[op_id].solver == PCG || operator_list[op_id].solver == QSQFGMRES) {
 	generate_dfl_subspace_Q(g_N_s, VOLUME, reproduce_randomnumber_flag);
       }
 

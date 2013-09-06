@@ -38,6 +38,7 @@
 #define BICG 15
 #define CR 16
 #define CGMMSND 17
+#define QSQFGMRES 18
 
 #include"solver/matrix_mult_typedef.h"
 #include "solver/matrix_mult_typedef_bi.h"

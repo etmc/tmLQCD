@@ -89,9 +89,10 @@ static void random_fields(const int Ns) {
 }
 
 int generate_dfl_subspace_Q(const int Ns, const int N, const int repro) {
-  int ix, i_o, k, blk, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(_Complex double),    vol = VOLUME*sizeof(spinor)/sizeof(_Complex double);
+  int ix, i_o, k, blk, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(_Complex double);
+  int vol = VOLUME*sizeof(spinor)/sizeof(_Complex double);
   spinor **psi;
-  double nrm, e = 0.3, d = 1.1, atime, etime;
+  double nrm, snrm=1000, mu1, e = 0.3, d = 1.1, atime, etime;
   _Complex double s;
   _Complex double * work;
   char file_name[500]; // CT
@@ -122,13 +123,19 @@ int generate_dfl_subspace_Q(const int Ns, const int N, const int repro) {
   if((g_proc_id == 0) && (g_debug_level > 0)) {
     printf("Compute approximate eigenvectors from scratch\n");
   }
-  for(int j = 0; j < 10; j++) {
+  for(int j = 0; j < 30; j++) {
     for(int i = 0; i < Ns; i++) {
       zero_spinor_field(g_spinor_field[0], VOLUME);  
       g_sloppy_precision = 1;
 
-      k = cg_her(g_spinor_field[0], dfl_fields[i], j+1, 1.e-8, 1, VOLUME, &Q_pm_psi);
-
+      if(j < 5) {
+	k = cg_her(g_spinor_field[0], dfl_fields[i], j+1, 1.e-8, 1, VOLUME, &Q_pm_psi);
+      }
+      else {
+	g_mu = 0.1;
+	k = cg_her(g_spinor_field[0], dfl_fields[i], 15, 1.e-8, 1, VOLUME, &Q_pm_psi);
+      }
+      g_mu = 0.;
       for (ix=0;ix<VOLUME;ix++) {
 	_spinor_assign((*(dfl_fields[i] + ix)),(*(g_spinor_field[0]+ix)));
       }
@@ -183,14 +190,27 @@ int generate_dfl_subspace_Q(const int Ns, const int N, const int repro) {
   dfl_subspace_updated = 0;
   compute_little_D(1);
 
-  //
   //diff(g_spinor_field[0], dfl_fields[i], g_spinor_field[0], VOLUME);
-  zero_spinor_field(g_spinor_field[6], VOLUME);  
   random_spinor_field_lexic(g_spinor_field[5], 1, RN_Z2);
-  mg_Qsq_precon(g_spinor_field[6], g_spinor_field[5]);
-  Q_pm_psi(g_spinor_field[7], g_spinor_field[6]);
-  diff( g_spinor_field[7],  g_spinor_field[5], g_spinor_field[7], VOLUME);
-  printf("residuum %e\n", square_norm(g_spinor_field[7], VOLUME, 1)/square_norm(g_spinor_field[5], VOLUME, 1));
+  mu1 = 0.007;
+  for(g_mu1 = 0.001; g_mu1 < 0*0.11; g_mu1 += 0.005) {
+    for(g_mu2 = 0.001; g_mu2 < 0.11; g_mu2 += 0.005) {
+      zero_spinor_field(g_spinor_field[6], VOLUME);  
+      mg_Qsq_precon(g_spinor_field[6], g_spinor_field[5]);
+      Q_pm_psi(g_spinor_field[7], g_spinor_field[6]);
+      diff( g_spinor_field[7],  g_spinor_field[5], g_spinor_field[7], VOLUME);
+      nrm = square_norm(g_spinor_field[7], VOLUME, 1)/square_norm(g_spinor_field[5], VOLUME, 1);
+      if(nrm < snrm) {
+	snrm = nrm;
+	mu1 = g_mu1;
+      }
+      if(g_proc_id == 0) printf("residuum %e g_mu1=%e g_mu2=%e\n", nrm, g_mu1, g_mu2);
+    }
+  }
+
+  g_mu1 = 0.05;
+  g_mu2 = 0.008;
+  if(g_proc_id == 0) printf("residuum g_mu1=%e g_mu2=%e\n", g_mu1, g_mu2);
 
   if(g_debug_level > 1) {
     for (int i=0; i<Ns; i++) {
@@ -198,7 +218,7 @@ int generate_dfl_subspace_Q(const int Ns, const int N, const int repro) {
       Q_pm_psi(work_fields[0], dfl_fields[i]);
       nrm = sqrt(square_norm(work_fields[0], N, 1));
       if(g_proc_id == 0) {
-	printf(" ||Qsq psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm*nrm);
+	printf(" ||Qsq psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm);
       }
     }
   }
@@ -336,6 +356,9 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
       }
     }
   }
+  g_mu1 = 0.;
+  g_mu2 = 0.;
+
   // g_mu = musave;
   g_sloppy_precision = 0;
   boundary(g_kappa);

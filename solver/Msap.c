@@ -135,7 +135,7 @@ void CGeoSmoother(spinor * const P, spinor * const Q, const int Ncy, const int d
   spinor ** solver_field = NULL;
   const int nr_sf = 5;
   double musave = g_mu;
-  g_mu += 0.;
+  g_mu = g_mu1;
   init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);
 
   convert_lexic_to_eo(solver_field[0], solver_field[1], Q);
