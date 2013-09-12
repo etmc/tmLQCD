@@ -263,7 +263,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       else {
 	optr->iterations = invert_clover_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
 					    optr->eps_sq, optr->maxiter,
-					    optr->solver, optr->rel_prec,
+					    optr->solver, optr->rel_prec,optr->solver_params,
 					    &g_gauge_field, &Qsw_pm_psi, &Qsw_minus_psi);
 	/* check result */
  	Msw_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);

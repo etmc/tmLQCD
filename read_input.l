@@ -271,6 +271,7 @@ inline void rmQuotes(char *str){
 %x DBCLOVEROP
 %x TMSOLVER
 %x DBTMSOLVER
+%x CSWSOLVER
 %x OVSOLVER
 
 %x INITMONOMIAL
@@ -649,6 +650,14 @@ inline void rmQuotes(char *str){
   }
 }
 
+<CLOVEROP>{
+  {SPC}*Solver{EQL} {
+    name_caller = YY_START; 
+    BEGIN(CSWSOLVER);
+  }
+}
+
+
 <WILSONOP,TMOP>{
   {SPC}*UseEvenOdd{EQL}yes {
     if(myverbose) printf("  Use even/odd preconditioning line %d operator %d\n", line_of_file, current_operator);
@@ -740,7 +749,7 @@ inline void rmQuotes(char *str){
   }
 }
 
-<DBTMSOLVER,TMSOLVER>{
+<DBTMSOLVER,TMSOLVER,CSWSOLVER>{
   cg {
     optr->solver=1;
     if(myverbose) printf("  Solver set to CG line %d operator %d\n", line_of_file, current_operator);
@@ -818,6 +827,21 @@ inline void rmQuotes(char *str){
   }
 
 }
+
+
+<CSWSOLVER>{
+  increigcg {
+    optr->solver = 15;
+    if(myverbose) printf("  Solver set to INCR-EIG-CG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+
+}
+
+
+
+
+
 
 <OVSOLVER>{
   sumr {
