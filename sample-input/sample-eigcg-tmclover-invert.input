@@ -30,7 +30,7 @@ BeginOperator CLOVER
   kappa = 0.160900
   csw = 1.00
   Solver = INCREIGCG
-  UseEvenOdd = yes
+  #UseEvenOdd = yes
   SolverPrecision = 1.e-16
   MaxSolverIterations = 2000
   PropagatorPrecision = 64
