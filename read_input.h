@@ -105,6 +105,7 @@ extern "C"
   extern double innersolver_precision_rel;
   extern int innersolver_precision_check_abs;
   extern int innersolver_precision_check_rel;
+  extern int min_innersolver_it;  
 
   extern int omp_num_threads;
 

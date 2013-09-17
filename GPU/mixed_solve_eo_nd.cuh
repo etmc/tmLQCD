@@ -3684,6 +3684,7 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
   float alpha;
   float beta;
   
+  int min_solver_it = min_innersolver_it;
   // (auxiliary) device fields
   dev_spinor *  r_up, *  r_dn,
              * Ad_up, * Ad_dn,
@@ -3896,6 +3897,7 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
   
   for (j = 0; j < max_iter; j++) {
 
+     
       // A*d(k)
       #ifndef MPI
       		dev_Qtm_pm_ndpsi(Ad_up, Ad_dn,										// normally:  dev_Qtm_pm_ndpsi()
@@ -4050,7 +4052,7 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
     
     
     // aborting ?? // check wether precision is reached ...
-    if ( (check_abs)&&(rr <= eps_abs) || (check_rel)&&(rr <= eps_rel*r0r0) ) {
+    if ( ((check_abs)&&(rr <= eps_abs)&&((j>min_solver_it)||(rr<1.0e-25))) || ((check_rel)&&(rr <= eps_rel*r0r0)&&((j>min_solver_it)||(rr<1.0e-25))) ) {
     
       #ifdef MPI
         if (g_proc_id == 0) {

@@ -160,6 +160,7 @@ inline void rmQuotes(char *str){
   double innersolver_precision_rel;
   int innersolver_precision_check_abs;
   int innersolver_precision_check_rel;
+  int min_innersolver_it;
   int num_gpu_per_node;
 
   int propagator_comparison;
@@ -453,6 +454,11 @@ inline void rmQuotes(char *str){
       sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
       innersolver_precision_check_rel = a;
       if(myverbose) printf("  innersolver_precision_check_rel set to %d line %d\n", a, line_of_file);
+  }
+  {SPC}*MinInnerSolverIterations{EQL}{DIGIT}+ {
+      sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
+      min_innersolver_it = a;
+      if(myverbose) printf("  min_innersolver_it set to %d line %d\n", a, line_of_file);
   }
   EndGPUInit{SPC}* {
   if(myverbose) printf("GPU parsed in line %d\n\n", line_of_file);
@@ -2094,6 +2100,7 @@ int read_input(char * conf_file){
   mstarsq = _default_mstarsq;
   no_sources_z2 = _default_no_sources_z2;
   device_num = _default_device_num;
+  min_innersolver_it = _default_min_innersolver_it;
   innersolver_precision_rel = 1.e-4;
   innersolver_precision_abs = 1.e-4;
   num_gpu_per_node = _default_num_gpu_per_node;

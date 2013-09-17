@@ -1753,8 +1753,8 @@ extern "C" int mixed_solve_eo_clover (spinor * const P, spinor * const Q, const 
 
   
   #ifdef GPU_DOUBLE
-  
-    test_double_operator(Q,N);
+    //FIXME
+    //test_double_operator(Q,N);
     double testnorm;
     
     /*!!!!  WHY IS P NONZERO????? */
@@ -1792,11 +1792,13 @@ for(iter=0; iter<max_iter; iter++){
    #endif
      // r_k = b - D x_k 
    #ifdef GPU_DOUBLE
-     dev_Qsw_pm_psi_d(dev_spin2_d, dev_spin3_d,  
+   //FIXME
+   /*dev_Qsw_pm_psi_d(dev_spin2_d, dev_spin3_d,  
 		      dev_spin_eo1_d, dev_spin_eo2_d, 
 		      griddim3, blockdim3, griddim4, blockdim4,
 		      dev_eoidx_even, dev_eoidx_odd, 
 		      dev_nn_eo, dev_nn_oe); 
+		      */
      dev_diff_d<<<griddim4,blockdim4>>>(dev_spin0_d,dev_spin0_d,dev_spin3_d);
      rk = double_dotprod(dev_spin0_d,dev_spin0_d);
    #else   

@@ -158,6 +158,7 @@
 /* default GPU values */
 #define _default_device_num -1
 #define _default_num_gpu_per_node 4
+#define _default_min_innersolver_it 10
 
 /* default OpenMP values */
 #define _default_omp_num_threads 0
