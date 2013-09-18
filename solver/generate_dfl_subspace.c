@@ -69,21 +69,22 @@ static int init_little_subspace = 0;
 
 static void random_fields(const int Ns) {
 
-  int i, j, ix;
-  float r,s[24];
-  double *t;
+  //  int i, j, ix;
+  //  float r,s[24];
+  //  double *t;
 
-  r=(float)(1.0/sqrt(24.0*(double)(VOLUME)));
+  //  r=(float)(1.0/sqrt(24.0*(double)(VOLUME)));
 
-  for (i = 0; i < Ns; i++) {
-    t=(double*)(dfl_fields[i]);
-    for (ix = 0; ix < VOLUME; ix++){
-      ranlxs(s,24);
-      for (j = 0; j < 24; j++) {
-	(*t) = (double)(r*(s[j]-0.5f)); 
-	t += 1; 
-      }
-    }
+  for (int i = 0; i < Ns; i++) {
+    random_spinor_field_lexic(dfl_fields[i], 1, RN_GAUSS);
+    //    t=(double*)(dfl_fields[i]);
+    //    for (ix = 0; ix < VOLUME; ix++){
+    //      ranlxs(s,24);
+    //      for (j = 0; j < 24; j++) {
+    //	(*t) = (double)(r*(s[j]-0.5f)); 
+    //	t += 1; 
+    //      }
+    //    }
   }
   return;
 }
@@ -91,7 +92,7 @@ static void random_fields(const int Ns) {
 int generate_dfl_subspace_Q(const int Ns, const int N, const int repro) {
   int ix, i_o, k, blk, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(_Complex double),    vol = VOLUME*sizeof(spinor)/sizeof(_Complex double);
   spinor **psi;
-  double nrm, e = 0.3, d = 1.1, atime, etime;
+  double nrm, snrm=1000, mu1, e = 0.3, d = 1.1, atime, etime;
   _Complex double s;
   _Complex double * work;
   char file_name[500]; // CT
@@ -122,13 +123,19 @@ int generate_dfl_subspace_Q(const int Ns, const int N, const int repro) {
   if((g_proc_id == 0) && (g_debug_level > 0)) {
     printf("Compute approximate eigenvectors from scratch\n");
   }
-  for(int j = 0; j < 10; j++) {
+  for(int j = 0; j < NsmoothMsap_dflgen; j++) {
     for(int i = 0; i < Ns; i++) {
       zero_spinor_field(g_spinor_field[0], VOLUME);  
       g_sloppy_precision = 1;
 
-      k = cg_her(g_spinor_field[0], dfl_fields[i], j+1, 1.e-8, 1, VOLUME, &Q_pm_psi);
-
+      if(j < 5) {
+	k = cg_her(g_spinor_field[0], dfl_fields[i], j+1, 1.e-8, 1, VOLUME, &Q_pm_psi);
+      }
+      else {
+	g_mu = 0.1;
+	k = cg_her(g_spinor_field[0], dfl_fields[i], 15, 1.e-8, 1, VOLUME, &Q_pm_psi);
+      }
+      g_mu = 0.;
       for (ix=0;ix<VOLUME;ix++) {
 	_spinor_assign((*(dfl_fields[i] + ix)),(*(g_spinor_field[0]+ix)));
       }
@@ -183,14 +190,27 @@ int generate_dfl_subspace_Q(const int Ns, const int N, const int repro) {
   dfl_subspace_updated = 0;
   compute_little_D(1);
 
-  //
   //diff(g_spinor_field[0], dfl_fields[i], g_spinor_field[0], VOLUME);
-  zero_spinor_field(g_spinor_field[6], VOLUME);  
   random_spinor_field_lexic(g_spinor_field[5], 1, RN_Z2);
-  mg_Qsq_precon(g_spinor_field[6], g_spinor_field[5]);
-  Q_pm_psi(g_spinor_field[7], g_spinor_field[6]);
-  diff( g_spinor_field[7],  g_spinor_field[5], g_spinor_field[7], VOLUME);
-  printf("residuum %e\n", square_norm(g_spinor_field[7], VOLUME, 1)/square_norm(g_spinor_field[5], VOLUME, 1));
+  mu1 = 0.007;
+  for(g_mu1 = 0.001; g_mu1 < 0*0.11; g_mu1 += 0.005) {
+    for(g_mu2 = 0.001; g_mu2 < 0.11; g_mu2 += 0.005) {
+      zero_spinor_field(g_spinor_field[6], VOLUME);  
+      mg_Qsq_precon(g_spinor_field[6], g_spinor_field[5]);
+      Q_pm_psi(g_spinor_field[7], g_spinor_field[6]);
+      diff( g_spinor_field[7],  g_spinor_field[5], g_spinor_field[7], VOLUME);
+      nrm = square_norm(g_spinor_field[7], VOLUME, 1)/square_norm(g_spinor_field[5], VOLUME, 1);
+      if(nrm < snrm) {
+	snrm = nrm;
+	mu1 = g_mu1;
+      }
+      if(g_proc_id == 0) printf("residuum %e g_mu1=%e g_mu2=%e\n", nrm, g_mu1, g_mu2);
+    }
+  }
+
+  g_mu1 = 0.05;
+  g_mu2 = 0.008;
+  if(g_proc_id == 0) printf("residuum g_mu1=%e g_mu2=%e\n", g_mu1, g_mu2);
 
   if(g_debug_level > 1) {
     for (int i=0; i<Ns; i++) {
@@ -198,7 +218,7 @@ int generate_dfl_subspace_Q(const int Ns, const int N, const int repro) {
       Q_pm_psi(work_fields[0], dfl_fields[i]);
       nrm = sqrt(square_norm(work_fields[0], N, 1));
       if(g_proc_id == 0) {
-	printf(" ||Qsq psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm*nrm);
+	printf(" ||Qsq psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm);
       }
     }
   }
@@ -243,7 +263,7 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
   double musave = g_mu;
   spinor ** work_fields = NULL;
   const int nr_wf = 2;
-
+  g_mu2 = 0.1;
 #ifdef MPI
   atime = MPI_Wtime();
 #else
@@ -267,15 +287,13 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
     printf("Compute approximate eigenvectors from scratch\n");
   }
   if(p < Ns) {
-    for(j = 0; j < 3; j++) {
+    for(j = 0; j < 5; j++) {
       for(i = 0; i < Ns; i++) {
 	zero_spinor_field(g_spinor_field[0], VOLUME);  
 	g_sloppy_precision = 1;
 	Msap_eo(g_spinor_field[0], dfl_fields[i], j+1, NiterMsap_dflgen); 
 	
-	for (ix=0;ix<VOLUME;ix++) {
-	  _spinor_assign((*(dfl_fields[i] + ix)),(*(g_spinor_field[0]+ix)));
-	}
+	assign(dfl_fields[i], g_spinor_field[0], VOLUME);
 	
 	g_sloppy_precision = 0;
 	ModifiedGS((_Complex double*)g_spinor_field[0], vol, i, (_Complex double*)dfl_fields[0], vpr);
@@ -294,17 +312,18 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
 	block_orthonormalize(block_list+i);
       }
       dfl_subspace_updated = 1;
-      
-      for(i = 0; i < Ns; i++) {
-	g_sloppy_precision = 1;
-	D_psi(g_spinor_field[0],  dfl_fields[i]);
-	diff(g_spinor_field[0], dfl_fields[i], g_spinor_field[0], VOLUME);
-	mg_precon(g_spinor_field[1], g_spinor_field[0]);
-	//	Msap_eo(g_spinor_field[0], dfl_fields[i], NcycleMsap_dflgen, NiterMsap_dflgen); 
 
-	for (ix=0;ix<VOLUME;ix++) {
-	  _spinor_add_assign((*(dfl_fields[i] + ix)),(*(g_spinor_field[1]+ix)));
-	}
+      // why can't I use g_spinor_field[1] in mg_precon??
+      for(i = 0; i < Ns; i++) {
+	//g_sloppy_precision = 1;
+	//D_psi(g_spinor_field[1],  dfl_fields[i]);
+	//diff(g_spinor_field[1], dfl_fields[i], g_spinor_field[1], VOLUME);
+	//mg_precon(g_spinor_field[0], g_spinor_field[1]);
+	////Msap_eo(g_spinor_field[1], g_spinor_field[0], NcycleMsap_dflgen, NiterMsap_dflgen); 
+	////Msap_eo(g_spinor_field[0], dfl_fields[i], NcycleMsap_dflgen, NiterMsap_dflgen); 
+	mg_precon(g_spinor_field[0], dfl_fields[i]);
+
+	assign(dfl_fields[i], g_spinor_field[0], VOLUME);
 	g_sloppy_precision = 0;
 	ModifiedGS((_Complex double*)g_spinor_field[0], vol, i, (_Complex double*)dfl_fields[0], vpr);
 	nrm = sqrt(square_norm(g_spinor_field[0], N, 1));
