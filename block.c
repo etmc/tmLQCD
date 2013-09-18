@@ -116,6 +116,10 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
   nblks_dir[2] = nblks_y;
   nblks_dir[3] = nblks_z;
   nb_blocks = nblks_t*nblks_x*nblks_y*nblks_z;
+  if(nblks_t%2 == 1 || nblks_x%2 == 1 || nblks_y%2 == 1 || nblks_z%2 == 1 ) {
+    fprintf(stderr, "no of blocks in all directions must be even! Aborting...\n");
+    exit(0);
+  }
   dT = T/nblks_t; 
   dX = LX/nblks_x; 
   dY = LY/nblks_y; 
@@ -184,29 +188,6 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
     block_list[i].ns = g_N_s;
     block_list[i].spinpad = spinpad;
 
-    /* The following has not yet been adapted for */
-    /* new block geometry right? (C.U.)           */
-    for (j = 0 ; j < 6; ++j) {
-#ifdef MPI
-      block_list[i].mpilocal_neighbour[j] = (g_nb_list[j] == g_cart_id) ? i : -1;
-#else
-      block_list[i].mpilocal_neighbour[j] = i;
-#endif
-    }
-#ifdef MPI
-    block_list[i].mpilocal_neighbour[6] = (i == 0 ? 1 : (g_nb_list[j] == g_cart_id) ? 0 : -1);
-    block_list[i].mpilocal_neighbour[7] = (i == 1 ? 0 : (g_nb_list[j] == g_cart_id) ? 1 : -1);
-#else
-    block_list[i].mpilocal_neighbour[6] = (i == 0 ? 1 : 0);
-    block_list[i].mpilocal_neighbour[7] = (i == 0 ? 1 : 0);
-#endif
-    if(g_debug_level > 4 && g_proc_id == 0) {
-      for(j = 0; j < 8; j++) {
-	printf("block %d mpilocal_neighbour[%d] = %d\n", i, j, block_list[i].mpilocal_neighbour[j]);
-      }
-    }
-    /* till here... (C.U.)                        */
-
     /* block coordinate on the mpilocal processor */
     block_list[i].mpilocal_coordinate[0] = (i / (nblks_x * nblks_y * nblks_z));
     block_list[i].mpilocal_coordinate[1] = (i / (nblks_y * nblks_z)) % nblks_x;
@@ -250,9 +231,7 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
       block_list[i].little_dirac_operator_eo[j] = 0.0;
     }
   }
- 
- 
-   
+  
   init_blocks_geometry();
   init_blocks_gaugefield();
 
@@ -280,6 +259,7 @@ int free_blocks() {
   }
   return 0;
 }
+
 int init_blocks_gaugefield() {
   /* 
      Copies the existing gauge field on the processor into the separate blocks in a form
@@ -635,11 +615,11 @@ int init_blocks_geometry() {
   int tstride = dX * dY * dZ;
   int boundidx = VOLUME/nb_blocks;
   for (ix = 0; ix < VOLUME/nb_blocks; ++ix) {
-    block_idx[8 * ix + 0] = ix           >= VOLUME/nb_blocks - tstride ? boundidx : ix + tstride;/* +t */
-    block_idx[8 * ix + 1] = ix           <  tstride                    ? boundidx : ix - tstride;/* -t */
-    block_idx[8 * ix + 2] = (ix % tstride >= dZ * dY * (dX - 1)		? boundidx : ix + xstride);/* +x */
+    block_idx[8 * ix + 0] = ix           >= VOLUME/nb_blocks - tstride  ? boundidx : ix + tstride;/* +t */
+    block_idx[8 * ix + 1] = ix           <  tstride                     ? boundidx : ix - tstride;/* -t */
+    block_idx[8 * ix + 2] = ix % tstride >= dZ * dY * (dX - 1)		? boundidx : ix + xstride;/* +x */
     block_idx[8 * ix + 3] = ix % tstride <  dZ * dY			? boundidx : ix - xstride;/* -x */
-    block_idx[8 * ix + 4] = (ix % xstride >= dZ * (dY - 1)		? boundidx : ix + ystride);/* +y */
+    block_idx[8 * ix + 4] = ix % xstride >= dZ * (dY - 1)		? boundidx : ix + ystride;/* +y */
     block_idx[8 * ix + 5] = ix % xstride <  dZ				? boundidx : ix - ystride;/* -y */
     block_idx[8 * ix + 6] = ix % ystride == dZ - 1			? boundidx : ix + zstride;/* +z */
     block_idx[8 * ix + 7] = ix % ystride == 0				? boundidx : ix - zstride;/* -z */
@@ -1069,7 +1049,7 @@ void compute_little_D(const int mul_g5) {
       x_start = 0; x_end = dX;
       y_start = 0; y_end = dY;
       z_start = 0; z_end = dZ;
-      switch(pm){ 
+      switch(pm) { 
       case 0: t_start = dT - 1; t_end = t_start + 1; mu = 0; is_up = 1; break; /* Boundary in direction +t */
       case 1: t_start = 0;      t_end = t_start + 1; mu = 0; is_up = 0; break; /* Boundary in direction -t */
       case 2: x_start = dX - 1; x_end = x_start + 1; mu = 1; is_up = 1; break; /* Boundary in direction +x */
