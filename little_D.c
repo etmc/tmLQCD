@@ -687,7 +687,7 @@ void little_Q_pm(_Complex double * v, _Complex double *w) {
   little_D(tmp, w);
   little_D(v, tmp);
   free(tmp);
-  lassign_add_mul(v, w, g_mu*g_mu+0.15, nb_blocks*g_N_s);
+  lassign_add_mul(v, w, g_mu*g_mu + g_mu*g_mu, nb_blocks*g_N_s);
   //memcpy(v, w, nb_blocks * g_N_s*sizeof(_Complex double));
 }
 

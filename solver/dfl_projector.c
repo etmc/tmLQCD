@@ -1037,7 +1037,6 @@ void check_little_D_inversion(const int repro) {
   }
   little_D(result, invvec); /* This should be a proper inverse now */
 
-
 #ifdef MPI
   MPI_Barrier(MPI_COMM_WORLD);
 #endif

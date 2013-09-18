@@ -90,7 +90,8 @@ static void random_fields(const int Ns) {
 }
 
 int generate_dfl_subspace_Q(const int Ns, const int N, const int repro) {
-  int ix, i_o, k, blk, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(_Complex double),    vol = VOLUME*sizeof(spinor)/sizeof(_Complex double);
+  int ix, i_o, k, blk, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(_Complex double);
+  int vol = VOLUME*sizeof(spinor)/sizeof(_Complex double);
   spinor **psi;
   double nrm, snrm=1000, mu1, e = 0.3, d = 1.1, atime, etime;
   _Complex double s;
@@ -355,6 +356,9 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
       }
     }
   }
+  g_mu1 = 0.;
+  g_mu2 = 0.;
+
   // g_mu = musave;
   g_sloppy_precision = 0;
   boundary(g_kappa);
