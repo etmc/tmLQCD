@@ -1178,9 +1178,11 @@ void compute_little_D(const int mul_g5) {
       }
     }
   }
-  for(i = 0; i < nb_blocks; i++)
-    for(j = 0; j < 9 * g_N_s * g_N_s; j++)
+  for(i = 0; i < nb_blocks; i++) {
+    for(j = 0; j < 9 * g_N_s * g_N_s; j++) {
       block_list[i].little_dirac_operator32[j] = (_Complex float)block_list[i].little_dirac_operator[ iy ];
+    }
+  }
 
   if(g_debug_level > 2) {
     if (g_N_s <= 5 && !g_cart_id){

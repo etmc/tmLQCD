@@ -83,7 +83,7 @@ void project(spinor * const out, spinor * const in) {
   int vol = block_list[0].volume;
   _Complex double * v, * w;
   double prec;
-
+  evenodd = little_evenodd;
   if(init_dfl_projector == 0) {
     alloc_dfl_projector();
   }

@@ -43,8 +43,6 @@
 /* assume we have a little field w                       */
 /* which has length 9*nb_blocks*N_s                      */
 /* with usual order in space                             */
-/* nb_blocks = 2 currently fixed                         */
-/* and blocks devide z-direction by 2                    */
 /*                                                       */
 /* block[0], block[1], block[0], block[1], block[0]  ... */
 /* local             , +t                , -t        ... */
@@ -427,7 +425,7 @@ void little_field_gather(_Complex double * w) {
     MPI_Irecv(wt_buf, nb_blocks * g_N_s, MPI_DOUBLE_COMPLEX, g_nb_t_up, T_DN, g_cart_grid, &lrequests[request]);
     request++;
   }
-  if(g_norpc_x > 1) {
+  if(g_nproc_x > 1) {
     /* Send x up */
     MPI_Isend(w, nb_blocks * g_N_s, MPI_DOUBLE_COMPLEX, g_nb_x_up, X_UP, g_cart_grid, &lrequests[request]);
     request++;
@@ -832,10 +830,7 @@ void little_D(_Complex double * v, _Complex double *w) {
     dfl_subspace_updated = 0;
   }
   
-#ifdef MPI
-  /*init_little_field_exchange(w);*/
   little_field_gather(w);
-#endif
   
   /* all the mpilocal stuff first */
   for(int i = 0; i < nb_blocks; i++) {
@@ -917,10 +912,7 @@ void little_D_hop(int eo,_Complex double * v, _Complex double *w) {
 
   i_eo=(eo+1)%2;
   
-#ifdef MPI
-  /*init_little_field_exchange(w);*/
   little_field_gather_eo(eo,w+i_eo*nb_blocks*g_N_s/2);
-#endif
   
   for(j = 1; j < 9; j++) {
     for(i = 0; i < nb_blocks/2; i++) {

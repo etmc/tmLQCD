@@ -375,7 +375,6 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
   }
   for (i = 0; i < Ns; i++) {
     /* add it to the basis */
-    /* split_global_field(block_list[0].basis[i], block_list[1].basis[i], dfl_fields[i]); */
     split_global_field_GEN_ID(block_list, i, dfl_fields[i], nb_blocks);
   }
 
