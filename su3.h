@@ -59,6 +59,11 @@ typedef struct
 
 typedef struct
 {
+   su3_vector32 s0,s1,s2,s3;
+} spinor32;
+
+typedef struct
+{
   su3_vector s0, s1;
 } halfspinor;
 
