@@ -24,7 +24,7 @@
 
 int write_luscher_gauge_binary(const double plaq, char* filename, su3 ** const gf) {
 #ifdef MPI
-  fprintf("Luscher format for gauges not implelmented for MPI! Not writing anything!\n");
+  fprintf(stdout, "Luescher DD-HMC format for gauges not implemented for MPI! Not writing anything!\n");
 #else
   FILE * ofs;
   int ix;

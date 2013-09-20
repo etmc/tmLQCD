@@ -130,19 +130,17 @@ int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum, par
   n_uint64_t bytes;
   su3 tmp[4];
   float tmp2[72];
-#ifdef MPI
   double tick = 0, tock = 0;
-#endif
   char measure[64];
   DML_SiteRank rank;
   DML_checksum_init(checksum);
 
-#ifdef MPI
   if (g_debug_level > 0) {
+#ifdef MPI
     MPI_Barrier(g_cart_grid);
-    tick = MPI_Wtime();
-  }
 #endif
+    tick = gettime();
+  }
 
   bytes = limeReaderBytes(limereader); /* datalength of ildg-binary-data record in bytes */
   if (bytes != (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * 4 * (n_uint64_t)sizeof(su3) / (input->prec==64 ? 1 : 2)) {
@@ -202,10 +200,11 @@ int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum, par
     }
   }
 
-#ifdef MPI
   if (g_debug_level > 0) {
+#ifdef MPI
     MPI_Barrier(g_cart_grid);
-    tock = MPI_Wtime();
+#endif
+    tock = gettime();
 
     if (g_cart_id == 0) {
       engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes, "b");
@@ -218,7 +217,7 @@ int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum, par
       fprintf(stdout, " (%s per MPI process).\n", measure);
     }
   }
-
+#ifdef MPI
   DML_checksum_combine(checksum);
 #endif
   return(0);
