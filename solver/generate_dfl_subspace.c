@@ -69,22 +69,8 @@ static int init_little_subspace = 0;
 
 static void random_fields(const int Ns) {
 
-  //  int i, j, ix;
-  //  float r,s[24];
-  //  double *t;
-
-  //  r=(float)(1.0/sqrt(24.0*(double)(VOLUME)));
-
   for (int i = 0; i < Ns; i++) {
     random_spinor_field_lexic(dfl_fields[i], 1, RN_GAUSS);
-    //    t=(double*)(dfl_fields[i]);
-    //    for (ix = 0; ix < VOLUME; ix++){
-    //      ranlxs(s,24);
-    //      for (j = 0; j < 24; j++) {
-    //	(*t) = (double)(r*(s[j]-0.5f)); 
-    //	t += 1; 
-    //      }
-    //    }
   }
   return;
 }
@@ -348,10 +334,7 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
 	D_psi(work_fields[0], dfl_fields[i]);
 	nrm = sqrt(square_norm(work_fields[0], N, 1));
 	if(g_proc_id == 0) {
-	  if (use_iQ_dfl)
-	    printf(" ||iQ psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm*nrm);
-	  else	
-	    printf(" ||D psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm*nrm);
+	  printf(" ||D psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm*nrm);
 	}
       }
     }
