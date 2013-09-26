@@ -29,8 +29,8 @@
 #include <io/utils.h>
 
 
-int read_gauge_field(char *filename);
-int read_binary_gauge_data(READER *reader, DML_Checksum *checksum, paramsIldgFormat * ildgformat);
+int read_gauge_field(char *filename, su3 ** const gf);
+int read_binary_gauge_data(READER *reader, DML_Checksum *checksum, paramsIldgFormat * ildgformat, su3 ** const gf);
 
 int write_gauge_field(char * filename, int prec, paramsXlfInfo const *xlfInfo);
 int write_binary_gauge_data(WRITER * writer, const int prec, DML_Checksum * checksum);

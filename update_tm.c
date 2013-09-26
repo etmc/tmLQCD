@@ -68,7 +68,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 	      const int traj_counter) {
 
   su3 *v, *w;
-  static int ini_g_tmp = 0;
   int accept, i=0, j=0, iostatus=0;
 
   double yy[1];
@@ -99,13 +98,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   integrator_set_fields(&hf);
 
   strcpy(tmp_filename, ".conf.tmp");
-  if(ini_g_tmp == 0) {
-    ini_g_tmp = init_gauge_tmp(VOLUME);
-    if(ini_g_tmp != 0) {
-      exit(-1);
-    }
-    ini_g_tmp = 1;
-  }
   atime = gettime();
 
   /*
@@ -298,12 +290,13 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
 
     if(accept) {
-      /* Read back gauge field */
+      /* Read back gauge field
+         FIXME unlike in hmc_tm we abort immediately if there is a failure */
       if(g_proc_id == 0 && g_debug_level > 0) {
         fprintf(stdout, "# Trying to read gauge field from file %s.\n", tmp_filename);
       }
 
-      if((iostatus = read_gauge_field(tmp_filename) != 0)) {
+      if((iostatus = read_gauge_field(tmp_filename,g_gauge_field) != 0)) {
         fprintf(stderr, "Error %d while reading gauge field from %s\nAborting...\n", iostatus, tmp_filename);
         exit(-2);
       }
