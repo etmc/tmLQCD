@@ -17,8 +17,8 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _HOPPING_MATRIX_H
-#  define _HOPPING_MATRIX_H
+#ifndef _HOPPING_MATRIX32_H
+#  define _HOPPING_MATRIX32_H
 
 #  define EO 0
 #  define OE 1
@@ -27,7 +27,6 @@
 
 #  include "su3.h"
 
-void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k);
 #if defined _USE_HALFSPINOR
 void Hopping_Matrix_32(const int ieo, spinor32 * const l, spinor32 * const k);
 #endif

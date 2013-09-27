@@ -19,10 +19,11 @@
 #ifndef _MIXED_CG_HER_H
 #define _MIXED_CG_HER_H
 
+#include"operator/tm_operators_32.h"
 #include"solver/matrix_mult_typedef.h"
 #include"su3.h"
 
 int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter, 
-		 double eps_sq, const int rel_prec, const int N, matrix_mult f);
+		 double eps_sq, const int rel_prec, const int N, matrix_mult f, matrix_mult32 f32);
 
 #endif

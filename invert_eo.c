@@ -40,6 +40,7 @@
 #include"operator/tm_operators.h"
 #include"operator/Hopping_Matrix.h"
 #include"operator/D_psi.h"
+#include"operator/tm_operators_32.h"
 #include"gamma.h"
 #include"solver/solver.h"
 #include"read_input.h"
@@ -175,7 +176,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
       if(g_proc_id == 0) {printf("# Using Mixed Precision CG!\n"); fflush(stdout);}
       iter = mixed_cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, 
-			  VOLUME/2, &Qtm_pm_psi);
+			  VOLUME/2, &Qtm_pm_psi, &Qtm_pm_psi_32);
       Qtm_minus_psi(Odd_new, Odd_new);
     }
     else if(solver_flag == CG) {

@@ -65,6 +65,7 @@
 
 EXTERN int DUM_DERI, DUM_SOLVER, DUM_MATRIX;
 EXTERN int NO_OF_SPINORFIELDS;
+EXTERN int NO_OF_SPINORFIELDS_32;
 
 EXTERN int DUM_BI_DERI, DUM_BI_SOLVER, DUM_BI_MATRIX;
 EXTERN int NO_OF_BISPINORFIELDS;
@@ -106,6 +107,7 @@ EXTERN int * g_field_z_ipt_even;
 EXTERN int * g_field_z_ipt_odd;
 
 EXTERN spinor ** g_spinor_field;
+EXTERN spinor32 ** g_spinor_field32;
 
 EXTERN bispinor ** g_bispinor_field;
 EXTERN spinor * g_tbuff;
