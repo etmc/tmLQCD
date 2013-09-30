@@ -29,11 +29,13 @@
 #include "init_gauge_field.h"
 
 su3 * gauge_field = NULL;
+su3_32 * gauge_field_32 = NULL;
 #ifdef _USE_TSPLITPAR
 su3 * gauge_field_copyt = NULL;
 su3 * gauge_field_copys = NULL;
 #else
 su3 * gauge_field_copy = NULL;
+su3_32 * gauge_field_copy_32 = NULL;
 #endif
 
 int init_gauge_field(const int V, const int back) {
@@ -171,3 +173,139 @@ void free_gauge_field() {
   free(gauge_field_copy);
 #  endif
 }
+
+
+
+int init_gauge_field_32(const int V, const int back) {
+  int i=0;
+
+  g_gauge_field_copy_32 = NULL;
+
+
+  if((void*)(g_gauge_field_32 = (su3_32**)calloc(V, sizeof(su3_32*))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
+    return(1);
+  }
+  if((void*)(gauge_field_32 = (su3_32*)calloc(4*V+1, sizeof(su3_32))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
+    return(2);
+  }
+#if (defined SSE || defined SSE2 || defined SSE3)
+  g_gauge_field_32[0] = (su3_32*)(((unsigned long int)(gauge_field_32)+ALIGN_BASE)&~ALIGN_BASE);
+#else
+  g_gauge_field_32[0] = gauge_field_32;
+#endif
+  for(i = 1; i < V; i++){
+    g_gauge_field_32[i] = g_gauge_field_32[i-1]+4;
+  }
+
+#  if defined _USE_HALFSPINOR
+  if(back == 1) {
+    /*
+      g_gauge_field_copy[ieo][PM][sites/2][mu]
+    */
+    if((void*)(g_gauge_field_copy_32 = (su3_32***)calloc(2, sizeof(su3_32**))) == NULL) {
+      printf ("malloc errno : %d\n",errno); 
+      errno = 0;
+      return(3);
+    }
+    if((void*)(g_gauge_field_copy_32[0] = (su3_32**)calloc(VOLUME_32, sizeof(su3_32*))) == NULL) {
+      printf ("malloc errno : %d\n",errno); 
+      errno = 0;
+      return(3);
+    }
+    g_gauge_field_copy_32[1] = g_gauge_field_copy_32[0] + (VOLUME)/2;
+    if((void*)(gauge_field_copy_32 = (su3_32*)calloc(4*(VOLUME)+1, sizeof(su3_32))) == NULL) {
+      printf ("malloc errno : %d\n",errno); 
+      errno = 0;
+      return(4);
+    }
+#    if (defined SSE || defined SSE2 || defined SSE3)
+    g_gauge_field_copy_32[0][0] = (su3_32*)(((unsigned long int)(gauge_field_copy_32)+ALIGN_BASE)&~ALIGN_BASE);
+#    else
+    g_gauge_field_copy_32[0][0] = gauge_field_copy_32;
+#    endif
+    for(i = 1; i < (VOLUME)/2; i++) {
+      g_gauge_field_copy_32[0][i] = g_gauge_field_copy_32[0][i-1]+4;
+    }
+    g_gauge_field_copy_32[1][0] = g_gauge_field_copy_32[0][0] + 2*VOLUME; 
+    for(i = 1; i < (VOLUME)/2; i++) {
+      g_gauge_field_copy_32[1][i] = g_gauge_field_copy_32[1][i-1]+4;
+    }
+  }
+#  else  /* than _USE_HALFSPINOR  */
+  if(back == 1) {
+    if((void*)(g_gauge_field_copy_32 = (su3_32**)calloc((VOLUME+RAND), sizeof(su3_32*))) == NULL) {
+      printf ("malloc errno : %d\n",errno); 
+      errno = 0;
+      return(3);
+    }
+    if((void*)(gauge_field_copy_32 = (su3_32*)calloc(8*(VOLUME+RAND)+1, sizeof(su3_32))) == NULL) {
+      printf ("malloc errno : %d\n",errno); 
+      errno = 0;
+      return(4);
+    }
+#  if (defined SSE || defined SSE2 || defined SSE3)
+    g_gauge_field_copy_32[0] = (su3_32*)(((unsigned long int)(gauge_field_copy_32)+ALIGN_BASE)&~ALIGN_BASE);
+#  else
+    g_gauge_field_copy_32[0] = gauge_field_copy_32;
+#  endif
+    for(i = 1; i < (VOLUME+RAND); i++) {
+      g_gauge_field_copy_32[i] = g_gauge_field_copy_32[i-1]+8;
+    }
+  }
+#  endif
+  return(0);
+}
+
+void free_gauge_field_32() {
+  free(gauge_field_32);
+  free(g_gauge_field_32);
+  free(gauge_field_copy_32);
+}
+
+
+void convert_32_gauge_field( (su3_32**) gf32, (su3_32*) gf, int V){
+ int i,mu;   
+  for(i = 0; i < V; i++) {
+    for(mu =0; mu<4; mu++){
+     creal(g_gauge_field_32[i][mu].c00) = (float) creal(g_gauge_field[i][mu].c00)
+     cimag(g_gauge_field_32[i][mu].c00) = (float) cimag(g_gauge_field[i][mu].c00)
+     creal(g_gauge_field_32[i][mu].c01) = (float) creal(g_gauge_field[i][mu].c01)
+     cimag(g_gauge_field_32[i][mu].c01) = (float) cimag(g_gauge_field[i][mu].c01) 
+     creal(g_gauge_field_32[i][mu].c02) = (float) creal(g_gauge_field[i][mu].c02)
+     cimag(g_gauge_field_32[i][mu].c02) = (float) cimag(g_gauge_field[i][mu].c02) 
+
+     creal(g_gauge_field_32[i][mu].c10) = (float) creal(g_gauge_field[i][mu].c10)
+     cimag(g_gauge_field_32[i][mu].c10) = (float) cimag(g_gauge_field[i][mu].c10)
+     creal(g_gauge_field_32[i][mu].c11) = (float) creal(g_gauge_field[i][mu].c11)
+     cimag(g_gauge_field_32[i][mu].c11) = (float) cimag(g_gauge_field[i][mu].c11) 
+     creal(g_gauge_field_32[i][mu].c12) = (float) creal(g_gauge_field[i][mu].c12)
+     cimag(g_gauge_field_32[i][mu].c12) = (float) cimag(g_gauge_field[i][mu].c12) 
+
+     
+     creal(g_gauge_field_32[i][mu].c20) = (float) creal(g_gauge_field[i][mu].c20)
+     cimag(g_gauge_field_32[i][mu].c20) = (float) cimag(g_gauge_field[i][mu].c20)
+     creal(g_gauge_field_32[i][mu].c21) = (float) creal(g_gauge_field[i][mu].c21)
+     cimag(g_gauge_field_32[i][mu].c21) = (float) cimag(g_gauge_field[i][mu].c21) 
+     creal(g_gauge_field_32[i][mu].c22) = (float) creal(g_gauge_field[i][mu].c22)
+     cimag(g_gauge_field_32[i][mu].c22) = (float) cimag(g_gauge_field[i][mu].c22)      
+     
+    }
+  }
+#if defined _USE_HALFSPINOR
+  
+  
+  
+  
+#endif
+  
+}
+
+
+
+
+
+

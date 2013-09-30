@@ -32,7 +32,7 @@
 
 #define _prefetch_spinor(s)
 #define _prefetch_halfspinor(hs)
-#define _prefetch_su3(U)
+#define _prefetch_su3_32(U)
 
 #define _hop_t_p_pre32()				\
   _vector_assign(rs.s0, s->s0);				\

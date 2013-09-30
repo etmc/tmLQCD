@@ -42,6 +42,11 @@ typedef struct
    _Complex double c00, c01, c02, c10, c11, c12, c20, c21, c22;
 } su3;
 
+typedef struct 
+{
+   _Complex float c00, c01, c02, c10, c11, c12, c20, c21, c22;
+} su3_32;
+
 typedef struct
 {
    _Complex double c0,c1,c2;

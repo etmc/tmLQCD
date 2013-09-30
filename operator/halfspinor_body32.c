@@ -25,7 +25,7 @@
 
 
 int ix;
-su3 * restrict U ALIGN;
+su3_32 * restrict U ALIGN;
 spinor32 * restrict s ALIGN;
 halfspinor32 * restrict * phi ALIGN;
 halfspinor32 * restrict * phi2 ALIGN;
@@ -37,18 +37,18 @@ _declare_hregs();
 s = k;
 _prefetch_spinor(s);
 if(ieo == 0) {
-  U = g_gauge_field_copy[0][0];
+  U = g_gauge_field_copy_32[0][0];
  }
  else {
-   U = g_gauge_field_copy[1][0];
+   U = g_gauge_field_copy_32[1][0];
  }
-_prefetch_su3(U);
+_prefetch_su3_32(U);
 #else
 if(ieo == 0) {
-  u0 = g_gauge_field_copy[0][0];
+  u0 = g_gauge_field_copy_32[0][0];
  }
  else {
-   u0 = g_gauge_field_copy[1][0];
+   u0 = g_gauge_field_copy_32[1][0];
  }
 #endif
 
