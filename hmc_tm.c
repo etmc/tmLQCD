@@ -394,7 +394,7 @@ int main(int argc,char *argv[]) {
     return_check = return_check_flag && (trajectory_counter%return_check_interval == 0);
 
     accept = update_tm(&plaquette_energy, &rectangle_energy, datafilename, 
-		       return_check, Ntherm<trajectory_counter, trajectory_counter);
+		       return_check, trajectory_counter>=Ntherm, trajectory_counter);
     Rate += accept;
 
     /* Save gauge configuration all Nsave times */

@@ -187,6 +187,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
 #endif
 
+  /* when acctest is 0 (i.e. do not perform acceptance test), the trajectory is accepted whatever the energy difference */
   accept = (!acctest | (expmdh > yy[0]));
   if(g_proc_id == 0) {
     fprintf(stdout, "# Trajectory is %saccepted.\n", (accept ? "" : "not "));
