@@ -74,15 +74,15 @@
 void Hopping_Matrix_32(const int ieo, spinor32 * const l, spinor32 * const k) {
 
 #ifdef _GAUGE_COPY
-  if(g_update_gauge_copy) {
-    update_backward_gauge(g_gauge_field);
+  if(g_update_gauge_copy_32) {
+    update_backward_gauge_32(g_gauge_field_32);   
   }
 #endif
 
 #ifdef OMP
 #pragma omp parallel
   {
-  su3 * restrict u0 ALIGN;
+  su3_32 * restrict u0 ALIGN;
 #endif
 
 #  include "operator/halfspinor_body32.c"

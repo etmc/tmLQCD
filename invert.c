@@ -191,6 +191,7 @@ int main(int argc, char *argv[])
   j = init_gauge_field(VOLUMEPLUSRAND, 0);
   j += init_gauge_field_32(VOLUMEPLUSRAND, 0);  
 #endif
+ 
   if (j != 0) {
     fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
     exit(-1);
@@ -296,9 +297,9 @@ int main(int argc, char *argv[])
       fflush(stdout);
     }
 #ifdef MPI
-    xchange_gauge(g_gauge_field);
+    xchange_gauge(g_gauge_field);   
 #endif
-    /*Convert to a 32 bit gauge field*/
+    /*Convert to a 32 bit gauge field, after xchange*/
     convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND);
     /*compute the energy of the gauge field*/
     plaquette_energy = measure_gauge_action( (const su3**) g_gauge_field);

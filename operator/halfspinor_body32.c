@@ -31,7 +31,11 @@ halfspinor32 * restrict * phi ALIGN;
 halfspinor32 * restrict * phi2 ALIGN;
 _declare_hregs();
 
-
+//convert kappas to float locally
+_Complex float ka0_32 = (_Complex float) ka0;
+_Complex float ka1_32 = (_Complex float) ka1;
+_Complex float ka2_32 = (_Complex float) ka2;
+_Complex float ka3_32 = (_Complex float) ka3;
 
 #ifndef OMP  
 s = k;
@@ -138,17 +142,17 @@ if(ieo == 0) {
 #ifndef OMP
   s = l;
   if(ieo == 0) {
-    U = g_gauge_field_copy[1][0];
+    U = g_gauge_field_copy_32[1][0];
   }
   else {
-    U = g_gauge_field_copy[0][0];
+    U = g_gauge_field_copy_32[0][0];
   }
 #else
   if(ieo == 0) {
-    u0 = g_gauge_field_copy[1][0];
+    u0 = g_gauge_field_copy_32[1][0];
   }
   else {
-    u0 = g_gauge_field_copy[0][0];
+    u0 = g_gauge_field_copy_32[0][0];
   }
 #endif
   

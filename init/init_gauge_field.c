@@ -211,7 +211,7 @@ int init_gauge_field_32(const int V, const int back) {
       errno = 0;
       return(3);
     }
-    if((void*)(g_gauge_field_copy_32[0] = (su3_32**)calloc(VOLUME_32, sizeof(su3_32*))) == NULL) {
+    if((void*)(g_gauge_field_copy_32[0] = (su3_32**)calloc(VOLUME, sizeof(su3_32*))) == NULL) {
       printf ("malloc errno : %d\n",errno); 
       errno = 0;
       return(3);
@@ -257,6 +257,7 @@ int init_gauge_field_32(const int V, const int back) {
     }
   }
 #  endif
+  g_update_gauge_copy_32 = 1;
   return(0);
 }
 
@@ -267,32 +268,21 @@ void free_gauge_field_32() {
 }
 
 
-void convert_32_gauge_field( (su3_32**) gf32, (su3_32*) gf, int V){
+void convert_32_gauge_field( su3_32** gf32, su3** gf, int V){
  int i,mu;   
   for(i = 0; i < V; i++) {
     for(mu =0; mu<4; mu++){
-     creal(g_gauge_field_32[i][mu].c00) = (float) creal(g_gauge_field[i][mu].c00)
-     cimag(g_gauge_field_32[i][mu].c00) = (float) cimag(g_gauge_field[i][mu].c00)
-     creal(g_gauge_field_32[i][mu].c01) = (float) creal(g_gauge_field[i][mu].c01)
-     cimag(g_gauge_field_32[i][mu].c01) = (float) cimag(g_gauge_field[i][mu].c01) 
-     creal(g_gauge_field_32[i][mu].c02) = (float) creal(g_gauge_field[i][mu].c02)
-     cimag(g_gauge_field_32[i][mu].c02) = (float) cimag(g_gauge_field[i][mu].c02) 
-
-     creal(g_gauge_field_32[i][mu].c10) = (float) creal(g_gauge_field[i][mu].c10)
-     cimag(g_gauge_field_32[i][mu].c10) = (float) cimag(g_gauge_field[i][mu].c10)
-     creal(g_gauge_field_32[i][mu].c11) = (float) creal(g_gauge_field[i][mu].c11)
-     cimag(g_gauge_field_32[i][mu].c11) = (float) cimag(g_gauge_field[i][mu].c11) 
-     creal(g_gauge_field_32[i][mu].c12) = (float) creal(g_gauge_field[i][mu].c12)
-     cimag(g_gauge_field_32[i][mu].c12) = (float) cimag(g_gauge_field[i][mu].c12) 
-
+     gf32[i][mu].c00 = (_Complex float) gf[i][mu].c00;
+     gf32[i][mu].c01 = (_Complex float) gf[i][mu].c01;
+     gf32[i][mu].c02 = (_Complex float) gf[i][mu].c02;
      
-     creal(g_gauge_field_32[i][mu].c20) = (float) creal(g_gauge_field[i][mu].c20)
-     cimag(g_gauge_field_32[i][mu].c20) = (float) cimag(g_gauge_field[i][mu].c20)
-     creal(g_gauge_field_32[i][mu].c21) = (float) creal(g_gauge_field[i][mu].c21)
-     cimag(g_gauge_field_32[i][mu].c21) = (float) cimag(g_gauge_field[i][mu].c21) 
-     creal(g_gauge_field_32[i][mu].c22) = (float) creal(g_gauge_field[i][mu].c22)
-     cimag(g_gauge_field_32[i][mu].c22) = (float) cimag(g_gauge_field[i][mu].c22)      
-     
+     gf32[i][mu].c10 = (_Complex float) gf[i][mu].c10;
+     gf32[i][mu].c11 = (_Complex float) gf[i][mu].c11;
+     gf32[i][mu].c12 = (_Complex float) gf[i][mu].c12;    
+
+     gf32[i][mu].c20 = (_Complex float) gf[i][mu].c20;
+     gf32[i][mu].c21 = (_Complex float) gf[i][mu].c21;
+     gf32[i][mu].c22 = (_Complex float) gf[i][mu].c22;        
     }
   }
 #if defined _USE_HALFSPINOR

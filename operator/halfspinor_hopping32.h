@@ -41,10 +41,10 @@
   _vector_assign(rs.s3, s->s3);				\
   _vector_add(psi, rs.s0, rs.s2);			\
   _su3_multiply(chi,(*U),psi);				\
-  _complex_times_vector(phi2[ix]->s0, ka0, chi);	\
+  _complex_times_vector(phi2[ix]->s0, ka0_32, chi);	\
   _vector_add(psi, rs.s1, rs.s3);			\
   _su3_multiply(chi,(*U),psi);				\
-  _complex_times_vector(phi2[ix]->s1, ka0, chi);
+  _complex_times_vector(phi2[ix]->s1, ka0_32, chi);
 
 #define _hop_t_m_pre32()				\
   _vector_sub(phi2[ix]->s0, rs.s0, rs.s2);		\
@@ -53,10 +53,10 @@
 #define _hop_x_p_pre32()				\
   _vector_i_add(psi, rs.s0, rs.s3);			\
   _su3_multiply(chi, (*U), psi);			\
-  _complex_times_vector(phi2[ix]->s0, ka1, chi);	\
+  _complex_times_vector(phi2[ix]->s0, ka1_32, chi);	\
   _vector_i_add(psi, rs.s1, rs.s2);			\
   _su3_multiply(chi, (*U), psi);			\
-  _complex_times_vector(phi2[ix]->s1, ka1, chi);
+  _complex_times_vector(phi2[ix]->s1, ka1_32, chi);
 
 #define _hop_x_m_pre32()				\
   _vector_i_sub(phi2[ix]->s0, rs.s0, rs.s3);		\
@@ -65,10 +65,10 @@
 #define _hop_y_p_pre32()				\
   _vector_add(psi, rs.s0, rs.s3);			\
   _su3_multiply(chi,(*U),psi);				\
-  _complex_times_vector(phi2[ix]->s0, ka2, chi);	\
+  _complex_times_vector(phi2[ix]->s0, ka2_32, chi);	\
   _vector_sub(psi, rs.s1, rs.s2);			\
   _su3_multiply(chi,(*U),psi);				\
-  _complex_times_vector(phi2[ix]->s1, ka2, chi);
+  _complex_times_vector(phi2[ix]->s1, ka2_32, chi);
 
 #define _hop_y_m_pre32()			\
   _vector_sub(phi2[ix]->s0, rs.s0, rs.s3);	\
@@ -77,10 +77,10 @@
 #define _hop_z_p_pre32()				\
   _vector_i_add(psi, rs.s0, rs.s2);			\
   _su3_multiply(chi, (*U), psi);			\
-  _complex_times_vector(phi2[ix]->s0, ka3, chi);	\
+  _complex_times_vector(phi2[ix]->s0, ka3_32, chi);	\
   _vector_i_sub(psi, rs.s1, rs.s3);			\
   _su3_multiply(chi,(*U),psi);				\
-  _complex_times_vector(phi2[ix]->s1, ka3, chi);
+  _complex_times_vector(phi2[ix]->s1, ka3_32, chi);
 
 #define _hop_z_m_pre32()			\
   _vector_i_sub(phi2[ix]->s0, rs.s0, rs.s2);	\
@@ -95,12 +95,12 @@
 #define _hop_t_m_post32();			\
   _vector_assign(psi, phi2[ix]->s0);		\
   _su3_inverse_multiply(chi,(*U), psi);		\
-  _complexcjg_times_vector(psi,ka0,chi);	\
+  _complexcjg_times_vector(psi,ka0_32,chi);	\
   _vector_add_assign(rs.s0, psi);		\
   _vector_sub_assign(rs.s2, psi);		\
   _vector_assign(psi, phi2[ix]->s1);		\
   _su3_inverse_multiply(chi,(*U), psi);		\
-  _complexcjg_times_vector(psi,ka0,chi);	\
+  _complexcjg_times_vector(psi,ka0_32,chi);	\
   _vector_add_assign(rs.s1, psi);		\
   _vector_sub_assign(rs.s3, psi);
 
@@ -113,12 +113,12 @@
 #define _hop_x_m_post32();			\
   _vector_assign(psi, phi2[ix]->s0);		\
   _su3_inverse_multiply(chi,(*U), psi);		\
-  _complexcjg_times_vector(psi,ka1,chi);	\
+  _complexcjg_times_vector(psi,ka1_32,chi);	\
   _vector_add_assign(rs.s0, psi);		\
   _vector_i_add_assign(rs.s3, psi);		\
   _vector_assign(psi, phi2[ix]->s1);		\
   _su3_inverse_multiply(chi,(*U), psi);		\
-  _complexcjg_times_vector(psi,ka1,chi);	\
+  _complexcjg_times_vector(psi,ka1_32,chi);	\
   _vector_add_assign(rs.s1, psi);		\
   _vector_i_add_assign(rs.s2, psi);
 
@@ -131,12 +131,12 @@
 #define _hop_y_m_post32();			\
   _vector_assign(psi, phi2[ix]->s0);		\
   _su3_inverse_multiply(chi,(*U), psi);		\
-  _complexcjg_times_vector(psi,ka2,chi);	\
+  _complexcjg_times_vector(psi,ka2_32,chi);	\
   _vector_add_assign(rs.s0, psi);		\
   _vector_sub_assign(rs.s3, psi);		\
   _vector_assign(psi, phi2[ix]->s1);		\
   _su3_inverse_multiply(chi, (*U), psi);	\
-  _complexcjg_times_vector(psi,ka2,chi);	\
+  _complexcjg_times_vector(psi,ka2_32,chi);	\
   _vector_add_assign(rs.s1, psi);		\
   _vector_add_assign(rs.s2, psi);
 
@@ -149,12 +149,12 @@
 #define _hop_z_m_post32();			\
   _vector_assign(psi, phi2[ix]->s0);		\
   _su3_inverse_multiply(chi,(*U), psi);		\
-  _complexcjg_times_vector(psi,ka3,chi);	\
+  _complexcjg_times_vector(psi,ka3_32,chi);	\
   _vector_add_assign(rs.s0, psi);		\
   _vector_i_add_assign(rs.s2, psi);		\
   _vector_assign(psi, phi2[ix]->s1);		\
   _su3_inverse_multiply(chi,(*U), psi);		\
-  _complexcjg_times_vector(psi,ka3,chi);	\
+  _complexcjg_times_vector(psi,ka3_32,chi);	\
   _vector_add_assign(rs.s1, psi);		\
   _vector_i_sub_assign(rs.s3, psi);
 
@@ -167,8 +167,8 @@
   _vector_add(psi2, rs.s1, rs.s3);			\
   _su3_multiply(chi,(*U),psi);				\
   _su3_multiply(chi2,(*U),psi2);			\
-  _complex_times_vector(phi[ix]->s0, ka0, chi);		\
-  _complex_times_vector(phi[ix]->s1, ka0, chi2);
+  _complex_times_vector(phi[ix]->s0, ka0_32, chi);		\
+  _complex_times_vector(phi[ix]->s1, ka0_32, chi2);
 
 #define _hop_t_m_pre()				\
   _vector_sub(phi[ix]->s0, rs.s0, rs.s2);	\
@@ -179,8 +179,8 @@
   _vector_i_add(psi2, rs.s1, rs.s2);			\
   _su3_multiply(chi, (*U), psi);			\
   _su3_multiply(chi2, (*U), psi2);			\
-  _complex_times_vector(phi[ix]->s0, ka1, chi);		\
-  _complex_times_vector(phi[ix]->s1, ka1, chi2);
+  _complex_times_vector(phi[ix]->s0, ka1_32, chi);		\
+  _complex_times_vector(phi[ix]->s1, ka1_32, chi2);
 
 #define _hop_x_m_pre()					\
   _vector_i_sub(phi[ix]->s0, rs.s0, rs.s3);		\
@@ -191,8 +191,8 @@
   _vector_sub(psi2, rs.s1, rs.s2);			\
   _su3_multiply(chi,(*U),psi);				\
   _su3_multiply(chi2,(*U),psi2);			\
-  _complex_times_vector(phi[ix]->s0, ka2, chi);		\
-  _complex_times_vector(phi[ix]->s1, ka2, chi2);
+  _complex_times_vector(phi[ix]->s0, ka2_32, chi);		\
+  _complex_times_vector(phi[ix]->s1, ka2_32, chi2);
 
 #define _hop_y_m_pre()					\
   _vector_sub(phi[ix]->s0, rs.s0, rs.s3);		\
@@ -203,8 +203,8 @@
   _vector_i_sub(psi2, rs.s1, rs.s3);			\
   _su3_multiply(chi, (*U), psi);			\
   _su3_multiply(chi2,(*U),psi2);			\
-  _complex_times_vector(phi[ix]->s0, ka3, chi);		\
-  _complex_times_vector(phi[ix]->s1, ka3, chi2);
+  _complex_times_vector(phi[ix]->s0, ka3_32, chi);		\
+  _complex_times_vector(phi[ix]->s1, ka3_32, chi2);
 
 #define _hop_z_m_pre()					\
   _vector_i_sub(phi[ix]->s0, rs.s0, rs.s2);		\
@@ -219,8 +219,8 @@
 #define _hop_t_m_post()					\
   _su3_inverse_multiply(chi,(*U),phi[ix]->s0);		\
   _su3_inverse_multiply(chi2,(*U),phi[ix]->s1);		\
-  _complexcjg_times_vector(psi,ka0,chi);		\
-  _complexcjg_times_vector(psi2,ka0,chi2);		\
+  _complexcjg_times_vector(psi,ka0_32,chi);		\
+  _complexcjg_times_vector(psi2,ka0_32,chi2);		\
   _vector_add_assign(rs.s0, psi);			\
   _vector_sub_assign(rs.s2, psi);			\
   _vector_add_assign(rs.s1, psi2);			\
@@ -235,8 +235,8 @@
 #define _hop_x_m_post()					\
   _su3_inverse_multiply(chi,(*U), phi[ix]->s0);		\
   _su3_inverse_multiply(chi2, (*U), phi[ix]->s1);	\
-  _complexcjg_times_vector(psi,ka1,chi);		\
-  _complexcjg_times_vector(psi2,ka1,chi2);		\
+  _complexcjg_times_vector(psi,ka1_32,chi);		\
+  _complexcjg_times_vector(psi2,ka1_32,chi2);		\
   _vector_add_assign(rs.s0, psi);			\
   _vector_i_add_assign(rs.s3, psi);			\
   _vector_add_assign(rs.s1, psi2);			\
@@ -251,8 +251,8 @@
 #define _hop_y_m_post()					\
   _su3_inverse_multiply(chi,(*U), phi[ix]->s0);		\
   _su3_inverse_multiply(chi2, (*U), phi[ix]->s1);	\
-  _complexcjg_times_vector(psi,ka2,chi);		\
-  _complexcjg_times_vector(psi2,ka2,chi2);		\
+  _complexcjg_times_vector(psi,ka2_32,chi);		\
+  _complexcjg_times_vector(psi2,ka2_32,chi2);		\
   _vector_add_assign(rs.s0, psi);			\
   _vector_sub_assign(rs.s3, psi);			\
   _vector_add_assign(rs.s1, psi2);			\
@@ -267,8 +267,8 @@
 #define _hop_z_m_post()					\
   _su3_inverse_multiply(chi,(*U), phi[ix]->s0);		\
   _su3_inverse_multiply(chi2, (*U), phi[ix]->s1);	\
-  _complexcjg_times_vector(psi,ka3,chi);		\
-  _complexcjg_times_vector(psi2,ka3,chi2);		\
+  _complexcjg_times_vector(psi,ka3_32,chi);		\
+  _complexcjg_times_vector(psi2,ka3_32,chi2);		\
   _vector_add_assign(rs.s0, psi);			\
   _vector_add_assign(rs.s1, psi2);			\
   _vector_i_add_assign(rs.s2, psi);			\

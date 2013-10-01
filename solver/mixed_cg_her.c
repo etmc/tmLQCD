@@ -120,6 +120,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   
   
   /* small performance test */
+  
 //   int Nhit = 40;
 //   double t1,t2,dt,sdt;
 //   double antioptaway=0.0;
@@ -128,8 +129,8 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
 //   for (i=0;i<Nhit;i++) {
 //      f(y, delta);
 //      f(delta,y);
-//      antioptaway+=creal(delta[0].s0.c0);
 //   }
+//      antioptaway+=creal(delta[0].s0.c0);  
 //   t2 = gettime();
 //   dt = t2-t1;
 //   sdt=2*1.0e6f*dt/((double)(Nhit*(N)));
@@ -145,13 +146,15 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
 //   for (i=0;i<Nhit;i++) {
 //      f32(solver_field32[0], x);
 //      f32(x,solver_field32[0]);
-//      antioptaway_f+=creal(x[0].s0.c0);
+// 
 //   }
+//   antioptaway_f+=creal(x[0].s0.c0);
 //   t2 = gettime();
 //   dt = t2-t1;
 //   sdt=2*1.0e6f*dt/((double)(Nhit*(N)));
 //   printf("antioptaway = %e\n", antioptaway_f);
 //   printf("# Communication switched on:\n# (%d Mflops [%d bit arithmetic])\n", (int)(1608.0f/sdt), (int)sizeof(spinor32)/3);
+//   
   /* end of small performance test */
   
     
@@ -199,7 +202,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
       }
     
       //if (((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))){
-      if(((err <= 1.0e-4) && (rel_prec == 0)) || ((err <= 1.0e-4*sqnrm) && (rel_prec == 1))) {
+      if(((err <= 1.0e-6) && (rel_prec == 0)) || ((err <= 1.0e-6*sqnrm) && (rel_prec == 1))) {
 	break;
       }
       beta_cg = err / sqnrm2;
