@@ -1,8 +1,5 @@
 /***********************************************************************
- *
- * Copyright (C) 2001 Martin Hasenbusch
- *               2003 Thomas Chiarappa
- *               2002,2003,2004,2005 Carsten Urbach
+ * Copyright (C) 2013 Florian Burger
  *
  * This file is part of tmLQCD.
  *
@@ -75,15 +72,10 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   const int nr_sf = 3;
   const int nr_sf32 = 4;
   if(N == VOLUME) {
-    printf("N == VOLUME\n");
     init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);    
     init_solver_field32(&solver_field32, VOLUMEPLUSRAND, nr_sf32);
   }
   else {
-    printf("N != VOLUME\n");
-    printf("VOLUMEPLUSRAND = %d\n", VOLUMEPLUSRAND);
-    printf("VOLUME = %d\n", VOLUME);
-    printf("N = %d\n", N);
     init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);
     init_solver_field32(&solver_field32, VOLUMEPLUSRAND/2, nr_sf32);    
   }
@@ -164,7 +156,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
     f(y, P);
     diff(delta, Q, y, N);
     sqnrm_d = square_norm(delta, N, 1);
-    if(((sqnrm <= eps_sq) && (rel_prec == 0)) || ((sqnrm <= eps_sq*squarenorm) && (rel_prec == 1))) {
+    if(((sqnrm <= eps_sq) && (rel_prec == 0)) || ((sqnrm <= eps_sq*sourcesquarenorm) && (rel_prec == 1))) {
       finalize_solver(solver_field, nr_sf);
       finalize_solver32(solver_field32, nr_sf32);      
       return(0);
@@ -202,7 +194,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
       }
     
       //if (((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))){
-      if(((err <= 1.0e-6) && (rel_prec == 0)) || ((err <= 1.0e-6*sqnrm) && (rel_prec == 1))) {
+      if((err <= 6.0e-6*sqnrm)) {
 	break;
       }
       beta_cg = err / sqnrm2;
@@ -246,103 +238,6 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   return(-1);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-int mixed_cg_her_old(spinor * const P, spinor * const Q, const int max_iter, 
-		 double eps_sq, const int rel_prec, const int N, matrix_mult f) {
-
-  int i = 0, iter = 0, j = 0;
-  double sqnrm = 0., sqnrm2, squarenorm;
-  double pro, err, alpha_cg, beta_cg;
-  spinor *x, *delta, *y;
-  spinor ** solver_field = NULL;
-  const int nr_sf = 6;
-
-  if(N == VOLUME) {
-    init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
-  }
-  else {
-    init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);
-  }
-  squarenorm = square_norm(Q, N, 1);
-  sqnrm = squarenorm;
-
-  delta = solver_field[3];
-  x = solver_field[4];
-  y = solver_field[5];
-  assign(delta, Q, N);
-    
-  if(squarenorm > 1.e-7) { 
-    /* if a starting solution vector different from zero is chosen */
-    f(y, P);
-    diff(delta, Q, y, N);
-    sqnrm = square_norm(delta, N, 1);
-    if(((sqnrm <= eps_sq) && (rel_prec == 0)) || ((sqnrm <= eps_sq*squarenorm) && (rel_prec == 1))) {
-      finalize_solver(solver_field, nr_sf);
-      return(0);
-    }
-  }
-
-  for(i = 0; i < 20; i++) {
-
-    g_sloppy_precision = 1;
-    /* main CG loop in lower precision */
-    zero_spinor_field(x, N);
-    assign(solver_field[1], delta, N);
-    assign(solver_field[2], delta, N);
-    sqnrm2 = sqnrm;
-    for(j = 0; j <= max_iter; j++) {
-      f(solver_field[0], solver_field[2]);
-      pro = scalar_prod_r(solver_field[2], solver_field[0], N, 1);
-      alpha_cg = sqnrm2 / pro;
-      assign_add_mul_r(x, solver_field[2], alpha_cg, N);
-    
-      assign_mul_add_r(solver_field[0], -alpha_cg, solver_field[1], N);
-      err = square_norm(solver_field[0], N, 1);
-
-      if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
-	printf("inner CG: %d res^2 %g\n", iter+j, err);
-	fflush(stdout);
-      }
-    
-      if (((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))){
-	break;
-      }
-      beta_cg = err / sqnrm2;
-      assign_mul_add_r(solver_field[2], beta_cg, solver_field[0], N);
-      assign(solver_field[1], solver_field[0], N);
-      sqnrm2 = err;
-    }
-    /* end main CG loop */
-    iter += j;
-    g_sloppy_precision = 0;
-    add(P, P, x, N);
-
-    f(y, x);
-    diff(delta, delta, y, N);
-    sqnrm = square_norm(delta, N, 1);
-    if(g_debug_level > 0 && g_proc_id == g_stdio_proc) {
-      printf("mixed CG: true residue %d\t%g\t\n",iter, sqnrm); fflush( stdout);
-    }
-
-    if(((sqnrm <= eps_sq) && (rel_prec == 0)) || ((sqnrm <= eps_sq*squarenorm) && (rel_prec == 1))) {
-      finalize_solver(solver_field, nr_sf);
-      return(iter+i);
-    }
-    iter++;
-  }
-  finalize_solver(solver_field, nr_sf);
-  return(-1);
-}
 
 
 
