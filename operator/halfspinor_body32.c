@@ -31,15 +31,28 @@ halfspinor32 * restrict * phi ALIGN;
 halfspinor32 * restrict * phi2 ALIGN;
 _declare_hregs();
 
+#ifdef XLC
+# pragma disjoint(*l, *k)
+# pragma disjoint(*k, *U)
+# pragma disjoint(*l, *U)
+# pragma disjoint(*U, *s)
+# pragma disjoint(*k, *s)
+# pragma disjoint(*l, *s)
+__alignx(32, l);
+__alignx(32, k);
+__alignx(32, U);
+__alignx(32, s);
+#endif 
+
 //convert kappas to float locally
-_Complex float ka0_32 = (_Complex float) ka0;
-_Complex float ka1_32 = (_Complex float) ka1;
-_Complex float ka2_32 = (_Complex float) ka2;
-_Complex float ka3_32 = (_Complex float) ka3;
+_Complex float ALIGN ka0_32 = (_Complex float) ka0;
+_Complex float ALIGN ka1_32 = (_Complex float) ka1;
+_Complex float ALIGN ka2_32 = (_Complex float) ka2;
+_Complex float ALIGN ka3_32 = (_Complex float) ka3;
 
 #ifndef OMP  
 s = k;
-_prefetch_spinor(s);
+_prefetch_spinor_32(s);
 if(ieo == 0) {
   U = g_gauge_field_copy_32[0][0];
  }

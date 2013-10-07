@@ -32,6 +32,12 @@
   __dcbt(((char*)((unsigned long int)(addr))));	    \
   __dcbt(((char*)((unsigned long int)(addr)))+128); 
 
+#define _prefetch_spinor_32(addr)			    \
+  __dcbt(((char*)((unsigned long int)(addr))));
+
+#define _prefetch_su3_32(addr)			    \
+  __dcbt(((char*)((unsigned long int)(addr))));
+
 #define _prefetch_su3(addr)			    \
   __dcbt(((char*)((unsigned long int)(addr))));	    \
   __dcbt(((char*)((unsigned long int)(addr)))+128); 
@@ -57,6 +63,10 @@ __prefetch_by_load((void*)(addr2));
 #define _prefetch_spinor(addr)
 
 #define _prefetch_su3(addr)
+
+#define _prefetch_spinor_32(addr)
+
+#define _prefetch_su3_32(addr)
 
 #endif
 
