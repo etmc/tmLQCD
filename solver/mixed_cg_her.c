@@ -188,13 +188,13 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
       
       err = square_norm_32(solver_field32[0], N, 1);
 
-      if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
+      if(g_proc_id == g_stdio_proc && g_debug_level > 2) {
 	printf("inner CG: %d res^2 %g\n", iter+j, err);
 	fflush(stdout);
       }
     
       //if (((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))){
-      if((err <= 6.0e-6*sqnrm)) {
+      if((err <= 6.0e-6*sqnrm)|| ((1.2*err <= eps_sq) && (rel_prec == 0)) || ((1.2*err <= eps_sq*squarenorm) && (rel_prec == 1))) {
 	break;
       }
       beta_cg = err / sqnrm2;
@@ -223,7 +223,8 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
     diff(delta, Q, y, N);
     sqnrm_d = square_norm(delta, N, 1);
     if(g_debug_level > 0 && g_proc_id == g_stdio_proc) {
-      printf("mixed CG: true residue %d\t%g\t\n",iter, sqnrm_d); fflush(stdout);
+      printf("mixed CG: last inner residue: %g\t\n", err);
+      printf("mixed CG: true residue %d %g\t\n",iter, sqnrm_d); fflush(stdout);
     }
 
     if(((sqnrm_d <= eps_sq) && (rel_prec == 0)) || ((sqnrm_d <= eps_sq*sourcesquarenorm) && (rel_prec == 1))) {

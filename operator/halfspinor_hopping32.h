@@ -2,7 +2,7 @@
  *
  * Copyright (C) 2013  Florian Burger
  *
- *
+ * A 32-bit version of the Half-spinor implementation by Carsten Urbach
  *
  * This file is based on an implementation of the Dirac operator 
  * written by Martin Luescher, modified by Martin Hasenbusch in 2002 
@@ -28,11 +28,197 @@
 #ifndef _HALFSPINOR_HOPPING32_H
 #define _HALFSPINOR_HOPPING32_H
 
+#if (defined BGQ && defined XLC)
 
+#define _hop_t_p_pre32()					\
+  _vec_load2_32(rs0, rs1, rs2, s->s0);				\
+  _vec_load2_32(rs3, rs4, rs5, s->s1);				\
+  _vec_load2_32(rs6, rs7, rs8, s->s2);				\
+  _vec_load2_32(rs9, rs10, rs11, s->s3);				\
+  _prefetch_spinor_32(s+1);					\
+  _prefetch_su3_32(U+1);						\
+  _vec_add_to2(r0, r1, r2, rs0, rs1, rs2, rs6, rs7, rs8);	\
+  _vec_add_to2(r3, r4, r5, rs3, rs4, rs5, rs9, rs10, rs11);	\
+  rtmp = vec_ld2(0, (float*) &ka0_32);					\
+  _vec_su3_multiply_double2_32(U);						\
+  _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, rtmp); \
+  _vec_store2_32(phi[ix]->s0, r0, r1, r2);				\
+  _vec_store2_32(phi[ix]->s1, r3, r4, r5);
+
+#define _hop_t_m_pre32()					\
+  _vec_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs6, rs7, rs8);	\
+  _vec_sub_to2(r3, r4, r5, rs3, rs4, rs5, rs9, rs10, rs11);	\
+  _vec_store2_32(phi[ix]->s0, r0, r1, r2);			\
+  _vec_store2_32(phi[ix]->s1, r3, r4, r5);
+
+#define _hop_x_p_pre32()						\
+  _prefetch_su3_32(U+1);							\
+  _vec_i_mul_add_to2(r0, r1, r2, rs0, rs1, rs2, rs9, rs10, rs11, U0);	\
+  _vec_i_mul_add_to2(r3, r4, r5, rs3, rs4, rs5, rs6, rs7, rs8, U0);	\
+  rtmp = vec_ld2(0, (float*) &ka1_32);					\
+  _vec_su3_multiply_double2_32(U);						\
+  _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, rtmp); \
+  _vec_store2_32(phi[ix]->s0, r0, r1, r2);				\
+  _vec_store2_32(phi[ix]->s1, r3, r4, r5);
+
+#define _hop_x_m_pre32()						\
+  _vec_i_mul_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs9, rs10, rs11, U0);	\
+  _vec_i_mul_sub_to2(r3, r4, r5, rs3, rs4, rs5, rs6, rs7, rs8, U0);	\
+  _vec_store2_32(phi[ix]->s0, r0, r1, r2);				\
+  _vec_store2_32(phi[ix]->s1, r3, r4, r5);
+
+#define _hop_y_p_pre32()					\
+  _prefetch_su3_32(U+1);						\
+  _vec_add_to2(r0, r1, r2, rs0, rs1, rs2, rs9, rs10, rs11);	\
+  _vec_sub_to2(r3, r4, r5, rs3, rs4, rs5, rs6, rs7, rs8);	\
+  rtmp = vec_ld2(0, (float*) &ka2_32);					\
+  _vec_su3_multiply_double2_32(U);						\
+  _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, rtmp); \
+  _vec_store2_32(phi[ix]->s0, r0, r1, r2);				\
+  _vec_store2_32(phi[ix]->s1, r3, r4, r5);
+
+#define _hop_y_m_pre32()					\
+  _vec_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs9, rs10, rs11);	\
+  _vec_add_to2(r3, r4, r5, rs3, rs4, rs5, rs6, rs7, rs8);	\
+  _vec_store2_32(phi[ix]->s0, r0, r1, r2);			\
+  _vec_store2_32(phi[ix]->s1, r3, r4, r5);
+
+#define _hop_z_p_pre32()						\
+  _prefetch_su3_32(U+1);							\
+  _vec_i_mul_add_to2(r0, r1, r2, rs0, rs1, rs2, rs6, rs7, rs8, U0);	\
+  _vec_i_mul_sub_to2(r3, r4, r5, rs3, rs4, rs5, rs9, rs10, rs11, U0);	\
+  rtmp = vec_ld2(0, (float*) &ka3_32);					\
+  _vec_su3_multiply_double2_32(U);						\
+  _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, rtmp); \
+  _vec_store2_32(phi[ix]->s0, r0, r1, r2);				\
+  _vec_store2_32(phi[ix]->s1, r3, r4, r5);
+
+#define _hop_z_m_pre32()						\
+  _vec_i_mul_sub_to2(r0, r1, r2, rs0, rs1, rs2, rs6, rs7, rs8, U0);	\
+  _vec_i_mul_add_to2(r3, r4, r5, rs3, rs4, rs5, rs9, rs10, rs11, U0);	\
+  _vec_store2_32(phi[ix]->s0, r0, r1, r2);				\
+  _vec_store2_32(phi[ix]->s1, r3, r4, r5);
+
+#define _hop_t_p_post32()				\
+  _vec_load2_32(rs0, rs1, rs2, phi[ix]->s0);		\
+  rs6 = rs0;						\
+  rs7 = rs1;						\
+  rs8 = rs2;						\
+  _vec_load2_32(rs3, rs4, rs5, phi[ix]->s1);		\
+  rs9 = rs3;						\
+  rs10= rs4;						\
+  rs11= rs5;
+
+#define _hop_t_m_post32()						\
+  _prefetch_su3_32(U+1);							\
+  _vec_load2_32(r0, r1, r2, phi[ix]->s0);				\
+  _vec_load2_32(r3, r4, r5, phi[ix]->s1);				\
+  rtmp = vec_ld2(0, (float*) &ka0_32);					\
+  _vec_su3_inverse_multiply_double2_32(U);					\
+  _vec_cmplxcg_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, rtmp); \
+  _vec_add2(rs0, rs1, rs2, r0, r1, r2);					\
+  _vec_sub2(rs6, rs7, rs8, r0, r1, r2);					\
+  _vec_add2(rs3, rs4, rs5, r3, r4, r5);					\
+  _vec_sub2(rs9, rs10, rs11, r3, r4, r5);
+
+#define _hop_x_p_post32()						\
+  _vec_load2_32(r0, r1, r2, phi[ix]->s0);				\
+  _vec_load2_32(r3, r4, r5, phi[ix]->s1);				\
+  _vec_add2(rs0, rs1, rs2, r0, r1, r2);					\
+  _vec_i_mul_sub2(rs9, rs10, rs11, r0, r1, r2, U0);			\
+  _vec_add2(rs3, rs4, rs5, r3, r4, r5);					\
+  _vec_i_mul_sub2(rs6, rs7, rs8, r3, r4, r5, U0);
+
+#define _hop_x_m_post32()						\
+  _prefetch_su3_32(U+1);							\
+  _vec_load2_32(r0, r1, r2, phi[ix]->s0);				\
+  _vec_load2_32(r3, r4, r5, phi[ix]->s1);				\
+  rtmp = vec_ld2(0, (float*) &ka1_32);					\
+  _vec_su3_inverse_multiply_double2_32(U);					\
+  _vec_cmplxcg_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, rtmp); \
+  _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
+  _vec_i_mul_add_double2(rs9, rs10, rs11, rs6, rs7, rs8, r0, r1, r2, r3, r4, r5, U0);
+
+#define _hop_y_p_post32()						\
+  _vec_load2_32(r0, r1, r2, phi[ix]->s0);				\
+  _vec_load2_32(r3, r4, r5, phi[ix]->s1);				\
+  _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
+  _vec_sub2(rs6, rs7, rs8, r3, r4, r5);					\
+  _vec_add2(rs9, rs10, rs11, r0, r1, r2);
+
+#define _hop_y_m_post32()						\
+  _prefetch_su3_32(U+1);							\
+  _vec_load2_32(r0, r1, r2, phi[ix]->s0);				\
+  _vec_load2_32(r3, r4, r5, phi[ix]->s1);				\
+  rtmp = vec_ld2(0, (float*) &ka2_32);					\
+  _vec_su3_inverse_multiply_double2_32(U);					\
+  _vec_cmplxcg_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, rtmp); \
+  _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
+  _vec_add2(rs6, rs7, rs8, r3, r4, r5);					\
+  _vec_sub2(rs9, rs10, rs11, r0, r1, r2);
+
+#define _hop_z_p_post32()						\
+  _vec_load2_32(r0, r1, r2, phi[ix]->s0);				\
+  _vec_load2_32(r3, r4, r5, phi[ix]->s1);				\
+  _vec_add_double2(rs0, rs1, rs2, rs3, rs4, rs5, r0, r1, r2, r3, r4, r5); \
+  _vec_i_mul_sub2(rs6, rs7, rs8, r0, r1, r2, U0);			\
+  _vec_i_mul_add2(rs9, rs10, rs11, r3, r4, r5, U0);
+
+#define _hop_z_m_post32()						\
+  _prefetch_su3_32(U+1);							\
+  _vec_load2_32(r0, r1, r2, phi[ix]->s0);				\
+  _vec_load2_32(r3, r4, r5, phi[ix]->s1);				\
+  rtmp = vec_ld2(0, (float*) &ka3_32);					\
+  _vec_su3_inverse_multiply_double2_32(U);					\
+  _vec_cmplxcg_mul_double2(r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, rtmp); \
+  _vec_add2(rs0, rs1, rs2, r0, r1, r2);					\
+  _vec_i_mul_add2(rs6, rs7, rs8, r0, r1, r2, U0);			\
+  _vec_add2(rs3, rs4, rs5, r3, r4, r5);					\
+  _vec_i_mul_sub2(rs9, rs10, rs11, r3, r4, r5, U0);
+
+
+#define _hop_mul_g5_cmplx_and_store(res)					\
+  _vec_cmplx_mul_double2(r0, r1, r2, r3, r4, r5, rs0, rs1, rs2, rs3, rs4, rs5, cf); \
+  _vec_cmplxcg_mul_double2(r6, r7, r8, r9, r10, r11, rs6, rs7, rs8, rs9, rs10, rs11, cf); \
+  _vec_store2_32((res)->s0, r0, r1, r2);					\
+  _vec_store2_32((res)->s1, r3, r4, r5);					\
+  _vec_store2_32((res)->s2, r6, r7, r8);					\
+  _vec_store2_32((res)->s3, r9, r10, r11);
+
+#define _g5_cmplx_sub_hop_and_g5store(res)					\
+  _vec_load_halfspinor(r3, r4, r5, pn->s0);				\
+  _vec_cmplx_mul_double2c(r0, r1, r2, r3, r4, r5, cf);			\
+  _vec_unfuse(r0, r1, r2, r3, r4, r5);					\
+  _vec_sub_double2(r0, r3, r1, r4, r2, r5, rs0, rs1, rs2, rs3, rs4, rs5); \
+  _vec_store2_32((res)->s0, r0, r3, r1);					\
+  _vec_store2_32((res)->s1, r4, r2, r5);					\
+  _vec_load_halfspinor(r3, r4, r5, pn->s2);				\
+  _vec_cmplxcg_mul_double2c(r0, r1, r2, r3, r4, r5, cf);		\
+  _vec_unfuse(r0, r1, r2, r3, r4, r5);					\
+  _vec_sub_double2(rs6, rs7, rs8, rs9, rs10, rs11, r0, r3, r1, r4, r2, r5); \
+  _vec_store2_32((res)->s2, rs6, rs7, rs8);					\
+  _vec_store2_32((res)->s3, rs9, rs10, rs11);
+
+#define _hop_store_post(res)		\
+  _vec_store2_32((res)->s0, rs0, rs1, rs2);	\
+  _vec_store2_32((res)->s1, rs3, rs4, rs5);	\
+  _vec_store2_32((res)->s2, rs6, rs7, rs8);	\
+  _vec_store2_32((res)->s3, rs9, rs10, rs11);
+
+
+#define _declare_hregs()						\
+  vector4double ALIGN r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11;	\
+  vector4double ALIGN rs0, rs1, rs2, rs3, rs4, rs5, rs6, rs7, rs8, rs9, rs10, rs11; \
+  vector4double ALIGN U0, U1, U2, U3, U4, U6, U7;			\
+  vector4double ALIGN rtmp;
+
+#else
 
 #define _prefetch_spinor(s)
 #define _prefetch_halfspinor(hs)
+#define _prefetch_spinor_32(s)
 #define _prefetch_su3_32(U)
+
 
 #define _hop_t_p_pre32()				\
   _vector_assign(rs.s0, s->s0);				\
