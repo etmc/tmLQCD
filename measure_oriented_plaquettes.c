@@ -87,6 +87,10 @@ void measure_oriented_plaquettes(const su3 ** const gf, double *plaq) {
 
 void oriented_plaquettes_measurement(const int traj, const int id, const int ieo) {
   double plaq[6];
+
+  if( g_proc_id == 0 ) {
+    printf("# Doing oriented plaquettes measurement.\n");
+  }
   measure_oriented_plaquettes((const su3** const)g_gauge_field,plaq);
 
   if( g_proc_id == 0 ) {

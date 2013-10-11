@@ -1,6 +1,6 @@
 /***********************************************************************
  *
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ * Copyright (C) 2012 Carsten Urbach, Albert Deuzeman, Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -17,10 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  *
- * invert for twisted mass QCD
- *
- * Author: Carsten Urbach
- *         urbach@physik.fu-berlin.de
+ * naive pion correlator for twisted mass QCD
  *
  *******************************************************************************/
 
@@ -48,7 +45,6 @@
 #include "linalg_eo.h"
 #include "geometry_eo.h"
 #include "start.h"
-/*#include "eigenvalues.h"*/
 #include "measure_gauge_action.h"
 #ifdef MPI
 #include "xchange/xchange.h"
@@ -60,7 +56,6 @@
 #include "boundary.h"
 #include "solver/solver.h"
 #include "init/init.h"
-#include "smearing/stout.h"
 #include "invert_eo.h"
 #include "monomial/monomial.h"
 #include "ranlxd.h"
@@ -83,7 +78,7 @@
 #include "P_M_eta.h"
 #include "operator/tm_operators.h"
 #include "operator/Dov_psi.h"
-#include "solver/spectral_proj.h"
+#include "gettime.h"
 #include "measurements.h"
 
 extern int nstore;
@@ -103,8 +98,6 @@ int main(int argc, char *argv[])
   char * input_filename = NULL;
   char * filename = NULL;
   double plaquette_energy;
-  struct stout_parameters params_smear;
-  spinor **s, *s_;
 
 #ifdef _KOJAK_INST
 #pragma pomp inst init
@@ -173,7 +166,7 @@ int main(int argc, char *argv[])
   /* starts the single and double precision random number */
   /* generator                                            */
   start_ranlux(rlxd_level, random_seed);
-
+  
   /* we need to make sure that we don't have even_odd_flag = 1 */
   /* if any of the operators doesn't use it                    */
   /* in this way even/odd can still be used by other operators */
@@ -251,7 +244,7 @@ int main(int argc, char *argv[])
   phmc_invmaxev = 1.;
 
   init_operators();
-
+  
   /* list and initialize measurements*/
   if(g_proc_id == 0) {
     printf("\n");
@@ -293,227 +286,62 @@ int main(int argc, char *argv[])
       fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", i, conf_filename);
       exit(-2);
     }
-
-
+  
     if (g_cart_id == 0) {
       printf("# Finished reading gauge field.\n");
       fflush(stdout);
     }
+
 #ifdef MPI
     xchange_gauge(g_gauge_field);
 #endif
 
     /*compute the energy of the gauge field*/
-    plaquette_energy = measure_gauge_action( (const su3**) g_gauge_field);
+    plaquette_energy = measure_gauge_action( (const su3** const) g_gauge_field);
 
     if (g_cart_id == 0) {
       printf("# The computed plaquette value is %e.\n", plaquette_energy / (6.*VOLUME*g_nproc));
       fflush(stdout);
     }
 
-    if (use_stout_flag == 1){
-      params_smear.rho = stout_rho;
-      params_smear.iterations = stout_no_iter;
-/*       if (stout_smear((su3_tuple*)(g_gauge_field[0]), &params_smear, (su3_tuple*)(g_gauge_field[0])) != 0) */
-/*         exit(1) ; */
-      g_update_gauge_copy = 1;
-      g_update_gauge_energy = 1;
-      g_update_rectangle_energy = 1;
-      plaquette_energy = measure_gauge_action( (const su3**) g_gauge_field);
-
-      if (g_cart_id == 0) {
-        printf("# The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
-        fflush(stdout);
-      }
+    if (g_cart_id == 0) {
+      fprintf(stdout, "#\n"); /*Indicate starting of the operator part*/
     }
 
-    /* if any measurements are defined in the input file, do them here */
+    
+    /* offline measurements */
     measurement * meas;
     for(int imeas = 0; imeas < no_measurements; imeas++){
       meas = &measurement_list[imeas];
       if (g_proc_id == 0) {
-        fprintf(stdout, "#\n# Beginning online measurement.\n");
+        fprintf(stdout, "#\n# Beginning offline measurement.\n");
       }
       meas->measurefunc(nstore, imeas, even_odd_flag);
-    }
-
-    if (reweighting_flag == 1) {
-      reweighting_factor(reweighting_samples, nstore);
-    }
-
-    /* Compute minimal eigenvalues, if wanted */
-    if (compute_evs != 0) {
-      eigenvalues(&no_eigenvalues, 5000, eigenvalue_precision,
-                  0, compute_evs, nstore, even_odd_flag);
-    }
-    if (phmc_compute_evs != 0) {
-#ifdef MPI
-      MPI_Finalize();
-#endif
-      return(0);
-    }
-
-    /* Compute the mode number or topological susceptibility using spectral projectors, if wanted*/
-
-    if(compute_modenumber != 0 || compute_topsus !=0){
-      
-      s_ = calloc(no_sources_z2*VOLUMEPLUSRAND+1, sizeof(spinor));
-      s  = calloc(no_sources_z2, sizeof(spinor*));
-      if(s_ == NULL) { 
-	printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
-      }
-      if(s == NULL) { 
-	printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
-      }
-      
-      
-      for(i = 0; i < no_sources_z2; i++) {
-#if (defined SSE3 || defined SSE2 || defined SSE)
-        s[i] = (spinor*)(((unsigned long int)(s_)+ALIGN_BASE)&~ALIGN_BASE)+i*VOLUMEPLUSRAND;
-#else
-        s[i] = s_+i*VOLUMEPLUSRAND;
-#endif
-	
-        random_spinor_field_lexic(s[i], reproduce_randomnumber_flag,RN_Z2);
-	
-/* 	what is this here needed for?? */
-/*         spinor *aux_,*aux; */
-/* #if ( defined SSE || defined SSE2 || defined SSE3 ) */
-/*         aux_=calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
-/*         aux = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE); */
-/* #else */
-/*         aux_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
-/*         aux = aux_; */
-/* #endif */
-	
-        if(g_proc_id == 0) {
-          printf("source %d \n", i);
-        }
-	
-        if(compute_modenumber != 0){
-          mode_number(s[i], mstarsq);
-        }
-	
-        if(compute_topsus !=0) {
-          top_sus(s[i], mstarsq);
-        }
-      }
-      free(s);
-      free(s_);
-    }
-
-
-    /* move to operators as well */
-    if (g_dflgcr_flag == 1) {
-      /* set up deflation blocks */
-      init_blocks(nblocks_t, nblocks_x, nblocks_y, nblocks_z);
-
-      /* the can stay here for now, but later we probably need */
-      /* something like init_dfl_solver called somewhere else  */
-      /* create set of approximate lowest eigenvectors ("global deflation subspace") */
-
-      /*       g_mu = 0.; */
-      /*       boundary(0.125); */
-      generate_dfl_subspace(g_N_s, VOLUME, reproduce_randomnumber_flag);
-      /*       boundary(g_kappa); */
-      /*       g_mu = g_mu1; */
-
-      /* Compute little Dirac operators */
-      /*       alt_block_compute_little_D(); */
-      if (g_debug_level > 0) {
-        check_projectors(reproduce_randomnumber_flag);
-        check_local_D(reproduce_randomnumber_flag);
-      }
-      if (g_debug_level > 1) {
-        check_little_D_inversion(reproduce_randomnumber_flag);
-      }
-
-    }
-    if(SourceInfo.type == 1) {
-      index_start = 0;
-      index_end = 1;
-    }
-
-    g_precWS=NULL;
-    if(use_preconditioning == 1){
-      /* todo load fftw wisdom */
-#if (defined HAVE_FFTW ) && !( defined MPI)
-      loadFFTWWisdom(g_spinor_field[0],g_spinor_field[1],T,LX);
-#else
-      use_preconditioning=0;
-#endif
-    }
-
-    if (g_cart_id == 0) {
-      fprintf(stdout, "#\n"); /*Indicate starting of the operator part*/
-    }
-    for(op_id = 0; op_id < no_operators; op_id++) {
-      boundary(operator_list[op_id].kappa);
-      g_kappa = operator_list[op_id].kappa; 
-      g_mu = 0.;
-
-      if(use_preconditioning==1 && PRECWSOPERATORSELECT[operator_list[op_id].solver]!=PRECWS_NO ){
-        printf("# Using preconditioning with treelevel preconditioning operator: %s \n",
-              precWSOpToString(PRECWSOPERATORSELECT[operator_list[op_id].solver]));
-        /* initial preconditioning workspace */
-        operator_list[op_id].precWS=(spinorPrecWS*)malloc(sizeof(spinorPrecWS));
-        spinorPrecWS_Init(operator_list[op_id].precWS,
-                  operator_list[op_id].kappa,
-                  operator_list[op_id].mu/2./operator_list[op_id].kappa,
-                  -(0.5/operator_list[op_id].kappa-4.),
-                  PRECWSOPERATORSELECT[operator_list[op_id].solver]);
-        g_precWS = operator_list[op_id].precWS;
-
-        if(PRECWSOPERATORSELECT[operator_list[op_id].solver] == PRECWS_D_DAGGER_D) {
-          fitPrecParams(op_id);
-        }
-      }
-
-      for(isample = 0; isample < no_samples; isample++) {
-        for (ix = index_start; ix < index_end; ix++) {
-          if (g_cart_id == 0) {
-            fprintf(stdout, "#\n"); /*Indicate starting of new index*/
-          }
-          /* we use g_spinor_field[0-7] for sources and props for the moment */
-          /* 0-3 in case of 1 flavour  */
-          /* 0-7 in case of 2 flavours */
-          prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location);
-          operator_list[op_id].inverter(op_id, index_start, 1);
-        }
-      }
-
-
-      if(use_preconditioning==1 && operator_list[op_id].precWS!=NULL ){
-        /* free preconditioning workspace */
-        spinorPrecWS_Free(operator_list[op_id].precWS);
-        free(operator_list[op_id].precWS);
-      }
-
-      if(operator_list[op_id].type == OVERLAP){
-        free_Dov_WS();
-      }
-
-    }
+    }      
     nstore += Nsave;
   }
 
 #ifdef OMP
   free_omp_accumulators();
 #endif
+
   free_blocks();
   free_dfl_subspace();
-  free_gauge_field();
   free_geometry_indices();
   free_spinor_field();
-  free_moment_field();
+
   free_chi_spinor_field();
+
   free(filename);
   free(input_filename);
+
 #ifdef MPI
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 #endif
   return(0);
+  
+  
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)
 #endif
@@ -521,12 +349,11 @@ int main(int argc, char *argv[])
 
 static void usage()
 {
-  fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
+  fprintf(stdout, "Offline version of the online measurements for twisted mass QCD\n");
   fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
   fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
   fprintf(stdout, "Usage:   invert [options]\n");
   fprintf(stdout, "Options: [-f input-filename]\n");
-  fprintf(stdout, "         [-o output-filename]\n");
   fprintf(stdout, "         [-v] more verbosity\n");
   fprintf(stdout, "         [-h|-? this help]\n");
   fprintf(stdout, "         [-V] print version information and exit\n");
@@ -540,10 +367,6 @@ static void process_args(int argc, char *argv[], char ** input_filename, char **
       case 'f':
         *input_filename = calloc(200, sizeof(char));
         strncpy(*input_filename, optarg, 200);
-        break;
-      case 'o':
-        *filename = calloc(200, sizeof(char));
-        strncpy(*filename, optarg, 200);
         break;
       case 'v':
         verbose = 1;
@@ -567,8 +390,8 @@ static void process_args(int argc, char *argv[], char ** input_filename, char **
 
 static void set_default_filenames(char ** input_filename, char ** filename) {
   if( *input_filename == NULL ) {
-    *input_filename = calloc(13, sizeof(char));
-    strcpy(*input_filename,"invert.input");
+    *input_filename = calloc(28, sizeof(char));
+    strcpy(*input_filename,"offline_measurement.input");
   }
   
   if( *filename == NULL ) {
