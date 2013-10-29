@@ -63,7 +63,7 @@
 #include "boundary.h"
 #include "init/init_dirac_halfspinor.h"
 #include "update_backward_gauge.h"
-#ifdef BGQ
+#ifdef SPI
 #  include"DirectPut.h"
 #endif
 #include "operator/Hopping_Matrix32.h"
@@ -90,7 +90,7 @@ void Hopping_Matrix_32(const int ieo, spinor32 * const l, spinor32 * const k) {
 #ifdef OMP
 #pragma omp parallel
   {
-  su3_32 * restrict u0 ALIGN;
+  su3_32 * restrict u0 ALIGN32;
 #endif
 
 #  include "operator/halfspinor_body32.c"

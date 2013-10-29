@@ -62,7 +62,7 @@
 #include "boundary.h"
 #include "init/init_dirac_halfspinor.h"
 #include "update_backward_gauge.h"
-#ifdef BGQ
+#ifdef SPI
 #  include"DirectPut.h"
 #endif
 #include "operator/Hopping_Matrix.h"

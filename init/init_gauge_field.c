@@ -192,11 +192,10 @@ int init_gauge_field_32(const int V, const int back) {
     errno = 0;
     return(2);
   }
-#if (defined SSE || defined SSE2 || defined SSE3)
-  g_gauge_field_32[0] = (su3_32*)(((unsigned long int)(gauge_field_32)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  g_gauge_field_32[0] = gauge_field_32;
-#endif
+
+  /*doing alignment no matter what*/
+  g_gauge_field_32[0] = (su3_32*)(((unsigned long int)(gauge_field_32)+ALIGN_BASE32)&~ALIGN_BASE32);
+
   for(i = 1; i < V; i++){
     g_gauge_field_32[i] = g_gauge_field_32[i-1]+4;
   }
@@ -222,11 +221,9 @@ int init_gauge_field_32(const int V, const int back) {
       errno = 0;
       return(4);
     }
-#    if (defined SSE || defined SSE2 || defined SSE3)
-    g_gauge_field_copy_32[0][0] = (su3_32*)(((unsigned long int)(gauge_field_copy_32)+ALIGN_BASE)&~ALIGN_BASE);
-#    else
-    g_gauge_field_copy_32[0][0] = gauge_field_copy_32;
-#    endif
+    /* doing alignment no matter what */
+    g_gauge_field_copy_32[0][0] = (su3_32*)(((unsigned long int)(gauge_field_copy_32)+ALIGN_BASE32)&~ALIGN_BASE32);
+
     for(i = 1; i < (VOLUME)/2; i++) {
       g_gauge_field_copy_32[0][i] = g_gauge_field_copy_32[0][i-1]+4;
     }
@@ -247,11 +244,10 @@ int init_gauge_field_32(const int V, const int back) {
       errno = 0;
       return(4);
     }
-#  if (defined SSE || defined SSE2 || defined SSE3)
-    g_gauge_field_copy_32[0] = (su3_32*)(((unsigned long int)(gauge_field_copy_32)+ALIGN_BASE)&~ALIGN_BASE);
-#  else
-    g_gauge_field_copy_32[0] = gauge_field_copy_32;
-#  endif
+
+    /* doing alignment no matter what */
+    g_gauge_field_copy_32[0] = (su3_32*)(((unsigned long int)(gauge_field_copy_32)+ALIGN_BASE32)&~ALIGN_BASE32);
+
     for(i = 1; i < (VOLUME+RAND); i++) {
       g_gauge_field_copy_32[i] = g_gauge_field_copy_32[i-1]+8;
     }

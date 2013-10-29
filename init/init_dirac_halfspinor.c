@@ -30,7 +30,7 @@
 #include "su3.h"
 #include "init_dirac_halfspinor.h"
 
-#ifdef BGQ
+#ifdef SPI
 #  define SPI_ALIGN_BASE 0x7f
 #else
 #  define SPI_ALIGN_BASE ALIGN_BASE
@@ -46,7 +46,7 @@ halfspinor * sendBuffer_, * recvBuffer_;
 /* The single precision versions */
 halfspinor32 ** NBPointer32_;
 halfspinor32 * HalfSpinor32_;
-halfspinor32 * HalfSpinor32 ALIGN;
+halfspinor32 * HalfSpinor32 ALIGN32;
 halfspinor32 *** NBPointer32;
 halfspinor32 * sendBuffer32, * recvBuffer32;
 halfspinor32 * sendBuffer32_, * recvBuffer32_;
@@ -362,7 +362,7 @@ int init_dirac_halfspinor32() {
     return(-1);
   }
 
-  HalfSpinor32 = (halfspinor32*)(((unsigned long int)(HalfSpinor32_)+ALIGN_BASE)&~ALIGN_BASE);
+  HalfSpinor32 = (halfspinor32*)(((unsigned long int)(HalfSpinor32_)+ALIGN_BASE32)&~ALIGN_BASE32);
 
 #ifdef MPI
   //re-use memory from 64Bit version

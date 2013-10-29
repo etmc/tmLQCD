@@ -384,6 +384,8 @@ elif test $withalign = auto; then
   AC_MSG_RESULT(auto)
   AC_DEFINE(ALIGN_BASE, 0x00, [Align base])
   AC_DEFINE(ALIGN, [], [])
+  AC_DEFINE(ALIGN_BASE32, 0x00, [Align base])
+  AC_DEFINE(ALIGN32, [], [])
 else
   AC_MSG_RESULT(Unusable value for array alignment)
   AC_MSG_ERROR([Allowed values are: auto, none, 16, 32])
@@ -479,6 +481,9 @@ if test $enable_qpx = yes; then
       AC_MSG_RESULT(increasing array alignment to 32 bytes for use of QPX instructions on BG/Q)
       AC_DEFINE(ALIGN_BASE, 0x1F, [Align base])
       AC_DEFINE(ALIGN, [__attribute__ ((aligned (32)))])
+      AC_MSG_RESULT(increasing 32bit array alignment to 16 bytes for use of QPX instructions on BG/Q)
+      AC_DEFINE(ALIGN_BASE32, 0x0F, [Align base])
+      AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))])
       withautoalign=32
     fi
   elif test $withalign -lt 32; then

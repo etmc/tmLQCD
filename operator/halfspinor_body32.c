@@ -25,10 +25,9 @@
 
 
 int ix;
-su3_32 * restrict U ALIGN;
-spinor32 * restrict s ALIGN;
-halfspinor32 * restrict * phi ALIGN;
-halfspinor32 * restrict * phi2 ALIGN;
+su3_32 * restrict U ALIGN32;
+spinor32 * restrict s ALIGN32;
+halfspinor32 * restrict * phi2 ALIGN32;
 _declare_hregs();
 
 #ifdef XLC
@@ -38,17 +37,17 @@ _declare_hregs();
 # pragma disjoint(*U, *s)
 # pragma disjoint(*k, *s)
 # pragma disjoint(*l, *s)
-__alignx(32, l);
-__alignx(32, k);
-__alignx(32, U);
-__alignx(32, s);
+__alignx(16, l);
+__alignx(16, k);
+__alignx(16, U);
+__alignx(16, s);
 #endif 
 
 //convert kappas to float locally
-_Complex float ALIGN ka0_32 = (_Complex float) ka0;
-_Complex float ALIGN ka1_32 = (_Complex float) ka1;
-_Complex float ALIGN ka2_32 = (_Complex float) ka2;
-_Complex float ALIGN ka3_32 = (_Complex float) ka3;
+_Complex float ALIGN32 ka0_32 = (_Complex float) ka0;
+_Complex float ALIGN32 ka1_32 = (_Complex float) ka1;
+_Complex float ALIGN32 ka2_32 = (_Complex float) ka2;
+_Complex float ALIGN32 ka3_32 = (_Complex float) ka3;
 
 #ifndef OMP  
 s = k;
@@ -124,7 +123,7 @@ if(ieo == 0) {
 #      ifdef SPI
 
      // Initialize the barrier, resetting the hardware.
-     int rc = MUSPI_GIBarrierInit ( &GIBarrier, 0 /*comm world class route */);
+     int rc = MUSPI_GIBarrierInit ( &GIBarrier, 0 /*comm world class route*/  );
      if(rc) {
        printf("MUSPI_GIBarrierInit returned rc = %d\n", rc);
        exit(__LINE__);
@@ -151,7 +150,7 @@ if(ieo == 0) {
 #ifdef OMP
   }
 #endif
-  
+ 
 #ifndef OMP
   s = l;
   if(ieo == 0) {
@@ -216,7 +215,7 @@ if(ieo == 0) {
 #elif defined _TM_SUB_HOP
      _g5_cmplx_sub_hop_and_g5store(s);
 #else
-    _hop_store_post(s);
+    _hop_store_post32(s);
 #endif
     
 #ifndef OMP

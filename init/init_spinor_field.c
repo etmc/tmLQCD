@@ -103,9 +103,9 @@ int init_spinor_field_32(const int V, const int nr) {
     return(2);
   }
 #if ( defined SSE || defined SSE2 || defined SSE3)
-  g_spinor_field32[0] = (spinor32*)(((unsigned long int)(sp32)+ALIGN_BASE)&~ALIGN_BASE);
+  g_spinor_field32[0] = (spinor32*)(((unsigned long int)(sp32)+ALIGN_BASE32)&~ALIGN_BASE32);
 #else
-  g_spinor_field32[0] = sp32;
+  g_spinor_field32[0] = (spinor32*)(((unsigned long int)(sp32)+ALIGN_BASE32)&~ALIGN_BASE32);
 #endif
   
   for(i = 1; i < nr; i++){

@@ -38,6 +38,69 @@
 #include "assign_add_mul_r_32.h"
 
 
+#if (defined BGQ && defined XLC)
+void assign_add_mul_r_32(spinor32 * const R, spinor32 * const S, const float c, const int N) {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+  vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
+  vector4double z0, z1, z2, z3, z4, z5, k;
+  float *s, *r;
+  float ALIGN32 _c;
+  _c = c;
+  __prefetch_by_load(S);
+  __prefetch_by_load(R);
+
+  k = vec_splats((double)_c);
+  __alignx(16, s);
+  __alignx(16, r);
+  __alignx(16, S);
+  __alignx(16, R);
+
+#ifdef OMP
+#pragma omp for
+#else
+#pragma unroll(2)
+#endif
+  for(int i = 0; i < N; i++) {
+    s=(float*)((spinor32 *) S + i);
+    r=(float*)((spinor32 *) R + i);
+    __prefetch_by_load(S + i + 1);
+    __prefetch_by_stream(1, R + i + 1);
+    x0 = vec_ld(0, r);
+    x1 = vec_ld(0, r+4);
+    x2 = vec_ld(0, r+8);
+    x3 = vec_ld(0, r+12);
+    x4 = vec_ld(0, r+16);
+    x5 = vec_ld(0, r+20);
+    y0 = vec_ld(0, s);
+    y1 = vec_ld(0, s+4);
+    y2 = vec_ld(0, s+8);
+    y3 = vec_ld(0, s+12);
+    y4 = vec_ld(0, s+16);
+    y5 = vec_ld(0, s+20);
+    z0 = vec_madd(k, y0, x0);
+    z1 = vec_madd(k, y1, x1);
+    z2 = vec_madd(k, y2, x2);
+    z3 = vec_madd(k, y3, x3);
+    z4 = vec_madd(k, y4, x4);
+    z5 = vec_madd(k, y5, x5);
+    vec_st(z0, 0, r);
+    vec_st(z1, 0, r+4);
+    vec_st(z2, 0, r+8);
+    vec_st(z3, 0, r+12);
+    vec_st(z4, 0, r+16);
+    vec_st(z5, 0, r+20);
+  }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+  return;
+}
+
+#else
+
 void assign_add_mul_r_32(spinor32 * const R, spinor32 * const S, const float c, const int N)
 {
 #ifdef OMP
@@ -77,4 +140,4 @@ void assign_add_mul_r_32(spinor32 * const R, spinor32 * const S, const float c, 
 
 }
 
-
+#endif
