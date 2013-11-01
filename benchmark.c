@@ -248,7 +248,7 @@ int main(int argc,char *argv[])
     fprintf(stderr, "Checking of geometry failed. Unable to proceed.\nAborting....\n");
     exit(1);
   }
-#if (defined MPI && !(defined _USE_SHMEM))
+#if (defined MPI && !(defined _USE_SHMEM) && !(defined _USE_HALFSPINOR))
   check_xchange(); 
 #endif
 
@@ -259,10 +259,7 @@ int main(int argc,char *argv[])
   /*For parallelization: exchange the gaugefield */
   xchange_gauge(g_gauge_field);
 #endif
-  
-  /*Convert to a 32 bit gauge field, after xchange*/
-  convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND + g_dbw2rand);
-  
+
   if(even_odd_flag) {
     /*initialize the pseudo-fermion fields*/
     j_max=2048;
@@ -369,6 +366,8 @@ if(g_sloppy_precision_flag == 0) {
     
     
 if(g_sloppy_precision_flag == 1) {
+ /*Convert to a 32 bit gauge field, after xchange*/
+ convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND + g_dbw2rand);
 g_sloppy_precision = 1;  
 /* 32 Bit Hopping Matrix*/   
 j_max=2048;

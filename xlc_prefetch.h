@@ -28,6 +28,9 @@
 
 #ifdef XLC
 
+#define _prefetch_halfspinor(addr)		\
+  __dcbt(((char*)((unsigned long int)(addr))));
+
 #define _prefetch_spinor(addr)			    \
   __dcbt(((char*)((unsigned long int)(addr))));	    \
   __dcbt(((char*)((unsigned long int)(addr)))+128); 
@@ -62,6 +65,8 @@ __prefetch_by_load((void*)(addr1)); \
 __prefetch_by_load((void*)(addr2)); 
 
 #else
+
+#define _prefetch_halfspinor(addr)
 
 #define _prefetch_spinor(addr)
 

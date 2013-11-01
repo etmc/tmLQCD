@@ -52,21 +52,12 @@ __alignx(32, s);
 #ifndef OMP  
 s = k;
 _prefetch_spinor(s);
-if(ieo == 0) {
-  U = g_gauge_field_copy[0][0];
- }
- else {
-   U = g_gauge_field_copy[1][0];
- }
+U = g_gauge_field_copy[ieo][0];
 _prefetch_su3(U);
 #else
-if(ieo == 0) {
-  u0 = g_gauge_field_copy[0][0];
- }
- else {
-   u0 = g_gauge_field_copy[1][0];
- }
+u0 = g_gauge_field_copy[ieo][0];
 #endif
+
 #if (defined SSE2 || defined SSE3)
 g_sloppy_precision = 0;
 #endif
@@ -78,7 +69,7 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #else
   ix=0;
 #endif
-  for(unsigned int i = 0; i < (VOLUME)/2; i++){
+  for(unsigned int i = 0; i < (VOLUME)/2; i++) {
 #ifdef OMP
     U=u0+i*4;
     s=k+i;
@@ -116,42 +107,42 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
     ix++;
 #endif
   }
+
+#if (defined MPI && !defined _NO_COMM)
   
-#ifdef OMP
-#pragma omp single
+#  ifdef OMP
+#  pragma omp single nowait
   {
-#endif
+#  endif
     
-#    if (defined MPI && !defined _NO_COMM)
-#      ifdef SPI
-
-     // Initialize the barrier, resetting the hardware.
-     int rc = MUSPI_GIBarrierInit ( &GIBarrier, 0 /*comm world class route */);
-     if(rc) {
-       printf("MUSPI_GIBarrierInit returned rc = %d\n", rc);
-       exit(__LINE__);
-     }
-     // reset the recv counter 
-     recvCounter = totalMessageSize/2;
-     global_barrier(); // make sure everybody is set recv counter
-
-     //#pragma omp for nowait
-     for (unsigned int j = 0; j < spi_num_dirs; j++) {
-       descCount[ j ] =
-	 msg_InjFifoInject ( injFifoHandle,
-			     j,
-			     &SPIDescriptors32[j]);
-     }
-     // wait for receive completion
-     while ( recvCounter > 0 );
-     _bgq_msync();
-#      else
+#    ifdef SPI
+    
+    // Initialize the barrier, resetting the hardware.
+    int rc = MUSPI_GIBarrierInit ( &GIBarrier, 0 /*comm world class route */);
+    if(rc) {
+      printf("MUSPI_GIBarrierInit returned rc = %d\n", rc);
+      exit(__LINE__);
+    }
+    // reset the recv counter 
+    recvCounter = totalMessageSize/2;
+    global_barrier(); // make sure everybody is set recv counter
+    
+    //#pragma omp for nowait
+    for (unsigned int j = 0; j < spi_num_dirs; j++) {
+      descCount[ j ] =
+	msg_InjFifoInject ( injFifoHandle,
+			    j,
+			    &SPIDescriptors32[j]);
+    }
+#    else
     xchange_halffield32(); 
-#      endif
+#    ifdef _THREAD_OVERLAP
+      wait_halffield();
 #    endif
-    
-#ifdef OMP
+#   endif /* SPI */
+#  ifdef OMP
   }
+#  endif
 #endif
   
 #ifndef OMP
@@ -174,49 +165,131 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
   phi32 = NBPointer32[2 + ieo];
   
 #ifdef OMP
+#  ifdef _THREAD_OVERLAP
+#pragma omp for schedule(guided,32)
+#  else
 #pragma omp for
+#  endif
 #else
   ix = 0;
 #endif
-  for(unsigned int i = 0; i < (VOLUME)/2; i++){
+  for(unsigned int i = 0; i < bodyV; i++){
 #ifdef OMP
     ix=i*8;
     s=l+i;
     U=u0+i*4;
 #endif
 #ifdef _TM_SUB_HOP
-     pn=p+i;
+    pn=p+i;
 #endif
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_t_p_post32();
     ix++;
-    
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_t_m_post32();
     ix++;
     U++;
-    
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_x_p_post32();
     ix++;
-    
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_x_m_post32();
     U++;
     ix++;
-    
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_y_p_post32();
     ix++;
-    
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_y_m_post32();
     U++;
     ix++;
-    
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_z_p_post32();
     ix++;
-    
+    _prefetch_halfspinor(phi32[ix+1]);
     _hop_z_m_post32();
     
 #ifdef _MUL_G5_CMPLX
     _hop_mul_g5_cmplx_and_store(s);
 #elif defined _TM_SUB_HOP
-     _g5_cmplx_sub_hop_and_g5store(s);
+    _g5_cmplx_sub_hop_and_g5store(s);
+#else
+    _hop_store_post(s);
+#endif
+    
+#ifndef OMP
+    U++;
+    ix++;
+    s++;
+#endif
+  }
+  
+#ifndef _THREAD_OVERLAP
+#ifdef OMP
+#pragma omp single
+  {
+#endif
+    
+#    if (defined MPI && !defined _NO_COMM)
+#      ifdef SPI
+    // wait for receive completion
+    while ( recvCounter > 0 );
+    _bgq_msync();
+#      else
+    wait_halffield();
+#      endif
+#    endif
+    
+#ifdef OMP
+  }
+#endif
+#endif /* _THREAD_OVERLAP */
+  
+#ifdef OMP
+#pragma omp for
+#else
+  ix = 0;
+#endif
+  for(unsigned int i = bodyV; i < VOLUME/2; i++) {
+#ifdef OMP
+    ix=i*8;
+    s=l+i;
+    U=u0+i*4;
+#endif
+#ifdef _TM_SUB_HOP
+    pn=p+i;
+#endif
+    _prefetch_halfspinor(phi32[ix+1]);
+    _hop_t_p_post32();
+    ix++;
+    _prefetch_halfspinor(phi32[ix+1]);
+    _hop_t_m_post32();
+    ix++;
+    U++;
+    _prefetch_halfspinor(phi32[ix+1]);
+    _hop_x_p_post32();
+    ix++;
+    _prefetch_halfspinor(phi32[ix+1]);
+    _hop_x_m_post32();
+    U++;
+    ix++;
+    _prefetch_halfspinor(phi32[ix+1]);
+    _hop_y_p_post32();
+    ix++;
+    _prefetch_halfspinor(phi32[ix+1]);
+    _hop_y_m_post32();
+    U++;
+    ix++;
+    _prefetch_halfspinor(phi32[ix+1]);
+    _hop_z_p_post32();
+    ix++;
+    _prefetch_halfspinor(phi32[ix+1]);
+    _hop_z_m_post32();
+
+#ifdef _MUL_G5_CMPLX
+    _hop_mul_g5_cmplx_and_store(s);
+#elif defined _TM_SUB_HOP
+    _g5_cmplx_sub_hop_and_g5store(s);
 #else
     _hop_store_post(s);
 #endif
@@ -277,15 +350,14 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
      ix++;
 #endif
    }
-   
-#ifdef OMP
-#pragma omp single
-   {
-#endif
-     
-#    if (defined MPI && !defined _NO_COMM)
-#      ifdef SPI
 
+#if (defined MPI && !defined _NO_COMM)
+#  ifdef OMP
+#  pragma omp single nowait
+   {
+#  endif
+#    ifdef SPI
+     
      // Initialize the barrier, resetting the hardware.
      int rc = MUSPI_GIBarrierInit ( &GIBarrier, 0 /*comm world class route */);
      if(rc) {
@@ -295,7 +367,7 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
      // reset the recv counter 
      recvCounter = totalMessageSize;
      global_barrier(); // make sure everybody is set recv counter
-
+     
      //#pragma omp for nowait
      for (unsigned int j = 0; j < spi_num_dirs; j++) {
        descCount[ j ] =
@@ -303,17 +375,18 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 			     j,
 			     &SPIDescriptors[j]);
      }
-     // wait for receive completion
-     while ( recvCounter > 0 );
-     _bgq_msync();
-
-#      else // SPI
-     xchange_halffield(); 
-#      endif // SPI
-#    endif
      
-#ifdef OMP
+#    else // SPI
+     xchange_halffield(); 
+#      ifdef _THREAD_OVERLAP
+        wait_halffield();
+#      endif
+  
+#    endif // SPI
+     
+#  ifdef OMP
    }
+#  endif
 #endif
    
 #ifndef OMP
@@ -337,12 +410,15 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
    phi = NBPointer[2 + ieo];
    
 #ifdef OMP
+#ifdef _THREAD_OVERLAP
+#pragma omp for schedule(guided,32)
+#else
 #pragma omp for
+#endif
 #else
    ix = 0;
 #endif
-   /* #pragma ivdep */
-   for(unsigned int i = 0; i < (VOLUME)/2; i++){
+   for(unsigned int i = 0; i < bodyV; i++){
 #ifdef OMP
      ix=i*8;
      U=u0+i*4;
@@ -353,32 +429,112 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #ifdef _TM_SUB_HOP
      pn=p+i;
 #endif
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_t_p_post();
      ix++;
-     
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_t_m_post();
      ix++;
      U++;
-     
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_x_p_post();
      ix++;
-     
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_x_m_post();
      U++;
      ix++;
-     
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_y_p_post();
      ix++;
-     
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_y_m_post();
      U++;
      ix++;
-     
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_z_p_post();
      ix++;
-     
+     _prefetch_halfspinor(phi[ix+1]);
      _hop_z_m_post();
+
+#ifdef _MUL_G5_CMPLX
+     _hop_mul_g5_cmplx_and_store(s);
+#elif defined _TM_SUB_HOP
+     _g5_cmplx_sub_hop_and_g5store(s);
+#else
+     _hop_store_post(s);
+#endif
      
+#ifndef OMP
+     U++;
+     ix++;
+     s++;
+#endif
+   }
+
+#ifndef _THREAD_OVERLAP
+#ifdef OMP
+#pragma omp single
+   {
+#endif
+     
+#    if (defined MPI && !defined _NO_COMM)
+#      ifdef SPI
+     // wait for receive completion
+     while ( recvCounter > 0 );
+     _bgq_msync();
+#      else
+     wait_halffield();
+#      endif
+#    endif
+     
+#ifdef OMP
+   }
+#endif
+#endif /* _THREAD_OVERLAP */
+
+
+#ifdef OMP
+#pragma omp for
+#endif
+   /* #pragma ivdep */
+   for(unsigned int i = bodyV; i < VOLUME/2; i++){
+#ifdef OMP
+     ix=i*8;
+     U=u0+i*4;
+     _prefetch_su3(U);
+     s=l+i;
+     _prefetch_spinor(s);
+#endif
+#ifdef _TM_SUB_HOP
+     pn=p+i;
+#endif
+     _prefetch_halfspinor(phi[ix+1]);
+     _hop_t_p_post();
+     ix++;
+     _prefetch_halfspinor(phi[ix+1]);
+     _hop_t_m_post();
+     ix++;
+     U++;
+     _prefetch_halfspinor(phi[ix+1]);
+     _hop_x_p_post();
+     ix++;
+     _prefetch_halfspinor(phi[ix+1]);
+     _hop_x_m_post();
+     U++;
+     ix++;
+     _prefetch_halfspinor(phi[ix+1]);
+     _hop_y_p_post();
+     ix++;
+     _prefetch_halfspinor(phi[ix+1]);
+     _hop_y_m_post();
+     U++;
+     ix++;
+     _prefetch_halfspinor(phi[ix+1]);
+     _hop_z_p_post();
+     ix++;
+     _prefetch_halfspinor(phi[ix+1]);
+     _hop_z_m_post();
+
 #ifdef _MUL_G5_CMPLX
      _hop_mul_g5_cmplx_and_store(s);
 #elif defined _TM_SUB_HOP

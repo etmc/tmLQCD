@@ -29,6 +29,7 @@
 #include "global.h"
 #include "su3.h"
 #include "init_dirac_halfspinor.h"
+#include "fatal_error.h"
 
 #ifdef SPI
 #  define SPI_ALIGN_BASE 0x7f
@@ -51,10 +52,27 @@ halfspinor32 *** NBPointer32;
 halfspinor32 * sendBuffer32, * recvBuffer32;
 halfspinor32 * sendBuffer32_, * recvBuffer32_;
 
+// body and surface volume also same for 32 bit
+int bodyV, surfaceV;
 
 int init_dirac_halfspinor() {
-  int j=0, k;
+  int j=0;
   int x, y, z, t;
+#ifdef MPI
+  int k;
+#endif
+#ifdef PARALLELXYZT
+  bodyV = (T-2)*(LZ-2)*(LY-2)*(LX-2)/2;
+#elif defined PARALLELXYT
+  bodyV = (T-2)*(LZ)*(LY-2)*(LX-2)/2;
+#elif defined PARALLELXT
+  bodyV = (T-2)*(LZ)*(LY)*(LX-2)/2;
+#elif defined PARALLELT
+  bodyV = (T-2)*(LZ)*(LY)*(LX)/2;
+#else
+  bodyV = VOLUME/2;
+#endif
+  surfaceV = VOLUME/2-bodyV;
 
   NBPointer = (halfspinor***) calloc(4,sizeof(halfspinor**));
   NBPointer_ = (halfspinor**) calloc(16,(VOLUME+RAND)*sizeof(halfspinor*));
@@ -346,9 +364,9 @@ int init_dirac_halfspinor() {
 
 
 int init_dirac_halfspinor32() {
-  int j=0, k;
+  int j=0,k;
   int x, y, z, t, mu;
-  
+
   NBPointer32 = (halfspinor32***) calloc(4,sizeof(halfspinor32**));
   NBPointer32_ = (halfspinor32**) calloc(16,(VOLUME+RAND)*sizeof(halfspinor32*));
   NBPointer32[0] = NBPointer32_;

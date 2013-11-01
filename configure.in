@@ -149,10 +149,10 @@ if test $enable_omp = yes; then
 # -- AC_OPENMP provides a compiler-dependent OPENMP_CFLAGS so we can set it here
 # on the BG/Q with XLC we force a special set of options for OpenMP support
   if test $enable_qpx = yes; then
-    AC_MSG_NOTICE([Using OpenMP with XLC on BG/Q. Compiling with "-qsmp=omp:noauto:schedule=static".])
-    CFLAGS="$CFLAGS -qsmp=omp:noauto:schedule=static"
-    CPPFLAGS="$CPPFLAGS -qsmp=omp:noauto:schedule=static"
-    LDFLAGS="$LDFLAGS -qsmp=omp:noauto:schedule=static" 
+    AC_MSG_NOTICE([Using OpenMP with XLC on BG/Q. Compiling with "-qsmp=omp:noauto:schedule=static -qthreaded".])
+    CFLAGS="$CFLAGS -qsmp=omp:noauto:schedule=static -qthreaded"
+    CPPFLAGS="$CPPFLAGS -qsmp=omp:noauto:schedule=static -qthreaded"
+    LDFLAGS="$LDFLAGS -qsmp=omp:noauto:schedule=static -qthreaded" 
   else
     CFLAGS="$CFLAGS $OPENMP_CFLAGS"
     CPPFLAGS="$CPPFLAGS $OPENMP_CFLAGS"
@@ -243,6 +243,19 @@ if test $enable_mpi = yes; then
   if test $withnonblock = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(_NON_BLOCKING,1,use non-blocking MPI calls for spinor ang gauge)
+  else
+    AC_MSG_RESULT(no)
+  fi
+
+  # when using MPI and OpenMP but NOT SPI, overlapping can be made more efficient by exploiting threading 
+  AC_MSG_CHECKING(whether we want to make computation-overlapping MPI exchange more efficient through the use of threads)
+  if test $enable_omp = yes; then
+    if test $enable_spi = no; then
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(_THREAD_OVERLAP,1,use same thread for exchange and wait in halfspinor hopping matrix)
+    else
+      AC_MSG_RESULT(no)
+    fi
   else
     AC_MSG_RESULT(no)
   fi
