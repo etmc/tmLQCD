@@ -88,16 +88,12 @@ void Hopping_Matrix_32(const int ieo, spinor32 * const l, spinor32 * const k) {
 #endif
 
 #ifdef OMP
-#pragma omp parallel
-  {
   su3_32 * restrict u0 ALIGN32;
 #endif
 
 #  include "operator/halfspinor_body32.c"
 
-#  ifdef OMP
-  } /* OpenMP closing brace */
-#  endif
+
   return;
 }
 

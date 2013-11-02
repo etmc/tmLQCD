@@ -14,10 +14,6 @@
 
 
 void mul_one_pm_imu_inv_32(spinor32 * const l, const float _sign, const int N){
-#ifdef OMP
-#pragma omp parallel
-  {
-#endif
   _Complex float ALIGN z,w;
   int ix;
   float sign=-1.; 
@@ -50,9 +46,6 @@ void mul_one_pm_imu_inv_32(spinor32 * const l, const float _sign, const int N){
     _vector_assign(r->s3, phi1);
   }
 
-#ifdef OMP
-  } /* OpenMP closing brace */
-#endif
 
 }
 
@@ -61,10 +54,7 @@ void mul_one_pm_imu_inv_32(spinor32 * const l, const float _sign, const int N){
 
 void mul_one_pm_imu_sub_mul_gamma5_32(spinor32 * const l, spinor32 * const k, 
 				   spinor32 * const j, const float _sign){
-#ifdef OMP
-#pragma omp parallel
-  {
-#endif
+
   _Complex float z,w;
   int ix;
   float sign=1.;
@@ -101,9 +91,7 @@ void mul_one_pm_imu_sub_mul_gamma5_32(spinor32 * const l, spinor32 * const k,
     _vector_sub(t->s3, s->s3, phi4);
   }
 
-#ifdef OMP
-  } /* OpenMP closing brace */
-#endif
+
 }
 
 
@@ -111,6 +99,10 @@ void mul_one_pm_imu_sub_mul_gamma5_32(spinor32 * const l, spinor32 * const k,
 
 void Qtm_pm_psi_32(spinor32 * const l, spinor32 * const k){
   /* Q_{-} */
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif  
   Hopping_Matrix_32(EO, g_spinor_field32[1], k);
   mul_one_pm_imu_inv_32(g_spinor_field32[1], -1., VOLUME/2);
   Hopping_Matrix_32(OE, g_spinor_field32[0], g_spinor_field32[1]);
@@ -120,6 +112,9 @@ void Qtm_pm_psi_32(spinor32 * const l, spinor32 * const k){
   mul_one_pm_imu_inv_32(l, +1., VOLUME/2);
   Hopping_Matrix_32(OE, g_spinor_field32[1], l);
   mul_one_pm_imu_sub_mul_gamma5_32(l, g_spinor_field32[0], g_spinor_field32[1], +1.);
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif  
 }
 
 

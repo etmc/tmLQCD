@@ -191,6 +191,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
     sqnrm = (float) sqnrm_d;
     sqnrm2 = sqnrm;
     for(j = 0; j <= max_inner_it; j++) {
+      
       f32(solver_field32[0], solver_field32[2]); 
       pro = scalar_prod_r_32(solver_field32[2], solver_field32[0], N, 1);
       alpha_cg = sqnrm2 / pro;
@@ -216,6 +217,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
       solver_field32[0] = solver_field32[1];
       solver_field32[1] = stmp;
       sqnrm2 = err;
+      
       
     }
     /* end main CG loop */
