@@ -384,11 +384,18 @@ for (k = 0; k < k_max; k++) {
       t1 = gettime();
       antioptaway=0.0;
       for (j=0;j<j_max;j++) {
+       #ifdef OMP
+       #pragma omp parallel
+        {
+       #endif
         for (k=0;k<k_max;k++) {
           Hopping_Matrix_32(0, g_spinor_field32[k+k_max], g_spinor_field32[k]);
           Hopping_Matrix_32(1, g_spinor_field32[2*k_max], g_spinor_field32[k+k_max]);
           antioptaway+=(double)creal(g_spinor_field32[2*k_max][0].s0.c0);
         }
+       #ifdef OMP
+        } /* OpenMP closing brace */
+       #endif 
       }
       t2 = gettime();
       dt = t2-t1;
@@ -421,7 +428,46 @@ for (k = 0; k < k_max; k++) {
 #endif
       printf("\n");
       fflush(stdout);
-    } 
+    }
+    
+ #ifdef MPI
+    /* isolated computation */
+    t1 = gettime();
+    antioptaway=0.0;
+    for (j=0;j<j_max;j++) {
+      for (k=0;k<k_max;k++) {
+       #ifdef OMP
+       #pragma omp parallel
+        {
+       #endif	
+        Hopping_Matrix_32_nocom(0, g_spinor_field32[k+k_max], g_spinor_field32[k]);
+        Hopping_Matrix_32_nocom(1, g_spinor_field32[2*k_max], g_spinor_field32[k+k_max]);
+        antioptaway += (double)creal(g_spinor_field32[2*k_max][0].s0.c0);
+      }
+      #ifdef OMP
+        } /* OpenMP closing brace */
+      #endif       
+    }
+    t2 = gettime();
+    dt2 = t2-t1;
+    /* compute the bandwidth */
+    dt=dts-dt2;
+    MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    sdt=sdt/((double)g_nproc);
+    MPI_Allreduce (&dt2, &dt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    dt=dt/((double)g_nproc);
+    dt=1.0e6f*dt/((double)(k_max*j_max*(VOLUME)));
+    if(g_proc_id==0) {
+      printf("# The following result is printed just to make sure that the calculation is not optimized away: %e\n",antioptaway);
+      printf("# Communication switched off: \n# (%d Mflops [%d bit arithmetic])\n", (int)(1608.0f/dt),(int)sizeof(spinor32)/3);
+#ifdef OMP
+      printf("# Mflops per OpenMP thread ~ %d\n",(int)(1608.0f/(omp_num_threads*dt)));
+#endif
+      printf("\n"); 
+      fflush(stdout);
+    }   
+#endif
+    
 }
 /* 32 bit*/
         
