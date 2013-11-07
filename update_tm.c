@@ -346,6 +346,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
   hf.update_gauge_copy = 1;
   g_update_gauge_copy = 1;
+  g_update_gauge_copy_32 = 1;  
   hf.update_gauge_energy = 1;
   g_update_gauge_energy = 1;
   hf.update_rectangle_energy = 1;
@@ -353,6 +354,10 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 #ifdef MPI
   xchange_gauge(hf.gaugefield);
 #endif
+  
+  /*Convert to a 32 bit gauge field, after xchange*/
+  convert_32_gauge_field(g_gauge_field_32, hf.gaugefield, VOLUMEPLUSRAND + g_dbw2rand); 
+  
   etime=gettime();
 
   /* printing data in the .data file */

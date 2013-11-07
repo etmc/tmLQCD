@@ -33,6 +33,7 @@
 #include "deriv_Sb.h"
 #include "deriv_Sb_D_psi.h"
 #include "operator/tm_operators.h"
+#include "operator/tm_operators_32.h"
 #include "operator/Hopping_Matrix.h"
 #include "solver/chrono_guess.h"
 #include "solver/solver.h"
@@ -66,7 +67,7 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     g_mu = mnl->mu2;
     boundary(mnl->kappa2);
 
-    if(mnl->solver != CG) {
+    if( (mnl->solver) != CG && (mnl->solver != MIXEDCG) ) {
       fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (detratio_monomial.c)\n");
     }
 
@@ -77,8 +78,13 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     /* X_W -> w_fields[1] */
     chrono_guess(mnl->w_fields[1], mnl->w_fields[2], mnl->csg_field, 
 		 mnl->csg_index_array, mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_pm_psi);
+    /*
     mnl->iter1 += cg_her(mnl->w_fields[1], mnl->w_fields[2], mnl->maxiter, 
 			 mnl->forceprec, g_relative_precision_flag, VOLUME/2, &Qtm_pm_psi);
+    */
+    //!Here we need a wrapper
+    mnl->iter1 += mixed_cg_her(mnl->w_fields[1], mnl->w_fields[2], mnl->maxiter, 
+			 mnl->forceprec, g_relative_precision_flag, VOLUME/2, &Qtm_pm_psi, &Qtm_pm_psi_32);
     chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
     /* Y_W -> w_fields[0]  */
@@ -211,8 +217,14 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
     g_mu = mnl->mu2;
     boundary(mnl->kappa2);
     zero_spinor_field(mnl->w_fields[0], VOLUME/2);
+    /*
     mnl->iter0 = cg_her(mnl->w_fields[0], mnl->w_fields[1], mnl->maxiter, mnl->accprec, g_relative_precision_flag,
     			VOLUME/2, mnl->Qsq);
+    */
+    //!Here we need a wrapper
+    mnl->iter0 = mixed_cg_her(mnl->w_fields[0], mnl->w_fields[1], mnl->maxiter, mnl->accprec, g_relative_precision_flag,
+    			VOLUME/2, mnl->Qsq, mnl->Qsq32);
+    
     mnl->Qm(mnl->pf, mnl->w_fields[0]);
     chrono_add_solution(mnl->w_fields[0], mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
@@ -261,11 +273,19 @@ double detratio_acc(const int id, hamiltonian_field_t * const hf) {
     boundary(mnl->kappa);
     chrono_guess(mnl->w_fields[0], mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array, 
 		 mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
+    /*
     g_sloppy_precision_flag = 0;
     mnl->iter0 += cg_her(mnl->w_fields[0], mnl->w_fields[1], mnl->maxiter, mnl->accprec, g_relative_precision_flag,
 			 VOLUME/2, mnl->Qsq);
     mnl->Qm(mnl->w_fields[1], mnl->w_fields[0]);
     g_sloppy_precision_flag = save_sloppy;
+    */
+    
+    //!Here we need a wrapper    
+    mnl->iter0 += mixed_cg_her(mnl->w_fields[0], mnl->w_fields[1], mnl->maxiter, mnl->accprec, g_relative_precision_flag,
+			 VOLUME/2, mnl->Qsq, mnl->Qsq32);
+    mnl->Qm(mnl->w_fields[1], mnl->w_fields[0]);
+    
     /* Compute the energy contr. from second field */
     mnl->energy1 = square_norm(mnl->w_fields[1], VOLUME/2, 1);
   }

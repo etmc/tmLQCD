@@ -38,6 +38,7 @@
 #include "xchange/xchange.h"
 #include "hamiltonian_field.h"
 #include "update_gauge.h"
+#include "init/init_gauge_field.h"
 
 
 /*******************************************************
@@ -92,12 +93,17 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
   /* for parallelization */
   xchange_gauge(hf->gaugefield);
 #endif
+  
+  /*Convert to a 32 bit gauge field, after xchange*/
+  convert_32_gauge_field(g_gauge_field_32, hf->gaugefield, VOLUMEPLUSRAND + g_dbw2rand);
+  
   /*
    * The backward copy of the gauge field
    * is not updated here!
    */
   hf->update_gauge_copy = 1;
   g_update_gauge_copy = 1;
+  g_update_gauge_copy_32 = 1;
   hf->update_gauge_energy = 1;
   g_update_gauge_energy = 1;
   hf->update_rectangle_energy = 1;

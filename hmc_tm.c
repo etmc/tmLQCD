@@ -169,7 +169,9 @@ int main(int argc,char *argv[]) {
 
   DUM_BI_MATRIX = DUM_BI_SOLVER+6;
   NO_OF_BISPINORFIELDS = DUM_BI_MATRIX+6;
-
+  
+  NO_OF_SPINORFIELDS_32 = 2;
+  
   tmlqcd_mpi_init(argc, argv);
 
   if(nstore == -1) {
@@ -195,8 +197,10 @@ int main(int argc,char *argv[]) {
   
 #ifdef _GAUGE_COPY
   status = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
+  status += init_gauge_field_32(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
   status = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
+  status += init_gauge_field_32(VOLUMEPLUSRAND + g_dbw2rand, 0);   
 #endif
   if (status != 0) {
     fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
@@ -209,6 +213,7 @@ int main(int argc,char *argv[]) {
   }
   if(even_odd_flag) {
     j = init_spinor_field(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS);
+    j += init_spinor_field_32(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS_32);      
   }
   else {
     j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
@@ -281,9 +286,14 @@ int main(int argc,char *argv[]) {
     fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
     exit(-1);
   }
-  if(g_sloppy_precision_flag == 1) {
-    init_dirac_halfspinor32();
-  }
+
+  j = init_dirac_halfspinor32();
+  if (j != 0)
+  {
+    fprintf(stderr, "Not enough memory for 32-bit halffield! Aborting...\n");
+    exit(-1);
+  } 
+  
 #  if (defined _PERSISTENT)
   init_xchange_halffield();
 #  endif
@@ -323,7 +333,11 @@ int main(int argc,char *argv[]) {
 #ifdef MPI
   xchange_gauge(g_gauge_field);
 #endif
-
+    
+  /*Convert to a 32 bit gauge field, after xchange*/
+  convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND + g_dbw2rand);
+  
+    
   if(even_odd_flag) {
     j = init_monomials(VOLUMEPLUSRAND/2, even_odd_flag);
   }
@@ -530,8 +544,10 @@ int main(int argc,char *argv[]) {
 #endif
   free_gauge_tmp();
   free_gauge_field();
+  free_gauge_field_32();  
   free_geometry_indices();
   free_spinor_field();
+  free_spinor_field_32();  
   free_moment_field();
   free_monomials();
   if(g_running_phmc) {
