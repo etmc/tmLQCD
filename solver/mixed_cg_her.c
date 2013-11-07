@@ -76,7 +76,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
 
   int max_inner_it = 2800;
   int N_outer = max_iter/max_inner_it;
-
+  int save_sloppy = g_sloppy_precision_flag;
 
   if(N == VOLUME) {
     init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);    
@@ -180,8 +180,6 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
 
   for(i = 0; i < N_outer; i++) {
 
-    //g_sloppy_precision = 1;
-    //g_sloppy_precision_flag = 1;
     /* main CG loop in lower precision */
     zero_spinor_field_32(x, N);
     zero_spinor_field_32(solver_field32[0], N);   
@@ -190,6 +188,8 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
     
     sqnrm = (float) sqnrm_d;
     sqnrm2 = sqnrm;
+    
+    /*inner CG loop */
     for(j = 0; j <= max_inner_it; j++) {
       
       f32(solver_field32[0], solver_field32[2]); 
@@ -220,12 +220,14 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
       
       
     }
-    /* end main CG loop */
+    /* end inner CG loop */
     iter += j;
-    //g_sloppy_precision = 0;
-    //g_sloppy_precision_flag = 0;
-    assign_to_64(xhigh, x, N);    
+
+    /* we want to apply a true double matrix with f(y,P) -> set sloppy off here*/
+    g_sloppy_precision_flag = 0;
     
+    /* calculate defect in double precision */
+    assign_to_64(xhigh, x, N);    
     add(P, P, xhigh, N);
     f(y, P);
     diff(delta, Q, y, N);
@@ -234,7 +236,10 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
       printf("mixed CG: last inner residue: %g\t\n", err);
       printf("mixed CG: true residue %d %g\t\n",iter, sqnrm_d); fflush(stdout);
     }
-
+    
+    /* here we can reset it to its initial value*/
+    g_sloppy_precision_flag = save_sloppy;
+    
     if(((sqnrm_d <= eps_sq) && (rel_prec == 0)) || ((sqnrm_d <= eps_sq*sourcesquarenorm) && (rel_prec == 1))) {
       finalize_solver(solver_field, nr_sf);
       finalize_solver32(solver_field32, nr_sf32); 
