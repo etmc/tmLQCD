@@ -497,7 +497,7 @@ int main(int argc, char *argv[])
   free_gauge_field_32();
   free_geometry_indices();
   free_spinor_field();
-  free_spinor_field32();  
+  free_spinor_field_32();  
   free_moment_field();
   free_chi_spinor_field();
   free(filename);

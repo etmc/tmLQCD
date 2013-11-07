@@ -20,7 +20,7 @@
 #define _INIT_SPINOR_FIELD_H
 
 int init_spinor_field(const int V, const int nr);
-int init_spinor_field32(const int V, const int nr);
+int init_spinor_field_32(const int V, const int nr);
 int init_csg_field(const int V);
 
 int allocate_spinor_field_array(spinor ***spinors,spinor **sp,const int V, const int nr);

@@ -115,7 +115,7 @@ int init_spinor_field_32(const int V, const int nr) {
   return(0);
 }
 
-void free_spinor_field32() {
+void free_spinor_field_32() {
 #if (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
   shfree(sp32);
 #else
