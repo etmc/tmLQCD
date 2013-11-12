@@ -273,19 +273,16 @@ double detratio_acc(const int id, hamiltonian_field_t * const hf) {
     boundary(mnl->kappa);
     chrono_guess(mnl->w_fields[0], mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array, 
 		 mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
+    g_sloppy_precision_flag = 0;   
     /*
-    g_sloppy_precision_flag = 0;
     mnl->iter0 += cg_her(mnl->w_fields[0], mnl->w_fields[1], mnl->maxiter, mnl->accprec, g_relative_precision_flag,
 			 VOLUME/2, mnl->Qsq);
-    mnl->Qm(mnl->w_fields[1], mnl->w_fields[0]);
-    g_sloppy_precision_flag = save_sloppy;
     */
-    
     //!Here we need a wrapper    
     mnl->iter0 += mixed_cg_her(mnl->w_fields[0], mnl->w_fields[1], mnl->maxiter, mnl->accprec, g_relative_precision_flag,
 			 VOLUME/2, mnl->Qsq, mnl->Qsq32);
     mnl->Qm(mnl->w_fields[1], mnl->w_fields[0]);
-    
+    g_sloppy_precision_flag = save_sloppy;
     /* Compute the energy contr. from second field */
     mnl->energy1 = square_norm(mnl->w_fields[1], VOLUME/2, 1);
   }
