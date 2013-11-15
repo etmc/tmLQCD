@@ -522,9 +522,6 @@ int main(int argc,char *argv[]) {
     fclose(parameterfile);
   }
 
-#ifdef MPI
-  MPI_Finalize();
-#endif
 #ifdef OMP
   free_omp_accumulators();
 #endif
@@ -540,6 +537,10 @@ int main(int argc,char *argv[]) {
   }
   free(input_filename);
   free(filename);
+#ifdef MPI
+  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Finalize();
+#endif
   return(0);
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)

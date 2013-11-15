@@ -415,9 +415,6 @@ int main(int argc,char *argv[])
 #endif
 
 
-#ifdef MPI
-  MPI_Finalize();
-#endif
 #ifdef OMP
   free_omp_accumulators();
 #endif
@@ -425,5 +422,9 @@ int main(int argc,char *argv[])
   free_geometry_indices();
   free_spinor_field();
   free_moment_field();
+#ifdef MPI
+  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Finalize();
+#endif
   return(0);
 }
