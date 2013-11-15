@@ -123,7 +123,7 @@ extern MPI_Datatype jfield_z_slice_gath;
 extern MPI_Datatype jfield_y_subslice;
 #endif
 
-#if ( defined PARALLELXYZT || defined PARALLELXYZ )
+#if ( defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELXYZ )
 extern MPI_Datatype field_z_slice_even_dn;
 extern MPI_Datatype field_z_slice_even_up;
 extern MPI_Datatype field_z_slice_odd_dn;
@@ -134,6 +134,19 @@ extern spinor * field_buffer_z ALIGN;
 extern spinor * field_buffer_z2 ALIGN;
 extern spinor * field_buffer_z3 ALIGN;
 extern spinor * field_buffer_z4 ALIGN;
+extern spinor * field_buffer_y ALIGN;
+extern spinor * field_buffer_y2 ALIGN;
+extern spinor * field_buffer_y3 ALIGN;
+extern spinor * field_buffer_y4 ALIGN;
+extern spinor * field_buffer_x ALIGN;
+extern spinor * field_buffer_x2 ALIGN;
+extern spinor * field_buffer_x3 ALIGN;
+extern spinor * field_buffer_x4 ALIGN;
+extern spinor * field_buffer_t ALIGN;
+extern spinor * field_buffer_t2 ALIGN;
+extern spinor * field_buffer_t3 ALIGN;
+extern spinor * field_buffer_t4 ALIGN;
+
 extern halfspinor * halffield_buffer_z ALIGN;
 extern halfspinor * halffield_buffer_z2 ALIGN;
 # endif

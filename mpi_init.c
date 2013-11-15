@@ -154,13 +154,25 @@ MPI_Datatype jfield_z_slice_gath;
 MPI_Datatype jfield_y_subslice;
 #endif
 
-#if ( defined PARALLELXYZT || defined PARALLELXYZ )
+#if ( defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELXYZ )
 MPI_Datatype field_z_slice_even_dn;
 MPI_Datatype field_z_slice_even_up;
 MPI_Datatype field_z_slice_odd_dn;
 MPI_Datatype field_z_slice_odd_up;
 
 # if (!defined _INDEX_INDEP_GEOM)
+spinor * field_buffer_t ALIGN;
+spinor * field_buffer_t2 ALIGN;
+spinor * field_buffer_t3 ALIGN;
+spinor * field_buffer_t4 ALIGN;
+spinor * field_buffer_x ALIGN;
+spinor * field_buffer_x2 ALIGN;
+spinor * field_buffer_x3 ALIGN;
+spinor * field_buffer_x4 ALIGN;
+spinor * field_buffer_y ALIGN;
+spinor * field_buffer_y2 ALIGN;
+spinor * field_buffer_y3 ALIGN;
+spinor * field_buffer_y4 ALIGN;
 spinor * field_buffer_z ALIGN;
 spinor * field_buffer_z2 ALIGN;
 spinor * field_buffer_z3 ALIGN;
@@ -351,6 +363,30 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   g_dbw2rand = (RAND + 2*EDGES);
 
 #  if (!defined _INDEX_INDEP_GEOM)
+#   if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+  field_buffer_t  = (spinor*)malloc(LX*LY*LZ/2*sizeof(spinor));
+  field_buffer_t2 = (spinor*)malloc(LX*LY*LZ/2*sizeof(spinor));
+#    ifdef _NON_BLOCKING
+  field_buffer_t3 = (spinor*)malloc(LX*LY*LZ/2*sizeof(spinor));
+  field_buffer_t4 = (spinor*)malloc(LX*LY*LZ/2*sizeof(spinor));
+#    endif
+#   endif
+#   if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+  field_buffer_x  = (spinor*)malloc(T*LY*LZ/2*sizeof(spinor));
+  field_buffer_x2 = (spinor*)malloc(T*LY*LZ/2*sizeof(spinor));
+#    ifdef _NON_BLOCKING
+  field_buffer_x3 = (spinor*)malloc(T*LY*LZ/2*sizeof(spinor));
+  field_buffer_x4 = (spinor*)malloc(T*LY*LZ/2*sizeof(spinor));
+#    endif
+#   endif
+#   if (defined PARALLELXYT || defined PARALLELXYZT)
+  field_buffer_y  = (spinor*)malloc(T*LX*LZ/2*sizeof(spinor));
+  field_buffer_y2 = (spinor*)malloc(T*LX*LZ/2*sizeof(spinor));
+#    ifdef _NON_BLOCKING
+  field_buffer_y3 = (spinor*)malloc(T*LX*LZ/2*sizeof(spinor));
+  field_buffer_y4 = (spinor*)malloc(T*LX*LZ/2*sizeof(spinor));
+#    endif
+#   endif
 #   if ( defined PARALLELXYZT ||  defined PARALLELXYZ )
   field_buffer_z = (spinor*)malloc(T*LX*LY/2*sizeof(spinor));
   field_buffer_z2 = (spinor*)malloc(T*LX*LY/2*sizeof(spinor));
@@ -360,8 +396,8 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
 #    endif
   halffield_buffer_z = (halfspinor*)malloc(T*LX*LY/2*sizeof(halfspinor));
   halffield_buffer_z2 = (halfspinor*)malloc(T*LX*LY/2*sizeof(halfspinor));
+#   endif
 #  endif
-# endif
 
   MPI_Cart_create(MPI_COMM_WORLD, nalldims, dims, periods, reorder, &g_cart_grid);
   MPI_Comm_rank(g_cart_grid, &g_cart_id);
