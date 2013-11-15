@@ -477,9 +477,6 @@ int main(int argc, char *argv[])
     nstore += Nsave;
   }
 
-#ifdef MPI
-  MPI_Finalize();
-#endif
 #ifdef OMP
   free_omp_accumulators();
 #endif
@@ -492,6 +489,10 @@ int main(int argc, char *argv[])
   free_chi_spinor_field();
   free(filename);
   free(input_filename);
+#ifdef MPI
+  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Finalize();
+#endif
   return(0);
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)
