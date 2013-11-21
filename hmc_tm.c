@@ -420,6 +420,9 @@ int main(int argc,char *argv[]) {
        * then the configuration is currently stored in .conf.tmp, written out by update_tm.
        * In that case also a readback was performed, so no need to test .conf.tmp
        * In all other cases the gauge configuration still needs to be written out here. */
+
+      sprintf(tmp_filename,".conf.t%05d.tmp",trajectory_counter);
+
       if (!(return_check && accept))
         for (unsigned int attempt = 1; attempt <= io_max_attempts; ++attempt)
         {

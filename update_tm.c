@@ -97,7 +97,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   hf.traj_counter = traj_counter;
   integrator_set_fields(&hf);
 
-  strcpy(tmp_filename, ".conf.tmp");
+  sprintf(tmp_filename, ".conf.t%05d.tmp",traj_counter);
   atime = gettime();
 
   /*
