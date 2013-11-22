@@ -400,7 +400,7 @@ int main(int argc,char *argv[]) {
 	printf("Reading Gauge field from file %s\n", gauge_input_filename); fflush(stdout);
       }
       
-      read_gauge_field_time_p(gauge_input_filename);
+      read_gauge_field_time_p(gauge_input_filename,g_gauge_field);
     }
   }
   if(startoption != 3){
@@ -444,7 +444,7 @@ int main(int argc,char *argv[]) {
       if (g_proc_id == 0){
 	printf("Reading Gauge field from file %s\n", gauge_input_filename); fflush(stdout);
       }
-      read_gauge_field_time_p(gauge_input_filename);
+      read_gauge_field_time_p(gauge_input_filename,g_gauge_field);
     }
 
   }
