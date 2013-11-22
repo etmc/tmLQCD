@@ -159,6 +159,7 @@ int read_gauge_field(char * filename, su3 ** const gf) {
     }
   }
 
+  free(ildgformat_input);
   destruct_reader(reader);
 
   g_update_gauge_copy = 1;
