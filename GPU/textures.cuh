@@ -36,17 +36,25 @@
  const textureReference* nn_texRefPtr = NULL;
  cudaChannelFormatDesc nn_channelDesc;
 
- /* texture for spinor field */
- texture<float4,1, cudaReadModeElementType> spin_tex;
- const textureReference* spin_texRefPtr = NULL;
- cudaChannelFormatDesc spin_channelDesc;
-
- /* texture for spinor field 2*/
+ /* textures for spinor field */
+ texture<float4,1, cudaReadModeElementType> spin_tex0;
+ texture<float4,1, cudaReadModeElementType> spin_tex1;
  texture<float4,1, cudaReadModeElementType> spin_tex2;
- const textureReference* spin_texRefPtr2 = NULL;
- cudaChannelFormatDesc spin_channelDesc2;
-
-
+ texture<float4,1, cudaReadModeElementType> spin_tex3; 
+ texture<float4,1, cudaReadModeElementType> spin_tex4;
+ texture<float4,1, cudaReadModeElementType> spin_tex5;
+ 
+  /* textures for down type spinor field */
+ texture<float4,1, cudaReadModeElementType> spin_tex_dn0;
+ texture<float4,1, cudaReadModeElementType> spin_tex_dn1;
+ texture<float4,1, cudaReadModeElementType> spin_tex_dn2;
+ texture<float4,1, cudaReadModeElementType> spin_tex_dn3; 
+ texture<float4,1, cudaReadModeElementType> spin_tex_dn4;
+ texture<float4,1, cudaReadModeElementType> spin_tex_dn5;
+ 
+ texture<float2,1,cudaReadModeElementType> sw_tex;
+ texture<float2,1,cudaReadModeElementType> sw_inv_tex;
+ 
 #ifndef HALF
  /* texture for gauge field */
  texture<float4,1, cudaReadModeElementType> gf_tex;
@@ -57,63 +65,155 @@
 extern "C" int bind_texture_spin(dev_spinor* s, int i){
   
   size_t size;
-  
+  int offset;
   #ifdef MPI
     if(even_odd_flag){
-      size = sizeof(float4)*6*(VOLUME+RAND)/2;
+      size = sizeof(float4)*(VOLUME+RAND)/2;
+      offset = (VOLUME+RAND)/2;
     }
     else{
-      size = sizeof(float4)*6*(VOLUME+RAND);
+      size = sizeof(float4)*(VOLUME+RAND);
+      offset = (VOLUME+RAND);
     }
   #else
     if(even_odd_flag){
-      size = sizeof(float4)*6*VOLUME/2;
+      size = sizeof(float4)*VOLUME/2;
+      offset = VOLUME/2;
     }
     else{
-      size = sizeof(float4)*6*VOLUME;
+      size = sizeof(float4)*VOLUME;
+      offset = VOLUME;
     }
   #endif
    
+
+  //printf("Binding texture to spinorfield 1\n");
+    cudaBindTexture(0, spin_tex0, s, size);
+    cudaBindTexture(0, spin_tex1, s+offset, size);
+    cudaBindTexture(0, spin_tex2, s+2*offset, size);
+    cudaBindTexture(0, spin_tex3, s+3*offset, size);
+    cudaBindTexture(0, spin_tex4, s+4*offset, size);
+    cudaBindTexture(0, spin_tex5, s+5*offset, size);  
+  //printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
   
-  switch(i){
-    case 1:
-      //printf("Binding texture to spinorfield 1\n");
-      spin_texRefPtr = NULL;
-      cudaGetTextureReference(&spin_texRefPtr, "spin_tex");
-      spin_channelDesc =  cudaCreateChannelDesc<float4>();
-      cudaBindTexture(0, spin_texRefPtr, s, &spin_channelDesc, size);
-      //printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
-      return(0);
-   
-    case 2:
-      //printf("Binding texture to spinorfield 2\n");
-      spin_texRefPtr2 = NULL;
-      cudaGetTextureReference(&spin_texRefPtr2, "spin_tex2");
-      spin_channelDesc2 =  cudaCreateChannelDesc<float4>();
-      cudaBindTexture(0, spin_texRefPtr2, s, &spin_channelDesc2, size);
-      //printf("%s\n", cudaGetErrorString(cudaGetLastError()));  
-      return(0);
-  }
-return(1);  
+  return(0);
 }
+
+
+extern "C" int bind_texture_sw(float2* sw){
+  
+  size_t size;
+  int offset;
+  #ifdef MPI
+      size = sizeof(float2)*6*9*(VOLUME);
+  #else
+      size = sizeof(float2)*6*9*VOLUME;
+  #endif
+   
+
+  //printf("Binding texture to spinorfield 1\n");
+    cudaBindTexture(0, sw_tex, sw, size);
+  //printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
+  
+  return(0);
+}
+
+
+extern "C" int unbind_texture_sw(){
+  cudaUnbindTexture(sw_tex);
+}
+
+
+
+
+extern "C" int bind_texture_sw_inv(float2* sw_inv){
+  
+  size_t size;
+  int offset;
+  #ifdef MPI
+      size = sizeof(float2)*8*9*(VOLUME);
+  #else
+      size = sizeof(float2)*8*9*VOLUME;
+  #endif
+   
+
+  //printf("Binding texture to spinorfield 1\n");
+    cudaBindTexture(0, sw_inv_tex, sw_inv, size);
+  //printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
+  
+  return(0);
+}
+
+extern "C" int unbind_texture_sw_inv(){
+  cudaUnbindTexture(sw_inv_tex);
+}
+
+
+
 
 
 extern "C" int unbind_texture_spin(int i){
-  switch(i){
-    case 1:
-      //printf("Unbinding texture of spinorfield 1\n");
-      cudaUnbindTexture(spin_texRefPtr);
-      //printf("%s\n", cudaGetErrorString(cudaGetLastError()));    
-      return(0);
-    case 2:
-      //printf("Unbinding texture of spinorfield 2\n");
-      cudaUnbindTexture(spin_texRefPtr2);
-      //printf("%s\n", cudaGetErrorString(cudaGetLastError()));    
-      return(0);    
-  }
-  
+  cudaUnbindTexture(spin_tex0);
+  cudaUnbindTexture(spin_tex1);
+  cudaUnbindTexture(spin_tex2);
+  cudaUnbindTexture(spin_tex3);
+  cudaUnbindTexture(spin_tex4);
+  cudaUnbindTexture(spin_tex5);
 return(1);
 }
+
+
+
+extern "C" int bind_texture_spin_dn(dev_spinor* s, int i){
+  
+  size_t size;
+  int offset;
+  #ifdef MPI
+    if(even_odd_flag){
+      size = sizeof(float4)*(VOLUME+RAND)/2;
+      offset = (VOLUME+RAND)/2;
+    }
+    else{
+      size = sizeof(float4)*(VOLUME+RAND);
+      offset = (VOLUME+RAND);
+    }
+  #else
+    if(even_odd_flag){
+      size = sizeof(float4)*VOLUME/2;
+      offset = VOLUME/2;
+    }
+    else{
+      size = sizeof(float4)*VOLUME;
+      offset = VOLUME;
+    }
+  #endif
+   
+
+  //printf("Binding texture to spinorfield 1\n");
+    cudaBindTexture(0, spin_tex_dn0, s, size);
+    cudaBindTexture(0, spin_tex_dn1, s+offset, size);
+    cudaBindTexture(0, spin_tex_dn2, s+2*offset, size);
+    cudaBindTexture(0, spin_tex_dn3, s+3*offset, size);
+    cudaBindTexture(0, spin_tex_dn4, s+4*offset, size);
+    cudaBindTexture(0, spin_tex_dn5, s+5*offset, size);  
+  //printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
+  
+  return(0);
+}
+
+
+extern "C" int unbind_texture_spin_dn(int i){
+  cudaUnbindTexture(spin_tex_dn0);
+  cudaUnbindTexture(spin_tex_dn1);
+  cudaUnbindTexture(spin_tex_dn2);
+  cudaUnbindTexture(spin_tex_dn3);
+  cudaUnbindTexture(spin_tex_dn4);
+  cudaUnbindTexture(spin_tex_dn5);
+return(1);
+}
+
+
+
 
 
 
@@ -151,10 +251,12 @@ extern "C" int bind_texture_gf(dev_su3_2v * gf){
      size_t size = sizeof(float4)*3*VOLUME*4;
     #endif
   #endif
- 
+ /*
  cudaGetTextureReference(&gf_texRefPtr, "gf_tex");
  gf_channelDesc =  cudaCreateChannelDesc<float4>();
  cudaBindTexture(0, gf_texRefPtr, gf, &gf_channelDesc, size);
+ */
+ cudaBindTexture(0, gf_tex, gf, size);
  //printf("%s\n", cudaGetErrorString(cudaGetLastError()));    
  return(0);
 }
@@ -162,7 +264,10 @@ extern "C" int bind_texture_gf(dev_su3_2v * gf){
 
 extern "C" int unbind_texture_gf(){
  //printf("Unbinding texture to gaugefield\n");
+ /*
  cudaUnbindTexture(gf_texRefPtr);
+ */
+ cudaUnbindTexture(gf_tex);
  //printf("%s\n", cudaGetErrorString(cudaGetLastError()));    
  return(0);
 }

@@ -34,6 +34,13 @@ void apply_inv_gtrafo_spinor_even(spinor * spin, su3 * trafofield);
 
 void copy_gauge_field(su3** to, su3** from);
 
+int init_temporalgauge(const int V, su3** gfield); 
+void from_temporalgauge(spinor * const spin1,spinor * const spin2);
+void to_temporalgauge(su3** gfield, spinor * const spin1,spinor * const spin2); 
+
+void to_temporalgauge_invert_eo( su3** gfield, spinor * const spineven, spinor * const spinodd);
+void from_temporalgauge_invert_eo(spinor * const spineven, spinor * const spinodd, spinor * const spineven_new, spinor * const spinodd_new);
+
 #endif
 
 

@@ -85,6 +85,18 @@
 #include "operator/Dov_psi.h"
 #include "solver/spectral_proj.h"
 
+#ifdef HAVE_GPU
+extern void init_mixedsolve_eo(su3** gf);
+extern void init_mixedsolve(su3** gf);
+extern void finalize_mixedsolve();
+extern void init_gpu_fields(int need_momenta);
+extern void finalize_gpu_fields();
+#include "GPU/cudadefs.h"
+  #ifdef TEMPORALGAUGE
+     #include "temporalgauge.h" 
+   #endif
+#endif
+
 extern int nstore;
 int check_geometry();
 
@@ -251,6 +263,28 @@ int main(int argc, char *argv[])
 
   init_operators();
 
+  #ifdef HAVE_GPU
+   if(usegpu_flag){
+    if(even_odd_flag){
+       init_mixedsolve_eo(g_gauge_field);
+    }
+    else{
+      init_mixedsolve(g_gauge_field);
+    }
+    #ifdef GPU_DOUBLE
+      /*init double fields w/o momenta*/
+      init_gpu_fields(0);
+    #endif
+    #ifdef TEMPORALGAUGE
+      int retval;
+      if((retval=init_temporalgauge(VOLUME, g_gauge_field)) !=0){
+	if(g_proc_id == 0) printf("Error while initializing temporal gauge. Aborting...\n");   
+	exit(200);
+      }
+    #endif
+   }//usegpu_flag
+  #endif  
+  
   /* this could be maybe moved to init_operators */
 #ifdef _USE_HALFSPINOR
   j = init_dirac_halfspinor();
@@ -480,6 +514,20 @@ int main(int argc, char *argv[])
 #ifdef OMP
   free_omp_accumulators();
 #endif
+
+#ifdef HAVE_GPU
+ if(usegpu_flag){
+  finalize_mixedsolve();
+  #ifdef GPU_DOUBLE
+    finalize_gpu_fields();
+  #endif
+    #ifdef TEMPORALGAUGE
+      finalize_temporalgauge();
+    #endif
+ }
+#endif
+
+
   free_blocks();
   free_dfl_subspace();
   free_gauge_field();

@@ -41,6 +41,17 @@
 #include "monomial/monomial.h"
 #include "det_monomial.h"
 
+#ifdef HAVE_GPU
+#include"../GPU/cudadefs.h"
+extern int mixed_solve (spinor * const P, spinor * const Q, const int max_iter, 
+                        double eps, const int rel_prec,const int N);
+extern  int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int max_iter, 
+                            double eps, const int rel_prec, const int N);
+   #ifdef TEMPORALGAUGE
+     #include "../temporalgauge.h" 
+   #endif
+#endif
+
 /* think about chronological solver ! */
 
 void det_derivative(const int id, hamiltonian_field_t * const hf) {
@@ -64,29 +75,86 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
     if(mnl->solver != CG) {
       fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (det_monomial.c)\n");
     }
-    
-    /* Invert Q_{+} Q_{-} */
-    /* X_o -> w_fields[1] */
-    chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
-		 mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
-    mnl->iter1 += cg_her(mnl->w_fields[1], mnl->pf, mnl->maxiter, mnl->forceprec, 
-			 g_relative_precision_flag, VOLUME/2, mnl->Qsq);
-    chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
-			mnl->csg_N, &mnl->csg_n, VOLUME/2);
-    
-    /* Y_o -> w_fields[0]  */
-    mnl->Qm(mnl->w_fields[0], mnl->w_fields[1]);
-    
-    /* apply Hopping Matrix M_{eo} */
-    /* to get the even sites of X_e */
-    H_eo_tm_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EO, -1.);
-    /* \delta Q sandwitched by Y_o^\dagger and X_e */
-    deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
-    
-    /* to get the even sites of Y_e */
-    H_eo_tm_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1);
-    /* \delta Q sandwitched by Y_e^\dagger and X_o */
-    deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor);
+
+      #ifdef HAVE_GPU
+  
+      if(usegpu_flag){
+	chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+		    mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
+        if(g_proc_id == 0) printf("Using GPU for det inversion\n");		    
+        #ifdef TEMPORALGAUGE
+          to_temporalgauge(g_gauge_field,mnl->pf, mnl->w_fields[1]);
+        #endif          
+        mnl->iter1 += linsolve_eo_gpu(mnl->w_fields[1], mnl->pf, mnl->maxiter, mnl->forceprec, g_relative_precision_flag, VOLUME/2);			     
+        #ifdef TEMPORALGAUGE
+          from_temporalgauge( mnl->pf, mnl->w_fields[1]);
+        #endif        
+	chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
+			    mnl->csg_N, &mnl->csg_n, VOLUME/2);
+	
+	/* Y_o -> w_fields[0]  */
+	mnl->Qm(mnl->w_fields[0], mnl->w_fields[1]);
+	
+	/* apply Hopping Matrix M_{eo} */
+	/* to get the even sites of X_e */
+	H_eo_tm_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EO, -1.);
+	
+	/* \delta Q sandwitched by Y_o^\dagger and X_e */
+        gpu_deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor);
+	
+	/* to get the even sites of Y_e */
+	H_eo_tm_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1);
+	/* \delta Q sandwitched by Y_e^\dagger and X_o */
+        gpu_deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor);	
+      }
+      else{
+	/* Invert Q_{+} Q_{-} */
+	/* X_o -> w_fields[1] */
+	chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+		    mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
+	mnl->iter1 += cg_her(mnl->w_fields[1], mnl->pf, mnl->maxiter, mnl->forceprec, 
+			    g_relative_precision_flag, VOLUME/2, mnl->Qsq);
+	chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
+			    mnl->csg_N, &mnl->csg_n, VOLUME/2);
+	
+	/* Y_o -> w_fields[0]  */
+	mnl->Qm(mnl->w_fields[0], mnl->w_fields[1]);
+	
+	/* apply Hopping Matrix M_{eo} */
+	/* to get the even sites of X_e */
+	H_eo_tm_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EO, -1.);
+	/* \delta Q sandwitched by Y_o^\dagger and X_e */
+	deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
+	
+	/* to get the even sites of Y_e */
+	H_eo_tm_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1);
+	/* \delta Q sandwitched by Y_e^\dagger and X_o */
+	deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor);	
+      }
+      #else
+	/* Invert Q_{+} Q_{-} */
+	/* X_o -> w_fields[1] */
+	chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+		    mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
+	mnl->iter1 += cg_her(mnl->w_fields[1], mnl->pf, mnl->maxiter, mnl->forceprec, 
+			    g_relative_precision_flag, VOLUME/2, mnl->Qsq);
+	chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
+			    mnl->csg_N, &mnl->csg_n, VOLUME/2);
+	
+	/* Y_o -> w_fields[0]  */
+	mnl->Qm(mnl->w_fields[0], mnl->w_fields[1]);
+	
+	/* apply Hopping Matrix M_{eo} */
+	/* to get the even sites of X_e */
+	H_eo_tm_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EO, -1.);
+	/* \delta Q sandwitched by Y_o^\dagger and X_e */
+	deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
+	
+	/* to get the even sites of Y_e */
+	H_eo_tm_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1);
+	/* \delta Q sandwitched by Y_e^\dagger and X_o */
+	deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor);
+   #endif //HAVE_GPU
   } 
   else {
     /*********************************************************************
@@ -212,8 +280,26 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
     chrono_guess(mnl->w_fields[0], mnl->pf, mnl->csg_field, mnl->csg_index_array,
     	 mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
     g_sloppy_precision_flag = 0;
+    
+    #ifdef HAVE_GPU
+      if(usegpu_flag){ 
+        #ifdef TEMPORALGAUGE
+          to_temporalgauge(g_gauge_field,mnl->pf, mnl->w_fields[0] );
+        #endif          
+        mnl->iter0 = linsolve_eo_gpu(mnl->w_fields[0], mnl->pf, mnl->maxiter, mnl->accprec, g_relative_precision_flag, VOLUME/2);			     
+	#ifdef TEMPORALGAUGE
+          from_temporalgauge( mnl->pf,mnl->w_fields[0] );
+        #endif  	
+      }
+      else{
+        mnl->iter0 = cg_her(mnl->w_fields[0], mnl->pf, mnl->maxiter, mnl->accprec, g_relative_precision_flag,
+    			VOLUME/2, mnl->Qsq);      
+      }
+    #else
     mnl->iter0 = cg_her(mnl->w_fields[0], mnl->pf, mnl->maxiter, mnl->accprec, g_relative_precision_flag,
     			VOLUME/2, mnl->Qsq);
+    #endif //HAVE_GPU		
+			
     mnl->Qm(mnl->w_fields[1], mnl->w_fields[0]);
     g_sloppy_precision_flag = save_sloppy;
     /* Compute the energy contr. from first field */

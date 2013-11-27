@@ -103,8 +103,16 @@ void X_psi(spinor * const R, spinor * const S, double const mstarsq){
       // call mixed_solve_DiracDaggerDaggerD for double precision calculations on gpu - may be faster if the device supports compute capability >= 2.0 (fermi generation)
       {//include M^{*2} into twisted mass g_mu => saves one assign_multiply_add;
         g_mu=sqrt(g_mu*g_mu+mstarsq);
-        mixed_solve_DiracDaggerDirac ( R, S, X_psiSIterations, X_psiSPrecision, 0/*!rel_prec*/, VOLUME);
-        //mixed_solve_DiracDaggerDiracD( R, S, X_psiSIterations, X_psiSPrecision, 0/*!rel_prec*/, VOLUME);
+        
+	//FIXME
+	//mixed_solve_DiracDaggerDirac not available any more. 
+	fprintf(stderr, "Error: mixed_solve_DiracDaggerDirac called. Aborting...\n");
+	exit(200);
+	
+	//mixed_solve_DiracDaggerDirac ( R, S, X_psiSIterations, X_psiSPrecision, 0/*!rel_prec*/, VOLUME);
+        
+	
+	////mixed_solve_DiracDaggerDiracD( R, S, X_psiSIterations, X_psiSPrecision, 0/*!rel_prec*/, VOLUME);
         g_mu=g_muWithoutMStarSquare;
       }
     }
@@ -162,8 +170,14 @@ void X_psiSquare(spinor * const R, spinor * const S, double const mstarsq)
         double g_muWithoutMStarSquare=g_mu;
 
         g_mu=sqrt(g_mu*g_mu+mstarsq);
-        mixed_solve_DiracDaggerDiracDiracDaggerDirac ( R, S, X_psiSIterations, X_psiSPrecision, 0/*!rel_prec*/, VOLUME);
-        //mixed_solve_DiracDaggerDiracDiracDagerDiracD( R, S, X_psiSIterations, X_psiSPrecision, 0/*!rel_prec*/, VOLUME);
+	
+	//FIXME
+	//mixed_solve_DiracDaggerDirac not available any more. 
+	fprintf(stderr, "Error: mixed_solve_DiracDaggerDirac called. Aborting...\n");
+	exit(200);	
+	
+        //mixed_solve_DiracDaggerDiracDiracDaggerDirac ( R, S, X_psiSIterations, X_psiSPrecision, 0/*!rel_prec*/, VOLUME);
+        ////mixed_solve_DiracDaggerDiracDiracDagerDiracD( R, S, X_psiSIterations, X_psiSPrecision, 0/*!rel_prec*/, VOLUME);
         g_mu=g_muWithoutMStarSquare;
       }//R holds now the value of (D^+DD^+D)^-1 !
 

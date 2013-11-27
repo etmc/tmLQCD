@@ -72,6 +72,17 @@
 #include "sighandler.h"
 #include "measurements.h"
 
+#ifdef HAVE_GPU
+#include "GPU/cudadefs.h"
+extern void init_mixedsolve_eo(su3** gf);
+extern void finalize_mixedsolve();
+extern void init_gpu_fields(int need_momenata);
+extern void finalize_gpu_fields();
+   #ifdef TEMPORALGAUGE
+     #include "temporalgauge.h" 
+   #endif
+#endif
+
 extern int nstore;
 
 int const rlxdsize = 105;
@@ -387,6 +398,21 @@ int main(int argc,char *argv[]) {
     fclose(countfile);
   }
 
+  #ifdef HAVE_GPU
+  if(usegpu_flag){
+    init_mixedsolve_eo(g_gauge_field);
+    /*init double fields with momentum field*/
+    init_gpu_fields(1);
+    #ifdef TEMPORALGAUGE
+      int retval;
+      if((retval=init_temporalgauge(VOLUME, g_gauge_field)) !=0){
+	if(g_proc_id == 0) printf("Error while initializing temporal gauge. Aborting...\n");   
+	exit(200);
+      }
+    #endif
+  }
+  #endif
+
 
   /* Loop for measurements */
   for(j = 0; j < Nmeas; j++) {
@@ -542,6 +568,15 @@ int main(int argc,char *argv[]) {
 
 #ifdef OMP
   free_omp_accumulators();
+#endif
+#ifdef HAVE_GPU
+ if(usegpu_flag){
+  finalize_mixedsolve();
+  finalize_gpu_fields();
+    #ifdef TEMPORALGAUGE
+      finalize_temporalgauge();
+    #endif
+ }
 #endif
   free_gauge_tmp();
   free_gauge_field();
