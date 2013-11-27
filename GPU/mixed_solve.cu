@@ -2253,9 +2253,10 @@ extern "C" void init_mixedsolve_eo(su3** gf){
   	#else
     	  // device number = mpi rank
           printf("num_gpu_per_node = %d\n", num_gpu_per_node);
-    	  if ((g_cart_id%num_gpu_per_node) < ndev) {
-    	    printf("Process %d of %d: Setting active device to: %d\n", g_proc_id, g_nproc, g_cart_id%num_gpu_per_node);
-    	    cudaSetDevice((g_cart_id%num_gpu_per_node));
+	  printf("first device = %d\n", device_num);
+    	  if (((g_cart_id + device_num)%num_gpu_per_node ) < ndev) {
+    	    printf("Process %d of %d: Setting active device to: %d\n", g_proc_id, g_nproc, (g_cart_id + device_num)%num_gpu_per_node);
+    	    cudaSetDevice(((g_cart_id + device_num)%num_gpu_per_node));
 	  }
     	  else {
     	    fprintf(stderr, "Process %d of %d: Error: There is no CUDA device with No. %d. Aborting...\n", g_proc_id, g_nproc, g_cart_id);
