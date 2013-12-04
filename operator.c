@@ -184,8 +184,12 @@ int init_operators() {
 	optr->applyQ = &Qov_psi;
       }
       else if(optr->type == DBTMWILSON) {
-	optr->even_odd_flag = 1;
-	optr->applyDbQsq = &Qtm_pm_ndpsi;
+	if(optr->even_odd_flag){
+	  optr->applyDbQsq = &Qtm_pm_ndpsi;
+	}
+	else{
+	 optr->applyDbQsq = &Q_pm_ndpsi; 
+	}
 	/* TODO: this should be here!       */
 	/* Chi`s-spinors  memory allocation */
 	/*       if(init_chi_spinor_field(VOLUMEPLUSRAND/2, 20) != 0) { */
@@ -315,7 +319,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 	optr->iterations = invert_doublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3, 
 					      optr->sr0, optr->sr1, optr->sr2, optr->sr3,
 					      optr->eps_sq, optr->maxiter,
-					      optr->solver, optr->rel_prec);
+					      optr->solver, optr->rel_prec, optr->even_odd_flag);
       }
       else {
 	optr->iterations = invert_cloverdoublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3, 
