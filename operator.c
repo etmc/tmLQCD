@@ -315,6 +315,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
     }
 
     for(i = 0; i < SourceInfo.no_flavours; i++) {
+      g_mu = optr->mubar;
       if(optr->type != DBCLOVER) {
 	optr->iterations = invert_doublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3, 
 					      optr->sr0, optr->sr1, optr->sr2, optr->sr3,
@@ -327,7 +328,6 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 						    optr->eps_sq, optr->maxiter,
 						    optr->solver, optr->rel_prec);
       }
-      g_mu = optr->mubar;
       if(optr->type != DBCLOVER) {
 	M_full(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], optr->prop0, optr->prop1); 
       }

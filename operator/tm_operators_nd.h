@@ -47,10 +47,16 @@ void Qsw_pm_ndbipsi(bispinor * const bisp_l, bispinor * const bisp_k);
 void Q_pm_ndpsi(spinor * const l_strange, spinor * const l_charm, 
 		spinor * const k_strange, spinor * const k_charm);
 void Q_minus_ndpsi(spinor * const l_strange, spinor * const l_charm, spinor * const k_strange, spinor * const k_charm);
+void Q_plus_ndpsi(spinor * const l_strange, spinor * const l_charm, spinor * const k_strange, spinor * const k_charm);
 
 void Q_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
 			    spinor * const k_strange, spinor * const k_charm, 
 			    const _Complex double z, const double Cpol, const double invev);
+
+void Q_tau1_sub_const_ndpsi_D_psi(spinor * const l_strange, spinor * const l_charm,
+			    spinor * const k_strange, spinor * const k_charm, 
+			    const _Complex double z, const double Cpol, const double invev);
+
 void Qsw_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
 			      spinor * const k_strange, spinor * const k_charm, 
 			      const _Complex double z, const double Cpol, const double invev);

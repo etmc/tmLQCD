@@ -294,9 +294,9 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
     convert_eo_to_lexic(g_spinor_field[DUM_DERI+2], Even_new_s, Odd_new_s);
     convert_eo_to_lexic(g_spinor_field[DUM_DERI+3], Even_new_c, Odd_new_c);    
     
-//     gamma5(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI], VOLUME);
-//     gamma5(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], VOLUME);   
-//     
+    gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME);
+    gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], VOLUME);   
+     
     iter = cg_her_nd(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
 		     max_iter, precision, rel_prec, 
 		     VOLUME, &Q_pm_ndpsi);

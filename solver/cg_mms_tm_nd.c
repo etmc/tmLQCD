@@ -75,15 +75,20 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
   atime = gettime();
   if(solver_pm->sdim == VOLUME) {
     init_solver_field(&solver_field, VOLUMEPLUSRAND, 2*nr_sf);
+    // don't need boundaries, because we never apply f to them
+    // so N is enough
+    //init_mms_tm_nd(shifts, solver_pm->N);
+    init_mms_tm_nd(shifts, VOLUMEPLUSRAND);    
   } 
   else {
     init_solver_field(&solver_field, VOLUMEPLUSRAND/2, 2*nr_sf); 
+    // don't need boundaries, because we never apply f to them
+    // so N is enough
+    //init_mms_tm_nd(shifts, solver_pm->N);
+    init_mms_tm_nd(shifts, VOLUMEPLUSRAND/2);  
   } 
 
-  // don't need boundaries, because we never apply f to them
-  // so N is enough
-  //init_mms_tm_nd(shifts, solver_pm->N);
-  init_mms_tm_nd(shifts, VOLUMEPLUSRAND/2);
+
   zero_spinor_field(Pup[0], N);
   zero_spinor_field(Pdn[0], N);
   assign(ps_mms_solver[0], Qup, N);
