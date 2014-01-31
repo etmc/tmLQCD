@@ -87,6 +87,15 @@
 (r).d8+= ((-(a)[0][0].im-(a)[1][1].im + 2.0*a[2][2].im)*0.577350269189625);
 
 
+#define _trace_lambda_mul_add_assign_dev(r,c,a) \
+(r).d1+= c*(-(a)[1][0].im-(a)[0][1].im); \
+(r).d2+= c*(+(a)[1][0].re-(a)[0][1].re); \
+(r).d3+= c*(-(a)[0][0].im+(a)[1][1].im); \
+(r).d4+= c*(-(a)[2][0].im-(a)[0][2].im); \
+(r).d5+= c*(+(a)[2][0].re-(a)[0][2].re); \
+(r).d6+= c*(-(a)[2][1].im-(a)[1][2].im); \
+(r).d7+= c*(+(a)[2][1].re-(a)[1][2].re); \
+(r).d8+= c*((-(a)[0][0].im-(a)[1][1].im + 2.0*a[2][2].im)*0.577350269189625);
 
 
 //this adds two su3 vectors where a and b are given as spinors 
@@ -141,7 +150,7 @@ __device__ void dev_vector_i_sub_spinorcomponent(dev_su3_vec_d * out, dev_spinor
 
 
 
-__global__ void dev_deriv_Sb(dev_su3adj* df0, dev_su3_2v_d * gf,dev_spinor_d * l, dev_spinor_d * k, 
+__global__ void dev_deriv_Sb(dev_su3adj* df0, dev_su3_2v_d * gf,dev_spinor_d * l, dev_spinor_d * k, double factor, 
                               const int * gfindex_site, const int* gfindex_nextsite, 
                               const int * nn_evenodd, const int eo, int start, int size) {
 
@@ -201,7 +210,7 @@ __global__ void dev_deriv_Sb(dev_su3adj* df0, dev_su3_2v_d * gf,dev_spinor_d * l
     _vector_tensor_vector_add_dev(v1, phia, psia, phib, psib);
     dev_su3_ti_su3d_d(&(v2), &(up), &(v1));
     _complex_times_su3_dev(v1,dev_k0c_d,v2);
-    _trace_lambda_add_assign_dev(df0[4*gfindex_site[pos]+0], v1);
+    _trace_lambda_mul_add_assign_dev(df0[4*gfindex_site[pos]+0], 2.0*factor, v1);
 
     /************** direction -0 ****************************/
 
@@ -230,7 +239,7 @@ __global__ void dev_deriv_Sb(dev_su3adj* df0, dev_su3_2v_d * gf,dev_spinor_d * l
     _vector_tensor_vector_add_dev(v1, psia, phia, psib, phib);
     dev_su3_ti_su3d_d(&(v2), &(um), &(v1));
     _complex_times_su3_dev(v1,dev_k0c_d,v2);
-    _trace_lambda_add_assign_dev(df0[4*gfindex_nextsite[hoppos]+0], v1);
+    _trace_lambda_mul_add_assign_dev(df0[4*gfindex_nextsite[hoppos]+0], 2.0*factor, v1);
 
 
     /*************** direction +1 **************************/
@@ -260,7 +269,7 @@ __global__ void dev_deriv_Sb(dev_su3adj* df0, dev_su3_2v_d * gf,dev_spinor_d * l
     _vector_tensor_vector_add_dev(v1, phia, psia, phib, psib);
     dev_su3_ti_su3d_d(&(v2), &(up), &(v1));
     _complex_times_su3_dev(v1,dev_k1c_d,v2);
-    _trace_lambda_add_assign_dev(df0[4*gfindex_site[pos]+1], v1);
+    _trace_lambda_mul_add_assign_dev(df0[4*gfindex_site[pos]+1], 2.0*factor, v1);
 
 
     
@@ -291,7 +300,7 @@ __global__ void dev_deriv_Sb(dev_su3adj* df0, dev_su3_2v_d * gf,dev_spinor_d * l
     _vector_tensor_vector_add_dev(v1, psia, phia, psib, phib);
     dev_su3_ti_su3d_d(&(v2), &(um), &(v1));
     _complex_times_su3_dev(v1,dev_k1c_d,v2);
-    _trace_lambda_add_assign_dev(df0[4*gfindex_nextsite[hoppos]+1], v1);
+    _trace_lambda_mul_add_assign_dev(df0[4*gfindex_nextsite[hoppos]+1], 2.0*factor, v1);
 
 
     /*************** direction +2 **************************/
@@ -321,7 +330,7 @@ __global__ void dev_deriv_Sb(dev_su3adj* df0, dev_su3_2v_d * gf,dev_spinor_d * l
     _vector_tensor_vector_add_dev(v1, phia, psia, phib, psib);
     dev_su3_ti_su3d_d(&(v2), &(up), &(v1));
     _complex_times_su3_dev(v1,dev_k2c_d,v2);
-    _trace_lambda_add_assign_dev(df0[4*gfindex_site[pos]+2], v1);
+    _trace_lambda_mul_add_assign_dev(df0[4*gfindex_site[pos]+2], 2.0*factor, v1);
 
     /***************** direction -2 ************************/
 
@@ -350,7 +359,7 @@ __global__ void dev_deriv_Sb(dev_su3adj* df0, dev_su3_2v_d * gf,dev_spinor_d * l
     _vector_tensor_vector_add_dev(v1, psia, phia, psib, phib);
     dev_su3_ti_su3d_d(&(v2), &(um), &(v1));
     _complex_times_su3_dev(v1,dev_k2c_d,v2);
-    _trace_lambda_add_assign_dev(df0[4*gfindex_nextsite[hoppos]+2], v1);
+    _trace_lambda_mul_add_assign_dev(df0[4*gfindex_nextsite[hoppos]+2], 2.0*factor, v1);
 
 
     /****************** direction +3 ***********************/
@@ -380,7 +389,7 @@ __global__ void dev_deriv_Sb(dev_su3adj* df0, dev_su3_2v_d * gf,dev_spinor_d * l
     _vector_tensor_vector_add_dev(v1, phia, psia, phib, psib);
     dev_su3_ti_su3d_d(&(v2), &(up), &(v1));
     _complex_times_su3_dev(v1,dev_k3c_d,v2);
-    _trace_lambda_add_assign_dev(df0[4*gfindex_site[pos]+3], v1);
+    _trace_lambda_mul_add_assign_dev(df0[4*gfindex_site[pos]+3], 2.0*factor, v1);
 
 
     /***************** direction -3 ************************/
@@ -410,7 +419,7 @@ __global__ void dev_deriv_Sb(dev_su3adj* df0, dev_su3_2v_d * gf,dev_spinor_d * l
     _vector_tensor_vector_add_dev(v1, psia, phia, psib, phib);
     dev_su3_ti_su3d_d(&(v2), &(um), &(v1));
     _complex_times_su3_dev(v1,dev_k3c_d,v2);
-    _trace_lambda_add_assign_dev(df0[4*gfindex_nextsite[hoppos]+3], v1); 
+    _trace_lambda_mul_add_assign_dev(df0[4*gfindex_nextsite[hoppos]+3], 2.0*factor, v1); 
   
   }
 }
@@ -504,13 +513,13 @@ int host_check_VOL2, Vol;
 if(ieo==0){
 //cudaFuncSetCacheConfig(dev_gauge_derivative, cudaFuncCachePreferL1);
 dev_deriv_Sb<<<griddimgauge, blockdimgauge >>>(dev_df0_d, dev_gf_d, 
-                                               dev_spin_eo1_d, dev_spin_eo2_d, 
+                                               dev_spin_eo1_d, dev_spin_eo2_d, factor,
                                                dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, 0, Vol);   
 }
 if(ieo==1){
 //cudaFuncSetCacheConfig(dev_gauge_derivative, cudaFuncCachePreferL1);
 dev_deriv_Sb<<<griddimgauge, blockdimgauge >>>(dev_df0_d, dev_gf_d, 
-                                               dev_spin_eo1_d, dev_spin_eo2_d,  
+                                               dev_spin_eo1_d, dev_spin_eo2_d, factor, 
                                                dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, 0, Vol);   
 }
 
@@ -621,7 +630,7 @@ dev_H_eo_tm_inv_psi_d(dev_spin1_d, dev_spin_eo1_d, dev_spin_eo2_d,
   update_constants_d(dev_grid);
   update_gpu_fields(hf->gaugefield, hf->derivative,1);
 dev_deriv_Sb<<<griddimgauge, blockdimgauge >>>(dev_df0_d, dev_gf_d, 
-                                               dev_spin_eo1_d, dev_spin0_d,
+                                               dev_spin_eo1_d, dev_spin0_d, factor,
                                                dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, 0, Vol);   
 }
 if(ieo==1){
@@ -639,7 +648,7 @@ dev_H_eo_tm_inv_psi_d(dev_spin1_d, dev_spin_eo1_d, dev_spin_eo2_d,
   update_constants_d(dev_grid);
   update_gpu_fields(hf->gaugefield, hf->derivative,1);
   dev_deriv_Sb<<<griddimgauge, blockdimgauge >>>(dev_df0_d, dev_gf_d, 
-                                               dev_spin_eo1_d, dev_spin0_d,   
+                                               dev_spin_eo1_d, dev_spin0_d, factor,  
                                                dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, 0, Vol);   
 }
 
