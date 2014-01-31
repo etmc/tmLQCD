@@ -2515,14 +2515,18 @@ extern "C" void init_mixedsolve_eo(su3** gf){
   	cudaMalloc((void **) &dev_spin5, dev_spinsize);
   	cudaMalloc((void **) &dev_spinin, dev_spinsize);
   	cudaMalloc((void **) &dev_spinout, dev_spinsize);
-        #ifdef GPU_DOUBLE
-   	  size_t dev_spinsize_d = 6*VOLUME/2 * sizeof(dev_spinor_d); /* double4 */  
-  	  cudaMalloc((void **) &dev_spin0_d, dev_spinsize_d);   
-  	  cudaMalloc((void **) &dev_spin1_d, dev_spinsize_d);   
+	
+	//dev_spin_eo1/2_d we need for gpu_deriv_SB in any case
+   	size_t dev_spinsize_d = 6*VOLUME/2 * sizeof(dev_spinor_d); /* double4 */  
+  	cudaMalloc((void **) &dev_spin_eo1_d, dev_spinsize_d);	
+  	cudaMalloc((void **) &dev_spin_eo2_d, dev_spinsize_d);   
+
+	#ifdef GPU_DOUBLE   
+	  cudaMalloc((void **) &dev_spin0_d, dev_spinsize_d);   
+	  cudaMalloc((void **) &dev_spin1_d, dev_spinsize_d);	
   	  cudaMalloc((void **) &dev_spin2_d, dev_spinsize_d);   
   	  cudaMalloc((void **) &dev_spin3_d, dev_spinsize_d);
-  	  cudaMalloc((void **) &dev_spin_eo1_d, dev_spinsize_d);	
-  	  cudaMalloc((void **) &dev_spin_eo2_d, dev_spinsize_d);
+
 	  if((void*)(h2d_spin_d = (dev_spinor_d *)malloc(dev_spinsize_d)) == NULL){
   	    printf("Could not allocate memory for double h2d_spin_d. Aborting...\n");
   	    exit(200);
