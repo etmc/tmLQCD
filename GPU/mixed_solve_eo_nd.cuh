@@ -71,7 +71,6 @@ extern "C" {
 #include "../operator/tm_operators_nd.h"
 #include "../operator/Hopping_Matrix.h"
 #include "../solver/cg_her_nd.h"
-#include "../phmc.h"
 }
 #include "../global.h"
 #include "HEADER.h"
@@ -607,13 +606,15 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
   }
   
   
-  //allocate additional eo3 fields needed in dev_Qtm_pm_ndpsi_d
+
   #ifdef GPU_DOUBLE
    	  size_t dev_spinsize_d = 6*VOLUME/2 * sizeof(dev_spinor_d); /* double4 */
+	  //allocate fields used in dev_Qtm_pm_ndpsi_d
   	  cudaMalloc((void **) &dev_spin_eo1_up_d, dev_spinsize_d);	
   	  cudaMalloc((void **) &dev_spin_eo1_dn_d, dev_spinsize_d);	  
   	  cudaMalloc((void **) &dev_spin_eo3_up_d, dev_spinsize_d);	
   	  cudaMalloc((void **) &dev_spin_eo3_dn_d, dev_spinsize_d);
+	  
   	  if((cudaerr=cudaGetLastError())!=cudaSuccess){
               if(g_proc_id==0) printf("Error in init_mixedsolve_eo(): Memory allocation of nd additional double spinor fields failed. Aborting...\n");
               exit(200);
@@ -815,7 +816,7 @@ void finalize_mixedsolve_eo_nd(void) {
     cudaFree(dev_spin_eo1_up_d);
     cudaFree(dev_spin_eo1_dn_d);     
     cudaFree(dev_spin_eo3_up_d);
-    cudaFree(dev_spin_eo3_dn_d);    
+    cudaFree(dev_spin_eo3_dn_d);
   #endif
   free(h2d_spin_up);
   free(h2d_spin_dn);
@@ -4982,6 +4983,892 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
 
 
 
+
+#ifdef GPU_DOUBLE
+
+
+
+void init_doublesolve_eo_nd (su3** gf) {	// gf is the full gauge field
+  
+  
+  //////////////////////
+  // GLOBAL VARIABLES //
+  //////////////////////
+  
+  dev_spinsize_int   =  6*VOLUME/2*sizeof(dev_spinor);				// 24 floats per lattice site
+  N_sites_int        =    VOLUME/2;
+  N_floats_int       = 24*VOLUME/2;
+
+  set_global_sizes();
+  
+  /////////////////////
+  // LOCAL VARIABLES //
+  /////////////////////
+  
+  cudaError_t cudaerr;		// CUDA errors
+  int grid[6];			// array for grid specifications
+  
+  
+
+  /////////////
+  // SPINORS //							// allocates device memory for the odd part of the spinor fields (24 = 4*6 floats per odd lattice sites)
+  /////////////							// now we have to consider 2 flavors: up, dn
+  
+  
+  size_t dev_spinsize_d = 6*VOLUME/2 * sizeof(dev_spinor_d); /* double4 */
+  //allocate fields used in dev_Qtm_pm_ndpsi_d
+  cudaMalloc((void **) &dev_spin_eo1_up_d, dev_spinsize_d);	
+  cudaMalloc((void **) &dev_spin_eo1_dn_d, dev_spinsize_d);	  
+  cudaMalloc((void **) &dev_spin_eo3_up_d, dev_spinsize_d);	
+  cudaMalloc((void **) &dev_spin_eo3_dn_d, dev_spinsize_d);
+  //fields for cg
+  //.. and allocate 6 additional
+  cudaMalloc((void **) &dev_spin1_up_d, dev_spinsize_d);	
+  cudaMalloc((void **) &dev_spin1_dn_d, dev_spinsize_d);	  
+  cudaMalloc((void **) &dev_spin2_up_d, dev_spinsize_d);	
+  cudaMalloc((void **) &dev_spin2_dn_d, dev_spinsize_d);	  
+  cudaMalloc((void **) &dev_spin3_up_d, dev_spinsize_d);	
+  cudaMalloc((void **) &dev_spin3_dn_d, dev_spinsize_d);
+  
+  cudaMalloc((void **) &dev_spinin_up_d, dev_spinsize_d);	
+  cudaMalloc((void **) &dev_spinin_dn_d, dev_spinsize_d);
+  cudaMalloc((void **) &dev_spinout_up_d, dev_spinsize_d);	
+  cudaMalloc((void **) &dev_spinout_dn_d, dev_spinsize_d);
+  
+  if((cudaerr=cudaGetLastError())!=cudaSuccess){
+      if(g_proc_id==0) printf("Error in init_doublesolve_eo_nd(): Memory allocation of nd additional double spinor fields failed. Aborting...\n");
+      exit(200);
+  }
+
+  
+  // debug	// CUDA
+  #ifdef CUDA_DEBUG
+    #ifndef MPI
+      CUDA_CHECK("CUDA error in init_doublesolve_eo_nd(). Memory allocation of spinor fields failed.", "Allocated spinor fields on device.");
+    #else
+      CUDA_CHECK("CUDA error in init_doublesolve_eo_nd(). Memory allocation of spinor fields failed.", "Allocated spinor fields on devices.");
+    #endif
+  #endif
+
+  
+  ////////////////////////////
+  // grid[ ] specifications //							// allocate and initializes the array grid[5] on device
+  ////////////////////////////
+  
+  grid[0] = LX;									// it contains the dimensions of the lattice and the volume of the eo-sublattice
+  grid[1] = LY;
+  grid[2] = LZ;
+  grid[3] = T;
+  grid[4] = VOLUME/2;								// will be used to set dev_VOLUME: dev_VOLUME is half of VOLUME for eo
+  
+  grid[5] = VOLUME/2;
+
+  //done in init_mixedsolve_eo
+  //cudaMalloc((void **) &dev_grid, 6*sizeof(int));				// dev_grid
+  cudaMemcpy(dev_grid, &(grid[0]), 6*sizeof(int), cudaMemcpyHostToDevice);
+  
+  // debug	// CUDA
+  #ifdef CUDA_DEBUG
+    #ifndef MPI
+      CUDA_CHECK("CUDA error in init_mixedsolve_eo_nd(). Memory allocation of grid[] specifications failed.", "Allocated grid[] specifications on device.");
+    #else
+      CUDA_CHECK("CUDA error in init_mixedsolve_eo_nd(). Memory allocation of grid[] specifications failed.", "Allocated grid[] specifications on devices.");
+    #endif
+  #endif
+  
+
+}//init_doublesolve_eo_nd()
+
+
+
+void finalize_doublesolve_eo_nd(void) {
+  
+  cudaError_t cudaerr;
+   
+  cudaFree(dev_spin_eo1_up_d);
+  cudaFree(dev_spin_eo1_dn_d);     
+  cudaFree(dev_spin_eo3_up_d);
+  cudaFree(dev_spin_eo3_dn_d);
+  cudaFree(dev_spin1_up_d);  
+  cudaFree(dev_spin1_dn_d);
+  cudaFree(dev_spin2_up_d);  
+  cudaFree(dev_spin2_dn_d);
+  cudaFree(dev_spin3_up_d);  
+  cudaFree(dev_spin3_dn_d); 
+  cudaFree(dev_spinin_up_d);  
+  cudaFree(dev_spinin_dn_d);
+  cudaFree(dev_spinout_up_d);  
+  cudaFree(dev_spinout_dn_d);  
+  #ifdef CUDA_DEBUG
+    CUDA_CHECK("CUDA error in finalize_mixedsolve_eo_nd(). Device memory deallocation failed", "Device memory deallocated.");
+  #endif
+  
+  
+}
+
+
+int dev_cg_eo_nd_d (dev_su3_2v_d * gf,
+              dev_spinor_d * P_up, dev_spinor_d * P_dn,
+              dev_spinor_d * Q_up, dev_spinor_d * Q_dn,
+	      double shift,
+              int max_iter,
+              int check_abs , int check_rel,
+              double eps_abs, double eps_rel       ) {
+  
+  // P_up/dn  can be used as auxiliary field to work on, as it is not later used (could be used as initial guess at the very start)
+  // Q_up/dn  can be used as feedback, or if not, also as auxiliary field
+  
+  
+  /////////////////////
+  // LOCAL VARIABLES //
+  /////////////////////
+  
+  // CUDA
+  cudaError_t cudaerr;
+  cublasStatus cublasstatus;
+  
+  // algorithm
+  double rr_up, rr_dn, rr, rr_old, r0r0, dAd_up, dAd_dn, dAd;
+  double alpha, beta;
+  
+  
+  int min_solver_it = min_innersolver_it;
+  
+  // (auxiliary) device fields
+  // for recalculating the residue
+  dev_spinor_d *  r_up, *  r_dn, * Ad_up, * Ad_dn, *  x_up, *  x_dn, *  d_up, *  d_dn, * Ax_up, * Ax_dn;		
+  
+ 
+  // counting
+  int j;				// iteration counter
+ 
+  // algorithm control parameters
+  // int N_recalc_res = 10;		
+  // recalculate residue r(k+1) = b - A*x(k+1) each N_recalc_res iteration
+  int N_recalc_res = 1000;
+  
+
+  /////////////////////////////////////////////
+  // CUDA block- and gridsize specifications //
+  /////////////////////////////////////////////
+  
+  // int gridsize;		// auxiliary
+  int blocksize;		// auxiliary
+  
+  blocksize = BLOCKD;
+  int blockdim2, griddim2;					// passed:	dev_Hopping_Matrix
+  if ( (VOLUME/2) % blocksize == 0 ) {
+    blockdim2 = blocksize;
+    griddim2  = VOLUME/2/blocksize;
+  }
+  else {
+    blockdim2 = blocksize;
+    griddim2  = (int) ((VOLUME/2/blocksize) + 1);
+  }
+  
+  blocksize = BLOCK2D;
+  int blockdim3, griddim3;					// passed:	dev_mul_one_pm_imubar_gamma5
+  if ( (VOLUME/2) % blocksize == 0 ) {
+    blockdim3 = blocksize;
+    griddim3  = VOLUME/2/blocksize;
+  }
+  else {
+    blockdim3 = blocksize;
+    griddim3  = (int) ((VOLUME/2/blocksize) + 1);
+  }
+ 
+
+  /////////////////
+  // ASSIGNMENTS //
+  /////////////////
+  
+  x_up  = P_up;							
+  // can use the output spinors also as auxiliary fields
+  x_dn  = P_dn;							
+  //	saves copying the output spinor field
+  // use these pointers to the allocated space on device memory 
+  // (allocated by init_mixedsolve_eo_nd_d)  
+  r_up  = dev_spin1_up_d;						
+  r_dn  = dev_spin1_dn_d;
+  d_up  = dev_spin2_up_d;
+  d_dn  = dev_spin2_dn_d;
+  Ad_up = dev_spin3_up_d;
+  Ad_dn = dev_spin3_dn_d;
+  Ax_up = Ad_up;						
+  // works as long as no initial guess vector x(0) is passed to cg_eo_nd_d()
+  Ax_dn = Ad_dn;
+  
+  
+ 
+  /////////////////////
+  // INITIALIZATIONS //
+  /////////////////////
+  
+      // debug	// CUBLAS helper function
+      #ifdef CUDA_DEBUG
+	CUBLAS_HELPER_CHECK(cublasInit(), "CUBLAS error in cublasInit(). Couldn't initialize CUBLAS.", "CUBLAS initialized.");
+      #else
+	#ifdef CUDA_45
+	  cublasHandle_t handle;
+	  cublasCreate(&handle);
+	#else
+	  cublasInit();
+	#endif 
+      #endif
+
+  if(g_debug_level > 3) printf("cublasstatus = %f\n", cublasstatus);
+  
+  
+  
+  ///////////////
+  // ALGORITHM //
+  ///////////////
+  
+  
+  // initialize x(0) = 0	// will be added up
+  dev_zero_spinor_field_d<<<griddim2, blockdim2>>>(x_up);
+  dev_zero_spinor_field_d<<<griddim2, blockdim2>>>(x_dn);
+  
+  // r(0) = b - A*x(0) = b
+  dev_copy_spinor_field_d<<<griddim2, blockdim2>>>(Q_up, r_up);
+  dev_copy_spinor_field_d<<<griddim2, blockdim2>>>(Q_dn, r_dn);
+  
+  // d(0) = r(0)
+  dev_copy_spinor_field_d<<<griddim2, blockdim2>>>(r_up, d_up);
+  dev_copy_spinor_field_d<<<griddim2, blockdim2>>>(r_dn, d_dn);
+  
+      // debug	// kernel
+      #ifdef CUDA_DEBUG
+	CUDA_KERNEL_CHECK("Kernel error in dev_cg_eo_nd(). Initializing spinor fields on device failed.", "Spinor fields initialized on device.");
+      #endif
+  
+  
+  
+  // rr = (r_up)^2 + (r_dn)^2
+
+  #ifdef MPI
+    //launch error and exit
+    if(g_proc_id == 0){
+      printf("Error: pure double GPU ND solver not implemented for MPI. Aborting...\n");
+      exit(200);
+    }
+  #endif
+  
+    rr_up = cublasDdot(N_floats_int, (double *) r_up, 1, (double *) r_up, 1);
+    rr_dn = cublasDdot(N_floats_int, (double *) r_dn, 1, (double *) r_dn, 1);
+
+  rr    = rr_up + rr_dn;
+
+  r0r0   = rr;	// for relative precision 
+  rr_old = rr;	// for the first iteration
+  
+  //////////
+  // LOOP //
+  //////////
+  
+      #ifndef LOWOUTPUT
+      if (g_proc_id == 0) printf("\nEntering inner loop.\n");
+      #endif
+
+      // debug	// CUBLAS core function
+      #ifdef CUDA_DEBUG
+	// CUBLAS_CORE_CHECK("CUBLAS error in cg_eo_nd(). Calculating initial residue failed.", "Initial inner residue calculated.");
+	CUBLAS_CORE_CHECK_NO_SUCCESS_MSG("CUBLAS error in dev_cg_eo_nd_d(). Calculating initial residue failed.");
+      #endif
+
+      if (g_proc_id == 0) printf("Initial inner residue: %.6e\n", r0r0);
+  
+  
+  for (j = 0; j < max_iter; j++) {
+
+     
+      // A*d(k)
+
+    dev_Qtm_pm_ndpsi_d(Ad_up, Ad_dn, d_up,  d_dn,										// debugging: matrix_debug1(), matrix_multiplication_test()
+		      griddim2, blockdim2, griddim3, blockdim3,
+		      griddim3, blockdim3, griddim3, blockdim3);
+
+	if(shift != 0.0f){
+           //add constant shift if nonzero
+           // CUBLAS:
+          cublasDaxpy (N_floats_int, shift, (double *) d_up, 1, (double *) Ad_up, 1);
+          cublasDaxpy (N_floats_int, shift, (double *) d_dn, 1, (double *) Ad_dn, 1);
+        }      
+        if((cudaerr=cudaGetLastError()) != cudaSuccess){
+           printf("%s\n", cudaGetErrorString(cudaerr));
+           exit(200);
+        }
+      
+	#ifdef CUDA_DEBUG
+	  CUDA_CHECK("CUDA error in matrix_muliplication32(). Applying the matrix on GPU failed.", "The matrix was applied on GPU.");
+	#endif
+
+    // alpha = r(k)*r(k) / d(k)*A*d(k)
+      dAd_up = cublasDdot(N_floats_int, (double *) d_up, 1, (double *) Ad_up, 1);
+      dAd_dn = cublasDdot(N_floats_int, (double *) d_dn, 1, (double *) Ad_dn, 1);
+
+    dAd    = dAd_up + dAd_dn;
+    
+    		// debug	// is NaN ?
+    		if isnan(dAd) {
+    		  printf("Error in dev_cg_eo_nd_d(). dAd is NaN.\n");
+    		  exit(-1);
+    		}
+    
+    alpha  = rr_old / dAd;	// rr_old is taken from the last iteration respectively
+    
+    // x(k+1) = x(k) + alpha*d(k)
+    cublasDaxpy(N_floats_int, alpha, (double *) d_up, 1, (double *) x_up, 1);
+    cublasDaxpy(N_floats_int, alpha, (double *) d_dn, 1, (double *) x_dn, 1);
+    
+    // r(k+1)
+    if ( (j+1) % N_recalc_res != 0 ) {	// r(k+1) = r(k) - alpha*A*d(k)
+      cublasDaxpy(N_floats_int, -1.0*alpha, (double *) Ad_up, 1, (double *) r_up, 1);
+      cublasDaxpy(N_floats_int, -1.0*alpha, (double *) Ad_dn, 1, (double *) r_dn, 1);
+    }
+    else {				// recalculate residue r(k+1) = b - A*x(k+1)
+	// debug
+	#ifndef MPI
+	  printf("Recalculating the inner residue.\n");
+	#else
+	  if (g_proc_id == 0) printf("Recalculating the inner residue.\n");
+	#endif
+      
+      
+      // A*x(k+1)
+
+
+        dev_Qtm_pm_ndpsi_d(Ax_up, Ax_dn, x_up,  x_dn, 
+        	           griddim2, blockdim2, griddim3, blockdim3,
+        	           griddim3, blockdim3, griddim3, blockdim3);
+
+	if(shift != 0.0f){
+           //add constant shift if nonzero
+           // CUBLAS:
+          cublasDaxpy (N_floats_int, shift, (double *) x_up, 1, (double *) Ad_up, 1);
+          cublasDaxpy (N_floats_int, shift, (double *) x_dn, 1, (double *) Ad_dn, 1);
+        }    
+
+      // r(k+1) = b - A*x(k+1)
+      cublasDcopy(N_floats_int, (double *) Q_up, 1, (double *) r_up, 1);		// r_up = Q_up
+      cublasDcopy(N_floats_int, (double *) Q_dn, 1, (double *) r_dn, 1);		// r_dn = Q_dn
+      cublasDaxpy(N_floats_int, -1.0, (double *) Ax_up, 1, (double *) r_up, 1);	// r_up = Q_up - Ax_up
+      cublasDaxpy(N_floats_int, -1.0, (double *) Ax_dn, 1, (double *) r_dn, 1);	// r_dn = Q_dn - Ax_dn
+    
+    } // recalculate residue
+    
+
+    // r(k+1)*r(k+1)
+      rr_up  = cublasDdot(N_floats_int, (double *) r_up, 1, (double *) r_up, 1);
+      rr_dn  = cublasDdot(N_floats_int, (double *) r_dn, 1, (double *) r_dn, 1);
+
+    rr     = rr_up + rr_dn;
+    
+    #ifdef CUDA_DEBUG
+      CUBLAS_CORE_CHECK_NO_SUCCESS_MSG("CUBLAS error in dev_cg_eo_nd(). CUBLAS function failed.");
+    #endif
+
+    #ifndef LOWOUTPUT
+      if (g_proc_id == 0) printf("inner iteration j = %i: rr = %.6e\n", j, rr);
+    #endif
+		 
+	
+    // debug	// is NaN ?
+    if isnan(rr) {
+      printf("Error in dev_cg_eo_nd(). Inner residue is NaN.\n");
+      exit(-1);
+    }
+    
+    // aborting ?? // check wether precision is reached ...
+    if ( ((check_abs)&&(rr <= eps_abs)&&((j>min_solver_it)||(rr<1.0e-25))) || ((check_rel)&&(rr <= eps_rel*r0r0)&&((j>min_solver_it)||(rr<1.0e-25))) ) {
+    
+
+    
+    if ((check_rel)&&(rr <= eps_rel*r0r0)) {
+      printf("Reached relative inner solver precision of eps_rel = %.2e\n", eps_rel);
+    }
+    if ((check_abs)&&(rr <= eps_abs)) {
+      printf("Reached absolute inner solver precision of eps_abs = %.2e\n", eps_abs);
+    }
+    
+    printf("Final inner residue: %.6e\n", rr);
+     
+      #ifdef CUDA_45  
+	cublasDestroy(handle);
+      #else
+	cublasShutdown();
+      #endif 
+      
+      return(j+1);
+    }
+    
+    
+    // beta = r(k+1)*r(k+1) / r(k)*r(k)
+    beta = rr / rr_old;
+    
+    
+    rr_old = rr;  // for next iteration
+    
+    
+    // d(k+1) = r(k+1) + beta*d(k)
+    cublasDscal (N_floats_int, beta, (double *) d_up, 1);
+    cublasDaxpy (N_floats_int, 1.0 , (double *) r_up, 1, (double *) d_up, 1);
+    
+    cublasDscal (N_floats_int, beta, (double *) d_dn, 1);
+    cublasDaxpy (N_floats_int, 1.0 , (double *) r_dn, 1, (double *) d_dn, 1);
+    
+    // debug	// CUBLAS core function
+    #ifdef CUDA_DEBUG
+      CUBLAS_CORE_CHECK_NO_SUCCESS_MSG("CUBLAS error in dev_cg_eo_nd(). Error in CUBLAS function.");
+    #endif
+  }//LOOP
+  
+  
+  #ifndef LOWOUTPUT
+  if (g_proc_id == 0) printf("Finished inner loop because of maximal number of inner iterations.\n");
+  #endif
+  if (g_proc_id == 0) printf("Final inner residue: %.6e\n", rr);
+
+    
+    #ifdef CUDA_45  
+      cublasDestroy(handle);
+    #else
+      cublasShutdown();
+    #endif 
+  return(j+1);
+  
+}//dev_cg_eo_nd_d()
+
+
+
+//////////////////
+// OUTER SOLVER //
+//////////////////
+
+// iterative refinement, defect correction
+// that function is to replace the call of  cg_her_nd()  in  invert_doublet_eo.c
+// solves the odd part of the full eo and nd problem
+//	more precisely we have to invert  Qhat(2x2)*Qhat(2x2)^dagger
+//	multiplying by  Qhat(2x2)^dagger  is done in  invert_doublet_eo.c
+
+extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
+                                 spinor * Q_up, spinor * Q_dn, double shift,
+                                 int max_iter, double eps_sq, int rel_prec) {
+  
+
+    innersolver_precision_check_rel = 1;
+    innersolver_precision_check_abs = 0;
+  
+
+
+  /////////////////////
+  // LOCAL VARIABLES //
+  /////////////////////
+  
+  // CUDA
+  cudaError_t cudaerr;
+  cublasStatus cublasstatus;
+  
+  // algorithm
+  double rr_up, rr_dn, rr, rr_old, r0r0, bb;
+  // counting
+  int i = 0;					// iteration counter
+  int innercount;				// latest inner solver iterations
+  int outercount = 0;				// total inner solver iterations
+
+  #ifdef ALGORITHM_BENCHMARK
+    double effectiveflops;
+    //double hoppingflops = 1608.0;
+    double matrixflops  = 14448;
+  #endif
+  
+  // timing
+  double startouter, stopouter;
+  double startinner, stopinner;  
+  double innerclocks;
+  
+  // (auxiliary) fields
+  spinor *  r_up, *  r_dn, * Ad_up, * Ad_dn, *  x_up, *  x_dn, *  d_up, *  d_dn, * Ax_up, * Ax_dn;
+
+  spinor ** up_field = NULL;
+  spinor ** dn_field = NULL;
+  const int nr_sf = 5;
+
+  init_solver_field(&up_field, VOLUMEPLUSRAND/2, nr_sf);
+  init_solver_field(&dn_field, VOLUMEPLUSRAND/2, nr_sf);	 
+	 
+
+  //////////////////
+  // INITIALIZING //
+  //////////////////
+  
+  
+      dev_spinor_d * x_up_d = dev_spin0_d;
+      dev_spinor_d * x_dn_d = dev_spin1_d;
+      dev_spinor_d * Ax_up_d = dev_spin2_d;
+      dev_spinor_d * Ax_dn_d = dev_spin3_d;
+      dev_spinor_d * Q_up_d = dev_spin_eo1_d;
+      dev_spinor_d * Q_dn_d = dev_spin_eo2_d;  
+      dev_spinor_d * r_up_d = dev_spin_eo3_up_d;  
+      dev_spinor_d * r_dn_d = dev_spin_eo3_dn_d;      
+      
+       size_t dev_spinsize_d = 6*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !   
+   int gridsize;
+     //this is the partitioning for the HoppingMatrix kernel
+     int blockdim3 = BLOCKD;
+     if( VOLUME/2 % blockdim3 == 0){
+       gridsize = (int) VOLUME/2/blockdim3;
+     }
+     else{
+       gridsize = (int) VOLUME/2/blockdim3 + 1;
+     }
+     int griddim3 = gridsize;
+   
+     //this is the partitioning for dev_mul_one_pm...
+     int blockdim4 = BLOCK2D;
+     if( VOLUME/2 % blockdim4 == 0){
+       gridsize = (int) VOLUME/2/blockdim4;
+     }
+     else{
+       gridsize = (int) VOLUME/2/blockdim4 + 1;
+     }
+     int griddim4 = gridsize;  
+    
+     update_constants_d(dev_grid);
+     update_gpu_gf_d(g_gauge_field);
+    
+  //do we need this after all??
+  dev_complex h0, h1, h2, h3; 
+  h0.re  =  (float) creal(ka0);	h0.im  = -(float) cimag(ka0);	// ka{0-4} are defined in boundary.c
+  h1.re  =  (float) creal(ka1);	h1.im  = -(float) cimag(ka1);	// what is the meaning?
+  h2.re  =  (float) creal(ka2);	h2.im  = -(float) cimag(ka2);
+  h3.re  =  (float) creal(ka3);	h3.im  = -(float) cimag(ka3);
+  he_cg_init<<< 1, 1 >>> (dev_grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0, h1, h2, h3);
+
+  		
+    // debug	// check stuff on device
+    #ifdef STUFF_DEBUG
+    
+	    #ifdef MPI
+	      if (g_proc_id == 0) {
+	    #endif
+	    
+	    #ifdef MPI
+	      printf("\tOn host:\n");
+	      printf("\tVOLUME = %i\n", VOLUME);							// checking VOLUME and RAND in the parallel case 
+	      printf("\tRAND   = %i\n", RAND);
+	      printf("\tVOLUME + RAND = %i\n",  VOLUME+RAND);
+	    #endif
+	    
+	    int host_check_LX, host_check_LY, host_check_LZ, host_check_T, host_check_VOLUME, host_check_OFFSET;
+	    cudaMemcpyFromSymbol(&host_check_LX, dev_LX, sizeof(int));
+	    cudaMemcpyFromSymbol(&host_check_LY, dev_LY, sizeof(int));
+	    cudaMemcpyFromSymbol(&host_check_LZ, dev_LZ, sizeof(int));
+	    cudaMemcpyFromSymbol(&host_check_T, dev_T, sizeof(int));
+	    cudaMemcpyFromSymbol(&host_check_VOLUME, dev_VOLUME, sizeof(int));
+	    cudaMemcpyFromSymbol(&host_check_OFFSET, dev_Offset, sizeof(int));
+	    // printf("\teven_odd_flag = %i\n", even_odd_flag);
+	    printf("\tOn device:\n");
+	    printf("\tdev_LX = %i\n", host_check_LX);
+	    printf("\tdev_LY = %i\n", host_check_LY);
+	    printf("\tdev_LZ = %i\n", host_check_LZ);
+	    printf("\tdev_T = %i\n", host_check_T);
+	    printf("\tdev_VOLUME = %i/2 ?!= %i\n", host_check_LX*host_check_LY*host_check_LZ*host_check_T, host_check_VOLUME);
+	    printf("\tdev_Offset = %i\n", host_check_OFFSET);
+	    float host_check_mu, host_check_kappa, host_check_twokappamu;
+	    cudaMemcpyFromSymbol(&host_check_mu, mu, sizeof(float));
+	    cudaMemcpyFromSymbol(&host_check_kappa, kappa, sizeof(float));
+	    cudaMemcpyFromSymbol(&host_check_twokappamu, twokappamu, sizeof(float));
+	    // printf("\tOn device:\n");
+	    // printf("\tmu = %f\n", host_check_mu);		// not needed for the nd case
+	    printf("\tkappa = %f\n", host_check_kappa);
+	    // printf("\ttwokappamu = %f\n", host_check_twokappamu);
+	    
+	    #ifdef MPI
+	      }
+	    #endif
+    
+    #endif
+  
+  he_cg_init_nd_additional<<<1,1>>> (g_mubar, g_epsbar);
+  
+
+    // debug	// check mubar and epsbar on host and device
+    #ifdef STUFF_DEBUG
+    
+	    #ifdef MPI
+	      if (g_proc_id == 0) {
+	    #endif
+	    
+	    printf("\tOn host:\n");
+	    printf("\tg_mubar = %f\n", g_mubar);
+	    printf("\tg_epsbar = %f\n", g_epsbar);
+	    
+	    float host_check_mubar, host_check_epsbar;
+	    cudaMemcpyFromSymbol(&host_check_mubar, mubar, sizeof(float));
+	    cudaMemcpyFromSymbol(&host_check_epsbar, epsbar, sizeof(float));
+	    printf("\tOn device:\n");
+	    printf("\tmubar = %f\n", host_check_mubar);
+	    printf("\tepsbar = %f\n", host_check_epsbar);
+	    
+	    #ifdef MPI
+	      }
+	    #endif
+    
+    #endif
+  
+
+  #ifdef GPU_DOUBLE
+  test_double_nd_operator(Q_up, Q_dn, N_sites_int);
+  #endif
+  /////////////////
+  // ASSIGNMENTS //
+  /////////////////
+  
+  
+  x_up = P_up;							// can use the output spinors also as auxiliary fields
+  x_dn = P_dn;							//	can use as initial guess at the same time
+//   x_up = up_field[3];							// can use the output spinors also as auxiliary fields
+//   x_dn = dn_field[3];
+
+    r_up  = up_field[0];			// use the pre-allocated memory on host memory
+    r_dn  = dn_field[0];			// allocated by  init_chi_spinor_field.c  and  invert_doublet.c  !?
+    d_up  = up_field[1];		// the fields  up_field/dn_field[{0 , 1, ... , 5}]  are used in  cg_her_nd()
+    d_dn  = dn_field[1];
+    Ad_up = up_field[2];
+    Ad_dn = dn_field[2];
+    Ax_up = Ad_up;
+    Ax_dn = Ad_dn;
+    
+
+  ///////////////
+  // ALGORITHM //
+  ///////////////
+  
+  //ONLY FOR TESTS
+  //FIXME
+//   shift=0.005;
+  //
+  ////////////////
+
+  printf("phmc_invmaxev = %f\n",phmc_invmaxev);  
+  
+  
+    // r(0)
+    // r(0) = b - A*x(0) = Q - A*P
+      bb = square_norm(P_up, VOLUME/2, 1);
+      bb += square_norm(P_dn, VOLUME/2, 1);
+      printf("bb = %.16e \n", bb);
+      order_spin_gpu(Q_up, h2d_spin_d);
+      cudaMemcpy(Q_up_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);      
+      order_spin_gpu(Q_dn, h2d_spin_d);
+      cudaMemcpy(Q_dn_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);	
+      
+      if (bb > 0.0) {
+	  printf("Have non-zero initial guess\n");
+      }
+      
+      //set x_up/dn to initial guess in P_up/dn
+      order_spin_gpu(P_up, h2d_spin_d);
+      cudaMemcpy(x_up_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);      
+      order_spin_gpu(P_dn, h2d_spin_d);
+      cudaMemcpy(x_dn_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);	  
+      // r_up/dn = Q-A*x_up/dn
+      dev_Qtm_pm_ndpsi_d(Ax_up_d, Ax_dn_d,  
+		  x_up_d, x_dn_d, 
+		  griddim3, blockdim3, griddim4, blockdim4,
+		  griddim4, blockdim4, griddim4, blockdim4);
+      if(shift != 0.0) {
+	//FIXME
+	dev_axpy_d<<<griddim4,blockdim4>>>(shift, x_up_d, Ax_up_d);
+	dev_axpy_d<<<griddim4,blockdim4>>>(shift, x_dn_d, Ax_dn_d);
+	//assign_add_mul_r(Ax_up, x_up , shift, N_sites_int);
+	//assign_add_mul_r(Ax_dn, x_dn , shift, N_sites_int);
+      }        
+    
+      dev_diff_d<<<griddim4,blockdim4>>>(r_up_d,Q_up_d,Ax_up_d);         
+      dev_diff_d<<<griddim4,blockdim4>>>(r_dn_d,Q_dn_d,Ax_dn_d); 
+      
+      cudaMemcpy(h2d_spin_d, r_up_d , dev_spinsize_d, cudaMemcpyDeviceToHost);      
+      unorder_spin_gpu(h2d_spin_d, r_up);
+      cudaMemcpy(h2d_spin_d, r_dn_d , dev_spinsize_d, cudaMemcpyDeviceToHost);      
+      unorder_spin_gpu(h2d_spin_d, r_dn);
+     
+    
+    // rr = (r_up)^2 + (r_dn)^2
+    rr_up = double_dotprod(r_up_d, r_up_d);
+    rr_dn = double_dotprod(r_dn_d, r_dn_d);
+    rr = rr_up + rr_dn;
+    rr_old = rr; // for the first iteration  
+    
+    r0r0   = double_dotprod(Q_up_d, Q_up_d) 
+           + double_dotprod(Q_dn_d, Q_dn_d);    
+
+
+  if (g_proc_id == 0) printf("Initial outer residue: %.10e\n", rr_old);
+
+
+  ////////////////
+  // OUTER LOOP //
+  ////////////////
+
+  do {		// for (i = 0; i < max_iter; i++) {
+    
+    i++;
+  
+    #ifndef LOWOUTPUT
+    if (g_proc_id == 0) printf("Outer iteration i = %i\n", i);
+    #endif
+
+    order_spin_gpu(r_up, h2d_spin_d);
+    cudaMemcpy(dev_spinin_up_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);      
+    order_spin_gpu(r_dn, h2d_spin_d);
+    cudaMemcpy(dev_spinin_dn_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);
+ 
+    ////////////////////////////////////
+    // INNER LOOP, CONJUGATE GRADIENT //
+    ////////////////////////////////////
+    
+    // SHIFT?
+    // solves (A + shift)*p(k+1) = r(k)
+    //        (A + shift)*p(0)   = r(0) = b
+    float shift_single;
+    if(shift==0.0){
+      shift_single = 0.0f;
+    }
+    else{
+      shift_single = (float) shift;
+    }
+
+    startinner = gettime();
+    innercount = dev_cg_eo_nd_d(dev_gf_d,
+                          dev_spinout_up_d, dev_spinout_dn_d,
+                          dev_spinin_up_d , dev_spinin_dn_d, shift,
+                          max_innersolver_it,
+                          innersolver_precision_check_abs, innersolver_precision_check_rel,
+                          innersolver_precision_abs      , innersolver_precision_rel      );
+    //after first inner solve in double we merely check for absolute tolerance
+    innersolver_precision_check_rel = 0;
+    innersolver_precision_check_abs = 1;
+    
+    outercount = outercount + innercount;
+    stopinner = gettime();
+    innerclocks = stopinner-startinner;
+    #ifdef ALGORITHM_BENCHMARK
+      effectiveflops = innercount*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/2;   
+      printf("inner solver BENCHMARK:\n");
+      printf("\tinner solver performance:  %.4e Gflop/s\n", double(effectiveflops)/innerclocks/ 1.0e9);
+    #endif
+      
+    //copy result back
+    cudaMemcpy(h2d_spin_d, dev_spinout_up_d , dev_spinsize_d, cudaMemcpyDeviceToHost);      
+    unorder_spin_gpu(h2d_spin_d, d_up);
+    cudaMemcpy(h2d_spin_d, dev_spinout_dn_d , dev_spinsize_d, cudaMemcpyDeviceToHost);      
+    unorder_spin_gpu(h2d_spin_d, d_dn);
+      
+    		// debug	// CUDA
+    		#ifdef CUDA_DEBUG
+    		  // CUDA_CHECK("CUDA error in mixedsolve_eo_nd(). Device to host interaction failed.", "Fields copied back to device.");
+    		  CUDA_CHECK_NO_SUCCESS_MSG("CUDA error in mixedsolve_eo_nd(). Device to host interaction failed.");
+    		#endif
+  
+   
+
+    // x(k+1) = x(k) + d(k+1)
+      add(x_up, x_up, d_up, N_sites_int);
+      add(x_dn, x_dn, d_dn, N_sites_int);
+
+      // r(k+1)
+      // r(k+1) = b - (A + shift)*x(k+1)
+      // (A + shift)*x(k+1)
+        Qtm_pm_ndpsi(Ax_up, Ax_dn, x_up, x_dn);
+        if(shift != 0.0) {
+	  assign_add_mul_r(Ax_up, x_up , shift, N_sites_int);
+	  assign_add_mul_r(Ax_dn, x_dn , shift, N_sites_int);
+        }          
+        #ifndef LOWOUTPUT
+        if (g_proc_id == 0) printf("The matrix was applied on CPU in double precision. r = b - Ax\n");
+        #endif
+        diff(r_up, Q_up, Ax_up, N_sites_int);
+        diff(r_dn, Q_dn, Ax_dn, N_sites_int);
+
+      // rr = (rr_up)^2 + (r_dn)^2
+      rr_up = square_norm(r_up, N_sites_int, 1);
+      rr_dn = square_norm(r_dn, N_sites_int, 1);
+      rr    = rr_up + rr_dn;
+      
+
+    if (g_proc_id == 0){ 
+      printf("Outer residue at iteration i = %i : %.10e\n", i, rr);
+      #ifndef LOWOUTPUT
+       printf("No inner solver iterations: %i\n", outercount);
+      #endif
+    }		
+    // debug	// is NaN ?
+    if isnan(rr) {
+    	printf("Error in mixedsolve_eo_nd(). Outer residue is NaN.\n");
+    	exit(-1);
+    }
+    		
+    // aborting ?? // check wether precision is reached ...
+    if ( ((rr <= eps_sq) && (rel_prec == 0))  ||  ((rr <= eps_sq*r0r0) && (rel_prec == 1)) ) {
+      //for GPU_DOUBLE we have to assign P_up/dn 
+      //(for cpu outer solver this is not necessary, as P_up/dn == x_up/dn
+      cudaMemcpy(h2d_spin_d, x_up_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
+      unorder_spin_gpu(h2d_spin_d, P_up); 
+      cudaMemcpy(h2d_spin_d, x_dn_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
+      unorder_spin_gpu(h2d_spin_d, P_dn); 	
+	
+      #ifdef MPI
+	if (g_proc_id == 0) {
+      #endif
+      printf("\nEO inversion done in mixed precision.\n");
+      if (rel_prec == 0) printf("Finished outer loop because of reached absolute outer solver precision.\n");
+      if (rel_prec == 1) printf("Finished outer loop because of reached relative outer solver precision.\n");
+      printf("Total number of inner iterations: %i\n", outercount);
+      printf("Total number of outer iterations: %i\n", i+1);
+      printf("Squared residue: %.10e\n", rr); 
+      #ifdef MPI
+	}
+      #endif
+		  
+
+      finalize_solver(up_field, nr_sf);
+      finalize_solver(dn_field, nr_sf);  
+      
+      return(outercount);  
+    }
+    
+  
+  }//OUTER LOOP
+  while (outercount <= max_iter);
+  
+  
+  // multiplying with Qhat(2x2)^dagger is done in invert_doublet_eo.c
+    #ifdef MPI
+      if (g_cart_id == 0) {
+    #endif
+    printf("\nEO inversion done in full precision.\n");
+    printf("Finished outer loop, because of maximal number of outer iterations.\n");
+    printf("Total number of inner iterations: %i\n", outercount);
+    printf("Total number of outer iterations: %i\n", i+1);
+    printf("Squared residue: %.10e\n", rr); 
+    #ifdef MPI
+      }
+    #endif
+    
+
+
+  finalize_solver(up_field, nr_sf);
+  finalize_solver(dn_field, nr_sf);
+  return(outercount);
+  
+  
+}//doublesolve_eo_nd()
+
+
+
+#endif
 
 
 

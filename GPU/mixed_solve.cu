@@ -88,6 +88,7 @@ extern "C" {
   #include "../xchange/xchange.h"
 #endif 
 
+#include "../phmc.h"
 }
 
 
@@ -142,6 +143,19 @@ dev_spinor_d * dev_spin_eo2_up_d;
 dev_spinor_d * dev_spin_eo2_dn_d;
 dev_spinor_d * dev_spin_eo3_up_d;
 dev_spinor_d * dev_spin_eo3_dn_d;
+
+
+dev_spinor_d * dev_spinin_up_d;
+dev_spinor_d * dev_spinin_dn_d;
+dev_spinor_d * dev_spinout_up_d;
+dev_spinor_d * dev_spinout_dn_d;
+
+dev_spinor_d * dev_spin1_up_d;
+dev_spinor_d * dev_spin1_dn_d;
+dev_spinor_d * dev_spin2_up_d;
+dev_spinor_d * dev_spin2_dn_d;
+dev_spinor_d * dev_spin3_up_d;
+dev_spinor_d * dev_spin3_dn_d;
 
 //spinor fields for reliable update solver
 dev_spinor* dev_spin1_reliable;

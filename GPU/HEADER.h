@@ -184,6 +184,8 @@ __global__ void dev_squarenorm_spinor_field(dev_spinor* s1, float* erg);
 __global__ void dev_skalarprod_spinor_field(dev_spinor* s1, dev_spinor* s2, float* erg);
 __global__ void dev_zero_spinor_field(dev_spinor* s1);
 __global__ void dev_copy_spinor_field(dev_spinor* s1, dev_spinor* s2);
+__global__ void dev_zero_spinor_field_d(dev_spinor_d* s1);
+__global__ void dev_copy_spinor_field_d(dev_spinor_d* s1, dev_spinor_d* s2);
 __global__ void dev_skalarmult_add_assign_spinor_field(dev_spinor* s1, float lambda, dev_spinor* s2, dev_spinor* so);
 __global__ void dev_skalarmult_spinor_field(dev_spinor* s1, float lambda, dev_spinor* so);
 __global__ void dev_complexmult_spinor_field(dev_spinor* s1, dev_complex lambda, dev_spinor* so);

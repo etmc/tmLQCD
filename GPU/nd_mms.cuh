@@ -37,17 +37,25 @@ extern "C" int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
   int iteration=0, shifts = solver_pm->no_shifts;
 
   atime = gettime();
-
   double use_shift;
+  
+  #ifdef GPU_DOUBLE 
+   init_doublesolve_eo_nd(g_gauge_field);
+  #endif
 
   //invert with zero'th shift
   if(g_debug_level > 0 && g_proc_id == 0) {
     use_shift = solver_pm->shifts[0]*solver_pm->shifts[0];
   }
     printf("# dev_CGMMS inverting with first shift s = %f\n",use_shift);
+
+   #ifdef GPU_DOUBLE 
+   iteration += doublesolve_eo_nd(Pup[0], Pdn[0], Qup, Qdn, use_shift,
+			    solver_pm->max_iter, solver_pm->squared_solver_prec, solver_pm->rel_prec);    
+   #else
     iteration += mixedsolve_eo_nd(Pup[0], Pdn[0], Qup, Qdn, use_shift,
 			    solver_pm->max_iter, solver_pm->squared_solver_prec, solver_pm->rel_prec);
-
+   #endif
   
 
   //now invert the other shifts
@@ -57,10 +65,19 @@ extern "C" int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
     if(g_debug_level > 0 && g_proc_id == 0) {
       printf("# dev_CGMMS inverting with %i'th shift s = %f\n",im,use_shift);
     }
+   #ifdef GPU_DOUBLE
+    iteration += doublesolve_eo_nd(Pup[im], Pdn[im], Qup, Qdn, use_shift,
+			    solver_pm->max_iter, solver_pm->squared_solver_prec, solver_pm->rel_prec);
+   #else
     iteration += mixedsolve_eo_nd(Pup[im], Pdn[im], Qup, Qdn, use_shift,
 			    solver_pm->max_iter, solver_pm->squared_solver_prec, solver_pm->rel_prec);
+   #endif    
   }
-
+  
+#ifdef GPU_DOUBLE
+  finalize_doublesolve_eo_nd();
+#endif  
+  
   etime = gettime();
   g_sloppy_precision = 0;
   if(g_debug_level > 0 && g_proc_id == 0) {

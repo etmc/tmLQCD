@@ -990,7 +990,9 @@ void dev_Qtm_pm_ndpsi_d (dev_spinor_d * spinout_up, dev_spinor_d * spinout_dn,
   dev_gamma5_d<<<gridsize3, blocksize3>>>(dev_spin_eo2_up_d, dev_spin_eo2_up_d);					// dev_spin_eo2_up = gamma5 * dev_spin_eo2_up 
   dev_gamma5_d<<<gridsize3, blocksize3>>>(dev_spin_eo2_dn_d, dev_spin_eo2_dn_d);					// dev_spin_eo2_dn = gamma5 * dev_spin_eo2_dn
 
-  
+  dev_blasscal_d<<<gridsize2, blocksize2>>>(phmc_invmaxev*phmc_invmaxev, dev_spin_eo2_up_d);
+  dev_blasscal_d<<<gridsize2, blocksize2>>>(phmc_invmaxev*phmc_invmaxev, dev_spin_eo2_dn_d);
+
   return;
   
 }//dev_Qtm_pm_ndpsi_d()

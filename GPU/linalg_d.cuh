@@ -2275,6 +2275,12 @@ __global__ void dev_zero_spinor_field_d(dev_spinor_d* s1){
 
 
 
-
+__global__ void dev_copy_spinor_field_d(dev_spinor_d* s1, dev_spinor_d* s2){
+  int pos;
+  pos= threadIdx.x + blockDim.x*blockIdx.x;  
+  if(pos < dev_VOLUME){
+      dev_copy_spinor_d(&(s1[pos]),&(s2[pos]));
+  } 
+}
 
 
