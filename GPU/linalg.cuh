@@ -1006,222 +1006,6 @@ __device__ inline void dev_sub_globalspinor_assign(dev_spinor * i1, dev_spinor *
 
 
 
-// this is to store a spinor in local mem (24 numbers adjacent) to global mem
-__device__ inline void dev_write_spinor_d2(dev_spinor_d *i1, dev_spinor_d *i2){
-  int i;
-  #pragma unroll 6
-  for(i=0;i<6;i++){ //color + spin
-    (*(i2+i*DEVOFF)).x = (*(i1+i)).x;
-    (*(i2+i*DEVOFF)).y = (*(i1+i)).y;
-    (*(i2+i*DEVOFF)).z = (*(i1+i)).z;
-    (*(i2+i*DEVOFF)).w = (*(i1+i)).w;
-  }
-}
-
-
-// this is to store a spinor in local mem (24 numbers adjacent) to global mem
-__device__ inline void dev_write_spinor_d2f(dev_spinor_d *i1, dev_spinor *i2){
-  int i;
-  #pragma unroll 6
-  for(i=0;i<6;i++){ //color + spin
-    (*(i2+i*DEVOFF)).x = __double2float_rn((*(i1+i)).x);
-    (*(i2+i*DEVOFF)).y = __double2float_rn((*(i1+i)).y);
-    (*(i2+i*DEVOFF)).z = __double2float_rn((*(i1+i)).z);
-    (*(i2+i*DEVOFF)).w = __double2float_rn((*(i1+i)).w);
-  }
-}
-
-
-
-// this is to store a spinor in local mem (24 numbers adjacent) to global mem
-__device__ inline void dev_write_spinor_f2d(dev_spinor *i1, dev_spinor_d *i2){
-  int i;
-  #pragma unroll 6
-  for(i=0;i<6;i++){ //color + spin
-    (*(i2+i*DEVOFF)).x = (double) (*(i1+i)).x;
-    (*(i2+i*DEVOFF)).y = (double) (*(i1+i)).y;
-    (*(i2+i*DEVOFF)).z = (double) (*(i1+i)).z;
-    (*(i2+i*DEVOFF)).w = (double) (*(i1+i)).w;
-  }
-}
-
-
-
-// this is to read a spinor from global into local mem (24 numbers adjacent)
-__device__ inline void dev_read_spinor_d2(dev_spinor_d *i1, dev_spinor_d *i2){
-  int i;
-  #pragma unroll 6
-  for(i=0;i<6;i++){ //color + spin
-    (*(i1+i)).x  = (*(i2+i*DEVOFF)).x;
-    (*(i1+i)).y  = (*(i2+i*DEVOFF)).y;
-    (*(i1+i)).z  = (*(i2+i*DEVOFF)).z;
-    (*(i1+i)).w  = (*(i2+i*DEVOFF)).w;
-  }
-}
-
-
-
-
-__global__ void dev_d2f(dev_spinor* spinfloat, dev_spinor_d* spindouble){
-
-   int pos;
-   pos= threadIdx.x + blockDim.x*blockIdx.x;  
-   
-   double4 help[6]; 
-   
-   if(pos < dev_VOLUME){
-   
-   dev_read_spinor_d2(&(help[0]), &(spindouble[pos]));
-   dev_write_spinor_d2f(&(help[0]),&(spinfloat[pos])); 
-
-
-//        spinfloat[6*pos+0].x = 1.0f;
-//        spinfloat[6*pos+0].y = 1.0f;
-//        spinfloat[6*pos+0].z = 1.0f;
-//        spinfloat[6*pos+0].w = 1.0f;      
-// 
-//        spinfloat[6*pos+1].x = 1.0f;
-//        spinfloat[6*pos+1].y = 1.0f;
-//        spinfloat[6*pos+1].z = 1.0f;
-//        spinfloat[6*pos+1].w = 1.0f;
-//        
-//        spinfloat[6*pos+2].x = 1.0f;
-//        spinfloat[6*pos+2].y = 1.0f;
-//        spinfloat[6*pos+2].z = 1.0f;
-//        spinfloat[6*pos+2].w = 1.0f;  
-//        
-//        spinfloat[6*pos+3].x = 1.0f;
-//        spinfloat[6*pos+3].y = 1.0f;
-//        spinfloat[6*pos+3].z = 1.0f;
-//        spinfloat[6*pos+3].w = 1.0f; 
-//        
-//        spinfloat[6*pos+4].x = 1.0f;
-//        spinfloat[6*pos+4].y = 1.0f;
-//        spinfloat[6*pos+4].z = 1.0f;
-//        spinfloat[6*pos+4].w = 1.0f; 
-//        
-//        spinfloat[6*pos+5].x = 1.0f;
-//        spinfloat[6*pos+5].y = 1.0f;
-//        spinfloat[6*pos+5].z = 1.0f;
-//        spinfloat[6*pos+5].w = 1.0f; 
-       
-/*       spinfloat[6*pos+0].x = __double2float_rn(spindouble[6*pos+0].x);
-       spinfloat[6*pos+0].y = __double2float_rn(spindouble[6*pos+0].y);
-       spinfloat[6*pos+0].z = __double2float_rn(spindouble[6*pos+0].z);
-       spinfloat[6*pos+0].w = __double2float_rn(spindouble[6*pos+0].w);      
-
-       spinfloat[6*pos+1].x = __double2float_rn(spindouble[6*pos+1].x);
-       spinfloat[6*pos+1].y = __double2float_rn(spindouble[6*pos+1].y);
-       spinfloat[6*pos+1].z = __double2float_rn(spindouble[6*pos+1].z);
-       spinfloat[6*pos+1].w = __double2float_rn(spindouble[6*pos+1].w);
-       
-       spinfloat[6*pos+2].x = __double2float_rn(spindouble[6*pos+2].x);
-       spinfloat[6*pos+2].y = __double2float_rn(spindouble[6*pos+2].y);
-       spinfloat[6*pos+2].z = __double2float_rn(spindouble[6*pos+2].z);
-       spinfloat[6*pos+2].w = __double2float_rn(spindouble[6*pos+2].w);  
-       
-       spinfloat[6*pos+3].x = __double2float_rn(spindouble[6*pos+3].x);
-       spinfloat[6*pos+3].y = __double2float_rn(spindouble[6*pos+3].y);
-       spinfloat[6*pos+3].z = __double2float_rn(spindouble[6*pos+3].z);
-       spinfloat[6*pos+3].w = __double2float_rn(spindouble[6*pos+3].w); 
-       
-       spinfloat[6*pos+4].x = __double2float_rn(spindouble[6*pos+4].x);
-       spinfloat[6*pos+4].y = __double2float_rn(spindouble[6*pos+4].y);
-       spinfloat[6*pos+4].z = __double2float_rn(spindouble[6*pos+4].z);
-       spinfloat[6*pos+4].w = __double2float_rn(spindouble[6*pos+4].w); 
-       
-       spinfloat[6*pos+5].x = __double2float_rn(spindouble[6*pos+5].x);
-       spinfloat[6*pos+5].y = __double2float_rn(spindouble[6*pos+5].y);
-       spinfloat[6*pos+5].z = __double2float_rn(spindouble[6*pos+5].z);
-       spinfloat[6*pos+5].w = __double2float_rn(spindouble[6*pos+5].w);      */  
-       
-       
-   }
-   
-}
-
-
-__global__ void dev_f2d(dev_spinor_d* spindouble, dev_spinor* spinfloat){
-
-   int pos;
-   pos= threadIdx.x + blockDim.x*blockIdx.x;  
-   
-   float4 help[6]; 
-   
-   if(pos < dev_VOLUME){
-     dev_read_spinor(&(help[0]), &(spinfloat[pos]));
-     dev_write_spinor_f2d(&(help[0]),&(spindouble[pos])); 
-   }
-   
-}
-
-
-
-
-
-
-// out = x + (float) y 
-// x is not read from texture
-// y is not read from texture
-__global__ void dev_add_f2d (dev_spinor_d* out, dev_spinor_d* x, dev_spinor* y){
-   int pos= threadIdx.x + blockDim.x*blockIdx.x;
-   double4 xhelp[6]; 
-   float4 yhelp[6]; 
-   double4 erghelp[6];
-   int i;
-
-   if(pos < dev_VOLUME){
-   
-   //load x
-   dev_read_spinor_d2(&(xhelp[0]), &(x[pos]));
-   //load y
-   dev_read_spinor(&(yhelp[0]), &(y[pos]));
-
-    #pragma unroll 6
-    for(i=0; i<6; i++){
-       erghelp[i].x = xhelp[i].x + (double) yhelp[i].x;
-       erghelp[i].y = xhelp[i].y + (double) yhelp[i].y;
-       erghelp[i].z = xhelp[i].z + (double) yhelp[i].z;
-       erghelp[i].w = xhelp[i].w + (double) yhelp[i].w;
-    }
-        
-     //write out spinors
-     dev_write_spinor_d2(&(erghelp[0]),&(out[pos])); 
-   }//dev_VOLUME
-}
-
-
-// out = x - y 
-// x is not read from texture
-// y is not read from texture
-__global__ void dev_diff_d (dev_spinor_d* out, dev_spinor_d* x, dev_spinor_d* y){
-   int pos= threadIdx.x + blockDim.x*blockIdx.x;
-   double4 xhelp[6];
-   double4 yhelp[6];   
-   double4 erghelp[6];
-   int i;
-
-   if(pos < dev_VOLUME){
-   
-   //load x
-   dev_read_spinor_d2(&(xhelp[0]), &(x[pos]));
-   //load y
-   dev_read_spinor_d2(&(yhelp[0]), &(y[pos]));
-
-    #pragma unroll 6
-    for(i=0; i<6; i++){
-       erghelp[i].x = xhelp[i].x - yhelp[i].x;
-       erghelp[i].y = xhelp[i].y - yhelp[i].y;
-       erghelp[i].z = xhelp[i].z - yhelp[i].z;
-       erghelp[i].w = xhelp[i].w - yhelp[i].w;
-    }
-        
-     //write out spinors
-     dev_write_spinor_d2(&(erghelp[0]),&(out[pos])); 
-   }//dev_VOLUME
-}
-
-
 /*
 //multipliziert su3-Matrix mal Spinor im Dirac-Raum
 //code in su3_MtV.txt -- generated with codegen
@@ -8066,6 +7850,270 @@ void convert2REAL4_spin(spinor* spin, dev_spinor* h2d){
 
 
 
+
+__global__ void dev_zero_spinor_field(dev_spinor* s1){
+  int pos;
+  pos= threadIdx.x + blockDim.x*blockIdx.x;  
+  if(pos < dev_VOLUME){
+          dev_zero_spinor(&(s1[pos]));
+  }
+}
+
+
+
+
+__global__ void dev_copy_spinor_field(dev_spinor* s1, dev_spinor* s2){
+    int pos;
+  pos= threadIdx.x + blockDim.x*blockIdx.x;  
+  if(pos < dev_VOLUME){
+      dev_copy_spinor(&(s1[pos]),&(s2[pos]));
+  } 
+}
+
+
+
+__global__ void dev_skalarmult_add_assign_spinor_field(dev_spinor* s1, float lambda, dev_spinor* s2, dev_spinor* so){
+  int pos;
+  pos= threadIdx.x + blockDim.x*blockIdx.x;  
+  if(pos < dev_VOLUME){
+    dev_skalarmult_add_assign_spinor(&(s1[pos]), lambda ,&(s2[pos]), &(so[pos]) );
+  }
+}
+
+
+
+__global__ void dev_skalarmult_spinor_field(dev_spinor* s1, float lambda, dev_spinor* so){
+  int pos;
+  pos= threadIdx.x + blockDim.x*blockIdx.x;  
+  if(pos < dev_VOLUME){
+    dev_skalarmult_spinor(&(s1[pos]), dev_initcomplex(lambda,0.0) , &(so[pos]) );
+  }
+}  
+
+
+
+__global__ void dev_complexmult_spinor_field(dev_spinor* s1, dev_complex lambda, dev_spinor* so){
+  int pos;
+  pos= threadIdx.x + blockDim.x*blockIdx.x;  
+  if(pos < dev_VOLUME){
+    dev_skalarmult_spinor(&(s1[pos]), lambda , &(so[pos]) );
+  }
+}
+
+
+
+
+
+/*  functions needed for GPU double support */
+/********************************************/
+
+
+
+
+
+// this is to store a spinor in local mem (24 numbers adjacent) to global mem
+__device__ inline void dev_write_spinor_d2(dev_spinor_d *i1, dev_spinor_d *i2){
+  int i;
+  #pragma unroll 6
+  for(i=0;i<6;i++){ //color + spin
+    (*(i2+i*DEVOFF)).x = (*(i1+i)).x;
+    (*(i2+i*DEVOFF)).y = (*(i1+i)).y;
+    (*(i2+i*DEVOFF)).z = (*(i1+i)).z;
+    (*(i2+i*DEVOFF)).w = (*(i1+i)).w;
+  }
+}
+
+
+// this is to store a spinor in local mem (24 numbers adjacent) to global mem
+__device__ inline void dev_write_spinor_d2f(dev_spinor_d *i1, dev_spinor *i2){
+  int i;
+  #pragma unroll 6
+  for(i=0;i<6;i++){ //color + spin
+    (*(i2+i*DEVOFF)).x = __double2float_rn((*(i1+i)).x);
+    (*(i2+i*DEVOFF)).y = __double2float_rn((*(i1+i)).y);
+    (*(i2+i*DEVOFF)).z = __double2float_rn((*(i1+i)).z);
+    (*(i2+i*DEVOFF)).w = __double2float_rn((*(i1+i)).w);
+  }
+}
+
+
+
+// this is to store a spinor in local mem (24 numbers adjacent) to global mem
+__device__ inline void dev_write_spinor_f2d(dev_spinor *i1, dev_spinor_d *i2){
+  int i;
+  #pragma unroll 6
+  for(i=0;i<6;i++){ //color + spin
+    (*(i2+i*DEVOFF)).x = (double) (*(i1+i)).x;
+    (*(i2+i*DEVOFF)).y = (double) (*(i1+i)).y;
+    (*(i2+i*DEVOFF)).z = (double) (*(i1+i)).z;
+    (*(i2+i*DEVOFF)).w = (double) (*(i1+i)).w;
+  }
+}
+
+
+
+// this is to read a spinor from global into local mem (24 numbers adjacent)
+__device__ inline void dev_read_spinor_d2(dev_spinor_d *i1, dev_spinor_d *i2){
+  int i;
+  #pragma unroll 6
+  for(i=0;i<6;i++){ //color + spin
+    (*(i1+i)).x  = (*(i2+i*DEVOFF)).x;
+    (*(i1+i)).y  = (*(i2+i*DEVOFF)).y;
+    (*(i1+i)).z  = (*(i2+i*DEVOFF)).z;
+    (*(i1+i)).w  = (*(i2+i*DEVOFF)).w;
+  }
+}
+
+
+
+
+__global__ void dev_d2f(dev_spinor* spinfloat, dev_spinor_d* spindouble){
+
+   int pos;
+   pos= threadIdx.x + blockDim.x*blockIdx.x;  
+   
+   double4 help[6]; 
+   
+   if(pos < dev_VOLUME){
+   
+   dev_read_spinor_d2(&(help[0]), &(spindouble[pos]));
+   dev_write_spinor_d2f(&(help[0]),&(spinfloat[pos])); 
+        
+   }
+   
+}
+
+
+__global__ void dev_f2d(dev_spinor_d* spindouble, dev_spinor* spinfloat){
+
+   int pos;
+   pos= threadIdx.x + blockDim.x*blockIdx.x;  
+   
+   float4 help[6]; 
+   
+   if(pos < dev_VOLUME){
+     dev_read_spinor(&(help[0]), &(spinfloat[pos]));
+     dev_write_spinor_f2d(&(help[0]),&(spindouble[pos])); 
+   }
+   
+}
+
+
+
+
+
+
+// out = x + (float) y 
+// x is not read from texture
+// y is not read from texture
+__global__ void dev_add_f2d (dev_spinor_d* out, dev_spinor_d* x, dev_spinor* y){
+   int pos= threadIdx.x + blockDim.x*blockIdx.x;
+   double4 xhelp[6]; 
+   float4 yhelp[6]; 
+   double4 erghelp[6];
+   int i;
+
+   if(pos < dev_VOLUME){
+   
+   //load x
+   dev_read_spinor_d2(&(xhelp[0]), &(x[pos]));
+   //load y
+   dev_read_spinor(&(yhelp[0]), &(y[pos]));
+
+    #pragma unroll 6
+    for(i=0; i<6; i++){
+       erghelp[i].x = xhelp[i].x + (double) yhelp[i].x;
+       erghelp[i].y = xhelp[i].y + (double) yhelp[i].y;
+       erghelp[i].z = xhelp[i].z + (double) yhelp[i].z;
+       erghelp[i].w = xhelp[i].w + (double) yhelp[i].w;
+    }
+        
+     //write out spinors
+     dev_write_spinor_d2(&(erghelp[0]),&(out[pos])); 
+   }//dev_VOLUME
+}
+
+
+// out = x - y 
+// x is not read from texture
+// y is not read from texture
+__global__ void dev_diff_d (dev_spinor_d* out, dev_spinor_d* x, dev_spinor_d* y){
+   int pos= threadIdx.x + blockDim.x*blockIdx.x;
+   double4 xhelp[6];
+   double4 yhelp[6];   
+   double4 erghelp[6];
+   int i;
+
+   if(pos < dev_VOLUME){
+   
+   //load x
+   dev_read_spinor_d2(&(xhelp[0]), &(x[pos]));
+   //load y
+   dev_read_spinor_d2(&(yhelp[0]), &(y[pos]));
+
+    #pragma unroll 6
+    for(i=0; i<6; i++){
+       erghelp[i].x = xhelp[i].x - yhelp[i].x;
+       erghelp[i].y = xhelp[i].y - yhelp[i].y;
+       erghelp[i].z = xhelp[i].z - yhelp[i].z;
+       erghelp[i].w = xhelp[i].w - yhelp[i].w;
+    }
+        
+     //write out spinors
+     dev_write_spinor_d2(&(erghelp[0]),&(out[pos])); 
+   }//dev_VOLUME
+}
+
+
+
+
+// orders a double spinor on host according to the ordering used on host 
+void unorder_spin_gpu (dev_spinor_d* spin, spinor* h2d) {
+
+  int i, Vol, offset;
+  
+  #ifndef MPI
+    if (even_odd_flag) {
+      Vol = VOLUME/2;
+    }
+    else {
+      Vol = VOLUME;
+    }
+  #else
+   if (even_odd_flag) {
+     Vol = (VOLUME+RAND)/2;
+   }
+   else{
+     Vol = (VOLUME+RAND);
+   }
+  #endif
+  offset = Vol;
+  
+  for (i = 0; i < Vol; i++) {
+  
+        h2d[i].s0.c0 = spin[i+0*offset].x + I* spin[i+0*offset].y;
+        h2d[i].s0.c1 = spin[i+0*offset].z + I* spin[i+0*offset].w;
+        
+        h2d[i].s0.c2 = spin[i+1*offset].x + I* spin[i+1*offset].y;
+        h2d[i].s1.c0 = spin[i+1*offset].z + I* spin[i+1*offset].w;   
+        
+        h2d[i].s1.c1 = spin[i+2*offset].x + I* spin[i+2*offset].y;
+        h2d[i].s1.c2 = spin[i+2*offset].z + I* spin[i+2*offset].w;  
+        
+        h2d[i].s2.c0 = spin[i+3*offset].x + I* spin[i+3*offset].y;
+        h2d[i].s2.c1 = spin[i+3*offset].z + I* spin[i+3*offset].w;  
+        
+        h2d[i].s2.c2 = spin[i+4*offset].x + I* spin[i+4*offset].y;
+        h2d[i].s3.c0 = spin[i+4*offset].z + I* spin[i+4*offset].w; 
+        
+        h2d[i].s3.c1 = spin[i+5*offset].x + I* spin[i+5*offset].y;
+        h2d[i].s3.c2 = spin[i+5*offset].z + I* spin[i+5*offset].w; 
+        
+  }
+}
+
+
+
 // orders a double spinor on host according to the ordering used on device 
 void order_spin_gpu(spinor* spin, dev_spinor_d* h2d){
 
@@ -8123,104 +8171,4 @@ void order_spin_gpu(spinor* spin, dev_spinor_d* h2d){
     
   }
 }
-
-
-// orders a double spinor on host according to the ordering used on host 
-void unorder_spin_gpu (dev_spinor_d* spin, spinor* h2d) {
-
-  int i, Vol, offset;
-  
-  #ifndef MPI
-    if (even_odd_flag) {
-      Vol = VOLUME/2;
-    }
-    else {
-      Vol = VOLUME;
-    }
-  #else
-   if (even_odd_flag) {
-     Vol = (VOLUME+RAND)/2;
-   }
-   else{
-     Vol = (VOLUME+RAND);
-   }
-  #endif
-  offset = Vol;
-  
-  for (i = 0; i < Vol; i++) {
-  
-        h2d[i].s0.c0 = spin[i+0*offset].x + I* spin[i+0*offset].y;
-        h2d[i].s0.c1 = spin[i+0*offset].z + I* spin[i+0*offset].w;
-        
-        h2d[i].s0.c2 = spin[i+1*offset].x + I* spin[i+1*offset].y;
-        h2d[i].s1.c0 = spin[i+1*offset].z + I* spin[i+1*offset].w;   
-        
-        h2d[i].s1.c1 = spin[i+2*offset].x + I* spin[i+2*offset].y;
-        h2d[i].s1.c2 = spin[i+2*offset].z + I* spin[i+2*offset].w;  
-        
-        h2d[i].s2.c0 = spin[i+3*offset].x + I* spin[i+3*offset].y;
-        h2d[i].s2.c1 = spin[i+3*offset].z + I* spin[i+3*offset].w;  
-        
-        h2d[i].s2.c2 = spin[i+4*offset].x + I* spin[i+4*offset].y;
-        h2d[i].s3.c0 = spin[i+4*offset].z + I* spin[i+4*offset].w; 
-        
-        h2d[i].s3.c1 = spin[i+5*offset].x + I* spin[i+5*offset].y;
-        h2d[i].s3.c2 = spin[i+5*offset].z + I* spin[i+5*offset].w; 
-        
-  }
-}
-
-
-
-__global__ void dev_zero_spinor_field(dev_spinor* s1){
-  int pos;
-  pos= threadIdx.x + blockDim.x*blockIdx.x;  
-  if(pos < dev_VOLUME){
-          dev_zero_spinor(&(s1[pos]));
-  }
-}
-
-
-
-
-__global__ void dev_copy_spinor_field(dev_spinor* s1, dev_spinor* s2){
-    int pos;
-  pos= threadIdx.x + blockDim.x*blockIdx.x;  
-  if(pos < dev_VOLUME){
-      dev_copy_spinor(&(s1[pos]),&(s2[pos]));
-  } 
-}
-
-
-
-__global__ void dev_skalarmult_add_assign_spinor_field(dev_spinor* s1, float lambda, dev_spinor* s2, dev_spinor* so){
-  int pos;
-  pos= threadIdx.x + blockDim.x*blockIdx.x;  
-  if(pos < dev_VOLUME){
-    dev_skalarmult_add_assign_spinor(&(s1[pos]), lambda ,&(s2[pos]), &(so[pos]) );
-  }
-}
-
-
-
-__global__ void dev_skalarmult_spinor_field(dev_spinor* s1, float lambda, dev_spinor* so){
-  int pos;
-  pos= threadIdx.x + blockDim.x*blockIdx.x;  
-  if(pos < dev_VOLUME){
-    dev_skalarmult_spinor(&(s1[pos]), dev_initcomplex(lambda,0.0) , &(so[pos]) );
-  }
-}  
-
-
-
-__global__ void dev_complexmult_spinor_field(dev_spinor* s1, dev_complex lambda, dev_spinor* so){
-  int pos;
-  pos= threadIdx.x + blockDim.x*blockIdx.x;  
-  if(pos < dev_VOLUME){
-    dev_skalarmult_spinor(&(s1[pos]), lambda , &(so[pos]) );
-  }
-}
-
-
-
 

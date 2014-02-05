@@ -100,7 +100,7 @@
 
 //this adds two su3 vectors where a and b are given as spinors 
 //and their associated color vector is given as the component s_a and s_b
-__device__ void dev_vector_add_spinorcomponent(dev_su3_vec_d * out, dev_spinor_d * a, int s_a, dev_spinor_d * b, int s_b){
+__device__ void dev_vector_add_spinorcomponent(dev_su3_vec_d * out, double4 * a, int s_a, double4 * b, int s_b){
 
  dev_su3_vec_d *col_a, * col_b;
  //convert into double pointer and add 6(no of doubles in dev_su3_vec_d) * (spinor number)
@@ -113,7 +113,7 @@ __device__ void dev_vector_add_spinorcomponent(dev_su3_vec_d * out, dev_spinor_d
 //this adds two su3 vectors where a and b are given as spinors 
 //and their associated color vector is given as the component s_a and s_b
 //imaginary unit included
-__device__ void dev_vector_i_add_spinorcomponent(dev_su3_vec_d * out, dev_spinor_d * a, int s_a, dev_spinor_d * b, int s_b){
+__device__ void dev_vector_i_add_spinorcomponent(dev_su3_vec_d * out, double4 * a, int s_a, double4 * b, int s_b){
 
  dev_su3_vec_d *col_a, * col_b;
  //convert into double pointer and add 6(no of doubles in dev_su3_vec_d) * (spinor number)
@@ -125,7 +125,7 @@ __device__ void dev_vector_i_add_spinorcomponent(dev_su3_vec_d * out, dev_spinor
 
 //this subtracts two su3 vectors where a and b are given as spinors 
 //and their associated color vector is given as the component s_a and s_b
-__device__ void dev_vector_sub_spinorcomponent(dev_su3_vec_d * out, dev_spinor_d * a, int s_a, dev_spinor_d * b, int s_b){
+__device__ void dev_vector_sub_spinorcomponent(dev_su3_vec_d * out, double4 * a, int s_a, double4 * b, int s_b){
 
  dev_su3_vec_d *col_a, * col_b;
  //convert into double pointer and add 6(no of doubles in dev_su3_vec_d) * (spinor number)
@@ -138,7 +138,7 @@ __device__ void dev_vector_sub_spinorcomponent(dev_su3_vec_d * out, dev_spinor_d
 //this subtracts two su3 vectors where a and b are given as spinors 
 //and their associated color vector is given as the component s_a and s_b
 //imaginary unit included
-__device__ void dev_vector_i_sub_spinorcomponent(dev_su3_vec_d * out, dev_spinor_d * a, int s_a, dev_spinor_d * b, int s_b){
+__device__ void dev_vector_i_sub_spinorcomponent(dev_su3_vec_d * out, double4 * a, int s_a, double4 * b, int s_b){
 
  dev_su3_vec_d *col_a, * col_b;
  //convert into double pointer and add 6(no of doubles in dev_su3_vec_d) * (spinor number)
