@@ -405,7 +405,7 @@ __global__ void dev_Hopping_Matrix_d(dev_su3_2v_d * gf, const dev_spinor_d * sin
              //hoppos = tex1Dfetch(nn_tex,8*pos+3);
             //color
             dev_reconstructgf_2vtexref_d(gf, 4*gfindex_site[pos]+3, &(gfsmem[ix]));
-            dev_su3MtV_kappaP3_plus_d(gfsmem[ix],&(sin[hoppos]), &(ssum[0]), dev_k3_d.re);
+	    dev_su3MtV_kappaP3_plus_d(gfsmem[ix],&(sin[hoppos]), &(ssum[0]), dev_k3_d.re);
 
 //l==3,z               
             //negative direction
@@ -682,6 +682,32 @@ __global__ void dev_mul_one_pm_imu_sub_mul_gamma5_d(dev_spinor_d* sin1, dev_spin
 
 
 
+// aequivalent to Hopping_Matrix
+extern "C" void dev_Hopp_d(dev_spinor_d* spinout, dev_spinor_d* spinin, 
+			int gridsize, int blocksize, int gridsize2, int blocksize2,
+			int evenodd){
+  cudaError_t cudaerr;
+  int VolumeEO = VOLUME/2;
+
+
+  if(evenodd==0){
+    dev_Hopping_Matrix_d<<<gridsize, blocksize>>>
+             (dev_gf_d, spinin, spinout, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, 0, VolumeEO);            
+    
+  }
+  else{
+    dev_Hopping_Matrix_d<<<gridsize, blocksize>>>
+            (dev_gf_d, spinin, spinout, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, 0, VolumeEO);   
+  }
+  
+  if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
+    if (g_proc_id == 0){
+      printf("Error in dev_Hopp_d: %s\n", cudaGetErrorString(cudaGetLastError()));
+      printf("Error code is: %f\n",cudaerr);
+    }
+    exit(100);
+  }
+}
 
 
 
