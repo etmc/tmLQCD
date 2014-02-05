@@ -58,6 +58,9 @@
 #ifndef HALF
  /* texture for gauge field */
  texture<float4,1, cudaReadModeElementType> gf_tex;
+ //this is a workaround (int4 <-> double2) because
+ //of missing double2 texture support
+ texture<int4,1, cudaReadModeElementType> gf_tex_d; 
  const textureReference* gf_texRefPtr = NULL;
  cudaChannelFormatDesc gf_channelDesc;
  
@@ -262,6 +265,8 @@ extern "C" int bind_texture_gf(dev_su3_2v * gf){
 }
 
 
+
+
 extern "C" int unbind_texture_gf(){
  //printf("Unbinding texture to gaugefield\n");
  /*
@@ -274,7 +279,40 @@ extern "C" int unbind_texture_gf(){
 
 
 
+__inline__ __device__ double2 fetch1D_gf_d(const int& i){
+  int4 v=tex1Dfetch(gf_tex_d, i);
+  return(make_double2(__hiloint2double(v.y, v.x),__hiloint2double(v.w, v.z)));
+} 
 
+
+extern "C" int bind_texture_gf_d(dev_su3_2v_d * gf){
+ //printf("Binding texture to gaugefield\n");
+ 
+  #ifdef MPI
+     size_t size = sizeof(double2)*6*(VOLUME+RAND)*4;
+  #else
+     size_t size = sizeof(double2)*6*VOLUME*4;
+  #endif
+ /*
+ cudaGetTextureReference(&gf_texRefPtr, "gf_tex");
+ gf_channelDesc =  cudaCreateChannelDesc<float4>();
+ cudaBindTexture(0, gf_texRefPtr, gf, &gf_channelDesc, size);
+ */
+ cudaBindTexture(0, gf_tex_d, (int4*) gf, size);
+ //printf("%s\n", cudaGetErrorString(cudaGetLastError()));    
+ return(0);
+}
+
+
+extern "C" int unbind_texture_gf_d(){
+ //printf("Unbinding texture to gaugefield\n");
+ /*
+ cudaUnbindTexture(gf_texRefPtr);
+ */
+ cudaUnbindTexture(gf_tex_d);
+ //printf("%s\n", cudaGetErrorString(cudaGetLastError()));    
+ return(0);
+}
 
 
 
