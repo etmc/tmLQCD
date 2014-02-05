@@ -3581,8 +3581,9 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
 
   
   #ifdef GPU_DOUBLE
-  
-    test_double_operator(Q,N);
+    #ifdef MATRIX_DEBUG
+      test_double_operator(Q,N);
+    #endif
     double testnorm;
     
     /*!!!!  WHY IS P NONZERO????? */
