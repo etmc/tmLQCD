@@ -60,8 +60,11 @@ extern "C" int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
 
   //now invert the other shifts
   for(int im = 1; im < shifts; im++) {
-    use_shift = solver_pm->shifts[im]*solver_pm->shifts[im];
-    construct_mms_initialguess(Pup, Pdn, im, solver_pm); 
+    //construct the shift mu_k^2 - mu_0^2-
+    use_shift = solver_pm->shifts[im]*solver_pm->shifts[im] - solver_pm->shifts[0]*solver_pm->shifts[0];
+    if(use_shift < 0.05){
+      //construct_mms_initialguess(Pup, Pdn, im, solver_pm); 
+    }
     if(g_debug_level > 0 && g_proc_id == 0) {
       printf("# dev_CGMMS inverting with %i'th shift s = %f\n",im,use_shift);
     }
@@ -96,19 +99,22 @@ void construct_mms_initialguess(spinor ** const Pup, spinor ** const Pdn, int im
 //implementation of formula (17) of 1103:5103
   
   double num, denom, c_i;
-  zero_spinor_field(Pup[im], VOLUMEPLUSRAND/2);
-  zero_spinor_field(Pdn[im], VOLUMEPLUSRAND/2);
-  //FIXME 
-  //here we should exchange at least Pup/dn [im-1] such that it works also for MPI
+  zero_spinor_field(Pup[im], VOLUME/2);
+  zero_spinor_field(Pdn[im], VOLUME/2);
+
   for(int i=0; i<im; i++){
     c_i = 1.0;
-    for(int j=0; ((j<im) && (i!=i)); j++){
+    for(int j=0; ((j<im) && (j!=i)); j++){
+      /*
       num = solver_pm->shifts[im]*solver_pm->shifts[im] - solver_pm->shifts[j]*solver_pm->shifts[j];
       denom = solver_pm->shifts[j]*solver_pm->shifts[j] - solver_pm->shifts[i]*solver_pm->shifts[i];
+      */
+      num = solver_pm->shifts[im] - solver_pm->shifts[j];
+      denom = solver_pm->shifts[j] - solver_pm->shifts[i];      
       c_i *= num/denom;
     }
-    assign_add_mul_r(Pup[im], Pup[i] , c_i, VOLUMEPLUSRAND/2);
-    assign_add_mul_r(Pdn[im], Pdn[i] , c_i, VOLUMEPLUSRAND/2);    
+    assign_add_mul_r(Pup[im], Pup[i] , c_i, VOLUME/2);
+    assign_add_mul_r(Pdn[im], Pdn[i] , c_i, VOLUME/2);    
   }
 }
 
