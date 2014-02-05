@@ -3685,7 +3685,7 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
   float alpha;
   float beta;
   
-  int min_solver_it = min_innersolver_it;
+
   // (auxiliary) device fields
   dev_spinor *  r_up, *  r_dn,
              * Ad_up, * Ad_dn,
@@ -4053,7 +4053,7 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
     
     
     // aborting ?? // check wether precision is reached ...
-    if ( ((check_abs)&&(rr <= eps_abs)&&((j>min_solver_it)||(rr<1.0e-25))) || ((check_rel)&&(rr <= eps_rel*r0r0)&&((j>min_solver_it)||(rr<1.0e-25))) ) {
+    if ( ((check_abs)&&(rr <= eps_abs)) || ((check_rel)&&(rr <= eps_rel*r0r0)) ) {
     
       #ifdef MPI
         if (g_proc_id == 0) {
@@ -4176,19 +4176,30 @@ void test_double_nd_operator(spinor* const Q_up, spinor* const Q_dn, const int N
 
   //apply cpu matrix
 
-  Qtm_pm_ndpsi(solver_field_up[0], solver_field_dn[0], Q_up, Q_dn);
   
+   Qtm_pm_ndpsi(solver_field_up[0], solver_field_dn[0], Q_up, Q_dn);
+  
+  /*
+  Hopping_Matrix(EO,solver_field_up[1], Q_up);
+  Hopping_Matrix(OE, solver_field_up[0] , solver_field_up[1]); 
+  */
   //apply gpu matrix
   order_spin_gpu(Q_up, h2d_spin_d);
   cudaMemcpy(x_up_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);      
   order_spin_gpu(Q_dn, h2d_spin_d);
   cudaMemcpy(x_dn_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);	  
   // r_up/dn = Q-A*x_up/dn
+  
   dev_Qtm_pm_ndpsi_d(Ax_up_d, Ax_dn_d,  
 		      x_up_d, x_dn_d, 
 		      griddim3, blockdim3, griddim4, blockdim4,
 		      griddim4, blockdim4, griddim4, blockdim4);  
-  	
+  /*
+  dev_Hopp_d(x_dn_d, x_up_d,  
+		      griddim3, blockdim3, griddim4, blockdim4,0); 
+  dev_Hopp_d(Ax_up_d, x_dn_d,  
+		      griddim3, blockdim3, griddim4, blockdim4,1);   
+  */
   cudaMemcpy(h2d_spin_d, Ax_up_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
   unorder_spin_gpu(h2d_spin_d, solver_field_up[1]);      
 
@@ -4198,6 +4209,41 @@ void test_double_nd_operator(spinor* const Q_up, spinor* const Q_dn, const int N
   diff(solver_field_up[2], solver_field_up[1], solver_field_up[0],N);
   diff(solver_field_dn[2], solver_field_dn[1], solver_field_dn[0],N);  
   
+  int at_max = -1;
+  int at_min = -1;
+  double max_dev = 0.0;
+  double min_dev = 1.0;  
+  double dev;
+  _Complex double cdev;
+  spinor * s = solver_field_up[2];
+  for(int i=0; i<N; i++){
+    
+    cdev = conj(s->s0.c0) * s->s0.c0 +
+         conj(s->s0.c1) * s->s0.c1 +
+         conj(s->s0.c2) * s->s0.c2 +
+         conj(s->s1.c0) * s->s1.c0 +
+         conj(s->s1.c1) * s->s1.c1 +
+         conj(s->s1.c2) * s->s1.c2 +
+         conj(s->s2.c0) * s->s2.c0 +
+         conj(s->s2.c1) * s->s2.c1 +
+         conj(s->s2.c2) * s->s2.c2 +
+         conj(s->s3.c0) * s->s3.c0 +
+         conj(s->s3.c1) * s->s3.c1 +
+         conj(s->s3.c2) * s->s3.c2;   
+     dev = creal(cdev);
+      
+     if(dev > max_dev){
+       max_dev = dev;
+       at_max=i;
+    }
+    if(dev < min_dev){
+       min_dev = dev;
+       at_min=i;
+    } 
+    s++;
+  }
+  
+  
   double rk_up = square_norm(solver_field_up[2], N, 1);
   double rk_dn = square_norm(solver_field_dn[2], N, 1);  
   double rk = rk_up + rk_dn;
@@ -4205,8 +4251,32 @@ void test_double_nd_operator(spinor* const Q_up, spinor* const Q_dn, const int N
   printf("cpu: Squared difference is   UP: %.8e\n", rk_up);
   printf("cpu: Squared difference is DOWN: %.8e\n", rk_dn);  
   printf("cpu: Squared difference per spinor component is: %.8e\n", rk/N/24.0);  
+  printf("Max. difference at position %i: %.8e\n", at_max, max_dev);
+  printf("Min. difference at position %i: %.8e\n", at_min, min_dev);  
+  dev_complex_d h0,h1,h2,h3;
+  cudaMemcpyFromSymbol(&h0, dev_k0_d, sizeof(dev_complex_d));
+  printf("cpu: k0.re: %.16e\t k0.im: %.16e\n", creal(ka0), cimag(ka0));
+  printf("gpu: k0.re: %.16e\t k0.im: %.16e\n", h0.re, h0.im);  
+  printf("diff: k0.re: %.16e\t k0.im: %.16e\n", (creal(ka0)-h0.re), (cimag(ka0)-h0.im));
   
-
+  printf("\n");
+  cudaMemcpyFromSymbol(&h1, dev_k1_d, sizeof(dev_complex_d));  
+  printf("cpu: k1.re: %.16e\t k1.im: %.16e\n", creal(ka1), cimag(ka1));
+  printf("gpu: k1.re: %.16e\t k1.im: %.16e\n", h1.re, h1.im);  
+  printf("diff: k1.re: %.16e\t k1.im: %.16e\n", (creal(ka1)-h1.re), (cimag(ka1)-h1.im));
+  
+  printf("\n");
+  cudaMemcpyFromSymbol(&h2, dev_k2_d, sizeof(dev_complex_d));  
+  printf("cpu: k2.re: %.16e\t k2.im: %.16e\n", creal(ka2), cimag(ka2));
+  printf("gpu: k2.re: %.16e\t k2.im: %.16e\n", h2.re, h2.im);  
+  printf("diff: k2.re: %.16e\t k2.im: %.16e\n", (creal(ka1)-h2.re), (cimag(ka1)-h2.im));
+ 
+  printf("\n");
+  cudaMemcpyFromSymbol(&h3, dev_k3_d, sizeof(dev_complex_d));  
+  printf("cpu: k3.re: %.16e\t k3.im: %.16e\n", creal(ka3), cimag(ka3));
+  printf("gpu: k3.re: %.16e\t k3.im: %.16e\n", h3.re, h3.im);  
+  printf("diff: k3.re: %.16e\t k3.im: %.16e\n", (creal(ka1)-h3.re), (cimag(ka1)-h3.im));
+   
   finalize_solver(solver_field_up, nr_sf); 
   finalize_solver(solver_field_dn, nr_sf);  
 }
@@ -4562,7 +4632,9 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   #endif
   
   #ifdef GPU_DOUBLE
-  test_double_nd_operator(Q_up, Q_dn, N_sites_int);
+    #ifdef MATRIX_DEBUG
+      test_double_nd_operator(Q_up, Q_dn, N_sites_int);
+    #endif
   #endif
   /////////////////
   // ASSIGNMENTS //
@@ -5131,9 +5203,7 @@ int dev_cg_eo_nd_d (dev_su3_2v_d * gf,
   double rr_up, rr_dn, rr, rr_old, r0r0, dAd_up, dAd_dn, dAd;
   double alpha, beta;
   
-  
-  int min_solver_it = min_innersolver_it;
-  
+
   // (auxiliary) device fields
   // for recalculating the residue
   dev_spinor_d *  r_up, *  r_dn, * Ad_up, * Ad_dn, *  x_up, *  x_dn, *  d_up, *  d_dn, * Ax_up, * Ax_dn;		
@@ -5342,7 +5412,7 @@ int dev_cg_eo_nd_d (dev_su3_2v_d * gf,
         	           griddim2, blockdim2, griddim3, blockdim3,
         	           griddim3, blockdim3, griddim3, blockdim3);
 
-	if(shift != 0.0f){
+	if(shift != 0.0){
            //add constant shift if nonzero
            // CUBLAS:
           cublasDaxpy (N_floats_int, shift, (double *) x_up, 1, (double *) Ad_up, 1);
@@ -5380,7 +5450,7 @@ int dev_cg_eo_nd_d (dev_su3_2v_d * gf,
     }
     
     // aborting ?? // check wether precision is reached ...
-    if ( ((check_abs)&&(rr <= eps_abs)&&((j>min_solver_it)||(rr<1.0e-25))) || ((check_rel)&&(rr <= eps_rel*r0r0)&&((j>min_solver_it)||(rr<1.0e-25))) ) {
+    if ( ((check_abs)&&(rr <= eps_abs)) || ((check_rel)&&(rr <= eps_rel*r0r0)) ) {
     
 
     
@@ -5454,11 +5524,16 @@ int dev_cg_eo_nd_d (dev_su3_2v_d * gf,
 extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
                                  spinor * Q_up, spinor * Q_dn, double shift,
                                  int max_iter, double eps_sq, int rel_prec) {
+   
   
-
+   if(rel_prec){
     innersolver_precision_check_rel = 1;
     innersolver_precision_check_abs = 0;
-  
+   }
+   else{
+    innersolver_precision_check_rel = 0;
+    innersolver_precision_check_abs = 1;     
+  }
 
 
   /////////////////////
@@ -5619,7 +5694,9 @@ extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
   
 
   #ifdef GPU_DOUBLE
-  test_double_nd_operator(Q_up, Q_dn, N_sites_int);
+   #ifdef MATRIX_DEBUG
+    test_double_nd_operator(Q_up, Q_dn, N_sites_int);
+   #endif
   #endif
   /////////////////
   // ASSIGNMENTS //
@@ -5645,11 +5722,6 @@ extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
   // ALGORITHM //
   ///////////////
   
-  //ONLY FOR TESTS
-  //FIXME
-//   shift=0.005;
-  //
-  ////////////////
 
   printf("phmc_invmaxev = %f\n",phmc_invmaxev);  
   
@@ -5664,9 +5736,9 @@ extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
       order_spin_gpu(Q_dn, h2d_spin_d);
       cudaMemcpy(Q_dn_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);	
       
-      if (bb > 0.0) {
-	  printf("Have non-zero initial guess\n");
-      }
+//       if (bb > 0.0) {
+// 	  printf("Have non-zero initial guess\n");
+//       }
       
       //set x_up/dn to initial guess in P_up/dn
       order_spin_gpu(P_up, h2d_spin_d);
@@ -5679,11 +5751,8 @@ extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
 		  griddim3, blockdim3, griddim4, blockdim4,
 		  griddim4, blockdim4, griddim4, blockdim4);
       if(shift != 0.0) {
-	//FIXME
 	dev_axpy_d<<<griddim4,blockdim4>>>(shift, x_up_d, Ax_up_d);
 	dev_axpy_d<<<griddim4,blockdim4>>>(shift, x_dn_d, Ax_dn_d);
-	//assign_add_mul_r(Ax_up, x_up , shift, N_sites_int);
-	//assign_add_mul_r(Ax_dn, x_dn , shift, N_sites_int);
       }        
     
       dev_diff_d<<<griddim4,blockdim4>>>(r_up_d,Q_up_d,Ax_up_d);         
@@ -5729,16 +5798,6 @@ extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
     // INNER LOOP, CONJUGATE GRADIENT //
     ////////////////////////////////////
     
-    // SHIFT?
-    // solves (A + shift)*p(k+1) = r(k)
-    //        (A + shift)*p(0)   = r(0) = b
-    float shift_single;
-    if(shift==0.0){
-      shift_single = 0.0f;
-    }
-    else{
-      shift_single = (float) shift;
-    }
 
     startinner = gettime();
     innercount = dev_cg_eo_nd_d(dev_gf_d,
@@ -5746,7 +5805,7 @@ extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
                           dev_spinin_up_d , dev_spinin_dn_d, shift,
                           max_innersolver_it,
                           innersolver_precision_check_abs, innersolver_precision_check_rel,
-                          innersolver_precision_abs      , innersolver_precision_rel      );
+                          eps_sq     , eps_sq    );
     //after first inner solve in double we merely check for absolute tolerance
     innersolver_precision_check_rel = 0;
     innersolver_precision_check_abs = 1;
@@ -5812,17 +5871,14 @@ extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
     		
     // aborting ?? // check wether precision is reached ...
     if ( ((rr <= eps_sq) && (rel_prec == 0))  ||  ((rr <= eps_sq*r0r0) && (rel_prec == 1)) ) {
-      //for GPU_DOUBLE we have to assign P_up/dn 
-      //(for cpu outer solver this is not necessary, as P_up/dn == x_up/dn
-      cudaMemcpy(h2d_spin_d, x_up_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
-      unorder_spin_gpu(h2d_spin_d, P_up); 
-      cudaMemcpy(h2d_spin_d, x_dn_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
-      unorder_spin_gpu(h2d_spin_d, P_dn); 	
-	
+      
+      //we need not assign P_up/dn, as P_up/dn == x_up/dn
+
+        
       #ifdef MPI
 	if (g_proc_id == 0) {
       #endif
-      printf("\nEO inversion done in mixed precision.\n");
+      printf("\nEO inversion done in double precision.\n");
       if (rel_prec == 0) printf("Finished outer loop because of reached absolute outer solver precision.\n");
       if (rel_prec == 1) printf("Finished outer loop because of reached relative outer solver precision.\n");
       printf("Total number of inner iterations: %i\n", outercount);
