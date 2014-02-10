@@ -162,7 +162,6 @@ int read_gauge_field(char * filename, su3 ** const gf) {
   destruct_reader(reader);
 
   g_update_gauge_copy = 1;
-  g_update_gauge_energy = 1;
 
   return(0);
 }

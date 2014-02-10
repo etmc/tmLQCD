@@ -92,8 +92,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   hf.momenta = moment;
   hf.derivative = df0;
   hf.update_gauge_copy = g_update_gauge_copy;
-  hf.update_gauge_energy = g_update_gauge_energy;
-  hf.update_rectangle_energy = g_update_rectangle_energy;
   hf.traj_counter = traj_counter;
   integrator_set_fields(&hf);
 
@@ -151,7 +149,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   enepx = moment_energy(hf.momenta);
 
   if (!bc_flag) { /* if PBC */
-    new_plaquette_energy = measure_gauge_action( (const su3**) hf.gaugefield);
+    new_plaquette_energy = measure_plaquette( (const su3**) hf.gaugefield);
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
       new_rectangle_energy = measure_rectangles( (const su3**) hf.gaugefield);
     }
@@ -340,10 +338,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
   hf.update_gauge_copy = 1;
   g_update_gauge_copy = 1;
-  hf.update_gauge_energy = 1;
-  g_update_gauge_energy = 1;
-  hf.update_rectangle_energy = 1;
-  g_update_rectangle_energy = 1;
 #ifdef MPI
   xchange_gauge(hf.gaugefield);
 #endif
