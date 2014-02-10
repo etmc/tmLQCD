@@ -65,15 +65,8 @@ dev_complex_d c2;
 
 typedef dev_complex dev_su3_vec [3];
 
-/*double spinors*/
-// typedef struct  {
-//   double x;
-//   double y;
-//   double z;
-//   double w;  
-// } double4;
 
-typedef double4 dev_spinor_d;
+typedef double2 dev_spinor_d;
 
 
 

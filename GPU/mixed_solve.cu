@@ -2517,7 +2517,7 @@ extern "C" void init_mixedsolve_eo(su3** gf){
   	cudaMalloc((void **) &dev_spinout, dev_spinsize);
 	
 	//dev_spin_eo1/2_d we need for gpu_deriv_SB in any case
-   	size_t dev_spinsize_d = 6*VOLUME/2 * sizeof(dev_spinor_d); /* double4 */  
+   	size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); /* double4 */  
   	cudaMalloc((void **) &dev_spin_eo1_d, dev_spinsize_d);	
   	cudaMalloc((void **) &dev_spin_eo2_d, dev_spinsize_d);   
 
@@ -3402,7 +3402,7 @@ extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_it
 
 void test_double_operator(spinor* const Q, const int N){
    
-   size_t dev_spinsize_d = 6*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !   
+   size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !   
    int gridsize;
      //this is the partitioning for the HoppingMatrix kernel
      int blockdim3 = BLOCKD;
@@ -3520,7 +3520,7 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
   update_gpu_gf(g_gauge_field);
 
   #ifdef GPU_DOUBLE
-   size_t dev_spinsize_d = 6*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !   
+   size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !   
    int gridsize;
      //this is the partitioning for the HoppingMatrix kernel
      int blockdim3 = BLOCKD;
@@ -4026,7 +4026,7 @@ extern "C" int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int ma
   update_gpu_gf(g_gauge_field);
   
   #ifdef GPU_DOUBLE
-   size_t dev_spinsize_d = 6*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !   
+   size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !   
    int gridsize;
      //this is the partitioning for the HoppingMatrix kernel
      int blockdim3 = BLOCKD;

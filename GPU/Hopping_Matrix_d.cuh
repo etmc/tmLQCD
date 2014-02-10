@@ -74,7 +74,7 @@ __global__ void dev_Hopping_Matrix_d(dev_su3_2v_d * gf, const dev_spinor_d * sin
 
   int pos,hoppos;
     double4 shelp1[6], ssum[6];
-    __shared__ dev_su3_d gfsmem[BLOCKD];
+    dev_su3_d gfsmem;
 
 
   pos = start  +  threadIdx.x + blockDim.x * blockIdx.x;
@@ -107,22 +107,42 @@ __global__ void dev_Hopping_Matrix_d(dev_su3_2v_d * gf, const dev_spinor_d * sin
               #else
                 if ((gfindex_site[pos]/spatialvol) != (dev_T-1) ) {
               #endif
-                shelp1[0] = sin[hoppos+0*DEVOFF];
-                shelp1[1] = sin[hoppos+1*DEVOFF];
-                shelp1[2] = sin[hoppos+2*DEVOFF];
-		shelp1[3] = sin[hoppos+3*DEVOFF];
-                shelp1[4] = sin[hoppos+4*DEVOFF];
-                shelp1[5] = sin[hoppos+5*DEVOFF];
+                shelp1[0].x = sin[hoppos+0*DEVOFF].x;
+                shelp1[0].y = sin[hoppos+0*DEVOFF].y;
+                shelp1[0].z = sin[hoppos+1*DEVOFF].x;
+                shelp1[0].w = sin[hoppos+1*DEVOFF].y;		
+                shelp1[1].x = sin[hoppos+2*DEVOFF].x;
+                shelp1[1].y = sin[hoppos+2*DEVOFF].y;
+                shelp1[1].z = sin[hoppos+3*DEVOFF].x;
+                shelp1[1].w = sin[hoppos+3*DEVOFF].y;
+		
+                shelp1[2].x = sin[hoppos+4*DEVOFF].x;
+                shelp1[2].y = sin[hoppos+4*DEVOFF].y;
+                shelp1[2].z = sin[hoppos+5*DEVOFF].x;
+                shelp1[2].w = sin[hoppos+5*DEVOFF].y;		
+                shelp1[3].x = sin[hoppos+6*DEVOFF].x;
+                shelp1[3].y = sin[hoppos+6*DEVOFF].y;
+                shelp1[3].z = sin[hoppos+7*DEVOFF].x;
+                shelp1[3].w = sin[hoppos+7*DEVOFF].y;
+		
+                shelp1[4].x = sin[hoppos+8*DEVOFF].x;
+                shelp1[4].y = sin[hoppos+8*DEVOFF].y;
+                shelp1[4].z = sin[hoppos+9*DEVOFF].x;
+                shelp1[4].w = sin[hoppos+9*DEVOFF].y;		
+                shelp1[5].x = sin[hoppos+10*DEVOFF].x;
+                shelp1[5].y = sin[hoppos+10*DEVOFF].y;
+                shelp1[5].z = sin[hoppos+11*DEVOFF].x;
+                shelp1[5].w = sin[hoppos+11*DEVOFF].y;		
               }
               else{
                 // gf != ID for t == T-1 => mult spinor with gf
-                dev_reconstructgf_2vtexref_d(gf,4*gfindex_site[pos]+0,&(gfsmem[ix]));
-                dev_su3MtV_d(gfsmem[ix], &(sin[hoppos]), &(shelp1[0]));
+                dev_reconstructgf_2vtexref_d(gf,4*gfindex_site[pos]+0,&(gfsmem));
+                dev_su3MtV_d(gfsmem, &(sin[hoppos]), &(shelp1[0]));
 
               }
             #else
-              dev_reconstructgf_2vtexref_d(gf, 4*gfindex_site[pos]+ 0 ,&(gfsmem[ix]));
-              dev_su3MtV_d(gfsmem[ix], &(sin[hoppos]), &(shelp1[0]));
+              dev_reconstructgf_2vtexref_d(gf, 4*gfindex_site[pos]+ 0 ,&(gfsmem));
+              dev_su3MtV_d(gfsmem, &(sin[hoppos]), &(shelp1[0]));
             #endif
             //-kappa(r - gamma_mu)
               dev_kappaP0_plus_d(&(ssum[0]), &(shelp1[0]), dev_cconj_d(dev_k0_d));
@@ -141,22 +161,42 @@ __global__ void dev_Hopping_Matrix_d(dev_su3_2v_d * gf, const dev_spinor_d * sin
                 if ((gfindex_nextsite[hoppos]/spatialvol) != (dev_T-1) ) {
               #endif
               
-                shelp1[0] = sin[hoppos+0*DEVOFF];
-                shelp1[1] = sin[hoppos+1*DEVOFF];
-                shelp1[2] = sin[hoppos+2*DEVOFF];
-		shelp1[3] = sin[hoppos+3*DEVOFF];
-                shelp1[4] = sin[hoppos+4*DEVOFF];
-                shelp1[5] = sin[hoppos+5*DEVOFF];
+                shelp1[0].x = sin[hoppos+0*DEVOFF].x;
+                shelp1[0].y = sin[hoppos+0*DEVOFF].y;
+                shelp1[0].z = sin[hoppos+1*DEVOFF].x;
+                shelp1[0].w = sin[hoppos+1*DEVOFF].y;		
+                shelp1[1].x = sin[hoppos+2*DEVOFF].x;
+                shelp1[1].y = sin[hoppos+2*DEVOFF].y;
+                shelp1[1].z = sin[hoppos+3*DEVOFF].x;
+                shelp1[1].w = sin[hoppos+3*DEVOFF].y;
+		
+                shelp1[2].x = sin[hoppos+4*DEVOFF].x;
+                shelp1[2].y = sin[hoppos+4*DEVOFF].y;
+                shelp1[2].z = sin[hoppos+5*DEVOFF].x;
+                shelp1[2].w = sin[hoppos+5*DEVOFF].y;		
+                shelp1[3].x = sin[hoppos+6*DEVOFF].x;
+                shelp1[3].y = sin[hoppos+6*DEVOFF].y;
+                shelp1[3].z = sin[hoppos+7*DEVOFF].x;
+                shelp1[3].w = sin[hoppos+7*DEVOFF].y;
+		
+                shelp1[4].x = sin[hoppos+8*DEVOFF].x;
+                shelp1[4].y = sin[hoppos+8*DEVOFF].y;
+                shelp1[4].z = sin[hoppos+9*DEVOFF].x;
+                shelp1[4].w = sin[hoppos+9*DEVOFF].y;		
+                shelp1[5].x = sin[hoppos+10*DEVOFF].x;
+                shelp1[5].y = sin[hoppos+10*DEVOFF].y;
+                shelp1[5].z = sin[hoppos+11*DEVOFF].x;
+                shelp1[5].w = sin[hoppos+11*DEVOFF].y;
 
               }
               else{
                 // gf != ID for t == T-1 => mult spinor with gf
-                dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+0, &(gfsmem[ix]));
-                dev_su3MtV_d(gfsmem[ix], &(sin[hoppos]), &(shelp1[0]));
+                dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+0, &(gfsmem));
+                dev_su3MtV_d(gfsmem, &(sin[hoppos]), &(shelp1[0]));
               }
             #else            
-              dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+0, &(gfsmem[ix]));
-              dev_su3MtV_d(gfsmem[ix], &(sin[hoppos]), &(shelp1[0]));
+              dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+0, &(gfsmem));
+              dev_su3MtV_d(gfsmem, &(sin[hoppos]), &(shelp1[0]));
             #endif
             
             //-kappa(r + gamma_mu)
@@ -169,16 +209,16 @@ __global__ void dev_Hopping_Matrix_d(dev_su3_2v_d * gf, const dev_spinor_d * sin
             hoppos = nn_evenodd[8*pos+3];
              //hoppos = tex1Dfetch(nn_tex,8*pos+3);
             //color
-            dev_reconstructgf_2vtexref_d(gf, 4*gfindex_site[pos]+3, &(gfsmem[ix]));
-	    dev_su3MtV_kappaP3_plus_d(gfsmem[ix],&(sin[hoppos]), &(ssum[0]), dev_k3_d.re);
+            dev_reconstructgf_2vtexref_d(gf, 4*gfindex_site[pos]+3, &(gfsmem));
+	    dev_su3MtV_kappaP3_plus_d(gfsmem,&(sin[hoppos]), &(ssum[0]), dev_k3_d.re);
 
 //l==3,z               
             //negative direction
             hoppos = nn_evenodd[8*pos+7];
              //hoppos = tex1Dfetch(nn_tex,8*pos+7); 
             //color
-            dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+3, &(gfsmem[ix]));
-	    dev_su3MtV_kappaP3_minus_d(gfsmem[ix],&(sin[hoppos]), &(ssum[0]), dev_k3_d.re);
+            dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+3, &(gfsmem));
+	    dev_su3MtV_kappaP3_minus_d(gfsmem,&(sin[hoppos]), &(ssum[0]), dev_k3_d.re);
 
 
 	    
@@ -187,16 +227,16 @@ __global__ void dev_Hopping_Matrix_d(dev_su3_2v_d * gf, const dev_spinor_d * sin
             hoppos = nn_evenodd[8*pos+2];
              //hoppos = tex1Dfetch(nn_tex,8*pos+2);
             //color
-            dev_reconstructgf_2vtexref_d(gf,4*gfindex_site[pos]+2, &(gfsmem[ix]));
-	    dev_su3MtV_kappaP2_plus_d(gfsmem[ix],&(sin[hoppos]), &(ssum[0]), dev_k2_d.re);
+            dev_reconstructgf_2vtexref_d(gf,4*gfindex_site[pos]+2, &(gfsmem));
+	    dev_su3MtV_kappaP2_plus_d(gfsmem,&(sin[hoppos]), &(ssum[0]), dev_k2_d.re);
 
 //l==2,y                  
             //negative direction
             hoppos = nn_evenodd[8*pos+6]; 
              //hoppos = tex1Dfetch(nn_tex,8*pos+6);
             //color
-            dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+2, &(gfsmem[ix]));
-	    dev_su3MtV_kappaP2_minus_d(gfsmem[ix],&(sin[hoppos]), &(ssum[0]), dev_k2_d.re);
+            dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+2, &(gfsmem));
+	    dev_su3MtV_kappaP2_minus_d(gfsmem,&(sin[hoppos]), &(ssum[0]), dev_k2_d.re);
             
 
 	    
@@ -205,16 +245,16 @@ __global__ void dev_Hopping_Matrix_d(dev_su3_2v_d * gf, const dev_spinor_d * sin
             hoppos = nn_evenodd[8*pos+1];
              //hoppos = tex1Dfetch(nn_tex,8*pos+1);
             //color
-            dev_reconstructgf_2vtexref_d(gf,4*gfindex_site[pos]+1, &(gfsmem[ix]));
-	    dev_su3MtV_kappaP1_plus_d(gfsmem[ix],&(sin[hoppos]), &(ssum[0]), dev_k1_d.re);
+            dev_reconstructgf_2vtexref_d(gf,4*gfindex_site[pos]+1, &(gfsmem));
+	    dev_su3MtV_kappaP1_plus_d(gfsmem,&(sin[hoppos]), &(ssum[0]), dev_k1_d.re);
 
 //l==1,x 
             //negative direction
             hoppos = nn_evenodd[8*pos+5]; 
              //hoppos = tex1Dfetch(nn_tex,8*pos+5);
             //color
-            dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+1, &(gfsmem[ix]));
-	    dev_su3MtV_kappaP1_minus_d(gfsmem[ix],&(sin[hoppos]), &(ssum[0]), dev_k1_d.re);
+            dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+1, &(gfsmem));
+	    dev_su3MtV_kappaP1_minus_d(gfsmem,&(sin[hoppos]), &(ssum[0]), dev_k1_d.re);
             
           
         //copy to output spinor
@@ -232,7 +272,7 @@ __global__ void dev_Hopping_Matrix_updn_d(dev_su3_2v_d * gf, const dev_spinor_d 
   int pos,hoppos;
     double4 shelp1_up[6], ssum_up[6];
     double4 shelp1_dn[6], ssum_dn[6];    
-    __shared__ dev_su3_d gfsmem[BLOCKD];
+    dev_su3_d gfsmem;
 
 
   pos = start  +  threadIdx.x + blockDim.x * blockIdx.x;
@@ -266,29 +306,71 @@ __global__ void dev_Hopping_Matrix_updn_d(dev_su3_2v_d * gf, const dev_spinor_d 
               #else
                 if ((gfindex_site[pos]/spatialvol) != (dev_T-1) ) {
               #endif
-                shelp1_up[0] = sin_up[hoppos+0*DEVOFF];
-                shelp1_up[1] = sin_up[hoppos+1*DEVOFF];
-                shelp1_up[2] = sin_up[hoppos+2*DEVOFF];
-		shelp1_up[3] = sin_up[hoppos+3*DEVOFF];
-                shelp1_up[4] = sin_up[hoppos+4*DEVOFF];
-                shelp1_up[5] = sin_up[hoppos+5*DEVOFF];
-                shelp1_dn[0] = sin_dn[hoppos+0*DEVOFF];
-                shelp1_dn[1] = sin_dn[hoppos+1*DEVOFF];
-                shelp1_dn[2] = sin_dn[hoppos+2*DEVOFF];
-		shelp1_dn[3] = sin_dn[hoppos+3*DEVOFF];
-                shelp1_dn[4] = sin_dn[hoppos+4*DEVOFF];
-                shelp1_dn[5] = sin_dn[hoppos+5*DEVOFF];		
+              
+		shelp1_up[0].x = sin_up[hoppos+0*DEVOFF].x;
+                shelp1_up[0].y = sin_up[hoppos+0*DEVOFF].y;
+                shelp1_up[0].z = sin_up[hoppos+1*DEVOFF].x;
+                shelp1_up[0].w = sin_up[hoppos+1*DEVOFF].y;		
+                shelp1_up[1].x = sin_up[hoppos+2*DEVOFF].x;
+                shelp1_up[1].y = sin_up[hoppos+2*DEVOFF].y;
+                shelp1_up[1].z = sin_up[hoppos+3*DEVOFF].x;
+                shelp1_up[1].w = sin_up[hoppos+3*DEVOFF].y;
+		
+                shelp1_up[2].x = sin_up[hoppos+4*DEVOFF].x;
+                shelp1_up[2].y = sin_up[hoppos+4*DEVOFF].y;
+                shelp1_up[2].z = sin_up[hoppos+5*DEVOFF].x;
+                shelp1_up[2].w = sin_up[hoppos+5*DEVOFF].y;		
+                shelp1_up[3].x = sin_up[hoppos+6*DEVOFF].x;
+                shelp1_up[3].y = sin_up[hoppos+6*DEVOFF].y;
+                shelp1_up[3].z = sin_up[hoppos+7*DEVOFF].x;
+                shelp1_up[3].w = sin_up[hoppos+7*DEVOFF].y;
+		
+                shelp1_up[4].x = sin_up[hoppos+8*DEVOFF].x;
+                shelp1_up[4].y = sin_up[hoppos+8*DEVOFF].y;
+                shelp1_up[4].z = sin_up[hoppos+9*DEVOFF].x;
+                shelp1_up[4].w = sin_up[hoppos+9*DEVOFF].y;		
+                shelp1_up[5].x = sin_up[hoppos+10*DEVOFF].x;
+                shelp1_up[5].y = sin_up[hoppos+10*DEVOFF].y;
+                shelp1_up[5].z = sin_up[hoppos+11*DEVOFF].x;
+                shelp1_up[5].w = sin_up[hoppos+11*DEVOFF].y;
+		
+		shelp1_dn[0].x = sin_dn[hoppos+0*DEVOFF].x;
+                shelp1_dn[0].y = sin_dn[hoppos+0*DEVOFF].y;
+                shelp1_dn[0].z = sin_dn[hoppos+1*DEVOFF].x;
+                shelp1_dn[0].w = sin_dn[hoppos+1*DEVOFF].y;		
+                shelp1_dn[1].x = sin_dn[hoppos+2*DEVOFF].x;
+                shelp1_dn[1].y = sin_dn[hoppos+2*DEVOFF].y;
+                shelp1_dn[1].z = sin_dn[hoppos+3*DEVOFF].x;
+                shelp1_dn[1].w = sin_dn[hoppos+3*DEVOFF].y;
+		
+                shelp1_dn[2].x = sin_dn[hoppos+4*DEVOFF].x;
+                shelp1_dn[2].y = sin_dn[hoppos+4*DEVOFF].y;
+                shelp1_dn[2].z = sin_dn[hoppos+5*DEVOFF].x;
+                shelp1_dn[2].w = sin_dn[hoppos+5*DEVOFF].y;		
+                shelp1_dn[3].x = sin_dn[hoppos+6*DEVOFF].x;
+                shelp1_dn[3].y = sin_dn[hoppos+6*DEVOFF].y;
+                shelp1_dn[3].z = sin_dn[hoppos+7*DEVOFF].x;
+                shelp1_dn[3].w = sin_dn[hoppos+7*DEVOFF].y;
+		
+                shelp1_dn[4].x = sin_dn[hoppos+8*DEVOFF].x;
+                shelp1_dn[4].y = sin_dn[hoppos+8*DEVOFF].y;
+                shelp1_dn[4].z = sin_dn[hoppos+9*DEVOFF].x;
+                shelp1_dn[4].w = sin_dn[hoppos+9*DEVOFF].y;		
+                shelp1_dn[5].x = sin_dn[hoppos+10*DEVOFF].x;
+                shelp1_dn[5].y = sin_dn[hoppos+10*DEVOFF].y;
+                shelp1_dn[5].z = sin_dn[hoppos+11*DEVOFF].x;
+                shelp1_dn[5].w = sin_dn[hoppos+11*DEVOFF].y;		
               }
               else{
                 // gf != ID for t == T-1 => mult spinor with gf
-                dev_reconstructgf_2vtexref_d(gf,4*gfindex_site[pos]+0,&(gfsmem[ix]));
-                dev_su3MtV_d(gfsmem[ix], &(sin_up[hoppos]), &(shelp1_up[0]));
-                dev_su3MtV_d(gfsmem[ix], &(sin_dn[hoppos]), &(shelp1_dn[0]));
+                dev_reconstructgf_2vtexref_d(gf,4*gfindex_site[pos]+0,&(gfsmem));
+                dev_su3MtV_d(gfsmem, &(sin_up[hoppos]), &(shelp1_up[0]));
+                dev_su3MtV_d(gfsmem, &(sin_dn[hoppos]), &(shelp1_dn[0]));
               }
             #else
-              dev_reconstructgf_2vtexref_d(gf, 4*gfindex_site[pos]+ 0 ,&(gfsmem[ix]));
-              dev_su3MtV_d(gfsmem[ix], &(sin_up[hoppos]), &(shelp1_up[0]));
-              dev_su3MtV_d(gfsmem[ix], &(sin_dn[hoppos]), &(shelp1_dn[0]));	      
+              dev_reconstructgf_2vtexref_d(gf, 4*gfindex_site[pos]+ 0 ,&(gfsmem));
+              dev_su3MtV_d(gfsmem, &(sin_up[hoppos]), &(shelp1_up[0]));
+              dev_su3MtV_d(gfsmem, &(sin_dn[hoppos]), &(shelp1_dn[0]));	      
             #endif
             //-kappa(r - gamma_mu)
               dev_kappaP0_plus_d(&(ssum_up[0]), &(shelp1_up[0]), dev_cconj_d(dev_k0_d));
@@ -307,29 +389,70 @@ __global__ void dev_Hopping_Matrix_updn_d(dev_su3_2v_d * gf, const dev_spinor_d 
                 if ((gfindex_nextsite[hoppos]/spatialvol) != (dev_T-1) ) {
               #endif
               
-                shelp1_up[0] = sin_up[hoppos+0*DEVOFF];
-                shelp1_up[1] = sin_up[hoppos+1*DEVOFF];
-                shelp1_up[2] = sin_up[hoppos+2*DEVOFF];
-		shelp1_up[3] = sin_up[hoppos+3*DEVOFF];
-                shelp1_up[4] = sin_up[hoppos+4*DEVOFF];
-                shelp1_up[5] = sin_up[hoppos+5*DEVOFF];
-                shelp1_dn[0] = sin_dn[hoppos+0*DEVOFF];
-                shelp1_dn[1] = sin_dn[hoppos+1*DEVOFF];
-                shelp1_dn[2] = sin_dn[hoppos+2*DEVOFF];
-		shelp1_dn[3] = sin_dn[hoppos+3*DEVOFF];
-                shelp1_dn[4] = sin_dn[hoppos+4*DEVOFF];
-                shelp1_dn[5] = sin_dn[hoppos+5*DEVOFF];
+		shelp1_up[0].x = sin_up[hoppos+0*DEVOFF].x;
+                shelp1_up[0].y = sin_up[hoppos+0*DEVOFF].y;
+                shelp1_up[0].z = sin_up[hoppos+1*DEVOFF].x;
+                shelp1_up[0].w = sin_up[hoppos+1*DEVOFF].y;		
+                shelp1_up[1].x = sin_up[hoppos+2*DEVOFF].x;
+                shelp1_up[1].y = sin_up[hoppos+2*DEVOFF].y;
+                shelp1_up[1].z = sin_up[hoppos+3*DEVOFF].x;
+                shelp1_up[1].w = sin_up[hoppos+3*DEVOFF].y;
+		
+                shelp1_up[2].x = sin_up[hoppos+4*DEVOFF].x;
+                shelp1_up[2].y = sin_up[hoppos+4*DEVOFF].y;
+                shelp1_up[2].z = sin_up[hoppos+5*DEVOFF].x;
+                shelp1_up[2].w = sin_up[hoppos+5*DEVOFF].y;		
+                shelp1_up[3].x = sin_up[hoppos+6*DEVOFF].x;
+                shelp1_up[3].y = sin_up[hoppos+6*DEVOFF].y;
+                shelp1_up[3].z = sin_up[hoppos+7*DEVOFF].x;
+                shelp1_up[3].w = sin_up[hoppos+7*DEVOFF].y;
+		
+                shelp1_up[4].x = sin_up[hoppos+8*DEVOFF].x;
+                shelp1_up[4].y = sin_up[hoppos+8*DEVOFF].y;
+                shelp1_up[4].z = sin_up[hoppos+9*DEVOFF].x;
+                shelp1_up[4].w = sin_up[hoppos+9*DEVOFF].y;		
+                shelp1_up[5].x = sin_up[hoppos+10*DEVOFF].x;
+                shelp1_up[5].y = sin_up[hoppos+10*DEVOFF].y;
+                shelp1_up[5].z = sin_up[hoppos+11*DEVOFF].x;
+                shelp1_up[5].w = sin_up[hoppos+11*DEVOFF].y;
+		
+		shelp1_dn[0].x = sin_dn[hoppos+0*DEVOFF].x;
+                shelp1_dn[0].y = sin_dn[hoppos+0*DEVOFF].y;
+                shelp1_dn[0].z = sin_dn[hoppos+1*DEVOFF].x;
+                shelp1_dn[0].w = sin_dn[hoppos+1*DEVOFF].y;		
+                shelp1_dn[1].x = sin_dn[hoppos+2*DEVOFF].x;
+                shelp1_dn[1].y = sin_dn[hoppos+2*DEVOFF].y;
+                shelp1_dn[1].z = sin_dn[hoppos+3*DEVOFF].x;
+                shelp1_dn[1].w = sin_dn[hoppos+3*DEVOFF].y;
+		
+                shelp1_dn[2].x = sin_dn[hoppos+4*DEVOFF].x;
+                shelp1_dn[2].y = sin_dn[hoppos+4*DEVOFF].y;
+                shelp1_dn[2].z = sin_dn[hoppos+5*DEVOFF].x;
+                shelp1_dn[2].w = sin_dn[hoppos+5*DEVOFF].y;		
+                shelp1_dn[3].x = sin_dn[hoppos+6*DEVOFF].x;
+                shelp1_dn[3].y = sin_dn[hoppos+6*DEVOFF].y;
+                shelp1_dn[3].z = sin_dn[hoppos+7*DEVOFF].x;
+                shelp1_dn[3].w = sin_dn[hoppos+7*DEVOFF].y;
+		
+                shelp1_dn[4].x = sin_dn[hoppos+8*DEVOFF].x;
+                shelp1_dn[4].y = sin_dn[hoppos+8*DEVOFF].y;
+                shelp1_dn[4].z = sin_dn[hoppos+9*DEVOFF].x;
+                shelp1_dn[4].w = sin_dn[hoppos+9*DEVOFF].y;		
+                shelp1_dn[5].x = sin_dn[hoppos+10*DEVOFF].x;
+                shelp1_dn[5].y = sin_dn[hoppos+10*DEVOFF].y;
+                shelp1_dn[5].z = sin_dn[hoppos+11*DEVOFF].x;
+                shelp1_dn[5].w = sin_dn[hoppos+11*DEVOFF].y;	
               }
               else{
                 // gf != ID for t == T-1 => mult spinor with gf
-                dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+0, &(gfsmem[ix]));
-                dev_su3MtV_d(gfsmem[ix], &(sin_up[hoppos]), &(shelp1_up[0]));
-                dev_su3MtV_d(gfsmem[ix], &(sin_dn[hoppos]), &(shelp1_dn[0]));		
+                dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+0, &(gfsmem));
+                dev_su3MtV_d(gfsmem, &(sin_up[hoppos]), &(shelp1_up[0]));
+                dev_su3MtV_d(gfsmem, &(sin_dn[hoppos]), &(shelp1_dn[0]));		
               }
             #else            
-              dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+0, &(gfsmem[ix]));
-              dev_su3MtV_d(gfsmem[ix], &(sin_up[hoppos]), &(shelp1_up[0]));
-              dev_su3MtV_d(gfsmem[ix], &(sin_dn[hoppos]), &(shelp1_dn[0]));	      
+              dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+0, &(gfsmem));
+              dev_su3MtV_d(gfsmem, &(sin_up[hoppos]), &(shelp1_up[0]));
+              dev_su3MtV_d(gfsmem, &(sin_dn[hoppos]), &(shelp1_dn[0]));	      
             #endif
             
             //-kappa(r + gamma_mu)
@@ -342,35 +465,37 @@ __global__ void dev_Hopping_Matrix_updn_d(dev_su3_2v_d * gf, const dev_spinor_d 
             hoppos = nn_evenodd[8*pos+3];
              //hoppos = tex1Dfetch(nn_tex,8*pos+3);
             //color
-            dev_reconstructgf_2vtexref_d(gf, 4*gfindex_site[pos]+3, &(gfsmem[ix]));
-            dev_su3MtV_kappaP3_plus_d(gfsmem[ix],&(sin_up[hoppos]), &(ssum_up[0]), dev_k3_d.re);
-            dev_su3MtV_kappaP3_plus_d(gfsmem[ix],&(sin_dn[hoppos]), &(ssum_dn[0]), dev_k3_d.re);
+            dev_reconstructgf_2vtexref_d(gf, 4*gfindex_site[pos]+3, &(gfsmem));
+            dev_su3MtV_kappaP3_plus_d(gfsmem,&(sin_up[hoppos]), &(ssum_up[0]), dev_k3_d.re);
+            dev_su3MtV_kappaP3_plus_d(gfsmem,&(sin_dn[hoppos]), &(ssum_dn[0]), dev_k3_d.re);
+
+	    
 //l==3,z               
             //negative direction
             hoppos = nn_evenodd[8*pos+7];
              //hoppos = tex1Dfetch(nn_tex,8*pos+7); 
             //color
-            dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+3, &(gfsmem[ix]));
-	    dev_su3MtV_kappaP3_minus_d(gfsmem[ix],&(sin_up[hoppos]), &(ssum_up[0]), dev_k3_d.re);
-	    dev_su3MtV_kappaP3_minus_d(gfsmem[ix],&(sin_dn[hoppos]), &(ssum_dn[0]), dev_k3_d.re);
-
+            dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+3, &(gfsmem));
+	    dev_su3MtV_kappaP3_minus_d(gfsmem,&(sin_up[hoppos]), &(ssum_up[0]), dev_k3_d.re);
+	    dev_su3MtV_kappaP3_minus_d(gfsmem,&(sin_dn[hoppos]), &(ssum_dn[0]), dev_k3_d.re);
 	    
 //l==2,y 
             //positive direction
             hoppos = nn_evenodd[8*pos+2];
              //hoppos = tex1Dfetch(nn_tex,8*pos+2);
             //color
-            dev_reconstructgf_2vtexref_d(gf,4*gfindex_site[pos]+2, &(gfsmem[ix]));
-	    dev_su3MtV_kappaP2_plus_d(gfsmem[ix],&(sin_up[hoppos]), &(ssum_up[0]), dev_k2_d.re);
-	    dev_su3MtV_kappaP2_plus_d(gfsmem[ix],&(sin_dn[hoppos]), &(ssum_dn[0]), dev_k2_d.re);
+            dev_reconstructgf_2vtexref_d(gf,4*gfindex_site[pos]+2, &(gfsmem));
+	    dev_su3MtV_kappaP2_plus_d(gfsmem,&(sin_up[hoppos]), &(ssum_up[0]), dev_k2_d.re);
+	    dev_su3MtV_kappaP2_plus_d(gfsmem,&(sin_dn[hoppos]), &(ssum_dn[0]), dev_k2_d.re);
+	      
 //l==2,y                  
             //negative direction
             hoppos = nn_evenodd[8*pos+6]; 
              //hoppos = tex1Dfetch(nn_tex,8*pos+6);
             //color
-            dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+2, &(gfsmem[ix]));
-	    dev_su3MtV_kappaP2_minus_d(gfsmem[ix],&(sin_up[hoppos]), &(ssum_up[0]), dev_k2_d.re);
-	    dev_su3MtV_kappaP2_minus_d(gfsmem[ix],&(sin_dn[hoppos]), &(ssum_dn[0]), dev_k2_d.re);            
+            dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+2, &(gfsmem));
+	    dev_su3MtV_kappaP2_minus_d(gfsmem,&(sin_up[hoppos]), &(ssum_up[0]), dev_k2_d.re);
+	    dev_su3MtV_kappaP2_minus_d(gfsmem,&(sin_dn[hoppos]), &(ssum_dn[0]), dev_k2_d.re);            
 
 	    
 //l==1,x 
@@ -378,21 +503,22 @@ __global__ void dev_Hopping_Matrix_updn_d(dev_su3_2v_d * gf, const dev_spinor_d 
             hoppos = nn_evenodd[8*pos+1];
              //hoppos = tex1Dfetch(nn_tex,8*pos+1);
             //color
-            dev_reconstructgf_2vtexref_d(gf,4*gfindex_site[pos]+1, &(gfsmem[ix]));
-	    dev_su3MtV_kappaP1_plus_d(gfsmem[ix],&(sin_up[hoppos]), &(ssum_up[0]), dev_k1_d.re);
-	    dev_su3MtV_kappaP1_plus_d(gfsmem[ix],&(sin_dn[hoppos]), &(ssum_dn[0]), dev_k1_d.re);
+            dev_reconstructgf_2vtexref_d(gf,4*gfindex_site[pos]+1, &(gfsmem));
+	    dev_su3MtV_kappaP1_plus_d(gfsmem,&(sin_up[hoppos]), &(ssum_up[0]), dev_k1_d.re);
+	    dev_su3MtV_kappaP1_plus_d(gfsmem,&(sin_dn[hoppos]), &(ssum_dn[0]), dev_k1_d.re);
 //l==1,x 
             //negative direction
             hoppos = nn_evenodd[8*pos+5]; 
              //hoppos = tex1Dfetch(nn_tex,8*pos+5);
             //color
-            dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+1, &(gfsmem[ix]));
-	    dev_su3MtV_kappaP1_minus_d(gfsmem[ix],&(sin_up[hoppos]), &(ssum_up[0]), dev_k1_d.re);
-	    dev_su3MtV_kappaP1_minus_d(gfsmem[ix],&(sin_dn[hoppos]), &(ssum_dn[0]), dev_k1_d.re);            
-          
-        //copy to output spinor
-        dev_write_spinor_d(&(ssum_up[0]),&(sout_up[pos])); 
-        dev_write_spinor_d(&(ssum_dn[0]),&(sout_dn[pos])); 	
+            dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+1, &(gfsmem));
+	    dev_su3MtV_kappaP1_minus_d(gfsmem,&(sin_up[hoppos]), &(ssum_up[0]), dev_k1_d.re);
+	    //copy to output spinor
+            dev_write_spinor_d(&(ssum_up[0]),&(sout_up[pos])); 	    
+	    
+	    dev_su3MtV_kappaP1_minus_d(gfsmem,&(sin_dn[hoppos]), &(ssum_dn[0]), dev_k1_d.re);            
+            //copy to output spinor
+	    dev_write_spinor_d(&(ssum_dn[0]),&(sout_dn[pos])); 	
   }
 }
 
@@ -634,6 +760,281 @@ __global__ void dev_mul_one_pm_imubar_gamma5_d (dev_spinor_d * sin,
 
 
 
+__global__ void dev_nd_linalg2_d(dev_spinor_d * s1_up, dev_spinor_d * s1_dn, 
+				dev_spinor_d * s2_up, dev_spinor_d * s2_dn, 
+				double epsbar, double nrm) {
+  double4 s1[6], sout[6];	
+  int pos = threadIdx.x + blockDim.x*blockIdx.x;
+  
+  if (pos < dev_VOLUME) {
+    //upper output spinor
+    dev_read_spinor_d(&(sout[0]), &(s2_up[pos]));
+    dev_read_spinor_d(&(s1[0]), &(s1_dn[pos]));    
+    
+    sout[0].x += epsbar*s1[0].x;
+    s2_up[pos+0*DEVOFF].x = sout[0].x*nrm;    
+    sout[0].y += epsbar*s1[0].y;
+    s2_up[pos+0*DEVOFF].y = sout[0].y*nrm;    
+    sout[0].z += epsbar*s1[0].z;
+    s2_up[pos+1*DEVOFF].x = sout[0].z*nrm;      
+    sout[0].w += epsbar*s1[0].w;
+    s2_up[pos+1*DEVOFF].y = sout[0].w*nrm; 
+       
+    sout[1].x += epsbar*s1[1].x;
+    s2_up[pos+2*DEVOFF].x = sout[1].x*nrm; 
+    sout[1].y += epsbar*s1[1].y;
+    s2_up[pos+2*DEVOFF].y = sout[1].y*nrm;      
+    sout[1].z += epsbar*s1[1].z;
+    s2_up[pos+3*DEVOFF].x = sout[1].z*nrm;       
+    sout[1].w += epsbar*s1[1].w;
+    s2_up[pos+3*DEVOFF].y = sout[1].w*nrm;    
+    
+    sout[2].x += epsbar*s1[2].x;
+    s2_up[pos+4*DEVOFF].x = sout[2].x*nrm; 
+    sout[2].y += epsbar*s1[2].y;
+    s2_up[pos+4*DEVOFF].y = sout[2].y*nrm;  
+    sout[2].z += epsbar*s1[2].z;
+    s2_up[pos+5*DEVOFF].x = sout[2].z*nrm;    
+    sout[2].w += epsbar*s1[2].w;
+    s2_up[pos+5*DEVOFF].y = sout[2].w*nrm;   
+
+    sout[3].x += epsbar*s1[3].x;
+    s2_up[pos+6*DEVOFF].x = sout[3].x*nrm;
+    sout[3].y += epsbar*s1[3].y;
+    s2_up[pos+6*DEVOFF].y = sout[3].y*nrm;   
+    sout[3].z += epsbar*s1[3].z;
+    s2_up[pos+7*DEVOFF].x = sout[3].z*nrm;     
+    sout[3].w += epsbar*s1[3].w;
+    s2_up[pos+7*DEVOFF].y = sout[3].w*nrm;   
+
+    sout[4].x += epsbar*s1[4].x;
+    s2_up[pos+8*DEVOFF].x = sout[4].x*nrm;
+    sout[4].y += epsbar*s1[4].y;
+    s2_up[pos+8*DEVOFF].y = sout[4].y*nrm;      
+    sout[4].z += epsbar*s1[4].z;
+    s2_up[pos+9*DEVOFF].x = sout[4].z*nrm;    
+    sout[4].w += epsbar*s1[4].w;
+    s2_up[pos+9*DEVOFF].y = sout[4].w*nrm;   
+    
+    sout[5].x += epsbar*s1[5].x;
+    s2_up[pos+10*DEVOFF].x = sout[5].x*nrm;
+    sout[5].y += epsbar*s1[5].y;
+    s2_up[pos+10*DEVOFF].y = sout[5].y*nrm;      
+    sout[5].z += epsbar*s1[5].z;
+    s2_up[pos+11*DEVOFF].x = sout[5].z*nrm;   
+    sout[5].w += epsbar*s1[5].w;
+    s2_up[pos+11*DEVOFF].y = sout[5].w*nrm;   
+    
+
+        
+    //upper output spinor
+    dev_read_spinor_d(&(sout[0]), &(s2_dn[pos]));
+    dev_read_spinor_d(&(s1[0]), &(s1_up[pos]));    
+
+    
+    sout[0].x += epsbar*s1[0].x;
+    s2_dn[pos+0*DEVOFF].x = sout[0].x*nrm;
+    sout[0].y += epsbar*s1[0].y;
+    s2_dn[pos+0*DEVOFF].y = sout[0].y*nrm;        
+    sout[0].z += epsbar*s1[0].z;
+    s2_dn[pos+1*DEVOFF].x = sout[0].z*nrm;             
+    sout[0].w += epsbar*s1[0].w;
+    s2_dn[pos+1*DEVOFF].y = sout[0].w*nrm;  
+       
+    sout[1].x += epsbar*s1[1].x;
+    s2_dn[pos+2*DEVOFF].x = sout[1].x*nrm;    
+    sout[1].y += epsbar*s1[1].y;
+    s2_dn[pos+2*DEVOFF].y = sout[1].y*nrm; 
+    sout[1].z += epsbar*s1[1].z;
+    s2_dn[pos+3*DEVOFF].x = sout[1].z*nrm; 
+    sout[1].w += epsbar*s1[1].w;
+    s2_dn[pos+3*DEVOFF].y = sout[1].w*nrm; 
+    
+    sout[2].x += epsbar*s1[2].x;
+    s2_dn[pos+4*DEVOFF].x = sout[2].x*nrm; 
+    sout[2].y += epsbar*s1[2].y;
+    s2_dn[pos+4*DEVOFF].y = sout[2].y*nrm;     
+    sout[2].z += epsbar*s1[2].z;
+    s2_dn[pos+5*DEVOFF].x = sout[2].z*nrm; 
+    sout[2].w += epsbar*s1[2].w;
+    s2_dn[pos+5*DEVOFF].y = sout[2].w*nrm;  
+
+    sout[3].x += epsbar*s1[3].x;
+    s2_dn[pos+6*DEVOFF].x = sout[3].x*nrm; 
+    sout[3].y += epsbar*s1[3].y;
+    s2_dn[pos+6*DEVOFF].y = sout[3].y*nrm;  
+    sout[3].z += epsbar*s1[3].z;
+    s2_dn[pos+7*DEVOFF].x = sout[3].z*nrm;      
+    sout[3].w += epsbar*s1[3].w;
+    s2_dn[pos+7*DEVOFF].y = sout[3].w*nrm;     
+
+    sout[4].x += epsbar*s1[4].x;
+    s2_dn[pos+8*DEVOFF].x = sout[4].x*nrm; 
+    sout[4].y += epsbar*s1[4].y;
+    s2_dn[pos+8*DEVOFF].y = sout[4].y*nrm;    
+    sout[4].z += epsbar*s1[4].z;
+    s2_dn[pos+9*DEVOFF].x = sout[4].z*nrm;      
+    sout[4].w += epsbar*s1[4].w;
+    s2_dn[pos+9*DEVOFF].y = sout[4].w*nrm;    
+    
+    sout[5].x += epsbar*s1[5].x;
+    s2_dn[pos+10*DEVOFF].x = sout[5].x*nrm; 
+    sout[5].y += epsbar*s1[5].y;
+    s2_dn[pos+10*DEVOFF].y = sout[5].y*nrm; 
+    sout[5].z += epsbar*s1[5].z;
+    s2_dn[pos+11*DEVOFF].x = sout[5].z*nrm;    
+    sout[5].w += epsbar*s1[5].w;
+    s2_dn[pos+11*DEVOFF].y = sout[5].w*nrm;    
+
+  }
+}
+
+
+
+
+//s2_up = gamma5*(s2_up -epsbar s3_up - s1_up)
+//s2_dn = gamma5*(s2_dn -epsbar s3_dn - s1_dn)
+__global__ void dev_nd_linalg1_gamma5_d (dev_spinor_d * s1_up, dev_spinor_d * s1_dn,
+				dev_spinor_d * s3_up, dev_spinor_d * s3_dn,  
+				dev_spinor_d * s2_up, dev_spinor_d * s2_dn,	double epsbar			
+				) {
+  double4 s1[6], s3[6], sout[6];	
+  int pos = threadIdx.x + blockDim.x*blockIdx.x;
+  
+  if (pos < dev_VOLUME) {
+    //upper output spinor
+    dev_read_spinor_d(&(sout[0]), &(s2_up[pos]));
+    dev_read_spinor_d(&(s1[0]), &(s1_up[pos]));    
+    dev_read_spinor_d(&(s3[0]), &(s3_up[pos])); 
+    
+    sout[0].x -= epsbar*s3[0].x;
+    sout[0].x -= s1[0].x;
+    sout[0].y -= epsbar*s3[0].y;
+    sout[0].y -= s1[0].y;    
+    sout[0].z -= epsbar*s3[0].z;
+    sout[0].z -= s1[0].z;    
+    sout[0].w -= epsbar*s3[0].w;
+    sout[0].w -= s1[0].w;       
+    
+    sout[1].x -= epsbar*s3[1].x;
+    sout[1].x -= s1[1].x;
+    sout[1].y -= epsbar*s3[1].y;
+    sout[1].y -= s1[1].y;    
+    sout[1].z -= epsbar*s3[1].z;
+    sout[1].z -= s1[1].z;    
+    sout[1].w -= epsbar*s3[1].w;
+    sout[1].w -= s1[1].w;       
+    
+    sout[2].x -= epsbar*s3[2].x;
+    sout[2].x -= s1[2].x;
+    sout[2].y -= epsbar*s3[2].y;
+    sout[2].y -= s1[2].y;    
+    sout[2].z -= epsbar*s3[2].z;
+    sout[2].z -= s1[2].z;    
+    sout[2].w -= epsbar*s3[2].w;
+    sout[2].w -= s1[2].w;       
+    
+    sout[3].x -= epsbar*s3[3].x;
+    sout[3].x -= s1[3].x;
+    sout[3].y -= epsbar*s3[3].y;
+    sout[3].y -= s1[3].y;    
+    sout[3].z -= epsbar*s3[3].z;
+    sout[3].z -= s1[3].z;    
+    sout[3].w -= epsbar*s3[3].w;
+    sout[3].w -= s1[3].w;   
+    
+    sout[4].x -= epsbar*s3[4].x;
+    sout[4].x -= s1[4].x;
+    sout[4].y -= epsbar*s3[4].y;
+    sout[4].y -= s1[4].y;    
+    sout[4].z -= epsbar*s3[4].z;
+    sout[4].z -= s1[4].z;    
+    sout[4].w -= epsbar*s3[4].w;
+    sout[4].w -= s1[4].w;       
+    
+    sout[5].x -= epsbar*s3[5].x;
+    sout[5].x -= s1[5].x;
+    sout[5].y -= epsbar*s3[5].y;
+    sout[5].y -= s1[5].y;    
+    sout[5].z -= epsbar*s3[5].z;
+    sout[5].z -= s1[5].z;    
+    sout[5].w -= epsbar*s3[5].w;
+    sout[5].w -= s1[5].w;       
+    
+
+    dev_Gamma5_assign_d(&(s1[0]), &(sout[0]));      
+    dev_write_spinor_d(&(s1[0]),&(s2_up[pos]));    
+    
+    
+    //lower output spinor
+    dev_read_spinor_d(&(sout[0]), &(s2_dn[pos]));
+    dev_read_spinor_d(&(s1[0]), &(s1_dn[pos]));    
+    dev_read_spinor_d(&(s3[0]), &(s3_dn[pos]));    
+    
+
+     sout[0].x -= epsbar*s3[0].x;
+    sout[0].x -= s1[0].x;
+    sout[0].y -= epsbar*s3[0].y;
+    sout[0].y -= s1[0].y;    
+    sout[0].z -= epsbar*s3[0].z;
+    sout[0].z -= s1[0].z;    
+    sout[0].w -= epsbar*s3[0].w;
+    sout[0].w -= s1[0].w;       
+    
+    sout[1].x -= epsbar*s3[1].x;
+    sout[1].x -= s1[1].x;
+    sout[1].y -= epsbar*s3[1].y;
+    sout[1].y -= s1[1].y;    
+    sout[1].z -= epsbar*s3[1].z;
+    sout[1].z -= s1[1].z;    
+    sout[1].w -= epsbar*s3[1].w;
+    sout[1].w -= s1[1].w;       
+    
+    sout[2].x -= epsbar*s3[2].x;
+    sout[2].x -= s1[2].x;
+    sout[2].y -= epsbar*s3[2].y;
+    sout[2].y -= s1[2].y;    
+    sout[2].z -= epsbar*s3[2].z;
+    sout[2].z -= s1[2].z;    
+    sout[2].w -= epsbar*s3[2].w;
+    sout[2].w -= s1[2].w;       
+    
+    sout[3].x -= epsbar*s3[3].x;
+    sout[3].x -= s1[3].x;
+    sout[3].y -= epsbar*s3[3].y;
+    sout[3].y -= s1[3].y;    
+    sout[3].z -= epsbar*s3[3].z;
+    sout[3].z -= s1[3].z;    
+    sout[3].w -= epsbar*s3[3].w;
+    sout[3].w -= s1[3].w;   
+    
+    sout[4].x -= epsbar*s3[4].x;
+    sout[4].x -= s1[4].x;
+    sout[4].y -= epsbar*s3[4].y;
+    sout[4].y -= s1[4].y;    
+    sout[4].z -= epsbar*s3[4].z;
+    sout[4].z -= s1[4].z;    
+    sout[4].w -= epsbar*s3[4].w;
+    sout[4].w -= s1[4].w;       
+    
+    sout[5].x -= epsbar*s3[5].x;
+    sout[5].x -= s1[5].x;
+    sout[5].y -= epsbar*s3[5].y;
+    sout[5].y -= s1[5].y;    
+    sout[5].z -= epsbar*s3[5].z;
+    sout[5].z -= s1[5].z;    
+    sout[5].w -= epsbar*s3[5].w;
+    sout[5].w -= s1[5].w;         
+    
+
+    dev_Gamma5_assign_d(&(s1[0]), &(sout[0]));        
+    dev_write_spinor_d(&(s1[0]),&(s2_dn[pos]));       
+  }
+}
+
+
+
+
 
 
 // the GPU implementation of  Qtm_pm_ndpsi(...)  from tm_operators_nd.c
@@ -660,90 +1061,37 @@ void dev_Qtm_pm_ndpsi_d (dev_spinor_d * spinout_up, dev_spinor_d * spinout_dn,
   double nrm = 1.0 / (1.0 + g_mubar*g_mubar - g_epsbar*g_epsbar);
   
   dev_Hopping_Matrix_updn_d<<<gridsize1, blocksize1>>>(dev_gf_d, spinin_dn, spinin_up, dev_spin_eo1_up_d, dev_spin_eo1_dn_d,dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,0,N_sites);	// dev_spin_eo1_up = (M_eo) * spinin_dn
-
   
   dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_up_d, dev_spin_eo2_up_d, -1.0);		// dev_spin_eo2_up  =  (1 - imubar) * dev_spin_eo1_up  =  (1 - imubar)*(M_eo) * spinin_dn
   dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_dn_d, dev_spin_eo2_dn_d, +1.0);		// dev_spin_eo2_dn  =  (1 + imubar) * dev_spin_eo1_dn  =  (1 + imubar)*(M_eo) * spinin_up
+  dev_nd_linalg2_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, g_epsbar, nrm); 
   
-  dev_axpy_d<<<gridsize2, blocksize2>>>(g_epsbar, dev_spin_eo1_dn_d, dev_spin_eo2_up_d);
-  
-  dev_axpy_d<<<gridsize2, blocksize2>>>(g_epsbar, dev_spin_eo1_up_d, dev_spin_eo2_dn_d);
-
-  										// dev_spin_eo2_up  =  dev_spin_eo2_up  +  epsbar * dev_spin_eo1_dn  =  (1 - imubar)*(M_eo) * spinin_dn  +  epsbar * (M_eo) * spinin_updev_xpay_d<<<gridsize2, blocksize2>>>(g_epsbar, dev_spin_eo1_up, dev_spin_eo2_dn);
-  										// dev_spin_eo2_dn  =  dev_spin_eo2_dn  +  epsbar * dev_spin_eo1_up  =  (1 + imubar)*(M_eo) * spinin_up  +  epsbar * (M_eo) * spinin_dn
-  dev_blasscal_d<<<gridsize2, blocksize2>>>(nrm, dev_spin_eo2_up_d);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * spinin_dn  +  nrm*epsbar*(M_eo) * spinin_up
-  dev_blasscal_d<<<gridsize2, blocksize2>>>(nrm, dev_spin_eo2_dn_d);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * spinin_up  +  nrm*epsbar*(M_eo) * spinin_dn
-  
-  dev_Hopping_Matrix_updn_d<<<gridsize1, blocksize1>>>(dev_gf_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,0,N_sites);
-								
+ 
+  dev_Hopping_Matrix_updn_d<<<gridsize1, blocksize1>>>(dev_gf_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,0,N_sites);								
 
   dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(spinin_dn, dev_spin_eo2_up_d, +1.0);			// dev_spin_eo2_up = (1 + imubar) * spinin_dn
   dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(spinin_up, dev_spin_eo2_dn_d, -1.0);			// dev_spin_eo2_dn = (1 - imubar) * spinin_up
-  
-
-  dev_axpy_d<<<gridsize2, blocksize2>>>(-g_epsbar, spinin_up, dev_spin_eo2_up_d);
-  												// dev_spin_eo2_up  =  dev_spin_eo2_up - epsbar*spinin_up  =  (1+imubar)*spinin_dn - epsbar*spinin_up
-  dev_axpy_d<<<gridsize2, blocksize2>>>(-g_epsbar, spinin_dn, dev_spin_eo2_dn_d);
-  												// dev_spin_eo2_dn  =  dev_spin_eo2_dn - epsbar*spinin_dn  =  (1-imubar)*spinin_up - epsbar*spinin_dn
-  
-  													// this is ((M_oo) - (M_oe)(Mee^-1)(M_eo)) * (spinin_dn, spinin_up):
-  dev_axpy_d<<<gridsize2, blocksize2>>>(-1.0, dev_spin_eo1_up_d, dev_spin_eo2_up_d);
-  							// dev_spin_eo2_up  =  dev_spin_eo2_up  -  dev_spin_eo1_up  =                      (1+imubar) * spinin_dn  -                    epsbar * spinin_up
-  							//                                                             - (M_oe)*nrm*(1-imubar)*(M_eo) * spinin_dn  -  (M_oe)*nrm*epsbar*(M_eo) * spinin_up
-  dev_axpy_d<<<gridsize2, blocksize2>>>(-1.0, dev_spin_eo1_dn_d, dev_spin_eo2_dn_d);
-  							// dev_spin_eo2_dn  =  dev_spin_eo2_dn  -  dev_spin_eo1_dn  =                      (1-imubar) * spinin_up  -                    epsbar * spinin_dn
-  							//                                                             - (M_oe)*nrm*(1+imubar)*(M_eo) * spinin_up  -  (M_oe)*nrm*epsbar*(M_eo) * spinin_dn
-  
-
-  dev_gamma5_d<<<gridsize3, blocksize3>>>(dev_spin_eo2_up_d, dev_spin_eo2_up_d);					// dev_spin_eo2_up = gamma5 * dev_spin_eo2_up 
-  dev_gamma5_d<<<gridsize3, blocksize3>>>(dev_spin_eo2_dn_d, dev_spin_eo2_dn_d);					// dev_spin_eo2_dn = gamma5 * dev_spin_eo2_dn
-
- 
+  dev_nd_linalg1_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_up_d, dev_spin_eo1_dn_d, spinin_up, spinin_dn, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, g_epsbar ); 
+    
   ////////////////////
   // (a,b) -> (b,a) //
   ////////////////////
   
   dev_blascopy_d<<<gridsize4, blocksize4>>>(dev_spin_eo2_dn_d, dev_spin_eo3_up_d);			// dev_spin_eo3_up = dev_spin_eo2_dn
   dev_blascopy_d<<<gridsize4, blocksize4>>>(dev_spin_eo2_up_d, dev_spin_eo3_dn_d);			// dev_spin_eo3_dn = dev_spin_eo2_up
-      
+       
   dev_Hopping_Matrix_updn_d<<<gridsize1, blocksize1>>>(dev_gf_d, dev_spin_eo3_up_d, dev_spin_eo3_dn_d, dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,0,N_sites);	// dev_spin_eo1_up = (M_eo) * dev_spin_eo3_up
-
+    
   dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_up_d, dev_spin_eo2_up_d, -1.0);			// dev_spin_eo2_up  =  (1 - imubar) * dev_spin_eo1_up  =  (1 - imubar)*(M_eo) * dev_spin_eo3_up
-  dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_dn_d, dev_spin_eo2_dn_d, +1.0);			// dev_spin_eo2_dn  =  (1 + imubar) * dev_spin_eo1_dn  =  (1 + imubar)*(M_eo) * dev_spin_eo3_dn
+  dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_dn_d, dev_spin_eo2_dn_d, +1.0);			// dev_spin_eo2_dn  =  (1 + imubar) * dev_spin_eo1_dn  =  (1 + imubar)*(M_eo) * dev_spin_eo3_dn 
+  dev_nd_linalg2_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, g_epsbar, nrm); 
   
-  dev_axpy_d<<<gridsize2, blocksize2>>>(g_epsbar, dev_spin_eo1_dn_d, dev_spin_eo2_up_d);
-  										// dev_spin_eo2_up  =  dev_spin_eo2_up  +  epsbar * dev_spin_eo1_dn  =  (1 - imubar)*(M_eo) * dev_spin_eo3_up  +  epsbar * (M_eo) * dev_spin_eo3_dn
-  dev_axpy_d<<<gridsize2, blocksize2>>>(g_epsbar, dev_spin_eo1_up_d, dev_spin_eo2_dn_d);
-  										// dev_spin_eo2_dn  =  dev_spin_eo2_dn  +  epsbar * dev_spin_eo1_up  =  (1 + imubar)*(M_eo) * dev_spin_eo3_dn  +  epsbar * (M_eo) * dev_spin_eo3_up
-  
-  dev_blasscal_d<<<gridsize2, blocksize2>>>(nrm, dev_spin_eo2_up_d);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  +  nrm*epsbar*(M_eo) * dev_spin_eo3_dn
-  dev_blasscal_d<<<gridsize2, blocksize2>>>(nrm, dev_spin_eo2_dn_d);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  +  nrm*epsbar*(M_eo) * dev_spin_eo3_up
-  
-  
-
   dev_Hopping_Matrix_updn_d<<<gridsize1, blocksize1>>>(dev_gf_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, dev_spin_eo1_up_d,dev_spin_eo1_dn_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,0,N_sites);
-
   
-
   dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo3_up_d, dev_spin_eo2_up_d, +1.0);				// dev_spin_eo2_up = (1 + imubar) * dev_spin_eo3_up
   dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo3_dn_d, dev_spin_eo2_dn_d, -1.0);				// dev_spin_eo2_dn = (1 - imubar) * dev_spin_eo3_dn
-  
-  											// remember: this is (M_oo) * (dev_spin_eo3_up, dev_spin_eo3_dn):
-  dev_axpy_d<<<gridsize2, blocksize2>>>(-g_epsbar, dev_spin_eo3_dn_d, dev_spin_eo2_up_d);
-  												// dev_spin_eo2_up  =  dev_spin_eo2_up - epsbar*dev_spin_eo3_dn  =  (1+imubar)*dev_spin_eo3_up - epsbar*dev_spin_eo3_dn
-  dev_axpy_d<<<gridsize2, blocksize2>>>(-g_epsbar, dev_spin_eo3_up_d, dev_spin_eo2_dn_d);
-  												// dev_spin_eo2_dn  =  dev_spin_eo2_dn - epsbar*dev_spin_eo3_up  =  (1-imubar)*dev_spin_eo3_dn - epsbar*dev_spin_eo3_up
-  											// this is ( (M_oo) - (M_oe) (Mee^-1) (M_eo) ) * (dev_spin_eo3_up, dev_spin_eo3_dn)
-  dev_axpy_d<<<gridsize2, blocksize2>>>(-1.0, dev_spin_eo1_up_d, dev_spin_eo2_up_d);
-  							// dev_spin_eo2_up  =  dev_spin_eo2_up  -  dev_spin_eo1_up  =                      (1+imubar) * dev_spin_eo3_up  -                    epsbar * dev_spin_eo3_dn
-  							//                                                             - (M_oe)*nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  -  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_dn
-  dev_axpy_d<<<gridsize2, blocksize2>>>( -1.0, dev_spin_eo1_dn_d, dev_spin_eo2_dn_d);
-  							// dev_spin_eo2_dn  =  dev_spin_eo2_dn  -  dev_spin_eo1_dn  =                      (1-imubar) * dev_spin_eo3_dn  -                    epsbar * dev_spin_eo3_up
-  							//                                                             - (M_oe)*nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  -  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_up
-  
-  dev_gamma5_d<<<gridsize3, blocksize3>>>(dev_spin_eo2_up_d, dev_spin_eo2_up_d);					// dev_spin_eo2_up = gamma5 * dev_spin_eo2_up 
-  dev_gamma5_d<<<gridsize3, blocksize3>>>(dev_spin_eo2_dn_d, dev_spin_eo2_dn_d);					// dev_spin_eo2_dn = gamma5 * dev_spin_eo2_dn
-
+  dev_nd_linalg1_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_spin_eo3_dn_d, dev_spin_eo3_up_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, g_epsbar ); 
+      
   dev_blasscal_d<<<gridsize2, blocksize2>>>(phmc_invmaxev*phmc_invmaxev, dev_spin_eo2_up_d);
   dev_blasscal_d<<<gridsize2, blocksize2>>>(phmc_invmaxev*phmc_invmaxev, dev_spin_eo2_dn_d);
 

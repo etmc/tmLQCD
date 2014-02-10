@@ -35,8 +35,11 @@
 
 
 //Block sizes for GPU_DOUBLE
-#define BLOCKD 64 // Block Size	
-#define BLOCK2D 64
+#define BLOCKD 288 // Block Size	
+#define BLOCK2D 512
+
+//this defines a stopping criterion for the inner mixed solver
+#define SP_MIN_EPS 1.0e-20
 
 #endif
 

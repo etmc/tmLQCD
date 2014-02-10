@@ -506,6 +506,19 @@ void to_temporalgauge( su3** gfield, spinor * const spin1, spinor * const spin2)
 
 
 
+void to_temporalgauge_mms( su3** gfield, spinor * const spin1, spinor * const spin2, spinor ** const spin_mms_up, spinor ** const spin_mms_dn, int Nshift) {
+
+  //apply trafo on gauge and up/dn source fields
+  to_temporalgauge(gfield, spin1, spin2);
+  
+  //apply trafo on mms up/dn fields
+  for(int is=0; is < Nshift; is++){
+    apply_gtrafo_spinor_odd(spin_mms_up[is], g_trafo);
+    apply_gtrafo_spinor_odd(spin_mms_dn[is], g_trafo);
+  }
+
+  return;
+}
 
 
 
@@ -748,6 +761,25 @@ void from_temporalgauge(spinor * const spin1, spinor * const spin2) {
 }
 
 
+
+void from_temporalgauge_mms(spinor * const spin1, spinor * const spin2, spinor ** const spin_mms_up, spinor ** const spin_mms_dn, int Nshift) {
+  #ifndef LOWOUTPUT
+   if (g_proc_id == 0) {  
+    printf("Returning from temporalgauge now!\n");
+   }
+  #endif
+  
+
+  //apply trafo on gauge and up/dn source fields
+  from_temporalgauge(spin1, spin2);
+  
+  //apply trafo on mms up/dn fields
+  for(int is=0; is < Nshift; is++){
+    apply_inv_gtrafo_spinor_odd(spin_mms_up[is], g_trafo);
+    apply_inv_gtrafo_spinor_odd(spin_mms_dn[is], g_trafo);
+  }
+  return;
+}
 
 
 

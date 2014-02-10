@@ -7912,20 +7912,20 @@ __global__ void dev_complexmult_spinor_field(dev_spinor* s1, dev_complex lambda,
 
 
 // this is to store a spinor in local mem (24 numbers adjacent) to global mem
-__device__ inline void dev_write_spinor_d2(dev_spinor_d *i1, dev_spinor_d *i2){
+__device__ inline void dev_write_spinor_d2(double4 *i1, dev_spinor_d *i2){
   int i;
   #pragma unroll 6
   for(i=0;i<6;i++){ //color + spin
-    (*(i2+i*DEVOFF)).x = (*(i1+i)).x;
-    (*(i2+i*DEVOFF)).y = (*(i1+i)).y;
-    (*(i2+i*DEVOFF)).z = (*(i1+i)).z;
-    (*(i2+i*DEVOFF)).w = (*(i1+i)).w;
+    (*(i2+(2*i)*DEVOFF)).x = (*(i1+i)).x;
+    (*(i2+(2*i)*DEVOFF)).y = (*(i1+i)).y;
+    (*(i2+(2*i+1)*DEVOFF)).x = (*(i1+i)).z;
+    (*(i2+(2*i+1)*DEVOFF)).y = (*(i1+i)).w;
   }
 }
 
 
 // this is to store a spinor in local mem (24 numbers adjacent) to global mem
-__device__ inline void dev_write_spinor_d2f(dev_spinor_d *i1, dev_spinor *i2){
+__device__ inline void dev_write_spinor_d2f(double4 *i1, dev_spinor *i2){
   int i;
   #pragma unroll 6
   for(i=0;i<6;i++){ //color + spin
@@ -7943,24 +7943,24 @@ __device__ inline void dev_write_spinor_f2d(dev_spinor *i1, dev_spinor_d *i2){
   int i;
   #pragma unroll 6
   for(i=0;i<6;i++){ //color + spin
-    (*(i2+i*DEVOFF)).x = (double) (*(i1+i)).x;
-    (*(i2+i*DEVOFF)).y = (double) (*(i1+i)).y;
-    (*(i2+i*DEVOFF)).z = (double) (*(i1+i)).z;
-    (*(i2+i*DEVOFF)).w = (double) (*(i1+i)).w;
+    (*(i2+(2*i)*DEVOFF)).x = (double) (*(i1+i)).x;
+    (*(i2+(2*i)*DEVOFF)).y = (double) (*(i1+i)).y;
+    (*(i2+(2*i+1)*DEVOFF)).x = (double) (*(i1+i)).z;
+    (*(i2+(2*i+1)*DEVOFF)).y = (double) (*(i1+i)).w;
   }
 }
 
 
 
 // this is to read a spinor from global into local mem (24 numbers adjacent)
-__device__ inline void dev_read_spinor_d2(dev_spinor_d *i1, dev_spinor_d *i2){
+__device__ inline void dev_read_spinor_d2(double4 *i1, dev_spinor_d *i2){
   int i;
   #pragma unroll 6
   for(i=0;i<6;i++){ //color + spin
-    (*(i1+i)).x  = (*(i2+i*DEVOFF)).x;
-    (*(i1+i)).y  = (*(i2+i*DEVOFF)).y;
-    (*(i1+i)).z  = (*(i2+i*DEVOFF)).z;
-    (*(i1+i)).w  = (*(i2+i*DEVOFF)).w;
+    (*(i1+i)).x  = (*(i2+(2*i)*DEVOFF)).x;
+    (*(i1+i)).y  = (*(i2+(2*i)*DEVOFF)).y;
+    (*(i1+i)).z  = (*(i2+(2*i+1)*DEVOFF)).x;
+    (*(i1+i)).w  = (*(i2+(2*i+1)*DEVOFF)).y;
   }
 }
 
@@ -8092,22 +8092,22 @@ void unorder_spin_gpu (dev_spinor_d* spin, spinor* h2d) {
   for (i = 0; i < Vol; i++) {
   
         h2d[i].s0.c0 = spin[i+0*offset].x + I* spin[i+0*offset].y;
-        h2d[i].s0.c1 = spin[i+0*offset].z + I* spin[i+0*offset].w;
+        h2d[i].s0.c1 = spin[i+1*offset].x + I* spin[i+1*offset].y;
         
-        h2d[i].s0.c2 = spin[i+1*offset].x + I* spin[i+1*offset].y;
-        h2d[i].s1.c0 = spin[i+1*offset].z + I* spin[i+1*offset].w;   
+        h2d[i].s0.c2 = spin[i+2*offset].x + I* spin[i+2*offset].y;
+        h2d[i].s1.c0 = spin[i+3*offset].x + I* spin[i+3*offset].y;   
         
-        h2d[i].s1.c1 = spin[i+2*offset].x + I* spin[i+2*offset].y;
-        h2d[i].s1.c2 = spin[i+2*offset].z + I* spin[i+2*offset].w;  
+        h2d[i].s1.c1 = spin[i+4*offset].x + I* spin[i+4*offset].y;
+        h2d[i].s1.c2 = spin[i+5*offset].x + I* spin[i+5*offset].y;  
         
-        h2d[i].s2.c0 = spin[i+3*offset].x + I* spin[i+3*offset].y;
-        h2d[i].s2.c1 = spin[i+3*offset].z + I* spin[i+3*offset].w;  
+        h2d[i].s2.c0 = spin[i+6*offset].x + I* spin[i+6*offset].y;
+        h2d[i].s2.c1 = spin[i+7*offset].x + I* spin[i+7*offset].y;  
         
-        h2d[i].s2.c2 = spin[i+4*offset].x + I* spin[i+4*offset].y;
-        h2d[i].s3.c0 = spin[i+4*offset].z + I* spin[i+4*offset].w; 
+        h2d[i].s2.c2 = spin[i+8*offset].x + I* spin[i+8*offset].y;
+        h2d[i].s3.c0 = spin[i+9*offset].x + I* spin[i+9*offset].y; 
         
-        h2d[i].s3.c1 = spin[i+5*offset].x + I* spin[i+5*offset].y;
-        h2d[i].s3.c2 = spin[i+5*offset].z + I* spin[i+5*offset].w; 
+        h2d[i].s3.c1 = spin[i+10*offset].x + I* spin[i+10*offset].y;
+        h2d[i].s3.c2 = spin[i+11*offset].x + I* spin[i+11*offset].y; 
         
   }
 }
@@ -8141,33 +8141,33 @@ void order_spin_gpu(spinor* spin, dev_spinor_d* h2d){
     
         h2d[i+0*offset].x = creal(spin[i].s0.c0);
         h2d[i+0*offset].y = cimag(spin[i].s0.c0);
-        h2d[i+0*offset].z = creal(spin[i].s0.c1);
-        h2d[i+0*offset].w = cimag(spin[i].s0.c1);
+        h2d[i+1*offset].x = creal(spin[i].s0.c1);
+        h2d[i+1*offset].y = cimag(spin[i].s0.c1);
         
-        h2d[i+1*offset].x = creal(spin[i].s0.c2);
-        h2d[i+1*offset].y = cimag(spin[i].s0.c2);
-        h2d[i+1*offset].z = creal(spin[i].s1.c0);
-        h2d[i+1*offset].w = cimag(spin[i].s1.c0);
+        h2d[i+2*offset].x = creal(spin[i].s0.c2);
+        h2d[i+2*offset].y = cimag(spin[i].s0.c2);
+        h2d[i+3*offset].x = creal(spin[i].s1.c0);
+        h2d[i+3*offset].y = cimag(spin[i].s1.c0);
         
-        h2d[i+2*offset].x = creal(spin[i].s1.c1);
-        h2d[i+2*offset].y = cimag(spin[i].s1.c1);
-        h2d[i+2*offset].z = creal(spin[i].s1.c2);
-        h2d[i+2*offset].w = cimag(spin[i].s1.c2);
+        h2d[i+4*offset].x = creal(spin[i].s1.c1);
+        h2d[i+4*offset].y = cimag(spin[i].s1.c1);
+        h2d[i+5*offset].x = creal(spin[i].s1.c2);
+        h2d[i+5*offset].y = cimag(spin[i].s1.c2);
         
-        h2d[i+3*offset].x = creal(spin[i].s2.c0);
-        h2d[i+3*offset].y = cimag(spin[i].s2.c0);
-        h2d[i+3*offset].z = creal(spin[i].s2.c1);
-        h2d[i+3*offset].w = cimag(spin[i].s2.c1);
+        h2d[i+6*offset].x = creal(spin[i].s2.c0);
+        h2d[i+6*offset].y = cimag(spin[i].s2.c0);
+        h2d[i+7*offset].x = creal(spin[i].s2.c1);
+        h2d[i+7*offset].y = cimag(spin[i].s2.c1);
         
-        h2d[i+4*offset].x = creal(spin[i].s2.c2);
-        h2d[i+4*offset].y = cimag(spin[i].s2.c2);
-        h2d[i+4*offset].z = creal(spin[i].s3.c0);
-        h2d[i+4*offset].w = cimag(spin[i].s3.c0);
+        h2d[i+8*offset].x = creal(spin[i].s2.c2);
+        h2d[i+8*offset].y = cimag(spin[i].s2.c2);
+        h2d[i+9*offset].x = creal(spin[i].s3.c0);
+        h2d[i+9*offset].y = cimag(spin[i].s3.c0);
         
-        h2d[i+5*offset].x = creal(spin[i].s3.c1);
-        h2d[i+5*offset].y = cimag(spin[i].s3.c1);
-        h2d[i+5*offset].z = creal(spin[i].s3.c2);
-        h2d[i+5*offset].w = cimag(spin[i].s3.c2);
+        h2d[i+10*offset].x = creal(spin[i].s3.c1);
+        h2d[i+10*offset].y = cimag(spin[i].s3.c1);
+        h2d[i+11*offset].x = creal(spin[i].s3.c2);
+        h2d[i+11*offset].y = cimag(spin[i].s3.c2);
     
   }
 }

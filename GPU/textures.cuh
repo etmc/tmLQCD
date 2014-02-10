@@ -51,6 +51,15 @@
  texture<float4,1, cudaReadModeElementType> spin_tex_dn3; 
  texture<float4,1, cudaReadModeElementType> spin_tex_dn4;
  texture<float4,1, cudaReadModeElementType> spin_tex_dn5;
+
+ 
+ /* textures for double spinor field */
+ texture<int4,1, cudaReadModeElementType> spin_d_tex;
+
+ 
+  /* textures for double down type spinor field */
+ texture<int4,1, cudaReadModeElementType> spin_d_tex_dn;
+
  
  texture<float2,1,cudaReadModeElementType> sw_tex;
  texture<float2,1,cudaReadModeElementType> sw_inv_tex;
@@ -217,8 +226,89 @@ return(1);
 
 
 
+__inline__ __device__ double2 fetch1D_spin_d(texture<int4> tex, const int& i){
+  int4 v=tex1Dfetch(tex, i);
+  return(make_double2(__hiloint2double(v.y, v.x),__hiloint2double(v.w, v.z)));
+} 
+
+extern "C" int bind_texture_spin_d(dev_spinor_d* s, int i){
+  
+  size_t size;
+  int offset;
+  #ifdef MPI
+    if(even_odd_flag){
+      size = 12*sizeof(double2)*(VOLUME+RAND)/2;
+      offset = (VOLUME+RAND)/2;
+    }
+    else{
+      size = 12*sizeof(double2)*(VOLUME+RAND);
+      offset = (VOLUME+RAND);
+    }
+  #else
+    if(even_odd_flag){
+      size = 12*sizeof(double2)*VOLUME/2;
+      offset = VOLUME/2;
+    }
+    else{
+      size = 12*sizeof(double2)*VOLUME;
+      offset = VOLUME;
+    }
+  #endif
+   
+
+  //printf("Binding texture to spinorfield 1\n");
+    cudaBindTexture(0, spin_d_tex, (int4*)s, size);   
+  //printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
+  
+  return(0);
+}
 
 
+extern "C" int unbind_texture_spin_d(int i){
+  cudaUnbindTexture(spin_d_tex);
+return(1);
+}
+
+
+
+
+extern "C" int bind_texture_spin_dn_d(dev_spinor_d* s, int i){
+  
+  size_t size;
+  int offset;
+  #ifdef MPI
+    if(even_odd_flag){
+      size = 12*sizeof(double2)*(VOLUME+RAND)/2;
+      offset = (VOLUME+RAND)/2;
+    }
+    else{
+      size = 12*sizeof(double2)*(VOLUME+RAND);
+      offset = (VOLUME+RAND);
+    }
+  #else
+    if(even_odd_flag){
+      size = 12*sizeof(double2)*VOLUME/2;
+      offset = VOLUME/2;
+    }
+    else{
+      size = 12*sizeof(double2)*VOLUME;
+      offset = VOLUME;
+    }
+  #endif
+   
+
+  //printf("Binding texture to spinorfield 1\n");
+    cudaBindTexture(0, spin_d_tex_dn, (int4*)s, size);   
+  //printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
+  
+  return(0);
+}
+
+
+extern "C" int unbind_texture_spin_dn_d(int i){
+  cudaUnbindTexture(spin_d_tex_dn);
+return(1);
+}
 
 
 #else 

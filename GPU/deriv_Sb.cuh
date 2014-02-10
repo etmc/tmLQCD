@@ -499,7 +499,7 @@ int host_check_VOL2, Vol;
 //printf("griddim (gauge_monomial): %d, blockdim: %d\n", griddimgauge, blockdimgauge);
 
   //bring spinors to device RE-ORDER!
-  size_t dev_spinsize_d = 6*Vol * sizeof(dev_spinor_d); // double4 even-odd !
+  size_t dev_spinsize_d = 12*Vol * sizeof(dev_spinor_d); // double4 even-odd !
   
   // l == dev_spin_eo1_d
   order_spin_gpu(l, h2d_spin_d);
@@ -574,7 +574,7 @@ int host_check_VOL2, Vol;
   printf("\tdev_VOL2 = %i\n", host_check_VOL2);  
 
 
-   size_t dev_spinsize_d = 6*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !   
+   size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !   
    int gridsize;
      //this is the partitioning for the HoppingMatrix kernel
      int blockdim3 = BLOCKD;
@@ -604,7 +604,7 @@ int host_check_VOL2, Vol;
 //printf("griddim (gauge_monomial): %d, blockdim: %d\n", griddimgauge, blockdimgauge);
 
   //bring spinors to device RE-ORDER!
-  dev_spinsize_d = 6*Vol * sizeof(dev_spinor_d); // double4 even-odd !
+  dev_spinsize_d = 12*Vol * sizeof(dev_spinor_d); // double4 even-odd !
   
   order_spin_gpu(l, h2d_spin_d);
   cudaMemcpy(dev_spin0_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice); 

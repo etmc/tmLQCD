@@ -208,17 +208,13 @@ double apply_Z_ndpsi(spinor * const k_up, spinor * const k_dn,
  #ifdef HAVE_GPU
   if(usegpu_flag){ 
    #ifdef TEMPORALGAUGE
-     //FIXME
-     //all spinors of mms should be treated
-     //to_temporalgauge_mms(g_gauge_field,mnl->pf, mnl->w_fields[1]);
+     to_temporalgauge_mms(g_gauge_field, l_up, l_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
    #endif        
    mnl->iter0 += dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 			     l_up, l_dn,
 			     solver_pm); 
    #ifdef TEMPORALGAUGE
-     //FIXME   
-     //all spinors of mms should be treated   
-     //from_temporalgauge_mms( mnl->pf, mnl->w_fields[1]);
+     from_temporalgauge_mms(l_up, l_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
    #endif 			     
   }
   else{
@@ -246,17 +242,13 @@ double apply_Z_ndpsi(spinor * const k_up, spinor * const k_dn,
  #ifdef HAVE_GPU
   if(usegpu_flag){ 
    #ifdef TEMPORALGAUGE
-     //FIXME
-     //all spinors of mms should be treated
-     //to_temporalgauge_mms(g_gauge_field,mnl->pf, mnl->w_fields[1]);
+     to_temporalgauge_mms(g_gauge_field, k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
    #endif        
       dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 	       k_up, k_dn,
 	       solver_pm);
    #ifdef TEMPORALGAUGE
-     //FIXME   
-     //all spinors of mms should be treated   
-     //from_temporalgauge_mms( mnl->pf, mnl->w_fields[1]);
+     from_temporalgauge_mms(k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
    #endif 			     
   }
   else{
@@ -302,16 +294,12 @@ void check_C_ndpsi(spinor * const k_up, spinor * const k_dn,
  #ifdef HAVE_GPU
   if(usegpu_flag){ 
    #ifdef TEMPORALGAUGE
-     //FIXME
-     //all spinors of mms should be treated
-     //to_temporalgauge_mms(g_gauge_field,mnl->pf, mnl->w_fields[1]);
+     to_temporalgauge_mms(g_gauge_field, l_up, l_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
    #endif        
      mnl->iter0 = dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 			     l_up, l_dn, solver_pm);
    #ifdef TEMPORALGAUGE
-     //FIXME   
-     //all spinors of mms should be treated   
-     //from_temporalgauge_mms( mnl->pf, mnl->w_fields[1]);
+     from_temporalgauge_mms(l_up, l_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
    #endif 			     
   }
   else{
@@ -347,17 +335,13 @@ void check_C_ndpsi(spinor * const k_up, spinor * const k_dn,
  #ifdef HAVE_GPU
   if(usegpu_flag){ 
    #ifdef TEMPORALGAUGE
-     //FIXME
-     //all spinors of mms should be treated
-     //to_temporalgauge_mms(g_gauge_field,mnl->pf, mnl->w_fields[1]);
+     to_temporalgauge_mms(g_gauge_field, k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
    #endif        
      dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 	       k_up, k_dn,
 	       solver_pm);
    #ifdef TEMPORALGAUGE
-     //FIXME   
-     //all spinors of mms should be treated   
-     //from_temporalgauge_mms( mnl->pf, mnl->w_fields[1]);
+     from_temporalgauge_mms(k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
    #endif 			     
   }
   else{
@@ -381,16 +365,12 @@ void check_C_ndpsi(spinor * const k_up, spinor * const k_dn,
  #ifdef HAVE_GPU
   if(usegpu_flag){ 
    #ifdef TEMPORALGAUGE
-     //FIXME
-     //all spinors of mms should be treated
-     //to_temporalgauge_mms(g_gauge_field,mnl->pf, mnl->w_fields[1]);
+     to_temporalgauge_mms(g_gauge_field, k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
    #endif        
      dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 	       k_up, k_dn, solver_pm);
    #ifdef TEMPORALGAUGE
-     //FIXME   
-     //all spinors of mms should be treated   
-     //from_temporalgauge_mms( mnl->pf, mnl->w_fields[1]);
+     from_temporalgauge_mms(k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
    #endif 			     
   }
   else{

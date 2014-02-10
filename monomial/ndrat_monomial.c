@@ -118,17 +118,13 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   if(usegpu_flag){
     
    #ifdef TEMPORALGAUGE
-     //FIXME
-     //all spinors of mms should be treated
-     //to_temporalgauge_mms(g_gauge_field,mnl->pf, mnl->w_fields[1]);
+     to_temporalgauge_mms(g_gauge_field ,mnl->pf, mnl->pf2, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm.no_shifts);
    #endif        
    mnl->iter1 += dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 			     mnl->pf, mnl->pf2,
 			     &solver_pm);  
    #ifdef TEMPORALGAUGE
-     //FIXME   
-     //all spinors of mms should be treated   
-     //from_temporalgauge_mms( mnl->pf, mnl->w_fields[1]);
+     from_temporalgauge_mms(mnl->pf, mnl->pf2, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm.no_shifts);
    #endif 			     
   }
   else{
@@ -168,12 +164,28 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
       H_eo_tm_ndpsi(mnl->w_fields[2], mnl->w_fields[3], 
 		    g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], EO);
     }
+    #ifdef HAVE_GPU
+      if(usegpu_flag){
+	/* X_j,e^dagger \delta M_eo Y_j,o */
+	gpu_deriv_Sb(EO, mnl->w_fields[2], mnl->w_fields[0], 
+		hf, mnl->rat.rmu[j]*mnl->forcefactor);
+	gpu_deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1],
+		hf, mnl->rat.rmu[j]*mnl->forcefactor);	
+      }
+      else{
+	/* X_j,e^dagger \delta M_eo Y_j,o */
+	deriv_Sb(EO, mnl->w_fields[2], mnl->w_fields[0], 
+		hf, mnl->rat.rmu[j]*mnl->forcefactor);
+	deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1],
+		hf, mnl->rat.rmu[j]*mnl->forcefactor);	
+      }
+   #else
     /* X_j,e^dagger \delta M_eo Y_j,o */
     deriv_Sb(EO, mnl->w_fields[2], mnl->w_fields[0], 
 	     hf, mnl->rat.rmu[j]*mnl->forcefactor);
     deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1],
 	     hf, mnl->rat.rmu[j]*mnl->forcefactor);
-
+    #endif
     if(mnl->type == NDCLOVERRAT) {
       /* Get the even parts Y_j,e */
       H_eo_sw_ndpsi(mnl->w_fields[4], mnl->w_fields[5], 
@@ -185,12 +197,28 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
 		    mnl->w_fields[0], mnl->w_fields[1], EO);
 
     }
+    #ifdef HAVE_GPU
+      if(usegpu_flag){
+	/* X_j,o \delta M_oe Y_j,e */
+	gpu_deriv_Sb(OE, g_chi_up_spinor_field[j], mnl->w_fields[4], 
+		hf, mnl->rat.rmu[j]*mnl->forcefactor);
+	gpu_deriv_Sb(OE, g_chi_dn_spinor_field[j], mnl->w_fields[5], 
+		hf, mnl->rat.rmu[j]*mnl->forcefactor);
+      }
+      else{
+	/* X_j,o \delta M_oe Y_j,e */
+	deriv_Sb(OE, g_chi_up_spinor_field[j], mnl->w_fields[4], 
+		hf, mnl->rat.rmu[j]*mnl->forcefactor);
+	deriv_Sb(OE, g_chi_dn_spinor_field[j], mnl->w_fields[5], 
+		hf, mnl->rat.rmu[j]*mnl->forcefactor);	
+      }
+   #else
     /* X_j,o \delta M_oe Y_j,e */
     deriv_Sb(OE, g_chi_up_spinor_field[j], mnl->w_fields[4], 
 	     hf, mnl->rat.rmu[j]*mnl->forcefactor);
     deriv_Sb(OE, g_chi_dn_spinor_field[j], mnl->w_fields[5], 
 	     hf, mnl->rat.rmu[j]*mnl->forcefactor);
-
+   #endif
     if(mnl->type == NDCLOVERRAT) {
       // even/even sites sandwiched by tau_1 gamma_5 Y_e and gamma_5 X_e
       sw_spinor(EE, mnl->w_fields[5], mnl->w_fields[2], 
@@ -261,16 +289,12 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
  #ifdef HAVE_GPU
   if(usegpu_flag){ 
    #ifdef TEMPORALGAUGE
-     //FIXME
-     //all spinors of mms should be treated
-     //to_temporalgauge_mms(g_gauge_field,mnl->pf, mnl->w_fields[1]);
+     to_temporalgauge_mms(g_gauge_field, mnl->pf, mnl->pf2, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm.no_shifts);
    #endif        
    mnl->iter1 += dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 			     mnl->pf, mnl->pf2, &solver_pm); 
-   #ifdef TEMPORALGAUGE
-     //FIXME   
-     //all spinors of mms should be treated   
-     //from_temporalgauge_mms( mnl->pf, mnl->w_fields[1]);
+   #ifdef TEMPORALGAUGE  
+     from_temporalgauge_mms(mnl->pf, mnl->pf2, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm.no_shifts);
    #endif 			     
   }
   else{
@@ -340,16 +364,12 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
   #ifdef HAVE_GPU
   if(usegpu_flag){ 
    #ifdef TEMPORALGAUGE
-     //FIXME
-     //all spinors of mms should be treated
-     //to_temporalgauge_mms(g_gauge_field,mnl->pf, mnl->w_fields[1]);
+     to_temporalgauge_mms(g_gauge_field, mnl->pf, mnl->pf2, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm.no_shifts);
    #endif        
    mnl->iter1 += dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 			     mnl->pf, mnl->pf2, &solver_pm); 
    #ifdef TEMPORALGAUGE
-     //FIXME   
-     //all spinors of mms should be treated   
-     //from_temporalgauge_mms( mnl->pf, mnl->w_fields[1]);
+     from_temporalgauge_mms(mnl->pf, mnl->pf2, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm.no_shifts);
    #endif 			     
   }
   else{

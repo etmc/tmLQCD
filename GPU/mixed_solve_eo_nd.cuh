@@ -608,7 +608,7 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
   
 
   #ifdef GPU_DOUBLE
-   	  size_t dev_spinsize_d = 6*VOLUME/2 * sizeof(dev_spinor_d); /* double4 */
+   	  size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); /* double4 */
 	  //allocate fields used in dev_Qtm_pm_ndpsi_d
   	  cudaMalloc((void **) &dev_spin_eo1_up_d, dev_spinsize_d);	
   	  cudaMalloc((void **) &dev_spin_eo1_dn_d, dev_spinsize_d);	  
@@ -3699,12 +3699,7 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
   // algorithm control parameters
   // int N_recalc_res = 10;		// recalculate residue r(k+1) = b - A*x(k+1) each N_recalc_res iteration
   int N_recalc_res = 1000;
-  spinor ** up_field = NULL;
-  spinor ** dn_field = NULL;
-  const int nr_sf = 5;
-  
-  init_solver_field(&up_field, VOLUMEPLUSRAND/2, nr_sf);
-  init_solver_field(&dn_field, VOLUMEPLUSRAND/2, nr_sf); 
+
   
   
   /////////////////////////////////////////////
@@ -4139,7 +4134,7 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
 
 void test_double_nd_operator(spinor* const Q_up, spinor* const Q_dn, const int N){
    
-   size_t dev_spinsize_d = 6*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !   
+   size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !   
    int gridsize;
      //this is the partitioning for the HoppingMatrix kernel
      int blockdim3 = BLOCKD;
@@ -4417,13 +4412,6 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   								//	puts the gauge field on device as "2 rows" or "8 floats" per SU(3)-matrix
   								//	allocates memory for all spinor fields
   								//	puts the nn- and eoidx-fields on device memory
-
-  		//debug
-  		#ifndef MPI
-  		  printf("mixedsolve_eo_nd():\n");
-  		#else
-  		  if (g_cart_id == 0) printf("mixedsolve_eo_nd_mpi():\n");
-  		#endif
   
   
   // the following initializations are moved from dev_cg_eo_nd():
@@ -4466,7 +4454,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       dev_spinor_d * r_up_d = dev_spin_eo3_up_d;  
       dev_spinor_d * r_dn_d = dev_spin_eo3_dn_d;      
       
-       size_t dev_spinsize_d = 6*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !   
+       size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !   
    int gridsize;
      //this is the partitioning for the HoppingMatrix kernel
      int blockdim3 = BLOCKD;
@@ -4661,11 +4649,6 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   // ALGORITHM //
   ///////////////
   
-  //ONLY FOR TESTS
-  //FIXME
-//   shift=0.005;
-  //
-  ////////////////
 
   printf("phmc_invmaxev = %f\n",phmc_invmaxev);  
   
@@ -4681,11 +4664,18 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     // r(0) = b - A*x(0) = Q - A*P
       bb = square_norm(P_up, N_sites_int, 1) + square_norm(P_dn, N_sites_int, 1);
       order_spin_gpu(Q_up, h2d_spin_d);
-      cudaMemcpy(Q_up_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);      
+      cudaMemcpy(Q_up_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);
+      cudaMemcpy(r_up_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);      
       order_spin_gpu(Q_dn, h2d_spin_d);
-      cudaMemcpy(Q_dn_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);	
-      if (bb != 0) { 
+      cudaMemcpy(Q_dn_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);
+      cudaMemcpy(r_dn_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);
+      
+      //set solution accumulation fields to zero
+      dev_zero_spinor_field_d<<<griddim4, blockdim4>>>(x_up_d);
+      dev_zero_spinor_field_d<<<griddim4, blockdim4>>>(x_dn_d);      
+      if (bb > 0.0) {
 	  //set x_up/dn to initial guess in P_up/dn
+	  printf("bb = %.16e \n", bb);
           order_spin_gpu(P_up, h2d_spin_d);
           cudaMemcpy(x_up_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);      
           order_spin_gpu(P_dn, h2d_spin_d);
@@ -4696,15 +4686,15 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
 		      griddim3, blockdim3, griddim4, blockdim4,
 		      griddim4, blockdim4, griddim4, blockdim4);
           if(shift != 0.0) {
-	    //FIXME
-	    //assign_add_mul_r(Ax_up, x_up , shift, N_sites_int);
-	    //assign_add_mul_r(Ax_dn, x_dn , shift, N_sites_int);
+	    dev_axpy_d<<<griddim4,blockdim4>>>(shift, x_up_d, Ax_up_d);
+	    dev_axpy_d<<<griddim4,blockdim4>>>(shift, x_dn_d, Ax_dn_d);
           }        
         
           dev_diff_d<<<griddim4,blockdim4>>>(r_up_d,Q_up_d,Ax_up_d);         
           dev_diff_d<<<griddim4,blockdim4>>>(r_dn_d,Q_dn_d,Ax_dn_d); 
 	
      }
+
     
     // rr = (r_up)^2 + (r_dn)^2
     rr_up = double_dotprod(r_up_d, r_up_d);
@@ -4715,14 +4705,10 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     r0r0   = double_dotprod(Q_up_d, Q_up_d) 
            + double_dotprod(Q_dn_d, Q_dn_d);    
   #else
-  
+      
       // P==0 -> no initial guess
       bb = square_norm(P_up, N_sites_int, 1) + square_norm(P_dn, N_sites_int, 1);
-      if (bb == 0) {
-	assign(r_up, Q_up, N_sites_int);
-	assign(r_dn, Q_dn, N_sites_int);
-      }
-      else {	
+      if (bb > 0.0) {
 	Qtm_pm_ndpsi(Ax_up, Ax_dn, P_up, P_dn);
 	if(shift != 0.0) {
 	  assign_add_mul_r(Ax_up, P_up , shift, N_sites_int);
@@ -4730,7 +4716,14 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
 	}
 	diff(r_up, Q_up, Ax_up, N_sites_int);
 	diff(r_dn, Q_dn, Ax_dn, N_sites_int);
-       }
+      }
+      else {	
+	assign(r_up, Q_up, N_sites_int);
+	assign(r_dn, Q_dn, N_sites_int);
+	//set solution accumulation fields to zero (==P_up/dn in this case)
+	assign(x_up, P_up, N_sites_int);
+	assign(x_dn, P_dn, N_sites_int);	
+      }
     
     
     // rr = (r_up)^2 + (r_dn)^2
@@ -4743,7 +4736,13 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   #endif //GPU_DOUBLE
 
   if (g_proc_id == 0) printf("Initial outer residue: %.10e\n", rr_old);
-
+  if(rr_old < SP_MIN_EPS){
+    if (g_proc_id == 0) printf("Initial residue too small for mixed precision! Stopping Inversion.\n");    
+    finalize_mixedsolve_eo_nd();
+    finalize_solver(up_field, nr_sf);
+    finalize_solver(dn_field, nr_sf); 
+    return(-1);
+  }
 
   ////////////////
   // OUTER LOOP //
@@ -4826,9 +4825,8 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
 		      griddim3, blockdim3, griddim4, blockdim4,
 		      griddim4, blockdim4, griddim4, blockdim4);
         if(shift != 0.0) {
-	  //FIXME
-	  //assign_add_mul_r(Ax_up, x_up , shift, N_sites_int);
-	  //assign_add_mul_r(Ax_dn, x_dn , shift, N_sites_int);
+	  dev_axpy_d<<<griddim4,blockdim4>>>(shift, x_up_d, Ax_up_d);
+	  dev_axpy_d<<<griddim4,blockdim4>>>(shift, x_dn_d, Ax_dn_d);
         }        
         
       dev_diff_d<<<griddim4,blockdim4>>>(r_up_d,Q_up_d,Ax_up_d);         
@@ -4880,7 +4878,8 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       #ifndef LOWOUTPUT
        printf("No inner solver iterations: %i\n", outercount);
       #endif
-    }		
+    }
+
     // debug	// is NaN ?
     if isnan(rr) {
     	printf("Error in mixedsolve_eo_nd(). Outer residue is NaN.\n");
@@ -4965,8 +4964,14 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       return(outercount);
       
     }
-    
-  
+    //check if we can afford another inner solver run
+    if(rr < SP_MIN_EPS){
+      if (g_proc_id == 0) printf("At iteration %i: residue too small for mixed precision! Stopping Inversion.\n", outercount);    
+      finalize_mixedsolve_eo_nd();
+      finalize_solver(up_field, nr_sf);
+      finalize_solver(dn_field, nr_sf); 
+      return(-1);
+    }  
   }//OUTER LOOP
   while (outercount <= max_iter);
   
@@ -5087,7 +5092,7 @@ void init_doublesolve_eo_nd (su3** gf) {	// gf is the full gauge field
   /////////////							// now we have to consider 2 flavors: up, dn
   
   
-  size_t dev_spinsize_d = 6*VOLUME/2 * sizeof(dev_spinor_d); /* double4 */
+  size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); /* double4 */
   //allocate fields used in dev_Qtm_pm_ndpsi_d
   cudaMalloc((void **) &dev_spin_eo1_up_d, dev_spinsize_d);	
   cudaMalloc((void **) &dev_spin_eo1_dn_d, dev_spinsize_d);	  
@@ -5185,7 +5190,7 @@ int dev_cg_eo_nd_d (dev_su3_2v_d * gf,
 	      double shift,
               int max_iter,
               int check_abs , int check_rel,
-              double eps_abs, double eps_rel       ) {
+              double eps_abs, double eps_rel, int min_solver_it       ) {
   
   // P_up/dn  can be used as auxiliary field to work on, as it is not later used (could be used as initial guess at the very start)
   // Q_up/dn  can be used as feedback, or if not, also as auxiliary field
@@ -5450,7 +5455,7 @@ int dev_cg_eo_nd_d (dev_su3_2v_d * gf,
     }
     
     // aborting ?? // check wether precision is reached ...
-    if ( ((check_abs)&&(rr <= eps_abs)) || ((check_rel)&&(rr <= eps_rel*r0r0)) ) {
+    if ( ((check_abs)&&(rr <= eps_abs)&&(j>min_solver_it)) || ((check_rel)&&(rr <= eps_rel*r0r0)&&(j>min_solver_it)) ) {
     
 
     
@@ -5523,7 +5528,7 @@ int dev_cg_eo_nd_d (dev_su3_2v_d * gf,
 
 extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
                                  spinor * Q_up, spinor * Q_dn, double shift,
-                                 int max_iter, double eps_sq, int rel_prec) {
+                                 int max_iter, double eps_sq, int rel_prec, int min_solver_it) {
    
   
    if(rel_prec){
@@ -5587,7 +5592,7 @@ extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
       dev_spinor_d * r_up_d = dev_spin_eo3_up_d;  
       dev_spinor_d * r_dn_d = dev_spin_eo3_dn_d;      
       
-       size_t dev_spinsize_d = 6*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !   
+       size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !   
    int gridsize;
      //this is the partitioning for the HoppingMatrix kernel
      int blockdim3 = BLOCKD;
@@ -5805,7 +5810,7 @@ extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
                           dev_spinin_up_d , dev_spinin_dn_d, shift,
                           max_innersolver_it,
                           innersolver_precision_check_abs, innersolver_precision_check_rel,
-                          eps_sq     , eps_sq    );
+                          eps_sq     , eps_sq, min_solver_it    );
     //after first inner solve in double we merely check for absolute tolerance
     innersolver_precision_check_rel = 0;
     innersolver_precision_check_abs = 1;
