@@ -182,7 +182,9 @@ void shownn2(){
 void update_gpu_fields(su3** gf, su3adj** mom, int need_momenta){
   cudaError_t cudaerr;
   int i, mu,Vol;
-  printf("updating double gpu fields...");
+  #ifndef LOWOUTPUT
+    printf("updating double gpu fields...");
+  #endif
   #ifdef MPI
     Vol = VOLUME + RAND;
   #else
@@ -218,7 +220,9 @@ void update_gpu_fields(su3** gf, su3adj** mom, int need_momenta){
      printf("%s\n", cudaGetErrorString(cudaGetLastError()));
      printf("Error code is: %f\n",cudaerr);
   }
-  printf("done.\n");
+  #ifndef LOWOUTPUT
+    printf("done.\n");
+  #endif
 }
 
 

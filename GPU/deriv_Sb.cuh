@@ -437,9 +437,7 @@ __global__ void dev_deriv_Sb(dev_su3adj* df0, dev_su3_2v_d * gf,dev_spinor_d * l
 extern "C" void gpu_deriv_Sb(const int ieo, spinor * const l, spinor * const k, 
                              hamiltonian_field_t * const hf, const double factor){
 cudaError_t cudaerr;
-printf("GPU deriv_Sb...\n");
 int host_check_VOL2, Vol;
-
 
   #ifdef MPI
    Vol = (VOLUME + RAND)/2;
@@ -452,9 +450,13 @@ int host_check_VOL2, Vol;
     printf("gpu_deriv_Sb(): Could not copy dev_VOL2 to device. Aborting...\n");
     exit(200);
   } 
+
+#ifndef LOWOUTPUT
   cudaMemcpyFromSymbol(&host_check_VOL2, dev_VOL2, sizeof(int)); 
+  printf("GPU deriv_Sb...\n");
   printf("\tOn device:\n");
   printf("\tdev_VOL2 = %i\n", host_check_VOL2);  
+#endif
 
   // FLIP IMAGINARY OF ka0
   // this is needed as update_constants_d gives an 
@@ -465,32 +467,6 @@ int host_check_VOL2, Vol;
   //update constants, gauge field and momentum field
   update_constants_d(dev_grid);
   update_gpu_fields(hf->gaugefield, hf->derivative,1);
-
-
-//   dev_complex_d h0;
-//   h0.re = ka0.re;    h0.im = ka0.im;
-//   // try using constant mem for kappas
-//   printf("ka0: %.8f  %.8f\n", ka0.re, ka0.im);
-//   printf("ka1: %.8f  %.8f\n", ka1.re, ka1.im);
-//   if((cudaerr=cudaMemcpyToSymbol(dev_k0_d, &(h0), sizeof(dev_complex_d)))!=cudaSuccess){
-//     printf("gpu_deriv_Sb(): Could not copy dev_k0c_d to device. Aborting...\n");
-//     exit(200);
-//   } 
-// 
-//   dev_complex host_check_k0, host_check_k1;
-//   cudaMemcpyFromSymbol(&host_check_k0, dev_k0_d, sizeof(dev_complex_d));
-//   if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
-//         printf("%s\n", cudaGetErrorString(cudaPeekAtLastError()));
-//   }
-//   printf ("GPU k0.re = %.8f k0.im = %.8f\n",host_check_k0.re, host_check_k0.im); 
-// 
-// 
-//   dev_complex_d h1;
-//   h1.re = (double)ka1.re;    h1.im = -(double)ka1.im;
-//   // try using constant mem for kappas
-//   cudaMemcpyToSymbol("dev_k1_d", &h1, sizeof(dev_complex_d)) ;
-//   cudaMemcpyFromSymbol(&host_check_k1, dev_k1_d, sizeof(dev_complex_d));
-//   printf ("GPU k1.re = %.8f k1.im = %.8f\n",host_check_k1.re, host_check_k1.im); 
 
 
   if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
@@ -528,9 +504,6 @@ if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
 }           
 
 
-  cudaMemcpyFromSymbol(&host_check_VOL2, dev_VOL2, sizeof(int)); 
-  printf("\tOn device:\n");
-  printf("\tdev_VOL2 = %i\n", host_check_VOL2); 
 
   //bring momentum field back to host
   to_host_mom(hf);
@@ -544,8 +517,12 @@ if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
   // FLIP BACK IMAGINARY OF ka0
   ka0= conj(ka0);
 
-printf("finished: GPU deriv_Sb.\n");
-
+#ifndef LOWOUTPUT
+  cudaMemcpyFromSymbol(&host_check_VOL2, dev_VOL2, sizeof(int)); 
+  printf("\tOn device:\n");
+  printf("\tdev_VOL2 = %i\n", host_check_VOL2); 
+  printf("finished: GPU deriv_Sb.\n");
+#endif
 }
 
 
