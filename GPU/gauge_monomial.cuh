@@ -1440,7 +1440,7 @@ __global__ void dev_rect_deri_three(int * dev_nn, dev_su3_2v_d * gf, dev_su3adj*
 
 extern "C" void gpu_gauge_derivative(int withrectangles, hamiltonian_field_t * const hf, double c_gauge, double c_rect){
 cudaError_t cudaerr;
-printf("GPU gauge derivative..\n");
+
 int host_check_VOL2;
 
 #ifdef MPI
@@ -1453,9 +1453,11 @@ int host_check_VOL2;
     exit(200);
   } 
   cudaMemcpyFromSymbol(&host_check_VOL2, dev_VOL2, sizeof(int)); 
-  printf("\tOn device:\n");
-  printf("\tdev_VOL2 = %i\n", host_check_VOL2);  
-
+  #ifndef LOWOUTPUT  
+    printf("GPU gauge derivative..\n");
+    printf("\tOn device:\n");
+    printf("\tdev_VOL2 = %i\n", host_check_VOL2);  
+  #endif
   update_gpu_fields(hf->gaugefield, hf->derivative,1);
   if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
         printf("%s\n", cudaGetErrorString(cudaPeekAtLastError()));
@@ -1518,16 +1520,18 @@ if(withrectangles){
 }   
 
   cudaMemcpyFromSymbol(&host_check_VOL2, dev_VOL2, sizeof(int)); 
-  printf("\tOn device:\n");
-  printf("\tdev_VOL2 = %i\n", host_check_VOL2); 
+
   to_host_mom(hf);
 
   if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
         printf("%s\n", cudaGetErrorString(cudaPeekAtLastError()));
         printf("Error code is: %f\n",cudaerr);
   }
-printf("finished: GPU gauge derivative..\n");
-
+  #ifndef LOWOUTPUT
+    printf("\tOn device:\n");
+    printf("\tdev_VOL2 = %i\n", host_check_VOL2); 
+    printf("finished: GPU gauge derivative..\n");
+  #endif
 }
 
 

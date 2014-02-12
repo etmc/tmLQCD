@@ -944,11 +944,11 @@ void apply_gtrafo (su3 ** gfield, su3 * trafofield) {
       }
     } 
   }
-  
+  #ifndef LOWOUTPUT  
   if (g_proc_id == 0) {
     printf("done\n");
   }
-  
+  #endif  
   /* update gauge copy fields in the next call to HoppingMatrix */
   g_update_gauge_copy = 1;
  
