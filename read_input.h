@@ -100,7 +100,8 @@ extern "C"
   extern double innersolver_precision;
   extern int device_num;
   extern int num_gpu_per_node;
-
+  extern int max_mms_shifts;
+  extern int use_mixed_mms;  
   extern double innersolver_precision_abs;
   extern double innersolver_precision_rel;
   extern int innersolver_precision_check_abs;

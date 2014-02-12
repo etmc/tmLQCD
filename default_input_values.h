@@ -159,6 +159,7 @@
 #define _default_device_num 0
 #define _default_num_gpu_per_node 4
 #define _default_min_innersolver_it 10
+#define _default_max_mms_shifts 6
 
 /* default OpenMP values */
 #define _default_omp_num_threads 0
