@@ -6435,7 +6435,7 @@ extern "C" int doublesolve_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
     outercount = dev_cg_mms_eo_nd_d(dev_gf_d,
                           dev_spinout_up_d, dev_spinout_dn_d,
                           dev_spinin_up_d , dev_spinin_dn_d, shifts, Nshift,
-                          max_innersolver_it,
+                          max_iter,
                           innersolver_precision_check_abs, innersolver_precision_check_rel,
                           eps_sq, eps_sq, min_solver_it);
     stopinner = gettime();
