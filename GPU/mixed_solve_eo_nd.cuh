@@ -5952,10 +5952,10 @@ void init_gpu_nd_mms_fields(int Nshift){
    cudaMalloc((void **) &_mms_x_dn, dev_spinsize_d);  
 
 
-  mms_d_up = (dev_spinor_d**)malloc(((Nshift-1)*sizeof(dev_spinor*)));
-  mms_d_dn = (dev_spinor_d**)malloc(((Nshift-1)*sizeof(dev_spinor*)));
-  mms_x_up = (dev_spinor_d**)malloc(((Nshift-1)*sizeof(dev_spinor*)));
-  mms_x_dn = (dev_spinor_d**)malloc(((Nshift-1)*sizeof(dev_spinor*)));  
+  mms_d_up = (dev_spinor_d**)malloc(((Nshift-1)*sizeof(dev_spinor_d*)));
+  mms_d_dn = (dev_spinor_d**)malloc(((Nshift-1)*sizeof(dev_spinor_d*)));
+  mms_x_up = (dev_spinor_d**)malloc(((Nshift-1)*sizeof(dev_spinor_d*)));
+  mms_x_dn = (dev_spinor_d**)malloc(((Nshift-1)*sizeof(dev_spinor_d*)));  
   
   mms_d_up[0] = _mms_d_up;
   mms_d_dn[0] = _mms_d_dn;
