@@ -3630,6 +3630,181 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
 
 
 
+extern "C" void benchmark_eo_nd_d (spinor * Q_up, spinor * Q_dn, int N) {
+
+  
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //													//
+  // total FLOPS  =  (#iterations) * (FLOPS/matrix application) * (#lattice sites)			//
+  //													//
+  //													//
+  // FLOPS per lattice site and application of the function,						//
+  // count the floating point op's on device:								//
+  //													//
+  // dev_Hopping_Matrix	          = 1608								//
+  // dev_mul_one_pm_imubar_gamma5 = 120									//
+  // dev_gamma5                   = 12									//
+  //													//
+  // cublasSaxpy                  = 24*2 = 48								//
+  // cublasSscal                  = 24*1 = 24								//
+  //													//
+  //													//
+  // (FLOPS/matrix application)  =  2 * (4*1608 + 4*120 + 6*48 + 2*24 + 2*12)  =  2 * 7224  =  14448	//
+  //													//
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd ! 
+  // timing
+  #ifndef MPI
+    double timeElapsed;
+  #else
+    double singleTimeElapsed;
+    double maxTimeElapsed;
+  #endif
+  double startBenchmark;
+  double stopBenchmark;
+  int staticsource = 0;
+  // counter
+  int i;
+  
+  // flop counting
+
+  double effectiveFlopsPerApp = 14448.0; // hopping = 1608
+  
+  #ifndef MPI
+    double effectiveDeviceFlops;
+    double effectiveFlops;
+  #else
+    double effectiveDeviceFlops;
+    double allEffectiveDeviceFlops;
+    double effectiveFlops;
+  #endif
+  
+  // CUDA errors
+  cudaError_t cudaerr;
+
+
+  dev_spinor_d * A_up = dev_spin_eo1_d;
+  dev_spinor_d * A_dn = dev_spin_eo2_d;
+  dev_spinor_d * B_up = dev_spin_eo1_up_d;
+  dev_spinor_d * B_dn = dev_spin_eo1_dn_d;
+  
+  dev_spinor_d * C_up;
+  dev_spinor_d * C_dn;
+  
+
+  int blocksize;		// auxiliary
+  
+  blocksize = BLOCKD;
+  int griddim2;	
+  dim3 blockdim2 (0,0,0);
+  if ( (VOLUME/2) % blocksize == 0 ) {
+    blockdim2.x = blocksize;
+    griddim2  = VOLUME/2/blocksize;
+  }
+  else {
+    blockdim2.x = blocksize;
+    griddim2  = (int) ((VOLUME/2/blocksize) + 1);
+  }
+  
+  blocksize = BLOCK2D;
+  int blockdim3, griddim3;	
+  if ( (VOLUME/2) % blocksize == 0 ) {
+    blockdim3 = blocksize;
+    griddim3  = VOLUME/2/blocksize;
+  }
+  else {
+    blockdim3 = blocksize;
+    griddim3  = (int) ((VOLUME/2/blocksize) + 1);
+  }
+  
+
+  
+  
+  		//debug
+  		#ifndef MPI
+  		  printf("\nStarting a little BENCHMARK. benchmark_eo_nd_d().\n");
+  		#else
+  		  if (g_proc_id == 0) printf("\nStarting a little BENCHMARK. benchmark_eo_nd_mpi().\n");
+  		#endif
+
+  
+  		// debug
+  		#ifndef MPI
+  		  printf("Applying the eo-preconditioned matrix %i times.\n", N);
+  		#else
+  		  if (g_proc_id == 0) printf("Applying the eo-preconditioned matrix %i times.\n", N);
+  		#endif
+  
+  
+  order_spin_gpu(Q_up, h2d_spin_d);
+  cudaMemcpy(B_up, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);      
+  order_spin_gpu(Q_dn, h2d_spin_d);
+  cudaMemcpy(B_dn, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);	
+  order_spin_gpu(Q_up, h2d_spin_d);
+  cudaMemcpy(A_up, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);      
+  order_spin_gpu(Q_dn, h2d_spin_d);
+  cudaMemcpy(A_dn, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);	  
+  
+  //startBenchmark = gettime();
+  assert((startBenchmark = clock())!=-1);
+  cudaThreadSynchronize();
+  // timer
+    
+
+  for (i = 0; i < N; i++) {
+  
+  
+
+    dev_Qtm_pm_ndpsi_d(A_up, A_dn, B_up, B_dn, 
+    	                        griddim2, blockdim2.x,
+    	                        griddim3, blockdim3,
+    	                        griddim3, blockdim3,
+    	                        griddim3, blockdim3);
+
+    
+    if (staticsource == 0) {
+      // swaps A and B
+      C_up = B_up;
+      C_dn = B_dn;
+      B_up = A_up;
+      B_dn = A_dn;
+      A_up = C_up;
+      A_dn = C_dn;
+    }
+
+  }
+  
+  printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
+  printf("Done\n"); 
+  cudaThreadSynchronize();
+  
+  
+  		// debug	// CUDA
+  		#ifdef CUDA_DEBUG
+  		  CUDA_CHECK_NO_SUCCESS_MSG("CUDA error in nd matrix_muliplication(). Applying the matrix on GPU failed.");
+  		#endif
+
+  // timer
+    //stopBenchmark = gettime();
+    assert((stopBenchmark = clock())!=-1);
+  
+
+  	//timeElapsed = stopBenchmark - startBenchmark;
+        timeElapsed = (double) (stopBenchmark-startBenchmark)/CLOCKS_PER_SEC;
+  	effectiveDeviceFlops = N * VOLUME/2 * effectiveFlopsPerApp;
+  	effectiveFlops       = N * VOLUME/2 * effectiveFlopsPerApp / timeElapsed / 1.0e9;
+  	printf("EFFECTIVE:\n");
+  	printf("\ttime:        %.4e sec\n", timeElapsed);
+  	printf("\tflop's:      %.4e flops\n", effectiveDeviceFlops);
+  	printf("\tperformance: %.4e Gflop/s\n\n", effectiveFlops);
+  	
+
+  
+}//benchmark_eo_nd_d()
+
+
 
 
 
@@ -3763,24 +3938,6 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
     blockdim5 = blocksize;
     griddim5  = (int) ((VOLUME/2/blocksize) + 1);
   }
-
- #ifdef RELATIVISTIC_BASIS 
-   //transform to relativistic gamma basis
-   to_relativistic_basis<<<griddim4, blockdim4>>> (Q_up);
-   to_relativistic_basis<<<griddim4, blockdim4>>> (Q_dn);
-   to_relativistic_basis<<<griddim4, blockdim4>>> (P_up);
-   to_relativistic_basis<<<griddim4, blockdim4>>> (P_dn);   
-   
-   if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-     if (g_proc_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-   }
-   else{
-     #ifndef LOWOUTPUT 
-     if (g_proc_id == 0) printf("Switched to relativistic basis\n");
-     #endif
-   }
- #endif
-
  
   
   /////////////////
@@ -4067,11 +4224,6 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
         }
       #endif
       
-      #ifdef RELATIVISTIC_BASIS 
-         //transform back to tmlqcd gamma basis
-         to_tmlqcd_basis<<<griddim4, blockdim4>>> (x_up);
-	 to_tmlqcd_basis<<<griddim4, blockdim4>>> (x_dn);
-      #endif
       
       #ifdef CUDA_45  
 	cublasDestroy(handle);
@@ -4111,13 +4263,6 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
   #endif
   if (g_proc_id == 0) printf("Final inner residue: %.6e\n", rr);
 
-
-
-      #ifdef RELATIVISTIC_BASIS 
-         //transform back to tmlqcd gamma basis
-         to_tmlqcd_basis<<<griddim4, blockdim4>>> (x_up);
-	 to_tmlqcd_basis<<<griddim4, blockdim4>>> (x_dn);
-      #endif
     
     #ifdef CUDA_45  
       cublasDestroy(handle);
@@ -4133,7 +4278,7 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
 
 
 void test_double_nd_operator(spinor* const Q_up, spinor* const Q_dn, const int N){
-   
+   cudaError_t cudaerr;
    size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !   
    int gridsize;
      //this is the partitioning for the HoppingMatrix kernel
@@ -4179,12 +4324,26 @@ void test_double_nd_operator(spinor* const Q_up, spinor* const Q_dn, const int N
   Hopping_Matrix(OE, solver_field_up[0] , solver_field_up[1]); 
   */
   //apply gpu matrix
+
   order_spin_gpu(Q_up, h2d_spin_d);
   cudaMemcpy(x_up_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);      
   order_spin_gpu(Q_dn, h2d_spin_d);
   cudaMemcpy(x_dn_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);	  
-  // r_up/dn = Q-A*x_up/dn
   
+  #ifdef RELATIVISTIC_BASIS
+      to_relativistic_basis_d<<<griddim4, blockdim4>>> (x_up_d);
+      to_relativistic_basis_d<<<griddim4, blockdim4>>> (x_dn_d);
+      if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
+	if (g_proc_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+      }
+      else{
+	#ifndef LOWOUTPUT 
+	if (g_proc_id == 0) printf("Switched to relativistic basis\n");
+	#endif
+      }    
+  #endif   
+  
+  // r_up/dn = Q-A*x_up/dn
   dev_Qtm_pm_ndpsi_d(Ax_up_d, Ax_dn_d,  
 		      x_up_d, x_dn_d, 
 		      griddim3, blockdim3, griddim4, blockdim4,
@@ -4195,6 +4354,10 @@ void test_double_nd_operator(spinor* const Q_up, spinor* const Q_dn, const int N
   dev_Hopp_d(Ax_up_d, x_dn_d,  
 		      griddim3, blockdim3, griddim4, blockdim4,1);   
   */
+  #ifdef RELATIVISTIC_BASIS 
+    to_tmlqcd_basis_d<<<griddim4, blockdim4>>> (Ax_up_d);
+    to_tmlqcd_basis_d<<<griddim4, blockdim4>>> (Ax_dn_d);      
+  #endif   
   cudaMemcpy(h2d_spin_d, Ax_up_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
   unorder_spin_gpu(h2d_spin_d, solver_field_up[1]);      
 
@@ -4477,8 +4640,17 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
      int griddim4 = gridsize;  
     update_constants_d(dev_grid);
     update_gpu_gf_d(g_gauge_field);
-    
-
+  #else   
+    int gridsize;
+     //this is the partitioning for dev_mul_one_pm...
+     int blockdim4 = BLOCK2;
+     if( VOLUME/2 % blockdim4 == 0){
+       gridsize = (int) VOLUME/2/blockdim4;
+     }
+     else{
+       gridsize = (int) VOLUME/2/blockdim4 + 1;
+     }
+     int griddim4 = gridsize;  
   #endif  
   
   
@@ -4658,6 +4830,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   #ifdef ALGORITHM_BENCHMARK
       starteffective = gettime();
   #endif
+     
   
   #ifdef GPU_DOUBLE
     // r(0)
@@ -4669,7 +4842,12 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       order_spin_gpu(Q_dn, h2d_spin_d);
       cudaMemcpy(Q_dn_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);
       cudaMemcpy(r_dn_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);
-      
+      #ifdef RELATIVISTIC_BASIS
+        to_relativistic_basis_d<<<griddim4, blockdim4>>> (Q_up_d);
+        to_relativistic_basis_d<<<griddim4, blockdim4>>> (Q_dn_d);   
+        to_relativistic_basis_d<<<griddim4, blockdim4>>> (r_up_d);
+        to_relativistic_basis_d<<<griddim4, blockdim4>>> (r_dn_d);	
+      #endif 
       //set solution accumulation fields to zero
       dev_zero_spinor_field_d<<<griddim4, blockdim4>>>(x_up_d);
       dev_zero_spinor_field_d<<<griddim4, blockdim4>>>(x_dn_d);      
@@ -4679,7 +4857,11 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
           order_spin_gpu(P_up, h2d_spin_d);
           cudaMemcpy(x_up_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);      
           order_spin_gpu(P_dn, h2d_spin_d);
-          cudaMemcpy(x_dn_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);	  
+          cudaMemcpy(x_dn_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);
+          #ifdef RELATIVISTIC_BASIS  
+            to_relativistic_basis_d<<<griddim4, blockdim4>>> (x_up_d);
+            to_relativistic_basis_d<<<griddim4, blockdim4>>> (x_dn_d);	
+          #endif 	  
           // r_up/dn = Q-A*x_up/dn
 	  dev_Qtm_pm_ndpsi_d(Ax_up_d, Ax_dn_d,  
 		      x_up_d, x_dn_d, 
@@ -4764,6 +4946,10 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     #else
       to_device(dev_spinin_up, r_up, h2d_spin_up, dev_spinsize_int);		// notice: for MPI communicateion the boundary exchange takes place when the hopping matrix is applied
       to_device(dev_spinin_dn, r_dn, h2d_spin_dn, dev_spinsize_int);
+      #ifdef RELATIVISTIC_BASIS  
+        to_relativistic_basis<<<griddim4, blockdim4>>> (dev_spinin_up);
+        to_relativistic_basis<<<griddim4, blockdim4>>> (dev_spinin_dn);	
+      #endif 
     #endif
     		// debug	// CUDA
     		#ifdef CUDA_DEBUG
@@ -4838,9 +5024,13 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       
     #else
       // host/device interaction
+      #ifdef RELATIVISTIC_BASIS 
+        to_tmlqcd_basis<<<griddim4, blockdim4>>> (dev_spinout_up);
+        to_tmlqcd_basis<<<griddim4, blockdim4>>> (dev_spinout_dn);      
+      #endif       
       to_host(d_up, dev_spinout_up, h2d_spin_up, dev_spinsize_int);
       to_host(d_dn, dev_spinout_dn, h2d_spin_dn, dev_spinsize_int);
-    
+
     		// debug	// CUDA
     		#ifdef CUDA_DEBUG
     		  // CUDA_CHECK("CUDA error in mixedsolve_eo_nd(). Device to host interaction failed.", "Fields copied back to device.");
@@ -4893,6 +5083,10 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
      #ifdef GPU_DOUBLE
        //for GPU_DOUBLE we have to assign P_up/dn 
        //(for cpu outer solver this is not necessary, as P_up/dn == x_up/dn
+        #ifdef RELATIVISTIC_BASIS 
+          to_tmlqcd_basis_d<<<griddim4, blockdim4>>> (x_up_d);
+          to_tmlqcd_basis_d<<<griddim4, blockdim4>>> (x_dn_d);      
+        #endif              
         cudaMemcpy(h2d_spin_d, x_up_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
         unorder_spin_gpu(h2d_spin_d, P_up); 
         cudaMemcpy(h2d_spin_d, x_dn_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
@@ -5061,7 +5255,6 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
 
 
 
-#ifdef GPU_DOUBLE
 
 
 
@@ -6376,6 +6569,11 @@ extern "C" int doublesolve_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
     innersolver_precision_check_abs = 1;     
   }
 
+   #ifdef OPERATOR_BENCHMARK
+    benchmark_eo_nd_d(Q_up, Q_dn, OPERATOR_BENCHMARK);
+   #endif
+  
+  
   //////////////////
   // INITIALIZING //
   //////////////////
@@ -6429,7 +6627,18 @@ extern "C" int doublesolve_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
     cudaMemcpy(dev_spinin_up_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);      
     order_spin_gpu(Q_dn, h2d_spin_d);
     cudaMemcpy(dev_spinin_dn_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);
- 
+    #ifdef RELATIVISTIC_BASIS
+      to_relativistic_basis_d<<<griddim4, blockdim4>>> (dev_spinin_up_d);
+      to_relativistic_basis_d<<<griddim4, blockdim4>>> (dev_spinin_dn_d);
+      if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
+	if (g_proc_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+      }
+      else{
+	#ifndef LOWOUTPUT 
+	if (g_proc_id == 0) printf("Switched to relativistic basis\n");
+	#endif
+      }    
+    #endif
 
     startinner = gettime();
     outercount = dev_cg_mms_eo_nd_d(dev_gf_d,
@@ -6448,11 +6657,19 @@ extern "C" int doublesolve_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
     
       
     //copy result back
+    #ifdef RELATIVISTIC_BASIS 
+      to_tmlqcd_basis_d<<<griddim4, blockdim4>>> (dev_spinout_up_d);
+      to_tmlqcd_basis_d<<<griddim4, blockdim4>>> (dev_spinout_dn_d);      
+    #endif     
     cudaMemcpy(h2d_spin_d, dev_spinout_up_d , dev_spinsize_d, cudaMemcpyDeviceToHost);      
     unorder_spin_gpu(h2d_spin_d, P_up[0]);
     cudaMemcpy(h2d_spin_d, dev_spinout_dn_d , dev_spinsize_d, cudaMemcpyDeviceToHost);      
     unorder_spin_gpu(h2d_spin_d, P_dn[0]);
-    for(int im = 1; im < Nshift; im++) { 
+    for(int im = 1; im < Nshift; im++) {
+      #ifdef RELATIVISTIC_BASIS 
+	to_tmlqcd_basis_d<<<griddim4, blockdim4>>> (mms_x_up[im-1]);
+	to_tmlqcd_basis_d<<<griddim4, blockdim4>>> (mms_x_dn[im-1]);      
+      #endif        
       cudaMemcpy(h2d_spin_d, mms_x_up[im-1], dev_spinsize_d, cudaMemcpyDeviceToHost);      
       unorder_spin_gpu(h2d_spin_d, P_up[im]);
       cudaMemcpy(h2d_spin_d, mms_x_dn[im-1] , dev_spinsize_d, cudaMemcpyDeviceToHost);      
@@ -6483,7 +6700,7 @@ extern "C" int doublesolve_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
 
 
 
-#endif
+
 
 
 

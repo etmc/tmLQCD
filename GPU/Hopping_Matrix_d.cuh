@@ -107,32 +107,8 @@ __global__ void dev_Hopping_Matrix_d(dev_su3_2v_d * gf, const dev_spinor_d * sin
               #else
                 if ((gfindex_site[pos]/spatialvol) != (dev_T-1) ) {
               #endif
-                shelp1[0].x = sin[hoppos+0*DEVOFF].x;
-                shelp1[0].y = sin[hoppos+0*DEVOFF].y;
-                shelp1[0].z = sin[hoppos+1*DEVOFF].x;
-                shelp1[0].w = sin[hoppos+1*DEVOFF].y;		
-                shelp1[1].x = sin[hoppos+2*DEVOFF].x;
-                shelp1[1].y = sin[hoppos+2*DEVOFF].y;
-                shelp1[1].z = sin[hoppos+3*DEVOFF].x;
-                shelp1[1].w = sin[hoppos+3*DEVOFF].y;
-		
-                shelp1[2].x = sin[hoppos+4*DEVOFF].x;
-                shelp1[2].y = sin[hoppos+4*DEVOFF].y;
-                shelp1[2].z = sin[hoppos+5*DEVOFF].x;
-                shelp1[2].w = sin[hoppos+5*DEVOFF].y;		
-                shelp1[3].x = sin[hoppos+6*DEVOFF].x;
-                shelp1[3].y = sin[hoppos+6*DEVOFF].y;
-                shelp1[3].z = sin[hoppos+7*DEVOFF].x;
-                shelp1[3].w = sin[hoppos+7*DEVOFF].y;
-		
-                shelp1[4].x = sin[hoppos+8*DEVOFF].x;
-                shelp1[4].y = sin[hoppos+8*DEVOFF].y;
-                shelp1[4].z = sin[hoppos+9*DEVOFF].x;
-                shelp1[4].w = sin[hoppos+9*DEVOFF].y;		
-                shelp1[5].x = sin[hoppos+10*DEVOFF].x;
-                shelp1[5].y = sin[hoppos+10*DEVOFF].y;
-                shelp1[5].z = sin[hoppos+11*DEVOFF].x;
-                shelp1[5].w = sin[hoppos+11*DEVOFF].y;		
+              
+                DIRECTLOAD_D(shelp1, sin, hoppos);
               }
               else{
                 // gf != ID for t == T-1 => mult spinor with gf
@@ -161,33 +137,7 @@ __global__ void dev_Hopping_Matrix_d(dev_su3_2v_d * gf, const dev_spinor_d * sin
                 if ((gfindex_nextsite[hoppos]/spatialvol) != (dev_T-1) ) {
               #endif
               
-                shelp1[0].x = sin[hoppos+0*DEVOFF].x;
-                shelp1[0].y = sin[hoppos+0*DEVOFF].y;
-                shelp1[0].z = sin[hoppos+1*DEVOFF].x;
-                shelp1[0].w = sin[hoppos+1*DEVOFF].y;		
-                shelp1[1].x = sin[hoppos+2*DEVOFF].x;
-                shelp1[1].y = sin[hoppos+2*DEVOFF].y;
-                shelp1[1].z = sin[hoppos+3*DEVOFF].x;
-                shelp1[1].w = sin[hoppos+3*DEVOFF].y;
-		
-                shelp1[2].x = sin[hoppos+4*DEVOFF].x;
-                shelp1[2].y = sin[hoppos+4*DEVOFF].y;
-                shelp1[2].z = sin[hoppos+5*DEVOFF].x;
-                shelp1[2].w = sin[hoppos+5*DEVOFF].y;		
-                shelp1[3].x = sin[hoppos+6*DEVOFF].x;
-                shelp1[3].y = sin[hoppos+6*DEVOFF].y;
-                shelp1[3].z = sin[hoppos+7*DEVOFF].x;
-                shelp1[3].w = sin[hoppos+7*DEVOFF].y;
-		
-                shelp1[4].x = sin[hoppos+8*DEVOFF].x;
-                shelp1[4].y = sin[hoppos+8*DEVOFF].y;
-                shelp1[4].z = sin[hoppos+9*DEVOFF].x;
-                shelp1[4].w = sin[hoppos+9*DEVOFF].y;		
-                shelp1[5].x = sin[hoppos+10*DEVOFF].x;
-                shelp1[5].y = sin[hoppos+10*DEVOFF].y;
-                shelp1[5].z = sin[hoppos+11*DEVOFF].x;
-                shelp1[5].w = sin[hoppos+11*DEVOFF].y;
-
+                DIRECTLOAD_D(shelp1, sin, hoppos);
               }
               else{
                 // gf != ID for t == T-1 => mult spinor with gf
@@ -281,9 +231,9 @@ __global__ void dev_Hopping_Matrix_updn_d(dev_su3_2v_d * gf, const dev_spinor_d 
   
   if(pos < (start + size)){
   
-
-  dev_zero_spinor_local_d(&(ssum_up[0])); // zero sum 
-  dev_zero_spinor_local_d(&(ssum_dn[0])); // zero sum   
+  ZERO_D(ssum_up);
+  ZERO_D(ssum_dn);
+  
  #ifdef TEMPORALGAUGE
   int spatialvol = dev_LX*dev_LY*dev_LZ;
  #endif
@@ -306,75 +256,43 @@ __global__ void dev_Hopping_Matrix_updn_d(dev_su3_2v_d * gf, const dev_spinor_d 
               #else
                 if ((gfindex_site[pos]/spatialvol) != (dev_T-1) ) {
               #endif
-              
-		shelp1_up[0].x = sin_up[hoppos+0*DEVOFF].x;
-                shelp1_up[0].y = sin_up[hoppos+0*DEVOFF].y;
-                shelp1_up[0].z = sin_up[hoppos+1*DEVOFF].x;
-                shelp1_up[0].w = sin_up[hoppos+1*DEVOFF].y;		
-                shelp1_up[1].x = sin_up[hoppos+2*DEVOFF].x;
-                shelp1_up[1].y = sin_up[hoppos+2*DEVOFF].y;
-                shelp1_up[1].z = sin_up[hoppos+3*DEVOFF].x;
-                shelp1_up[1].w = sin_up[hoppos+3*DEVOFF].y;
-		
-                shelp1_up[2].x = sin_up[hoppos+4*DEVOFF].x;
-                shelp1_up[2].y = sin_up[hoppos+4*DEVOFF].y;
-                shelp1_up[2].z = sin_up[hoppos+5*DEVOFF].x;
-                shelp1_up[2].w = sin_up[hoppos+5*DEVOFF].y;		
-                shelp1_up[3].x = sin_up[hoppos+6*DEVOFF].x;
-                shelp1_up[3].y = sin_up[hoppos+6*DEVOFF].y;
-                shelp1_up[3].z = sin_up[hoppos+7*DEVOFF].x;
-                shelp1_up[3].w = sin_up[hoppos+7*DEVOFF].y;
-		
-                shelp1_up[4].x = sin_up[hoppos+8*DEVOFF].x;
-                shelp1_up[4].y = sin_up[hoppos+8*DEVOFF].y;
-                shelp1_up[4].z = sin_up[hoppos+9*DEVOFF].x;
-                shelp1_up[4].w = sin_up[hoppos+9*DEVOFF].y;		
-                shelp1_up[5].x = sin_up[hoppos+10*DEVOFF].x;
-                shelp1_up[5].y = sin_up[hoppos+10*DEVOFF].y;
-                shelp1_up[5].z = sin_up[hoppos+11*DEVOFF].x;
-                shelp1_up[5].w = sin_up[hoppos+11*DEVOFF].y;
-		
-		shelp1_dn[0].x = sin_dn[hoppos+0*DEVOFF].x;
-                shelp1_dn[0].y = sin_dn[hoppos+0*DEVOFF].y;
-                shelp1_dn[0].z = sin_dn[hoppos+1*DEVOFF].x;
-                shelp1_dn[0].w = sin_dn[hoppos+1*DEVOFF].y;		
-                shelp1_dn[1].x = sin_dn[hoppos+2*DEVOFF].x;
-                shelp1_dn[1].y = sin_dn[hoppos+2*DEVOFF].y;
-                shelp1_dn[1].z = sin_dn[hoppos+3*DEVOFF].x;
-                shelp1_dn[1].w = sin_dn[hoppos+3*DEVOFF].y;
-		
-                shelp1_dn[2].x = sin_dn[hoppos+4*DEVOFF].x;
-                shelp1_dn[2].y = sin_dn[hoppos+4*DEVOFF].y;
-                shelp1_dn[2].z = sin_dn[hoppos+5*DEVOFF].x;
-                shelp1_dn[2].w = sin_dn[hoppos+5*DEVOFF].y;		
-                shelp1_dn[3].x = sin_dn[hoppos+6*DEVOFF].x;
-                shelp1_dn[3].y = sin_dn[hoppos+6*DEVOFF].y;
-                shelp1_dn[3].z = sin_dn[hoppos+7*DEVOFF].x;
-                shelp1_dn[3].w = sin_dn[hoppos+7*DEVOFF].y;
-		
-                shelp1_dn[4].x = sin_dn[hoppos+8*DEVOFF].x;
-                shelp1_dn[4].y = sin_dn[hoppos+8*DEVOFF].y;
-                shelp1_dn[4].z = sin_dn[hoppos+9*DEVOFF].x;
-                shelp1_dn[4].w = sin_dn[hoppos+9*DEVOFF].y;		
-                shelp1_dn[5].x = sin_dn[hoppos+10*DEVOFF].x;
-                shelp1_dn[5].y = sin_dn[hoppos+10*DEVOFF].y;
-                shelp1_dn[5].z = sin_dn[hoppos+11*DEVOFF].x;
-                shelp1_dn[5].w = sin_dn[hoppos+11*DEVOFF].y;		
+              #ifdef RELATIVISTIC_BASIS
+                DIRECTLOAD_REL_UP_D(shelp1_up, sin_up, hoppos);
+                DIRECTLOAD_REL_UP_D(shelp1_dn, sin_dn, hoppos);		
+              #else
+                DIRECTLOAD_D(shelp1_up, sin_up, hoppos);
+                DIRECTLOAD_D(shelp1_dn, sin_dn, hoppos);		
+              #endif
               }
               else{
                 // gf != ID for t == T-1 => mult spinor with gf
                 dev_reconstructgf_2vtexref_d(gf,4*gfindex_site[pos]+0,&(gfsmem));
-                dev_su3MtV_d(gfsmem, &(sin_up[hoppos]), &(shelp1_up[0]));
-                dev_su3MtV_d(gfsmem, &(sin_dn[hoppos]), &(shelp1_dn[0]));
+                #ifdef RELATIVISTIC_BASIS
+                  dev_su3MtV_rel_up_d(gfsmem, &(sin_up[hoppos]), &(shelp1_up[0]));
+                  dev_su3MtV_rel_up_d(gfsmem, &(sin_dn[hoppos]), &(shelp1_dn[0]));                
+                #else
+                  dev_su3MtV_d(gfsmem, &(sin_up[hoppos]), &(shelp1_up[0]));
+                  dev_su3MtV_d(gfsmem, &(sin_dn[hoppos]), &(shelp1_dn[0]));
+                #endif
               }
             #else
               dev_reconstructgf_2vtexref_d(gf, 4*gfindex_site[pos]+ 0 ,&(gfsmem));
-              dev_su3MtV_d(gfsmem, &(sin_up[hoppos]), &(shelp1_up[0]));
-              dev_su3MtV_d(gfsmem, &(sin_dn[hoppos]), &(shelp1_dn[0]));	      
+              #ifdef RELATIVISTIC_BASIS	  
+                dev_su3MtV_rel_up_d(gfsmem, &(sin_up[hoppos]), &(shelp1_up[0]));
+                dev_su3MtV_rel_up_d(gfsmem, &(sin_dn[hoppos]), &(shelp1_dn[0]));	      
+              #else	      
+                dev_su3MtV_d(gfsmem, &(sin_up[hoppos]), &(shelp1_up[0]));
+                dev_su3MtV_d(gfsmem, &(sin_dn[hoppos]), &(shelp1_dn[0]));
+              #endif		
             #endif
             //-kappa(r - gamma_mu)
+            #ifdef RELATIVISTIC_BASIS
+              dev_kappaP0_plus_relativistic_d(&(ssum_up[0]), &(shelp1_up[0]), dev_cconj_d(dev_k0_d));
+              dev_kappaP0_plus_relativistic_d(&(ssum_dn[0]), &(shelp1_dn[0]), dev_cconj_d(dev_k0_d));              
+            #else		
               dev_kappaP0_plus_d(&(ssum_up[0]), &(shelp1_up[0]), dev_cconj_d(dev_k0_d));
-              dev_kappaP0_plus_d(&(ssum_dn[0]), &(shelp1_dn[0]), dev_cconj_d(dev_k0_d));	    
+              dev_kappaP0_plus_d(&(ssum_dn[0]), &(shelp1_dn[0]), dev_cconj_d(dev_k0_d));
+	    #endif
 //l==0,t
             //negative direction
             hoppos = nn_evenodd[8*pos+4]; 
@@ -388,77 +306,44 @@ __global__ void dev_Hopping_Matrix_updn_d(dev_su3_2v_d * gf, const dev_spinor_d 
               #else
                 if ((gfindex_nextsite[hoppos]/spatialvol) != (dev_T-1) ) {
               #endif
-              
-		shelp1_up[0].x = sin_up[hoppos+0*DEVOFF].x;
-                shelp1_up[0].y = sin_up[hoppos+0*DEVOFF].y;
-                shelp1_up[0].z = sin_up[hoppos+1*DEVOFF].x;
-                shelp1_up[0].w = sin_up[hoppos+1*DEVOFF].y;		
-                shelp1_up[1].x = sin_up[hoppos+2*DEVOFF].x;
-                shelp1_up[1].y = sin_up[hoppos+2*DEVOFF].y;
-                shelp1_up[1].z = sin_up[hoppos+3*DEVOFF].x;
-                shelp1_up[1].w = sin_up[hoppos+3*DEVOFF].y;
-		
-                shelp1_up[2].x = sin_up[hoppos+4*DEVOFF].x;
-                shelp1_up[2].y = sin_up[hoppos+4*DEVOFF].y;
-                shelp1_up[2].z = sin_up[hoppos+5*DEVOFF].x;
-                shelp1_up[2].w = sin_up[hoppos+5*DEVOFF].y;		
-                shelp1_up[3].x = sin_up[hoppos+6*DEVOFF].x;
-                shelp1_up[3].y = sin_up[hoppos+6*DEVOFF].y;
-                shelp1_up[3].z = sin_up[hoppos+7*DEVOFF].x;
-                shelp1_up[3].w = sin_up[hoppos+7*DEVOFF].y;
-		
-                shelp1_up[4].x = sin_up[hoppos+8*DEVOFF].x;
-                shelp1_up[4].y = sin_up[hoppos+8*DEVOFF].y;
-                shelp1_up[4].z = sin_up[hoppos+9*DEVOFF].x;
-                shelp1_up[4].w = sin_up[hoppos+9*DEVOFF].y;		
-                shelp1_up[5].x = sin_up[hoppos+10*DEVOFF].x;
-                shelp1_up[5].y = sin_up[hoppos+10*DEVOFF].y;
-                shelp1_up[5].z = sin_up[hoppos+11*DEVOFF].x;
-                shelp1_up[5].w = sin_up[hoppos+11*DEVOFF].y;
-		
-		shelp1_dn[0].x = sin_dn[hoppos+0*DEVOFF].x;
-                shelp1_dn[0].y = sin_dn[hoppos+0*DEVOFF].y;
-                shelp1_dn[0].z = sin_dn[hoppos+1*DEVOFF].x;
-                shelp1_dn[0].w = sin_dn[hoppos+1*DEVOFF].y;		
-                shelp1_dn[1].x = sin_dn[hoppos+2*DEVOFF].x;
-                shelp1_dn[1].y = sin_dn[hoppos+2*DEVOFF].y;
-                shelp1_dn[1].z = sin_dn[hoppos+3*DEVOFF].x;
-                shelp1_dn[1].w = sin_dn[hoppos+3*DEVOFF].y;
-		
-                shelp1_dn[2].x = sin_dn[hoppos+4*DEVOFF].x;
-                shelp1_dn[2].y = sin_dn[hoppos+4*DEVOFF].y;
-                shelp1_dn[2].z = sin_dn[hoppos+5*DEVOFF].x;
-                shelp1_dn[2].w = sin_dn[hoppos+5*DEVOFF].y;		
-                shelp1_dn[3].x = sin_dn[hoppos+6*DEVOFF].x;
-                shelp1_dn[3].y = sin_dn[hoppos+6*DEVOFF].y;
-                shelp1_dn[3].z = sin_dn[hoppos+7*DEVOFF].x;
-                shelp1_dn[3].w = sin_dn[hoppos+7*DEVOFF].y;
-		
-                shelp1_dn[4].x = sin_dn[hoppos+8*DEVOFF].x;
-                shelp1_dn[4].y = sin_dn[hoppos+8*DEVOFF].y;
-                shelp1_dn[4].z = sin_dn[hoppos+9*DEVOFF].x;
-                shelp1_dn[4].w = sin_dn[hoppos+9*DEVOFF].y;		
-                shelp1_dn[5].x = sin_dn[hoppos+10*DEVOFF].x;
-                shelp1_dn[5].y = sin_dn[hoppos+10*DEVOFF].y;
-                shelp1_dn[5].z = sin_dn[hoppos+11*DEVOFF].x;
-                shelp1_dn[5].w = sin_dn[hoppos+11*DEVOFF].y;	
+              #ifdef RELATIVISTIC_BASIS
+                DIRECTLOAD_REL_DN_D(shelp1_up, sin_up, hoppos);
+		DIRECTLOAD_REL_DN_D(shelp1_dn, sin_dn, hoppos);
+              #else              
+                DIRECTLOAD_D(shelp1_up, sin_up, hoppos);
+		DIRECTLOAD_D(shelp1_dn, sin_dn, hoppos);
+              #endif
               }
               else{
                 // gf != ID for t == T-1 => mult spinor with gf
                 dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+0, &(gfsmem));
-                dev_su3MtV_d(gfsmem, &(sin_up[hoppos]), &(shelp1_up[0]));
-                dev_su3MtV_d(gfsmem, &(sin_dn[hoppos]), &(shelp1_dn[0]));		
+                #ifdef RELATIVISTIC_BASIS
+                  dev_su3MtV_rel_dn_d(gfsmem, &(sin_up[hoppos]), &(shelp1_up[0]));
+                  dev_su3MtV_rel_dn_d(gfsmem, &(sin_dn[hoppos]), &(shelp1_dn[0]));               
+                #else		
+                  dev_su3MtV_d(gfsmem, &(sin_up[hoppos]), &(shelp1_up[0]));
+                  dev_su3MtV_d(gfsmem, &(sin_dn[hoppos]), &(shelp1_dn[0])); 
+		#endif
               }
             #else            
               dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+0, &(gfsmem));
-              dev_su3MtV_d(gfsmem, &(sin_up[hoppos]), &(shelp1_up[0]));
-              dev_su3MtV_d(gfsmem, &(sin_dn[hoppos]), &(shelp1_dn[0]));	      
+              #ifdef RELATIVISTIC_BASIS	  
+                dev_su3MtV_rel_dn_d(gfsmem, &(sin_up[hoppos]), &(shelp1_up[0]));
+                dev_su3MtV_rel_dn_d(gfsmem, &(sin_dn[hoppos]), &(shelp1_dn[0]));	      
+              #else	      
+                dev_su3MtV_d(gfsmem, &(sin_up[hoppos]), &(shelp1_up[0]));
+                dev_su3MtV_d(gfsmem, &(sin_dn[hoppos]), &(shelp1_dn[0]));
+	      #endif
             #endif
             
             //-kappa(r + gamma_mu)
+            #ifdef RELATIVISTIC_BASIS
+              dev_kappaP0_minus_relativistic_d(&(ssum_up[0]), &(shelp1_up[0]), dev_k0_d);
+              dev_kappaP0_minus_relativistic_d(&(ssum_dn[0]), &(shelp1_dn[0]), dev_k0_d);              
+            #else		
               dev_kappaP0_minus_d(&(ssum_up[0]), &(shelp1_up[0]), dev_k0_d);
               dev_kappaP0_minus_d(&(ssum_dn[0]), &(shelp1_dn[0]), dev_k0_d);
-
+            #endif
 
 //l==3,z 
             //positive direction
@@ -752,7 +637,11 @@ __global__ void dev_mul_one_pm_imubar_gamma5_d (dev_spinor_d * sin,
   int pos = threadIdx.x + blockDim.x*blockIdx.x;
   
   if (pos < dev_VOLUME) {
+#ifdef RELATIVISTIC_BASIS
+   dev_skalarmult_gamma5_globalspinor_rel_d(&(slocal[0]), pm_imu, &(sin[pos]) );
+#else
     dev_skalarmult_gamma5_globalspinor_d(&(slocal[0]), pm_imu, &(sin[pos]) );			// slocal  =  pm_imu * (gamma5) * sin
+#endif
     dev_add_globalspinor_assign_d(&(slocal[0]), &(sin[pos]));					// slocal  =  slocal + sin  =  pm_imu * (gamma5) * sin + sin
     dev_realmult_spinor_assigntoglobal_d(&(sout[pos]), 1.0, &(slocal[0]) );			// sout    =  slocal
   }
@@ -961,8 +850,11 @@ __global__ void dev_nd_linalg1_gamma5_d (dev_spinor_d * s1_up, dev_spinor_d * s1
     sout[5].w -= epsbar*s3[5].w;
     sout[5].w -= s1[5].w;       
     
-
-    dev_Gamma5_assign_d(&(s1[0]), &(sout[0]));      
+#ifdef RELATIVISTIC_BASIS
+    dev_Gamma5_assign_rel_d(&(s1[0]), &(sout[0]));    
+#else
+    dev_Gamma5_assign_d(&(s1[0]), &(sout[0]));    
+#endif
     dev_write_spinor_d(&(s1[0]),&(s2_up[pos]));    
     
     
@@ -1026,8 +918,11 @@ __global__ void dev_nd_linalg1_gamma5_d (dev_spinor_d * s1_up, dev_spinor_d * s1
     sout[5].w -= epsbar*s3[5].w;
     sout[5].w -= s1[5].w;         
     
-
-    dev_Gamma5_assign_d(&(s1[0]), &(sout[0]));        
+#ifdef RELATIVISTIC_BASIS
+    dev_Gamma5_assign_rel_d(&(s1[0]), &(sout[0]));    
+#else
+    dev_Gamma5_assign_d(&(s1[0]), &(sout[0])); 
+#endif
     dev_write_spinor_d(&(s1[0]),&(s2_dn[pos]));       
   }
 }

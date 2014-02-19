@@ -158,6 +158,104 @@ __device__ inline void dev_read_spinor_d(double4 *i1, dev_spinor_d *i2){
   }
 }
 
+#define ZERO_D(spin) \
+{ \
+  spin[0].x=0.0f; spin[0].y=0.0f; spin[0].z=0.0f; spin[0].w=0.0f;	\
+  spin[1].x=0.0f; spin[1].y=0.0f; spin[1].z=0.0f; spin[1].w=0.0f;	\
+  spin[2].x=0.0f; spin[2].y=0.0f; spin[2].z=0.0f; spin[2].w=0.0f;	\
+  spin[3].x=0.0f; spin[3].y=0.0f; spin[3].z=0.0f; spin[3].w=0.0f;  	\
+  spin[4].x=0.0f; spin[4].y=0.0f; spin[4].z=0.0f; spin[4].w=0.0f;	\
+  spin[5].x=0.0f; spin[5].y=0.0f; spin[5].z=0.0f; spin[5].w=0.0f;	\
+} 
+
+
+#define DIRECTLOAD_D(A, BGLOBAL, pos)			\
+{							\
+A[0].x = BGLOBAL[pos+0*DEVOFF].x;		\
+A[0].y = BGLOBAL[pos+0*DEVOFF].y;		\
+A[0].z = BGLOBAL[pos+1*DEVOFF].x;		\
+A[0].w = BGLOBAL[pos+1*DEVOFF].y;		\
+A[1].x = BGLOBAL[pos+2*DEVOFF].x;		\
+A[1].y = BGLOBAL[pos+2*DEVOFF].y;		\
+A[1].z = BGLOBAL[pos+3*DEVOFF].x;		\
+A[1].w = BGLOBAL[pos+3*DEVOFF].y;		\
+						\
+A[2].x = BGLOBAL[pos+4*DEVOFF].x;		\
+A[2].y = BGLOBAL[pos+4*DEVOFF].y;		\
+A[2].z = BGLOBAL[pos+5*DEVOFF].x;		\
+A[2].w = BGLOBAL[pos+5*DEVOFF].y;		\
+A[3].x = BGLOBAL[pos+6*DEVOFF].x;		\
+A[3].y = BGLOBAL[pos+6*DEVOFF].y;		\
+A[3].z = BGLOBAL[pos+7*DEVOFF].x;		\
+A[3].w = BGLOBAL[pos+7*DEVOFF].y;		\
+						\
+A[4].x = BGLOBAL[pos+8*DEVOFF].x;		\
+A[4].y = BGLOBAL[pos+8*DEVOFF].y;		\
+A[4].z = BGLOBAL[pos+9*DEVOFF].x;		\
+A[4].w = BGLOBAL[pos+9*DEVOFF].y;		\
+A[5].x = BGLOBAL[pos+10*DEVOFF].x;		\
+A[5].y = BGLOBAL[pos+10*DEVOFF].y;		\
+A[5].z = BGLOBAL[pos+11*DEVOFF].x;		\
+A[5].w = BGLOBAL[pos+11*DEVOFF].y;		\
+}		
+
+
+#define DIRECTLOAD_REL_UP_D(A, BGLOBAL, pos)	\
+{						\
+A[0].x = BGLOBAL[pos+0*DEVOFF].x;		\
+A[0].y = BGLOBAL[pos+0*DEVOFF].y;		\
+A[0].z = BGLOBAL[pos+1*DEVOFF].x;		\
+A[0].w = BGLOBAL[pos+1*DEVOFF].y;		\
+A[1].x = BGLOBAL[pos+2*DEVOFF].x;		\
+A[1].y = BGLOBAL[pos+2*DEVOFF].y;		\
+A[1].z = BGLOBAL[pos+3*DEVOFF].x;		\
+A[1].w = BGLOBAL[pos+3*DEVOFF].y;		\
+A[2].x = BGLOBAL[pos+4*DEVOFF].x;		\
+A[2].y = BGLOBAL[pos+4*DEVOFF].y;		\
+A[2].z = BGLOBAL[pos+5*DEVOFF].x;		\
+A[2].w = BGLOBAL[pos+5*DEVOFF].y;		\
+A[3].x = 1.0;					\
+A[3].y = 1.0;		\
+A[3].z = 1.0;		\
+A[3].w = 1.0;		\
+A[4].x = 1.0;		\
+A[4].y = 1.0;		\
+A[4].z = 1.0;		\
+A[4].w = 1.0;		\
+A[5].x = 1.0;		\
+A[5].y = 1.0;		\
+A[5].z = 1.0;		\
+A[5].w = 1.0;		\
+}
+
+#define DIRECTLOAD_REL_DN_D(A, BGLOBAL, pos)	\
+{						\
+A[0].x = 1.0;					\
+A[0].y = 1.0;					\
+A[0].z = 1.0;					\
+A[0].w = 1.0;					\
+A[1].x = 1.0;					\
+A[1].y = 1.0;					\
+A[1].z = 1.0;					\
+A[1].w = 1.0;					\
+A[2].x = 1.0;					\
+A[2].y = 1.0;					\
+A[2].z = 1.0;					\
+A[2].w = 1.0;					\
+A[3].x = BGLOBAL[pos+6*DEVOFF].x;		\
+A[3].y = BGLOBAL[pos+6*DEVOFF].y;		\
+A[3].z = BGLOBAL[pos+7*DEVOFF].x;		\
+A[3].w = BGLOBAL[pos+7*DEVOFF].y;		\
+A[4].x = BGLOBAL[pos+8*DEVOFF].x;		\
+A[4].y = BGLOBAL[pos+8*DEVOFF].y;		\
+A[4].z = BGLOBAL[pos+9*DEVOFF].x;		\
+A[4].w = BGLOBAL[pos+9*DEVOFF].y;		\
+A[5].x = BGLOBAL[pos+10*DEVOFF].x;		\
+A[5].y = BGLOBAL[pos+10*DEVOFF].y;		\
+A[5].z = BGLOBAL[pos+11*DEVOFF].x;		\
+A[5].w = BGLOBAL[pos+11*DEVOFF].y;		\
+}
+
 
 // this is to zero a spinor in global mem
 __device__ inline void dev_zero_spinor_d(dev_spinor_d *sin){
@@ -425,6 +523,136 @@ shelp = *(in+11*DEVOFF);
 
 
 
+
+
+__device__ void inline dev_skalarmult_gamma5_globalspinor_rel_d(double4 * out, dev_complex_d lambda, dev_spinor_d * in){
+
+
+ (*(out+3)).x  = -(*(in)).x*lambda.re;
+ (*(out+3)).x += (*(in)).y*lambda.im; 
+ (*(out+3)).y  = -(*(in)).y*lambda.re;
+ (*(out+3)).y -= (*(in)).x*lambda.im; 
+ (*(out+3)).z  = -(*(in+1*DEVOFF)).x*lambda.re;
+ (*(out+3)).z += (*(in+1*DEVOFF)).y*lambda.im;
+ (*(out+3)).w  = -(*(in+1*DEVOFF)).y*lambda.re;
+ (*(out+3)).w -= (*(in+1*DEVOFF)).x*lambda.im;
+ (*(out+4)).x  = -(*(in+2*DEVOFF)).x*lambda.re;
+ (*(out+4)).x += (*(in+2*DEVOFF)).y*lambda.im; 
+ (*(out+4)).y  = -(*(in+2*DEVOFF)).y*lambda.re;
+ (*(out+4)).y -= (*(in+2*DEVOFF)).x*lambda.im;
+ 
+
+ (*(out+4)).z  = -(*(in+3*DEVOFF)).x*lambda.re;
+ (*(out+4)).z += (*(in+3*DEVOFF)).y*lambda.im;
+ (*(out+4)).w  = -(*(in+3*DEVOFF)).y*lambda.re;
+ (*(out+4)).w -= (*(in+3*DEVOFF)).x*lambda.im;
+ (*(out+5)).x  = -(*(in+4*DEVOFF)).x*lambda.re;
+ (*(out+5)).x += (*(in+4*DEVOFF)).y*lambda.im; 
+ (*(out+5)).y  = -(*(in+4*DEVOFF)).y*lambda.re;
+ (*(out+5)).y -= (*(in+4*DEVOFF)).x*lambda.im;
+ (*(out+5)).z  = -(*(in+5*DEVOFF)).x*lambda.re;
+ (*(out+5)).z += (*(in+5*DEVOFF)).y*lambda.im;
+ (*(out+5)).w  = -(*(in+5*DEVOFF)).y*lambda.re;
+ (*(out+5)).w -= (*(in+5*DEVOFF)).x*lambda.im;
+
+ //this is the lower spinor
+ //re and im parts are interchanged w.r.t. above
+ //same sign as above 
+ (*(out+0)).x  = (*(in+6*DEVOFF)).y*lambda.im;
+ (*(out+0)).x -= (*(in+6*DEVOFF)).x*lambda.re;
+ (*(out+0)).y  = -(*(in+6*DEVOFF)).x*lambda.im;
+ (*(out+0)).y -= (*(in+6*DEVOFF)).y*lambda.re; 
+ (*(out+0)).z  = (*(in+7*DEVOFF)).y*lambda.im;
+ (*(out+0)).z -= (*(in+7*DEVOFF)).x*lambda.re;
+ (*(out+0)).w  = -(*(in+7*DEVOFF)).x*lambda.im;
+ (*(out+0)).w -= (*(in+7*DEVOFF)).y*lambda.re;
+ (*(out+1)).x  = (*(in+8*DEVOFF)).y*lambda.im;
+ (*(out+1)).x -= (*(in+8*DEVOFF)).x*lambda.re;
+ (*(out+1)).y  = -(*(in+8*DEVOFF)).x*lambda.im;
+ (*(out+1)).y -= (*(in+8*DEVOFF)).y*lambda.re;
+ 
+ 
+ 
+ (*(out+1)).z  = (*(in+9*DEVOFF)).y*lambda.im;
+ (*(out+1)).z -= (*(in+9*DEVOFF)).x*lambda.re;
+ (*(out+1)).w  = -(*(in+9*DEVOFF)).x*lambda.im;
+ (*(out+1)).w -= (*(in+9*DEVOFF)).y*lambda.re; 
+ (*(out+2)).x  = (*(in+10*DEVOFF)).y*lambda.im;
+ (*(out+2)).x -= (*(in+10*DEVOFF)).x*lambda.re;
+ (*(out+2)).y  = -(*(in+10*DEVOFF)).x*lambda.im;
+ (*(out+2)).y -= (*(in+10*DEVOFF)).y*lambda.re; 
+ (*(out+2)).z  = (*(in+11*DEVOFF)).y*lambda.im;
+ (*(out+2)).z -= (*(in+11*DEVOFF)).x*lambda.re;
+ (*(out+2)).w  = -(*(in+11*DEVOFF)).x*lambda.im;
+ (*(out+2)).w -= (*(in+11*DEVOFF)).y*lambda.re;
+
+}
+
+
+//this is in the relativistic basis
+//gamma5 NOT diagonal
+__device__ void inline dev_skalarmult_gamma5_spinor_rel_d(double4 * out, dev_complex_d lambda, double4 * in){
+
+
+ (*(out+3)).x  = -(*(in)).x*lambda.re;
+ (*(out+3)).x += (*(in)).y*lambda.im; 
+ (*(out+3)).y  = -(*(in)).y*lambda.re;
+ (*(out+3)).y -= (*(in)).x*lambda.im; 
+ (*(out+3)).z  = -(*(in)).z*lambda.re;
+ (*(out+3)).z += (*(in)).w*lambda.im;
+ (*(out+3)).w  = -(*(in)).w*lambda.re;
+ (*(out+3)).w -= (*(in)).z*lambda.im;
+ (*(out+4)).x  = -(*(in+1)).x*lambda.re;
+ (*(out+4)).x += (*(in+1)).y*lambda.im; 
+ (*(out+4)).y  = -(*(in+1)).y*lambda.re;
+ (*(out+4)).y -= (*(in+1)).x*lambda.im;
+ 
+
+ (*(out+4)).z  = -(*(in+1)).z*lambda.re;
+ (*(out+4)).z += (*(in+1)).w*lambda.im;
+ (*(out+4)).w  = -(*(in+1)).w*lambda.re;
+ (*(out+4)).w -= (*(in+1)).z*lambda.im;
+ (*(out+5)).x  = -(*(in+2)).x*lambda.re;
+ (*(out+5)).x += (*(in+2)).y*lambda.im; 
+ (*(out+5)).y  = -(*(in+2)).y*lambda.re;
+ (*(out+5)).y -= (*(in+2)).x*lambda.im;
+ (*(out+5)).z  = -(*(in+2)).z*lambda.re;
+ (*(out+5)).z += (*(in+2)).w*lambda.im;
+ (*(out+5)).w  = -(*(in+2)).w*lambda.re;
+ (*(out+5)).w -= (*(in+2)).z*lambda.im;
+
+ //this is the lower spinor
+ //re and im parts are interchanged w.r.t. above
+ //same sign as above 
+ (*(out+0)).x  = (*(in+3)).y*lambda.im;
+ (*(out+0)).x -= (*(in+3)).x*lambda.re;
+ (*(out+0)).y  = -(*(in+3)).x*lambda.im;
+ (*(out+0)).y -= (*(in+3)).y*lambda.re; 
+ (*(out+0)).z  = (*(in+3)).w*lambda.im;
+ (*(out+0)).z -= (*(in+3)).z*lambda.re;
+ (*(out+0)).w  = -(*(in+3)).z*lambda.im;
+ (*(out+0)).w -= (*(in+3)).w*lambda.re;
+ (*(out+1)).x  = (*(in+4)).y*lambda.im;
+ (*(out+1)).x -= (*(in+4)).x*lambda.re;
+ (*(out+1)).y  = -(*(in+4)).x*lambda.im;
+ (*(out+1)).y -= (*(in+4)).y*lambda.re;
+ 
+ 
+ 
+ (*(out+1)).z  = (*(in+4)).w*lambda.im;
+ (*(out+1)).z -= (*(in+4)).z*lambda.re;
+ (*(out+1)).w  = -(*(in+4)).z*lambda.im;
+ (*(out+1)).w -= (*(in+4)).w*lambda.re; 
+ (*(out+2)).x  = (*(in+5)).y*lambda.im;
+ (*(out+2)).x -= (*(in+5)).x*lambda.re;
+ (*(out+2)).y  = -(*(in+5)).x*lambda.im;
+ (*(out+2)).y -= (*(in+5)).y*lambda.re; 
+ (*(out+2)).z  = (*(in+5)).w*lambda.im;
+ (*(out+2)).z -= (*(in+5)).z*lambda.re;
+ (*(out+2)).w  = -(*(in+5)).z*lambda.im;
+ (*(out+2)).w -= (*(in+5)).w*lambda.re;
+
+}
 
 
 
@@ -877,7 +1105,7 @@ __device__ void dev_kappaP0_plus_d(double4 * out, double4 * in, dev_complex_d ka
 //-kappa(r + gamma_mu)
 __device__ void dev_kappaP0_minus_d(double4 * out, double4 * in, dev_complex_d kappa){
 
-/*
+
  
      (*(out+0)).x -= (*(in+0)).x*kappa.re;
      (*(out+0)).x += (*(in+0)).y*kappa.im;     
@@ -998,76 +1226,76 @@ __device__ void dev_kappaP0_minus_d(double4 * out, double4 * in, dev_complex_d k
      (*(out+5)).w += (*(in+2)).w*kappa.re; 
      (*(out+5)).w += (*(in+2)).z*kappa.im;
       
-*/
-     (*(out+0)).x -= (*(in+0)).x*kappa.re - (*(in+0)).y*kappa.im;
-     (*(out+0)).y -= (*(in+0)).y*kappa.re + (*(in+0)).x*kappa.im;
-     (*(out+0)).x += (*(in+3)).x*kappa.re - (*(in+3)).y*kappa.im;
-     (*(out+0)).y += (*(in+3)).y*kappa.re + (*(in+3)).x*kappa.im;
-     
-     (*(out+3)).x -= (*(in+3)).x*kappa.re - (*(in+3)).y*kappa.im;
-     (*(out+3)).y -= (*(in+3)).y*kappa.re + (*(in+3)).x*kappa.im;   
-     (*(out+3)).x += (*(in+0)).x*kappa.re - (*(in+0)).y*kappa.im;
-     (*(out+3)).y += (*(in+0)).y*kappa.re + (*(in+0)).x*kappa.im; 
 
-
-
-     (*(out+0)).z -= (*(in+0)).z*kappa.re - (*(in+0)).w*kappa.im;
-     (*(out+0)).w -= (*(in+0)).w*kappa.re + (*(in+0)).z*kappa.im;
-     (*(out+0)).z += (*(in+3)).z*kappa.re - (*(in+3)).w*kappa.im;
-     (*(out+0)).w += (*(in+3)).w*kappa.re + (*(in+3)).z*kappa.im;     
-          
-     (*(out+3)).z -= (*(in+3)).z*kappa.re - (*(in+3)).w*kappa.im;
-     (*(out+3)).w -= (*(in+3)).w*kappa.re + (*(in+3)).z*kappa.im;
-     (*(out+3)).z += (*(in+0)).z*kappa.re - (*(in+0)).w*kappa.im;
-     (*(out+3)).w += (*(in+0)).w*kappa.re + (*(in+0)).z*kappa.im;
-
- 
- 
-     (*(out+1)).x -= (*(in+1)).x*kappa.re - (*(in+1)).y*kappa.im;
-     (*(out+1)).y -= (*(in+1)).y*kappa.re + (*(in+1)).x*kappa.im;
-     (*(out+1)).x += (*(in+4)).x*kappa.re - (*(in+4)).y*kappa.im;
-     (*(out+1)).y += (*(in+4)).y*kappa.re + (*(in+4)).x*kappa.im;     
-     
-     (*(out+4)).x -= (*(in+4)).x*kappa.re - (*(in+4)).y*kappa.im;
-     (*(out+4)).y -= (*(in+4)).y*kappa.re + (*(in+4)).x*kappa.im;    
-     (*(out+4)).x += (*(in+1)).x*kappa.re - (*(in+1)).y*kappa.im;
-     (*(out+4)).y += (*(in+1)).y*kappa.re + (*(in+1)).x*kappa.im; 
- 
- 
- 
-     (*(out+1)).z -= (*(in+1)).z*kappa.re - (*(in+1)).w*kappa.im;
-     (*(out+1)).w -= (*(in+1)).w*kappa.re + (*(in+1)).z*kappa.im;
-     (*(out+1)).z += (*(in+4)).z*kappa.re - (*(in+4)).w*kappa.im;
-     (*(out+1)).w += (*(in+4)).w*kappa.re + (*(in+4)).z*kappa.im;     
-     
-     (*(out+4)).z -= (*(in+4)).z*kappa.re - (*(in+4)).w*kappa.im;
-     (*(out+4)).w -= (*(in+4)).w*kappa.re + (*(in+4)).z*kappa.im;    
-     (*(out+4)).z += (*(in+1)).z*kappa.re - (*(in+1)).w*kappa.im;
-     (*(out+4)).w += (*(in+1)).w*kappa.re + (*(in+1)).z*kappa.im;      
- 
-
-     
-     (*(out+2)).x -= (*(in+2)).x*kappa.re - (*(in+2)).y*kappa.im;
-     (*(out+2)).y -= (*(in+2)).y*kappa.re + (*(in+2)).x*kappa.im;
-     (*(out+2)).x += (*(in+5)).x*kappa.re - (*(in+5)).y*kappa.im;
-     (*(out+2)).y += (*(in+5)).y*kappa.re + (*(in+5)).x*kappa.im;
-                
-     (*(out+5)).x -= (*(in+5)).x*kappa.re - (*(in+5)).y*kappa.im;
-     (*(out+5)).y -= (*(in+5)).y*kappa.re + (*(in+5)).x*kappa.im;   
-     (*(out+5)).x += (*(in+2)).x*kappa.re - (*(in+2)).y*kappa.im;
-     (*(out+5)).y += (*(in+2)).y*kappa.re + (*(in+2)).x*kappa.im; 
-   
-   
-       
-     (*(out+2)).z -= (*(in+2)).z*kappa.re - (*(in+2)).w*kappa.im;
-     (*(out+2)).w -= (*(in+2)).w*kappa.re + (*(in+2)).z*kappa.im;
-     (*(out+2)).z += (*(in+5)).z*kappa.re - (*(in+5)).w*kappa.im;
-     (*(out+2)).w += (*(in+5)).w*kappa.re + (*(in+5)).z*kappa.im;
-               
-     (*(out+5)).z -= (*(in+5)).z*kappa.re - (*(in+5)).w*kappa.im;
-     (*(out+5)).w -= (*(in+5)).w*kappa.re + (*(in+5)).z*kappa.im;   
-     (*(out+5)).z += (*(in+2)).z*kappa.re - (*(in+2)).w*kappa.im;
-     (*(out+5)).w += (*(in+2)).w*kappa.re + (*(in+2)).z*kappa.im; 
+//      (*(out+0)).x -= (*(in+0)).x*kappa.re - (*(in+0)).y*kappa.im;
+//      (*(out+0)).y -= (*(in+0)).y*kappa.re + (*(in+0)).x*kappa.im;
+//      (*(out+0)).x += (*(in+3)).x*kappa.re - (*(in+3)).y*kappa.im;
+//      (*(out+0)).y += (*(in+3)).y*kappa.re + (*(in+3)).x*kappa.im;
+//      
+//      (*(out+3)).x -= (*(in+3)).x*kappa.re - (*(in+3)).y*kappa.im;
+//      (*(out+3)).y -= (*(in+3)).y*kappa.re + (*(in+3)).x*kappa.im;   
+//      (*(out+3)).x += (*(in+0)).x*kappa.re - (*(in+0)).y*kappa.im;
+//      (*(out+3)).y += (*(in+0)).y*kappa.re + (*(in+0)).x*kappa.im; 
+// 
+// 
+// 
+//      (*(out+0)).z -= (*(in+0)).z*kappa.re - (*(in+0)).w*kappa.im;
+//      (*(out+0)).w -= (*(in+0)).w*kappa.re + (*(in+0)).z*kappa.im;
+//      (*(out+0)).z += (*(in+3)).z*kappa.re - (*(in+3)).w*kappa.im;
+//      (*(out+0)).w += (*(in+3)).w*kappa.re + (*(in+3)).z*kappa.im;     
+//           
+//      (*(out+3)).z -= (*(in+3)).z*kappa.re - (*(in+3)).w*kappa.im;
+//      (*(out+3)).w -= (*(in+3)).w*kappa.re + (*(in+3)).z*kappa.im;
+//      (*(out+3)).z += (*(in+0)).z*kappa.re - (*(in+0)).w*kappa.im;
+//      (*(out+3)).w += (*(in+0)).w*kappa.re + (*(in+0)).z*kappa.im;
+// 
+//  
+//  
+//      (*(out+1)).x -= (*(in+1)).x*kappa.re - (*(in+1)).y*kappa.im;
+//      (*(out+1)).y -= (*(in+1)).y*kappa.re + (*(in+1)).x*kappa.im;
+//      (*(out+1)).x += (*(in+4)).x*kappa.re - (*(in+4)).y*kappa.im;
+//      (*(out+1)).y += (*(in+4)).y*kappa.re + (*(in+4)).x*kappa.im;     
+//      
+//      (*(out+4)).x -= (*(in+4)).x*kappa.re - (*(in+4)).y*kappa.im;
+//      (*(out+4)).y -= (*(in+4)).y*kappa.re + (*(in+4)).x*kappa.im;    
+//      (*(out+4)).x += (*(in+1)).x*kappa.re - (*(in+1)).y*kappa.im;
+//      (*(out+4)).y += (*(in+1)).y*kappa.re + (*(in+1)).x*kappa.im; 
+//  
+//  
+//  
+//      (*(out+1)).z -= (*(in+1)).z*kappa.re - (*(in+1)).w*kappa.im;
+//      (*(out+1)).w -= (*(in+1)).w*kappa.re + (*(in+1)).z*kappa.im;
+//      (*(out+1)).z += (*(in+4)).z*kappa.re - (*(in+4)).w*kappa.im;
+//      (*(out+1)).w += (*(in+4)).w*kappa.re + (*(in+4)).z*kappa.im;     
+//      
+//      (*(out+4)).z -= (*(in+4)).z*kappa.re - (*(in+4)).w*kappa.im;
+//      (*(out+4)).w -= (*(in+4)).w*kappa.re + (*(in+4)).z*kappa.im;    
+//      (*(out+4)).z += (*(in+1)).z*kappa.re - (*(in+1)).w*kappa.im;
+//      (*(out+4)).w += (*(in+1)).w*kappa.re + (*(in+1)).z*kappa.im;      
+//  
+// 
+//      
+//      (*(out+2)).x -= (*(in+2)).x*kappa.re - (*(in+2)).y*kappa.im;
+//      (*(out+2)).y -= (*(in+2)).y*kappa.re + (*(in+2)).x*kappa.im;
+//      (*(out+2)).x += (*(in+5)).x*kappa.re - (*(in+5)).y*kappa.im;
+//      (*(out+2)).y += (*(in+5)).y*kappa.re + (*(in+5)).x*kappa.im;
+//                 
+//      (*(out+5)).x -= (*(in+5)).x*kappa.re - (*(in+5)).y*kappa.im;
+//      (*(out+5)).y -= (*(in+5)).y*kappa.re + (*(in+5)).x*kappa.im;   
+//      (*(out+5)).x += (*(in+2)).x*kappa.re - (*(in+2)).y*kappa.im;
+//      (*(out+5)).y += (*(in+2)).y*kappa.re + (*(in+2)).x*kappa.im; 
+//    
+//    
+//        
+//      (*(out+2)).z -= (*(in+2)).z*kappa.re - (*(in+2)).w*kappa.im;
+//      (*(out+2)).w -= (*(in+2)).w*kappa.re + (*(in+2)).z*kappa.im;
+//      (*(out+2)).z += (*(in+5)).z*kappa.re - (*(in+5)).w*kappa.im;
+//      (*(out+2)).w += (*(in+5)).w*kappa.re + (*(in+5)).z*kappa.im;
+//                
+//      (*(out+5)).z -= (*(in+5)).z*kappa.re - (*(in+5)).w*kappa.im;
+//      (*(out+5)).w -= (*(in+5)).w*kappa.re + (*(in+5)).z*kappa.im;   
+//      (*(out+5)).z += (*(in+2)).z*kappa.re - (*(in+2)).w*kappa.im;
+//      (*(out+5)).w += (*(in+2)).w*kappa.re + (*(in+2)).z*kappa.im; 
   
 }
 
@@ -1078,6 +1306,208 @@ __device__ void dev_kappaP0_minus_d(double4 * out, double4 * in, dev_complex_d k
 
 
 #ifdef RELATIVISTIC_BASIS
+
+/////////////////////  gamma basis transformations //////////////////////////////////
+//
+// to go to relativistic basis we have:
+// g0_rel = t1 . g0_tmlqcd  . t1^+                                    
+// g5_rel = t1 . g5_tmlqcd  . t1^+
+//
+// t1 =
+//              |  1  0  1  0 |
+//  1/sqrt(2) * |  0  1  0  1 |
+//              | -1  0  1  0 |
+//              |  0 -1  0  1 |
+//
+
+
+
+__global__ void to_relativistic_basis_d(dev_spinor_d* spinin){
+   int pos= threadIdx.x + blockDim.x*blockIdx.x;
+   double4 inhelp[6];
+   double4 outhelp[6];
+
+   const double sq2 = 1.0/sqrt(2.0);
+   
+   if(pos < dev_VOLUME){
+    dev_read_spinor_d(&(inhelp[0]), &(spinin[pos]));
+    
+    outhelp[0].x = sq2*(inhelp[0].x + inhelp[3].x);
+    outhelp[0].y = sq2*(inhelp[0].y + inhelp[3].y);
+    outhelp[0].z = sq2*(inhelp[0].z + inhelp[3].z);
+    outhelp[0].w = sq2*(inhelp[0].w + inhelp[3].w);
+    outhelp[1].x = sq2*(inhelp[1].x + inhelp[4].x);
+    outhelp[1].y = sq2*(inhelp[1].y + inhelp[4].y);
+    
+    
+    outhelp[1].z = sq2*(inhelp[1].z + inhelp[4].z);
+    outhelp[1].w = sq2*(inhelp[1].w + inhelp[4].w);
+    outhelp[2].x = sq2*(inhelp[2].x + inhelp[5].x);
+    outhelp[2].y = sq2*(inhelp[2].y + inhelp[5].y);
+    outhelp[2].z = sq2*(inhelp[2].z + inhelp[5].z);
+    outhelp[2].w = sq2*(inhelp[2].w + inhelp[5].w); 
+    
+    
+    outhelp[3].x = sq2*(inhelp[3].x - inhelp[0].x);
+    outhelp[3].y = sq2*(inhelp[3].y - inhelp[0].y);
+    outhelp[3].z = sq2*(inhelp[3].z - inhelp[0].z);
+    outhelp[3].w = sq2*(inhelp[3].w - inhelp[0].w);
+    outhelp[4].x = sq2*(inhelp[4].x - inhelp[1].x);
+    outhelp[4].y = sq2*(inhelp[4].y - inhelp[1].y);   
+    
+    
+    outhelp[4].z = sq2*(inhelp[4].z - inhelp[1].z);
+    outhelp[4].w = sq2*(inhelp[4].w - inhelp[1].w);
+    outhelp[5].x = sq2*(inhelp[5].x - inhelp[2].x);
+    outhelp[5].y = sq2*(inhelp[5].y - inhelp[2].y);
+    outhelp[5].z = sq2*(inhelp[5].z - inhelp[2].z);
+    outhelp[5].w = sq2*(inhelp[5].w - inhelp[2].w);    
+
+    //copy to output spinor
+      dev_write_spinor_d(&(outhelp[0]),&(spinin[pos])); 
+   }//dev_VOLUME
+
+}
+
+
+
+__device__ void to_relativistic_basis_spinor_d(double4* spinin){
+   double4 outhelp[6];
+
+   const double sq2 = 1.0/sqrt(2.0);
+   
+   
+    outhelp[0].x = sq2*(spinin[0].x + spinin[3].x);
+    outhelp[0].y = sq2*(spinin[0].y + spinin[3].y);
+    outhelp[0].z = sq2*(spinin[0].z + spinin[3].z);
+    outhelp[0].w = sq2*(spinin[0].w + spinin[3].w);
+    outhelp[1].x = sq2*(spinin[1].x + spinin[4].x);
+    outhelp[1].y = sq2*(spinin[1].y + spinin[4].y);
+    
+    
+    outhelp[1].z = sq2*(spinin[1].z + spinin[4].z);
+    outhelp[1].w = sq2*(spinin[1].w + spinin[4].w);
+    outhelp[2].x = sq2*(spinin[2].x + spinin[5].x);
+    outhelp[2].y = sq2*(spinin[2].y + spinin[5].y);
+    outhelp[2].z = sq2*(spinin[2].z + spinin[5].z);
+    outhelp[2].w = sq2*(spinin[2].w + spinin[5].w); 
+    
+    
+    outhelp[3].x = sq2*(spinin[3].x - spinin[0].x);
+    outhelp[3].y = sq2*(spinin[3].y - spinin[0].y);
+    outhelp[3].z = sq2*(spinin[3].z - spinin[0].z);
+    outhelp[3].w = sq2*(spinin[3].w - spinin[0].w);
+    outhelp[4].x = sq2*(spinin[4].x - spinin[1].x);
+    outhelp[4].y = sq2*(spinin[4].y - spinin[1].y);   
+    
+    
+    outhelp[4].z = sq2*(spinin[4].z - spinin[1].z);
+    outhelp[4].w = sq2*(spinin[4].w - spinin[1].w);
+    outhelp[5].x = sq2*(spinin[5].x - spinin[2].x);
+    outhelp[5].y = sq2*(spinin[5].y - spinin[2].y);
+    outhelp[5].z = sq2*(spinin[5].z - spinin[2].z);
+    outhelp[5].w = sq2*(spinin[5].w - spinin[2].w);    
+
+   dev_copy_spinor_local_d(&(outhelp[0]), spinin);
+
+}
+
+
+__global__ void to_tmlqcd_basis_d(dev_spinor_d* spinin){
+  
+   int pos= threadIdx.x + blockDim.x*blockIdx.x;
+   double4 inhelp[6];
+   double4 outhelp[6];
+
+   const double sq2 = 1.0/sqrt(2.0);
+   
+   if(pos < dev_VOLUME){
+    dev_read_spinor_d(&(inhelp[0]), &(spinin[pos]));
+    
+    outhelp[0].x = sq2*(inhelp[0].x - inhelp[3].x);
+    outhelp[0].y = sq2*(inhelp[0].y - inhelp[3].y);
+    outhelp[0].z = sq2*(inhelp[0].z - inhelp[3].z);
+    outhelp[0].w = sq2*(inhelp[0].w - inhelp[3].w);
+    outhelp[1].x = sq2*(inhelp[1].x - inhelp[4].x);
+    outhelp[1].y = sq2*(inhelp[1].y - inhelp[4].y);
+    
+    
+    outhelp[1].z = sq2*(inhelp[1].z - inhelp[4].z);
+    outhelp[1].w = sq2*(inhelp[1].w - inhelp[4].w);
+    outhelp[2].x = sq2*(inhelp[2].x - inhelp[5].x);
+    outhelp[2].y = sq2*(inhelp[2].y - inhelp[5].y);
+    outhelp[2].z = sq2*(inhelp[2].z - inhelp[5].z);
+    outhelp[2].w = sq2*(inhelp[2].w - inhelp[5].w); 
+    
+    
+    outhelp[3].x = sq2*(inhelp[3].x + inhelp[0].x);
+    outhelp[3].y = sq2*(inhelp[3].y + inhelp[0].y);
+    outhelp[3].z = sq2*(inhelp[3].z + inhelp[0].z);
+    outhelp[3].w = sq2*(inhelp[3].w + inhelp[0].w);
+    outhelp[4].x = sq2*(inhelp[4].x + inhelp[1].x);
+    outhelp[4].y = sq2*(inhelp[4].y + inhelp[1].y);   
+    
+    
+    outhelp[4].z = sq2*(inhelp[4].z + inhelp[1].z);
+    outhelp[4].w = sq2*(inhelp[4].w + inhelp[1].w);
+    outhelp[5].x = sq2*(inhelp[5].x + inhelp[2].x);
+    outhelp[5].y = sq2*(inhelp[5].y + inhelp[2].y);
+    outhelp[5].z = sq2*(inhelp[5].z + inhelp[2].z);
+    outhelp[5].w = sq2*(inhelp[5].w + inhelp[2].w);    
+
+    //copy to output spinor
+      dev_write_spinor_d(&(outhelp[0]),&(spinin[pos]));     
+   }//dev_VOLUME
+
+
+}
+
+
+__device__ void to_tmlqcd_basis_spinor_d(double4* spinin){
+   double4 outhelp[6];
+   
+    const double sq2 = 1.0/sqrt(2.0);
+   
+    outhelp[0].x = sq2*(spinin[0].x - spinin[3].x);
+    outhelp[0].y = sq2*(spinin[0].y - spinin[3].y);
+    outhelp[0].z = sq2*(spinin[0].z - spinin[3].z);
+    outhelp[0].w = sq2*(spinin[0].w - spinin[3].w);
+    outhelp[1].x = sq2*(spinin[1].x - spinin[4].x);
+    outhelp[1].y = sq2*(spinin[1].y - spinin[4].y);
+    
+    
+    outhelp[1].z = sq2*(spinin[1].z - spinin[4].z);
+    outhelp[1].w = sq2*(spinin[1].w - spinin[4].w);
+    outhelp[2].x = sq2*(spinin[2].x - spinin[5].x);
+    outhelp[2].y = sq2*(spinin[2].y - spinin[5].y);
+    outhelp[2].z = sq2*(spinin[2].z - spinin[5].z);
+    outhelp[2].w = sq2*(spinin[2].w - spinin[5].w); 
+    
+    
+    outhelp[3].x = sq2*(spinin[3].x + spinin[0].x);
+    outhelp[3].y = sq2*(spinin[3].y + spinin[0].y);
+    outhelp[3].z = sq2*(spinin[3].z + spinin[0].z);
+    outhelp[3].w = sq2*(spinin[3].w + spinin[0].w);
+    outhelp[4].x = sq2*(spinin[4].x + spinin[1].x);
+    outhelp[4].y = sq2*(spinin[4].y + spinin[1].y);   
+    
+    
+    outhelp[4].z = sq2*(spinin[4].z + spinin[1].z);
+    outhelp[4].w = sq2*(spinin[4].w + spinin[1].w);
+    outhelp[5].x = sq2*(spinin[5].x + spinin[2].x);
+    outhelp[5].y = sq2*(spinin[5].y + spinin[2].y);
+    outhelp[5].z = sq2*(spinin[5].z + spinin[2].z);
+    outhelp[5].w = sq2*(spinin[5].w + spinin[2].w);    
+
+    //copy to output spinor
+    dev_copy_spinor_local_d(&(outhelp[0]), spinin);
+}
+
+
+
+
+
+
 //  here comes P0+- for the relativistic basis
 //  in this basis we have:
 //
@@ -1091,95 +1521,100 @@ __device__ void dev_kappaP0_minus_d(double4 * out, double4 * in, dev_complex_d k
 
 __device__ void dev_su3MtV_rel_up_d(dev_su3_d M, const dev_spinor_d * s, double4 * out){
 
-(*(out+0)).x =  M[0][0].re*(*(s+0*DEVOFF)).x;
-(*(out+0)).x -= M[0][0].im*(*(s+0*DEVOFF)).y;
-(*(out+0)).x += M[0][1].re*(*(s+1*DEVOFF)).x;
-(*(out+0)).x -= M[0][1].im*(*(s+1*DEVOFF)).y;
-(*(out+0)).x += M[0][2].re*(*(s+2*DEVOFF)).x;
-(*(out+0)).x -= M[0][2].im*(*(s+2*DEVOFF)).y;
+double help;
 
-(*(out+0)).y =  M[0][0].re*(*(s+0*DEVOFF)).y;
-(*(out+0)).y += M[0][0].im*(*(s+0*DEVOFF)).x;
-(*(out+0)).y += M[0][1].re*(*(s+1*DEVOFF)).y;
-(*(out+0)).y += M[0][1].im*(*(s+1*DEVOFF)).x;
-(*(out+0)).y += M[0][2].re*(*(s+2*DEVOFF)).y;
-(*(out+0)).y += M[0][2].im*(*(s+2*DEVOFF)).x;
+help =  M[0][0].re*(*(s+0*DEVOFF)).x;
+help -= M[0][0].im*(*(s+0*DEVOFF)).y;
+help += M[0][1].re*(*(s+1*DEVOFF)).x;
+help -= M[0][1].im*(*(s+1*DEVOFF)).y;
+help += M[0][2].re*(*(s+2*DEVOFF)).x;
+help -= M[0][2].im*(*(s+2*DEVOFF)).y;
+(*(out+0)).x = help;		 		 
+help =  M[0][0].re*(*(s+0*DEVOFF)).y;
+help += M[0][0].im*(*(s+0*DEVOFF)).x; 
+help += M[0][1].re*(*(s+1*DEVOFF)).y;
+help += M[0][1].im*(*(s+1*DEVOFF)).x;
+help += M[0][2].re*(*(s+2*DEVOFF)).y;
+help += M[0][2].im*(*(s+2*DEVOFF)).x;
+(*(out+0)).y = help;
 
+help =  M[1][0].re*(*(s+0*DEVOFF)).x;
+help -= M[1][0].im*(*(s+0*DEVOFF)).y;
+help += M[1][1].re*(*(s+1*DEVOFF)).x;
+help -= M[1][1].im*(*(s+1*DEVOFF)).y;
+help += M[1][2].re*(*(s+2*DEVOFF)).x;
+help -= M[1][2].im*(*(s+2*DEVOFF)).y;
+(*(out+0)).z = help; 		  		  
+help =  M[1][0].re*(*(s+0*DEVOFF)).y;
+help += M[1][0].im*(*(s+0*DEVOFF)).x;
+help += M[1][1].re*(*(s+1*DEVOFF)).y;
+help += M[1][1].im*(*(s+1*DEVOFF)).x;
+help += M[1][2].re*(*(s+2*DEVOFF)).y;
+help += M[1][2].im*(*(s+2*DEVOFF)).x;
+(*(out+0)).w = help;
 
-(*(out+0)).z =  M[1][0].re*(*(s+0*DEVOFF)).x;
-(*(out+0)).z -= M[1][0].im*(*(s+0*DEVOFF)).y;
-(*(out+0)).z += M[1][1].re*(*(s+1*DEVOFF)).x;
-(*(out+0)).z -= M[1][1].im*(*(s+1*DEVOFF)).y;
-(*(out+0)).z += M[1][2].re*(*(s+2*DEVOFF)).x;
-(*(out+0)).z -= M[1][2].im*(*(s+2*DEVOFF)).y;
-
-(*(out+0)).w =  M[1][0].re*(*(s+0*DEVOFF)).y;
-(*(out+0)).w += M[1][0].im*(*(s+0*DEVOFF)).x;
-(*(out+0)).w += M[1][1].re*(*(s+1*DEVOFF)).y;
-(*(out+0)).w += M[1][1].im*(*(s+1*DEVOFF)).x;
-(*(out+0)).w += M[1][2].re*(*(s+2*DEVOFF)).y;
-(*(out+0)).w += M[1][2].im*(*(s+2*DEVOFF)).x;
-
-
-(*(out+1)).x =  M[2][0].re*(*(s+0*DEVOFF)).x;
-(*(out+1)).x -= M[2][0].im*(*(s+0*DEVOFF)).y;
-(*(out+1)).x += M[2][1].re*(*(s+1*DEVOFF)).x;
-(*(out+1)).x -= M[2][1].im*(*(s+1*DEVOFF)).y;
-(*(out+1)).x += M[2][2].re*(*(s+2*DEVOFF)).x;
-(*(out+1)).x -= M[2][2].im*(*(s+2*DEVOFF)).y;
-
-(*(out+1)).y =  M[2][0].re*(*(s+0*DEVOFF)).y;
-(*(out+1)).y += M[2][0].im*(*(s+0*DEVOFF)).x;
-(*(out+1)).y += M[2][1].re*(*(s+1*DEVOFF)).y;
-(*(out+1)).y += M[2][1].im*(*(s+1*DEVOFF)).x;
-(*(out+1)).y += M[2][2].re*(*(s+2*DEVOFF)).y;
-(*(out+1)).y += M[2][2].im*(*(s+2*DEVOFF)).x;
-
-
-(*(out+1)).z =  M[0][0].re*(*(s+3*DEVOFF)).x;
-(*(out+1)).z -= M[0][0].im*(*(s+3*DEVOFF)).y;
-(*(out+1)).z += M[0][1].re*(*(s+4*DEVOFF)).x;
-(*(out+1)).z -= M[0][1].im*(*(s+4*DEVOFF)).y;
-(*(out+1)).z += M[0][2].re*(*(s+5*DEVOFF)).x;
-(*(out+1)).z -= M[0][2].im*(*(s+5*DEVOFF)).y;
-
-(*(out+1)).w =  M[0][0].re*(*(s+3*DEVOFF)).y;
-(*(out+1)).w += M[0][0].im*(*(s+3*DEVOFF)).x;
-(*(out+1)).w += M[0][1].re*(*(s+4*DEVOFF)).y;
-(*(out+1)).w += M[0][1].im*(*(s+4*DEVOFF)).x;
-(*(out+1)).w += M[0][2].re*(*(s+5*DEVOFF)).y;
-(*(out+1)).w += M[0][2].im*(*(s+5*DEVOFF)).x;
+help =  M[2][0].re*(*(s+0*DEVOFF)).x;
+help -= M[2][0].im*(*(s+0*DEVOFF)).y;
+help += M[2][1].re*(*(s+1*DEVOFF)).x;
+help -= M[2][1].im*(*(s+1*DEVOFF)).y;
+help += M[2][2].re*(*(s+2*DEVOFF)).x;
+help -= M[2][2].im*(*(s+2*DEVOFF)).y;
+(*(out+1)).x = help;
+help =  M[2][0].re*(*(s+0*DEVOFF)).y;
+help += M[2][0].im*(*(s+0*DEVOFF)).x;
+help += M[2][1].re*(*(s+1*DEVOFF)).y;
+help += M[2][1].im*(*(s+1*DEVOFF)).x;
+help += M[2][2].re*(*(s+2*DEVOFF)).y;
+help += M[2][2].im*(*(s+2*DEVOFF)).x;
+(*(out+1)).y = help;
 
 
-(*(out+2)).x =  M[1][0].re*(*(s+3*DEVOFF)).x;
-(*(out+2)).x -= M[1][0].im*(*(s+3*DEVOFF)).y;
-(*(out+2)).x += M[1][1].re*(*(s+4*DEVOFF)).x;
-(*(out+2)).x -= M[1][1].im*(*(s+4*DEVOFF)).y;
-(*(out+2)).x += M[1][2].re*(*(s+5*DEVOFF)).x;
-(*(out+2)).x -= M[1][2].im*(*(s+5*DEVOFF)).y;
+help =  M[0][0].re*(*(s+3*DEVOFF)).x;
+help -= M[0][0].im*(*(s+3*DEVOFF)).y;
+help += M[0][1].re*(*(s+4*DEVOFF)).x;
+help -= M[0][1].im*(*(s+4*DEVOFF)).y;
+help += M[0][2].re*(*(s+5*DEVOFF)).x;
+help -= M[0][2].im*(*(s+5*DEVOFF)).y;
+(*(out+1)).z = help;		 
+help =  M[0][0].re*(*(s+3*DEVOFF)).y;
+help += M[0][0].im*(*(s+3*DEVOFF)).x;
+help += M[0][1].re*(*(s+4*DEVOFF)).y;
+help += M[0][1].im*(*(s+4*DEVOFF)).x;
+help += M[0][2].re*(*(s+5*DEVOFF)).y;
+help += M[0][2].im*(*(s+5*DEVOFF)).x;
+(*(out+1)).w = help;
 
-(*(out+2)).y =  M[1][0].re*(*(s+3*DEVOFF)).y;
-(*(out+2)).y += M[1][0].im*(*(s+3*DEVOFF)).x;
-(*(out+2)).y += M[1][1].re*(*(s+4*DEVOFF)).y;
-(*(out+2)).y += M[1][1].im*(*(s+4*DEVOFF)).x;
-(*(out+2)).y += M[1][2].re*(*(s+5*DEVOFF)).y;
-(*(out+2)).y += M[1][2].im*(*(s+5*DEVOFF)).x;
+
+help =  M[1][0].re*(*(s+3*DEVOFF)).x;
+help -= M[1][0].im*(*(s+3*DEVOFF)).y;
+help += M[1][1].re*(*(s+4*DEVOFF)).x;
+help -= M[1][1].im*(*(s+4*DEVOFF)).y;
+help += M[1][2].re*(*(s+5*DEVOFF)).x;
+help -= M[1][2].im*(*(s+5*DEVOFF)).y;
+(*(out+2)).x = help;		 		 
+help =  M[1][0].re*(*(s+3*DEVOFF)).y;
+help += M[1][0].im*(*(s+3*DEVOFF)).x;
+help += M[1][1].re*(*(s+4*DEVOFF)).y;
+help += M[1][1].im*(*(s+4*DEVOFF)).x;
+help += M[1][2].re*(*(s+5*DEVOFF)).y;
+help += M[1][2].im*(*(s+5*DEVOFF)).x;
+(*(out+2)).y = help;
 
 
-(*(out+2)).z =  M[2][0].re*(*(s+3*DEVOFF)).x;
-(*(out+2)).z -= M[2][0].im*(*(s+3*DEVOFF)).y;
-(*(out+2)).z += M[2][1].re*(*(s+4*DEVOFF)).x;
-(*(out+2)).z -= M[2][1].im*(*(s+4*DEVOFF)).y;
-(*(out+2)).z += M[2][2].re*(*(s+5*DEVOFF)).x;
-(*(out+2)).z -= M[2][2].im*(*(s+5*DEVOFF)).y;
-
-(*(out+2)).w =  M[2][0].re*(*(s+3*DEVOFF)).y;
-(*(out+2)).w += M[2][0].im*(*(s+3*DEVOFF)).x;
-(*(out+2)).w += M[2][1].re*(*(s+4*DEVOFF)).y;
-(*(out+2)).w += M[2][1].im*(*(s+4*DEVOFF)).x;
-(*(out+2)).w += M[2][2].re*(*(s+5*DEVOFF)).y;
-(*(out+2)).w += M[2][2].im*(*(s+5*DEVOFF)).x;
-
+help =  M[2][0].re*(*(s+3*DEVOFF)).x;
+help -= M[2][0].im*(*(s+3*DEVOFF)).y;
+help += M[2][1].re*(*(s+4*DEVOFF)).x;
+help -= M[2][1].im*(*(s+4*DEVOFF)).y;
+help += M[2][2].re*(*(s+5*DEVOFF)).x;
+help -= M[2][2].im*(*(s+5*DEVOFF)).y;
+(*(out+2)).z = help;		 		 
+help =  M[2][0].re*(*(s+3*DEVOFF)).y;
+help += M[2][0].im*(*(s+3*DEVOFF)).x;
+help += M[2][1].re*(*(s+4*DEVOFF)).y;
+help += M[2][1].im*(*(s+4*DEVOFF)).x;
+help += M[2][2].re*(*(s+5*DEVOFF)).y;
+help += M[2][2].im*(*(s+5*DEVOFF)).x;
+(*(out+2)).w = help;
 
 (*(out+3)).x = 0.0;
 (*(out+3)).y = 0.0;
@@ -1202,7 +1637,9 @@ __device__ void dev_su3MtV_rel_up_d(dev_su3_d M, const dev_spinor_d * s, double4
 
 
 __device__ void dev_su3MtV_rel_dn_d(dev_su3_d M, const dev_spinor_d * s, double4 * out){
-  
+
+double help;
+
 (*(out+0)).x = 0.0;
 (*(out+0)).y = 0.0;
 (*(out+0)).z = 0.0;
@@ -1220,94 +1657,101 @@ __device__ void dev_su3MtV_rel_dn_d(dev_su3_d M, const dev_spinor_d * s, double4
 (*(out+2)).z = 0.0;
 (*(out+2)).w = 0.0;
 
-(*(out+3)).x =  M[0][0].re*(*(s+6*DEVOFF)).x;
-(*(out+3)).x -= M[0][0].im*(*(s+6*DEVOFF)).y;
-(*(out+3)).x += M[0][1].re*(*(s+7*DEVOFF)).x;
-(*(out+3)).x -= M[0][1].im*(*(s+7*DEVOFF)).y;
-(*(out+3)).x += M[0][2].re*(*(s+8*DEVOFF)).x;
-(*(out+3)).x -= M[0][2].im*(*(s+8*DEVOFF)).y;
 
-(*(out+3)).y =  M[0][0].re*(*(s+6*DEVOFF)).y;
-(*(out+3)).y += M[0][0].im*(*(s+6*DEVOFF)).x;
-(*(out+3)).y += M[0][1].re*(*(s+7*DEVOFF)).y;
-(*(out+3)).y += M[0][1].im*(*(s+7*DEVOFF)).x;
-(*(out+3)).y += M[0][2].re*(*(s+8*DEVOFF)).y;
-(*(out+3)).y += M[0][2].im*(*(s+8*DEVOFF)).x;
-
-
-(*(out+3)).z =  M[1][0].re*(*(s+6*DEVOFF)).x;
-(*(out+3)).z -= M[1][0].im*(*(s+6*DEVOFF)).y;
-(*(out+3)).z += M[1][1].re*(*(s+7*DEVOFF)).x;
-(*(out+3)).z -= M[1][1].im*(*(s+7*DEVOFF)).y;
-(*(out+3)).z += M[1][2].re*(*(s+8*DEVOFF)).x;
-(*(out+3)).z -= M[1][2].im*(*(s+8*DEVOFF)).y;
-
-(*(out+3)).w =  M[1][0].re*(*(s+6*DEVOFF)).y;
-(*(out+3)).w += M[1][0].im*(*(s+6*DEVOFF)).x;
-(*(out+3)).w += M[1][1].re*(*(s+7*DEVOFF)).y;
-(*(out+3)).w += M[1][1].im*(*(s+7*DEVOFF)).x;
-(*(out+3)).w += M[1][2].re*(*(s+8*DEVOFF)).y;
-(*(out+3)).w += M[1][2].im*(*(s+8*DEVOFF)).x;
+help =  M[0][0].re*(*(s+6*DEVOFF)).x;
+help -= M[0][0].im*(*(s+6*DEVOFF)).y;
+help += M[0][1].re*(*(s+7*DEVOFF)).x;
+help -= M[0][1].im*(*(s+7*DEVOFF)).y;
+help += M[0][2].re*(*(s+8*DEVOFF)).x;
+help -= M[0][2].im*(*(s+8*DEVOFF)).y;
+(*(out+3)).x = help;
+help =  M[0][0].re*(*(s+6*DEVOFF)).y;
+help += M[0][0].im*(*(s+6*DEVOFF)).x;
+help += M[0][1].re*(*(s+7*DEVOFF)).y;
+help += M[0][1].im*(*(s+7*DEVOFF)).x;
+help += M[0][2].re*(*(s+8*DEVOFF)).y;
+help += M[0][2].im*(*(s+8*DEVOFF)).x;
+(*(out+3)).y = help;
 
 
-(*(out+4)).x =  M[2][0].re*(*(s+6*DEVOFF)).x;
-(*(out+4)).x -= M[2][0].im*(*(s+6*DEVOFF)).y;
-(*(out+4)).x += M[2][1].re*(*(s+7*DEVOFF)).x;
-(*(out+4)).x -= M[2][1].im*(*(s+7*DEVOFF)).y;
-(*(out+4)).x += M[2][2].re*(*(s+8*DEVOFF)).x;
-(*(out+4)).x -= M[2][2].im*(*(s+8*DEVOFF)).y;
-
-(*(out+4)).y =  M[2][0].re*(*(s+6*DEVOFF)).y;
-(*(out+4)).y += M[2][0].im*(*(s+6*DEVOFF)).x;
-(*(out+4)).y += M[2][1].re*(*(s+7*DEVOFF)).y;
-(*(out+4)).y += M[2][1].im*(*(s+7*DEVOFF)).x;
-(*(out+4)).y += M[2][2].re*(*(s+8*DEVOFF)).y;
-(*(out+4)).y += M[2][2].im*(*(s+8*DEVOFF)).x;
-
-
-(*(out+4)).z =  M[0][0].re*(*(s+9*DEVOFF)).x;
-(*(out+4)).z -= M[0][0].im*(*(s+9*DEVOFF)).y;
-(*(out+4)).z += M[0][1].re*(*(s+10*DEVOFF)).x;
-(*(out+4)).z -= M[0][1].im*(*(s+10*DEVOFF)).y;
-(*(out+4)).z += M[0][2].re*(*(s+11*DEVOFF)).x;
-(*(out+4)).z -= M[0][2].im*(*(s+11*DEVOFF)).y;
-
-(*(out+4)).w =  M[0][0].re*(*(s+9*DEVOFF)).y;
-(*(out+4)).w += M[0][0].im*(*(s+9*DEVOFF)).x;
-(*(out+4)).w += M[0][1].re*(*(s+10*DEVOFF)).y;
-(*(out+4)).w += M[0][1].im*(*(s+10*DEVOFF)).x;
-(*(out+4)).w += M[0][2].re*(*(s+11*DEVOFF)).y;
-(*(out+4)).w += M[0][2].im*(*(s+11*DEVOFF)).x;
+help =  M[1][0].re*(*(s+6*DEVOFF)).x;
+help -= M[1][0].im*(*(s+6*DEVOFF)).y;
+help += M[1][1].re*(*(s+7*DEVOFF)).x;
+help -= M[1][1].im*(*(s+7*DEVOFF)).y;
+help += M[1][2].re*(*(s+8*DEVOFF)).x;
+help -= M[1][2].im*(*(s+8*DEVOFF)).y;
+(*(out+3)).z = help;		 
+help =  M[1][0].re*(*(s+6*DEVOFF)).y;
+help += M[1][0].im*(*(s+6*DEVOFF)).x;
+help += M[1][1].re*(*(s+7*DEVOFF)).y;
+help += M[1][1].im*(*(s+7*DEVOFF)).x;
+help += M[1][2].re*(*(s+8*DEVOFF)).y;
+help += M[1][2].im*(*(s+8*DEVOFF)).x;
+(*(out+3)).w = help;
 
 
-(*(out+5)).x =  M[1][0].re*(*(s+9*DEVOFF)).x;
-(*(out+5)).x -= M[1][0].im*(*(s+9*DEVOFF)).y;
-(*(out+5)).x += M[1][1].re*(*(s+10*DEVOFF)).x;
-(*(out+5)).x -= M[1][1].im*(*(s+10*DEVOFF)).y;
-(*(out+5)).x += M[1][2].re*(*(s+11*DEVOFF)).x;
-(*(out+5)).x -= M[1][2].im*(*(s+11*DEVOFF)).y;
+help =  M[2][0].re*(*(s+6*DEVOFF)).x;
+help -= M[2][0].im*(*(s+6*DEVOFF)).y;
+help += M[2][1].re*(*(s+7*DEVOFF)).x;
+help -= M[2][1].im*(*(s+7*DEVOFF)).y;
+help += M[2][2].re*(*(s+8*DEVOFF)).x;
+help -= M[2][2].im*(*(s+8*DEVOFF)).y;
+(*(out+4)).x = help;		  
+help =  M[2][0].re*(*(s+6*DEVOFF)).y;
+help += M[2][0].im*(*(s+6*DEVOFF)).x;
+help += M[2][1].re*(*(s+7*DEVOFF)).y;
+help += M[2][1].im*(*(s+7*DEVOFF)).x;
+help += M[2][2].re*(*(s+8*DEVOFF)).y;
+help += M[2][2].im*(*(s+8*DEVOFF)).x;
+(*(out+4)).y = help;
 
-(*(out+5)).y =  M[1][0].re*(*(s+9*DEVOFF)).y;
-(*(out+5)).y += M[1][0].im*(*(s+9*DEVOFF)).x;
-(*(out+5)).y += M[1][1].re*(*(s+10*DEVOFF)).y;
-(*(out+5)).y += M[1][1].im*(*(s+10*DEVOFF)).x;
-(*(out+5)).y += M[1][2].re*(*(s+11*DEVOFF)).y;
-(*(out+5)).y += M[1][2].im*(*(s+11*DEVOFF)).x;
+
+help =  M[0][0].re*(*(s+9*DEVOFF)).x;
+help -= M[0][0].im*(*(s+9*DEVOFF)).y;
+help += M[0][1].re*(*(s+10*DEVOFF)).x;
+help -= M[0][1].im*(*(s+10*DEVOFF)).y;
+help += M[0][2].re*(*(s+11*DEVOFF)).x;
+help -= M[0][2].im*(*(s+11*DEVOFF)).y;
+(*(out+4)).z = help;		 		 
+help =  M[0][0].re*(*(s+9*DEVOFF)).y;
+help += M[0][0].im*(*(s+9*DEVOFF)).x;
+help += M[0][1].re*(*(s+10*DEVOFF)).y;
+help += M[0][1].im*(*(s+10*DEVOFF)).x;
+help += M[0][2].re*(*(s+11*DEVOFF)).y;
+help += M[0][2].im*(*(s+11*DEVOFF)).x;
+(*(out+4)).w = help;
 
 
-(*(out+5)).z =  M[2][0].re*(*(s+9*DEVOFF)).x;
-(*(out+5)).z -= M[2][0].im*(*(s+9*DEVOFF)).y;
-(*(out+5)).z += M[2][1].re*(*(s+10*DEVOFF)).x;
-(*(out+5)).z -= M[2][1].im*(*(s+10*DEVOFF)).y;
-(*(out+5)).z += M[2][2].re*(*(s+11*DEVOFF)).x;
-(*(out+5)).z -= M[2][2].im*(*(s+11*DEVOFF)).y;
+help =  M[1][0].re*(*(s+9*DEVOFF)).x;
+help -= M[1][0].im*(*(s+9*DEVOFF)).y;
+help += M[1][1].re*(*(s+10*DEVOFF)).x;
+help -= M[1][1].im*(*(s+10*DEVOFF)).y;
+help += M[1][2].re*(*(s+11*DEVOFF)).x;
+help -= M[1][2].im*(*(s+11*DEVOFF)).y;
+(*(out+5)).x = help;
+help =  M[1][0].re*(*(s+9*DEVOFF)).y;
+help += M[1][0].im*(*(s+9*DEVOFF)).x;
+help += M[1][1].re*(*(s+10*DEVOFF)).y;
+help += M[1][1].im*(*(s+10*DEVOFF)).x;
+help += M[1][2].re*(*(s+11*DEVOFF)).y;
+help += M[1][2].im*(*(s+11*DEVOFF)).x;
+(*(out+5)).y = help;
 
-(*(out+5)).w =  M[2][0].re*(*(s+9*DEVOFF)).y;
-(*(out+5)).w += M[2][0].im*(*(s+9*DEVOFF)).x;
-(*(out+5)).w += M[2][1].re*(*(s+10*DEVOFF)).y;
-(*(out+5)).w += M[2][1].im*(*(s+10*DEVOFF)).x;
-(*(out+5)).w += M[2][2].re*(*(s+11*DEVOFF)).y;
-(*(out+5)).w += M[2][2].im*(*(s+11*DEVOFF)).x;
+
+help =  M[2][0].re*(*(s+9*DEVOFF)).x;
+help -= M[2][0].im*(*(s+9*DEVOFF)).y;
+help += M[2][1].re*(*(s+10*DEVOFF)).x;
+help -= M[2][1].im*(*(s+10*DEVOFF)).y;
+help += M[2][2].re*(*(s+11*DEVOFF)).x;
+help -= M[2][2].im*(*(s+11*DEVOFF)).y;
+(*(out+5)).z = help;
+help =  M[2][0].re*(*(s+9*DEVOFF)).y;
+help += M[2][0].im*(*(s+9*DEVOFF)).x;
+help += M[2][1].re*(*(s+10*DEVOFF)).y;
+help += M[2][1].im*(*(s+10*DEVOFF)).x;
+help += M[2][2].re*(*(s+11*DEVOFF)).y;
+help += M[2][2].im*(*(s+11*DEVOFF)).x;
+(*(out+5)).w = help;	  
 }
 
 
@@ -2976,6 +3420,40 @@ __device__ void dev_Gamma5_assigntoglobal_d(dev_spinor_d* out, double4* in){
   (*(out+11*DEVOFF)).y = -1.0*(*(in+5)).w;
 }
 
+
+
+//this works in the relativistic basis
+//gamma5 NOT diagonal!!
+__device__ void dev_Gamma5_assign_rel_d(double4 * out, double4* in){
+  (*(out+0)).x = -1.0*(*(in+3)).x;
+  (*(out+0)).y = -1.0*(*(in+3)).y;
+  (*(out+0)).z = -1.0*(*(in+3)).z;
+  (*(out+0)).w = -1.0*(*(in+3)).w;
+  (*(out+1)).x = -1.0*(*(in+4)).x;
+  (*(out+1)).y = -1.0*(*(in+4)).y;
+
+  (*(out+1)).z = -1.0*(*(in+4)).z;
+  (*(out+1)).w = -1.0*(*(in+4)).w;
+  (*(out+2)).x = -1.0*(*(in+5)).x;
+  (*(out+2)).y = -1.0*(*(in+5)).y;
+  (*(out+2)).z = -1.0*(*(in+5)).z;
+  (*(out+2)).w = -1.0*(*(in+5)).w;
+
+  (*(out+3)).x = -1.0*(*(in+0)).x;
+  (*(out+3)).y = -1.0*(*(in+0)).y;
+  (*(out+3)).z = -1.0*(*(in+0)).z;
+  (*(out+3)).w = -1.0*(*(in+0)).w;
+  (*(out+4)).x = -1.0*(*(in+1)).x;
+  (*(out+4)).y = -1.0*(*(in+1)).y;
+
+  (*(out+4)).z = -1.0*(*(in+1)).z;
+  (*(out+4)).w = -1.0*(*(in+1)).w;
+  (*(out+5)).x = -1.0*(*(in+2)).x;
+  (*(out+5)).y = -1.0*(*(in+2)).y;
+  (*(out+5)).z = -1.0*(*(in+2)).z;
+  (*(out+5)).w = -1.0*(*(in+2)).w;
+
+}
 
 
 
