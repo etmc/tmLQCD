@@ -466,8 +466,7 @@ void update_constants(int *grid){
   dev_complex h0,h1,h2,h3,mh0, mh1, mh2, mh3;
   
   //Hopping Matrix and tm_Dirac_op are defined with a relative minus in the imaginary parts of kappa
-  //Of course both comply with the cpu part thus no harm done
-  // FIXME
+  //both comply with the cpu part
   float sign;
   if(even_odd_flag){
     sign=-1.0;
@@ -503,17 +502,17 @@ void update_constants(int *grid){
   #endif
   
   // try using constant mem for kappas
-  /*
-  cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_k1c", &h1, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_k2c", &h2, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_k3c", &h3, sizeof(dev_complex)) ;
   
-  cudaMemcpyToSymbol("dev_mk0c", &mh0, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_mk1c", &mh1, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_mk2c", &mh2, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_mk3c", &mh3, sizeof(dev_complex)) ;  
-  */
+  cudaMemcpyToSymbol(dev_k0c, &h0, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol(dev_k1c, &h1, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol(dev_k2c, &h2, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol(dev_k3c, &h3, sizeof(dev_complex)) ;
+  
+  cudaMemcpyToSymbol(dev_mk0c, &mh0, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol(dev_mk1c, &mh1, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol(dev_mk2c, &mh2, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol(dev_mk3c, &mh3, sizeof(dev_complex)) ;  
+  
   he_cg_init<<< 1, 1 >>> (grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
   // BEWARE in dev_tm_dirac_kappa we need the true mu (not 2 kappa mu!)
 }
@@ -1734,7 +1733,7 @@ cudaError_t cudaerr;
 
   if((cudaerr=cudaGetLastError())!=cudaSuccess){
     printf("Error in init_mixedsolve(): Memory allocation of spinor fields failed. Aborting...\n");
-    printf("Error code is: %f\n",cudaerr);    
+    printf("Error code is: %d\n",cudaerr);    
     exit(200);
   }
   else{
@@ -2744,15 +2743,15 @@ void benchmark_eo(spinor * const Q){
   
   // try using constant mem for kappas
   /*
-  cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_k1c", &h1, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_k2c", &h2, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_k3c", &h3, sizeof(dev_complex)) ;
+  cudaMemcpyToSymbol(dev_k0c, &h0, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol(dev_k1c, &h1, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol(dev_k2c, &h2, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol(dev_k3c, &h3, sizeof(dev_complex)) ;
   
-  cudaMemcpyToSymbol("dev_mk0c", &mh0, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_mk1c", &mh1, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_mk2c", &mh2, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_mk3c", &mh3, sizeof(dev_complex)) ;  
+  cudaMemcpyToSymbol(dev_mk0c, &mh0, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol(dev_mk1c, &mh1, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol(dev_mk2c, &mh2, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol(dev_mk3c, &mh3, sizeof(dev_complex)) ;  
   */
   #ifdef GPU_3DBLOCK
     dim3 blockdim3(BLOCK,BLOCKSUB,BLOCKSUB);
@@ -2892,15 +2891,15 @@ void benchmark_eo_mpi(spinor * const Q){
   
   // try using constant mem for kappas
   /*
-  cudaMemcpyToSymbol("dev_k0c", &h0, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_k1c", &h1, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_k2c", &h2, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_k3c", &h3, sizeof(dev_complex)) ;
+  cudaMemcpyToSymbol(dev_k0c, &h0, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol(dev_k1c, &h1, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol(dev_k2c, &h2, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol(dev_k3c, &h3, sizeof(dev_complex)) ;
   
-  cudaMemcpyToSymbol("dev_mk0c", &mh0, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_mk1c", &mh1, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_mk2c", &mh2, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol("dev_mk3c", &mh3, sizeof(dev_complex)) ;  
+  cudaMemcpyToSymbol(dev_mk0c, &mh0, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol(dev_mk1c, &mh1, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol(dev_mk2c, &mh2, sizeof(dev_complex)) ; 
+  cudaMemcpyToSymbol(dev_mk3c, &mh3, sizeof(dev_complex)) ;  
   */
   
   int blockdim3=BLOCK;
@@ -3346,7 +3345,7 @@ for(iter=0; iter<max_iter; iter++){
      #endif
      if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
        printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-       printf("Error code is: %f\n",cudaerr);       
+       printf("Error code is: %d\n",cudaerr);       
      }
      #ifndef HALF
        convert2double_spin(h2d_spin, solver_field[2]);
@@ -3533,7 +3532,7 @@ for(iter=0; iter<max_iter; iter++){
 
    if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
      printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-     printf("Error code is: %f\n",cudaerr);     
+     printf("Error code is: %d\n",cudaerr);     
    }
 
    convert2double_spin(h2d_spin_reliable, solver_field[2]);
@@ -3748,7 +3747,7 @@ for(iter=0; iter<max_iter; iter++){
       //cudaThreadSynchronize();
       if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
         if (g_proc_id == 0) printf("Error in linsolve_eo_gpu: %s\n", cudaGetErrorString(cudaGetLastError()));
-        if (g_proc_id == 0) printf("Error code is: %f\n",cudaerr);
+        if (g_proc_id == 0) printf("Error code is: %d\n",cudaerr);
 	exit(100);
       }      
     #else 
@@ -3764,7 +3763,7 @@ for(iter=0; iter<max_iter; iter++){
 
   if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
     if (g_proc_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-    if (g_proc_id == 0) printf("Error code is: %f\n",cudaerr);   
+    if (g_proc_id == 0) printf("Error code is: %d\n",cudaerr);   
   }
    // solve in single prec on device
    // D p_k = r_k

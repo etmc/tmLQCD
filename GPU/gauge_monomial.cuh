@@ -194,8 +194,8 @@ void update_gpu_fields(su3** gf, su3adj** mom, int need_momenta){
   size_t dev_gfsize = 6*4*Vol * sizeof(dev_su3_2v_d);
   cudaMemcpy(dev_gf_d, h2d_gf_d, dev_gfsize, cudaMemcpyHostToDevice);
   if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-     printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-     printf("Error code is: %f\n",cudaerr);
+     printf("%s\n", cudaGetErrorString(cudaerr));
+     printf("Error code is: %d\n",cudaerr);
   }
   
   if(need_momenta){
@@ -217,8 +217,8 @@ void update_gpu_fields(su3** gf, su3adj** mom, int need_momenta){
   }
   
   if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-     printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-     printf("Error code is: %f\n",cudaerr);
+     printf("%s\n", cudaGetErrorString(cudaerr));
+     printf("Error code is: %d\n",cudaerr);
   }
   #ifndef LOWOUTPUT
     printf("done.\n");
@@ -277,15 +277,16 @@ extern "C" void update_constants_d(int *grid){
   mh3.re = -(double)creal(ka3);    mh3.im = (double)cimag(ka3);
   
   // try using constant mem for kappas
-  cudaMemcpyToSymbol("dev_k0c_d", &h0, sizeof(dev_complex_d)) ; 
-  cudaMemcpyToSymbol("dev_k1c_d", &h1, sizeof(dev_complex_d)) ; 
-  cudaMemcpyToSymbol("dev_k2c_d", &h2, sizeof(dev_complex_d)) ; 
-  cudaMemcpyToSymbol("dev_k3c_d", &h3, sizeof(dev_complex_d)) ;
   
-  cudaMemcpyToSymbol("dev_mk0c_d", &mh0, sizeof(dev_complex_d)) ; 
-  cudaMemcpyToSymbol("dev_mk1c_d", &mh1, sizeof(dev_complex_d)) ; 
-  cudaMemcpyToSymbol("dev_mk2c_d", &mh2, sizeof(dev_complex_d)) ; 
-  cudaMemcpyToSymbol("dev_mk3c_d", &mh3, sizeof(dev_complex_d)) ;  
+  cudaMemcpyToSymbol(dev_k0c_d, &h0, sizeof(dev_complex_d)) ; 
+  cudaMemcpyToSymbol(dev_k1c_d, &h1, sizeof(dev_complex_d)) ; 
+  cudaMemcpyToSymbol(dev_k2c_d, &h2, sizeof(dev_complex_d)) ; 
+  cudaMemcpyToSymbol(dev_k3c_d, &h3, sizeof(dev_complex_d)) ;
+  
+  cudaMemcpyToSymbol(dev_mk0c_d, &mh0, sizeof(dev_complex_d)) ; 
+  cudaMemcpyToSymbol(dev_mk1c_d, &mh1, sizeof(dev_complex_d)) ; 
+  cudaMemcpyToSymbol(dev_mk2c_d, &mh2, sizeof(dev_complex_d)) ; 
+  cudaMemcpyToSymbol(dev_mk3c_d, &mh3, sizeof(dev_complex_d)) ;  
   
   he_cg_init_d<<< 1, 1 >>> (grid, (double) g_kappa, (double)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
   // BEWARE in dev_tm_dirac_kappa we need the true mu (not 2 kappa mu!)
@@ -323,8 +324,8 @@ extern "C" void update_gpu_gf_d(su3** gf){
   size_t dev_gfsize = 6*4*Vol * sizeof(dev_su3_2v_d);
   cudaMemcpy(dev_gf_d, h2d_gf_d, dev_gfsize, cudaMemcpyHostToDevice);
   if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-     printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-     printf("Error code is: %f\n",cudaerr);
+     printf("%s\n", cudaGetErrorString(cudaerr));
+     printf("Error code is: %d\n",cudaerr);
   }
   
  
@@ -420,7 +421,7 @@ extern "C" void init_gpu_fields(int need_momenta){
   
   if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
     printf("%s\n", cudaGetErrorString(cudaPeekAtLastError()));
-    printf("Error code is: %f\n",cudaerr);
+    printf("Error code is: %d\n",cudaerr);
   } 
   #ifdef MPI
    MPI_Barrier(g_cart_grid);
@@ -459,8 +460,8 @@ void to_host_mom(hamiltonian_field_t * const hf){
   size_t dev_momsize = 4*VOLUME * sizeof(dev_su3adj);
   cudaMemcpy(h2d_df0_d, dev_df0_d, dev_momsize, cudaMemcpyDeviceToHost);
   if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-     printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-     printf("Error code is: %f\n",cudaerr);
+     printf("%s\n", cudaGetErrorString(cudaerr));
+     printf("Error code is: %d\n",cudaerr);
   }
   
   for(i=0; i<VOLUME; i++){
@@ -485,8 +486,8 @@ void to_host_mom_field(su3adj** mom, dev_su3adj* dev_mom){
   size_t dev_momsize = 4*VOLUME * sizeof(dev_su3adj);
   cudaMemcpy(h2d_df0_d, dev_mom, dev_momsize, cudaMemcpyDeviceToHost);
   if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-     printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-     printf("Error code is: %f\n",cudaerr);
+     printf("%s\n", cudaGetErrorString(cudaerr));
+     printf("Error code is: %d\n",cudaerr);
   }
   
   for(i=0; i<VOLUME; i++){
@@ -1471,8 +1472,8 @@ cudaFuncSetCacheConfig(dev_gauge_derivative, cudaFuncCachePreferL1);
 dev_gauge_derivative <<<griddimgauge, blockdimgauge >>> 
             (dev_nn2, dev_gf_d, dev_df0_d, c_gauge);   
 if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-   printf("Error code is: %f\n",cudaerr);
+   printf("%s\n", cudaGetErrorString(cudaerr));
+   printf("Error code is: %d\n",cudaerr);
 }           
 
 
@@ -1494,7 +1495,7 @@ if(withrectangles){
     dev_rect_deri_one <<<griddimgauge, blockdimgauge >>> 
             (dev_nn2, dev_gf_d, dev_df0_d, c_rect, mu);  
     if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-       printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+       printf("%s\n", cudaGetErrorString(cudaerr));
     }
   //here we do
   //    __                         __
@@ -1504,7 +1505,7 @@ if(withrectangles){
     dev_rect_deri_two <<<griddimgauge, blockdimgauge >>> 
               (dev_nn2, dev_gf_d, dev_df0_d, c_rect, mu);  
     if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-       printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+       printf("%s\n", cudaGetErrorString(cudaerr));
     }
   //here we do
   //   __                         __    
@@ -1514,7 +1515,7 @@ if(withrectangles){
     dev_rect_deri_three <<<griddimgauge, blockdimgauge >>> 
               (dev_nn2, dev_gf_d, dev_df0_d, c_rect, mu);  
     if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-       printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+       printf("%s\n", cudaGetErrorString(cudaerr));
     }
   }
 }   
@@ -1525,7 +1526,7 @@ if(withrectangles){
 
   if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
         printf("%s\n", cudaGetErrorString(cudaPeekAtLastError()));
-        printf("Error code is: %f\n",cudaerr);
+        printf("Error code is: %d\n",cudaerr);
   }
   #ifndef LOWOUTPUT
     printf("\tOn device:\n");
@@ -1557,7 +1558,7 @@ cudaFuncSetCacheConfig(dev_gauge_derivative, cudaFuncCachePreferL1);
 dev_gauge_derivative <<<griddimgauge, blockdimgauge >>> 
             (dev_nn2, dev_gf_d, dev_df0_d, 1.0);   
 if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+   printf("%s\n", cudaGetErrorString(cudaerr));
 }           
 
 //rectangles            
@@ -1577,7 +1578,7 @@ if(withrectangles){
     dev_rect_deri_one <<<griddimgauge, blockdimgauge >>> 
             (dev_nn2, dev_gf_d, dev_df0_d, c, mu);  
     if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-       printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+       printf("%s\n", cudaGetErrorString(cudaerr));
     }
   //here we do
   //    __                         __
@@ -1587,7 +1588,7 @@ if(withrectangles){
     dev_rect_deri_two <<<griddimgauge, blockdimgauge >>> 
               (dev_nn2, dev_gf_d, dev_df0_d, c, mu);  
     if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-       printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+       printf("%s\n", cudaGetErrorString(cudaerr));
     }
   //here we do
   //   __                         __    
@@ -1597,7 +1598,7 @@ if(withrectangles){
     dev_rect_deri_three <<<griddimgauge, blockdimgauge >>> 
               (dev_nn2, dev_gf_d, dev_df0_d, c, mu);  
     if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-       printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+       printf("%s\n", cudaGetErrorString(cudaerr));
     }
   }
 }  
