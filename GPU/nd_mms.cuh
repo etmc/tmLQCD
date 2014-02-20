@@ -43,7 +43,7 @@ extern "C" int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
   double* use_mms_shifts;
   //for large shifts the solver converges too fast 
   //-> give it a minimum number of solver iterations 
-  int min_solver_it = LZ<T?2*T:2*LZ;
+  int min_solver_it = LZ<T?T/2:LZ/2;
   
   //check how many shifts we will do in mixed_precision, if enabled
   if(use_mixed_mms){
