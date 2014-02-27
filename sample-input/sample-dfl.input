@@ -1,0 +1,64 @@
+# example input file for invert
+# for CG solver
+# requires a 4^4 gauge configuration conf.0000
+
+L=4
+T=4
+NrXProcs = 2
+NrYProcs = 2
+NrZProcs = 2
+
+NoBlocksT = 2
+NoBlocksX = 2
+NoBlocksY = 2
+NoBlocksZ = 2
+
+DebugLevel = 3
+InitialStoreCounter = 0
+Measurements = 1
+2kappamu = 0.001
+kappa = 0.177
+BCAngleT = 1
+GaugeConfigInputFile = conf
+UseEvenOdd = no
+
+SourceType = timeslice
+#ReadSource = no
+#NoSamples = 1
+UseSloppyPrecision = no
+OmpNumThreads = 2
+
+ReadSource = no
+SourceFilename = bla
+SourceTimeSlice = 38
+Indices = 0
+
+GMRESMParameter = 25
+
+GCRPreconditioner = cg
+DeflationSubspaceDimension = 10
+BeginDeflationInit
+  GlobalVectorsNum = 20
+  OuterloopMsap = yes
+  NiterMsap = 3
+  NcycleMsap = 5
+  NiterMsapDfl = 20
+  NcycleMsapDfl = 5
+  NsmoothMsapDfl = 6
+  UseiQDFL = no
+EndDeflationInit
+
+BeginOperator TMWILSON
+  2kappaMu = 0.001
+  #2kappaMu = 0.0
+  kappa = 0.177
+  UseEvenOdd = no
+  Solver = dflfgmres
+  #Solver = dflgcr
+  #Solver = fgmres
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 125
+#  AddDownPropagator = yes
+EndOperator
+
+
