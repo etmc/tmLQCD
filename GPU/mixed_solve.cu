@@ -284,6 +284,10 @@ int nStreams_nd = 2;
 cudaStream_t stream_nd[2];
 
 
+// here we set the block and grid sizes for kernels
+int gpu_gd_M, gpu_bd_M, gpu_gd_linalg, gpu_bd_linalg, gpu_gd_blas, gpu_bd_blas;
+int gpu_gd_M_d, gpu_bd_M_d, gpu_gd_linalg_d, gpu_bd_linalg_d, gpu_gd_blas_d, gpu_bd_blas_d;
+
 
 #ifdef MPI
 
@@ -599,6 +603,66 @@ extern "C" int find_devices() {
 
 
 
+void set_gpu_work_layout(int eoflag){
+  
+ int N;
+ if (eoflag){
+   N = VOLUME/2;  
+ }
+ else{
+   N = VOLUME;
+ }
+ 
+ // this is the partitioning for the Hopping Matrix Mult.
+ // single
+ gpu_bd_M = BLOCK;
+ if( N % gpu_bd_M == 0){
+   gpu_gd_M = (int) N/gpu_bd_M;
+ }
+ else{
+   gpu_gd_M  = (int) N/gpu_bd_M + 1;
+ }
+ // double
+ gpu_bd_M_d = BLOCKD;
+ if( N % gpu_bd_M_d == 0){
+   gpu_gd_M_d = (int) N/gpu_bd_M_d;
+ }
+ else{
+   gpu_gd_M_d  = (int) N/gpu_bd_M_d + 1;
+ } 
+ 
+ // this is the partitioning for the dev_mul_one_pm... 
+ // single
+ gpu_bd_linalg = BLOCK2;
+ if( N % gpu_bd_linalg == 0){
+   gpu_gd_linalg = (int) N/gpu_bd_linalg;
+ }
+ else{
+   gpu_gd_linalg  = (int) N/gpu_bd_linalg + 1;
+ }
+ // double
+ gpu_bd_linalg_d = BLOCK2D;
+ if( N % gpu_bd_linalg_d == 0){
+   gpu_gd_linalg_d = (int) N/gpu_bd_linalg_d;
+ }
+ else{
+   gpu_gd_linalg_d  = (int) N/gpu_bd_linalg_d + 1;
+ } 
+  
+  
+ // this is the partitioning for the copying of fields 
+ // single and double
+ gpu_bd_blas = BLOCK3;
+ gpu_bd_blas_d = gpu_bd_blas;
+ if( N % gpu_bd_blas == 0){
+   gpu_gd_blas = (int) N/gpu_bd_blas;
+ }
+ else{
+   gpu_gd_blas  = (int) N/gpu_bd_blas + 1;
+ }
+ gpu_gd_blas_d = gpu_gd_blas;
+ 
+}
 
 
 
@@ -607,40 +671,18 @@ extern "C" int find_devices() {
 extern "C" void test_operator(dev_su3_2v * gf,dev_spinor* spinin, dev_spinor* spinout, 
 dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_spinor* spin4, int *grid, int * nn_grid, float* output,float* erg, int xsize, int ysize){
  
- int  gridsize;
 
- dim3 blockdim(1,1);
- dim3 blockdim2(128,1,1);
- if( VOLUME >= 128){
-   gridsize =VOLUME/128;
- }
- else{
-   gridsize=1;
- }
- dim3 griddim2(gridsize,1,1);
- 
- 
- dim3 blockdim3(BLOCK,1,1);
- if( VOLUME >= BLOCK){
-   gridsize = (int) VOLUME/BLOCK + 1;
- }
- else{
-   gridsize=1;
- }
- dim3 griddim3(gridsize,1,1); 
- 
- 
  update_constants(grid);
  
   float scaleparam = sqrt(1.0/(2.0 * (float) hostkappa));
-  dev_skalarmult_spinor_field<<<griddim2, blockdim2 >>>(spinin,scaleparam*scaleparam, spin4);
+  dev_skalarmult_spinor_field<<<gpu_gd_blas, gpu_bd_blas >>>(spinin,scaleparam*scaleparam, spin4);
  
  #ifdef USETEXTURE
    bind_texture_gf(gf);
    bind_texture_spin(spin4,1);
  #endif 
   // apply D_tm
-  dev_tm_dirac_kappa <<<griddim3, blockdim3 >>>(gf, spin4, spinout, nn_grid);
+  dev_tm_dirac_kappa <<<gpu_gd_M, gpu_bd_M >>>(gf, spin4, spinout, nn_grid);
 
  #ifdef USETEXTURE
   unbind_texture_gf();
@@ -683,38 +725,6 @@ extern "C" int dev_cg(
    exit(100); 
  }
 
- // this is the partitioning for the copying of fields 
- dim3 blockdim(1,1);
- dim3 blockdim2(128,1,1);
- if( VOLUME >= 128){
-   gridsize = (int) VOLUME/128 + 1;
- }
- else{
-   gridsize=1;
- }
- dim3 griddim2(gridsize,1,1);
- 
- // this is the partitioning for the Dirac-Kernel
- dim3 blockdim3(BLOCK,1,1);
- if( VOLUME >= BLOCK){
-   gridsize = (int) (VOLUME/BLOCK) +1;
- }
- else{
-   gridsize=1;
- }
- dim3 griddim3(gridsize,1,1); 
- 
- //this is the partitioning for dev_mul_one_pm...
- int blockdim4 = BLOCK2;
- if( VOLUME % blockdim4 == 0){
-   gridsize = (int) VOLUME/blockdim4;
- }
- else{
-   gridsize = (int) VOLUME/blockdim4 + 1;
- }
- int griddim4 = gridsize;
-  
- 
  
  size_t size2 = sizeof(float4)*6*VOLUME;
  
@@ -759,7 +769,7 @@ extern "C" int dev_cg(
  
   #ifdef RELATIVISTIC_BASIS 
    //transform to relativistic gamma basis
-   to_relativistic_basis<<<griddim4, blockdim4>>> (spinin);
+   to_relativistic_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (spinin);
 
    if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
      if (g_proc_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
@@ -771,10 +781,10 @@ extern "C" int dev_cg(
    }
  #endif
  
- dev_copy_spinor_field<<<griddim2, blockdim2 >>>(spinin, spin0);
- dev_zero_spinor_field<<<griddim2, blockdim2 >>>(spin1); // x_0 = 0
- dev_copy_spinor_field<<<griddim2, blockdim2 >>>(spinin, spin2);
- dev_zero_spinor_field<<<griddim2, blockdim2 >>>(spin3);
+ dev_copy_spinor_field<<<gpu_gd_blas, gpu_bd_blas >>>(spinin, spin0);
+ dev_zero_spinor_field<<<gpu_gd_blas, gpu_bd_blas >>>(spin1); // x_0 = 0
+ dev_copy_spinor_field<<<gpu_gd_blas, gpu_bd_blas >>>(spinin, spin2);
+ dev_zero_spinor_field<<<gpu_gd_blas, gpu_bd_blas >>>(spin3);
  printf("%s\n", cudaGetErrorString(cudaGetLastError()));
  
  
@@ -797,24 +807,24 @@ extern "C" int dev_cg(
   #endif
      // GAMMA5, mu -> -mu
   #ifdef RELATIVISTIC_BASIS 
-     dev_gamma5_rel <<<griddim2, blockdim2 >>> (spin2,spin4);
+     dev_gamma5_rel <<<gpu_gd_blas, gpu_bd_blas >>> (spin2,spin4);
   #else
-     dev_gamma5 <<<griddim2, blockdim2 >>> (spin2,spin4);     
+     dev_gamma5 <<<gpu_gd_blas, gpu_bd_blas >>> (spin2,spin4);     
   #endif
      dev_swapmu <<<1,1>>> ();
   #ifdef USETEXTURE
    bind_texture_spin(spin4,1);
   #endif
      //D_tm 
-     dev_tm_dirac_kappa <<<griddim3, blockdim3 >>> (gf, spin4, spin3, dev_nn);
+     dev_tm_dirac_kappa <<<gpu_gd_M, gpu_bd_M >>> (gf, spin4, spin3, dev_nn);
   #ifdef USETEXTURE
    unbind_texture_spin(1);
   #endif
      //GAMMA5 mu -> -mu
   #ifdef RELATIVISTIC_BASIS    
-     dev_gamma5_rel <<<griddim2, blockdim2 >>>(spin3,spin4);
+     dev_gamma5_rel <<<gpu_gd_blas, gpu_bd_blas >>>(spin3,spin4);
   #else
-     dev_gamma5 <<<griddim2, blockdim2 >>> (spin3,spin4);     
+     dev_gamma5 <<<gpu_gd_blas, gpu_bd_blas >>> (spin3,spin4);     
   #endif
      
      dev_swapmu <<<1,1>>> ();
@@ -822,7 +832,7 @@ extern "C" int dev_cg(
    bind_texture_spin(spin4,1);
   #endif
      //D_tm
-     dev_tm_dirac_kappa <<<griddim3, blockdim3 >>> (gf, spin4, spin3, dev_nn);
+     dev_tm_dirac_kappa <<<gpu_gd_M, gpu_bd_M >>> (gf, spin4, spin3, dev_nn);
   
   //Here we have used the output spinor (spinout) to temporarly take the field and to 
   //copy it to the texture field (spin4)!!
@@ -874,9 +884,9 @@ extern "C" int dev_cg(
      unbind_texture_spin(1);
     #endif
     #ifdef RELATIVISTIC_BASIS  
-      dev_gamma5_rel <<<griddim2, blockdim2 >>> (spin1,spin4);
+      dev_gamma5_rel <<<gpu_gd_blas, gpu_bd_blas >>> (spin1,spin4);
     #else
-      dev_gamma5 <<<griddim2, blockdim2 >>> (spin1,spin4);      
+      dev_gamma5 <<<gpu_gd_blas, gpu_bd_blas >>> (spin1,spin4);      
     #endif
       dev_swapmu <<<1,1>>> ();
     #ifdef USETEXTURE
@@ -884,11 +894,11 @@ extern "C" int dev_cg(
     #endif
    
       //D_tm GAMMA5, mu -> -mu
-      dev_tm_dirac_kappa <<<griddim3, blockdim3 >>> (gf, spin4, spin3, dev_nn);
+      dev_tm_dirac_kappa <<< gpu_gd_M, gpu_bd_M >>> (gf, spin4, spin3, dev_nn);
     #ifdef RELATIVISTIC_BASIS        
-      dev_gamma5_rel <<<griddim2, blockdim2 >>>(spin3,spinout);
+      dev_gamma5_rel <<<gpu_gd_blas, gpu_bd_blas >>>(spin3,spinout);
     #else
-       dev_gamma5 <<<griddim2, blockdim2 >>>(spin3,spinout);     
+       dev_gamma5 <<<gpu_gd_blas, gpu_bd_blas >>>(spin3,spinout);     
     #endif
       dev_swapmu <<<1,1>>> ();
   
@@ -903,14 +913,13 @@ extern "C" int dev_cg(
     #endif
       
       //D_tm
-      dev_tm_dirac_kappa<<<griddim3, blockdim3 >>>(gf, spin4, spin3, dev_nn);
+      dev_tm_dirac_kappa<<< gpu_gd_M, gpu_bd_M >>>(gf, spin4, spin3, dev_nn);
     
     // r = b - Ax
     cublasSscal (24*VOLUME, -1.0, (float *)spin3, 1);
     cublasSaxpy (24*VOLUME, 1.0, (const float *) spinin,  1, (float *) spin3, 1);
     cublasScopy (24*VOLUME, (const float *)spin3, 1, (float *)spin0, 1);
     
-    //dev_skalarmult_add_assign_spinor_field<<<griddim2, blockdim2 >>>(spinin, -1.0, spin3, spin0);
    }//recalculate residue
 
  }//MAIN LOOP cg	
@@ -926,19 +935,19 @@ extern "C" int dev_cg(
      unbind_texture_spin(1);
     #endif
   #ifdef RELATIVISTIC_BASIS      
-      dev_gamma5_rel <<<griddim2, blockdim2 >>> (spin1,spin4);
+      dev_gamma5_rel <<<gpu_gd_blas, gpu_bd_blas >>> (spin1,spin4);
   #else
-      dev_gamma5 <<<griddim2, blockdim2 >>> (spin1,spin4); 
+      dev_gamma5 <<<gpu_gd_blas, gpu_bd_blas >>> (spin1,spin4); 
   #endif
       dev_swapmu <<<1,1>>> ();
     #ifdef USETEXTURE
      bind_texture_spin(spin4,1);
     #endif
-      dev_tm_dirac_kappa <<<griddim3, blockdim3 >>> (gf, spin4, spin3, dev_nn);
+      dev_tm_dirac_kappa <<< gpu_gd_M, gpu_bd_M >>> (gf, spin4, spin3, dev_nn);
   #ifdef RELATIVISTIC_BASIS       
-      dev_gamma5_rel <<<griddim2, blockdim2 >>>(spin3,spin1);
+      dev_gamma5_rel <<<gpu_gd_blas, gpu_bd_blas >>>(spin3,spin1);
   #else
-        dev_gamma5 <<<griddim2, blockdim2 >>>(spin3,spin1);    
+        dev_gamma5 <<<gpu_gd_blas, gpu_bd_blas >>>(spin3,spin1);    
   #endif
       dev_swapmu <<<1,1>>> ();
     #ifdef USETEXTURE
@@ -947,19 +956,18 @@ extern "C" int dev_cg(
 
 
  //go over to non-kappa, Ddagger = g5 D g5
- dev_skalarmult_spinor_field<<<griddim2, blockdim2 >>>(spin1,1.0/(scaleparam*scaleparam), spinout);  
+ dev_skalarmult_spinor_field<<<gpu_gd_blas, gpu_bd_blas >>>(spin1,1.0/(scaleparam*scaleparam), spinout);  
  // times operator == source ?? 
- //dev_tm_dirac_kappa<<<griddim3, blockdim3 >>>(gf, spin3, spinout, nn_grid);
   #ifdef RELATIVISTIC_BASIS 
    //transform back to tmlqcd gamma basis
-   to_tmlqcd_basis<<<griddim4, blockdim4>>> (spinout);
+   to_tmlqcd_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (spinout);
   #endif  
   }
   else{
-   dev_copy_spinor_field<<<griddim2, blockdim2 >>>(spin1,spinout);  
+   dev_copy_spinor_field<<<gpu_gd_blas, gpu_bd_blas >>>(spin1,spinout);  
    #ifdef RELATIVISTIC_BASIS 
    //transform back to tmlqcd gamma basis
-   to_tmlqcd_basis<<<griddim4, blockdim4>>> (spinout);
+   to_tmlqcd_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (spinout);
   #endif   
 
   }
@@ -1023,75 +1031,12 @@ extern "C" int dev_cg_eo(
  
  
  
- int i, gridsize;
+ int i;
  int maxit = max_innersolver_it;
  float eps = (float) innersolver_precision;
  int N_recalcres = 40; // after N_recalcres iterations calculate r = A x_k - b
  
  cudaError_t cudaerr;
- 
- // this is the partitioning for the copying of fields
- dim3 blockdim(1,1);
- //dim3 blockdim2(128,1,1);
- 
- int blockdim2 = BLOCK3;
- if( VOLUME/2 % blockdim2 == 0){
-   gridsize = (int) VOLUME/2/blockdim2;
- }
- else{
-   gridsize = (int) VOLUME/2/blockdim2 + 1;
- }
- int griddim2 = gridsize;
-
- 
- //this is the partitioning for the HoppingMatrix kernel
- #ifdef GPU_3DBLOCK
-   dim3 blockdim3 (BLOCK,BLOCKSUB,BLOCKSUB);
-   int blocksize = BLOCK*BLOCKSUB*BLOCKSUB;
-   if( VOLUME/2 % blocksize == 0){
-     gridsize = (int) VOLUME/2/blocksize;
-   }
-   else{
-     gridsize = (int) VOLUME/2/blocksize + 1;
-   }
-   int griddim3 = gridsize;
- #else
-   dim3 blockdim3(BLOCK);
-   int blocksize = BLOCK;   
-   if( VOLUME/2 % blocksize == 0){
-     gridsize = (int) VOLUME/2/blocksize;
-   }
-   else{
-     gridsize = (int) VOLUME/2/blocksize + 1;
-   }
-   int griddim3 = gridsize;
- #endif 
-
-
- 
- //this is the partitioning for dev_mul_one_pm...
- int blockdim4 = BLOCK2;
- if( VOLUME/2 % blockdim4 == 0){
-   gridsize = (int) VOLUME/2/blockdim4;
- }
- else{
-   gridsize = (int) VOLUME/2/blockdim4 + 1;
- }
- int griddim4 = gridsize;
- 
- #ifndef LOWOUTPUT
-    if (g_proc_id == 0) {
-      printf("griddim3 = %d\n", griddim3);
-      #ifdef GPU_3DBLOCK
-        printf("blockdim3.x = %d, blockdim3.y = %d, blockdim3.z = %d\n", blockdim3.x, blockdim3.y, blockdim3.z);
-      #else
-        printf("blockdim3 = %d\n", blockdim3.x);
-      #endif
-      printf("griddim4 = %d\n", griddim4); 
-      printf("blockdim4 = %d\n", blockdim4);          
-    }
- #endif
- 
  
  
  //Initialize some stuff
@@ -1168,7 +1113,7 @@ extern "C" int dev_cg_eo(
  
  #ifdef RELATIVISTIC_BASIS 
    //transform to relativistic gamma basis
-   to_relativistic_basis<<<griddim4, blockdim4>>> (spinin);
+   to_relativistic_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (spinin);
 
    if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
      if (g_proc_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
@@ -1181,10 +1126,10 @@ extern "C" int dev_cg_eo(
  #endif
  
 
- dev_copy_spinor_field<<<griddim2, blockdim2 >>>(spinin, spin0);
- dev_zero_spinor_field<<<griddim2, blockdim2 >>>(spin1); // x_0 = 0
- dev_copy_spinor_field<<<griddim2, blockdim2 >>>(spinin, spin2);
- dev_zero_spinor_field<<<griddim2, blockdim2 >>>(spin3);
+ dev_copy_spinor_field<<<gpu_gd_blas, gpu_bd_blas >>>(spinin, spin0);
+ dev_zero_spinor_field<<<gpu_gd_blas, gpu_bd_blas >>>(spin1); // x_0 = 0
+ dev_copy_spinor_field<<<gpu_gd_blas, gpu_bd_blas >>>(spinin, spin2);
+ dev_zero_spinor_field<<<gpu_gd_blas, gpu_bd_blas >>>(spin3);
   
    if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
      if (g_proc_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
@@ -1231,9 +1176,9 @@ extern "C" int dev_cg_eo(
   
   // Q_{-}Q{+}
   #ifndef MPI
-    dev_Qtm_pm_psi(spin2, spin3, griddim3, blockdim3, griddim4, blockdim4);
+    dev_Qtm_pm_psi(spin2, spin3, gpu_gd_M, gpu_bd_M, gpu_gd_linalg, gpu_bd_linalg);
   #else
-    dev_Qtm_pm_psi_mpi(spin2, spin3, griddim3, blockdim3, griddim4, blockdim4);
+    dev_Qtm_pm_psi_mpi(spin2, spin3, gpu_gd_M, gpu_bd_M, gpu_gd_linalg, gpu_bd_linalg);
   #endif
   
   if((cudaerr=cudaGetLastError()) != cudaSuccess){
@@ -1256,14 +1201,14 @@ extern "C" int dev_cg_eo(
  #ifndef MPI
    cublasSaxpy (24*VOLUME/2,-1.0*host_alpha, (const float *) spin3, 1, (float *) spin0, 1);  
  #else
-   dev_axpy<<<griddim4, blockdim4>>> (-1.0*host_alpha, spin3, spin0);
+   dev_axpy<<<gpu_gd_blas, gpu_bd_blas >>> (-1.0*host_alpha, spin3, spin0);
  #endif 
 
  //x(k+1);
  #ifndef MPI 
    cublasSaxpy (24*VOLUME/2, host_alpha, (const float *) spin2,  1, (float *) spin1, 1);
  #else
-   dev_axpy<<<griddim4, blockdim4>>> (host_alpha, spin2, spin1);
+   dev_axpy<<<gpu_gd_blas, gpu_bd_blas >>> (host_alpha, spin2, spin1);
  #endif
  
  
@@ -1296,8 +1241,8 @@ extern "C" int dev_cg_eo(
    cublasSscal (24*VOLUME/2, host_beta, (float *)spin2, 1);
    cublasSaxpy (24*VOLUME/2, 1.0, (const float *) spin0,  1, (float *) spin2, 1);
  #else
-   dev_blasscal<<<griddim4, blockdim4>>> (host_beta, spin2);
-   dev_axpy<<<griddim4, blockdim4>>> (1.0, spin0, spin2);
+   dev_blasscal<<<gpu_gd_blas, gpu_bd_blas >>> (host_beta, spin2);
+   dev_axpy<<<gpu_gd_blas, gpu_bd_blas >>> (1.0, spin0, spin2);
  #endif
  host_rk = host_dotprod;
  
@@ -1312,9 +1257,9 @@ extern "C" int dev_cg_eo(
       
     // Q_{-}Q{+}
     #ifndef MPI
-        dev_Qtm_pm_psi(spin1, spin3, griddim3, blockdim3, griddim4, blockdim4);
+        dev_Qtm_pm_psi(spin1, spin3, gpu_gd_M, gpu_bd_M, gpu_gd_linalg, gpu_bd_linalg);
     #else
-        dev_Qtm_pm_psi_mpi(spin1, spin3, griddim3, blockdim3, griddim4, blockdim4);
+        dev_Qtm_pm_psi_mpi(spin1, spin3, gpu_gd_M, gpu_bd_M, gpu_gd_linalg, gpu_bd_linalg);
     #endif
     if((cudaerr=cudaGetLastError()) != cudaSuccess){
       printf("%s\n", cudaGetErrorString(cudaerr));
@@ -1328,9 +1273,9 @@ extern "C" int dev_cg_eo(
       cublasSaxpy (24*VOLUME/2, 1.0, (const float *) spinin,  1, (float *) spin3, 1);
       cublasScopy (24*VOLUME/2, (const float *)spin3, 1, (float *)spin0, 1);
     #else
-      dev_blasscal<<<griddim4, blockdim4>>> (-1.0, spin3);
-      dev_axpy<<<griddim4, blockdim4>>> (1.0, spinin, spin3);
-      dev_blascopy<<<griddim4, blockdim4>>> (spin3, spin0);    
+      dev_blasscal<<<gpu_gd_blas, gpu_bd_blas >>> (-1.0, spin3);
+      dev_axpy<<<gpu_gd_blas, gpu_bd_blas >>> (1.0, spinin, spin3);
+      dev_blascopy<<<gpu_gd_blas, gpu_bd_blas >>> (spin3, spin0);    
     #endif
 
    }//recalculate residue
@@ -1364,11 +1309,11 @@ extern "C" int dev_cg_eo(
   // x_result = spin1 !
   
   //no multiplication with D^{dagger} here and no return to non-kappa basis as in dev_cg!
-  dev_copy_spinor_field<<<griddim2, blockdim2 >>>(spin1,spinout);
+  dev_copy_spinor_field<<<gpu_gd_blas, gpu_bd_blas >>>(spin1,spinout);
   
   #ifdef RELATIVISTIC_BASIS 
    //transform back to tmlqcd gamma basis
-   to_tmlqcd_basis<<<griddim4, blockdim4>>> (spinout);
+   to_tmlqcd_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (spinout);
   #endif
   
   #ifdef USETEXTURE
@@ -1711,25 +1656,6 @@ cudaError_t cudaerr;
   #endif
   
   
-  cudaMalloc((void **) &dev_spin1, dev_spinsize);   // Allocate array spin1 on device
-  cudaMalloc((void **) &dev_spin2, dev_spinsize);   // Allocate array spin2 on device
-  cudaMalloc((void **) &dev_spin3, dev_spinsize);   // Allocate array spin3 on device
-  cudaMalloc((void **) &dev_spin4, dev_spinsize);
-  cudaMalloc((void **) &dev_spin5, dev_spinsize);
-  cudaMalloc((void **) &dev_spinin, dev_spinsize);
-  cudaMalloc((void **) &dev_spinout, dev_spinsize);
-
-  #ifdef HALF
-   dev_spinsize = VOLUME/2*sizeof(float);
-   cudaMalloc((void **) &dev_spin1_norm, dev_spinsize);   // Allocate norm spin1 on device
-   cudaMalloc((void **) &dev_spin2_norm, dev_spinsize);   // Allocate norm spin2 on device
-   cudaMalloc((void **) &dev_spin3_norm, dev_spinsize);   // Allocate norm spin3 on device
-   cudaMalloc((void **) &dev_spin4_norm, dev_spinsize);
-   cudaMalloc((void **) &dev_spin5_norm, dev_spinsize);
-   cudaMalloc((void **) &dev_spinin_norm, dev_spinsize);
-   cudaMalloc((void **) &dev_spinout_norm, dev_spinsize);
-  #endif
-
 
   if((cudaerr=cudaGetLastError())!=cudaSuccess){
     printf("Error in init_mixedsolve(): Memory allocation of spinor fields failed. Aborting...\n");
@@ -1759,7 +1685,8 @@ cudaError_t cudaerr;
   else{
     printf("Allocated grid on device\n");
   }
-   
+  //set grid and block sizes, non-eo
+  set_gpu_work_layout(0);
 }
 
 
@@ -2103,13 +2030,7 @@ extern "C" void init_mixedsolve_eo(su3** gf){
   
   
 #ifndef MPI
-  	cudaMalloc((void **) &dev_spin1, dev_spinsize);   // Allocate array spin1 on device
-  	cudaMalloc((void **) &dev_spin2, dev_spinsize);   // Allocate array spin2 on device
-  	cudaMalloc((void **) &dev_spin3, dev_spinsize);   // Allocate array spin3 on device
-  	cudaMalloc((void **) &dev_spin4, dev_spinsize);
-  	cudaMalloc((void **) &dev_spin5, dev_spinsize);
-  	cudaMalloc((void **) &dev_spinin, dev_spinsize);
-  	cudaMalloc((void **) &dev_spinout, dev_spinsize);
+
 	
 	//dev_spin_eo1/2_d we need for gpu_deriv_SB in any case
    	size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); /* double2 */  
@@ -2133,13 +2054,6 @@ extern "C" void init_mixedsolve_eo(su3** gf){
         #endif
 
        #ifdef HALF
-         cudaMalloc((void **) &dev_spin1_norm, dev_normsize);   // Allocate norm spin1 on device
-         cudaMalloc((void **) &dev_spin2_norm, dev_normsize);   // Allocate norm spin2 on device
-         cudaMalloc((void **) &dev_spin3_norm, dev_normsize);   // Allocate norm spin3 on device
-         cudaMalloc((void **) &dev_spin4_norm, dev_normsize);
-         cudaMalloc((void **) &dev_spin5_norm, dev_normsize);
-         cudaMalloc((void **) &dev_spinin_norm, dev_normsize);
-         cudaMalloc((void **) &dev_spinout_norm, dev_normsize);
 
   	cudaMalloc((void **) &dev_spin_eo1_half, dev_spinsize);
   	cudaMalloc((void **) &dev_spin_eo2_half, dev_spinsize);
@@ -2167,25 +2081,10 @@ extern "C" void init_mixedsolve_eo(su3** gf){
   	#else
   	  dev_spinsize_ext =  6*(VOLUME+RAND)/2*sizeof(dev_spinor);
 	#endif
-  	
-  	//printf("VOLUME+RAND = %d\tVOLUMEPLUSRAND = %d\n",VOLUME+RAND,VOLUMEPLUSRAND);
-  	cudaMalloc((void **) &dev_spin1, dev_spinsize_ext);
-  	cudaMalloc((void **) &dev_spin2, dev_spinsize_ext);
-  	cudaMalloc((void **) &dev_spin3, dev_spinsize_ext);
-  	cudaMalloc((void **) &dev_spin4, dev_spinsize_ext);
-  	cudaMalloc((void **) &dev_spin5, dev_spinsize_ext);
-  	cudaMalloc((void **) &dev_spinin, dev_spinsize_ext);
-  	cudaMalloc((void **) &dev_spinout, dev_spinsize_ext);
+
 
   	
         #ifdef HALF
-         cudaMalloc((void **) &dev_spin1_norm, dev_normsize_ext);   // Allocate norm spin1 on device
-         cudaMalloc((void **) &dev_spin2_norm, dev_normsize_ext);   // Allocate norm spin2 on device
-         cudaMalloc((void **) &dev_spin3_norm, dev_normsize_ext);   // Allocate norm spin3 on device
-         cudaMalloc((void **) &dev_spin4_norm, dev_normsize_ext);
-         cudaMalloc((void **) &dev_spin5_norm, dev_normsize_ext);
-         cudaMalloc((void **) &dev_spinin_norm, dev_normsize_ext);
-         cudaMalloc((void **) &dev_spinout_norm, dev_normsize_ext);
 
          cudaMalloc((void **) &dev_spin_eo1_half, dev_spinsize_ext);
   	 cudaMalloc((void **) &dev_spin_eo2_half, dev_spinsize_ext);
@@ -2366,7 +2265,11 @@ extern "C" void init_mixedsolve_eo(su3** gf){
 
   exit(100);
   */
-
+  
+  
+  //set grid and block sizes, eo!
+  set_gpu_work_layout(1);
+  
   if((cudaerr=cudaGetLastError())!=cudaSuccess){
     if(g_proc_id==0) printf("Error in init_mixedsolve_eo(): Something went wrong. CUDA error at end of function. Aborting...\n");
     exit(200);
@@ -2381,13 +2284,7 @@ extern "C" void init_mixedsolve_eo(su3** gf){
 
 extern "C" void finalize_mixedsolve(){
 
-  cudaFree(dev_spin1);
-  cudaFree(dev_spin2);
-  cudaFree(dev_spin3);
-  cudaFree(dev_spin4);
-  cudaFree(dev_spin5);
-  cudaFree(dev_spinin);
-  cudaFree(dev_spinout);
+
   cudaFree(dev_gf);
   cudaFree(dev_grid);
   cudaFree(dev_output);
@@ -2405,13 +2302,6 @@ extern "C" void finalize_mixedsolve(){
   #ifdef HALF
     cudaFree(dev_gf_half);
  
-    cudaFree(dev_spin1_norm);
-    cudaFree(dev_spin2_norm);
-    cudaFree(dev_spin3_norm);
-    cudaFree(dev_spin4_norm);
-    cudaFree(dev_spin5_norm);
-    cudaFree(dev_spinin_norm);
-    cudaFree(dev_spinout_norm);
     
     //reliable update fields
     cudaFree(dev_spin1_reliable);
@@ -2425,8 +2315,7 @@ extern "C" void finalize_mixedsolve(){
      cudaFree(dev_spin_eo1_half_norm);
      cudaFree(dev_spin_eo2_half_norm);
     }
-    
-    
+        
   #endif
   
 #ifdef MPI
@@ -2445,9 +2334,103 @@ extern "C" void finalize_mixedsolve(){
 #endif 
   
   
-  
   free(h2d_spin);
   free(h2d_gf);
+}
+
+
+//allocates cg single solver fields
+void init_mixedsolve_fields(int eo){
+  int N;
+  size_t dev_spinsize; 
+  cudaError_t cudaerr;
+  
+#ifdef HALF
+  size_t dev_normsize;
+#endif
+  
+  if(eo){
+   #ifdef MPI
+     N = (VOLUME+RAND)/2;
+   #else
+     N = VOLUME/2;
+   #endif
+  }
+  else{
+   #ifdef MPI
+     N = (VOLUME+RAND);
+   #else
+     N = VOLUME;
+   #endif  
+  }
+
+#ifndef LOWOUTPUT
+  if(g_proc_id ==0) printf("Allocating mixed solver single fields on device.\n");
+#endif
+
+  #ifdef MPI
+    #ifdef HALF
+      dev_spinsize =  6* N * sizeof(dev_spinor_half);
+      dev_normsize =  N *sizeof(float);
+    #else
+      dev_spinsize =  6* N * sizeof(dev_spinor);    
+    #endif
+  #else
+    #ifdef HALF
+      dev_spinsize = 6* N * sizeof(dev_spinor_half);  
+      dev_normsize =  N *sizeof(float);      
+    #else
+      dev_spinsize = 6* N * sizeof(dev_spinor);
+    #endif
+  #endif  
+	  
+  cudaMalloc((void **) &dev_spin1, dev_spinsize);   // Allocate array spin1 on device
+  cudaMalloc((void **) &dev_spin2, dev_spinsize);   // Allocate array spin2 on device
+  cudaMalloc((void **) &dev_spin3, dev_spinsize);   // Allocate array spin3 on device
+  cudaMalloc((void **) &dev_spin4, dev_spinsize);
+  cudaMalloc((void **) &dev_spin5, dev_spinsize);
+  cudaMalloc((void **) &dev_spinin, dev_spinsize);
+  cudaMalloc((void **) &dev_spinout, dev_spinsize); 
+  
+  #ifdef HALF
+    cudaMalloc((void **) &dev_spin1_norm, dev_normsize);   // Allocate norm spin1 on device
+    cudaMalloc((void **) &dev_spin2_norm, dev_normsize);   // Allocate norm spin2 on device
+    cudaMalloc((void **) &dev_spin3_norm, dev_normsize);   // Allocate norm spin3 on device
+    cudaMalloc((void **) &dev_spin4_norm, dev_normsize);
+    cudaMalloc((void **) &dev_spin5_norm, dev_normsize);
+    cudaMalloc((void **) &dev_spinin_norm, dev_normsize);
+    cudaMalloc((void **) &dev_spinout_norm, dev_normsize);
+  #endif
+	
+  if((cudaerr=cudaGetLastError())!=cudaSuccess){
+    if(g_proc_id==0) printf("Error in init_mixedsolve_fields(): could not allocate fields\n");
+    exit(200);
+  }	
+}
+
+
+
+//frees cg single solver fields
+void finalize_mixedsolve_fields(){
+
+  cudaFree(dev_spin1);
+  cudaFree(dev_spin2);
+  cudaFree(dev_spin3);
+  cudaFree(dev_spin4);
+  cudaFree(dev_spin5);
+  cudaFree(dev_spinin);
+  cudaFree(dev_spinout);
+  
+#ifdef HALF
+    cudaFree(dev_spin1_norm);
+    cudaFree(dev_spin2_norm);
+    cudaFree(dev_spin3_norm);
+    cudaFree(dev_spin4_norm);
+    cudaFree(dev_spin5_norm);
+    cudaFree(dev_spinin_norm);
+    cudaFree(dev_spinout_norm);
+#endif
+    
 }
 
 
@@ -2512,30 +2495,6 @@ void benchmark(spinor * const Q){
   mh3.re = -(float)creal(ka3);    mh3.im = (float)cimag(ka3);
 
   
-  #ifdef GPU_3DBLOCK
-    dim3 blockdim3(BLOCK,BLOCKSUB,BLOCKSUB);
-    int gridsize;
-    int blocksize = (BLOCK*BLOCKSUB*BLOCKSUB);
-    if( VOLUME >= blocksize){
-      gridsize = (int)(VOLUME/blocksize) + 1;
-    }
-    else{
-      gridsize=1;
-    }
-    printf("gridsize = %d\n", gridsize);
-    int griddim3=gridsize;  
-  #else
-    dim3 blockdim3(BLOCK);
-    int gridsize;
-    if( VOLUME >= BLOCK){
-      gridsize = (int)(VOLUME/BLOCK) + 1;
-    }
-    else{
-      gridsize=1;
-    }
-    printf("gridsize = %d\n", gridsize);
-    int griddim3=gridsize; 
-  #endif
   
   he_cg_init<<< 1, 1 >>> (dev_grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3); 
   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
@@ -2545,7 +2504,7 @@ void benchmark(spinor * const Q){
     #ifdef USETEXTURE
          bind_texture_spin(dev_spinin,1);
     #endif
-     dev_tm_dirac_kappa <<<griddim3, blockdim3 >>> (dev_gf, dev_spinout, dev_spinin, dev_nn);
+     dev_tm_dirac_kappa <<<gpu_gd_M, gpu_bd_M >>> (dev_gf, dev_spinout, dev_spinin, dev_nn);
     #ifdef USETEXTURE             
       unbind_texture_spin(1);
     #endif
@@ -2593,7 +2552,10 @@ extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_it
 
   size_t dev_spinsize = 6*VOLUME * sizeof(dev_spinor); // float4 
   //update the gpu single gauge_field
-  update_gpu_gf(g_gauge_field);  
+  update_gpu_gf(g_gauge_field); 
+  
+  //allocate solver fields non-eo!
+  init_mixedsolve_fields(0);
   
   // Start timer
   assert((start = clock())!=-1);
@@ -2644,6 +2606,7 @@ for(iter=0; iter<max_iter; iter++){
     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
     printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
     finalize_solver(solver_field, nr_sf);
+    finalize_mixedsolve_fields();
     return(totalcount);  
    }
    
@@ -2687,6 +2650,7 @@ for(iter=0; iter<max_iter; iter++){
     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
     printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
     finalize_solver(solver_field, nr_sf);
+    finalize_mixedsolve_fields();    
   return(-1);
 }
 
@@ -2707,6 +2671,7 @@ void benchmark_eo(spinor * const Q){
   #else
     ibench = 100;
   #endif
+  
   
   size_t dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor); // float4 even-odd !
   convert2REAL4_spin(Q,h2d_spin);
@@ -2753,30 +2718,7 @@ void benchmark_eo(spinor * const Q){
   cudaMemcpyToSymbol(dev_mk2c, &mh2, sizeof(dev_complex)) ; 
   cudaMemcpyToSymbol(dev_mk3c, &mh3, sizeof(dev_complex)) ;  
   */
-  #ifdef GPU_3DBLOCK
-    dim3 blockdim3(BLOCK,BLOCKSUB,BLOCKSUB);
-    int gridsize;
-    int blocksize = (BLOCK*BLOCKSUB*BLOCKSUB);
-    if( VOLUME/2 >= blocksize){
-      gridsize = (int)(VOLUME/2/blocksize) + 1;
-    }
-    else{
-      gridsize=1;
-    }
-    printf("gridsize = %d\n", gridsize);
-    int griddim3=gridsize;  
-  #else
-    dim3 blockdim3(BLOCK);
-    int gridsize;
-    if( VOLUME/2 >= BLOCK){
-      gridsize = (int)(VOLUME/2/BLOCK) + 1;
-    }
-    else{
-      gridsize=1;
-    }
-    printf("gridsize = %d\n", gridsize);
-    int griddim3=gridsize; 
-  #endif
+
   
   he_cg_init<<< 1, 1 >>> (dev_grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3); 
   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
@@ -2790,7 +2732,7 @@ void benchmark_eo(spinor * const Q){
          bind_texture_spin(dev_spinin,1);
       #endif
        //bind_texture_nn(dev_nn_eo);
-      dev_Hopping_Matrix<<<griddim3, blockdim3>>>
+      dev_Hopping_Matrix<<<gpu_gd_M, gpu_bd_M >>>
              (dev_gf, dev_spinin, dev_spin_eo1, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, 0, VolumeEO); //dev_spin_eo1 == even -> 0
        //unbind_texture_nn();
     #ifdef USETEXTURE             
@@ -2802,7 +2744,7 @@ void benchmark_eo(spinor * const Q){
     #endif
        bind_texture_spin(dev_spin_eo1,1);
   //bind_texture_nn(dev_nn_oe);
-    dev_Hopping_Matrix<<<griddim3, blockdim3>>>
+    dev_Hopping_Matrix<<<gpu_gd_M, gpu_bd_M >>>
             (dev_gf, dev_spin_eo1, dev_spinin, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, 0, VolumeEO); 
   //unbind_texture_nn();
     #ifdef USETEXTURE
@@ -2833,9 +2775,7 @@ void benchmark_eo(spinor * const Q){
     }
   #endif  
   
-  
-  
-  
+   
    
   #ifdef USETEXTURE
     unbind_texture_gf();
@@ -2856,7 +2796,7 @@ void benchmark_eo_mpi(spinor * const Q){
   #else
     ibench = 100;
   #endif
-  
+ 
   size_t dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor); // float4 even-odd !
   convert2REAL4_spin(Q,h2d_spin);
   cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
@@ -2901,29 +2841,7 @@ void benchmark_eo_mpi(spinor * const Q){
   cudaMemcpyToSymbol(dev_mk2c, &mh2, sizeof(dev_complex)) ; 
   cudaMemcpyToSymbol(dev_mk3c, &mh3, sizeof(dev_complex)) ;  
   */
-  
-  int blockdim3=BLOCK;
-  int gridsize;
-  if( VOLUME/2 >= BLOCK){
-    gridsize = (int)(VOLUME/2/BLOCK) + 1;
-  }
-  else{
-    gridsize=1;
-  }
- printf("gridsize = %d\n", gridsize);
- int griddim3=gridsize;
-  
-  
- int blockdim4 = BLOCK2;
- if( VOLUME/2 % blockdim4 == 0){
-   gridsize = (int) VOLUME/2/blockdim4;
- }
- else{
-   gridsize = (int) VOLUME/2/blockdim4 + 1;
- }
- int griddim4 = gridsize;  
-  
-  
+     
   
   he_cg_init<<< 1, 1 >>> (dev_grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3); 
   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
@@ -2932,9 +2850,9 @@ void benchmark_eo_mpi(spinor * const Q){
   for(i=0; i<ibench; i++){
   
       
-   dev_Qtm_pm_psi_mpi(dev_spinin, dev_spin_eo1, griddim3,blockdim3, griddim4, blockdim4);   
+   dev_Qtm_pm_psi_mpi(dev_spinin, dev_spin_eo1, gpu_gd_M, gpu_bd_M, gpu_gd_linalg, gpu_bd_linalg);   
    
-   dev_Qtm_pm_psi_mpi(dev_spin_eo1, dev_spinin, griddim3,blockdim3, griddim4, blockdim4); 
+   dev_Qtm_pm_psi_mpi(dev_spin_eo1, dev_spinin, gpu_gd_M, gpu_bd_M, gpu_gd_linalg, gpu_bd_linalg); 
 
   }  
   printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
@@ -2959,9 +2877,6 @@ void benchmark_eo_mpi(spinor * const Q){
   #endif  
   
   
-  
-  
-   
   #ifdef USETEXTURE
     unbind_texture_gf();
   #endif
@@ -2977,7 +2892,7 @@ void benchmark_eo_mpi(spinor * const Q){
 
 
 
-#else
+#else // with half we end up here upon calling mixed_solve FIXME
 extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_iter, 
            double eps, const int rel_prec,const int N){
    printf("WARNING dummy function mixed_solve called\n");
@@ -2985,10 +2900,6 @@ extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_it
 }
 
 #endif
-// WORK TO DO:
-// Separate half and non-half inner solvers in a more transparent way!!
-
-
 
 
 
@@ -2998,28 +2909,8 @@ extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_it
 void test_double_operator(spinor* const Q, const int N){
    
    size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double2 even-odd !   
-   int gridsize;
-     //this is the partitioning for the HoppingMatrix kernel
-     int blockdim3 = BLOCKD;
-     if( VOLUME/2 % blockdim3 == 0){
-       gridsize = (int) VOLUME/2/blockdim3;
-     }
-     else{
-       gridsize = (int) VOLUME/2/blockdim3 + 1;
-     }
-     int griddim3 = gridsize;
-   
-     //this is the partitioning for dev_mul_one_pm...
-     int blockdim4 = BLOCK2D;
-     if( VOLUME/2 % blockdim4 == 0){
-       gridsize = (int) VOLUME/2/blockdim4;
-     }
-     else{
-       gridsize = (int) VOLUME/2/blockdim4 + 1;
-     }
-     int griddim4 = gridsize;    
-     
-     
+ 
+        
   spinor ** solver_field = NULL;
   const int nr_sf = 3;
   init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);  
@@ -3032,7 +2923,7 @@ void test_double_operator(spinor* const Q, const int N){
   cudaMemcpy(dev_spin0_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);
   dev_Qtm_pm_psi_d(dev_spin0_d, dev_spin1_d,  
 		      dev_spin_eo1_d, dev_spin_eo2_d, 
-		      griddim3, blockdim3, griddim4, blockdim4,
+		      gpu_gd_M_d, gpu_bd_M_d, gpu_gd_linalg_d, gpu_bd_linalg_d,
 		      dev_eoidx_even, dev_eoidx_odd, 
 		      dev_nn_eo, dev_nn_oe); 
 		
@@ -3051,7 +2942,7 @@ void test_double_operator(spinor* const Q, const int N){
   cudaMemcpy(dev_spin0_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);
 
 
-  dev_diff_d<<<griddim4,blockdim4>>>(dev_spin2_d,dev_spin0_d,dev_spin1_d);
+  dev_diff_d<<<gpu_gd_blas_d, gpu_bd_blas_d>>>(dev_spin2_d,dev_spin0_d,dev_spin1_d);
   double rk_gpu = double_dotprod(dev_spin2_d,dev_spin2_d);
   
   printf("Testing double linalg:\n");
@@ -3113,30 +3004,12 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
   
   //update the gpu single gauge_field
   update_gpu_gf(g_gauge_field);
+  
+  //allocate solver fields eo!
+  init_mixedsolve_fields(1);
 
   #ifdef GPU_DOUBLE
-   size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double2 even-odd !   
-   int gridsize;
-     //this is the partitioning for the HoppingMatrix kernel
-     int blockdim3 = BLOCKD;
-     if( VOLUME/2 % blockdim3 == 0){
-       gridsize = (int) VOLUME/2/blockdim3;
-     }
-     else{
-       gridsize = (int) VOLUME/2/blockdim3 + 1;
-     }
-     int griddim3 = gridsize;
-   
-     //this is the partitioning for dev_mul_one_pm...
-     int blockdim4 = BLOCK2D;
-     if( VOLUME/2 % blockdim4 == 0){
-       gridsize = (int) VOLUME/2/blockdim4;
-     }
-     else{
-       gridsize = (int) VOLUME/2/blockdim4 + 1;
-     }
-     int griddim4 = gridsize;  
-     //printf("gd3: %d\t bd3: %d\t gd4: %d\t bd4: %d\n", griddim3, blockdim3, griddim4, blockdim4);
+    size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double2 even-odd !   
     update_constants_d(dev_grid);
     update_gpu_gf_d(g_gauge_field);
   #endif 
@@ -3180,24 +3053,15 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
       test_double_operator(Q,N);
     #endif
     double testnorm;
-    
-    /*!!!!  WHY IS P NONZERO????? */
-    //zero_spinor_field(P,N);
-    
+
     order_spin_gpu(Q, h2d_spin_d);
     cudaMemcpy(dev_spin0_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);
-    //cudaThreadSynchronize();
-    
 
     order_spin_gpu(P, h2d_spin_d);
     cudaMemcpy(dev_spin1_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice); 
     cudaMemcpy(dev_spin2_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);     
     cudaMemcpy(dev_spin3_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice); 
-   /*
-    cudaMemcpy(dev_spin0_d, Q, dev_spinsize_d, cudaMemcpyHostToDevice);
-    cudaMemcpy(dev_spin1_d, P, dev_spinsize_d, cudaMemcpyHostToDevice); 
-    cudaMemcpy(dev_spin2_d, P, dev_spinsize_d, cudaMemcpyHostToDevice);    
-  */ 
+
   #else  
     assign(solver_field[0],Q,N);
     zero_spinor_field(solver_field[1],  N);//spin2 = x_k
@@ -3218,10 +3082,10 @@ for(iter=0; iter<max_iter; iter++){
    #ifdef GPU_DOUBLE
      dev_Qtm_pm_psi_d(dev_spin2_d, dev_spin3_d,  
 		      dev_spin_eo1_d, dev_spin_eo2_d, 
-		      griddim3, blockdim3, griddim4, blockdim4,
+		      gpu_gd_M_d, gpu_bd_M_d, gpu_gd_linalg_d, gpu_bd_linalg_d,
 		      dev_eoidx_even, dev_eoidx_odd, 
 		      dev_nn_eo, dev_nn_oe); 
-     dev_diff_d<<<griddim4,blockdim4>>>(dev_spin0_d,dev_spin0_d,dev_spin3_d);
+     dev_diff_d<<<gpu_gd_blas_d, gpu_bd_blas_d>>>(dev_spin0_d,dev_spin0_d,dev_spin3_d);
      rk = double_dotprod(dev_spin0_d,dev_spin0_d);
    #else   
      Qtm_pm_psi(solver_field[3], solver_field[2]);
@@ -3261,7 +3125,7 @@ for(iter=0; iter<max_iter; iter++){
 */
     #ifdef GPU_DOUBLE
       cudaMemcpy(h2d_spin_d, dev_spin1_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
-      unorder_spin_gpu(h2d_spin_d, solver_field[1]);    
+      unorder_spin_gpu(h2d_spin_d, solver_field[1]);
     #endif
      //multiply with Qtm_minus_psi (for non gpu done in invert_eo.c)
      Qtm_minus_psi(solver_field[3], solver_field[1]);
@@ -3275,13 +3139,14 @@ for(iter=0; iter<max_iter; iter++){
       if(g_proc_id==0) printf("EO Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
      #endif
      finalize_solver(solver_field, nr_sf);
+     finalize_mixedsolve_fields();
      return(totalcount);  
    }
    
   //initialize spin fields on device
   #ifndef HALF
     #ifdef GPU_DOUBLE
-      dev_d2f<<<griddim4,blockdim4>>>(dev_spinin, dev_spin0_d);
+      dev_d2f<<<gpu_gd_blas_d, gpu_bd_blas_d>>>(dev_spinin, dev_spin0_d);
       //cudaThreadSynchronize();
       if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
         if (g_proc_id == 0) printf("Error in linsolve_eo_gpu: %s\n", cudaGetErrorString(cudaGetLastError()));
@@ -3336,8 +3201,8 @@ for(iter=0; iter<max_iter; iter++){
    #endif
    // copy back
    #ifdef GPU_DOUBLE
-     dev_add_f2d<<<griddim4,blockdim4>>>(dev_spin1_d,dev_spin1_d,dev_spinout);
-     dev_f2d<<<griddim4,blockdim4>>>(dev_spin2_d,dev_spinout);
+     dev_add_f2d<<<gpu_gd_blas_d, gpu_bd_blas_d >>>(dev_spin1_d,dev_spin1_d,dev_spinout);
+     dev_f2d<<<gpu_gd_blas_d, gpu_bd_blas_d >>>(dev_spin2_d,dev_spinout);
    #else    
      cudaMemcpy(h2d_spin, dev_spinout, dev_spinsize, cudaMemcpyDeviceToHost);
      #ifdef HALF
@@ -3374,210 +3239,9 @@ for(iter=0; iter<max_iter; iter++){
     if(g_proc_id==0) printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
 
     finalize_solver(solver_field, nr_sf);
+    finalize_mixedsolve_fields();
   return(-1);
 }
-
-
-
-
-
-
-
-
-
-
-
-extern "C" int mixed_solve_eo_reliable (spinor * const P, spinor * const Q, const int max_iter, 
-	   double eps, const int rel_prec, const int N){
-
-  // source in Q, initial solution in P (not yet implemented)
-  double rk;
-  int outercount=0;
-  int totalcount=0;
-  clock_t start, stop, startinner, stopinner; 
-  double timeelapsed = 0.0;
-  double sourcesquarenorm;
-  int iter;
-  cudaError_t cudaerr;
-  
-  size_t dev_spinsize;
-  #ifndef HALF
-    dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor); // float4 even-odd !
-    size_t dev_spinsize_reliable = 6*VOLUME/2 * sizeof(dev_spinor); //float4 eo !
-  #else
-    dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor_half); //short4 eo !
-    size_t dev_spinsize_reliable = 6*VOLUME/2 * sizeof(dev_spinor); //float4 eo !
-    size_t dev_normsize = VOLUME/2 * sizeof(float);
-  #endif
-  
-  //update the gpu single gauge_field
-  update_gpu_gf(g_gauge_field);
-  
-  //initialize solver fields
-  spinor ** solver_field = NULL;
-  const int nr_sf = 4;
-  init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);  
-  
-  // Start timer
-  assert((start = clock())!=-1);
-  rk = square_norm(Q, N, 1);
-  sourcesquarenorm=rk; // for relative prec
-  double finaleps;
-  if(rel_prec == 1){
-    finaleps = eps * sourcesquarenorm;
-  }
-  else{
-    finaleps = eps;
-  }
-  assign(solver_field[0],Q,N);
-  zero_spinor_field(solver_field[1],  N);//spin2 = x_k
-  zero_spinor_field(solver_field[2],  N);
-  
-  #ifndef LOWOUTPUT
-    printf("Initial residue: %.16e\n",rk);
-    printf("The VOLUME/2 is: %d\n",N);
-  #endif
-  
-
-
-for(iter=0; iter<max_iter; iter++){
-   #ifndef LOWOUTPUT
-   printf("Applying double precision EO Dirac-Op Q_{-}Q{+}...\n");
-   #endif
-   Qtm_pm_psi(solver_field[3], solver_field[2]);
-   diff(solver_field[0],solver_field[0],solver_field[3],N);
-    // r_k = b - D x_k
-   
-   rk = square_norm(solver_field[0], N, 1);
-   #ifdef GF_8
-    if(isnan(rk)){
-      fprintf(stderr, "Error in mixed_solve_eo: Residue is NaN.\n  May happen with GF 8 reconstruction. Aborting ...\n");
-      exit(200);
-    }
-   #endif
-   
-   printf("Residue after %d inner solver iterations: %.18e\n",outercount,rk);
-   
-   if(((rk <= eps) && (rel_prec == 0)) || ((rk <= eps*sourcesquarenorm) && (rel_prec == 1)))
-   {
-     
-     //multiply with Qtm_minus_psi (for non gpu done in invert_eo.c)
-     Qtm_minus_psi(solver_field[3], solver_field[1]);
-     assign(P, solver_field[3], N);
-     stop = clock();
-     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
-     
-     #ifndef LOWOUTPUT
-      printf("Reached solver precision of eps=%.2e\n",eps);
-      printf("EO Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
-     #endif
-     finalize_solver(solver_field, nr_sf);
-     return(totalcount);  
-   }
-   
-  //initialize spin fields on device
-  #ifndef HALF
-    convert2REAL4_spin(solver_field[0],h2d_spin);
-    cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
-  #else
-    convert2REAL4_spin_half(solver_field[0],h2d_spin, h2d_spin_norm);
-    // also copy half spinor norm and reliable (float) source
-    cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
-    cudaMemcpy(dev_spinin_norm, h2d_spin_norm, dev_normsize, cudaMemcpyHostToDevice);
-    convert2REAL4_spin(solver_field[0],h2d_spin_reliable);
-    cudaMemcpy(dev_spin1_reliable, h2d_spin_reliable, dev_spinsize_reliable, cudaMemcpyHostToDevice);    
- #endif
-  
-
-  
-  
-  if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-    printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-  }
-   // solve in single prec on device
-   // D p_k = r_k
-   #ifndef LOWOUTPUT
-     printf("Entering inner solver\n");
-   #endif
-   assert((startinner = clock())!=-1);
-   #ifndef HALF
-      totalcount += dev_cg_eo(dev_gf, dev_spinin, dev_spinout, dev_spin1, dev_spin2, dev_spin3, dev_spin4, dev_spin5, dev_grid,dev_nn, (float) finaleps);
-   #else
-     
-
-     totalcount += dev_cg_eo_half_reliable(dev_gf, 
-                 dev_spinin, dev_spinin_norm,
-                 dev_spinout,dev_spinout_norm,
-                 dev_spin1, dev_spin1_norm,
-                 dev_spin2, dev_spin2_norm,
-                 dev_spin3, dev_spin3_norm,
-                 dev_spin4, dev_spin4_norm,
-                 dev_spin5, dev_spin5_norm,
-		 dev_spin1_reliable,
-		 dev_spin2_reliable,
-		 dev_spin3_reliable,		 
-                 dev_grid,dev_nn, (float) finaleps, 0.05); 
-		 
-   #endif
-   stopinner = clock();
-   timeelapsed = (double) (stopinner-startinner)/CLOCKS_PER_SEC;
-   
-   #ifndef LOWOUTPUT
-   printf("Inner solver done\nTime elapsed: %.6e sec\n", timeelapsed);
-   #endif
-   
-   
-   // copy back the accumulated reliable result in dev_spin2_reliable
-   cudaMemcpy(h2d_spin_reliable, dev_spin2_reliable, dev_spinsize_reliable, cudaMemcpyDeviceToHost);
-
-   if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-     printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-     printf("Error code is: %d\n",cudaerr);     
-   }
-
-   convert2double_spin(h2d_spin_reliable, solver_field[2]);
-   
-
-   // x_(k+1) = x_k + p_k
-   add(solver_field[1],solver_field[1],solver_field[2],N);
-
-   outercount ++;   
-}// outer loop 
-    
-     printf("Did NOT reach solver precision of eps=%.2e\n",eps);
-     //multiply with Qtm_minus_psi (for non gpu done in invert_eo.c)
-     Qtm_minus_psi(solver_field[3], solver_field[1]);
-     assign(P, solver_field[3], N);
-    
-
-    assert((stop = clock())!=-1);
-    timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
-    printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
-
-    finalize_solver(solver_field, nr_sf);
-  return(-1);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -3619,30 +3283,11 @@ extern "C" int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int ma
   
   //update the gpu single gauge_field
   update_gpu_gf(g_gauge_field);
+  //allocate solver fields eo!
+  init_mixedsolve_fields(1);
   
   #ifdef GPU_DOUBLE
    size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double2 even-odd !   
-   int gridsize;
-     //this is the partitioning for the HoppingMatrix kernel
-     int blockdim3 = BLOCKD;
-     if( VOLUME/2 % blockdim3 == 0){
-       gridsize = (int) VOLUME/2/blockdim3;
-     }
-     else{
-       gridsize = (int) VOLUME/2/blockdim3 + 1;
-     }
-     int griddim3 = gridsize;
-   
-     //this is the partitioning for dev_mul_one_pm...
-     int blockdim4 = BLOCK2D;
-     if( VOLUME/2 % blockdim4 == 0){
-       gridsize = (int) VOLUME/2/blockdim4;
-     }
-     else{
-       gridsize = (int) VOLUME/2/blockdim4 + 1;
-     }
-     int griddim4 = gridsize;  
-     //printf("gd3: %d\t bd3: %d\t gd4: %d\t bd4: %d\n", griddim3, blockdim3, griddim4, blockdim4);
     update_constants_d(dev_grid);
     update_gpu_gf_d(g_gauge_field);
   #endif
@@ -3699,10 +3344,10 @@ for(iter=0; iter<max_iter; iter++){
    #ifdef GPU_DOUBLE
      dev_Qtm_pm_psi_d(dev_spin2_d, dev_spin3_d,  
 		      dev_spin_eo1_d, dev_spin_eo2_d, 
-		      griddim3, blockdim3, griddim4, blockdim4,
+		      gpu_gd_M_d, gpu_bd_M_d, gpu_gd_linalg_d, gpu_bd_linalg_d,
 		      dev_eoidx_even, dev_eoidx_odd, 
 		      dev_nn_eo, dev_nn_oe); 
-     dev_diff_d<<<griddim4,blockdim4>>>(dev_spin0_d,dev_spin0_d,dev_spin3_d);
+     dev_diff_d<<<gpu_gd_blas_d, gpu_bd_blas_d >>>(dev_spin0_d,dev_spin0_d,dev_spin3_d);
      rk = double_dotprod(dev_spin0_d,dev_spin0_d);
    #else
      Qtm_pm_psi(solver_field[3], solver_field[2]);
@@ -3737,13 +3382,14 @@ for(iter=0; iter<max_iter; iter++){
      #endif
      if (g_proc_id == 0) printf("Number of inner (single) solver iterations: %d\n",totalcount);
      finalize_solver(solver_field, nr_sf);
+     finalize_mixedsolve_fields();
      return(totalcount);  
    }
    
   //initialize spin fields on device
   #ifndef HALF
     #ifdef GPU_DOUBLE
-      dev_d2f<<<griddim4,blockdim4>>>(dev_spinin, dev_spin0_d);
+      dev_d2f<<<gpu_gd_blas_d, gpu_bd_blas_d >>>(dev_spinin, dev_spin0_d);
       //cudaThreadSynchronize();
       if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
         if (g_proc_id == 0) printf("Error in linsolve_eo_gpu: %s\n", cudaGetErrorString(cudaGetLastError()));
@@ -3797,8 +3443,8 @@ for(iter=0; iter<max_iter; iter++){
    #endif
 
    #ifdef GPU_DOUBLE
-     dev_add_f2d<<<griddim4,blockdim4>>>(dev_spin1_d,dev_spin1_d,dev_spinout);
-     dev_f2d<<<griddim4,blockdim4>>>(dev_spin2_d,dev_spinout);
+     dev_add_f2d<<<gpu_gd_blas_d, gpu_bd_blas_d >>>(dev_spin1_d,dev_spin1_d,dev_spinout);
+     dev_f2d<<<gpu_gd_blas_d, gpu_bd_blas_d >>>(dev_spin2_d,dev_spinout);
    #else 
      // copy back
      cudaMemcpy(h2d_spin, dev_spinout, dev_spinsize, cudaMemcpyDeviceToHost);
@@ -3834,6 +3480,7 @@ for(iter=0; iter<max_iter; iter++){
     if (g_proc_id == 0) printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
 
     finalize_solver(solver_field, nr_sf);
+    finalize_mixedsolve_fields();
   return(-1);
 }
 

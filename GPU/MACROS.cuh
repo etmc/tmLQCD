@@ -50,19 +50,6 @@
 
 
 
-// CUDA parameters
-
-#define BLOCKSIZE1 512		// here:	dev_zero_spinor_field , dev_copy_spinor_field
-#define BLOCKSIZE2 384		// passed:	dev_Hopping_Matrix
-#define BLOCKSIZE3 512		// passed:	dev_mul_one_pm_imubar_gamma5
-#define BLOCKSIZE4 512		// passed:	dev_gamma5
-#define BLOCKSIZE5 512		// passed:	dev_copy_spinor_field
-
-
-
-
-
-
 ////////////////////////////////////////////////////////////
 // debugging macros for CUDA, CUBLAS and kernel functions //
 ////////////////////////////////////////////////////////////
