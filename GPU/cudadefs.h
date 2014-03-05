@@ -11,8 +11,8 @@
 #define GPU_DOUBLE
 #define RELATIVISTIC_BASIS 
 //#define GPU_3DBLOCK
-#define LOWOUTPUT
-
+//#define LOWOUTPUT
+//#define CUDA_45
 
 
 #define BLOCK 288 // Block Size	

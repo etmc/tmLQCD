@@ -7701,7 +7701,7 @@ __global__ void dev_dot( float* redfield, dev_spinor* x,dev_spinor* y){
 
 
 // calculates the dot product of x and y
-float float_dotprod(dev_spinor* x, dev_spinor* y){
+extern "C" float float_dotprod(dev_spinor* x, dev_spinor* y, int N){
    int i;
 
    cudaError_t cudaerr;
@@ -7716,8 +7716,8 @@ float float_dotprod(dev_spinor* x, dev_spinor* y){
    //reduce reductionfield on device 
    reduce_float <<< blas_redblocks, REDUCTION_N, 
                 REDUCTION_N*sizeof(float) >>> 
-                ( dev_blas_redfield, dev_blas_sredfield,  VOLUME);
-   //this reduction always takes the VOLUME (also for mpi)     
+                ( dev_blas_redfield, dev_blas_sredfield,  N);
+   
    
    //copy back
    cudaMemcpy(blas_sredfield, dev_blas_sredfield, (size_t)(blas_redblocks*sizeof(float)), cudaMemcpyDeviceToHost);
@@ -7731,10 +7731,59 @@ float float_dotprod(dev_spinor* x, dev_spinor* y){
      float result;
      //printf("proc %d : %f\n",g_proc_id,finalsum);
      MPI_Allreduce(&finalsum, &result, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
-     finalsum=result;
+     return(result);
+   #else
+     return(finalsum);
    #endif
-   return(finalsum);
 }
+
+
+
+
+
+
+
+// a wrapper function for cublasSdot() (with the same interface)
+// provides the MPI communication via MPI_Allreduce()
+
+float cublasSdot_wrapper(int size, float * A, float * B) {
+
+  float buffer;
+#ifdef MPI
+  //N is number of floats -> divide by 24 to get number of spinors
+  buffer = float_dotprod((dev_spinor*) A, (dev_spinor*) B, size/24);    
+#else
+  buffer = cublasSdot(size, (float *) A, 1, (float *) B, 1);
+#endif  
+  return(buffer);
+  
+}
+
+
+
+
+
+void cublasSaxpy_wrapper(int size, float alpha, float* A, float* B){
+#ifdef MPI
+  dev_axpy<<<gpu_gd_blas, gpu_bd_blas>>>(alpha, (dev_spinor *) A, (dev_spinor *) B);
+#else
+  cublasSaxpy(size, alpha, (float *) A, 1, (float *) B, 1);
+#endif
+  
+}
+
+
+void cublasSscal_wrapper(int size, float alpha, float* A){
+#ifdef MPI
+  dev_blasscal<<<gpu_gd_blas, gpu_bd_blas>>>(alpha, (dev_spinor *) A);
+#else
+  cublasDscal(size, alpha, (float *) A, 1);
+#endif
+  
+}
+
+
+
 
 
 
@@ -8034,35 +8083,6 @@ __global__ void dev_add_f2d (dev_spinor_d* out, dev_spinor_d* x, dev_spinor* y){
 }
 
 
-// out = x - y 
-// x is not read from texture
-// y is not read from texture
-__global__ void dev_diff_d (dev_spinor_d* out, dev_spinor_d* x, dev_spinor_d* y){
-   int pos= threadIdx.x + blockDim.x*blockIdx.x;
-   double4 xhelp[6];
-   double4 yhelp[6];   
-   double4 erghelp[6];
-   int i;
-
-   if(pos < dev_VOLUME){
-   
-   //load x
-   dev_read_spinor_d2(&(xhelp[0]), &(x[pos]));
-   //load y
-   dev_read_spinor_d2(&(yhelp[0]), &(y[pos]));
-
-    #pragma unroll 6
-    for(i=0; i<6; i++){
-       erghelp[i].x = xhelp[i].x - yhelp[i].x;
-       erghelp[i].y = xhelp[i].y - yhelp[i].y;
-       erghelp[i].z = xhelp[i].z - yhelp[i].z;
-       erghelp[i].w = xhelp[i].w - yhelp[i].w;
-    }
-        
-     //write out spinors
-     dev_write_spinor_d2(&(erghelp[0]),&(out[pos])); 
-   }//dev_VOLUME
-}
 
 
 

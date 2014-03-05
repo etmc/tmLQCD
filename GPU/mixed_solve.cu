@@ -298,24 +298,54 @@ __device__ int dev_rank;
 __device__ int dev_nproc;
 
 
-  #ifndef ALTERNATE_FIELD_XCHANGE
-    spinor * spinor_xchange;                    // for xchange_field_wrapper()
-  #else
+
     dev_spinor * R1;
     dev_spinor * R2;
     dev_spinor * R3;
     dev_spinor * R4;
-  #endif
+    dev_spinor_d * R1_D;
+    dev_spinor_d * R2_D;
+    dev_spinor_d * R3_D;
+    dev_spinor_d * R4_D;
+    dev_spinor_d * R1_UP_D;
+    dev_spinor_d * R2_UP_D;
+    dev_spinor_d * R3_UP_D;
+    dev_spinor_d * R4_UP_D; 
+    dev_spinor_d * R1_DN_D;
+    dev_spinor_d * R2_DN_D;
+    dev_spinor_d * R3_DN_D;
+    dev_spinor_d * R4_DN_D; 
+
 
   dev_spinor* RAND_FW;
   dev_spinor* RAND_BW;
-
-
+  dev_spinor_d* RAND_FW_D;
+  dev_spinor_d* RAND_BW_D;
+  dev_spinor_d* RAND_FW_UP_D;
+  dev_spinor_d* RAND_BW_UP_D;
+  dev_spinor_d* RAND_FW_DN_D;
+  dev_spinor_d* RAND_BW_DN_D;
+  
 //also need RAND? for ASYNC==0
 //#if ASYNC > 0
     int nStreams = ASYNC_OPTIMIZED;
     cudaStream_t stream[2*ASYNC_OPTIMIZED+1];
+    
+    dev_spinor_d  * RAND1_D;   // for exchanging the boundaries in ASYNC_D.cuh
+    dev_spinor_d  * RAND2_D;
+    dev_spinor_d  * RAND3_D; 
+    dev_spinor_d  * RAND4_D;
+ 
+    dev_spinor_d  * RAND1_UP_D;   // for exchanging the boundaries in ASYNC_D.cuh
+    dev_spinor_d  * RAND2_UP_D;
+    dev_spinor_d  * RAND3_UP_D; 
+    dev_spinor_d  * RAND4_UP_D;
 
+    dev_spinor_d  * RAND1_DN_D;   // for exchanging the boundaries in ASYNC_D.cuh
+    dev_spinor_d  * RAND2_DN_D;
+    dev_spinor_d  * RAND3_DN_D; 
+    dev_spinor_d  * RAND4_DN_D;
+    
    #ifndef HALF
     dev_spinor * RAND1;   // for exchanging the boundaries in ASYNC.cuh
     dev_spinor * RAND2;
@@ -336,11 +366,11 @@ __device__ int dev_nproc;
 
 
 
-#if defined(ALTERNATE_FIELD_XCHANGE) || defined(ASYNC_OPTIMIZED)
+
   MPI_Status stat[2];
   MPI_Request send_req[2];
   MPI_Request recv_req[2]; 
-#endif
+
 
 
 #define EXTERN extern
@@ -397,6 +427,7 @@ EXTERN int g_nb_z_up, g_nb_z_dn;
 #ifdef MPI
 // optimization of the communication
   #include "ASYNC.cuh"
+  #include "ASYNC_D.cuh"
 #endif 
 
 // nd-mms solver based on single mass solver and polynomial initial guess
@@ -1140,7 +1171,7 @@ extern "C" int dev_cg_eo(
  #ifndef MPI
    sourcesquarenorm = cublasSdot (24*VOLUME/2, (const float *)spinin, 1, (const float *)spinin, 1);
  #else
-   sourcesquarenorm = float_dotprod(spinin, spinin);
+   sourcesquarenorm = float_dotprod(spinin, spinin, 24*VOLUME/2);
  #endif
  host_rk = sourcesquarenorm; //for use in main loop
  
@@ -1192,7 +1223,7 @@ extern "C" int dev_cg_eo(
   #ifndef MPI
     host_dotprod = cublasSdot (24*VOLUME/2, (const float *) spin2, 1, (const float *) spin3, 1);
   #else
-    host_dotprod =  float_dotprod(spin2, spin3);
+    host_dotprod =  float_dotprod(spin2, spin3, 24*VOLUME/2);
   #endif
   
   host_alpha = (host_rk / host_dotprod); // alpha = r*r/ p M p
@@ -1221,7 +1252,7 @@ extern "C" int dev_cg_eo(
   #ifndef MPI
     host_dotprod = cublasSdot (24*VOLUME/2, (const float *) spin0, 1,(const float *) spin0, 1);
   #else
-    host_dotprod = float_dotprod(spin0, spin0);
+    host_dotprod = float_dotprod(spin0, spin0, 24*VOLUME/2);
   #endif
   
  if (((host_dotprod <= eps*sourcesquarenorm)) || ( host_dotprod <= epsfinal/2.)){//error-limit erreicht (epsfinal/2 sollte ausreichen um auch in double precision zu bestehen)
@@ -1304,7 +1335,7 @@ extern "C" int dev_cg_eo(
       	printf("\tfloating point operations: %.4e flops\n", effectiveflops);
       	printf("\tinner solver performance:  %.4e Gflop/s\n", double(effectiveflops) / double(stopeffective-starteffective) / 1.0e9);
      }
-#endif
+   #endif
   
   // x_result = spin1 !
   
@@ -2028,12 +2059,13 @@ extern "C" void init_mixedsolve_eo(su3** gf){
 
   #endif
   
-  
-#ifndef MPI
 
-	
-	//dev_spin_eo1/2_d we need for gpu_deriv_SB in any case
+#ifdef MPI
+   	size_t dev_spinsize_d = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); /* double2 */
+#else
    	size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); /* double2 */  
+#endif
+	//dev_spin_eo1/2_d we need for gpu_deriv_SB in any case	
   	cudaMalloc((void **) &dev_spin_eo1_d, dev_spinsize_d);	
   	cudaMalloc((void **) &dev_spin_eo2_d, dev_spinsize_d);   
 
@@ -2051,8 +2083,11 @@ extern "C" void init_mixedsolve_eo(su3** gf){
               if(g_proc_id==0) printf("Error in init_mixedsolve_eo(): Memory allocation of double spinor fields failed. Aborting...\n");
               exit(200);
           }
-        #endif
+        #endif  
+        
+#ifndef MPI
 
+	
        #ifdef HALF
 
   	cudaMalloc((void **) &dev_spin_eo1_half, dev_spinsize);
@@ -2115,7 +2150,7 @@ extern "C" void init_mixedsolve_eo(su3** gf){
       #else
       
   	// implement this for half?
-  	// -> ALTERNATE_FIELD_EXCHANGE     
+   
       #endif
 
 //for gathering and spreading of indizes of rand in (gather_rand spread_rand called from xchange_field_wrapper)
@@ -2156,9 +2191,39 @@ extern "C" void init_mixedsolve_eo(su3** gf){
     RAND2_norm = RAND1_norm + tSliceEO;
   #endif  
   //HALF
-  
+
+#ifdef GPU_DOUBLE
+  R1_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
+  R2_D = R1_D + 12*tSliceEO;
+  R3_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
+  R4_D = R3_D + 12*tSliceEO;
+
+//!FIXME relativistic basis not working for dev_Qtm_pm_psi_d -> fix in dev_Hopping_Matrix_d first
+//for gathering and spreading of indizes of rand in (gather_rand spread_rand called from xchange_field_wrapper)
+//     #ifdef RELATIVISTIC_BASIS
+//       cudaMalloc((void **) &RAND_FW_D, tSliceEO*6*sizeof(double2));
+//       cudaMalloc((void **) &RAND_BW_D, tSliceEO*6*sizeof(double2));
+//     #else
+      cudaMalloc((void **) &RAND_FW_D, tSliceEO*12*sizeof(double2));
+      cudaMalloc((void **) &RAND_BW_D, tSliceEO*12*sizeof(double2));      
+//    #endif
+    /*  for async communication */
+    // page-locked memory    
+//     #ifdef RELATIVISTIC_BASIS
+//       int dbperspin = 6;
+//     #else
+      int dbperspin = 12;
+//    #endif  
+    cudaMallocHost(&RAND3_D, tSliceEO*dbperspin*sizeof(double2));
+    cudaMallocHost(&RAND4_D, tSliceEO*dbperspin*sizeof(double2));
+    cudaMallocHost(&RAND1_D, tSliceEO*dbperspin*sizeof(double2));
+    cudaMallocHost(&RAND2_D, tSliceEO*dbperspin*sizeof(double2));
+    
+
+#endif    
+    
     // CUDA streams and events
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 2*nStreams+1; i++) {
         cudaStreamCreate(&stream[i]);
     }    
     /* end for async communication */  	
@@ -2320,15 +2385,31 @@ extern "C" void finalize_mixedsolve(){
   
 #ifdef MPI
   cudaFreeHost(RAND1);
+  cudaFreeHost(RAND2);  
   cudaFreeHost(RAND3);
+  cudaFreeHost(RAND4);  
   cudaFree(RAND_BW);
   cudaFree(RAND_FW);
+  free(R1);
+  free(R3);
+#ifdef GPU_DOUBLE
+  cudaFreeHost(RAND1_D);
+  cudaFreeHost(RAND2_D); 
+  cudaFreeHost(RAND3_D);
+  cudaFreeHost(RAND4_D);  
+  cudaFree(RAND_BW_D);
+  cudaFree(RAND_FW_D);
+  free(R1_D);
+  free(R3_D);  
+#endif
   #ifdef HALF
    cudaFreeHost(RAND1_norm);
+   cudaFreeHost(RAND2_norm);   
    cudaFreeHost(RAND3_norm);
+   cudaFreeHost(RAND4_norm);   
   #endif
              
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 2*nStreams+1; i++) {
      cudaStreamDestroy(stream[i]);
   } 
 #endif 
@@ -2908,7 +2989,12 @@ extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_it
 
 void test_double_operator(spinor* const Q, const int N){
    
-   size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double2 even-odd !   
+   size_t dev_spinsize_d;
+#ifdef MPI
+  dev_spinsize_d  = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); // double2 even-odd !
+#else
+  dev_spinsize_d  = 12*VOLUME/2 * sizeof(dev_spinor_d); 
+#endif   
  
         
   spinor ** solver_field = NULL;
@@ -2943,7 +3029,7 @@ void test_double_operator(spinor* const Q, const int N){
 
 
   dev_diff_d<<<gpu_gd_blas_d, gpu_bd_blas_d>>>(dev_spin2_d,dev_spin0_d,dev_spin1_d);
-  double rk_gpu = double_dotprod(dev_spin2_d,dev_spin2_d);
+  double rk_gpu = double_dotprod(dev_spin2_d,dev_spin2_d, N);
   
   printf("Testing double linalg:\n");
   printf("gpu: Squared difference is: %.8e\n", rk_gpu);
@@ -3009,7 +3095,13 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
   init_mixedsolve_fields(1);
 
   #ifdef GPU_DOUBLE
-    size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double2 even-odd !   
+    size_t dev_spinsize_d; 
+    #ifdef MPI
+      dev_spinsize_d = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); // double2 even-odd ! 
+    #else
+      dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double2 even-odd !  
+    #endif
+  
     update_constants_d(dev_grid);
     update_gpu_gf_d(g_gauge_field);
   #endif 
@@ -3086,7 +3178,7 @@ for(iter=0; iter<max_iter; iter++){
 		      dev_eoidx_even, dev_eoidx_odd, 
 		      dev_nn_eo, dev_nn_oe); 
      dev_diff_d<<<gpu_gd_blas_d, gpu_bd_blas_d>>>(dev_spin0_d,dev_spin0_d,dev_spin3_d);
-     rk = double_dotprod(dev_spin0_d,dev_spin0_d);
+     rk = double_dotprod(dev_spin0_d,dev_spin0_d, N);
    #else   
      Qtm_pm_psi(solver_field[3], solver_field[2]);
      diff(solver_field[0],solver_field[0],solver_field[3],N);
@@ -3348,7 +3440,7 @@ for(iter=0; iter<max_iter; iter++){
 		      dev_eoidx_even, dev_eoidx_odd, 
 		      dev_nn_eo, dev_nn_oe); 
      dev_diff_d<<<gpu_gd_blas_d, gpu_bd_blas_d >>>(dev_spin0_d,dev_spin0_d,dev_spin3_d);
-     rk = double_dotprod(dev_spin0_d,dev_spin0_d);
+     rk = double_dotprod(dev_spin0_d,dev_spin0_d, N);
    #else
      Qtm_pm_psi(solver_field[3], solver_field[2]);
      diff(solver_field[0],solver_field[0],solver_field[3],N);

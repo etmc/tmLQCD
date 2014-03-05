@@ -104,6 +104,17 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
                     int * gfindex_site, int * gfindex_nextsite, int * nn_evenodd,
                     int ieo,
                     int gridsize, dim3 blocksize);
+void HOPPING_ASYNC_D (dev_su3_2v_d * gf, 
+                    dev_spinor_d * spinin, dev_spinor_d * spinout,
+                    int * gfindex_site, int * gfindex_nextsite, int * nn_evenodd,
+                    int ieo,
+                    int gridsize, int blocksize);
+void HOPPING_ASYNC_UPDN_D (dev_su3_2v_d * gf, 
+                    dev_spinor_d * spinin_up, dev_spinor_d* spinin_dn, 
+		    dev_spinor_d * spinout_up, dev_spinor_d* spinout_dn,
+                    int * gfindex_site, int * gfindex_nextsite, int * nn_evenodd,
+                    int ieo,
+                    int gridsize, int blocksize);
 
 void dev_Qtm_pm_ndpsi_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * spinout_dn,
                                         dev_spinor * spinin_up , dev_spinor * spinin_dn ,
@@ -204,13 +215,14 @@ __global__ void dev_spread_rand_reldn(dev_spinor * sin, dev_spinor * rand, int s
 //custom blas kernels for float 
 void init_blas(int vol);
 void finalize_blas();
+void set_gpu_work_layout(int eoflag);
 __device__ inline void dev_read_spinor(dev_spinor *i1, dev_spinor *i2);
 __global__ void dev_axpy (float alpha, dev_spinor* x, dev_spinor* y);
 __global__ void dev_xpay (float alpha, dev_spinor* x, dev_spinor* y);
 __global__ void dev_blasscal (float alpha, dev_spinor* y);
 __global__ void dev_blascopy (dev_spinor* x, dev_spinor* y);
 __global__ void dev_dot( float* redfield, dev_spinor* x,dev_spinor* y);
-float float_dotprod(dev_spinor* x, dev_spinor* y);
+extern "C" float float_dotprod(dev_spinor* x, dev_spinor* y, int N);
 
 
 extern "C" int find_devices();
@@ -251,7 +263,7 @@ void benchmark_eo_mpi(spinor * const Q);
 extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max_iter, double eps, const int rel_prec, const int N);
 
 
-extern "C" double double_dotprod(dev_spinor_d* x, dev_spinor_d* y);
+extern "C" double double_dotprod(dev_spinor_d* x, dev_spinor_d* y, int N);
 extern "C" void update_constants_d(int *grid);
 extern "C" void update_gpu_gf_d(su3** gf);
 extern "C" void dev_Qtm_pm_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinout, 

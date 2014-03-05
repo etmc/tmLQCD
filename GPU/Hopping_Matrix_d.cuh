@@ -506,28 +506,40 @@ extern "C" void dev_Qtm_pm_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinout,
   cudaError_t cudaerr;
   int VolumeEO = VOLUME/2;
   //Q_{-}
-  //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
+
+#ifdef MPI
+  HOPPING_ASYNC_D(dev_gf_d, spinin, spin_eo1_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, gridsize, blocksize);   
+#else
   dev_Hopping_Matrix_d<<<gridsize, blocksize>>>
              (dev_gf_d, spinin, spin_eo1_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, 0, VolumeEO); //spin_eo1 == even -> 0           
+#endif
   dev_mul_one_pm_imu_inv_d<<<gridsize2, blocksize2>>>(spin_eo1_d,spin_eo2_d, -1.);
  
 
-  //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
+#ifdef MPI
+  HOPPING_ASYNC_D(dev_gf_d, spin_eo2_d, spin_eo1_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, gridsize, blocksize);   
+#else
   dev_Hopping_Matrix_d<<<gridsize, blocksize>>>
             (dev_gf_d, spin_eo2_d, spin_eo1_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, 0, VolumeEO); 
-
+#endif
   dev_mul_one_pm_imu_sub_mul_gamma5_d<<<gridsize2, blocksize2>>>(spinin, spin_eo1_d,  spin_eo2_d, -1.);
 
   //Q_{+}
-  //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
+#ifdef MPI
+  HOPPING_ASYNC_D(dev_gf_d, spin_eo2_d, spin_eo1_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, gridsize, blocksize); //spin_eo1 == even -> 0
+#else
   dev_Hopping_Matrix_d<<<gridsize, blocksize>>>
-          (dev_gf_d, spin_eo2_d, spin_eo1_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, 0, VolumeEO); //spin_eo1 == even -> 0
+          (dev_gf_d, spin_eo2_d, spin_eo1_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, 0, VolumeEO);	  
+#endif
   dev_mul_one_pm_imu_inv_d<<<gridsize2, blocksize2>>>(spin_eo1_d,spinout, +1.);
  
 
-  //cudaFuncSetCacheConfig(dev_Hopping_Matrix, cudaFuncCachePreferL1);
+#ifdef MPI
+  HOPPING_ASYNC_D(dev_gf_d, spinout, spin_eo1_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, gridsize, blocksize); 
+#else
   dev_Hopping_Matrix_d<<<gridsize, blocksize>>>
              (dev_gf_d, spinout, spin_eo1_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, 0, VolumeEO); 
+#endif
   dev_mul_one_pm_imu_sub_mul_gamma5_d<<<gridsize2, blocksize2>>>(spin_eo2_d, spin_eo1_d,  spinout , +1.); 
 
   if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
@@ -954,16 +966,20 @@ void dev_Qtm_pm_ndpsi_d (dev_spinor_d * spinout_up, dev_spinor_d * spinout_dn,
   
  
   double nrm = 1.0 / (1.0 + g_mubar*g_mubar - g_epsbar*g_epsbar);
-  
-  dev_Hopping_Matrix_updn_d<<<gridsize1, blocksize1>>>(dev_gf_d, spinin_dn, spinin_up, dev_spin_eo1_up_d, dev_spin_eo1_dn_d,dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,0,N_sites);	// dev_spin_eo1_up = (M_eo) * spinin_dn
-  
+#ifdef MPI
+  HOPPING_ASYNC_UPDN_D(dev_gf_d, spinin_dn, spinin_up, dev_spin_eo1_up_d, dev_spin_eo1_dn_d,dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, gridsize1, blocksize1);	// dev_spin_eo1_up = (M_eo) * spinin_dn  
+#else
+  dev_Hopping_Matrix_updn_d<<<gridsize1, blocksize1>>>(dev_gf_d, spinin_dn, spinin_up, dev_spin_eo1_up_d, dev_spin_eo1_dn_d,dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,0,N_sites);
+#endif  
   dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_up_d, dev_spin_eo2_up_d, -1.0);		// dev_spin_eo2_up  =  (1 - imubar) * dev_spin_eo1_up  =  (1 - imubar)*(M_eo) * spinin_dn
   dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_dn_d, dev_spin_eo2_dn_d, +1.0);		// dev_spin_eo2_dn  =  (1 + imubar) * dev_spin_eo1_dn  =  (1 + imubar)*(M_eo) * spinin_up
   dev_nd_linalg2_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, g_epsbar, nrm); 
   
- 
+#ifdef MPI
+  HOPPING_ASYNC_UPDN_D(dev_gf_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, gridsize1, blocksize1);
+#else
   dev_Hopping_Matrix_updn_d<<<gridsize1, blocksize1>>>(dev_gf_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,0,N_sites);								
-
+#endif
   dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(spinin_dn, dev_spin_eo2_up_d, +1.0);			// dev_spin_eo2_up = (1 + imubar) * spinin_dn
   dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(spinin_up, dev_spin_eo2_dn_d, -1.0);			// dev_spin_eo2_dn = (1 - imubar) * spinin_up
   dev_nd_linalg1_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_up_d, dev_spin_eo1_dn_d, spinin_up, spinin_dn, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, g_epsbar ); 
@@ -974,15 +990,21 @@ void dev_Qtm_pm_ndpsi_d (dev_spinor_d * spinout_up, dev_spinor_d * spinout_dn,
   
   dev_blascopy_d<<<gridsize4, blocksize4>>>(dev_spin_eo2_dn_d, dev_spin_eo3_up_d);			// dev_spin_eo3_up = dev_spin_eo2_dn
   dev_blascopy_d<<<gridsize4, blocksize4>>>(dev_spin_eo2_up_d, dev_spin_eo3_dn_d);			// dev_spin_eo3_dn = dev_spin_eo2_up
-       
-  dev_Hopping_Matrix_updn_d<<<gridsize1, blocksize1>>>(dev_gf_d, dev_spin_eo3_up_d, dev_spin_eo3_dn_d, dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,0,N_sites);	// dev_spin_eo1_up = (M_eo) * dev_spin_eo3_up
-    
+
+#ifdef MPI
+  HOPPING_ASYNC_UPDN_D(dev_gf_d, dev_spin_eo3_up_d, dev_spin_eo3_dn_d, dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, gridsize1, blocksize1);	// dev_spin_eo1_up = (M_eo) * dev_spin_eo3_up  
+#else
+  dev_Hopping_Matrix_updn_d<<<gridsize1, blocksize1>>>(dev_gf_d, dev_spin_eo3_up_d, dev_spin_eo3_dn_d, dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,0,N_sites);
+#endif    
   dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_up_d, dev_spin_eo2_up_d, -1.0);			// dev_spin_eo2_up  =  (1 - imubar) * dev_spin_eo1_up  =  (1 - imubar)*(M_eo) * dev_spin_eo3_up
   dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_dn_d, dev_spin_eo2_dn_d, +1.0);			// dev_spin_eo2_dn  =  (1 + imubar) * dev_spin_eo1_dn  =  (1 + imubar)*(M_eo) * dev_spin_eo3_dn 
   dev_nd_linalg2_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, g_epsbar, nrm); 
-  
+
+#ifdef MPI
+  HOPPING_ASYNC_UPDN_D(dev_gf_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, dev_spin_eo1_up_d,dev_spin_eo1_dn_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, gridsize1, blocksize1);  
+#else
   dev_Hopping_Matrix_updn_d<<<gridsize1, blocksize1>>>(dev_gf_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, dev_spin_eo1_up_d,dev_spin_eo1_dn_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,0,N_sites);
-  
+#endif  
   dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo3_up_d, dev_spin_eo2_up_d, +1.0);				// dev_spin_eo2_up = (1 + imubar) * dev_spin_eo3_up
   dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo3_dn_d, dev_spin_eo2_dn_d, -1.0);				// dev_spin_eo2_dn = (1 - imubar) * dev_spin_eo3_dn
   dev_nd_linalg1_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_spin_eo3_dn_d, dev_spin_eo3_up_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, g_epsbar ); 

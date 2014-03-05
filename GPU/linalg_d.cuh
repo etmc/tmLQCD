@@ -4339,7 +4339,35 @@ __global__ void dev_xpay_d (double alpha, dev_spinor_d* x, dev_spinor_d* y){
 
 
 
+// out = x - y 
+// x is not read from texture
+// y is not read from texture
+__global__ void dev_diff_d (dev_spinor_d* out, dev_spinor_d* x, dev_spinor_d* y){
+   int pos= threadIdx.x + blockDim.x*blockIdx.x;
+   double4 xhelp[6];
+   double4 yhelp[6];   
+   double4 erghelp[6];
+   int i;
 
+   if(pos < dev_VOLUME){
+   
+   //load x
+   dev_read_spinor_d2(&(xhelp[0]), &(x[pos]));
+   //load y
+   dev_read_spinor_d2(&(yhelp[0]), &(y[pos]));
+
+    #pragma unroll 6
+    for(i=0; i<6; i++){
+       erghelp[i].x = xhelp[i].x - yhelp[i].x;
+       erghelp[i].y = xhelp[i].y - yhelp[i].y;
+       erghelp[i].z = xhelp[i].z - yhelp[i].z;
+       erghelp[i].w = xhelp[i].w - yhelp[i].w;
+    }
+        
+     //write out spinors
+     dev_write_spinor_d2(&(erghelp[0]),&(out[pos])); 
+   }//dev_VOLUME
+}
 
 
 
@@ -4429,7 +4457,7 @@ __global__ void dev_dot_d( double* redfield, dev_spinor_d* x,dev_spinor_d* y){
 
 
 // calculates the dot product of x and y
-extern "C" double double_dotprod(dev_spinor_d* x, dev_spinor_d* y){
+extern "C" double double_dotprod(dev_spinor_d* x, dev_spinor_d* y, int N){
    int i;
    #ifdef MPI  
    double result;
@@ -4446,8 +4474,8 @@ extern "C" double double_dotprod(dev_spinor_d* x, dev_spinor_d* y){
    //reduce reductionfield on device 
    reduce_double<<< blas_redblocks_d, REDUCTION_N, 
                 REDUCTION_N*sizeof(double) >>> 
-                ( dev_blas_redfield_d, dev_blas_sredfield_d,  VOLUME);
-   //this reduction always takes the VOLUME (also for mpi)     
+                ( dev_blas_redfield_d, dev_blas_sredfield_d,  N);
+ 
 
    if((cudaerr=cudaGetLastError()) != cudaSuccess){
       if(g_proc_id==0) printf("%s\n", cudaGetErrorString(cudaerr));
@@ -4466,13 +4494,47 @@ extern "C" double double_dotprod(dev_spinor_d* x, dev_spinor_d* y){
    #ifdef MPI
      //printf("proc %d : %f\n",g_proc_id,finalsum);
      MPI_Allreduce(&finalsum, &result, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-     finalsum=result;
+     return(result);
+   #else
+     return(finalsum);
    #endif
-   return(finalsum);
 }
 
 
 
+//this is a wrapper for cublasDdot that works for MPI and non-MPI
+double cublasDdot_wrapper(int size, double * A, double * B) {
+
+  double buffer;
+  //printf("proc no %d: my square is: %.8f\n", g_proc_id, buffer);
+#ifdef MPI
+  //size is number of double -> divide by 24 to get number of spinors 
+  buffer = double_dotprod((dev_spinor_d *) A, (dev_spinor_d *) B, size/24);   
+#else
+  buffer = cublasDdot(size, (double *) A, 1, (double *) B, 1);  
+#endif
+  return(buffer);  
+}
+
+
+void cublasDaxpy_wrapper(int size, double alpha, double* A, double* B){
+#ifdef MPI
+  dev_axpy_d<<<gpu_gd_blas_d, gpu_bd_blas_d>>>(alpha, (dev_spinor_d *) A, (dev_spinor_d *) B);
+#else
+  cublasDaxpy(size, alpha, (double *) A, 1, (double *) B, 1);
+#endif
+  
+}
+
+
+void cublasDscal_wrapper(int size, double alpha, double* A){
+#ifdef MPI
+  dev_blasscal_d<<<gpu_gd_blas_d, gpu_bd_blas_d>>>(alpha, (dev_spinor_d *) A);
+#else
+  cublasDscal(size, alpha, (double *) A, 1);
+#endif
+  
+}
 
 
 __global__ void dev_zero_spinor_field_d(dev_spinor_d* s1){

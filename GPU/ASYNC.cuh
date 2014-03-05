@@ -238,6 +238,126 @@ __global__ void dev_spread_rand_reldn(dev_spinor * sin, dev_spinor * rand, int s
   }
 }
 
+
+
+
+
+
+
+
+
+///////////////////////
+// boundary exchange //
+///////////////////////
+
+#ifdef MPI
+
+// both versions do work:
+
+
+/*
+// copies VOLUME to host, exchanges, copies RAND back to device
+
+void xchange_field_wrapper (dev_spinor * dev_spin, int ieo) {
+
+  size_t size_Volume = VOLUME/2 * 6*sizeof(dev_spinor);
+  size_t size_Rand   = RAND/2   * 6*sizeof(dev_spinor);
+
+  to_host_mpi(spinor_xchange, dev_spin, h2d_spin_up, size_Volume, 0, VOLUME/2);
+  xchange_field(spinor_xchange, ieo);
+  to_device_mpi(dev_spin, spinor_xchange, h2d_spin_dn, size_Rand, VOLUME/2, (VOLUME+RAND)/2);
+
+}
+*/
+
+
+
+
+// copies the boundary t-slices t=0 and t=T-1 to host		// will be used in dev_Qtm_pm_ndpsi_mpi(), not ASYNC
+//	exchanges						// provides a wrapped version of Carsten's xchange_field()
+//		copies RAND back to device			//	and not asynchronous version of ASYNC.cuh
+
+void xchange_field_wrapper (dev_spinor * dev_spin, int ieo) {
+  
+    
+    int tSliceEO = LX*LY*LZ/2;
+    int VolumeEO = VOLUME/2;
+    
+    //this is the same partitioning as for dev_mul_one_pm...
+    int gridsize;
+    int blockdim = BLOCK2;
+    if( tSliceEO % blockdim == 0){
+      gridsize = (int) tSliceEO/blockdim;
+    }
+    else{
+      gridsize = (int) tSliceEO/blockdim + 1;
+    }
+    int griddim = gridsize;
+    
+    
+    #ifdef RELATIVISTIC_BASIS
+      //this goes backwards, so for the receiver this is forward
+      dev_gather_rand_relup<<<griddim, blockdim >>>(dev_spin,RAND_BW,0,tSliceEO);
+      cudaMemcpy(R1, RAND_BW, tSliceEO*3*sizeof(float4), cudaMemcpyDeviceToHost);
+    
+      //this goes forward, so for the receiver this is backward
+      dev_gather_rand_reldn<<<griddim, blockdim >>>(dev_spin,RAND_FW,(VolumeEO-tSliceEO),tSliceEO);
+      cudaMemcpy(R2, RAND_FW, tSliceEO*3*sizeof(float4), cudaMemcpyDeviceToHost);    
+    #else
+      //this goes backwards
+      dev_gather_rand<<<griddim, blockdim >>>(dev_spin,RAND_BW,0,tSliceEO);
+      cudaMemcpy(R1, RAND_BW, tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost);
+    
+      //this goes forward
+      dev_gather_rand<<<griddim, blockdim >>>(dev_spin,RAND_FW,(VolumeEO-tSliceEO),tSliceEO);
+      cudaMemcpy(R2, RAND_FW, tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost);
+    #endif
+    
+    //we only need to exchange half of the spinors in relativistic basis (upper or lower part)
+    int nfloat_per_spin;
+    #ifdef RELATIVISTIC_BASIS
+      nfloat_per_spin = 12;
+    #else
+      nfloat_per_spin = 24;
+    #endif
+    
+    MPI_Sendrecv(R1, nfloat_per_spin*tSliceEO, MPI_FLOAT, g_nb_t_dn, 0,
+                 R3, nfloat_per_spin*tSliceEO, MPI_FLOAT, g_nb_t_up, 0,
+                 g_cart_grid, &stat[0]);
+    MPI_Sendrecv(R2, nfloat_per_spin*tSliceEO, MPI_FLOAT, g_nb_t_up, 1,
+                 R4, nfloat_per_spin*tSliceEO, MPI_FLOAT, g_nb_t_dn, 1,
+                 g_cart_grid, &stat[1]);
+
+    #ifdef RELATIVISTIC_BASIS
+      cudaMemcpy(RAND_BW, R3, tSliceEO*3*sizeof(float4), cudaMemcpyHostToDevice);
+      dev_spread_rand_relup<<<griddim, blockdim >>>(dev_spin,RAND_BW,VolumeEO,tSliceEO);
+    
+      cudaMemcpy(RAND_FW, R4, tSliceEO*3*sizeof(float4), cudaMemcpyHostToDevice);
+      dev_spread_rand_reldn<<<griddim, blockdim >>>(dev_spin,RAND_FW,(VolumeEO+tSliceEO),tSliceEO);   
+    #else 
+      cudaMemcpy(RAND_BW, R3, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice);
+      dev_spread_rand<<<griddim, blockdim >>>(dev_spin,RAND_BW,VolumeEO,tSliceEO);
+    
+      cudaMemcpy(RAND_FW, R4, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice);
+      dev_spread_rand<<<griddim, blockdim >>>(dev_spin,RAND_FW,(VolumeEO+tSliceEO),tSliceEO);
+    #endif
+
+  
+}
+
+#endif // MPI
+
+
+
+
+
+
+
+
+
+
+
+
 /*
 This is the wrapper function for the device hopping matrix for MPI with support of
 CUDA streams in order to parallelize bulk calculation and boundary exchange
@@ -564,9 +684,9 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
 // the GPU implementation of  Q_Qdagger_ND(...)  from Nondegenerate_Matrix.c
 //	Flo's equivalent function for the standard and non-nd case is  dev_Qtm_pm_psi
 
-void dev_Qtm_pm_ndpsi_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * spinout_dn,
+void dev_Qtm_pm_ndpsi_mpi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
                                         dev_spinor * spinin_up , dev_spinor * spinin_dn ,
-                                        int gridsize1, dim3 blocksize1, int gridsize2, int blocksize2,
+                                        int gridsize1, int blocksize1, int gridsize2, int blocksize2,
                                         int gridsize3, int blocksize3, int gridsize4, int blocksize4) {
   
   
@@ -585,8 +705,7 @@ void dev_Qtm_pm_ndpsi_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * spinout_d
   int N_sites  =    VOLUME/2;		// #lattice sites
   int N_floats = 24*VOLUME/2;		// #floats
   
-  
-  
+    
   
   ////////////////////////////////////
   //   MATCHING with Q_Qdagger_ND   //
@@ -635,7 +754,326 @@ void dev_Qtm_pm_ndpsi_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * spinout_d
   // (M_oe) (Mee^-1) (M_eo) //
   ////////////////////////////
   
-    	  
+#if ASYNC == 0
+
+  ////////////////////////////
+  // (M_oe) (Mee^-1) (M_eo) //
+  ////////////////////////////
+  
+  
+  		// xchange
+  		#ifndef HOPPING_DEBUG
+  		  xchange_field_wrapper(spinin_dn, 0);
+  		#endif
+  
+  // hopping matrix
+  #ifdef USETEXTURE
+    bind_texture_spin(spinin_dn,1);
+  #endif
+  
+    #ifndef HOPPING_DEBUG
+      dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, spinin_dn, dev_spin_eo1_up, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,0,N_sites);	// dev_spin_eo1_up = (M_eo) * spinin_dn
+    #else
+      Hopping_Matrix_wrapper(0, dev_spin_eo1_up, spinin_dn);
+    #endif
+  
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+  #endif
+  
+  
+  		// xchange
+  		#ifndef HOPPING_DEBUG
+  		  xchange_field_wrapper(spinin_up, 0);
+  		#endif
+  
+  // hopping matrix
+  #ifdef USETEXTURE
+    bind_texture_spin(spinin_up,1);
+  #endif
+  
+    #ifndef HOPPING_DEBUG
+      dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, spinin_up, dev_spin_eo1_dn, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,0,N_sites);	// dev_spin_eo1_dn = (M_eo) * spinin_up
+    #else
+      Hopping_Matrix_wrapper(0, dev_spin_eo1_dn, spinin_up);
+    #endif
+  
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+  #endif
+  
+  
+  // imubar, gamma5
+  dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo1_up, dev_spin_eo2_up, -1.0);		// dev_spin_eo2_up  =  (1 - imubar) * dev_spin_eo1_up  =  (1 - imubar)*(M_eo) * spinin_dn
+  dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo1_dn, dev_spin_eo2_dn, +1.0);		// dev_spin_eo2_dn  =  (1 + imubar) * dev_spin_eo1_dn  =  (1 + imubar)*(M_eo) * spinin_up
+  
+  
+  // linear algebra
+  cublasSaxpy_wrapper (N_floats, g_epsbar, (float *) dev_spin_eo1_dn, (float *) dev_spin_eo2_up);
+  										// dev_spin_eo2_up  =  dev_spin_eo2_up  +  epsbar * dev_spin_eo1_dn  =  (1 - imubar)*(M_eo) * spinin_dn  +  epsbar * (M_eo) * spinin_up
+  cublasSaxpy_wrapper (N_floats, g_epsbar, (float *) dev_spin_eo1_up, (float *) dev_spin_eo2_dn);
+  										// dev_spin_eo2_dn  =  dev_spin_eo2_dn  +  epsbar * dev_spin_eo1_up  =  (1 + imubar)*(M_eo) * spinin_up  +  epsbar * (M_eo) * spinin_dn
+  
+  // linear algebra
+  cublasSscal_wrapper (N_floats, nrm, (float *) dev_spin_eo2_up);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * spinin_dn  +  nrm*epsbar*(M_eo) * spinin_up
+  
+  cublasSscal_wrapper (N_floats, nrm, (float *) dev_spin_eo2_dn);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * spinin_up  +  nrm*epsbar*(M_eo) * spinin_dn
+  
+  
+  		// xchange
+  		#ifndef HOPPING_DEBUG
+  		  xchange_field_wrapper(dev_spin_eo2_up, 1);
+  		#endif
+  
+  // hopping matrix
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo2_up,1);									// remember: this is ((M_oe)(Mee^-1)(M_eo)) * (spinin_dn, spinin_up):
+  #endif
+  
+    #ifndef HOPPING_DEBUG
+      dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo2_up, dev_spin_eo1_up, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,0,N_sites);
+    #else
+      Hopping_Matrix_wrapper(1, dev_spin_eo1_up, dev_spin_eo2_up);
+    #endif
+  
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);							// dev_spin_eo1_up  =  (M_oe) * dev_spin_eo2_up  =  (M_oe)*nrm*(1-imubar)*(M_eo) * spinin_dn  +  (M_oe)*nrm*epsbar*(M_eo) * spinin_up
+  #endif									
+  
+  
+  		// xchange
+  		#ifndef HOPPING_DEBUG
+  		  xchange_field_wrapper(dev_spin_eo2_dn, 1);
+  		#endif
+  
+  // hopping matrix
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo2_dn,1);
+  #endif
+  
+    #ifndef HOPPING_DEBUG
+      dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo2_dn, dev_spin_eo1_dn, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,0,N_sites);
+    #else
+      Hopping_Matrix_wrapper(1, dev_spin_eo1_dn, dev_spin_eo2_dn);
+    #endif
+    
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);							// dev_spin_eo1_dn  =  (M_oe) * dev_spin_eo2_dn  =  (M_oe)*nrm*(1+imubar)*(M_eo) * spinin_up  +  (M_oe)*nrm*epsbar*(M_eo) * spinin_dn
+  #endif
+  
+  
+  
+  
+  ////////////
+  // (M_oo) //
+  ////////////
+  
+  
+  // imubar, gamma5
+  dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(spinin_dn, dev_spin_eo2_up, +1.0);			// dev_spin_eo2_up = (1 + imubar) * spinin_dn
+  dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(spinin_up, dev_spin_eo2_dn, -1.0);			// dev_spin_eo2_dn = (1 - imubar) * spinin_up
+  
+  
+  // linear algebra													// remember: this is (M_oo) * (spinin_dn, spinin_up):
+  cublasSaxpy_wrapper (N_floats, -g_epsbar, (float *) spinin_up, (float *) dev_spin_eo2_up);
+  												// dev_spin_eo2_up  =  dev_spin_eo2_up - epsbar*spinin_up  =  (1+imubar)*spinin_dn - epsbar*spinin_up
+  cublasSaxpy_wrapper (N_floats, -g_epsbar, (float *) spinin_dn, (float *) dev_spin_eo2_dn);
+  												// dev_spin_eo2_dn  =  dev_spin_eo2_dn - epsbar*spinin_dn  =  (1-imubar)*spinin_up - epsbar*spinin_dn
+  
+  
+  
+  ///////////////////////////////////////
+  // (M_oo)  -  (M_oe) (Mee^-1) (M_eo) //
+  ///////////////////////////////////////
+  
+  // linear algebra													// this is ((M_oo) - (M_oe)(Mee^-1)(M_eo)) * (spinin_dn, spinin_up):
+  cublasSaxpy_wrapper(N_floats, -1.0, (float *) dev_spin_eo1_up, (float *) dev_spin_eo2_up);
+  							// dev_spin_eo2_up  =  dev_spin_eo2_up  -  dev_spin_eo1_up  =                      (1+imubar) * spinin_dn  -                    epsbar * spinin_up
+  							//                                                             - (M_oe)*nrm*(1-imubar)*(M_eo) * spinin_dn  -  (M_oe)*nrm*epsbar*(M_eo) * spinin_up
+  cublasSaxpy_wrapper (N_floats, -1.0, (float *) dev_spin_eo1_dn, (float *) dev_spin_eo2_dn);
+  							// dev_spin_eo2_dn  =  dev_spin_eo2_dn  -  dev_spin_eo1_dn  =                      (1-imubar) * spinin_up  -                    epsbar * spinin_dn
+  							//                                                             - (M_oe)*nrm*(1+imubar)*(M_eo) * spinin_up  -  (M_oe)*nrm*epsbar*(M_eo) * spinin_dn
+  
+  
+  ////////////
+  // gamma5 //
+  ////////////
+  
+  // gamma5
+  #ifdef RELATIVISTIC_BASIS
+    dev_gamma5_rel<<<gridsize3, blocksize3>>>(dev_spin_eo2_up, dev_spin_eo2_up);					// dev_spin_eo2_up = gamma5 * dev_spin_eo2_up 
+    dev_gamma5_rel<<<gridsize3, blocksize3>>>(dev_spin_eo2_dn, dev_spin_eo2_dn);					// dev_spin_eo2_dn = gamma5 * dev_spin_eo2_dn  
+  #else
+    dev_gamma5<<<gridsize3, blocksize3>>>(dev_spin_eo2_up, dev_spin_eo2_up);					// dev_spin_eo2_up = gamma5 * dev_spin_eo2_up 
+    dev_gamma5<<<gridsize3, blocksize3>>>(dev_spin_eo2_dn, dev_spin_eo2_dn);					// dev_spin_eo2_dn = gamma5 * dev_spin_eo2_dn
+  #endif	
+  
+  
+  
+  
+  
+  ////////////////////
+  // (a,b) -> (b,a) //
+  ////////////////////
+  dev_copy_spinor_field<<<gridsize4, blocksize4>>>(dev_spin_eo2_dn, dev_spin_eo3_up);			// dev_spin_eo3_up = dev_spin_eo2_dn
+  dev_copy_spinor_field<<<gridsize4, blocksize4>>>(dev_spin_eo2_up, dev_spin_eo3_dn);			// dev_spin_eo3_dn = dev_spin_eo2_up
+  
+  
+  
+  
+  
+  
+  ///////////////////////////////////								///////////////////////
+  //        Q_tilde(2x2)           //								// (Q_tilde) * (b,a) //
+  ///////////////////////////////////								///////////////////////
+  
+  
+  ////////////////////////////
+  // (M_oe) (Mee^-1) (M_eo) //
+  ////////////////////////////
+  
+  		// xchange
+  		#ifndef HOPPING_DEBUG
+  		  xchange_field_wrapper(dev_spin_eo3_up, 0);
+  		#endif
+  
+  // hopping matrix
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo3_up,1);
+  #endif
+  
+    #ifndef HOPPING_DEBUG
+      dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo3_up, dev_spin_eo1_up, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,0,N_sites);	// dev_spin_eo1_up = (M_eo) * dev_spin_eo3_up
+    #else
+      Hopping_Matrix_wrapper(0, dev_spin_eo1_up, dev_spin_eo3_up);
+    #endif
+  
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+  #endif
+  
+  
+  		// xchange
+  		#ifndef HOPPING_DEBUG
+  		  xchange_field_wrapper(dev_spin_eo3_dn, 0);
+  		#endif
+  
+  // hopping matrix
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo3_dn,1);
+  #endif
+  
+    #ifndef HOPPING_DEBUG
+      dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo3_dn, dev_spin_eo1_dn, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,0,N_sites);	// dev_spin_eo1_dn = (M_eo) * dev_spin_eo3_dn
+    #else
+      Hopping_Matrix_wrapper(0, dev_spin_eo1_dn, dev_spin_eo3_dn);
+    #endif
+  
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);
+  #endif
+  
+  
+  // imubar, gamma5
+  dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo1_up, dev_spin_eo2_up, -1.0);			// dev_spin_eo2_up  =  (1 - imubar) * dev_spin_eo1_up  =  (1 - imubar)*(M_eo) * dev_spin_eo3_up
+  dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo1_dn, dev_spin_eo2_dn, +1.0);			// dev_spin_eo2_dn  =  (1 + imubar) * dev_spin_eo1_dn  =  (1 + imubar)*(M_eo) * dev_spin_eo3_dn
+  
+  // linear algebra
+  cublasSaxpy_wrapper (N_floats, g_epsbar, (float *) dev_spin_eo1_dn, (float *) dev_spin_eo2_up);										// dev_spin_eo2_up  =  dev_spin_eo2_up  +  epsbar * dev_spin_eo1_dn  =  (1 - imubar)*(M_eo) * dev_spin_eo3_up  +  epsbar * (M_eo) * dev_spin_eo3_dn
+  cublasSaxpy_wrapper (N_floats, g_epsbar, (float *) dev_spin_eo1_up, (float *) dev_spin_eo2_dn);
+  										// dev_spin_eo2_dn  =  dev_spin_eo2_dn  +  epsbar * dev_spin_eo1_up  =  (1 + imubar)*(M_eo) * dev_spin_eo3_dn  +  epsbar * (M_eo) * dev_spin_eo3_up
+  // lineare algebra
+  cublasSscal_wrapper (N_floats, nrm, (float *) dev_spin_eo2_up);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  +  nrm*epsbar*(M_eo) * dev_spin_eo3_dn
+  cublasSscal_wrapper (N_floats, nrm, (float *) dev_spin_eo2_dn);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  +  nrm*epsbar*(M_eo) * dev_spin_eo3_up
+  
+  		// xchange
+  		#ifndef HOPPING_DEBUG
+  		  xchange_field_wrapper(dev_spin_eo2_up, 1);
+  		#endif
+  
+  // hopping matrix
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo2_up,1);									// remember: this is ((M_oe) (Mee^-1) (M_eo)) * (dev_spin_eo3_up, dev_spin_eo3_dn):
+  #endif
+  
+    #ifndef HOPPING_DEBUG
+      dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo2_up, dev_spin_eo1_up, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,0,N_sites);
+    #else
+      Hopping_Matrix_wrapper(1, dev_spin_eo1_up, dev_spin_eo2_up);
+    #endif
+  
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);							// dev_spin_eo1_up  =  (M_oe) * dev_spin_eo2_up  =  (M_oe)*nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  +  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_dn
+  #endif
+  
+  		// xchange
+  		#ifndef HOPPING_DEBUG
+  		  xchange_field_wrapper(dev_spin_eo2_dn, 1);
+  		#endif
+  
+  // hopping matrix
+  #ifdef USETEXTURE
+    bind_texture_spin(dev_spin_eo2_dn,1);
+  #endif
+  
+    #ifndef HOPPING_DEBUG
+      dev_Hopping_Matrix<<<gridsize1, blocksize1>>>(dev_gf, dev_spin_eo2_dn, dev_spin_eo1_dn, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,0,N_sites);
+    #else
+      Hopping_Matrix_wrapper(1, dev_spin_eo1_dn, dev_spin_eo2_dn);
+    #endif
+  
+  #ifdef USETEXTURE
+    unbind_texture_spin(1);							// dev_spin_eo1_dn  =  (M_oe) * dev_spin_eo2_dn  =  (M_oe)*nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  +  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_up
+  #endif
+  
+  
+  ////////////
+  // (M_oo) //
+  ////////////
+  
+  // imubar, gamma5
+  dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo3_up, dev_spin_eo2_up, +1.0);				// dev_spin_eo2_up = (1 + imubar) * dev_spin_eo3_up
+  dev_mul_one_pm_imubar_gamma5<<<gridsize2, blocksize2>>>(dev_spin_eo3_dn, dev_spin_eo2_dn, -1.0);				// dev_spin_eo2_dn = (1 - imubar) * dev_spin_eo3_dn
+  
+  
+  // lineare algebra										// remember: this is (M_oo) * (dev_spin_eo3_up, dev_spin_eo3_dn):
+  cublasSaxpy_wrapper (N_floats, -g_epsbar, (float *) dev_spin_eo3_dn, (float *) dev_spin_eo2_up);												// dev_spin_eo2_up  =  dev_spin_eo2_up - epsbar*dev_spin_eo3_dn  =  (1+imubar)*dev_spin_eo3_up - epsbar*dev_spin_eo3_dn
+  cublasSaxpy_wrapper (N_floats, -g_epsbar, (float *) dev_spin_eo3_up, (float *) dev_spin_eo2_dn);
+  												// dev_spin_eo2_dn  =  dev_spin_eo2_dn - epsbar*dev_spin_eo3_up  =  (1-imubar)*dev_spin_eo3_dn - epsbar*dev_spin_eo3_up
+  
+  ///////////////////////////////////////
+  // (M_oo)  -  (M_oe) (Mee^-1) (M_eo) //
+  ///////////////////////////////////////
+  
+  // lineare algebra										// this is ( (M_oo) - (M_oe) (Mee^-1) (M_eo) ) * (dev_spin_eo3_up, dev_spin_eo3_dn)
+  cublasSaxpy_wrapper (N_floats, -1.0, (float *) dev_spin_eo1_up, (float *) dev_spin_eo2_up);
+  							// dev_spin_eo2_up  =  dev_spin_eo2_up  -  dev_spin_eo1_up  =                      (1+imubar) * dev_spin_eo3_up  -                    epsbar * dev_spin_eo3_dn						//                                                             - (M_oe)*nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  -  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_dn
+  cublasSaxpy_wrapper (N_floats, -1.0, (float *) dev_spin_eo1_dn, (float *) dev_spin_eo2_dn);
+  							// dev_spin_eo2_dn  =  dev_spin_eo2_dn  -  dev_spin_eo1_dn  =                      (1-imubar) * dev_spin_eo3_dn  -                    epsbar * dev_spin_eo3_up
+  							//                                                             - (M_oe)*nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  -  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_up
+ 
+  ////////////
+  // gamma5 //
+  ////////////
+  
+  // gamma5
+  #ifdef RELATIVISTIC_BASIS
+    dev_gamma5_rel<<<gridsize3, blocksize3>>>(dev_spin_eo2_up, dev_spin_eo2_up);					// dev_spin_eo2_up = gamma5 * dev_spin_eo2_up 
+    dev_gamma5_rel<<<gridsize3, blocksize3>>>(dev_spin_eo2_dn, dev_spin_eo2_dn);					// dev_spin_eo2_dn = gamma5 * dev_spin_eo2_dn  
+  #else
+    dev_gamma5<<<gridsize3, blocksize3>>>(dev_spin_eo2_up, dev_spin_eo2_up);					// dev_spin_eo2_up = gamma5 * dev_spin_eo2_up 
+    dev_gamma5<<<gridsize3, blocksize3>>>(dev_spin_eo2_dn, dev_spin_eo2_dn);					// dev_spin_eo2_dn = gamma5 * dev_spin_eo2_dn
+  #endif
+
+  cublasSscal_wrapper (N_floats, phmc_invmaxev*phmc_invmaxev, (float *) dev_spin_eo2_up);
+  cublasSscal_wrapper (N_floats, phmc_invmaxev*phmc_invmaxev, (float *) dev_spin_eo2_dn);   
+  
+  
+  
+#elif ASYNC == 1  //ASYNC
+  
+  
+  
   HOPPING_ASYNC(dev_gf, spinin_dn, dev_spin_eo1_up, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, gridsize1, blocksize1);
   
   HOPPING_ASYNC(dev_gf, spinin_up, dev_spin_eo1_dn, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, gridsize1, blocksize1);
@@ -647,15 +1085,15 @@ void dev_Qtm_pm_ndpsi_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * spinout_d
   
   
   // linear algebra
-  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_up, 1);
+  cublasSaxpy_wrapper (N_floats, g_epsbar, (float *) dev_spin_eo1_dn, (float *) dev_spin_eo2_up);
   										// dev_spin_eo2_up  =  dev_spin_eo2_up  +  epsbar * dev_spin_eo1_dn  =  (1 - imubar)*(M_eo) * spinin_dn  +  epsbar * (M_eo) * spinin_up
-  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasSaxpy_wrapper (N_floats, g_epsbar, (float *) dev_spin_eo1_up, (float *) dev_spin_eo2_dn);
   										// dev_spin_eo2_dn  =  dev_spin_eo2_dn  +  epsbar * dev_spin_eo1_up  =  (1 + imubar)*(M_eo) * spinin_up  +  epsbar * (M_eo) * spinin_dn
   
   // linear algebra
-  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_up, 1);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * spinin_dn  +  nrm*epsbar*(M_eo) * spinin_up
+  cublasSscal_wrapper (N_floats, nrm, (float *) dev_spin_eo2_up);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * spinin_dn  +  nrm*epsbar*(M_eo) * spinin_up
   
-  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_dn, 1);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * spinin_up  +  nrm*epsbar*(M_eo) * spinin_dn
+  cublasSscal_wrapper (N_floats, nrm, (float *) dev_spin_eo2_dn);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * spinin_up  +  nrm*epsbar*(M_eo) * spinin_dn
   
   
   
@@ -678,9 +1116,9 @@ void dev_Qtm_pm_ndpsi_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * spinout_d
   
   
   // linear algebra													// remember: this is (M_oo) * (spinin_dn, spinin_up):
-  cublasSaxpy (N_floats, -g_epsbar, (float *) spinin_up, 1, (float *) dev_spin_eo2_up, 1);
+  cublasSaxpy_wrapper (N_floats, -g_epsbar, (float *) spinin_up, (float *) dev_spin_eo2_up);
   												// dev_spin_eo2_up  =  dev_spin_eo2_up - epsbar*spinin_up  =  (1+imubar)*spinin_dn - epsbar*spinin_up
-  cublasSaxpy (N_floats, -g_epsbar, (float *) spinin_dn, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasSaxpy_wrapper (N_floats, -g_epsbar, (float *) spinin_dn, (float *) dev_spin_eo2_dn);
   												// dev_spin_eo2_dn  =  dev_spin_eo2_dn - epsbar*spinin_dn  =  (1-imubar)*spinin_up - epsbar*spinin_dn
   
   
@@ -690,10 +1128,10 @@ void dev_Qtm_pm_ndpsi_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * spinout_d
   ///////////////////////////////////////
   
   // linear algebra													// this is ((M_oo) - (M_oe)(Mee^-1)(M_eo)) * (spinin_dn, spinin_up):
-  cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_up, 1);
+  cublasSaxpy_wrapper (N_floats, -1.0, (float *) dev_spin_eo1_up, (float *) dev_spin_eo2_up);
   							// dev_spin_eo2_up  =  dev_spin_eo2_up  -  dev_spin_eo1_up  =                      (1+imubar) * spinin_dn  -                    epsbar * spinin_up
   							//                                                             - (M_oe)*nrm*(1-imubar)*(M_eo) * spinin_dn  -  (M_oe)*nrm*epsbar*(M_eo) * spinin_up
-  cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasSaxpy_wrapper (N_floats, -1.0, (float *) dev_spin_eo1_dn, (float *) dev_spin_eo2_dn);
   							// dev_spin_eo2_dn  =  dev_spin_eo2_dn  -  dev_spin_eo1_dn  =                      (1-imubar) * spinin_up  -                    epsbar * spinin_dn
   							//                                                             - (M_oe)*nrm*(1+imubar)*(M_eo) * spinin_up  -  (M_oe)*nrm*epsbar*(M_eo) * spinin_dn
   
@@ -744,15 +1182,15 @@ void dev_Qtm_pm_ndpsi_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * spinout_d
   
   
   // linear algebra
-  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_up, 1);
+  cublasSaxpy_wrapper (N_floats, g_epsbar, (float *) dev_spin_eo1_dn, (float *) dev_spin_eo2_up);
   										// dev_spin_eo2_up  =  dev_spin_eo2_up  +  epsbar * dev_spin_eo1_dn  =  (1 - imubar)*(M_eo) * dev_spin_eo3_up  +  epsbar * (M_eo) * dev_spin_eo3_dn
-  cublasSaxpy (N_floats, g_epsbar, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasSaxpy_wrapper (N_floats, g_epsbar, (float *) dev_spin_eo1_up, (float *) dev_spin_eo2_dn);
   										// dev_spin_eo2_dn  =  dev_spin_eo2_dn  +  epsbar * dev_spin_eo1_up  =  (1 + imubar)*(M_eo) * dev_spin_eo3_dn  +  epsbar * (M_eo) * dev_spin_eo3_up
   
   // lineare algebra
-  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_up, 1);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  +  nrm*epsbar*(M_eo) * dev_spin_eo3_dn
+  cublasSscal_wrapper (N_floats, nrm, (float *) dev_spin_eo2_up);			// dev_spin_eo2_up  =  nrm * dev_spin_eo2_up  =  nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  +  nrm*epsbar*(M_eo) * dev_spin_eo3_dn
   
-  cublasSscal (N_floats, nrm, (float *) dev_spin_eo2_dn, 1);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  +  nrm*epsbar*(M_eo) * dev_spin_eo3_up
+  cublasSscal_wrapper (N_floats, nrm, (float *) dev_spin_eo2_dn);			// dev_spin_eo2_dn  =  nrm * dev_spin_eo2_dn  =  nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  +  nrm*epsbar*(M_eo) * dev_spin_eo3_up
   
     
     	  
@@ -773,9 +1211,9 @@ void dev_Qtm_pm_ndpsi_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * spinout_d
   
   
   // lineare algebra										// remember: this is (M_oo) * (dev_spin_eo3_up, dev_spin_eo3_dn):
-  cublasSaxpy (N_floats, -g_epsbar, (float *) dev_spin_eo3_dn, 1, (float *) dev_spin_eo2_up, 1);
+  cublasSaxpy_wrapper (N_floats, -g_epsbar, (float *) dev_spin_eo3_dn, (float *) dev_spin_eo2_up);
   												// dev_spin_eo2_up  =  dev_spin_eo2_up - epsbar*dev_spin_eo3_dn  =  (1+imubar)*dev_spin_eo3_up - epsbar*dev_spin_eo3_dn
-  cublasSaxpy (N_floats, -g_epsbar, (float *) dev_spin_eo3_up, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasSaxpy_wrapper (N_floats, -g_epsbar, (float *) dev_spin_eo3_up, (float *) dev_spin_eo2_dn);
   												// dev_spin_eo2_dn  =  dev_spin_eo2_dn - epsbar*dev_spin_eo3_up  =  (1-imubar)*dev_spin_eo3_dn - epsbar*dev_spin_eo3_up
   
   
@@ -785,10 +1223,10 @@ void dev_Qtm_pm_ndpsi_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * spinout_d
   ///////////////////////////////////////
   
   // lineare algebra										// this is ( (M_oo) - (M_oe) (Mee^-1) (M_eo) ) * (dev_spin_eo3_up, dev_spin_eo3_dn)
-  cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_up, 1, (float *) dev_spin_eo2_up, 1);
+  cublasSaxpy_wrapper (N_floats, -1.0, (float *) dev_spin_eo1_up, (float *) dev_spin_eo2_up);
   							// dev_spin_eo2_up  =  dev_spin_eo2_up  -  dev_spin_eo1_up  =                      (1+imubar) * dev_spin_eo3_up  -                    epsbar * dev_spin_eo3_dn
   							//                                                             - (M_oe)*nrm*(1-imubar)*(M_eo) * dev_spin_eo3_up  -  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_dn
-  cublasSaxpy (N_floats, -1.0, (float *) dev_spin_eo1_dn, 1, (float *) dev_spin_eo2_dn, 1);
+  cublasSaxpy_wrapper (N_floats, -1.0, (float *) dev_spin_eo1_dn, (float *) dev_spin_eo2_dn);
   							// dev_spin_eo2_dn  =  dev_spin_eo2_dn  -  dev_spin_eo1_dn  =                      (1-imubar) * dev_spin_eo3_dn  -                    epsbar * dev_spin_eo3_up
   							//                                                             - (M_oe)*nrm*(1+imubar)*(M_eo) * dev_spin_eo3_dn  -  (M_oe)*nrm*epsbar*(M_eo) * dev_spin_eo3_up
   
@@ -802,10 +1240,11 @@ void dev_Qtm_pm_ndpsi_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * spinout_d
   dev_gamma5<<<gridsize3, blocksize3>>>(dev_spin_eo2_dn, dev_spin_eo2_dn);					// dev_spin_eo2_dn = gamma5 * dev_spin_eo2_dn
   
   
-  cublasSscal (N_floats, phmc_invmaxev*phmc_invmaxev, (float *) dev_spin_eo2_up, 1);
-  cublasSscal (N_floats, phmc_invmaxev*phmc_invmaxev, (float *) dev_spin_eo2_dn, 1);
+  cublasSscal_wrapper (N_floats, phmc_invmaxev*phmc_invmaxev, (float *) dev_spin_eo2_up);
+  cublasSscal_wrapper (N_floats, phmc_invmaxev*phmc_invmaxev, (float *) dev_spin_eo2_dn);
   
-  
+
+#endif  //ASYNC  
   /*
   ////////////
   // output //										// output is already done by setting  dev_spin_eo2_up/dn = spinout_up/dn
@@ -814,7 +1253,7 @@ void dev_Qtm_pm_ndpsi_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * spinout_d
   dev_copy_spinor_field<<<griddim2, blockdim2 >>>(dev_spin_eo2_up, spinout_up);		// spinout_up = dev_spin_eo2_up
   dev_copy_spinor_field<<<griddim2, blockdim2 >>>(dev_spin_eo2_dn, spinout_dn);		// spinout_dn = dev_spin_eo2_dn
   */
-  
+
   
   return;
   

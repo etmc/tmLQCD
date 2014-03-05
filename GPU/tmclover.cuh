@@ -1441,7 +1441,7 @@ extern "C" int dev_cg_eo_clover(
  #ifndef MPI
    sourcesquarenorm = cublasSdot (24*VOLUME/2, (const float *)spinin, 1, (const float *)spinin, 1);
  #else
-   sourcesquarenorm = float_dotprod(spinin, spinin);
+   sourcesquarenorm = float_dotprod(spinin, spinin,24*VOLUME/2);
  #endif
  host_rk = sourcesquarenorm; //for use in main loop
  
@@ -1493,7 +1493,7 @@ extern "C" int dev_cg_eo_clover(
   #ifndef MPI
     host_dotprod = cublasSdot (24*VOLUME/2, (const float *) spin2, 1, (const float *) spin3, 1);
   #else
-    host_dotprod =  float_dotprod(spin2, spin3);
+    host_dotprod =  float_dotprod(spin2, spin3, 24*VOLUME/2);
   #endif
   
   host_alpha = (host_rk / host_dotprod); // alpha = r*r/ p M p
@@ -1522,7 +1522,7 @@ extern "C" int dev_cg_eo_clover(
   #ifndef MPI
     host_dotprod = cublasSdot (24*VOLUME/2, (const float *) spin0, 1,(const float *) spin0, 1);
   #else
-    host_dotprod = float_dotprod(spin0, spin0);
+    host_dotprod = float_dotprod(spin0, spin0, 24*VOLUME/2);
   #endif
   
  if (((host_dotprod <= eps*sourcesquarenorm)) || ( host_dotprod <= epsfinal/2.)){//error-limit erreicht (epsfinal/2 sollte ausreichen um auch in double precision zu bestehen)
@@ -1800,7 +1800,7 @@ for(iter=0; iter<max_iter; iter++){
 		      dev_nn_eo, dev_nn_oe); 
 		      */
      dev_diff_d<<<griddim4,blockdim4>>>(dev_spin0_d,dev_spin0_d,dev_spin3_d);
-     rk = double_dotprod(dev_spin0_d,dev_spin0_d);
+     rk = double_dotprod(dev_spin0_d,dev_spin0_d,N);
    #else   
      Qsw_pm_psi(solver_field[3], solver_field[2]);
      diff(solver_field[0],solver_field[0],solver_field[3],N);

@@ -606,9 +606,13 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
   }
   
   
+#ifdef GPU_DOUBLE
+      #ifdef MPI
+   	size_t dev_spinsize_d = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); /* double2 */
+      #else
+   	size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); /* double2 */  
+      #endif
 
-
-   	  size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); /* double2 */
 	  //allocate fields used in dev_Qtm_pm_ndpsi_d
   	  cudaMalloc((void **) &dev_spin_eo1_up_d, dev_spinsize_d);	
   	  cudaMalloc((void **) &dev_spin_eo1_dn_d, dev_spinsize_d);	  
@@ -619,7 +623,7 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
               if(g_proc_id==0) printf("Error in init_mixedsolve_eo_nd(): Memory allocation of nd additional double spinor fields failed. Aborting...\n");
               exit(200);
           }
-
+#endif
  
  
  
@@ -691,25 +695,17 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
   		  exit(200);
   		}
   	#endif
-  
 
-  	#if defined(ALTERNATE_FIELD_XCHANGE) || ASYNC > 0
-  	  int tSliceEO = LX*LY*LZ/2;
-  	#endif
+  	int tSliceEO = LX*LY*LZ/2;
+
         
         
-  	#ifndef ALTERNATE_FIELD_XCHANGE												// xchange_field() acts on this spinor field
-  		// debug	// host code											// MEMORY REQUIREMENTS:
-  		if ( (void *) (spinor_xchange = (spinor *) malloc(2*dev_spinsize_ext) ) == NULL) {				//	auxiliary fields for  xchange_field_wrapper()  and  Hopping_Matrix_wrapper()
-  		  printf("Process %d of %d: Could not allocate memory for spinor_xchange. Aborting...\n", g_proc_id, g_nproc);	//	have to store doubles --> 2*dev_spinsize  !!
-  		  exit(200);
-  		}
-  	#else		// xchange procedure comparable to ASYNC
+		// xchange procedure comparable to ASYNC
   		R1 = (dev_spinor *) malloc(2*tSliceEO*24*sizeof(float));
   		R2 = R1 + 6*tSliceEO;
   		R3 = (dev_spinor *) malloc(2*tSliceEO*24*sizeof(float));
   		R4 = R3 + 6*tSliceEO;
-  	#endif
+  	
   
   
   	#if ASYNC > 0	// asynchronous communication and computation
@@ -720,10 +716,10 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
   	  cudaMallocHost(&RAND1, 2*tSliceEO*6*sizeof(float4));
   	  RAND2 = RAND1 + 6*tSliceEO;
   	  
-  	  // CUDA streams and events
-  	  for (int i = 0; i < 2*nStreams+1; i++) {
-  	    cudaStreamCreate(&stream[i]);
-  	  }
+//   	  // CUDA streams and events
+//   	  for (int i = 0; i < 2*nStreams+1; i++) {
+//   	    cudaStreamCreate(&stream[i]);
+//   	  }
   	  
   	  #ifdef ASYNC_TIMING
   	    cudaEventCreate(&start_ALL);
@@ -737,7 +733,61 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
   	    cudaEventCreate(&stop_EXT_2);
   	  #endif
   	#endif
-  
+
+	#ifdef GPU_DOUBLE
+	  R1_UP_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
+	  R2_UP_D = R1_UP_D + 12*tSliceEO;
+	  R3_UP_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
+	  R4_UP_D = R3_UP_D + 12*tSliceEO;
+
+
+	//for gathering and spreading of indizes of rand in (gather_rand spread_rand called from xchange_field_wrapper)
+	    #ifdef RELATIVISTIC_BASIS
+	      cudaMalloc((void **) &RAND_FW_UP_D, tSliceEO*6*sizeof(double2));
+	      cudaMalloc((void **) &RAND_BW_UP_D, tSliceEO*6*sizeof(double2));
+	    #else
+	      cudaMalloc((void **) &RAND_FW_UP_D, tSliceEO*12*sizeof(double2));
+	      cudaMalloc((void **) &RAND_BW_UP_D, tSliceEO*12*sizeof(double2));      
+	    #endif
+	    /*  for async communication */
+	    // page-locked memory    
+	    #ifdef RELATIVISTIC_BASIS
+	      int dbperspin = 6;
+	    #else
+	      int dbperspin = 12;
+	    #endif  
+	    cudaMallocHost(&RAND3_UP_D, tSliceEO*dbperspin*sizeof(double2));
+	    cudaMallocHost(&RAND4_UP_D, tSliceEO*dbperspin*sizeof(double2));
+	    cudaMallocHost(&RAND1_UP_D, tSliceEO*dbperspin*sizeof(double2));
+	    cudaMallocHost(&RAND2_UP_D, tSliceEO*dbperspin*sizeof(double2));
+
+	  R1_UP_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
+	  R2_UP_D = R1_UP_D + 12*tSliceEO;
+	  R3_UP_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
+	  R4_UP_D = R3_UP_D + 12*tSliceEO;
+
+
+	//for gathering and spreading of indizes of rand in (gather_rand spread_rand called from xchange_field_wrapper)
+	    #ifdef RELATIVISTIC_BASIS
+	      cudaMalloc((void **) &RAND_FW_DN_D, tSliceEO*6*sizeof(double2));
+	      cudaMalloc((void **) &RAND_BW_DN_D, tSliceEO*6*sizeof(double2));
+	    #else
+	      cudaMalloc((void **) &RAND_FW_DN_D, tSliceEO*12*sizeof(double2));
+	      cudaMalloc((void **) &RAND_BW_DN_D, tSliceEO*12*sizeof(double2));      
+	    #endif
+
+	    cudaMallocHost(&RAND3_DN_D, tSliceEO*dbperspin*sizeof(double2));
+	    cudaMallocHost(&RAND4_DN_D, tSliceEO*dbperspin*sizeof(double2));
+	    cudaMallocHost(&RAND1_DN_D, tSliceEO*dbperspin*sizeof(double2));
+	    cudaMallocHost(&RAND2_DN_D, tSliceEO*dbperspin*sizeof(double2));
+	    
+	  R1_DN_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
+	  R2_DN_D = R1_DN_D + 12*tSliceEO;
+	  R3_DN_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
+	  R4_DN_D = R3_DN_D + 12*tSliceEO;    
+	#endif
+  	    
+	    
   #endif	// MPI
   
   
@@ -822,12 +872,8 @@ void finalize_mixedsolve_eo_nd(void) {
   free(h2d_spin_dn);
   
   #ifdef MPI
-  	#ifndef ALTERNATE_FIELD_XCHANGE
-  	  free(spinor_xchange);
-  	#else
   	  free(R1);
   	  free(R3);
-  	#endif
   	
   	#ifdef HOPPING_DEBUG
   	  free(spinor_debug_in);
@@ -845,17 +891,14 @@ void finalize_mixedsolve_eo_nd(void) {
   }
   
   #ifdef MPI
-  	#ifdef ALTERNATE_HOPPING_MATRIX
-  	  free_gpu_indexfields();
-  	#endif
   	
   	#if ASYNC > 0
   	  cudaFreeHost(RAND1);
   	  cudaFreeHost(RAND3);
   	  
-  	  for (int i = 0; i < 2*nStreams+1; i++) {
-  	    cudaStreamDestroy(stream[i]);
-  	  }
+//   	  for (int i = 0; i < 2*nStreams+1; i++) {
+//   	    cudaStreamDestroy(stream[i]);
+//   	  }
   	  
   	  #ifdef ASYNC_TIMING
   	    cudaEventDestroy(start_ALL);
@@ -869,6 +912,26 @@ void finalize_mixedsolve_eo_nd(void) {
   	    cudaEventDestroy(stop_EXT_2);
   	  #endif
   	#endif
+	
+	#ifdef GPU_DOUBLE
+	  cudaFreeHost(RAND1_UP_D);
+	  cudaFreeHost(RAND2_UP_D); 
+	  cudaFreeHost(RAND3_UP_D);
+	  cudaFreeHost(RAND4_UP_D);  
+	  cudaFree(RAND_BW_UP_D);
+	  cudaFree(RAND_FW_UP_D);
+	  free(R1_UP_D);
+	  free(R3_UP_D);
+	  cudaFreeHost(RAND1_DN_D);
+	  cudaFreeHost(RAND2_DN_D); 
+	  cudaFreeHost(RAND3_DN_D);
+	  cudaFreeHost(RAND4_DN_D);  
+	  cudaFree(RAND_BW_DN_D);
+	  cudaFree(RAND_FW_DN_D);
+	  free(R1_DN_D);
+	  free(R3_DN_D); 
+	#endif	    
+	    
   #endif
   
   
@@ -1016,139 +1079,49 @@ void to_host_mpi (spinor * host, dev_spinor * device, dev_spinor * auxiliary, in
 //         the parameter "size" specifies the memory needed for the spinor n the device !!
 //         
 
-void to_device (dev_spinor * device, spinor * host, dev_spinor * auxiliary, int size) {
-
+void to_device (dev_spinor * device, spinor * host, dev_spinor * auxiliary, int evenodd) {
+  int size;
+  if(evenodd){
+    #ifdef MPI
+      size = 6*(VOLUME+RAND)/2*sizeof(dev_spinor);
+    #else
+      size = 6*VOLUME/2*sizeof(dev_spinor);
+    #endif
+  }
+  else{
+    #ifdef MPI
+      size = 6*(VOLUME+RAND)*sizeof(dev_spinor);
+    #else
+      size = 6*VOLUME*sizeof(dev_spinor);
+    #endif    
+  }
   convert2REAL4_spin(host, auxiliary);						// auxiliary = (float) host
   cudaMemcpy(device, auxiliary, size, cudaMemcpyHostToDevice);			// device = auxiliary  (on device)
 
 }
 
 
-void to_host (spinor * host, dev_spinor * device, dev_spinor * auxiliary, int size) {
-
+void to_host (spinor * host, dev_spinor * device, dev_spinor * auxiliary, int evenodd) {
+  int size;
+  if(evenodd){
+    #ifdef MPI
+      size = 6*(VOLUME+RAND)/2*sizeof(dev_spinor);
+    #else
+      size = 6*VOLUME/2*sizeof(dev_spinor);
+    #endif
+  }
+  else{
+    #ifdef MPI
+      size = 6*(VOLUME+RAND)*sizeof(dev_spinor);
+    #else
+      size = 6*VOLUME*sizeof(dev_spinor);
+    #endif    
+  }
   cudaMemcpy(auxiliary, device, size, cudaMemcpyDeviceToHost);			// auxiliary = device  (on device)
   convert2double_spin(auxiliary, host);						// host = (double) auxiliary
 
 }
 
-
-
-
-
-
-///////////////////////
-// boundary exchange //
-///////////////////////
-
-#ifdef MPI
-
-// both versions do work:
-
-
-/*
-// copies VOLUME to host, exchanges, copies RAND back to device
-
-void xchange_field_wrapper (dev_spinor * dev_spin, int ieo) {
-
-  size_t size_Volume = VOLUME/2 * 6*sizeof(dev_spinor);
-  size_t size_Rand   = RAND/2   * 6*sizeof(dev_spinor);
-
-  to_host_mpi(spinor_xchange, dev_spin, h2d_spin_up, size_Volume, 0, VOLUME/2);
-  xchange_field(spinor_xchange, ieo);
-  to_device_mpi(dev_spin, spinor_xchange, h2d_spin_dn, size_Rand, VOLUME/2, (VOLUME+RAND)/2);
-
-}
-*/
-
-
-
-
-// copies the boundary t-slices t=0 and t=T-1 to host		// will be used in dev_Qtm_pm_ndpsi_mpi(), not ASYNC
-//	exchanges						// provides a wrapped version of Carsten's xchange_field()
-//		copies RAND back to device			//	and not asynchronous version of ASYNC.cuh
-
-void xchange_field_wrapper (dev_spinor * dev_spin, int ieo) {
-  
-  #ifndef ALTERNATE_FIELD_XCHANGE
-    
-    size_t size_tSlice = LX*LY*LZ/2 * 6*sizeof(dev_spinor);
-    size_t size_Rand   = RAND/2     * 6*sizeof(dev_spinor);
-    
-    to_host_mpi(spinor_xchange, dev_spin, h2d_spin_up, size_tSlice, 0 , LX*LY*LZ/2);
-    to_host_mpi(spinor_xchange, dev_spin, h2d_spin_dn, size_tSlice, (T-1)*LX*LY*LZ/2, (VOLUME)/2);
-    
-    xchange_field(spinor_xchange, ieo);
-    
-    to_device_mpi(dev_spin, spinor_xchange, h2d_spin_up, size_Rand, VOLUME/2, (VOLUME+RAND)/2);
-    
-  #else
-    
-    int tSliceEO = LX*LY*LZ/2;
-    int VolumeEO = VOLUME/2;
-    
-    //this is the same partitioning as for dev_mul_one_pm...
-    int gridsize;
-    int blockdim = BLOCK2;
-    if( tSliceEO % blockdim == 0){
-      gridsize = (int) tSliceEO/blockdim;
-    }
-    else{
-      gridsize = (int) tSliceEO/blockdim + 1;
-    }
-    int griddim = gridsize;
-    
-    
-    #ifdef RELATIVISTIC_BASIS
-      //this goes backwards, so for the receiver this is forward
-      dev_gather_rand_relup<<<griddim, blockdim >>>(dev_spin,RAND_BW,0,tSliceEO);
-      cudaMemcpy(R1, RAND_BW, tSliceEO*3*sizeof(float4), cudaMemcpyDeviceToHost);
-    
-      //this goes forward, so for the receiver this is backward
-      dev_gather_rand_reldn<<<griddim, blockdim >>>(dev_spin,RAND_FW,(VolumeEO-tSliceEO),tSliceEO);
-      cudaMemcpy(R2, RAND_FW, tSliceEO*3*sizeof(float4), cudaMemcpyDeviceToHost);    
-    #else
-      //this goes backwards
-      dev_gather_rand<<<griddim, blockdim >>>(dev_spin,RAND_BW,0,tSliceEO);
-      cudaMemcpy(R1, RAND_BW, tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost);
-    
-      //this goes forward
-      dev_gather_rand<<<griddim, blockdim >>>(dev_spin,RAND_FW,(VolumeEO-tSliceEO),tSliceEO);
-      cudaMemcpy(R2, RAND_FW, tSliceEO*6*sizeof(float4), cudaMemcpyDeviceToHost);
-    #endif
-    
-    //we only need to exchange half of the spinors in relativistic basis (upper or lower part)
-    int nfloat_per_spin;
-    #ifdef RELATIVISTIC_BASIS
-      nfloat_per_spin = 12;
-    #else
-      nfloat_per_spin = 24;
-    #endif
-    
-    MPI_Sendrecv(R1, nfloat_per_spin*tSliceEO, MPI_FLOAT, g_nb_t_dn, 0,
-                 R3, nfloat_per_spin*tSliceEO, MPI_FLOAT, g_nb_t_up, 0,
-                 g_cart_grid, &stat[0]);
-    MPI_Sendrecv(R2, nfloat_per_spin*tSliceEO, MPI_FLOAT, g_nb_t_up, 1,
-                 R4, nfloat_per_spin*tSliceEO, MPI_FLOAT, g_nb_t_dn, 1,
-                 g_cart_grid, &stat[1]);
-
-    #ifdef RELATIVISTIC_BASIS
-      cudaMemcpy(RAND_BW, R3, tSliceEO*3*sizeof(float4), cudaMemcpyHostToDevice);
-      dev_spread_rand_relup<<<griddim, blockdim >>>(dev_spin,RAND_BW,VolumeEO,tSliceEO);
-    
-      cudaMemcpy(RAND_FW, R4, tSliceEO*3*sizeof(float4), cudaMemcpyHostToDevice);
-      dev_spread_rand_reldn<<<griddim, blockdim >>>(dev_spin,RAND_FW,(VolumeEO+tSliceEO),tSliceEO);   
-    #else 
-      cudaMemcpy(RAND_BW, R3, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice);
-      dev_spread_rand<<<griddim, blockdim >>>(dev_spin,RAND_BW,VolumeEO,tSliceEO);
-    
-      cudaMemcpy(RAND_FW, R4, tSliceEO*6*sizeof(float4), cudaMemcpyHostToDevice);
-      dev_spread_rand<<<griddim, blockdim >>>(dev_spin,RAND_FW,(VolumeEO+tSliceEO),tSliceEO);
-    #endif
-  #endif
-  
-}
-
-#endif // MPI
 
 
 
@@ -1166,9 +1139,9 @@ void xchange_field_wrapper (dev_spinor * dev_spin, int ieo) {
   
   void Hopping_Matrix_wrapper (int ieo, dev_spinor * out, dev_spinor * in) {
   
-      to_host(spinor_debug_in, in, h2d_spin_up, dev_spinsize_int);
+      to_host(spinor_debug_in, in, h2d_spin_up, 1);
       Hopping_Matrix(ieo, spinor_debug_out, spinor_debug_in);
-      to_device(out, spinor_debug_out, h2d_spin_dn, dev_spinsize_int);    
+      to_device(out, spinor_debug_out, h2d_spin_dn, 1);    
     
   }
 
@@ -1179,35 +1152,6 @@ void xchange_field_wrapper (dev_spinor * dev_spin, int ieo) {
 
 
 
-
-////////////////////
-// linear algebra //
-////////////////////
-
-#ifdef MPI
-
-// have to rebuilt some linear algebra functions which contain global communication
-// can be done as wrappers to appropriate CUBLAS routines
-
-
-
-// a wrapper function for cublasSdot() (with the same interface)
-// provides the MPI communication via MPI_Allreduce()
-
-float cublasSdot_wrapper(int size, float * A, int incx, float * B, int incy) {
-
-  float result;
-  float buffer;
-  
-  buffer = cublasSdot(size, (float *) A, incx, (float *) B, incy);
-  //printf("proc no %d: my square is: %.8f\n", g_proc_id, buffer);
-  MPI_Allreduce(&buffer, &result, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
-  
-  return(result);
-  
-}
-
-#endif
 
 
 
@@ -1235,6 +1179,7 @@ void update_bare_constants_nd(){
   		// initializes  mu, kappa and twokappamu  on the device
   		// initializes the strange  dev_k{0-3}, dev_mk{0-3}  as derived from the  ka{0-3}  from boundary.c
   #ifdef CUDA_DEBUG
+    cudaError_t cudaerr;
     CUDA_KERNEL_CHECK("Kernel error in he_cg_init(). Couldn't initialize some stuff.", "he_cg_init() succeeded.");
   #endif
     
@@ -1245,7 +1190,7 @@ void update_bare_constants_nd(){
   
   
   #ifdef MPI
-    he_cg_init_nd_additional_mpi<<<1,1>>>(VOLUMEPLUSRAND, RAND, g_cart_id, g_nproc);	
+    he_cg_init_nd_additional_mpi<<<1,1>>>(VOLUMEPLUSRAND/2, RAND, g_cart_id, g_nproc);	
     #ifdef CUDA_DEBUG
       CUDA_KERNEL_CHECK("Kernel error in he_cg_init_nd_additional_mpi(). Couldn't initialize some stuff.", "he_cg_init_nd_additional_mpi() succeeded.");
     #endif			
@@ -1370,8 +1315,8 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   		#endif
   
   
-  to_device(B_up, Q_up, h2d_spin_up, dev_spinsize_int);
-  to_device(B_dn, Q_dn, h2d_spin_dn, dev_spinsize_int);
+  to_device(B_up, Q_up, h2d_spin_up, 1);
+  to_device(B_dn, Q_dn, h2d_spin_dn, 1);
   
   
   // timer
@@ -1390,21 +1335,12 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
       		                gpu_gd_blas, gpu_bd_blas,
       		                gpu_gd_blas, gpu_bd_blas);
     #else
-    	#ifndef ASYNC
     	  dev_Qtm_pm_ndpsi_mpi(A_up, A_dn,				// A = (matrix)*B
-    	                       B_up, B_dn, 
-    	                       gpu_gd_M, gpu_bd_M,
-      		               gpu_gd_linalg, gpu_bd_linalg,
-      		               gpu_gd_blas, gpu_bd_blas,
-      		               gpu_gd_blas, gpu_bd_blas);
-    	#else
-    	  dev_Qtm_pm_ndpsi_mpi_ASYNC(A_up, A_dn,				// A = (matrix)*B
     	                             B_up, B_dn, 
     	                             gpu_gd_M, gpu_bd_M,
       		                     gpu_gd_linalg, gpu_bd_linalg,
       		                     gpu_gd_blas, gpu_bd_blas,
       		                     gpu_gd_blas, gpu_bd_blas);
-    	#endif
     #endif
     
     
@@ -1544,13 +1480,18 @@ extern "C" void benchmark_eo_nd_d (spinor * Q_up, spinor * Q_dn, int N) {
   //													//
   ////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd ! 
+  size_t dev_spinsize_d;
+  
+
   // timing
   #ifndef MPI
     double timeElapsed;
+    dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd ! 
   #else
+    double timeElapsed;    
     double singleTimeElapsed;
     double maxTimeElapsed;
+    dev_spinsize_d = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); // double4 even-odd !     
   #endif
   double startBenchmark;
   double stopBenchmark;
@@ -1738,8 +1679,6 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
   int N_recalc_res = 1000;
 
   
-  
-  
   /////////////////
   // ASSIGNMENTS //
   /////////////////
@@ -1768,17 +1707,19 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
   
   
   		// debug	// CUBLAS helper function
-  		#ifdef CUDA_DEBUG
-  		  CUBLAS_HELPER_CHECK(cublasInit(), "CUBLAS error in cublasInit(). Couldn't initialize CUBLAS.", "CUBLAS initialized.");
-  		#else
-		  #ifdef CUDA_45
-		    cublasHandle_t handle;
-		    cublasCreate(&handle);
-		  #else
-		    cublasInit();
-		  #endif 
-  		#endif
-
+  #ifdef CUDA_DEBUG
+    CUBLAS_HELPER_CHECK(cublasInit(), "CUBLAS error in cublasInit(). Couldn't initialize CUBLAS.", "CUBLAS initialized.");
+  #else
+    #ifdef CUDA_45
+      cublasHandle_t handle;
+      cublasCreate(&handle);
+    #else
+      cublasInit();
+    #endif 
+  #endif
+  #ifdef MPI
+      init_blas(VOLUME/2);
+  #endif   
   if(g_debug_level > 3) printf("cublasstatus = %f\n", cublasstatus);
   
   
@@ -1812,13 +1753,9 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
   
   
   // rr = (r_up)^2 + (r_dn)^2
-  #ifndef MPI
-    rr_up = cublasSdot(N_floats_int, (float *) r_up, 1, (float *) r_up, 1);
-    rr_dn = cublasSdot(N_floats_int, (float *) r_dn, 1, (float *) r_dn, 1);
-  #else
-    rr_up = cublasSdot_wrapper(N_floats_int, (float *) r_up, 1, (float *) r_up, 1);
-    rr_dn = cublasSdot_wrapper(N_floats_int, (float *) r_dn, 1, (float *) r_dn, 1);
-  #endif
+  rr_up = cublasSdot_wrapper(N_floats_int, (float *) r_up, (float *) r_up);
+  rr_dn = cublasSdot_wrapper(N_floats_int, (float *) r_dn, (float *) r_dn);
+
   rr    = rr_up + rr_dn;
   
 
@@ -1861,30 +1798,21 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
       		                        gpu_gd_blas, gpu_bd_blas);
 
     
-      #else
-      	#ifndef ASYNC
-        	dev_Qtm_pm_ndpsi_mpi(Ad_up, Ad_dn,									// normally:  dev_Qtm_pm_ndpsi_mpi()
-        	                             d_up,  d_dn, 									// debugging: matrix_mpi_debug1/2/3/4()
-        	                            gpu_gd_M, gpu_bd_M,
-        	                            gpu_gd_linalg, gpu_bd_linalg,
-        	                            gpu_gd_blas, gpu_bd_blas,
-        	                            gpu_gd_blas, gpu_bd_blas);
-      	#else															// tries to overlap computation and communication
-        	dev_Qtm_pm_ndpsi_mpi_ASYNC(Ad_up, Ad_dn, 
+      #else												// tries to overlap computation and communication
+        	dev_Qtm_pm_ndpsi_mpi(Ad_up, Ad_dn, 
         	                                   d_up,  d_dn, 
         	                                  gpu_gd_M, gpu_bd_M,
         	                                  gpu_gd_linalg, gpu_bd_linalg,
         	                                  gpu_gd_blas, gpu_bd_blas,
         	                                  gpu_gd_blas, gpu_bd_blas);
-      	#endif
       #endif	// MPI
       
       
 	if(shift != 0.0f){
            //add constant shift if nonzero
            // CUBLAS:
-          cublasSaxpy (N_floats_int, shift, (float *) d_up, 1, (float *) Ad_up, 1);
-          cublasSaxpy (N_floats_int, shift, (float *) d_dn, 1, (float *) Ad_dn, 1);
+          cublasSaxpy_wrapper (N_floats_int, shift, (float *) d_up, (float *) Ad_up);
+          cublasSaxpy_wrapper (N_floats_int, shift, (float *) d_dn, (float *) Ad_dn);
         }      
         if((cudaerr=cudaGetLastError()) != cudaSuccess){
            printf("%s\n", cudaGetErrorString(cudaerr));
@@ -1898,13 +1826,9 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
   		#endif
 
     // alpha = r(k)*r(k) / d(k)*A*d(k)
-    #ifndef MPI
-      dAd_up = cublasSdot(N_floats_int, (float *) d_up, 1, (float *) Ad_up, 1);
-      dAd_dn = cublasSdot(N_floats_int, (float *) d_dn, 1, (float *) Ad_dn, 1);
-    #else
-      dAd_up = cublasSdot_wrapper(N_floats_int, (float *) d_up, 1, (float *) Ad_up, 1);
-      dAd_dn = cublasSdot_wrapper(N_floats_int, (float *) d_dn, 1, (float *) Ad_dn, 1);
-    #endif
+    dAd_up = cublasSdot_wrapper(N_floats_int, (float *) d_up, (float *) Ad_up);
+    dAd_dn = cublasSdot_wrapper(N_floats_int, (float *) d_dn, (float *) Ad_dn);
+
     dAd    = dAd_up + dAd_dn;
     
     		// debug	// is NaN ?
@@ -1916,13 +1840,13 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
     alpha  = rr_old / dAd;	// rr_old is taken from the last iteration respectively
     
     // x(k+1) = x(k) + alpha*d(k)
-    cublasSaxpy(N_floats_int, alpha, (float *) d_up, 1, (float *) x_up, 1);
-    cublasSaxpy(N_floats_int, alpha, (float *) d_dn, 1, (float *) x_dn, 1);
+    cublasSaxpy_wrapper(N_floats_int, alpha, (float *) d_up, (float *) x_up);
+    cublasSaxpy_wrapper(N_floats_int, alpha, (float *) d_dn, (float *) x_dn);
     
     // r(k+1)
     if ( (j+1) % N_recalc_res != 0 ) {	// r(k+1) = r(k) - alpha*A*d(k)
-      cublasSaxpy(N_floats_int, -1.0*alpha, (float *) Ad_up, 1, (float *) r_up, 1);
-      cublasSaxpy(N_floats_int, -1.0*alpha, (float *) Ad_dn, 1, (float *) r_dn, 1);
+      cublasSaxpy_wrapper(N_floats_int, -1.0*alpha, (float *) Ad_up, (float *) r_up);
+      cublasSaxpy_wrapper(N_floats_int, -1.0*alpha, (float *) Ad_dn, (float *) r_dn);
     }
     else {				// recalculate residue r(k+1) = b - A*x(k+1)
     					//	"feedback"
@@ -1944,46 +1868,33 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
         	                        gpu_gd_blas, gpu_bd_blas,
         	                        gpu_gd_blas, gpu_bd_blas);
         #else
-        	#ifndef ASYNC
         	  dev_Qtm_pm_ndpsi_mpi(Ax_up, Ax_dn,									// normally:  dev_Qtm_pm_ndpsi_mpi()
-        	                               x_up,  x_dn, 									// debugging: matrix_mpi_debug1/2/3/4()
-        	                              gpu_gd_M, gpu_bd_M,
-        	                              gpu_gd_linalg, gpu_bd_linalg,
-        	                              gpu_gd_blas, gpu_bd_blas,
-        	                              gpu_gd_blas, gpu_bd_blas);
-        	#else
-        	  dev_Qtm_pm_ndpsi_mpi_ASYNC(Ax_up, Ax_dn,									// normally:  dev_Qtm_pm_ndpsi_mpi()
         	                                     x_up,  x_dn, 									// debugging: matrix_mpi_debug1/2/3/4()
         	                                    gpu_gd_M, gpu_bd_M,
         	                                    gpu_gd_linalg, gpu_bd_linalg,
         	                                    gpu_gd_blas, gpu_bd_blas,
         	                                    gpu_gd_blas, gpu_bd_blas);
-        	#endif
         #endif	// MPI
 	if(shift != 0.0f){
            //add constant shift if nonzero
            // CUBLAS:
-          cublasSaxpy (N_floats_int, shift, (float *) x_up, 1, (float *) Ad_up, 1);
-          cublasSaxpy (N_floats_int, shift, (float *) x_dn, 1, (float *) Ad_dn, 1);
+          cublasSaxpy_wrapper (N_floats_int, shift, (float *) x_up, (float *) Ad_up);
+          cublasSaxpy_wrapper (N_floats_int, shift, (float *) x_dn, (float *) Ad_dn);
         }    
 
       // r(k+1) = b - A*x(k+1)
-      cublasScopy(N_floats_int, (float *) Q_up, 1, (float *) r_up, 1);		// r_up = Q_up
-      cublasScopy(N_floats_int, (float *) Q_dn, 1, (float *) r_dn, 1);		// r_dn = Q_dn
-      cublasSaxpy(N_floats_int, -1.0, (float *) Ax_up, 1, (float *) r_up, 1);	// r_up = Q_up - Ax_up
-      cublasSaxpy(N_floats_int, -1.0, (float *) Ax_dn, 1, (float *) r_dn, 1);	// r_dn = Q_dn - Ax_dn
+      dev_copy_spinor_field<<<gpu_gd_blas, gpu_bd_blas>>>(Q_up, r_up); // r_up = Q_up
+      dev_copy_spinor_field<<<gpu_gd_blas, gpu_bd_blas>>>(Q_dn, r_dn); // r_dn = Q_dn 
+      cublasSaxpy_wrapper(N_floats_int, -1.0, (float *) Ax_up, (float *) r_up);	// r_up = Q_up - Ax_up
+      cublasSaxpy_wrapper(N_floats_int, -1.0, (float *) Ax_dn, (float *) r_dn);	// r_dn = Q_dn - Ax_dn
     
     } // recalculate residue
     
 
     // r(k+1)*r(k+1)
-    #ifndef MPI
-      rr_up  = cublasSdot(N_floats_int, (float *) r_up, 1, (float *) r_up, 1);
-      rr_dn  = cublasSdot(N_floats_int, (float *) r_dn, 1, (float *) r_dn, 1);
-    #else
-      rr_up  = cublasSdot_wrapper(N_floats_int, (float *) r_up, 1, (float *) r_up, 1);
-      rr_dn  = cublasSdot_wrapper(N_floats_int, (float *) r_dn, 1, (float *) r_dn, 1);
-    #endif
+    rr_up  = cublasSdot_wrapper(N_floats_int, (float *) r_up, (float *) r_up);
+    rr_dn  = cublasSdot_wrapper(N_floats_int, (float *) r_dn, (float *) r_dn);
+
     rr     = rr_up + rr_dn;
     
 		// debug	// CUBLAS core function
@@ -2030,7 +1941,9 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
       #else
 	cublasShutdown();
       #endif 
-      
+      #ifdef MPI
+        finalize_blas();
+      #endif  
       return(j+1);
     }
     
@@ -2043,11 +1956,11 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
     
     
     // d(k+1) = r(k+1) + beta*d(k)
-    cublasSscal (N_floats_int, beta, (float *) d_up, 1);
-    cublasSaxpy (N_floats_int, 1.0 , (float *) r_up, 1, (float *) d_up, 1);
+    cublasSscal_wrapper (N_floats_int, beta, (float *) d_up);
+    cublasSaxpy_wrapper (N_floats_int, 1.0 , (float *) r_up, (float *) d_up);
     
-    cublasSscal (N_floats_int, beta, (float *) d_dn, 1);
-    cublasSaxpy (N_floats_int, 1.0 , (float *) r_dn, 1, (float *) d_dn, 1);
+    cublasSscal_wrapper (N_floats_int, beta, (float *) d_dn);
+    cublasSaxpy_wrapper (N_floats_int, 1.0 , (float *) r_dn, (float *) d_dn);
     
     		// debug	// CUBLAS core function
     		#ifdef CUDA_DEBUG
@@ -2064,11 +1977,14 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
   if (g_proc_id == 0) printf("Final inner residue: %.6e\n", rr);
 
     
-    #ifdef CUDA_45  
-      cublasDestroy(handle);
-    #else
-      cublasShutdown();
-    #endif 
+  #ifdef CUDA_45  
+    cublasDestroy(handle);
+  #else
+    cublasShutdown();
+  #endif 
+  #ifdef MPI
+    finalize_blas();
+  #endif  
   return(j+1);
   
 }//dev_cg_eo_nd()
@@ -2079,8 +1995,12 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
 
 void test_double_nd_operator(spinor* const Q_up, spinor* const Q_dn, const int N){
    cudaError_t cudaerr;
-   size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !   
-      
+   size_t dev_spinsize_d;
+#ifdef MPI
+  dev_spinsize_d = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); // double2 even-odd !   
+#else
+  dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d);  
+#endif 
       dev_spinor_d * x_up_d = dev_spin0_d;
       dev_spinor_d * x_dn_d = dev_spin1_d;
       dev_spinor_d * Ax_up_d = dev_spin2_d;
@@ -2399,7 +2319,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   //////////////////
   
 
-    init_mixedsolve_eo_nd(g_gauge_field);			// initializes and allocates all quantities for the mixed solver
+   init_mixedsolve_eo_nd(g_gauge_field);			// initializes and allocates all quantities for the mixed solver
   								// more precise:
   								//	puts the gauge field on device as "2 rows" or "8 floats" per SU(3)-matrix
   								//	allocates memory for all spinor fields
@@ -2408,7 +2328,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
 
   //update the gpu single gauge_field
   update_gpu_gf(g_gauge_field); 
-
+  set_gpu_work_layout(1); //set block and grid sizes, eo!
   #ifdef GPU_DOUBLE
       
       //dev_spin0_d == x_up
@@ -2428,9 +2348,13 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       dev_spinor_d * Q_dn_d = dev_spin_eo2_d;  
       dev_spinor_d * r_up_d = dev_spin_eo3_up_d;  
       dev_spinor_d * r_dn_d = dev_spin_eo3_dn_d;      
-      
-       size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !    
-    
+
+      size_t dev_spinsize_d;
+      #ifdef MPI
+       dev_spinsize_d = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); // double2 even-odd !      
+      #else
+       dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d);   
+      #endif
        update_constants_d(dev_grid);
        update_gpu_gf_d(g_gauge_field);
   #endif  
@@ -2547,13 +2471,13 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
 
     
     // rr = (r_up)^2 + (r_dn)^2
-    rr_up = double_dotprod(r_up_d, r_up_d);
-    rr_dn = double_dotprod(r_dn_d, r_dn_d);
+    rr_up = double_dotprod(r_up_d, r_up_d, N_sites_int);
+    rr_dn = double_dotprod(r_dn_d, r_dn_d, N_sites_int);
     rr = rr_up + rr_dn;
     rr_old = rr; // for the first iteration  
     
-    r0r0   = double_dotprod(Q_up_d, Q_up_d) 
-           + double_dotprod(Q_dn_d, Q_dn_d);    
+    r0r0   = double_dotprod(Q_up_d, Q_up_d, N_sites_int) 
+           + double_dotprod(Q_dn_d, Q_dn_d, N_sites_int);    
   #else
       
       // P==0 -> no initial guess
@@ -2612,8 +2536,8 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       dev_d2f<<<gpu_gd_linalg_d,gpu_bd_linalg_d>>>(dev_spinin_up, r_up_d);
       dev_d2f<<<gpu_gd_linalg_d,gpu_bd_linalg_d>>>(dev_spinin_dn, r_dn_d);     
     #else
-      to_device(dev_spinin_up, r_up, h2d_spin_up, dev_spinsize_int);		// notice: for MPI communicateion the boundary exchange takes place when the hopping matrix is applied
-      to_device(dev_spinin_dn, r_dn, h2d_spin_dn, dev_spinsize_int);
+      to_device(dev_spinin_up, r_up, h2d_spin_up, 1);
+      to_device(dev_spinin_dn, r_dn, h2d_spin_dn, 1);
       #ifdef RELATIVISTIC_BASIS  
         to_relativistic_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (dev_spinin_up);
         to_relativistic_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (dev_spinin_dn);	
@@ -2686,8 +2610,8 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       dev_diff_d<<<gpu_gd_linalg_d,gpu_bd_linalg_d>>>(r_up_d,Q_up_d,Ax_up_d);         
       dev_diff_d<<<gpu_gd_linalg_d,gpu_bd_linalg_d>>>(r_dn_d,Q_dn_d,Ax_dn_d); 
  
-      rr_up = double_dotprod(r_up_d, r_up_d);
-      rr_dn = double_dotprod(r_dn_d, r_dn_d);
+      rr_up = double_dotprod(r_up_d, r_up_d, N_sites_int);
+      rr_dn = double_dotprod(r_dn_d, r_dn_d, N_sites_int);
       rr    = rr_up + rr_dn;
       
     #else
@@ -2696,8 +2620,8 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
         to_tmlqcd_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (dev_spinout_up);
         to_tmlqcd_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (dev_spinout_dn);      
       #endif       
-      to_host(d_up, dev_spinout_up, h2d_spin_up, dev_spinsize_int);
-      to_host(d_dn, dev_spinout_dn, h2d_spin_dn, dev_spinsize_int);
+      to_host(d_up, dev_spinout_up, h2d_spin_up, 1);
+      to_host(d_dn, dev_spinout_dn, h2d_spin_dn, 1);
 
       #ifdef CUDA_DEBUG
 	// CUDA_CHECK("CUDA error in mixedsolve_eo_nd(). Device to host interaction failed.", "Fields copied back to device.");
@@ -2927,16 +2851,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
 
 void init_doublesolve_eo_nd (su3** gf) {	// gf is the full gauge field
   
-  
-  //////////////////////
-  // GLOBAL VARIABLES //
-  //////////////////////
-  
-  dev_spinsize_int   =  6*VOLUME/2*sizeof(dev_spinor);				// 24 floats per lattice site
-  N_sites_int        =    VOLUME/2;
-  N_floats_int       = 24*VOLUME/2;
 
-  set_global_sizes();
   
   /////////////////////
   // LOCAL VARIABLES //
@@ -2951,8 +2866,13 @@ void init_doublesolve_eo_nd (su3** gf) {	// gf is the full gauge field
   // SPINORS //							// allocates device memory for the odd part of the spinor fields (24 = 4*6 floats per odd lattice sites)
   /////////////							// now we have to consider 2 flavors: up, dn
   
-  
-  size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); /* double4 */
+  int N;
+#ifdef MPI
+  N = (VOLUME+RAND)/2;
+#else
+  N = VOLUME/2;
+#endif  
+  size_t dev_spinsize_d = 12*N * sizeof(dev_spinor_d); /* double2 */
   //allocate fields used in dev_Qtm_pm_ndpsi_d
   cudaMalloc((void **) &dev_spin_eo1_up_d, dev_spinsize_d);	
   cudaMalloc((void **) &dev_spin_eo1_dn_d, dev_spinsize_d);	  
@@ -2998,7 +2918,7 @@ void init_doublesolve_eo_nd (su3** gf) {	// gf is the full gauge field
   grid[3] = T;
   grid[4] = VOLUME/2;								// will be used to set dev_VOLUME: dev_VOLUME is half of VOLUME for eo
   
-  grid[5] = VOLUME/2;
+  grid[5] = N;
 
   //done in init_mixedsolve_eo
   //cudaMalloc((void **) &dev_grid, 6*sizeof(int));				// dev_grid
@@ -3007,9 +2927,9 @@ void init_doublesolve_eo_nd (su3** gf) {	// gf is the full gauge field
   // debug	// CUDA
   #ifdef CUDA_DEBUG
     #ifndef MPI
-      CUDA_CHECK("CUDA error in init_mixedsolve_eo_nd(). Memory allocation of grid[] specifications failed.", "Allocated grid[] specifications on device.");
+      CUDA_CHECK("CUDA error in init_doublesolve_eo_nd(). Memory allocation of grid[] specifications failed.", "Allocated grid[] specifications on device.");
     #else
-      CUDA_CHECK("CUDA error in init_mixedsolve_eo_nd(). Memory allocation of grid[] specifications failed.", "Allocated grid[] specifications on devices.");
+      CUDA_CHECK("CUDA error in init_doublesolve_eo_nd(). Memory allocation of grid[] specifications failed.", "Allocated grid[] specifications on devices.");
     #endif
   #endif
   
@@ -3160,8 +3080,8 @@ int dev_cg_eo_nd_d (dev_su3_2v_d * gf,
     }
   #endif
   
-    rr_up = cublasDdot(N_floats_int, (double *) r_up, 1, (double *) r_up, 1);
-    rr_dn = cublasDdot(N_floats_int, (double *) r_dn, 1, (double *) r_dn, 1);
+    rr_up = cublasDdot_wrapper(N_floats_int, (double *) r_up, (double *) r_up);
+    rr_dn = cublasDdot_wrapper(N_floats_int, (double *) r_dn, (double *) r_dn);
 
   rr    = rr_up + rr_dn;
 
@@ -3197,8 +3117,8 @@ int dev_cg_eo_nd_d (dev_su3_2v_d * gf,
 	if(shift != 0.0f){
            //add constant shift if nonzero
            // CUBLAS:
-          cublasDaxpy (N_floats_int, shift, (double *) d_up, 1, (double *) Ad_up, 1);
-          cublasDaxpy (N_floats_int, shift, (double *) d_dn, 1, (double *) Ad_dn, 1);
+          cublasDaxpy_wrapper (N_floats_int, shift, (double *) d_up, (double *) Ad_up);
+          cublasDaxpy_wrapper (N_floats_int, shift, (double *) d_dn, (double *) Ad_dn);
         }      
         if((cudaerr=cudaGetLastError()) != cudaSuccess){
            printf("%s\n", cudaGetErrorString(cudaerr));
@@ -3210,8 +3130,8 @@ int dev_cg_eo_nd_d (dev_su3_2v_d * gf,
 	#endif
 
     // alpha = r(k)*r(k) / d(k)*A*d(k)
-      dAd_up = cublasDdot(N_floats_int, (double *) d_up, 1, (double *) Ad_up, 1);
-      dAd_dn = cublasDdot(N_floats_int, (double *) d_dn, 1, (double *) Ad_dn, 1);
+      dAd_up = cublasDdot_wrapper(N_floats_int, (double *) d_up, (double *) Ad_up);
+      dAd_dn = cublasDdot_wrapper(N_floats_int, (double *) d_dn, (double *) Ad_dn);
 
     dAd    = dAd_up + dAd_dn;
     
@@ -3224,13 +3144,13 @@ int dev_cg_eo_nd_d (dev_su3_2v_d * gf,
     alpha  = rr_old / dAd;	// rr_old is taken from the last iteration respectively
     
     // x(k+1) = x(k) + alpha*d(k)
-    cublasDaxpy(N_floats_int, alpha, (double *) d_up, 1, (double *) x_up, 1);
-    cublasDaxpy(N_floats_int, alpha, (double *) d_dn, 1, (double *) x_dn, 1);
+    cublasDaxpy_wrapper(N_floats_int, alpha, (double *) d_up, (double *) x_up);
+    cublasDaxpy_wrapper(N_floats_int, alpha, (double *) d_dn, (double *) x_dn);
     
     // r(k+1)
     if ( (j+1) % N_recalc_res != 0 ) {	// r(k+1) = r(k) - alpha*A*d(k)
-      cublasDaxpy(N_floats_int, -1.0*alpha, (double *) Ad_up, 1, (double *) r_up, 1);
-      cublasDaxpy(N_floats_int, -1.0*alpha, (double *) Ad_dn, 1, (double *) r_dn, 1);
+      cublasDaxpy_wrapper(N_floats_int, -1.0*alpha, (double *) Ad_up, (double *) r_up);
+      cublasDaxpy_wrapper(N_floats_int, -1.0*alpha, (double *) Ad_dn, (double *) r_dn);
     }
     else {				// recalculate residue r(k+1) = b - A*x(k+1)
 	// debug
@@ -3251,22 +3171,24 @@ int dev_cg_eo_nd_d (dev_su3_2v_d * gf,
 	if(shift != 0.0){
            //add constant shift if nonzero
            // CUBLAS:
-          cublasDaxpy (N_floats_int, shift, (double *) x_up, 1, (double *) Ad_up, 1);
-          cublasDaxpy (N_floats_int, shift, (double *) x_dn, 1, (double *) Ad_dn, 1);
+          cublasDaxpy_wrapper (N_floats_int, shift, (double *) x_up, (double *) Ad_up);
+          cublasDaxpy_wrapper (N_floats_int, shift, (double *) x_dn, (double *) Ad_dn);
         }    
 
       // r(k+1) = b - A*x(k+1)
-      cublasDcopy(N_floats_int, (double *) Q_up, 1, (double *) r_up, 1);		// r_up = Q_up
-      cublasDcopy(N_floats_int, (double *) Q_dn, 1, (double *) r_dn, 1);		// r_dn = Q_dn
-      cublasDaxpy(N_floats_int, -1.0, (double *) Ax_up, 1, (double *) r_up, 1);	// r_up = Q_up - Ax_up
-      cublasDaxpy(N_floats_int, -1.0, (double *) Ax_dn, 1, (double *) r_dn, 1);	// r_dn = Q_dn - Ax_dn
+      //cublasDcopy(N_floats_int, (double *) Q_up, 1, (double *) r_up, 1);		
+      //cublasDcopy(N_floats_int, (double *) Q_dn, 1, (double *) r_dn, 1);		
+      dev_copy_spinor_field_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>>(Q_up, r_up);        // r_up = Q_up
+      dev_copy_spinor_field_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>>(Q_dn, r_dn);        // r_dn = Q_dn
+      cublasDaxpy_wrapper(N_floats_int, -1.0, (double *) Ax_up, (double *) r_up);	// r_up = Q_up - Ax_up
+      cublasDaxpy_wrapper(N_floats_int, -1.0, (double *) Ax_dn, (double *) r_dn);	// r_dn = Q_dn - Ax_dn
     
     } // recalculate residue
     
 
     // r(k+1)*r(k+1)
-      rr_up  = cublasDdot(N_floats_int, (double *) r_up, 1, (double *) r_up, 1);
-      rr_dn  = cublasDdot(N_floats_int, (double *) r_dn, 1, (double *) r_dn, 1);
+      rr_up  = cublasDdot_wrapper(N_floats_int, (double *) r_up, (double *) r_up);
+      rr_dn  = cublasDdot_wrapper(N_floats_int, (double *) r_dn, (double *) r_dn);
 
     rr     = rr_up + rr_dn;
     
@@ -3317,11 +3239,11 @@ int dev_cg_eo_nd_d (dev_su3_2v_d * gf,
     
     
     // d(k+1) = r(k+1) + beta*d(k)
-    cublasDscal (N_floats_int, beta, (double *) d_up, 1);
-    cublasDaxpy (N_floats_int, 1.0 , (double *) r_up, 1, (double *) d_up, 1);
+    cublasDscal_wrapper (N_floats_int, beta, (double *) d_up);
+    cublasDaxpy_wrapper (N_floats_int, 1.0 , (double *) r_up, (double *) d_up);
     
-    cublasDscal (N_floats_int, beta, (double *) d_dn, 1);
-    cublasDaxpy (N_floats_int, 1.0 , (double *) r_dn, 1, (double *) d_dn, 1);
+    cublasDscal_wrapper (N_floats_int, beta, (double *) d_dn);
+    cublasDaxpy_wrapper (N_floats_int, 1.0 , (double *) r_dn, (double *) d_dn);
     
     // debug	// CUBLAS core function
     #ifdef CUDA_DEBUG
@@ -3423,10 +3345,15 @@ extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
       dev_spinor_d * r_up_d = dev_spin_eo3_up_d;  
       dev_spinor_d * r_dn_d = dev_spin_eo3_dn_d;      
       
-     size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !      
+     size_t dev_spinsize_d;
+#ifdef MPI
+   dev_spinsize_d = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); // double2 even-odd ! 
+#else
+   dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d);     
+#endif
+     set_global_sizes();
      update_constants_d(dev_grid);
-     update_gpu_gf_d(g_gauge_field);
-    
+     update_gpu_gf_d(g_gauge_field);    
      update_bare_constants_nd();
   
  
@@ -3508,13 +3435,13 @@ extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
      
     
     // rr = (r_up)^2 + (r_dn)^2
-    rr_up = double_dotprod(r_up_d, r_up_d);
-    rr_dn = double_dotprod(r_dn_d, r_dn_d);
+    rr_up = double_dotprod(r_up_d, r_up_d, N_sites_int);
+    rr_dn = double_dotprod(r_dn_d, r_dn_d, N_sites_int);
     rr = rr_up + rr_dn;
     rr_old = rr; // for the first iteration  
     
-    r0r0   = double_dotprod(Q_up_d, Q_up_d) 
-           + double_dotprod(Q_dn_d, Q_dn_d);    
+    r0r0   = double_dotprod(Q_up_d, Q_up_d, N_sites_int) 
+           + double_dotprod(Q_dn_d, Q_dn_d, N_sites_int);    
 
 
   if (g_proc_id == 0) printf("Initial outer residue: %.10e\n", rr_old);
@@ -3681,9 +3608,17 @@ dev_spinor_d ** mms_x_dn_d;
 void init_gpu_nd_mms_fields(int Nshift){
   
   cudaError_t cudaerr;
+
+  int N;
+#ifdef MPI
+  N = (VOLUME+RAND)/2;
+#else
+  N = VOLUME/2;
+#endif
+  
   //here we allocate one spinor pair less than the number of shifts
   //as for the zero'th shift we re-use fields from the usual cg solver
-   size_t dev_spinsize_d = (Nshift-1)*12*VOLUME/2 * sizeof(dev_spinor_d); /* double2 */  
+   size_t dev_spinsize_d = (Nshift-1)*12*N * sizeof(dev_spinor_d); /* double2 */  
    cudaMalloc((void **) &_mms_d_up_d_d, dev_spinsize_d);
    cudaMalloc((void **) &_mms_d_dn_d_d, dev_spinsize_d);   
    cudaMalloc((void **) &_mms_x_up_d_d, dev_spinsize_d);
@@ -3700,11 +3635,65 @@ void init_gpu_nd_mms_fields(int Nshift){
   mms_x_up_d[0] = _mms_x_up_d_d;
   mms_x_dn_d[0] = _mms_x_dn_d_d;  
   for(int im = 1; im < (Nshift-1); im++) {
-    mms_d_up_d[im] = _mms_d_up_d_d + im*12*VOLUME/2;
-    mms_d_dn_d[im] = _mms_d_dn_d_d + im*12*VOLUME/2; 
-    mms_x_up_d[im] = _mms_x_up_d_d + im*12*VOLUME/2;
-    mms_x_dn_d[im] = _mms_x_dn_d_d + im*12*VOLUME/2;     
+    mms_d_up_d[im] = _mms_d_up_d_d + im*12*N;
+    mms_d_dn_d[im] = _mms_d_dn_d_d + im*12*N; 
+    mms_x_up_d[im] = _mms_x_up_d_d + im*12*N;
+    mms_x_dn_d[im] = _mms_x_dn_d_d + im*12*N;     
   }
+
+#ifdef MPI
+  int tSliceEO = LX*LY*LZ/2;
+  R1_UP_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
+  R2_UP_D = R1_UP_D + 12*tSliceEO;
+  R3_UP_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
+  R4_UP_D = R3_UP_D + 12*tSliceEO;
+
+
+//for gathering and spreading of indizes of rand in (gather_rand spread_rand called from xchange_field_wrapper)
+    #ifdef RELATIVISTIC_BASIS
+      cudaMalloc((void **) &RAND_FW_UP_D, tSliceEO*6*sizeof(double2));
+      cudaMalloc((void **) &RAND_BW_UP_D, tSliceEO*6*sizeof(double2));
+    #else
+      cudaMalloc((void **) &RAND_FW_UP_D, tSliceEO*12*sizeof(double2));
+      cudaMalloc((void **) &RAND_BW_UP_D, tSliceEO*12*sizeof(double2));      
+    #endif
+    /*  for async communication */
+    // page-locked memory    
+    #ifdef RELATIVISTIC_BASIS
+      int dbperspin = 6;
+    #else
+      int dbperspin = 12;
+    #endif  
+    cudaMallocHost(&RAND3_UP_D, tSliceEO*dbperspin*sizeof(double2));
+    cudaMallocHost(&RAND4_UP_D, tSliceEO*dbperspin*sizeof(double2));
+    cudaMallocHost(&RAND1_UP_D, tSliceEO*dbperspin*sizeof(double2));
+    cudaMallocHost(&RAND2_UP_D, tSliceEO*dbperspin*sizeof(double2));
+
+  R1_UP_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
+  R2_UP_D = R1_UP_D + 12*tSliceEO;
+  R3_UP_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
+  R4_UP_D = R3_UP_D + 12*tSliceEO;
+
+
+//for gathering and spreading of indizes of rand in (gather_rand spread_rand called from xchange_field_wrapper)
+    #ifdef RELATIVISTIC_BASIS
+      cudaMalloc((void **) &RAND_FW_DN_D, tSliceEO*6*sizeof(double2));
+      cudaMalloc((void **) &RAND_BW_DN_D, tSliceEO*6*sizeof(double2));
+    #else
+      cudaMalloc((void **) &RAND_FW_DN_D, tSliceEO*12*sizeof(double2));
+      cudaMalloc((void **) &RAND_BW_DN_D, tSliceEO*12*sizeof(double2));      
+    #endif
+
+    cudaMallocHost(&RAND3_DN_D, tSliceEO*dbperspin*sizeof(double2));
+    cudaMallocHost(&RAND4_DN_D, tSliceEO*dbperspin*sizeof(double2));
+    cudaMallocHost(&RAND1_DN_D, tSliceEO*dbperspin*sizeof(double2));
+    cudaMallocHost(&RAND2_DN_D, tSliceEO*dbperspin*sizeof(double2));
+    
+  R1_DN_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
+  R2_DN_D = R1_DN_D + 12*tSliceEO;
+  R3_DN_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
+  R4_DN_D = R3_DN_D + 12*tSliceEO;    
+#endif
   
   if((cudaerr=cudaGetLastError())!=cudaSuccess){
     if(g_proc_id==0) printf("Error in init_gpu_nd_mms_fields: Memory allocation of spinor fields failed. Aborting...\n");
@@ -3727,6 +3716,24 @@ void finalize_gpu_nd_mms_fields(){
   cudaFree(_mms_d_dn_d_d);
   cudaFree(_mms_x_up_d_d);
   cudaFree(_mms_x_dn_d_d);  
+#ifdef MPI
+  cudaFreeHost(RAND1_UP_D);
+  cudaFreeHost(RAND2_UP_D); 
+  cudaFreeHost(RAND3_UP_D);
+  cudaFreeHost(RAND4_UP_D);  
+  cudaFree(RAND_BW_UP_D);
+  cudaFree(RAND_FW_UP_D);
+  free(R1_UP_D);
+  free(R3_UP_D);
+  cudaFreeHost(RAND1_DN_D);
+  cudaFreeHost(RAND2_DN_D); 
+  cudaFreeHost(RAND3_DN_D);
+  cudaFreeHost(RAND4_DN_D);  
+  cudaFree(RAND_BW_DN_D);
+  cudaFree(RAND_FW_DN_D);
+  free(R1_DN_D);
+  free(R3_DN_D); 
+#endif
 }
 
 
@@ -3845,17 +3852,9 @@ int dev_cg_mms_eo_nd_d (dev_su3_2v_d * gf,
   
   
   // rr = (r_up)^2 + (r_dn)^2
-
-  #ifdef MPI
-    //launch error and exit
-    if(g_proc_id == 0){
-      printf("Error: pure double GPU ND solver not implemented for MPI. Aborting...\n");
-      exit(200);
-    }
-  #endif
   
-    rr_up = cublasDdot(N_floats_int, (double *) r_up, 1, (double *) r_up, 1);
-    rr_dn = cublasDdot(N_floats_int, (double *) r_dn, 1, (double *) r_dn, 1);
+    rr_up = cublasDdot_wrapper(N_floats_int, (double *) r_up, (double *) r_up);
+    rr_dn = cublasDdot_wrapper(N_floats_int, (double *) r_dn, (double *) r_dn);
 
   rr    = rr_up + rr_dn;
 
@@ -3905,8 +3904,8 @@ int dev_cg_mms_eo_nd_d (dev_su3_2v_d * gf,
 		      gpu_gd_linalg_d, gpu_bd_linalg_d, gpu_gd_linalg_d, gpu_bd_linalg_d);
 
     //add zero'th shift
-    cublasDaxpy (N_floats_int, sigma[0], (double *) d_up, 1, (double *) Ad_up, 1);
-    cublasDaxpy (N_floats_int, sigma[0], (double *) d_dn, 1, (double *) Ad_dn, 1);
+    cublasDaxpy_wrapper (N_floats_int, sigma[0], (double *) d_up, (double *) Ad_up);
+    cublasDaxpy_wrapper (N_floats_int, sigma[0], (double *) d_dn, (double *) Ad_dn);
 	
 
      #ifdef CUDA_DEBUG
@@ -3914,8 +3913,8 @@ int dev_cg_mms_eo_nd_d (dev_su3_2v_d * gf,
      #endif
 
     // alpha = r(k)*r(k) / d(k)*A*d(k)
-      dAd_up = cublasDdot(N_floats_int, (double *) d_up, 1, (double *) Ad_up, 1);
-      dAd_dn = cublasDdot(N_floats_int, (double *) d_dn, 1, (double *) Ad_dn, 1);
+      dAd_up = cublasDdot_wrapper(N_floats_int, (double *) d_up, (double *) Ad_up);
+      dAd_dn = cublasDdot_wrapper(N_floats_int, (double *) d_dn, (double *) Ad_dn);
 
     dAd    = dAd_up + dAd_dn; 
     alpham1 = alphas[0];
@@ -3929,11 +3928,11 @@ int dev_cg_mms_eo_nd_d (dev_su3_2v_d * gf,
       zitam1[im] = zita[im];
       zita[im] = gamma;
       alphas[im] = alphas[0]*zita[im]/zitam1[im];
-      cublasDaxpy(N_floats_int, alphas[im], (double *) mms_d_up_d[im-1], 1, (double *) mms_x_up_d[im-1], 1);
-      cublasDaxpy(N_floats_int, alphas[im], (double *) mms_d_dn_d[im-1], 1, (double *) mms_x_dn_d[im-1], 1);
+      cublasDaxpy_wrapper(N_floats_int, alphas[im], (double *) mms_d_up_d[im-1], (double *) mms_x_up_d[im-1]);
+      cublasDaxpy_wrapper(N_floats_int, alphas[im], (double *) mms_d_dn_d[im-1], (double *) mms_x_dn_d[im-1]);
       if(j > 0 && (j % 10 == 0) && (im == noshifts-1)) {
-	double sn = cublasDdot(N_floats_int, (double *) mms_d_up_d[im-1], 1, (double *) mms_d_up_d[im-1], 1);
-	sn += cublasDdot(N_floats_int, (double *) mms_d_dn_d[im-1], 1, (double *) mms_d_dn_d[im-1], 1);
+	double sn = cublasDdot_wrapper(N_floats_int, (double *) mms_d_up_d[im-1], (double *) mms_d_up_d[im-1]);
+	sn += cublasDdot_wrapper(N_floats_int, (double *) mms_d_dn_d[im-1], (double *) mms_d_dn_d[im-1]);
 	if(alphas[noshifts-1]*alphas[noshifts-1]*sn <= eps_abs) {
 	  noshifts--;
 	  if(g_debug_level > 2 && g_proc_id == 0) {
@@ -3943,16 +3942,16 @@ int dev_cg_mms_eo_nd_d (dev_su3_2v_d * gf,
       }
     }   
     // x_0(k+1) = x_0(k) + alpha_0*d_0(k)      
-    cublasDaxpy(N_floats_int, alphas[0], (double *) d_up, 1, (double *) x_up, 1);
-    cublasDaxpy(N_floats_int, alphas[0], (double *) d_dn, 1, (double *) x_dn, 1);
+    cublasDaxpy_wrapper(N_floats_int, alphas[0], (double *) d_up, (double *) x_up);
+    cublasDaxpy_wrapper(N_floats_int, alphas[0], (double *) d_dn, (double *) x_dn);
     
     // r(k+1)
-    cublasDaxpy(N_floats_int, -1.0*alphas[0], (double *) Ad_up, 1, (double *) r_up, 1);
-    cublasDaxpy(N_floats_int, -1.0*alphas[0], (double *) Ad_dn, 1, (double *) r_dn, 1);
+    cublasDaxpy_wrapper(N_floats_int, -1.0*alphas[0], (double *) Ad_up, (double *) r_up);
+    cublasDaxpy_wrapper(N_floats_int, -1.0*alphas[0], (double *) Ad_dn, (double *) r_dn);
 
     // r(k+1)*r(k+1)
-      rr_up  = cublasDdot(N_floats_int, (double *) r_up, 1, (double *) r_up, 1);
-      rr_dn  = cublasDdot(N_floats_int, (double *) r_dn, 1, (double *) r_dn, 1);
+      rr_up  = cublasDdot_wrapper(N_floats_int, (double *) r_up, (double *) r_up);
+      rr_dn  = cublasDdot_wrapper(N_floats_int, (double *) r_dn, (double *) r_dn);
 
     rr     = rr_up + rr_dn;
     
@@ -4005,19 +4004,19 @@ int dev_cg_mms_eo_nd_d (dev_su3_2v_d * gf,
     
     
     // d(k+1) = r(k+1) + beta*d(k)
-    cublasDscal (N_floats_int, betas[0], (double *) d_up, 1);
-    cublasDaxpy (N_floats_int, 1.0 , (double *) r_up, 1, (double *) d_up, 1);
+    cublasDscal_wrapper (N_floats_int, betas[0], (double *) d_up);
+    cublasDaxpy_wrapper (N_floats_int, 1.0 , (double *) r_up, (double *) d_up);
     
-    cublasDscal (N_floats_int, betas[0], (double *) d_dn, 1);
-    cublasDaxpy (N_floats_int, 1.0 , (double *) r_dn, 1, (double *) d_dn, 1);
+    cublasDscal_wrapper (N_floats_int, betas[0], (double *) d_dn);
+    cublasDaxpy_wrapper (N_floats_int, 1.0 , (double *) r_dn, (double *) d_dn);
     
      for(int im = 1; im < noshifts; im++) {
       betas[im] = betas[0]*zita[im]*alphas[im]/(zitam1[im]*alphas[0]);
-      cublasDscal (N_floats_int, betas[im], (double *) mms_d_up_d[im-1], 1);
-      cublasDaxpy (N_floats_int, zita[im] , (double *) r_up, 1, (double *) mms_d_up_d[im-1], 1);
+      cublasDscal_wrapper (N_floats_int, betas[im], (double *) mms_d_up_d[im-1]);
+      cublasDaxpy_wrapper (N_floats_int, zita[im] , (double *) r_up, (double *) mms_d_up_d[im-1]);
     
-      cublasDscal (N_floats_int, betas[im], (double *) mms_d_dn_d[im-1], 1);
-      cublasDaxpy (N_floats_int, zita[im] , (double *) r_dn, 1, (double *) mms_d_dn_d[im-1], 1);
+      cublasDscal_wrapper (N_floats_int, betas[im], (double *) mms_d_dn_d[im-1]);
+      cublasDaxpy_wrapper (N_floats_int, zita[im] , (double *) r_dn, (double *) mms_d_dn_d[im-1]);
      }   
     
     // debug	// CUBLAS core function
@@ -4084,10 +4083,6 @@ extern "C" int doublesolve_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
     innersolver_precision_check_rel = 0;
     innersolver_precision_check_abs = 1;     
   }
-
-   #ifdef OPERATOR_BENCHMARK
-    benchmark_eo_nd_d(Q_up, Q_dn, OPERATOR_BENCHMARK);
-   #endif
   
   
   //////////////////
@@ -4096,12 +4091,16 @@ extern "C" int doublesolve_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
   
      dev_spinor_d * Q_up_d = dev_spin_eo1_d;
      dev_spinor_d * Q_dn_d = dev_spin_eo2_d;   
-     size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !   
-   
+     size_t dev_spinsize_d;
+#ifdef MPI
+  dev_spinsize_d  = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); // double2 even-odd !   
+#else
+  dev_spinsize_d  = 12*VOLUME/2 * sizeof(dev_spinor_d);  
+#endif
 
     
-     update_constants_d(dev_grid);
-     update_gpu_gf_d(g_gauge_field);
+  update_constants_d(dev_grid);
+  update_gpu_gf_d(g_gauge_field);
     
 
   dev_complex h0, h1, h2, h3; 
@@ -4112,14 +4111,17 @@ extern "C" int doublesolve_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
   he_cg_init<<< 1, 1 >>> (dev_grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0, h1, h2, h3);
 
   he_cg_init_nd_additional<<<1,1>>> (g_mubar, g_epsbar);
-  
+      
+  init_gpu_nd_mms_fields(Nshift);  
+  set_global_sizes();
+    
    #ifdef MATRIX_DEBUG
     test_double_nd_operator(Q_up, Q_dn, N_sites_int);
+   #endif  
+   #ifdef OPERATOR_BENCHMARK
+    benchmark_eo_nd_d(Q_up, Q_dn, OPERATOR_BENCHMARK);
    #endif
-
-     
-    init_gpu_nd_mms_fields(Nshift);  
-  
+    
     order_spin_gpu(Q_up, h2d_spin_d);
     cudaMemcpy(dev_spinin_up_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);      
     order_spin_gpu(Q_dn, h2d_spin_d);
@@ -4280,63 +4282,30 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
   double startinner, stopinner;  
   double innerclocks;
 
-
-  //////////////////
-  // INITIALIZING //
-  //////////////////
+  dev_spinor * Q_up = dev_spin_eo1;
+  dev_spinor * Q_dn = dev_spin_eo2;   
+  size_t dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor); // float4 even-odd !   
   
-     dev_spinor_d * Q_up_d = dev_spin_eo1_d;
-     dev_spinor_d * Q_dn_d = dev_spin_eo2_d;   
-     size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !   
-   
-     int gridsize;
-     //this is the partitioning for the HoppingMatrix kernel
-     int blockdim3 = BLOCKD;
-     if( VOLUME/2 % blockdim3 == 0){
-       gridsize = (int) VOLUME/2/blockdim3;
-     }
-     else{
-       gridsize = (int) VOLUME/2/blockdim3 + 1;
-     }
-     int griddim3 = gridsize;
-   
-     //this is the partitioning for dev_mul_one_pm...
-     int blockdim4 = BLOCK2D;
-     if( VOLUME/2 % blockdim4 == 0){
-       gridsize = (int) VOLUME/2/blockdim4;
-     }
-     else{
-       gridsize = (int) VOLUME/2/blockdim4 + 1;
-     }
-     int griddim4 = gridsize;  
-    
-     update_constants_d(dev_grid);
-     update_gpu_gf_d(g_gauge_field);
-    
-
-  dev_complex h0, h1, h2, h3; 
-  h0.re  =  (float) creal(ka0);	h0.im  = -(float) cimag(ka0);	// ka{0-4} are defined in boundary.c
-  h1.re  =  (float) creal(ka1);	h1.im  = -(float) cimag(ka1);	// what is the meaning?
-  h2.re  =  (float) creal(ka2);	h2.im  = -(float) cimag(ka2);
-  h3.re  =  (float) creal(ka3);	h3.im  = -(float) cimag(ka3);
-  he_cg_init<<< 1, 1 >>> (dev_grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0, h1, h2, h3);
-
-  he_cg_init_nd_additional<<<1,1>>> (g_mubar, g_epsbar);
+  init_mixedsolve_eo_nd(g_gauge_field);
+  
+  update_constants_d(dev_grid);
+  update_gpu_gf_d(g_gauge_field);
+  update_bare_constants_nd();
+  init_gpu_single_nd_mms_fields(Nshift);
   
    #ifdef MATRIX_DEBUG
     test_double_nd_operator(Q_up, Q_dn, N_sites_int);
    #endif
-
      
-    init_gpu_nd_mms_fields(Nshift);  
-  
-    order_spin_gpu(Q_up, h2d_spin_d);
-    cudaMemcpy(dev_spinin_up_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);      
-    order_spin_gpu(Q_dn, h2d_spin_d);
-    cudaMemcpy(dev_spinin_dn_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);
-    #ifdef RELATIVISTIC_BASIS
-      to_relativistic_basis_d<<<griddim4, blockdim4>>> (dev_spinin_up_d);
-      to_relativistic_basis_d<<<griddim4, blockdim4>>> (dev_spinin_dn_d);
+   //double source on device
+   order_spin_gpu(Q_up, h2d_spin_d);
+   cudaMemcpy(dev_spinin_up_d, h2d_spin_d, dev_spinsize, cudaMemcpyHostToDevice);      
+   order_spin_gpu(Q_dn, h2d_spin_d);
+   cudaMemcpy(dev_spinin_dn_d, h2d_spin_d, dev_spinsize, cudaMemcpyHostToDevice);
+   
+   #ifdef RELATIVISTIC_BASIS
+      to_relativistic_basis_d<<<gpu_gd_blas_d, gpu_bd_blas_d>>> (dev_spinin_up_d);
+      to_relativistic_basis_d<<<gpu_gd_blas_d, gpu_bd_blas_d>>> (dev_spinin_dn_d);
       if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
 	if (g_proc_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
       }
@@ -4365,10 +4334,6 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
     alphas = (double*)calloc((noshifts), sizeof(double));
     betas = (double*)calloc((noshifts), sizeof(double));
 
-  /////////////////////
-  // LOCAL VARIABLES //
-  /////////////////////
-  
   // CUDA
   cudaError_t cudaerr;
   cublasStatus cublasstatus;
@@ -4376,42 +4341,12 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
   // algorithm
   double rr_up, rr_dn, rr, rr_old, r0r0, dAd_up, dAd_dn, dAd;
 
-
   // (auxiliary) device fields
   // for recalculating the residue
-  dev_spinor_d *  r_up, *  r_dn, * Ad_up, * Ad_dn, *  x_up, *  x_dn, *  d_up, *  d_dn, * Ax_up, * Ax_dn;		
+  dev_spinor *  r_up, *  r_dn, * Ad_up, * Ad_dn, *  x_up, *  x_dn, *  d_up, *  d_dn, * Ax_up, * Ax_dn;		
  
   // counting
   int j;				// iteration counter
- 
-  /////////////////////////////////////////////
-  // CUDA block- and gridsize specifications //
-  /////////////////////////////////////////////
-  
-  // int gridsize;		// auxiliary
-  int blocksize;		// auxiliary
-  
-  blocksize = BLOCKD;
-  int blockdim2, griddim2;					// passed:	dev_Hopping_Matrix
-  if ( (VOLUME/2) % blocksize == 0 ) {
-    blockdim2 = blocksize;
-    griddim2  = VOLUME/2/blocksize;
-  }
-  else {
-    blockdim2 = blocksize;
-    griddim2  = (int) ((VOLUME/2/blocksize) + 1);
-  }
-  
-  blocksize = BLOCK2D;
-  int blockdim3, griddim3;					// passed:	dev_mul_one_pm_imubar_gamma5
-  if ( (VOLUME/2) % blocksize == 0 ) {
-    blockdim3 = blocksize;
-    griddim3  = VOLUME/2/blocksize;
-  }
-  else {
-    blockdim3 = blocksize;
-    griddim3  = (int) ((VOLUME/2/blocksize) + 1);
-  }
  
 
   /////////////////
@@ -4462,16 +4397,17 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
   
   
   // initialize x(0) = 0	// will be added up
-  dev_zero_spinor_field_d<<<griddim2, blockdim2>>>(x_up);
-  dev_zero_spinor_field_d<<<griddim2, blockdim2>>>(x_dn);
+  dev_zero_spinor_field<<<gpu_gd_blas, gpu_bd_blas>>>(x_up);
+  dev_zero_spinor_field<<<gpu_gd_blas, gpu_bd_blas>>>(x_dn);
   
   // r(0) = b - A*x(0) = b
-  dev_copy_spinor_field_d<<<griddim2, blockdim2>>>(Q_up, r_up);
-  dev_copy_spinor_field_d<<<griddim2, blockdim2>>>(Q_dn, r_dn);
+  dev_d2f<<<gpu_gd_blas_d, gpu_bd_blas_d>>>(r_up, dev_spinin_up_d);
+  dev_d2f<<<gpu_gd_blas_d, gpu_bd_blas_d>>>(r_dn, dev_spinin_dn_d); 
   
-  // d(0) = r(0)
-  dev_copy_spinor_field_d<<<griddim2, blockdim2>>>(r_up, d_up);
-  dev_copy_spinor_field_d<<<griddim2, blockdim2>>>(r_dn, d_dn);
+  // d(0) = b - A*x(0) = b
+  dev_d2f<<<gpu_gd_blas_d, gpu_bd_blas_d>>>(d_up, dev_spinin_up_d);
+  dev_d2f<<<gpu_gd_blas_d, gpu_bd_blas_d>>>(d_dn, dev_spinin_dn_d); 
+  
   
       // debug	// kernel
       #ifdef CUDA_DEBUG
@@ -4490,8 +4426,8 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
     }
   #endif
   
-    rr_up = cublasDdot(N_floats_int, (double *) r_up, 1, (double *) r_up, 1);
-    rr_dn = cublasDdot(N_floats_int, (double *) r_dn, 1, (double *) r_dn, 1);
+    rr_up = cublasSdot_wrapper(N_floats_int, (float *) r_up, (float *) r_up);
+    rr_dn = cublasSdot_wrapper(N_floats_int, (float *) r_dn, (float *) r_dn);
 
   rr    = rr_up + rr_dn;
 
@@ -4541,8 +4477,8 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
 		      griddim3, blockdim3, griddim3, blockdim3);
 
     //add zero'th shift
-    cublasDaxpy (N_floats_int, sigma[0], (double *) d_up, 1, (double *) Ad_up, 1);
-    cublasDaxpy (N_floats_int, sigma[0], (double *) d_dn, 1, (double *) Ad_dn, 1);
+    cublasSaxpy (N_floats_int, sigma[0], (float *) d_up, 1, (float *) Ad_up, 1);
+    cublasSaxpy (N_floats_int, sigma[0], (float *) d_dn, 1, (float *) Ad_dn, 1);
 	
 
      #ifdef CUDA_DEBUG
@@ -4550,8 +4486,8 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
      #endif
 
     // alpha = r(k)*r(k) / d(k)*A*d(k)
-      dAd_up = cublasDdot(N_floats_int, (double *) d_up, 1, (double *) Ad_up, 1);
-      dAd_dn = cublasDdot(N_floats_int, (double *) d_dn, 1, (double *) Ad_dn, 1);
+      dAd_up = cublasSdot_wrapper(N_floats_int, (float *) d_up, (float *) Ad_up);
+      dAd_dn = cublasSdot_wrapper(N_floats_int, (float *) d_dn, (float *) Ad_dn);
 
     dAd    = dAd_up + dAd_dn; 
     alpham1 = alphas[0];
@@ -4565,11 +4501,11 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
       zitam1[im] = zita[im];
       zita[im] = gamma;
       alphas[im] = alphas[0]*zita[im]/zitam1[im];
-      cublasDaxpy(N_floats_int, alphas[im], (double *) mms_d_up_d[im-1], 1, (double *) mms_x_up_d[im-1], 1);
-      cublasDaxpy(N_floats_int, alphas[im], (double *) mms_d_dn_d[im-1], 1, (double *) mms_x_dn_d[im-1], 1);
+      cublasSaxpy(N_floats_int, alphas[im], (float *) mms_d_up_d[im-1], 1, (float *) mms_x_up_d[im-1], 1);
+      cublasSaxpy(N_floats_int, alphas[im], (float *) mms_d_dn_d[im-1], 1, (float *) mms_x_dn_d[im-1], 1);
       if(j > 0 && (j % 10 == 0) && (im == noshifts-1)) {
-	double sn = cublasDdot(N_floats_int, (double *) mms_d_up_d[im-1], 1, (double *) mms_d_up_d[im-1], 1);
-	sn += cublasDdot(N_floats_int, (double *) mms_d_dn_d[im-1], 1, (double *) mms_d_dn_d[im-1], 1);
+	double sn = cublasSdot_wrapper(N_floats_int, (float *) mms_d_up_d[im-1], (float *) mms_d_up_d[im-1]);
+	sn += cublasSdot_wrapper(N_floats_int, (float *) mms_d_dn_d[im-1], (float *) mms_d_dn_d[im-1]);
 	if(alphas[noshifts-1]*alphas[noshifts-1]*sn <= eps_abs) {
 	  noshifts--;
 	  if(g_debug_level > 2 && g_proc_id == 0) {
@@ -4579,16 +4515,16 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
       }
     }   
     // x_0(k+1) = x_0(k) + alpha_0*d_0(k)      
-    cublasDaxpy(N_floats_int, alphas[0], (double *) d_up, 1, (double *) x_up, 1);
-    cublasDaxpy(N_floats_int, alphas[0], (double *) d_dn, 1, (double *) x_dn, 1);
+    cublasSaxpy(N_floats_int, alphas[0], (float *) d_up, 1, (float *) x_up, 1);
+    cublasSaxpy(N_floats_int, alphas[0], (float *) d_dn, 1, (float *) x_dn, 1);
     
     // r(k+1)
-    cublasDaxpy(N_floats_int, -1.0*alphas[0], (double *) Ad_up, 1, (double *) r_up, 1);
-    cublasDaxpy(N_floats_int, -1.0*alphas[0], (double *) Ad_dn, 1, (double *) r_dn, 1);
+    cublasSaxpy(N_floats_int, -1.0*alphas[0], (float *) Ad_up, 1, (float *) r_up, 1);
+    cublasSaxpy(N_floats_int, -1.0*alphas[0], (float *) Ad_dn, 1, (float *) r_dn, 1);
 
     // r(k+1)*r(k+1)
-      rr_up  = cublasDdot(N_floats_int, (double *) r_up, 1, (double *) r_up, 1);
-      rr_dn  = cublasDdot(N_floats_int, (double *) r_dn, 1, (double *) r_dn, 1);
+      rr_up  = cublasSdot_wrapper(N_floats_int, (float *) r_up, (float *) r_up);
+      rr_dn  = cublasSdot_wrapper(N_floats_int, (float *) r_dn, (float *) r_dn);
 
     rr     = rr_up + rr_dn;
     
@@ -4619,11 +4555,14 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
       
       printf("Final mms solver residue: %.6e\n", rr);
       
-	#ifdef CUDA_45  
-	  cublasDestroy(handle);
-	#else
-	  cublasShutdown();
-	#endif 
+      finalize_mixedsolve_eo_nd();
+      finalize_gpu_single_nd_mms_fields();
+      
+      #ifdef CUDA_45  
+	cublasDestroy(handle);
+      #else
+	cublasShutdown();
+      #endif 
 	
 	//free cg constants
 	free(sigma);
@@ -4641,19 +4580,19 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
     
     
     // d(k+1) = r(k+1) + beta*d(k)
-    cublasDscal (N_floats_int, betas[0], (double *) d_up, 1);
-    cublasDaxpy (N_floats_int, 1.0 , (double *) r_up, 1, (double *) d_up, 1);
+    cublasSscal (N_floats_int, betas[0], (float *) d_up, 1);
+    cublasSaxpy (N_floats_int, 1.0 , (float *) r_up, 1, (float *) d_up, 1);
     
-    cublasDscal (N_floats_int, betas[0], (double *) d_dn, 1);
-    cublasDaxpy (N_floats_int, 1.0 , (double *) r_dn, 1, (double *) d_dn, 1);
+    cublasSscal (N_floats_int, betas[0], (float *) d_dn, 1);
+    cublasSaxpy (N_floats_int, 1.0 , (float *) r_dn, 1, (float *) d_dn, 1);
     
      for(int im = 1; im < noshifts; im++) {
       betas[im] = betas[0]*zita[im]*alphas[im]/(zitam1[im]*alphas[0]);
-      cublasDscal (N_floats_int, betas[im], (double *) mms_d_up_d[im-1], 1);
-      cublasDaxpy (N_floats_int, zita[im] , (double *) r_up, 1, (double *) mms_d_up_d[im-1], 1);
+      cublasSscal (N_floats_int, betas[im], (float *) mms_d_up_d[im-1], 1);
+      cublasSaxpy (N_floats_int, zita[im] , (float *) r_up, 1, (float *) mms_d_up_d[im-1], 1);
     
-      cublasDscal (N_floats_int, betas[im], (double *) mms_d_dn_d[im-1], 1);
-      cublasDaxpy (N_floats_int, zita[im] , (double *) r_dn, 1, (double *) mms_d_dn_d[im-1], 1);
+      cublasSscal (N_floats_int, betas[im], (float *) mms_d_dn_d[im-1], 1);
+      cublasSaxpy (N_floats_int, zita[im] , (float *) r_dn, 1, (float *) mms_d_dn_d[im-1], 1);
      }   
     
     // debug	// CUBLAS core function
@@ -4668,12 +4607,13 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
   #endif
   if (g_proc_id == 0) printf("Final mms residue: %.6e\n", rr);
 
-    
-    #ifdef CUDA_45  
-      cublasDestroy(handle);
-    #else
-      cublasShutdown();
-    #endif 
+  finalize_mixedsolve_eo_nd();
+  finalize_gpu_single_nd_mms_fields();    
+  #ifdef CUDA_45  
+    cublasDestroy(handle);
+  #else
+    cublasShutdown();
+  #endif 
  
       
   //free cg constants
@@ -4685,10 +4625,10 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
       
   return(j);
   
-}//dev_cg_mms_eo_nd_d()
-
+}//
 
 */
+
 
 
 
