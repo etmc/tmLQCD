@@ -15,8 +15,7 @@
   #include<mpi.h>
   #include "mpi_init.h"
 #endif
-
-
+#include "xchange/xchange.h"
 
 su3 * g_trafo;
 su3 * tempgauge_field = NULL;
@@ -337,7 +336,7 @@ void to_temporalgauge( su3** gfield, spinor * const spin1, spinor * const spin2)
 
 #ifndef MPI
    #ifndef LOWOUTPUT
-    if (g_proc_id == 0) {
+    if (g_cart_id == 0) {
       printf("Going to temporalgauge now!\n");
     }
    #endif
@@ -534,7 +533,7 @@ void to_temporalgauge_invert_eo( su3** gfield, spinor * const spineven, spinor *
 
 #ifndef MPI
    #ifndef LOWOUTPUT
-    if (g_proc_id == 0) {
+    if (g_cart_id == 0) {
       printf("Going to temporalgauge now!\n");
     }
    #endif
@@ -692,7 +691,7 @@ void to_temporalgauge_invert_eo( su3** gfield, spinor * const spineven, spinor *
     
       if (g_debug_level > 1) {
         plaquette = measure_gauge_action(g_gauge_field);
-        if(g_proc_id == 0) printf("Plaquette before gauge fixing: %.16e\n", 
+        if(g_cart_id == 0) printf("Plaquette before gauge fixing: %.16e\n", 
                                   plaquette/6./VOLUME);
       }  
 
@@ -704,11 +703,11 @@ void to_temporalgauge_invert_eo( su3** gfield, spinor * const spineven, spinor *
       
       if (g_debug_level > 1) {
         plaquette = measure_gauge_action(g_gauge_field);
-        if(g_proc_id == 0) printf("Plaquette after gauge fixing: %.16e\n", 
+        if(g_cart_id == 0) printf("Plaquette after gauge fixing: %.16e\n", 
                                 plaquette/6./VOLUME);
       
         dret = square_norm(spinodd, VOLUME/2 , 1);
-        if(g_proc_id == 0) printf("square norm before gauge fixing: %.16e\n", dret); 
+        if(g_cart_id == 0) printf("square norm before gauge fixing: %.16e\n", dret); 
       }
 
       /* do trafo to odd part of source */
@@ -716,10 +715,10 @@ void to_temporalgauge_invert_eo( su3** gfield, spinor * const spineven, spinor *
  
       if (g_debug_level > 1) {
         dret = square_norm(spinodd, VOLUME/2, 1);
-        if(g_proc_id == 0) printf("square norm after gauge fixing: %.16e\n", dret);       
+        if(g_cart_id == 0) printf("square norm after gauge fixing: %.16e\n", dret);       
    
         dret = square_norm(spineven, VOLUME/2 , 1);
-        if(g_proc_id == 0) printf("square norm before gauge fixing: %.16e\n", dret); 
+        if(g_cart_id == 0) printf("square norm before gauge fixing: %.16e\n", dret); 
       }
 
       /* do trafo to even part of source */
@@ -727,7 +726,7 @@ void to_temporalgauge_invert_eo( su3** gfield, spinor * const spineven, spinor *
        
       if (g_debug_level > 1) {     
         dret = square_norm(spineven, VOLUME/2, 1);
-        if(g_proc_id == 0) printf("square norm after gauge fixing: %.16e\n", dret);      
+        if(g_cart_id == 0) printf("square norm after gauge fixing: %.16e\n", dret);      
       }
   return;
 }
@@ -736,10 +735,43 @@ void to_temporalgauge_invert_eo( su3** gfield, spinor * const spineven, spinor *
 
 
 
+void to_temporalgauge_invert_doublet_eo(su3** gfield, 
+					spinor * const spineven_s, spinor * const spinodd_s,
+				        spinor * const spineven_c, spinor * const spinodd_c) {
+  double dret;
+   
+  if (g_debug_level > 1) {
+    if(g_cart_id == 0) printf("Strange spinor:\n");  
+  }
+  
+  //the difference w.r.t. to_temporalgauge_invert_eo is that we have additionally a charm spinor
+  to_temporalgauge_invert_eo(gfield, spineven_s, spinodd_s);
+  //Now g_trafo is initialized and we can use it directly for the _c fields
 
+  if (g_debug_level > 1) {
+    if(g_cart_id == 0) printf("Charm spinor:\n");     
+    dret = square_norm(spinodd_c, VOLUME/2, 1);
+    if(g_cart_id == 0) printf("square norm before gauge fixing: %.16e\n", dret);       
+  }
+  /* do trafo to odd part of source */  
+  apply_gtrafo_spinor_odd(spinodd_c, g_trafo);
+  if (g_debug_level > 1) {
+    dret = square_norm(spinodd_c, VOLUME/2, 1);
+    if(g_cart_id == 0) printf("square norm after gauge fixing: %.16e\n", dret);       
+  }
 
-
-
+  if (g_debug_level > 1) {
+    dret = square_norm(spineven_c, VOLUME/2, 1);
+    if(g_cart_id == 0) printf("square norm before gauge fixing: %.16e\n", dret);       
+  }  
+  /* do trafo to even part of source */
+  apply_gtrafo_spinor_even(spineven_c, g_trafo);
+    
+  if (g_debug_level > 1) {     
+    dret = square_norm(spineven_c, VOLUME/2, 1);
+    if(g_cart_id == 0) printf("square norm after gauge fixing: %.16e\n", dret);      
+  } 
+}
 
 /*
   Return from temporalgauge again.
@@ -749,7 +781,7 @@ void to_temporalgauge_invert_eo( su3** gfield, spinor * const spineven, spinor *
 */
 void from_temporalgauge(spinor * const spin1, spinor * const spin2) {
   #ifndef LOWOUTPUT
-   if (g_proc_id == 0) {  
+   if (g_cart_id == 0) {  
     printf("Returning from temporalgauge now!\n");
    }
   #endif
@@ -764,7 +796,7 @@ void from_temporalgauge(spinor * const spin1, spinor * const spin2) {
 
 void from_temporalgauge_mms(spinor * const spin1, spinor * const spin2, spinor ** const spin_mms_up, spinor ** const spin_mms_dn, int Nshift) {
   #ifndef LOWOUTPUT
-   if (g_proc_id == 0) {  
+   if (g_cart_id == 0) {  
     printf("Returning from temporalgauge now!\n");
    }
   #endif
@@ -797,7 +829,7 @@ void from_temporalgauge_invert_eo(spinor * const spineven, spinor * const spinod
 
 double plaquette, dret;
       plaquette = measure_gauge_action(g_gauge_field);
-      if(g_proc_id == 0) printf("Plaquette before inverse gauge fixing: %.16e\n",      
+      if(g_cart_id == 0) printf("Plaquette before inverse gauge fixing: %.16e\n",      
                          plaquette/6./VOLUME);
     
       /* undo trafo */
@@ -806,13 +838,17 @@ double plaquette, dret;
       /* copy back the saved original field located in g_tempgauge_field -> update necessary*/
       copy_gauge_field(g_gauge_field, g_tempgauge_field);
       g_update_gauge_copy = 1;
+
+#ifdef MPI
+xchange_gauge(g_gauge_field);
+#endif   
     
      if (g_debug_level > 1) {   
         plaquette = measure_gauge_action(g_gauge_field);
-        if(g_proc_id == 0) printf("Plaquette after inverse gauge fixing: %.16e\n",
+        if(g_cart_id == 0) printf("Plaquette after inverse gauge fixing: %.16e\n",
         plaquette/6./VOLUME);
         dret = square_norm(spineven, VOLUME/2 , 1);
-        if(g_proc_id == 0) printf("square norm before gauge fixing: %.16e\n", dret); 
+        if(g_cart_id == 0) printf("square norm before gauge fixing: %.16e\n", dret); 
       }
 
       /* undo trafo to source (Even, Odd) */
@@ -820,34 +856,34 @@ double plaquette, dret;
 
      if (g_debug_level > 1) { 
       dret = square_norm(spineven, VOLUME/2, 1);
-      if(g_proc_id == 0) printf("square norm after gauge fixing: %.16e\n", dret);  
+      if(g_cart_id == 0) printf("square norm after gauge fixing: %.16e\n", dret);  
       dret = square_norm(spinodd, VOLUME/2 , 1);
-      if(g_proc_id == 0) printf("square norm before gauge fixing: %.16e\n", dret); 
+      if(g_cart_id == 0) printf("square norm before gauge fixing: %.16e\n", dret); 
      }
 
       apply_inv_gtrafo_spinor_odd(spinodd, g_trafo);
 
      if (g_debug_level > 1) { 
       dret = square_norm(spinodd, VOLUME/2, 1);
-      if(g_proc_id == 0) printf("square norm after gauge fixing: %.16e\n", dret); 
+      if(g_cart_id == 0) printf("square norm after gauge fixing: %.16e\n", dret); 
       dret = square_norm(spineven_new, VOLUME/2 , 1);
-      if(g_proc_id == 0) printf("square norm before gauge fixing: %.16e\n", dret); 
+      if(g_cart_id == 0) printf("square norm before gauge fixing: %.16e\n", dret); 
      }
 
       apply_inv_gtrafo_spinor_even(spineven_new, g_trafo);
 
      if (g_debug_level > 1) {
       dret = square_norm(spineven_new, VOLUME/2, 1);
-      if(g_proc_id == 0) printf("square norm after gauge fixing: %.16e\n", dret);  
+      if(g_cart_id == 0) printf("square norm after gauge fixing: %.16e\n", dret);  
       dret = square_norm(spinodd_new, VOLUME/2 , 1);
-      if(g_proc_id == 0) printf("square norm before gauge fixing: %.16e\n", dret); 
+      if(g_cart_id == 0) printf("square norm before gauge fixing: %.16e\n", dret); 
      }
 
       apply_inv_gtrafo_spinor_odd(spinodd_new, g_trafo);
 
      if (g_debug_level > 1) { 
       dret = square_norm(spinodd_new, VOLUME/2, 1);
-      if(g_proc_id == 0) printf("square norm after gauge fixing: %.16e\n", dret); 
+      if(g_cart_id == 0) printf("square norm after gauge fixing: %.16e\n", dret); 
      }
 
 
@@ -859,6 +895,63 @@ double plaquette, dret;
 
 
 
+void from_temporalgauge_invert_doublet_eo(spinor * const spineven_s, spinor * const spinodd_s, 
+					  spinor * const spineven_new_s, spinor * const spinodd_new_s,
+					  spinor * const spineven_c, spinor * const spinodd_c, 
+					  spinor * const spineven_new_c, spinor * const spinodd_new_c) {
+  double dret;
+  
+  //First the strange spinor
+  if (g_debug_level > 1) {
+    if(g_cart_id == 0) printf("Strange spinor:\n");  
+  }  
+  from_temporalgauge_invert_eo(spineven_s, spinodd_s, spineven_new_s, spinodd_new_s);
+  
+  
+  //Second the charm spinor 
+      /* undo trafo to source (Even, Odd) */
+  if (g_debug_level > 1) {
+    if(g_cart_id == 0) printf("Charm spinor:\n");  
+    dret = square_norm(spineven_c, VOLUME/2 , 1);
+    if(g_cart_id == 0) printf("square norm before gauge fixing: %.16e\n", dret);     
+  }     
+      apply_inv_gtrafo_spinor_even(spineven_c, g_trafo);
+
+     if (g_debug_level > 1) { 
+      dret = square_norm(spineven_c, VOLUME/2, 1);
+      if(g_cart_id == 0) printf("square norm after gauge fixing: %.16e\n", dret);  
+      dret = square_norm(spinodd_c, VOLUME/2 , 1);
+      if(g_cart_id == 0) printf("square norm before gauge fixing: %.16e\n", dret); 
+     }
+
+      apply_inv_gtrafo_spinor_odd(spinodd_c, g_trafo);
+
+     if (g_debug_level > 1) { 
+      dret = square_norm(spinodd_c, VOLUME/2, 1);
+      if(g_cart_id == 0) printf("square norm after gauge fixing: %.16e\n", dret); 
+      dret = square_norm(spineven_new_c, VOLUME/2 , 1);
+      if(g_cart_id == 0) printf("square norm before gauge fixing: %.16e\n", dret); 
+     }
+
+      apply_inv_gtrafo_spinor_even(spineven_new_c, g_trafo);
+
+     if (g_debug_level > 1) {
+      dret = square_norm(spineven_new_c, VOLUME/2, 1);
+      if(g_cart_id == 0) printf("square norm after gauge fixing: %.16e\n", dret);  
+      dret = square_norm(spinodd_new_c, VOLUME/2 , 1);
+      if(g_cart_id == 0) printf("square norm before gauge fixing: %.16e\n", dret); 
+     }
+
+      apply_inv_gtrafo_spinor_odd(spinodd_new_c, g_trafo);
+
+     if (g_debug_level > 1) { 
+      dret = square_norm(spinodd_new_c, VOLUME/2, 1);
+      if(g_cart_id == 0) printf("square norm after gauge fixing: %.16e\n", dret); 
+     }
+  
+  
+  
+}
 
 
 
@@ -893,7 +986,7 @@ void apply_gtrafo (su3 ** gfield, su3 * trafofield) {
   
   su3 temp1;
   #ifndef LOWOUTPUT
-   if (g_proc_id == 0) {
+   if (g_cart_id == 0) {
     printf("Applying gauge transformation...");
    }
   #endif
@@ -945,10 +1038,13 @@ void apply_gtrafo (su3 ** gfield, su3 * trafofield) {
     } 
   }
   #ifndef LOWOUTPUT  
-  if (g_proc_id == 0) {
+  if (g_cart_id == 0) {
     printf("done\n");
   }
   #endif  
+#ifdef MPI
+xchange_gauge(gfield);
+#endif
   /* update gauge copy fields in the next call to HoppingMatrix */
   g_update_gauge_copy = 1;
  
@@ -971,7 +1067,7 @@ void apply_inv_gtrafo (su3 ** gfield, su3 * trafofield) {
   
  su3 temp1, temp2;
  
- if(g_proc_id == 0) {
+ if(g_cart_id == 0) {
    printf("Applying INVERSE gauge transformation...");
  }
  
@@ -999,13 +1095,16 @@ void apply_inv_gtrafo (su3 ** gfield, su3 * trafofield) {
           }  
   }}}}
   
-  if(g_proc_id == 0) {
+  if(g_cart_id == 0) {
     printf("done\n");
   }
   
   /* update gauge copy fields in the next call to HoppingMatrix */
   g_update_gauge_copy = 1;
   
+#ifdef MPI
+xchange_gauge(gfield);
+#endif  
 }
 
 
@@ -1024,7 +1123,7 @@ void apply_inv_gtrafo_spinor (spinor * spin, su3 * trafofield) {
   
  spinor temp;
  
- if(g_proc_id == 0) {
+ if(g_cart_id == 0) {
    printf("Applying INVERSE gauge transformation to spinor...");
  }
  
@@ -1050,7 +1149,7 @@ void apply_inv_gtrafo_spinor (spinor * spin, su3 * trafofield) {
     } 
   }
   
-  if (g_proc_id == 0) {
+  if (g_cart_id == 0) {
     printf("done\n");
   }
   
@@ -1072,7 +1171,7 @@ void apply_gtrafo_spinor (spinor * spin, su3 * trafofield) {
  int pos; 
  spinor temp;
  
- if(g_proc_id == 0) {
+ if(g_cart_id == 0) {
    printf("Applying gauge transformation to spinor...");
  }
  
@@ -1097,7 +1196,7 @@ void apply_gtrafo_spinor (spinor * spin, su3 * trafofield) {
     } 
   }
   
-  if(g_proc_id == 0) {
+  if(g_cart_id == 0) {
     printf("done\n");
   }
   
@@ -1120,7 +1219,7 @@ void apply_gtrafo_spinor_odd (spinor * spin, su3 * trafofield) {
   int oddpos; 
   spinor temp;
   #ifndef LOWOUTPUT
-    if (g_proc_id == 0) {
+    if (g_cart_id == 0) {
       printf("Applying  gauge transformation to odd spinor...");
     }
   #endif
@@ -1152,7 +1251,7 @@ void apply_gtrafo_spinor_odd (spinor * spin, su3 * trafofield) {
     } 
   }
   #ifndef LOWOUTPUT
-    if (g_proc_id == 0) {
+    if (g_cart_id == 0) {
       printf("done\n");
     }   
   #endif
@@ -1177,7 +1276,7 @@ void apply_inv_gtrafo_spinor_odd (spinor * spin, su3 * trafofield) {
   
   spinor temp;
   #ifndef LOWOUTPUT
-    if (g_proc_id == 0) {
+    if (g_cart_id == 0) {
       printf("Applying INVERSE gauge transformation to odd spinor...");
     }
   #endif
@@ -1211,7 +1310,7 @@ void apply_inv_gtrafo_spinor_odd (spinor * spin, su3 * trafofield) {
   }
 
   #ifndef LOWOUTPUT
-    if (g_proc_id == 0) {
+    if (g_cart_id == 0) {
       printf("done\n");
     }
   #endif
@@ -1237,7 +1336,7 @@ void apply_gtrafo_spinor_even (spinor * spin, su3 * trafofield) {
   
   spinor temp;
   #ifndef LOWOUTPUT
-    if (g_proc_id == 0) {
+    if (g_cart_id == 0) {
       printf("Applying  gauge transformation to even spinor...");
     }
   #endif
@@ -1270,7 +1369,7 @@ void apply_gtrafo_spinor_even (spinor * spin, su3 * trafofield) {
     } 
   }
   #ifndef LOWOUTPUT
-    if (g_proc_id == 0) {
+    if (g_cart_id == 0) {
       printf("done\n");
     }
   #endif
@@ -1294,7 +1393,7 @@ void apply_inv_gtrafo_spinor_even (spinor * spin, su3 * trafofield) {
   
   spinor temp;
   #ifndef LOWOUTPUT
-    if (g_proc_id == 0) {
+    if (g_cart_id == 0) {
       printf("Applying INVERSE gauge transformation to even spinor...");
     }
   #endif
@@ -1326,7 +1425,7 @@ void apply_inv_gtrafo_spinor_even (spinor * spin, su3 * trafofield) {
     } 
   }
   #ifndef LOWOUTPUT
-    if (g_proc_id == 0) {
+    if (g_cart_id == 0) {
       printf("done\n");
     }
   #endif
