@@ -107,21 +107,35 @@ __global__ void dev_Hopping_Matrix_d(dev_su3_2v_d * gf, const dev_spinor_d * sin
               #else
                 if ((gfindex_site[pos]/spatialvol) != (dev_T-1) ) {
               #endif
-              
-                DIRECTLOAD_D(shelp1, sin, hoppos);
+              #ifdef RELATIVISTIC_BASIS
+                DIRECTLOAD_REL_UP_D(shelp1, sin, hoppos);
+              #else
+                DIRECTLOAD_D(shelp1, sin, hoppos);		
+              #endif
               }
               else{
                 // gf != ID for t == T-1 => mult spinor with gf
                 dev_reconstructgf_2vtexref_d(gf,4*gfindex_site[pos]+0,&(gfsmem));
-                dev_su3MtV_d(gfsmem, &(sin[hoppos]), &(shelp1[0]));
-
+                #ifdef RELATIVISTIC_BASIS
+                  dev_su3MtV_rel_up_d(gfsmem, &(sin[hoppos]), &(shelp1[0]));		
+		#else
+                  dev_su3MtV_d(gfsmem, &(sin[hoppos]), &(shelp1[0]));
+		#endif
               }
             #else
               dev_reconstructgf_2vtexref_d(gf, 4*gfindex_site[pos]+ 0 ,&(gfsmem));
-              dev_su3MtV_d(gfsmem, &(sin[hoppos]), &(shelp1[0]));
+	      #ifdef RELATIVISTIC_BASIS
+	        dev_su3MtV_rel_up_d(gfsmem, &(sin[hoppos]), &(shelp1[0]));
+	      #else
+                dev_su3MtV_d(gfsmem, &(sin[hoppos]), &(shelp1[0]));
+	      #endif
             #endif
             //-kappa(r - gamma_mu)
+	    #ifdef RELATIVISTIC_BASIS
+              dev_kappaP0_plus_relativistic_d(&(ssum[0]), &(shelp1[0]), dev_cconj_d(dev_k0_d));		
+	    #else
               dev_kappaP0_plus_d(&(ssum[0]), &(shelp1[0]), dev_cconj_d(dev_k0_d));
+	    #endif
 	    
 //l==0,t
             //negative direction
@@ -136,22 +150,36 @@ __global__ void dev_Hopping_Matrix_d(dev_su3_2v_d * gf, const dev_spinor_d * sin
               #else
                 if ((gfindex_nextsite[hoppos]/spatialvol) != (dev_T-1) ) {
               #endif
-              
+              #ifdef RELATIVISTIC_BASIS
+                DIRECTLOAD_REL_DN_D(shelp1, sin, hoppos);   
+              #else 		
                 DIRECTLOAD_D(shelp1, sin, hoppos);
+              #endif		
               }
               else{
                 // gf != ID for t == T-1 => mult spinor with gf
                 dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+0, &(gfsmem));
-                dev_su3MtV_d(gfsmem, &(sin[hoppos]), &(shelp1[0]));
+                #ifdef RELATIVISTIC_BASIS		
+                  dev_su3MtV_rel_dn_d(gfsmem, &(sin[hoppos]), &(shelp1[0]));
+		#else
+                  dev_su3MtV_d(gfsmem, &(sin[hoppos]), &(shelp1[0]));		  
+		#endif
               }
             #else            
               dev_reconstructgf_2vtexref_dagger_d(gf,4*gfindex_nextsite[hoppos]+0, &(gfsmem));
-              dev_su3MtV_d(gfsmem, &(sin[hoppos]), &(shelp1[0]));
+              #ifdef RELATIVISTIC_BASIS	
+                dev_su3MtV_rel_dn_d(gfsmem, &(sin[hoppos]), &(shelp1[0]));	      
+              #else	      
+                dev_su3MtV_d(gfsmem, &(sin[hoppos]), &(shelp1[0]));
+	      #endif	      
             #endif
             
             //-kappa(r + gamma_mu)
+            #ifdef RELATIVISTIC_BASIS
+              dev_kappaP0_minus_relativistic_d(&(ssum[0]), &(shelp1[0]), dev_k0_d);		
+            #else		
               dev_kappaP0_minus_d(&(ssum[0]), &(shelp1[0]), dev_k0_d);
-
+            #endif
 
 
 //l==3,z 
@@ -425,7 +453,11 @@ __global__ void dev_mul_one_pm_imu_inv_d(dev_spinor_d* sin, dev_spinor_d* sout, 
    pos= threadIdx.x + blockDim.x*blockIdx.x;  
 
    if(pos < dev_VOLUME){
-     dev_skalarmult_gamma5_globalspinor_d(&(slocal[0]), pm_imu, &(sin[pos]) );
+     #ifdef RELATIVISTIC_BASIS
+       dev_skalarmult_gamma5_globalspinor_rel_d(&(slocal[0]), pm_imu, &(sin[pos]) );
+     #else
+       dev_skalarmult_gamma5_globalspinor_d(&(slocal[0]), pm_imu, &(sin[pos]) );
+     #endif
      dev_add_globalspinor_assign_d(&(slocal[0]), &(sin[pos])); 
      dev_realmult_spinor_assigntoglobal_d(&(sout[pos]), one_plus_musquare_inv, &(slocal[0]) );
    }
@@ -444,10 +476,18 @@ __global__ void dev_mul_one_pm_imu_sub_mul_gamma5_d(dev_spinor_d* sin1, dev_spin
    pos= threadIdx.x + blockDim.x*blockIdx.x; 
 
    if(pos < dev_VOLUME){
-     dev_skalarmult_gamma5_globalspinor_d(&(slocal[0]),pm_imu,&(sin1[pos]));
+     #ifdef RELATIVISTIC_BASIS
+       dev_skalarmult_gamma5_globalspinor_rel_d(&(slocal[0]), pm_imu, &(sin1[pos]) );
+     #else     
+       dev_skalarmult_gamma5_globalspinor_d(&(slocal[0]),pm_imu,&(sin1[pos]));
+     #endif  
      dev_add_globalspinor_assign_d(&(slocal[0]), &(sin1[pos]));
      dev_sub_globalspinor_assign_d(&(slocal[0]), &(sin2[pos]));
-     dev_Gamma5_assigntoglobal_d(&(sout[pos]), &(slocal[0]));
+     #ifdef RELATIVISTIC_BASIS
+       dev_Gamma5_assigntoglobal_rel_d(&(sout[pos]), &(slocal[0]));
+     #else     
+       dev_Gamma5_assigntoglobal_d(&(sout[pos]), &(slocal[0]));
+     #endif
    }   
 }
 

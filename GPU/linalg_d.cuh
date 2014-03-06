@@ -3456,6 +3456,39 @@ __device__ void dev_Gamma5_assign_rel_d(double4 * out, double4* in){
 }
 
 
+//this works in the relativistic basis
+//gamma5 NOT diagonal!!
+__device__ void dev_Gamma5_assigntoglobal_rel_d(dev_spinor_d* out, double4* in){
+  (*(out+0*DEVOFF)).x = -1.0*(*(in+3)).x;
+  (*(out+0*DEVOFF)).y = -1.0*(*(in+3)).y;
+  (*(out+1*DEVOFF)).x = -1.0*(*(in+3)).z;
+  (*(out+1*DEVOFF)).y = -1.0*(*(in+3)).w;
+  (*(out+2*DEVOFF)).x = -1.0*(*(in+4)).x;
+  (*(out+2*DEVOFF)).y = -1.0*(*(in+4)).y;
+
+  (*(out+3*DEVOFF)).x = -1.0*(*(in+4)).z;
+  (*(out+3*DEVOFF)).y = -1.0*(*(in+4)).w;
+  (*(out+4*DEVOFF)).x = -1.0*(*(in+5)).x;
+  (*(out+4*DEVOFF)).y = -1.0*(*(in+5)).y;
+  (*(out+5*DEVOFF)).x = -1.0*(*(in+5)).z;
+  (*(out+5*DEVOFF)).y = -1.0*(*(in+5)).w;
+
+  (*(out+6*DEVOFF)).x = -1.0*(*(in+0)).x;
+  (*(out+6*DEVOFF)).y = -1.0*(*(in+0)).y;
+  (*(out+7*DEVOFF)).x = -1.0*(*(in+0)).z;
+  (*(out+7*DEVOFF)).y = -1.0*(*(in+0)).w;
+  (*(out+8*DEVOFF)).x = -1.0*(*(in+1)).x;
+  (*(out+8*DEVOFF)).y = -1.0*(*(in+1)).y;
+
+  (*(out+9*DEVOFF)).x = -1.0*(*(in+1)).z;
+  (*(out+9*DEVOFF)).y = -1.0*(*(in+1)).w;
+  (*(out+10*DEVOFF)).x = -1.0*(*(in+2)).x;
+  (*(out+10*DEVOFF)).y = -1.0*(*(in+2)).y;
+  (*(out+11*DEVOFF)).x = -1.0*(*(in+2)).z;
+  (*(out+11*DEVOFF)).y = -1.0*(*(in+2)).w;
+
+}
+
 
 
 // **************** double su3 operations **************************

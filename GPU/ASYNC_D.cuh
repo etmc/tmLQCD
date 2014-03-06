@@ -472,14 +472,14 @@ void HOPPING_ASYNC_D (dev_su3_2v_d * gf,
         	
         	// copies first FACE to host
 				  
-        	//#ifdef RELATIVISTIC_BASIS
-        	//  dev_gather_rand_relup_d<<<gridsize3, blocksize3 ,0,stream[1] >>>(spinin,RAND_BW_D,0,tSliceEO);
-  		//  cudaMemcpyAsync(RAND1_D, RAND_BW_D, tSliceEO*6*sizeof(double2), cudaMemcpyDeviceToHost, stream[1]);
-  		//#else
+        	#ifdef RELATIVISTIC_BASIS
+        	  dev_gather_rand_relup_d<<<gridsize3, blocksize3 ,0,stream[1] >>>(spinin,RAND_BW_D,0,tSliceEO);
+  		  cudaMemcpyAsync(RAND1_D, RAND_BW_D, tSliceEO*6*sizeof(double2), cudaMemcpyDeviceToHost, stream[1]);
+  		#else
         	  dev_gather_rand_d<<<gridsize3, blocksize3,0,stream[1] >>>(spinin,RAND_BW_D,0,tSliceEO);
   		  cudaMemcpyAsync(RAND1_D, RAND_BW_D, tSliceEO*12*sizeof(double2), cudaMemcpyDeviceToHost, stream[1]);  		
 		  //printf("g_proc_id = %d: R1  %e \n", g_proc_id, RAND1[11].x);
-		//#endif
+		#endif
   				#ifdef ASYNC_TIMING
   				  cudaEventRecord(stop_D2H_1, stream[1]);
   				#endif
@@ -493,14 +493,14 @@ void HOPPING_ASYNC_D (dev_su3_2v_d * gf,
 
                 // copies second FACE to host
 				  
-  		//#ifdef RELATIVISTIC_BASIS
-  		//  dev_gather_rand_reldn_d<<<gridsize3, blocksize3, 0, stream[2] >>>(spinin,RAND_FW_D,(VolumeEO-tSliceEO),tSliceEO);
-  		//  cudaMemcpyAsync(RAND2_D, RAND_FW_D, tSliceEO*6*sizeof(double2), cudaMemcpyDeviceToHost, stream[2]);
-  		//#else
+  		#ifdef RELATIVISTIC_BASIS
+  		  dev_gather_rand_reldn_d<<<gridsize3, blocksize3, 0, stream[2] >>>(spinin,RAND_FW_D,(VolumeEO-tSliceEO),tSliceEO);
+  		  cudaMemcpyAsync(RAND2_D, RAND_FW_D, tSliceEO*6*sizeof(double2), cudaMemcpyDeviceToHost, stream[2]);
+  		#else
                   dev_gather_rand_d<<<gridsize3, blocksize3, 0, stream[2] >>>(spinin,RAND_FW_D,(VolumeEO-tSliceEO),tSliceEO);
   		  cudaMemcpyAsync(RAND2_D, RAND_FW_D, tSliceEO*12*sizeof(double2), cudaMemcpyDeviceToHost, stream[2]);  		
 		  //printf("g_proc_id = %d: R2  %e \n", g_proc_id, RAND2[11].x);
-		//#endif
+		#endif
   				#ifdef ASYNC_TIMING
   				  cudaEventRecord(stop_D2H_2, stream[2]);
   				#endif	
@@ -545,14 +545,14 @@ void HOPPING_ASYNC_D (dev_su3_2v_d * gf,
   		//MPI_Wait(&recv_req[0], &stat[0]);									
   		// synchronous
                 
-		//#ifdef RELATIVISTIC_BASIS 
-  		//  cudaMemcpyAsync(RAND_BW_D, RAND3_D, tSliceEO*6*sizeof(double2), cudaMemcpyHostToDevice, stream[1]);
-  		//  dev_spread_rand_relup_d<<<gridsize3, blocksize3, 0, stream[1] >>>(spinin,RAND_BW_D,VolumeEO,tSliceEO);
-                //#else
+		#ifdef RELATIVISTIC_BASIS 
+  		  cudaMemcpyAsync(RAND_BW_D, RAND3_D, tSliceEO*6*sizeof(double2), cudaMemcpyHostToDevice, stream[1]);
+  		  dev_spread_rand_relup_d<<<gridsize3, blocksize3, 0, stream[1] >>>(spinin,RAND_BW_D,VolumeEO,tSliceEO);
+                #else
                   //printf("g_proc_id = %d:  R3 %e \n", g_proc_id, RAND3[11].x);
                   cudaMemcpyAsync(RAND_BW_D, RAND3_D, tSliceEO*12*sizeof(double2), cudaMemcpyHostToDevice, stream[1]);
                   dev_spread_rand_d<<<gridsize3, blocksize3, 0, stream[1] >>>(spinin,RAND_BW_D,VolumeEO,tSliceEO);
-                //#endif
+                #endif
 
   				#ifdef ASYNC_TIMING
   				  cudaEventRecord(stop_H2D_3, stream[1]);
@@ -591,14 +591,14 @@ void HOPPING_ASYNC_D (dev_su3_2v_d * gf,
   		// copies second FACE back to device
   		//MPI_Wait(&recv_req[1], &stat[1]); 
 				  
-  		//#ifdef RELATIVISTIC_BASIS 
-  		//  cudaMemcpyAsync(RAND_FW_D, RAND4_D, tSliceEO*6*sizeof(double2), cudaMemcpyHostToDevice, stream[2]);
-  		//  dev_spread_rand_reldn_d<<<gridsize3, blocksize3, 0, stream[2] >>>(spinin,RAND_FW_D,VolumeEO+tSliceEO,tSliceEO);
-  		//#else
+  		#ifdef RELATIVISTIC_BASIS 
+  		  cudaMemcpyAsync(RAND_FW_D, RAND4_D, tSliceEO*6*sizeof(double2), cudaMemcpyHostToDevice, stream[2]);
+  		  dev_spread_rand_reldn_d<<<gridsize3, blocksize3, 0, stream[2] >>>(spinin,RAND_FW_D,VolumeEO+tSliceEO,tSliceEO);
+  		#else
   		  //printf("g_proc_id = %d: R4  %e \n", g_proc_id, RAND4[11].x);
    		  cudaMemcpyAsync(RAND_FW_D, RAND4_D, tSliceEO*12*sizeof(double2), cudaMemcpyHostToDevice, stream[2]);
   		  dev_spread_rand_d<<<gridsize3, blocksize3, 0, stream[2] >>>(spinin,RAND_FW_D,VolumeEO+tSliceEO,tSliceEO); 		
-  		//#endif
+  		#endif
 		
   				#ifdef ASYNC_TIMING
   				  cudaEventRecord(stop_H2D_4, stream[2]);
