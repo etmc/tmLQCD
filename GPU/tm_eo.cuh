@@ -127,7 +127,7 @@ extern "C" void dev_Qtm_pm_psi_old(dev_spinor* spinin, dev_spinor* spinout, int 
 
 // aequivalent to Qtm_pm_psi in tm_operators.c, this is NON-MPI version
 // fused hopping and linalg kernels to be more efficient on kepler
-extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int gridsize, dim3 blocksize, int gridsize2, int blocksize2){
+extern "C" void dev_Qtm_pm_psi_scalar(dev_spinor* spinin, dev_spinor* spinout, int gridsize, dim3 blocksize, int gridsize2, int blocksize2){
   //spinin == odd
   //spinout == odd
   
@@ -231,6 +231,19 @@ extern "C" void dev_Qtm_pm_psi_mpi(dev_spinor* spinin, dev_spinor* spinout, int 
 }
 #endif
 
+
+
+
+extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int gridsize, dim3 blocksize, 
+			       int gridsize2, int blocksize2){
+
+#ifdef MPI
+  dev_Qtm_pm_psi_mpi(spinin, spinout, gridsize, blocksize, gridsize2, blocksize2);
+#else
+  dev_Qtm_pm_psi_scalar(spinin, spinout, gridsize, blocksize, gridsize2, blocksize2);
+#endif
+
+}
 
 
 

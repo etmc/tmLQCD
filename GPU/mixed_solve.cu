@@ -521,7 +521,7 @@ void update_constants(int *grid){
   mh3.re = -(float)creal(ka3);    mh3.im = (float)cimag(ka3);
 
   #ifndef LOWOUTPUT
-  if(g_proc_id==0){
+  if(g_cart_id==0){
     printf("ka0.re = %f\n",  h0.re);
     printf("ka0.im = %f\n",  h0.im); 
     printf("ka1.re = %f\n",  h1.re);
@@ -803,11 +803,11 @@ extern "C" int dev_cg(
    to_relativistic_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (spinin);
 
    if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-     if (g_proc_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+     if (g_cart_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
    }
    else{
      #ifndef LOWOUTPUT 
-     if (g_proc_id == 0) printf("Switched to relativistic basis\n");
+     if (g_cart_id == 0) printf("Switched to relativistic basis\n");
      #endif
    }
  #endif
@@ -1071,7 +1071,7 @@ extern "C" int dev_cg_eo(
  
  
  //Initialize some stuff
-    //if (g_proc_id == 0) printf("mu = %f\n", g_mu);
+    //if (g_cart_id == 0) printf("mu = %f\n", g_mu);
 
   update_constants(grid);
   
@@ -1079,7 +1079,7 @@ extern "C" int dev_cg_eo(
     he_cg_init_nd_additional_mpi<<<1,1>>>(VOLUMEPLUSRAND/2, RAND, g_cart_id, g_nproc);
     // debug	// check dev_VOLUMEPLUSRAND and dev_RAND on device
     #ifndef LOWOUTPUT
-        if (g_proc_id == 0) {
+        if (g_cart_id == 0) {
   	  int host_check_VOLUMEPLUSRAND, host_check_RAND;
   	  int host_check_rank, host_check_nproc;
   	  int host_check_VOLUME;
@@ -1117,7 +1117,7 @@ extern "C" int dev_cg_eo(
  cudaMalloc((void **) &beta, sizeof(float));
  #ifndef LOWOUTPUT 
  if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-   if (g_proc_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
+   if (g_cart_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
  }
  #endif
  //init blas
@@ -1132,7 +1132,7 @@ extern "C" int dev_cg_eo(
   init_blas(VOLUME/2);
  #endif 
 
-    if (g_proc_id == 0) {
+    if (g_cart_id == 0) {
       if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
         printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
       }
@@ -1140,21 +1140,6 @@ extern "C" int dev_cg_eo(
         printf("have initialized cublas\n"); 
       #endif
     }
-
- 
- #ifdef RELATIVISTIC_BASIS 
-   //transform to relativistic gamma basis
-   to_relativistic_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (spinin);
-
-   if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-     if (g_proc_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-   }
-   else{
-     #ifndef LOWOUTPUT 
-     if (g_proc_id == 0) printf("Switched to relativistic basis\n");
-     #endif
-   }
- #endif
  
 
  dev_copy_spinor_field<<<gpu_gd_blas, gpu_bd_blas >>>(spinin, spin0);
@@ -1163,21 +1148,17 @@ extern "C" int dev_cg_eo(
  dev_zero_spinor_field<<<gpu_gd_blas, gpu_bd_blas >>>(spin3);
   
    if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-     if (g_proc_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+     if (g_cart_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
    }
  
 
  //relative precision -> get initial residue
- #ifndef MPI
-   sourcesquarenorm = cublasSdot (24*VOLUME/2, (const float *)spinin, 1, (const float *)spinin, 1);
- #else
-   sourcesquarenorm = float_dotprod(spinin, spinin, 24*VOLUME/2);
- #endif
+ sourcesquarenorm = cublasSdot_wrapper (24*VOLUME/2, (float *)spinin, (float *)spinin);
  host_rk = sourcesquarenorm; //for use in main loop
  
 
 
-    if (g_proc_id == 0) {
+    if (g_cart_id == 0) {
       #ifndef LOWOUTPUT
         printf("Squarenorm Source:\t%.8e\n", sourcesquarenorm);
         printf("Entering inner solver cg-loop\n");
@@ -1206,92 +1187,59 @@ extern "C" int dev_cg_eo(
  for(i=0;i<maxit;i++){ //MAIN LOOP
   
   // Q_{-}Q{+}
-  #ifndef MPI
-    dev_Qtm_pm_psi(spin2, spin3, gpu_gd_M, gpu_bd_M, gpu_gd_linalg, gpu_bd_linalg);
-  #else
-    dev_Qtm_pm_psi_mpi(spin2, spin3, gpu_gd_M, gpu_bd_M, gpu_gd_linalg, gpu_bd_linalg);
-  #endif
-  
+   dev_Qtm_pm_psi(spin2, spin3, gpu_gd_M, gpu_bd_M, gpu_gd_linalg, gpu_bd_linalg);
+
+  // check on Matrix error
   if((cudaerr=cudaGetLastError()) != cudaSuccess){
-    if (g_proc_id == 0) printf("%s\n", cudaGetErrorString(cudaerr));
-    if (g_proc_id == 0) printf("Error in dev_cg_eo: CUDA error after Matrix application\n", cudaGetErrorString(cudaerr));
+    if (g_cart_id == 0) printf("%s\n", cudaGetErrorString(cudaerr));
+    if (g_cart_id == 0) printf("Error in dev_cg_eo: CUDA error after Matrix application\n", cudaGetErrorString(cudaerr));
     exit(200);
   }
   
   
  //alpha
-  #ifndef MPI
-    host_dotprod = cublasSdot (24*VOLUME/2, (const float *) spin2, 1, (const float *) spin3, 1);
-  #else
-    host_dotprod =  float_dotprod(spin2, spin3, 24*VOLUME/2);
-  #endif
-  
-  host_alpha = (host_rk / host_dotprod); // alpha = r*r/ p M p
+ host_dotprod = cublasSdot_wrapper (24*VOLUME/2, (float *) spin2, (float *) spin3);
+
+ host_alpha = (host_rk / host_dotprod); // alpha = r*r/ p M p
    
  //r(k+1)
- #ifndef MPI
-   cublasSaxpy (24*VOLUME/2,-1.0*host_alpha, (const float *) spin3, 1, (float *) spin0, 1);  
- #else
-   dev_axpy<<<gpu_gd_blas, gpu_bd_blas >>> (-1.0*host_alpha, spin3, spin0);
- #endif 
+ cublasSaxpy_wrapper (24*VOLUME/2,-1.0*host_alpha, (float *) spin3, (float *) spin0);  
 
  //x(k+1);
- #ifndef MPI 
-   cublasSaxpy (24*VOLUME/2, host_alpha, (const float *) spin2,  1, (float *) spin1, 1);
- #else
-   dev_axpy<<<gpu_gd_blas, gpu_bd_blas >>> (host_alpha, spin2, spin1);
- #endif
- 
- 
-  if((cudaerr=cudaGetLastError()) != cudaSuccess){
-    printf("%s\n", cudaGetErrorString(cudaerr));
-    exit(200);
-  }
+ cublasSaxpy_wrapper (24*VOLUME/2, host_alpha, (float *) spin2, (float *) spin1);
 
-  //Abbruch?
-  #ifndef MPI
-    host_dotprod = cublasSdot (24*VOLUME/2, (const float *) spin0, 1,(const float *) spin0, 1);
-  #else
-    host_dotprod = float_dotprod(spin0, spin0, 24*VOLUME/2);
-  #endif
-  
+ //break?
+ host_dotprod = cublasSdot_wrapper (24*VOLUME/2, (float *) spin0, (float *) spin0);
  if (((host_dotprod <= eps*sourcesquarenorm)) || ( host_dotprod <= epsfinal/2.)){//error-limit erreicht (epsfinal/2 sollte ausreichen um auch in double precision zu bestehen)
    break; 
  }
   
   
-    #ifndef LOWOUTPUT 
-    if (g_proc_id == 0) printf("iter %d: err = %.8e\n", i, host_dotprod);
-    #endif
+ #ifndef LOWOUTPUT 
+   if (g_cart_id == 0) printf("iter %d: err = %.8e\n", i, host_dotprod);
+ #endif
   
   
  //beta
  host_beta =host_dotprod/host_rk;
  //p(k+1)
- #ifndef MPI
-   cublasSscal (24*VOLUME/2, host_beta, (float *)spin2, 1);
-   cublasSaxpy (24*VOLUME/2, 1.0, (const float *) spin0,  1, (float *) spin2, 1);
- #else
-   dev_blasscal<<<gpu_gd_blas, gpu_bd_blas >>> (host_beta, spin2);
-   dev_axpy<<<gpu_gd_blas, gpu_bd_blas >>> (1.0, spin0, spin2);
- #endif
+ cublasSscal_wrapper (24*VOLUME/2, host_beta, (float *)spin2);
+ cublasSaxpy_wrapper (24*VOLUME/2, 1.0, (float *) spin0,  (float *) spin2);
+
  host_rk = host_dotprod;
  
  // recalculate residue frome r = b - Ax
  if(((i+1) % N_recalcres) == 0){
     // r_(k+1) = Ax -b 
     #ifndef LOWOUTPUT
-    if (g_proc_id == 0) printf("Recalculating residue\n");
+    if (g_cart_id == 0) printf("Recalculating residue\n");
     #endif
     // D Ddagger   --   Ddagger = gamma5 D gamma5  for Wilson Dirac Operator
     // DO NOT USE tm_dirac_dagger_kappa here, otherwise spin2 will be overwritten!!!
       
     // Q_{-}Q{+}
-    #ifndef MPI
-        dev_Qtm_pm_psi(spin1, spin3, gpu_gd_M, gpu_bd_M, gpu_gd_linalg, gpu_bd_linalg);
-    #else
-        dev_Qtm_pm_psi_mpi(spin1, spin3, gpu_gd_M, gpu_bd_M, gpu_gd_linalg, gpu_bd_linalg);
-    #endif
+     dev_Qtm_pm_psi(spin1, spin3, gpu_gd_M, gpu_bd_M, gpu_gd_linalg, gpu_bd_linalg);
+
     if((cudaerr=cudaGetLastError()) != cudaSuccess){
       printf("%s\n", cudaGetErrorString(cudaerr));
       exit(200);
@@ -1299,22 +1247,17 @@ extern "C" int dev_cg_eo(
         
     
     // r = b - Ax
-    #ifndef MPI
-      cublasSscal (24*VOLUME/2, -1.0, (float *)spin3, 1);
-      cublasSaxpy (24*VOLUME/2, 1.0, (const float *) spinin,  1, (float *) spin3, 1);
-      cublasScopy (24*VOLUME/2, (const float *)spin3, 1, (float *)spin0, 1);
-    #else
-      dev_blasscal<<<gpu_gd_blas, gpu_bd_blas >>> (-1.0, spin3);
-      dev_axpy<<<gpu_gd_blas, gpu_bd_blas >>> (1.0, spinin, spin3);
-      dev_blascopy<<<gpu_gd_blas, gpu_bd_blas >>> (spin3, spin0);    
-    #endif
+      cublasSscal_wrapper (24*VOLUME/2, -1.0, (float *)spin3);
+      cublasSaxpy_wrapper (24*VOLUME/2, 1.0, (float *) spinin, (float *) spin3);
+      //cublasScopy_wrapper (24*VOLUME/2, (float *)spin3, (float *)spin0);
+      dev_copy_spinor_field<<<gpu_gd_blas, gpu_bd_blas >>>(spin3, spin0);
 
    }//recalculate residue
 
  }//MAIN LOOP cg	
   
     
-    if (g_proc_id == 0) printf("Final residue: %.6e\n",host_dotprod);
+    if (g_cart_id == 0) printf("Final residue: %.6e\n",host_dotprod);
  
   #ifdef ALGORITHM_BENCHMARK
     cudaThreadSynchronize();
@@ -1328,7 +1271,7 @@ extern "C" int dev_cg_eo(
      #else
        int proccount = 1;
      #endif 
-     if(g_proc_id == 0){
+     if(g_cart_id == 0){
       	effectiveflops = i*proccount*(matrixflops + 2*2*24 + 2*24 + 2*24 + 2*2*24 + 2*24)*VOLUME/2;
       	printf("effective BENCHMARK:\n");
       	printf("\ttotal mixed solver time:   %.4e sec\n", double(stopeffective-starteffective));
@@ -1342,10 +1285,6 @@ extern "C" int dev_cg_eo(
   //no multiplication with D^{dagger} here and no return to non-kappa basis as in dev_cg!
   dev_copy_spinor_field<<<gpu_gd_blas, gpu_bd_blas >>>(spin1,spinout);
   
-  #ifdef RELATIVISTIC_BASIS 
-   //transform back to tmlqcd gamma basis
-   to_tmlqcd_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (spinout);
-  #endif
   
   #ifdef USETEXTURE
    unbind_texture_gf();
@@ -1724,7 +1663,7 @@ cudaError_t cudaerr;
 void update_gpu_gf(su3** gf){
   cudaError_t cudaerr;
   #ifndef LOWOUTPUT
-    if(g_proc_id == 0) printf("Updating device single gauge field.\n");
+    if(g_cart_id == 0) printf("Updating device single gauge field.\n");
   #endif
   
   #ifndef MPI
@@ -1806,11 +1745,11 @@ extern "C" void init_mixedsolve_eo(su3** gf){
     	  // each process gets bounded to the same GPU
     	  if(device_num > -1){ 
             if (device_num < ndev) {
-    	      printf("Process %d of %d: Setting active device to: %d\n", g_proc_id, g_nproc, device_num);
+    	      printf("Process %d of %d: Setting active device to: %d\n", g_cart_id, g_nproc, device_num);
     	      cudaSetDevice(device_num);
     	    }
     	    else {
-    	      fprintf(stderr, "Process %d of %d: Error: There is no CUDA device with No. %d. Aborting...\n", g_proc_id, g_nproc, device_num);
+    	      fprintf(stderr, "Process %d of %d: Error: There is no CUDA device with No. %d. Aborting...\n", g_cart_id, g_nproc, device_num);
     	      exit(301);
     	    }
           }
@@ -1822,16 +1761,16 @@ extern "C" void init_mixedsolve_eo(su3** gf){
           printf("num_gpu_per_node = %d\n", num_gpu_per_node);
 	  printf("first device = %d\n", device_num);
     	  if (((g_cart_id + device_num)%num_gpu_per_node ) < ndev) {
-    	    printf("Process %d of %d: Setting active device to: %d\n", g_proc_id, g_nproc, (g_cart_id + device_num)%num_gpu_per_node);
+    	    printf("Process %d of %d: Setting active device to: %d\n", g_cart_id, g_nproc, (g_cart_id + device_num)%num_gpu_per_node);
     	    cudaSetDevice(((g_cart_id + device_num)%num_gpu_per_node));
 	  }
     	  else {
-    	    fprintf(stderr, "Process %d of %d: Error: There is no CUDA device with No. %d. Aborting...\n", g_proc_id, g_nproc, g_cart_id);
+    	    fprintf(stderr, "Process %d of %d: Error: There is no CUDA device with No. %d. Aborting...\n", g_cart_id, g_nproc, g_cart_id);
     	    exit(301);
     	  }
   	#endif
   	if ((cudaerr=cudaGetLastError()) != cudaSuccess) {
-  	  printf("Process %d of %d: Error in init_mixedsolve_eo(): Could not set active device. Aborting...\n", g_proc_id, g_nproc);
+  	  printf("Process %d of %d: Error in init_mixedsolve_eo(): Could not set active device. Aborting...\n", g_cart_id, g_nproc);
   	  exit(302);
   	}
     #endif
@@ -1868,9 +1807,9 @@ extern "C" void init_mixedsolve_eo(su3** gf){
   #endif
   #ifndef LOWOUTPUT
     #ifdef RELATIVISTIC_BASIS
-      if (g_proc_id == 0) printf("Using RELATIVISTIC gamma basis.\n");
+      if (g_cart_id == 0) printf("Using RELATIVISTIC gamma basis.\n");
     #else
-      if (g_proc_id == 0) printf("Using TMLQCD gamma basis.\n");    
+      if (g_cart_id == 0) printf("Using TMLQCD gamma basis.\n");    
     #endif
   #endif
   #ifndef MPI
@@ -1982,7 +1921,7 @@ extern "C" void init_mixedsolve_eo(su3** gf){
 
 /*
     char filename[50];
-    sprintf(filename, "nnfield_proc%d", g_proc_id);
+    sprintf(filename, "nnfield_proc%d", g_cart_id);
     FILE * outfile = fopen(filename,"w");
     int m1;
      for(m1=0; m1<VOLUME/2; m1++){
@@ -2008,11 +1947,11 @@ extern "C" void init_mixedsolve_eo(su3** gf){
   cudaMemcpy(dev_eoidx_odd, eoidx_odd, idxsize, cudaMemcpyHostToDevice);
 
   if((cudaerr=cudaGetLastError())!=cudaSuccess){
-    if(g_proc_id==0) printf("Error in init_mixedsolve_eo(): NN-fields transfer failed. Aborting...\n");
+    if(g_cart_id==0) printf("Error in init_mixedsolve_eo(): NN-fields transfer failed. Aborting...\n");
     exit(200);
   }
   else{
-    if(g_proc_id==0) printf("Allocated NN-fields on device\n");
+    if(g_cart_id==0) printf("Allocated NN-fields on device\n");
   }  
   //free again
   free(eoidx_odd);
@@ -2080,7 +2019,7 @@ extern "C" void init_mixedsolve_eo(su3** gf){
   	    exit(200);
   	  } 
   	  if((cudaerr=cudaGetLastError())!=cudaSuccess){
-              if(g_proc_id==0) printf("Error in init_mixedsolve_eo(): Memory allocation of double spinor fields failed. Aborting...\n");
+              if(g_cart_id==0) printf("Error in init_mixedsolve_eo(): Memory allocation of double spinor fields failed. Aborting...\n");
               exit(200);
           }
         #endif  
@@ -2198,22 +2137,22 @@ extern "C" void init_mixedsolve_eo(su3** gf){
   R3_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
   R4_D = R3_D + 12*tSliceEO;
 
-//!FIXME relativistic basis not working for dev_Qtm_pm_psi_d -> fix in dev_Hopping_Matrix_d first
+
 //for gathering and spreading of indizes of rand in (gather_rand spread_rand called from xchange_field_wrapper)
-//     #ifdef RELATIVISTIC_BASIS
-//       cudaMalloc((void **) &RAND_FW_D, tSliceEO*6*sizeof(double2));
-//       cudaMalloc((void **) &RAND_BW_D, tSliceEO*6*sizeof(double2));
-//     #else
+    #ifdef RELATIVISTIC_BASIS
+      cudaMalloc((void **) &RAND_FW_D, tSliceEO*6*sizeof(double2));
+      cudaMalloc((void **) &RAND_BW_D, tSliceEO*6*sizeof(double2));
+    #else
       cudaMalloc((void **) &RAND_FW_D, tSliceEO*12*sizeof(double2));
       cudaMalloc((void **) &RAND_BW_D, tSliceEO*12*sizeof(double2));      
-//    #endif
+    #endif
     /*  for async communication */
     // page-locked memory    
-//     #ifdef RELATIVISTIC_BASIS
-//       int dbperspin = 6;
-//     #else
+    #ifdef RELATIVISTIC_BASIS
+      int dbperspin = 6;
+    #else
       int dbperspin = 12;
-//    #endif  
+    #endif  
     cudaMallocHost(&RAND3_D, tSliceEO*dbperspin*sizeof(double2));
     cudaMallocHost(&RAND4_D, tSliceEO*dbperspin*sizeof(double2));
     cudaMallocHost(&RAND1_D, tSliceEO*dbperspin*sizeof(double2));
@@ -2233,11 +2172,11 @@ extern "C" void init_mixedsolve_eo(su3** gf){
 
 
   if((cudaerr=cudaGetLastError())!=cudaSuccess){
-    if(g_proc_id==0) printf("Error in init_mixedsolve_eo(): Memory allocation of spinor fields failed. Aborting...\n");
+    if(g_cart_id==0) printf("Error in init_mixedsolve_eo(): Memory allocation of spinor fields failed. Aborting...\n");
     exit(200);
   }
   else{
-    if(g_proc_id==0) printf("Allocated spinor fields on device\n");
+    if(g_cart_id==0) printf("Allocated spinor fields on device\n");
   }
   
 
@@ -2336,11 +2275,11 @@ extern "C" void init_mixedsolve_eo(su3** gf){
   set_gpu_work_layout(1);
   
   if((cudaerr=cudaGetLastError())!=cudaSuccess){
-    if(g_proc_id==0) printf("Error in init_mixedsolve_eo(): Something went wrong. CUDA error at end of function. Aborting...\n");
+    if(g_cart_id==0) printf("Error in init_mixedsolve_eo(): Something went wrong. CUDA error at end of function. Aborting...\n");
     exit(200);
   }
   else{
-    if(g_proc_id==0) printf("Finished init_mixedsolve_eo()\n");
+    if(g_cart_id==0) printf("Finished init_mixedsolve_eo()\n");
   }
   
 }
@@ -2446,7 +2385,7 @@ void init_mixedsolve_fields(int eo){
   }
 
 #ifndef LOWOUTPUT
-  if(g_proc_id ==0) printf("Allocating mixed solver single fields on device.\n");
+  if(g_cart_id ==0) printf("Allocating mixed solver single fields on device.\n");
 #endif
 
   #ifdef MPI
@@ -2484,7 +2423,7 @@ void init_mixedsolve_fields(int eo){
   #endif
 	
   if((cudaerr=cudaGetLastError())!=cudaSuccess){
-    if(g_proc_id==0) printf("Error in init_mixedsolve_fields(): could not allocate fields\n");
+    if(g_cart_id==0) printf("Error in init_mixedsolve_fields(): could not allocate fields\n");
     exit(200);
   }	
 }
@@ -2851,7 +2790,7 @@ void benchmark_eo(spinor * const Q){
     timeelapsed = (double) (stop-start);
     // x2 because 2x Hopping per iteration
     double benchres = 1608.0*2*(g_nproc*VOLUME/2)* ibench / timeelapsed / 1.0e9;
-    if (g_proc_id == 0) {
+    if (g_cart_id == 0) {
       printf("Benchmark: %f Gflops\n", benchres); 
     }
   #endif  
@@ -2952,7 +2891,7 @@ void benchmark_eo_mpi(spinor * const Q){
     timeelapsed = (double) (stop-start);
     // 8 because 8x Hopping per iteration
     double benchres = 1608.0*8*(g_nproc*VOLUME/2)* ibench / timeelapsed / 1.0e9;
-    if (g_proc_id == 0) {
+    if (g_cart_id == 0) {
       printf("Benchmark: %f Gflops\n", benchres); 
     }
   #endif  
@@ -3003,16 +2942,25 @@ void test_double_operator(spinor* const Q, const int N){
 
   //apply cpu matrix
   Qtm_pm_psi(solver_field[0], Q);  
-  
+  /*
+  Hopping_Matrix(EO,solver_field[1], Q);
+  Hopping_Matrix(OE, solver_field[0] , solver_field_up[1]); 
+  */
   //apply gpu matrix
   order_spin_gpu(Q, h2d_spin_d);
   cudaMemcpy(dev_spin0_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);
+  #ifdef RELATIVISTIC_BASIS
+     to_relativistic_basis_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>> (dev_spin0_d);
+  #endif  
   dev_Qtm_pm_psi_d(dev_spin0_d, dev_spin1_d,  
 		      dev_spin_eo1_d, dev_spin_eo2_d, 
 		      gpu_gd_M_d, gpu_bd_M_d, gpu_gd_linalg_d, gpu_bd_linalg_d,
 		      dev_eoidx_even, dev_eoidx_odd, 
 		      dev_nn_eo, dev_nn_oe); 
-		
+  
+  #ifdef RELATIVISTIC_BASIS
+     to_tmlqcd_basis_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>> (dev_spin1_d);
+  #endif  		
   cudaMemcpy(h2d_spin_d, dev_spin1_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
   unorder_spin_gpu(h2d_spin_d, solver_field[1]);      
 
@@ -3153,7 +3101,12 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
     cudaMemcpy(dev_spin1_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice); 
     cudaMemcpy(dev_spin2_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);     
     cudaMemcpy(dev_spin3_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice); 
-
+    #ifdef RELATIVISTIC_BASIS
+        to_relativistic_basis_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>> (dev_spin0_d);
+        to_relativistic_basis_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>> (dev_spin1_d);   
+        to_relativistic_basis_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>> (dev_spin2_d);
+        to_relativistic_basis_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>> (dev_spin3_d);	
+    #endif 
   #else  
     assign(solver_field[0],Q,N);
     zero_spinor_field(solver_field[1],  N);//spin2 = x_k
@@ -3161,14 +3114,14 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
   #endif
     
   #ifndef LOWOUTPUT
-    if(g_proc_id==0) printf("Initial residue: %.16e\n",rk);
-    if(g_proc_id==0) printf("The VOLUME/2 is: %d\n",N);
+    if(g_cart_id==0) printf("Initial residue: %.16e\n",rk);
+    if(g_cart_id==0) printf("The VOLUME/2 is: %d\n",N);
   #endif
 
 
 for(iter=0; iter<max_iter; iter++){
    #ifndef LOWOUTPUT
-   if(g_proc_id==0) printf("Applying double precision EO Dirac-Op Q_{-}Q{+}...\n");
+   if(g_cart_id==0) printf("Applying double precision EO Dirac-Op Q_{-}Q{+}...\n");
    #endif
      // r_k = b - D x_k 
    #ifdef GPU_DOUBLE
@@ -3193,7 +3146,7 @@ for(iter=0; iter<max_iter; iter++){
     }
    #endif
    
-   if(g_proc_id==0) printf("Residue after %d inner solver iterations: %.18e\n",outercount,rk);
+   if(g_cart_id==0) printf("Residue after %d inner solver iterations: %.18e\n",outercount,rk);
    
    if(((rk <= eps) && (rel_prec == 0)) || ((rk <= eps*sourcesquarenorm) && (rel_prec == 1)))
    {
@@ -3216,6 +3169,9 @@ for(iter=0; iter<max_iter; iter++){
 
 */
     #ifdef GPU_DOUBLE
+      #ifdef RELATIVISTIC_BASIS
+        to_tmlqcd_basis_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>> (dev_spin1_d);
+      #endif
       cudaMemcpy(h2d_spin_d, dev_spin1_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
       unorder_spin_gpu(h2d_spin_d, solver_field[1]);
     #endif
@@ -3227,8 +3183,8 @@ for(iter=0; iter<max_iter; iter++){
      timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
      
      #ifndef LOWOUTPUT
-      if(g_proc_id==0) printf("Reached solver precision of eps=%.2e\n",eps);
-      if(g_proc_id==0) printf("EO Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
+      if(g_cart_id==0) printf("Reached solver precision of eps=%.2e\n",eps);
+      if(g_cart_id==0) printf("EO Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
      #endif
      finalize_solver(solver_field, nr_sf);
      finalize_mixedsolve_fields();
@@ -3241,12 +3197,15 @@ for(iter=0; iter<max_iter; iter++){
       dev_d2f<<<gpu_gd_blas_d, gpu_bd_blas_d>>>(dev_spinin, dev_spin0_d);
       //cudaThreadSynchronize();
       if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
-        if (g_proc_id == 0) printf("Error in linsolve_eo_gpu: %s\n", cudaGetErrorString(cudaGetLastError()));
+        if (g_cart_id == 0) printf("Error in mixedsolve_eo_gpu: %s\n", cudaGetErrorString(cudaGetLastError()));
         exit(100);
       }      
     #else   
       convert2REAL4_spin(solver_field[0],h2d_spin);
-      cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);     
+      cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice); 
+      #ifdef RELATIVISTIC_BASIS
+        to_relativistic_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (dev_spinin);      
+      #endif
     #endif
   #else
     convert2REAL4_spin_half(solver_field[0],h2d_spin, h2d_spin_norm); 
@@ -3265,7 +3224,7 @@ for(iter=0; iter<max_iter; iter++){
    // solve in single prec on device
    // D p_k = r_k
    #ifndef LOWOUTPUT
-     if(g_proc_id==0) printf("Entering inner solver\n");
+     if(g_cart_id==0) printf("Entering inner solver\n");
    #endif
    assert((startinner = clock())!=-1);
    #ifndef HALF
@@ -3289,19 +3248,22 @@ for(iter=0; iter<max_iter; iter++){
    timeelapsed = (double) (stopinner-startinner)/CLOCKS_PER_SEC;
    
    #ifndef LOWOUTPUT
-   if(g_proc_id==0) printf("Inner solver done\nTime elapsed: %.6e sec\n", timeelapsed);
+   if(g_cart_id==0) printf("Inner solver done\nTime elapsed: %.6e sec\n", timeelapsed);
    #endif
    // copy back
    #ifdef GPU_DOUBLE
      dev_add_f2d<<<gpu_gd_blas_d, gpu_bd_blas_d >>>(dev_spin1_d,dev_spin1_d,dev_spinout);
      dev_f2d<<<gpu_gd_blas_d, gpu_bd_blas_d >>>(dev_spin2_d,dev_spinout);
-   #else    
+   #else 
+     #ifdef RELATIVISTIC_BASIS
+        to_tmlqcd_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (dev_spinout);
+     #endif
      cudaMemcpy(h2d_spin, dev_spinout, dev_spinsize, cudaMemcpyDeviceToHost);
      #ifdef HALF
       cudaMemcpy(h2d_spin_norm, dev_spinout_norm, dev_normsize, cudaMemcpyDeviceToHost);
      #endif
      if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-       printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+       printf("%s\n", cudaGetErrorString(cudaerr));
        printf("Error code is: %d\n",cudaerr);       
      }
      #ifndef HALF
@@ -3316,9 +3278,12 @@ for(iter=0; iter<max_iter; iter++){
    outercount ++;   
 }// outer loop 
     
-     if(g_proc_id==0) printf("Did NOT reach solver precision of eps=%.2e\n",eps);
+     if(g_cart_id==0) printf("Did NOT reach solver precision of eps=%.2e\n",eps);
      //multiply with Qtm_minus_psi (for non gpu done in invert_eo.c)
    #ifdef GPU_DOUBLE
+      #ifdef RELATIVISTIC_BASIS
+        to_tmlqcd_basis_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>> (dev_spin1_d);
+      #endif    
       cudaMemcpy(h2d_spin_d, dev_spin1_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
       unorder_spin_gpu(h2d_spin_d, solver_field[1]);   
    #endif      
@@ -3328,7 +3293,7 @@ for(iter=0; iter<max_iter; iter++){
 
     assert((stop = clock())!=-1);
     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
-    if(g_proc_id==0) printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
+    if(g_cart_id==0) printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
 
     finalize_solver(solver_field, nr_sf);
     finalize_mixedsolve_fields();
@@ -3379,7 +3344,12 @@ extern "C" int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int ma
   init_mixedsolve_fields(1);
   
   #ifdef GPU_DOUBLE
-   size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double2 even-odd !   
+    size_t dev_spinsize_d;   
+    #ifdef MPI
+      dev_spinsize_d = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); // double2 even-odd ! 
+    #else
+      dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double2 even-odd !  
+    #endif    
     update_constants_d(dev_grid);
     update_gpu_gf_d(g_gauge_field);
   #endif
@@ -3411,10 +3381,16 @@ extern "C" int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int ma
     //cudaThreadSynchronize();
     
 
-    order_spin_gpu(P, h2d_spin_d);
-    cudaMemcpy(dev_spin1_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice); 
-    cudaMemcpy(dev_spin2_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);     
-    cudaMemcpy(dev_spin3_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice); 
+      order_spin_gpu(P, h2d_spin_d);
+      cudaMemcpy(dev_spin1_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice); 
+      cudaMemcpy(dev_spin2_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);     
+      cudaMemcpy(dev_spin3_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);
+      #ifdef RELATIVISTIC_BASIS
+	  to_relativistic_basis_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>> (dev_spin0_d);
+	  to_relativistic_basis_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>> (dev_spin1_d);   
+	  to_relativistic_basis_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>> (dev_spin2_d);
+	  to_relativistic_basis_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>> (dev_spin3_d);	
+      #endif     
     #else
     assign(solver_field[0],Q,N);
     /* set initial guess*/
@@ -3423,14 +3399,14 @@ extern "C" int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int ma
   #endif
   
   #ifndef LOWOUTPUT
-    if (g_proc_id == 0) printf("Initial residue: %.16e\n",rk);
-    if (g_proc_id == 0) printf("The VOLUME/2 is: %d\n",N);
+    if (g_cart_id == 0) printf("Initial residue: %.16e\n",rk);
+    if (g_cart_id == 0) printf("The VOLUME/2 is: %d\n",N);
   #endif
 
 
 for(iter=0; iter<max_iter; iter++){
    #ifndef LOWOUTPUT
-   if (g_proc_id == 0) printf("Applying double precision EO Dirac-Op Q_{-}Q{+}...\n");
+   if (g_cart_id == 0) printf("Applying double precision EO Dirac-Op Q_{-}Q{+}...\n");
    #endif
    
    #ifdef GPU_DOUBLE
@@ -3450,16 +3426,19 @@ for(iter=0; iter<max_iter; iter++){
    
    #ifdef GF_8
     if(isnan(rk)){
-      if (g_proc_id == 0) fprintf(stderr, "Error in linsolve_eo_gpu: Residue is NaN.\n  May happen with GF 8 reconstruction. Aborting ...\n");
+      if (g_cart_id == 0) fprintf(stderr, "Error in linsolve_eo_gpu: Residue is NaN.\n  May happen with GF 8 reconstruction. Aborting ...\n");
       exit(200);
     }
    #endif
    
-    if (g_proc_id == 0) printf("Residue after %d inner solver iterations: %.18e\n",outercount,rk);
+    if (g_cart_id == 0) printf("Residue after %d inner solver iterations: %.18e\n",outercount,rk);
    
    if(((rk <= eps) && (rel_prec == 0)) || ((rk <= eps*sourcesquarenorm) && (rel_prec == 1)))
    {
     #ifdef GPU_DOUBLE
+      #ifdef RELATIVISTIC_BASIS
+        to_tmlqcd_basis_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>> (dev_spin1_d);
+      #endif
       cudaMemcpy(h2d_spin_d, dev_spin1_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
       unorder_spin_gpu(h2d_spin_d, P);    
     #else  
@@ -3469,10 +3448,10 @@ for(iter=0; iter<max_iter; iter++){
      timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
      
      #ifndef LOWOUTPUT
-      if (g_proc_id == 0) printf("Reached solver precision of eps=%.2e\n",eps);
-      if (g_proc_id == 0) printf("EO Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
+      if (g_cart_id == 0) printf("Reached solver precision of eps=%.2e\n",eps);
+      if (g_cart_id == 0) printf("EO Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
      #endif
-     if (g_proc_id == 0) printf("Number of inner (single) solver iterations: %d\n",totalcount);
+     if (g_cart_id == 0) printf("Number of inner (single) solver iterations: %d\n",totalcount);
      finalize_solver(solver_field, nr_sf);
      finalize_mixedsolve_fields();
      return(totalcount);  
@@ -3484,13 +3463,16 @@ for(iter=0; iter<max_iter; iter++){
       dev_d2f<<<gpu_gd_blas_d, gpu_bd_blas_d >>>(dev_spinin, dev_spin0_d);
       //cudaThreadSynchronize();
       if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
-        if (g_proc_id == 0) printf("Error in linsolve_eo_gpu: %s\n", cudaGetErrorString(cudaGetLastError()));
-        if (g_proc_id == 0) printf("Error code is: %d\n",cudaerr);
+        if (g_cart_id == 0) printf("Error in linsolve_eo_gpu: %s\n", cudaGetErrorString(cudaGetLastError()));
+        if (g_cart_id == 0) printf("Error code is: %d\n",cudaerr);
 	exit(100);
       }      
     #else 
       convert2REAL4_spin(solver_field[0],h2d_spin);
-      cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);      
+      cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);    
+      #ifdef RELATIVISTIC_BASIS
+        to_relativistic_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (dev_spinin);      
+      #endif      
     #endif
   #else
     convert2REAL4_spin_half(solver_field[0],h2d_spin, h2d_spin_norm);
@@ -3500,13 +3482,13 @@ for(iter=0; iter<max_iter; iter++){
   #endif
 
   if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-    if (g_proc_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-    if (g_proc_id == 0) printf("Error code is: %d\n",cudaerr);   
+    if (g_cart_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+    if (g_cart_id == 0) printf("Error code is: %d\n",cudaerr);   
   }
    // solve in single prec on device
    // D p_k = r_k
    #ifndef LOWOUTPUT
-     if (g_proc_id == 0) printf("Entering inner solver\n");
+     if (g_cart_id == 0) printf("Entering inner solver\n");
    #endif
    assert((startinner = clock())!=-1);
    #ifndef HALF
@@ -3531,13 +3513,16 @@ for(iter=0; iter<max_iter; iter++){
    timeelapsed = (double) (stopinner-startinner)/CLOCKS_PER_SEC;
    
    #ifndef LOWOUTPUT
-   if (g_proc_id == 0) printf("Inner solver done\nTime elapsed: %.6e sec\n", timeelapsed);
+   if (g_cart_id == 0) printf("Inner solver done\nTime elapsed: %.6e sec\n", timeelapsed);
    #endif
 
    #ifdef GPU_DOUBLE
      dev_add_f2d<<<gpu_gd_blas_d, gpu_bd_blas_d >>>(dev_spin1_d,dev_spin1_d,dev_spinout);
      dev_f2d<<<gpu_gd_blas_d, gpu_bd_blas_d >>>(dev_spin2_d,dev_spinout);
-   #else 
+   #else
+     #ifdef RELATIVISTIC_BASIS
+        to_tmlqcd_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (dev_spinout);
+     #endif     
      // copy back
      cudaMemcpy(h2d_spin, dev_spinout, dev_spinsize, cudaMemcpyDeviceToHost);
      #ifdef HALF
@@ -3545,7 +3530,7 @@ for(iter=0; iter<max_iter; iter++){
      #endif
 
      if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-       if (g_proc_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+       if (g_cart_id == 0) printf("%s\n", cudaGetErrorString(cudaerr));
      }
      #ifndef HALF
        convert2double_spin(h2d_spin, solver_field[2]);
@@ -3559,8 +3544,11 @@ for(iter=0; iter<max_iter; iter++){
    outercount ++;   
 }// outer loop 
     
-     if (g_proc_id == 0) printf("Did NOT reach solver precision of eps=%.2e\n",eps);
+     if (g_cart_id == 0) printf("Did NOT reach solver precision of eps=%.2e\n",eps);
    #ifdef GPU_DOUBLE
+      #ifdef RELATIVISTIC_BASIS
+        to_tmlqcd_basis_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>> (dev_spin1_d);
+      #endif        
       cudaMemcpy(h2d_spin_d, dev_spin1_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
       unorder_spin_gpu(h2d_spin_d, P);   
    #else 
@@ -3569,7 +3557,7 @@ for(iter=0; iter<max_iter; iter++){
 
     assert((stop = clock())!=-1);
     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
-    if (g_proc_id == 0) printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
+    if (g_cart_id == 0) printf("Inversion done in mixed precision.\n Number of iterations in outer solver: %d\n Squared residue: %.8e\n Time elapsed: %.6e sec\n", outercount, rk, timeelapsed);
 
     finalize_solver(solver_field, nr_sf);
     finalize_mixedsolve_fields();

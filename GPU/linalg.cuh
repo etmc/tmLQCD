@@ -7766,6 +7766,7 @@ float cublasSdot_wrapper(int size, float * A, float * B) {
 void cublasSaxpy_wrapper(int size, float alpha, float* A, float* B){
 #ifdef MPI
   dev_axpy<<<gpu_gd_blas, gpu_bd_blas>>>(alpha, (dev_spinor *) A, (dev_spinor *) B);
+  //cublasSaxpy(size, alpha, (float *) A, 1, (float *) B, 1); 
 #else
   cublasSaxpy(size, alpha, (float *) A, 1, (float *) B, 1);
 #endif
@@ -7776,8 +7777,9 @@ void cublasSaxpy_wrapper(int size, float alpha, float* A, float* B){
 void cublasSscal_wrapper(int size, float alpha, float* A){
 #ifdef MPI
   dev_blasscal<<<gpu_gd_blas, gpu_bd_blas>>>(alpha, (dev_spinor *) A);
+  //cublasSscal(size, alpha, (float *) A, 1); 
 #else
-  cublasDscal(size, alpha, (float *) A, 1);
+  cublasSscal(size, alpha, (float *) A, 1);
 #endif
   
 }
