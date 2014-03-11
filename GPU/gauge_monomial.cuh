@@ -1,36 +1,5 @@
 
-#ifdef MPI
-extern "C"{
- #include "../xchange/xchange_gauge.h"
- #include "../geometry_eo.h"
- }
-#endif //MPI
 
-extern "C"{
- #include "../boundary.h"
- }
-
-
-int blockdimgauge;
-int griddimgauge;
-
-int * nn2;
-int * dev_nn2;
-
-
-double2 * dev_gf_d;
-dev_su3_2v_d * h2d_gf_d;
-dev_su3adj* dev_df0_d;
-dev_su3adj* h2d_df0_d;
-
-__device__  int  dev_VOL2;
-
-
-
-
-#include "linalg_d.cuh"
-/* include double matrix on device here */
-#include "Hopping_Matrix_d.cuh"
 
 
 
@@ -78,8 +47,21 @@ void initnn2(){
   }
 }
 
-
+//FIXME
+// this needs to become more general before implementing more parallelizations
 void initnn2_mpi(){
+if(g_dbw2rand){
+  for(int k = 0; k<(VOLUME+2*RAND); k++){
+     for (int j = 0; j < 4; j++) { // plus direction	
+                nn2[8*k+j] = g_iup[k][j];	
+          }	
+     for (int j = 0; j < 4; j++) { // plus direction	
+                nn2[8*k+4+j] = g_idn[k][j];	
+          }
+  }
+}
+else{
+
   int x, y, z, t, ind, j;
   for (t = 0; t < T; t++) {
     for (x = 0; x < LX; x++) {
@@ -99,6 +81,8 @@ void initnn2_mpi(){
 
 }
 
+}
+
 
 
 
@@ -106,7 +90,12 @@ void su3to2vf4_d(su3** gf, dev_su3_2v_d* h2d){
   int i,j;
   int Vol;
   #ifdef MPI
-   Vol = VOLUME + RAND;
+   if(g_dbw2rand){
+     Vol = VOLUME + 2*RAND;
+   }
+   else{
+     Vol = VOLUME + RAND;     
+   }
   #else
    Vol = VOLUME;
   #endif
@@ -182,11 +171,21 @@ void shownn2(){
 void update_gpu_fields(su3** gf, su3adj** mom, int need_momenta){
   cudaError_t cudaerr;
   int i, mu,Vol;
+
+#ifdef MPI
+xchange_gauge(gf);
+#endif   
+
   #ifndef LOWOUTPUT
     printf("updating double gpu fields...");
   #endif
   #ifdef MPI
-    Vol = VOLUME + RAND;
+   if(g_dbw2rand){
+     Vol = VOLUME + 2*RAND;
+   }
+   else{
+     Vol = VOLUME + RAND;     
+   }
   #else
     Vol = VOLUME;
   #endif
@@ -199,9 +198,10 @@ void update_gpu_fields(su3** gf, su3adj** mom, int need_momenta){
   }
   
   if(need_momenta){
-    //note: we only need the INTERNAL lattice size here as the momentum is only updated internally
-    size_t dev_momsize = 4*VOLUME * sizeof(dev_su3adj);
-    for(i=0; i<VOLUME; i++){
+    int N;
+    N = VOLUMEPLUSRAND + g_dbw2rand;
+    size_t dev_momsize = 4*N * sizeof(dev_su3adj);
+    for(i=0; i<N; i++){
       for(mu=0; mu<4; mu++){
         h2d_df0_d[4*i+mu].d1 = mom[i][mu].d1;
         h2d_df0_d[4*i+mu].d2 = mom[i][mu].d2;
@@ -216,10 +216,11 @@ void update_gpu_fields(su3** gf, su3adj** mom, int need_momenta){
     cudaMemcpy(dev_df0_d, h2d_df0_d, dev_momsize, cudaMemcpyHostToDevice);
   }
   
-  if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-     printf("%s\n", cudaGetErrorString(cudaerr));
-     printf("Error code is: %d\n",cudaerr);
-  }
+
+  if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
+    printf("%s\n", cudaGetErrorString(cudaerr));
+    printf("Error code is: %d\n",cudaerr);
+  } 
   #ifndef LOWOUTPUT
     printf("done.\n");
   #endif
@@ -278,15 +279,15 @@ extern "C" void update_constants_d(int *grid){
   
   // try using constant mem for kappas
   
-  cudaMemcpyToSymbol(dev_k0c_d, &h0, sizeof(dev_complex_d)) ; 
-  cudaMemcpyToSymbol(dev_k1c_d, &h1, sizeof(dev_complex_d)) ; 
-  cudaMemcpyToSymbol(dev_k2c_d, &h2, sizeof(dev_complex_d)) ; 
-  cudaMemcpyToSymbol(dev_k3c_d, &h3, sizeof(dev_complex_d)) ;
-  
-  cudaMemcpyToSymbol(dev_mk0c_d, &mh0, sizeof(dev_complex_d)) ; 
-  cudaMemcpyToSymbol(dev_mk1c_d, &mh1, sizeof(dev_complex_d)) ; 
-  cudaMemcpyToSymbol(dev_mk2c_d, &mh2, sizeof(dev_complex_d)) ; 
-  cudaMemcpyToSymbol(dev_mk3c_d, &mh3, sizeof(dev_complex_d)) ;  
+//   cudaMemcpyToSymbol(dev_k0c_d, &h0, sizeof(dev_complex_d)) ; 
+//   cudaMemcpyToSymbol(dev_k1c_d, &h1, sizeof(dev_complex_d)) ; 
+//   cudaMemcpyToSymbol(dev_k2c_d, &h2, sizeof(dev_complex_d)) ; 
+//   cudaMemcpyToSymbol(dev_k3c_d, &h3, sizeof(dev_complex_d)) ;
+//   
+//   cudaMemcpyToSymbol(dev_mk0c_d, &mh0, sizeof(dev_complex_d)) ; 
+//   cudaMemcpyToSymbol(dev_mk1c_d, &mh1, sizeof(dev_complex_d)) ; 
+//   cudaMemcpyToSymbol(dev_mk2c_d, &mh2, sizeof(dev_complex_d)) ; 
+//   cudaMemcpyToSymbol(dev_mk3c_d, &mh3, sizeof(dev_complex_d)) ;  
   
   he_cg_init_d<<< 1, 1 >>> (grid, (double) g_kappa, (double)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
   // BEWARE in dev_tm_dirac_kappa we need the true mu (not 2 kappa mu!)
@@ -298,9 +299,11 @@ extern "C" void update_constants_d(int *grid){
   	  int host_check_Offset;
   	  cudaMemcpyFromSymbol(&host_check_VOLUME, dev_VOLUME, sizeof(int));
   	  cudaMemcpyFromSymbol(&host_check_Offset, dev_Offset, sizeof(int));
+
   	  printf("\tOn device:\n");
   	  printf("\tdev_VOLUME = %i\n", host_check_VOLUME);
   	  printf("\tdev_Offset = %i\n", host_check_Offset);
+  	  
   	}
     #endif
   
@@ -314,8 +317,17 @@ extern "C" void update_constants_d(int *grid){
 extern "C" void update_gpu_gf_d(su3** gf){
   cudaError_t cudaerr;
   int Vol;
+#ifdef MPI
+xchange_gauge(gf);
+#endif   
+
   #ifdef MPI
-    Vol = VOLUME + RAND;
+   if(g_dbw2rand){
+     Vol = VOLUME + 2*RAND;
+   }
+   else{
+     Vol = VOLUME + RAND;     
+   }
   #else
     Vol = VOLUME;
   #endif 
@@ -327,19 +339,25 @@ extern "C" void update_gpu_gf_d(su3** gf){
      printf("%s\n", cudaGetErrorString(cudaerr));
      printf("Error code is: %d\n",cudaerr);
   }
-  
- 
 }
 
 
 
 extern "C" void init_gpu_fields(int need_momenta){
   cudaError_t cudaerr;
-  int Vol;
+  int Vol, blasVol;
   #ifdef MPI
-    Vol = VOLUME + RAND;
+   if(g_dbw2rand){
+     Vol = VOLUME + 2*RAND;
+     printf("Allocating 2*RAND for gauge field\n");
+   }
+   else{
+     Vol = VOLUME + RAND;     
+   }
+    blasVol = (VOLUME+RAND)/2;
   #else
     Vol = VOLUME;
+    blasVol = VOLUME/2;
   #endif  
   
   size_t dev_gfsize = 6*4*Vol * sizeof(dev_su3_2v_d);
@@ -358,13 +376,15 @@ extern "C" void init_gpu_fields(int need_momenta){
 
   if(need_momenta){
     //only need INTERNAL here
-    size_t dev_momsize = 4*VOLUME * sizeof(dev_su3adj);
+
+    size_t dev_momsize = 4*(VOLUMEPLUSRAND + g_dbw2rand) * sizeof(dev_su3adj);
     if((cudaerr=cudaMalloc((void **) &dev_df0_d, dev_momsize)) != cudaSuccess){
       printf("Error in init_gpu_fields(): Memory allocation of double momentum field failed. Aborting...\n");
       exit(200);
     }   // Allocate array on device
+
     else{
-      printf("Allocated double momentum field on device\n");
+      printf("Allocated double momentum fields on device\n");
     } 
 
      if((h2d_df0_d = (dev_su3adj *)malloc(dev_momsize))==(dev_su3adj *) NULL){
@@ -387,6 +407,21 @@ extern "C" void init_gpu_fields(int need_momenta){
    gridsize=1;
   }
   griddimgauge = gridsize; 
+
+
+  if((VOLUME/2)%BLOCKD != 0){
+   printf("Error: VOLUME/2 is not a multiple of BLOCKGAUGE. Aborting...\n");
+   exit(200);
+  }
+  blockdimdsb = BLOCKD;
+  if( VOLUME/2 >= BLOCKD){
+   gridsize = (int) (VOLUME/2)/BLOCKD;
+  }
+  else{
+   gridsize=1;
+  }
+  griddimdsb = gridsize; 
+
   printf("Have initialized double fields on device.\n");
   
   
@@ -402,7 +437,20 @@ extern "C" void init_gpu_fields(int need_momenta){
   printf("\tdev_VOL2 = %i\n", host_check_VOL2);  
   
   //grid 
-  size_t nnsize = 8*VOLUME*sizeof(int);
+
+  size_t nnsize;
+  #ifdef MPI
+   if(g_dbw2rand){
+    nnsize= 8*(VOLUME+2*RAND)*sizeof(int);
+   }
+   else{
+     nnsize= 8*(VOLUME+RAND)*sizeof(int);   
+   }
+
+  #else
+    nnsize = 8*VOLUME*sizeof(int);
+  #endif 
+
   nn2 = (int *) malloc(nnsize);
   cudaMalloc((void **) &dev_nn2, nnsize);
   #ifdef MPI
@@ -417,21 +465,17 @@ extern "C" void init_gpu_fields(int need_momenta){
   } 
   
   //store them immediately
-  update_gpu_fields(g_gauge_field, df0,need_momenta);
+  //update_gpu_fields(g_gauge_field, df0,need_momenta);
   
   if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
-    printf("%s\n", cudaGetErrorString(cudaPeekAtLastError()));
+    printf("%s\n", cudaGetErrorString(cudaerr));
     printf("Error code is: %d\n",cudaerr);
   } 
-  #ifdef MPI
-   MPI_Barrier(g_cart_grid);
-  #endif
-  
   
   //init blas kernels for double
   #ifdef GPU_DOUBLE
     //initialize blas with 
-    init_blas_d(Vol/2);
+    init_blas_d(blasVol);
   #endif
 }
 
@@ -453,34 +497,87 @@ extern "C" void finalize_gpu_fields(){
 
 
 
-
-void to_host_mom(hamiltonian_field_t * const hf){
+//brings the gpu derivative field to host
+//for gauge-deri we don't have rand terms -> no_rand = 1
+void to_host_deri(su3adj **  derivative, int no_rand){
   cudaError_t cudaerr;
   int i, mu;
-  size_t dev_momsize = 4*VOLUME * sizeof(dev_su3adj);
+  int N;
+  if(no_rand){
+    N=VOLUME;
+  }
+  else{
+   N = VOLUMEPLUSRAND + g_dbw2rand;
+  }
+  size_t dev_momsize = 4*N* sizeof(dev_su3adj);
   cudaMemcpy(h2d_df0_d, dev_df0_d, dev_momsize, cudaMemcpyDeviceToHost);
   if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
      printf("%s\n", cudaGetErrorString(cudaerr));
      printf("Error code is: %d\n",cudaerr);
   }
   
-  for(i=0; i<VOLUME; i++){
+  for(i=0; i<N; i++){
     for(mu=0; mu<4; mu++){
-      hf->derivative[i][mu].d1 = h2d_df0_d[4*i+mu].d1;
-      hf->derivative[i][mu].d2 = h2d_df0_d[4*i+mu].d2;
-      hf->derivative[i][mu].d3 = h2d_df0_d[4*i+mu].d3;
-      hf->derivative[i][mu].d4 = h2d_df0_d[4*i+mu].d4;
-      hf->derivative[i][mu].d5 = h2d_df0_d[4*i+mu].d5;
-      hf->derivative[i][mu].d6 = h2d_df0_d[4*i+mu].d6;
-      hf->derivative[i][mu].d7 = h2d_df0_d[4*i+mu].d7;
-      hf->derivative[i][mu].d8 = h2d_df0_d[4*i+mu].d8;
+      derivative[i][mu].d1 = h2d_df0_d[4*i+mu].d1;
+      derivative[i][mu].d2 = h2d_df0_d[4*i+mu].d2;
+      derivative[i][mu].d3 = h2d_df0_d[4*i+mu].d3;
+      derivative[i][mu].d4 = h2d_df0_d[4*i+mu].d4;
+      derivative[i][mu].d5 = h2d_df0_d[4*i+mu].d5;
+      derivative[i][mu].d6 = h2d_df0_d[4*i+mu].d6;
+      derivative[i][mu].d7 = h2d_df0_d[4*i+mu].d7;
+      derivative[i][mu].d8 = h2d_df0_d[4*i+mu].d8;
     }
   }
+
+  if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
+    printf("%s\n", cudaGetErrorString(cudaerr));
+    printf("Error code is: %d\n",cudaerr);
+  } 
 }
 
 
 
-void to_host_mom_field(su3adj** mom, dev_su3adj* dev_mom){
+void add_host_deri(su3adj **  derivative, dev_su3adj* dev_df, int no_rand){
+  cudaError_t cudaerr;
+  int i, mu;
+  int N;
+  if(no_rand){
+    N=VOLUME;
+  }
+  else{
+   N = VOLUMEPLUSRAND + g_dbw2rand;
+  }
+  size_t dev_momsize = 4*N * sizeof(dev_su3adj);
+  cudaMemcpy(h2d_df0_d, dev_df, dev_momsize, cudaMemcpyDeviceToHost);
+  if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
+     printf("%s\n", cudaGetErrorString(cudaerr));
+     printf("Error code is: %d\n",cudaerr);
+  }
+  
+  for(i=0; i<N; i++){
+    for(mu=0; mu<4; mu++){
+      derivative[i][mu].d1 += h2d_df0_d[4*i+mu].d1;
+      derivative[i][mu].d2 += h2d_df0_d[4*i+mu].d2;
+      derivative[i][mu].d3 += h2d_df0_d[4*i+mu].d3;
+      derivative[i][mu].d4 += h2d_df0_d[4*i+mu].d4;
+      derivative[i][mu].d5 += h2d_df0_d[4*i+mu].d5;
+      derivative[i][mu].d6 += h2d_df0_d[4*i+mu].d6;
+      derivative[i][mu].d7 += h2d_df0_d[4*i+mu].d7;
+      derivative[i][mu].d8 += h2d_df0_d[4*i+mu].d8;
+    }
+  }
+
+  if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
+    printf("%s\n", cudaGetErrorString(cudaerr));
+    printf("Error code is: %d\n",cudaerr);
+  } 
+}
+
+
+
+
+
+void to_host_deri_field(su3adj** mom, dev_su3adj* dev_mom){
   cudaError_t cudaerr;
   int i, mu;
   size_t dev_momsize = 4*VOLUME * sizeof(dev_su3adj);
@@ -503,7 +600,7 @@ void to_host_mom_field(su3adj** mom, dev_su3adj* dev_mom){
     }
   }
   if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {   
-    printf("%s\n", cudaGetErrorString(cudaPeekAtLastError()));
+    printf("%s\n", cudaGetErrorString(cudaerr));
   }
 }
 
@@ -1446,6 +1543,7 @@ int host_check_VOL2;
 
 #ifdef MPI
  if(g_proc_id==0) printf("Exchanging gauge...");
+ xchange_gauge(hf->gaugefield);
  if(g_proc_id==0) printf("done\n");
 #endif
   
@@ -1461,7 +1559,7 @@ int host_check_VOL2;
   #endif
   update_gpu_fields(hf->gaugefield, hf->derivative,1);
   if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
-        printf("%s\n", cudaGetErrorString(cudaPeekAtLastError()));
+        printf("%s\n", cudaGetErrorString(cudaerr));
   }
 //printf("griddim (gauge_monomial): %d, blockdim: %d\n", griddimgauge, blockdimgauge);
 
@@ -1475,7 +1573,6 @@ if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
    printf("%s\n", cudaGetErrorString(cudaerr));
    printf("Error code is: %d\n",cudaerr);
 }           
-
 
   
 //rectangles            
@@ -1521,11 +1618,11 @@ if(withrectangles){
 }   
 
   cudaMemcpyFromSymbol(&host_check_VOL2, dev_VOL2, sizeof(int)); 
-
-  to_host_mom(hf);
+  //no rand needed here
+  to_host_deri(hf->derivative, 1);
 
   if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
-        printf("%s\n", cudaGetErrorString(cudaPeekAtLastError()));
+        printf("%s\n", cudaGetErrorString(cudaerr));
         printf("Error code is: %d\n",cudaerr);
   }
   #ifndef LOWOUTPUT
@@ -1611,7 +1708,8 @@ printf(" done\n");
 timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
 printf("Time elapsed: %e sec\n",timeelapsed);
 
-to_host_mom(hf);
+//no rand needed here
+to_host_deri(hf->derivative, 1);
 exit(0);
 }
 
@@ -1619,9 +1717,3 @@ exit(0);
 
 
 
-/* include gauge_update on device here */
-#include "hybrid_update.cuh"
-/* include deriv_Sb on device here */
-#include "deriv_Sb.cuh"
-/* include the wilson flow on device*/
-//#include "wilson_flow.cuh"
