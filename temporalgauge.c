@@ -257,7 +257,7 @@ int init_temporalgauge_trafo (const int V, su3** gfield) {
 */
 int init_temporalgauge(const int V, su3** gfield) {
   int i;
-  printf("Initializing tempgauge fields!\n");
+  if(g_cart_id == 0) printf("Initializing tempgauge fields!\n");
 #ifndef MPI
 
    if ( (void *) (g_trafo = (su3 *) calloc(V, sizeof(su3))) == NULL ) {
@@ -786,6 +786,11 @@ void from_temporalgauge(spinor * const spin1, spinor * const spin2) {
    }
   #endif
   copy_gauge_field(g_gauge_field, g_tempgauge_field);
+  
+#ifdef MPI
+xchange_gauge(g_gauge_field);
+#endif     
+  
   g_update_gauge_copy = 1;
   apply_inv_gtrafo_spinor_odd(spin1, g_trafo);
   apply_inv_gtrafo_spinor_odd(spin2, g_trafo);
@@ -1148,7 +1153,9 @@ void apply_inv_gtrafo_spinor (spinor * spin, su3 * trafofield) {
       }
     } 
   }
-  
+#ifdef MPI
+  xchange_lexicfield(spin);
+#endif  
   if (g_cart_id == 0) {
     printf("done\n");
   }
@@ -1195,7 +1202,9 @@ void apply_gtrafo_spinor (spinor * spin, su3 * trafofield) {
       }
     } 
   }
-  
+#ifdef MPI
+  xchange_lexicfield(spin);
+#endif
   if(g_cart_id == 0) {
     printf("done\n");
   }
@@ -1219,7 +1228,7 @@ void apply_gtrafo_spinor_odd (spinor * spin, su3 * trafofield) {
   int oddpos; 
   spinor temp;
   #ifndef LOWOUTPUT
-    if (g_cart_id == 0) {
+    if (g_cart_id == 0 && g_debug_level > 2) {
       printf("Applying  gauge transformation to odd spinor...");
     }
   #endif
@@ -1250,6 +1259,11 @@ void apply_gtrafo_spinor_odd (spinor * spin, su3 * trafofield) {
       }
     } 
   }
+  
+#ifdef MPI
+  xchange_field(spin, 0);
+#endif
+
   #ifndef LOWOUTPUT
     if (g_cart_id == 0) {
       printf("done\n");
@@ -1276,7 +1290,7 @@ void apply_inv_gtrafo_spinor_odd (spinor * spin, su3 * trafofield) {
   
   spinor temp;
   #ifndef LOWOUTPUT
-    if (g_cart_id == 0) {
+    if (g_cart_id == 0  && g_debug_level > 2) {
       printf("Applying INVERSE gauge transformation to odd spinor...");
     }
   #endif
@@ -1308,7 +1322,9 @@ void apply_inv_gtrafo_spinor_odd (spinor * spin, su3 * trafofield) {
       }
     } 
   }
-
+#ifdef MPI
+  xchange_field(spin, 0);
+#endif
   #ifndef LOWOUTPUT
     if (g_cart_id == 0) {
       printf("done\n");
@@ -1336,7 +1352,7 @@ void apply_gtrafo_spinor_even (spinor * spin, su3 * trafofield) {
   
   spinor temp;
   #ifndef LOWOUTPUT
-    if (g_cart_id == 0) {
+    if (g_cart_id == 0 && g_debug_level > 2) {
       printf("Applying  gauge transformation to even spinor...");
     }
   #endif
@@ -1368,6 +1384,11 @@ void apply_gtrafo_spinor_even (spinor * spin, su3 * trafofield) {
       }
     } 
   }
+  
+#ifdef MPI
+  xchange_field(spin, 1);
+#endif  
+  
   #ifndef LOWOUTPUT
     if (g_cart_id == 0) {
       printf("done\n");
@@ -1393,7 +1414,7 @@ void apply_inv_gtrafo_spinor_even (spinor * spin, su3 * trafofield) {
   
   spinor temp;
   #ifndef LOWOUTPUT
-    if (g_cart_id == 0) {
+    if (g_cart_id == 0  && g_debug_level > 2) {
       printf("Applying INVERSE gauge transformation to even spinor...");
     }
   #endif
@@ -1424,6 +1445,11 @@ void apply_inv_gtrafo_spinor_even (spinor * spin, su3 * trafofield) {
       }
     } 
   }
+  
+#ifdef MPI
+  xchange_field(spin, 1);
+#endif  
+  
   #ifndef LOWOUTPUT
     if (g_cart_id == 0) {
       printf("done\n");
