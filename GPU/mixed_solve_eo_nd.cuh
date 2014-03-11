@@ -1541,9 +1541,10 @@ extern "C" void benchmark_eo_nd_d (spinor * Q_up, spinor * Q_dn, int N) {
     }
 
   }
-  
-  printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
-  printf("Done\n"); 
+  if(g_cart_id==0){
+    printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
+    printf("Done\n"); 
+  }
   cudaThreadSynchronize();
   
   
@@ -1555,17 +1556,17 @@ extern "C" void benchmark_eo_nd_d (spinor * Q_up, spinor * Q_dn, int N) {
   // timer
     //stopBenchmark = gettime();
     assert((stopBenchmark = clock())!=-1);
-  
-
+    
+    if(g_cart_id == 0){
   	//timeElapsed = stopBenchmark - startBenchmark;
         timeElapsed = (double) (stopBenchmark-startBenchmark)/CLOCKS_PER_SEC;
-  	effectiveDeviceFlops = N * VOLUME/2 * effectiveFlopsPerApp;
-  	effectiveFlops       = N * VOLUME/2 * effectiveFlopsPerApp / timeElapsed / 1.0e9;
+  	effectiveDeviceFlops = g_nproc*N * VOLUME/2 * effectiveFlopsPerApp;
+  	effectiveFlops       = double(g_nproc*N * VOLUME/2 * effectiveFlopsPerApp) / timeElapsed / 1.0e9;
   	printf("EFFECTIVE:\n");
   	printf("\ttime:        %.4e sec\n", timeElapsed);
   	printf("\tflop's:      %.4e flops\n", effectiveDeviceFlops);
   	printf("\tperformance: %.4e Gflop/s\n\n", effectiveFlops);
-  	
+    }
 
   
 }//benchmark_eo_nd_d()
@@ -4090,9 +4091,11 @@ extern "C" int doublesolve_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
     stopinner = gettime();
     innerclocks = stopinner-startinner;
     #ifdef ALGORITHM_BENCHMARK
-      effectiveflops = outercount*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/2;   
+     if(g_cart_id == 0){
+      effectiveflops = outercount*g_nproc*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/2;   
       printf("mms double solver BENCHMARK:\n");
       printf("\tsolver performance:  %.4e Gflop/s\n", double(effectiveflops)/innerclocks/ 1.0e9);
+     }
     #endif
     
       

@@ -112,6 +112,12 @@ dev_su3_2v * dev_gf;
 dev_su3_2v * h2d_gf;
 #endif
 
+//double gauge field and deri field
+double2 * dev_gf_d;
+dev_su3_2v_d * h2d_gf_d;
+dev_su3adj* dev_df0_d;
+dev_su3adj* h2d_df0_d;
+
 #ifndef HALF
 dev_spinor* dev_spin1;
 dev_spinor* dev_spin2;
@@ -212,7 +218,7 @@ float* dev_spin_eo2_half_norm;
 #endif 
 
 
-
+//nearest neighbour fields for Dirac
 int * nn;
 int * nn_eo;
 int * nn_oe;
@@ -225,6 +231,11 @@ int * dev_nn_oe;
 
 int * dev_eoidx_even;
 int * dev_eoidx_odd;
+
+//nearest neighbour fields for gauge deri
+int * nn2;
+int * dev_nn2;
+
 
 
 size_t output_size;
@@ -256,25 +267,45 @@ __device__ dev_complex dev_mk2;
 __device__ dev_complex dev_mk3;
 
 
-__constant__ __device__ dev_complex dev_k0c;
-__constant__ __device__ dev_complex dev_k1c;
-__constant__ __device__ dev_complex dev_k2c;
-__constant__ __device__ dev_complex dev_k3c;
-
-__constant__ __device__ dev_complex dev_mk0c;
-__constant__ __device__ dev_complex dev_mk1c;
-__constant__ __device__ dev_complex dev_mk2c;
-__constant__ __device__ dev_complex dev_mk3c;
+// __constant__ __device__ dev_complex dev_k0c;
+// __constant__ __device__ dev_complex dev_k1c;
+// __constant__ __device__ dev_complex dev_k2c;
+// __constant__ __device__ dev_complex dev_k3c;
+// 
+// __constant__ __device__ dev_complex dev_mk0c;
+// __constant__ __device__ dev_complex dev_mk1c;
+// __constant__ __device__ dev_complex dev_mk2c;
+// __constant__ __device__ dev_complex dev_mk3c;
 
 
 // physical parameters (on device)
 __device__ float mubar, epsbar;
 
 
+/*********** double constants on GPU *********************/
+__device__ double mu_d;
+__device__ double kappa_d;
+__device__ double twokappamu_d;
+__device__ double mubar_d, epsbar_d;
+
+__device__ dev_complex_d dev_k0_d;
+__device__ dev_complex_d dev_k1_d;
+__device__ dev_complex_d dev_k2_d;
+__device__ dev_complex_d dev_k3_d;
+
+__device__ dev_complex_d dev_mk0_d;
+__device__ dev_complex_d dev_mk1_d;
+__device__ dev_complex_d dev_mk2_d;
+__device__ dev_complex_d dev_mk3_d;
+
+
 
 
 //dev_Offset is the jump in the spinor fields we have to do because of space-time first ordering
 __device__  int  dev_LX,dev_LY,dev_LZ,dev_T,dev_VOLUME,dev_Offset,dev_VOLUMEPLUSRAND;
+
+__device__  int  dev_VOL2;
+
 
 //host_Offset is the jump in the spinor fields we have to do because of space-time first ordering on host
 int host_Offset;
@@ -287,7 +318,10 @@ cudaStream_t stream_nd[2];
 // here we set the block and grid sizes for kernels
 int gpu_gd_M, gpu_bd_M, gpu_gd_linalg, gpu_bd_linalg, gpu_gd_blas, gpu_bd_blas;
 int gpu_gd_M_d, gpu_bd_M_d, gpu_gd_linalg_d, gpu_bd_linalg_d, gpu_gd_blas_d, gpu_bd_blas_d;
-
+// for gpu_gauge_derivative
+int blockdimgauge, griddimgauge;
+// for gpu_deriv_SB
+int blockdimdsb,  griddimdsb;
 
 #ifdef MPI
 
@@ -410,11 +444,28 @@ EXTERN int g_nb_z_up, g_nb_z_dn;
 #include "su3.cuh"
 // the plaquette and rectangle routines
 #include "observables.cuh"
-//gauge staple calculations in double plus all other double operations
+
+// linear algebra for double
+#include "linalg_d.cuh"
+
+/* include double matrix on device here */
+#include "Hopping_Matrix_d.cuh"
+
+//gauge staple calculations
 #include "gauge_monomial.cuh"
+/* include gauge_update on device here */
+#include "hybrid_update.cuh"
+/* include deriv_Sb on device here */
+#include "deriv_Sb.cuh"
+/* include the wilson flow on device*/
+//#include "wilson_flow.cuh"
+
+
 
 // the device Hopping_Matrix
 #include "Hopping_Matrix.cuh"
+
+
 // eo tm operator in single and half precision
 #include "tm_eo.cuh"
 // the non-EO twisted mass dirac operator
@@ -498,7 +549,7 @@ __global__ void dev_init_grid (int* grid){
 
 
 void update_constants(int *grid){
-  dev_complex h0,h1,h2,h3,mh0, mh1, mh2, mh3;
+  dev_complex h0,h1,h2,h3;
   
   //Hopping Matrix and tm_Dirac_op are defined with a relative minus in the imaginary parts of kappa
   //both comply with the cpu part
@@ -515,10 +566,6 @@ void update_constants(int *grid){
   h2.re = (float)creal(ka2);    h2.im = (float)cimag(ka2);
   h3.re = (float)creal(ka3);    h3.im = (float)cimag(ka3);
   
-  mh0.re = -(float)creal(ka0);    mh0.im = (float)cimag(ka0);
-  mh1.re = -(float)creal(ka1);    mh1.im = (float)cimag(ka1);
-  mh2.re = -(float)creal(ka2);    mh2.im = (float)cimag(ka2);
-  mh3.re = -(float)creal(ka3);    mh3.im = (float)cimag(ka3);
 
   #ifndef LOWOUTPUT
   if(g_cart_id==0){
@@ -535,18 +582,7 @@ void update_constants(int *grid){
     printf("2kappamu = %f\n", g_mu);
   }
   #endif
-  
-  // try using constant mem for kappas
-  
-  cudaMemcpyToSymbol(dev_k0c, &h0, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol(dev_k1c, &h1, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol(dev_k2c, &h2, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol(dev_k3c, &h3, sizeof(dev_complex)) ;
-  
-  cudaMemcpyToSymbol(dev_mk0c, &mh0, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol(dev_mk1c, &mh1, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol(dev_mk2c, &mh2, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol(dev_mk3c, &mh3, sizeof(dev_complex)) ;  
+   
   
   he_cg_init<<< 1, 1 >>> (grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
   // BEWARE in dev_tm_dirac_kappa we need the true mu (not 2 kappa mu!)
@@ -744,7 +780,7 @@ extern "C" int dev_cg(
  
  
  cudaError_t cudaerr;
- int i, gridsize;
+ int i;
  int maxit = max_innersolver_it;
  float eps = (float) innersolver_precision;
  int N_recalcres = 30; // after N_recalcres iterations calculate r = A x_k - b
@@ -1173,11 +1209,8 @@ extern "C" int dev_cg_eo(
     double effectiveflops;	// will used to count the "effective" flop's (from the algorithmic perspective)
     double hoppingflops = 1608.0;
     double matrixflops  = 2*(2*hoppingflops + 120.0 + 132.0); //that is for dev_Qtm_pm_psi
-    #ifdef MPI
-      double allflops;				// flops added for all processes
-    #endif
-      double starteffective;
-      double stopeffective;
+    double starteffective;
+    double stopeffective;
    // timer
    starteffective = gettime();
   #endif
@@ -2007,17 +2040,18 @@ extern "C" void init_mixedsolve_eo(su3** gf){
 	//dev_spin_eo1/2_d we need for gpu_deriv_SB in any case	
   	cudaMalloc((void **) &dev_spin_eo1_d, dev_spinsize_d);	
   	cudaMalloc((void **) &dev_spin_eo2_d, dev_spinsize_d);   
-
+	if((void*)(h2d_spin_d = (dev_spinor_d *)malloc(dev_spinsize_d)) == NULL){
+  	    printf("Could not allocate memory for double h2d_spin_d. Aborting...\n");
+  	    exit(200);
+  	} 
+  	  
 	#ifdef GPU_DOUBLE   
 	  cudaMalloc((void **) &dev_spin0_d, dev_spinsize_d);   
 	  cudaMalloc((void **) &dev_spin1_d, dev_spinsize_d);	
   	  cudaMalloc((void **) &dev_spin2_d, dev_spinsize_d);   
   	  cudaMalloc((void **) &dev_spin3_d, dev_spinsize_d);
 
-	  if((void*)(h2d_spin_d = (dev_spinor_d *)malloc(dev_spinsize_d)) == NULL){
-  	    printf("Could not allocate memory for double h2d_spin_d. Aborting...\n");
-  	    exit(200);
-  	  } 
+
   	  if((cudaerr=cudaGetLastError())!=cudaSuccess){
               if(g_cart_id==0) printf("Error in init_mixedsolve_eo(): Memory allocation of double spinor fields failed. Aborting...\n");
               exit(200);
@@ -2493,8 +2527,6 @@ void benchmark(spinor * const Q){
   #endif  
   
  
-  int VolumeEO = VOLUME;
-  
 
  #ifdef USETEXTURE
   //Bind texture gf
@@ -2503,17 +2535,11 @@ void benchmark(spinor * const Q){
 
  //Initialize some stuff
   printf("mu = %f\n", g_mu);
-  dev_complex h0,h1,h2,h3,mh0, mh1, mh2, mh3;
+  dev_complex h0,h1,h2,h3;
   h0.re = (float)creal(ka0);    h0.im = -(float)cimag(ka0);
   h1.re = (float)creal(ka1);    h1.im = -(float)cimag(ka1);
   h2.re = (float)creal(ka2);    h2.im = -(float)cimag(ka2);
   h3.re = (float)creal(ka3);    h3.im = -(float)cimag(ka3);
-  
-  mh0.re = -(float)creal(ka0);    mh0.im = (float)cimag(ka0);
-  mh1.re = -(float)creal(ka1);    mh1.im = (float)cimag(ka1);
-  mh2.re = -(float)creal(ka2);    mh2.im = (float)cimag(ka2);
-  mh3.re = -(float)creal(ka3);    mh3.im = (float)cimag(ka3);
-
   
   
   he_cg_init<<< 1, 1 >>> (dev_grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3); 
@@ -2715,29 +2741,12 @@ void benchmark_eo(spinor * const Q){
 
  //Initialize some stuff
   printf("mu = %f\n", g_mu);
-  dev_complex h0,h1,h2,h3,mh0, mh1, mh2, mh3;
+  dev_complex h0,h1,h2,h3;
   h0.re = (float)creal(ka0);    h0.im = -(float)cimag(ka0);
   h1.re = (float)creal(ka1);    h1.im = -(float)cimag(ka1);
   h2.re = (float)creal(ka2);    h2.im = -(float)cimag(ka2);
   h3.re = (float)creal(ka3);    h3.im = -(float)cimag(ka3);
   
-  mh0.re = -(float)creal(ka0);    mh0.im = (float)cimag(ka0);
-  mh1.re = -(float)creal(ka1);    mh1.im = (float)cimag(ka1);
-  mh2.re = -(float)creal(ka2);    mh2.im = (float)cimag(ka2);
-  mh3.re = -(float)creal(ka3);    mh3.im = (float)cimag(ka3);
-  
-  // try using constant mem for kappas
-  /*
-  cudaMemcpyToSymbol(dev_k0c, &h0, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol(dev_k1c, &h1, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol(dev_k2c, &h2, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol(dev_k3c, &h3, sizeof(dev_complex)) ;
-  
-  cudaMemcpyToSymbol(dev_mk0c, &mh0, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol(dev_mk1c, &mh1, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol(dev_mk2c, &mh2, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol(dev_mk3c, &mh3, sizeof(dev_complex)) ;  
-  */
 
   
   he_cg_init<<< 1, 1 >>> (dev_grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3); 
@@ -2838,30 +2847,12 @@ void benchmark_eo_mpi(spinor * const Q){
 
  //Initialize some stuff
   printf("mu = %f\n", g_mu);
-  dev_complex h0,h1,h2,h3,mh0, mh1, mh2, mh3;
+  dev_complex h0,h1,h2,h3;
   h0.re = (float)creal(ka0);    h0.im = -(float)cimag(ka0);
   h1.re = (float)creal(ka1);    h1.im = -(float)cimag(ka1);
   h2.re = (float)creal(ka2);    h2.im = -(float)cimag(ka2);
   h3.re = (float)creal(ka3);    h3.im = -(float)cimag(ka3);
   
-  mh0.re = -(float)creal(ka0);    mh0.im = (float)cimag(ka0);
-  mh1.re = -(float)creal(ka1);    mh1.im = (float)cimag(ka1);
-  mh2.re = -(float)creal(ka2);    mh2.im = (float)cimag(ka2);
-  mh3.re = -(float)creal(ka3);    mh3.im = (float)cimag(ka3);
-  
-  // try using constant mem for kappas
-  /*
-  cudaMemcpyToSymbol(dev_k0c, &h0, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol(dev_k1c, &h1, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol(dev_k2c, &h2, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol(dev_k3c, &h3, sizeof(dev_complex)) ;
-  
-  cudaMemcpyToSymbol(dev_mk0c, &mh0, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol(dev_mk1c, &mh1, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol(dev_mk2c, &mh2, sizeof(dev_complex)) ; 
-  cudaMemcpyToSymbol(dev_mk3c, &mh3, sizeof(dev_complex)) ;  
-  */
-     
   
   he_cg_init<<< 1, 1 >>> (dev_grid, (float) g_kappa, (float)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3); 
   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
@@ -3092,7 +3083,6 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
     #ifdef MATRIX_DEBUG
       test_double_operator(Q,N);
     #endif
-    double testnorm;
 
     order_spin_gpu(Q, h2d_spin_d);
     cudaMemcpy(dev_spin0_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);
@@ -3350,8 +3340,20 @@ extern "C" int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int ma
     #else
       dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double2 even-odd !  
     #endif    
-    update_constants_d(dev_grid);
-    update_gpu_gf_d(g_gauge_field);
+      int grid[6];
+      grid[0]=LX; grid[1]=LY; grid[2]=LZ; grid[3]=T; grid[4]=VOLUME/2; 
+	// dev_VOLUME is half of VOLUME for eo
+	
+      // put dev_Offset accordingly depending on mpi/non-mpi
+      #ifdef MPI
+      grid[5] = (VOLUME+RAND)/2;
+      #else
+      grid[5] = VOLUME/2;
+      #endif
+      cudaMemcpy(dev_grid, &(grid[0]), 6*sizeof(int), cudaMemcpyHostToDevice);    
+      
+      update_constants_d(dev_grid);
+      update_gpu_gf_d(g_gauge_field);
   #endif
  
   // Start timer
@@ -3371,11 +3373,14 @@ extern "C" int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int ma
   init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);  
 
   #ifdef GPU_DOUBLE
-    double testnorm;
     
     /*!!!!  WHY IS P NONZERO????? */
     //zero_spinor_field(P,N);
     
+    #ifdef MATRIX_DEBUG
+      test_double_operator(Q,N);
+    #endif    
+      
     order_spin_gpu(Q, h2d_spin_d);
     cudaMemcpy(dev_spin0_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);
     //cudaThreadSynchronize();

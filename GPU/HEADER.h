@@ -54,6 +54,7 @@ void convert2REAL4_spin_mpi (spinor* spin, dev_spinor* h2d, int start, int end);
 void to_device_mpi (dev_spinor * device, spinor * host, dev_spinor * auxiliary, int size, int start, int end);
 void to_host_mpi (spinor * host, dev_spinor * device, dev_spinor * auxiliary, int size, int start, int end);
 void xchange_field_wrapper (dev_spinor * dev_spin, int ieo);
+void xchange_field_wrapper_d (dev_spinor_d * dev_spin, int ieo);
 void Hopping_Matrix_wrapper (int ieo, dev_spinor * out, dev_spinor * in);
 void su3to2vf4_mpi(su3** gf, dev_su3_2v* h2d_gf);
 void su3to8_mpi(su3** gf, dev_su3_8* h2d_gf);

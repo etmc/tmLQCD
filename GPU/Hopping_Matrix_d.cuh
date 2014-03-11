@@ -28,35 +28,6 @@
 
 
 
-/*********** double constants on GPU *********************/
-__device__ double mu_d;
-__device__ double kappa_d;
-__device__ double twokappamu_d;
-__device__ double mubar_d, epsbar_d;
-
-__device__ dev_complex_d dev_k0_d;
-__device__ dev_complex_d dev_k1_d;
-__device__ dev_complex_d dev_k2_d;
-__device__ dev_complex_d dev_k3_d;
-
-__device__ dev_complex_d dev_mk0_d;
-__device__ dev_complex_d dev_mk1_d;
-__device__ dev_complex_d dev_mk2_d;
-__device__ dev_complex_d dev_mk3_d;
-
-__constant__ __device__ dev_complex_d dev_k0c_d;
-__constant__ __device__ dev_complex_d dev_k1c_d;
-__constant__ __device__ dev_complex_d dev_k2c_d;
-__constant__ __device__ dev_complex_d dev_k3c_d;
-
-__constant__ __device__ dev_complex_d dev_mk0c_d;
-__constant__ __device__ dev_complex_d dev_mk1c_d;
-__constant__ __device__ dev_complex_d dev_mk2c_d;
-__constant__ __device__ dev_complex_d dev_mk3c_d;
-
-
-
-
 //applies the Hopping Part Even-Odd !
 //the gauge field is the complete gaugefield!
 //the gauge field at the local point is reconstructed by 2*pos+eo where pos is the eo-position
