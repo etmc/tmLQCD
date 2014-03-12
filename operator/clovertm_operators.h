@@ -29,6 +29,14 @@ extern su3 *** sw;
 extern su3 *** sw_inv;
 extern su3 ** swm, ** swp;
 
+void assign_mul_one_sw_pm_imu_site_lexic(const int ix, spinor * const k, const spinor * const l, const double mu);
+void Qsw_full(spinor * const Even_new, spinor * const Odd_new,
+              spinor * const Even, spinor * const Odd);
+void Qsw_full_plus_psi(spinor * const l, spinor * const k);
+void Qsw_full_minus_psi(spinor * const l, spinor * const k);
+void Qsw_full_pm_psi(spinor * const l, spinor * const k);
+void Msw_full_minus_psi(spinor * const l, spinor * const k);
+
 void assign_mul_one_sw_pm_imu(const int ieo, spinor * const k, const spinor * const l, const double mu);
 void assign_mul_one_sw_pm_imu_inv(const int ieo, spinor * const k, const spinor * const l, const double mu);
 void Msw_full(spinor * const Even_new, spinor * const Odd_new, 
