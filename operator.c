@@ -227,7 +227,7 @@ int init_operators() {
       }
       else if(optr->type == DBCLOVER) {
 	optr->even_odd_flag = 1;
-	optr->applyDbQsq = &Qtm_pm_ndpsi;
+	optr->applyDbQsq = &Qsw_pm_ndpsi;
       }
     }
   }
