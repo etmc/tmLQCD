@@ -37,6 +37,7 @@
 #include "operator/tm_operators.h"
 #include "linalg_eo.h"
 #include "operator/D_psi.h"
+#include "operator/Dsw_psi.h"
 #include "operator/Dov_psi.h"
 #include "operator/tm_operators_nd.h"
 #include "operator/Hopping_Matrix.h"
@@ -155,6 +156,8 @@ int init_operators() {
 	if(optr->c_sw > 0) {
 	  init_sw_fields();
 	}
+        optr->applyM = &M_full;
+        optr->applyQ = &Q_full;
 	if(optr->even_odd_flag) {
 	  optr->applyQp = &Qtm_plus_psi;
 	  optr->applyQm = &Qtm_minus_psi;
@@ -167,7 +170,7 @@ int init_operators() {
 	  optr->applyQm = &Q_minus_psi;
 	  optr->applyQsq = &Q_pm_psi;
 	  optr->applyMp = &D_psi;
-	  optr->applyMm = &D_psi;
+	  optr->applyMm = &M_minus_psi;
 	}
 	if(optr->solver == 12) {
 	  if (g_cart_id == 0 && optr->even_odd_flag == 1)
@@ -177,6 +180,35 @@ int init_operators() {
 	    fprintf(stderr, "CGMMS doesn't need AddDownPropagator! Switching Off!\n");
 	  optr->DownProp = 0;
 	}
+      }
+      else if(optr->type == CLOVER) {
+        if(optr->c_sw > 0) {
+          init_sw_fields();
+        }
+        optr->applyM = &Msw_full;
+        optr->applyQ = &Qsw_full;
+        if(optr->even_odd_flag) {
+          optr->applyQp = &Qsw_plus_psi;
+          optr->applyQm = &Qsw_minus_psi;
+          optr->applyQsq = &Qsw_pm_psi;
+          optr->applyMp = &Msw_plus_psi;
+          optr->applyMm = &Msw_minus_psi;
+        }
+        else {
+          optr->applyQp = &Qsw_full_plus_psi;
+          optr->applyQm = &Qsw_full_minus_psi;
+          optr->applyQsq = &Qsw_full_pm_psi;
+          optr->applyMp = &Dsw_psi;
+          optr->applyMm = &Msw_full_minus_psi;
+        }
+        if(optr->solver == 12) {
+          if (g_cart_id == 0 && optr->even_odd_flag == 1)
+            fprintf(stderr, "CG Multiple mass solver works only without even/odd! Forcing!\n");
+          optr->even_odd_flag = 0;
+          if (g_cart_id == 0 && optr->DownProp)
+            fprintf(stderr, "CGMMS doesn't need AddDownPropagator! Switching Off!\n");
+          optr->DownProp = 0;
+        }
       }
       else if(optr->type == OVERLAP) {
 	optr->even_odd_flag = 0;

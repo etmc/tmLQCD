@@ -89,9 +89,14 @@ typedef struct {
   /* chebyshef coefficients for the overlap */
   double * coefs;
   /* various versions of the Dirac operator */
-  void (*applyM) (spinor * const, spinor * const);
-  void (*applyQ) (spinor * const, spinor * const);
-  /* with even/odd */
+  /***********************************************
+   * For the full operator, the spinors are 
+   * assumed to be in lexiographic order.
+   * For the even-odd case, these operators are 
+   * the odd-odd part.
+   ***********************************************/
+  void (*applyM) (spinor * const, spinor * const); //full operator M on eo ordered spinor
+  void (*applyQ) (spinor * const, spinor * const); //full operator Q= gamma5*M on eo ordered spinor
   void (*applyQp) (spinor * const, spinor * const);
   void (*applyQm) (spinor * const, spinor * const);
   void (*applyQsq) (spinor * const, spinor * const);
