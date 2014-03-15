@@ -152,7 +152,7 @@ int init_temporalgauge_trafo (const int V, su3** gfield) {
   	MPI_Send((void *)(g_trafo+(T-1)*LX*LY*LZ), LX*LY*LZ, mpi_su3, g_nb_t_up, 0, g_cart_grid);
   	//MPI_Send((void *)(g_trafo+(T-1)*LX*LY*LZ), LX*LY*LZ, mpi_su3, g_cart_id+1, 0, g_cart_grid);
   	
-  	printf("g_cart_id = %i has send a message to %i\n", g_cart_id, g_nb_t_up);
+  	if(g_debug_level > 2) printf("g_cart_id = %i has send a message to %i\n", g_cart_id, g_nb_t_up);
   	
   	
   } // first process
@@ -169,7 +169,7 @@ int init_temporalgauge_trafo (const int V, su3** gfield) {
   	//MPI_Recv((void *)left, LX*LY*LZ, mpi_su3, g_cart_id-1, 0, g_cart_grid, &status);
   	
   	
-  	printf("g_cart_id = %i has received a message from %i\n", g_cart_id, g_nb_t_dn);
+  	if(g_debug_level > 2) if(g_debug_level > 2) printf("g_cart_id = %i has received a message from %i\n", g_cart_id, g_nb_t_dn);
   	
   	it = 0;
   	for (ix = 0; ix < LX; ix++) {
@@ -203,7 +203,7 @@ int init_temporalgauge_trafo (const int V, su3** gfield) {
   	  MPI_Send((void *)(g_trafo+(T-1)*LX*LY*LZ), LX*LY*LZ, mpi_su3, g_nb_t_up, 0, g_cart_grid);
   	  //MPI_Send((void *)(g_trafo+(T-1)*LX*LY*LZ), LX*LY*LZ, mpi_su3, g_cart_id+1, 0, g_cart_grid);
   	  
-  	  printf("g_cart_id = %i has send a message to %i\n", g_cart_id, g_nb_t_up);
+  	  if(g_debug_level > 2) printf("g_cart_id = %i has send a message to %i\n", g_cart_id, g_nb_t_up);
   	  
   	}
   	
@@ -222,7 +222,7 @@ int init_temporalgauge_trafo (const int V, su3** gfield) {
                (void *)(right  ), LX*LY*LZ, mpi_su3, g_nb_t_up, 1,
                g_cart_grid, &status);
   
-  printf("g_cart_id = %i has send to %i and received from %i\n", g_cart_id, g_nb_t_dn, g_nb_t_up);
+  if(g_debug_level > 2) printf("g_cart_id = %i has send to %i and received from %i\n", g_cart_id, g_nb_t_dn, g_nb_t_up);
 
 
 #endif // MPI
@@ -412,7 +412,7 @@ void to_temporalgauge( su3** gfield, spinor * const spin1, spinor * const spin2)
   	MPI_Send((void *)(g_trafo+(T-1)*LX*LY*LZ), LX*LY*LZ, mpi_su3, g_nb_t_up, 0, g_cart_grid);
   	//MPI_Send((void *)(g_trafo+(T-1)*LX*LY*LZ), LX*LY*LZ, mpi_su3, g_cart_id+1, 0, g_cart_grid);
   	
-  	printf("g_cart_id = %i has send a message to %i\n", g_cart_id, g_nb_t_up);
+  	if(g_debug_level > 2) printf("g_cart_id = %i has send a message to %i\n", g_cart_id, g_nb_t_up);
   	
   	
   } // first process
@@ -429,7 +429,7 @@ void to_temporalgauge( su3** gfield, spinor * const spin1, spinor * const spin2)
   	//MPI_Recv((void *)left, LX*LY*LZ, mpi_su3, g_cart_id-1, 0, g_cart_grid, &status);
   	
   	
-  	printf("g_cart_id = %i has received a message from %i\n", g_cart_id, g_nb_t_dn);
+  	if(g_debug_level > 2) printf("g_cart_id = %i has received a message from %i\n", g_cart_id, g_nb_t_dn);
   	
   	it = 0;
   	for (ix = 0; ix < LX; ix++) {
@@ -463,7 +463,7 @@ void to_temporalgauge( su3** gfield, spinor * const spin1, spinor * const spin2)
   	  MPI_Send((void *)(g_trafo+(T-1)*LX*LY*LZ), LX*LY*LZ, mpi_su3, g_nb_t_up, 0, g_cart_grid);
   	  //MPI_Send((void *)(g_trafo+(T-1)*LX*LY*LZ), LX*LY*LZ, mpi_su3, g_cart_id+1, 0, g_cart_grid);
   	  
-  	  printf("g_cart_id = %i has send a message to %i\n", g_cart_id, g_nb_t_up);
+  	  if(g_debug_level > 2) printf("g_cart_id = %i has send a message to %i\n", g_cart_id, g_nb_t_up);
   	  
   	}
   	
@@ -482,7 +482,7 @@ void to_temporalgauge( su3** gfield, spinor * const spin1, spinor * const spin2)
                (void *)(right  ), LX*LY*LZ, mpi_su3, g_nb_t_up, 1,
                g_cart_grid, &status);
   
-  printf("g_cart_id = %i has send to %i and received from %i\n", g_cart_id, g_nb_t_dn, g_nb_t_up);
+  if(g_debug_level > 2) printf("g_cart_id = %i has send to %i and received from %i\n", g_cart_id, g_nb_t_dn, g_nb_t_up);
 
 
 #endif // MPI
@@ -626,7 +626,7 @@ void to_temporalgauge_invert_eo( su3** gfield, spinor * const spineven, spinor *
   	//MPI_Recv((void *)left, LX*LY*LZ, mpi_su3, g_cart_id-1, 0, g_cart_grid, &status);
   	
   	
-  	printf("g_cart_id = %i has received a message from %i\n", g_cart_id, g_nb_t_dn);
+  	if(g_debug_level > 2) printf("g_cart_id = %i has received a message from %i\n", g_cart_id, g_nb_t_dn);
   	
   	it = 0;
   	for (ix = 0; ix < LX; ix++) {
@@ -679,7 +679,7 @@ void to_temporalgauge_invert_eo( su3** gfield, spinor * const spineven, spinor *
                (void *)(right  ), LX*LY*LZ, mpi_su3, g_nb_t_up, 1,
                g_cart_grid, &status);
   
-  printf("g_cart_id = %i has send to %i and received from %i\n", g_cart_id, g_nb_t_dn, g_nb_t_up);
+  if(g_debug_level > 2) printf("g_cart_id = %i has send to %i and received from %i\n", g_cart_id, g_nb_t_dn, g_nb_t_up);
 
 
 #endif // MPI
@@ -1265,7 +1265,7 @@ void apply_gtrafo_spinor_odd (spinor * spin, su3 * trafofield) {
 #endif
 
   #ifndef LOWOUTPUT
-    if (g_cart_id == 0) {
+    if (g_cart_id == 0 && g_debug_level > 2) {
       printf("done\n");
     }   
   #endif
@@ -1326,7 +1326,7 @@ void apply_inv_gtrafo_spinor_odd (spinor * spin, su3 * trafofield) {
   xchange_field(spin, 0);
 #endif
   #ifndef LOWOUTPUT
-    if (g_cart_id == 0) {
+    if (g_cart_id == 0 && g_debug_level > 2) {
       printf("done\n");
     }
   #endif
@@ -1390,7 +1390,7 @@ void apply_gtrafo_spinor_even (spinor * spin, su3 * trafofield) {
 #endif  
   
   #ifndef LOWOUTPUT
-    if (g_cart_id == 0) {
+    if (g_cart_id == 0 && g_debug_level > 2) {
       printf("done\n");
     }
   #endif
@@ -1451,7 +1451,7 @@ void apply_inv_gtrafo_spinor_even (spinor * spin, su3 * trafofield) {
 #endif  
   
   #ifndef LOWOUTPUT
-    if (g_cart_id == 0) {
+    if (g_cart_id == 0 && g_debug_level > 2 ) {
       printf("done\n");
     }
   #endif
