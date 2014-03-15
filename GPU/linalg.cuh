@@ -7395,6 +7395,60 @@ __device__ void to_tmlqcd_basis_spinor(dev_spinor* spinin){
 
 ////////////////////////  BLAS KERNELS FLOAT ////////////////////////////////////////////////////
 
+void start_blas(int Vol){
+  cudaError_t cudaerr;
+  cublasStatus cublasstatus;  
+  // debug	// CUBLAS helper function
+    #ifdef CUDA_DEBUG
+      CUBLAS_HELPER_CHECK(cublasInit(), "CUBLAS error in cublasInit(). Couldn't initialize CUBLAS.", "CUBLAS initialized.");
+    #else
+      #ifdef CUDA_45
+	cublasHandle_t handle;
+	cublasCreate(&handle);
+      #else
+	cublasInit();
+      #endif 
+    #endif 
+  
+    #ifdef MPI
+      init_blas(Vol);
+    #endif  	
+    if((cudaerr=cudaGetLastError()) != cudaSuccess){
+      if(g_proc_id==0) printf("%s\n", cudaGetErrorString(cudaerr));
+      if(g_proc_id==0) printf("Error start_blas. Aborting...\n");
+      exit(200);
+    }
+    else{     
+      #ifndef LOWOUTPUT 
+        printf("BLAS initialized\n");
+      #endif
+    }
+}
+
+void stop_blas(){
+  cudaError_t cudaerr;
+  cublasStatus cublasstatus;  
+  
+  #ifdef CUDA_45  
+    cublasDestroy(handle);
+  #else
+    cublasShutdown();
+  #endif 
+  #ifdef MPI
+    finalize_blas();
+  #endif
+    
+    if((cudaerr=cudaGetLastError()) != cudaSuccess){
+      if(g_proc_id==0) printf("%s\n", cudaGetErrorString(cudaerr));
+      if(g_proc_id==0) printf("Error stop_blas. Aborting...\n");
+      exit(200);
+    }
+    else{     
+      #ifndef LOWOUTPUT 
+        printf("BLAS stopped\n");
+      #endif
+    }    
+}
 
 
 
@@ -8086,7 +8140,21 @@ __global__ void dev_add_f2d (dev_spinor_d* out, dev_spinor_d* x, dev_spinor* y){
 
 
 
-
+void add_f2d_host(spinor* spin_h, spinor* help_h,  dev_spinor* spin_d, int N)
+{  
+  cudaError_t cudaerr;
+  size_t dev_spinsize = 6*N*sizeof(dev_spinor); 
+     #ifdef RELATIVISTIC_BASIS
+        to_tmlqcd_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (spin_d);
+     #endif
+     cudaMemcpy(h2d_spin, spin_d, dev_spinsize, cudaMemcpyDeviceToHost);
+     if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
+       printf("%s\n", cudaGetErrorString(cudaerr));
+       printf("Error code is: %d\n",cudaerr);       
+     }
+     convert2double_spin(h2d_spin, help_h);  
+     add(spin_h, spin_h, help_h, N);     
+}
 
 
 // orders a double spinor on host according to the ordering used on host 

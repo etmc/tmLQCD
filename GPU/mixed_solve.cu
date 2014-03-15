@@ -237,15 +237,12 @@ int * nn2;
 int * dev_nn2;
 
 
-
-size_t output_size;
 int* dev_grid;
-float * dev_output;
 int havedevice = 0;
 
 
 float hostr;
-float hostkappa;
+
 float hostm;
 float hostmu;
 
@@ -741,7 +738,7 @@ dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_
 
  update_constants(grid);
  
-  float scaleparam = sqrt(1.0/(2.0 * (float) hostkappa));
+  float scaleparam = sqrt(1.0/(2.0 * (float) g_kappa));
   dev_skalarmult_spinor_field<<<gpu_gd_blas, gpu_bd_blas >>>(spinin,scaleparam*scaleparam, spin4);
  
  #ifdef USETEXTURE
@@ -775,8 +772,7 @@ extern "C" int dev_cg(
        int *grid, int * nn_grid, int rescalekappa){
  
  
- float host_alpha, host_beta, host_dotprod, host_rk, sourcesquarenorm;
- float * dotprod, * dotprod2, * rk, * alpha, *beta;
+ float alpha, beta, dotprod, rk, sourcesquarenorm;
  
  
  cudaError_t cudaerr;
@@ -805,28 +801,10 @@ extern "C" int dev_cg(
  //Initialize some stuff
  update_constants(grid);
  
- // Init x,p,r for k=0
- // Allocate some numbers for host <-> device interaction
- cudaMalloc((void **) &dotprod, sizeof(float));
- cudaMalloc((void **) &dotprod2, sizeof(float));
- cudaMalloc((void **) &rk, sizeof(float));
- cudaMalloc((void **) &alpha, sizeof(float));
- cudaMalloc((void **) &beta, sizeof(float));
- printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
- 
- 
  //init blas
-#ifdef CUDA_45
- cublasHandle_t handle;
- cublasCreate(&handle);
-#else
- cublasInit();
-#endif 
+ start_blas(VOLUME);
 
 
- printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
- printf("have initialized cublas\n");
- 
  
  // go over to kappa (if wanted)
  float scaleparam = sqrt(1.0/(2.0 * g_kappa));
@@ -859,7 +837,7 @@ extern "C" int dev_cg(
  
  //relative precision -> get initial residue
  sourcesquarenorm = cublasSdot (24*VOLUME, (const float *)spinin, 1, (const float *)spinin, 1);
- host_rk = sourcesquarenorm; //for use in main loop
+ rk = sourcesquarenorm; //for use in main loop
  printf("Squarenorm Source:\t%.8e\n", sourcesquarenorm);
  printf("%s\n", cudaGetErrorString(cudaGetLastError()));
  
@@ -906,15 +884,15 @@ extern "C" int dev_cg(
 
   
  //alpha
-  host_dotprod = cublasSdot (24*VOLUME, (const float *) spin2, 1,
+  dotprod = cublasSdot (24*VOLUME, (const float *) spin2, 1,
             (const float *) spin3, 1);
-  host_alpha = (host_rk / host_dotprod); // alpha = r*r/ p M p
+  alpha = (rk / dotprod); // alpha = r*r/ p M p
    
  //r(k+1)
- cublasSaxpy (24*VOLUME,-1.0*host_alpha, (const float *) spin3, 1, (float *) spin0, 1);  
+ cublasSaxpy (24*VOLUME,-1.0*alpha, (const float *) spin3, 1, (float *) spin0, 1);  
 
  //x(k+1);
- cublasSaxpy (24*VOLUME, host_alpha, (const float *) spin2,  1, (float *) spin1, 1);
+ cublasSaxpy (24*VOLUME, alpha, (const float *) spin2,  1, (float *) spin1, 1);
 
   if((cudaerr=cudaGetLastError()) != cudaSuccess){
     printf("%s\n", cudaGetErrorString(cudaerr));
@@ -923,20 +901,20 @@ extern "C" int dev_cg(
   
 
   //Abbruch?
-  host_dotprod = cublasSdot (24*VOLUME, (const float *) spin0, 1,(const float *) spin0, 1);
+  dotprod = cublasSdot (24*VOLUME, (const float *) spin0, 1,(const float *) spin0, 1);
   
- if ((host_dotprod <= eps*sourcesquarenorm)){//error-limit erreicht
+ if ((dotprod <= eps*sourcesquarenorm)){//error-limit erreicht
    break; 
  }
-  printf("iter %d: err = %.8e\n", i, host_dotprod);
+  printf("iter %d: err = %.8e\n", i, dotprod);
   
  //beta
- host_beta =host_dotprod/host_rk;
+ beta =dotprod/rk;
  //p(k+1)
- cublasSscal (24*VOLUME, host_beta, (float *)spin2, 1);
+ cublasSscal (24*VOLUME, beta, (float *)spin2, 1);
  cublasSaxpy (24*VOLUME, 1.0, (const float *) spin0,  1, (float *) spin2, 1);
 
- host_rk = host_dotprod;
+ rk = dotprod;
  
  // recalculate residue frome r = b - Ax
  if(((i+1) % N_recalcres) == 0){
@@ -992,7 +970,7 @@ extern "C" int dev_cg(
  }//MAIN LOOP cg	
   
   
-  printf("Final residue: %.6e\n",host_dotprod);
+  printf("Final residue: %.6e\n", dotprod);
   // x_result = spin1 !
   
  if(rescalekappa == 1){  //want D^-1 rescaled by 2*kappa
@@ -1042,17 +1020,8 @@ extern "C" int dev_cg(
   #ifdef USETEXTURE
    unbind_texture_gf();
   #endif
-  cudaFree(dotprod);
-  cudaFree(dotprod2);
-  cudaFree(rk);
-  cudaFree(alpha);
-  cudaFree(beta);
-  
-#ifdef CUDA_45  
-  cublasDestroy(handle);
-#else
-  cublasShutdown();
-#endif
+   
+  stop_blas();
   
   return(i);
 }
@@ -1075,45 +1044,8 @@ void showspinor(dev_spinor* s){
 }
 
 
-
-
-#ifndef HALF
-
-// this is the eo version of the device cg inner solver 
-// we invert the hermitean Q_{-} Q_{+}
-extern "C" int dev_cg_eo(
-      dev_su3_2v * gf,
-      dev_spinor* spinin, 
-      dev_spinor* spinout, 
-      dev_spinor* spin0, 
-      dev_spinor* spin1, 
-      dev_spinor* spin2, 
-      dev_spinor* spin3, 
-      dev_spinor* spin4, 
-      int *grid, int * nn_grid, float epsfinal){
- 
- 
- float host_alpha, host_beta, host_dotprod, host_rk, sourcesquarenorm;
- float * dotprod, * dotprod2, * rk, * alpha, *beta;
- 
- 
- 
- int i;
- int maxit = max_innersolver_it;
- float eps = (float) innersolver_precision;
- int N_recalcres = 40; // after N_recalcres iterations calculate r = A x_k - b
- 
- cudaError_t cudaerr;
- 
- 
- //Initialize some stuff
-    //if (g_cart_id == 0) printf("mu = %f\n", g_mu);
-
-  update_constants(grid);
+void check_mixedsolve_params(){
   
-  #ifdef MPI
-    he_cg_init_nd_additional_mpi<<<1,1>>>(VOLUMEPLUSRAND/2, RAND, g_cart_id, g_nproc);
-    // debug	// check dev_VOLUMEPLUSRAND and dev_RAND on device
     #ifndef LOWOUTPUT
         if (g_cart_id == 0) {
   	  int host_check_VOLUMEPLUSRAND, host_check_RAND;
@@ -1134,76 +1066,75 @@ extern "C" int dev_cg_eo(
   	  printf("\tdev_rank = %i\n", host_check_rank);
   	  printf("\tdev_nproc = %i\n", host_check_nproc);
   	}
-    #endif
   #endif
   
+}
+
+
+
+#ifndef HALF
+
+// this is the eo version of the device cg inner solver 
+// we invert the hermitean Q_{-} Q_{+}
+extern "C" int dev_cg_eo(
+      dev_su3_2v * gf,
+      dev_spinor* spinin, 
+      dev_spinor* spinout, 
+      dev_spinor* spin0, 
+      dev_spinor* spin1, 
+      dev_spinor* spin2, 
+      dev_spinor* spin3, 
+      dev_spinor* spin4, 
+      int *grid, int * nn_grid, float epsfinal){
+ 
+ 
+ float alpha, beta, dotprod, rk, sourcesquarenorm;
+ 
+ int i;
+ int maxit = max_innersolver_it;
+ float eps = (float) innersolver_precision;
+ int N_recalcres = 40; // after N_recalcres iterations calculate r = A x_k - b
+ 
+ cudaError_t cudaerr;
+ 
+  //constants
+  update_constants(grid);  
+  #ifdef MPI
+    he_cg_init_nd_additional_mpi<<<1,1>>>(VOLUMEPLUSRAND/2, RAND, g_cart_id, g_nproc);
+  #endif
+  //->check
+  check_mixedsolve_params();
   
   #ifdef USETEXTURE
     //Bind texture gf
     bind_texture_gf(gf);
   #endif
  
- 
- // Init x,p,r for k=0
- // Allocate some numbers for host <-> device interaction
- cudaMalloc((void **) &dotprod, sizeof(float));
- cudaMalloc((void **) &dotprod2, sizeof(float));
- cudaMalloc((void **) &rk, sizeof(float));
- cudaMalloc((void **) &alpha, sizeof(float));
- cudaMalloc((void **) &beta, sizeof(float));
- #ifndef LOWOUTPUT 
- if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-   if (g_cart_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
- }
- #endif
- //init blas
- #ifndef MPI
-    #ifdef CUDA_45
-      cublasHandle_t handle;
-      cublasCreate(&handle);
-    #else
-      cublasInit();
-    #endif 
- #else
-  init_blas(VOLUME/2);
- #endif 
+  start_blas(VOLUME/2);
 
-    if (g_cart_id == 0) {
-      if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-        printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
-      }
-      #ifndef LOWOUTPUT 
-        printf("have initialized cublas\n"); 
-      #endif
-    }
- 
-
+ //init fields 
  dev_copy_spinor_field<<<gpu_gd_blas, gpu_bd_blas >>>(spinin, spin0);
  dev_zero_spinor_field<<<gpu_gd_blas, gpu_bd_blas >>>(spin1); // x_0 = 0
  dev_copy_spinor_field<<<gpu_gd_blas, gpu_bd_blas >>>(spinin, spin2);
  dev_zero_spinor_field<<<gpu_gd_blas, gpu_bd_blas >>>(spin3);
   
-   if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-     if (g_cart_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-   }
- 
 
  //relative precision -> get initial residue
  sourcesquarenorm = cublasSdot_wrapper (24*VOLUME/2, (float *)spinin, (float *)spinin);
- host_rk = sourcesquarenorm; //for use in main loop
+ rk = sourcesquarenorm; //for use in main loop
  
 
-
-    if (g_cart_id == 0) {
-      #ifndef LOWOUTPUT
-        printf("Squarenorm Source:\t%.8e\n", sourcesquarenorm);
-        printf("Entering inner solver cg-loop\n");
-      #endif
-      if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-        printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-      }
-    }
-
+  if (g_cart_id == 0) {
+    #ifndef LOWOUTPUT
+      printf("Squarenorm Source:\t%.8e\n", sourcesquarenorm);
+      printf("Entering inner solver cg-loop\n");
+    #endif
+  }
+  if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
+      printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+      exit(200);
+  }
+    
 
   #ifdef ALGORITHM_BENCHMARK
     double effectiveflops;	// will used to count the "effective" flop's (from the algorithmic perspective)
@@ -1216,7 +1147,6 @@ extern "C" int dev_cg_eo(
   #endif
 
 
- 
  for(i=0;i<maxit;i++){ //MAIN LOOP
   
   // Q_{-}Q{+}
@@ -1231,35 +1161,35 @@ extern "C" int dev_cg_eo(
   
   
  //alpha
- host_dotprod = cublasSdot_wrapper (24*VOLUME/2, (float *) spin2, (float *) spin3);
+ dotprod = cublasSdot_wrapper (24*VOLUME/2, (float *) spin2, (float *) spin3);
 
- host_alpha = (host_rk / host_dotprod); // alpha = r*r/ p M p
+ alpha = (rk / dotprod); // alpha = r*r/ p M p
    
  //r(k+1)
- cublasSaxpy_wrapper (24*VOLUME/2,-1.0*host_alpha, (float *) spin3, (float *) spin0);  
+ cublasSaxpy_wrapper (24*VOLUME/2,-1.0*alpha, (float *) spin3, (float *) spin0);  
 
  //x(k+1);
- cublasSaxpy_wrapper (24*VOLUME/2, host_alpha, (float *) spin2, (float *) spin1);
+ cublasSaxpy_wrapper (24*VOLUME/2, alpha, (float *) spin2, (float *) spin1);
 
  //break?
- host_dotprod = cublasSdot_wrapper (24*VOLUME/2, (float *) spin0, (float *) spin0);
- if (((host_dotprod <= eps*sourcesquarenorm)) || ( host_dotprod <= epsfinal/2.)){//error-limit erreicht (epsfinal/2 sollte ausreichen um auch in double precision zu bestehen)
+ dotprod = cublasSdot_wrapper (24*VOLUME/2, (float *) spin0, (float *) spin0);
+ if (((dotprod <= eps*sourcesquarenorm)) || ( dotprod <= epsfinal/2.)){//error-limit erreicht (epsfinal/2 sollte ausreichen um auch in double precision zu bestehen)
    break; 
  }
   
-  
+ //residue 
  #ifndef LOWOUTPUT 
-   if (g_cart_id == 0) printf("iter %d: err = %.8e\n", i, host_dotprod);
+   if (g_cart_id == 0) printf("iter %d: err = %.8e\n", i, dotprod);
  #endif
   
   
  //beta
- host_beta =host_dotprod/host_rk;
+ beta = dotprod/rk;
  //p(k+1)
- cublasSscal_wrapper (24*VOLUME/2, host_beta, (float *)spin2);
+ cublasSscal_wrapper (24*VOLUME/2, beta, (float *)spin2);
  cublasSaxpy_wrapper (24*VOLUME/2, 1.0, (float *) spin0,  (float *) spin2);
 
- host_rk = host_dotprod;
+ rk = dotprod;
  
  // recalculate residue frome r = b - Ax
  if(((i+1) % N_recalcres) == 0){
@@ -1290,7 +1220,7 @@ extern "C" int dev_cg_eo(
  }//MAIN LOOP cg	
   
     
-    if (g_cart_id == 0) printf("Final residue: %.6e\n",host_dotprod);
+    if (g_cart_id == 0) printf("Final residue: %.6e\n", dotprod);
  
   #ifdef ALGORITHM_BENCHMARK
     cudaThreadSynchronize();
@@ -1322,20 +1252,8 @@ extern "C" int dev_cg_eo(
   #ifdef USETEXTURE
    unbind_texture_gf();
   #endif
-  cudaFree(dotprod);
-  cudaFree(dotprod2);
-  cudaFree(rk);
-  cudaFree(alpha);
-  cudaFree(beta);
-  #ifndef MPI
-    #ifdef CUDA_45  
-      cublasDestroy(handle);
-    #else
-      cublasShutdown();
-    #endif 
-  #else
-   finalize_blas();
-  #endif 
+ 
+  stop_blas();
 
   return(i);
 }
@@ -1669,10 +1587,6 @@ cudaError_t cudaerr;
     printf("Allocated spinor fields on device\n");
   }
   
-  
-  output_size = LZ*T*sizeof(float); // parallel in t and z direction
-  cudaMalloc((void **) &dev_output, output_size);   // output array
-  float * host_output = (float*) malloc(output_size);
 
   int grid[6];
   grid[0]=LX; grid[1]=LY; grid[2]=LZ; grid[3]=T; grid[4]=VOLUME; grid[5]=VOLUME;
@@ -2220,9 +2134,6 @@ extern "C" void init_mixedsolve_eo(su3** gf){
     exit(200);
   }  
   
-  output_size = LZ*T*sizeof(float); // parallel in t and z direction
-  cudaMalloc((void **) &dev_output, output_size);   // output array
-  float * host_output = (float*) malloc(output_size);
 
   int grid[6];
   grid[0]=LX; grid[1]=LY; grid[2]=LZ; grid[3]=T; grid[4]=VOLUME/2; 
@@ -2325,7 +2236,6 @@ extern "C" void finalize_mixedsolve(){
 
   cudaFree(dev_gf);
   cudaFree(dev_grid);
-  cudaFree(dev_output);
   cudaFree(dev_nn);
   
   if(even_odd_flag){

@@ -354,7 +354,7 @@ extern "C" void init_gpu_fields(int need_momenta){
    else{
      Vol = VOLUME + RAND;     
    }
-    blasVol = (VOLUME+RAND)/2;
+    blasVol = (VOLUME)/2;
   #else
     Vol = VOLUME;
     blasVol = VOLUME/2;
@@ -399,26 +399,24 @@ extern "C" void init_gpu_fields(int need_momenta){
    printf("Error: VOLUME is not a multiple of BLOCKGAUGE. Aborting...\n");
    exit(200);
   }
-  blockdimgauge = BLOCKGAUGE;
-  if( VOLUME >= BLOCKGAUGE){
-   gridsize = (int) VOLUME/BLOCKGAUGE;
-  }
-  else{
-   gridsize=1;
-  }
+
+
+ blockdimgauge = BLOCKGAUGE;
+ if( VOLUME % blockdimgauge == 0){
+   gridsize = (int) VOLUME/blockdimgauge;
+ }
+ else{
+   gridsize  = (int) VOLUME/blockdimgauge + 1;
+ }
   griddimgauge = gridsize; 
 
 
-  if((VOLUME/2)%BLOCKD != 0){
-   printf("Error: VOLUME/2 is not a multiple of BLOCKGAUGE. Aborting...\n");
-   exit(200);
-  }
   blockdimdsb = BLOCKD;
-  if( VOLUME/2 >= BLOCKD){
+  if( VOLUME/2 % BLOCKD == 0){
    gridsize = (int) (VOLUME/2)/BLOCKD;
   }
   else{
-   gridsize=1;
+   gridsize = (int) (VOLUME/2)/BLOCKD + 1;
   }
   griddimdsb = gridsize; 
 

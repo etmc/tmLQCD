@@ -4207,7 +4207,6 @@ void finalize_gpu_single_nd_mms_fields(){
 }
 
 
-
 /*
 // a mixed reliable update mms solver
 // arithmetics equal the cpu counterpart in solver/cg_mms_tm_nd.c
@@ -4226,38 +4225,52 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
   double startinner, stopinner;  
   double innerclocks;
 
-  dev_spinor * Q_up = dev_spin_eo1;
-  dev_spinor * Q_dn = dev_spin_eo2;   
-  size_t dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor); // float4 even-odd !   
   
-  init_mixedsolve_eo_nd(g_gauge_field);
   
-  update_constants_d(dev_grid);
-  update_gpu_gf_d(g_gauge_field);
+  /////////////////////
+  // INITIALIZATIONS //
+  /////////////////////
+  
+  // FIXME this should be made dependent on if EO is used or not in future
+  
+  size_t dev_spinsize = 6*VOLUMEPLUSRAND/2 * sizeof(dev_spinor); // float4 even-odd !   
+  //blas - only internal volume
+  start_blas(VOLUME/2);
+  
+  int Vol = VOLUMEPLUSRAND/2;
+ 
+  //allocate an auxiliary solver fields 
+  spinor ** solver_field = NULL;
+  const int nr_sf = 1;
+  init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);  
+ 
+  
+  //set double & single constants
+  set_global_sizes();
+  update_constants_d(dev_grid);  
   update_bare_constants_nd();
+  
+  //allocate cg spinor fields
+  init_mixedsolve_eo_nd(g_gauge_field);
+  //update double gauge field
+  update_gpu_gf_d(g_gauge_field);
+  //allocate additianal mms fields in single
   init_gpu_single_nd_mms_fields(Nshift);
   
    #ifdef MATRIX_DEBUG
     test_double_nd_operator(Q_up, Q_dn, N_sites_int);
    #endif
      
+
+   
    //double source on device
    order_spin_gpu(Q_up, h2d_spin_d);
    cudaMemcpy(dev_spinin_up_d, h2d_spin_d, dev_spinsize, cudaMemcpyHostToDevice);      
    order_spin_gpu(Q_dn, h2d_spin_d);
    cudaMemcpy(dev_spinin_dn_d, h2d_spin_d, dev_spinsize, cudaMemcpyHostToDevice);
-   
    #ifdef RELATIVISTIC_BASIS
       to_relativistic_basis_d<<<gpu_gd_blas_d, gpu_bd_blas_d>>> (dev_spinin_up_d);
-      to_relativistic_basis_d<<<gpu_gd_blas_d, gpu_bd_blas_d>>> (dev_spinin_dn_d);
-      if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-	if (g_cart_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-      }
-      else{
-	#ifndef LOWOUTPUT 
-	if (g_cart_id == 0) printf("Switched to relativistic basis\n");
-	#endif
-      }    
+      to_relativistic_basis_d<<<gpu_gd_blas_d, gpu_bd_blas_d>>> (dev_spinin_dn_d);  
     #endif  
   
   
@@ -4285,53 +4298,38 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
   // algorithm
   double rr_up, rr_dn, rr, rr_old, r0r0, dAd_up, dAd_dn, dAd;
 
-  // (auxiliary) device fields
-  // for recalculating the residue
   dev_spinor *  r_up, *  r_dn, * Ad_up, * Ad_dn, *  x_up, *  x_dn, *  d_up, *  d_dn, * Ax_up, * Ax_dn;		
+  dev_spinor_d * r_high_up, r_high_dn, x_high_up, x_high_dn;
+  
+ // iteration counter
+ int j; 
  
-  // counting
-  int j;				// iteration counter
- 
-
+ //reliable update
+ int rel_update = 0;
+ double rel_delta = 1.0e-4;
+ int trigger_shift = -1;
+ double * res;
+ double * res0;
+ double * maxres;
+ res = (double*)calloc((noshifts), sizeof(double));
+ res0 = (double*)calloc((noshifts), sizeof(double));
+ maxres = (double*)calloc((noshifts), sizeof(double)); 
+    
   /////////////////
   // ASSIGNMENTS //
   /////////////////
   
-  x_up  = P_up;							
-  // can use the output spinors also as auxiliary fields
-  x_dn  = P_dn;							
-  //	saves copying the output spinor field
-  // use these pointers to the allocated space on device memory 
-  // (allocated by init_mixedsolve_eo_nd_d)  
-  r_up  = dev_spin1_up_d;						
-  r_dn  = dev_spin1_dn_d;
-  d_up  = dev_spin2_up_d;
-  d_dn  = dev_spin2_dn_d;
-  Ad_up = dev_spin3_up_d;
-  Ad_dn = dev_spin3_dn_d;
-  Ax_up = Ad_up;						
-  // works as long as no initial guess vector x(0) is passed to cg_eo_nd_d()
+  x_up  = dev_spinout_up;	
+  x_dn  = dev_spinout_dn;	
+  r_up  = dev_spin1_up;	
+  r_dn  = dev_spin1_dn;
+  d_up  = dev_spin2_up;
+  d_dn  = dev_spin2_dn;
+  Ad_up = dev_spin3_up;
+  Ad_dn = dev_spin3_dn;
+  Ax_up = Ad_up;
   Ax_dn = Ad_dn;
   
-  
- 
-  /////////////////////
-  // INITIALIZATIONS //
-  /////////////////////
-  
-      // debug	// CUBLAS helper function
-      #ifdef CUDA_DEBUG
-	CUBLAS_HELPER_CHECK(cublasInit(), "CUBLAS error in cublasInit(). Couldn't initialize CUBLAS.", "CUBLAS initialized.");
-      #else
-	#ifdef CUDA_45
-	  cublasHandle_t handle;
-	  cublasCreate(&handle);
-	#else
-	  cublasInit();
-	#endif 
-      #endif
-
-  if(g_debug_level > 3) printf("cublasstatus = %f\n", cublasstatus);
   
   
   
@@ -4339,52 +4337,27 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
   // ALGORITHM //
   ///////////////
   
-  
   // initialize x(0) = 0	// will be added up
   dev_zero_spinor_field<<<gpu_gd_blas, gpu_bd_blas>>>(x_up);
   dev_zero_spinor_field<<<gpu_gd_blas, gpu_bd_blas>>>(x_dn);
   
   // r(0) = b - A*x(0) = b
-  dev_d2f<<<gpu_gd_blas_d, gpu_bd_blas_d>>>(r_up, dev_spinin_up_d);
-  dev_d2f<<<gpu_gd_blas_d, gpu_bd_blas_d>>>(r_dn, dev_spinin_dn_d); 
+  dev_d2f<<<gpu_gd_blas, gpu_bd_blas>>>(r_up, dev_spinin_up_d);
+  dev_d2f<<<gpu_gd_blas, gpu_bd_blas>>>(r_dn, dev_spinin_dn_d); 
   
   // d(0) = b - A*x(0) = b
-  dev_d2f<<<gpu_gd_blas_d, gpu_bd_blas_d>>>(d_up, dev_spinin_up_d);
-  dev_d2f<<<gpu_gd_blas_d, gpu_bd_blas_d>>>(d_dn, dev_spinin_dn_d); 
+  dev_d2f<<<gpu_gd_blas, gpu_bd_blas>>>(d_up, dev_spinin_up_d);
+  dev_d2f<<<gpu_gd_blas, gpu_bd_blas>>>(d_dn, dev_spinin_dn_d); 
   
   
-      // debug	// kernel
-      #ifdef CUDA_DEBUG
-	CUDA_KERNEL_CHECK("Kernel error in dev_cg_mms_eo_nd_d(). Initializing spinor fields on device failed.", "Spinor fields initialized on device.");
-      #endif
-  
-  
-  
-  // rr = (r_up)^2 + (r_dn)^2
-
-  #ifdef MPI
-    //launch error and exit
-    if(g_cart_id == 0){
-      printf("Error: pure double GPU ND solver not implemented for MPI. Aborting...\n");
-      exit(200);
-    }
-  #endif
-  
-    rr_up = cublasSdot_wrapper(N_floats_int, (float *) r_up, (float *) r_up);
-    rr_dn = cublasSdot_wrapper(N_floats_int, (float *) r_dn, (float *) r_dn);
-
+  rr_up = cublasSdot_wrapper(N_floats_int, (float *) r_up, (float *) r_up);
+  rr_dn = cublasSdot_wrapper(N_floats_int, (float *) r_dn, (float *) r_dn);
   rr    = rr_up + rr_dn;
 
   r0r0   = rr;	// for relative precision 
   rr_old = rr;	// for the first iteration
   
-      // debug	// CUBLAS core function
-      #ifdef CUDA_DEBUG
-	// CUBLAS_CORE_CHECK("CUBLAS error in cg_eo_nd(). Calculating initial residue failed.", "Initial inner residue calculated.");
-	CUBLAS_CORE_CHECK_NO_SUCCESS_MSG("CUBLAS error in dev_cg_mms_eo_nd_d(). Calculating initial residue failed.");
-      #endif
-
-      if (g_cart_id == 0) printf("Initial mms residue: %.6e\n", r0r0);
+ if (g_cart_id == 0) printf("Initial mms residue: %.6e\n", r0r0);
   
   alphas[0] = 1.0;
   betas[0] = 0.0;
@@ -4396,12 +4369,12 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
     sigma[im] = shifts[im]*shifts[im] - sigma[0];
     if(g_cart_id == 0 && g_debug_level > 2) printf("# dev_CGMMSND: shift %d is %e\n", im, sigma[im]);
     // these will be the result spinor fields
-    dev_zero_spinor_field_d<<<griddim2, blockdim2>>>(mms_x_up_d[im-1]);
-    dev_zero_spinor_field_d<<<griddim2, blockdim2>>>(mms_x_dn_d[im-1]);    
+    dev_zero_spinor_field<<<griddim2, blockdim2>>>(mms_x_up[im-1]);
+    dev_zero_spinor_field<<<griddim2, blockdim2>>>(mms_x_dn[im-1]);    
 
     // these are intermediate fields
-    dev_copy_spinor_field_d<<<griddim2, blockdim2>>>(Q_up, mms_d_up_d[im-1]);
-    dev_copy_spinor_field_d<<<griddim2, blockdim2>>>(Q_dn, mms_d_dn_d[im-1]);
+    dev_copy_spinor_field<<<griddim2, blockdim2>>>(Q_up, mms_d_up[im-1]);
+    dev_copy_spinor_field<<<griddim2, blockdim2>>>(Q_dn, mms_d_dn[im-1]);
     zitam1[im] = 1.0;
     zita[im] = 1.0;
     alphas[im] = 1.0;
@@ -4416,40 +4389,135 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
   for (j = 0; j < max_iter; j++) {
 
       // A*d(k)
-    dev_Qtm_pm_ndpsi_d(Ad_up, Ad_dn, d_up,  d_dn,	
-		      griddim2, blockdim2, griddim3, blockdim3,
-		      griddim3, blockdim3, griddim3, blockdim3);
+    dev_Qtm_pm_ndpsi(Ad_up, Ad_dn, d_up,  d_dn,	
+		      gpu_gd_M, gpu_bd_M, gpu_gd_linalg, gpu_bd_linalg,
+		      gpu_gd_linalg, gpu_bd_linalg, gpu_gd_linalg, gpu_bd_linalg);
+    #ifdef CUDA_DEBUG
+      CUDA_CHECK("CUDA error in matrix_muliplication(). Applying the matrix on GPU failed.", "The matrix was applied on GPU.");
+    #endif    
 
     //add zero'th shift
-    cublasSaxpy (N_floats_int, sigma[0], (float *) d_up, 1, (float *) Ad_up, 1);
-    cublasSaxpy (N_floats_int, sigma[0], (float *) d_dn, 1, (float *) Ad_dn, 1);
+    cublasSaxpy_wrapper (N_floats_int, sigma[0], (float *) d_up, (float *) Ad_up);
+    cublasSaxpy_wrapper (N_floats_int, sigma[0], (float *) d_dn, (float *) Ad_dn);
 	
-
-     #ifdef CUDA_DEBUG
-	  CUDA_CHECK("CUDA error in matrix_muliplication(). Applying the matrix on GPU failed.", "The matrix was applied on GPU.");
-     #endif
-
     // alpha = r(k)*r(k) / d(k)*A*d(k)
-      dAd_up = cublasSdot_wrapper(N_floats_int, (float *) d_up, (float *) Ad_up);
-      dAd_dn = cublasSdot_wrapper(N_floats_int, (float *) d_dn, (float *) Ad_dn);
+    dAd_up = cublasSdot_wrapper(N_floats_int, (float *) d_up, (float *) Ad_up);
+    dAd_dn = cublasSdot_wrapper(N_floats_int, (float *) d_dn, (float *) Ad_dn);
 
     dAd    = dAd_up + dAd_dn; 
     alpham1 = alphas[0];
     alphas[0]  = rr_old / dAd;	// rr_old is taken from the last iteration respectively
     
+   
+    // r(k+1)
+    cublasSaxpy_wrapper(N_floats_int, -1.0*alphas[0], (float *) Ad_up, (float *) r_up);
+    cublasSaxpy_wrapper(N_floats_int, -1.0*alphas[0], (float *) Ad_dn, (float *) r_dn);
+
+    // r(k+1)*r(k+1)
+    rr_up  = cublasSdot_wrapper(N_floats_int, (float *) r_up, (float *) r_up);
+    rr_dn  = cublasSdot_wrapper(N_floats_int, (float *) r_dn, (float *) r_dn);
+    rr     = rr_up + rr_dn;
     
-    // x_j(k+1) = x_j(k) + alpha_j*d_j(k)   
+    #ifdef CUDA_DEBUG
+      CUBLAS_CORE_CHECK_NO_SUCCESS_MSG("CUBLAS error in dev_cg_eo_nd(). CUBLAS function failed.");
+    #endif
+    // debug	// is NaN ?
+    if isnan(rr) {
+      printf("Error in dev_cg_mms_eo_nd_d(). Inner residue is NaN.\n");
+      exit(-1);
+    }
+      
+    #ifndef LOWOUTPUT
+      if (g_cart_id == 0) printf("mms iteration j = %i: rr = %.6e\n", j, rr);
+    #endif
+		 
+
+    // aborting ?? // check wether precision is reached ...
+    if ( ((check_abs)&&(rr <= eps_abs)&&(j>min_solver_it)) || ((check_rel)&&(rr <= eps_rel*r0r0)&&(j>min_solver_it)) ) 
+    {
+      #ifndef LOWOUTPUT
+	if ((check_rel)&&(rr <= eps_rel*r0r0)) {
+	  printf("Reached relative solver precision of eps_rel = %.2e\n", eps_rel);
+	}
+	if ((check_abs)&&(rr <= eps_abs)) {
+	  printf("Reached absolute solver precision of eps_abs = %.2e\n", eps_abs);
+	}
+      #endif 
+      break;
+   }
+    
+    // update alphas and zitas  
+    // used later
     for(int im = 1; im < noshifts; im++) {
       gamma = zita[im]*alpham1/(alphas[0]*betas[0]*(1.-zita[im]/zitam1[im]) 
 				+ alpham1*(1.+sigma[im]*alphas[0]));
       zitam1[im] = zita[im];
       zita[im] = gamma;
       alphas[im] = alphas[0]*zita[im]/zitam1[im];
-      cublasSaxpy(N_floats_int, alphas[im], (float *) mms_d_up_d[im-1], 1, (float *) mms_x_up_d[im-1], 1);
-      cublasSaxpy(N_floats_int, alphas[im], (float *) mms_d_dn_d[im-1], 1, (float *) mms_x_dn_d[im-1], 1);
+    }  
+    
+    //check for reliable update
+    res[0] = rr;
+    for(im=1; im<noshifts; im++) res[im] = rr * zita[im]; 
+      
+    rel_update = -1;
+    for(int im = (noshifts-1); im >= 0; im--) {
+      if( res[im] > maxres[im] ) maxres[im] = res[im];
+      if( (res[im] < rel_delta*res0[im]) && (res0[im]<=maxres[im]) ) rel_update=1; 
+      if( rel_update && ( trigger_shift == -1) ) trigger_shift = im;
+    }     
+    
+    if(!rel_update)
+    {
+      // x_j(k+1) = x_j(k) + alpha_j*d_j(k) 
+      // alphas are set above
+      cublasSaxpy_wrapper(N_floats_int, alphas[0], (float *) d_up, (float *) x_up);   
+      cublasSaxpy_wrapper(N_floats_int, alphas[0], (float *) d_dn, (float *) x_dn);
+      for(int im = 1; im < noshifts; im++) {
+	cublasSaxpy_wrapper(N_floats_int, alphas[im], (float *) mms_d_up[im-1], (float *) mms_x_up[im-1]);   
+	cublasSaxpy_wrapper(N_floats_int, alphas[im], (float *) mms_d_dn[im-1], (float *) mms_x_dn[im-1]);  
+      }  
+   
+      // beta = r(k+1)*r(k+1) / r(k)*r(k)
+      betas[0] = rr / rr_old;
+      rr_old = rr;  // for next iteration
+      
+      // d_0(k+1) = r(k+1) + beta*d_0(k)
+      cublasSscal_wrapper (N_floats_int, betas[0], (float *) d_up);
+      cublasSaxpy_wrapper (N_floats_int, 1.0 , (float *) r_up, (float *) d_up);     
+      cublasSscal_wrapper (N_floats_int, betas[0], (float *) d_dn);
+      cublasSaxpy_wrapper (N_floats_int, 1.0 , (float *) r_dn, (float *) d_dn);     
+      // d_j(k+1) = r(k+1) + beta*d_j(k)
+      for(int im = 1; im < noshifts; im++) {
+	betas[im] = betas[0]*zita[im]*alphas[im]/(zitam1[im]*alphas[0]);
+	cublasSscal_wrapper (N_floats_int, betas[im], (float *) mms_d_up[im-1]);
+	cublasSaxpy_wrapper (N_floats_int, zita[im] , (float *) r_up, (float *) mms_d_up[im-1]);
+      
+	cublasSscal_wrapper (N_floats_int, betas[im], (float *) mms_d_dn[im-1]);
+	cublasSaxpy_wrapper (N_floats_int, zita[im] , (float *) r_dn, (float *) mms_d_dn[im-1]);
+      }   
+    }
+    else{
+      //reliable update
+      
+      //add low prec solutions on host 
+      cublasSaxpy_wrapper(N_floats_int, alphas[0], (float *) d_up, (float *) x_up);
+      cublasSaxpy_wrapper(N_floats_int, alphas[0], (float *) d_dn, (float *) x_dn);	
+      add_f2d_host(P_up[0], solver_field[0], x_up, N);
+      add_f2d_host(P_dn[0], solver_field[0], x_dn, N);	      
+      for(int im = 1; im < noshifts; im++) {  
+	cublasSaxpy_wrapper(N_floats_int, alphas[im], (float *) mms_d_up[im-1], (float *) mms_x_up[im-1]);
+	cublasSaxpy_wrapper(N_floats_int, alphas[im], (float *) mms_d_dn[im-1], (float *) mms_x_dn[im-1]);	
+        add_f2d_host(P_up[im], solver_field[0], mms_x_up[im-1], N);
+        add_f2d_host(P_dn[im], solver_field[0], mms_x_dn[im-1], N);	
+      }
+    }
+    
+    //check if some shift is converged
+    for(int im = 1; im < noshifts; im++) {    
       if(j > 0 && (j % 10 == 0) && (im == noshifts-1)) {
-	double sn = cublasSdot_wrapper(N_floats_int, (float *) mms_d_up_d[im-1], (float *) mms_d_up_d[im-1]);
-	sn += cublasSdot_wrapper(N_floats_int, (float *) mms_d_dn_d[im-1], (float *) mms_d_dn_d[im-1]);
+	double sn = cublasSdot_wrapper(N_floats_int, (float *) mms_d_up[im-1], (float *) mms_d_up[im-1]);
+	sn += cublasSdot_wrapper(N_floats_int, (float *) mms_d_dn[im-1], (float *) mms_d_dn[im-1]);
 	if(alphas[noshifts-1]*alphas[noshifts-1]*sn <= eps_abs) {
 	  noshifts--;
 	  if(g_debug_level > 2 && g_cart_id == 0) {
@@ -4457,92 +4525,13 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
 	  }
 	}
       }
-    }   
-    // x_0(k+1) = x_0(k) + alpha_0*d_0(k)      
-    cublasSaxpy(N_floats_int, alphas[0], (float *) d_up, 1, (float *) x_up, 1);
-    cublasSaxpy(N_floats_int, alphas[0], (float *) d_dn, 1, (float *) x_dn, 1);
-    
-    // r(k+1)
-    cublasSaxpy(N_floats_int, -1.0*alphas[0], (float *) Ad_up, 1, (float *) r_up, 1);
-    cublasSaxpy(N_floats_int, -1.0*alphas[0], (float *) Ad_dn, 1, (float *) r_dn, 1);
-
-    // r(k+1)*r(k+1)
-      rr_up  = cublasSdot_wrapper(N_floats_int, (float *) r_up, (float *) r_up);
-      rr_dn  = cublasSdot_wrapper(N_floats_int, (float *) r_dn, (float *) r_dn);
-
-    rr     = rr_up + rr_dn;
-    
-    #ifdef CUDA_DEBUG
-      CUBLAS_CORE_CHECK_NO_SUCCESS_MSG("CUBLAS error in dev_cg_eo_nd(). CUBLAS function failed.");
-    #endif
-
-    #ifndef LOWOUTPUT
-      if (g_cart_id == 0) printf("mms iteration j = %i: rr = %.6e\n", j, rr);
-    #endif
-		 
-	
-    // debug	// is NaN ?
-    if isnan(rr) {
-      printf("Error in dev_cg_mms_eo_nd_d(). Inner residue is NaN.\n");
-      exit(-1);
     }
-    
-    // aborting ?? // check wether precision is reached ...
-    if ( ((check_abs)&&(rr <= eps_abs)&&(j>min_solver_it)) || ((check_rel)&&(rr <= eps_rel*r0r0)&&(j>min_solver_it)) ) {
-   
-      if ((check_rel)&&(rr <= eps_rel*r0r0)) {
-	printf("Reached relative solver precision of eps_rel = %.2e\n", eps_rel);
-      }
-      if ((check_abs)&&(rr <= eps_abs)) {
-	printf("Reached absolute solver precision of eps_abs = %.2e\n", eps_abs);
-      }
-      
-      printf("Final mms solver residue: %.6e\n", rr);
-      
-      finalize_mixedsolve_eo_nd();
-      finalize_gpu_single_nd_mms_fields();
-      
-      #ifdef CUDA_45  
-	cublasDestroy(handle);
-      #else
-	cublasShutdown();
-      #endif 
-	
-	//free cg constants
-	free(sigma);
-	free(zitam1);
-	free(zita);
-	free(alphas);
-	free(betas);    
-	return(j);
-    }
-    
-
-    // beta = r(k+1)*r(k+1) / r(k)*r(k)
-    betas[0] = rr / rr_old;
-    rr_old = rr;  // for next iteration
-    
-    
-    // d(k+1) = r(k+1) + beta*d(k)
-    cublasSscal (N_floats_int, betas[0], (float *) d_up, 1);
-    cublasSaxpy (N_floats_int, 1.0 , (float *) r_up, 1, (float *) d_up, 1);
-    
-    cublasSscal (N_floats_int, betas[0], (float *) d_dn, 1);
-    cublasSaxpy (N_floats_int, 1.0 , (float *) r_dn, 1, (float *) d_dn, 1);
-    
-     for(int im = 1; im < noshifts; im++) {
-      betas[im] = betas[0]*zita[im]*alphas[im]/(zitam1[im]*alphas[0]);
-      cublasSscal (N_floats_int, betas[im], (float *) mms_d_up_d[im-1], 1);
-      cublasSaxpy (N_floats_int, zita[im] , (float *) r_up, 1, (float *) mms_d_up_d[im-1], 1);
-    
-      cublasSscal (N_floats_int, betas[im], (float *) mms_d_dn_d[im-1], 1);
-      cublasSaxpy (N_floats_int, zita[im] , (float *) r_dn, 1, (float *) mms_d_dn_d[im-1], 1);
-     }   
     
     // debug	// CUBLAS core function
     #ifdef CUDA_DEBUG
       CUBLAS_CORE_CHECK_NO_SUCCESS_MSG("CUBLAS error in dev_cg_eo_nd(). Error in CUBLAS function.");
     #endif
+      
   }//LOOP
   
   
@@ -4552,23 +4541,23 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
   if (g_cart_id == 0) printf("Final mms residue: %.6e\n", rr);
 
   finalize_mixedsolve_eo_nd();
-  finalize_gpu_single_nd_mms_fields();    
-  #ifdef CUDA_45  
-    cublasDestroy(handle);
-  #else
-    cublasShutdown();
-  #endif 
- 
-      
-  //free cg constants
-  free(sigma);
-  free(zitam1);
-  free(zita);
-  free(alphas);
-  free(betas);    
-      
-  return(j);
+  finalize_gpu_single_nd_mms_fields();  
+  finalize_solver(solver_field, nr_sf);    
   
+  stop_blas();
+  //free cg constants
+  free(sigma); free(zitam1); free(zita); free(alphas); free(betas);    
+  
+  //free reliable update stuff
+  free(res); free(res0); free(maxres);
+    
+  //if not converged -> return(-1)
+  if(j<maxiter){
+    return(j);
+  }
+  else{
+    return(-1);
+  }
 }//
 
 */
