@@ -95,13 +95,14 @@ typedef struct {
    * For the even-odd case, these operators are 
    * the odd-odd part.
    ***********************************************/
-  void (*applyM) (spinor * const, spinor * const); //full operator M on eo ordered spinor
-  void (*applyQ) (spinor * const, spinor * const); //full operator Q= gamma5*M on eo ordered spinor
-  void (*applyQp) (spinor * const, spinor * const);
-  void (*applyQm) (spinor * const, spinor * const);
-  void (*applyQsq) (spinor * const, spinor * const);
-  void (*applyMp) (spinor * const, spinor * const);
-  void (*applyMm) (spinor * const, spinor * const);
+  void (*applyM) (spinor * const, spinor * const, spinor * const, spinor * const); //full operator M on eo ordered spinor
+  void (*applyQ) (spinor * const, spinor * const, spinor * const, spinor * const); //full operator Q= gamma5*M on eo ordered spinor
+  void (*applyQp) (spinor * const, spinor * const); //either the full operator Q^+ on lexiographic spinor or eo-preconditioned Q^+ on odd part of an eo ordered spinor
+  void (*applyQm) (spinor * const, spinor * const); //either the full operator Q^- on lexiographic spinor or eo-preconditioned Q^- on odd part of an eo ordered spinor
+  void (*applyQsq) (spinor * const, spinor * const);//either the full operator Q^+*Q^- on lexiographic spinor or eo-preconditioned Q^+*Q^- on odd part of an eo ordered spinor
+  void (*applyMp) (spinor * const, spinor * const); //either the full operator M^+ on lexiographic spinor or eo-preconditioned M^+ on odd part of an eo ordered spinor
+  void (*applyMm) (spinor * const, spinor * const); //either the full operator M^- on lexiographic spinor or eo-preconditioned M^- on odd part of an eo ordered spinor
+  //EO preconditoned Hermitian operator for the non-degenerate doublet (more explanantion needed here).
   void (*applyDbQsq) (spinor * const, spinor * const, spinor * const, spinor * const);
   /* the generic invert function */
   void (*inverter) (const int op_id, const int index_start, const int write_prop);

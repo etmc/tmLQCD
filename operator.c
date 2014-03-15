@@ -62,6 +62,7 @@
 
 
 void dummy_D(spinor * const, spinor * const);
+void dummy_M(spinor * const, spinor * const, spinor * const, spinor * const);
 void dummy_DbD(spinor * const s, spinor * const r, spinor * const p, spinor * const q);
 void op_invert(const int op_id, const int index_start, const int write_prop);
 void op_write_prop(const int op_id, const int index_start, const int append_);
@@ -105,8 +106,8 @@ int add_operator(const int type) {
   optr->conf_input = _default_gauge_input_filename;
   optr->no_extra_masses = 0;
 
-  optr->applyM = &dummy_D;
-  optr->applyQ = &dummy_D;
+  optr->applyM = &dummy_M;
+  optr->applyQ = &dummy_M;
   optr->applyQp = &dummy_D;
   optr->applyQm = &dummy_D;
   optr->applyMp = &dummy_D;
@@ -240,6 +241,14 @@ void dummy_D(spinor * const s, spinor * const r) {
   } 
   return;
 }
+
+void dummy_M(spinor * const s, spinor * const r, spinor * const t, spinor * const k) {
+  if(g_proc_id == 0) {
+    fprintf(stderr, "dummy_M was called. Was that really intended?\n");
+  } 
+  return;
+}
+
 
 void dummy_DbD(spinor * const s, spinor * const r, spinor * const p, spinor * const q) {
   if(g_proc_id == 0) {
