@@ -63,8 +63,8 @@ dev_complex_d c1;
 dev_complex_d c2;
 } dev_su3_vec_d;
 
-typedef dev_complex dev_su3_vec [3];
-
+typedef dev_complex dev_vector [3];
+typedef dev_complex_d dev_vector_d [3];
 
 typedef double2 dev_spinor_d;
 

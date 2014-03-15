@@ -145,7 +145,61 @@ __device__ void dev_load_sw_inv (dev_su3* gf, int pos, int a, int b, int VOL, co
 }
 
 
+//double version
+__device__ void dev_load_sw_inv_d (dev_su3_d* gf, int pos, int a, int b, int VOL, const double2* field){
+  double2 gfin;
+  
+  int ASIZE = 4;
+  int SWSIZE = 9;
 
+
+  //first row
+  gfin = field[pos+VOL*(0+SWSIZE*(a + ASIZE*b))];
+  (*gf)[0][0].re = gfin.x;
+  (*gf)[0][0].im = gfin.y;
+
+  gfin = field[pos+VOL*(1+SWSIZE*(a + ASIZE*b))];
+  (*gf)[0][1].re = gfin.x;
+  (*gf)[0][1].im = gfin.y;
+
+
+  gfin = field[pos+VOL*(2+SWSIZE*(a + ASIZE*b))];
+  (*gf)[0][2].re = gfin.x;
+  (*gf)[0][2].im = gfin.y;
+  //*******
+
+
+  //second row
+  gfin = field[pos+VOL*(3+SWSIZE*(a + ASIZE*b))];
+  (*gf)[1][0].re = gfin.x;
+  (*gf)[1][0].im = gfin.y;
+
+  gfin = field[pos+VOL*(4+SWSIZE*(a + ASIZE*b))];
+  (*gf)[1][1].re = gfin.x;
+  (*gf)[1][1].im = gfin.y;
+
+  gfin = field[pos+VOL*(5+SWSIZE*(a + ASIZE*b))];
+  (*gf)[1][2].re = gfin.x;
+  (*gf)[1][2].im = gfin.y;
+  //*******  
+
+
+  //third row
+  gfin = field[pos+VOL*(6+SWSIZE*(a + ASIZE*b))];
+  (*gf)[2][0].re = gfin.x;
+  (*gf)[2][0].im = gfin.y;
+
+  gfin = field[pos+VOL*(7+SWSIZE*(a + ASIZE*b))];
+  (*gf)[2][1].re = gfin.x;
+  (*gf)[2][1].im = gfin.y;
+
+  gfin = field[pos+VOL*(8+SWSIZE*(a + ASIZE*b))];
+  (*gf)[2][2].re = gfin.x;
+  (*gf)[2][2].im = gfin.y;
+  //*******  
+
+  return;
+}
 
 
 
@@ -260,6 +314,63 @@ __device__ void dev_load_sw(dev_su3* gf, int pos, int a, int b, int VOL, const f
 
 
 
+__device__ void dev_load_sw_d(dev_su3_d* gf, int pos, int a, int b, int VOL, const double2* field ){
+  double2 gfin;
+  
+  int ASIZE = 3;
+  int SWSIZE = 9;
+
+
+
+  //first row
+  gfin = field[pos+VOL*(0+SWSIZE*(a + ASIZE*b))];
+  (*gf)[0][0].re = gfin.x;
+  (*gf)[0][0].im = gfin.y;
+
+  gfin = field[pos+VOL*(1+SWSIZE*(a + ASIZE*b))];
+  (*gf)[0][1].re = gfin.x;
+  (*gf)[0][1].im = gfin.y;
+
+  gfin = field[pos+VOL*(2+SWSIZE*(a + ASIZE*b))];
+  (*gf)[0][2].re = gfin.x;
+  (*gf)[0][2].im = gfin.y;
+  //*******
+
+
+  //second row
+  gfin = field[pos+VOL*(3+SWSIZE*(a + ASIZE*b))];
+  (*gf)[1][0].re = gfin.x;
+  (*gf)[1][0].im = gfin.y;
+
+  gfin = field[pos+VOL*(4+SWSIZE*(a + ASIZE*b))];
+  (*gf)[1][1].re = gfin.x;
+  (*gf)[1][1].im = gfin.y;
+
+  gfin = field[pos+VOL*(5+SWSIZE*(a + ASIZE*b))];
+  (*gf)[1][2].re = gfin.x;
+  (*gf)[1][2].im = gfin.y;
+  //*******  
+
+
+
+
+  //third row
+  gfin = field[pos+VOL*(6+SWSIZE*(a + ASIZE*b))];
+  (*gf)[2][0].re = gfin.x;
+  (*gf)[2][0].im = gfin.y;
+
+  gfin = field[pos+VOL*(7+SWSIZE*(a + ASIZE*b))];
+  (*gf)[2][1].re = gfin.x;
+  (*gf)[2][1].im = gfin.y;
+
+  gfin = field[pos+VOL*(8+SWSIZE*(a + ASIZE*b))];
+  (*gf)[2][2].re = gfin.x;
+  (*gf)[2][2].im = gfin.y;
+  //*******  
+
+  return;
+}
+
 
 
 
@@ -268,7 +379,7 @@ __device__ void dev_load_sw(dev_su3* gf, int pos, int a, int b, int VOL, const f
 
 // *************************  -> linalg.cuh *****************************
 
-__device__ inline void dev_get_su3_vec0(dev_su3_vec out, dev_spinor* in){
+__device__ inline void dev_get_su3_vec0(dev_vector out, float4* in){
 
    out[0].re = in[0].x;  out[0].im = in[0].y;
    out[1].re = in[0].z;  out[1].im = in[0].w;
@@ -276,7 +387,8 @@ __device__ inline void dev_get_su3_vec0(dev_su3_vec out, dev_spinor* in){
 }
 
 
-__device__ inline void dev_get_su3_vec1(dev_su3_vec out, dev_spinor* in){
+
+__device__ inline void dev_get_su3_vec1(dev_vector out, float4* in){
 
    out[0].re = in[1].z;  out[0].im = in[1].w;
    out[1].re = in[2].x;  out[1].im = in[2].y;
@@ -284,7 +396,7 @@ __device__ inline void dev_get_su3_vec1(dev_su3_vec out, dev_spinor* in){
 }
 
 
-__device__ inline void dev_get_su3_vec2(dev_su3_vec out, dev_spinor* in){
+__device__ inline void dev_get_su3_vec2(dev_vector out, float4* in){
 
    out[0].re = in[3].x;  out[0].im = in[3].y;
    out[1].re = in[3].z;  out[1].im = in[3].w;
@@ -292,7 +404,7 @@ __device__ inline void dev_get_su3_vec2(dev_su3_vec out, dev_spinor* in){
 }
 
 
-__device__ inline void dev_get_su3_vec3(dev_su3_vec out, dev_spinor* in){
+__device__ inline void dev_get_su3_vec3(dev_vector out, float4* in){
 
    out[0].re = in[4].z;  out[0].im = in[4].w;
    out[1].re = in[5].x;  out[1].im = in[5].y;
@@ -300,9 +412,49 @@ __device__ inline void dev_get_su3_vec3(dev_su3_vec out, dev_spinor* in){
 }
 
 
+
+// *************************  -> linalg_d.cuh *****************************
+
+__device__ inline void dev_get_su3_vec0_d(dev_vector_d out, double4* in){
+
+   out[0].re = in[0].x;  out[0].im = in[0].y;
+   out[1].re = in[0].z;  out[1].im = in[0].w;
+   out[2].re = in[1].x;  out[2].im = in[1].y;
+}
+
+
+
+__device__ inline void dev_get_su3_vec1_d(dev_vector_d out, double4* in){
+
+   out[0].re = in[1].z;  out[0].im = in[1].w;
+   out[1].re = in[2].x;  out[1].im = in[2].y;
+   out[2].re = in[2].z;  out[2].im = in[2].w;
+}
+
+
+__device__ inline void dev_get_su3_vec2_d(dev_vector_d out, double4* in){
+
+   out[0].re = in[3].x;  out[0].im = in[3].y;
+   out[1].re = in[3].z;  out[1].im = in[3].w;
+   out[2].re = in[4].x;  out[2].im = in[4].y;
+}
+
+
+__device__ inline void dev_get_su3_vec3_d(dev_vector_d out, double4* in){
+
+   out[0].re = in[4].z;  out[0].im = in[4].w;
+   out[1].re = in[5].x;  out[1].im = in[5].y;
+   out[2].re = in[5].z;  out[2].im = in[5].w;
+}
+
+
+
+
+
+
 __device__ inline void dev_store_spinor_from_vec(dev_spinor* out, 
-                                                 dev_su3_vec in0, dev_su3_vec in1,
-                                                 dev_su3_vec in2, dev_su3_vec in3){
+                                                 dev_vector in0, dev_vector in1,
+                                                 dev_vector in2, dev_vector in3){
    out[0].x = in0[0].re; 
    out[0].y = in0[0].im;
    out[0].z = in0[1].re; 
@@ -335,7 +487,7 @@ __device__ inline void dev_store_spinor_from_vec(dev_spinor* out,
 
 
 
-__device__ inline void dev_su3vec_add(dev_su3_vec out, dev_su3_vec in1, dev_su3_vec in2){
+__device__ inline void dev_su3vec_add(dev_vector out, dev_vector in1, dev_vector in2){
 
    out[0].re  = in1[0].re;
    out[0].re += in2[0].re;
@@ -355,7 +507,7 @@ __device__ inline void dev_su3vec_add(dev_su3_vec out, dev_su3_vec in1, dev_su3_
 
 
 /* out += I * c * in (c real) */
-__device__ inline void dev_su3vec_add_i_mul_old(dev_su3_vec out, dev_complex c, dev_su3_vec in1){
+__device__ inline void dev_su3vec_add_i_mul_old(dev_vector out, dev_complex c, dev_vector in1){
 
    out[0].re += c.re*in1[0].re;
    out[0].re -= c.im*in1[0].im;
@@ -374,7 +526,7 @@ __device__ inline void dev_su3vec_add_i_mul_old(dev_su3_vec out, dev_complex c, 
 }
 
 
-__device__ inline void dev_su3vec_add_i_mul(dev_su3_vec out, float c, dev_su3_vec in1){
+__device__ inline void dev_su3vec_add_i_mul(dev_vector out, float c, dev_vector in1){
   
    out[0].re -= c*in1[0].im; 
    out[0].im += c*in1[0].re;
@@ -388,7 +540,7 @@ __device__ inline void dev_su3vec_add_i_mul(dev_su3_vec out, float c, dev_su3_ve
 }
 
 
-__device__ inline void dev_su3vec_add_assign(dev_su3_vec out, dev_su3_vec in1){
+__device__ inline void dev_su3vec_add_assign(dev_vector out, dev_vector in1){
 
    out[0].re += in1[0].re;
    out[0].im += in1[0].im;
@@ -401,7 +553,7 @@ __device__ inline void dev_su3vec_add_assign(dev_su3_vec out, dev_su3_vec in1){
 
 
 
-__device__ inline void dev_su3vec_sub(dev_su3_vec out, dev_su3_vec in1, dev_su3_vec in2){
+__device__ inline void dev_su3vec_sub(dev_vector out, dev_vector in1, dev_vector in2){
 
    out[0].re  = in1[0].re;
    out[0].re -= in2[0].re;
@@ -420,7 +572,7 @@ __device__ inline void dev_su3vec_sub(dev_su3_vec out, dev_su3_vec in1, dev_su3_
 
 
 
-__device__ inline void dev_su3_multiply(dev_su3_vec r, dev_su3 u, dev_su3_vec s){					        
+__device__ inline void dev_su3_multiply(dev_vector r, dev_su3 u, dev_vector s){					        
    r[0].re=   u[0][0].re*s[0].re-u[0][0].im*s[0].im  
              +u[0][1].re*s[1].re-u[0][1].im*s[1].im  
              +u[0][2].re*s[2].re-u[0][2].im*s[2].im; 
@@ -442,7 +594,7 @@ __device__ inline void dev_su3_multiply(dev_su3_vec r, dev_su3 u, dev_su3_vec s)
 }
 
 
-__device__ inline void dev_su3_inverse_multiply(dev_su3_vec r, dev_su3 u, dev_su3_vec s){	
+__device__ inline void dev_su3_inverse_multiply(dev_vector r, dev_su3 u, dev_vector s){	
 
    r[0].re= u[0][0].re*s[0].re+u[0][0].im*s[0].im  
            +u[1][0].re*s[1].re+u[1][0].im*s[1].im  
@@ -613,7 +765,7 @@ void finalize_gpu_clover_fields(){
 __global__ void dev_clover_inv(dev_spinor* sin,  float2* sw_inv, const float mu_in){
    
    dev_spinor slocal[6];
-   dev_su3_vec psi, chi, phi0, phi1, phi2, phi3, r0, r1, r2, r3;
+   dev_vector psi, chi, phi0, phi1, phi2, phi3, r0, r1, r2, r3;
     __shared__ dev_su3 mat[BLOCK];
    int offset = 0;
    //dev_VOLUME is VOLUME/2 for EO, therefor no /2 here!!
@@ -716,7 +868,7 @@ __global__ void dev_clover_gamma5(const int ieo, const int * index_site, dev_spi
    
    dev_spinor slocal[6];
    //rho? is output
-   dev_su3_vec psi1, psi2, chi, phi0, phi1, phi2, phi3,  
+   dev_vector psi1, psi2, chi, phi0, phi1, phi2, phi3,  
                          tau0, tau1, tau2, tau3,
                          rho0, rho1, rho2, rho3;                         
    __shared__ dev_su3 mat[BLOCK];
@@ -867,92 +1019,15 @@ extern "C" void dev_Qsw_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
   #endif
     
     
-  //bind_texture_nn(dev_nn_eo);
-    dev_Hopping_Matrix<<<gridsize, blocksize>>>
-             (dev_gf, spinin, dev_spin_eo1, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, 0, VolumeEO); //dev_spin_eo1 == even -> 0           
-  //unbind_texture_nn();           
-  #ifdef USETEXTURE
-    unbind_texture_spin(1);
-  #endif
-  dev_clover_inv<<<gridsize, blocksize>>>(dev_spin_eo1, dev_sw_inv, -1.0);
-  
-
-  #ifdef USETEXTURE
-    bind_texture_spin(dev_spin_eo1,1);
-  #endif
-  //bind_texture_nn(dev_nn_oe);
-    dev_Hopping_Matrix<<<gridsize, blocksize>>>
-            (dev_gf, dev_spin_eo1, dev_spin_eo2, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, 0, VolumeEO); 
-  //unbind_texture_nn();
-  #ifdef USETEXTURE
-    unbind_texture_spin(1);
-  #endif
-  dev_clover_gamma5<<<gridsize, blocksize>>>(1,dev_eoidx_odd, dev_spin_eo2, spinin, dev_spin_eo2,  dev_sw, (float)(-(g_mu+g_mu3))); 
-  
-  //Q_{+}
-
-  #ifdef USETEXTURE
-    bind_texture_spin(dev_spin_eo2,1);
-  #endif
-  //bind_texture_nn(dev_nn_eo);
-    dev_Hopping_Matrix<<<gridsize, blocksize>>>
-          (dev_gf, dev_spin_eo2, spinout, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, 0, VolumeEO); //dev_spin_eo1 == even -> 0
-  //unbind_texture_nn();      
-  #ifdef USETEXTURE  
-    unbind_texture_spin(1);
-  #endif
-  dev_clover_inv<<<gridsize, blocksize>>>(spinout, dev_sw_inv, +1.0);
-  
-
-  #ifdef USETEXTURE
-    bind_texture_spin(spinout,1);
-  #endif
-  //bind_texture_nn(dev_nn_oe);
-    dev_Hopping_Matrix<<<gridsize, blocksize>>>
-             (dev_gf, spinout, dev_spin_eo1, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, 0, VolumeEO); 
-  //unbind_texture_nn();  
-  #ifdef USETEXTURE
-    unbind_texture_spin(1);
-  #endif
-  dev_clover_gamma5<<<gridsize, blocksize>>>(1,dev_eoidx_odd, spinout, dev_spin_eo2, dev_spin_eo1,  dev_sw, (float)(+(g_mu+g_mu3))); 
- 
-  #ifdef USETEXTURE
-    unbind_texture_sw();
-    unbind_texture_sw_inv();  
-  #endif
-    
-}
-
-
-
-
-
-#ifdef MPI
-
-
-// aequivalent to Qsw_pm_psi in clovertm_operators.c, this is MPI version
-extern "C" void dev_Qsw_pm_psi_mpi(dev_spinor* spinin, dev_spinor* spinout, int gridsize, dim3 blocksize, int gridsize2, int blocksize2){
-  //spinin == odd
-  //spinout == odd
-  
-  int VolumeEO = VOLUME/2;
-  
-  #ifdef USETEXTURE
-    bind_texture_sw(dev_sw);
-    bind_texture_sw_inv(dev_sw_inv);  
-  #endif
-    
-  //Q_{-}
-  #ifdef USETEXTURE
-    bind_texture_spin(spinin,1);
-  #endif
-    
-    
-  //bind_texture_nn(dev_nn_eo);
+  #ifdef MPI
     HOPPING_ASYNC(dev_gf, spinin, dev_spin_eo1, 
 		  dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 
-		  0, gridsize, blocksize); //dev_spin_eo1 == even -> 0           
-  //unbind_texture_nn();           
+		  0, gridsize, blocksize); //dev_spin_eo1 == even -> 0     
+  #else
+    dev_Hopping_Matrix<<<gridsize, blocksize>>>
+             (dev_gf, spinin, dev_spin_eo1, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, 0, VolumeEO); //dev_spin_eo1 == even -> 0           
+  #endif 
+	     
   #ifdef USETEXTURE
     unbind_texture_spin(1);
   #endif
@@ -962,11 +1037,15 @@ extern "C" void dev_Qsw_pm_psi_mpi(dev_spinor* spinin, dev_spinor* spinout, int 
   #ifdef USETEXTURE
     bind_texture_spin(dev_spin_eo1,1);
   #endif
-  //bind_texture_nn(dev_nn_oe);
+
+   #ifdef MPI
     HOPPING_ASYNC(dev_gf, dev_spin_eo1, dev_spin_eo2, 
 		  dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 
-		  1, gridsize, blocksize); 
-  //unbind_texture_nn();
+		  1, gridsize, blocksize);     
+   #else
+    dev_Hopping_Matrix<<<gridsize, blocksize>>>
+            (dev_gf, dev_spin_eo1, dev_spin_eo2, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, 0, VolumeEO); 
+   #endif
   #ifdef USETEXTURE
     unbind_texture_spin(1);
   #endif
@@ -977,11 +1056,15 @@ extern "C" void dev_Qsw_pm_psi_mpi(dev_spinor* spinin, dev_spinor* spinout, int 
   #ifdef USETEXTURE
     bind_texture_spin(dev_spin_eo2,1);
   #endif
-  //bind_texture_nn(dev_nn_eo);
+
+  #ifdef MPI
     HOPPING_ASYNC(dev_gf, dev_spin_eo2, spinout, 
 		  dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 
-		  0, gridsize, blocksize); //dev_spin_eo1 == even -> 0
-  //unbind_texture_nn();      
+		  0, gridsize, blocksize); //dev_spin_eo1 == even -> 0    
+  #else
+    dev_Hopping_Matrix<<<gridsize, blocksize>>>
+          (dev_gf, dev_spin_eo2, spinout, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, 0, VolumeEO); //dev_spin_eo1 == even -> 0
+  #endif     
   #ifdef USETEXTURE  
     unbind_texture_spin(1);
   #endif
@@ -991,11 +1074,15 @@ extern "C" void dev_Qsw_pm_psi_mpi(dev_spinor* spinin, dev_spinor* spinout, int 
   #ifdef USETEXTURE
     bind_texture_spin(spinout,1);
   #endif
-  //bind_texture_nn(dev_nn_oe);
+
+  #ifdef MPI
     HOPPING_ASYNC(dev_gf, spinout, dev_spin_eo1, 
 		  dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 
-		  1, gridsize, blocksize); 
-  //unbind_texture_nn();  
+		  1, gridsize, blocksize);     
+  #else
+    dev_Hopping_Matrix<<<gridsize, blocksize>>>
+             (dev_gf, spinout, dev_spin_eo1, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, 0, VolumeEO); 
+  #endif  
   #ifdef USETEXTURE
     unbind_texture_spin(1);
   #endif
@@ -1008,7 +1095,7 @@ extern "C" void dev_Qsw_pm_psi_mpi(dev_spinor* spinin, dev_spinor* spinout, int 
     
 }
 
-#endif
+
 
 
 
@@ -1476,11 +1563,8 @@ extern "C" int dev_cg_eo_clover(
  for(i=0;i<maxit;i++){ //MAIN LOOP
   
   // Q_{-}Q{+}
-  #ifndef MPI
     dev_Qsw_pm_psi(spin2, spin3, griddim3, blockdim3, griddim4, blockdim4);
-  #else
-    dev_Qsw_pm_psi_mpi(spin2, spin3, griddim3, blockdim3, griddim4, blockdim4);
-  #endif
+
   
   if((cudaerr=cudaGetLastError()) != cudaSuccess){
     if (g_proc_id == 0) printf("%s\n", cudaGetErrorString(cudaerr));
@@ -1557,11 +1641,8 @@ extern "C" int dev_cg_eo_clover(
     // DO NOT USE tm_dirac_dagger_kappa here, otherwise spin2 will be overwritten!!!
       
     // Q_{-}Q{+}
-    #ifndef MPI
         dev_Qsw_pm_psi(spin1, spin3, griddim3, blockdim3, griddim4, blockdim4);
-    #else
-        dev_Qsw_pm_psi_mpi(spin1, spin3, griddim3, blockdim3, griddim4, blockdim4);
-    #endif
+
     if((cudaerr=cudaGetLastError()) != cudaSuccess){
       printf("%s\n", cudaGetErrorString(cudaerr));
       exit(200);
