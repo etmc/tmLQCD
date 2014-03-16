@@ -63,6 +63,7 @@ void Q_pm_psi_prec(spinor * const l, spinor * const k);
 void Q_pm_psi_gpu(spinor * const l, spinor * const k);
 void Q_pm_psi2(spinor * const l, spinor * const k);
 void Q_minus_psi(spinor * const l, spinor * const k);
+void M_minus_psi(spinor * const l, spinor * const k);
 void Q_minus_psi_gpu(spinor * const l, spinor * const k);
 void Q_plus_psi(spinor * const l, spinor * const k);
 

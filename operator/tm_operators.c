@@ -98,6 +98,7 @@ void tm_sub_H_eo_gamma5(spinor* const l, spinor * const p, spinor * const k,
 
 /* external functions */
 
+/*full operator acting on the even and odd parts of a spinor*/
 void M_full(spinor * const Even_new, spinor * const Odd_new, 
 	    spinor * const Even, spinor * const Odd) {
   /* Even sites */
@@ -427,6 +428,13 @@ void Q_minus_psi(spinor * const l, spinor * const k)
   D_psi(l, k);
   g_mu = -g_mu;
   gamma5(l, l, VOLUME);
+}
+
+void M_minus_psi(spinor * const l, spinor * const k)
+{
+  g_mu = -g_mu;
+  D_psi(l, k);
+  g_mu = -g_mu;
 }
 
 /* This is the version for the gpu (Florian Burger)*/

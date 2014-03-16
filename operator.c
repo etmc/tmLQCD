@@ -37,7 +37,6 @@
 #include "operator/tm_operators.h"
 #include "linalg_eo.h"
 #include "operator/D_psi.h"
-#include "operator/Dsw_psi.h"
 #include "operator/Dov_psi.h"
 #include "operator/tm_operators_nd.h"
 #include "operator/Hopping_Matrix.h"

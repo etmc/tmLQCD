@@ -38,7 +38,7 @@
 #include "operator/Hopping_Matrix.h"
 #include "tm_operators.h"
 #include "operator/clovertm_operators.h"
-#include "operator/Dsw_psi.h"
+#include "operator/D_psi.h"
 
 su3 *** sw;
 su3 *** sw_inv;
@@ -950,7 +950,7 @@ void assign_mul_one_sw_pm_imu(const int ieo,
  * A. Abdel-Rehim
  **************************************************/
 
-void Mee_sw_pm_psi(spinor * const k, const spinor * const l, const double mu) {
+void Mee_sw_psi(spinor * const k, const spinor * const l, const double mu) {
 #ifdef OMP
 #pragma omp parallel
   {
@@ -976,9 +976,11 @@ void Mee_sw_pm_psi(spinor * const k, const spinor * const l, const double mu) {
   for(unsigned icx = 0; icx < VOLUME/2; icx++) {
     ix = g_eo2lexic[icx];
     
-    r = k + icx-ioff;
-    s = l + icx-ioff;
+    //r = k + icx-ioff;
+    //s = l + icx-ioff;
 
+    r = k + icx;
+    s = l + icx;
     // upper two spin components first
     w1=&sw[ix][0][0];
     w2=w1+2; /*&sw[ix][1][0];*/

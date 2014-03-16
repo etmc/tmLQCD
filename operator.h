@@ -88,6 +88,8 @@ typedef struct {
 
   /* chebyshef coefficients for the overlap */
   double * coefs;
+
+ 
   /* various versions of the Dirac operator */
   /* ---------------------------------------*/
   //even-even part of the even-odd operator 
