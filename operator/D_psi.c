@@ -266,9 +266,11 @@ void local_H(spinor * const rr, spinor * const s, su3 * u, int * _idx) {
 #else
 
 
-static inline void p0add(spinor * restrict const tmpr , spinor const * restrict const s, 
-			 su3 const * restrict const u, const _Complex double phase) {
+//static inline void p0add(spinor * restrict const tmpr , spinor const * restrict const s, 
+//			 su3 const * restrict const u, const _Complex double phase) {
 
+inline void p0add(spinor * restrict const tmpr , spinor const * restrict const s, 
+			 su3 const * restrict const u, const _Complex double phase) {
 #ifdef OMP
 #define static
 #endif
@@ -295,7 +297,8 @@ static inline void p0add(spinor * restrict const tmpr , spinor const * restrict 
 }
 
 
-static inline void m0add(spinor * restrict const tmpr, spinor const * restrict const s, 
+//static inline void m0add(spinor * restrict const tmpr, spinor const * restrict const s, 
+inline void m0add(spinor * restrict const tmpr, spinor const * restrict const s, 
 			 su3 const * restrict const u, const _Complex double phase) {
 #ifdef OMP
 #define static
@@ -322,7 +325,8 @@ static inline void m0add(spinor * restrict const tmpr, spinor const * restrict c
   return;
 }
 
-static inline void p1add(spinor * restrict const tmpr, spinor const * restrict const s, 
+//static inline void p1add(spinor * restrict const tmpr, spinor const * restrict const s, 
+inline void p1add(spinor * restrict const tmpr, spinor const * restrict const s, 
 			 su3 const * restrict const u, const _Complex double phase) {
 #ifdef OMP
 #define static
@@ -349,7 +353,8 @@ static inline void p1add(spinor * restrict const tmpr, spinor const * restrict c
   return;
 }
 
-static inline void m1add(spinor * restrict const tmpr, spinor const * restrict const s, 
+//static inline void m1add(spinor * restrict const tmpr, spinor const * restrict const s, 
+inline void m1add(spinor * restrict const tmpr, spinor const * restrict const s, 
 			 su3 const * restrict const u, const _Complex double phase) {
 #ifdef OMP
 #define static
@@ -376,7 +381,8 @@ static inline void m1add(spinor * restrict const tmpr, spinor const * restrict c
   return;
 }
 
-static inline void p2add(spinor * restrict const tmpr, spinor const * restrict const s, 
+//static inline void p2add(spinor * restrict const tmpr, spinor const * restrict const s, 
+inline void p2add(spinor * restrict const tmpr, spinor const * restrict const s, 
 			 su3 const * restrict const u, const _Complex double phase) {
 #ifdef OMP
 #define static
@@ -404,7 +410,8 @@ static inline void p2add(spinor * restrict const tmpr, spinor const * restrict c
   return;
 }
 
-static inline void m2add(spinor * restrict const tmpr, spinor const * restrict const s, 
+//static inline void m2add(spinor * restrict const tmpr, spinor const * restrict const s, 
+inline void m2add(spinor * restrict const tmpr, spinor const * restrict const s, 
 			 su3 const * restrict const u, const _Complex double phase) {
 #ifdef OMP
 #define static
@@ -431,7 +438,8 @@ static inline void m2add(spinor * restrict const tmpr, spinor const * restrict c
   return;
 }
 
-static inline void p3add(spinor * restrict const tmpr, spinor const * restrict const s, 
+//static inline void p3add(spinor * restrict const tmpr, spinor const * restrict const s, 
+inline void p3add(spinor * restrict const tmpr, spinor const * restrict const s, 
 			 su3 const * restrict const u, const _Complex double phase) {
 #ifdef OMP
 #define static
@@ -458,7 +466,8 @@ static inline void p3add(spinor * restrict const tmpr, spinor const * restrict c
   return;
 }
 
-static inline void m3addandstore(spinor * restrict const r, spinor const * restrict const s, 
+//static inline void m3addandstore(spinor * restrict const r, spinor const * restrict const s, 
+inline void m3addandstore(spinor * restrict const r, spinor const * restrict const s, 
 				 su3 const * restrict const u, const _Complex double phase,
          spinor const * restrict const tmpr) {
 #ifdef OMP
@@ -487,7 +496,8 @@ static inline void m3addandstore(spinor * restrict const r, spinor const * restr
 }
 
 /* this is the hopping part only */
-static inline void local_H(spinor * const rr, spinor const * const s, su3 const * restrict u, int * _idx, spinor * const restrict tmpr) {
+//static inline void local_H(spinor * const rr, spinor const * const s, su3 const * restrict u, int * _idx, spinor * const restrict tmpr) {
+inline void local_H(spinor * const rr, spinor const * const s, su3 const * restrict u, int * _idx, spinor * const restrict tmpr) {
 
   int * idx = _idx;
 

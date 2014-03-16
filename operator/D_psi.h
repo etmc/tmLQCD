@@ -28,6 +28,41 @@ void D_psi_prec(spinor * const P, spinor * const Q);
 void Block_D_psi(block * blk, spinor * const rr, spinor * const s);
 void Block_H_psi(block * blk, spinor * const rr, spinor * const s, const int eo);
 
+
+#if (defined BGL && defined XLC)
+void local_H(spinor * const rr, spinor * const s, su3 * u, int * _idx);
+#else
+inline void local_H(spinor * const rr, spinor const * const s, su3 const * restrict u, int * _idx, spinor * const restrict tmpr);
+#endif
+
+inline void p0add(spinor * restrict const tmpr , spinor const * restrict const s,
+                         su3 const * restrict const u, const _Complex double phase);
+
+inline void m0add(spinor * restrict const tmpr , spinor const * restrict const s,
+                         su3 const * restrict const u, const _Complex double phase);
+
+
+inline void p1add(spinor * restrict const tmpr , spinor const * restrict const s,
+                         su3 const * restrict const u, const _Complex double phase);
+
+inline void m1add(spinor * restrict const tmpr , spinor const * restrict const s,
+                         su3 const * restrict const u, const _Complex double phase);
+
+inline void p2add(spinor * restrict const tmpr , spinor const * restrict const s,
+                         su3 const * restrict const u, const _Complex double phase);
+
+inline void m2add(spinor * restrict const tmpr , spinor const * restrict const s,
+                         su3 const * restrict const u, const _Complex double phase);
+
+inline void p3add(spinor * restrict const tmpr , spinor const * restrict const s,
+                         su3 const * restrict const u, const _Complex double phase);
+
+inline void m3addandstore(spinor * restrict const r, spinor const * restrict const s,       
+                                 su3 const * restrict const u, const _Complex double phase,
+         spinor const * restrict const tmpr);
+
+
+
 void boundary_D_0(spinor * const r, spinor * const s, su3 *u);
 void boundary_D_1(spinor * const r, spinor * const s, su3 *u);
 void boundary_D_2(spinor * const r, spinor * const s, su3 *u);

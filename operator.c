@@ -62,6 +62,7 @@
 
 
 void dummy_D(spinor * const, spinor * const);
+void dummy_Mee(spinor * const, spinor * const, double const);
 void dummy_M(spinor * const, spinor * const, spinor * const, spinor * const);
 void dummy_DbD(spinor * const s, spinor * const r, spinor * const p, spinor * const q);
 void op_invert(const int op_id, const int index_start, const int write_prop);
@@ -107,6 +108,8 @@ int add_operator(const int type) {
   optr->no_extra_masses = 0;
 
   optr->applyM = &dummy_M;
+  optr->applyMee = &dummy_Mee;
+  optr->applyMeeInv = &dummy_Mee;
   optr->applyQ = &dummy_M;
   optr->applyQp = &dummy_D;
   optr->applyQm = &dummy_D;
@@ -160,6 +163,8 @@ int init_operators() {
         optr->applyM = &M_full;
         optr->applyQ = &Q_full;
 	if(optr->even_odd_flag) {
+          optr->applyMee    = &Mee_psi;
+          optr->applyMeeInv = &Mee_inv_psi;
 	  optr->applyQp = &Qtm_plus_psi;
 	  optr->applyQm = &Qtm_minus_psi;
 	  optr->applyQsq = &Qtm_pm_psi;
@@ -189,6 +194,8 @@ int init_operators() {
         optr->applyM = &Msw_full;
         optr->applyQ = &Qsw_full;
         if(optr->even_odd_flag) {
+          optr->applyMee    = &Mee_sw_psi;
+          optr->applyMeeInv = &Mee_sw_inv_psi;
           optr->applyQp = &Qsw_plus_psi;
           optr->applyQm = &Qsw_minus_psi;
           optr->applyQsq = &Qsw_pm_psi;
@@ -238,6 +245,13 @@ int init_operators() {
 void dummy_D(spinor * const s, spinor * const r) {
   if(g_proc_id == 0) {
     fprintf(stderr, "dummy_D was called. Was that really intended?\n");
+  } 
+  return;
+}
+
+void dummy_Mee(spinor * const s, spinor * const r, double const d) {
+  if(g_proc_id == 0) {
+    fprintf(stderr, "dummy_Mee was called. Was that really intended?\n");
   } 
   return;
 }

@@ -39,6 +39,8 @@ void Msw_full_minus_psi(spinor * const l, spinor * const k);
 
 void assign_mul_one_sw_pm_imu(const int ieo, spinor * const k, const spinor * const l, const double mu);
 void assign_mul_one_sw_pm_imu_inv(const int ieo, spinor * const k, const spinor * const l, const double mu);
+void Mee_sw_psi(spinor * const k, const spinor * const l, const double mu);
+void Mee_sw_inv_psi(spinor * const k, const spinor * const l, const double mu);
 void Msw_full(spinor * const Even_new, spinor * const Odd_new, 
 	      spinor * const Even, spinor * const Odd);
 void clover_inv(spinor * const l, const int tau3sign, const double mu);
