@@ -156,7 +156,11 @@
 #define _default_MDPolyDetRatio 0
 
 /* default GPU values */
-#define _default_device_num 0
+#ifdef MPI
+  #define _default_device_num 0
+#else
+  #define _default_device_num -1
+#endif
 #define _default_num_gpu_per_node 4
 #define _default_min_innersolver_it 10
 #define _default_max_mms_shifts 6
