@@ -210,14 +210,6 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
 			      g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
 			      -I*mnl->rat.mu[j], 1., mnl->EVMaxInv);
 	
-//    //additional g5 tau_1???
-//         gamma5(mnl->w_fields[0], mnl->w_fields[0], VOLUME);
-//         gamma5(mnl->w_fields[1], mnl->w_fields[1], VOLUME);  
-//   
-//       deriv_Sb_D_psi(mnl->w_fields[1], g_chi_up_spinor_field[j], hf, mnl->rat.rmu[j]*mnl->forcefactor);
-//       deriv_Sb_D_psi(mnl->w_fields[0], g_chi_dn_spinor_field[j], hf, mnl->rat.rmu[j]*mnl->forcefactor); 
-//   
-//   
       /* \delta Q sandwitched by Y^\dagger and X */
       /* \delta Q has a \tau_1!*/
       deriv_Sb_D_psi(mnl->w_fields[1], g_chi_up_spinor_field[j], hf, mnl->rat.rmu[j]*mnl->forcefactor);
@@ -308,8 +300,7 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
 //       if(mnl->type != NDCLOVERRAT) phmc_compute_ev(hf->traj_counter-1, id, &Qtm_pm_ndbipsi);
 //       else phmc_compute_ev(hf->traj_counter-1, id, &Qsw_pm_ndbipsi);
 //     }
-     mnl->EVMaxInv = 1.0;
-//     //!FIXME 
+
     
     // the Gaussian distributed random fields  
     random_spinor_field_lexic(mnl->pf, mnl->rngrepro,RN_GAUSS);

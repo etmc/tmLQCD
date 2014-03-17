@@ -174,7 +174,10 @@ void Q_pm_ndpsi(spinor * const l_strange, spinor * const l_charm, spinor * const
      
      gamma5(l_strange, l_strange, VOLUME);      
      gamma5(l_charm, l_charm, VOLUME);
-     
+     /* At the end, the normalisation by the max. eigenvalue  */ 
+     /* Twice  phmc_invmaxev  since we consider here  D Ddag  !!! */
+     mul_r(l_charm, phmc_invmaxev*phmc_invmaxev, l_charm, VOLUME);
+     mul_r(l_strange, phmc_invmaxev*phmc_invmaxev, l_strange, VOLUME);     
 
 }
 
