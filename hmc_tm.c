@@ -239,7 +239,12 @@ int main(int argc,char *argv[]) {
   }
 
   if(g_running_phmc) {
-    j = init_bispinor_field(VOLUME/2, NO_OF_BISPINORFIELDS);
+    if(even_odd_flag) {
+      j = init_bispinor_field(VOLUME/2, NO_OF_BISPINORFIELDS);
+    }
+    else{
+      j = init_bispinor_field(VOLUME, NO_OF_BISPINORFIELDS);      
+    }
     if (j!= 0) {
       fprintf(stderr, "Not enough memory for bi-spinor fields! Aborting...\n");
       exit(0);

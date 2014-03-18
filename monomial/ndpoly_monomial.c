@@ -173,7 +173,7 @@ void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   // we measure before trajectory!
   if((mnl->rec_ev != 0) && (hf->traj_counter%mnl->rec_ev == 0)) {
-    phmc_compute_ev(hf->traj_counter-1, id, &Qtm_pm_ndbipsi);
+    phmc_compute_ev(hf->traj_counter-1, id, &Qtm_pm_ndbipsi, VOLUME/2);
   }
 
   mnl->energy0 = 0.;

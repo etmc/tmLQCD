@@ -480,19 +480,6 @@ void Q_tau1_sub_const_ndpsi_D_psi(spinor * const l_strange, spinor * const l_cha
   spinor *r, *s;
   su3_vector ALIGN phi1;
 
-  
-  /*   tau_1   inverts the   k_charm  <->  k_strange   spinors */
-  /*  Apply first  Qhat(2x2)  and finally substract the constant  */
-//      D_psi(l_strange, k_strange);
-//      g_mu = -g_mu;
-//      D_psi(l_charm, k_charm);         
-//      g_mu = -g_mu;
-//      sub_epsbar_tau1(l_strange, l_charm, k_strange, k_charm);
-//      
-//      gamma5(l_strange, l_strange, VOLUME);      
-//      gamma5(l_charm, l_charm, VOLUME);
-
-   /*this gave exploding cg_mms solver iterations*/     
      D_psi(l_strange, k_charm);
      g_mu = -g_mu;
      D_psi(l_charm, k_strange);     
@@ -637,26 +624,39 @@ void Qsw_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
 void Qtm_pm_ndbipsi(bispinor * const bisp_l, bispinor * const bisp_k) {
 
   /*  create 2 spinors out of 1 (input) bispinor  */
-  decompact(g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7], bisp_k);
+  decompact(g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7], bisp_k, VOLUME/2);
 
   Qtm_pm_ndpsi(g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7],
 	       g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7]);
 
   /*  create 1 (output) bispinor out of 2 spinors  */
-  compact(bisp_l, g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7]);
+  compact(bisp_l, g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7], VOLUME/2);
+  return;
+}
+
+void Q_pm_ndbipsi(bispinor * const bisp_l, bispinor * const bisp_k) {
+
+  /*  create 2 spinors out of 1 (input) bispinor  */
+  decompact(g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7], bisp_k, VOLUME);
+
+  Q_pm_ndpsi(g_spinor_field[DUM_MATRIX+4], g_spinor_field[DUM_MATRIX+5],
+	       g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7]);
+
+  /*  create 1 (output) bispinor out of 2 spinors  */
+  compact(bisp_l, g_spinor_field[DUM_MATRIX+4], g_spinor_field[DUM_MATRIX+5], VOLUME);
   return;
 }
 
 void Qsw_pm_ndbipsi(bispinor * const bisp_l, bispinor * const bisp_k) {
 
   /*  create 2 spinors out of 1 (input) bispinor  */
-  decompact(g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7], bisp_k);
+  decompact(g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7], bisp_k, VOLUME/2);
 
   Qsw_pm_ndpsi(g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7],
 	       g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7]);
 
   /*  create 1 (output) bispinor out of 2 spinors  */
-  compact(bisp_l, g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7]);
+  compact(bisp_l, g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7], VOLUME/2);
   return;
 }
 

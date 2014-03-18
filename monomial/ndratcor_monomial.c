@@ -79,8 +79,8 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
     }
     // we measure before the trajectory!
     if((mnl->rec_ev != 0) && (hf->traj_counter%mnl->rec_ev == 0)) {
-      if(mnl->type != NDCLOVERRAT) phmc_compute_ev(hf->traj_counter-1, id, &Qtm_pm_ndbipsi);
-      else phmc_compute_ev(hf->traj_counter-1, id, &Qsw_pm_ndbipsi);
+      if(mnl->type != NDCLOVERRAT) phmc_compute_ev(hf->traj_counter-1, id, &Qtm_pm_ndbipsi, VOLUME/2);
+      else phmc_compute_ev(hf->traj_counter-1, id, &Qsw_pm_ndbipsi, VOLUME/2);
     }
 
     // the Gaussian distributed random fields
@@ -121,6 +121,18 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
     if(g_debug_level > 1 && g_proc_id == 0) {
       printf("# Entering non-eo part of heatbath for %s monomial\n", mnl->name);
     }
+    
+    // we measure before the trajectory!
+    if((mnl->rec_ev != 0) && (hf->traj_counter%mnl->rec_ev == 0)) {
+      if(mnl->type != NDCLOVERRAT) phmc_compute_ev(hf->traj_counter-1, id, &Q_pm_ndbipsi, VOLUME);
+      else{
+        //!FIXME 	  
+         printf("Error: %s monomial ev computation not implemented w/o even-odd! Aborting... \n", mnl->name);
+	 exit(0);	
+      }
+    }    
+    
+    
     // the Gaussian distributed random fields
     mnl->energy0 = 0.;
     random_spinor_field_lexic(mnl->pf, mnl->rngrepro, RN_GAUSS);

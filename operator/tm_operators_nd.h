@@ -46,6 +46,8 @@ void Qsw_pm_ndbipsi(bispinor * const bisp_l, bispinor * const bisp_k);
 
 void Q_pm_ndpsi(spinor * const l_strange, spinor * const l_charm, 
 		spinor * const k_strange, spinor * const k_charm);
+void Q_pm_ndbipsi(bispinor * const bisp_l, bispinor * const bisp_k);
+
 void Q_minus_ndpsi(spinor * const l_strange, spinor * const l_charm, spinor * const k_strange, spinor * const k_charm);
 void Q_plus_ndpsi(spinor * const l_strange, spinor * const l_charm, spinor * const k_strange, spinor * const k_charm);
 

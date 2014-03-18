@@ -42,6 +42,6 @@ extern void jdher_bi(int n, int lda, double tau, double jdtol,
 		     int clvl,
 		     int *k_conv, _Complex double *Q, double *lambda, int *it,
 		     int maxmin, const int shift_mode,
-		     matrix_mult_bi domatveca);
+		     matrix_mult_bi domatveca, const int Vol);
 
 #endif
