@@ -45,6 +45,7 @@ typedef struct {
   
   int sloppy_precision;
   int even_odd_flag;
+  int generic_noeo;
   int solver;
   int N_s;
   int initialised;

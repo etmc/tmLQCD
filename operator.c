@@ -41,6 +41,7 @@
 #include "operator/tm_operators_nd.h"
 #include "operator/Hopping_Matrix.h"
 #include "invert_eo.h"
+#include "invert_noeo.h"
 #include "invert_doublet_eo.h"
 #include "invert_overlap.h"
 #include "invert_clover_eo.h"
@@ -156,6 +157,7 @@ int init_operators() {
 	  init_sw_fields();
 	}
 	if(optr->even_odd_flag) {
+	  optr->generic_noeo = 0; 	  
 	  optr->applyQp = &Qtm_plus_psi;
 	  optr->applyQm = &Qtm_minus_psi;
 	  optr->applyQsq = &Qtm_pm_psi;
@@ -163,6 +165,15 @@ int init_operators() {
 	  optr->applyMm = &Mtm_minus_psi;
 	}
 	else {
+	  /* here we check if we have odd number of sites in T-direction -> cannot use
+           * standard invert_eo due to calls to lexic2eosub etc... 
+	  */
+	  if((g_nproc_t*T) % 2 != 0){
+	    optr->generic_noeo = 1; 
+	  }
+	  else{
+	    optr->generic_noeo = 0; 	    
+	  }
 	  optr->applyQp = &Q_plus_psi;
 	  optr->applyQm = &Q_minus_psi;
 	  optr->applyQsq = &Q_pm_psi;
@@ -244,20 +255,30 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
         printf("#\n# 2 kappa mu = %e, kappa = %e, c_sw = %e\n", g_mu, g_kappa, g_c_sw);
       }
       if(optr->type != CLOVER) {
-	if(use_preconditioning){
-	  g_precWS=(void*)optr->precWS;
+	if(optr->generic_noeo){
+	  optr->iterations = invert_noeo( optr->prop0,  optr->sr0, 
+					optr->eps_sq, optr->maxiter,
+					optr->solver, optr->rel_prec,
+					optr->id );	
+	  M_full_noeo(g_spinor_field[DUM_DERI], optr->prop0 );	  
 	}
-	else {
-	  g_precWS=NULL;
+	else{
+	  if(use_preconditioning){
+	    g_precWS=(void*)optr->precWS;
+	  }
+	  else {
+	    g_precWS=NULL;
+	  }
+	  
+	  optr->iterations = invert_eo( optr->prop0, optr->prop1, optr->sr0, optr->sr1,
+					optr->eps_sq, optr->maxiter,
+					optr->solver, optr->rel_prec,
+					0, optr->even_odd_flag,optr->no_extra_masses, optr->extra_masses, optr->id );
+	  
+	  /* check result */
+	  M_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
+	
 	}
-	
-	optr->iterations = invert_eo( optr->prop0, optr->prop1, optr->sr0, optr->sr1,
-				      optr->eps_sq, optr->maxiter,
-				      optr->solver, optr->rel_prec,
-				      0, optr->even_odd_flag,optr->no_extra_masses, optr->extra_masses, optr->id );
-	
-	/* check result */
-	M_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
       }
       else {
 	/* this must be EE here!   */
@@ -271,30 +292,40 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 	/* check result */
  	Msw_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
       }
+      if(optr->generic_noeo){
+	diff(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], optr->sr0, VOLUME);
+	nrm1 = square_norm(g_spinor_field[DUM_DERI], VOLUME, 1);
+	optr->reached_prec = nrm1;	
+      }
+      else{
+	diff(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], optr->sr0, VOLUME / 2);
+	diff(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], optr->sr1, VOLUME / 2);
 
-      diff(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], optr->sr0, VOLUME / 2);
-      diff(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], optr->sr1, VOLUME / 2);
-
-      nrm1 = square_norm(g_spinor_field[DUM_DERI], VOLUME / 2, 1);
-      nrm2 = square_norm(g_spinor_field[DUM_DERI+1], VOLUME / 2, 1);
-      optr->reached_prec = nrm1 + nrm2;
-
+	nrm1 = square_norm(g_spinor_field[DUM_DERI], VOLUME / 2, 1);
+	nrm2 = square_norm(g_spinor_field[DUM_DERI+1], VOLUME / 2, 1);
+	optr->reached_prec = nrm1 + nrm2;
+      }
       /* convert to standard normalisation  */
       /* we have to mult. by 2*kappa        */
       if (optr->kappa != 0.) {
-        mul_r(optr->prop0, (2*optr->kappa), optr->prop0, VOLUME / 2);
-        mul_r(optr->prop1, (2*optr->kappa), optr->prop1, VOLUME / 2);
+        if(optr->generic_noeo){	
+	  mul_r(optr->prop0, (2*optr->kappa), optr->prop0, VOLUME);
+	}else{
+	  mul_r(optr->prop0, (2*optr->kappa), optr->prop0, VOLUME / 2);
+	  mul_r(optr->prop1, (2*optr->kappa), optr->prop1, VOLUME / 2);	  
+	}
       }
       if (optr->solver != CGMMS && write_prop) /* CGMMS handles its own I/O */
-        optr->write_prop(op_id, index_start, i);
+	optr->write_prop(op_id, index_start, i);
       if(optr->DownProp) {
 	g_mu = -optr->mu;      
 	optr->mu = -optr->mu;
-      } else 
-        break;
+      } else break;
     }
   }
   else if(optr->type == DBTMWILSON || optr->type == DBCLOVER) {
+    /* TODO:        */
+    /* implement generic non-eo version for heavy doublet! */
     g_mubar = optr->mubar;
     g_epsbar = optr->epsbar;
     g_c_sw = 0.;
@@ -483,9 +514,19 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
   free(propagatorFormat);
 
   if(optr->no_flavours == 2) {
-    status = write_spinor(writer, &operator_list[op_id].prop2, &operator_list[op_id].prop3, 1, optr->prop_precision);
+    if(optr->generic_noeo){
+      status = write_spinor(writer, &operator_list[op_id].prop2, NULL, 1, optr->prop_precision); 
+    }
+    else{
+      status = write_spinor(writer, &operator_list[op_id].prop2, &operator_list[op_id].prop3, 1, optr->prop_precision);
+    }
   }
-  status = write_spinor(writer, &operator_list[op_id].prop0, &operator_list[op_id].prop1, 1, optr->prop_precision);
+  if(optr->generic_noeo){
+     status = write_spinor(writer, &operator_list[op_id].prop0, NULL, 1, optr->prop_precision);
+  }
+  else{
+    status = write_spinor(writer, &operator_list[op_id].prop0, &operator_list[op_id].prop1, 1, optr->prop_precision);    
+  }
   destruct_writer(writer);
   return;
 }

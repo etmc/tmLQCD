@@ -25,6 +25,7 @@
 /* This is the full matrix multiplication */
 void M_full(spinor * const Even_new, spinor * const Odd_new, 
 	    spinor * const Even, spinor * const Odd);
+void M_full_noeo(spinor * const Spin_new, spinor * const Spin);
 void Q_full(spinor * const Even_new, spinor * const Odd_new, 
 	    spinor * const Even, spinor * const Odd);
 void M_minus_1_timesC(spinor * const Even_new, spinor * const Odd_new, 

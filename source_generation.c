@@ -122,6 +122,46 @@ void gaussian_volume_source(spinor * const P, spinor * const Q,
   return;
 }
 
+
+/* this is a generically non-evenodd version of  */
+/* gaussian_volume_source                                      */
+void gaussian_volume_source_noeo(spinor * const P,
+			    const int sample, const int nstore, const int f) 
+{
+  int x, y, z, t, i, reset = 0, seed; 
+  int rlxd_state[105];
+  spinor * p;
+
+  /* save the ranlxd_state if neccessary */
+  if(ranlxd_init == 1) {
+    rlxd_get(rlxd_state);
+    reset = 1;
+  }
+
+  /* Compute the seed */
+  seed =(int) abs(1 + sample + f*10*97 + nstore*100*53 + g_cart_id*13);
+
+  rlxd_init(2, seed);
+  i=0;
+  for(t = 0; t < T; t++) {
+    for(x = 0; x < LX; x++) {
+      for(y =0; y < LY; y++) {
+	for(z = 0; z < LZ; z++) {
+          p = P + i;
+	  rnormal((double*)p, 24);
+	  i++;
+	}
+      }
+    }
+  }
+
+  /* reset the ranlxd if neccessary */
+  if(reset) {
+    rlxd_reset(rlxd_state);
+  }
+  return;
+}
+
 void extended_pion_source(spinor * const P, spinor * const Q,
 			  spinor * const R, spinor * const S,
 			  const int t0,

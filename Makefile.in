@@ -44,7 +44,7 @@ MODULES = read_input gamma measure_gauge_action start \
 	measure_rectangles get_rectangle_staples  \
 	test/check_geometry test/check_xchange \
 	test/overlaptests \
-	invert_eo invert_doublet_eo update_gauge \
+	invert_eo invert_noeo invert_doublet_eo update_gauge \
 	polyakov_loop getopt sighandler reweighting_factor \
 	source_generation boundary update_tm ranlxd  \
 	mpi_init deriv_Sb deriv_Sb_D_psi ranlxs \

@@ -57,7 +57,15 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
   static int isample_ = -1;
   static int ix_ = -1;
   static int op_id_ = -1;
-
+  int Vol;
+  
+  if(optr->generic_noeo){
+    Vol = VOLUME;    
+  }
+  else{
+    Vol = VOLUME / 2;
+  }
+  
   SourceInfo.nstore = nstore;
   SourceInfo.sample = isample;
   SourceInfo.ix = ix;
@@ -124,10 +132,19 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
     else if(source_type == 1) {
       /* Volume sources */
       if(read_source_flag == 0 || read_source_flag == 2) {
-        if(g_proc_id == 0 && g_debug_level > 0) {
-          printf("# Preparing 1 flavour volume source\n");
-        }
-        gaussian_volume_source(g_spinor_field[0], g_spinor_field[1], isample, nstore, 0);
+
+        if(optr->generic_noeo){
+	  if(g_proc_id == 0 && g_debug_level > 0) {
+	    printf("# Preparing 1 flavour no-EO volume source\n");
+	  }	  
+          gaussian_volume_source_noeo(g_spinor_field[0], isample, nstore, 0);
+	}
+	else{
+	  if(g_proc_id == 0 && g_debug_level > 0) {
+	    printf("# Preparing 1 flavour volume source\n");
+	  }	  
+          gaussian_volume_source(g_spinor_field[0], g_spinor_field[1], isample, nstore, 0);
+	}
       }
       else {
         sprintf(source_filename, "%s.%.4d.%.5d", SourceInfo.basename, nstore, isample);
@@ -142,11 +159,11 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
       }
       sprintf(source_filename, "%s.%.4d.%.5d.inverted", PropInfo.basename, nstore, isample);
     }
+    
     optr->sr0 = g_spinor_field[0];
     optr->sr1 = g_spinor_field[1];
     optr->prop0 = g_spinor_field[2];
-    optr->prop1 = g_spinor_field[3];
-
+    optr->prop1 = g_spinor_field[3];  
 
     /* If the solver is _not_ CG we might read in */
     /* here some better guess                     */
@@ -167,23 +184,23 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
           exit(-1);
         }
         if (g_kappa != 0.) {
-          mul_r(optr->prop1, 1. / (2*optr->kappa), optr->prop1, VOLUME / 2);
-          mul_r(optr->prop0, 1. / (2*optr->kappa), optr->prop0, VOLUME / 2);
+          mul_r(optr->prop1, 1. / (2*optr->kappa), optr->prop1, Vol);
+          mul_r(optr->prop0, 1. / (2*optr->kappa), optr->prop0, Vol);
         }
 
         if (err != 0) {
-          zero_spinor_field(optr->prop0, VOLUME / 2);
-          zero_spinor_field(optr->prop1, VOLUME / 2);
+          zero_spinor_field(optr->prop0, Vol);
+          zero_spinor_field(optr->prop1, Vol);
         }
       }
       else {
-        zero_spinor_field(optr->prop0, VOLUME / 2);
-        zero_spinor_field(optr->prop1, VOLUME / 2);
+        zero_spinor_field(optr->prop0, Vol);
+        zero_spinor_field(optr->prop1, Vol);
       }
     }
     else {
-      zero_spinor_field(optr->prop0, VOLUME / 2);
-      zero_spinor_field(optr->prop1, VOLUME / 2);
+        zero_spinor_field(optr->prop0, Vol);
+        zero_spinor_field(optr->prop1, Vol);
     }
     /*     if(optr->even_odd_flag) { */
     /*       assign(optr->sr0, g_spinor_field[0], VOLUME/2); */
@@ -192,11 +209,20 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
     /*     else { */
     /*       convert_eo_to_lexic(optr->sr0, g_spinor_field[0], g_spinor_field[1]); */
     /*     } */
+    
+    if(optr->generic_noeo){
+      /* We need to put the second source/propagator field
+	to NULL in order to use the correct (i.e. the lexicographic)
+	binary write functions in op_invert FIXME
+      */
+      optr->sr1 = NULL;
+      optr->prop1 = NULL;
+    }
   }
   else { /* for the ND 2 flavour twisted operator */
     SourceInfo.no_flavours = 2;
-    zero_spinor_field(g_spinor_field[0], VOLUME/2);
-    zero_spinor_field(g_spinor_field[1], VOLUME/2);
+    zero_spinor_field(g_spinor_field[0], Vol);
+    zero_spinor_field(g_spinor_field[1], Vol);
     if(source_type != 1) {
       if(read_source_flag == 0 || read_source_flag == 2) {
         if(source_location == 0) {
@@ -232,17 +258,25 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
       if(g_proc_id == 0 && g_debug_level > 0) {
         printf("# Preparing 2 flavour volume source\n");
       }
-      gaussian_volume_source(g_spinor_field[0], g_spinor_field[1],
-                             isample, nstore, 1);
-      gaussian_volume_source(g_spinor_field[2], g_spinor_field[3],
-                             isample, nstore, 2);
+      if(optr->generic_noeo){
+	gaussian_volume_source_noeo(g_spinor_field[0], 
+			      isample, nstore, 1);
+	gaussian_volume_source_noeo(g_spinor_field[2], 
+			      isample, nstore, 2);	
+      }
+      else{
+	gaussian_volume_source(g_spinor_field[0], g_spinor_field[1],
+			      isample, nstore, 1);
+	gaussian_volume_source(g_spinor_field[2], g_spinor_field[3],
+			      isample, nstore, 2);
+      }
     }
-    mul_one_pm_itau2(g_spinor_field[4], g_spinor_field[6], g_spinor_field[0], g_spinor_field[2], +1., VOLUME/2);
-    mul_one_pm_itau2(g_spinor_field[5], g_spinor_field[7], g_spinor_field[1], g_spinor_field[3], +1., VOLUME/2);
-    assign(g_spinor_field[0], g_spinor_field[4], VOLUME/2);
-    assign(g_spinor_field[1], g_spinor_field[5], VOLUME/2);
-    assign(g_spinor_field[2], g_spinor_field[6], VOLUME/2);
-    assign(g_spinor_field[3], g_spinor_field[7], VOLUME/2);
+    mul_one_pm_itau2(g_spinor_field[4], g_spinor_field[6], g_spinor_field[0], g_spinor_field[2], +1., Vol);
+    mul_one_pm_itau2(g_spinor_field[5], g_spinor_field[7], g_spinor_field[1], g_spinor_field[3], +1., Vol);
+    assign(g_spinor_field[0], g_spinor_field[4], Vol);
+    assign(g_spinor_field[1], g_spinor_field[5], Vol);
+    assign(g_spinor_field[2], g_spinor_field[6], Vol);
+    assign(g_spinor_field[3], g_spinor_field[7], Vol);
 
     optr->sr0 = g_spinor_field[0];
     optr->sr1 = g_spinor_field[1];
@@ -252,6 +286,16 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
     optr->prop1 = g_spinor_field[5];
     optr->prop2 = g_spinor_field[6];
     optr->prop3 = g_spinor_field[7];
+    if(optr->generic_noeo){
+      /* We need to put the second source/propagator field
+	to NULL in order to use the correct (i.e. the lexicographic)
+	binary write functions in op_invert FIXME
+      */
+      optr->sr1 = NULL;
+      optr->sr3 = NULL;      
+      optr->prop1 = NULL;
+      optr->prop3 = NULL;      
+    }   
   }
   nstore_ = nstore;
   isample_ = isample;

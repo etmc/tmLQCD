@@ -111,6 +111,10 @@ void M_full(spinor * const Even_new, spinor * const Odd_new,
   assign_add_mul_r(Odd_new, g_spinor_field[DUM_MATRIX], -1., VOLUME/2);
 }
 
+void M_full_noeo(spinor * const Spin_new, spinor * const Spin) {
+  D_psi(Spin_new, Spin);
+}
+
 void Q_full(spinor * const Even_new, spinor * const Odd_new, 
 	    spinor * const Even, spinor * const Odd) {
   /* Even sites */
