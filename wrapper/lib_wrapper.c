@@ -58,6 +58,19 @@
 #include "linalg/convert_eo_to_lexic.h"
 #include "include/tmLQCD.h"
 
+#ifdef HAVE_GPU
+extern void init_mixedsolve_eo(su3** gf);
+extern void init_mixedsolve(su3** gf);
+extern void finalize_mixedsolve();
+extern void init_gpu_fields(int need_momenta);
+extern void finalize_gpu_fields();
+#include "GPU/cudadefs.h"
+#  ifdef TEMPORALGAUGE
+#  include "temporalgauge.h" 
+#  endif
+#endif
+
+
 static int tmLQCD_invert_initialised = 0;
 
 int tmLQCD_invert_init(int argc, char *argv[], const int _verbose) {
@@ -118,6 +131,29 @@ int tmLQCD_invert_init(int argc, char *argv[], const int _verbose) {
 
   // initialise the operators
   init_operators();
+  
+#ifdef HAVE_GPU
+  if(usegpu_flag){
+    if(even_odd_flag){
+      init_mixedsolve_eo(g_gauge_field);
+    }
+    else{
+      init_mixedsolve(g_gauge_field);
+    }
+#  ifdef GPU_DOUBLE
+    /*init double fields w/o momenta*/
+    init_gpu_fields(0);
+#  endif
+#  ifdef TEMPORALGAUGE
+    int retval;
+    if((retval=init_temporalgauge(VOLUME, g_gauge_field)) !=0){
+      if(g_proc_id == 0) printf("tmLQCD_init_invert: Error while initializing temporal gauge. Aborting...\n");   
+      exit(200);
+    }
+#  endif
+  }//usegpu_flag
+#endif  
+
 
 #ifdef _USE_HALFSPINOR
   j = init_dirac_halfspinor();
@@ -211,6 +247,19 @@ int tmLQCD_finalise() {
 #ifdef OMP
   free_omp_accumulators();
 #endif
+
+#ifdef HAVE_GPU
+  if(usegpu_flag){
+    finalize_mixedsolve();
+#  ifdef GPU_DOUBLE
+    finalize_gpu_fields();
+#  endif
+#  ifdef TEMPORALGAUGE
+    finalize_temporalgauge();
+#  endif
+  }
+#endif
+  
   free_gauge_field();
   free_geometry_indices();
   free_spinor_field();
