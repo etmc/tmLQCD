@@ -1048,23 +1048,25 @@ void check_mixedsolve_params(){
   
     #ifndef LOWOUTPUT
         if (g_cart_id == 0) {
-  	  int host_check_VOLUMEPLUSRAND, host_check_RAND;
-  	  int host_check_rank, host_check_nproc;
   	  int host_check_VOLUME;
   	  int host_check_Offset;
-  	  cudaMemcpyFromSymbol(&host_check_VOLUMEPLUSRAND, dev_VOLUMEPLUSRAND, sizeof(int));
   	  cudaMemcpyFromSymbol(&host_check_RAND, dev_RAND, sizeof(int));
   	  cudaMemcpyFromSymbol(&host_check_VOLUME, dev_VOLUME, sizeof(int));
   	  cudaMemcpyFromSymbol(&host_check_Offset, dev_Offset, sizeof(int));
   	  printf("\tOn device:\n");
-  	  printf("\tdev_VOLUMEPLUSRAND = %i\n", host_check_VOLUMEPLUSRAND);
   	  printf("\tdev_VOLUME = %i\n", host_check_VOLUME);
   	  printf("\tdev_Offset = %i\n", host_check_Offset);
-  	  printf("\tdev_RAND = %i\n", host_check_RAND);
-  	  cudaMemcpyFromSymbol(&host_check_rank, dev_rank, sizeof(int));
-  	  cudaMemcpyFromSymbol(&host_check_nproc, dev_nproc, sizeof(int));
-  	  printf("\tdev_rank = %i\n", host_check_rank);
-  	  printf("\tdev_nproc = %i\n", host_check_nproc);
+          #ifdef MPI
+  	    int host_check_VOLUMEPLUSRAND, host_check_RAND;
+  	    int host_check_rank, host_check_nproc;	  
+  	    cudaMemcpyFromSymbol(&host_check_VOLUMEPLUSRAND, dev_VOLUMEPLUSRAND, sizeof(int));
+	    printf("\tdev_VOLUMEPLUSRAND = %i\n", host_check_VOLUMEPLUSRAND);
+	    printf("\tdev_RAND = %i\n", host_check_RAND);
+	    cudaMemcpyFromSymbol(&host_check_rank, dev_rank, sizeof(int));
+	    cudaMemcpyFromSymbol(&host_check_nproc, dev_nproc, sizeof(int));
+	    printf("\tdev_rank = %i\n", host_check_rank);
+	    printf("\tdev_nproc = %i\n", host_check_nproc);
+          #endif
   	}
   #endif
   
