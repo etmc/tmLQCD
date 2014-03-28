@@ -70,13 +70,14 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
   int iter = 0;
   
   
-#ifdef HAVE_GPU
-#  ifdef TEMPORALGAUGE
+
   if (usegpu_flag) {
-    to_temporalgauge_invert_doublet_eo(g_gauge_field, Even_s, Odd_s, Even_c, Odd_c);
+    #ifdef TEMPORALGAUGE 
+      to_temporalgauge_invert_doublet_eo(g_gauge_field, Even_s, Odd_s, Even_c, Odd_c);
+    #endif
   } 
-#  endif  
-#endif /* HAVE_GPU*/
+  
+
 
 
   /* here comes the inversion using even/odd preconditioning */
@@ -105,29 +106,15 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
   gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], VOLUME/2);
   
   
-#ifdef HAVE_GPU
   if (usegpu_flag) {	// GPU, mixed precision solver, shift==0
-#  if defined(MPI) && defined(PARALLELT)
     iter = mixedsolve_eo_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
-			    0.0,max_iter, precision, rel_prec);
-#  elif !defined(MPI) && !defined(PARALLELT)
-    iter = mixedsolve_eo_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
-			    0.0,max_iter, precision, rel_prec);
-#  else
-    printf("MPI and/or PARALLELT are not appropriately set for the GPU implementation. Aborting...\n");
-    exit(-1);
-#  endif
+			    0.0, max_iter, precision, rel_prec);
   }
-  else {		// CPU, conjugate gradient
+  else {
     iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
-		     max_iter, precision, rel_prec, 
-		     VOLUME/2, &Qtm_pm_ndpsi);
+		    max_iter, precision, rel_prec, 
+		    VOLUME/2, &Qtm_pm_ndpsi);
   }
-#else			// CPU, conjugate gradient
-  iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
-		   max_iter, precision, rel_prec, 
-		   VOLUME/2, &Qtm_pm_ndpsi);
-#endif
   
   
   Qtm_dagger_ndpsi(Odd_new_s, Odd_new_c,
@@ -146,17 +133,14 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
   assign_add_mul_r(Even_new_c, g_spinor_field[DUM_DERI+3], +1., VOLUME/2);
   
   
-#ifdef HAVE_GPU  
-  /* return from temporal gauge again */
-#  ifdef TEMPORALGAUGE
-  
-  if (usegpu_flag) { 
-    /* undo trafo */
-    from_temporalgauge_invert_doublet_eo(Even_s, Odd_s, Even_new_s, Odd_new_s,
+  if (usegpu_flag) {
+    /* return from temporal gauge again */
+    #ifdef TEMPORALGAUGE
+      from_temporalgauge_invert_doublet_eo(Even_s, Odd_s, Even_new_s, Odd_new_s,
 					 Even_c, Odd_c, Even_new_c, Odd_new_c);
+    #endif  
   }
-#  endif
-#endif
+  
   return(iter);
 }
 

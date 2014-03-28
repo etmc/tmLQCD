@@ -45,7 +45,6 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
       
 
   pos= threadIdx.x + blockDim.x*blockIdx.x;  
-  int ix = threadIdx.x;
   int gaugevol = dev_VOLUME;
   
  #ifdef TEMPORALGAUGE

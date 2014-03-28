@@ -601,7 +601,10 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
   
   #endif
   if((cudaerr=cudaGetLastError())!=cudaSuccess){
-    if(g_cart_id==0) printf("Error in init_mixedsolve_eo_nd(): Memory allocation of nd additional spinor fields failed. Aborting...\n");
+    if(g_cart_id==0){
+      printf("Error in init_mixedsolve_eo_nd(): Memory allocation of nd additional spinor fields failed.\n");
+      printf("Error was %d. Aborting...\n", cudaerr);
+    }
     exit(200);
   }
   
@@ -831,7 +834,6 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
 
 void finalize_mixedsolve_eo_nd(void) {
   
-  cudaError_t cudaerr;
   
   cudaFree(dev_spin1_up);
   cudaFree(dev_spin1_dn);
@@ -914,6 +916,7 @@ void finalize_mixedsolve_eo_nd(void) {
   
   		// debug	// CUDA
   		#ifdef CUDA_DEBUG
+		  cudaError_t cudaerr;	  
   		  CUDA_CHECK("CUDA error in finalize_mixedsolve_eo_nd(). Device memory deallocation failed", "Device memory deallocated.");
   		#endif
   
@@ -1237,8 +1240,6 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
     double effectiveFlops;
   #endif
   
-  // CUDA errors
-  cudaError_t cudaerr;
 
 
   // formal parameters
@@ -1268,6 +1269,7 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   
   		// debug	// CUDA
   		#ifdef CUDA_DEBUG
+		  cudaError_t cudaerr;
   		  CUDA_CHECK_NO_SUCCESS_MSG("CUDA error in benchmark_eo_nd(). Memory allocation of spinor fields failed.");
   		#endif
 
@@ -1452,8 +1454,6 @@ extern "C" void benchmark_eo_nd_d (spinor * Q_up, spinor * Q_dn, int N) {
     dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd ! 
   #else
     double timeElapsed;    
-    double singleTimeElapsed;
-    double maxTimeElapsed;
     dev_spinsize_d = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); // double4 even-odd !     
   #endif
   double startBenchmark;
@@ -1471,12 +1471,9 @@ extern "C" void benchmark_eo_nd_d (spinor * Q_up, spinor * Q_dn, int N) {
     double effectiveFlops;
   #else
     double effectiveDeviceFlops;
-    double allEffectiveDeviceFlops;
     double effectiveFlops;
   #endif
   
-  // CUDA errors
-  cudaError_t cudaerr;
 
 
   dev_spinor_d * A_up = dev_spin_eo1_d;
@@ -1550,6 +1547,7 @@ extern "C" void benchmark_eo_nd_d (spinor * Q_up, spinor * Q_dn, int N) {
   
   		// debug	// CUDA
   		#ifdef CUDA_DEBUG
+		  cudaError_t cudaerr;
   		  CUDA_CHECK_NO_SUCCESS_MSG("CUDA error in nd matrix_muliplication(). Applying the matrix on GPU failed.");
   		#endif
 
@@ -1611,7 +1609,6 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
   
   // CUDA
   cudaError_t cudaerr;
-  cublasStatus cublasstatus;
   
   // algorithm
   float rr_up;
@@ -1672,7 +1669,9 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
   
   		// debug	// CUBLAS helper function
   #ifdef CUDA_DEBUG
+    cublasStatus cublasstatus;  
     CUBLAS_HELPER_CHECK(cublasInit(), "CUBLAS error in cublasInit(). Couldn't initialize CUBLAS.", "CUBLAS initialized.");
+    if(g_debug_level > 3) printf("cublasstatus = %f\n", cublasstatus);
   #else
     #ifdef CUDA_45
       cublasHandle_t handle;
@@ -1684,7 +1683,7 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
   #ifdef MPI
       init_blas(VOLUME/2);
   #endif   
-  if(g_debug_level > 3) printf("cublasstatus = %f\n", cublasstatus);
+
   
   
   
@@ -1944,9 +1943,7 @@ void test_double_nd_operator(spinor* const Q_up, spinor* const Q_dn, const int N
       dev_spinor_d * x_up_d = dev_spin0_d;
       dev_spinor_d * x_dn_d = dev_spin1_d;
       dev_spinor_d * Ax_up_d = dev_spin2_d;
-      dev_spinor_d * Ax_dn_d = dev_spin3_d;
-      dev_spinor_d * Q_up_d = dev_spin_eo1_d;
-      dev_spinor_d * Q_dn_d = dev_spin_eo2_d;     
+      dev_spinor_d * Ax_dn_d = dev_spin3_d;    
       
   spinor ** solver_field_up = NULL;
   spinor ** solver_field_dn = NULL;  
@@ -1960,6 +1957,8 @@ void test_double_nd_operator(spinor* const Q_up, spinor* const Q_dn, const int N
    Qtm_pm_ndpsi(solver_field_up[0], solver_field_dn[0], Q_up, Q_dn);
   
   /*
+  dev_spinor_d * Q_up_d = dev_spin_eo1_d;
+  dev_spinor_d * Q_dn_d = dev_spin_eo2_d; 
   Hopping_Matrix(EO,solver_field_up[1], Q_up);
   Hopping_Matrix(OE, solver_field_up[0] , solver_field_up[1]); 
   */
@@ -1974,7 +1973,7 @@ void test_double_nd_operator(spinor* const Q_up, spinor* const Q_dn, const int N
       to_relativistic_basis_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>> (x_up_d);
       to_relativistic_basis_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>> (x_dn_d);
       if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-	if (g_cart_id == 0) printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+	if (g_cart_id == 0) printf("%s\n", cudaGetErrorString(cudaerr));
       }
       else{
 	#ifndef LOWOUTPUT 
@@ -2194,9 +2193,6 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   // LOCAL VARIABLES //
   /////////////////////
   
-  // CUDA
-  cudaError_t cudaerr;
-  cublasStatus cublasstatus;
   
   // algorithm
   double rr_up;
@@ -2239,12 +2235,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     #endif
   #endif
   
-  // (auxiliary) fields
-  spinor *  r_up, *  r_dn,
-         * Ad_up, * Ad_dn,
-         *  x_up, *  x_dn,
-         *  d_up, *  d_dn,
-         * Ax_up, * Ax_dn;
+
 
   spinor ** up_field = NULL;
   spinor ** dn_field = NULL;
@@ -2306,6 +2297,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     bind_texture_gf(dev_gf);					//	e.g. dev_reconstructgf_2vtexref(...), dev_reconstructgf_8texref(...), 
   #endif							//	in general in functions  dev_reconstructgf[...]  with  "tex1Dfetch(gf_tex[...]"
   #ifdef CUDA_DEBUG
+    cudaError_t cudaerr;
     CUDA_CHECK("CUDA error in bind_texture_gf(). Binding GF to texture failed.", "GF bound to texture.");
   #endif
     
@@ -2331,12 +2323,11 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   /////////////////
   // ASSIGNMENTS //
   /////////////////
-  
-  
-  x_up = P_up;							// can use the output spinors also as auxiliary fields
-  x_dn = P_dn;							//	can use as initial guess at the same time
-  
-
+  #ifndef GPU_DOUBLE
+  // (auxiliary) fields in case we of no GPU_DOUBLE
+    spinor *r_up, *r_dn, *Ad_up, *Ad_dn, *x_up, *x_dn, *d_up, *d_dn, *Ax_up, *Ax_dn;      
+    x_up = P_up;							// can use the output spinors also as auxiliary fields
+    x_dn = P_dn;							//	can use as initial guess at the same time
     r_up  = up_field[0];			// use the pre-allocated memory on host memory
     r_dn  = dn_field[0];			// allocated by  init_chi_spinor_field.c  and  invert_doublet.c  !?
     d_up  = up_field[1];		// the fields  up_field/dn_field[{0 , 1, ... , 5}]  are used in  cg_her_nd()
@@ -2345,7 +2336,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     Ad_dn = dn_field[2];
     Ax_up = Ad_up;
     Ax_dn = Ad_dn;
-    
+  #endif  
 
 
 
@@ -2799,9 +2790,8 @@ void init_doublesolve_eo_nd (su3** gf) {	// gf is the full gauge field
   // LOCAL VARIABLES //
   /////////////////////
   
-  cudaError_t cudaerr;		// CUDA errors
   int grid[6];			// array for grid specifications
-  
+  cudaError_t cudaerr;		// CUDA errors 
   
 
   /////////////
@@ -2835,13 +2825,16 @@ void init_doublesolve_eo_nd (su3** gf) {	// gf is the full gauge field
   cudaMalloc((void **) &dev_spinout_dn_d, dev_spinsize_d);
   
   if((cudaerr=cudaGetLastError())!=cudaSuccess){
-      if(g_cart_id==0) printf("Error in init_doublesolve_eo_nd(): Memory allocation of nd additional double spinor fields failed. Aborting...\n");
-      exit(200);
+    if(g_cart_id==0){
+      printf("Error in init_doublesolve_eo_nd(): Memory allocation of nd additional double spinor fields failed.\n");
+      printf("Error number %d. Aborting...\n", cudaerr); 
+    }  
+    exit(200);
   }
 
   
   // debug	// CUDA
-  #ifdef CUDA_DEBUG
+  #ifdef CUDA_DEBUG 
     #ifndef MPI
       CUDA_CHECK("CUDA error in init_doublesolve_eo_nd(). Memory allocation of spinor fields failed.", "Allocated spinor fields on device.");
     #else
@@ -2882,7 +2875,6 @@ void init_doublesolve_eo_nd (su3** gf) {	// gf is the full gauge field
 
 void finalize_doublesolve_eo_nd(void) {
   
-  cudaError_t cudaerr;
    
   cudaFree(dev_spin_eo1_up_d);
   cudaFree(dev_spin_eo1_dn_d);     
@@ -2899,6 +2891,7 @@ void finalize_doublesolve_eo_nd(void) {
   cudaFree(dev_spinout_up_d);  
   cudaFree(dev_spinout_dn_d);  
   #ifdef CUDA_DEBUG
+    cudaError_t cudaerr; 
     CUDA_CHECK("CUDA error in finalize_mixedsolve_eo_nd(). Device memory deallocation failed", "Device memory deallocated.");
   #endif
   
@@ -2924,7 +2917,6 @@ int dev_cg_eo_nd_d (dev_su3_2v_d * gf,
   
   // CUDA
   cudaError_t cudaerr;
-  cublasStatus cublasstatus;
   
   // algorithm
   double rr_up, rr_dn, rr, rr_old, r0r0, dAd_up, dAd_dn, dAd;
@@ -2974,7 +2966,9 @@ int dev_cg_eo_nd_d (dev_su3_2v_d * gf,
   
       // debug	// CUBLAS helper function
       #ifdef CUDA_DEBUG
+	cublasStatus cublasstatus;  
 	CUBLAS_HELPER_CHECK(cublasInit(), "CUBLAS error in cublasInit(). Couldn't initialize CUBLAS.", "CUBLAS initialized.");
+	if(g_debug_level > 3) printf("cublasstatus = %f\n", cublasstatus);
       #else
 	#ifdef CUDA_45
 	  cublasHandle_t handle;
@@ -2984,7 +2978,7 @@ int dev_cg_eo_nd_d (dev_su3_2v_d * gf,
 	#endif 
       #endif
 
-  if(g_debug_level > 3) printf("cublasstatus = %f\n", cublasstatus);
+
   
   
   
@@ -3240,9 +3234,6 @@ extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
   // LOCAL VARIABLES //
   /////////////////////
   
-  // CUDA
-  cudaError_t cudaerr;
-  cublasStatus cublasstatus;
   
   // algorithm
   double rr_up, rr_dn, rr, rr_old, r0r0, bb;
@@ -3258,7 +3249,6 @@ extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
   #endif
   
   // timing
-  double startouter, stopouter;
   double startinner, stopinner;  
   double innerclocks;
   
@@ -3439,6 +3429,7 @@ extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
       
     		// debug	// CUDA
     		#ifdef CUDA_DEBUG
+		  cudaError_t cudaerr;    
     		  // CUDA_CHECK("CUDA error in mixedsolve_eo_nd(). Device to host interaction failed.", "Fields copied back to device.");
     		  CUDA_CHECK_NO_SUCCESS_MSG("CUDA error in mixedsolve_eo_nd(). Device to host interaction failed.");
     		#endif
@@ -3638,8 +3629,11 @@ void init_gpu_nd_mms_fields(int Nshift){
 #endif
   
   if((cudaerr=cudaGetLastError())!=cudaSuccess){
-    if(g_cart_id==0) printf("Error in init_gpu_nd_mms_fields: Memory allocation of spinor fields failed. Aborting...\n");
-    exit(200);
+    if(g_cart_id==0){
+      printf("Error in init_gpu_nd_mms_fields: Memory allocation of spinor fields failed.\n");
+      printf("Error number %d. Aborting...", cudaerr);
+      exit(200);
+    }
   }
   else{
     if(g_cart_id==0) printf("Allocated nd mms double spinor fields on device\n");
@@ -3711,9 +3705,6 @@ int dev_cg_mms_eo_nd_d (dev_su3_2v_d * gf,
   // LOCAL VARIABLES //
   /////////////////////
   
-  // CUDA
-  cudaError_t cudaerr;
-  cublasStatus cublasstatus;
   
   // algorithm
   double rr_up, rr_dn, rr, rr_old, r0r0, dAd_up, dAd_dn, dAd;
@@ -3721,7 +3712,7 @@ int dev_cg_mms_eo_nd_d (dev_su3_2v_d * gf,
 
   // (auxiliary) device fields
   // for recalculating the residue
-  dev_spinor_d *  r_up, *  r_dn, * Ad_up, * Ad_dn, *  x_up, *  x_dn, *  d_up, *  d_dn, * Ax_up, * Ax_dn;		
+  dev_spinor_d *  r_up, *  r_dn, * Ad_up, * Ad_dn, *  x_up, *  x_dn, *  d_up, *  d_dn;		
  
   // counting
   int j;				// iteration counter
@@ -3743,9 +3734,7 @@ int dev_cg_mms_eo_nd_d (dev_su3_2v_d * gf,
   d_dn  = dev_spin2_dn_d;
   Ad_up = dev_spin3_up_d;
   Ad_dn = dev_spin3_dn_d;
-  Ax_up = Ad_up;						
-  // works as long as no initial guess vector x(0) is passed to cg_eo_nd_d()
-  Ax_dn = Ad_dn;
+
   
   
  
@@ -3755,7 +3744,10 @@ int dev_cg_mms_eo_nd_d (dev_su3_2v_d * gf,
   
       // debug	// CUBLAS helper function
       #ifdef CUDA_DEBUG
+        cudaError_t cudaerr;
+        cublasStatus cublasstatus;
 	CUBLAS_HELPER_CHECK(cublasInit(), "CUBLAS error in cublasInit(). Couldn't initialize CUBLAS.", "CUBLAS initialized.");
+	if(g_debug_level > 3) printf("cublasstatus = %f\n", cublasstatus);
       #else
 	#ifdef CUDA_45
 	  cublasHandle_t handle;
@@ -3765,7 +3757,7 @@ int dev_cg_mms_eo_nd_d (dev_su3_2v_d * gf,
 	#endif 
       #endif
 
-  if(g_debug_level > 3) printf("cublasstatus = %f\n", cublasstatus);
+
   
   
   
@@ -3788,6 +3780,7 @@ int dev_cg_mms_eo_nd_d (dev_su3_2v_d * gf,
   
       // debug	// kernel
       #ifdef CUDA_DEBUG
+  
 	CUDA_KERNEL_CHECK("Kernel error in dev_cg_mms_eo_nd_d(). Initializing spinor fields on device failed.", "Spinor fields initialized on device.");
       #endif
   
@@ -4002,7 +3995,6 @@ extern "C" int doublesolve_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
   
   // CUDA
   cudaError_t cudaerr;
-  cublasStatus cublasstatus;
   
   // counting			// latest inner solver iterations
   int outercount = 0;				// total inner solver iterations
@@ -4030,9 +4022,7 @@ extern "C" int doublesolve_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
   //////////////////
   // INITIALIZING //
   //////////////////
-  
-     dev_spinor_d * Q_up_d = dev_spin_eo1_d;
-     dev_spinor_d * Q_dn_d = dev_spin_eo2_d;   
+     
      size_t dev_spinsize_d;
 #ifdef MPI
   dev_spinsize_d  = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); // double2 even-odd !   
@@ -4120,7 +4110,10 @@ extern "C" int doublesolve_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
     }
   
     if((cudaerr=cudaGetLastError())!=cudaSuccess){
-      if(g_cart_id==0) printf("Error in doublesolve_mms_eo_nd(): Aborting...\n");
+      if(g_cart_id==0) {
+	printf("Error in doublesolve_mms_eo_nd().\n");
+        printf("Error was %d. Aborting...\n", cudaerr);
+      }
       exit(200);
     }    
       #ifdef MPI
@@ -4184,7 +4177,10 @@ void init_gpu_single_nd_mms_fields(int Nshift, int N){
   }
   
   if((cudaerr=cudaGetLastError())!=cudaSuccess){
-    if(g_cart_id==0) printf("Error in init_gpu_nd_mms_fields: Memory allocation of spinor fields failed. Aborting...\n");
+    if(g_cart_id==0){ 
+      printf("Error in init_gpu_nd_mms_fields: Memory allocation of spinor fields failed.\n");
+      printf("Error was %d.  Aborting...", cudaerr);
+    }
     exit(200);
   }
   else{

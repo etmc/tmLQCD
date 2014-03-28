@@ -156,6 +156,7 @@
 #define _default_MDPolyDetRatio 0
 
 /* default GPU values */
+#define _default_usegpu_flag 0
 #ifdef MPI
   #define _default_device_num 0
 #else

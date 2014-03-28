@@ -379,12 +379,7 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
   int gridsize1;
   int gridsize2;
   
-  #ifdef GPU_3DBLOCK
-    fprintf(stderr, "Error in HOPPING_ASYNC: 3D blocks not implemented for MPI! Aborting...\n");
-    exit(200);
-  #else
     int blocksize = blocksize_in.x;
-  #endif
   
   #ifndef ASYNC_TSLICES
     int tSlices = 1; 
@@ -425,8 +420,7 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
     }
     else{
       gridsize3 = (int) tSliceEO/blocksize3 + 1;
-    }
-    int griddim3 = gridsize3;  
+    } 
   
   
   
@@ -434,13 +428,13 @@ void HOPPING_ASYNC (dev_su3_2v * gf,
     bind_texture_spin(spinin,1);
   #endif
   
- cudaError_t cudaerr;   
   
   
   #if ASYNC == 0		// primitive version
     		
 
- 	                                                       
+ cudaError_t cudaerr;
+
  if((cudaerr=cudaGetLastError()) != cudaSuccess){
     printf("Error in ASYNC: %s\n", cudaGetErrorString(cudaerr));
     printf("gridsize = %d, blocksize = %d\n",gridsize1,blocksize);

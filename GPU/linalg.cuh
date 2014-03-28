@@ -849,7 +849,6 @@ int i;
 
 
 __device__ void inline dev_realmult_spinor_assigntoglobal(dev_spinor* out, float lambda, dev_spinor* in){
-int i;
 
   //out[i] = in[i]*lambda;
       (*(out+0*DEVOFF)).x = (*(in+0)).x*lambda;
@@ -911,7 +910,6 @@ float help;
 
 
 __device__ inline void dev_add_spinor_assign(dev_spinor * i1, dev_spinor * i2){
-  int i;
 
     (*(i1+0)).x = (*(i1+0)).x + (*(i2+0)).x;
     (*(i1+0)).y = (*(i1+0)).y + (*(i2+0)).y;
@@ -946,7 +944,6 @@ __device__ inline void dev_add_spinor_assign(dev_spinor * i1, dev_spinor * i2){
 
 
 __device__ inline void dev_add_globalspinor_assign(dev_spinor * i1, dev_spinor * i2){
-  int i;
 
     (*(i1+0)).x = (*(i1+0)).x + (*(i2+0*DEVOFF)).x;
     (*(i1+0)).y = (*(i1+0)).y + (*(i2+0*DEVOFF)).y;
@@ -7396,10 +7393,10 @@ __device__ void to_tmlqcd_basis_spinor(dev_spinor* spinin){
 ////////////////////////  BLAS KERNELS FLOAT ////////////////////////////////////////////////////
 
 void start_blas(int Vol){
-  cudaError_t cudaerr;
-  cublasStatus cublasstatus;  
+  cudaError_t cudaerr;  
   // debug	// CUBLAS helper function
     #ifdef CUDA_DEBUG
+      cublasStatus cublasstatus;  
       CUBLAS_HELPER_CHECK(cublasInit(), "CUBLAS error in cublasInit(). Couldn't initialize CUBLAS.", "CUBLAS initialized.");
     #else
       #ifdef CUDA_45
@@ -7426,8 +7423,7 @@ void start_blas(int Vol){
 }
 
 void stop_blas(){
-  cudaError_t cudaerr;
-  cublasStatus cublasstatus;  
+  cudaError_t cudaerr; 
   
   #ifdef CUDA_45  
     cublasDestroy(handle);

@@ -87,24 +87,19 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
 	   g_mu/2./g_kappa, g_kappa, g_c_sw);
     fflush(stdout);
   }
- #ifdef HAVE_GPU
-    if(usegpu_flag){
-      if(g_proc_id == 0) {printf("Using GPU for clover inversion\n");
-	fflush(stdout);}
-      iter = mixed_solve_eo_clover(Odd_new, g_spinor_field[DUM_DERI], max_iter,   precision, rel_prec, VOLUME/2);
-    }
-    else{
-      iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, 
-		precision, rel_prec, 
-		VOLUME/2, Qsq);
-      Qm(Odd_new, Odd_new);    
-    }
- #else
-  iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, 
-		precision, rel_prec, 
-		VOLUME/2, Qsq);
-  Qm(Odd_new, Odd_new);
-#endif 
+
+  if(usegpu_flag){
+    if(g_proc_id == 0) {printf("Using GPU for clover inversion\n");
+      fflush(stdout);}
+    iter = mixed_solve_eo_clover(Odd_new, g_spinor_field[DUM_DERI], max_iter,   precision, rel_prec, VOLUME/2);
+  }
+  else{
+    iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, 
+		  precision, rel_prec, 
+		  VOLUME/2, Qsq);
+    Qm(Odd_new, Odd_new);    
+  }
+
   
 
 

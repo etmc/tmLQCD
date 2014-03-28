@@ -115,7 +115,6 @@ extern "C" int bind_texture_spin(dev_spinor* s, int i){
 extern "C" int bind_texture_sw(float2* sw){
   
   size_t size;
-  int offset;
   #ifdef MPI
       size = sizeof(float2)*6*9*(VOLUME);
   #else
@@ -133,6 +132,7 @@ extern "C" int bind_texture_sw(float2* sw){
 
 extern "C" int unbind_texture_sw(){
   cudaUnbindTexture(sw_tex);
+  return(0);  
 }
 
 
@@ -141,7 +141,6 @@ extern "C" int unbind_texture_sw(){
 extern "C" int bind_texture_sw_inv(float2* sw_inv){
   
   size_t size;
-  int offset;
   #ifdef MPI
       size = sizeof(float2)*8*9*(VOLUME);
   #else
@@ -158,6 +157,7 @@ extern "C" int bind_texture_sw_inv(float2* sw_inv){
 
 extern "C" int unbind_texture_sw_inv(){
   cudaUnbindTexture(sw_inv_tex);
+return(0);  
 }
 
 
@@ -171,7 +171,7 @@ extern "C" int unbind_texture_spin(int i){
   cudaUnbindTexture(spin_tex3);
   cudaUnbindTexture(spin_tex4);
   cudaUnbindTexture(spin_tex5);
-return(1);
+return(0);
 }
 
 
@@ -234,24 +234,19 @@ __inline__ __device__ double2 fetch1D_spin_d(texture<int4> tex, const int& i){
 extern "C" int bind_texture_spin_d(dev_spinor_d* s, int i){
   
   size_t size;
-  int offset;
   #ifdef MPI
     if(even_odd_flag){
       size = 12*sizeof(double2)*(VOLUME+RAND)/2;
-      offset = (VOLUME+RAND)/2;
     }
     else{
       size = 12*sizeof(double2)*(VOLUME+RAND);
-      offset = (VOLUME+RAND);
     }
   #else
     if(even_odd_flag){
       size = 12*sizeof(double2)*VOLUME/2;
-      offset = VOLUME/2;
     }
     else{
       size = 12*sizeof(double2)*VOLUME;
-      offset = VOLUME;
     }
   #endif
    
@@ -266,7 +261,7 @@ extern "C" int bind_texture_spin_d(dev_spinor_d* s, int i){
 
 extern "C" int unbind_texture_spin_d(int i){
   cudaUnbindTexture(spin_d_tex);
-return(1);
+return(0);
 }
 
 
@@ -275,24 +270,19 @@ return(1);
 extern "C" int bind_texture_spin_dn_d(dev_spinor_d* s, int i){
   
   size_t size;
-  int offset;
   #ifdef MPI
     if(even_odd_flag){
       size = 12*sizeof(double2)*(VOLUME+RAND)/2;
-      offset = (VOLUME+RAND)/2;
     }
     else{
       size = 12*sizeof(double2)*(VOLUME+RAND);
-      offset = (VOLUME+RAND);
     }
   #else
     if(even_odd_flag){
       size = 12*sizeof(double2)*VOLUME/2;
-      offset = VOLUME/2;
     }
     else{
       size = 12*sizeof(double2)*VOLUME;
-      offset = VOLUME;
     }
   #endif
    
@@ -307,7 +297,7 @@ extern "C" int bind_texture_spin_dn_d(dev_spinor_d* s, int i){
 
 extern "C" int unbind_texture_spin_dn_d(int i){
   cudaUnbindTexture(spin_d_tex_dn);
-return(1);
+return(0);
 }
 
 

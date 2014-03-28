@@ -49,7 +49,6 @@ __global__ void dev_Hopping_Matrix_d(dev_su3_2v_d * gf, const dev_spinor_d * sin
 
 
   pos = start  +  threadIdx.x + blockDim.x * blockIdx.x;
-  int ix = threadIdx.x;
   
   
   if(pos < (start + size)){
@@ -225,7 +224,6 @@ __global__ void dev_Hopping_Matrix_updn_d(dev_su3_2v_d * gf, const dev_spinor_d 
 
 
   pos = start  +  threadIdx.x + blockDim.x * blockIdx.x;
-  int ix = threadIdx.x;
   
   
   if(pos < (start + size)){
@@ -515,7 +513,10 @@ extern "C" void dev_Qtm_pm_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinout,
   //spinin == odd
   //spinout == odd
   cudaError_t cudaerr;
-  int VolumeEO = VOLUME/2;
+  #ifndef MPI 
+    int VolumeEO = VOLUME/2;
+  #endif
+  
   //Q_{-}
 
 #ifdef MPI
@@ -968,9 +969,9 @@ void dev_Qtm_pm_ndpsi_d (dev_spinor_d * spinout_up, dev_spinor_d * spinout_dn,
   // spinin_up/dn  have to remain unchanged !!
   // spinout_up/dn  can be freely used
   
-
-  int N_sites  =    VOLUME/2;		// #lattice sites
-
+  #ifndef MPI
+    int N_sites  =    VOLUME/2;		// #lattice sites
+  #endif
 
   dev_spin_eo2_up_d = spinout_up;		// need no memory allocated
   dev_spin_eo2_dn_d = spinout_dn;

@@ -263,27 +263,27 @@ int main(int argc, char *argv[])
 
   init_operators();
 
-  #ifdef HAVE_GPU
-   if(usegpu_flag){
-    if(even_odd_flag){
-       init_mixedsolve_eo(g_gauge_field);
+
+if(usegpu_flag){
+  if(even_odd_flag){
+      init_mixedsolve_eo(g_gauge_field);
+  }
+  else{
+    init_mixedsolve(g_gauge_field);
+  }
+  #ifdef GPU_DOUBLE
+    /*init double fields w/o momenta*/
+    init_gpu_fields(0);
+  #endif
+  #ifdef TEMPORALGAUGE
+    int retval;
+    if((retval=init_temporalgauge(VOLUME, g_gauge_field)) !=0){
+      if(g_proc_id == 0) printf("Error while initializing temporal gauge. Aborting...\n");   
+      exit(200);
     }
-    else{
-      init_mixedsolve(g_gauge_field);
-    }
-    #ifdef GPU_DOUBLE
-      /*init double fields w/o momenta*/
-      init_gpu_fields(0);
-    #endif
-    #ifdef TEMPORALGAUGE
-      int retval;
-      if((retval=init_temporalgauge(VOLUME, g_gauge_field)) !=0){
-	if(g_proc_id == 0) printf("Error while initializing temporal gauge. Aborting...\n");   
-	exit(200);
-      }
-    #endif
-   }//usegpu_flag
-  #endif  
+  #endif
+}//usegpu_flag
+  
   
   /* this could be maybe moved to init_operators */
 #ifdef _USE_HALFSPINOR
@@ -518,8 +518,8 @@ int main(int argc, char *argv[])
   free_omp_accumulators();
 #endif
 
-#ifdef HAVE_GPU
- if(usegpu_flag){
+
+if(usegpu_flag){
   finalize_mixedsolve();
   #ifdef GPU_DOUBLE
     finalize_gpu_fields();
@@ -527,8 +527,8 @@ int main(int argc, char *argv[])
     #ifdef TEMPORALGAUGE
       finalize_temporalgauge();
     #endif
- }
-#endif
+}
+
 
 
   free_blocks();

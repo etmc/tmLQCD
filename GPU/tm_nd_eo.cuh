@@ -326,7 +326,7 @@ __global__ void dev_nd_linalg3_gamma5 (dev_spinor * s1_up, dev_spinor * s1_dn,
 				dev_spinor * s2_up, dev_spinor * s2_dn,  
 				dev_spinor * sout_up, dev_spinor * sout_dn, float epsbar, float sign
 				) {
-  dev_spinor s1[6], s3[6], sout[6], slocal[6], save_up[6], save_dn[6];	
+  dev_spinor s1[6], s3[6], sout[6], slocal[6];	
   int pos = threadIdx.x + blockDim.x*blockIdx.x;
   dev_complex pm_imu = dev_initcomplex(0.0, sign * mubar);
   
@@ -342,9 +342,7 @@ __global__ void dev_nd_linalg3_gamma5 (dev_spinor * s1_up, dev_spinor * s1_dn,
       dev_read_spinor(&(s3[0]), &(s2_up[pos]));  
       dev_read_spinor(&(slocal[0]), &(s2_dn[pos])); 
     #endif
-    //store s2_up/dn in local variables
-    //dev_copy_spinor_local(&(slocal[0]), &(save_dn[0]));
-    //dev_copy_spinor_local(&(s3[0]), &(save_up[0]));    
+   
     
     #ifdef RELATIVISTIC_BASIS
       dev_skalarmult_gamma5_spinor_rel(&(sout[0]), pm_imu, &(slocal[0]) );
@@ -518,7 +516,7 @@ __global__ void dev_nd_linalg4_gamma5 (dev_spinor * s1_up, dev_spinor * s1_dn,
 				dev_spinor * s2_up, dev_spinor * s2_dn,  
 				dev_spinor * sout_up, dev_spinor * sout_dn, float epsbar, float sign
 				) {
-  dev_spinor s1[6], s3[6], sout[6], slocal[6], save_up[6], save_dn[6];	
+  dev_spinor s1[6], s3[6], sout[6], slocal[6];	
   int pos = threadIdx.x + blockDim.x*blockIdx.x;
   dev_complex pm_imu = dev_initcomplex(0.0, sign * mubar);
   
@@ -532,10 +530,7 @@ __global__ void dev_nd_linalg4_gamma5 (dev_spinor * s1_up, dev_spinor * s1_dn,
     #else
       dev_read_spinor(&(slocal[0]), &(s2_up[pos]));    
       dev_read_spinor(&(s3[0]), &(s2_dn[pos]));  
-    #endif 
-    //store s2_up/dn in local variables
-    //dev_copy_spinor_local(&(slocal[0]), &(save_up[0]));
-    //dev_copy_spinor_local(&(s3[0]), &(save_dn[0]));       
+    #endif       
     
     #ifdef RELATIVISTIC_BASIS
       dev_skalarmult_gamma5_spinor_rel(&(sout[0]), pm_imu, &(slocal[0]) );
@@ -619,10 +614,7 @@ __global__ void dev_nd_linalg4_gamma5 (dev_spinor * s1_up, dev_spinor * s1_dn,
     #else    
       dev_read_spinor(&(slocal[0]), &(s2_dn[pos]));    
       dev_read_spinor(&(s3[0]), &(s2_up[pos]));  
-    #endif
-    //restore s2_up/dn from local variables
-    //dev_copy_spinor_local(&(save_dn[0]), &(slocal[0]));
-    //dev_copy_spinor_local(&(save_up[0]), &(s3[0]));     
+    #endif  
     
     
     #ifdef RELATIVISTIC_BASIS
@@ -1048,7 +1040,6 @@ void dev_Qtm_pm_ndpsi_old (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   /////////////////////
   
   int N_sites  =    VOLUME/2;		// #lattice sites
-  int N_floats = 24*VOLUME/2;		// #floats
   
   
   
@@ -1667,7 +1658,6 @@ void dev_Qtm_pm_ndpsi_mpi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   // LOCAL VARIABLES //
   /////////////////////
   
-  int N_sites  =    VOLUME/2;		// #lattice sites
   int N_floats = 24*VOLUME/2;		// #floats
   
     
@@ -1720,6 +1710,8 @@ void dev_Qtm_pm_ndpsi_mpi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
   ////////////////////////////
   
 #if ASYNC == 0
+
+  int N_sites  =    VOLUME/2;		// #lattice sites
 
   ////////////////////////////
   // (M_oe) (Mee^-1) (M_eo) //

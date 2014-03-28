@@ -151,6 +151,8 @@ inline void rmQuotes(char *str){
   int compute_topsus;
   double mstarsq;
   int no_sources_z2;
+  
+  int gpu_parsed = 0;
   int usegpu_flag;
   int max_innersolver_it;
   int device_num;
@@ -412,8 +414,7 @@ inline void rmQuotes(char *str){
 
 <INITGPU>Init{SPC}* {
  if(myverbose) printf("Initialising GPU line %d\n", line_of_file); 
- usegpu_flag = 1;
-  if(myverbose!=0) printf("  Using help of GPU for inversions\n"); 
+ gpu_parsed = 1; 
  BEGIN(GPU);
  }
 <GPU>{
@@ -2115,6 +2116,7 @@ int read_input(char * conf_file){
   compute_topsus = _default_compute_topsus;
   mstarsq = _default_mstarsq;
   no_sources_z2 = _default_no_sources_z2;
+  usegpu_flag = _default_usegpu_flag;
   device_num = _default_device_num;
   min_innersolver_it = _default_min_innersolver_it;
   max_mms_shifts = _default_max_mms_shifts;
@@ -2151,6 +2153,25 @@ int read_input(char * conf_file){
   if(PropInfo.format == -1) PropInfo.format = SourceInfo.format;
   g_rgi_C0 = 1. - 8.*g_rgi_C1;
 
+  
+  #ifdef HAVE_GPU
+    /* Here we do sanity checks for GPU functionality and if passed 
+       set usegpu_flag, if a InitGPU block has been parsed (if gpu_parsed is set)
+       Otherwise it results to be 0 (the default)
+    */
+    if(gpu_parsed){
+      #ifdef MPI
+	#ifdef PARALLELT
+          if(myverbose!=0) printf("Using GPU for inversions\n");
+	  usegpu_flag = 1;
+	#else
+          printf("Warning: this parallelization is not supported: Not using GPU\n");
+        #endif
+      #else
+	usegpu_flag = 1;
+      #endif
+    }
+  #endif
 
   fclose(yyout);
   fclose(yyin);

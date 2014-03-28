@@ -704,41 +704,41 @@ void order_sw_inv_gpu(float2* h2d){
 void init_gpu_clover_fields(){
 
   cudaError_t cudaerr;
-  printf("Initializing clover fields on gpu...\n");
+  if(g_cart_id == 0) printf("Initializing clover fields on gpu...\n");
   //sw - field
   size_t sw_size = 6*VOLUME*9*sizeof(float2); /* float2 */
   if((void*)(h2d_sw = (float2*)malloc(sw_size)) == NULL){
-    printf("Could not allocate memory for h2d_sw. Aborting...\n");
+    if(g_cart_id == 0) printf("Could not allocate memory for h2d_sw. Aborting...\n");
     exit(201);
   } // Allocate conversion sw field on host 
   
   if((cudaerr=cudaMalloc((void **) &dev_sw, sw_size)) != cudaSuccess){
-    printf("Error in init_gpu_clover_fields(): Memory allocation of sw field failed. Aborting...\n");
+    if(g_cart_id == 0) printf("Error in init_gpu_clover_fields(): Memory allocation of sw field failed with error %d. Aborting...\n", cudaerr);
     exit(201);
   }   // Allocate array on device 
   
-  printf("Rearranging sw field on gpu...\n");
+  if(g_cart_id == 0) printf("Rearranging sw field on gpu...\n");
   order_sw_gpu(h2d_sw);
   cudaMemcpy(dev_sw, h2d_sw, sw_size, cudaMemcpyHostToDevice);
   
   //sw_inv - field
   size_t sw_inv_size = 8*VOLUME*9*sizeof(float2); /* float2 */
   if((void*)(h2d_sw_inv = (float2*)malloc(sw_inv_size)) == NULL){
-    printf("Could not allocate memory for h2d_sw_inv. Aborting...\n");
+    if(g_cart_id == 0) printf("Could not allocate memory for h2d_sw_inv. Aborting...\n");
     exit(201);
   } // Allocate conversion sw_inv field on host 
   
   if((cudaerr=cudaMalloc((void **) &dev_sw_inv, sw_inv_size)) != cudaSuccess){
-    printf("Error in init_gpu_clover_fields(): Memory allocation of sw field failed. Aborting...\n");
+    if(g_cart_id == 0) printf("Error in init_gpu_clover_fields(): Memory allocation of sw field failed with error %d. Aborting...\n", cudaerr);
     exit(201);
   }   // Allocate array on device 
   
-  printf("Rearranging sw_inv field on gpu...\n");  
+  if(g_cart_id == 0) printf("Rearranging sw_inv field on gpu...\n");  
   order_sw_inv_gpu(h2d_sw_inv);
   cudaMemcpy(dev_sw_inv, h2d_sw_inv, sw_inv_size, cudaMemcpyHostToDevice);   
 
   
-  printf("Finished clover gpu initialisation\n");   
+  if(g_cart_id == 0) printf("Finished clover gpu initialisation\n");   
 }
 
 
@@ -1005,9 +1005,10 @@ __global__ void dev_clover_gamma5(const int ieo, const int * index_site, dev_spi
 extern "C" void dev_Qsw_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int gridsize, dim3 blocksize, int gridsize2, int blocksize2){
   //spinin == odd
   //spinout == odd
-  
-  int VolumeEO = VOLUME/2;
-  
+  #ifndef MPI
+    int VolumeEO = VOLUME/2;
+  #endif
+    
   #ifdef USETEXTURE
     bind_texture_sw(dev_sw);
     bind_texture_sw_inv(dev_sw_inv);  
@@ -1161,8 +1162,7 @@ void test_clover_operator(spinor* const Q, const int N){
      }
      else{
        gridsize = (int) VOLUME/2/blockdim4 + 1;
-     }
-     int griddim4 = gridsize;    
+     }   
      
   int grid[6];
   grid[0]=LX; grid[1]=LY; grid[2]=LZ; grid[3]=T; grid[4]=VOLUME/2; 
@@ -1194,8 +1194,8 @@ void test_clover_operator(spinor* const Q, const int N){
 //   cudaMemcpy(dev_eoidx_even, eoidx_even, idxsize, cudaMemcpyHostToDevice);
 //   cudaMemcpy(dev_eoidx_odd, eoidx_odd, idxsize, cudaMemcpyHostToDevice);
 //    
-        if (g_proc_id == 0) {
-  	  int host_check_VOLUMEPLUSRAND, host_check_RAND;
+        if (g_cart_id == 0) {
+  	  int host_check_VOLUMEPLUSRAND;
   	  int host_check_VOLUME;
   	  int host_check_Offset;
   	  cudaMemcpyFromSymbol(&host_check_VOLUMEPLUSRAND, dev_VOLUMEPLUSRAND, sizeof(int));
@@ -1378,27 +1378,15 @@ extern "C" int dev_cg_eo_clover(
 
  
  //this is the partitioning for the HoppingMatrix kernel
- #ifdef GPU_3DBLOCK
-   dim3 blockdim3 (BLOCK,BLOCKSUB,BLOCKSUB);
-   int blocksize = BLOCK*BLOCKSUB*BLOCKSUB;
-   if( VOLUME/2 % blocksize == 0){
-     gridsize = (int) VOLUME/2/blocksize;
-   }
-   else{
-     gridsize = (int) VOLUME/2/blocksize + 1;
-   }
-   int griddim3 = gridsize;
- #else
-   dim3 blockdim3(BLOCK);
-   int blocksize = BLOCK;   
-   if( VOLUME/2 % blocksize == 0){
-     gridsize = (int) VOLUME/2/blocksize;
-   }
-   else{
-     gridsize = (int) VOLUME/2/blocksize + 1;
-   }
-   int griddim3 = gridsize;
- #endif 
+  dim3 blockdim3(BLOCK);
+  int blocksize = BLOCK;   
+  if( VOLUME/2 % blocksize == 0){
+    gridsize = (int) VOLUME/2/blocksize;
+  }
+  else{
+    gridsize = (int) VOLUME/2/blocksize + 1;
+  }
+  int griddim3 = gridsize;
 
 
  
@@ -1415,11 +1403,7 @@ extern "C" int dev_cg_eo_clover(
  #ifndef LOWOUTPUT
     if (g_proc_id == 0) {
       printf("griddim3 = %d\n", griddim3);
-      #ifdef GPU_3DBLOCK
-        printf("blockdim3.x = %d, blockdim3.y = %d, blockdim3.z = %d\n", blockdim3.x, blockdim3.y, blockdim3.z);
-      #else
-        printf("blockdim3 = %d\n", blockdim3.x);
-      #endif
+      printf("blockdim3 = %d\n", blockdim3.x);
       printf("griddim4 = %d\n", griddim4); 
       printf("blockdim4 = %d\n", blockdim4);          
     }
@@ -1478,16 +1462,7 @@ extern "C" int dev_cg_eo_clover(
  }
  #endif
  //init blas
- #ifndef MPI
-    #ifdef CUDA_45
-      cublasHandle_t handle;
-      cublasCreate(&handle);
-    #else
-      cublasInit();
-    #endif 
- #else
-  init_blas(VOLUME/2);
- #endif 
+ start_blas(VOLUME/2);
 
     if (g_proc_id == 0) {
       if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
@@ -1549,11 +1524,8 @@ extern "C" int dev_cg_eo_clover(
     double effectiveflops;	// will used to count the "effective" flop's (from the algorithmic perspective)
     double hoppingflops = 1608.0;
     double matrixflops  = 2*(2*(hoppingflops + 984)); //that is for dev_Qsw_pm_psi
-    #ifdef MPI
-      double allflops;				// flops added for all processes
-    #endif
-      double starteffective;
-      double stopeffective;
+    double starteffective;
+    double stopeffective;
    // timer
    starteffective = gettime();
   #endif
@@ -1568,7 +1540,7 @@ extern "C" int dev_cg_eo_clover(
   
   if((cudaerr=cudaGetLastError()) != cudaSuccess){
     if (g_proc_id == 0) printf("%s\n", cudaGetErrorString(cudaerr));
-    if (g_proc_id == 0) printf("Error in dev_cg_eo: CUDA error after Matrix application\n", cudaGetErrorString(cudaerr));
+    if (g_proc_id == 0) printf("Error in dev_cg_eo_clover: CUDA error after Matrix application\n", cudaGetErrorString(cudaerr));
     exit(200);
   }
   
@@ -1706,15 +1678,7 @@ extern "C" int dev_cg_eo_clover(
   cudaFree(rk);
   cudaFree(alpha);
   cudaFree(beta);
-  #ifndef MPI
-    #ifdef CUDA_45  
-      cublasDestroy(handle);
-    #else
-      cublasShutdown();
-    #endif 
-  #else
-   finalize_blas();
-  #endif 
+  stop_blas();
 
   return(i);
 }
@@ -1767,41 +1731,24 @@ extern "C" int mixed_solve_eo_clover (spinor * const P, spinor * const Q, const 
   //update the gpu single gauge_field
   update_gpu_gf(g_gauge_field);
 
-  #ifdef GPU_DOUBLE
-   size_t dev_spinsize_d = 6*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd !   
-   int gridsize;
-     //this is the partitioning for the HoppingMatrix kernel
-     int blockdim3 = BLOCKD;
-     if( VOLUME/2 % blockdim3 == 0){
-       gridsize = (int) VOLUME/2/blockdim3;
-     }
-     else{
-       gridsize = (int) VOLUME/2/blockdim3 + 1;
-     }
-     int griddim3 = gridsize;
-   
-     //this is the partitioning for dev_mul_one_pm...
-     int blockdim4 = BLOCK2D;
-     if( VOLUME/2 % blockdim4 == 0){
-       gridsize = (int) VOLUME/2/blockdim4;
-     }
-     else{
-       gridsize = (int) VOLUME/2/blockdim4 + 1;
-     }
-     int griddim4 = gridsize;  
-     //printf("gd3: %d\t bd3: %d\t gd4: %d\t bd4: %d\n", griddim3, blockdim3, griddim4, blockdim4);
-    update_constants_d(dev_grid);
-    update_gpu_gf_d(g_gauge_field);
-  #endif 
   
   //initialize solver fields 
   spinor ** solver_field = NULL;
   const int nr_sf = 4;
   init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);  
+  //allocate solver fields non-eo!
+  init_mixedsolve_fields(0);
+  
   //FIXME this has to go somewhere else
   init_gpu_clover_fields();
 
-  
+  // FIXME implement temporal gauge
+  // temporarily we fix it with a breakout test
+  #ifdef TEMPORALGAUGE
+    printf("Error: GPU clover and TEMPORALGAUGE (defined in GPU/cudadefs.h) not implemented.\n");
+    printf("Please recompile without TEMPORALGAUGE. Aborting...\n");
+    exit(-1);
+  #endif
   
   //test_clover_operator(Q, N);
   
@@ -1833,33 +1780,9 @@ extern "C" int mixed_solve_eo_clover (spinor * const P, spinor * const Q, const 
 
 
   
-  #ifdef GPU_DOUBLE
-    //FIXME
-    //test_double_operator(Q,N);
-    double testnorm;
-    
-    /*!!!!  WHY IS P NONZERO????? */
-    //zero_spinor_field(P,N);
-    
-    order_spin_gpu(Q, h2d_spin_d);
-    cudaMemcpy(dev_spin0_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);
-    //cudaThreadSynchronize();
-    
-
-    order_spin_gpu(P, h2d_spin_d);
-    cudaMemcpy(dev_spin1_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice); 
-    cudaMemcpy(dev_spin2_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);     
-    cudaMemcpy(dev_spin3_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice); 
-   /*
-    cudaMemcpy(dev_spin0_d, Q, dev_spinsize_d, cudaMemcpyHostToDevice);
-    cudaMemcpy(dev_spin1_d, P, dev_spinsize_d, cudaMemcpyHostToDevice); 
-    cudaMemcpy(dev_spin2_d, P, dev_spinsize_d, cudaMemcpyHostToDevice);    
-  */ 
-  #else  
     assign(solver_field[0],Q,N);
     zero_spinor_field(solver_field[1],  N);//spin2 = x_k
     zero_spinor_field(solver_field[2],  N);
-  #endif
     
   #ifndef LOWOUTPUT
     if(g_proc_id==0) printf("Initial residue: %.16e\n",rk);
@@ -1871,23 +1794,11 @@ for(iter=0; iter<max_iter; iter++){
    #ifndef LOWOUTPUT
    if(g_proc_id==0) printf("Applying double precision EO Dirac-Op Q_{-}Q{+}...\n");
    #endif
-     // r_k = b - D x_k 
-   #ifdef GPU_DOUBLE
-   //FIXME
-   /*dev_Qsw_pm_psi_d(dev_spin2_d, dev_spin3_d,  
-		      dev_spin_eo1_d, dev_spin_eo2_d, 
-		      griddim3, blockdim3, griddim4, blockdim4,
-		      dev_eoidx_even, dev_eoidx_odd, 
-		      dev_nn_eo, dev_nn_oe); 
-		      */
-     dev_diff_d<<<griddim4,blockdim4>>>(dev_spin0_d,dev_spin0_d,dev_spin3_d);
-     rk = double_dotprod(dev_spin0_d,dev_spin0_d,N);
-   #else   
-     Qsw_pm_psi(solver_field[3], solver_field[2]);
-     diff(solver_field[0],solver_field[0],solver_field[3],N);
-
-     rk = square_norm(solver_field[0], N, 1);
-   #endif
+   
+   // r_k = b - D x_k   
+   Qsw_pm_psi(solver_field[3], solver_field[2]);
+   diff(solver_field[0],solver_field[0],solver_field[3],N);
+   rk = square_norm(solver_field[0], N, 1);
    
    #ifdef GF_8
     if(isnan(rk)){
@@ -1900,28 +1811,7 @@ for(iter=0; iter<max_iter; iter++){
    
    if(((rk <= eps) && (rel_prec == 0)) || ((rk <= eps*sourcesquarenorm) && (rel_prec == 1)))
    {
-/*     
 
-    #ifdef GPU_DOUBLE
-      dev_Qtm_minus_psi_d(dev_spin1_d, dev_spin2_d,  
-		      dev_spin_eo1_d, 
-		      griddim3, blockdim3, griddim4, blockdim4,
-		      dev_eoidx_even, dev_eoidx_odd, 
-		      dev_nn_eo, dev_nn_oe);       
-      cudaMemcpy(h2d_spin_d, dev_spin2_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
-      unorder_spin_gpu(h2d_spin_d, solver_field[3]);  
-      assign(P, solver_field[3], N);     
-    #else
-     //multiply with Qtm_minus_psi (for non gpu done in invert_eo.c)
-     Qtm_minus_psi(solver_field[3], solver_field[1]);
-     assign(P, solver_field[3], N);
-    #endif
-
-*/
-    #ifdef GPU_DOUBLE
-      cudaMemcpy(h2d_spin_d, dev_spin1_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
-      unorder_spin_gpu(h2d_spin_d, solver_field[1]);    
-    #endif
      //multiply with Qtm_minus_psi (for non gpu done in invert_eo.c)
      Qsw_minus_psi(solver_field[3], solver_field[1]);
      assign(P, solver_field[3], N);
@@ -1935,30 +1825,13 @@ for(iter=0; iter<max_iter; iter++){
      #endif
      finalize_solver(solver_field, nr_sf);
      finalize_gpu_clover_fields();
+     finalize_mixedsolve_fields();     
      return(totalcount);  
    }
    
-  //initialize spin fields on device
-  #ifndef HALF
-    #ifdef GPU_DOUBLE
-      dev_d2f<<<griddim4,blockdim4>>>(dev_spinin, dev_spin0_d);
-      //cudaThreadSynchronize();
-      if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
-        if (g_proc_id == 0) printf("Error in linsolve_eo_gpu: %s\n", cudaGetErrorString(cudaGetLastError()));
-        exit(100);
-      }      
-    #else   
-      convert2REAL4_spin(solver_field[0],h2d_spin);
-      cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);     
-    #endif
-  #else
-    convert2REAL4_spin_half(solver_field[0],h2d_spin, h2d_spin_norm); 
-    cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice); 
-  // also copy half spinor norm and reliable (float) source
-    cudaMemcpy(dev_spinin_norm, h2d_spin_norm, dev_normsize, cudaMemcpyHostToDevice);
-    convert2REAL4_spin(solver_field[0],h2d_spin_reliable);
-    cudaMemcpy(dev_spin1_reliable, h2d_spin_reliable, dev_spinsize_reliable, cudaMemcpyHostToDevice); 
-  #endif
+  convert2REAL4_spin(solver_field[0],h2d_spin);
+  cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);     
+
 
   
   
@@ -1997,38 +1870,25 @@ for(iter=0; iter<max_iter; iter++){
    printf("g_mu3 = %f \n", g_mu3);
    #endif
    // copy back
-   #ifdef GPU_DOUBLE
-     dev_add_f2d<<<griddim4,blockdim4>>>(dev_spin1_d,dev_spin1_d,dev_spinout);
-     dev_f2d<<<griddim4,blockdim4>>>(dev_spin2_d,dev_spinout);
-   #else    
-     cudaMemcpy(h2d_spin, dev_spinout, dev_spinsize, cudaMemcpyDeviceToHost);
-     #ifdef HALF
-      cudaMemcpy(h2d_spin_norm, dev_spinout_norm, dev_normsize, cudaMemcpyDeviceToHost);
-     #endif
-     if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
-       printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-       printf("Error code is: %f\n",cudaerr);       
-     }
-     #ifndef HALF
-       convert2double_spin(h2d_spin, solver_field[2]);
-     #else
-       convert2double_spin_half(h2d_spin, h2d_spin_norm, solver_field[2]);
-     #endif
-   
-     // x_(k+1) = x_k + p_k
-     add(solver_field[1],solver_field[1],solver_field[2],N);
-   #endif
+    
+  cudaMemcpy(h2d_spin, dev_spinout, dev_spinsize, cudaMemcpyDeviceToHost);
+  if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
+    printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+    printf("Error code is: %f\n",cudaerr);       
+  }
+  convert2double_spin(h2d_spin, solver_field[2]);
+
+
+    // x_(k+1) = x_k + p_k
+    add(solver_field[1],solver_field[1],solver_field[2],N);
+
    outercount ++;   
 }// outer loop 
     
-     if(g_proc_id==0) printf("Did NOT reach solver precision of eps=%.2e\n",eps);
-     //multiply with Qtm_minus_psi (for non gpu done in invert_eo.c)
-   #ifdef GPU_DOUBLE
-      cudaMemcpy(h2d_spin_d, dev_spin1_d, dev_spinsize_d, cudaMemcpyDeviceToHost);
-      unorder_spin_gpu(h2d_spin_d, solver_field[1]);   
-   #endif      
-     Qsw_minus_psi(solver_field[3], solver_field[1]);
-     assign(P, solver_field[3], N);
+    if(g_proc_id==0) printf("Did NOT reach solver precision of eps=%.2e\n",eps);
+    //multiply with Qtm_minus_psi (for non gpu done in invert_eo.c)      
+    Qsw_minus_psi(solver_field[3], solver_field[1]);
+    assign(P, solver_field[3], N);
     
 
     assert((stop = clock())!=-1);
@@ -2037,6 +1897,7 @@ for(iter=0; iter<max_iter; iter++){
 
     finalize_solver(solver_field, nr_sf);
     finalize_gpu_clover_fields();
+    finalize_mixedsolve_fields();     
   return(-1);
 }
 

@@ -205,29 +205,24 @@ double apply_Z_ndpsi(spinor * const k_up, spinor * const k_dn,
 		     solver_pm_t * solver_pm) {
   monomial * mnl = &monomial_list[id];
 
- #ifdef HAVE_GPU
+
   if(usegpu_flag){ 
-   #ifdef TEMPORALGAUGE
-     to_temporalgauge_mms(g_gauge_field, l_up, l_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
-   #endif        
-   mnl->iter0 += dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-			     l_up, l_dn,
-			     solver_pm); 
-   #ifdef TEMPORALGAUGE
-     from_temporalgauge_mms(l_up, l_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
-   #endif 			     
+    #ifdef TEMPORALGAUGE
+      to_temporalgauge_mms(g_gauge_field, l_up, l_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
+    #endif        
+    mnl->iter0 += dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+			      l_up, l_dn,
+			      solver_pm); 
+    #ifdef TEMPORALGAUGE
+      from_temporalgauge_mms(l_up, l_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
+    #endif 			     
   }
   else{
-  mnl->iter0 += cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-			     l_up, l_dn,
-			     solver_pm);  
+    mnl->iter0 += cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+			      l_up, l_dn,
+			      solver_pm); 
   }
- #else   
-  
-  mnl->iter0 += cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-			     l_up, l_dn,
-			     solver_pm);  
- #endif 
+
   // apply R to the pseudo-fermion fields
   assign(k_up, l_up, VOLUME/2);
   assign(k_dn, l_dn, VOLUME/2);
@@ -239,29 +234,23 @@ double apply_Z_ndpsi(spinor * const k_up, spinor * const k_dn,
   }
 
   // apply R a second time
- #ifdef HAVE_GPU
   if(usegpu_flag){ 
-   #ifdef TEMPORALGAUGE
-     to_temporalgauge_mms(g_gauge_field, k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
-   #endif        
-      dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-	       k_up, k_dn,
-	       solver_pm);
-   #ifdef TEMPORALGAUGE
-     from_temporalgauge_mms(k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
-   #endif 			     
+    #ifdef TEMPORALGAUGE
+      to_temporalgauge_mms(g_gauge_field, k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
+    #endif        
+	dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+		k_up, k_dn,
+		solver_pm);
+    #ifdef TEMPORALGAUGE
+      from_temporalgauge_mms(k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
+    #endif 			     
   }
   else{
     cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-	       k_up, k_dn,
-	       solver_pm);
+		k_up, k_dn,
+		solver_pm);
   }
- #else   
-   
-  cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-	       k_up, k_dn,
-	       solver_pm);
- #endif
+
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     assign_add_mul_r(k_up, g_chi_up_spinor_field[j], 
 		     mnl->rat.rmu[j], VOLUME/2);
@@ -291,25 +280,22 @@ void check_C_ndpsi(spinor * const k_up, spinor * const k_dn,
 		   const int id, hamiltonian_field_t * const hf,
 		   solver_pm_t * solver_pm) {
   monomial * mnl = &monomial_list[id];
- #ifdef HAVE_GPU
+
   if(usegpu_flag){ 
-   #ifdef TEMPORALGAUGE
-     to_temporalgauge_mms(g_gauge_field, l_up, l_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
-   #endif        
-     mnl->iter0 = dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-			     l_up, l_dn, solver_pm);
-   #ifdef TEMPORALGAUGE
-     from_temporalgauge_mms(l_up, l_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
-   #endif 			     
+    #ifdef TEMPORALGAUGE
+      to_temporalgauge_mms(g_gauge_field, l_up, l_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
+    #endif        
+      mnl->iter0 = dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+			      l_up, l_dn, solver_pm);
+    #ifdef TEMPORALGAUGE
+      from_temporalgauge_mms(l_up, l_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
+    #endif 			     
   }
   else{
     mnl->iter0 = cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-			     l_up, l_dn, solver_pm);
+			      l_up, l_dn, solver_pm);
   }
- #else     
-  mnl->iter0 = cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-			     l_up, l_dn, solver_pm);
- #endif
+
   assign(k_up, l_up, VOLUME/2);
   assign(k_dn, l_dn, VOLUME/2);
 
@@ -332,28 +318,24 @@ void check_C_ndpsi(spinor * const k_up, spinor * const k_dn,
   }
   //apply R
   solver_pm->shifts = mnl->rat.mu;
- #ifdef HAVE_GPU
+
   if(usegpu_flag){ 
-   #ifdef TEMPORALGAUGE
-     to_temporalgauge_mms(g_gauge_field, k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
-   #endif        
-     dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-	       k_up, k_dn,
-	       solver_pm);
-   #ifdef TEMPORALGAUGE
-     from_temporalgauge_mms(k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
-   #endif 			     
+    #ifdef TEMPORALGAUGE
+      to_temporalgauge_mms(g_gauge_field, k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
+    #endif        
+      dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+		k_up, k_dn,
+		solver_pm);
+    #ifdef TEMPORALGAUGE
+      from_temporalgauge_mms(k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
+    #endif 			     
   }
   else{
     cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-	       k_up, k_dn,
-	       solver_pm);
+		k_up, k_dn,
+		solver_pm);
   }
- #else  
-  cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-	       k_up, k_dn,
-	       solver_pm);
- #endif
+
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     assign_add_mul_r(k_up, g_chi_up_spinor_field[j], 
 		     mnl->rat.rmu[j], VOLUME/2);
@@ -362,25 +344,22 @@ void check_C_ndpsi(spinor * const k_up, spinor * const k_dn,
   }
   // apply C^dagger
   solver_pm->shifts = mnl->rat.nu;
- #ifdef HAVE_GPU
+
   if(usegpu_flag){ 
-   #ifdef TEMPORALGAUGE
-     to_temporalgauge_mms(g_gauge_field, k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
-   #endif        
-     dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-	       k_up, k_dn, solver_pm);
-   #ifdef TEMPORALGAUGE
-     from_temporalgauge_mms(k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
-   #endif 			     
+    #ifdef TEMPORALGAUGE
+      to_temporalgauge_mms(g_gauge_field, k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
+    #endif        
+      dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+		k_up, k_dn, solver_pm);
+    #ifdef TEMPORALGAUGE
+      from_temporalgauge_mms(k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
+    #endif 			     
   }
   else{
     cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-	       k_up, k_dn, solver_pm);
+		k_up, k_dn, solver_pm);
   }
- #else 
-  cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-	       k_up, k_dn, solver_pm);
- #endif
+
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     // Q_h * tau^1 + i nu_j
     if(mnl->type == NDCLOVERRATCOR || mnl->type == NDCLOVERRAT) {

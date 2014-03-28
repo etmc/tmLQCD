@@ -395,7 +395,6 @@ int main(int argc,char *argv[]) {
     fclose(countfile);
   }
 
-  #ifdef HAVE_GPU
   if(usegpu_flag){
     init_mixedsolve_eo(g_gauge_field);
     /*init double fields with momentum field*/
@@ -408,7 +407,6 @@ int main(int argc,char *argv[]) {
       }
     #endif
   }
-  #endif
 
 
   /* Loop for measurements */
@@ -554,15 +552,15 @@ int main(int argc,char *argv[]) {
 #ifdef OMP
   free_omp_accumulators();
 #endif
-#ifdef HAVE_GPU
- if(usegpu_flag){
-  finalize_mixedsolve();
-  finalize_gpu_fields();
-    #ifdef TEMPORALGAUGE
-      finalize_temporalgauge();
-    #endif
- }
-#endif
+
+  if(usegpu_flag){
+    finalize_mixedsolve();
+    finalize_gpu_fields();
+      #ifdef TEMPORALGAUGE
+	finalize_temporalgauge();
+      #endif
+  }
+
   free_gauge_tmp();
   free_gauge_field();
   free_geometry_indices();

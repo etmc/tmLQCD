@@ -535,11 +535,8 @@ __device__ void dev_hopping_kernel(const dev_su3_2v * gf, const dev_spinor * sin
     dev_spinor shelp1[6];
 
 
-  #ifdef GPU_3DBLOCK
+
     dev_su3_pad gfsmem;  
-  #else
-    dev_su3_pad gfsmem;  
-  #endif
 
 
  
@@ -912,13 +909,8 @@ __global__ void dev_Hopping_Matrix(const dev_su3_2v * gf, const dev_spinor * sin
     dev_spinor ssum[6];
 
 
-  #ifdef GPU_3DBLOCK
-    pos = start  
-          + (threadIdx.z + blockDim.z*(threadIdx.y + blockDim.y*(threadIdx.x))) 
-          + blockDim.z*blockDim.y*blockDim.x*blockIdx.x;     
-  #else
+
     pos = start  +  threadIdx.x + blockDim.x * blockIdx.x;  
-  #endif
 
   
   
@@ -958,14 +950,7 @@ __global__ void dev_Hopping_Matrix_ext(const dev_su3_2v * gf, const dev_spinor *
   int pos;
     dev_spinor ssum[6], shelp1[6];
 
-
-  #ifdef GPU_3DBLOCK
-    pos = start  
-          + (threadIdx.z + blockDim.z*(threadIdx.y + blockDim.y*(threadIdx.x))) 
-          + blockDim.z*blockDim.y*blockDim.x*blockIdx.x;     
-  #else 
     pos = start  +  threadIdx.x + blockDim.x * blockIdx.x;  
-  #endif
 
   
   
@@ -1029,16 +1014,11 @@ __global__ void dev_Hopping_Matrix_ext2(const dev_su3_2v * gf, const dev_spinor 
                                         const int * nn_evenodd, const int eo, int start, int size){
 
   int pos;
-    dev_spinor shelp1[6], ssum[6];
+    dev_spinor ssum[6];
 
 
-  #ifdef GPU_3DBLOCK
-    pos = start  
-          + (threadIdx.z + blockDim.z*(threadIdx.y + blockDim.y*(threadIdx.x))) 
-          + blockDim.z*blockDim.y*blockDim.x*blockIdx.x;     
-  #else
+
     pos = start  +  threadIdx.x + blockDim.x * blockIdx.x;  
-  #endif
 
   
   
@@ -1079,13 +1059,8 @@ __global__ void dev_Hopping_Matrix_ext3(const dev_su3_2v * gf, const dev_spinor 
     dev_spinor ssum[6], shelp1[6];
 
 
-  #ifdef GPU_3DBLOCK
-    pos = start  
-          + (threadIdx.z + blockDim.z*(threadIdx.y + blockDim.y*(threadIdx.x))) 
-          + blockDim.z*blockDim.y*blockDim.x*blockIdx.x;     
-  #else 
+
     pos = start  +  threadIdx.x + blockDim.x * blockIdx.x;  
-  #endif
 
   
   
@@ -1140,15 +1115,9 @@ __global__ void dev_Hopping_Matrix_updn(const dev_su3_2v * gf, const dev_spinor 
     dev_spinor shelp1_up[6], ssum_up[6];
     dev_spinor shelp1_dn[6], ssum_dn[6];
 
-  #ifdef GPU_3DBLOCK
-    dev_su3 gfsmem;  
-    pos = start  
-          + (threadIdx.z + blockDim.z*(threadIdx.y + blockDim.y*(threadIdx.x))) 
-          + blockDim.z*blockDim.y*blockDim.x*blockIdx.x;     
-  #else
+
     dev_su3 gfsmem;  
     pos = start  +  threadIdx.x + blockDim.x * blockIdx.x;  
-  #endif
 
   
   

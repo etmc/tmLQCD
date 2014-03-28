@@ -364,10 +364,7 @@ void HOPPING_ASYNC_D (dev_su3_2v_d * gf,
   int gridsize1;
   int gridsize2;
   
-  #ifdef GPU_3DBLOCK
-    fprintf(stderr, "Error in HOPPING_ASYNC_D: 3D blocks not implemented for MPI! Aborting...\n");
-    exit(200);
-  #endif
+
   
   #ifndef ASYNC_TSLICES
     int tSlices = 1; 
@@ -454,8 +451,7 @@ void HOPPING_ASYNC_D (dev_su3_2v_d * gf,
     }
     else{
       gridsize3 = (int) tSliceEO/blocksize3 + 1;
-    }
-    int griddim3 = gridsize3;  		
+    } 		
 		
                 //set the amount of data we need to transfer with mpi
       		#ifdef RELATIVISTIC_BASIS
@@ -655,10 +651,7 @@ void HOPPING_ASYNC_UPDN_D (dev_su3_2v_d * gf,
   int gridsize1;
   int gridsize2;
   
-  #ifdef GPU_3DBLOCK
-    fprintf(stderr, "Error in HOPPING_ASYNC_D: 3D blocks not implemented for MPI! Aborting...\n");
-    exit(200);
-  #endif
+
   
   #ifndef ASYNC_TSLICES
     int tSlices = 1; 
@@ -746,8 +739,7 @@ void HOPPING_ASYNC_UPDN_D (dev_su3_2v_d * gf,
     }
     else{
       gridsize3 = (int) tSliceEO/blocksize3 + 1;
-    }
-    int griddim3 = gridsize3;  
+    }  
     
                 //set the amount of data we need to transfer with mpi
       		#ifdef RELATIVISTIC_BASIS

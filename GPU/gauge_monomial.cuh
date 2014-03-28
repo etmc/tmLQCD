@@ -265,29 +265,13 @@ __global__ void he_cg_init_d (int* grid, double param_kappa, double param_mu, de
 
 
 extern "C" void update_constants_d(int *grid){
-  dev_complex_d h0,h1,h2,h3,mh0, mh1, mh2, mh3;
+  dev_complex_d h0,h1,h2,h3;
   
   h0.re = (double)creal(ka0);    h0.im = -(double)cimag(ka0);
   h1.re = (double)creal(ka1);    h1.im = -(double)cimag(ka1);
   h2.re = (double)creal(ka2);    h2.im = -(double)cimag(ka2);
   h3.re = (double)creal(ka3);    h3.im = -(double)cimag(ka3);
-  
-  mh0.re = -(double)creal(ka0);    mh0.im = (double)cimag(ka0);
-  mh1.re = -(double)creal(ka1);    mh1.im = (double)cimag(ka1);
-  mh2.re = -(double)creal(ka2);    mh2.im = (double)cimag(ka2);
-  mh3.re = -(double)creal(ka3);    mh3.im = (double)cimag(ka3);
-  
-  // try using constant mem for kappas
-  
-//   cudaMemcpyToSymbol(dev_k0c_d, &h0, sizeof(dev_complex_d)) ; 
-//   cudaMemcpyToSymbol(dev_k1c_d, &h1, sizeof(dev_complex_d)) ; 
-//   cudaMemcpyToSymbol(dev_k2c_d, &h2, sizeof(dev_complex_d)) ; 
-//   cudaMemcpyToSymbol(dev_k3c_d, &h3, sizeof(dev_complex_d)) ;
-//   
-//   cudaMemcpyToSymbol(dev_mk0c_d, &mh0, sizeof(dev_complex_d)) ; 
-//   cudaMemcpyToSymbol(dev_mk1c_d, &mh1, sizeof(dev_complex_d)) ; 
-//   cudaMemcpyToSymbol(dev_mk2c_d, &mh2, sizeof(dev_complex_d)) ; 
-//   cudaMemcpyToSymbol(dev_mk3c_d, &mh3, sizeof(dev_complex_d)) ;  
+   
   
   he_cg_init_d<<< 1, 1 >>> (grid, (double) g_kappa, (double)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
   // BEWARE in dev_tm_dirac_kappa we need the true mu (not 2 kappa mu!)
