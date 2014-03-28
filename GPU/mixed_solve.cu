@@ -2172,7 +2172,6 @@ extern "C" void init_mixedsolve_eo(su3** gf){
   float hostplaq;
   int a = 0;
   //for(count=0; count<1; count++){
-    g_update_gauge_energy = 1;
     hostplaq = (float) measure_gauge_action()/(6.*VOLUME*g_nproc);
   //}
   assert((stop = clock())!=-1);
@@ -2193,7 +2192,6 @@ extern "C" void init_mixedsolve_eo(su3** gf){
   float hostrect;
   assert((start = clock())!=-1);
   //for(count=0; count<100; count++){
-    g_update_rectangle_energy = 1;
     hostrect = (float) measure_rectangles()/(12.*VOLUME*g_nproc);
   //}
   assert((stop = clock())!=-1);

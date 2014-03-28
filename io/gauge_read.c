@@ -23,7 +23,7 @@
 extern int gauge_precision_read_flag;
 paramsGaugeInfo GaugeInfo = { 0., 0, {0,0}, NULL, NULL};
 
-int read_gauge_field(char * filename) {
+int read_gauge_field(char * filename, su3 ** const gf) {
   int status = 0;
   char *header_type = NULL;
   READER *reader = NULL;
@@ -64,7 +64,7 @@ int read_gauge_field(char * filename) {
         fprintf(stderr, "Unable to verify integrity of the gauge field data.\n");
         return(-1);
       }
-      gauge_binary_status = read_binary_gauge_data(reader, &checksum_calc, ildgformat_input);
+      gauge_binary_status = read_binary_gauge_data(reader, &checksum_calc, ildgformat_input, gf);
       if (gauge_binary_status) {
         fprintf(stderr, "Gauge file reading failed at binary part, unable to proceed.\n");
         return(-1);
@@ -159,10 +159,10 @@ int read_gauge_field(char * filename) {
     }
   }
 
+  free(ildgformat_input);
   destruct_reader(reader);
 
   g_update_gauge_copy = 1;
-  g_update_gauge_energy = 1;
 
   return(0);
 }

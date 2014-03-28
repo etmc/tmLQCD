@@ -209,6 +209,9 @@ int main(int argc,char *argv[]) {
 #else
   status = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
 #endif
+  /* need temporary gauge field for gauge reread checks and in update_tm */
+  status += init_gauge_tmp(VOLUME);
+
   if (status != 0) {
     fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
     exit(0);
@@ -311,7 +314,7 @@ int main(int argc,char *argv[]) {
             gauge_input_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
       fflush(stdout);
     }
-    if( (status = read_gauge_field(gauge_input_filename)) != 0) {
+    if( (status = read_gauge_field(gauge_input_filename,g_gauge_field)) != 0) {
       fprintf(stderr, "Error %d while reading gauge field from %s\nAborting...\n", status, gauge_input_filename);
       exit(-2);
     }
@@ -354,7 +357,7 @@ int main(int argc,char *argv[]) {
     }
   }
 
-  plaquette_energy = measure_gauge_action( (const su3**) g_gauge_field);
+  plaquette_energy = measure_plaquette( (const su3**) g_gauge_field);
   if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
     rectangle_energy = measure_rectangles( (const su3**) g_gauge_field);
     if(g_proc_id == 0){
@@ -418,7 +421,7 @@ int main(int argc,char *argv[]) {
     return_check = return_check_flag && (trajectory_counter%return_check_interval == 0);
 
     accept = update_tm(&plaquette_energy, &rectangle_energy, datafilename, 
-		       return_check, Ntherm<trajectory_counter, trajectory_counter);
+		       return_check, trajectory_counter>=Ntherm, trajectory_counter);
     Rate += accept;
 
     /* Save gauge configuration all Nsave times */
@@ -441,6 +444,9 @@ int main(int argc,char *argv[]) {
        * then the configuration is currently stored in .conf.tmp, written out by update_tm.
        * In that case also a readback was performed, so no need to test .conf.tmp
        * In all other cases the gauge configuration still needs to be written out here. */
+
+      sprintf(tmp_filename,".conf.t%05d.tmp",trajectory_counter);
+
       if (!(return_check && accept))
         for (unsigned int attempt = 1; attempt <= io_max_attempts; ++attempt)
         {
@@ -467,18 +473,33 @@ int main(int argc,char *argv[]) {
           if (g_proc_id == 0) 
             fprintf(stdout, "# Write completed, verifying write...\n");
 
-          status = read_gauge_field(tmp_filename);
-          
-          if (!status) {
-            if (g_proc_id == 0)
-              fprintf(stdout, "# Write successfully verified.\n");
-            break;
+          for(int read_attempt = 0; read_attempt < 2; ++read_attempt) {
+            status = read_gauge_field(tmp_filename,gauge_tmp);        
+            if (!status) {
+              if (g_proc_id == 0)
+                fprintf(stdout, "# Write successfully verified.\n");
+              break;
+            } else {
+              if(g_proc_id==0) {
+                if(read_attempt+1 < 2) {
+                  fprintf(stdout, "# Reread attempt %d out of %d failed, trying again in %d seconds!\n",read_attempt+1,2,2);
+                } else {
+                  fprintf(stdout, "$ Reread attept %d out of %d failed, write will be reattempted!\n",read_attempt+1,2,2);
+                }
+              }
+              sleep(2);
+            }
           }
+
+          /* we broke out of the read attempt loop, still need to break out of the write attempt loop ! */
+          if(!status) {
+            break;
+          } 
 
           if (g_proc_id == 0) {
             fprintf(stdout, "# Writeout of %s returned no error, but verification discovered errors.\n", tmp_filename);
             fprintf(stdout, "# Potential disk or MPI I/O error.\n");
-            fprintf(stdout, "# This was attempt %d out of %d.\n", attempt, io_max_attempts);
+            fprintf(stdout, "# This was writing attempt %d out of %d.\n", attempt, io_max_attempts);
           }
 
           if (attempt == io_max_attempts)
@@ -546,9 +567,6 @@ int main(int argc,char *argv[]) {
     fclose(parameterfile);
   }
 
-#ifdef MPI
-  MPI_Finalize();
-#endif
 #ifdef OMP
   free_omp_accumulators();
 #endif
@@ -573,6 +591,10 @@ int main(int argc,char *argv[]) {
   }
   free(input_filename);
   free(filename);
+#ifdef MPI
+  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Finalize();
+#endif
   return(0);
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)

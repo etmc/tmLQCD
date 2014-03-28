@@ -90,6 +90,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       to_temporalgauge_invert_eo(g_gauge_field, Even, Odd); 
     #endif      
   }
+
     
  
     assign_mul_one_pm_imu_inv(Even_new, Even, +1., VOLUME/2);

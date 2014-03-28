@@ -68,7 +68,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 	      const int traj_counter) {
 
   su3 *v, *w;
-  static int ini_g_tmp = 0;
   int accept, i=0, j=0, iostatus=0;
 
   double yy[1];
@@ -93,19 +92,10 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   hf.momenta = moment;
   hf.derivative = df0;
   hf.update_gauge_copy = g_update_gauge_copy;
-  hf.update_gauge_energy = g_update_gauge_energy;
-  hf.update_rectangle_energy = g_update_rectangle_energy;
   hf.traj_counter = traj_counter;
   integrator_set_fields(&hf);
 
-  strcpy(tmp_filename, ".conf.tmp");
-  if(ini_g_tmp == 0) {
-    ini_g_tmp = init_gauge_tmp(VOLUME);
-    if(ini_g_tmp != 0) {
-      exit(-1);
-    }
-    ini_g_tmp = 1;
-  }
+  sprintf(tmp_filename, ".conf.t%05d.tmp",traj_counter);
   atime = gettime();
 
   /*
@@ -159,7 +149,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   enepx = moment_energy(hf.momenta);
 
   if (!bc_flag) { /* if PBC */
-    new_plaquette_energy = measure_gauge_action( (const su3**) hf.gaugefield);
+    new_plaquette_energy = measure_plaquette( (const su3**) hf.gaugefield);
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
       new_rectangle_energy = measure_rectangles( (const su3**) hf.gaugefield);
     }
@@ -187,6 +177,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
 #endif
 
+  /* when acctest is 0 (i.e. do not perform acceptance test), the trajectory is accepted whatever the energy difference */
   accept = (!acctest | (expmdh > yy[0]));
   if(g_proc_id == 0) {
     fprintf(stdout, "# Trajectory is %saccepted.\n", (accept ? "" : "not "));
@@ -298,12 +289,13 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
 
     if(accept) {
-      /* Read back gauge field */
+      /* Read back gauge field
+         FIXME unlike in hmc_tm we abort immediately if there is a failure */
       if(g_proc_id == 0 && g_debug_level > 0) {
         fprintf(stdout, "# Trying to read gauge field from file %s.\n", tmp_filename);
       }
 
-      if((iostatus = read_gauge_field(tmp_filename) != 0)) {
+      if((iostatus = read_gauge_field(tmp_filename,g_gauge_field) != 0)) {
         fprintf(stderr, "Error %d while reading gauge field from %s\nAborting...\n", iostatus, tmp_filename);
         exit(-2);
       }
@@ -346,10 +338,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
   hf.update_gauge_copy = 1;
   g_update_gauge_copy = 1;
-  hf.update_gauge_energy = 1;
-  g_update_gauge_energy = 1;
-  hf.update_rectangle_energy = 1;
-  g_update_rectangle_energy = 1;
 #ifdef MPI
   xchange_gauge(hf.gaugefield);
 #endif

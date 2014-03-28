@@ -149,10 +149,10 @@ if test $enable_omp = yes; then
 # -- AC_OPENMP provides a compiler-dependent OPENMP_CFLAGS so we can set it here
 # on the BG/Q with XLC we force a special set of options for OpenMP support
   if test $enable_qpx = yes; then
-    AC_MSG_NOTICE([Using OpenMP with XLC on BG/Q. Compiling with "-qsmp=omp:noauto:schedule=static".])
-    CFLAGS="$CFLAGS -qsmp=omp:noauto:schedule=static"
-    CPPFLAGS="$CPPFLAGS -qsmp=omp:noauto:schedule=static"
-    LDFLAGS="$LDFLAGS -qsmp=omp:noauto:schedule=static" 
+    AC_MSG_NOTICE([Using OpenMP with XLC on BG/Q. Compiling with "-qsmp=omp:noauto:schedule=static -qthreaded".])
+    CFLAGS="$CFLAGS -qsmp=omp:noauto:schedule=static -qthreaded"
+    CPPFLAGS="$CPPFLAGS -qsmp=omp:noauto:schedule=static -qthreaded"
+    LDFLAGS="$LDFLAGS -qsmp=omp:noauto:schedule=static -qthreaded" 
   else
     CFLAGS="$CFLAGS $OPENMP_CFLAGS"
     CPPFLAGS="$CPPFLAGS $OPENMP_CFLAGS"
