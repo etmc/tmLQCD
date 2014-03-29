@@ -690,7 +690,7 @@ void to_temporalgauge_invert_eo( su3** gfield, spinor * const spineven, spinor *
 
     
       if (g_debug_level > 1) {
-        plaquette = measure_gauge_action(g_gauge_field);
+        plaquette = measure_plaquette(g_gauge_field);
         if(g_cart_id == 0) printf("Plaquette before gauge fixing: %.16e\n", 
                                   plaquette/6./VOLUME);
       }  
@@ -702,7 +702,7 @@ void to_temporalgauge_invert_eo( su3** gfield, spinor * const spineven, spinor *
       apply_gtrafo(g_gauge_field, g_trafo);
       
       if (g_debug_level > 1) {
-        plaquette = measure_gauge_action(g_gauge_field);
+        plaquette = measure_plaquette(g_gauge_field);
         if(g_cart_id == 0) printf("Plaquette after gauge fixing: %.16e\n", 
                                 plaquette/6./VOLUME);
       
@@ -833,7 +833,7 @@ void from_temporalgauge_mms(spinor * const spin1, spinor * const spin2, spinor *
 void from_temporalgauge_invert_eo(spinor * const spineven, spinor * const spinodd, spinor * const spineven_new, spinor * const spinodd_new) {
 
 double plaquette, dret;
-      plaquette = measure_gauge_action(g_gauge_field);
+      plaquette = measure_plaquette(g_gauge_field);
       if(g_cart_id == 0) printf("Plaquette before inverse gauge fixing: %.16e\n",      
                          plaquette/6./VOLUME);
     
@@ -849,7 +849,7 @@ xchange_gauge(g_gauge_field);
 #endif   
     
      if (g_debug_level > 1) {   
-        plaquette = measure_gauge_action(g_gauge_field);
+        plaquette = measure_plaquette(g_gauge_field);
         if(g_cart_id == 0) printf("Plaquette after inverse gauge fixing: %.16e\n",
         plaquette/6./VOLUME);
         dret = square_norm(spineven, VOLUME/2 , 1);
