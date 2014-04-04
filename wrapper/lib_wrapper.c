@@ -36,7 +36,6 @@
 #ifdef OMP
 # include <omp.h>
 #endif
-#define MAIN_PROGRAM
 #include "global.h"
 #include "git_hash.h"
 #include "getopt.h"

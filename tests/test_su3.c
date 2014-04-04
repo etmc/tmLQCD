@@ -1,4 +1,3 @@
-#define MAIN_PROGRAM
 
 #include "test_su3_algebra.h"
 
@@ -13,5 +12,4 @@ int main(int argc,char *argv[]){
   return 0;
 }
 
-#undef MAIN_PROGRAM
 

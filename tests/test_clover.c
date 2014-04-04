@@ -1,4 +1,3 @@
-#define MAIN_PROGRAM
 
 #include "../global.h"
 #include "test_clover_six_invert.h"
@@ -14,4 +13,3 @@ int main(int argc,char *argv[]){
   return 0;
 }
 
-#undef MAIN_PROGRAM

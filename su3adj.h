@@ -295,7 +295,4 @@ __asm__ __volatile__ ("movapd %%xmm4, %0 \n\t" \
 (res).d8-=(c)*(in).d8;
 #endif
 
-#ifdef MAIN_PROGRAM
-#endif
-
 #endif
