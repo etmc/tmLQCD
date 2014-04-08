@@ -51,12 +51,16 @@
 #include "sse.h"
 #include "update_backward_gauge.h"
 #include "hamiltonian_field.h"
+#include "read_input.h"
+#ifdef HAVE_GPU
+  extern void gpu_deriv_Sb(const int ieo, spinor *  l, spinor *  k, 
+                             hamiltonian_field_t * hf, const double factor);
+#endif
 #include "deriv_Sb.h"
-
 
 #if (defined BGL && defined XLC)
 
-void deriv_Sb(const int ieo, spinor * const l, spinor * const k, 
+void cpu_deriv_Sb(const int ieo, spinor * const l, spinor * const k, 
 	      hamiltonian_field_t * const hf, const double factor) {
 
   int ix,iy, iz;
@@ -399,7 +403,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
 
 #else
 
-void deriv_Sb(const int ieo, spinor * const l, spinor * const k, 
+void cpu_deriv_Sb(const int ieo, spinor * const l, spinor * const k, 
 	      hamiltonian_field_t * const hf, const double factor) {
 
 #ifdef _GAUGE_COPY
@@ -646,4 +650,18 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
 }
 
 #endif
+
+
+
+void deriv_Sb(const int ieo, spinor * const l, spinor * const k, 
+	      hamiltonian_field_t * const hf, const double factor){
+
+  if(usegpu_flag){
+    cpu_deriv_Sb(ieo, l, k, hf, factor);
+  }
+  else{
+    gpu_deriv_Sb(ieo, l, k, hf, factor);    
+  }
+  return;
+}
 
