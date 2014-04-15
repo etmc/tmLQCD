@@ -58,10 +58,8 @@ extern "C" int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
   }
   shifts_mms_parallel = shifts-shifts_sequential;  
   
-  if(g_debug_level > 0 && g_proc_id == 0) {
-      printf("# dev_CGMMSND inverting %d shifts\n", shifts);
-      printf("# dev_CGMMSND %d with sequential mixed solver\n", shifts_sequential);
-      printf("# dev_CGMMSND %d in parallel with double mms solver\n", shifts_mms_parallel);      
+  if(g_debug_level > 1 && g_proc_id == 0) {
+      printf("# dev_CGMMSND No(shifts) = %d (%d parallel, %d sequential)\n", shifts, shifts_mms_parallel, shifts_sequential);      
   }  
   for(int im = 0; im < shifts_sequential; im++) {  
     
@@ -114,8 +112,14 @@ extern "C" int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
       use_mms_shifts = &(solver_pm->shifts[first_shift]);       
       this_turn = MIN(remaining_shifts, max_mms_shifts);
       init_doublesolve_eo_nd(g_gauge_field);
-      iteration += doublesolve_mms_eo_nd(&(Pup[first_shift]), &(Pdn[first_shift]), Qup, Qdn, use_mms_shifts, this_turn,
-				solver_pm->max_iter, solver_pm->squared_solver_prec, solver_pm->rel_prec,min_solver_it);    
+      if(solver_pm->squared_solver_prec < 1.0e-15){
+        iteration += doublesolve_mms_eo_nd(&(Pup[first_shift]), &(Pdn[first_shift]), Qup, Qdn, use_mms_shifts, this_turn,
+ 				solver_pm->max_iter, solver_pm->squared_solver_prec, solver_pm->rel_prec,min_solver_it); 
+      }
+      else{
+        iteration += mixed_cg_mms_eo_nd(&(Pup[first_shift]), &(Pdn[first_shift]), Qup, Qdn, use_mms_shifts, this_turn,
+				solver_pm->max_iter, solver_pm->squared_solver_prec, solver_pm->rel_prec,min_solver_it);       
+      }
       finalize_doublesolve_eo_nd();
       remaining_shifts -= this_turn;
       first_shift += this_turn;

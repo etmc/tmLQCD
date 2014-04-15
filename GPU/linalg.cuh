@@ -8140,7 +8140,9 @@ void add_f2d_host(spinor* spin_h, spinor* help_h,  dev_spinor* spin_d, int N)
 {  
   cudaError_t cudaerr;
   size_t dev_spinsize = 6*N*sizeof(dev_spinor); 
+  
      #ifdef RELATIVISTIC_BASIS
+        //rotate
         to_tmlqcd_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (spin_d);
      #endif
      cudaMemcpy(h2d_spin, spin_d, dev_spinsize, cudaMemcpyDeviceToHost);
@@ -8149,7 +8151,12 @@ void add_f2d_host(spinor* spin_h, spinor* help_h,  dev_spinor* spin_d, int N)
        printf("Error code is: %d\n",cudaerr);       
      }
      convert2double_spin(h2d_spin, help_h);  
-     add(spin_h, spin_h, help_h, N);     
+     add(spin_h, spin_h, help_h, N);  
+     
+     #ifdef RELATIVISTIC_BASIS
+        //undo rotation on spin_d
+        to_relativistic_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (spin_d);
+     #endif     
 }
 
 

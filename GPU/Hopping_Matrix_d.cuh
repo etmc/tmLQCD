@@ -888,7 +888,7 @@ __global__ void dev_nd_linalg1_gamma5_d (dev_spinor_d * s1_up, dev_spinor_d * s1
     dev_read_spinor_d(&(s3[0]), &(s3_dn[pos]));    
     
 
-     sout[0].x -= epsbar*s3[0].x;
+    sout[0].x -= epsbar*s3[0].x;
     sout[0].x -= s1[0].x;
     sout[0].y -= epsbar*s3[0].y;
     sout[0].y -= s1[0].y;    
