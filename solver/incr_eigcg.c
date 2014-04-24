@@ -117,6 +117,7 @@
 #endif
 
 #include "global.h"
+#include "gettime.h"
 #include "linalg_eo.h"
 #include "start.h"
 #include "linalg/blas.h"
@@ -306,12 +307,8 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
       /* xinit = xinit + evecs*Hinv*evec'*(b-Ax0) 		     */
       /* --------------------------------------------------------- */
 
-      #ifdef MPI
-         wt1 = MPI_Wtime();
-      #else
-         wt1 = ((double)clock())/((double)(CLOCKS_PER_SEC));
-      #endif
-      
+      wt1 = gettime();
+
       /*r0=b-Ax0*/
       normsq = square_norm(x,N,parallel);
       if(normsq>0.0)
@@ -350,11 +347,8 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
       }
       
       /* compute elapsed time and add to accumulator */
-      #ifdef MPI
-        wt2 = MPI_Wtime();
-      #else
-        wt2 = ((double)clock())/((double)(CLOCKS_PER_SEC));
-      #endif
+
+      wt2 = gettime();
       
       wI = wI + wt2-wt1;
       
@@ -393,11 +387,9 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
     /* ------------------------------------------------------------ */
     /* Solve Ax = b with x initial guess                            */
     /* ------------------------------------------------------------ */
-    #ifdef MPI
-       wt1 = MPI_Wtime();
-    #else
-       wt1 = ((double)clock())/((double)(CLOCKS_PER_SEC));
-    #endif
+
+    wt1 = gettime();
+
        
     eigcg( N, LDN, x, b, &normb, eps_sq, restart_eps_sq, maxit_remain, 
 	     &numIts, &cur_res, &flag, solver_field, f, 
@@ -406,13 +398,8 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
     //if(g_proc_id == g_stdio_proc) 
         //printf("eigcg flag= %d \n",flag); 
       
+    wt2 = gettime();
 
-    #ifdef MPI
-      wt2 = MPI_Wtime();
-    #else
-      wt2 = ((double)clock())/((double)(CLOCKS_PER_SEC));
-    #endif
-    
     wE = wE + wt2-wt1;
     
     /* if flag == 3 update the remain max number of iterations */
@@ -449,11 +436,8 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
   /* ------------------------------------------------------------------- */
   if (nev > 0) 
   {
-    #ifdef MPI
-    wt1 = MPI_Wtime();
-    #else
-    wt1 = ((double)clock())/((double)(CLOCKS_PER_SEC));
-    #endif
+
+    wt1 = gettime();
 
     /* Append new Ritz vectors to the basis and orthogonalize them to evecs */
     for(i=0; i<nev_used; i++)
@@ -482,11 +466,9 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
     /* ---------- */
     /* Reporting  */
     /* ---------- */
-    #ifdef MPI
-       wt2 = MPI_Wtime();
-    #else
-       wt2 = ((double)clock())/((double)(CLOCKS_PER_SEC));
-    #endif
+
+    wt2 = gettime();
+
     
     if(g_proc_id == g_stdio_proc && g_debug_level > 0)
     {
