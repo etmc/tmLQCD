@@ -83,8 +83,9 @@
 
    ----------------------------------
    g_debug_level  
-   	 0 prints CG linear system info on exit (num its/ flag)
-	 1 prints linear system residuals at every iteration 
+   	 > 0 prints CG linear system info on exit (num its/ flag)
+	 > 2 prints linear system residuals at every iteration 
+         > 3 information about computed eigenvectors after each rhs in the first phase is printed
    ----------------------------------*/
 /***********************************************************************************/
 
@@ -364,7 +365,7 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
     
       *flag = 0;		
       *reshist = 0.0;
-      if( g_proc_id == g_stdio_proc)
+      if( g_debug_level > 0 && g_proc_id == g_stdio_proc)
         displayInfo(eps_sq,maxit,*flag,*iter,*reshist);
       return;
      }
@@ -397,7 +398,7 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
     rhoprev = rho;
     rho=square_norm(r,n,parallel);
     *reshist = rho;
-    if ( (g_debug_level >= 1) && (g_proc_id == g_stdio_proc) )
+    if ( (g_debug_level > 2) && (g_proc_id == g_stdio_proc) )
     { fprintf(stdout, " Linsys res( %d ): %g\n",*iter+it,*reshist); fflush(stdout); }
 
     /* Convergence test */
@@ -581,7 +582,7 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
   } /* for it = 0 : maxit-1 */
   
   *iter = *iter + it+1; /* record the number of CG iterations plus any older */
-  if( g_proc_id == g_stdio_proc && g_debug_level >= 0)
+  if( g_proc_id == g_stdio_proc && g_debug_level > 0)
     displayInfo(eps_sq,maxit,*flag,*iter-1,*reshist);
 
   

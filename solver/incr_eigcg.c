@@ -281,7 +281,7 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
   } /*if(ncurRHS==1)*/
 
   
-  if(g_proc_id == g_stdio_proc && g_debug_level >= 0) {
+  if(g_proc_id == g_stdio_proc && g_debug_level > 0) {
     fprintf(stdout, "System %d\n",ncurRHS); 
     fflush(stdout);
   } 
@@ -429,7 +429,7 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
   f(solver_field[0],x); /* solver_field[0]= A*x */
   diff(solver_field[1],b,solver_field[0],N);  /* solver_filed[1]=b-A*x */	
   normsq=square_norm(solver_field[1],N,parallel);
-  if(g_proc_id == g_stdio_proc)
+  if(g_debug_level > 0 && g_proc_id == g_stdio_proc)
   {
     fprintf(stdout, "For this rhs:\n");
     fprintf(stdout, "Total initCG Wallclock : %-f\n", wI);
@@ -488,7 +488,7 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
        wt2 = ((double)clock())/((double)(CLOCKS_PER_SEC));
     #endif
     
-    if(g_proc_id == g_stdio_proc && g_debug_level >= 0)
+    if(g_proc_id == g_stdio_proc && g_debug_level > 0)
     {
       fprintf(stdout,"ncurRHS %d\n",ncurRHS);
       fprintf(stdout,"ncurEvals %d \n",ncurEvals);
@@ -499,7 +499,7 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
       fflush(stdout);     
     }
     
-    if(g_debug_level >= 2)  /*compute eigenvalues and their residuals if requested*/
+    if(g_debug_level > 3)  /*compute eigenvalues and their residuals if requested*/
     {
       /* copy H into HU */
       tmpsize=ldh*ncurEvals;
