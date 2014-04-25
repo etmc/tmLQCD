@@ -177,6 +177,16 @@ int init_operators() {
 	    fprintf(stderr, "CGMMS doesn't need AddDownPropagator! Switching Off!\n");
 	  optr->DownProp = 0;
 	}
+        
+        if(optr->solver == INCREIGCG){
+          if (g_cart_id == 0 && optr->DownProp){
+             fprintf(stderr,"Incremental EigCG solver works better for either up or down propagator but not both\n");
+             fprintf(stderr,"because the eigenvectors are diffrent. Switching off AddDownPropagator!\n");
+          }
+          optr->DownProp = 0; 
+        }
+
+
       }
       else if(optr->type == OVERLAP) {
 	optr->even_odd_flag = 0;
