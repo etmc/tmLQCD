@@ -31,7 +31,7 @@
 
 
 void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb, const double eps_sq, 
-           double restart_eps_sq, int maxit, int *iter, double *reshist, int *flag,  
+           double restart_eps_sq, const int rel_prec, int maxit, int *iter, double *reshist, int *flag,  
            spinor **work, matrix_mult f, int nev, int v_max, spinor *V, int esize, _Complex double *ework);
 
 

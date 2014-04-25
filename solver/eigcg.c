@@ -46,8 +46,11 @@
             (OUT) the computed approximate solution
   b         (IN) the right hand side of the system
   normb     (IN/OUT) ||b|| is computed. On input, if flag==3, normb=||b||
-  eps_sq    (IN) error tolerance ||r|| < sqrt(eps_sq)*||b|| where r is the residual
-  restart_eps_sq (IN) restart CG when ||r|| < sqrt(restart_eps_sq)*||b-Ax0||
+  eps_sq    (IN) error tolerance ||r|| < sqrt(eps_sq)*||b|| (if using relative precision)
+                 OR ||r|| < sqrt(eps_sq) (if using absolute precision)where r is the residual
+  restart_eps_sq (IN) restart CG when ||r|| < sqrt(restart_eps_sq)*||b-Ax0|| if using relative
+                      precison or ||r|| < sqrt(restart_eps_sq) if using absolute precison.
+  rel_prec  (IN) 0 means use absolute precision, 1 means use relative precison
   maxit     (IN) maximum number of iterations
   reshist   (OUT) achievd residual squared value
   iter      (IN/OUT) number CG iterations performed in previous restarts (IN) 
@@ -71,15 +74,13 @@
   On exit, if flag is
 
    0 then CG converged to the desired tolerance  within maxit iterations 
-   	convergence test:  norm(residual) < sqrt(eps_sq)*norm(b)
 
    1 then CG iterated maxit times but did not converge.
 
    2 then one of the scalar quantities computed during CG was zero
 
    3 then CG stopped because the restarting tolerance (related to initCG)
-     is satisfied: i.e.,  norm(r(k)) < sqrt(restart_eps_sq)*norm(r(1))
-     Note: r(1)=b-Ax0 could be << r(0)=norm(b) 
+     is satisfied.
 
    ----------------------------------
    g_debug_level  
@@ -145,7 +146,7 @@ static void displayInfo(float tol,
 
 
 void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb, 
-           const double eps_sq, double restart_eps_sq, int maxit, int *iter, 
+           const double eps_sq, double restart_eps_sq, const int rel_prec, int maxit, int *iter, 
            double *reshist, int *flag, spinor **work, matrix_mult f, 
            int nev, int v_max, spinor *V, int esize, _Complex double *ework)
 {
@@ -402,7 +403,8 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
     { fprintf(stdout, " Linsys res( %d ): %g\n",*iter+it,*reshist); fflush(stdout); }
 
     /* Convergence test */
-    if (*reshist < tolb) { 
+    if ( ( (*reshist < eps_sq) && (rel_prec==0) ) || ( (*reshist < eps_sq*(*normb)*(*normb)) && (rel_prec ==1 ) )   ) 
+    { 
        *flag = 0;
        break;  /* break do not return */
     }
@@ -410,7 +412,8 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
     /* Restart test */
     if(nev==0)
     {
-       if (*reshist < restart_eps_sq*reshist_init ) {  
+       if (  ( (*reshist < restart_eps_sq) && (rel_prec ==0) ) || ((*reshist < restart_eps_sq*reshist_init ) && (rel_prec==1)) ) 
+       {  
            *flag = 3;
             break;  /* break do not return */
        }

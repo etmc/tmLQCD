@@ -391,7 +391,7 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
     wt1 = gettime();
 
        
-    eigcg( N, LDN, x, b, &normb, eps_sq, restart_eps_sq, maxit_remain, 
+    eigcg( N, LDN, x, b, &normb, eps_sq, restart_eps_sq, rel_prec, maxit_remain, 
 	     &numIts, &cur_res, &flag, solver_field, f, 
 	     nev_used, v_max, V, esize, ework);
      
