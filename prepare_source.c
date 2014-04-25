@@ -51,12 +51,8 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
   FILE * ifs = NULL;
   int is = ix / 3, ic = ix %3, err = 0, rstat=0, t = 0;
   operator * optr = &operator_list[op_id];
-  char source_filename[100];
+  char source_filename[400];
   int source_type = SourceInfo.type;
-  static int nstore_ = -1;
-  static int isample_ = -1;
-  static int ix_ = -1;
-  static int op_id_ = -1;
 
   SourceInfo.nstore = nstore;
   SourceInfo.sample = isample;
@@ -65,7 +61,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
   if(optr->type != DBTMWILSON && optr->type != DBCLOVER) {
     SourceInfo.no_flavours = 1;
     /* no volume sources */
-    if(source_type != 1) {
+    if(source_type == 0 || source_type == 2) {
       /* either "Don't read inversion source from file" or                    */
       /* "Don't read inversion source from file, but save the one generated" */
       if (read_source_flag == 0 || read_source_flag == 2) {
@@ -79,23 +75,23 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
       /* "Read inversion source from file" */
       else {
         if (SourceInfo.splitted) {
-	  /* timeslice needs to be put into filename */
-	  if(SourceInfo.automaticTS) {
-	    /* automatic timeslice detection */
-	    if(g_proc_id == 0) {
-	      for(t = 0; t < g_nproc_t*T; t++) {
-		sprintf(source_filename, "%s.%.4d.%.2d.%.2d", SourceInfo.basename, nstore, t, ix);
-		if( (ifs = fopen(source_filename, "r")) != NULL) {
-		  fclose(ifs);
-		  break;
-		}
-	      }
-	    }
+          /* timeslice needs to be put into filename */
+          if(SourceInfo.automaticTS) {
+            /* automatic timeslice detection */
+            if(g_proc_id == 0) {
+              for(t = 0; t < g_nproc_t*T; t++) {
+                sprintf(source_filename, "%s.%.4d.%.2d.%.2d", SourceInfo.basename, nstore, t, ix);
+                if( (ifs = fopen(source_filename, "r")) != NULL) {
+                  fclose(ifs);
+                  break;
+                }
+              }
+            }
 #ifdef MPI
-	    MPI_Bcast(&t, 1, MPI_INT, 0, MPI_COMM_WORLD);
+            MPI_Bcast(&t, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif
-	    SourceInfo.t = t;
-	  }
+            SourceInfo.t = t;
+          }
           sprintf(source_filename, "%s.%.4d.%.2d.%.2d", SourceInfo.basename, nstore, SourceInfo.t, ix);
           if (g_cart_id == 0) {
             printf("# Trying to read source from %s\n", source_filename);
@@ -141,6 +137,51 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
         }
       }
       sprintf(source_filename, "%s.%.4d.%.5d.inverted", PropInfo.basename, nstore, isample);
+    }
+    else if(source_type == 3) {
+      // Pion full time slice sources
+      if(g_proc_id == 0 && g_debug_level > 0) {
+        printf("# Preparing 1 flavour Pion TimeSlice at t = %d source\n", SourceInfo.t);
+      }
+      source_generation_pion_only(g_spinor_field[0], g_spinor_field[1], SourceInfo.t, isample, nstore);
+      sprintf(source_filename, "%s.%.4d.%.5d.%.2d.inverted", PropInfo.basename, nstore, isample, SourceInfo.t);
+    }
+    else if(source_type == 4) {
+      // Generalised Pion full time slice sources
+      if(SourceInfo.automaticTS) {
+        /* automatic timeslice detection */
+        if(g_proc_id == 0) {
+          for(t = 0; t < g_nproc_t*T; t++) {
+            sprintf(source_filename, "%s.%.4d.%.5d.%.2d.inverted", SourceInfo.basename, nstore, isample, t);
+            if( (ifs = fopen(source_filename, "r")) != NULL) {
+              fclose(ifs);
+              break;
+            }
+          }
+        }
+#ifdef MPI
+        MPI_Bcast(&t, 1, MPI_INT, 0, MPI_COMM_WORLD);
+#endif
+        SourceInfo.t = t;
+      }
+
+      if(g_proc_id == 0 && g_debug_level > 0) {
+        printf("# Preparing 1 flavour Generalised Pion TimeSlice at T/2 + t = %d source\n", SourceInfo.t+(g_nproc_t*T)/2);
+      }
+
+      sprintf(source_filename, "%s.%.4d.%.5d.%.2d.inverted", SourceInfo.basename, nstore, isample, SourceInfo.t);
+      rstat = read_spinor(g_spinor_field[2], g_spinor_field[3], source_filename, 0);
+      if(rstat) {
+        fprintf(stderr, "Error reading file %s in prepare_source.c.\nUnable to proceed, aborting....\n", source_filename);
+        exit(-1);
+      }
+      extended_pion_source(g_spinor_field[0], g_spinor_field[1], g_spinor_field[2], g_spinor_field[3], 
+                           SourceInfo.t, 0., 0., 0.);
+      sprintf(source_filename, "%s.%.4d.%.5d.%.2d.inverted", PropInfo.basename, nstore, isample, SourceInfo.t);
+      PropInfo.splitted = 0;
+    }
+    else { 
+      fprintf(stderr, "# source type %d not implemented yet.\nCannot proceed, aborting...\n", source_type);
     }
     optr->sr0 = g_spinor_field[0];
     optr->sr1 = g_spinor_field[1];
@@ -197,17 +238,17 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
     SourceInfo.no_flavours = 2;
     zero_spinor_field(g_spinor_field[0], VOLUME/2);
     zero_spinor_field(g_spinor_field[1], VOLUME/2);
-    if(source_type != 1) {
+    if(source_type == 0 || source_type == 2) {
       if(read_source_flag == 0 || read_source_flag == 2) {
         if(source_location == 0) {
           source_spinor_field(g_spinor_field[2], g_spinor_field[3], is, ic);
         }
         else {
           source_spinor_field_point_from_file(g_spinor_field[2], g_spinor_field[3], 
-                              is, ic, source_location);
+                                              is, ic, source_location);
         }
-          }
-          else {
+      }
+      else {
         if(SourceInfo.splitted) {
           sprintf(source_filename, "%s.%.4d.%.2d.%.2d", SourceInfo.basename, nstore, SourceInfo.t, ix);
         }
@@ -253,9 +294,5 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
     optr->prop2 = g_spinor_field[6];
     optr->prop3 = g_spinor_field[7];
   }
-  nstore_ = nstore;
-  isample_ = isample;
-  ix_ = ix;
-  op_id_ = op_id;
   return;
 }

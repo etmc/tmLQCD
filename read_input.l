@@ -1366,6 +1366,14 @@ inline void rmQuotes(char *str){
     SourceInfo.type = 2;
     if(myverbose) printf("Using TimeSlice Sources\n");
   }
+  PionTimeSlice {
+    SourceInfo.type = 3;
+    if(myverbose) printf("Using PionTimeSlice Sources\n");
+  }
+  GenPionTimeSlice {
+    SourceInfo.type = 4;
+    if(myverbose) printf("Using GenPionTimeSlice Sources\n");
+  }
 }
 <PROPSPLIT>{
   yes {
