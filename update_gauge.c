@@ -88,7 +88,7 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
   } /* OpenMP parallel closing brace */
 #endif
   
-#ifdef MPI
+#ifdef _USE_MPI
   /* for parallelization */
   xchange_gauge(hf->gaugefield);
 #endif

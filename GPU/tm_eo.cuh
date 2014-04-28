@@ -188,7 +188,7 @@ extern "C" void dev_Qtm_pm_psi_scalar(dev_spinor* spinin, dev_spinor* spinout, i
 
 
 
-#ifdef MPI
+#ifdef _USE_MPI
 // aequivalent to Qtm_pm_psi in tm_operators.c
 // using HOPPING_ASYNC for mpi
 extern "C" void dev_Qtm_pm_psi_mpi(dev_spinor* spinin, dev_spinor* spinout, int gridsize, dim3 blocksize, int gridsize2, int blocksize2){
@@ -237,7 +237,7 @@ extern "C" void dev_Qtm_pm_psi_mpi(dev_spinor* spinin, dev_spinor* spinout, int 
 extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int gridsize, dim3 blocksize, 
 			       int gridsize2, int blocksize2){
 
-#ifdef MPI
+#ifdef _USE_MPI
   dev_Qtm_pm_psi_mpi(spinin, spinout, gridsize, blocksize, gridsize2, blocksize2);
 #else
   dev_Qtm_pm_psi_scalar(spinin, spinout, gridsize, blocksize, gridsize2, blocksize2);
@@ -374,7 +374,7 @@ extern "C" void dev_Qtm_pm_psi_half(dev_spinor_half* spinin, float* spinin_norm,
 }
 
 
-#ifdef MPI
+#ifdef _USE_MPI
 
 // aequivalent to Qtm_pm_psi in tm_operators.c for half precision
 extern "C" void dev_Qtm_pm_psi_half_mpi(dev_spinor_half* spinin, float* spinin_norm, dev_spinor_half* spinout, float* spinout_norm, int gridsize, dim3 blocksize, int gridsize2, int blocksize2){

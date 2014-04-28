@@ -1005,7 +1005,7 @@ __global__ void dev_clover_gamma5(const int ieo, const int * index_site, dev_spi
 extern "C" void dev_Qsw_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int gridsize, dim3 blocksize, int gridsize2, int blocksize2){
   //spinin == odd
   //spinout == odd
-  #ifndef MPI
+  #ifndef _USE_MPI
     int VolumeEO = VOLUME/2;
   #endif
     
@@ -1020,7 +1020,7 @@ extern "C" void dev_Qsw_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
   #endif
     
     
-  #ifdef MPI
+  #ifdef _USE_MPI
     HOPPING_ASYNC(dev_gf, spinin, dev_spin_eo1, 
 		  dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 
 		  0, gridsize, blocksize); //dev_spin_eo1 == even -> 0     
@@ -1039,7 +1039,7 @@ extern "C" void dev_Qsw_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
     bind_texture_spin(dev_spin_eo1,1);
   #endif
 
-   #ifdef MPI
+   #ifdef _USE_MPI
     HOPPING_ASYNC(dev_gf, dev_spin_eo1, dev_spin_eo2, 
 		  dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 
 		  1, gridsize, blocksize);     
@@ -1058,7 +1058,7 @@ extern "C" void dev_Qsw_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
     bind_texture_spin(dev_spin_eo2,1);
   #endif
 
-  #ifdef MPI
+  #ifdef _USE_MPI
     HOPPING_ASYNC(dev_gf, dev_spin_eo2, spinout, 
 		  dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 
 		  0, gridsize, blocksize); //dev_spin_eo1 == even -> 0    
@@ -1076,7 +1076,7 @@ extern "C" void dev_Qsw_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int grid
     bind_texture_spin(spinout,1);
   #endif
 
-  #ifdef MPI
+  #ifdef _USE_MPI
     HOPPING_ASYNC(dev_gf, spinout, dev_spin_eo1, 
 		  dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 
 		  1, gridsize, blocksize);     
@@ -1169,7 +1169,7 @@ void test_clover_operator(spinor* const Q, const int N){
   // dev_VOLUME is half of VOLUME for eo
   
   // put dev_Offset accordingly depending on mpi/non-mpi
-  #ifdef MPI
+  #ifdef _USE_MPI
    grid[5] = (VOLUME+RAND)/2;
   #else
    grid[5] = VOLUME/2;
@@ -1416,7 +1416,7 @@ extern "C" int dev_cg_eo_clover(
 
   update_constants(grid);
   
-  #ifdef MPI
+  #ifdef _USE_MPI
     he_cg_init_nd_additional_mpi<<<1,1>>>(VOLUMEPLUSRAND/2, RAND, g_cart_id, g_nproc);
     // debug	// check dev_VOLUMEPLUSRAND and dev_RAND on device
     #ifndef LOWOUTPUT
@@ -1500,7 +1500,7 @@ extern "C" int dev_cg_eo_clover(
  
 
  //relative precision -> get initial residue
- #ifndef MPI
+ #ifndef _USE_MPI
    sourcesquarenorm = cublasSdot (24*VOLUME/2, (const float *)spinin, 1, (const float *)spinin, 1);
  #else
    sourcesquarenorm = float_dotprod(spinin, spinin,24*VOLUME/2);
@@ -1546,7 +1546,7 @@ extern "C" int dev_cg_eo_clover(
   
   
  //alpha
-  #ifndef MPI
+  #ifndef _USE_MPI
     host_dotprod = cublasSdot (24*VOLUME/2, (const float *) spin2, 1, (const float *) spin3, 1);
   #else
     host_dotprod =  float_dotprod(spin2, spin3, 24*VOLUME/2);
@@ -1555,14 +1555,14 @@ extern "C" int dev_cg_eo_clover(
   host_alpha = (host_rk / host_dotprod); // alpha = r*r/ p M p
    
  //r(k+1)
- #ifndef MPI
+ #ifndef _USE_MPI
    cublasSaxpy (24*VOLUME/2,-1.0*host_alpha, (const float *) spin3, 1, (float *) spin0, 1);  
  #else
    dev_axpy<<<griddim4, blockdim4>>> (-1.0*host_alpha, spin3, spin0);
  #endif 
 
  //x(k+1);
- #ifndef MPI 
+ #ifndef _USE_MPI 
    cublasSaxpy (24*VOLUME/2, host_alpha, (const float *) spin2,  1, (float *) spin1, 1);
  #else
    dev_axpy<<<griddim4, blockdim4>>> (host_alpha, spin2, spin1);
@@ -1575,7 +1575,7 @@ extern "C" int dev_cg_eo_clover(
   }
 
   //Abbruch?
-  #ifndef MPI
+  #ifndef _USE_MPI
     host_dotprod = cublasSdot (24*VOLUME/2, (const float *) spin0, 1,(const float *) spin0, 1);
   #else
     host_dotprod = float_dotprod(spin0, spin0, 24*VOLUME/2);
@@ -1594,7 +1594,7 @@ extern "C" int dev_cg_eo_clover(
  //beta
  host_beta =host_dotprod/host_rk;
  //p(k+1)
- #ifndef MPI
+ #ifndef _USE_MPI
    cublasSscal (24*VOLUME/2, host_beta, (float *)spin2, 1);
    cublasSaxpy (24*VOLUME/2, 1.0, (const float *) spin0,  1, (float *) spin2, 1);
  #else
@@ -1622,7 +1622,7 @@ extern "C" int dev_cg_eo_clover(
         
     
     // r = b - Ax
-    #ifndef MPI
+    #ifndef _USE_MPI
       cublasSscal (24*VOLUME/2, -1.0, (float *)spin3, 1);
       cublasSaxpy (24*VOLUME/2, 1.0, (const float *) spinin,  1, (float *) spin3, 1);
       cublasScopy (24*VOLUME/2, (const float *)spin3, 1, (float *)spin0, 1);
@@ -1646,7 +1646,7 @@ extern "C" int dev_cg_eo_clover(
       // effectiveflops  =  #(inner iterations)*(matrixflops+linalgflops)*VOLUME/2  +  #(outer iterations)*(matrixflops+linalgflops)*VOLUME/2
       // outer loop: linalg  =  flops for calculating  r(k+1) and x(k+1)
       // inner loop: linalg  =  flops for calculating  alpha, x(k+1), r(k+1), beta, d(k+1)
-     #ifdef MPI
+     #ifdef _USE_MPI
        int proccount = g_nproc;
      #else
        int proccount = 1;
@@ -1712,13 +1712,13 @@ extern "C" int mixed_solve_eo_clover (spinor * const P, spinor * const Q, const 
   size_t dev_spinsize;
   
   #ifndef HALF
-    #ifndef MPI
+    #ifndef _USE_MPI
       dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor); // float4 even-odd !
     #else
       dev_spinsize = 6*VOLUMEPLUSRAND/2 * sizeof(dev_spinor); // float4 even-odd !
     #endif
   #else
-   #ifndef MPI
+   #ifndef _USE_MPI
     dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor_half); //short4 eo !
     size_t dev_normsize = VOLUME/2 * sizeof(float);
    #else
@@ -1756,7 +1756,7 @@ extern "C" int mixed_solve_eo_clover (spinor * const P, spinor * const Q, const 
     #ifndef HALF
     // small benchmark
       assign(solver_field[0],Q,N);
-      #ifndef MPI
+      #ifndef _USE_MPI
         benchmark_eo(solver_field[0]);
       #else
         benchmark_eo_mpi(solver_field[0]); 

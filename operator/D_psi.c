@@ -40,7 +40,7 @@
 #include "su3.h"
 #include "sse.h"
 #include "boundary.h"
-#ifdef MPI
+#ifdef _USE_MPI
 # include "xchange/xchange.h"
 #endif
 #include "update_backward_gauge.h"
@@ -546,7 +546,7 @@ void D_psi(spinor * const P, spinor * const Q){
   }
 #endif
 
-# if defined MPI
+# if defined _USE_MPI
   xchange_lexicfield(Q);
 # endif
 
@@ -966,7 +966,7 @@ void D_psi(spinor * const P, spinor * const Q){
   }
 #endif
 
-#    if (defined MPI && !(defined _NO_COMM))
+#    if (defined _USE_MPI && !(defined _NO_COMM))
   xchange_lexicfield(Q);
 #    endif
 
@@ -1208,7 +1208,7 @@ void D_psi(spinor * const P, spinor * const Q){
       update_backward_gauge(g_gauge_field);
   }
 #endif
-# if defined MPI
+# if defined _USE_MPI
   xchange_lexicfield(Q);
 # endif
 

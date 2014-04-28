@@ -89,7 +89,7 @@ else{
 void su3to2vf4_d(su3** gf, dev_su3_2v_d* h2d){
   int i,j;
   int Vol;
-  #ifdef MPI
+  #ifdef _USE_MPI
    if(g_dbw2rand){
      Vol = VOLUME + 2*RAND;
    }
@@ -172,14 +172,14 @@ void update_gpu_fields(su3** gf, su3adj** mom, int need_momenta){
   cudaError_t cudaerr;
   int i, mu,Vol;
 
-#ifdef MPI
+#ifdef _USE_MPI
 xchange_gauge(gf);
 #endif   
 
   #ifndef LOWOUTPUT
     printf("updating double gpu fields...");
   #endif
-  #ifdef MPI
+  #ifdef _USE_MPI
    if(g_dbw2rand){
      Vol = VOLUME + 2*RAND;
    }
@@ -301,11 +301,11 @@ extern "C" void update_constants_d(int *grid){
 extern "C" void update_gpu_gf_d(su3** gf){
   cudaError_t cudaerr;
   int Vol;
-#ifdef MPI
+#ifdef _USE_MPI
 xchange_gauge(gf);
 #endif   
 
-  #ifdef MPI
+  #ifdef _USE_MPI
    if(g_dbw2rand){
      Vol = VOLUME + 2*RAND;
    }
@@ -330,7 +330,7 @@ xchange_gauge(gf);
 extern "C" void init_gpu_fields(int need_momenta){
   cudaError_t cudaerr;
   int Vol, blasVol;
-  #ifdef MPI
+  #ifdef _USE_MPI
    if(g_dbw2rand){
      Vol = VOLUME + 2*RAND;
      printf("Allocating 2*RAND for gauge field\n");
@@ -421,7 +421,7 @@ extern "C" void init_gpu_fields(int need_momenta){
   //grid 
 
   size_t nnsize;
-  #ifdef MPI
+  #ifdef _USE_MPI
    if(g_dbw2rand){
     nnsize= 8*(VOLUME+2*RAND)*sizeof(int);
    }
@@ -435,7 +435,7 @@ extern "C" void init_gpu_fields(int need_momenta){
 
   nn2 = (int *) malloc(nnsize);
   cudaMalloc((void **) &dev_nn2, nnsize);
-  #ifdef MPI
+  #ifdef _USE_MPI
     initnn2_mpi();
     //shownn2(); //for tests
   #else
@@ -1523,7 +1523,7 @@ cudaError_t cudaerr;
 
 int host_check_VOL2;
 
-#ifdef MPI
+#ifdef _USE_MPI
  if(g_proc_id==0) printf("Exchanging gauge...");
  xchange_gauge(hf->gaugefield);
  if(g_proc_id==0) printf("done\n");

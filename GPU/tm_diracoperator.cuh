@@ -82,7 +82,7 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             
             #ifdef TEMPORALGAUGE
               // gf == ID for t != T-1 => just read the spinor
-              #ifdef MPI
+              #ifdef _USE_MPI
                 if ( ((pos) < (dev_T-1)*spatialvol) || (dev_rank < dev_nproc-1) ) {
                 //if ((pos) < (dev_T-1)*spatialvol) { // FAKE TEMPORALGAUGE
               #else
@@ -174,7 +174,7 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
             //color
             #ifdef TEMPORALGAUGE
               // gf == ID for t != T-1 => just read the spinor
-              #ifdef MPI
+              #ifdef _USE_MPI
                 if ( ((hoppos) < (dev_T-1)*spatialvol) || (dev_rank > 0) ) {
                 //if ((hoppos) < (dev_T-1)*spatialvol) { // FAKE TEMPORALGAUGE
               #else

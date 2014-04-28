@@ -11,7 +11,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#ifdef MPI
+#ifdef _USE_MPI
 # include <mpi.h>
 #endif
 #include <unistd.h>

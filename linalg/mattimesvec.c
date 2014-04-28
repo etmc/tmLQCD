@@ -21,7 +21,7 @@
 # include<config.h>
 #endif
 #include <stdlib.h>
-#ifdef MPI
+#ifdef _USE_MPI
 #include <mpi.h>
 #endif
 #include "complex.h"

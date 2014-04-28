@@ -99,7 +99,7 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
   spinor ** work_fields = NULL;
   const int nr_wf = 2;
 
-#ifdef MPI
+#ifdef _USE_MPI
   atime = MPI_Wtime();
 #else
   atime = (double)clock()/(double)(CLOCKS_PER_SEC);
@@ -389,7 +389,7 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
 
 
   
-#ifdef MPI
+#ifdef _USE_MPI
   etime = MPI_Wtime();
 #else
   etime = (double)clock()/(double)(CLOCKS_PER_SEC);

@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#ifdef MPI
+#ifdef _USE_MPI
 # include <mpi.h>
 #endif
 #ifdef _USE_SHMEM
@@ -28,7 +28,7 @@
 #include "su3.h"
 #include "xchange_field_tslice.h"
 
-#ifdef MPI
+#ifdef _USE_MPI
 # ifdef _USE_TSPLITPAR
 void xchange_field_open(spinor * const l, const int ieo, const int x0, MPI_Request * requests, 
 			MPI_Status * status) {
@@ -40,7 +40,7 @@ void xchange_field_open(spinor * const l, const int ieo, const int x0, MPI_Reque
   __alignx(16, l); /* ?!? */
 #  endif
 
-#  ifdef MPI
+#  ifdef _USE_MPI
 
 #    if (defined PARALLELX || defined PARALLELXY || defined PARALLELXYZ )
   /* send the data to the neighbour on the left in x direction */
@@ -145,7 +145,7 @@ void xchange_field_slice(spinor * const l, const int ieo, const int x0) {
   __alignx(16, l); /* ?!? */
 #  endif
 
-#  ifdef MPI
+#  ifdef _USE_MPI
 
     MPI_Status status;
 

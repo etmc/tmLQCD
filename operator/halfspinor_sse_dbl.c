@@ -129,7 +129,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #pragma omp single
 {
 #endif
-#    if (defined MPI && !defined _NO_COMM)
+#    if (defined _USE_MPI && !defined _NO_COMM)
   xchange_halffield(); 
 #    endif
 #ifdef OMP

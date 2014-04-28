@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#ifdef MPI
+#ifdef _USE_MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -342,7 +342,7 @@ void little_project(_Complex double * const out, _Complex double * const in, con
     phi[i] = lscalar_prod(little_dfl_fields[i], in, nb_blocks*N, 0);
   }
 
-#ifdef MPI
+#ifdef _USE_MPI
   MPI_Allreduce(phi, psi, N, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
 #else
   memcpy(psi, phi, N*sizeof(_Complex double));
@@ -380,7 +380,7 @@ void little_project_eo(_Complex double * const out, _Complex double * const in, 
     phi[i] = lscalar_prod(little_dfl_fields_eo[i], in, nb_blocks*N, 0);
   }
   
-#ifdef MPI
+#ifdef _USE_MPI
   MPI_Allreduce(phi, psi, N, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
 #else
   memcpy(psi, phi, N*sizeof(_Complex double));
@@ -414,7 +414,7 @@ void little_project2(_Complex double * const out, _Complex double * const in, co
   for(i = 0; i < N; i++) {
     phi[i] = lscalar_prod(little_dfl_fields[i], in, nb_blocks*N, 0);
   }
-#ifdef MPI
+#ifdef _USE_MPI
   MPI_Allreduce(phi, psi, g_N_s, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
 #else
   memcpy(psi, phi, g_N_s*sizeof(_Complex double));
@@ -864,7 +864,7 @@ void check_little_D_inversion(const int repro) {
   if (dif > 1e-8 * VOLUME){
     printf("[WARNING] check_little_D_inversion: deviation found of size %1.5e!\n", dif);
   }
-#ifdef MPI
+#ifdef _USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
 

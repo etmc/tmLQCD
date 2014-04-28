@@ -129,14 +129,14 @@ int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum, par
   n_uint64_t bytes;
   su3 tmp[4];
   float tmp2[72];
-#ifdef MPI
+#ifdef _USE_MPI
   double tick = 0, tock = 0;
 #endif
   char measure[64];
   DML_SiteRank rank;
   DML_checksum_init(checksum);
 
-#ifdef MPI
+#ifdef _USE_MPI
   if (g_debug_level > 0) {
     MPI_Barrier(g_cart_grid);
     tick = MPI_Wtime();
@@ -157,7 +157,7 @@ int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum, par
   for(t = 0; t < T; t++) {
     for(z = 0; z < LZ; z++) {
       for(y = 0; y < LY; y++) {
-#ifdef MPI
+#ifdef _USE_MPI
         limeReaderSeek(limereader,(n_uint64_t)
                        (((n_uint64_t) g_proc_coords[1]*LX) +
                         ((n_uint64_t) (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY
@@ -178,7 +178,7 @@ int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum, par
           }
           if(status < 0 && status != LIME_EOR) {
             fprintf(stderr, "LIME read error occurred with status = %d while reading in gauge_read_binary.c!\n", status);
-#ifdef MPI
+#ifdef _USE_MPI
               MPI_Abort(MPI_COMM_WORLD, 1);
               MPI_Finalize();
 #endif
@@ -201,7 +201,7 @@ int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum, par
     }
   }
 
-#ifdef MPI
+#ifdef _USE_MPI
   if (g_debug_level > 0) {
     MPI_Barrier(g_cart_grid);
     tock = MPI_Wtime();

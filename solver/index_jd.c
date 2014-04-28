@@ -52,7 +52,7 @@ void index_jd(int * nr_of_eigenvalues_ov,
   double absdifference;
   const int N2 = VOLUMEPLUSRAND;
 
-#ifdef MPI
+#ifdef _USE_MPI
   double atime, etime;
 #endif
   double lowestmodes[20];
@@ -117,7 +117,7 @@ void index_jd(int * nr_of_eigenvalues_ov,
   j_min = 8; j_max = 16;
   max_iter = 70;
 
-#ifdef MPI
+#ifdef _USE_MPI
   atime = MPI_Wtime();
 #endif
 
@@ -187,7 +187,7 @@ void index_jd(int * nr_of_eigenvalues_ov,
     }
   }
 
-#ifdef MPI
+#ifdef _USE_MPI
   etime = MPI_Wtime();
   if(g_proc_id == g_stdio_proc){
     printf("It took %f sec to determine the sector with zero modes, if any!\n", etime-atime);
@@ -262,7 +262,7 @@ void index_jd(int * nr_of_eigenvalues_ov,
       eigenvalues_ov[i] = lowestmodes[first_blocksize*intsign+i];
     }
 
-#ifdef MPI
+#ifdef _USE_MPI
     atime = MPI_Wtime();
 #endif
 
@@ -285,7 +285,7 @@ void index_jd(int * nr_of_eigenvalues_ov,
       returncode = 0;
 
       /* compute minimal eigenvalues */
-#ifdef MPI
+#ifdef _USE_MPI
       /*      pjdher(VOLUME*sizeof(spinor)/sizeof(_Complex double), VOLUMEPLUSRAND*sizeof(spinor)/sizeof(_Complex double),
 	     shift, prec, omega, n_omega, ev_tr,
 	     i+blocksize, j_max, j_min, 
@@ -364,7 +364,7 @@ void index_jd(int * nr_of_eigenvalues_ov,
       }
     }
 
-#ifdef MPI
+#ifdef _USE_MPI
     etime = MPI_Wtime();
 #endif
 
@@ -383,7 +383,7 @@ void index_jd(int * nr_of_eigenvalues_ov,
     /* Some Output */
     if(g_proc_id == g_stdio_proc) {
       printf("Index is %s%d!\n", intsign ? "-" : "+", index);
-#ifdef MPI
+#ifdef _USE_MPI
       printf("Zero modes determined in %f sec!\n", etime-atime);
 #endif
     }

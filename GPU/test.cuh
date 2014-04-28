@@ -1,6 +1,6 @@
 
 
-#ifdef MPI
+#ifdef _USE_MPI
 extern "C"{
  #include "../xchange_gauge.h"
  #include "../geometry_eo.h"
@@ -105,7 +105,7 @@ void initnn2_mpi(){
 void su3to2vf4_d(su3** gf, dev_su3_2v_d* h2d){
   int i,j;
   int Vol;
-  #ifdef MPI
+  #ifdef _USE_MPI
    Vol = VOLUME + RAND;
   #else
    Vol = VOLUME;
@@ -183,7 +183,7 @@ void update_gpu_fields(su3** gf, su3adj** mom){
   cudaError_t cudaerr;
   int i, mu,Vol;
   printf("updating double gpu fields...");
-  #ifdef MPI
+  #ifdef _USE_MPI
     Vol = VOLUME + RAND;
   #else
     Vol = VOLUME;
@@ -305,7 +305,7 @@ extern "C" void update_constants_d(int *grid){
 extern "C" void update_gpu_gf_d(su3** gf){
   cudaError_t cudaerr;
   int i, mu,Vol;
-  #ifdef MPI
+  #ifdef _USE_MPI
     Vol = VOLUME + RAND;
   #else
     Vol = VOLUME;
@@ -326,7 +326,7 @@ extern "C" void update_gpu_gf_d(su3** gf){
 extern "C" void init_gpu_fields(){
   cudaError_t cudaerr;
   int Vol;
-  #ifdef MPI
+  #ifdef _USE_MPI
     Vol = VOLUME + RAND;
   #else
     Vol = VOLUME;
@@ -394,7 +394,7 @@ extern "C" void init_gpu_fields(){
   size_t nnsize = 8*VOLUME*sizeof(int);
   nn2 = (int *) malloc(nnsize);
   cudaMalloc((void **) &dev_nn2, nnsize);
-  #ifdef MPI
+  #ifdef _USE_MPI
     initnn2_mpi();
     //shownn2(); //for tests
   #else
@@ -411,7 +411,7 @@ extern "C" void init_gpu_fields(){
   if ((cudaerr=cudaPeekAtLastError())!=cudaSuccess) {
     printf("%s\n", cudaGetErrorString(cudaPeekAtLastError()));
   } 
-  #ifdef MPI
+  #ifdef _USE_MPI
    MPI_Barrier(g_cart_grid);
   #endif
   
@@ -1422,7 +1422,7 @@ cudaError_t cudaerr;
 printf("GPU gauge derivative..\n");
 int host_check_VOL2;
 
-#ifdef MPI
+#ifdef _USE_MPI
  if(g_proc_id==0) printf("Exchanging gauge...");
  if(g_proc_id==0) printf("done\n");
 #endif

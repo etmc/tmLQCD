@@ -45,7 +45,7 @@
 
 double measure_plaquette(const su3 ** const gf) {
   static double res;
-#ifdef MPI
+#ifdef _USE_MPI
   double ALIGN mres;
 #endif
 
@@ -98,7 +98,7 @@ double measure_plaquette(const su3 ** const gf) {
   for(int i=0; i < omp_num_threads; ++i)
     res += g_omp_acc_re[i];
 #endif
-#ifdef MPI
+#ifdef _USE_MPI
   MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   res = mres;
 #endif
@@ -107,7 +107,7 @@ double measure_plaquette(const su3 ** const gf) {
 
 double measure_gauge_action(const su3 ** const gf, const double lambda) {
   static double res;
-#ifdef MPI
+#ifdef _USE_MPI
   double ALIGN mres;
 #endif
 
@@ -180,7 +180,7 @@ double measure_gauge_action(const su3 ** const gf, const double lambda) {
   for(int i=0; i < omp_num_threads; ++i)
     res += g_omp_acc_re[i];
 #endif
-#ifdef MPI
+#ifdef _USE_MPI
   MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   res = mres;
 #endif
