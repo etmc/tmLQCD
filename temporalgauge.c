@@ -11,7 +11,7 @@
 #include "stdlib.h"
 #include"measure_gauge_action.h"
 #include"linalg_eo.h"
-#ifdef MPI
+#ifdef _USE_MPI
   #include<mpi.h>
   #include "mpi_init.h"
 #endif
@@ -75,7 +75,7 @@ void copy_gauge_field (su3 ** to, su3 ** from) {
 */
 int init_temporalgauge_trafo (const int V, su3** gfield) {
 
-#ifndef MPI
+#ifndef _USE_MPI
 
    int it, iz, iy, ix;
    
@@ -258,7 +258,7 @@ int init_temporalgauge_trafo (const int V, su3** gfield) {
 int init_temporalgauge(const int V, su3** gfield) {
   int i;
   if(g_cart_id == 0) printf("Initializing tempgauge fields!\n");
-#ifndef MPI
+#ifndef _USE_MPI
 
    if ( (void *) (g_trafo = (su3 *) calloc(V, sizeof(su3))) == NULL ) {
     printf("malloc error in 'init_temporalgauge'\n"); 
@@ -334,7 +334,7 @@ int init_temporalgauge(const int V, su3** gfield) {
 */
 void to_temporalgauge( su3** gfield, spinor * const spin1, spinor * const spin2) {
 
-#ifndef MPI
+#ifndef _USE_MPI
    #ifndef LOWOUTPUT
     if (g_cart_id == 0) {
       printf("Going to temporalgauge now!\n");
@@ -531,7 +531,7 @@ void to_temporalgauge_mms( su3** gfield, spinor * const spin1, spinor * const sp
 */
 void to_temporalgauge_invert_eo( su3** gfield, spinor * const spineven, spinor * const spinodd) {
 
-#ifndef MPI
+#ifndef _USE_MPI
    #ifndef LOWOUTPUT
     if (g_cart_id == 0) {
       printf("Going to temporalgauge now!\n");
@@ -787,7 +787,7 @@ void from_temporalgauge(spinor * const spin1, spinor * const spin2) {
   #endif
   copy_gauge_field(g_gauge_field, g_tempgauge_field);
   
-#ifdef MPI
+#ifdef _USE_MPI
 xchange_gauge(g_gauge_field);
 #endif     
   
@@ -844,7 +844,7 @@ double plaquette, dret;
       copy_gauge_field(g_gauge_field, g_tempgauge_field);
       g_update_gauge_copy = 1;
 
-#ifdef MPI
+#ifdef _USE_MPI
 xchange_gauge(g_gauge_field);
 #endif   
     
@@ -967,7 +967,7 @@ void finalize_temporalgauge() {
   free(tempgauge_field);
   free(g_tempgauge_field);
   
-  #ifdef MPI
+  #ifdef _USE_MPI
     free(left);
     free(right);
   #endif
@@ -1002,7 +1002,7 @@ void apply_gtrafo (su3 ** gfield, su3 * trafofield) {
       for (iy = 0; iy < LY; iy++) {
         for (iz = 0; iz < LZ; iz++) {
         
-          #ifdef MPI				// this is the MPI implementation of the GLOBAL TEMPORALGAUGE
+          #ifdef _USE_MPI				// this is the MPI implementation of the GLOBAL TEMPORALGAUGE
           
             pos = g_ipt[it][ix][iy][iz];
             
@@ -1047,7 +1047,7 @@ void apply_gtrafo (su3 ** gfield, su3 * trafofield) {
     printf("done\n");
   }
   #endif  
-#ifdef MPI
+#ifdef _USE_MPI
 xchange_gauge(gfield);
 #endif
   /* update gauge copy fields in the next call to HoppingMatrix */
@@ -1107,7 +1107,7 @@ void apply_inv_gtrafo (su3 ** gfield, su3 * trafofield) {
   /* update gauge copy fields in the next call to HoppingMatrix */
   g_update_gauge_copy = 1;
   
-#ifdef MPI
+#ifdef _USE_MPI
 xchange_gauge(gfield);
 #endif  
 }
@@ -1153,7 +1153,7 @@ void apply_inv_gtrafo_spinor (spinor * spin, su3 * trafofield) {
       }
     } 
   }
-#ifdef MPI
+#ifdef _USE_MPI
   xchange_lexicfield(spin);
 #endif  
   if (g_cart_id == 0) {
@@ -1202,7 +1202,7 @@ void apply_gtrafo_spinor (spinor * spin, su3 * trafofield) {
       }
     } 
   }
-#ifdef MPI
+#ifdef _USE_MPI
   xchange_lexicfield(spin);
 #endif
   if(g_cart_id == 0) {
@@ -1260,7 +1260,7 @@ void apply_gtrafo_spinor_odd (spinor * spin, su3 * trafofield) {
     } 
   }
   
-#ifdef MPI
+#ifdef _USE_MPI
   xchange_field(spin, 0);
 #endif
 
@@ -1322,7 +1322,7 @@ void apply_inv_gtrafo_spinor_odd (spinor * spin, su3 * trafofield) {
       }
     } 
   }
-#ifdef MPI
+#ifdef _USE_MPI
   xchange_field(spin, 0);
 #endif
   #ifndef LOWOUTPUT
@@ -1385,7 +1385,7 @@ void apply_gtrafo_spinor_even (spinor * spin, su3 * trafofield) {
     } 
   }
   
-#ifdef MPI
+#ifdef _USE_MPI
   xchange_field(spin, 1);
 #endif  
   
@@ -1446,7 +1446,7 @@ void apply_inv_gtrafo_spinor_even (spinor * spin, su3 * trafofield) {
     } 
   }
   
-#ifdef MPI
+#ifdef _USE_MPI
   xchange_field(spin, 1);
 #endif  
   

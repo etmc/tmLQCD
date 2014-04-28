@@ -56,7 +56,7 @@
 #endif
 #include "global.h"
 #include "su3.h"
-#ifdef MPI
+#ifdef _USE_MPI
 #  include "xchange/xchange.h"
 #endif
 #include "boundary.h"
@@ -138,7 +138,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
   }
 #    endif
 
-#    if (defined MPI && !(defined _NO_COMM))
+#    if (defined _USE_MPI && !(defined _NO_COMM))
   xchange_field(k, ieo);
 #    endif
 

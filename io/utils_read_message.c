@@ -44,7 +44,7 @@ int read_message(READER * reader, char **buffer) {
   }
 
   status = ReaderReadData(*buffer, &bytesRead, reader);
-#if MPI
+#ifdef _USE_MPI
   MPI_Barrier(g_cart_grid);
 #endif
 

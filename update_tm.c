@@ -35,7 +35,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
-#ifdef MPI
+#ifdef _USE_MPI
 # include <mpi.h>
 #endif
 #ifdef OMP
@@ -165,13 +165,13 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
      the other sites */
   ranlxd(yy,1);
   if(g_proc_id==0) {
-#ifdef MPI
+#ifdef _USE_MPI
     for(i = 1; i < g_nproc; i++) {
       MPI_Send(&yy[0], 1, MPI_DOUBLE, i, 31, MPI_COMM_WORLD);
     }
 #endif
   }
-#ifdef MPI
+#ifdef _USE_MPI
   else{
     MPI_Recv(&yy[0], 1, MPI_DOUBLE, 0, 31, MPI_COMM_WORLD, &status);
   }
@@ -269,7 +269,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     ret_gauge_diff = kc;
 #endif
 
-#ifdef MPI
+#ifdef _USE_MPI
     tmp = ret_gauge_diff;
     MPI_Reduce(&tmp, &ret_gauge_diff, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 #endif
@@ -338,7 +338,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
   hf.update_gauge_copy = 1;
   g_update_gauge_copy = 1;
-#ifdef MPI
+#ifdef _USE_MPI
   xchange_gauge(hf.gaugefield);
 #endif
   etime=gettime();

@@ -84,7 +84,7 @@ extern "C" {
 #include "../solver/solver_field.h"
 
 #include "../gettime.h"
-#ifdef MPI
+#ifdef _USE_MPI
   #include "../xchange/xchange.h"
 #endif 
 
@@ -320,7 +320,7 @@ int blockdimgauge, griddimgauge;
 // for gpu_deriv_SB
 int blockdimdsb,  griddimdsb;
 
-#ifdef MPI
+#ifdef _USE_MPI
 
 
 // from mixed_solve_eo_nd.cuh
@@ -472,7 +472,7 @@ EXTERN int g_nb_z_up, g_nb_z_dn;
 // nd eo tm 1+1 operator in single precision
 #include "tm_nd_eo.cuh"
 
-#ifdef MPI
+#ifdef _USE_MPI
 // optimization of the communication
   #include "ASYNC.cuh"
   #include "ASYNC_D.cuh"
@@ -597,7 +597,7 @@ extern "C" int find_devices() {
 
   cudaGetDeviceCount(&deviceCount);
     
-  #ifdef MPI
+  #ifdef _USE_MPI
     if (g_cart_id == 0) {
   #endif
     
@@ -657,7 +657,7 @@ extern "C" int find_devices() {
     #endif
     }
     
-    #ifdef MPI 
+    #ifdef _USE_MPI 
       }
     #endif
     
@@ -1055,7 +1055,7 @@ void check_mixedsolve_params(){
   	  printf("\tOn device:\n");
   	  printf("\tdev_VOLUME = %i\n", host_check_VOLUME);
   	  printf("\tdev_Offset = %i\n", host_check_Offset);
-	  #ifdef MPI
+	  #ifdef _USE_MPI
 	    int host_check_VOLUMEPLUSRAND, host_check_RAND;
 	    int host_check_rank, host_check_nproc;	  
 	    cudaMemcpyFromSymbol(&host_check_RAND, dev_RAND, sizeof(int));
@@ -1101,7 +1101,7 @@ extern "C" int dev_cg_eo(
  
   //constants
   update_constants(grid);  
-  #ifdef MPI
+  #ifdef _USE_MPI
     he_cg_init_nd_additional_mpi<<<1,1>>>(VOLUMEPLUSRAND/2, RAND, g_cart_id, g_nproc);
   #endif
   //->check
@@ -1231,7 +1231,7 @@ extern "C" int dev_cg_eo(
       // effectiveflops  =  #(inner iterations)*(matrixflops+linalgflops)*VOLUME/2  +  #(outer iterations)*(matrixflops+linalgflops)*VOLUME/2
       // outer loop: linalg  =  flops for calculating  r(k+1) and x(k+1)
       // inner loop: linalg  =  flops for calculating  alpha, x(k+1), r(k+1), beta, d(k+1)
-     #ifdef MPI
+     #ifdef _USE_MPI
        int proccount = g_nproc;
      #else
        int proccount = 1;
@@ -1615,7 +1615,7 @@ void update_gpu_gf(su3** gf){
     if(g_cart_id == 0) printf("Updating device single gauge field.\n");
   #endif
   
-  #ifndef MPI
+  #ifndef _USE_MPI
         #ifdef GF_8
           /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
           size_t dev_gsize = 2*4*VOLUME * sizeof(dev_su3_8);
@@ -1669,7 +1669,7 @@ extern "C" void init_mixedsolve_eo(su3** gf){
     }
     
     // try to set active device to device_num given in input file (or mpi rank)
-    #ifndef MPI
+    #ifndef _USE_MPI
     // only if device_num is not the default (-1)
      if(device_num > -1){ 
     	if(device_num < ndev){
@@ -1735,7 +1735,7 @@ extern "C" void init_mixedsolve_eo(su3** gf){
   
   
   // output
-  #ifdef MPI
+  #ifdef _USE_MPI
     if (g_cart_id == 0) {
   #endif
     #ifndef LOWOUTPUT
@@ -1751,7 +1751,7 @@ extern "C" void init_mixedsolve_eo(su3** gf){
   	  printf("Using GF 12 reconstruction.\n");
   	#endif
     #endif
-  #ifdef MPI
+  #ifdef _USE_MPI
     }
   #endif
   #ifndef LOWOUTPUT
@@ -1761,7 +1761,7 @@ extern "C" void init_mixedsolve_eo(su3** gf){
       if (g_cart_id == 0) printf("Using TMLQCD gamma basis.\n");    
     #endif
   #endif
-  #ifndef MPI
+  #ifndef _USE_MPI
   	#ifdef GF_8
   	  /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
   	  size_t dev_gfsize = 2*4*VOLUME * sizeof(dev_su3_8);
@@ -1785,7 +1785,7 @@ extern "C" void init_mixedsolve_eo(su3** gf){
     exit(200);
   }   // Allocate array on device
   else {
-    #ifndef MPI
+    #ifndef _USE_MPI
      #ifndef LOWOUTPUT
       printf("Allocated memory for gauge field on device.\n");
      #endif
@@ -1806,7 +1806,7 @@ extern "C" void init_mixedsolve_eo(su3** gf){
   
   
   #ifdef HALF
-    #ifndef MPI
+    #ifndef _USE_MPI
       #ifdef GF_8
        /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
         printf("Using half precision GF 8 reconstruction\n");
@@ -1850,7 +1850,7 @@ extern "C" void init_mixedsolve_eo(su3** gf){
   cudaMalloc((void **) &dev_nn_eo, nnsize/2);
   cudaMalloc((void **) &dev_nn_oe, nnsize/2);
   
-  #ifndef MPI
+  #ifndef _USE_MPI
     size_t idxsize = VOLUME/2*sizeof(int);
   #else
     size_t idxsize = (VOLUME+RAND)/2*sizeof(int);
@@ -1860,7 +1860,7 @@ extern "C" void init_mixedsolve_eo(su3** gf){
   cudaMalloc((void **) &dev_eoidx_even, idxsize);
   cudaMalloc((void **) &dev_eoidx_odd, idxsize);
   
-  #ifndef MPI
+  #ifndef _USE_MPI
     initnn();
     initnn_eo();
     //shownn_eo();
@@ -1913,7 +1913,7 @@ extern "C" void init_mixedsolve_eo(su3** gf){
 // Spinors
   #ifndef HALF
 
-	#ifdef MPI
+	#ifdef _USE_MPI
   	  size_t dev_spinsize_ext =  6*(VOLUME+RAND)/2*sizeof(dev_spinor);
 	  if((void*)(h2d_spin = (dev_spinor *)malloc(dev_spinsize_ext)) == NULL){
   	    printf("Could not allocate memory for h2d_spin. Aborting...\n");
@@ -1948,7 +1948,7 @@ extern "C" void init_mixedsolve_eo(su3** gf){
   #endif
   
 
-#ifdef MPI
+#ifdef _USE_MPI
    	size_t dev_spinsize_d = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); /* double2 */
 #else
    	size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); /* double2 */  
@@ -1974,7 +1974,7 @@ extern "C" void init_mixedsolve_eo(su3** gf){
           }
         #endif  
         
-#ifndef MPI
+#ifndef _USE_MPI
 
 	
        #ifdef HALF
@@ -2142,7 +2142,7 @@ extern "C" void init_mixedsolve_eo(su3** gf){
   // dev_VOLUME is half of VOLUME for eo
   
   // put dev_Offset accordingly depending on mpi/non-mpi
-  #ifdef MPI
+  #ifdef _USE_MPI
    grid[5] = (VOLUME+RAND)/2;
   #else
    grid[5] = VOLUME/2;
@@ -2266,7 +2266,7 @@ extern "C" void finalize_mixedsolve(){
         
   #endif
   
-#ifdef MPI
+#ifdef _USE_MPI
   cudaFreeHost(RAND1);
   cudaFreeHost(RAND2);  
   cudaFreeHost(RAND3);
@@ -2314,14 +2314,14 @@ void init_mixedsolve_fields(int eo){
 #endif
   
   if(eo){
-   #ifdef MPI
+   #ifdef _USE_MPI
      N = (VOLUME+RAND)/2;
    #else
      N = VOLUME/2;
    #endif
   }
   else{
-   #ifdef MPI
+   #ifdef _USE_MPI
      N = (VOLUME+RAND);
    #else
      N = VOLUME;
@@ -2332,7 +2332,7 @@ void init_mixedsolve_fields(int eo){
   if(g_cart_id ==0) printf("Allocating mixed solver single fields on device.\n");
 #endif
 
-  #ifdef MPI
+  #ifdef _USE_MPI
     #ifdef HALF
       dev_spinsize =  6* N * sizeof(dev_spinor_half);
       dev_normsize =  N *sizeof(float);
@@ -2433,7 +2433,7 @@ void benchmark(spinor * const Q){
   cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
   
-  #ifndef MPI
+  #ifndef _USE_MPI
     assert((start = clock())!=-1);
   #else
     start = MPI_Wtime();
@@ -2637,7 +2637,7 @@ void benchmark_eo(spinor * const Q){
   cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
   
-  #ifndef MPI
+  #ifndef _USE_MPI
     assert((start = clock())!=-1);
   #else
     start = MPI_Wtime();
@@ -2667,7 +2667,7 @@ void benchmark_eo(spinor * const Q){
   printf("Applying H %d times\n", ibench);
   for(i=0; i<ibench; i++){
   
-      #ifdef MPI
+      #ifdef _USE_MPI
            xchange_field_wrapper(dev_spinin, 0);
       #endif
       #ifdef USETEXTURE
@@ -2681,7 +2681,7 @@ void benchmark_eo(spinor * const Q){
       unbind_texture_spin(1);
     #endif
 
-    #ifdef MPI
+    #ifdef _USE_MPI
         xchange_field_wrapper(dev_spin_eo1, 0);
     #endif
        bind_texture_spin(dev_spin_eo1,1);
@@ -2700,7 +2700,7 @@ void benchmark_eo(spinor * const Q){
   
   cudaThreadSynchronize();
 
-  #ifndef MPI
+  #ifndef _USE_MPI
     assert((stop = clock())!=-1);
     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
     // x2 because 2x Hopping per iteration
@@ -2726,7 +2726,7 @@ void benchmark_eo(spinor * const Q){
 
 
 
-#ifdef MPI
+#ifdef _USE_MPI
 void benchmark_eo_mpi(spinor * const Q){
   
   double timeelapsed = 0.0;
@@ -2744,7 +2744,7 @@ void benchmark_eo_mpi(spinor * const Q){
   cudaMemcpy(dev_spinin, h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
   
-  #ifndef MPI
+  #ifndef _USE_MPI
     assert((start = clock())!=-1);
   #else
     start = MPI_Wtime();
@@ -2784,7 +2784,7 @@ void benchmark_eo_mpi(spinor * const Q){
   
   
   
-  #ifndef MPI
+  #ifndef _USE_MPI
     assert((stop = clock())!=-1);
     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
     // x8 because 8x Hopping per iteration
@@ -2833,7 +2833,7 @@ extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_it
 void test_double_operator(spinor* const Q, const int N){
    
    size_t dev_spinsize_d;
-#ifdef MPI
+#ifdef _USE_MPI
   dev_spinsize_d  = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); // double2 even-odd !
 #else
   dev_spinsize_d  = 12*VOLUME/2 * sizeof(dev_spinor_d); 
@@ -2924,13 +2924,13 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
     size_t dev_spinsize;
     
     #ifndef HALF
-      #ifndef MPI
+      #ifndef _USE_MPI
 	dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor); // float4 even-odd !
       #else
 	dev_spinsize = 6*VOLUMEPLUSRAND/2 * sizeof(dev_spinor); // float4 even-odd !
       #endif
     #else
-    #ifndef MPI
+    #ifndef _USE_MPI
       dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor_half); //short4 eo !
       size_t dev_normsize = VOLUME/2 * sizeof(float);
     #else
@@ -2948,7 +2948,7 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
 
   #ifdef GPU_DOUBLE
     size_t dev_spinsize_d; 
-    #ifdef MPI
+    #ifdef _USE_MPI
       dev_spinsize_d = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); // double2 even-odd ! 
     #else
       dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double2 even-odd !  
@@ -2968,7 +2968,7 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
     #ifndef HALF
     // small benchmark
       assign(solver_field[0],Q,N);
-      #ifndef MPI
+      #ifndef _USE_MPI
         benchmark_eo(solver_field[0]);
       #else
         benchmark_eo_mpi(solver_field[0]); 
@@ -3227,13 +3227,13 @@ extern "C" int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int ma
   #ifndef GPU_DOUBLE
     size_t dev_spinsize;
     #ifndef HALF
-      #ifndef MPI
+      #ifndef _USE_MPI
 	dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor); // float4 even-odd !     
       #else
 	dev_spinsize = 6*VOLUMEPLUSRAND/2 * sizeof(dev_spinor); // float4 even-odd !
       #endif
     #else
-    #ifndef MPI
+    #ifndef _USE_MPI
       dev_spinsize = 6*VOLUME/2 * sizeof(dev_spinor_half); //short4 eo !
       size_t dev_normsize = VOLUME/2 * sizeof(float);
     #else
@@ -3249,7 +3249,7 @@ extern "C" int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int ma
   
   #ifdef GPU_DOUBLE
     size_t dev_spinsize_d;   
-    #ifdef MPI
+    #ifdef _USE_MPI
       dev_spinsize_d = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); // double2 even-odd ! 
     #else
       dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double2 even-odd !  
@@ -3259,7 +3259,7 @@ extern "C" int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int ma
 	// dev_VOLUME is half of VOLUME for eo
 	
       // put dev_Offset accordingly depending on mpi/non-mpi
-      #ifdef MPI
+      #ifdef _USE_MPI
       grid[5] = (VOLUME+RAND)/2;
       #else
       grid[5] = VOLUME/2;

@@ -6,7 +6,7 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
-#ifdef MPI
+#ifdef _USE_MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -26,7 +26,7 @@ void DML_checksum_init(DML_Checksum *checksum){
 }
 
 
-#ifdef MPI
+#ifdef _USE_MPI
 int DML_global_xor(uint32_t *x) {
   unsigned long work = (unsigned long)*x;
   unsigned long dest;

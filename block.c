@@ -186,13 +186,13 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
     /* The following has not yet been adapted for */
     /* new block geometry right? (C.U.)           */
     for (j = 0 ; j < 6; ++j) {
-#ifdef MPI
+#ifdef _USE_MPI
       block_list[i].mpilocal_neighbour[j] = (g_nb_list[j] == g_cart_id) ? i : -1;
 #else
       block_list[i].mpilocal_neighbour[j] = i;
 #endif
     }
-#ifdef MPI
+#ifdef _USE_MPI
     block_list[i].mpilocal_neighbour[6] = (i == 0 ? 1 : (g_nb_list[j] == g_cart_id) ? 0 : -1);
     block_list[i].mpilocal_neighbour[7] = (i == 1 ? 0 : (g_nb_list[j] == g_cart_id) ? 1 : -1);
 #else
@@ -817,7 +817,7 @@ void alt_block_compute_little_D() {
 	  block_contract_basis(0, i, NONE, psi);
 	  block_contract_basis(1, i, Z_DN, psi);
 	}
-#ifdef MPI
+#ifdef _USE_MPI
 	else if (k == g_nb_t_up) {
 	  block_contract_basis(0, i, T_UP, psi);
 	}
@@ -857,7 +857,7 @@ void alt_block_compute_little_D() {
 	      block_contract_basis(0, i, Z_UP, psi);
 	      block_contract_basis(1, i, NONE, psi);
 	      }
-	      #ifdef MPI
+	      #ifdef _USE_MPI
 	      else if (k == g_nb_t_up){
 	      block_contract_basis(1, i, T_UP, psi);
 	      }
@@ -1018,7 +1018,7 @@ void compute_little_D() {
     if(i==0) count = 0;
     reconstruct_global_field_GEN_ID(scratch, block_list, i , nb_blocks);
     
-#ifdef MPI
+#ifdef _USE_MPI
     xchange_lexicfield(scratch);
 #endif
     

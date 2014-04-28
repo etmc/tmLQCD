@@ -78,7 +78,7 @@ extern "C" int bind_texture_spin(dev_spinor* s, int i){
   
   size_t size;
   int offset;
-  #ifdef MPI
+  #ifdef _USE_MPI
     if(even_odd_flag){
       size = sizeof(float4)*(VOLUME+RAND)/2;
       offset = (VOLUME+RAND)/2;
@@ -115,7 +115,7 @@ extern "C" int bind_texture_spin(dev_spinor* s, int i){
 extern "C" int bind_texture_sw(float2* sw){
   
   size_t size;
-  #ifdef MPI
+  #ifdef _USE_MPI
       size = sizeof(float2)*6*9*(VOLUME);
   #else
       size = sizeof(float2)*6*9*VOLUME;
@@ -141,7 +141,7 @@ extern "C" int unbind_texture_sw(){
 extern "C" int bind_texture_sw_inv(float2* sw_inv){
   
   size_t size;
-  #ifdef MPI
+  #ifdef _USE_MPI
       size = sizeof(float2)*8*9*(VOLUME);
   #else
       size = sizeof(float2)*8*9*VOLUME;
@@ -180,7 +180,7 @@ extern "C" int bind_texture_spin_dn(dev_spinor* s, int i){
   
   size_t size;
   int offset;
-  #ifdef MPI
+  #ifdef _USE_MPI
     if(even_odd_flag){
       size = sizeof(float4)*(VOLUME+RAND)/2;
       offset = (VOLUME+RAND)/2;
@@ -234,7 +234,7 @@ __inline__ __device__ double2 fetch1D_spin_d(texture<int4> tex, const int& i){
 extern "C" int bind_texture_spin_d(dev_spinor_d* s, int i){
   
   size_t size;
-  #ifdef MPI
+  #ifdef _USE_MPI
     if(even_odd_flag){
       size = 12*sizeof(double2)*(VOLUME+RAND)/2;
     }
@@ -270,7 +270,7 @@ return(0);
 extern "C" int bind_texture_spin_dn_d(dev_spinor_d* s, int i){
   
   size_t size;
-  #ifdef MPI
+  #ifdef _USE_MPI
     if(even_odd_flag){
       size = 12*sizeof(double2)*(VOLUME+RAND)/2;
     }
@@ -321,7 +321,7 @@ return(0);
 extern "C" int bind_texture_gf(dev_su3_2v * gf){
  //printf("Binding texture to gaugefield\n");
  
-  #ifdef MPI
+  #ifdef _USE_MPI
     #ifdef GF_8
      size_t size = sizeof(float4)*2*(VOLUME+RAND)*4;
     #else
@@ -368,7 +368,7 @@ __inline__ __device__ double2 fetch1D_gf_d(const int& i){
 extern "C" int bind_texture_gf_d(dev_su3_2v_d * gf){
  //printf("Binding texture to gaugefield\n");
  
-  #ifdef MPI
+  #ifdef _USE_MPI
      size_t size = sizeof(double2)*6*(VOLUME+RAND)*4;
   #else
      size_t size = sizeof(double2)*6*VOLUME*4;
@@ -400,7 +400,7 @@ extern "C" int bind_texture_nn(int* nn){
  //printf("Binding texture to nn field\n");
   size_t size;
   
-  #ifdef MPI
+  #ifdef _USE_MPI
     if(even_odd_flag){
       size = sizeof(int)*8*(VOLUME+RAND)/2;
     }

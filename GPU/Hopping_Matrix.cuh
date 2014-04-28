@@ -554,7 +554,7 @@ __device__ void dev_hopping_kernel(const dev_su3_2v * gf, const dev_spinor * sin
   
 
  //the volume for the gaugefield is 2x volume of spinors!!!
- #ifdef MPI
+ #ifdef _USE_MPI
    int gaugevol = 2*dev_VOLUMEPLUSRAND;
  #else
    int gaugevol = 2*dev_VOLUME; 
@@ -569,7 +569,7 @@ __device__ void dev_hopping_kernel(const dev_su3_2v * gf, const dev_spinor * sin
             
             #ifdef TEMPORALGAUGE
               // gf == ID for t != T-1 => just read the spinor
-              #ifdef MPI
+              #ifdef _USE_MPI
                 if ( ((gfindex_site[pos]) < (dev_T-1)*spatialvol) || (dev_rank < dev_nproc-1) ) {
                 //if ((gfindex_site[pos]) < (dev_T-1)*spatialvol) { // FAKE TEMPORALGAUGE
               #else
@@ -661,7 +661,7 @@ __device__ void dev_hopping_kernel(const dev_su3_2v * gf, const dev_spinor * sin
             //color
             #ifdef TEMPORALGAUGE
               // gf == ID for t != T-1 => just read the spinor
-              #ifdef MPI
+              #ifdef _USE_MPI
                 if ( ((gfindex_nextsite[hoppos]) < (dev_T-1)*spatialvol) || (dev_rank > 0) ) {
                 //if ((gfindex_nextsite[hoppos]) < (dev_T-1)*spatialvol) { // FAKE TEMPORALGAUGE
               #else
@@ -1144,7 +1144,7 @@ __global__ void dev_Hopping_Matrix_updn(const dev_su3_2v * gf, const dev_spinor 
   
 
  //the volume for the gaugefield is 2x volume of spinors!!!
- #ifdef MPI
+ #ifdef _USE_MPI
    int gaugevol = 2*dev_VOLUMEPLUSRAND;
  #else
    int gaugevol = 2*dev_VOLUME; 
@@ -1159,7 +1159,7 @@ __global__ void dev_Hopping_Matrix_updn(const dev_su3_2v * gf, const dev_spinor 
             
             #ifdef TEMPORALGAUGE
               // gf == ID for t != T-1 => just read the spinor
-              #ifdef MPI
+              #ifdef _USE_MPI
                 if ( ((gfindex_site[pos]) < (dev_T-1)*spatialvol) || (dev_rank < dev_nproc-1) ) {
                 //if ((gfindex_site[pos]) < (dev_T-1)*spatialvol) { // FAKE TEMPORALGAUGE
               #else
@@ -1279,7 +1279,7 @@ __global__ void dev_Hopping_Matrix_updn(const dev_su3_2v * gf, const dev_spinor 
             //color
             #ifdef TEMPORALGAUGE
               // gf == ID for t != T-1 => just read the spinor
-              #ifdef MPI
+              #ifdef _USE_MPI
                 if ( ((gfindex_nextsite[hoppos]) < (dev_T-1)*spatialvol) || (dev_rank > 0) ) {
                 //if ((gfindex_nextsite[hoppos]) < (dev_T-1)*spatialvol) { // FAKE TEMPORALGAUGE
               #else
@@ -1610,7 +1610,7 @@ __global__ void dev_Hopping_Matrix_half(const dev_su3_2v_half * gf, const dev_sp
   
   //the volume for the gaugefield is 2x volume of spinors!!!
  //the volume for the gaugefield is 2x volume of spinors!!!
- #ifdef MPI
+ #ifdef _USE_MPI
    int gaugevol = 2*dev_VOLUMEPLUSRAND;
  #else
    int gaugevol = 2*dev_VOLUME; 
@@ -1636,7 +1636,7 @@ __global__ void dev_Hopping_Matrix_half(const dev_su3_2v_half * gf, const dev_sp
               float norm;
 	      int i;
               // gf == ID for t != T-1 => just read the spinor
-              #ifdef MPI
+              #ifdef _USE_MPI
                 if ( ((gfindex_site[pos]) < (dev_T-1)*spatialvol) || (dev_rank < dev_nproc-1) ) {
                 //if ((gfindex_site[pos]) < (dev_T-1)*spatialvol) { // FAKE TEMPORALGAUGE
               #else
@@ -1750,7 +1750,7 @@ __global__ void dev_Hopping_Matrix_half(const dev_su3_2v_half * gf, const dev_sp
             //color
             #ifdef TEMPORALGAUGE
               // gf == ID for t != T-1 => just read the spinor
-              #ifdef MPI
+              #ifdef _USE_MPI
                 if ( ((gfindex_nextsite[hoppos]) < (dev_T-1)*spatialvol) || (dev_rank > 0) ) {
                 //if ((gfindex_nextsite[hoppos]) < (dev_T-1)*spatialvol) { // FAKE TEMPORALGAUGE
               #else

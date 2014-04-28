@@ -201,7 +201,7 @@ double lsquare_norm(_Complex double * const Q, const int N, const int parallel)
   for(int i = 0; i < N; ++i)
     
     nrm += conj(Q[i]) * Q[i];
-#ifdef MPI
+#ifdef _USE_MPI
   if(parallel)
   {
     double nrm2 = nrm;
@@ -219,7 +219,7 @@ _Complex double lscalar_prod(_Complex double * const R, _Complex double * const 
   for(int i = 0; i < N; ++i)
     res += conj(R[i]) * S[i];
   
-#ifdef MPI
+#ifdef _USE_MPI
   if(parallel)
   {
     _Complex double res2 = res;

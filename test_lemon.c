@@ -37,7 +37,7 @@
 #if (defined BGL && !defined BGP)
 #  include <rts.h>
 #endif
-#ifdef MPI
+#ifdef _USE_MPI
 # include <mpi.h>
 #endif
 #include "su3.h"
@@ -63,7 +63,7 @@ int main(int argc,char *argv[]) {
   paramsXlfInfo *xlfInfo;
   
 
-#ifdef MPI
+#ifdef _USE_MPI
   
   MPI_Init(&argc, &argv);
 #endif
@@ -101,7 +101,7 @@ int main(int argc,char *argv[]) {
   start_ranlux(1, 123456);
   random_gauge_field(reproduce_randomnumber_flag, g_gauge_field);
 
-#ifdef MPI
+#ifdef _USE_MPI
   /*For parallelization: exchange the gaugefield */
   xchange_gauge(g_gauge_field);
 #endif
@@ -167,7 +167,7 @@ int main(int argc,char *argv[]) {
   }
 
 
-#ifdef MPI
+#ifdef _USE_MPI
   MPI_Finalize();
 #endif
   free_gauge_field();

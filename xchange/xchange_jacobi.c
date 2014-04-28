@@ -31,7 +31,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#ifdef MPI
+#ifdef _USE_MPI
 # include <mpi.h>
 #endif
 
@@ -53,7 +53,7 @@ void xchange_jacobi(su3_vector * const l) {
 #pragma pomp inst begin(xchange_jacobi)
 #endif
 
-#  ifdef MPI
+#  ifdef _USE_MPI
 
   MPI_Status status;
 #    if (defined PARALLELX || defined PARALLELXY || defined PARALLELXYZ )

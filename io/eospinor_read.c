@@ -25,7 +25,7 @@ int read_eospinor(spinor * const s, char * filename) {
   n_uint64_t bytes;
   char * header_type;
   LimeReader * limereader;
-#ifdef MPI
+#ifdef _USE_MPI
   int position;
 #endif
   spinor tmp[1];
@@ -73,7 +73,7 @@ int read_eospinor(spinor * const s, char * filename) {
   for(x = 0; x < LX; x++) {
     for(y = 0; y < LY; y++) {
       for(z = 0; z < LZ; z++) {
-#if (defined MPI)
+#if (defined _USE_MPI)
 	limeReaderSeek(limereader, (n_uint64_t)
 		       (g_proc_coords[0]*T+
 			(((g_proc_coords[1]*LX+x)*g_nproc_y*LY+g_proc_coords[2]*LY+y)*g_nproc_z*LZ
@@ -90,7 +90,7 @@ int read_eospinor(spinor * const s, char * filename) {
 	    be_to_cpu_assign(s + i, tmp, sizeof(spinor)/8);
 	    if(status < 0 && status != LIME_EOR) {
 	      fprintf(stderr, "LIME read error occured with status = %d while reading file %s!\n Aborting...\n", status, filename);
-#ifdef MPI
+#ifdef _USE_MPI
 	      MPI_Abort(MPI_COMM_WORLD, 1);
 	      MPI_Finalize();
 #endif

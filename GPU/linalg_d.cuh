@@ -4492,7 +4492,7 @@ __global__ void dev_dot_d( double* redfield, dev_spinor_d* x,dev_spinor_d* y){
 // calculates the dot product of x and y
 extern "C" double double_dotprod(dev_spinor_d* x, dev_spinor_d* y, int N){
    int i;
-   #ifdef MPI  
+   #ifdef _USE_MPI  
    double result;
    #endif
    cudaError_t cudaerr;
@@ -4524,7 +4524,7 @@ extern "C" double double_dotprod(dev_spinor_d* x, dev_spinor_d* y, int N){
    for(i=0; i<blas_redblocks_d; i++){
      finalsum += blas_sredfield_d[i];
    }
-   #ifdef MPI
+   #ifdef _USE_MPI
      //printf("proc %d : %f\n",g_proc_id,finalsum);
      MPI_Allreduce(&finalsum, &result, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
      return(result);
@@ -4540,7 +4540,7 @@ double cublasDdot_wrapper(int size, double * A, double * B) {
 
   double buffer;
   //printf("proc no %d: my square is: %.8f\n", g_proc_id, buffer);
-#ifdef MPI
+#ifdef _USE_MPI
   //size is number of double -> divide by 24 to get number of spinors 
   buffer = double_dotprod((dev_spinor_d *) A, (dev_spinor_d *) B, size/24);   
 #else
@@ -4551,7 +4551,7 @@ double cublasDdot_wrapper(int size, double * A, double * B) {
 
 
 void cublasDaxpy_wrapper(int size, double alpha, double* A, double* B){
-#ifdef MPI
+#ifdef _USE_MPI
   dev_axpy_d<<<gpu_gd_blas_d, gpu_bd_blas_d>>>(alpha, (dev_spinor_d *) A, (dev_spinor_d *) B);
 #else
   cublasDaxpy(size, alpha, (double *) A, 1, (double *) B, 1);
@@ -4561,7 +4561,7 @@ void cublasDaxpy_wrapper(int size, double alpha, double* A, double* B){
 
 
 void cublasDscal_wrapper(int size, double alpha, double* A){
-#ifdef MPI
+#ifdef _USE_MPI
   dev_blasscal_d<<<gpu_gd_blas_d, gpu_bd_blas_d>>>(alpha, (dev_spinor_d *) A);
 #else
   cublasDscal(size, alpha, (double *) A, 1);

@@ -21,7 +21,7 @@
 # include<config.h>
 #endif
 #include <stdlib.h>
-#ifdef MPI
+#ifdef _USE_MPI
 #include <mpi.h>
 #endif
 #include "su3.h"
@@ -33,7 +33,7 @@ complex_spinor scalar_prod_su3spinor(su3_vector * const S, spinor * const R, con
   static _Complex double ks, kc, ds, tr, ts, tt;
   su3_vector *s, *r;
   complex_spinor c;
-#ifdef MPI
+#ifdef _USE_MPI
   complex_spinor d;
 #endif
 
@@ -117,7 +117,7 @@ complex_spinor scalar_prod_su3spinor(su3_vector * const S, spinor * const R, con
   kc = ks + kc;
   c.sc3 = kc;
 
-#ifdef MPI
+#ifdef _USE_MPI
   if(parallel == 1) {
     d = c;
     MPI_Allreduce(&d, &c, 4, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD); //???

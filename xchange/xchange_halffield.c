@@ -32,7 +32,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#ifdef MPI
+#ifdef _USE_MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -53,7 +53,7 @@ MPI_Request prequests[16];
 /* 2. */
 void init_xchange_halffield() {
 
-#  ifdef MPI
+#  ifdef _USE_MPI
 
 #  ifdef PARALLELT
   int reqcount = 4;
@@ -145,7 +145,7 @@ void init_xchange_halffield() {
 
 /* 3. */
 void xchange_halffield() {
-#  ifdef MPI
+#  ifdef _USE_MPI
 
   MPI_Status status[16];
 #    ifdef PARALLELT
@@ -175,7 +175,7 @@ void xchange_halffield() {
 /* 4. -IIG */
 void xchange_halffield() {
 
-#  ifdef MPI
+#  ifdef _USE_MPI
 
   MPI_Request requests[16];
   MPI_Status status[16];
@@ -267,7 +267,7 @@ void xchange_halffield() {
 /* 4. */
 void xchange_halffield() {
 
-#  ifdef MPI
+#  ifdef _USE_MPI
 
   MPI_Request requests[16];
   MPI_Status status[16];
@@ -370,7 +370,7 @@ void xchange_halffield() {
 /* 32-2. */
 void xchange_halffield32() {
 
-#  ifdef MPI
+#  ifdef _USE_MPI
 
   MPI_Request requests[16];
   MPI_Status status[16];
