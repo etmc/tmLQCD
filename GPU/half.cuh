@@ -490,7 +490,7 @@ extern "C" int bind_halfspinor_texture(dev_spinor_half* sh, float* shnorm){
   size_t size, sizenorm;
   int gridsize, offset;
   
-  #ifdef MPI
+  #ifdef _USE_MPI
     if(even_odd_flag){
       size = sizeof(short4)*(VOLUME+RAND)/2;
       sizenorm = sizeof(float)*(VOLUME+RAND)/2;
@@ -649,7 +649,7 @@ return(0);
 extern "C" int bind_texture_gf_half(dev_su3_2v_half * gf){
  //printf("Binding texture to gaugefield\n");
  
-  #ifdef MPI
+  #ifdef _USE_MPI
     #ifdef GF_8
      size_t size = sizeof(short4)*2*(VOLUME+RAND)*4;
     #else
@@ -1073,7 +1073,7 @@ float dotprod_half(dev_spinor_half* x, float* x_norm, dev_spinor_half* y, float*
    for(i=0; i<blas_half_redblocks; i++){
      finalsum += blas_half_sredfield[i];
    }
-   #ifdef MPI
+   #ifdef _USE_MPI
      MPI_Allreduce(&finalsum, &result, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
      finalsum=result;
    #endif
@@ -1108,7 +1108,7 @@ float squarenorm_half(dev_spinor_half* x, float * xnorm){
    for(i=0; i<blas_half_redblocks; i++){
      finalsum += blas_half_sredfield[i];
    }
-   #ifdef MPI
+   #ifdef _USE_MPI
      MPI_Allreduce(&finalsum, &result, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
      finalsum=result;
    #endif

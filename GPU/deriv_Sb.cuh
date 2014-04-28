@@ -470,14 +470,14 @@ cudaError_t cudaerr;
 int Vol;
 
 
-  #ifdef MPI
+  #ifdef _USE_MPI
    Vol = (VOLUME + RAND)/2;
   #else
    Vol = VOLUME/2;
   #endif
   int intVol = VOLUME/2;
 
-#ifdef MPI
+#ifdef _USE_MPI
  xchange_2fields(k, l, ieo);
 #endif
 
@@ -549,7 +549,7 @@ printf("GPU H_deriv_Sb...\n");
 int host_check_VOL2, Vol;
 
 
-  #ifdef MPI
+  #ifdef _USE_MPI
    Vol = (VOLUME + RAND)/2;
   #else
    Vol = VOLUME/2;

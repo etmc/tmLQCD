@@ -146,7 +146,7 @@ void extended_pion_source(spinor * const P, spinor * const Q,
       for(z = 0; z < LZ*g_nproc_z; z++) {
 	lz = z - g_proc_coords[3]*LZ;
 	coords[3] = z / LZ;
-#ifdef MPI
+#ifdef _USE_MPI
 	MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
 	if(g_cart_id == id) {
@@ -207,7 +207,7 @@ void source_generation_pion_only(spinor * const P, spinor * const Q,
       for(z = 0; z < LZ*g_nproc_z; z++) {
 	lz = z - g_proc_coords[3]*LZ;
 	coords[3] = z / LZ;
-#ifdef MPI
+#ifdef _USE_MPI
 	MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
 	for(is = 0; is < 4; is++) {
@@ -294,7 +294,7 @@ void source_generation_pion_zdir(spinor * const P, spinor * const Q,
       ly = y - g_proc_coords[2]*LY;
       coords[2] = y / LY;
 
-#ifdef MPI
+#ifdef _USE_MPI
         MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
         for(is = 0; is < 4; is++) {
@@ -394,7 +394,7 @@ void source_generation_nucleon(spinor * const P, spinor * const Q,
 	for(zz = 0; zz < LZ*g_nproc_z; zz+=nx) {
 	  lz = zz - g_proc_coords[3]*LZ;
 	  coords[3] = zz / LZ;
-#ifdef MPI
+#ifdef _USE_MPI
 	  MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
 	  ranlxd(&rnumber, 1);

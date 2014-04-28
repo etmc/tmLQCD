@@ -21,7 +21,7 @@
 # include<config.h>
 #endif
 #include <stdlib.h>
-#ifdef MPI
+#ifdef _USE_MPI
 # include <mpi.h>
 #endif
 #include "su3.h"
@@ -72,7 +72,7 @@ double diff_and_square_norm(spinor * const Q, spinor * const R, const int N) {
     kc = tr-tt;
   }
   kc = ks+kc;
-#ifdef MPI
+#ifdef _USE_MPI
   MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   return ks;
 #else

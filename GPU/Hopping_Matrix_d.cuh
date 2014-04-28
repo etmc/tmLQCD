@@ -71,7 +71,7 @@ __global__ void dev_Hopping_Matrix_d(dev_su3_2v_d * gf, const dev_spinor_d * sin
             
             #ifdef TEMPORALGAUGE
               // gf == ID for t != T-1 => just read the spinor
-              #ifdef MPI
+              #ifdef _USE_MPI
                 if ( ((gfindex_site[pos]) < (dev_T-1)*spatialvol) || (dev_rank < dev_nproc-1) ) {
                 //if ((gfindex_site[pos]) < (dev_T-1)*spatialvol) { // FAKE TEMPORALGAUGE
               #else
@@ -114,7 +114,7 @@ __global__ void dev_Hopping_Matrix_d(dev_su3_2v_d * gf, const dev_spinor_d * sin
             //color
             #ifdef TEMPORALGAUGE
               // gf == ID for t != T-1 => just read the spinor
-              #ifdef MPI
+              #ifdef _USE_MPI
                 if ( ((gfindex_nextsite[hoppos]) < (dev_T-1)*spatialvol) || (dev_rank > 0) ) {
                 //if ((gfindex_nextsite[hoppos]) < (dev_T-1)*spatialvol) { // FAKE TEMPORALGAUGE
               #else
@@ -247,7 +247,7 @@ __global__ void dev_Hopping_Matrix_updn_d(dev_su3_2v_d * gf, const dev_spinor_d 
             
             #ifdef TEMPORALGAUGE
               // gf == ID for t != T-1 => just read the spinor
-              #ifdef MPI
+              #ifdef _USE_MPI
                 if ( ((gfindex_site[pos]) < (dev_T-1)*spatialvol) || (dev_rank < dev_nproc-1) ) {
                 //if ((gfindex_site[pos]) < (dev_T-1)*spatialvol) { // FAKE TEMPORALGAUGE
               #else
@@ -297,7 +297,7 @@ __global__ void dev_Hopping_Matrix_updn_d(dev_su3_2v_d * gf, const dev_spinor_d 
             //color
             #ifdef TEMPORALGAUGE
               // gf == ID for t != T-1 => just read the spinor
-              #ifdef MPI
+              #ifdef _USE_MPI
                 if ( ((gfindex_nextsite[hoppos]) < (dev_T-1)*spatialvol) || (dev_rank > 0) ) {
                 //if ((gfindex_nextsite[hoppos]) < (dev_T-1)*spatialvol) { // FAKE TEMPORALGAUGE
               #else
@@ -513,13 +513,13 @@ extern "C" void dev_Qtm_pm_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinout,
   //spinin == odd
   //spinout == odd
   cudaError_t cudaerr;
-  #ifndef MPI 
+  #ifndef _USE_MPI 
     int VolumeEO = VOLUME/2;
   #endif
   
   //Q_{-}
 
-#ifdef MPI
+#ifdef _USE_MPI
   HOPPING_ASYNC_D(dev_gf_d, spinin, spin_eo1_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, gridsize, blocksize);   
 #else
   dev_Hopping_Matrix_d<<<gridsize, blocksize>>>
@@ -528,7 +528,7 @@ extern "C" void dev_Qtm_pm_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinout,
   dev_mul_one_pm_imu_inv_d<<<gridsize2, blocksize2>>>(spin_eo1_d,spin_eo2_d, -1.);
  
 
-#ifdef MPI
+#ifdef _USE_MPI
   HOPPING_ASYNC_D(dev_gf_d, spin_eo2_d, spin_eo1_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, gridsize, blocksize);   
 #else
   dev_Hopping_Matrix_d<<<gridsize, blocksize>>>
@@ -537,7 +537,7 @@ extern "C" void dev_Qtm_pm_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinout,
   dev_mul_one_pm_imu_sub_mul_gamma5_d<<<gridsize2, blocksize2>>>(spinin, spin_eo1_d,  spin_eo2_d, -1.);
 
   //Q_{+}
-#ifdef MPI
+#ifdef _USE_MPI
   HOPPING_ASYNC_D(dev_gf_d, spin_eo2_d, spin_eo1_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, gridsize, blocksize); //spin_eo1 == even -> 0
 #else
   dev_Hopping_Matrix_d<<<gridsize, blocksize>>>
@@ -546,7 +546,7 @@ extern "C" void dev_Qtm_pm_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinout,
   dev_mul_one_pm_imu_inv_d<<<gridsize2, blocksize2>>>(spin_eo1_d,spinout, +1.);
  
 
-#ifdef MPI
+#ifdef _USE_MPI
   HOPPING_ASYNC_D(dev_gf_d, spinout, spin_eo1_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, gridsize, blocksize); 
 #else
   dev_Hopping_Matrix_d<<<gridsize, blocksize>>>
@@ -969,7 +969,7 @@ void dev_Qtm_pm_ndpsi_d (dev_spinor_d * spinout_up, dev_spinor_d * spinout_dn,
   // spinin_up/dn  have to remain unchanged !!
   // spinout_up/dn  can be freely used
   
-  #ifndef MPI
+  #ifndef _USE_MPI
     int N_sites  =    VOLUME/2;		// #lattice sites
   #endif
 
@@ -978,7 +978,7 @@ void dev_Qtm_pm_ndpsi_d (dev_spinor_d * spinout_up, dev_spinor_d * spinout_dn,
   
  
   double nrm = 1.0 / (1.0 + g_mubar*g_mubar - g_epsbar*g_epsbar);
-#ifdef MPI
+#ifdef _USE_MPI
   HOPPING_ASYNC_UPDN_D(dev_gf_d, spinin_dn, spinin_up, dev_spin_eo1_up_d, dev_spin_eo1_dn_d,dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, gridsize1, blocksize1);	// dev_spin_eo1_up = (M_eo) * spinin_dn  
 #else
   dev_Hopping_Matrix_updn_d<<<gridsize1, blocksize1>>>(dev_gf_d, spinin_dn, spinin_up, dev_spin_eo1_up_d, dev_spin_eo1_dn_d,dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,0,N_sites);
@@ -987,7 +987,7 @@ void dev_Qtm_pm_ndpsi_d (dev_spinor_d * spinout_up, dev_spinor_d * spinout_dn,
   dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_dn_d, dev_spin_eo2_dn_d, +1.0);		// dev_spin_eo2_dn  =  (1 + imubar) * dev_spin_eo1_dn  =  (1 + imubar)*(M_eo) * spinin_up
   dev_nd_linalg2_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, g_epsbar, nrm); 
   
-#ifdef MPI
+#ifdef _USE_MPI
   HOPPING_ASYNC_UPDN_D(dev_gf_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, gridsize1, blocksize1);
 #else
   dev_Hopping_Matrix_updn_d<<<gridsize1, blocksize1>>>(dev_gf_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,0,N_sites);								
@@ -1003,7 +1003,7 @@ void dev_Qtm_pm_ndpsi_d (dev_spinor_d * spinout_up, dev_spinor_d * spinout_dn,
   dev_blascopy_d<<<gridsize4, blocksize4>>>(dev_spin_eo2_dn_d, dev_spin_eo3_up_d);			// dev_spin_eo3_up = dev_spin_eo2_dn
   dev_blascopy_d<<<gridsize4, blocksize4>>>(dev_spin_eo2_up_d, dev_spin_eo3_dn_d);			// dev_spin_eo3_dn = dev_spin_eo2_up
 
-#ifdef MPI
+#ifdef _USE_MPI
   HOPPING_ASYNC_UPDN_D(dev_gf_d, dev_spin_eo3_up_d, dev_spin_eo3_dn_d, dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, gridsize1, blocksize1);	// dev_spin_eo1_up = (M_eo) * dev_spin_eo3_up  
 #else
   dev_Hopping_Matrix_updn_d<<<gridsize1, blocksize1>>>(dev_gf_d, dev_spin_eo3_up_d, dev_spin_eo3_dn_d, dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,0,N_sites);
@@ -1012,7 +1012,7 @@ void dev_Qtm_pm_ndpsi_d (dev_spinor_d * spinout_up, dev_spinor_d * spinout_dn,
   dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_dn_d, dev_spin_eo2_dn_d, +1.0);			// dev_spin_eo2_dn  =  (1 + imubar) * dev_spin_eo1_dn  =  (1 + imubar)*(M_eo) * dev_spin_eo3_dn 
   dev_nd_linalg2_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, g_epsbar, nrm); 
 
-#ifdef MPI
+#ifdef _USE_MPI
   HOPPING_ASYNC_UPDN_D(dev_gf_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, dev_spin_eo1_up_d,dev_spin_eo1_dn_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, gridsize1, blocksize1);  
 #else
   dev_Hopping_Matrix_updn_d<<<gridsize1, blocksize1>>>(dev_gf_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, dev_spin_eo1_up_d,dev_spin_eo1_dn_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,0,N_sites);

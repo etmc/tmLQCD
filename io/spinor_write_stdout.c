@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "global.h"
-#ifdef MPI
+#ifdef _USE_MPI
 # include <mpi.h>
 #endif
 #include "su3.h"
@@ -46,7 +46,7 @@ void spinor_write_stdout(spinor * const s) {
 	for(int z = 0; z < g_nproc_z*LZ; z++) {
 	  Z = z - g_proc_coords[3]*LZ;
 	  coords[3] = z / LZ;
-#ifdef MPI
+#ifdef _USE_MPI
 	  MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
 	  if((t+x+y+z)%2 == 0 && g_cart_id == id) {
@@ -59,7 +59,7 @@ void spinor_write_stdout(spinor * const s) {
 		   creal(s[ix].s0.c0), cimag(s[ix].s0.c0));
 	    fflush(stdout);
 	  }
-#ifdef MPI
+#ifdef _USE_MPI
 	  MPI_Barrier(MPI_COMM_WORLD);
 #endif
 	}

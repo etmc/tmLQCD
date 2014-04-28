@@ -19,7 +19,7 @@
 #ifndef _MPI_INIT_H
 #define _MPI_INIT_H
 
-#ifdef MPI
+#ifdef _USE_MPI
 #include <mpi.h>
 
 

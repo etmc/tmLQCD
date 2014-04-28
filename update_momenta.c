@@ -57,7 +57,7 @@ void update_momenta(int * mnllist, double step, const int no,
     }
   }
   
-#ifdef MPI
+#ifdef _USE_MPI
   xchange_deri(hf->derivative);
 #endif
     

@@ -250,7 +250,7 @@ __global__ void dev_spread_rand_reldn(dev_spinor * sin, dev_spinor * rand, int s
 // boundary exchange //
 ///////////////////////
 
-#ifdef MPI
+#ifdef _USE_MPI
 
 // both versions do work:
 

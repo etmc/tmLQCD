@@ -7407,7 +7407,7 @@ void start_blas(int Vol){
       #endif 
     #endif 
   
-    #ifdef MPI
+    #ifdef _USE_MPI
       init_blas(Vol);
     #endif  	
     if((cudaerr=cudaGetLastError()) != cudaSuccess){
@@ -7430,7 +7430,7 @@ void stop_blas(){
   #else
     cublasShutdown();
   #endif 
-  #ifdef MPI
+  #ifdef _USE_MPI
     finalize_blas();
   #endif
     
@@ -7777,7 +7777,7 @@ extern "C" float float_dotprod(dev_spinor* x, dev_spinor* y, int N){
    for(i=0; i<blas_redblocks; i++){
      finalsum += blas_sredfield[i];
    }
-   #ifdef MPI
+   #ifdef _USE_MPI
      float result;
      //printf("proc %d : %f\n",g_proc_id,finalsum);
      MPI_Allreduce(&finalsum, &result, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
@@ -7799,7 +7799,7 @@ extern "C" float float_dotprod(dev_spinor* x, dev_spinor* y, int N){
 float cublasSdot_wrapper(int size, float * A, float * B) {
 
   float buffer;
-#ifdef MPI
+#ifdef _USE_MPI
   //N is number of floats -> divide by 24 to get number of spinors
   buffer = float_dotprod((dev_spinor*) A, (dev_spinor*) B, size/24);    
 #else
@@ -7814,7 +7814,7 @@ float cublasSdot_wrapper(int size, float * A, float * B) {
 
 
 void cublasSaxpy_wrapper(int size, float alpha, float* A, float* B){
-#ifdef MPI
+#ifdef _USE_MPI
   dev_axpy<<<gpu_gd_blas, gpu_bd_blas>>>(alpha, (dev_spinor *) A, (dev_spinor *) B);
   //cublasSaxpy(size, alpha, (float *) A, 1, (float *) B, 1); 
 #else
@@ -7825,7 +7825,7 @@ void cublasSaxpy_wrapper(int size, float alpha, float* A, float* B){
 
 
 void cublasSscal_wrapper(int size, float alpha, float* A){
-#ifdef MPI
+#ifdef _USE_MPI
   dev_blasscal<<<gpu_gd_blas, gpu_bd_blas>>>(alpha, (dev_spinor *) A);
   //cublasSscal(size, alpha, (float *) A, 1); 
 #else
@@ -7846,7 +7846,7 @@ void convert2double_spin (dev_spinor* spin, spinor* h2d) {
 
   int i, Vol, offset;
   
-  #ifndef MPI
+  #ifndef _USE_MPI
     if (even_odd_flag) {
       Vol = VOLUME/2;
     }
@@ -7895,7 +7895,7 @@ void convert2REAL4_spin(spinor* spin, dev_spinor* h2d){
 
   int i, Vol, offset;
   
-  #ifndef MPI
+  #ifndef _USE_MPI
     if (even_odd_flag) {
       Vol = VOLUME/2;
     }
@@ -8165,7 +8165,7 @@ void unorder_spin_gpu (dev_spinor_d* spin, spinor* h2d) {
 
   int i, Vol, offset;
   
-  #ifndef MPI
+  #ifndef _USE_MPI
     if (even_odd_flag) {
       Vol = VOLUME/2;
     }
@@ -8212,7 +8212,7 @@ void order_spin_gpu(spinor* spin, dev_spinor_d* h2d){
 
   int i, Vol, offset;
   
-  #ifndef MPI
+  #ifndef _USE_MPI
     if (even_odd_flag) {
       Vol = VOLUME/2;
     }

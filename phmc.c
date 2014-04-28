@@ -98,7 +98,7 @@ void init_phmc() {
       printf("PHMC: Ev-max = %e \n", phmc_cheb_evmax);
       printf("PHMC: Ev-min = %e \n", phmc_cheb_evmin); 
     }
-#ifdef MPI
+#ifdef _USE_MPI
     MPI_Finalize();
 #endif
     exit(0);
@@ -152,7 +152,7 @@ void init_phmc() {
       fclose(Const);
     } else {
       fprintf(stderr, "File %s is missing! Aborting...\n", filename_const);
-#ifdef MPI
+#ifdef _USE_MPI
       MPI_Finalize();
 #endif
       exit(6);
@@ -177,7 +177,7 @@ void init_phmc() {
     if (fgets(title, 100, roots) == NULL)
     {
       fprintf(stderr, "Error in reading %s! Aborting...\n", filename_phmc_root);
-      #ifdef MPI
+      #ifdef _USE_MPI
          MPI_Finalize();
       #endif
       exit(6);
@@ -191,7 +191,7 @@ void init_phmc() {
   }
   else {
     fprintf(stderr, "File %s is missing! Aborting...\n", filename_phmc_root);
-#ifdef MPI
+#ifdef _USE_MPI
     MPI_Finalize();
 #endif
     exit(6);

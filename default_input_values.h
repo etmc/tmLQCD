@@ -157,7 +157,7 @@
 
 /* default GPU values */
 #define _default_usegpu_flag 0
-#ifdef MPI
+#ifdef _USE_MPI
   #define _default_device_num 0
 #else
   #define _default_device_num -1

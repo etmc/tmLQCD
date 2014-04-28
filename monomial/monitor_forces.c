@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
-#ifdef MPI
+#ifdef _USE_MPI
 # include <mpi.h>
 #endif
 #ifdef OMP
@@ -57,7 +57,7 @@ void monitor_forces(hamiltonian_field_t * const hf) {
       
       monomial_list[ id ].derivativefunction(id, hf);
       
-#ifdef MPI
+#ifdef _USE_MPI
       xchange_deri(hf->derivative);
 #endif
       
@@ -89,7 +89,7 @@ void monitor_forces(hamiltonian_field_t * const hf) {
 #endif
       
       // output for force monitoring
-#ifdef MPI
+#ifdef _USE_MPI
       MPI_Reduce(&sum, &sum2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
       sum = sum2;
       MPI_Reduce(&max, &sum2, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);

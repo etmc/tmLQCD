@@ -33,7 +33,7 @@
 #if (defined BGL && !defined BGP)
 #  include <rts.h>
 #endif
-#ifdef MPI
+#ifdef _USE_MPI
 # include <mpi.h>
 #endif
 
@@ -46,7 +46,7 @@ double gettime(void) {
   const double clockspeed=1.0e-6/700.0;
   t = rts_get_timebase() * clockspeed;
 
-#elif defined MPI
+#elif defined _USE_MPI
 
   t = MPI_Wtime();
 

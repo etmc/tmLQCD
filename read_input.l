@@ -2165,7 +2165,7 @@ int read_input(char * conf_file){
        Otherwise it results to be 0 (the default)
     */
     if(gpu_parsed){
-      #ifdef MPI
+      #ifdef _USE_MPI
 	#ifdef PARALLELT
           if(myverbose!=0) printf("Using GPU for inversions\n");
 	  usegpu_flag = 1;

@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#ifdef MPI
+#ifdef _USE_MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -45,7 +45,7 @@
 
 void xchange_gauge(su3 ** const gf) {
   int cntr=0;
-#  ifdef MPI
+#  ifdef _USE_MPI
   MPI_Request request[105];
   MPI_Status status[105];
 
@@ -606,7 +606,7 @@ void xchange_gauge(su3 ** const gf) {
 
 void xchange_gauge(su3 ** const gf) {
   int cntr=0;
-#  ifdef MPI
+#  ifdef _USE_MPI
   MPI_Request request[105];
   MPI_Status status[105];
 
@@ -1195,7 +1195,7 @@ void xchange_gauge(su3 ** const gf) {
 
 void xchange_gauge(su3 ** const gf) {
 
-#ifdef MPI
+#ifdef _USE_MPI
 
   MPI_Status status;
 #    if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT )
@@ -1621,7 +1621,7 @@ void xchange_gauge(su3 ** const gf) {
 # else /* _INDEX_INDEP_GEOM */
 void xchange_gauge(su3 ** const gf) {
 
-#ifdef MPI
+#ifdef _USE_MPI
 
   MPI_Status status;
   /* send the data to the neighbour on the left */

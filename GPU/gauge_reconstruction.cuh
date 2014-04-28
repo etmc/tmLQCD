@@ -1472,7 +1472,7 @@ void su3to2vf4(su3** gf, dev_su3_2v* h2d_gf){
   int pos=0;
   int VOL;
   int COL=3; // 3 float4 per gauge link
-  #ifndef MPI
+  #ifndef _USE_MPI
     VOL = VOLUME;
     for (i = 0; i < VOLUME; i++) {  
   #else
@@ -1510,7 +1510,7 @@ void su3to8(su3** gf, dev_su3_8* h2d_gf){
   int pos=0;
   int VOL;
   int COL=2; // 2 float4 per gauge link
-  #ifndef MPI
+  #ifndef _USE_MPI
     VOL = VOLUME;
     for (i = 0; i < VOLUME; i++) {
   #else

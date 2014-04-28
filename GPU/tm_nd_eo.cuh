@@ -1638,7 +1638,7 @@ void dev_Qtm_pm_ndpsi_updn (dev_spinor * spinout_up, dev_spinor * spinout_dn,
 
 
 
-#ifdef MPI
+#ifdef _USE_MPI
 
 void dev_Qtm_pm_ndpsi_mpi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
                                         dev_spinor * spinin_up , dev_spinor * spinin_dn ,
@@ -2160,7 +2160,7 @@ void dev_Qtm_pm_ndpsi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
                               dev_spinor * spinin_up , dev_spinor * spinin_dn , 
                               int gridsize1, int blocksize1, int gridsize2, int blocksize2,
                               int gridsize3, int blocksize3, int gridsize4, int blocksize4){
-#ifdef MPI
+#ifdef _USE_MPI
   dev_Qtm_pm_ndpsi_mpi (spinout_up, spinout_dn,
                     spinin_up , spinin_dn , 
                     gridsize1, blocksize1, gridsize2, blocksize2,
