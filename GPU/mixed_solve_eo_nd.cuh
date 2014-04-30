@@ -63,20 +63,12 @@
 
 
 
-#ifdef HAVE_CONFIG_H
-  #include<config.h>
-#endif
-
 extern "C" {
 #include "../operator/tm_operators_nd.h"
 #include "../operator/Hopping_Matrix.h"
 #include "../solver/cg_her_nd.h"
 }
-#include "../global.h"
-#include "HEADER.h"
-#ifdef _USE_MPI
-    #include <mpi.h>
-#endif
+
 
 
 

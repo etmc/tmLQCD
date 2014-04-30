@@ -51,21 +51,29 @@
 #endif 
 
 
-
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <math.h>
+
+
+#ifdef HAVE_CONFIG_H
+  #include<config.h>
+#endif
 
 extern "C" {
 #include "../global.h"
-}
+#include "../solver/solver.h" 
 #include "../hamiltonian_field.h"
+}
+
+
 #include "cudaglobal.h"
-#include "../solver/solver.h"
 #include "HEADER.h"
+#include "MACROS.cuh"
 #include "cudadefs.h"
-#include <math.h>
+
 
 
 extern "C" {
@@ -92,12 +100,6 @@ extern "C" {
 }
 
 
-#ifdef HAVE_CONFIG_H
-  #include<config.h>
-#endif
-
-
-#include "MACROS.cuh"
 
 
 
