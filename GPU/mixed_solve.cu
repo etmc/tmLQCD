@@ -2942,7 +2942,10 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
     #endif
     #endif  
   #endif
-  
+
+  //set device parameters
+  update_constants(dev_grid);     
+      
   //update the gpu single gauge_field
   update_gpu_gf(g_gauge_field);
   
@@ -3245,6 +3248,9 @@ extern "C" int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int ma
     #endif
     #endif
   #endif  
+      
+  //set device parameters
+  update_constants(dev_grid); 
   //update the gpu single gauge_field
   update_gpu_gf(g_gauge_field);
   //allocate solver fields eo!
