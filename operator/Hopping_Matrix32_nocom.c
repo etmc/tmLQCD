@@ -1,5 +1,5 @@
 /***********************************************************************
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ * Copyright (C) 2013 Florian Burger
  *
  * This file is part of tmLQCD.
  *
@@ -17,12 +17,21 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _UPDATE_BACKWARD_GAUGE_H
-#define _UPDATE_BACKWARD_GAUGE_H
 
-#include "su3.h"
-
-void update_backward_gauge(su3 ** const gf);
-void update_backward_gauge_32(su3_32 ** const gf);
-
+#ifdef HAVE_CONFIG_H
+# include<config.h>
 #endif
+#include <stdlib.h>
+#include <stdio.h>
+#include "global.h"
+#include "xchange/xchange.h"
+#include "su3.h"
+#include "sse.h"
+#include "boundary.h"
+#include "operator/Hopping_Matrix32.h"
+
+#define Hopping_Matrix_32 Hopping_Matrix_32_nocom
+#define _NO_COMM 1
+
+
+#include "Hopping_Matrix32.c"

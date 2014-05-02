@@ -264,21 +264,25 @@ void xchange_halffield() {
 
 # else /* _INDEX_INDEP_GEOM */
 
+#ifdef MPI
+MPI_Request requests[16];
+MPI_Status hstatus[16];
+int reqcount;
+#endif
+
 /* 4. */
 void xchange_halffield() {
 
 #  ifdef _USE_MPI
 
-  MPI_Request requests[16];
-  MPI_Status status[16];
 #  ifdef PARALLELT
-  int reqcount = 4;
+  reqcount = 4;
 #  elif defined PARALLELXT
-  int reqcount = 8;
+  reqcount = 8;
 #  elif defined PARALLELXYT
-  int reqcount = 12;
+  reqcount = 12;
 #  elif defined PARALLELXYZT
-  int reqcount = 16;
+  reqcount = 16;
 #  endif
 #  if (defined XLC && defined BGL)
   __alignx(16, HalfSpinor);
@@ -350,13 +354,20 @@ void xchange_halffield() {
 	    T*LX*LY*12/2, MPI_DOUBLE, g_nb_z_up, 504, g_cart_grid, &requests[15]); 
 #    endif
   
-  MPI_Waitall(reqcount, requests, status); 
+  //MPI_Waitall(reqcount, requests, status); 
 #  endif /* MPI */
   return;
   
 #ifdef _KOJAK_INST
 #pragma pomp inst end(xchangehalf)
 #endif
+}
+
+void wait_halffield() {
+#  ifdef MPI
+  MPI_Waitall(reqcount, requests, hstatus); 
+#  endif /* MPI */
+  return;
 }
 
 # endif /* _INDEX_INDEP_GEOM */
@@ -374,14 +385,15 @@ void xchange_halffield32() {
 
   MPI_Request requests[16];
   MPI_Status status[16];
+
 #  ifdef PARALLELT
-  int reqcount = 4;
+  reqcount = 4;
 #  elif defined PARALLELXT
-  int reqcount = 8;
+  reqcount = 8;
 #  elif defined PARALLELXYT
-  int reqcount = 12;
+  reqcount = 12;
 #  elif defined PARALLELXYZT
-  int reqcount = 16;
+  reqcount = 16;
 #  endif
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(xchangehalf32)
@@ -453,13 +465,21 @@ void xchange_halffield32() {
 	    T*LX*LY*12/2, MPI_FLOAT, g_nb_z_up, 504, g_cart_grid, &requests[15]); 
 #    endif
 
-  MPI_Waitall(reqcount, requests, status); 
+  //MPI_Waitall(reqcount, requests, status); 
 #  endif /* MPI */
   return;
 #ifdef _KOJAK_INST
 #pragma pomp inst end(xchangehalf32)
 #endif
 }
+void wait_halffield32() {
+#  ifdef MPI
+  MPI_Waitall(reqcount, requests, hstatus); 
+#  endif /* MPI */
+  return;
+}
+
+
 # endif /* defined _INDEX_INDEP_GEOM */
 #endif /* defined _USE_HALFSPINOR */
 

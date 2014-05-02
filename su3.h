@@ -42,6 +42,11 @@ typedef struct
    _Complex double c00, c01, c02, c10, c11, c12, c20, c21, c22;
 } su3;
 
+typedef struct 
+{
+   _Complex float c00, c01, c02, c10, c11, c12, c20, c21, c22;
+} su3_32;
+
 typedef struct
 {
    _Complex double c0,c1,c2;
@@ -56,6 +61,11 @@ typedef struct
 {
    su3_vector s0,s1,s2,s3;
 } spinor;
+
+typedef struct
+{
+   su3_vector32 s0,s1,s2,s3;
+} spinor32;
 
 typedef struct
 {

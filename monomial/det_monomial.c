@@ -32,6 +32,7 @@
 #include "deriv_Sb.h"
 #include "deriv_Sb_D_psi.h"
 #include "operator/tm_operators.h"
+#include "operator/tm_operators_32.h"
 #include "operator/Hopping_Matrix.h"
 #include "solver/chrono_guess.h"
 #include "solver/solver.h"
@@ -92,7 +93,7 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
     g_mu = mnl->mu;
     boundary(mnl->kappa);
 
-    if(mnl->solver != CG) {
+    if( (mnl->solver) != CG && (mnl->solver != MIXEDCG) ) {
       fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (det_monomial.c)\n");
     }
 
@@ -243,14 +244,17 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
 
     chrono_guess(mnl->w_fields[0], mnl->pf, mnl->csg_field, mnl->csg_index_array,
     	 mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
+
     g_sloppy_precision_flag = 0;
     
 
 	mnl->iter0 = det_eo_inversion(mnl->w_fields[0], mnl->pf, mnl->maxiter, mnl->accprec, g_relative_precision_flag,
 			    VOLUME/2, mnl->Qsq);     		
 			
+
     mnl->Qm(mnl->w_fields[1], mnl->w_fields[0]);
-    g_sloppy_precision_flag = save_sloppy;
+    g_sloppy_precision_flag = save_sloppy;   
+ 
     /* Compute the energy contr. from first field */
     mnl->energy1 = square_norm(mnl->w_fields[1], VOLUME/2, 1);
   }

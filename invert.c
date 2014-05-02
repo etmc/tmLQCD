@@ -133,6 +133,8 @@ int main(int argc, char *argv[])
 #else
   NO_OF_SPINORFIELDS = DUM_MATRIX + 3;
 #endif
+  
+  NO_OF_SPINORFIELDS_32 = 2;
 
   verbose = 0;
   g_use_clover_flag = 0;
@@ -196,9 +198,12 @@ int main(int argc, char *argv[])
 
 #ifdef _GAUGE_COPY
   j = init_gauge_field(VOLUMEPLUSRAND, 1);
+  j += init_gauge_field_32(VOLUMEPLUSRAND, 1);
 #else
   j = init_gauge_field(VOLUMEPLUSRAND, 0);
+  j += init_gauge_field_32(VOLUMEPLUSRAND, 0);  
 #endif
+ 
   if (j != 0) {
     fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
     exit(-1);
@@ -222,9 +227,11 @@ int main(int argc, char *argv[])
   }
   if (even_odd_flag) {
     j = init_spinor_field(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS);
+    j += init_spinor_field_32(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS_32);   
   }
   else {
     j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
+    j += init_spinor_field_32(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS_32);   
   }
   if (j != 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
@@ -326,7 +333,8 @@ if(usegpu_flag){
 #ifdef _USE_MPI
     xchange_gauge(g_gauge_field);
 #endif
-
+    /*Convert to a 32 bit gauge field, after xchange*/
+    convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND);
     /*compute the energy of the gauge field*/
     plaquette_energy = measure_plaquette( (const su3**) g_gauge_field);
 
@@ -529,8 +537,10 @@ if(usegpu_flag){
   free_blocks();
   free_dfl_subspace();
   free_gauge_field();
+  free_gauge_field_32();
   free_geometry_indices();
   free_spinor_field();
+  free_spinor_field_32();  
   free_moment_field();
   free_chi_spinor_field();
   free(filename);

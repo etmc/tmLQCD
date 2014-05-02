@@ -32,6 +32,7 @@
 #include "su3adj.h"
 #include "su3spinor.h"
 #include "operator/tm_operators.h"
+#include "operator/tm_operators_32.h"
 #include "operator/clovertm_operators.h"
 #include "operator/clover_leaf.h"
 #include "ranlxd.h"
@@ -180,6 +181,7 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].accfunction = &det_acc;
 	monomial_list[i].derivativefunction = &det_derivative;
 	monomial_list[i].Qsq = &Qtm_pm_psi;
+	monomial_list[i].Qsq32 = &Qtm_pm_psi_32;	
 	monomial_list[i].Qp = &Qtm_plus_psi;
 	monomial_list[i].Qm = &Qtm_minus_psi;
 	if(g_proc_id == 0 && g_debug_level > 1) {
@@ -219,6 +221,7 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].accfunction = &detratio_acc;
 	monomial_list[i].derivativefunction = &detratio_derivative;
 	monomial_list[i].Qsq = &Qtm_pm_psi;
+	monomial_list[i].Qsq32 = &Qtm_pm_psi_32;	
 	monomial_list[i].Qp = &Qtm_plus_psi;
 	monomial_list[i].Qm = &Qtm_minus_psi;
 	if(g_proc_id == 0 && g_debug_level > 1) {

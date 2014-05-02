@@ -246,6 +246,19 @@ if test $enable_mpi = yes; then
   else
     AC_MSG_RESULT(no)
   fi
+
+  # when using MPI and OpenMP but NOT SPI, overlapping can be made more efficient by exploiting threading 
+  AC_MSG_CHECKING(whether we want to make computation-overlapping MPI exchange more efficient through the use of threads)
+  if test $enable_omp = yes; then
+    if test $enable_spi = no; then
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(_THREAD_OVERLAP,1,use same thread for exchange and wait in halfspinor hopping matrix)
+    else
+      AC_MSG_RESULT(no)
+    fi
+  else
+    AC_MSG_RESULT(no)
+  fi
 fi
 
 AC_MSG_CHECKING([whether we want to fix volume at compiletime])
@@ -384,6 +397,8 @@ elif test $withalign = auto; then
   AC_MSG_RESULT(auto)
   AC_DEFINE(ALIGN_BASE, 0x00, [Align base])
   AC_DEFINE(ALIGN, [], [])
+  AC_DEFINE(ALIGN_BASE32, 0x00, [Align base])
+  AC_DEFINE(ALIGN32, [], [])
 else
   AC_MSG_RESULT(Unusable value for array alignment)
   AC_MSG_ERROR([Allowed values are: auto, none, 16, 32])
@@ -479,6 +494,9 @@ if test $enable_qpx = yes; then
       AC_MSG_RESULT(increasing array alignment to 32 bytes for use of QPX instructions on BG/Q)
       AC_DEFINE(ALIGN_BASE, 0x1F, [Align base])
       AC_DEFINE(ALIGN, [__attribute__ ((aligned (32)))])
+      AC_MSG_RESULT(increasing 32bit array alignment to 16 bytes for use of QPX instructions on BG/Q)
+      AC_DEFINE(ALIGN_BASE32, 0x0F, [Align base])
+      AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))])
       withautoalign=32
     fi
   elif test $withalign -lt 32; then

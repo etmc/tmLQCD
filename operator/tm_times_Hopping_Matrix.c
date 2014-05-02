@@ -38,7 +38,7 @@
 #include <complex.h>
 #include "global.h"
 #include "su3.h"
-#ifdef BGQ
+#ifdef SPI
 #  include"DirectPut.h"
 #endif
 #ifdef _USE_MPI

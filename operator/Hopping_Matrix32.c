@@ -1,5 +1,6 @@
 /**********************************************************************
- *
+ * Copyright (C) 2013 Florian Burger
+ * derived from Hopping_Matrix.c 
  * Copyright (C) 2001 Martin Luescher
  *               2002 Martin Hasenbusch
  *               2003, 2004, 2005, 2006, 2007, 2008 Carsten Urbach
@@ -56,7 +57,7 @@
 #endif
 #include "global.h"
 #include "su3.h"
-#ifdef _USE_MPI
+#ifdef MPI
 #  include "xchange/xchange.h"
 #endif
 #include "boundary.h"
@@ -65,95 +66,34 @@
 #ifdef SPI
 #  include"DirectPut.h"
 #endif
-#include "operator/Hopping_Matrix.h"
+#include "operator/Hopping_Matrix32.h"
 
 #if defined _USE_HALFSPINOR
-#  include "operator/halfspinor_hopping.h"
+#  include "operator/halfspinor_hopping32.h"
+#endif
 
-#  if ((defined SSE2)||(defined SSE3))
-#    include "sse.h"
 
-#  elif (defined BGL && defined XLC)
-#    include "bgl.h"
-
-#  elif (defined BGQ && defined XLC)
+#if (defined BGQ && defined XLC)
 #    include "bgq.h"
 #    include "bgq2.h"
 #    include "xlc_prefetch.h"
+#endif
 
-#  endif
-
-void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
+void Hopping_Matrix_32(const int ieo, spinor32 * const l, spinor32 * const k) {
 
 #ifdef _GAUGE_COPY
-  if(g_update_gauge_copy) {
-    update_backward_gauge(g_gauge_field);
+  if(g_update_gauge_copy_32) {
+    update_backward_gauge_32(g_gauge_field_32);   
   }
 #endif
 
 #ifdef OMP
-#pragma omp parallel
-  {
-  su3 * restrict u0 ALIGN;
+  su3_32 * restrict u0 ALIGN32;
 #endif
 
-#  include "operator/halfspinor_body.c"
+#  include "operator/halfspinor_body32.c"
 
-#  ifdef OMP
-  } /* OpenMP closing brace */
-#  endif
+
   return;
 }
-#else /* thats _USE_HALFSPINOR */
-
-#  if (((defined SSE2)||(defined SSE3)) && defined _USE_TSPLITPAR)
-#    include "sse.h"
-#    include "operator/hopping_sse_dbl.c"
-
-#  else
-#    include "operator/hopping.h"
-#    if ((defined SSE2)||(defined SSE3))
-#      include "sse.h"
-
-#    elif (defined BGL && defined XLC)
-#      include "bgl.h"
-
-#    elif (defined BGQ && defined XLC)
-#      include "bgq.h"
-#      include "bgq2.h"
-#      include "xlc_prefetch.h"
-
-#    elif defined XLC
-#      include"xlc_prefetch.h"
-
-#    endif
-void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
-#    ifdef XLC
-#      pragma disjoint(*l, *k)
-#    endif
-#    ifdef _GAUGE_COPY
-  if(g_update_gauge_copy) {
-    update_backward_gauge(g_gauge_field);
-  }
-#    endif
-
-#    if (defined _USE_MPI && !(defined _NO_COMM))
-  xchange_field(k, ieo);
-#    endif
-
-#    ifdef OMP
-#      pragma omp parallel
-  {
-#    endif
-
-#    include "operator/hopping_body_dbl.c"
-
-#    ifdef OMP
-  } /* OpenMP closing brace */
-#    endif
-  return;
-}
-#  endif
-
-#endif /* thats _USE_HALFSPINOR */
 

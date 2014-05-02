@@ -21,5 +21,9 @@
 
 int init_gauge_field(const int V, const int back);
 void free_gauge_field();
+int init_gauge_field_32(const int V, const int back);
+void free_gauge_field_32();
+
+void convert_32_gauge_field( su3_32** gf32, su3** gf, int V);
 
 #endif

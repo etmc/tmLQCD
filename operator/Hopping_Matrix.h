@@ -28,4 +28,8 @@
 #  include "su3.h"
 
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k);
+#if defined _USE_HALFSPINOR
+void Hopping_Matrix_32(const int ieo, spinor32 * const l, spinor32 * const k);
+#endif
+
 #endif

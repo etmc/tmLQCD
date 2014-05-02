@@ -80,6 +80,58 @@ void free_spinor_field() {
 }
 
 
+spinor * sp32 = NULL;
+int init_spinor_field_32(const int V, const int nr) {
+  int i = 0;
+
+#if (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
+  if((void*)(sp32 = (spinor32*)shmalloc((nr*V+1)*sizeof(spinor32))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
+    return(1);
+  }
+#else
+  if((void*)(sp32 = (spinor32*)calloc(nr*V+1, sizeof(spinor32))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
+    return(1);
+  }
+#endif
+  if((void*)(g_spinor_field32 = (spinor32**)malloc(nr*sizeof(spinor32*))) == NULL) {
+    printf ("malloc errno : %d\n",errno); 
+    errno = 0;
+    return(2);
+  }
+#if ( defined SSE || defined SSE2 || defined SSE3)
+  g_spinor_field32[0] = (spinor32*)(((unsigned long int)(sp32)+ALIGN_BASE32)&~ALIGN_BASE32);
+#else
+  g_spinor_field32[0] = (spinor32*)(((unsigned long int)(sp32)+ALIGN_BASE32)&~ALIGN_BASE32);
+#endif
+  
+  for(i = 1; i < nr; i++){
+    g_spinor_field32[i] = g_spinor_field32[i-1]+V;
+  }
+
+  return(0);
+}
+
+void free_spinor_field_32() {
+#if (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
+  shfree(sp32);
+#else
+  free(sp32);
+#endif
+}
+
+
+
+
+
+
+
+
+
+
 /** 
  * costumized spinor allocation routines
  */

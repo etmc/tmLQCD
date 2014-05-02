@@ -48,6 +48,7 @@
 #include "operator/Hopping_Matrix.h"
 
 #define Hopping_Matrix Hopping_Matrix_nocom
+#define Hopping_Matrix_32 Hopping_Matrix_32_nocom
 #define _NO_COMM 1
 #ifdef _KOJAK_INST
 #undef _KOJAK_INST

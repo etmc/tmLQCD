@@ -17,12 +17,18 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _UPDATE_BACKWARD_GAUGE_H
-#define _UPDATE_BACKWARD_GAUGE_H
+#ifndef _HOPPING_MATRIX32_H
+#  define _HOPPING_MATRIX32_H
 
-#include "su3.h"
+#  define EO 0
+#  define OE 1
+#  define OO 1
+#  define EE 0
 
-void update_backward_gauge(su3 ** const gf);
-void update_backward_gauge_32(su3_32 ** const gf);
+#  include "su3.h"
+
+#if defined _USE_HALFSPINOR
+void Hopping_Matrix_32(const int ieo, spinor32 * const l, spinor32 * const k);
+#endif
 
 #endif

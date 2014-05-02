@@ -4389,7 +4389,7 @@ void finalize_gpu_single_nd_mms_fields(){
   cudaFree(dev_spin_eo3_up);
   cudaFree(dev_spin_eo3_dn);  
   
-#ifdef MPI
+#ifdef _USE_MPI
   cudaFreeHost(RAND1_UP_D);
   cudaFreeHost(RAND2_UP_D); 
   cudaFreeHost(RAND3_UP_D);
@@ -4483,7 +4483,7 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
   
   //spinor fields  
   init_gpu_single_nd_mms_fields(Nshift, Vol);
-  #ifdef MPI
+  #ifdef _USE_MPI
     he_cg_init_nd_additional_mpi<<<1,1>>>(VOLUMEPLUSRAND/2, RAND, g_cart_id, g_nproc);
   #endif
   //->check
@@ -4508,7 +4508,7 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
    #endif
      
    size_t dev_spinsize_d; 
-   #ifdef MPI
+   #ifdef _USE_MPI
      dev_spinsize_d = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); // double2 even-odd ! 
    #else
      dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double2 even-odd !  
