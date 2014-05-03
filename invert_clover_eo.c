@@ -86,8 +86,9 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
     }else if(solver_flag == INCREIGCG){
 
        if(g_proc_id == 0) {printf("# Using Incremental Eig-CG!\n"); fflush(stdout);}
-       iter = incr_eigcg(VOLUME/2,solver_params.eigcg_nrhs,Odd_new, g_spinor_field[DUM_DERI], solver_params.eigcg_ldh, Qsq,
- 		    	            precision, solver_params.eigcg_restolsq , rel_prec, max_iter, solver_params.eigcg_nev, solver_params.eigcg_vmax);
+       iter = incr_eigcg(VOLUME/2,solver_params.eigcg_nrhs, solver_params.eigcg_nrhs1, Odd_new, g_spinor_field[DUM_DERI], solver_params.eigcg_ldh, Qsq,
+ 		    	            solver_params.eigcg_tolsq1, solver_params.eigcg_tolsq, solver_params.eigcg_restolsq , solver_params.eigcg_rand_guess_opt, 
+                                    rel_prec, max_iter, solver_params.eigcg_nev, solver_params.eigcg_vmax);
        Qm(Odd_new, Odd_new);
 
    }else{

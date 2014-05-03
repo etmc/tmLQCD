@@ -532,7 +532,9 @@ inline void rmQuotes(char *str){
   {SPC}*SolverPrecision{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->eps_sq = c;
-    if(myverbose) printf("  SolverPrecision set to %f line %d operator %d\n", c, line_of_file, current_operator);
+    (optr->solver_params).eigcg_tolsq = c;
+    if(myverbose) printf("  SolverPrecision set to %lf line %d operator %d\n", c, line_of_file, current_operator);
+    if(myverbose) printf("  EigCGtolsq set to %lf line %d operator %d\n", c, line_of_file, current_operator);
   }
   {SPC}*SolverRelativePrecision{EQL}yes {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
@@ -544,11 +546,15 @@ inline void rmQuotes(char *str){
     optr->rel_prec = 0;
     if(myverbose) printf("  SolverRelativePrecision set to NO line %d operator %d\n",  line_of_file, current_operator);
   }
-
   {SPC}*EigCGnrhs{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     (optr->solver_params).eigcg_nrhs = a;
     if(myverbose) printf("  EigCGnrhs set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EigCGnrhs1{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z1] = %d", name, &a);
+    (optr->solver_params).eigcg_nrhs1 = a;
+    if(myverbose) printf("  EigCGnrhs1 set to %d line %d operator %d\n", a, line_of_file, current_operator);
   }
   {SPC}*EigCGnev{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
@@ -565,10 +571,20 @@ inline void rmQuotes(char *str){
     (optr->solver_params).eigcg_ldh = a;
     if(myverbose) printf("  EigCGldh set to %d line %d operator %d\n", a, line_of_file, current_operator);
   }
+  {SPC}*EigCGtolsq1{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z1] = %lf", name, &c);
+    (optr->solver_params).eigcg_tolsq1 = c;
+    if(myverbose) printf("  EigCGtolsq1 set to %lf line %d operator %d\n", a, line_of_file, current_operator);
+  }
   {SPC}*EigCGrestolsq{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     (optr->solver_params).eigcg_restolsq = c;
-    if(myverbose) printf("  EigCGrestolsq set to %f line %d operator %d\n", a, line_of_file, current_operator);
+    if(myverbose) printf("  EigCGrestolsq set to %lf line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EigCGRandGuessOpt{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).eigcg_rand_guess_opt = a;
+    if(myverbose) printf("  EigCGrand_guess_opt set to %d line %d operator %d\n", a, line_of_file, current_operator);
   }
 
   {SPC}*ExtraMasses{EQL}{FLTLIST} {

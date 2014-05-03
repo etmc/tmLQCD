@@ -37,13 +37,18 @@ typedef struct {
    ********************************/
 
   int eigcg_nrhs;          /*total number of right-hand sides to be solved*/
+  int eigcg_nrhs1;         /*The number of right-hand sides where we solve to tolerance tolsq1 
+                             remaining systems will be solved to tolsq*/
   int eigcg_nev;           /*number of eigenvalues computed from a single right-hand side */
   int eigcg_vmax;          /*size of the search subspace for eigcg*/
   int eigcg_ldh;           /*total number of eigenvectors that will be computed and used in deflation */
+  double eigcg_tolsq1;     /*squared tolerance for the first n1 systems */
+  double eigcg_tolsq;      /*squared tolerance for the rest of the linear systems*/
   double eigcg_restolsq;   /*tolerance squared for restarting eigcg after eigenvectors has been computed
                              Typically this is the square root of the tolerance squared requested for the linear system.
-                             Example, to solve the linear systems to res_sq=1e-16, one chooses eigcg_restolsq=1e-8 or smaller 
+                             Example, to solve the linear systems to squared residual 1e-16, one chooses eigcg_restolsq=1e-8 or smaller 
                              This will specify how many times deflated CG restaretd in the second phase (after eigenvectors has been computed)*/
+  int eigcg_rand_guess_opt; /*set to 0 to use 0 initial guesses or non-zero values if you want to use random initial guess as a volume source */
 } solver_params_t;
 
 

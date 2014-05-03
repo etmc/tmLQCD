@@ -37,12 +37,15 @@
 int incr_eigcg(
      const int N,      /*(IN) Number of lattice sites for this process*/
      const int nrhs,   /*(IN) Number of right-hand sides to be solved*/ 
+     const int nrhs1,  /*(IN) First number of right-hand sides to be solved using tolerance eps_sq1*/ 
      spinor * const x, /*(IN/OUT) initial guess on input, solution on output for this RHS*/
      spinor * const b, /*(IN) right-hand side*/
      const int ldh,    /*(IN) maximum number of eignvectors to be computed*/
      matrix_mult f,    /*(IN) f(s,r) computes s=A*r, i.e. matrix-vector multiply*/
-     const double eps_sq,   /*(IN) squared tolerance of convergence of the linear system*/
+     const double eps_sq1,    /*(IN) squared tolerance of convergence of the linear system for systems 1 till nrhs1*/
+     const double eps_sq,     /*(IN) squared tolerance of convergence of the linear system for systems nrhs1+1 till nrhs*/
      double restart_eps_sq, /*(IN) squared tolerance for restarting CG*/
+     const int rand_guess_opt,    /*(IN) set to non-zero if you want to use random intitial guess (volume Gaussian with mean 0)*/
      const int rel_preq,    /*(IN)0 for using absoute error for convergence
                                   1 for using relative error for convergence*/
      const int maxit,       /*(IN) Maximum allowed number of iterations to solution*/

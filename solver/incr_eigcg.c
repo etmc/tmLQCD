@@ -128,9 +128,9 @@
 
 #include "solver/incr_eigcg.h"
 
-int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b, 
-               const int ldh, matrix_mult f, const double eps_sq, double restart_eps_sq,  
-               const int rel_prec, const int maxit, int nev, const int v_max) 
+int incr_eigcg(const int N, const int nrhs,  const int nrhs1, spinor * const x, spinor * const b, 
+               const int ldh, matrix_mult f, const double eps_sq1, const double eps_sq, double restart_eps_sq,  
+               const int rand_guess_opt, const int rel_prec, const int maxit, int nev, const int v_max) 
 { 
   /*Static variables and arrays.*/
   static spinor **solver_field; /*4 spinor fields*/
@@ -178,7 +178,7 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
   /* Timing vars */
   double wt1,wt2,wE,wI;
 
-
+  double eps_sq_used;
 
  
   /* Variables */
@@ -218,6 +218,12 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
 
   /*increment the RHS counter*/
   ncurRHS = ncurRHS +1;  
+  if(ncurRHS > nrhs1){
+    eps_sq_used = eps_sq;
+  }
+  else{
+    eps_sq_used = eps_sq1;
+  }
 
   if(ncurRHS==1) /* If this is the first right-hand side, allocate needed memory*/
   {
@@ -283,7 +289,7 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
 
   
   if(g_proc_id == g_stdio_proc && g_debug_level > 0) {
-    fprintf(stdout, "System %d\n",ncurRHS); 
+    fprintf(stdout, "System %d, eps_sq %f\n",ncurRHS,eps_sq_used); 
     fflush(stdout);
   } 
   
@@ -390,8 +396,7 @@ int incr_eigcg(const int N, const int nrhs,  spinor * const x, spinor * const b,
 
     wt1 = gettime();
 
-       
-    eigcg( N, LDN, x, b, &normb, eps_sq, restart_eps_sq, rel_prec, maxit_remain, 
+    eigcg( N, LDN, x, b, &normb, eps_sq_used, restart_eps_sq, rel_prec, maxit_remain, 
 	     &numIts, &cur_res, &flag, solver_field, f, 
 	     nev_used, v_max, V, esize, ework);
      
