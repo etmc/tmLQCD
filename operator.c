@@ -180,10 +180,10 @@ int init_operators() {
         
         if(optr->solver == INCREIGCG){
           if (g_cart_id == 0 && optr->DownProp){
-             fprintf(stderr,"Incremental EigCG solver works better for either up or down propagator but not both\n");
-             fprintf(stderr,"because the eigenvectors are diffrent. Switching off AddDownPropagator!\n");
+             fprintf(stderr,"Warning: For the even-odd preconditioned operator, eigenvectors for +mu and -mu are slightly different.\n");
+             fprintf(stderr,"However, Incremental EigCG will still work but with a mix of these approximate eigenvectors.\n");
           }
-          optr->DownProp = 0;
+          
 
           if (g_cart_id == 0 && optr->even_odd_flag == 0)
              fprintf(stderr,"Incremental EigCG solver is added only with Even-Odd preconditioning!. Forcing\n");
