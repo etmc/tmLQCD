@@ -217,7 +217,9 @@ int incr_eigcg(const int N, const int nrhs,  const int nrhs1, spinor * const x, 
   double cur_res; //current residual squared (initial value will be computed in eigcg)
 
   /*increment the RHS counter*/
-  ncurRHS = ncurRHS +1;  
+  ncurRHS = ncurRHS +1; 
+
+  //set the tolerance to be used for this right-hand side 
   if(ncurRHS > nrhs1){
     eps_sq_used = eps_sq;
   }
@@ -225,9 +227,25 @@ int incr_eigcg(const int N, const int nrhs,  const int nrhs1, spinor * const x, 
     eps_sq_used = eps_sq1;
   }
 
-  if(ncurRHS==1) /* If this is the first right-hand side, allocate needed memory*/
+  if(ncurRHS==1)/* If this is the first system, allocate needed memory for the solver*/
   {
     init_solver_field(&solver_field, LDN, nrsf); 
+  }
+
+  if(nev==0){ /*incremental eigcg is used as a cg solver. No need to restart forcing no-restart*/
+    if(g_proc_id == g_stdio_proc && g_debug_level > 0) {
+       fprintf(stdout, "CG won't be restarted in this mode since no deflation will take place (nev=0)\n"); 
+       fflush(stdout);
+    } 
+  
+    restart_eps_sq=0.0;
+  }
+
+
+
+
+  if((ncurRHS==1) && (nev >0) )/* If this is the first right-hand side and eigenvectors are needed, allocate needed memory*/
+  { 
     init_solver_field(&evecs, LDN, ldh); 
      
     #if (defined SSE || defined SSE2 || defined SSE3)
@@ -549,6 +567,10 @@ int incr_eigcg(const int N, const int nrhs,  const int nrhs1, spinor * const x, 
      ncurRHS=0;
      ncurEvals=0;
      finalize_solver(solver_field,nrsf);
+  }
+
+  if( (ncurRHS == nrhs) && (nev >0) )/*this was the last system to be solved and there were allocated memory for eigenvector computation*/
+  {
      finalize_solver(evecs,ldh);
      #if (defined SSE || defined SSE2 || defined SSE3)
      free(_v);
