@@ -307,7 +307,7 @@ int incr_eigcg(const int N, const int nrhs,  const int nrhs1, spinor * const x, 
 
   
   if(g_proc_id == g_stdio_proc && g_debug_level > 0) {
-    fprintf(stdout, "System %d, eps_sq %f\n",ncurRHS,eps_sq_used); 
+    fprintf(stdout, "System %d, eps_sq %e\n",ncurRHS,eps_sq_used); 
     fflush(stdout);
   } 
   
