@@ -1,4 +1,3 @@
-#define MAIN_PROGRAM
 
 #if HAVE_CONFIG_H
 #include<config.h>
@@ -17,6 +16,5 @@ int main(int argc,char *argv[]){
   return 0;
 }
 
-#undef MAIN_PROGRAM
 
 

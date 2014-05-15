@@ -23,10 +23,7 @@
  * Author: Carsten Urbach
  *         urbach@physik.fu-berlin.de
  *
- * Modified by Jenifer Gonzalez Lopez for the Schroedinger Functional
- *
  *******************************************************************************/
-#define MAIN_PROGRAM
 #include "lime.h"
 #if HAVE_CONFIG_H
 #include<config.h>

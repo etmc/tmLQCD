@@ -23,8 +23,6 @@
 *
 *******************************************************************************/
 
-#define MAIN_PROGRAM
-
 #include <lime.h>
 #ifdef HAVE_CONFIG_H
 # include<config.h>
