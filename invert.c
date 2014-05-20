@@ -280,200 +280,200 @@ int main(int argc, char *argv[])
       fflush(stdout);
     }
     if( (i = read_gauge_field(conf_filename,g_gauge_field)) !=0) {
-      fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", i, conf_filename);
-      exit(-2);
+      fprintf(stderr, "Error %d while reading gauge field from %s\n Skipping...\n", i, conf_filename);
     }
-
-
-    if (g_cart_id == 0) {
-      printf("# Finished reading gauge field.\n");
-      fflush(stdout);
-    }
-#ifdef MPI
-    xchange_gauge(g_gauge_field);
-#endif
-
-    /*compute the energy of the gauge field*/
-    plaquette_energy = measure_plaquette( (const su3**) g_gauge_field);
-
-    if (g_cart_id == 0) {
-      printf("# The computed plaquette value is %e.\n", plaquette_energy / (6.*VOLUME*g_nproc));
-      fflush(stdout);
-    }
-
-    if (use_stout_flag == 1){
-      params_smear.rho = stout_rho;
-      params_smear.iterations = stout_no_iter;
-/*       if (stout_smear((su3_tuple*)(g_gauge_field[0]), &params_smear, (su3_tuple*)(g_gauge_field[0])) != 0) */
-/*         exit(1) ; */
-      g_update_gauge_copy = 1;
-      plaquette_energy = measure_plaquette( (const su3**) g_gauge_field);
+    else {
 
       if (g_cart_id == 0) {
-        printf("# The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
-        fflush(stdout);
+	printf("# Finished reading gauge field.\n");
+	fflush(stdout);
       }
-    }
-
-    if (reweighting_flag == 1) {
-      reweighting_factor(reweighting_samples, nstore);
-    }
-
-    /* Compute minimal eigenvalues, if wanted */
-    if (compute_evs != 0) {
-      eigenvalues(&no_eigenvalues, 5000, eigenvalue_precision,
-                  0, compute_evs, nstore, even_odd_flag);
-    }
-    if (phmc_compute_evs != 0) {
 #ifdef MPI
-      MPI_Finalize();
+      xchange_gauge(g_gauge_field);
 #endif
-      return(0);
-    }
-
-    /* Compute the mode number or topological susceptibility using spectral projectors, if wanted*/
-
-    if(compute_modenumber != 0 || compute_topsus !=0){
       
-      s_ = calloc(no_sources_z2*VOLUMEPLUSRAND+1, sizeof(spinor));
-      s  = calloc(no_sources_z2, sizeof(spinor*));
-      if(s_ == NULL) { 
-        printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
-      }
-      if(s == NULL) { 
-        printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
+      /*compute the energy of the gauge field*/
+      plaquette_energy = measure_plaquette( (const su3**) g_gauge_field);
+      
+      if (g_cart_id == 0) {
+	printf("# The computed plaquette value is %e.\n", plaquette_energy / (6.*VOLUME*g_nproc));
+	fflush(stdout);
       }
       
+      if (use_stout_flag == 1){
+	params_smear.rho = stout_rho;
+	params_smear.iterations = stout_no_iter;
+	/*       if (stout_smear((su3_tuple*)(g_gauge_field[0]), &params_smear, (su3_tuple*)(g_gauge_field[0])) != 0) */
+	/*         exit(1) ; */
+	g_update_gauge_copy = 1;
+	plaquette_energy = measure_plaquette( (const su3**) g_gauge_field);
+	
+	if (g_cart_id == 0) {
+	  printf("# The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
+	  fflush(stdout);
+	}
+      }
       
-      for(i = 0; i < no_sources_z2; i++) {
+      if (reweighting_flag == 1) {
+	reweighting_factor(reweighting_samples, nstore);
+      }
+      
+      /* Compute minimal eigenvalues, if wanted */
+      if (compute_evs != 0) {
+	eigenvalues(&no_eigenvalues, 5000, eigenvalue_precision,
+		    0, compute_evs, nstore, even_odd_flag);
+      }
+      if (phmc_compute_evs != 0) {
+#ifdef MPI
+	MPI_Finalize();
+#endif
+	return(0);
+      }
+      
+      /* Compute the mode number or topological susceptibility using spectral projectors, if wanted*/
+      
+      if(compute_modenumber != 0 || compute_topsus !=0){
+	
+	s_ = calloc(no_sources_z2*VOLUMEPLUSRAND+1, sizeof(spinor));
+	s  = calloc(no_sources_z2, sizeof(spinor*));
+	if(s_ == NULL) { 
+	  printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
+	}
+	if(s == NULL) { 
+	  printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
+	}
+	
+	
+	for(i = 0; i < no_sources_z2; i++) {
 #if (defined SSE3 || defined SSE2 || defined SSE)
-        s[i] = (spinor*)(((unsigned long int)(s_)+ALIGN_BASE)&~ALIGN_BASE)+i*VOLUMEPLUSRAND;
+	  s[i] = (spinor*)(((unsigned long int)(s_)+ALIGN_BASE)&~ALIGN_BASE)+i*VOLUMEPLUSRAND;
 #else
-        s[i] = s_+i*VOLUMEPLUSRAND;
+	  s[i] = s_+i*VOLUMEPLUSRAND;
 #endif
-        
-        random_spinor_field_lexic(s[i], reproduce_randomnumber_flag,RN_Z2);
-        
-/*      what is this here needed for?? */
-/*         spinor *aux_,*aux; */
-/* #if ( defined SSE || defined SSE2 || defined SSE3 ) */
-/*         aux_=calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
-/*         aux = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE); */
-/* #else */
-/*         aux_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
-/*         aux = aux_; */
-/* #endif */
-        
-        if(g_proc_id == 0) {
-          printf("source %d \n", i);
-        }
-        
-        if(compute_modenumber != 0){
-          mode_number(s[i], mstarsq);
-        }
-        
-        if(compute_topsus !=0) {
-          top_sus(s[i], mstarsq);
-        }
+	  
+	  random_spinor_field_lexic(s[i], reproduce_randomnumber_flag,RN_Z2);
+	  
+	  /*      what is this here needed for?? */
+	  /*         spinor *aux_,*aux; */
+	  /* #if ( defined SSE || defined SSE2 || defined SSE3 ) */
+	  /*         aux_=calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
+	  /*         aux = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE); */
+	  /* #else */
+	  /*         aux_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
+	  /*         aux = aux_; */
+	  /* #endif */
+	  
+	  if(g_proc_id == 0) {
+	    printf("source %d \n", i);
+	  }
+	  
+	  if(compute_modenumber != 0){
+	    mode_number(s[i], mstarsq);
+	  }
+	  
+	  if(compute_topsus !=0) {
+	    top_sus(s[i], mstarsq);
+	  }
+	}
+	free(s);
+	free(s_);
       }
-      free(s);
-      free(s_);
-    }
-
-
-    /* move to operators as well */
-    if (g_dflgcr_flag == 1) {
-      /* set up deflation blocks */
-      init_blocks(nblocks_t, nblocks_x, nblocks_y, nblocks_z);
-
-      /* the can stay here for now, but later we probably need */
-      /* something like init_dfl_solver called somewhere else  */
-      /* create set of approximate lowest eigenvectors ("global deflation subspace") */
-
-      /*       g_mu = 0.; */
-      /*       boundary(0.125); */
-      generate_dfl_subspace(g_N_s, VOLUME, reproduce_randomnumber_flag);
-      /*       boundary(g_kappa); */
-      /*       g_mu = g_mu1; */
-
-      /* Compute little Dirac operators */
-      /*       alt_block_compute_little_D(); */
-      if (g_debug_level > 0) {
-        check_projectors(reproduce_randomnumber_flag);
-        check_local_D(reproduce_randomnumber_flag);
+      
+      
+      /* move to operators as well */
+      if (g_dflgcr_flag == 1) {
+	/* set up deflation blocks */
+	init_blocks(nblocks_t, nblocks_x, nblocks_y, nblocks_z);
+	
+	/* the can stay here for now, but later we probably need */
+	/* something like init_dfl_solver called somewhere else  */
+	/* create set of approximate lowest eigenvectors ("global deflation subspace") */
+	
+	/*       g_mu = 0.; */
+	/*       boundary(0.125); */
+	generate_dfl_subspace(g_N_s, VOLUME, reproduce_randomnumber_flag);
+	/*       boundary(g_kappa); */
+	/*       g_mu = g_mu1; */
+	
+	/* Compute little Dirac operators */
+	/*       alt_block_compute_little_D(); */
+	if (g_debug_level > 0) {
+	  check_projectors(reproduce_randomnumber_flag);
+	  check_local_D(reproduce_randomnumber_flag);
+	}
+	if (g_debug_level > 1) {
+	  check_little_D_inversion(reproduce_randomnumber_flag);
+	}
+	
       }
-      if (g_debug_level > 1) {
-        check_little_D_inversion(reproduce_randomnumber_flag);
+      if(SourceInfo.type == 1 || SourceInfo.type == 3 || SourceInfo.type == 4) {
+	index_start = 0;
+	index_end = 1;
       }
-
-    }
-    if(SourceInfo.type == 1 || SourceInfo.type == 3 || SourceInfo.type == 4) {
-      index_start = 0;
-      index_end = 1;
-    }
-    if(SourceInfo.type == 0 || SourceInfo.type == 2) {
-      no_samples = 1;
-    }
-    
-    g_precWS=NULL;
-    if(use_preconditioning == 1){
-      /* todo load fftw wisdom */
+      if(SourceInfo.type == 0 || SourceInfo.type == 2) {
+	no_samples = 1;
+      }
+      
+      g_precWS=NULL;
+      if(use_preconditioning == 1){
+	/* todo load fftw wisdom */
 #if (defined HAVE_FFTW ) && !( defined MPI)
-      loadFFTWWisdom(g_spinor_field[0],g_spinor_field[1],T,LX);
+	loadFFTWWisdom(g_spinor_field[0],g_spinor_field[1],T,LX);
 #else
-      use_preconditioning=0;
+	use_preconditioning=0;
 #endif
-    }
-
-    if (g_cart_id == 0) {
-      fprintf(stdout, "#\n"); /*Indicate starting of the operator part*/
-    }
-    for(op_id = 0; op_id < no_operators; op_id++) {
-      boundary(operator_list[op_id].kappa);
-      g_kappa = operator_list[op_id].kappa; 
-      g_mu = 0.;
-
-      if(use_preconditioning==1 && PRECWSOPERATORSELECT[operator_list[op_id].solver]!=PRECWS_NO ){
-        printf("# Using preconditioning with treelevel preconditioning operator: %s \n",
-              precWSOpToString(PRECWSOPERATORSELECT[operator_list[op_id].solver]));
-        /* initial preconditioning workspace */
-        operator_list[op_id].precWS=(spinorPrecWS*)malloc(sizeof(spinorPrecWS));
-        spinorPrecWS_Init(operator_list[op_id].precWS,
-                  operator_list[op_id].kappa,
-                  operator_list[op_id].mu/2./operator_list[op_id].kappa,
-                  -(0.5/operator_list[op_id].kappa-4.),
-                  PRECWSOPERATORSELECT[operator_list[op_id].solver]);
-        g_precWS = operator_list[op_id].precWS;
-
-        if(PRECWSOPERATORSELECT[operator_list[op_id].solver] == PRECWS_D_DAGGER_D) {
-          fitPrecParams(op_id);
-        }
       }
-
-      for(isample = 0; isample < no_samples; isample++) {
-        for (ix = index_start; ix < index_end; ix++) {
-          if (g_cart_id == 0) {
-            fprintf(stdout, "#\n"); /*Indicate starting of new index*/
-          }
-          /* we use g_spinor_field[0-7] for sources and props for the moment */
-          /* 0-3 in case of 1 flavour  */
-          /* 0-7 in case of 2 flavours */
-          prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location);
-          operator_list[op_id].inverter(op_id, index_start, 1);
-        }
+      
+      if (g_cart_id == 0) {
+	fprintf(stdout, "#\n"); /*Indicate starting of the operator part*/
       }
-
-
-      if(use_preconditioning==1 && operator_list[op_id].precWS!=NULL ){
-        /* free preconditioning workspace */
-        spinorPrecWS_Free(operator_list[op_id].precWS);
-        free(operator_list[op_id].precWS);
+      for(op_id = 0; op_id < no_operators; op_id++) {
+	boundary(operator_list[op_id].kappa);
+	g_kappa = operator_list[op_id].kappa; 
+	g_mu = 0.;
+	
+	if(use_preconditioning==1 && PRECWSOPERATORSELECT[operator_list[op_id].solver]!=PRECWS_NO ){
+	  printf("# Using preconditioning with treelevel preconditioning operator: %s \n",
+		 precWSOpToString(PRECWSOPERATORSELECT[operator_list[op_id].solver]));
+	  /* initial preconditioning workspace */
+	  operator_list[op_id].precWS=(spinorPrecWS*)malloc(sizeof(spinorPrecWS));
+	  spinorPrecWS_Init(operator_list[op_id].precWS,
+			    operator_list[op_id].kappa,
+			    operator_list[op_id].mu/2./operator_list[op_id].kappa,
+			    -(0.5/operator_list[op_id].kappa-4.),
+			    PRECWSOPERATORSELECT[operator_list[op_id].solver]);
+	  g_precWS = operator_list[op_id].precWS;
+	  
+	  if(PRECWSOPERATORSELECT[operator_list[op_id].solver] == PRECWS_D_DAGGER_D) {
+	    fitPrecParams(op_id);
+	  }
+	}
+	
+	for(isample = 0; isample < no_samples; isample++) {
+	  for (ix = index_start; ix < index_end; ix++) {
+	    if (g_cart_id == 0) {
+	      fprintf(stdout, "#\n"); /*Indicate starting of new index*/
+	    }
+	    /* we use g_spinor_field[0-7] for sources and props for the moment */
+	    /* 0-3 in case of 1 flavour  */
+	    /* 0-7 in case of 2 flavours */
+	    prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location);
+	    operator_list[op_id].inverter(op_id, index_start, 1);
+	  }
+	}
+	
+	
+	if(use_preconditioning==1 && operator_list[op_id].precWS!=NULL ){
+	  /* free preconditioning workspace */
+	  spinorPrecWS_Free(operator_list[op_id].precWS);
+	  free(operator_list[op_id].precWS);
+	}
+	
+	if(operator_list[op_id].type == OVERLAP){
+	  free_Dov_WS();
+	}
+	
       }
-
-      if(operator_list[op_id].type == OVERLAP){
-        free_Dov_WS();
-      }
-
     }
     nstore += Nsave;
   }
