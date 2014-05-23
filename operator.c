@@ -461,10 +461,11 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
   /* the 1 is for appending */
   construct_writer(&writer, filename, append);
   if (PropInfo.splitted || SourceInfo.ix == index_start) {
+    write_propagator_type(writer, 0);
+
     inverterInfo = construct_paramsInverterInfo(optr->reached_prec, optr->iterations, 
                                                 optr->solver, optr->no_flavours);
     write_spinor_info(writer, PropInfo.format, inverterInfo, append);
-    write_propagator_type(writer, 0);
     free(inverterInfo);
   }
   /* write the source depending on format */
