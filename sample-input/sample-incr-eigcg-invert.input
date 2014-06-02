@@ -1,0 +1,49 @@
+L=16
+T=32
+
+NrXProcs = 1
+NrYProcs = 1
+NrZProcs = 1
+
+OmpNumThreads = 1
+
+
+DebugLevel            = 4
+InitialStoreCounter   = 200
+Measurements          = 1
+2kappamu              = 0.0024135
+kappa                 = 0.160900
+BCAngleT              = 1.
+GaugeConfigInputFile  = conf
+UseEvenOdd            = yes
+UseRelativePrecision  = yes
+SourceType           = Point
+#SourceType            = Volume
+Indices               = 0-9
+ReadSource            = no
+NoSamples             = 1
+DisableIOChecks       = yes
+
+
+
+
+BeginOperator TMWILSON
+
+  2kappaMu            = 0.0024135
+  kappa               = 0.160900
+  UseEvenOdd          = yes
+  Solver              = INCREIGCG
+  SolverPrecision     = 1.e-8   #tolerance for systems nrhs1+1,..,nrhs
+  MaxSolverIterations = 2000    #maximum number of iterations when solving a linear system
+  EigCGnrhs           = 10      #total number of systems
+  EigCGnrhs1          = 5       #first nrhs1 systems that will be solved to tolerance tolsq1  
+  EigCGnev            = 10      #number of eigenvectors to be computed for every system in the build-up phase
+  EigCGvmax           = 40      #size of the search subspace used by eigcg to compute nev eigenvectors
+  EigCGldh            = 20      #total number of approximate eigenvectors to be computed
+  EigCGtolsq1         = 1.e-16  #tolerance for the systems 1,..,nrhs1
+  EigCGrestolsq       = 1e-4    #tolerance for restarting eigcg after the eigenvectors has been computed
+  EigCGRandGuessOpt   = 1       #if 0 means use zero initial guess, 1 means use random intial guess as a volume gaussian spinor
+  AddDownPropagator   = no
+
+EndOperator
+

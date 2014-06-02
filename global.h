@@ -250,7 +250,7 @@ EXTERN int tempT,tempV,tempR;
 EXTERN int ** g_iup3d;
 EXTERN int ** g_idn3d;
 #endif
-
+ 
 #undef EXTERN
 /* #undef ALIGN */
 
