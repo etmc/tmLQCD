@@ -1771,19 +1771,19 @@ inline void rmQuotes(char *str){
 }
 <BOUNDT>{FLT} {
   X0 = atof(yytext);
-  if(myverbose != 0) printf("X0 for boundary cond. in time set to %e\n", X0);
+  if(myverbose != 0) printf("X0 for boundary cond. in t-direction set to %e times pi\n", X0);
 }
 <BOUNDX>{FLT} {
   X1 = atof(yytext);
-  if(myverbose != 0) printf("X1 for boundary cond. in time set to %e\n", X0);
+  if(myverbose != 0) printf("X1 for boundary cond. in x-direction set to %e times pi\n", X1);
 }
 <BOUNDY>{FLT} {
   X2 = atof(yytext);
-  if(myverbose != 0) printf("X2 for boundary cond. in time set to %e\n", X0);
+  if(myverbose != 0) printf("X2 for boundary cond. in y-direction set to %e times pi\n", X2);
 }
 <BOUNDZ>{FLT} {
   X3 = atof(yytext);
-  if(myverbose != 0) printf("X3 for boundary cond. in time set to %e\n", X0);
+  if(myverbose != 0) printf("X3 for boundary cond. in z-direction set to %e times pi\n", X3);
 }
 <READSOURCE>yes     {
   read_source_flag=1;
