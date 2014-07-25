@@ -248,7 +248,8 @@ double sw_trace_nd(const int ieo, const double mu, const double eps) {
       six_det(&det[i], t);
     }
     // and compute the tr log (or log det)
-    tra = log(det[0]*det[1]);
+    // taking into account that either determinant must be real
+    tra = log(creal(det[0])*creal(det[1]));
 
     tr=tra+kc;
     ts=tr+ks;
