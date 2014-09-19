@@ -105,10 +105,10 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
   // computes the insertion matrices for S_eff
   // result is written to swp and swm
   // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e  
-  sw_spinor(EE, mnl->w_fields[2], mnl->w_fields[3], mnl->forcefactor);
+  sw_spinor_eo(EE, mnl->w_fields[2], mnl->w_fields[3], mnl->forcefactor);
   
   // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-  sw_spinor(OO, mnl->w_fields[0], mnl->w_fields[1], mnl->forcefactor);
+  sw_spinor_eo(OO, mnl->w_fields[0], mnl->w_fields[1], mnl->forcefactor);
 
   g_mu3 = mnl->rho2; // rho2
   
@@ -131,10 +131,10 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
   // computes the insertion matrices for S_eff
   // result is written to swp and swm
   // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
-  sw_spinor(EE, mnl->w_fields[2], mnl->w_fields[3], mnl->forcefactor);
+  sw_spinor_eo(EE, mnl->w_fields[2], mnl->w_fields[3], mnl->forcefactor);
   
   // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-  sw_spinor(OO, mnl->w_fields[0], mnl->w_fields[1], mnl->forcefactor);
+  sw_spinor_eo(OO, mnl->w_fields[0], mnl->w_fields[1], mnl->forcefactor);
 
   sw_all(hf, mnl->kappa, mnl->c_sw);
   
@@ -216,10 +216,10 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   // computes the insertion matrices for S_eff
   // result is written to swp and swm
   // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e  
-  sw_spinor(EO, mnl->w_fields[2], mnl->w_fields[3], mnl->forcefactor);
+  sw_spinor_eo(EO, mnl->w_fields[2], mnl->w_fields[3], mnl->forcefactor);
   
   // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-  sw_spinor(OE, mnl->w_fields[0], mnl->w_fields[1], mnl->forcefactor);
+  sw_spinor_eo(OE, mnl->w_fields[0], mnl->w_fields[1], mnl->forcefactor);
 
   sw_all(hf, mnl->kappa, mnl->c_sw);
   

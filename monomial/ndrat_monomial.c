@@ -155,18 +155,18 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
 
     if(mnl->type == NDCLOVERRAT) {
       // even/even sites sandwiched by tau_1 gamma_5 Y_e and gamma_5 X_e
-      sw_spinor(EE, mnl->w_fields[5], mnl->w_fields[2], 
-		mnl->rat.rmu[j]*mnl->forcefactor);
+      sw_spinor_eo(EE, mnl->w_fields[5], mnl->w_fields[2], 
+		   mnl->rat.rmu[j]*mnl->forcefactor);
       // odd/odd sites sandwiched by tau_1 gamma_5 Y_o and gamma_5 X_o
-      sw_spinor(OO, g_chi_up_spinor_field[j], mnl->w_fields[1],
-		mnl->rat.rmu[j]*mnl->forcefactor);
+      sw_spinor_eo(OO, g_chi_up_spinor_field[j], mnl->w_fields[1],
+		   mnl->rat.rmu[j]*mnl->forcefactor);
       
       // even/even sites sandwiched by tau_1 gamma_5 Y_e and gamma_5 X_e
-      sw_spinor(EE, mnl->w_fields[4], mnl->w_fields[3], 
-		mnl->rat.rmu[j]*mnl->forcefactor);
+      sw_spinor_eo(EE, mnl->w_fields[4], mnl->w_fields[3], 
+		   mnl->rat.rmu[j]*mnl->forcefactor);
       // odd/odd sites sandwiched by tau_1 gamma_5 Y_o and gamma_5 X_o
-      sw_spinor(OO, g_chi_dn_spinor_field[j], mnl->w_fields[0],
-		mnl->rat.rmu[j]*mnl->forcefactor);
+      sw_spinor_eo(OO, g_chi_dn_spinor_field[j], mnl->w_fields[0],
+		   mnl->rat.rmu[j]*mnl->forcefactor);
     }
   }
   // trlog part does not depend on the normalisation
