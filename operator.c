@@ -322,7 +322,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 					    optr->eps_sq, optr->maxiter,
 					    optr->solver, optr->rel_prec,
 					    optr->even_odd_flag,
-					    &g_gauge_field, &Qsw_pm_psi, &Qsw_minus_psi);
+					    &g_gauge_field, optr->applyQsq, optr->applyQm);
 	/* check result */
  	Msw_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
       }
