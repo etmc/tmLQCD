@@ -49,44 +49,63 @@
 
 
 int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new, 
-		     spinor * const Even, spinor * const Odd,
-		     const double precision, const int max_iter,
-		     const int solver_flag, const int rel_prec,
-		     su3 *** gf, matrix_mult Qsq, matrix_mult Qm) {
+                     spinor * const Even, spinor * const Odd,
+                     const double precision, const int max_iter,
+                     const int solver_flag, const int rel_prec,
+		     const int even_odd_flag,
+                     su3 *** gf, matrix_mult Qsq, matrix_mult Qm) {
   int iter;
 
-  if(g_proc_id == 0 && g_debug_level > 0) {
-    printf("# Using even/odd preconditioning!\n"); fflush(stdout);
-  }
-
-  assign_mul_one_sw_pm_imu_inv(EE, Even_new, Even, +g_mu);
+  if(even_odd_flag) {
+    if(g_proc_id == 0 && g_debug_level > 0) {
+      printf("# Using even/odd preconditioning!\n"); fflush(stdout);
+    }
     
-  Hopping_Matrix(OE, g_spinor_field[DUM_DERI], Even_new); 
-  /* The sign is plus, since in Hopping_Matrix */
-  /* the minus is missing                      */
-  assign_mul_add_r(g_spinor_field[DUM_DERI], +1., Odd, VOLUME/2);
-  /* Do the inversion with the preconditioned  */
-  /* matrix to get the odd sites               */
-
-  /* Here we invert the hermitean operator squared */
-  gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
-  if(g_proc_id == 0) {
-    printf("# Using CG!\n"); 
-    printf("# mu = %f, kappa = %f, csw = %f\n", 
-	   g_mu/2./g_kappa, g_kappa, g_c_sw);
-    fflush(stdout);
+    assign_mul_one_sw_pm_imu_inv(EE, Even_new, Even, +g_mu);
+    
+    Hopping_Matrix(OE, g_spinor_field[DUM_DERI], Even_new); 
+    /* The sign is plus, since in Hopping_Matrix */
+    /* the minus is missing                      */
+    assign_mul_add_r(g_spinor_field[DUM_DERI], +1., Odd, VOLUME/2);
+    /* Do the inversion with the preconditioned  */
+    /* matrix to get the odd sites               */
+    
+    /* Here we invert the hermitean operator squared */
+    gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
+    if(g_proc_id == 0) {
+      printf("# Using CG!\n"); 
+      printf("# mu = %f, kappa = %f, csw = %f\n", 
+             g_mu/2./g_kappa, g_kappa, g_c_sw);
+      fflush(stdout);
+    }
+    iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, 
+                  precision, rel_prec, 
+                  VOLUME/2, Qsq);
+    Qm(Odd_new, Odd_new);
+    
+    /* Reconstruct the even sites                */
+    Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd_new);
+    clover_inv(g_spinor_field[DUM_DERI], +1, g_mu);
+    /* The sign is plus, since in Hopping_Matrix */
+    /* the minus is missing                      */
+    assign_add_mul_r(Even_new, g_spinor_field[DUM_DERI], +1., VOLUME/2);
   }
-  iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, 
-		precision, rel_prec, 
-		VOLUME/2, Qsq);
-  Qm(Odd_new, Odd_new);
+  else {
+    if(g_proc_id == 0) {
+      printf("# Not using even/odd preconditioning!\n"); fflush(stdout);
+    }
+    convert_eo_to_lexic(g_spinor_field[DUM_DERI], Even, Odd);
+    convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], Even_new, Odd_new);
+    if(g_proc_id == 0) {
+      printf("# Using CG!\n"); fflush(stdout);
+    }
+    gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
+    iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
+                  rel_prec, VOLUME, Qsq);
 
-  /* Reconstruct the even sites                */
-  Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd_new);
-  clover_inv(g_spinor_field[DUM_DERI], +1, g_mu);
-  /* The sign is plus, since in Hopping_Matrix */
-  /* the minus is missing                      */
-  assign_add_mul_r(Even_new, g_spinor_field[DUM_DERI], +1., VOLUME/2);
+    Qm(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
 
+    convert_lexic_to_eo(Even_new, Odd_new, g_spinor_field[DUM_DERI+1]);
+  }
   return(iter);
 }
