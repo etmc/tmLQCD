@@ -219,8 +219,8 @@ int init_operators() {
       }
       else if(optr->type == OVERLAP) {
 	optr->even_odd_flag = 0;
-	optr->applyM = &Dov_psi;
-	optr->applyQ = &Qov_psi;
+	optr->applyMp = &Dov_psi;
+	optr->applyQp = &Qov_psi;
       }
       else if(optr->type == DBTMWILSON) {
 	optr->even_odd_flag = 1;
@@ -321,6 +321,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 	optr->iterations = invert_clover_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
 					    optr->eps_sq, optr->maxiter,
 					    optr->solver, optr->rel_prec,
+					    optr->even_odd_flag,
 					    &g_gauge_field, &Qsw_pm_psi, &Qsw_minus_psi);
 	/* check result */
  	Msw_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);

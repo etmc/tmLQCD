@@ -34,6 +34,7 @@
 #include "global.h"
 #include "su3.h"
 #include "sse.h"
+#include "gamma.h"
 #include "linalg_eo.h"
 #include "operator/Hopping_Matrix.h"
 #include "tm_operators.h"
@@ -950,7 +951,7 @@ void assign_mul_one_sw_pm_imu(const int ieo,
  * A. Abdel-Rehim
  **************************************************/
 
-void Mee_sw_psi(spinor * const k, const spinor * const l, const double mu) {
+void Mee_sw_psi(spinor * const k, spinor * const l, const double mu) {
 #ifdef OMP
 #pragma omp parallel
   {
@@ -1210,7 +1211,7 @@ void assign_mul_one_sw_pm_imu_inv(const int ieo,
 
 
 
-void Mee_sw_inv_psi(spinor * const k, const spinor * const l, const double mu) {
+void Mee_sw_inv_psi(spinor * const k, spinor * const l, const double mu) {
 #ifdef OMP
 #pragma omp parallel
   {
