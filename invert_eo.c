@@ -62,21 +62,21 @@ static void cgmms_write_props(spinor ** const P, double const * const extra_mass
 #include"measure_gauge_action.h"
 
 extern int mixed_solve (spinor * const P, spinor * const Q, const int max_iter, 
-			double eps, const int rel_prec,const int N);
+                        double eps, const int rel_prec,const int N);
 extern  int mixed_solve_eo (spinor * const P, spinor * const Q, const int max_iter, 
-			    double eps, const int rel_prec, const int N);
+                            double eps, const int rel_prec, const int N);
 #ifdef TEMPORALGAUGE
 extern su3* g_trafo;
 #endif
 #endif
 
 int invert_eo(spinor * const Even_new, spinor * const Odd_new, 
-	      spinor * const Even, spinor * const Odd,
-	      const double precision, const int max_iter,
-	      const int solver_flag, const int rel_prec,
-	      const int sub_evs_flag, const int even_odd_flag,
-        const int no_extra_masses, double * const extra_masses,
-        const int id )  {
+              spinor * const Even, spinor * const Odd,
+              const double precision, const int max_iter,
+              const int solver_flag, const int rel_prec,
+              const int sub_evs_flag, const int even_odd_flag,
+	      const int no_extra_masses, double * const extra_masses,
+	      const int id )  {
 
   int iter = 0;
   /* here comes the inversion using even/odd preconditioning */
@@ -94,8 +94,8 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     
       /* need VOLUME here (not N=VOLUME/2)*/
       if((retval=init_temporalgauge_trafo(VOLUME, g_gauge_field)) !=0){
-	if(g_proc_id == 0) printf("Error while gauge fixing to temporal gauge. Aborting...\n");   
-	exit(200);
+        if(g_proc_id == 0) printf("Error while gauge fixing to temporal gauge. Aborting...\n");   
+        exit(200);
       }
       plaquette = measure_plaquette(g_gauge_field);
       if(g_proc_id == 0) printf("Plaquette before gauge fixing: %.16e\n", plaquette/6./VOLUME);
@@ -148,7 +148,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     }
     else if(solver_flag == GMRESDR) {
       if(g_proc_id == 0) {printf("# Using GMRES-DR! m = %d, NrEv = %d\n", 
-         gmres_m_parameter, gmresdr_nr_ev); fflush(stdout);}
+				 gmres_m_parameter, gmresdr_nr_ev); fflush(stdout);}
       mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1., VOLUME/2);
       iter = gmres_dr(Odd_new, g_spinor_field[DUM_DERI], gmres_m_parameter, gmresdr_nr_ev, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME/2, &Mtm_plus_sym_psi);
     }
@@ -175,21 +175,21 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
       if(g_proc_id == 0) {printf("# Using Mixed Precision CG!\n"); fflush(stdout);}
       iter = mixed_cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, 
-			  VOLUME/2, &Qtm_pm_psi);
+                          VOLUME/2, &Qtm_pm_psi);
       Qtm_minus_psi(Odd_new, Odd_new);
     }
     else if(solver_flag == CG) {
       /* Here we invert the hermitean operator squared */
       gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
       if(g_proc_id == 0) {
-	printf("# Using CG!\n"); 
-	printf("# mu = %f, kappa = %f\n", g_mu/2./g_kappa, g_kappa);
-	fflush(stdout);
+        printf("# Using CG!\n"); 
+        printf("# mu = %f, kappa = %f\n", g_mu/2./g_kappa, g_kappa);
+        fflush(stdout);
       }
 #ifdef HAVE_GPU
       if(usegpu_flag){
-	if(g_proc_id == 0) printf("Using GPU for inversion\n");
-	iter = mixed_solve_eo(Odd_new, g_spinor_field[DUM_DERI], max_iter,   precision, rel_prec, VOLUME/2);
+        if(g_proc_id == 0) printf("Using GPU for inversion\n");
+        iter = mixed_solve_eo(Odd_new, g_spinor_field[DUM_DERI], max_iter,   precision, rel_prec, VOLUME/2);
       }
       else{
         iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi);
@@ -197,7 +197,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       }
 #else        
       iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, 
-		    VOLUME/2, &Qtm_pm_psi);
+                    VOLUME/2, &Qtm_pm_psi);
       Qtm_minus_psi(Odd_new, Odd_new);
 #endif /*HAVE_GPU*/
     }
@@ -215,7 +215,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
 #ifdef HAVE_GPU
       if(g_proc_id == 0) {printf("Using GPU for inversion\n");
-	fflush(stdout);}
+        fflush(stdout);}
       iter = mixed_solve_eo(Odd_new, g_spinor_field[DUM_DERI], max_iter,   precision, rel_prec, VOLUME/2);
 #else
       iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi);
@@ -406,52 +406,52 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
 #ifdef HAVE_GPU 
       if(usegpu_flag){
-	if(g_proc_id == 0) printf("# Using GPU for inversion\n");
-	iter = mixed_solve(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME);
+        if(g_proc_id == 0) printf("# Using GPU for inversion\n");
+        iter = mixed_solve(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME);
       }
       else{
-	gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
-	iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
-		      rel_prec, VOLUME, &Q_pm_psi);
-	Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
+        gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
+        iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
+                      rel_prec, VOLUME, &Q_pm_psi);
+        Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
       }
 #else
       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
 
       if(use_preconditioning==1 && g_precWS!=NULL){
-	spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
-	static _Complex double alpha = 0.0;
-	if(g_proc_id==0) {printf("# Using preconditioning (which one?)!\n");}
+        spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
+        static _Complex double alpha = 0.0;
+        if(g_proc_id==0) {printf("# Using preconditioning (which one?)!\n");}
 
-	if(g_prec_sequence_d_dagger_d[2] != 0.0){
-	  alpha = g_prec_sequence_d_dagger_d[2];
-	  spinorPrecondition(g_spinor_field[DUM_DERI+1],g_spinor_field[DUM_DERI+1],ws,T,L,alpha,0,1);
-	}
+        if(g_prec_sequence_d_dagger_d[2] != 0.0){
+          alpha = g_prec_sequence_d_dagger_d[2];
+          spinorPrecondition(g_spinor_field[DUM_DERI+1],g_spinor_field[DUM_DERI+1],ws,T,L,alpha,0,1);
+        }
 
-	iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
-		    rel_prec, VOLUME, &Q_pm_psi_prec);
+        iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
+		      rel_prec, VOLUME, &Q_pm_psi_prec);
 
-	if(g_prec_sequence_d_dagger_d[0] != 0.0){
-	  alpha = g_prec_sequence_d_dagger_d[0];
-	  spinorPrecondition(g_spinor_field[DUM_DERI],g_spinor_field[DUM_DERI],ws,T,L,alpha,0,1);
-	}
+        if(g_prec_sequence_d_dagger_d[0] != 0.0){
+          alpha = g_prec_sequence_d_dagger_d[0];
+          spinorPrecondition(g_spinor_field[DUM_DERI],g_spinor_field[DUM_DERI],ws,T,L,alpha,0,1);
+        }
 
       } else {
-	if(g_proc_id==0) {printf("# Not using preconditioning!\n");}
-	iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
-		      rel_prec, VOLUME, &Q_pm_psi);
+        if(g_proc_id==0) {printf("# Not using preconditioning!\n");}
+        iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
+                      rel_prec, VOLUME, &Q_pm_psi);
       }
 
 
       Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
 
       if(use_preconditioning==1 && g_precWS!=NULL){
-	spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
-	static _Complex double alpha = 0.0;
-	if(g_prec_sequence_d_dagger_d[1] != 0.0){
-	  alpha = g_prec_sequence_d_dagger_d[1];
-	  spinorPrecondition(g_spinor_field[DUM_DERI+1],g_spinor_field[DUM_DERI+1],ws,T,L,alpha,0,1);
-	}
+        spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
+        static _Complex double alpha = 0.0;
+        if(g_prec_sequence_d_dagger_d[1] != 0.0){
+          alpha = g_prec_sequence_d_dagger_d[1];
+          spinorPrecondition(g_spinor_field[DUM_DERI+1],g_spinor_field[DUM_DERI+1],ws,T,L,alpha,0,1);
+        }
       }
 #endif
     }
@@ -461,8 +461,8 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 }
 
 /* FIXME temporary solution for the writing of CGMMS propagators until the input/output interface for
- invert_eo has been generalized
- NOTE that no_shifts = no_extra_masses+1 */
+   invert_eo has been generalized
+   NOTE that no_shifts = no_extra_masses+1 */
 static void cgmms_write_props(spinor ** const P, double const * const shifts, const int no_shifts, const int id, const int iteration) {
   int append = 0;
   char filename[300];
