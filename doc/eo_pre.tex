@@ -228,7 +228,7 @@ again a hermitian conjugate given by
 (\hat Q^h)^\dagger = \tau^1\ \hat Q^h\ \tau^1
 \]
 
-\subsubsection{Combining Clover and Twisted mass term}
+\subsubsection{Combining Clover and Twisted mass term} \label{sec:clover_twist}
 
 We start again with the lattice fermion action in the hopping
 parameter representation in the $\chi$-basis now including the clover
@@ -303,13 +303,14 @@ pseudo fermion fields:
 \end{equation}
 where the fields $\phi_o$ are defined only on the odd sites of the
 lattice. From the first factor in the Schur decomposition a second
-term needs to be taken into account, this reads
+term needs to be taken into account in the effective action for the
+fermion determinant, this reads
 \begin{equation}
   \label{eq:swdet}
   \begin{split}
     S_{\det} &=  - \log[\det(1+T_{ee} + i\tilde\mu\gamma_5)\ \cdot\ 
     \det(1+T_{ee} - i\tilde\mu\gamma_5)]\\
-    &= -\tr[\det(1+T_{ee} + i\tilde\mu\gamma_5) + \det(1+T_{ee} -
+    &= -\tr[\log(1+T_{ee} + i\tilde\mu\gamma_5) + \log(1+T_{ee} -
     i\tilde\mu\gamma_5)]\, .\\
   \end{split}
 \end{equation}
@@ -417,10 +418,13 @@ included in this routine, as this would require double the storage for
 plus and minus $\mu$, respectively. It is easier to add the twisted
 mass term in later on. 
 
-The term in eq.~(\ref{eq:Tee}) represents two complex $6\times6$ matrices
-per site. As for each $6\times6$ matrix the off-diagonal $3\times3$
-matrices are just hermitian conjugate to each other -- $1+T$ is
-hermitian --, we get away with storing two times three 
+The term in eq.~(\ref{eq:Tee}) correpsonds to a $12\times12$ matrix
+in colour and spin which reduces to two complex $6\times6$ matrices
+per site because it is block-diagonal in spin (one matrix for the two
+upper spin components, one for the two lower ones). 
+For each $6\times6$ matrix the off-diagonal $3\times3$
+matrices are just hermitian conjugate to each other since $1+T$ is hermitian.
+We therefore get away with storing two times three 
 $3\times3$ complex matrices. These are stored in the array {\ttfamily
   sw[VOLUME][3][2]} of type {\ttfamily su3}. Here, {\ttfamily
   sw[x][0][0]} is the upper diagonal $3\times3$ matrix, {\ttfamily
@@ -428,6 +432,32 @@ $3\times3$ complex matrices. These are stored in the array {\ttfamily
   sw[x][2][0]} the lower diagonal matrix. The lower off-diagonal
 matrix would be the inverse of {\ttfamily sw[x][1][0]}. The second
 $6\times6$ matrix is stored following the same conventions.
+
+For computing $S_\mathrm{det}$, we take into account the structure
+of the $24 \times 24$ flavour, spin and colour matrix:
+\begin{equation}
+	\label{eq:cloverMee}
+	M_{ee}(x) = 
+		\begin{pmatrix}
+		  A(x) + i\tilde{\mu} & 0 & 0 & 0 \\
+		  0 & B(x) - i\tilde{\mu} & 0 & 0 \\
+		  0 & 0 & A(x) - i\tilde{\mu} & 0 \\
+		  0 & 0 & 0 & B(x) + i\tilde{\mu} \\
+		\end{pmatrix}\, ,
+\end{equation}
+where A and B are the $6 \times 6$ matrices mentioned above and are individually hermitian. 
+
+The implementation {\ttfamily sw\_trace} in {\ttfamily clover\_det.c} populates a temporary $6\times6$ array 
+from the {\ttfamily sw} array and adds $+i\mu$ to the diagonal. Using $\det(\gamma_5) = 1$, 
+the contribution to the effective action is then:
+\begin{equation}
+	\label{eq:cloverdet}
+	\begin{aligned}
+		\log \det(M_{ee}) &= \log\left( |\det( A + i\tilde{\mu} )|^2 \cdot |\det( B + i\tilde{\mu} )|^2 \right) \\
+		& = \log\left( |\det( A + i\tilde{\mu} )|^2 \right) + \log \left( |\det( B + i\tilde{\mu} )|^2 \right)\,,
+	\end{aligned}
+\end{equation}
+where the summands are computed individually in a loop.
 
 When it comes to computing the inverse of $1\pm i \mu\gamma_5 +
 T_{ee}$, the dependence on the sign of $\mu$ is unavoidable. However,
@@ -502,6 +532,10 @@ with
 \begin{equation}
   M_{oo|ee}^h = 1+T_{oo|ee}+i\bar\mu\gamma_5\tau^3-\bar\epsilon\tau^1\,.
 \end{equation}
+
+The clover part $1+T_{ee}$ is identical to the one in the $N_f=2$
+flavour case and stored in the array {\ttfamily sw}. 
+
 Because $1+T_{ee}$ is hermitian, we can invert $M_{ee}^h$ by
 \begin{equation}
   \label{eq:ndSdet}
@@ -521,16 +555,64 @@ we would only have to store $\bar\epsilon((1+T_{ee})^2
 + \bar\mu^2 - \bar\epsilon^2)^{-1}$. This would also allow to re-use a
 lot of the $N_f=2$ flavour implementation.
 
-The clover part $1+T_{ee}$ is identical to the one in the $N_f=2$
-flavour case and stored in the array {\ttfamily sw}. 
-
 The determinant we have to compute is
 \[
 \det(Q^h) =
 \det[\gamma_5(1+T_{ee}+i\bar\mu\gamma_5\tau^3-\bar\epsilon\tau^1)]\
-\det[\hat Q^h_{oo}]
+\det[\hat Q^h_{oo}].
 \]
-For the variation of the first term we have to compute now
+
+Again, the first factor can be computed as $S_\mathrm{det}$, for which we take into
+account the structure of the $24 \times 24$ flavour, spin and colour matrix:
+\begin{equation}
+	\label{eq:cloverMee_eps}
+	M^h_{ee}(x) = 
+		\begin{pmatrix}
+		  A(x) + i\bar{\mu} & 0 & -\bar{\epsilon} & 0 \\
+		  0 & B(x) - i\bar{\mu} & 0 & -\bar{\epsilon} \\
+		  -\bar{\epsilon} & 0 & A(x) - i\bar{\mu} & 0 \\
+		  0 & -\bar{\epsilon} & 0 & B(x) + i\bar{\mu} \\
+		\end{pmatrix}\, ,
+\end{equation}
+where A and B are the $6 \times 6$ matrices mentioned in sub-section 
+\ref{sec:clover_twist} and are individually hermitian. 
+
+The determinant of the $24 \times 24$ matrix can be simplified by writing it as follows
+in $12 \times 12$ blocks in flavour:
+\begin{equation*}
+	\begin{aligned}
+	\det(M^h_{ee}) &= 
+		\det 
+			\begin{pmatrix}
+				K & D \\
+				D & K^\dagger
+			\end{pmatrix} =
+			\det \left[ \begin{pmatrix}
+				K & D - K D^{-1} K^\dagger \\
+				D & 0
+			\end{pmatrix} \cdot
+			\begin{pmatrix}
+				1 & D^{-1} K^\dagger \\
+				0 & 1
+			\end{pmatrix} \right] \\
+	&= - \det(D) \cdot \det( D - K D^{-1} K^\dagger ) \\
+	&= \det( K K^\dagger - D^2 ) \\
+	&= \det( A^2 + \bar{\mu}^2 - \bar{\epsilon}^2 ) \cdot \det( B^2 + \bar{\mu}^2 - \bar{\epsilon}^2 ) \,,
+	\end{aligned}
+\end{equation*}
+where the sign in the second line comes from the first term and in the third line the
+proportionality of $D$ to the identity matrix was used.
+
+The implementation {\ttfamily sw\_trace\_nd} in {\ttfamily clover\_det.c} populates
+a temporary $6\times6$ array from the {\ttfamily sw} array, squares it and
+and adds $\bar{\mu}^2 - \bar{\epsilon}^2$ to the diagonal. Using $\det(\gamma_5) = 1$, 
+the contribution to the effective action is then:
+\begin{equation}
+	\label{eq:cloverdet_nd}
+		\log \det(M_{ee}) = \log\left( \det( A^2 + \bar{\mu}^2 - \bar{\epsilon}^2 ) \cdot \det( B^2 + \bar{\mu}^2 - \bar{\epsilon}^2 ) \right).
+\end{equation}
+
+For the variation of this term we have to compute now
 \begin{equation}
   \label{eq:ndtrdiracdet}
   \tr_\mathrm{dirac, flavour}[\ i\sigma_{\mu\nu}(1+T_{ee}(x) +

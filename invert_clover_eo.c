@@ -52,7 +52,7 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
                      spinor * const Even, spinor * const Odd,
                      const double precision, const int max_iter,
                      const int solver_flag, const int rel_prec,
-		     const int even_odd_flag,
+		     const int even_odd_flag, solver_params_t solver_params,
                      su3 *** gf, matrix_mult Qsq, matrix_mult Qm) {
   int iter;
 
@@ -78,9 +78,25 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
              g_mu/2./g_kappa, g_kappa, g_c_sw);
       fflush(stdout);
     }
-    iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, 
-                  precision, rel_prec, 
-                  VOLUME/2, Qsq);
+    if(solver_flag == CG) {
+      if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
+      iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, 
+		    precision, rel_prec, 
+		    VOLUME/2, Qsq);
+    }
+    else if(solver_flag == INCREIGCG) {
+      
+      if(g_proc_id == 0) {printf("# Using Incremental Eig-CG!\n"); fflush(stdout);}
+      iter = incr_eigcg(VOLUME/2,solver_params.eigcg_nrhs, solver_params.eigcg_nrhs1, Odd_new, g_spinor_field[DUM_DERI], solver_params.eigcg_ldh, Qsq,
+			solver_params.eigcg_tolsq1, solver_params.eigcg_tolsq, solver_params.eigcg_restolsq , solver_params.eigcg_rand_guess_opt, 
+			rel_prec, max_iter, solver_params.eigcg_nev, solver_params.eigcg_vmax);
+      
+    }
+    else {
+      if(g_proc_id == 0) {printf("# This solver is not available for this operator. Exisiting!\n"); fflush(stdout);}
+      return 0;
+    }
+
     Qm(Odd_new, Odd_new);
     
     /* Reconstruct the even sites                */

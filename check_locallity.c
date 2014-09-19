@@ -16,16 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-/*******************************************************************************
-*
-* Hybrid-Monte-Carlo for twisted mass QCD
-*
-* Author: Carsten Urbach
-*         urbach@physik.fu-berlin.de
-*
-*******************************************************************************/
-
-#define MAIN_PROGRAM
 
 #include"lime.h"
 #ifdef HAVE_CONFIG_H

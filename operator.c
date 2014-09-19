@@ -185,6 +185,20 @@ int init_operators() {
 	    fprintf(stderr, "CGMMS doesn't need AddDownPropagator! Switching Off!\n");
 	  optr->DownProp = 0;
 	}
+        
+        if(optr->solver == INCREIGCG){
+          if (g_cart_id == 0 && optr->DownProp){
+             fprintf(stderr,"Warning: When even-odd preconditioning is used, the eigenvalues for +mu and -mu will be little different\n");
+             fprintf(stderr,"Incremental EigCG solver will still work however.\n");
+          }
+          
+
+          if (g_cart_id == 0 && optr->even_odd_flag == 0)
+             fprintf(stderr,"Incremental EigCG solver is added only with Even-Odd preconditioning!. Forcing\n");
+          optr->even_odd_flag = 1; 
+        }
+
+
       }
       else if(optr->type == CLOVER) {
         if(optr->c_sw > 0) {
@@ -308,7 +322,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 	optr->iterations = invert_eo( optr->prop0, optr->prop1, optr->sr0, optr->sr1,
 				      optr->eps_sq, optr->maxiter,
 				      optr->solver, optr->rel_prec,
-				      0, optr->even_odd_flag,optr->no_extra_masses, optr->extra_masses, optr->id );
+				      0, optr->even_odd_flag,optr->no_extra_masses, optr->extra_masses, optr->solver_params, optr->id );
 	
 	/* check result */
 	M_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
@@ -321,7 +335,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 	optr->iterations = invert_clover_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
 					    optr->eps_sq, optr->maxiter,
 					    optr->solver, optr->rel_prec,
-					    optr->even_odd_flag,
+					    optr->even_odd_flag, optr->solver_params,
 					    &g_gauge_field, optr->applyQsq, optr->applyQm);
 	/* check result */
  	Msw_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);

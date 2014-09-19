@@ -1,3 +1,4 @@
+
 /***********************************************************************
  *
  * Copyright (C) 2009 Carsten Urbach
@@ -24,6 +25,8 @@
 #include <io/utils.h>
 #include "solver/dirac_operator_eigenvectors.h"
 #include "su3.h"
+#include "solver/solver_params.h"
+                                    
 
 #define TMWILSON 0
 #define OVERLAP 1
@@ -82,9 +85,13 @@ typedef struct {
   /* generic place for propagators */
   spinor *prop0, *prop1, *prop2, *prop3;
 
+  /*solver parameters struct*/
+  solver_params_t solver_params;
+
   /* multiple masses for CGMMS */
   double extra_masses[MAX_EXTRA_MASSES];
   int no_extra_masses;
+
 
   /* chebyshef coefficients for the overlap */
   double * coefs;

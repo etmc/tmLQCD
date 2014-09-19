@@ -71,11 +71,11 @@ extern su3* g_trafo;
 #endif
 
 int invert_eo(spinor * const Even_new, spinor * const Odd_new, 
-              spinor * const Even, spinor * const Odd,
-              const double precision, const int max_iter,
-              const int solver_flag, const int rel_prec,
-              const int sub_evs_flag, const int even_odd_flag,
-	      const int no_extra_masses, double * const extra_masses,
+	      spinor * const Even, spinor * const Odd,
+	      const double precision, const int max_iter,
+	      const int solver_flag, const int rel_prec,
+	      const int sub_evs_flag, const int even_odd_flag,
+	      const int no_extra_masses, double * const extra_masses, solver_params_t solver_params,
 	      const int id )  {
 
   int iter = 0;
@@ -170,6 +170,15 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       iter = pcg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi);
       Qtm_minus_psi(Odd_new, Odd_new);
     }
+    else if(solver_flag == INCREIGCG) {
+       /* Here we invert the hermitean operator squared */
+       gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);  
+       if(g_proc_id == 0) {printf("# Using Incremental Eig-CG!\n"); fflush(stdout);}
+       iter = incr_eigcg(VOLUME/2,solver_params.eigcg_nrhs,solver_params.eigcg_nrhs1, Odd_new, g_spinor_field[DUM_DERI], solver_params.eigcg_ldh, &Qtm_pm_psi,
+ 			 solver_params.eigcg_tolsq1, solver_params.eigcg_tolsq, solver_params.eigcg_restolsq , solver_params.eigcg_rand_guess_opt,
+                         rel_prec, max_iter, solver_params.eigcg_nev, solver_params.eigcg_vmax);
+       Qtm_minus_psi(Odd_new, Odd_new);
+     }
     else if(solver_flag == MIXEDCG) {
       /* Here we invert the hermitean operator squared */
       gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
