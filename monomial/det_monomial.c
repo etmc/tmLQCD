@@ -101,12 +101,12 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
       /* Invert Q_{+} Q_{-} */
       /* X -> w_fields[1] */
       chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
-		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_pm_psi);
+		   mnl->csg_N, mnl->csg_n, VOLUME, &Q_pm_psi);
       mnl->iter1 += cg_her(mnl->w_fields[1], mnl->pf, 
 			mnl->maxiter, mnl->forceprec, g_relative_precision_flag, 
 			VOLUME, &Q_pm_psi);
       chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
-			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
+			  mnl->csg_N, &mnl->csg_n, VOLUME);
 
       /* Y -> w_fields[0]  */
       Q_minus_psi(mnl->w_fields[0], mnl->w_fields[1]);
@@ -179,10 +179,10 @@ void det_heatbath(const int id, hamiltonian_field_t * const hf) {
 
     Q_plus_psi(mnl->pf, mnl->w_fields[0]);
     chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
-			mnl->csg_N, &mnl->csg_n, VOLUME/2);
+			mnl->csg_N, &mnl->csg_n, VOLUME);
     if(mnl->solver != CG) {
       chrono_add_solution(mnl->pf, mnl->csg_field2, mnl->csg_index_array2, 
-			  mnl->csg_N2, &mnl->csg_n2, VOLUME/2);
+			  mnl->csg_N2, &mnl->csg_n2, VOLUME);
     }
   }
   g_mu = g_mu1;
