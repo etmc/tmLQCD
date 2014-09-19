@@ -95,7 +95,6 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
       printf("# Not using even/odd preconditioning!\n"); fflush(stdout);
     }
     convert_eo_to_lexic(g_spinor_field[DUM_DERI], Even, Odd);
-    convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], Even_new, Odd_new);
     if(g_proc_id == 0) {
       printf("# Using CG!\n"); fflush(stdout);
     }
