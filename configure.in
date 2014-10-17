@@ -608,6 +608,16 @@ dnl check for icc
       CCDEP="$CC"
 
     else
+      # other compilers might support SSE inline assembly too
+      # (the cray compiler, for example)
+      if test $enable_sse3 = yes; then
+        echo Using SSE3 and SSE2 macros!
+        AC_DEFINE(SSE3,1,Compile with SSE3 support)
+      elif test $enable_sse2 = yes; then
+        echo Using SSE2 macros only!
+        AC_DEFINE(SSE2,1,Compile with SSE2 support)
+      fi
+
       DEPFLAGS="-M"
       CFLAGS="$CFLAGS -O"
       DEBUG_FLAG="-g"
