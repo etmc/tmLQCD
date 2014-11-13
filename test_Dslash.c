@@ -242,123 +242,21 @@ int main(int argc,char *argv[])
   xchange_gauge(g_gauge_field);
 #endif
 
-  if(even_odd_flag) {
-    /*initialize the pseudo-fermion fields*/
-    j_max=2048;
-    sdt=0.;
-    for (k = 0; k < k_max; k++) {
-      random_spinor_field_eo(g_spinor_field[k], reproduce_randomnumber_flag, RN_GAUSS);
-    }
+	/* the non even/odd case now */
+	/*initialize the pseudo-fermion fields*/
+	j_max=1;
+	sdt=0.;
+	for (k=0;k<k_max;k++) {
+	  random_spinor_field_lexic(g_spinor_field[k], reproduce_randomnumber_flag, RN_GAUSS);
+	}
 
-    while(sdt < 30.) {
 #ifdef MPI
       MPI_Barrier(MPI_COMM_WORLD);
 #endif
       t1 = gettime();
-      antioptaway=0.0;
-      for (j=0;j<j_max;j++) {
-        for (k=0;k<k_max;k++) {
-          Hopping_Matrix(0, g_spinor_field[k+k_max], g_spinor_field[k]);
-          Hopping_Matrix(1, g_spinor_field[2*k_max], g_spinor_field[k+k_max]);
-          antioptaway+=creal(g_spinor_field[2*k_max][0].s0.c0);
-        }
-      }
-      t2 = gettime();
-      dt = t2-t1;
-#ifdef MPI
-      MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-#else
-      sdt = dt;
-#endif
-      qdt=dt*dt;
-#ifdef MPI
-      MPI_Allreduce (&qdt, &sqdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-#else
-      sqdt = qdt;
-#endif
-      sdt=sdt/((double)g_nproc);
-      sqdt=sqrt(sqdt/g_nproc-sdt*sdt);
-      j_max*=2;
-    }
-    j_max=j_max/2;
-    dts=dt;
-    sdt=1.0e6f*sdt/((double)(k_max*j_max*(VOLUME)));
-    sqdt=1.0e6f*sqdt/((double)(k_max*j_max*(VOLUME)));
 
-    if(g_proc_id==0) {
-      printf("# The following result is just to make sure that the calculation is not optimized away: %e\n", antioptaway);
-      printf("# Total compute time %e sec, variance of the time %e sec. (%d iterations).\n", sdt, sqdt, j_max);
-      printf("# Communication switched on:\n# (%d Mflops [%d bit arithmetic])\n", (int)(1608.0f/sdt),(int)sizeof(spinor)/3);
-#ifdef OMP
-      printf("# Mflops per OpenMP thread ~ %d\n",(int)(1608.0f/(omp_num_threads*sdt)));
-#endif
-      printf("\n");
-      fflush(stdout);
-    }
+      D_psi(g_spinor_field[0], g_spinor_field[1]);
 
-#ifdef MPI
-    /* isolated computation */
-    t1 = gettime();
-    antioptaway=0.0;
-    for (j=0;j<j_max;j++) {
-      for (k=0;k<k_max;k++) {
-        Hopping_Matrix_nocom(0, g_spinor_field[k+k_max], g_spinor_field[k]);
-        Hopping_Matrix_nocom(1, g_spinor_field[2*k_max], g_spinor_field[k+k_max]);
-        antioptaway += creal(g_spinor_field[2*k_max][0].s0.c0);
-      }
-    }
-    t2 = gettime();
-    dt2 = t2-t1;
-    /* compute the bandwidth */
-    dt=dts-dt2;
-    MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    sdt=sdt/((double)g_nproc);
-    MPI_Allreduce (&dt2, &dt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    dt=dt/((double)g_nproc);
-    dt=1.0e6f*dt/((double)(k_max*j_max*(VOLUME)));
-    if(g_proc_id==0) {
-      printf("# The following result is printed just to make sure that the calculation is not optimized away: %e\n",antioptaway);
-      printf("# Communication switched off: \n# (%d Mflops [%d bit arithmetic])\n", (int)(1608.0f/dt),(int)sizeof(spinor)/3);
-#ifdef OMP
-      printf("# Mflops per OpenMP thread ~ %d\n",(int)(1608.0f/(omp_num_threads*dt)));
-#endif
-      printf("\n");
-      fflush(stdout);
-    }
-    sdt=sdt/((double)k_max);
-    sdt=sdt/((double)j_max);
-    sdt=sdt/((double)(2*SLICE));
-    if(g_proc_id==0) {
-      printf("# The size of the package is %d bytes.\n",(SLICE)*192);
-#ifdef _USE_HALFSPINOR
-      printf("# The bandwidth is %5.2f + %5.2f MB/sec\n", 192./sdt/1024/1024, 192./sdt/1024./1024);
-#else
-      printf("# The bandwidth is %5.2f + %5.2f MB/sec\n", 2.*192./sdt/1024/1024, 2.*192./sdt/1024./1024);
-#endif
-    }
-#endif
-    fflush(stdout);
-  }
-  else {
-    /* the non even/odd case now */
-    /*initialize the pseudo-fermion fields*/
-    j_max=1;
-    sdt=0.;
-    for (k=0;k<k_max;k++) {
-      random_spinor_field_lexic(g_spinor_field[k], reproduce_randomnumber_flag, RN_GAUSS);
-    }
-
-    while(sdt < 3.) {
-#ifdef MPI
-      MPI_Barrier(MPI_COMM_WORLD);
-#endif
-      t1 = gettime();
-      for (j=0;j<j_max;j++) {
-        for (k=0;k<k_max;k++) {
-          D_psi(g_spinor_field[k+k_max], g_spinor_field[k]);
-          antioptaway+=creal(g_spinor_field[k+k_max][0].s0.c0);
-        }
-      }
       t2 = gettime();
       dt=t2-t1;
 #ifdef MPI
@@ -366,32 +264,13 @@ int main(int argc,char *argv[])
 #else
       sdt = dt;
 #endif
-      qdt=dt*dt;
-#ifdef MPI
-      MPI_Allreduce (&qdt, &sqdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-#else
-      sqdt = qdt;
-#endif
-      sdt=sdt/((double)g_nproc);
-      sqdt=sqrt(sqdt/g_nproc-sdt*sdt);
-      j_max*=2;
-    }
-    j_max=j_max/2;
-    dts=dt;
-    sdt=1.0e6f*sdt/((double)(k_max*j_max*(VOLUME)));
-    sqdt=1.0e6f*sqdt/((double)(k_max*j_max*(VOLUME)));
 
     if(g_proc_id==0) {
-      printf("# The following result is just to make sure that the calculation is not optimized away: %e\n", antioptaway);
-      printf("# Total compute time %e sec, variance of the time %e sec. (%d iterations).\n", sdt, sqdt, j_max);
-      printf("\n# (%d Mflops [%d bit arithmetic])\n", (int)(1680.0f/sdt),(int)sizeof(spinor)/3);
-#ifdef OMP
-      printf("# Mflops per OpenMP thread ~ %d\n",(int)(1680.0f/(omp_num_threads*sdt)));
-#endif
+      printf("# Time for Dslash %e sec.\n", sdt);
       printf("\n");
       fflush(stdout);
     }
-  }
+
 #ifdef HAVE_LIBLEMON
   if(g_proc_id==0) {
     printf("# Performing parallel IO test ...\n");
