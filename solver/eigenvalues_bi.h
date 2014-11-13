@@ -23,6 +23,6 @@
 
 double eigenvalues_bi(int * nev, const int max_iterations, 
 		      const double prec, const int maxmin,
-		      matrix_mult_bi Qsq);
+		      matrix_mult_bi Qsq, const int N);
 
 #endif

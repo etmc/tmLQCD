@@ -65,12 +65,20 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
 		      spinor * const Even_s, spinor * const Odd_s,
 		      spinor * const Even_c, spinor * const Odd_c,
 		      const double precision, const int max_iter,
-		      const int solver_flag, const int rel_prec) {
+		      const int solver_flag, const int rel_prec, const int even_odd_flag) {
 
   int iter = 0;
   
+  if(even_odd_flag){
+#ifdef HAVE_GPU
+#  ifdef TEMPORALGAUGE
   
-
+  /* initialize temporal gauge here */
+  int retval;
+  double dret1, dret2;
+  double plaquette1 = 0.0;
+  double plaquette2 = 0.0;
+  
   if (usegpu_flag) {
     #ifdef TEMPORALGAUGE 
       to_temporalgauge_invert_doublet_eo(g_gauge_field, Even_s, Odd_s, Even_c, Odd_c);
@@ -140,7 +148,35 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
 					 Even_c, Odd_c, Even_new_c, Odd_new_c);
     #endif  
   }
-  
+#  endif
+#endif
+
+  }
+  else{
+    
+    /* here comes the inversion not using even/odd preconditioning */
+    if(g_proc_id == 0) {printf("# Not using even/odd preconditioning!\n"); fflush(stdout);}
+    
+    
+    convert_eo_to_lexic(g_spinor_field[DUM_DERI], Even_s, Odd_s);
+    convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], Even_c, Odd_c);
+    convert_eo_to_lexic(g_spinor_field[DUM_DERI+2], Even_new_s, Odd_new_s);
+    convert_eo_to_lexic(g_spinor_field[DUM_DERI+3], Even_new_c, Odd_new_c);    
+    
+    gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME);
+    gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], VOLUME);   
+     
+    iter = cg_her_nd(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+		     max_iter, precision, rel_prec, 
+		     VOLUME, &Q_pm_ndpsi);
+    
+    Q_minus_ndpsi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3]);
+    
+    convert_lexic_to_eo(Even_new_s, Odd_new_s, g_spinor_field[DUM_DERI]);
+    convert_lexic_to_eo(Even_new_c, Odd_new_c, g_spinor_field[DUM_DERI+1]);
+    
+  }
+
   return(iter);
 }
 

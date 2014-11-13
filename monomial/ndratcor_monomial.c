@@ -31,6 +31,7 @@
 #include "start.h"
 #include "gettime.h"
 #include "solver/solver.h"
+#include "solver/monomial_solve.h"
 #include "deriv_Sb.h"
 #include "init/init_chi_spinor_field.h"
 #include "operator/tm_operators.h"
@@ -46,16 +47,7 @@
 #include "ndrat_monomial.h"
 #include "ndratcor_monomial.h"
 
-#ifdef HAVE_GPU
-#include"../GPU/cudadefs.h"
-extern int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn, 
-		 spinor * const Qup, spinor * const Qdn, 
-		 solver_pm_t * solver_pm);
-   #ifdef TEMPORALGAUGE
-     #include "../temporalgauge.h" 
-   #endif
-#include "read_input.h"   
-#endif
+
 
 // computes ||(1 - C^dagger R C) phi||
 void check_C_ndpsi(spinor * const k_up, spinor * const k_dn,
@@ -81,49 +73,114 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
   nd_set_global_parameter(mnl);
   g_mu3 = 0.;
   mnl->iter0 = 0;
-  if(mnl->type == NDCLOVERRATCOR) {
-    init_sw_fields();
-    sw_term((const su3**)hf->gaugefield, mnl->kappa, mnl->c_sw); 
-    sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
-  }
-  // we measure before the trajectory!
-  if((mnl->rec_ev != 0) && (hf->traj_counter%mnl->rec_ev == 0)) {
-    if(mnl->type != NDCLOVERRAT) phmc_compute_ev(hf->traj_counter-1, id, &Qtm_pm_ndbipsi);
-    else phmc_compute_ev(hf->traj_counter-1, id, &Qsw_pm_ndbipsi);
-  }
+  
+  if(mnl->even_odd_flag) {  
+    if(mnl->type == NDCLOVERRATCOR) {
+      init_sw_fields();
+      sw_term((const su3**)hf->gaugefield, mnl->kappa, mnl->c_sw); 
+      sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
+    }
+    // we measure before the trajectory!
+    if((mnl->rec_ev != 0) && (hf->traj_counter%mnl->rec_ev == 0)) {
+      if(mnl->type != NDCLOVERRAT) phmc_compute_ev(hf->traj_counter-1, id, &Qtm_pm_ndbipsi, VOLUME/2);
+      else phmc_compute_ev(hf->traj_counter-1, id, &Qsw_pm_ndbipsi, VOLUME/2);
+    }
 
-  // the Gaussian distributed random fields
-  mnl->energy0 = 0.;
-  random_spinor_field_eo(mnl->pf, mnl->rngrepro, RN_GAUSS);
-  mnl->energy0 = square_norm(mnl->pf, VOLUME/2, 1);
+    // the Gaussian distributed random fields
+    mnl->energy0 = 0.;
+    random_spinor_field_eo(mnl->pf, mnl->rngrepro, RN_GAUSS);
+    mnl->energy0 = square_norm(mnl->pf, VOLUME/2, 1);
 
-  random_spinor_field_eo(mnl->pf2, mnl->rngrepro, RN_GAUSS);
-  mnl->energy0 += square_norm(mnl->pf2, VOLUME/2, 1);
+    random_spinor_field_eo(mnl->pf2, mnl->rngrepro, RN_GAUSS);
+    mnl->energy0 += square_norm(mnl->pf2, VOLUME/2, 1);
 
-  solver_pm.max_iter = mnl->maxiter;
-  solver_pm.squared_solver_prec = mnl->accprec;
-  solver_pm.no_shifts = mnl->rat.np;
-  solver_pm.shifts = mnl->rat.mu;
-  solver_pm.type = CGMMSND;
-  solver_pm.M_ndpsi = &Qtm_pm_ndpsi;
-  if(mnl->type == NDCLOVERRATCOR) solver_pm.M_ndpsi = &Qsw_pm_ndpsi;
-  solver_pm.sdim = VOLUME/2;
-  solver_pm.rel_prec = g_relative_precision_flag;
+    solver_pm.max_iter = mnl->maxiter;
+    solver_pm.squared_solver_prec = mnl->accprec;
+    solver_pm.no_shifts = mnl->rat.np;
+    solver_pm.shifts = mnl->rat.mu;
+    solver_pm.type = CGMMSND;
+    solver_pm.M_ndpsi = &Qtm_pm_ndpsi;
+    if(mnl->type == NDCLOVERRATCOR) solver_pm.M_ndpsi = &Qsw_pm_ndpsi;
+    solver_pm.sdim = VOLUME/2;
+    solver_pm.rel_prec = g_relative_precision_flag;
 
-  // apply B to the random field to generate pseudo-fermion fields
-  assign(mnl->w_fields[0], mnl->pf, VOLUME/2);
-  assign(mnl->w_fields[1], mnl->pf2, VOLUME/2);
-  up0 = mnl->w_fields[0]; dn0 = mnl->w_fields[1];
-  up1 = mnl->w_fields[2]; dn1 = mnl->w_fields[3];
-	 
-  for(int i = 1; i < 8; i++) {
-    delta = apply_Z_ndpsi(up1, dn1, up0, dn0, id, hf, &solver_pm);
-    assign_add_mul_r(mnl->pf, up1, coefs[i-1], VOLUME/2);
-    assign_add_mul_r(mnl->pf2, dn1, coefs[i-1], VOLUME/2);
-    if(delta < mnl->accprec) break;
-    tup = up0; tdn = dn0;
-    up0 = up1; dn0 = dn1;
-    up1 = tup; dn1 = tdn;
+    // apply B to the random field to generate pseudo-fermion fields
+    assign(mnl->w_fields[0], mnl->pf, VOLUME/2);
+    assign(mnl->w_fields[1], mnl->pf2, VOLUME/2);
+    up0 = mnl->w_fields[0]; dn0 = mnl->w_fields[1];
+    up1 = mnl->w_fields[2]; dn1 = mnl->w_fields[3];
+	  
+    for(int i = 1; i < 8; i++) {
+      delta = apply_Z_ndpsi(up1, dn1, up0, dn0, id, hf, &solver_pm);
+      assign_add_mul_r(mnl->pf, up1, coefs[i-1], VOLUME/2);
+      assign_add_mul_r(mnl->pf2, dn1, coefs[i-1], VOLUME/2);
+      if(delta < mnl->accprec) break;
+      tup = up0; tdn = dn0;
+      up0 = up1; dn0 = dn1;
+      up1 = tup; dn1 = tdn;
+    }
+  } //even-odd
+  else{
+    if(g_debug_level > 1 && g_proc_id == 0) {
+      printf("# Entering non-eo part of heatbath for %s monomial\n", mnl->name);
+    }
+    
+    // we measure before the trajectory!
+    if((mnl->rec_ev != 0) && (hf->traj_counter%mnl->rec_ev == 0)) {
+      if(mnl->type != NDCLOVERRAT) phmc_compute_ev(hf->traj_counter-1, id, &Q_pm_ndbipsi, VOLUME);
+      else{
+        //!FIXME 	  
+         printf("Error: %s monomial ev computation not implemented w/o even-odd! Aborting... \n", mnl->name);
+	 exit(0);	
+      }
+    }    
+    
+    
+    // the Gaussian distributed random fields
+    mnl->energy0 = 0.;
+    random_spinor_field_lexic(mnl->pf, mnl->rngrepro, RN_GAUSS);
+    mnl->energy0 = square_norm(mnl->pf, VOLUME, 1);
+
+    random_spinor_field_lexic(mnl->pf2, mnl->rngrepro, RN_GAUSS);
+    mnl->energy0 += square_norm(mnl->pf2, VOLUME, 1);
+
+    double g_mu_save = g_mu;  
+    g_mu = g_mubar;
+
+    
+    solver_pm.max_iter = mnl->maxiter;
+    solver_pm.squared_solver_prec = mnl->accprec;
+    solver_pm.no_shifts = mnl->rat.np;
+    solver_pm.shifts = mnl->rat.mu;
+    solver_pm.type = CGMMSND;
+    solver_pm.M_ndpsi = &Q_pm_ndpsi;    
+    
+    if(mnl->type == NDCLOVERRATCOR) {
+       if(g_proc_id == 0) {
+	 //!FIXME NDCLOVERRAT needs implementation w/o even-odd
+         printf("Error: %s monomial not implemented w/o even-odd! Aborting... \n", mnl->name);
+	exit(0);
+      }
+    }
+    solver_pm.sdim = VOLUME;
+    solver_pm.rel_prec = g_relative_precision_flag;
+
+    // apply B to the random field to generate pseudo-fermion fields
+    assign(mnl->w_fields[0], mnl->pf, VOLUME);
+    assign(mnl->w_fields[1], mnl->pf2, VOLUME);
+    up0 = mnl->w_fields[0]; dn0 = mnl->w_fields[1];
+    up1 = mnl->w_fields[2]; dn1 = mnl->w_fields[3];
+	  
+    for(int i = 1; i < 8; i++) {
+      delta = apply_Z_ndpsi(up1, dn1, up0, dn0, id, hf, &solver_pm);
+      assign_add_mul_r(mnl->pf, up1, coefs[i-1], VOLUME);
+      assign_add_mul_r(mnl->pf2, dn1, coefs[i-1], VOLUME);
+      if(delta < mnl->accprec) break;
+      tup = up0; tdn = dn0;
+      up0 = up1; dn0 = dn1;
+      up1 = tup; dn1 = tdn;
+    } 
+     g_mu = g_mu_save;   
   }
   etime = gettime();
   if(g_proc_id == 0) {
@@ -147,44 +204,100 @@ double ndratcor_acc(const int id, hamiltonian_field_t * const hf) {
   atime = gettime();
   nd_set_global_parameter(mnl);
   g_mu3 = 0.;
-  if(mnl->type == NDCLOVERRATCOR) {
-    sw_term((const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
-    sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
+  
+  
+  if(mnl->even_odd_flag) {
+    if(mnl->type == NDCLOVERRATCOR) {
+      sw_term((const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
+      sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
+    }
+    mnl->energy1 = 0.;
+
+    solver_pm.max_iter = mnl->maxiter;
+    solver_pm.squared_solver_prec = mnl->accprec;
+    solver_pm.no_shifts = mnl->rat.np;
+    solver_pm.shifts = mnl->rat.mu;
+    solver_pm.type = CGMMSND;
+    solver_pm.M_ndpsi = &Qtm_pm_ndpsi;
+    if(mnl->type == NDCLOVERRATCOR) solver_pm.M_ndpsi = &Qsw_pm_ndpsi;
+    solver_pm.sdim = VOLUME/2;
+    solver_pm.rel_prec = g_relative_precision_flag;
+
+    // apply (Q R)^(-1) to pseudo-fermion fields
+    assign(mnl->w_fields[4], mnl->pf, VOLUME/2);
+    assign(mnl->w_fields[5], mnl->pf2, VOLUME/2);
+    up0 = mnl->w_fields[0]; dn0 = mnl->w_fields[1];
+    up1 = mnl->w_fields[2]; dn1 = mnl->w_fields[3];
+
+    delta = apply_Z_ndpsi(up0, dn0, mnl->pf, mnl->pf2, id, hf, &solver_pm);
+    assign_add_mul_r(mnl->w_fields[4], up0, coefs[0], VOLUME/2);
+    assign_add_mul_r(mnl->w_fields[5], dn0, coefs[0], VOLUME/2);
+
+    for(int i = 2; i < 8; i++) {
+      if(delta < mnl->accprec) break;
+      delta = apply_Z_ndpsi(up1, dn1, up0, dn0, id, hf, &solver_pm);
+      assign_add_mul_r(mnl->w_fields[4], up1, coefs[i-1], VOLUME/2);
+      assign_add_mul_r(mnl->w_fields[5], dn1, coefs[i-1], VOLUME/2);
+      tup = up0; tdn = dn0;
+      up0 = up1; dn0 = dn1;
+      up1 = tup; dn1 = tdn;
+    }
+
+    mnl->energy1 = scalar_prod_r(mnl->pf, mnl->w_fields[4], VOLUME/2, 1);
+    mnl->energy1 += scalar_prod_r(mnl->pf2, mnl->w_fields[5], VOLUME/2, 1);
+    
+  }//even-odd
+  else{
+    if(g_debug_level > 1 && g_proc_id == 0) {
+      printf("# Entering non-eo part of acceptance for %s monomial\n", mnl->name);
+    }
+    if(mnl->type == NDCLOVERRATCOR) {
+       if(g_proc_id == 0) {
+	 //!FIXME NDCLOVERRAT needs implementation w/o even-odd
+         printf("Error: %s monomial not implemented w/o even-odd! Aborting... \n", mnl->name);
+	exit(0);
+      }
+    }
+    mnl->energy1 = 0.;
+    
+    double g_mu_save = g_mu;  
+    g_mu = g_mubar;
+    
+    solver_pm.max_iter = mnl->maxiter;
+    solver_pm.squared_solver_prec = mnl->accprec;
+    solver_pm.no_shifts = mnl->rat.np;
+    solver_pm.shifts = mnl->rat.mu;
+    solver_pm.type = CGMMSND;
+    solver_pm.M_ndpsi = &Q_pm_ndpsi; 
+    
+    solver_pm.sdim = VOLUME;
+    solver_pm.rel_prec = g_relative_precision_flag;
+
+    // apply (Q R)^(-1) to pseudo-fermion fields
+    assign(mnl->w_fields[4], mnl->pf, VOLUME);
+    assign(mnl->w_fields[5], mnl->pf2, VOLUME);
+    up0 = mnl->w_fields[0]; dn0 = mnl->w_fields[1];
+    up1 = mnl->w_fields[2]; dn1 = mnl->w_fields[3];
+
+    delta = apply_Z_ndpsi(up0, dn0, mnl->pf, mnl->pf2, id, hf, &solver_pm);
+    assign_add_mul_r(mnl->w_fields[4], up0, coefs[0], VOLUME);
+    assign_add_mul_r(mnl->w_fields[5], dn0, coefs[0], VOLUME);
+
+    for(int i = 2; i < 8; i++) {
+      if(delta < mnl->accprec) break;
+      delta = apply_Z_ndpsi(up1, dn1, up0, dn0, id, hf, &solver_pm);
+      assign_add_mul_r(mnl->w_fields[4], up1, coefs[i-1], VOLUME);
+      assign_add_mul_r(mnl->w_fields[5], dn1, coefs[i-1], VOLUME);
+      tup = up0; tdn = dn0;
+      up0 = up1; dn0 = dn1;
+      up1 = tup; dn1 = tdn;
+    }
+
+    mnl->energy1 = scalar_prod_r(mnl->pf, mnl->w_fields[4], VOLUME, 1);
+    mnl->energy1 += scalar_prod_r(mnl->pf2, mnl->w_fields[5], VOLUME, 1);
+  g_mu = g_mu_save;          
   }
-  mnl->energy1 = 0.;
-
-  solver_pm.max_iter = mnl->maxiter;
-  solver_pm.squared_solver_prec = mnl->accprec;
-  solver_pm.no_shifts = mnl->rat.np;
-  solver_pm.shifts = mnl->rat.mu;
-  solver_pm.type = CGMMSND;
-  solver_pm.M_ndpsi = &Qtm_pm_ndpsi;
-  if(mnl->type == NDCLOVERRATCOR) solver_pm.M_ndpsi = &Qsw_pm_ndpsi;
-  solver_pm.sdim = VOLUME/2;
-  solver_pm.rel_prec = g_relative_precision_flag;
-
-  // apply (Q R)^(-1) to pseudo-fermion fields
-  assign(mnl->w_fields[4], mnl->pf, VOLUME/2);
-  assign(mnl->w_fields[5], mnl->pf2, VOLUME/2);
-  up0 = mnl->w_fields[0]; dn0 = mnl->w_fields[1];
-  up1 = mnl->w_fields[2]; dn1 = mnl->w_fields[3];
-
-  delta = apply_Z_ndpsi(up0, dn0, mnl->pf, mnl->pf2, id, hf, &solver_pm);
-  assign_add_mul_r(mnl->w_fields[4], up0, coefs[0], VOLUME/2);
-  assign_add_mul_r(mnl->w_fields[5], dn0, coefs[0], VOLUME/2);
-
-  for(int i = 2; i < 8; i++) {
-    if(delta < mnl->accprec) break;
-    delta = apply_Z_ndpsi(up1, dn1, up0, dn0, id, hf, &solver_pm);
-    assign_add_mul_r(mnl->w_fields[4], up1, coefs[i-1], VOLUME/2);
-    assign_add_mul_r(mnl->w_fields[5], dn1, coefs[i-1], VOLUME/2);
-    tup = up0; tdn = dn0;
-    up0 = up1; dn0 = dn1;
-    up1 = tup; dn1 = tdn;
-  }
-
-  mnl->energy1 = scalar_prod_r(mnl->pf, mnl->w_fields[4], VOLUME/2, 1);
-  mnl->energy1 += scalar_prod_r(mnl->pf2, mnl->w_fields[5], VOLUME/2, 1);
+  
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
@@ -206,67 +319,43 @@ double apply_Z_ndpsi(spinor * const k_up, spinor * const k_dn,
   monomial * mnl = &monomial_list[id];
 
 
-  if(usegpu_flag){ 
-    #ifdef TEMPORALGAUGE
-      to_temporalgauge_mms(g_gauge_field, l_up, l_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
-    #endif        
-    mnl->iter0 += dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-			      l_up, l_dn,
-			      solver_pm); 
-    #ifdef TEMPORALGAUGE
-      from_temporalgauge_mms(l_up, l_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
-    #endif 			     
-  }
-  else{
-    mnl->iter0 += cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-			      l_up, l_dn,
-			      solver_pm); 
-  }
-
+  mnl->iter0 += solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+			     l_up, l_dn,
+			     solver_pm);  
+  //N-> VOLUME/2 for even-odd; N-> VOLUME for non-even-odd
+  int N = solver_pm->sdim;
   // apply R to the pseudo-fermion fields
-  assign(k_up, l_up, VOLUME/2);
-  assign(k_dn, l_dn, VOLUME/2);
+  assign(k_up, l_up, N);
+  assign(k_dn, l_dn, N);
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     assign_add_mul_r(k_up, g_chi_up_spinor_field[j], 
-		     mnl->rat.rmu[j], VOLUME/2);
+		     mnl->rat.rmu[j], N);
     assign_add_mul_r(k_dn, g_chi_dn_spinor_field[j], 
-		     mnl->rat.rmu[j], VOLUME/2);
+		     mnl->rat.rmu[j], N);
   }
 
   // apply R a second time
-  if(usegpu_flag){ 
-    #ifdef TEMPORALGAUGE
-      to_temporalgauge_mms(g_gauge_field, k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
-    #endif        
-	dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+    solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 		k_up, k_dn,
 		solver_pm);
-    #ifdef TEMPORALGAUGE
-      from_temporalgauge_mms(k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
-    #endif 			     
-  }
-  else{
-    cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-		k_up, k_dn,
-		solver_pm);
-  }
+
 
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     assign_add_mul_r(k_up, g_chi_up_spinor_field[j], 
-		     mnl->rat.rmu[j], VOLUME/2);
+		     mnl->rat.rmu[j], N);
     assign_add_mul_r(k_dn, g_chi_dn_spinor_field[j], 
-		     mnl->rat.rmu[j], VOLUME/2);
+		     mnl->rat.rmu[j], N);
   }
   mul_r(g_chi_up_spinor_field[mnl->rat.np], mnl->rat.A*mnl->rat.A, 
-	k_up, VOLUME/2);
+	k_up, N);
   mul_r(g_chi_dn_spinor_field[mnl->rat.np], mnl->rat.A*mnl->rat.A, 
-	k_dn, VOLUME/2);
+	k_dn, N);
   // apply Q^2 and compute the residue
   solver_pm->M_ndpsi(k_up, k_dn,
 		     g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np]);
-  diff(k_up, k_up, l_up, VOLUME/2);
-  diff(k_dn, k_dn, l_dn, VOLUME/2);
-  double resi = square_norm(k_up, VOLUME/2, 1) + square_norm(k_dn, VOLUME/2, 1);
+  diff(k_up, k_up, l_up, N);
+  diff(k_dn, k_dn, l_dn, N);
+  double resi = square_norm(k_up, N, 1) + square_norm(k_dn, N, 1);
   if(g_debug_level > 2 && g_proc_id == 0) {
     printf("# NDRATCOR: ||Z * phi|| = %e\n", resi);
   }
@@ -281,20 +370,9 @@ void check_C_ndpsi(spinor * const k_up, spinor * const k_dn,
 		   solver_pm_t * solver_pm) {
   monomial * mnl = &monomial_list[id];
 
-  if(usegpu_flag){ 
-    #ifdef TEMPORALGAUGE
-      to_temporalgauge_mms(g_gauge_field, l_up, l_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
-    #endif        
-      mnl->iter0 = dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+
+    mnl->iter0 = solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 			      l_up, l_dn, solver_pm);
-    #ifdef TEMPORALGAUGE
-      from_temporalgauge_mms(l_up, l_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
-    #endif 			     
-  }
-  else{
-    mnl->iter0 = cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-			      l_up, l_dn, solver_pm);
-  }
 
   assign(k_up, l_up, VOLUME/2);
   assign(k_dn, l_dn, VOLUME/2);
@@ -319,22 +397,11 @@ void check_C_ndpsi(spinor * const k_up, spinor * const k_dn,
   //apply R
   solver_pm->shifts = mnl->rat.mu;
 
-  if(usegpu_flag){ 
-    #ifdef TEMPORALGAUGE
-      to_temporalgauge_mms(g_gauge_field, k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
-    #endif        
-      dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+
+    solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 		k_up, k_dn,
 		solver_pm);
-    #ifdef TEMPORALGAUGE
-      from_temporalgauge_mms(k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
-    #endif 			     
-  }
-  else{
-    cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-		k_up, k_dn,
-		solver_pm);
-  }
+
 
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     assign_add_mul_r(k_up, g_chi_up_spinor_field[j], 
@@ -345,20 +412,9 @@ void check_C_ndpsi(spinor * const k_up, spinor * const k_dn,
   // apply C^dagger
   solver_pm->shifts = mnl->rat.nu;
 
-  if(usegpu_flag){ 
-    #ifdef TEMPORALGAUGE
-      to_temporalgauge_mms(g_gauge_field, k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
-    #endif        
-      dev_cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+
+    solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 		k_up, k_dn, solver_pm);
-    #ifdef TEMPORALGAUGE
-      from_temporalgauge_mms(k_up, k_dn, g_chi_up_spinor_field, g_chi_dn_spinor_field, solver_pm->no_shifts);
-    #endif 			     
-  }
-  else{
-    cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-		k_up, k_dn, solver_pm);
-  }
 
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     // Q_h * tau^1 + i nu_j

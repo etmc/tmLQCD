@@ -57,6 +57,6 @@ void pushPhmcVars();
 void popPhmcVars();
 
 void phmc_compute_ev(const int trajectory_counter, const int id,
-		     matrix_mult_bi Qsq);
+		     matrix_mult_bi Qsq, const int N);
 
 #endif

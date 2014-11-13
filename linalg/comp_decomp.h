@@ -24,9 +24,9 @@
 #include "su3.h"
 
 /* Build bispinor out of spinors :  (*R) = ((*S), (*T)) */
-void compact(bispinor * const R, spinor * const S, spinor * const P);
+void compact(bispinor * const R, spinor * const S, spinor * const P, int N);
 
 /* Splits bispinor into spinors :  (*S) = top (*R) ; (*T) = bottom (*R) */
-void decompact(spinor * const S, spinor * const P, bispinor * const R);
+void decompact(spinor * const S, spinor * const P, bispinor * const R, int N);
 
 #endif

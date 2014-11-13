@@ -285,7 +285,8 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].hbfunction = &ndrat_heatbath;
 	monomial_list[i].accfunction = &ndrat_acc;
 	monomial_list[i].derivativefunction = &ndrat_derivative;
-	monomial_list[i].even_odd_flag = 1;
+	/* Since we have NDRAT also for non-EO we use the externally given flag to decide*/
+	monomial_list[i].even_odd_flag = even_odd_flag;
 	monomial_list[i].pf2 = __pf+no*V;
 	no++;
 	retval = init_ndrat_monomial(i);
@@ -347,7 +348,8 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].hbfunction = &ndratcor_heatbath;
 	monomial_list[i].accfunction = &ndratcor_acc;
 	monomial_list[i].derivativefunction = NULL;
-	monomial_list[i].even_odd_flag = 1;
+	/* Since we have NDRAT also for non-EO we use the externally given flag to decide*/
+	monomial_list[i].even_odd_flag = even_odd_flag;
 	monomial_list[i].pf2 = __pf+no*V;
 	monomial_list[i].rat.crange[0] = 0;
         monomial_list[i].rat.crange[1] = monomial_list[i].rat.order-1;

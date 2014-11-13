@@ -81,18 +81,22 @@
 
 void Hopping_Matrix_32(const int ieo, spinor32 * const l, spinor32 * const k) {
 
-#ifdef _GAUGE_COPY
-  if(g_update_gauge_copy_32) {
-    update_backward_gauge_32(g_gauge_field_32);   
-  }
-#endif
+#if defined _USE_HALFSPINOR
+  #ifdef _GAUGE_COPY
+    if(g_update_gauge_copy_32) {
+      update_backward_gauge_32(g_gauge_field_32);   
+    }
+  #endif
 
-#ifdef OMP
-  su3_32 * restrict u0 ALIGN32;
-#endif
+  #ifdef OMP
+    su3_32 * restrict u0 ALIGN32;
+  #endif
 
-#  include "operator/halfspinor_body32.c"
-
+  #  include "operator/halfspinor_body32.c"
+#else
+   printf("Error: Single precision Matrix only implemented with HALFSPINOR\n");
+   exit(200);
+#endif  
 
   return;
 }
