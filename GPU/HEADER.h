@@ -260,6 +260,8 @@ extern "C" void finalize_mixedsolve();
 extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_iter, double eps, const int rel_prec,const int N);
 void init_mixedsolve_fields(int eo);
 void finalize_mixedsolve_fields();
+void alloc_single_gf();
+void dealloc_single_gf();
 void check_mixedsolve_params();
 void update_constants(int *grid);
 

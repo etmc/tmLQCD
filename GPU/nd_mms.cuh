@@ -112,7 +112,12 @@ extern "C" int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
       use_mms_shifts = &(solver_pm->shifts[first_shift]);       
       this_turn = MIN(remaining_shifts, max_mms_shifts);
       init_doublesolve_eo_nd(g_gauge_field);
-      if(solver_pm->squared_solver_prec < 1.0e-15){
+      double source_norm, source_norm_up, source_norm_dn;
+      source_norm_up = square_norm(Qup, VOLUME/2, 1);
+      source_norm_dn = square_norm(Qdn, VOLUME/2, 1); 
+      source_norm = source_norm_up + source_norm_dn;
+      
+      if(source_norm < 1.0e-4){
         iteration += doublesolve_mms_eo_nd(&(Pup[first_shift]), &(Pdn[first_shift]), Qup, Qdn, use_mms_shifts, this_turn,
  				solver_pm->max_iter, solver_pm->squared_solver_prec, solver_pm->rel_prec,min_solver_it); 
       }

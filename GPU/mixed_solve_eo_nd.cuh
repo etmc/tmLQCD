@@ -4086,6 +4086,8 @@ extern "C" int doublesolve_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
                                  spinor * Q_up, spinor * Q_dn, double * shifts, int Nshift,
                                  int max_iter, double eps_sq, int rel_prec, int min_solver_it) {
    
+  //to save mem: dealloc single gauge field
+  dealloc_single_gf();
   
   // CUDA
   cudaError_t cudaerr;
@@ -4221,6 +4223,8 @@ extern "C" int doublesolve_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
 		  
   finalize_gpu_nd_mms_fields(); 
   
+  //re-alloc single gauge field
+  alloc_single_gf();
 
   return(outercount);
   
@@ -4246,7 +4250,7 @@ void init_gpu_single_nd_mms_fields(int Nshift, int N){
   
   cudaError_t cudaerr;
   
-  size_t dev_spinsize = (Nshift-1)*6*N*sizeof(dev_spinor); /* float4 */ 
+  size_t dev_spinsize = 6*N*sizeof(dev_spinor); /* float4 */ 
   
   cudaMalloc((void **) &dev_spin1_up, dev_spinsize); 
   cudaMalloc((void **) &dev_spin1_dn, dev_spinsize);
@@ -4326,6 +4330,7 @@ void init_gpu_single_nd_mms_fields(int Nshift, int N){
   
   //here we allocate one spinor pair less than the number of shifts
   //as for the zero'th shift we re-use fields from the usual cg solver
+   dev_spinsize = (Nshift-1)*6*N*sizeof(dev_spinor);
    cudaMalloc((void **) &_mms_d_up, dev_spinsize);
    cudaMalloc((void **) &_mms_d_dn, dev_spinsize);   
    cudaMalloc((void **) &_mms_x_up, dev_spinsize);

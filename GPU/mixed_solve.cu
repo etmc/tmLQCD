@@ -1676,7 +1676,7 @@ extern "C" void init_mixedsolve_eo(su3** gf){
      if(device_num > -1){ 
     	if(device_num < ndev){
     	  printf("Setting active device to: %d\n", device_num);
-    	  //cudaSetDevice(device_num);
+    	  cudaSetDevice(device_num);
     	}
     	else{
    	  fprintf(stderr, "Error: There is no CUDA device with No. %d. Aborting...\n",device_num);
@@ -2403,6 +2403,44 @@ void finalize_mixedsolve_fields(){
     
 }
 
+void alloc_single_gf(){
+  cudaError_t cudaerr;
+  
+  #ifndef _USE_MPI
+  	#ifdef GF_8
+  	  /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
+  	  size_t dev_gfsize = 2*4*VOLUME * sizeof(dev_su3_8);
+  	#else
+  	  /* allocate 2 rows of gf = 3*4*VOLUME float4's*/
+  	  size_t dev_gfsize = 3*4*VOLUME * sizeof(dev_su3_2v);
+  	#endif
+  #else
+  	#ifdef GF_8
+  	  /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
+  	  size_t dev_gfsize = 2*4*(VOLUME+RAND) * sizeof(dev_su3_8);
+  	#else
+  	  /* allocate 2 rows of gf = 3*4*VOLUME float4's*/
+  	  size_t dev_gfsize = 3*4*(VOLUME+RAND) * sizeof(dev_su3_2v);
+  	#endif
+  #endif  
+  if((cudaerr=cudaMalloc((void **) &dev_gf, dev_gfsize)) != cudaSuccess){
+    printf("Error in alloc_single_gf(): Memory allocation of gauge field failed. Aborting...\n");
+    exit(200);
+  }   // Allocate array on device
+  else {
+    #ifndef _USE_MPI
+     #ifndef LOWOUTPUT
+      printf("Allocated memory for gauge field on device.\n");
+     #endif
+    #else
+      if (g_cart_id == 0) printf("Allocated memory for gauge field on devices.\n");
+    #endif
+  }  
+}
+
+void dealloc_single_gf(){
+  cudaFree(dev_gf);
+}
 
 // include half versions of dev_cg - solvers
 #ifdef HALF
