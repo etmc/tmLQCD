@@ -108,7 +108,7 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #endif
   }
 
-#if (defined _USE_MPI && !defined _NO_COMM)
+
   
 #  ifdef OMP
 #  pragma omp single nowait
@@ -144,10 +144,11 @@ if(g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
       wait_halffield();
 #    endif
 #   endif /* SPI */
+#endif
 #  ifdef OMP
   }
 #  endif
-#endif
+
   
 #ifndef OMP
   s = l;
