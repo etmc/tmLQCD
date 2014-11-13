@@ -65,7 +65,7 @@ GPUOBJECTS := $(patsubst $(srcdir)/$(GPUDIR)/%.cu, $(GPUDIR)/%.o, $(GPUSOURCES))
 
 NOOPTMOD = test/check_xchange test/check_geometry
 
-PROGRAMS = hmc_tm benchmark invert gen_sources  \
+PROGRAMS = hmc_tm benchmark invert gen_sources test_Dslash  \
 	check_locallity test_lemon hopping_test LapH_ev
 
 ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES}
@@ -74,7 +74,7 @@ SUBDIRS = ${USESUBDIRS}
 # delete the default suffix rules
 .SUFFIXES:
 
-all: Makefile dep $(SUBDIRS) hmc_tm invert benchmark
+all: Makefile dep $(SUBDIRS) hmc_tm invert benchmark test_Dslash
 
 $(SUBDIRS):
 	$(MAKE) --directory=$@
@@ -144,10 +144,10 @@ compile-clean: compile-clean-recursive Makefile
 	rm -f *.o *.d test/*.o test/*.d tests/*.o tests/*.d
 
 clean: clean-recursive Makefile
-	rm -f benchmark hmc_tm invert *.o *.d test/*.o test/*.d tests/*.o tests/*.d
+	rm -f benchmark hmc_tm invert test_Dslash *.o *.d test/*.o test/*.d tests/*.o tests/*.d
 
 distclean: distclean-recursive Makefile
-	rm -f benchmark hmc_tm invert *.o *.d *~ Makefile config.log config.status fixed_volume.h
+	rm -f benchmark hmc_tm invert test_Dslash *.o *.d *~ Makefile config.log config.status fixed_volume.h
 	rm -f config.h
 
 .PHONY: all ${SUBDIRS} ${top_srcdir}/git_hash.h clean compile-clean distclean dep install \
