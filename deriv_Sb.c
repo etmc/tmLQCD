@@ -657,10 +657,10 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
 	      hamiltonian_field_t * const hf, const double factor){
 
   if(usegpu_flag){
-    cpu_deriv_Sb(ieo, l, k, hf, factor);
+    gpu_deriv_Sb(ieo, l, k, hf, factor);
   }
   else{
-    gpu_deriv_Sb(ieo, l, k, hf, factor);    
+    cpu_deriv_Sb(ieo, l, k, hf, factor);    
   }
   return;
 }
