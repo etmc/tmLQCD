@@ -53,6 +53,7 @@ extern "C"
   extern int nstore;
   extern int crylov_space_dim;
   extern char rlxd_input_filename[500];
+  extern char rlxs_input_filename[500];
   extern char gauge_input_filename[500];
   extern int subforwilson_flag;
   extern int eigenvalue_method_flag;
@@ -60,6 +61,7 @@ extern "C"
   extern double eigenvalue_precision;
   extern int index_start;
   extern int index_end;
+  extern int save_ranlux_state;
   extern int random_seed;
   extern int rlxd_level;
   extern double X0, X1, X2, X3;

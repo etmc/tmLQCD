@@ -116,8 +116,10 @@ inline void rmQuotes(char *str){
   int nstore;
   int index_start, index_end;
   int random_seed;
+  int save_ranlux_state;
   int rlxd_level;
   char rlxd_input_filename[500];
+  char rlxs_input_filename[500];
   char gauge_input_filename[500];
   int read_source_flag;
   int return_check_flag, return_check_interval;
@@ -191,6 +193,7 @@ inline void rmQuotes(char *str){
 %x MU
 %x CSW
 %x SEED
+%x SAVERANLUXSTATE
 %x RLXDLEVEL
 %x NSAVE
 %x RLXDINPUTFILE
@@ -336,6 +339,7 @@ inline void rmQuotes(char *str){
 ^NoEigenvalues{EQL}                BEGIN(NOEV);
 ^EigenvaluePrecision{EQL}          BEGIN(PRECEV);
 ^seed{EQL}                         BEGIN(SEED);
+^SaveRanluxState{EQL}              BEGIN(SAVERANLUXSTATE);
 ^StartCondition{EQL}               BEGIN(STARTCOND);
 ^ThermalisationSweeps{EQL}         BEGIN(THERMSWEEPS);
 ^Measurements{EQL}                 BEGIN(NMEAS);
@@ -1622,9 +1626,22 @@ inline void rmQuotes(char *str){
   dfl_poly_iter=atoi(yytext);
   if(myverbose!=0) printf("dfl_poly_iter = %s \n", yytext);
 }
+<SAVERANLUXSTATE>yes {
+  save_ranlux_state = 1;
+  if(myverbose!=0) printf("Save RANLUX state at end of trajectory.\n");
+}
+<SAVERANLUXSTATE>no {
+  save_ranlux_state = 0;
+  if(myverbose!=0) printf("Don't save RANLUX state at end of trajectory.\n");
+}
 <SEED>{DIGIT}+               {
   random_seed=atoi(yytext);
   if(myverbose!=0) printf("seed=%s \n", yytext);
+}
+<SEED>statefile {
+  random_seed=-1;
+  save_ranlux_state=1;
+  if(myverbose!=0) printf("seed=%s; Trying to read ranlux state from file! Saving RANLUX state at end of trajectory!\n", yytext);
 }
 <RLXDLEVEL>[12] {
   rlxd_level = atoi(yytext);
@@ -2113,6 +2130,7 @@ int read_input(char * conf_file){
   g_N_s = _default_g_N_s;
   g_dflgcr_flag = _default_g_dflgcr_flag;
   random_seed = _default_random_seed;
+  save_ranlux_state = _default_save_ranlux_state;
   rlxd_level = _default_rlxd_level;
   startoption = _default_startoption;
   Ntherm = _default_Ntherm;
@@ -2122,6 +2140,7 @@ int read_input(char * conf_file){
   cp_interval = _default_cp_interval;
   nstore = _default_nstore;
   strcpy(rlxd_input_filename, _default_rlxd_input_filename);
+  strcpy(rlxs_input_filename, _default_rlxs_input_filename);
   strcpy(gauge_input_filename, _default_gauge_input_filename);
   g_stdio_proc = _default_g_stdio_proc;
   index_start = _default_index_start;

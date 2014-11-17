@@ -54,8 +54,9 @@
 #define _default_g_beta 6.0
 #define _default_g_N_s 20
 #define _default_g_dflgcr_flag 0
+#define _default_save_ranlux_state 0
 #define _default_random_seed 123456
-#define _default_rlxd_level 1
+#define _default_rlxd_level 2
 #define _default_solver_flag 1
 #define _default_startoption 0
 #define _default_Ntherm 0
@@ -64,7 +65,8 @@
 #define _default_write_cp_flag 1
 #define _default_cp_interval 5
 #define _default_nstore 0
-#define _default_rlxd_input_filename "last_state"
+#define _default_rlxd_input_filename "rlxd_state"
+#define _default_rlxs_input_filename "rlxs_state"
 #define _default_gauge_input_filename "conf"
 #define _default_read_source_flag 0
 #define _default_source_filename "source"

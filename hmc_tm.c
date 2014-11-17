@@ -290,7 +290,15 @@ int main(int argc,char *argv[]) {
 #endif
 
   /* Initialise random number generator */
-  start_ranlux(rlxd_level, random_seed^trajectory_counter);
+  /* if running in reproducible mode we can initialize ranlux using 
+   * a saved state */
+  if(reproduce_randomnumber_flag && random_seed == -1) {
+    start_ranlux_from_file(rlxd_input_filename,rlxs_input_filename);
+  } else if (random_seed == -1) {
+    fatal_error("Initializing RANLUX from file only works in reproducible random numbers mode. Aborting!","hmc_tm");
+  } else {  
+    start_ranlux(rlxd_level, random_seed^trajectory_counter);
+  }
 
   /* Set up the gauge field */
   /* continue and restart */

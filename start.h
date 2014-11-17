@@ -68,6 +68,18 @@ void source_spinor_field_point_from_file(spinor * const P, spinor * const Q, int
 
 void start_ranlux(int level,int seed);
 
+/* This function allows initializing RANLUX from a saved state. IMPORTANT NOTE BELOW:
+ * Because of the way that random numbers are used in tmLQCD, this function should only ever be
+ * used in "reproducible random numbers" mode with the full understanding that all processes
+ * will have exactly the same random number generators!!
+ * The main routines in start.c all accomodate this by making every process generate random
+ * numbers for the whole volume and only using those relevant for the local volume while throwing
+ * all others away.
+ * If some function requests random numbers via any of the utility functions or ranlx[d,s] directly
+ * without taking this fact into account, all processes will generate the same ones! You have been warned. */
+void start_ranlux_from_file(char * const rlxd_state_filename, char * const rlxs_state_filename);
+void store_ranlux_state(char * const rlxd_state_filename, char * const rlxs_state_filename);
+
 void gen_test_spinor_field(spinor * const k , const int eoflag);
 void write_test_spinor_field(spinor * const k , const int eoflag, char * postfix);
 #endif
