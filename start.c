@@ -475,7 +475,7 @@ void random_gauge_field(const int repro, su3 ** const gf) {
     }
 #ifdef MPI
     if(g_proc_id != 0) {
-      rlxd_get(rlxd_state_backup);
+      rlxd_reset(rlxd_state_backup);
     }
 #endif
   }
