@@ -829,6 +829,24 @@ void start_ranlux(int level, int seed)
    loc_seed = (seed + step*max_seed) % 2147483647;
 
    if(loc_seed == 0) loc_seed++;
+
+   #ifdef MPI
+   unsigned int * seeds = calloc(g_nproc,sizeof(unsigned int));
+   if(seeds == NULL) fatal_error("Memory allocation for seeds buffer failed!","start_ranlux");  
+   MPI_Gather(&loc_seed,1,MPI_UNSIGNED,seeds,1,MPI_UNSIGNED,0,MPI_COMM_WORLD);
+   if(g_proc_id == 0) {
+     for(int i = 0; i < g_nproc; ++i) {
+       for(int j = i+1; j < g_nproc; ++j) {
+         if( seeds[i] == seeds[j] ) {
+           char error_message[100];
+           snprintf(error_message,100,"Process %d and %d have the same seed. Aborting!",i,j);
+           fatal_error(error_message,"start_ranlux");
+         }
+       }
+     }
+   }
+   free(seeds);
+   #endif 
  
    if(g_debug_level > 3) {
      printf("Local seed is %d  proc_id = %d\n", loc_seed, g_proc_id);
