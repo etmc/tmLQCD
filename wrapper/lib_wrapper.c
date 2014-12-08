@@ -310,16 +310,16 @@ int tmLQCD_get_mpi_params(tmLQCD_mpi_params * params) {
   return(0);
 }
 
-int tmLQCD_get_gauge_field_pointer(double * gf) {
+int tmLQCD_get_gauge_field_pointer(double ** gf) {
   if(!tmLQCD_invert_initialised) {
-    fprintf(stderr, "tmLQCD_get_mpi_params: tmLQCD_inver_init must be called first. Aborting...\n");
+    fprintf(stderr, "tmLQCD_get_gauge_field_pointer: tmLQCD_invert_init must be called first. Aborting...\n");
     return(-1);
   }
 #ifdef MPI
   xchange_gauge(g_gauge_field);
 #endif
 
-  gf = (double*) g_gauge_field[0];
+  *gf = (double*) g_gauge_field[0];
 
   return(0);
 }
