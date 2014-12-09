@@ -2157,19 +2157,17 @@ void dev_Qtm_pm_ndpsi_mpi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
 
 
 void dev_Qtm_pm_ndpsi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
-                              dev_spinor * spinin_up , dev_spinor * spinin_dn , 
-                              int gridsize1, int blocksize1, int gridsize2, int blocksize2,
-                              int gridsize3, int blocksize3, int gridsize4, int blocksize4){
+                              dev_spinor * spinin_up , dev_spinor * spinin_dn){
 #ifdef _USE_MPI
   dev_Qtm_pm_ndpsi_mpi (spinout_up, spinout_dn,
                     spinin_up , spinin_dn , 
-                    gridsize1, blocksize1, gridsize2, blocksize2,
-                    gridsize3, blocksize3, gridsize4, blocksize4);
+                    gpu_gd_M, gpu_bd_M, gpu_gd_linalg, gpu_bd_linalg,
+                    gpu_gd_blas, gpu_bd_blas, gpu_gd_blas, gpu_bd_blas);
 #else
   dev_Qtm_pm_ndpsi_scalar (spinout_up, spinout_dn,
                     spinin_up , spinin_dn , 
-                    gridsize1, blocksize1, gridsize2, blocksize2,
-                    gridsize3, blocksize3, gridsize4, blocksize4);
+                    gpu_gd_M, gpu_bd_M, gpu_gd_linalg, gpu_bd_linalg,
+                    gpu_gd_blas, gpu_bd_blas, gpu_gd_blas, gpu_bd_blas);
 #endif
 
 }

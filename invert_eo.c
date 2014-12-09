@@ -49,6 +49,7 @@
 #include"solver/dfl_projector.h"
 #include"invert_eo.h"
 #include "solver/dirac_operator_eigenvectors.h"
+#include "solver/matrix_mult_typedef.h"
 
 /* FIXME temporary includes and declarations until IO and interface for invert and CGMMS are generelized */
 #include "init/init_spinor_field.h"
@@ -62,10 +63,8 @@ static void cgmms_write_props(spinor ** const P, double const * const extra_mass
 #include"temporalgauge.h"
 #include"measure_gauge_action.h"
 
-extern int mixed_solve (spinor * const P, spinor * const Q, const int max_iter, 
-			double eps, const int rel_prec,const int N);
-extern  int mixed_solve_eo (spinor * const P, spinor * const Q, const int max_iter, 
-			    double eps, const int rel_prec, const int N);
+extern  int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int max_iter, 
+			    double eps, const int rel_prec, const int N, matrix_mult f);
 #ifdef TEMPORALGAUGE
 extern su3* g_trafo;
 #endif
@@ -86,10 +85,12 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     
 
   if(usegpu_flag){
-  /* initialize temporal gauge here */      
-    #ifdef TEMPORALGAUGE      
-      to_temporalgauge_invert_eo(g_gauge_field, Even, Odd); 
-    #endif      
+    #ifdef HAVE_GPU
+    /* initialize temporal gauge here */      
+      #ifdef TEMPORALGAUGE      
+	to_temporalgauge_invert_eo(g_gauge_field, Even, Odd); 
+      #endif    
+    #endif
   }
 
     
@@ -159,14 +160,16 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 	fflush(stdout);
       }
       if(usegpu_flag){
-	if(g_proc_id == 0) printf("Using GPU for inversion\n");
-	iter = mixed_solve_eo(Odd_new, g_spinor_field[DUM_DERI], max_iter,   precision, rel_prec, VOLUME/2);
+	#ifdef HAVE_GPU
+	  if(g_proc_id == 0) printf("Using GPU for inversion\n");
+	  iter = linsolve_eo_gpu(Odd_new, g_spinor_field[DUM_DERI], max_iter,   precision, rel_prec, VOLUME/2, &Qtm_pm_psi);   
+        #endif
       }
       else{
 	iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, 
 		      VOLUME/2, &Qtm_pm_psi);
-	Qtm_minus_psi(Odd_new, Odd_new);
       }
+      Qtm_minus_psi(Odd_new, Odd_new);
     }
     else if(solver_flag == MR) {
       if(g_proc_id == 0) {printf("# Using MR!\n"); fflush(stdout);}
@@ -181,14 +184,16 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       if(g_proc_id == 0) {printf("# Using CG as default solver!\n"); fflush(stdout);}
       gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
       if(usegpu_flag){
-	if(g_proc_id == 0) {printf("Using GPU for inversion\n");
+	#ifdef HAVE_GPU
+	  if(g_proc_id == 0) {printf("Using GPU for inversion\n");
 	  fflush(stdout);}
-	iter = mixed_solve_eo(Odd_new, g_spinor_field[DUM_DERI], max_iter,   precision, rel_prec, VOLUME/2);
+	  iter = linsolve_eo_gpu(Odd_new, g_spinor_field[DUM_DERI], max_iter,   precision, rel_prec, VOLUME/2, &Qtm_pm_psi);   
+        #endif
       }
       else{
 	iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi);
-	Qtm_minus_psi(Odd_new, Odd_new);
       }
+      Qtm_minus_psi(Odd_new, Odd_new);
     }
     
     /* In case of failure, redo with CG */
@@ -209,10 +214,12 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     assign_add_mul_r(Even_new, g_spinor_field[DUM_DERI], +1., VOLUME/2);
  
     if(usegpu_flag){
-    /* return from temporal gauge again */  
-      #ifdef TEMPORALGAUGE      
-	from_temporalgauge_invert_eo(Even, Odd, Even_new, Odd_new);
-      #endif      
+      #ifdef HAVE_GPU      
+      /* return from temporal gauge again */  
+	#ifdef TEMPORALGAUGE      
+	  from_temporalgauge_invert_eo(Even, Odd, Even_new, Odd_new);
+	#endif  
+      #endif
     } 
     
   }
@@ -220,10 +227,12 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
   else {
     
     if(usegpu_flag){
-    /* initialize temporal gauge here */  
-      #ifdef TEMPORALGAUGE    
-	to_temporalgauge_invert_eo(g_gauge_field, Even, Odd);   
-      #endif      
+      #ifdef HAVE_GPU
+      /* initialize temporal gauge here */  
+	#ifdef TEMPORALGAUGE    
+	  to_temporalgauge_invert_eo(g_gauge_field, Even, Odd);   
+	#endif 
+      #endif
     } 
     
     /* here comes the inversion not using even/odd preconditioning */
@@ -338,8 +347,12 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     else {
       if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
       if(usegpu_flag){
-	if(g_proc_id == 0) printf("# Using GPU for inversion\n");
-	iter = mixed_solve(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME);
+        #ifdef HAVE_GPU	
+	  if(g_proc_id == 0) printf("# Using GPU for inversion\n");
+	  gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
+	  iter = linsolve_eo_gpu(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, rel_prec, VOLUME, &Q_pm_psi);
+	  Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
+        #endif
       }
       else{
 	gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
@@ -384,10 +397,12 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     convert_lexic_to_eo(Even_new, Odd_new, g_spinor_field[DUM_DERI+1]);
     
     if(usegpu_flag){ 
-    /* return from temporal gauge again */ 
-      #ifdef TEMPORALGAUGE
-	from_temporalgauge_invert_eo(Even, Odd, Even_new, Odd_new);
-      #endif  
+      #ifdef HAVE_GPU
+      /* return from temporal gauge again */ 
+	#ifdef TEMPORALGAUGE
+	  from_temporalgauge_invert_eo(Even, Odd, Even_new, Odd_new);
+	#endif  
+      #endif
     }     
   
   }

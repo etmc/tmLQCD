@@ -52,8 +52,7 @@
 #  include"GPU/cudadefs.h"
 #  include"temporalgauge.h"
 #  include"measure_gauge_action.h"
-int mixedsolve_eo_nd (spinor *, spinor *, spinor *, spinor *, double, int, double, int);
-int mixedsolve_eo_nd_mpi(spinor *, spinor *, spinor *, spinor *, double, int, double, int);
+int mixedsolve_eo_nd (spinor *, spinor *, spinor *, spinor *, double, int, double, int, int, matrix_mult_nd);
 #  ifdef TEMPORALGAUGE
 extern su3* g_trafo;
 #  endif
@@ -68,11 +67,10 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
 		      const int solver_flag, const int rel_prec, const int even_odd_flag) {
 
   int iter = 0;
-  
+
   if(even_odd_flag){
+
 #ifdef HAVE_GPU
-#  ifdef TEMPORALGAUGE
-  
   /* initialize temporal gauge here */
   int retval;
   double dret1, dret2;
@@ -84,7 +82,7 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
       to_temporalgauge_invert_doublet_eo(g_gauge_field, Even_s, Odd_s, Even_c, Odd_c);
     #endif
   } 
-  
+#endif  
 
 
 
@@ -115,8 +113,10 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
   
   
   if (usegpu_flag) {	// GPU, mixed precision solver, shift==0
+   #ifdef HAVE_GPU
     iter = mixedsolve_eo_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
-			    0.0, max_iter, precision, rel_prec);
+			    0.0, max_iter, precision, rel_prec, even_odd_flag, &Qtm_pm_ndpsi);
+   #endif
   }
   else {
     iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
@@ -141,16 +141,6 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
   assign_add_mul_r(Even_new_c, g_spinor_field[DUM_DERI+3], +1., VOLUME/2);
   
   
-  if (usegpu_flag) {
-    /* return from temporal gauge again */
-    #ifdef TEMPORALGAUGE
-      from_temporalgauge_invert_doublet_eo(Even_s, Odd_s, Even_new_s, Odd_new_s,
-					 Even_c, Odd_c, Even_new_c, Odd_new_c);
-    #endif  
-  }
-#  endif
-#endif
-
   }
   else{
     
@@ -165,17 +155,34 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
     
     gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME);
     gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], VOLUME);   
-     
-    iter = cg_her_nd(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+    
+    if (usegpu_flag) {	// GPU, mixed precision solver, shift==0
+      #ifdef HAVE_GPU
+	iter = mixedsolve_eo_nd(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+				0.0, max_iter, precision, rel_prec, even_odd_flag, &Q_pm_ndpsi);
+      #endif
+    }
+    else{
+      iter = cg_her_nd(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
 		     max_iter, precision, rel_prec, 
 		     VOLUME, &Q_pm_ndpsi);
-    
+    }
     Q_minus_ndpsi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3]);
     
     convert_lexic_to_eo(Even_new_s, Odd_new_s, g_spinor_field[DUM_DERI]);
     convert_lexic_to_eo(Even_new_c, Odd_new_c, g_spinor_field[DUM_DERI+1]);
     
   }
+  
+  if (usegpu_flag) {
+    #ifdef HAVE_GPU
+      /* return from temporal gauge again */
+      #ifdef TEMPORALGAUGE
+	from_temporalgauge_invert_doublet_eo(Even_s, Odd_s, Even_new_s, Odd_new_s,
+					  Even_c, Odd_c, Even_new_c, Odd_new_c);
+      #endif  
+    #endif  
+  }  
 
   return(iter);
 }

@@ -468,7 +468,7 @@ __global__ void dev_mul_one_pm_imu_sub_mul_gamma5_d(dev_spinor_d* sin1, dev_spin
 
 
 // aequivalent to Hopping_Matrix
-extern "C" void dev_Hopp_d(dev_spinor_d* spinout, dev_spinor_d* spinin, 
+void dev_Hopp_d(dev_spinor_d* spinout, dev_spinor_d* spinin, 
 			int gridsize, int blocksize, int gridsize2, int blocksize2,
 			int evenodd){
   cudaError_t cudaerr;
@@ -505,11 +505,7 @@ extern "C" void dev_Hopp_d(dev_spinor_d* spinout, dev_spinor_d* spinin,
 
 
 // aequivalent to Qtm_pm_psi in tm_operators.c, this is NON-MPI version
-extern "C" void dev_Qtm_pm_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinout, 
-				 dev_spinor_d* spin_eo1_d, dev_spinor_d* spin_eo2_d, 
-				 int gridsize, int blocksize, int gridsize2, int blocksize2,
-				 int* dev_eoidx_even, int* dev_eoidx_odd, 
-				 int* dev_nn_eo, int* dev_nn_oe){
+void dev_Qtm_pm_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinout){
   //spinin == odd
   //spinout == odd
   cudaError_t cudaerr;
@@ -520,39 +516,39 @@ extern "C" void dev_Qtm_pm_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinout,
   //Q_{-}
 
 #ifdef _USE_MPI
-  HOPPING_ASYNC_D(dev_gf_d, spinin, spin_eo1_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, gridsize, blocksize);   
+  HOPPING_ASYNC_D(dev_gf_d, spinin, dev_spin_eo1_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, gpu_gd_M_d, gpu_bd_M_d);   
 #else
-  dev_Hopping_Matrix_d<<<gridsize, blocksize>>>
-             (dev_gf_d, spinin, spin_eo1_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, 0, VolumeEO); //spin_eo1 == even -> 0           
+  dev_Hopping_Matrix_d<<<gpu_gd_M_d, gpu_bd_M_d>>>
+             (dev_gf_d, spinin, dev_spin_eo1_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, 0, VolumeEO); //spin_eo1 == even -> 0           
 #endif
-  dev_mul_one_pm_imu_inv_d<<<gridsize2, blocksize2>>>(spin_eo1_d,spin_eo2_d, -1.);
+  dev_mul_one_pm_imu_inv_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>>(dev_spin_eo1_d,dev_spin_eo2_d, -1.);
  
 
 #ifdef _USE_MPI
-  HOPPING_ASYNC_D(dev_gf_d, spin_eo2_d, spin_eo1_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, gridsize, blocksize);   
+  HOPPING_ASYNC_D(dev_gf_d, dev_spin_eo2_d, dev_spin_eo1_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, gpu_gd_M_d, gpu_bd_M_d);   
 #else
-  dev_Hopping_Matrix_d<<<gridsize, blocksize>>>
-            (dev_gf_d, spin_eo2_d, spin_eo1_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, 0, VolumeEO); 
+  dev_Hopping_Matrix_d<<<gpu_gd_M_d, gpu_bd_M_d>>>
+            (dev_gf_d, dev_spin_eo2_d, dev_spin_eo1_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, 0, VolumeEO); 
 #endif
-  dev_mul_one_pm_imu_sub_mul_gamma5_d<<<gridsize2, blocksize2>>>(spinin, spin_eo1_d,  spin_eo2_d, -1.);
+  dev_mul_one_pm_imu_sub_mul_gamma5_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>>(spinin, dev_spin_eo1_d,  dev_spin_eo2_d, -1.);
 
   //Q_{+}
 #ifdef _USE_MPI
-  HOPPING_ASYNC_D(dev_gf_d, spin_eo2_d, spin_eo1_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, gridsize, blocksize); //spin_eo1 == even -> 0
+  HOPPING_ASYNC_D(dev_gf_d, dev_spin_eo2_d, dev_spin_eo1_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, gpu_gd_M_d, gpu_bd_M_d); //spin_eo1 == even -> 0
 #else
-  dev_Hopping_Matrix_d<<<gridsize, blocksize>>>
-          (dev_gf_d, spin_eo2_d, spin_eo1_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, 0, VolumeEO);	  
+  dev_Hopping_Matrix_d<<<gpu_gd_M_d, gpu_bd_M_d>>>
+          (dev_gf_d, dev_spin_eo2_d, dev_spin_eo1_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, 0, VolumeEO);	  
 #endif
-  dev_mul_one_pm_imu_inv_d<<<gridsize2, blocksize2>>>(spin_eo1_d,spinout, +1.);
+  dev_mul_one_pm_imu_inv_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>>(dev_spin_eo1_d,spinout, +1.);
  
 
 #ifdef _USE_MPI
-  HOPPING_ASYNC_D(dev_gf_d, spinout, spin_eo1_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, gridsize, blocksize); 
+  HOPPING_ASYNC_D(dev_gf_d, spinout, dev_spin_eo1_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, gpu_gd_M_d, gpu_bd_M_d); 
 #else
-  dev_Hopping_Matrix_d<<<gridsize, blocksize>>>
-             (dev_gf_d, spinout, spin_eo1_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, 0, VolumeEO); 
+  dev_Hopping_Matrix_d<<<gpu_gd_M_d, gpu_bd_M_d>>>
+             (dev_gf_d, spinout, dev_spin_eo1_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, 0, VolumeEO); 
 #endif
-  dev_mul_one_pm_imu_sub_mul_gamma5_d<<<gridsize2, blocksize2>>>(spin_eo2_d, spin_eo1_d,  spinout , +1.); 
+  dev_mul_one_pm_imu_sub_mul_gamma5_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>>(dev_spin_eo2_d, dev_spin_eo1_d,  spinout , +1.); 
 
   if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
     if (g_proc_id == 0){
@@ -566,7 +562,7 @@ extern "C" void dev_Qtm_pm_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinout,
 
 
 // aequivalent to H_eo_tm_inv_psi in tm_operators.c, this is NON-MPI version
-extern "C" void dev_H_eo_tm_inv_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinout,dev_spinor_d* spin_eo1_d, 
+void dev_H_eo_tm_inv_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinout,dev_spinor_d* spin_eo1_d, 
 				 int gridsize, int blocksize, int gridsize2, int blocksize2,
 				 int* dev_eoidx_even, int* dev_eoidx_odd, 
 				 int* dev_nn_eo, int* dev_nn_oe, const int ieo, const double sign){
@@ -604,7 +600,7 @@ extern "C" void dev_H_eo_tm_inv_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinou
 
 
 // aequivalent to Qtm_minus_psi in tm_operators.c, this is NON-MPI version
-extern "C" void dev_Qtm_minus_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinout,dev_spinor_d* spin_eo1_d, 
+void dev_Qtm_minus_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinout,dev_spinor_d* spin_eo1_d, 
 				 int gridsize, int blocksize, int gridsize2, int blocksize2,
 				 int* dev_eoidx_even, int* dev_eoidx_odd, 
 				 int* dev_nn_eo, int* dev_nn_oe){
@@ -959,9 +955,7 @@ __global__ void dev_nd_linalg1_gamma5_d (dev_spinor_d * s1_up, dev_spinor_d * s1
 // the GPU implementation of  Qtm_pm_ndpsi(...)  from tm_operators_nd.c
 // we have the possibility to add a constant shift > 0 
 void dev_Qtm_pm_ndpsi_d (dev_spinor_d * spinout_up, dev_spinor_d * spinout_dn,
-                              dev_spinor_d * spinin_up , dev_spinor_d * spinin_dn , 
-                              int gridsize1, int blocksize1, int gridsize2, int blocksize2,
-                              int gridsize3, int blocksize3, int gridsize4, int blocksize4) {
+                         dev_spinor_d * spinin_up , dev_spinor_d * spinin_dn) {
   
   
   // we will use the auxiliary fields  dev_spin_eo{1,2}_up/dn  for working on and buffering
@@ -979,50 +973,50 @@ void dev_Qtm_pm_ndpsi_d (dev_spinor_d * spinout_up, dev_spinor_d * spinout_dn,
  
   double nrm = 1.0 / (1.0 + g_mubar*g_mubar - g_epsbar*g_epsbar);
 #ifdef _USE_MPI
-  HOPPING_ASYNC_UPDN_D(dev_gf_d, spinin_dn, spinin_up, dev_spin_eo1_up_d, dev_spin_eo1_dn_d,dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, gridsize1, blocksize1);	// dev_spin_eo1_up = (M_eo) * spinin_dn  
+  HOPPING_ASYNC_UPDN_D(dev_gf_d, spinin_dn, spinin_up, dev_spin_eo1_up_d, dev_spin_eo1_dn_d,dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, gpu_gd_M_d, gpu_bd_M_d);	// dev_spin_eo1_up = (M_eo) * spinin_dn  
 #else
-  dev_Hopping_Matrix_updn_d<<<gridsize1, blocksize1>>>(dev_gf_d, spinin_dn, spinin_up, dev_spin_eo1_up_d, dev_spin_eo1_dn_d,dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,0,N_sites);
+  dev_Hopping_Matrix_updn_d<<<gpu_gd_M_d, gpu_bd_M_d>>>(dev_gf_d, spinin_dn, spinin_up, dev_spin_eo1_up_d, dev_spin_eo1_dn_d,dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,0,N_sites);
 #endif  
-  dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_up_d, dev_spin_eo2_up_d, -1.0);		// dev_spin_eo2_up  =  (1 - imubar) * dev_spin_eo1_up  =  (1 - imubar)*(M_eo) * spinin_dn
-  dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_dn_d, dev_spin_eo2_dn_d, +1.0);		// dev_spin_eo2_dn  =  (1 + imubar) * dev_spin_eo1_dn  =  (1 + imubar)*(M_eo) * spinin_up
-  dev_nd_linalg2_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, g_epsbar, nrm); 
+  dev_mul_one_pm_imubar_gamma5_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>>(dev_spin_eo1_up_d, dev_spin_eo2_up_d, -1.0);		// dev_spin_eo2_up  =  (1 - imubar) * dev_spin_eo1_up  =  (1 - imubar)*(M_eo) * spinin_dn
+  dev_mul_one_pm_imubar_gamma5_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>>(dev_spin_eo1_dn_d, dev_spin_eo2_dn_d, +1.0);		// dev_spin_eo2_dn  =  (1 + imubar) * dev_spin_eo1_dn  =  (1 + imubar)*(M_eo) * spinin_up
+  dev_nd_linalg2_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>>(dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, g_epsbar, nrm); 
   
 #ifdef _USE_MPI
-  HOPPING_ASYNC_UPDN_D(dev_gf_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, gridsize1, blocksize1);
+  HOPPING_ASYNC_UPDN_D(dev_gf_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, gpu_gd_M_d, gpu_bd_M_d);
 #else
-  dev_Hopping_Matrix_updn_d<<<gridsize1, blocksize1>>>(dev_gf_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,0,N_sites);								
+  dev_Hopping_Matrix_updn_d<<<gpu_gd_M_d, gpu_bd_M_d>>>(dev_gf_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,0,N_sites);								
 #endif
-  dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(spinin_dn, dev_spin_eo2_up_d, +1.0);			// dev_spin_eo2_up = (1 + imubar) * spinin_dn
-  dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(spinin_up, dev_spin_eo2_dn_d, -1.0);			// dev_spin_eo2_dn = (1 - imubar) * spinin_up
-  dev_nd_linalg1_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_up_d, dev_spin_eo1_dn_d, spinin_up, spinin_dn, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, g_epsbar ); 
+  dev_mul_one_pm_imubar_gamma5_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>>(spinin_dn, dev_spin_eo2_up_d, +1.0);			// dev_spin_eo2_up = (1 + imubar) * spinin_dn
+  dev_mul_one_pm_imubar_gamma5_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>>(spinin_up, dev_spin_eo2_dn_d, -1.0);			// dev_spin_eo2_dn = (1 - imubar) * spinin_up
+  dev_nd_linalg1_gamma5_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>>(dev_spin_eo1_up_d, dev_spin_eo1_dn_d, spinin_up, spinin_dn, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, g_epsbar ); 
     
   ////////////////////
   // (a,b) -> (b,a) //
   ////////////////////
   
-  dev_blascopy_d<<<gridsize4, blocksize4>>>(dev_spin_eo2_dn_d, dev_spin_eo3_up_d);			// dev_spin_eo3_up = dev_spin_eo2_dn
-  dev_blascopy_d<<<gridsize4, blocksize4>>>(dev_spin_eo2_up_d, dev_spin_eo3_dn_d);			// dev_spin_eo3_dn = dev_spin_eo2_up
+  dev_blascopy_d<<<gpu_gd_blas_d, gpu_bd_blas_d>>>(dev_spin_eo2_dn_d, dev_spin_eo3_up_d);			// dev_spin_eo3_up = dev_spin_eo2_dn
+  dev_blascopy_d<<<gpu_gd_blas_d, gpu_bd_blas_d>>>(dev_spin_eo2_up_d, dev_spin_eo3_dn_d);			// dev_spin_eo3_dn = dev_spin_eo2_up
 
 #ifdef _USE_MPI
-  HOPPING_ASYNC_UPDN_D(dev_gf_d, dev_spin_eo3_up_d, dev_spin_eo3_dn_d, dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, gridsize1, blocksize1);	// dev_spin_eo1_up = (M_eo) * dev_spin_eo3_up  
+  HOPPING_ASYNC_UPDN_D(dev_gf_d, dev_spin_eo3_up_d, dev_spin_eo3_dn_d, dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0, gpu_gd_M_d, gpu_bd_M_d);	// dev_spin_eo1_up = (M_eo) * dev_spin_eo3_up  
 #else
-  dev_Hopping_Matrix_updn_d<<<gridsize1, blocksize1>>>(dev_gf_d, dev_spin_eo3_up_d, dev_spin_eo3_dn_d, dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,0,N_sites);
+  dev_Hopping_Matrix_updn_d<<<gpu_gd_M_d, gpu_bd_M_d>>>(dev_gf_d, dev_spin_eo3_up_d, dev_spin_eo3_dn_d, dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_eoidx_even, dev_eoidx_odd, dev_nn_eo, 0,0,N_sites);
 #endif    
-  dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_up_d, dev_spin_eo2_up_d, -1.0);			// dev_spin_eo2_up  =  (1 - imubar) * dev_spin_eo1_up  =  (1 - imubar)*(M_eo) * dev_spin_eo3_up
-  dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_dn_d, dev_spin_eo2_dn_d, +1.0);			// dev_spin_eo2_dn  =  (1 + imubar) * dev_spin_eo1_dn  =  (1 + imubar)*(M_eo) * dev_spin_eo3_dn 
-  dev_nd_linalg2_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, g_epsbar, nrm); 
+  dev_mul_one_pm_imubar_gamma5_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>>(dev_spin_eo1_up_d, dev_spin_eo2_up_d, -1.0);			// dev_spin_eo2_up  =  (1 - imubar) * dev_spin_eo1_up  =  (1 - imubar)*(M_eo) * dev_spin_eo3_up
+  dev_mul_one_pm_imubar_gamma5_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>>(dev_spin_eo1_dn_d, dev_spin_eo2_dn_d, +1.0);			// dev_spin_eo2_dn  =  (1 + imubar) * dev_spin_eo1_dn  =  (1 + imubar)*(M_eo) * dev_spin_eo3_dn 
+  dev_nd_linalg2_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>>(dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, g_epsbar, nrm); 
 
 #ifdef _USE_MPI
-  HOPPING_ASYNC_UPDN_D(dev_gf_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, dev_spin_eo1_up_d,dev_spin_eo1_dn_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, gridsize1, blocksize1);  
+  HOPPING_ASYNC_UPDN_D(dev_gf_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, dev_spin_eo1_up_d,dev_spin_eo1_dn_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1, gpu_gd_M_d, gpu_bd_M_d);  
 #else
-  dev_Hopping_Matrix_updn_d<<<gridsize1, blocksize1>>>(dev_gf_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, dev_spin_eo1_up_d,dev_spin_eo1_dn_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,0,N_sites);
+  dev_Hopping_Matrix_updn_d<<<gpu_gd_M_d, gpu_bd_M_d>>>(dev_gf_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, dev_spin_eo1_up_d,dev_spin_eo1_dn_d, dev_eoidx_odd, dev_eoidx_even, dev_nn_oe, 1,0,N_sites);
 #endif  
-  dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo3_up_d, dev_spin_eo2_up_d, +1.0);				// dev_spin_eo2_up = (1 + imubar) * dev_spin_eo3_up
-  dev_mul_one_pm_imubar_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo3_dn_d, dev_spin_eo2_dn_d, -1.0);				// dev_spin_eo2_dn = (1 - imubar) * dev_spin_eo3_dn
-  dev_nd_linalg1_gamma5_d<<<gridsize2, blocksize2>>>(dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_spin_eo3_dn_d, dev_spin_eo3_up_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, g_epsbar ); 
+  dev_mul_one_pm_imubar_gamma5_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>>(dev_spin_eo3_up_d, dev_spin_eo2_up_d, +1.0);				// dev_spin_eo2_up = (1 + imubar) * dev_spin_eo3_up
+  dev_mul_one_pm_imubar_gamma5_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>>(dev_spin_eo3_dn_d, dev_spin_eo2_dn_d, -1.0);				// dev_spin_eo2_dn = (1 - imubar) * dev_spin_eo3_dn
+  dev_nd_linalg1_gamma5_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>>(dev_spin_eo1_up_d, dev_spin_eo1_dn_d, dev_spin_eo3_dn_d, dev_spin_eo3_up_d, dev_spin_eo2_up_d, dev_spin_eo2_dn_d, g_epsbar ); 
       
-  dev_blasscal_d<<<gridsize2, blocksize2>>>(phmc_invmaxev*phmc_invmaxev, dev_spin_eo2_up_d);
-  dev_blasscal_d<<<gridsize2, blocksize2>>>(phmc_invmaxev*phmc_invmaxev, dev_spin_eo2_dn_d);
+  dev_blasscal_d<<<gpu_gd_blas_d, gpu_bd_blas_d>>>(phmc_invmaxev*phmc_invmaxev, dev_spin_eo2_up_d);
+  dev_blasscal_d<<<gpu_gd_blas_d, gpu_bd_blas_d>>>(phmc_invmaxev*phmc_invmaxev, dev_spin_eo2_dn_d);
 
   return;
   

@@ -63,12 +63,14 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
 
   if(usegpu_flag)
   {
-    if(mnl->use_rectangles) {
-      gpu_gauge_derivative(1, hf, factor, factor*mnl->c1/mnl->c0);
-    }
-    else{
-      gpu_gauge_derivative(0, hf, factor, 0.0);
-    }
+    #ifdef HAVE_GPU
+      if(mnl->use_rectangles) {
+	gpu_gauge_derivative(1, hf, factor, factor*mnl->c1/mnl->c0);
+      }
+      else{
+	gpu_gauge_derivative(0, hf, factor, 0.0);
+      }
+    #endif
   }
   else{
     #ifdef OMP

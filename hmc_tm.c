@@ -74,9 +74,9 @@
 
 #ifdef HAVE_GPU
 #include "GPU/cudadefs.h"
-extern void init_mixedsolve_eo(su3** gf);
-extern void finalize_mixedsolve();
-extern void init_gpu_fields(int need_momenata);
+extern void init_mixedsolve_eo(su3** gf, int use_eo);
+extern void finalize_mixedsolve(int use_eo);
+extern void init_gpu_fields(int need_momenata, int use_eo);
 extern void finalize_gpu_fields();
    #ifdef TEMPORALGAUGE
      #include "temporalgauge.h" 
@@ -416,17 +416,20 @@ int main(int argc,char *argv[]) {
     fprintf(countfile, "\n");
     fclose(countfile);
   }
+  
 
   if(usegpu_flag){
-    init_mixedsolve_eo(g_gauge_field);
-    /*init double fields with momentum field*/
-    init_gpu_fields(1);
-    #ifdef TEMPORALGAUGE
-      int retval;
-      if((retval=init_temporalgauge(VOLUME, g_gauge_field)) !=0){
-	if(g_proc_id == 0) printf("Error while initializing temporal gauge. Aborting...\n");   
-	exit(200);
-      }
+    #ifdef HAVE_GPU 
+      init_mixedsolve_eo(g_gauge_field, even_odd_flag);
+      /*init double fields with momentum field*/
+      init_gpu_fields(1, even_odd_flag);
+      #ifdef TEMPORALGAUGE
+	int retval;
+	if((retval=init_temporalgauge(VOLUME, g_gauge_field)) !=0){
+	  if(g_proc_id == 0) printf("Error while initializing temporal gauge. Aborting...\n");   
+	  exit(200);
+	}
+      #endif
     #endif
   }
 
@@ -589,14 +592,18 @@ int main(int argc,char *argv[]) {
 #ifdef OMP
   free_omp_accumulators();
 #endif
+  
 
   if(usegpu_flag){
-    finalize_mixedsolve();
-    finalize_gpu_fields();
-      #ifdef TEMPORALGAUGE
-	finalize_temporalgauge();
-      #endif
+    #ifdef HAVE_GPU    
+      finalize_mixedsolve(even_odd_flag);
+      finalize_gpu_fields();
+	#ifdef TEMPORALGAUGE
+	  finalize_temporalgauge();
+	#endif
+    #endif
   }
+
 
   free_gauge_tmp();
   free_gauge_field();

@@ -2,6 +2,7 @@
 # include<config.h>
 #endif
 #include "global.h"
+#include "read_input.h"
 #include "GPU/cudadefs.h"
 #include "su3.h"
 #include "geometry_eo.h"
@@ -15,6 +16,9 @@
   #include<mpi.h>
   #include "mpi_init.h"
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include "xchange/xchange.h"
 
 su3 * g_trafo;
@@ -25,24 +29,21 @@ su3 * right;
 
 
 
-static su3 unit_su3 (void) {
+void unit_su3 (su3 * u) {
 
-   su3 u;
 
-   u.c00 = 1.0 + 0.0*I;
-   u.c01 = 0.0 + 0.0*I;
-   u.c02 = 0.0 + 0.0*I;
+   (*u).c00 = 1.0 + 0.0*I;
+   (*u).c01 = 0.0 + 0.0*I;
+   (*u).c02 = 0.0 + 0.0*I;
 
-   u.c10 = 0.0 + 0.0*I;
-   u.c11 = 1.0 + 0.0*I;
-   u.c12 = 0.0 + 0.0*I;
+   (*u).c10 = 0.0 + 0.0*I;
+   (*u).c11 = 1.0 + 0.0*I;
+   (*u).c12 = 0.0 + 0.0*I;
 
-   u.c20 = 0.0 + 0.0*I;
-   u.c21 = 0.0 + 0.0*I;
-   u.c22 = 1.0 + 0.0*I;
+   (*u).c20 = 0.0 + 0.0*I;
+   (*u).c21 = 0.0 + 0.0*I;
+   (*u).c22 = 1.0 + 0.0*I;
 
-   return(u);
-   
 }
 
 
@@ -50,9 +51,14 @@ static su3 unit_su3 (void) {
 /*copy a complete gauge field*/
 /* THINK OF PARALLELIZATION (RAND!!!)*/
 void copy_gauge_field (su3 ** to, su3 ** from) {
-
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   int ix;
-  
+#ifdef OMP
+#pragma omp for private(ix)
+#endif  
   for (ix = 0; ix < VOLUME; ix++) {				// for TEMPORALGAUGE we will only consider the INTERN lattice
   								//	after the tansformations we will xchange the fields
     _su3_assign(to[ix][0], from[ix][0]);
@@ -61,6 +67,9 @@ void copy_gauge_field (su3 ** to, su3 ** from) {
     _su3_assign(to[ix][3], from[ix][3]);
     
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif 
 }
 
 
@@ -77,21 +86,32 @@ int init_temporalgauge_trafo (const int V, su3** gfield) {
 
 #ifndef _USE_MPI
 
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
    int it, iz, iy, ix;
    
    int pos;
    
   /* initialize first timeslice (t=0) with unit matrices*/
+#ifdef OMP
+#pragma omp for private(ix,iy,iz)
+#endif
   for (ix = 0; ix < LX; ix++) {
     for (iy = 0; iy < LY; iy++) {
       for (iz = 0; iz < LZ; iz++) {
-        g_trafo[g_ipt[0][ix][iy][iz]] = unit_su3();
+        unit_su3(&g_trafo[g_ipt[0][ix][iy][iz]]);
       }
     }
   }
   
   /* U^{'}_0(x)  g(x) U_0(x) g^{+}(x+0) != ID   =>  g_(x+0) = g(x) U_0(x)  */
   for (it = 1; it < T; it++) {
+#ifdef OMP
+#pragma omp for private(ix,iy,iz,pos)
+#endif    
     for (ix = 0; ix < LX; ix++) {
       for (iy = 0; iy < LY; iy++) {
         for (iz = 0; iz < LZ; iz++) {
@@ -105,8 +125,12 @@ int init_temporalgauge_trafo (const int V, su3** gfield) {
     } 
   }
 
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif   
+  
 #else // MPI
-
+//FIXME need to think about MPI+OMP
   int it, iz, iy, ix;
   
   int pos;
@@ -128,7 +152,7 @@ int init_temporalgauge_trafo (const int V, su3** gfield) {
   	for (ix = 0; ix < LX; ix++) {
   	  for (iy = 0; iy < LY; iy++) {
   	    for (iz = 0; iz < LZ; iz++) {
-  	      g_trafo[g_ipt[0][ix][iy][iz]] = unit_su3();					// g_trafo[0-th time slice]  =  ID
+  	       unit_su3(&g_trafo[g_ipt[0][ix][iy][iz]]);					// g_trafo[0-th time slice]  =  ID
   	    }
   	  }
   	}
@@ -333,27 +357,39 @@ int init_temporalgauge(const int V, su3** gfield) {
   Used in the inversions in the hmc
 */
 void to_temporalgauge( su3** gfield, spinor * const spin1, spinor * const spin2) {
-
+#ifndef LOWOUTPUT
+if (g_cart_id == 0) {
+  printf("Going to temporalgauge now!\n");
+}
+#endif
+   
 #ifndef _USE_MPI
-   #ifndef LOWOUTPUT
-    if (g_cart_id == 0) {
-      printf("Going to temporalgauge now!\n");
-    }
-   #endif
+
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
    int it, iz, iy, ix;
    int pos;
    
-  /* initialize first timeslice (t=0) with unit matrices*/
+  /* initialize first timeslice (t=0) with unit matrices*/ 
+#ifdef OMP
+#pragma omp for private(ix,iy,iz)
+#endif
   for (ix = 0; ix < LX; ix++) {
     for (iy = 0; iy < LY; iy++) {
       for (iz = 0; iz < LZ; iz++) {
-        g_trafo[g_ipt[0][ix][iy][iz]] = unit_su3();
+         unit_su3(&g_trafo[g_ipt[0][ix][iy][iz]]);
       }
     }
   }
   
   /* U^{'}_0(x)  g(x) U_0(x) g^{+}(x+0) != ID   =>  g_(x+0) = g(x) U_0(x)  */
   for (it = 1; it < T; it++) {
+#ifdef OMP
+#pragma omp for private(ix,iy,iz,pos)
+#endif
     for (ix = 0; ix < LX; ix++) {
       for (iy = 0; iy < LY; iy++) {
         for (iz = 0; iz < LZ; iz++) {
@@ -367,8 +403,12 @@ void to_temporalgauge( su3** gfield, spinor * const spin1, spinor * const spin2)
     } 
   }
 
-#else // MPI
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif 
 
+#else // MPI
+//FIXME need to think about MPI+OMP
   int it, iz, iy, ix;
   int pos;
   MPI_Status status;
@@ -388,7 +428,7 @@ void to_temporalgauge( su3** gfield, spinor * const spin1, spinor * const spin2)
   	for (ix = 0; ix < LX; ix++) {
   	  for (iy = 0; iy < LY; iy++) {
   	    for (iz = 0; iz < LZ; iz++) {
-  	      g_trafo[g_ipt[0][ix][iy][iz]] = unit_su3();					// g_trafo[0-th time slice]  =  ID
+  	       unit_su3(&g_trafo[g_ipt[0][ix][iy][iz]]);					// g_trafo[0-th time slice]  =  ID
   	    }
   	  }
   	}
@@ -495,11 +535,17 @@ void to_temporalgauge( su3** gfield, spinor * const spin1, spinor * const spin2)
   /* apply the gauge trafo to g_gauge_field */
   apply_gtrafo(g_gauge_field, g_trafo);
 
+  if(even_odd_flag){
   /* apply the gauge trafo to the ODD spinor given 
      We only need odd here as only ODDs are inverted in
      detratio_monomial and detratio */
-  apply_gtrafo_spinor_odd(spin1, g_trafo);
-  apply_gtrafo_spinor_odd(spin2, g_trafo);
+    apply_gtrafo_spinor_odd(spin1, g_trafo);
+    apply_gtrafo_spinor_odd(spin2, g_trafo);
+  }
+  else{
+    apply_gtrafo_spinor(spin1, g_trafo);
+    apply_gtrafo_spinor(spin2, g_trafo);    
+  }
   return;
 }
 
@@ -512,8 +558,14 @@ void to_temporalgauge_mms( su3** gfield, spinor * const spin1, spinor * const sp
   
   //apply trafo on mms up/dn fields
   for(int is=0; is < Nshift; is++){
-    apply_gtrafo_spinor_odd(spin_mms_up[is], g_trafo);
-    apply_gtrafo_spinor_odd(spin_mms_dn[is], g_trafo);
+    if(even_odd_flag){
+      apply_gtrafo_spinor_odd(spin_mms_up[is], g_trafo);
+      apply_gtrafo_spinor_odd(spin_mms_dn[is], g_trafo);
+    }
+    else{
+      apply_gtrafo_spinor(spin_mms_up[is], g_trafo);
+      apply_gtrafo_spinor(spin_mms_dn[is], g_trafo);      
+    }
   }
 
   return;
@@ -530,27 +582,38 @@ void to_temporalgauge_mms( su3** gfield, spinor * const spin1, spinor * const sp
   Used in the inversions in the hmc
 */
 void to_temporalgauge_invert_eo( su3** gfield, spinor * const spineven, spinor * const spinodd) {
-
+#ifndef LOWOUTPUT
+if (g_cart_id == 0) {
+  printf("Going to temporalgauge now!\n");
+}
+#endif
 #ifndef _USE_MPI
-   #ifndef LOWOUTPUT
-    if (g_cart_id == 0) {
-      printf("Going to temporalgauge now!\n");
-    }
-   #endif
+
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
    int it, iz, iy, ix;
    int pos;
    
   /* initialize first timeslice (t=0) with unit matrices*/
+#ifdef OMP
+#pragma omp for private(ix,iy,iz)
+#endif  
   for (ix = 0; ix < LX; ix++) {
     for (iy = 0; iy < LY; iy++) {
       for (iz = 0; iz < LZ; iz++) {
-        g_trafo[g_ipt[0][ix][iy][iz]] = unit_su3();
+         unit_su3(&g_trafo[g_ipt[0][ix][iy][iz]]);
       }
     }
   }
   
   /* U^{'}_0(x)  g(x) U_0(x) g^{+}(x+0) != ID   =>  g_(x+0) = g(x) U_0(x)  */
   for (it = 1; it < T; it++) {
+#ifdef OMP
+#pragma omp for private(ix,iy,iz,pos)
+#endif    
     for (ix = 0; ix < LX; ix++) {
       for (iy = 0; iy < LY; iy++) {
         for (iz = 0; iz < LZ; iz++) {
@@ -563,9 +626,13 @@ void to_temporalgauge_invert_eo( su3** gfield, spinor * const spineven, spinor *
       }
     } 
   }
+  
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif 
 
 #else // MPI
-
+//FIXME need to think about MPI+OMP
   int it, iz, iy, ix;
   int pos;
   MPI_Status status;
@@ -585,7 +652,7 @@ void to_temporalgauge_invert_eo( su3** gfield, spinor * const spineven, spinor *
   	for (ix = 0; ix < LX; ix++) {
   	  for (iy = 0; iy < LY; iy++) {
   	    for (iz = 0; iz < LZ; iz++) {
-  	      g_trafo[g_ipt[0][ix][iy][iz]] = unit_su3();					// g_trafo[0-th time slice]  =  ID
+  	       unit_su3(&g_trafo[g_ipt[0][ix][iy][iz]]);					// g_trafo[0-th time slice]  =  ID
   	    }
   	  }
   	}
@@ -792,8 +859,14 @@ xchange_gauge(g_gauge_field);
 #endif     
   
   g_update_gauge_copy = 1;
-  apply_inv_gtrafo_spinor_odd(spin1, g_trafo);
-  apply_inv_gtrafo_spinor_odd(spin2, g_trafo);
+  if(even_odd_flag){
+    apply_inv_gtrafo_spinor_odd(spin1, g_trafo);
+    apply_inv_gtrafo_spinor_odd(spin2, g_trafo);
+  }
+  else{
+    apply_inv_gtrafo_spinor(spin1, g_trafo);
+    apply_inv_gtrafo_spinor(spin2, g_trafo);    
+  }
   return;
 }
 
@@ -812,8 +885,14 @@ void from_temporalgauge_mms(spinor * const spin1, spinor * const spin2, spinor *
   
   //apply trafo on mms up/dn fields
   for(int is=0; is < Nshift; is++){
-    apply_inv_gtrafo_spinor_odd(spin_mms_up[is], g_trafo);
-    apply_inv_gtrafo_spinor_odd(spin_mms_dn[is], g_trafo);
+    if(even_odd_flag){
+      apply_inv_gtrafo_spinor_odd(spin_mms_up[is], g_trafo);
+      apply_inv_gtrafo_spinor_odd(spin_mms_dn[is], g_trafo);
+    }
+    else{
+      apply_inv_gtrafo_spinor(spin_mms_up[is], g_trafo);
+      apply_inv_gtrafo_spinor(spin_mms_dn[is], g_trafo);      
+    }
   }
   return;
 }
@@ -984,19 +1063,27 @@ void finalize_temporalgauge() {
 //  apply gauge transform to gfield with the trafo stored in trafofield
 
 void apply_gtrafo (su3 ** gfield, su3 * trafofield) {
+  
+  #ifndef LOWOUTPUT
+   if (g_cart_id == 0) {
+    printf("Applying gauge transformation...");
+   }
+  #endif 
+
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif 
 
   int it, iz, iy, ix;
   int pos;
   int mu;
   
   su3 temp1;
-  #ifndef LOWOUTPUT
-   if (g_cart_id == 0) {
-    printf("Applying gauge transformation...");
-   }
-  #endif
-  
-  
+
+#ifdef OMP
+#pragma omp for private(it,ix,iy,iz,pos,temp1,mu)
+#endif   
   for (it = 0; it < T; it++) {
     for (ix = 0; ix < LX; ix++) {
       for (iy = 0; iy < LY; iy++) {
@@ -1042,11 +1129,17 @@ void apply_gtrafo (su3 ** gfield, su3 * trafofield) {
       }
     } 
   }
+  
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif 
+
   #ifndef LOWOUTPUT  
-  if (g_cart_id == 0) {
-    printf("done\n");
-  }
+    if (g_cart_id == 0) {
+      printf("done\n");
+    }
   #endif  
+  
 #ifdef _USE_MPI
 xchange_gauge(gfield);
 #endif
@@ -1066,16 +1159,26 @@ xchange_gauge(gfield);
 
 void apply_inv_gtrafo (su3 ** gfield, su3 * trafofield) {
 
+#ifndef LOWOUTPUT
+ if(g_cart_id == 0) {
+   printf("Applying INVERSE gauge transformation...");
+ }
+#endif
+
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
  int it, iz, iy, ix;
  int xpos;
  int mu;
   
  su3 temp1, temp2;
  
- if(g_cart_id == 0) {
-   printf("Applying INVERSE gauge transformation...");
- }
- 
+#ifdef OMP
+#pragma omp for private(it,ix,iy,iz,xpos,mu,temp1,temp2)
+#endif   
  for (it = 0; it < T; it++) {
    for (ix = 0; ix < LX; ix++) {
      for (iy = 0; iy < LY; iy++) {
@@ -1100,10 +1203,16 @@ void apply_inv_gtrafo (su3 ** gfield, su3 * trafofield) {
           }  
   }}}}
   
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif 
+
+#ifndef LOWOUTPUT
   if(g_cart_id == 0) {
     printf("done\n");
   }
-  
+#endif 
+
   /* update gauge copy fields in the next call to HoppingMatrix */
   g_update_gauge_copy = 1;
   
@@ -1123,15 +1232,25 @@ xchange_gauge(gfield);
 
 void apply_inv_gtrafo_spinor (spinor * spin, su3 * trafofield) {
 
+#ifndef LOWOUTPUT
+ if(g_cart_id == 0) {
+   printf("Applying INVERSE gauge transformation to spinor...");
+ }
+#endif
+
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
  int it, iz, iy, ix;
  int pos;
   
  spinor temp;
  
- if(g_cart_id == 0) {
-   printf("Applying INVERSE gauge transformation to spinor...");
- }
  
+#ifdef OMP
+#pragma omp for private(it,ix,iy,iz,pos,temp)
+#endif     
  for (it = 0; it < T; it++) {
   for (ix = 0; ix < LX; ix++) {
     for (iy = 0; iy < LY; iy++) {
@@ -1153,13 +1272,20 @@ void apply_inv_gtrafo_spinor (spinor * spin, su3 * trafofield) {
       }
     } 
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif  
+  
 #ifdef _USE_MPI
   xchange_lexicfield(spin);
-#endif  
+#endif 
+  
+#ifndef LOWOUTPUT  
   if (g_cart_id == 0) {
     printf("done\n");
   }
-  
+#endif 
 }
 
 
@@ -1173,15 +1299,24 @@ void apply_inv_gtrafo_spinor (spinor * spin, su3 * trafofield) {
 */
 
 void apply_gtrafo_spinor (spinor * spin, su3 * trafofield) {
+#ifndef LOWOUTPUT
+ if(g_cart_id == 0) {
+   printf("Applying gauge transformation to spinor...");
+ }
+#endif
 
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
  int it, iz, iy, ix;
  int pos; 
  spinor temp;
  
- if(g_cart_id == 0) {
-   printf("Applying gauge transformation to spinor...");
- }
  
+#ifdef OMP
+#pragma omp for private(it,ix,iy,iz,pos,temp)
+#endif    
   for (it = 0; it < T; it++) {
     for (ix = 0; ix < LX; ix++) {
       for (iy = 0; iy < LY; iy++) {
@@ -1202,13 +1337,20 @@ void apply_gtrafo_spinor (spinor * spin, su3 * trafofield) {
       }
     } 
   }
+  
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
 #ifdef _USE_MPI
   xchange_lexicfield(spin);
 #endif
+ 
+#ifndef LOWOUTPUT
   if(g_cart_id == 0) {
     printf("done\n");
   }
-  
+#endif  
 }
 
 
@@ -1222,18 +1364,25 @@ void apply_gtrafo_spinor (spinor * spin, su3 * trafofield) {
 */
 
 void apply_gtrafo_spinor_odd (spinor * spin, su3 * trafofield) {
+#ifndef LOWOUTPUT
+  if (g_cart_id == 0 && g_debug_level > 2) {
+    printf("Applying  gauge transformation to odd spinor...");
+  }
+#endif
 
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   int it, iz, iy, ix;
   int pos;
   int oddpos; 
   spinor temp;
-  #ifndef LOWOUTPUT
-    if (g_cart_id == 0 && g_debug_level > 2) {
-      printf("Applying  gauge transformation to odd spinor...");
-    }
-  #endif
+
   
-  
+#ifdef OMP
+#pragma omp for private(it,ix,iy,iz,pos,oddpos,temp)
+#endif   
   for (it = 0; it < T; it++) {
     for (ix = 0; ix < LX; ix++) { 
       for (iy = 0; iy < LY; iy++) {
@@ -1259,7 +1408,11 @@ void apply_gtrafo_spinor_odd (spinor * spin, su3 * trafofield) {
       }
     } 
   }
-  
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
 #ifdef _USE_MPI
   xchange_field(spin, 0);
 #endif
@@ -1283,18 +1436,27 @@ void apply_gtrafo_spinor_odd (spinor * spin, su3 * trafofield) {
 */
 
 void apply_inv_gtrafo_spinor_odd (spinor * spin, su3 * trafofield) {
-
+  
+#ifndef LOWOUTPUT
+  if (g_cart_id == 0  && g_debug_level > 2) {
+    printf("Applying INVERSE gauge transformation to odd spinor...");
+  }
+#endif
+  
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   int it, iz, iy, ix;
   int pos;
   int oddpos;
   
   spinor temp;
-  #ifndef LOWOUTPUT
-    if (g_cart_id == 0  && g_debug_level > 2) {
-      printf("Applying INVERSE gauge transformation to odd spinor...");
-    }
-  #endif
+
   
+#ifdef OMP
+#pragma omp for private(it,ix,iy,iz,pos,oddpos,temp)
+#endif   
   for (it = 0; it < T; it++) {
     for (ix = 0; ix < LX; ix++) {
       for (iy = 0; iy < LY; iy++) {
@@ -1322,9 +1484,15 @@ void apply_inv_gtrafo_spinor_odd (spinor * spin, su3 * trafofield) {
       }
     } 
   }
+  
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
 #ifdef _USE_MPI
   xchange_field(spin, 0);
 #endif
+  
   #ifndef LOWOUTPUT
     if (g_cart_id == 0 && g_debug_level > 2) {
       printf("done\n");
@@ -1345,19 +1513,25 @@ void apply_inv_gtrafo_spinor_odd (spinor * spin, su3 * trafofield) {
 */
 
 void apply_gtrafo_spinor_even (spinor * spin, su3 * trafofield) {
+#ifndef LOWOUTPUT
+  if (g_cart_id == 0 && g_debug_level > 2) {
+    printf("Applying  gauge transformation to even spinor...");
+  }
+#endif
 
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   int it, iz, iy, ix;
   int pos;
   int evenpos;
   
   spinor temp;
-  #ifndef LOWOUTPUT
-    if (g_cart_id == 0 && g_debug_level > 2) {
-      printf("Applying  gauge transformation to even spinor...");
-    }
-  #endif
   
-  
+#ifdef OMP
+#pragma omp for private(it,ix,iy,iz,pos,evenpos,temp)
+#endif  
   for (it = 0; it < T; it++) {
     for (ix = 0; ix < LX; ix++) { 
       for (iy = 0; iy < LY; iy++) {
@@ -1384,6 +1558,10 @@ void apply_gtrafo_spinor_even (spinor * spin, su3 * trafofield) {
       }
     } 
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   
 #ifdef _USE_MPI
   xchange_field(spin, 1);
@@ -1407,18 +1585,26 @@ void apply_gtrafo_spinor_even (spinor * spin, su3 * trafofield) {
   (the primed (^{'}) quantities are the gauge transformed fields)
 */
 void apply_inv_gtrafo_spinor_even (spinor * spin, su3 * trafofield) {
+#ifndef LOWOUTPUT
+  if (g_cart_id == 0  && g_debug_level > 2) {
+    printf("Applying INVERSE gauge transformation to even spinor...");
+  }
+#endif  
+  
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
 
   int it, iz, iy, ix;
   int xpos;
   int evenpos;
   
   spinor temp;
-  #ifndef LOWOUTPUT
-    if (g_cart_id == 0  && g_debug_level > 2) {
-      printf("Applying INVERSE gauge transformation to even spinor...");
-    }
-  #endif
-  
+
+#ifdef OMP
+#pragma omp for private(it,ix,iy,iz,xpos,evenpos,temp)
+#endif
   for (it = 0; it < T; it++) {
     for (ix = 0; ix < LX; ix++) {
       for (iy = 0; iy < LY; iy++) {
@@ -1446,6 +1632,10 @@ void apply_inv_gtrafo_spinor_even (spinor * spin, su3 * trafofield) {
     } 
   }
   
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
 #ifdef _USE_MPI
   xchange_field(spin, 1);
 #endif  

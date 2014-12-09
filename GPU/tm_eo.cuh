@@ -61,7 +61,7 @@ __global__ void dev_mul_one_pm_imu_sub_mul_gamma5(dev_spinor* sin1, dev_spinor* 
 
 
 // aequivalent to Qtm_pm_psi in tm_operators.c, this is NON-MPI version
-extern "C" void dev_Qtm_pm_psi_old(dev_spinor* spinin, dev_spinor* spinout, int gridsize, dim3 blocksize, int gridsize2, int blocksize2){
+void dev_Qtm_pm_psi_old(dev_spinor* spinin, dev_spinor* spinout, int gridsize, dim3 blocksize, int gridsize2, int blocksize2){
   //spinin == odd
   //spinout == odd
   
@@ -127,7 +127,7 @@ extern "C" void dev_Qtm_pm_psi_old(dev_spinor* spinin, dev_spinor* spinout, int 
 
 // aequivalent to Qtm_pm_psi in tm_operators.c, this is NON-MPI version
 // fused hopping and linalg kernels to be more efficient on kepler
-extern "C" void dev_Qtm_pm_psi_scalar(dev_spinor* spinin, dev_spinor* spinout, int gridsize, dim3 blocksize, int gridsize2, int blocksize2){
+void dev_Qtm_pm_psi_scalar(dev_spinor* spinin, dev_spinor* spinout, int gridsize, dim3 blocksize, int gridsize2, int blocksize2){
   //spinin == odd
   //spinout == odd
   
@@ -191,7 +191,7 @@ extern "C" void dev_Qtm_pm_psi_scalar(dev_spinor* spinin, dev_spinor* spinout, i
 #ifdef _USE_MPI
 // aequivalent to Qtm_pm_psi in tm_operators.c
 // using HOPPING_ASYNC for mpi
-extern "C" void dev_Qtm_pm_psi_mpi(dev_spinor* spinin, dev_spinor* spinout, int gridsize, dim3 blocksize, int gridsize2, int blocksize2){
+void dev_Qtm_pm_psi_mpi(dev_spinor* spinin, dev_spinor* spinout, int gridsize, dim3 blocksize, int gridsize2, int blocksize2){
   //spinin == odd
   //spinout == odd
   
@@ -234,13 +234,12 @@ extern "C" void dev_Qtm_pm_psi_mpi(dev_spinor* spinin, dev_spinor* spinout, int 
 
 
 
-extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int gridsize, dim3 blocksize, 
-			       int gridsize2, int blocksize2){
+void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout){
 
 #ifdef _USE_MPI
-  dev_Qtm_pm_psi_mpi(spinin, spinout, gridsize, blocksize, gridsize2, blocksize2);
+  dev_Qtm_pm_psi_mpi(spinin, spinout, gpu_gd_M, gpu_bd_M, gpu_gd_linalg, gpu_bd_linalg);
 #else
-  dev_Qtm_pm_psi_scalar(spinin, spinout, gridsize, blocksize, gridsize2, blocksize2);
+  dev_Qtm_pm_psi_scalar(spinin, spinout, gpu_gd_M, gpu_bd_M, gpu_gd_linalg, gpu_bd_linalg);
 #endif
 
 }

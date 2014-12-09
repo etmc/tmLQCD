@@ -19,16 +19,15 @@ __global__ void he_cg_init_nd_additional (double param_mubar, double param_epsba
 
 __global__ void dev_mul_one_pm_imubar_gamma5 (dev_spinor * sin, dev_spinor * sout, float sign);
 
-void init_mixedsolve_eo_nd(su3** gf);
+void init_mixedsolve_eo_nd(su3** gf, int use_eo);
 
 void finalize_mixedsolve_eo_nd(void);
 void update_gpu_gf(su3** gf);
 
-void dev_Qtm_pm_ndpsi(dev_spinor * , dev_spinor * , dev_spinor * , dev_spinor * , int, int, int, int, int, int, int, int);
 
 void flopcount(unsigned long long int& total, int add);
 
-extern "C" void benchmark_eo_nd (spinor * const Q_up, spinor * const Q_dn, int N);
+extern "C" void benchmark_eo_nd (spinor * const Q_up, spinor * const Q_dn, int N, int use_eo);
 
 int dev_cg_eo_nd (dev_su3_2v * gf,
               dev_spinor * P_up, dev_spinor * P_dn,
@@ -40,9 +39,9 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
 
 extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
                                  spinor * Q_up, spinor * Q_dn, double shift,
-                                 int max_iter, double eps_sq, int rel_prec);
+                                 int max_iter, double eps_sq, int rel_prec, int use_eo, matrix_mult_nd f);
 
-void set_global_sizes();
+void set_global_sizes(int use_eo);
 
 float cublasSdot_wrapper(int size, float * A, int incx, float * B, int incy);
 
@@ -67,14 +66,6 @@ __global__ void he_cg_init_nd_additional_mpi (int param_VOLUMEPLUSRAND, int para
 void init_mixedsolve_eo_nd_mpi(su3** gf);
 void finalize_mixedsolve_eo_nd_mpi(void);
 
-__global__ void dev_Hopping_Matrix_mpi (const dev_su3_2v * gf, const dev_spinor * sin, dev_spinor * sout,
-                                        int * dev_iup, int * dev_idn, int * dev_eo2lexic, int * dev_lexic2eosub,
-                                        int ieo);
-
-void dev_Qtm_pm_ndpsi_mpi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
-                                  dev_spinor * spinin_up , dev_spinor * spinin_dn , 
-                                  int gridsize1, int blocksize1, int gridsize2, int blocksize2,
-                                  int gridsize3, int blocksize3, int gridsize4, int blocksize4);
 
 int cg_eo_nd_mpi (dev_su3_2v * gf,
                   dev_spinor * P_up, dev_spinor * P_dn,
@@ -92,8 +83,12 @@ extern "C" int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
 		 solver_pm_t * solver_pm);
 
 
-// ASYNC
 
+
+
+__global__ void dev_Hopping_Matrix_mpi (const dev_su3_2v * gf, const dev_spinor * sin, dev_spinor * sout,
+                                        int * dev_iup, int * dev_idn, int * dev_eo2lexic, int * dev_lexic2eosub,
+                                        int ieo);
 __global__ void dev_Hopping_Matrix_ASYNC (const dev_su3_2v * gf, 
                                           const dev_spinor * sin, dev_spinor * sout,
                                           const int * gfindex_site, const int* gfindex_nextsite, const int * nn_evenodd,
@@ -117,6 +112,16 @@ void HOPPING_ASYNC_UPDN_D (dev_su3_2v_d * gf,
                     int ieo,
                     int gridsize, int blocksize);
 
+
+
+
+void dev_Qtm_pm_ndpsi_mpi (dev_spinor * spinout_up, dev_spinor * spinout_dn,
+                                  dev_spinor * spinin_up , dev_spinor * spinin_dn , 
+                                  int gridsize1, int blocksize1, int gridsize2, int blocksize2,
+                                  int gridsize3, int blocksize3, int gridsize4, int blocksize4);
+
+
+
 void dev_Qtm_pm_ndpsi_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * spinout_dn,
                                         dev_spinor * spinin_up , dev_spinor * spinin_dn ,
                                         int gridsize1, dim3 blocksize1, int gridsize2, int blocksize2,
@@ -124,6 +129,21 @@ void dev_Qtm_pm_ndpsi_mpi_ASYNC (dev_spinor * spinout_up, dev_spinor * spinout_d
 
 
 
+void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout);
+void dev_Qtm_pm_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinout);
+
+void dev_Qtm_pm_ndpsi(dev_spinor * , dev_spinor * , dev_spinor * , dev_spinor * );
+void dev_Qtm_pm_ndpsi_d (dev_spinor_d * spinout_up, dev_spinor_d * spinout_dn,
+                         dev_spinor_d * spinin_up , dev_spinor_d * spinin_dn);
+
+void dev_Q_pm_ndpsi(dev_spinor * const l_strange, dev_spinor * const l_charm, dev_spinor * const k_strange, dev_spinor * const k_charm);
+void dev_Q_pm_ndpsi_d(dev_spinor_d * const l_strange, dev_spinor_d * const l_charm, dev_spinor_d * const k_strange, dev_spinor_d * const k_charm);
+
+void dev_Qtm_minus_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinout,dev_spinor_d* spin_eo1_d, int gridsize, int blocksize, int gridsize2, int blocksize2, int* dev_eoidx_even, int* dev_eoidx_odd,  int* dev_nn_eo, int* dev_nn_oe);				
+
+
+__global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor * sout, int * dev_nn);
+void dev_tm_dirac_dagger_kappa(dev_su3_2v * gf,dev_spinor* spinin, dev_spinor* spinout, int *grid, int * nn_grid, float* output,float* erg, int xsize, int ysize);
 
 
 
@@ -185,9 +205,6 @@ __device__ void dev_kappaP3_minus(dev_spinor * out, dev_spinor * in, float kappa
 __device__ void dev_kappaP0_plus(dev_spinor * out, dev_spinor * in, dev_complex kappa);
 __device__ void dev_kappaP0_minus(dev_spinor * out, dev_spinor * in, dev_complex kappa);
 __global__ void dev_Hopping_Matrix(const dev_su3_2v * gf, const dev_spinor * sin, dev_spinor * sout, const int * gfindex_site, const int* gfindex_nextsite, const int * nn_evenodd, const int eo);
-extern "C" void dev_Qtm_pm_psi(dev_spinor* spinin, dev_spinor* spinout, int gridsize, dim3 blocksize, int gridsize2, int blocksize2);
-__global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor * sout, int * dev_nn);
-extern "C" void dev_tm_dirac_dagger_kappa(dev_su3_2v * gf,dev_spinor* spinin, dev_spinor* spinout, int *grid, int * nn_grid, float* output,float* erg, int xsize, int ysize);
 __device__ inline float dev_skalarprod_spinor(dev_spinor * s1, dev_spinor * s2);
 __device__ inline float dev_squarenorm_spinor(dev_spinor * s1);
 __device__ inline float dev_squarenorm_spinor_tex(int pos);
@@ -236,8 +253,8 @@ extern "C" int unbind_texture_gf();
 extern "C" int bind_texture_nn(int* nn);
 extern "C" int unbind_texture_nn();
 extern "C" void test_operator(dev_su3_2v * gf,dev_spinor* spinin, dev_spinor* spinout, dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_spinor* spin4, int *grid, int * nn_grid, float* output,float* erg, int xsize, int ysize);
-extern "C" int dev_cg(dev_su3_2v * gf,dev_spinor* spinin, dev_spinor* spinout, dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_spinor* spin4, int *grid, int * nn_grid, int rescalekappa);
-extern "C" int dev_cg_eo(dev_su3_2v * gf,dev_spinor* spinin, dev_spinor* spinout, dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_spinor* spin4, int *grid, int * nn_grid, float epsfinal);
+int dev_cg(dev_su3_2v * gf,dev_spinor* spinin, dev_spinor* spinout, dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_spinor* spin4, int *grid, int * nn_grid, int rescalekappa);
+int dev_cg_eo(dev_su3_2v * gf,dev_spinor* spinin, dev_spinor* spinout, dev_spinor* spin0, dev_spinor* spin1, dev_spinor* spin2, dev_spinor* spin3, dev_spinor* spin4, int *grid, int * nn_grid, float epsfinal);
 void initnn();
 void initnn_eo();
 void shownn_eo();
@@ -255,8 +272,8 @@ void showcompare_gf(int t, int x, int y, int z, int mu);
 void convert2double_spin(dev_spinor* spin, spinor* h2d);
 void convert2REAL4_spin(spinor* spin, dev_spinor* h2d);
 extern "C" void init_mixedsolve(su3** gf);
-extern "C" void init_mixedsolve_eo(su3** gf);
-extern "C" void finalize_mixedsolve();
+extern "C" void init_mixedsolve_eo(su3** gf, int use_eo);
+extern "C" void finalize_mixedsolve(int use_eo);
 extern "C" int mixed_solve (spinor * const P, spinor * const Q, const int max_iter, double eps, const int rel_prec,const int N);
 void init_mixedsolve_fields(int eo);
 void finalize_mixedsolve_fields();
@@ -274,16 +291,10 @@ extern "C" int mixed_solve_eo (spinor * const P, spinor * const Q, const int max
 extern "C" double double_dotprod(dev_spinor_d* x, dev_spinor_d* y, int N);
 extern "C" void update_constants_d(int *grid);
 extern "C" void update_gpu_gf_d(su3** gf);
-extern "C" void dev_Qtm_pm_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinout, 
-				 dev_spinor_d* dev_spin_eo1_d, dev_spinor_d* dev_spin_eo2_d, 
-				 int gridsize, int blocksize, int gridsize2, int blocksize2,
-				 int* dev_eoidx_even, int* dev_eoidx_odd, 
-				 int* dev_nn_eo, int* dev_nn_oe);
 
-extern "C" void dev_Qtm_minus_psi_d(dev_spinor_d* spinin, dev_spinor_d* spinout,dev_spinor_d* spin_eo1_d, 
-				 int gridsize, int blocksize, int gridsize2, int blocksize2,
-				 int* dev_eoidx_even, int* dev_eoidx_odd, 
-				 int* dev_nn_eo, int* dev_nn_oe);				 
+
+
+ 
 				 
 extern "C" void gpu_deriv_Sb(const int ieo, spinor * const l, spinor * const k,
                                hamiltonian_field_t * const hf, const double factor);				 

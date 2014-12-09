@@ -38,16 +38,15 @@
 # include<config.h>
 #endif
 #include "global.h"
+#include "read_input.h"
 #include "solver/solver.h"
 #include "solver/matrix_mult_typedef.h"
 #include "monomial_solve.h"
 
 #ifdef HAVE_GPU
 #include"../GPU/cudadefs.h"
-extern int mixed_solve (spinor * const P, spinor * const Q, const int max_iter, 
-                        double eps, const int rel_prec,const int N);
 extern  int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int max_iter, 
-                            double eps, const int rel_prec, const int N);
+                            double eps, const int rel_prec, const int N, matrix_mult f);
 extern int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn, 
 		 spinor * const Qup, spinor * const Qdn, 
 		 solver_pm_t * solver_pm);
@@ -63,18 +62,21 @@ extern int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
 int solve_degenerate(spinor * const P, spinor * const Q, const int max_iter, 
            double eps_sq, const int rel_prec, const int N, matrix_mult f){
   int iteration_count;
-  if(usegpu_flag){     
-    #ifdef TEMPORALGAUGE
-      to_temporalgauge(g_gauge_field, Q , P);
-    #endif          
-    iteration_count = linsolve_eo_gpu(P, Q, max_iter, eps_sq, rel_prec, N);			     
-    #ifdef TEMPORALGAUGE
-      from_temporalgauge(Q, P);
-    #endif     
-  }
-  else{
-    iteration_count =  cg_her(P, Q, max_iter, eps_sq, rel_prec, N, f);
-  }
+
+    if(usegpu_flag){   
+      #ifdef HAVE_GPU     
+	#ifdef TEMPORALGAUGE
+	  to_temporalgauge(g_gauge_field, Q , P);
+	#endif          
+	iteration_count = linsolve_eo_gpu(P, Q, max_iter, eps_sq, rel_prec, N, f);			     
+	#ifdef TEMPORALGAUGE
+	  from_temporalgauge(Q, P);
+	#endif
+      #endif
+    }
+    else{
+      iteration_count =  cg_her(P, Q, max_iter, eps_sq, rel_prec, N, f);
+    }
   return(iteration_count);
 }
 
@@ -82,18 +84,22 @@ int solve_degenerate(spinor * const P, spinor * const Q, const int max_iter,
 int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn, 
                  spinor * const Qup, spinor * const Qdn, 
                  solver_pm_t * solver_pm){ 
-  int iteration_count;  
-  if(usegpu_flag){
-    #ifdef TEMPORALGAUGE
-      to_temporalgauge_mms(g_gauge_field , Qup, Qdn, Pup, Pdn, solver_pm->no_shifts);
-    #endif        
-    iteration_count = dev_cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_pm);  
-    #ifdef TEMPORALGAUGE
-      from_temporalgauge_mms(Qup, Qdn, Pup, Pdn, solver_pm->no_shifts);
-    #endif 			     
-  }
-  else{
-    iteration_count = cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_pm);
-  }
+  int iteration_count; 
+
+    if(usegpu_flag){
+      #ifdef HAVE_GPU      
+	#ifdef TEMPORALGAUGE
+	  to_temporalgauge_mms(g_gauge_field , Qup, Qdn, Pup, Pdn, solver_pm->no_shifts);
+	#endif        
+	iteration_count = dev_cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_pm);  
+	#ifdef TEMPORALGAUGE
+	  from_temporalgauge_mms(Qup, Qdn, Pup, Pdn, solver_pm->no_shifts);
+	#endif 
+      #endif
+    }
+    else{
+      iteration_count = cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_pm);
+    }
+
   return(iteration_count);
 }

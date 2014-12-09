@@ -322,6 +322,77 @@ __global__ void dev_gamma5_d(dev_spinor_d * sin, dev_spinor_d * sout){
 
 
 
+__global__ void dev_gamma5_rel_d(dev_spinor_d * sin, dev_spinor_d * sout){
+  int pos;
+  pos= threadIdx.x + blockDim.x*blockIdx.x;  
+  if(pos < dev_VOLUME){
+  double4 shelp[6];
+  
+  shelp[0].x = sin[pos+0*DEVOFF].x;
+  shelp[0].y = sin[pos+0*DEVOFF].y;
+  shelp[0].z = sin[pos+1*DEVOFF].x;
+  shelp[0].w = sin[pos+1*DEVOFF].y;
+  
+  shelp[1].x = sin[pos+2*DEVOFF].x;
+  shelp[1].y = sin[pos+2*DEVOFF].y;
+  shelp[1].z = sin[pos+3*DEVOFF].x;
+  shelp[1].w = sin[pos+3*DEVOFF].y;
+  
+  shelp[2].x = sin[pos+4*DEVOFF].x;
+  shelp[2].y = sin[pos+4*DEVOFF].y;
+  shelp[2].z = sin[pos+5*DEVOFF].x;
+  shelp[2].w = sin[pos+5*DEVOFF].y; 
+  
+  shelp[3].x = sin[pos+6*DEVOFF].x;
+  shelp[3].y = sin[pos+6*DEVOFF].y;
+  shelp[3].z = sin[pos+7*DEVOFF].x;
+  shelp[3].w = sin[pos+7*DEVOFF].y;   
+  
+  shelp[4].x = sin[pos+8*DEVOFF].x;
+  shelp[4].y = sin[pos+8*DEVOFF].y;
+  shelp[4].z = sin[pos+9*DEVOFF].x;
+  shelp[4].w = sin[pos+9*DEVOFF].y;  
+  
+  shelp[5].x = sin[pos+10*DEVOFF].x;
+  shelp[5].y = sin[pos+10*DEVOFF].y;
+  shelp[5].z = sin[pos+11*DEVOFF].x;
+  shelp[5].w = sin[pos+11*DEVOFF].y;  
+  
+  
+ sout[pos+6*DEVOFF].x  = -shelp[0].x; 
+ sout[pos+6*DEVOFF].y  = -shelp[0].y;
+ sout[pos+7*DEVOFF].x  = -shelp[0].z;
+ sout[pos+7*DEVOFF].y  = -shelp[0].w;
+ sout[pos+8*DEVOFF].x  = -shelp[1].x;
+ sout[pos+8*DEVOFF].y  = -shelp[1].y;
+ 
+
+ sout[pos+9*DEVOFF].x  = -shelp[1].z;
+ sout[pos+9*DEVOFF].y  = -shelp[1].w;
+ sout[pos+10*DEVOFF].x  = -shelp[2].x;
+ sout[pos+10*DEVOFF].y  = -shelp[2].y;
+ sout[pos+11*DEVOFF].x  = -shelp[2].z;
+ sout[pos+11*DEVOFF].y  = -shelp[2].w;
+
+ sout[pos+0*DEVOFF].x = -shelp[3].x;
+ sout[pos+0*DEVOFF].y = -shelp[3].y; 
+ sout[pos+1*DEVOFF].x = -shelp[3].z;
+ sout[pos+1*DEVOFF].y = -shelp[3].w;
+ sout[pos+2*DEVOFF].x = -shelp[4].x;
+ sout[pos+2*DEVOFF].y = -shelp[4].y;
+ 
+ 
+ sout[pos+3*DEVOFF].x = -shelp[4].z;
+ sout[pos+3*DEVOFF].y = -shelp[4].w; 
+ sout[pos+4*DEVOFF].x = -shelp[5].x;
+ sout[pos+4*DEVOFF].y = -shelp[5].y; 
+ sout[pos+5*DEVOFF].x = -shelp[5].z;
+ sout[pos+5*DEVOFF].y = -shelp[5].w;
+
+               
+  } 
+}
+
 /* OBSOLETE??
 __device__ void inline dev_skalarmult_gamma5_spinor_d(dev_spinor_d * out, dev_complex_d lambda, dev_spinor_d * in){
 
@@ -780,7 +851,18 @@ __device__ inline void dev_sub_globalspinor_assign_d(double4 * i1, dev_spinor_d 
 }
 
 
-
+//out(global mem) = in + lambda in2(local mem)
+//have to care about different indices!!
+__device__ inline void dev_complexmult_add_assign_writetoglobal_spinor_d(double4 * in, dev_complex_d lambda, double4 * in2, dev_spinor_d * out){
+  int i;
+  #pragma unroll 6
+  for(i=0;i<6;i++){ //color + spin
+    (*(out+(2*i)*DEVOFF)).x = (*(in+i)).x + ((*(in2+i)).x*lambda.re - (*(in2+i)).y*lambda.im);
+    (*(out+(2*i)*DEVOFF)).y = (*(in+i)).y + ((*(in2+i)).x*lambda.im + (*(in2+i)).y*lambda.re);
+    (*(out+(2*i+1)*DEVOFF)).x = (*(in+i)).z + ((*(in2+i)).z*lambda.re - (*(in2+i)).w*lambda.im);
+    (*(out+(2*i+1)*DEVOFF)).y = (*(in+i)).w + ((*(in2+i)).z*lambda.im + (*(in2+i)).w*lambda.re);
+  }
+}
 
 
 //multipliziert su3-Matrix mal Spinor im Dirac-Raum
@@ -3356,6 +3438,74 @@ __device__ void dev_Gamma5_d(double4 * in){
           (*(in+5)).z = -(*(in+5)).z;
           (*(in+5)).w = -(*(in+5)).w;  
 }
+
+
+//this works in the relativistic basis
+//gamma5 NOT diagonal!!
+__device__ void dev_Gamma5_rel_d(double4 * in){
+
+double4 help[6]; 
+  help[0].x = -1.0*(*(in+3)).x;
+  help[0].y = -1.0*(*(in+3)).y;
+  help[0].z = -1.0*(*(in+3)).z;
+  help[0].w = -1.0*(*(in+3)).w;
+  help[1].x = -1.0*(*(in+4)).x;
+  help[1].y = -1.0*(*(in+4)).y;
+
+  help[1].z = -1.0*(*(in+4)).z;
+  help[1].w = -1.0*(*(in+4)).w;
+  help[2].x = -1.0*(*(in+5)).x;
+  help[2].y = -1.0*(*(in+5)).y;
+  help[2].z = -1.0*(*(in+5)).z;
+  help[2].w = -1.0*(*(in+5)).w;
+
+  help[3].x = -1.0*(*(in+0)).x;
+  help[3].y = -1.0*(*(in+0)).y;
+  help[3].z = -1.0*(*(in+0)).z;
+  help[3].w = -1.0*(*(in+0)).w;
+  help[4].x = -1.0*(*(in+1)).x;
+  help[4].y = -1.0*(*(in+1)).y;
+
+  help[4].z = -1.0*(*(in+1)).z;
+  help[4].w = -1.0*(*(in+1)).w;
+  help[5].x = -1.0*(*(in+2)).x;
+  help[5].y = -1.0*(*(in+2)).y;
+  help[5].z = -1.0*(*(in+2)).z;
+  help[5].w = -1.0*(*(in+2)).w;
+  
+  (*(in+0)).x = help[0].x;
+  (*(in+0)).y = help[0].y; 
+  (*(in+0)).z = help[0].z;  
+  (*(in+0)).w = help[0].w;  
+  
+  (*(in+1)).x = help[1].x;
+  (*(in+1)).y = help[1].y; 
+  (*(in+1)).z = help[1].z;  
+  (*(in+1)).w = help[1].w;   
+  
+  (*(in+2)).x = help[2].x;
+  (*(in+2)).y = help[2].y; 
+  (*(in+2)).z = help[2].z;  
+  (*(in+2)).w = help[2].w;   
+  
+  (*(in+3)).x = help[3].x;
+  (*(in+3)).y = help[3].y; 
+  (*(in+3)).z = help[3].z;  
+  (*(in+3)).w = help[3].w;    
+
+  (*(in+4)).x = help[4].x;
+  (*(in+4)).y = help[4].y; 
+  (*(in+4)).z = help[4].z;  
+  (*(in+4)).w = help[4].w;    
+  
+  (*(in+5)).x = help[5].x;
+  (*(in+5)).y = help[5].y; 
+  (*(in+5)).z = help[5].z;  
+  (*(in+5)).w = help[5].w;    
+  
+}
+
+
 
 
 __device__ void dev_Gamma5_assign_d(double4* out, double4* in){

@@ -86,10 +86,9 @@
 #include "solver/spectral_proj.h"
 
 #ifdef HAVE_GPU
-extern void init_mixedsolve_eo(su3** gf);
-extern void init_mixedsolve(su3** gf);
-extern void finalize_mixedsolve();
-extern void init_gpu_fields(int need_momenta);
+extern void init_mixedsolve_eo(su3** gf, int use_eo);
+extern void finalize_mixedsolve(int use_eo);
+extern void init_gpu_fields(int need_momenta, int use_eo);
 extern void finalize_gpu_fields();
 #include "GPU/cudadefs.h"
   #ifdef TEMPORALGAUGE
@@ -269,25 +268,22 @@ int main(int argc, char *argv[])
 
 
 if(usegpu_flag){
-  if(even_odd_flag){
-      init_mixedsolve_eo(g_gauge_field);
-  }
-  else{
-    init_mixedsolve(g_gauge_field);
-  }
-  #ifdef GPU_DOUBLE
-    /*init double fields w/o momenta*/
-    init_gpu_fields(0);
-  #endif
-  #ifdef TEMPORALGAUGE
-    int retval;
-    if((retval=init_temporalgauge(VOLUME, g_gauge_field)) !=0){
-      if(g_proc_id == 0) printf("Error while initializing temporal gauge. Aborting...\n");   
-      exit(200);
-    }
-  #endif
+  #ifdef HAVE_GPU 
+    init_mixedsolve_eo(g_gauge_field, even_odd_flag);
+    #ifdef GPU_DOUBLE
+      /*init double fields w/o momenta*/
+      init_gpu_fields(0, even_odd_flag);
+    #endif
+    #ifdef TEMPORALGAUGE
+      int retval;
+      if((retval=init_temporalgauge(VOLUME, g_gauge_field)) !=0){
+	if(g_proc_id == 0) printf("Error while initializing temporal gauge. Aborting...\n");   
+	exit(200);
+      }
+    #endif
+  #endif 
 }//usegpu_flag
-  
+ 
   
   /* this could be maybe moved to init_operators */
 #ifdef _USE_HALFSPINOR
@@ -520,13 +516,15 @@ if(usegpu_flag){
 
 
 if(usegpu_flag){
-  finalize_mixedsolve();
-  #ifdef GPU_DOUBLE
-    finalize_gpu_fields();
-  #endif
-    #ifdef TEMPORALGAUGE
-      finalize_temporalgauge();
+  #ifdef HAVE_GPU
+    finalize_mixedsolve(even_odd_flag);
+    #ifdef GPU_DOUBLE
+      finalize_gpu_fields();
     #endif
+      #ifdef TEMPORALGAUGE
+	finalize_temporalgauge();
+      #endif
+  #endif    
 }
 
 

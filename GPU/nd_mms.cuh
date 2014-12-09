@@ -41,9 +41,17 @@ extern "C" int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
   atime = gettime();
   double use_shift;
   double* use_mms_shifts;
+  int use_eo, eofactor;
+  if(solver_pm->sdim == VOLUME){
+    use_eo = 0;
+    eofactor = 1;
+  }else{
+    use_eo = 1;
+    eofactor = 2;    
+  }
   //for large shifts the solver converges too fast 
   //-> give it a minimum number of solver iterations 
-  int min_solver_it = LZ<T?T/2:LZ/2;
+  int min_solver_it = LZ<T?T/eofactor:LZ/eofactor;
   
   //check how many shifts we will do in mixed_precision, if enabled
   if(use_mixed_mms){
@@ -72,34 +80,34 @@ extern "C" int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
       construct_mms_initialguess(Pup, Pdn, im, solver_pm); 
     }
     else{
-       zero_spinor_field(Pup[im], VOLUME/2);
-       zero_spinor_field(Pdn[im], VOLUME/2);
+       zero_spinor_field(Pup[im], VOLUME/eofactor);
+       zero_spinor_field(Pdn[im], VOLUME/eofactor);
     }
    #ifdef GPU_DOUBLE
     if(use_shift < mixed_cut){
       iteration_tmp = mixedsolve_eo_nd(Pup[im], Pdn[im], Qup, Qdn, use_shift,
-			    solver_pm->max_iter, solver_pm->squared_solver_prec, solver_pm->rel_prec);
+			    solver_pm->max_iter, solver_pm->squared_solver_prec, solver_pm->rel_prec, use_eo, solver_pm->M_ndpsi);
       //if we had an issue with precision, redo in double
       if(iteration_tmp != -1){
         iteration += iteration_tmp;
       }
       else{
         if (g_proc_id == 0) printf("Re-doing inversion in double.\n");    
-        init_doublesolve_eo_nd(g_gauge_field);
+        init_doublesolve_eo_nd(g_gauge_field, use_eo);
         iteration += doublesolve_eo_nd(Pup[im], Pdn[im], Qup, Qdn, use_shift,
-			    solver_pm->max_iter, solver_pm->squared_solver_prec, solver_pm->rel_prec,min_solver_it);    
+			    solver_pm->max_iter, solver_pm->squared_solver_prec, solver_pm->rel_prec,min_solver_it, use_eo, solver_pm->M_ndpsi);    
         finalize_doublesolve_eo_nd();	
       }
     }
     else{
-     init_doublesolve_eo_nd(g_gauge_field);
+     init_doublesolve_eo_nd(g_gauge_field, use_eo);
      iteration += doublesolve_eo_nd(Pup[im], Pdn[im], Qup, Qdn, use_shift,
-			    solver_pm->max_iter, solver_pm->squared_solver_prec, solver_pm->rel_prec,min_solver_it);    
+			    solver_pm->max_iter, solver_pm->squared_solver_prec, solver_pm->rel_prec,min_solver_it, use_eo, solver_pm->M_ndpsi);    
      finalize_doublesolve_eo_nd();
     }
    #else
     iteration += mixedsolve_eo_nd(Pup[im], Pdn[im], Qup, Qdn, use_shift,
-			    solver_pm->max_iter, solver_pm->squared_solver_prec, solver_pm->rel_prec);
+			    solver_pm->max_iter, solver_pm->squared_solver_prec, solver_pm->rel_prec, use_eo, solver_pm->M_ndpsi);
     #endif
     
   }//sequential shifts
@@ -111,19 +119,19 @@ extern "C" int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
     while(remaining_shifts > 0){  
       use_mms_shifts = &(solver_pm->shifts[first_shift]);       
       this_turn = MIN(remaining_shifts, max_mms_shifts);
-      init_doublesolve_eo_nd(g_gauge_field);
+      init_doublesolve_eo_nd(g_gauge_field, use_eo);
       double source_norm, source_norm_up, source_norm_dn;
-      source_norm_up = square_norm(Qup, VOLUME/2, 1);
-      source_norm_dn = square_norm(Qdn, VOLUME/2, 1); 
+      source_norm_up = square_norm(Qup, VOLUME/eofactor, 1);
+      source_norm_dn = square_norm(Qdn, VOLUME/eofactor, 1); 
       source_norm = source_norm_up + source_norm_dn;
       
       if(source_norm < 1.0e-4){
         iteration += doublesolve_mms_eo_nd(&(Pup[first_shift]), &(Pdn[first_shift]), Qup, Qdn, use_mms_shifts, this_turn,
- 				solver_pm->max_iter, solver_pm->squared_solver_prec, solver_pm->rel_prec,min_solver_it); 
+ 				solver_pm->max_iter, solver_pm->squared_solver_prec, solver_pm->rel_prec,min_solver_it, use_eo, solver_pm->M_ndpsi); 
       }
       else{
         iteration += mixed_cg_mms_eo_nd(&(Pup[first_shift]), &(Pdn[first_shift]), Qup, Qdn, use_mms_shifts, this_turn,
-				solver_pm->max_iter, solver_pm->squared_solver_prec, solver_pm->rel_prec,min_solver_it);       
+				solver_pm->max_iter, solver_pm->squared_solver_prec, solver_pm->rel_prec,min_solver_it, use_eo, solver_pm->M_ndpsi);       
       }
       finalize_doublesolve_eo_nd();
       remaining_shifts -= this_turn;
@@ -143,10 +151,16 @@ extern "C" int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
 
 void construct_mms_initialguess(spinor ** const Pup, spinor ** const Pdn, int im, solver_pm_t * solver_pm){
 //implementation of formula (17) of 1103:5103
-  
+
+int eofactor;
+  if(solver_pm->sdim == VOLUME){
+    eofactor = 1;
+  }else{
+    eofactor = 2;    
+  }  
   double num, denom, c_i;
-  zero_spinor_field(Pup[im], VOLUME/2);
-  zero_spinor_field(Pdn[im], VOLUME/2);
+  zero_spinor_field(Pup[im], VOLUME/eofactor);
+  zero_spinor_field(Pdn[im], VOLUME/eofactor);
 
   for(int i=0; i<im; i++){
     c_i = 1.0;
@@ -159,8 +173,8 @@ void construct_mms_initialguess(spinor ** const Pup, spinor ** const Pdn, int im
       denom = solver_pm->shifts[j] - solver_pm->shifts[i];      
       c_i *= num/denom;
     }
-    assign_add_mul_r(Pup[im], Pup[i] , c_i, VOLUME/2);
-    assign_add_mul_r(Pdn[im], Pdn[i] , c_i, VOLUME/2);    
+    assign_add_mul_r(Pup[im], Pup[i] , c_i, VOLUME/eofactor);
+    assign_add_mul_r(Pdn[im], Pdn[i] , c_i, VOLUME/eofactor);    
   }
 }
 

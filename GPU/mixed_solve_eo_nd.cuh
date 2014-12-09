@@ -74,6 +74,9 @@ extern "C" {
 
 
 
+/* nd Matrix multiplications */
+gpu_matrix_mult_nd dev_M_nd;
+gpu_matrix_mult_nd_d dev_M_nd_d;
 
 
 // global formal parameters
@@ -181,6 +184,21 @@ dev_spinor * dev_spin_eo3_dn;
 		///////////////////////////
 
 
+      
+void set_gpu_nd_matrix(matrix_mult_nd f){
+  if(f==&Qtm_pm_ndpsi){
+    dev_M_nd   = &dev_Qtm_pm_ndpsi;
+    dev_M_nd_d = &dev_Qtm_pm_ndpsi_d;
+  }
+  else if(f==&Q_pm_ndpsi){
+    dev_M_nd   = &dev_Q_pm_ndpsi;
+    dev_M_nd_d = &dev_Q_pm_ndpsi_d; 
+  }
+  else{
+    printf("Error: gpu matrix multiplication undefined. Aborting...\n");
+    exit(100);
+  }
+}
 
 
 ////////////////////
@@ -485,8 +503,15 @@ void init_idxgauge_mpi() {		// works!
 
 
 
-void set_global_sizes() {
-  
+void set_global_sizes(int use_eo) {
+
+  int eofactor;
+  if(use_eo){
+    eofactor=2;
+  }
+  else{
+    eofactor=1;
+  }  
   #ifndef _USE_MPI
   	#ifdef GF_8
   	  // allocate 8 floats for gf = 2*4*VOLUME float4's			// dev_su3_8 = float4
@@ -503,13 +528,13 @@ void set_global_sizes() {
   	#endif
   #endif
   
-  dev_spinsize_int   =  6*VOLUME/2*sizeof(dev_spinor);				// 24 floats per lattice site
-  N_sites_int        =    VOLUME/2;
-  N_floats_int       = 24*VOLUME/2;
+  dev_spinsize_int   =  6*VOLUME/eofactor*sizeof(dev_spinor);				// 24 floats per lattice site
+  N_sites_int        =    VOLUME/eofactor;
+  N_floats_int       = 24*VOLUME/eofactor;
   #ifdef _USE_MPI
-    dev_spinsize_ext =  6*(VOLUME+RAND)/2*sizeof(dev_spinor);
-    N_sites_ext      =    (VOLUME+RAND)/2;
-    N_floats_ext     = 24*(VOLUME+RAND)/2;
+    dev_spinsize_ext =  6*(VOLUME+RAND)/eofactor*sizeof(dev_spinor);
+    N_sites_ext      =    (VOLUME+RAND)/eofactor;
+    N_floats_ext     = 24*(VOLUME+RAND)/eofactor;
   #endif
   
 }
@@ -530,24 +555,31 @@ void set_global_sizes() {
 //	allocates memory for all ND spinor fields
 
 
-void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
+void init_mixedsolve_eo_nd (su3** gf, int use_eo) {	// gf is the full gauge field
   
   
   //////////////////////
   // GLOBAL VARIABLES //
   //////////////////////
   
-  dev_spinsize_int   =  6*VOLUME/2*sizeof(dev_spinor);				// 24 floats per lattice site
-  N_sites_int        =    VOLUME/2;
-  N_floats_int       = 24*VOLUME/2;
+  int eofactor;
+  if(use_eo){
+    eofactor=2;
+  }
+  else{
+    eofactor=1;
+  }
+  dev_spinsize_int   =  6*VOLUME/eofactor*sizeof(dev_spinor);				// 24 floats per lattice site
+  N_sites_int        =    VOLUME/eofactor;
+  N_floats_int       = 24*VOLUME/eofactor;
   #ifdef _USE_MPI
-    dev_spinsize_ext =  6*(VOLUME+RAND)/2*sizeof(dev_spinor);
-    N_sites_ext      =    (VOLUME+RAND)/2;
-    N_floats_ext     = 24*(VOLUME+RAND)/2;
+    dev_spinsize_ext =  6*(VOLUME+RAND)/eofactor*sizeof(dev_spinor);
+    N_sites_ext      =    (VOLUME+RAND)/eofactor;
+    N_floats_ext     = 24*(VOLUME+RAND)/eofactor;
   #endif
 
   
-  set_global_sizes();
+  set_global_sizes(use_eo);
   
   
   
@@ -603,9 +635,9 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
   
 #ifdef GPU_DOUBLE
       #ifdef _USE_MPI
-   	size_t dev_spinsize_d = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); /* double2 */
+   	size_t dev_spinsize_d = 12*(VOLUME+RAND)/eofactor * sizeof(dev_spinor_d); /* double2 */
       #else
-   	size_t dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); /* double2 */  
+   	size_t dev_spinsize_d = 12*VOLUME/eofactor * sizeof(dev_spinor_d); /* double2 */  
       #endif
 
 	  //allocate fields used in dev_Qtm_pm_ndpsi_d
@@ -691,7 +723,7 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
   		}
   	#endif
 
-  	int tSliceEO = LX*LY*LZ/2;
+  	int tSliceEO = LX*LY*LZ/eofactor;
 
   
   	#if ASYNC > 0	// asynchronous communication and computation
@@ -775,13 +807,13 @@ void init_mixedsolve_eo_nd (su3** gf) {	// gf is the full gauge field
   grid[1] = LY;
   grid[2] = LZ;
   grid[3] = T;
-  grid[4] = VOLUME/2;								// will be used to set dev_VOLUME: dev_VOLUME is half of VOLUME for eo
+  grid[4] = VOLUME/eofactor;								// will be used to set dev_VOLUME: dev_VOLUME is half of VOLUME for eo
   
   // put dev_Offset accordingly depending on mpi/non-mpi
   #ifdef _USE_MPI
-   grid[5] = (VOLUME+RAND)/2;
+   grid[5] = (VOLUME+RAND)/eofactor;
   #else
-   grid[5] = VOLUME/2;
+   grid[5] = VOLUME/eofactor;
   #endif
 
   //done in init_mixedsolve_eo
@@ -1123,7 +1155,7 @@ void to_host (spinor * host, dev_spinor * device, dev_spinor * auxiliary, int ev
 
 
 
-void update_bare_constants_nd(){
+void update_bare_constants_nd(int use_eo){
 
   dev_complex h0, h1, h2, h3; 
 
@@ -1158,7 +1190,9 @@ void update_bare_constants_nd(){
   
   
   #ifdef _USE_MPI
-    he_cg_init_nd_additional_mpi<<<1,1>>>(VOLUMEPLUSRAND/2, RAND, g_cart_id, g_nproc);	
+    int eofactor=1;
+    if(use_eo) eofactor=1;
+    he_cg_init_nd_additional_mpi<<<1,1>>>(VOLUMEPLUSRAND/eofactor, RAND, g_cart_id, g_nproc);	
     #ifdef CUDA_DEBUG
       CUDA_KERNEL_CHECK("Kernel error in he_cg_init_nd_additional_mpi(). Couldn't initialize some stuff.", "he_cg_init_nd_additional_mpi() succeeded.");
     #endif			
@@ -1177,7 +1211,7 @@ void update_bare_constants_nd(){
 
 
 
-extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
+extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N, int use_eo) {
 
   
   
@@ -1232,7 +1266,14 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
     double effectiveFlops;
   #endif
   
-
+   int eofactor;
+    if(use_eo) {
+      eofactor=2;
+    }
+    else{
+      eofactor=1;
+      use_eo=1;
+    }
 
   // formal parameters
   int staticsource = 0;		// 1: applies matrix every time on the same source
@@ -1282,8 +1323,8 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   		#endif
   
   
-  to_device(B_up, Q_up, h2d_spin_up, 1);
-  to_device(B_dn, Q_dn, h2d_spin_dn, 1);
+  to_device(B_up, Q_up, h2d_spin_up, use_eo);
+  to_device(B_dn, Q_dn, h2d_spin_dn, use_eo);
   
   
   // timer
@@ -1295,9 +1336,7 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   
   
    
-    dev_Qtm_pm_ndpsi(A_up, A_dn, B_up, B_dn, 
-    	             gpu_gd_M, gpu_bd_M, gpu_gd_linalg, gpu_bd_linalg,
-      		     gpu_gd_blas, gpu_bd_blas, gpu_gd_blas, gpu_bd_blas);
+    dev_M_nd(A_up, A_dn, B_up, B_dn);
 
     
     
@@ -1331,8 +1370,8 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   #ifndef _USE_MPI
   
   	timeElapsed = stopBenchmark - startBenchmark;
-  	effectiveDeviceFlops = N * VOLUME/2 * effectiveFlopsPerApp;
-  	effectiveFlops       = N * VOLUME/2 * effectiveFlopsPerApp / timeElapsed / 1.0e9;
+  	effectiveDeviceFlops = N * VOLUME/eofactor * effectiveFlopsPerApp;
+  	effectiveFlops       = N * VOLUME/eofactor * effectiveFlopsPerApp / timeElapsed / 1.0e9;
   	printf("EFFECTIVE:\n");
   	printf("\ttime:        %.4e sec\n", timeElapsed);
   	printf("\tflop's:      %.4e flops\n", effectiveDeviceFlops);
@@ -1342,7 +1381,7 @@ extern "C" void benchmark_eo_nd (spinor * Q_up, spinor * Q_dn, int N) {
   	
   	singleTimeElapsed = stopBenchmark - startBenchmark;
   	MPI_Allreduce(&singleTimeElapsed, &maxTimeElapsed, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
-  	effectiveDeviceFlops = N * VOLUME/2 * effectiveFlopsPerApp;
+  	effectiveDeviceFlops = N * VOLUME/eofactor * effectiveFlopsPerApp;
   	MPI_Allreduce(&effectiveDeviceFlops, &allEffectiveDeviceFlops, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   	effectiveFlops       = allEffectiveDeviceFlops / maxTimeElapsed / 1.0e9;
   	
@@ -1438,15 +1477,22 @@ extern "C" void benchmark_eo_nd_d (spinor * Q_up, spinor * Q_dn, int N) {
   ////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   size_t dev_spinsize_d;
-  
+  int eofactor;
+   
+  if(N == VOLUME) {
+    eofactor=1;
+  }
+  else{
+    eofactor=2;
+  }  
 
   // timing
   #ifndef _USE_MPI
     double timeElapsed;
-    dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double4 even-odd ! 
+    dev_spinsize_d = 12*VOLUME/eofactor * sizeof(dev_spinor_d); // double4 even-odd ! 
   #else
     double timeElapsed;    
-    dev_spinsize_d = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); // double4 even-odd !     
+    dev_spinsize_d = 12*(VOLUME+RAND)/eofactor * sizeof(dev_spinor_d); // double4 even-odd !     
   #endif
   double startBenchmark;
   double stopBenchmark;
@@ -1512,11 +1558,7 @@ extern "C" void benchmark_eo_nd_d (spinor * Q_up, spinor * Q_dn, int N) {
   
   
 
-    dev_Qtm_pm_ndpsi_d(A_up, A_dn, B_up, B_dn, 
-    	                        gpu_gd_M_d, gpu_bd_M_d,
-      		                gpu_gd_linalg_d, gpu_bd_linalg_d,
-      		                gpu_gd_blas_d, gpu_bd_blas_d,
-      		                gpu_gd_blas_d, gpu_bd_blas_d);
+    dev_M_nd_d(A_up, A_dn, B_up, B_dn);
 
     
     if (staticsource == 0) {
@@ -1550,8 +1592,8 @@ extern "C" void benchmark_eo_nd_d (spinor * Q_up, spinor * Q_dn, int N) {
     if(g_cart_id == 0){
   	//timeElapsed = stopBenchmark - startBenchmark;
         timeElapsed = (double) (stopBenchmark-startBenchmark)/CLOCKS_PER_SEC;
-  	effectiveDeviceFlops = g_nproc*N * VOLUME/2 * effectiveFlopsPerApp;
-  	effectiveFlops       = double(g_nproc*N * VOLUME/2 * effectiveFlopsPerApp) / timeElapsed / 1.0e9;
+  	effectiveDeviceFlops = g_nproc*N * VOLUME/eofactor * effectiveFlopsPerApp;
+  	effectiveFlops       = double(g_nproc*N * VOLUME/eofactor * effectiveFlopsPerApp) / timeElapsed / 1.0e9;
   	printf("EFFECTIVE:\n");
   	printf("\ttime:        %.4e sec\n", timeElapsed);
   	printf("\tflop's:      %.4e flops\n", effectiveDeviceFlops);
@@ -1587,7 +1629,7 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
 	      float shift,
               int max_iter,
               int check_abs , int check_rel,
-              double eps_abs, double eps_rel       ) {
+              double eps_abs, double eps_rel, int use_eo ) {
   
   // P_up/dn  can be used as auxiliary field to work on, as it is not later used (could be used as initial guess at the very start)
   // Q_up/dn  can be used as feedback, or if not, also as auxiliary field
@@ -1653,7 +1695,6 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
   
   
   
-  
   /////////////////////
   // INITIALIZATIONS //
   /////////////////////
@@ -1673,7 +1714,15 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
     #endif 
   #endif
   #ifdef _USE_MPI
-      init_blas(VOLUME/2);
+    int eofactor;
+    if(use_eo){
+    eofactor=2;
+    }
+    else{
+    eofactor=1;
+    }
+        
+    init_blas(VOLUME/eofactor);
   #endif   
 
   
@@ -1744,9 +1793,7 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
 
      
       // A*d(k)
-      dev_Qtm_pm_ndpsi(Ad_up, Ad_dn, d_up,  d_dn,										// debugging: matrix_debug1(), matrix_multiplication_test()
-      		       gpu_gd_M, gpu_bd_M, gpu_gd_linalg, gpu_bd_linalg,
-      		       gpu_gd_blas, gpu_bd_blas, gpu_gd_blas, gpu_bd_blas);
+      dev_M_nd(Ad_up, Ad_dn, d_up,  d_dn);
 
       
       
@@ -1801,9 +1848,7 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
       
       
       // A*x(k+1)
-        dev_Qtm_pm_ndpsi(Ax_up, Ax_dn, x_up,  x_dn, 
-        	         gpu_gd_M, gpu_bd_M,gpu_gd_linalg, gpu_bd_linalg,
-        	         gpu_gd_blas, gpu_bd_blas, gpu_gd_blas, gpu_bd_blas);
+        dev_M_nd(Ax_up, Ax_dn, x_up,  x_dn);
 	
 
 	if(shift != 0.0f){
@@ -1924,13 +1969,22 @@ int dev_cg_eo_nd (dev_su3_2v * gf,
 
 
 
-void test_double_nd_operator(spinor* const Q_up, spinor* const Q_dn, const int N){
+void test_double_nd_operator(spinor* const Q_up, spinor* const Q_dn, const int N, matrix_mult_nd f){
    cudaError_t cudaerr;
    size_t dev_spinsize_d;
+   
+  int eofactor;
+  
+  if(N==VOLUME){
+    eofactor=1;
+  }else{
+    eofactor=2;
+  }
+  
 #ifdef _USE_MPI
-  dev_spinsize_d = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); // double2 even-odd !   
+  dev_spinsize_d = 12*(VOLUME+RAND)/eofactor * sizeof(dev_spinor_d); // double2 even-odd !   
 #else
-  dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d);  
+  dev_spinsize_d = 12*VOLUME/eofactor * sizeof(dev_spinor_d);  
 #endif 
       dev_spinor_d * x_up_d = dev_spin0_d;
       dev_spinor_d * x_dn_d = dev_spin1_d;
@@ -1940,13 +1994,13 @@ void test_double_nd_operator(spinor* const Q_up, spinor* const Q_dn, const int N
   spinor ** solver_field_up = NULL;
   spinor ** solver_field_dn = NULL;  
   const int nr_sf = 3;
-  init_solver_field(&solver_field_up, VOLUMEPLUSRAND/2, nr_sf);  
-  init_solver_field(&solver_field_dn, VOLUMEPLUSRAND/2, nr_sf); 
+  init_solver_field(&solver_field_up, VOLUMEPLUSRAND/eofactor, nr_sf);  
+  init_solver_field(&solver_field_dn, VOLUMEPLUSRAND/eofactor, nr_sf); 
 
   //apply cpu matrix
 
   
-   Qtm_pm_ndpsi(solver_field_up[0], solver_field_dn[0], Q_up, Q_dn);
+   f(solver_field_up[0], solver_field_dn[0], Q_up, Q_dn);
   
   /*
   dev_spinor_d * Q_up_d = dev_spin_eo1_d;
@@ -1975,10 +2029,7 @@ void test_double_nd_operator(spinor* const Q_up, spinor* const Q_dn, const int N
   #endif   
   
   // r_up/dn = Q-A*x_up/dn
-  dev_Qtm_pm_ndpsi_d(Ax_up_d, Ax_dn_d,  
-		      x_up_d, x_dn_d, 
-		      gpu_gd_M_d, gpu_bd_M_d, gpu_gd_linalg_d, gpu_bd_linalg_d,
-		      gpu_gd_linalg_d, gpu_bd_linalg_d, gpu_gd_linalg_d, gpu_bd_linalg_d);  
+  dev_M_nd_d(Ax_up_d, Ax_dn_d, x_up_d, x_dn_d);  
   /*
   dev_Hopp_d(x_dn_d, x_up_d,  
 		      gpu_gd_M_d, gpu_bd_M_d, gpu_gd_linalg_d, gpu_bd_linalg_d,0); 
@@ -2065,7 +2116,23 @@ void test_double_nd_operator(spinor* const Q_up, spinor* const Q_dn, const int N
   printf("cpu: k3.re: %.16e\t k3.im: %.16e\n", creal(ka3), cimag(ka3));
   printf("gpu: k3.re: %.16e\t k3.im: %.16e\n", h3.re, h3.im);  
   printf("diff: k3.re: %.16e\t k3.im: %.16e\n", (creal(ka1)-h3.re), (cimag(ka1)-h3.im));
+
+  printf("\n");  
+  double test_mubar;
+  cudaMemcpyFromSymbol(&test_mubar, mubar_d, sizeof(double));  
+  printf("device mubar_d = %.16e\n", test_mubar);
+  double test_mu_d;
+  cudaMemcpyFromSymbol(&test_mu_d, mu_d, sizeof(double));  
+  printf("device mu_d = %.16e\n", test_mu_d);
    
+  
+  if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
+    if (g_cart_id == 0) printf("%s\n", cudaGetErrorString(cudaerr));
+  }
+  else{
+    if (g_cart_id == 0) printf("finished double nd operator test\n");
+  }     
+  
   finalize_solver(solver_field_up, nr_sf); 
   finalize_solver(solver_field_dn, nr_sf);  
 }
@@ -2073,9 +2140,18 @@ void test_double_nd_operator(spinor* const Q_up, spinor* const Q_dn, const int N
 
 
 
-void test_single_nd_operator(spinor* const Q_up, spinor* const Q_dn, const int N){
+void test_single_nd_operator(spinor* const Q_up, spinor* const Q_dn, const int N, matrix_mult_nd f){
    cudaError_t cudaerr;
-
+   
+  int use_eo, eofactor;
+  if(N==VOLUME){
+    use_eo=0;
+    eofactor=1;
+  }else{
+    use_eo=1;
+    eofactor=2;
+  }  
+  
       dev_spinor * x_up = dev_spin1_up;
       dev_spinor * x_dn = dev_spin1_dn;
       dev_spinor * Ax_up = dev_spin2_up;
@@ -2084,16 +2160,17 @@ void test_single_nd_operator(spinor* const Q_up, spinor* const Q_dn, const int N
   spinor ** solver_field_up = NULL;
   spinor ** solver_field_dn = NULL;  
   const int nr_sf = 3;
-  init_solver_field(&solver_field_up, VOLUMEPLUSRAND/2, nr_sf);  
-  init_solver_field(&solver_field_dn, VOLUMEPLUSRAND/2, nr_sf); 
+  init_solver_field(&solver_field_up, VOLUMEPLUSRAND/eofactor, nr_sf);  
+  init_solver_field(&solver_field_dn, VOLUMEPLUSRAND/eofactor, nr_sf); 
+
 
   //apply cpu matrix 
-   Qtm_pm_ndpsi(solver_field_up[0], solver_field_dn[0], Q_up, Q_dn);
+   f(solver_field_up[0], solver_field_dn[0], Q_up, Q_dn);
   
 
   //apply gpu matrix
-  to_device(x_up, Q_up, h2d_spin, 1);
-  to_device(x_dn, Q_dn, h2d_spin, 1);  
+  to_device(x_up, Q_up, h2d_spin, use_eo);
+  to_device(x_dn, Q_dn, h2d_spin, use_eo);  
   #ifdef RELATIVISTIC_BASIS
       to_relativistic_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (x_up);
       to_relativistic_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (x_dn);
@@ -2108,17 +2185,14 @@ void test_single_nd_operator(spinor* const Q_up, spinor* const Q_dn, const int N
   #endif   
   
   // r_up/dn = Q-A*x_up/dn
-  dev_Qtm_pm_ndpsi(Ax_up, Ax_dn,  
-		      x_up, x_dn, 
-		      gpu_gd_M, gpu_bd_M, gpu_gd_linalg, gpu_bd_linalg,
-		      gpu_gd_linalg, gpu_bd_linalg, gpu_gd_linalg, gpu_bd_linalg);  
+  dev_M_nd(Ax_up, Ax_dn, x_up, x_dn);  
 
   #ifdef RELATIVISTIC_BASIS 
     to_tmlqcd_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (Ax_up);
     to_tmlqcd_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (Ax_dn);      
   #endif   
-  to_host(solver_field_up[1], Ax_up, h2d_spin, 1);
-  to_host(solver_field_dn[1], Ax_dn, h2d_spin, 1); 
+  to_host(solver_field_up[1], Ax_up, h2d_spin, use_eo);
+  to_host(solver_field_dn[1], Ax_dn, h2d_spin, use_eo); 
       
   diff(solver_field_up[2], solver_field_up[1], solver_field_up[0],N);
   diff(solver_field_dn[2], solver_field_dn[1], solver_field_dn[0],N);  
@@ -2168,6 +2242,12 @@ void test_single_nd_operator(spinor* const Q_up, spinor* const Q_dn, const int N
   printf("Max. difference at position %i: %.8e\n", at_max, max_dev);
   printf("Min. difference at position %i: %.8e\n", at_min, min_dev);  
 
+  if ((cudaerr=cudaGetLastError())!=cudaSuccess) {
+    if (g_cart_id == 0) printf("%s\n", cudaGetErrorString(cudaerr));
+  }
+  else{
+    if (g_cart_id == 0) printf("finished single nd operator test\n");
+  }   
   finalize_solver(solver_field_up, nr_sf); 
   finalize_solver(solver_field_dn, nr_sf);  
 }
@@ -2262,7 +2342,7 @@ void check_nd_mixedsolve_params(){
 
 extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
                                  spinor * Q_up, spinor * Q_dn, double shift,
-                                 int max_iter, double eps_sq, int rel_prec) {
+                                 int max_iter, double eps_sq, int rel_prec, int use_eo, matrix_mult_nd f) {
   
   if(rel_prec) {
     innersolver_precision_check_rel = 1;
@@ -2273,6 +2353,14 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     innersolver_precision_check_abs = 1;
   }
 
+ set_gpu_nd_matrix(f);
+ int eofactor;
+ if(use_eo){
+   eofactor=2;
+ }
+ else{
+   eofactor=1;
+ }
 
   // basically  P_up/dn  and  Q_up/dn  could be used as auxiliary fields
   //	P_up/dn  is the output field (and can be used as initial guess)
@@ -2333,8 +2421,8 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   spinor ** dn_field = NULL;
   const int nr_sf = 5;
 
-  init_solver_field(&up_field, VOLUMEPLUSRAND/2, nr_sf);
-  init_solver_field(&dn_field, VOLUMEPLUSRAND/2, nr_sf);	 
+  init_solver_field(&up_field, VOLUMEPLUSRAND/eofactor, nr_sf);
+  init_solver_field(&dn_field, VOLUMEPLUSRAND/eofactor, nr_sf);	 
 	 
 
   //////////////////
@@ -2342,7 +2430,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   //////////////////
   
 
-   init_mixedsolve_eo_nd(g_gauge_field);			// initializes and allocates all quantities for the mixed solver
+   init_mixedsolve_eo_nd(g_gauge_field, use_eo);			// initializes and allocates all quantities for the mixed solver
   								// more precise:
   								//	puts the gauge field on device as "2 rows" or "8 floats" per SU(3)-matrix
   								//	allocates memory for all spinor fields
@@ -2351,7 +2439,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
 
   //update the gpu single gauge_field
   update_gpu_gf(g_gauge_field); 
-  set_gpu_work_layout(1); //set block and grid sizes, eo!
+  set_gpu_work_layout(use_eo); //set block and grid sizes, eo!
   #ifdef GPU_DOUBLE
       
       //dev_spin0_d == x_up
@@ -2374,9 +2462,9 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
 
       size_t dev_spinsize_d;
       #ifdef _USE_MPI
-       dev_spinsize_d = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); // double2 even-odd !      
+       dev_spinsize_d = 12*(VOLUME+RAND)/eofactor * sizeof(dev_spinor_d); // double2 even-odd !      
       #else
-       dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d);   
+       dev_spinsize_d = 12*VOLUME/eofactor * sizeof(dev_spinor_d);   
       #endif
        update_constants_d(dev_grid);
        update_gpu_gf_d(g_gauge_field);
@@ -2395,7 +2483,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     
       
   //update the constants on device
-    update_bare_constants_nd();
+    update_bare_constants_nd(use_eo);
     
   #ifdef STUFF_DEBUG
     // check params on device
@@ -2403,12 +2491,12 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
   #endif
     
   #ifdef OPERATOR_BENCHMARK
-    benchmark_eo_nd(Q_up, Q_dn, OPERATOR_BENCHMARK);
+    benchmark_eo_nd(Q_up, Q_dn, OPERATOR_BENCHMARK, use_eo);
   #endif
   
   #ifdef GPU_DOUBLE
     #ifdef MATRIX_DEBUG
-      test_double_nd_operator(Q_up, Q_dn, N_sites_int);
+      test_double_nd_operator(Q_up, Q_dn, N_sites_int, f);
     #endif
   #endif
       
@@ -2478,10 +2566,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
             to_relativistic_basis_d<<<gpu_gd_linalg_d, gpu_bd_linalg_d>>> (x_dn_d);	
           #endif 	  
           // r_up/dn = Q-A*x_up/dn
-	  dev_Qtm_pm_ndpsi_d(Ax_up_d, Ax_dn_d,  
-		      x_up_d, x_dn_d, 
-		      gpu_gd_M_d, gpu_bd_M_d, gpu_gd_linalg_d, gpu_bd_linalg_d,
-		      gpu_gd_linalg_d, gpu_bd_linalg_d, gpu_gd_linalg_d, gpu_bd_linalg_d);
+	  dev_M_nd_d(Ax_up_d, Ax_dn_d, x_up_d, x_dn_d);
           if(shift != 0.0) {
 	    dev_axpy_d<<<gpu_gd_linalg_d,gpu_bd_linalg_d>>>(shift, x_up_d, Ax_up_d);
 	    dev_axpy_d<<<gpu_gd_linalg_d,gpu_bd_linalg_d>>>(shift, x_dn_d, Ax_dn_d);
@@ -2506,7 +2591,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       // P==0 -> no initial guess
       bb = square_norm(P_up, N_sites_int, 1) + square_norm(P_dn, N_sites_int, 1);
       if (bb > 0.0) {
-	Qtm_pm_ndpsi(Ax_up, Ax_dn, P_up, P_dn);
+	f(Ax_up, Ax_dn, P_up, P_dn);
 	if(shift != 0.0) {
 	  assign_add_mul_r(Ax_up, P_up , shift, N_sites_int);
 	  assign_add_mul_r(Ax_dn, P_dn , shift, N_sites_int);
@@ -2559,8 +2644,8 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       dev_d2f<<<gpu_gd_linalg_d,gpu_bd_linalg_d>>>(dev_spinin_up, r_up_d);
       dev_d2f<<<gpu_gd_linalg_d,gpu_bd_linalg_d>>>(dev_spinin_dn, r_dn_d);     
     #else
-      to_device(dev_spinin_up, r_up, h2d_spin_up, 1);
-      to_device(dev_spinin_dn, r_dn, h2d_spin_dn, 1);
+      to_device(dev_spinin_up, r_up, h2d_spin_up, use_eo);
+      to_device(dev_spinin_dn, r_dn, h2d_spin_dn, use_eo);
       #ifdef RELATIVISTIC_BASIS  
         to_relativistic_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (dev_spinin_up);
         to_relativistic_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (dev_spinin_dn);	
@@ -2596,7 +2681,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
                           dev_spinin_up , dev_spinin_dn, shift_single,
                           max_innersolver_it,
                           innersolver_precision_check_abs, innersolver_precision_check_rel,
-                          innersolver_precision_abs      , innersolver_precision_rel      );
+                          innersolver_precision_abs, innersolver_precision_rel, use_eo );
     
     outercount = outercount + innercount;
     
@@ -2605,7 +2690,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
     innerclocks = stopinner-startinner;
     #ifdef ALGORITHM_BENCHMARK
       if ((g_cart_id == 0) && (g_debug_level > 1)){
-      effectiveflops = innercount*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/2;   
+      effectiveflops = innercount*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/eofactor;   
       printf("inner solver BENCHMARK:\n");
       printf("\ttotal mixed solver time:   %.4e sec\n", innerclocks);
       printf("\tfloating point operations: %.4e flops\n", effectiveflops*g_nproc);
@@ -2623,10 +2708,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       dev_add_f2d<<<gpu_gd_linalg_d,gpu_bd_linalg_d>>>(x_up_d,x_up_d,dev_spinout_up); 
       dev_add_f2d<<<gpu_gd_linalg_d,gpu_bd_linalg_d>>>(x_dn_d,x_dn_d,dev_spinout_dn);       
 
-      dev_Qtm_pm_ndpsi_d(Ax_up_d, Ax_dn_d,  
-		      x_up_d, x_dn_d, 
-		      gpu_gd_M_d, gpu_bd_M_d, gpu_gd_linalg_d, gpu_bd_linalg_d,
-		      gpu_gd_linalg_d, gpu_bd_linalg_d, gpu_gd_linalg_d, gpu_bd_linalg_d);
+      dev_M_nd_d(Ax_up_d, Ax_dn_d, x_up_d, x_dn_d);
         if(shift != 0.0) {
 	  dev_axpy_d<<<gpu_gd_linalg_d,gpu_bd_linalg_d>>>(shift, x_up_d, Ax_up_d);
 	  dev_axpy_d<<<gpu_gd_linalg_d,gpu_bd_linalg_d>>>(shift, x_dn_d, Ax_dn_d);
@@ -2645,8 +2727,8 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
         to_tmlqcd_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (dev_spinout_up);
         to_tmlqcd_basis<<<gpu_gd_linalg, gpu_bd_linalg>>> (dev_spinout_dn);      
       #endif       
-      to_host(d_up, dev_spinout_up, h2d_spin_up, 1);
-      to_host(d_dn, dev_spinout_dn, h2d_spin_dn, 1);
+      to_host(d_up, dev_spinout_up, h2d_spin_up, use_eo);
+      to_host(d_dn, dev_spinout_dn, h2d_spin_dn, use_eo);
 
       #ifdef CUDA_DEBUG
 	// CUDA_CHECK("CUDA error in mixedsolve_eo_nd(). Device to host interaction failed.", "Fields copied back to device.");
@@ -2662,7 +2744,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       // r(k+1)
       // r(k+1) = b - (A + shift)*x(k+1)
       // (A + shift)*x(k+1)
-        Qtm_pm_ndpsi(Ax_up, Ax_dn, x_up, x_dn);
+        f(Ax_up, Ax_dn, x_up, x_dn);
         if(shift != 0.0) {
 	  assign_add_mul_r(Ax_up, x_up , shift, N_sites_int);
 	  assign_add_mul_r(Ax_dn, x_dn , shift, N_sites_int);
@@ -2740,14 +2822,14 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       		  // outer loop: linalg  =  flops for calculating  r(k+1) and x(k+1)
       		  // inner loop: linalg  =  flops for calculating  alpha, x(k+1), r(k+1), beta, d(k+1)
       		  #ifndef _USE_MPI
-      		  	effectiveflops = outercount*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/2   +   i*(matrixflops + 2*24 + 2*24)*VOLUME/2;
+      		  	effectiveflops = outercount*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/eofactor   +   i*(matrixflops + 2*24 + 2*24)*VOLUME/eofactor;
       		  	printf("effective BENCHMARK:\n");
       		  	printf("\ttotal mixed solver time:   %.4e sec\n", double(stopeffective-starteffective));
       		  	printf("\tfloating point operations: %.4e flops\n", effectiveflops);
       		  	printf("\tinner solver performance:  %.4e Gflop/s\n", double(effectiveflops) / double(stopeffective-starteffective) / 1.0e9);
       		  #else
       		  	singletime = double(stopeffective-starteffective);
-      		  	effectiveflops = outercount*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/2   +   i*(matrixflops + 2*24 + 2*24)*VOLUME/2;
+      		  	effectiveflops = outercount*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/eofactor   +   i*(matrixflops + 2*24 + 2*24)*VOLUME/eofactor;
       		  	MPI_Allreduce(&singletime, &maxtime, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
       		  	MPI_Allreduce(&effectiveflops, &allflops, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
       		  	if (g_cart_id == 0) printf("effective BENCHMARK:\n");
@@ -2819,14 +2901,14 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
       		  // outer loop: linalg  =  flops for calculating  r(k+1) and x(k+1)
       		  // inner loop: linalg  =  flops for calculating  alpha, x(k+1), r(k+1), beta, d(k+1)
       		  #ifndef _USE_MPI
-      		  	effectiveflops = outercount*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/2   +   i*(matrixflops + 2*24 + 2*24)*VOLUME/2;
+      		  	effectiveflops = outercount*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/eofactor   +   i*(matrixflops + 2*24 + 2*24)*VOLUME/eofactor;
       		  	printf("effective BENCHMARK:\n");
       		  	printf("\ttotal mixed solver time:   %.4e sec\n", double(stopeffective-starteffective));
       		  	printf("\tfloating point operations: %.4e flops\n", effectiveflops);
       		  	printf("\tinner solver performance:  %.4e Gflop/s\n", double(effectiveflops) / double(stopeffective-starteffective) / 1.0e9);
       		  #else
       		  	singletime = double(stopeffective-starteffective);
-      		  	effectiveflops = outercount*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/2   +   i*(matrixflops + 2*24 + 2*24)*VOLUME/2;
+      		  	effectiveflops = outercount*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/eofactor  +   i*(matrixflops + 2*24 + 2*24)*VOLUME/eofactor;
       		  	MPI_Allreduce(&singletime, &maxtime, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
       		  	MPI_Allreduce(&effectiveflops, &allflops, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
       		  	if (g_cart_id == 0) printf("effective BENCHMARK:\n");
@@ -2874,7 +2956,7 @@ extern "C" int mixedsolve_eo_nd (spinor * P_up, spinor * P_dn,
 
 
 
-void init_doublesolve_eo_nd (su3** gf) {	// gf is the full gauge field
+void init_doublesolve_eo_nd (su3** gf, int use_eo) {	// gf is the full gauge field
   
 
   
@@ -2889,12 +2971,19 @@ void init_doublesolve_eo_nd (su3** gf) {	// gf is the full gauge field
   /////////////
   // SPINORS //							// allocates device memory for the odd part of the spinor fields (24 = 4*6 floats per odd lattice sites)
   /////////////							// now we have to consider 2 flavors: up, dn
-  
+  int eofactor;
+  if(use_eo){
+    eofactor=2;
+  }
+  else{
+    eofactor=1;
+  }
+ 
   int N;
 #ifdef _USE_MPI
-  N = (VOLUME+RAND)/2;
+  N = (VOLUME+RAND)/eofactor;
 #else
-  N = VOLUME/2;
+  N = VOLUME/eofactor;
 #endif  
   size_t dev_spinsize_d = 12*N * sizeof(dev_spinor_d); /* double2 */
   //allocate fields used in dev_Qtm_pm_ndpsi_d
@@ -2943,7 +3032,7 @@ void init_doublesolve_eo_nd (su3** gf) {	// gf is the full gauge field
   grid[1] = LY;
   grid[2] = LZ;
   grid[3] = T;
-  grid[4] = VOLUME/2;								// will be used to set dev_VOLUME: dev_VOLUME is half of VOLUME for eo
+  grid[4] = VOLUME/eofactor;								// will be used to set dev_VOLUME: dev_VOLUME is half of VOLUME for eo
   
   grid[5] = N;
 
@@ -3138,9 +3227,7 @@ int dev_cg_eo_nd_d (dev_su3_2v_d * gf,
      
       // A*d(k)
 
-    dev_Qtm_pm_ndpsi_d(Ad_up, Ad_dn, d_up,  d_dn,										// debugging: matrix_debug1(), matrix_multiplication_test()
-		      gpu_gd_M_d, gpu_bd_M_d, gpu_gd_linalg_d, gpu_bd_linalg_d,
-		      gpu_gd_linalg_d, gpu_bd_linalg_d, gpu_gd_linalg_d, gpu_bd_linalg_d);
+    dev_M_nd_d(Ad_up, Ad_dn, d_up,  d_dn);
 
 	if(shift != 0.0f){
            //add constant shift if nonzero
@@ -3192,9 +3279,7 @@ int dev_cg_eo_nd_d (dev_su3_2v_d * gf,
       // A*x(k+1)
 
 
-        dev_Qtm_pm_ndpsi_d(Ax_up, Ax_dn, x_up,  x_dn, 
-        	           gpu_gd_M_d, gpu_bd_M_d, gpu_gd_linalg_d, gpu_bd_linalg_d,
-        	           gpu_gd_linalg_d, gpu_bd_linalg_d, gpu_gd_linalg_d, gpu_bd_linalg_d);
+        dev_M_nd_d(Ax_up, Ax_dn, x_up,  x_dn);
 
 	if(shift != 0.0){
            //add constant shift if nonzero
@@ -3309,7 +3394,7 @@ int dev_cg_eo_nd_d (dev_su3_2v_d * gf,
 
 extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
                                  spinor * Q_up, spinor * Q_dn, double shift,
-                                 int max_iter, double eps_sq, int rel_prec, int min_solver_it) {
+                                 int max_iter, double eps_sq, int rel_prec, int min_solver_it, int use_eo, matrix_mult_nd f) {
    
   
    if(rel_prec){
@@ -3334,6 +3419,14 @@ extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
   int innercount;				// latest inner solver iterations
   int outercount = 0;				// total inner solver iterations
 
+  set_gpu_nd_matrix(f);
+  int eofactor;
+  if(use_eo){
+    eofactor=2;
+  }
+  else{
+    eofactor=1;
+  }
   #ifdef ALGORITHM_BENCHMARK
     double effectiveflops;
     //double hoppingflops = 1608.0;
@@ -3351,8 +3444,8 @@ extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
   spinor ** dn_field = NULL;
   const int nr_sf = 5;
 
-  init_solver_field(&up_field, VOLUMEPLUSRAND/2, nr_sf);
-  init_solver_field(&dn_field, VOLUMEPLUSRAND/2, nr_sf);	 
+  init_solver_field(&up_field, VOLUMEPLUSRAND/eofactor, nr_sf);
+  init_solver_field(&dn_field, VOLUMEPLUSRAND/eofactor, nr_sf);	 
 	 
 
   //////////////////
@@ -3371,14 +3464,14 @@ extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
       
      size_t dev_spinsize_d;
 #ifdef _USE_MPI
-   dev_spinsize_d = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); // double2 even-odd ! 
+   dev_spinsize_d = 12*(VOLUME+RAND)/eofactor * sizeof(dev_spinor_d); // double2 even-odd ! 
 #else
-   dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d);     
+   dev_spinsize_d = 12*VOLUME/eofactor * sizeof(dev_spinor_d);     
 #endif
-     set_global_sizes();
+     set_global_sizes(use_eo);
      update_constants_d(dev_grid);
      update_gpu_gf_d(g_gauge_field);    
-     update_bare_constants_nd();
+     update_bare_constants_nd(use_eo);
   
  
     // check mubar and epsbar etc. on host and device
@@ -3389,7 +3482,7 @@ extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
 
 
    #ifdef MATRIX_DEBUG
-    test_double_nd_operator(Q_up, Q_dn, N_sites_int);
+    test_double_nd_operator(Q_up, Q_dn, N_sites_int, f);
    #endif
 
   /////////////////
@@ -3422,8 +3515,8 @@ extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
   
     // r(0)
     // r(0) = b - A*x(0) = Q - A*P
-      bb = square_norm(P_up, VOLUME/2, 1);
-      bb += square_norm(P_dn, VOLUME/2, 1);
+      bb = square_norm(P_up, VOLUME/eofactor, 1);
+      bb += square_norm(P_dn, VOLUME/eofactor, 1);
       if( (g_cart_id == 0) && (g_debug_level > 2) ) printf("Norm of initial guess: %.16e \n", bb);
       order_spin_gpu(Q_up, h2d_spin_d);
       cudaMemcpy(Q_up_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);      
@@ -3440,10 +3533,7 @@ extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
       order_spin_gpu(P_dn, h2d_spin_d);
       cudaMemcpy(x_dn_d, h2d_spin_d, dev_spinsize_d, cudaMemcpyHostToDevice);	  
       // r_up/dn = Q-A*x_up/dn
-      dev_Qtm_pm_ndpsi_d(Ax_up_d, Ax_dn_d,  
-		  x_up_d, x_dn_d, 
-		  gpu_gd_M_d, gpu_bd_M_d, gpu_gd_linalg_d, gpu_bd_linalg_d,
-		  gpu_gd_linalg_d, gpu_bd_linalg_d, gpu_gd_linalg_d, gpu_bd_linalg_d);
+      dev_M_nd_d(Ax_up_d, Ax_dn_d, x_up_d, x_dn_d);
       if(shift != 0.0) {
 	dev_axpy_d<<<gpu_gd_linalg_d,gpu_bd_linalg_d>>>(shift, x_up_d, Ax_up_d);
 	dev_axpy_d<<<gpu_gd_linalg_d,gpu_bd_linalg_d>>>(shift, x_dn_d, Ax_dn_d);
@@ -3509,7 +3599,7 @@ extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
     innerclocks = stopinner-startinner;
     #ifdef ALGORITHM_BENCHMARK
       if ( (g_cart_id == 0) && (g_debug_level > 1) ){
-        effectiveflops = innercount*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/2;   
+        effectiveflops = innercount*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/eofactor;   
         printf("inner solver BENCHMARK:\n");
         printf("\tinner solver performance:  %.4e Gflop/s\n", double(effectiveflops)/innerclocks/ 1.0e9);
       }
@@ -3537,7 +3627,7 @@ extern "C" int doublesolve_eo_nd (spinor * P_up, spinor * P_dn,
       // r(k+1)
       // r(k+1) = b - (A + shift)*x(k+1)
       // (A + shift)*x(k+1)
-        Qtm_pm_ndpsi(Ax_up, Ax_dn, x_up, x_dn);
+        f(Ax_up, Ax_dn, x_up, x_dn);
         if(shift != 0.0) {
 	  assign_add_mul_r(Ax_up, x_up , shift, N_sites_int);
 	  assign_add_mul_r(Ax_dn, x_dn , shift, N_sites_int);
@@ -3632,15 +3722,22 @@ dev_spinor_d ** mms_x_dn_d;
 
 
 
-void init_gpu_nd_mms_fields(int Nshift){
+void init_gpu_nd_mms_fields(int Nshift, int use_eo){
   
   cudaError_t cudaerr;
 
   int N;
+  int eofactor;
+  if(use_eo){
+    eofactor=2;
+  }
+  else{
+    eofactor=1;
+  }
 #ifdef _USE_MPI
-  N = (VOLUME+RAND)/2;
+  N = (VOLUME+RAND)/eofactor;
 #else
-  N = VOLUME/2;
+  N = VOLUME/eofactor;
 #endif
   
   //here we allocate one spinor pair less than the number of shifts
@@ -3669,7 +3766,7 @@ void init_gpu_nd_mms_fields(int Nshift){
   }
 
 #ifdef _USE_MPI
-  int tSliceEO = LX*LY*LZ/2;
+  int tSliceEO = LX*LY*LZ/eofactor;
   R1_UP_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
   R2_UP_D = R1_UP_D + 12*tSliceEO;
   R3_UP_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
@@ -3928,9 +4025,7 @@ int dev_cg_mms_eo_nd_d (dev_su3_2v_d * gf,
   for (j = 0; j < max_iter; j++) {
 
       // A*d(k)
-    dev_Qtm_pm_ndpsi_d(Ad_up, Ad_dn, d_up,  d_dn,	
-		      gpu_gd_M_d, gpu_bd_M_d, gpu_gd_linalg_d, gpu_bd_linalg_d,
-		      gpu_gd_linalg_d, gpu_bd_linalg_d, gpu_gd_linalg_d, gpu_bd_linalg_d);
+    dev_M_nd_d(Ad_up, Ad_dn, d_up,  d_dn);
 
     //add zero'th shift
     cublasDaxpy_wrapper (N_floats_int, sigma[0], (double *) d_up, (double *) Ad_up);
@@ -4084,7 +4179,7 @@ int dev_cg_mms_eo_nd_d (dev_su3_2v_d * gf,
 
 extern "C" int doublesolve_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
                                  spinor * Q_up, spinor * Q_dn, double * shifts, int Nshift,
-                                 int max_iter, double eps_sq, int rel_prec, int min_solver_it) {
+                                 int max_iter, double eps_sq, int rel_prec, int min_solver_it, int use_eo, matrix_mult_nd f) {
    
   //to save mem: dealloc single gauge field
   dealloc_single_gf();
@@ -4104,6 +4199,7 @@ extern "C" int doublesolve_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
   // timing
   double startinner, stopinner;  
   double innerclocks;
+ 
   
   if(rel_prec){
     innersolver_precision_check_rel = 1;
@@ -4118,12 +4214,21 @@ extern "C" int doublesolve_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
   //////////////////
   // INITIALIZING //
   //////////////////
-     
-     size_t dev_spinsize_d;
+  set_gpu_nd_matrix(f);
+  
+  int eofactor;
+  if(use_eo){
+    eofactor=2;
+  }
+  else{
+    eofactor=1;
+  }     
+  
+  size_t dev_spinsize_d;
 #ifdef _USE_MPI
-  dev_spinsize_d  = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); // double2 even-odd !   
+  dev_spinsize_d  = 12*(VOLUME+RAND)/eofactor * sizeof(dev_spinor_d); // double2 even-odd !   
 #else
-  dev_spinsize_d  = 12*VOLUME/2 * sizeof(dev_spinor_d);  
+  dev_spinsize_d  = 12*VOLUME/eofactor * sizeof(dev_spinor_d);  
 #endif
 
     
@@ -4140,11 +4245,11 @@ extern "C" int doublesolve_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
 
   he_cg_init_nd_additional<<<1,1>>> (g_mubar, g_epsbar);
       
-  init_gpu_nd_mms_fields(Nshift);  
-  set_global_sizes();
+  init_gpu_nd_mms_fields(Nshift, use_eo);  
+  set_global_sizes(use_eo);
     
    #ifdef MATRIX_DEBUG
-    test_double_nd_operator(Q_up, Q_dn, N_sites_int);
+    test_double_nd_operator(Q_up, Q_dn, N_sites_int, f);
    #endif  
    #ifdef OPERATOR_BENCHMARK
     benchmark_eo_nd_d(Q_up, Q_dn, OPERATOR_BENCHMARK);
@@ -4178,7 +4283,7 @@ extern "C" int doublesolve_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
     innerclocks = stopinner-startinner;
     #ifdef ALGORITHM_BENCHMARK
      if( (g_cart_id == 0) && (g_debug_level > 1) ){
-      effectiveflops = outercount*g_nproc*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/2;   
+      effectiveflops = outercount*g_nproc*(matrixflops + 2*2*2*24 + 2*2*24 + 2*2*24 + 2*2*2*24 + 2*2*24)*VOLUME/eofactor;   
       printf("mms double solver BENCHMARK:\n");
       printf("\tsolver performance:  %.4e Gflop/s\n", double(effectiveflops)/innerclocks/ 1.0e9);
      }
@@ -4248,8 +4353,7 @@ dev_spinor ** mms_x_dn;
 
 void init_gpu_single_nd_mms_fields(int Nshift, int N){
   
-  cudaError_t cudaerr;
-  
+  cudaError_t cudaerr;  
   size_t dev_spinsize = 6*N*sizeof(dev_spinor); /* float4 */ 
   
   cudaMalloc((void **) &dev_spin1_up, dev_spinsize); 
@@ -4275,7 +4379,15 @@ void init_gpu_single_nd_mms_fields(int Nshift, int N){
   
   
 #ifdef MPI
-  int tSliceEO = LX*LY*LZ/2;
+  int eofactor;
+  
+  if(N==VOLUME){
+    eofactor=1;
+  }else{
+    eofactor=2;
+  }
+
+  int tSliceEO = LX*LY*LZ/eofactor;
   R1_UP_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
   R2_UP_D = R1_UP_D + 12*tSliceEO;
   R3_UP_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
@@ -4436,7 +4548,7 @@ void checkspin_d(dev_spinor_d* s, int N, const char* name){
 // calculation of alphas, betas, zitas ... taken over from there
 extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
                                  spinor * Q_up, spinor * Q_dn, double * shifts, int Nshift,
-                                 int max_iter, double eps_sq, int rel_prec, int min_solver_it) {
+                                 int max_iter, double eps_sq, int rel_prec, int min_solver_it, int use_eo, matrix_mult_nd f) {
 /*
   #ifdef ALGORITHM_BENCHMARK
     double effectiveflops;
@@ -4465,31 +4577,38 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
   // INITIALIZATIONS //
   /////////////////////
   
-  // FIXME this should be made dependent on if EO is used or not in future
-  int N = VOLUME/2;
+  set_gpu_nd_matrix(f);
+  int eofactor;
+  if(use_eo){
+    eofactor=2;
+  }
+  else{
+    eofactor=1;
+  }  
+  int N = VOLUME/eofactor;
  
   //blas - only internal volume
   start_blas(N);
   
-  int Vol = VOLUMEPLUSRAND/2;
+  int Vol = VOLUMEPLUSRAND/eofactor;
  
   //allocate an auxiliary solver fields 
   spinor ** solver_field = NULL;
   const int nr_sf = 4;
-  init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);  
+  init_solver_field(&solver_field, VOLUMEPLUSRAND/eofactor, nr_sf);  
  
   
   //set double & single constants
-  set_global_sizes();  
+  set_global_sizes(use_eo);  
   update_constants(dev_grid);  
   update_constants_d(dev_grid);  
-  update_bare_constants_nd();
-  set_gpu_work_layout(1); //set block and grid sizes, eo!
+  update_bare_constants_nd(use_eo);
+  set_gpu_work_layout(use_eo); //set block and grid sizes, eo!
   
   //spinor fields  
   init_gpu_single_nd_mms_fields(Nshift, Vol);
   #ifdef _USE_MPI
-    he_cg_init_nd_additional_mpi<<<1,1>>>(VOLUMEPLUSRAND/2, RAND, g_cart_id, g_nproc);
+    he_cg_init_nd_additional_mpi<<<1,1>>>(VOLUMEPLUSRAND/eofactor, RAND, g_cart_id, g_nproc);
   #endif
   //->check
   check_mixedsolve_params();  
@@ -4508,15 +4627,15 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
 
   
    #ifdef MATRIX_DEBUG
-    test_double_nd_operator(Q_up, Q_dn, N_sites_int);
-    test_single_nd_operator(Q_up, Q_dn, N_sites_int);
+    test_double_nd_operator(Q_up, Q_dn, N_sites_int, f);
+    test_single_nd_operator(Q_up, Q_dn, N_sites_int, f);
    #endif
      
    size_t dev_spinsize_d; 
    #ifdef _USE_MPI
-     dev_spinsize_d = 12*(VOLUME+RAND)/2 * sizeof(dev_spinor_d); // double2 even-odd ! 
+     dev_spinsize_d = 12*(VOLUME+RAND)/eofactor * sizeof(dev_spinor_d); // double2 even-odd ! 
    #else
-     dev_spinsize_d = 12*VOLUME/2 * sizeof(dev_spinor_d); // double2 even-odd !  
+     dev_spinsize_d = 12*VOLUME/eofactor * sizeof(dev_spinor_d); // double2 even-odd !  
    #endif
    
 
@@ -4671,9 +4790,7 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
     
   for (j = 0; j < max_iter; j++) {   
       // A*d(k)
-    dev_Qtm_pm_ndpsi(Ad_up, Ad_dn, d_up,  d_dn,	
-		      gpu_gd_M, gpu_bd_M, gpu_gd_linalg, gpu_bd_linalg,
-		      gpu_gd_linalg, gpu_bd_linalg, gpu_gd_linalg, gpu_bd_linalg);     
+    dev_M_nd(Ad_up, Ad_dn, d_up,  d_dn);     
     //add zero'th shift
     cublasSaxpy_wrapper (N_floats_int, sigma[0], (float *) d_up, (float *) Ad_up);
     cublasSaxpy_wrapper (N_floats_int, sigma[0], (float *) d_dn, (float *) Ad_dn);
@@ -4800,9 +4917,7 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
 //      checkspin(x_dn, N_floats_int, "x_dn");
 //      checkspin_d(x_dn_d, N_floats_int, "x_dn_d");   
       
-      dev_Qtm_pm_ndpsi_d(Ax_up_d, Ax_dn_d, x_up_d,  x_dn_d,	
-		      gpu_gd_M_d, gpu_bd_M_d, gpu_gd_linalg_d, gpu_bd_linalg_d,
-		      gpu_gd_linalg_d, gpu_bd_linalg_d, gpu_gd_linalg_d, gpu_bd_linalg_d);
+      dev_M_nd_d(Ax_up_d, Ax_dn_d, x_up_d,  x_dn_d);
       //add zero'th shift
       cublasDaxpy_wrapper (N_floats_int, sigma[0], (double *) x_up_d, (double *) Ax_up_d);
       cublasDaxpy_wrapper (N_floats_int, sigma[0], (double *) x_dn_d, (double *) Ax_dn_d);
@@ -4908,7 +5023,7 @@ extern "C" int mixed_cg_mms_eo_nd (spinor ** P_up, spinor ** P_dn,
     if(g_cart_id == 0) printf("# dev_CGMMSND_mixed: Checking mms result:\n");
     //loop over all shifts (-> Nshift) 
     for(int im = 0; im < Nshift; im++){
-      Qtm_pm_ndpsi(solver_field[0], solver_field[1], P_up[im], P_dn[im]);
+      f(solver_field[0], solver_field[1], P_up[im], P_dn[im]);
       assign_add_mul_r(solver_field[0], P_up[im] , shifts[im]*shifts[im], N);
       assign_add_mul_r(solver_field[1], P_dn[im] , shifts[im]*shifts[im], N);
       diff(solver_field[2], solver_field[0], Q_up, N);

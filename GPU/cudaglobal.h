@@ -69,7 +69,11 @@ typedef dev_complex_d dev_vector_d [3];
 typedef double2 dev_spinor_d;
 
 
-
+// definition of matrix-multiplications
+typedef void (*gpu_matrix_mult)(dev_spinor * const, dev_spinor * const);
+typedef void (*gpu_matrix_mult_d)(dev_spinor_d * const, dev_spinor_d * const);
+typedef void (*gpu_matrix_mult_nd)  (dev_spinor * const, dev_spinor * const,dev_spinor * const, dev_spinor * const);
+typedef void (*gpu_matrix_mult_nd_d)(dev_spinor_d * const, dev_spinor_d * const,dev_spinor_d * const, dev_spinor_d * const);
 
 /* END GPU Stuff */
 

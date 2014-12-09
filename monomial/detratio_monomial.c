@@ -226,13 +226,19 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
     g_mu = mnl->mu2;
     boundary(mnl->kappa2);
     zero_spinor_field(mnl->pf,VOLUME);
-    mnl->iter0 += bicgstab_complex(mnl->pf, mnl->w_fields[1], mnl->maxiter, mnl->accprec, 
-				   g_relative_precision_flag, VOLUME, Q_plus_psi);
-    chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
-			mnl->csg_N, &mnl->csg_n, VOLUME/2);
-    if(mnl->solver != CG) {
+    if(mnl->solver == CG){
+      mnl->iter0 = solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->maxiter, mnl->accprec, 
+				    g_relative_precision_flag, VOLUME, Q_pm_psi);
+      Q_minus_psi(mnl->pf, mnl->w_fields[0]);
+      chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
+			  mnl->csg_N, &mnl->csg_n, VOLUME/2);      
+    }else{
+      mnl->iter0 += bicgstab_complex(mnl->pf, mnl->w_fields[1], mnl->maxiter, mnl->accprec, 
+				    g_relative_precision_flag, VOLUME, Q_plus_psi);
+      chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
+			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
       chrono_add_solution(mnl->pf, mnl->csg_field2, mnl->csg_index_array2,
-			  mnl->csg_N2, &mnl->csg_n2, VOLUME/2);
+			    mnl->csg_N2, &mnl->csg_n2, VOLUME/2);           
     }
   }
   etime = gettime();
@@ -276,11 +282,25 @@ double detratio_acc(const int id, hamiltonian_field_t * const hf) {
     boundary(mnl->kappa);
     chrono_guess(mnl->w_fields[0], mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array, 
 		 mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_plus_psi);
-    mnl->iter0 += bicgstab_complex(mnl->w_fields[0], mnl->w_fields[1], 
+    g_sloppy_precision_flag = 0;
+    if(mnl->solver == CG){
+      
+      mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->maxiter, mnl->accprec, g_relative_precision_flag,
+			 VOLUME, &Q_pm_psi); 
+      Q_minus_psi(mnl->w_fields[1], mnl->w_fields[0]);
+      g_sloppy_precision_flag = save_sloppy;
+      /* Compute the energy contr. from second field */
+      mnl->energy1 = square_norm(mnl->w_fields[1], VOLUME, 1);      
+    }
+    else{
+      mnl->iter0 += bicgstab_complex(mnl->w_fields[0], mnl->w_fields[1], 
 				   mnl->maxiter, mnl->accprec, g_relative_precision_flag, 
 				   VOLUME, Q_plus_psi); 
-    /* Compute the energy contr. from second field */
-    mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME, 1);
+    
+      /* Compute the energy contr. from second field */
+      mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME, 1); 
+    }
+    
   }
   g_mu = g_mu1;
   boundary(g_kappa);

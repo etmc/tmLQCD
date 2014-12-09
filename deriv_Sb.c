@@ -657,7 +657,9 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
 	      hamiltonian_field_t * const hf, const double factor){
 
   if(usegpu_flag){
-    gpu_deriv_Sb(ieo, l, k, hf, factor);
+    #ifdef HAVE_GPU
+      gpu_deriv_Sb(ieo, l, k, hf, factor);
+    #endif
   }
   else{
     cpu_deriv_Sb(ieo, l, k, hf, factor);    

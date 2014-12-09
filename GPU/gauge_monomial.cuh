@@ -327,9 +327,17 @@ xchange_gauge(gf);
 
 
 
-extern "C" void init_gpu_fields(int need_momenta){
+extern "C" void init_gpu_fields(int need_momenta, int use_eo){
   cudaError_t cudaerr;
   int Vol, blasVol;
+  int eofactor;
+  if(use_eo){
+    eofactor = 2;
+  }
+  else{
+    eofactor = 1;
+  }
+
   #ifdef _USE_MPI
    if(g_dbw2rand){
      Vol = VOLUME + 2*RAND;
@@ -338,10 +346,10 @@ extern "C" void init_gpu_fields(int need_momenta){
    else{
      Vol = VOLUME + RAND;     
    }
-    blasVol = (VOLUME)/2;
+   blasVol = (VOLUME)/eofactor;
   #else
     Vol = VOLUME;
-    blasVol = VOLUME/2;
+    blasVol = VOLUME/eofactor;
   #endif  
   
   size_t dev_gfsize = 6*4*Vol * sizeof(dev_su3_2v_d);

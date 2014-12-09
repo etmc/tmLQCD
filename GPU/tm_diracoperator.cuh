@@ -56,24 +56,12 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
   if(pos < dev_VOLUME){
         
           //dev_zero_spinor(&(ssum[0])); // zero sum
-          //skalarer Term
-         #ifdef USETEXTURE
-          ssum[0] = tex1Dfetch(spin_tex0,pos);
-          ssum[1] = tex1Dfetch(spin_tex1,pos);
-          ssum[2] = tex1Dfetch(spin_tex2,pos);
-          ssum[3] = tex1Dfetch(spin_tex3,pos);
-          ssum[4] = tex1Dfetch(spin_tex4,pos);
-          ssum[5] = tex1Dfetch(spin_tex5,pos);
-	 #else
-	  ssum[0] = sin[pos+0*DEVOFF];
-          ssum[1] = sin[pos+1*DEVOFF];
-          ssum[2] = sin[pos+2*DEVOFF];
-          ssum[3] = sin[pos+3*DEVOFF];
-          ssum[4] = sin[pos+4*DEVOFF];
-          ssum[5] = sin[pos+5*DEVOFF];
-	 #endif
-          
-
+          ssum[0].x=0.0; ssum[0].y=0.0; ssum[0].z=0.0; ssum[0].w=0.0;
+          ssum[1].x=0.0; ssum[1].y=0.0; ssum[1].z=0.0; ssum[1].w=0.0;	  
+          ssum[2].x=0.0; ssum[2].y=0.0; ssum[2].z=0.0; ssum[2].w=0.0;
+          ssum[3].x=0.0; ssum[3].y=0.0; ssum[3].z=0.0; ssum[3].w=0.0;
+          ssum[4].x=0.0; ssum[4].y=0.0; ssum[4].z=0.0; ssum[4].w=0.0;
+          ssum[5].x=0.0; ssum[5].y=0.0; ssum[5].z=0.0; ssum[5].w=0.0;
 	  
            //positive direction
             hoppos = dev_nn[8*pos];
@@ -405,24 +393,40 @@ __global__ void dev_tm_dirac_kappa(dev_su3_2v * gf, dev_spinor * sin, dev_spinor
 	  
           
           
-          //gamma5 term
+         //scalar and gamma5 term -> read
          #ifdef USETEXTURE
           shelp1[0] = tex1Dfetch(spin_tex0,pos);
+	  ssum[0].x += shelp1[0].x; ssum[0].y += shelp1[0].y; ssum[0].z += shelp1[0].z; ssum[0].w += shelp1[0].w;
           shelp1[1] = tex1Dfetch(spin_tex1,pos);
+	  ssum[1].x += shelp1[1].x; ssum[1].y += shelp1[1].y; ssum[1].z += shelp1[1].z; ssum[1].w += shelp1[1].w;
           shelp1[2] = tex1Dfetch(spin_tex2,pos);
+          ssum[2].x += shelp1[2].x; ssum[2].y += shelp1[2].y; ssum[2].z += shelp1[2].z; ssum[2].w += shelp1[2].w;
           shelp1[3] = tex1Dfetch(spin_tex3,pos);
+          ssum[3].x += shelp1[3].x; ssum[3].y += shelp1[3].y; ssum[3].z += shelp1[3].z; ssum[3].w += shelp1[3].w;	  
           shelp1[4] = tex1Dfetch(spin_tex4,pos);
+          ssum[4].x += shelp1[4].x; ssum[4].y += shelp1[4].y; ssum[4].z += shelp1[4].z; ssum[4].w += shelp1[4].w;	  
           shelp1[5] = tex1Dfetch(spin_tex5,pos);
+          ssum[5].x += shelp1[5].x; ssum[5].y += shelp1[5].y; ssum[5].z += shelp1[5].z; ssum[5].w += shelp1[5].w;
+	  
          #else
           shelp1[0] = sin[pos+0*DEVOFF];
+	  ssum[0].x += shelp1[0].x; ssum[0].y += shelp1[0].y; ssum[0].z += shelp1[0].z; ssum[0].w += shelp1[0].w;
           shelp1[1] = sin[pos+1*DEVOFF];
+	  ssum[1].x += shelp1[1].x; ssum[1].y += shelp1[1].y; ssum[1].z += shelp1[1].z; ssum[1].w += shelp1[1].w;
           shelp1[2] = sin[pos+2*DEVOFF];
+          ssum[2].x += shelp1[2].x; ssum[2].y += shelp1[2].y; ssum[2].z += shelp1[2].z; ssum[2].w += shelp1[2].w;	  
           shelp1[3] = sin[pos+3*DEVOFF];
+          ssum[3].x += shelp1[3].x; ssum[3].y += shelp1[3].y; ssum[3].z += shelp1[3].z; ssum[3].w += shelp1[3].w;	  
           shelp1[4] = sin[pos+4*DEVOFF];
-          shelp1[5] = sin[pos+5*DEVOFF];
+          ssum[4].x += shelp1[4].x; ssum[4].y += shelp1[4].y; ssum[4].z += shelp1[4].z; ssum[4].w += shelp1[4].w;
+	  shelp1[5] = sin[pos+5*DEVOFF];
+          ssum[5].x += shelp1[5].x; ssum[5].y += shelp1[5].y; ssum[5].z += shelp1[5].z; ssum[5].w += shelp1[5].w;
+	  
          #endif 
-          
-          
+                    
+        //id term
+
+         //gamma5 term 
           //dev_GammatV(4,&(shelp1[0]));
 	  #ifdef RELATIVISTIC_BASIS
             dev_Gamma5_rel(&(shelp1[0]));          
@@ -548,7 +552,7 @@ __global__ void dev_gamma5_rel(dev_spinor * sin, dev_spinor * sout){
 
 
 
-extern "C" void dev_tm_dirac_dagger_kappa(dev_su3_2v * gf,dev_spinor* spinin, dev_spinor* spinout, 
+void dev_tm_dirac_dagger_kappa(dev_su3_2v * gf,dev_spinor* spinin, dev_spinor* spinout, 
  int *grid, int * nn_grid, float* output, float* erg, int xsize, int ysize){
  int gridsize;
  if( VOLUME >= 128){
@@ -585,5 +589,49 @@ __global__ void dev_swapmu(){
 
 
 
+
+
+
+void dev_Q_pm_psi(dev_spinor* spinin, dev_spinor* spinout){
+
+  // mu -> -mu
+  dev_swapmu <<<1,1>>> ();  
+  
+  #ifdef USETEXTURE
+   bind_texture_spin(spinin,1);
+  #endif
+     //D_tm 
+     dev_tm_dirac_kappa <<<gpu_gd_M, gpu_bd_M >>> (dev_gf, spinin, dev_spin_eo1, dev_nn);
+  #ifdef USETEXTURE
+   unbind_texture_spin(1);
+  #endif  
+   
+  // GAMMA5
+  #ifdef RELATIVISTIC_BASIS 
+     dev_gamma5_rel <<<gpu_gd_linalg, gpu_bd_linalg >>> (dev_spin_eo1, dev_spin_eo2);
+  #else
+     dev_gamma5 <<<gpu_gd_linalg, gpu_bd_linalg >>> (dev_spin_eo1, dev_spin_eo2);     
+  #endif
+     
+  //mu -> -mu
+  dev_swapmu <<<1,1>>> ();
+  
+  #ifdef USETEXTURE
+   bind_texture_spin(dev_spin_eo2,1);
+  #endif
+     //D_tm
+     dev_tm_dirac_kappa <<<gpu_gd_M, gpu_bd_M >>> (dev_gf, dev_spin_eo2, dev_spin_eo1, dev_nn);
+  #ifdef USETEXTURE
+   unbind_texture_spin(1);
+  #endif   
+   
+  //GAMMA5
+  #ifdef RELATIVISTIC_BASIS    
+     dev_gamma5_rel <<<gpu_gd_linalg, gpu_bd_linalg >>>(dev_spin_eo1, spinout);
+  #else
+     dev_gamma5 <<<gpu_gd_linalg, gpu_bd_linalg >>> (dev_spin_eo1, spinout);     
+  #endif
+     
+}
 
 
