@@ -540,6 +540,21 @@ __device__ inline void dev_su3vec_add_i_mul(dev_vector out, float c, dev_vector 
 }
 
 
+__device__ inline void dev_su3vec_add_mul(dev_vector out, float c, dev_vector in1){
+  
+   out[0].re += c*in1[0].re; 
+   out[0].im += c*in1[0].im;
+
+   out[1].re += c*in1[1].re;
+   out[1].im += c*in1[1].im;
+
+   out[2].re += c*in1[2].re;
+   out[2].im += c*in1[2].im;
+
+}
+
+
+
 __device__ inline void dev_su3vec_add_assign(dev_vector out, dev_vector in1){
 
    out[0].re += in1[0].re;
@@ -1132,6 +1147,283 @@ __global__ void check_sw_reconst(float2* sw, dev_su3* to, int vol){
 
 
 
+
+
+
+
+// computes same as clover_inv
+// sin is read and stored after mult with sw_inv
+__global__ void dev_clover_inv_nd(dev_spinor* sin_s, dev_spinor* sin_c,  float2* sw_inv, const float mu_in){
+   
+   dev_spinor slocal_s[6];
+   dev_vector psi_s, chi_s, phi0_s, phi1_s, phi2_s, phi3_s, r0_s, r1_s, r2_s, r3_s;
+   dev_spinor slocal_c[6];
+   dev_vector psi_c, chi_c, phi0_c, phi1_c, phi2_c, phi3_c, r0_c, r1_c, r2_c, r3_c;
+  
+   __shared__ dev_su3 mat[BLOCK];
+   int offset = 0;
+   //dev_VOLUME is VOLUME/2 for EO, therefor no /2 here!!
+   if(mu_in < 0.0) offset = dev_VOLUME;  
+
+
+   int pos, ix;
+   pos= threadIdx.x + blockDim.x*blockIdx.x;  
+   ix= threadIdx.x;
+   if(pos < dev_VOLUME){
+
+     dev_read_spinor(&(slocal_s[0]), &(sin_s[pos]));
+     
+#ifdef RELATIVISTIC_BASIS 
+     //rotate to tmlqcd basis, as clover term is defined in that basis
+     to_tmlqcd_basis_spinor(&(slocal_s[0])); 
+#endif     
+     dev_get_su3_vec0(phi0_s, &(slocal_s[0]));
+     dev_get_su3_vec1(phi1_s, &(slocal_s[0]));
+     dev_get_su3_vec2(phi2_s, &(slocal_s[0]));
+     dev_get_su3_vec3(phi3_s, &(slocal_s[0]));
+
+     
+     
+     dev_read_spinor(&(slocal_c[0]), &(sin_c[pos]));
+     
+#ifdef RELATIVISTIC_BASIS 
+     //rotate to tmlqcd basis, as clover term is defined in that basis
+     to_tmlqcd_basis_spinor(&(slocal_c[0])); 
+#endif     
+     dev_get_su3_vec0(phi0_c, &(slocal_c[0]));
+     dev_get_su3_vec1(phi1_c, &(slocal_c[0]));
+     dev_get_su3_vec2(phi2_c, &(slocal_c[0]));
+     dev_get_su3_vec3(phi3_c, &(slocal_c[0]));
+
+     
+     //sw_inv[?][0]
+     dev_load_sw_inv (&(mat[ix]), (offset+pos), 0, 0, 2*dev_VOLUME, sw_inv);
+     dev_su3_multiply(psi_s,mat[ix],phi0_s);
+     dev_su3_multiply(psi_c,mat[ix],phi0_c);
+     
+     dev_load_sw_inv (&(mat[ix]), (offset+pos), 1, 0, 2*dev_VOLUME, sw_inv);
+     dev_su3_multiply(chi_s,mat[ix],phi1_s);
+     dev_su3vec_add(r0_s,psi_s,chi_s);
+     dev_su3_multiply(chi_c,mat[ix],phi1_c);
+     dev_su3vec_add(r0_c,psi_c,chi_c);     
+
+     dev_load_sw_inv (&(mat[ix]), (offset+pos), 3, 0, 2*dev_VOLUME, sw_inv);
+     dev_su3_multiply(psi_s,mat[ix],phi0_s);
+     dev_su3_multiply(psi_c,mat[ix],phi0_c);
+     
+     dev_load_sw_inv (&(mat[ix]), (offset+pos), 2, 0, 2*dev_VOLUME, sw_inv);
+     dev_su3_multiply(chi_s,mat[ix],phi1_s);
+     dev_su3vec_add(r1_s,psi_s,chi_s);
+     dev_su3_multiply(chi_c,mat[ix],phi1_c);
+     dev_su3vec_add(r1_c,psi_c,chi_c);
+
+
+     //sw_inv[?][1]
+     dev_load_sw_inv (&(mat[ix]), (offset+pos), 0, 1, 2*dev_VOLUME, sw_inv);
+     dev_su3_multiply(psi_s,mat[ix],phi2_s);
+     dev_su3_multiply(psi_c,mat[ix],phi2_c);
+     
+     dev_load_sw_inv (&(mat[ix]), (offset+pos), 1, 1, 2*dev_VOLUME, sw_inv);
+     dev_su3_multiply(chi_s,mat[ix],phi3_s);
+     dev_su3vec_add(r2_s,psi_s,chi_s);
+     dev_su3_multiply(chi_c,mat[ix],phi3_c);
+     dev_su3vec_add(r2_c,psi_c,chi_c);
+     
+     dev_load_sw_inv (&(mat[ix]), (offset+pos), 3, 1, 2*dev_VOLUME, sw_inv);
+     dev_su3_multiply(psi_s,mat[ix],phi2_s);
+     dev_su3_multiply(psi_c,mat[ix],phi2_c);     
+
+     dev_load_sw_inv (&(mat[ix]), (offset+pos), 2, 1, 2*dev_VOLUME, sw_inv);
+     dev_su3_multiply(chi_s,mat[ix],phi3_s);
+     dev_su3vec_add(r3_s,psi_s,chi_s);
+     dev_su3_multiply(chi_c,mat[ix],phi3_c);
+     dev_su3vec_add(r3_c,psi_c,chi_c);
+     
+     dev_store_spinor_from_vec(&(slocal_s[0]), r0_s, r1_s, r2_s, r3_s);
+     dev_store_spinor_from_vec(&(slocal_c[0]), r0_c, r1_c, r2_c, r3_c);
+     
+#ifdef RELATIVISTIC_BASIS 
+     //rotate to tmlqcd basis, as clover term is defined in that basis
+     to_relativistic_basis_spinor(&(slocal_s[0]));     
+#endif      
+     
+     dev_write_spinor(&(slocal_s[0]),&(sin_s[pos]));    
+
+#ifdef RELATIVISTIC_BASIS 
+     //rotate to tmlqcd basis, as clover term is defined in that basis
+     to_relativistic_basis_spinor(&(slocal_c[0]));     
+#endif         
+     
+     dev_write_spinor(&(slocal_c[0]),&(sin_c[pos]));        
+   }
+}
+
+
+
+
+__global__ void dev_clover_gamma5_nd(const int ieo, const int * index_site, 
+				     dev_spinor* l_s, dev_spinor* k_s ,dev_spinor* j_s, 
+				     dev_spinor* l_c, dev_spinor* k_c ,dev_spinor* j_c, 
+				     float2* sw, const float mu_in, const float eps_in){
+   
+   dev_spinor slocal_s[6];
+   dev_spinor slocal_c[6];
+   //rho? is output
+   dev_vector psi1_s, psi2_s, chi_s, phi0_s, phi1_s, phi2_s, phi3_s,  
+                         tau0_s, tau1_s, tau2_s, tau3_s,
+                         rho0_s, rho1_s, rho2_s, rho3_s; 
+   dev_vector psi1_c, psi2_c, chi_c, phi0_c, phi1_c, phi2_c, phi3_c,  
+                         tau0_c, tau1_c, tau2_c, tau3_c,
+                         rho0_c, rho1_c, rho2_c, rho3_c;			 
+			 
+   __shared__ dev_su3 mat[BLOCK];
+
+   int pos, ix;
+   
+   pos= threadIdx.x + blockDim.x*blockIdx.x;  
+   ix= threadIdx.x; 
+   
+   if(pos < dev_VOLUME){
+
+
+     //load k
+     dev_read_spinor(&(slocal_s[0]), &(k_s[pos]));
+#ifdef RELATIVISTIC_BASIS 
+     //rotate to tmlqcd basis, as clover term is defined in that basis
+     to_tmlqcd_basis_spinor(&(slocal_s[0])); 
+#endif     
+     dev_get_su3_vec0(phi0_s, &(slocal_s[0]));
+     dev_get_su3_vec1(phi1_s, &(slocal_s[0]));
+     dev_get_su3_vec2(phi2_s, &(slocal_s[0]));
+     dev_get_su3_vec3(phi3_s, &(slocal_s[0]));     
+ 
+     
+     dev_read_spinor(&(slocal_c[0]), &(k_c[pos]));
+#ifdef RELATIVISTIC_BASIS 
+     //rotate to tmlqcd basis, as clover term is defined in that basis
+     to_tmlqcd_basis_spinor(&(slocal_c[0])); 
+#endif         
+     dev_get_su3_vec0(phi0_c, &(slocal_c[0]));
+     dev_get_su3_vec1(phi1_c, &(slocal_c[0]));
+     dev_get_su3_vec2(phi2_c, &(slocal_c[0]));
+     dev_get_su3_vec3(phi3_c, &(slocal_c[0]));
+     
+
+     dev_load_sw (&(mat[ix]), index_site[pos], 0, 0, 2*dev_VOLUME, sw);
+     dev_su3_multiply(psi1_s,mat[ix],phi0_s);
+     dev_su3_multiply(psi1_c,mat[ix],phi0_c);     
+     
+     dev_load_sw (&(mat[ix]), index_site[pos], 1, 0, 2*dev_VOLUME, sw);
+     dev_su3_multiply(chi_s,mat[ix],phi1_s);
+     dev_su3vec_add_assign(psi1_s,chi_s);
+     dev_su3_inverse_multiply(psi2_s,mat[ix],phi0_s); 
+     dev_su3_multiply(chi_c,mat[ix],phi1_c);
+     dev_su3vec_add_assign(psi1_c,chi_c);
+     dev_su3_inverse_multiply(psi2_c,mat[ix],phi0_c);      
+
+     dev_load_sw (&(mat[ix]), index_site[pos], 2, 0, 2*dev_VOLUME, sw);     
+     dev_su3_multiply(chi_s,mat[ix],phi1_s);
+     dev_su3vec_add_assign(psi2_s,chi_s);
+     dev_su3_multiply(chi_c,mat[ix],phi1_c);
+     dev_su3vec_add_assign(psi2_c,chi_c);     
+
+     dev_su3vec_add_i_mul(psi1_s, mu_in, phi0_s);
+     dev_su3vec_add_i_mul(psi2_s, mu_in, phi1_s); 
+     dev_su3vec_add_i_mul(psi1_c, mu_in, phi0_c);     
+     dev_su3vec_add_i_mul(psi2_c, mu_in, phi1_c);
+     
+     dev_su3vec_add_mul(psi1_s, eps_in, phi0_s);
+     dev_su3vec_add_mul(psi2_s, eps_in, phi1_s);  
+     dev_su3vec_add_mul(psi1_c, eps_in, phi0_c);     
+     dev_su3vec_add_mul(psi2_c, eps_in, phi1_c);     
+    
+     //load j
+     dev_read_spinor(&(slocal_s[0]), &(j_s[pos]));
+     
+#ifdef RELATIVISTIC_BASIS 
+     //rotate to tmlqcd basis, as clover term is defined in that basis
+     to_tmlqcd_basis_spinor(&(slocal_s[0])); 
+#endif         
+     
+     dev_get_su3_vec0(tau0_s, &(slocal_s[0]));
+     dev_get_su3_vec1(tau1_s, &(slocal_s[0]));
+     dev_get_su3_vec2(tau2_s, &(slocal_s[0]));
+     dev_get_su3_vec3(tau3_s, &(slocal_s[0]));
+     
+     
+     dev_read_spinor(&(slocal_c[0]), &(j_c[pos]));
+     
+#ifdef RELATIVISTIC_BASIS 
+     //rotate to tmlqcd basis, as clover term is defined in that basis
+     to_tmlqcd_basis_spinor(&(slocal_c[0])); 
+#endif         
+     
+     dev_get_su3_vec0(tau0_c, &(slocal_c[0]));
+     dev_get_su3_vec1(tau1_c, &(slocal_c[0]));
+     dev_get_su3_vec2(tau2_c, &(slocal_c[0]));
+     dev_get_su3_vec3(tau3_c, &(slocal_c[0])); 
+     
+
+     dev_su3vec_sub(rho0_s, psi1_s, tau0_s);
+     dev_su3vec_sub(rho1_s, psi2_s, tau1_s);
+     dev_su3vec_sub(rho0_c, psi1_c, tau0_c);
+     dev_su3vec_sub(rho1_c, psi2_c, tau1_c);
+
+     
+     dev_load_sw (&(mat[ix]), index_site[pos], 0, 1, 2*dev_VOLUME, sw);
+     dev_su3_multiply(psi1_s,mat[ix],phi2_s);
+     dev_su3_multiply(psi1_c,mat[ix],phi2_c);     
+     dev_load_sw (&(mat[ix]), index_site[pos], 1, 1, 2*dev_VOLUME, sw);
+     dev_su3_multiply(chi_s,mat[ix],phi3_s);
+     dev_su3vec_add_assign(psi1_s,chi_s);
+     dev_su3_inverse_multiply(psi2_s,mat[ix],phi2_s); 
+     dev_su3_multiply(chi_c,mat[ix],phi3_c);
+     dev_su3vec_add_assign(psi1_c,chi_c);
+     dev_su3_inverse_multiply(psi2_c,mat[ix],phi2_c);
+     
+     dev_load_sw (&(mat[ix]), index_site[pos], 2, 1, 2*dev_VOLUME, sw);
+     dev_su3_multiply(chi_s,mat[ix],phi3_s);
+     dev_su3vec_add_assign(psi2_s,chi_s);
+     dev_su3_multiply(chi_c,mat[ix],phi3_c);
+     dev_su3vec_add_assign(psi2_c,chi_c);
+     
+     dev_su3vec_add_i_mul(psi1_s, -mu_in, phi2_s);
+     dev_su3vec_add_i_mul(psi2_s, -mu_in, phi3_s);
+     dev_su3vec_add_i_mul(psi1_c, -mu_in, phi2_c);
+     dev_su3vec_add_i_mul(psi2_c, -mu_in, phi3_c);     
+     
+     dev_su3vec_add_i_mul(psi1_s, eps_in, phi2_s);
+     dev_su3vec_add_i_mul(psi2_s, eps_in, phi3_s);
+     dev_su3vec_add_i_mul(psi1_c, eps_in, phi2_c);
+     dev_su3vec_add_i_mul(psi2_c, eps_in, phi3_c);         
+
+     dev_su3vec_sub(rho2_s, tau2_s, psi1_s);
+     dev_su3vec_sub(rho3_s, tau3_s, psi2_s);
+     dev_su3vec_sub(rho2_c, tau2_c, psi1_c);
+     dev_su3vec_sub(rho3_c, tau3_c, psi2_c);    
+
+     //write to l
+     dev_store_spinor_from_vec(&(slocal_s[0]), rho0_s, rho1_s, rho2_s, rho3_s);
+     
+ #ifdef RELATIVISTIC_BASIS 
+     //rotate to tmlqcd basis, as clover term is defined in that basis
+     to_relativistic_basis_spinor(&(slocal_s[0])); 
+#endif       
+     
+     dev_write_spinor(&(slocal_s[0]),&(l_s[pos]));  
+
+     
+     dev_store_spinor_from_vec(&(slocal_c[0]), rho0_c, rho1_c, rho2_c, rho3_c);
+     
+ #ifdef RELATIVISTIC_BASIS 
+     //rotate to tmlqcd basis, as clover term is defined in that basis
+     to_relativistic_basis_spinor(&(slocal_c[0])); 
+#endif       
+     
+     dev_write_spinor(&(slocal_c[0]),&(l_c[pos]));       
+     
+   }
+}
 
 
 
