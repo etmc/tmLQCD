@@ -264,7 +264,7 @@ void xchange_halffield() {
 
 # else /* _INDEX_INDEP_GEOM */
 
-#ifdef MPI
+#ifdef _USE_MPI
 MPI_Request requests[16];
 MPI_Status hstatus[16];
 int reqcount;

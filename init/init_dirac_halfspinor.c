@@ -58,7 +58,7 @@ int bodyV, surfaceV;
 int init_dirac_halfspinor() {
   int j=0;
   int x, y, z, t;
-#ifdef MPI
+#ifdef _USE_MPI
   int k;
 #endif
 #ifdef PARALLELXYZT
