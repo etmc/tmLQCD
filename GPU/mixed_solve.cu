@@ -95,6 +95,7 @@ extern "C" {
 
 #include "../gettime.h"
 #ifdef _USE_MPI
+  #include <mpi.h>
   #include "../xchange/xchange.h"
 #endif 
 

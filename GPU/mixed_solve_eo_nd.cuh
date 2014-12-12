@@ -4378,7 +4378,7 @@ void init_gpu_single_nd_mms_fields(int Nshift, int N){
   }   
   
   
-#ifdef MPI
+#ifdef _USE_MPI
   int eofactor;
   
   if(N==VOLUME){
