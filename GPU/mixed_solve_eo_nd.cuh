@@ -1191,7 +1191,7 @@ void update_bare_constants_nd(int use_eo){
   
   #ifdef _USE_MPI
     int eofactor=1;
-    if(use_eo) eofactor=1;
+    if(use_eo) eofactor=2;
     he_cg_init_nd_additional_mpi<<<1,1>>>(VOLUMEPLUSRAND/eofactor, RAND, g_cart_id, g_nproc);	
     #ifdef CUDA_DEBUG
       CUDA_KERNEL_CHECK("Kernel error in he_cg_init_nd_additional_mpi(). Couldn't initialize some stuff.", "he_cg_init_nd_additional_mpi() succeeded.");
