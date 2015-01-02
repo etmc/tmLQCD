@@ -139,7 +139,7 @@ void init_xchange_halffield() {
   MPI_Recv_init((void*)(recvBuffer + LX*LY*LZ + T*LY*LZ + T*LX*LZ), 
 		T*LX*LY*12/2, MPI_DOUBLE, g_nb_z_up, 504, g_cart_grid, &prequests[15]); 
 #  endif
-#  endif /* MPI */
+#  endif /* _USE_MPI */
   return;
 }
 
@@ -164,7 +164,7 @@ void xchange_halffield() {
   MPI_Startall(reqcount, prequests);
 
   MPI_Waitall(reqcount, prequests, status); 
-#  endif /* MPI */
+#  endif /* _USE_MPI */
   return;
 }
 
@@ -254,7 +254,7 @@ void xchange_halffield() {
 #    endif
 
   MPI_Waitall(reqcount, requests, status); 
-#  endif /* MPI */
+#  endif /* _USE_MPI */
   return;
 
 #ifdef _KOJAK_INST
@@ -264,25 +264,21 @@ void xchange_halffield() {
 
 # else /* _INDEX_INDEP_GEOM */
 
-#ifdef _USE_MPI
-MPI_Request requests[16];
-MPI_Status hstatus[16];
-int reqcount;
-#endif
-
 /* 4. */
 void xchange_halffield() {
 
 #  ifdef _USE_MPI
 
+  MPI_Request requests[16];
+  MPI_Status status[16];
 #  ifdef PARALLELT
-  reqcount = 4;
+  int reqcount = 4;
 #  elif defined PARALLELXT
-  reqcount = 8;
+  int reqcount = 8;
 #  elif defined PARALLELXYT
-  reqcount = 12;
+  int reqcount = 12;
 #  elif defined PARALLELXYZT
-  reqcount = 16;
+  int reqcount = 16;
 #  endif
 #  if (defined XLC && defined BGL)
   __alignx(16, HalfSpinor);
@@ -354,20 +350,13 @@ void xchange_halffield() {
 	    T*LX*LY*12/2, MPI_DOUBLE, g_nb_z_up, 504, g_cart_grid, &requests[15]); 
 #    endif
   
-  //MPI_Waitall(reqcount, requests, status); 
-#  endif /* MPI */
+  MPI_Waitall(reqcount, requests, status); 
+#  endif /* _USE_MPI */
   return;
   
 #ifdef _KOJAK_INST
 #pragma pomp inst end(xchangehalf)
 #endif
-}
-
-void wait_halffield() {
-#  ifdef MPI
-  MPI_Waitall(reqcount, requests, hstatus); 
-#  endif /* MPI */
-  return;
 }
 
 # endif /* _INDEX_INDEP_GEOM */
@@ -385,15 +374,14 @@ void xchange_halffield32() {
 
   MPI_Request requests[16];
   MPI_Status status[16];
-
 #  ifdef PARALLELT
-  reqcount = 4;
+  int reqcount = 4;
 #  elif defined PARALLELXT
-  reqcount = 8;
+  int reqcount = 8;
 #  elif defined PARALLELXYT
-  reqcount = 12;
+  int reqcount = 12;
 #  elif defined PARALLELXYZT
-  reqcount = 16;
+  int reqcount = 16;
 #  endif
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(xchangehalf32)
@@ -465,21 +453,13 @@ void xchange_halffield32() {
 	    T*LX*LY*12/2, MPI_FLOAT, g_nb_z_up, 504, g_cart_grid, &requests[15]); 
 #    endif
 
-  //MPI_Waitall(reqcount, requests, status); 
-#  endif /* MPI */
+  MPI_Waitall(reqcount, requests, status); 
+#  endif /* _USE_MPI */
   return;
 #ifdef _KOJAK_INST
 #pragma pomp inst end(xchangehalf32)
 #endif
 }
-void wait_halffield32() {
-#  ifdef MPI
-  MPI_Waitall(reqcount, requests, hstatus); 
-#  endif /* MPI */
-  return;
-}
-
-
 # endif /* defined _INDEX_INDEP_GEOM */
 #endif /* defined _USE_HALFSPINOR */
 

@@ -190,8 +190,6 @@
 /* Define to 1 if non-blocking MPI calls for spinor and gauge should be used */
 #undef _NON_BLOCKING
 
-/* use the same thread for xchange and wait in halfspinor hopping matrix, use guided scheduling in body computation */
-#undef _THREAD_OVERLAP
 
 /* Define if we want to use CUDA GPU */
 #undef HAVE_GPU

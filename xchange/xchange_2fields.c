@@ -218,7 +218,9 @@ void xchange_2fields(spinor * const l, spinor * const k, const int ieo) {
   MPI_Request requests[32];
   MPI_Status status[32];
   int reqcount = 0;
+#if defined PARALLELXYZT
   int ix=0;
+#endif
 
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(xchange2fields)
@@ -238,81 +240,25 @@ void xchange_2fields(spinor * const l, spinor * const k, const int ieo) {
 
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
-  ix = 0;
-  for(int x = 0; x < LX; x++) {
-    for(int y = 0; y < LY; y++) {
-      for(int z = 0; z < LZ; z++) {
-	if((x + y + z +  
-	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
-	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2 == ieo) { 
-	  
-	  field_buffer_t[ix] = l[g_lexic2eosub[ g_ipt[0][x][y][z]] ];
-	  ix++;
-	}
-      }
-    }
-  }
-  MPI_Isend((void*)field_buffer_t, LX*LY*LZ*12, MPI_DOUBLE, g_nb_t_dn, 81, g_cart_grid, &requests[reqcount]);
+  MPI_Isend((void*)l, 1, field_time_slice_cont, g_nb_t_dn, 81, g_cart_grid, &requests[reqcount]);
   MPI_Irecv((void*)(l+T*LX*LY*LZ/2), 1, field_time_slice_cont, g_nb_t_up, 81, g_cart_grid, &requests[reqcount+1]);
   reqcount=reqcount+2;
   
   /* send the data to the neighbour on the right */
   /* recieve the data from the neighbour on the left */
-  ix = 0;
-  for(int x = 0; x < LX; x++) {
-    for(int y = 0; y < LY; y++) {
-      for(int z = 0; z < LZ; z++) {
-	if((x + y + z + (T-1) +
-	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
-	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2 == ieo) { 
-	  
-	  field_buffer_t2[ix] = l[ g_lexic2eosub[ g_ipt[T-1][x][y][z] ] ];
-	  ix++;
-	}
-      }
-    }
-  }
-  MPI_Isend((void*)field_buffer_t2, LX*LY*LZ*12, MPI_DOUBLE, g_nb_t_up, 82, g_cart_grid, &requests[reqcount]);
+  MPI_Isend((void*)(l+(T-1)*LX*LY*LZ/2), 1, field_time_slice_cont, g_nb_t_up, 82, g_cart_grid, &requests[reqcount]);
   MPI_Irecv((void*)(l+(T+1)*LX*LY*LZ/2), 1, field_time_slice_cont, g_nb_t_dn, 82, g_cart_grid, &requests[reqcount+1]);
   reqcount=reqcount+2;
   
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */
-  ix = 0;
-  for(int x = 0; x < LX; x++) {
-    for(int y = 0; y < LY; y++) {
-      for(int z = 0; z < LZ; z++) {
-	if((x + y + z +  
-	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
-	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2 == ieo) { 
-	  
-	  field_buffer_t3[ix] = k[ g_lexic2eosub[ g_ipt[0][x][y][z]] ];
-	  ix++;
-	}
-      }
-    }
-  }
-  MPI_Isend((void*)field_buffer_t3, LX*LY*LZ*12, MPI_DOUBLE, g_nb_t_dn, 83, g_cart_grid, &requests[reqcount]);
+  MPI_Isend((void*)k, 1, field_time_slice_cont, g_nb_t_dn, 83, g_cart_grid, &requests[reqcount]);
   MPI_Irecv((void*)(k+T*LX*LY*LZ/2), 1, field_time_slice_cont, g_nb_t_up, 83, g_cart_grid, &requests[reqcount+1]);
   reqcount=reqcount+2;
   
   /* send the data to the neighbour on the right */
   /* recieve the data from the neighbour on the left */
-  ix = 0;
-  for(int x = 0; x < LX; x++) {
-    for(int y = 0; y < LY; y++) {
-      for(int z = 0; z < LZ; z++) {
-	if((x + y + z + (T-1) +
-	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
-	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2 == ieo) { 
-	  
-	  field_buffer_t4[ix] = k[ g_lexic2eosub[ g_ipt[T-1][x][y][z] ] ];
-	  ix++;
-	}
-      }
-    }
-  }
-  MPI_Isend((void*)field_buffer_t4, LX*LY*LZ*12, MPI_DOUBLE, g_nb_t_up, 84, g_cart_grid, &requests[reqcount]);
+  MPI_Isend((void*)(k+(T-1)*LX*LY*LZ/2), 1, field_time_slice_cont, g_nb_t_up, 84, g_cart_grid, &requests[reqcount]);
   MPI_Irecv((void*)(k+(T+1)*LX*LY*LZ/2), 1, field_time_slice_cont, g_nb_t_dn, 84, g_cart_grid, &requests[reqcount+1]);
   reqcount=reqcount+2;
 
@@ -320,81 +266,25 @@ void xchange_2fields(spinor * const l, spinor * const k, const int ieo) {
 #    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
-  ix = 0;
-  for(int t = 0; t < T; t++) {
-    for(int y = 0; y < LY; y++) {
-      for(int z = 0; z < LZ; z++) {
-	if((t + y + z +  
-	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
-	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2 == ieo) { 
-	  
-	  field_buffer_x[ix] = l[g_lexic2eosub[ g_ipt[t][0][y][z]] ];
-	  ix++;
-	}
-      }
-    }
-  }
-  MPI_Isend((void*)field_buffer_x, T*LY*LZ*12, MPI_DOUBLE, g_nb_x_dn, 91, g_cart_grid,  &requests[reqcount]);
+  MPI_Isend((void*)l, 1, field_x_slice_gath, g_nb_x_dn, 91, g_cart_grid,  &requests[reqcount]);
   MPI_Irecv((void*)(l+(T+2)*LX*LY*LZ/2), 1, field_x_slice_cont, g_nb_x_up, 91, g_cart_grid, &requests[reqcount+1]);
   reqcount=reqcount+2;
   
-  /* send the data to the neighbour on the right in x direction */
-  /* recieve the data from the neighbour on the left in x direction */  
-  ix = 0;
-  for(int t = 0; t < T; t++) {
-    for(int y = 0; y < LY; y++) {
-      for(int z = 0; z < LZ; z++) {
-	if((t + y + z + (LX-1) +
-	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
-	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2 == ieo) { 
-	  
-	  field_buffer_x2[ix] = l[g_lexic2eosub[ g_ipt[t][LX-1][y][z]] ];
-	  ix++;
-	}
-      }
-    }
-  }
-  MPI_Isend((void*)field_buffer_x2, T*LY*LZ*12, MPI_DOUBLE, g_nb_x_up, 92, g_cart_grid, &requests[reqcount]);
+    /* send the data to the neighbour on the right in x direction */
+    /* recieve the data from the neighbour on the left in x direction */  
+  MPI_Isend((void*)(l+(LX-1)*LY*LZ/2), 1, field_x_slice_gath, g_nb_x_up, 92, g_cart_grid, &requests[reqcount]);
   MPI_Irecv((void*)(l+((T+2)*LX*LY*LZ + T*LY*LZ)/2), 1, field_x_slice_cont, g_nb_x_dn, 92, g_cart_grid, &requests[reqcount+1]);
   reqcount=reqcount+2;
   
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
-  ix = 0;
-  for(int t = 0; t < T; t++) {
-    for(int y = 0; y < LY; y++) {
-      for(int z = 0; z < LZ; z++) {
-	if((t + y + z +
-	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
-	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2 == ieo) { 
-	  
-	  field_buffer_x3[ix] = k[g_lexic2eosub[ g_ipt[t][0][y][z]] ];
-	  ix++;
-	}
-      }
-    }
-  }
-  MPI_Isend((void*)field_buffer_x3, T*LY*LZ*12, MPI_DOUBLE, g_nb_x_dn, 93, g_cart_grid,  &requests[reqcount]);
+  MPI_Isend((void*)k, 1, field_x_slice_gath, g_nb_x_dn, 93, g_cart_grid,  &requests[reqcount]);
   MPI_Irecv((void*)(k+(T+2)*LX*LY*LZ/2), 1, field_x_slice_cont, g_nb_x_up, 93, g_cart_grid, &requests[reqcount+1]);
   reqcount=reqcount+2;
   
   /* send the data to the neighbour on the right in x direction */
   /* recieve the data from the neighbour on the left in x direction */  
-  ix = 0;
-  for(int t = 0; t < T; t++) {
-    for(int y = 0; y < LY; y++) {
-      for(int z = 0; z < LZ; z++) {
-	if((t + y + z + (LX-1) +
-	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
-	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2 == ieo) { 
-	  
-	  field_buffer_x4[ix] = k[g_lexic2eosub[ g_ipt[t][LX-1][y][z]] ];
-	  ix++;
-	}
-      }
-    }
-  }
-  MPI_Isend((void*)field_buffer_x3, T*LY*LZ*12, MPI_DOUBLE, g_nb_x_up, 94, g_cart_grid, &requests[reqcount]);
+  MPI_Isend((void*)(k+(LX-1)*LY*LZ/2), 1, field_x_slice_gath, g_nb_x_up, 94, g_cart_grid, &requests[reqcount]);
   MPI_Irecv((void*)(k+((T+2)*LX*LY*LZ + T*LY*LZ)/2), 1, field_x_slice_cont, g_nb_x_dn, 94, g_cart_grid, &requests[reqcount+1]);
   reqcount=reqcount+2;
 #    endif
@@ -402,81 +292,25 @@ void xchange_2fields(spinor * const l, spinor * const k, const int ieo) {
 #    if (defined PARALLELXYT || defined PARALLELXYZT)
   /* send the data to the neighbour on the left in y direction */
   /* recieve the data from the neighbour on the right in y direction */
-  ix = 0;
-  for(int t = 0; t < T; t++) {
-    for(int x = 0; x < LX; x++) {
-      for(int z = 0; z < LZ; z++) {
-	if((t + x + z +  
-	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
-	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2 == ieo) { 
-	  
-	  field_buffer_y[ix] = l[g_lexic2eosub[ g_ipt[t][x][0][z]] ];
-	  ix++;
-	}
-      }
-    }
-  }
-  MPI_Isend((void*)field_buffer_y, T*LX*LZ*12, MPI_DOUBLE, g_nb_y_dn, 101, g_cart_grid, &requests[reqcount]);
+  MPI_Isend((void*)l, 1, field_y_slice_gath, g_nb_y_dn, 101, g_cart_grid, &requests[reqcount]);
   MPI_Irecv((void*)(l+((T+2)*LX*LY*LZ + 2*T*LY*LZ)/2), 1, field_y_slice_cont, g_nb_y_up, 101, g_cart_grid, &requests[reqcount+1]);
   reqcount=reqcount+2;
   
   /* send the data to the neighbour on the right in y direction */
   /* recieve the data from the neighbour on the left in y direction */  
-  ix = 0;
-  for(int t = 0; t < T; t++) {
-    for(int x = 0; x < LX; x++) {
-      for(int z = 0; z < LZ; z++) {
-	if((t + x + z + (LY-1) +
-	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
-	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2 == ieo) { 
-	  
-	  field_buffer_y2[ix] = l[g_lexic2eosub[ g_ipt[t][x][LY-1][z]] ];
-	  ix++;
-	}
-      }
-    }
-  }
-  MPI_Isend((void*)field_buffer_y2, T*LX*LZ*12, MPI_DOUBLE, g_nb_y_up, 102, g_cart_grid, &requests[reqcount]);
+  MPI_Isend((void*)(l+(LY-1)*LZ/2), 1, field_y_slice_gath, g_nb_y_up, 102, g_cart_grid, &requests[reqcount]);
   MPI_Irecv((void*)(l+((T+2)*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ)/2), 1, field_y_slice_cont, g_nb_y_dn, 102, g_cart_grid, &requests[reqcount+1]);
   reqcount=reqcount+2;
   
   /* send the data to the neighbour on the left in y direction */
   /* recieve the data from the neighbour on the right in y direction */
-  ix = 0;
-  for(int t = 0; t < T; t++) {
-    for(int x = 0; x < LX; x++) {
-      for(int z = 0; z < LZ; z++) {
-	if((t + x + z +  
-	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
-	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2 == ieo) { 
-	  
-	  field_buffer_y3[ix] = k[g_lexic2eosub[ g_ipt[t][x][0][z]] ];
-	  ix++;
-	}
-      }
-    }
-  }
-  MPI_Isend((void*)field_buffer_y3, T*LX*LZ*12, MPI_DOUBLE, g_nb_y_dn, 103, g_cart_grid, &requests[reqcount]);
+  MPI_Isend((void*)k, 1, field_y_slice_gath, g_nb_y_dn, 103, g_cart_grid, &requests[reqcount]);
   MPI_Irecv((void*)(k+((T+2)*LX*LY*LZ + 2*T*LY*LZ)/2), 1, field_y_slice_cont, g_nb_y_up, 103, g_cart_grid, &requests[reqcount+1]);
   reqcount=reqcount+2;
   
   /* send the data to the neighbour on the right in y direction */
   /* recieve the data from the neighbour on the left in y direction */  
-  ix = 0;
-  for(int t = 0; t < T; t++) {
-    for(int x = 0; x < LX; x++) {
-      for(int z = 0; z < LZ; z++) {
-	if((t + x + z + (LY-1) +
-	    g_proc_coords[0]*T + g_proc_coords[1]*LX +  
-	    g_proc_coords[2]*LY + g_proc_coords[3]*LZ)%2 == ieo) { 
-	  
-	  field_buffer_y4[ix] = k[g_lexic2eosub[ g_ipt[t][x][LY-1][z]] ];
-	  ix++;
-	}
-      }
-    }
-  }
-  MPI_Isend((void*)field_buffer_y4, T*LX*LZ*12, MPI_DOUBLE, g_nb_y_up, 104, g_cart_grid, &requests[reqcount]);
+  MPI_Isend((void*)(k+(LY-1)*LZ/2), 1, field_y_slice_gath, g_nb_y_up, 104, g_cart_grid, &requests[reqcount]);
   MPI_Irecv((void*)(k+((T+2)*LX*LY*LZ + 2*T*LY*LZ + T*LX*LZ)/2), 1, field_y_slice_cont, g_nb_y_dn, 104, g_cart_grid, &requests[reqcount+1]);
   reqcount=reqcount+2;
   

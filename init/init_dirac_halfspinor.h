@@ -29,8 +29,7 @@ extern halfspinor32 * HalfSpinor32 ALIGN32;
 extern halfspinor32 *** NBPointer32;
 extern halfspinor * ALIGN sendBuffer, * ALIGN recvBuffer;
 extern halfspinor32 * ALIGN32 sendBuffer32, * ALIGN32 recvBuffer32;
-// body and surface volume
-extern int bodyV, surfaceV;
+
 
 int init_dirac_halfspinor();
 int init_dirac_halfspinor32();

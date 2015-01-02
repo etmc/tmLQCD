@@ -105,6 +105,23 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   xhigh = solver_field[2];
   x = solver_field32[3];   
   assign(delta, Q, N);
+//printf("In mixed_cg solver...\n");
+//printf("volume is: %d\n",N); 
+ /* here comes a small test */
+   spinor32 * help_low = solver_field32[0];
+   spinor * help_high = solver_field[0];
+   assign_to_32(help_low, Q, N);
+   assign(help_high, Q, N);
+   printf("square_norm(Q_high) = %e\n", square_norm(help_high,N,1));
+   printf("square_norm(Q_low) = %e\n", square_norm_32(help_low,N,1));  
+   f32(solver_field32[1], help_low);
+   f(solver_field[1], help_high);
+   
+   assign_to_64(solver_field[2], solver_field32[1], N);
+   diff(solver_field[3], solver_field[1], solver_field[2], N);
+   sqnrm = square_norm(solver_field[3], N, 1);
+   printf("Operator 32 test: (square_norm) / (spinor component) = %.8e\n", sqnrm/24.0/VOLUME);
+  // exit(1);
   
   if(squarenorm_d > 1.e-7) { 
     /* if a starting solution vector different from zero is chosen */ 
