@@ -56,6 +56,7 @@ EQL {SPC}*={SPC}*
 #include"read_input.h"
 #include"default_input_values.h"
 #include"monomial/monomial.h"
+#include"solver/solver_types.h"
 #include"measurements.h"
 #include"integrator.h"
 #include"operator.h"
@@ -166,6 +167,9 @@ inline void rmQuotes(char *str){
   int use_mixed_mms;
   int min_innersolver_it;
   int num_gpu_per_node;
+
+  double mixcg_innereps;
+  int mixcg_maxinnersolverit;
 
   int propagator_comparison;
   int nb_cores;
@@ -316,6 +320,8 @@ inline void rmQuotes(char *str){
 
 %x PRECONDITIONING
 
+%x MIXCGEPS
+%x MIXCGIT
 
 %%
 ^SourceFilename{EQL}               BEGIN(SOURCEFILE);
@@ -410,6 +416,8 @@ inline void rmQuotes(char *str){
 
 ^BeginGPU                          BEGIN(INITGPU);
 
+^MixCGInnerEps{EQL}                BEGIN(MIXCGEPS);
+^MixCGMaxIter{EQL}                 BEGIN(MIXCGIT);
 
 
 <INITGPU>Init{SPC}* {
@@ -744,64 +752,64 @@ inline void rmQuotes(char *str){
 
 <TMSOLVER>{
   mixedcg {
-    optr->solver=13;
+    optr->solver=MIXEDCG;
     if(myverbose) printf("  Solver set to MixedCG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   bicgstab {
-    optr->solver=0;
+    optr->solver=BICGSTAB;
     if(myverbose) printf("  Solver set to BiCGstab line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   pcg {
-    optr->solver=9;
+    optr->solver=PCG;
     if(myverbose) printf("  Solver set to PCG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   gmres {
-    optr->solver=2;
+    optr->solver=GMRES;
     if(myverbose) printf("  Solver set to GMRES line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   gcr {
-    optr->solver=7;
+    optr->solver=GCR;
     if(myverbose) printf("  Solver set to GCR line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   gmresdr {
-    optr->solver=8;
+    optr->solver=GMRESDR;
     if(myverbose) printf("  Solver set to GMRES-DR line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   cgs {
-    optr->solver=3;
+    optr->solver=CGS;
     if(myverbose) printf("  Solver set to CGS line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   mr {
-    optr->solver=4;
+    optr->solver=MR;
     if(myverbose) printf("  Solver set to MR line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   fgmres {
-    optr->solver=6;
+    optr->solver=FGMRES;
     if(myverbose) printf("  Solver set to FGMRES line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   dflgcr {
-    optr->solver=10;
+    optr->solver=DFLGCR;
     g_dflgcr_flag = 1;
     if(myverbose) printf("  Solver set to DFL-GCR line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   dflfgmres {
-    optr->solver=11;
+    optr->solver=DFLFGMRES;
     g_dflgcr_flag = 1;
     if(myverbose) printf("  Solver set to DFL-FGMRES line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   cgmms {
-    optr->solver = 12;
+    optr->solver = CGMMS;
     if(myverbose) printf("  Solver set to CGMMS line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
@@ -1250,12 +1258,17 @@ inline void rmQuotes(char *str){
 <MSOLVER>{
   CG {
     if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
-    mnl->solver = 1;
+    mnl->solver = CG;
+    BEGIN(solver_caller);
+  }
+  mixedCG {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = MIXEDCG;
     BEGIN(solver_caller);
   }
   bicgstab {
     if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
-    mnl->solver = 0;
+    mnl->solver = BICGSTAB;
     BEGIN(solver_caller);
   }
 }
@@ -1963,6 +1976,16 @@ inline void rmQuotes(char *str){
   if(myverbose!=0) fprintf(stderr, "Number of reweighting samples set to %d\n", reweighting_samples);
 }
 
+<MIXCGIT>{DIGIT}+ {
+  mixcg_maxinnersolverit = atoi(yytext);
+  if(myverbose) printf("MixedCG: setting maximal inner solver iterations to %d\n", mixcg_maxinnersolverit);
+}
+
+<MIXCGEPS>{FLT}  {
+  mixcg_innereps=atof(yytext);
+  if(myverbose!=0) printf("MixedCG: setting inner solver eps to %s \n", yytext);
+}
+
 <*>^#   {
    comment_caller = YY_START;
    BEGIN(COMMENT);
@@ -2129,6 +2152,10 @@ int read_input(char * conf_file){
   innersolver_precision_rel = 1.e-4;
   innersolver_precision_abs = 1.e-4;
   num_gpu_per_node = _default_num_gpu_per_node;
+
+  mixcg_innereps = _default_mixcg_innereps;
+  mixcg_maxinnersolverit = _default_mixcg_maxinnersolverit;
+
   /* Put -1 in PropInfo.format to see if parse_config() will
   change the value. If not then set it to source_format_flag */
   PropInfo.format = -1;

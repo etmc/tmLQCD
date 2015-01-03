@@ -41,7 +41,11 @@
 #include "read_input.h"
 #include "solver/solver.h"
 #include "solver/matrix_mult_typedef.h"
+#include "solver/solver_types.h"
+#include "operator/tm_operators.h"
+#include "operator/tm_operators_32.h"
 #include "monomial_solve.h"
+
 
 #ifdef HAVE_GPU
 #include"../GPU/cudadefs.h"
@@ -60,9 +64,22 @@ extern int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
 
 
 int solve_degenerate(spinor * const P, spinor * const Q, const int max_iter, 
-           double eps_sq, const int rel_prec, const int N, matrix_mult f){
+           double eps_sq, const int rel_prec, const int N, matrix_mult f, int solver_type){
   int iteration_count;
-
+  int use_solver = solver_type;
+  
+  if(use_solver == MIXEDCG){
+    if(f==Qtm_pm_psi){
+      if(g_proc_id==0) printf("Solving with MIXEDCG\n");     
+      iteration_count =  mixed_cg_her(P, Q, max_iter, eps_sq, rel_prec, N, f, &Qtm_pm_psi_32);
+      return(iteration_count);
+    }
+    else{
+      if(g_proc_id==0) printf("Warning: 32 bit matrix not available. Falling back to CG in 64 bit\n");     
+    }
+  }
+  
+  if(use_solver == CG){
     if(usegpu_flag){   
       #ifdef HAVE_GPU     
 	#ifdef TEMPORALGAUGE
@@ -77,6 +94,11 @@ int solve_degenerate(spinor * const P, spinor * const Q, const int max_iter,
     else{
       iteration_count =  cg_her(P, Q, max_iter, eps_sq, rel_prec, N, f);
     }
+  }
+  else{
+    if(g_proc_id==0) printf("Error: solver not allowed for degenerate solve. Aborting...\n");
+    exit(2);
+  }
   return(iteration_count);
 }
 

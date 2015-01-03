@@ -71,7 +71,7 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
     chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 		 mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
     mnl->iter1 += solve_degenerate(mnl->w_fields[1], mnl->pf, mnl->maxiter, mnl->forceprec, 
-			 g_relative_precision_flag, VOLUME/2, mnl->Qsq);
+			 g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver);
     chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
     
@@ -105,7 +105,7 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
 		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_pm_psi);
       mnl->iter1 += solve_degenerate(mnl->w_fields[1], mnl->pf, 
 			mnl->maxiter, mnl->forceprec, g_relative_precision_flag, 
-			VOLUME, &Q_pm_psi);
+			VOLUME, &Q_pm_psi, mnl->solver);
       chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
 
@@ -214,7 +214,7 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
     	 mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
     g_sloppy_precision_flag = 0;
     mnl->iter0 = solve_degenerate(mnl->w_fields[0], mnl->pf, mnl->maxiter, mnl->accprec, g_relative_precision_flag,
-    			VOLUME/2, mnl->Qsq);
+    			VOLUME/2, mnl->Qsq, mnl->solver);
     mnl->Qm(mnl->w_fields[1], mnl->w_fields[0]);
     g_sloppy_precision_flag = save_sloppy;
     /* Compute the energy contr. from first field */
@@ -226,7 +226,7 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
 		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_pm_psi);
       mnl->iter0 = solve_degenerate(mnl->w_fields[1], mnl->pf, 
 			  mnl->maxiter, mnl->accprec, g_relative_precision_flag, 
-			  VOLUME, &Q_pm_psi);
+			  VOLUME, &Q_pm_psi, mnl->solver);
       Q_minus_psi(mnl->w_fields[0], mnl->w_fields[1]);
       /* Compute the energy contr. from first field */
       mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME, 1);

@@ -51,6 +51,7 @@
 #include "start.h"
 #include "operator/tm_operators_32.h"
 #include "solver/matrix_mult_typedef.h"
+#include "read_input.h"
 
 #include "solver_field.h"
 #include "solver/mixed_cg_her.h"
@@ -74,7 +75,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   const int nr_sf = 3;
   const int nr_sf32 = 4;
 
-  int max_inner_it = 2800;
+  int max_inner_it = mixcg_maxinnersolverit;
   int N_outer = max_iter/max_inner_it;
   //to be on the save side we allow at least 10 outer iterations
   if(N_outer < 10) N_outer = 10;
@@ -105,9 +106,11 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   xhigh = solver_field[2];
   x = solver_field32[3];   
   assign(delta, Q, N);
+  
+  /*
+  if(g_debug_level > 3){
 //printf("In mixed_cg solver...\n");
 //printf("volume is: %d\n",N); 
- /* here comes a small test */
    spinor32 * help_low = solver_field32[0];
    spinor * help_high = solver_field[0];
    assign_to_32(help_low, Q, N);
@@ -121,7 +124,10 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
    diff(solver_field[3], solver_field[1], solver_field[2], N);
    sqnrm = square_norm(solver_field[3], N, 1);
    printf("Operator 32 test: (square_norm) / (spinor component) = %.8e\n", sqnrm/24.0/VOLUME);
-  // exit(1);
+   exit(1);
+  }
+  */
+  
   
   if(squarenorm_d > 1.e-7) { 
     /* if a starting solution vector different from zero is chosen */ 
@@ -168,7 +174,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
       }
     
       //if (((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))){
-      if((err <= 6.0e-6*sqnrm)|| (j==max_inner_it) ||  ((1.3*err <= eps_sq) && (rel_prec == 0)) || ((1.3*err <= eps_sq*sourcesquarenorm) && (rel_prec == 1))) {
+      if((err <= mixcg_innereps*sqnrm)|| (j==max_inner_it) ||  ((1.3*err <= eps_sq) && (rel_prec == 0)) || ((1.3*err <= eps_sq*sourcesquarenorm) && (rel_prec == 1))) {
 	break;
       }
       beta_cg = err / sqnrm2;
@@ -206,8 +212,8 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
       /* 2*1608.0 because the linalg is over VOLUME/2 */
       flops = (2*(2*1608.0+2*3*4) + 2*3*4 + iter*(2.*(2*1608.0+2*3*4) + 10*3*4))*N/1.0e6f;
       if(g_debug_level > 0 && g_proc_id == 0 && N != VOLUME) {
-         printf("# CG: iter: %d eps_sq: %1.4e t/s: %1.4e\n", iter, eps_sq, etime-atime); 
-         printf("# CG: flopcount (for e/o tmWilson only): t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
+         printf("# mixed CG: iter: %d eps_sq: %1.4e t/s: %1.4e\n", iter, eps_sq, etime-atime); 
+         printf("# mixed CG: flopcount (for e/o tmWilson only): t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
          etime-atime, flops/(etime-atime), g_nproc*flops/(etime-atime));
       }
       finalize_solver(solver_field, nr_sf);

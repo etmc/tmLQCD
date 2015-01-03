@@ -108,6 +108,9 @@ extern "C"
   extern int innersolver_precision_check_rel;
   extern int min_innersolver_it;  
 
+  extern double mixcg_innereps;
+  extern int mixcg_maxinnersolverit;
+  
   extern int omp_num_threads;
 
   extern int use_preconditioning;
