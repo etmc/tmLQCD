@@ -274,6 +274,17 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
         iter = gmres(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 1, &D_psi);
       }
     }
+    else if(solver_flag == MIXEDCG) {
+       if(g_proc_id == 0) {printf("# Using MIXEDCG!\n"); fflush(stdout);}
+
+	gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
+
+	iter = mixed_cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
+			rel_prec, VOLUME, &Q_pm_psi, &Q_pm_psi_32);
+	
+	Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
+
+    }    
     else if(solver_flag == FGMRES) {
       if(g_proc_id == 0) {printf("# Using FGMRES! m = %d\n", gmres_m_parameter); fflush(stdout);}
       iter = fgmres(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 1, &D_psi); 

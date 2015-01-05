@@ -43,8 +43,10 @@ MPI_Datatype deri_time_slice_cont;
 MPI_Datatype deri_time_slice_split;
 
 MPI_Datatype field_point;
+MPI_Datatype field_point32;
 MPI_Datatype field_time_slice_cont;
 MPI_Datatype lfield_time_slice_cont;
+MPI_Datatype lfield_time_slice_cont32;
 MPI_Datatype gauge_x_slice_cont;
 MPI_Datatype gauge_x_subslice;
 MPI_Datatype gauge_x_slice_gath;
@@ -52,8 +54,11 @@ MPI_Datatype field_x_slice_cont;
 MPI_Datatype field_x_subslice;
 MPI_Datatype field_x_slice_gath;
 MPI_Datatype lfield_x_slice_cont;
+MPI_Datatype lfield_x_slice_cont32;
 MPI_Datatype lfield_x_subslice;
+MPI_Datatype lfield_x_subslice32;
 MPI_Datatype lfield_x_slice_gath;
+MPI_Datatype lfield_x_slice_gath32;
 MPI_Datatype deri_x_slice_cont;
 MPI_Datatype deri_x_subslice;
 MPI_Datatype deri_x_slice_gath;
@@ -69,14 +74,19 @@ MPI_Datatype field_y_slice_gath;
 MPI_Datatype field_y_slice_cont;
 MPI_Datatype field_y_subslice;
 MPI_Datatype lfield_y_slice_gath;
+MPI_Datatype lfield_y_slice_gath32;
 MPI_Datatype lfield_y_slice_cont;
+MPI_Datatype lfield_y_slice_cont32;
 MPI_Datatype lfield_y_subslice;
+MPI_Datatype lfield_y_subslice32;
 
 MPI_Datatype field_z_slice_gath;
 MPI_Datatype field_z_subslice;
 MPI_Datatype field_z_slice_cont;
 MPI_Datatype lfield_z_slice_gath;
+MPI_Datatype lfield_z_slice_gath32;
 MPI_Datatype lfield_z_slice_cont;
+MPI_Datatype lfield_z_slice_cont32;
 MPI_Datatype field_z_slice_half;
 
 MPI_Datatype deri_y_slice_cont;
@@ -514,6 +524,7 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   /* The spinor fields */
   /* this is a single spinor field on one space-time point */
   MPI_Type_contiguous(24, MPI_DOUBLE, &field_point);
+  MPI_Type_contiguous(24, MPI_FLOAT, &field_point32);  
   /* Tis is an even or odd spinor field time slice, continuous */
 /*   MPI_Type_contiguous(LX*LY*LZ/2, field_point, &field_time_slice_cont);  */
   MPI_Type_contiguous(LX*LY*LZ*12, MPI_DOUBLE, &field_time_slice_cont); 
@@ -523,7 +534,8 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   /* this is the not even/odd field */
   MPI_Type_contiguous(LX*LY*LZ, field_point, &lfield_time_slice_cont);
   MPI_Type_commit(&lfield_time_slice_cont);
-
+  MPI_Type_contiguous(LX*LY*LZ, field_point32, &lfield_time_slice_cont32);
+  MPI_Type_commit(&lfield_time_slice_cont32);
 
   /* This is an even or odd continuous spinor field x-slice */
   MPI_Type_contiguous(T*LY*LZ/2, field_point, &field_x_slice_cont); 
@@ -543,6 +555,12 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   MPI_Type_vector(T, 1, LX, lfield_x_subslice, &lfield_x_slice_gath);
   MPI_Type_commit(&lfield_x_slice_gath);
   MPI_Type_commit(&lfield_x_slice_cont);
+  
+  MPI_Type_contiguous(T*LY*LZ, field_point32, &lfield_x_slice_cont32);
+  MPI_Type_contiguous(LY*LZ, field_point32, &lfield_x_subslice32);
+  MPI_Type_vector(T, 1, LX, lfield_x_subslice32, &lfield_x_slice_gath32);
+  MPI_Type_commit(&lfield_x_slice_gath32);
+  MPI_Type_commit(&lfield_x_slice_cont32);  
 
   /* This is an even or odd continuous spinor field y-slice */
   MPI_Type_contiguous(T*LX*LZ/2, field_point, &field_y_slice_cont); 
@@ -562,6 +580,12 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   MPI_Type_vector(T*LX, 1, LY, lfield_y_subslice, &lfield_y_slice_gath);
   MPI_Type_commit(&lfield_y_slice_cont);
   MPI_Type_commit(&lfield_y_slice_gath);
+  
+  MPI_Type_contiguous(T*LX*LZ, field_point32, &lfield_y_slice_cont32);
+  MPI_Type_contiguous(LZ, field_point32, &lfield_y_subslice32);
+  MPI_Type_vector(T*LX, 1, LY, lfield_y_subslice32, &lfield_y_slice_gath32);
+  MPI_Type_commit(&lfield_y_slice_cont32);
+  MPI_Type_commit(&lfield_y_slice_gath32);  
 
   /* If z-dir is parallelized, I have assumed that both LZ and T*LX*LY are even */
   /* This is an even or odd continuous spinor field z-slice */
@@ -578,6 +602,11 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   MPI_Type_vector(T*LX*LY, 1, LZ, field_point, &lfield_z_slice_gath);
   MPI_Type_commit(&lfield_z_slice_cont);
   MPI_Type_commit(&lfield_z_slice_gath);
+  
+  MPI_Type_contiguous(T*LX*LY, field_point32, &lfield_z_slice_cont32);
+  MPI_Type_vector(T*LX*LY, 1, LZ, field_point32, &lfield_z_slice_gath32);
+  MPI_Type_commit(&lfield_z_slice_cont32);
+  MPI_Type_commit(&lfield_z_slice_gath32);  
 
 #ifdef _USE_TSPLITPAR
   /* here I construct the xt yt zt edges for use in _USE_TSPLITPAR  */

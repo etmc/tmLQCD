@@ -8,7 +8,7 @@
 #include "operator/Hopping_Matrix.h"
 #include "linalg_eo.h"
 #include "gamma.h"
-
+#include "operator/D_psi_32.h"
 #include "tm_operators_32.h"
 
 
@@ -121,5 +121,40 @@ void Qtm_pm_psi_32(spinor32 * const l, spinor32 * const k){
 
 
 
+void gamma5_32(spinor32 * const l, spinor32 * const k, const int V){
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+  int ix;
+  spinor32 *r,*s;
+#ifdef OMP
+#pragma omp for
+#endif
+  for (ix = 0; ix < V; ix++){
+    r=l+ix;
+    s=k+ix;
+    _vector_assign((*r).s0,(*s).s0);
+    _vector_assign((*r).s1,(*s).s1);
+    _vector_minus_assign((*r).s2,(*s).s2);
+    _vector_minus_assign((*r).s3,(*s).s3);
+  }
+#ifdef OMP
+  } /*OpenMP closing brace */
+#endif
+}
 
+
+
+
+
+void Q_pm_psi_32(spinor32 * const l, spinor32 * const k)
+{
+  g_mu = -g_mu;
+  D_psi_32(l, k);
+  gamma5_32(g_spinor_field32[0], l, VOLUME);
+  g_mu = -g_mu;
+  D_psi_32(l, g_spinor_field32[0]);
+  gamma5_32(l, l, VOLUME);
+}
 

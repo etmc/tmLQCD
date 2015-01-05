@@ -128,7 +128,7 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     Q_plus_psi(mnl->w_fields[2], mnl->pf);
     g_mu = mnl->mu;
     boundary(mnl->kappa);
-    if(mnl->solver == CG) {
+    if((mnl->solver == CG) || (mnl->solver == MIXEDCG)) {
       /* If CG is used anyhow */
       /*       gamma5(mnl->w_fields[1], mnl->w_fields[2], VOLUME/2); */
       /* Invert Q_{+} Q_{-} */
@@ -226,7 +226,7 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
     g_mu = mnl->mu2;
     boundary(mnl->kappa2);
     zero_spinor_field(mnl->pf,VOLUME);
-    if(mnl->solver == CG){
+    if((mnl->solver == CG) || (mnl->solver == MIXEDCG)){
       mnl->iter0 = solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->maxiter, mnl->accprec, 
 				    g_relative_precision_flag, VOLUME, Q_pm_psi, mnl->solver);
       Q_minus_psi(mnl->pf, mnl->w_fields[0]);
@@ -283,7 +283,7 @@ double detratio_acc(const int id, hamiltonian_field_t * const hf) {
     chrono_guess(mnl->w_fields[0], mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array, 
 		 mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_plus_psi);
     g_sloppy_precision_flag = 0;
-    if(mnl->solver == CG){
+    if((mnl->solver == CG) || (mnl->solver == MIXEDCG)){
       
       mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->maxiter, mnl->accprec, g_relative_precision_flag,
 			 VOLUME, &Q_pm_psi, mnl->solver); 

@@ -69,10 +69,13 @@ int solve_degenerate(spinor * const P, spinor * const Q, const int max_iter,
   int use_solver = solver_type;
   
   if(use_solver == MIXEDCG){
-    if(f==Qtm_pm_psi){
-      if(g_proc_id==0) printf("Solving with MIXEDCG\n");     
+    if(f==Qtm_pm_psi){   
       iteration_count =  mixed_cg_her(P, Q, max_iter, eps_sq, rel_prec, N, f, &Qtm_pm_psi_32);
       return(iteration_count);
+    }
+    else if(f==Q_pm_psi){     
+      iteration_count =  mixed_cg_her(P, Q, max_iter, eps_sq, rel_prec, N, f, &Q_pm_psi_32);
+      return(iteration_count);      
     }
     else{
       if(g_proc_id==0) printf("Warning: 32 bit matrix not available. Falling back to CG in 64 bit\n");     

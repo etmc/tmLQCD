@@ -26,18 +26,22 @@
 /* Datatypes for the data exchange */
 extern MPI_Datatype mpi_su3;
 extern MPI_Datatype field_point;
+extern MPI_Datatype field_point32;
 extern MPI_Datatype gauge_time_slice_cont;
 extern MPI_Datatype gauge_time_slice_split;
 extern MPI_Datatype deri_time_slice_cont;
 extern MPI_Datatype deri_time_slice_split;
 extern MPI_Datatype field_time_slice_cont;
 extern MPI_Datatype lfield_time_slice_cont;
+extern MPI_Datatype lfield_time_slice_cont32;
 extern MPI_Datatype gauge_x_slice_cont;
 extern MPI_Datatype gauge_x_slice_gath;
 extern MPI_Datatype field_x_slice_cont;
 extern MPI_Datatype field_x_slice_gath;
 extern MPI_Datatype lfield_x_slice_cont;
+extern MPI_Datatype lfield_x_slice_cont32;
 extern MPI_Datatype lfield_x_slice_gath;
+extern MPI_Datatype lfield_x_slice_gath32;
 extern MPI_Datatype deri_x_slice_cont;
 extern MPI_Datatype deri_x_slice_gath;
 extern MPI_Datatype gauge_xt_edge_cont;
@@ -70,7 +74,9 @@ extern MPI_Datatype gauge_y_slice_gath;
 extern MPI_Datatype field_y_slice_cont;
 extern MPI_Datatype field_y_slice_gath;
 extern MPI_Datatype lfield_y_slice_cont;
+extern MPI_Datatype lfield_y_slice_cont32;
 extern MPI_Datatype lfield_y_slice_gath;
+extern MPI_Datatype lfield_y_slice_gath32;
 extern MPI_Datatype deri_y_slice_cont;
 extern MPI_Datatype deri_y_slice_gath;
 
@@ -83,7 +89,9 @@ extern MPI_Datatype gauge_z_slice_cont;
 extern MPI_Datatype field_z_slice_cont;
 extern MPI_Datatype field_z_slice_gath;
 extern MPI_Datatype lfield_z_slice_cont;
+extern MPI_Datatype lfield_z_slice_cont32;
 extern MPI_Datatype lfield_z_slice_gath;
+extern MPI_Datatype lfield_z_slice_gath32;
 extern MPI_Datatype field_z_slice_half;
 
 extern MPI_Datatype halffield_point;

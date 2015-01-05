@@ -126,11 +126,11 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
    printf("Operator 32 test: (square_norm) / (spinor component) = %.8e\n", sqnrm/24.0/VOLUME);
    exit(1);
   }
-  */
+  
   
   
   if(squarenorm_d > 1.e-7) { 
-    /* if a starting solution vector different from zero is chosen */ 
+    // if a starting solution vector different from zero is chosen 
     printf("We have a non-zero starting solution -> using it\n");
     f(y, P);
     diff(delta, Q, y, N);
@@ -142,7 +142,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
       return(0);
     }
   }
-  
+  */  
   atime = gettime();
   for(i = 0; i < N_outer; i++) {
 
@@ -198,7 +198,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
     f(y, P);
     diff(delta, Q, y, N);
     sqnrm_d = square_norm(delta, N, 1);
-    if(g_debug_level > 0 && g_proc_id == 0) {
+    if(g_debug_level > 2 && g_proc_id == 0) {
       printf("mixed CG: last inner residue: %g\t\n", err);
       printf("mixed CG: true residue %d %g\t\n",iter, sqnrm_d); fflush(stdout);
     }
@@ -208,14 +208,25 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
     
     if(((sqnrm_d <= eps_sq) && (rel_prec == 0)) || ((sqnrm_d <= eps_sq*sourcesquarenorm) && (rel_prec == 1))) {
       etime = gettime();     
-      /* 2 A + 2 Nc Ns + N_Count ( 2 A + 10 Nc Ns ) */
-      /* 2*1608.0 because the linalg is over VOLUME/2 */
-      flops = (2*(2*1608.0+2*3*4) + 2*3*4 + iter*(2.*(2*1608.0+2*3*4) + 10*3*4))*N/1.0e6f;
-      if(g_debug_level > 0 && g_proc_id == 0 && N != VOLUME) {
-         printf("# mixed CG: iter: %d eps_sq: %1.4e t/s: %1.4e\n", iter, eps_sq, etime-atime); 
-         printf("# mixed CG: flopcount (for e/o tmWilson only): t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
-         etime-atime, flops/(etime-atime), g_nproc*flops/(etime-atime));
-      }
+
+      if(g_debug_level > 0 && g_proc_id == 0) {
+	if(N != VOLUME){
+	  /* 2 A + 2 Nc Ns + N_Count ( 2 A + 10 Nc Ns ) */
+	  /* 2*1608.0 because the linalg is over VOLUME/2 */
+	  flops = (2*(2*1608.0+2*3*4) + 2*3*4 + iter*(2.*(2*1608.0+2*3*4) + 10*3*4))*N/1.0e6f;
+	  printf("# mixed CG: iter: %d eps_sq: %1.4e t/s: %1.4e\n", iter, eps_sq, etime-atime); 
+	  printf("# mixed CG: flopcount (for e/o tmWilson only): t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
+	      etime-atime, flops/(etime-atime), g_nproc*flops/(etime-atime));
+	}
+	else{
+	  /* 2 A + 2 Nc Ns + N_Count ( 2 A + 10 Nc Ns ) */
+	  flops = (2*(1608.0+2*3*4) + 2*3*4 + iter*(2.*(1608.0+2*3*4) + 10*3*4))*N/1.0e6f;      
+	  printf("# mixed CG: iter: %d eps_sq: %1.4e t/s: %1.4e\n", iter, eps_sq, etime-atime); 
+	  printf("# mixed CG: flopcount (for non-e/o tmWilson only): t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
+	      etime-atime, flops/(etime-atime), g_nproc*flops/(etime-atime));      
+	}
+      }      
+      
       finalize_solver(solver_field, nr_sf);
       finalize_solver32(solver_field32, nr_sf32); 
       return(iter+i);
