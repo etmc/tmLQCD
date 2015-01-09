@@ -1,6 +1,6 @@
 /***********************************************************************
  *
- * Copyright (C) 2007 Andreas Nube
+ * Copyright (C) 2015 Florian Burger
  *
  * This file is part of tmLQCD.
  *
@@ -16,20 +16,13 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Typedefinition of the pointer to the function
- * which contains the matrix multiplication.
- *
- * Author: Andreas Nube
- *         annube@ifh.de
- *
- ************************************************************************/
+ ***********************************************************************/
 
-#ifndef _MATRIX_MULT_TYPEDEF_ND_H
-#define _MATRIX_MULT_TYPEDEF_ND_H
+#ifndef _TM_OPERATORS_ND_32_H
+#define _TM_OPERATORS_ND_32_H
 
-typedef void (*matrix_mult_nd)(spinor * const, spinor * const,spinor * const, spinor * const);
-typedef void (*matrix_mult_nd32)(spinor32 * const, spinor32 * const,spinor32 * const, spinor32 * const);
+void Q_pm_ndpsi_32(spinor32 * const l_strange, spinor32 * const l_charm, spinor32 * const k_strange, spinor32 * const k_charm);
 
-
+void Qtm_pm_ndpsi_32(spinor32 * const l_strange, spinor32 * const l_charm,
+		  spinor32 * const k_strange, spinor32 * const k_charm);
 #endif

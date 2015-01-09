@@ -1,6 +1,7 @@
 /***********************************************************************
  *
- * Copyright (C) 2007 Andreas Nube
+ *
+ * Copyright (C) 2015 Florian Burger
  *
  * This file is part of tmLQCD.
  *
@@ -17,19 +18,16 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Typedefinition of the pointer to the function
- * which contains the matrix multiplication.
- *
- * Author: Andreas Nube
- *         annube@ifh.de
- *
- ************************************************************************/
+ ***********************************************************************/
 
-#ifndef _MATRIX_MULT_TYPEDEF_ND_H
-#define _MATRIX_MULT_TYPEDEF_ND_H
+#ifndef _MIXED_CG_MMS_TM_ND_H
+#define _MIXED_CG_MMS_TM_ND_H
 
-typedef void (*matrix_mult_nd)(spinor * const, spinor * const,spinor * const, spinor * const);
-typedef void (*matrix_mult_nd32)(spinor32 * const, spinor32 * const,spinor32 * const, spinor32 * const);
+#include"su3.h"
+#include"solver.h"
 
+int mixed_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn, 
+		 spinor * const Qup, spinor * const Qdn, 
+		 solver_pm_t * solver_pm);
 
 #endif

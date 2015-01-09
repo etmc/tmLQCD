@@ -41,8 +41,12 @@ typedef struct {
   double squared_solver_prec;
   // single flavour matrix to invert
   matrix_mult M_psi;
+  // 32bit single flavour matrix to invert
+  matrix_mult32 M_psi32;  
   // flavour doublet matrix to invert
   matrix_mult_nd M_ndpsi;
+  // 32bit flavour doublet matrix to invert
+  matrix_mult_nd32 M_ndpsi32;  
   // pointer to array of shifts
   double * shifts;
 } solver_pm_t;
@@ -71,6 +75,7 @@ typedef struct {
 
 #include "solver/cg_her_nd.h"
 #include"solver/cg_mms_tm_nd.h"
+#include"solver/mixed_cg_mms_tm_nd.h"
 
 #include "solver/generate_dfl_subspace.h"
 

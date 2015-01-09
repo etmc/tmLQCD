@@ -93,7 +93,16 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].accprec = _default_g_eps_sq_acc;
   monomial_list[no_monomials].forceprec = _default_g_eps_sq_force;
   monomial_list[no_monomials].maxiter = _default_max_solver_iterations;
-  monomial_list[no_monomials].solver = _default_solver_flag;
+  if((monomial_list[no_monomials].type == NDRAT) ||
+     (monomial_list[no_monomials].type == NDRATCOR) ||
+     (monomial_list[no_monomials].type == NDCLOVERRAT) ||
+     (monomial_list[no_monomials].type == NDCLOVERRATCOR)
+  ) {
+    monomial_list[no_monomials].solver = _default_nd_solver_flag;    
+  }
+  else{
+    monomial_list[no_monomials].solver = _default_solver_flag;
+  }
   monomial_list[no_monomials].even_odd_flag = _default_even_odd_flag;
   monomial_list[no_monomials].forcefactor = 1.;
   monomial_list[no_monomials].use_rectangles = 0;

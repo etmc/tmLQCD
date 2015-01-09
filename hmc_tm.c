@@ -181,7 +181,8 @@ int main(int argc,char *argv[]) {
   DUM_BI_MATRIX = DUM_BI_SOLVER+6;
   NO_OF_BISPINORFIELDS = DUM_BI_MATRIX+6;
   
-  NO_OF_SPINORFIELDS_32 = 2;
+  //4 extra fields (corresponding to DUM_MATRIX+0..5) for deg. and ND matrix mult.
+  NO_OF_SPINORFIELDS_32 = 6;
   
   tmlqcd_mpi_init(argc, argv);
 

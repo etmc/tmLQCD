@@ -44,6 +44,8 @@
 #include "solver/solver_types.h"
 #include "operator/tm_operators.h"
 #include "operator/tm_operators_32.h"
+#include "operator/tm_operators_nd.h"
+#include "operator/tm_operators_nd_32.h"
 #include "monomial_solve.h"
 
 
@@ -69,20 +71,6 @@ int solve_degenerate(spinor * const P, spinor * const Q, const int max_iter,
   int use_solver = solver_type;
   
   if(use_solver == MIXEDCG){
-    if(f==Qtm_pm_psi){   
-      iteration_count =  mixed_cg_her(P, Q, max_iter, eps_sq, rel_prec, N, f, &Qtm_pm_psi_32);
-      return(iteration_count);
-    }
-    else if(f==Q_pm_psi){     
-      iteration_count =  mixed_cg_her(P, Q, max_iter, eps_sq, rel_prec, N, f, &Q_pm_psi_32);
-      return(iteration_count);      
-    }
-    else{
-      if(g_proc_id==0) printf("Warning: 32 bit matrix not available. Falling back to CG in 64 bit\n");     
-    }
-  }
-  
-  if(use_solver == CG){
     if(usegpu_flag){   
       #ifdef HAVE_GPU     
 	#ifdef TEMPORALGAUGE
@@ -93,10 +81,24 @@ int solve_degenerate(spinor * const P, spinor * const Q, const int max_iter,
 	  from_temporalgauge(Q, P);
 	#endif
       #endif
+      return(iteration_count);
     }
     else{
-      iteration_count =  cg_her(P, Q, max_iter, eps_sq, rel_prec, N, f);
+      if(f==Qtm_pm_psi){   
+	iteration_count =  mixed_cg_her(P, Q, max_iter, eps_sq, rel_prec, N, f, &Qtm_pm_psi_32);
+	return(iteration_count);
+      }
+      else if(f==Q_pm_psi){     
+	iteration_count =  mixed_cg_her(P, Q, max_iter, eps_sq, rel_prec, N, f, &Q_pm_psi_32);
+	return(iteration_count);      
+      }
+      else{
+	if(g_proc_id==0) printf("Warning: 32 bit matrix not available. Falling back to CG in 64 bit\n");     
+      }
     }
+  } 
+  if(use_solver == CG){
+     iteration_count =  cg_her(P, Q, max_iter, eps_sq, rel_prec, N, f);   
   }
   else{
     if(g_proc_id==0) printf("Error: solver not allowed for degenerate solve. Aborting...\n");
@@ -110,21 +112,28 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
                  spinor * const Qup, spinor * const Qdn, 
                  solver_pm_t * solver_pm){ 
   int iteration_count; 
-
-    if(usegpu_flag){
-      #ifdef HAVE_GPU      
-	#ifdef TEMPORALGAUGE
-	  to_temporalgauge_mms(g_gauge_field , Qup, Qdn, Pup, Pdn, solver_pm->no_shifts);
-	#endif        
-	iteration_count = dev_cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_pm);  
-	#ifdef TEMPORALGAUGE
-	  from_temporalgauge_mms(Qup, Qdn, Pup, Pdn, solver_pm->no_shifts);
-	#endif 
-      #endif
+    if(solver_pm->type==MIXEDCGMMSND){
+      if(usegpu_flag){
+	#ifdef HAVE_GPU      
+	  #ifdef TEMPORALGAUGE
+	    to_temporalgauge_mms(g_gauge_field , Qup, Qdn, Pup, Pdn, solver_pm->no_shifts);
+	  #endif        
+	  iteration_count = dev_cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_pm);  
+	  #ifdef TEMPORALGAUGE
+	    from_temporalgauge_mms(Qup, Qdn, Pup, Pdn, solver_pm->no_shifts);
+	  #endif 
+	#endif
+      }
+      else{
+	iteration_count = mixed_cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_pm);
+      }
     }
-    else{
+    else if (solver_pm->type==CGMMSND){
       iteration_count = cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_pm);
     }
-
+    else{
+      if(g_proc_id==0) printf("Error: solver not allowed for ND mms solve. Aborting...\n");
+      exit(2);      
+    }
   return(iteration_count);
 }

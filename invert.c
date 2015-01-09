@@ -129,8 +129,8 @@ int main(int argc, char *argv[])
   DUM_MATRIX = DUM_DERI + 5;
   NO_OF_SPINORFIELDS = DUM_MATRIX + 3;
 
-  
-  NO_OF_SPINORFIELDS_32 = 2;
+  //4 extra fields (corresponding to DUM_MATRIX+0..5) for deg. and ND matrix mult.  
+  NO_OF_SPINORFIELDS_32 = 6;
 
   verbose = 0;
   g_use_clover_flag = 0;

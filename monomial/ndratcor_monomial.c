@@ -35,7 +35,9 @@
 #include "deriv_Sb.h"
 #include "init/init_chi_spinor_field.h"
 #include "operator/tm_operators.h"
+#include "operator/tm_operators_32.h"
 #include "operator/tm_operators_nd.h"
+#include "operator/tm_operators_nd_32.h"
 #include "operator/Hopping_Matrix.h"
 #include "monomial/monomial.h"
 #include "hamiltonian_field.h"
@@ -98,8 +100,9 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
     solver_pm.squared_solver_prec = mnl->accprec;
     solver_pm.no_shifts = mnl->rat.np;
     solver_pm.shifts = mnl->rat.mu;
-    solver_pm.type = CGMMSND;
+    solver_pm.type = mnl->solver;
     solver_pm.M_ndpsi = &Qtm_pm_ndpsi;
+    solver_pm.M_ndpsi32 = &Qtm_pm_ndpsi_32;    
     if(mnl->type == NDCLOVERRATCOR) solver_pm.M_ndpsi = &Qsw_pm_ndpsi;
     solver_pm.sdim = VOLUME/2;
     solver_pm.rel_prec = g_relative_precision_flag;
@@ -152,9 +155,9 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
     solver_pm.squared_solver_prec = mnl->accprec;
     solver_pm.no_shifts = mnl->rat.np;
     solver_pm.shifts = mnl->rat.mu;
-    solver_pm.type = CGMMSND;
+    solver_pm.type = mnl->solver;
     solver_pm.M_ndpsi = &Q_pm_ndpsi;    
-    
+    solver_pm.M_ndpsi32 = &Q_pm_ndpsi_32;     
     if(mnl->type == NDCLOVERRATCOR) {
        if(g_proc_id == 0) {
 	 //!FIXME NDCLOVERRAT needs implementation w/o even-odd
@@ -217,8 +220,9 @@ double ndratcor_acc(const int id, hamiltonian_field_t * const hf) {
     solver_pm.squared_solver_prec = mnl->accprec;
     solver_pm.no_shifts = mnl->rat.np;
     solver_pm.shifts = mnl->rat.mu;
-    solver_pm.type = CGMMSND;
+    solver_pm.type = mnl->solver;
     solver_pm.M_ndpsi = &Qtm_pm_ndpsi;
+    solver_pm.M_ndpsi32 = &Qtm_pm_ndpsi_32;    
     if(mnl->type == NDCLOVERRATCOR) solver_pm.M_ndpsi = &Qsw_pm_ndpsi;
     solver_pm.sdim = VOLUME/2;
     solver_pm.rel_prec = g_relative_precision_flag;
@@ -267,8 +271,9 @@ double ndratcor_acc(const int id, hamiltonian_field_t * const hf) {
     solver_pm.squared_solver_prec = mnl->accprec;
     solver_pm.no_shifts = mnl->rat.np;
     solver_pm.shifts = mnl->rat.mu;
-    solver_pm.type = CGMMSND;
+    solver_pm.type = mnl->solver;
     solver_pm.M_ndpsi = &Q_pm_ndpsi; 
+    solver_pm.M_ndpsi32 = &Q_pm_ndpsi_32; 
     
     solver_pm.sdim = VOLUME;
     solver_pm.rel_prec = g_relative_precision_flag;

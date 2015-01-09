@@ -1,6 +1,5 @@
 /***********************************************************************
- *
- * Copyright (C) 2007 Andreas Nube
+ * Copyright (C) 2015 Florian Burger
  *
  * This file is part of tmLQCD.
  *
@@ -16,20 +15,16 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Typedefinition of the pointer to the function
- * which contains the matrix multiplication.
- *
- * Author: Andreas Nube
- *         annube@ifh.de
- *
- ************************************************************************/
+ ***********************************************************************/
 
-#ifndef _MATRIX_MULT_TYPEDEF_ND_H
-#define _MATRIX_MULT_TYPEDEF_ND_H
+#ifndef _ASSIGN_MUL_ADD_MUL_R_32_H
+#define _ASSIGN_MUL_ADD_MUL_R_32_H
 
-typedef void (*matrix_mult_nd)(spinor * const, spinor * const,spinor * const, spinor * const);
-typedef void (*matrix_mult_nd32)(spinor32 * const, spinor32 * const,spinor32 * const, spinor32 * const);
+#include "su3.h"
 
+/* Makes (*R)=c1*(*R)+c2*(*S) , c1 and c2 are real constants */
+void assign_mul_add_mul_r_32(spinor32 * const R,spinor32 * const S, 
+			  const float c1, const float c2,
+			  const int N);
 
 #endif

@@ -300,6 +300,7 @@ inline void rmQuotes(char *str){
 %x MNAME
 %x MCSTR
 %x MSOLVER
+%x NDMSOLVER
 %x GTYPE
 
 %x COMMENT
@@ -1060,6 +1061,15 @@ inline void rmQuotes(char *str){
   }
 }
 
+
+<NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL>{
+  {SPC}*Solver{EQL} {
+   solver_caller=YY_START;
+   BEGIN(NDMSOLVER);
+  }
+}
+
+
 <DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL>{
   {SPC}*2KappaMu{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
@@ -1269,6 +1279,20 @@ inline void rmQuotes(char *str){
   bicgstab {
     if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->solver = BICGSTAB;
+    BEGIN(solver_caller);
+  }
+}
+
+
+<NDMSOLVER>{
+  GGmmsnd {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = CGMMSND;
+    BEGIN(solver_caller);
+  }
+  mixedCGmmsnd {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = MIXEDCGMMSND;
     BEGIN(solver_caller);
   }
 }
