@@ -63,7 +63,7 @@ EQL {SPC}*={SPC}*
 #include"phmc.h"
 #include<io/params.h>
 
-inline void rmQuotes(char *str){
+static inline void rmQuotes(char *str){
   char* strsave=str;
 
   while(*str== ' ' || *str == '\t') str++;
