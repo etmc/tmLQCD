@@ -93,12 +93,16 @@ int solve_degenerate(spinor * const P, spinor * const Q, const int max_iter,
 	return(iteration_count);      
       }
       else{
-	if(g_proc_id==0) printf("Warning: 32 bit matrix not available. Falling back to CG in 64 bit\n");     
+	if(g_proc_id==0) printf("Warning: 32 bit matrix not available. Falling back to CG in 64 bit\n"); 
+	use_solver = CG;
       }
     }
   } 
   if(use_solver == CG){
      iteration_count =  cg_her(P, Q, max_iter, eps_sq, rel_prec, N, f);   
+  }
+  else if(use_solver == BICGSTAB){
+     iteration_count =  bicgstab_complex(P, Q, max_iter, eps_sq, rel_prec, N, f);     
   }
   else{
     if(g_proc_id==0) printf("Error: solver not allowed for degenerate solve. Aborting...\n");
