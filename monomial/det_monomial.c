@@ -135,7 +135,7 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
       
       /* Now Q_- */
       /* X -> w_fields[1] */
-      g_mu = -g_mu;
+      
       chrono_guess(mnl->w_fields[1], mnl->w_fields[0], mnl->csg_field2, 
 		   mnl->csg_index_array2, mnl->csg_N2, mnl->csg_n2, VOLUME/2, &Q_minus_psi);
       mnl->iter1 += solve_degenerate(mnl->w_fields[1], mnl->w_fields[0], 
@@ -143,7 +143,7 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
 				     VOLUME, &Q_minus_psi, mnl->solver);
       chrono_add_solution(mnl->w_fields[1], mnl->csg_field2, mnl->csg_index_array2,
 			  mnl->csg_N2, &mnl->csg_n2, VOLUME/2);
-      g_mu = -g_mu;   
+        
     }
     
     /* \delta Q sandwitched by Y^\dagger and X */
