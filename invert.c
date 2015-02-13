@@ -82,7 +82,7 @@
 #include "operator/tm_operators.h"
 #include "operator/Dov_psi.h"
 #include "solver/spectral_proj.h"
-#include "measurements.h"
+#include "measurements/measurements.h"
 
 extern int nstore;
 int check_geometry();

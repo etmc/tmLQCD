@@ -29,10 +29,11 @@
 #include "global.h"
 #include "default_input_values.h"
 #include "read_input.h"
-#include "pion_norm.h"
-#include "online_measurement.h"
-#include "polyakov_loop.h"
-#include "measure_oriented_plaquettes.h"
+
+#include "measurements/pion_norm.h"
+#include "measurements/correlators.h"
+#include "measurements/polyakov_loop.h"
+#include "measurements/oriented_plaquettes.h"
 #include "measurements.h"
 
 measurement measurement_list[max_no_measurements];
@@ -56,12 +57,12 @@ int init_measurements(){
   for(i = 0; i < no_measurements; i++) {
  
     if(measurement_list[i].type == ONLINE) {
-      measurement_list[i].measurefunc = &online_measurement;
+      measurement_list[i].measurefunc = &correlators_measurement;
       measurement_list[i].max_source_slice = g_nproc_t*T;
     }
 
     if(measurement_list[i].type == PIONNORM) {
-      measurement_list[i].measurefunc = &pion_norm;
+      measurement_list[i].measurefunc = &pion_norm_measurement;
       measurement_list[i].max_source_slice = g_nproc_z*LZ;
     }
     

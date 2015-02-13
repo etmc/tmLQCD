@@ -41,7 +41,7 @@ LDFLAGS="$LDFLAGS -L\${HOME}/lib -L\${top_builddir}/lib"
 CCLD=${CC}
 
 # compilation in operator is slowest so we do it first, saves time in parallel compiles
-USESUBDIRS="operator linalg solver monomial buffers cu io xchange init rational wrapper"
+USESUBDIRS="operator linalg solver monomial buffers cu io xchange init rational wrapper measurements"
 
 AC_CHECK_HEADERS([stdint.h],
 [ dnl for inttypes.h and stdint.h for uint_xxx types
@@ -921,7 +921,7 @@ if test ! -e tests/regressions; then
 fi
 
 
-LIBS="-lhmc -lmonomial -loperator -lsolver -linit -llinalg -lhmc -lxchange -lrational -lio $LIBS"
+LIBS="-lhmc -lmonomial -loperator -lsolver -linit -llinalg -lhmc -lxchange -lrational -lio -lmeas $LIBS"
 AUTOCONF=autoconf
 
 for i in $USESUBDIRS

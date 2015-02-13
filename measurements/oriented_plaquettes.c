@@ -32,9 +32,9 @@
 #include "su3.h"
 #include "geometry_eo.h"
 #include "global.h"
-#include "measure_oriented_plaquettes.h"
+#include "oriented_plaquettes.h"
 #include "fatal_error.h"
-
+#include "measurements.h"
 
 void measure_oriented_plaquettes(const su3 ** const gf, double *plaq) {
 #ifdef MPI
