@@ -34,6 +34,7 @@
 #include "measurements/correlators.h"
 #include "measurements/polyakov_loop.h"
 #include "measurements/oriented_plaquettes.h"
+#include "measurements/w0.h"
 #include "measurements.h"
 
 measurement measurement_list[max_no_measurements];
@@ -71,7 +72,11 @@ int init_measurements(){
     }
 
     if(measurement_list[i].type == ORIENTED_PLAQUETTES) {
-      measurement_list[i].measurefunc = oriented_plaquettes_measurement;
+      measurement_list[i].measurefunc = &oriented_plaquettes_measurement;
+    }
+
+    if(measurement_list[i].type == W0) {
+      measurement_list[i].measurefunc = &w0_measurement;
     }
     
     measurement_list[i].id = i;

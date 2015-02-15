@@ -47,7 +47,7 @@ MODULES = read_input gamma measure_gauge_action start \
 	getopt sighandler reweighting_factor \
 	source_generation boundary update_tm ranlxd  \
 	mpi_init deriv_Sb deriv_Sb_D_psi ranlxs \
-	geometry_eo invert_overlap \
+	geometry_eo invert_overlap aligned_malloc \
 	prepare_source chebyshev_polynomial_nd Ptilde_nd  \
 	reweighting_factor_nd rnd_gauge_trafo \
   update_momenta integrator  phmc \

@@ -29,7 +29,8 @@ enum MEAS_TYPE {
   ONLINE, 
   PIONNORM, 
   POLYAKOV, 
-  ORIENTED_PLAQUETTES 
+  ORIENTED_PLAQUETTES,
+  W0 
   };
 
 typedef struct {

@@ -35,9 +35,12 @@ libmeas_TARGETS = measurements \
 	oriented_plaquettes \
 	correlators \
 	pion_norm \
-	polyakov_loop 
+	polyakov_loop \
+	energy_density w0
 
 libmeas_OBJECTS = $(addsuffix .o, ${libmeas_TARGETS})
+external_OBJECTS = ${top_builddir}/fatal_error.o ${top_builddir}/source_generation.o ${top_builddir}/prepare_source.o \
+	${top_builddir}/aligned_malloc.o
 
 # default rule
 
@@ -67,9 +70,9 @@ include ${top_srcdir}/Makefile.global
 
 # rule to make libmeas, linking those objects is clearly required for the libary
 # to be self-contained, but maybe they should be "extern" instead?
-libmeas.a: ${libmeas_OBJECTS} Makefile
+libmeas.a: ${libmeas_OBJECTS} $(external_OBJECTS) Makefile
 	@rm -f libmeas.a
-	@${AR} cru libmeas.a $(libmeas_OBJECTS) ${top_builddir}/fatal_error.o ${top_builddir}/source_generation.o ${top_builddir}/prepare_source.o
+	@${AR} cru libmeas.a $(libmeas_OBJECTS) $(external_OBJECTS)
 	@$(RANLIB) libmeas.a
 	@cp libmeas.a ${top_builddir}/lib/libmeas.a
 

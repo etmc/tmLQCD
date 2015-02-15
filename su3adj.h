@@ -74,6 +74,16 @@ typedef struct
 (r).d7=+creal((a).c21)-creal((a).c12); \
 (r).d8=(-cimag((a).c00)-cimag((a).c11) + 2.0 * cimag((a).c22))*0.577350269189625;
 
+#define _trace_lambda_mul(r,c,a) \
+(r).d1=c*(+cimag((a).c10)-cimag((a).c01)); \
+(r).d2=c*(+creal((a).c10)-creal((a).c01)); \
+(r).d3=c*(-cimag((a).c00)+cimag((a).c11)); \
+(r).d4=c*(-cimag((a).c20)-cimag((a).c02)); \
+(r).d5=c*(+creal((a).c20)-creal((a).c02)); \
+(r).d6=c*(-cimag((a).c21)-cimag((a).c12)); \
+(r).d7=c*(+creal((a).c21)-creal((a).c12)); \
+(r).d8=c*((-cimag((a).c00)-cimag((a).c11) + 2.0 * cimag((a).c22))*0.577350269189625);
+
 #define _add_trace_lambda(r,a) \
 (r).d1+=-cimag((a).c10)-cimag((a).c01); \
 (r).d2+=+creal((a).c10)-creal((a).c01); \
@@ -189,7 +199,6 @@ _Pragma("omp atomic") \
 (r).d6=0.; \
 (r).d7=0.; \
 (r).d8=0.;
-
 
 #if defined SSE2
 #define _su3adj_assign_const_times_su3adj(res,c,in) \
