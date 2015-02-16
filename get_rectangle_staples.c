@@ -27,7 +27,10 @@
 #include "get_rectangle_staples.h"
 
 void get_rectangle_staples(su3 * const v, const int x, const int mu) {
+  get_rectangle_staples_general(v,x,mu,g_gauge_field);
+}
 
+void get_rectangle_staples_general(su3 * const v, const int x, const int mu, su3** gf) {
   su3 ALIGN tmp1, tmp2;
   int y, z, nu;
   su3 * a, * b, * c, * d, * e;
@@ -47,18 +50,18 @@ void get_rectangle_staples(su3 * const v, const int x, const int mu) {
        * b| |e
        * a| |d
        */
-      a = &g_gauge_field[x][nu];
+      a = &gf[x][nu];
       y = g_iup[x][nu];
-      b = &g_gauge_field[y][nu];
+      b = &gf[y][nu];
       _su3_times_su3(tmp1, *a, *b);
       z = g_iup[y][nu];
-      c = &g_gauge_field[z][mu];
+      c = &gf[z][mu];
       _su3_times_su3(tmp2, tmp1, *c);
 
       y = g_iup[x][mu];
-      d = &g_gauge_field[y][nu];
+      d = &gf[y][nu];
       z = g_iup[y][nu];
-      e = &g_gauge_field[z][nu];
+      e = &gf[z][nu];
       _su3_times_su3(tmp1, *d, *e);
       _su3_times_su3d_acc((*v), tmp2, tmp1);
 
@@ -71,16 +74,16 @@ void get_rectangle_staples(su3 * const v, const int x, const int mu) {
        */
       y = g_idn[x][nu];
       z = g_idn[y][nu];
-      d = &g_gauge_field[z][nu];
-      a = &g_gauge_field[z][mu];
+      d = &gf[z][nu];
+      a = &gf[z][mu];
       _su3d_times_su3(tmp1, *d, *a);
-      e = &g_gauge_field[y][nu];
+      e = &gf[y][nu];
       _su3d_times_su3(tmp2, *e, tmp1);
 
       y = g_iup[z][mu];
-      b = &g_gauge_field[y][nu];
+      b = &gf[y][nu];
       z = g_iup[y][nu];
-      c = &g_gauge_field[z][nu];
+      c = &gf[z][nu];
       _su3_times_su3(tmp1, *b, *c);
       _su3_times_su3_acc((*v), tmp2, tmp1);
 
@@ -92,18 +95,18 @@ void get_rectangle_staples(su3 * const v, const int x, const int mu) {
        * a| _|e
        *    d
        */
-      a = &g_gauge_field[x][nu];
+      a = &gf[x][nu];
       y = g_iup[x][nu];
-      b = &g_gauge_field[y][mu];
+      b = &gf[y][mu];
       _su3_times_su3(tmp1, *a, *b);
       z = g_iup[y][mu];
-      c = &g_gauge_field[z][mu];
+      c = &gf[z][mu];
       _su3_times_su3(tmp2, tmp1, *c);
 
       y = g_iup[x][mu];
-      d = &g_gauge_field[y][mu];
+      d = &gf[y][mu];
       z = g_iup[y][mu];
-      e = &g_gauge_field[z][nu];
+      e = &gf[z][nu];
       _su3_times_su3(tmp1, *d, *e);
       _su3_times_su3d_acc((*v), tmp2, tmp1);
 
@@ -116,17 +119,17 @@ void get_rectangle_staples(su3 * const v, const int x, const int mu) {
        *   ab
        */
       y = g_idn[x][nu];
-      d = &g_gauge_field[y][nu];
-      a = &g_gauge_field[y][mu];
+      d = &gf[y][nu];
+      a = &gf[y][mu];
       _su3d_times_su3(tmp1, *d, *a);
       z = g_iup[y][mu];
-      b = &g_gauge_field[z][mu];
+      b = &gf[z][mu];
       _su3_times_su3(tmp2, tmp1, *b);
 
       y = g_iup[z][mu];
-      c = &g_gauge_field[y][nu];
+      c = &gf[y][nu];
       z = g_iup[x][mu];
-      e = &g_gauge_field[z][mu];
+      e = &gf[z][mu];
       _su3_times_su3d(tmp1, *c, *e);
       _su3_times_su3_acc((*v), tmp2, tmp1);
 
@@ -140,16 +143,16 @@ void get_rectangle_staples(su3 * const v, const int x, const int mu) {
        */
       y = g_idn[x][mu];
       z = g_idn[y][nu];
-      d = &g_gauge_field[z][nu];
-      a = &g_gauge_field[z][mu];
+      d = &gf[z][nu];
+      a = &gf[z][mu];
       _su3d_times_su3(tmp1, *d, *a);
-      e = &g_gauge_field[y][mu];
+      e = &gf[y][mu];
       _su3d_times_su3(tmp2, *e, tmp1);
 
       y = g_idn[x][nu];
-      b = &g_gauge_field[y][mu];
+      b = &gf[y][mu];
       z = g_iup[y][mu];
-      c = &g_gauge_field[z][nu];
+      c = &gf[z][nu];
       _su3_times_su3(tmp1, *b, *c);
       _su3_times_su3_acc((*v), tmp2, tmp1); 
 
@@ -162,17 +165,17 @@ void get_rectangle_staples(su3 * const v, const int x, const int mu) {
        *  d
        */
       y = g_idn[x][mu];
-      d = &g_gauge_field[y][mu];
+      d = &gf[y][mu];
       z = g_iup[y][nu];
-      a = &g_gauge_field[y][nu];
+      a = &gf[y][nu];
       _su3d_times_su3(tmp1, *d, *a);
-      b = &g_gauge_field[z][mu];
+      b = &gf[z][mu];
       _su3_times_su3(tmp2, tmp1, *b);
 
       y = g_iup[x][mu];
-      e = &g_gauge_field[y][nu];
+      e = &gf[y][nu];
       z = g_iup[x][nu];
-      c = &g_gauge_field[z][mu];
+      c = &gf[z][mu];
       _su3_times_su3d(tmp1, *c, *e);
       _su3_times_su3_acc((*v), tmp2, tmp1);
     }

@@ -39,7 +39,7 @@ COMPILE = ${CC} ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
 SMODULES = 
 
 MODULES = read_input gamma measure_gauge_action start \
-	expo get_staples update_backward_gauge \
+	expo matrix_utils get_staples update_backward_gauge \
 	measure_rectangles get_rectangle_staples  \
 	test/check_geometry test/check_xchange \
 	test/overlaptests \
@@ -74,6 +74,7 @@ SUBDIRS = ${USESUBDIRS}
 # delete the default suffix rules
 .SUFFIXES:
 
+# need to build modules before subdirs!
 all: Makefile dep $(SUBDIRS) hmc_tm invert benchmark offline_measurement
 
 $(SUBDIRS):

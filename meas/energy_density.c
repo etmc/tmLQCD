@@ -42,11 +42,11 @@
 #include "su3.h"
 #include "sse.h"
 #include "su3adj.h"
+#include "matrix_utils.h"
 
 void measure_energy_density(const su3 ** const gf, double *ret)
 {
-  // NOTE This normalization is not obviously the correct one...
-  double normalization = 1 / (24.0 /* Plaquette directions */ * 3.0 /* Nc */ * VOLUME * g_nproc);
+  double normalization = 32 / ( 4 * 64.0 * VOLUME * g_nproc);
   double res = 0;
 #ifdef MPI
   double ALIGN mres=0;
@@ -58,6 +58,7 @@ void measure_energy_density(const su3 ** const gf, double *ret)
 #endif
     su3 ALIGN v1, v2, plaq;
     double ALIGN ac,tr,ts,tt,kc=0,ks=0;
+    su3 ALIGN trace;
   
     /*  compute the clover-leave */
   /*  l  __   __
@@ -111,9 +112,7 @@ void measure_energy_density(const su3 ** const gf, double *ret)
           _su3d_times_su3(v1, *w1, *w2);
           _su3_times_su3d(v2, *w3, *w4);
           _su3_times_su3_acc(plaq, v1, v2);
-          _su3_dagger(v2, plaq); 
-          _su3_minus_su3(plaq, plaq, v2); // At this point: anti-hermitian clover average in direction k, l
-          
+          project_traceless_antiherm(&plaq);  
           _trace_su3_times_su3(ac, plaq, plaq); // This should actually be the energy density already...
           
           // Kahan summation for each thread
@@ -141,5 +140,6 @@ void measure_energy_density(const su3 ** const gf, double *ret)
   MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   res = mres;
 #endif
+  // -sign compensates for i^2
   *ret = -normalization * res;
 }

@@ -30,11 +30,11 @@
 #include "default_input_values.h"
 #include "read_input.h"
 
-#include "measurements/pion_norm.h"
-#include "measurements/correlators.h"
-#include "measurements/polyakov_loop.h"
-#include "measurements/oriented_plaquettes.h"
-#include "measurements/w0.h"
+#include "pion_norm.h"
+#include "correlators.h"
+#include "polyakov_loop.h"
+#include "oriented_plaquettes.h"
+#include "w0.h"
 #include "measurements.h"
 
 measurement measurement_list[max_no_measurements];

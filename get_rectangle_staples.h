@@ -20,5 +20,6 @@
 #define _GET_RECTANGLE_STAPLES_H
 
 void get_rectangle_staples(su3 * const v, const int x, const int mu);
+void get_rectangle_staples_general(su3 * const v, const int x, const int mu, const su3** gf);
 
 #endif

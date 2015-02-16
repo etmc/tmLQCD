@@ -79,7 +79,7 @@
 #include "operator/tm_operators.h"
 #include "operator/Dov_psi.h"
 #include "gettime.h"
-#include "measurements/measurements.h"
+#include "meas/measurements.h"
 
 extern int nstore;
 int check_geometry();
@@ -150,7 +150,6 @@ int main(int argc, char *argv[])
   if (g_dflgcr_flag == 1) {
     even_odd_flag = 0;
   }
-  g_rgi_C1 = 0;
   if (Nsave == 0) {
     Nsave = 1;
   }
@@ -160,8 +159,6 @@ int main(int argc, char *argv[])
   }
 
   tmlqcd_mpi_init(argc, argv);
-
-  g_dbw2rand = 0;
 
   /* starts the single and double precision random number */
   /* generator                                            */
@@ -177,15 +174,15 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef _GAUGE_COPY
-  j = init_gauge_field(VOLUMEPLUSRAND, 1);
+  j = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
-  j = init_gauge_field(VOLUMEPLUSRAND, 0);
+  j = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
 #endif
   if (j != 0) {
     fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
     exit(-1);
   }
-  j = init_geometry_indices(VOLUMEPLUSRAND);
+  j = init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
   if (j != 0) {
     fprintf(stderr, "Not enough memory for geometry indices! Aborting...\n");
     exit(-1);
@@ -237,6 +234,12 @@ int main(int argc, char *argv[])
 
   /* define the geometry */
   geometry();
+  int status = check_geometry();
+
+  if (status != 0) {
+    fprintf(stderr, "Checking of geometry failed. Unable to proceed.\nAborting....\n");
+    exit(1);
+  }
 
   /* define the boundary conditions for the fermion fields */
   boundary(g_kappa);

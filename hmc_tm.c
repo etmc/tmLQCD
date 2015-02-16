@@ -67,7 +67,7 @@
 #include "monomial/monomial.h"
 #include "integrator.h"
 #include "sighandler.h"
-#include "measurements/measurements.h"
+#include "meas/measurements.h"
 
 extern int nstore;
 

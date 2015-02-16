@@ -29,9 +29,9 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "global.h"
 #include "su3.h"
 #include "geometry_eo.h"
-#include "global.h"
 #include "oriented_plaquettes.h"
 #include "fatal_error.h"
 #include "measurements.h"
