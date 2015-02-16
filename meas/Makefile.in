@@ -36,7 +36,7 @@ libmeas_TARGETS = measurements \
 	correlators \
 	pion_norm \
 	polyakov_loop \
-	energy_density w0
+	energy_density gradient_flow
 
 libmeas_OBJECTS = $(addsuffix .o, ${libmeas_TARGETS})
 

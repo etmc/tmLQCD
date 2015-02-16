@@ -31,9 +31,6 @@
 #include <stdio.h>
 #include <math.h>
 #include "global.h"
-
-#include "w0.h"
-
 #include "fatal_error.h"
 #include "aligned_malloc.h"
 #include "energy_density.h"
@@ -44,6 +41,7 @@
 #include "measure_gauge_action.h"
 #include "matrix_utils.h"
 #include "xchange/xchange_gauge.h"
+#include "gradient_flow.h"
 
 void step_gradient_flow(su3** x0, su3** x1, su3** x2, su3** z, unsigned int type, double eps ) {
   double zfac[5] = { 1, (8.0)/(9.0), (-17.0)/(36.0), (3.0)/(4.0), -1 };
@@ -90,16 +88,6 @@ void step_gradient_flow(su3** x0, su3** x1, su3** x2, su3** z, unsigned int type
         if(f==0){
           _real_times_su3(z[x][mu],eps,z_tmp);
         }else{
-          //_trace_lambda_mul(z[x][mu],0.5*3.648,w);
-          
-          //_trace_lambda_mul(z[x][mu],0.5,w);
-          //_trace_lambda_mul_add_assign(z[x][mu],-0.5*0.331,w1);
-        //}else{
-          //_trace_lambda_mul(z_adj,0.5*3.648,w);
-          //_trace_lambda_mul(z_adj,0.5,w);
-          //_trace_lambda_mul_add_assign(z_adj,-0.5*0.331,w1);
-          //_su3adj_assign_const_times_su3adj(z_adj,zfac[2*f-1],z_adj);
-          //_su3adj_minus_const_times_su3adj(z_adj,zfac[2*f],z[x][mu]);
           _real_times_su3(z_tmp,eps*zfac[2*f-1],z_tmp);
           _su3_refac_acc(z_tmp,zfac[2*f],z[x][mu]);
           z[x][mu] = z_tmp;
@@ -107,9 +95,6 @@ void step_gradient_flow(su3** x0, su3** x1, su3** x2, su3** z, unsigned int type
         _real_times_su3(z_tmp,zadjfac[f],z[x][mu]);
         project_traceless_antiherm(&z_tmp);
         cayley_hamilton_exponent(&w,&z_tmp);
-        //_su3adj_assign_const_times_su3adj(z_adj,eps*zadjfac[f],z[x][mu]);
-        //exposu3(&w,&z_adj);
-        //restoresu3(&w1,&w);
         _su3_times_su3(fields[f+1][x][mu],w,fields[f][x][mu]);
       }
     }
@@ -125,10 +110,8 @@ void step_gradient_flow(su3** x0, su3** x1, su3** x2, su3** z, unsigned int type
   }
 }
 
-void w0_measurement(const int traj, const int id, const int ieo) {
+void gradient_flow_measurement(const int traj, const int id, const int ieo) {
 
-  double const W_target = 0.3, tsqE_target=0.3;
-  
   double E[3],t[3], P[3];
   double W=0, eps=0.01, tsqE=0;
   double t1, t2;
@@ -197,9 +180,10 @@ void w0_measurement(const int traj, const int id, const int ieo) {
     }
     if(g_proc_id==0){
       fprintf(outfile,"%06d %f %2.12lf %2.12lf %2.12lf %2.12lf %2.12lf %2.12lf \n",
-                      traj,t[1],P[1],72*(1-P[1]),
-                      E[1],tsqE,
-                      t[1]*t[1]*72*(1-P[1]),W);
+                      traj,t[1],P[1],
+                      72*(1-P[1]),E[1],
+                      t[1]*t[1]*72*(1-P[1]),tsqE,
+                      W);
       fflush(outfile);
     }
 

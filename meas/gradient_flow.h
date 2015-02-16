@@ -19,13 +19,13 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _W0_H
-#define _W0_H
+#ifndef _GRADIENT_FLOW_H
+#define _GRADIENT_FLOW_H
 
 #include "su3.h"
 
-void step_wilson_flow(const su3 ** const vt, const su3 ** vtpeps);
+void step_gradient_flow(const su3 ** const vt, const su3 ** vtpeps);
 
-void w0_measurement(const int traj, const int id, const int ieo);
+void gradient_flow_measurement(const int traj, const int id, const int ieo);
 
 #endif

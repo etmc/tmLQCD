@@ -34,7 +34,7 @@
 #include "correlators.h"
 #include "polyakov_loop.h"
 #include "oriented_plaquettes.h"
-#include "w0.h"
+#include "gradient_flow.h"
 #include "measurements.h"
 
 measurement measurement_list[max_no_measurements];
@@ -75,8 +75,8 @@ int init_measurements(){
       measurement_list[i].measurefunc = &oriented_plaquettes_measurement;
     }
 
-    if(measurement_list[i].type == W0) {
-      measurement_list[i].measurefunc = &w0_measurement;
+    if(measurement_list[i].type == GRADIENT_FLOW) {
+      measurement_list[i].measurefunc = &gradient_flow_measurement;
     }
     
     measurement_list[i].id = i;

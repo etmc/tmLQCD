@@ -30,7 +30,7 @@ enum MEAS_TYPE {
   PIONNORM, 
   POLYAKOV, 
   ORIENTED_PLAQUETTES,
-  W0 
+  GRADIENT_FLOW 
   };
 
 typedef struct {
