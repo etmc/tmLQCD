@@ -46,7 +46,15 @@
 
 void measure_energy_density(const su3 ** const gf, double *ret)
 {
-  double normalization = 32 / ( 4 * 64.0 * VOLUME * g_nproc);
+  // we have iG_\mu\nu = 1/4 P_T.A. [clover] where P is the projection to the
+  // traceless anti-hermitian part
+  // the minus sign compensates for the i^2 in the lattice definition of G_\mu\nu
+  // our traceless anti-hermitian projection includes a factor of 0.5, so instead of 
+  // the usual (1/8)^2 we get (1/4)^2 of the clover
+  // 1/4 from the definition of the energy density <E> = 1\4 (G_\mu\nu)^2
+  // The factor of 4 makes the result agree (at large t and keeping in mind discretization errors)
+  //  with the plaquette definition and with papers... I don't understand where it comes from...
+  double normalization = - 4 / ( 4 * 16.0 * VOLUME * g_nproc);
   double res = 0;
 #ifdef MPI
   double ALIGN mres=0;
@@ -140,6 +148,5 @@ void measure_energy_density(const su3 ** const gf, double *ret)
   MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   res = mres;
 #endif
-  // -sign compensates for i^2
-  *ret = -normalization * res;
+  *ret = normalization * res;
 }

@@ -40,9 +40,6 @@ libmeas_TARGETS = measurements \
 
 libmeas_OBJECTS = $(addsuffix .o, ${libmeas_TARGETS})
 
-#external_OBJECTS = ${top_builddir}/fatal_error.o ${top_builddir}/source_generation.o ${top_builddir}/prepare_source.o \
-#	${top_builddir}/aligned_malloc.o
-
 # default rule
 
 all: Makefile dep libmeas.a
@@ -57,8 +54,6 @@ profile all-profile: all
 
 
 #include dep rules
-
-
 -include $(addsuffix .d,${libmeas_TARGETS})
 
 include ${top_srcdir}/Makefile.global

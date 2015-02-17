@@ -26,6 +26,9 @@
 #ifdef OMP
 # include <omp.h>
 #endif
+#ifdef MPI
+# include <mpi.h>
+#endif
 
 #include <string.h>
 #include <stdio.h>
@@ -43,9 +46,9 @@
 #include "xchange/xchange_gauge.h"
 #include "gradient_flow.h"
 
-void step_gradient_flow(su3** x0, su3** x1, su3** x2, su3** z, unsigned int type, double eps ) {
+void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigned int type, const double eps ) {
   double zfac[5] = { 1, (8.0)/(9.0), (-17.0)/(36.0), (3.0)/(4.0), -1 };
-  double zadjfac[3] = { 0.25, 1, 1 };
+  double zepsfac[3] = { 0.25, 1, 1 };
   su3** fields[4];
 
   fields[0] = x0;
@@ -70,6 +73,9 @@ void step_gradient_flow(su3** x0, su3** x1, su3** x2, su3** z, unsigned int type
   }
 #endif
 
+  // implementation of third-order Runge-Kutta integrator following Luescher's hep-lat/1006.4518
+  // this can probably be improved...
+
   for( int f = 0; f < 3; ++f ){
 #ifdef OMP
 #pragma omp for
@@ -77,13 +83,15 @@ void step_gradient_flow(su3** x0, su3** x1, su3** x2, su3** z, unsigned int type
     for( int x = 0; x < VOLUME; ++x ){
       for( int mu = 0; mu < 4; ++mu ){
         get_staples(&w1, x, mu, fields[f]);
+        // usually we dagger the staples, but the sign convention seems to require this
         _su3_times_su3d(z_tmp,w1,fields[f][x][mu]);
         project_traceless_antiherm(&z_tmp);
 
         // implementing the Iwasaki, Symanzik or DBW2 flow from here should be a trivial extension
-        // but it will require some settings
+        // but it will require adding some (more) parameters and making sure that g_dbw2rand exists
+        // also in the inverter if the measurement is to be carried out there
         //get_rectangle_staples_general(&w2,x,mu,fields[f]);
-        //_su3_times_su3d(w1,fields[f][x][mu],w2);
+        //_su3_times_su3d(w1,w2,fields[f][x][mu]);
 
         if(f==0){
           _real_times_su3(z[x][mu],eps,z_tmp);
@@ -92,7 +100,7 @@ void step_gradient_flow(su3** x0, su3** x1, su3** x2, su3** z, unsigned int type
           _su3_refac_acc(z_tmp,zfac[2*f],z[x][mu]);
           z[x][mu] = z_tmp;
         }
-        _real_times_su3(z_tmp,zadjfac[f],z[x][mu]);
+        _real_times_su3(z_tmp,zepsfac[f],z[x][mu]);
         project_traceless_antiherm(&z_tmp);
         cayley_hamilton_exponent(&w,&z_tmp);
         _su3_times_su3(fields[f+1][x][mu],w,fields[f][x][mu]);
@@ -116,8 +124,6 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
   double W=0, eps=0.01, tsqE=0;
   double t1, t2;
 
-  double t0, w0;
-  
   if( g_proc_id == 0 ) {
     printf("# Doing gradient flow measurement.\n");
   }
@@ -140,7 +146,7 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
   aligned_su3_field_t vt = aligned_su3_field_alloc(VOLUMEPLUSRAND+g_dbw2rand);
   aligned_su3_field_t x1 = aligned_su3_field_alloc(VOLUMEPLUSRAND+g_dbw2rand);
   aligned_su3_field_t x2 = aligned_su3_field_alloc(VOLUMEPLUSRAND+g_dbw2rand);
-  aligned_su3adj_field_t z = aligned_su3adj_field_alloc(VOLUME);
+  aligned_su3_field_t z = aligned_su3_field_alloc(VOLUME);
 
 #ifdef MPI
   xchange_gauge(g_gauge_field);
@@ -159,7 +165,7 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
     printf("time for energy density measurement: %lf\n",t2-t1);
   }
 
-  while( t[1] < 5.99 ) {
+  while( t[1] < 9.99 ) {
     t[0] = t[2];
     E[0] = E[2];
     P[0] = P[2];
@@ -174,15 +180,15 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
     
     if(g_proc_id==0 && g_debug_level > 3){
       printf("sym(plaq)  t=%lf 1-P(t)=%1.8lf E(t)=%2.8lf(%2.8lf) t^2E=%2.8lf(%2.8lf) W(t)=%2.8lf \n",t[1],1-P[1],
-        E[1],72*(1-P[1]),
-        tsqE,t[1]*t[1]*72*(1-P[1]),
+        E[1],36*(1-P[1]),
+        tsqE,t[1]*t[1]*36*(1-P[1]),
         W);
     }
     if(g_proc_id==0){
       fprintf(outfile,"%06d %f %2.12lf %2.12lf %2.12lf %2.12lf %2.12lf %2.12lf \n",
                       traj,t[1],P[1],
-                      72*(1-P[1]),E[1],
-                      t[1]*t[1]*72*(1-P[1]),tsqE,
+                      36*(1-P[1]),E[1],
+                      t[1]*t[1]*36*(1-P[1]),tsqE,
                       W);
       fflush(outfile);
     }
@@ -192,11 +198,13 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
   aligned_su3_field_free(&vt);
   aligned_su3_field_free(&x1);
   aligned_su3_field_free(&x2);
-  aligned_su3adj_field_free(&z);
+  aligned_su3_field_free(&z);
+ 
+  t2 = gettime();
   
   if( g_proc_id == 0 ) {
     if(g_debug_level>2){
-      printf("Gradient flow measurement done!\n");
+      printf("Gradient flow measurement done in %f seconds!\n",t2-t1);
     }
     fclose(outfile);
   }
