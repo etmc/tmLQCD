@@ -412,7 +412,7 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
     /* Restart test */
     if(nev==0)
     {
-       if (  ( (*reshist < restart_eps_sq) && (rel_prec ==0) ) || ((*reshist < restart_eps_sq*reshist_init ) && (rel_prec==1)) ) 
+       if (*reshist < (restart_eps_sq*reshist_init) ) 
        {  
            *flag = 3;
             break;  /* break do not return */
