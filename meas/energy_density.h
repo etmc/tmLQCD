@@ -21,6 +21,6 @@
 #ifndef _ENERGY_DENSITY_H
 #define _ENERGY_DENSITY_H
 
-void measure_energy_density(const su3 ** const gf, double *plaq);
+void measure_energy_density(const su3 ** const gf, double *ret);
 
 #endif  
