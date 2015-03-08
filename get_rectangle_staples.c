@@ -30,7 +30,7 @@ void get_rectangle_staples(su3 * const v, const int x, const int mu) {
   get_rectangle_staples_general(v,x,mu,g_gauge_field);
 }
 
-void get_rectangle_staples_general(su3 * const v, const int x, const int mu, su3** gf) {
+void get_rectangle_staples_general(su3 * const v, const int x, const int mu, const su3** const gf) {
   su3 ALIGN tmp1, tmp2;
   int y, z, nu;
   su3 * a, * b, * c, * d, * e;
