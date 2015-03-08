@@ -1,8 +1,7 @@
 /***********************************************************************
  *
- * Copyright (C) 2009 Florian Burger
- *
- * Adapted from online_measurement.h by Florian Burger 2009/12/16
+ * Copyright (C) 2013 Albert Deuzeman
+ *               2015 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -20,11 +19,12 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _PION_NORM_H
-#define _PION_NORM_H
+#ifndef _GRADIENT_FLOW_H
+#define _GRADIENT_FLOW_H
 
-void pion_norm(const int traj, const int id, const int ieo);
+#include "su3.h"
+
+void step_gradient_flow(su3 ** vt, su3 ** x1, su3 ** x2, su3 ** z, const unsigned int type, const double eps);
+void gradient_flow_measurement(const int traj, const int id, const int ieo);
 
 #endif
-
-

@@ -620,6 +620,11 @@ _sse_store_up(r);
 
 #endif
 
+#define _su3_minus_const_times_im_trace_su3(w,c,v) \
+  (w).c00 -= I*c*(cimag((v).c00) + cimag((v).c11) + cimag((v).c22)); \
+  (w).c11 -= I*c*(cimag((v).c00) + cimag((v).c11) + cimag((v).c22)); \
+  (w).c22 -= I*c*(cimag((v).c00) + cimag((v).c11) + cimag((v).c22)); 
+
 #define _trace_su3_times_su3d(x,v,w)	\
   x =   (v).c00 * conj((w).c00)		\
       + (v).c01 * conj((w).c01)		\
@@ -681,6 +686,11 @@ _sse_store_up(r);
   (t).c21 = (u).c2 * conj((v).c1) + (w).c2 * conj((z).c1);	\
   (t).c22 = (u).c2 * conj((v).c2) + (w).c2 * conj((z).c2);
 
-
+#define _su3_add_equals_complex_identity(u, c) \
+  (u).c00 += (c); \
+  (u).c11 += (c); \
+  (u).c22 += (c);
 
 #endif
+
+

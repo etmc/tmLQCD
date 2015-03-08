@@ -1,5 +1,6 @@
 /***********************************************************************
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ *
+ * Copyright (C) 2015 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -16,10 +17,10 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-#ifndef _GET_RECTANGLE_STAPLES_H
-#define _GET_RECTANGLE_STAPLES_H
 
-void get_rectangle_staples(su3 * const v, const int x, const int mu);
-void get_rectangle_staples_general(su3 * const v, const int x, const int mu, const su3** const gf);
+#ifndef _ENERGY_DENSITY_H
+#define _ENERGY_DENSITY_H
 
-#endif
+void measure_energy_density(const su3 ** const gf, double *ret);
+
+#endif  

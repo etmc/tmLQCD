@@ -41,7 +41,7 @@
 #include "pion_norm.h"
 #include "gettime.h"
 
-void pion_norm(const int traj, const int id, const int ieo) {
+void pion_norm_measurement(const int traj, const int id, const int ieo) {
   int i, j, z, zz, z0;
   double *Cpp;
   double res = 0.;
