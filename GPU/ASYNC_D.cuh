@@ -686,6 +686,8 @@ void HOPPING_ASYNC_UPDN_D (dev_su3_2v_d * gf,
   #endif
 
   
+  
+  
   #if ASYNC == 0		// primitive version
     		
 
@@ -733,7 +735,7 @@ void HOPPING_ASYNC_UPDN_D (dev_su3_2v_d * gf,
 		
     //this is the same partitioning as for dev_mul_one_pm...
     int gridsize3;
-    int blocksize3 = BLOCK2;
+    int blocksize3 = BLOCK2D;
     if( tSliceEO % blocksize3 == 0){
       gridsize3 = (int) tSliceEO/blocksize3;
     }
@@ -793,7 +795,10 @@ void HOPPING_ASYNC_UPDN_D (dev_su3_2v_d * gf,
 
         	
         	
-//INTERNAL        	
+//INTERNAL      
+    
+                cudaStreamSynchronize(stream[0]);				// SYNCPOINT
+ 	        
         	// starts INTERNAL kernel
   		dev_Hopping_Matrix_updn_d <<<gridsize1, blocksize, 0, stream[0]>>> ( gf,
         	                                                                    spinin_up, spinin_dn, spinout_up, spinout_dn,
@@ -820,7 +825,8 @@ void HOPPING_ASYNC_UPDN_D (dev_su3_2v_d * gf,
   		MPI_Sendrecv(RAND1_DN_D, dbperspin*tSliceEO, MPI_DOUBLE, g_nb_t_dn, 0,	// SYNCPOINT
   		             RAND3_DN_D, dbperspin*tSliceEO, MPI_DOUBLE, g_nb_t_up, 0,
   		             g_cart_grid, &stat[0]);
-		
+		MPI_Barrier(MPI_COMM_WORLD);
+
   				#ifdef ASYNC_TIMING
   				  mpi_stop_sendrecv_1 = MPI_Wtime();
   				#endif
@@ -872,7 +878,7 @@ void HOPPING_ASYNC_UPDN_D (dev_su3_2v_d * gf,
   		MPI_Sendrecv(RAND2_DN_D, dbperspin*tSliceEO, MPI_DOUBLE, g_nb_t_up, 1,	// SYNCPOINT
   		             RAND4_DN_D, dbperspin*tSliceEO, MPI_DOUBLE, g_nb_t_dn, 1,
   		             g_cart_grid, &stat[1]);
-		
+		MPI_Barrier(MPI_COMM_WORLD);
   				#ifdef ASYNC_TIMING
   				  mpi_stop_sendrecv_2 = MPI_Wtime();
   				#endif
@@ -924,7 +930,7 @@ void HOPPING_ASYNC_UPDN_D (dev_su3_2v_d * gf,
   		
   		cudaThreadSynchronize();		// test if needed	YES IS NEEDED according to Programming Guide
   
-
+                MPI_Barrier(MPI_COMM_WORLD);
   
 }
 

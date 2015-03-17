@@ -2168,6 +2168,18 @@ extern "C" void init_mixedsolve_eo(su3** gf, int use_eo){
     cudaMallocHost(&RAND4_D, tSliceEO*dbperspin*sizeof(double2));
     cudaMallocHost(&RAND1_D, tSliceEO*dbperspin*sizeof(double2));
     cudaMallocHost(&RAND2_D, tSliceEO*dbperspin*sizeof(double2));
+
+    /*  for async communication */
+    // page-locked memory    
+    cudaMallocHost(&RAND3_UP_D, tSliceEO*dbperspin*sizeof(double2));
+    cudaMallocHost(&RAND4_UP_D, tSliceEO*dbperspin*sizeof(double2));
+    cudaMallocHost(&RAND1_UP_D, tSliceEO*dbperspin*sizeof(double2));
+    cudaMallocHost(&RAND2_UP_D, tSliceEO*dbperspin*sizeof(double2));
+
+    cudaMallocHost(&RAND3_DN_D, tSliceEO*dbperspin*sizeof(double2));
+    cudaMallocHost(&RAND4_DN_D, tSliceEO*dbperspin*sizeof(double2));
+    cudaMallocHost(&RAND1_DN_D, tSliceEO*dbperspin*sizeof(double2));
+    cudaMallocHost(&RAND2_DN_D, tSliceEO*dbperspin*sizeof(double2));
     
 
 #endif    
@@ -2340,7 +2352,17 @@ extern "C" void finalize_mixedsolve(int use_eo){
   cudaFreeHost(RAND1_D);
   cudaFreeHost(RAND2_D); 
   cudaFreeHost(RAND3_D);
-  cudaFreeHost(RAND4_D);  
+  cudaFreeHost(RAND4_D);
+
+  cudaFreeHost(RAND1_UP_D);
+  cudaFreeHost(RAND2_UP_D); 
+  cudaFreeHost(RAND3_UP_D);
+  cudaFreeHost(RAND4_UP_D); 
+ 
+  cudaFreeHost(RAND1_DN_D);
+  cudaFreeHost(RAND2_DN_D); 
+  cudaFreeHost(RAND3_DN_D);
+  cudaFreeHost(RAND4_DN_D);    
   cudaFree(RAND_BW_D);
   cudaFree(RAND_FW_D);
   free(R1_D);

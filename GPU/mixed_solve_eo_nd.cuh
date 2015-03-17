@@ -757,17 +757,7 @@ void init_mixedsolve_eo_nd (su3** gf, int use_eo) {	// gf is the full gauge fiel
 	      cudaMalloc((void **) &RAND_FW_UP_D, tSliceEO*12*sizeof(double2));
 	      cudaMalloc((void **) &RAND_BW_UP_D, tSliceEO*12*sizeof(double2));      
 	    #endif
-	    /*  for async communication */
-	    // page-locked memory    
-	    #ifdef RELATIVISTIC_BASIS
-	      int dbperspin = 6;
-	    #else
-	      int dbperspin = 12;
-	    #endif  
-	    cudaMallocHost(&RAND3_UP_D, tSliceEO*dbperspin*sizeof(double2));
-	    cudaMallocHost(&RAND4_UP_D, tSliceEO*dbperspin*sizeof(double2));
-	    cudaMallocHost(&RAND1_UP_D, tSliceEO*dbperspin*sizeof(double2));
-	    cudaMallocHost(&RAND2_UP_D, tSliceEO*dbperspin*sizeof(double2));
+
 
 	  R1_UP_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
 	  R2_UP_D = R1_UP_D + 12*tSliceEO;
@@ -784,10 +774,6 @@ void init_mixedsolve_eo_nd (su3** gf, int use_eo) {	// gf is the full gauge fiel
 	      cudaMalloc((void **) &RAND_BW_DN_D, tSliceEO*12*sizeof(double2));      
 	    #endif
 
-	    cudaMallocHost(&RAND3_DN_D, tSliceEO*dbperspin*sizeof(double2));
-	    cudaMallocHost(&RAND4_DN_D, tSliceEO*dbperspin*sizeof(double2));
-	    cudaMallocHost(&RAND1_DN_D, tSliceEO*dbperspin*sizeof(double2));
-	    cudaMallocHost(&RAND2_DN_D, tSliceEO*dbperspin*sizeof(double2));
 	    
 	  R1_DN_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
 	  R2_DN_D = R1_DN_D + 12*tSliceEO;
@@ -913,18 +899,10 @@ void finalize_mixedsolve_eo_nd(void) {
   	#endif
 	
 	#ifdef GPU_DOUBLE
-	  cudaFreeHost(RAND1_UP_D);
-	  cudaFreeHost(RAND2_UP_D); 
-	  cudaFreeHost(RAND3_UP_D);
-	  cudaFreeHost(RAND4_UP_D);  
 	  cudaFree(RAND_BW_UP_D);
 	  cudaFree(RAND_FW_UP_D);
 	  free(R1_UP_D);
 	  free(R3_UP_D);
-	  cudaFreeHost(RAND1_DN_D);
-	  cudaFreeHost(RAND2_DN_D); 
-	  cudaFreeHost(RAND3_DN_D);
-	  cudaFreeHost(RAND4_DN_D);  
 	  cudaFree(RAND_BW_DN_D);
 	  cudaFree(RAND_FW_DN_D);
 	  free(R1_DN_D);
@@ -3781,17 +3759,7 @@ void init_gpu_nd_mms_fields(int Nshift, int use_eo){
       cudaMalloc((void **) &RAND_FW_UP_D, tSliceEO*12*sizeof(double2));
       cudaMalloc((void **) &RAND_BW_UP_D, tSliceEO*12*sizeof(double2));      
     #endif
-    /*  for async communication */
-    // page-locked memory    
-    #ifdef RELATIVISTIC_BASIS
-      int dbperspin = 6;
-    #else
-      int dbperspin = 12;
-    #endif  
-    cudaMallocHost(&RAND3_UP_D, tSliceEO*dbperspin*sizeof(double2));
-    cudaMallocHost(&RAND4_UP_D, tSliceEO*dbperspin*sizeof(double2));
-    cudaMallocHost(&RAND1_UP_D, tSliceEO*dbperspin*sizeof(double2));
-    cudaMallocHost(&RAND2_UP_D, tSliceEO*dbperspin*sizeof(double2));
+
 
   R1_UP_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
   R2_UP_D = R1_UP_D + 12*tSliceEO;
@@ -3808,10 +3776,6 @@ void init_gpu_nd_mms_fields(int Nshift, int use_eo){
       cudaMalloc((void **) &RAND_BW_DN_D, tSliceEO*12*sizeof(double2));      
     #endif
 
-    cudaMallocHost(&RAND3_DN_D, tSliceEO*dbperspin*sizeof(double2));
-    cudaMallocHost(&RAND4_DN_D, tSliceEO*dbperspin*sizeof(double2));
-    cudaMallocHost(&RAND1_DN_D, tSliceEO*dbperspin*sizeof(double2));
-    cudaMallocHost(&RAND2_DN_D, tSliceEO*dbperspin*sizeof(double2));
     
   R1_DN_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
   R2_DN_D = R1_DN_D + 12*tSliceEO;
@@ -3843,19 +3807,11 @@ void finalize_gpu_nd_mms_fields(){
   cudaFree(_mms_d_dn_d_d);
   cudaFree(_mms_x_up_d_d);
   cudaFree(_mms_x_dn_d_d);  
-#ifdef _USE_MPI
-  cudaFreeHost(RAND1_UP_D);
-  cudaFreeHost(RAND2_UP_D); 
-  cudaFreeHost(RAND3_UP_D);
-  cudaFreeHost(RAND4_UP_D);  
+#ifdef _USE_MPI 
   cudaFree(RAND_BW_UP_D);
   cudaFree(RAND_FW_UP_D);
   free(R1_UP_D);
   free(R3_UP_D);
-  cudaFreeHost(RAND1_DN_D);
-  cudaFreeHost(RAND2_DN_D); 
-  cudaFreeHost(RAND3_DN_D);
-  cudaFreeHost(RAND4_DN_D);  
   cudaFree(RAND_BW_DN_D);
   cudaFree(RAND_FW_DN_D);
   free(R1_DN_D);
@@ -4402,17 +4358,8 @@ void init_gpu_single_nd_mms_fields(int Nshift, int N){
       cudaMalloc((void **) &RAND_FW_UP_D, tSliceEO*12*sizeof(double2));
       cudaMalloc((void **) &RAND_BW_UP_D, tSliceEO*12*sizeof(double2));      
     #endif
-    /*  for async communication */
-    // page-locked memory    
-    #ifdef RELATIVISTIC_BASIS
-      int dbperspin = 6;
-    #else
-      int dbperspin = 12;
-    #endif  
-    cudaMallocHost(&RAND3_UP_D, tSliceEO*dbperspin*sizeof(double2));
-    cudaMallocHost(&RAND4_UP_D, tSliceEO*dbperspin*sizeof(double2));
-    cudaMallocHost(&RAND1_UP_D, tSliceEO*dbperspin*sizeof(double2));
-    cudaMallocHost(&RAND2_UP_D, tSliceEO*dbperspin*sizeof(double2));
+
+
 
   R1_UP_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
   R2_UP_D = R1_UP_D + 12*tSliceEO;
@@ -4429,10 +4376,6 @@ void init_gpu_single_nd_mms_fields(int Nshift, int N){
       cudaMalloc((void **) &RAND_BW_DN_D, tSliceEO*12*sizeof(double2));      
     #endif
 
-    cudaMallocHost(&RAND3_DN_D, tSliceEO*dbperspin*sizeof(double2));
-    cudaMallocHost(&RAND4_DN_D, tSliceEO*dbperspin*sizeof(double2));
-    cudaMallocHost(&RAND1_DN_D, tSliceEO*dbperspin*sizeof(double2));
-    cudaMallocHost(&RAND2_DN_D, tSliceEO*dbperspin*sizeof(double2));
     
   R1_DN_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
   R2_DN_D = R1_DN_D + 12*tSliceEO;
@@ -4507,18 +4450,10 @@ void finalize_gpu_single_nd_mms_fields(){
   cudaFree(dev_spin_eo3_dn);  
   
 #ifdef _USE_MPI
-  cudaFreeHost(RAND1_UP_D);
-  cudaFreeHost(RAND2_UP_D); 
-  cudaFreeHost(RAND3_UP_D);
-  cudaFreeHost(RAND4_UP_D);  
   cudaFree(RAND_BW_UP_D);
   cudaFree(RAND_FW_UP_D);
   free(R1_UP_D);
   free(R3_UP_D);
-  cudaFreeHost(RAND1_DN_D);
-  cudaFreeHost(RAND2_DN_D); 
-  cudaFreeHost(RAND3_DN_D);
-  cudaFreeHost(RAND4_DN_D);  
   cudaFree(RAND_BW_DN_D);
   cudaFree(RAND_FW_DN_D);
   free(R1_DN_D);
