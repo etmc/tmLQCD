@@ -52,6 +52,7 @@
 #include "operator/D_psi.h"
 //#include "phmc.h"
 #include "mpi_init.h"
+#include "quda.h"
 
 #ifdef PARALLELT
 #  define SLICE (LX*LY*LZ/2)
@@ -109,6 +110,18 @@ int main(int argc,char *argv[])
     fprintf(stderr, "Could not find input file: test_Dslash.input\nAborting...\n");
     exit(-1);
   }
+
+#ifdef QUDA
+  printf("# QUDA is defined!\n");
+#else
+  printf("# QUDA is NOT defined!\n");
+#endif
+
+#ifdef HAVE_LIBQUDA
+  printf("# HAVE_LIBQUDA is defined!\n");
+#else
+  printf("# HAVE_LIBQUDA is NOT defined!\n");
+#endif
 
 #ifdef OMP
   init_openmp();
