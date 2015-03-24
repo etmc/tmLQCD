@@ -52,6 +52,7 @@
 #include "operator/D_psi.h"
 //#include "phmc.h"
 #include "mpi_init.h"
+#include "linalg/square_norm.h"
 #include "quda_interface.h"
 
 #ifdef PARALLELT
@@ -74,7 +75,8 @@ int check_xchange();
 
 int main(int argc,char *argv[])
 {
-  int j,j_max,k,k_max = 1;
+  int j,j_max,k;
+  int k_max = 2; //two sources, two sinks (two Dslashes)
 #ifdef HAVE_LIBLEMON
   paramsXlfInfo *xlfInfo;
 #endif
@@ -111,17 +113,6 @@ int main(int argc,char *argv[])
     exit(-1);
   }
 
-#ifdef QUDA
-  printf("# QUDA is defined!\n");
-#else
-  printf("# QUDA is NOT defined!\n");
-#endif
-
-#ifdef HAVE_LIBQUDA
-  printf("# HAVE_LIBQUDA is defined!\n");
-#else
-  printf("# HAVE_LIBQUDA is NOT defined!\n");
-#endif
 
 #ifdef OMP
   init_openmp();
@@ -130,6 +121,7 @@ int main(int argc,char *argv[])
   tmlqcd_mpi_init(argc, argv);
 
 #ifdef QUDA
+  printf("# We're using QUDA!\n");
   _initQuda(3);
 #endif
 
@@ -176,6 +168,11 @@ int main(int argc,char *argv[])
     fflush(stdout);
   }
 
+  if(even_odd_flag)
+	{
+		even_odd_flag=0;
+		printf("# WARNING: even_odd_flag will be ignored (currently not supported here).\n");
+	}
 
 #ifdef _GAUGE_COPY
   init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
@@ -193,11 +190,6 @@ int main(int argc,char *argv[])
 
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
-    exit(0);
-  }
-  j = init_moment_field(VOLUME, VOLUMEPLUSRAND + g_dbw2rand);
-  if ( j!= 0) {
-    fprintf(stderr, "Not enough memory for moment fields! Aborting...\n");
     exit(0);
   }
 
@@ -245,9 +237,9 @@ int main(int argc,char *argv[])
     fprintf(stderr, "Checking of geometry failed. Unable to proceed.\nAborting....\n");
     exit(1);
   }
-#if (defined MPI && !(defined _USE_SHMEM))
-  check_xchange();
-#endif
+//#if (defined MPI && !(defined _USE_SHMEM))
+//  check_xchange();
+//#endif
 
   start_ranlux(1, 123456);
   random_gauge_field(reproduce_randomnumber_flag, g_gauge_field);
@@ -258,12 +250,32 @@ int main(int argc,char *argv[])
 #endif
 
 	/* the non even/odd case now */
-	/*initialize the pseudo-fermion fields*/
+	/*initialize the spinor fields*/
 	j_max=1;
 	sdt=0.;
-	for (k=0;k<k_max;k++) {
-	  random_spinor_field_lexic(g_spinor_field[k], reproduce_randomnumber_flag, RN_GAUSS);
+	random_spinor_field_lexic(g_spinor_field[1], reproduce_randomnumber_flag, RN_GAUSS);
+	//random_spinor_field_eo
+
+	// copy
+	for(int ix=0; ix<VOLUME; ix++ )
+	{
+		_spinor_assign(g_spinor_field[3][ix], g_spinor_field[1][ix]);
 	}
+
+#if defined MPI
+	xchange_lexicfield(g_spinor_field[1]);
+	xchange_lexicfield(g_spinor_field[3]);
+#endif
+
+	// print L2-norm of source:
+	double squarenorm = square_norm(g_spinor_field[1], VOLUME, 1);
+	if(g_proc_id==0) {
+		printf("\n# ||source||^2 = %e\n\n", squarenorm);
+		fflush(stdout);
+	}
+
+
+	/************************** one operator **************************/
 
 #ifdef MPI
       MPI_Barrier(MPI_COMM_WORLD);
@@ -286,17 +298,64 @@ int main(int argc,char *argv[])
       fflush(stdout);
     }
 
-#ifdef HAVE_LIBLEMON
-  if(g_proc_id==0) {
-    printf("# Performing parallel IO test ...\n");
-  }
-  xlfInfo = construct_paramsXlfInfo(0.5, 0);
-  write_gauge_field( "conf.test", 64, xlfInfo);
-  free(xlfInfo);
-  if(g_proc_id==0) {
-    printf("# done ...\n");
-  }
+// print L2-norm of result:
+	squarenorm = square_norm(g_spinor_field[0], VOLUME, 1);
+	if(g_proc_id==0) {
+		printf("# ||result1||^2 = %e\n\n", squarenorm);
+		fflush(stdout);
+	}
+
+
+	/************************** the other operator **************************/
+
+#ifdef MPI
+      MPI_Barrier(MPI_COMM_WORLD);
 #endif
+      t1 = gettime();
+
+      D_psi(g_spinor_field[2], g_spinor_field[3]);
+
+      t2 = gettime();
+      dt=t2-t1;
+#ifdef MPI
+      MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#else
+      sdt = dt;
+#endif
+
+    if(g_proc_id==0) {
+      printf("# Time for Dslash %e sec.\n", sdt);
+      printf("\n");
+      fflush(stdout);
+    }
+
+    // print L2-norm of result:
+	squarenorm = square_norm(g_spinor_field[2], VOLUME, 1);
+	if(g_proc_id==0) {
+		printf("# ||result1||^2 = %e\n\n", squarenorm);
+		fflush(stdout);
+	}
+
+
+	/************************** finished: get difference **************************/
+
+	// subract result1 -= result2
+	for(int ix=0; ix<VOLUME; ix++ )
+	{
+		_vector_sub_assign( g_spinor_field[0][ix].s0, g_spinor_field[2][ix].s0 );
+		_vector_sub_assign( g_spinor_field[0][ix].s1, g_spinor_field[2][ix].s1 );
+		_vector_sub_assign( g_spinor_field[0][ix].s2, g_spinor_field[2][ix].s2 );
+		_vector_sub_assign( g_spinor_field[0][ix].s3, g_spinor_field[2][ix].s3 );
+	}
+
+	// print L2-norm of result1 - result2:
+	squarenorm = square_norm(g_spinor_field[0], VOLUME, 1);
+	if(g_proc_id==0) {
+		printf("# ||result1-result2||^2 = %e\n\n", squarenorm);
+		fflush(stdout);
+	}
+
+	// ---------------
 
 #ifdef QUDA
   _endQuda(3);
