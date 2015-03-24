@@ -52,7 +52,7 @@
 #include "operator/D_psi.h"
 //#include "phmc.h"
 #include "mpi_init.h"
-#include "quda.h"
+#include "quda_interface.h"
 
 #ifdef PARALLELT
 #  define SLICE (LX*LY*LZ/2)
@@ -129,7 +129,9 @@ int main(int argc,char *argv[])
 
   tmlqcd_mpi_init(argc, argv);
 
-
+#ifdef QUDA
+  _initQuda(3);
+#endif
 
   if(g_proc_id==0) {
 #ifdef SSE
@@ -296,7 +298,9 @@ int main(int argc,char *argv[])
   }
 #endif
 
-
+#ifdef QUDA
+  _endQuda(3);
+#endif
 #ifdef OMP
   free_omp_accumulators();
 #endif

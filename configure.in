@@ -338,7 +338,7 @@ AC_HEADER_TIME
 dnl Checks for library functions.
 AC_SYS_LARGEFILE
 AC_FUNC_FSEEKO
-AC_FUNC_MALLOC
+#AC_FUNC_MALLOC
 AC_TYPE_SIGNAL
 AC_CHECK_FUNCS([gettimeofday pow sqrt])
 

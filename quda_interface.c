@@ -71,7 +71,7 @@
 *
 **************************************************************************/
 
-#include "../quda_interface.h"
+#include "quda_interface.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -272,11 +272,11 @@ void _endQuda()
 void _loadGaugeQuda()
 {
   if( inv_param.verbosity > QUDA_SILENT )
-    message("\nCalled _loadGaugeQuda\n\n");
+    printf("\nCalled _loadGaugeQuda\n\n");
 
   // update boundary if necessary  
 //   if( query_flags(UDBUF_UP2DATE)!=1 )
-    copy_bnd_ud();
+//    copy_bnd_ud();
 
   size_t gSize = (gauge_param.cpu_prec == QUDA_DOUBLE_PRECISION) ? sizeof(double) : sizeof(float);
 
@@ -298,7 +298,7 @@ void _loadGaugeQuda()
 #endif
           
           int oddBit = (x0+x1+x2+x3) & 1;
-          int dd_idx   = ipt[i];
+          int dd_idx   = 0;//ipt[i];
           int quda_idx = 18*(oddBit*VOLUME/2+j/2);
           
 
@@ -339,12 +339,12 @@ void reorder_spinor_toQuda( double* spinor, QudaPrecision precision )
 #endif
           
           int oddBit = (x0+x1+x2+x3) & 1;
-          memcpy( &(spinor[24*(oddBit*VOLUME/2+j/2)]), &(tempSpinor[24*ipt[i]]), 24*sizeof(double));
+          memcpy( &(spinor[24*(oddBit*VOLUME/2+j/2)]), &(tempSpinor[24/* *ipt[i]*/]), 24*sizeof(double));
         } 
         
   double endTime = MPI_Wtime();
   double diffTime = endTime - startTime;
-  message("time spent in reorder_spinor_toQuda: %f secs\n", diffTime);
+  printf("time spent in reorder_spinor_toQuda: %f secs\n", diffTime);
 }
 
 // reorder spinor from QUDA format
@@ -367,12 +367,12 @@ void reorder_spinor_fromQuda( double* spinor, QudaPrecision precision )
 #endif
           
           int oddBit = (x0+x1+x2+x3) & 1;
-          memcpy( &(spinor[24*ipt[i]]), &(tempSpinor[24*(oddBit*VOLUME/2+j/2)]), 24*sizeof(double));
+          memcpy( &(spinor[24/* *ipt[i]*/]), &(tempSpinor[24*(oddBit*VOLUME/2+j/2)]), 24*sizeof(double));
         }
         
   double endTime = MPI_Wtime();
   double diffTime = endTime - startTime;
-  message("time spent in reorder_spinor_fromQuda: %f secs\n", diffTime);
+  printf("time spent in reorder_spinor_fromQuda: %f secs\n", diffTime);
 }
 
 void tmQnohat_quda(int k, int l)
