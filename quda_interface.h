@@ -74,6 +74,8 @@
 #ifndef QUDA_INTERFACE_H_
 #define QUDA_INTERFACE_H_
 
+#include "su3.h"
+
 // pointer to the QUDA gaugefield, alloc. in dd_initQuda()
 double *gauge_quda[4];
 
@@ -86,6 +88,6 @@ void _loadGaugeQuda();
 double tmcgne_quda( int nmx, double res, int k, int l, int *status, int *ifail );
 
 // apply the TM operator using QUDA
-void tmQnohat_quda(int k, int l);
+void D_psi_quda(spinor * const P, spinor * const Q);
 
 #endif /* QUDA_INTERFACE_H_ */

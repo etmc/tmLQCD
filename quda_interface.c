@@ -298,7 +298,7 @@ void _loadGaugeQuda()
 #endif
           
           int oddBit = (x0+x1+x2+x3) & 1;
-          int dd_idx   = 0;//ipt[i];
+          int dd_idx   = j;//ipt[i];
           int quda_idx = 18*(oddBit*VOLUME/2+j/2);
           
 
@@ -308,10 +308,10 @@ void _loadGaugeQuda()
             memcpy( &(gauge_quda[2][quda_idx]), pud[dd_idx][1], 18*gSize); 
             memcpy( &(gauge_quda[3][quda_idx]), pud[dd_idx][0], 18*gSize); 
 #else
-//            memcpy( &(gauge_quda[0][quda_idx]), pud[dd_idx][1], 18*gSize);
-//            memcpy( &(gauge_quda[1][quda_idx]), pud[dd_idx][2], 18*gSize);
-//            memcpy( &(gauge_quda[2][quda_idx]), pud[dd_idx][3], 18*gSize);
-//            memcpy( &(gauge_quda[3][quda_idx]), pud[dd_idx][0], 18*gSize);
+            memcpy( &(gauge_quda[0][quda_idx]), &(g_gauge_field[dd_idx][1]), 18*gSize);
+            memcpy( &(gauge_quda[1][quda_idx]), &(g_gauge_field[dd_idx][2]), 18*gSize);
+            memcpy( &(gauge_quda[2][quda_idx]), &(g_gauge_field[dd_idx][3]), 18*gSize);
+            memcpy( &(gauge_quda[3][quda_idx]), &(g_gauge_field[dd_idx][0]), 18*gSize);
 #endif
         }
         
@@ -375,29 +375,28 @@ void reorder_spinor_fromQuda( double* spinor, QudaPrecision precision )
   printf("time spent in reorder_spinor_fromQuda: %f secs\n", diffTime);
 }
 
-void tmQnohat_quda(int k, int l)
+void D_psi_quda(spinor * const P, spinor * const Q)
 {
-//  lat_parms_t lat = lat_parms();
-//  inv_param.kappa = lat.kappa;
-//  inv_param.mu = fabs(lat.csw);
-//  inv_param.epsilon = 0.0;
-//
-//  // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
-//  inv_param.twist_flavor = (lat.csw < 0.0 ? QUDA_TWIST_PLUS : QUDA_TWIST_MINUS);
-//  inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ||
-//       inv_param.twist_flavor == QUDA_TWIST_DEG_DOUBLET ) ? 2 : 1;
-//
-//  void *spinorIn  = (void*)psd[k][0];
-//  void *spinorOut = (void*)psd[l][0];
-//
-//  // reorder spinor
+  inv_param.kappa = g_kappa;
+  inv_param.mu = 0.0; //TODO
+  inv_param.epsilon = 0.0;
+
+  // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
+  inv_param.twist_flavor = QUDA_TWIST_PLUS;//TODO (lat.csw < 0.0 ? QUDA_TWIST_PLUS : QUDA_TWIST_MINUS);
+  inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ||
+       inv_param.twist_flavor == QUDA_TWIST_DEG_DOUBLET ) ? 2 : 1;
+
+  void *spinorIn  = (void*)Q;
+  void *spinorOut = (void*)P;
+
+  // reorder spinor
 //  reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec );
-//
-//  // multiply
-////   inv_param.solution_type = QUDA_MAT_SOLUTION;
-//  MatQuda( spinorOut, spinorIn, &inv_param);
-//
-//  // reorder spinor
+
+  // multiply
+//   inv_param.solution_type = QUDA_MAT_SOLUTION;
+  MatQuda( spinorOut, spinorIn, &inv_param);
+
+  // reorder spinor
 //  reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec );
 //  reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec );
 }

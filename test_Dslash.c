@@ -249,6 +249,10 @@ int main(int argc,char *argv[])
   xchange_gauge(g_gauge_field);
 #endif
 
+#ifdef QUDA
+  _loadGaugeQuda();
+#endif
+
 	/* the non even/odd case now */
 	/*initialize the spinor fields*/
 	j_max=1;
@@ -275,7 +279,7 @@ int main(int argc,char *argv[])
 	}
 
 
-	/************************** one operator **************************/
+	/************************** D_psi on CPU **************************/
 
 #ifdef MPI
       MPI_Barrier(MPI_COMM_WORLD);
@@ -306,14 +310,14 @@ int main(int argc,char *argv[])
 	}
 
 
-	/************************** the other operator **************************/
+	/************************** D_psi_quda on GPU **************************/
 
 #ifdef MPI
       MPI_Barrier(MPI_COMM_WORLD);
 #endif
       t1 = gettime();
 
-      D_psi(g_spinor_field[2], g_spinor_field[3]);
+      D_psi_quda(g_spinor_field[2], g_spinor_field[3]);
 
       t2 = gettime();
       dt=t2-t1;
