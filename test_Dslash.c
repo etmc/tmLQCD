@@ -11,6 +11,8 @@
 *
 *
 *******************************************************************************/
+#define TEST_INVERSION 1 //if 0, then test only Dslash
+
 
 #ifdef HAVE_CONFIG_H
 # include<config.h>
@@ -42,10 +44,13 @@
 #include "read_input.h"
 #include "start.h"
 #include "boundary.h"
+#include "global.h"
 #include "operator/Hopping_Matrix.h"
 #include "operator/Hopping_Matrix_nocom.h"
 #include "operator/tm_operators.h"
-#include "global.h"
+#include "operator.h"
+#include "solver/cg_her.h"
+#include "gamma.h"
 #include "xchange/xchange.h"
 #include "init/init.h"
 #include "test/check_geometry.h"
@@ -53,6 +58,7 @@
 //#include "phmc.h"
 #include "mpi_init.h"
 #include "linalg/square_norm.h"
+#include "prepare_source.h"
 #include "quda_interface.h"
 
 #ifdef PARALLELT
@@ -72,6 +78,16 @@
 #endif
 
 int check_xchange();
+
+void _Q_pm_psi(spinor * const l, spinor * const k)
+{
+  g_mu = -g_mu;
+  D_psi(l, k);
+  gamma5(g_spinor_field[4], l, VOLUME);
+  g_mu = -g_mu;
+  D_psi(l, g_spinor_field[4]);
+  gamma5(l, l, VOLUME);
+}
 
 int main(int argc,char *argv[])
 {
@@ -181,12 +197,12 @@ int main(int argc,char *argv[])
 #endif
   init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
 
-  if(even_odd_flag) {
-    j = init_spinor_field(VOLUMEPLUSRAND/2, 2*k_max+1);
-  }
-  else {
-    j = init_spinor_field(VOLUMEPLUSRAND, 2*k_max);
-  }
+//  if(even_odd_flag) {
+//    j = init_spinor_field(VOLUMEPLUSRAND/2, 2*k_max+1);
+//  }
+//  else {
+    j = init_spinor_field(VOLUMEPLUSRAND, 2*k_max+1);
+//  }
 
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
@@ -212,6 +228,7 @@ int main(int argc,char *argv[])
   geometry();
   /* define the boundary conditions for the fermion fields */
   boundary(g_kappa);
+
 
 #ifdef _USE_HALFSPINOR
   j = init_dirac_halfspinor();
@@ -257,8 +274,11 @@ int main(int argc,char *argv[])
 	/*initialize the spinor fields*/
 	j_max=1;
 	sdt=0.;
+	random_spinor_field_lexic(g_spinor_field[0], reproduce_randomnumber_flag, RN_GAUSS);
 	random_spinor_field_lexic(g_spinor_field[1], reproduce_randomnumber_flag, RN_GAUSS);
-	//random_spinor_field_eo
+	random_spinor_field_lexic(g_spinor_field[2], reproduce_randomnumber_flag, RN_GAUSS);
+	random_spinor_field_lexic(g_spinor_field[3], reproduce_randomnumber_flag, RN_GAUSS);
+	//random_spinor_field_eo(...);
 
 	// copy
 	for(int ix=0; ix<VOLUME; ix++ )
@@ -278,15 +298,49 @@ int main(int argc,char *argv[])
 		fflush(stdout);
 	}
 
+//#if TEST_INVERSION
+//  init_operators();
+//  //prepare_source(0, 0, 0, 0, read_source_flag, source_location);
+//  operator_list[0].sr0 = g_spinor_field[0];
+//  operator_list[0].sr1 = g_spinor_field[1];
+//  operator_list[0].prop0 = g_spinor_field[2];
+//  operator_list[0].prop1 = g_spinor_field[3];
+//#endif
 
 	/************************** D_psi on CPU **************************/
+printf("\n# Operator 1:\n");
 
 #ifdef MPI
       MPI_Barrier(MPI_COMM_WORLD);
 #endif
       t1 = gettime();
 
+#if TEST_INVERSION
+      // invert
+//      operator_list[0].inverter(0, 0, 1);
+      gamma5(g_spinor_field[1], g_spinor_field[3], VOLUME);
+      cg_her(g_spinor_field[2], g_spinor_field[1], 1000, 1.0e-10,
+		      1.0e-10, VOLUME, &_Q_pm_psi);
+      Q_minus_psi(g_spinor_field[0], g_spinor_field[2]);
+
+      // check inversion
+      D_psi(g_spinor_field[1], g_spinor_field[0]);
+	for(int ix=0; ix<VOLUME; ix++ )
+	{
+		_vector_sub_assign( g_spinor_field[1][ix].s0, g_spinor_field[3][ix].s0 );
+		_vector_sub_assign( g_spinor_field[1][ix].s1, g_spinor_field[3][ix].s1 );
+		_vector_sub_assign( g_spinor_field[1][ix].s2, g_spinor_field[3][ix].s2 );
+		_vector_sub_assign( g_spinor_field[1][ix].s3, g_spinor_field[3][ix].s3 );
+	}
+
+	squarenorm = square_norm(g_spinor_field[1], VOLUME, 1);
+	if(g_proc_id==0) {
+		printf("\n# ||Ax-b||^2 = %e\n\n", squarenorm);
+		fflush(stdout);
+	}
+#else
       D_psi(g_spinor_field[0], g_spinor_field[1]);
+#endif
 
       t2 = gettime();
       dt=t2-t1;
@@ -311,13 +365,18 @@ int main(int argc,char *argv[])
 
 
 	/************************** D_psi_quda on GPU **************************/
+printf("\n# Operator 2:\n");
 
 #ifdef MPI
       MPI_Barrier(MPI_COMM_WORLD);
 #endif
       t1 = gettime();
 
+#if TEST_INVERSION
+
+#else
       D_psi_quda(g_spinor_field[2], g_spinor_field[3]);
+#endif
 
       t2 = gettime();
       dt=t2-t1;
