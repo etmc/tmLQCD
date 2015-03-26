@@ -11,8 +11,8 @@
 *
 *
 *******************************************************************************/
-#define TEST_INVERSION 1 //if 0, then test only Dslash
-
+#define TEST_INVERSION 1   // if 0, then test only Dslash
+#define TIMESLICE_SOURCE 1 // if 0, then volume source
 
 #ifdef HAVE_CONFIG_H
 # include<config.h>
@@ -280,6 +280,13 @@ int main(int argc,char *argv[])
 	random_spinor_field_lexic(g_spinor_field[3], reproduce_randomnumber_flag, RN_GAUSS);
 	//random_spinor_field_eo(...);
 
+#if TIMESLICE_SOURCE
+	for(int ix=T; ix<VOLUME; ix++ )
+	{
+		_spinor_null(g_spinor_field[1][ix]);
+	}
+#endif
+
 	// copy
 	for(int ix=0; ix<VOLUME; ix++ )
 	{
@@ -338,6 +345,21 @@ printf("\n# Operator 1:\n");
 		printf("\n# ||Ax-b||^2 = %e\n\n", squarenorm);
 		fflush(stdout);
 	}
+
+	// get pion
+	printf("\n# pion1: \n");
+	double pion[T];
+	for( int t = 0; t < T; t++ )
+	{
+		pion[t] = 0.0;
+		j = g_ipt[t][0][0][0];
+    	for( int i = j; i < j+LX*LY*LZ; i++ )
+    	{
+    		pion[t] += _spinor_prod_re( g_spinor_field[0][i], g_spinor_field[0][i] );
+    	}
+    	printf("%i\t%f\n", t, pion[t]);
+	}
+
 #else
       D_psi(g_spinor_field[0], g_spinor_field[1]);
 #endif
