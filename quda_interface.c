@@ -126,7 +126,7 @@ void _initQuda( int verbose )
   inv_param = newQudaInvertParam();
   
   // *** QUDA parameters begin here (may be modified)
-  gauge_param.t_boundary = QUDA_ANTI_PERIODIC_T;
+  gauge_param.t_boundary = QUDA_PERIODIC_T;//QUDA_ANTI_PERIODIC_T;
   QudaDslashType dslash_type = QUDA_TWISTED_MASS_DSLASH;
   QudaPrecision cpu_prec  = QUDA_DOUBLE_PRECISION;
   QudaPrecision cuda_prec = QUDA_DOUBLE_PRECISION;
@@ -178,7 +178,7 @@ void _initQuda( int verbose )
   inv_param.solution_type = QUDA_MAT_SOLUTION;
 
   inv_param.dagger = QUDA_DAG_NO;
-  inv_param.mass_normalization = QUDA_MASS_NORMALIZATION;
+  inv_param.mass_normalization = QUDA_KAPPA_NORMALIZATION;
   inv_param.solver_normalization = QUDA_DEFAULT_NORMALIZATION;
   inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
   inv_param.inv_type = QUDA_CG_INVERTER;
@@ -290,28 +290,48 @@ void _loadGaugeQuda()
              point on the local lattice with cartesian coordinates
              (x0,x1,x2,x3) */
              
-          int i = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
 #if USE_LZ_LY_LX_T
-          int j = i;
+          int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
+          int tm_idx   = g_ipt[x0][x1][x2][x3];
 #else
           int j = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
+          int tm_idx   = j;//g_ipt[x0][x3][x2][x1];
 #endif
           
           int oddBit = (x0+x1+x2+x3) & 1;
-          int dd_idx   = j;//ipt[i];
           int quda_idx = 18*(oddBit*VOLUME/2+j/2);
           
 
 #if USE_LZ_LY_LX_T
-            memcpy( &(gauge_quda[0][quda_idx]), pud[dd_idx][3], 18*gSize); 
-            memcpy( &(gauge_quda[1][quda_idx]), pud[dd_idx][2], 18*gSize); 
-            memcpy( &(gauge_quda[2][quda_idx]), pud[dd_idx][1], 18*gSize); 
-            memcpy( &(gauge_quda[3][quda_idx]), pud[dd_idx][0], 18*gSize); 
+            memcpy( &(gauge_quda[0][quda_idx]), pud[tm_idx][3], 18*gSize);
+            memcpy( &(gauge_quda[1][quda_idx]), pud[tm_idx][2], 18*gSize);
+            memcpy( &(gauge_quda[2][quda_idx]), pud[tm_idx][1], 18*gSize);
+            memcpy( &(gauge_quda[3][quda_idx]), pud[tm_idx][0], 18*gSize);
 #else
-            memcpy( &(gauge_quda[0][quda_idx]), &(g_gauge_field[dd_idx][1]), 18*gSize);
-            memcpy( &(gauge_quda[1][quda_idx]), &(g_gauge_field[dd_idx][2]), 18*gSize);
-            memcpy( &(gauge_quda[2][quda_idx]), &(g_gauge_field[dd_idx][3]), 18*gSize);
-            memcpy( &(gauge_quda[3][quda_idx]), &(g_gauge_field[dd_idx][0]), 18*gSize);
+            memcpy( &(gauge_quda[0][quda_idx]), &(g_gauge_field[tm_idx][1]), 18*gSize);
+            memcpy( &(gauge_quda[1][quda_idx]), &(g_gauge_field[tm_idx][2]), 18*gSize);
+            memcpy( &(gauge_quda[2][quda_idx]), &(g_gauge_field[tm_idx][3]), 18*gSize);
+            memcpy( &(gauge_quda[3][quda_idx]), &(g_gauge_field[tm_idx][0]), 18*gSize);
+
+//            _su3_transpose(tmp,g_gauge_field[tm_idx][1]);
+//            memcpy( &(gauge_quda[0][quda_idx]), &(tmp), 18*gSize);
+//            _su3_transpose(tmp,g_gauge_field[tm_idx][2]);
+//            memcpy( &(gauge_quda[1][quda_idx]), &(tmp), 18*gSize);
+//            _su3_transpose(tmp,g_gauge_field[tm_idx][3]);
+//            memcpy( &(gauge_quda[2][quda_idx]), &(tmp), 18*gSize);
+//            _su3_transpose(tmp,g_gauge_field[tm_idx][0]);
+//            memcpy( &(gauge_quda[3][quda_idx]), &(tmp), 18*gSize);
+
+//            for( int a=0; a<3; a++ )
+//            	for( int b=0; b<3; b++ )
+//            	{
+////            		memcpy( &(gauge_quda[0][quda_idx+6*b+2*a]), &(g_gauge_field[tm_idx][1+6*b+2*a]), 2*gSize);
+////            		memcpy( &(gauge_quda[1][quda_idx+6*b+2*a]), &(g_gauge_field[tm_idx][2+6*b+2*a]), 2*gSize);
+////            		memcpy( &(gauge_quda[2][quda_idx+6*b+2*a]), &(g_gauge_field[tm_idx][3+6*b+2*a]), 2*gSize);
+////            		memcpy( &(gauge_quda[3][quda_idx+6*b+2*a]), &(g_gauge_field[tm_idx][0+6*b+2*a]), 2*gSize);
+//
+//            		gauge_quda[0][quda_idx+6*b+2*a] = g_gauge_field[tm_idx][1]
+//            	}
 #endif
         }
         
@@ -331,15 +351,18 @@ void reorder_spinor_toQuda( double* spinor, QudaPrecision precision )
       for( int x2=0; x2<LY; x2++ )   //y
         for( int x3=0; x3<LZ; x3++ ) //x
         {
-          int i = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
 #if USE_LZ_LY_LX_T
-          int j = i;
+          int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
+          int tm_idx   = g_ipt[x0][x1][x2][x3];
 #else
           int j = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
+          int tm_idx   = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;//g_ipt[x0][x3][x2][x1];
 #endif
           
           int oddBit = (x0+x1+x2+x3) & 1;
-          memcpy( &(spinor[24*(oddBit*VOLUME/2+j/2)]), &(tempSpinor[24/* *ipt[i]*/]), 24*sizeof(double));
+          int quda_idx = 18*(oddBit*VOLUME/2+j/2);
+
+          memcpy( &(spinor[24*(oddBit*VOLUME/2+j/2)]), &(tempSpinor[24*tm_idx]), 24*sizeof(double));
         } 
         
   double endTime = MPI_Wtime();
@@ -359,15 +382,18 @@ void reorder_spinor_fromQuda( double* spinor, QudaPrecision precision )
       for( int x2=0; x2<LY; x2++ )   //y
         for( int x3=0; x3<LZ; x3++ ) //x
         {
-          int i = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
 #if USE_LZ_LY_LX_T
-          int j = i;
+          int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
+          int tm_idx   = g_ipt[x0][x1][x2][x3];
 #else
           int j = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
+          int tm_idx   = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;//g_ipt[x0][x3][x2][x1];
 #endif
           
           int oddBit = (x0+x1+x2+x3) & 1;
-          memcpy( &(spinor[24/* *ipt[i]*/]), &(tempSpinor[24*(oddBit*VOLUME/2+j/2)]), 24*sizeof(double));
+          int quda_idx = 18*(oddBit*VOLUME/2+j/2);
+
+          memcpy( &(spinor[24*tm_idx]), &(tempSpinor[24*(oddBit*VOLUME/2+j/2)]), 24*sizeof(double));
         }
         
   double endTime = MPI_Wtime();
@@ -435,83 +461,59 @@ double getResidualDD( int k, int l, double *nrm2 )
   return 0.0;//rn;
 }
 
-double tmcgne_quda(int nmx,double res,int k,int l,int *status,int *ifail)
+int invert_quda(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, const int rel_prec )
 {
 //  double startTime = MPI_Wtime();
-//
-//  if( inv_param.verbosity > QUDA_SILENT )
-//    message("\nCalled tmcgne_quda\n\n");
-//
-//  int iprms[3];
-//  double dprms[1];
-//
-//  // do some checks
-//  if (NPROC>1)
-//  {
-//    iprms[0]=nmx;
-//    iprms[1]=k;
-//    iprms[2]=l;
-//    dprms[0]=res;
-//
-//    MPI_Bcast(iprms,3,MPI_INT,0,MPI_COMM_WORLD);
-//    MPI_Bcast(dprms,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
-//
-//    error((iprms[0]!=nmx)||(iprms[1]!=k)||(iprms[2]!=l)||(dprms[0]!=res),1,
-//      "tmcgne_quda [quda_interface.c]","Parameters are not global");
-//    error_root((nmx<1)||(res<=DBL_EPSILON),1,
-//		   "tmcgne_quda [quda_interface.c]","Improper choice of nmx or res");
-//  }
-//
-//  lat_parms_t lat = lat_parms();
-//  error_root(lat.kappa==0.0,1,
-//    "tmcgne_quda [quda_interface.c]","Lattice parameters are not set");
-//  *ifail=0;
-//  inv_param.maxiter = nmx;
-//
-//  void *spinorIn  = (void*)psd[k][0]; // source
-//  void *spinorOut = (void*)psd[l][0]; // solution
-//
-//  //ranlxd(spinorIn,VOLUME*24); // a random source for debugging
-//
-//  // get initial rel. residual (rn) and residual^2 (nrm2) from DD
-//  double rn, nrm2;
+
+  if( inv_param.verbosity > QUDA_SILENT )
+    printf("\nCalled invert_quda\n\n");
+
+  inv_param.maxiter = max_iter;
+
+  void *spinorIn  = (void*)Q; // source
+  void *spinorOut = (void*)P; // solution
+
+  //ranlxd(spinorIn,VOLUME*24); // a random source for debugging
+
+  // get initial rel. residual (rn) and residual^2 (nrm2) from DD
+  int iteration;
 //  rn = getResidualDD(k,l,&nrm2);
 //  double tol = res*rn;
-//  inv_param.tol = 0.05*tol; // TODO be so strict?
-//
-//  // these can be set individually
-//  for (int i=0; i<inv_param.num_offset; i++) {
-//    inv_param.tol_offset[i] = inv_param.tol;
-//    inv_param.tol_hq_offset[i] = inv_param.tol_hq;
-//  }
-//  inv_param.kappa = lat.kappa;
-//  inv_param.mu = fabs(lat.csw);
-//  inv_param.epsilon = 0.0;
-//  // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
-//  inv_param.twist_flavor = (lat.csw < 0.0 ? QUDA_TWIST_PLUS : QUDA_TWIST_MINUS);
-//  inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ||
-//       inv_param.twist_flavor == QUDA_TWIST_DEG_DOUBLET ) ? 2 : 1;
-//
-//  // reorder spinor
-//  reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec );
-//
-//  // perform the inversion
-//  invertQuda(spinorOut, spinorIn, &inv_param);
-//
-//  if( inv_param.verbosity == QUDA_VERBOSE )
-//    message("Device memory used:\n   Spinor: %f GiB\n    Gauge: %f GiB\n",
-//	 inv_param.spinorGiB, gauge_param.gaugeGiB);
-//	if( inv_param.verbosity > QUDA_SILENT )
-//    message("Done: %i iter / %g secs = %g Gflops\n",
-//	 inv_param.iter, inv_param.secs, inv_param.gflops/inv_param.secs);
-//
-//  // number of CG iterations
-//  (*status) = inv_param.iter;
-//
-//  // reorder spinor
-//  reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec );
-//  reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec );
-//
+  inv_param.tol = rel_prec;
+
+  // these can be set individually
+  for (int i=0; i<inv_param.num_offset; i++) {
+    inv_param.tol_offset[i] = inv_param.tol;
+    inv_param.tol_hq_offset[i] = inv_param.tol_hq;
+  }
+  inv_param.kappa = g_kappa;
+  inv_param.mu = 0.0;//fabs(lat.csw);
+  inv_param.epsilon = 0.0;
+  // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
+  inv_param.twist_flavor = QUDA_TWIST_PLUS;//(lat.csw < 0.0 ? QUDA_TWIST_PLUS : QUDA_TWIST_MINUS);
+  inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ||
+       inv_param.twist_flavor == QUDA_TWIST_DEG_DOUBLET ) ? 2 : 1;
+
+  // reorder spinor
+  reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec );
+
+  // perform the inversion
+  invertQuda(spinorOut, spinorIn, &inv_param);
+
+  if( inv_param.verbosity == QUDA_VERBOSE )
+    printf("Device memory used:\n   Spinor: %f GiB\n    Gauge: %f GiB\n",
+	 inv_param.spinorGiB, gauge_param.gaugeGiB);
+	if( inv_param.verbosity > QUDA_SILENT )
+    printf("Done: %i iter / %g secs = %g Gflops\n",
+	 inv_param.iter, inv_param.secs, inv_param.gflops/inv_param.secs);
+
+  // number of CG iterations
+  iteration = inv_param.iter;
+
+  // reorder spinor
+  reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec );
+  reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec );
+
 //#if FINAL_RESIDUAL_CHECK_CPU_DD
 //  rn = getResidualDD(k,l,&nrm2);
 //  if( inv_param.verbosity > QUDA_SILENT )
@@ -521,17 +523,18 @@ double tmcgne_quda(int nmx,double res,int k,int l,int *status,int *ifail)
 //    if( inv_param.verbosity > QUDA_SILENT )
 //      message("true_res is %e (tol. is %e)\n", rn, tol);
 //#endif
-//
-//  // negative value if the program failed
+
+  // negative value if the program failed
 //  if (((*status)>=nmx)||(rn>tol)) //NOTE: here was AND, should be OR
 //    (*status)=-1;
 //  else if ((100.0*DBL_EPSILON*sqrt(nrm2))>tol)
 //    (*status)=-2;
-//
+
 //  double endTime = MPI_Wtime();
 //  double diffTime = endTime - startTime;
 //  message("time spent in tmcgne_quda: %f secs\n", diffTime);
     
-  return 0.0;//rn;
+  if(iteration > max_iter) return(-1);
+  	  return(iteration);
 }
 

@@ -259,7 +259,8 @@ int main(int argc,char *argv[])
 //#endif
 
   start_ranlux(1, 123456);
-  random_gauge_field(reproduce_randomnumber_flag, g_gauge_field);
+//  random_gauge_field(reproduce_randomnumber_flag, g_gauge_field);
+  unit_g_gauge_field();
 
 #ifdef MPI
   /*For parallelization: exchange the gaugefield */
@@ -281,11 +282,28 @@ int main(int argc,char *argv[])
 	//random_spinor_field_eo(...);
 
 #if TIMESLICE_SOURCE
-	for(int ix=T; ix<VOLUME; ix++ )
+//	for(int ix=0; ix<LX*LY*LZ; ix++ )
+//	{
+//		g_spinor_field[1][ix].s0.c1 = 0.0;
+//		g_spinor_field[1][ix].s0.c2 = 0.0;
+//		_vector_null(g_spinor_field[1][ix].s1);
+//		_vector_null(g_spinor_field[1][ix].s2);
+//		_vector_null(g_spinor_field[1][ix].s3);
+//	}
+	for(int ix=LX*LY*LZ; ix<VOLUME; ix++ )
 	{
 		_spinor_null(g_spinor_field[1][ix]);
 	}
 #endif
+
+//	for(int ix=0; ix<VOLUME; ix++ )
+//	{
+//		_spinor_null(g_spinor_field[1][ix]);
+//	}
+//	for(int ix=0; ix<LX*LY*LZ; ix++ )
+//	{
+//		g_spinor_field[1][ix].s0.c0 = 1.0;
+//	}
 
 	// copy
 	for(int ix=0; ix<VOLUME; ix++ )
@@ -348,16 +366,19 @@ printf("\n# Operator 1:\n");
 
 	// get pion
 	printf("\n# pion1: \n");
-	double pion[T];
+	double pionr[T];
+	double pioni[T];
 	for( int t = 0; t < T; t++ )
 	{
-		pion[t] = 0.0;
+		pionr[t] = 0.0;
+		pioni[t] = 0.0;
 		j = g_ipt[t][0][0][0];
     	for( int i = j; i < j+LX*LY*LZ; i++ )
     	{
-    		pion[t] += _spinor_prod_re( g_spinor_field[0][i], g_spinor_field[0][i] );
+    		pionr[t] += _spinor_prod_re( g_spinor_field[0][i], g_spinor_field[0][i] );
+    		pioni[t] += _spinor_prod_im( g_spinor_field[0][i], g_spinor_field[0][i] );
     	}
-    	printf("%i\t%f\n", t, pion[t]);
+    	printf("%i\t%f\t%f\n", t, pionr[t], pioni[t]);
 	}
 
 #else
@@ -395,7 +416,39 @@ printf("\n# Operator 2:\n");
       t1 = gettime();
 
 #if TEST_INVERSION
+      // invert
+      invert_quda(g_spinor_field[2], g_spinor_field[3], 1000, 1.0e-10, 1.0e-10 );
 
+      // check inversion
+      D_psi(g_spinor_field[1], g_spinor_field[2]);
+	for(int ix=0; ix<VOLUME; ix++ )
+	{
+		_vector_sub_assign( g_spinor_field[1][ix].s0, g_spinor_field[3][ix].s0 );
+		_vector_sub_assign( g_spinor_field[1][ix].s1, g_spinor_field[3][ix].s1 );
+		_vector_sub_assign( g_spinor_field[1][ix].s2, g_spinor_field[3][ix].s2 );
+		_vector_sub_assign( g_spinor_field[1][ix].s3, g_spinor_field[3][ix].s3 );
+	}
+
+	squarenorm = square_norm(g_spinor_field[1], VOLUME, 1);
+	if(g_proc_id==0) {
+		printf("\n# ||Ax-b||^2 = %e\n\n", squarenorm);
+		fflush(stdout);
+	}
+
+	// get pion
+	printf("\n# pion2: \n");
+	for( int t = 0; t < T; t++ )
+	{
+		pionr[t] = 0.0;
+		pioni[t] = 0.0;
+		j = g_ipt[t][0][0][0];
+    	for( int i = j; i < j+LX*LY*LZ; i++ )
+    	{
+    		pionr[t] += _spinor_prod_re( g_spinor_field[2][i], g_spinor_field[2][i] );
+    		pioni[t] += _spinor_prod_im( g_spinor_field[2][i], g_spinor_field[2][i] );
+    	}
+    	printf("%i\t%f\t%f\n", t, pionr[t], pioni[t]);
+	}
 #else
       D_psi_quda(g_spinor_field[2], g_spinor_field[3]);
 #endif
@@ -417,7 +470,7 @@ printf("\n# Operator 2:\n");
     // print L2-norm of result:
 	squarenorm = square_norm(g_spinor_field[2], VOLUME, 1);
 	if(g_proc_id==0) {
-		printf("# ||result1||^2 = %e\n\n", squarenorm);
+		printf("# ||result2||^2 = %e\n\n", squarenorm);
 		fflush(stdout);
 	}
 

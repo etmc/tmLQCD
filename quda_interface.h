@@ -85,7 +85,7 @@ void _endQuda();
 void _loadGaugeQuda();
 
 // to be called instead of tmcgne to use the QUDA inverter
-double tmcgne_quda( int nmx, double res, int k, int l, int *status, int *ifail );
+int invert_quda(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, const int rel_prec );
 
 // apply the TM operator using QUDA
 void D_psi_quda(spinor * const P, spinor * const Q);
