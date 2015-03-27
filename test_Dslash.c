@@ -12,7 +12,7 @@
 *
 *******************************************************************************/
 #define TEST_INVERSION 1   // if 0, then test only Dslash
-#define TIMESLICE_SOURCE 1 // if 0, then volume source
+#define TIMESLICE_SOURCE 0 // if 0, then volume source
 
 #ifdef HAVE_CONFIG_H
 # include<config.h>

@@ -404,11 +404,11 @@ void reorder_spinor_fromQuda( double* spinor, QudaPrecision precision )
 void D_psi_quda(spinor * const P, spinor * const Q)
 {
   inv_param.kappa = g_kappa;
-  inv_param.mu = 0.0; //TODO
+  inv_param.mu = fabs(g_mu);
   inv_param.epsilon = 0.0;
 
   // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
-  inv_param.twist_flavor = QUDA_TWIST_PLUS;//TODO (lat.csw < 0.0 ? QUDA_TWIST_PLUS : QUDA_TWIST_MINUS);
+  inv_param.twist_flavor = (g_mu < 0.0 ? QUDA_TWIST_PLUS : QUDA_TWIST_MINUS);
   inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ||
        inv_param.twist_flavor == QUDA_TWIST_DEG_DOUBLET ) ? 2 : 1;
 
@@ -416,15 +416,15 @@ void D_psi_quda(spinor * const P, spinor * const Q)
   void *spinorOut = (void*)P;
 
   // reorder spinor
-//  reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec );
+  reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec );
 
   // multiply
 //   inv_param.solution_type = QUDA_MAT_SOLUTION;
   MatQuda( spinorOut, spinorIn, &inv_param);
 
   // reorder spinor
-//  reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec );
-//  reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec );
+  reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec );
+  reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec );
 }
 
 
@@ -487,10 +487,10 @@ int invert_quda(spinor * const P, spinor * const Q, const int max_iter, double e
     inv_param.tol_hq_offset[i] = inv_param.tol_hq;
   }
   inv_param.kappa = g_kappa;
-  inv_param.mu = 0.0;//fabs(lat.csw);
+  inv_param.mu = fabs(g_mu);
   inv_param.epsilon = 0.0;
   // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
-  inv_param.twist_flavor = QUDA_TWIST_PLUS;//(lat.csw < 0.0 ? QUDA_TWIST_PLUS : QUDA_TWIST_MINUS);
+  inv_param.twist_flavor = (g_mu < 0.0 ? QUDA_TWIST_PLUS : QUDA_TWIST_MINUS);
   inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ||
        inv_param.twist_flavor == QUDA_TWIST_DEG_DOUBLET ) ? 2 : 1;
 
