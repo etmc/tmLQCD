@@ -295,7 +295,7 @@ void _loadGaugeQuda()
           int tm_idx   = g_ipt[x0][x1][x2][x3];
 #else
           int j = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
-          int tm_idx   = j;//g_ipt[x0][x3][x2][x1];
+          int tm_idx   = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;//g_ipt[x0][x3][x2][x1];
 #endif
           
           int oddBit = (x0+x1+x2+x3) & 1;
