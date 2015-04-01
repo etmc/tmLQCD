@@ -3761,12 +3761,6 @@ void init_gpu_nd_mms_fields(int Nshift, int use_eo){
     #endif
 
 
-  R1_UP_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
-  R2_UP_D = R1_UP_D + 12*tSliceEO;
-  R3_UP_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
-  R4_UP_D = R3_UP_D + 12*tSliceEO;
-
-
 //for gathering and spreading of indizes of rand in (gather_rand spread_rand called from xchange_field_wrapper)
     #ifdef RELATIVISTIC_BASIS
       cudaMalloc((void **) &RAND_FW_DN_D, tSliceEO*6*sizeof(double2));
@@ -4359,12 +4353,6 @@ void init_gpu_single_nd_mms_fields(int Nshift, int N){
       cudaMalloc((void **) &RAND_BW_UP_D, tSliceEO*12*sizeof(double2));      
     #endif
 
-
-
-  R1_UP_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
-  R2_UP_D = R1_UP_D + 12*tSliceEO;
-  R3_UP_D = (dev_spinor_d *) malloc(2*tSliceEO*24*sizeof(double));
-  R4_UP_D = R3_UP_D + 12*tSliceEO;
 
 
 //for gathering and spreading of indizes of rand in (gather_rand spread_rand called from xchange_field_wrapper)

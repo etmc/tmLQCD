@@ -2379,8 +2379,8 @@ extern "C" void finalize_mixedsolve(int use_eo){
      cudaStreamDestroy(stream[i]);
   } 
 #endif 
-  
-  
+
+  free(h2d_spin_d);
   free(h2d_spin);
   free(h2d_gf);
 }
