@@ -45,8 +45,10 @@
 *
 *   void _loadGaugeQuda()
 *     Copies and reorders the gaugefield on the host and copies it to the GPU.
-*     Must be called between last changes on the gaugefield (smearing, flip 
-*     boundary conditions, etc.) and first call of the inverter.
+*     Must be called between last changes on the gaugefield (smearing etc.)
+*     and first call of the inverter. In particular, 'boundary(const double kappa)'
+*     must be called before if nontrivial boundary conditions are to be used since
+*     those will be applied directly to the gaugefield.
 *
 *   double tmcgne_quda(int nmx,double res,int k,int l,int *status,int *ifail)
 *     The same functionality as 'tmcgne' (see tmcg.c) but inversion is performed on 
@@ -78,10 +80,8 @@
 #include <string.h>
 #include <math.h>
 #include "global.h"
+#include "boundary.h"
 #include "quda.h"
-
-
-#define MAX(a,b) ((a)>(b)?(a):(b))
 
 // define order of the spatial indices
 // default is LX-LY-LZ-T, see below def. of local lattice size, this is related to
@@ -89,8 +89,19 @@
 // for details see https://github.com/lattice/quda/issues/157
 #define USE_LZ_LY_LX_T 0
 
+// TRIVIAL_BC are trivial (anti-)periodic boundary conditions,
+// i.e. 1 or -1 on last timeslice
+// tmLQCD uses twisted BC, i.e. phases on all timeslices.
+// if using TRIVIAL_BC: can't compare inversion result to tmLQCD
+// if not using TRIVIAL_BC: BC will be applied to gauge field,
+// can't use 12 parameter reconstruction
+#define TRIVIAL_BC 0
+
 // final check of residual with DD functions on the CPU
 #define FINAL_RESIDUAL_CHECK_CPU_DD 1
+
+
+#define MAX(a,b) ((a)>(b)?(a):(b))
 
 // gauge and invert paramameter structs; init. in _initQuda()
 QudaGaugeParam  gauge_param;
@@ -126,14 +137,20 @@ void _initQuda( int verbose )
   inv_param = newQudaInvertParam();
   
   // *** QUDA parameters begin here (may be modified)
-  gauge_param.t_boundary = QUDA_PERIODIC_T;//QUDA_ANTI_PERIODIC_T;
   QudaDslashType dslash_type = QUDA_TWISTED_MASS_DSLASH;
   QudaPrecision cpu_prec  = QUDA_DOUBLE_PRECISION;
   QudaPrecision cuda_prec = QUDA_DOUBLE_PRECISION;
   QudaPrecision cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
-  QudaPrecision cuda_prec_precondition = QUDA_HALF_PRECISION;  
+  QudaPrecision cuda_prec_precondition = QUDA_HALF_PRECISION;
+#if TRIVIAL_BC
+  gauge_param.t_boundary = ( abs(phase_0)>0.0 ? QUDA_ANTI_PERIODIC_T : QUDA_PERIODIC_T );
   QudaReconstructType link_recon = 12;
   QudaReconstructType link_recon_sloppy = 12;
+#else
+  gauge_param.t_boundary = QUDA_PERIODIC_T; // BC will be applied to gaugefield
+  QudaReconstructType link_recon = 18;
+  QudaReconstructType link_recon_sloppy = 18;
+#endif
   QudaTune tune = QUDA_TUNE_YES;
   
   
@@ -278,6 +295,8 @@ void _loadGaugeQuda()
 //   if( query_flags(UDBUF_UP2DATE)!=1 )
 //    copy_bnd_ud();
 
+  _Complex double tmpcplx;
+
   size_t gSize = (gauge_param.cpu_prec == QUDA_DOUBLE_PRECISION) ? sizeof(double) : sizeof(float);
 
   // now copy and reorder 
@@ -313,25 +332,32 @@ void _loadGaugeQuda()
             memcpy( &(gauge_quda[2][quda_idx]), &(g_gauge_field[tm_idx][3]), 18*gSize);
             memcpy( &(gauge_quda[3][quda_idx]), &(g_gauge_field[tm_idx][0]), 18*gSize);
 
-//            _su3_transpose(tmp,g_gauge_field[tm_idx][1]);
-//            memcpy( &(gauge_quda[0][quda_idx]), &(tmp), 18*gSize);
-//            _su3_transpose(tmp,g_gauge_field[tm_idx][2]);
-//            memcpy( &(gauge_quda[1][quda_idx]), &(tmp), 18*gSize);
-//            _su3_transpose(tmp,g_gauge_field[tm_idx][3]);
-//            memcpy( &(gauge_quda[2][quda_idx]), &(tmp), 18*gSize);
-//            _su3_transpose(tmp,g_gauge_field[tm_idx][0]);
-//            memcpy( &(gauge_quda[3][quda_idx]), &(tmp), 18*gSize);
+#if !(TRIVIAL_BC)
+            // apply boundary conditions
+            for( int i=0; i<9; i++ )
+            {
+            	tmpcplx = gauge_quda[0][quda_idx+2*i] + I*gauge_quda[0][quda_idx+2*i+1];
+            	tmpcplx *= -phase_1/g_kappa;
+            	gauge_quda[0][quda_idx+2*i]   = creal(tmpcplx);
+            	gauge_quda[0][quda_idx+2*i+1] = cimag(tmpcplx);
 
-//            for( int a=0; a<3; a++ )
-//            	for( int b=0; b<3; b++ )
-//            	{
-////            		memcpy( &(gauge_quda[0][quda_idx+6*b+2*a]), &(g_gauge_field[tm_idx][1+6*b+2*a]), 2*gSize);
-////            		memcpy( &(gauge_quda[1][quda_idx+6*b+2*a]), &(g_gauge_field[tm_idx][2+6*b+2*a]), 2*gSize);
-////            		memcpy( &(gauge_quda[2][quda_idx+6*b+2*a]), &(g_gauge_field[tm_idx][3+6*b+2*a]), 2*gSize);
-////            		memcpy( &(gauge_quda[3][quda_idx+6*b+2*a]), &(g_gauge_field[tm_idx][0+6*b+2*a]), 2*gSize);
-//
-//            		gauge_quda[0][quda_idx+6*b+2*a] = g_gauge_field[tm_idx][1]
-//            	}
+            	tmpcplx = gauge_quda[1][quda_idx+2*i] + I*gauge_quda[1][quda_idx+2*i+1];
+            	tmpcplx *= -phase_2/g_kappa;
+            	gauge_quda[1][quda_idx+2*i]   = creal(tmpcplx);
+            	gauge_quda[1][quda_idx+2*i+1] = cimag(tmpcplx);
+
+            	tmpcplx = gauge_quda[2][quda_idx+2*i] + I*gauge_quda[2][quda_idx+2*i+1];
+            	tmpcplx *= -phase_3/g_kappa;
+            	gauge_quda[2][quda_idx+2*i]   = creal(tmpcplx);
+            	gauge_quda[2][quda_idx+2*i+1] = cimag(tmpcplx);
+
+            	tmpcplx = gauge_quda[3][quda_idx+2*i] + I*gauge_quda[3][quda_idx+2*i+1];
+            	tmpcplx *= -phase_0/g_kappa;
+            	gauge_quda[3][quda_idx+2*i]   = creal(tmpcplx);
+            	gauge_quda[3][quda_idx+2*i+1] = cimag(tmpcplx);
+            }
+#endif
+
 #endif
         }
         

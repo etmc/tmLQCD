@@ -229,6 +229,14 @@ int main(int argc,char *argv[])
   /* define the boundary conditions for the fermion fields */
   boundary(g_kappa);
 
+  //check BC
+  if(g_proc_id == 0)
+  {
+	  printf("phase_0 = %f + I*%f\n", creal(phase_0), cimag(phase_0));
+	  printf("phase_1 = %f + I*%f\n", creal(phase_1), cimag(phase_1));
+	  printf("phase_2 = %f + I*%f\n", creal(phase_2), cimag(phase_2));
+	  printf("phase_3 = %f + I*%f\n", creal(phase_3), cimag(phase_3));
+  }
 
 #ifdef _USE_HALFSPINOR
   j = init_dirac_halfspinor();
