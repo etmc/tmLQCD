@@ -113,15 +113,17 @@ double *tempSpinor;
 // function that maps coordinates in the communication grid to MPI ranks
 int commsMap(const int *coords, void *fdata)
 {
-//#if USE_LZ_LY_LX_T
-//  int n[4] = {coords[3], coords[2], coords[1], coords[0]};
-//#else
-//  int n[4] = {coords[3], coords[0], coords[1], coords[2]};
-//#endif
+#if USE_LZ_LY_LX_T
+  int n[4] = {coords[3], coords[2], coords[1], coords[0]};
+#else
+  int n[4] = {coords[3], coords[0], coords[1], coords[2]};
+#endif
 
-  // This program returns the number of the process with cartesian
-  // coordinates n[0],..,n[3] in the process grid
-  return 0;//ipr_global(n);
+  int rank;
+
+  MPI_Cart_rank( g_cart_grid, n, &rank );
+
+  return rank;
 }
 
 void _initQuda( int verbose )
@@ -256,7 +258,7 @@ void _initQuda( int verbose )
 #if USE_LZ_LY_LX_T
   int grid[4] = {NPROC3, NPROC2, NPROC1, NPROC0};
 #else
-  int grid[4] = {1,1,1,1};//{NPROC1, NPROC2, NPROC3, NPROC0};
+  int grid[4] = {g_nproc_x, g_nproc_y, g_nproc_z, g_nproc_t};
 #endif
 
   initCommsGridQuda(4, grid, commsMap, NULL);
@@ -300,10 +302,10 @@ void _loadGaugeQuda()
   size_t gSize = (gauge_param.cpu_prec == QUDA_DOUBLE_PRECISION) ? sizeof(double) : sizeof(float);
 
   // now copy and reorder 
-  for( int x0=0; x0<T; x0++ )       //t
-    for( int x1=0; x1<LX; x1++ )     //z
-      for( int x2=0; x2<LY; x2++ )   //y
-        for( int x3=0; x3<LZ; x3++ ) //x
+  for( int x0=0; x0<T; x0++ )
+    for( int x1=0; x1<LX; x1++ )
+      for( int x2=0; x2<LY; x2++ )
+        for( int x3=0; x3<LZ; x3++ )
         {
           /* ipt[x3+LZ*x2+LY*LZ*x1+LX*LY*LZ*x0] is the index of the
              point on the local lattice with cartesian coordinates
@@ -372,10 +374,10 @@ void reorder_spinor_toQuda( double* spinor, QudaPrecision precision )
   memcpy( tempSpinor, spinor, VOLUME*24*sizeof(double) );
 
   // now copy and reorder from tempSpinor to spinor 
-  for( int x0=0; x0<T; x0++ )       //t
-    for( int x1=0; x1<LX; x1++ )     //z
-      for( int x2=0; x2<LY; x2++ )   //y
-        for( int x3=0; x3<LZ; x3++ ) //x
+  for( int x0=0; x0<T; x0++ )
+    for( int x1=0; x1<LX; x1++ )
+      for( int x2=0; x2<LY; x2++ )
+        for( int x3=0; x3<LZ; x3++ )
         {
 #if USE_LZ_LY_LX_T
           int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
@@ -403,10 +405,10 @@ void reorder_spinor_fromQuda( double* spinor, QudaPrecision precision )
   memcpy( tempSpinor, spinor, VOLUME*24*sizeof(double) );
 
   // now copy and reorder from tempSpinor to spinor 
-  for( int x0=0; x0<T; x0++ )       //t
-    for( int x1=0; x1<LX; x1++ )     //z
-      for( int x2=0; x2<LY; x2++ )   //y
-        for( int x3=0; x3<LZ; x3++ ) //x
+  for( int x0=0; x0<T; x0++ )
+    for( int x1=0; x1<LX; x1++ )
+      for( int x2=0; x2<LY; x2++ )
+        for( int x3=0; x3<LZ; x3++ )
         {
 #if USE_LZ_LY_LX_T
           int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
@@ -489,7 +491,7 @@ double getResidualDD( int k, int l, double *nrm2 )
 
 int invert_quda(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, const int rel_prec )
 {
-//  double startTime = MPI_Wtime();
+  double startTime = MPI_Wtime();
 
   if( inv_param.verbosity > QUDA_SILENT )
     printf("\nCalled invert_quda\n\n");
@@ -556,9 +558,9 @@ int invert_quda(spinor * const P, spinor * const Q, const int max_iter, double e
 //  else if ((100.0*DBL_EPSILON*sqrt(nrm2))>tol)
 //    (*status)=-2;
 
-//  double endTime = MPI_Wtime();
-//  double diffTime = endTime - startTime;
-//  message("time spent in tmcgne_quda: %f secs\n", diffTime);
+  double endTime = MPI_Wtime();
+  double diffTime = endTime - startTime;
+  printf("time spent in tmcgne_quda: %f secs\n", diffTime);
     
   if(iteration > max_iter) return(-1);
   	  return(iteration);

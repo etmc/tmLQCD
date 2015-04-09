@@ -137,7 +137,8 @@ int main(int argc,char *argv[])
   tmlqcd_mpi_init(argc, argv);
 
 #ifdef QUDA
-  printf("# We're using QUDA!\n");
+  if(g_proc_id==0)
+	  printf("# We're using QUDA!\n");
   _initQuda(3);
 #endif
 
@@ -232,10 +233,10 @@ int main(int argc,char *argv[])
   //check BC
   if(g_proc_id == 0)
   {
-	  printf("phase_0 = %f + I*%f\n", creal(phase_0), cimag(phase_0));
+	  printf("\nphase_0 = %f + I*%f\n", creal(phase_0), cimag(phase_0));
 	  printf("phase_1 = %f + I*%f\n", creal(phase_1), cimag(phase_1));
 	  printf("phase_2 = %f + I*%f\n", creal(phase_2), cimag(phase_2));
-	  printf("phase_3 = %f + I*%f\n", creal(phase_3), cimag(phase_3));
+	  printf("phase_3 = %f + I*%f\n\n", creal(phase_3), cimag(phase_3));
   }
 
 #ifdef _USE_HALFSPINOR
@@ -341,7 +342,8 @@ int main(int argc,char *argv[])
 //#endif
 
 	/************************** D_psi on CPU **************************/
-printf("\n# Operator 1:\n");
+	if(g_proc_id==0)
+		printf("\n# Operator 1:\n");
 
 #ifdef MPI
       MPI_Barrier(MPI_COMM_WORLD);
@@ -372,22 +374,22 @@ printf("\n# Operator 1:\n");
 		fflush(stdout);
 	}
 
-	// get pion
-	printf("\n# pion1: \n");
-	double pionr[T];
-	double pioni[T];
-	for( int t = 0; t < T; t++ )
-	{
-		pionr[t] = 0.0;
-		pioni[t] = 0.0;
-		j = g_ipt[t][0][0][0];
-    	for( int i = j; i < j+LX*LY*LZ; i++ )
-    	{
-    		pionr[t] += _spinor_prod_re( g_spinor_field[0][i], g_spinor_field[0][i] );
-    		pioni[t] += _spinor_prod_im( g_spinor_field[0][i], g_spinor_field[0][i] );
-    	}
-    	printf("%i\t%f\t%f\n", t, pionr[t], pioni[t]);
-	}
+//	// get pion
+//	printf("\n# pion1: \n");
+//	double pionr[T];
+//	double pioni[T];
+//	for( int t = 0; t < T; t++ )
+//	{
+//		pionr[t] = 0.0;
+//		pioni[t] = 0.0;
+//		j = g_ipt[t][0][0][0];
+//    	for( int i = j; i < j+LX*LY*LZ; i++ )
+//    	{
+//    		pionr[t] += _spinor_prod_re( g_spinor_field[0][i], g_spinor_field[0][i] );
+//    		pioni[t] += _spinor_prod_im( g_spinor_field[0][i], g_spinor_field[0][i] );
+//    	}
+//    	printf("%i\t%f\t%f\n", t, pionr[t], pioni[t]);
+//	}
 
 #else
       D_psi(g_spinor_field[0], g_spinor_field[1]);
@@ -416,7 +418,8 @@ printf("\n# Operator 1:\n");
 
 
 	/************************** D_psi_quda on GPU **************************/
-printf("\n# Operator 2:\n");
+	if(g_proc_id==0)
+		printf("\n# Operator 2:\n");
 
 #ifdef MPI
       MPI_Barrier(MPI_COMM_WORLD);
@@ -443,20 +446,20 @@ printf("\n# Operator 2:\n");
 		fflush(stdout);
 	}
 
-	// get pion
-	printf("\n# pion2: \n");
-	for( int t = 0; t < T; t++ )
-	{
-		pionr[t] = 0.0;
-		pioni[t] = 0.0;
-		j = g_ipt[t][0][0][0];
-    	for( int i = j; i < j+LX*LY*LZ; i++ )
-    	{
-    		pionr[t] += _spinor_prod_re( g_spinor_field[2][i], g_spinor_field[2][i] );
-    		pioni[t] += _spinor_prod_im( g_spinor_field[2][i], g_spinor_field[2][i] );
-    	}
-    	printf("%i\t%f\t%f\n", t, pionr[t], pioni[t]);
-	}
+//	// get pion
+//	printf("\n# pion2: \n");
+//	for( int t = 0; t < T; t++ )
+//	{
+//		pionr[t] = 0.0;
+//		pioni[t] = 0.0;
+//		j = g_ipt[t][0][0][0];
+//    	for( int i = j; i < j+LX*LY*LZ; i++ )
+//    	{
+//    		pionr[t] += _spinor_prod_re( g_spinor_field[2][i], g_spinor_field[2][i] );
+//    		pioni[t] += _spinor_prod_im( g_spinor_field[2][i], g_spinor_field[2][i] );
+//    	}
+//    	printf("%i\t%f\t%f\n", t, pionr[t], pioni[t]);
+//	}
 #else
       D_psi_quda(g_spinor_field[2], g_spinor_field[3]);
 #endif
