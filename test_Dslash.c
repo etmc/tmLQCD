@@ -11,7 +11,7 @@
 *
 *
 *******************************************************************************/
-#define TEST_INVERSION 1   // if 0, then test only Dslash
+#define TEST_INVERSION 0   // if 0, then test only Dslash
 #define TIMESLICE_SOURCE 0 // if 0, then volume source
 
 #ifdef HAVE_CONFIG_H
@@ -58,6 +58,7 @@
 //#include "phmc.h"
 #include "mpi_init.h"
 #include "linalg/square_norm.h"
+#include "linalg/assign_add_mul_r.h"
 #include "prepare_source.h"
 #include "quda_interface.h"
 
@@ -87,6 +88,19 @@ void _Q_pm_psi(spinor * const l, spinor * const k)
   g_mu = -g_mu;
   D_psi(l, g_spinor_field[4]);
   gamma5(l, l, VOLUME);
+}
+
+void _M_full(spinor * const Even_new, spinor * const Odd_new,
+	    spinor * const Even, spinor * const Odd) {
+  /* Even sites */
+  Hopping_Matrix(EO, g_spinor_field[8], Odd);
+  assign_mul_one_pm_imu(Even_new, Even, 1., VOLUME/2);
+  assign_add_mul_r(Even_new, g_spinor_field[8], -1., VOLUME/2);
+
+  /* Odd sites */
+  Hopping_Matrix(OE, g_spinor_field[8], Even);
+  assign_mul_one_pm_imu(Odd_new, Odd, 1., VOLUME/2);
+  assign_add_mul_r(Odd_new, g_spinor_field[8], -1., VOLUME/2);
 }
 
 int main(int argc,char *argv[])
@@ -185,12 +199,6 @@ int main(int argc,char *argv[])
     fflush(stdout);
   }
 
-  if(even_odd_flag)
-	{
-		even_odd_flag=0;
-		printf("# WARNING: even_odd_flag will be ignored (currently not supported here).\n");
-	}
-
 #ifdef _GAUGE_COPY
   init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
@@ -198,12 +206,12 @@ int main(int argc,char *argv[])
 #endif
   init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
 
-//  if(even_odd_flag) {
-//    j = init_spinor_field(VOLUMEPLUSRAND/2, 2*k_max+1);
-//  }
-//  else {
+  if(even_odd_flag) {
+    j = init_spinor_field(VOLUMEPLUSRAND/2, 4*k_max+1);
+  }
+  else {
     j = init_spinor_field(VOLUMEPLUSRAND, 2*k_max+1);
-//  }
+  }
 
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
@@ -217,10 +225,10 @@ int main(int argc,char *argv[])
     printf("# The local lattice size is %d x %d x %d x %d\n",
 	   (int)(T), (int)(LX), (int)(LY),(int) LZ);
     if(even_odd_flag) {
-      printf("# benchmarking the even/odd preconditioned Dirac operator\n");
+      printf("# testing the even/odd preconditioned Dirac operator\n");
     }
     else {
-      printf("# benchmarking the standard Dirac operator\n");
+      printf("# testing the standard Dirac operator\n");
     }
     fflush(stdout);
   }
@@ -280,56 +288,87 @@ int main(int argc,char *argv[])
   _loadGaugeQuda();
 #endif
 
-	/* the non even/odd case now */
 	/*initialize the spinor fields*/
 	j_max=1;
 	sdt=0.;
-	random_spinor_field_lexic(g_spinor_field[0], reproduce_randomnumber_flag, RN_GAUSS);
-	random_spinor_field_lexic(g_spinor_field[1], reproduce_randomnumber_flag, RN_GAUSS);
-	random_spinor_field_lexic(g_spinor_field[2], reproduce_randomnumber_flag, RN_GAUSS);
-	random_spinor_field_lexic(g_spinor_field[3], reproduce_randomnumber_flag, RN_GAUSS);
-	//random_spinor_field_eo(...);
+	if(even_odd_flag)
+		for( int k=0; k<4*k_max; k++ )
+			random_spinor_field_eo(g_spinor_field[k], reproduce_randomnumber_flag, RN_GAUSS);
+	else
+		for( int k=0; k<2*k_max; k++ )
+			random_spinor_field_lexic(g_spinor_field[k], reproduce_randomnumber_flag, RN_GAUSS);
+
 
 #if TIMESLICE_SOURCE
-//	for(int ix=0; ix<LX*LY*LZ; ix++ )
-//	{
-//		g_spinor_field[1][ix].s0.c1 = 0.0;
-//		g_spinor_field[1][ix].s0.c2 = 0.0;
-//		_vector_null(g_spinor_field[1][ix].s1);
-//		_vector_null(g_spinor_field[1][ix].s2);
-//		_vector_null(g_spinor_field[1][ix].s3);
-//	}
-	for(int ix=LX*LY*LZ; ix<VOLUME; ix++ )
-	{
-		_spinor_null(g_spinor_field[1][ix]);
-	}
+	if(even_odd_flag)
+		for(int ix=LX*LY*LZ/2; ix<VOLUME/2; ix++ )
+		{
+			// even
+			_spinor_null(g_spinor_field[2][ix]);
+			// odd
+			_spinor_null(g_spinor_field[3][ix]);
+		}
+	else
+		for(int ix=LX*LY*LZ; ix<VOLUME; ix++ )
+		{
+			_spinor_null(g_spinor_field[1][ix]);
+		}
 #endif
 
-//	for(int ix=0; ix<VOLUME; ix++ )
-//	{
-//		_spinor_null(g_spinor_field[1][ix]);
-//	}
-//	for(int ix=0; ix<LX*LY*LZ; ix++ )
-//	{
-//		g_spinor_field[1][ix].s0.c0 = 1.0;
-//	}
-
 	// copy
-	for(int ix=0; ix<VOLUME; ix++ )
-	{
-		_spinor_assign(g_spinor_field[3][ix], g_spinor_field[1][ix]);
-	}
+	if(even_odd_flag)
+		for(int ix=0; ix<VOLUME/2; ix++ )
+		{
+			// even
+			_spinor_assign(g_spinor_field[6][ix], g_spinor_field[2][ix]);
+			// odd
+			_spinor_assign(g_spinor_field[7][ix], g_spinor_field[3][ix]);
+		}
+	else
+		for(int ix=0; ix<VOLUME; ix++ )
+		{
+			_spinor_assign(g_spinor_field[3][ix], g_spinor_field[1][ix]);
+		}
 
 #if defined MPI
-	xchange_lexicfield(g_spinor_field[1]);
-	xchange_lexicfield(g_spinor_field[3]);
+	if(even_odd_flag)
+	{
+		// even fields
+		xchange_field(g_spinor_field[2],EO);
+		xchange_field(g_spinor_field[6],EO);
+		// odd fields
+		xchange_field(g_spinor_field[3],OE);
+		xchange_field(g_spinor_field[7],OE);
+	}
+	else
+	{
+		xchange_lexicfield(g_spinor_field[1]);
+		xchange_lexicfield(g_spinor_field[3]);
+	}
 #endif
 
 	// print L2-norm of source:
-	double squarenorm = square_norm(g_spinor_field[1], VOLUME, 1);
-	if(g_proc_id==0) {
-		printf("\n# ||source||^2 = %e\n\n", squarenorm);
-		fflush(stdout);
+	double squarenorm;
+	if(even_odd_flag)
+	{
+		squarenorm = square_norm(g_spinor_field[2], VOLUME/2, 1);
+		if(g_proc_id==0) {
+			printf("\n# ||source_e||^2 = %e\n", squarenorm);
+			fflush(stdout);
+		}
+		squarenorm = square_norm(g_spinor_field[3], VOLUME/2, 1);
+		if(g_proc_id==0) {
+			printf("\n# ||source_o||^2 = %e\n\n", squarenorm);
+			fflush(stdout);
+		}
+	}
+	else
+	{
+		squarenorm = square_norm(g_spinor_field[1], VOLUME, 1);
+		if(g_proc_id==0) {
+			printf("\n# ||source||^2 = %e\n\n", squarenorm);
+			fflush(stdout);
+		}
 	}
 
 //#if TEST_INVERSION
@@ -392,7 +431,12 @@ int main(int argc,char *argv[])
 //	}
 
 #else
-      D_psi(g_spinor_field[0], g_spinor_field[1]);
+	if(even_odd_flag)
+		_M_full(g_spinor_field[0], g_spinor_field[1],
+	           g_spinor_field[2], g_spinor_field[3]);
+	else
+		D_psi(g_spinor_field[0], g_spinor_field[1]);
+
 #endif
 
       t2 = gettime();
@@ -410,11 +454,27 @@ int main(int argc,char *argv[])
     }
 
 // print L2-norm of result:
-	squarenorm = square_norm(g_spinor_field[0], VOLUME, 1);
-	if(g_proc_id==0) {
-		printf("# ||result1||^2 = %e\n\n", squarenorm);
-		fflush(stdout);
-	}
+    if(even_odd_flag)
+	{
+		squarenorm = square_norm(g_spinor_field[0], VOLUME/2, 1);
+		if(g_proc_id==0) {
+			printf("# ||result1_e||^2 = %e\n", squarenorm);
+			fflush(stdout);
+		}
+		squarenorm = square_norm(g_spinor_field[1], VOLUME/2, 1);
+		if(g_proc_id==0) {
+			printf("# ||result1_o||^2 = %e\n\n", squarenorm);
+			fflush(stdout);
+		}
+    }
+    else
+    {
+		squarenorm = square_norm(g_spinor_field[0], VOLUME, 1);
+		if(g_proc_id==0) {
+			printf("# ||result1||^2 = %e\n\n", squarenorm);
+			fflush(stdout);
+		}
+    }
 
 
 	/************************** D_psi_quda on GPU **************************/
@@ -461,7 +521,11 @@ int main(int argc,char *argv[])
 //    	printf("%i\t%f\t%f\n", t, pionr[t], pioni[t]);
 //	}
 #else
-      D_psi_quda(g_spinor_field[2], g_spinor_field[3]);
+	if(even_odd_flag)
+		M_full_quda(g_spinor_field[0], g_spinor_field[1],
+	                g_spinor_field[2], g_spinor_field[3]);
+	else
+		D_psi_quda(g_spinor_field[2], g_spinor_field[3]);
 #endif
 
       t2 = gettime();
@@ -479,29 +543,78 @@ int main(int argc,char *argv[])
     }
 
     // print L2-norm of result:
-	squarenorm = square_norm(g_spinor_field[2], VOLUME, 1);
-	if(g_proc_id==0) {
-		printf("# ||result2||^2 = %e\n\n", squarenorm);
-		fflush(stdout);
+    if(even_odd_flag)
+	{
+    	// even
+		squarenorm = square_norm(g_spinor_field[4], VOLUME/2, 1);
+		if(g_proc_id==0) {
+			printf("# ||result2_e||^2 = %e\n", squarenorm);
+			fflush(stdout);
+		}
+		// odd
+		squarenorm = square_norm(g_spinor_field[5], VOLUME/2, 1);
+		if(g_proc_id==0) {
+			printf("# ||result2_o||^2 = %e\n\n", squarenorm);
+			fflush(stdout);
+		}
+	}
+    else
+    {
+		squarenorm = square_norm(g_spinor_field[2], VOLUME, 1);
+		if(g_proc_id==0) {
+			printf("# ||result2||^2 = %e\n\n", squarenorm);
+			fflush(stdout);
+		}
 	}
 
 
 	/************************** finished: get difference **************************/
 
 	// subract result1 -= result2
-	for(int ix=0; ix<VOLUME; ix++ )
+    if(even_odd_flag)
 	{
-		_vector_sub_assign( g_spinor_field[0][ix].s0, g_spinor_field[2][ix].s0 );
-		_vector_sub_assign( g_spinor_field[0][ix].s1, g_spinor_field[2][ix].s1 );
-		_vector_sub_assign( g_spinor_field[0][ix].s2, g_spinor_field[2][ix].s2 );
-		_vector_sub_assign( g_spinor_field[0][ix].s3, g_spinor_field[2][ix].s3 );
-	}
+		for(int ix=0; ix<VOLUME/2; ix++ )
+		{
+			// even
+			_vector_sub_assign( g_spinor_field[0][ix].s0, g_spinor_field[4][ix].s0 );
+			_vector_sub_assign( g_spinor_field[0][ix].s1, g_spinor_field[4][ix].s1 );
+			_vector_sub_assign( g_spinor_field[0][ix].s2, g_spinor_field[4][ix].s2 );
+			_vector_sub_assign( g_spinor_field[0][ix].s3, g_spinor_field[4][ix].s3 );
+			// odd
+			_vector_sub_assign( g_spinor_field[1][ix].s0, g_spinor_field[5][ix].s0 );
+			_vector_sub_assign( g_spinor_field[1][ix].s1, g_spinor_field[5][ix].s1 );
+			_vector_sub_assign( g_spinor_field[1][ix].s2, g_spinor_field[5][ix].s2 );
+			_vector_sub_assign( g_spinor_field[1][ix].s3, g_spinor_field[5][ix].s3 );
+		}
 
-	// print L2-norm of result1 - result2:
-	squarenorm = square_norm(g_spinor_field[0], VOLUME, 1);
-	if(g_proc_id==0) {
-		printf("# ||result1-result2||^2 = %e\n\n", squarenorm);
-		fflush(stdout);
+		// print L2-norm of result1 - result2:
+		squarenorm = square_norm(g_spinor_field[0], VOLUME/2, 1);
+		if(g_proc_id==0) {
+			printf("# ||result1_e-result2_e||^2 = %e\n", squarenorm);
+			fflush(stdout);
+		}
+		squarenorm = square_norm(g_spinor_field[1], VOLUME/2, 1);
+		if(g_proc_id==0) {
+			printf("# ||result1_o-result2_o||^2 = %e\n\n", squarenorm);
+			fflush(stdout);
+		}
+	}
+    else
+    {
+		for(int ix=0; ix<VOLUME; ix++ )
+		{
+			_vector_sub_assign( g_spinor_field[0][ix].s0, g_spinor_field[2][ix].s0 );
+			_vector_sub_assign( g_spinor_field[0][ix].s1, g_spinor_field[2][ix].s1 );
+			_vector_sub_assign( g_spinor_field[0][ix].s2, g_spinor_field[2][ix].s2 );
+			_vector_sub_assign( g_spinor_field[0][ix].s3, g_spinor_field[2][ix].s3 );
+		}
+
+		// print L2-norm of result1 - result2:
+		squarenorm = square_norm(g_spinor_field[0], VOLUME, 1);
+		if(g_proc_id==0) {
+			printf("# ||result1-result2||^2 = %e\n\n", squarenorm);
+			fflush(stdout);
+		}
 	}
 
 	// ---------------

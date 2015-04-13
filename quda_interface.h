@@ -88,6 +88,7 @@ void _loadGaugeQuda();
 int invert_quda(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, const int rel_prec );
 
 // apply the TM operator using QUDA
+void M_full_quda(spinor * const Even_new, spinor * const Odd_new,  spinor * const Even, spinor * const Odd);
 void D_psi_quda(spinor * const P, spinor * const Q);
 
 #endif /* QUDA_INTERFACE_H_ */

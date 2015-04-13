@@ -109,6 +109,7 @@ QudaInvertParam inv_param;
 
 // pointer to a temp. spinor, used for reordering etc.
 double *tempSpinor;
+double *tempSpinor2;
 
 // function that maps coordinates in the communication grid to MPI ranks
 int commsMap(const int *coords, void *fdata)
@@ -272,7 +273,10 @@ void _initQuda( int verbose )
   } 
   
   // alloc space for a temp. spinor, used throughout this module
-  tempSpinor = (double*)malloc( VOLUME*24*sizeof(double) );
+  tempSpinor  = (double*)malloc( VOLUME*24*sizeof(double) );
+  // only needed if eo flag set
+  tempSpinor2 = (double*)malloc( VOLUME*24*sizeof(double) );
+
 //  error_root((tempSpinor == NULL),1,"reorder_spinor_toQuda [quda_interface.c]","malloc for tempSpinor failed");
 
   // initialize the QUDA library
@@ -398,6 +402,36 @@ void reorder_spinor_toQuda( double* spinor, QudaPrecision precision )
   printf("time spent in reorder_spinor_toQuda: %f secs\n", diffTime);
 }
 
+//TODO
+//void reorder_spinor_eo_toQuda( double* spinor, double* even, double* odd, QudaPrecision precision )
+//{
+//  double startTime = MPI_Wtime();
+//
+//  // now copy and reorder from tempSpinor to spinor
+//  for( int x0=0; x0<T; x0++ )
+//    for( int x1=0; x1<LX; x1++ )
+//      for( int x2=0; x2<LY; x2++ )
+//        for( int x3=0; x3<LZ; x3++ )
+//        {
+//#if USE_LZ_LY_LX_T
+//          int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
+//          int tm_idx   = g_ipt[x0][x1][x2][x3];
+//#else
+//          int j = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
+//          int tm_idx   = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;//g_ipt[x0][x3][x2][x1];
+//#endif
+//
+//          int oddBit = (x0+x1+x2+x3) & 1;
+//          int quda_idx = 18*(oddBit*VOLUME/2+j/2);
+//
+//          memcpy( &(spinor[24*(oddBit*VOLUME/2+j/2)]), &(even[24*tm_idx]), 24*sizeof(double));
+//        }
+//
+//  double endTime = MPI_Wtime();
+//  double diffTime = endTime - startTime;
+//  printf("time spent in reorder_spinor_toQuda: %f secs\n", diffTime);
+//}
+
 // reorder spinor from QUDA format
 void reorder_spinor_fromQuda( double* spinor, QudaPrecision precision )
 {
@@ -429,6 +463,33 @@ void reorder_spinor_fromQuda( double* spinor, QudaPrecision precision )
   printf("time spent in reorder_spinor_fromQuda: %f secs\n", diffTime);
 }
 
+void M_full_quda(spinor * const Even_new, spinor * const Odd_new,  spinor * const Even, spinor * const Odd)
+{
+  inv_param.kappa = g_kappa;
+  inv_param.mu = fabs(g_mu);
+  inv_param.epsilon = 0.0;
+
+  // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
+  inv_param.twist_flavor = (g_mu < 0.0 ? QUDA_TWIST_PLUS : QUDA_TWIST_MINUS);
+  inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ||
+       inv_param.twist_flavor == QUDA_TWIST_DEG_DOUBLET ) ? 2 : 1;
+
+  void *spinorIn  = (void*)Even;
+  void *spinorOut = (void*)Even_new;
+
+  // reorder spinor
+//  reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec );
+
+  // multiply
+//   inv_param.solution_type = QUDA_MAT_SOLUTION;
+  MatQuda( spinorOut, spinorIn, &inv_param);
+
+  // reorder spinor
+//  reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec );
+//  reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec );
+}
+
+// no even-odd
 void D_psi_quda(spinor * const P, spinor * const Q)
 {
   inv_param.kappa = g_kappa;
