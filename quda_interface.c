@@ -81,6 +81,7 @@
 #include <math.h>
 #include "global.h"
 #include "boundary.h"
+#include "linalg/convert_eo_to_lexic.h"
 #include "quda.h"
 
 // define order of the spatial indices
@@ -109,7 +110,9 @@ QudaInvertParam inv_param;
 
 // pointer to a temp. spinor, used for reordering etc.
 double *tempSpinor;
-double *tempSpinor2;
+// needed if even_odd_flag set
+double *fullSpinor1;
+double *fullSpinor2;
 
 // function that maps coordinates in the communication grid to MPI ranks
 int commsMap(const int *coords, void *fdata)
@@ -274,8 +277,10 @@ void _initQuda( int verbose )
   
   // alloc space for a temp. spinor, used throughout this module
   tempSpinor  = (double*)malloc( VOLUME*24*sizeof(double) );
-  // only needed if eo flag set
-  tempSpinor2 = (double*)malloc( VOLUME*24*sizeof(double) );
+
+  // only needed if even_odd_flag set
+  fullSpinor1 = (double*)malloc( VOLUME*24*sizeof(double) );
+  fullSpinor2 = (double*)malloc( VOLUME*24*sizeof(double) );
 
 //  error_root((tempSpinor == NULL),1,"reorder_spinor_toQuda [quda_interface.c]","malloc for tempSpinor failed");
 
@@ -392,7 +397,7 @@ void reorder_spinor_toQuda( double* spinor, QudaPrecision precision )
 #endif
           
           int oddBit = (x0+x1+x2+x3) & 1;
-          int quda_idx = 18*(oddBit*VOLUME/2+j/2);
+//          int quda_idx = 18*(oddBit*VOLUME/2+j/2);
 
           memcpy( &(spinor[24*(oddBit*VOLUME/2+j/2)]), &(tempSpinor[24*tm_idx]), 24*sizeof(double));
         } 
@@ -401,36 +406,6 @@ void reorder_spinor_toQuda( double* spinor, QudaPrecision precision )
   double diffTime = endTime - startTime;
   printf("time spent in reorder_spinor_toQuda: %f secs\n", diffTime);
 }
-
-//TODO
-//void reorder_spinor_eo_toQuda( double* spinor, double* even, double* odd, QudaPrecision precision )
-//{
-//  double startTime = MPI_Wtime();
-//
-//  // now copy and reorder from tempSpinor to spinor
-//  for( int x0=0; x0<T; x0++ )
-//    for( int x1=0; x1<LX; x1++ )
-//      for( int x2=0; x2<LY; x2++ )
-//        for( int x3=0; x3<LZ; x3++ )
-//        {
-//#if USE_LZ_LY_LX_T
-//          int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
-//          int tm_idx   = g_ipt[x0][x1][x2][x3];
-//#else
-//          int j = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
-//          int tm_idx   = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;//g_ipt[x0][x3][x2][x1];
-//#endif
-//
-//          int oddBit = (x0+x1+x2+x3) & 1;
-//          int quda_idx = 18*(oddBit*VOLUME/2+j/2);
-//
-//          memcpy( &(spinor[24*(oddBit*VOLUME/2+j/2)]), &(even[24*tm_idx]), 24*sizeof(double));
-//        }
-//
-//  double endTime = MPI_Wtime();
-//  double diffTime = endTime - startTime;
-//  printf("time spent in reorder_spinor_toQuda: %f secs\n", diffTime);
-//}
 
 // reorder spinor from QUDA format
 void reorder_spinor_fromQuda( double* spinor, QudaPrecision precision )
@@ -453,7 +428,7 @@ void reorder_spinor_fromQuda( double* spinor, QudaPrecision precision )
 #endif
           
           int oddBit = (x0+x1+x2+x3) & 1;
-          int quda_idx = 18*(oddBit*VOLUME/2+j/2);
+//          int quda_idx = 18*(oddBit*VOLUME/2+j/2);
 
           memcpy( &(spinor[24*tm_idx]), &(tempSpinor[24*(oddBit*VOLUME/2+j/2)]), 24*sizeof(double));
         }
@@ -463,6 +438,7 @@ void reorder_spinor_fromQuda( double* spinor, QudaPrecision precision )
   printf("time spent in reorder_spinor_fromQuda: %f secs\n", diffTime);
 }
 
+// if even_odd_flag set
 void M_full_quda(spinor * const Even_new, spinor * const Odd_new,  spinor * const Even, spinor * const Odd)
 {
   inv_param.kappa = g_kappa;
@@ -474,11 +450,12 @@ void M_full_quda(spinor * const Even_new, spinor * const Odd_new,  spinor * cons
   inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ||
        inv_param.twist_flavor == QUDA_TWIST_DEG_DOUBLET ) ? 2 : 1;
 
-  void *spinorIn  = (void*)Even;
-  void *spinorOut = (void*)Even_new;
+  void *spinorIn  = (void*)fullSpinor1;
+  void *spinorOut = (void*)fullSpinor2;
 
   // reorder spinor
-//  reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec );
+  convert_eo_to_lexic( spinorIn, Even, Odd );
+  reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec );
 
   // multiply
 //   inv_param.solution_type = QUDA_MAT_SOLUTION;
@@ -486,8 +463,12 @@ void M_full_quda(spinor * const Even_new, spinor * const Odd_new,  spinor * cons
 
   // reorder spinor
 //  reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec );
-//  reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec );
+//  convert_lexic_to_eo( Even, Odd, spinorIn );
+
+  reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec );
+  convert_lexic_to_eo( Even_new, Odd_new, spinorOut );
 }
+
 
 // no even-odd
 void D_psi_quda(spinor * const P, spinor * const Q)

@@ -358,7 +358,7 @@ int main(int argc,char *argv[])
 		}
 		squarenorm = square_norm(g_spinor_field[3], VOLUME/2, 1);
 		if(g_proc_id==0) {
-			printf("\n# ||source_o||^2 = %e\n\n", squarenorm);
+			printf("# ||source_o||^2 = %e\n\n", squarenorm);
 			fflush(stdout);
 		}
 	}
@@ -390,28 +390,37 @@ int main(int argc,char *argv[])
       t1 = gettime();
 
 #if TEST_INVERSION
-      // invert
-//      operator_list[0].inverter(0, 0, 1);
-      gamma5(g_spinor_field[1], g_spinor_field[3], VOLUME);
-      cg_her(g_spinor_field[2], g_spinor_field[1], 1000, 1.0e-10,
-		      1.0e-10, VOLUME, &_Q_pm_psi);
-      Q_minus_psi(g_spinor_field[0], g_spinor_field[2]);
+      if(even_odd_flag)
+      {
+    	  if(g_proc_id==0)
+    		  printf("\n# Test combination TEST_INVERSION and even_odd_flag is not implemented...\n");
+      	  return 0;
+      }
+	  else
+	  {
+		  // invert
+	//      operator_list[0].inverter(0, 0, 1);
+		  gamma5(g_spinor_field[1], g_spinor_field[3], VOLUME);
+		  cg_her(g_spinor_field[2], g_spinor_field[1], 1000, 1.0e-10,
+				  1.0e-10, VOLUME, &_Q_pm_psi);
+		  Q_minus_psi(g_spinor_field[0], g_spinor_field[2]);
 
-      // check inversion
-      D_psi(g_spinor_field[1], g_spinor_field[0]);
-	for(int ix=0; ix<VOLUME; ix++ )
-	{
-		_vector_sub_assign( g_spinor_field[1][ix].s0, g_spinor_field[3][ix].s0 );
-		_vector_sub_assign( g_spinor_field[1][ix].s1, g_spinor_field[3][ix].s1 );
-		_vector_sub_assign( g_spinor_field[1][ix].s2, g_spinor_field[3][ix].s2 );
-		_vector_sub_assign( g_spinor_field[1][ix].s3, g_spinor_field[3][ix].s3 );
-	}
+		  // check inversion
+		  D_psi(g_spinor_field[1], g_spinor_field[0]);
+		for(int ix=0; ix<VOLUME; ix++ )
+		{
+			_vector_sub_assign( g_spinor_field[1][ix].s0, g_spinor_field[3][ix].s0 );
+			_vector_sub_assign( g_spinor_field[1][ix].s1, g_spinor_field[3][ix].s1 );
+			_vector_sub_assign( g_spinor_field[1][ix].s2, g_spinor_field[3][ix].s2 );
+			_vector_sub_assign( g_spinor_field[1][ix].s3, g_spinor_field[3][ix].s3 );
+		}
 
-	squarenorm = square_norm(g_spinor_field[1], VOLUME, 1);
-	if(g_proc_id==0) {
-		printf("\n# ||Ax-b||^2 = %e\n\n", squarenorm);
-		fflush(stdout);
-	}
+		squarenorm = square_norm(g_spinor_field[1], VOLUME, 1);
+		if(g_proc_id==0) {
+			printf("\n# ||Ax-b||^2 = %e\n\n", squarenorm);
+			fflush(stdout);
+		}
+	  }
 
 //	// get pion
 //	printf("\n# pion1: \n");
@@ -487,24 +496,33 @@ int main(int argc,char *argv[])
       t1 = gettime();
 
 #if TEST_INVERSION
-      // invert
-      invert_quda(g_spinor_field[2], g_spinor_field[3], 1000, 1.0e-10, 1.0e-10 );
+      if(even_odd_flag)
+      {
+    	  if(g_proc_id==0)
+    		  printf("\n# Test combination TEST_INVERSION and even_odd_flag is not implemented...\n");
+      	  return 0;
+      }
+	  else
+	  {
+		// invert
+		invert_quda(g_spinor_field[2], g_spinor_field[3], 1000, 1.0e-10, 1.0e-10 );
 
-      // check inversion
-      D_psi(g_spinor_field[1], g_spinor_field[2]);
-	for(int ix=0; ix<VOLUME; ix++ )
-	{
-		_vector_sub_assign( g_spinor_field[1][ix].s0, g_spinor_field[3][ix].s0 );
-		_vector_sub_assign( g_spinor_field[1][ix].s1, g_spinor_field[3][ix].s1 );
-		_vector_sub_assign( g_spinor_field[1][ix].s2, g_spinor_field[3][ix].s2 );
-		_vector_sub_assign( g_spinor_field[1][ix].s3, g_spinor_field[3][ix].s3 );
-	}
+		// check inversion
+		D_psi(g_spinor_field[1], g_spinor_field[2]);
+		for(int ix=0; ix<VOLUME; ix++ )
+		{
+			_vector_sub_assign( g_spinor_field[1][ix].s0, g_spinor_field[3][ix].s0 );
+			_vector_sub_assign( g_spinor_field[1][ix].s1, g_spinor_field[3][ix].s1 );
+			_vector_sub_assign( g_spinor_field[1][ix].s2, g_spinor_field[3][ix].s2 );
+			_vector_sub_assign( g_spinor_field[1][ix].s3, g_spinor_field[3][ix].s3 );
+		}
 
-	squarenorm = square_norm(g_spinor_field[1], VOLUME, 1);
-	if(g_proc_id==0) {
-		printf("\n# ||Ax-b||^2 = %e\n\n", squarenorm);
-		fflush(stdout);
-	}
+		squarenorm = square_norm(g_spinor_field[1], VOLUME, 1);
+		if(g_proc_id==0) {
+			printf("\n# ||Ax-b||^2 = %e\n\n", squarenorm);
+			fflush(stdout);
+		}
+	  }
 
 //	// get pion
 //	printf("\n# pion2: \n");
@@ -522,8 +540,8 @@ int main(int argc,char *argv[])
 //	}
 #else
 	if(even_odd_flag)
-		M_full_quda(g_spinor_field[0], g_spinor_field[1],
-	                g_spinor_field[2], g_spinor_field[3]);
+		M_full_quda(g_spinor_field[4], g_spinor_field[5],
+	                g_spinor_field[6], g_spinor_field[7]);
 	else
 		D_psi_quda(g_spinor_field[2], g_spinor_field[3]);
 #endif
