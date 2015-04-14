@@ -31,14 +31,13 @@
 *
 * The externally accessible functions are
 *
-*   void _initQuda( int verbose )  
+*   void _initQuda()
 *     Initializes the QUDA library. Carries over the lattice size and the 
 *     MPI process grid and thus must be called after initializing MPI (and 
 *     after 'read_infile(argc,argv)').
 *     Memory for the QUDA gaugefield on the host is allocated but not filled 
 *     yet (the latter is done in _loadGaugeQuda(), see below). 
 *     Performance critical settings are done here and can be changed.
-*     Input parameter: verbose (0=SILENT, 1=SUMMARIZE, 2=VERBOSE).
 *
 *   void _endQuda()
 *     Finalizes the QUDA library. Call before MPI_Finalize().
@@ -130,11 +129,15 @@ int commsMap(const int *coords, void *fdata)
   return rank;
 }
 
-void _initQuda( int verbose )
+void _initQuda()
 {
-  if( verbose > 0 )
+	static initialized = 0;
+	if( initialized )
+		return;
+
+  if( g_debug_level > 0 )
     printf("\nDetected QUDA version %d.%d.%d\n\n", QUDA_VERSION_MAJOR, QUDA_VERSION_MINOR, QUDA_VERSION_SUBMINOR);
-    
+//TODO
 //  error_root((QUDA_VERSION_MAJOR == 0 && QUDA_VERSION_MINOR < 7),1,"_initQuda [quda_interface.c]","minimum QUDA version required is 0.7.0 (for support of chiral basis and removal of bug in mass normalization with preconditioning).");
   
     
@@ -250,9 +253,9 @@ void _initQuda( int verbose )
   pad_size = MAX(pad_size, t_face_size);
   gauge_param.ga_pad = pad_size;    
 
-  if( verbose == 0 )
+  if( g_debug_level == 0 )
     inv_param.verbosity = QUDA_SILENT;
-  else if( verbose == 1 )
+  else if( g_debug_level == 1 )
     inv_param.verbosity = QUDA_SUMMARIZE;
   else
     inv_param.verbosity = QUDA_VERBOSE;
@@ -286,6 +289,7 @@ void _initQuda( int verbose )
 
   // initialize the QUDA library
   initQuda(-1);
+  initialized = 1;
 }
 
 // finalize the QUDA library
@@ -529,6 +533,85 @@ double getResidualDD( int k, int l, double *nrm2 )
 //  message("time spent in getResidualDD: %f secs\n", diffTime);
   
   return 0.0;//rn;
+}
+
+int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
+                   spinor * const Even, spinor * const Odd,
+                   const double precision, const int max_iter,
+                   const int solver_flag, const int rel_prec,
+                   const int sub_evs_flag, const int even_odd_flag,
+                   const int no_extra_masses, double * const extra_masses, solver_params_t solver_params,
+                   const int id )
+{
+	convert_eo_to_lexic(g_spinor_field[DUM_DERI],   Even,     Odd);
+//	convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], Even_new, Odd_new);
+
+    void *spinorIn  = (void*)g_spinor_field[DUM_DERI];   // source
+    void *spinorOut = (void*)g_spinor_field[DUM_DERI+1]; // solution
+
+    inv_param.maxiter = max_iter;
+
+  //ranlxd(spinorIn,VOLUME*24); // a random source for debugging
+
+  // get initial rel. residual (rn) and residual^2 (nrm2) from DD
+  int iteration;
+//  rn = getResidualDD(k,l,&nrm2);
+//  double tol = res*rn;
+  inv_param.tol = precision;
+
+  // these can be set individually
+  for (int i=0; i<inv_param.num_offset; i++) {
+    inv_param.tol_offset[i] = inv_param.tol;
+    inv_param.tol_hq_offset[i] = inv_param.tol_hq;
+  }
+  inv_param.kappa = g_kappa;
+  inv_param.mu = fabs(g_mu/2./g_kappa);
+  inv_param.epsilon = 0.0;
+  // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
+  inv_param.twist_flavor = (g_mu < 0.0 ? QUDA_TWIST_PLUS : QUDA_TWIST_MINUS);
+  inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ||
+       inv_param.twist_flavor == QUDA_TWIST_DEG_DOUBLET ) ? 2 : 1;
+
+  // reorder spinor
+  reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec );
+
+  // perform the inversion
+  invertQuda(spinorOut, spinorIn, &inv_param);
+
+  if( inv_param.verbosity == QUDA_VERBOSE )
+    printf("Device memory used:\n   Spinor: %f GiB\n    Gauge: %f GiB\n",
+	 inv_param.spinorGiB, gauge_param.gaugeGiB);
+	if( inv_param.verbosity > QUDA_SILENT )
+    printf("Done: %i iter / %g secs = %g Gflops\n",
+	 inv_param.iter, inv_param.secs, inv_param.gflops/inv_param.secs);
+
+  // number of CG iterations
+  iteration = inv_param.iter;
+
+  // reorder spinor
+  reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec );
+  reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec );
+  convert_lexic_to_eo(Even,     Odd,     g_spinor_field[DUM_DERI]);
+  convert_lexic_to_eo(Even_new, Odd_new, g_spinor_field[DUM_DERI+1]);
+
+//#if FINAL_RESIDUAL_CHECK_CPU_DD
+//  rn = getResidualDD(k,l,&nrm2);
+//  if( inv_param.verbosity > QUDA_SILENT )
+//    message("CPU (DD) rel. residual is %e (tol. is %e)\n", rn, tol);
+//#else
+//    rn = inv_param.true_res;
+//    if( inv_param.verbosity > QUDA_SILENT )
+//      message("true_res is %e (tol. is %e)\n", rn, tol);
+//#endif
+
+  // negative value if the program failed
+//  if (((*status)>=nmx)||(rn>tol)) //NOTE: here was AND, should be OR
+//    (*status)=-1;
+//  else if ((100.0*DBL_EPSILON*sqrt(nrm2))>tol)
+//    (*status)=-2;
+
+  if(iteration > max_iter) return(-1);
+  	  return(iteration);
 }
 
 int invert_quda(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, const int rel_prec )

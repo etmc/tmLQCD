@@ -75,16 +75,24 @@
 #define QUDA_INTERFACE_H_
 
 #include "su3.h"
+#include "solver/solver_params.h"
 
 // pointer to the QUDA gaugefield, alloc. in dd_initQuda()
 double *gauge_quda[4];
 
 // wrapper functions
-void _initQuda( int verbose );
+void _initQuda();
 void _endQuda();
 void _loadGaugeQuda();
 
 // to be called instead of tmcgne to use the QUDA inverter
+int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
+                   spinor * const Even, spinor * const Odd,
+                   const double precision, const int max_iter,
+                   const int solver_flag, const int rel_prec,
+                   const int sub_evs_flag, const int even_odd_flag,
+                   const int no_extra_masses, double * const extra_masses, solver_params_t solver_params,
+                   const int id );
 int invert_quda(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, const int rel_prec );
 
 // apply the TM operator using QUDA

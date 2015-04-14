@@ -58,7 +58,9 @@
 #include "operator/clover_leaf.h"
 #include "operator.h"
 #include "gettime.h"
-
+#ifdef QUDA
+# include "quda_interface.h"
+#endif
 
 void dummy_D(spinor * const, spinor * const);
 void dummy_DbD(spinor * const s, spinor * const r, spinor * const p, spinor * const q);
@@ -211,6 +213,50 @@ int init_operators() {
 	optr->even_odd_flag = 1;
 	optr->applyDbQsq = &Qtm_pm_ndpsi;
       }
+#ifdef QUDA
+      else if(optr->type == TMWILSONQUDA || optr->type == WILSONQUDA) {
+		if(optr->c_sw > 0) {
+		  init_sw_fields();
+		}
+
+		_initQuda(); /* is called only once */
+
+		if(optr->even_odd_flag) {
+//		  optr->applyQp = &Qtm_plus_psi;
+//		  optr->applyQm = &Qtm_minus_psi;
+//		  optr->applyQsq = &Qtm_pm_psi;
+//		  optr->applyMp = &Mtm_plus_psi;
+//		  optr->applyMm = &Mtm_minus_psi;
+		}
+		else {
+//		  optr->applyQp = &Q_plus_psi;
+//		  optr->applyQm = &Q_minus_psi;
+//		  optr->applyQsq = &Q_pm_psi;
+		  optr->applyMp = &D_psi_quda;
+		  optr->applyMm = &D_psi_quda;
+		}
+		if(optr->solver == 12) {
+		  if (g_cart_id == 0 && optr->even_odd_flag == 1)
+			fprintf(stderr, "CG Multiple mass solver works only without even/odd! Forcing!\n");
+		  optr->even_odd_flag = 0;
+		  if (g_cart_id == 0 && optr->DownProp)
+			fprintf(stderr, "CGMMS doesn't need AddDownPropagator! Switching Off!\n");
+		  optr->DownProp = 0;
+		}
+
+			if(optr->solver == INCREIGCG){
+			  if (g_cart_id == 0 && optr->DownProp){
+				 fprintf(stderr,"Warning: When even-odd preconditioning is used, the eigenvalues for +mu and -mu will be little different\n");
+				 fprintf(stderr,"Incremental EigCG solver will still work however.\n");
+			  }
+
+
+			  if (g_cart_id == 0 && optr->even_odd_flag == 0)
+				 fprintf(stderr,"Incremental EigCG solver is added only with Even-Odd preconditioning!. Forcing\n");
+			  optr->even_odd_flag = 1;
+        }
+      }
+#endif
     }
   }
   return(0);
@@ -425,6 +471,76 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 
     if(write_prop) optr->write_prop(op_id, index_start, 0);
   }
+#ifdef QUDA
+  if(optr->type == TMWILSONQUDA || optr->type == WILSONQUDA || optr->type == CLOVERQUDA) {
+    _loadGaugeQuda();
+    g_mu = optr->mu;
+    g_c_sw = optr->c_sw;
+    if(optr->type == CLOVERQUDA) {
+      if (g_cart_id == 0 && g_debug_level > 1) {
+	printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
+      }
+      init_sw_fields(VOLUME);
+      sw_term( (const su3**) g_gauge_field, optr->kappa, optr->c_sw);
+    }
+
+    for(i = 0; i < 2; i++) {
+      // we need this here again for the sign switch at i == 1
+      g_mu = optr->mu;
+      if (g_cart_id == 0) {
+        printf("#\n# 2 kappa mu = %e, kappa = %e, c_sw = %e\n", g_mu, g_kappa, g_c_sw);
+      }
+      if(optr->type != CLOVERQUDA) {
+		if(use_preconditioning){
+		  g_precWS=(void*)optr->precWS;
+		}
+		else {
+		  g_precWS=NULL;
+		}
+
+		optr->iterations = invert_eo_quda( optr->prop0, optr->prop1, optr->sr0, optr->sr1,
+						  optr->eps_sq, optr->maxiter,
+						  optr->solver, optr->rel_prec,
+						  0, optr->even_odd_flag,optr->no_extra_masses, optr->extra_masses, optr->solver_params, optr->id );
+
+		/* check result on CPU*/
+		M_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
+      }
+      else {
+		/* this must be EE here!   */
+		/* to match clover_inv in Qsw_psi */
+		sw_invert(EE, optr->mu);
+
+		optr->iterations = invert_clover_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
+							optr->eps_sq, optr->maxiter,
+							optr->solver, optr->rel_prec,optr->solver_params,
+							&g_gauge_field, &Qsw_pm_psi, &Qsw_minus_psi);
+		/* check result */
+		Msw_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
+      }
+
+      diff(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], optr->sr0, VOLUME / 2);
+      diff(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], optr->sr1, VOLUME / 2);
+
+      nrm1 = square_norm(g_spinor_field[DUM_DERI], VOLUME / 2, 1);
+      nrm2 = square_norm(g_spinor_field[DUM_DERI+1], VOLUME / 2, 1);
+      optr->reached_prec = nrm1 + nrm2;
+
+      /* convert to standard normalisation  */
+      /* we have to mult. by 2*kappa        */
+      if (optr->kappa != 0.) {
+        mul_r(optr->prop0, (2*optr->kappa), optr->prop0, VOLUME / 2);
+        mul_r(optr->prop1, (2*optr->kappa), optr->prop1, VOLUME / 2);
+      }
+      if (optr->solver != CGMMS && write_prop) /* CGMMS handles its own I/O */
+        optr->write_prop(op_id, index_start, i);
+      if(optr->DownProp) {
+        optr->mu = -optr->mu;
+      } else
+        break;
+    }
+  }
+#endif
   etime = gettime();
   if (g_cart_id == 0 && g_debug_level > 0) {
     fprintf(stdout, "# Inversion done in %d iterations, squared residue = %e!\n",
