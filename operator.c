@@ -472,74 +472,74 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
     if(write_prop) optr->write_prop(op_id, index_start, 0);
   }
 #ifdef QUDA
-  if(optr->type == TMWILSONQUDA || optr->type == WILSONQUDA || optr->type == CLOVERQUDA) {
-    _loadGaugeQuda();
-    g_mu = optr->mu;
-    g_c_sw = optr->c_sw;
-    if(optr->type == CLOVERQUDA) {
-      if (g_cart_id == 0 && g_debug_level > 1) {
-	printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
-      }
-      init_sw_fields(VOLUME);
-      sw_term( (const su3**) g_gauge_field, optr->kappa, optr->c_sw);
-    }
-
-    for(i = 0; i < 2; i++) {
-      // we need this here again for the sign switch at i == 1
-      g_mu = optr->mu;
-      if (g_cart_id == 0) {
-        printf("#\n# 2 kappa mu = %e, kappa = %e, c_sw = %e\n", g_mu, g_kappa, g_c_sw);
-      }
-      if(optr->type != CLOVERQUDA) {
-		if(use_preconditioning){
-		  g_precWS=(void*)optr->precWS;
-		}
-		else {
-		  g_precWS=NULL;
+	if(optr->type == TMWILSONQUDA || optr->type == WILSONQUDA || optr->type == CLOVERQUDA) {
+		_loadGaugeQuda();
+		g_mu = optr->mu;
+		g_c_sw = optr->c_sw;
+		if(optr->type == CLOVERQUDA) {
+			if (g_cart_id == 0 && g_debug_level > 1) {
+				printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
+			}
+			init_sw_fields(VOLUME);
+			sw_term( (const su3**) g_gauge_field, optr->kappa, optr->c_sw);
 		}
 
-		optr->iterations = invert_eo_quda( optr->prop0, optr->prop1, optr->sr0, optr->sr1,
-						  optr->eps_sq, optr->maxiter,
-						  optr->solver, optr->rel_prec,
-						  0, optr->even_odd_flag,optr->no_extra_masses, optr->extra_masses, optr->solver_params, optr->id );
+		for(i = 0; i < 2; i++) {
+			// we need this here again for the sign switch at i == 1
+			g_mu = optr->mu;
+			if (g_cart_id == 0) {
+				printf("#\n# 2 kappa mu = %e, kappa = %e, c_sw = %e\n", g_mu, g_kappa, g_c_sw);
+			}
+			if(optr->type != CLOVERQUDA) {
+				if(use_preconditioning){
+					g_precWS=(void*)optr->precWS;
+				}
+				else {
+					g_precWS=NULL;
+				}
 
-		/* check result on CPU*/
-		M_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
-      }
-      else {
-		/* this must be EE here!   */
-		/* to match clover_inv in Qsw_psi */
-		sw_invert(EE, optr->mu);
+				optr->iterations = invert_eo_quda( optr->prop0, optr->prop1, optr->sr0, optr->sr1,
+									optr->eps_sq, optr->maxiter,
+									optr->solver, optr->rel_prec,
+									0, optr->even_odd_flag,optr->no_extra_masses, optr->extra_masses, optr->solver_params, optr->id );
 
-		optr->iterations = invert_clover_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
-							optr->eps_sq, optr->maxiter,
-							optr->solver, optr->rel_prec,optr->solver_params,
-							&g_gauge_field, &Qsw_pm_psi, &Qsw_minus_psi);
-		/* check result */
-		Msw_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
-      }
+				/* check result on CPU*/
+				M_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
+			}
+			else {
+				/* this must be EE here!	 */
+				/* to match clover_inv in Qsw_psi */
+				sw_invert(EE, optr->mu);
 
-      diff(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], optr->sr0, VOLUME / 2);
-      diff(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], optr->sr1, VOLUME / 2);
+				optr->iterations = invert_clover_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
+									optr->eps_sq, optr->maxiter,
+									optr->solver, optr->rel_prec,optr->solver_params,
+									&g_gauge_field, &Qsw_pm_psi, &Qsw_minus_psi);
+				/* check result */
+				Msw_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
+			}
 
-      nrm1 = square_norm(g_spinor_field[DUM_DERI], VOLUME / 2, 1);
-      nrm2 = square_norm(g_spinor_field[DUM_DERI+1], VOLUME / 2, 1);
-      optr->reached_prec = nrm1 + nrm2;
+			diff(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], optr->sr0, VOLUME / 2);
+			diff(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], optr->sr1, VOLUME / 2);
 
-      /* convert to standard normalisation  */
-      /* we have to mult. by 2*kappa        */
-      if (optr->kappa != 0.) {
-        mul_r(optr->prop0, (2*optr->kappa), optr->prop0, VOLUME / 2);
-        mul_r(optr->prop1, (2*optr->kappa), optr->prop1, VOLUME / 2);
-      }
-      if (optr->solver != CGMMS && write_prop) /* CGMMS handles its own I/O */
-        optr->write_prop(op_id, index_start, i);
-      if(optr->DownProp) {
-        optr->mu = -optr->mu;
-      } else
-        break;
-    }
-  }
+			nrm1 = square_norm(g_spinor_field[DUM_DERI], VOLUME / 2, 1);
+			nrm2 = square_norm(g_spinor_field[DUM_DERI+1], VOLUME / 2, 1);
+			optr->reached_prec = nrm1 + nrm2;
+
+			/* convert to standard normalisation	*/
+			/* we have to mult. by 2*kappa				*/
+			if (optr->kappa != 0.) {
+				mul_r(optr->prop0, (2*optr->kappa), optr->prop0, VOLUME / 2);
+				mul_r(optr->prop1, (2*optr->kappa), optr->prop1, VOLUME / 2);
+			}
+			if (optr->solver != CGMMS && write_prop) /* CGMMS handles its own I/O */
+				optr->write_prop(op_id, index_start, i);
+			if(optr->DownProp) {
+				optr->mu = -optr->mu;
+			} else
+				break;
+		}
+	}
 #endif
   etime = gettime();
   if (g_cart_id == 0 && g_debug_level > 0) {
