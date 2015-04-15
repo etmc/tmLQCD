@@ -685,7 +685,7 @@ inline void rmQuotes(char *str){
   }
 }
 
-<CLOVEROP>{
+<CLOVEROP,CLOVERQUDAOP>{
   {SPC}*Solver{EQL} {
     name_caller = YY_START; 
     BEGIN(CSWSOLVER);
@@ -737,7 +737,7 @@ inline void rmQuotes(char *str){
   }
 }
 
-<CLOVEROP,DBCLOVEROP>{
+<CLOVEROP,CLOVERQUDAOP,DBCLOVEROP>{
   {SPC}*csw{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->c_sw = c;

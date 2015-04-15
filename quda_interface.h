@@ -93,6 +93,14 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
                    const int sub_evs_flag, const int even_odd_flag,
                    const int no_extra_masses, double * const extra_masses, solver_params_t solver_params,
                    const int id );
+
+int invert_clover_eo_quda(spinor * const Even_new, spinor * const Odd_new,
+                          spinor * const Even, spinor * const Odd,
+                          const double precision, const int max_iter,
+                          const int solver_flag, const int rel_prec,
+						  const int sub_evs_flag, const int even_odd_flag,
+						  solver_params_t solver_params);
+
 int invert_quda(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, const int rel_prec );
 
 // apply the TM operator using QUDA
