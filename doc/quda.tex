@@ -1,0 +1,31 @@
+\subsection{QUDA}
+
+
+The QUDA interface is complementary to tmLQCD's own CUDA kernels for computations on the GPU by Florian Burger.
+
+\subsubsection{Design goals of the interface}
+The QUDA interface has been designed with the following goals in mind, sorted by priority:
+\begin{enumerate}
+	\item \emph{Safety.} Naturally, highest priority is given to the correctness of the output of the interface. 
+	This is trivially achieved by always checking the final residual on the CPU with the default tmLQCD routines.
+	\item \emph{Ease of use.} Replacing the operator declarations
+	\begin{itemize}
+		\item {\ttfamily TMWILSON}
+		\item {\ttfamily WILSON}
+		\item {\ttfamily DBTMWILSON}
+		\item {\ttfamily CLOVER}
+		\item {\ttfamily DBCLOVER}
+	\end{itemize}
+	in the input file with their QUDA counterparts {\ttfamily TMWILSONQUDA, WILSONQUDA, DBTMWILSONQUDA, CLOVERQUDA, DBCLOVERQUDA} will let QUDA perform the inversion of that operator.
+	\item \emph{Minimality.} Minimal additions in the form of {\ttfamily \#ifdef QUDA} precompiler directives to the tmLQCD code base. The main bulk of the interface lies in a separate file {\ttfamily quda\_interface.c} (with corresponding header file). A single precompiler directive block had to be added to {\ttfamily operators.c}.
+	\item \emph{Performance.} The higher priority of the previous items results in small performance detriments. In particular:
+	\begin{itemize}
+		\item tmLQCD's $\theta$-boundary conditions disallow QUDA's 12 parameter reconstruction of the gauge fields (as of QUDA-0.7.0). Choosing to use trivial (anti-)periodic BC within {\ttfamily quda\_interface.c} overcomes this limitation but the final CPU residual check with tmLQCD routines cannot be passed then. Therefore the default is to not use 12 parameter reconstruction.
+		\item The gaugefield is transferred each time to the GPU before the inversion starts (this is negligible).
+	\end{itemize}
+\end{enumerate}
+
+
+\subsubsection{Installation}
+
+
