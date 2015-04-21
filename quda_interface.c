@@ -640,7 +640,7 @@ int invert_clover_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 	inv_param.epsilon = 0.0;
 
 	inv_param.dslash_type = QUDA_TWISTED_CLOVER_DSLASH;
-	inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN_ASYMMETRIC;
+	inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
 	inv_param.solution_type = QUDA_MAT_SOLUTION;
 
 	inv_param.inv_type = QUDA_CG_INVERTER; //TODO
@@ -648,9 +648,6 @@ int invert_clover_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 	// clover
     inv_param.clover_order = QUDA_PACKED_CLOVER_ORDER;
     inv_param.clover_coeff = g_c_sw;
-    // NULL pointers to host fields to force
-    // construction instead of download of the clover field:
-    loadCloverQuda(NULL, NULL, &inv_param);
 
 	if( even_odd_flag )
 	{
@@ -676,6 +673,10 @@ int invert_clover_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 	inv_param.twist_flavor = (g_mu < 0.0 ? QUDA_TWIST_PLUS : QUDA_TWIST_MINUS);
 	inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ||
 			 inv_param.twist_flavor == QUDA_TWIST_DEG_DOUBLET ) ? 2 : 1;
+
+	// NULL pointers to host fields to force
+    // construction instead of download of the clover field:
+    loadCloverQuda(NULL, NULL, &inv_param);
 
 	// reorder spinor
 	reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec );

@@ -214,7 +214,7 @@ int init_operators() {
 	optr->applyDbQsq = &Qtm_pm_ndpsi;
       }
 #ifdef QUDA
-      else if(optr->type == TMWILSONQUDA || optr->type == WILSONQUDA) {
+      else if(optr->type == TMWILSONQUDA || optr->type == WILSONQUDA || optr->type == CLOVERQUDA) {
 		if(optr->c_sw > 0) {
 		  init_sw_fields();
 		}
@@ -222,7 +222,7 @@ int init_operators() {
 		_initQuda(); /* is called only once */
 
 		if(optr->even_odd_flag) {
-//		  optr->applyQp = &Qtm_plus_psi;
+//		  optr->applyQp = &Qtm_plus_psi; //TODO
 //		  optr->applyQm = &Qtm_minus_psi;
 //		  optr->applyQsq = &Qtm_pm_psi;
 //		  optr->applyMp = &Mtm_plus_psi;
