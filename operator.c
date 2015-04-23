@@ -491,11 +491,18 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 				printf("#\n# 2 kappa mu = %e, kappa = %e, c_sw = %e\n", g_mu, g_kappa, g_c_sw);
 			}
 			if(optr->type != CLOVERQUDA) {
-				optr->iterations = invert_eo_quda( optr->prop0, optr->prop1, optr->sr0, optr->sr1,
-				                   optr->eps_sq, optr->maxiter,
-				                   optr->solver, optr->rel_prec,
-				                   0, optr->even_odd_flag,optr->no_extra_masses, optr->extra_masses, optr->solver_params, optr->id );
-
+				if(optr->type == WILSONQUDA) {
+					optr->iterations = invert_wilson_eo_quda( optr->prop0, optr->prop1, optr->sr0, optr->sr1,
+				                       optr->eps_sq, optr->maxiter,
+				                       optr->solver, optr->rel_prec,
+				                       0, optr->even_odd_flag,optr->no_extra_masses, optr->extra_masses, optr->solver_params, optr->id );
+				}
+				else {
+					optr->iterations = invert_eo_quda( optr->prop0, optr->prop1, optr->sr0, optr->sr1,
+									   optr->eps_sq, optr->maxiter,
+									   optr->solver, optr->rel_prec,
+									   0, optr->even_odd_flag,optr->no_extra_masses, optr->extra_masses, optr->solver_params, optr->id );
+				}
 				/* check result on CPU */
 				M_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
 			}
