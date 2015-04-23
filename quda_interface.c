@@ -145,6 +145,9 @@ void _initQuda()
 	gauge_param.t_boundary = ( abs(phase_0)>0.0 ? QUDA_ANTI_PERIODIC_T : QUDA_PERIODIC_T );
 	QudaReconstructType link_recon = 12;
 	QudaReconstructType link_recon_sloppy = 12;
+	if( g_debug_level > 0 )
+		if(g_proc_id == 0)
+			printf("\n# QUDA: WARNING using TRIVIAL_BC! This works fine but the residual check on the host (CPU) will fail.\n");
 #else
 	gauge_param.t_boundary = QUDA_PERIODIC_T; // BC will be applied to gaugefield
 	QudaReconstructType link_recon = 18;
@@ -717,10 +720,10 @@ int invert_clover_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 		inv_param.residual_type = QUDA_L2_ABSOLUTE_RESIDUAL;
 
 	inv_param.kappa = g_kappa;
-	inv_param.mu = fabs(g_mu/2./g_kappa);
-	inv_param.epsilon = 0.0;
+//	inv_param.mu = fabs(g_mu/2./g_kappa);
+//	inv_param.epsilon = 0.0;
 
-	inv_param.dslash_type = QUDA_TWISTED_CLOVER_DSLASH;
+	inv_param.dslash_type = QUDA_CLOVER_WILSON_DSLASH;//QUDA_TWISTED_CLOVER_DSLASH;
 	inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
 	inv_param.solution_type = QUDA_MAT_SOLUTION;
 
@@ -751,9 +754,9 @@ int invert_clover_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 	}
 
 	// IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
-	inv_param.twist_flavor = (g_mu < 0.0 ? QUDA_TWIST_PLUS : QUDA_TWIST_MINUS);
-	inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ||
-			 inv_param.twist_flavor == QUDA_TWIST_DEG_DOUBLET ) ? 2 : 1;
+//	inv_param.twist_flavor = (g_mu < 0.0 ? QUDA_TWIST_PLUS : QUDA_TWIST_MINUS);
+	inv_param.Ls = 1;// (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ||
+//			 inv_param.twist_flavor == QUDA_TWIST_DEG_DOUBLET ) ? 2 : 1;
 
 	// NULL pointers to host fields to force
     // construction instead of download of the clover field:
