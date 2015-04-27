@@ -58,6 +58,7 @@ typedef struct {
   int no_flavours;
   int DownProp;
   int no_ev_index;
+  int use_qudainverter;
 
   int error_code;
 
