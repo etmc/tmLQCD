@@ -845,3 +845,102 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
 			return(iteration);
 }
 
+int invert_cloverdoublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
+                           spinor * const Even_new_c, spinor * const Odd_new_c,
+                           spinor * const Even_s, spinor * const Odd_s,
+                           spinor * const Even_c, spinor * const Odd_c,
+                           const double precision, const int max_iter,
+                           const int solver_flag, const int rel_prec)
+{
+	_loadGaugeQuda();
+
+	convert_eo_to_lexic(g_spinor_field[DUM_DERI],	 Even_s,	Odd_s);
+	convert_eo_to_lexic(g_spinor_field[DUM_DERI+1],	 Even_c,	Odd_c);
+//	convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], Even_new, Odd_new);
+
+	void *spinorIn    = (void*)g_spinor_field[DUM_DERI];   // source
+	void *spinorIn_c  = (void*)g_spinor_field[DUM_DERI+1]; // charme source
+	void *spinorOut   = (void*)g_spinor_field[DUM_DERI+2]; // solution
+	void *spinorOut_c = (void*)g_spinor_field[DUM_DERI+3]; // charme solution
+
+	int multishift = 0; //TODO
+
+	if ( rel_prec )
+		inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
+	else
+		inv_param.residual_type = QUDA_L2_ABSOLUTE_RESIDUAL;
+
+	inv_param.kappa = g_kappa;
+
+	// IMPORTANT: use opposite TM mu-flavor since gamma5 -> -gamma5
+	inv_param.mu      = -g_mubar /2./g_kappa;
+	inv_param.epsilon =  g_epsbar/2./g_kappa;
+
+	inv_param.dslash_type = QUDA_TWISTED_CLOVER_DSLASH;
+	inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
+	inv_param.solution_type = QUDA_MAT_SOLUTION;
+
+	inv_param.inv_type = QUDA_CG_INVERTER; //TODO
+
+	// clover
+    inv_param.clover_order = QUDA_PACKED_CLOVER_ORDER;
+    inv_param.clover_coeff = g_c_sw*g_kappa;
+
+
+	if( 1 /*even_odd_flag*/ )
+	{
+		inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
+		if(g_proc_id == 0) printf("# QUDA: Using preconditioning!\n");
+	}
+	else
+	{
+		inv_param.solve_type = QUDA_NORMOP_SOLVE;
+		if(g_proc_id == 0) printf("# QUDA: Not using preconditioning!\n");
+	}
+
+	inv_param.tol = sqrt(precision)*0.5;
+	inv_param.maxiter = max_iter;
+
+	// these can be set individually
+	for (int i=0; i<inv_param.num_offset; i++) {
+		inv_param.tol_offset[i] = inv_param.tol;
+		inv_param.tol_hq_offset[i] = inv_param.tol_hq;
+	}
+
+	inv_param.twist_flavor = QUDA_TWIST_NONDEG_DOUBLET;
+	inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ||
+		                inv_param.twist_flavor == QUDA_TWIST_DEG_DOUBLET ) ? 2 : 1;
+
+	// NULL pointers to host fields to force
+    // construction instead of download of the clover field:
+    loadCloverQuda(NULL, NULL, &inv_param);
+
+	// reorder spinor
+	reorder_spinor_toQuda( (double*)spinorIn,   inv_param.cpu_prec, 1, (double*)spinorIn_c );
+
+	// perform the inversion
+	invertQuda(spinorOut, spinorIn, &inv_param);
+
+	if( inv_param.verbosity == QUDA_VERBOSE )
+		if(g_proc_id == 0)
+			printf("# QUDA: Device memory used:	Spinor: %f GiB,	Gauge: %f GiB\n",
+	 inv_param.spinorGiB, gauge_param.gaugeGiB);
+	if( inv_param.verbosity > QUDA_SILENT )
+		if(g_proc_id == 0)
+			printf("# QUDA: Done: %i iter / %g secs = %g Gflops\n",
+	 inv_param.iter, inv_param.secs, inv_param.gflops/inv_param.secs);
+
+	// number of CG iterations
+	int iteration = inv_param.iter;
+
+	// reorder spinor
+	reorder_spinor_fromQuda( (double*)spinorIn,    inv_param.cpu_prec, 1, (double*)spinorIn_c );
+	reorder_spinor_fromQuda( (double*)spinorOut,   inv_param.cpu_prec, 1, (double*)spinorOut_c );
+	convert_lexic_to_eo(Even_s,     Odd_s,     g_spinor_field[DUM_DERI]);
+	convert_lexic_to_eo(Even_c,     Odd_c,     g_spinor_field[DUM_DERI+1]);
+	convert_lexic_to_eo(Even_new_s, Odd_new_s, g_spinor_field[DUM_DERI+2]);
+	convert_lexic_to_eo(Even_new_c, Odd_new_c, g_spinor_field[DUM_DERI+3]);
+
+	if(iteration > max_iter) return(-1);
+			return(iteration);
+}

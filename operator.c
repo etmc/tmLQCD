@@ -338,24 +338,31 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
     }
 
     for(i = 0; i < SourceInfo.no_flavours; i++) {
-    	if(optr->type != DBCLOVER) {
-    		if(optr->use_qudainverter) {
+		if(optr->type != DBCLOVER) {
+			if(optr->use_qudainverter) {
 				optr->iterations = invert_doublet_eo_quda( optr->prop0, optr->prop1, optr->prop2, optr->prop3,
 				                                      optr->sr0, optr->sr1, optr->sr2, optr->sr3,
 				                                      optr->eps_sq, optr->maxiter,
 				                                      optr->solver, optr->rel_prec);
-    		} else {
+			} else {
 				optr->iterations = invert_doublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3,
 				                                      optr->sr0, optr->sr1, optr->sr2, optr->sr3,
 				                                      optr->eps_sq, optr->maxiter,
 				                                      optr->solver, optr->rel_prec);
-    		}
-      }
-      else {
-	optr->iterations = invert_cloverdoublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3, 
-						    optr->sr0, optr->sr1, optr->sr2, optr->sr3,
-						    optr->eps_sq, optr->maxiter,
-						    optr->solver, optr->rel_prec);
+			}
+		}
+		else {
+			if(optr->use_qudainverter) {
+				optr->iterations = invert_cloverdoublet_eo_quda( optr->prop0, optr->prop1, optr->prop2, optr->prop3,
+				                                            optr->sr0, optr->sr1, optr->sr2, optr->sr3,
+				                                            optr->eps_sq, optr->maxiter,
+				                                            optr->solver, optr->rel_prec);
+    	  } else {
+				optr->iterations = invert_cloverdoublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3,
+				                                            optr->sr0, optr->sr1, optr->sr2, optr->sr3,
+				                                            optr->eps_sq, optr->maxiter,
+				                                            optr->solver, optr->rel_prec);
+    	  }
       }
       g_mu = optr->mubar;
       if(optr->type != DBCLOVER) {
