@@ -265,13 +265,10 @@ inline void rmQuotes(char *str){
 
 %x INITOPERATOR
 %x TMOP
-%x TMQUDAOP
 %x DBTMOP
 %x WILSONOP
-%x WILSONQUDAOP
 %x OVERLAPOP
 %x CLOVEROP
-%x CLOVERQUDAOP
 %x DBCLOVEROP
 %x TMSOLVER
 %x DBTMSOLVER
@@ -491,16 +488,6 @@ inline void rmQuotes(char *str){
   else if(strcmp(yytext, "OVERLAP")==0) {
     optr->type = OVERLAP;
   }
-  /* the QUDA operators: */
-  else if(strcmp(yytext, "WILSONQUDA")==0) {
-    optr->type = WILSONQUDA;
-  }
-  else if(strcmp(yytext, "TMWILSONQUDA")==0) {
-    optr->type = TMWILSONQUDA;
-  }
-  else if(strcmp(yytext, "CLOVERQUDA")==0) {
-    optr->type = CLOVERQUDA;
-  }
   else {
     fprintf(stderr, "Unknown operator type %s in line %d\n", yytext, line_of_file);
     exit(1);
@@ -519,15 +506,10 @@ inline void rmQuotes(char *str){
   else if(optr->type == TMWILSON) BEGIN(TMOP);
   else if(optr->type == DBTMWILSON) BEGIN(DBTMOP);
   else if(optr->type == DBCLOVER) BEGIN(DBCLOVEROP);
-  /* the QUDA operators: */
-  else if(optr->type == WILSONQUDA) BEGIN(WILSONQUDAOP);
-  else if(optr->type == CLOVERQUDA) BEGIN(CLOVERQUDAOP);
-  else if(optr->type == TMWILSONQUDA) BEGIN(TMQUDAOP);
-  
   else BEGIN(OVERLAPOP);
 }
 
-<WILSONOP,WILSONQUDAOP,TMOP,TMQUDAOP,OVERLAPOP,DBTMOP,CLOVEROP,CLOVERQUDAOP,DBCLOVEROP>{
+<WILSONOP,TMOP,OVERLAPOP,DBTMOP,CLOVEROP,DBCLOVEROP>{
   {SPC}*kappa{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->kappa = c;
@@ -678,14 +660,14 @@ inline void rmQuotes(char *str){
   }
 }
 
-<WILSONOP,TMOP,WILSONQUDAOP,TMQUDAOP>{
+<WILSONOP,TMOP>{
   {SPC}*Solver{EQL} {
     name_caller = YY_START; 
     BEGIN(TMSOLVER);
   }
 }
 
-<CLOVEROP,CLOVERQUDAOP>{
+<CLOVEROP>{
   {SPC}*Solver{EQL} {
     name_caller = YY_START; 
     BEGIN(CSWSOLVER);
@@ -693,7 +675,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<WILSONOP,TMOP,WILSONQUDAOP,TMQUDAOP>{
+<WILSONOP,TMOP>{
   {SPC}*UseEvenOdd{EQL}yes {
     if(myverbose) printf("  Use even/odd preconditioning line %d operator %d\n", line_of_file, current_operator);
     optr->even_odd_flag = 1;
@@ -721,7 +703,7 @@ inline void rmQuotes(char *str){
   }
 }
 
-<TMOP,TMQUDAOP,CLOVEROP,CLOVERQUDAOP>{
+<TMOP,CLOVEROP>{
   {SPC}*2KappaMu{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->mu = c;
@@ -737,7 +719,7 @@ inline void rmQuotes(char *str){
   }
 }
 
-<CLOVEROP,CLOVERQUDAOP,DBCLOVEROP>{
+<CLOVEROP,DBCLOVEROP>{
   {SPC}*csw{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->c_sw = c;
@@ -2047,7 +2029,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,INITOPERATOR,TMOP,TMQUDAOP,DBTMOP,OVERLAPOP,WILSONOP,WILSONQUDAOP,CLOVEROP,CLOVERQUDAOP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{SPC}*\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{SPC}*\n   {
   line_of_file++;
 }
 <*>{SPC}*\n                       {

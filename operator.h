@@ -35,11 +35,6 @@
 #define CLOVER 4
 #define DBCLOVER 5
 
-/* the QUDA operators (orig. ID + 10) */
-#define TMWILSONQUDA 10
-#define WILSONQUDA 12
-#define CLOVERQUDA 14
-
 #define max_no_operators 10
 
 typedef struct {
