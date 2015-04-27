@@ -121,7 +121,7 @@ int commsMap(const int *coords, void *fdata)
 
 void _initQuda()
 {
-	static initialized = 0;
+	static int initialized = 0;
 	if( initialized )
 		return;
 
