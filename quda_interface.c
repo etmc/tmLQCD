@@ -274,7 +274,7 @@ void _initQuda()
 	}
 
 	// alloc space for a temp. spinor, used throughout this module
-	tempSpinor	= (double*)malloc( VOLUME*24*sizeof(double) );
+	tempSpinor	= (double*)malloc( 2*VOLUME*24*sizeof(double) ); /* factor 2 for doublet */
 
 	// only needed if even_odd_flag set
 //	fullSpinor1 = (double*)malloc( VOLUME*24*sizeof(double) );
@@ -377,10 +377,17 @@ void _loadGaugeQuda()
 
 
 // reorder spinor to QUDA format
-void reorder_spinor_toQuda( double* spinor, QudaPrecision precision )
+void reorder_spinor_toQuda( double* spinor, QudaPrecision precision, int doublet, double* spinor2 )
 {
 	double startTime = MPI_Wtime();
-	memcpy( tempSpinor, spinor, VOLUME*24*sizeof(double) );
+
+	if( doublet ) {
+		memcpy( tempSpinor,           spinor,  VOLUME*24*sizeof(double) );
+		memcpy( tempSpinor+VOLUME*24, spinor2, VOLUME*24*sizeof(double) );
+	}
+	else {
+		memcpy( tempSpinor, spinor, VOLUME*24*sizeof(double) );
+	}
 
 	// now copy and reorder from tempSpinor to spinor
 	for( int x0=0; x0<T; x0++ )
@@ -399,7 +406,14 @@ void reorder_spinor_toQuda( double* spinor, QudaPrecision precision )
 					int oddBit = (x0+x1+x2+x3) & 1;
 //					int quda_idx = 18*(oddBit*VOLUME/2+j/2);
 
-					memcpy( &(spinor[24*(oddBit*VOLUME/2+j/2)]), &(tempSpinor[24*tm_idx]), 24*sizeof(double));
+					if( doublet ) {
+						memcpy( &(spinor[24*(oddBit*VOLUME+j/2)]),          &(tempSpinor[24* tm_idx        ]), 24*sizeof(double));
+						memcpy( &(spinor[24*(oddBit*VOLUME+j/2+VOLUME/2)]), &(tempSpinor[24*(tm_idx+VOLUME)]), 24*sizeof(double));
+					}
+					else {
+						memcpy( &(spinor[24*(oddBit*VOLUME/2+j/2)]), &(tempSpinor[24*tm_idx]), 24*sizeof(double));
+					}
+
 				}
 
 	double endTime = MPI_Wtime();
@@ -409,10 +423,16 @@ void reorder_spinor_toQuda( double* spinor, QudaPrecision precision )
 }
 
 // reorder spinor from QUDA format
-void reorder_spinor_fromQuda( double* spinor, QudaPrecision precision )
+void reorder_spinor_fromQuda( double* spinor, QudaPrecision precision, int doublet, double* spinor2 )
 {
 	double startTime = MPI_Wtime();
-	memcpy( tempSpinor, spinor, VOLUME*24*sizeof(double) );
+
+	if( doublet ) {
+		memcpy( tempSpinor, spinor, 2*VOLUME*24*sizeof(double) );
+	}
+	else {
+		memcpy( tempSpinor, spinor, VOLUME*24*sizeof(double) );
+	}
 
 	// now copy and reorder from tempSpinor to spinor
 	for( int x0=0; x0<T; x0++ )
@@ -431,7 +451,13 @@ void reorder_spinor_fromQuda( double* spinor, QudaPrecision precision )
 					int oddBit = (x0+x1+x2+x3) & 1;
 //					int quda_idx = 18*(oddBit*VOLUME/2+j/2);
 
-					memcpy( &(spinor[24*tm_idx]), &(tempSpinor[24*(oddBit*VOLUME/2+j/2)]), 24*sizeof(double));
+					if( doublet ) {
+						memcpy( &(spinor [24* tm_idx]),  &(tempSpinor[24*(oddBit*VOLUME+j/2)         ]), 24*sizeof(double));
+						memcpy( &(spinor2[24*(tm_idx)]), &(tempSpinor[24*(oddBit*VOLUME+j/2+VOLUME/2)]), 24*sizeof(double));
+					}
+					else {
+						memcpy( &(spinor[24*tm_idx]), &(tempSpinor[24*(oddBit*VOLUME/2+j/2)]), 24*sizeof(double));
+					}
 				}
 
 	double endTime = MPI_Wtime();
@@ -457,7 +483,7 @@ void M_full_quda(spinor * const Even_new, spinor * const Odd_new,	spinor * const
 
 	// reorder spinor
 	convert_eo_to_lexic( spinorIn, Even, Odd );
-	reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec );
+	reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0, NULL );
 
 	// multiply
 //	 inv_param.solution_type = QUDA_MAT_SOLUTION;
@@ -467,7 +493,7 @@ void M_full_quda(spinor * const Even_new, spinor * const Odd_new,	spinor * const
 //	reorder_spinor_fromQuda( (double*)spinorIn,	inv_param.cpu_prec );
 //	convert_lexic_to_eo( Even, Odd, spinorIn );
 
-	reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec );
+	reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, NULL );
 	convert_lexic_to_eo( Even_new, Odd_new, spinorOut );
 }
 
@@ -488,15 +514,15 @@ void D_psi_quda(spinor * const P, spinor * const Q)
 	void *spinorOut = (void*)P;
 
 	// reorder spinor
-	reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec );
+	reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0, NULL );
 
 	// multiply
 //	 inv_param.solution_type = QUDA_MAT_SOLUTION;
 	MatQuda( spinorOut, spinorIn, &inv_param);
 
 	// reorder spinor
-	reorder_spinor_fromQuda( (double*)spinorIn,	inv_param.cpu_prec );
-	reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec );
+	reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, NULL );
+	reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, NULL );
 }
 
 
@@ -605,7 +631,7 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 	}
 
 	// reorder spinor
-	reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec );
+	reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0, NULL );
 
 	// perform the inversion
 	invertQuda(spinorOut, spinorIn, &inv_param);
@@ -623,8 +649,8 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 	int iteration = inv_param.iter;
 
 	// reorder spinor
-	reorder_spinor_fromQuda( (double*)spinorIn,	inv_param.cpu_prec );
-	reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec );
+	reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, NULL );
+	reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, NULL );
 	convert_lexic_to_eo(Even,		 Odd,		 g_spinor_field[DUM_DERI]);
 	convert_lexic_to_eo(Even_new, Odd_new, g_spinor_field[DUM_DERI+1]);
 
@@ -668,8 +694,16 @@ int invert_clover_eo_quda(spinor * const Even_new, spinor * const Odd_new,
     inv_param.clover_coeff = g_c_sw*g_kappa;
 
 
-	inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
-	if(g_proc_id == 0) printf("# QUDA: Using preconditioning!\n");
+	if( 1 /*even_odd_flag*/ )
+	{
+		inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
+		if(g_proc_id == 0) printf("# QUDA: Using preconditioning!\n");
+	}
+	else
+	{
+		inv_param.solve_type = QUDA_NORMOP_SOLVE;
+		if(g_proc_id == 0) printf("# QUDA: Not using preconditioning!\n");
+	}
 
 
 	inv_param.tol = sqrt(precision)*0.5;
@@ -691,7 +725,7 @@ int invert_clover_eo_quda(spinor * const Even_new, spinor * const Odd_new,
     loadCloverQuda(NULL, NULL, &inv_param);
 
 	// reorder spinor
-	reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec );
+	reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0, NULL );
 
 	// perform the inversion
 	invertQuda(spinorOut, spinorIn, &inv_param);
@@ -709,8 +743,8 @@ int invert_clover_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 	int iteration = inv_param.iter;
 
 	// reorder spinor
-	reorder_spinor_fromQuda( (double*)spinorIn,	inv_param.cpu_prec );
-	reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec );
+	reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, NULL );
+	reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, NULL );
 	convert_lexic_to_eo(Even,		 Odd,		 g_spinor_field[DUM_DERI]);
 	convert_lexic_to_eo(Even_new, Odd_new, g_spinor_field[DUM_DERI+1]);
 
@@ -718,4 +752,96 @@ int invert_clover_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 			return(iteration);
 }
 
+
+int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
+                           spinor * const Even_new_c, spinor * const Odd_new_c,
+                           spinor * const Even_s, spinor * const Odd_s,
+                           spinor * const Even_c, spinor * const Odd_c,
+                           const double precision, const int max_iter,
+                           const int solver_flag, const int rel_prec)
+{
+	_loadGaugeQuda();
+
+	convert_eo_to_lexic(g_spinor_field[DUM_DERI],	 Even_s,	Odd_s);
+	convert_eo_to_lexic(g_spinor_field[DUM_DERI+1],	 Even_c,	Odd_c);
+//	convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], Even_new, Odd_new);
+
+	void *spinorIn    = (void*)g_spinor_field[DUM_DERI];   // source
+	void *spinorIn_c  = (void*)g_spinor_field[DUM_DERI+1]; // charme source
+	void *spinorOut   = (void*)g_spinor_field[DUM_DERI+2]; // solution
+	void *spinorOut_c = (void*)g_spinor_field[DUM_DERI+3]; // charme solution
+
+	int multishift = 0; //TODO
+
+	if ( rel_prec )
+		inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
+	else
+		inv_param.residual_type = QUDA_L2_ABSOLUTE_RESIDUAL;
+
+	inv_param.kappa = g_kappa;
+
+	// IMPORTANT: use opposite TM mu-flavor since gamma5 -> -gamma5
+	inv_param.mu      = -g_mubar /2./g_kappa;
+	inv_param.epsilon =  g_epsbar/2./g_kappa;
+
+	inv_param.dslash_type = QUDA_TWISTED_MASS_DSLASH;
+	inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN_ASYMMETRIC;
+	inv_param.solution_type = QUDA_MAT_SOLUTION;
+
+	inv_param.inv_type = QUDA_CG_INVERTER; //TODO
+
+
+	if( 1 /*even_odd_flag*/ )
+	{
+		inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
+		if(g_proc_id == 0) printf("# QUDA: Using preconditioning!\n");
+	}
+	else
+	{
+		inv_param.solve_type = QUDA_NORMOP_SOLVE;
+		if(g_proc_id == 0) printf("# QUDA: Not using preconditioning!\n");
+	}
+
+	inv_param.tol = sqrt(precision)*0.5;
+	inv_param.maxiter = max_iter;
+
+	// these can be set individually
+	for (int i=0; i<inv_param.num_offset; i++) {
+		inv_param.tol_offset[i] = inv_param.tol;
+		inv_param.tol_hq_offset[i] = inv_param.tol_hq;
+	}
+
+	inv_param.twist_flavor = QUDA_TWIST_NONDEG_DOUBLET;
+	inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ||
+		                inv_param.twist_flavor == QUDA_TWIST_DEG_DOUBLET ) ? 2 : 1;
+
+	// reorder spinor
+	reorder_spinor_toQuda( (double*)spinorIn,   inv_param.cpu_prec, 1, (double*)spinorIn_c );
+
+	// perform the inversion
+	invertQuda(spinorOut, spinorIn, &inv_param);
+
+	if( inv_param.verbosity == QUDA_VERBOSE )
+		if(g_proc_id == 0)
+			printf("# QUDA: Device memory used:	Spinor: %f GiB,	Gauge: %f GiB\n",
+	 inv_param.spinorGiB, gauge_param.gaugeGiB);
+	if( inv_param.verbosity > QUDA_SILENT )
+		if(g_proc_id == 0)
+			printf("# QUDA: Done: %i iter / %g secs = %g Gflops\n",
+	 inv_param.iter, inv_param.secs, inv_param.gflops/inv_param.secs);
+
+	// number of CG iterations
+	int iteration = inv_param.iter;
+
+	// reorder spinor
+	reorder_spinor_fromQuda( (double*)spinorIn,    inv_param.cpu_prec, 1, (double*)spinorIn_c );
+	reorder_spinor_fromQuda( (double*)spinorOut,   inv_param.cpu_prec, 1, (double*)spinorOut_c );
+	convert_lexic_to_eo(Even_s,     Odd_s,     g_spinor_field[DUM_DERI]);
+	convert_lexic_to_eo(Even_c,     Odd_c,     g_spinor_field[DUM_DERI+1]);
+	convert_lexic_to_eo(Even_new_s, Odd_new_s, g_spinor_field[DUM_DERI+2]);
+	convert_lexic_to_eo(Even_new_c, Odd_new_c, g_spinor_field[DUM_DERI+3]);
+
+	if(iteration > max_iter) return(-1);
+			return(iteration);
+}
 
