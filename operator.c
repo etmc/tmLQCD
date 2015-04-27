@@ -212,6 +212,11 @@ int init_operators() {
 	optr->applyDbQsq = &Qtm_pm_ndpsi;
       }
     }
+
+    if(optr->use_qudainverter)
+    {
+    	_initQuda();
+    }
   }
   return(0);
 }
