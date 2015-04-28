@@ -1330,6 +1330,17 @@ void D_psi_prec(spinor * const P, spinor * const Q){
 /* double copy                                                */
 
 void Block_D_psi(block * blk, spinor * const rr, spinor * const s) {
+
+  if(g_c_sw > 0)
+     Block_Dsw_psi(blk,rr,s);
+  else 
+     Block_Dtm_psi(blk,rr,s);
+
+  return;
+}
+ 
+//this version is for c_sw=0
+void Block_Dtm_psi(block * blk, spinor * const rr, spinor * const s) {
   int i;
   spinor *r = rr;
   spinor *t = s;
