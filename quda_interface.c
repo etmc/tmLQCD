@@ -133,10 +133,12 @@ int commsMap(const int *coords, void *fdata)
 	return rank;
 }
 
+// variable to check if quda has been initialized
+static int quda_initialized = 0;
+
 void _initQuda()
 {
-	static int initialized = 0;
-	if( initialized )
+	if( quda_initialized )
 		return;
 
 	if( g_debug_level > 0 )
@@ -299,15 +301,18 @@ void _initQuda()
 
 	// initialize the QUDA library
 	initQuda(-1);
-	initialized = 1;
+	quda_initialized = 1;
 }
 
 // finalize the QUDA library
 void _endQuda()
 {
-	freeGaugeQuda();
-	free((void*)tempSpinor);
-	endQuda();
+	if( quda_initialized )
+	{
+		freeGaugeQuda();
+		free((void*)tempSpinor);
+		endQuda();
+	}
 }
 
 
