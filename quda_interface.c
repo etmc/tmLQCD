@@ -77,6 +77,9 @@
 #include "solver/solver.h"
 #include "quda.h"
 
+
+#ifdef QUDA
+
 // define order of the spatial indices
 // default is LX-LY-LZ-T, see below def. of local lattice size, this is related to
 // the gamma basis transformation from tmLQCD -> UKQCD
@@ -129,8 +132,10 @@ void _initQuda()
 	if( g_debug_level > 0 )
 		if(g_proc_id == 0)
 			printf("\n# QUDA: Detected QUDA version %d.%d.%d\n\n", QUDA_VERSION_MAJOR, QUDA_VERSION_MINOR, QUDA_VERSION_SUBMINOR);
-//TODO
-//	error_root((QUDA_VERSION_MAJOR == 0 && QUDA_VERSION_MINOR < 7),1,"_initQuda [quda_interface.c]","minimum QUDA version required is 0.7.0 (for support of chiral basis and removal of bug in mass normalization with preconditioning).");
+	if( QUDA_VERSION_MAJOR == 0 && QUDA_VERSION_MINOR < 7) {
+		fprintf(stderr, "Error: minimum QUDA version required is 0.7.0 (for support of chiral basis and removal of bug in mass normalization with preconditioning).\n");
+		exit(-2);
+	}
 
 
 
@@ -1013,3 +1018,69 @@ int invert_cloverdoublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_n
 	if(iteration > max_iter) return(-1);
 			return(iteration);
 }
+
+#else /* if not built against QUDA: dummy functions */
+
+void qudaNotDefined() {
+	fprintf(stderr, "Error: you're trying to access a QUDA function but this build has not been linked against QUDA...\n");
+      exit(-2);
+}
+
+void _initQuda() {
+	qudaNotDefined();
+}
+void _endQuda() {
+	qudaNotDefined();
+}
+
+void _loadGaugeQuda() {
+	qudaNotDefined();
+}
+
+int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
+                   spinor * const Even, spinor * const Odd,
+                   const double precision, const int max_iter,
+                   const int solver_flag, const int rel_prec,
+                   const int sub_evs_flag, const int even_odd_flag,
+                   const int no_extra_masses, double * const extra_masses, solver_params_t solver_params,
+                   const int id ) {
+	qudaNotDefined();
+}
+
+int invert_clover_eo_quda(spinor * const Even_new, spinor * const Odd_new,
+                          spinor * const Even, spinor * const Odd,
+                          const double precision, const int max_iter,
+                          const int solver_flag, const int rel_prec, solver_params_t solver_params) {
+	qudaNotDefined();
+}
+
+int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
+                           spinor * const Even_new_c, spinor * const Odd_new_c,
+                           spinor * const Even_s, spinor * const Odd_s,
+                           spinor * const Even_c, spinor * const Odd_c,
+                           const double precision, const int max_iter,
+                           const int solver_flag, const int rel_prec) {
+	qudaNotDefined();
+}
+
+int invert_cloverdoublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
+                           spinor * const Even_new_c, spinor * const Odd_new_c,
+                           spinor * const Even_s, spinor * const Odd_s,
+                           spinor * const Even_c, spinor * const Odd_c,
+                           const double precision, const int max_iter,
+                           const int solver_flag, const int rel_prec) {
+	qudaNotDefined();
+}
+
+int invert_quda(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, const int rel_prec ) {
+	qudaNotDefined();
+}
+
+void M_full_quda(spinor * const Even_new, spinor * const Odd_new,  spinor * const Even, spinor * const Odd) {
+	qudaNotDefined();
+}
+void D_psi_quda(spinor * const P, spinor * const Q) {
+	qudaNotDefined();
+}
+
+#endif /* dummy functions */
