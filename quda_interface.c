@@ -543,8 +543,6 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 	void *spinorIn	= (void*)g_spinor_field[DUM_DERI];	 // source
 	void *spinorOut = (void*)g_spinor_field[DUM_DERI+1]; // solution
 
-	int multishift = 0; //TODO
-
 	if ( rel_prec )
 		inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
 	else
@@ -682,8 +680,6 @@ int invert_clover_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 	void *spinorIn	= (void*)g_spinor_field[DUM_DERI];	 // source
 	void *spinorOut = (void*)g_spinor_field[DUM_DERI+1]; // solution
 
-	int multishift = 0; //TODO
-
 	if ( rel_prec )
 		inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
 	else
@@ -805,8 +801,6 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
 	void *spinorOut   = (void*)g_spinor_field[DUM_DERI+2]; // solution
 	void *spinorOut_c = (void*)g_spinor_field[DUM_DERI+3]; // charme solution
 
-	int multishift = 0; //TODO
-
 	if ( rel_prec )
 		inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
 	else
@@ -896,8 +890,6 @@ int invert_cloverdoublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_n
 	void *spinorIn_c  = (void*)g_spinor_field[DUM_DERI+1]; // charme source
 	void *spinorOut   = (void*)g_spinor_field[DUM_DERI+2]; // solution
 	void *spinorOut_c = (void*)g_spinor_field[DUM_DERI+3]; // charme solution
-
-	int multishift = 0; //TODO
 
 	if ( rel_prec )
 		inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
