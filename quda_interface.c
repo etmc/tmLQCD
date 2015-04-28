@@ -74,6 +74,7 @@
 #include "global.h"
 #include "boundary.h"
 #include "linalg/convert_eo_to_lexic.h"
+#include "solver/solver.h"
 #include "quda.h"
 
 // define order of the spatial indices
@@ -187,9 +188,9 @@ void _initQuda()
 
 
 	// offsets used only by multi-shift solver
-	inv_param.num_offset = 4;
-	double offset[4] = {0.01, 0.02, 0.03, 0.04};
-	for (int i=0; i<inv_param.num_offset; i++) inv_param.offset[i] = offset[i];
+//	inv_param.num_offset = 4;
+//	double offset[4] = {0.01, 0.02, 0.03, 0.04};
+//	for (int i=0; i<inv_param.num_offset; i++) inv_param.offset[i] = offset[i];
 
 	inv_param.dagger = QUDA_DAG_NO;
 	inv_param.mass_normalization = QUDA_KAPPA_NORMALIZATION;
@@ -204,7 +205,7 @@ void _initQuda()
 	inv_param.reliable_delta = 1e-2; // ignored by multi-shift solver
 
 	// domain decomposition preconditioner parameters
-	inv_param.inv_type_precondition = QUDA_GCR_INVERTER;
+	inv_param.inv_type_precondition = QUDA_CG_INVERTER;
 	inv_param.schwarz_type = QUDA_ADDITIVE_SCHWARZ;
 	inv_param.precondition_cycle = 1;
 	inv_param.tol_precondition = 1e-1;
@@ -599,19 +600,61 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 		inv_param.solution_type = QUDA_MAT_SOLUTION;
 	}
 
-	inv_param.inv_type = QUDA_CG_INVERTER; //TODO
+	// choose solver
+	if(solver_flag == BICGSTAB) {
+		if(g_proc_id == 0) {printf("# QUDA: Using BiCGstab!\n"); fflush(stdout);}
+		inv_param.inv_type = QUDA_BICGSTAB_INVERTER;
+	}
+//	else if(solver_flag == GMRES) {
+//		if(g_proc_id == 0) {printf("# Using MR!\n"); fflush(stdout);}
+//		inv_param.inv_type = QUDA_MR_INVERTER;
+//	}
+//	else if(solver_flag == GCR) {
+//		if(g_proc_id == 0) {printf("# Using GCR!\n"); fflush(stdout);}
+//		inv_param.inv_type = QUDA_GCR_INVERTER;
+//	}
+//	else if(solver_flag == PCG) {
+//		/* Here we invert the hermitean operator squared */
+//		inv_param.inv_type = QUDA_PCG_INVERTER;
+//	}
+//	else if(solver_flag == INCREIGCG) {
+//		 /* Here we invert the hermitean operator squared */
+//		 inv_param.inv_type = QUDA_EIGCG_INVERTER;
+//	 }
+	else {
+		/* Here we invert the hermitean operator squared */
+		inv_param.inv_type = QUDA_CG_INVERTER;
+		if(g_proc_id == 0) {
+			printf("# QUDA:  Using mixed precision CG!\n");
+			printf("# mu = %f, kappa = %f\n", g_mu/2./g_kappa, g_kappa);
+			fflush(stdout);
+		}
+	}
 
-
-	if( even_odd_flag )
+	// direct or norm-op. solve
+	if( inv_param.inv_type == QUDA_CG_INVERTER )
 	{
-		inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
-		if(g_proc_id == 0) printf("# QUDA: Using preconditioning!\n");
+		if( even_odd_flag ) {
+			inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
+			if(g_proc_id == 0) printf("# QUDA: Using preconditioning!\n");
+		}
+		else {
+			inv_param.solve_type = QUDA_NORMOP_SOLVE;
+			if(g_proc_id == 0) printf("# QUDA: Not using preconditioning!\n");
+		}
 	}
 	else
 	{
-		inv_param.solve_type = QUDA_NORMOP_SOLVE;
-		if(g_proc_id == 0) printf("# QUDA: Not using preconditioning!\n");
+		if( even_odd_flag ) {
+			inv_param.solve_type = QUDA_DIRECT_PC_SOLVE;
+			if(g_proc_id == 0) printf("# QUDA: Using preconditioning!\n");
+		}
+		else {
+			inv_param.solve_type = QUDA_DIRECT_SOLVE;
+			if(g_proc_id == 0) printf("# QUDA: Not using preconditioning!\n");
+		}
 	}
+
 
 	inv_param.tol = sqrt(precision)*0.5;
 	inv_param.maxiter = max_iter;
@@ -687,22 +730,48 @@ int invert_clover_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 	inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
 	inv_param.solution_type = QUDA_MAT_SOLUTION;
 
-	inv_param.inv_type = QUDA_CG_INVERTER; //TODO
-
 	// clover
     inv_param.clover_order = QUDA_PACKED_CLOVER_ORDER;
     inv_param.clover_coeff = g_c_sw*g_kappa;
 
 
-	if( 1 /*even_odd_flag*/ )
+	// choose solver
+	if(solver_flag == BICGSTAB) {
+		if(g_proc_id == 0) {printf("# QUDA: Using BiCGstab!\n"); fflush(stdout);}
+		inv_param.inv_type = QUDA_BICGSTAB_INVERTER;
+	}
+	else {
+		/* Here we invert the hermitean operator squared */
+		inv_param.inv_type = QUDA_CG_INVERTER;
+		if(g_proc_id == 0) {
+			printf("# QUDA:  Using mixed precision CG!\n");
+			printf("# mu = %f, kappa = %f\n", g_mu/2./g_kappa, g_kappa);
+			fflush(stdout);
+		}
+	}
+
+	// direct or norm-op. solve
+	if( inv_param.inv_type == QUDA_CG_INVERTER )
 	{
-		inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
-		if(g_proc_id == 0) printf("# QUDA: Using preconditioning!\n");
+		if( 1 /*even_odd_flag*/ ) {
+			inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
+			if(g_proc_id == 0) printf("# QUDA: Using preconditioning!\n");
+		}
+		else {
+			inv_param.solve_type = QUDA_NORMOP_SOLVE;
+			if(g_proc_id == 0) printf("# QUDA: Not using preconditioning!\n");
+		}
 	}
 	else
 	{
-		inv_param.solve_type = QUDA_NORMOP_SOLVE;
-		if(g_proc_id == 0) printf("# QUDA: Not using preconditioning!\n");
+		if( 1 /*even_odd_flag*/ ) {
+			inv_param.solve_type = QUDA_DIRECT_PC_SOLVE;
+			if(g_proc_id == 0) printf("# QUDA: Using preconditioning!\n");
+		}
+		else {
+			inv_param.solve_type = QUDA_DIRECT_SOLVE;
+			if(g_proc_id == 0) printf("# QUDA: Not using preconditioning!\n");
+		}
 	}
 
 
