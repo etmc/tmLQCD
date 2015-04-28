@@ -24,17 +24,18 @@
 *
 * Author: Mario Schroeck <mario.schroeck@roma3.infn.it>
 * 
-* Last changes: 03/2015
+* Last changes: 04/2015
 *
 *
-* Integration of the QUDA inverter for multi-GPU usage
+* Interface to QUDA for multi-GPU inverters
 *
 * The externally accessible functions are
 *
 *	 void _initQuda()
 *		 Initializes the QUDA library. Carries over the lattice size and the
-*		 MPI process grid and thus must be called after initializing MPI (and
-*		 after 'read_infile(argc,argv)').
+*		 MPI process grid and thus must be called after initializing MPI.
+*		 Currently it is called in init_operators() if optr->use_qudainverter
+*		 flag is set.
 *		 Memory for the QUDA gaugefield on the host is allocated but not filled
 *		 yet (the latter is done in _loadGaugeQuda(), see below).
 *		 Performance critical settings are done here and can be changed.
@@ -47,15 +48,28 @@
 *		 Must be called between last changes on the gaugefield (smearing etc.)
 *		 and first call of the inverter. In particular, 'boundary(const double kappa)'
 *		 must be called before if nontrivial boundary conditions are to be used since
-*		 those will be applied directly to the gaugefield.
+*		 those will be applied directly to the gaugefield. Currently it is called just
+*		 before the inversion is done (might result in wasted loads...).
 *
 *	 double tmcgne_quda(int nmx,double res,int k,int l,int *status,int *ifail)
 *		 The same functionality as 'tmcgne' (see tmcg.c) but inversion is performed on
 *		 the GPU using QUDA. Final residuum check is performed on the host (CPU)
 *		 with the function 'void tmQnohat_dble(int k,int l)' (see tmdirac.c).
 *
-*	 void tmQnohat_quda(int k, int l)
-*		 The implementation of the QUDA equivalent of 'tmQnohat_dble'.
+*	 The functions
+*
+*		 int invert_eo_quda(...);
+*		 int invert_clover_eo_quda(...);
+*		 int invert_doublet_eo_quda(...);
+*		 int invert_cloverdoublet_eo_quda(...);
+*		 void M_full_quda(...);
+*		 void D_psi_quda(...);
+*
+*	 closely mimic their tmLQCD counterparts in functionality as well as
+*	 input and output parameters.
+*
+*	 To activate those, set "UseQudaInverter = yes" in the operator
+*	 declaration of the input file. For details see the documentation.
 *
 *
 * Notes:
@@ -93,10 +107,6 @@
 // if not using TRIVIAL_BC: BC will be applied to gauge field,
 // can't use 12 parameter reconstruction
 #define TRIVIAL_BC 0
-
-// final check of residual with DD functions on the CPU
-#define FINAL_RESIDUAL_CHECK_CPU_DD 1
-
 
 #define MAX(a,b) ((a)>(b)?(a):(b))
 
@@ -136,8 +146,6 @@ void _initQuda()
 		fprintf(stderr, "Error: minimum QUDA version required is 0.7.0 (for support of chiral basis and removal of bug in mass normalization with preconditioning).\n");
 		exit(-2);
 	}
-
-
 
 	gauge_param = newQudaGaugeParam();
 	inv_param = newQudaInvertParam();
@@ -264,7 +272,7 @@ void _initQuda()
 
 	// declare the grid mapping used for communications in a multi-GPU grid
 #if USE_LZ_LY_LX_T
-	int grid[4] = {NPROC3, NPROC2, NPROC1, NPROC0};
+	int grid[4] = {g_nproc_z, g_nproc_y, g_nproc_x, g_nproc_t};
 #else
 	int grid[4] = {g_nproc_x, g_nproc_y, g_nproc_z, g_nproc_t};
 #endif
@@ -276,17 +284,18 @@ void _initQuda()
 
 	for (int dir = 0; dir < 4; dir++) {
 		gauge_quda[dir] = (double*) malloc(VOLUME*18*gSize);
-//		error_root((gauge_quda[dir] == NULL),1,"_initQuda [quda_interface.c]","malloc for gauge_quda[dir] failed");
+		if(gauge_quda[dir] == NULL) {
+			fprintf(stderr, "_initQuda: malloc for gauge_quda[dir] failed");
+			exit(-2);
+		}
 	}
 
 	// alloc space for a temp. spinor, used throughout this module
 	tempSpinor	= (double*)malloc( 2*VOLUME*24*sizeof(double) ); /* factor 2 for doublet */
-
-	// only needed if even_odd_flag set
-//	fullSpinor1 = (double*)malloc( VOLUME*24*sizeof(double) );
-//	fullSpinor2 = (double*)malloc( VOLUME*24*sizeof(double) );
-
-//	error_root((tempSpinor == NULL),1,"reorder_spinor_toQuda [quda_interface.c]","malloc for tempSpinor failed");
+	if(tempSpinor == NULL) {
+		fprintf(stderr, "_initQuda: malloc for tempSpinor failed");
+		exit(-2);
+	}
 
 	// initialize the QUDA library
 	initQuda(-1);
@@ -308,10 +317,6 @@ void _loadGaugeQuda()
 		if(g_proc_id == 0)
 			printf("\n# QUDA: Called _loadGaugeQuda\n");
 
-	// update boundary if necessary
-//	 if( query_flags(UDBUF_UP2DATE)!=1 )
-//		copy_bnd_ud();
-
 	_Complex double tmpcplx;
 
 	size_t gSize = (gauge_param.cpu_prec == QUDA_DOUBLE_PRECISION) ? sizeof(double) : sizeof(float);
@@ -322,27 +327,21 @@ void _loadGaugeQuda()
 			for( int x2=0; x2<LY; x2++ )
 				for( int x3=0; x3<LZ; x3++ )
 				{
-					/* ipt[x3+LZ*x2+LY*LZ*x1+LX*LY*LZ*x0] is the index of the
-						 point on the local lattice with cartesian coordinates
-						 (x0,x1,x2,x3) */
-
 #if USE_LZ_LY_LX_T
 					int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
-					int tm_idx	 = g_ipt[x0][x1][x2][x3];
+					int tm_idx = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
 #else
 					int j = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
-					int tm_idx	 = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;//g_ipt[x0][x3][x2][x1];
+					int tm_idx = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
 #endif
-
 					int oddBit = (x0+x1+x2+x3) & 1;
 					int quda_idx = 18*(oddBit*VOLUME/2+j/2);
 
-
 #if USE_LZ_LY_LX_T
-					memcpy( &(gauge_quda[0][quda_idx]), pud[tm_idx][3], 18*gSize);
-					memcpy( &(gauge_quda[1][quda_idx]), pud[tm_idx][2], 18*gSize);
-					memcpy( &(gauge_quda[2][quda_idx]), pud[tm_idx][1], 18*gSize);
-					memcpy( &(gauge_quda[3][quda_idx]), pud[tm_idx][0], 18*gSize);
+					memcpy( &(gauge_quda[0][quda_idx]), &(g_gauge_field[tm_idx][3]), 18*gSize);
+					memcpy( &(gauge_quda[1][quda_idx]), &(g_gauge_field[tm_idx][2]), 18*gSize);
+					memcpy( &(gauge_quda[2][quda_idx]), &(g_gauge_field[tm_idx][1]), 18*gSize);
+					memcpy( &(gauge_quda[3][quda_idx]), &(g_gauge_field[tm_idx][0]), 18*gSize);
 #else
 					memcpy( &(gauge_quda[0][quda_idx]), &(g_gauge_field[tm_idx][1]), 18*gSize);
 					memcpy( &(gauge_quda[1][quda_idx]), &(g_gauge_field[tm_idx][2]), 18*gSize);
@@ -403,14 +402,12 @@ void reorder_spinor_toQuda( double* spinor, QudaPrecision precision, int doublet
 				{
 #if USE_LZ_LY_LX_T
 					int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
-					int tm_idx	 = g_ipt[x0][x1][x2][x3];
+					int tm_idx = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
 #else
 					int j = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
-					int tm_idx	 = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;//g_ipt[x0][x3][x2][x1];
+					int tm_idx	 = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
 #endif
-
 					int oddBit = (x0+x1+x2+x3) & 1;
-//					int quda_idx = 18*(oddBit*VOLUME/2+j/2);
 
 					if( doublet ) {
 						memcpy( &(spinor[24*(oddBit*VOLUME+j/2)]),          &(tempSpinor[24* tm_idx        ]), 24*sizeof(double));
@@ -448,14 +445,12 @@ void reorder_spinor_fromQuda( double* spinor, QudaPrecision precision, int doubl
 				{
 #if USE_LZ_LY_LX_T
 					int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
-					int tm_idx	 = g_ipt[x0][x1][x2][x3];
+					int tm_idx = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
 #else
 					int j = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
-					int tm_idx	 = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;//g_ipt[x0][x3][x2][x1];
+					int tm_idx	 = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
 #endif
-
 					int oddBit = (x0+x1+x2+x3) & 1;
-//					int quda_idx = 18*(oddBit*VOLUME/2+j/2);
 
 					if( doublet ) {
 						memcpy( &(spinor [24* tm_idx]),  &(tempSpinor[24*(oddBit*VOLUME+j/2)         ]), 24*sizeof(double));
@@ -492,17 +487,13 @@ void M_full_quda(spinor * const Even_new, spinor * const Odd_new,	spinor * const
 	reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0, NULL );
 
 	// multiply
-//	 inv_param.solution_type = QUDA_MAT_SOLUTION;
+	inv_param.solution_type = QUDA_MAT_SOLUTION;
 	MatQuda( spinorOut, spinorIn, &inv_param);
 
 	// reorder spinor
-//	reorder_spinor_fromQuda( (double*)spinorIn,	inv_param.cpu_prec );
-//	convert_lexic_to_eo( Even, Odd, spinorIn );
-
 	reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, NULL );
 	convert_lexic_to_eo( Even_new, Odd_new, spinorOut );
 }
-
 
 // no even-odd
 void D_psi_quda(spinor * const P, spinor * const Q)
@@ -523,46 +514,12 @@ void D_psi_quda(spinor * const P, spinor * const Q)
 	reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0, NULL );
 
 	// multiply
-//	 inv_param.solution_type = QUDA_MAT_SOLUTION;
+	inv_param.solution_type = QUDA_MAT_SOLUTION;
 	MatQuda( spinorOut, spinorIn, &inv_param);
 
 	// reorder spinor
 	reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, NULL );
 	reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, NULL );
-}
-
-
-// the following function calculates the relative residual with DD functions, no QUDA here.
-double getResidualDD( int k, int l, double *nrm2 )
-{
-//	double startTime = MPI_Wtime();
-//	double rn, locnrm2, locsrc2, globnrm2, globsrc2;
-//	// copy source to temp. spinor (to recover source later)
-//	memcpy( tempSpinor, psd[k][0], VOLUME*24*sizeof(double));
-//
-//	tmQnohat_dble(l,k); // apply op. on solution(=l) and store in source(=k): x -> A*x
-//	complex_dble z;
-//	z.re=-1.0;
-//	z.im=0.0;
-// 	mulg5_dble(VOLUME,psd[k][0]);	// A*x -> gamma_5 * A*x
-//	mulc_spinor_add_dble(VOLUME,psd[k][0],(spinor_dble*)tempSpinor,z); // A*x -> A*x-b
-//	locnrm2 = norm_square_dble(VOLUME,1,psd[k][0]);			// ||A*x-b||^2
-//	locsrc2 = norm_square_dble(VOLUME,1,(spinor_dble*)tempSpinor);// ||b||^2
-//
-//	memcpy( psd[k][0], tempSpinor, VOLUME*24*sizeof(double));
-//
-//	MPI_Bcast(&rn,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
-//	MPI_Allreduce(&locnrm2, &globnrm2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-//	MPI_Allreduce(&locsrc2, &globsrc2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-//
-//	(*nrm2) = globnrm2;
-//	rn = sqrt(globnrm2/globsrc2);
-//
-//	double endTime = MPI_Wtime();
-//	double diffTime = endTime - startTime;
-//	message("time spent in getResidualDD: %f secs\n", diffTime);
-
-	return 0.0;//rn;
 }
 
 int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
@@ -661,7 +618,7 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 	}
 
 
-	inv_param.tol = sqrt(precision)*0.5;
+	inv_param.tol = sqrt(precision)*0.25;
 	inv_param.maxiter = max_iter;
 
 	// these can be set individually
@@ -729,7 +686,6 @@ int invert_clover_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 
 	inv_param.kappa = g_kappa;
 	inv_param.mu = fabs(g_mu/2./g_kappa);
-//	inv_param.epsilon = 0.0;
 
 	inv_param.dslash_type = QUDA_TWISTED_CLOVER_DSLASH;
 	inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
@@ -738,7 +694,6 @@ int invert_clover_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 	// clover
     inv_param.clover_order = QUDA_PACKED_CLOVER_ORDER;
     inv_param.clover_coeff = g_c_sw*g_kappa;
-
 
 	// choose solver
 	if(solver_flag == BICGSTAB) {
@@ -780,7 +735,7 @@ int invert_clover_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 	}
 
 
-	inv_param.tol = sqrt(precision)*0.5;
+	inv_param.tol = sqrt(precision)*0.25;
 	inv_param.maxiter = max_iter;
 
 	// these can be set individually
@@ -876,7 +831,7 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
 		if(g_proc_id == 0) printf("# QUDA: Not using preconditioning!\n");
 	}
 
-	inv_param.tol = sqrt(precision)*0.5;
+	inv_param.tol = sqrt(precision)*0.25;
 	inv_param.maxiter = max_iter;
 
 	// these can be set individually
@@ -972,7 +927,7 @@ int invert_cloverdoublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_n
 		if(g_proc_id == 0) printf("# QUDA: Not using preconditioning!\n");
 	}
 
-	inv_param.tol = sqrt(precision)*0.5;
+	inv_param.tol = sqrt(precision)*0.25;
 	inv_param.maxiter = max_iter;
 
 	// these can be set individually

@@ -11,11 +11,11 @@
  *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
+ * along with tmLQCD.	If not, see <http://www.gnu.org/licenses/>.
  *
  ***********************************************************************/
 /***********************************************************************
@@ -24,37 +24,52 @@
 *
 * Author: Mario Schroeck <mario.schroeck@roma3.infn.it>
 * 
-* Last changes: 03/2015
+* Last changes: 04/2015
 *
 *
-* Integration of the QUDA inverter for multi-GPU usage
+* Interface to QUDA for multi-GPU inverters
 *
 * The externally accessible functions are
 *
-*   void _initQuda( int verbose )  
-*     Initializes the QUDA library. Carries over the lattice size and the 
-*     MPI process grid and thus must be called after initializing MPI (and 
-*     after 'read_infile(argc,argv)').
-*     Memory for the QUDA gaugefield on the host is allocated but not filled 
-*     yet (the latter is done in _loadGaugeQuda(), see below). 
-*     Performance critical settings are done here and can be changed.
-*     Input parameter: verbose (0=SILENT, 1=SUMMARIZE, 2=VERBOSE).
+*	 void _initQuda()
+*		 Initializes the QUDA library. Carries over the lattice size and the
+*		 MPI process grid and thus must be called after initializing MPI.
+*		 Currently it is called in init_operators() if optr->use_qudainverter
+*		 flag is set.
+*		 Memory for the QUDA gaugefield on the host is allocated but not filled
+*		 yet (the latter is done in _loadGaugeQuda(), see below).
+*		 Performance critical settings are done here and can be changed.
 *
-*   void _endQuda()
-*     Finalizes the QUDA library. Call before MPI_Finalize().
+*	 void _endQuda()
+*		 Finalizes the QUDA library. Call before MPI_Finalize().
 *
-*   void _loadGaugeQuda()
-*     Copies and reorders the gaugefield on the host and copies it to the GPU.
-*     Must be called between last changes on the gaugefield (smearing, flip 
-*     boundary conditions, etc.) and first call of the inverter.
+*	 void _loadGaugeQuda()
+*		 Copies and reorders the gaugefield on the host and copies it to the GPU.
+*		 Must be called between last changes on the gaugefield (smearing etc.)
+*		 and first call of the inverter. In particular, 'boundary(const double kappa)'
+*		 must be called before if nontrivial boundary conditions are to be used since
+*		 those will be applied directly to the gaugefield. Currently it is called just
+*		 before the inversion is done (might result in wasted loads...).
 *
-*   double tmcgne_quda(int nmx,double res,int k,int l,int *status,int *ifail)
-*     The same functionality as 'tmcgne' (see tmcg.c) but inversion is performed on 
-*     the GPU using QUDA. Final residuum check is performed on the host (CPU)
-*     with the function 'void tmQnohat_dble(int k,int l)' (see tmdirac.c).
+*	 double tmcgne_quda(int nmx,double res,int k,int l,int *status,int *ifail)
+*		 The same functionality as 'tmcgne' (see tmcg.c) but inversion is performed on
+*		 the GPU using QUDA. Final residuum check is performed on the host (CPU)
+*		 with the function 'void tmQnohat_dble(int k,int l)' (see tmdirac.c).
 *
-*   void tmQnohat_quda(int k, int l)
-*     The implementation of the QUDA equivalent of 'tmQnohat_dble'. 
+*	 The functions
+*
+*		 int invert_eo_quda(...);
+*		 int invert_clover_eo_quda(...);
+*		 int invert_doublet_eo_quda(...);
+*		 int invert_cloverdoublet_eo_quda(...);
+*		 void M_full_quda(...);
+*		 void D_psi_quda(...);
+*
+*	 closely mimic their tmLQCD counterparts in functionality as well as
+*	 input and output parameters.
+*
+*	 To activate those, set "UseQudaInverter = yes" in the operator
+*	 declaration of the input file. For details see the documentation.
 *
 *
 * Notes:
@@ -62,12 +77,6 @@
 * Minimum QUDA version is 0.7.0 (see https://github.com/lattice/quda/issues/151 
 * and https://github.com/lattice/quda/issues/157).
 *
-* To enable compilation of the same code for QUDA usage and standard non-QUDA usage, 
-* all calls of these functions should be wrapped in precompiler switches of the form
-*
-*   #ifdef QUDA
-*     ...
-*   #endif  
 *
 **************************************************************************/
 
@@ -77,7 +86,7 @@
 #include "su3.h"
 #include "solver/solver_params.h"
 
-// pointer to the QUDA gaugefield, alloc. in dd_initQuda()
+// pointer to the QUDA gaugefield
 double *gauge_quda[4];
 
 // wrapper functions
