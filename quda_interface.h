@@ -94,7 +94,7 @@ void _initQuda();
 void _endQuda();
 void _loadGaugeQuda();
 
-// to be called instead of tmcgne to use the QUDA inverter
+// to be called instead of tmLQCD functions to use the QUDA inverter
 int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
                    spinor * const Even, spinor * const Odd,
                    const double precision, const int max_iter,

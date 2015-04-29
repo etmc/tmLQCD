@@ -82,7 +82,9 @@
 #include "operator/tm_operators.h"
 #include "operator/Dov_psi.h"
 #include "solver/spectral_proj.h"
-#include "quda_interface.h"
+#ifdef QUDA
+#  include "quda_interface.h"
+#endif
 
 extern int nstore;
 int check_geometry();

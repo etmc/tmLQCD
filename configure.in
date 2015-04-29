@@ -358,6 +358,7 @@ AC_SUBST(XCHANGEDIR)
 AC_SUBST(XLIB)
 AC_SUBST([LEMON_AVAILABLE])
 AC_SUBST(SPI_FILES)
+AC_SUBST(QUDA_INTERFACE)
 
 INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${abs_top_builddir}/  -I\${abs_top_srcdir}/ -I${lime_dir}/include/ -I${lemon_dir}/include/"
 DEPFLAGS="$DEPFLAGS"
@@ -881,6 +882,7 @@ AC_ARG_WITH(qudadir,
               quda_dir=$withval
               LDFLAGS="$LDFLAGS -L${quda_dir}/lib"
               INCLUDES="$INCLUDES -I${quda_dir}/include/"
+              QUDA_INTERFACE="quda_interface"
               AC_MSG_CHECKING([where to search for CUDA libs])
 						  AC_ARG_WITH(cudadir,
 						    AS_HELP_STRING([--with-cudadir[=dir]], [if using QUDA, then set CUDA lib dir [default=/usr/local/cuda/lib]]),
@@ -904,7 +906,10 @@ AC_ARG_WITH(qudadir,
               CCLD=${CXX}
              ],
              [echo no
-              QUDA_AVAILABLE=0])
+              QUDA_AVAILABLE=0
+              QUDA_INTERFACE=""
+              ]
+              )
 AC_SUBST([QUDA_AVAILABLE])
 
 

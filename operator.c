@@ -58,7 +58,9 @@
 #include "operator/clover_leaf.h"
 #include "operator.h"
 #include "gettime.h"
-#include "quda_interface.h"
+#ifdef QUDA
+#  include "quda_interface.h"
+#endif
 
 
 void dummy_D(spinor * const, spinor * const);
@@ -215,7 +217,14 @@ int init_operators() {
     }
 
     if(optr->use_qudainverter) {
+#ifdef QUDA
     	_initQuda();
+#else
+    	if(g_proc_id == 0) {
+    		fprintf(stderr, "Error: You're trying to use QUDA but this build was not configured for QUDA usage.\n");
+    		exit(-2);
+    	}
+#endif
     }
   }
   return(0);
@@ -270,11 +279,14 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 	  g_precWS=NULL;
 	}
 	if(optr->use_qudainverter) {
+#ifdef QUDA
 		optr->iterations = invert_eo_quda( optr->prop0, optr->prop1, optr->sr0, optr->sr1,
 		                                   optr->eps_sq, optr->maxiter,
 		                                   optr->solver, optr->rel_prec,
 		                                   0, optr->even_odd_flag,optr->no_extra_masses, optr->extra_masses, optr->solver_params, optr->id );
-	} else {
+#endif
+	}
+	else {
 		optr->iterations = invert_eo( optr->prop0, optr->prop1, optr->sr0, optr->sr1,
 	                                  optr->eps_sq, optr->maxiter,
 	                                  optr->solver, optr->rel_prec,
@@ -289,10 +301,13 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 	sw_invert(EE, optr->mu);
 
 	if(optr->use_qudainverter) {
+#ifdef QUDA
 		optr->iterations = invert_clover_eo_quda(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
 		                                    optr->eps_sq, optr->maxiter,
 		                                    optr->solver, optr->rel_prec,optr->solver_params);
-	} else {
+#endif
+	}
+	else {
 		optr->iterations = invert_clover_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
 		                                    optr->eps_sq, optr->maxiter,
 		                                    optr->solver, optr->rel_prec,optr->solver_params,
@@ -340,11 +355,14 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
     for(i = 0; i < SourceInfo.no_flavours; i++) {
 		if(optr->type != DBCLOVER) {
 			if(optr->use_qudainverter) {
+#ifdef QUDA
 				optr->iterations = invert_doublet_eo_quda( optr->prop0, optr->prop1, optr->prop2, optr->prop3,
 				                                      optr->sr0, optr->sr1, optr->sr2, optr->sr3,
 				                                      optr->eps_sq, optr->maxiter,
 				                                      optr->solver, optr->rel_prec);
-			} else {
+#endif
+			}
+			else {
 				optr->iterations = invert_doublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3,
 				                                      optr->sr0, optr->sr1, optr->sr2, optr->sr3,
 				                                      optr->eps_sq, optr->maxiter,
@@ -353,16 +371,19 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 		}
 		else {
 			if(optr->use_qudainverter) {
+#ifdef QUDA
 				optr->iterations = invert_cloverdoublet_eo_quda( optr->prop0, optr->prop1, optr->prop2, optr->prop3,
 				                                            optr->sr0, optr->sr1, optr->sr2, optr->sr3,
 				                                            optr->eps_sq, optr->maxiter,
 				                                            optr->solver, optr->rel_prec);
-    	  } else {
+#endif
+			}
+			else {
 				optr->iterations = invert_cloverdoublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3,
 				                                            optr->sr0, optr->sr1, optr->sr2, optr->sr3,
 				                                            optr->eps_sq, optr->maxiter,
 				                                            optr->solver, optr->rel_prec);
-    	  }
+			}
       }
       g_mu = optr->mubar;
       if(optr->type != DBCLOVER) {

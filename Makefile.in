@@ -54,7 +54,8 @@ MODULES = read_input gamma measure_gauge_action start \
 	online_measurement update_momenta integrator  phmc \
 	little_D block operator measurements pion_norm \
 	temporalgauge spinor_fft X_psi P_M_eta \
-	jacobi fatal_error invert_clover_eo gettime quda_interface @SPI_FILES@
+	jacobi fatal_error invert_clover_eo gettime @SPI_FILES@ \
+	@QUDA_INTERFACE@
 
 ## the GPU modules (all .cu files in $GPUDIR)
 GPUSOURCES := $(wildcard $(srcdir)/$(GPUDIR)/*.cu)
