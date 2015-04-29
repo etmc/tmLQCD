@@ -43,9 +43,11 @@
 #include"operator/clovertm_operators.h"
 #include"operator/D_psi.h"
 #include"gamma.h"
+#include"read_input.h"
 #include"solver/solver.h"
 #include"invert_clover_eo.h"
 #include "solver/dirac_operator_eigenvectors.h"
+#include "solver/dfl_projector.h"
 
 
 int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new, 
@@ -111,16 +113,40 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
       printf("# Not using even/odd preconditioning!\n"); fflush(stdout);
     }
     convert_eo_to_lexic(g_spinor_field[DUM_DERI], Even, Odd);
-    if(g_proc_id == 0) {
-      printf("# Using CG!\n"); fflush(stdout);
+
+    if(solver_flag == DFLGCR || solver_flag == DFLFGMRES) {
+      if(g_proc_id == 0) {printf("# Using deflated solver! m = %d\n", gmres_m_parameter); fflush(stdout);}
+      /* apply P_L to source           */
+      project_left(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI]);
+      if(g_proc_id == 0) printf("# Applied P_L to source\n");
+      /* invert P_L D on source -> chi */
+      if(solver_flag == DFLGCR) {
+        iter = gcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], gmres_m_parameter, 
+                   max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 1, &project_left_D);
+      }
+      else {
+        iter = fgmres(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], gmres_m_parameter, 
+                      max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 1, &project_left_D);
+      }
+      /* apply P_R to chi              */
+      project_right(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1]);
+      if(g_proc_id == 0) printf("# Applied P_R to solution\n");
+      /* reconstruct solution          */
+      project(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
+      add(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], VOLUME);
     }
-    gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
-    iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
+    else if(solver_flag == CG){
+      if(g_proc_id == 0) {
+           printf("# Using CG!\n"); fflush(stdout);
+      }
+      gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
+      iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
                   rel_prec, VOLUME, Qsq);
 
-    Qm(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
-
+      Qm(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
+    }
     convert_lexic_to_eo(Even_new, Odd_new, g_spinor_field[DUM_DERI+1]);
   }
   return(iter);
 }
+
