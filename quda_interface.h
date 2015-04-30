@@ -59,14 +59,13 @@
 *	 The functions
 *
 *		 int invert_eo_quda(...);
-*		 int invert_clover_eo_quda(...);
 *		 int invert_doublet_eo_quda(...);
-*		 int invert_cloverdoublet_eo_quda(...);
 *		 void M_full_quda(...);
 *		 void D_psi_quda(...);
 *
-*	 closely mimic their tmLQCD counterparts in functionality as well as
-*	 input and output parameters.
+*	 mimic their tmLQCD counterparts in functionality as well as input and
+*	 output parameters. The invert functions will check the parameters
+*	 g_mu, g_c_sw do decide which QUDA operator to create.
 *
 *	 To activate those, set "UseQudaInverter = yes" in the operator
 *	 declaration of the input file. For details see the documentation.
@@ -82,12 +81,9 @@
 
 #ifndef QUDA_INTERFACE_H_
 #define QUDA_INTERFACE_H_
-
 #include "su3.h"
 #include "solver/solver_params.h"
 
-// pointer to the QUDA gaugefield
-double *gauge_quda[4];
 
 // wrapper functions
 void _initQuda();
@@ -98,15 +94,7 @@ void _loadGaugeQuda();
 int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
                    spinor * const Even, spinor * const Odd,
                    const double precision, const int max_iter,
-                   const int solver_flag, const int rel_prec,
-                   const int sub_evs_flag, const int even_odd_flag,
-                   const int no_extra_masses, double * const extra_masses, solver_params_t solver_params,
-                   const int id );
-
-int invert_clover_eo_quda(spinor * const Even_new, spinor * const Odd_new,
-                          spinor * const Even, spinor * const Odd,
-                          const double precision, const int max_iter,
-                          const int solver_flag, const int rel_prec, solver_params_t solver_params);
+                   const int solver_flag, const int rel_prec, solver_params_t solver_params);
 
 int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
                            spinor * const Even_new_c, spinor * const Odd_new_c,
@@ -114,15 +102,6 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
                            spinor * const Even_c, spinor * const Odd_c,
                            const double precision, const int max_iter,
                            const int solver_flag, const int rel_prec);
-
-int invert_cloverdoublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
-                           spinor * const Even_new_c, spinor * const Odd_new_c,
-                           spinor * const Even_s, spinor * const Odd_s,
-                           spinor * const Even_c, spinor * const Odd_c,
-                           const double precision, const int max_iter,
-                           const int solver_flag, const int rel_prec);
-
-int invert_quda(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, const int rel_prec );
 
 // apply the TM operator using QUDA
 void M_full_quda(spinor * const Even_new, spinor * const Odd_new,  spinor * const Even, spinor * const Odd);

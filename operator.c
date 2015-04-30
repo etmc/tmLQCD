@@ -280,10 +280,9 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 	}
 	if(optr->use_qudainverter) {
 #ifdef QUDA
-		optr->iterations = invert_eo_quda( optr->prop0, optr->prop1, optr->sr0, optr->sr1,
-		                                   optr->eps_sq, optr->maxiter,
-		                                   optr->solver, optr->rel_prec,
-		                                   0, optr->even_odd_flag,optr->no_extra_masses, optr->extra_masses, optr->solver_params, optr->id );
+		optr->iterations = invert_eo_quda(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
+		                                  optr->eps_sq, optr->maxiter,
+		                                  optr->solver, optr->rel_prec,optr->solver_params);
 #endif
 	}
 	else {
@@ -302,9 +301,9 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 
 	if(optr->use_qudainverter) {
 #ifdef QUDA
-		optr->iterations = invert_clover_eo_quda(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
-		                                    optr->eps_sq, optr->maxiter,
-		                                    optr->solver, optr->rel_prec,optr->solver_params);
+		optr->iterations = invert_eo_quda(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
+		                                  optr->eps_sq, optr->maxiter,
+		                                  optr->solver, optr->rel_prec,optr->solver_params);
 #endif
 	}
 	else {
@@ -357,9 +356,9 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 			if(optr->use_qudainverter) {
 #ifdef QUDA
 				optr->iterations = invert_doublet_eo_quda( optr->prop0, optr->prop1, optr->prop2, optr->prop3,
-				                                      optr->sr0, optr->sr1, optr->sr2, optr->sr3,
-				                                      optr->eps_sq, optr->maxiter,
-				                                      optr->solver, optr->rel_prec);
+				                                           optr->sr0, optr->sr1, optr->sr2, optr->sr3,
+				                                           optr->eps_sq, optr->maxiter,
+				                                           optr->solver, optr->rel_prec);
 #endif
 			}
 			else {
@@ -372,10 +371,10 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 		else {
 			if(optr->use_qudainverter) {
 #ifdef QUDA
-				optr->iterations = invert_cloverdoublet_eo_quda( optr->prop0, optr->prop1, optr->prop2, optr->prop3,
-				                                            optr->sr0, optr->sr1, optr->sr2, optr->sr3,
-				                                            optr->eps_sq, optr->maxiter,
-				                                            optr->solver, optr->rel_prec);
+				optr->iterations = invert_doublet_eo_quda( optr->prop0, optr->prop1, optr->prop2, optr->prop3,
+				                                           optr->sr0, optr->sr1, optr->sr2, optr->sr3,
+				                                           optr->eps_sq, optr->maxiter,
+				                                           optr->solver, optr->rel_prec);
 #endif
 			}
 			else {
