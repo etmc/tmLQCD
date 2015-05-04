@@ -24,7 +24,7 @@
 *
 * Author: Mario Schroeck <mario.schroeck@roma3.infn.it>
 * 
-* Last changes: 04/2015
+* Last changes: 05/2015
 *
 *
 * Interface to QUDA for multi-GPU inverters
@@ -94,14 +94,15 @@ void _loadGaugeQuda();
 int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
                    spinor * const Even, spinor * const Odd,
                    const double precision, const int max_iter,
-                   const int solver_flag, const int rel_prec, solver_params_t solver_params);
+                   const int solver_flag, const int rel_prec,
+                   const int even_odd_flag, solver_params_t solver_params);
 
 int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
                            spinor * const Even_new_c, spinor * const Odd_new_c,
                            spinor * const Even_s, spinor * const Odd_s,
                            spinor * const Even_c, spinor * const Odd_c,
                            const double precision, const int max_iter,
-                           const int solver_flag, const int rel_prec);
+                           const int solver_flag, const int rel_prec, const int even_odd_flag);
 
 // apply the TM operator using QUDA
 void M_full_quda(spinor * const Even_new, spinor * const Odd_new,  spinor * const Even, spinor * const Odd);

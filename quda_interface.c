@@ -24,7 +24,7 @@
 *
 * Author: Mario Schroeck <mario.schroeck@roma3.infn.it>
 * 
-* Last changes: 04/2015
+* Last changes: 05/2015
 *
 *
 * Interface to QUDA for multi-GPU inverters
@@ -88,6 +88,7 @@
 #include "boundary.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "solver/solver.h"
+#include "solver/solver_field.h"
 #include "quda.h"
 
 
@@ -469,15 +470,20 @@ void reorder_spinor_fromQuda( double* spinor, QudaPrecision precision, int doubl
 int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
                    spinor * const Even, spinor * const Odd,
                    const double precision, const int max_iter,
-                   const int solver_flag, const int rel_prec, solver_params_t solver_params)
+                   const int solver_flag, const int rel_prec,
+                   const int even_odd_flag, solver_params_t solver_params)
 {
 	_loadGaugeQuda();
 
-	convert_eo_to_lexic(g_spinor_field[DUM_DERI],	 Even,		 Odd);
-//	convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], Even_new, Odd_new);
+	spinor ** solver_field = NULL;
+	const int nr_sf = 2;
+	init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
 
-	void *spinorIn	= (void*)g_spinor_field[DUM_DERI];	 // source
-	void *spinorOut = (void*)g_spinor_field[DUM_DERI+1]; // solution
+	convert_eo_to_lexic(solver_field[0],  Even, Odd);
+//	convert_eo_to_lexic(solver_field[1], Even_new, Odd_new);
+
+	void *spinorIn	= (void*)solver_field[0]; // source
+	void *spinorOut = (void*)solver_field[1]; // solution
 
 	if ( rel_prec )
 		inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
@@ -537,7 +543,7 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 	// direct or norm-op. solve
 	if( inv_param.inv_type == QUDA_CG_INVERTER )
 	{
-		if( 1 /*even_odd_flag*/ ) {
+		if( even_odd_flag ) {
 			inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
 			if(g_proc_id == 0) printf("# QUDA: Using preconditioning!\n");
 		}
@@ -548,7 +554,7 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 	}
 	else
 	{
-		if( 1 /*even_odd_flag*/ ) {
+		if( even_odd_flag ) {
 			inv_param.solve_type = QUDA_DIRECT_PC_SOLVE;
 			if(g_proc_id == 0) printf("# QUDA: Using preconditioning!\n");
 		}
@@ -592,11 +598,15 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 	// reorder spinor
 	reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, NULL );
 	reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, NULL );
-	convert_lexic_to_eo(Even,		 Odd,		 g_spinor_field[DUM_DERI]);
-	convert_lexic_to_eo(Even_new, Odd_new, g_spinor_field[DUM_DERI+1]);
+	convert_lexic_to_eo(Even,     Odd,     solver_field[0]);
+	convert_lexic_to_eo(Even_new, Odd_new, solver_field[1]);
 
-	if(iteration > max_iter) return(-1);
-			return(iteration);
+	finalize_solver(solver_field, nr_sf);
+
+	if(iteration >= max_iter)
+		return(-1);
+
+	return(iteration);
 }
 
 int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
@@ -604,18 +614,22 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
                            spinor * const Even_s, spinor * const Odd_s,
                            spinor * const Even_c, spinor * const Odd_c,
                            const double precision, const int max_iter,
-                           const int solver_flag, const int rel_prec)
+                           const int solver_flag, const int rel_prec, const int even_odd_flag)
 {
 	_loadGaugeQuda();
 
-	convert_eo_to_lexic(g_spinor_field[DUM_DERI],	 Even_s,	Odd_s);
-	convert_eo_to_lexic(g_spinor_field[DUM_DERI+1],	 Even_c,	Odd_c);
+	spinor ** solver_field = NULL;
+	const int nr_sf = 4;
+	init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
+
+	convert_eo_to_lexic(solver_field[0],	 Even_s,	Odd_s);
+	convert_eo_to_lexic(solver_field[1],	 Even_c,	Odd_c);
 //	convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], Even_new, Odd_new);
 
-	void *spinorIn    = (void*)g_spinor_field[DUM_DERI];   // source
-	void *spinorIn_c  = (void*)g_spinor_field[DUM_DERI+1]; // charme source
-	void *spinorOut   = (void*)g_spinor_field[DUM_DERI+2]; // solution
-	void *spinorOut_c = (void*)g_spinor_field[DUM_DERI+3]; // charme solution
+	void *spinorIn    = (void*)solver_field[0]; // source
+	void *spinorIn_c  = (void*)solver_field[1]; // charme source
+	void *spinorOut   = (void*)solver_field[2]; // solution
+	void *spinorOut_c = (void*)solver_field[3]; // charme solution
 
 	if ( rel_prec )
 		inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
@@ -659,7 +673,7 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
 		}
 	}
 
-	if( 1 /*even_odd_flag*/ )
+	if( even_odd_flag )
 	{
 		inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
 		if(g_proc_id == 0) printf("# QUDA: Using preconditioning!\n");
@@ -702,13 +716,17 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
 	// reorder spinor
 	reorder_spinor_fromQuda( (double*)spinorIn,    inv_param.cpu_prec, 1, (double*)spinorIn_c );
 	reorder_spinor_fromQuda( (double*)spinorOut,   inv_param.cpu_prec, 1, (double*)spinorOut_c );
-	convert_lexic_to_eo(Even_s,     Odd_s,     g_spinor_field[DUM_DERI]);
-	convert_lexic_to_eo(Even_c,     Odd_c,     g_spinor_field[DUM_DERI+1]);
-	convert_lexic_to_eo(Even_new_s, Odd_new_s, g_spinor_field[DUM_DERI+2]);
-	convert_lexic_to_eo(Even_new_c, Odd_new_c, g_spinor_field[DUM_DERI+3]);
+	convert_lexic_to_eo(Even_s,     Odd_s,     solver_field[0]);
+	convert_lexic_to_eo(Even_c,     Odd_c,     solver_field[1]);
+	convert_lexic_to_eo(Even_new_s, Odd_new_s, solver_field[2]);
+	convert_lexic_to_eo(Even_new_c, Odd_new_c, solver_field[3]);
 
-	if(iteration > max_iter) return(-1);
-			return(iteration);
+	finalize_solver(solver_field, nr_sf);
+
+	if(iteration >= max_iter)
+		return(-1);
+
+	return(iteration);
 }
 
 // if even_odd_flag set
