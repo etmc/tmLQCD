@@ -37,6 +37,7 @@
 #include "solver/solver.h"
 #include "start.h"
 #include "ranlxd.h"
+#include "ranlxs.h"
 #include "su3.h"
 #include "operator.h"
 #include "linalg_eo.h"
@@ -53,7 +54,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
   operator * optr = &operator_list[op_id];
   char source_filename[400];
   int source_type = SourceInfo.type;
-
+  float u;
   SourceInfo.nstore = nstore;
   SourceInfo.sample = isample;
   SourceInfo.ix = ix;
@@ -143,13 +144,24 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
       if(g_proc_id == 0 && g_debug_level > 0) {
         printf("# Preparing 1 flavour Pion TimeSlice at t = %d source\n", SourceInfo.t);
       }
+      if(SourceInfo.automaticTS) {
+	// chose timeslice randomly
+	if(g_proc_id == 0) {
+	  ranlxs(&u, 1);
+	  t = (int)(u*g_nproc_t*T);
+	}
+#ifdef MPI
+        MPI_Bcast(&t, 1, MPI_INT, 0, MPI_COMM_WORLD);
+#endif
+        SourceInfo.t = t;
+      }
       source_generation_pion_only(g_spinor_field[0], g_spinor_field[1], SourceInfo.t, isample, nstore);
       sprintf(source_filename, "%s.%.4d.%.5d.%.2d.inverted", PropInfo.basename, nstore, isample, SourceInfo.t);
     }
     else if(source_type == 4) {
       // Generalised Pion full time slice sources
       if(SourceInfo.automaticTS) {
-        /* automatic timeslice detection */
+        // automatic timeslice detection
         if(g_proc_id == 0) {
           for(t = 0; t < g_nproc_t*T; t++) {
             sprintf(source_filename, "%s.%.4d.%.5d.%.2d.inverted", SourceInfo.basename, nstore, isample, t);
