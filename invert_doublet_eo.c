@@ -147,11 +147,22 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
     /* here comes the inversion not using even/odd preconditioning */
     if(g_proc_id == 0) {printf("# Not using even/odd preconditioning!\n"); fflush(stdout);}
     
-    
-    convert_eo_to_lexic(g_spinor_field[DUM_DERI], Even_s, Odd_s);
-    convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], Even_c, Odd_c);
-    convert_eo_to_lexic(g_spinor_field[DUM_DERI+2], Even_new_s, Odd_new_s);
-    convert_eo_to_lexic(g_spinor_field[DUM_DERI+3], Even_new_c, Odd_new_c);    
+    //if odd set to NULL (e.g. if global T is odd) then do not 
+    //use EO management of fields but use the Even and Even_new pointers
+    //exclusively, supposed to hold the complete field
+    if((Odd_s == NULL) || (Odd_c == NULL)){
+      assign(g_spinor_field[DUM_DERI],   Even_s, VOLUME);
+      assign(g_spinor_field[DUM_DERI+1], Even_c, VOLUME);
+      assign(g_spinor_field[DUM_DERI+2], Even_new_s, VOLUME);
+      assign(g_spinor_field[DUM_DERI+3], Even_new_c, VOLUME);
+    }
+    else{
+      convert_eo_to_lexic(g_spinor_field[DUM_DERI], Even_s, Odd_s);
+      convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], Even_c, Odd_c);
+      convert_eo_to_lexic(g_spinor_field[DUM_DERI+2], Even_new_s, Odd_new_s);
+      convert_eo_to_lexic(g_spinor_field[DUM_DERI+3], Even_new_c, Odd_new_c); 
+    }
+   
     
     gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME);
     gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], VOLUME);   
@@ -169,9 +180,14 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
     }
     Q_minus_ndpsi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3]);
     
-    convert_lexic_to_eo(Even_new_s, Odd_new_s, g_spinor_field[DUM_DERI]);
-    convert_lexic_to_eo(Even_new_c, Odd_new_c, g_spinor_field[DUM_DERI+1]);
-    
+    if((Odd_s == NULL) || (Odd_c == NULL)){
+      assign(Even_new_s, g_spinor_field[DUM_DERI], VOLUME);
+      assign(Even_new_c, g_spinor_field[DUM_DERI+1], VOLUME);
+    }
+    else{
+      convert_lexic_to_eo(Even_new_s, Odd_new_s, g_spinor_field[DUM_DERI]);
+      convert_lexic_to_eo(Even_new_c, Odd_new_c, g_spinor_field[DUM_DERI+1]);
+    }
   }
   
   if (usegpu_flag) {

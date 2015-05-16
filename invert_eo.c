@@ -237,9 +237,17 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     
     /* here comes the inversion not using even/odd preconditioning */
     if(g_proc_id == 0) {printf("# Not using even/odd preconditioning!\n"); fflush(stdout);}
-    convert_eo_to_lexic(g_spinor_field[DUM_DERI], Even, Odd);
-    convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], Even_new, Odd_new);
-    
+    //if odd set to NULL (e.g. if global T is odd) then do not 
+    //use EO management of fields but use the Even and Even_new pointers
+    //exclusively, supposed to hold the complete field
+    if(Odd == NULL){
+      assign(g_spinor_field[DUM_DERI], Even, VOLUME);
+      assign(g_spinor_field[DUM_DERI+1], Even_new, VOLUME);
+    }
+    else{
+      convert_eo_to_lexic(g_spinor_field[DUM_DERI], Even, Odd);
+      convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], Even_new, Odd_new);
+    }
     if(solver_flag == BICGSTAB) {
       if(g_proc_id == 0) {printf("# Using BiCGstab!\n"); fflush(stdout);}
       if(use_preconditioning==1 && g_precWS!=NULL){
@@ -405,8 +413,15 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 	}
       }
     }
-    convert_lexic_to_eo(Even_new, Odd_new, g_spinor_field[DUM_DERI+1]);
     
+    //if odd is set to NULL assign the result vector to the even part
+    //which is the part that will be stored lexicographically in operator.c
+    if(Odd == NULL){
+      assign(Even_new, g_spinor_field[DUM_DERI+1], VOLUME);
+    }
+    else{
+      convert_lexic_to_eo(Even_new, Odd_new, g_spinor_field[DUM_DERI+1]);
+    }
     if(usegpu_flag){ 
       #ifdef HAVE_GPU
       /* return from temporal gauge again */ 

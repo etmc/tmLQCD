@@ -96,20 +96,35 @@ void gaussian_volume_source(spinor * const P, spinor * const Q,
   seed =(int) abs(1 + sample + f*10*97 + nstore*100*53 + g_cart_id*13);
 
   rlxd_init(2, seed);
-
-  for(t = 0; t < T; t++) {
-    for(x = 0; x < LX; x++) {
-      for(y =0; y < LY; y++) {
-	for(z = 0; z < LZ; z++) {
-	  i = g_lexic2eosub[ g_ipt[t][x][y][z] ];
-	  if((t+x+y+z+g_proc_coords[3]*LZ+g_proc_coords[2]*LY 
-	      + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
+  //if Q==NULL (e.g. if T global is odd) we only work on Q
+  if(Q==NULL){
+    for(t = 0; t < T; t++) {
+      for(x = 0; x < LX; x++) {
+	for(y =0; y < LY; y++) {
+	  for(z = 0; z < LZ; z++) {
+	    i = g_ipt[t][x][y][z];
 	    p = P + i;
+	    rnormal((double*)p, 24);
 	  }
-	  else {
-	    p = Q + i;
+	}
+      }
+    }    
+  }
+  else{
+    for(t = 0; t < T; t++) {
+      for(x = 0; x < LX; x++) {
+	for(y =0; y < LY; y++) {
+	  for(z = 0; z < LZ; z++) {
+	    i = g_lexic2eosub[ g_ipt[t][x][y][z] ];
+	    if((t+x+y+z+g_proc_coords[3]*LZ+g_proc_coords[2]*LY 
+		+ g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
+	      p = P + i;
+	    }
+	    else {
+	      p = Q + i;
+	    }
+	    rnormal((double*)p, 24);
 	  }
-	  rnormal((double*)p, 24);
 	}
       }
     }

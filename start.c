@@ -698,10 +698,18 @@ void set_gauge_field(const double c)
 void source_spinor_field(spinor * const P, spinor * const Q, int is, int ic) {
 
   spinor * s;
+  int Vol;
+  if(even_odd_flag){
+    Vol = VOLUME/2;
+  }
+  else{
+    Vol = VOLUME;
+  }
 
-  zero_spinor_field(P,VOLUME/2);
-  zero_spinor_field(Q,VOLUME/2);
-
+  zero_spinor_field(P,Vol);
+  if(Q != NULL){
+    zero_spinor_field(Q,Vol);
+  }
   if (g_proc_coords[0] == 0 && g_proc_coords[1] == 0
       && g_proc_coords[2] == 0 && g_proc_coords[3] == 0) {
 
@@ -737,11 +745,18 @@ void source_spinor_field_point_from_file(spinor * const P, spinor * const Q, int
   int source_coord[4],source_pe_coord[4],source_loc_coord[4];
   int source_pe_indx,source_loc_indx;
   spinor * s;
-
+  int Vol;
+  if(even_odd_flag){
+    Vol = VOLUME/2;
+  }
+  else{
+    Vol = VOLUME;
+  }
   /* set fields to zero */
-  zero_spinor_field(P,VOLUME/2);
-  zero_spinor_field(Q,VOLUME/2);
-
+  zero_spinor_field(P,Vol);
+  if(Q != NULL){
+    zero_spinor_field(Q,Vol);
+  }
   /* Check if source_indx is valid */
   if((source_indx < 0) || (source_indx >= (g_nproc_t*g_nproc_x*g_nproc_y*g_nproc_z*T*LX*LY*LZ)))
   {
@@ -796,11 +811,15 @@ void source_spinor_field_point_from_file(spinor * const P, spinor * const Q, int
       printf("source_loc_indx = %i\n",source_loc_indx);
     }
     /* Check which spinor field (even or odd) needs to be initialized */
-    if(g_lexic2eo[source_loc_indx] < VOLUME/2)
-      s = P + g_lexic2eo[source_loc_indx];
-    else
-      s = Q + g_lexic2eosub[source_loc_indx];
-
+    if(Q == NULL){
+      s = P + source_loc_indx;
+    }
+    else{
+      if(g_lexic2eo[source_loc_indx] < VOLUME/2)
+	s = P + g_lexic2eo[source_loc_indx];
+      else
+	s = Q + g_lexic2eosub[source_loc_indx];
+    }
     /* put source to 1.0 */
     if (is==0){
       if      (ic==0) s->s0.c0 = 1.0;
