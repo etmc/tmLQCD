@@ -141,9 +141,6 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
     }
     else if(source_type == 3) {
       // Pion full time slice sources
-      if(g_proc_id == 0 && g_debug_level > 0) {
-        printf("# Preparing 1 flavour Pion TimeSlice at t = %d source\n", SourceInfo.t);
-      }
       if(SourceInfo.automaticTS) {
 	// chose timeslice randomly
 	if(g_proc_id == 0) {
@@ -154,6 +151,9 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
         MPI_Bcast(&t, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif
         SourceInfo.t = t;
+      }
+      if(g_proc_id == 0 && g_debug_level > 0) {
+        printf("# Preparing 1 flavour Pion TimeSlice at t = %d source\n", SourceInfo.t);
       }
       source_generation_pion_only(g_spinor_field[0], g_spinor_field[1], SourceInfo.t, isample, nstore);
       sprintf(source_filename, "%s.%.4d.%.5d.%.2d.inverted", PropInfo.basename, nstore, isample, SourceInfo.t);
