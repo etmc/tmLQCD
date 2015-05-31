@@ -667,6 +667,13 @@ inline void rmQuotes(char *str){
   }
 }
 
+<CLOVEROP>{
+  {SPC}*Solver{EQL} {
+    name_caller = YY_START; 
+    BEGIN(CSWSOLVER);
+  }
+}
+
 <WILSONOP,TMOP,CLOVEROP>{
   {SPC}*UseEvenOdd{EQL}yes {
     if(myverbose) printf("  Use even/odd preconditioning line %d operator %d\n", line_of_file, current_operator);
