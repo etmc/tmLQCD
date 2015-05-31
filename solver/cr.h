@@ -16,20 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-#ifndef _GENERATE_DFL_SUBSPACE
-#define _GENERATE_DFL_SUBSPACE
 
-#include "su3.h"
-#include <complex.h>
+#ifndef _CR_H
+#define _CR_H
 
-int init_dfl_subspace(const int);
-int free_dfl_subspace();
-int generate_dfl_subspace(const int Ns, const int N, const int repro);
-int generate_dfl_subspace_Q(const int Ns, const int N, const int repro);
-int generate_dfl_subspace_free(const int Ns, const int N);
+#include"solver/matrix_mult_typedef.h"
+#include"su3.h"
 
-extern spinor ** dfl_fields;
-extern _Complex double ** little_dfl_fields;
-extern _Complex double ** little_dfl_fields_eo;
+int cr(spinor * const P, spinor * const Q, 
+	const int m, const int max_restarts,
+	const double eps_sq, const int rel_prec,
+	const int N, const int precon, matrix_mult f);
 
 #endif

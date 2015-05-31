@@ -54,6 +54,22 @@
 #define _default_g_beta 6.0
 #define _default_g_N_s 20
 #define _default_g_dflgcr_flag 0
+#define _default_little_evenodd 0
+#define _default_use_iQ_dfl 0
+#define _default_usePL 0
+#define _default_little_solver 0
+#define _default_little_gmres_m_parameter 50
+#define _default_little_solver_low_prec 1.0e-2
+#define _default_little_solver_high_prec 1.0e-10
+
+#define _default_Msap_precon 1
+#define _default_NiterMsap 3
+#define _default_NcycleMsap 2
+
+#define _default_NiterMsap_dflgen 4
+#define _default_NcycleMsap_dflgen 4
+#define _default_NsmoothMsap_dflgen 2
+
 #define _default_random_seed 123456
 #define _default_rlxd_level 1
 #define _default_solver_flag 1

@@ -34,8 +34,15 @@
 #define DFLFGMRES 11
 #define CGMMS 12
 #define MIXEDCG 13
-#define CGMMSND 14
-#define INCREIGCG 15
+#define MCR 14
+#define BICG 15
+#define CR 16
+#define CGMMSND 17
+#define QSQFGMRES 18
+#define CGMMSND 19
+#define INCREIGCG 20 
+#define SUMR 21
+
 
 #include"solver/matrix_mult_typedef.h"
 #include "solver/matrix_mult_typedef_bi.h"
@@ -66,6 +73,7 @@ typedef struct {
 #include"solver/gmres_dr.h"
 #include"solver/fgmres.h"
 #include"solver/bicgstab_complex.h"
+#include"solver/bicg_complex.h"
 #include"solver/cgs_real.h"
 #include"solver/bicgstabell.h"
 #include"solver/bicgstab2.h"
@@ -77,6 +85,8 @@ typedef struct {
 #include"solver/eigenvalues.h"
 #include"solver/cg_mms_tm.h"
 #include"solver/mixed_cg_her.h"
+#include"solver/mcr.h"
+#include"solver/cr.h"
 
 #include"solver/sub_low_ev.h"
 #include"solver/gmres_precon.h"

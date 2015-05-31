@@ -16,28 +16,15 @@
 * You should have received a copy of the GNU General Public License
 * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
 ***********************************************************************/
+#ifndef _GAUGE_WRITE_LUSCHER_BINARY_H
+#define _GAUGE_WRITE_LUSCHER_BINARY_H
 
-#include <lime.h>
-#ifdef HAVE_CONFIG_H
-# include<config.h>
-#endif
-
-#include <stdlib.h>
+#include "gauge.ih"
 #include <stdio.h>
-#include <string.h>
-#include <time.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#ifdef MPI
-# include <mpi.h>
-#endif
 #include <unistd.h>
-#include <math.h>
-#include <errno.h>
-#include "global.h"
-#include "su3.h"
-#include "gettime.h"
 
-#include <io/utils.h>
-#include <io/gauge.h>
+// not parallelised!
 
+int write_luscher_gauge_binary(const double plaq, char* filename, su3 ** const gf);
+
+#endif

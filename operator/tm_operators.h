@@ -23,6 +23,7 @@
 #include "su3.h"
 
 /* This is the full matrix multiplication */
+void Q_psi(spinor * const P, spinor * const Q);
 void M_full(spinor * const Even_new, spinor * const Odd_new, 
 	    spinor * const Even, spinor * const Odd);
 void Q_full(spinor * const Even_new, spinor * const Odd_new, 
@@ -53,11 +54,14 @@ void Qtm_plus_sym_psi(spinor * const l, spinor * const k);
 void Qtm_plus_sym_psi_nocom(spinor * const l, spinor * const k);
 void Qtm_minus_sym_psi(spinor * const l, spinor * const k);
 void Mtm_plus_sym_psi(spinor * const l, spinor * const k);
+void Mtm_plus_sym_dagg_psi(spinor * const l, spinor * const k);
 void Mtm_minus_sym_psi(spinor * const l, spinor * const k);
 void Mtm_plus_sym_psi_nocom(spinor * const l, spinor * const k);
 void Mtm_minus_sym_psi_nocom(spinor * const l, spinor * const k);
 void Qtm_pm_sym_psi(spinor * const l, spinor * const k);
 
+
+void D_dagg_psi(spinor * const l, spinor * const k);
 void Q_pm_psi(spinor * const l, spinor * const k);
 void Q_pm_psi_prec(spinor * const l, spinor * const k);
 void Q_pm_psi_gpu(spinor * const l, spinor * const k);

@@ -17,8 +17,8 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _GCR4COMPLEX_H
-#define _GCR4COMPLEX_H
+#ifndef _MCR4COMPLEX_H
+#define _MCR4COMPLEX_H
 
 #include"solver/matrix_mult_typedef.h"
 #include"su3.h"
@@ -27,20 +27,20 @@ void ldiff(_Complex double * Q, _Complex double * const R, _Complex double * con
 void ladd(_Complex double * Q, _Complex double * const R, _Complex double * const S, const int N);
 double lsquare_norm(_Complex double * const Q, const int N, const int parallel);
 _Complex double lscalar_prod(_Complex double * const R, _Complex double * const S, const int N, const int parallel);
-double lscalar_prod_r(_Complex double * const R, _Complex double * const S, const int N, const int parallel);
 void lmul_r(_Complex double * const R, const double c, _Complex double * const S, const int N);
 void lmul(_Complex double * const R, const _Complex double c, _Complex double * const S, const int N);
 void lassign_diff_mul(_Complex double * const R, _Complex double * const S, const _Complex double c, const int N);
 void lassign_add_mul(_Complex double * const R, _Complex double * const S, const _Complex double c, const int N);
-void lassign_add_mul_r(_Complex double * const R, _Complex double * const S, const double c, const int N);
-void lassign_mul_add_r(_Complex double * const R, const double c, _Complex double * const S, const int N);
 void ldiff_assign(_Complex double * const Q, _Complex double * const S, 
-		  const int N);
+		    const int N);
 void ladd_assign(_Complex double * const Q, _Complex double * const S, 
-		  const int N);
+		    const int N);
+void lmul_add_mul(_Complex double * const R, _Complex double * const S, _Complex double * const T, 
+                    const _Complex double c, const _Complex double d, const int N);
+void lmul_diff_mul(_Complex double * const R, _Complex double * const S, _Complex double * const T, 
+                    const _Complex double c, const _Complex double d, const int N);
 
-
-int gcr4complex(_Complex double * const P, _Complex double * const Q, 
+int mcr4complex(_Complex double * const P, _Complex double * const Q, 
 		const int m, const int max_restarts,
 		const double eps_sq, const int rel_prec,
 		const int N, const int parallel,

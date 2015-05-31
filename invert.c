@@ -114,11 +114,7 @@ int main(int argc, char *argv[])
 
   DUM_DERI = 8;
   DUM_MATRIX = DUM_DERI + 5;
-#if ((defined BGL && defined XLC) || defined _USE_TSPLITPAR)
-  NO_OF_SPINORFIELDS = DUM_MATRIX + 3;
-#else
-  NO_OF_SPINORFIELDS = DUM_MATRIX + 3;
-#endif
+  NO_OF_SPINORFIELDS = DUM_MATRIX + 4;
 
   verbose = 0;
   g_use_clover_flag = 0;
@@ -378,33 +374,9 @@ int main(int argc, char *argv[])
       free(s_);
     }
 
-
-    /* move to operators as well */
-    if (g_dflgcr_flag == 1) {
-      /* set up deflation blocks */
-      init_blocks(nblocks_t, nblocks_x, nblocks_y, nblocks_z);
-
-      /* the can stay here for now, but later we probably need */
-      /* something like init_dfl_solver called somewhere else  */
-      /* create set of approximate lowest eigenvectors ("global deflation subspace") */
-
-      /*       g_mu = 0.; */
-      /*       boundary(0.125); */
-      generate_dfl_subspace(g_N_s, VOLUME, reproduce_randomnumber_flag);
-      /*       boundary(g_kappa); */
-      /*       g_mu = g_mu1; */
-
-      /* Compute little Dirac operators */
-      /*       alt_block_compute_little_D(); */
-      if (g_debug_level > 0) {
-        check_projectors(reproduce_randomnumber_flag);
-        check_local_D(reproduce_randomnumber_flag);
-      }
-      if (g_debug_level > 1) {
-        check_little_D_inversion(reproduce_randomnumber_flag);
-      }
-
-    }
+    if (Msap_precon == 1 || g_dflgcr_flag == 1)	/*  set up blocks if Msap_eo or deflation is used  */
+		init_blocks(nblocks_t, nblocks_x, nblocks_y, nblocks_z);
+    
     if(SourceInfo.type == 1) {
       index_start = 0;
       index_end = 1;
@@ -426,7 +398,22 @@ int main(int argc, char *argv[])
     for(op_id = 0; op_id < no_operators; op_id++) {
       boundary(operator_list[op_id].kappa);
       g_kappa = operator_list[op_id].kappa; 
-      g_mu = 0.;
+      g_mu = operator_list[op_id].mu;
+      g_c_sw = operator_list[op_id].c_sw;
+      // DFLGCR and DFLFGMRES
+      if(operator_list[op_id].solver == DFLGCR || operator_list[op_id].solver == DFLFGMRES) {
+	generate_dfl_subspace(g_N_s, VOLUME, reproduce_randomnumber_flag);
+	/* Cross-checks */
+	if (g_debug_level > 4) {
+	  check_projectors(reproduce_randomnumber_flag);
+	  check_local_D(reproduce_randomnumber_flag);
+	  check_little_D_inversion(reproduce_randomnumber_flag);
+	}
+      }
+      // deflated PCG
+      if(operator_list[op_id].solver == PCG || operator_list[op_id].solver == QSQFGMRES) {
+	generate_dfl_subspace_Q(g_N_s, VOLUME, reproduce_randomnumber_flag);
+      }
 
       if(use_preconditioning==1 && PRECWSOPERATORSELECT[operator_list[op_id].solver]!=PRECWS_NO ){
         printf("# Using preconditioning with treelevel preconditioning operator: %s \n",

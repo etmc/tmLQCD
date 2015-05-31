@@ -1,5 +1,5 @@
 /***********************************************************************
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+  Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -77,7 +77,6 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 	      const int sub_evs_flag, const int even_odd_flag,
 	      const int no_extra_masses, double * const extra_masses, solver_params_t solver_params,
 	      const int id )  {
-
   int iter = 0;
   /* here comes the inversion using even/odd preconditioning */
   if(even_odd_flag) {
@@ -136,6 +135,12 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1., VOLUME/2); 
       iter = bicgstab_complex(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Mtm_plus_sym_psi);
     }
+    else if(solver_flag == BICG) {
+      if(g_proc_id == 0) {printf("# Using BiCG!\n"); fflush(stdout);}
+      mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1., VOLUME/2);
+      iter = bicg_complex(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Mtm_plus_sym_psi, &Mtm_plus_sym_dagg_psi);
+    }
+
     else if(solver_flag == GMRES) {
       if(g_proc_id == 0) {printf("# Using GMRES! m = %d\n", gmres_m_parameter); fflush(stdout);}
       mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1., VOLUME/2);
@@ -145,6 +150,12 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       if(g_proc_id == 0) {printf("# Using GCR! m = %d\n", gmres_m_parameter); fflush(stdout);}
       mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1., VOLUME/2);
       iter = gcr(Odd_new, g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME/2, 0, &Mtm_plus_sym_psi);
+    }
+    else if (solver_flag == MCR) {
+      if(g_proc_id == 0) {printf("# Using MCR! m = %d\n", gmres_m_parameter); fflush(stdout);}
+      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
+      iter = mcr(Odd_new, g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME/2, 0, &Qtm_pm_psi);
+      Qtm_minus_psi(Odd_new, Odd_new);
     }
     else if(solver_flag == GMRESDR) {
       if(g_proc_id == 0) {printf("# Using GMRES-DR! m = %d, NrEv = %d\n", 
@@ -317,6 +328,19 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
         iter = bicgstab_complex(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &D_psi);
       }
     }
+    else if(solver_flag == BICG) {
+      if(g_proc_id == 0) {printf("# Using BiCG!\n"); fflush(stdout);}
+      if(use_preconditioning==1 && g_precWS!=NULL){
+        //if(g_proc_id == 0) {printf("# Using preconditioning (which one?)!\n");}
+        //iter = bicg_complex(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &D_psi_prec, &D_dagg_psi_prec);
+        
+        if(g_proc_id == 0) {printf("# Not using preconditioning (which one?)!\n");}
+	iter = bicg_complex(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &D_psi, &D_dagg_psi);
+      } else {
+        if(g_proc_id == 0) {printf("# Not using preconditioning (which one?)!\n");}
+        iter = bicg_complex(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &D_psi, &D_dagg_psi);
+      }
+    }
     else if(solver_flag == CGS) {
       if(g_proc_id == 0) {printf("# Using CGS!\n"); fflush(stdout);}
 
@@ -343,38 +367,60 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     }
     else if(solver_flag == FGMRES) {
       if(g_proc_id == 0) {printf("# Using FGMRES! m = %d\n", gmres_m_parameter); fflush(stdout);}
-      iter = fgmres(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 1, &D_psi); 
-      /*       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME); */
-      /*       iter = fgmres(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, &Q_pm_psi);  */
-      /*       Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]); */
+      iter = fgmres(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, Msap_precon, &D_psi); 
     }
     else if(solver_flag == GCR) {
       if(g_proc_id == 0) {printf("# Using GCR! m = %d\n", gmres_m_parameter); fflush(stdout);}
-      iter = gcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 1, &D_psi); 
-      /*       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME); */
-      /*       iter = gcr(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, &Q_pm_psi); */
-      /*       Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]); */
+      iter = gcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, Msap_precon, &D_psi); 
     }
-    else if(solver_flag == DFLGCR || solver_flag == DFLFGMRES) {
+    else if(solver_flag == MCR) {
+      if(g_proc_id == 0) {printf("# Using mCR! m = %d\n", gmres_m_parameter); fflush(stdout);}
+      /* iter = mcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 0, &D_psi); */
+      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME);
+      iter = mcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 0, &Q_plus_psi);
+    }
+    else if(solver_flag == CR) {
+      if(g_proc_id == 0) {printf("# Using CR and iQ!\n"); fflush(stdout);}
+      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME);
+      iter = cr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 0, &Q_plus_psi);
+      /* Solve DdaggD */
+      /* gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
+	 iter = cr(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 0, &Q_pm_psi);
+	 Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
+      */  
+    }
+    else if(solver_flag == DFLGCR) {
+      /* Use Q=gamma5 D for DFL */
+      if (use_iQ_dfl) {
+        gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME);
+        if (g_proc_id == 0)
+	  printf("# Using Q=gamma5 D for deflation.\n");
+      }
       if(g_proc_id == 0) {printf("# Using deflated solver! m = %d\n", gmres_m_parameter); fflush(stdout);}
       /* apply P_L to source           */
       project_left(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI]);
       if(g_proc_id == 0) printf("# Applied P_L to source\n");
       /* invert P_L D on source -> chi */
-      if(solver_flag == DFLGCR) {
-        iter = gcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], gmres_m_parameter, 
-                   max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 1, &project_left_D);
-      }
-      else {
-        iter = fgmres(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], gmres_m_parameter, 
-                      max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 1, &project_left_D);
-      }
+      iter = gcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], gmres_m_parameter, 
+		 max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, Msap_precon, &project_left_D);
       /* apply P_R to chi              */
       project_right(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+1]);
       if(g_proc_id == 0) printf("# Applied P_R to solution\n");
       /* reconstruct solution          */
       project(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
       add(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], VOLUME);
+    }
+    else if (solver_flag == DFLFGMRES) {
+      if(g_proc_id == 0) {printf("# Using deflated FGMRES solver! m = %d\n", gmres_m_parameter); fflush(stdout);}
+      iter = fgmres(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, 
+		    max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 2, &D_psi);
+    }
+    else if (solver_flag == QSQFGMRES) {
+      if(g_proc_id == 0) {printf("# Using deflated FGMRES solver for Qsq! m = %d\n", gmres_m_parameter); fflush(stdout);}
+      gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
+      iter = fgmres(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], gmres_m_parameter, 
+		    max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 3, &Q_pm_psi);
+      Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
     }
     else if (solver_flag == CGMMS) {
       /* FIXME temporary workaround for the multiple masses interface */
@@ -410,6 +456,13 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       free_spinor_field_array(&P_memory);
       free(P);
       free(shifts);
+    }
+    else if(solver_flag == PCG) {
+      if(g_proc_id == 0) {printf("# Using PCG!\n"); fflush(stdout);}
+      gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
+      iter = pcg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
+		     rel_prec, VOLUME, &Q_pm_psi);
+      Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
     }
     else {
       if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}

@@ -40,6 +40,8 @@
 #include "su3.h"
 #include "sse.h"
 #include "boundary.h"
+#include "gamma.h"
+#include "linalg_eo.h"
 #ifdef MPI
 # include "xchange/xchange.h"
 #endif
@@ -274,7 +276,8 @@ static inline void m3addandstore(spinor * restrict const r, spinor const * restr
 }
 
 /* this is the hopping part only */
-static inline void local_H(spinor * const rr, spinor const * const s, su3 const * restrict u, int * _idx, spinor * const restrict tmpr) {
+static inline void local_H(spinor * const rr, spinor const * const s, su3 const * restrict u, 
+			   int * _idx, spinor * const restrict tmpr) {
 
   int * idx = _idx;
 
@@ -1328,7 +1331,7 @@ void D_psi_prec(spinor * const P, spinor * const Q){
 /* the block local gauge field is assumed to be in the order  */
 /* that is needed int local_D, which means also that it is a  */
 /* double copy                                                */
-
+// CU: has problems with SSE2,3
 void Block_D_psi(block * blk, spinor * const rr, spinor * const s) {
 
   if(g_c_sw > 0)
@@ -1365,12 +1368,14 @@ void Block_Dtm_psi(block * blk, spinor * const rr, spinor * const s) {
     _complex_times_vector(tmpr.s3, rhob, t->s3);
 
     local_H(r, s, u, idx, &tmpr);
+    if(use_iQ_dfl) gamma5(r, r, 1);
 
     r++;
     t++;
     idx += 8;
     u += 8;
   }
+
   return;
 }
 
@@ -1484,11 +1489,13 @@ void Block_H_psi(block * blk, spinor * const rr, spinor * const s, const int eo)
     _spinor_null(tmpr);
 
     local_H(r, s, u, eoidx, &tmpr);
+    if (use_iQ_dfl) gamma5(r, r, 1);
 
     r++;
     eoidx += 8;
     u += 8;
   }
+
   return;
 }
 

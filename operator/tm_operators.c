@@ -99,6 +99,11 @@ void tm_sub_H_eo_gamma5(spinor* const l, spinor * const p, spinor * const k,
 /* external functions */
 
 /*full operator acting on the even and odd parts of a spinor*/
+void Q_psi(spinor * const P, spinor * const Q) {
+  D_psi(P, Q);
+  gamma5(P, P, VOLUME);
+}
+
 void M_full(spinor * const Even_new, spinor * const Odd_new, 
 	    spinor * const Even, spinor * const Odd) {
   /* Even sites */
@@ -294,6 +299,19 @@ void Mtm_minus_sym_psi_nocom(spinor * const l, spinor * const k) {
   diff(l, k, g_spinor_field[DUM_MATRIX], VOLUME/2);
 }
 
+void Mtm_plus_sym_dagg_psi(spinor * const l, spinor * const k){
+
+  gamma5(l, k, VOLUME/2);
+  mul_one_pm_imu_inv(l, -1., VOLUME/2);
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], l);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], -1., VOLUME/2);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  gamma5(g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX], VOLUME/2);
+
+  diff(l, k, g_spinor_field[DUM_MATRIX+1], VOLUME/2);
+}
+
+
 /******************************************
  *
  * This is the implementation of
@@ -358,6 +376,16 @@ void Q_pm_psi(spinor * const l, spinor * const k)
   D_psi(l, g_spinor_field[DUM_MATRIX]);
   gamma5(l, l, VOLUME);
 }
+
+void D_dagg_psi(spinor * const l, spinor * const k)
+{
+  gamma5(l, k, VOLUME); 
+  g_mu = -g_mu;
+  D_psi(g_spinor_field[DUM_MATRIX], l);
+  gamma5(l, g_spinor_field[DUM_MATRIX], VOLUME);
+  g_mu = -g_mu;
+}
+
 
 
 /* the "full" operators */

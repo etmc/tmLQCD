@@ -99,12 +99,11 @@ int gcr(spinor * const P, spinor * const Q,
       }
       else {
         zero_spinor_field(xi[k], N);  
-        Msap_eo(xi[k], rho, 6);   
- 	/* Msap(xi[k], rho, 8); */
+        Msap_eo(xi[k], rho, NcycleMsap, NiterMsap);   
       }
 	  
       dfl_sloppy_prec = 1;
-      dfl_little_D_prec = 1.e-12;
+      //dfl_little_D_prec = 1.e-12;
       f(tmp, xi[k]); 
 	  
       /* tmp will become chi[k] */
@@ -133,15 +132,15 @@ int gcr(spinor * const P, spinor * const Q,
     c[k] /= b[k];
     assign_add_mul(P, xi[k], c[k], N);
     for(l = k - 1; l >= 0; --l)
-    {
-      for(i = l+1; i <= k; ++i)
       {
-        ctmp = a[l][i] * c[i];
-        c[l] -= ctmp;
+	for(i = l+1; i <= k; ++i)
+	  {
+	    ctmp = a[l][i] * c[i];
+	    c[l] -= ctmp;
+	  }
+	c[l] /= b[l];
+	assign_add_mul(P, xi[l], c[l], N);
       }
-      c[l] /= b[l];
-      assign_add_mul(P, xi[l], c[l], N);
-    }
   }
   finalize_solver(solver_field, nr_sf);
   return(-1);

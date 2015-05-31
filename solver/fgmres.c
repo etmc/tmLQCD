@@ -51,6 +51,7 @@
 #include"gamma.h"
 #include "start.h"
 #include "solver_field.h"
+#include "dfl_projector.h"
 #include"fgmres.h"
 
 static void init_gmres(const int _M, const int _V);
@@ -83,21 +84,6 @@ int fgmres(spinor * const P,spinor * const Q,
 
   if(N == VOLUME) {
     init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);/* #ifdef HAVE_LAPACK */
-/*     _FT(zhetrf)("U", &n, G, &N, ipiv, work, &lwork, &info, 1); */
-/* #endif */
-/*     if(info != 0) { */
-/*       printf("Error in zhetrf info = %d\n", info); */
-/*     } */
-/*     else { */
-/* #ifdef HAVE_LAPACK */
-/*       _FT(zhetrs)("U", &n, &ONE, G, &N, ipiv, bn, &N, &info, 1); */
-/* #endif */
-/*       if(info != 0) { */
-/* 	printf("Error in zhetrs info = %d\n", info); */
-/*       } */
-/*     } */
-    /* solution again stored in bn */
-
   }
   else {
     init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);
@@ -136,10 +122,18 @@ int fgmres(spinor * const P,spinor * const Q,
       if(precon == 0) {
 	assign(Z[j], V[j], N);
       }
-      else {
+      else if(precon == 1) {
 	zero_spinor_field(Z[j], N);
-	/* poly_nonherm_precon(Z[j], V[j], 0.3, 1.1, 80, N); */
-	Msap(Z[j], V[j], 8);
+	Msap_eo(Z[j], V[j], 5, 3);
+      }
+      else if(precon == 2) {
+	mg_precon(Z[j], V[j]);
+      }
+      else if(precon == 4) {
+	mg_precon_cg(Z[j], V[j]);
+      }
+      else {
+	mg_Qsq_precon(Z[j], V[j]);
       }
       f(r0, Z[j]); 
       /* Set h_ij and omega_j */

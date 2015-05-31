@@ -27,10 +27,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <complex.h>
 #include "global.h"
 #include "operator/D_psi.h"
 #include "linalg_eo.h"
 #include "start.h"
+#include "gamma.h"
 #include "xchange/xchange.h"
 #include "block.h"
 #include "solver/lu_solve.h"
@@ -114,15 +116,18 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
   nblks_dir[2] = nblks_y;
   nblks_dir[3] = nblks_z;
   nb_blocks = nblks_t*nblks_x*nblks_y*nblks_z;
+  if(nblks_t%2 == 1 || nblks_x%2 == 1 || nblks_y%2 == 1 || nblks_z%2 == 1 ) {
+    fprintf(stderr, "no of blocks in all directions must be even! Aborting...\n");
+    exit(0);
+  }
   dT = T/nblks_t; 
   dX = LX/nblks_x; 
   dY = LY/nblks_y; 
   dZ = LZ/nblks_z;
   if(g_proc_id == 0 && g_debug_level > 0) {
-    printf("# Number of deflation blocks = %d\n  n_block_t = %d\n  n_block_x = %d\n  n_block_y = %d\n  n_block_z = %d\n",
+    printf("# Number of deflation blocks per MPI process = %d\n  n_block_t = %d\n  n_block_x = %d\n  n_block_y = %d\n  n_block_z = %d\n",
 	   nb_blocks, nblks_t, nblks_x, nblks_y, nblks_z);
-    /*     printf("# Number of iteration with the polynomial preconditioner = %d \n", dfl_field_iter); */
-    /*     printf("# Number of iteration in the polynomial preconditioner   = %d \n", dfl_poly_iter); */
+    printf("# Block size: %d x %d x %d x %d\n", dT, dX, dY, dZ);
   }
   
   free_blocks();
@@ -183,29 +188,6 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
     block_list[i].ns = g_N_s;
     block_list[i].spinpad = spinpad;
 
-    /* The following has not yet been adapted for */
-    /* new block geometry right? (C.U.)           */
-    for (j = 0 ; j < 6; ++j) {
-#ifdef MPI
-      block_list[i].mpilocal_neighbour[j] = (g_nb_list[j] == g_cart_id) ? i : -1;
-#else
-      block_list[i].mpilocal_neighbour[j] = i;
-#endif
-    }
-#ifdef MPI
-    block_list[i].mpilocal_neighbour[6] = (i == 0 ? 1 : (g_nb_list[j] == g_cart_id) ? 0 : -1);
-    block_list[i].mpilocal_neighbour[7] = (i == 1 ? 0 : (g_nb_list[j] == g_cart_id) ? 1 : -1);
-#else
-    block_list[i].mpilocal_neighbour[6] = (i == 0 ? 1 : 0);
-    block_list[i].mpilocal_neighbour[7] = (i == 0 ? 1 : 0);
-#endif
-    if(g_debug_level > 4 && g_proc_id == 0) {
-      for(j = 0; j < 8; j++) {
-	printf("block %d mpilocal_neighbour[%d] = %d\n", i, j, block_list[i].mpilocal_neighbour[j]);
-      }
-    }
-    /* till here... (C.U.)                        */
-
     /* block coordinate on the mpilocal processor */
     block_list[i].mpilocal_coordinate[0] = (i / (nblks_x * nblks_y * nblks_z));
     block_list[i].mpilocal_coordinate[1] = (i / (nblks_y * nblks_z)) % nblks_x;
@@ -221,7 +203,7 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
 			     block_list[i].coordinate[2] + block_list[i].coordinate[3]) % 2;
 
     /* block_list[i].evenodd = i % 2; */
-    if(g_proc_id == 0 && g_debug_level > 1) {
+    if(g_proc_id == 0 && g_debug_level > 4) {
       printf("%d %d (%d %d %d %d)\n", i, block_list[i].evenodd, block_list[i].coordinate[0], block_list[i].coordinate[1], block_list[i].coordinate[2], block_list[i].coordinate[3]);
     }
     if ((void*)(block_idx = calloc(8 * (VOLUME/nb_blocks), sizeof(int))) == NULL)
@@ -249,9 +231,7 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
       block_list[i].little_dirac_operator_eo[j] = 0.0;
     }
   }
- 
- 
-   
+  
   init_blocks_geometry();
   init_blocks_gaugefield();
 
@@ -279,6 +259,7 @@ int free_blocks() {
   }
   return 0;
 }
+
 int init_blocks_gaugefield() {
   /* 
      Copies the existing gauge field on the processor into the separate blocks in a form
@@ -498,7 +479,7 @@ int check_blocks_geometry(block * blk) {
     }
   }
 
-  if(g_proc_id == 0 && g_debug_level > 1) {
+  if(g_proc_id == 0 && g_debug_level > 4) {
     printf("# block geometry checked successfully for block %d !\n", blk->id);
   }
   for(i = 0; i < blk->volume; i++) {
@@ -618,7 +599,7 @@ int check_blocks_geometry(block * blk) {
     }
   }
 
-  if(g_proc_id == 0 && g_debug_level > 1) {
+  if(g_proc_id == 0 && g_debug_level > 4) {
     printf("# block eo geometry checked successfully for block %d !\n", blk->id);
   }
 
@@ -634,11 +615,11 @@ int init_blocks_geometry() {
   int tstride = dX * dY * dZ;
   int boundidx = VOLUME/nb_blocks;
   for (ix = 0; ix < VOLUME/nb_blocks; ++ix) {
-    block_idx[8 * ix + 0] = ix           >= VOLUME/nb_blocks - tstride ? boundidx : ix + tstride;/* +t */
-    block_idx[8 * ix + 1] = ix           <  tstride                    ? boundidx : ix - tstride;/* -t */
-    block_idx[8 * ix + 2] = (ix % tstride >= dZ * dY * (dX - 1)		? boundidx : ix + xstride);/* +x */
+    block_idx[8 * ix + 0] = ix           >= VOLUME/nb_blocks - tstride  ? boundidx : ix + tstride;/* +t */
+    block_idx[8 * ix + 1] = ix           <  tstride                     ? boundidx : ix - tstride;/* -t */
+    block_idx[8 * ix + 2] = ix % tstride >= dZ * dY * (dX - 1)		? boundidx : ix + xstride;/* +x */
     block_idx[8 * ix + 3] = ix % tstride <  dZ * dY			? boundidx : ix - xstride;/* -x */
-    block_idx[8 * ix + 4] = (ix % xstride >= dZ * (dY - 1)		? boundidx : ix + ystride);/* +y */
+    block_idx[8 * ix + 4] = ix % xstride >= dZ * (dY - 1)		? boundidx : ix + ystride;/* +y */
     block_idx[8 * ix + 5] = ix % xstride <  dZ				? boundidx : ix - ystride;/* -y */
     block_idx[8 * ix + 6] = ix % ystride == dZ - 1			? boundidx : ix + zstride;/* +z */
     block_idx[8 * ix + 7] = ix % ystride == 0				? boundidx : ix - zstride;/* -z */
@@ -932,7 +913,7 @@ void alt_block_compute_little_D() {
 
 
 /* checked CU */
-void compute_little_D_diagonal() {
+void compute_little_D_diagonal(const int mul_g5) {
   int i,j, blk;
   spinor * tmp, * _tmp;
   _Complex double * M;
@@ -947,12 +928,50 @@ void compute_little_D_diagonal() {
     M = block_list[blk].little_dirac_operator;
     for(i = 0; i < g_N_s; i++) {
       Block_D_psi(&block_list[blk], tmp, block_list[blk].basis[i]);
+      if(mul_g5) gamma5(tmp, tmp, block_list[blk].volume);
       for(j = 0; j < g_N_s; j++) {
 	M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], tmp, block_list[blk].volume, 0);
 	block_list[blk].little_dirac_operator32[i*g_N_s + j] = M[i * g_N_s + j];
       }
     }
   }
+
+  if(g_debug_level > 2) {
+    if (g_N_s <= 5 && !g_cart_id){
+      printf("\n\n  *** CHECKING LITTLE D ***\n");
+      printf("\n  ** node 0, lower block **\n");
+      for (i = 0*g_N_s; i < 9 * g_N_s; ++i){
+        printf(" [ ");
+        for (j = 0; j < g_N_s; ++j){
+          printf("%s%1.3e %s %1.3e i", creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[0].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[0].little_dirac_operator[i * g_N_s + j]), cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[0].little_dirac_operator[i * g_N_s + j]));
+          if (j != g_N_s - 1){
+            printf(",\t");
+          }
+        }
+        printf(" ]\n");
+        if ((i % g_N_s) == (g_N_s - 1))
+          printf("\n");
+      }
+      
+      printf("\n\n  *** CHECKING LITTLE D ***\n");
+      printf("\n  ** node 0, upper block **\n");
+      for (i = 0*g_N_s; i < 9 * g_N_s; ++i){
+        printf(" [ ");
+        for (j = 0; j < g_N_s; ++j){
+          printf("%s%1.3e %s %1.3e i", creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[1].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[1].little_dirac_operator[i * g_N_s + j]), cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[1].little_dirac_operator[i * g_N_s + j]));
+          if (j != g_N_s - 1){
+            printf(",\t");
+          }
+        }
+        printf(" ]\n");
+        if ((i % g_N_s) == (g_N_s - 1))
+          printf("\n");
+	
+      }
+    }
+  }
+
+
   free(_tmp);
   return;
 }
@@ -961,7 +980,7 @@ void compute_little_D_diagonal() {
 /* what happens if this routine is called in a one dimensional parallelisation? */
 /* or even serially ?                                                           */
 /* checked CU */
-void compute_little_D() {
+void compute_little_D(const int mul_g5) {
   /* 
      This is the little dirac routine rewritten according to multidimensional blocking
      Adaptation by Claude Tadonki (claude.tadonki@u-psud.fr)
@@ -978,19 +997,17 @@ void compute_little_D() {
   int dT, dX, dY, dZ;
   dT = T/nblks_t; dX = LX/nblks_x; dY = LY/nblks_y; dZ = LZ/nblks_z;
 
-  if(g_proc_id == 0) printf("||-----------------------\n||compute_little_D\n||-----------------------\n");
-
+  if(g_proc_id == 0 && g_debug_level > 1) printf("# compute_little_D called with mul_g5 = %d\n", mul_g5);
 
   /* for a full spinor field we need VOLUMEPLUSRAND                 */
   /* because we use the same geometry as for the                    */
   /* gauge field                                                    */
   /* It is VOLUME + 2*LZ*(LY*LX + T*LY + T*LX) + 4*LZ*(LY + T + LX) */
-  _scratch = calloc(2*VOLUMEPLUSRAND+1, sizeof(spinor));
-#if ( defined SSE || defined SSE2 || defined SSE3)
+  if( (_scratch = calloc(2*VOLUMEPLUSRAND+1, sizeof(spinor))) == NULL) {
+    fprintf(stderr, "not enough memory for scratch in compute_little_D! Aborting...\n");
+    exit(-1);
+  }
   scratch = (spinor*)(((unsigned long int)(_scratch)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  scratch = _scratch;
-#endif
   temp = scratch + VOLUMEPLUSRAND;
   // NEED TO BE REWRITTEN
   block_id_e = 0;
@@ -999,9 +1016,10 @@ void compute_little_D() {
     M = block_list[blk].little_dirac_operator;
     for(i = 0; i < g_N_s; i++) {
       Block_D_psi(&block_list[blk], scratch, block_list[blk].basis[i]);
+      if(mul_g5) gamma5(scratch, scratch, block_list[blk].volume);
       for(j = 0; j < g_N_s; j++) {
 	M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], scratch, block_list[blk].volume, 0);
-	
+		
 	if (block_list[blk].evenodd==0) {
 	  block_list[block_id_e].little_dirac_operator_eo[i * g_N_s + j] = M[i * g_N_s + j];
 	}
@@ -1036,7 +1054,7 @@ void compute_little_D() {
       x_start = 0; x_end = dX;
       y_start = 0; y_end = dY;
       z_start = 0; z_end = dZ;
-      switch(pm){ 
+      switch(pm) { 
       case 0: t_start = dT - 1; t_end = t_start + 1; mu = 0; is_up = 1; break; /* Boundary in direction +t */
       case 1: t_start = 0;      t_end = t_start + 1; mu = 0; is_up = 0; break; /* Boundary in direction -t */
       case 2: x_start = dX - 1; x_end = x_start + 1; mu = 1; is_up = 1; break; /* Boundary in direction +x */
@@ -1060,7 +1078,7 @@ void compute_little_D() {
 		      /* We treat the case when we need to cross between blocks                             */
 		      /* We are in block (bt, bx, by, bz) and compute direction pm                          */
 		      /* We check inner block statement by ( b_ > 0 )&&( b_ < nblks_ - 1 )                  */
-		      /* Other cases are threated in a standard way using the boundary of the scracth array */
+		      /* Other cases are treated in a standard way using the boundary of the scracth array */
 		      ib = -1; /* ib is the index of the selected block if any */
 		      if((pm==0)&&(bt<nblks_t-1)&&(t==t_end-1)){ //direction +t
 			iy = index_b(0, x, y, z); /* lowest edge of upper block needed */
@@ -1105,6 +1123,7 @@ void compute_little_D() {
 		      }
 		      if(ib >= 0) s = &block_list[ib].basis[ i ][ iy ] ; 
 		      boundary_D[pm](r, s, u);
+		      if(mul_g5) gamma5(r, r, 1);
 		      r++;
 		    }
 		  }
@@ -1127,8 +1146,12 @@ void compute_little_D() {
             for(by = 0; by < nblks_y; by++) {
 	      for(bz = 0; bz < nblks_z; bz++){
 		block_list[block_id].little_dirac_operator[ iy ] = 0.0;
-		if (block_list[block_id].evenodd==0) {block_list[block_id_e].little_dirac_operator_eo[ iy ] = 0.0;}
- 		if (block_list[block_id].evenodd==1) {block_list[block_id_o+nb_blocks/2].little_dirac_operator_eo[ iy ] = 0.0;}
+		if (block_list[block_id].evenodd==0) {
+		  block_list[block_id_e].little_dirac_operator_eo[ iy ] = 0.0;
+		}
+ 		if (block_list[block_id].evenodd==1) {
+		  block_list[block_id_o+nb_blocks/2].little_dirac_operator_eo[ iy ] = 0.0;
+		}
 		/* We need to contract g_N_s times with the same set of fields */
 		for(t = t_start; t < t_end; t++) {
 		  for(x = x_start; x < x_end; x++) {
@@ -1136,17 +1159,17 @@ void compute_little_D() {
 		      for(z = z_start; z < z_end; z++) {
 			ix = index_b(t, x, y, z); // TO BE INLINED
 			s = &block_list[block_id].basis[j][ ix ];
-			c = scalar_prod(s, r, 1, 0);// TO BE INLINED
+			c = scalar_prod(s, r, 1, 0);
 			block_list[block_id].little_dirac_operator[ iy ] += c;
-		if (block_list[block_id].evenodd==0) {
-		block_list[block_id_e].little_dirac_operator_eo[ iy ] += c;
-		}
-		if (block_list[block_id].evenodd==1) {
-		block_list[block_id_o+nb_blocks/2].little_dirac_operator_eo[ iy ] += c;
-		}
+			//printf("%e %e\n", creal(c), cimag(c));
+			if (block_list[block_id].evenodd==0) {
+			  block_list[block_id_e].little_dirac_operator_eo[ iy ] += c;
+			}
+			if (block_list[block_id].evenodd==1) {
+			  block_list[block_id_o+nb_blocks/2].little_dirac_operator_eo[ iy ] += c;
+			}
 			r++;
 		      }
-			   
 		    }
 		  }
 		}
@@ -1160,11 +1183,13 @@ void compute_little_D() {
       }
     }
   }
-  for(i = 0; i < nb_blocks; i++)
-    for(j = 0; j < 9 * g_N_s * g_N_s; j++)
+  for(i = 0; i < nb_blocks; i++) {
+    for(j = 0; j < 9 * g_N_s * g_N_s; j++) {
       block_list[i].little_dirac_operator32[j] = (_Complex float)block_list[i].little_dirac_operator[ iy ];
+    }
+  }
 
-  if(g_debug_level > 3) {
+  if(g_debug_level > 2) {
     if (g_N_s <= 5 && !g_cart_id){
       printf("\n\n  *** CHECKING LITTLE D ***\n");
       printf("\n  ** node 0, lower block **\n");

@@ -66,7 +66,8 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
   int iteration;
   int save_sloppy = g_sloppy_precision;
   double atime, etime, flops;
-  spinor ** solver_field = NULL;
+  static spinor ** solver_field = NULL;
+  static cg_init = 0;
   spinor * stmp;
   const int nr_sf = 3;
 
@@ -75,7 +76,7 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
   } 
   else {
     init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf); 
-  } 
+  }
   /* initialize residue r and search vector p */
   atime = gettime();
   squarenorm = square_norm(Q, N, 1);

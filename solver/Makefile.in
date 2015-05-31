@@ -33,6 +33,7 @@ libsolver_TARGETS = bicgstab_complex gmres incr_eigcg eigcg restart_X ortho \
 	            cgs_real cg_her mr chrono_guess \
 	            bicgstabell bicgstab2 eigenvalues fgmres \
 	            gcr gcr4complex diagonalise_general_matrix \
+	            cgne4complex mr4complex \
 	            quicksort gmres_dr lu_solve jdher Msap \
                     jdher_bi gram-schmidt eigenvalues_bi \
                     bicgstab_complex_bi cg_her_bi pcg_her \
@@ -40,7 +41,8 @@ libsolver_TARGETS = bicgstab_complex gmres incr_eigcg eigcg restart_X ortho \
                     generate_dfl_subspace dfl_projector \
                     cg_mms_tm cg_mms_tm_nd solver_field sumr mixed_cg_her index_jd \
                     dirac_operator_eigenvectors	spectral_proj \
-                    jdher_su3vect cg_her_su3vect eigenvalues_Jacobi
+                    jdher_su3vect cg_her_su3vect eigenvalues_Jacobi \
+		    mcr cr mcr4complex bicg_complex
 
 libsolver_OBJECTS = $(addsuffix .o, ${libsolver_TARGETS})
 

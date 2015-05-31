@@ -32,7 +32,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 	      const double precision, const int iter_max,
 	      const int solver_flag, const int rel_prec,
 	      const int sub_evs_flag, const int even_odd_flag,
-        const int no_extra_masses, double * const extra_masses, solver_params_t solver_params, 
-        const int id );
+              const int no_extra_masses, double * const extra_masses, solver_params_t solver_params, 
+              const int id );
 
 #endif

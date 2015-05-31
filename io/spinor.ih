@@ -36,6 +36,7 @@
 #include <errno.h>
 
 #include <global.h>
+#include <gettime.h>
 
 #include <io/gauge.h>
 #include <io/spinor.h>

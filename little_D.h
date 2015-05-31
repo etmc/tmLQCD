@@ -25,6 +25,7 @@
 
 extern int dfl_subspace_updated;
 void little_D(_Complex double * v, _Complex double *w);
+void little_Q_pm(_Complex double * v, _Complex double *w);
 void little_D_sym(_Complex double * v, _Complex double *w);
 void little_D_ee_inv(_Complex double * v, _Complex double *w);
 void little_D_hop(int eo,_Complex double * v, _Complex double *w);

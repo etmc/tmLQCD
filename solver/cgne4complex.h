@@ -1,5 +1,8 @@
+#ifndef _CGNE4COMPLEX_H
+#define _CGNE4COMPLEX_H
+
 /***********************************************************************
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ * Copyright (C) 2013 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -16,20 +19,10 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-#ifndef _GENERATE_DFL_SUBSPACE
-#define _GENERATE_DFL_SUBSPACE
 
-#include "su3.h"
-#include <complex.h>
 
-int init_dfl_subspace(const int);
-int free_dfl_subspace();
-int generate_dfl_subspace(const int Ns, const int N, const int repro);
-int generate_dfl_subspace_Q(const int Ns, const int N, const int repro);
-int generate_dfl_subspace_free(const int Ns, const int N);
-
-extern spinor ** dfl_fields;
-extern _Complex double ** little_dfl_fields;
-extern _Complex double ** little_dfl_fields_eo;
+int cgne4complex(_Complex double * const P, _Complex double * const Q, 
+		 const int max_iter, const double eps_sq, const int rel_prec,
+		 const int N, const int lda, c_matrix_mult f);
 
 #endif

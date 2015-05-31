@@ -16,20 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-#ifndef _GENERATE_DFL_SUBSPACE
-#define _GENERATE_DFL_SUBSPACE
+
+#ifndef _ASSIGN_MUL_ADD_MUL_H
+#define _ASSIGN_MUL_ADD_MUL_H
 
 #include "su3.h"
-#include <complex.h>
 
-int init_dfl_subspace(const int);
-int free_dfl_subspace();
-int generate_dfl_subspace(const int Ns, const int N, const int repro);
-int generate_dfl_subspace_Q(const int Ns, const int N, const int repro);
-int generate_dfl_subspace_free(const int Ns, const int N);
-
-extern spinor ** dfl_fields;
-extern _Complex double ** little_dfl_fields;
-extern _Complex double ** little_dfl_fields_eo;
-
+/* Makes (*R)=c1*(*R)+c2*(*S) , c1 and c2 are complex constants */
+void assign_mul_add_mul(spinor * const R, const _Complex double c1, spinor * const S, const _Complex double c2, const int N);
+ 
 #endif

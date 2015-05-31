@@ -72,7 +72,8 @@ libio_TARGETS = utils_engineering \
 		eospinor_write \
 		eospinor_read \
 		io_cm \
-		deri_write_stdout spinor_write_stdout sw_write_stdout
+		deri_write_stdout spinor_write_stdout sw_write_stdout \
+		gauge_write_luscher_binary
 
 libio_OBJECTS = $(addsuffix .o, ${libio_TARGETS})
 

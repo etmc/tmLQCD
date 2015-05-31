@@ -122,6 +122,13 @@ typedef struct
    _vector_assign((r).s2,(s).s2);\
    _vector_assign((r).s3,(s).s3);
 
+#define _spinor_add_assign(r,s) \
+   _vector_add_assign((r).s0,(s).s0);\
+   _vector_add_assign((r).s1,(s).s1);\
+   _vector_add_assign((r).s2,(s).s2);\
+   _vector_add_assign((r).s3,(s).s3);
+
+
 #define _vector_norm_square(r) \
    conj((r).c0) * (r).c0 + conj((r).c1) * (r).c1 + conj((r).c2) * (r).c2
    
