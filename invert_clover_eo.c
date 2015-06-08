@@ -51,7 +51,7 @@
 int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new, 
 		     spinor * const Even, spinor * const Odd,
 		     const double precision, const int max_iter,
-		     const int solver_flag, const int rel_prec,
+		     const int solver_flag, const int rel_prec,solver_params_t solver_params,
 		     su3 *** gf, matrix_mult Qsq, matrix_mult Qm) {
   int iter;
 
@@ -71,15 +71,31 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
   /* Here we invert the hermitean operator squared */
   gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
   if(g_proc_id == 0) {
-    printf("# Using CG!\n"); 
+    //printf("# Using CG!\n"); 
     printf("# mu = %f, kappa = %f, csw = %f\n", 
 	   g_mu/2./g_kappa, g_kappa, g_c_sw);
     fflush(stdout);
   }
-  iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, 
-		precision, rel_prec, 
-		VOLUME/2, Qsq);
-  Qm(Odd_new, Odd_new);
+  
+  if(solver_flag == CG){
+    if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
+    iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, 
+		 precision, rel_prec, 
+		 VOLUME/2, Qsq);
+    Qm(Odd_new, Odd_new);
+    }else if(solver_flag == INCREIGCG){
+
+       if(g_proc_id == 0) {printf("# Using Incremental Eig-CG!\n"); fflush(stdout);}
+       iter = incr_eigcg(VOLUME/2,solver_params.eigcg_nrhs, solver_params.eigcg_nrhs1, Odd_new, g_spinor_field[DUM_DERI], solver_params.eigcg_ldh, Qsq,
+ 		    	            solver_params.eigcg_tolsq1, solver_params.eigcg_tolsq, solver_params.eigcg_restolsq , solver_params.eigcg_rand_guess_opt, 
+                                    rel_prec, max_iter, solver_params.eigcg_nev, solver_params.eigcg_vmax);
+       Qm(Odd_new, Odd_new);
+
+   }else{
+    if(g_proc_id == 0) {printf("# This solver is not available for this operator. Exisiting!\n"); fflush(stdout);}
+    return 0;
+  }
+
 
   /* Reconstruct the even sites                */
   Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd_new);

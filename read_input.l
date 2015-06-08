@@ -52,17 +52,18 @@ EQL {SPC}*={SPC}*
 #include<stdlib.h>
 #include<stdio.h>
 #include<string.h>
+#define INIT_GLOBALS
 #include"global.h"
 #include"read_input.h"
 #include"default_input_values.h"
 #include"monomial/monomial.h"
-#include"measurements.h"
+#include"meas/measurements.h"
 #include"integrator.h"
 #include"operator.h"
 #include"phmc.h"
 #include<io/params.h>
 
-inline void rmQuotes(char *str){
+static inline void rmQuotes(char *str){
   char* strsave=str;
 
   while(*str== ' ' || *str == '\t') str++;
@@ -175,6 +176,8 @@ inline void rmQuotes(char *str){
   int dfl_poly_iter;
 
   int use_preconditioning;
+
+
 %}
 
 %option never-interactive
@@ -250,6 +253,7 @@ inline void rmQuotes(char *str){
 %x PIONNORMMEAS
 %x PLOOP
 %x ORIENTEDPLAQUETTESMEAS
+%x GRADIENTFLOWMEAS
 
 %x REWEIGH
 %x REWSAMPLES
@@ -269,6 +273,7 @@ inline void rmQuotes(char *str){
 %x DBCLOVEROP
 %x TMSOLVER
 %x DBTMSOLVER
+%x CSWSOLVER
 %x OVSOLVER
 
 %x INITMONOMIAL
@@ -309,6 +314,9 @@ inline void rmQuotes(char *str){
 %x DFLPOLYITER
 
 %x PRECONDITIONING
+
+
+
 
 
 %%
@@ -403,6 +411,9 @@ inline void rmQuotes(char *str){
 ^DflPolyIter{EQL}                  BEGIN(DFLPOLYITER);
 
 ^BeginGPU                          BEGIN(INITGPU);
+
+
+
 
 
 
@@ -523,7 +534,9 @@ inline void rmQuotes(char *str){
   {SPC}*SolverPrecision{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->eps_sq = c;
-    if(myverbose) printf("  SolverPrecision set to %f line %d operator %d\n", c, line_of_file, current_operator);
+    (optr->solver_params).eigcg_tolsq = c;
+    if(myverbose) printf("  SolverPrecision set to %lf line %d operator %d\n", c, line_of_file, current_operator);
+    if(myverbose) printf("  EigCGtolsq set to %lf line %d operator %d\n", c, line_of_file, current_operator);
   }
   {SPC}*SolverRelativePrecision{EQL}yes {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
@@ -535,6 +548,47 @@ inline void rmQuotes(char *str){
     optr->rel_prec = 0;
     if(myverbose) printf("  SolverRelativePrecision set to NO line %d operator %d\n",  line_of_file, current_operator);
   }
+  {SPC}*EigCGnrhs{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).eigcg_nrhs = a;
+    if(myverbose) printf("  EigCGnrhs set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EigCGnrhs1{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z1] = %d", name, &a);
+    (optr->solver_params).eigcg_nrhs1 = a;
+    if(myverbose) printf("  EigCGnrhs1 set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EigCGnev{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).eigcg_nev = a;
+    if(myverbose) printf("  EigCGnev set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EigCGvmax{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).eigcg_vmax = a;
+    if(myverbose) printf("  EigCGvmax set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EigCGldh{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).eigcg_ldh = a;
+    if(myverbose) printf("  EigCGldh set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EigCGtolsq1{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z1] = %lf", name, &c);
+    (optr->solver_params).eigcg_tolsq1 = c;
+    if(myverbose) printf("  EigCGtolsq1 set to %lf line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EigCGrestolsq{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    (optr->solver_params).eigcg_restolsq = c;
+    if(myverbose) printf("  EigCGrestolsq set to %lf line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EigCGRandGuessOpt{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->solver_params).eigcg_rand_guess_opt = a;
+    if(myverbose) printf("  EigCGrand_guess_opt set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+
   {SPC}*ExtraMasses{EQL}{FLTLIST} {
     char * token = NULL;
     optr->no_extra_masses = 0;
@@ -613,6 +667,14 @@ inline void rmQuotes(char *str){
     BEGIN(TMSOLVER);
   }
 }
+
+<CLOVEROP>{
+  {SPC}*Solver{EQL} {
+    name_caller = YY_START; 
+    BEGIN(CSWSOLVER);
+  }
+}
+
 
 <WILSONOP,TMOP>{
   {SPC}*UseEvenOdd{EQL}yes {
@@ -705,7 +767,7 @@ inline void rmQuotes(char *str){
   }
 }
 
-<DBTMSOLVER,TMSOLVER>{
+<DBTMSOLVER,TMSOLVER,CSWSOLVER>{
   cg {
     optr->solver=1;
     if(myverbose) printf("  Solver set to CG line %d operator %d\n", line_of_file, current_operator);
@@ -776,7 +838,28 @@ inline void rmQuotes(char *str){
     if(myverbose) printf("  Solver set to CGMMS line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
+  increigcg {
+    optr->solver = 15;
+    if(myverbose) printf("  Solver set to INCR-EIG-CG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+
 }
+
+
+<CSWSOLVER>{
+  increigcg {
+    optr->solver = 15;
+    if(myverbose) printf("  Solver set to INCR-EIG-CG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+
+}
+
+
+
+
+
 
 <OVSOLVER>{
   sumr {
@@ -1414,6 +1497,10 @@ inline void rmQuotes(char *str){
     meas->type = ORIENTED_PLAQUETTES;
     strcpy(meas->name, "ORIENTEDPLAQUETTES");
   }
+  else if(strcmp(yytext, "GRADIENTFLOW")==0) {
+    meas->type = GRADIENT_FLOW;
+    strcpy(meas->name, "GRADIENTFLOW");
+  }
   else {
     fprintf(stderr, "Unknown measurement type %s in line %d\n", yytext, line_of_file);
     exit(1);
@@ -1434,9 +1521,10 @@ inline void rmQuotes(char *str){
   else if(meas->type == PIONNORM) BEGIN(PIONNORMMEAS);
   else if(meas->type == POLYAKOV) BEGIN(PLOOP);
   else if(meas->type == ORIENTED_PLAQUETTES) BEGIN(ORIENTEDPLAQUETTESMEAS);
+  else if(meas->type == GRADIENT_FLOW) BEGIN(GRADIENTFLOWMEAS);
 }
 
-<ONLINEMEAS,PIONNORMMEAS,PLOOP,ORIENTEDPLAQUETTESMEAS>{
+<ONLINEMEAS,PIONNORMMEAS,PLOOP,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS>{
   ^EndMeasurement{SPC}* {
     if(myverbose) printf("Measurement with id %d parsed in line %d\n\n", meas->id, line_of_file);
     BEGIN(0);
@@ -1697,19 +1785,19 @@ inline void rmQuotes(char *str){
 }
 <BOUNDT>{FLT} {
   X0 = atof(yytext);
-  if(myverbose != 0) printf("X0 for boundary cond. in time set to %e\n", X0);
+  if(myverbose != 0) printf("X0 for boundary cond. in t-direction set to %e times pi\n", X0);
 }
 <BOUNDX>{FLT} {
   X1 = atof(yytext);
-  if(myverbose != 0) printf("X1 for boundary cond. in time set to %e\n", X0);
+  if(myverbose != 0) printf("X1 for boundary cond. in x-direction set to %e times pi\n", X1);
 }
 <BOUNDY>{FLT} {
   X2 = atof(yytext);
-  if(myverbose != 0) printf("X2 for boundary cond. in time set to %e\n", X0);
+  if(myverbose != 0) printf("X2 for boundary cond. in y-direction set to %e times pi\n", X2);
 }
 <BOUNDZ>{FLT} {
   X3 = atof(yytext);
-  if(myverbose != 0) printf("X3 for boundary cond. in time set to %e\n", X0);
+  if(myverbose != 0) printf("X3 for boundary cond. in z-direction set to %e times pi\n", X3);
 }
 <READSOURCE>yes     {
   read_source_flag=1;
@@ -1955,7 +2043,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{SPC}*\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{SPC}*\n   {
   line_of_file++;
 }
 <*>{SPC}*\n                       {
@@ -2081,6 +2169,7 @@ int read_input(char * conf_file){
   use_preconditioning = _default_use_preconditioning;
   stout_rho = _default_stout_rho;
   stout_no_iter = _default_stout_no_iter;
+
   /* check for reread ! */ 
   phmc_compute_evs = _default_phmc_compute_evs;
   compute_evs = _default_compute_evs;

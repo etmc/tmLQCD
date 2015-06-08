@@ -24,8 +24,6 @@
  *
  *******************************************************************************/
 
-#define MAIN_PROGRAM
-
 #include"lime.h"
 #ifdef HAVE_CONFIG_H
 # include<config.h>
@@ -84,6 +82,7 @@
 #include "operator/tm_operators.h"
 #include "operator/Dov_psi.h"
 #include "solver/spectral_proj.h"
+#include "meas/measurements.h"
 
 extern int nstore;
 int check_geometry();
@@ -251,6 +250,15 @@ int main(int argc, char *argv[])
 
   init_operators();
 
+  /* list and initialize measurements*/
+  if(g_proc_id == 0) {
+    printf("\n");
+    for(int j = 0; j < no_measurements; j++) {
+      printf("# measurement id %d, type = %d\n", j, measurement_list[j].type);
+    }
+  }
+  init_measurements();  
+
   /* this could be maybe moved to init_operators */
 #ifdef _USE_HALFSPINOR
   j = init_dirac_halfspinor();
@@ -313,6 +321,16 @@ int main(int argc, char *argv[])
 	  fflush(stdout);
 	}
       }
+
+      /* if any measurements are defined in the input file, do them here */
+      measurement * meas;
+      for(int imeas = 0; imeas < no_measurements; imeas++){
+	meas = &measurement_list[imeas];
+	if (g_proc_id == 0) {
+	  fprintf(stdout, "#\n# Beginning online measurement.\n");
+	}
+	meas->measurefunc(nstore, imeas, even_odd_flag);
+      }
       
       if (reweighting_flag == 1) {
 	reweighting_factor(reweighting_samples, nstore);
@@ -329,7 +347,7 @@ int main(int argc, char *argv[])
 #endif
 	return(0);
       }
-      
+
       /* Compute the mode number or topological susceptibility using spectral projectors, if wanted*/
       
       if(compute_modenumber != 0 || compute_topsus !=0){
@@ -404,8 +422,8 @@ int main(int argc, char *argv[])
 	if (g_debug_level > 1) {
 	  check_little_D_inversion(reproduce_randomnumber_flag);
 	}
-	
       }
+
       if(SourceInfo.type == 1 || SourceInfo.type == 3 || SourceInfo.type == 4) {
 	index_start = 0;
 	index_end = 1;

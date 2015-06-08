@@ -51,7 +51,7 @@
 /* size of the extra_masses array for operators using the CGMMS solver */
 #define MAX_EXTRA_MASSES 30
 
-#if defined MAIN_PROGRAM
+#if defined INIT_GLOBALS
 #  define EXTERN
 #else
 #  define EXTERN extern
@@ -250,14 +250,11 @@ EXTERN int tempT,tempV,tempR;
 EXTERN int ** g_iup3d;
 EXTERN int ** g_idn3d;
 #endif
-
+ 
 #undef EXTERN
 /* #undef ALIGN */
 
 void fatal_error(char const *error, char const *function);
-
-#ifdef MAIN_PROGRAM
-#endif
 
 #endif
 

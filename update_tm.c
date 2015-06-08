@@ -95,7 +95,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   hf.traj_counter = traj_counter;
   integrator_set_fields(&hf);
 
-  strcpy(tmp_filename, ".conf.tmp");
+  sprintf(tmp_filename, ".conf.t%05d.tmp",traj_counter);
   atime = gettime();
 
   /*
@@ -164,17 +164,8 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   /* the random number is only taken at node zero and then distributed to 
      the other sites */
   ranlxd(yy,1);
-  if(g_proc_id==0) {
 #ifdef MPI
-    for(i = 1; i < g_nproc; i++) {
-      MPI_Send(&yy[0], 1, MPI_DOUBLE, i, 31, MPI_COMM_WORLD);
-    }
-#endif
-  }
-#ifdef MPI
-  else{
-    MPI_Recv(&yy[0], 1, MPI_DOUBLE, 0, 31, MPI_COMM_WORLD, &status);
-  }
+  MPI_Bcast(&yy[0], 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
 
   /* when acctest is 0 (i.e. do not perform acceptance test), the trajectory is accepted whatever the energy difference */

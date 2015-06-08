@@ -177,6 +177,18 @@ int init_operators() {
             fprintf(stderr, "CGMMS doesn't need AddDownPropagator! Switching Off!\n");
           optr->DownProp = 0;
         }
+        
+        if(optr->solver == INCREIGCG){
+          if (g_cart_id == 0 && optr->DownProp){
+             fprintf(stderr,"Warning: When even-odd preconditioning is used, the eigenvalues for +mu and -mu will be little different\n");
+             fprintf(stderr,"Incremental EigCG solver will still work however.\n");
+          }
+          
+
+          if (g_cart_id == 0 && optr->even_odd_flag == 0)
+             fprintf(stderr,"Incremental EigCG solver is added only with Even-Odd preconditioning!. Forcing\n");
+          optr->even_odd_flag = 1; 
+        }
       }
       else if(optr->type == OVERLAP) {
         optr->even_odd_flag = 0;

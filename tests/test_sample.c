@@ -1,4 +1,3 @@
-#define MAIN_PROGRAM
 
 #include "test_sample_ts1.h"
 #include "test_sample_ts2.h"
@@ -16,5 +15,4 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-#undef MAIN_PROGRAM
 
