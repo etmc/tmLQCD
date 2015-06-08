@@ -1,6 +1,8 @@
 /***********************************************************************
  *
- * Copyright (C) 2008 Carsten Urbach
+ * Copyright (C) 2009 Florian Burger
+ *
+ * Adapted from online_measurement.h by Florian Burger 2009/12/16
  *
  * This file is part of tmLQCD.
  *
@@ -18,9 +20,11 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _ONLINE_MEASUREMENT_H
-#define _ONLINE_MEASUREMENT_H
+#ifndef _PION_NORM_H
+#define _PION_NORM_H
 
-void online_measurement(const int traj, const int t0, const int ieo);
+void pion_norm_measurement(const int traj, const int id, const int ieo);
 
 #endif
+
+

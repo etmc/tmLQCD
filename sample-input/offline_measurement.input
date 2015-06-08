@@ -1,0 +1,51 @@
+# example input file for offline measurements using "offline_measurement"
+# requires 2 8^4 gauge configuration conf.0000 and conf.0002
+
+L=8
+T=8
+
+DebugLevel = 5
+ompnumthreads=4
+
+InitialStoreCounter = 0
+Measurements = 2
+# measurements will be carried out in nsave steps
+# e.g. for conf.0000 and conf.0002 in this case 
+nsave=2
+2kappamu = 0.05
+kappa = 0.177
+BCAngleT = 1
+GaugeConfigInputFile = conf
+UseEvenOdd = yes
+
+# the correlators measurement requires ONE operator to be defined
+# if multiple operators are defined, only the first one is used!
+BeginMeasurement CORRELATORS
+  Frequency = 1 
+EndMeasurement
+
+BeginMeasurement POLYAKOVLOOP
+  Frequency = 1
+EndMeasurement
+
+BeginMeasurement ORIENTEDPLAQUETTES
+  Frequency = 1
+EndMeasurement
+
+# requirements are the same as for the correlators measurement
+BeginMeasurement PIONNORM
+  Frequency = 1
+EndMeasurement
+
+# note: setting the solver to CGMMS will result in the CGMMS inversion taking place
+# because the solver is not properly decoupled form the rest of the code
+BeginOperator TMWILSON
+  2kappaMu = 0.05
+  kappa = 0.177
+  UseEvenOdd = yes
+  Solver = CG
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 1000
+  AddDownPropagator = no
+EndOperator
+
