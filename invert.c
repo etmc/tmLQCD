@@ -52,6 +52,7 @@
 #include "xchange/xchange.h"
 #endif
 #include <io/utils.h>
+#include "source_generation.h"
 #include "read_input.h"
 #include "mpi_init.h"
 #include "sighandler.h"

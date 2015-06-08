@@ -100,8 +100,6 @@ int main(int argc,char *argv[]) {
   /* Do we want to perform reversibility checks */
   /* See also return_check_flag in read_input.h */
   int return_check = 0;
-  /* For getopt */
-  int c;
 
   paramsXlfInfo *xlfInfo;
 
@@ -455,9 +453,9 @@ int main(int argc,char *argv[]) {
             } else {
               if(g_proc_id==0) {
                 if(read_attempt+1 < 2) {
-                  fprintf(stdout, "# Reread attempt %d out of %d failed, trying again in %d seconds!\n",read_attempt+1,2,2);
+                  fprintf(stdout, "# Reread attempt %d out of %d failed, trying again in %d seconds!\n",read_attempt+1,2, 2);
                 } else {
-                  fprintf(stdout, "$ Reread attept %d out of %d failed, write will be reattempted!\n",read_attempt+1,2,2);
+                  fprintf(stdout, "# Reread attept %d out of %d failed, write will be reattempted!\n",read_attempt+1,2);
                 }
               }
               sleep(2);

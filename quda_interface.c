@@ -89,6 +89,7 @@
 #include "linalg/convert_eo_to_lexic.h"
 #include "solver/solver.h"
 #include "solver/solver_field.h"
+#include "gettime.h"
 #include "quda.h"
 
 
@@ -127,9 +128,10 @@ int commsMap(const int *coords, void *fdata)
 	int n[4] = {coords[3], coords[0], coords[1], coords[2]};
 #endif
 
-	int rank;
-
+	int rank = 0;
+#ifdef MPI
 	MPI_Cart_rank( g_cart_grid, n, &rank );
+#endif
 
 	return rank;
 }
@@ -384,7 +386,7 @@ void _loadGaugeQuda()
 // reorder spinor to QUDA format
 void reorder_spinor_toQuda( double* spinor, QudaPrecision precision, int doublet, double* spinor2 )
 {
-	double startTime = MPI_Wtime();
+	double startTime = gettime();
 
 	if( doublet ) {
 		memcpy( tempSpinor,           spinor,  VOLUME*24*sizeof(double) );
@@ -419,7 +421,7 @@ void reorder_spinor_toQuda( double* spinor, QudaPrecision precision, int doublet
 
 				}
 
-	double endTime = MPI_Wtime();
+	double endTime = gettime();
 	double diffTime = endTime - startTime;
 	if(g_proc_id == 0)
 		printf("# QUDA: time spent in reorder_spinor_toQuda: %f secs\n", diffTime);
@@ -428,7 +430,7 @@ void reorder_spinor_toQuda( double* spinor, QudaPrecision precision, int doublet
 // reorder spinor from QUDA format
 void reorder_spinor_fromQuda( double* spinor, QudaPrecision precision, int doublet, double* spinor2 )
 {
-	double startTime = MPI_Wtime();
+	double startTime = gettime();
 
 	if( doublet ) {
 		memcpy( tempSpinor, spinor, 2*VOLUME*24*sizeof(double) );
@@ -461,7 +463,7 @@ void reorder_spinor_fromQuda( double* spinor, QudaPrecision precision, int doubl
 					}
 				}
 
-	double endTime = MPI_Wtime();
+	double endTime = gettime();
 	double diffTime = endTime - startTime;
 	if(g_proc_id == 0)
 		printf("# QUDA: time spent in reorder_spinor_fromQuda: %f secs\n", diffTime);
