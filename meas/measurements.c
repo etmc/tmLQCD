@@ -29,10 +29,12 @@
 #include "global.h"
 #include "default_input_values.h"
 #include "read_input.h"
+
 #include "pion_norm.h"
-#include "online_measurement.h"
+#include "correlators.h"
 #include "polyakov_loop.h"
-#include "measure_oriented_plaquettes.h"
+#include "oriented_plaquettes.h"
+#include "gradient_flow.h"
 #include "measurements.h"
 
 measurement measurement_list[max_no_measurements];
@@ -56,12 +58,12 @@ int init_measurements(){
   for(i = 0; i < no_measurements; i++) {
  
     if(measurement_list[i].type == ONLINE) {
-      measurement_list[i].measurefunc = &online_measurement;
+      measurement_list[i].measurefunc = &correlators_measurement;
       measurement_list[i].max_source_slice = g_nproc_t*T;
     }
 
     if(measurement_list[i].type == PIONNORM) {
-      measurement_list[i].measurefunc = &pion_norm;
+      measurement_list[i].measurefunc = &pion_norm_measurement;
       measurement_list[i].max_source_slice = g_nproc_z*LZ;
     }
     
@@ -70,7 +72,11 @@ int init_measurements(){
     }
 
     if(measurement_list[i].type == ORIENTED_PLAQUETTES) {
-      measurement_list[i].measurefunc = oriented_plaquettes_measurement;
+      measurement_list[i].measurefunc = &oriented_plaquettes_measurement;
+    }
+
+    if(measurement_list[i].type == GRADIENT_FLOW) {
+      measurement_list[i].measurefunc = &gradient_flow_measurement;
     }
     
     measurement_list[i].id = i;

@@ -382,21 +382,8 @@ int incr_eigcg(const int N, const int nrhs,  const int nrhs1, spinor * const x, 
     /* ------------------------------------------------------------ */
     /* Adjust nev for eigcg according to available ldh/restart      */
     /* ------------------------------------------------------------ */
-	  
     if (flag == 3) { /* restart with the same rhs, set nev_used = 0 */
       nev_used = 0;
-      /* if convergence seems before next restart do not restart again */
-      if(rel_prec)
-      {
-	       if (cur_res*(restart_eps_sq) < eps_sq*normb*normb) 
-	           restart_eps_sq=0.0;
-      }
-      else
-      {
-	       if (cur_res*(restart_eps_sq) < eps_sq) 
-	          restart_eps_sq=0.0;
-      } /* if(rel_prec) */
-	  
     }
     else
     {    
@@ -405,7 +392,6 @@ int incr_eigcg(const int N, const int nrhs,  const int nrhs1, spinor * const x, 
       if (ldh-ncurEvals < nev)
 	       nev = ldh - ncurEvals;
       nev_used = nev;
-      
     }
 
     /* ------------------------------------------------------------ */

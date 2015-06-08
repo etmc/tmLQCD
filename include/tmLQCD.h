@@ -47,7 +47,7 @@ extern "C"
 		    const int op_id, const int write_prop);
   int tmLQCD_finalise();
 
-  int tmLQCD_get_gauge_field_pointer(double * gf);
+  int tmLQCD_get_gauge_field_pointer(double ** gf);
   int tmLQCD_get_mpi_params(tmLQCD_mpi_params * params);
   int tmLQCD_get_lat_params(tmLQCD_lat_params * params);
   

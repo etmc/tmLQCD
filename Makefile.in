@@ -39,20 +39,19 @@ COMPILE = ${CC} ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
 SMODULES = 
 
 MODULES = read_input gamma measure_gauge_action start \
-	measure_oriented_plaquettes \
-	expo get_staples update_backward_gauge \
+	expo matrix_utils get_staples update_backward_gauge \
 	measure_rectangles get_rectangle_staples  \
 	test/check_geometry test/check_xchange \
 	test/overlaptests \
 	invert_eo invert_doublet_eo update_gauge \
-	polyakov_loop getopt sighandler reweighting_factor \
+	getopt sighandler reweighting_factor \
 	source_generation boundary update_tm ranlxd  \
 	mpi_init deriv_Sb deriv_Sb_D_psi ranlxs \
-	geometry_eo invert_overlap \
+	geometry_eo invert_overlap aligned_malloc \
 	prepare_source chebyshev_polynomial_nd Ptilde_nd  \
 	reweighting_factor_nd rnd_gauge_trafo \
-	online_measurement update_momenta integrator  phmc \
-	little_D block operator measurements pion_norm \
+  update_momenta integrator  phmc \
+	little_D block operator \
 	temporalgauge spinor_fft X_psi P_M_eta \
 	jacobi fatal_error invert_clover_eo gettime @SPI_FILES@ \
 	@QUDA_INTERFACE@
@@ -67,7 +66,8 @@ GPUOBJECTS := $(patsubst $(srcdir)/$(GPUDIR)/%.cu, $(GPUDIR)/%.o, $(GPUSOURCES))
 NOOPTMOD = test/check_xchange test/check_geometry
 
 PROGRAMS = hmc_tm benchmark invert gen_sources  \
-	check_locallity test_lemon hopping_test LapH_ev
+	check_locallity test_lemon hopping_test LapH_ev \
+	offline_measurement
 
 ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES}
 SUBDIRS = ${USESUBDIRS}
@@ -75,7 +75,8 @@ SUBDIRS = ${USESUBDIRS}
 # delete the default suffix rules
 .SUFFIXES:
 
-all: Makefile dep $(SUBDIRS) hmc_tm invert benchmark
+# need to build modules before subdirs!
+all: Makefile dep $(SUBDIRS) hmc_tm invert benchmark offline_measurement
 
 $(SUBDIRS):
 	$(MAKE) --directory=$@

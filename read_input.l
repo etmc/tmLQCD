@@ -57,13 +57,13 @@ EQL {SPC}*={SPC}*
 #include"read_input.h"
 #include"default_input_values.h"
 #include"monomial/monomial.h"
-#include"measurements.h"
+#include"meas/measurements.h"
 #include"integrator.h"
 #include"operator.h"
 #include"phmc.h"
 #include<io/params.h>
 
-inline void rmQuotes(char *str){
+static inline void rmQuotes(char *str){
   char* strsave=str;
 
   while(*str== ' ' || *str == '\t') str++;
@@ -255,6 +255,7 @@ inline void rmQuotes(char *str){
 %x PIONNORMMEAS
 %x PLOOP
 %x ORIENTEDPLAQUETTESMEAS
+%x GRADIENTFLOWMEAS
 
 %x REWEIGH
 %x REWSAMPLES
@@ -1502,6 +1503,10 @@ inline void rmQuotes(char *str){
     meas->type = ORIENTED_PLAQUETTES;
     strcpy(meas->name, "ORIENTEDPLAQUETTES");
   }
+  else if(strcmp(yytext, "GRADIENTFLOW")==0) {
+    meas->type = GRADIENT_FLOW;
+    strcpy(meas->name, "GRADIENTFLOW");
+  }
   else {
     fprintf(stderr, "Unknown measurement type %s in line %d\n", yytext, line_of_file);
     exit(1);
@@ -1522,9 +1527,10 @@ inline void rmQuotes(char *str){
   else if(meas->type == PIONNORM) BEGIN(PIONNORMMEAS);
   else if(meas->type == POLYAKOV) BEGIN(PLOOP);
   else if(meas->type == ORIENTED_PLAQUETTES) BEGIN(ORIENTEDPLAQUETTESMEAS);
+  else if(meas->type == GRADIENT_FLOW) BEGIN(GRADIENTFLOWMEAS);
 }
 
-<ONLINEMEAS,PIONNORMMEAS,PLOOP,ORIENTEDPLAQUETTESMEAS>{
+<ONLINEMEAS,PIONNORMMEAS,PLOOP,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS>{
   ^EndMeasurement{SPC}* {
     if(myverbose) printf("Measurement with id %d parsed in line %d\n\n", meas->id, line_of_file);
     BEGIN(0);
@@ -2043,7 +2049,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{SPC}*\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{SPC}*\n   {
   line_of_file++;
 }
 <*>{SPC}*\n                       {
