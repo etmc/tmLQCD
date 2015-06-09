@@ -81,5 +81,6 @@ typedef struct {
 
 #include "solver/generate_dfl_subspace.h"
 
+#include "solver/sumr.h"
 
 #endif

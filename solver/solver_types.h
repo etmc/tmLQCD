@@ -16,6 +16,8 @@
 #define CGMMS 12
 #define MIXEDCG 13
 #define CGMMSND 14
-#define MIXEDCGMMSND 15
+#define INCREIGCG 15
+#define MIXEDCGMMSND 16
+#define SUMR 17
 
 #endif

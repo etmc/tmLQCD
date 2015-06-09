@@ -878,7 +878,7 @@ static inline void rmQuotes(char *str){
     BEGIN(name_caller);
   }
   increigcg {
-    optr->solver = 15;
+    optr->solver = INCREIGCG;
     if(myverbose) printf("  Solver set to INCR-EIG-CG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
@@ -888,27 +888,22 @@ static inline void rmQuotes(char *str){
 
 <CSWSOLVER>{
   increigcg {
-    optr->solver = 15;
+    optr->solver = INCREIGCG;
     if(myverbose) printf("  Solver set to INCR-EIG-CG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
-
 }
-
-
-
-
 
 
 <OVSOLVER>{
   sumr {
-    optr->solver = 13;
-    if(myverbose) printf("  Solver set to SUMR line %d operator %d\n", line_of_file, current_operator);
+    optr->solver = SUMR;
+    if(myverbose) printf("  Solver set to SUMR in line %d operator %d\n", line_of_file, current_operator);
     BEGIN(OVERLAPOP);
   }
   cg {
-    optr->solver = 1;
-    if(myverbose) printf("  Solver set to SUMR line %d operator %d\n", line_of_file, current_operator);
+    optr->solver = CG;
+    if(myverbose) printf("  Solver set to CG in line %d operator %d\n", line_of_file, current_operator);
     BEGIN(OVERLAPOP);
   }
 }
