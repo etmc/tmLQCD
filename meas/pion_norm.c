@@ -34,19 +34,21 @@
 #include "source_generation.h"
 #include "invert_eo.h"
 #include "solver/solver.h"
+#include "solver/solver_params.h"
 #include "geometry_eo.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "measurements.h"
 #include "pion_norm.h"
 #include "gettime.h"
 
-void pion_norm(const int traj, const int id, const int ieo) {
+void pion_norm_measurement(const int traj, const int id, const int ieo) {
   int i, j, z, zz, z0;
   double *Cpp;
   double res = 0.;
   double pionnorm;
   double atime, etime;
   float tmp;
+  solver_params_t tmp_solver_params;
 #ifdef _USE_MPI
   double mpi_res = 0.;
 #endif
@@ -85,7 +87,7 @@ void pion_norm(const int traj, const int id, const int ieo) {
   /* invert on the stochastic source */
   invert_eo(g_spinor_field[2], g_spinor_field[3], 
             g_spinor_field[0], g_spinor_field[1],
-            1.e-14, measurement_list[id].max_iter, CG, 1, 0, ieo, 0, NULL, -1);
+            1.e-14, measurement_list[id].max_iter, CG, 1, 0, ieo, 0, NULL,tmp_solver_params, -1);
 
   /* now we bring it to normal format */
   /* here we use implicitly DUM_MATRIX and DUM_MATRIX+1 */

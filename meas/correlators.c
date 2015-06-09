@@ -36,7 +36,7 @@
 #include "geometry_eo.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "measurements.h"
-#include "online_measurement.h"
+#include "correlators.h"
 #include "gettime.h"
 
 
@@ -53,7 +53,7 @@
  *
  ******************************************************/
 
-void online_measurement(const int traj, const int id, const int ieo) {
+void correlators_measurement(const int traj, const int id, const int ieo) {
   int i, j, t, tt, t0;
   double *Cpp = NULL, *Cpa = NULL, *Cp4 = NULL;
   double res = 0., respa = 0., resp4 = 0.;
@@ -88,7 +88,7 @@ void online_measurement(const int traj, const int id, const int ieo) {
   if(optr->type != TMWILSON && optr->type != WILSON && optr->type != CLOVER) {
     if(g_proc_id == 0) {
       fprintf(stderr, "Warning! correlator online measurement currently only implemented for TMWILSON, WILSON and CLOVER\n");
-      fprintf(stderr, "Cannot perform online measurement!\n");
+      fprintf(stderr, "Cannot perform correlator online measurement!\n");
     }
     return;
   }

@@ -20,6 +20,7 @@
 #ifndef _SOLVER_H
 #define _SOLVER_H
 
+
 #include"solver/solver_types.h"
 
 #include"solver/matrix_mult_typedef.h"
@@ -62,6 +63,7 @@ typedef struct {
 #include"solver/pcg_her.h"
 #include"solver/mr.h"
 #include"solver/gcr.h"
+#include"solver/incr_eigcg.h"
 #include"solver/eigenvalues.h"
 #include"solver/cg_mms_tm.h"
 #include"solver/mixed_cg_her.h"

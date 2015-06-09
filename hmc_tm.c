@@ -23,10 +23,7 @@
  * Author: Carsten Urbach
  *         urbach@physik.fu-berlin.de
  *
- * Modified by Jenifer Gonzalez Lopez for the Schroedinger Functional
- *
  *******************************************************************************/
-#define MAIN_PROGRAM
 #include "lime.h"
 #if HAVE_CONFIG_H
 #include<config.h>
@@ -70,7 +67,7 @@
 #include "monomial/monomial.h"
 #include "integrator.h"
 #include "sighandler.h"
-#include "measurements.h"
+#include "meas/measurements.h"
 
 #ifdef HAVE_GPU
 #include "GPU/cudadefs.h"

@@ -25,7 +25,6 @@
 *         urbach@physik.fu-berlin.de
 *
 *******************************************************************************/
-#define MAIN_PROGRAM
 
 #include "lime.h"
 #ifdef HAVE_CONFIG_H

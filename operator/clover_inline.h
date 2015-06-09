@@ -19,7 +19,7 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-/*definitions needed for the functions sw_trace(int ieo) and sw_trace(int ieo)*/
+/*definitions needed for the functions sw_trace(int ieo) and sw_trace_nd(int ieo)*/
 static inline void populate_6x6_matrix(_Complex double a[6][6], const su3 * const C, const int row, const int col) {
   a[0+row][0+col] = C->c00;
   a[0+row][1+col] = C->c01;
@@ -46,11 +46,17 @@ static inline void get_3x3_block_matrix(su3 * const C, _Complex double a[6][6], 
   return;
 }
 
-// This function computes the trace-log part of the clover term
-// in case of even/odd preconditioning
-//
-// it is expected that sw_term is called beforehand such that
-// the array sw is populated properly
+static inline void six_mul_six(_Complex double c[6][6], _Complex double a[6][6], _Complex double b[6][6]) {
+  for(unsigned int i = 0; i < 6; ++i) {
+    for(unsigned int j = 0; j < 6; ++j) {
+      c[i][j] = 0;
+      for(unsigned int k = 0; k < 6; ++k) {
+        c[i][j] += a[i][k] * b[k][j];
+      }
+    }
+  }
+  return;
+}
 
 static inline void add_tm(_Complex double a[6][6], const double mu) {
   for(int i = 0; i < 6; i++) {

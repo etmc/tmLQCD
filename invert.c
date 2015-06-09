@@ -24,8 +24,6 @@
  *
  *******************************************************************************/
 
-#define MAIN_PROGRAM
-
 #include"lime.h"
 #ifdef HAVE_CONFIG_H
 # include<config.h>
@@ -84,6 +82,7 @@
 #include "operator/tm_operators.h"
 #include "operator/Dov_psi.h"
 #include "solver/spectral_proj.h"
+#include "meas/measurements.h"
 
 #ifdef HAVE_GPU
 extern void init_mixedsolve_eo(su3** gf, int use_eo);
@@ -266,25 +265,33 @@ int main(int argc, char *argv[])
 
   init_operators();
 
-
-if(usegpu_flag){
-  #ifdef HAVE_GPU 
+  if(usegpu_flag){
+#ifdef HAVE_GPU 
     init_mixedsolve_eo(g_gauge_field, even_odd_flag);
-    #ifdef GPU_DOUBLE
-      /*init double fields w/o momenta*/
-      init_gpu_fields(0, even_odd_flag);
-    #endif
-    #ifdef TEMPORALGAUGE
-      int retval;
-      if((retval=init_temporalgauge(VOLUME, g_gauge_field)) !=0){
-	if(g_proc_id == 0) printf("Error while initializing temporal gauge. Aborting...\n");   
-	exit(200);
-      }
-    #endif
-  #endif 
-}//usegpu_flag
+#ifdef GPU_DOUBLE
+    /*init double fields w/o momenta*/
+    init_gpu_fields(0, even_odd_flag);
+#endif
+#ifdef TEMPORALGAUGE
+    int retval;
+    if((retval=init_temporalgauge(VOLUME, g_gauge_field)) !=0){
+      if(g_proc_id == 0) printf("Error while initializing temporal gauge. Aborting...\n");   
+      exit(200);
+    }
+#endif
+#endif 
+  } //usegpu_flag
  
   
+  /* list and initialize measurements*/
+  if(g_proc_id == 0) {
+    printf("\n");
+    for(int j = 0; j < no_measurements; j++) {
+      printf("# measurement id %d, type = %d\n", j, measurement_list[j].type);
+    }
+  }
+  init_measurements();  
+
   /* this could be maybe moved to init_operators */
 #ifdef _USE_HALFSPINOR
   j = init_dirac_halfspinor();
@@ -348,6 +355,16 @@ if(usegpu_flag){
         printf("# The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
         fflush(stdout);
       }
+    }
+
+    /* if any measurements are defined in the input file, do them here */
+    measurement * meas;
+    for(int imeas = 0; imeas < no_measurements; imeas++){
+      meas = &measurement_list[imeas];
+      if (g_proc_id == 0) {
+        fprintf(stdout, "#\n# Beginning online measurement.\n");
+      }
+      meas->measurefunc(nstore, imeas, even_odd_flag);
     }
 
     if (reweighting_flag == 1) {
@@ -491,6 +508,10 @@ if(usegpu_flag){
           /* 0-3 in case of 1 flavour  */
           /* 0-7 in case of 2 flavours */
           prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location);
+          //randmize initial guess for eigcg if needed-----experimental
+          if( (operator_list[op_id].solver == INCREIGCG) && (operator_list[op_id].solver_params.eigcg_rand_guess_opt) ){ //randomize the initial guess
+              gaussian_volume_source( operator_list[op_id].prop0, operator_list[op_id].prop1,isample,ix,0); //need to check this
+          } 
           operator_list[op_id].inverter(op_id, index_start, 1);
         }
       }
