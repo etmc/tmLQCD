@@ -97,7 +97,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
-#ifdef MPI
+#ifdef USE_MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -199,7 +199,7 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
 
   int info, allelems = v_max*v_max;
   
-#ifdef MPI
+#ifdef USE_MPI
   parallel=1;
 #else
   parallel=0;

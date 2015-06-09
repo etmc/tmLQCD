@@ -164,7 +164,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   /* the random number is only taken at node zero and then distributed to 
      the other sites */
   ranlxd(yy,1);
-#ifdef MPI
+#ifdef USE_MPI
   MPI_Bcast(&yy[0], 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
 

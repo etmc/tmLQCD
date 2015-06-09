@@ -379,7 +379,7 @@ for (k = 0; k < k_max; k++) {
 }
 
        while(sdt < 30.) {
-#ifdef MPI
+#ifdef USE_MPI
       MPI_Barrier(MPI_COMM_WORLD);
 #endif
       t1 = gettime();
@@ -400,13 +400,13 @@ for (k = 0; k < k_max; k++) {
       }
       t2 = gettime();
       dt = t2-t1;
-#ifdef MPI
+#ifdef USE_MPI
       MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
       sdt = dt;
 #endif
       qdt=dt*dt;
-#ifdef MPI
+#ifdef USE_MPI
       MPI_Allreduce (&qdt, &sqdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
       sqdt = qdt;
@@ -431,7 +431,7 @@ for (k = 0; k < k_max; k++) {
       fflush(stdout);
     }
     
- #ifdef MPI
+ #ifdef USE_MPI
     /* isolated computation */
     t1 = gettime();
     antioptaway=0.0;

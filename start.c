@@ -856,7 +856,7 @@ void start_ranlux(int level, int seed)
 
    if(loc_seed == 0) loc_seed++;
 
-   #ifdef MPI
+   #ifdef USE_MPI
    unsigned int * seeds = calloc(g_nproc,sizeof(unsigned int));
    if(seeds == NULL) fatal_error("Memory allocation for seeds buffer failed!","start_ranlux");  
    MPI_Gather(&loc_seed,1,MPI_UNSIGNED,seeds,1,MPI_UNSIGNED,0,MPI_COMM_WORLD);
