@@ -291,7 +291,11 @@ void _initQuda() {
   }
 
   // initialize the QUDA library
-  initQuda(-1);
+#ifdef MPI
+  initQuda(-1); //sets device numbers automatically
+#else
+  initQuda(0);  //scalar build: use device 0
+#endif
   quda_initialized = 1;
 }
 

@@ -46,6 +46,7 @@ CFLAGS="-O3 -std=c99" CXXFLAGS="-O3 -std=c++0x" \
 \end{verbatim}
 where {\ttfamily \$CUDADIR} and {\ttfamily \$MPI\_PATH} have to be set appropriately.
 {\ttfamily \$QUDADIR} is your choice for the installation directory of QUDA.
+Note that if you want to use QUDA in a scalar build of tmLQCD, you should remove the lines {\ttfamily --enable-multi-gpu} and {\ttfamily --with-mpi=\$MPI\_PATH} in the configuration (and probably you want to replace the MPI compilers).
 In order to profit from QUDA's autotuning functionality, set the environment variable {\ttfamily QUDA\_RESOURCE\_PATH} to a directory of your choice, e.g., add
 \begin{verbatim}
 export QUDA_RESOURCE_PATH=${HOME}/quda_resources/
