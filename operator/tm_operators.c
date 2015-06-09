@@ -98,6 +98,7 @@ void tm_sub_H_eo_gamma5(spinor* const l, spinor * const p, spinor * const k,
 
 /* external functions */
 
+/*full operator acting on the even and odd parts of a spinor*/
 void M_full(spinor * const Even_new, spinor * const Odd_new, 
 	    spinor * const Even, spinor * const Odd) {
   /* Even sites */
@@ -429,6 +430,13 @@ void Q_minus_psi(spinor * const l, spinor * const k)
   gamma5(l, l, VOLUME);
 }
 
+void M_minus_psi(spinor * const l, spinor * const k)
+{
+  g_mu = -g_mu;
+  D_psi(l, k);
+  g_mu = -g_mu;
+}
+
 /* This is the version for the gpu (Florian Burger)*/
 void Q_minus_psi_gpu(spinor * const l, spinor * const k)
 {
@@ -610,6 +618,46 @@ void assign_mul_one_pm_imu_inv(spinor * const l, spinor * const k, const double 
 #endif
 }
 
+void Mee_inv_psi(spinor * const l, spinor * const k, const double mu){
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+  _Complex double z,w;
+  int ix;
+  //double sign=-1.; 
+  spinor *r, *s;
+  //double nrm = 1./(1.+g_mu*g_mu);
+  double nrm = 1./(1.+mu*mu);
+
+  //if(_sign < 0.){
+  //  sign = 1.; 
+  //}
+
+  //z = nrm + (sign * nrm * g_mu) * I;
+  z = nrm - (nrm * mu) * I;
+  w = conj(z);
+
+  /************ loop over all lattice sites ************/
+#ifdef OMP
+#pragma omp for
+#endif
+  //for(ix = 0; ix < N; ix++){
+  for(ix = 0; ix < VOLUME/2; ix++){
+    r=k+ix;
+    s=l+ix;
+    /* Multiply the spinorfield with the inverse of 1+imu\gamma_5 */
+    _complex_times_vector(s->s0, z, r->s0);
+    _complex_times_vector(s->s1, z, r->s1);
+    _complex_times_vector(s->s2, w, r->s2);
+    _complex_times_vector(s->s3, w, r->s3);
+  }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+}
+
 void mul_one_pm_imu(spinor * const l, const double _sign){
 #ifdef OMP
 #pragma omp parallel
@@ -704,6 +752,65 @@ void assign_mul_one_pm_imu(spinor * const l, spinor * const k, const double _sig
   } /* OpenMP closing brace */
 #endif
 }
+
+
+void Mee_psi(spinor * const l, spinor * const k, const double mu){
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+  _Complex double z,w;
+  int ix;
+  //double sign = 1.; 
+  spinor *r, *s;
+
+  //if(_sign < 0.){
+  //  sign = -1.; 
+  //}
+
+  //z = 1. + (sign * g_mu) * I;
+  z = 1. + mu * I;
+  w = conj(z);
+
+  /************ loop over all lattice sites ************/
+#ifdef OMP
+#pragma omp for
+#endif
+  for(ix = 0; ix < VOLUME/2; ix++){
+    s=l+ix;
+    r=k+ix;
+
+    /* Multiply the spinorfield with of 1+imu\gamma_5 */
+#if ( defined SSE2 || defined SSE3 )
+    _prefetch_spinor((r+predist));
+    _prefetch_spinor((s+predist));
+    _sse_load_up(r->s0);
+    _sse_vector_cmplx_mul(z);
+    _sse_store_nt_up(s->s0);
+    _sse_load_up(r->s1);
+    _sse_vector_cmplx_mul_two();
+    _sse_store_nt_up(s->s1);
+    _sse_load_up(r->s2);
+    _sse_vector_cmplx_mul(w);
+    _sse_store_nt_up(s->s2);
+    _sse_load_up(r->s3);
+    _sse_vector_cmplx_mul_two();
+    _sse_store_nt_up(s->s3);
+#else
+    _complex_times_vector(s->s0, z, r->s0);
+    _complex_times_vector(s->s1, z, r->s1);
+    _complex_times_vector(s->s2, w, r->s2);
+    _complex_times_vector(s->s3, w, r->s3);
+#endif
+  }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+}
+
+
+
+
 
 void mul_one_sub_mul_gamma5(spinor * const l, spinor * const k, 
 				   spinor * const j){

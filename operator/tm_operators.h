@@ -42,6 +42,9 @@ void H_eo_tm_inv_psi(spinor * const l, spinor * const k, const int ieo, const do
 void mul_one_pm_imu_inv(spinor * const l, const double _sign, const int N);
 void assign_mul_one_pm_imu_inv(spinor * const l, spinor * const k, const double _sign, const int N);
 void assign_mul_one_pm_imu(spinor * const l, spinor * const k, const double _sign, const int N);
+void Mee_inv_psi(spinor * const l, spinor * const k, const double mu);
+void assign_mul_one_pm_imu(spinor * const l, spinor * const k, const double _sign, const int N);
+void Mee_psi(spinor * const l, spinor * const k, const double mu);
 void mul_one_pm_imu(spinor * const l, const double _sign);
 void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k,
 			    spinor * const j, const double _sign, const int N);
@@ -60,6 +63,7 @@ void Q_pm_psi_prec(spinor * const l, spinor * const k);
 void Q_pm_psi_gpu(spinor * const l, spinor * const k);
 void Q_pm_psi2(spinor * const l, spinor * const k);
 void Q_minus_psi(spinor * const l, spinor * const k);
+void M_minus_psi(spinor * const l, spinor * const k);
 void Q_minus_psi_gpu(spinor * const l, spinor * const k);
 void Q_plus_psi(spinor * const l, spinor * const k);
 

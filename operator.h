@@ -95,15 +95,34 @@ typedef struct {
 
   /* chebyshef coefficients for the overlap */
   double * coefs;
+
+ 
   /* various versions of the Dirac operator */
-  void (*applyM) (spinor * const, spinor * const);
-  void (*applyQ) (spinor * const, spinor * const);
-  /* with even/odd */
-  void (*applyQp) (spinor * const, spinor * const);
-  void (*applyQm) (spinor * const, spinor * const);
+  /* ---------------------------------------*/
+  //even-even part of the even-odd operator 
+  void (*applyMee) (spinor * const, spinor * const, double const);
+  //inverse of the even-even part of the even-odd operator 
+  void (*applyMeeInv) (spinor * const, spinor * const, double const);
+  //full operator M acting on a spinor given as even and odd parts separately
+  void (*applyM) (spinor * const, spinor * const, spinor * const, spinor * const); 
+  //full operator Q=gamma5*M on a spinor given as even and odd parts separately
+  void (*applyQ) (spinor * const, spinor * const, spinor * const, spinor * const); 
+  //either: the full operator Q^+ on lexiographic spinor 
+  //or    : eo-preconditioned Q^+ on odd part of an eo ordered spinor
+  void (*applyQp) (spinor * const, spinor * const); 
+  //either : the full operator Q^- on lexiographic spinor 
+  //or     : eo-preconditioned Q^- on odd part of an eo ordered spinor
+  void (*applyQm) (spinor * const, spinor * const); 
+  //either: the full operator Q^+*Q^- on lexiographic spinor 
+  //or    : eo-preconditioned Q^+*Q^- on odd part of an eo ordered spinor
   void (*applyQsq) (spinor * const, spinor * const);
-  void (*applyMp) (spinor * const, spinor * const);
-  void (*applyMm) (spinor * const, spinor * const);
+  //either: the full operator M^+ on lexiographic spinor 
+  //or    : eo-preconditioned M^+ on odd part of an eo ordered spinor
+  void (*applyMp) (spinor * const, spinor * const); 
+  //either: the full operator M^- on lexiographic spinor 
+  //or    : eo-preconditioned M^- on odd part of an eo ordered spinor
+  void (*applyMm) (spinor * const, spinor * const); 
+  //EO preconditoned Hermitian operator for the non-degenerate doublet (more explanantion needed here).
   void (*applyDbQsq) (spinor * const, spinor * const, spinor * const, spinor * const);
   /* the generic invert function */
   void (*inverter) (const int op_id, const int index_start, const int write_prop);

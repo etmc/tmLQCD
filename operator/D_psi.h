@@ -28,6 +28,11 @@ void D_psi_prec(spinor * const P, spinor * const Q);
 void Block_D_psi(block * blk, spinor * const rr, spinor * const s);
 void Block_H_psi(block * blk, spinor * const rr, spinor * const s, const int eo);
 
+/* version with clover term*/
+void Dsw_psi(spinor * const P, spinor * const Q);
+void Dsw_psi_prec(spinor * const P, spinor * const Q);
+void Block_Dsw_psi(block * blk, spinor * const rr, spinor * const s);
+
 void boundary_D_0(spinor * const r, spinor * const s, su3 *u);
 void boundary_D_1(spinor * const r, spinor * const s, su3 *u);
 void boundary_D_2(spinor * const r, spinor * const s, su3 *u);
