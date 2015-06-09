@@ -232,9 +232,21 @@
 
 #else
 
+#ifdef _prefetch_spinor
+# undef _prefetch_spinor
+#endif
 #define _prefetch_spinor(s)
+#ifdef _prefetch_halfspinor
+# undef _prefetch_halfspinor
+#endif
 #define _prefetch_halfspinor(hs)
+#ifdef _prefetch_spinor_32
+# undef _prefetch_spinor_32
+#endif
 #define _prefetch_spinor_32(s)
+#ifdef _prefetch_su3_32
+# undef _prefetch_su3_32
+#endif
 #define _prefetch_su3_32(U)
 
 
