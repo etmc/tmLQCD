@@ -586,6 +586,7 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
   convert_lexic_to_eo(Even_new, Odd_new, solver_field[1]);
 
   finalize_solver(solver_field, nr_sf);
+  freeGaugeQuda();
 
   if(iteration >= max_iter)
     return(-1);
@@ -701,6 +702,7 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   convert_lexic_to_eo(Even_new_c, Odd_new_c, solver_field[3]);
 
   finalize_solver(solver_field, nr_sf);
+  freeGaugeQuda();
 
   if(iteration >= max_iter)
     return(-1);
