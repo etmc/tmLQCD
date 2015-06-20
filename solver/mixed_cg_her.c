@@ -94,55 +94,20 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
 
 
   squarenorm_d = square_norm(Q, N, 1);
-  //printf("sqarenorm_d = %f\n", squarenorm_d);
   sourcesquarenorm = squarenorm_d;
   sqnrm_d = squarenorm_d;
-  squarenorm_d = square_norm(P, N, 1);
  
-  //printf("sqarenorm_d = %f\n", squarenorm_d);
- 
+
   delta = solver_field[0];
   y = solver_field[1];
   xhigh = solver_field[2];
   x = solver_field32[3];   
   assign(delta, Q, N);
   
-  /*
-  if(g_debug_level > 3){
-//printf("In mixed_cg solver...\n");
-//printf("volume is: %d\n",N); 
-   spinor32 * help_low = solver_field32[0];
-   spinor * help_high = solver_field[0];
-   assign_to_32(help_low, Q, N);
-   assign(help_high, Q, N);
-   printf("square_norm(Q_high) = %e\n", square_norm(help_high,N,1));
-   printf("square_norm(Q_low) = %e\n", square_norm_32(help_low,N,1));  
-   f32(solver_field32[1], help_low);
-   f(solver_field[1], help_high);
-   
-   assign_to_64(solver_field[2], solver_field32[1], N);
-   diff(solver_field[3], solver_field[1], solver_field[2], N);
-   sqnrm = square_norm(solver_field[3], N, 1);
-   printf("Operator 32 test: (square_norm) / (spinor component) = %.8e\n", sqnrm/24.0/VOLUME);
-   exit(1);
-  }
+  //set solution to zero
+  zero_spinor_field(P, N);
   
-  
-  
-  if(squarenorm_d > 1.e-7) { 
-    // if a starting solution vector different from zero is chosen 
-    printf("We have a non-zero starting solution -> using it\n");
-    f(y, P);
-    diff(delta, Q, y, N);
-    sqnrm_d = square_norm(delta, N, 1);
-    printf("sqnrm_d = %f\n", sqnrm_d);
-    if(((sqnrm_d <= eps_sq) && (rel_prec == 0)) || ((sqnrm_d <= eps_sq*sourcesquarenorm) && (rel_prec == 1))) {
-      finalize_solver(solver_field, nr_sf);
-      finalize_solver32(solver_field32, nr_sf32);      
-      return(0);
-    }
-  }
-  */  
+
   atime = gettime();
   for(i = 0; i < N_outer; i++) {
 

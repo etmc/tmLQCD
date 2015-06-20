@@ -111,6 +111,10 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
 		      rel_prec, max_iter, solver_params.eigcg_nev, solver_params.eigcg_vmax);
     Qm(Odd_new, Odd_new);
   }
+  else if(solver_flag == MIXEDCG){
+    iter = mixed_cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, 
+			  VOLUME/2, &Qsw_pm_psi, &Qsw_pm_psi_32);
+  }
   else {
     if(g_proc_id == 0) {printf("# This solver is not available for this operator. Exisiting!\n"); fflush(stdout);}
     return 0;

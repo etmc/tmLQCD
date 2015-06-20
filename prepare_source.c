@@ -174,7 +174,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
     /* If the solver is _not_ CG we might read in */
     /* here some better guess                     */
     /* This also works for re-iteration           */
-    if (optr->solver != CG && optr->solver != PCG) {
+    if (optr->solver != CG && optr->solver != PCG && optr->solver != MIXEDCG) {
       ifs = fopen(source_filename, "r");
       if (ifs != NULL) {
         if (g_cart_id == 0) {
