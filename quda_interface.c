@@ -149,7 +149,7 @@ void _initQuda() {
   gauge_param = newQudaGaugeParam();
   inv_param = newQudaInvertParam();
 
-  // *** QUDA parameters begin here (may be modified)
+  // *** QUDA parameters begin here (sloppy prec. will be adjusted in invert)
   QudaPrecision cpu_prec  = QUDA_DOUBLE_PRECISION;
   QudaPrecision cuda_prec = QUDA_DOUBLE_PRECISION;
   QudaPrecision cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
@@ -462,7 +462,8 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
                    spinor * const Even, spinor * const Odd,
                    const double precision, const int max_iter,
                    const int solver_flag, const int rel_prec,
-                   const int even_odd_flag, solver_params_t solver_params) {
+                   const int even_odd_flag, solver_params_t solver_params,
+                   const int sloppy_precision) {
   _loadGaugeQuda();
 
   spinor ** solver_field = NULL;
@@ -481,6 +482,21 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
     inv_param.residual_type = QUDA_L2_ABSOLUTE_RESIDUAL;
 
   inv_param.kappa = g_kappa;
+
+  // choose sloppy prec.
+  if( sloppy_precision==1 ) {
+    gauge_param.cuda_prec_sloppy = QUDA_DOUBLE_PRECISION;
+    if(g_proc_id == 0) printf("# QUDA: Using double prec. as sloppy!\n");
+  }
+  else if( sloppy_precision==2 ) {
+    gauge_param.cuda_prec_sloppy = QUDA_HALF_PRECISION;
+    if(g_proc_id == 0) printf("# QUDA: Using single prec. as sloppy!\n");
+  }
+  else {
+    gauge_param.cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
+    if(g_proc_id == 0) printf("# QUDA: Using half prec. as sloppy!\n");
+  }
+
 
   // choose dslash type
   if( g_mu != 0.0 && g_c_sw > 0.0 ) {
@@ -599,7 +615,8 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
                            spinor * const Even_s, spinor * const Odd_s,
                            spinor * const Even_c, spinor * const Odd_c,
                            const double precision, const int max_iter,
-                           const int solver_flag, const int rel_prec, const int even_odd_flag) {
+                           const int solver_flag, const int rel_prec, const int even_odd_flag,
+                           const int sloppy_precision) {
   _loadGaugeQuda();
 
   spinor ** solver_field = NULL;
@@ -625,6 +642,20 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   // IMPORTANT: use opposite TM mu-flavor since gamma5 -> -gamma5
   inv_param.mu      = -g_mubar /2./g_kappa;
   inv_param.epsilon =  g_epsbar/2./g_kappa;
+
+  // choose sloppy prec.
+  if( sloppy_precision==1 ) {
+    gauge_param.cuda_prec_sloppy = QUDA_DOUBLE_PRECISION;
+    if(g_proc_id == 0) printf("# QUDA: Using double prec. as sloppy!\n");
+  }
+  else if( sloppy_precision==2 ) {
+    gauge_param.cuda_prec_sloppy = QUDA_HALF_PRECISION;
+    if(g_proc_id == 0) printf("# QUDA: Using single prec. as sloppy!\n");
+  }
+  else {
+    gauge_param.cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
+    if(g_proc_id == 0) printf("# QUDA: Using half prec. as sloppy!\n");
+  }
 
   // choose dslash type
   if( g_c_sw > 0.0 ) {

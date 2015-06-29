@@ -1897,11 +1897,27 @@ static inline void rmQuotes(char *str){
 }
 <SLOPPYPREC>yes {
   g_sloppy_precision_flag = 1;
-  if(myverbose!=0) printf("Use sloppy precision if available!\n");
+  if(myverbose!=0) printf("Use sloppy precision (single precision) if available!\n");
 }
 <SLOPPYPREC>no {
   g_sloppy_precision_flag = 0;
   if(myverbose!=0) printf("Don't use sloppy precision!\n");
+}
+<SLOPPYPREC>double {
+  g_sloppy_precision_flag = 0;
+  if(myverbose!=0) printf("Don't use sloppy precision!\n");
+}
+<SLOPPYPREC>single {
+  g_sloppy_precision_flag = 1;
+  if(myverbose!=0) printf("Use sloppy precision (single precision) if available!\n");
+}
+<SLOPPYPREC>float {
+  g_sloppy_precision_flag = 1;
+  if(myverbose!=0) printf("Use sloppy precision (single precision) if available!\n");
+}
+<SLOPPYPREC>half {
+  g_sloppy_precision_flag = 2;
+  if(myverbose!=0) printf("Use sloppy precision (half precision) if available!\n");
 }
 <USESTOUT>yes {
   use_stout_flag = 1;

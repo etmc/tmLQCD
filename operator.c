@@ -283,7 +283,8 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
     optr->iterations = invert_eo_quda(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
                                       optr->eps_sq, optr->maxiter,
                                       optr->solver, optr->rel_prec,
-                                      optr->even_odd_flag, optr->solver_params);
+                                      optr->even_odd_flag, optr->solver_params,
+                                      optr->sloppy_precision);
 #endif
   }
   else {
@@ -305,7 +306,8 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
     optr->iterations = invert_eo_quda(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
                                       optr->eps_sq, optr->maxiter,
                                       optr->solver, optr->rel_prec,
-                                      optr->even_odd_flag, optr->solver_params);
+                                      optr->even_odd_flag, optr->solver_params,
+                                      optr->sloppy_precision);
 #endif
   }
   else {
@@ -360,7 +362,8 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
         optr->iterations = invert_doublet_eo_quda( optr->prop0, optr->prop1, optr->prop2, optr->prop3,
                                                    optr->sr0, optr->sr1, optr->sr2, optr->sr3,
                                                    optr->eps_sq, optr->maxiter,
-                                                   optr->solver, optr->rel_prec, optr->even_odd_flag );
+                                                   optr->solver, optr->rel_prec, optr->even_odd_flag,
+                                                   optr->sloppy_precision );
 #endif
       }
       else {
@@ -376,7 +379,8 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
         optr->iterations = invert_doublet_eo_quda( optr->prop0, optr->prop1, optr->prop2, optr->prop3,
                                                    optr->sr0, optr->sr1, optr->sr2, optr->sr3,
                                                    optr->eps_sq, optr->maxiter,
-                                                   optr->solver, optr->rel_prec, optr->even_odd_flag);
+                                                   optr->solver, optr->rel_prec, optr->even_odd_flag,
+                                                   optr->sloppy_precision);
 #endif
       }
       else {
