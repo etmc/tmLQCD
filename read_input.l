@@ -740,6 +740,30 @@ static inline void rmQuotes(char *str){
     if(myverbose) printf("  Do not use Quda inverter line %d operator %d\n", line_of_file, current_operator);
     optr->use_qudainverter = 0;
   }
+  {SPC}*UseSloppyPrecision{EQL}yes {
+    if(myverbose) printf("  Use use sloppy precision (single) in the inverter (if supported by the inverter) line %d operator %d\n", line_of_file, current_operator);
+    optr->sloppy_precision = 1;
+  }
+  {SPC}*UseSloppyPrecision{EQL}float {
+    if(myverbose) printf("  Use use sloppy precision (single) in the inverter (if supported by the inverter) line %d operator %d\n", line_of_file, current_operator);
+    optr->sloppy_precision = 1;
+  }
+  {SPC}*UseSloppyPrecision{EQL}single {
+    if(myverbose) printf("  Use use sloppy precision (single) in the inverter (if supported by the inverter) line %d operator %d\n", line_of_file, current_operator);
+    optr->sloppy_precision = 1;
+  }
+  {SPC}*UseSloppyPrecision{EQL}no {
+    if(myverbose) printf("  Use use sloppy precision (single) in the inverter line %d operator %d\n", line_of_file, current_operator);
+    optr->sloppy_precision = 0;
+  }
+  {SPC}*UseSloppyPrecision{EQL}double {
+    if(myverbose) printf("  Use use sloppy precision (single) in the inverter line %d operator %d\n", line_of_file, current_operator);
+    optr->sloppy_precision = 0;
+  }
+  {SPC}*UseSloppyPrecision{EQL}half {
+    if(myverbose) printf("  Use use sloppy precision (half) in the inverter (if supported by the inverter) line %d operator %d\n", line_of_file, current_operator);
+    optr->sloppy_precision = 2;
+  }
 }
 
 <OVERLAPOP>{
@@ -1897,27 +1921,11 @@ static inline void rmQuotes(char *str){
 }
 <SLOPPYPREC>yes {
   g_sloppy_precision_flag = 1;
-  if(myverbose!=0) printf("Use sloppy precision (single precision) if available!\n");
+  if(myverbose!=0) printf("Use sloppy precision if available!\n");
 }
 <SLOPPYPREC>no {
   g_sloppy_precision_flag = 0;
   if(myverbose!=0) printf("Don't use sloppy precision!\n");
-}
-<SLOPPYPREC>double {
-  g_sloppy_precision_flag = 0;
-  if(myverbose!=0) printf("Don't use sloppy precision!\n");
-}
-<SLOPPYPREC>single {
-  g_sloppy_precision_flag = 1;
-  if(myverbose!=0) printf("Use sloppy precision (single precision) if available!\n");
-}
-<SLOPPYPREC>float {
-  g_sloppy_precision_flag = 1;
-  if(myverbose!=0) printf("Use sloppy precision (single precision) if available!\n");
-}
-<SLOPPYPREC>half {
-  g_sloppy_precision_flag = 2;
-  if(myverbose!=0) printf("Use sloppy precision (half precision) if available!\n");
 }
 <USESTOUT>yes {
   use_stout_flag = 1;
