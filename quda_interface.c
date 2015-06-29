@@ -312,7 +312,7 @@ void _endQuda() {
 void _loadGaugeQuda() {
   if( inv_param.verbosity > QUDA_SILENT )
     if(g_proc_id == 0)
-      printf("\n# QUDA: Called _loadGaugeQuda\n");
+      printf("# QUDA: Called _loadGaugeQuda\n");
 
   _Complex double tmpcplx;
 
@@ -464,7 +464,6 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
                    const int solver_flag, const int rel_prec,
                    const int even_odd_flag, solver_params_t solver_params,
                    const int sloppy_precision) {
-  _loadGaugeQuda();
 
   spinor ** solver_field = NULL;
   const int nr_sf = 2;
@@ -483,20 +482,27 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 
   inv_param.kappa = g_kappa;
 
+
   // choose sloppy prec.
-  if( sloppy_precision==1 ) {
-    gauge_param.cuda_prec_sloppy = QUDA_DOUBLE_PRECISION;
+  QudaPrecision cuda_prec_sloppy;
+  if( sloppy_precision==0 ) {
+    cuda_prec_sloppy = QUDA_DOUBLE_PRECISION;
     if(g_proc_id == 0) printf("# QUDA: Using double prec. as sloppy!\n");
   }
   else if( sloppy_precision==2 ) {
-    gauge_param.cuda_prec_sloppy = QUDA_HALF_PRECISION;
-    if(g_proc_id == 0) printf("# QUDA: Using single prec. as sloppy!\n");
-  }
-  else {
-    gauge_param.cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
+    cuda_prec_sloppy = QUDA_HALF_PRECISION;
     if(g_proc_id == 0) printf("# QUDA: Using half prec. as sloppy!\n");
   }
+  else {
+    cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
+    if(g_proc_id == 0) printf("# QUDA: Using single prec. as sloppy!\n");
+  }
+  gauge_param.cuda_prec_sloppy = cuda_prec_sloppy;
+  inv_param.cuda_prec_sloppy = cuda_prec_sloppy;
+  inv_param.clover_cuda_prec_sloppy = cuda_prec_sloppy;
 
+  // load gauge after setting precision
+   _loadGaugeQuda();
 
   // choose dslash type
   if( g_mu != 0.0 && g_c_sw > 0.0 ) {
@@ -536,8 +542,8 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
     /* Here we invert the hermitean operator squared */
     inv_param.inv_type = QUDA_CG_INVERTER;
     if(g_proc_id == 0) {
-      printf("# QUDA:  Using mixed precision CG!\n");
-      printf("# mu = %f, kappa = %f\n", g_mu/2./g_kappa, g_kappa);
+      printf("# QUDA: Using mixed precision CG!\n");
+      printf("# QUDA: mu = %f, kappa = %f\n", g_mu/2./g_kappa, g_kappa);
       fflush(stdout);
     }
   }
@@ -617,7 +623,6 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
                            const double precision, const int max_iter,
                            const int solver_flag, const int rel_prec, const int even_odd_flag,
                            const int sloppy_precision) {
-  _loadGaugeQuda();
 
   spinor ** solver_field = NULL;
   const int nr_sf = 4;
@@ -643,19 +648,27 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   inv_param.mu      = -g_mubar /2./g_kappa;
   inv_param.epsilon =  g_epsbar/2./g_kappa;
 
+
   // choose sloppy prec.
-  if( sloppy_precision==1 ) {
-    gauge_param.cuda_prec_sloppy = QUDA_DOUBLE_PRECISION;
+  QudaPrecision cuda_prec_sloppy;
+  if( sloppy_precision==0 ) {
+    cuda_prec_sloppy = QUDA_DOUBLE_PRECISION;
     if(g_proc_id == 0) printf("# QUDA: Using double prec. as sloppy!\n");
   }
   else if( sloppy_precision==2 ) {
-    gauge_param.cuda_prec_sloppy = QUDA_HALF_PRECISION;
-    if(g_proc_id == 0) printf("# QUDA: Using single prec. as sloppy!\n");
-  }
-  else {
-    gauge_param.cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
+    cuda_prec_sloppy = QUDA_HALF_PRECISION;
     if(g_proc_id == 0) printf("# QUDA: Using half prec. as sloppy!\n");
   }
+  else {
+    cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
+    if(g_proc_id == 0) printf("# QUDA: Using single prec. as sloppy!\n");
+  }
+  gauge_param.cuda_prec_sloppy = cuda_prec_sloppy;
+  inv_param.cuda_prec_sloppy = cuda_prec_sloppy;
+  inv_param.clover_cuda_prec_sloppy = cuda_prec_sloppy;
+
+  // load gauge after setting precision
+   _loadGaugeQuda();
 
   // choose dslash type
   if( g_c_sw > 0.0 ) {
@@ -680,8 +693,8 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
     /* Here we invert the hermitean operator squared */
     inv_param.inv_type = QUDA_CG_INVERTER;
     if(g_proc_id == 0) {
-      printf("# QUDA:  Using mixed precision CG!\n");
-      printf("# mu = %f, kappa = %f\n", g_mu/2./g_kappa, g_kappa);
+      printf("# QUDA: Using mixed precision CG!\n");
+      printf("# QUDA: mu = %f, kappa = %f\n", g_mu/2./g_kappa, g_kappa);
       fflush(stdout);
     }
   }

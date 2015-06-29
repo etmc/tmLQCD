@@ -764,6 +764,7 @@ static inline void rmQuotes(char *str){
     if(myverbose) printf("  Use use sloppy precision (half) in the inverter (if supported by the inverter) line %d operator %d\n", line_of_file, current_operator);
     optr->sloppy_precision = 2;
   }
+
 }
 
 <OVERLAPOP>{
