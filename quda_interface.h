@@ -91,7 +91,8 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
                    const double precision, const int max_iter,
                    const int solver_flag, const int rel_prec,
                    const int even_odd_flag, solver_params_t solver_params,
-                   const int sloppy_precision);
+                   const int sloppy_precision,
+                   const int compression);
 
 int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
                            spinor * const Even_new_c, spinor * const Odd_new_c,
@@ -99,7 +100,8 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
                            spinor * const Even_c, spinor * const Odd_c,
                            const double precision, const int max_iter,
                            const int solver_flag, const int rel_prec, const int even_odd_flag,
-                           const int sloppy_precision);
+                           const int sloppy_precision,
+                           const int compression);
 
 // apply the TM operator using QUDA
 void M_full_quda(spinor * const Even_new, spinor * const Odd_new,  spinor * const Even, spinor * const Odd);

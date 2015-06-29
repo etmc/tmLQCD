@@ -154,18 +154,7 @@ void _initQuda() {
   QudaPrecision cuda_prec = QUDA_DOUBLE_PRECISION;
   QudaPrecision cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
   QudaPrecision cuda_prec_precondition = QUDA_HALF_PRECISION;
-#if TRIVIAL_BC
-  gauge_param.t_boundary = ( abs(phase_0)>0.0 ? QUDA_ANTI_PERIODIC_T : QUDA_PERIODIC_T );
-  QudaReconstructType link_recon = 12;
-  QudaReconstructType link_recon_sloppy = 12;
-  if( g_debug_level > 0 )
-    if(g_proc_id == 0)
-      printf("\n# QUDA: WARNING using TRIVIAL_BC! This works fine but the residual check on the host (CPU) will fail.\n");
-#else
-  gauge_param.t_boundary = QUDA_PERIODIC_T; // BC will be applied to gaugefield
-  QudaReconstructType link_recon = 18;
-  QudaReconstructType link_recon_sloppy = 18;
-#endif
+
   QudaTune tune = QUDA_TUNE_YES;
 
 
@@ -191,11 +180,11 @@ void _initQuda() {
 
   gauge_param.cpu_prec = cpu_prec;
   gauge_param.cuda_prec = cuda_prec;
-  gauge_param.reconstruct = link_recon;
+  gauge_param.reconstruct = 18;
   gauge_param.cuda_prec_sloppy = cuda_prec_sloppy;
-  gauge_param.reconstruct_sloppy = link_recon_sloppy;
+  gauge_param.reconstruct_sloppy = 18;
   gauge_param.cuda_prec_precondition = cuda_prec_precondition;
-  gauge_param.reconstruct_precondition = link_recon_sloppy;
+  gauge_param.reconstruct_precondition = 18;
   gauge_param.gauge_fix = QUDA_GAUGE_FIXED_NO;
 
   inv_param.dagger = QUDA_DAG_NO;
@@ -309,7 +298,7 @@ void _endQuda() {
 }
 
 
-void _loadGaugeQuda() {
+void _loadGaugeQuda( const int compression ) {
   if( inv_param.verbosity > QUDA_SILENT )
     if(g_proc_id == 0)
       printf("# QUDA: Called _loadGaugeQuda\n");
@@ -344,7 +333,7 @@ void _loadGaugeQuda() {
           memcpy( &(gauge_quda[2][quda_idx]), &(g_gauge_field[tm_idx][3]), 18*gSize);
           memcpy( &(gauge_quda[3][quda_idx]), &(g_gauge_field[tm_idx][0]), 18*gSize);
 
-#if !(TRIVIAL_BC)
+        if( compression == 18 ) {
           // apply boundary conditions
           for( int i=0; i<9; i++ ) {
             tmpcplx = gauge_quda[0][quda_idx+2*i] + I*gauge_quda[0][quda_idx+2*i+1];
@@ -367,7 +356,7 @@ void _loadGaugeQuda() {
             gauge_quda[3][quda_idx+2*i]   = creal(tmpcplx);
             gauge_quda[3][quda_idx+2*i+1] = cimag(tmpcplx);
           }
-#endif
+        }
 
 #endif
         }
@@ -458,30 +447,40 @@ void reorder_spinor_fromQuda( double* spinor, QudaPrecision precision, int doubl
     printf("# QUDA: time spent in reorder_spinor_fromQuda: %f secs\n", diffTime);
 }
 
-int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
-                   spinor * const Even, spinor * const Odd,
-                   const double precision, const int max_iter,
-                   const int solver_flag, const int rel_prec,
-                   const int even_odd_flag, solver_params_t solver_params,
-                   const int sloppy_precision) {
+void set_boundary_conditions( int* compression ) {
+  // we can't have compression and theta-BC
+  if( abs(phase_1)>0.0 || abs(phase_2)>0.0 || abs(phase_3)>0.0 || (abs(phase_0)!=0.0 && abs(phase_0)!=1.0) ) {
+    if( *compression!=18 ) {
+      if(g_proc_id == 0) {
+          printf("\n# QUDA: WARNING you can't use compression %d with boundary conditions for fermion fields (t,x,y,z) * pi: (%d,%d,%d,%d) \n", compression,phase_0,phase_1,phase_2,phase_3);
+          printf("\n# QUDA: disabling compression.\n");
+          *compression=18;
+      }
+    }
+  }
 
-  spinor ** solver_field = NULL;
-  const int nr_sf = 2;
-  init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
+  QudaReconstructType link_recon;
 
-  convert_eo_to_lexic(solver_field[0],  Even, Odd);
-//  convert_eo_to_lexic(solver_field[1], Even_new, Odd_new);
+  if( *compression==18 ) { // theta BC
+    gauge_param.t_boundary = QUDA_PERIODIC_T; // BC will be applied to gaugefield
+    link_recon = 18;
+  }
+  else { // trivial BC
+    gauge_param.t_boundary = ( abs(phase_0)>0.0 ? QUDA_ANTI_PERIODIC_T : QUDA_PERIODIC_T );
+    link_recon = *compression;
+    if( g_debug_level > 0 )
+      if(g_proc_id == 0)
+        printf("\n# QUDA: WARNING using trivial (A)PBC instead of theta-BC! This works fine but the residual check on the host (CPU) will fail.\n");
+  }
 
-  void *spinorIn  = (void*)solver_field[0]; // source
-  void *spinorOut = (void*)solver_field[1]; // solution
+  gauge_param.reconstruct = link_recon;
+  gauge_param.cuda_prec_sloppy = link_recon;
+  gauge_param.reconstruct_sloppy = link_recon;
+  gauge_param.cuda_prec_precondition = link_recon;
+  gauge_param.reconstruct_precondition = link_recon;
+}
 
-  if ( rel_prec )
-    inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
-  else
-    inv_param.residual_type = QUDA_L2_ABSOLUTE_RESIDUAL;
-
-  inv_param.kappa = g_kappa;
-
+void set_sloppy_prec( const int sloppy_precision ) {
 
   // choose sloppy prec.
   QudaPrecision cuda_prec_sloppy;
@@ -500,9 +499,41 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
   gauge_param.cuda_prec_sloppy = cuda_prec_sloppy;
   inv_param.cuda_prec_sloppy = cuda_prec_sloppy;
   inv_param.clover_cuda_prec_sloppy = cuda_prec_sloppy;
+}
+
+int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
+                   spinor * const Even, spinor * const Odd,
+                   const double precision, const int max_iter,
+                   const int solver_flag, const int rel_prec,
+                   const int even_odd_flag, solver_params_t solver_params,
+                   const int sloppy_precision,
+                   int compression) {
+
+  spinor ** solver_field = NULL;
+  const int nr_sf = 2;
+  init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
+
+  convert_eo_to_lexic(solver_field[0],  Even, Odd);
+//  convert_eo_to_lexic(solver_field[1], Even_new, Odd_new);
+
+  void *spinorIn  = (void*)solver_field[0]; // source
+  void *spinorOut = (void*)solver_field[1]; // solution
+
+  if ( rel_prec )
+    inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
+  else
+    inv_param.residual_type = QUDA_L2_ABSOLUTE_RESIDUAL;
+
+  inv_param.kappa = g_kappa;
+
+  // figure out which BC to use (theta, trivial...)
+  set_boundary_conditions(&compression);
+
+  // set the sloppy precision of the mixed prec solver
+  set_sloppy_prec(sloppy_precision);
 
   // load gauge after setting precision
-   _loadGaugeQuda();
+   _loadGaugeQuda(compression);
 
   // choose dslash type
   if( g_mu != 0.0 && g_c_sw > 0.0 ) {
@@ -622,7 +653,8 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
                            spinor * const Even_c, spinor * const Odd_c,
                            const double precision, const int max_iter,
                            const int solver_flag, const int rel_prec, const int even_odd_flag,
-                           const int sloppy_precision) {
+                           const int sloppy_precision,
+                           const int compression) {
 
   spinor ** solver_field = NULL;
   const int nr_sf = 4;
@@ -649,26 +681,14 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   inv_param.epsilon =  g_epsbar/2./g_kappa;
 
 
-  // choose sloppy prec.
-  QudaPrecision cuda_prec_sloppy;
-  if( sloppy_precision==0 ) {
-    cuda_prec_sloppy = QUDA_DOUBLE_PRECISION;
-    if(g_proc_id == 0) printf("# QUDA: Using double prec. as sloppy!\n");
-  }
-  else if( sloppy_precision==2 ) {
-    cuda_prec_sloppy = QUDA_HALF_PRECISION;
-    if(g_proc_id == 0) printf("# QUDA: Using half prec. as sloppy!\n");
-  }
-  else {
-    cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
-    if(g_proc_id == 0) printf("# QUDA: Using single prec. as sloppy!\n");
-  }
-  gauge_param.cuda_prec_sloppy = cuda_prec_sloppy;
-  inv_param.cuda_prec_sloppy = cuda_prec_sloppy;
-  inv_param.clover_cuda_prec_sloppy = cuda_prec_sloppy;
+  // figure out which BC to use (theta, trivial...)
+  set_boundary_conditions(&compression);
+
+  // set the sloppy precision of the mixed prec solver
+  set_sloppy_prec(sloppy_precision);
 
   // load gauge after setting precision
-   _loadGaugeQuda();
+   _loadGaugeQuda(compression);
 
   // choose dslash type
   if( g_c_sw > 0.0 ) {

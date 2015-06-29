@@ -84,6 +84,7 @@ int add_operator(const int type) {
   optr->mu = _default_g_mu;
   optr->c_sw = _default_c_sw;
   optr->sloppy_precision = _default_operator_sloppy_precision_flag;
+  optr->compression_type = _default_compression_type;
   optr->coefs = NULL;
   optr->rel_prec = _default_g_relative_precision_flag;
   optr->eps_sq = _default_solver_precision;
@@ -284,7 +285,8 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
                                       optr->eps_sq, optr->maxiter,
                                       optr->solver, optr->rel_prec,
                                       optr->even_odd_flag, optr->solver_params,
-                                      optr->sloppy_precision);
+                                      optr->sloppy_precision,
+                                      optr->compression_type);
 #endif
   }
   else {
@@ -307,7 +309,8 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
                                       optr->eps_sq, optr->maxiter,
                                       optr->solver, optr->rel_prec,
                                       optr->even_odd_flag, optr->solver_params,
-                                      optr->sloppy_precision);
+                                      optr->sloppy_precision,
+                                      optr->compression_type);
 #endif
   }
   else {
@@ -363,7 +366,8 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
                                                    optr->sr0, optr->sr1, optr->sr2, optr->sr3,
                                                    optr->eps_sq, optr->maxiter,
                                                    optr->solver, optr->rel_prec, optr->even_odd_flag,
-                                                   optr->sloppy_precision );
+                                                   optr->sloppy_precision,
+                                                   optr->compression_type);
 #endif
       }
       else {
@@ -380,7 +384,8 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
                                                    optr->sr0, optr->sr1, optr->sr2, optr->sr3,
                                                    optr->eps_sq, optr->maxiter,
                                                    optr->solver, optr->rel_prec, optr->even_odd_flag,
-                                                   optr->sloppy_precision);
+                                                   optr->sloppy_precision,
+                                                   optr->compression_type);
 #endif
       }
       else {

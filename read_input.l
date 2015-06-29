@@ -318,7 +318,7 @@ static inline void rmQuotes(char *str){
 %x PRECONDITIONING
 
 %x QUDAINVERTER
-
+%x COMPRESSION
 
 
 %%
@@ -390,6 +390,7 @@ static inline void rmQuotes(char *str){
 ^SplittedPropagator{EQL}           BEGIN(PROPSPLIT);
 ^UsePreconditioning{EQL}           BEGIN(PRECONDITIONING);
 ^UseQudaInverter{EQL}              BEGIN(QUDAINVERTER);
+^UseCompression{EQL}               BEGIN(COMPRESSION);
 
 ^BeginMeasurement{SPC}+            BEGIN(INITMEASUREMENT);
 ^ComputeModeNumber{EQL}            BEGIN(COMPUTEMN);
@@ -764,7 +765,18 @@ static inline void rmQuotes(char *str){
     if(myverbose) printf("  Use use sloppy precision (half) in the inverter (if supported by the inverter) line %d operator %d\n", line_of_file, current_operator);
     optr->sloppy_precision = 2;
   }
-
+  {SPC}*UseCompression{EQL}12 {
+    if(myverbose) printf("  Use 12 compression in the inverter (if supported) line %d operator %d\n", line_of_file, current_operator);
+    optr->compression_type = 12;
+  }
+  {SPC}*UseCompression{EQL}8 {
+    if(myverbose) printf("  Use 8 compression in the inverter (if supported) line %d operator %d\n", line_of_file, current_operator);
+    optr->compression_type = 8;
+  }
+  {SPC}*UseCompression{EQL}18 {
+    if(myverbose) printf("  Not using compression in the inverter line %d operator %d\n", line_of_file, current_operator);
+    optr->compression_type = 18;
+  }
 }
 
 <OVERLAPOP>{
