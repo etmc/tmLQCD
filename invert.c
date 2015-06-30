@@ -86,6 +86,9 @@
 #ifdef QUDA
 #  include "quda_interface.h"
 #endif
+#ifdef QPHIX
+#  include "qphix_interface.h"
+#endif
 #include "meas/measurements.h"
 
 extern int nstore;
