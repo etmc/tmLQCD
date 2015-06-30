@@ -196,5 +196,11 @@
 /* Using QUDA GPU */
 #undef QUDA
 
+/* Define to 1 if you have the `qphix' library (-lqphix). */
+#undef HAVE_LIBQPHIX
+
+/* Using QPhiX */
+#undef QPHIX
+
 #endif
 
