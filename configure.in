@@ -361,6 +361,7 @@ AC_SUBST(XLIB)
 AC_SUBST([LEMON_AVAILABLE])
 AC_SUBST(SPI_FILES)
 AC_SUBST(QUDA_INTERFACE)
+AC_SUBST(QPHIX_INTERFACE)
 
 INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${abs_top_builddir}/  -I\${abs_top_srcdir}/ -I${lime_dir}/include/ -I${lemon_dir}/include/"
 DEPFLAGS="$DEPFLAGS"
@@ -935,9 +936,10 @@ AC_ARG_WITH(qphixdir,
               qphix_dir=$withval
               LDFLAGS="$LDFLAGS -L${qphix_dir}/lib -lqphix_solver"
               INCLUDES="$INCLUDES -I${qphix_dir}/include/ -I${qphix_dir}/../../tests/"
+              QPHIX_INTERFACE="qphix_interface"
               CXXFLAGS="-O2 -openmp -std=c++0x"
 						  
-						  # QMP
+						  # QMP: TODO AC_CHECK_LIB
               AC_MSG_CHECKING([where to search for QMP libs])
 						  AC_ARG_WITH(qmpdir,
 						    AS_HELP_STRING([--with-qmpdir[=dir]], [if using QPhiX, then set QMP lib dir]),
@@ -952,7 +954,8 @@ AC_ARG_WITH(qphixdir,
               CXXDEP=${CXX}
              ],
              [echo no
-              QPHIX_AVAILABLE=0])
+              QPHIX_AVAILABLE=0
+              QPHIX_INTERFACE=""])
 AC_SUBST([QPHIX_AVAILABLE])
 
 

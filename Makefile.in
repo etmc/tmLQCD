@@ -60,7 +60,7 @@ MODULES = read_input gamma measure_gauge_action start \
 	jacobi fatal_error invert_clover_eo gettime @SPI_FILES@ \
 	@QUDA_INTERFACE@
 
-CXXMODULES = qphix_interface
+CXXMODULES = @QPHIX_INTERFACE@
 
 ## the GPU modules (all .cu files in $GPUDIR)
 GPUSOURCES := $(wildcard $(srcdir)/$(GPUDIR)/*.cu)

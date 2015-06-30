@@ -79,6 +79,8 @@
 #undef SEEK_CUR
 #undef SEEK_END
 
+// include mpi.h first
+#include "mpi.h"
 #include "global.h"
 extern "C" {
 #include "boundary.h"
