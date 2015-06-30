@@ -349,6 +349,7 @@ AC_SUBST(INCLUDES)
 AC_SUBST(AUTOCONF)
 AC_SUBST(SOLVEROUT)
 AC_SUBST(CCDEP)
+AC_SUBST(CXXDEP)
 AC_SUBST(CCLD)
 AC_SUBST(DEPFLAGS)
 AC_SUBST(DEBUG_FLAG)
@@ -360,6 +361,7 @@ AC_SUBST(XLIB)
 AC_SUBST([LEMON_AVAILABLE])
 AC_SUBST(SPI_FILES)
 AC_SUBST(QUDA_INTERFACE)
+AC_SUBST(QPHIX_INTERFACE)
 
 INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${abs_top_builddir}/  -I\${abs_top_srcdir}/ -I${lime_dir}/include/ -I${lemon_dir}/include/"
 DEPFLAGS="$DEPFLAGS"
@@ -922,6 +924,37 @@ AC_ARG_WITH(qudadir,
               ]
               )
 AC_SUBST([QUDA_AVAILABLE])
+
+
+# QPhiX library for Intel Xeon and Xeon Phis
+AC_MSG_CHECKING(whether we want to use QPhiX)
+AC_ARG_WITH(qphixdir,
+            AS_HELP_STRING([--with-qphixdir[=dir]], [use QPhiX, to be found in dir]),
+             [echo yes
+              QPHIX_AVAILABLE=1
+              AC_DEFINE(QPHIX,1,Using QPhiX)
+              qphix_dir=$withval
+              LDFLAGS="$LDFLAGS -L${qphix_dir}/lib -lqphix_solver"
+              INCLUDES="$INCLUDES -I${qphix_dir}/include/ -I${qphix_dir}/../../tests/"
+              CXXFLAGS="-O2 -openmp -std=c++0x"
+						  
+						  # QMP
+              AC_MSG_CHECKING([where to search for QMP libs])
+						  AC_ARG_WITH(qmpdir,
+						    AS_HELP_STRING([--with-qmpdir[=dir]], [if using QPhiX, then set QMP lib dir]),
+						    qmp_dir=$withval
+						    LDFLAGS="$LDFLAGS -L${qmp_dir}/lib -lqmp"
+						    INCLUDES="$INCLUDES -I${qmp_dir}/include/"
+						  )
+						  AC_MSG_RESULT($qmp_dir)
+              AC_PROG_CXX
+              #QPhiX needs to be linked with C++ linker
+              CCLD=${CXX}
+              CXXDEP=${CXX}
+             ],
+             [echo no
+              QPHIX_AVAILABLE=0])
+AC_SUBST([QPHIX_AVAILABLE])
 
 
 AC_MSG_CHECKING(checking consistency)
