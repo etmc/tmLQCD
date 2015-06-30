@@ -462,24 +462,25 @@ void set_boundary_conditions( int* compression ) {
   }
 
   QudaReconstructType link_recon;
+  QudaReconstructType link_recon_sloppy;
 
   if( *compression==18 ) { // theta BC
     gauge_param.t_boundary = QUDA_PERIODIC_T; // BC will be applied to gaugefield
     link_recon = 18;
+    link_recon_sloppy = 18;
   }
   else { // trivial BC
     gauge_param.t_boundary = ( fabs(X0)>0.0 ? QUDA_ANTI_PERIODIC_T : QUDA_PERIODIC_T );
-    link_recon = *compression;
+    link_recon = 12;
+    link_recon_sloppy = *compression;
     if( g_debug_level > 0 )
       if(g_proc_id == 0)
         printf("\n# QUDA: WARNING using %d compression with trivial (A)PBC instead of theta-BC ((t,x,y,z)*pi: (%f,%f,%f,%f))! This works fine but the residual check on the host (CPU) will fail.\n",*compression,X0,X1,X2,X3);
   }
 
   gauge_param.reconstruct = link_recon;
-  gauge_param.cuda_prec_sloppy = link_recon;
-  gauge_param.reconstruct_sloppy = link_recon;
-  gauge_param.cuda_prec_precondition = link_recon;
-  gauge_param.reconstruct_precondition = link_recon;
+  gauge_param.reconstruct_sloppy = link_recon_sloppy;
+  gauge_param.reconstruct_precondition = link_recon_sloppy;
 }
 
 void set_sloppy_prec( const int sloppy_precision ) {
