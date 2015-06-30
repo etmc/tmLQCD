@@ -16,7 +16,7 @@ The QUDA interface has been designed with the following goals in mind, sorted by
 	\item \emph{Minimality.} Minimal changes in the form of {\ttfamily \#ifdef QUDA} precompiler directives to the tmLQCD code base. The main bulk of the interface lies in a single separate file {\ttfamily quda\_interface.c} (with corresponding header file). In the file {\ttfamily operators.c}, the QUDA library is initialized when an operator is initialized which has set {\ttfamily UseQudaInverter = yes}. There, the actual call to the inverter is conditionally replaced with a call to the QUDA interface.
 	\item \emph{Performance.} The higher priority of the previous items results in small performance detriments. In particular:
 	\begin{itemize}
-		\item tmLQCD's $\theta$-boundary conditions disallow QUDA's 12 parameter reconstruction of the gauge fields (as of QUDA-0.7.0). Choosing to use trivial (anti-)periodic BC within {\ttfamily quda\_interface.c} overcomes this limitation but the final CPU residual check with tmLQCD routines cannot be passed then. Therefore the default is to not use 12 parameter reconstruction.
+		\item tmLQCD's $\theta$-boundary conditions are not compatible with QUDA's 8 and 12 parameter reconstruction of the gauge fields (as of QUDA-0.7.0). Therefore reconstruction/compression is deactivated by default, although it may be activated via the input file, see below.
 		\item The gaugefield is transferred each time to the GPU before the inversion starts in order to ensure not to miss any modifications of the gaugefield.
 	\end{itemize}
 \end{enumerate}
@@ -82,6 +82,12 @@ BeginOperator TMWILSON
 EndOperator
 \end{verbatim}
 and the operator of interest will be inverted using QUDA. The initialization of QUDA is done automatically within the operator initialization,  the QUDA library should be finalized by a call to {\ttfamily \_endQuda()} just before finalizing MPI. When you use the QUDA interface for work that is being published, don't forget to cite \cite{Clark:2009wm, Babich:2011np, Strelchenko:2013vaa}.
+
+
+\subsubsection{More advanced settings}
+To achieve higher performance you may choose single (default) or even half precision as sloppy precision for the inner solver of the mixed precision inverter with reliable updates. After {\ttfamily BeginOperator} and before {\ttfamily EndOperator} set {\ttfamily UseSloppyPrecision = double|single|half}.
+
+To activate compression of the gauge fields (in order to save bandwidth and thus to achieve higher performance), set {\ttfamily UseSloppyPrecision = 8|12|18} within {\ttfamily BeginOperator} and {\ttfamily EndOperator}. The default is 18 which corresponds to no compression. Note that if you use compression, trivial (anti)periodic boundary conditions will be applied to the gauge fields, instead of the default $\theta$-boundary conditions. As a consequence, the residual check on tmLQCD side will fail. Moreover, compression is not applicable when using general $\theta$-boundary conditions in the spatial directions. If trying to do so, compression will be activated automatically and the user gets informed via the standard output.
 
 
 \subsubsection{Functionality}
