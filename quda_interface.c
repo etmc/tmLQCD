@@ -86,8 +86,10 @@
 #include "solver/solver.h"
 #include "solver/solver_field.h"
 #include "gettime.h"
+#include "boundary.h"
 #include "quda.h"
 
+double X0, X1, X2, X3;
 
 // define order of the spatial indices
 // default is LX-LY-LZ-T, see below def. of local lattice size, this is related to
@@ -449,11 +451,11 @@ void reorder_spinor_fromQuda( double* spinor, QudaPrecision precision, int doubl
 
 void set_boundary_conditions( int* compression ) {
   // we can't have compression and theta-BC
-  if( abs(phase_1)>0.0 || abs(phase_2)>0.0 || abs(phase_3)>0.0 || (abs(phase_0)!=0.0 && abs(phase_0)!=1.0) ) {
+  if( fabs(X1)>0.0 || fabs(X2)>0.0 || fabs(X3)>0.0 || (fabs(X0)!=0.0 && fabs(X0)!=1.0) ) {
     if( *compression!=18 ) {
       if(g_proc_id == 0) {
-          printf("\n# QUDA: WARNING you can't use compression %d with boundary conditions for fermion fields (t,x,y,z) * pi: (%d,%d,%d,%d) \n", compression,phase_0,phase_1,phase_2,phase_3);
-          printf("\n# QUDA: disabling compression.\n");
+          printf("\n# QUDA: WARNING you can't use compression %d with boundary conditions for fermion fields (t,x,y,z)*pi: (%f,%f,%f,%f) \n", *compression,X0,X1,X2,X3);
+          printf("# QUDA: disabling compression.\n\n");
           *compression=18;
       }
     }
@@ -466,11 +468,11 @@ void set_boundary_conditions( int* compression ) {
     link_recon = 18;
   }
   else { // trivial BC
-    gauge_param.t_boundary = ( abs(phase_0)>0.0 ? QUDA_ANTI_PERIODIC_T : QUDA_PERIODIC_T );
+    gauge_param.t_boundary = ( fabs(X0)>0.0 ? QUDA_ANTI_PERIODIC_T : QUDA_PERIODIC_T );
     link_recon = *compression;
     if( g_debug_level > 0 )
       if(g_proc_id == 0)
-        printf("\n# QUDA: WARNING using trivial (A)PBC instead of theta-BC! This works fine but the residual check on the host (CPU) will fail.\n");
+        printf("\n# QUDA: WARNING using %d compression with trivial (A)PBC instead of theta-BC ((t,x,y,z)*pi: (%f,%f,%f,%f))! This works fine but the residual check on the host (CPU) will fail.\n",*compression,X0,X1,X2,X3);
   }
 
   gauge_param.reconstruct = link_recon;
@@ -654,7 +656,7 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
                            const double precision, const int max_iter,
                            const int solver_flag, const int rel_prec, const int even_odd_flag,
                            const int sloppy_precision,
-                           const int compression) {
+                           int compression) {
 
   spinor ** solver_field = NULL;
   const int nr_sf = 4;
