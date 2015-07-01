@@ -59,6 +59,7 @@ typedef struct {
   int DownProp;
   int no_ev_index;
   int use_qudainverter;
+  int use_qphixinverter;
   int compression_type;
 
   int error_code;

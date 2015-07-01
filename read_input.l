@@ -390,6 +390,7 @@ static inline void rmQuotes(char *str){
 ^SplittedPropagator{EQL}           BEGIN(PROPSPLIT);
 ^UsePreconditioning{EQL}           BEGIN(PRECONDITIONING);
 ^UseQudaInverter{EQL}              BEGIN(QUDAINVERTER);
+^UseQphixInverter{EQL}             BEGIN(QPHIXINVERTER);
 ^UseCompression{EQL}               BEGIN(COMPRESSION);
 
 ^BeginMeasurement{SPC}+            BEGIN(INITMEASUREMENT);
@@ -740,6 +741,14 @@ static inline void rmQuotes(char *str){
   {SPC}*UseQudaInverter{EQL}no {
     if(myverbose) printf("  Do not use Quda inverter line %d operator %d\n", line_of_file, current_operator);
     optr->use_qudainverter = 0;
+  }
+  {SPC}*UseQphixInverter{EQL}yes {
+    if(myverbose) printf("  Use QPhiX inverter line %d operator %d\n", line_of_file, current_operator);
+    optr->use_qphixinverter = 1;
+  }
+  {SPC}*UseQphixInverter{EQL}no {
+    if(myverbose) printf("  Do not use QPhiX inverter line %d operator %d\n", line_of_file, current_operator);
+    optr->use_qphixinverter = 0;
   }
   {SPC}*UseSloppyPrecision{EQL}yes {
     if(myverbose) printf("  Use use sloppy precision (single) in the inverter (if supported by the inverter) line %d operator %d\n", line_of_file, current_operator);
