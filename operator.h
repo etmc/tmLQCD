@@ -46,7 +46,7 @@ typedef struct {
   int deg_poly;
   int no_ev;
   
-  int sloppy_precision;
+  SloppyPrecision sloppy_precision;
   int even_odd_flag;
   int solver;
   int N_s;
@@ -58,8 +58,8 @@ typedef struct {
   int no_flavours;
   int DownProp;
   int no_ev_index;
-  int use_qudainverter;
-  int compression_type;
+  ExternalInverter external_inverter;
+  CompressionType compression_type;
 
   int error_code;
 
