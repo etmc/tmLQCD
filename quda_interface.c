@@ -80,7 +80,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "global.h"
 #include "boundary.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "solver/solver.h"
@@ -449,14 +448,14 @@ void reorder_spinor_fromQuda( double* spinor, QudaPrecision precision, int doubl
     printf("# QUDA: time spent in reorder_spinor_fromQuda: %f secs\n", diffTime);
 }
 
-void set_boundary_conditions( int* compression ) {
+void set_boundary_conditions( CompressionType* compression ) {
   // we can't have compression and theta-BC
   if( fabs(X1)>0.0 || fabs(X2)>0.0 || fabs(X3)>0.0 || (fabs(X0)!=0.0 && fabs(X0)!=1.0) ) {
-    if( *compression!=18 ) {
+    if( *compression!=NO_COMPRESSION ) {
       if(g_proc_id == 0) {
           printf("\n# QUDA: WARNING you can't use compression %d with boundary conditions for fermion fields (t,x,y,z)*pi: (%f,%f,%f,%f) \n", *compression,X0,X1,X2,X3);
           printf("# QUDA: disabling compression.\n\n");
-          *compression=18;
+          *compression=NO_COMPRESSION;
       }
     }
   }
@@ -464,7 +463,7 @@ void set_boundary_conditions( int* compression ) {
   QudaReconstructType link_recon;
   QudaReconstructType link_recon_sloppy;
 
-  if( *compression==18 ) { // theta BC
+  if( *compression==NO_COMPRESSION ) { // theta BC
     gauge_param.t_boundary = QUDA_PERIODIC_T; // BC will be applied to gaugefield
     link_recon = 18;
     link_recon_sloppy = 18;
@@ -483,15 +482,15 @@ void set_boundary_conditions( int* compression ) {
   gauge_param.reconstruct_precondition = link_recon_sloppy;
 }
 
-void set_sloppy_prec( const int sloppy_precision ) {
+void set_sloppy_prec( const SloppyPrecision sloppy_precision ) {
 
   // choose sloppy prec.
   QudaPrecision cuda_prec_sloppy;
-  if( sloppy_precision==0 ) {
+  if( sloppy_precision==SLOPPY_DOUBLE ) {
     cuda_prec_sloppy = QUDA_DOUBLE_PRECISION;
     if(g_proc_id == 0) printf("# QUDA: Using double prec. as sloppy!\n");
   }
-  else if( sloppy_precision==2 ) {
+  else if( sloppy_precision==SLOPPY_HALF ) {
     cuda_prec_sloppy = QUDA_HALF_PRECISION;
     if(g_proc_id == 0) printf("# QUDA: Using half prec. as sloppy!\n");
   }
@@ -509,8 +508,8 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
                    const double precision, const int max_iter,
                    const int solver_flag, const int rel_prec,
                    const int even_odd_flag, solver_params_t solver_params,
-                   const int sloppy_precision,
-                   int compression) {
+                   SloppyPrecision sloppy_precision,
+                   CompressionType compression) {
 
   spinor ** solver_field = NULL;
   const int nr_sf = 2;
@@ -656,8 +655,8 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
                            spinor * const Even_c, spinor * const Odd_c,
                            const double precision, const int max_iter,
                            const int solver_flag, const int rel_prec, const int even_odd_flag,
-                           const int sloppy_precision,
-                           int compression) {
+                           const SloppyPrecision sloppy_precision,
+                           CompressionType compression) {
 
   spinor ** solver_field = NULL;
   const int nr_sf = 4;

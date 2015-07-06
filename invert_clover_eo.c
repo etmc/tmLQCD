@@ -46,14 +46,28 @@
 #include"solver/solver.h"
 #include"invert_clover_eo.h"
 #include "solver/dirac_operator_eigenvectors.h"
+#ifdef QUDA
+#  include "quda_interface.h"
+#endif
 
 
 int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new, 
-		     spinor * const Even, spinor * const Odd,
-		     const double precision, const int max_iter,
-		     const int solver_flag, const int rel_prec,solver_params_t solver_params,
-		     su3 *** gf, matrix_mult Qsq, matrix_mult Qm) {
+                     spinor * const Even, spinor * const Odd,
+                     const double precision, const int max_iter,
+                     const int solver_flag, const int rel_prec,solver_params_t solver_params,
+                     su3 *** gf, matrix_mult Qsq, matrix_mult Qm,
+                     const ExternalInverter inverter, const SloppyPrecision sloppy, const CompressionType compression) {
   int iter;
+
+#ifdef QUDA
+  if( inverter==QUDA_INVERTER ) {
+    return invert_eo_quda(Even_new, Odd_new, Even, Odd,
+                                  precision, max_iter,
+                                  solver_flag, rel_prec,
+                                  1, solver_params,
+                                  sloppy, compression);
+  }
+#endif
 
   if(g_proc_id == 0 && g_debug_level > 0) {
     printf("# Using even/odd preconditioning!\n"); fflush(stdout);
