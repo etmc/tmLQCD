@@ -55,6 +55,9 @@
 #ifdef QUDA
 #  include "quda_interface.h"
 #endif
+#ifdef QPHIX
+#  include "qphix_interface.h"
+#endif
 
 static double cgmms_reached_prec = 0.0; 
 static void cgmms_write_props(spinor ** const P, double const * const extra_masses, const int no_extra_masses, const int id, const int iteration);
@@ -145,6 +148,14 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     /* Do the inversion with the preconditioned  */
     /* matrix to get the odd sites               */
     
+#ifdef QPHIX
+    /* NOTE: Qphix does only the solve on the odd sites, unlike Quda! */
+  if( inverter==QPHIX_INVERTER ) {
+    iter = invert_qphix(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec);
+  }
+  else
+#endif
+
     if(solver_flag == BICGSTAB) {
       if(g_proc_id == 0) {printf("# Using BiCGstab!\n"); fflush(stdout);}
       mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1., VOLUME/2); 
@@ -219,19 +230,9 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
         Qtm_minus_psi(Odd_new, Odd_new);
       }
 #else        
-#ifdef QPHIX
-      if( inverter==QUDA_INVERTER ) {
-        iter = cg_her_qphix(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec );
-      }
-      else {
-        iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi);
-      }
-      Qtm_minus_psi(Odd_new, Odd_new);
-#else
       iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, 
 		    VOLUME/2, &Qtm_pm_psi);
       Qtm_minus_psi(Odd_new, Odd_new);
-#endif /*QPHIX*/
 #endif /*HAVE_GPU*/
     }
     else if(solver_flag == MR) {
