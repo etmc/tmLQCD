@@ -84,6 +84,7 @@ int add_operator(const int type) {
   optr->c_sw = _default_c_sw;
   optr->sloppy_precision = _default_operator_sloppy_precision_flag;
   optr->compression_type = _default_compression_type;
+  optr->external_inverter = _default_external_inverter;
   optr->coefs = NULL;
   optr->rel_prec = _default_g_relative_precision_flag;
   optr->eps_sq = _default_solver_precision;

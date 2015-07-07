@@ -219,9 +219,19 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
         Qtm_minus_psi(Odd_new, Odd_new);
       }
 #else        
+#ifdef QPHIX
+      if( inverter==QUDA_INVERTER ) {
+        iter = cg_her_qphix(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec );
+      }
+      else {
+        iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi);
+      }
+      Qtm_minus_psi(Odd_new, Odd_new);
+#else
       iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, 
 		    VOLUME/2, &Qtm_pm_psi);
       Qtm_minus_psi(Odd_new, Odd_new);
+#endif /*QPHIX*/
 #endif /*HAVE_GPU*/
     }
     else if(solver_flag == MR) {

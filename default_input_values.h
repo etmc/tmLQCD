@@ -165,6 +165,6 @@
 
 #define _default_use_preconditioning 0
 
-#define _default_use_qudainverter 0
+#define _default_external_inverter 0
 
 #endif
