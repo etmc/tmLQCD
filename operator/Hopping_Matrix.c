@@ -56,13 +56,13 @@
 #endif
 #include "global.h"
 #include "su3.h"
-#ifdef MPI
+#ifdef _USE_MPI
 #  include "xchange/xchange.h"
 #endif
 #include "boundary.h"
 #include "init/init_dirac_halfspinor.h"
 #include "update_backward_gauge.h"
-#ifdef BGQ
+#ifdef SPI
 #  include"DirectPut.h"
 #endif
 #include "operator/Hopping_Matrix.h"
@@ -104,7 +104,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
 #  endif
   return;
 }
-
 #else /* thats _USE_HALFSPINOR */
 
 #  if (((defined SSE2)||(defined SSE3)) && defined _USE_TSPLITPAR)
@@ -138,7 +137,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
   }
 #    endif
 
-#    if (defined MPI && !(defined _NO_COMM))
+#    if (defined _USE_MPI && !(defined _NO_COMM))
   xchange_field(k, ieo);
 #    endif
 

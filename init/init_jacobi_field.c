@@ -80,7 +80,7 @@ double v[6];
      s->c1 = v[2] + v[3] * I;
      s->c2 = v[4] + v[5] * I;
  }
-#ifdef MPI
+#ifdef _USE_MPI
  xchange_jacobi(k);
 #endif
 }
@@ -96,7 +96,7 @@ double v[6];
      s=k+ix;
      *s=unif_su3_vector();
    }
-#ifdef MPI
+#ifdef _USE_MPI
  xchange_jacobi(k);
 #endif
 }

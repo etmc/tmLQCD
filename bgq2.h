@@ -334,6 +334,139 @@
   r10= vec_xxnpmadd(U7, r5, r10);	\
   r11= vec_xxnpmadd(U1, r5, r11); 
 
+
+//same as _vec_su3_multiply_double2 but loading a 32bit gauge field
+#define _vec_su3_multiply_double2_32(u)		\
+  U0 = vec_ld2(0, (float*) &(u)->c00);	\
+  U3 = vec_ld2(0, (float*) &(u)->c01);	\
+  U6 = vec_ld2(0, (float*) &(u)->c02);	\
+  U1 = vec_ld2(0, (float*) &(u)->c10);	\
+  U4 = vec_ld2(0, (float*) &(u)->c11);	\
+  U7 = vec_ld2(0, (float*) &(u)->c12);	\
+  U2 = vec_ld2(0, (float*) &(u)->c20);	\
+  r6 = vec_xmul(r0, U0);			\
+  r7 = vec_xmul(r0, U1);			\
+  r8 = vec_xmul(r0, U2);			\
+  r9 = vec_xmul(r3, U0);			\
+  r10= vec_xmul(r3, U1);			\
+  r11= vec_xmul(r3, U2);			\
+						\
+  r6 = vec_xxnpmadd(U0, r0, r6);	\
+  r7 = vec_xxnpmadd(U1, r0, r7);	\
+  r8 = vec_xxnpmadd(U2, r0, r8);	\
+  r9 = vec_xxnpmadd(U0, r3, r9);	\
+  r10= vec_xxnpmadd(U1, r3, r10);	\
+  r11= vec_xxnpmadd(U2, r3, r11);	\
+  U0 = vec_ld2(0, (float*) &(u)->c21);	\
+  						\
+  r6 = vec_xmadd(r1, U3, r6);		\
+  r7 = vec_xmadd(r1, U4, r7);		\
+  r8 = vec_xmadd(r1, U0, r8);		\
+  r9 = vec_xmadd(r4, U3, r9);		\
+  r10= vec_xmadd(r4, U4, r10);		\
+  r11= vec_xmadd(r4, U0, r11);		\
+       					\
+  r6 = vec_xxnpmadd(U3, r1, r6);	\
+  r7 = vec_xxnpmadd(U4, r1, r7);	\
+  r8 = vec_xxnpmadd(U0, r1, r8);	\
+  r9 = vec_xxnpmadd(U3, r4, r9);	\
+  r10= vec_xxnpmadd(U4, r4, r10);	\
+  r11= vec_xxnpmadd(U0, r4, r11);	\
+  U1 = vec_ld2(0, (float*) &(u)->c22);	\
+       					\
+  r6 = vec_xmadd(r2, U6, r6);		\
+  r7 = vec_xmadd(r2, U7, r7);		\
+  r8 = vec_xmadd(r2, U1, r8);		\
+  r9 = vec_xmadd(r5, U6, r9);		\
+  r10= vec_xmadd(r5, U7, r10);		\
+  r11= vec_xmadd(r5, U1, r11);		\
+       					\
+  r6 = vec_xxnpmadd(U6, r2, r6);	\
+  r7 = vec_xxnpmadd(U7, r2, r7);	\
+  r8 = vec_xxnpmadd(U1, r2, r8);	\
+  r9 = vec_xxnpmadd(U6, r5, r9);	\
+  r10= vec_xxnpmadd(U7, r5, r10);	\
+  r11= vec_xxnpmadd(U1, r5, r11); 
+
+
+  
+  
+#define _vec_su3_multiply(u)		\
+  U0 = vec_ld2(0, (double*) &(u)->c00);	\
+  U3 = vec_ld2(0, (double*) &(u)->c01);	\
+  U6 = vec_ld2(0, (double*) &(u)->c02);	\
+  U1 = vec_ld2(0, (double*) &(u)->c10);	\
+  U4 = vec_ld2(0, (double*) &(u)->c11);	\
+  U7 = vec_ld2(0, (double*) &(u)->c12);	\
+  U2 = vec_ld2(0, (double*) &(u)->c20);	\
+  r6 = vec_xmul(r0, U0);			\
+  r7 = vec_xmul(r0, U1);			\
+  r8 = vec_xmul(r0, U2);			\
+						\
+  r6 = vec_xxnpmadd(U0, r0, r6);	\
+  r7 = vec_xxnpmadd(U1, r0, r7);	\
+  r8 = vec_xxnpmadd(U2, r0, r8);	\
+  U0 = vec_ld2(0, (double*) &(u)->c21);	\
+  					\
+  r6 = vec_xmadd(r1, U3, r6);		\
+  r7 = vec_xmadd(r1, U4, r7);		\
+  r8 = vec_xmadd(r1, U0, r8);		\
+       					\
+  r6 = vec_xxnpmadd(U3, r1, r6);	\
+  r7 = vec_xxnpmadd(U4, r1, r7);	\
+  r8 = vec_xxnpmadd(U0, r1, r8);	\
+  U1 = vec_ld2(0, (double*) &(u)->c22);	\
+       					\
+  r6 = vec_xmadd(r2, U6, r6);		\
+  r7 = vec_xmadd(r2, U7, r7);		\
+  r8 = vec_xmadd(r2, U1, r8);		\
+       					\
+  r6 = vec_xxnpmadd(U6, r2, r6);	\
+  r7 = vec_xxnpmadd(U7, r2, r7);	\
+  r8 = vec_xxnpmadd(U1, r2, r8);	\
+
+
+  
+#define _vec_su3_inverse_multiply(u)    \
+  U0 = vec_ld2(0, (double*) &(u)->c00);		\
+  U1 = vec_ld2(0, (double*) &(u)->c01);		\
+  U2 = vec_ld2(0, (double*) &(u)->c02);		\
+  						\
+  r6 = vec_xmul(U0, r0);                        \
+  r7 = vec_xmul(U1, r0);                        \
+  r8 = vec_xmul(U2, r0);                        \
+  						\
+  r6 = vec_xxcpnmadd(r0, U0, r6);		\
+  r7 = vec_xxcpnmadd(r0, U1, r7);		\
+  r8 = vec_xxcpnmadd(r0, U2, r8);		\
+  						\
+  U3 = vec_ld2(0, (double*) &(u)->c10);		\
+  U4 = vec_ld2(0, (double*) &(u)->c11);		\
+  U6 = vec_ld2(0, (double*) &(u)->c12);		\
+  						\
+  r6 = vec_xmadd(U3, r1, r6);			\
+  r7 = vec_xmadd(U4, r1, r7);			\
+  r8 = vec_xmadd(U6, r1, r8);			\
+  						\
+  r6 = vec_xxcpnmadd(r1, U3, r6);		\
+  r7 = vec_xxcpnmadd(r1, U4, r7);		\
+  r8 = vec_xxcpnmadd(r1, U6, r8);		\
+  						\
+  U0 = vec_ld2(0, (double*) &(u)->c20);		\
+  U1 = vec_ld2(0, (double*) &(u)->c21);		\
+  U2 = vec_ld2(0, (double*) &(u)->c22);		\
+  						\
+  r6 = vec_xmadd(U0, r2, r6);			\
+  r7 = vec_xmadd(U1, r2, r7);			\
+  r8 = vec_xmadd(U2, r2, r8);			\
+  						\
+  r6 = vec_xxcpnmadd(r2, U0, r6);		\
+  r7 = vec_xxcpnmadd(r2, U1, r7);		\
+  r8 = vec_xxcpnmadd(r2, U2, r8);		\
+  
+  
+  
+  
 // expects the spinor to act on in
 // r0, r1 -> s0
 // r2, r3 -> s1
@@ -376,6 +509,49 @@
   r5 = vec_xxnpmadd(U7, r7, r5);		\
   r6 = vec_xxnpmadd(U1, r7, r6);
 
+  
+  
+#define _vec_su3_multiply_double2c_32(u)	\
+  r8 = vec_gpci(00145);				\
+  r9 = vec_gpci(02367);				\
+  U0 = vec_ld2(0, (float*) &(u)->c00);		\
+  U3 = vec_ld2(0, (float*) &(u)->c01);		\
+  U6 = vec_ld2(0, (float*) &(u)->c02);		\
+  U1 = vec_ld2(0, (float*) &(u)->c10);		\
+  r7 = vec_perm(r0, r2, r8);			\
+  U4 = vec_ld2(0, (float*) &(u)->c11);		\
+  U7 = vec_ld2(0, (float*) &(u)->c12);		\
+  U2 = vec_ld2(0, (float*) &(u)->c20);		\
+  r4 = vec_xmul(r7, U0);			\
+  r5 = vec_xmul(r7, U1);			\
+  r6 = vec_xmul(r7, U2);			\
+						\
+  r4 = vec_xxnpmadd(U0, r7, r4);		\
+  r5 = vec_xxnpmadd(U1, r7, r5);		\
+  r6 = vec_xxnpmadd(U2, r7, r6);		\
+  r7 = vec_perm(r0, r2, r9);			\
+  U0 = vec_ld2(0, (float*) &(u)->c21);		\
+						\
+  r4 = vec_xmadd(r7, U3, r4);			\
+  r5 = vec_xmadd(r7, U4, r5);			\
+  r6 = vec_xmadd(r7, U0, r6);			\
+  						\
+  r4 = vec_xxnpmadd(U3, r7, r4);		\
+  r5 = vec_xxnpmadd(U4, r7, r5);		\
+  r6 = vec_xxnpmadd(U0, r7, r6);		\
+  r7 = vec_perm(r1, r3, r8);			\
+  U1 = vec_ld2(0, (float*) &(u)->c22);		\
+						\
+  r4 = vec_xmadd(r7, U6, r4);			\
+  r5 = vec_xmadd(r7, U7, r5);			\
+  r6 = vec_xmadd(r7, U1, r6);			\
+  						\
+  r4 = vec_xxnpmadd(U6, r7, r4);		\
+  r5 = vec_xxnpmadd(U7, r7, r5);		\
+  r6 = vec_xxnpmadd(U1, r7, r6);
+  
+  
+  
 #define _vec_su3_multiply_double2ct(u)		\
   r8 = vec_gpci(00167);				\
   U0 = vec_ld2(0, (double*) &(u)->c00);		\
@@ -414,6 +590,13 @@
   r5 = vec_xxnpmadd(U7, r7, r5);		\
   r6 = vec_xxnpmadd(U1, r7, r6);
 
+  
+  
+  
+  
+  
+  
+  
 // multiplies the inverse of one su3 matrix with two su3_vectors
 // the first of which stored in r[0-2]
 // and the second one in r[3-5]
@@ -478,6 +661,64 @@
   r11= vec_xxcpnmadd(r5, U2, r11);
 
 
+//same as _vec_su3_inverse_multiply_double2 but for 32bit gauge field
+#define _vec_su3_inverse_multiply_double2_32(u)    \
+  U0 = vec_ld2(0, (float*) &(u)->c00);		\
+  U1 = vec_ld2(0, (float*) &(u)->c01);		\
+  U2 = vec_ld2(0, (float*) &(u)->c02);		\
+  						\
+  r6 = vec_xmul(U0, r0);                        \
+  r7 = vec_xmul(U1, r0);                        \
+  r8 = vec_xmul(U2, r0);                        \
+  r9 = vec_xmul(U0, r3);                        \
+  r10= vec_xmul(U1, r3);                        \
+  r11= vec_xmul(U2, r3);                        \
+  						\
+  r6 = vec_xxcpnmadd(r0, U0, r6);		\
+  r7 = vec_xxcpnmadd(r0, U1, r7);		\
+  r8 = vec_xxcpnmadd(r0, U2, r8);		\
+  r9 = vec_xxcpnmadd(r3, U0, r9);		\
+  r10= vec_xxcpnmadd(r3, U1, r10);		\
+  r11= vec_xxcpnmadd(r3, U2, r11);		\
+  						\
+  U3 = vec_ld2(0, (float*) &(u)->c10);		\
+  U4 = vec_ld2(0, (float*) &(u)->c11);		\
+  U6 = vec_ld2(0, (float*) &(u)->c12);		\
+  						\
+  r6 = vec_xmadd(U3, r1, r6);			\
+  r7 = vec_xmadd(U4, r1, r7);			\
+  r8 = vec_xmadd(U6, r1, r8);			\
+  r9 = vec_xmadd(U3, r4, r9);			\
+  r10= vec_xmadd(U4, r4, r10);			\
+  r11= vec_xmadd(U6, r4, r11);			\
+  						\
+  r6 = vec_xxcpnmadd(r1, U3, r6);		\
+  r7 = vec_xxcpnmadd(r1, U4, r7);		\
+  r8 = vec_xxcpnmadd(r1, U6, r8);		\
+  r9 = vec_xxcpnmadd(r4, U3, r9);		\
+  r10= vec_xxcpnmadd(r4, U4, r10);		\
+  r11= vec_xxcpnmadd(r4, U6, r11);		\
+  						\
+  U0 = vec_ld2(0, (float*) &(u)->c20);		\
+  U1 = vec_ld2(0, (float*) &(u)->c21);		\
+  U2 = vec_ld2(0, (float*) &(u)->c22);		\
+  						\
+  r6 = vec_xmadd(U0, r2, r6);			\
+  r7 = vec_xmadd(U1, r2, r7);			\
+  r8 = vec_xmadd(U2, r2, r8);			\
+  r9 = vec_xmadd(U0, r5, r9);			\
+  r10= vec_xmadd(U1, r5, r10);			\
+  r11= vec_xmadd(U2, r5, r11);			\
+  						\
+  r6 = vec_xxcpnmadd(r2, U0, r6);		\
+  r7 = vec_xxcpnmadd(r2, U1, r7);		\
+  r8 = vec_xxcpnmadd(r2, U2, r8);		\
+  r9 = vec_xxcpnmadd(r5, U0, r9);		\
+  r10= vec_xxcpnmadd(r5, U1, r10);		\
+  r11= vec_xxcpnmadd(r5, U2, r11);
+
+
+
 #define _vec_su3_inverse_multiply_double2c(u)	\
   U0 = vec_ld2(0, (double*) &(u)->c00);		\
   r8 = vec_gpci(00145);				\
@@ -520,6 +761,52 @@
   r5 = vec_xxcpnmadd(r7, U1, r5);		\
   r6 = vec_xxcpnmadd(r7, U2, r6);
 
+  
+#define _vec_su3_inverse_multiply_double2c_32(u)	\
+  U0 = vec_ld2(0, (float*) &(u)->c00);		\
+  r8 = vec_gpci(00145);				\
+  r9 = vec_gpci(02367);				\
+  U1 = vec_ld2(0, (float*) &(u)->c01);		\
+  r7 = vec_perm(r0, r2, r8);			\
+  U2 = vec_ld2(0, (float*) &(u)->c02);		\
+						\
+  r4 = vec_xmul(U0, r7);			\
+  r5 = vec_xmul(U1, r7);			\
+  r6 = vec_xmul(U2, r7);			\
+						\
+  r4 = vec_xxcpnmadd(r7, U0, r4);		\
+  r5 = vec_xxcpnmadd(r7, U1, r5);		\
+  r6 = vec_xxcpnmadd(r7, U2, r6);		\
+						\
+  r7 = vec_perm(r0, r2, r9);			\
+  U3 = vec_ld2(0, (float*) &(u)->c10);		\
+  U4 = vec_ld2(0, (float*) &(u)->c11);		\
+  U6 = vec_ld2(0, (float*) &(u)->c12);		\
+  						\
+  r4 = vec_xmadd(U3, r7, r4);			\
+  r5 = vec_xmadd(U4, r7, r5);			\
+  r6 = vec_xmadd(U6, r7, r6);			\
+  						\
+  r4 = vec_xxcpnmadd(r7, U3, r4);		\
+  r5 = vec_xxcpnmadd(r7, U4, r5);		\
+  r6 = vec_xxcpnmadd(r7, U6, r6);		\
+						\
+  r7 = vec_perm(r1, r3, r8);			\
+  U0 = vec_ld2(0, (float*) &(u)->c20);		\
+  U1 = vec_ld2(0, (float*) &(u)->c21);		\
+  U2 = vec_ld2(0, (float*) &(u)->c22);		\
+  						\
+  r4 = vec_xmadd(U0, r7, r4);			\
+  r5 = vec_xmadd(U1, r7, r5);			\
+  r6 = vec_xmadd(U2, r7, r6);			\
+  						\
+  r4 = vec_xxcpnmadd(r7, U0, r4);		\
+  r5 = vec_xxcpnmadd(r7, U1, r5);		\
+  r6 = vec_xxcpnmadd(r7, U2, r6);
+  
+  
+  
+  
 #define _vec_su3_inverse_multiply_double2ct(u)	\
   U0 = vec_ld2(0, (double*) &(u)->c00);		\
   r8 = vec_gpci(00167);				\

@@ -88,6 +88,102 @@ void Qtm_ndpsi(spinor * const l_strange, spinor * const l_charm,
   mul_r(l_charm, phmc_invmaxev, g_spinor_field[DUM_MATRIX+1], VOLUME/2);
 }
 
+
+/******************************************
+ *
+ * This is the implementation of
+ *
+ * D_h D_h^{dagger} (non-even-odd)
+ *
+ * see documentation for details
+ * k_charm and k_strange are the input fields
+ * l_* the output fields
+ *
+ * it acts on both odd and even parts
+ ******************************************/
+void sub_epsbar_tau1(spinor * const l_strange, spinor * const l_charm , spinor * const k_strange, spinor * const k_charm){
+  mul_r(g_spinor_field[DUM_MATRIX+2], g_epsbar, k_strange , VOLUME);
+  mul_r(g_spinor_field[DUM_MATRIX+3], g_epsbar, k_charm, VOLUME);
+  diff(l_strange, l_strange, g_spinor_field[DUM_MATRIX+3], VOLUME);
+  diff(l_charm, l_charm, g_spinor_field[DUM_MATRIX+2], VOLUME);  
+}
+
+
+void Q_minus_ndpsi(spinor * const l_strange, spinor * const l_charm, spinor * const k_strange, spinor * const k_charm)
+{
+
+  //D_h^{dagger}
+  //tau^1 by s<->c  
+
+     D_psi(l_strange, k_charm);
+     g_mu = -g_mu;
+     D_psi(l_charm, k_strange);     
+     g_mu = -g_mu;
+     
+     sub_epsbar_tau1(l_strange, l_charm, k_charm, k_strange);
+     
+     gamma5(g_spinor_field[DUM_MATRIX], l_strange, VOLUME);
+     gamma5(g_spinor_field[DUM_MATRIX+1], l_charm, VOLUME);    
+     
+     assign(l_strange, g_spinor_field[DUM_MATRIX+1], VOLUME);
+     assign(l_charm, g_spinor_field[DUM_MATRIX], VOLUME);
+
+}
+
+
+void Q_plus_ndpsi(spinor * const l_strange, spinor * const l_charm, spinor * const k_strange, spinor * const k_charm)
+{
+
+
+    //D_h
+    //tau^1 by s<->c     
+     D_psi(l_charm, k_strange);
+     g_mu = -g_mu;
+     D_psi(l_strange, k_charm);         
+     g_mu = -g_mu;
+     sub_epsbar_tau1(l_charm, l_strange, k_strange, k_charm);
+     
+     gamma5(l_strange, l_strange, VOLUME);      
+     gamma5(l_charm, l_charm, VOLUME);
+}
+
+
+void Q_pm_ndpsi(spinor * const l_strange, spinor * const l_charm, spinor * const k_strange, spinor * const k_charm)
+{
+
+  //D_h^{dagger}
+  //tau^1 by s<->c
+  
+     D_psi(l_strange, k_charm);
+     g_mu = -g_mu;
+     D_psi(l_charm, k_strange);     
+     g_mu = -g_mu;
+     
+     sub_epsbar_tau1(l_strange, l_charm, k_charm, k_strange);
+     
+     gamma5(g_spinor_field[DUM_MATRIX], l_strange, VOLUME);
+     gamma5(g_spinor_field[DUM_MATRIX+1], l_charm, VOLUME);    
+     
+    //D_h
+    //tau^1 by s<->c     
+     D_psi(l_strange, g_spinor_field[DUM_MATRIX+1]);
+     g_mu = -g_mu;
+     D_psi(l_charm, g_spinor_field[DUM_MATRIX]);         
+     g_mu = -g_mu;
+     sub_epsbar_tau1(l_strange, l_charm, g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX]);
+     
+     gamma5(l_strange, l_strange, VOLUME);      
+     gamma5(l_charm, l_charm, VOLUME);
+     /* At the end, the normalisation by the max. eigenvalue  */ 
+     /* Twice  phmc_invmaxev  since we consider here  D Ddag  !!! */
+     mul_r(l_charm, phmc_invmaxev*phmc_invmaxev, l_charm, VOLUME);
+     mul_r(l_strange, phmc_invmaxev*phmc_invmaxev, l_strange, VOLUME);     
+
+}
+
+
+
+
 void Qsw_ndpsi(spinor * const l_strange, spinor * const l_charm,
 		spinor * const k_strange, spinor * const k_charm) {
 
@@ -375,6 +471,67 @@ void Q_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
   return;
 }
 
+
+//non-EO version
+void Q_tau1_sub_const_ndpsi_D_psi(spinor * const l_strange, spinor * const l_charm,
+			    spinor * const k_strange, spinor * const k_charm, 
+			    const _Complex double z, const double Cpol, const double invev) {
+
+  spinor *r, *s;
+  su3_vector ALIGN phi1;
+
+     D_psi(l_strange, k_charm);
+     g_mu = -g_mu;
+     D_psi(l_charm, k_strange);     
+     g_mu = -g_mu;
+     
+     sub_epsbar_tau1(l_strange, l_charm, k_charm, k_strange);
+     
+     gamma5(g_spinor_field[DUM_MATRIX], l_strange, VOLUME);
+     gamma5(g_spinor_field[DUM_MATRIX+1], l_charm, VOLUME);    
+
+    /* At the end, the normalisation by the max. eigenvalue  */
+    mul_r(l_strange, Cpol*invev, g_spinor_field[DUM_MATRIX], VOLUME);
+    mul_r(l_charm, Cpol*invev, g_spinor_field[DUM_MATRIX+1], VOLUME);    
+    
+#ifdef OMP
+#pragma omp parallel for private(r) private(s) private(phi1)
+#endif
+  for(int ix = 0; ix < (VOLUME); ix++){
+
+    r=l_strange + ix;
+    s=k_strange + ix;
+    
+    _complex_times_vector(phi1, Cpol*z, s->s0);
+    _vector_sub_assign(r->s0, phi1);
+    _complex_times_vector(phi1, Cpol*z, s->s1);
+    _vector_sub_assign(r->s1, phi1);
+    _complex_times_vector(phi1, Cpol*z, s->s2);
+    _vector_sub_assign(r->s2, phi1);
+    _complex_times_vector(phi1, Cpol*z, s->s3);
+    _vector_sub_assign(r->s3, phi1);
+
+    r=l_charm + ix;
+    s=k_charm + ix;
+    
+    _complex_times_vector(phi1, Cpol*z, s->s0);
+    _vector_sub_assign(r->s0, phi1);
+    _complex_times_vector(phi1, Cpol*z, s->s1);
+    _vector_sub_assign(r->s1, phi1);
+    _complex_times_vector(phi1, Cpol*z, s->s2);
+    _vector_sub_assign(r->s2, phi1);
+    _complex_times_vector(phi1, Cpol*z, s->s3);
+    _vector_sub_assign(r->s3, phi1);    
+  }
+  
+  
+
+  return;
+}
+
+
+
+
 void Qsw_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
 			      spinor * const k_strange, spinor * const k_charm, 
 			      const _Complex double z, const double Cpol, const double invev) {
@@ -467,26 +624,39 @@ void Qsw_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
 void Qtm_pm_ndbipsi(bispinor * const bisp_l, bispinor * const bisp_k) {
 
   /*  create 2 spinors out of 1 (input) bispinor  */
-  decompact(g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7], bisp_k);
+  decompact(g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7], bisp_k, VOLUME/2);
 
   Qtm_pm_ndpsi(g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7],
 	       g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7]);
 
   /*  create 1 (output) bispinor out of 2 spinors  */
-  compact(bisp_l, g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7]);
+  compact(bisp_l, g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7], VOLUME/2);
+  return;
+}
+
+void Q_pm_ndbipsi(bispinor * const bisp_l, bispinor * const bisp_k) {
+
+  /*  create 2 spinors out of 1 (input) bispinor  */
+  decompact(g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7], bisp_k, VOLUME);
+
+  Q_pm_ndpsi(g_spinor_field[DUM_MATRIX+4], g_spinor_field[DUM_MATRIX+5],
+	       g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7]);
+
+  /*  create 1 (output) bispinor out of 2 spinors  */
+  compact(bisp_l, g_spinor_field[DUM_MATRIX+4], g_spinor_field[DUM_MATRIX+5], VOLUME);
   return;
 }
 
 void Qsw_pm_ndbipsi(bispinor * const bisp_l, bispinor * const bisp_k) {
 
   /*  create 2 spinors out of 1 (input) bispinor  */
-  decompact(g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7], bisp_k);
+  decompact(g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7], bisp_k, VOLUME/2);
 
   Qsw_pm_ndpsi(g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7],
 	       g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7]);
 
   /*  create 1 (output) bispinor out of 2 spinors  */
-  compact(bisp_l, g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7]);
+  compact(bisp_l, g_spinor_field[DUM_MATRIX+6], g_spinor_field[DUM_MATRIX+7], VOLUME/2);
   return;
 }
 

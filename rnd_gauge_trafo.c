@@ -46,7 +46,7 @@ void rnd_gauge_trafo(const int repro, su3 ** const gf){
 
   random_gauge_field(repro, gauge_trafo);
 
-#ifdef MPI
+#ifdef _USE_MPI
   xchange_gauge(gauge_trafo);
 #endif
 

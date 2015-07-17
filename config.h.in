@@ -18,7 +18,7 @@
 #undef HAVE_CLOCK_GETTIME
 
 /* Compile with MPI support */
-#undef MPI
+#undef _USE_MPI
 
 /* Compile with OpenMP support */
 #undef OMP
@@ -88,6 +88,12 @@
 
 /* Alignment compiler hint macro */
 #undef ALIGN
+
+/* Alignment for 32bit arrays -- necessary for SSE and automated vectorization */
+#undef ALIGN_BASE32
+
+/* Alignment of 32bit fields, compiler hint macro */
+#undef ALIGN32
 
 /* Compile with SSE2 support */
 #undef SSE2
@@ -183,6 +189,7 @@
 
 /* Define to 1 if non-blocking MPI calls for spinor and gauge should be used */
 #undef _NON_BLOCKING
+
 
 /* Define if we want to use CUDA GPU */
 #undef HAVE_GPU

@@ -48,7 +48,7 @@
 
 
 /* S and P inputs, R output */
-void compact(bispinor * const R, spinor * const S, spinor * const P)
+void compact(bispinor * const R, spinor * const S, spinor * const P, int N)
 { 
 #ifdef OMP
 #pragma omp parallel
@@ -60,7 +60,7 @@ void compact(bispinor * const R, spinor * const S, spinor * const P)
 #ifdef OMP
 #pragma omp for
 #endif
-  for (int ix = 0; ix < VOLUME/2; ix++){
+  for (int ix = 0; ix < N; ix++){
     r=(spinor *) &R[ix].sp_up;
     s=(spinor *) S + ix;
     
@@ -131,7 +131,7 @@ void compact(bispinor * const R, spinor * const S, spinor * const P)
 
 
 /* R input , S and P outputs */
-void decompact(spinor * const S, spinor * const P, bispinor * const R){
+void decompact(spinor * const S, spinor * const P, bispinor * const R, int N){
 #ifdef OMP
 #pragma omp parallel
   {
@@ -143,7 +143,7 @@ void decompact(spinor * const S, spinor * const P, bispinor * const R){
 #ifdef OMP
 #pragma omp for
 #endif
-  for (int ix = 0; ix < VOLUME/2; ix++)
+  for (int ix = 0; ix < N; ix++)
   {
     s=(spinor *) &R[ix].sp_up;
     r=(spinor *) S + ix;

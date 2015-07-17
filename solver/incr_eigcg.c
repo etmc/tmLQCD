@@ -112,7 +112,7 @@
 #include <math.h>
 #include <time.h>
 
-#ifdef MPI
+#ifdef USE_MPI
 # include <mpi.h>
 #endif
 
@@ -201,7 +201,7 @@ int incr_eigcg(const int N, const int nrhs,  const int nrhs1, spinor * const x, 
      LDN = VOLUMEPLUSRAND/2;
   
  
-  #ifdef MPI
+  #ifdef USE_MPI
     parallel=1;
   #else
     parallel=0;

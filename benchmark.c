@@ -34,7 +34,7 @@
 #if (defined BGL && !defined BGP)
 #  include <rts.h>
 #endif
-#ifdef MPI
+#ifdef _USE_MPI
 # include <mpi.h>
 # ifdef HAVE_LIBLEMON
 #  include <io/params.h>
@@ -54,8 +54,10 @@
 #include "start.h"
 #include "boundary.h"
 #include "operator/Hopping_Matrix.h"
+#include "operator/Hopping_Matrix32.h"
 #include "operator/Hopping_Matrix_nocom.h"
 #include "operator/tm_operators.h"
+#include "operator/tm_operators_32.h"
 #include "global.h"
 #include "xchange/xchange.h"
 #include "init/init.h"
@@ -93,14 +95,16 @@ int main(int argc,char *argv[])
   static double t1,t2,dt,sdt,dts,qdt,sqdt;
   double antioptaway=0.0;
 
-#ifdef MPI
+#ifdef _USE_MPI
   static double dt2;
   
   DUM_DERI = 6;
   DUM_SOLVER = DUM_DERI+2;
   DUM_MATRIX = DUM_SOLVER+6;
   NO_OF_SPINORFIELDS = DUM_MATRIX+2;
-
+  
+  NO_OF_SPINORFIELDS_32 = 2;
+  
 #  ifdef OMP
   int mpi_thread_provided;
   MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
@@ -163,7 +167,7 @@ int main(int argc,char *argv[])
     printf("# The code was compiled for persistent MPI calls (halfspinor only)\n");
 #  endif
 #endif
-#ifdef MPI
+#ifdef _USE_MPI
 #  ifdef _NON_BLOCKING
     printf("# The code was compiled for non-blocking MPI calls (spinor and gauge)\n");
 #  endif
@@ -175,16 +179,20 @@ int main(int argc,char *argv[])
   
 #ifdef _GAUGE_COPY
   init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
+  init_gauge_field_32(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
   init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
+  init_gauge_field_32(VOLUMEPLUSRAND + g_dbw2rand, 0);
 #endif
   init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
 
   if(even_odd_flag) {
     j = init_spinor_field(VOLUMEPLUSRAND/2, 2*k_max+1);
+    j += init_spinor_field_32(VOLUMEPLUSRAND/2, 2*k_max+1);  
   }
   else {
     j = init_spinor_field(VOLUMEPLUSRAND, 2*k_max);
+    j += init_spinor_field_32(VOLUMEPLUSRAND, 2*k_max);    
   }
 
   if ( j!= 0) {
@@ -241,14 +249,14 @@ int main(int argc,char *argv[])
     fprintf(stderr, "Checking of geometry failed. Unable to proceed.\nAborting....\n");
     exit(1);
   }
-#if (defined MPI && !(defined _USE_SHMEM))
+#if (defined _USE_MPI && !(defined _USE_SHMEM))
   check_xchange(); 
 #endif
 
   start_ranlux(1, 123456);
   random_gauge_field(reproduce_randomnumber_flag, g_gauge_field);
 
-#ifdef MPI
+#ifdef _USE_MPI
   /*For parallelization: exchange the gaugefield */
   xchange_gauge(g_gauge_field);
 #endif
@@ -261,8 +269,9 @@ int main(int argc,char *argv[])
       random_spinor_field_eo(g_spinor_field[k], reproduce_randomnumber_flag, RN_GAUSS);
     }
     
+if(g_sloppy_precision_flag == 0) {    
     while(sdt < 30.) {
-#ifdef MPI
+#ifdef _USE_MPI
       MPI_Barrier(MPI_COMM_WORLD);
 #endif
       t1 = gettime();
@@ -276,13 +285,13 @@ int main(int argc,char *argv[])
       }
       t2 = gettime();
       dt = t2-t1;
-#ifdef MPI
+#ifdef _USE_MPI
       MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
       sdt = dt;
 #endif
       qdt=dt*dt;
-#ifdef MPI
+#ifdef _USE_MPI
       MPI_Allreduce (&qdt, &sqdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
       sqdt = qdt;
@@ -306,8 +315,12 @@ int main(int argc,char *argv[])
       printf("\n");
       fflush(stdout);
     }
+
     
-#ifdef MPI
+    
+
+    
+#ifdef _USE_MPI
     /* isolated computation */
     t1 = gettime();
     antioptaway=0.0;
@@ -349,6 +362,120 @@ int main(int argc,char *argv[])
     }
 #endif
     fflush(stdout);
+    
+} /*g_sloppy_precision_flag==0*/   
+    
+    
+if(g_sloppy_precision_flag == 1) {
+ /*Convert to a 32 bit gauge field, after xchange*/
+ convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND + g_dbw2rand);
+g_sloppy_precision = 1;  
+/* 32 Bit Hopping Matrix*/   
+j_max=2048;
+sdt=0.;
+for (k = 0; k < k_max; k++) {
+      random_spinor_field_eo(g_spinor_field[k], reproduce_randomnumber_flag, RN_GAUSS);
+      assign_to_32(g_spinor_field32[k], g_spinor_field[k], VOLUMEPLUSRAND/2);
+}
+
+       while(sdt < 30.) {
+#ifdef USE_MPI
+      MPI_Barrier(MPI_COMM_WORLD);
+#endif
+      t1 = gettime();
+      antioptaway=0.0;
+      for (j=0;j<j_max;j++) {
+       #ifdef OMP
+       #pragma omp parallel
+        {
+       #endif
+        for (k=0;k<k_max;k++) {
+          Hopping_Matrix_32(0, g_spinor_field32[k+k_max], g_spinor_field32[k]);
+          Hopping_Matrix_32(1, g_spinor_field32[2*k_max], g_spinor_field32[k+k_max]);
+          antioptaway+=(double)creal(g_spinor_field32[2*k_max][0].s0.c0);
+        }
+       #ifdef OMP
+        } /* OpenMP closing brace */
+       #endif 
+      }
+      t2 = gettime();
+      dt = t2-t1;
+#ifdef USE_MPI
+      MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#else
+      sdt = dt;
+#endif
+      qdt=dt*dt;
+#ifdef USE_MPI
+      MPI_Allreduce (&qdt, &sqdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#else
+      sqdt = qdt;
+#endif
+      sdt=sdt/((double)g_nproc);
+      sqdt=sqrt(sqdt/g_nproc-sdt*sdt);
+      j_max*=2;
+    }
+    j_max=j_max/2;
+    dts=dt;
+    sdt=1.0e6f*sdt/((double)(k_max*j_max*(VOLUME)));
+    sqdt=1.0e6f*sqdt/((double)(k_max*j_max*(VOLUME)));
+    
+    if(g_proc_id==0) {
+      printf("# The following result is just to make sure that the calculation is not optimized away: %e\n", antioptaway);
+      printf("# Total compute time %e sec, variance of the time %e sec. (%d iterations).\n", sdt, sqdt, j_max);
+      printf("# Communication switched on:\n# (%d Mflops [%d bit arithmetic])\n", (int)(1608.0f/sdt),(int)sizeof(spinor32)/3);
+#ifdef OMP
+      printf("# Mflops per OpenMP thread ~ %d\n",(int)(1608.0f/(omp_num_threads*sdt)));
+#endif
+      printf("\n");
+      fflush(stdout);
+    }
+    
+ #ifdef USE_MPI
+    /* isolated computation */
+    t1 = gettime();
+    antioptaway=0.0;
+    for (j=0;j<j_max;j++) {
+      for (k=0;k<k_max;k++) {
+       #ifdef OMP
+       #pragma omp parallel
+        {
+       #endif	
+        Hopping_Matrix_32_nocom(0, g_spinor_field32[k+k_max], g_spinor_field32[k]);
+        Hopping_Matrix_32_nocom(1, g_spinor_field32[2*k_max], g_spinor_field32[k+k_max]);
+        antioptaway += (double)creal(g_spinor_field32[2*k_max][0].s0.c0);
+      }
+      #ifdef OMP
+        } /* OpenMP closing brace */
+      #endif       
+    }
+    t2 = gettime();
+    dt2 = t2-t1;
+    /* compute the bandwidth */
+    dt=dts-dt2;
+    MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    sdt=sdt/((double)g_nproc);
+    MPI_Allreduce (&dt2, &dt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    dt=dt/((double)g_nproc);
+    dt=1.0e6f*dt/((double)(k_max*j_max*(VOLUME)));
+    if(g_proc_id==0) {
+      printf("# The following result is printed just to make sure that the calculation is not optimized away: %e\n",antioptaway);
+      printf("# Communication switched off: \n# (%d Mflops [%d bit arithmetic])\n", (int)(1608.0f/dt),(int)sizeof(spinor32)/3);
+#ifdef OMP
+      printf("# Mflops per OpenMP thread ~ %d\n",(int)(1608.0f/(omp_num_threads*dt)));
+#endif
+      printf("\n"); 
+      fflush(stdout);
+    }   
+#endif
+    
+}
+/* 32 bit*/
+        
+    
+    
+    
+    
   }
   else {
     /* the non even/odd case now */
@@ -360,7 +487,7 @@ int main(int argc,char *argv[])
     }
     
     while(sdt < 3.) {
-#ifdef MPI
+#ifdef _USE_MPI
       MPI_Barrier(MPI_COMM_WORLD);
 #endif
       t1 = gettime();
@@ -372,13 +499,13 @@ int main(int argc,char *argv[])
       }
       t2 = gettime();
       dt=t2-t1;
-#ifdef MPI
+#ifdef _USE_MPI
       MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
       sdt = dt;
 #endif
       qdt=dt*dt;
-#ifdef MPI
+#ifdef _USE_MPI
       MPI_Allreduce (&qdt, &sqdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
       sqdt = qdt;
@@ -403,6 +530,7 @@ int main(int argc,char *argv[])
       fflush(stdout);
     }
   }
+
 #ifdef HAVE_LIBLEMON
   if(g_proc_id==0) {
     printf("# Performing parallel IO test ...\n");
@@ -420,10 +548,12 @@ int main(int argc,char *argv[])
   free_omp_accumulators();
 #endif
   free_gauge_field();
+  free_gauge_field_32();
   free_geometry_indices();
   free_spinor_field();
+  free_spinor_field_32();  
   free_moment_field();
-#ifdef MPI
+#ifdef _USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 #endif

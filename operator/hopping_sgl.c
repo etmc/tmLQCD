@@ -44,7 +44,7 @@ void Hopping_Matrix(int ieo, spinor32 * const l, spinor32 * const k){
 #endif
 
   /* for parallelization */
-#    if (defined MPI && !(defined _NO_COMM))
+#    if (defined _USE_MPI && !(defined _NO_COMM))
   xchange_field(k, ieo);
 #    endif
 

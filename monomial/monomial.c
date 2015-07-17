@@ -32,6 +32,7 @@
 #include "su3adj.h"
 #include "su3spinor.h"
 #include "operator/tm_operators.h"
+#include "operator/tm_operators_32.h"
 #include "operator/clovertm_operators.h"
 #include "operator/clover_leaf.h"
 #include "ranlxd.h"
@@ -92,7 +93,16 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].accprec = _default_g_eps_sq_acc;
   monomial_list[no_monomials].forceprec = _default_g_eps_sq_force;
   monomial_list[no_monomials].maxiter = _default_max_solver_iterations;
-  monomial_list[no_monomials].solver = _default_solver_flag;
+  if((monomial_list[no_monomials].type == NDRAT) ||
+     (monomial_list[no_monomials].type == NDRATCOR) ||
+     (monomial_list[no_monomials].type == NDCLOVERRAT) ||
+     (monomial_list[no_monomials].type == NDCLOVERRATCOR)
+  ) {
+    monomial_list[no_monomials].solver = _default_nd_solver_flag;    
+  }
+  else{
+    monomial_list[no_monomials].solver = _default_solver_flag;
+  }
   monomial_list[no_monomials].even_odd_flag = _default_even_odd_flag;
   monomial_list[no_monomials].forcefactor = 1.;
   monomial_list[no_monomials].use_rectangles = 0;
@@ -180,6 +190,7 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].accfunction = &det_acc;
 	monomial_list[i].derivativefunction = &det_derivative;
 	monomial_list[i].Qsq = &Qtm_pm_psi;
+	monomial_list[i].Qsq32 = &Qtm_pm_psi_32;	
 	monomial_list[i].Qp = &Qtm_plus_psi;
 	monomial_list[i].Qm = &Qtm_minus_psi;
 	if(g_proc_id == 0 && g_debug_level > 1) {
@@ -219,6 +230,7 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].accfunction = &detratio_acc;
 	monomial_list[i].derivativefunction = &detratio_derivative;
 	monomial_list[i].Qsq = &Qtm_pm_psi;
+	monomial_list[i].Qsq32 = &Qtm_pm_psi_32;	
 	monomial_list[i].Qp = &Qtm_plus_psi;
 	monomial_list[i].Qm = &Qtm_minus_psi;
 	if(g_proc_id == 0 && g_debug_level > 1) {
@@ -282,7 +294,8 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].hbfunction = &ndrat_heatbath;
 	monomial_list[i].accfunction = &ndrat_acc;
 	monomial_list[i].derivativefunction = &ndrat_derivative;
-	monomial_list[i].even_odd_flag = 1;
+	/* Since we have NDRAT also for non-EO we use the externally given flag to decide*/
+	monomial_list[i].even_odd_flag = even_odd_flag;
 	monomial_list[i].pf2 = __pf+no*V;
 	no++;
 	retval = init_ndrat_monomial(i);
@@ -344,7 +357,8 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].hbfunction = &ndratcor_heatbath;
 	monomial_list[i].accfunction = &ndratcor_acc;
 	monomial_list[i].derivativefunction = NULL;
-	monomial_list[i].even_odd_flag = 1;
+	/* Since we have NDRAT also for non-EO we use the externally given flag to decide*/
+	monomial_list[i].even_odd_flag = even_odd_flag;
 	monomial_list[i].pf2 = __pf+no*V;
 	monomial_list[i].rat.crange[0] = 0;
         monomial_list[i].rat.crange[1] = monomial_list[i].rat.order-1;
@@ -557,7 +571,7 @@ int init_poly_monomial(const int V, const int id){
     } 
     else {
       fprintf(stderr,"Reading local normalization from file FAILED\n Borting Ab\n");
-#ifdef MPI
+#ifdef _USE_MPI
       MPI_Finalize();
 #endif
       exit(6);
@@ -576,7 +590,7 @@ int init_poly_monomial(const int V, const int id){
   if((rootsFile=fopen(mnl->MDPolyRootsFile,"r")) != (FILE*)NULL) {
     if (fgets(title, 100, rootsFile) == NULL) {
       fprintf(stderr, "Cant read Roots file: %s Aborting...\n", mnl->MDPolyRootsFile);
-#ifdef MPI
+#ifdef _USE_MPI
       MPI_Finalize();
 #endif
       exit(6);
@@ -590,7 +604,7 @@ int init_poly_monomial(const int V, const int id){
   }
   else {
     fprintf(stderr, "Roots File %s is missing! Aborting...\n", mnl->MDPolyRootsFile );
-#ifdef MPI
+#ifdef _USE_MPI
     MPI_Finalize();
 #endif
     exit(6);

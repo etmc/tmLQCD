@@ -34,7 +34,7 @@
 #include <time.h>
 #include <string.h>
 #include <signal.h>
-#ifdef MPI
+#ifdef _USE_MPI
 #include <mpi.h>
 #endif
 #ifdef OMP
@@ -48,7 +48,7 @@
 #include "start.h"
 /*#include "eigenvalues.h"*/
 #include "measure_gauge_action.h"
-#ifdef MPI
+#ifdef _USE_MPI
 #include "xchange/xchange.h"
 #endif
 #include <io/utils.h>
@@ -84,6 +84,17 @@
 #include "solver/spectral_proj.h"
 #include "meas/measurements.h"
 
+#ifdef HAVE_GPU
+extern void init_mixedsolve_eo(su3** gf, int use_eo);
+extern void finalize_mixedsolve(int use_eo);
+extern void init_gpu_fields(int need_momenta, int use_eo);
+extern void finalize_gpu_fields();
+#include "GPU/cudadefs.h"
+  #ifdef TEMPORALGAUGE
+     #include "temporalgauge.h" 
+   #endif
+#endif
+
 extern int nstore;
 int check_geometry();
 
@@ -115,16 +126,15 @@ int main(int argc, char *argv[])
 
   DUM_DERI = 8;
   DUM_MATRIX = DUM_DERI + 5;
-#if ((defined BGL && defined XLC) || defined _USE_TSPLITPAR)
   NO_OF_SPINORFIELDS = DUM_MATRIX + 3;
-#else
-  NO_OF_SPINORFIELDS = DUM_MATRIX + 3;
-#endif
+
+  //4 extra fields (corresponding to DUM_MATRIX+0..5) for deg. and ND matrix mult.  
+  NO_OF_SPINORFIELDS_32 = 6;
 
   verbose = 0;
   g_use_clover_flag = 0;
 
-#ifdef MPI
+#ifdef _USE_MPI
 
 #  ifdef OMP
   int mpi_thread_provided;
@@ -177,15 +187,18 @@ int main(int argc, char *argv[])
   /* in this way even/odd can still be used by other operators */
   for(j = 0; j < no_operators; j++) if(!operator_list[j].even_odd_flag) even_odd_flag = 0;
 
-#ifndef MPI
+#ifndef _USE_MPI
   g_dbw2rand = 0;
 #endif
 
 #ifdef _GAUGE_COPY
   j = init_gauge_field(VOLUMEPLUSRAND, 1);
+  j += init_gauge_field_32(VOLUMEPLUSRAND, 1);
 #else
   j = init_gauge_field(VOLUMEPLUSRAND, 0);
+  j += init_gauge_field_32(VOLUMEPLUSRAND, 0);  
 #endif
+ 
   if (j != 0) {
     fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
     exit(-1);
@@ -209,9 +222,11 @@ int main(int argc, char *argv[])
   }
   if (even_odd_flag) {
     j = init_spinor_field(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS);
+    j += init_spinor_field_32(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS_32);   
   }
   else {
     j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
+    j += init_spinor_field_32(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS_32);   
   }
   if (j != 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
@@ -250,6 +265,24 @@ int main(int argc, char *argv[])
 
   init_operators();
 
+  if(usegpu_flag){
+#ifdef HAVE_GPU 
+    init_mixedsolve_eo(g_gauge_field, even_odd_flag);
+#ifdef GPU_DOUBLE
+    /*init double fields w/o momenta*/
+    init_gpu_fields(0, even_odd_flag);
+#endif
+#ifdef TEMPORALGAUGE
+    int retval;
+    if((retval=init_temporalgauge(VOLUME, g_gauge_field)) !=0){
+      if(g_proc_id == 0) printf("Error while initializing temporal gauge. Aborting...\n");   
+      exit(200);
+    }
+#endif
+#endif 
+  } //usegpu_flag
+ 
+  
   /* list and initialize measurements*/
   if(g_proc_id == 0) {
     printf("\n");
@@ -297,10 +330,11 @@ int main(int argc, char *argv[])
       printf("# Finished reading gauge field.\n");
       fflush(stdout);
     }
-#ifdef MPI
+#ifdef _USE_MPI
     xchange_gauge(g_gauge_field);
 #endif
-
+    /*Convert to a 32 bit gauge field, after xchange*/
+    convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND);
     /*compute the energy of the gauge field*/
     plaquette_energy = measure_plaquette( (const su3**) g_gauge_field);
 
@@ -343,7 +377,7 @@ int main(int argc, char *argv[])
                   0, compute_evs, nstore, even_odd_flag);
     }
     if (phmc_compute_evs != 0) {
-#ifdef MPI
+#ifdef _USE_MPI
       MPI_Finalize();
 #endif
       return(0);
@@ -433,7 +467,7 @@ int main(int argc, char *argv[])
     g_precWS=NULL;
     if(use_preconditioning == 1){
       /* todo load fftw wisdom */
-#if (defined HAVE_FFTW ) && !( defined MPI)
+#if (defined HAVE_FFTW ) && !( defined _USE_MPI)
       loadFFTWWisdom(g_spinor_field[0],g_spinor_field[1],T,LX);
 #else
       use_preconditioning=0;
@@ -500,16 +534,34 @@ int main(int argc, char *argv[])
 #ifdef OMP
   free_omp_accumulators();
 #endif
+
+
+if(usegpu_flag){
+  #ifdef HAVE_GPU
+    finalize_mixedsolve(even_odd_flag);
+    #ifdef GPU_DOUBLE
+      finalize_gpu_fields();
+    #endif
+      #ifdef TEMPORALGAUGE
+	finalize_temporalgauge();
+      #endif
+  #endif    
+}
+
+
+
   free_blocks();
   free_dfl_subspace();
   free_gauge_field();
+  free_gauge_field_32();
   free_geometry_indices();
   free_spinor_field();
+  free_spinor_field_32();  
   free_moment_field();
   free_chi_spinor_field();
   free(filename);
   free(input_filename);
-#ifdef MPI
+#ifdef _USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 #endif

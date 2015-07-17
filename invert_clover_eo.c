@@ -46,7 +46,18 @@
 #include"solver/solver.h"
 #include"invert_clover_eo.h"
 #include "solver/dirac_operator_eigenvectors.h"
+#include"read_input.h"
+#ifdef HAVE_GPU
+#include"GPU/cudadefs.h"
+#include"temporalgauge.h"
+#include"measure_gauge_action.h"
 
+extern  int mixed_solve_eo_clover (spinor * const P, spinor * const Q, const int max_iter, 
+			    double eps, const int rel_prec, const int N);
+#ifdef TEMPORALGAUGE
+extern su3* g_trafo;
+#endif
+#endif
 
 int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new, 
 		     spinor * const Even, spinor * const Odd,
@@ -77,21 +88,35 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
     fflush(stdout);
   }
   
-  if(solver_flag == CG){
+  if(solver_flag == CG) {
     if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
-    iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, 
-		 precision, rel_prec, 
-		 VOLUME/2, Qsq);
+    if(usegpu_flag){
+#ifdef HAVE_GPU
+      if(g_proc_id == 0) {printf("Using GPU for clover inversion\n");
+	fflush(stdout);}
+      iter = linsolve_eo_gpu(Odd_new, g_spinor_field[DUM_DERI], max_iter,   precision, rel_prec, VOLUME/2, Qsq);
+#endif
+    }
+    else {
+      iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, 
+		    precision, rel_prec, 
+		    VOLUME/2, Qsq);
+    }
     Qm(Odd_new, Odd_new);
-    }else if(solver_flag == INCREIGCG){
-
-       if(g_proc_id == 0) {printf("# Using Incremental Eig-CG!\n"); fflush(stdout);}
-       iter = incr_eigcg(VOLUME/2,solver_params.eigcg_nrhs, solver_params.eigcg_nrhs1, Odd_new, g_spinor_field[DUM_DERI], solver_params.eigcg_ldh, Qsq,
- 		    	            solver_params.eigcg_tolsq1, solver_params.eigcg_tolsq, solver_params.eigcg_restolsq , solver_params.eigcg_rand_guess_opt, 
-                                    rel_prec, max_iter, solver_params.eigcg_nev, solver_params.eigcg_vmax);
-       Qm(Odd_new, Odd_new);
-
-   }else{
+  }
+  else if(solver_flag == INCREIGCG) {
+    if(g_proc_id == 0) {printf("# Using Incremental Eig-CG!\n"); fflush(stdout);}
+    iter = incr_eigcg(VOLUME/2,solver_params.eigcg_nrhs, solver_params.eigcg_nrhs1, Odd_new, g_spinor_field[DUM_DERI], solver_params.eigcg_ldh, Qsq,
+		      solver_params.eigcg_tolsq1, solver_params.eigcg_tolsq, solver_params.eigcg_restolsq , solver_params.eigcg_rand_guess_opt, 
+		      rel_prec, max_iter, solver_params.eigcg_nev, solver_params.eigcg_vmax);
+    Qm(Odd_new, Odd_new);
+  }
+  else if(solver_flag == MIXEDCG){
+    iter = mixed_cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, 
+			  VOLUME/2, &Qsw_pm_psi, &Qsw_pm_psi_32);
+    Qm(Odd_new, Odd_new);
+  }
+  else {
     if(g_proc_id == 0) {printf("# This solver is not available for this operator. Exisiting!\n"); fflush(stdout);}
     return 0;
   }

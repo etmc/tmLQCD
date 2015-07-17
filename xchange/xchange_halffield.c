@@ -32,7 +32,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#ifdef MPI
+#ifdef _USE_MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -53,7 +53,7 @@ MPI_Request prequests[16];
 /* 2. */
 void init_xchange_halffield() {
 
-#  ifdef MPI
+#  ifdef _USE_MPI
 
 #  ifdef PARALLELT
   int reqcount = 4;
@@ -139,13 +139,13 @@ void init_xchange_halffield() {
   MPI_Recv_init((void*)(recvBuffer + LX*LY*LZ + T*LY*LZ + T*LX*LZ), 
 		T*LX*LY*12/2, MPI_DOUBLE, g_nb_z_up, 504, g_cart_grid, &prequests[15]); 
 #  endif
-#  endif /* MPI */
+#  endif /* _USE_MPI */
   return;
 }
 
 /* 3. */
 void xchange_halffield() {
-#  ifdef MPI
+#  ifdef _USE_MPI
 
   MPI_Status status[16];
 #    ifdef PARALLELT
@@ -164,7 +164,7 @@ void xchange_halffield() {
   MPI_Startall(reqcount, prequests);
 
   MPI_Waitall(reqcount, prequests, status); 
-#  endif /* MPI */
+#  endif /* _USE_MPI */
   return;
 }
 
@@ -175,7 +175,7 @@ void xchange_halffield() {
 /* 4. -IIG */
 void xchange_halffield() {
 
-#  ifdef MPI
+#  ifdef _USE_MPI
 
   MPI_Request requests[16];
   MPI_Status status[16];
@@ -254,7 +254,7 @@ void xchange_halffield() {
 #    endif
 
   MPI_Waitall(reqcount, requests, status); 
-#  endif /* MPI */
+#  endif /* _USE_MPI */
   return;
 
 #ifdef _KOJAK_INST
@@ -267,7 +267,7 @@ void xchange_halffield() {
 /* 4. */
 void xchange_halffield() {
 
-#  ifdef MPI
+#  ifdef _USE_MPI
 
   MPI_Request requests[16];
   MPI_Status status[16];
@@ -351,7 +351,7 @@ void xchange_halffield() {
 #    endif
   
   MPI_Waitall(reqcount, requests, status); 
-#  endif /* MPI */
+#  endif /* _USE_MPI */
   return;
   
 #ifdef _KOJAK_INST
@@ -370,7 +370,7 @@ void xchange_halffield() {
 /* 32-2. */
 void xchange_halffield32() {
 
-#  ifdef MPI
+#  ifdef _USE_MPI
 
   MPI_Request requests[16];
   MPI_Status status[16];
@@ -454,7 +454,7 @@ void xchange_halffield32() {
 #    endif
 
   MPI_Waitall(reqcount, requests, status); 
-#  endif /* MPI */
+#  endif /* _USE_MPI */
   return;
 #ifdef _KOJAK_INST
 #pragma pomp inst end(xchangehalf32)

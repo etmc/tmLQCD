@@ -27,7 +27,7 @@
 #include <math.h>
 #include <errno.h>
 #include <time.h>
-#ifdef MPI
+#ifdef _USE_MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -198,8 +198,12 @@ int init_operators() {
 	optr->applyQ = &Qov_psi;
       }
       else if(optr->type == DBTMWILSON) {
-	optr->even_odd_flag = 1;
-	optr->applyDbQsq = &Qtm_pm_ndpsi;
+	if(optr->even_odd_flag){
+	  optr->applyDbQsq = &Qtm_pm_ndpsi;
+	}
+	else{
+	 optr->applyDbQsq = &Q_pm_ndpsi; 
+	}
 	/* TODO: this should be here!       */
 	/* Chi`s-spinors  memory allocation */
 	/*       if(init_chi_spinor_field(VOLUMEPLUSRAND/2, 20) != 0) { */
@@ -238,7 +242,16 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
   optr->reached_prec = -1.;
   g_kappa = optr->kappa;
   boundary(g_kappa);
-
+  int Vol;
+  
+  if(even_odd_flag){
+    Vol = VOLUME/2;
+  }
+  else{
+    Vol = VOLUME;
+  }
+  
+  
   atime = gettime();
   if(optr->type == TMWILSON || optr->type == WILSON || optr->type == CLOVER) {
     g_mu = optr->mu;
@@ -248,7 +261,13 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 	printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
       }
       init_sw_fields(VOLUME);
+      
       sw_term( (const su3**) g_gauge_field, optr->kappa, optr->c_sw); 
+      /* this must be EE here!   */
+      /* to match clover_inv in Qsw_psi */
+      sw_invert(EE, optr->mu);
+      /* now copy double sw and sw_inv fields to 32bit versions */
+      copy_32_sw_fields();
     }
 
     for(i = 0; i < 2; i++) {
@@ -271,13 +290,19 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 				      0, optr->even_odd_flag,optr->no_extra_masses, optr->extra_masses, optr->solver_params, optr->id );
 	
 	/* check result */
-	M_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
+	if(even_odd_flag){
+	  M_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
+	}
+	else{
+	  D_psi(g_spinor_field[DUM_DERI],  optr->prop0);  
+	}
       }
       else {
 	/* this must be EE here!   */
 	/* to match clover_inv in Qsw_psi */
 	sw_invert(EE, optr->mu);
-
+        /* now copy double sw and sw_inv fields to 32bit versions */
+        copy_32_sw_fields();
 	optr->iterations = invert_clover_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
 					    optr->eps_sq, optr->maxiter,
 					    optr->solver, optr->rel_prec,optr->solver_params,
@@ -286,23 +311,30 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
  	Msw_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
       }
 
-      diff(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], optr->sr0, VOLUME / 2);
-      diff(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], optr->sr1, VOLUME / 2);
+      diff(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], optr->sr0, Vol);
+      if(even_odd_flag)
+        diff(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], optr->sr1, Vol);
 
-      nrm1 = square_norm(g_spinor_field[DUM_DERI], VOLUME / 2, 1);
-      nrm2 = square_norm(g_spinor_field[DUM_DERI+1], VOLUME / 2, 1);
+      nrm1 = square_norm(g_spinor_field[DUM_DERI], Vol, 1);
+      if(even_odd_flag){
+        nrm2 = square_norm(g_spinor_field[DUM_DERI+1], Vol, 1);
+      }else{
+	nrm2 = 0.0;
+      }
       optr->reached_prec = nrm1 + nrm2;
 
       /* convert to standard normalisation  */
       /* we have to mult. by 2*kappa        */
       if (optr->kappa != 0.) {
-        mul_r(optr->prop0, (2*optr->kappa), optr->prop0, VOLUME / 2);
-        mul_r(optr->prop1, (2*optr->kappa), optr->prop1, VOLUME / 2);
+        mul_r(optr->prop0, (2*optr->kappa), optr->prop0, Vol);
+	if(even_odd_flag)
+          mul_r(optr->prop1, (2*optr->kappa), optr->prop1, Vol);
       }
       if (optr->solver != CGMMS && write_prop) /* CGMMS handles its own I/O */
         optr->write_prop(op_id, index_start, i);
       if(optr->DownProp) {
-        optr->mu = -optr->mu;
+	g_mu = -optr->mu;      
+	optr->mu = -optr->mu;
       } else 
         break;
     }
@@ -322,11 +354,12 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
     }
 
     for(i = 0; i < SourceInfo.no_flavours; i++) {
+      g_mu = optr->mubar;
       if(optr->type != DBCLOVER) {
 	optr->iterations = invert_doublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3, 
 					      optr->sr0, optr->sr1, optr->sr2, optr->sr3,
 					      optr->eps_sq, optr->maxiter,
-					      optr->solver, optr->rel_prec);
+					      optr->solver, optr->rel_prec, optr->even_odd_flag);
       }
       else {
 	optr->iterations = invert_cloverdoublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3, 
@@ -334,59 +367,71 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 						    optr->eps_sq, optr->maxiter,
 						    optr->solver, optr->rel_prec);
       }
-      g_mu = optr->mubar;
       if(optr->type != DBCLOVER) {
-	M_full(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], optr->prop0, optr->prop1); 
+	if(even_odd_flag){
+	  M_full(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], optr->prop0, optr->prop1); 
+	}
+	else{
+	  D_psi(g_spinor_field[DUM_DERI+1], optr->prop0);
+	}
       }
       else {
 	Msw_full(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], optr->prop0, optr->prop1); 
       }
-      assign_add_mul_r(g_spinor_field[DUM_DERI+1], optr->prop2, -optr->epsbar, VOLUME/2);
-      assign_add_mul_r(g_spinor_field[DUM_DERI+2], optr->prop3, -optr->epsbar, VOLUME/2);
+      assign_add_mul_r(g_spinor_field[DUM_DERI+1], optr->prop2, -optr->epsbar, Vol);
+      if(even_odd_flag)
+        assign_add_mul_r(g_spinor_field[DUM_DERI+2], optr->prop3, -optr->epsbar, Vol);
 
       g_mu = -g_mu;
       if(optr->type != DBCLOVER) {
-	M_full(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+4], optr->prop2, optr->prop3); 
+	if(even_odd_flag){
+	  M_full(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+4], optr->prop2, optr->prop3); 
+	}
+	else{
+	  D_psi(g_spinor_field[DUM_DERI+3], optr->prop2); 	  
+	}
       }
       else {
 	Msw_full(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+4], optr->prop2, optr->prop3);
       }
-      assign_add_mul_r(g_spinor_field[DUM_DERI+3], optr->prop0, -optr->epsbar, VOLUME/2);
-      assign_add_mul_r(g_spinor_field[DUM_DERI+4], optr->prop1, -optr->epsbar, VOLUME/2);
+      assign_add_mul_r(g_spinor_field[DUM_DERI+3], optr->prop0, -optr->epsbar, Vol);
+      if(even_odd_flag)
+      assign_add_mul_r(g_spinor_field[DUM_DERI+4], optr->prop1, -optr->epsbar, Vol);
 
-      diff(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], optr->sr0, VOLUME/2); 
-      diff(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+2], optr->sr1, VOLUME/2); 
-      diff(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+3], optr->sr2, VOLUME/2); 
-      diff(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+4], optr->sr3, VOLUME/2); 
+      diff(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], optr->sr0, Vol); 
+      if(even_odd_flag) diff(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+2], optr->sr1, Vol); 
+      diff(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+3], optr->sr2, Vol); 
+      if(even_odd_flag) diff(g_spinor_field[DUM_DERI+4], g_spinor_field[DUM_DERI+4], optr->sr3, Vol); 
 
-      nrm1  = square_norm(g_spinor_field[DUM_DERI+1], VOLUME/2, 1); 
-      nrm1 += square_norm(g_spinor_field[DUM_DERI+2], VOLUME/2, 1); 
-      nrm1 += square_norm(g_spinor_field[DUM_DERI+3], VOLUME/2, 1); 
-      nrm1 += square_norm(g_spinor_field[DUM_DERI+4], VOLUME/2, 1); 
+      nrm1  = square_norm(g_spinor_field[DUM_DERI+1], Vol, 1); 
+      if(even_odd_flag) nrm1 += square_norm(g_spinor_field[DUM_DERI+2], Vol, 1); 
+      nrm1 += square_norm(g_spinor_field[DUM_DERI+3], Vol, 1); 
+      if(even_odd_flag) nrm1 += square_norm(g_spinor_field[DUM_DERI+4], Vol, 1); 
       optr->reached_prec = nrm1;
       g_mu = g_mu1;
       /* For standard normalisation */
       /* we have to mult. by 2*kappa */
-      mul_r(g_spinor_field[DUM_DERI], (2*optr->kappa), optr->prop0, VOLUME/2);
-      mul_r(g_spinor_field[DUM_DERI+1], (2*optr->kappa), optr->prop1, VOLUME/2);
-      mul_r(g_spinor_field[DUM_DERI+2], (2*optr->kappa), optr->prop2, VOLUME/2);
-      mul_r(g_spinor_field[DUM_DERI+3], (2*optr->kappa), optr->prop3, VOLUME/2);
+      mul_r(g_spinor_field[DUM_DERI], (2*optr->kappa), optr->prop0, Vol);
+      if(even_odd_flag) mul_r(g_spinor_field[DUM_DERI+1], (2*optr->kappa), optr->prop1, Vol);
+      mul_r(g_spinor_field[DUM_DERI+2], (2*optr->kappa), optr->prop2, Vol);
+      if(even_odd_flag) mul_r(g_spinor_field[DUM_DERI+3], (2*optr->kappa), optr->prop3, Vol);
       /* the final result should be stored in the convention used in */
       /* hep-lat/0606011                                             */
       /* this requires multiplication of source with                 */
       /* (1+itau_2)/sqrt(2) and the result with (1-itau_2)/sqrt(2)   */
 
       mul_one_pm_itau2(optr->prop0, optr->prop2, g_spinor_field[DUM_DERI], 
-                       g_spinor_field[DUM_DERI+2], -1., VOLUME/2);
-      mul_one_pm_itau2(optr->prop1, optr->prop3, g_spinor_field[DUM_DERI+1], 
-                       g_spinor_field[DUM_DERI+3], -1., VOLUME/2);
+                       g_spinor_field[DUM_DERI+2], -1., Vol);
+      if(even_odd_flag)
+        mul_one_pm_itau2(optr->prop1, optr->prop3, g_spinor_field[DUM_DERI+1], 
+                         g_spinor_field[DUM_DERI+3], -1., Vol);
       /* write propagator */
       if(write_prop) optr->write_prop(op_id, index_start, i);
 
-      mul_r(optr->prop0, 1./(2*optr->kappa), g_spinor_field[DUM_DERI], VOLUME/2);
-      mul_r(optr->prop1, 1./(2*optr->kappa), g_spinor_field[DUM_DERI+1], VOLUME/2);
-      mul_r(optr->prop2, 1./(2*optr->kappa), g_spinor_field[DUM_DERI+2], VOLUME/2);
-      mul_r(optr->prop3, 1./(2*optr->kappa), g_spinor_field[DUM_DERI+3], VOLUME/2);
+      mul_r(optr->prop0, 1./(2*optr->kappa), g_spinor_field[DUM_DERI], Vol);
+      if(even_odd_flag) mul_r(optr->prop1, 1./(2*optr->kappa), g_spinor_field[DUM_DERI+1], Vol);
+      mul_r(optr->prop2, 1./(2*optr->kappa), g_spinor_field[DUM_DERI+2], Vol);
+      if(even_odd_flag) mul_r(optr->prop3, 1./(2*optr->kappa), g_spinor_field[DUM_DERI+3], Vol);
 
       /* mirror source, but not for volume sources */
       if(i == 0 && SourceInfo.no_flavours == 2 && SourceInfo.type != 1) {
@@ -394,11 +439,11 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
           fprintf(stdout, "# Inversion done in %d iterations, squared residue = %e!\n",
                   optr->iterations, optr->reached_prec);
         }
-        mul_one_pm_itau2(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], optr->sr0, optr->sr2, -1., VOLUME/2);
-        mul_one_pm_itau2(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+3], optr->sr1, optr->sr3, -1., VOLUME/2);
+        mul_one_pm_itau2(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], optr->sr0, optr->sr2, -1., Vol);
+        if(even_odd_flag) mul_one_pm_itau2(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+3], optr->sr1, optr->sr3, -1., Vol);
 
-        mul_one_pm_itau2(optr->sr0, optr->sr2, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI], +1., VOLUME/2);
-        mul_one_pm_itau2(optr->sr1, optr->sr3, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], +1., VOLUME/2);
+        mul_one_pm_itau2(optr->sr0, optr->sr2, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI], +1., Vol);
+        if(even_odd_flag) mul_one_pm_itau2(optr->sr1, optr->sr3, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], +1., Vol);
 
       }
       /* volume sources need only one inversion */
@@ -442,6 +487,7 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
   WRITER *writer = NULL;
   int append = 0;
   int status = 0;
+  spinor ** sr0p, ** sr1p, ** sr2p, ** sr3p;
 
   paramsSourceFormat *sourceFormat = NULL;
   paramsPropagatorFormat *propagatorFormat = NULL;
@@ -483,10 +529,25 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
   if (PropInfo.format == 1) {
     sourceFormat = construct_paramsSourceFormat(SourceInfo.precision, optr->no_flavours, 4, 3);
     write_source_format(writer, sourceFormat);
-    status = write_spinor(writer, &operator_list[op_id].sr0, &operator_list[op_id].sr1, 
+    sr0p = &operator_list[op_id].sr0;
+    if(operator_list[op_id].sr1 == NULL){
+      sr1p = NULL;
+    }
+    else{
+      sr1p = &operator_list[op_id].sr1;
+    }
+    status = write_spinor(writer, sr0p, sr1p, 
 			  1, SourceInfo.precision);
+    
     if(optr->no_flavours == 2) {
-      status = write_spinor(writer, &operator_list[op_id].sr2, &operator_list[op_id].sr3, 
+      sr2p = &operator_list[op_id].sr2;
+      if(operator_list[op_id].sr3 == NULL){
+	sr3p = NULL;
+      }
+      else{
+	sr3p = &operator_list[op_id].sr3;
+      }
+      status = write_spinor(writer, sr2p, sr3p, 
 			    1, SourceInfo.precision);
     }
     free(sourceFormat);
@@ -496,9 +557,23 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
   free(propagatorFormat);
 
   if(optr->no_flavours == 2) {
-    status = write_spinor(writer, &operator_list[op_id].prop2, &operator_list[op_id].prop3, 1, optr->prop_precision);
+    sr2p = &operator_list[op_id].prop2;
+      if(operator_list[op_id].prop3 == NULL){
+	sr3p = NULL;
+      }
+      else{
+	sr3p = &operator_list[op_id].prop3;
+      }
+    status = write_spinor(writer, sr2p, sr3p, 1, optr->prop_precision);
   }
-  status = write_spinor(writer, &operator_list[op_id].prop0, &operator_list[op_id].prop1, 1, optr->prop_precision);
+  sr0p = &operator_list[op_id].prop0;
+    if(operator_list[op_id].prop1 == NULL){
+      sr1p = NULL;
+    }
+    else{
+      sr1p = &operator_list[op_id].prop1;
+    }
+  status = write_spinor(writer, sr0p, sr1p, 1, optr->prop_precision);
   destruct_writer(writer);
   return;
 }

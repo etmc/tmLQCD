@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#ifdef MPI
+#ifdef _USE_MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -234,7 +234,7 @@ void apply_little_D_spinor(spinor *r, spinor *s){
         printf("LITTLE_D for 0: v[%u] = %1.5e + %1.5e i\n", j, creal(v[j]), cimag(v[j]));
       }
     }
-#ifdef MPI
+#ifdef _USE_MPI
     MPI_Barrier(MPI_COMM_WORLD);
 #endif
   }
@@ -246,7 +246,7 @@ void apply_little_D_spinor(spinor *r, spinor *s){
           printf("LITTLE_D for %u: v[%u] = %1.5e + %1.5e i\n", k, j, creal(v[j]), cimag(v[j]));
         }
       }
-#ifdef MPI
+#ifdef _USE_MPI
       MPI_Barrier(MPI_COMM_WORLD);
 #endif
     }
@@ -260,7 +260,7 @@ void apply_little_D_spinor(spinor *r, spinor *s){
         printf("LITTLE_D for 0: w[%u] = %1.5e + %1.5e i\n", j, creal(w[j]), cimag(w[j]));
       }
     }
-#ifdef MPI
+#ifdef _USE_MPI
     MPI_Barrier(MPI_COMM_WORLD);
 #endif
   }
@@ -272,7 +272,7 @@ void apply_little_D_spinor(spinor *r, spinor *s){
           printf("LITTLE_D for %u: w[%u] = %1.5e + %1.5e i\n", k, j, creal(w[j]), cimag(w[j]));
         }
       }
-#ifdef MPI
+#ifdef _USE_MPI
       MPI_Barrier(MPI_COMM_WORLD);
 #endif
     }
@@ -295,7 +295,7 @@ void apply_little_D_spinor(spinor *r, spinor *s){
 
 
 void alt_little_field_gather(_Complex double * w) {
-#ifdef MPI
+#ifdef _USE_MPI
   MPI_Status status;
   int size = 25 * g_N_s * sizeof(_Complex double);
   _Complex double *buf = malloc(size);
@@ -379,7 +379,7 @@ void alt_little_field_gather(_Complex double * w) {
   return;
 }
 
-#ifdef MPI
+#ifdef _USE_MPI
 MPI_Request lrequests[16];
 MPI_Status lstatus[16];
 int waitcount = 0;
@@ -387,7 +387,7 @@ int waitcount = 0;
 
 
 void little_field_gather(_Complex double * w) {
-#ifdef MPI
+#ifdef _USE_MPI
   int err, bt, bx, by, bz, pm, ib;
   _Complex double *wt, *wx, *wy, *wz;
   _Complex double *wt_buf, *wx_buf, *wy_buf, *wz_buf, *w_buf, *w_source, *w_dest;
@@ -516,7 +516,7 @@ void little_field_gather(_Complex double * w) {
 }
 
 void little_field_gather_eo(int eo, _Complex double * w) {
-#ifdef MPI
+#ifdef _USE_MPI
   int err, bt, bx, by, bz, pm, ib,ib2;
   _Complex double *wt, *wx, *wy, *wz;
   _Complex double *wt_buf, *wx_buf, *wy_buf, *wz_buf, *w_buf, *w_source, *w_dest;
@@ -653,7 +653,7 @@ void little_D(_Complex double * v, _Complex double *w) {
     dfl_subspace_updated = 0;
   }
   
-#ifdef MPI
+#ifdef _USE_MPI
   /*init_little_field_exchange(w);*/
   little_field_gather(w);
 #endif
@@ -720,7 +720,7 @@ void little_D_hop(int eo,_Complex double * v, _Complex double *w) {
 
   i_eo=(eo+1)%2;
   
-#ifdef MPI
+#ifdef _USE_MPI
   /*init_little_field_exchange(w);*/
   little_field_gather_eo(eo,w+i_eo*nb_blocks*g_N_s/2);
 #endif
@@ -769,7 +769,7 @@ void little_Dhat_rhs(int eo, _Complex double * v, double r, _Complex double *w) 
 
 
 void init_little_field_exchange(_Complex double * w) {
-#ifdef MPI
+#ifdef _USE_MPI
   int i = 0;
 #  if (defined PARALLELT || defined PARALLELX)
   int no_dirs = 2;
@@ -819,7 +819,7 @@ void init_little_field_exchange(_Complex double * w) {
 }
 
 void wait_little_field_exchange(const int mu) {
-#ifdef MPI
+#ifdef _USE_MPI
   int err;
   err = MPI_Waitall(2, &lrequests[2*mu], &lstatus[2*mu]);
   waitcount -= 2;

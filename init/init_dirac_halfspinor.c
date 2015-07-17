@@ -29,8 +29,9 @@
 #include "global.h"
 #include "su3.h"
 #include "init_dirac_halfspinor.h"
+#include "fatal_error.h"
 
-#ifdef BGQ
+#ifdef SPI
 #  define SPI_ALIGN_BASE 0x7f
 #else
 #  define SPI_ALIGN_BASE ALIGN_BASE
@@ -46,15 +47,18 @@ halfspinor * sendBuffer_, * recvBuffer_;
 /* The single precision versions */
 halfspinor32 ** NBPointer32_;
 halfspinor32 * HalfSpinor32_;
-halfspinor32 * HalfSpinor32 ALIGN;
+halfspinor32 * HalfSpinor32 ALIGN32;
 halfspinor32 *** NBPointer32;
 halfspinor32 * sendBuffer32, * recvBuffer32;
 halfspinor32 * sendBuffer32_, * recvBuffer32_;
 
 
 int init_dirac_halfspinor() {
-  int j=0, k;
+  int j=0;
   int x, y, z, t;
+#ifdef _USE_MPI
+  int k;
+#endif
 
   NBPointer = (halfspinor***) calloc(4,sizeof(halfspinor**));
   NBPointer_ = (halfspinor**) calloc(16,(VOLUME+RAND)*sizeof(halfspinor*));
@@ -71,7 +75,7 @@ int init_dirac_halfspinor() {
 
   HalfSpinor = (halfspinor*)(((unsigned long int)(HalfSpinor_)+ALIGN_BASE+1)&~ALIGN_BASE);
 
-#ifdef MPI
+#ifdef _USE_MPI
   if((void*)(sendBuffer_ = (halfspinor*)calloc(RAND/2+8, sizeof(halfspinor))) == NULL) {
     printf ("malloc errno : %d\n",errno); 
     errno = 0;
@@ -144,7 +148,7 @@ int init_dirac_halfspinor() {
 	NBPointer[ieo][8*i + mu] = NBPointer[ieo][0];
       }
     }
-#ifdef MPI
+#ifdef _USE_MPI
 #endif
   }
   for(int ieo = 2; ieo < 4; ieo++) {
@@ -197,7 +201,7 @@ int init_dirac_halfspinor() {
       }
     }
   }
-#if (defined SPI && defined MPI)
+#if (defined SPI && defined _USE_MPI)
   // here comes the SPI initialisation
   uint64_t messageSizes[NUM_DIRS];
   uint64_t roffsets[NUM_DIRS], soffsets[NUM_DIRS];
@@ -346,9 +350,9 @@ int init_dirac_halfspinor() {
 
 
 int init_dirac_halfspinor32() {
-  int j=0, k;
+  int j=0,k;
   int x, y, z, t, mu;
-  
+
   NBPointer32 = (halfspinor32***) calloc(4,sizeof(halfspinor32**));
   NBPointer32_ = (halfspinor32**) calloc(16,(VOLUME+RAND)*sizeof(halfspinor32*));
   NBPointer32[0] = NBPointer32_;
@@ -362,9 +366,9 @@ int init_dirac_halfspinor32() {
     return(-1);
   }
 
-  HalfSpinor32 = (halfspinor32*)(((unsigned long int)(HalfSpinor32_)+ALIGN_BASE)&~ALIGN_BASE);
+  HalfSpinor32 = (halfspinor32*)(((unsigned long int)(HalfSpinor32_)+ALIGN_BASE32)&~ALIGN_BASE32);
 
-#ifdef MPI
+#ifdef _USE_MPI
   //re-use memory from 64Bit version
   sendBuffer32 = (halfspinor32*)sendBuffer;
   recvBuffer32 = (halfspinor32*)recvBuffer;
@@ -469,7 +473,7 @@ int init_dirac_halfspinor32() {
 #endif
     }
   }
-#if (defined SPI && defined MPI)
+#if (defined SPI && defined _USE_MPI)
   // here comes the SPI initialisation
   uint64_t messageSizes[NUM_DIRS];
   uint64_t roffsets[NUM_DIRS], soffsets[NUM_DIRS];

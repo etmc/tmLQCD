@@ -2,7 +2,7 @@
 #include <global.h>
 #include <config.h>
 
-#ifdef MPI
+#ifdef _USE_MPI
 #include <mpi.h>
 #endif
 
@@ -14,7 +14,7 @@ TEST_SUITES {
 };
 
 int main(int argc,char *argv[]){
-#ifdef MPI
+#ifdef _USE_MPI
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
 #else
@@ -24,7 +24,7 @@ int main(int argc,char *argv[]){
   CU_SET_OUT_PREFIX("regressions/");
   CU_RUN(argc,argv);
 
-#ifdef MPI
+#ifdef _USE_MPI
   MPI_Finalize();
 #endif
 

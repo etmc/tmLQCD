@@ -173,7 +173,7 @@ void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   // we measure before trajectory!
   if((mnl->rec_ev != 0) && (hf->traj_counter%mnl->rec_ev == 0)) {
-    phmc_compute_ev(hf->traj_counter-1, id, &Qtm_pm_ndbipsi);
+    phmc_compute_ev(hf->traj_counter-1, id, &Qtm_pm_ndbipsi, VOLUME/2);
   }
 
   mnl->energy0 = 0.;
@@ -502,7 +502,7 @@ int init_ndpoly_monomial(const int id) {
   */
   if(mnl->MDPolyLocNormConst < 0.0){
     fprintf(stderr, "Error, please specify LocNormConst in the input file! Aborting...\n");
-#ifdef MPI
+#ifdef _USE_MPI
     MPI_Finalize();
 #endif
     exit(6);
@@ -513,7 +513,7 @@ int init_ndpoly_monomial(const int id) {
   if((ifs = fopen(mnl->MDPolyRootsFile, "r")) != (FILE*)NULL) {
     if (fgets(title, 100, ifs) == NULL) {
       fprintf(stderr, "Error in reading %s! Aborting...\n", mnl->MDPolyRootsFile);
-#ifdef MPI
+#ifdef _USE_MPI
       MPI_Finalize();
 #endif
       exit(6);
@@ -528,7 +528,7 @@ int init_ndpoly_monomial(const int id) {
   }
   else {
     fprintf(stderr, "File %s is missing! Aborting...\n", mnl->MDPolyRootsFile);
-#ifdef MPI
+#ifdef _USE_MPI
     MPI_Finalize();
 #endif
     exit(6);

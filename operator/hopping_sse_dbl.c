@@ -50,7 +50,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   spinor * restrict sm;
   spinor * restrict rn;
 
-# if (defined MPI)
+# if (defined _USE_MPI)
 #  ifdef PARALLELX
 #   define  REQC 4
 #  elif defined PARALLELXY
@@ -79,7 +79,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   for(x0=0;x0<T;x0++){
 
     /* start the communication of the timslice borders (non-blocking send and receive)*/
-#    if (defined MPI && !defined _NO_COMM)
+#    if (defined _USE_MPI && !defined _NO_COMM)
    xchange_field_open(k, ieo, x0, requests, status);
 #    endif
     
@@ -152,7 +152,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
        
    /* complete the communication of the timslice borders (and wait) */
-#if (defined MPI && !defined _NO_COMM)
+#if (defined _USE_MPI && !defined _NO_COMM)
    xchange_field_close(requests, status, REQC); /*    MPI_Waitall */
 #endif
 

@@ -23,8 +23,7 @@
 #endif
 #include <stdlib.h>
 #include "global.h"
-#include "solver/sumr.h"
-#include "solver/cgs_real.h"
+#include "solver/solver.h"
 #include "operator.h"
 #include "invert_overlap.h"
 #include "operator/Dov_psi.h"
@@ -32,7 +31,6 @@
 #include "read_input.h"
 #include "operator/tm_operators.h"
 #include "gamma.h"
-#include "solver/cg_her.h"
 
 
 void invert_overlap(const int op_id, const int index_start) {
@@ -50,10 +48,10 @@ void invert_overlap(const int op_id, const int index_start) {
   convert_eo_to_lexic(g_spinor_field[DUM_DERI], optr->sr0, optr->sr1);
   convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
 
-  if(optr->solver == 13 ){
+  if(optr->solver == SUMR ){
     optr->iterations = sumr(g_spinor_field[DUM_DERI+1],g_spinor_field[DUM_DERI] , optr->maxiter, optr->eps_sq);
   } 
-  else if(optr->solver == 1 /* CG */) {
+  else if(optr->solver == CG /* CG */) {
 
     gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
   

@@ -9,8 +9,8 @@
 
 // output & debug
 
-#define CUDA_DEBUG		// provides some tests and output specific to the used CUDA code
-#define STUFF_DEBUG		// some stuff
+//#define CUDA_DEBUG		// provides some tests and output specific to the used CUDA code
+//#define STUFF_DEBUG		// some stuff
 //#define HOPPING_DEBUG		// enables the Hopping Matrix on the CPU (inside matrix_multiplication32_mpi())
 //#define MATRIX_DEBUG		// enables the matrix multiplication on the CPU (in the inner CG solver)
 //#define CG_DEBUG		// enables the CG on the CPU
@@ -18,47 +18,19 @@
 
 
 
-// conjugate gradient
-// ...				// to come ...
-
-
-
-
 // benchmarks
 
-#define OPERATOR_BENCHMARK 100	// refers to only matrix applications
+//#define OPERATOR_BENCHMARK 100	// refers to only matrix applications
 #define ALGORITHM_BENCHMARK	// counts the number of effective flops
-
-
-
-// alternative code
-
-#define ALTERNATE_FIELD_XCHANGE	// provides a better communication, without ASYNC
-//#define ALTERNATE_HOPPING_MATRIX	// at the moment: provides an alternative way of passing the (nn-)positions to dev_Hopping_Matrix()
-					//		  does not work properly yet, ALTERNATE.cuh
-
 
 
 // CUDA + MPI
 
 #define DEVICE_EQUAL_RANK	// for MPI: cudaSetDevice(mpi-rank)
 #define ASYNC 1			// overlaps computation and communication	// 0, 1, 2, 3
-#define ASYNC_TSLICES 1		// determines workload af kernels
+//#define ASYNC_TSLICES 1		// determines workload af kernels
 #define ASYNC_OPTIMIZED	1	// CUDA streams					// needs ASYNC == 3
 //#define ASYNC_TIMING		// profiling the ASYNC_OPTIMIZED code		// needs ASYNC == 1,2
-
-
-
-
-// CUDA parameters
-
-#define BLOCKSIZE1 64		// here:	dev_zero_spinor_field , dev_copy_spinor_field
-#define BLOCKSIZE2 64		// passed:	dev_Hopping_Matrix
-#define BLOCKSIZE3 64		// passed:	dev_mul_one_pm_imubar_gamma5
-#define BLOCKSIZE4 64		// passed:	dev_gamma5
-#define BLOCKSIZE5 64		// passed:	dev_copy_spinor_field
-
-
 
 
 
@@ -70,7 +42,7 @@
 
 
 
-#ifndef MPI	//  non-MPI  ////////////////////////////////////////////////////////////
+#ifndef _USE_MPI	//  non-MPI  ////////////////////////////////////////////////////////////
 
 
 
@@ -183,6 +155,9 @@
 
 
 // debug	// CUBLAS core function
+
+
+
 
 #define CUBLAS_CORE_CHECK(errorMessage, successMessage) {				\
           if ( (cublasstatus = cublasGetError()) != CUBLAS_STATUS_SUCCESS ) {		\

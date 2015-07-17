@@ -104,7 +104,7 @@ AC_ARG_ENABLE(mpi,
   enable_mpi=$enableval, enable_mpi=yes)
 if test $enable_mpi = yes; then
   AC_MSG_RESULT(yes)
-  AC_DEFINE(MPI,1,Compile with MPI support)
+  AC_DEFINE(_USE_MPI,1,Compile with MPI support)
 else
   AC_MSG_RESULT(no)
 fi
@@ -372,19 +372,27 @@ if test "$withalign" = "none"; then
   withalign=1
   AC_DEFINE(ALIGN_BASE, 0x00, [Align base])
   AC_DEFINE(ALIGN, [])
+  AC_DEFINE(ALIGN_BASE32, 0x00, [Align base32])
+  AC_DEFINE(ALIGN32, [], [])
 elif test $withalign = 16; then
   AC_MSG_RESULT(16 bytes)
   AC_DEFINE(ALIGN_BASE, 0x0F, [Align base])
   AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
+  AC_DEFINE(ALIGN_BASE32, 0x0F, [Align base32])
+  AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))], [])
 elif test $withalign = 32; then
   AC_MSG_RESULT(32 bytes)
   AC_DEFINE(ALIGN_BASE, 0x1F, [Align base])
   AC_DEFINE(ALIGN, [__attribute__ ((aligned (32)))])
+  AC_DEFINE(ALIGN_BASE32, 0x1F, [Align base32])
+  AC_DEFINE(ALIGN32, [__attribute__ ((aligned (32)))], [])
 elif test $withalign = auto; then
   withautoalign=1
   AC_MSG_RESULT(auto)
   AC_DEFINE(ALIGN_BASE, 0x00, [Align base])
   AC_DEFINE(ALIGN, [], [])
+  AC_DEFINE(ALIGN_BASE32, 0x00, [Align base32])
+  AC_DEFINE(ALIGN32, [], [])
 else
   AC_MSG_RESULT(Unusable value for array alignment)
   AC_MSG_ERROR([Allowed values are: auto, none, 16, 32])
@@ -405,6 +413,9 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
         AC_MSG_RESULT(increasing array alignment to 16 bytes for P4 instructions)
         AC_DEFINE(ALIGN_BASE, 0x0F, [Align base])
         AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
+        AC_MSG_RESULT(increasing array 32 bit alignment to 16 bytes for P4 instructions)
+        AC_DEFINE(ALIGN_BASE32, 0x0F, [Align base])
+        AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))])
         withautoalign=16
       fi
     elif test $withalign -lt 16; then
@@ -426,6 +437,9 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
         AC_MSG_RESULT(increasing array alignment to 16 bytes for Opteron instructions)
         AC_DEFINE(ALIGN_BASE, 0x0F, [Align base])
         AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
+        AC_MSG_RESULT(increasing array 32 bit alignment to 16 bytes for Opteron instructions)
+        AC_DEFINE(ALIGN_BASE32, 0x0F, [Align base32])
+        AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))])
         withautoalign=16
       fi
     elif test $withalign -lt 16; then
@@ -467,6 +481,9 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
         AC_MSG_RESULT(increasing array alignment to 16 bytes for SSE instructions)
         AC_DEFINE(ALIGN_BASE, 0x0F, [Align base])
         AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
+        AC_MSG_RESULT(increasing 32bit array alignment to 16 bytes for SSE instructions)
+        AC_DEFINE(ALIGN_BASE32, 0x0F, [Align base32])	
+        AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))])
         withautoalign=16
       fi
     fi
@@ -480,6 +497,9 @@ if test $enable_qpx = yes; then
       AC_MSG_RESULT(increasing array alignment to 32 bytes for use of QPX instructions on BG/Q)
       AC_DEFINE(ALIGN_BASE, 0x1F, [Align base])
       AC_DEFINE(ALIGN, [__attribute__ ((aligned (32)))])
+      AC_MSG_RESULT(increasing 32bit array alignment to 16 bytes for use of QPX instructions on BG/Q)
+      AC_DEFINE(ALIGN_BASE32, 0x0F, [Align base32])
+      AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))])
       withautoalign=32
     fi
   elif test $withalign -lt 32; then
@@ -489,30 +509,15 @@ fi
 
 dnl Check for alignment associated with (non-QPX) BG optimization.
 dnl This will also result in using 32 byte alignment on MareNostrum, but that should be fairly innocuous.
-if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" = "blrts"; then
-  if test $withalign = auto; then
-    if test $withautoalign -lt 16; then
-      AC_MSG_RESULT(increasing array alignment to 16 bytes for BG/L optimization)
-      AC_DEFINE(ALIGN_BASE, 0x0F, [Align base])
-      AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
-      withautoalign=16
-    fi
-  fi
-elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" = "bprts"; then
-  if test $withalign = auto; then
-    if test $withautoalign -lt 16; then
-      AC_MSG_RESULT(increasing array alignment to 16 bytes for BG/P optimization)
-      AC_DEFINE(ALIGN_BASE, 0x0F, [Align base])
-      AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
-      withautoalign=16
-    fi
-  fi
-elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "$host_os" = "linux-gnu"; then
+if test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "$host_os" = "linux-gnu"; then
   if test $withalign = auto; then
     if test $withautoalign -lt 32; then
       AC_MSG_RESULT(increasing array alignment to 32 bytes for BG/Q and generic POWER optimization)
       AC_DEFINE(ALIGN_BASE, 0x1F, [Align base])
       AC_DEFINE(ALIGN, [__attribute__ ((aligned (32)))])
+      AC_MSG_RESULT(increasing array 32 bit alignment to 32 bytes for BG/Q and generic POWER optimization)
+      AC_DEFINE(ALIGN_BASE32, 0x0F, [Align base])
+      AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))])
       withautoalign=32
     fi
   fi

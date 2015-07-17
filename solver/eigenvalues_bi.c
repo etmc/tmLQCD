@@ -40,7 +40,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#ifdef MPI
+#ifdef _USE_MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -57,7 +57,7 @@
 
 double eigenvalues_bi(int * nr_of_eigenvalues,  
 		      const int max_iterations, const double precision,
-		      const int maxmin, matrix_mult_bi Qsq) {
+		      const int maxmin, matrix_mult_bi Qsq, const int N) {
 
 
   static bispinor * eigenvectors_bi_ = NULL;
@@ -117,10 +117,10 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
   if(allocated == 0) {
     allocated = 1;
 #if (defined SSE || defined SSE2 || defined SSE3)
-    eigenvectors_bi_ = calloc((VOLUME)/2*(*nr_of_eigenvalues)+1, sizeof(bispinor)); 
+    eigenvectors_bi_ = calloc(N*(*nr_of_eigenvalues)+1, sizeof(bispinor)); 
     eigenvectors_bi = (bispinor *)(((unsigned long int)(eigenvectors_bi_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-    eigenvectors_bi_= calloc((VOLUME)/2*(*nr_of_eigenvalues), sizeof(bispinor));
+    eigenvectors_bi_= calloc(N*(*nr_of_eigenvalues), sizeof(bispinor));
     eigenvectors_bi = eigenvectors_bi_;
 #endif
     eigenvls_bi = (double*)malloc((*nr_of_eigenvalues)*sizeof(double));
@@ -135,7 +135,7 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
   /* here n and lda are equal, because Q_Qdagger_ND_BI does an internal */
   /* conversion to non _bi fields which are subject to xchange_fields   */
   /* so _bi fields do not need boundary                                 */
-  jdher_bi((VOLUME)/2*sizeof(bispinor)/sizeof(_Complex double), (VOLUME)/2*sizeof(bispinor)/sizeof(_Complex double),
+  jdher_bi(N*sizeof(bispinor)/sizeof(_Complex double), N*sizeof(bispinor)/sizeof(_Complex double),
 	   startvalue, prec, 
 	   (*nr_of_eigenvalues), j_max, j_min, 
 	   max_iterations, blocksize, blockwise, v0dim, (_Complex double*) eigenvectors_bi,
@@ -143,7 +143,7 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
 	   threshold, decay, verbosity,
 	   &converged, (_Complex double*) eigenvectors_bi, eigenvls_bi,
 	   &returncode, maxmin, 1,
-	   Qsq);
+	   Qsq, N);
   
   *nr_of_eigenvalues = converged;
 

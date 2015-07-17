@@ -26,7 +26,7 @@
 #ifdef OMP
 # include <omp.h>
 #endif
-#ifdef MPI
+#ifdef USE_MPI
 # include <mpi.h>
 #endif
 
@@ -64,7 +64,7 @@ void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigne
   su3 ALIGN w,w1,w2;
   su3 ALIGN z_tmp,z_tmp1;
 
-#ifdef MPI
+#ifdef USE_MPI
 #ifdef OMP
 #pragma omp single
 #endif
@@ -106,7 +106,7 @@ void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigne
         _su3_times_su3(fields[f+1][x][mu],w,fields[f][x][mu]);
       }
     }
-#ifdef MPI
+#ifdef USE_MPI
 #ifdef OMP
 #pragma omp single
 #endif
@@ -148,7 +148,7 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
   aligned_su3_field_t x2 = aligned_su3_field_alloc(VOLUMEPLUSRAND+g_dbw2rand);
   aligned_su3_field_t z = aligned_su3_field_alloc(VOLUME);
 
-#ifdef MPI
+#ifdef USE_MPI
   xchange_gauge(g_gauge_field);
 #endif
   memcpy(vt.field[0],g_gauge_field[0],sizeof(su3)*4*(VOLUMEPLUSRAND+g_dbw2rand));

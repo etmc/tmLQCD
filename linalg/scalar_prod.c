@@ -21,7 +21,7 @@
 # include<config.h>
 #endif
 #include <stdlib.h>
-#ifdef MPI
+#ifdef _USE_MPI
 #include <mpi.h>
 #endif
 #ifdef OMP
@@ -34,7 +34,7 @@
 /*  <S,R>=S^* times R */
 _Complex double scalar_prod(const spinor * const S, const spinor * const R, const int N, const int parallel) {
   _Complex double ALIGN res = 0.0;
-#ifdef MPI
+#ifdef _USE_MPI
   _Complex double ALIGN mres;
 #endif
 
@@ -90,7 +90,7 @@ _Complex double scalar_prod(const spinor * const S, const spinor * const R, cons
   res=kc;
 #endif
 
-#ifdef MPI
+#ifdef _USE_MPI
   if(parallel == 1)
   {
     MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
@@ -106,7 +106,7 @@ _Complex double scalar_prod_su3vect(su3_vector * const S, su3_vector * const R, 
   double ALIGN ks, ds, tr, ts, tt;
   su3_vector *s, *r;
   _Complex double c;
-#ifdef MPI
+#ifdef _USE_MPI
   _Complex double d;
 #endif
 
@@ -130,7 +130,7 @@ _Complex double scalar_prod_su3vect(su3_vector * const S, su3_vector * const R, 
     }
   c = ks + c;
 
-#ifdef MPI
+#ifdef _USE_MPI
   if(parallel == 1)
   {
     d = c;

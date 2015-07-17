@@ -57,6 +57,7 @@ EQL {SPC}*={SPC}*
 #include"read_input.h"
 #include"default_input_values.h"
 #include"monomial/monomial.h"
+#include"solver/solver_types.h"
 #include"meas/measurements.h"
 #include"integrator.h"
 #include"operator.h"
@@ -152,6 +153,8 @@ static inline void rmQuotes(char *str){
   int compute_topsus;
   double mstarsq;
   int no_sources_z2;
+  
+  int gpu_parsed = 0;
   int usegpu_flag;
   int max_innersolver_it;
   int device_num;
@@ -161,6 +164,13 @@ static inline void rmQuotes(char *str){
   double innersolver_precision_rel;
   int innersolver_precision_check_abs;
   int innersolver_precision_check_rel;
+  int max_mms_shifts;
+  int use_mixed_mms;
+  int min_innersolver_it;
+  int num_gpu_per_node;
+
+  double mixcg_innereps;
+  int mixcg_maxinnersolverit;
 
   int propagator_comparison;
   int nb_cores;
@@ -295,6 +305,7 @@ static inline void rmQuotes(char *str){
 %x MNAME
 %x MCSTR
 %x MSOLVER
+%x NDMSOLVER
 %x GTYPE
 
 %x COMMENT
@@ -315,6 +326,8 @@ static inline void rmQuotes(char *str){
 
 %x PRECONDITIONING
 
+%x MIXCGEPS
+%x MIXCGIT
 
 
 
@@ -412,6 +425,8 @@ static inline void rmQuotes(char *str){
 
 ^BeginGPU                          BEGIN(INITGPU);
 
+^MixCGInnerEps{EQL}                BEGIN(MIXCGEPS);
+^MixCGMaxIter{EQL}                 BEGIN(MIXCGIT);
 
 
 
@@ -419,8 +434,7 @@ static inline void rmQuotes(char *str){
 
 <INITGPU>Init{SPC}* {
  if(myverbose) printf("Initialising GPU line %d\n", line_of_file); 
- usegpu_flag = 1;
-  if(myverbose!=0) printf("  Using help of GPU for inversions\n"); 
+ gpu_parsed = 1; 
  BEGIN(GPU);
  }
 <GPU>{
@@ -433,6 +447,11 @@ static inline void rmQuotes(char *str){
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
     max_innersolver_it = a;
     if(myverbose) printf("  Inner solver iterations set to %d line %d\n", a, line_of_file);
+  }
+  {SPC}*GpuPerNode{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
+    num_gpu_per_node = a;
+    if(myverbose) printf("  Number of GPUs per node is %d line %d\n", a, line_of_file);
   }
   {SPC}*DeviceNum{EQL}{DIGIT}+ {
       sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
@@ -458,6 +477,25 @@ static inline void rmQuotes(char *str){
       sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
       innersolver_precision_check_rel = a;
       if(myverbose) printf("  innersolver_precision_check_rel set to %d line %d\n", a, line_of_file);
+  }
+  {SPC}*MinInnerSolverIterations{EQL}{DIGIT}+ {
+      sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
+      min_innersolver_it = a;
+      if(myverbose) printf("  min_innersolver_it set to %d line %d\n", a, line_of_file);
+  }
+  {SPC}*MaxMmsShifts{EQL}{DIGIT}+ {
+      sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
+      max_mms_shifts = a;
+      if(myverbose) printf("  max_mms_shifts set to %d line %d\n", a, line_of_file);
+  }
+  {SPC}*UseMixedMms{EQL}yes {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    use_mixed_mms = 1;
+    if(myverbose) printf("  Using mixed solver for smallest shifts\n");  }
+  {SPC}*UseMixedMms{EQL}no {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    use_mixed_mms = 0;
+    if(myverbose) printf("  Not using mixed solver for smallest shifts\n");
   }
   EndGPUInit{SPC}* {
   if(myverbose) printf("GPU parsed in line %d\n\n", line_of_file);
@@ -668,6 +706,7 @@ static inline void rmQuotes(char *str){
   }
 }
 
+
 <CLOVEROP>{
   {SPC}*Solver{EQL} {
     name_caller = YY_START; 
@@ -777,69 +816,69 @@ static inline void rmQuotes(char *str){
 
 <TMSOLVER>{
   mixedcg {
-    optr->solver=13;
+    optr->solver=MIXEDCG;
     if(myverbose) printf("  Solver set to MixedCG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   bicgstab {
-    optr->solver=0;
+    optr->solver=BICGSTAB;
     if(myverbose) printf("  Solver set to BiCGstab line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   pcg {
-    optr->solver=9;
+    optr->solver=PCG;
     if(myverbose) printf("  Solver set to PCG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   gmres {
-    optr->solver=2;
+    optr->solver=GMRES;
     if(myverbose) printf("  Solver set to GMRES line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   gcr {
-    optr->solver=7;
+    optr->solver=GCR;
     if(myverbose) printf("  Solver set to GCR line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   gmresdr {
-    optr->solver=8;
+    optr->solver=GMRESDR;
     if(myverbose) printf("  Solver set to GMRES-DR line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   cgs {
-    optr->solver=3;
+    optr->solver=CGS;
     if(myverbose) printf("  Solver set to CGS line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   mr {
-    optr->solver=4;
+    optr->solver=MR;
     if(myverbose) printf("  Solver set to MR line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   fgmres {
-    optr->solver=6;
+    optr->solver=FGMRES;
     if(myverbose) printf("  Solver set to FGMRES line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   dflgcr {
-    optr->solver=10;
+    optr->solver=DFLGCR;
     g_dflgcr_flag = 1;
     if(myverbose) printf("  Solver set to DFL-GCR line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   dflfgmres {
-    optr->solver=11;
+    optr->solver=DFLFGMRES;
     g_dflgcr_flag = 1;
     if(myverbose) printf("  Solver set to DFL-FGMRES line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   cgmms {
-    optr->solver = 12;
+    optr->solver = CGMMS;
     if(myverbose) printf("  Solver set to CGMMS line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   increigcg {
-    optr->solver = 15;
+    optr->solver = INCREIGCG;
     if(myverbose) printf("  Solver set to INCR-EIG-CG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
@@ -849,27 +888,27 @@ static inline void rmQuotes(char *str){
 
 <CSWSOLVER>{
   increigcg {
-    optr->solver = 15;
+    optr->solver = INCREIGCG;
     if(myverbose) printf("  Solver set to INCR-EIG-CG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
-
+  mixedcg {
+    optr->solver=MIXEDCG;
+    if(myverbose) printf("  Solver set to MixedCG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
 }
-
-
-
-
 
 
 <OVSOLVER>{
   sumr {
-    optr->solver = 13;
-    if(myverbose) printf("  Solver set to SUMR line %d operator %d\n", line_of_file, current_operator);
+    optr->solver = SUMR;
+    if(myverbose) printf("  Solver set to SUMR in line %d operator %d\n", line_of_file, current_operator);
     BEGIN(OVERLAPOP);
   }
   cg {
-    optr->solver = 1;
-    if(myverbose) printf("  Solver set to SUMR line %d operator %d\n", line_of_file, current_operator);
+    optr->solver = CG;
+    if(myverbose) printf("  Solver set to CG in line %d operator %d\n", line_of_file, current_operator);
     BEGIN(OVERLAPOP);
   }
 }
@@ -1106,6 +1145,15 @@ static inline void rmQuotes(char *str){
   }
 }
 
+
+<NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL>{
+  {SPC}*Solver{EQL} {
+   solver_caller=YY_START;
+   BEGIN(NDMSOLVER);
+  }
+}
+
+
 <DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL>{
   {SPC}*2KappaMu{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
@@ -1304,12 +1352,31 @@ static inline void rmQuotes(char *str){
 <MSOLVER>{
   CG {
     if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
-    mnl->solver = 1;
+    mnl->solver = CG;
+    BEGIN(solver_caller);
+  }
+  mixedCG {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = MIXEDCG;
     BEGIN(solver_caller);
   }
   bicgstab {
     if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
-    mnl->solver = 0;
+    mnl->solver = BICGSTAB;
+    BEGIN(solver_caller);
+  }
+}
+
+
+<NDMSOLVER>{
+  GGmmsnd {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = CGMMSND;
+    BEGIN(solver_caller);
+  }
+  mixedCGmmsnd {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = MIXEDCGMMSND;
     BEGIN(solver_caller);
   }
 }
@@ -2022,6 +2089,16 @@ static inline void rmQuotes(char *str){
   if(myverbose!=0) fprintf(stderr, "Number of reweighting samples set to %d\n", reweighting_samples);
 }
 
+<MIXCGIT>{DIGIT}+ {
+  mixcg_maxinnersolverit = atoi(yytext);
+  if(myverbose) printf("MixedCG: setting maximal inner solver iterations to %d\n", mixcg_maxinnersolverit);
+}
+
+<MIXCGEPS>{FLT}  {
+  mixcg_innereps=atof(yytext);
+  if(myverbose!=0) printf("MixedCG: setting inner solver eps to %s \n", yytext);
+}
+
 <*>^#   {
    comment_caller = YY_START;
    BEGIN(COMMENT);
@@ -2181,7 +2258,18 @@ int read_input(char * conf_file){
   compute_topsus = _default_compute_topsus;
   mstarsq = _default_mstarsq;
   no_sources_z2 = _default_no_sources_z2;
+  usegpu_flag = _default_usegpu_flag;
   device_num = _default_device_num;
+  min_innersolver_it = _default_min_innersolver_it;
+  max_mms_shifts = _default_max_mms_shifts;
+  use_mixed_mms = 0;
+  innersolver_precision_rel = 1.e-4;
+  innersolver_precision_abs = 1.e-4;
+  num_gpu_per_node = _default_num_gpu_per_node;
+
+  mixcg_innereps = _default_mixcg_innereps;
+  mixcg_maxinnersolverit = _default_mixcg_maxinnersolverit;
+
   /* Put -1 in PropInfo.format to see if parse_config() will
   change the value. If not then set it to source_format_flag */
   PropInfo.format = -1;
@@ -2211,6 +2299,25 @@ int read_input(char * conf_file){
   if(PropInfo.format == -1) PropInfo.format = SourceInfo.format;
   g_rgi_C0 = 1. - 8.*g_rgi_C1;
 
+  
+  #ifdef HAVE_GPU
+    /* Here we do sanity checks for GPU functionality and if passed 
+       set usegpu_flag, if a InitGPU block has been parsed (if gpu_parsed is set)
+       Otherwise it results to be 0 (the default)
+    */
+    if(gpu_parsed){
+      #ifdef _USE_MPI
+	#ifdef PARALLELT
+          if(myverbose!=0) printf("Using GPU for inversions\n");
+	  usegpu_flag = 1;
+	#else
+          printf("Warning: this parallelization is not supported: Not using GPU\n");
+        #endif
+      #else
+	usegpu_flag = 1;
+      #endif
+    }
+  #endif
 
   fclose(yyout);
   fclose(yyin);

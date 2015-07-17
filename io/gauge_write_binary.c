@@ -131,7 +131,7 @@ int write_binary_gauge_data(LimeWriter * limewriter, const int prec, DML_Checksu
   int coords[4];
   n_uint64_t bytes;
   DML_SiteRank rank;
-#ifdef MPI
+#ifdef _USE_MPI
   double tick = 0, tock = 0;
   char measure[64];
   MPI_Status mpi_status;
@@ -139,7 +139,7 @@ int write_binary_gauge_data(LimeWriter * limewriter, const int prec, DML_Checksu
 
   DML_checksum_init(checksum);
 
-#ifdef MPI
+#ifdef _USE_MPI
   if (g_debug_level > 0) {
     MPI_Barrier(g_cart_grid);
     tick = MPI_Wtime();
@@ -160,7 +160,7 @@ int write_binary_gauge_data(LimeWriter * limewriter, const int prec, DML_Checksu
         for(x = 0; x < LX*g_nproc_x; x++) {
           X = x - g_proc_coords[1]*LX;
           coords[1] = x / LX;
-#ifdef MPI
+#ifdef _USE_MPI
           MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
           if(g_cart_id == 0) {
@@ -183,7 +183,7 @@ int write_binary_gauge_data(LimeWriter * limewriter, const int prec, DML_Checksu
                 status = limeWriteRecordData((void*)&tmp, &bytes, limewriter);
               }
             }
-#ifdef MPI
+#ifdef _USE_MPI
             else {
               if(prec == 32) {
                 MPI_Recv(tmp2, 4*sizeof(su3)/8, MPI_FLOAT, id, tag, g_cart_grid, &mpi_status);
@@ -201,14 +201,14 @@ int write_binary_gauge_data(LimeWriter * limewriter, const int prec, DML_Checksu
               fprintf(stderr, "LIME write error occurred with status = %d, while writing in gauge_write_binary.c!\n", status);
               fprintf(stderr, "x %d, y %d, z %d, t %d (%d,%d,%d,%d)\n",x,y,z,tt,X,Y,Z,tt);
               fprintf(stderr, "id = %d, bytes = %lu, size = %d\n", g_cart_id, bytes,  (int)(4*sizeof(su3)/8));
-#ifdef MPI
+#ifdef _USE_MPI
               MPI_Abort(MPI_COMM_WORLD, 1);
               MPI_Finalize();
 #endif
               exit(500);
             }
           }
-#ifdef MPI
+#ifdef _USE_MPI
           else {
             if(g_cart_id == id){
               memcpy(&tmp3[0], &g_gauge_field[ g_ipt[tt][X][Y][Z] ][1], sizeof(su3));
@@ -228,14 +228,14 @@ int write_binary_gauge_data(LimeWriter * limewriter, const int prec, DML_Checksu
 #endif
           tag++;
         }
-#ifdef MPI
+#ifdef _USE_MPI
         MPI_Barrier(g_cart_grid);
 #endif
       }
     }
   }
 
-#ifdef MPI
+#ifdef _USE_MPI
   if (g_debug_level > 0) {
     MPI_Barrier(g_cart_grid);
     tock = MPI_Wtime();

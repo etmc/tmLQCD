@@ -50,7 +50,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#ifdef MPI
+#ifdef _USE_MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -119,7 +119,7 @@ void jdher_bi(int n, int lda, double tau, double tol,
 	      int verbosity,
 	      int *k_conv, _Complex double *Q, double *lambda, int *it,
 	      int maxmin, const int shift_mode,
-	      matrix_mult_bi A_psi){
+	      matrix_mult_bi A_psi, const int Vol){
   
   /****************************************************************************
    *                                                                          *
@@ -600,15 +600,15 @@ void jdher_bi(int n, int lda, double tau, double tol,
       /* Solve the correction equation ...  */
       if (solver_flag == BICGSTAB){
 	info = bicgstab_complex_bi((bispinor*) v, (bispinor*) r, linitmax, 
-				   it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &Proj_A_psi_bi);
+				   it_tol*it_tol, g_relative_precision_flag, Vol, &Proj_A_psi_bi);
       }
       else if(solver_flag == CG){ 
 	info = cg_her_bi((bispinor*) v, (bispinor*) r, linitmax, 
-			 it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &Proj_A_psi_bi); 
+			 it_tol*it_tol, g_relative_precision_flag, Vol, &Proj_A_psi_bi); 
       } 
       else{
 	info = bicgstab_complex_bi((bispinor*) v, (bispinor*) r, linitmax, 
-				   it_tol*it_tol, g_relative_precision_flag, VOLUME/2, &Proj_A_psi_bi);
+				   it_tol*it_tol, g_relative_precision_flag, Vol, &Proj_A_psi_bi);
       }
 
       g_sloppy_precision = 0;

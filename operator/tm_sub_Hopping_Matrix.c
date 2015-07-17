@@ -38,10 +38,10 @@
 #include <complex.h>
 #include "global.h"
 #include "su3.h"
-#ifdef BGQ
+#ifdef SPI
 #  include"DirectPut.h"
 #endif
-#ifdef MPI
+#ifdef _USE_MPI
 #  include "xchange/xchange.h"
 #endif
 #include "boundary.h"
@@ -130,7 +130,7 @@ void tm_sub_Hopping_Matrix(const int ieo, spinor * const l, spinor * p, spinor *
   }
 #  endif
 
-#  if (defined MPI)
+#  if (defined _USE_MPI)
   xchange_field(k, ieo);
 #  endif
   

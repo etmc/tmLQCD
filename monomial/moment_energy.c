@@ -72,7 +72,7 @@ double moment_energy(su3adj ** const momenta) {
   /* from the loop I got: p^2 */
   /* the contribution to the E is however (p^2)/2: */
   kc=0.5*(ks+kc);
-#ifdef MPI
+#ifdef _USE_MPI
   ks = kc;
   MPI_Allreduce(&ks, &kc, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #endif

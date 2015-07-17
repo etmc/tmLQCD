@@ -31,7 +31,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#ifdef MPI
+#ifdef _USE_MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -50,7 +50,7 @@ int check_xchange()
 #pragma execution_frequency(very_low)
 #endif
 
-#ifdef MPI
+#ifdef _USE_MPI
   double * x;
   int i,ix, mu, x0, x1, x2, x3, k;
   int mp, pm, mm, pp, di[4];
@@ -2981,7 +2981,7 @@ int check_xchange()
 #pragma execution_frequency(very_low)
 #endif
 
-#ifdef MPI
+#ifdef _USE_MPI
   double * x;
   int i,ix, mu, x0, x1, x2, x3 = 0, k;
   int mp, pm, mm, pp, di[4];

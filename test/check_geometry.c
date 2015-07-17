@@ -33,13 +33,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#ifdef MPI
+#ifdef _USE_MPI
 #include <mpi.h>
 #endif
 #include "global.h"
 #include "geometry_eo.h"
 #include "test/check_geometry.h"
-#ifdef MPI
+#ifdef _USE_MPI
 #include "mpi_init.h"
 #endif
 
@@ -466,7 +466,7 @@ int check_geometry()
 	    if(iz0 != iy0) {
 	      printf("Edge -t -z has an error\n");
 	      printf("Program aborted\n");
-#  ifdef MPI
+#  ifdef _USE_MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #  endif
 	      exit(0);
@@ -488,7 +488,7 @@ int check_geometry()
 	    if(iz0 != iy0) {
 	      printf("Edge -t +z has an error\n");
 	      printf("Program aborted\n");
-#  ifdef MPI
+#  ifdef _USE_MPI
 	      MPI_Abort(MPI_COMM_WORLD, 5); MPI_Finalize();
 #  endif
 	      exit(0);
@@ -691,7 +691,7 @@ int check_geometry()
     itest[ix]=0;
   }
 
-#ifdef MPI
+#ifdef _USE_MPI
   if(g_dbw2rand > 0) {
 
 #if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
@@ -2016,7 +2016,7 @@ return(-1);
     itest[ix]=0;
   }
 
-#ifdef MPI
+#ifdef _USE_MPI
   if(g_dbw2rand > 0) {
     for (x1 = 0; x1 < LX; x1++) {
       for (x2 = 0; x2 < LY; x2++) {

@@ -35,7 +35,7 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
 		      spinor * const Even_s, spinor * const Odd_s,
 		      spinor * const Even_c, spinor * const Odd_c,
 		      const double precision, const int max_iter,
-		      const int solver_flag, const int rel_prec);
+		      const int solver_flag, const int rel_prec, const int even_odd_flag);
 
 
 /* This is the full matrix multiplication */
