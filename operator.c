@@ -458,10 +458,12 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
 
   if(SourceInfo.type != 1) {
     if (PropInfo.splitted) {
-      sprintf(filename, "%s.%.4d.%.2d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, ending);
+      if(T_global > 99) sprintf(filename, "%s.%.4d.%.3d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, ending);
+      else sprintf(filename, "%s.%.4d.%.2d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, ending);
     }
     else {
-      sprintf(filename, "%s.%.4d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, ending);
+      if(T_global > 99) sprintf(filename, "%s.%.4d.%.3d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, ending);
+      else sprintf(filename, "%s.%.4d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, ending);
     }
   }
   else {
