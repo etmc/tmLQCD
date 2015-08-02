@@ -746,8 +746,7 @@ void Dsw_psi(spinor * const P, spinor * const Q){
     int ix,iy,iz;
     su3 *up,*um;
     spinor *s,*sp,*sm,*rn;
-    spinor rs __attribute__ ((aligned (16)));
-    spinor ALIGN stmp;
+    spinor ALIGN stmp,rs;
 
 #ifndef OMP
     iy=g_iup[0][0];
@@ -1244,7 +1243,7 @@ void Dsw_psi(spinor * const P, spinor * const Q){
     spinor const * restrict s;
     spinor const * restrict sp;
     spinor const * restrict sm;
-    spinor ALIGN tmpr;
+    spinor tmpr;
 
     /************************ loop over all lattice sites *************************/
 

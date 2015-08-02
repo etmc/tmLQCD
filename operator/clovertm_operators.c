@@ -57,7 +57,7 @@ su3 *** sw_inv;
 
 
 void assign_mul_one_sw_pm_imu_site_lexic(const int ix,
-            const spinor * k, const spinor * const l, const double mu) {
+            spinor * const k, const spinor * const l, const double mu) {
 
   su3_vector ALIGN chi, psi1, psi2;
   const su3 *w1, *w2, *w3;

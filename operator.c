@@ -332,31 +332,6 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 	/* to match clover_inv in Qsw_psi */
 	sw_invert(EE, optr->mu);
 
-        //Testing the full clover + twisted Dirac operator implementation
-        //copy the source vector to prop 
-        //assign(optr->prop0,optr->sr0,VOLUME/2);
-        //assign(optr->prop1,optr->sr1,VOLUME/2);
-
-        //apply the clover operator in the even-odd representation
-        //Qsw_full(g_spinor_field[DUM_DERI+3],g_spinor_field[DUM_DERI+4],optr->sr0,optr->sr1);
-
-        //apply the clover operator in the full form
-        //convert_eo_to_lexic(g_spinor_field[DUM_DERI+5],g_spinor_field[DUM_DERI+3],g_spinor_field[DUM_DERI+4]);
-
-        //apply the full operator
-        //Dsw_psi(g_spinor_field[DUM_DERI+6],g_spinor_field[DUM_DERI+5]);
-        
-        //compare the answers
-        //diff(g_spinor_field[DUM_DERI+6],g_spinor_field[DUM_DERI+6],g_spinor_field[DUM_DERI+5],VOLUMEPLUSRAND);
-        //nrm1 = square_norm(g_spinor_field[DUM_DERI+6],VOLUME,1);
-        //if(g_cart_id == 0)
-        //     printf("diference for checking the full operator %e\n",nrm1);
-        //return ; 
-
-
-
-
-
 	optr->iterations = invert_clover_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
 					    optr->eps_sq, optr->maxiter,
 					    optr->solver, optr->rel_prec,
