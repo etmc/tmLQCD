@@ -37,7 +37,7 @@
 #include "gamma.h"
 #include "linalg_eo.h"
 #include "operator/Hopping_Matrix.h"
-#include "tm_operators.h"
+#include "operator/tm_operators.h"
 #include "operator/clovertm_operators.h"
 #include "operator/D_psi.h"
 
@@ -57,12 +57,11 @@ su3 *** sw_inv;
 
 
 void assign_mul_one_sw_pm_imu_site_lexic(const int ix,
-            spinor * const k, const spinor * const l, const double mu) {
+            const spinor * k, const spinor * const l, const double mu) {
 
   su3_vector ALIGN chi, psi1, psi2;
   const su3 *w1, *w2, *w3;
-  spinor *r;
-  const spinor *s;
+  spinor *r,*s;
 
   r = k;
   s = l;
