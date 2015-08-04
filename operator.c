@@ -330,7 +330,8 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       else {
 	/* this must be EE here!   */
 	/* to match clover_inv in Qsw_psi */
-	sw_invert(EE, optr->mu);
+        if(optr->even_odd_flag)
+	  sw_invert(EE, optr->mu); //this is needed only when we use even-odd preconditioning
 
 	optr->iterations = invert_clover_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
 					    optr->eps_sq, optr->maxiter,
