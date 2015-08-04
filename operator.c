@@ -339,7 +339,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 					    optr->even_odd_flag, optr->solver_params,
 					    &g_gauge_field, optr->applyQsq, optr->applyQm);
 	/* check result */
- 	Msw_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
+ 	optr->applyM(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
       }
 
       diff(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], optr->sr0, VOLUME / 2);
