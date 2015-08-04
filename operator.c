@@ -177,7 +177,7 @@ int init_operators() {
 	  optr->applyMp = &D_psi;
 	  optr->applyMm = &M_minus_psi;
 	}
-	if(optr->solver == 12) {
+	if(optr->solver == CGMMS) {
 	  if (g_cart_id == 0 && optr->even_odd_flag == 1)
 	    fprintf(stderr, "CG Multiple mass solver works only without even/odd! Forcing!\n");
 	  optr->even_odd_flag = 0;
@@ -222,7 +222,7 @@ int init_operators() {
           optr->applyMp = &Dsw_psi;
           optr->applyMm = &Msw_full_minus_psi;
         }
-        if(optr->solver == 12) {
+        if(optr->solver == CGMMS) {
           if (g_cart_id == 0 && optr->even_odd_flag == 1)
             fprintf(stderr, "CG Multiple mass solver works only without even/odd! Forcing!\n");
           optr->even_odd_flag = 0;
