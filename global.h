@@ -228,6 +228,7 @@ EXTERN int little_evenodd;
 EXTERN int little_gmres_m_parameter;
 EXTERN double little_solver_low_prec;
 EXTERN double little_solver_high_prec;
+EXTERN int little_solver_max_iter;
 
 #ifdef MPI
 EXTERN MPI_Status status;

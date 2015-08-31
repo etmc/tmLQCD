@@ -195,7 +195,6 @@ inline void rmQuotes(char *str){
 %x GAUGERPREC
 %x GAUGEWPREC
 %x DSBLIOCHECK
-%x DFLSP
 %x PRECON
 %x WRITECP
 %x CPINT
@@ -373,7 +372,6 @@ inline void rmQuotes(char *str){
 ^WritePropagatorFormat{EQL}        BEGIN(WRPROPFLAG);
 ^PropagatorType{EQL}               BEGIN(WRPROPFLAG);
 ^RanluxdLevel{EQL}                 BEGIN(RLXDLEVEL);
-^DeflationSubspaceDimension{EQL}   BEGIN(DFLSP);
 ^GCRPreconditioner{EQL}            BEGIN(PRECON);
 ^ComputeReweightingFactor{EQL}     BEGIN(REWEIGH);
 ^NoReweightingSamples{EQL}         BEGIN(REWSAMPLES);
@@ -462,71 +460,69 @@ inline void rmQuotes(char *str){
  BEGIN(DEFLATION);
  }
 <DEFLATION>{
-  
-  {SPC}*GlobalVectorsNum{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*GlobalVectorsNum{EQL}{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
     g_N_s = a;
-    if(myverbose) printf("Number of global vectors set to %d line %d\n", a, line_of_file);
+    if(myverbose) printf("Number of global approximate eigenvectors (deflation subspace dimension) set to %d line %d\n", a, line_of_file);
   }
-
+  {SPC}*DeflationSubspaceDimension{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
+    g_N_s = a;
+    if(myverbose) printf("Number of global approximate eigenvectors (deflation subspace dimension) set to %d line %d\n", a, line_of_file);
+  }
   {SPC}*OuterloopMsap{EQL}yes {
     Msap_precon = 1;
-    if(myverbose) printf("UseIQDFL set to true line %d monomial %d\n", line_of_file, current_monomial);
+    if(myverbose) printf("OuterloopMsap set to true line %d monomial %d\n", line_of_file, current_monomial);
   }
-
   {SPC}*OuterloopMsap{EQL}no {
     Msap_precon = 0;
-    if(myverbose) printf("UseIQDFL set to false line %d monomial %d\n", line_of_file, current_monomial);
+    if(myverbose) printf("OuterloopMsap set to false line %d monomial %d\n", line_of_file, current_monomial);
   }
-
-  {SPC}*NiterMsap{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*NiterMsap{EQL}{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
     NiterMsap = a;
     if(myverbose) printf("NiterMsap set to %d line %d\n", a, line_of_file);
   }
-
-  {SPC}*NcycleMsap{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*NcycleMsap{EQL}{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
     NcycleMsap = a;
     if(myverbose) printf("NcycleMsap set to %d line %d\n", a, line_of_file);
   }
-
-  {SPC}*NiterMsapDfl{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*NiterMsapDfl{EQL}{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
     NiterMsap_dflgen = a;
     if(myverbose) printf("NiterMsapDfl set to %d line %d\n", a, line_of_file);
   }
-
-  {SPC}*NcycleMsapDfl{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*NcycleMsapDfl{EQL}{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
     NcycleMsap_dflgen = a;
     if(myverbose) printf("NcycleMsapDfl set to %d line %d\n", a, line_of_file);
   }
-
-  {SPC}*NsmoothMsapDfl{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*NsmoothMsapDfl{EQL}{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
     NsmoothMsap_dflgen = a;
     if(myverbose) printf("NsmoothMsapDfl set to %d line %d\n", a, line_of_file);
   }
-
-  {SPC}*LittleGMRESMParameter{SPC}*={SPC}*{DIGIT}+ {
+  {SPC}*LittleGMRESMParameter{EQL}{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
     little_gmres_m_parameter = a;
     if(myverbose) printf("LittleGMRESMParameter set to %d line %d\n", a, line_of_file);
   }
-
   {SPC}*LittleSolverLowPrecision{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     little_solver_low_prec = c;
     if(myverbose) printf("Low precision for little Dirac solver set to %e line %d\n", c, line_of_file);
   }
-
   {SPC}*LittleSolverHighPrecision{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     little_solver_high_prec = c;
     if(myverbose) printf("High precision for little Dirac solver set to %e line %d\n", c, line_of_file);
   }
-
+  {SPC}*LittleSolverMaxIter{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
+    little_solver_max_iter = a;
+    if(myverbose) printf("LittleSolverMaxIter set to %d line %d\n", a, line_of_file);
+  }
   {SPC}*UseiQDFL{EQL}yes {
     use_iQ_dfl = 1;
     if(myverbose) printf("UseIQDFL set to true line %d monomial %d\n", line_of_file, current_monomial);
@@ -535,32 +531,26 @@ inline void rmQuotes(char *str){
     use_iQ_dfl = 0;
     if(myverbose) printf("UseIQDFL set to false line %d monomial %d\n", line_of_file, current_monomial);
   }
-
   {SPC}*LittleSolver{EQL}gcr {
     little_solver = 0;
     if(myverbose) printf("Littlesolver set to gcr line %d monomial %d\n", line_of_file, current_monomial);
   }
-
   {SPC}*LittleSolver{EQL}mcr {
     little_solver = 1;
     if(myverbose) printf("Littlesolver set to mcr line %d monomial %d\n", line_of_file, current_monomial);
   }
-
   {SPC}*LittleSolver{EQL}mr {
     little_solver = 2;
     if(myverbose) printf("Littlesolver set to mr line %d monomial %d\n", line_of_file, current_monomial);
   }
-
   {SPC}*UsePL{EQL}yes {
     usePL = 1;
     if(myverbose) printf("UsePL set to true line %d monomial %d\n", line_of_file, current_monomial);
   }
-
   {SPC}*UsePL{EQL}no {
     usePL = 0;
     if(myverbose) printf("UsePL set to true line %d monomial %d\n", line_of_file, current_monomial);
   }
-
   {SPC}*LittleEvenOdd{EQL}yes {
     little_evenodd = 1;
     if(myverbose) printf("LittleEvenOdd set to true line %d monomial %d\n", line_of_file, current_monomial);
@@ -1754,10 +1744,6 @@ inline void rmQuotes(char *str){
   gmresdr_nr_ev = atoi(yytext);
   if(myverbose!=0) printf("Deflate %d eigenvectors in GMRES-DR \n", gmresdr_nr_ev);
 }
-<DFLSP>{DIGIT}+ {
-  g_N_s = atoi(yytext);
-  if(myverbose!=0) printf("Deflation subspace dimension set to %d \n", g_N_s);
-}
 <PRECON>{
   none {
     if(myverbose!=0) printf("Using no right preconditioner \n");
@@ -2190,6 +2176,7 @@ int read_input(char * conf_file){
   usePL = _default_usePL;
   little_solver_low_prec = _default_little_solver_low_prec;
   little_solver_high_prec = _default_little_solver_high_prec;
+  little_solver_max_iter = _default_little_solver_max_iter;
   little_evenodd = _default_little_evenodd;
   little_solver = _default_little_solver;
   little_gmres_m_parameter = _default_little_gmres_m_parameter;

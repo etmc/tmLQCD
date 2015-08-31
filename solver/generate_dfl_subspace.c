@@ -271,14 +271,15 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
   boundary(g_kappa);
 
   if((g_proc_id == 0) && (p < Ns) && (g_debug_level > 0)) {
-    printf("Compute approximate eigenvectors from scratch\n");
+    printf("# Compute approximate eigenvectors from scratch\n");
   }
   if(p < Ns) {
-    for(j = 0; j < 5; j++) {
+    for(j = 0; j < 1; j++) {
       for(i = 0; i < Ns; i++) {
 	zero_spinor_field(g_spinor_field[0], VOLUME);  
 	g_sloppy_precision = 1;
-	Msap_eo(g_spinor_field[0], dfl_fields[i], j+1, NiterMsap_dflgen); 
+	//Msap_eo(g_spinor_field[0], dfl_fields[i], j+1, NiterMsap_dflgen); 
+	Msap_eo(g_spinor_field[0], dfl_fields[i], NcycleMsap_dflgen, NiterMsap_dflgen); 
 	
 	assign(dfl_fields[i], g_spinor_field[0], VOLUME);
 	
@@ -289,7 +290,7 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
       }
     }
     for(j = 0; j < NsmoothMsap_dflgen; j++) {
-      // little D automatically when little_D is called and dfl_subspace_updated == 1
+      // build little D automatically when little_D is called and dfl_subspace_updated == 1
       for (i = 0; i < Ns; i++) {
 	/* add it to the basis */
 	split_global_field_GEN_ID(block_list, i, dfl_fields[i], nb_blocks);
@@ -302,7 +303,7 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
 
       // why can't I use g_spinor_field[1] in mg_precon??
       for(i = 0; i < Ns; i++) {
-	//g_sloppy_precision = 1;
+	g_sloppy_precision = 1;
 	//D_psi(g_spinor_field[1],  dfl_fields[i]);
 	//diff(g_spinor_field[1], dfl_fields[i], g_spinor_field[1], VOLUME);
 	//mg_precon(g_spinor_field[0], g_spinor_field[1]);
@@ -339,6 +340,10 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
       }
     }
   }
+  if((g_proc_id == 0) && (g_debug_level > 0)) {
+    printf("# Approximate eigenvectors generated\n");
+  }
+
   g_mu1 = 0.;
   g_mu2 = 0.;
 
