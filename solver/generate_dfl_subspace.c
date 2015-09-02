@@ -274,7 +274,7 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
     printf("# Compute approximate eigenvectors from scratch\n");
   }
   if(p < Ns) {
-    for(j = 0; j < 1; j++) {
+    for(j = 0; j < 3; j++) {
       for(i = 0; i < Ns; i++) {
 	zero_spinor_field(g_spinor_field[0], VOLUME);  
 	g_sloppy_precision = 1;
@@ -289,7 +289,7 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
 	mul_r(dfl_fields[i], 1./nrm, g_spinor_field[0], N);
       }
     }
-    for(j = 0; j < NsmoothMsap_dflgen; j++) {
+    for(j = 3; j < NsmoothMsap_dflgen; j++) {
       // build little D automatically when little_D is called and dfl_subspace_updated == 1
       for (i = 0; i < Ns; i++) {
 	/* add it to the basis */
@@ -330,12 +330,12 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
     dfl_subspace_updated = 1;
     
     if(g_debug_level > 1) {
-      for (i=0; i<Ns; i++) {
+      for (i = 0; i < Ns; i++) {
 	/* test quality */
 	D_psi(work_fields[0], dfl_fields[i]);
 	nrm = sqrt(square_norm(work_fields[0], N, 1));
 	if(g_proc_id == 0) {
-	  printf(" ||D psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm*nrm);
+	  printf(" ||D psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm);
 	}
       }
     }
