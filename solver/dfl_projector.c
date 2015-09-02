@@ -1,6 +1,6 @@
 /***********************************************************************
  *
- * Copyright (C) 2008 Alber Deuzeman, Siebren Reker, Carsten Urbach
+ * Copyright (C) 2008 Albert Deuzeman, Siebren Reker, Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -372,8 +372,8 @@ void project2(spinor * const out, spinor * const in) {
 
 // This is a preconditioner for D in Multi-Grid spirit
 // following equation (4.2) in arXiv:1303.1377
-// C^(nu) psi = D[M_sap(psi - phi) + phi]
-// with phi = P A^{-1} P^dagger   (A = little D)
+// C^(nu) psi = M_sap[(psi - D phi) + phi]
+// with approximately P A P phi = psi   (A = little D)
 // and nu the M_sap cycles here called Ncy
 
 void mg_precon(spinor * const out, spinor * const in) {
