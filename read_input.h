@@ -110,6 +110,7 @@ extern "C"
   extern int use_preconditioning;
 
   extern int nblocks_t, nblocks_x, nblocks_y, nblocks_z;
+  extern double kappa_dflgen, mu_dflgen;
 
   int read_input(char *);
   int reread_input(char *);

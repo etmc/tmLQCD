@@ -173,6 +173,8 @@ inline void rmQuotes(char *str){
 
   int dfl_field_iter;
   int dfl_poly_iter;
+  double kappa_dflgen;
+  double mu_dflgen;
 
   int use_preconditioning;
 %}
@@ -472,11 +474,11 @@ inline void rmQuotes(char *str){
   }
   {SPC}*OuterloopMsap{EQL}yes {
     Msap_precon = 1;
-    if(myverbose) printf("OuterloopMsap set to true line %d monomial %d\n", line_of_file, current_monomial);
+    if(myverbose) printf("OuterloopMsap set to true line %d\n", line_of_file);
   }
   {SPC}*OuterloopMsap{EQL}no {
     Msap_precon = 0;
-    if(myverbose) printf("OuterloopMsap set to false line %d monomial %d\n", line_of_file, current_monomial);
+    if(myverbose) printf("OuterloopMsap set to false line %d\n", line_of_file);
   }
   {SPC}*NiterMsap{EQL}{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
@@ -525,39 +527,49 @@ inline void rmQuotes(char *str){
   }
   {SPC}*UseiQDFL{EQL}yes {
     use_iQ_dfl = 1;
-    if(myverbose) printf("UseIQDFL set to true line %d monomial %d\n", line_of_file, current_monomial);
+    if(myverbose) printf("UseIQDFL set to true line %d\n", line_of_file);
   }
   {SPC}*UseiQDFL{EQL}no {
     use_iQ_dfl = 0;
-    if(myverbose) printf("UseIQDFL set to false line %d monomial %d\n", line_of_file, current_monomial);
+    if(myverbose) printf("UseIQDFL set to false line %d\n", line_of_file);
   }
   {SPC}*LittleSolver{EQL}gcr {
     little_solver = 0;
-    if(myverbose) printf("Littlesolver set to gcr line %d monomial %d\n", line_of_file, current_monomial);
+    if(myverbose) printf("Littlesolver set to gcr line %d\n", line_of_file);
   }
   {SPC}*LittleSolver{EQL}mcr {
     little_solver = 1;
-    if(myverbose) printf("Littlesolver set to mcr line %d monomial %d\n", line_of_file, current_monomial);
+    if(myverbose) printf("Littlesolver set to mcr line %d\n", line_of_file);
   }
   {SPC}*LittleSolver{EQL}mr {
     little_solver = 2;
-    if(myverbose) printf("Littlesolver set to mr line %d monomial %d\n", line_of_file, current_monomial);
+    if(myverbose) printf("Littlesolver set to mr line %d\n", line_of_file);
   }
   {SPC}*UsePL{EQL}yes {
     usePL = 1;
-    if(myverbose) printf("UsePL set to true line %d monomial %d\n", line_of_file, current_monomial);
+    if(myverbose) printf("UsePL set to true line %d\n", line_of_file);
   }
   {SPC}*UsePL{EQL}no {
     usePL = 0;
-    if(myverbose) printf("UsePL set to true line %d monomial %d\n", line_of_file, current_monomial);
+    if(myverbose) printf("UsePL set to true line %d\n", line_of_file);
   }
   {SPC}*LittleEvenOdd{EQL}yes {
     little_evenodd = 1;
-    if(myverbose) printf("LittleEvenOdd set to true line %d monomial %d\n", line_of_file, current_monomial);
+    if(myverbose) printf("LittleEvenOdd set to true line %d\n", line_of_file);
   }
   {SPC}*LittleEvenOdd{EQL}no {
     little_evenodd = 0;
-    if(myverbose) printf("LittleEvenOdd set to true line %d monomial %d\n", line_of_file, current_monomial);
+    if(myverbose) printf("LittleEvenOdd set to true line %d\n", line_of_file);
+  }
+  {SPC}*kappaDfl{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    kappa_dflgen = c;
+    if(myverbose) printf("kappa for subspace generation set to %e line %d\n", c, line_of_file);
+  }
+  {SPC}*2KappaMuDfl{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    mu_dflgen = c;
+    if(myverbose) printf("2KappaMu for subspace generation set to %e line %d\n", c, line_of_file);
   }
   EndDeflationInit{SPC}* {
   if(myverbose) printf("DEFLATION parsed in line %d\n\n", line_of_file);
@@ -2174,6 +2186,8 @@ int read_input(char * conf_file){
   NcycleMsap_dflgen = _default_NcycleMsap_dflgen;
   use_iQ_dfl = _default_use_iQ_dfl;
   usePL = _default_usePL;
+  mu_dflgen = -20.;
+  kappa_dflgen = -1.;
   little_solver_low_prec = _default_little_solver_low_prec;
   little_solver_high_prec = _default_little_solver_high_prec;
   little_solver_max_iter = _default_little_solver_max_iter;
