@@ -22,6 +22,16 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#ifdef SSE
+# undef SSE
+#endif
+#ifdef SSE2
+# undef SSE2
+#endif
+#ifdef SSE3
+# undef SSE3
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -109,24 +119,17 @@ void assign_mul_one_sw_pm_imu_site_lexic(const int ix,
 void Qsw_full(spinor * const Even_new, spinor * const Odd_new,
               spinor * const Even, spinor * const Odd) {
 
-  //THIS IS A HACK. SOMEHOW THE SSE verion doesn't work that's why
-  //we are using this hack at the moment
-  convert_eo_to_lexic(g_spinor_field[DUM_MATRIX],Even,Odd);
-  Qsw_full_plus_psi(g_spinor_field[DUM_MATRIX+1],g_spinor_field[DUM_MATRIX]);
-  convert_lexic_to_eo(Even_new,Odd_new,g_spinor_field[DUM_MATRIX+1]);
-  return ;
-
   /* Even sites */
-  //Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], Odd);
-  //assign_mul_one_sw_pm_imu(EE, Even_new, Even, +g_mu);
-  //assign_add_mul_r(Even_new, g_spinor_field[DUM_MATRIX], -1., VOLUME/2);
-  //gamma5(Even_new,Even_new,VOLUME/2);
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], Odd);
+  assign_mul_one_sw_pm_imu(EE, Even_new, Even, +g_mu);
+  assign_add_mul_r(Even_new, g_spinor_field[DUM_MATRIX], -1., VOLUME/2);
+  gamma5(Even_new,Even_new,VOLUME/2);
 
   /* Odd sites */
-  //Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], Even);
-  //assign_mul_one_sw_pm_imu(OO, Odd_new, Odd, +g_mu);
-  //assign_add_mul_r(Odd_new, g_spinor_field[DUM_MATRIX], -1., VOLUME/2);
-  //gamma5(Odd_new,Odd_new,VOLUME/2);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], Even);
+  assign_mul_one_sw_pm_imu(OO, Odd_new, Odd, +g_mu);
+  assign_add_mul_r(Odd_new, g_spinor_field[DUM_MATRIX], -1., VOLUME/2);
+  gamma5(Odd_new,Odd_new,VOLUME/2);
 }
 
 /**************************************************
@@ -179,22 +182,15 @@ void clover(const int ieo,
 void Msw_full(spinor * const Even_new, spinor * const Odd_new, 
 	      spinor * const Even, spinor * const Odd) {
 
-  //BECAUSE OF UNKNOWN ISSUE WITH THE EO VERSION when SSE is turned on, we use this hack for now
-  convert_eo_to_lexic(g_spinor_field[DUM_MATRIX],Even,Odd);
-  Dsw_psi(g_spinor_field[DUM_MATRIX+1],g_spinor_field[DUM_MATRIX]);
-  convert_lexic_to_eo(Even_new,Odd_new,g_spinor_field[DUM_MATRIX+1]);
-  return ;
-
-
   /* Even sites */
-  //Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], Odd);
-  //assign_mul_one_sw_pm_imu(EE, Even_new, Even, +g_mu);
-  //assign_add_mul_r(Even_new, g_spinor_field[DUM_MATRIX], -1., VOLUME/2);
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], Odd);
+  assign_mul_one_sw_pm_imu(EE, Even_new, Even, +g_mu);
+  assign_add_mul_r(Even_new, g_spinor_field[DUM_MATRIX], -1., VOLUME/2);
   
   /* Odd sites */
-  //Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], Even);
-  //assign_mul_one_sw_pm_imu(OO, Odd_new, Odd, +g_mu);
-  //assign_add_mul_r(Odd_new, g_spinor_field[DUM_MATRIX], -1., VOLUME/2);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], Even);
+  assign_mul_one_sw_pm_imu(OO, Odd_new, Odd, +g_mu);
+  assign_add_mul_r(Odd_new, g_spinor_field[DUM_MATRIX], -1., VOLUME/2);
 }
 
 
