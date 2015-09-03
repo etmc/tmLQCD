@@ -118,6 +118,15 @@ static void z2_vector(double *v, const int N) {
   return;
 }
 
+// produce a double array uniformly random in [-1,1]
+static void pm1_unit(double * v, const int N) {
+  ranlxd(v,N);
+  for (int i = 0; i < N; ++i) {
+    v[i] = 2*v[i] - 1.;
+  }
+  return;
+}
+
 static su3 unit_su3(void)
 {
    su3 u = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};

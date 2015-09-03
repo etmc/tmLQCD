@@ -884,8 +884,12 @@ void geometry(){
     }
   }
 
-  for(j=0; j<4; j++){  // NEW GIUPDNEO
-    for(ix=0;ix< (VOLUME+RAND);ix++){
+  for(j=0; j<4; j++){  // NEW GIUPDNEO                                                                                                                                  
+    for(ix = 0; ix < (VOLUME)/2; ix++){
+      g_iup_eo[ix][j]=g_lexic2eosub[g_iup[g_eo2lexic[ix]][j]];
+      g_idn_eo[ix][j]=g_lexic2eosub[g_idn[g_eo2lexic[ix]][j]];
+    }
+    for(ix = (VOLUME+RAND)/2; ix < VOLUME+RAND/2; ix++){
       g_iup_eo[ix][j]=g_lexic2eosub[g_iup[g_eo2lexic[ix]][j]];
       g_idn_eo[ix][j]=g_lexic2eosub[g_idn[g_eo2lexic[ix]][j]];
     }
