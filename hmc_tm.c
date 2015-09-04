@@ -457,7 +457,7 @@ int main(int argc,char *argv[]) {
                 if(read_attempt+1 < 2) {
                   fprintf(stdout, "# Reread attempt %d out of %d failed, trying again in %d seconds!\n",read_attempt+1,2,2);
                 } else {
-                  fprintf(stdout, "$ Reread attept %d out of %d failed, write will be reattempted!\n",read_attempt+1,2,2);
+                  fprintf(stdout, "# Reread attempt %d out of %d failed, write will be reattempted!\n",read_attempt+1,2);
                 }
               }
               sleep(2);
