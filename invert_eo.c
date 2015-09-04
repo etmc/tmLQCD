@@ -75,8 +75,9 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 	      const double precision, const int max_iter,
 	      const int solver_flag, const int rel_prec,
 	      const int sub_evs_flag, const int even_odd_flag,
-	      const int no_extra_masses, double * const extra_masses,
-	      const int id ) {
+	      const int no_extra_masses, double * const extra_masses, 
+	      solver_params_t solver_params, const int id )  {
+
   int iter = 0;
   /* here comes the inversion using even/odd preconditioning */
   if(even_odd_flag) {
@@ -96,11 +97,11 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 	if(g_proc_id == 0) printf("Error while gauge fixing to temporal gauge. Aborting...\n");   
 	exit(200);
       }
-      plaquette = measure_gauge_action(g_gauge_field);
+      plaquette = measure_plaquette(g_gauge_field);
       if(g_proc_id == 0) printf("Plaquette before gauge fixing: %.16e\n", plaquette/6./VOLUME);
       /* do trafo */
       apply_gtrafo(g_gauge_field, g_trafo);
-      plaquette = measure_gauge_action(g_gauge_field);
+      plaquette = measure_plaquette(g_gauge_field);
       if(g_proc_id == 0) printf("Plaquette after gauge fixing: %.16e\n", plaquette/6./VOLUME);
     
       /* do trafo to odd part of source */
@@ -181,6 +182,15 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       iter = pcg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi);
       Qtm_minus_psi(Odd_new, Odd_new);
     }
+    else if(solver_flag == INCREIGCG) {
+       /* Here we invert the hermitean operator squared */
+       gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);  
+       if(g_proc_id == 0) {printf("# Using Incremental Eig-CG!\n"); fflush(stdout);}
+       iter = incr_eigcg(VOLUME/2,solver_params.eigcg_nrhs,solver_params.eigcg_nrhs1, Odd_new, g_spinor_field[DUM_DERI], solver_params.eigcg_ldh, &Qtm_pm_psi,
+ 			 solver_params.eigcg_tolsq1, solver_params.eigcg_tolsq, solver_params.eigcg_restolsq , solver_params.eigcg_rand_guess_opt,
+                         rel_prec, max_iter, solver_params.eigcg_nev, solver_params.eigcg_vmax);
+       Qtm_minus_psi(Odd_new, Odd_new);
+     }
     else if(solver_flag == MIXEDCG) {
       /* Here we invert the hermitean operator squared */
       gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
@@ -255,7 +265,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     /* return from temporal gauge again */
 #ifdef TEMPORALGAUGE
     if(usegpu_flag){ 
-      plaquette = measure_gauge_action(g_gauge_field);
+      plaquette = measure_plaquette(g_gauge_field);
       if(g_proc_id == 0) printf("Plaquette before inverse gauge fixing: %.16e\n", plaquette/6./VOLUME);
     
       /* undo trafo */
@@ -266,7 +276,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       g_update_gauge_copy = 1;
     
     
-      plaquette = measure_gauge_action(g_gauge_field);
+      plaquette = measure_plaquette(g_gauge_field);
       if(g_proc_id == 0) printf("Plaquette after inverse gauge fixing: %.16e\n", plaquette/6./VOLUME);
    
       /* undo trafo to source (Even, Odd) */

@@ -22,9 +22,8 @@
 /* FIXME I will first fix this function by using referral.
          Probably should be done better in the future. AD. */
 
-
 #ifdef HAVE_LIBLEMON
-int read_binary_gauge_data(LemonReader * lemonreader, DML_Checksum * checksum, paramsIldgFormat * input)
+int read_binary_gauge_data(LemonReader * lemonreader, DML_Checksum * checksum, paramsIldgFormat * input, su3 ** const gf)
 {
   int t, x, y, z, status = 0;
   int latticeSize[] = {input->lt, input->lx, input->ly, input->lz};
@@ -102,16 +101,16 @@ int read_binary_gauge_data(LemonReader * lemonreader, DML_Checksum * checksum, p
           current = filebuffer + bytes * (x + (y + (t * LZ + z) * LY) * LX);
           DML_checksum_accum(checksum, rank, current, bytes);
           if (input->prec == 32) {
-            be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][1], current            , sizeof(su3) / 8);
-            be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][2], current +     fbsu3, sizeof(su3) / 8);
-            be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][3], current + 2 * fbsu3, sizeof(su3) / 8);
-            be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][0], current + 3 * fbsu3, sizeof(su3) / 8);
+            be_to_cpu_assign_single2double(&gf[ g_ipt[t][x][y][z] ][1], current            , sizeof(su3) / 8);
+            be_to_cpu_assign_single2double(&gf[ g_ipt[t][x][y][z] ][2], current +     fbsu3, sizeof(su3) / 8);
+            be_to_cpu_assign_single2double(&gf[ g_ipt[t][x][y][z] ][3], current + 2 * fbsu3, sizeof(su3) / 8);
+            be_to_cpu_assign_single2double(&gf[ g_ipt[t][x][y][z] ][0], current + 3 * fbsu3, sizeof(su3) / 8);
           }
           else {
-            be_to_cpu_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][1], current            , sizeof(su3) / 8);
-            be_to_cpu_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][2], current +     fbsu3, sizeof(su3) / 8);
-            be_to_cpu_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][3], current + 2 * fbsu3, sizeof(su3) / 8);
-            be_to_cpu_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][0], current + 3 * fbsu3, sizeof(su3) / 8);
+            be_to_cpu_assign(&gf[ g_ipt[t][x][y][z] ][1], current            , sizeof(su3) / 8);
+            be_to_cpu_assign(&gf[ g_ipt[t][x][y][z] ][2], current +     fbsu3, sizeof(su3) / 8);
+            be_to_cpu_assign(&gf[ g_ipt[t][x][y][z] ][3], current + 2 * fbsu3, sizeof(su3) / 8);
+            be_to_cpu_assign(&gf[ g_ipt[t][x][y][z] ][0], current + 3 * fbsu3, sizeof(su3) / 8);
           }
         }
       }
@@ -123,7 +122,7 @@ int read_binary_gauge_data(LemonReader * lemonreader, DML_Checksum * checksum, p
   return(0);
 }
 #else /* HAVE_LIBLEMON */
-int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum, paramsIldgFormat * input) {
+int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum, paramsIldgFormat * input, su3 ** const gf) {
 
   int t, x, y , z, status=0;
   int latticeSize[] = {input->lt, input->lx, input->ly, input->lz};
@@ -184,16 +183,16 @@ int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum, par
             return(-2);
           }
           if(input->prec == 32) {
-            be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][0], &tmp2[3*18], sizeof(su3)/8);
-            be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][1], &tmp2[0*18], sizeof(su3)/8);
-            be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][2], &tmp2[1*18], sizeof(su3)/8);
-            be_to_cpu_assign_single2double(&g_gauge_field[ g_ipt[t][x][y][z] ][3], &tmp2[2*18], sizeof(su3)/8);
+            be_to_cpu_assign_single2double(&gf[ g_ipt[t][x][y][z] ][0], &tmp2[3*18], sizeof(su3)/8);
+            be_to_cpu_assign_single2double(&gf[ g_ipt[t][x][y][z] ][1], &tmp2[0*18], sizeof(su3)/8);
+            be_to_cpu_assign_single2double(&gf[ g_ipt[t][x][y][z] ][2], &tmp2[1*18], sizeof(su3)/8);
+            be_to_cpu_assign_single2double(&gf[ g_ipt[t][x][y][z] ][3], &tmp2[2*18], sizeof(su3)/8);
           }
           else {
-            be_to_cpu_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][0], &tmp[3], sizeof(su3)/8);
-            be_to_cpu_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][1], &tmp[0], sizeof(su3)/8);
-            be_to_cpu_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][2], &tmp[1], sizeof(su3)/8);
-            be_to_cpu_assign(&g_gauge_field[ g_ipt[t][x][y][z] ][3], &tmp[2], sizeof(su3)/8);
+            be_to_cpu_assign(&gf[ g_ipt[t][x][y][z] ][0], &tmp[3], sizeof(su3)/8);
+            be_to_cpu_assign(&gf[ g_ipt[t][x][y][z] ][1], &tmp[0], sizeof(su3)/8);
+            be_to_cpu_assign(&gf[ g_ipt[t][x][y][z] ][2], &tmp[1], sizeof(su3)/8);
+            be_to_cpu_assign(&gf[ g_ipt[t][x][y][z] ][3], &tmp[2], sizeof(su3)/8);
           }
         }
       }

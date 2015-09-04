@@ -24,8 +24,6 @@
  *
  *******************************************************************************/
 
-#define MAIN_PROGRAM
-
 #include"lime.h"
 #ifdef HAVE_CONFIG_H
 # include<config.h>
@@ -84,6 +82,7 @@
 #include "operator/tm_operators.h"
 #include "operator/Dov_psi.h"
 #include "solver/spectral_proj.h"
+#include "meas/measurements.h"
 
 extern int nstore;
 int check_geometry();
@@ -247,6 +246,15 @@ int main(int argc, char *argv[])
 
   init_operators();
 
+  /* list and initialize measurements*/
+  if(g_proc_id == 0) {
+    printf("\n");
+    for(int j = 0; j < no_measurements; j++) {
+      printf("# measurement id %d, type = %d\n", j, measurement_list[j].type);
+    }
+  }
+  init_measurements();  
+
   /* this could be maybe moved to init_operators */
 #ifdef _USE_HALFSPINOR
   j = init_dirac_halfspinor();
@@ -275,7 +283,7 @@ int main(int argc, char *argv[])
             conf_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
       fflush(stdout);
     }
-    if( (i = read_gauge_field(conf_filename)) !=0) {
+    if( (i = read_gauge_field(conf_filename,g_gauge_field)) !=0) {
       fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", i, conf_filename);
       exit(-2);
     }
@@ -290,7 +298,7 @@ int main(int argc, char *argv[])
 #endif
 
     /*compute the energy of the gauge field*/
-    plaquette_energy = measure_gauge_action( (const su3**) g_gauge_field);
+    plaquette_energy = measure_plaquette( (const su3**) g_gauge_field);
 
     if (g_cart_id == 0) {
       printf("# The computed plaquette value is %e.\n", plaquette_energy / (6.*VOLUME*g_nproc));
@@ -303,14 +311,22 @@ int main(int argc, char *argv[])
 /*       if (stout_smear((su3_tuple*)(g_gauge_field[0]), &params_smear, (su3_tuple*)(g_gauge_field[0])) != 0) */
 /*         exit(1) ; */
       g_update_gauge_copy = 1;
-      g_update_gauge_energy = 1;
-      g_update_rectangle_energy = 1;
-      plaquette_energy = measure_gauge_action( (const su3**) g_gauge_field);
+      plaquette_energy = measure_plaquette( (const su3**) g_gauge_field);
 
       if (g_cart_id == 0) {
         printf("# The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
         fflush(stdout);
       }
+    }
+
+    /* if any measurements are defined in the input file, do them here */
+    measurement * meas;
+    for(int imeas = 0; imeas < no_measurements; imeas++){
+      meas = &measurement_list[imeas];
+      if (g_proc_id == 0) {
+        fprintf(stdout, "#\n# Beginning online measurement.\n");
+      }
+      meas->measurefunc(nstore, imeas, even_odd_flag);
     }
 
     if (reweighting_flag == 1) {
@@ -445,6 +461,10 @@ int main(int argc, char *argv[])
           /* 0-3 in case of 1 flavour  */
           /* 0-7 in case of 2 flavours */
           prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location);
+          //randmize initial guess for eigcg if needed-----experimental
+          if( (operator_list[op_id].solver == INCREIGCG) && (operator_list[op_id].solver_params.eigcg_rand_guess_opt) ){ //randomize the initial guess
+              gaussian_volume_source( operator_list[op_id].prop0, operator_list[op_id].prop1,isample,ix,0); //need to check this
+          } 
           operator_list[op_id].inverter(op_id, index_start, 1);
         }
       }
@@ -464,9 +484,6 @@ int main(int argc, char *argv[])
     nstore += Nsave;
   }
 
-#ifdef MPI
-  MPI_Finalize();
-#endif
 #ifdef OMP
   free_omp_accumulators();
 #endif
@@ -479,6 +496,10 @@ int main(int argc, char *argv[])
   free_chi_spinor_field();
   free(filename);
   free(input_filename);
+#ifdef MPI
+  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Finalize();
+#endif
   return(0);
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)

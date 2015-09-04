@@ -51,7 +51,7 @@
 /* size of the extra_masses array for operators using the CGMMS solver */
 #define MAX_EXTRA_MASSES 30
 
-#if defined MAIN_PROGRAM
+#if defined INIT_GLOBALS
 #  define EXTERN
 #else
 #  define EXTERN extern
@@ -70,8 +70,6 @@ EXTERN int DUM_BI_DERI, DUM_BI_SOLVER, DUM_BI_MATRIX;
 EXTERN int NO_OF_BISPINORFIELDS;
 
 EXTERN int g_update_gauge_copy;
-EXTERN int g_update_gauge_energy;
-EXTERN int g_update_rectangle_energy;
 EXTERN int g_relative_precision_flag;
 EXTERN int g_debug_level;
 EXTERN int g_disable_IO_checks;
@@ -266,14 +264,11 @@ EXTERN int tempT,tempV,tempR;
 EXTERN int ** g_iup3d;
 EXTERN int ** g_idn3d;
 #endif
-
+ 
 #undef EXTERN
 /* #undef ALIGN */
 
 void fatal_error(char const *error, char const *function);
-
-#ifdef MAIN_PROGRAM
-#endif
 
 #endif
 

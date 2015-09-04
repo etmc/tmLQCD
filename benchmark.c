@@ -23,7 +23,6 @@
 *
 *******************************************************************************/
 
-#define MAIN_PROGRAM
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
@@ -115,7 +114,7 @@ int main(int argc,char *argv[])
 #endif
 
   g_rgi_C1 = 1.; 
-  
+
     /* Read the input file */
   if((status = read_input("benchmark.input")) != 0) {
     fprintf(stderr, "Could not find input file: benchmark.input\nAborting...\n");
@@ -127,6 +126,8 @@ int main(int argc,char *argv[])
 #endif
 
   tmlqcd_mpi_init(argc, argv);
+
+
   
   if(g_proc_id==0) {
 #ifdef SSE
@@ -415,9 +416,6 @@ int main(int argc,char *argv[])
 #endif
 
 
-#ifdef MPI
-  MPI_Finalize();
-#endif
 #ifdef OMP
   free_omp_accumulators();
 #endif
@@ -425,5 +423,9 @@ int main(int argc,char *argv[])
   free_geometry_indices();
   free_spinor_field();
   free_moment_field();
+#ifdef MPI
+  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Finalize();
+#endif
   return(0);
 }

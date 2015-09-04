@@ -23,8 +23,6 @@
  *
  *******************************************************************************/
 
-#define MAIN_PROGRAM
-
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #else
@@ -158,7 +156,7 @@ int main(int argc,char *argv[])
 	   conf_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
     fflush(stdout);
   }
-  if( (j = read_gauge_field(conf_filename)) !=0) {
+  if( (j = read_gauge_field(conf_filename,g_gauge_field)) !=0) {
     fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", j, conf_filename);
     exit(-2);
   }

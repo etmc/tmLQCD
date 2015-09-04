@@ -23,8 +23,6 @@
 *
 *******************************************************************************/
 
-#define MAIN_PROGRAM
-
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
@@ -256,7 +254,7 @@ int main(int argc,char *argv[])
   } else if ( startoption == 0 ) { /* cold */
     unit_g_gauge_field();
   } else if (startoption == 3 ) { /* continue */
-    read_gauge_field(gauge_input_filename);
+    read_gauge_field(gauge_input_filename,g_gauge_field);
   } else if ( startoption == 1 ) { /* hot */
   }
 

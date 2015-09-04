@@ -26,18 +26,18 @@
 #if defined CRAY || defined HITACHI
 /* On the CRAY is all different, of course... */
 #include"fortran.h"
-#define zgemm CGEMM
-#define zgemv CGEMV
-#define ddot SDOT
-#define zdotc CDOTC
-#define daxpy SAXPY
-#define dnrm2 SNRM2
-#define znrm2 CNRM2
-#define zaxpy CAXPY
-#define dcopy SCOPY
-#define dscal SSCAL
-#define dgemv SGEMV
-#define dgemm SGEMM
+#define zgemm ZGEMM
+#define zgemv ZGEMV
+#define ddot DDOT
+#define zdotc ZDOTC
+#define daxpy DAXPY
+#define dnrm2 DNRM2
+#define znrm2 ZNRM2
+#define zaxpy ZAXPY
+#define dcopy DCOPY
+#define dscal DSCAL
+#define dgemv DGEMV
+#define dgemm DGEMM
 extern double _FT(dasum);
 extern double _FT(ddot)();
 extern void _FT(zdotc)();
@@ -84,12 +84,10 @@ extern void _FT(zgemv)(char* trans, int* m, int* n, _Complex double* alpha,
 /* BLAS-3 subroutines */
 extern void _FT(dgemm)(char* transa, char* transb, int* m, int* n, int* k,
         double* alpha, double a[], int* lda, double b[], int* ldb,
-        double* beta, double c[], int* ldc, int len_transa,
-        int len_transb);
+        double* beta, double c[], int* ldc, int len_transa, int len_transb);
 extern void _FT(zgemm)(char* transa, char* transb, int* m, int* n, int* k,
         _Complex double* alpha, _Complex double a[], int* lda, _Complex double b[], int* ldb,
-        _Complex double* beta, _Complex double c[], int* ldc, int len_transa,
-        int len_transb);
+        _Complex double* beta, _Complex double c[], int* ldc, int len_transa, int len_transb);
 #endif
 
 #endif

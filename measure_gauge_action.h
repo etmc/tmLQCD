@@ -22,6 +22,7 @@
 
 #include "su3.h"
 
-double measure_gauge_action(const su3 ** const gf);
+double measure_plaquette(const su3 ** const gf);
+double measure_gauge_action(const su3 ** const gf, const double lambda);
 
 #endif
