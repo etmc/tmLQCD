@@ -663,15 +663,13 @@ void little_P_L_D(_Complex double * const out, _Complex double * const in) {
 }
 
 void little_mg_precon(_Complex double * const out, _Complex double * const in) {
-  /* // phi = PD_c^{-1} P^dagger in */
-  /* little_project_eo(out, in, g_N_s); */
-  /* // in - D*phi  */
-  /* little_D_sym(work[2], out); */
-  /* ldiff(work[3], in, work[2], nb_blocks*g_N_s); */
-  /* // sum with phi */
-  /* ladd(out, work[3], out, nb_blocks*g_N_s); */
-  little_project_eo(work[2], in, g_N_s);
-  ldiff(out, in, work[2], nb_blocks*g_N_s);
+  // phi = PD_c^{-1} P^dagger in
+  little_project_eo(out, in, g_N_s);
+  // in - D*phi
+  little_D_sym(work[2], out);
+  ldiff(work[3], in, work[2], nb_blocks*g_N_s);
+  // sum with phi
+  ladd(out, work[3], out, nb_blocks*g_N_s);
   return;
 }
 
