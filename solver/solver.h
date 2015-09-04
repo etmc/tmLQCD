@@ -34,14 +34,13 @@
 #define DFLFGMRES 11
 #define CGMMS 12
 #define MIXEDCG 13
-#define MCR 14
-#define BICG 15
-#define CR 16
-#define CGMMSND 17
-#define QSQFGMRES 18
-#define CGMMSND 19
-#define INCREIGCG 20 
-#define SUMR 21
+#define CGMMSND 14
+#define INCREIGCG 15
+#define MCR 16
+#define BICG 17
+#define CR 18
+#define QSQFGMRES 19
+#define SUMR 20
 
 
 #include"solver/matrix_mult_typedef.h"
