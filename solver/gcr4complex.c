@@ -28,6 +28,7 @@
 #include"global.h"
 #include"su3.h"
 #include"linalg_eo.h"
+#include"dfl_projector.h"
 #include"gcr4complex.h"
 
 static void init_lgcr(const int _M, const int _V);
@@ -49,7 +50,7 @@ int gcr4complex(_Complex double * const P, _Complex double * const Q,
 		const int m, const int max_restarts,
 		const double eps_sq, const int rel_prec,
 		const int N, const int parallel, 
-		const int lda, c_matrix_mult f) {
+		const int lda, const int precon, c_matrix_mult f) {
 
   int k, l, restart, i, p=0;
   double norm_sq, err;
@@ -75,8 +76,12 @@ int gcr4complex(_Complex double * const P, _Complex double * const Q,
       return (p);
     }
     for(k = 0; k < m ; k++) {
-      memcpy(xi[k], rho, N*sizeof(_Complex double));
-      /* here we could put in a preconditioner */
+      if(precon == 0) {
+	memcpy(xi[k], rho, N*sizeof(_Complex double));
+      }
+      else {
+	little_mg_precon(xi[k], rho);
+      }
       f(tmp, xi[k]); 
       /* tmp will become chi[k] */
       for(l = 0; l < k; l++) {

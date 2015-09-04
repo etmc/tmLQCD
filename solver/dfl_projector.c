@@ -111,14 +111,14 @@ void project(spinor * const out, spinor * const in) {
     for(i = 0; i < nb_blocks; i++) {
       inprod[j + i*g_N_s]  = scalar_prod(block_list[i].basis[j], psi[i], vol, 0);
       if(evenodd) {
-	if (block_list[i].evenodd==0) {
-	  inprod_eo[j + i_e*g_N_s] = inprod[j + i*g_N_s];
-	  i_e++;
-	}
-	if (block_list[i].evenodd==1) {
-	  inprod_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s] = inprod[j + i*g_N_s];
-	  i_o++;
-	}
+        if (block_list[i].evenodd==0) {
+          inprod_eo[j + i_e*g_N_s] = inprod[j + i*g_N_s];
+          i_e++;
+        }
+        if (block_list[i].evenodd==1) {
+          inprod_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s] = inprod[j + i*g_N_s];
+          i_o++;
+        }
       }
     }
   }
@@ -136,96 +136,101 @@ void project(spinor * const out, spinor * const in) {
   if(!usePL) {
     if(evenodd) {
       if (little_solver == 0) {
-	iter = gcr4complex(invvec_eo, inprod_o, little_m, little_max_iter, prec, 1, nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, &little_D_sym);
+        iter = gcr4complex(invvec_eo, inprod_o, little_m, little_max_iter, prec, 1, nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, 0, &little_D_sym);
       }
       else if(little_solver == 1) {
-	iter = mcr4complex(invvec_eo, inprod_o, little_m, little_max_iter, prec, 1, nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, &little_D_sym);
+        iter = mcr4complex(invvec_eo, inprod_o, little_m, little_max_iter, prec, 1, nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, &little_D_sym);
       }
-      else
-	iter = mr4complex(invvec_eo, inprod_o, 8, prec, 1, nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, &little_D_sym);
-
+      else {
+        iter = mr4complex(invvec_eo, inprod_o, 8, prec, 1, nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, &little_D_sym);
+      }
       little_D_hop(0,ctmp, invvec_eo);
       little_D_ee_inv(invvec_eo,ctmp);
       little_Dhat_rhs(0,invvec_eo, -1., inprod_e);
 
       for (j = 0; j < g_N_s; j++) {
-	i_o=0;
-	i_e=0;
-	for(i = 0; i < nb_blocks; i++) {
-	  if (block_list[i].evenodd==0) {
-	    invvec[j + i*g_N_s] = invvec_eo[j + i_e*g_N_s];
-	    i_e++;
-	  }
-	  if (block_list[i].evenodd==1) {
-	    invvec[j + i*g_N_s] = invvec_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s];
-	    i_o++;
-	  }
-	}
+        i_o=0;
+        i_e=0;
+        for(i = 0; i < nb_blocks; i++) {
+          if (block_list[i].evenodd==0) {
+            invvec[j + i*g_N_s] = invvec_eo[j + i_e*g_N_s];
+            i_e++;
+          }
+          if (block_list[i].evenodd==1) {
+            invvec[j + i*g_N_s] = invvec_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s];
+            i_o++;
+          }
+        }
       }
       if(g_proc_id == 0 && g_debug_level > 2) {
-	printf("little solver (evenodd) number of iterations %d (no P_L)\n", iter);
+        printf("little solver (evenodd) number of iterations %d (no P_L)\n", iter);
       }
     }
     else {
       if (little_solver == 0) {
-	iter = gcr4complex(invvec, inprod, little_m, little_max_iter, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);
-	if(g_proc_id == 0 && g_debug_level > 2) {
-	  printf("lgcr number of iterations %d (no P_L)\n", iter);
-	}	
+        iter = gcr4complex(invvec, inprod, little_m, little_max_iter, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, 0, &little_D);
+        if(g_proc_id == 0 && g_debug_level > 2) {
+          printf("lgcr number of iterations %d (no P_L)\n", iter);
+        }       
       }
       else if(little_solver == 1) { 
-	iter = mcr4complex(invvec, inprod, little_m, little_max_iter, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);	
-	if(g_proc_id == 0 && g_debug_level > 2) {
-	  printf("lmcr number of iterations %d (no P_L)\n", iter);
-	}	
+        iter = mcr4complex(invvec, inprod, little_m, little_max_iter, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D); 
+        if(g_proc_id == 0 && g_debug_level > 2) {
+          printf("lmcr number of iterations %d (no P_L)\n", iter);
+        }       
       }
       else {
-	iter = mr4complex(invvec, inprod, 20, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);
-	if(g_proc_id == 0 && g_debug_level > 2) {
-	  printf("lmr number of iterations %d (no P_L)\n", iter);
-	}	
+        iter = mr4complex(invvec, inprod, 20, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);
+        if(g_proc_id == 0 && g_debug_level > 2) {
+          printf("lmr number of iterations %d (no P_L)\n", iter);
+        }       
       }
     }
   }
-  else {
+  else { // usePL = true
     if(evenodd) {
-      little_P_L_sym(v, inprod_o);
-      iter = gcr4complex(w, v, little_m, little_max_iter, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_P_L_D_sym);
-      little_P_R_sym(v, w);
-      /*      little_project(w, inprod_o, g_N_s);*/
-      little_project_eo(w,inprod_o,g_N_s);
-      for(i = 0; i < nb_blocks*g_N_s; ++i)
-	invvec_eo[i] = w[i] + v[i];
+      if(1) {
+	little_P_L_sym(v, inprod_o);
+	iter = gcr4complex(w, v, little_m, little_max_iter, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, 0, &little_P_L_D_sym);
+	little_P_R_sym(v, w);
+	little_project_eo(w,inprod_o,g_N_s);
+	for(i = 0; i < nb_blocks*g_N_s; ++i)
+	  invvec_eo[i] = w[i] + v[i];
+      }
+      else {
+	// this is in adaptive MG style?
+	iter = gcr4complex(invvec_eo, inprod_o, little_m, little_max_iter, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, 1, &little_D_sym);
+      }
       little_D_hop(0,ctmp, invvec_eo);
       little_D_ee_inv(invvec_eo,ctmp);
       little_Dhat_rhs(0,invvec_eo, -1., inprod_e);
       for (j = 0; j < g_N_s; j++) {
-	i_o=0;
-	i_e=0;
-	for(i = 0; i < nb_blocks; i++){
-	  if (block_list[i].evenodd==0) {
-	    invvec[j + i*g_N_s] = invvec_eo[j + i_e*g_N_s];
-	    i_e++;
-	  }
-	  if (block_list[i].evenodd==1) {
-	    invvec[j + i*g_N_s] = invvec_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s];
-	    i_o++;
-	  }
-	}
+        i_o=0;
+        i_e=0;
+        for(i = 0; i < nb_blocks; i++){
+          if (block_list[i].evenodd==0) {
+            invvec[j + i*g_N_s] = invvec_eo[j + i_e*g_N_s];
+            i_e++;
+          }
+          if (block_list[i].evenodd==1) {
+            invvec[j + i*g_N_s] = invvec_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s];
+            i_o++;
+          }
+        }
       } 
       if(g_proc_id == 0 && g_debug_level > 0) {/*CT: was "g_debug_level > -1" */
-	printf("lgcr even/odd number of iterations %d (using P_L)\n", iter);
+        printf("lgcr even/odd number of iterations %d (using P_L)\n", iter);
       }
     }
     else {
       little_P_L(v, inprod);
-      iter = gcr4complex(w, v, little_m, little_max_iter, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_P_L_D);
+      iter = gcr4complex(w, v, little_m, little_max_iter, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, 0, &little_P_L_D);
       little_P_R(v, w);
       little_project(w, inprod, g_N_s);
       for(i = 0; i < nb_blocks*g_N_s; ++i)
-	invvec[i] = w[i] + v[i];
+        invvec[i] = w[i] + v[i];
       if(g_proc_id == 0 && g_debug_level > 0) {/*CT: was "g_debug_level > -1" */
-	printf("lgcr number of iterations %d (using P_L)\n", iter);
+        printf("lgcr number of iterations %d (using P_L)\n", iter);
       }
     }    
   }
@@ -411,7 +416,7 @@ void mg_Qsq_precon1(spinor * const out, spinor * const in) {
   g_mu = g_mu1;
   zero_spinor_field(out, VOLUME);
   cg_her(out, in, 10, 1.e-14, 
-	 1, VOLUME, &Q_pm_psi);
+         1, VOLUME, &Q_pm_psi);
   g_mu = mu_save;
   return;
 }
@@ -421,10 +426,10 @@ void mg_Qsq_precon3(spinor * const out, spinor * const in) {
   g_mu = g_mu1;
   zero_spinor_field(g_spinor_field[DUM_MATRIX+3], VOLUME);
   cg_her(g_spinor_field[DUM_MATRIX+3], in, 30, g_mu*g_mu, 
-	 1, VOLUME, &Q_pm_psi);
+         1, VOLUME, &Q_pm_psi);
   zero_spinor_field(g_spinor_field[DUM_MATRIX+2], VOLUME);
   cg_her(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+3], 30, g_mu*g_mu, 
-	 1, VOLUME, &Q_pm_psi);
+         1, VOLUME, &Q_pm_psi);
   mul_r(g_spinor_field[DUM_MATRIX+2], g_mu*g_mu-mu_save*mu_save, g_spinor_field[DUM_MATRIX+2], VOLUME);
   add(out, g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], VOLUME);
   g_mu = mu_save;
@@ -445,7 +450,7 @@ void mg_Qsq_precon(spinor * const out, spinor * const in) {
 
   g_mu = g_mu1;
   cg_her(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], 10, 1.e-14, 
-	 1, VOLUME, &Q_pm_psi);
+         1, VOLUME, &Q_pm_psi);
   g_mu = mu_save;
   add(out, g_spinor_field[DUM_MATRIX+3], out, VOLUME);
   return;
@@ -464,14 +469,14 @@ void mg_Qsq_precon2(spinor * const out, spinor * const in) {
 
   g_mu = g_mu1;
   //cg_her(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], 10, 1.e-14, 
-  //	 1, VOLUME, &Q_pm_psi);
+  //     1, VOLUME, &Q_pm_psi);
 
   zero_spinor_field(g_spinor_field[DUM_MATRIX+3], VOLUME);
   cg_her(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], 30, g_mu*g_mu, 
-	 1, VOLUME, &Q_pm_psi);
+         1, VOLUME, &Q_pm_psi);
   zero_spinor_field(g_spinor_field[DUM_MATRIX+2], VOLUME);
   cg_her(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+3], 30, g_mu*g_mu, 
-	 1, VOLUME, &Q_pm_psi);
+         1, VOLUME, &Q_pm_psi);
   mul_r(g_spinor_field[DUM_MATRIX+2], g_mu*g_mu-mu_save*mu_save, g_spinor_field[DUM_MATRIX+2], VOLUME);
   add(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], VOLUME);
   g_mu = mu_save;
@@ -590,6 +595,7 @@ void little_project_eo(_Complex double * const out, _Complex double * const in, 
 }
 
 
+
 void little_project2(_Complex double * const out, _Complex double * const in, const int  N) {
   int i;
   static _Complex double *phi;
@@ -635,7 +641,6 @@ void little_P_R(_Complex double * const out, _Complex double * const in) {
 
 void little_P_L_sym(_Complex double * const out, _Complex double * const in) {
   if(init_dfl_projector == 0) {alloc_dfl_projector();}
-  /*  little_project(out, in, g_N_s);*/
   little_project_eo(out,in,g_N_s);
   little_D_sym(work[13], out);
   ldiff(out, in, work[13], nb_blocks*g_N_s);
@@ -645,7 +650,6 @@ void little_P_L_sym(_Complex double * const out, _Complex double * const in) {
 void little_P_R_sym(_Complex double * const out, _Complex double * const in) {
   if(init_dfl_projector == 0) {alloc_dfl_projector();}
   little_D_sym(out, in);
-  /*  little_project(work[14], out, g_N_s);*/
   little_project_eo(work[14],out,g_N_s);
   ldiff(out, in, work[14], nb_blocks*g_N_s);
   return;
@@ -658,6 +662,20 @@ void little_P_L_D(_Complex double * const out, _Complex double * const in) {
   return;
 }
 
+void little_mg_precon(_Complex double * const out, _Complex double * const in) {
+  /* // phi = PD_c^{-1} P^dagger in */
+  /* little_project_eo(out, in, g_N_s); */
+  /* // in - D*phi  */
+  /* little_D_sym(work[2], out); */
+  /* ldiff(work[3], in, work[2], nb_blocks*g_N_s); */
+  /* // sum with phi */
+  /* ladd(out, work[3], out, nb_blocks*g_N_s); */
+  little_project_eo(work[2], in, g_N_s);
+  ldiff(out, in, work[2], nb_blocks*g_N_s);
+  return;
+}
+
+// little_P_L_D_sym * psi = (1 - PA^-1P little_D_sym) * little_D_sym * psi
 void little_P_L_D_sym(_Complex double * const out, _Complex double * const in) {
   if(init_dfl_projector == 0) {alloc_dfl_projector();}
   little_D_sym(work[15], in);
@@ -860,7 +878,7 @@ int check_projectors(const int repro) {
 
     for (j = 0; j < g_N_s; ++j) {
       for(i = 0; i < nb_blocks; i++) {
-	v[j + i*g_N_s] = scalar_prod(block_list[i].basis[j], phi[i], VOLUME/nb_blocks, 0);
+        v[j + i*g_N_s] = scalar_prod(block_list[i].basis[j], phi[i], VOLUME/nb_blocks, 0);
       }
     }
 
@@ -888,7 +906,7 @@ int check_projectors(const int repro) {
     split_global_field_GEN(phi, work_fields[2],nb_blocks);
     for (j = 0; j < g_N_s; ++j) 
       for(i = 0; i < nb_blocks; i++)
-	v[j + i*g_N_s] = scalar_prod(block_list[i].basis[j], phi[i], VOLUME/nb_blocks, 0);
+        v[j + i*g_N_s] = scalar_prod(block_list[i].basis[j], phi[i], VOLUME/nb_blocks, 0);
     for (j = 0; j < nb_blocks* g_N_s; ++j) {
       printf("AFTER D: w[%u] = %1.5e + %1.5e i\n", j, creal(v[j]), cimag(v[j]));
     }
@@ -1026,11 +1044,11 @@ void check_little_D_inversion(const int repro) {
   }
 
   if(1) {
-    gcr4complex(invvec, inprod, little_gmres_m_parameter, 1000, 1.e-24, 0, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);
+    gcr4complex(invvec, inprod, little_gmres_m_parameter, 1000, 1.e-24, 0, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, 0, &little_D);
   }
   else {
     little_P_L(v, inprod);
-    gcr4complex(w, v, little_gmres_m_parameter, 1000, 1.e-24, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_P_L_D);
+    gcr4complex(w, v, little_gmres_m_parameter, 1000, 1.e-24, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, 0, &little_P_L_D);
     little_P_R(v, w);
     little_project(w, inprod, g_N_s);
     for(i = 0; i < nb_blocks*g_N_s; ++i)
@@ -1047,19 +1065,19 @@ void check_little_D_inversion(const int repro) {
     for(ctr_t = 0; ctr_t < nb_blocks * g_N_s; ++ctr_t){
       printf("%1.9e + %1.9e I   ", creal(inprod[ctr_t]), cimag(inprod[ctr_t]));
       if (ctr_t == g_N_s - 1)
-	printf("\n");
+        printf("\n");
     }
     printf("\nInverted:\n");
     for(ctr_t = 0; ctr_t < nb_blocks * g_N_s; ++ctr_t){
       printf("%1.9e + %19e I   ", creal(invvec[ctr_t]), cimag(invvec[ctr_t]));
       if (ctr_t == g_N_s - 1 )
-	printf("\n");
+        printf("\n");
     }
     printf("\nResult:\n");
     for(ctr_t = 0; ctr_t < nb_blocks * g_N_s; ++ctr_t){
       printf("%1.9e + %1.9e I   ", creal(result[ctr_t]), cimag(result[ctr_t]));
       if (ctr_t == g_N_s - 1)
-	printf("\n");
+        printf("\n");
     }
     printf("\n");
   }
@@ -1171,10 +1189,10 @@ void check_local_D(const int repro)
 
     if(g_proc_id == 0 && g_debug_level > 5) {
       for(i = 0; i < block_list[0].volume; i++) {
-	if(fabs(creal(work_fields[6][i].s0.c0)) > 1.e-15 || fabs(creal(work_fields[5][i].s0.c0)) > 1.e-15) {
-	  printf("%d %e %d\n", i, creal(work_fields[6][i].s0.c0), block_list[0].volume);
-	  printf("%d %e\n", i, creal(work_fields[5][i].s0.c0));
-	}
+        if(fabs(creal(work_fields[6][i].s0.c0)) > 1.e-15 || fabs(creal(work_fields[5][i].s0.c0)) > 1.e-15) {
+          printf("%d %e %d\n", i, creal(work_fields[6][i].s0.c0), block_list[0].volume);
+          printf("%d %e\n", i, creal(work_fields[5][i].s0.c0));
+        }
       }
     }
 

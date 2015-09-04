@@ -45,6 +45,7 @@ void little_P_R(_Complex double * const out, _Complex double * const in);
 void little_P_L(_Complex double * const out, _Complex double * const in);
 void little_P_R_sym(_Complex double * const out, _Complex double * const in);
 void little_P_L_sym(_Complex double * const out, _Complex double * const in);
+void little_mg_precon(_Complex double * const out, _Complex double * const in);
 
 extern double dfl_little_D_prec;
 extern int dfl_sloppy_prec;
