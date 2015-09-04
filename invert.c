@@ -78,6 +78,7 @@
 #include <io/spinor.h>
 #include <io/utils.h>
 #include "solver/dirac_operator_eigenvectors.h"
+#include "source_generation.h"
 #include "P_M_eta.h"
 #include "operator/tm_operators.h"
 #include "operator/Dov_psi.h"
