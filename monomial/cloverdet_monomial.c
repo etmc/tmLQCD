@@ -34,6 +34,7 @@
 #include "gettime.h"
 #include "linalg_eo.h"
 #include "deriv_Sb.h"
+#include "deriv_Sb_D_psi.h"
 #include "gamma.h"
 #include "operator/tm_operators.h"
 #include "operator/Hopping_Matrix.h"
