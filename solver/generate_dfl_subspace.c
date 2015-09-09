@@ -367,7 +367,9 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
     g_kappa = kappasave;
     boundary(g_kappa);
     usePL = usePLsave;
-
+    if(g_debug_level > 0 && g_proc_id == 0) {
+      printf("# Switched to target parameters kappa= %e, mu=%e\n", g_kappa, g_mu/2/g_kappa);
+    }
     if(g_debug_level > 1) {
       for (i = 0; i < Ns; i++) {
         /* test quality */
