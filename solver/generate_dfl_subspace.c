@@ -73,7 +73,7 @@ static int init_little_subspace = 0;
 static void random_fields(const int Ns) {
 
   for (int i = 0; i < Ns; i++) {
-    random_spinor_field_lexic(dfl_fields[i], 1, RN_PM1UNIF);
+    random_spinor_field_lexic(dfl_fields[i], 0, RN_PM1UNIF);
   }
   return;
 }
@@ -262,6 +262,7 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
   if(mu_dflgen > -10) {
     g_mu = mu_dflgen;
   }
+  // currently set to 0 during subspace generation
   usePL = 0;
   atime = gettime();
 
@@ -271,11 +272,25 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
   psi[0] = calloc(VOLUME + nb_blocks, sizeof(spinor));
   for(i = 1; i < nb_blocks; i++) psi[i] = psi[i-1] + (VOLUME / nb_blocks) + 1;
 
+  if((g_proc_id == 0) && (g_debug_level > 0)) {
+    printf("# Initialising subspaces\n");
+    fflush(stdout);
+  }
+
   if(init_subspace == 0) i = init_dfl_subspace(Ns);
 
   if(init_little_subspace == 0) i = init_little_dfl_subspace(Ns);
 
+  if((g_proc_id == 0) && (g_debug_level > 0)) {
+    printf("# Generating random fields...");
+  }
+  double ta = gettime();
   random_fields(Ns);
+  double tb = gettime();
+  if((g_proc_id == 0) && (g_debug_level > 0)) {
+    printf(" done in %e seconds\n", tb-ta);
+    fflush(stdout);
+  }
 
   boundary(g_kappa);
 
