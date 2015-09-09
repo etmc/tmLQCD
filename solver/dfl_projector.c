@@ -189,7 +189,7 @@ void project(spinor * const out, spinor * const in) {
   }
   else { // usePL = true
     if(evenodd) {
-      if(1) {
+      if(0) {
 	little_P_L_sym(v, inprod_o);
 	iter = gcr4complex(w, v, little_m, little_max_iter, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, 0, &little_P_L_D_sym);
 	little_P_R_sym(v, w);
