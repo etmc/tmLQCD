@@ -156,13 +156,13 @@ void project(spinor * const out, spinor * const in) {
         }
       }
       if(g_proc_id == 0 && g_debug_level > 2) {
-        printf("lgcr (even/odd) number of iterations %d (no P_L)\n", iter);
+        printf("lgcr (even/odd) number of iterations %d (no LittleLittleD)\n", iter);
       }
     }
     else {
       iter = gcr4complex(invvec, inprod, little_m, little_max_iter, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, 0, &little_D);
       if(g_proc_id == 0 && g_debug_level > 2) {
-	printf("lgcr number of iterations %d (no P_L)\n", iter);
+	printf("lgcr number of iterations %d (no LittleLittleD)\n", iter);
       }       
     }
   }
@@ -198,7 +198,7 @@ void project(spinor * const out, spinor * const in) {
         }
       } 
       if(g_proc_id == 0 && g_debug_level > 0) {/*CT: was "g_debug_level > -1" */
-        printf("lgcr (even/odd) number of iterations %d (using P_L)\n", iter);
+        printf("lgcr (even/odd) number of iterations %d (using LittleLittleD)\n", iter);
       }
     }
     else {
@@ -209,7 +209,7 @@ void project(spinor * const out, spinor * const in) {
       for(i = 0; i < nb_blocks*g_N_s; ++i)
         invvec[i] = w[i] + v[i];
       if(g_proc_id == 0 && g_debug_level > 0) {/*CT: was "g_debug_level > -1" */
-        printf("lgcr number of iterations %d (using P_L)\n", iter);
+        printf("lgcr number of iterations %d (using LittleLittleD)\n", iter);
       }
     }    
   }
