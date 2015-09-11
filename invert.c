@@ -70,7 +70,6 @@
 #include "block.h"
 #include "operator.h"
 #include "sighandler.h"
-#include "solver/dfl_projector.h"
 #include "solver/generate_dfl_subspace.h"
 #include "prepare_source.h"
 #include <io/params.h>
@@ -83,6 +82,7 @@
 #include "operator/Dov_psi.h"
 #include "solver/spectral_proj.h"
 #include "meas/measurements.h"
+#include "source_generation.h"
 
 extern int nstore;
 int check_geometry();
@@ -414,12 +414,6 @@ int main(int argc, char *argv[])
       // DFLGCR and DFLFGMRES
       if(operator_list[op_id].solver == DFLGCR || operator_list[op_id].solver == DFLFGMRES) {
 	generate_dfl_subspace(g_N_s, VOLUME, reproduce_randomnumber_flag);
-	/* Cross-checks */
-	if (g_debug_level > 4) {
-	  check_projectors(reproduce_randomnumber_flag);
-	  check_local_D(reproduce_randomnumber_flag);
-	  check_little_D_inversion(reproduce_randomnumber_flag);
-	}
       }
 
       if(use_preconditioning==1 && PRECWSOPERATORSELECT[operator_list[op_id].solver]!=PRECWS_NO ){

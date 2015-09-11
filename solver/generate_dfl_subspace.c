@@ -258,6 +258,14 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
   free(work);
   free(psi[0]);
   free(psi);
+
+  /* Cross-checks */
+  if (g_debug_level > 3) {
+    check_projectors(reproduce_randomnumber_flag);
+    check_local_D(reproduce_randomnumber_flag);
+    check_little_D_inversion(reproduce_randomnumber_flag);
+  }
+
   return(0);
 }
 
@@ -428,13 +436,14 @@ void compute_little_little_D(const int Ns) {
     
     double etime = gettime();
     if(g_proc_id == 0 && g_debug_level > 0) {
-      printf("time for little little D computation %1.3e s\n", etime-atime);
+      printf("# time for little little D computation %1.3e s\n", etime-atime);
       fflush(stdout);
     }
     free(work);
     free(psi[0]);
     free(psi);
   }
+
   return;
 }
 

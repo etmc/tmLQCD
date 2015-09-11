@@ -98,7 +98,7 @@ void invert_little_D_spinor(spinor *r, spinor *s){
     }
   }
 
-  i = gcr4complex(w, v, 10, 100, 1e-31, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, 0, &little_D);
+  i = gcr4complex(w, v, 10, 100, little_solver_high_prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, 0, &little_D);
   if(g_proc_id == 0 && g_debug_level > 0) {
     printf("lgcr: %d iterations in invert_little_D_spinor\n", i);
   }
@@ -227,55 +227,8 @@ void apply_little_D_spinor(spinor *r, spinor *s){
     for(i = 0; i < nb_blocks; i++) v[j + i*g_N_s] = scalar_prod(block_list[i].basis[j], psi[i], VOLUME/nb_blocks, 0);
   }
 
-  if (g_debug_level > 2){
-    if (!g_cart_id) {
-      for (j = 0; j < nb_blocks* g_N_s; ++j) {
-        printf("LITTLE_D for 0: v[%u] = %1.5e + %1.5e i\n", j, creal(v[j]), cimag(v[j]));
-      }
-    }
-#ifdef MPI
-    MPI_Barrier(MPI_COMM_WORLD);
-#endif
-  }
-
-  if (g_debug_level > 4) {
-    for (k = 1; k < 16; ++k) {
-      if (g_cart_id == k) {
-        for (j = 0; j < nb_blocks* g_N_s; ++j) {
-          printf("LITTLE_D for %u: v[%u] = %1.5e + %1.5e i\n", k, j, creal(v[j]), cimag(v[j]));
-        }
-      }
-#ifdef MPI
-      MPI_Barrier(MPI_COMM_WORLD);
-#endif
-    }
-  }
-
   little_D(w, v);
 
-  if (g_debug_level > 2){
-    if (!g_cart_id){
-      for (j = 0; j < nb_blocks * g_N_s; ++j) {
-        printf("LITTLE_D for 0: w[%u] = %1.5e + %1.5e i\n", j, creal(w[j]), cimag(w[j]));
-      }
-    }
-#ifdef MPI
-    MPI_Barrier(MPI_COMM_WORLD);
-#endif
-  }
-
-  if (g_debug_level > 4) {
-    for (k = 1; k < 16; ++k) {
-      if (g_cart_id == k) {
-        for (j = 0; j < nb_blocks* g_N_s; ++j) {
-          printf("LITTLE_D for %u: w[%u] = %1.5e + %1.5e i\n", k, j, creal(w[j]), cimag(w[j]));
-        }
-      }
-#ifdef MPI
-      MPI_Barrier(MPI_COMM_WORLD);
-#endif
-    }
-  }
   for(i = 0; i < nb_blocks; i++) {
     mul(psi[i], w[i*g_N_s], block_list[i].basis[0], VOLUME/nb_blocks);
   }
