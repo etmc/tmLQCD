@@ -926,6 +926,12 @@ static inline void rmQuotes(char *str){
     if(myverbose) printf("  Solver set to FGMRES line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
+  dflgcr {
+    optr->solver=10;
+    g_dflgcr_flag = 1;
+    if(myverbose) printf("  Solver set to DFL-GCR line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
   dflfgmres {
     optr->solver=11;
     g_dflgcr_flag = 1;
