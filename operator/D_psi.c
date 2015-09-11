@@ -1294,11 +1294,6 @@ void D_psi(spinor * const P, spinor * const Q){
     sm = (spinor *) Q +iy;
     um=&g_gauge_field[iy][3];
     m3addandstore(rr, sm, um, phase_3, &tmpr);
-    // this is for using Q in deflation FIXME
-    if(use_iQ_dfl) {
-      gamma5(rr, rr, 1);
-    }
-    // FIXME
   }
 #ifdef OMP
   } /* OpenMP closing brace */
@@ -1363,7 +1358,6 @@ void Block_D_psi(block * blk, spinor * const rr, spinor * const s) {
 #endif
 
     local_H(r, s, u, idx, &tmpr);
-    if(use_iQ_dfl) gamma5(r, r, 1);
 
     r++;
     t++;
@@ -1408,7 +1402,6 @@ void Block_H_psi(block * blk, spinor * const rr, spinor * const s, const int eo)
 #endif
 
     local_H(r, s, u, eoidx, &tmpr);
-    if (use_iQ_dfl) gamma5(r, r, 1);
 
     r++;
     eoidx += 8;

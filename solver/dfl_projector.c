@@ -135,17 +135,10 @@ void project(spinor * const out, spinor * const in) {
 
   if(!usePL) {
     if(evenodd) {
-      if (little_solver == 0) {
-        iter = gcr4complex(invvec_eo, inprod_o, little_m, little_max_iter, prec, 1, nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, 0, &little_D_sym);
-      }
-      else if(little_solver == 1) {
-        iter = mcr4complex(invvec_eo, inprod_o, little_m, little_max_iter, prec, 1, nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, &little_D_sym);
-      }
-      else {
-        iter = mr4complex(invvec_eo, inprod_o, 8, prec, 1, nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, &little_D_sym);
-      }
-      little_D_hop(0,ctmp, invvec_eo);
-      little_D_ee_inv(invvec_eo,ctmp);
+      iter = gcr4complex(invvec_eo, inprod_o, little_m, little_max_iter, prec, 1, nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, 0, &little_D_sym);
+
+      little_D_hop(0, ctmp, invvec_eo);
+      little_D_ee_inv(invvec_eo, ctmp);
       little_Dhat_rhs(0,invvec_eo, -1., inprod_e);
 
       for (j = 0; j < g_N_s; j++) {
@@ -163,28 +156,14 @@ void project(spinor * const out, spinor * const in) {
         }
       }
       if(g_proc_id == 0 && g_debug_level > 2) {
-        printf("little solver (evenodd) number of iterations %d (no P_L)\n", iter);
+        printf("lgcr (even/odd) number of iterations %d (no P_L)\n", iter);
       }
     }
     else {
-      if (little_solver == 0) {
-        iter = gcr4complex(invvec, inprod, little_m, little_max_iter, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, 0, &little_D);
-        if(g_proc_id == 0 && g_debug_level > 2) {
-          printf("lgcr number of iterations %d (no P_L)\n", iter);
-        }       
-      }
-      else if(little_solver == 1) { 
-        iter = mcr4complex(invvec, inprod, little_m, little_max_iter, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D); 
-        if(g_proc_id == 0 && g_debug_level > 2) {
-          printf("lmcr number of iterations %d (no P_L)\n", iter);
-        }       
-      }
-      else {
-        iter = mr4complex(invvec, inprod, 20, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);
-        if(g_proc_id == 0 && g_debug_level > 2) {
-          printf("lmr number of iterations %d (no P_L)\n", iter);
-        }       
-      }
+      iter = gcr4complex(invvec, inprod, little_m, little_max_iter, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, 0, &little_D);
+      if(g_proc_id == 0 && g_debug_level > 2) {
+	printf("lgcr number of iterations %d (no P_L)\n", iter);
+      }       
     }
   }
   else { // usePL = true
@@ -219,7 +198,7 @@ void project(spinor * const out, spinor * const in) {
         }
       } 
       if(g_proc_id == 0 && g_debug_level > 0) {/*CT: was "g_debug_level > -1" */
-        printf("lgcr even/odd number of iterations %d (using P_L)\n", iter);
+        printf("lgcr (even/odd) number of iterations %d (using P_L)\n", iter);
       }
     }
     else {
@@ -240,59 +219,6 @@ void project(spinor * const out, spinor * const in) {
   }
   for(j = 1; j < g_N_s; j++) {
     for(i = 0 ; i < nb_blocks ; i++) {
-      assign_add_mul(psi[i], block_list[i].basis[j], invvec[i*g_N_s + j], vol);
-    }
-  }
-
-  /* reconstruct global field */
-  reconstruct_global_field_GEN(out, psi, nb_blocks);
-  free_dfl_projector();
-  return;
-}
-
-/* this is phi_k A^{-1}_{kl} (phi_k, in) */
-/* for Q^2                               */
-/* using CGNE as inner solver            */
-void project_Qsq(spinor * const out, spinor * const in) {
-  int iter;
-
-  int vol = block_list[0].volume;
-  _Complex double * v, * w;
-  double prec;
-
-  if(init_dfl_projector == 0) {
-    alloc_dfl_projector();
-  }
-  v = work[0];
-  w = work[1]; 
-  /*initialize the local (block) parts of the spinor*/
-  split_global_field_GEN(psi, in, nb_blocks);
-
-  for (int j = 0; j < g_N_s*nb_blocks*9; j++) {
-    (inprod[j]) = 0.0;
-    (invvec[j]) = 0.0;
-    (ctmp[j]) = 0.0;
-    (w[j]) = 0.0;
-    (v[j]) = 0.0;
-  }
-
-  for (int j = 0; j < g_N_s; j++) {/*loop over block.basis */
-    for(int i = 0; i < nb_blocks; i++) {
-      inprod[j + i*g_N_s]  = scalar_prod(block_list[i].basis[j], psi[i], vol, 0);
-    }
-  }
-
-  if(!dfl_sloppy_prec) prec = little_solver_low_prec;
-  else prec = little_solver_low_prec;
-
-  iter = cgne4complex(invvec, inprod, 1500, prec, 1, nb_blocks * g_N_s, nb_blocks * 9 * g_N_s, &little_Q_pm);
-
-  /* sum up */
-  for(int j = 0 ; j < nb_blocks ; j++) {
-    mul(psi[j], invvec[j*g_N_s], block_list[j].basis[0], vol);
-  }
-  for(int j = 1; j < g_N_s; j++) {
-    for(int i = 0 ; i < nb_blocks ; i++) {
       assign_add_mul(psi[i], block_list[i].basis[j], invvec[i*g_N_s + j], vol);
     }
   }
@@ -392,95 +318,6 @@ void mg_precon(spinor * const out, spinor * const in) {
   zero_spinor_field(g_spinor_field[DUM_MATRIX+3], VOLUME);
   Msap_eo(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], NcycleMsap, NiterMsap);
   // sum with phi
-  add(out, g_spinor_field[DUM_MATRIX+3], out, VOLUME);
-  return;
-}
-
-void mg_precon_cg(spinor * const out, spinor * const in) {
-  // phi = PD_c^{-1} P^dagger in
-  project(out, in);
-  // in - D*phi 
-  // need to DUM_MATRIX+2,3 because in Msap_eo DUM_MATRIX+0,1 is used
-  D_psi(g_spinor_field[DUM_MATRIX+2], out);
-  diff(g_spinor_field[DUM_MATRIX+2], in, g_spinor_field[DUM_MATRIX+2], VOLUME);
-  // apply M_SAP
-  zero_spinor_field(g_spinor_field[DUM_MATRIX+3], VOLUME);
-  CGeoSmoother(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], NcycleMsap, NiterMsap);
-  // sum with phi
-  add(out, g_spinor_field[DUM_MATRIX+3], out, VOLUME);
-  return;
-}
-
-void mg_Qsq_precon1(spinor * const out, spinor * const in) {
-  double mu_save = g_mu;
-  g_mu = g_mu1;
-  zero_spinor_field(out, VOLUME);
-  cg_her(out, in, 10, 1.e-14, 
-         1, VOLUME, &Q_pm_psi);
-  g_mu = mu_save;
-  return;
-}
-
-void mg_Qsq_precon3(spinor * const out, spinor * const in) {
-  double mu_save = g_mu;
-  g_mu = g_mu1;
-  zero_spinor_field(g_spinor_field[DUM_MATRIX+3], VOLUME);
-  cg_her(g_spinor_field[DUM_MATRIX+3], in, 30, g_mu*g_mu, 
-         1, VOLUME, &Q_pm_psi);
-  zero_spinor_field(g_spinor_field[DUM_MATRIX+2], VOLUME);
-  cg_her(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+3], 30, g_mu*g_mu, 
-         1, VOLUME, &Q_pm_psi);
-  mul_r(g_spinor_field[DUM_MATRIX+2], g_mu*g_mu-mu_save*mu_save, g_spinor_field[DUM_MATRIX+2], VOLUME);
-  add(out, g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], VOLUME);
-  g_mu = mu_save;
-  return;
-}
-
-
-void mg_Qsq_precon(spinor * const out, spinor * const in) {
-  double mu_save = g_mu;
-  project_Qsq(out, in);
-  //assign(out, in, VOLUME);
-  // in - Q_pm*phi 
-  // need to DUM_MATRIX+2,3 because in Msap_eo DUM_MATRIX+0,1 is used
-  Q_pm_psi(g_spinor_field[DUM_MATRIX+3], out);
-  diff(g_spinor_field[DUM_MATRIX+2], in, g_spinor_field[DUM_MATRIX+3], VOLUME);
-  // apply (Q^2)^-1
-  zero_spinor_field(g_spinor_field[DUM_MATRIX+3], VOLUME);
-
-  g_mu = g_mu1;
-  cg_her(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], 10, 1.e-14, 
-         1, VOLUME, &Q_pm_psi);
-  g_mu = mu_save;
-  add(out, g_spinor_field[DUM_MATRIX+3], out, VOLUME);
-  return;
-}
-
-void mg_Qsq_precon2(spinor * const out, spinor * const in) {
-  double mu_save = g_mu;
-  project_Qsq(out, in);
-  //assign(out, in, VOLUME);
-  // in - Q_pm*phi 
-  // need to DUM_MATRIX+2,3 because in Msap_eo DUM_MATRIX+0,1 is used
-  Q_pm_psi(g_spinor_field[DUM_MATRIX+3], out);
-  diff(g_spinor_field[DUM_MATRIX+2], in, g_spinor_field[DUM_MATRIX+3], VOLUME);
-  // apply (Q^2)^-1
-  zero_spinor_field(g_spinor_field[DUM_MATRIX+3], VOLUME);
-
-  g_mu = g_mu1;
-  //cg_her(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], 10, 1.e-14, 
-  //     1, VOLUME, &Q_pm_psi);
-
-  zero_spinor_field(g_spinor_field[DUM_MATRIX+3], VOLUME);
-  cg_her(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], 30, g_mu*g_mu, 
-         1, VOLUME, &Q_pm_psi);
-  zero_spinor_field(g_spinor_field[DUM_MATRIX+2], VOLUME);
-  cg_her(g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+3], 30, g_mu*g_mu, 
-         1, VOLUME, &Q_pm_psi);
-  mul_r(g_spinor_field[DUM_MATRIX+2], g_mu*g_mu-mu_save*mu_save, g_spinor_field[DUM_MATRIX+2], VOLUME);
-  add(g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+3], g_spinor_field[DUM_MATRIX+2], VOLUME);
-  g_mu = mu_save;
-
   add(out, g_spinor_field[DUM_MATRIX+3], out, VOLUME);
   return;
 }
@@ -1099,52 +936,6 @@ void check_little_D_inversion(const int repro) {
   return;
 }
 
-void check_little_Qsq_inversion(const int repro) {
-  int i,j,ctr_t;
-  int contig_block = LZ / nb_blocks;
-  int vol = block_list[0].volume;
-  _Complex double *result;
-  double dif;
-  spinor ** work_fields = NULL;
-  const int nr_wf = 1;
-
-  init_solver_field(&work_fields, VOLUMEPLUSRAND, nr_wf);
-  random_spinor_field_lexic(work_fields[0], repro, RN_GAUSS);
-  if(init_dfl_projector == 0) {
-    alloc_dfl_projector();
-  }
-  result = work[0];
-
-  split_global_field_GEN(psi, work_fields[0], nb_blocks);
-
-  for (i = 0; i < nb_blocks; ++i) {/* loop over blocks */
-    /* compute inner product */
-    for (j = 0; j < g_N_s; ++j) {/*loop over block.basis */
-      inprod[j + i*g_N_s] = scalar_prod(psi[i], block_list[i].basis[j], vol, 0);
-      invvec[j + i*g_N_s] = 0.;
-      result[j + i*g_N_s] = 0.;
-    }
-  }
-
-  cgne4complex(invvec, inprod, 1000, 1.e-24, 1, nb_blocks * g_N_s, nb_blocks * 9 * g_N_s, &little_Q_pm);
-  little_Q_pm(result, invvec); /* This should be a proper inverse now */
-  ldiff(invvec, result, inprod, nb_blocks*g_N_s);
-  dif = lsquare_norm(invvec, nb_blocks*g_N_s, 1);
-  for (i = 0; i < nb_blocks; ++i) {/* loop over blocks */
-    /* compute inner product */
-    for (j = 0; j < 9*g_N_s; ++j) {/*loop over block.basis */
-      invvec[j + i*g_N_s] = 0.;
-      inprod[j + i*g_N_s] = 0.;
-    }
-  }
-
-  if(g_proc_id == g_stdio_proc) {
-    printf("# check_little_Qsq_inversion: squared residue found of size %1.5e!\n", dif);
-  }
-  free_dfl_projector();
-  finalize_solver(work_fields, nr_wf);
-  return;
-}
 
 void check_local_D(const int repro)
 {

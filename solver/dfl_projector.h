@@ -22,19 +22,15 @@
 #include "su3spinor.h"
 
 void project(spinor * const out, spinor * const in);
-void project_Qsq(spinor * const out, spinor * const in);
 void project_left(spinor * const out, spinor * const in);
 void project_right(spinor * const out, spinor * const in);
 void project_left_D(spinor * const out, spinor * const in);
 void D_project_right(spinor * const out, spinor * const in);
 int check_projectors(const int repro);
 void check_little_D_inversion(const int repro);
-void check_little_Qsq_inversion(const int repro);
 void check_local_D(const int repro);
 void free_dfl_projector();
 void mg_precon(spinor * const out, spinor * const in);
-void mg_precon_cg(spinor * const out, spinor * const in);
-void mg_Qsq_precon(spinor * const out, spinor * const in);
 
 void little_project(_Complex double * const out, _Complex double * const in, const int  N);
 void little_project_eo(_Complex double * const out, _Complex double * const in, const int N);

@@ -368,16 +368,6 @@ int main(int argc, char *argv[])
 	
         random_spinor_field_lexic(s[i], reproduce_randomnumber_flag,RN_Z2);
 	
-/* 	what is this here needed for?? */
-/*         spinor *aux_,*aux; */
-/* #if ( defined SSE || defined SSE2 || defined SSE3 ) */
-/*         aux_=calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
-/*         aux = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE); */
-/* #else */
-/*         aux_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
-/*         aux = aux_; */
-/* #endif */
-	
         if(g_proc_id == 0) {
           printf("source %d \n", i);
         }
@@ -394,8 +384,9 @@ int main(int argc, char *argv[])
       free(s_);
     }
 
-    if (Msap_precon == 1 || g_dflgcr_flag == 1)	/*  set up blocks if Msap_eo or deflation is used  */
-		init_blocks(nblocks_t, nblocks_x, nblocks_y, nblocks_z);
+    //  set up blocks if Deflation is used 
+    if (g_dflgcr_flag) 
+      init_blocks(nblocks_t, nblocks_x, nblocks_y, nblocks_z);
     
     if(SourceInfo.type == 1) {
       index_start = 0;
@@ -429,10 +420,6 @@ int main(int argc, char *argv[])
 	  check_local_D(reproduce_randomnumber_flag);
 	  check_little_D_inversion(reproduce_randomnumber_flag);
 	}
-      }
-      // deflated PCG
-      if(operator_list[op_id].solver == PCG || operator_list[op_id].solver == QSQFGMRES) {
-	generate_dfl_subspace_Q(g_N_s, VOLUME, reproduce_randomnumber_flag);
       }
 
       if(use_preconditioning==1 && PRECWSOPERATORSELECT[operator_list[op_id].solver]!=PRECWS_NO ){

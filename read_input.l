@@ -473,23 +473,10 @@ static inline void rmQuotes(char *str){
  BEGIN(DEFLATION);
  }
 <DEFLATION>{
-  {SPC}*GlobalVectorsNum{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
-    g_N_s = a;
-    if(myverbose) printf("Number of global approximate eigenvectors (deflation subspace dimension) set to %d line %d\n", a, line_of_file);
-  }
   {SPC}*DeflationSubspaceDimension{EQL}{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
     g_N_s = a;
     if(myverbose) printf("Number of global approximate eigenvectors (deflation subspace dimension) set to %d line %d\n", a, line_of_file);
-  }
-  {SPC}*OuterloopMsap{EQL}yes {
-    Msap_precon = 1;
-    if(myverbose) printf("OuterloopMsap set to true line %d\n", line_of_file);
-  }
-  {SPC}*OuterloopMsap{EQL}no {
-    Msap_precon = 0;
-    if(myverbose) printf("OuterloopMsap set to false line %d\n", line_of_file);
   }
   {SPC}*NiterMsap{EQL}{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
@@ -536,31 +523,15 @@ static inline void rmQuotes(char *str){
     little_solver_max_iter = a;
     if(myverbose) printf("LittleSolverMaxIter set to %d line %d\n", a, line_of_file);
   }
-  {SPC}*UseiQDFL{EQL}yes {
-    use_iQ_dfl = 1;
-    if(myverbose) printf("UseIQDFL set to true line %d\n", line_of_file);
-  }
-  {SPC}*UseiQDFL{EQL}no {
-    use_iQ_dfl = 0;
-    if(myverbose) printf("UseIQDFL set to false line %d\n", line_of_file);
-  }
-  {SPC}*LittleSolver{EQL}gcr {
+  {SPC}*LittleSolver{EQL}(gcr|mcr|mr) {
     little_solver = 0;
-    if(myverbose) printf("Littlesolver set to gcr line %d\n", line_of_file);
+    if(myverbose) printf("Littlesolver set to gcr in line %d (currently no other solver available)\n", line_of_file);
   }
-  {SPC}*LittleSolver{EQL}mcr {
-    little_solver = 1;
-    if(myverbose) printf("Littlesolver set to mcr line %d\n", line_of_file);
-  }
-  {SPC}*LittleSolver{EQL}mr {
-    little_solver = 2;
-    if(myverbose) printf("Littlesolver set to mr line %d\n", line_of_file);
-  }
-  {SPC}*UsePL{EQL}yes {
+  {SPC}*useLittleLittleD{EQL}yes {
     usePL = 1;
     if(myverbose) printf("UsePL set to true line %d\n", line_of_file);
   }
-  {SPC}*UsePL{EQL}no {
+  {SPC}*useLittleLittleD{EQL}no {
     usePL = 0;
     if(myverbose) printf("UsePL set to true line %d\n", line_of_file);
   }
@@ -915,13 +886,6 @@ static inline void rmQuotes(char *str){
     if(myverbose) printf("  Solver set to BiCG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
- 
-  pcg {
-    optr->solver=9;
-    g_dflgcr_flag = 1;
-    if(myverbose) printf("  Solver set to DFL-PCG line %d operator %d\n", line_of_file, current_operator);
-    BEGIN(name_caller);
-  }
   gmres {
     optr->solver=2;
     if(myverbose) printf("  Solver set to GMRES line %d operator %d\n", line_of_file, current_operator);
@@ -942,7 +906,6 @@ static inline void rmQuotes(char *str){
     if(myverbose) printf("  Solver set to CR line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
- 
   gmresdr {
     optr->solver=8;
     if(myverbose) printf("  Solver set to GMRES-DR line %d operator %d\n", line_of_file, current_operator);
@@ -963,12 +926,6 @@ static inline void rmQuotes(char *str){
     if(myverbose) printf("  Solver set to FGMRES line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
-  dflgcr {
-    optr->solver=10;
-    g_dflgcr_flag = 1;
-    if(myverbose) printf("  Solver set to DFL-GCR line %d operator %d\n", line_of_file, current_operator);
-    BEGIN(name_caller);
-  }
   dflfgmres {
     optr->solver=11;
     g_dflgcr_flag = 1;
@@ -978,12 +935,6 @@ static inline void rmQuotes(char *str){
   cgmms {
     optr->solver = 12;
     if(myverbose) printf("  Solver set to CGMMS line %d operator %d\n", line_of_file, current_operator);
-    BEGIN(name_caller);
-  }
-  qsqfgmres {
-    optr->solver=19;
-    g_dflgcr_flag = 1;
-    if(myverbose) printf("  Solver set to DFL-FGMRES line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
   increigcg {
@@ -2275,7 +2226,6 @@ int read_input(char * conf_file){
   NsmoothMsap_dflgen = _default_NsmoothMsap_dflgen;
   NiterMsap_dflgen = _default_NiterMsap_dflgen;
   NcycleMsap_dflgen = _default_NcycleMsap_dflgen;
-  use_iQ_dfl = _default_use_iQ_dfl;
   usePL = _default_usePL;
   mu_dflgen = -20.;
   kappa_dflgen = -1.;

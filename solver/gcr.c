@@ -97,10 +97,14 @@ int gcr(spinor * const P, spinor * const Q,
       if(precon == 0) {
 	assign(xi[k], rho, N);
       }
-      else {
+      else if(precon == 1){
         zero_spinor_field(xi[k], N);  
         Msap_eo(xi[k], rho, NcycleMsap, NiterMsap);   
       }
+      else {
+	mg_precon(xi[k], rho);
+      }
+
 	  
       dfl_sloppy_prec = 1;
       //dfl_little_D_prec = 1.e-12;

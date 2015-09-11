@@ -55,7 +55,6 @@
 #define _default_g_N_s 20
 #define _default_g_dflgcr_flag 0
 #define _default_little_evenodd 0
-#define _default_use_iQ_dfl 0
 #define _default_usePL 0
 #define _default_little_solver 0
 #define _default_little_gmres_m_parameter 50
