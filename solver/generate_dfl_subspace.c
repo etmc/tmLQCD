@@ -78,18 +78,16 @@ static void random_fields(const int Ns) {
   return;
 }
 
-
+// this routine generates the deflation subspace
 
 int generate_dfl_subspace(const int Ns, const int N, const int repro) {
-  int ix, i_o,i, j, k, p=0, blk, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(_Complex double),
+  int p=0, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(_Complex double),
     vol = VOLUME*sizeof(spinor)/sizeof(_Complex double);
+  const int loop_SAP = 3;
   spinor **psi;
-  double nrm, e = 0.3, d = 1.1, atime, etime;
+  double nrm, atime, etime;
   _Complex double s;
   _Complex double * work;
-  WRITER *writer = NULL;  
-  FILE *fp_dfl_fields; 
-  char file_name[500]; // CT
   double musave = g_mu;
   double kappasave = g_kappa;
   int usePLsave = usePL;
@@ -110,16 +108,16 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
   work = (_Complex double*)malloc(nb_blocks*9*Ns*sizeof(_Complex double));
   psi = (spinor **)calloc(nb_blocks, sizeof(spinor *));
   psi[0] = calloc(VOLUME + nb_blocks, sizeof(spinor));
-  for(i = 1; i < nb_blocks; i++) psi[i] = psi[i-1] + (VOLUME / nb_blocks) + 1;
+  for(int i = 1; i < nb_blocks; i++) psi[i] = psi[i-1] + (VOLUME / nb_blocks) + 1;
 
   if((g_proc_id == 0) && (g_debug_level > 0)) {
     printf("# Initialising subspaces\n");
     fflush(stdout);
   }
 
-  if(init_subspace == 0) i = init_dfl_subspace(Ns);
+  if(init_subspace == 0) p = init_dfl_subspace(Ns);
 
-  if(init_little_subspace == 0) i = init_little_dfl_subspace(Ns);
+  if(init_little_subspace == 0) p = init_little_dfl_subspace(Ns);
 
   if((g_proc_id == 0) && (g_debug_level > 0)) {
     printf("# Generating random fields...");
@@ -139,92 +137,94 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
     printf("# Using kappa= %e and mu = %e for the subspace generation\n", g_kappa, g_mu/g_kappa/2.);
   }
 
-  if(p < Ns) {
-    for(j = 0; j < 3; j++) {
-      for(i = 0; i < Ns; i++) {
-        zero_spinor_field(g_spinor_field[0], VOLUME);  
-        g_sloppy_precision = 1;
-        Msap_eo(g_spinor_field[0], dfl_fields[i], NcycleMsap_dflgen, NiterMsap_dflgen); 
-        
-        assign(dfl_fields[i], g_spinor_field[0], VOLUME);
-        
-        g_sloppy_precision = 0;
-        ModifiedGS((_Complex double*)g_spinor_field[0], vol, i, (_Complex double*)dfl_fields[0], vpr);
-        nrm = sqrt(square_norm(g_spinor_field[0], N, 1));
-        mul_r(dfl_fields[i], 1./nrm, g_spinor_field[0], N);
-      }
+  for(int j = 0; j < loop_SAP; j++) {
+    for(int i = 0; i < Ns; i++) {
+      zero_spinor_field(g_spinor_field[0], VOLUME);  
+      g_sloppy_precision = 1;
+      Msap_eo(g_spinor_field[0], dfl_fields[i], NcycleMsap_dflgen, NiterMsap_dflgen); 
+      
+      assign(dfl_fields[i], g_spinor_field[0], VOLUME);
+      
+      g_sloppy_precision = 0;
+      ModifiedGS((_Complex double*)g_spinor_field[0], vol, i, (_Complex double*)dfl_fields[0], vpr);
+      nrm = sqrt(square_norm(g_spinor_field[0], N, 1));
+      mul_r(dfl_fields[i], 1./nrm, g_spinor_field[0], N);
     }
-    for(j = 3; j < NsmoothMsap_dflgen; j++) {
-      // build little D automatically when little_D is called and dfl_subspace_updated == 1
-      for (i = 0; i < Ns; i++) {
-        /* add it to the basis */
-        split_global_field_GEN_ID(block_list, i, dfl_fields[i], nb_blocks);
-      }
-      /* perform local orthonormalization */
-      for(i = 0; i < nb_blocks; i++) {
-        block_orthonormalize(block_list+i);
-      }
-      dfl_subspace_updated = 1;
-      compute_little_little_D(Ns);
-
-      // why can't I use g_spinor_field[1] in mg_precon??
-      for(i = 0; i < Ns; i++) {
-        g_sloppy_precision = 1;
-	if(0) {
-	  D_psi(g_spinor_field[1],  dfl_fields[i]);
-	  // v - Dv
-	  diff(g_spinor_field[2], dfl_fields[i], g_spinor_field[1], VOLUME);
-	  // C(v - Dv)
-	  mg_precon(g_spinor_field[0], g_spinor_field[2]);
-	  // v <- v + C(v - Dv)
-	  add(dfl_fields[i], dfl_fields[i], g_spinor_field[0], VOLUME);
-	}
-	else {
-	  // this is the original Luescher Version
-	  // v <- C v
-	  mg_precon(g_spinor_field[0], dfl_fields[i]);
-	  assign(dfl_fields[i], g_spinor_field[0], VOLUME);
-	}
-        
-        g_sloppy_precision = 0;
-        ModifiedGS((_Complex double*)g_spinor_field[0], vol, i, (_Complex double*)dfl_fields[0], vpr);
-        nrm = sqrt(square_norm(g_spinor_field[0], N, 1));
-        mul_r(dfl_fields[i], 1./nrm, g_spinor_field[0], N);
-
-      }
+  }
+  for(int j = loop_SAP; j < NsmoothMsap_dflgen; j++) {
+    if(j - loop_SAP > 4) {
+      usePL = usePLsave;
     }
-
-    for (i = 0; i < Ns; i++) {
+    // build little D automatically when little_D is called and dfl_subspace_updated == 1
+    for (int i = 0; i < Ns; i++) {
       /* add it to the basis */
       split_global_field_GEN_ID(block_list, i, dfl_fields[i], nb_blocks);
     }
     /* perform local orthonormalization */
-    for(i = 0; i < nb_blocks; i++) {
+    for(int i = 0; i < nb_blocks; i++) {
       block_orthonormalize(block_list+i);
     }
     dfl_subspace_updated = 1;
-    g_mu = musave;
-    g_kappa = kappasave;
-    boundary(g_kappa);
-    usePL = usePLsave;
-    if(g_debug_level > 0 && g_proc_id == 0) {
-      printf("# Switched to target parameters kappa= %e, mu=%e\n", g_kappa, g_mu/2/g_kappa);
+    compute_little_little_D(Ns);
+    
+    // why can't I use g_spinor_field[1] in mg_precon??
+    for(int i = 0; i < Ns; i++) {
+      g_sloppy_precision = 1;
+      if(0) {
+	D_psi(g_spinor_field[1],  dfl_fields[i]);
+	// v - Dv
+	diff(g_spinor_field[2], dfl_fields[i], g_spinor_field[1], VOLUME);
+	// C(v - Dv)
+	mg_precon(g_spinor_field[0], g_spinor_field[2]);
+	// v <- v + C(v - Dv)
+	add(dfl_fields[i], dfl_fields[i], g_spinor_field[0], VOLUME);
+      }
+      else {
+	// this is the original Luescher Version
+	// v <- C v
+	mg_precon(g_spinor_field[0], dfl_fields[i]);
+	assign(dfl_fields[i], g_spinor_field[0], VOLUME);
+      }
+      
+      g_sloppy_precision = 0;
+      ModifiedGS((_Complex double*)g_spinor_field[0], vol, i, (_Complex double*)dfl_fields[0], vpr);
+      nrm = sqrt(square_norm(g_spinor_field[0], N, 1));
+      mul_r(dfl_fields[i], 1./nrm, g_spinor_field[0], N);
+      
     }
-    if(g_debug_level > 1) {
-      for (i = 0; i < Ns; i++) {
-        /* test quality */
-        D_psi(work_fields[0], dfl_fields[i]);
-        nrm = sqrt(square_norm(work_fields[0], N, 1));
-        if(g_proc_id == 0) {
-          printf(" ||D psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm);
-        }
+  }
+  
+  for(int i = 0; i < Ns; i++) {
+    /* add it to the basis */
+    split_global_field_GEN_ID(block_list, i, dfl_fields[i], nb_blocks);
+  }
+  /* perform local orthonormalization */
+  for(int i = 0; i < nb_blocks; i++) {
+    block_orthonormalize(block_list+i);
+  }
+  dfl_subspace_updated = 1;
+  g_mu = musave;
+  g_kappa = kappasave;
+  boundary(g_kappa);
+  usePL = usePLsave;
+  if(g_debug_level > 0 && g_proc_id == 0) {
+    printf("# Switched to target parameters kappa= %e, mu=%e\n", g_kappa, g_mu/2/g_kappa);
+  }
+  if(g_debug_level > 1) {
+    for(int i = 0; i < Ns; i++) {
+      /* test quality */
+      D_psi(work_fields[0], dfl_fields[i]);
+      nrm = sqrt(square_norm(work_fields[0], N, 1));
+      if(g_proc_id == 0) {
+	printf(" ||D psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm);
       }
     }
   }
+  
   if((g_proc_id == 0) && (g_debug_level > 0)) {
     printf("# Approximate eigenvectors generated\n");
   }
-
+  
   g_mu1 = 0.;
   g_mu2 = 0.;
 
@@ -232,8 +232,8 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
 
   if(g_debug_level > 4) {
     printf("Checking orthonormality of dfl_fields\n");
-    for(i = 0; i < Ns; i++) {
-      for(j = 0; j < Ns; j++) {
+    for(int i = 0; i < Ns; i++) {
+      for(int j = 0; j < Ns; j++) {
         s = scalar_prod(dfl_fields[i], dfl_fields[j], N, 1);
         if(g_proc_id == 0) {
           printf("<%d, %d> = %1.3e +i %1.3e\n", i, j, creal(s), cimag(s));
@@ -241,15 +241,6 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
       }
     }
   }
-  //for (i = 0; i < Ns; i++) {
-  //  /* add it to the basis */
-  //  split_global_field_GEN_ID(block_list, i, dfl_fields[i], nb_blocks);
-  //}
-
-  ///* perform local orthonormalization */
-  //for(i = 0; i < nb_blocks; i++) {
-  //  block_orthonormalize(block_list+i);
-  //}
 
   dfl_subspace_updated = 1;
 
