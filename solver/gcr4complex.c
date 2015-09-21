@@ -106,16 +106,14 @@ int gcr4complex(_Complex double * const P, _Complex double * const Q,
     /* prepare for restart */
     c[k] /= b[k];
     lassign_add_mul(P, xi[k], c[k], N);
-    for(l = k-1; l >= 0; --l)
-      {
-	for(i = l+1; i <= k; ++i)
-	  {
-	    ctmp  = a[l][i] * c[i];
-	    c[l] -= ctmp;
-	  }
-	c[l] /= b[l];
-	lassign_add_mul(P, xi[l], c[l], N);
+    for(l = k-1; l >= 0; --l) {
+      for(i = l+1; i <= k; ++i) {
+	ctmp  = a[l][i] * c[i];
+	c[l] -= ctmp;
       }
+      c[l] /= b[l];
+      lassign_add_mul(P, xi[l], c[l], N);
+    }
   }
   return(-1);
 }

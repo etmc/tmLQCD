@@ -980,7 +980,7 @@ void check_local_D(const int repro)
     /* varphi_o in r[3] */
     assign_mul_add_r(r[3], -1., r[1], vol);
     /* psi_o in r[1] */
-    mrblk(r[1], r[3], 3, 1.e-31, 1, vol, &Mtm_plus_block_psi, j);
+    mrblk(r[1], r[3], r[4], 3, 1.e-31, 1, vol, &Mtm_plus_block_psi, j);
 
     Block_H_psi(&block_list[j], r[0], r[1], EO);
     mul_one_pm_imu_inv(r[0], +1., vol);
@@ -1008,7 +1008,7 @@ void check_local_D(const int repro)
     assign_mul_add_r(r[3], -1., r[1], vol);
     /* psi_o in r[1] */
     mul_one_pm_imu_inv(r[3], +1., vol); 
-    mrblk(r[1], r[3], 3, 1.e-31, 1, vol, &Mtm_plus_sym_block_psi, j);
+    mrblk(r[1], r[3], r[4], 3, 1.e-31, 1, vol, &Mtm_plus_sym_block_psi, j);
 
     Block_H_psi(&block_list[j], r[0], r[1], EO);
     mul_one_pm_imu_inv(r[0], +1., vol);
