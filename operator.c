@@ -284,6 +284,8 @@ void dummy_DbD(spinor * const s, spinor * const r, spinor * const p, spinor * co
   return;
 }
 
+
+
 void op_invert(const int op_id, const int index_start, const int write_prop) {
   operator * optr = &operator_list[op_id];
   double atime = 0., etime = 0., nrm1 = 0., nrm2 = 0.;
@@ -297,13 +299,14 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
   if(optr->type == TMWILSON || optr->type == WILSON || optr->type == CLOVER) {
     g_mu = optr->mu;
     g_c_sw = optr->c_sw;
-    if(optr->type == CLOVER) {
-      if (g_cart_id == 0 && g_debug_level > 1) {
-	printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
-      }
-      init_sw_fields(VOLUME);
-      sw_term( (const su3**) g_gauge_field, optr->kappa, optr->c_sw); 
-    }
+    //if(optr->type == CLOVER) {
+    //  if (g_cart_id == 0 && g_debug_level > 1) {
+	//printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
+      //}
+      //init_sw_fields(VOLUME);
+      //sw_term( (const su3**) g_gauge_field, optr->kappa, optr->c_sw);
+      //sw_invert(EE,optr->mu);
+    //}
 
     for(i = 0; i < 2; i++) {
       // we need this here again for the sign switch at i == 1
@@ -330,8 +333,10 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       else {
 	/* this must be EE here!   */
 	/* to match clover_inv in Qsw_psi */
-        if(optr->even_odd_flag)
-	  sw_invert(EE, optr->mu); //this is needed only when we use even-odd preconditioning
+        //if(optr->even_odd_flag)
+	  //sw_invert(EE, optr->mu); //this is needed only when we use even-odd preconditioning
+        print_su3(&sw_inv[0][0][0],"inside operator.c 3");
+        exit(4);
 
 	optr->iterations = invert_clover_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
 					    optr->eps_sq, optr->maxiter,
