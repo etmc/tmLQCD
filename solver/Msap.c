@@ -1,4 +1,4 @@
-/***********************************************************************
+/*********t*************************************************************
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
  * This file is part of tmLQCD.
@@ -30,6 +30,7 @@
 #include "start.h"
 #include "linalg_eo.h"
 #include "operator/tm_operators.h"
+#include "operator/clovertm_operators.h"
 #include "boundary.h"
 #include "gmres.h"
 #include "solver.h"
@@ -64,6 +65,40 @@ void Mtm_plus_sym_block_psi(spinor * const l, spinor * const k, const int i) {
   diff(l, k, &g_spinor_field[DUM_MATRIX][i*vol], vol);
   return;
 }
+
+
+
+void Msw_plus_block_psi(spinor * l, spinor *  k, const int i) {
+  block * blk = &block_list[i];
+  int vol = (*blk).volume/2;
+  Block_H_psi(blk, &g_spinor_field[DUM_MATRIX+1][i*vol], k, EO);
+  assign_mul_one_sw_pm_imu_inv_block(EE, &g_spinor_field[DUM_MATRIX][i*vol],&g_spinor_field[DUM_MATRIX+1][i*vol], g_mu, blk);
+  Block_H_psi(blk, &g_spinor_field[DUM_MATRIX+1][i*vol], &g_spinor_field[DUM_MATRIX][i*vol], OE);
+  assign_mul_one_sw_pm_imu_block(OO, &g_spinor_field[DUM_MATRIX][i*vol],k,g_mu,blk);
+  diff(l,&g_spinor_field[DUM_MATRIX][i*vol],&g_spinor_field[DUM_MATRIX+1][i*vol],vol);
+  return;
+}
+
+void Msw_plus_sym_block_psi(spinor *  l, spinor *  k, const int i) {
+  if(g_proc_id == g_stdio_proc){
+    printf("==================WARNNING WARNNING WARNNING ==================\n");
+    printf("Msw_plus_sym_block_psi doesn't work properly yet because we need the inverse of 
+            (1+T +img5) on odd sites for +mu which is not computed or stored ....\n");
+    printf("==================WARNNING WARNNING WARNNING ===================\n");
+    printf("Exiting ........\n");
+    exit(100);
+  }
+  block * blk = &block_list[i];
+  int vol = (*blk).volume/2;
+  Block_H_psi(blk, &g_spinor_field[DUM_MATRIX+1][i*vol], k, EO);
+  assign_mul_one_sw_pm_imu_inv_block(EE, &g_spinor_field[DUM_MATRIX][i*vol], &g_spinor_field[DUM_MATRIX+1][i*vol] , g_mu,blk);
+  Block_H_psi(blk, &g_spinor_field[DUM_MATRIX+1][i*vol], &g_spinor_field[DUM_MATRIX][i*vol], OE);
+  //FIXME
+  assign_mul_one_sw_pm_imu_inv_block(OO, &g_spinor_field[DUM_MATRIX][i*vol], &g_spinor_field[DUM_MATRIX+1][i*vol] , g_mu, blk);
+  diff(l, k, &g_spinor_field[DUM_MATRIX][i*vol], vol);
+  return;
+}
+
 
 
 void dummy_D0(spinor * const P, spinor * const Q) {
@@ -139,7 +174,10 @@ void CGeoSmoother(spinor * const P, spinor * const Q, const int Ncy, const int d
   init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);
 
   convert_lexic_to_eo(solver_field[0], solver_field[1], Q);
-  assign_mul_one_pm_imu_inv(solver_field[2], solver_field[0], +1., VOLUME/2);
+  if(g_c_sw > 0)
+    assign_mul_one_sw_pm_imu_inv(EE,solver_field[2], solver_field[0], g_mu);
+  else
+    assign_mul_one_pm_imu_inv(solver_field[2], solver_field[0], +1., VOLUME/2);
     
   Hopping_Matrix(OE, solver_field[4], solver_field[2]); 
   /* The sign is plus, since in Hopping_Matrix */
@@ -148,13 +186,25 @@ void CGeoSmoother(spinor * const P, spinor * const Q, const int Ncy, const int d
   /* Do the inversion with the preconditioned  */
   /* matrix to get the odd sites               */
   gamma5(solver_field[4], solver_field[4], VOLUME/2);
-  cg_her(solver_field[3], solver_field[4], Ncy, 1.e-8, 1, 
-	 VOLUME/2, &Qtm_pm_psi);
-  Qtm_minus_psi(solver_field[3], solver_field[3]);
+  if(g_c_sw > 0)
+  {
+     cg_her(solver_field[3], solver_field[4], Ncy, 1.e-8, 1, 
+	    VOLUME/2, &Qsw_pm_psi);
+     Qsw_minus_psi(solver_field[3], solver_field[3]);
 
-  /* Reconstruct the even sites                */
-  Hopping_Matrix(EO, solver_field[4], solver_field[3]);
-  mul_one_pm_imu_inv(solver_field[4], +1., VOLUME/2);
+     /* Reconstruct the even sites                */
+     Hopping_Matrix(EO, solver_field[2], solver_field[3]);
+     assign_mul_one_sw_pm_imu_inv(EE,solver_field[4],solver_field[2], g_mu);
+  }else{
+     cg_her(solver_field[3], solver_field[4], Ncy, 1.e-8, 1, 
+	 VOLUME/2, &Qtm_pm_psi);
+     Qtm_minus_psi(solver_field[3], solver_field[3]);
+
+     /* Reconstruct the even sites                */
+     Hopping_Matrix(EO, solver_field[4], solver_field[3]);
+     mul_one_pm_imu_inv(solver_field[4], +1., VOLUME/2);
+  }
+
   /* The sign is plus, since in Hopping_Matrix */
   /* the minus is missing                      */
   assign_add_mul_r(solver_field[2], solver_field[4], +1., VOLUME/2);
@@ -212,16 +262,26 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
 	if(block_list[blk].evenodd == eo) {
 	  /* get part of r corresponding to block blk into b_even and b_odd */
 	  copy_global_to_block_eo(b_even, b_odd, r, blk);
+          if(g_c_sw>0)
+	    assign_mul_one_sw_pm_imu_inv_block(EE,a_even, b_even, g_mu, &block_list[blk]);
+          else
+	    assign_mul_one_pm_imu_inv(a_even, b_even, +1., vol);
 
-	  assign_mul_one_pm_imu_inv(a_even, b_even, +1., vol);
 	  Block_H_psi(&block_list[blk], a_odd, a_even, OE);
 	  /* a_odd = a_odd - b_odd */
 	  diff(a_odd, b_odd, a_odd, vol);
 
-	  mrblk(b_odd, a_odd, Niter, 1.e-31, 1, vol, &Mtm_plus_block_psi, blk);
+          if(g_c_sw > 0)
+	    mrblk(b_odd, a_odd, Niter, 1.e-31, 1, vol, &Msw_plus_block_psi, blk);
+          else
+	    mrblk(b_odd, a_odd, Niter, 1.e-31, 1, vol, &Mtm_plus_block_psi, blk);
 
 	  Block_H_psi(&block_list[blk], b_even, b_odd, EO);
-	  mul_one_pm_imu_inv(b_even, +1., vol);
+          assign(r,b_even,vol);
+          if(g_c_sw > 0)
+	    assign_mul_one_sw_pm_imu_inv_block(EE,b_even, r, g_mu,&block_list[blk]);
+          else
+	    mul_one_pm_imu_inv(b_even, +1., vol);
 	  /* a_even = a_even - b_even */
 	  diff(a_even, a_even, b_even, vol);
 
@@ -233,4 +293,4 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
   }
   finalize_solver(solver_field, nr_sf);
   return;
-}
+
