@@ -321,10 +321,10 @@ static inline void local_H(spinor * const rr, spinor const * const s, su3 const 
 #if (defined SSE2 || defined SSE3)
 
 /* Serially Checked ! */
-void D_psi(spinor * const P, spinor * const Q){
+void Dtm_psi(spinor * const P, spinor * const Q){
 
   if(P==Q){
-    printf("Error in D_psi (D_psi.c):\n");
+    printf("Error in Dtm_psi (D_psi.c):\n");
     printf("Arguments must be differen spinor fields\n");
     printf("Program aborted\n");
     exit(1);
@@ -1115,9 +1115,9 @@ void Dsw_psi(spinor * const P, spinor * const Q){
 
 /* Serially Checked ! */
 
-void D_psi(spinor * const P, spinor * const Q){
+void Dtm_psi(spinor * const P, spinor * const Q){
   if(P==Q){
-    printf("Error in D_psi (operator.c):\n");
+    printf("Error in Dtm_psi (operator.c):\n");
     printf("Arguments must be different spinor fields\n");
     printf("Program aborted\n");
     exit(1);
@@ -1218,7 +1218,7 @@ void D_psi(spinor * const P, spinor * const Q){
 
 void Dsw_psi(spinor * const P, spinor * const Q){
   if(P==Q){
-    printf("Error in Dsw_psi (Dsw_psi.c):\n");
+    printf("Error in Dsw_psi (D_psi.c):\n");
     printf("Arguments must be different spinor fields\n");
     printf("Program aborted\n");
     exit(1);
@@ -1311,6 +1311,18 @@ void Dsw_psi(spinor * const P, spinor * const Q){
 
 #endif
 
+
+void D_psi(spinor * const P, spinor * const Q){
+   if(g_c_sw > 0)
+     Dsw_psi(P,Q);
+   else
+     Dtm_psi(P,Q);
+
+   return ;
+}
+
+
+
 void D_psi_prec(spinor * const P, spinor * const Q){
 
   /* todo: do preconditioning */
@@ -1349,7 +1361,7 @@ void Block_Dtm_psi(block * blk, spinor * const rr, spinor * const s) {
   su3 * u = blk->u;
   int * idx = blk->idx;
   static _Complex double rhoa, rhob;
-  spinor tmpr;
+  spinor ALIGN tmpr;
   if(blk_gauge_eo) {
     init_blocks_gaugefield();
   }
@@ -1379,19 +1391,6 @@ void Block_Dtm_psi(block * blk, spinor * const rr, spinor * const s) {
 }
 
 
-void Dsw_psi_prec(spinor * const P, spinor * const Q){
-
-  /* todo: do preconditioning */
-  spinorPrecWS *ws=(spinorPrecWS*)g_precWS;
-  static _Complex double alpha = -1.0;
-
-  alpha = -0.5;
-  spinorPrecondition(P,Q,ws,T,L,alpha,0,1);
-  Dsw_psi(g_spinor_field[DUM_MATRIX],P);
-  alpha = -0.5;
-  spinorPrecondition(P,g_spinor_field[DUM_MATRIX],ws,T,L,alpha,0,1);
-}
-
 /* apply the Dirac operator to the block local spinor field s */
 /* and store the result in block local spinor field rr        */
 /* for block blk                                              */
@@ -1406,7 +1405,7 @@ void Block_Dsw_psi(block * blk, spinor * const rr, spinor * const s) {
   su3 * u = blk->u;
   int * idx = blk->idx;
   //static _Complex double rhoa, rhob;
-  spinor tmpr;
+  spinor ALIGN tmpr;
 
   int it,ix,iy,iz; //lexiographic index of the site w.r.t the block
   int bt,bx,by,bz; //block coordinate on the local mpi process
@@ -1468,7 +1467,7 @@ void Block_H_psi(block * blk, spinor * const rr, spinor * const s, const int eo)
   spinor *r = rr;
   su3 * u = blk->u;
   int * eoidx = blk->evenidx;
-  spinor tmpr;
+  spinor ALIGN tmpr;
 
   if(!blk_gauge_eo) {
     init_blocks_eo_gaugefield();
