@@ -24,11 +24,14 @@
 #define _CLOVERTM_OPERATORS_H
 
 #include "su3.h"
+#include "block.h"
 
 extern su3 *** sw;
 extern su3 *** sw_inv;
 extern su3 ** swm, ** swp;
 
+//void print_su3(su3 *w, char *s);
+//void print_su3_vector(su3_vector *v, char *s);
 void assign_mul_one_sw_pm_imu_site_lexic(const int ix, spinor * const k,  const spinor * const l, const double mu);
 
 void Qsw_full(spinor * const Even_new, spinor * const Odd_new,
@@ -39,7 +42,10 @@ void Qsw_full_pm_psi(spinor * const l, spinor * const k);
 void Msw_full_minus_psi(spinor * const l, spinor * const k);
 
 void assign_mul_one_sw_pm_imu(const int ieo, spinor * const k, const spinor * const l, const double mu);
+void assign_mul_one_sw_pm_imu_block(const int ieo, spinor * const k, const spinor * const l, const double mu, block *blk);
 void assign_mul_one_sw_pm_imu_inv(const int ieo, spinor * const k, const spinor * const l, const double mu);
+void assign_mul_one_sw_pm_imu_inv_block(const int ieo, spinor * const k, const spinor * const l, const double mu, block *blk);
+
 void Mee_sw_psi(spinor * const l, spinor * const k, const double mu);
 void Mee_sw_inv_psi(spinor * const k, spinor * const l, const double mu);
 void Msw_full(spinor * const Even_new, spinor * const Odd_new, 
