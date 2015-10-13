@@ -30,8 +30,6 @@ extern su3 *** sw;
 extern su3 *** sw_inv;
 extern su3 ** swm, ** swp;
 
-//void print_su3(su3 *w, char *s);
-//void print_su3_vector(su3_vector *v, char *s);
 void assign_mul_one_sw_pm_imu_site_lexic(const int ix, spinor * const k,  const spinor * const l, const double mu);
 
 void Qsw_full(spinor * const Even_new, spinor * const Odd_new,
