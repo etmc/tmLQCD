@@ -176,6 +176,8 @@ static inline void rmQuotes(char *str){
   int dfl_poly_iter;
 
   int use_preconditioning;
+  
+  int use_qudainverter;
 
 
 %}
@@ -315,8 +317,8 @@ static inline void rmQuotes(char *str){
 
 %x PRECONDITIONING
 
-
-
+%x QUDAINVERTER
+%x COMPRESSION
 
 
 %%
@@ -387,6 +389,8 @@ static inline void rmQuotes(char *str){
 ^NoSamples{EQL}                    BEGIN(NOSAMPLES);
 ^SplittedPropagator{EQL}           BEGIN(PROPSPLIT);
 ^UsePreconditioning{EQL}           BEGIN(PRECONDITIONING);
+^UseQudaInverter{EQL}              BEGIN(QUDAINVERTER);
+^UseCompression{EQL}               BEGIN(COMPRESSION);
 
 ^BeginMeasurement{SPC}+            BEGIN(INITMEASUREMENT);
 ^ComputeModeNumber{EQL}            BEGIN(COMPUTEMN);
@@ -725,6 +729,53 @@ static inline void rmQuotes(char *str){
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->c_sw = c;
     if(myverbose) printf("  Set c_sw set to %lf in line %d for operator %d\n", optr->c_sw, line_of_file, current_operator);
+  }
+}
+
+<WILSONOP,TMOP,DBTMOP,CLOVEROP,DBCLOVEROP>{  
+  {SPC}*UseQudaInverter{EQL}yes {
+    if(myverbose) printf("  Use Quda inverter line %d operator %d\n", line_of_file, current_operator);
+    optr->external_inverter = QUDA_INVERTER;
+  }
+  {SPC}*UseQudaInverter{EQL}no {
+    if(myverbose) printf("  Do not use Quda inverter line %d operator %d\n", line_of_file, current_operator);
+    optr->external_inverter = NO_EXT_INV;
+  }
+  {SPC}*UseSloppyPrecision{EQL}yes {
+    if(myverbose) printf("  Use use sloppy precision (single) in the inverter (if supported by the inverter) line %d operator %d\n", line_of_file, current_operator);
+    optr->sloppy_precision = SLOPPY_SINGLE;
+  }
+  {SPC}*UseSloppyPrecision{EQL}float {
+    if(myverbose) printf("  Use use sloppy precision (single) in the inverter (if supported by the inverter) line %d operator %d\n", line_of_file, current_operator);
+    optr->sloppy_precision = SLOPPY_SINGLE;
+  }
+  {SPC}*UseSloppyPrecision{EQL}single {
+    if(myverbose) printf("  Use use sloppy precision (single) in the inverter (if supported by the inverter) line %d operator %d\n", line_of_file, current_operator);
+    optr->sloppy_precision = SLOPPY_SINGLE;
+  }
+  {SPC}*UseSloppyPrecision{EQL}no {
+    if(myverbose) printf("  Use use sloppy precision (single) in the inverter line %d operator %d\n", line_of_file, current_operator);
+    optr->sloppy_precision = SLOPPY_DOUBLE;
+  }
+  {SPC}*UseSloppyPrecision{EQL}double {
+    if(myverbose) printf("  Use use sloppy precision (single) in the inverter line %d operator %d\n", line_of_file, current_operator);
+    optr->sloppy_precision = SLOPPY_DOUBLE;
+  }
+  {SPC}*UseSloppyPrecision{EQL}half {
+    if(myverbose) printf("  Use use sloppy precision (half) in the inverter (if supported by the inverter) line %d operator %d\n", line_of_file, current_operator);
+    optr->sloppy_precision = SLOPPY_HALF;
+  }
+  {SPC}*UseCompression{EQL}12 {
+    if(myverbose) printf("  Use 12 compression in the inverter (if supported) line %d operator %d\n", line_of_file, current_operator);
+    optr->compression_type = COMPRESSION_12;
+  }
+  {SPC}*UseCompression{EQL}8 {
+    if(myverbose) printf("  Use 8 compression in the inverter (if supported) line %d operator %d\n", line_of_file, current_operator);
+    optr->compression_type = COMPRESSION_8;
+  }
+  {SPC}*UseCompression{EQL}18 {
+    if(myverbose) printf("  Not using compression in the inverter line %d operator %d\n", line_of_file, current_operator);
+    optr->compression_type = NO_COMPRESSION;
   }
 }
 
@@ -2159,6 +2210,7 @@ int read_input(char * conf_file){
   g_sloppy_precision_flag = _default_g_sloppy_precision_flag;
   use_stout_flag = _default_use_stout_flag;
   use_preconditioning = _default_use_preconditioning;
+  use_qudainverter = _default_use_qudainverter;
   stout_rho = _default_stout_rho;
   stout_no_iter = _default_stout_no_iter;
 

@@ -256,5 +256,26 @@ EXTERN int ** g_idn3d;
 
 void fatal_error(char const *error, char const *function);
 
+/* enumeration type for the sloppy prec. of the inverter */
+typedef enum SloppyPrecision_s {
+  SLOPPY_DOUBLE = 0,
+  SLOPPY_SINGLE,
+  SLOPPY_HALF
+} SloppyPrecision;
+
+/* enumeration type for the compression of the inverter */
+typedef enum CompressionType_s {
+  NO_COMPRESSION = 18,
+  COMPRESSION_12 = 12,
+  COMPRESSION_8  = 8
+} CompressionType;
+
+/* enumeration type for the external inverter */
+typedef enum ExternalInverter_s {
+  NO_EXT_INV = 0,
+  QUDA_INVERTER,
+  QPHIX_INVERTER
+} ExternalInverter;
+
 #endif
 

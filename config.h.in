@@ -190,5 +190,11 @@
 /* Define if we want to compute the LapH eigenvectors */
 #undef WITHLAPH
 
+/* Define to 1 if you have the `quda' library (-lquda). */
+#undef HAVE_LIBQUDA
+
+/* Using QUDA GPU */
+#undef QUDA
+
 #endif
 

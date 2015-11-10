@@ -52,6 +52,7 @@
 #include "xchange/xchange.h"
 #endif
 #include <io/utils.h>
+#include "source_generation.h"
 #include "read_input.h"
 #include "mpi_init.h"
 #include "sighandler.h"
@@ -82,6 +83,9 @@
 #include "operator/tm_operators.h"
 #include "operator/Dov_psi.h"
 #include "solver/spectral_proj.h"
+#ifdef QUDA
+#  include "quda_interface.h"
+#endif
 #include "meas/measurements.h"
 
 extern int nstore;
@@ -509,6 +513,9 @@ int main(int argc, char *argv[])
   free_chi_spinor_field();
   free(filename);
   free(input_filename);
+#ifdef QUDA
+  _endQuda();
+#endif
 #ifdef MPI
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();

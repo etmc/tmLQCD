@@ -368,6 +368,17 @@ _sse_store_up(r);
   (u).c21 = conj((v).c12);			\
   (u).c22 = conj((v).c22); 
 
+#define _su3_transpose(u,v)			\
+  (u).c00 = ((v).c00);			\
+  (u).c01 = ((v).c10);			\
+  (u).c02 = ((v).c20);			\
+  (u).c10 = ((v).c01);			\
+  (u).c11 = ((v).c11);			\
+  (u).c12 = ((v).c21);			\
+  (u).c20 = ((v).c02);			\
+  (u).c21 = ((v).c12);			\
+  (u).c22 = ((v).c22);
+
 #define _itimes_su3(u,v)			\
   (u).c00 = I * (v).c00;			\
   (u).c01 = I * (v).c01;			\

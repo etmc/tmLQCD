@@ -109,6 +109,8 @@ extern "C"
 
   extern int use_preconditioning;
 
+  extern int use_qudainverter;
+
   extern int nblocks_t, nblocks_x, nblocks_y, nblocks_z;
 
   int read_input(char *);

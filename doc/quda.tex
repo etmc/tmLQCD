@@ -1,0 +1,101 @@
+%author: Mario Schroeck <mario.schroeck@roma3.infn.it>
+%date: 04/2015
+
+\subsection{QUDA: A library for QCD on GPUs}
+
+
+The QUDA \cite{Clark:2009wm, Babich:2011np, Strelchenko:2013vaa} interface is complementary to tmLQCD's own CUDA kernels for computations on the GPU by Florian Burger.
+So far it is exclusively used for inversions.
+
+\subsubsection{Design goals of the interface}
+The QUDA interface has been designed with the following goals in mind, sorted by priority:
+\begin{enumerate}
+	\item \emph{Safety.} Naturally, highest priority is given to the correctness of the output of the interface. 
+	This is trivially achieved by always checking the final residual on the CPU with the default tmLQCD routines.
+	\item \emph{Ease of use.} Within the operator declarations of the input file (between {\ttfamily BeginOperator} and {\ttfamily EndOperator}) a simple flag {\ttfamily UseQudaInverter} is introduced which, when set to {\ttfamily yes}, will let QUDA perform the inversion of that operator. The operators {\ttfamily TMWILSON, WILSON, DBTMWILSON} and {\ttfamily CLOVER} are supported.\footnote{{\ttfamily DBCLOVER} is supported by the interface but not by QUDA as of version 0.7.0.}
+	\item \emph{Minimality.} Minimal changes in the form of {\ttfamily \#ifdef QUDA} precompiler directives to the tmLQCD code base. The main bulk of the interface lies in a single separate file {\ttfamily quda\_interface.c} (with corresponding header file). In the file {\ttfamily operators.c}, the QUDA library is initialized when an operator is initialized which has set {\ttfamily UseQudaInverter = yes}. There, the actual call to the inverter is conditionally replaced with a call to the QUDA interface.
+	\item \emph{Performance.} The higher priority of the previous items results in small performance detriments. In particular:
+	\begin{itemize}
+		\item tmLQCD's $\theta$-boundary conditions are not compatible with QUDA's 8 and 12 parameter reconstruction of the gauge fields (as of QUDA-0.7.0). Therefore reconstruction/compression is deactivated by default, although it may be activated via the input file, see below.
+		\item The gaugefield is transferred each time to the GPU before the inversion starts in order to ensure not to miss any modifications of the gaugefield.
+	\end{itemize}
+\end{enumerate}
+
+
+\subsubsection{Installation}
+If not already installed, you have to install QUDA first. Download the most recent version from \url{http://lattice.github.io/quda/}. Note that QUDA version $\geq 0.7.0$ is required (chiral gamma basis).
+
+QUDA can be installed without any dependencies, consider, e.g., the following minimal configuration:
+
+\begin{verbatim}
+./configure CC=mpicc CXX=mpiCC \
+CFLAGS="-O3 -std=c99" CXXFLAGS="-O3 -std=c++0x" \
+--prefix=$QUDADIR \
+--with-mpi=$MPI_PATH \
+--with-cuda=$CUDADIR \
+--enable-os=linux \
+--enable-cpu-arch=x86_64 \
+--enable-gpu-arch=sm_35 \
+--enable-multi-gpu \
+--enable-wilson-dirac \
+--enable-clover-dirac \
+--enable-twisted-mass-dirac \
+--enable-ndeg-twisted-mass-dirac \
+--enable-twisted-clover-dirac \
+--enable-device-pack
+\end{verbatim}
+where {\ttfamily \$CUDADIR} and {\ttfamily \$MPI\_PATH} have to be set appropriately.
+{\ttfamily \$QUDADIR} is your choice for the installation directory of QUDA.
+Note that if you want to use QUDA in a scalar build of tmLQCD, you should remove the lines {\ttfamily --enable-multi-gpu} and {\ttfamily --with-mpi=\$MPI\_PATH} in the configuration (and probably you want to replace the MPI compilers).
+In order to profit from QUDA's autotuning functionality, set the environment variable {\ttfamily QUDA\_RESOURCE\_PATH} to a directory of your choice, e.g., add
+\begin{verbatim}
+export QUDA_RESOURCE_PATH=${HOME}/quda_resources/
+\end{verbatim}
+to your {\ttfamily $\sim$/.bash\_profile}.
+
+Once QUDA is installed, a minimal configuration of tmLQCD could look like, e.g.,
+\begin{verbatim}
+./configure CC=mpicc \
+--prefix=$TMLQCDDIR \
+--with-limedir=$LIMEDIR \
+--with-lapack=<linker-flags> \
+--enable-mpi \
+--with-mpidimension=4 \
+CXX=mpiCC \
+--with-qudadir=$QUDADIR \
+--with-cudadir=${CUDADIR}/lib
+\end{verbatim}
+Note that a {\ttfamily C++} compiler is required for linking against the QUDA library, therefore set {\ttfamily CXX} appropriately. {\ttfamily \${QUDADIR}} is where you installed QUDA in the previous step and {\ttfamily \${CUDADIR}} is required again for linking.
+
+
+\subsubsection{Usage}
+Any main program that reads and handles the operator declaration from an input file can easily be set up to use the QUDA inverter by setting the {\ttfamily UseQudaInverter} flag to {\ttfamily yes}. For example, in the input file for the {\ttfamily invert} executable, add the flag to the operator declaration as
+\begin{verbatim}
+BeginOperator TMWILSON
+  2kappaMu = 0.05
+  kappa = 0.177
+  UseEvenOdd = yes
+  Solver = CG
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 1000
+  UseQudaInverter = yes
+EndOperator
+\end{verbatim}
+and the operator of interest will be inverted using QUDA. The initialization of QUDA is done automatically within the operator initialization,  the QUDA library should be finalized by a call to {\ttfamily \_endQuda()} just before finalizing MPI. When you use the QUDA interface for work that is being published, don't forget to cite \cite{Clark:2009wm, Babich:2011np, Strelchenko:2013vaa}.
+
+
+\subsubsection{More advanced settings}
+To achieve higher performance you may choose single (default) or even half precision as sloppy precision for the inner solver of the mixed precision inverter with reliable updates. After {\ttfamily BeginOperator} and before {\ttfamily EndOperator} set {\ttfamily UseSloppyPrecision = double|single|half}.
+
+To activate compression of the gauge fields (in order to save bandwidth and thus to achieve higher performance), set {\ttfamily UseCompression = 8|12|18} within {\ttfamily BeginOperator} and {\ttfamily EndOperator}. The default is 18 which corresponds to no compression. Note that if you use compression, trivial (anti)periodic boundary conditions will be applied to the gauge fields, instead of the default $\theta$-boundary conditions. As a consequence, the residual check on tmLQCD side will fail. Moreover, compression is not applicable when using general $\theta$-boundary conditions in the spatial directions. If trying to do so, compression will be activated automatically and the user gets informed via the standard output.
+
+
+\subsubsection{Functionality}
+The QUDA interface can currently be used to invert {\ttfamily TMWILSON, WILSON, DBTMWILSON} and {\ttfamily CLOVER} within a 4D multi-GPU (MPI) parallel environment with CG or BICGSTAB. QUDA uses even-odd preconditioning, if wanted ({\ttfamily UseEvenOdd = yes}), and the interface is set up to use a mixed precision solver by default. For more details on the QUDA settings check the function {\ttfamily \_initQuda()} in {\ttfamily quda\_interface.c}.
+
+
+
+
+
+
+
