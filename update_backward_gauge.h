@@ -23,6 +23,7 @@
 #include "su3.h"
 
 void update_backward_gauge(su3 ** const gf);
+void update_backward_gauge_32_orphaned(su3_32 ** const gf);
 void update_backward_gauge_32(su3_32 ** const gf);
 
 #endif

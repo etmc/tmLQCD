@@ -67,16 +67,12 @@ void update_backward_gauge(su3 ** const gf) {
   return;
 }
 
-void update_backward_gauge_32(su3_32 ** const gf) {
-#ifdef OMP
-#pragma omp parallel
-  {
-#endif
+void update_backward_gauge_32_orphaned(su3_32 ** const gf) {
 
   int ix=0, kb=0, iy=0;
 
 #ifdef OMP
-#pragma omp for
+#pragma omp for nowait
 #endif 
   for(ix = 0; ix < VOLUME/2; ix++) {
     iy = (VOLUME+RAND)/2+ix;
@@ -99,14 +95,29 @@ void update_backward_gauge_32(su3_32 ** const gf) {
     _su3_assign(g_gauge_field_copy_32[1][ix][3], gf[kb][3]);
   }
 
+// we use the implicit barrier at the end of the single section to catch all
+// threads, in the meantime, one of them modifies the global flag
+#ifdef OMP
+#pragma omp single
+  {
+#endif
+    g_update_gauge_copy_32 = 0;
+#ifdef OMP
+  } 
+#endif
+}
+
+void update_backward_gauge_32(su3_32 ** const gf) {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+  update_backward_gauge_32_orphaned(gf);
 #ifdef OMP
   } /* OpenMP closing brace */
 #endif
-
-  g_update_gauge_copy_32 = 0;
   return;
 }
-
 
 #elif _USE_TSPLITPAR 
 
@@ -230,17 +241,11 @@ void update_backward_gauge(su3 ** const gf) {
   return;
 }
 
-
-void update_backward_gauge_32(su3_32 ** const gf) {
-#ifdef OMP
-#pragma omp parallel
-  {
-#endif
-
+void update_backward_gauge_32_orphaned(su3_32 ** const gf) {
   int ix=0, kb=0, kb2=0;
 
 #ifdef OMP
-#pragma omp for
+#pragma omp for nowait
 #endif
   for(ix = 0; ix < VOLUME/2; ix++) {
     kb2=g_eo2lexic[ix];
@@ -261,7 +266,7 @@ void update_backward_gauge_32(su3_32 ** const gf) {
     _su3_assign(g_gauge_field_copy_32[ix][7],gf[kb][3]);
   }
 #ifdef OMP
-#pragma omp for
+#pragma omp for nowait
 #endif
   for(ix = (VOLUME+RAND)/2; ix < (VOLUME+RAND)/2+VOLUME/2; ix++) {
     kb2=g_eo2lexic[ix];
@@ -281,12 +286,25 @@ void update_backward_gauge_32(su3_32 ** const gf) {
     kb=g_idn[g_eo2lexic[ix]][3];
     _su3_assign(g_gauge_field_copy_32[ix][7],gf[kb][3]);
   }
+// the threads are caught by the implicit barrier here
+#ifdef OMP
+#pragma omp single
+#endif
+  g_update_gauge_copy_32 = 0;
+#ifdef OMP
+ }
+#endif
+}
 
+void update_backward_gauge_32(su3_32 ** const gf) {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+  update_backward_gauge_32_orphaned(gf);
 #ifdef OMP
   } /* OpenMP closing brace */
 #endif
-
-  g_update_gauge_copy_32 = 0;
   return;
 }
 
