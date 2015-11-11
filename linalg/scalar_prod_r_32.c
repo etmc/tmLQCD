@@ -1,7 +1,7 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
-#ifdef _USE_MPI
+#ifdef MPI
 # include <mpi.h>
 #endif
 #ifdef OMP
@@ -18,7 +18,7 @@
 
 float scalar_prod_r_32(const spinor32 * const S, const spinor32 * const R, const int N, const int parallel) {
   float ALIGN32 res = 0.0;
-#ifdef _USE_MPI
+#ifdef MPI
   float ALIGN32 mres;
 #endif
 
@@ -94,7 +94,7 @@ float scalar_prod_r_32(const spinor32 * const S, const spinor32 * const R, const
   res = buffer[0] + buffer[1] + buffer[2] + buffer[3]; 
 #endif
 
-#if defined _USE_MPI
+#if defined MPI
   if(parallel) {
     MPI_Allreduce(&res, &mres, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
     return(mres);
@@ -109,7 +109,7 @@ float scalar_prod_r_32(const spinor32 * const S, const spinor32 * const R, const
 float scalar_prod_r_32(const spinor32 * const S, const spinor32 * const R, const int N, const int parallel)
 {
   float ALIGN32 res = 0.0;
-#ifdef _USE_MPI
+#ifdef MPI
   float ALIGN32 mres;
 #endif
 
@@ -155,7 +155,7 @@ float scalar_prod_r_32(const spinor32 * const S, const spinor32 * const R, const
   res = kc;
 #endif
 
-#if defined _USE_MPI
+#if defined MPI
   if(parallel)
   {
     MPI_Allreduce(&res, &mres, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
