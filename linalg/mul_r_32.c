@@ -37,12 +37,7 @@
 #include "su3.h"
 #include "mul_r_32.h"
 
-void mul_r_32(spinor32 * const R, const float c, spinor32 * const S, const int N){
-#ifdef OMP
-#pragma omp parallel
-  {
-#endif
-
+void mul_r_32_orphaned(spinor32 * const R, const float c, spinor32 * const S, const int N){
   int ix;
   spinor32 *r,*s;
   
@@ -69,8 +64,16 @@ void mul_r_32(spinor32 * const R, const float c, spinor32 * const S, const int N
     r->s3.c1 = c * s->s3.c1;
     r->s3.c2 = c * s->s3.c2;
   }
+}
+
+void mul_r_32(spinor32 * const R, const float c, spinor32 * const S, const int N){
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+  mul_r_32_orphaned(R,c,S,N);
+  }
 #ifdef OMP
   } /*OpenMP closing brace */
 #endif
-
 }
