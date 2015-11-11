@@ -65,11 +65,13 @@
 
 EXTERN int DUM_DERI, DUM_SOLVER, DUM_MATRIX;
 EXTERN int NO_OF_SPINORFIELDS;
+EXTERN int NO_OF_SPINORFIELDS_32;
 
 EXTERN int DUM_BI_DERI, DUM_BI_SOLVER, DUM_BI_MATRIX;
 EXTERN int NO_OF_BISPINORFIELDS;
 
 EXTERN int g_update_gauge_copy;
+EXTERN int g_update_gauge_copy_32;
 EXTERN int g_relative_precision_flag;
 EXTERN int g_debug_level;
 EXTERN int g_disable_IO_checks;
@@ -170,13 +172,16 @@ EXTERN int g_running_phmc;
 /* End IF PHMC  */
 
 EXTERN su3 ** g_gauge_field;
+EXTERN su3_32 ** g_gauge_field_32;
 #ifdef _USE_HALFSPINOR
 EXTERN su3 *** g_gauge_field_copy;
+EXTERN su3_32 *** g_gauge_field_copy_32;
 #elif (defined _USE_TSPLITPAR )
 EXTERN su3 ** g_gauge_field_copyt;
 EXTERN su3 ** g_gauge_field_copys;
 #else
 EXTERN su3 ** g_gauge_field_copy;
+EXTERN su3_32 ** g_gauge_field_copy_32;
 #endif
 
 /*for temporalgauge in GPU part*/
