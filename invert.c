@@ -274,13 +274,12 @@ int main(int argc, char *argv[])
     fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
     exit(-1);
   }
-  if (g_sloppy_precision_flag == 1) {
-    j = init_dirac_halfspinor32();
-    if (j != 0)
-    {
-      fprintf(stderr, "Not enough memory for 32-bit halffield! Aborting...\n");
-      exit(-1);
-    }
+  /* for mixed precision solvers, the 32 bit halfspinor field must always be there */
+  j = init_dirac_halfspinor32();
+  if (j != 0)
+  {
+    fprintf(stderr, "Not enough memory for 32-bit halffield! Aborting...\n");
+    exit(-1);
   }
 #  if (defined _PERSISTENT)
   if (even_odd_flag)
