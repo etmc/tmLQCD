@@ -124,7 +124,7 @@ int mixed_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
    
   spinor32 ** sf32 = NULL;
   const int nr_sf32 = 8;
-  init_solver_field32(&sf32, Vol, nr_sf32);  
+  init_solver_field_32(&sf32, Vol, nr_sf32);  
   
   
   //spinor fields  
@@ -492,7 +492,7 @@ int mixed_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
   
  
   finalize_solver(sf, nr_sf);  
-  finalize_solver32(sf32, nr_sf32); 
+  finalize_solver_32(sf32, nr_sf32); 
  
   //free cg constants
   free(sigma); free(zitam1); free(zita); free(alphas); free(betas);    

@@ -289,6 +289,7 @@ void update_backward_gauge_32_orphaned(su3_32 ** const gf) {
 // the threads are caught by the implicit barrier here
 #ifdef OMP
 #pragma omp single
+  {
 #endif
   g_update_gauge_copy_32 = 0;
 #ifdef OMP

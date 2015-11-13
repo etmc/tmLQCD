@@ -56,7 +56,10 @@
 #define _default_g_dflgcr_flag 0
 #define _default_random_seed 123456
 #define _default_rlxd_level 1
+//this is CG
 #define _default_solver_flag 1
+//this is CGMMSND
+#define _default_nd_solver_flag 14
 #define _default_startoption 0
 #define _default_Ntherm 0
 #define _default_Nmeas 1
@@ -160,8 +163,15 @@
 /* default GPU values */
 #define _default_device_num -1
 
+#define _default_min_innersolver_it 10
+#define _default_max_mms_shifts 6
+
 /* default OpenMP values */
 #define _default_omp_num_threads 0
+
+/* default mixed precision solver values */
+#define _default_mixcg_innereps 1.0e-6
+#define _default_mixcg_maxinnersolverit 1500
 
 #define _default_use_preconditioning 0
 

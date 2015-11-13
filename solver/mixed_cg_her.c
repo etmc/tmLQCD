@@ -1,8 +1,5 @@
 /***********************************************************************
- *
- * Copyright (C) 2001 Martin Hasenbusch
- *               2003 Thomas Chiarappa
- *               2002,2003,2004,2005 Carsten Urbach
+ * Copyright (C) 2013 Florian Burger
  *
  * This file is part of tmLQCD.
  *
@@ -88,21 +85,17 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   
   if(N == VOLUME) {
     init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);    
-    init_solver_field32(&solver_field32, VOLUMEPLUSRAND, nr_sf32);
+    init_solver_field_32(&solver_field32, VOLUMEPLUSRAND, nr_sf32);
   }
   else {
     init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);
     init_solver_field_32(&solver_field32, VOLUMEPLUSRAND/2, nr_sf32);    
   }
-  squarenorm = square_norm(Q, N, 1);
-  sqnrm = squarenorm;
-
 
   squarenorm_d = square_norm(Q, N, 1);
   sourcesquarenorm = squarenorm_d;
   sqnrm_d = squarenorm_d;
  
-
   delta = solver_field[0];
   y = solver_field[1];
   xhigh = solver_field[2];
@@ -112,11 +105,9 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   //set solution to zero
   zero_spinor_field(P, N);
   
-
   atime = gettime();
   for(i = 0; i < N_outer; i++) {
 
-    g_sloppy_precision = 1;
     /* main CG loop in lower precision */
     zero_spinor_field_32(x, N);
     zero_spinor_field_32(solver_field32[0], N);   
@@ -125,11 +116,6 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
     
     sqnrm = (float) sqnrm_d;
     sqnrm2 = sqnrm;
-    for(j = 0; j <= max_iter; j++) {
-      f(solver_field[0], solver_field[2]);
-      pro = scalar_prod_r(solver_field[2], solver_field[0], N, 1);
-      alpha_cg = sqnrm2 / pro;
-      assign_add_mul_r(x, solver_field[2], alpha_cg, N);
     
     /*inner CG loop */
     for(j = 0; j <= max_inner_it; j++) {
@@ -145,13 +131,13 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
       err = square_norm_32(solver_field32[0], N, 1);
 
       if(g_proc_id == g_stdio_proc && g_debug_level > 2) {
-	printf("inner CG: %d res^2 %g\n", iter+j, err);
-	fflush(stdout);
+	      printf("inner CG: %d res^2 %g\n", iter+j, err);
+	      fflush(stdout);
       }
     
       //if (((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))){
       if((err <= mixcg_innereps*sqnrm)|| (j==max_inner_it) ||  ((1.3*err <= eps_sq) && (rel_prec == 0)) || ((1.3*err <= eps_sq*sourcesquarenorm) && (rel_prec == 1))) {
-	break;
+	      break;
       }
       beta_cg = err / sqnrm2;
       assign_mul_add_r_32(solver_field32[2], beta_cg, solver_field32[0], N);
@@ -162,8 +148,6 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
     }
     /* end inner CG loop */
     iter += j;
-    g_sloppy_precision = 0;
-    add(P, P, x, N);
 
     /* we want to apply a true double matrix with f(y,P) -> set sloppy off here*/
     g_sloppy_precision_flag = 0;
@@ -186,21 +170,21 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
       etime = gettime();     
 
       if(g_debug_level > 0 && g_proc_id == 0) {
-	if(N != VOLUME){
-	  /* 2 A + 2 Nc Ns + N_Count ( 2 A + 10 Nc Ns ) */
-	  /* 2*1608.0 because the linalg is over VOLUME/2 */
-	  flops = (2*(2*1608.0+2*3*4) + 2*3*4 + iter*(2.*(2*1608.0+2*3*4) + 10*3*4))*N/1.0e6f;
-	  printf("# mixed CG: iter: %d eps_sq: %1.4e t/s: %1.4e\n", iter, eps_sq, etime-atime); 
-	  printf("# mixed CG: flopcount (for e/o tmWilson only): t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
-	      etime-atime, flops/(etime-atime), g_nproc*flops/(etime-atime));
-	}
-	else{
-	  /* 2 A + 2 Nc Ns + N_Count ( 2 A + 10 Nc Ns ) */
-	  flops = (2*(1608.0+2*3*4) + 2*3*4 + iter*(2.*(1608.0+2*3*4) + 10*3*4))*N/1.0e6f;      
-	  printf("# mixed CG: iter: %d eps_sq: %1.4e t/s: %1.4e\n", iter, eps_sq, etime-atime); 
-	  printf("# mixed CG: flopcount (for non-e/o tmWilson only): t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
-	      etime-atime, flops/(etime-atime), g_nproc*flops/(etime-atime));      
-	}
+      	if(N != VOLUME){
+      	  /* 2 A + 2 Nc Ns + N_Count ( 2 A + 10 Nc Ns ) */
+      	  /* 2*1608.0 because the linalg is over VOLUME/2 */
+      	  flops = (2*(2*1608.0+2*3*4) + 2*3*4 + iter*(2.*(2*1608.0+2*3*4) + 10*3*4))*N/1.0e6f;
+      	  printf("# mixed CG: iter: %d eps_sq: %1.4e t/s: %1.4e\n", iter, eps_sq, etime-atime); 
+      	  printf("# mixed CG: flopcount (for e/o tmWilson only): t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
+      	      etime-atime, flops/(etime-atime), g_nproc*flops/(etime-atime));
+      	}
+      	else{
+      	  /* 2 A + 2 Nc Ns + N_Count ( 2 A + 10 Nc Ns ) */
+      	  flops = (2*(1608.0+2*3*4) + 2*3*4 + iter*(2.*(1608.0+2*3*4) + 10*3*4))*N/1.0e6f;      
+      	  printf("# mixed CG: iter: %d eps_sq: %1.4e t/s: %1.4e\n", iter, eps_sq, etime-atime); 
+      	  printf("# mixed CG: flopcount (for non-e/o tmWilson only): t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
+      	      etime-atime, flops/(etime-atime), g_nproc*flops/(etime-atime));      
+      	}
       }      
       
       finalize_solver(solver_field, nr_sf);
@@ -213,12 +197,4 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   finalize_solver_32(solver_field32, nr_sf32); 
   return(-1);
 }
-
-
-
-
-
-
-
-
 

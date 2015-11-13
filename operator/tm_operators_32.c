@@ -6,6 +6,7 @@
 #include "global.h"
 #include "su3.h"
 #include "operator/Hopping_Matrix.h"
+#include "operator/Hopping_Matrix_32.h"
 #include "linalg_eo.h"
 #include "gamma.h"
 #include "operator/D_psi_32.h"

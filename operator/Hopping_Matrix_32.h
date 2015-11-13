@@ -27,9 +27,7 @@
 
 #  include "su3.h"
 
-#if defined _USE_HALFSPINOR
 void Hopping_Matrix_32_orphaned(const int ieo, spinor32 * const l, spinor32 * const k);
 void Hopping_Matrix_32(const int ieo, spinor32 * const l, spinor32 * const k);
-#endif
 
 #endif

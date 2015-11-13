@@ -72,7 +72,6 @@ void mul_r_32(spinor32 * const R, const float c, spinor32 * const S, const int N
   {
 #endif
   mul_r_32_orphaned(R,c,S,N);
-  }
 #ifdef OMP
   } /*OpenMP closing brace */
 #endif
