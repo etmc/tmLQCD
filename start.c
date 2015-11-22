@@ -77,6 +77,7 @@
 #include "ranlxd.h"
 #include "ranlxs.h"
 #include "start.h"
+#include "fatal_error.h"
 
 static void gauss_vector(double v[],int n)
 {
@@ -854,6 +855,69 @@ void start_ranlux(int level, int seed)
 
    rlxs_init(level-1, loc_seed);
    rlxd_init(level, loc_seed);
+}
+
+/* read warning in start.h before using this function! */
+void start_ranlux_from_file(char * const rlxd_state_filename, char * const rlxs_state_filename) {
+  FILE * rlxd_state_file;
+  FILE * rlxs_state_file;
+
+  char error_message[1000];
+
+  rlxd_state_file = fopen(rlxd_state_filename,"r");
+  rlxs_state_file = fopen(rlxs_state_filename,"r");
+
+  if(rlxd_state_file != NULL) {
+    int rlxd_state[105];
+    fread(rlxd_state, sizeof(rlxd_state), 1, rlxd_state_file);
+    fclose(rlxd_state_file);
+    rlxd_reset(rlxd_state);
+  } else {
+    snprintf(error_message,1000,"Problem reading RLXD state file \"%s\", aborting!",rlxd_state_filename);
+    fatal_error(error_message,"start_ranlux_from_file");
+  }
+
+  if(rlxs_state_file != NULL) {
+    int rlxs_state[105];
+    fread(rlxs_state, sizeof(rlxs_state), 1, rlxs_state_file);
+    fclose(rlxs_state_file);
+    rlxs_reset(rlxs_state);
+  } else {
+    snprintf(error_message,1000,"Problem reading RLXS state file \"%s\", aborting!",rlxs_state_filename);
+    fatal_error(error_message,"start_ranlux_from_file");
+  }
+
+}
+
+void store_ranlux_state(char * const rlxd_state_filename, char * const rlxs_state_filename) {
+  FILE * rlxd_state_file;
+  FILE * rlxs_state_file;
+
+  char error_message[1000];
+
+  rlxd_state_file = fopen(rlxd_state_filename,"w");
+  rlxs_state_file = fopen(rlxs_state_filename,"w");
+
+  if(rlxd_state_file != NULL) {
+    int rlxd_state[105];
+    rlxd_get(rlxd_state);
+    fwrite(rlxd_state, sizeof(rlxd_state), 1, rlxd_state_file);
+    fclose(rlxd_state_file);
+  } else {
+    snprintf(error_message,1000,"Problem opening RLXD state file \"%s\" for writing, aborting!",rlxd_state_filename);
+    fatal_error(error_message,"store_ranlux_state");
+  }
+  
+  if(rlxs_state_file != NULL) {
+    int rlxs_state[105];
+    rlxs_get(rlxs_state);
+    fwrite(rlxs_state, sizeof(rlxs_state), 1, rlxs_state_file);
+    fclose(rlxs_state_file);
+  } else {
+    snprintf(error_message,1000,"Problem opening RLXS state file \"%s\" for writing, aborting!",rlxs_state_filename);
+    fatal_error(error_message,"store_ranlux_state");
+  }
+
 }
 
 void gen_test_spinor_field(spinor * const k, const int eoflag) {

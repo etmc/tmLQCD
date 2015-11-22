@@ -334,7 +334,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 #endif
   etime=gettime();
 
-  /* printing data in the .data file */
+  /* printing data in the .data file and save ranlux state if the option is set */
   if(g_proc_id==0) {
     datafile = fopen(filename, "a");
     if (!bc_flag) { /* if Periodic Boundary Conditions */
@@ -361,6 +361,10 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     fprintf(datafile, "\n");
     fflush(datafile);
     fclose(datafile);
+
+    if(save_ranlux_state) {
+      store_ranlux_state(rlxd_input_filename, rlxs_input_filename);
+    }
   }
   return(accept);
 }

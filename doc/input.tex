@@ -79,7 +79,41 @@ supported general input paramters:
   See {\ttfamily NrXProcs}.
 
 \item {\ttfamily seed}:\\
-  The seed for the random number generator. Default value is $123456$.
+  The seed for the random number generator. Possible values: Integer 
+  $i \in \left[ 1, 2^{31}-1 \right] $ or {\ttfamily statefile}. Default value is $123456$.
+  The seeds for different MPI processes are computed from this number XOR'ed
+  with the store counter and a regular pattern according to the process number.
+  When {\ttfamily statefile} is specified here, ranlux will be initialised
+  from the state stored in the files {\ttfamily rlxd\_state} and {\ttfamily rlxs\_state}.
+  Also, {\ttfamily hmc\_tm} will save the ranlux state at the end of each
+  trajectory. Note that when using MPI, {\ttfamily seed = statefile} should only ever be used 
+  when in {\ttfamily ReproduceRandomNumbers} mode because all processes 
+  will be initialised with the same random number generator. Serial or OpenMP
+  executions of {\ttfamily hmc\_tm} have only one random number generator and
+  so this option allows running a simulation with a single chain of
+  random numbers fully specified by the initial seed set for the first
+  execution.
+
+\item {\ttfamily SaveRanluxState}:\\
+  Store the state of the random number generator of MPI process 0 
+  to the files {\ttfamily rlxd\_state} and {\ttfamily rlxs\_state} 
+  at the end of each trajectory. This is useful to make a fully reproducible
+  chain of random numbers even across multiple executions of {\ttfamily hmc\_tm}.
+  When using MPI, this only makes sense if {\ttfamily ReproduceRandomNumbers} is
+  used. (see {\ttfamily seed}) 
+
+\item {\ttfamily ReproduceRandomNumbers}:\\
+  Possible values are {\ttfamily yes} or {\ttfamily no}, default is {\ttfamily yes}.
+  When set to {\ttfamily yes}, when random numbers are requested the random
+  number generators of all processes are set to the same state. Then each
+  process generates random numbers for the whole volume but uses only those
+  which belong to its local volume. This ensures that a parallelised run
+  is equivalent to a serial one as far as the random numbers are concerned and
+  is useful for testing purposes.
+  This can also be extended by setting {\ttfamily seed = statefile }
+  to produce a single chain of random numbers across multiple executions
+  of the program (such as using {\ttfamily StartCondition = continue} and
+  {\ttfamily InitialStoreCounter = readin}, even when using MPI.
 
 \item {\ttfamily kappa}:\\
   The $\kappa$ value. Default is $0.12$. For the {\ttfamily hmc\_tm}
