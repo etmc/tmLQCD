@@ -27,6 +27,8 @@
 
 extern su3 *** sw;
 extern su3 *** sw_inv;
+extern su3_32 *** sw_32;
+extern su3_32 *** sw_inv_32;
 extern su3 ** swm, ** swp;
 
 void assign_mul_one_sw_pm_imu(const int ieo, spinor * const k, const spinor * const l, const double mu);
@@ -34,7 +36,10 @@ void assign_mul_one_sw_pm_imu_inv(const int ieo, spinor * const k, const spinor 
 void Msw_full(spinor * const Even_new, spinor * const Odd_new, 
 	      spinor * const Even, spinor * const Odd);
 void clover_inv(spinor * const l, const int tau3sign, const double mu);
+void clover_inv_32_orphaned(spinor32 * const l, const int tau3sign, const double mu);
+void clover_inv_32(spinor32 * const l, const int tau3sign, const double mu);
 void Qsw_psi(spinor * const l, spinor * const k);
+void Qsw_pm_psi_32(spinor32 * const l, spinor32 * const k);
 void Qsw_plus_psi(spinor * const l, spinor * const k);
 void Qsw_minus_psi(spinor * const l, spinor * const k);
 void Qsw_sq_psi(spinor * const l, spinor * const k);
@@ -44,6 +49,13 @@ void Msw_plus_psi(spinor * const l, spinor * const k);
 void Msw_minus_psi(spinor * const l, spinor * const k);
 void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const int tau3sign, const double mu);
 void init_sw_fields();
+void copy_32_sw_fields();
+void clover_gamma5_32_orphaned(const int ieo, 
+		   spinor32 * const l, const spinor32 * const k, const spinor32 * const j,
+		   const double mu);
+void clover_gamma5_32(const int ieo, 
+		   spinor32 * const l, const spinor32 * const k, const spinor32 * const j,
+		   const double mu);
 
 void clover_nd(const int ieo, 
 	       spinor * const l_s, spinor * const l_c, 
