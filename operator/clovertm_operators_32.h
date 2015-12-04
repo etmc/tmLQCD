@@ -1,5 +1,8 @@
 /***********************************************************************
- * Copyright (C) 2013 Florian Burger
+ *
+ * Copyright (C) 2005 Martin Hasenbusch
+ *               2009 Carsten Urbach
+ *               2012 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -17,37 +20,25 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+#ifndef _CLOVERTM_OPERATORS_32_H
+#define _CLOVERTM_OPERATORS_32_H
 
-#ifdef HAVE_CONFIG_H
-# include<config.h>
-#endif
-
-// work-around for missing single precision implementation of inline SSE
-#ifdef SSE
-#define REDEFSSE
-#undef SSE
-#endif
-
-#ifdef SSE2
-#define REDEFSSE2
-#undef SSE2
-#endif
-
-#ifdef SSE3
-#define REDEFSSE3
-#undef SSE3
-#endif
-
-#include <stdlib.h>
-#include <stdio.h>
-#include "global.h"
-#include "xchange/xchange.h"
 #include "su3.h"
-#include "sse.h"
-#include "boundary.h"
-#include "operator/Hopping_Matrix_32.h"
 
-#define Hopping_Matrix_32 Hopping_Matrix_32_nocom
-#define _NO_COMM 1
+extern su3 *** sw;
+extern su3 *** sw_inv;
+extern su3_32 *** sw_32;
+extern su3_32 *** sw_inv_32;
+extern su3 ** swm, ** swp;
 
-#include "Hopping_Matrix_32.c"
+void clover_inv_32_orphaned(spinor32 * const l, const int tau3sign, const double mu);
+void clover_inv_32(spinor32 * const l, const int tau3sign, const double mu);
+void Qsw_pm_psi_32(spinor32 * const l, spinor32 * const k);
+void clover_gamma5_32_orphaned(const int ieo, 
+		   spinor32 * const l, const spinor32 * const k, const spinor32 * const j,
+		   const double mu);
+void clover_gamma5_32(const int ieo, 
+		   spinor32 * const l, const spinor32 * const k, const spinor32 * const j,
+		   const double mu);
+
+#endif

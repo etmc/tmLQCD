@@ -55,6 +55,7 @@
 #include "test/overlaptests.h"
 #include "solver/index_jd.h"
 #include "operator/clovertm_operators.h"
+#include "operator/clovertm_operators_32.h"
 #include "operator/clover_leaf.h"
 #include "operator.h"
 #include "gettime.h"

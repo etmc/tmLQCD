@@ -41,6 +41,7 @@
 #include"operator/tm_operators.h"
 #include"operator/Hopping_Matrix.h"
 #include"operator/clovertm_operators.h"
+#include"operator/clovertm_operators_32.h"
 #include"operator/D_psi.h"
 #include"gamma.h"
 #include"solver/solver.h"
