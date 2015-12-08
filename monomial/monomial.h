@@ -116,6 +116,7 @@ typedef struct {
   void (*derivativefunction) (const int no, hamiltonian_field_t * const hf);
   /* the operator definitions */
   void (*Qsq) (spinor * const, spinor * const);
+  void (*Qsq32) (spinor32 * const, spinor32 * const);  
   void (*Qp) (spinor * const, spinor * const);
   void (*Qm) (spinor * const, spinor * const);
 } monomial;

@@ -1393,12 +1393,17 @@ static inline void rmQuotes(char *str){
 <MSOLVER>{
   CG {
     if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
-    mnl->solver = 1;
+    mnl->solver = CG;
+    BEGIN(solver_caller);
+  }
+  mixedCG {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = MIXEDCG;
     BEGIN(solver_caller);
   }
   bicgstab {
     if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
-    mnl->solver = 0;
+    mnl->solver = BICGSTAB;
     BEGIN(solver_caller);
   }
 }
