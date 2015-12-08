@@ -80,7 +80,7 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   // we invert it for the even sites only
   sw_invert(EE, mnl->mu);
 
-  if(mnl->solver != CG && g_proc_id == 0) {
+  if(mnl->solver == BICGSTAB && g_proc_id == 0) {
     fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (cloverdet_monomial.c)\n");
   }
   

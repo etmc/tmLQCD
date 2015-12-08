@@ -74,7 +74,7 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
   // we invert it for the even sites only including mu
   sw_invert(EE, mnl->mu);
   
-  if(mnl->solver != CG) {
+  if(mnl->solver == BICGSTAB && g_proc_id==0) {
     fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (detratio_monomial.c)\n");
   }
   
@@ -181,7 +181,7 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   // we invert it for the even sites only including mu
   sw_invert(EE, mnl->mu);
   
-  if(mnl->solver != CG) {
+  if(mnl->solver == BICGSTAB && g_proc_id == 0) {
     fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (cloverdetratio_monomial.c)\n");
   }
   
