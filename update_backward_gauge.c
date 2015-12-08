@@ -72,7 +72,7 @@ void update_backward_gauge_32_orphaned(su3_32 ** const gf) {
   int ix=0, kb=0, iy=0;
 
 #ifdef OMP
-#pragma omp for nowait
+#pragma omp for
 #endif 
   for(ix = 0; ix < VOLUME/2; ix++) {
     iy = (VOLUME+RAND)/2+ix;
