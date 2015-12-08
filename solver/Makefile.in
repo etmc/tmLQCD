@@ -39,7 +39,7 @@ libsolver_TARGETS = bicgstab_complex gmres incr_eigcg eigcg restart_X ortho \
                     sub_low_ev cg_her_nd poly_precon \
                     generate_dfl_subspace dfl_projector \
                     cg_mms_tm cg_mms_tm_nd mixed_cg_mms_tm_nd \
-                    solver_field sumr mixed_cg_her index_jd \
+                    solver_field sumr mixed_cg_her rg_mixed_cg_her index_jd \
                     dirac_operator_eigenvectors	spectral_proj \
                     jdher_su3vect cg_her_su3vect eigenvalues_Jacobi monomial_solve
 

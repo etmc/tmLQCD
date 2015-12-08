@@ -1,5 +1,5 @@
 /***********************************************************************
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ * Copyright (C) 2014 Florian Burger
  *
  * This file is part of tmLQCD.
  *
@@ -16,15 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
+#ifndef _MONOMIAL_SOLVE_H
+#define _MONOMIAL_SOLVE_H
 
-#ifndef _ASSIGN_H
-#define _ASSIGN_H
 
-#include "su3.h"
-
-/* Assign (*R) = (*S) */
-void assign(spinor * const R, spinor * const S, const int N);
-void assign_32(spinor32 * const R, spinor32 * const S, const int N);
-void assign_su3vect(su3_vector * const R, su3_vector * const S, const int N);
+#include"solver/matrix_mult_typedef.h"
+#include"su3.h"
+    int solve_degenerate(spinor * const P, spinor * const Q, const int max_iter, 
+           double eps_sq, const int rel_prec, const int N, matrix_mult f, int solver_type);
+    int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn, 
+                     spinor * const Qup, spinor * const Qdn, 
+                     solver_pm_t * solver_pm);
 
 #endif

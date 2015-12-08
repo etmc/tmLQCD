@@ -79,14 +79,14 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     chrono_guess(mnl->w_fields[1], mnl->w_fields[2], mnl->csg_field, 
 		 mnl->csg_index_array, mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_pm_psi);
     
-    if((mnl->solver != CG) && (mnl->solver != MIXEDCG)) {
+    if(mnl->solver == BICGSTAB) {
       fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (detratio_monomial.c)\n"); 
        mnl->iter1 += solve_degenerate(mnl->w_fields[1], mnl->w_fields[2], mnl->maxiter, 
-			 mnl->forceprec, g_relative_precision_flag, VOLUME/2, &Qtm_pm_psi, CG);
+			                                mnl->forceprec, g_relative_precision_flag, VOLUME/2, &Qtm_pm_psi, CG);
     }
     else{
        mnl->iter1 += solve_degenerate(mnl->w_fields[1], mnl->w_fields[2], mnl->maxiter, 
-			 mnl->forceprec, g_relative_precision_flag, VOLUME/2, &Qtm_pm_psi, mnl->solver);      
+			                                mnl->forceprec, g_relative_precision_flag, VOLUME/2, &Qtm_pm_psi, mnl->solver);      
     }
     chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
@@ -136,7 +136,7 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     Q_plus_psi(mnl->w_fields[2], mnl->pf);
     g_mu = mnl->mu;
     boundary(mnl->kappa);
-    if((mnl->solver == CG) || (mnl->solver == MIXEDCG)) {
+    if((mnl->solver == CG) || (mnl->solver == MIXEDCG) || (mnl->solver == RGMIXEDCG)) {
       /* If CG is used anyhow */
       /*       gamma5(mnl->w_fields[1], mnl->w_fields[2], VOLUME/2); */
       /* Invert Q_{+} Q_{-} */

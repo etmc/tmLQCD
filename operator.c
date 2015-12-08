@@ -173,7 +173,7 @@ int init_operators() {
     optr->applyMp = &D_psi;
     optr->applyMm = &D_psi;
   }
-  if(optr->solver == 12) {
+  if(optr->solver == CGMMS) {
     if (g_cart_id == 0 && optr->even_odd_flag == 1)
       fprintf(stderr, "CG Multiple mass solver works only without even/odd! Forcing!\n");
     optr->even_odd_flag = 0;
@@ -263,7 +263,13 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
   printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
       }
       init_sw_fields(VOLUME);
-      sw_term( (const su3**) g_gauge_field, optr->kappa, optr->c_sw);
+      
+      sw_term( (const su3**) g_gauge_field, optr->kappa, optr->c_sw); 
+      /* this must be EE here!   */
+      /* to match clover_inv in Qsw_psi */
+      sw_invert(EE, optr->mu);
+      /* now copy double sw and sw_inv fields to 32bit versions */
+      copy_32_sw_fields();
     }
 
     for(i = 0; i < 2; i++) {
@@ -334,7 +340,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
     if(optr->type == DBCLOVER) {
       g_c_sw = optr->c_sw;
       if (g_cart_id == 0 && g_debug_level > 1) {
-  printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
+        printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
       }
       init_sw_fields(VOLUME);
       sw_term( (const su3**) g_gauge_field, optr->kappa, optr->c_sw); 

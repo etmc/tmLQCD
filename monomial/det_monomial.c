@@ -62,16 +62,12 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
     g_mu = mnl->mu;
     boundary(mnl->kappa);
 
-    if(mnl->solver != CG) {
-      fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (det_monomial.c)\n");
-    }
-    
     /* Invert Q_{+} Q_{-} */
     /* X_o -> w_fields[1] */
     chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 		 mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
 
-    if((mnl->solver != CG)&&(mnl->solver != MIXEDCG)) 
+    if(mnl->solver==BICGSTAB) 
     {      
 	  fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (det_monomial.c)\n");
 	  mnl->iter1 += solve_degenerate(mnl->w_fields[1], mnl->pf, mnl->maxiter, mnl->forceprec, 
@@ -109,16 +105,16 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
      *********************************************************************/
     g_mu = mnl->mu;
     boundary(mnl->kappa);
-    if((mnl->solver == CG) || (mnl->solver == MIXEDCG)) {
+    if((mnl->solver == CG) || (mnl->solver == MIXEDCG) || (mnl->solver == RGMIXEDCG)) {
       /* Invert Q_{+} Q_{-} */
       /* X -> w_fields[1] */
       chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
-		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_pm_psi);
+		               mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_pm_psi);
       mnl->iter1 += solve_degenerate(mnl->w_fields[1], mnl->pf, 
-			mnl->maxiter, mnl->forceprec, g_relative_precision_flag, 
-			VOLUME, &Q_pm_psi, mnl->solver);
+			                               mnl->maxiter, mnl->forceprec, g_relative_precision_flag, 
+			                               VOLUME, &Q_pm_psi, mnl->solver);
       chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
-			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
+			                    mnl->csg_N, &mnl->csg_n, VOLUME/2);
 
       /* Y -> w_fields[0]  */
       Q_minus_psi(mnl->w_fields[0], mnl->w_fields[1]);

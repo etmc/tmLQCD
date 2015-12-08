@@ -16,15 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
+#ifndef _RG_MIXED_CG_HER_H
+#define _RG_MIXED_CG_HER_H
 
-#ifndef _ASSIGN_H
-#define _ASSIGN_H
+#include"operator/tm_operators_32.h"
+#include"solver/matrix_mult_typedef.h"
+#include"su3.h"
 
-#include "su3.h"
-
-/* Assign (*R) = (*S) */
-void assign(spinor * const R, spinor * const S, const int N);
-void assign_32(spinor32 * const R, spinor32 * const S, const int N);
-void assign_su3vect(su3_vector * const R, su3_vector * const S, const int N);
+int rg_mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter, 
+		 double eps_sq, const int rel_prec, const int N, matrix_mult f, matrix_mult32 f32);
 
 #endif

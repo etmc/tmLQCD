@@ -45,6 +45,11 @@ void assign(spinor * const R, spinor * const S, const int N)
   return;
 }
 
+void assign_32(spinor32 * const R, spinor32 * const S, const int N)
+{
+  memcpy(R, S, N*sizeof(spinor32));
+  return;
+}
 
 #ifdef WITHLAPH
 void assign_su3vect(su3_vector * const R, su3_vector * const S, const int N)
