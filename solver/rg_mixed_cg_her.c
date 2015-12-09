@@ -217,7 +217,7 @@ int rg_mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   }
   
   // compute the maximum number of maximum iterations based on the expected reduction 
-  int N_outer = (int)ceil(log10( delta/eps_sq ))+1;
+  int N_outer = (int)ceil(log10( delta/eps_sq ))+4; // +4 is an arbitrary choice which seems to avoid switching to DP
   int max_inner_it = mixcg_maxinnersolverit;
   if(g_debug_level > 0 && g_proc_id==0) 
     printf("#RG_Mixed CG: max_inner_it: %d N_outer: %d \n", max_inner_it, N_outer);

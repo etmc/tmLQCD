@@ -171,7 +171,7 @@
 
 /* default mixed precision solver values */
 #define _default_mixcg_innereps 1.0e-6
-#define _default_mixcg_maxinnersolverit 1500
+#define _default_mixcg_maxinnersolverit 5000
 
 #define _default_use_preconditioning 0
 
