@@ -302,22 +302,27 @@ int rg_mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
       rho_sp = rho_dp; // not sure if it's fine to truncate this or whether one should calculate it in SP directly
 
       // if the inner loop was successful at reducing the residual, reuse the search direction to some extent
-      if(beta_dp < 1.0) {
+      //if(beta_dp < 1.0) {
         // if we just came out of a high precision loop (high_control==1), phigh currently contains the search vector
         // and there is no need to copy it over
-        if(high_control==0){
-          assign_to_64(phigh,p,N);
-        }else{
-          high_control = 0;
-        }
+        //if(high_control==0){
+        //  assign_to_64(phigh,p,N);
+        //}else{
+        //  high_control = 0;
+        //}
         // attempt to make a new search vector, as conjugate as possible to the previous one
         // trying to enforce conjugacy (phigh^+ M p) = 0 directly by computing p' = rhigh - (rhigh^+ M p) / (p^+ M p) * p
         // does not work in general due to limited precision (it fails on lattices L>24)
-        assign_mul_add_r(phigh,beta_dp,rhigh,N);
+        f(qhigh,phigh);
+        _Complex double gamma = 1.0/scalar_prod(phigh,qhigh,N,1);
+        gamma *= scalar_prod(rhigh,qhigh,N,1);
+        if(g_proc_id==0) printf("gamma: %g %g\n",creal(gamma),cimag(gamma));
+        assign_mul_add(phigh,-gamma,rhigh,N);
+        //assign_mul_add_r(phigh,beta_dp,rhigh,N);
         assign_to_32(p,phigh,N);
-      }else{
-        assign_to_32(p,rhigh,N);
-      }
+      //}else{
+      //  assign_to_32(p,rhigh,N);
+      //}
     }
 
     zero_spinor_field_32(x,N);
