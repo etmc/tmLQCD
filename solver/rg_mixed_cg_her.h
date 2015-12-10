@@ -23,6 +23,22 @@
 #include"solver/matrix_mult_typedef.h"
 #include"su3.h"
 
+typedef enum PolakRibiere_s {
+  MCG_NO_PR=0,
+  MCG_PR=1
+} MCG_PR_TYPE;
+
+typedef enum Pipelined_s {
+  MCG_NO_PIPELINED=0,
+  MCG_PIPELINED
+} MCG_PIPELINED_TYPE;
+
+// currently not used
+typedef enum ResGuide_s {
+  MCG_NO_RESGUIDE=0,
+  MCG_RESGUIDE
+} MCG_RESGUIDE_TYPE;
+
 int rg_mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter, 
 		 double eps_sq, const int rel_prec, const int N, matrix_mult f, matrix_mult32 f32);
 
