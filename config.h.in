@@ -89,6 +89,12 @@
 /* Alignment compiler hint macro */
 #undef ALIGN
 
+/* Alignment for 32bit arrays -- necessary for SSE and automated vectorization */
+#undef ALIGN_BASE32
+
+/* Alignment of 32bit fields, compiler hint macro */
+#undef ALIGN32
+
 /* Compile with SSE2 support */
 #undef SSE2
 

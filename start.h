@@ -47,6 +47,7 @@ enum RN_TYPE { RN_GAUSS, RN_UNIF, RN_Z2 };
 
 void unit_spinor_field(const int k);
 void zero_spinor_field(spinor * const k, const int N);
+void zero_spinor_field_32(spinor32 * const k, const int N);
 void constant_spinor_field(spinor * const k, const int p, const int N);
 
 void random_spinor_field_lexic(spinor * const k, const int repro, const enum RN_TYPE rn_type);

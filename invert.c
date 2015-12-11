@@ -119,11 +119,10 @@ int main(int argc, char *argv[])
 
   DUM_DERI = 8;
   DUM_MATRIX = DUM_DERI + 5;
-#if ((defined BGL && defined XLC) || defined _USE_TSPLITPAR)
   NO_OF_SPINORFIELDS = DUM_MATRIX + 3;
-#else
-  NO_OF_SPINORFIELDS = DUM_MATRIX + 3;
-#endif
+
+  //4 extra fields (corresponding to DUM_MATRIX+0..5) for deg. and ND matrix mult.  
+  NO_OF_SPINORFIELDS_32 = 6;
 
   verbose = 0;
   g_use_clover_flag = 0;
@@ -187,9 +186,12 @@ int main(int argc, char *argv[])
 
 #ifdef _GAUGE_COPY
   j = init_gauge_field(VOLUMEPLUSRAND, 1);
+  j += init_gauge_field_32(VOLUMEPLUSRAND, 1);
 #else
   j = init_gauge_field(VOLUMEPLUSRAND, 0);
+  j += init_gauge_field_32(VOLUMEPLUSRAND, 0);  
 #endif
+ 
   if (j != 0) {
     fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
     exit(-1);
@@ -213,9 +215,11 @@ int main(int argc, char *argv[])
   }
   if (even_odd_flag) {
     j = init_spinor_field(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS);
+    j += init_spinor_field_32(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS_32);   
   }
   else {
     j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
+    j += init_spinor_field_32(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS_32);   
   }
   if (j != 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
@@ -270,13 +274,12 @@ int main(int argc, char *argv[])
     fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
     exit(-1);
   }
-  if (g_sloppy_precision_flag == 1) {
-    j = init_dirac_halfspinor32();
-    if (j != 0)
-    {
-      fprintf(stderr, "Not enough memory for 32-bit halffield! Aborting...\n");
-      exit(-1);
-    }
+  /* for mixed precision solvers, the 32 bit halfspinor field must always be there */
+  j = init_dirac_halfspinor32();
+  if (j != 0)
+  {
+    fprintf(stderr, "Not enough memory for 32-bit halffield! Aborting...\n");
+    exit(-1);
   }
 #  if (defined _PERSISTENT)
   if (even_odd_flag)
@@ -304,7 +307,8 @@ int main(int argc, char *argv[])
 #ifdef MPI
     xchange_gauge(g_gauge_field);
 #endif
-
+    /*Convert to a 32 bit gauge field, after xchange*/
+    convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND);
     /*compute the energy of the gauge field*/
     plaquette_energy = measure_plaquette( (const su3**) g_gauge_field);
 
@@ -507,8 +511,10 @@ int main(int argc, char *argv[])
   free_blocks();
   free_dfl_subspace();
   free_gauge_field();
+  free_gauge_field_32();
   free_geometry_indices();
   free_spinor_field();
+  free_spinor_field_32();  
   free_moment_field();
   free_chi_spinor_field();
   free(filename);
