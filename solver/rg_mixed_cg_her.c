@@ -23,7 +23,8 @@
  * Mixed precision solver which uses true reliable updates and has a double
  * precision fail-safe mechanism. The Polak-Ribiere computation of beta is
  * implemented but currently not used because the extra scalar product is
- * more expensive than the gain from the self-stabilisation.
+ * more expensive than the gain from the self-stabilisation as far as has 
+ * been tested.
  *
  * in:
  *   Q: source
@@ -37,13 +38,14 @@
  * non-zero entries in the Dirac operator and usual lattice sizes, the
  * requisite projection 
  *
- *   p' = r - (r* A p)/(p* A p) p
+ *   p' = r - <r,Ap>/<p,Ap> p
  *
  * cannot be computed with sufficient precision in 64 bit arithmetic. It should
  * be noted that for L < 24 in general, this does work and produces
  * a mixed solver which converges at the same rate as a double solver, but it's
  * not generally useable... For point sources, it also works for larger lattice 
- * volumes.
+ * volumes. Might be introduced as an optional mode in the future with some
+ * fail-safe mechanism which detects if the search direction begins to diverge.
  *
  **************************************************************************/
 
@@ -60,18 +62,17 @@
 #include "operator/tm_operators_32.h"
 #include "operator/clovertm_operators_32.h"
 #include "solver/matrix_mult_typedef.h"
+#include "solver/solver_params.h"
 #include "read_input.h"
 
 #include "solver_field.h"
 #include "solver/rg_mixed_cg_her.h"
 #include "gettime.h"
 
-#define DELTA 1.0e-6f
-
 void output_flops(const double seconds, const unsigned int N, const unsigned int iter_out, const unsigned int iter_in_sp, const unsigned int iter_in_dp, const double eps_sq);
 
-static inline unsigned int inner_loop_high(spinor * const x, spinor * const p, spinor * const q, spinor * const r, double * const rho1, double delta,
-                              matrix_mult f, const double eps_sq, const unsigned int N, const unsigned int iter ){
+static inline unsigned int inner_loop_high(spinor * const x, spinor * const p, spinor * const q, spinor * const r, double * const rho1, const double delta,
+                                           matrix_mult f, const double eps_sq, const unsigned int N, const unsigned int iter ){
 
   static double alpha, beta, rho, rhomax;
   unsigned int j = 0;
@@ -105,9 +106,9 @@ static inline unsigned int inner_loop_high(spinor * const x, spinor * const p, s
   return j;
 }
 
-static inline unsigned int inner_loop(spinor32 * const x, spinor32 * const p, spinor32 * const q, spinor32 * const r, float * const rho1, float delta,
-                              matrix_mult32 f32, const float eps_sq, const unsigned int N, const unsigned int iter,
-                              float alpha, float beta, MCG_PIPELINED_TYPE pipelined, MCG_PR_TYPE pr ){
+static inline unsigned int inner_loop(spinor32 * const x, spinor32 * const p, spinor32 * const q, spinor32 * const r, float * const rho1, const float delta,
+                                      matrix_mult32 f32, const float eps_sq, const unsigned int N, const unsigned int iter,
+                                      float alpha, float beta, MCG_PIPELINED_TYPE pipelined, MCG_PR_TYPE pr ){
 
   static float rho, rhomax, pro;
   unsigned int j = 0;
@@ -176,11 +177,12 @@ static inline unsigned int inner_loop(spinor32 * const x, spinor32 * const p, sp
 
 
 /* P output = solution , Q input = source */
-int rg_mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter, 
-		 double eps_sq, const int rel_prec, const int N, matrix_mult f, matrix_mult32 f32) {
+int rg_mixed_cg_her(spinor * const P, spinor * const Q, solver_params_t solver_params,
+                    const int max_iter, const double eps_sq, const int rel_prec,
+                    const int N, matrix_mult f, matrix_mult32 f32) {
 
   int iter_in_sp = 0, iter_in_dp = 0, iter_out = 0;
-  float rho_sp;
+  float rho_sp, delta = solver_params.mcg_delta;
   double beta_dp, rho_dp;
   double sourcesquarenorm, target_eps_sq;
 
@@ -192,9 +194,6 @@ int rg_mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   const int nr_sf = 4;
   const int nr_sf32 = 4;
   
-  // for now use a constant residual reduction factor, 1.0e-6 seems to work very well in general
-  float delta = DELTA;
-
   int high_control = 0;
 
   double atime, etime, flops;
@@ -310,7 +309,7 @@ int rg_mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
     }else{
       // correct defect
       assign_to_32(r,rhigh,N);
-      rho_sp = rho_dp; // not sure if it's fine to truncate this or whether one should calculate it in SP directly
+      rho_sp = rho_dp; // not sure if it's fine to truncate this or whether one should calculate it in SP directly, it seems to work fine though
       assign_32(p,r,N);
     }
 
@@ -331,7 +330,7 @@ void output_flops(const double seconds, const unsigned int N, const unsigned int
   // TODO: compute real number of flops...
   int total_it = iter_in_sp+iter_in_dp+iter_out;
   if(g_debug_level > 0 && g_proc_id == 0) {
-    printf("# mixed CG: iter_out: %d iter_in_sp: %d iter_in_dp: %d\n",iter_out,iter_in_sp,iter_in_dp);
+    printf("# RG_mixed CG: iter_out: %d iter_in_sp: %d iter_in_dp: %d\n",iter_out,iter_in_sp,iter_in_dp);
   	if(N != VOLUME){
   	  /* 2 A + 2 Nc Ns + N_Count ( 2 A + 10 Nc Ns ) */
   	  /* 2*1608.0 because the linalg is over VOLUME/2 */
@@ -342,8 +341,8 @@ void output_flops(const double seconds, const unsigned int N, const unsigned int
   	  flops = (2*(1608.0+2*3*4) + 2*3*4 + total_it*(2.*(1608.0+2*3*4) + 10*3*4))*N/1.0e6f;      
   	}
   	printf("#RG_mixed CG: iter: %d eps_sq: %1.4e t/s: %1.4e\n", total_it, eps_sq, seconds); 
-    printf("# FIXME: note the following flop counts are wrong!\n");
+    printf("# FIXME: note the following flop counts are wrong! Consider only the time to solution!\n");
   	printf("#RG_mixed CG: flopcount (for e/o tmWilson only): t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
-  	      seconds, flops/(seconds), g_nproc*flops/(seconds));
+  	       seconds, flops/(seconds), g_nproc*flops/(seconds));
   }      
 }

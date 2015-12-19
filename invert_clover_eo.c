@@ -45,6 +45,7 @@
 #include"operator/D_psi.h"
 #include"gamma.h"
 #include"solver/solver.h"
+#include"solver/solver_params.h"
 #include"invert_clover_eo.h"
 #include "solver/dirac_operator_eigenvectors.h"
 #ifdef QUDA
@@ -98,20 +99,19 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
 		 precision, rel_prec, 
 		 VOLUME/2, Qsq);
     Qm(Odd_new, Odd_new);
-    }else if(solver_flag == INCREIGCG){
-
-       if(g_proc_id == 0) {printf("# Using Incremental Eig-CG!\n"); fflush(stdout);}
-       iter = incr_eigcg(VOLUME/2,solver_params.eigcg_nrhs, solver_params.eigcg_nrhs1, Odd_new, g_spinor_field[DUM_DERI], solver_params.eigcg_ldh, Qsq,
- 		    	            solver_params.eigcg_tolsq1, solver_params.eigcg_tolsq, solver_params.eigcg_restolsq , solver_params.eigcg_rand_guess_opt, 
-                                    rel_prec, max_iter, solver_params.eigcg_nev, solver_params.eigcg_vmax);
-       Qm(Odd_new, Odd_new);
+  }else if(solver_flag == INCREIGCG){
+    if(g_proc_id == 0) {printf("# Using Incremental Eig-CG!\n"); fflush(stdout);}
+    iter = incr_eigcg(VOLUME/2,solver_params.eigcg_nrhs, solver_params.eigcg_nrhs1, Odd_new, g_spinor_field[DUM_DERI], solver_params.eigcg_ldh, Qsq,
+     	            solver_params.eigcg_tolsq1, solver_params.eigcg_tolsq, solver_params.eigcg_restolsq , solver_params.eigcg_rand_guess_opt, 
+                                 rel_prec, max_iter, solver_params.eigcg_nev, solver_params.eigcg_vmax);
+    Qm(Odd_new, Odd_new);
   }else if(solver_flag == MIXEDCG){
-    iter = mixed_cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, 
+    iter = mixed_cg_her(Odd_new, g_spinor_field[DUM_DERI], solver_params, max_iter, precision, rel_prec, 
 			  VOLUME/2, &Qsw_pm_psi, &Qsw_pm_psi_32);
     Qm(Odd_new, Odd_new);
   }else if(solver_flag == RGMIXEDCG){
-    iter = rg_mixed_cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, 
-			  VOLUME/2, &Qsw_pm_psi, &Qsw_pm_psi_32);
+    iter = rg_mixed_cg_her(Odd_new, g_spinor_field[DUM_DERI], solver_params, max_iter, precision, rel_prec,
+			                     VOLUME/2, &Qsw_pm_psi, &Qsw_pm_psi_32);
     Qm(Odd_new, Odd_new);
    }else{
     if(g_proc_id == 0) {printf("# This solver is not available for this operator. Exisiting!\n"); fflush(stdout);}

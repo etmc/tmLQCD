@@ -1,5 +1,5 @@
 /***********************************************************************
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ * Copyright (C) 2015 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -21,6 +21,7 @@
 
 #include"operator/tm_operators_32.h"
 #include"solver/matrix_mult_typedef.h"
+#include"solver/solver_params.h"
 #include"su3.h"
 
 typedef enum PolakRibiere_s {
@@ -39,7 +40,8 @@ typedef enum ResGuide_s {
   MCG_RESGUIDE
 } MCG_RESGUIDE_TYPE;
 
-int rg_mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter, 
-		 double eps_sq, const int rel_prec, const int N, matrix_mult f, matrix_mult32 f32);
+int rg_mixed_cg_her(spinor * const P, spinor * const Q, solver_params_t solver_params,
+                    const int max_iter, const double eps_sq, const int rel_prec,
+                    const int N, matrix_mult f, matrix_mult32 f32);
 
 #endif

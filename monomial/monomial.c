@@ -104,6 +104,7 @@ int add_monomial(const int type) {
   else{
     monomial_list[no_monomials].solver = _default_solver_flag;
   }
+  monomial_list[no_monomials].solver_params.mcg_delta = _default_mixcg_innereps;
   monomial_list[no_monomials].even_odd_flag = _default_even_odd_flag;
   monomial_list[no_monomials].forcefactor = 1.;
   monomial_list[no_monomials].use_rectangles = 0;

@@ -42,6 +42,7 @@
 #include "solver/solver.h"
 #include "solver/matrix_mult_typedef.h"
 #include "solver/solver_types.h"
+#include "solver/solver_params.h"
 #include "operator/tm_operators.h"
 #include "operator/tm_operators_32.h"
 #include "operator/tm_operators_nd.h"
@@ -49,7 +50,6 @@
 #include "operator/clovertm_operators.h"
 #include "operator/clovertm_operators_32.h"
 #include "monomial_solve.h"
-
 
 #ifdef HAVE_GPU
 #include"../GPU/cudadefs.h"
@@ -64,17 +64,17 @@ extern int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
 #include "read_input.h" 
 #endif
 
-
-
-
-int solve_degenerate(spinor * const P, spinor * const Q, const int max_iter, 
-           double eps_sq, const int rel_prec, const int N, matrix_mult f, int solver_type){
+int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_params,
+                     const int max_iter, double eps_sq, const int rel_prec, 
+                     const int N, matrix_mult f, int solver_type){
   int iteration_count = 0;
   int use_solver = solver_type;
-  // the default mixed solver is rg_mixed_cg_her
-  int (*msolver_fp)(spinor * const, spinor * const, const int, double, const int, const int, matrix_mult, matrix_mult32) = rg_mixed_cg_her;
   
   if(use_solver == MIXEDCG || use_solver == RGMIXEDCG){
+    // the default mixed solver is rg_mixed_cg_her
+    int (*msolver_fp)(spinor * const, spinor * const, solver_params_t, 
+                      const int, double, const int, const int, matrix_mult, matrix_mult32) = rg_mixed_cg_her;
+
     // but it might be necessary at some point to use the old version
     if(use_solver == MIXEDCG){
       msolver_fp = mixed_cg_her;
@@ -94,15 +94,15 @@ int solve_degenerate(spinor * const P, spinor * const Q, const int max_iter,
     }
     else{
       if(f==Qtm_pm_psi){   
-        iteration_count =  msolver_fp(P, Q, max_iter, eps_sq, rel_prec, N, f, &Qtm_pm_psi_32);
+        iteration_count =  msolver_fp(P, Q, solver_params, max_iter, eps_sq, rel_prec, N, f, &Qtm_pm_psi_32);
         return(iteration_count);
       }
       else if(f==Q_pm_psi){     
-	      iteration_count =  msolver_fp(P, Q, max_iter, eps_sq, rel_prec, N, f, &Q_pm_psi_32);
+	      iteration_count =  msolver_fp(P, Q, solver_params, max_iter, eps_sq, rel_prec, N, f, &Q_pm_psi_32);
 	      return(iteration_count);      
       } else if(f==Qsw_pm_psi){
         copy_32_sw_fields();
-        iteration_count = msolver_fp(P, Q, max_iter, eps_sq, rel_prec, N, f, &Qsw_pm_psi_32);
+        iteration_count = msolver_fp(P, Q, solver_params, max_iter, eps_sq, rel_prec, N, f, &Qsw_pm_psi_32);
         return(iteration_count);
       } else {
         if(g_proc_id==0) printf("Warning: 32 bit matrix not available. Falling back to CG in 64 bit\n"); 

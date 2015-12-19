@@ -585,6 +585,11 @@ static inline void rmQuotes(char *str){
     optr->rel_prec = 0;
     if(myverbose) printf("  SolverRelativePrecision set to NO line %d operator %d\n",  line_of_file, current_operator);
   }
+  {SPC}*mcgdelta{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z1] = %lf", name, &c);
+    (optr->solver_params).mcg_delta = c;
+    if(myverbose) printf("  mcg_delta set to %lf line %d operator %d\n", c, line_of_file, current_operator);
+  }
   {SPC}*EigCGnrhs{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     (optr->solver_params).eigcg_nrhs = a;
@@ -613,12 +618,12 @@ static inline void rmQuotes(char *str){
   {SPC}*EigCGtolsq1{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z1] = %lf", name, &c);
     (optr->solver_params).eigcg_tolsq1 = c;
-    if(myverbose) printf("  EigCGtolsq1 set to %lf line %d operator %d\n", a, line_of_file, current_operator);
+    if(myverbose) printf("  EigCGtolsq1 set to %lf line %d operator %d\n", c, line_of_file, current_operator);
   }
   {SPC}*EigCGrestolsq{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     (optr->solver_params).eigcg_restolsq = c;
-    if(myverbose) printf("  EigCGrestolsq set to %lf line %d operator %d\n", a, line_of_file, current_operator);
+    if(myverbose) printf("  EigCGrestolsq set to %lf line %d operator %d\n", c, line_of_file, current_operator);
   }
   {SPC}*EigCGRandGuessOpt{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
@@ -1201,6 +1206,11 @@ static inline void rmQuotes(char *str){
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->maxiter = a;
     if(myverbose) printf("  MaxSolverIterations set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+  }
+  {SPC}*mcgdelta{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z1] = %lf", name, &c);
+    (mnl->solver_params).mcg_delta = c;
+    if(myverbose) printf("  mcg_delta set to %lf line %d monomial %d\n", c, line_of_file, current_monomial);
   }
 }
 

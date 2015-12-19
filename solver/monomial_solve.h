@@ -21,8 +21,9 @@
 
 
 #include"solver/matrix_mult_typedef.h"
+#include"solver/solver_params.h"
 #include"su3.h"
-    int solve_degenerate(spinor * const P, spinor * const Q, const int max_iter, 
+    int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_params, const int max_iter, 
            double eps_sq, const int rel_prec, const int N, matrix_mult f, int solver_type);
     int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn, 
                      spinor * const Qup, spinor * const Qdn, 

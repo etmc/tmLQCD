@@ -25,6 +25,7 @@
 #include "su3spinor.h"
 #include "hamiltonian_field.h"
 #include "rational/rational.h"
+#include "solver/solver_params.h"
 
 #define DET 0
 #define DETRATIO 1
@@ -82,6 +83,7 @@ typedef struct {
   double epsilon;
   double forceprec;
   double accprec;
+  solver_params_t solver_params;
   /* force normalisation */
   double forcefactor;
   /* some book-keeping */
