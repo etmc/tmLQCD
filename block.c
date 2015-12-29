@@ -793,10 +793,7 @@ void alt_block_compute_little_D() {
 	  reconstruct_global_field_GEN_ID(rec, block_list, i, nb_blocks);
 	}
 
-        if(g_c_sw > 0)
-          Dsw_psi(app, rec);
-        else
-	  D_psi(app, rec);
+	D_psi(app, rec);
 
 	split_global_field_GEN(psi_blocks, app, nb_blocks);
 	if (g_cart_id == k) {

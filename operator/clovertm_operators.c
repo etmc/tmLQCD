@@ -951,6 +951,77 @@ void assign_mul_one_sw_pm_imu(const int ieo,
   return;
 }
 
+/**************************************************************
+ * assign_mul_one_sw_pm_imu applies (1 + T + imug5) to 
+ * a block spinor k
+ *
+ * it is assumed that the clover leaf is computed and stored
+ * in sw[VOLUME][3][2]
+ * the corresponding routine can be found in clover_leaf.c
+ *
+ **************************************************************/
+
+
+void assign_mul_one_sw_pm_imu_block(const int ieo, 
+ 	                            spinor * const k, const spinor * const l,
+			            const double mu, block *blk) {
+  int i,vol,jeo;
+  spinor *r,*s;
+  spinor  ALIGN tmpr;
+
+  int it,ix,iy,iz; //lexiographic index of the site w.r.t the block
+  int t,x,y,z;     //lexiographic index of the site w.r.t the current process
+  int bt,bx,by,bz; //block coordinate on the local mpi process
+  int dT,dX,dY,dZ; //block size
+  int sT,sX,sY,sZ; //constant shifts
+  int lx; //lexiographic index of the block site w.r.t the local mpi process
+
+  dT  = blk->BT;
+  dX  = blk->BLX;
+  dY  = blk->BLY;
+  dZ  = blk->BLZ;
+  vol = dT*dX*dY*dZ;
+
+  bt = blk->mpilocal_coordinate[0];
+  bx = blk->mpilocal_coordinate[1];
+  by = blk->mpilocal_coordinate[2];
+  bz = blk->mpilocal_coordinate[3];
+
+  sT = bt*dT;
+  sX = bx*dX;
+  sY = by*dY;
+  sZ = bz*dZ;
+ 
+
+  r = k; 
+  s = l;
+
+  for(it = 0; it < dT; it++)
+    for(ix =0; ix < dX; ix++)
+      for(iy=0; iy < dY; iy++)
+         for(iz=0; iz<dZ; iz++)
+         { 
+            t = it + sT;
+            x = ix + sX;
+            y = iy + sY;
+            z = iz + sZ;
+
+            lx = g_ipt[t][x][y][z];
+
+            jeo= (t+x+y+z)%2;
+
+            if( ieo == jeo) 
+            {
+                assign_mul_one_sw_pm_imu_site_lexic(lx,&tmpr,s,g_mu);
+                assign(r,&tmpr,1);
+                r++;
+                s++;
+            }
+         }
+
+  return;
+}
+
 /***************************************************
  * Application of Mee (1+T+i*g_mu*gamma5) to spinor
  * l and store the result in spinor k. Only even 
@@ -1216,6 +1287,92 @@ void assign_mul_one_sw_pm_imu_inv(const int ieo,
   return;
 }
 
+
+void assign_mul_one_sw_pm_imu_inv_block(const int ieo, 
+				  spinor * const k, const spinor * const l, 
+				  const double mu, block *blk) {
+
+  int it,ix,iy,iz; //lexiographic index of the site w.r.t the block
+  int t,x,y,z;     //lexiographic index of the site w.r.t the current process
+  int bt,bx,by,bz; //block coordinate on the local mpi process
+  int dT,dX,dY,dZ; //block size
+  int sT,sX,sY,sZ; //constant shifts
+  int lx; //lexiographic index of the block site w.r.t the local mpi process
+  int lxeo,jeo,vol;  
+
+  su3_vector ALIGN psi, chi, phi1, phi3;
+  const su3 *w1, *w2, *w3, *w4;
+  const spinor *rn;
+  spinor *s;
+
+  dT  = blk->BT;
+  dX  = blk->BLX;
+  dY  = blk->BLY;
+  dZ  = blk->BLZ;
+  vol = dT*dX*dY*dZ;
+
+  bt = blk->mpilocal_coordinate[0];
+  bx = blk->mpilocal_coordinate[1];
+  by = blk->mpilocal_coordinate[2];
+  bz = blk->mpilocal_coordinate[3];
+
+  sT = bt*dT;
+  sX = bx*dX;
+  sY = by*dY;
+  sZ = bz*dZ;
+ 
+
+  rn = l; 
+  s  = k;
+
+  for(it = 0; it < dT; it++)
+    for(ix =0; ix < dX; ix++)
+      for(iy=0; iy < dY; iy++)
+         for(iz=0; iz<dZ; iz++)
+         {
+            t = it + sT;
+            x = ix + sX;
+            y = iy + sY;
+            z = iz + sZ;
+
+            lx = g_ipt[t][x][y][z];
+            lxeo = g_lexic2eo[lx]; 
+
+            jeo= (t+x+y+z)%2;
+
+            if( ieo == jeo) 
+            {
+               _vector_assign(phi1,(*rn).s0);
+               _vector_assign(phi3,(*rn).s2);
+
+               w1=&sw_inv[lxeo][0][0];
+               w2=w1+2;  /* &sw_inv[lxeo][1][0]; */
+               w3=w1+4;  /* &sw_inv[lxeo][2][0]; */
+               w4=w1+6;  /* &sw_inv[lxeo][3][0]; */
+         
+               _su3_multiply(psi,*w1,phi1); 
+               _su3_multiply(chi,*w2,(*rn).s1);
+               _vector_add((*s).s0,psi,chi);
+               _su3_multiply(psi,*w4,phi1); 
+               _su3_multiply(chi,*w3,(*rn).s1);
+               _vector_add((*s).s1,psi,chi);
+
+               w1++; /* &sw_inv[icx][0][1]; */
+               w2++; /* &sw_inv[icx][1][1]; */
+               w3++; /* &sw_inv[icx][2][1]; */
+               w4++; /* &sw_inv[icx][3][1]; */
+               _su3_multiply(psi,*w1,phi3); 
+               _su3_multiply(chi,*w2,(*rn).s3);
+               _vector_add((*s).s2,psi,chi);
+               _su3_multiply(psi,*w4,phi3); 
+               _su3_multiply(chi,*w3,(*rn).s3);
+               _vector_add((*s).s3,psi,chi);
+                rn++;
+                s++;
+            }
+         }
+  return;
+}
 
 
 void Mee_sw_inv_psi(spinor * const k, spinor * const l, const double mu) {
