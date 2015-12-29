@@ -118,7 +118,6 @@ int fgmres(spinor * const P,spinor * const Q,
 
     for(j = 0; j < m; j++){
       /* solver_field[0]=A*M^-1*v_j */
-
       if(precon == 0) {
 	assign(Z[j], V[j], N);
       }
@@ -126,15 +125,10 @@ int fgmres(spinor * const P,spinor * const Q,
 	zero_spinor_field(Z[j], N);
 	Msap_eo(Z[j], V[j], 5, 3);
       }
-      else if(precon == 2) {
+      else {
 	mg_precon(Z[j], V[j]);
       }
-      else if(precon == 4) {
-	mg_precon_cg(Z[j], V[j]);
-      }
-      else {
-	mg_Qsq_precon(Z[j], V[j]);
-      }
+
       f(r0, Z[j]); 
       /* Set h_ij and omega_j */
       /* solver_field[1] <- omega_j */

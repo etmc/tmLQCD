@@ -111,7 +111,7 @@ int mr(spinor * const P, spinor * const Q,
 }
 
 
-int mrblk(spinor * const P, spinor * const Q,
+int mrblk(spinor * const P, spinor * const Q, spinor * const s_,
 	  const int max_iter, const double eps_sq,
 	  const int rel_prec, const int N, 
 	  matrix_mult_blk f, const int blk) {
@@ -120,24 +120,10 @@ int mrblk(spinor * const P, spinor * const Q,
   double norm_r,beta;
   _Complex double alpha;
   spinor * r;
-  const int parallel = 0;
   spinor * s[3];
-  static spinor *s_=NULL;
-  static int N_;
+  const int parallel = 0;
 
-  if(mr_init == 0 || N != N_) {
-    if(N!= N_ && mr_init != 0) {
-      free(s_);
-    }
-    N_ = N;
-    s_ = calloc(3*(N+1)+1, sizeof(spinor));
-    mr_init = 1;
-  }
-#if (defined SSE || defined SSE2 || defined SSE3)
-  s[0] = (spinor *)(((unsigned long int)(s_)+ALIGN_BASE)&~ALIGN_BASE); 
-#else
   s[0] = s_;
-#endif
   s[1] = s[0] + N + 1;
   s[2] = s[1] + N + 1;
 
@@ -173,7 +159,6 @@ int mrblk(spinor * const P, spinor * const Q,
       fflush(stdout);
     }
   }
-  /* free(s_); */
   if(norm_r > eps_sq){
     return(-1);
   }

@@ -219,7 +219,6 @@ EXTERN int NcycleMsap;
 EXTERN int NiterMsap_dflgen;
 EXTERN int NcycleMsap_dflgen;
 EXTERN int NsmoothMsap_dflgen;
-EXTERN int use_iQ_dfl;
 EXTERN int usePL;
 EXTERN int little_solver;
 EXTERN int little_evenodd;

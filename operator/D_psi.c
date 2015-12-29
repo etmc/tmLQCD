@@ -1153,76 +1153,76 @@ void Dtm_psi(spinor * const P, spinor * const Q){
 #ifdef OMP
 #pragma omp for
 #endif
-    for (ix=0;ix<VOLUME;ix++)
-      {
-	rr  = (spinor *) P +ix;
-	s  = (spinor *) Q +ix;
-
-	_complex_times_vector(tmpr.s0, rho1, s->s0);
-	_complex_times_vector(tmpr.s1, rho1, s->s1);
-	_complex_times_vector(tmpr.s2, rho2, s->s2);
-	_complex_times_vector(tmpr.s3, rho2, s->s3);
-
-	/******************************* direction +0 *********************************/
-	iy=g_iup[ix][0];
-	sp = (spinor *) Q +iy;
-	up=&g_gauge_field[ix][0];
-	p0add(&tmpr, sp, up, phase_0);
-
-	/******************************* direction -0 *********************************/
-	iy=g_idn[ix][0];
-	sm  = (spinor *) Q +iy;
-	um=&g_gauge_field[iy][0];
-	m0add(&tmpr, sm, um, phase_0);
-
-	/******************************* direction +1 *********************************/
-	iy=g_iup[ix][1];
-	sp = (spinor *) Q +iy;
-	up=&g_gauge_field[ix][1];
-	p1add(&tmpr, sp, up, phase_1);
-
-	/******************************* direction -1 *********************************/
-	iy=g_idn[ix][1];
-	sm = (spinor *) Q +iy;
-	um=&g_gauge_field[iy][1];
-	m1add(&tmpr, sm, um, phase_1);
-
-	/******************************* direction +2 *********************************/
-	iy=g_iup[ix][2];
-	sp = (spinor *) Q +iy;
-	up=&g_gauge_field[ix][2];
-	p2add(&tmpr, sp, up, phase_2);
-
-	/******************************* direction -2 *********************************/
-	iy=g_idn[ix][2];
-	sm = (spinor *) Q +iy;
-	um=&g_gauge_field[iy][2];
-	m2add(&tmpr, sm, um, phase_2);
-
-	/******************************* direction +3 *********************************/
-	iy=g_iup[ix][3];
-	sp = (spinor *) Q +iy;
-	up=&g_gauge_field[ix][3];
-	p3add(&tmpr, sp, up, phase_3);
-
-	/******************************* direction -3 *********************************/
-	iy=g_idn[ix][3];
-	sm = (spinor *) Q +iy;
-	um=&g_gauge_field[iy][3];
-	m3addandstore(rr, sm, um, phase_3, &tmpr);
-      }
+    for (ix=0;ix<VOLUME;ix++) {
+      rr  = (spinor *) P +ix;
+      s  = (spinor *) Q +ix;
+      
+      _complex_times_vector(tmpr.s0, rho1, s->s0);
+      _complex_times_vector(tmpr.s1, rho1, s->s1);
+      _complex_times_vector(tmpr.s2, rho2, s->s2);
+      _complex_times_vector(tmpr.s3, rho2, s->s3);
+      
+      /******************************* direction +0 *********************************/
+      iy=g_iup[ix][0];
+      sp = (spinor *) Q +iy;
+      up=&g_gauge_field[ix][0];
+      p0add(&tmpr, sp, up, phase_0);
+      
+      /******************************* direction -0 *********************************/
+      iy=g_idn[ix][0];
+      sm  = (spinor *) Q +iy;
+      um=&g_gauge_field[iy][0];
+      m0add(&tmpr, sm, um, phase_0);
+      
+      /******************************* direction +1 *********************************/
+      iy=g_iup[ix][1];
+      sp = (spinor *) Q +iy;
+      up=&g_gauge_field[ix][1];
+      p1add(&tmpr, sp, up, phase_1);
+      
+      /******************************* direction -1 *********************************/
+      iy=g_idn[ix][1];
+      sm = (spinor *) Q +iy;
+      um=&g_gauge_field[iy][1];
+      m1add(&tmpr, sm, um, phase_1);
+      
+      /******************************* direction +2 *********************************/
+      iy=g_iup[ix][2];
+      sp = (spinor *) Q +iy;
+      up=&g_gauge_field[ix][2];
+      p2add(&tmpr, sp, up, phase_2);
+      
+      /******************************* direction -2 *********************************/
+      iy=g_idn[ix][2];
+      sm = (spinor *) Q +iy;
+      um=&g_gauge_field[iy][2];
+      m2add(&tmpr, sm, um, phase_2);
+      
+      /******************************* direction +3 *********************************/
+      iy=g_iup[ix][3];
+      sp = (spinor *) Q +iy;
+      up=&g_gauge_field[ix][3];
+      p3add(&tmpr, sp, up, phase_3);
+      
+      /******************************* direction -3 *********************************/
+      iy=g_idn[ix][3];
+      sm = (spinor *) Q +iy;
+      um=&g_gauge_field[iy][3];
+      m3addandstore(rr, sm, um, phase_3, &tmpr);
+    }
 #ifdef OMP
   } /* OpenMP closing brace */
 #endif
 }
 
 void Dsw_psi(spinor * const P, spinor * const Q){
-  if(P==Q){
+  if(P==Q) {
     printf("Error in Dsw_psi (D_psi.c):\n");
     printf("Arguments must be different spinor fields\n");
     printf("Program aborted\n");
     exit(1);
   }
+
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
     update_backward_gauge(g_gauge_field);
@@ -1236,7 +1236,7 @@ void Dsw_psi(spinor * const P, spinor * const Q){
 #pragma omp parallel
   {
 #endif
-
+    
     int ix,iy;
     su3 * restrict up,* restrict um;
     spinor * restrict rr; 
@@ -1244,9 +1244,9 @@ void Dsw_psi(spinor * const P, spinor * const Q){
     spinor const * restrict sp;
     spinor const * restrict sm;
     spinor tmpr;
-
+    
     /************************ loop over all lattice sites *************************/
-
+    
 #ifdef OMP
 #pragma omp for
 #endif
@@ -1255,49 +1255,49 @@ void Dsw_psi(spinor * const P, spinor * const Q){
 	rr  = (spinor *) P +ix;
 	s  = (spinor *) Q +ix;
 	assign_mul_one_sw_pm_imu_site_lexic(ix,&tmpr,s,g_mu);
-
+	
 	/******************************* direction +0 *********************************/
 	iy=g_iup[ix][0];
 	sp = (spinor *) Q +iy;
 	up=&g_gauge_field[ix][0];
 	p0add(&tmpr, sp, up, phase_0);
-
+	
 	/******************************* direction -0 *********************************/
 	iy=g_idn[ix][0];
 	sm  = (spinor *) Q +iy;
 	um=&g_gauge_field[iy][0];
 	m0add(&tmpr, sm, um, phase_0);
-
+	
 	/******************************* direction +1 *********************************/
 	iy=g_iup[ix][1];
 	sp = (spinor *) Q +iy;
 	up=&g_gauge_field[ix][1];
 	p1add(&tmpr, sp, up, phase_1);
-
+	
 	/******************************* direction -1 *********************************/
 	iy=g_idn[ix][1];
 	sm = (spinor *) Q +iy;
 	um=&g_gauge_field[iy][1];
 	m1add(&tmpr, sm, um, phase_1);
-
+	
 	/******************************* direction +2 *********************************/
 	iy=g_iup[ix][2];
 	sp = (spinor *) Q +iy;
 	up=&g_gauge_field[ix][2];
 	p2add(&tmpr, sp, up, phase_2);
-
+	
 	/******************************* direction -2 *********************************/
 	iy=g_idn[ix][2];
 	sm = (spinor *) Q +iy;
 	um=&g_gauge_field[iy][2];
 	m2add(&tmpr, sm, um, phase_2);
-
+	
 	/******************************* direction +3 *********************************/
 	iy=g_iup[ix][3];
 	sp = (spinor *) Q +iy;
 	up=&g_gauge_field[ix][3];
 	p3add(&tmpr, sp, up, phase_3);
-
+	
 	/******************************* direction -3 *********************************/
 	iy=g_idn[ix][3];
 	sm = (spinor *) Q +iy;
@@ -1379,7 +1379,6 @@ void Block_Dtm_psi(block * blk, spinor * const rr, spinor * const s) {
     _complex_times_vector(tmpr.s3, rhob, t->s3);
 
     local_H(r, s, u, idx, &tmpr);
-    if(use_iQ_dfl) gamma5(r, r, 1);
 
     r++;
     t++;
@@ -1487,7 +1486,6 @@ void Block_H_psi(block * blk, spinor * const rr, spinor * const s, const int eo)
     _spinor_null(tmpr);
 
     local_H(r, s, u, eoidx, &tmpr);
-    if (use_iQ_dfl) gamma5(r, r, 1);
 
     r++;
     eoidx += 8;

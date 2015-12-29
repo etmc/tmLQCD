@@ -29,6 +29,7 @@
 #include <string.h>
 #include <complex.h>
 #include "global.h"
+#include "gettime.h"
 #include "operator/D_psi.h"
 #include "linalg_eo.h"
 #include "start.h"
@@ -104,7 +105,9 @@ int block_index(int t, int x, int y, int z){
 
 int init_blocks(const int nt, const int nx, const int ny, const int nz) {
   int i,j;
+  double atime, etime;
   /* Initialization of block-global variables for blocks */
+  atime = gettime();
   nb_blocks = 1; 
   nblks_t = nt;
   nblks_x = nx;
@@ -234,7 +237,11 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
   
   init_blocks_geometry();
   init_blocks_gaugefield();
-
+  etime = gettime();
+  if(g_proc_id == 0 && g_debug_level > 0) {
+    printf("# time for block initialisation %e s\n", etime - atime);
+    fflush(stdout);
+  }
   return 0;
 }
 

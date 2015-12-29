@@ -39,32 +39,22 @@ GCRPreconditioner = cg
 BeginDeflationInit
   DeflationSubspaceDimension = 20
 
-  ## use MSAP preconditioner
-  OuterloopMsap = yes
-
   ## during inversion/outer solver
   NiterMsap = 4
   NcycleMsap = 4
 
-  ## the following are used during subspace generation only
+  ## the following are used during subspace generation
   NiterMsapDfl = 4
   NcycleMsapDfl = 4
-
-  ## > 3 (first 3 times Msap only, then NsmoothMsapDfl-3 times adaptinve MG style)
-  NsmoothMsapDfl = 6
+  NsmoothMsapDfl = 11
 
   ## parameters of little solver
-  LittleSolver = gcr
   LittleSolverMaxIter = 20
   LittleGMRESMParameter = 25
   LittleSolverLowPrecision = 0.01
   LittleSolverHighPrecision = 0.01
-  LittleEvenOdd = yes
 
-  ## to be used only during subspace generation
-  ## can be different from physical values
-  kappaDfl = 0.177
-  2KappaMuDfl = 0.01
+  useLittleLittleD = yes
 EndDeflationInit
 
 BeginOperator TMWILSON
@@ -74,7 +64,6 @@ BeginOperator TMWILSON
   Solver = dflfgmres
   SolverPrecision = 1e-14
   MaxSolverIterations = 125
-#  AddDownPropagator = yes
 EndOperator
 
 

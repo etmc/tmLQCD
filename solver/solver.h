@@ -42,7 +42,6 @@
 #define QSQFGMRES 19
 #define SUMR 20
 
-
 #include"solver/matrix_mult_typedef.h"
 #include "solver/matrix_mult_typedef_bi.h"
 #include "solver/matrix_mult_typedef_nd.h"

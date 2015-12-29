@@ -116,7 +116,7 @@ void Msap(spinor * const P, spinor * const Q, const int Ncy, const int Niter) {
   spinor * r, * a, * b;
   double nrm;
   spinor ** solver_field = NULL;
-  const int nr_sf = 3;
+  const int nr_sf = 6;
 
   /* 
    * here it would be probably better to get the working fields as a parameter 
@@ -149,8 +149,8 @@ void Msap(spinor * const P, spinor * const Q, const int Ncy, const int Niter) {
 
 	  /* get part of r corresponding to block blk into b */
 	  copy_global_to_block(b, r, blk);
-
-	  mrblk(a, b, Niter, 1.e-31, 1, vol, &dummy_Di, blk);
+	  // does this work?? i.e. solver_field[3]
+	  mrblk(a, b, solver_field[3], Niter, 1.e-31, 1, vol, &dummy_Di, blk);
 
 	  /* add a up to full spinor P */
 	  add_block_to_global(P, a, blk);
@@ -216,27 +216,25 @@ void CGeoSmoother(spinor * const P, spinor * const Q, const int Ncy, const int d
 }
 
 void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter) {
-  int blk, ncy = 0, eo, vol;
+  int blk, ncy = 0, eo, vol, vols;
   spinor * r, * a, * b;
   double nrm;
   spinor * b_even, * b_odd, * a_even, * a_odd;
   spinor ** solver_field = NULL;
-  const int nr_sf = 3;
+  // also get space for mrblk! 6 = 3+3
+  const int nr_sf = 6;
 
   /* 
    * here it would be probably better to get the working fields as a parameter 
    * from the calling function
    */
-  init_solver_field(&solver_field, VOLUME, nr_sf);
+  vols = block_list[0].volume/2+block_list[0].spinpad;
+  vol = block_list[0].volume/2;
+
+  init_solver_field(&solver_field, nb_blocks*2*vols, nr_sf);
   r = solver_field[0];
   a = solver_field[1];
   b = solver_field[2];
-
-  vol = block_list[0].volume/2;
-  b_even = b;
-  b_odd = b + vol + 1;
-  a_even = a;
-  a_odd = a + vol + 1;
 
   for(ncy = 0; ncy < Ncy; ncy++) {
     /* compute the global residue        */
@@ -252,13 +250,17 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
       }
       /* choose the even (odd) block */
 
-      //#ifdef OMP
-      //# pragma omp parallel for
-      //#endif
-      // OMP doesn't work right now because a_even, a_odd, b_even, b_odd are not threadsafe
-      // also need to make sure that e.g. assign_mul_... and the linalg stuff do not 
-      // start threads again...
+      // OMP doesn't work right now because linalg routines start threads themselves
+      // also in mrblk
+      // 
+      // #ifdef OMP
+      // # pragma omp parallel for private (a_even, a_odd, b_even, b_odd)
+      // #endif
       for (blk = 0; blk < nb_blocks; blk++) {
+ 	b_even = b + blk*2*vols;
+ 	b_odd = b +blk*2*vols + vols;
+ 	a_even = a + blk*2*vols;
+ 	a_odd = a + blk*2*vols + vols;
 	if(block_list[blk].evenodd == eo) {
 	  /* get part of r corresponding to block blk into b_even and b_odd */
 	  copy_global_to_block_eo(b_even, b_odd, r, blk);
@@ -271,10 +273,7 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
 	  /* a_odd = a_odd - b_odd */
 	  diff(a_odd, b_odd, a_odd, vol);
 
-          if(g_c_sw > 0)
-	    mrblk(b_odd, a_odd, Niter, 1.e-31, 1, vol, &Msw_plus_block_psi, blk);
-          else
-	    mrblk(b_odd, a_odd, Niter, 1.e-31, 1, vol, &Mtm_plus_block_psi, blk);
+	  mrblk(b_odd, a_odd, solver_field[3] + blk*2*3*vols, Niter, 1.e-31, 1, vol, &Mtm_plus_block_psi, blk);
 
 	  Block_H_psi(&block_list[blk], b_even, b_odd, EO);
           assign(r,b_even,vol);

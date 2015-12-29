@@ -59,8 +59,8 @@ int pcg_her(spinor * const P, spinor * const Q, const int max_iter,
   f(solver_field[2], solver_field[0]);
   diff(solver_field[1], Q, solver_field[2], N);
   /* z_0 = M^-1 r_0 */
-  mg_Qsq_precon(solver_field[3], solver_field[1]);
-  //assign(solver_field[3], solver_field[1], N);
+  // here we could have a preconditioner for Q^2
+  assign(solver_field[3], solver_field[1], N);
   /* p_0 = z_0 */
   assign(solver_field[2], solver_field[3], N);
   /* (r_0, z_0) */
@@ -93,7 +93,9 @@ int pcg_her(spinor * const P, spinor * const Q, const int max_iter,
     }
 
     /* z_i+1 = M r_(i+1) */
-    mg_Qsq_precon(solver_field[3], solver_field[1]);
+    // here we could have a preconditioner for Q^2
+    //mg_Qsq_precon(solver_field[3], solver_field[1]);
+    assign(solver_field[3], solver_field[1], N);
     /* Compute beta_cg(i+1) */
     beta_cg = 1. / pro2;
     // here we might use Polak-Ribiere formula instead of the standard one

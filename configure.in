@@ -41,7 +41,7 @@ LDFLAGS="$LDFLAGS -L\${HOME}/lib -L\${top_builddir}/lib"
 CCLD=${CC}
 
 # compilation in operator is slowest so we do it first, saves time in parallel compiles
-USESUBDIRS="operator linalg solver monomial buffers cu io xchange init rational wrapper"
+USESUBDIRS="operator linalg solver monomial buffers cu io meas xchange init rational wrapper"
 
 AC_CHECK_HEADERS([stdint.h],
 [ dnl for inttypes.h and stdint.h for uint_xxx types
@@ -355,6 +355,7 @@ AC_SUBST(DEBUG_FLAG)
 AC_SUBST(PROFILE_FLAG)
 AC_SUBST(XCHANGELIB)
 AC_SUBST(XCHANGEDIR)
+AC_SUBST(MEASDIR)
 AC_SUBST(XLIB)
 AC_SUBST([LEMON_AVAILABLE])
 AC_SUBST(SPI_FILES)
@@ -608,6 +609,16 @@ dnl check for icc
       CCDEP="$CC"
 
     else
+      # other compilers might support SSE inline assembly too
+      # (the cray compiler, for example)
+      if test $enable_sse3 = yes; then
+        echo Using SSE3 and SSE2 macros!
+        AC_DEFINE(SSE3,1,Compile with SSE3 support)
+      elif test $enable_sse2 = yes; then
+        echo Using SSE2 macros only!
+        AC_DEFINE(SSE2,1,Compile with SSE2 support)
+      fi
+
       DEPFLAGS="-M"
       CFLAGS="$CFLAGS -O"
       DEBUG_FLAG="-g"
@@ -911,7 +922,7 @@ if test ! -e tests/regressions; then
 fi
 
 
-LIBS="-lhmc -lmonomial -loperator -lsolver -linit -llinalg -lhmc -lxchange -lrational -lio $LIBS"
+LIBS="-lhmc -lmonomial -loperator -lsolver -linit -lmeas -llinalg -lhmc -lxchange -lrational -lio $LIBS"
 AUTOCONF=autoconf
 
 for i in $USESUBDIRS
