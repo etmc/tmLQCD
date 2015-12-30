@@ -1020,53 +1020,55 @@ void check_local_D(const int repro)
       printf("# mr_eo, block=%d: ||r||^2 = %1.5e\n", j, nrm);
     }
   }
-  for(j = 0; j < nb_blocks; j++) {
-    block_convert_lexic_to_eo(r[0], r[1], block_list[j].basis[0]);
-    /* check even/odd inversion for Block_D_psi*/
-    /* varphi_e in r[2] */
-    if(g_c_sw > 0)
-      assign_mul_one_sw_pm_imu_inv(EE,r[2],r[0],g_mu);
-    else
-      assign_mul_one_pm_imu_inv(r[2], r[0], +1., vol);
-
-    Block_H_psi(&block_list[j], r[3], r[2], OE);
-    /* a_odd = a_odd + b_odd */
-    /* varphi_o in r[3] */
-    assign_mul_add_r(r[3], -1., r[1], vol);
-    /* psi_o in r[1] */
-    if(g_c_sw > 0) {
-      assign(r[5],r[3],VOLUMEPLUSRAND);
-      assign_mul_one_sw_pm_imu_inv(OO,r[3],r[5],g_mu);
-    }
-    else {
-      mul_one_pm_imu_inv(r[3], +1., vol);
-    }
- 
-    if(g_c_sw > 0)
-      mrblk(r[1], r[3], r[4], 3, 1.e-31, 1, vol, &Msw_plus_sym_block_psi, j);
-    else
-      mrblk(r[1], r[3], r[4], 3, 1.e-31, 1, vol, &Mtm_plus_sym_block_psi, j);
-
-    Block_H_psi(&block_list[j], r[0], r[1], EO);
-    
-    if(g_c_sw > 0){
-      assign(r[5],r[0],VOLUMEPLUSRAND);
-      assign_mul_one_sw_pm_imu_inv(EE,r[0],r[5],g_mu);
-    }
-    else{
-      mul_one_pm_imu_inv(r[0], +1., vol);}
-
-    /* a_even = a_even + b_even */
-    /* check this sign +1 seems to be right in Msap_eo */
-    assign_add_mul_r(r[2], r[0], -1., vol);
-
-    block_convert_eo_to_lexic(r[4], r[2], r[1]);
-
-    Block_D_psi(&block_list[j], r[5], r[4]);
-    diff(r[0], block_list[j].basis[0], r[5], block_list[j].volume);
-    nrm = square_norm(r[0], block_list[j].volume, 0);
-    if(g_proc_id == 0) {
-      printf("# mr_eo (symmetric eo), block=%d: ||r||^2 = %1.5e\n", j, nrm);
+  if( g_c_sw <= 0 ) {
+    for(j = 0; j < nb_blocks; j++) {
+      block_convert_lexic_to_eo(r[0], r[1], block_list[j].basis[0]);
+      /* check even/odd inversion for Block_D_psi*/
+      /* varphi_e in r[2] */
+      if(g_c_sw > 0)
+	assign_mul_one_sw_pm_imu_inv(EE,r[2],r[0],g_mu);
+      else
+	assign_mul_one_pm_imu_inv(r[2], r[0], +1., vol);
+      
+      Block_H_psi(&block_list[j], r[3], r[2], OE);
+      /* a_odd = a_odd + b_odd */
+      /* varphi_o in r[3] */
+      assign_mul_add_r(r[3], -1., r[1], vol);
+      /* psi_o in r[1] */
+      if(g_c_sw > 0) {
+	assign(r[5],r[3],VOLUMEPLUSRAND);
+	assign_mul_one_sw_pm_imu_inv(OO,r[3],r[5],g_mu);
+      }
+      else {
+	mul_one_pm_imu_inv(r[3], +1., vol);
+      }
+      
+      if(g_c_sw > 0)
+	mrblk(r[1], r[3], r[4], 3, 1.e-31, 1, vol, &Msw_plus_sym_block_psi, j);
+      else
+	mrblk(r[1], r[3], r[4], 3, 1.e-31, 1, vol, &Mtm_plus_sym_block_psi, j);
+      
+      Block_H_psi(&block_list[j], r[0], r[1], EO);
+      
+      if(g_c_sw > 0){
+	assign(r[5],r[0],VOLUMEPLUSRAND);
+	assign_mul_one_sw_pm_imu_inv(EE,r[0],r[5],g_mu);
+      }
+      else{
+	mul_one_pm_imu_inv(r[0], +1., vol);}
+      
+      /* a_even = a_even + b_even */
+      /* check this sign +1 seems to be right in Msap_eo */
+      assign_add_mul_r(r[2], r[0], -1., vol);
+      
+      block_convert_eo_to_lexic(r[4], r[2], r[1]);
+      
+      Block_D_psi(&block_list[j], r[5], r[4]);
+      diff(r[0], block_list[j].basis[0], r[5], block_list[j].volume);
+      nrm = square_norm(r[0], block_list[j].volume, 0);
+      if(g_proc_id == 0) {
+	printf("# mr_eo (symmetric eo), block=%d: ||r||^2 = %1.5e\n", j, nrm);
+      }
     }
   }
   finalize_solver(work_fields, nr_wf);
