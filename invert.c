@@ -81,6 +81,7 @@
 #include "P_M_eta.h"
 #include "operator/tm_operators.h"
 #include "operator/clover_leaf.h"
+#include "operator/clovertm_operators.h"
 #include "operator/Dov_psi.h"
 #include "solver/spectral_proj.h"
 #include "meas/measurements.h"
