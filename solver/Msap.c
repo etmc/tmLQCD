@@ -82,8 +82,8 @@ void Msw_plus_block_psi(spinor * l, spinor *  k, const int i) {
 void Msw_plus_sym_block_psi(spinor *  l, spinor *  k, const int i) {
   if(g_proc_id == g_stdio_proc){
     printf("==================WARNNING WARNNING WARNNING ==================\n");
-    printf("Msw_plus_sym_block_psi doesn't work properly yet because we need the inverse of 
-            (1+T +img5) on odd sites for +mu which is not computed or stored ....\n");
+    printf("Msw_plus_sym_block_psi doesn't work properly yet because we need the inverse of (1+T +img5) on odd sites for +mu which is not computed or stored ....\n");
+            
     printf("==================WARNNING WARNNING WARNNING ===================\n");
     printf("Exiting ........\n");
     exit(100);
@@ -172,13 +172,13 @@ void CGeoSmoother(spinor * const P, spinor * const Q, const int Ncy, const int d
   double musave = g_mu;
   g_mu = g_mu1;
   init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);
-
+  
   convert_lexic_to_eo(solver_field[0], solver_field[1], Q);
   if(g_c_sw > 0)
     assign_mul_one_sw_pm_imu_inv(EE,solver_field[2], solver_field[0], g_mu);
   else
     assign_mul_one_pm_imu_inv(solver_field[2], solver_field[0], +1., VOLUME/2);
-    
+  
   Hopping_Matrix(OE, solver_field[4], solver_field[2]); 
   /* The sign is plus, since in Hopping_Matrix */
   /* the minus is missing                      */
@@ -187,28 +187,28 @@ void CGeoSmoother(spinor * const P, spinor * const Q, const int Ncy, const int d
   /* matrix to get the odd sites               */
   gamma5(solver_field[4], solver_field[4], VOLUME/2);
   if(g_c_sw > 0)
-  {
-     cg_her(solver_field[3], solver_field[4], Ncy, 1.e-8, 1, 
-	    VOLUME/2, &Qsw_pm_psi);
-     Qsw_minus_psi(solver_field[3], solver_field[3]);
-
-     /* Reconstruct the even sites                */
+    {
+      cg_her(solver_field[3], solver_field[4], Ncy, 1.e-8, 1, 
+	     VOLUME/2, &Qsw_pm_psi);
+      Qsw_minus_psi(solver_field[3], solver_field[3]);
+      
+      /* Reconstruct the even sites                */
      Hopping_Matrix(EO, solver_field[2], solver_field[3]);
      assign_mul_one_sw_pm_imu_inv(EE,solver_field[4],solver_field[2], g_mu);
-  }else{
-     cg_her(solver_field[3], solver_field[4], Ncy, 1.e-8, 1, 
-	 VOLUME/2, &Qtm_pm_psi);
-     Qtm_minus_psi(solver_field[3], solver_field[3]);
-
-     /* Reconstruct the even sites                */
-     Hopping_Matrix(EO, solver_field[4], solver_field[3]);
-     mul_one_pm_imu_inv(solver_field[4], +1., VOLUME/2);
+    }else{
+    cg_her(solver_field[3], solver_field[4], Ncy, 1.e-8, 1, 
+	   VOLUME/2, &Qtm_pm_psi);
+    Qtm_minus_psi(solver_field[3], solver_field[3]);
+    
+    /* Reconstruct the even sites                */
+    Hopping_Matrix(EO, solver_field[4], solver_field[3]);
+    mul_one_pm_imu_inv(solver_field[4], +1., VOLUME/2);
   }
-
+  
   /* The sign is plus, since in Hopping_Matrix */
   /* the minus is missing                      */
   assign_add_mul_r(solver_field[2], solver_field[4], +1., VOLUME/2);
-
+  
   convert_eo_to_lexic(P, solver_field[2], solver_field[3]); 
   g_mu = musave;
   finalize_solver(solver_field, nr_sf);
@@ -292,4 +292,4 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
   }
   finalize_solver(solver_field, nr_sf);
   return;
-
+}
