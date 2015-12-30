@@ -186,16 +186,16 @@ void CGeoSmoother(spinor * const P, spinor * const Q, const int Ncy, const int d
   /* Do the inversion with the preconditioned  */
   /* matrix to get the odd sites               */
   gamma5(solver_field[4], solver_field[4], VOLUME/2);
-  if(g_c_sw > 0)
-    {
-      cg_her(solver_field[3], solver_field[4], Ncy, 1.e-8, 1, 
-	     VOLUME/2, &Qsw_pm_psi);
-      Qsw_minus_psi(solver_field[3], solver_field[3]);
-      
-      /* Reconstruct the even sites                */
-     Hopping_Matrix(EO, solver_field[2], solver_field[3]);
-     assign_mul_one_sw_pm_imu_inv(EE,solver_field[4],solver_field[2], g_mu);
-    }else{
+  if(g_c_sw > 0) {
+    cg_her(solver_field[3], solver_field[4], Ncy, 1.e-8, 1, 
+	   VOLUME/2, &Qsw_pm_psi);
+    Qsw_minus_psi(solver_field[3], solver_field[3]);
+    
+    /* Reconstruct the even sites                */
+    Hopping_Matrix(EO, solver_field[2], solver_field[3]);
+    assign_mul_one_sw_pm_imu_inv(EE,solver_field[4],solver_field[2], g_mu);
+  }
+  else {
     cg_her(solver_field[3], solver_field[4], Ncy, 1.e-8, 1, 
 	   VOLUME/2, &Qtm_pm_psi);
     Qtm_minus_psi(solver_field[3], solver_field[3]);
@@ -272,8 +272,12 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
 	  Block_H_psi(&block_list[blk], a_odd, a_even, OE);
 	  /* a_odd = a_odd - b_odd */
 	  diff(a_odd, b_odd, a_odd, vol);
-
-	  mrblk(b_odd, a_odd, solver_field[3] + blk*2*3*vols, Niter, 1.e-31, 1, vol, &Mtm_plus_block_psi, blk);
+	  if(g_c_sw > 0) {
+	    mrblk(b_odd, a_odd, solver_field[3] + blk*2*3*vols, Niter, 1.e-31, 1, vol, &Msw_plus_block_psi, blk);
+	  }
+	  else {
+	    mrblk(b_odd, a_odd, solver_field[3] + blk*2*3*vols, Niter, 1.e-31, 1, vol, &Mtm_plus_block_psi, blk);
+	  }
 
 	  Block_H_psi(&block_list[blk], b_even, b_odd, EO);
           assign(r,b_even,vol);
