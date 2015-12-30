@@ -726,26 +726,7 @@ int check_projectors(const int repro) {
   }
   apply_little_D_spinor(work_fields[3], work_fields[1]);
   D_psi(work_fields[2], work_fields[1]);
-<<<<<<< HEAD
-  
-  if (g_cart_id == 0 && g_debug_level > 4){
-    v = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
-    split_global_field_GEN(phi, work_fields[2], nb_blocks);
 
-    for (j = 0; j < g_N_s; ++j) {
-      for(i = 0; i < nb_blocks; i++) {
-	v[j + i*g_N_s] = scalar_prod(block_list[i].basis[j], phi[i], VOLUME/nb_blocks, 0);
-      }
-    }
-
-    for (j = 0; j < nb_blocks* g_N_s; ++j) {
-      printf("AFTER D: w[%u] = %1.5e + %1.5e i\n", j, creal(v[j]), cimag(v[j]));
-    }
-    free(v);
-  }
-
-=======
->>>>>>> Merge_Deflation
   project2(work_fields[1], work_fields[2]);
   diff(work_fields[2], work_fields[3], work_fields[1], VOLUME);
   nrm = square_norm(work_fields[2], VOLUME, 1);
@@ -758,21 +739,7 @@ int check_projectors(const int repro) {
   reconstruct_global_field_GEN_ID(work_fields[1], block_list, 0, nb_blocks);
   apply_little_D_spinor(work_fields[3], work_fields[1]);
   D_psi(work_fields[2], work_fields[1]);
-<<<<<<< HEAD
 
-  if (!g_proc_id && g_debug_level > 4){
-    v = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
-    split_global_field_GEN(phi, work_fields[2],nb_blocks);
-    for (j = 0; j < g_N_s; ++j) 
-      for(i = 0; i < nb_blocks; i++)
-	v[j + i*g_N_s] = scalar_prod(block_list[i].basis[j], phi[i], VOLUME/nb_blocks, 0);
-    for (j = 0; j < nb_blocks* g_N_s; ++j) {
-      printf("AFTER D: w[%u] = %1.5e + %1.5e i\n", j, creal(v[j]), cimag(v[j]));
-    }
-    free(v);
-  }
-=======
->>>>>>> Merge_Deflation
   project2(work_fields[1], work_fields[2]);
   diff(work_fields[2], work_fields[3], work_fields[1], VOLUME);
   nrm = square_norm(work_fields[2], VOLUME, 1);
@@ -923,57 +890,6 @@ void check_little_D_inversion(const int repro) {
   return;
 }
 
-<<<<<<< HEAD
-
-void check_little_Qsq_inversion(const int repro) {
-  int i,j,ctr_t;
-  int contig_block = LZ / nb_blocks;
-  int vol = block_list[0].volume;
-  _Complex double *result;
-  double dif;
-  spinor ** work_fields = NULL;
-  const int nr_wf = 1;
-
-  init_solver_field(&work_fields, VOLUMEPLUSRAND, nr_wf);
-  random_spinor_field_lexic(work_fields[0], repro, RN_GAUSS);
-  if(init_dfl_projector == 0) {
-    alloc_dfl_projector();
-  }
-  result = work[0];
-
-  split_global_field_GEN(psi, work_fields[0], nb_blocks);
-
-  for (i = 0; i < nb_blocks; ++i) {/* loop over blocks */
-    /* compute inner product */
-    for (j = 0; j < g_N_s; ++j) {/*loop over block.basis */
-      inprod[j + i*g_N_s] = scalar_prod(psi[i], block_list[i].basis[j], vol, 0);
-      invvec[j + i*g_N_s] = 0.;
-      result[j + i*g_N_s] = 0.;
-    }
-  }
-
-  cgne4complex(invvec, inprod, 1000, 1.e-24, 1, nb_blocks * g_N_s, nb_blocks * 9 * g_N_s, &little_Q_pm);
-  little_Q_pm(result, invvec); /* This should be a proper inverse now */
-  ldiff(invvec, result, inprod, nb_blocks*g_N_s);
-  dif = lsquare_norm(invvec, nb_blocks*g_N_s, 1);
-  for (i = 0; i < nb_blocks; ++i) {/* loop over blocks */
-    /* compute inner product */
-    for (j = 0; j < 9*g_N_s; ++j) {/*loop over block.basis */
-      invvec[j + i*g_N_s] = 0.;
-      inprod[j + i*g_N_s] = 0.;
-    }
-  }
-
-  if(g_proc_id == g_stdio_proc) {
-    printf("# check_little_Qsq_inversion: squared residue found of size %1.5e!\n", dif);
-  }
-  free_dfl_projector();
-  finalize_solver(work_fields, nr_wf);
-  return;
-}
-=======
->>>>>>> Merge_Deflation
-
 void check_local_D(const int repro)
 {
   spinor * r[8];
@@ -1078,14 +994,12 @@ void check_local_D(const int repro)
     /* varphi_o in r[3] */
     assign_mul_add_r(r[3], -1., r[1], vol);
     /* psi_o in r[1] */
-<<<<<<< HEAD
-    if(g_c_sw > 0)
-       mrblk(r[1], r[3], 3, 1.e-31, 1, vol, &Msw_plus_block_psi, j);
-    else
-       mrblk(r[1], r[3], 3, 1.e-31, 1, vol, &Mtm_plus_block_psi, j);
-=======
-    mrblk(r[1], r[3], r[4], 3, 1.e-31, 1, vol, &Mtm_plus_block_psi, j);
->>>>>>> Merge_Deflation
+    if(g_c_sw > 0) {
+      mrblk(r[1], r[3], r[4], 3, 1.e-31, 1, vol, &Msw_plus_block_psi, j);
+    }
+    else {
+      mrblk(r[1], r[3], r[4], 3, 1.e-31, 1, vol, &Mtm_plus_block_psi, j);
+    }
 
     Block_H_psi(&block_list[j], r[0], r[1], EO);
     assign(r[5],r[0],VOLUMEPLUSRAND);
@@ -1120,22 +1034,18 @@ void check_local_D(const int repro)
     /* varphi_o in r[3] */
     assign_mul_add_r(r[3], -1., r[1], vol);
     /* psi_o in r[1] */
-<<<<<<< HEAD
-    if(g_c_sw > 0){
+    if(g_c_sw > 0) {
       assign(r[5],r[3],VOLUMEPLUSRAND);
       assign_mul_one_sw_pm_imu_inv(OO,r[3],r[5],g_mu);
     }
-    else{
-      mul_one_pm_imu_inv(r[3], +1., vol);}
+    else {
+      mul_one_pm_imu_inv(r[3], +1., vol);
+    }
  
     if(g_c_sw > 0)
-      mrblk(r[1], r[3], 3, 1.e-31, 1, vol, &Msw_plus_sym_block_psi, j);
+      mrblk(r[1], r[3], r[4], 3, 1.e-31, 1, vol, &Msw_plus_sym_block_psi, j);
     else
-      mrblk(r[1], r[3], 3, 1.e-31, 1, vol, &Mtm_plus_sym_block_psi, j);
-=======
-    mul_one_pm_imu_inv(r[3], +1., vol); 
-    mrblk(r[1], r[3], r[4], 3, 1.e-31, 1, vol, &Mtm_plus_sym_block_psi, j);
->>>>>>> Merge_Deflation
+      mrblk(r[1], r[3], r[4], 3, 1.e-31, 1, vol, &Mtm_plus_sym_block_psi, j);
 
     Block_H_psi(&block_list[j], r[0], r[1], EO);
     
