@@ -80,6 +80,7 @@
 #include "source_generation.h"
 #include "P_M_eta.h"
 #include "operator/tm_operators.h"
+#include "operator/clover_leaf.h"
 #include "operator/Dov_psi.h"
 #include "solver/spectral_proj.h"
 #include "meas/measurements.h"
@@ -413,12 +414,13 @@ int main(int argc, char *argv[])
       g_mu = operator_list[op_id].mu;
       g_c_sw = operator_list[op_id].c_sw;
       if(operator_list[op_id].type == CLOVER) {
-           if (g_cart_id == 0 && g_debug_level > 1) {
-	      printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
-           }
-           init_sw_fields(VOLUME);
-           sw_term( (const su3**) g_gauge_field, g_kappa, g_c_sw);
-           sw_invert(EE,g_mu);
+	if (g_cart_id == 0 && g_debug_level > 1) {
+	  printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
+	}
+	init_sw_fields(VOLUME);
+	sw_term( (const su3**) g_gauge_field, g_kappa, g_c_sw);
+	// this must be EE = 0
+	sw_invert(0,g_mu);
       }
       // DFLGCR and DFLFGMRES
       if(operator_list[op_id].solver == DFLGCR || operator_list[op_id].solver == DFLFGMRES) {
