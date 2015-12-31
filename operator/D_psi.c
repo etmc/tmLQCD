@@ -1398,7 +1398,6 @@ void Block_Dtm_psi(block * blk, spinor * const rr, spinor * const s) {
 /* double copy                                                */
 // CU: has problems with SSE2,3
 void Block_Dsw_psi(block * blk, spinor * const rr, spinor * const s) {
-  int i;
   spinor *r = rr;
   spinor *t = s;
   su3 * u = blk->u;
@@ -1406,10 +1405,10 @@ void Block_Dsw_psi(block * blk, spinor * const rr, spinor * const s) {
   //static _Complex double rhoa, rhob;
   spinor ALIGN tmpr;
 
-  int it,ix,iy,iz; //lexiographic index of the site w.r.t the block
-  int bt,bx,by,bz; //block coordinate on the local mpi process
-  int dT,dX,dY,dZ; //block size
-  int sT,sX,sY,sZ; //constant shifts
+  int it, ix, iy, iz; //lexiographic index of the site w.r.t the block
+  int bt, bx, by, bz; //block coordinate on the local mpi process
+  int dT, dX, dY, dZ; //block size
+  int sT, sX, sY, sZ; //constant shifts
   int lx; //lexiographic index of the block site w.r.t the local mpi process
 
   dT = blk->BT;
@@ -1422,31 +1421,29 @@ void Block_Dsw_psi(block * blk, spinor * const rr, spinor * const s) {
   by = blk->mpilocal_coordinate[2];
   bz = blk->mpilocal_coordinate[3];
 
-  sT = bt*dT;
-  sX = bx*dX;
-  sY = by*dY;
-  sZ = bz*dZ;
+  sT = bt * dT;
+  sX = bx * dX;
+  sY = by * dY;
+  sZ = bz * dZ;
   
   if(blk_gauge_eo) {
     init_blocks_gaugefield();
   }
-  //rhoa = 1.0 + g_mu * I;
-  //rhob = conj(rhoa);
-
+  
   /* set the boundary term to zero */
   _spinor_null(rr[blk->volume]);
   _spinor_null(s[blk->volume]);
 
-  for(i = 0; i < blk->volume; i++) {
+  for(int i = 0; i < blk->volume; i++) {
 
-    iz = i%dZ;
-    iy = (i/dZ)%dY;
-    ix = (i/(dZ*dY))%dX;
-    it = i/(dZ*dY*dX);
+    iz = i % dZ;
+    iy = (i / dZ) % dY;
+    ix = (i / (dZ * dY)) % dX;
+    it = i / (dZ * dY * dX);
 
-    lx = g_ipt[it+sT][ix+sX][iy+sY][iz+sZ];
+    lx = g_ipt[it + sT][ix + sX][iy + sY][iz + sZ];
 
-    assign_mul_one_sw_pm_imu_site_lexic(lx,&tmpr,t,g_mu);
+    assign_mul_one_sw_pm_imu_site_lexic(lx, &tmpr, t, g_mu);
 
     local_H(r, s, u, idx, &tmpr);
 
