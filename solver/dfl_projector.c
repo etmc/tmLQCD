@@ -544,7 +544,8 @@ int check_projectors(const int repro) {
   random_spinor_field_lexic(work_fields[0], repro, RN_GAUSS);
   nrm = square_norm(work_fields[0], VOLUME, 1);
   if(g_cart_id == 0) {
-    printf("\n# Now we check the DFL projection routines!\n\n");
+    printf("\n######################\n");
+    printf("# Now we check the DFL projection routines!\n\n");
     printf("# ||psi|| = %1.5e\n", sqrt(nrm));
   }
 
@@ -558,8 +559,9 @@ int check_projectors(const int repro) {
   diff(work_fields[2], work_fields[0], work_fields[1], VOLUME);
   nrm = square_norm(work_fields[2], VOLUME, 1);
   if(g_cart_id == 0) {
-    printf("# ||psi_orig - psi_recon|| = %1.5e\n", sqrt(nrm));
+    printf("# ||psi_orig - psi_recon|| = %1.5e ", sqrt(nrm));
     if(sqrt(nrm) < eps) printf("#  -> passed\n\n");
+    else printf("#  -> FAILED!\n\n");
     fflush(stdout);
   }
   /* Check even/odd split reconstruct   */
@@ -569,8 +571,9 @@ int check_projectors(const int repro) {
   diff(work_fields[2], work_fields[0], work_fields[3], VOLUME);
   nrm = square_norm(work_fields[2], VOLUME, 1);
   if(g_cart_id == 0) {
-    printf("# even/odd split: ||psi_orig - psi_recon|| = %1.5e\n", sqrt(nrm));
+    printf("# even/odd split: ||psi_orig - psi_recon|| = %1.5e ", sqrt(nrm));
     if(sqrt(nrm) < eps) printf("#  -> passed\n\n");
+    else printf("#  -> FAILED!\n\n");
     fflush(stdout);
   }
 
@@ -579,8 +582,9 @@ int check_projectors(const int repro) {
   diff(work_fields[3], work_fields[1], work_fields[2], VOLUME);
   nrm = square_norm(work_fields[3], VOLUME, 1);
   if(g_cart_id == 0) {
-    printf("# ||P2 psi - P2 P2 psi|| = %1.5e\n", sqrt(nrm));
+    printf("# ||P2 psi - P2 P2 psi|| = %1.5e ", sqrt(nrm));
     if(sqrt(nrm) < eps) printf("#  -> passed\n\n");
+    else printf("#  -> FAILED!\n\n");
     fflush(stdout);
   }
 
@@ -589,9 +593,11 @@ int check_projectors(const int repro) {
   diff(work_fields[3], work_fields[2], work_fields[1], VOLUME);
   nrm = square_norm(work_fields[3], VOLUME, 1);
   if(g_cart_id == 0) {
-    printf("# ||P_L D psi - D P_R psi|| = %1.5e\n", sqrt(nrm));
+    printf("# ||P_L D psi - D P_R psi|| = %1.5e ", sqrt(nrm));
     if(sqrt(nrm) < eps) printf("#  -> passed\n\n");
+    else printf("#  -> FAILED!\n\n");
     fflush(stdout);
+    printf("\n######################\n");
     printf("# The following tests are only meaningful up to the precision little_D can be inverted for.\n");
     printf("# They might, therefore, be only useful in a small volume and/or a small condition number of little_D\n");
     printf("# The inversion precision (squared) is set to %e\n", little_solver_high_prec);
@@ -604,8 +610,9 @@ int check_projectors(const int repro) {
   diff(work_fields[3], work_fields[2], work_fields[1], VOLUME);
   nrm = square_norm(work_fields[3], VOLUME, 1);
   if(g_cart_id == 0) {
-    printf("# ||P_L^2 psi - P_L psi|| = %1.5e\n", sqrt(nrm));
+    printf("# ||P_L^2 psi - P_L psi|| = %1.5e ", sqrt(nrm));
     if(sqrt(nrm) < eps*10) printf("#  -> passed\n\n");
+    else printf("#  -> FAILED!\n\n");
     fflush(stdout);
   }
 
@@ -614,8 +621,9 @@ int check_projectors(const int repro) {
   diff(work_fields[3], work_fields[2], work_fields[1], VOLUME);
   nrm = square_norm(work_fields[3], VOLUME, 1);
   if(g_cart_id == 0) {
-    printf("# ||P_R^2 psi - P_R psi|| = %1.5e\n", sqrt(nrm));
+    printf("# ||P_R^2 psi - P_R psi|| = %1.5e ", sqrt(nrm));
     if(sqrt(nrm) < eps*10) printf("#  -> passed\n\n");
+    else printf("#  -> FAILED!\n\n");
     fflush(stdout);
   }
 
@@ -623,8 +631,9 @@ int check_projectors(const int repro) {
   project2(work_fields[2], work_fields[1]);
   nrm = square_norm(work_fields[2], VOLUME, 1);
   if(g_cart_id == 0) {
-    printf("# ||P P_L psi|| = %1.5e\n", sqrt(nrm));
+    printf("# ||P P_L psi|| = %1.5e ", sqrt(nrm));
     if(sqrt(nrm) < eps*10) printf("#  -> passed\n\n");
+    else printf("#  -> FAILED!\n\n");
     fflush(stdout);
   }
 
@@ -632,8 +641,9 @@ int check_projectors(const int repro) {
   project_right(work_fields[2], work_fields[1]);
   nrm = square_norm(work_fields[2], VOLUME, 1);
   if(g_cart_id == 0) {
-    printf("# ||P_R P psi|| = %1.5e\n", sqrt(nrm));
+    printf("# ||P_R P psi|| = %1.5e ", sqrt(nrm));
     if(sqrt(nrm) < eps*10) printf("#  -> passed\n\n");
+    else printf("#  -> FAILED!\n\n");
     fflush(stdout);
   }
 
@@ -644,8 +654,9 @@ int check_projectors(const int repro) {
   diff(work_fields[3], work_fields[2], work_fields[1], VOLUME);
   nrm = square_norm(work_fields[3], VOLUME, 1);
   if(g_cart_id == 0) {
-    printf("# ||P D A^-1 P psi - P psi|| = %1.5e\n", sqrt(nrm));
+    printf("# ||P D A^-1 P psi - P psi|| = %1.5e ", sqrt(nrm));
     if(sqrt(nrm) < eps*10) printf("#  -> passed\n\n");
+    else printf("#  -> FAILED!\n\n");
     fflush(stdout);
   }
 
@@ -656,8 +667,9 @@ int check_projectors(const int repro) {
   diff(work_fields[3], work_fields[2], work_fields[1], VOLUME);
   nrm = square_norm(work_fields[3], VOLUME, 1);
   if(g_cart_id == 0) {
-    printf("# ||P A^-1 D P psi - P psi|| = %1.5e\n", sqrt(nrm));
+    printf("# ||P A^-1 D P psi - P psi|| = %1.5e ", sqrt(nrm));
     if(sqrt(nrm) < eps*10) printf("#  -> passed\n\n");
+    else printf("#  -> FAILED!\n\n");
     fflush(stdout);
   }
 
@@ -669,8 +681,9 @@ int check_projectors(const int repro) {
   diff(work_fields[3], work_fields[2], work_fields[1], VOLUME);
   nrm = square_norm(work_fields[3], VOLUME, 1);
   if(g_cart_id == 0) {
-    printf("# ||P D P (P D P)^-1 psi - P psi|| = %1.5e\n", sqrt(nrm));
+    printf("# ||P D P (P D P)^-1 psi - P psi|| = %1.5e ", sqrt(nrm));
     if(sqrt(nrm) < eps*10) printf("#  -> passed\n\n");
+    else printf("#  -> FAILED!\n\n");
     fflush(stdout);
   }
 
@@ -680,8 +693,9 @@ int check_projectors(const int repro) {
   diff(work_fields[3], work_fields[1], work_fields[2], VOLUME);
   nrm = square_norm(work_fields[3], VOLUME, 1);
   if(g_cart_id == 0) {
-    printf("# ||A^-1 psi - A^-1_eo psi|| = %1.5e\n", sqrt(nrm));
+    printf("# ||A^-1 psi - A^-1_eo psi|| = %1.5e ", sqrt(nrm));
     if(sqrt(nrm) < eps*100) printf("#  -> passed\n\n");
+    else printf("#  -> FAILED!\n\n");
     fflush(stdout);
   }
 
@@ -692,8 +706,9 @@ int check_projectors(const int repro) {
   diff(work_fields[1], work_fields[3], work_fields[2], VOLUME);
   nrm = square_norm(work_fields[1], VOLUME, 1);
   if(g_cart_id == 0) {
-    printf("# ||A A^-1 psi - P psi|| = %1.5e\n", sqrt(nrm));
+    printf("# ||A A^-1 psi - P psi|| = %1.5e ", sqrt(nrm));
     if(sqrt(nrm) < eps*10) printf("#  -> passed\n\n");
+    else printf("#  -> FAILED!\n\n");
     fflush(stdout);
   }
 
@@ -704,8 +719,10 @@ int check_projectors(const int repro) {
   diff(work_fields[2], work_fields[3], work_fields[1], VOLUME);
   nrm = square_norm(work_fields[2], VOLUME, 1);
   if(g_cart_id == 0) {
-    printf("# ||P A A^-1 psi - P psi|| = %1.5e\n", sqrt(nrm));
+    printf("# ||P A A^-1 psi - P psi|| = %1.5e", sqrt(nrm));
     if(sqrt(nrm) < eps*10) printf("#  -> passed\n\n");
+    else printf("#  -> FAILED!\n\n");
+    printf("\n######################\n");
     printf("# The following tests should be again fulfilled up to machine precision\n\n");
     fflush(stdout);
   }
@@ -731,8 +748,9 @@ int check_projectors(const int repro) {
   diff(work_fields[2], work_fields[3], work_fields[1], VOLUME);
   nrm = square_norm(work_fields[2], VOLUME, 1);
   if(g_proc_id == 0) {
-    printf("# ||(P D - A) phi_i || = %1.5e\n", sqrt(nrm));
+    printf("# ||(P D - A) phi_i || = %1.5e ", sqrt(nrm));
     if(sqrt(nrm) < eps*10) printf("#  -> passed\n\n");
+    else printf("#  -> FAILED!\n\n");
     fflush(stdout);
   }
 
@@ -744,8 +762,9 @@ int check_projectors(const int repro) {
   diff(work_fields[2], work_fields[3], work_fields[1], VOLUME);
   nrm = square_norm(work_fields[2], VOLUME, 1);
   if(g_proc_id == 0) {
-    printf("# ||(P D - A) phi || = %1.5e\n", sqrt(nrm));
+    printf("# ||(P D - A) phi || = %1.5e ", sqrt(nrm));
     if(sqrt(nrm) < eps*10) printf("#  -> passed\n\n");
+    else printf("#  -> FAILED!\n\n");
     fflush(stdout);
   }
 
@@ -757,13 +776,15 @@ int check_projectors(const int repro) {
   diff(work_fields[2], work_fields[3], work_fields[1], VOLUME);
   nrm = square_norm(work_fields[2], VOLUME, 1);
   if(g_proc_id == 0) {
-    printf("# ||P D P psi - A psi|| = %1.5e\n", sqrt(nrm));
+    printf("# ||P D P psi - A psi|| = %1.5e ", sqrt(nrm));
     if(sqrt(nrm) < eps*10) printf("#  -> passed\n\n");
+    else printf("#  -> FAILED!\n\n");
     fflush(stdout);
   }
 
   /* check little projectors now */
   if(g_cart_id == 0) {
+    printf("\n######################\n");
     printf("# Now we check the little little projection routines\n\n");
   }
   if(init_dfl_projector == 0) {
@@ -776,8 +797,9 @@ int check_projectors(const int repro) {
   ldiff(work[12], work[12], work[11], nb_blocks*g_N_s);
   nrm = lsquare_norm(work[12], nb_blocks*g_N_s, 1);
   if(g_cart_id == 0) {
-    printf("# ||lP2 v - lP2 lP2 v|| = %1.5e\n", sqrt(nrm));
+    printf("# ||lP2 v - lP2 lP2 v|| = %1.5e ", sqrt(nrm));
     if(sqrt(nrm) < eps*10) printf("#  -> passed\n\n");
+    else printf("#  -> FAILED!\n\n");
     fflush(stdout);
   }
 
@@ -786,8 +808,9 @@ int check_projectors(const int repro) {
   ldiff(work[12], work[12], work[11], nb_blocks*g_N_s);
   nrm = lsquare_norm(work[12], nb_blocks*g_N_s, 1);
   if(g_cart_id == 0) {
-    printf("# ||lP_L lD v - lP_L lD v|| = %1.5e\n", sqrt(nrm));
+    printf("# ||lP_L lD v - lP_L lD v|| = %1.5e ", sqrt(nrm));
     if(sqrt(nrm) < eps*10) printf("#  -> passed\n\n");
+    else printf("#  -> FAILED!\n\n");
     fflush(stdout);
   }  
 
@@ -796,8 +819,9 @@ int check_projectors(const int repro) {
   ldiff(work[12], work[12], work[11], nb_blocks*g_N_s);
   nrm = lsquare_norm(work[12], nb_blocks*g_N_s, 1);
   if(g_cart_id == 0) {
-    printf("# ||lP_L lD v - lD lP_R v|| = %1.5e\n", sqrt(nrm));
+    printf("# ||lP_L lD v - lD lP_R v|| = %1.5e ", sqrt(nrm));
     if(sqrt(nrm) < eps*10) printf("#  -> passed\n\n");
+    else printf("#  -> FAILED!\n\n");
     fflush(stdout);
   }
 
@@ -806,8 +830,9 @@ int check_projectors(const int repro) {
   ldiff(work[12], work[12], work[11], nb_blocks*g_N_s);
   nrm = lsquare_norm(work[12], nb_blocks*g_N_s, 1);
   if(g_cart_id == 0) {
-    printf("# ||lP_R^2 v - lP_R v|| = %1.5e\n", sqrt(nrm));
+    printf("# ||lP_R^2 v - lP_R v|| = %1.5e ", sqrt(nrm));
     if(sqrt(nrm) < eps*10) printf("#  -> passed\n\n");
+    else printf("#  -> FAILED!\n\n");
     fflush(stdout);
   }
 
@@ -816,8 +841,9 @@ int check_projectors(const int repro) {
   ldiff(work[12], work[12], work[11], nb_blocks*g_N_s);
   nrm = lsquare_norm(work[12], nb_blocks*g_N_s, 1);
   if(g_cart_id == 0) {
-    printf("# ||lP_L^2 v - lP_L v|| = %1.5e\n", sqrt(nrm));
+    printf("# ||lP_L^2 v - lP_L v|| = %1.5e ", sqrt(nrm));
     if(sqrt(nrm) < eps*10) printf("#  -> passed\n\n");
+    else printf("#  -> FAILED!\n\n");
     fflush(stdout);
   }
 
@@ -881,8 +907,9 @@ void check_little_D_inversion(const int repro) {
   }
 
   if(g_proc_id == g_stdio_proc) {
-    printf("# # check_little_D_inversion: squared residue found of size %1.5e!\n", dif);
+    printf("# # check_little_D_inversion: squared residue found of size %1.5e! ", dif);
     if(dif < 1.e-24) printf("#  -> passed\n\n");
+    else printf("#  -> FAILED\n\n");
   }
 
   finalize_solver(work_fields, nr_wf);
@@ -920,18 +947,18 @@ void check_local_D(const int repro)
     /* Even sites */
     Block_H_psi(&block_list[j], g_spinor_field[DUM_DERI], work_fields[1], EO);
     if(g_c_sw > 0)
-       assign_mul_one_sw_pm_imu(EE,work_fields[2], work_fields[0],g_mu);
+      assign_mul_one_sw_pm_imu_block(EE, work_fields[2], work_fields[0], g_mu, &block_list[j]);
     else 
-       assign_mul_one_pm_imu(work_fields[2], work_fields[0], 1., vol);
- 
+      assign_mul_one_pm_imu(work_fields[2], work_fields[0], 1., vol);
+    
     assign_add_mul_r(work_fields[2], g_spinor_field[DUM_DERI], 1., vol);
 
     /* Odd sites */
     Block_H_psi(&block_list[j], g_spinor_field[DUM_DERI], work_fields[0], OE);
     if(g_c_sw > 0)
-        assign_mul_one_sw_pm_imu(OO,work_fields[3], work_fields[1],g_mu );
+      assign_mul_one_sw_pm_imu_block(OO,work_fields[3], work_fields[1], g_mu, &block_list[j]);
     else 
-        assign_mul_one_pm_imu(work_fields[3], work_fields[1], 1., vol);
+      assign_mul_one_pm_imu(work_fields[3], work_fields[1], 1., vol);
  
     assign_add_mul_r(work_fields[3], g_spinor_field[DUM_DERI], 1., vol);
 
