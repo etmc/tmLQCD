@@ -1012,9 +1012,9 @@ void check_local_D(const int repro)
     /* check even/odd inversion for Block_D_psi*/
     /* varphi_e in r[2] */
     if(g_c_sw > 0)
-       assign_mul_one_sw_pm_imu_inv(EE,r[2], r[0], g_mu);
+      assign_mul_one_sw_pm_imu_inv_block(EE,r[2], r[0], g_mu, &block_list[j]);
     else
-       assign_mul_one_pm_imu_inv(r[2], r[0], +1., vol);
+      assign_mul_one_pm_imu_inv(r[2], r[0], +1., vol);
 
     Block_H_psi(&block_list[j], r[3], r[2], OE);
     /* a_odd = a_odd + b_odd */
@@ -1031,9 +1031,9 @@ void check_local_D(const int repro)
     Block_H_psi(&block_list[j], r[0], r[1], EO);
     assign(r[5],r[0],VOLUMEPLUSRAND);
     if(g_c_sw > 0)
-       assign_mul_one_sw_pm_imu_inv(EE, r[0], r[5],g_mu);
+      assign_mul_one_sw_pm_imu_inv_block(EE, r[0], r[5], g_mu, &block_list[j]);
     else
-       mul_one_pm_imu_inv(r[0], +1., vol);
+      mul_one_pm_imu_inv(r[0], +1., vol);
     /* a_even = a_even + b_even */
     /* check this sign +1 seems to be right in Msap_eo */
     assign_add_mul_r(r[2], r[0], -1., vol);
@@ -1053,7 +1053,7 @@ void check_local_D(const int repro)
       /* check even/odd inversion for Block_D_psi*/
       /* varphi_e in r[2] */
       if(g_c_sw > 0)
-	assign_mul_one_sw_pm_imu_inv(EE,r[2],r[0],g_mu);
+	assign_mul_one_sw_pm_imu_inv_block(EE,r[2],r[0], g_mu, &block_list[j]);
       else
 	assign_mul_one_pm_imu_inv(r[2], r[0], +1., vol);
       
@@ -1063,8 +1063,9 @@ void check_local_D(const int repro)
       assign_mul_add_r(r[3], -1., r[1], vol);
       /* psi_o in r[1] */
       if(g_c_sw > 0) {
+	// FIXME: this cannot be correct!
 	assign(r[5],r[3],VOLUMEPLUSRAND);
-	assign_mul_one_sw_pm_imu_inv(OO,r[3],r[5],g_mu);
+	assign_mul_one_sw_pm_imu_inv_block(OO, r[3], r[5], g_mu, &block_list[j]);
       }
       else {
 	mul_one_pm_imu_inv(r[3], +1., vol);
@@ -1079,7 +1080,7 @@ void check_local_D(const int repro)
       
       if(g_c_sw > 0){
 	assign(r[5],r[0],VOLUMEPLUSRAND);
-	assign_mul_one_sw_pm_imu_inv(EE,r[0],r[5],g_mu);
+	assign_mul_one_sw_pm_imu_inv_block(EE, r[0], r[5], g_mu, &block_list[j]);
       }
       else{
 	mul_one_pm_imu_inv(r[0], +1., vol);}
