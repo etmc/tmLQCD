@@ -1302,7 +1302,7 @@ int split_global_field_GEN_ID(block * const block_list, const int id, spinor * c
 /* copies the part of globalfields corresponding to block blk */
 /* to the block field blockfield                              */
 void copy_global_to_block(spinor * const blockfield, spinor * const globalfield, const int blk) {
-  int i,it,ix,iy,iz;
+  int it,ix,iy,iz;
   int ibt,ibx,iby,ibz;
   int itb,ixb,iyb,izb;
   int ixcurrent;
@@ -1313,7 +1313,8 @@ void copy_global_to_block(spinor * const blockfield, spinor * const globalfield,
   ibt = blk / (nblks_x * nblks_y*nblks_z);
 
   ixcurrent=0;
-  for (i = 0; i < VOLUME; i++) {
+  // FIXME: here we should better run only through the block volume!
+  for (int i = 0; i < VOLUME; i++) {
 
     /* global coordinates */
     iz = i%LZ;
@@ -1400,7 +1401,7 @@ void copy_block_eo_to_global(spinor * const globalfield, spinor * const beven, s
 /* reconstructs the parts of globalfield corresponding to block blk */
 /* from block field blockfield                                      */
 void copy_block_to_global(spinor * const globalfield, spinor * const blockfield, const int blk) {
-  int i,it,ix,iy,iz;
+  int it,ix,iy,iz;
   int ibt,ibx,iby,ibz;
   int itb,ixb,iyb,izb;
   int ixcurrent;
@@ -1411,7 +1412,8 @@ void copy_block_to_global(spinor * const globalfield, spinor * const blockfield,
   ibt = blk / (nblks_x * nblks_y*nblks_z);
 
   ixcurrent=0;
-  for (i = 0; i < VOLUME; i++) {
+  // FIXME: here we should better run only through the block volume!
+  for (int i = 0; i < VOLUME; i++) {
 
     /* global coordinates */
     iz = i%LZ;
