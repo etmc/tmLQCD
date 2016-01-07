@@ -262,34 +262,40 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
  	a_even = a + blk*2*vols;
  	a_odd = a + blk*2*vols + vols;
 	if(block_list[blk].evenodd == eo) {
-	  /* get part of r corresponding to block blk into b_even and b_odd */
 	  copy_global_to_block_eo(b_even, b_odd, r, blk);
-          if(g_c_sw>0)
-	    assign_mul_one_sw_pm_imu_inv_block(EE,a_even, b_even, g_mu, &block_list[blk]);
-          else
-	    assign_mul_one_pm_imu_inv(a_even, b_even, +1., vol);
-
-	  Block_H_psi(&block_list[blk], a_odd, a_even, OE);
-	  /* a_odd = a_odd - b_odd */
-	  diff(a_odd, b_odd, a_odd, vol);
 	  if(g_c_sw > 0) {
+	    /* get part of r corresponding to block blk into b_even and b_odd */
+
+	    assign_mul_one_sw_pm_imu_inv_block(EE, a_even, b_even, g_mu, &block_list[blk]);
+
+	    Block_H_psi(&block_list[blk], a_odd, a_even, OE);
+	    /* a_odd = a_odd - b_odd */
+	    diff(a_odd, b_odd, a_odd, vol);
+
 	    mrblk(b_odd, a_odd, solver_field[3] + blk*2*3*vols, Niter, 1.e-31, 1, vol, &Msw_plus_block_psi, blk);
+	    
+	    Block_H_psi(&block_list[blk], b_even, b_odd, EO);
+	    assign(r,b_even,vol);
+	    assign_mul_one_sw_pm_imu_inv_block(EE, b_even, r, g_mu,&block_list[blk]);
 	  }
 	  else {
-	    mrblk(b_odd, a_odd, solver_field[3] + blk*2*3*vols, Niter, 1.e-31, 1, vol, &Mtm_plus_block_psi, blk);
-	  }
+	    assign_mul_one_pm_imu_inv(a_even, b_even, +1., vol);
+	    Block_H_psi(&block_list[blk], a_odd, a_even, OE);
+	    /* a_odd = a_odd - b_odd */
+	    diff(a_odd, b_odd, a_odd, vol);
 
-	  Block_H_psi(&block_list[blk], b_even, b_odd, EO);
-          assign(r,b_even,vol);
-          if(g_c_sw > 0)
-	    assign_mul_one_sw_pm_imu_inv_block(EE,b_even, r, g_mu,&block_list[blk]);
-          else
+	    mrblk(b_odd, a_odd, solver_field[3] + blk*2*3*vols, Niter, 1.e-31, 1, vol, &Mtm_plus_block_psi, blk);
+
+	    Block_H_psi(&block_list[blk], b_even, b_odd, EO);
 	    mul_one_pm_imu_inv(b_even, +1., vol);
+
+	  }
 	  /* a_even = a_even - b_even */
 	  diff(a_even, a_even, b_even, vol);
 
 	  /* add even and odd part up to full spinor P */
 	  add_eo_block_to_global(P, a_even, b_odd, blk);
+
 	}
       }
     }
