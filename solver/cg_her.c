@@ -67,7 +67,7 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
   int save_sloppy = g_sloppy_precision;
   double atime, etime, flops;
   static spinor ** solver_field = NULL;
-  static cg_init = 0;
+  static int cg_init = 0;
   spinor * stmp;
   const int nr_sf = 3;
 
