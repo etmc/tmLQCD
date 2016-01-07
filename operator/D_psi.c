@@ -1294,6 +1294,9 @@ void D_psi(spinor * const P, spinor * const Q){
     sm = (spinor *) Q +iy;
     um=&g_gauge_field[iy][3];
     m3addandstore(rr, sm, um, phase_3, &tmpr);
+    if(ix < 0) { // FIXME; hack to prevent segfault on JURECA
+      ix = 0;
+    }
   }
 #ifdef OMP
   } /* OpenMP closing brace */
