@@ -67,7 +67,7 @@ su3 *** sw_inv;
 
 
 void assign_mul_one_sw_pm_imu_site_lexic(const int ix,
-					 spinor * const k, const spinor * const l, const double mu) {
+                                         spinor * const k, const spinor * const l, const double mu) {
 
   su3_vector ALIGN chi, psi1, psi2;
   const su3 *w1, *w2, *w3;
@@ -999,8 +999,8 @@ void assign_mul_one_sw_pm_imu_block(const int ieo,
   for(it = 0; it < dT; it++)
     for(ix =0; ix < dX; ix++)
       for(iy=0; iy < dY; iy++)
-	for(iz=0; iz<dZ; iz++)
-	  { 
+        for(iz=0; iz<dZ; iz++)
+          { 
             t = it + sT;
             x = ix + sX;
             y = iy + sY;
@@ -1011,13 +1011,13 @@ void assign_mul_one_sw_pm_imu_block(const int ieo,
             jeo= (t+x+y+z)%2;
 
             if( ieo == jeo) 
-	      {
+              {
                 assign_mul_one_sw_pm_imu_site_lexic(lx,&tmpr,s,g_mu);
                 assign(r,&tmpr,1);
                 r++;
                 s++;
-	      }
-	  }
+              }
+          }
 
   return;
 }
@@ -1289,8 +1289,8 @@ void assign_mul_one_sw_pm_imu_inv(const int ieo,
 
 
 void assign_mul_one_sw_pm_imu_inv_block(const int ieo, 
-					spinor * const k, spinor * const l, 
-					const double mu, block *blk) {
+                                        spinor * const k, spinor * const l, 
+                                        const double mu, block *blk) {
   int i,it,ix,iy,iz, lxeo;
   su3_vector ALIGN psi, chi, phi1, phi3;
   const su3 *w1, *w2, *w3, *w4;
@@ -1305,41 +1305,41 @@ void assign_mul_one_sw_pm_imu_inv_block(const int ieo,
     for(int x = 0; x < blk->BLX; x++) {
       ix = x +  blk->mpilocal_coordinate[1]*blk->BLX;
       for(int y = 0; y < blk->BLY; y++) {
-	iy = y +  blk->mpilocal_coordinate[2]*blk->BLY;
-	for(int z = 0; z < blk->BLZ; z++) {
-	  iz = z +  blk->mpilocal_coordinate[3]*blk->BLZ;
-	  i = g_ipt[it][ix][iy][iz];
-	  lxeo = g_lexic2eo[i]; 
-	  if((t+x+y+z)%2 == ieo) {
-	    _vector_assign(phi1, (*rn).s0);
-	    _vector_assign(phi3, (*rn).s2);
-	    
-	    w1 = &sw_inv[lxeo][0][0];
-	    w2 = w1 + 2;  /* &sw_inv[lxeo][1][0]; */
-	    w3 = w1 + 4;  /* &sw_inv[lxeo][2][0]; */
-	    w4 = w1 + 6;  /* &sw_inv[lxeo][3][0]; */
-	    
-	    _su3_multiply(psi, *w1, phi1); 
-	    _su3_multiply(chi, *w2, (*rn).s1);
-	    _vector_add((*s).s0, psi, chi);
-	    _su3_multiply(psi, *w4, phi1); 
-	    _su3_multiply(chi, *w3, (*rn).s1);
-	    _vector_add((*s).s1, psi, chi);
-	    
-	    w1++; /* &sw_inv[lxeo][0][1]; */
-	    w2++; /* &sw_inv[lxeo][1][1]; */
-	    w3++; /* &sw_inv[lxeo][2][1]; */
-	    w4++; /* &sw_inv[lxeo][3][1]; */
-	    _su3_multiply(psi, *w1, phi3); 
-	    _su3_multiply(chi, *w2, (*rn).s3);
-	    _vector_add((*s).s2, psi, chi);
-	    _su3_multiply(psi, *w4, phi3); 
-	    _su3_multiply(chi, *w3, (*rn).s3);
-	    _vector_add((*s).s3, psi, chi);
-	    rn++;
-	    s++;
-	  }
-	}
+        iy = y +  blk->mpilocal_coordinate[2]*blk->BLY;
+        for(int z = 0; z < blk->BLZ; z++) {
+          iz = z +  blk->mpilocal_coordinate[3]*blk->BLZ;
+          i = g_ipt[it][ix][iy][iz];
+          lxeo = g_lexic2eo[i]; 
+          if((t+x+y+z)%2 == ieo) {
+            _vector_assign(phi1, (*rn).s0);
+            _vector_assign(phi3, (*rn).s2);
+            
+            w1 = &sw_inv[lxeo][0][0];
+            w2 = w1 + 2;  /* &sw_inv[lxeo][1][0]; */
+            w3 = w1 + 4;  /* &sw_inv[lxeo][2][0]; */
+            w4 = w1 + 6;  /* &sw_inv[lxeo][3][0]; */
+            
+            _su3_multiply(psi, *w1, phi1); 
+            _su3_multiply(chi, *w2, (*rn).s1);
+            _vector_add((*s).s0, psi, chi);
+            _su3_multiply(psi, *w4, phi1); 
+            _su3_multiply(chi, *w3, (*rn).s1);
+            _vector_add((*s).s1, psi, chi);
+            
+            w1++; /* &sw_inv[lxeo][0][1]; */
+            w2++; /* &sw_inv[lxeo][1][1]; */
+            w3++; /* &sw_inv[lxeo][2][1]; */
+            w4++; /* &sw_inv[lxeo][3][1]; */
+            _su3_multiply(psi, *w1, phi3); 
+            _su3_multiply(chi, *w2, (*rn).s3);
+            _vector_add((*s).s2, psi, chi);
+            _su3_multiply(psi, *w4, phi3); 
+            _su3_multiply(chi, *w3, (*rn).s3);
+            _vector_add((*s).s3, psi, chi);
+            rn++;
+            s++;
+          }
+        }
       }
     }
   }
@@ -1347,8 +1347,8 @@ void assign_mul_one_sw_pm_imu_inv_block(const int ieo,
 }
 
 void dassign_mul_one_sw_pm_imu_inv_block(const int ieo, 
-					spinor * const k, spinor * const l, 
-					const double mu, block *blk) {
+					 spinor * const k, spinor * const l, 
+					 const double mu, block *blk) {
 
   int it,ix,iy,iz; //lexiographic index of the site w.r.t the block
   int t,x,y,z;     //lexiographic index of the site w.r.t the current process
@@ -1386,8 +1386,8 @@ void dassign_mul_one_sw_pm_imu_inv_block(const int ieo,
   for(it = 0; it < dT; it++)
     for(ix =0; ix < dX; ix++)
       for(iy = 0; iy < dY; iy++)
-	for(iz = 0; iz < dZ; iz++)
-	  {
+        for(iz = 0; iz < dZ; iz++)
+          {
             t = it + sT;
             x = ix + sX;
             y = iy + sY;
@@ -1399,37 +1399,37 @@ void dassign_mul_one_sw_pm_imu_inv_block(const int ieo,
             jeo= (t+x+y+z)%2;
 
             if( ieo == jeo) 
-	      {
-	    
-		_vector_assign(phi1,(*rn).s0);
-		_vector_assign(phi3,(*rn).s2);
+              {
+            
+                _vector_assign(phi1,(*rn).s0);
+                _vector_assign(phi3,(*rn).s2);
 
-		w1=&sw_inv[lxeo][0][0];
-		w2=w1+2;  /* &sw_inv[lxeo][1][0]; */
-		w3=w1+4;  /* &sw_inv[lxeo][2][0]; */
-		w4=w1+6;  /* &sw_inv[lxeo][3][0]; */
+                w1=&sw_inv[lxeo][0][0];
+                w2=w1+2;  /* &sw_inv[lxeo][1][0]; */
+                w3=w1+4;  /* &sw_inv[lxeo][2][0]; */
+                w4=w1+6;  /* &sw_inv[lxeo][3][0]; */
          
-		_su3_multiply(psi,*w1,phi1); 
-		_su3_multiply(chi,*w2,(*rn).s1);
-		_vector_add((*s).s0,psi,chi);
-		_su3_multiply(psi,*w4,phi1); 
-		_su3_multiply(chi,*w3,(*rn).s1);
-		_vector_add((*s).s1,psi,chi);
+                _su3_multiply(psi,*w1,phi1); 
+                _su3_multiply(chi,*w2,(*rn).s1);
+                _vector_add((*s).s0,psi,chi);
+                _su3_multiply(psi,*w4,phi1); 
+                _su3_multiply(chi,*w3,(*rn).s1);
+                _vector_add((*s).s1,psi,chi);
 
-		w1++; /* &sw_inv[lxeo][0][1]; */
-		w2++; /* &sw_inv[lxeo][1][1]; */
-		w3++; /* &sw_inv[lxeo][2][1]; */
-		w4++; /* &sw_inv[lxeo][3][1]; */
-		_su3_multiply(psi,*w1,phi3); 
-		_su3_multiply(chi,*w2,(*rn).s3);
-		_vector_add((*s).s2,psi,chi);
-		_su3_multiply(psi,*w4,phi3); 
-		_su3_multiply(chi,*w3,(*rn).s3);
-		_vector_add((*s).s3,psi,chi);
+                w1++; /* &sw_inv[lxeo][0][1]; */
+                w2++; /* &sw_inv[lxeo][1][1]; */
+                w3++; /* &sw_inv[lxeo][2][1]; */
+                w4++; /* &sw_inv[lxeo][3][1]; */
+                _su3_multiply(psi,*w1,phi3); 
+                _su3_multiply(chi,*w2,(*rn).s3);
+                _vector_add((*s).s2,psi,chi);
+                _su3_multiply(psi,*w4,phi3); 
+                _su3_multiply(chi,*w3,(*rn).s3);
+                _vector_add((*s).s3,psi,chi);
                 rn++;
                 s++;
-	      }
-	  }
+              }
+          }
   return;
 }
 
