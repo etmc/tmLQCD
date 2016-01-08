@@ -577,12 +577,13 @@ int check_projectors(const int repro) {
     fflush(stdout);
   }
 
+  // check assign_mul_one_sw_pm_imu_inv_block for clover caswe
   if(g_mu > 0) {
     for (int blk = 0; blk < nb_blocks; blk++) {
       copy_global_to_block_eo(phi[0], phi[1], work_fields[0], blk);
       assign_mul_one_sw_pm_imu_inv_block(EE, phi[2], phi[0], g_mu, &block_list[blk]);
       
-      add_eo_block_to_global(work_fields[1], phi[2], phi[1], blk);      
+      copy_block_eo_to_global(work_fields[1], phi[2], phi[1], blk);      
     }
     convert_lexic_to_eo(work_fields[2], work_fields[3], work_fields[0]);
     assign_mul_one_sw_pm_imu_inv(EE, work_fields[5], work_fields[2], g_mu);
