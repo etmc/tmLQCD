@@ -532,7 +532,7 @@ int check_projectors(const int repro) {
   spinor **phi;
   spinor **wphi;
   spinor ** work_fields = NULL;
-  const int nr_wf = 4;
+  const int nr_wf = 5;
   const double eps = 1.e-8;
   double savelittle_solver_high_prec = little_solver_high_prec;
   little_solver_high_prec = eps*eps/10.;
@@ -577,6 +577,26 @@ int check_projectors(const int repro) {
     fflush(stdout);
   }
 
+  if(g_mu > 0) {
+    for (int blk = 0; blk < nb_blocks; blk++) {
+      copy_global_to_block_eo(phi[0], phi[1], work_fields[0], blk);
+      assign_mul_one_sw_pm_imu_inv_block(EE, phi[2], phi[0], g_mu, &block_list[blk]);
+      
+      add_eo_block_to_global(work_fields[1], phi[2], phi[1], blk);      
+    }
+    convert_lexic_to_eo(work_fields[2], work_fields[3], work_fields[0]);
+    assign_mul_one_sw_pm_imu_inv(EE, work_fields[5], work_fields[2], g_mu);
+    convert_eo_to_lexic(work_fields[2], work_fields[5], work_fields[3]);
+    diff(work_fields[0], work_fields[1], work_fields[2], VOLUME);
+    nrm = square_norm(work_fields[0], VOLUME, 1);
+    if(g_cart_id == 0) {
+      printf("# assign_mul_one_sw_pm_imu_inv: ||psi_orig - psi_block|| = %1.5e ", sqrt(nrm));
+      if(sqrt(nrm) < eps) printf("#  -> passed\n\n");
+      else printf("#  -> FAILED!\n\n");
+      fflush(stdout);
+    }
+  }
+  
   project2(work_fields[1], work_fields[0]);
   project2(work_fields[2], work_fields[1]);
   diff(work_fields[3], work_fields[1], work_fields[2], VOLUME);
