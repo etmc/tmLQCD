@@ -39,10 +39,10 @@ void Qsw_full_minus_psi(spinor * const l, spinor * const k);
 void Qsw_full_pm_psi(spinor * const l, spinor * const k);
 void Msw_full_minus_psi(spinor * const l, spinor * const k);
 
-void assign_mul_one_sw_pm_imu(const int ieo, spinor * const k, const spinor * const l, const double mu);
-void assign_mul_one_sw_pm_imu_block(const int ieo, spinor * const k, const spinor * const l, const double mu, block *blk);
-void assign_mul_one_sw_pm_imu_inv(const int ieo, spinor * const k, const spinor * const l, const double mu);
-void assign_mul_one_sw_pm_imu_inv_block(const int ieo, spinor * const k, const spinor * const l, const double mu, block *blk);
+void assign_mul_one_sw_pm_imu(const int ieo, spinor * const k, spinor * const l, const double mu);
+void assign_mul_one_sw_pm_imu_block(const int ieo, spinor * const k, spinor * const l, const double mu, block *blk);
+void assign_mul_one_sw_pm_imu_inv(const int ieo, spinor * const k, spinor * const l, const double mu);
+void assign_mul_one_sw_pm_imu_inv_block(const int ieo, spinor * const k, spinor * const l, const double mu, block *blk);
 
 void Mee_sw_psi(spinor * const l, spinor * const k, const double mu);
 void Mee_sw_inv_psi(spinor * const k, spinor * const l, const double mu);
