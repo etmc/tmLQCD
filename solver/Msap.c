@@ -217,7 +217,7 @@ void CGeoSmoother(spinor * const P, spinor * const Q, const int Ncy, const int d
 
 void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter) {
   int blk, ncy = 0, eo, vol, vols;
-  spinor * r, * a, * b;
+  spinor * r, * a, * b, * c;
   double nrm;
   spinor * b_even, * b_odd, * a_even, * a_odd;
   spinor ** solver_field = NULL;
@@ -254,13 +254,15 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
       // also in mrblk
       // 
       // #ifdef OMP
-      // # pragma omp parallel for private (a_even, a_odd, b_even, b_odd)
+      // # pragma omp parallel for private (a_even, a_odd, b_even, b_odd, c)
       // #endif
       for (blk = 0; blk < nb_blocks; blk++) {
  	b_even = b + blk*2*vols;
  	b_odd = b +blk*2*vols + vols;
  	a_even = a + blk*2*vols;
  	a_odd = a + blk*2*vols + vols;
+	c = solver_field[3] + blk*vols;
+
 	if(block_list[blk].evenodd == eo) {
 	  /* get part of r corresponding to block blk into b_even and b_odd */
 
@@ -274,8 +276,8 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
 	    mrblk(b_odd, a_odd, solver_field[3] + blk*2*3*vols, Niter, 1.e-31, 1, vol, &Msw_plus_block_psi, blk);
 	    
 	    Block_H_psi(&block_list[blk], b_even, b_odd, EO);
-	    assign(r, b_even, vol);
-	    assign_mul_one_sw_pm_imu_inv_block(EE, b_even, r, g_mu, &block_list[blk]);
+	    assign(c, b_even, vol);
+	    assign_mul_one_sw_pm_imu_inv_block(EE, b_even, c, g_mu, &block_list[blk]);
 	  }
 	  else {
 	    assign_mul_one_pm_imu_inv(a_even, b_even, +1., vol);
