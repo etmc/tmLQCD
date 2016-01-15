@@ -509,7 +509,8 @@ static void cgmms_write_props(spinor ** const P, double const * const shifts, co
   for(int im = 0; im < no_shifts; im++) {
     if(SourceInfo.type != 1) {
       if (PropInfo.splitted) {
-        sprintf(filename, "%s.%.2d.%.4d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im);
+        if(T_global > 99) sprintf(filename, "%s.%.2d.%.4d.%.3d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im);
+        else sprintf(filename, "%s.%.2d.%.4d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im);
       } else {
         sprintf(filename, "%s.%.2d.%.4d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.t, im);
       }
