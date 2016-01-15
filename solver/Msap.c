@@ -31,6 +31,7 @@
 #include "linalg_eo.h"
 #include "operator/tm_operators.h"
 #include "operator/clovertm_operators.h"
+#include "read_input.h"
 #include "boundary.h"
 #include "gmres.h"
 #include "solver.h"
@@ -219,11 +220,20 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
   int blk, ncy = 0, eo, vol, vols;
   spinor * r, * a, * b, * c;
   double nrm;
+  double musave = g_mu;
+  double kappasave = g_kappa;
   spinor * b_even, * b_odd, * a_even, * a_odd;
   spinor ** solver_field = NULL;
   // also get space for mrblk! 6 = 3+3
   const int nr_sf = 6;
 
+  if(kappa_dflgen > 0) {
+    g_kappa = kappa_dflgen;
+  }
+  if(mu_dflgen > -10) {
+    g_mu = mu_dflgen;
+  }
+  boundary(g_kappa);
   /* 
    * here it would be probably better to get the working fields as a parameter 
    * from the calling function
@@ -301,5 +311,8 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
     }
   }
   finalize_solver(solver_field, nr_sf);
+  g_mu = musave;
+  g_kappa = kappasave;
+  boundary(g_kappa);
   return;
 }
