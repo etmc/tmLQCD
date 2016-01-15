@@ -75,6 +75,69 @@ static void random_fields(const int Ns) {
   return;
 }
 
+
+// this routine updates the deflation subspace
+
+int update_dfl_subspace(const int Ns, const int N, const int Nsmooth) {
+  int vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(_Complex double),
+    vol = VOLUME*sizeof(spinor)/sizeof(_Complex double);
+
+  double nrm; 
+  for(int j = 0; j < Nsmooth; j++) {
+    //if(j - loop_SAP > 4) {
+    //  usePL = usePLsave;
+    //}
+    // build little D automatically when little_D is called and dfl_subspace_updated == 1
+    for (int i = 0; i < Ns; i++) {
+      /* add it to the basis */
+      split_global_field_GEN_ID(block_list, i, dfl_fields[i], nb_blocks);
+    }
+    /* perform local orthonormalization */
+    for(int i = 0; i < nb_blocks; i++) {
+      block_orthonormalize(block_list+i);
+    }
+    dfl_subspace_updated = 1;
+    compute_little_little_D(Ns);
+    
+    // why can't I use g_spinor_field[1] in mg_precon??
+    for(int i = 0; i < Ns; i++) {
+      g_sloppy_precision = 1;
+      if(0) {
+	D_psi(g_spinor_field[1],  dfl_fields[i]);
+	// v - Dv
+	diff(g_spinor_field[2], dfl_fields[i], g_spinor_field[1], VOLUME);
+	// C(v - Dv)
+	mg_precon(g_spinor_field[0], g_spinor_field[2]);
+	// v <- v + C(v - Dv)
+	add(dfl_fields[i], dfl_fields[i], g_spinor_field[0], VOLUME);
+      }
+      else {
+	// this is the original Luescher Version
+	// v <- C v
+	mg_precon(g_spinor_field[0], dfl_fields[i]);
+	assign(dfl_fields[i], g_spinor_field[0], VOLUME);
+      }
+      
+      g_sloppy_precision = 0;
+      ModifiedGS((_Complex double*)g_spinor_field[0], vol, i, (_Complex double*)dfl_fields[0], vpr);
+      nrm = sqrt(square_norm(g_spinor_field[0], N, 1));
+      mul_r(dfl_fields[i], 1./nrm, g_spinor_field[0], N);
+      
+    }
+  }
+  for(int i = 0; i < Ns; i++) {
+    /* add it to the basis */
+    split_global_field_GEN_ID(block_list, i, dfl_fields[i], nb_blocks);
+  }
+  /* perform local orthonormalization */
+  for(int i = 0; i < nb_blocks; i++) {
+    block_orthonormalize(block_list+i);
+  }
+  dfl_subspace_updated = 1;
+
+  return(0);
+}
+
 // this routine generates the deflation subspace
 
 int generate_dfl_subspace(const int Ns, const int N, const int repro) {
@@ -148,58 +211,12 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
       mul_r(dfl_fields[i], 1./nrm, g_spinor_field[0], N);
     }
   }
-  for(int j = loop_SAP; j < NsmoothMsap_dflgen; j++) {
-    if(j - loop_SAP > 4) {
-      usePL = usePLsave;
-    }
-    // build little D automatically when little_D is called and dfl_subspace_updated == 1
-    for (int i = 0; i < Ns; i++) {
-      /* add it to the basis */
-      split_global_field_GEN_ID(block_list, i, dfl_fields[i], nb_blocks);
-    }
-    /* perform local orthonormalization */
-    for(int i = 0; i < nb_blocks; i++) {
-      block_orthonormalize(block_list+i);
-    }
-    dfl_subspace_updated = 1;
-    compute_little_little_D(Ns);
-    
-    // why can't I use g_spinor_field[1] in mg_precon??
-    for(int i = 0; i < Ns; i++) {
-      g_sloppy_precision = 1;
-      if(0) {
-	D_psi(g_spinor_field[1],  dfl_fields[i]);
-	// v - Dv
-	diff(g_spinor_field[2], dfl_fields[i], g_spinor_field[1], VOLUME);
-	// C(v - Dv)
-	mg_precon(g_spinor_field[0], g_spinor_field[2]);
-	// v <- v + C(v - Dv)
-	add(dfl_fields[i], dfl_fields[i], g_spinor_field[0], VOLUME);
-      }
-      else {
-	// this is the original Luescher Version
-	// v <- C v
-	mg_precon(g_spinor_field[0], dfl_fields[i]);
-	assign(dfl_fields[i], g_spinor_field[0], VOLUME);
-      }
-      
-      g_sloppy_precision = 0;
-      ModifiedGS((_Complex double*)g_spinor_field[0], vol, i, (_Complex double*)dfl_fields[0], vpr);
-      nrm = sqrt(square_norm(g_spinor_field[0], N, 1));
-      mul_r(dfl_fields[i], 1./nrm, g_spinor_field[0], N);
-      
-    }
-  }
+
+  update_dfl_subspace(Ns, N, NsmoothMsap_dflgen-loop_SAP);
   
-  for(int i = 0; i < Ns; i++) {
-    /* add it to the basis */
-    split_global_field_GEN_ID(block_list, i, dfl_fields[i], nb_blocks);
-  }
-  /* perform local orthonormalization */
-  for(int i = 0; i < nb_blocks; i++) {
-    block_orthonormalize(block_list+i);
-  }
-  dfl_subspace_updated = 1;
+  compute_little_D(0);
+  compute_little_little_D(Ns);
+  dfl_subspace_updated = 0;
   g_mu = musave;
   g_kappa = kappasave;
   boundary(g_kappa);

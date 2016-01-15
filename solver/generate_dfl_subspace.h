@@ -24,6 +24,7 @@
 
 int init_dfl_subspace(const int);
 int free_dfl_subspace();
+int update_dfl_subspace(const int Ns, const int N, const int Nsmooth);
 int generate_dfl_subspace(const int Ns, const int N, const int repro);
 int generate_dfl_subspace_free(const int Ns, const int N);
 
