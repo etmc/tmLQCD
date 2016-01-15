@@ -17,10 +17,7 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
-
- This file was modified according to a flexible number of blocks
- by Claude Tadonki - PetaQCD - April 2010 ( claude.tadonki@lal.in2p3.fr )
-***********************************************************************/
+ ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
