@@ -99,15 +99,24 @@ extern "C"
   extern int max_innersolver_it;
   extern double innersolver_precision;
   extern int device_num;
+
+  extern int max_mms_shifts;
+  extern int use_mixed_mms; 
   
   extern double innersolver_precision_abs;
   extern double innersolver_precision_rel;
   extern int innersolver_precision_check_abs;
   extern int innersolver_precision_check_rel;
+  extern int min_innersolver_it;  
 
+  extern double mixcg_innereps;
+  extern int mixcg_maxinnersolverit;
+  
   extern int omp_num_threads;
 
   extern int use_preconditioning;
+
+  extern int use_qudainverter;
 
   extern int nblocks_t, nblocks_x, nblocks_y, nblocks_z;
   extern double kappa_dflgen, mu_dflgen;

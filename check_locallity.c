@@ -253,7 +253,8 @@ int main(int argc,char *argv[]) {
     if(even_odd_flag) {
       i = invert_eo(g_spinor_field[2], g_spinor_field[3], g_spinor_field[0], g_spinor_field[1], 
 		    solver_precision, max_solver_iterations, solver_flag, g_relative_precision_flag,
-		    sub_evs_cg_flag, even_odd_flag, 0, NULL, -1);
+		    sub_evs_cg_flag, even_odd_flag, 0, NULL, -1,
+            NO_EXT_INV, SLOPPY_DOUBLE, NO_COMPRESSION);
       convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], g_spinor_field[2], g_spinor_field[3]);
     }
 

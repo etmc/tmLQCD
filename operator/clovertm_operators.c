@@ -48,6 +48,11 @@
 #include "linalg_eo.h"
 #include "operator/Hopping_Matrix.h"
 #include "operator/tm_operators.h"
+#include "operator/Hopping_Matrix_32.h"
+
+#include "tm_operators.h"
+#include "tm_operators_32.h"
+
 #include "operator/clovertm_operators.h"
 #include "operator/D_psi.h"
 
@@ -171,6 +176,9 @@ void Qsw_full_pm_psi(spinor * const l, spinor * const k)
   gamma5(l, l, VOLUME);
 }
 //******************************************************************
+
+su3_32 *** sw_32;
+su3_32 *** sw_inv_32;
 
 void clover_gamma5(const int ieo, 
                    spinor * const l, const spinor * const k, const spinor * const j,
@@ -532,6 +540,7 @@ void clover_gamma5(const int ieo,
 #endif
   return;
 }
+
 
 /**************************************************************
  *
@@ -1495,9 +1504,13 @@ void Mee_sw_inv_psi(spinor * const k, spinor * const l, const double mu) {
 su3 ** sw1, ** sw_inv1;
 su3 * _sw, *_sw_inv;
 
+su3_32 ** sw1_32, ** sw_inv1_32;
+su3_32 * _sw_32, *_sw_inv_32;
+
 void init_sw_fields() {
   int V = VOLUME;
   su3 * tmp;
+  su3_32 * tmp_32;
   static int sw_init = 0;
 
   if(!sw_init) {
@@ -1542,7 +1555,98 @@ void init_sw_fields() {
         tmp = tmp+2;
       }
     }
+    
+    /* 32 bit fields */
+    if((void*)(sw_32 = (su3_32***)calloc(V, sizeof(su3_32**))) == NULL) {
+      fprintf (stderr, "sw (32 bit) malloc err\n"); 
+    }
+    if((void*)(sw_inv_32 = (su3_32***)calloc(V, sizeof(su3_32**))) == NULL) {
+      fprintf (stderr, "sw_inv (32 bit) malloc err\n"); 
+    }    
+    if((void*)(sw1_32 = (su3_32**)calloc(3*V, sizeof(su3_32*))) == NULL) {
+      fprintf (stderr, "sw1 (32 bit) malloc err\n"); 
+    }    
+    if((void*)(sw_inv1_32 = (su3_32**)calloc(4*V, sizeof(su3_32*))) == NULL) {
+      fprintf (stderr, "sw_inv1 (32 bit) malloc err\n"); 
+    }    
+    if((void*)(_sw_32 = (su3_32*)calloc(3*2*V+1, sizeof(su3_32))) == NULL) {
+      fprintf (stderr, "_sw (32 bit) malloc err\n"); 
+    }    
+    if((void*)(_sw_inv_32 = (su3_32*)calloc(4*2*V+1, sizeof(su3_32))) == NULL) {
+      fprintf (stderr, "_sw_inv (32 bit) malloc err\n"); 
+    } 
+        
+    sw_32[0] = sw1_32;
+    sw_inv_32[0] = sw_inv1_32;
+    for(int i = 1; i < V; i++) {
+      sw_32[i] = sw_32[i-1]+3;
+      sw_inv_32[i] = sw_inv_32[i-1]+4;
+    }
+    sw_32[0][0] = (su3_32*)(((unsigned long int)(_sw_32)+ALIGN_BASE32)&~ALIGN_BASE32);
+    sw_inv_32[0][0] = (su3_32*)(((unsigned long int)(_sw_inv_32)+ALIGN_BASE32)&~ALIGN_BASE32);
+    tmp_32 = sw_32[0][0];
+    for(int i = 0; i < V; i++) {
+      for(int j = 0; j < 3; j++) {
+	sw_32[i][j] = tmp_32;
+	tmp_32 = tmp_32+2;
+      }
+    }
+    
+    tmp_32 = sw_inv_32[0][0];
+    for(int i = 0; i < V; i++) {
+      for(int j = 0; j < 4; j++) {
+	sw_inv_32[i][j] = tmp_32;
+	tmp_32 = tmp_32+2;
+      }
+    }
+        
+    
+    
     sw_init = 1;
   }
   return;
 }
+
+
+void copy_32_sw_fields(){
+  
+  int V = VOLUME;
+  
+  for(int i = 0; i < V; i++) {
+      for(int j = 0; j < 3; j++) {
+	for(int k = 0; k < 2; k++) {
+	  sw_32[i][j][k].c00 = (_Complex float) sw[i][j][k].c00;
+	  sw_32[i][j][k].c01 = (_Complex float) sw[i][j][k].c01;
+	  sw_32[i][j][k].c02 = (_Complex float) sw[i][j][k].c02;
+	  
+	  sw_32[i][j][k].c10 = (_Complex float) sw[i][j][k].c10;
+	  sw_32[i][j][k].c11 = (_Complex float) sw[i][j][k].c11;
+	  sw_32[i][j][k].c12 = (_Complex float) sw[i][j][k].c12;    
+
+	  sw_32[i][j][k].c20 = (_Complex float) sw[i][j][k].c20;
+	  sw_32[i][j][k].c21 = (_Complex float) sw[i][j][k].c21;
+	  sw_32[i][j][k].c22 = (_Complex float) sw[i][j][k].c22; 
+	}
+      }
+    }
+    
+  for(int i = 0; i < V; i++) {
+      for(int j = 0; j < 4; j++) {
+	for(int k = 0; k < 2; k++) {
+	  sw_inv_32[i][j][k].c00 = (_Complex float) sw_inv[i][j][k].c00;
+	  sw_inv_32[i][j][k].c01 = (_Complex float) sw_inv[i][j][k].c01;
+	  sw_inv_32[i][j][k].c02 = (_Complex float) sw_inv[i][j][k].c02;
+	  
+	  sw_inv_32[i][j][k].c10 = (_Complex float) sw_inv[i][j][k].c10;
+	  sw_inv_32[i][j][k].c11 = (_Complex float) sw_inv[i][j][k].c11;
+	  sw_inv_32[i][j][k].c12 = (_Complex float) sw_inv[i][j][k].c12;    
+
+	  sw_inv_32[i][j][k].c20 = (_Complex float) sw_inv[i][j][k].c20;
+	  sw_inv_32[i][j][k].c21 = (_Complex float) sw_inv[i][j][k].c21;
+	  sw_inv_32[i][j][k].c22 = (_Complex float) sw_inv[i][j][k].c22; 	  
+	}
+      }
+    }
+}
+
+

@@ -41,6 +41,7 @@
 #include"operator/tm_operators.h"
 #include"operator/Hopping_Matrix.h"
 #include"operator/clovertm_operators.h"
+#include"operator/clovertm_operators_32.h"
 #include"operator/D_psi.h"
 #include"gamma.h"
 #include"read_input.h"
@@ -48,20 +49,35 @@
 #include"invert_clover_eo.h"
 #include "solver/dirac_operator_eigenvectors.h"
 #include "solver/dfl_projector.h"
+#ifdef QUDA
+#  include "quda_interface.h"
+#endif
 
 
 int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new, 
                      spinor * const Even, spinor * const Odd,
                      const double precision, const int max_iter,
-                     const int solver_flag, const int rel_prec,
-		     const int even_odd_flag, solver_params_t solver_params,
-                     su3 *** gf, matrix_mult Qsq, matrix_mult Qm) {
+                     const int solver_flag, const int rel_prec, const int even_odd_flag,
+		     solver_params_t solver_params,
+                     su3 *** gf, matrix_mult Qsq, matrix_mult Qm,
+                     const ExternalInverter inverter, const SloppyPrecision sloppy, const CompressionType compression) {
   int iter;
 
-  if(even_odd_flag) {
+  if(even_odd_flag) {  
     if(g_proc_id == 0 && g_debug_level > 0) {
       printf("# Using even/odd preconditioning!\n"); fflush(stdout);
     }
+    
+#ifdef QUDA
+    if( inverter==QUDA_INVERTER ) {
+      return invert_eo_quda(Even_new, Odd_new, Even, Odd,
+                            precision, max_iter,
+                            solver_flag, rel_prec,
+                            1, solver_params,
+                            sloppy, compression);
+    }
+#endif
+    
     
     assign_mul_one_sw_pm_imu_inv(EE, Even_new, Even, +g_mu);
     
@@ -75,7 +91,6 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
     /* Here we invert the hermitean operator squared */
     gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
     if(g_proc_id == 0) {
-      printf("# Using CG!\n"); 
       printf("# mu = %f, kappa = %f, csw = %f\n", 
              g_mu/2./g_kappa, g_kappa, g_c_sw);
       fflush(stdout);
@@ -83,23 +98,27 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
     if(solver_flag == CG) {
       if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
       iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, 
-		    precision, rel_prec, 
-		    VOLUME/2, Qsq);
+                    precision, rel_prec, 
+                    VOLUME/2, Qsq);
+      Qm(Odd_new, Odd_new);
     }
-    else if(solver_flag == INCREIGCG) {
+    else if(solver_flag == INCREIGCG){
       
       if(g_proc_id == 0) {printf("# Using Incremental Eig-CG!\n"); fflush(stdout);}
       iter = incr_eigcg(VOLUME/2,solver_params.eigcg_nrhs, solver_params.eigcg_nrhs1, Odd_new, g_spinor_field[DUM_DERI], solver_params.eigcg_ldh, Qsq,
-			solver_params.eigcg_tolsq1, solver_params.eigcg_tolsq, solver_params.eigcg_restolsq , solver_params.eigcg_rand_guess_opt, 
-			rel_prec, max_iter, solver_params.eigcg_nev, solver_params.eigcg_vmax);
-      
+                        solver_params.eigcg_tolsq1, solver_params.eigcg_tolsq, solver_params.eigcg_restolsq , solver_params.eigcg_rand_guess_opt, 
+                        rel_prec, max_iter, solver_params.eigcg_nev, solver_params.eigcg_vmax);
+      Qm(Odd_new, Odd_new);
     }
-    else {
+    else if(solver_flag == MIXEDCG){
+      iter = mixed_cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, 
+                          VOLUME/2, &Qsw_pm_psi, &Qsw_pm_psi_32);
+      Qm(Odd_new, Odd_new);
+    }
+    else{
       if(g_proc_id == 0) {printf("# This solver is not available for this operator. Exisiting!\n"); fflush(stdout);}
       return 0;
     }
-
-    Qm(Odd_new, Odd_new);
     
     /* Reconstruct the even sites                */
     Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd_new);
@@ -108,6 +127,7 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
     /* the minus is missing                      */
     assign_add_mul_r(Even_new, g_spinor_field[DUM_DERI], +1., VOLUME/2);
   }
+
   else {
     if(g_proc_id == 0) {
       printf("# Not using even/odd preconditioning!\n"); fflush(stdout);
@@ -138,15 +158,15 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
     else if (solver_flag == DFLFGMRES) {
       if(g_proc_id == 0) {printf("# Using deflated FGMRES solver! m = %d\n", gmres_m_parameter); fflush(stdout);}
       iter = fgmres(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, 
-		    max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 2, &Dsw_psi);
+                    max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 2, &Dsw_psi);
     }
     else if(solver_flag == CG){
       if(g_proc_id == 0) {
-           printf("# Using CG!\n"); fflush(stdout);
+	printf("# Using CG!\n"); fflush(stdout);
       }
       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
       iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
-                  rel_prec, VOLUME, Qsq);
+		    rel_prec, VOLUME, Qsq);
 
       Qm(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
     }

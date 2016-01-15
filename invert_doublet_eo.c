@@ -46,6 +46,9 @@
 #include"xchange/xchange.h"
 #include"operator/tm_operators_nd.h"
 #include"invert_doublet_eo.h"
+#ifdef QUDA
+#  include "quda_interface.h"
+#endif
 
 
 #ifdef HAVE_GPU
@@ -61,14 +64,24 @@ extern su3* g_trafo;
 
 
 int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s, 
-		      spinor * const Even_new_c, spinor * const Odd_new_c, 
-		      spinor * const Even_s, spinor * const Odd_s,
-		      spinor * const Even_c, spinor * const Odd_c,
-		      const double precision, const int max_iter,
-		      const int solver_flag, const int rel_prec) {
+                      spinor * const Even_new_c, spinor * const Odd_new_c,
+                      spinor * const Even_s, spinor * const Odd_s,
+                      spinor * const Even_c, spinor * const Odd_c,
+                      const double precision, const int max_iter,
+                      const int solver_flag, const int rel_prec,
+                      const ExternalInverter inverter, const SloppyPrecision sloppy, const CompressionType compression) {
 
   int iter = 0;
-  
+
+#ifdef QUDA
+  if( inverter==QUDA_INVERTER ) {
+    return invert_doublet_eo_quda( Even_new_s, Odd_new_s, Even_new_c, Odd_new_c,
+                                   Even_s, Odd_s, Even_c, Odd_c,
+                                   precision, max_iter,
+                                   solver_flag, rel_prec, 1,
+                                   sloppy, compression );
+  }
+#endif
   
 #ifdef HAVE_GPU
 #  ifdef TEMPORALGAUGE
@@ -286,14 +299,24 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
 
 
 int invert_cloverdoublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s, 
-			    spinor * const Even_new_c, spinor * const Odd_new_c, 
-			    spinor * const Even_s, spinor * const Odd_s,
-			    spinor * const Even_c, spinor * const Odd_c,
-			    const double precision, const int max_iter,
-			    const int solver_flag, const int rel_prec) {
+                      spinor * const Even_new_c, spinor * const Odd_new_c,
+                      spinor * const Even_s, spinor * const Odd_s,
+                      spinor * const Even_c, spinor * const Odd_c,
+                      const double precision, const int max_iter,
+                      const int solver_flag, const int rel_prec,
+                      const ExternalInverter inverter, const SloppyPrecision sloppy, const CompressionType compression) {
   
   int iter = 0;
-  
+
+#ifdef QUDA
+  if( inverter==QUDA_INVERTER ) {
+    return invert_doublet_eo_quda( Even_new_s, Odd_new_s, Even_new_c, Odd_new_c,
+                                   Even_s, Odd_s, Even_c, Odd_c,
+                                   precision, max_iter,
+                                   solver_flag, rel_prec, 1,
+                                   sloppy, compression );
+  }
+#endif
   
   /* here comes the inversion using even/odd preconditioning */
   if(g_proc_id == 0) {printf("# Using even/odd preconditioning!\n"); fflush(stdout);}

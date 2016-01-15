@@ -40,6 +40,7 @@
 #include"operator/tm_operators.h"
 #include"operator/Hopping_Matrix.h"
 #include"operator/D_psi.h"
+#include"operator/tm_operators_32.h"
 #include"gamma.h"
 #include"solver/solver.h"
 #include"read_input.h"
@@ -48,11 +49,14 @@
 #include"solver/dfl_projector.h"
 #include"invert_eo.h"
 #include "solver/dirac_operator_eigenvectors.h"
-
 /* FIXME temporary includes and declarations until IO and interface for invert and CGMMS are generelized */
 #include "init/init_spinor_field.h"
 #include <io/params.h>
 #include <io/spinor.h>
+#ifdef QUDA
+#  include "quda_interface.h"
+#endif
+
 static double cgmms_reached_prec = 0.0; 
 static void cgmms_write_props(spinor ** const P, double const * const extra_masses, const int no_extra_masses, const int id, const int iteration);
 
@@ -75,10 +79,21 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 	      const double precision, const int max_iter,
 	      const int solver_flag, const int rel_prec,
 	      const int sub_evs_flag, const int even_odd_flag,
-	      const int no_extra_masses, double * const extra_masses, 
-	      solver_params_t solver_params, const int id )  {
+	      const int no_extra_masses, double * const extra_masses, solver_params_t solver_params, const int id,
+	      const ExternalInverter inverter, const SloppyPrecision sloppy, const CompressionType compression )  {
 
   int iter = 0;
+
+#ifdef QUDA
+  if( inverter==QUDA_INVERTER ) {
+    return invert_eo_quda(Even_new, Odd_new, Even, Odd,
+                                  precision, max_iter,
+                                  solver_flag, rel_prec,
+                                  even_odd_flag, solver_params,
+                                  sloppy, compression);
+  }
+#endif
+
   /* here comes the inversion using even/odd preconditioning */
   if(even_odd_flag) {
     if(g_proc_id == 0) {printf("# Using even/odd preconditioning!\n"); fflush(stdout);}
@@ -196,7 +211,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
       if(g_proc_id == 0) {printf("# Using Mixed Precision CG!\n"); fflush(stdout);}
       iter = mixed_cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, 
-                          VOLUME/2, &Qtm_pm_psi);
+			  VOLUME/2, &Qtm_pm_psi, &Qtm_pm_psi_32);
       Qtm_minus_psi(Odd_new, Odd_new);
     }
     else if(solver_flag == CG) {
@@ -366,7 +381,13 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
         iter = gmres(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 1, &D_psi);
       }
     }
-    else if(solver_flag == FGMRES) {
+    else if(solver_flag == MIXEDCG) {
+      if(g_proc_id == 0) {printf("# Using MIXEDCG!\n"); fflush(stdout);}
+    	gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
+    	iter = mixed_cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, 
+                          precision, rel_prec, VOLUME, &Q_pm_psi, &Q_pm_psi_32);
+	    Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
+    } else if(solver_flag == FGMRES) {
       if(g_proc_id == 0) {printf("# Using FGMRES! m = %d\n", gmres_m_parameter); fflush(stdout);}
       iter = fgmres(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, Msap_precon, &D_psi); 
     }

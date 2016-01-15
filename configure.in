@@ -359,6 +359,7 @@ AC_SUBST(MEASDIR)
 AC_SUBST(XLIB)
 AC_SUBST([LEMON_AVAILABLE])
 AC_SUBST(SPI_FILES)
+AC_SUBST(QUDA_INTERFACE)
 
 INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${abs_top_builddir}/  -I\${abs_top_srcdir}/ -I${lime_dir}/include/ -I${lemon_dir}/include/"
 DEPFLAGS="$DEPFLAGS"
@@ -372,19 +373,27 @@ if test "$withalign" = "none"; then
   withalign=1
   AC_DEFINE(ALIGN_BASE, 0x00, [Align base])
   AC_DEFINE(ALIGN, [])
+  AC_DEFINE(ALIGN_BASE32, 0x00, [Align base32])
+  AC_DEFINE(ALIGN32, [], [])
 elif test $withalign = 16; then
   AC_MSG_RESULT(16 bytes)
   AC_DEFINE(ALIGN_BASE, 0x0F, [Align base])
   AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
+  AC_DEFINE(ALIGN_BASE32, 0x0F, [Align base32])
+  AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))], [])
 elif test $withalign = 32; then
   AC_MSG_RESULT(32 bytes)
   AC_DEFINE(ALIGN_BASE, 0x1F, [Align base])
   AC_DEFINE(ALIGN, [__attribute__ ((aligned (32)))])
+  AC_DEFINE(ALIGN_BASE32, 0x1F, [Align base32])
+  AC_DEFINE(ALIGN32, [__attribute__ ((aligned (32)))], [])
 elif test $withalign = auto; then
   withautoalign=1
   AC_MSG_RESULT(auto)
   AC_DEFINE(ALIGN_BASE, 0x00, [Align base])
   AC_DEFINE(ALIGN, [], [])
+  AC_DEFINE(ALIGN_BASE32, 0x00, [Align base32])
+  AC_DEFINE(ALIGN32, [], [])
 else
   AC_MSG_RESULT(Unusable value for array alignment)
   AC_MSG_ERROR([Allowed values are: auto, none, 16, 32])
@@ -405,6 +414,9 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
         AC_MSG_RESULT(increasing array alignment to 16 bytes for P4 instructions)
         AC_DEFINE(ALIGN_BASE, 0x0F, [Align base])
         AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
+        AC_MSG_RESULT(increasing array 32 bit alignment to 16 bytes for P4 instructions)
+        AC_DEFINE(ALIGN_BASE32, 0x0F, [Align base])
+        AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))])
         withautoalign=16
       fi
     elif test $withalign -lt 16; then
@@ -426,6 +438,9 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
         AC_MSG_RESULT(increasing array alignment to 16 bytes for Opteron instructions)
         AC_DEFINE(ALIGN_BASE, 0x0F, [Align base])
         AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
+        AC_MSG_RESULT(increasing array 32 bit alignment to 16 bytes for Opteron instructions)
+        AC_DEFINE(ALIGN_BASE32, 0x0F, [Align base32])
+        AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))])
         withautoalign=16
       fi
     elif test $withalign -lt 16; then
@@ -467,6 +482,9 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
         AC_MSG_RESULT(increasing array alignment to 16 bytes for SSE instructions)
         AC_DEFINE(ALIGN_BASE, 0x0F, [Align base])
         AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
+        AC_MSG_RESULT(increasing 32bit array alignment to 16 bytes for SSE instructions)
+        AC_DEFINE(ALIGN_BASE32, 0x0F, [Align base32])	
+        AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))])
         withautoalign=16
       fi
     fi
@@ -480,6 +498,9 @@ if test $enable_qpx = yes; then
       AC_MSG_RESULT(increasing array alignment to 32 bytes for use of QPX instructions on BG/Q)
       AC_DEFINE(ALIGN_BASE, 0x1F, [Align base])
       AC_DEFINE(ALIGN, [__attribute__ ((aligned (32)))])
+      AC_MSG_RESULT(increasing 32bit array alignment to 16 bytes for use of QPX instructions on BG/Q)
+      AC_DEFINE(ALIGN_BASE32, 0x0F, [Align base32])
+      AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))])
       withautoalign=32
     fi
   elif test $withalign -lt 32; then
@@ -494,7 +515,7 @@ if test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os
     if test $withautoalign -lt 16; then
       AC_MSG_RESULT(increasing array alignment to 16 bytes for BG/L optimization)
       AC_DEFINE(ALIGN_BASE, 0x0F, [Align base])
-      AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
+      AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))], [Align base])
       withautoalign=16
     fi
   fi
@@ -503,7 +524,7 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_
     if test $withautoalign -lt 16; then
       AC_MSG_RESULT(increasing array alignment to 16 bytes for BG/P optimization)
       AC_DEFINE(ALIGN_BASE, 0x0F, [Align base])
-      AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
+      AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))], [Align base])
       withautoalign=16
     fi
   fi
@@ -513,6 +534,9 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "
       AC_MSG_RESULT(increasing array alignment to 32 bytes for BG/Q and generic POWER optimization)
       AC_DEFINE(ALIGN_BASE, 0x1F, [Align base])
       AC_DEFINE(ALIGN, [__attribute__ ((aligned (32)))])
+      AC_MSG_RESULT(increasing array 32 bit alignment to 16 bytes for BG/Q and generic POWER optimization)
+      AC_DEFINE(ALIGN_BASE32, 0x0F, [Align base])
+      AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))])
       withautoalign=32
     fi
   fi
@@ -880,6 +904,47 @@ AC_SUBST(NVCC)
 AC_SUBST(GPUDIR)
 AC_SUBST(GPUCFLAGS)
 AC_SUBST(GPUMPICOMPILER)
+
+
+# QUDA library for GPUs
+AC_MSG_CHECKING(whether we want to use QUDA GPU)
+AC_ARG_WITH(qudadir,
+            AS_HELP_STRING([--with-qudadir[=dir]], [use QUDA, to be found in dir]),
+             [echo yes
+              QUDA_AVAILABLE=1
+              AC_DEFINE(QUDA,1,Using QUDA GPU)
+              quda_dir=$withval
+              LDFLAGS="$LDFLAGS -L${quda_dir}/lib"
+              INCLUDES="$INCLUDES -I${quda_dir}/include/"
+              QUDA_INTERFACE="quda_interface"
+              AC_MSG_CHECKING([where to search for CUDA libs])
+						  AC_ARG_WITH(cudadir,
+						    AS_HELP_STRING([--with-cudadir[=dir]], [if using QUDA, then set CUDA lib dir [default=/usr/local/cuda/lib]]),
+						    cuda_dir=$withval, cuda_dir="/usr/local/cuda/lib")
+						  AC_MSG_RESULT($cuda_dir)
+						  LDFLAGS="$LDFLAGS -L$cuda_dir"
+              AC_CHECK_LIB([cudart],
+                           [cudaMalloc],
+                           [],
+                           [AC_MSG_ERROR([Can't link a simple program against library cudart.])]
+                           )
+              # Perform test in C++
+              AC_LANG_PUSH([C++])
+              AC_CHECK_LIB([quda],
+                           [freeGaugeQuda],
+                           [],
+                           [AC_MSG_ERROR([Can't link a simple program against library libquda. (Did you set CXX properly?)])]
+                           )
+              AC_LANG_PUSH([C++])
+              #QUDA needs to be linked with C++ linker
+              CCLD=${CXX}
+             ],
+             [echo no
+              QUDA_AVAILABLE=0
+              QUDA_INTERFACE=""
+              ]
+              )
+AC_SUBST([QUDA_AVAILABLE])
 
 
 AC_MSG_CHECKING(checking consistency)

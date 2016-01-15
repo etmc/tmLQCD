@@ -28,6 +28,8 @@
 
 extern su3 *** sw;
 extern su3 *** sw_inv;
+extern su3_32 *** sw_32;
+extern su3_32 *** sw_inv_32;
 extern su3 ** swm, ** swp;
 
 void assign_mul_one_sw_pm_imu_site_lexic(const int ix, spinor * const k,  const spinor * const l, const double mu);
@@ -59,6 +61,7 @@ void Msw_plus_psi(spinor * const l, spinor * const k);
 void Msw_minus_psi(spinor * const l, spinor * const k);
 void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const int tau3sign, const double mu);
 void init_sw_fields();
+void copy_32_sw_fields();
 
 void clover_nd(const int ieo, 
 	       spinor * const l_s, spinor * const l_c, 

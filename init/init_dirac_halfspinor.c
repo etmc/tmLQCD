@@ -29,6 +29,7 @@
 #include "global.h"
 #include "su3.h"
 #include "init_dirac_halfspinor.h"
+#include "fatal_error.h"
 
 #ifdef BGQ
 #  define SPI_ALIGN_BASE 0x7f

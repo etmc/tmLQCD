@@ -356,6 +356,13 @@ void zero_spinor_field(spinor * const k, const int N)
   memset(k, 0, sizeof(spinor) * N);
 }
 
+/* Function provides a zero spinor field of length N */
+void zero_spinor_field_32(spinor32 * const k, const int N)
+{
+  memset(k, 0, sizeof(spinor32) * N);
+}
+
+
 /* Function provides a constant spinor field of length N */
 void constant_spinor_field(spinor * const k, const int p, const int N)
 {

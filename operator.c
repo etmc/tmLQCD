@@ -55,10 +55,13 @@
 #include "test/overlaptests.h"
 #include "solver/index_jd.h"
 #include "operator/clovertm_operators.h"
+#include "operator/clovertm_operators_32.h"
 #include "operator/clover_leaf.h"
 #include "operator.h"
 #include "gettime.h"
-
+#ifdef QUDA
+#  include "quda_interface.h"
+#endif
 
 void dummy_D(spinor * const, spinor * const);
 void dummy_Mee(spinor * const, spinor * const, double const);
@@ -82,7 +85,8 @@ int add_operator(const int type) {
   optr->kappa = _default_g_kappa;
   optr->mu = _default_g_mu;
   optr->c_sw = _default_c_sw;
-  optr->sloppy_precision = _default_g_sloppy_precision_flag;
+  optr->sloppy_precision = _default_operator_sloppy_precision_flag;
+  optr->compression_type = _default_compression_type;
   optr->coefs = NULL;
   optr->rel_prec = _default_g_relative_precision_flag;
   optr->eps_sq = _default_solver_precision;
@@ -156,49 +160,47 @@ int init_operators() {
       /* This is a hack, it should be set on an operator basis. */
       optr->rel_prec = g_relative_precision_flag;
       if(optr->type == TMWILSON || optr->type == WILSON) {
-	if(optr->c_sw > 0) {
-	  init_sw_fields();
-	}
+        if(optr->c_sw > 0) {
+          init_sw_fields();
+        }
         optr->applyM = &M_full;
         optr->applyQ = &Q_full;
-	if(optr->even_odd_flag) {
+        if(optr->even_odd_flag) {
           optr->applyMee    = &Mee_psi;
           optr->applyMeeInv = &Mee_inv_psi;
-	  optr->applyQp = &Qtm_plus_psi;
-	  optr->applyQm = &Qtm_minus_psi;
-	  optr->applyQsq = &Qtm_pm_psi;
-	  optr->applyMp = &Mtm_plus_psi;
-	  optr->applyMm = &Mtm_minus_psi;
-	}
-	else {
-	  optr->applyQp = &Q_plus_psi;
-	  optr->applyQm = &Q_minus_psi;
-	  optr->applyQsq = &Q_pm_psi;
-	  optr->applyMp = &D_psi;
-	  optr->applyMm = &M_minus_psi;
-	}
-	if(optr->solver == CGMMS) {
-	  if (g_cart_id == 0 && optr->even_odd_flag == 1)
-	    fprintf(stderr, "CG Multiple mass solver works only without even/odd! Forcing!\n");
-	  optr->even_odd_flag = 0;
-	  if (g_cart_id == 0 && optr->DownProp)
-	    fprintf(stderr, "CGMMS doesn't need AddDownPropagator! Switching Off!\n");
-	  optr->DownProp = 0;
-	}
-        
+          optr->applyQp = &Qtm_plus_psi;
+          optr->applyQm = &Qtm_minus_psi;
+          optr->applyQsq = &Qtm_pm_psi;
+          optr->applyMp = &Mtm_plus_psi;
+          optr->applyMm = &Mtm_minus_psi;
+        }
+        else {
+          optr->applyQp = &Q_plus_psi;
+          optr->applyQm = &Q_minus_psi;
+          optr->applyQsq = &Q_pm_psi;
+          optr->applyMp = &D_psi;
+          optr->applyMm = &M_minus_psi;
+        }
+        if(optr->solver == CGMMS) {
+          if (g_cart_id == 0 && optr->even_odd_flag == 1)
+            fprintf(stderr, "CG Multiple mass solver works only without even/odd! Forcing!\n");
+          optr->even_odd_flag = 0;
+          if (g_cart_id == 0 && optr->DownProp)
+            fprintf(stderr, "CGMMS doesn't need AddDownPropagator! Switching Off!\n");
+          optr->DownProp = 0;
+        }
         if(optr->solver == INCREIGCG){
           if (g_cart_id == 0 && optr->DownProp){
-             fprintf(stderr,"Warning: When even-odd preconditioning is used, the eigenvalues for +mu and -mu will be little different\n");
-             fprintf(stderr,"Incremental EigCG solver will still work however.\n");
+            fprintf(stderr,"Warning: When even-odd preconditioning is used, the eigenvalues for +mu and -mu will be little different\n");
+            fprintf(stderr,"Incremental EigCG solver will still work however.\n");
           }
           
-
+          
           if (g_cart_id == 0 && optr->even_odd_flag == 0)
-             fprintf(stderr,"Incremental EigCG solver is added only with Even-Odd preconditioning!. Forcing\n");
-          optr->even_odd_flag = 1; 
+            fprintf(stderr,"Incremental EigCG solver is added only with Even-Odd preconditioning!. Forcing\n");
+          optr->even_odd_flag = 1;
         }
-
-
+        
       }
       else if(optr->type == CLOVER) {
         if(optr->c_sw > 0) {
@@ -232,24 +234,36 @@ int init_operators() {
         }
       }
       else if(optr->type == OVERLAP) {
-	optr->even_odd_flag = 0;
-	optr->applyMp = &Dov_psi;
-	optr->applyQp = &Qov_psi;
+        optr->even_odd_flag = 0;
+        optr->applyMp = &Dov_psi;
+        optr->applyQp = &Qov_psi;
       }
       else if(optr->type == DBTMWILSON) {
-	optr->even_odd_flag = 1;
-	optr->applyDbQsq = &Qtm_pm_ndpsi;
-	/* TODO: this should be here!       */
-	/* Chi`s-spinors  memory allocation */
-	/*       if(init_chi_spinor_field(VOLUMEPLUSRAND/2, 20) != 0) { */
-	/* 	fprintf(stderr, "Not enough memory for 20 NDPHMC Chi fields! Aborting...\n"); */
-	/* 	exit(0); */
-	/*       } */
+        optr->even_odd_flag = 1;
+        optr->applyDbQsq = &Qtm_pm_ndpsi;
+        /* TODO: this should be here!       */
+        /* Chi`s-spinors  memory allocation */
+        /*       if(init_chi_spinor_field(VOLUMEPLUSRAND/2, 20) != 0) { */
+        /*   fprintf(stderr, "Not enough memory for 20 NDPHMC Chi fields! Aborting...\n"); */
+        /*   exit(0); */
+        /*       } */
       }
       else if(optr->type == DBCLOVER) {
-	optr->even_odd_flag = 1;
-	optr->applyDbQsq = &Qsw_pm_ndpsi;
+        optr->even_odd_flag = 1;
+        optr->applyDbQsq = &Qsw_pm_ndpsi;
+        //  optr->applyDbQsq = &Qtm_pm_ndpsi;
       }
+    }
+
+    if(optr->external_inverter==QUDA_INVERTER ) {
+#ifdef QUDA
+      _initQuda();
+#else
+      if(g_proc_id == 0) {
+        fprintf(stderr, "Error: You're trying to use QUDA but this build was not configured for QUDA usage.\n");
+        exit(-2);
+      }
+#endif
     }
   }
   return(0);
@@ -294,20 +308,19 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
   optr->reached_prec = -1.;
   g_kappa = optr->kappa;
   boundary(g_kappa);
-
+  
   atime = gettime();
   if(optr->type == TMWILSON || optr->type == WILSON || optr->type == CLOVER) {
     g_mu = optr->mu;
     g_c_sw = optr->c_sw;
-    //if(optr->type == CLOVER) {
-    //  if (g_cart_id == 0 && g_debug_level > 1) {
-	//printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
-      //}
-      //init_sw_fields(VOLUME);
-      //sw_term( (const su3**) g_gauge_field, optr->kappa, optr->c_sw);
-      //sw_invert(EE,optr->mu);
-    //}
-
+    if(optr->type == CLOVER) {
+      if (g_cart_id == 0 && g_debug_level > 1) {
+        printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
+      }
+      init_sw_fields(VOLUME);
+      sw_term( (const su3**) g_gauge_field, optr->kappa, optr->c_sw);
+    }
+    
     for(i = 0; i < 2; i++) {
       // we need this here again for the sign switch at i == 1
       g_mu = optr->mu;
@@ -315,34 +328,38 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
         printf("#\n# 2 kappa mu = %e, kappa = %e, c_sw = %e\n", g_mu, g_kappa, g_c_sw);
       }
       if(optr->type != CLOVER) {
-	if(use_preconditioning){
-	  g_precWS=(void*)optr->precWS;
-	}
-	else {
-	  g_precWS=NULL;
-	}
-	
-	optr->iterations = invert_eo( optr->prop0, optr->prop1, optr->sr0, optr->sr1,
-				      optr->eps_sq, optr->maxiter,
-				      optr->solver, optr->rel_prec,
-				      0, optr->even_odd_flag,optr->no_extra_masses, optr->extra_masses, optr->solver_params, optr->id );
-	
-	/* check result */
-	M_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
+        if(use_preconditioning){
+          g_precWS=(void*)optr->precWS;
+        }
+        else {
+          g_precWS=NULL;
+        }
+        optr->iterations = invert_eo( optr->prop0, optr->prop1, optr->sr0, optr->sr1,
+                                      optr->eps_sq, optr->maxiter,
+                                      optr->solver, optr->rel_prec,
+                                      0, optr->even_odd_flag,optr->no_extra_masses,
+                                      optr->extra_masses, optr->solver_params, optr->id,
+                                      optr->external_inverter, optr->sloppy_precision, optr->compression_type);
+        
+        /* check result */
+        M_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
       }
       else {
-	/* this must be EE here!   */
-	/* to match clover_inv in Qsw_psi */
-        //if(optr->even_odd_flag)
-	//  sw_invert(EE, optr->mu); //this is needed only when we use even-odd preconditioning
-
-	optr->iterations = invert_clover_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
-					    optr->eps_sq, optr->maxiter,
-					    optr->solver, optr->rel_prec,
-					    optr->even_odd_flag, optr->solver_params,
-					    &g_gauge_field, optr->applyQsq, optr->applyQm);
-	/* check result */
- 	optr->applyM(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
+        /* this must be EE here!   */
+        /* to match clover_inv in Qsw_psi */
+        if(optr->even_odd_flag)
+          sw_invert(EE, optr->mu); //this is needed only when we use even-odd preconditioning
+        /* now copy double sw and sw_inv fields to 32bit versions */
+        copy_32_sw_fields();
+        
+        optr->iterations = invert_clover_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
+                                            optr->eps_sq, optr->maxiter,
+                                            optr->solver, optr->rel_prec,
+                                            optr->even_odd_flag, optr->solver_params,
+                                            &g_gauge_field, optr->applyQsq, optr->applyQm,
+                                            optr->external_inverter, optr->sloppy_precision, optr->compression_type);
+        /* check result */
+        optr->applyM(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
       }
 
       diff(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], optr->sr0, VOLUME / 2);
@@ -382,30 +399,32 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 
     for(i = 0; i < SourceInfo.no_flavours; i++) {
       if(optr->type != DBCLOVER) {
-	optr->iterations = invert_doublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3, 
+	optr->iterations = invert_doublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3,
 					      optr->sr0, optr->sr1, optr->sr2, optr->sr3,
 					      optr->eps_sq, optr->maxiter,
-					      optr->solver, optr->rel_prec);
+					      optr->solver, optr->rel_prec,
+					      optr->external_inverter, optr->sloppy_precision, optr->compression_type);
       }
       else {
-	optr->iterations = invert_cloverdoublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3, 
+	optr->iterations = invert_cloverdoublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3,
 						    optr->sr0, optr->sr1, optr->sr2, optr->sr3,
 						    optr->eps_sq, optr->maxiter,
-						    optr->solver, optr->rel_prec);
+						    optr->solver, optr->rel_prec,
+						    optr->external_inverter, optr->sloppy_precision, optr->compression_type);
       }
       g_mu = optr->mubar;
       if(optr->type != DBCLOVER) {
-	M_full(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], optr->prop0, optr->prop1); 
+	M_full(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], optr->prop0, optr->prop1);
       }
       else {
-	Msw_full(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], optr->prop0, optr->prop1); 
+	Msw_full(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], optr->prop0, optr->prop1);
       }
       assign_add_mul_r(g_spinor_field[DUM_DERI+1], optr->prop2, -optr->epsbar, VOLUME/2);
       assign_add_mul_r(g_spinor_field[DUM_DERI+2], optr->prop3, -optr->epsbar, VOLUME/2);
-
+    
       g_mu = -g_mu;
       if(optr->type != DBCLOVER) {
-	M_full(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+4], optr->prop2, optr->prop3); 
+	M_full(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+4], optr->prop2, optr->prop3);
       }
       else {
 	Msw_full(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+4], optr->prop2, optr->prop3);
@@ -468,8 +487,8 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
     g_mu = 0.;
     m_ov=optr->m;
     eigenvalues(&optr->no_ev, 5000, optr->ev_prec, 0, optr->ev_readwrite, nstore, optr->even_odd_flag);
-/*     ov_check_locality(); */
-/*      index_jd(&optr->no_ev_index, 5000, 1.e-12, optr->conf_input, nstore, 4); */
+    /*     ov_check_locality(); */
+    /*      index_jd(&optr->no_ev_index, 5000, 1.e-12, optr->conf_input, nstore, 4); */
     ov_n_cheby=optr->deg_poly;
 
     if(use_preconditioning==1)

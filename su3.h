@@ -42,6 +42,11 @@ typedef struct
    _Complex double c00, c01, c02, c10, c11, c12, c20, c21, c22;
 } su3;
 
+typedef struct 
+{
+   _Complex float c00, c01, c02, c10, c11, c12, c20, c21, c22;
+} su3_32;
+
 typedef struct
 {
    _Complex double c0,c1,c2;
@@ -56,6 +61,11 @@ typedef struct
 {
    su3_vector s0,s1,s2,s3;
 } spinor;
+
+typedef struct
+{
+   su3_vector32 s0,s1,s2,s3;
+} spinor32;
 
 typedef struct
 {
@@ -374,6 +384,17 @@ _sse_store_up(r);
   (u).c20 = conj((v).c02);			\
   (u).c21 = conj((v).c12);			\
   (u).c22 = conj((v).c22); 
+
+#define _su3_transpose(u,v)			\
+  (u).c00 = ((v).c00);			\
+  (u).c01 = ((v).c10);			\
+  (u).c02 = ((v).c20);			\
+  (u).c10 = ((v).c01);			\
+  (u).c11 = ((v).c11);			\
+  (u).c12 = ((v).c21);			\
+  (u).c20 = ((v).c02);			\
+  (u).c21 = ((v).c12);			\
+  (u).c22 = ((v).c22);
 
 #define _itimes_su3(u,v)			\
   (u).c00 = I * (v).c00;			\
