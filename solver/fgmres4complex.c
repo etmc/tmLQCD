@@ -46,6 +46,7 @@
 #include"su3.h"
 #include"linalg_eo.h"
 #include"solver_field.h"
+#include"dfl_projector.h"
 #include"gcr4complex.h"
 #include"fgmres4complex.h"
 
@@ -66,10 +67,10 @@ static double * s;
 //extern int dfl_poly_iter;
 
 int fgmres4complex(_Complex double * const P, _Complex double * const Q,
-	   const int m, const int max_restarts,
-		const double eps_sq, const int rel_prec,
-		const int N, const int parallel,
-		const int lda, c_matrix_mult f) {
+		   const int m, const int max_restarts,
+		   const double eps_sq, const int rel_prec,
+		   const int N, const int parallel,
+		   const int lda, const int precon, c_matrix_mult f) {
 
   int restart, i, j, k;
   double beta, eps, norm;
@@ -78,12 +79,8 @@ int fgmres4complex(_Complex double * const P, _Complex double * const Q,
   _Complex double ** solver_field = NULL;
   const int nr_sf = 3;
 
-//  if(N == VOLUME) {
-    init_lsolver_field(&solver_field, /*why not N?*/ lda, nr_sf);/* #ifdef HAVE_LAPACK */
-//  }
-//  else {
-//    init_lsolver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);
-//  }
+  init_lsolver_field(&solver_field, /*why not N?*/ lda, nr_sf);/* #ifdef HAVE_LAPACK */
+
   eps=sqrt(eps_sq);
   init_lgmres(m, lda);
   r0 = solver_field[0];
@@ -115,22 +112,13 @@ int fgmres4complex(_Complex double * const P, _Complex double * const Q,
     for(j = 0; j < m; j++){
       /* solver_field[0]=A*M^-1*v_j */
 
-//      if(precon == 0) {
+      if(precon == 0) {
 	lassign(Z[j], V[j], N);
-//      }
-//      else if(precon == 1) {
-//	zero_spinor_field(Z[j], N);
-//	Msap_eo(Z[j], V[j], 5, 3);
-//      }
-//      else if(precon == 2) {
-//	mg_precon(Z[j], V[j]);
-//      }
-//      else if(precon == 4) {
-//	mg_precon_cg(Z[j], V[j]);
-//      }
-//      else {
-//	mg_Qsq_precon(Z[j], V[j]);
-//      }
+      }
+      else {
+	little_mg_precon(Z[j], V[j]);
+      }
+
       f(r0, Z[j]); 
       /* Set h_ij and omega_j */
       /* solver_field[1] <- omega_j */

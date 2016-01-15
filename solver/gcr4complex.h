@@ -24,6 +24,7 @@
 #include"su3.h"
 
 void ldiff(_Complex double * Q, _Complex double * const R, _Complex double * const S, const int N);
+void lassign(_Complex double * Q, _Complex double * const R, const int N);
 void ladd(_Complex double * Q, _Complex double * const R, _Complex double * const S, const int N);
 double lsquare_norm(_Complex double * const Q, const int N, const int parallel);
 _Complex double lscalar_prod(_Complex double * const R, _Complex double * const S, const int N, const int parallel);

@@ -55,10 +55,10 @@
 //#include"su3.h"
 
 int fgmres4complex(_Complex double * const P, _Complex double * const Q,
-	   const int m, const int max_restarts,
-		const double eps_sq, const int rel_prec,
-		const int N, const int parallel,
-		const int lda, c_matrix_mult f);
+		   const int m, const int max_restarts,
+		   const double eps_sq, const int rel_prec,
+		   const int N, const int parallel,
+		   const int lda, const int precon, c_matrix_mult f);
 
 
 #endif
