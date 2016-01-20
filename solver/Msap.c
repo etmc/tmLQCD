@@ -232,6 +232,8 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
   }
   if(mu_dflgen > -10) {
     g_mu = mu_dflgen;
+    // make sure the sign is correct!
+    if(g_mu*musave < 0) g_mu *= -1.;
   }
   boundary(g_kappa);
   /* 
@@ -255,7 +257,7 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
       diff(r, Q, r, VOLUME);
       nrm = square_norm(r, VOLUME, 1);
       if(g_proc_id == 0 && g_debug_level > 2 && eo == 0) {
-	printf("Msap_eo: %d %1.3e\n", ncy, nrm);
+	printf("Msap_eo: %d %1.3e mu = %e\n", ncy, nrm, g_mu/2./g_kappa);
 	fflush(stdout);
       }
       /* choose the even (odd) block */
