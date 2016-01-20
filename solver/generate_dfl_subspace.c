@@ -32,6 +32,7 @@
 #include <complex.h>
 #include "read_input.h"
 #include "start.h"
+#include "gamma.h"
 #include "ranlxs.h"
 #include "operator/D_psi.h"
 #include "operator/tm_operators.h"
@@ -159,6 +160,7 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
   }
   if(mu_dflgen > -10) {
     g_mu = mu_dflgen;
+    if(g_mu*musave < 0) g_mu *= -1.;
   }
   // currently set to 0 during subspace generation
   usePL = 0;
@@ -230,7 +232,7 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
       D_psi(work_fields[0], dfl_fields[i]);
       nrm = sqrt(square_norm(work_fields[0], N, 1));
       if(g_proc_id == 0) {
-	printf(" ||D psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm);
+	printf(" ||D psi_%d||/||psi_%d|| = %1.15e\n", i, i, nrm);
       }
     }
   }
