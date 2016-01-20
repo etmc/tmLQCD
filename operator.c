@@ -54,6 +54,7 @@
 #include <io/utils.h>
 #include "test/overlaptests.h"
 #include "solver/index_jd.h"
+#include "little_D.h"
 #include "operator/clovertm_operators.h"
 #include "operator/clovertm_operators_32.h"
 #include "operator/clover_leaf.h"
@@ -321,6 +322,8 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       sw_term( (const su3**) g_gauge_field, optr->kappa, optr->c_sw);
     }
     
+    // this loop is for +mu (i=0) and -mu (i=1)
+    // the latter if AddDownPropagator = yes is chosen
     for(i = 0; i < 2; i++) {
       // we need this here again for the sign switch at i == 1
       g_mu = optr->mu;
@@ -347,7 +350,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       else {
         /* this must be EE here!   */
         /* to match clover_inv in Qsw_psi */
-        if(optr->even_odd_flag)
+        if(optr->even_odd_flag || optr->solver == DFLFGMRES || optr->solver == DFLGCR)
           sw_invert(EE, optr->mu); //this is needed only when we use even-odd preconditioning
         /* now copy double sw and sw_inv fields to 32bit versions */
         copy_32_sw_fields();
@@ -378,8 +381,10 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       if (optr->solver != CGMMS && write_prop) /* CGMMS handles its own I/O */
         optr->write_prop(op_id, index_start, i);
       if(optr->DownProp) {
-        optr->mu = -optr->mu;
-      } else 
+	optr->mu = -optr->mu;
+	dfl_subspace_updated = 1;
+      } 
+      else 
         break;
     }
   }
