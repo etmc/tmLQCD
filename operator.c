@@ -254,17 +254,16 @@ int init_operators() {
         optr->applyDbQsq = &Qsw_pm_ndpsi;
         //  optr->applyDbQsq = &Qtm_pm_ndpsi;
       }
-    }
-
-    if(optr->external_inverter==QUDA_INVERTER ) {
+      if(optr->external_inverter==QUDA_INVERTER ) {
 #ifdef QUDA
-      _initQuda();
+        _initQuda();
 #else
-      if(g_proc_id == 0) {
-        fprintf(stderr, "Error: You're trying to use QUDA but this build was not configured for QUDA usage.\n");
-        exit(-2);
-      }
+        if(g_proc_id == 0) {
+          fprintf(stderr, "Error: You're trying to use QUDA but this build was not configured for QUDA usage.\n");
+          exit(-2);
+        }
 #endif
+      }
     }
   }
   return(0);
@@ -329,6 +328,10 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       g_mu = optr->mu;
       if (g_cart_id == 0) {
         printf("#\n# 2 kappa mu = %e, kappa = %e, c_sw = %e\n", g_mu, g_kappa, g_c_sw);
+      }
+      if(i > 0) {
+        zero_spinor_field(optr->prop0, VOLUME/2);
+        zero_spinor_field(optr->prop1, VOLUME/2);
       }
       if(optr->type != CLOVER) {
         if(use_preconditioning){
@@ -582,6 +585,7 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
     status = write_spinor(writer, &operator_list[op_id].prop2, &operator_list[op_id].prop3, 1, optr->prop_precision);
   }
   status = write_spinor(writer, &operator_list[op_id].prop0, &operator_list[op_id].prop1, 1, optr->prop_precision);
+  // check status for errors!?
   destruct_writer(writer);
   return;
 }
