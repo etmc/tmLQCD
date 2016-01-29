@@ -160,6 +160,7 @@ static void free_lgcr()
   free(_a);
   free(_chi);
   free(alpha);
+  free(b);
   free(c);
   free(_xi);
   free(xi);
