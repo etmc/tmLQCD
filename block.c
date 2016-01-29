@@ -209,14 +209,6 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
     if(g_proc_id == 0 && g_debug_level > 4) {
       printf("%d %d (%d %d %d %d)\n", i, block_list[i].evenodd, block_list[i].coordinate[0], block_list[i].coordinate[1], block_list[i].coordinate[2], block_list[i].coordinate[3]);
     }
-    if ((void*)(block_idx = calloc(8 * (VOLUME/nb_blocks), sizeof(int))) == NULL)
-      CALLOC_ERROR_CRASH;
-
-    if ((void*)(block_evenidx = calloc(8 * (VOLUME/nb_blocks/2), sizeof(int))) == NULL)
-      CALLOC_ERROR_CRASH;
-
-    if ((void*)(block_oddidx = calloc(8 * (VOLUME/nb_blocks/2), sizeof(int))) == NULL)
-      CALLOC_ERROR_CRASH;
 
     for (j = 0; j < g_N_s; j++) { /* write a zero element at the end of every spinor */
       _spinor_null(block_list[i].basis[j][VOLUME/nb_blocks]);
@@ -234,6 +226,14 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
       block_list[i].little_dirac_operator_eo[j] = 0.0;
     }
   }
+  if ((void*)(block_idx = calloc(8 * (VOLUME/nb_blocks), sizeof(int))) == NULL)
+    CALLOC_ERROR_CRASH;
+  
+  if ((void*)(block_evenidx = calloc(8 * (VOLUME/nb_blocks/2), sizeof(int))) == NULL)
+    CALLOC_ERROR_CRASH;
+  
+  if ((void*)(block_oddidx = calloc(8 * (VOLUME/nb_blocks/2), sizeof(int))) == NULL)
+    CALLOC_ERROR_CRASH;
   
   init_blocks_geometry();
   init_blocks_gaugefield();
@@ -259,6 +259,9 @@ int free_blocks() {
     free(bipt_);
     free(bipt);
     free(index_block_eo);
+    free(block_idx);
+    free(block_evenidx);
+    free(block_oddidx);
     free(u);
     free(basis);
     free(block_list);
@@ -996,7 +999,7 @@ void compute_little_D(const int mul_g5) {
   int x, y, z=0, t, ix, iy=0, i, j, pm, mu=0, blk;
   int t_start, t_end, x_start, x_end, y_start, y_end, z_start, z_end;
   _Complex double c, *M;
-  int count=0;
+  //int count=0;
   int bx, by, bz, bt, block_id = 0, block_id_e, block_id_o,is_up = 0, ib;
   int dT, dX, dY, dZ;
   dT = T/nblks_t; dX = LX/nblks_x; dY = LY/nblks_y; dZ = LZ/nblks_z;
@@ -1042,7 +1045,7 @@ void compute_little_D(const int mul_g5) {
     LUInvert(g_N_s,block_list[blk].little_dirac_operator_eo,g_N_s);
   }
   for (i = 0; i < g_N_s; i++) {
-    if(i==0) count = 0;
+    //if(i==0) count = 0;
     reconstruct_global_field_GEN_ID(scratch, block_list, i , nb_blocks);
     
 #ifdef MPI

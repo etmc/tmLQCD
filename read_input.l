@@ -2365,9 +2365,9 @@ int read_input(char * conf_file){
   X3 = _default_X3;
   g_rgi_C1 = _default_g_rgi_C1;
   read_source_flag= _default_read_source_flag;
-  if(SourceInfo.basename == NULL) SourceInfo.basename = (char*)malloc(100*sizeof(char));
+  if(SourceInfo.basename == NULL) SourceInfo.basename = (char*)malloc(strlen(_default_source_filename)+10);
   strcpy(SourceInfo.basename, _default_source_filename);
-  if(PropInfo.basename == NULL) PropInfo.basename = (char*)malloc(100*sizeof(char));
+  if(PropInfo.basename == NULL) PropInfo.basename = (char*)malloc(strlen(_default_source_filename)+10);
   strcpy(PropInfo.basename, _default_source_filename);
   PropInfo.splitted = _default_propagator_splitted;
   SourceInfo.splitted = _default_source_splitted;

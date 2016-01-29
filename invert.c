@@ -504,6 +504,8 @@ int main(int argc, char *argv[])
   free_chi_spinor_field();
   free(filename);
   free(input_filename);
+  free(SourceInfo.basename);
+  free(PropInfo.basename);
 #ifdef QUDA
   _endQuda();
 #endif

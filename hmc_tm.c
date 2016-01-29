@@ -554,6 +554,8 @@ int main(int argc,char *argv[]) {
   }
   free(input_filename);
   free(filename);
+  free(SourceInfo.basename);
+  free(PropInfo.basename);
 #ifdef MPI
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
