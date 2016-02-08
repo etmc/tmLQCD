@@ -1,7 +1,7 @@
 #ifndef _SOLVER_TYPES_H
 #define _SOLVER_TYPES_H
 
-typedef enum SOLVER_TYPE_s {
+typedef enum SOLVER_TYPE {
  BICGSTAB = 0,
  CG,
  GMRES,
