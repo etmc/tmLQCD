@@ -22,7 +22,7 @@
 
 #include "su3.h"
 
-/*   (*P) = (*P) + c(*Q)        c is a complex constant   */
+/*   (*P) = c(*P) + (*Q)        c is a complex constant   */
 void assign_mul_add(spinor * const P, const _Complex double c, spinor * const Q, const int N);
 
 #endif

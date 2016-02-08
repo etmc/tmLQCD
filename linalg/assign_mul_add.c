@@ -16,14 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-/*******************************************************************************
- *
- * File assign_add_mul.c 
- *
- *   void assign_add_mul(spinor * const P, spinor * const Q, const complex c)
- *     (*P) = (*P) + c(*Q)        c is a complex constant
- *
- *******************************************************************************/
 
 #ifdef HAVE_CONFIG_H
 # include<config.h>
@@ -37,8 +29,7 @@
 #include "su3.h"
 #include "assign_mul_add.h"
 
-
-void assign_add_mul(spinor * const R, const _Complex double c, spinor * const S, const int N)
+void assign_mul_add(spinor * const R, const _Complex double c, spinor * const S, const int N)
 {
 #ifdef OMP
 #pragma omp parallel
