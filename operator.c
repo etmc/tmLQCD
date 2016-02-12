@@ -344,13 +344,13 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       optr->iterations = invert_doublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3,
                                             optr->sr0, optr->sr1, optr->sr2, optr->sr3,
                                             optr->eps_sq, optr->maxiter,
-                                            optr->solver, optr->rel_prec,
+                                            optr->solver, optr->rel_prec, optr->solver_params,
                                             optr->external_inverter, optr->sloppy_precision, optr->compression_type);
     } else {
       optr->iterations = invert_cloverdoublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3,
                                                   optr->sr0, optr->sr1, optr->sr2, optr->sr3,
                                                   optr->eps_sq, optr->maxiter,
-                                                  optr->solver, optr->rel_prec,
+                                                  optr->solver, optr->rel_prec, optr->solver_params,
                                                   optr->external_inverter, optr->sloppy_precision, optr->compression_type);
       }
       g_mu = optr->mubar;
