@@ -1,6 +1,5 @@
 /***********************************************************************
- *
- * Copyright (C) 2007 Andreas Nube
+ * Copyright (C) 2016 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -16,19 +15,18 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Typedefinition of the pointer to the function
- * which contains the matrix multiplication.
- *
- * Author: Andreas Nube
- *         annube@ifh.de
- *
- ************************************************************************/
+ ***********************************************************************/
+#ifndef _RG_MIXED_CG_HER_ND_H
+#define _RG_MIXED_CG_HER_ND_H
 
-#ifndef _MATRIX_MULT_TYPEDEF_ND_H
-#define _MATRIX_MULT_TYPEDEF_ND_H
+#include "operator/tm_operators_32.h"
+#include "solver/matrix_mult_typedef_nd.h"
+#include "solver/solver_params.h"
+#include "solver/rg_mixed_cg_typedef.h"
+#include "su3.h"
 
-typedef void (*matrix_mult_nd)(spinor * const, spinor * const,spinor * const, spinor * const);
-typedef void (*matrix_mult_nd32)(spinor32 * const, spinor32 * const, spinor32 * const, spinor32 * const);
+int rg_mixed_cg_her_nd(spinor * const Pup, spinor * const Pdn, spinor * const Qup, spinor * const Qdn,
+                    solver_params_t solver_params, const int max_iter, const double eps_sq, const int rel_prec,
+                    const int N, matrix_mult_nd f, matrix_mult_nd32 f32);
 
 #endif

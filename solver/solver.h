@@ -77,6 +77,7 @@ typedef struct {
 #include "solver/cg_her_bi.h"
 
 #include "solver/cg_her_nd.h"
+#include "solver/rg_mixed_cg_her_nd.h"
 #include"solver/cg_mms_tm_nd.h"
 #include"solver/mixed_cg_mms_tm_nd.h"
 
