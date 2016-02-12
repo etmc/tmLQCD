@@ -69,7 +69,7 @@
 #include "solver/rg_mixed_cg_her.h"
 #include "gettime.h"
 
-void output_flops(const double seconds, const unsigned int N, const unsigned int iter_out, const unsigned int iter_in_sp, const unsigned int iter_in_dp, const double eps_sq);
+static void output_flops(const double seconds, const unsigned int N, const unsigned int iter_out, const unsigned int iter_in_sp, const unsigned int iter_in_dp, const double eps_sq);
 
 static inline unsigned int inner_loop_high(spinor * const x, spinor * const p, spinor * const q, spinor * const r, double * const rho1, const double delta,
                                            matrix_mult f, const double eps_sq, const unsigned int N, const unsigned int iter ){

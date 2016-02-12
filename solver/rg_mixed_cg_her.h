@@ -19,26 +19,11 @@
 #ifndef _RG_MIXED_CG_HER_H
 #define _RG_MIXED_CG_HER_H
 
-#include"operator/tm_operators_32.h"
-#include"solver/matrix_mult_typedef.h"
-#include"solver/solver_params.h"
-#include"su3.h"
-
-typedef enum PolakRibiere_s {
-  MCG_NO_PR=0,
-  MCG_PR=1
-} MCG_PR_TYPE;
-
-typedef enum Pipelined_s {
-  MCG_NO_PIPELINED=0,
-  MCG_PIPELINED
-} MCG_PIPELINED_TYPE;
-
-// currently not used
-typedef enum ResGuide_s {
-  MCG_NO_RESGUIDE=0,
-  MCG_RESGUIDE
-} MCG_RESGUIDE_TYPE;
+#include "operator/tm_operators_32.h"
+#include "solver/rg_mixed_cg_typedef.h"
+#include "solver/matrix_mult_typedef.h"
+#include "solver/solver_params.h"
+#include "su3.h"
 
 int rg_mixed_cg_her(spinor * const P, spinor * const Q, solver_params_t solver_params,
                     const int max_iter, const double eps_sq, const int rel_prec,
