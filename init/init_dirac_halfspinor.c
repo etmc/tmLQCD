@@ -348,8 +348,9 @@ int init_dirac_halfspinor() {
 
 int init_dirac_halfspinor32() {
   int j=0, k;
-  int x, y, z, t, mu;
   
+  int x, y, z, t, mu;
+
   NBPointer32 = (halfspinor32***) calloc(4,sizeof(halfspinor32**));
   NBPointer32_ = (halfspinor32**) calloc(16,(VOLUME+RAND)*sizeof(halfspinor32*));
   NBPointer32[0] = NBPointer32_;
@@ -357,7 +358,7 @@ int init_dirac_halfspinor32() {
   NBPointer32[2] = NBPointer32_ + (16*(VOLUME+RAND)/2);
   NBPointer32[3] = NBPointer32_ + (24*(VOLUME+RAND)/2);
 
-  if((void*)(HalfSpinor32_ = (halfspinor32*)calloc(8*(VOLUME+RAND)+1, sizeof(halfspinor32))) == NULL) {
+  if((void*)(HalfSpinor32_ = (halfspinor32*)calloc(4*(VOLUME)+1, sizeof(halfspinor32))) == NULL) {
     printf ("malloc errno : %d\n",errno); 
     errno = 0;
     return(-1);
@@ -505,12 +506,12 @@ int init_dirac_halfspinor32() {
 
   // test communication
   for(unsigned int i = 0; i < RAND/2; i++) {
-    sendBuffer32[i].s0.c0 = (double)g_cart_id;
-    sendBuffer32[i].s0.c1 = (double)g_cart_id;
-    sendBuffer32[i].s0.c2 = (double)g_cart_id;
-    sendBuffer32[i].s1.c0 = (double)g_cart_id;
-    sendBuffer32[i].s1.c1 = (double)g_cart_id;
-    sendBuffer32[i].s1.c2 = (double)g_cart_id;
+    sendBuffer32[i].s0.c0 = (float)g_cart_id;
+    sendBuffer32[i].s0.c1 = (float)g_cart_id;
+    sendBuffer32[i].s0.c2 = (float)g_cart_id;
+    sendBuffer32[i].s1.c0 = (float)g_cart_id;
+    sendBuffer32[i].s1.c1 = (float)g_cart_id;
+    sendBuffer32[i].s1.c2 = (float)g_cart_id;
   }
 
   // Initialize the barrier, resetting the hardware.
@@ -519,10 +520,12 @@ int init_dirac_halfspinor32() {
     printf("MUSPI_GIBarrierInit returned rc = %d\n", rc);
     exit(__LINE__);
   }
-  // reset the recv counter 
+  // reset the recv counter, note the division by 2, totalMessageSize has been set in init_dirac_halfspinor 
+  // which must be called first!
   recvCounter = totalMessageSize/2;
   global_barrier(); // make sure everybody is set recv counter
   
+  // could do communication with multiple threads
   //#pragma omp for nowait
   for (unsigned int j = 0; j < spi_num_dirs; j++) {
     descCount[ j ] =
