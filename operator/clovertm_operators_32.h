@@ -41,4 +41,28 @@ void clover_gamma5_32(const int ieo,
 		   spinor32 * const l, const spinor32 * const k, const spinor32 * const j,
 		   const double mu);
 
+void assign_mul_one_sw_pm_imu_eps_32(const int ieo, 
+          spinor32 * const k_s, spinor32 * const k_c, 
+          const spinor32 * const l_s, const spinor32 * const l_c,
+          const float mu, const float eps);
+void assign_mul_one_sw_pm_imu_eps_32_orphaned(const int ieo, 
+          spinor32 * const k_s, spinor32 * const k_c, 
+          const spinor32 * const l_s, const spinor32 * const l_c,
+          const float mu, const float eps);
+
+void clover_gamma5_nd_32(const int ieo,
+          spinor32 * const l_c, spinor32 * const l_s,
+          const spinor32 * const k_c, const spinor32 * const k_s,
+          const spinor32 * const j_c, const spinor32 * const j_s,
+          const float mubar, const float epsbar);
+void clover_gamma5_nd_32_orphaned(const int ieo,
+          spinor32 * const l_c, spinor32 * const l_s,
+          const spinor32 * const k_c, const spinor32 * const k_s,
+          const spinor32 * const j_c, const spinor32 * const j_s,
+          const float mubar, const float epsbar);
+
+void clover_inv_nd_32(const int ieo, spinor32 * const l_c, spinor32 * const l_s);
+void clover_inv_nd_32_orphaned(const int ieo, spinor32 * const l_c, spinor32 * const l_s);
+
 #endif
+

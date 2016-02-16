@@ -224,9 +224,15 @@ int invert_cloverdoublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
   gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
   gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], VOLUME/2);
   
-  iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
-		   max_iter, precision, rel_prec, 
-		   VOLUME/2, &Qsw_pm_ndpsi);
+  if(solver_flag == RGMIXEDCG){
+    iter = rg_mixed_cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+                              solver_params, max_iter, precision, rel_prec, VOLUME/2,
+                              &Qsw_pm_ndpsi, &Qsw_pm_ndpsi_32);
+  } else {
+    iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+		                 max_iter, precision, rel_prec, 
+		                 VOLUME/2, &Qsw_pm_ndpsi);
+  }
   
   
   Qsw_dagger_ndpsi(Odd_new_s, Odd_new_c,

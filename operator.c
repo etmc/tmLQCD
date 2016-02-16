@@ -337,6 +337,8 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       init_sw_fields(VOLUME);
       sw_term( (const su3**) g_gauge_field, optr->kappa, optr->c_sw); 
       sw_invert_nd(optr->mubar*optr->mubar-optr->epsbar*optr->epsbar);
+      /* now copy double sw and sw_inv fields to 32bit versions */
+      copy_32_sw_fields();
     }
 
     for(i = 0; i < SourceInfo.no_flavours; i++) {
