@@ -41,7 +41,7 @@ extern "C"
     unsigned int proc_coords[4];
   } tmLQCD_mpi_params;
 
-  int tmLQCD_invert_init(int argc, char *argv[], const int verbose);
+  int tmLQCD_invert_init(int argc, char *argv[], const int verbose, const int external_id);
   int tmLQCD_read_gauge(const int nconfig);
   int tmLQCD_invert(double * const propagator, double * const source,
 		    const int op_id, const int write_prop);

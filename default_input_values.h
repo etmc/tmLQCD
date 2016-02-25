@@ -177,4 +177,7 @@
 
 #define _default_use_qudainverter 0
 
+#define _default_subprocess_flag 0
+#define _default_lowmem_flag 0
+
 #endif

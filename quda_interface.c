@@ -66,6 +66,12 @@
 *   To activate those, set "UseQudaInverter = yes" in the operator
 *   declaration of the input file. For details see the documentation.
 *
+*   The function
+*
+*     int invert_quda_direct(...);
+*
+*   provides a direct interface to the QUDA solver and is not accessible through
+*   the input file.
 *
 * Notes:
 *
@@ -82,11 +88,14 @@
 #include <math.h>
 #include "boundary.h"
 #include "linalg/convert_eo_to_lexic.h"
+#include "linalg/mul_r.h"
 #include "solver/solver.h"
 #include "solver/solver_field.h"
 #include "gettime.h"
 #include "boundary.h"
 #include "quda.h"
+#include "global.h"
+#include "operator.h"
 
 double X0, X1, X2, X3;
 
@@ -115,7 +124,7 @@ double *gauge_quda[4];
 
 // pointer to a temp. spinor, used for reordering etc.
 double *tempSpinor;
-
+  
 // function that maps coordinates in the communication grid to MPI ranks
 int commsMap(const int *coords, void *fdata) {
 #if USE_LZ_LY_LX_T
@@ -245,10 +254,12 @@ void _initQuda() {
   // solver verbosity
   if( g_debug_level == 0 )
     inv_param.verbosity = QUDA_SILENT;
-  else if( g_debug_level == 1 )
+  else if( g_debug_level >= 1 && g_debug_level < 3 )
     inv_param.verbosity = QUDA_SUMMARIZE;
-  else
+  else if( g_debug_level >= 3 && g_debug_level < 5 )
     inv_param.verbosity = QUDA_VERBOSE;
+  else if( g_debug_level >= 5 )
+    inv_param.verbosity = QUDA_DEBUG_VERBOSE;
 
   // general verbosity
   setVerbosityQuda( QUDA_SUMMARIZE, "# QUDA: ", stdout);
@@ -284,7 +295,13 @@ void _initQuda() {
 #ifdef MPI
   initQuda(-1); //sets device numbers automatically
 #else
-  initQuda(0);  //scalar build: use device 0
+  // when running in 'subprocess' mode, the external program should have provided us with a unique
+  // id in the range 0 to (N-1), where N is the number of NVIDIA devices available (see wrapper/lib_wrapper.c)
+  if(subprocess_flag){
+    initQuda(g_external_id);
+  }else{
+    initQuda(0);  //scalar build without subprocess: use device 0
+  }
 #endif
   quda_initialized = 1;
 }
@@ -307,7 +324,7 @@ void _loadGaugeQuda( const int compression ) {
   _Complex double tmpcplx;
 
   size_t gSize = (gauge_param.cpu_prec == QUDA_DOUBLE_PRECISION) ? sizeof(double) : sizeof(float);
-
+  
   // now copy and reorder
   for( int x0=0; x0<T; x0++ )
     for( int x1=0; x1<LX; x1++ )
@@ -367,15 +384,15 @@ void _loadGaugeQuda( const int compression ) {
 
 
 // reorder spinor to QUDA format
-void reorder_spinor_toQuda( double* spinor, QudaPrecision precision, int doublet, double* spinor2 ) {
+void reorder_spinor_toQuda( double* sp, QudaPrecision precision, int doublet, double* sp2 ) {
   double startTime = gettime();
 
   if( doublet ) {
-    memcpy( tempSpinor,           spinor,  VOLUME*24*sizeof(double) );
-    memcpy( tempSpinor+VOLUME*24, spinor2, VOLUME*24*sizeof(double) );
+    memcpy( tempSpinor,           sp,  VOLUME*24*sizeof(double) );
+    memcpy( tempSpinor+VOLUME*24, sp2, VOLUME*24*sizeof(double) );
   }
   else {
-    memcpy( tempSpinor, spinor, VOLUME*24*sizeof(double) );
+    memcpy( tempSpinor, sp, VOLUME*24*sizeof(double) );
   }
 
   // now copy and reorder from tempSpinor to spinor
@@ -393,11 +410,11 @@ void reorder_spinor_toQuda( double* spinor, QudaPrecision precision, int doublet
           int oddBit = (x0+x1+x2+x3) & 1;
 
           if( doublet ) {
-            memcpy( &(spinor[24*(oddBit*VOLUME+j/2)]),          &(tempSpinor[24* tm_idx        ]), 24*sizeof(double));
-            memcpy( &(spinor[24*(oddBit*VOLUME+j/2+VOLUME/2)]), &(tempSpinor[24*(tm_idx+VOLUME)]), 24*sizeof(double));
+            memcpy( &(sp[24*(oddBit*VOLUME+j/2)]),          &(tempSpinor[24* tm_idx        ]), 24*sizeof(double));
+            memcpy( &(sp2[24*(oddBit*VOLUME+j/2+VOLUME/2)]), &(tempSpinor[24*(tm_idx+VOLUME)]), 24*sizeof(double)); // FIXME BK: I don't think this is correct!
           }
           else {
-            memcpy( &(spinor[24*(oddBit*VOLUME/2+j/2)]), &(tempSpinor[24*tm_idx]), 24*sizeof(double));
+            memcpy( &(sp[24*(oddBit*VOLUME/2+j/2)]), &(tempSpinor[24*tm_idx]), 24*sizeof(double));
           }
 
         }
@@ -409,14 +426,14 @@ void reorder_spinor_toQuda( double* spinor, QudaPrecision precision, int doublet
 }
 
 // reorder spinor from QUDA format
-void reorder_spinor_fromQuda( double* spinor, QudaPrecision precision, int doublet, double* spinor2 ) {
+void reorder_spinor_fromQuda( double* sp, QudaPrecision precision, int doublet, double* sp2 ) {
   double startTime = gettime();
 
   if( doublet ) {
-    memcpy( tempSpinor, spinor, 2*VOLUME*24*sizeof(double) );
+    memcpy( tempSpinor, sp, 2*VOLUME*24*sizeof(double) ); // FIXME BK: I think this is wrong
   }
   else {
-    memcpy( tempSpinor, spinor, VOLUME*24*sizeof(double) );
+    memcpy( tempSpinor, sp, VOLUME*24*sizeof(double) );
   }
 
   // now copy and reorder from tempSpinor to spinor
@@ -434,11 +451,11 @@ void reorder_spinor_fromQuda( double* spinor, QudaPrecision precision, int doubl
           int oddBit = (x0+x1+x2+x3) & 1;
 
           if( doublet ) {
-            memcpy( &(spinor [24* tm_idx]),  &(tempSpinor[24*(oddBit*VOLUME+j/2)         ]), 24*sizeof(double));
-            memcpy( &(spinor2[24*(tm_idx)]), &(tempSpinor[24*(oddBit*VOLUME+j/2+VOLUME/2)]), 24*sizeof(double));
+            memcpy( &(sp[24* tm_idx]),  &(tempSpinor[24*(oddBit*VOLUME+j/2)         ]), 24*sizeof(double));
+            memcpy( &(sp2[24*(tm_idx)]), &(tempSpinor[24*(oddBit*VOLUME+j/2+VOLUME/2)]), 24*sizeof(double));
           }
           else {
-            memcpy( &(spinor[24*tm_idx]), &(tempSpinor[24*(oddBit*VOLUME/2+j/2)]), 24*sizeof(double));
+            memcpy( &(sp[24*tm_idx]), &(tempSpinor[24*(oddBit*VOLUME/2+j/2)]), 24*sizeof(double));
           }
         }
 
@@ -503,6 +520,159 @@ void set_sloppy_prec( const SloppyPrecision sloppy_precision ) {
   inv_param.clover_cuda_prec_sloppy = cuda_prec_sloppy;
 }
 
+int invert_quda_direct(double * const propagator, double * const source,
+                const int op_id, const int gauge_persist) {
+
+  double atime, atotaltime = gettime();
+  void *spinorIn  = (void*)source; // source
+  void *spinorOut = (void*)propagator; // solution
+  static int loadGauge = 1;
+  
+  operator * optr = &operator_list[op_id];
+  // g_kappa is necessary for the gauge field to be correctly translated from tmLQCD to QUDA
+  g_kappa = optr->kappa;
+  g_c_sw = optr->c_sw;
+  g_mu = optr->mu;
+
+  boundary(optr->kappa);
+  
+  if ( g_relative_precision_flag )
+    inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
+  else
+    inv_param.residual_type = QUDA_L2_ABSOLUTE_RESIDUAL;
+  
+  inv_param.kappa = optr->kappa;
+
+  // figure out which BC to use (theta, trivial...)
+  set_boundary_conditions(&optr->compression_type);
+
+  // set the sloppy precision of the mixed prec solver
+  set_sloppy_prec(optr->sloppy_precision);
+
+  // load gauge after setting precision
+  atime=gettime();
+  if(loadGauge == 1)
+    _loadGaugeQuda(optr->compression_type);
+  if(gauge_persist == 1)
+    loadGauge = 0;
+  if(g_proc_id==0 && g_debug_level > 0 ) printf("# QUDA: Time for loadGaugeQuda: %.4e\n",gettime()-atime);
+
+  // choose dslash type
+  if( optr->mu != 0.0 && optr->c_sw > 0.0 ) {
+    inv_param.dslash_type = QUDA_TWISTED_CLOVER_DSLASH;
+    inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
+    inv_param.solution_type = QUDA_MAT_SOLUTION;
+    inv_param.clover_order = QUDA_PACKED_CLOVER_ORDER;
+    inv_param.mu = fabs(optr->mu/2./optr->kappa);
+    inv_param.clover_coeff = optr->c_sw*optr->kappa;
+
+  }
+  else if( optr->mu != 0.0 ) {
+    inv_param.dslash_type = QUDA_TWISTED_MASS_DSLASH;
+    inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN_ASYMMETRIC;
+    inv_param.solution_type = QUDA_MAT_SOLUTION;
+    inv_param.mu = fabs(optr->mu/2./optr->kappa);
+  }
+  else if( optr->c_sw > 0.0 ) {
+    inv_param.dslash_type = QUDA_CLOVER_WILSON_DSLASH;
+    inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
+    inv_param.solution_type = QUDA_MAT_SOLUTION;
+    inv_param.clover_order = QUDA_PACKED_CLOVER_ORDER;
+    inv_param.clover_coeff = optr->c_sw*optr->kappa;
+  }
+  else {
+    inv_param.dslash_type = QUDA_WILSON_DSLASH;
+    inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
+    inv_param.solution_type = QUDA_MAT_SOLUTION;
+  }
+
+  // choose solver
+  if(optr->solver == BICGSTAB) {
+    if(g_proc_id == 0) {printf("# QUDA: Using BiCGstab!\n"); fflush(stdout);}
+    inv_param.inv_type = QUDA_BICGSTAB_INVERTER;
+  }
+  else {
+    /* Here we invert the hermitean operator squared */
+    inv_param.inv_type = QUDA_CG_INVERTER;
+    if(g_proc_id == 0) {
+      printf("# QUDA: Using mixed precision CG!\n");
+      printf("# QUDA: mu = %f, kappa = %f\n", optr->mu/2./optr->kappa, optr->kappa);
+      fflush(stdout);
+    }
+  }
+
+  // direct or norm-op. solve
+  if( inv_param.inv_type == QUDA_CG_INVERTER ) {
+    if( optr->even_odd_flag ) {
+      inv_param.solve_type = QUDA_NORMERR_PC_SOLVE;
+      if(g_proc_id == 0) printf("# QUDA: Using preconditioning!\n");
+    }
+    else {
+      inv_param.solve_type = QUDA_NORMERR_SOLVE;
+      if(g_proc_id == 0) printf("# QUDA: Not using preconditioning!\n");
+    }
+  }
+  else {
+    if( optr->even_odd_flag ) {
+      inv_param.solve_type = QUDA_DIRECT_PC_SOLVE;
+      if(g_proc_id == 0) printf("# QUDA: Using preconditioning!\n");
+    }
+    else {
+      inv_param.solve_type = QUDA_DIRECT_SOLVE;
+      if(g_proc_id == 0) printf("# QUDA: Not using preconditioning!\n");
+    }
+  }
+
+  inv_param.tol = sqrt(optr->eps_sq);
+  inv_param.maxiter = optr->maxiter;
+
+  // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
+  inv_param.twist_flavor = (optr->mu < 0.0 ? QUDA_TWIST_PLUS : QUDA_TWIST_MINUS);
+  inv_param.Ls = 1;
+
+  // NULL pointers to host fields to force
+  // construction instead of download of the clover field:
+  if( optr->c_sw > 0.0 )
+    loadCloverQuda(NULL, NULL, &inv_param);
+
+  // reorder spinor
+  reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0, NULL );
+
+  // perform the inversion
+  invertQuda(spinorOut, spinorIn, &inv_param);
+
+  if( inv_param.verbosity == QUDA_VERBOSE )
+    if(g_proc_id == 0)
+      printf("# QUDA: Device memory used:  Spinor: %f GiB,  Gauge: %f GiB, Clover: %f GiB\n",
+             inv_param.spinorGiB, gauge_param.gaugeGiB, inv_param.cloverGiB);
+  if( inv_param.verbosity > QUDA_SILENT )
+    if(g_proc_id == 0)
+      printf("# QUDA: Done: %i iter / %g secs = %g Gflops\n",
+             inv_param.iter, inv_param.secs, inv_param.gflops/inv_param.secs);
+
+  // number of CG iterations
+  optr->iterations = inv_param.iter;
+
+  // reorder spinor
+  reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, NULL );
+  reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, NULL );
+  // propagator in usual normalisation, this is only necessary in invert_quda_direct
+  mul_r((spinor*)spinorOut, (2*optr->kappa), (spinor*)spinorOut, VOLUME );
+
+  // when gauge_persist == 1, we do not free the gauge so that it's more efficient!
+  // and we also don't load it on subsequent calls
+  if(gauge_persist != 1)
+    freeGaugeQuda();
+
+  if( g_proc_id==0 && g_debug_level > 0 )
+    printf("# QUDA: Total time for invert_quda_direct: %.4e\n",gettime()-atotaltime); 
+
+  if(optr->iterations >= optr->maxiter)
+    return(-1);
+
+  return(optr->iterations);
+}
+
 int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
                    spinor * const Even, spinor * const Odd,
                    const double precision, const int max_iter,
@@ -516,6 +686,7 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
   init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
 
   convert_eo_to_lexic(solver_field[0],  Even, Odd);
+
 //  convert_eo_to_lexic(solver_field[1], Even_new, Odd_new);
 
   void *spinorIn  = (void*)solver_field[0]; // source
@@ -535,7 +706,7 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
   set_sloppy_prec(sloppy_precision);
 
   // load gauge after setting precision
-   _loadGaugeQuda(compression);
+  _loadGaugeQuda(compression);
 
   // choose dslash type
   if( g_mu != 0.0 && g_c_sw > 0.0 ) {
@@ -584,11 +755,11 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
   // direct or norm-op. solve
   if( inv_param.inv_type == QUDA_CG_INVERTER ) {
     if( even_odd_flag ) {
-      inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
+      inv_param.solve_type = QUDA_NORMERR_PC_SOLVE;
       if(g_proc_id == 0) printf("# QUDA: Using preconditioning!\n");
     }
     else {
-      inv_param.solve_type = QUDA_NORMOP_SOLVE;
+      inv_param.solve_type = QUDA_NORMERR_SOLVE;
       if(g_proc_id == 0) printf("# QUDA: Not using preconditioning!\n");
     }
   }
@@ -603,8 +774,7 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
     }
   }
 
-
-  inv_param.tol = sqrt(precision)*0.25;
+  inv_param.tol = sqrt(precision);
   inv_param.maxiter = max_iter;
 
   // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
@@ -625,11 +795,11 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
   if( inv_param.verbosity == QUDA_VERBOSE )
     if(g_proc_id == 0)
       printf("# QUDA: Device memory used:  Spinor: %f GiB,  Gauge: %f GiB, Clover: %f GiB\n",
-   inv_param.spinorGiB, gauge_param.gaugeGiB, inv_param.cloverGiB);
+             inv_param.spinorGiB, gauge_param.gaugeGiB, inv_param.cloverGiB);
   if( inv_param.verbosity > QUDA_SILENT )
     if(g_proc_id == 0)
       printf("# QUDA: Done: %i iter / %g secs = %g Gflops\n",
-   inv_param.iter, inv_param.secs, inv_param.gflops/inv_param.secs);
+             inv_param.iter, inv_param.secs, inv_param.gflops/inv_param.secs);
 
   // number of CG iterations
   int iteration = inv_param.iter;
@@ -722,15 +892,15 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   }
 
   if( even_odd_flag ) {
-    inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
+    inv_param.solve_type = QUDA_NORMERR_PC_SOLVE;
     if(g_proc_id == 0) printf("# QUDA: Using preconditioning!\n");
   }
   else {
-    inv_param.solve_type = QUDA_NORMOP_SOLVE;
+    inv_param.solve_type = QUDA_NORMERR_SOLVE;
     if(g_proc_id == 0) printf("# QUDA: Not using preconditioning!\n");
   }
 
-  inv_param.tol = sqrt(precision)*0.25;
+  inv_param.tol = sqrt(precision);
   inv_param.maxiter = max_iter;
 
   inv_param.twist_flavor = QUDA_TWIST_NONDEG_DOUBLET;
@@ -750,11 +920,11 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   if( inv_param.verbosity == QUDA_VERBOSE )
     if(g_proc_id == 0)
       printf("# QUDA: Device memory used:  Spinor: %f GiB,  Gauge: %f GiB, Clover: %f GiB\n",
-   inv_param.spinorGiB, gauge_param.gaugeGiB, inv_param.cloverGiB);
+             inv_param.spinorGiB, gauge_param.gaugeGiB, inv_param.cloverGiB);
   if( inv_param.verbosity > QUDA_SILENT )
     if(g_proc_id == 0)
       printf("# QUDA: Done: %i iter / %g secs = %g Gflops\n",
-   inv_param.iter, inv_param.secs, inv_param.gflops/inv_param.secs);
+             inv_param.iter, inv_param.secs, inv_param.gflops/inv_param.secs);
 
   // number of CG iterations
   int iteration = inv_param.iter;

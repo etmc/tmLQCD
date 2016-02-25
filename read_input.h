@@ -118,6 +118,9 @@ extern "C"
 
   extern int use_qudainverter;
 
+  extern int subprocess_flag;
+  extern int lowmem_flag; 
+
   extern int nblocks_t, nblocks_x, nblocks_y, nblocks_z;
 
   int read_input(char *);

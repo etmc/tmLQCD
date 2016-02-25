@@ -224,7 +224,6 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
     g_nb_list[i] = 0;
   }
 
-
 #ifdef MPI
 #  ifdef _USE_SHMEM
   /* we need that the PE number in MPI_COMM_WORL  */

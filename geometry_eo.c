@@ -1459,8 +1459,9 @@ void geometry(){
     }
 #endif
   }
-
-  Hopping_Matrix_Indices();
+  if(!lowmem_flag){
+    Hopping_Matrix_Indices();
+  }
 
   free(xeven);
 }

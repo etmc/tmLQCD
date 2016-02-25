@@ -186,8 +186,7 @@ static inline void rmQuotes(char *str){
   int use_preconditioning;
   
   int use_qudainverter;
-
-
+  
 %}
 
 %option never-interactive
@@ -332,6 +331,8 @@ static inline void rmQuotes(char *str){
 %x MIXCGEPS
 %x MIXCGIT
 
+%x LOWMEM
+%x SUBPROCESS 
 
 %%
 ^SourceFilename{EQL}               BEGIN(SOURCEFILE);
@@ -431,7 +432,8 @@ static inline void rmQuotes(char *str){
 ^MixCGInnerEps{EQL}                BEGIN(MIXCGEPS);
 ^MixCGMaxIter{EQL}                 BEGIN(MIXCGIT);
 
-
+^EnableLowmem{EQL}                 BEGIN(LOWMEM);
+^EnableSubprocess{EQL}             BEGIN(SUBPROCESS);
 
 
 
@@ -1847,6 +1849,22 @@ static inline void rmQuotes(char *str){
   write_cp_flag=0;
   if(myverbose!=0) printf("Don't write Checkpoints\n");
 }
+<SUBPROCESS>yes     {
+  subprocess_flag=1;
+  if(myverbose!=0) printf("Running in \'subprocess\' mode\n");
+}
+<SUBPROCESS>no     {
+  subprocess_flag=0;
+  if(myverbose!=0) printf("Not running in \'subprocess\' mode\n");
+}
+<LOWMEM>yes     {
+  lowmem_flag=1;
+  if(g_proc_id==0) printf("!!! WARNING: running in \'lowmem\' mode, most functionality will NOT work without explicit memory allocations!\n");
+}
+<LOWMEM>no     {
+  lowmem_flag=0;
+  if(myverbose!=0) printf("Not running in \'lowmem\' mode\n");
+}
 <DSBLIOCHECK>yes {
   g_disable_IO_checks = 1;
   if(myverbose!=0) printf("Disable IO checks (and readback in case of Lemon IO)\n");
@@ -2331,6 +2349,9 @@ int read_input(char * conf_file){
 
   mixcg_innereps = _default_mixcg_innereps;
   mixcg_maxinnersolverit = _default_mixcg_maxinnersolverit;
+
+  lowmem_flag = _default_lowmem_flag;
+  subprocess_flag = _default_subprocess_flag;
 
   /* Put -1 in PropInfo.format to see if parse_config() will
   change the value. If not then set it to source_format_flag */

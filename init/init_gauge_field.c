@@ -68,7 +68,7 @@ int init_gauge_field(const int V, const int back) {
   }
 
 #  if defined _USE_HALFSPINOR
-  if(back == 1) {
+  if(back == 1 && !lowmem_flag) {
     /*
       g_gauge_field_copy[ieo][PM][sites/2][mu]
     */
@@ -102,7 +102,7 @@ int init_gauge_field(const int V, const int back) {
     }
   }
 #  elif defined _USE_TSPLITPAR
-  if(back == 1) {
+  if(back == 1 && !lowmem_flag) {
     if((void*)(g_gauge_field_copyt = (su3**)calloc((VOLUME+RAND), sizeof(su3*))) == NULL) {
       printf ("malloc errno : %d\n",errno); 
       errno = 0;
@@ -136,7 +136,7 @@ int init_gauge_field(const int V, const int back) {
     }
   }
 #  else  /* than _USE_HALFSPINOR or _USE_TSPLITPAR */
-  if(back == 1) {
+  if(back == 1 && !lowmem_flag) {
     if((void*)(g_gauge_field_copy = (su3**)calloc((VOLUME+RAND), sizeof(su3*))) == NULL) {
       printf ("malloc errno : %d\n",errno); 
       errno = 0;
@@ -164,101 +164,107 @@ int init_gauge_field(const int V, const int back) {
 void free_gauge_field() {
   free(gauge_field);
   free(g_gauge_field);
+  if(!lowmem_flag){
 #  if defined _USE_TSPLITPAR
-  free(gauge_field_copys);
-  free(gauge_field_copyt);
+    free(gauge_field_copys);
+    free(gauge_field_copyt);
 #  else
-  free(gauge_field_copy);
+    free(gauge_field_copy);
 #  endif
+  }
 }
 
 
 
 int init_gauge_field_32(const int V, const int back) {
-  int i=0;
+  if(!lowmem_flag){
+    int i=0;
 
-  g_gauge_field_copy_32 = NULL;
+    g_gauge_field_copy_32 = NULL;
 
 
-  if((void*)(g_gauge_field_32 = (su3_32**)calloc(V, sizeof(su3_32*))) == NULL) {
-    printf ("malloc errno : %d\n",errno); 
-    errno = 0;
-    return(1);
-  }
-  if((void*)(gauge_field_32 = (su3_32*)calloc(4*V+1, sizeof(su3_32))) == NULL) {
-    printf ("malloc errno : %d\n",errno); 
-    errno = 0;
-    return(2);
-  }
-
-  /*doing alignment no matter what*/
-  g_gauge_field_32[0] = (su3_32*)(((unsigned long int)(gauge_field_32)+ALIGN_BASE32)&~ALIGN_BASE32);
-
-  for(i = 1; i < V; i++){
-    g_gauge_field_32[i] = g_gauge_field_32[i-1]+4;
-  }
-
-#  if defined _USE_HALFSPINOR
-  if(back == 1) {
-    /*
-      g_gauge_field_copy[ieo][PM][sites/2][mu]
-    */
-    if((void*)(g_gauge_field_copy_32 = (su3_32***)calloc(2, sizeof(su3_32**))) == NULL) {
+    if((void*)(g_gauge_field_32 = (su3_32**)calloc(V, sizeof(su3_32*))) == NULL) {
       printf ("malloc errno : %d\n",errno); 
       errno = 0;
-      return(3);
+      return(1);
     }
-    if((void*)(g_gauge_field_copy_32[0] = (su3_32**)calloc(VOLUME, sizeof(su3_32*))) == NULL) {
+    if((void*)(gauge_field_32 = (su3_32*)calloc(4*V+1, sizeof(su3_32))) == NULL) {
       printf ("malloc errno : %d\n",errno); 
       errno = 0;
-      return(3);
+      return(2);
     }
-    g_gauge_field_copy_32[1] = g_gauge_field_copy_32[0] + (VOLUME)/2;
-    if((void*)(gauge_field_copy_32 = (su3_32*)calloc(4*(VOLUME)+1, sizeof(su3_32))) == NULL) {
-      printf ("malloc errno : %d\n",errno); 
-      errno = 0;
-      return(4);
-    }
-    /* doing alignment no matter what */
-    g_gauge_field_copy_32[0][0] = (su3_32*)(((unsigned long int)(gauge_field_copy_32)+ALIGN_BASE32)&~ALIGN_BASE32);
 
-    for(i = 1; i < (VOLUME)/2; i++) {
-      g_gauge_field_copy_32[0][i] = g_gauge_field_copy_32[0][i-1]+4;
+    /*doing alignment no matter what*/
+    g_gauge_field_32[0] = (su3_32*)(((unsigned long int)(gauge_field_32)+ALIGN_BASE32)&~ALIGN_BASE32);
+
+    for(i = 1; i < V; i++){
+      g_gauge_field_32[i] = g_gauge_field_32[i-1]+4;
     }
-    g_gauge_field_copy_32[1][0] = g_gauge_field_copy_32[0][0] + 2*VOLUME; 
-    for(i = 1; i < (VOLUME)/2; i++) {
-      g_gauge_field_copy_32[1][i] = g_gauge_field_copy_32[1][i-1]+4;
+
+#    if defined _USE_HALFSPINOR
+    if(back == 1) {
+      /*
+        g_gauge_field_copy[ieo][PM][sites/2][mu]
+      */
+      if((void*)(g_gauge_field_copy_32 = (su3_32***)calloc(2, sizeof(su3_32**))) == NULL) {
+        printf ("malloc errno : %d\n",errno); 
+        errno = 0;
+        return(3);
+      }
+      if((void*)(g_gauge_field_copy_32[0] = (su3_32**)calloc(VOLUME, sizeof(su3_32*))) == NULL) {
+        printf ("malloc errno : %d\n",errno); 
+        errno = 0;
+        return(3);
+      }
+      g_gauge_field_copy_32[1] = g_gauge_field_copy_32[0] + (VOLUME)/2;
+      if((void*)(gauge_field_copy_32 = (su3_32*)calloc(4*(VOLUME)+1, sizeof(su3_32))) == NULL) {
+        printf ("malloc errno : %d\n",errno); 
+        errno = 0;
+        return(4);
+      }
+      /* doing alignment no matter what */
+      g_gauge_field_copy_32[0][0] = (su3_32*)(((unsigned long int)(gauge_field_copy_32)+ALIGN_BASE32)&~ALIGN_BASE32);
+
+      for(i = 1; i < (VOLUME)/2; i++) {
+        g_gauge_field_copy_32[0][i] = g_gauge_field_copy_32[0][i-1]+4;
+      }
+      g_gauge_field_copy_32[1][0] = g_gauge_field_copy_32[0][0] + 2*VOLUME; 
+      for(i = 1; i < (VOLUME)/2; i++) {
+        g_gauge_field_copy_32[1][i] = g_gauge_field_copy_32[1][i-1]+4;
+      }
     }
+#    else  /* than _USE_HALFSPINOR  */
+    if(back == 1) {
+      if((void*)(g_gauge_field_copy_32 = (su3_32**)calloc((VOLUME+RAND), sizeof(su3_32*))) == NULL) {
+        printf ("malloc errno : %d\n",errno); 
+        errno = 0;
+        return(3);
+      }
+      if((void*)(gauge_field_copy_32 = (su3_32*)calloc(8*(VOLUME+RAND)+1, sizeof(su3_32))) == NULL) {
+        printf ("malloc errno : %d\n",errno); 
+        errno = 0;
+        return(4);
+      }
+
+      /* doing alignment no matter what */
+      g_gauge_field_copy_32[0] = (su3_32*)(((unsigned long int)(gauge_field_copy_32)+ALIGN_BASE32)&~ALIGN_BASE32);
+
+      for(i = 1; i < (VOLUME+RAND); i++) {
+        g_gauge_field_copy_32[i] = g_gauge_field_copy_32[i-1]+8;
+      }
+    }
+#    endif
+    g_update_gauge_copy_32 = 1;
   }
-#  else  /* than _USE_HALFSPINOR  */
-  if(back == 1) {
-    if((void*)(g_gauge_field_copy_32 = (su3_32**)calloc((VOLUME+RAND), sizeof(su3_32*))) == NULL) {
-      printf ("malloc errno : %d\n",errno); 
-      errno = 0;
-      return(3);
-    }
-    if((void*)(gauge_field_copy_32 = (su3_32*)calloc(8*(VOLUME+RAND)+1, sizeof(su3_32))) == NULL) {
-      printf ("malloc errno : %d\n",errno); 
-      errno = 0;
-      return(4);
-    }
-
-    /* doing alignment no matter what */
-    g_gauge_field_copy_32[0] = (su3_32*)(((unsigned long int)(gauge_field_copy_32)+ALIGN_BASE32)&~ALIGN_BASE32);
-
-    for(i = 1; i < (VOLUME+RAND); i++) {
-      g_gauge_field_copy_32[i] = g_gauge_field_copy_32[i-1]+8;
-    }
-  }
-#  endif
-  g_update_gauge_copy_32 = 1;
   return(0);
 }
 
 void free_gauge_field_32() {
-  free(gauge_field_32);
-  free(g_gauge_field_32);
-  free(gauge_field_copy_32);
+  if(!lowmem_flag){
+    free(gauge_field_32);
+    free(g_gauge_field_32);
+    free(gauge_field_copy_32);
+  }
 }
 
 
