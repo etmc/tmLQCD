@@ -48,6 +48,7 @@
 #include "operator/Hopping_Matrix_32.h"
 
 #define Hopping_Matrix_32 Hopping_Matrix_32_nocom
+#define Hopping_Matrix_32_orphaned Hopping_Matrix_32_orphaned_nocom
 #define _NO_COMM 1
 
 #include "Hopping_Matrix_32.c"

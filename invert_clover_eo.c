@@ -46,6 +46,7 @@
 #include"gamma.h"
 #include"read_input.h"
 #include"solver/solver.h"
+#include"solver/solver_params.h"
 #include"invert_clover_eo.h"
 #include "solver/dirac_operator_eigenvectors.h"
 #include "solver/dfl_projector.h"
@@ -126,6 +127,7 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
     /* The sign is plus, since in Hopping_Matrix */
     /* the minus is missing                      */
     assign_add_mul_r(Even_new, g_spinor_field[DUM_DERI], +1., VOLUME/2);
+
   }
 
   else {

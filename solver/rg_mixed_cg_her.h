@@ -1,5 +1,5 @@
 /***********************************************************************
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ * Copyright (C) 2015 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -16,15 +16,17 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
+#ifndef _RG_MIXED_CG_HER_H
+#define _RG_MIXED_CG_HER_H
 
-#ifndef _ASSIGN_H
-#define _ASSIGN_H
-
+#include "operator/tm_operators_32.h"
+#include "solver/rg_mixed_cg_typedef.h"
+#include "solver/matrix_mult_typedef.h"
+#include "solver/solver_params.h"
 #include "su3.h"
 
-/* Assign (*R) = (*S) */
-void assign(spinor * const R, spinor * const S, const int N);
-void assign_32(spinor32 * const R, spinor32 * const S, const int N);
-void assign_su3vect(su3_vector * const R, su3_vector * const S, const int N);
+int rg_mixed_cg_her(spinor * const P, spinor * const Q, solver_params_t solver_params,
+                    const int max_iter, const double eps_sq, const int rel_prec,
+                    const int N, matrix_mult f, matrix_mult32 f32);
 
 #endif

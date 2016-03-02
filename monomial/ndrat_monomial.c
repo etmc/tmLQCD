@@ -31,10 +31,13 @@
 #include "start.h"
 #include "gettime.h"
 #include "solver/solver.h"
+#include "solver/monomial_solve.h"
 #include "deriv_Sb.h"
 #include "init/init_chi_spinor_field.h"
 #include "operator/tm_operators.h"
+#include "operator/tm_operators_32.h"
 #include "operator/tm_operators_nd.h"
+#include "operator/tm_operators_nd_32.h"
 #include "operator/Hopping_Matrix.h"
 #include "monomial/monomial.h"
 #include "hamiltonian_field.h"
@@ -87,6 +90,7 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
     sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
     // we invert it for the even sites only
     sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
+    copy_32_sw_fields();
   }
   mnl->forcefactor = mnl->EVMaxInv;
 
@@ -95,14 +99,18 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   solver_pm.no_shifts = mnl->rat.np;
   solver_pm.shifts = mnl->rat.mu;
   solver_pm.rel_prec = g_relative_precision_flag;
-  solver_pm.type = CGMMSND;
+  solver_pm.type = mnl->solver; 
+
   solver_pm.M_ndpsi = &Qtm_pm_ndpsi;
-  if(mnl->type == NDCLOVERRAT) solver_pm.M_ndpsi = &Qsw_pm_ndpsi;
+  solver_pm.M_ndpsi32 = &Qtm_pm_ndpsi_32;    
+  if(mnl->type == NDCLOVERRAT) {
+    solver_pm.M_ndpsi = &Qsw_pm_ndpsi;
+    solver_pm.M_ndpsi32 = &Qsw_pm_ndpsi_32;
+  }
   solver_pm.sdim = VOLUME/2;
   // this generates all X_j,o (odd sites only) -> g_chi_up|dn_spinor_field
-  mnl->iter1 += cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-			     mnl->pf, mnl->pf2,
-			     &solver_pm);
+  mnl->iter1 += solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+                   		      mnl->pf, mnl->pf2,&solver_pm);
   
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     if(mnl->type == NDCLOVERRAT) {
@@ -117,8 +125,7 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
       H_eo_sw_ndpsi(mnl->w_fields[2], mnl->w_fields[3], 
 		    g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j]);
 
-    }
-    else {
+    } else {
       // multiply with Q_h * tau^1 + i mu_j to get Y_j,o (odd sites)
       // needs phmc_Cpol = 1 to work for ndrat!
       Q_tau1_sub_const_ndpsi(mnl->w_fields[0], mnl->w_fields[1],
@@ -195,6 +202,7 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
     init_sw_fields();
     sw_term((const su3**)hf->gaugefield, mnl->kappa, mnl->c_sw); 
     sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
+    copy_32_sw_fields();
   }
   // we measure before the trajectory!
   if((mnl->rec_ev != 0) && (hf->traj_counter%mnl->rec_ev == 0)) {
@@ -214,13 +222,17 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   solver_pm.squared_solver_prec = mnl->accprec;
   solver_pm.no_shifts = mnl->rat.np;
   solver_pm.shifts = mnl->rat.nu;
-  solver_pm.type = CGMMSND;
+  solver_pm.type = mnl->solver;
   solver_pm.M_ndpsi = &Qtm_pm_ndpsi;
-  if(mnl->type == NDCLOVERRAT) solver_pm.M_ndpsi = &Qsw_pm_ndpsi;
+  solver_pm.M_ndpsi32 = &Qtm_pm_ndpsi_32;    
+  if(mnl->type == NDCLOVERRAT) {
+    solver_pm.M_ndpsi = &Qsw_pm_ndpsi;
+    solver_pm.M_ndpsi32 = &Qsw_pm_ndpsi_32;
+  }
   solver_pm.sdim = VOLUME/2;
   solver_pm.rel_prec = g_relative_precision_flag;
-  mnl->iter0 = cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-			     mnl->pf, mnl->pf2, &solver_pm);
+  mnl->iter0 = solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+                   		      mnl->pf, mnl->pf2, &solver_pm);
 
   assign(mnl->w_fields[2], mnl->pf, VOLUME/2);
   assign(mnl->w_fields[3], mnl->pf2, VOLUME/2);
@@ -265,6 +277,7 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
   if(mnl->type == NDCLOVERRAT) {
     sw_term((const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
     sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
+    copy_32_sw_fields();
   }
   mnl->energy1 = 0.;
 
@@ -272,14 +285,18 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
   solver_pm.squared_solver_prec = mnl->accprec;
   solver_pm.no_shifts = mnl->rat.np;
   solver_pm.shifts = mnl->rat.mu;
-  solver_pm.type = CGMMSND;
+  solver_pm.type = mnl->solver;
+  
   solver_pm.M_ndpsi = &Qtm_pm_ndpsi;
-  if(mnl->type == NDCLOVERRAT) solver_pm.M_ndpsi = &Qsw_pm_ndpsi;
+  solver_pm.M_ndpsi32 = &Qtm_pm_ndpsi_32; 
+  if(mnl->type == NDCLOVERRAT) {
+    solver_pm.M_ndpsi = &Qsw_pm_ndpsi;
+    solver_pm.M_ndpsi32 = &Qsw_pm_ndpsi_32;
+  }
   solver_pm.sdim = VOLUME/2;
   solver_pm.rel_prec = g_relative_precision_flag;
-  mnl->iter0 += cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-			     mnl->pf, mnl->pf2,
-			     &solver_pm);
+  mnl->iter0 += solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+                             mnl->pf, mnl->pf2,&solver_pm);
 
   // apply R to the pseudo-fermion fields
   assign(mnl->w_fields[0], mnl->pf, VOLUME/2);

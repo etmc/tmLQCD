@@ -210,8 +210,16 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       /* Here we invert the hermitean operator squared */
       gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
       if(g_proc_id == 0) {printf("# Using Mixed Precision CG!\n"); fflush(stdout);}
-      iter = mixed_cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, 
+      iter = mixed_cg_her(Odd_new, g_spinor_field[DUM_DERI], solver_params, max_iter, precision, rel_prec, 
 			  VOLUME/2, &Qtm_pm_psi, &Qtm_pm_psi_32);
+      Qtm_minus_psi(Odd_new, Odd_new);
+    }
+    else if(solver_flag == RGMIXEDCG) {
+      /* Here we invert the hermitean operator squared */
+      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
+      if(g_proc_id == 0) {printf("# Using Mixed Precision CG!\n"); fflush(stdout);}
+      iter = rg_mixed_cg_her(Odd_new, g_spinor_field[DUM_DERI], solver_params, max_iter, precision, rel_prec,
+			                       VOLUME/2, &Qtm_pm_psi, &Qtm_pm_psi_32);
       Qtm_minus_psi(Odd_new, Odd_new);
     }
     else if(solver_flag == CG) {
@@ -227,7 +235,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
         if(g_proc_id == 0) printf("Using GPU for inversion\n");
         iter = mixed_solve_eo(Odd_new, g_spinor_field[DUM_DERI], max_iter,   precision, rel_prec, VOLUME/2);
       }
-      else{
+      else {
         iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi);
         Qtm_minus_psi(Odd_new, Odd_new);
       }
@@ -384,7 +392,13 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     else if(solver_flag == MIXEDCG) {
       if(g_proc_id == 0) {printf("# Using MIXEDCG!\n"); fflush(stdout);}
     	gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
-    	iter = mixed_cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, 
+    	iter = mixed_cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], solver_params, max_iter, 
+                          precision, rel_prec, VOLUME, &Q_pm_psi, &Q_pm_psi_32);
+	    Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
+    } else if(solver_flag == RGMIXEDCG) {
+      if(g_proc_id == 0) {printf("# Using MIXEDCG!\n"); fflush(stdout);}
+    	gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
+    	iter = rg_mixed_cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], solver_params, max_iter, 
                           precision, rel_prec, VOLUME, &Q_pm_psi, &Q_pm_psi_32);
 	    Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
     } else if(solver_flag == FGMRES) {
@@ -540,7 +554,8 @@ static void cgmms_write_props(spinor ** const P, double const * const shifts, co
   for(int im = 0; im < no_shifts; im++) {
     if(SourceInfo.type != 1) {
       if (PropInfo.splitted) {
-        sprintf(filename, "%s.%.2d.%.4d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im);
+        if(T_global > 99) sprintf(filename, "%s.%.2d.%.4d.%.3d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im);
+        else sprintf(filename, "%s.%.2d.%.4d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im);
       } else {
         sprintf(filename, "%s.%.2d.%.4d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.t, im);
       }

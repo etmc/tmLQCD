@@ -80,7 +80,7 @@ void free_spinor_field() {
 }
 
 
-spinor * sp32 = NULL;
+spinor32 * sp32 = NULL;
 int init_spinor_field_32(const int V, const int nr) {
   int i = 0;
 

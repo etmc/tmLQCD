@@ -46,6 +46,7 @@
 #include "linalg/scalar_prod.h"
 #include "linalg/mul_diff_mul.h"
 #include "linalg/assign_add_mul.h"
+#include "linalg/assign_mul_add.h"
 #include "linalg/assign_diff_mul.h"
 #include "linalg/mul_add_mul.h"
 #include "linalg/mul.h"
