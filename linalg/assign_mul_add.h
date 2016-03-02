@@ -17,14 +17,12 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _ASSIGN_H
-#define _ASSIGN_H
+#ifndef _ASSIGN_MUL_ADD_H
+#define _ASSIGN_MUL_ADD_H
 
 #include "su3.h"
 
-/* Assign (*R) = (*S) */
-void assign(spinor * const R, spinor * const S, const int N);
-void assign_32(spinor32 * const R, spinor32 * const S, const int N);
-void assign_su3vect(su3_vector * const R, su3_vector * const S, const int N);
+/*   (*P) = c(*P) + (*Q)        c is a complex constant   */
+void assign_mul_add(spinor * const P, const _Complex double c, spinor * const Q, const int N);
 
 #endif

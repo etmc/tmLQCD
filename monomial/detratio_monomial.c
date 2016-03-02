@@ -36,6 +36,7 @@
 #include "operator/Hopping_Matrix.h"
 #include "solver/chrono_guess.h"
 #include "solver/solver.h"
+#include "solver/monomial_solve.h"
 #include "read_input.h"
 #include "gamma.h"
 #include "monomial/monomial.h"
@@ -77,8 +78,16 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     /* X_W -> w_fields[1] */
     chrono_guess(mnl->w_fields[1], mnl->w_fields[2], mnl->csg_field, 
 		 mnl->csg_index_array, mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_pm_psi);
-    mnl->iter1 += cg_her(mnl->w_fields[1], mnl->w_fields[2], mnl->maxiter, 
-			 mnl->forceprec, g_relative_precision_flag, VOLUME/2, &Qtm_pm_psi);
+    
+    if(mnl->solver == BICGSTAB) {
+      fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (detratio_monomial.c)\n"); 
+       mnl->iter1 += solve_degenerate(mnl->w_fields[1], mnl->w_fields[2], mnl->solver_params, mnl->maxiter, 
+			                                mnl->forceprec, g_relative_precision_flag, VOLUME/2, &Qtm_pm_psi, CG);
+    }
+    else{
+       mnl->iter1 += solve_degenerate(mnl->w_fields[1], mnl->w_fields[2], mnl->solver_params, mnl->maxiter, 
+			                                mnl->forceprec, g_relative_precision_flag, VOLUME/2, &Qtm_pm_psi, mnl->solver);      
+    }
     chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
     /* Y_W -> w_fields[0]  */
@@ -127,16 +136,16 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     Q_plus_psi(mnl->w_fields[2], mnl->pf);
     g_mu = mnl->mu;
     boundary(mnl->kappa);
-    if(mnl->solver == CG) {
+    if((mnl->solver == CG) || (mnl->solver == MIXEDCG) || (mnl->solver == RGMIXEDCG)) {
       /* If CG is used anyhow */
       /*       gamma5(mnl->w_fields[1], mnl->w_fields[2], VOLUME/2); */
       /* Invert Q_{+} Q_{-} */
       /* X_W -> w_fields[1] */
       chrono_guess(mnl->w_fields[1], mnl->w_fields[2], mnl->csg_field, 
 		   mnl->csg_index_array, mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_pm_psi);
-      mnl->iter1 += cg_her(mnl->w_fields[1], mnl->w_fields[2], 
+      mnl->iter1 += solve_degenerate(mnl->w_fields[1], mnl->w_fields[2], mnl->solver_params, 
 			   mnl->maxiter, mnl->forceprec, g_relative_precision_flag, 
-			   VOLUME, &Q_pm_psi);
+			   VOLUME, &Q_pm_psi, mnl->solver);
       chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
       
@@ -150,24 +159,24 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
       chrono_guess(mnl->w_fields[0], mnl->w_fields[2], mnl->csg_field, mnl->csg_index_array,
 		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_plus_psi);
       gamma5(mnl->w_fields[0], mnl->w_fields[0], VOLUME);
-      mnl->iter1 += bicgstab_complex(mnl->w_fields[0], mnl->w_fields[2], 
+      mnl->iter1 += solve_degenerate(mnl->w_fields[0], mnl->w_fields[2], mnl->solver_params, 
 				     mnl->maxiter, mnl->forceprec, g_relative_precision_flag, 
-				     VOLUME, Q_plus_psi);
+				     VOLUME, Q_plus_psi, mnl->solver);
       chrono_add_solution(mnl->w_fields[0], mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
 
       /* Now Q_- */
       /* X_o -> w_fields[1] */
-      g_mu = -g_mu;
+      
       chrono_guess(mnl->w_fields[1], mnl->w_fields[0], mnl->csg_field2, 
 		   mnl->csg_index_array2, mnl->csg_N2, mnl->csg_n2, VOLUME/2, &Q_minus_psi);
       gamma5(mnl->w_fields[1], mnl->w_fields[1], VOLUME);
-      mnl->iter1 += bicgstab_complex(mnl->w_fields[1],mnl->w_fields[0], 
+      mnl->iter1 += solve_degenerate(mnl->w_fields[1],mnl->w_fields[0], mnl->solver_params, 
 				     mnl->maxiter, mnl->forceprec, g_relative_precision_flag, 
-				     VOLUME, Q_minus_psi);
+				     VOLUME, Q_minus_psi, mnl->solver);
       chrono_add_solution(mnl->w_fields[1], mnl->csg_field2, mnl->csg_index_array2,
 			  mnl->csg_N2, &mnl->csg_n2, VOLUME/2);
-      g_mu = -g_mu;   
+        
     }
 
     /* \delta Q sandwitched by Y^\dagger and X */
@@ -211,8 +220,9 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
     g_mu = mnl->mu2;
     boundary(mnl->kappa2);
     zero_spinor_field(mnl->w_fields[0], VOLUME/2);
-    mnl->iter0 = cg_her(mnl->w_fields[0], mnl->w_fields[1], mnl->maxiter, mnl->accprec, g_relative_precision_flag,
-    			VOLUME/2, mnl->Qsq);
+    mnl->iter0 = solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->solver_params,
+                                  mnl->maxiter, mnl->accprec, g_relative_precision_flag,
+    			                        VOLUME/2, mnl->Qsq, mnl->solver);
     mnl->Qm(mnl->pf, mnl->w_fields[0]);
     chrono_add_solution(mnl->w_fields[0], mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
@@ -225,13 +235,20 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
     g_mu = mnl->mu2;
     boundary(mnl->kappa2);
     zero_spinor_field(mnl->pf,VOLUME);
-    mnl->iter0 += bicgstab_complex(mnl->pf, mnl->w_fields[1], mnl->maxiter, mnl->accprec, 
-				   g_relative_precision_flag, VOLUME, Q_plus_psi);
-    chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
-			mnl->csg_N, &mnl->csg_n, VOLUME/2);
-    if(mnl->solver != CG) {
+    if((mnl->solver == CG) || (mnl->solver == MIXEDCG)){
+      mnl->iter0 = solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->solver_params,
+                                    mnl->maxiter, mnl->accprec, 
+				                            g_relative_precision_flag, VOLUME, Q_pm_psi, mnl->solver);
+      Q_minus_psi(mnl->pf, mnl->w_fields[0]);
+      chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
+			  mnl->csg_N, &mnl->csg_n, VOLUME/2);      
+    }else{
+      mnl->iter0 += solve_degenerate(mnl->pf, mnl->w_fields[1], mnl->solver_params, mnl->maxiter, mnl->accprec, 
+				    g_relative_precision_flag, VOLUME, Q_plus_psi, mnl->solver);
+      chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
+			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
       chrono_add_solution(mnl->pf, mnl->csg_field2, mnl->csg_index_array2,
-			  mnl->csg_N2, &mnl->csg_n2, VOLUME/2);
+			    mnl->csg_N2, &mnl->csg_n2, VOLUME/2);           
     }
   }
   etime = gettime();
@@ -262,8 +279,8 @@ double detratio_acc(const int id, hamiltonian_field_t * const hf) {
     chrono_guess(mnl->w_fields[0], mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array, 
 		 mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
     g_sloppy_precision_flag = 0;
-    mnl->iter0 += cg_her(mnl->w_fields[0], mnl->w_fields[1], mnl->maxiter, mnl->accprec, g_relative_precision_flag,
-			 VOLUME/2, mnl->Qsq);
+    mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->solver_params, mnl->maxiter, mnl->accprec, g_relative_precision_flag,
+			 VOLUME/2, mnl->Qsq, mnl->solver);
     mnl->Qm(mnl->w_fields[1], mnl->w_fields[0]);
     g_sloppy_precision_flag = save_sloppy;
     /* Compute the energy contr. from second field */
@@ -275,11 +292,25 @@ double detratio_acc(const int id, hamiltonian_field_t * const hf) {
     boundary(mnl->kappa);
     chrono_guess(mnl->w_fields[0], mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array, 
 		 mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_plus_psi);
-    mnl->iter0 += bicgstab_complex(mnl->w_fields[0], mnl->w_fields[1], 
+    g_sloppy_precision_flag = 0;
+    if((mnl->solver == CG) || (mnl->solver == MIXEDCG)){
+      
+      mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->solver_params, mnl->maxiter, mnl->accprec, g_relative_precision_flag,
+			 VOLUME, &Q_pm_psi, mnl->solver); 
+      Q_minus_psi(mnl->w_fields[1], mnl->w_fields[0]);
+      g_sloppy_precision_flag = save_sloppy;
+      /* Compute the energy contr. from second field */
+      mnl->energy1 = square_norm(mnl->w_fields[1], VOLUME, 1);      
+    }
+    else{
+      mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->solver_params, 
 				   mnl->maxiter, mnl->accprec, g_relative_precision_flag, 
-				   VOLUME, Q_plus_psi); 
-    /* Compute the energy contr. from second field */
-    mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME, 1);
+				   VOLUME, Q_plus_psi, mnl->solver); 
+    
+      /* Compute the energy contr. from second field */
+      mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME, 1); 
+    }
+    
   }
   g_mu = g_mu1;
   boundary(g_kappa);

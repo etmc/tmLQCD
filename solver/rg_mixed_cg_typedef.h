@@ -1,0 +1,21 @@
+#ifndef _RG_MIXED_CG_HER_TYPEDEF_H
+#define _RG_MIXED_CG_HER_TYPEDEF_H
+
+typedef enum MCG_PR_TYPE {
+  MCG_NO_PR=0,
+  MCG_PR
+} MCG_PR_TYPE;
+
+typedef enum MCG_PIPELINED_TYPE {
+  MCG_NO_PIPELINED=0,
+  MCG_PIPELINED
+} MCG_PIPELINED_TYPE;
+
+// currently not used
+typedef enum MCG_RESGUIDE_TYPE {
+  MCG_NO_RESGUIDE=0,
+  MCG_RESGUIDE
+} MCG_RESGUIDE_TYPE;
+     
+
+#endif

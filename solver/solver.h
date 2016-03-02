@@ -67,6 +67,7 @@ typedef struct {
 #include"solver/eigenvalues.h"
 #include"solver/cg_mms_tm.h"
 #include"solver/mixed_cg_her.h"
+#include "solver/rg_mixed_cg_her.h"
 
 #include"solver/sub_low_ev.h"
 #include"solver/gmres_precon.h"
@@ -76,6 +77,7 @@ typedef struct {
 #include "solver/cg_her_bi.h"
 
 #include "solver/cg_her_nd.h"
+#include "solver/rg_mixed_cg_her_nd.h"
 #include"solver/cg_mms_tm_nd.h"
 #include"solver/mixed_cg_mms_tm_nd.h"
 

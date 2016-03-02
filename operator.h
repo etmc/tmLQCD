@@ -94,7 +94,6 @@ typedef struct {
   double extra_masses[MAX_EXTRA_MASSES];
   int no_extra_masses;
 
-
   /* chebyshef coefficients for the overlap */
   double * coefs;
   /* various versions of the Dirac operator */
