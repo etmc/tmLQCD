@@ -31,6 +31,15 @@ void little_D_ee_inv(_Complex double * v, _Complex double *w);
 void little_D_hop(int eo,_Complex double * v, _Complex double *w);
 void little_Dhat_lhs(_Complex double * v, _Complex double *w, _Complex double *u);
 void little_Dhat_rhs(int eo, _Complex double * v, double r, _Complex double *w);
+
+void little_D32(_Complex float * v, _Complex float *w);
+void little_Q_pm32(_Complex float * v, _Complex float *w);
+void little_D_sym32(_Complex float * v, _Complex float *w);
+void little_D_ee_inv32(_Complex float * v, _Complex float *w);
+void little_D_hop32(int eo,_Complex float * v, _Complex float *w);
+void little_Dhat_lhs32(_Complex float * v, _Complex float *w, _Complex float *u);
+void little_Dhat_rhs32(int eo, _Complex float * v, double r, _Complex float *w);
+
 void unit_little_D(_Complex double *v, _Complex double *w);
 void invert_little_D_spinor(spinor *r, spinor *s);
 void invert_little_D_eo_spinor(spinor *r, spinor *s);

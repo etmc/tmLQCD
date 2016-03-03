@@ -259,6 +259,7 @@ void apply_little_D_spinor(spinor *r, spinor *s){
 
 #undef _C_TYPE
 #undef _PSWITCH
+#undef _MV
 
 #define _PSWITCH(s) s ## 32
 #if (defined NOF77UNDERSCORE || defined NOF77_)
@@ -266,119 +267,14 @@ void apply_little_D_spinor(spinor *r, spinor *s){
 #else
 #define _MV(x) cgemv_
 #endif
-#define _C_TYPE _Complex double
+#define _C_TYPE _Complex float
 
 #include"little_D_body.c"
 
 #undef _C_TYPE
 #undef _PSWITCH
+#undef _MV
 
-void little_Q_pm(_Complex double * v, _Complex double *w) {
-  _Complex double * tmp = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
-  double musave= g_mu;
-  if(dfl_subspace_updated) {
-    g_mu = 0.;
-    compute_little_D(1);
-    g_mu = musave;
-    dfl_subspace_updated = 0;
-  }
-  little_D(tmp, w);
-  little_D(v, tmp);
-  free(tmp);
-  lassign_add_mul(v, w, g_mu*g_mu + g_mu2*g_mu2, nb_blocks*g_N_s);
-  //memcpy(v, w, nb_blocks * g_N_s*sizeof(_Complex double));
-}
-
-
-void little_D_sym(_Complex double * v, _Complex double *w) {
-  
-  _Complex double* tmpc1, * tmpc2, * tmpc3;
-  tmpc1 = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
-  tmpc2 = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
-  tmpc3 = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
-  
-  if(dfl_subspace_updated) {
-    compute_little_D(0);
-    dfl_subspace_updated = 0;
-  }
-  
-  little_D_hop(0,tmpc1, w);
-  little_D_ee_inv(tmpc2,tmpc1);
-  little_D_hop(1,tmpc3, tmpc2);
-  little_Dhat_lhs(v, w,tmpc3);
-  
-  free(tmpc1);
-  free(tmpc2);
-  free(tmpc3);
-  return;
-}
-
-
-void little_D_ee_inv(_Complex double * v, _Complex double *w) {
-  int i;
-  CONE = 1.0;
-  CMONE = -1.0;
-  CZERO = 0.0;
-  
-  for(i = 0; i < nb_blocks/2; i++) {
-    _FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, block_list[i].little_dirac_operator_eo,
-               &g_N_s, w + i * g_N_s, &ONE, &CZERO, v + i * g_N_s, &ONE, 1);
-  }
-  return;
-}
-
-
-void little_D_hop(int eo,_Complex double * v, _Complex double *w) {
-  int i, j, i_eo,sq = g_N_s*g_N_s;
-  CONE = 1.0;
-  CMONE = -1.0;
-  CZERO = 0.0;
-
-  i_eo=(eo+1)%2;
-  
-  little_field_gather_eo(eo,w+i_eo*nb_blocks*g_N_s/2);
-  
-  for(j = 1; j < 9; j++) {
-    for(i = 0; i < nb_blocks/2; i++) {
-      _FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, block_list[eo*(nb_blocks/2)+i].little_dirac_operator_eo + j * sq,
-                 &g_N_s, w + (nb_blocks * j + (nb_blocks/2)*i_eo+i) * g_N_s, &ONE, &CONE, v + (eo*nb_blocks/2+i) * g_N_s, &ONE, 1);
-    } 
-  }
-  return;
-}
-
-void little_Dhat_lhs(_Complex double * v, _Complex double *w, _Complex double *u) {
-  int i,j;
-  CONE = 1.0;
-  CMONE = -1.0;
-  CZERO = 0.0;
-
-
-  for(i = nb_blocks/2; i < nb_blocks; i++) {
-    _FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, block_list[i].little_dirac_operator_eo,
-               &g_N_s, w + i * g_N_s, &ONE, &CZERO, v + i * g_N_s, &ONE, 1);
-  }
-  
-  for (i=nb_blocks/2; i < nb_blocks; i++) {
-    for (j=0;j<g_N_s;j++) {
-      *(v+ i * g_N_s+ j) = *(v+ i * g_N_s+ j) - *(u+ i * g_N_s+ j);
-    }
-  }
-  return;
-}
-
-
-
-void little_Dhat_rhs(int eo, _Complex double * v, double r, _Complex double *w) {
-  int i, j;
-  
-  for(i = 0; i < nb_blocks/2; i++) {
-    for (j=0;j<g_N_s;j++) {
-      *(v+eo*nb_blocks*g_N_s/2+i*g_N_s+j) = *(w+eo*nb_blocks*g_N_s/2+i*g_N_s+j) + r * *(v+eo*nb_blocks*g_N_s/2+i*g_N_s+j);
-    }
-  }
-  return;
-}
 
 
 void init_little_field_exchange(_Complex double * w) {
