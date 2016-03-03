@@ -61,7 +61,7 @@ int _PSWITCH(gcr4complex)(_C_TYPE * const P, _C_TYPE * const Q,
       fflush(stdout);
     }
     if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq * norm_sq) && (rel_prec == 1))) {
-      if(g_proc_id == 0 && g_debug_level > 2) printf("lgcr: %d %e %e %e %e\n", p, err, norm_sq, err/norm_sq, eps_sq);
+      if(g_proc_id == 0 && g_debug_level > 2) printf("lGCR: %d %e %e %e %e\n", p, err, norm_sq, err/norm_sq, eps_sq);
       return (p);
     }
     for(k = 0; k < m ; k++) {
@@ -78,9 +78,9 @@ int _PSWITCH(gcr4complex)(_C_TYPE * const P, _C_TYPE * const Q,
         _PSWITCH(a)[l][k] = _PSWITCH(lscalar_prod)(_PSWITCH(chi)[l], _PSWITCH(tmp), N, parallel);
         _PSWITCH(lassign_diff_mul)(_PSWITCH(tmp), _PSWITCH(chi)[l], _PSWITCH(a)[l][k], N);
       }
-      b[k] = sqrt(_PSWITCH(lsquare_norm)(_PSWITCH(tmp), N, parallel));
+      _PSWITCH(b)[k] = sqrt(_PSWITCH(lsquare_norm)(_PSWITCH(tmp), N, parallel));
       _PSWITCH(lmul_r)(_PSWITCH(chi)[k], 1./_PSWITCH(b)[k], _PSWITCH(tmp), N);
-      c[k] = _PSWITCH(lscalar_prod)(_PSWITCH(chi)[k], _PSWITCH(rho), N, parallel);
+      _PSWITCH(c)[k] = _PSWITCH(lscalar_prod)(_PSWITCH(chi)[k], _PSWITCH(rho), N, parallel);
       _PSWITCH(lassign_diff_mul)(_PSWITCH(rho), _PSWITCH(chi)[k], _PSWITCH(c)[k], N);
       err = _PSWITCH(lsquare_norm)(_PSWITCH(rho), N, parallel);
       if(g_proc_id == g_stdio_proc && g_debug_level > 2){
