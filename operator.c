@@ -116,8 +116,6 @@ int add_operator(const int type) {
   optr->applyMeeInv = &dummy_Mee;
   optr->applyQ = &dummy_M;
   (optr->solver_params).mcg_delta = _default_mixcg_innereps;
-  optr->applyM = &dummy_D;
-  optr->applyQ = &dummy_D;
   optr->applyQp = &dummy_D;
   optr->applyQm = &dummy_D;
   optr->applyMp = &dummy_D;
@@ -418,14 +416,16 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 					      optr->sr0, optr->sr1, optr->sr2, optr->sr3,
 					      optr->eps_sq, optr->maxiter,
 					      optr->solver, optr->rel_prec,
-					      optr->external_inverter, optr->sloppy_precision, optr->compression_type);
+					      optr->solver_params, optr->external_inverter, 
+					      optr->sloppy_precision, optr->compression_type);
       }
       else {
 	optr->iterations = invert_cloverdoublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3,
 						    optr->sr0, optr->sr1, optr->sr2, optr->sr3,
 						    optr->eps_sq, optr->maxiter,
 						    optr->solver, optr->rel_prec,
-						    optr->external_inverter, optr->sloppy_precision, optr->compression_type);
+						    optr->solver_params, optr->external_inverter, 
+						    optr->sloppy_precision, optr->compression_type);
       }
       g_mu = optr->mubar;
       if(optr->type != DBCLOVER) {
