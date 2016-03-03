@@ -227,6 +227,7 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
       block_list[i].little_dirac_operator[j] = 0.0;
       block_list[i].little_dirac_operator32[j] = 0.0;
       block_list[i].little_dirac_operator_eo[j] = 0.0;
+      block_list[i].little_dirac_operator_eo32[j] = 0.0;
     }
   }
   if ((void*)(block_idx = calloc(8 * (VOLUME/nb_blocks), sizeof(int))) == NULL)
@@ -256,6 +257,7 @@ int free_blocks() {
       free(block_list[i].little_dirac_operator);
       free(block_list[i].little_dirac_operator32);
       free(block_list[i].little_dirac_operator_eo);
+      free(block_list[i].little_dirac_operator_eo32);
     }
     free(block_ipt);
     free(bipt__);
@@ -941,7 +943,7 @@ void compute_little_D_diagonal(const int mul_g5) {
       if(mul_g5) gamma5(tmp, tmp, block_list[blk].volume);
       for(j = 0; j < g_N_s; j++) {
 	M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], tmp, block_list[blk].volume, 0);
-	block_list[blk].little_dirac_operator32[i*g_N_s + j] = M[i * g_N_s + j];
+	block_list[blk].little_dirac_operator32[i*g_N_s + j] = (_Complex float)M[i * g_N_s + j];
       }
     }
   }
@@ -953,7 +955,10 @@ void compute_little_D_diagonal(const int mul_g5) {
       for (i = 0*g_N_s; i < 9 * g_N_s; ++i){
         printf(" [ ");
         for (j = 0; j < g_N_s; ++j){
-          printf("%s%1.3e %s %1.3e i", creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[0].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[0].little_dirac_operator[i * g_N_s + j]), cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[0].little_dirac_operator[i * g_N_s + j]));
+          printf("%s%1.3e %s %1.3e i", creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", 
+		 creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[0].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[0].little_dirac_operator[i * g_N_s + j]), 
+		 cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", 
+		 cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[0].little_dirac_operator[i * g_N_s + j]));
           if (j != g_N_s - 1){
             printf(",\t");
           }
@@ -968,7 +973,10 @@ void compute_little_D_diagonal(const int mul_g5) {
       for (i = 0*g_N_s; i < 9 * g_N_s; ++i){
         printf(" [ ");
         for (j = 0; j < g_N_s; ++j){
-          printf("%s%1.3e %s %1.3e i", creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[1].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[1].little_dirac_operator[i * g_N_s + j]), cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[1].little_dirac_operator[i * g_N_s + j]));
+          printf("%s%1.3e %s %1.3e i", creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", 
+		 creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[1].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[1].little_dirac_operator[i * g_N_s + j]), 
+		 cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", 
+		 cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[1].little_dirac_operator[i * g_N_s + j]));
           if (j != g_N_s - 1){
             printf(",\t");
           }
@@ -1029,6 +1037,7 @@ void compute_little_D(const int mul_g5) {
       if(mul_g5) gamma5(scratch, scratch, block_list[blk].volume);
       for(j = 0; j < g_N_s; j++) {
 	M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], scratch, block_list[blk].volume, 0);
+	block_list[blk].little_dirac_operator32[i * g_N_s + j] = (_Complex float)M[i * g_N_s + j];
 		
 	if (block_list[blk].evenodd==0) {
 	  block_list[block_id_e].little_dirac_operator_eo[i * g_N_s + j] = M[i * g_N_s + j];
@@ -1045,7 +1054,7 @@ void compute_little_D(const int mul_g5) {
   /* computation of little_Dhat^{-1}_ee */
   
   for(blk = 0; blk < nb_blocks/2; blk++) {
-    LUInvert(g_N_s,block_list[blk].little_dirac_operator_eo,g_N_s);
+    LUInvert(g_N_s, block_list[blk].little_dirac_operator_eo, g_N_s);
   }
   for (i = 0; i < g_N_s; i++) {
     //if(i==0) count = 0;
@@ -1195,7 +1204,10 @@ void compute_little_D(const int mul_g5) {
   }
   for(i = 0; i < nb_blocks; i++) {
     for(j = 0; j < 9 * g_N_s * g_N_s; j++) {
-      block_list[i].little_dirac_operator32[j] = (_Complex float)block_list[i].little_dirac_operator[ iy ];
+      block_list[i].little_dirac_operator32[ j ] 
+	= (_Complex float)block_list[i].little_dirac_operator[ j ];
+      block_list[i].little_dirac_operator_eo32[ j ] 
+	= (_Complex float)block_list[i].little_dirac_operator_eo[ j ];
     }
   }
 
@@ -1206,7 +1218,11 @@ void compute_little_D(const int mul_g5) {
       for (i = 0*g_N_s; i < 9 * g_N_s; ++i){
         printf(" [ ");
         for (j = 0; j < g_N_s; ++j){
-          printf("%s%1.3e %s %1.3e i", creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[0].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[0].little_dirac_operator[i * g_N_s + j]), cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[0].little_dirac_operator[i * g_N_s + j]));
+          printf("%s%1.3e %s %1.3e i", 
+		 creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", 
+		 creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[0].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[0].little_dirac_operator[i * g_N_s + j]), 
+		 cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", 
+		 cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[0].little_dirac_operator[i * g_N_s + j]));
           if (j != g_N_s - 1){
             printf(",\t");
           }
@@ -1221,7 +1237,11 @@ void compute_little_D(const int mul_g5) {
       for (i = 0*g_N_s; i < 9 * g_N_s; ++i){
         printf(" [ ");
         for (j = 0; j < g_N_s; ++j){
-          printf("%s%1.3e %s %1.3e i", creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[1].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[1].little_dirac_operator[i * g_N_s + j]), cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[1].little_dirac_operator[i * g_N_s + j]));
+          printf("%s%1.3e %s %1.3e i", 
+		 creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", 
+		 creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[1].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[1].little_dirac_operator[i * g_N_s + j]), 
+		 cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", 
+		 cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[1].little_dirac_operator[i * g_N_s + j]));
           if (j != g_N_s - 1){
             printf(",\t");
           }
@@ -1229,7 +1249,6 @@ void compute_little_D(const int mul_g5) {
         printf(" ]\n");
         if ((i % g_N_s) == (g_N_s - 1))
           printf("\n");
-	
       }
     }
   }
