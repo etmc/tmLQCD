@@ -28,6 +28,7 @@
 #include"fortran.h"
 #define zgemm ZGEMM
 #define zgemv ZGEMV
+#define cgemv CGEMV
 #define ddot DDOT
 #define zdotc ZDOTC
 #define daxpy DAXPY
@@ -50,6 +51,7 @@ extern void _FT(dcopy)();
 extern void _FT(dscal)();
 extern void _FT(dgemv)();
 extern void _FT(zgemv)();
+extern void _FT(cgemv)();
 extern void _FT(dgemm)();
 extern void _FT(zgemm)();
 #else
@@ -75,11 +77,16 @@ extern void _FT(dscal)(int* n, double* a, double x[], int* incx);
 
 /* BLAS-2 subroutines */
 extern void _FT(dgemv)(char* trans, int* m, int* n, double* alpha,
-        double a[], int* lda, double x[], int* incx, double* beta,
-        double y[], int* incy, int len_trans);
+		       double a[], int* lda, double x[], int* incx, double* beta,
+		       double y[], int* incy, int len_trans);
+
 extern void _FT(zgemv)(char* trans, int* m, int* n, _Complex double* alpha,
-        _Complex double a[], int* lda, _Complex double x[], int* incx, _Complex double* beta,
-        _Complex double y[], int* incy, int len_trans);
+		       _Complex double a[], int* lda, _Complex double x[], int* incx, _Complex double* beta,
+		       _Complex double y[], int* incy, int len_trans);
+
+extern void _FT(cgemv)(char* trans, int* m, int* n, _Complex float* alpha,
+		       _Complex float a[], int* lda, _Complex float x[], int* incx, _Complex float* beta,
+		       _Complex float y[], int* incy, int len_trans);
 
 /* BLAS-3 subroutines */
 extern void _FT(dgemm)(char* transa, char* transb, int* m, int* n, int* k,

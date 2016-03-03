@@ -56,6 +56,7 @@ int dfl_subspace_updated = 1;
 /* some lapack related stuff */
 static int ONE = 1;
 static _Complex double CONE, CZERO, CMONE;
+static _Complex float CONE32, CZERO32, CMONE32;
 
 enum{
   NONE = 0,
@@ -332,37 +333,31 @@ void alt_little_field_gather(_Complex double * w) {
 }
 
 
+#define _PSWITCH(s) s
+#if (defined NOF77UNDERSCORE || defined NOF77_)
+#define _MV(x) zgemv
+#else
+#define _MV(x) zgemv_
+#endif
+#define _C_TYPE _Complex double
 
+#include"little_D_body.c"
 
-void little_D(_Complex double * v, _Complex double *w) {
-  int sq = g_N_s*g_N_s;
-  CONE = 1.0;
-  CMONE = -1.0;
-  CZERO = 0.0;
+#undef _C_TYPE
+#undef _PSWITCH
 
-  if(dfl_subspace_updated) {
-    compute_little_D(0);
-    dfl_subspace_updated = 0;
-  }
-  
-  little_field_gather(w);
-  
-  /* all the mpilocal stuff first */
-  for(int i = 0; i < nb_blocks; i++) {
-    /* diagonal term */
-    _FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, block_list[i].little_dirac_operator,
-               &g_N_s, w + i * g_N_s, &ONE, &CZERO, v + i * g_N_s, &ONE, 1);
-  }
-  /* offdiagonal terms */
-  for(int j = 1; j < 9; j++) {
-    for(int i = 0; i < nb_blocks; i++) {
-      _FT(zgemv)("N", &g_N_s, &g_N_s, &CONE, block_list[i].little_dirac_operator + j * sq,
-                 &g_N_s, w + (nb_blocks * j + i) * g_N_s, &ONE, &CONE, v + i * g_N_s, &ONE, 1);
-    }
-  }
-  return;
-}
+#define _PSWITCH(s) s ## 32
+#if (defined NOF77UNDERSCORE || defined NOF77_)
+#define _MV(x) cgemv
+#else
+#define _MV(x) cgemv_
+#endif
+#define _C_TYPE _Complex double
 
+#include"little_D_body.c"
+
+#undef _C_TYPE
+#undef _PSWITCH
 
 void little_Q_pm(_Complex double * v, _Complex double *w) {
   _Complex double * tmp = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));

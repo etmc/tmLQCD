@@ -51,7 +51,7 @@ int * bipt;
 _Complex double * little_A = NULL;
 _Complex float * little_A32 = NULL;
 _Complex double * little_A_eo = NULL;
-_Complex float * little_A32_eo = NULL;
+_Complex float * little_A_eo32 = NULL;
 int * block_idx;
 int * block_evenidx;
 int * block_oddidx;
@@ -220,6 +220,9 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
       CALLOC_ERROR_CRASH;
     if ((void*)(block_list[i].little_dirac_operator_eo = calloc(9*g_N_s * g_N_s, sizeof(_Complex double))) == NULL)
       CALLOC_ERROR_CRASH;
+    if ((void*)(block_list[i].little_dirac_operator_eo32 = calloc(9*g_N_s * g_N_s, sizeof(_Complex float))) == NULL)
+      CALLOC_ERROR_CRASH;
+
     for (j = 0; j < 9 * g_N_s * g_N_s; ++j) {
       block_list[i].little_dirac_operator[j] = 0.0;
       block_list[i].little_dirac_operator32[j] = 0.0;
