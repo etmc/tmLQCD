@@ -32,6 +32,7 @@ typedef void (*matrix_mult32)(spinor32 * const, spinor32 * const);
 typedef void (*matrix_mult_blk)(spinor * const, spinor * const, const int);
 typedef void (*matrix_mult_clover)(spinor * const, spinor * const, const double);
 typedef void (*c_matrix_mult)(_Complex double * const, _Complex double * const);
+typedef void (*c_matrix_mult32)(_Complex float * const, _Complex float * const);
 typedef void (*matrix_mult_su3vect)(su3_vector * const, su3_vector * const, const int);
 
 #endif
