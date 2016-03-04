@@ -111,56 +111,26 @@ int mr(spinor * const P, spinor * const Q,
 }
 
 
-int mrblk(spinor * const P, spinor * const Q, spinor * const s_,
-	  const int max_iter, const double eps_sq,
-	  const int rel_prec, const int N, 
-	  matrix_mult_blk f, const int blk) {
-  static int mr_init=0;
-  int i = 0;
-  double norm_r,beta;
-  _Complex double alpha;
-  spinor * r;
-  spinor * s[3];
-  const int parallel = 0;
+#define _F_TYPE double
+#define _C_TYPE _Complex double
+#define _PSWITCH(s) s
+#define _PTSWITCH(s) s 
 
-  s[0] = s_;
-  s[1] = s[0] + N + 1;
-  s[2] = s[1] + N + 1;
+#include "mrblk_body.c"
 
-  r = s[0];
-  norm_r = square_norm(Q, N, parallel);
+#undef _F_TYPE
+#undef _C_TYPE
+#undef _PSWITCH
+#undef _PTSWITCH
 
-  zero_spinor_field(P, N);
-  f(s[2], P, blk);
-  diff(r, Q, s[2], N);
-  norm_r = square_norm(r, N, parallel);
-  if(g_proc_id == g_stdio_proc && g_debug_level > 2 && blk == 0) {
-    printf("MRblk iteration= %d  |res|^2= %e\n", i, norm_r);
-    fflush( stdout );
-  }
-  
-  while((norm_r > eps_sq) && (i < max_iter)){
-    i++;
-    f(s[1], r, blk);
-    alpha = scalar_prod(s[1], r, N, parallel);
-    beta = square_norm(s[1], N, parallel);
-    alpha /= beta;
-    assign_add_mul(P, r, alpha, N);
-    if(i%50 == 0) {
-      f(s[2], P,blk);
-    }
-    else{
-      assign_add_mul(s[2], s[1], alpha, N);
-    }
-    diff(r, Q, s[2], N);
-    norm_r = square_norm(r, N, parallel);
-    if(g_proc_id == g_stdio_proc && g_debug_level > 2 && blk == 0) {
-      printf("MRblk iteration= %d  |res|^2= %g\n", i, norm_r);
-      fflush(stdout);
-    }
-  }
-  if(norm_r > eps_sq){
-    return(-1);
-  }
-  return(i);
-}
+#define _F_TYPE float
+#define _C_TYPE _Complex float
+#define _PSWITCH(s) s ## _32
+#define _PTSWITCH(s) s ## 32
+
+#include "mrblk_body.c"
+
+#undef _F_TYPE
+#undef _C_TYPE
+#undef _PSWITCH
+#undef _PTSWITCH
