@@ -59,10 +59,12 @@ _Complex double *inprod;
 _Complex float  *inprod32;
 _Complex double *inprod_eo;
 _Complex double *inprod_o;
+_Complex float *inprod_o32;
 _Complex double *inprod_e;
 _Complex double *invvec;
 _Complex float  *invvec32;
 _Complex double *invvec_eo;
+_Complex float *invvec_eo32;
 _Complex double *ctmp;
 _Complex double *work_block;
 const int dfl_work_size = 16;
@@ -82,6 +84,7 @@ static void alloc_dfl_projector();
 void project(spinor * const out, spinor * const in) {
   int i_e, i_o, iter;
   int evenodd = 1;
+  int gcr32 = 1;
   int little_m = little_gmres_m_parameter;
   int little_max_iter = little_solver_max_iter;
   int vol = block_list[0].volume;
@@ -139,8 +142,21 @@ void project(spinor * const out, spinor * const in) {
 
   if(!usePL) {
     if(evenodd) {
-      iter = gcr4complex(invvec_eo, inprod_o, little_m, little_max_iter, prec, 1, 
-                         nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, 0, &little_D_sym);
+      if(gcr32) {
+        for (int j = 0; j < g_N_s*nb_blocks*9; j++) {
+          inprod_o32[j] = (_Complex float) inprod_o[j];
+        }
+	iter = gcr4complex32(invvec_eo32, inprod_o32, little_m, little_max_iter, prec, 1, 
+			     nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, 0, &little_D_sym32);
+	// we could do more in 32bit precision!?
+        for (int j = 0; j < g_N_s*nb_blocks*9; j++) {
+          invvec_eo[j] = (_Complex double) invvec_eo32[j];
+        }
+      }
+      else {
+	iter = gcr4complex(invvec_eo, inprod_o, little_m, little_max_iter, prec, 1, 
+			   nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, 0, &little_D_sym);
+      }
 
       little_D_hop(0, ctmp, invvec_eo);
       little_D_ee_inv(invvec_eo, ctmp);
@@ -165,7 +181,7 @@ void project(spinor * const out, spinor * const in) {
       }
     }
     else {
-      if(1) {
+      if(gcr32) {
         iter = gcr4complex32(invvec32, inprod32, little_m, little_max_iter, prec, 1, 
                              nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, 0, &little_D32);
         
@@ -185,8 +201,21 @@ void project(spinor * const out, spinor * const in) {
   else { // usePL = true
     if(evenodd) {
       // this is in adaptive MG style
-      iter = gcr4complex(invvec_eo, inprod_o, little_m, little_max_iter, prec, 1, 
-                         nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, 1, &little_D_sym);
+      if(gcr32) {
+        for (int j = 0; j < g_N_s*nb_blocks*9; j++) {
+          inprod_o32[j] = (_Complex float) inprod_o[j];
+        }
+	iter = gcr4complex32(invvec_eo32, inprod_o32, little_m, little_max_iter, prec, 1, 
+			     nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, 0, &little_D_sym32);
+	// we could do more in 32bit precision!?
+        for (int j = 0; j < g_N_s*nb_blocks*9; j++) {
+          invvec_eo[j] = (_Complex double) invvec_eo32[j];
+        }
+      }
+      else {
+	iter = gcr4complex(invvec_eo, inprod_o, little_m, little_max_iter, prec, 1, 
+			   nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, 1, &little_D_sym);
+      }
       little_D_hop(0,ctmp, invvec_eo);
       little_D_ee_inv(invvec_eo,ctmp);
       little_Dhat_rhs(0,invvec_eo, -1., inprod_e);
@@ -245,11 +274,13 @@ static void alloc_dfl_projector() {
     inprod32 = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex float)); /*inner product of spinors with bases */
     inprod_eo = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
     inprod_o = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
+    inprod_o32 = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex float)); /*inner product of spinors with bases */
     inprod_e = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
     ctmp = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
     invvec = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
     invvec32 = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex float)); /*inner product of spinors with bases */
     invvec_eo = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double)); /*inner product of spinors with bases */
+    invvec_eo32 = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex float)); /*inner product of spinors with bases */
     work_block = calloc(dfl_work_size * nb_blocks * 9 * g_N_s, sizeof(_Complex double));
     for(int i = 0; i < dfl_work_size; ++i) {
       work[i] = work_block + i * nb_blocks * 9 * g_N_s;
@@ -273,11 +304,13 @@ void free_dfl_projector() {
     free(invvec);
     free(invvec32);
     free(invvec_eo);
+    free(invvec_eo32);
     free(inprod);
     free(inprod32);
     free(inprod_eo);
     free(inprod_e);
     free(inprod_o);
+    free(inprod_o32);
     free(ctmp);
     free(work_block);
     init_dfl_projector = 0;
