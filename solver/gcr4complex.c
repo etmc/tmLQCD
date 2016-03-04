@@ -28,6 +28,8 @@
 #include"global.h"
 #include"su3.h"
 #include"linalg_eo.h"
+// needed for the dummy function little_mg_precon ...
+#include"block.h"
 #include"dfl_projector.h"
 #include"gcr4complex.h"
 
@@ -46,4 +48,16 @@
 #define _C_TYPE _Complex float
 #define _F_TYPE float
 
+
+// dummy function until little_mg_precon is implemented in 
+// 32 Bit
+void little_mg_precon32(_Complex float *xi, _Complex float * rho) {
+  memcpy(xi, rho, nb_blocks*g_N_s*sizeof(_Complex float));
+  return;
+}
+
 #include"gcr4complex_body.c"
+
+#undef _PSWITCH
+#undef _C_TYPE
+#undef _F_TYPE

@@ -69,8 +69,7 @@ int _PSWITCH(gcr4complex)(_C_TYPE * const P, _C_TYPE * const Q,
         memcpy(_PSWITCH(xi)[k], _PSWITCH(rho), N*sizeof(_C_TYPE));
       }
       else {
-        little_mg_precon(_PSWITCH(xi)[k], _PSWITCH(rho));
-	// FIXME _PSWITCH(little_mg_precon)(_PSWITCH(xi)[k], _PSWITCH(rho));
+	_PSWITCH(little_mg_precon)(_PSWITCH(xi)[k], _PSWITCH(rho));
       }
       f(_PSWITCH(tmp), _PSWITCH(xi)[k]); 
       /* tmp will become chi[k] */
