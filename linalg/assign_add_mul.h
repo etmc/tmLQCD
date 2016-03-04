@@ -24,5 +24,6 @@
 
 /*   (*P) = (*P) + c(*Q)        c is a complex constant   */
 void assign_add_mul(spinor * const P, spinor * const Q, const _Complex double c, const int N);
+void assign_add_mul_32(spinor32 * const P, spinor32 * const Q, const _Complex float c, const int N);
 
 #endif
