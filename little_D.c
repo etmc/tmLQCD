@@ -275,6 +275,12 @@ void apply_little_D_spinor(spinor *r, spinor *s){
 #undef _PSWITCH
 #undef _MV
 
+#ifdef MPI
+// in xchange/little_field_gather.c
+extern MPI_Request lrequests[16];
+extern MPI_Status lstatus[16];
+extern int waitcount;
+#endif
 
 
 void init_little_field_exchange(_Complex double * w) {

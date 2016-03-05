@@ -35,6 +35,19 @@
 #include "block.h"
 #include "little_field_gather.h"
 
+enum{
+  NONE = 0,
+  T_UP = 1,
+  T_DN = 2,
+  X_UP = 3,
+  X_DN = 4,
+  Y_UP = 5,
+  Y_DN = 6,
+  Z_UP = 7,
+  Z_DN = 8
+} Direction;
+
+
 #ifdef MPI
 MPI_Request lrequests[16];
 MPI_Status lstatus[16];
@@ -44,7 +57,7 @@ int waitcount = 0;
 
 #define _PSWITCH(s) s 
 #define _C_TYPE _Complex double
-#define _MPI_C_TYPE MPI_COMPLEX_DOUBLE
+#define _MPI_C_TYPE MPI_DOUBLE_COMPLEX
 
 #include"little_field_gather_body.c"
 
