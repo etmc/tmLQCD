@@ -75,6 +75,7 @@ static void (*boundary_D[8])(spinor * const r, spinor * const s, su3 *u) =
 block * block_list = NULL;
 static spinor * basis = NULL;
 static su3 * u = NULL;
+static su3_32 * u_32 = NULL;
 const int spinpad = 1;
 static int block_init = 0;
 
@@ -142,6 +143,9 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
   if((void*)(u = (su3*)calloc(1+8*VOLUME, sizeof(su3))) == NULL) {
     CALLOC_ERROR_CRASH;
   }
+  if((void*)(u_32 = (su3_32*)calloc(1+8*VOLUME, sizeof(su3_32))) == NULL) {
+    CALLOC_ERROR_CRASH;
+  }
   for(i = 0; i < nb_blocks; i++) {
     block_list[i].basis = (spinor**)calloc(g_N_s, sizeof(spinor*));
   }
@@ -149,9 +153,11 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
 #if ( defined SSE || defined SSE2 || defined SSE3)
   block_list[0].basis[0] = (spinor*)(((unsigned long int)(basis)+ALIGN_BASE)&~ALIGN_BASE);
   block_list[0].u = (su3*)(((unsigned long int)(u)+ALIGN_BASE)&~ALIGN_BASE);
+  block_list[0].u_32 = (su3_32*)(((unsigned long int)(u_32)+ALIGN_BASE)&~ALIGN_BASE);
 #else
   block_list[0].basis[0] = basis;
   block_list[0].u = u;
+  block_list[0].u_32 = u_32;
 #endif
   for(j = 1; j < nb_blocks; j++) { 
     block_list[j].basis[0] = block_list[j-1].basis[0] + g_N_s*((VOLUME/nb_blocks) + spinpad) ;
@@ -268,6 +274,7 @@ int free_blocks() {
     free(block_evenidx);
     free(block_oddidx);
     free(u);
+    free(u_32);
     free(basis);
     free(block_list);
     block_init = 0;
@@ -283,18 +290,17 @@ int init_blocks_gaugefield() {
      memory. 
   */
 
-  int i, x, y, z, t, ix, ix_new = 0;
-  int bx, by, bz, bt;
+  int i, ix, ix_new = 0;
 
-  for (t = 0; t < dT;  t++) {
-    for (x = 0; x < dX; x++) {
-      for (y = 0; y < dY; y++) {
-	for (z = 0; z < dZ; z++) {
+  for(int t = 0; t < dT;  t++) {
+    for(int x = 0; x < dX; x++) {
+      for(int y = 0; y < dY; y++) {
+	for(int z = 0; z < dZ; z++) {
 	  i = 0;
-	  for(bt = 0; bt < nblks_t; bt ++) {
-	    for(bx = 0; bx < nblks_x; bx ++) {
-	      for(by = 0; by < nblks_y; by ++) {
-		for(bz = 0; bz < nblks_z; bz ++) {
+	  for(int bt = 0; bt < nblks_t; bt ++) {
+	    for(int bx = 0; bx < nblks_x; bx ++) {
+	      for(int by = 0; by < nblks_y; by ++) {
+		for(int bz = 0; bz < nblks_z; bz ++) {
 		  ix = g_ipt[t + bt*dT][x + bx*dX][y + by*dY][z + bz*dZ];
 		  memcpy(block_list[i].u + ix_new,     &g_gauge_field[ ix           ][0], sizeof(su3));
 		  memcpy(block_list[i].u + ix_new + 1, &g_gauge_field[ g_idn[ix][0] ][0], sizeof(su3));
@@ -318,6 +324,48 @@ int init_blocks_gaugefield() {
   return(0);
 }
 
+int init_blocks_gaugefield_32() {
+  /* 
+     Copies the existing gauge field on the processor into the separate blocks in a form
+     that is readable by the block Dirac operator. Specifically, in consecutive memory
+     now +t,-t,+x,-x,+y,-y,+z,-z gauge links are stored. This requires double the storage in
+     memory. 
+  */
+
+  int i, ix, ix_new = 0;
+
+  for(int t = 0; t < dT;  t++) {
+    for(int x = 0; x < dX; x++) {
+      for(int y = 0; y < dY; y++) {
+	for(int z = 0; z < dZ; z++) {
+	  i = 0;
+	  for(int bt = 0; bt < nblks_t; bt ++) {
+	    for(int bx = 0; bx < nblks_x; bx ++) {
+	      for(int by = 0; by < nblks_y; by ++) {
+		for(int bz = 0; bz < nblks_z; bz ++) {
+		  ix = g_ipt[t + bt*dT][x + bx*dX][y + by*dY][z + bz*dZ];
+		  memcpy(block_list[i].u_32 + ix_new,     &g_gauge_field_32[ ix           ][0], sizeof(su3_32));
+		  memcpy(block_list[i].u_32 + ix_new + 1, &g_gauge_field_32[ g_idn[ix][0] ][0], sizeof(su3_32));
+		  memcpy(block_list[i].u_32 + ix_new + 2, &g_gauge_field_32[ ix           ][1], sizeof(su3_32));
+		  memcpy(block_list[i].u_32 + ix_new + 3, &g_gauge_field_32[ g_idn[ix][1] ][1], sizeof(su3_32));
+		  memcpy(block_list[i].u_32 + ix_new + 4, &g_gauge_field_32[ ix           ][2], sizeof(su3_32));
+		  memcpy(block_list[i].u_32 + ix_new + 5, &g_gauge_field_32[ g_idn[ix][2] ][2], sizeof(su3_32));
+		  memcpy(block_list[i].u_32 + ix_new + 6, &g_gauge_field_32[ ix           ][3], sizeof(su3_32));
+		  memcpy(block_list[i].u_32 + ix_new + 7, &g_gauge_field_32[ g_idn[ix][3] ][3], sizeof(su3_32));
+		  i++;
+		}
+	      }
+	    }
+	  }
+	  ix_new += 8;
+	}
+      }
+    }
+  }
+  blk_gauge_eo = 0;
+  return(0);
+}
+
 int init_blocks_eo_gaugefield() {
   /* 
      Copies the existing gauge field on the processor into the separate blocks in a form
@@ -326,13 +374,13 @@ int init_blocks_eo_gaugefield() {
      memory. 
   */
 
-  int i, x, y, z, t, ix, ix_even = 0, ix_odd = (dT*dX*dY*dZ*8)/2, ixeo;
-  int bx, by, bz, bt, even=0;
+  int i, ix, ix_even = 0, ix_odd = (dT*dX*dY*dZ*8)/2, ixeo;
+  int even=0;
 
-  for (t = 0; t < dT;  t++) {
-    for (x = 0; x < dX; x++) {
-      for (y = 0; y < dY; y++) {
-	for (z = 0; z < dZ; z++) {
+  for (int t = 0; t < dT;  t++) {
+    for (int x = 0; x < dX; x++) {
+      for (int y = 0; y < dY; y++) {
+	for (int z = 0; z < dZ; z++) {
 	  if((t+x+y+z)%2 == 0) {
 	    even = 1;
 	    ixeo = ix_even;
@@ -342,10 +390,10 @@ int init_blocks_eo_gaugefield() {
 	    ixeo = ix_odd;
 	  }
 	  i = 0;
-	  for(bt = 0; bt < nblks_t; bt ++) {
-	    for(bx = 0; bx < nblks_x; bx ++) {
-	      for(by = 0; by < nblks_y; by ++) {
-		for(bz = 0; bz < nblks_z; bz ++) {
+	  for(int bt = 0; bt < nblks_t; bt ++) {
+	    for(int bx = 0; bx < nblks_x; bx ++) {
+	      for(int by = 0; by < nblks_y; by ++) {
+		for(int bz = 0; bz < nblks_z; bz ++) {
 		  ix = g_ipt[t + bt*dT][x + bx*dX][y + by*dY][z + bz*dZ];
 		  memcpy(block_list[i].u + ixeo,     &g_gauge_field[ ix           ][0], sizeof(su3));
 		  memcpy(block_list[i].u + ixeo + 1, &g_gauge_field[ g_idn[ix][0] ][0], sizeof(su3));
@@ -355,6 +403,58 @@ int init_blocks_eo_gaugefield() {
 		  memcpy(block_list[i].u + ixeo + 5, &g_gauge_field[ g_idn[ix][2] ][2], sizeof(su3));
 		  memcpy(block_list[i].u + ixeo + 6, &g_gauge_field[ ix           ][3], sizeof(su3));
 		  memcpy(block_list[i].u + ixeo + 7, &g_gauge_field[ g_idn[ix][3] ][3], sizeof(su3));
+		  i++;
+		}
+	      }
+	    }
+	  }
+	  if(even) ix_even += 8;
+	  else ix_odd += 8;
+	}
+      }
+    }
+  }
+  blk_gauge_eo = 1;
+  return(0);
+}
+
+int init_blocks_eo_gaugefield_32() {
+  /* 
+     Copies the existing gauge field on the processor into the separate blocks in a form
+     that is readable by the block Hopping matrix. Specifically, in consecutive memory
+     now +t,-t,+x,-x,+y,-y,+z,-z gauge links are stored. This requires double the storage in
+     memory. 
+  */
+
+  int i, ix, ix_even = 0, ix_odd = (dT*dX*dY*dZ*8)/2, ixeo;
+  int even=0;
+
+  for(int t = 0; t < dT;  t++) {
+    for(int x = 0; x < dX; x++) {
+      for(int y = 0; y < dY; y++) {
+	for(int z = 0; z < dZ; z++) {
+	  if((t+x+y+z)%2 == 0) {
+	    even = 1;
+	    ixeo = ix_even;
+	  }
+	  else {
+	    even = 0;
+	    ixeo = ix_odd;
+	  }
+	  i = 0;
+	  for(int bt = 0; bt < nblks_t; bt ++) {
+	    for(int bx = 0; bx < nblks_x; bx ++) {
+	      for(int by = 0; by < nblks_y; by ++) {
+		for(int bz = 0; bz < nblks_z; bz ++) {
+		  ix = g_ipt[t + bt*dT][x + bx*dX][y + by*dY][z + bz*dZ];
+		  memcpy(block_list[i].u_32 + ixeo,     &g_gauge_field_32[ ix           ][0], sizeof(su3_32));
+		  memcpy(block_list[i].u_32 + ixeo + 1, &g_gauge_field_32[ g_idn[ix][0] ][0], sizeof(su3_32));
+		  memcpy(block_list[i].u_32 + ixeo + 2, &g_gauge_field_32[ ix           ][1], sizeof(su3_32));
+		  memcpy(block_list[i].u_32 + ixeo + 3, &g_gauge_field_32[ g_idn[ix][1] ][1], sizeof(su3_32));
+		  memcpy(block_list[i].u_32 + ixeo + 4, &g_gauge_field_32[ ix           ][2], sizeof(su3_32));
+		  memcpy(block_list[i].u_32 + ixeo + 5, &g_gauge_field_32[ g_idn[ix][2] ][2], sizeof(su3_32));
+		  memcpy(block_list[i].u_32 + ixeo + 6, &g_gauge_field_32[ ix           ][3], sizeof(su3_32));
+		  memcpy(block_list[i].u_32 + ixeo + 7, &g_gauge_field_32[ g_idn[ix][3] ][3], sizeof(su3_32));
 		  i++;
 		}
 	      }

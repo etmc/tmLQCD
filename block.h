@@ -46,6 +46,7 @@ typedef struct {
   int *oddidx;                 /* provides the next neighbours for spinors on the block even/odd case */
   spinor **basis;               /* generated orthonormal basis for little D [Ns x local_volume] */
   su3 * u;                      /* block local gauge field, for use in D */
+  su3_32 * u_32;                /* 32 bit block local gauge field, for use in D */
   int spinpad;                  /* number of elements needed to store the boundaries of the spinor */
   int evenodd;                  /* block even or odd (0 or 1) */
 
@@ -63,6 +64,8 @@ int free_blocks();
 
 int init_blocks_gaugefield();
 int init_blocks_eo_gaugefield();
+int init_blocks_gaugefield_32();
+int init_blocks_eo_gaugefield_32();
 
 void copy_global_to_block(spinor * const blockfield, spinor * const globalfield, const int blk);
 void copy_block_to_global(spinor * const globalfield, spinor * const blockfield, const int blk);
