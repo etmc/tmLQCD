@@ -65,6 +65,7 @@ const int predist=2;
  *
  ******************************************/
 void mul_one_pm_imu_inv(spinor * const l, const double _sign, const int N);
+void mul_one_pm_imu_inv_32(spinor32 * const l, const double _sign, const int N);
 void mul_one_pm_imu(spinor * const l, const double _sign);
 /******************************************
  * mul_one_pm_imu_sub_mul_gamma5 computes
@@ -93,6 +94,9 @@ void mul_one_sub_mul_gamma5(spinor * const l, spinor * const k,
  ******************************************/
 void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k,
 			    spinor * const j, const double _sign, const int N);
+void mul_one_pm_imu_sub_mul_32(spinor32 * const l, spinor32 * const k,
+			       spinor32 * const j, const double _sign, const int N);
+
 void tm_sub_H_eo_gamma5(spinor* const l, spinor * const p, spinor * const k,
 			const int ieo, const double _sign);
 
@@ -549,65 +553,29 @@ void tm_sub_H_eo_gamma5(spinor* const l, spinor * const p, spinor * const k,
  * can find comments above at the declaration 
  *
  **********************************************/
+#define _F_TYPE double
+#define _C_TYPE _Complex double
+#define _PSWITCH(s) s
+#define _PTSWITCH(s) s
 
-void mul_one_pm_imu_inv(spinor * const l, const double _sign, const int N){
-#ifdef OMP
-#pragma omp parallel
-  {
-#endif
-  _Complex double ALIGN z,w;
-  int ix;
-  double sign=-1.; 
-  spinor *r;
+#include "mul_one_pm_imu_inv_body.c"
 
-  su3_vector ALIGN phi1;
+#undef _F_TYPE
+#undef _C_TYPE
+#undef _PSWITCH
+#undef _PTSWITCH
 
-  double ALIGN nrm = 1./(1.+g_mu*g_mu);
+#define _F_TYPE float
+#define _C_TYPE _Complex float
+#define _PSWITCH(s) s ## _32
+#define _PTSWITCH(s) s ## 32
 
-  if(_sign < 0.){
-    sign = 1.; 
-  }
+#include "mul_one_pm_imu_inv_body.c"
 
-  z = nrm + (sign * nrm * g_mu) * I;
-  w = conj(z);
-  /************ loop over all lattice sites ************/
-#ifdef OMP
-#pragma omp for
-#endif
-  for(ix = 0; ix < N; ix++){
-    r=l + ix;
-    /* Multiply the spinorfield with the inverse of 1+imu\gamma_5 */
-#if ( defined SSE2 || defined SSE3 )
-    _prefetch_spinor((r+predist)); 
-    _sse_load_up(r->s0);
-    _sse_vector_cmplx_mul(z);
-    _sse_store_nt_up(r->s0);
-    _sse_load_up(r->s1);
-    _sse_vector_cmplx_mul_two();
-    _sse_store_nt_up(r->s1);
-    _sse_load_up(r->s2);
-    _sse_vector_cmplx_mul(w);
-    _sse_store_nt_up(r->s2);
-    _sse_load_up(r->s3);
-    _sse_vector_cmplx_mul_two();
-    _sse_store_nt_up(r->s3);
-#else
-    _complex_times_vector(phi1, z, r->s0);
-    _vector_assign(r->s0, phi1);
-    _complex_times_vector(phi1, z, r->s1);
-    _vector_assign(r->s1, phi1);
-    _complex_times_vector(phi1, w, r->s2);
-    _vector_assign(r->s2, phi1);
-    _complex_times_vector(phi1, w, r->s3);
-    _vector_assign(r->s3, phi1);
-#endif
-  }
-
-#ifdef OMP
-  } /* OpenMP closing brace */
-#endif
-
-}
+#undef _F_TYPE
+#undef _C_TYPE
+#undef _PSWITCH
+#undef _PTSWITCH
 
 void assign_mul_one_pm_imu_inv(spinor * const l, spinor * const k, const double _sign, const int N){
 #ifdef OMP
@@ -919,76 +887,26 @@ void mul_one_pm_imu_sub_mul_gamma5(spinor * const l, spinor * const k,
 #endif
 }
 
-void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k, 
-			    spinor * const j, const double _sign, const int N){
-#ifdef OMP
-#pragma omp parallel
-  {
-#endif
-  _Complex double z,w;
-  int ix;
-  double sign=1.;
-  spinor *r, *s, *t;
+#define _C_TYPE _Complex double
+#define _F_TYPE double
+#define _PSWITCH(s) s
+#define _PTSWITCH(s) s
 
-#if (!defined SSE2 && !defined SSE3)
+#include "mul_one_pm_imu_sub_mul_body.c"
 
-  su3_vector ALIGN phi1, phi2, phi3, phi4;
-  
-#endif
+#undef _C_TYPE
+#undef _F_TYPE
+#undef _PSWITCH
+#undef _PTSWITCH
 
-  if(_sign < 0.){
-    sign = -1.;
-  }
+#define _C_TYPE _Complex float
+#define _F_TYPE float
+#define _PSWITCH(s) s ## _32
+#define _PTSWITCH(s) s ## 32
 
-  z = 1. + (sign * g_mu) * I;
-  w = conj(z);
-  /************ loop over all lattice sites ************/
-#ifdef OMP
-#pragma omp for
-#endif
-  for(ix = 0; ix < N; ix++){
-    r = k+ix;
-    s = j+ix;
-    t = l+ix;
-    /* Multiply the spinorfield with 1+imu\gamma_5 */
-#if (defined SSE2 || defined SSE3)
-    _prefetch_spinor((r+predist));
-    _prefetch_spinor((s+predist));
-    _sse_load_up(r->s0);
-    _sse_vector_cmplx_mul(z);
-    _sse_load(s->s0);
-    _sse_vector_sub_up();
-    _sse_store_nt_up(t->s0);
-    _sse_load_up(r->s1);
-    _sse_vector_cmplx_mul_two();
-    _sse_load(s->s1);
-    _sse_vector_sub_up();
-    _sse_store_nt_up(t->s1);
-    _sse_load_up(r->s2);
-    _sse_vector_cmplx_mul(w);
-    _sse_load(s->s2);
-    _sse_vector_sub_up();
-    _sse_store_nt_up(t->s2);
-    _sse_load_up(r->s3);
-    _sse_vector_cmplx_mul_two();
-    _sse_load(s->s3);
-    _sse_vector_sub_up();
-    _sse_store_nt_up(t->s3);
-#else
-    _complex_times_vector(phi1, z, r->s0);
-    _complex_times_vector(phi2, z, r->s1);
-    _complex_times_vector(phi3, w, r->s2);
-    _complex_times_vector(phi4, w, r->s3);
-    /* Subtract s and store the result in t */
-    _vector_sub(t->s0, phi1, s->s0);
-    _vector_sub(t->s1, phi2, s->s1);
-    _vector_sub(t->s2, phi3, s->s2);
-    _vector_sub(t->s3, phi4, s->s3);
-#endif
-  }
+#include "mul_one_pm_imu_sub_mul_body.c"
 
-#ifdef OMP
-  } /* OpenMP closing brace */
-#endif
-}
-
+#undef _C_TYPE
+#undef _F_TYPE
+#undef _PSWITCH
+#undef _PTSWITCH

@@ -220,7 +220,7 @@ int init_operators() {
           optr->applyQp = &Qsw_full_plus_psi;
           optr->applyQm = &Qsw_full_minus_psi;
           optr->applyQsq = &Qsw_full_pm_psi;
-          optr->applyMp = &Dsw_psi;
+          optr->applyMp = &D_psi;
           optr->applyMm = &Msw_full_minus_psi;
         }
         if(optr->solver == CGMMS) {

@@ -161,7 +161,7 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
     else if (solver_flag == DFLFGMRES) {
       if(g_proc_id == 0) {printf("# Using deflated FGMRES solver! m = %d\n", gmres_m_parameter); fflush(stdout);}
       iter = fgmres(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, 
-                    max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 2, &Dsw_psi);
+                    max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 2, &D_psi);
     }
     else if(solver_flag == CG){
       if(g_proc_id == 0) {

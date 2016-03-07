@@ -51,274 +51,35 @@
 #include "operator/clovertm_operators.h"
 #include "solver/dirac_operator_eigenvectors.h"
 
-#if (defined SSE23 || defined SSE33)
+
+#define _C_TYPE _Complex float
+#define _F_TYPE float
+#define _PSWITCH(s) s ## _32
+#define _PTSWITCH(s) s ## 32
+
+#include"D_psi_body.c"
+
+#undef _C_TYPE
+#undef _F_TYPE
+#undef _PSWITCH
+#undef _PTSWITCH
+
+
+#if (!defined SSE && !defined SSE2 && !defined SSE3)
+
+#define _C_TYPE _Complex double
+#define _F_TYPE double
+#define _PSWITCH(s) s
+#define _PTSWITCH(s) s
+
+#include"D_psi_body.c"
+
+#undef _C_TYPE
+#undef _F_TYPE
+#undef _PSWITCH
+#undef _PTSWITCH
 
 #else
-
-
-static inline void p0add(spinor * restrict const tmpr , spinor const * restrict const s, 
-                         su3 const * restrict const u, const _Complex double phase) {
-#ifdef OMP
-#define static
-#endif
-  static su3_vector chi, psi;
-#ifdef OMP
-#undef static
-#endif
-
-  _vector_add(psi,s->s0, s->s2);
-  _su3_multiply(chi, (*u), psi);
-
-  _complex_times_vector(psi, phase, chi);
-  _vector_add_assign(tmpr->s0, psi);
-  _vector_add_assign(tmpr->s2, psi);
-
-  _vector_add(psi, s->s1, s->s3);
-  _su3_multiply(chi, (*u), psi);
-
-  _complex_times_vector(psi, phase, chi);
-  _vector_add_assign(tmpr->s1, psi);
-  _vector_add_assign(tmpr->s3, psi);
-
-  return;
-}
-
-
-static inline void m0add(spinor * restrict const tmpr, spinor const * restrict const s, 
-                         su3 const * restrict const u, const _Complex double phase) {
-#ifdef OMP
-#define static
-#endif
-  static su3_vector chi, psi;
-#ifdef OMP
-#undef static
-#endif
-
-  _vector_sub(psi, s->s0, s->s2);
-  _su3_inverse_multiply(chi, (*u), psi);
-
-  _complexcjg_times_vector(psi, phase, chi);
-  _vector_add_assign(tmpr->s0, psi);
-  _vector_sub_assign(tmpr->s2, psi);
-
-  _vector_sub(psi, s->s1, s->s3);
-  _su3_inverse_multiply(chi, (*u), psi);
-
-  _complexcjg_times_vector(psi, phase, chi);
-  _vector_add_assign(tmpr->s1, psi);
-  _vector_sub_assign(tmpr->s3, psi);
-
-  return;
-}
-
-static inline void p1add(spinor * restrict const tmpr, spinor const * restrict const s, 
-                         su3 const * restrict const u, const _Complex double phase) {
-#ifdef OMP
-#define static
-#endif
-  static su3_vector chi, psi;
-#ifdef OMP
-#undef static
-#endif
-
-  _vector_i_add(psi,s->s0,s->s3);
-  _su3_multiply(chi,(*u),psi);
-
-  _complex_times_vector(psi, phase, chi);
-  _vector_add_assign(tmpr->s0, psi);
-  _vector_i_sub_assign(tmpr->s3, psi);
- 
-  _vector_i_add(psi, s->s1, s->s2);
-  _su3_multiply(chi, (*u), psi);
-
-  _complex_times_vector(psi, phase, chi);
-  _vector_add_assign(tmpr->s1, psi);
-  _vector_i_sub_assign(tmpr->s2, psi);
-
-  return;
-}
-
-static inline void m1add(spinor * restrict const tmpr, spinor const * restrict const s, 
-                         su3 const * restrict const u, const _Complex double phase) {
-#ifdef OMP
-#define static
-#endif
-  static su3_vector chi, psi;
-#ifdef OMP
-#undef static
-#endif
-
-  _vector_i_sub(psi,s->s0, s->s3);
-  _su3_inverse_multiply(chi,(*u), psi);
-
-  _complexcjg_times_vector(psi, phase, chi);
-  _vector_add_assign(tmpr->s0, psi);
-  _vector_i_add_assign(tmpr->s3, psi);
-
-  _vector_i_sub(psi, s->s1, s->s2);
-  _su3_inverse_multiply(chi, (*u), psi);
-
-  _complexcjg_times_vector(psi, phase, chi);
-  _vector_add_assign(tmpr->s1, psi);
-  _vector_i_add_assign(tmpr->s2, psi);
-
-  return;
-}
-
-static inline void p2add(spinor * restrict const tmpr, spinor const * restrict const s, 
-                         su3 const * restrict const u, const _Complex double phase) {
-#ifdef OMP
-#define static
-#endif
-  static su3_vector chi, psi;
-#ifdef OMP
-#undef static
-#endif
-
-  _vector_add(psi,s->s0,s->s3);
-  _su3_multiply(chi, (*u), psi);
-
-  _complex_times_vector(psi, phase, chi);
-  _vector_add_assign(tmpr->s0, psi);
-  _vector_add_assign(tmpr->s3, psi);
-
-  _vector_sub(psi,s->s1,s->s2);
-  _su3_multiply(chi, (*u), psi);
-
-  _complex_times_vector(psi, phase, chi);
-  _vector_add_assign(tmpr->s1, psi);
-  _vector_sub_assign(tmpr->s2, psi);
-
-
-  return;
-}
-
-static inline void m2add(spinor * restrict const tmpr, spinor const * restrict const s, 
-                         su3 const * restrict const u, const _Complex double phase) {
-#ifdef OMP
-#define static
-#endif
-  static su3_vector chi, psi;
-#ifdef OMP
-#undef static
-#endif
-
-  _vector_sub(psi, s->s0, s->s3);
-  _su3_inverse_multiply(chi, (*u), psi);
-
-  _complexcjg_times_vector(psi, phase, chi);
-  _vector_add_assign(tmpr->s0, psi);
-  _vector_sub_assign(tmpr->s3, psi);
-
-  _vector_add(psi, s->s1, s->s2);
-  _su3_inverse_multiply(chi, (*u),psi);
-
-  _complexcjg_times_vector(psi, phase, chi);
-  _vector_add_assign(tmpr->s1, psi);
-  _vector_add_assign(tmpr->s2, psi);
-
-  return;
-}
-
-static inline void p3add(spinor * restrict const tmpr, spinor const * restrict const s, 
-                         su3 const * restrict const u, const _Complex double phase) {
-#ifdef OMP
-#define static
-#endif
-  static su3_vector chi, psi;
-#ifdef OMP
-#undef static
-#endif
-
-  _vector_i_add(psi, s->s0, s->s2);
-  _su3_multiply(chi, (*u), psi);
-
-  _complex_times_vector(psi, phase, chi);
-  _vector_add_assign(tmpr->s0, psi);
-  _vector_i_sub_assign(tmpr->s2, psi);
-
-  _vector_i_sub(psi,s->s1, s->s3);
-  _su3_multiply(chi, (*u), psi);
-
-  _complex_times_vector(psi, phase, chi);
-  _vector_add_assign(tmpr->s1, psi);
-  _vector_i_add_assign(tmpr->s3, psi);
-
-  return;
-}
-
-static inline void m3addandstore(spinor * restrict const r, spinor const * restrict const s, 
-                                 su3 const * restrict const u, const _Complex double phase,
-                                 spinor const * restrict const tmpr) {
-#ifdef OMP
-#define static
-#endif
-  static su3_vector chi, psi;
-#ifdef OMP
-#undef static
-#endif
-
-  _vector_i_sub(psi,s->s0, s->s2);
-  _su3_inverse_multiply(chi, (*u), psi);
-
-  _complexcjg_times_vector(psi, phase, chi);
-  _vector_add(r->s0, tmpr->s0, psi);
-  _vector_i_add(r->s2, tmpr->s2, psi);
-
-  _vector_i_add(psi, s->s1, s->s3);
-  _su3_inverse_multiply(chi, (*u), psi);
-
-  _complexcjg_times_vector(psi, phase, chi);
-  _vector_add(r->s1, tmpr->s1, psi);
-  _vector_i_sub(r->s3, tmpr->s3, psi);
-
-  return;
-}
-
-/* this is the hopping part only */
-static inline void local_H(spinor * const rr, spinor const * const s, su3 const * restrict u, 
-                           int * _idx, spinor * const restrict tmpr) {
-
-  int * idx = _idx;
-
-  /****** direction +0 ******/
-  p0add(tmpr, s + (*idx), u, phase_0);
-  u++;
-  idx++;
-  /****** direction -0 ******/
-  m0add(tmpr, s + (*idx), u, phase_0);
-  u++;
-  idx++;
-  /****** direction +1 ******/
-  p1add(tmpr, s + (*idx), u, phase_1);
-  u++;
-  idx++;
-  /****** direction -1 ******/
-  m1add(tmpr, s + (*idx), u, phase_1);
-  u++;
-  idx++;
-  /****** direction +2 ******/
-  p2add(tmpr, s + (*idx), u, phase_2);
-  u++;
-  idx++;
-  /****** direction -2 ******/
-  m2add(tmpr, s + (*idx), u, phase_2);
-  u++;
-  idx++;
-  /****** direction +3 ******/
-  p3add(tmpr, s + (*idx), u, phase_3);
-  u++;
-  idx++;
-  /****** direction -3 ******/
-  m3addandstore(rr, s + (*idx), u, phase_3, tmpr);
-
-  return;
-}
-
-
-#endif
-
-#if (defined SSE2 || defined SSE3)
 
 /* Serially Checked ! */
 void Dtm_psi(spinor * const P, spinor * const Q){
@@ -1110,211 +871,6 @@ void Dsw_psi(spinor * const P, spinor * const Q){
 #endif
 }
 
-
-#else
-
-/* Serially Checked ! */
-
-void Dtm_psi(spinor * const P, spinor * const Q){
-  if(P==Q){
-    printf("Error in Dtm_psi (operator.c):\n");
-    printf("Arguments must be different spinor fields\n");
-    printf("Program aborted\n");
-    exit(1);
-  }
-#ifdef _GAUGE_COPY
-  if(g_update_gauge_copy) {
-    update_backward_gauge(g_gauge_field);
-  }
-#endif
-# if defined MPI
-  xchange_lexicfield(Q);
-# endif
-
-#ifdef OMP
-#pragma omp parallel
-  {
-#endif
-
-    int ix,iy;
-    su3 * restrict up,* restrict um;
-    spinor * restrict rr; 
-    spinor const * restrict s;
-    spinor const * restrict sp;
-    spinor const * restrict sm;
-    _Complex double rho1, rho2;
-    spinor tmpr;
-
-    rho1 = 1. + g_mu * I;
-    rho2 = conj(rho1);
-
-    /************************ loop over all lattice sites *************************/
-
-#ifdef OMP
-#pragma omp for
-#endif
-    for (ix=0;ix<VOLUME;ix++) {
-      rr  = (spinor *) P +ix;
-      s  = (spinor *) Q +ix;
-      
-      _complex_times_vector(tmpr.s0, rho1, s->s0);
-      _complex_times_vector(tmpr.s1, rho1, s->s1);
-      _complex_times_vector(tmpr.s2, rho2, s->s2);
-      _complex_times_vector(tmpr.s3, rho2, s->s3);
-      
-      /******************************* direction +0 *********************************/
-      iy=g_iup[ix][0];
-      sp = (spinor *) Q +iy;
-      up=&g_gauge_field[ix][0];
-      p0add(&tmpr, sp, up, phase_0);
-      
-      /******************************* direction -0 *********************************/
-      iy=g_idn[ix][0];
-      sm  = (spinor *) Q +iy;
-      um=&g_gauge_field[iy][0];
-      m0add(&tmpr, sm, um, phase_0);
-      
-      /******************************* direction +1 *********************************/
-      iy=g_iup[ix][1];
-      sp = (spinor *) Q +iy;
-      up=&g_gauge_field[ix][1];
-      p1add(&tmpr, sp, up, phase_1);
-      
-      /******************************* direction -1 *********************************/
-      iy=g_idn[ix][1];
-      sm = (spinor *) Q +iy;
-      um=&g_gauge_field[iy][1];
-      m1add(&tmpr, sm, um, phase_1);
-      
-      /******************************* direction +2 *********************************/
-      iy=g_iup[ix][2];
-      sp = (spinor *) Q +iy;
-      up=&g_gauge_field[ix][2];
-      p2add(&tmpr, sp, up, phase_2);
-      
-      /******************************* direction -2 *********************************/
-      iy=g_idn[ix][2];
-      sm = (spinor *) Q +iy;
-      um=&g_gauge_field[iy][2];
-      m2add(&tmpr, sm, um, phase_2);
-      
-      /******************************* direction +3 *********************************/
-      iy=g_iup[ix][3];
-      sp = (spinor *) Q +iy;
-      up=&g_gauge_field[ix][3];
-      p3add(&tmpr, sp, up, phase_3);
-      
-      /******************************* direction -3 *********************************/
-      iy=g_idn[ix][3];
-      sm = (spinor *) Q +iy;
-      um=&g_gauge_field[iy][3];
-      m3addandstore(rr, sm, um, phase_3, &tmpr);
-      if(ix < 0) {
-        ix = 0;
-      }
-    }
-#ifdef OMP
-  } /* OpenMP closing brace */
-#endif
-}
-
-void Dsw_psi(spinor * const P, spinor * const Q){
-  if(P==Q) {
-    printf("Error in Dsw_psi (D_psi.c):\n");
-    printf("Arguments must be different spinor fields\n");
-    printf("Program aborted\n");
-    exit(1);
-  }
-
-#ifdef _GAUGE_COPY
-  if(g_update_gauge_copy) {
-    update_backward_gauge(g_gauge_field);
-  }
-#endif
-# if defined MPI
-  xchange_lexicfield(Q);
-# endif
-
-#ifdef OMP
-#pragma omp parallel
-  {
-#endif
-    
-    int ix,iy;
-    su3 * restrict up,* restrict um;
-    spinor * restrict rr; 
-    spinor const * restrict s;
-    spinor const * restrict sp;
-    spinor const * restrict sm;
-    spinor tmpr;
-    
-    /************************ loop over all lattice sites *************************/
-    
-#ifdef OMP
-#pragma omp for
-#endif
-    for (ix=0;ix<VOLUME;ix++)
-      {
-        rr  = (spinor *) P +ix;
-        s  = (spinor *) Q +ix;
-        assign_mul_one_sw_pm_imu_site_lexic(ix,&tmpr,s,g_mu);
-        
-        /******************************* direction +0 *********************************/
-        iy=g_iup[ix][0];
-        sp = (spinor *) Q +iy;
-        up=&g_gauge_field[ix][0];
-        p0add(&tmpr, sp, up, phase_0);
-        
-        /******************************* direction -0 *********************************/
-        iy=g_idn[ix][0];
-        sm  = (spinor *) Q +iy;
-        um=&g_gauge_field[iy][0];
-        m0add(&tmpr, sm, um, phase_0);
-        
-        /******************************* direction +1 *********************************/
-        iy=g_iup[ix][1];
-        sp = (spinor *) Q +iy;
-        up=&g_gauge_field[ix][1];
-        p1add(&tmpr, sp, up, phase_1);
-        
-        /******************************* direction -1 *********************************/
-        iy=g_idn[ix][1];
-        sm = (spinor *) Q +iy;
-        um=&g_gauge_field[iy][1];
-        m1add(&tmpr, sm, um, phase_1);
-        
-        /******************************* direction +2 *********************************/
-        iy=g_iup[ix][2];
-        sp = (spinor *) Q +iy;
-        up=&g_gauge_field[ix][2];
-        p2add(&tmpr, sp, up, phase_2);
-        
-        /******************************* direction -2 *********************************/
-        iy=g_idn[ix][2];
-        sm = (spinor *) Q +iy;
-        um=&g_gauge_field[iy][2];
-        m2add(&tmpr, sm, um, phase_2);
-        
-        /******************************* direction +3 *********************************/
-        iy=g_iup[ix][3];
-        sp = (spinor *) Q +iy;
-        up=&g_gauge_field[ix][3];
-        p3add(&tmpr, sp, up, phase_3);
-        
-        /******************************* direction -3 *********************************/
-        iy=g_idn[ix][3];
-        sm = (spinor *) Q +iy;
-        um=&g_gauge_field[iy][3];
-        m3addandstore(rr, sm, um, phase_3, &tmpr);
-      }
-#ifdef OMP
-  } /* OpenMP closing brace */
-#endif
-}
-
-#endif
-
-
 void D_psi(spinor * const P, spinor * const Q){
    if(g_c_sw > 0)
      Dsw_psi(P,Q);
@@ -1324,7 +880,7 @@ void D_psi(spinor * const P, spinor * const Q){
    return ;
 }
 
-
+#endif // SSE
 
 void D_psi_prec(spinor * const P, spinor * const Q){
 
@@ -1339,161 +895,30 @@ void D_psi_prec(spinor * const P, spinor * const Q){
   spinorPrecondition(P,g_spinor_field[DUM_MATRIX],ws,T,L,alpha,0,1);
 }
 
-/* apply the Dirac operator to the block local spinor field s */
-/* and store the result in block local spinor field rr        */
-/* for block blk                                              */
-/* the block local gauge field is assumed to be in the order  */
-/* that is needed int local_D, which means also that it is a  */
-/* double copy                                                */
-// CU: has problems with SSE2,3
-void Block_D_psi(block * blk, spinor * const rr, spinor * const s) {
+#define _F_TYPE float
+#define _C_TYPE _Complex float
+#define _PSWITCH(s) s ## _32
+#define _PTSWITCH(s) s ## 32
 
-  if(g_c_sw > 0)
-     Block_Dsw_psi(blk,rr,s);
-  else 
-     Block_Dtm_psi(blk,rr,s);
+#include "Block_D_psi_body.c"
 
-  return;
-}
- 
-//this version is for c_sw=0
-void Block_Dtm_psi(block * blk, spinor * const rr, spinor * const s) {
-  int i;
-  spinor *r = rr;
-  spinor *t = s;
-  su3 * u = blk->u;
-  int * idx = blk->idx;
-  static _Complex double rhoa, rhob;
-  spinor ALIGN tmpr;
-  if(blk_gauge_eo) {
-    init_blocks_gaugefield();
-  }
-  rhoa = 1.0 + g_mu * I;
-  rhob = conj(rhoa);
+#undef _F_TYPE
+#undef _C_TYPE
+#undef _PSWITCH
+#undef _PTSWITCH
 
-  /* set the boundary term to zero */
-  _spinor_null(rr[blk->volume]);
-  _spinor_null(s[blk->volume]);
+#define _F_TYPE double
+#define _C_TYPE _Complex double
+#define _PSWITCH(s) s
+#define _PTSWITCH(s) s
 
-  for(i = 0; i < blk->volume; i++) {
-    _complex_times_vector(tmpr.s0, rhoa, t->s0);
-    _complex_times_vector(tmpr.s1, rhoa, t->s1);
-    _complex_times_vector(tmpr.s2, rhob, t->s2);
-    _complex_times_vector(tmpr.s3, rhob, t->s3);
+#include "Block_D_psi_body.c"
 
-    local_H(r, s, u, idx, &tmpr);
+#undef _F_TYPE
+#undef _C_TYPE
+#undef _PSWITCH
+#undef _PTSWITCH
 
-    r++;
-    t++;
-    idx += 8;
-    u += 8;
-  }
-
-  return;
-}
-
-
-/* apply the Dirac operator to the block local spinor field s */
-/* and store the result in block local spinor field rr        */
-/* for block blk                                              */
-/* the block local gauge field is assumed to be in the order  */
-/* that is needed int local_D, which means also that it is a  */
-/* double copy                                                */
-// CU: has problems with SSE2,3
-void Block_Dsw_psi(block * blk, spinor * const rr, spinor * const s) {
-  spinor *r = rr;
-  spinor *t = s;
-  su3 * u = blk->u;
-  int * idx = blk->idx;
-  //static _Complex double rhoa, rhob;
-  spinor ALIGN tmpr;
-
-  int it, ix, iy, iz; //lexiographic index of the site w.r.t the block
-  int bt, bx, by, bz; //block coordinate on the local mpi process
-  int dT, dX, dY, dZ; //block size
-  int sT, sX, sY, sZ; //constant shifts
-  int lx; //lexiographic index of the block site w.r.t the local mpi process
-
-  dT = blk->BT;
-  dX = blk->BLX;
-  dY = blk->BLY;
-  dZ = blk->BLZ;
-
-  bt = blk->mpilocal_coordinate[0];
-  bx = blk->mpilocal_coordinate[1];
-  by = blk->mpilocal_coordinate[2];
-  bz = blk->mpilocal_coordinate[3];
-
-  sT = bt * dT;
-  sX = bx * dX;
-  sY = by * dY;
-  sZ = bz * dZ;
-  
-  if(blk_gauge_eo) {
-    init_blocks_gaugefield();
-  }
-  
-  /* set the boundary term to zero */
-  _spinor_null(rr[blk->volume]);
-  _spinor_null(s[blk->volume]);
-
-  for(int i = 0; i < blk->volume; i++) {
-
-    iz = i % dZ;
-    iy = (i / dZ) % dY;
-    ix = (i / (dZ * dY)) % dX;
-    it = i / (dZ * dY * dX);
-
-    lx = g_ipt[it + sT][ix + sX][iy + sY][iz + sZ];
-
-    assign_mul_one_sw_pm_imu_site_lexic(lx, &tmpr, t, g_mu);
-
-    local_H(r, s, u, idx, &tmpr);
-
-    r++;
-    t++;
-    idx += 8;
-    u += 8;
-  }
-
-  return;
-}
-
-
-/* Apply Hopping Matrix to a even(odd) spinor */
-void Block_H_psi(block * blk, spinor * const rr, spinor * const s, const int eo) {
-  int i;
-  spinor *r = rr;
-  su3 * u = blk->u;
-  int * eoidx = blk->evenidx;
-  spinor ALIGN tmpr;
-
-  if(!blk_gauge_eo) {
-    init_blocks_eo_gaugefield();
-  }
-
-  /* for OE */
-  if(eo == 1) {
-    u = blk->u + blk->volume*8/2;
-    eoidx = blk->oddidx;
-  }
-
-  /* set the boundary term to zero */
-  _spinor_null(rr[blk->volume/2]);
-  _spinor_null(s[blk->volume/2]);
-  
-  for(i = 0; i < blk->volume/2; i++) {
-    _spinor_null(tmpr);
-
-    local_H(r, s, u, eoidx, &tmpr);
-
-    r++;
-    eoidx += 8;
-    u += 8;
-  }
-
-  return;
-}
 
 /* direction +t */
 void boundary_D_0(spinor * const r, spinor * const s, su3 * const u) {
