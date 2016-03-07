@@ -69,10 +69,19 @@ int init_blocks_eo_gaugefield_32();
 
 void copy_global_to_block(spinor * const blockfield, spinor * const globalfield, const int blk);
 void copy_block_to_global(spinor * const globalfield, spinor * const blockfield, const int blk);
-void copy_global_to_block_eo(spinor * const beven, spinor * const bodd, spinor * const globalfield, const int blk);
-void copy_block_eo_to_global(spinor * const globalfield, spinor * const beven, spinor * const bodd, const int blk);
+void copy_global_to_block_eo(spinor * const beven, spinor * const bodd, 
+			     spinor * const globalfield, const int blk);
+void copy_global_to_block_eo_32(spinor32 * const beven, spinor32 * const bodd, 
+				spinor * const globalfield, const int blk);
+
+void copy_block_eo_to_global(spinor * const globalfield, 
+			     spinor * const beven, spinor * const bodd, const int blk);
+
 void add_block_to_global(spinor * const globalfield, spinor * const blockfield, const int blk);
-void add_eo_block_to_global(spinor * const globalfield, spinor * const beven, spinor * const bodd, const int blk);
+void add_eo_block_to_global(spinor * const globalfield, 
+			    spinor * const beven, spinor * const bodd, const int blk);
+void add_eo_block_32_to_global(spinor * const globalfield, 
+			       spinor32 * const beven, spinor32 * const bodd, const int blk);
 
 void block_convert_lexic_to_eo(spinor * const s, spinor * const r, spinor * const P);
 void block_convert_eo_to_lexic(spinor * const P, spinor * const s, spinor * const r);

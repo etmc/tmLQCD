@@ -1492,6 +1492,47 @@ void copy_global_to_block_eo(spinor * const beven, spinor * const bodd, spinor *
   return;
 }
 
+void copy_global_to_block_eo_32(spinor32 * const beven, spinor32 * const bodd, 
+				spinor * const globalfield, const int blk) {
+  int i,it,ix,iy,iz;
+  int even = 0, odd = 0;
+  _Complex float * to = NULL;
+  _Complex double * from = NULL;
+  spinor32 * tmp = NULL;
+  
+  for(int t = 0; t < block_list[blk].BT; t++) {
+    it = t + block_list[blk].mpilocal_coordinate[0]*block_list[blk].BT;
+    for(int x = 0; x < block_list[blk].BLX; x++) {
+      ix = x +  block_list[blk].mpilocal_coordinate[1]*block_list[blk].BLX;
+      for(int y = 0; y < block_list[blk].BLY; y++) {
+	iy = y +  block_list[blk].mpilocal_coordinate[2]*block_list[blk].BLY;
+	for(int z = 0; z < block_list[blk].BLZ; z++) {
+	  iz = z +  block_list[blk].mpilocal_coordinate[3]*block_list[blk].BLZ;
+	  i = g_ipt[it][ix][iy][iz];
+
+	  if((t+x+y+z)%2 == 0) {
+	    tmp = beven + even;
+	    even++;
+	  }
+	  else {
+	    tmp = bodd + odd;
+	    odd++;
+	  }
+
+	  to = (_Complex float*) tmp;
+	  from = (_Complex double*) (globalfield + i);
+	  for(int k = 0; k < 12; k++) {
+	    (*to) = (_Complex float) (*from);
+	    to++;
+	    from++;
+	  }
+	}
+      }
+    }
+  }
+  return;
+}
+
 /* reverts copy_global_to_block_eo */
 void copy_block_eo_to_global(spinor * const globalfield, spinor * const beven, spinor * const bodd, const int blk) {
   int t, x, y, z;
@@ -1650,6 +1691,47 @@ void add_eo_block_to_global(spinor * const globalfield, spinor * const beven, sp
   }
   return;
 }
+
+void add_eo_block_32_to_global(spinor * const globalfield, 
+			       spinor32 * const beven, spinor32 * const bodd, const int blk) {
+  int i,it,ix,iy,iz;
+  int even = 0, odd = 0;
+  spinor32 * tmp = NULL;
+  _Complex double * to = NULL;
+  _Complex float * from = NULL;
+
+  for(int t = 0; t < block_list[blk].BT; t++) {
+    it = t + block_list[blk].mpilocal_coordinate[0]*block_list[blk].BT;
+    for(int x = 0; x < block_list[blk].BLX; x++) {
+      ix = x +  block_list[blk].mpilocal_coordinate[1]*block_list[blk].BLX;
+      for(int y = 0; y < block_list[blk].BLY; y++) {
+	iy = y +  block_list[blk].mpilocal_coordinate[2]*block_list[blk].BLY;
+	for(int z = 0; z < block_list[blk].BLZ; z++) {
+	  iz = z +  block_list[blk].mpilocal_coordinate[3]*block_list[blk].BLZ;
+	  i = g_ipt[it][ix][iy][iz];
+	  if((t+x+y+z)%2 == 0) {
+	    tmp = beven + even;
+	    even++;
+	  }
+	  else {
+	    tmp = bodd + odd;
+	    odd++;
+	  }
+	  to = (_Complex double*) (globalfield + i);
+	  from = (_Complex float*) tmp;
+	  for(int k = 0; k < 12; k++) {
+	    (*to) += (_Complex double) (*from);
+	    to++;
+	    from++;
+	  }
+
+	}
+      }
+    }
+  }
+  return;
+}
+
 
 void add_block_to_global(spinor * const globalfield, spinor * const blockfield, const int blk) {
   int i;

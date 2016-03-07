@@ -577,42 +577,6 @@ void tm_sub_H_eo_gamma5(spinor* const l, spinor * const p, spinor * const k,
 #undef _PSWITCH
 #undef _PTSWITCH
 
-void assign_mul_one_pm_imu_inv(spinor * const l, spinor * const k, const double _sign, const int N){
-#ifdef OMP
-#pragma omp parallel
-  {
-#endif
-  _Complex double z,w;
-  int ix;
-  double sign=-1.; 
-  spinor *r, *s;
-  double nrm = 1./(1.+g_mu*g_mu);
-
-  if(_sign < 0.){
-    sign = 1.; 
-  }
-
-  z = nrm + (sign * nrm * g_mu) * I;
-  w = conj(z);
-
-  /************ loop over all lattice sites ************/
-#ifdef OMP
-#pragma omp for
-#endif
-  for(ix = 0; ix < N; ix++){
-    r=k+ix;
-    s=l+ix;
-    /* Multiply the spinorfield with the inverse of 1+imu\gamma_5 */
-    _complex_times_vector(s->s0, z, r->s0);
-    _complex_times_vector(s->s1, z, r->s1);
-    _complex_times_vector(s->s2, w, r->s2);
-    _complex_times_vector(s->s3, w, r->s3);
-  }
-
-#ifdef OMP
-  } /* OpenMP closing brace */
-#endif
-}
 
 void Mee_inv_psi(spinor * const l, spinor * const k, const double mu){
 #ifdef OMP

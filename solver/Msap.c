@@ -45,16 +45,21 @@ void dummy_Di(spinor * const P, spinor * const Q, const int i) {
   return;
 }
 
+#define _PTSWITCH(s) s
+#define _PSWITCH(s) s
 
-void Mtm_plus_block_psi(spinor * const l, spinor * const k, const int i) {
-  block * blk = &block_list[i];
-  int vol = (*blk).volume/2;
-  Block_H_psi(blk, &g_spinor_field[DUM_MATRIX+1][i*vol], k, EO);
-  mul_one_pm_imu_inv(&g_spinor_field[DUM_MATRIX+1][i*vol], +1., vol);
-  Block_H_psi(blk, &g_spinor_field[DUM_MATRIX][i*vol], &g_spinor_field[DUM_MATRIX+1][i*vol], OE);
-  mul_one_pm_imu_sub_mul(l, k, &g_spinor_field[DUM_MATRIX][i*vol], +1., vol);
-  return;
-}
+#include"M_plus_block_psi_body.c"
+
+#undef _PTSWITCH
+#undef _PSWITCH
+
+#define _PTSWITCH(s) s ## 32
+#define _PSWITCH(s) s ## _32
+
+#include"M_plus_block_psi_body.c"
+
+#undef _PTSWITCH
+#undef _PSWITCH
 
 void Mtm_plus_sym_block_psi(spinor * const l, spinor * const k, const int i) {
   block * blk = &block_list[i];
@@ -64,19 +69,6 @@ void Mtm_plus_sym_block_psi(spinor * const l, spinor * const k, const int i) {
   Block_H_psi(blk, &g_spinor_field[DUM_MATRIX][i*vol], &g_spinor_field[DUM_MATRIX+1][i*vol], OE);
   mul_one_pm_imu_inv(&g_spinor_field[DUM_MATRIX][i*vol], +1., vol);
   diff(l, k, &g_spinor_field[DUM_MATRIX][i*vol], vol);
-  return;
-}
-
-
-
-void Msw_plus_block_psi(spinor * l, spinor *  k, const int i) {
-  block * blk = &block_list[i];
-  int vol = (*blk).volume/2;
-  Block_H_psi(blk, &g_spinor_field[DUM_MATRIX+1][i*vol], k, EO);
-  assign_mul_one_sw_pm_imu_inv_block(EE, &g_spinor_field[DUM_MATRIX][i*vol],&g_spinor_field[DUM_MATRIX+1][i*vol], g_mu, blk);
-  Block_H_psi(blk, &g_spinor_field[DUM_MATRIX+1][i*vol], &g_spinor_field[DUM_MATRIX][i*vol], OE);
-  assign_mul_one_sw_pm_imu_block(OO, &g_spinor_field[DUM_MATRIX][i*vol],k,g_mu,blk);
-  diff(l,&g_spinor_field[DUM_MATRIX][i*vol],&g_spinor_field[DUM_MATRIX+1][i*vol],vol);
   return;
 }
 
@@ -99,8 +91,6 @@ void Msw_plus_sym_block_psi(spinor *  l, spinor *  k, const int i) {
   diff(l, k, &g_spinor_field[DUM_MATRIX][i*vol], vol);
   return;
 }
-
-
 
 void dummy_D0(spinor * const P, spinor * const Q) {
   Block_D_psi(&block_list[0], P, Q);
@@ -282,7 +272,7 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
 	  if(g_c_sw > 0) {
 	    assign_mul_one_sw_pm_imu_inv_block(EE, a_even, b_even, g_mu, &block_list[blk]);
 	    Block_H_psi(&block_list[blk], a_odd, a_even, OE);
-	    /* a_odd = a_odd - b_odd */
+	    /* a_odd = b_odd - a_odd */
 	    diff(a_odd, b_odd, a_odd, vol);
 
 	    mrblk(b_odd, a_odd, solver_field[3] + blk*2*3*vols, Niter, 1.e-31, 1, vol, &Msw_plus_block_psi, blk);
@@ -294,7 +284,7 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
 	  else {
 	    assign_mul_one_pm_imu_inv(a_even, b_even, +1., vol);
 	    Block_H_psi(&block_list[blk], a_odd, a_even, OE);
-	    /* a_odd = a_odd - b_odd */
+	    /* a_odd = b_odd - a_odd */
 	    diff(a_odd, b_odd, a_odd, vol);
 
 	    mrblk(b_odd, a_odd, solver_field[3] + blk*2*3*vols, Niter, 1.e-31, 1, vol, &Mtm_plus_block_psi, blk);
@@ -307,6 +297,112 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
 
 	  /* add even and odd part up to full spinor P */
 	  add_eo_block_to_global(P, a_even, b_odd, blk);
+
+	}
+      }
+    }
+  }
+  finalize_solver(solver_field, nr_sf);
+  g_mu = musave;
+  g_kappa = kappasave;
+  boundary(g_kappa);
+  return;
+}
+
+
+void Msap_eo_new(spinor * const P, spinor * const Q, const int Ncy, const int Niter) {
+  int blk, ncy = 0, eo, vol, vols;
+  spinor * r, * a, * b;
+  double nrm;
+  double musave = g_mu;
+  double kappasave = g_kappa;
+  spinor32 * b_even, * b_odd, * a_even, * a_odd, *c;
+  spinor ** solver_field = NULL;
+  // also get space for mrblk! 6 = 3+3
+  const int nr_sf = 6;
+
+  if(kappa_dflgen > 0) {
+    g_kappa = kappa_dflgen;
+  }
+  if(mu_dflgen > -10) {
+    g_mu = mu_dflgen;
+    // make sure the sign is correct!
+    if(g_mu*musave < 0) g_mu *= -1.;
+  }
+  boundary(g_kappa);
+  /* 
+   * here it would be probably better to get the working fields as a parameter 
+   * from the calling function
+   */
+  vols = block_list[0].volume/2+block_list[0].spinpad;
+  vol = block_list[0].volume/2;
+
+  init_solver_field(&solver_field, nb_blocks*2*vols, nr_sf);
+  r = solver_field[0];
+  a = solver_field[1];
+  b = solver_field[2];
+
+  for(ncy = 0; ncy < Ncy; ncy++) {
+    /* compute the global residue        */
+    /* this can be done more efficiently */
+    /* here only a naive implementation  */
+    for(eo = 0; eo < 2; eo++) {
+      D_psi(r, P);
+      diff(r, Q, r, VOLUME);
+      nrm = square_norm(r, VOLUME, 1);
+      if(g_proc_id == 0 && g_debug_level > 2 && eo == 0) {
+	printf("Msap_eo: %d %1.3e mu = %e\n", ncy, nrm, g_mu/2./g_kappa);
+	fflush(stdout);
+      }
+      /* choose the even (odd) block */
+
+      // OMP doesn't work right now because linalg routines start threads themselves
+      // also in mrblk
+      // 
+      // #ifdef OMP
+      // # pragma omp parallel for private (a_even, a_odd, b_even, b_odd, c)
+      // #endif
+      for (blk = 0; blk < nb_blocks; blk++) {
+ 	b_even = (spinor32*) (b + blk*2*vols);
+ 	b_odd = (spinor32*) (b +blk*2*vols + vols);
+ 	a_even = (spinor32*) (a + blk*2*vols);
+ 	a_odd = (spinor32*) (a + blk*2*vols + vols);
+	c = (spinor32*) (solver_field[3] + blk*vols);
+
+	if(block_list[blk].evenodd == eo) {
+	  /* get part of r corresponding to block blk into b_even and b_odd */
+
+	  copy_global_to_block_eo_32(b_even, b_odd, r, blk);
+	  if(g_c_sw > 0) {
+	    assign_mul_one_sw_pm_imu_inv_block_32(EE, a_even, b_even, g_mu, &block_list[blk]);
+	    Block_H_psi_32(&block_list[blk], a_odd, a_even, OE);
+	    /* a_odd = b_odd - a_odd */
+	    diff_32(a_odd, b_odd, a_odd, vol);
+
+	    mrblk_32(b_odd, a_odd, (spinor32*) (solver_field[3] + blk*2*3*vols),
+		     Niter, 1.e-31, 1, vol, &Msw_plus_block_psi_32, blk);
+	    
+	    Block_H_psi_32(&block_list[blk], b_even, b_odd, EO);
+	    assign_32(c, b_even, vol);
+	    assign_mul_one_sw_pm_imu_inv_block_32(EE, b_even, c, g_mu, &block_list[blk]);
+	  }
+	  else {
+	    assign_mul_one_pm_imu_inv_32(a_even, b_even, +1., vol);
+	    Block_H_psi_32(&block_list[blk], a_odd, a_even, OE);
+	    /* a_odd = b_odd - a_odd */
+	    diff_32(a_odd, b_odd, a_odd, vol);
+
+	    mrblk_32(b_odd, a_odd, (spinor32*) (solver_field[3] + blk*2*3*vols), 
+		     Niter, 1.e-31, 1, vol, &Mtm_plus_block_psi_32, blk);
+
+	    Block_H_psi_32(&block_list[blk], b_even, b_odd, EO);
+	    mul_one_pm_imu_inv_32(b_even, +1., vol);
+	  }
+	  /* a_even = a_even - b_even */
+	  diff_32(a_even, a_even, b_even, vol);
+
+	  /* add even and odd part up to full spinor P */
+	  add_eo_block_32_to_global(P, a_even, b_odd, blk);
 
 	}
       }
