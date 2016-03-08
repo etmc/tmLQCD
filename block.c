@@ -130,7 +130,7 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
   dZ = LZ/nblks_z;
   if(g_proc_id == 0 && g_debug_level > 0) {
     printf("# Number of deflation blocks per MPI process = %d\n  n_block_t = %d\n  n_block_x = %d\n  n_block_y = %d\n  n_block_z = %d\n",
-	   nb_blocks, nblks_t, nblks_x, nblks_y, nblks_z);
+           nb_blocks, nblks_t, nblks_x, nblks_y, nblks_z);
     printf("# Block size: %d x %d x %d x %d\n", dT, dX, dY, dZ);
   }
   
@@ -150,18 +150,14 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
     block_list[i].basis = (spinor**)calloc(g_N_s, sizeof(spinor*));
   }
   
-#if ( defined SSE || defined SSE2 || defined SSE3)
   block_list[0].basis[0] = (spinor*)(((unsigned long int)(basis)+ALIGN_BASE)&~ALIGN_BASE);
   block_list[0].u = (su3*)(((unsigned long int)(u)+ALIGN_BASE)&~ALIGN_BASE);
   block_list[0].u_32 = (su3_32*)(((unsigned long int)(u_32)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  block_list[0].basis[0] = basis;
-  block_list[0].u = u;
-  block_list[0].u_32 = u_32;
-#endif
+
   for(j = 1; j < nb_blocks; j++) { 
     block_list[j].basis[0] = block_list[j-1].basis[0] + g_N_s*((VOLUME/nb_blocks) + spinpad) ;
     block_list[j].u = block_list[j-1].u + 8*(VOLUME/nb_blocks);
+    block_list[j].u_32 = block_list[j-1].u_32 + 8*(VOLUME/nb_blocks);
   }
   for(j = 0; j < nb_blocks; j++) {
     for(i = 1 ; i < g_N_s ; i ++ ) {
@@ -209,7 +205,7 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
     }
     /* even/odd id of block coordinate            */
     block_list[i].evenodd = (block_list[i].coordinate[0] + block_list[i].coordinate[1] + 
-			     block_list[i].coordinate[2] + block_list[i].coordinate[3]) % 2;
+                             block_list[i].coordinate[2] + block_list[i].coordinate[3]) % 2;
 
     /* block_list[i].evenodd = i % 2; */
     if(g_proc_id == 0 && g_debug_level > 4) {
@@ -295,28 +291,28 @@ int init_blocks_gaugefield() {
   for(int t = 0; t < dT;  t++) {
     for(int x = 0; x < dX; x++) {
       for(int y = 0; y < dY; y++) {
-	for(int z = 0; z < dZ; z++) {
-	  i = 0;
-	  for(int bt = 0; bt < nblks_t; bt ++) {
-	    for(int bx = 0; bx < nblks_x; bx ++) {
-	      for(int by = 0; by < nblks_y; by ++) {
-		for(int bz = 0; bz < nblks_z; bz ++) {
-		  ix = g_ipt[t + bt*dT][x + bx*dX][y + by*dY][z + bz*dZ];
-		  memcpy(block_list[i].u + ix_new,     &g_gauge_field[ ix           ][0], sizeof(su3));
-		  memcpy(block_list[i].u + ix_new + 1, &g_gauge_field[ g_idn[ix][0] ][0], sizeof(su3));
-		  memcpy(block_list[i].u + ix_new + 2, &g_gauge_field[ ix           ][1], sizeof(su3));
-		  memcpy(block_list[i].u + ix_new + 3, &g_gauge_field[ g_idn[ix][1] ][1], sizeof(su3));
-		  memcpy(block_list[i].u + ix_new + 4, &g_gauge_field[ ix           ][2], sizeof(su3));
-		  memcpy(block_list[i].u + ix_new + 5, &g_gauge_field[ g_idn[ix][2] ][2], sizeof(su3));
-		  memcpy(block_list[i].u + ix_new + 6, &g_gauge_field[ ix           ][3], sizeof(su3));
-		  memcpy(block_list[i].u + ix_new + 7, &g_gauge_field[ g_idn[ix][3] ][3], sizeof(su3));
-		  i++;
-		}
-	      }
-	    }
-	  }
-	  ix_new += 8;
-	}
+        for(int z = 0; z < dZ; z++) {
+          i = 0;
+          for(int bt = 0; bt < nblks_t; bt ++) {
+            for(int bx = 0; bx < nblks_x; bx ++) {
+              for(int by = 0; by < nblks_y; by ++) {
+                for(int bz = 0; bz < nblks_z; bz ++) {
+                  ix = g_ipt[t + bt*dT][x + bx*dX][y + by*dY][z + bz*dZ];
+                  memcpy(block_list[i].u + ix_new,     &g_gauge_field[ ix           ][0], sizeof(su3));
+                  memcpy(block_list[i].u + ix_new + 1, &g_gauge_field[ g_idn[ix][0] ][0], sizeof(su3));
+                  memcpy(block_list[i].u + ix_new + 2, &g_gauge_field[ ix           ][1], sizeof(su3));
+                  memcpy(block_list[i].u + ix_new + 3, &g_gauge_field[ g_idn[ix][1] ][1], sizeof(su3));
+                  memcpy(block_list[i].u + ix_new + 4, &g_gauge_field[ ix           ][2], sizeof(su3));
+                  memcpy(block_list[i].u + ix_new + 5, &g_gauge_field[ g_idn[ix][2] ][2], sizeof(su3));
+                  memcpy(block_list[i].u + ix_new + 6, &g_gauge_field[ ix           ][3], sizeof(su3));
+                  memcpy(block_list[i].u + ix_new + 7, &g_gauge_field[ g_idn[ix][3] ][3], sizeof(su3));
+                  i++;
+                }
+              }
+            }
+          }
+          ix_new += 8;
+        }
       }
     }
   }
@@ -337,28 +333,28 @@ int init_blocks_gaugefield_32() {
   for(int t = 0; t < dT;  t++) {
     for(int x = 0; x < dX; x++) {
       for(int y = 0; y < dY; y++) {
-	for(int z = 0; z < dZ; z++) {
-	  i = 0;
-	  for(int bt = 0; bt < nblks_t; bt ++) {
-	    for(int bx = 0; bx < nblks_x; bx ++) {
-	      for(int by = 0; by < nblks_y; by ++) {
-		for(int bz = 0; bz < nblks_z; bz ++) {
-		  ix = g_ipt[t + bt*dT][x + bx*dX][y + by*dY][z + bz*dZ];
-		  memcpy(block_list[i].u_32 + ix_new,     &g_gauge_field_32[ ix           ][0], sizeof(su3_32));
-		  memcpy(block_list[i].u_32 + ix_new + 1, &g_gauge_field_32[ g_idn[ix][0] ][0], sizeof(su3_32));
-		  memcpy(block_list[i].u_32 + ix_new + 2, &g_gauge_field_32[ ix           ][1], sizeof(su3_32));
-		  memcpy(block_list[i].u_32 + ix_new + 3, &g_gauge_field_32[ g_idn[ix][1] ][1], sizeof(su3_32));
-		  memcpy(block_list[i].u_32 + ix_new + 4, &g_gauge_field_32[ ix           ][2], sizeof(su3_32));
-		  memcpy(block_list[i].u_32 + ix_new + 5, &g_gauge_field_32[ g_idn[ix][2] ][2], sizeof(su3_32));
-		  memcpy(block_list[i].u_32 + ix_new + 6, &g_gauge_field_32[ ix           ][3], sizeof(su3_32));
-		  memcpy(block_list[i].u_32 + ix_new + 7, &g_gauge_field_32[ g_idn[ix][3] ][3], sizeof(su3_32));
-		  i++;
-		}
-	      }
-	    }
-	  }
-	  ix_new += 8;
-	}
+        for(int z = 0; z < dZ; z++) {
+          i = 0;
+          for(int bt = 0; bt < nblks_t; bt ++) {
+            for(int bx = 0; bx < nblks_x; bx ++) {
+              for(int by = 0; by < nblks_y; by ++) {
+                for(int bz = 0; bz < nblks_z; bz ++) {
+                  ix = g_ipt[t + bt*dT][x + bx*dX][y + by*dY][z + bz*dZ];
+                  memcpy(block_list[i].u_32 + ix_new,     &g_gauge_field_32[ ix           ][0], sizeof(su3_32));
+                  memcpy(block_list[i].u_32 + ix_new + 1, &g_gauge_field_32[ g_idn[ix][0] ][0], sizeof(su3_32));
+                  memcpy(block_list[i].u_32 + ix_new + 2, &g_gauge_field_32[ ix           ][1], sizeof(su3_32));
+                  memcpy(block_list[i].u_32 + ix_new + 3, &g_gauge_field_32[ g_idn[ix][1] ][1], sizeof(su3_32));
+                  memcpy(block_list[i].u_32 + ix_new + 4, &g_gauge_field_32[ ix           ][2], sizeof(su3_32));
+                  memcpy(block_list[i].u_32 + ix_new + 5, &g_gauge_field_32[ g_idn[ix][2] ][2], sizeof(su3_32));
+                  memcpy(block_list[i].u_32 + ix_new + 6, &g_gauge_field_32[ ix           ][3], sizeof(su3_32));
+                  memcpy(block_list[i].u_32 + ix_new + 7, &g_gauge_field_32[ g_idn[ix][3] ][3], sizeof(su3_32));
+                  i++;
+                }
+              }
+            }
+          }
+          ix_new += 8;
+        }
       }
     }
   }
@@ -380,37 +376,37 @@ int init_blocks_eo_gaugefield() {
   for (int t = 0; t < dT;  t++) {
     for (int x = 0; x < dX; x++) {
       for (int y = 0; y < dY; y++) {
-	for (int z = 0; z < dZ; z++) {
-	  if((t+x+y+z)%2 == 0) {
-	    even = 1;
-	    ixeo = ix_even;
-	  }
-	  else {
-	    even = 0;
-	    ixeo = ix_odd;
-	  }
-	  i = 0;
-	  for(int bt = 0; bt < nblks_t; bt ++) {
-	    for(int bx = 0; bx < nblks_x; bx ++) {
-	      for(int by = 0; by < nblks_y; by ++) {
-		for(int bz = 0; bz < nblks_z; bz ++) {
-		  ix = g_ipt[t + bt*dT][x + bx*dX][y + by*dY][z + bz*dZ];
-		  memcpy(block_list[i].u + ixeo,     &g_gauge_field[ ix           ][0], sizeof(su3));
-		  memcpy(block_list[i].u + ixeo + 1, &g_gauge_field[ g_idn[ix][0] ][0], sizeof(su3));
-		  memcpy(block_list[i].u + ixeo + 2, &g_gauge_field[ ix           ][1], sizeof(su3));
-		  memcpy(block_list[i].u + ixeo + 3, &g_gauge_field[ g_idn[ix][1] ][1], sizeof(su3));
-		  memcpy(block_list[i].u + ixeo + 4, &g_gauge_field[ ix           ][2], sizeof(su3));
-		  memcpy(block_list[i].u + ixeo + 5, &g_gauge_field[ g_idn[ix][2] ][2], sizeof(su3));
-		  memcpy(block_list[i].u + ixeo + 6, &g_gauge_field[ ix           ][3], sizeof(su3));
-		  memcpy(block_list[i].u + ixeo + 7, &g_gauge_field[ g_idn[ix][3] ][3], sizeof(su3));
-		  i++;
-		}
-	      }
-	    }
-	  }
-	  if(even) ix_even += 8;
-	  else ix_odd += 8;
-	}
+        for (int z = 0; z < dZ; z++) {
+          if((t+x+y+z)%2 == 0) {
+            even = 1;
+            ixeo = ix_even;
+          }
+          else {
+            even = 0;
+            ixeo = ix_odd;
+          }
+          i = 0;
+          for(int bt = 0; bt < nblks_t; bt ++) {
+            for(int bx = 0; bx < nblks_x; bx ++) {
+              for(int by = 0; by < nblks_y; by ++) {
+                for(int bz = 0; bz < nblks_z; bz ++) {
+                  ix = g_ipt[t + bt*dT][x + bx*dX][y + by*dY][z + bz*dZ];
+                  memcpy(block_list[i].u + ixeo,     &g_gauge_field[ ix           ][0], sizeof(su3));
+                  memcpy(block_list[i].u + ixeo + 1, &g_gauge_field[ g_idn[ix][0] ][0], sizeof(su3));
+                  memcpy(block_list[i].u + ixeo + 2, &g_gauge_field[ ix           ][1], sizeof(su3));
+                  memcpy(block_list[i].u + ixeo + 3, &g_gauge_field[ g_idn[ix][1] ][1], sizeof(su3));
+                  memcpy(block_list[i].u + ixeo + 4, &g_gauge_field[ ix           ][2], sizeof(su3));
+                  memcpy(block_list[i].u + ixeo + 5, &g_gauge_field[ g_idn[ix][2] ][2], sizeof(su3));
+                  memcpy(block_list[i].u + ixeo + 6, &g_gauge_field[ ix           ][3], sizeof(su3));
+                  memcpy(block_list[i].u + ixeo + 7, &g_gauge_field[ g_idn[ix][3] ][3], sizeof(su3));
+                  i++;
+                }
+              }
+            }
+          }
+          if(even) ix_even += 8;
+          else ix_odd += 8;
+        }
       }
     }
   }
@@ -427,42 +423,39 @@ int init_blocks_eo_gaugefield_32() {
   */
 
   int i, ix, ix_even = 0, ix_odd = (dT*dX*dY*dZ*8)/2, ixeo;
-  int even=0;
 
   for(int t = 0; t < dT;  t++) {
     for(int x = 0; x < dX; x++) {
       for(int y = 0; y < dY; y++) {
-	for(int z = 0; z < dZ; z++) {
-	  if((t+x+y+z)%2 == 0) {
-	    even = 1;
-	    ixeo = ix_even;
-	  }
-	  else {
-	    even = 0;
-	    ixeo = ix_odd;
-	  }
-	  i = 0;
-	  for(int bt = 0; bt < nblks_t; bt ++) {
-	    for(int bx = 0; bx < nblks_x; bx ++) {
-	      for(int by = 0; by < nblks_y; by ++) {
-		for(int bz = 0; bz < nblks_z; bz ++) {
-		  ix = g_ipt[t + bt*dT][x + bx*dX][y + by*dY][z + bz*dZ];
-		  memcpy(block_list[i].u_32 + ixeo,     &g_gauge_field_32[ ix           ][0], sizeof(su3_32));
-		  memcpy(block_list[i].u_32 + ixeo + 1, &g_gauge_field_32[ g_idn[ix][0] ][0], sizeof(su3_32));
-		  memcpy(block_list[i].u_32 + ixeo + 2, &g_gauge_field_32[ ix           ][1], sizeof(su3_32));
-		  memcpy(block_list[i].u_32 + ixeo + 3, &g_gauge_field_32[ g_idn[ix][1] ][1], sizeof(su3_32));
-		  memcpy(block_list[i].u_32 + ixeo + 4, &g_gauge_field_32[ ix           ][2], sizeof(su3_32));
-		  memcpy(block_list[i].u_32 + ixeo + 5, &g_gauge_field_32[ g_idn[ix][2] ][2], sizeof(su3_32));
-		  memcpy(block_list[i].u_32 + ixeo + 6, &g_gauge_field_32[ ix           ][3], sizeof(su3_32));
-		  memcpy(block_list[i].u_32 + ixeo + 7, &g_gauge_field_32[ g_idn[ix][3] ][3], sizeof(su3_32));
-		  i++;
-		}
-	      }
-	    }
-	  }
-	  if(even) ix_even += 8;
-	  else ix_odd += 8;
-	}
+        for(int z = 0; z < dZ; z++) {
+          if((t+x+y+z)%2 == 0) {
+            ixeo = ix_even;
+	    ix_even += 8;
+          }
+          else {
+            ixeo = ix_odd;
+	    ix_odd += 8;
+          }
+          i = 0;
+          for(int bt = 0; bt < nblks_t; bt ++) {
+            for(int bx = 0; bx < nblks_x; bx ++) {
+              for(int by = 0; by < nblks_y; by ++) {
+                for(int bz = 0; bz < nblks_z; bz ++) {
+                  ix = g_ipt[t + bt*dT][x + bx*dX][y + by*dY][z + bz*dZ];
+                  memcpy(block_list[i].u_32 + ixeo,     &g_gauge_field_32[ ix           ][0], sizeof(su3_32));
+                  memcpy(block_list[i].u_32 + ixeo + 1, &g_gauge_field_32[ g_idn[ix][0] ][0], sizeof(su3_32));
+                  memcpy(block_list[i].u_32 + ixeo + 2, &g_gauge_field_32[ ix           ][1], sizeof(su3_32));
+                  memcpy(block_list[i].u_32 + ixeo + 3, &g_gauge_field_32[ g_idn[ix][1] ][1], sizeof(su3_32));
+                  memcpy(block_list[i].u_32 + ixeo + 4, &g_gauge_field_32[ ix           ][2], sizeof(su3_32));
+                  memcpy(block_list[i].u_32 + ixeo + 5, &g_gauge_field_32[ g_idn[ix][2] ][2], sizeof(su3_32));
+                  memcpy(block_list[i].u_32 + ixeo + 6, &g_gauge_field_32[ ix           ][3], sizeof(su3_32));
+                  memcpy(block_list[i].u_32 + ixeo + 7, &g_gauge_field_32[ g_idn[ix][3] ][3], sizeof(su3_32));
+                  i++;
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -634,81 +627,81 @@ int check_blocks_geometry(block * blk) {
     for(x = 0; x < LX/nblks_x; x++) {
       for(y = 0; y < LY/nblks_y; y++) {
         for(z = 0; z < LZ/nblks_z; z++) {
-	  if((x + y + z + t)%2 == 0) {
-	    i = block_ipt[t][x][y][z]/2;
-	    if(t != T/nblks_t-1) {
-	      if(*ipt != block_ipt[t+1][x][y][z]/2 && g_proc_id == 0)
-		printf("Shit +t! (%d %d %d %d): %d != %d at %d\n",
-		       t, x, y, z, *ipt, block_ipt[t+1][x][y][z]/2, i);
-	    }
-	    else if(*ipt != VOLUME/nb_blocks/2)
-	      printf("Shit +t! (%d %d %d %d): %d != %d at %d\n",
+          if((x + y + z + t)%2 == 0) {
+            i = block_ipt[t][x][y][z]/2;
+            if(t != T/nblks_t-1) {
+              if(*ipt != block_ipt[t+1][x][y][z]/2 && g_proc_id == 0)
+                printf("Shit +t! (%d %d %d %d): %d != %d at %d\n",
+                       t, x, y, z, *ipt, block_ipt[t+1][x][y][z]/2, i);
+            }
+            else if(*ipt != VOLUME/nb_blocks/2)
+              printf("Shit +t! (%d %d %d %d): %d != %d at %d\n",
                    t, x, y, z, *ipt, VOLUME/nb_blocks/2, i);
-	    ipt++;
-	    if(t != 0) {
-	      if(*ipt != block_ipt[t-1][x][y][z]/2 && g_proc_id == 0)
-		printf("Shit -t! (%d %d %d %d): %d != %d at %d\n",
-		       t, x, y, z, *ipt, block_ipt[t+1][x][y][z]/2, i);
-	    }
-	    else if(*ipt != VOLUME/nb_blocks/2)
-	      printf("Shit -t! (%d %d %d %d): %d != %d at %d\n",
-		     t, x, y, z, *ipt, VOLUME/nb_blocks/2, i);
-	    ipt++;
-	    if(x != LX/nblks_x-1) {
-	      if(*ipt != block_ipt[t][x+1][y][z]/2 && g_proc_id == 0)
-		printf("Shit +x! (%d %d %d %d): %d != %d at %d\n",
-		       t, x, y, z, *ipt, block_ipt[t][x+1][y][z]/2, i);
-	    }
-	    else if(*ipt != VOLUME/nb_blocks/2)
-	      printf("Shit +x! (%d %d %d %d): %d != %d at %d\n",
-		     t, x, y, z, *ipt, VOLUME/nb_blocks/2, i);
-	    ipt++;
-	    if(x != 0) {
-	      if(*ipt != block_ipt[t][x-1][y][z]/2 && g_proc_id == 0)
-		printf("Shit -x! (%d %d %d %d): %d != %d at %d\n",
-		       t, x, y, z, *ipt, block_ipt[t][x-1][y][z]/2, i);
-	    }
-	    else if(*ipt != VOLUME/nb_blocks/2)
-	      printf("Shit -x! (%d %d %d %d): %d != %d at %d\n",
-		     t, x, y, z, *ipt, VOLUME/nb_blocks, i);
-	    ipt++;
-	    if(y != LY/nblks_y-1) {
-	      if(*ipt != block_ipt[t][x][y+1][z]/2 && g_proc_id == 0)
-		printf("Shit +y! (%d %d %d %d): %d != %d at %d\n",
-		       t, x, y, z, *ipt, block_ipt[t][x][y+1][z]/2, i);
-	    }
-	    else if(*ipt != VOLUME/nb_blocks/2)
-	      printf("Shit +y! (%d %d %d %d): %d != %d at %d\n",
-		     t, x, y, z, *ipt, VOLUME/nb_blocks/2, i);
-	    ipt++;
-	    if(y != 0) {
-	      if(*ipt != block_ipt[t][x][y-1][z]/2 && g_proc_id == 0)
-		printf("Shit -y! (%d %d %d %d): %d != %d at %d\n",
-		       t, x, y, z, *ipt, block_ipt[t][x][y-1][z]/2, i);
-	    }
-	    else if(*ipt != VOLUME/nb_blocks/2)
-	      printf("Shit -y! (%d %d %d %d): %d != %d at %d\n",
-		     t, x, y, z, *ipt, VOLUME/nb_blocks/2, i);
-	    ipt++;
-	    if(z != LZ/nblks_z-1) {
-	      if(*ipt != block_ipt[t][x][y][z+1]/2 && g_proc_id == 0)
-		printf("Shit +z! (%d %d %d %d): %d != %d at %d\n",
-		       t, x, y, z, *ipt, block_ipt[t][x][y][z+1]/2, i);
-	    }
-	    else if(*ipt != VOLUME/nb_blocks/2)
-	      printf("Shit +z! (%d %d %d %d): %d != %d at %d\n",
-		     t, x, y, z, *ipt, VOLUME/nb_blocks/2, i);
-	    ipt++;
-	    if(z != 0) {
-	      if(*ipt != block_ipt[t][x][y][z-1]/2 && g_proc_id == 0)
-		printf("Shit -z! (%d %d %d %d): %d != %d at %d\n",
-		       t, x, y, z, *ipt, block_ipt[t][x][y][z-1]/2, i);
-	    }
-	    else if(*ipt != VOLUME/nb_blocks/2)
-	      printf("Shit -z! (%d %d %d %d): %d != %d at %d\n",
-		     t, x, y, z, *ipt, VOLUME/nb_blocks/2, i);
-	    ipt++;
-	  }
+            ipt++;
+            if(t != 0) {
+              if(*ipt != block_ipt[t-1][x][y][z]/2 && g_proc_id == 0)
+                printf("Shit -t! (%d %d %d %d): %d != %d at %d\n",
+                       t, x, y, z, *ipt, block_ipt[t+1][x][y][z]/2, i);
+            }
+            else if(*ipt != VOLUME/nb_blocks/2)
+              printf("Shit -t! (%d %d %d %d): %d != %d at %d\n",
+                     t, x, y, z, *ipt, VOLUME/nb_blocks/2, i);
+            ipt++;
+            if(x != LX/nblks_x-1) {
+              if(*ipt != block_ipt[t][x+1][y][z]/2 && g_proc_id == 0)
+                printf("Shit +x! (%d %d %d %d): %d != %d at %d\n",
+                       t, x, y, z, *ipt, block_ipt[t][x+1][y][z]/2, i);
+            }
+            else if(*ipt != VOLUME/nb_blocks/2)
+              printf("Shit +x! (%d %d %d %d): %d != %d at %d\n",
+                     t, x, y, z, *ipt, VOLUME/nb_blocks/2, i);
+            ipt++;
+            if(x != 0) {
+              if(*ipt != block_ipt[t][x-1][y][z]/2 && g_proc_id == 0)
+                printf("Shit -x! (%d %d %d %d): %d != %d at %d\n",
+                       t, x, y, z, *ipt, block_ipt[t][x-1][y][z]/2, i);
+            }
+            else if(*ipt != VOLUME/nb_blocks/2)
+              printf("Shit -x! (%d %d %d %d): %d != %d at %d\n",
+                     t, x, y, z, *ipt, VOLUME/nb_blocks, i);
+            ipt++;
+            if(y != LY/nblks_y-1) {
+              if(*ipt != block_ipt[t][x][y+1][z]/2 && g_proc_id == 0)
+                printf("Shit +y! (%d %d %d %d): %d != %d at %d\n",
+                       t, x, y, z, *ipt, block_ipt[t][x][y+1][z]/2, i);
+            }
+            else if(*ipt != VOLUME/nb_blocks/2)
+              printf("Shit +y! (%d %d %d %d): %d != %d at %d\n",
+                     t, x, y, z, *ipt, VOLUME/nb_blocks/2, i);
+            ipt++;
+            if(y != 0) {
+              if(*ipt != block_ipt[t][x][y-1][z]/2 && g_proc_id == 0)
+                printf("Shit -y! (%d %d %d %d): %d != %d at %d\n",
+                       t, x, y, z, *ipt, block_ipt[t][x][y-1][z]/2, i);
+            }
+            else if(*ipt != VOLUME/nb_blocks/2)
+              printf("Shit -y! (%d %d %d %d): %d != %d at %d\n",
+                     t, x, y, z, *ipt, VOLUME/nb_blocks/2, i);
+            ipt++;
+            if(z != LZ/nblks_z-1) {
+              if(*ipt != block_ipt[t][x][y][z+1]/2 && g_proc_id == 0)
+                printf("Shit +z! (%d %d %d %d): %d != %d at %d\n",
+                       t, x, y, z, *ipt, block_ipt[t][x][y][z+1]/2, i);
+            }
+            else if(*ipt != VOLUME/nb_blocks/2)
+              printf("Shit +z! (%d %d %d %d): %d != %d at %d\n",
+                     t, x, y, z, *ipt, VOLUME/nb_blocks/2, i);
+            ipt++;
+            if(z != 0) {
+              if(*ipt != block_ipt[t][x][y][z-1]/2 && g_proc_id == 0)
+                printf("Shit -z! (%d %d %d %d): %d != %d at %d\n",
+                       t, x, y, z, *ipt, block_ipt[t][x][y][z-1]/2, i);
+            }
+            else if(*ipt != VOLUME/nb_blocks/2)
+              printf("Shit -z! (%d %d %d %d): %d != %d at %d\n",
+                     t, x, y, z, *ipt, VOLUME/nb_blocks/2, i);
+            ipt++;
+          }
         }
       }
     }
@@ -732,16 +725,16 @@ int init_blocks_geometry() {
   for (ix = 0; ix < VOLUME/nb_blocks; ++ix) {
     block_idx[8 * ix + 0] = ix           >= VOLUME/nb_blocks - tstride  ? boundidx : ix + tstride;/* +t */
     block_idx[8 * ix + 1] = ix           <  tstride                     ? boundidx : ix - tstride;/* -t */
-    block_idx[8 * ix + 2] = ix % tstride >= dZ * dY * (dX - 1)		? boundidx : ix + xstride;/* +x */
-    block_idx[8 * ix + 3] = ix % tstride <  dZ * dY			? boundidx : ix - xstride;/* -x */
-    block_idx[8 * ix + 4] = ix % xstride >= dZ * (dY - 1)		? boundidx : ix + ystride;/* +y */
-    block_idx[8 * ix + 5] = ix % xstride <  dZ				? boundidx : ix - ystride;/* -y */
-    block_idx[8 * ix + 6] = ix % ystride == dZ - 1			? boundidx : ix + zstride;/* +z */
-    block_idx[8 * ix + 7] = ix % ystride == 0				? boundidx : ix - zstride;/* -z */
+    block_idx[8 * ix + 2] = ix % tstride >= dZ * dY * (dX - 1)          ? boundidx : ix + xstride;/* +x */
+    block_idx[8 * ix + 3] = ix % tstride <  dZ * dY                     ? boundidx : ix - xstride;/* -x */
+    block_idx[8 * ix + 4] = ix % xstride >= dZ * (dY - 1)               ? boundidx : ix + ystride;/* +y */
+    block_idx[8 * ix + 5] = ix % xstride <  dZ                          ? boundidx : ix - ystride;/* -y */
+    block_idx[8 * ix + 6] = ix % ystride == dZ - 1                      ? boundidx : ix + zstride;/* +z */
+    block_idx[8 * ix + 7] = ix % ystride == 0                           ? boundidx : ix - zstride;/* -z */
     /* Assume that all directions have even extension */
     /* even and odd versions should be equal          */
     eo = ((ix%dZ)+(ix/ystride)%dY+(ix/(xstride))%dX
-	  +ix/(tstride))%2;
+          +ix/(tstride))%2;
     if(eo == 0) {
       block_evenidx[8*(ix/2) + 0] = block_idx[8 * ix + 0] / 2;
       block_evenidx[8*(ix/2) + 1] = block_idx[8 * ix + 1] / 2;
@@ -785,16 +778,16 @@ int init_blocks_geometry() {
   for (t=0;t<nblks_t;t++) {
     for (x=0;x<nblks_x;x++) {
       for (y=0;y<nblks_y;y++) {
-	for (z=0;z<nblks_z;z++) {
-	  if ((t+x+y+z)%2==0) {
-	    index_block_eo[block_index(t,x,y,z)]=i_even;
-	    i_even++;
-	  }
-	  if ((t+x+y+z)%2==1) {
-	    index_block_eo[block_index(t,x,y,z)]=i_odd;
-	    i_odd++;
-	  }
-	}
+        for (z=0;z<nblks_z;z++) {
+          if ((t+x+y+z)%2==0) {
+            index_block_eo[block_index(t,x,y,z)]=i_even;
+            i_even++;
+          }
+          if ((t+x+y+z)%2==1) {
+            index_block_eo[block_index(t,x,y,z)]=i_odd;
+            i_odd++;
+          }
+        }
       }
     }
   }
@@ -900,86 +893,86 @@ void alt_block_compute_little_D() {
   for (k = 0; k < g_nproc; ++k) {
     for (i = 0; i < g_N_s; ++i) {
       for(l=0;l<nb_blocks;l++) {
-	/* Lower Z block */
-	for (j = 0; j < VOLUMEPLUSRAND; ++j){
-	  _spinor_null(rec[j]);
-	}
-	if (g_cart_id == k) {
-	  reconstruct_global_field_GEN_ID(rec, block_list, i, nb_blocks);
-	}
+        /* Lower Z block */
+        for (j = 0; j < VOLUMEPLUSRAND; ++j){
+          _spinor_null(rec[j]);
+        }
+        if (g_cart_id == k) {
+          reconstruct_global_field_GEN_ID(rec, block_list, i, nb_blocks);
+        }
 
-	D_psi(app, rec);
+        D_psi(app, rec);
 
-	split_global_field_GEN(psi_blocks, app, nb_blocks);
-	if (g_cart_id == k) {
-	  block_contract_basis(0, i, NONE, psi);
-	  block_contract_basis(1, i, Z_DN, psi);
-	}
+        split_global_field_GEN(psi_blocks, app, nb_blocks);
+        if (g_cart_id == k) {
+          block_contract_basis(0, i, NONE, psi);
+          block_contract_basis(1, i, Z_DN, psi);
+        }
 #ifdef MPI
-	else if (k == g_nb_t_up) {
-	  block_contract_basis(0, i, T_UP, psi);
-	}
-	else if (k == g_nb_t_dn) {
-	  block_contract_basis(0, i, T_DN, psi);
-	}
-	else if (k == g_nb_x_up) {
-	  block_contract_basis(0, i, X_UP, psi);
-	}
-	else if (k == g_nb_x_dn) {
-	  block_contract_basis(0, i, X_DN, psi);
-	}
-	else if (k == g_nb_y_up) {
-	  block_contract_basis(0, i, Y_UP, psi);
-	}
-	else if (k == g_nb_y_dn) {
-	  block_contract_basis(0, i, Y_DN, psi);
-	}
-	else if (k == g_nb_z_up) {
-	  block_contract_basis(1, i, Z_UP, psi);
-	}
+        else if (k == g_nb_t_up) {
+          block_contract_basis(0, i, T_UP, psi);
+        }
+        else if (k == g_nb_t_dn) {
+          block_contract_basis(0, i, T_DN, psi);
+        }
+        else if (k == g_nb_x_up) {
+          block_contract_basis(0, i, X_UP, psi);
+        }
+        else if (k == g_nb_x_dn) {
+          block_contract_basis(0, i, X_DN, psi);
+        }
+        else if (k == g_nb_y_up) {
+          block_contract_basis(0, i, Y_UP, psi);
+        }
+        else if (k == g_nb_y_dn) {
+          block_contract_basis(0, i, Y_DN, psi);
+        }
+        else if (k == g_nb_z_up) {
+          block_contract_basis(1, i, Z_UP, psi);
+        }
 #endif
       }
       /* Upper Z block */
       /*      for (j = 0; j < VOLUMEPLUSRAND; ++j){
-	      _spinor_null(rec[j]);
-	      }
+              _spinor_null(rec[j]);
+              }
 
-	      if (g_cart_id == k){
-	      reconstruct_global_field(rec, zero, block_list[nb_blocks-1].basis[i]);
-	      }
+              if (g_cart_id == k){
+              reconstruct_global_field(rec, zero, block_list[nb_blocks-1].basis[i]);
+              }
 
-	      D_psi(app, rec);
+              D_psi(app, rec);
 
-	      split_global_field(psi_blocks, app);
-	      if (g_cart_id == k){
-	      block_contract_basis(0, i, Z_UP, psi);
-	      block_contract_basis(1, i, NONE, psi);
-	      }
-	      #ifdef MPI
-	      else if (k == g_nb_t_up){
-	      block_contract_basis(1, i, T_UP, psi);
-	      }
-	      else if (k == g_nb_t_dn){
-	      block_contract_basis(1, i, T_DN, psi);
-	      }
-	      else if (k == g_nb_x_up){
-	      block_contract_basis(1, i, X_UP, psi);
-	      }
-	      else if (k == g_nb_x_dn){
-	      block_contract_basis(1, i, X_DN, psi);
-	      }
-	      else if (k == g_nb_y_up){
-	      block_contract_basis(1, i, Y_UP, psi);
-	      }
-	      else if (k == g_nb_y_dn){
-	      block_contract_basis(1, i, Y_DN, psi);
-	      }
-	      else if (k == g_nb_z_dn){
-	      block_contract_basis(0, i, Z_DN, psi);
-	      }
+              split_global_field(psi_blocks, app);
+              if (g_cart_id == k){
+              block_contract_basis(0, i, Z_UP, psi);
+              block_contract_basis(1, i, NONE, psi);
+              }
+              #ifdef MPI
+              else if (k == g_nb_t_up){
+              block_contract_basis(1, i, T_UP, psi);
+              }
+              else if (k == g_nb_t_dn){
+              block_contract_basis(1, i, T_DN, psi);
+              }
+              else if (k == g_nb_x_up){
+              block_contract_basis(1, i, X_UP, psi);
+              }
+              else if (k == g_nb_x_dn){
+              block_contract_basis(1, i, X_DN, psi);
+              }
+              else if (k == g_nb_y_up){
+              block_contract_basis(1, i, Y_UP, psi);
+              }
+              else if (k == g_nb_y_dn){
+              block_contract_basis(1, i, Y_DN, psi);
+              }
+              else if (k == g_nb_z_dn){
+              block_contract_basis(0, i, Z_DN, psi);
+              }
 
-	      MPI_Barrier(MPI_COMM_WORLD);
-	      #endif */
+              MPI_Barrier(MPI_COMM_WORLD);
+              #endif */
     }
   }
 
@@ -1042,8 +1035,8 @@ void compute_little_D_diagonal(const int mul_g5) {
       Block_D_psi(&block_list[blk], tmp, block_list[blk].basis[i]);
       if(mul_g5) gamma5(tmp, tmp, block_list[blk].volume);
       for(j = 0; j < g_N_s; j++) {
-	M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], tmp, block_list[blk].volume, 0);
-	block_list[blk].little_dirac_operator32[i*g_N_s + j] = (_Complex float)M[i * g_N_s + j];
+        M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], tmp, block_list[blk].volume, 0);
+        block_list[blk].little_dirac_operator32[i*g_N_s + j] = (_Complex float)M[i * g_N_s + j];
       }
     }
   }
@@ -1056,9 +1049,9 @@ void compute_little_D_diagonal(const int mul_g5) {
         printf(" [ ");
         for (j = 0; j < g_N_s; ++j){
           printf("%s%1.3e %s %1.3e i", creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", 
-		 creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[0].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[0].little_dirac_operator[i * g_N_s + j]), 
-		 cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", 
-		 cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[0].little_dirac_operator[i * g_N_s + j]));
+                 creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[0].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[0].little_dirac_operator[i * g_N_s + j]), 
+                 cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", 
+                 cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[0].little_dirac_operator[i * g_N_s + j]));
           if (j != g_N_s - 1){
             printf(",\t");
           }
@@ -1074,9 +1067,9 @@ void compute_little_D_diagonal(const int mul_g5) {
         printf(" [ ");
         for (j = 0; j < g_N_s; ++j){
           printf("%s%1.3e %s %1.3e i", creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", 
-		 creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[1].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[1].little_dirac_operator[i * g_N_s + j]), 
-		 cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", 
-		 cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[1].little_dirac_operator[i * g_N_s + j]));
+                 creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[1].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[1].little_dirac_operator[i * g_N_s + j]), 
+                 cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", 
+                 cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[1].little_dirac_operator[i * g_N_s + j]));
           if (j != g_N_s - 1){
             printf(",\t");
           }
@@ -1084,7 +1077,7 @@ void compute_little_D_diagonal(const int mul_g5) {
         printf(" ]\n");
         if ((i % g_N_s) == (g_N_s - 1))
           printf("\n");
-	
+        
       }
     }
   }
@@ -1136,15 +1129,15 @@ void compute_little_D(const int mul_g5) {
       Block_D_psi(&block_list[blk], scratch, block_list[blk].basis[i]);
       if(mul_g5) gamma5(scratch, scratch, block_list[blk].volume);
       for(j = 0; j < g_N_s; j++) {
-	M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], scratch, block_list[blk].volume, 0);
-	block_list[blk].little_dirac_operator32[i * g_N_s + j] = (_Complex float)M[i * g_N_s + j];
-		
-	if (block_list[blk].evenodd==0) {
-	  block_list[block_id_e].little_dirac_operator_eo[i * g_N_s + j] = M[i * g_N_s + j];
-	}
-	if (block_list[blk].evenodd==1) {
-	  block_list[(nb_blocks/2)+block_id_o].little_dirac_operator_eo[i * g_N_s + j] = M[i * g_N_s + j];
-	}
+        M[i * g_N_s + j]  = scalar_prod(block_list[blk].basis[j], scratch, block_list[blk].volume, 0);
+        block_list[blk].little_dirac_operator32[i * g_N_s + j] = (_Complex float)M[i * g_N_s + j];
+                
+        if (block_list[blk].evenodd==0) {
+          block_list[block_id_e].little_dirac_operator_eo[i * g_N_s + j] = M[i * g_N_s + j];
+        }
+        if (block_list[blk].evenodd==1) {
+          block_list[(nb_blocks/2)+block_id_o].little_dirac_operator_eo[i * g_N_s + j] = M[i * g_N_s + j];
+        }
       }
     }
     if (block_list[blk].evenodd==0) block_id_e++;
@@ -1188,126 +1181,126 @@ void compute_little_D(const int mul_g5) {
       r = temp;
       for(bt = 0; bt < nblks_t; bt++) {
         for(bx = 0; bx < nblks_x; bx++) {
-	  for(by = 0; by < nblks_y; by++) {
-	    for(bz = 0; bz < nblks_z; bz++) {
-	      for(t = t_start; t < t_end; t++) {
-		for(x = x_start; x < x_end; x++) {
-		  for(y = y_start; y < y_end; y++) {
-		    for(z = z_start; z < z_end; z++) {
-		      /* We treat the case when we need to cross between blocks                             */
-		      /* We are in block (bt, bx, by, bz) and compute direction pm                          */
-		      /* We check inner block statement by ( b_ > 0 )&&( b_ < nblks_ - 1 )                  */
-		      /* Other cases are treated in a standard way using the boundary of the scracth array */
-		      ib = -1; /* ib is the index of the selected block if any */
-		      if((pm==0)&&(bt<nblks_t-1)&&(t==t_end-1)){ //direction +t
-			iy = index_b(0, x, y, z); /* lowest edge of upper block needed */
-			ib = block_index(bt+1, bx, by, bz);
-		      }
-		      else if((pm==1)&&(bt>0)&&(t==0)){ //direction -t
-			iy = index_b(dT - 1, x, y, z); /* highest edge of lower block needed */
-			ib = block_index(bt-1, bx, by, bz);
-		      }
-		      else if((pm==2)&&(bx<nblks_x-1)&&(x==x_end-1)){ //direction +x
-			iy = index_b(t, 0, y, z); /* lowest edge of upper block needed */
-			ib = block_index(bt, bx+1, by, bz);
-		      }
-		      else if((pm==3)&&(bx>0)&&(x==0)){ //direction -x
-			iy = index_b(t, dX - 1, y, z); /* highest edge of lower block needed */
-			ib = block_index(bt, bx-1, by, bz);
-		      }
-		      else if((pm==4)&&(by<nblks_y-1)&&(y==y_end-1)){ //direction +y
-			iy = index_b(t, x, 0, z); /* lowest edge of upper block needed */
-			ib = block_index(bt, bx, by+1, bz);
-		      }
-		      else if((pm==5)&&(by>0)&&(y==0)){ //direction -y
-			iy = index_b(t, x, dY - 1, z); /* highest edge of lower block needed */
-			ib = block_index(bt, bx, by-1, bz);
-		      }
-		      else if((pm==6)&&(bz<nblks_z-1)&&(z==z_end-1)){ //direction +z
-			iy = index_b(t, x, y, 0); /* lowest edge of upper block needed */
-			ib = block_index(bt, bx, by, bz+1);
-		      }
-		      else if((pm==7)&&(bz>0)&&(z==0)){ //direction -z
-			iy = index_b(t, x, y, dZ - 1); /* highest edge of lower block needed */
-			ib = block_index(bt, bx, by, bz-1);
-		      }
-		      ix = index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z);// GAFFE ICI
-		      if(is_up == 1) {
-			s = &scratch[ g_iup[ ix ][mu] ]; 
-			u = &g_gauge_field[ ix ][mu];
-		      }
-		      else {
-			s = &scratch[ g_idn[ ix ][mu] ];
-			u = &g_gauge_field[ g_idn[ix][mu] ][mu];
-		      }
-		      if(ib >= 0) s = &block_list[ib].basis[ i ][ iy ] ; 
-		      boundary_D[pm](r, s, u);
-		      if(mul_g5) gamma5(r, r, 1);
-		      r++;
-		    }
-		  }
-		}
-	      }
-	    }
-	  }
-	}
+          for(by = 0; by < nblks_y; by++) {
+            for(bz = 0; bz < nblks_z; bz++) {
+              for(t = t_start; t < t_end; t++) {
+                for(x = x_start; x < x_end; x++) {
+                  for(y = y_start; y < y_end; y++) {
+                    for(z = z_start; z < z_end; z++) {
+                      /* We treat the case when we need to cross between blocks                             */
+                      /* We are in block (bt, bx, by, bz) and compute direction pm                          */
+                      /* We check inner block statement by ( b_ > 0 )&&( b_ < nblks_ - 1 )                  */
+                      /* Other cases are treated in a standard way using the boundary of the scracth array */
+                      ib = -1; /* ib is the index of the selected block if any */
+                      if((pm==0)&&(bt<nblks_t-1)&&(t==t_end-1)){ //direction +t
+                        iy = index_b(0, x, y, z); /* lowest edge of upper block needed */
+                        ib = block_index(bt+1, bx, by, bz);
+                      }
+                      else if((pm==1)&&(bt>0)&&(t==0)){ //direction -t
+                        iy = index_b(dT - 1, x, y, z); /* highest edge of lower block needed */
+                        ib = block_index(bt-1, bx, by, bz);
+                      }
+                      else if((pm==2)&&(bx<nblks_x-1)&&(x==x_end-1)){ //direction +x
+                        iy = index_b(t, 0, y, z); /* lowest edge of upper block needed */
+                        ib = block_index(bt, bx+1, by, bz);
+                      }
+                      else if((pm==3)&&(bx>0)&&(x==0)){ //direction -x
+                        iy = index_b(t, dX - 1, y, z); /* highest edge of lower block needed */
+                        ib = block_index(bt, bx-1, by, bz);
+                      }
+                      else if((pm==4)&&(by<nblks_y-1)&&(y==y_end-1)){ //direction +y
+                        iy = index_b(t, x, 0, z); /* lowest edge of upper block needed */
+                        ib = block_index(bt, bx, by+1, bz);
+                      }
+                      else if((pm==5)&&(by>0)&&(y==0)){ //direction -y
+                        iy = index_b(t, x, dY - 1, z); /* highest edge of lower block needed */
+                        ib = block_index(bt, bx, by-1, bz);
+                      }
+                      else if((pm==6)&&(bz<nblks_z-1)&&(z==z_end-1)){ //direction +z
+                        iy = index_b(t, x, y, 0); /* lowest edge of upper block needed */
+                        ib = block_index(bt, bx, by, bz+1);
+                      }
+                      else if((pm==7)&&(bz>0)&&(z==0)){ //direction -z
+                        iy = index_b(t, x, y, dZ - 1); /* highest edge of lower block needed */
+                        ib = block_index(bt, bx, by, bz-1);
+                      }
+                      ix = index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z);// GAFFE ICI
+                      if(is_up == 1) {
+                        s = &scratch[ g_iup[ ix ][mu] ]; 
+                        u = &g_gauge_field[ ix ][mu];
+                      }
+                      else {
+                        s = &scratch[ g_idn[ ix ][mu] ];
+                        u = &g_gauge_field[ g_idn[ix][mu] ][mu];
+                      }
+                      if(ib >= 0) s = &block_list[ib].basis[ i ][ iy ] ; 
+                      boundary_D[pm](r, s, u);
+                      if(mul_g5) gamma5(r, r, 1);
+                      r++;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
       
       /* Now all the scalar products */
       for(j = 0; j < g_N_s; j++) {
-	iy = i * g_N_s + j  + (pm + 1) * g_N_s * g_N_s;
-	block_id = 0;
-	block_id_e=0;
-	block_id_o=0;
-	r = temp;
-	for(bt = 0; bt < nblks_t; bt++) {
-	  for(bx = 0; bx < nblks_x; bx++) {
+        iy = i * g_N_s + j  + (pm + 1) * g_N_s * g_N_s;
+        block_id = 0;
+        block_id_e=0;
+        block_id_o=0;
+        r = temp;
+        for(bt = 0; bt < nblks_t; bt++) {
+          for(bx = 0; bx < nblks_x; bx++) {
             for(by = 0; by < nblks_y; by++) {
-	      for(bz = 0; bz < nblks_z; bz++){
-		block_list[block_id].little_dirac_operator[ iy ] = 0.0;
-		if (block_list[block_id].evenodd==0) {
-		  block_list[block_id_e].little_dirac_operator_eo[ iy ] = 0.0;
-		}
- 		if (block_list[block_id].evenodd==1) {
-		  block_list[block_id_o+nb_blocks/2].little_dirac_operator_eo[ iy ] = 0.0;
-		}
-		/* We need to contract g_N_s times with the same set of fields */
-		for(t = t_start; t < t_end; t++) {
-		  for(x = x_start; x < x_end; x++) {
-		    for(y = y_start; y < y_end; y++) {
-		      for(z = z_start; z < z_end; z++) {
-			ix = index_b(t, x, y, z); // TO BE INLINED
-			s = &block_list[block_id].basis[j][ ix ];
-			c = scalar_prod(s, r, 1, 0);
-			block_list[block_id].little_dirac_operator[ iy ] += c;
-			//printf("%e %e\n", creal(c), cimag(c));
-			if (block_list[block_id].evenodd==0) {
-			  block_list[block_id_e].little_dirac_operator_eo[ iy ] += c;
-			}
-			if (block_list[block_id].evenodd==1) {
-			  block_list[block_id_o+nb_blocks/2].little_dirac_operator_eo[ iy ] += c;
-			}
-			r++;
-		      }
-		    }
-		  }
-		}
-		if (block_list[block_id].evenodd==0) block_id_e++;
-		if (block_list[block_id].evenodd==1) block_id_o++;	
-		block_id++;
-	      }
-	    }
-	  }
-	}
+              for(bz = 0; bz < nblks_z; bz++){
+                block_list[block_id].little_dirac_operator[ iy ] = 0.0;
+                if (block_list[block_id].evenodd==0) {
+                  block_list[block_id_e].little_dirac_operator_eo[ iy ] = 0.0;
+                }
+                if (block_list[block_id].evenodd==1) {
+                  block_list[block_id_o+nb_blocks/2].little_dirac_operator_eo[ iy ] = 0.0;
+                }
+                /* We need to contract g_N_s times with the same set of fields */
+                for(t = t_start; t < t_end; t++) {
+                  for(x = x_start; x < x_end; x++) {
+                    for(y = y_start; y < y_end; y++) {
+                      for(z = z_start; z < z_end; z++) {
+                        ix = index_b(t, x, y, z); // TO BE INLINED
+                        s = &block_list[block_id].basis[j][ ix ];
+                        c = scalar_prod(s, r, 1, 0);
+                        block_list[block_id].little_dirac_operator[ iy ] += c;
+                        //printf("%e %e\n", creal(c), cimag(c));
+                        if (block_list[block_id].evenodd==0) {
+                          block_list[block_id_e].little_dirac_operator_eo[ iy ] += c;
+                        }
+                        if (block_list[block_id].evenodd==1) {
+                          block_list[block_id_o+nb_blocks/2].little_dirac_operator_eo[ iy ] += c;
+                        }
+                        r++;
+                      }
+                    }
+                  }
+                }
+                if (block_list[block_id].evenodd==0) block_id_e++;
+                if (block_list[block_id].evenodd==1) block_id_o++;      
+                block_id++;
+              }
+            }
+          }
+        }
       }
     }
   }
   for(i = 0; i < nb_blocks; i++) {
     for(j = 0; j < 9 * g_N_s * g_N_s; j++) {
       block_list[i].little_dirac_operator32[ j ] 
-	= (_Complex float)block_list[i].little_dirac_operator[ j ];
+        = (_Complex float)block_list[i].little_dirac_operator[ j ];
       block_list[i].little_dirac_operator_eo32[ j ] 
-	= (_Complex float)block_list[i].little_dirac_operator_eo[ j ];
+        = (_Complex float)block_list[i].little_dirac_operator_eo[ j ];
     }
   }
 
@@ -1319,10 +1312,10 @@ void compute_little_D(const int mul_g5) {
         printf(" [ ");
         for (j = 0; j < g_N_s; ++j){
           printf("%s%1.3e %s %1.3e i", 
-		 creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", 
-		 creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[0].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[0].little_dirac_operator[i * g_N_s + j]), 
-		 cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", 
-		 cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[0].little_dirac_operator[i * g_N_s + j]));
+                 creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", 
+                 creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[0].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[0].little_dirac_operator[i * g_N_s + j]), 
+                 cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", 
+                 cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[0].little_dirac_operator[i * g_N_s + j]));
           if (j != g_N_s - 1){
             printf(",\t");
           }
@@ -1338,10 +1331,10 @@ void compute_little_D(const int mul_g5) {
         printf(" [ ");
         for (j = 0; j < g_N_s; ++j){
           printf("%s%1.3e %s %1.3e i", 
-		 creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", 
-		 creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[1].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[1].little_dirac_operator[i * g_N_s + j]), 
-		 cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", 
-		 cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[1].little_dirac_operator[i * g_N_s + j]));
+                 creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", 
+                 creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[1].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[1].little_dirac_operator[i * g_N_s + j]), 
+                 cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", 
+                 cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[1].little_dirac_operator[i * g_N_s + j]));
           if (j != g_N_s - 1){
             printf(",\t");
           }
@@ -1365,21 +1358,21 @@ int split_global_field_GEN(spinor ** const psi, spinor * const field, const int 
   for (t = 0; t < dT; t++) {
     for (x = 0; x < dX; x++) {
       for (y = 0; y < dY; y++) {
-	for (z = 0; z < dZ; z++) {
-	  block_id = 0;
-	  for(bt = 0; bt < nblks_t; bt++) {
-	    for(bx = 0; bx < nblks_x; bx++) {
-	      for(by = 0; by < nblks_y; by++) {
-		for(bz = 0; bz < nblks_z; bz++) {
-		  _spinor_assign(*(psi[block_id] + ctr_t), 
-				 *(field + index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z)));
-		  block_id++;
-		}
-	      }
-	    }
-	  }
-	  ctr_t++;
-	}
+        for (z = 0; z < dZ; z++) {
+          block_id = 0;
+          for(bt = 0; bt < nblks_t; bt++) {
+            for(bx = 0; bx < nblks_x; bx++) {
+              for(by = 0; by < nblks_y; by++) {
+                for(bz = 0; bz < nblks_z; bz++) {
+                  _spinor_assign(*(psi[block_id] + ctr_t), 
+                                 *(field + index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z)));
+                  block_id++;
+                }
+              }
+            }
+          }
+          ctr_t++;
+        }
       }
     }
   }
@@ -1398,21 +1391,21 @@ int split_global_field_GEN_ID(block * const block_list, const int id, spinor * c
   for (t = 0; t < dT; t++) {
     for (x = 0; x < dX; x++) {
       for (y = 0; y < dY; y++) {
-	for (z = 0; z < dZ; z++) {
-	  block_id = 0;
-	  for(bt = 0; bt < nblks_t; bt++) {
-	    for(bx = 0; bx < nblks_x; bx++) {
-	      for(by = 0; by < nblks_y; by++) {
-		for(bz = 0; bz < nblks_z; bz++) {
-		  _spinor_assign(*(block_list[block_id].basis[id] + ctr_t), 
-				 *(field + index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z)));
-		    block_id++;
-		}
-	      }
-	    }
-	  }
-	  ctr_t++;
-	}
+        for (z = 0; z < dZ; z++) {
+          block_id = 0;
+          for(bt = 0; bt < nblks_t; bt++) {
+            for(bx = 0; bx < nblks_x; bx++) {
+              for(by = 0; by < nblks_y; by++) {
+                for(bz = 0; bz < nblks_z; bz++) {
+                  _spinor_assign(*(block_list[block_id].basis[id] + ctr_t), 
+                                 *(field + index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z)));
+                    block_id++;
+                }
+              }
+            }
+          }
+          ctr_t++;
+        }
       }
     }
   }
@@ -1473,19 +1466,19 @@ void copy_global_to_block_eo(spinor * const beven, spinor * const bodd, spinor *
     for(x = 0; x < block_list[blk].BLX; x++) {
       ix = x +  block_list[blk].mpilocal_coordinate[1]*block_list[blk].BLX;
       for(y = 0; y < block_list[blk].BLY; y++) {
-	iy = y +  block_list[blk].mpilocal_coordinate[2]*block_list[blk].BLY;
-	for(z = 0; z < block_list[blk].BLZ; z++) {
-	  iz = z +  block_list[blk].mpilocal_coordinate[3]*block_list[blk].BLZ;
-	  i = g_ipt[it][ix][iy][iz];
-	  if((t+x+y+z)%2 == 0) {
-	    memcpy(beven + even, globalfield + i, sizeof(spinor));
-	    even++;
-	  }
-	  else {
-	    memcpy(bodd + odd, globalfield + i, sizeof(spinor));
-	    odd++;
-	  }
-	}
+        iy = y +  block_list[blk].mpilocal_coordinate[2]*block_list[blk].BLY;
+        for(z = 0; z < block_list[blk].BLZ; z++) {
+          iz = z +  block_list[blk].mpilocal_coordinate[3]*block_list[blk].BLZ;
+          i = g_ipt[it][ix][iy][iz];
+          if((t+x+y+z)%2 == 0) {
+            memcpy(beven + even, globalfield + i, sizeof(spinor));
+            even++;
+          }
+          else {
+            memcpy(bodd + odd, globalfield + i, sizeof(spinor));
+            odd++;
+          }
+        }
       }
     }
   }
@@ -1493,7 +1486,7 @@ void copy_global_to_block_eo(spinor * const beven, spinor * const bodd, spinor *
 }
 
 void copy_global_to_block_eo_32(spinor32 * const beven, spinor32 * const bodd, 
-				spinor * const globalfield, const int blk) {
+                                spinor * const globalfield, const int blk) {
   int i,it,ix,iy,iz;
   int even = 0, odd = 0;
   _Complex float * to = NULL;
@@ -1505,28 +1498,28 @@ void copy_global_to_block_eo_32(spinor32 * const beven, spinor32 * const bodd,
     for(int x = 0; x < block_list[blk].BLX; x++) {
       ix = x +  block_list[blk].mpilocal_coordinate[1]*block_list[blk].BLX;
       for(int y = 0; y < block_list[blk].BLY; y++) {
-	iy = y +  block_list[blk].mpilocal_coordinate[2]*block_list[blk].BLY;
-	for(int z = 0; z < block_list[blk].BLZ; z++) {
-	  iz = z +  block_list[blk].mpilocal_coordinate[3]*block_list[blk].BLZ;
-	  i = g_ipt[it][ix][iy][iz];
+        iy = y +  block_list[blk].mpilocal_coordinate[2]*block_list[blk].BLY;
+        for(int z = 0; z < block_list[blk].BLZ; z++) {
+          iz = z +  block_list[blk].mpilocal_coordinate[3]*block_list[blk].BLZ;
+          i = g_ipt[it][ix][iy][iz];
 
-	  if((t+x+y+z)%2 == 0) {
-	    tmp = beven + even;
-	    even++;
-	  }
-	  else {
-	    tmp = bodd + odd;
-	    odd++;
-	  }
+          if((t+x+y+z)%2 == 0) {
+            tmp = beven + even;
+            even++;
+          }
+          else {
+            tmp = bodd + odd;
+            odd++;
+          }
 
-	  to = (_Complex float*) tmp;
-	  from = (_Complex double*) (globalfield + i);
-	  for(int k = 0; k < 12; k++) {
-	    (*to) = (_Complex float) (*from);
-	    to++;
-	    from++;
-	  }
-	}
+          to = (_Complex float*) tmp;
+          from = (_Complex double*) (globalfield + i);
+          for(int k = 0; k < 12; k++) {
+            (*to) = (_Complex float) (*from);
+            to++;
+            from++;
+          }
+        }
       }
     }
   }
@@ -1544,19 +1537,19 @@ void copy_block_eo_to_global(spinor * const globalfield, spinor * const beven, s
     for(x = 0; x < block_list[blk].BLX; x++) {
       ix = x +  block_list[blk].mpilocal_coordinate[1]*block_list[blk].BLX;
       for(y = 0; y < block_list[blk].BLY; y++) {
-	iy = y +  block_list[blk].mpilocal_coordinate[2]*block_list[blk].BLY;
-	for(z = 0; z < block_list[blk].BLZ; z++) {
-	  iz = z +  block_list[blk].mpilocal_coordinate[3]*block_list[blk].BLZ;
-	  i = g_ipt[it][ix][iy][iz];
-	  if((t+x+y+z)%2 == 0) {
-	    memcpy(globalfield + i, beven + even, sizeof(spinor));
-	    even++;
-	  }
-	  else {
-	    memcpy(globalfield + i, bodd + odd, sizeof(spinor));
-	    odd++;
-	  }
-	}
+        iy = y +  block_list[blk].mpilocal_coordinate[2]*block_list[blk].BLY;
+        for(z = 0; z < block_list[blk].BLZ; z++) {
+          iz = z +  block_list[blk].mpilocal_coordinate[3]*block_list[blk].BLZ;
+          i = g_ipt[it][ix][iy][iz];
+          if((t+x+y+z)%2 == 0) {
+            memcpy(globalfield + i, beven + even, sizeof(spinor));
+            even++;
+          }
+          else {
+            memcpy(globalfield + i, bodd + odd, sizeof(spinor));
+            odd++;
+          }
+        }
       }
     }
   }
@@ -1613,21 +1606,21 @@ void reconstruct_global_field_GEN(spinor * const rec_field, spinor ** const psi,
   for (t = 0; t < dT; t++) {
     for (x = 0; x < dX; x++) {
       for (y = 0; y < dY; y++) {
-	for (z = 0; z < dZ; z++) {
-	  block_id = 0;
-	  for(bt = 0; bt < nblks_t; bt++) {
-	    for(bx = 0; bx < nblks_x; bx++) {
-	      for(by = 0; by < nblks_y; by++) {
-		for(bz = 0; bz < nblks_z; bz++) {
-		  _spinor_assign(*(rec_field + index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z)), 
-				 *(psi[block_id] + ctr_t));
-		  block_id++;
-		}
-	      }
-	    }
-	  }
-	  ctr_t++;
-	}
+        for (z = 0; z < dZ; z++) {
+          block_id = 0;
+          for(bt = 0; bt < nblks_t; bt++) {
+            for(bx = 0; bx < nblks_x; bx++) {
+              for(by = 0; by < nblks_y; by++) {
+                for(bz = 0; bz < nblks_z; bz++) {
+                  _spinor_assign(*(rec_field + index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z)), 
+                                 *(psi[block_id] + ctr_t));
+                  block_id++;
+                }
+              }
+            }
+          }
+          ctr_t++;
+        }
       }
     }
   }
@@ -1642,21 +1635,21 @@ void reconstruct_global_field_GEN_ID(spinor * const rec_field, block * const blo
   for (t = 0; t < dT; t++) {
     for (x = 0; x < dX; x++) {
       for (y = 0; y < dY; y++) {
-	for (z = 0; z < dZ; z++) {
-	  block_id = 0;
-	  for(bt = 0; bt < nblks_t; bt++) {
-	    for(bx = 0; bx < nblks_x; bx++) {
-	      for(by = 0; by < nblks_y; by++) {
-		for(bz = 0; bz < nblks_z; bz++) {
-		  _spinor_assign(*(rec_field + index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z)), 
-				 *(block_list[block_id].basis[id] + ctr_t));
-		  block_id++;
-		}
-	      }
-	    }
-	  }
-	  ctr_t++;
-	}
+        for (z = 0; z < dZ; z++) {
+          block_id = 0;
+          for(bt = 0; bt < nblks_t; bt++) {
+            for(bx = 0; bx < nblks_x; bx++) {
+              for(by = 0; by < nblks_y; by++) {
+                for(bz = 0; bz < nblks_z; bz++) {
+                  _spinor_assign(*(rec_field + index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z)), 
+                                 *(block_list[block_id].basis[id] + ctr_t));
+                  block_id++;
+                }
+              }
+            }
+          }
+          ctr_t++;
+        }
       }
     }
   }
@@ -1673,19 +1666,19 @@ void add_eo_block_to_global(spinor * const globalfield, spinor * const beven, sp
     for(x = 0; x < block_list[blk].BLX; x++) {
       ix = x +  block_list[blk].mpilocal_coordinate[1]*block_list[blk].BLX;
       for(y = 0; y < block_list[blk].BLY; y++) {
-	iy = y +  block_list[blk].mpilocal_coordinate[2]*block_list[blk].BLY;
-	for(z = 0; z < block_list[blk].BLZ; z++) {
-	  iz = z +  block_list[blk].mpilocal_coordinate[3]*block_list[blk].BLZ;
-	  i = g_ipt[it][ix][iy][iz];
-	  if((t+x+y+z)%2 == 0) {
-	    add(globalfield + i, globalfield + i, beven + even, 1);
-	    even++;
-	  }
-	  else {
-	    add(globalfield + i, globalfield + i, bodd + odd, 1);
-	    odd++;
-	  }
-	}
+        iy = y +  block_list[blk].mpilocal_coordinate[2]*block_list[blk].BLY;
+        for(z = 0; z < block_list[blk].BLZ; z++) {
+          iz = z +  block_list[blk].mpilocal_coordinate[3]*block_list[blk].BLZ;
+          i = g_ipt[it][ix][iy][iz];
+          if((t+x+y+z)%2 == 0) {
+            add(globalfield + i, globalfield + i, beven + even, 1);
+            even++;
+          }
+          else {
+            add(globalfield + i, globalfield + i, bodd + odd, 1);
+            odd++;
+          }
+        }
       }
     }
   }
@@ -1693,7 +1686,7 @@ void add_eo_block_to_global(spinor * const globalfield, spinor * const beven, sp
 }
 
 void add_eo_block_32_to_global(spinor * const globalfield, 
-			       spinor32 * const beven, spinor32 * const bodd, const int blk) {
+                               spinor32 * const beven, spinor32 * const bodd, const int blk) {
   int i,it,ix,iy,iz;
   int even = 0, odd = 0;
   spinor32 * tmp = NULL;
@@ -1705,27 +1698,27 @@ void add_eo_block_32_to_global(spinor * const globalfield,
     for(int x = 0; x < block_list[blk].BLX; x++) {
       ix = x +  block_list[blk].mpilocal_coordinate[1]*block_list[blk].BLX;
       for(int y = 0; y < block_list[blk].BLY; y++) {
-	iy = y +  block_list[blk].mpilocal_coordinate[2]*block_list[blk].BLY;
-	for(int z = 0; z < block_list[blk].BLZ; z++) {
-	  iz = z +  block_list[blk].mpilocal_coordinate[3]*block_list[blk].BLZ;
-	  i = g_ipt[it][ix][iy][iz];
-	  if((t+x+y+z)%2 == 0) {
-	    tmp = beven + even;
-	    even++;
-	  }
-	  else {
-	    tmp = bodd + odd;
-	    odd++;
-	  }
-	  to = (_Complex double*) (globalfield + i);
-	  from = (_Complex float*) tmp;
-	  for(int k = 0; k < 12; k++) {
-	    (*to) += (_Complex double) (*from);
-	    to++;
-	    from++;
-	  }
+        iy = y +  block_list[blk].mpilocal_coordinate[2]*block_list[blk].BLY;
+        for(int z = 0; z < block_list[blk].BLZ; z++) {
+          iz = z +  block_list[blk].mpilocal_coordinate[3]*block_list[blk].BLZ;
+          i = g_ipt[it][ix][iy][iz];
+          if((t+x+y+z)%2 == 0) {
+            tmp = beven + even;
+            even++;
+          }
+          else {
+            tmp = bodd + odd;
+            odd++;
+          }
+          to = (_Complex double*) (globalfield + i);
+          from = (_Complex float*) tmp;
+          for(int k = 0; k < 12; k++) {
+            (*to) += (_Complex double) (*from);
+            to++;
+            from++;
+          }
 
-	}
+        }
       }
     }
   }
@@ -1782,17 +1775,17 @@ void block_convert_eo_to_lexic(spinor * const P, spinor * const s, spinor * cons
   for(x = 0; x < dX; x++) {
     for(y = 0; y < dY; y++) {
       for(z = 0; z < dZ; z++) {
-	for(t = 0; t < dT; t++) {
-	  ix = block_ipt[t][x][y][z];
-	  i = ix / 2;
-	  if((x + y + z + t)%2 == 0) {
-	    p = s;
-	  }
-	  else {
-	    p = r;
-	  }
-	  memcpy((P+ix), (p+i), sizeof(spinor));
-	}
+        for(t = 0; t < dT; t++) {
+          ix = block_ipt[t][x][y][z];
+          i = ix / 2;
+          if((x + y + z + t)%2 == 0) {
+            p = s;
+          }
+          else {
+            p = r;
+          }
+          memcpy((P+ix), (p+i), sizeof(spinor));
+        }
       }
     }
   }
@@ -1811,17 +1804,17 @@ void block_convert_lexic_to_eo(spinor * const s, spinor * const r, spinor * cons
   for(x = 0; x < dX; x++) {
     for(y = 0; y < dY; y++) {
       for(z = 0; z < dZ; z++) {
-	for(t = 0; t < dT; t++) {
-	  ix = block_ipt[t][x][y][z];
-	  i = ix / 2;
-	  if((x + y + z + t)%2 == 0) {
-	    p = s;
-	  }
-	  else {
-	    p = r;
-	  }
-	  memcpy((p+i), (P+ix), sizeof(spinor));
-	}
+        for(t = 0; t < dT; t++) {
+          ix = block_ipt[t][x][y][z];
+          i = ix / 2;
+          if((x + y + z + t)%2 == 0) {
+            p = s;
+          }
+          else {
+            p = r;
+          }
+          memcpy((p+i), (P+ix), sizeof(spinor));
+        }
       }
     }
   }
