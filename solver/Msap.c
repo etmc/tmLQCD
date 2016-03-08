@@ -208,7 +208,7 @@ void CGeoSmoother(spinor * const P, spinor * const Q, const int Ncy, const int d
   return;  
 }
 
-void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter) {
+void Msap_eo_old(spinor * const P, spinor * const Q, const int Ncy, const int Niter) {
   int blk, ncy = 0, eo, vol, vols;
   spinor * r, * a, * b, * c;
   double nrm;
@@ -312,7 +312,7 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
 }
 
 
-void Msap_eo_new(spinor * const P, spinor * const Q, const int Ncy, const int Niter) {
+void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter) {
   int blk, ncy = 0, eo, vol, vols;
   spinor * r, * a, * b;
   double nrm;
