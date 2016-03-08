@@ -60,5 +60,11 @@ int fgmres4complex(_Complex double * const P, _Complex double * const Q,
 		   const int N, const int parallel,
 		   const int lda, const int precon, c_matrix_mult f);
 
+int fgmres4complex_32(_Complex float * const P, _Complex float * const Q,
+		      const int m, const int max_restarts,
+		      const double eps_sq, const int rel_prec,
+		      const int N, const int parallel,
+		      const int lda, const int precon, c_matrix_mult_32 f);
+
 
 #endif

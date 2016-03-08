@@ -33,5 +33,7 @@ void finalize_bisolver(bispinor ** solver_field, const int nr);
 /* little solver fields (deflation) */
 int init_lsolver_field(_Complex double *** const solver_field, const int V, const int nr);
 void finalize_lsolver(_Complex double ** solver_field, const int nr);
+int init_lsolver_field_32(_Complex float *** const solver_field, const int V, const int nr);
+void finalize_lsolver_32(_Complex float ** solver_field, const int nr);
 
 #endif
