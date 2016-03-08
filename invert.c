@@ -435,6 +435,8 @@ int main(int argc, char *argv[])
 	sw_term( (const su3**) g_gauge_field, g_kappa, g_c_sw);
 	// this must be EE = 0, this is needed for Msap_eo!?
 	sw_invert(0, g_mu);
+	/* now copy double sw and sw_inv fields to 32bit versions */
+	copy_32_sw_fields();
       }
       // DFLGCR and DFLFGMRES
       if(operator_list[op_id].solver == DFLGCR || operator_list[op_id].solver == DFLFGMRES) {
