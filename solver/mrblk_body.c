@@ -17,7 +17,7 @@ int _PSWITCH(mrblk)(_PTSWITCH(spinor) * const P, _PTSWITCH(spinor) * const Q,
   r = s[0];
   norm_r = _PSWITCH(square_norm)(Q, N, parallel);
 
-  zero_spinor_field(P, N);
+  _PSWITCH(zero_spinor_field)(P, N);
   f(s[2], P, blk);
   _PSWITCH(diff)(r, Q, s[2], N);
   norm_r = _PSWITCH(square_norm)(r, N, parallel);
