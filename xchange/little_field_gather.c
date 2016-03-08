@@ -56,21 +56,25 @@ int waitcount = 0;
 
 
 #define _PSWITCH(s) s 
+#define _PTSWITCH(s) s 
 #define _C_TYPE _Complex double
 #define _MPI_C_TYPE MPI_DOUBLE_COMPLEX
 
 #include"little_field_gather_body.c"
 
 #undef _PSWITCH
+#undef _PTSWITCH
 #undef _C_TYPE
 #undef _MPI_C_TYPE
 
-#define _PSWITCH(s) s ## 32
+#define _PSWITCH(s) s ## _32
+#define _PTSWITCH(s) s ## 32
 #define _C_TYPE _Complex float
 #define _MPI_C_TYPE MPI_COMPLEX
 
 #include"little_field_gather_body.c"
 
 #undef _PSWITCH
+#undef _PTSWITCH
 #undef _C_TYPE
 #undef _MPI_C_TYPE

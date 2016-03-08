@@ -56,7 +56,7 @@ int dfl_subspace_updated = 1;
 /* some lapack related stuff */
 static int ONE = 1;
 static _Complex double CONE, CZERO, CMONE;
-static _Complex float CONE32, CZERO32, CMONE32;
+static _Complex float CONE_32, CZERO_32, CMONE_32;
 
 enum{
   NONE = 0,
@@ -248,6 +248,7 @@ void apply_little_D_spinor(spinor *r, spinor *s){
 
 
 #define _PSWITCH(s) s
+#define _PTSWITCH(s) s
 #if (defined NOF77UNDERSCORE || defined NOF77_)
 #define _MV(x) zgemv
 #else
@@ -259,9 +260,11 @@ void apply_little_D_spinor(spinor *r, spinor *s){
 
 #undef _C_TYPE
 #undef _PSWITCH
+#undef _PTSWITCH
 #undef _MV
 
-#define _PSWITCH(s) s ## 32
+#define _PSWITCH(s) s ## _32
+#define _PTSWITCH(s) s ## 32
 #if (defined NOF77UNDERSCORE || defined NOF77_)
 #define _MV(x) cgemv
 #else
@@ -273,6 +276,7 @@ void apply_little_D_spinor(spinor *r, spinor *s){
 
 #undef _C_TYPE
 #undef _PSWITCH
+#undef _PTSWITCH
 #undef _MV
 
 #ifdef MPI

@@ -146,8 +146,8 @@ void project(spinor * const out, spinor * const in) {
         for (int j = 0; j < g_N_s*nb_blocks*9; j++) {
           inprod_o32[j] = (_Complex float) inprod_o[j];
         }
-	iter = gcr4complex32(invvec_eo32, inprod_o32, little_m, little_max_iter, prec, 1, 
-			     nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, 0, &little_D_sym32);
+	iter = gcr4complex_32(invvec_eo32, inprod_o32, little_m, little_max_iter, prec, 1, 
+			     nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, 0, &little_D_sym_32);
 	// we could do more in 32bit precision!?
         for (int j = 0; j < g_N_s*nb_blocks*9; j++) {
           invvec_eo[j] = (_Complex double) invvec_eo32[j];
@@ -182,8 +182,8 @@ void project(spinor * const out, spinor * const in) {
     }
     else {
       if(gcr32) {
-        iter = gcr4complex32(invvec32, inprod32, little_m, little_max_iter, prec, 1, 
-                             nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, 0, &little_D32);
+        iter = gcr4complex_32(invvec32, inprod32, little_m, little_max_iter, prec, 1, 
+                             nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, 0, &little_D_32);
         
         for (int j = 0; j < g_N_s*nb_blocks*9; j++) {
           invvec[j] = (_Complex double) invvec32[j];
@@ -205,8 +205,8 @@ void project(spinor * const out, spinor * const in) {
         for (int j = 0; j < g_N_s*nb_blocks*9; j++) {
           inprod_o32[j] = (_Complex float) inprod_o[j];
         }
-	iter = gcr4complex32(invvec_eo32, inprod_o32, little_m, little_max_iter, prec, 1, 
-			     nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, 0, &little_D_sym32);
+	iter = gcr4complex_32(invvec_eo32, inprod_o32, little_m, little_max_iter, prec, 1, 
+			     nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, 0, &little_D_sym_32);
 	// we could do more in 32bit precision!?
         for (int j = 0; j < g_N_s*nb_blocks*9; j++) {
           invvec_eo[j] = (_Complex double) invvec_eo32[j];

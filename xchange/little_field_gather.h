@@ -26,7 +26,7 @@
 void little_field_gather(_Complex double * w);
 void little_field_gather_eo(const int eo, _Complex double * w);
 
-void little_field_gather32(_Complex float * w);
-void little_field_gather_eo32(const int eo, _Complex float * w);
+void little_field_gather_32(_Complex float * w);
+void little_field_gather_eo_32(const int eo, _Complex float * w);
 
 #endif

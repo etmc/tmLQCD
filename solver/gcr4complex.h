@@ -25,22 +25,26 @@
 
 
 #define _PSWITCH(s) s 
+#define _PTSWITCH(s) s 
 #define _C_TYPE _Complex double
 #define _F_TYPE double
 
 #include"gcr4complex_body.h"
 
 #undef _PSWITCH
+#undef _PTSWITCH
 #undef _C_TYPE
 #undef _F_TYPE
 
-#define _PSWITCH(s) s ## 32
+#define _PSWITCH(s) s ## _32
+#define _PTSWITCH(s) s ## 32
 #define _C_TYPE _Complex float
 #define _F_TYPE float
 
 #include"gcr4complex_body.h"
 
 #undef _PSWITCH
+#undef _PTSWITCH
 #undef _C_TYPE
 #undef _F_TYPE
 

@@ -54,9 +54,9 @@ typedef struct {
   /* build_little_diraclocal g_Ns x g_Ns block first (the diagonal part) */
   /* then +t, -t, +x, -x, +y, -y, +z, -z               */
   _Complex double    *little_dirac_operator;  /* full dense representation of the little D */
-  _Complex float  *little_dirac_operator32;
+  _Complex float  *little_dirac_operator_32;
   _Complex double    *little_dirac_operator_eo;  /* full dense representation of the little D in e/o order */
-  _Complex float    *little_dirac_operator_eo32; 
+  _Complex float    *little_dirac_operator_eo_32; 
 } block;
 
 int init_blocks(const int nt, const int nx, const int ny, const int nz);

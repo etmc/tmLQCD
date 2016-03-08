@@ -35,23 +35,26 @@
 
 
 #define _PSWITCH(s) s 
+#define _PTSWITCH(s) s 
 #define _C_TYPE _Complex double
 #define _F_TYPE double
 
 #include"gcr4complex_body.c"
 
 #undef _PSWITCH
+#undef _PTSWITCH
 #undef _C_TYPE
 #undef _F_TYPE
 
-#define _PSWITCH(s) s ## 32
+#define _PSWITCH(s) s ## _32
+#define _PTSWITCH(s) s ## 32
 #define _C_TYPE _Complex float
 #define _F_TYPE float
 
 
 // dummy function until little_mg_precon is implemented in 
 // 32 Bit
-void little_mg_precon32(_Complex float *xi, _Complex float * rho) {
+void little_mg_precon_32(_Complex float *xi, _Complex float * rho) {
   memcpy(xi, rho, nb_blocks*g_N_s*sizeof(_Complex float));
   return;
 }
@@ -59,5 +62,6 @@ void little_mg_precon32(_Complex float *xi, _Complex float * rho) {
 #include"gcr4complex_body.c"
 
 #undef _PSWITCH
+#undef _PTSWITCH
 #undef _C_TYPE
 #undef _F_TYPE
