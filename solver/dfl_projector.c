@@ -621,8 +621,8 @@ int check_projectors(const int repro) {
     fflush(stdout);
   }
 
-  // check assign_mul_one_sw_pm_imu_inv_block for clover caswe
-  if(g_mu > 0) {
+  // check assign_mul_one_sw_pm_imu_inv_block for clover case
+  if(g_c_sw > 0) {
     for (int blk = 0; blk < nb_blocks; blk++) {
       copy_global_to_block_eo(phi[0], phi[1], work_fields[0], blk);
       assign_mul_one_sw_pm_imu_inv_block(EE, phi[2], phi[0], g_mu, &block_list[blk]);
