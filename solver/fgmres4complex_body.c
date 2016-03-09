@@ -38,7 +38,7 @@ int _PSWITCH(fgmres4complex)(_Complex _F_TYPE * const P, _Complex _F_TYPE * cons
     /* v_0=r_0/||r_0|| */
     _PSWITCH(alpha)[0] = sqrt(_PSWITCH(lsquare_norm)(r0, N, parallel));
 
-    if(g_proc_id == g_stdio_proc && g_debug_level > 0){
+    if(g_proc_id == g_stdio_proc && g_debug_level > 2){
       printf("lFGMRES %d\t%g true residue\n", restart*m, creal(_PSWITCH(alpha)[0])*creal(_PSWITCH(alpha)[0]));
       fflush(stdout);
     }
@@ -90,7 +90,7 @@ int _PSWITCH(fgmres4complex)(_Complex _F_TYPE * const P, _Complex _F_TYPE * cons
       (_PSWITCH(alpha)[j]) = conj(_PSWITCH(c)[j]) * (tmp1);
 
       /* precision reached? */
-      if(g_proc_id == g_stdio_proc && g_debug_level > 0){
+      if(g_proc_id == g_stdio_proc && g_debug_level > 2){
 	printf("lFGMRES\t%d\t%g iterated residue\n", restart*m+j, creal(_PSWITCH(alpha)[j+1])*creal(_PSWITCH(alpha)[j+1]));
 	fflush(stdout);
       }
