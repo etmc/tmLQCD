@@ -771,6 +771,14 @@ with (skipping the $\pm$ index for brevity)
   A_{oo}\quad &=\quad (1- M_{oo}^{-1} M_{oe} M_{ee}^{-1} M_{eo})^{-1}\ M_{oo}^{-1} \\
 \end{split}
 \]
+In practice The projectors $P_{l\to o}$ and $P_{o\to l}$ are trivially
+implemented by inverting the full matrix on a spinor with all even
+sites set to zero and the odd sites to $\phi_o$.
+
+Using this allows one to use one the one hand the speeding up due to
+even/odd preconditioning in the HMC, and on the other hand the
+speeding up due to a deflated solver.
+
 \endinput
 
 %%% Local Variables: 
