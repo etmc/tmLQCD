@@ -82,6 +82,7 @@ int fgmres(spinor * const P,spinor * const Q,
   spinor ** solver_field = NULL;
   const int nr_sf = 3;
 
+  cumiter_lgcr = 0;
   if(N == VOLUME) {
     init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);/* #ifdef HAVE_LAPACK */
   }
@@ -178,6 +179,11 @@ int fgmres(spinor * const P,spinor * const Q,
 	}
 	assign(P, solver_field[2], N);
 	finalize_solver(solver_field, nr_sf);
+	if(g_proc_id == g_stdio_proc && g_debug_level > 0){
+	  printf("FGMRES\t%d\t%g final iterated residue, cumulative little solver iterations %d\n", restart*m+j, creal(alpha[j+1])*creal(alpha[j+1]), cumiter_lgcr); 
+	  fflush(stdout);
+	}
+
 	return(restart*m+j);
       }
       /* if not */
