@@ -1,209 +1,210 @@
+/* config.h.  Generated from config.h.in by configure.  */
 /* config.h.in.  Generated from configure.in by autoheader.  */
 #ifndef _CONFIG_H
 #define _CONFIG_H
 
 /* We are on a CRAY */
-#undef CRAY
+/* #undef CRAY */
 
 /* lapack available */
-#undef HAVE_LAPACK
+#define HAVE_LAPACK 1
 
 /* Define to 1 if you have the `lime' library (-llime). */
-#undef HAVE_LIBLIME
+#define HAVE_LIBLIME 1
 
 /* Define to 1 if you have the `lemon' library (-llemon). */
-#undef HAVE_LIBLEMON
+/* #undef HAVE_LIBLEMON */
 
 /* 1 if clock_gettime is available for use in benchmark */
-#undef HAVE_CLOCK_GETTIME
+#define HAVE_CLOCK_GETTIME 1
 
 /* Compile with MPI support */
-#undef MPI
+#define MPI 1
 
 /* Compile with OpenMP support */
-#undef OMP
+#define OMP 1
 
 /* Compile with FFTW support */
-#undef HAVE_FFTW
+/* #undef HAVE_FFTW */
 
 /* Fortran has not extra _ */
-#undef NOF77_
+/* #undef NOF77_ */
 
 /* Use Opteron instructions */
-#undef OPTERON
+/* #undef OPTERON */
 
 /* Use Pentium4 instructions */
-#undef P4
+/* #undef P4 */
 
 /* Define to the address where bug reports for this package should be sent. */
-#undef PACKAGE_BUGREPORT
+#define PACKAGE_BUGREPORT "curbach@gmx.de"
 
 /* Define to the full name of this package. */
-#undef PACKAGE_NAME
+#define PACKAGE_NAME "tmLQCD"
 
 /* Define to the full name and version of this package. */
-#undef PACKAGE_STRING
+#define PACKAGE_STRING "tmLQCD 5.2.0"
 
 /* Define to the one symbol short name of this package. */
-#undef PACKAGE_TARNAME
+#define PACKAGE_TARNAME "tmlqcd"
 
 /* Define to the version of this package. */
-#undef PACKAGE_VERSION
+#define PACKAGE_VERSION "5.2.0"
 
 /* Index independent addressing */
-#undef _INDEX_INDEP_GEOM
+/* #undef _INDEX_INDEP_GEOM */
 
 /* X parallelisation */
-#undef PARALLELX
+/* #undef PARALLELX */
 
 /* XY parallelisation */
-#undef PARALLELXY
+/* #undef PARALLELXY */
 
 /* XYZ parallelisation */
-#undef PARALLELXYZ
+/* #undef PARALLELXYZ */
 
 /* One dimensional parallelisation */
-#undef PARALLELT
+/* #undef PARALLELT */
 
 /* Two dimensional parallelisation */
-#undef PARALLELXT
+/* #undef PARALLELXT */
 
 /* Three dimensional parallelisation */
-#undef PARALLELXYT
+/* #undef PARALLELXYT */
 
 /* Four dimensional parallelisation */
-#undef PARALLELXYZT
+#define PARALLELXYZT 1
 
 /* timeslice-splitted communications */
-#undef _USE_TSPLITPAR
+/* #undef _USE_TSPLITPAR */
 
 /* Fixed volume at compiletime */
-#undef FIXEDVOLUME
+/* #undef FIXEDVOLUME */
 
 /* Define to 1 if fseeko (and presumably ftello) exists and is declared. */
-#undef HAVE_FSEEKO
+#define HAVE_FSEEKO 1
 
 /* Alignment for arrays -- necessary for SSE and automated vectorization */
-#undef ALIGN_BASE
+#define ALIGN_BASE 0x00
 
 /* Alignment compiler hint macro */
-#undef ALIGN
+#define ALIGN /**/
 
 /* Alignment for 32bit arrays -- necessary for SSE and automated vectorization */
-#undef ALIGN_BASE32
+#define ALIGN_BASE32 0x00
 
 /* Alignment of 32bit fields, compiler hint macro */
-#undef ALIGN32
+#define ALIGN32 /**/
 
 /* Compile with SSE2 support */
-#undef SSE2
+/* #undef SSE2 */
 
 /* Compile with SSE3 support */
-#undef SSE3
+/* #undef SSE3 */
 
 /* Optimize for Blue Gene/L */
-#undef BGL
+/* #undef BGL */
 
 /* Optimize for Blue Gene/P */
-#undef BGP
+/* #undef BGP */
 
 /* Compile with QPX intrinsics */
-#undef BGQ
+/* #undef BGQ */
 
 /* Compile with SPI for communications */
-#undef SPI
+/* #undef SPI */
 
 /* Are we using the IBM xlc compiler? */
-#undef XLC
+/* #undef XLC */
 
 /* Define to 1 if `lex' declares `yytext' as a `char *' by default, not a
    `char[]'. */
-#undef YYTEXT_POINTER
+#define YYTEXT_POINTER 1
 
 /* Number of bits in a file offset, on hosts where this is settable. */
-#undef _FILE_OFFSET_BITS
+/* #undef _FILE_OFFSET_BITS */
 
 /* Construct an extra copy of the gauge fields */
-#undef _GAUGE_COPY
+#define _GAUGE_COPY 1
 
 /* Define to 1 to make fseeko visible on some hosts (e.g. glibc 2.2). */
-#undef _LARGEFILE_SOURCE
+#define _LARGEFILE_SOURCE 1
 
 /* Define for large files, on AIX-style hosts. */
-#undef _LARGE_FILES
+/* #undef _LARGE_FILES */
 
 /* Use even/odd geometry in the gauge fields */
-#undef _NEW_GEOMETRY
+/* #undef _NEW_GEOMETRY */
 
 /* x86 64 Bit architecture */
-#undef _x86_64
+#define _x86_64 1
 
 /* Define to empty if `const' does not conform to ANSI C. */
-#undef const
+/* #undef const */
 
 /* Define to `__inline__' or `__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */
 #ifndef __cplusplus
-#undef inline
+/* #undef inline */
 #endif
 
 /* Define to `long' if <sys/types.h> does not define. */
-#undef off_t
+/* #undef off_t */
 
 /* Define to `unsigned' if <sys/types.h> does not define. */
-#undef size_t
+/* #undef size_t */
 
 /* Define to 1 if you have the <stdint.h> header file. */
-#undef HAVE_STDINT_H
+#define HAVE_STDINT_H 1
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-#undef HAVE_SYS_TYPES_H
+#define HAVE_SYS_TYPES_H 1
 
 /* Define to 1 if the system has the type `uint16_t'. */
-#undef HAVE_UINT16_T
+#define HAVE_UINT16_T 1
 
 /* Define to 1 if the system has the type `uint32_t'. */
-#undef HAVE_UINT32_T
+#define HAVE_UINT32_T 1
 
 /* Define to 1 if the system has the type `uint64_t'. */
-#undef HAVE_UINT64_T
+#define HAVE_UINT64_T 1
 
 /* Define to 1 if you have the <unistd.h> header file. */
-#undef HAVE_UNISTD_H
+#define HAVE_UNISTD_H 1
 
 /* Define to 1 if Dirac operator with halfspinor should be used */
-#undef _USE_HALFSPINOR
+#define _USE_HALFSPINOR 1
 
 /* Define to 1 if shmem API should be used */
-#undef _USE_SHMEM
+/* #undef _USE_SHMEM */
 
 /* Define to 1 if KOJAK instrumentalisation should be done*/
-#undef _KOJAK_INST
+/* #undef _KOJAK_INST */
 
 /* Define to equivalent of C99 restrict keyword, or to nothing if this is not
    supported. Do not define if restrict is supported directly. */
-#undef restrict
+#define restrict __restrict
 
 /* Define to 1 if persistent MPI calls for halfspinor should be used */
-#undef _PERSISTENT
+/* #undef _PERSISTENT */
 
 /* Define to 1 if non-blocking MPI calls for spinor and gauge should be used */
-#undef _NON_BLOCKING
+#define _NON_BLOCKING 1
 
 /* Define if we want to use CUDA GPU */
-#undef HAVE_GPU
+/* #undef HAVE_GPU */
 
 /* Define if we want to compute the LapH eigenvectors */
-#undef WITHLAPH
+/* #undef WITHLAPH */
 
 /* Define to 1 if you have the `quda' library (-lquda). */
-#undef HAVE_LIBQUDA
+/* #undef HAVE_LIBQUDA */
 
 /* Using QUDA GPU */
-#undef QUDA
+/* #undef QUDA */
 
 /* Using MG4QCD */
-#undef MG4QCD
+#define MG4QCD 1
 
 #endif
 

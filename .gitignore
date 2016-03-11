@@ -10,3 +10,9 @@ Makefile
 config.log
 *.mod.c
 *.opari.inc
+*.a
+hmc_tm
+invert
+offline_measurement
+lib/
+benchmark
