@@ -272,11 +272,6 @@ int MG_solver(spinor * const Even_new, spinor * const Odd_new,
 #ifdef MGTEST
    double diff2[3]; 
    bicgstab_complex(solver_field[2], solver_field[0], max_iter, precision, rel_prec, VOLUME, f);
-   //f(solver_field[2], solver_field[0]);
-   
-   //print_out_vector(solver_field[0]);
-   //print_out_vector(solver_field[1]);
-   //print_out_vector(solver_field[2]);
    
    diff2[0] = sqrt(square_norm(solver_field[0], VOLUME, 1));
    diff2[1] = sqrt(square_norm(solver_field[1], VOLUME, 1));
