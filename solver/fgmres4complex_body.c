@@ -140,7 +140,7 @@ int _PSWITCH(fgmres4complex)(_Complex _F_TYPE * const P, _Complex _F_TYPE * cons
   /* If maximal number of restarts is reached */
   _PSWITCH(lassign)(P, solver_field[2], N);
   _PSWITCH(finalize_lsolver)(solver_field, nr_sf);
-  return(-1);
+  return(max_restarts*m);
 }
 
 static void _PSWITCH(init_lgmres)(const int _M, const int _V){

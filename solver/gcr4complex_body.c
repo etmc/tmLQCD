@@ -104,7 +104,7 @@ int _PSWITCH(gcr4complex)(_C_TYPE * const P, _C_TYPE * const Q,
       _PSWITCH(lassign_add_mul)(P, _PSWITCH(xi)[l], _PSWITCH(c)[l], N);
     }
   }
-  return(-1);
+  return(max_restarts*m);
 }
 
 static void _PSWITCH(init_lgcr)(const int _M, const int _V){
