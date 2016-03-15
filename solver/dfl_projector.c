@@ -178,7 +178,7 @@ void project(spinor * const out, spinor * const in) {
         }
       }
       if(g_proc_id == 0 && g_debug_level > 2) {
-        printf("lgcr (even/odd) number of iterations %d (no LittleLittleD)\n", iter);
+        printf("lgcr/lfgmres (even/odd) number of iterations %d (no LittleLittleD)\n", iter);
       }
     }
     else {
@@ -195,7 +195,7 @@ void project(spinor * const out, spinor * const in) {
                            nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, 0, &little_D);
       }
       if(g_proc_id == 0 && g_debug_level > 2) {
-        printf("lgcr number of iterations %d (no LittleLittleD)\n", iter);
+        printf("lgcr/lfgmres number of iterations %d (no LittleLittleD)\n", iter);
       }       
     }
   }
