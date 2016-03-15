@@ -1108,7 +1108,10 @@ void compute_little_D(const int mul_g5) {
   int dT, dX, dY, dZ;
   dT = T/nblks_t; dX = LX/nblks_x; dY = LY/nblks_y; dZ = LZ/nblks_z;
 
-  if(g_proc_id == 0 && g_debug_level > 1) printf("# compute_little_D called with mul_g5 = %d\n", mul_g5);
+  if(g_proc_id == 0 && g_debug_level > 1) {
+    printf("# compute_little_D called with mul_g5 = %d\n", mul_g5);
+    printf("# compute_little_D parameters mu= %e, kappa= %e\n", g_mu/2./g_kappa, g_kappa);
+  }
 
   /* for a full spinor field we need VOLUMEPLUSRAND                 */
   /* because we use the same geometry as for the                    */

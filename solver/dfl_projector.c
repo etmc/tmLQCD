@@ -70,6 +70,8 @@ _Complex double *ctmp;
 _Complex double *work_block;
 const int dfl_work_size = 16;
 _Complex double *work[16];
+int cumiter_lgcr = 0;
+
 
 static void alloc_dfl_projector();
 
@@ -177,7 +179,7 @@ void project(spinor * const out, spinor * const in) {
           }
         }
       }
-      if(g_proc_id == 0 && g_debug_level > 2) {
+      if(g_proc_id == 0 && g_debug_level > 0) {
         printf("lgcr/lfgmres (even/odd) number of iterations %d (no LittleLittleD)\n", iter);
       }
     }
@@ -194,7 +196,7 @@ void project(spinor * const out, spinor * const in) {
         iter = gcr4complex(invvec, inprod, little_m, little_max_iter, prec, 1, 
                            nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, 0, &little_D);
       }
-      if(g_proc_id == 0 && g_debug_level > 2) {
+      if(g_proc_id == 0 && g_debug_level > 0) {
         printf("lgcr/lfgmres number of iterations %d (no LittleLittleD)\n", iter);
       }       
     }
@@ -235,7 +237,7 @@ void project(spinor * const out, spinor * const in) {
         }
       } 
       if(g_proc_id == 0 && g_debug_level > 0) {
-        printf("lgcr (even/odd) number of iterations %d (using LittleLittleD)\n", iter);
+        printf("lgcr/lfgmres (even/odd) number of iterations %d (using LittleLittleD)\n", iter);
       }
     }
     else {
@@ -251,6 +253,8 @@ void project(spinor * const out, spinor * const in) {
       }
     }    
   }
+  cumiter_lgcr += iter;
+
   /* sum up */
   for(int i = 0 ; i < nb_blocks ; i++) {
     mul(psi[i], invvec[i*g_N_s], block_list[i].basis[0], vol);

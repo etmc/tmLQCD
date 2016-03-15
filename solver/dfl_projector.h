@@ -21,6 +21,8 @@
 
 #include "su3spinor.h"
 
+extern int cumiter_lgcr;
+
 void project(spinor * const out, spinor * const in);
 void project_left(spinor * const out, spinor * const in);
 void project_right(spinor * const out, spinor * const in);
