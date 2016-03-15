@@ -34,8 +34,11 @@
 #include "start.h"
 #include "gamma.h"
 #include "ranlxs.h"
+#include "init/init.h"
 #include "operator/D_psi.h"
 #include "operator/tm_operators.h"
+#include "operator/clover_leaf.h"
+#include "operator/clovertm_operators.h"
 #include "poly_precon.h"
 #include "Msap.h"
 #include "gmres_precon.h"
@@ -82,7 +85,18 @@ static void random_fields(const int Ns) {
 int update_dfl_subspace(const int Ns, const int N, const int Nsmooth) {
   int vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(_Complex double),
     vol = VOLUME*sizeof(spinor)/sizeof(_Complex double);
-
+  double musave = g_mu;
+  double kappasave = g_kappa;
+  
+  if(kappa_dflgen > 0) {
+    g_kappa = kappa_dflgen;
+  }
+  if(mu_dflgen > -10) {
+    g_mu = mu_dflgen;
+    if(g_mu*musave < 0) g_mu *= -1.;
+  }
+  boundary(g_kappa);
+  
   double nrm; 
   for(int j = 0; j < Nsmooth; j++) {
     //if(j - loop_SAP > 4) {
@@ -103,21 +117,10 @@ int update_dfl_subspace(const int Ns, const int N, const int Nsmooth) {
     // why can't I use g_spinor_field[1] in mg_precon??
     for(int i = 0; i < Ns; i++) {
       g_sloppy_precision = 1;
-      if(0) {
-	D_psi(g_spinor_field[1],  dfl_fields[i]);
-	// v - Dv
-	diff(g_spinor_field[2], dfl_fields[i], g_spinor_field[1], VOLUME);
-	// C(v - Dv)
-	mg_precon(g_spinor_field[0], g_spinor_field[2]);
-	// v <- v + C(v - Dv)
-	add(dfl_fields[i], dfl_fields[i], g_spinor_field[0], VOLUME);
-      }
-      else {
-	// this is the original Luescher Version
-	// v <- C v
-	mg_precon(g_spinor_field[0], dfl_fields[i]);
-	assign(dfl_fields[i], g_spinor_field[0], VOLUME);
-      }
+
+      // v <- C v
+      mg_precon(g_spinor_field[0], dfl_fields[i]);
+      assign(dfl_fields[i], g_spinor_field[0], VOLUME);
       
       g_sloppy_precision = 0;
       ModifiedGS((_Complex double*)g_spinor_field[0], vol, i, (_Complex double*)dfl_fields[0], vpr);
@@ -135,6 +138,9 @@ int update_dfl_subspace(const int Ns, const int N, const int Nsmooth) {
     block_orthonormalize(block_list+i);
   }
   dfl_subspace_updated = 1;
+  g_mu = musave;
+  g_kappa = kappasave;
+  boundary(g_kappa);
 
   return(0);
 }
@@ -162,6 +168,18 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
     g_mu = mu_dflgen;
     if(g_mu*musave < 0) g_mu *= -1.;
   }
+  if(g_c_sw > 0) {
+    if (g_cart_id == 0 && g_debug_level > 1) {
+      printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
+    }
+    init_sw_fields(VOLUME);
+    sw_term( (const su3**) g_gauge_field, g_kappa, g_c_sw);
+    // this must be EE = 0, this is needed for Msap_eo!?
+    sw_invert(0, g_mu);
+    /* now copy double sw and sw_inv fields to 32bit versions */
+    copy_32_sw_fields();
+  }
+
   // currently set to 0 during subspace generation
   usePL = 0;
   atime = gettime();

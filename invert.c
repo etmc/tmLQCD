@@ -81,8 +81,6 @@
 #include "source_generation.h"
 #include "P_M_eta.h"
 #include "operator/tm_operators.h"
-#include "operator/clover_leaf.h"
-#include "operator/clovertm_operators.h"
 #include "operator/Dov_psi.h"
 #include "solver/spectral_proj.h"
 #ifdef QUDA
@@ -426,18 +424,6 @@ int main(int argc, char *argv[])
       g_kappa = operator_list[op_id].kappa; 
       g_mu = operator_list[op_id].mu;
       g_c_sw = operator_list[op_id].c_sw;
-      if(operator_list[op_id].type == CLOVER) {
-	g_c_sw = operator_list[op_id].c_sw;
-	if (g_cart_id == 0 && g_debug_level > 1) {
-	  printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
-	}
-	init_sw_fields(VOLUME);
-	sw_term( (const su3**) g_gauge_field, g_kappa, g_c_sw);
-	// this must be EE = 0, this is needed for Msap_eo!?
-	sw_invert(0, g_mu);
-	/* now copy double sw and sw_inv fields to 32bit versions */
-	copy_32_sw_fields();
-      }
       // DFLGCR and DFLFGMRES
       if(operator_list[op_id].solver == DFLGCR || operator_list[op_id].solver == DFLFGMRES) {
 	generate_dfl_subspace(g_N_s, VOLUME, reproduce_randomnumber_flag);
