@@ -104,11 +104,15 @@ void project(spinor * const out, spinor * const in) {
 
   for (int j = 0; j < g_N_s*nb_blocks*9; j++) {
     (inprod[j]) = 0.0;
+    (inprod32[j]) = 0.0;
     (inprod_o[j]) = 0.0;
+    (inprod_o32[j]) = 0.0;
     (inprod_eo[j]) = 0.0;
     (inprod_e[j]) = 0.0;
     (invvec[j]) = 0.0;
+    (invvec32[j]) = 0.0;
     (invvec_eo[j]) = 0.0;
+    (invvec_eo32[j]) = 0.0;
     (ctmp[j]) = 0.0;
     (w[j]) = 0.0;
     (v[j]) = 0.0;
