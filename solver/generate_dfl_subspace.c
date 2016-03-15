@@ -85,17 +85,11 @@ static void random_fields(const int Ns) {
 int update_dfl_subspace(const int Ns, const int N, const int Nsmooth) {
   int vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(_Complex double),
     vol = VOLUME*sizeof(spinor)/sizeof(_Complex double);
-  double musave = g_mu;
-  double kappasave = g_kappa;
+  double musave = mu_dfl;
+  double kappasave = kappa_dfl;
   
-  if(kappa_dflgen > 0) {
-    g_kappa = kappa_dflgen;
-  }
-  if(mu_dflgen > -10) {
-    g_mu = mu_dflgen;
-    if(g_mu*musave < 0) g_mu *= -1.;
-  }
-  boundary(g_kappa);
+  mu_dfl = mu_dflgen;
+  kappa_dfl = kappa_dflgen;
   
   double nrm; 
   for(int j = 0; j < Nsmooth; j++) {
@@ -138,9 +132,8 @@ int update_dfl_subspace(const int Ns, const int N, const int Nsmooth) {
     block_orthonormalize(block_list+i);
   }
   dfl_subspace_updated = 1;
-  g_mu = musave;
-  g_kappa = kappasave;
-  boundary(g_kappa);
+  mu_dfl = musave;
+  kappa_dfl = kappasave;
 
   return(0);
 }
@@ -155,19 +148,15 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
   double nrm, atime, etime;
   _Complex double s;
   _Complex double * work;
-  double musave = g_mu;
-  double kappasave = g_kappa;
+  double musave = mu_dfl;
+  double kappasave = kappa_dfl;
   int usePLsave = usePL;
   spinor ** work_fields = NULL;
   const int nr_wf = 2;
   g_mu2 = 0.;
-  if(kappa_dflgen > 0) {
-    g_kappa = kappa_dflgen;
-  }
-  if(mu_dflgen > -10) {
-    g_mu = mu_dflgen;
-    if(g_mu*musave < 0) g_mu *= -1.;
-  }
+  kappa_dfl = kappa_dflgen;
+  mu_dfl = mu_dflgen;
+
   if(g_c_sw > 0) {
     if (g_cart_id == 0 && g_debug_level > 1) {
       printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
@@ -210,8 +199,6 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
     fflush(stdout);
   }
 
-  boundary(g_kappa);
-
   if((g_proc_id == 0) && (p < Ns) && (g_debug_level > 0)) {
     printf("# Compute approximate eigenvectors from scratch\n");
     printf("# Using kappa= %e and mu = %e for the subspace generation\n", g_kappa, g_mu/g_kappa/2.);
@@ -237,9 +224,8 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
   compute_little_D(0);
   compute_little_little_D(Ns);
   dfl_subspace_updated = 0;
-  g_mu = musave;
-  g_kappa = kappasave;
-  boundary(g_kappa);
+  mu_dfl = musave;
+  kappa_dfl = kappasave;
   usePL = usePLsave;
   if(g_debug_level > 0 && g_proc_id == 0) {
     printf("# Switched to target parameters kappa= %e, mu=%e\n", g_kappa, g_mu/2/g_kappa);

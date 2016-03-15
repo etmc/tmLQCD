@@ -29,7 +29,9 @@
 #include <string.h>
 #include <complex.h>
 #include "global.h"
+#include "boundary.h"
 #include "gettime.h"
+#include "read_input.h"
 #include "operator/D_psi.h"
 #include "linalg_eo.h"
 #include "start.h"
@@ -1106,6 +1108,17 @@ void compute_little_D(const int mul_g5) {
   //int count=0;
   int bx, by, bz, bt, block_id = 0, block_id_e, block_id_o,is_up = 0, ib;
   int dT, dX, dY, dZ;
+  double musave = g_mu;
+  double kappasave = g_kappa;
+  if(kappa_dfl > 0) {
+    g_kappa = kappa_dflgen;
+  }
+  if(mu_dfl > -10) {
+    g_mu = mu_dfl;
+    if(g_mu*musave < 0) g_mu *= -1.;
+  }
+  boundary(g_kappa);
+
   dT = T/nblks_t; dX = LX/nblks_x; dY = LY/nblks_y; dZ = LZ/nblks_z;
 
   if(g_proc_id == 0 && g_debug_level > 1) {
@@ -1348,6 +1361,9 @@ void compute_little_D(const int mul_g5) {
       }
     }
   }
+  g_mu = musave;
+  g_kappa = kappasave;
+  boundary(g_kappa);
   
   free(_scratch);
   return;
