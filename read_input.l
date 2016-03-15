@@ -184,6 +184,8 @@ static inline void rmQuotes(char *str){
   int dfl_poly_iter;
   double kappa_dflgen;
   double mu_dflgen;
+  double kappa_dfl;
+  double mu_dfl;
 
   int use_preconditioning;
   
@@ -579,15 +581,25 @@ static inline void rmQuotes(char *str){
     little_evenodd = 0;
     if(myverbose) printf("LittleEvenOdd set to true line %d\n", line_of_file);
   }
-  {SPC}*kappaDfl{EQL}{FLT} {
+  {SPC}*kappaDflgen{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     kappa_dflgen = c;
     if(myverbose) printf("kappa for subspace generation set to %e line %d\n", c, line_of_file);
   }
-  {SPC}*2KappaMuDfl{EQL}{FLT} {
+  {SPC}*2KappaMuDflgen{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mu_dflgen = c;
     if(myverbose) printf("2KappaMu for subspace generation set to %e line %d\n", c, line_of_file);
+  }
+  {SPC}*kappaDfl{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    kappa_dfl = c;
+    if(myverbose) printf("kappa for preconditioner set to %e line %d\n", c, line_of_file);
+  }
+  {SPC}*2KappaMuDfl{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    mu_dfl = c;
+    if(myverbose) printf("2KappaMu for preconditioner set to %e line %d\n", c, line_of_file);
   }
   EndDeflationInit{SPC}* {
   if(myverbose) printf("DEFLATION parsed in line %d\n\n", line_of_file);
@@ -2380,8 +2392,10 @@ int read_input(char * conf_file){
   NiterMsap_dflgen = _default_NiterMsap_dflgen;
   NcycleMsap_dflgen = _default_NcycleMsap_dflgen;
   usePL = _default_usePL;
-  mu_dflgen = -20.;
-  kappa_dflgen = -1.;
+  mu_dflgen = _default_mu_dflgen;
+  kappa_dflgen = _default_kappa_dflgen;
+  mu_dfl = _default_mu_dfl;
+  kappa_dfl = _default_kappa_dfl;
   little_solver_low_prec = _default_little_solver_low_prec;
   little_solver_high_prec = _default_little_solver_high_prec;
   little_solver_max_iter = _default_little_solver_max_iter;

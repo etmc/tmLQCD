@@ -119,7 +119,7 @@ extern "C"
   extern int use_qudainverter;
 
   extern int nblocks_t, nblocks_x, nblocks_y, nblocks_z;
-  extern double kappa_dflgen, mu_dflgen;
+  extern double kappa_dflgen, mu_dflgen, kappa_dfl, mu_dfl;
 
   int read_input(char *);
   int reread_input(char *);

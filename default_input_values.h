@@ -69,6 +69,10 @@
 #define _default_NiterMsap_dflgen 4
 #define _default_NcycleMsap_dflgen 4
 #define _default_NsmoothMsap_dflgen 2
+#define _default_kappa_dflgen -1.
+#define _default_mu_dflgen -20.
+#define _default_kappa_dfl -1.
+#define _default_mu_dfl -20.
 
 #define _default_random_seed 123456
 #define _default_rlxd_level 1
