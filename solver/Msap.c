@@ -324,10 +324,10 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
   const int nr_sf = 6;
 
   if(kappa_dflgen > 0) {
-    g_kappa = kappa_dflgen;
+    g_kappa = kappa_dfl;
   }
   if(mu_dflgen > -10) {
-    g_mu = mu_dflgen;
+    g_mu = mu_dfl;
     // make sure the sign is correct!
     if(g_mu*musave < 0) g_mu *= -1.;
   }
