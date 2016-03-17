@@ -519,27 +519,27 @@ static inline void rmQuotes(char *str){
   {SPC}*NiterMsap{EQL}{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
     NiterMsap = a;
-    if(myverbose) printf("NiterMsap set to %d line %d\n", a, line_of_file);
+    if(myverbose) printf("NiterMsap for solver preconditioner set to %d line %d\n", a, line_of_file);
   }
   {SPC}*NcycleMsap{EQL}{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
     NcycleMsap = a;
-    if(myverbose) printf("NcycleMsap set to %d line %d\n", a, line_of_file);
+    if(myverbose) printf("NcycleMsap for solver preconditioner set to %d line %d\n", a, line_of_file);
   }
   {SPC}*NiterMsapDfl{EQL}{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
     NiterMsap_dflgen = a;
-    if(myverbose) printf("NiterMsapDfl set to %d line %d\n", a, line_of_file);
+    if(myverbose) printf("NiterMsapDfl for subspace generation set to %d line %d\n", a, line_of_file);
   }
   {SPC}*NcycleMsapDfl{EQL}{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
     NcycleMsap_dflgen = a;
-    if(myverbose) printf("NcycleMsapDfl set to %d line %d\n", a, line_of_file);
+    if(myverbose) printf("NcycleMsapDfl for subspace generation set to %d line %d\n", a, line_of_file);
   }
   {SPC}*NsmoothMsapDfl{EQL}{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
     NsmoothMsap_dflgen = a;
-    if(myverbose) printf("NsmoothMsapDfl set to %d line %d\n", a, line_of_file);
+    if(myverbose) printf("NsmoothMsapDfl for subspace generation set to %d line %d\n", a, line_of_file);
   }
   {SPC}*LittleGMRESMParameter{EQL}{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
