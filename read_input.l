@@ -186,6 +186,8 @@ static inline void rmQuotes(char *str){
   double mu_dflgen;
   double kappa_dfl;
   double mu_dfl;
+  double kappa_Msap;
+  double mu_Msap;
 
   int use_preconditioning;
   
@@ -525,6 +527,16 @@ static inline void rmQuotes(char *str){
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
     NcycleMsap = a;
     if(myverbose) printf("NcycleMsap for solver preconditioner set to %d line %d\n", a, line_of_file);
+  }
+  {SPC}*KappaMsap{EQL}{FLT}+ {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    kappa_Msap = c;
+    if(myverbose) printf("kappa for Msap preconditioner set to %e line %d\n", c, line_of_file);
+  }
+  {SPC}*2KappaMuMsap{EQL}{FLT}+ {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    mu_Msap = c;
+    if(myverbose) printf("2KappaMu for Msap preconditioner set to %e line %d\n", c, line_of_file);
   }
   {SPC}*NiterMsapSubspace{EQL}{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
@@ -2387,7 +2399,9 @@ int read_input(char * conf_file){
   Msap_precon = _default_Msap_precon;
   NiterMsap = _default_NiterMsap;
   NcycleMsap = _default_NcycleMsap;
-  
+  kappa_Msap = _default_kappa_Msap;
+  mu_Msap = _default_mu_Msap;
+
   NsmoothMsap_dflgen = _default_NsmoothMsap_dflgen;
   NiterMsap_dflgen = _default_NiterMsap_dflgen;
   NcycleMsap_dflgen = _default_NcycleMsap_dflgen;

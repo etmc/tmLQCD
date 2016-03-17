@@ -43,6 +43,9 @@ BeginDeflationInit
   NiterMsap = 4
   NcycleMsap = 4
 
+  KappaMsap = 0.177
+  2KappaMuMsap = 0.010
+
   ## the following are used during subspace generation
   NiterMsapSubspace = 4
   NcycleMsapSubspace = 4

@@ -65,6 +65,8 @@
 #define _default_Msap_precon 1
 #define _default_NiterMsap 3
 #define _default_NcycleMsap 2
+#define _default_kappa_Msap -1.
+#define _default_mu_Msap -20.
 
 #define _default_NiterMsap_dflgen 4
 #define _default_NcycleMsap_dflgen 4
