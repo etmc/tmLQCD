@@ -323,11 +323,11 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
   // also get space for mrblk! 6 = 3+3
   const int nr_sf = 6;
 
-  if(kappa_dflgen > 0) {
-    g_kappa = kappa_dfl;
+  if(kappa_Msap > 0) {
+    g_kappa = kappa_Msap;
   }
-  if(mu_dflgen > -10) {
-    g_mu = mu_dfl;
+  if(mu_Msap > -10) {
+    g_mu = mu_Msap;
     // make sure the sign is correct!
     if(g_mu*musave < 0) g_mu *= -1.;
   }

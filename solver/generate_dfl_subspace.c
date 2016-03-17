@@ -87,9 +87,10 @@ int update_dfl_subspace(const int Ns, const int N, const int Nsmooth) {
     vol = VOLUME*sizeof(spinor)/sizeof(_Complex double);
   double musave = mu_dfl;
   double kappasave = kappa_dfl;
-  
+  double muMsapsave = mu_Msap;
   mu_dfl = mu_dflgen;
   kappa_dfl = kappa_dflgen;
+  mu_Msap = mu_dflgen;
   
   double nrm; 
   for(int j = 0; j < Nsmooth; j++) {
@@ -134,7 +135,7 @@ int update_dfl_subspace(const int Ns, const int N, const int Nsmooth) {
   dfl_subspace_updated = 1;
   mu_dfl = musave;
   kappa_dfl = kappasave;
-
+  mu_Msap = muMsapsave;
   return(0);
 }
 
@@ -151,11 +152,13 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
   double musave = mu_dfl;
   double kappasave = kappa_dfl;
   int usePLsave = usePL;
+  double muMsapsave = mu_Msap;
   spinor ** work_fields = NULL;
   const int nr_wf = 2;
   g_mu2 = 0.;
   kappa_dfl = kappa_dflgen;
   mu_dfl = mu_dflgen;
+  mu_Msap = mu_dflgen;
 
   if(g_c_sw > 0) {
     if (g_cart_id == 0 && g_debug_level > 1) {
@@ -226,6 +229,7 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
   dfl_subspace_updated = 0;
   mu_dfl = musave;
   kappa_dfl = kappasave;
+  mu_Msap = muMsapsave;
   usePL = usePLsave;
   if(g_debug_level > 0 && g_proc_id == 0) {
     printf("# Switched to target parameters kappa= %e, mu=%e\n", g_kappa, g_mu/2/g_kappa);
