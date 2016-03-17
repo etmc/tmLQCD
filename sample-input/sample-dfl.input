@@ -44,17 +44,17 @@ BeginDeflationInit
   NcycleMsap = 4
 
   ## the following are used during subspace generation
-  NiterMsapDfl = 4
-  NcycleMsapDfl = 4
-  NsmoothMsapDfl = 11
+  NiterMsapSubspace = 4
+  NcycleMsapSubspace = 4
+  NsmoothSubspace = 11
 
   ## kappa and mu for little D during inversion/outer solve
-  kappaDfl = 0.177
-  2KappaMuDfl = 0.005
+  kappa = 0.177
+  2KappaMu = 0.005
 
   ## kappa and mu for little D during subspace generation
-  kappaDflgen = 0.177
-  2KappaMuDflgen = 0.0
+  kappaSubspace = 0.177
+  2KappaSubspace = 0.0
 
   ## parameters of little solver
   LittleSolverMaxIter = 20

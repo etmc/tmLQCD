@@ -526,17 +526,17 @@ static inline void rmQuotes(char *str){
     NcycleMsap = a;
     if(myverbose) printf("NcycleMsap for solver preconditioner set to %d line %d\n", a, line_of_file);
   }
-  {SPC}*NiterMsapDfl{EQL}{DIGIT}+ {
+  {SPC}*NiterMsapSubspace{EQL}{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
     NiterMsap_dflgen = a;
     if(myverbose) printf("NiterMsapDfl for subspace generation set to %d line %d\n", a, line_of_file);
   }
-  {SPC}*NcycleMsapDfl{EQL}{DIGIT}+ {
+  {SPC}*NcycleMsapSubspace{EQL}{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
     NcycleMsap_dflgen = a;
     if(myverbose) printf("NcycleMsapDfl for subspace generation set to %d line %d\n", a, line_of_file);
   }
-  {SPC}*NsmoothMsapDfl{EQL}{DIGIT}+ {
+  {SPC}*NsmoothSubspace{EQL}{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
     NsmoothMsap_dflgen = a;
     if(myverbose) printf("NsmoothMsapDfl for subspace generation set to %d line %d\n", a, line_of_file);
@@ -561,7 +561,7 @@ static inline void rmQuotes(char *str){
     little_solver_max_iter = a;
     if(myverbose) printf("LittleSolverMaxIter set to %d line %d\n", a, line_of_file);
   }
-  {SPC}*LittleSolver{EQL}(gcr|mcr|mr) {
+  {SPC}*LittleSolver{EQL}(gcr|mcr|mr|fgmres) {
     little_solver = 0;
     if(myverbose) printf("Littlesolver set to gcr in line %d (currently no other solver available)\n", line_of_file);
   }
@@ -581,22 +581,22 @@ static inline void rmQuotes(char *str){
     little_evenodd = 0;
     if(myverbose) printf("LittleEvenOdd set to true line %d\n", line_of_file);
   }
-  {SPC}*kappaDflgen{EQL}{FLT} {
+  {SPC}*KappaSubspace{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     kappa_dflgen = c;
     if(myverbose) printf("kappa for subspace generation set to %e line %d\n", c, line_of_file);
   }
-  {SPC}*2KappaMuDflgen{EQL}{FLT} {
+  {SPC}*2KappaMuSubspace{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mu_dflgen = c;
     if(myverbose) printf("2KappaMu for subspace generation set to %e line %d\n", c, line_of_file);
   }
-  {SPC}*kappaDfl{EQL}{FLT} {
+  {SPC}*kappa{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     kappa_dfl = c;
     if(myverbose) printf("kappa for preconditioner set to %e line %d\n", c, line_of_file);
   }
-  {SPC}*2KappaMuDfl{EQL}{FLT} {
+  {SPC}*2KappaMu{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mu_dfl = c;
     if(myverbose) printf("2KappaMu for preconditioner set to %e line %d\n", c, line_of_file);
