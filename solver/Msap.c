@@ -254,12 +254,11 @@ void Msap_eo_old(spinor * const P, spinor * const Q, const int Ncy, const int Ni
       }
       /* choose the even (odd) block */
 
-      // OMP doesn't work right now because linalg routines start threads themselves
-      // also in mrblk
+      // rely on nested parallelism
       // 
-      // #ifdef OMP
-      // # pragma omp parallel for private (a_even, a_odd, b_even, b_odd, c)
-      // #endif
+      #ifdef OMP
+      # pragma omp parallel for private (a_even, a_odd, b_even, b_odd, c)
+      #endif
       for (blk = 0; blk < nb_blocks; blk++) {
  	b_even = b + blk*2*vols;
  	b_odd = b +blk*2*vols + vols;
@@ -358,12 +357,11 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
       }
       /* choose the even (odd) block */
 
-      // OMP doesn't work right now because linalg routines start threads themselves
-      // also in mrblk
+      // rely on nested parallelism
       // 
-      // #ifdef OMP
-      // # pragma omp parallel for private (a_even, a_odd, b_even, b_odd, c)
-      // #endif
+      #ifdef OMP
+      # pragma omp parallel for private (a_even, a_odd, b_even, b_odd, c)
+      #endif
       for (blk = 0; blk < nb_blocks; blk++) {
  	b_even = (spinor32*) (b + blk*2*vols);
  	b_odd = (spinor32*) (b +blk*2*vols + vols);
