@@ -206,9 +206,9 @@ void _PSWITCH(ladd_assign)(_C_TYPE * const Q, _C_TYPE * const S, const int N)
 _F_TYPE _PSWITCH(lsquare_norm)(_C_TYPE * const Q, const int N, const int parallel) 
 {
   double nrm = 0.0;
-  /* #ifdef OMP */
-  /* #pragma omp parallel for */
-  /* #endif */
+  #ifdef OMP
+  #  pragma omp parallel for reduction(+:nrm)
+  #endif
   for(int i = 0; i < N; ++i)
     nrm += conj(Q[i]) * Q[i];
 
@@ -227,9 +227,9 @@ _C_TYPE _PSWITCH(lscalar_prod)(_C_TYPE * const R, _C_TYPE * const S, const int N
 {
   _Complex double res = 0.0;
 
-  /* #ifdef OMP */
-  /* #pragma omp parallel for */
-  /* #endif */
+  #ifdef OMP
+  #  pragma omp parallel for reduction(+:res)
+  #endif
   for(int i = 0; i < N; ++i)
     res += conj(R[i]) * S[i];
 
