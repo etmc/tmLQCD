@@ -162,3 +162,62 @@ float square_norm_32(const spinor32 * const P, const int N, const int parallel)
 }
 
 #endif
+
+// threadsafe version
+
+float square_norm_ts_32(const spinor32 * const P, const int N, const int parallel)
+{
+  float ALIGN32 res = 0.0;
+#ifdef MPI
+  float ALIGN32 mres;
+#endif
+
+#ifdef OMP
+#pragma omp parallel reduction(+:res)
+  {
+#endif
+  float ALIGN32 ks,kc,ds,tr,ts,tt;
+  const spinor32 *s;
+  
+  ks = 0.0;
+  kc = 0.0;
+  
+#ifdef OMP
+#pragma omp for
+#endif    
+  for (int ix  =  0; ix < N; ix++) {
+    s = P + ix;
+    
+    ds = conj(s->s0.c0) * s->s0.c0 +
+         conj(s->s0.c1) * s->s0.c1 +
+         conj(s->s0.c2) * s->s0.c2 +
+         conj(s->s1.c0) * s->s1.c0 +
+         conj(s->s1.c1) * s->s1.c1 +
+         conj(s->s1.c2) * s->s1.c2 +
+         conj(s->s2.c0) * s->s2.c0 +
+         conj(s->s2.c1) * s->s2.c1 +
+         conj(s->s2.c2) * s->s2.c2 +
+         conj(s->s3.c0) * s->s3.c0 +
+         conj(s->s3.c1) * s->s3.c1 +
+         conj(s->s3.c2) * s->s3.c2;
+
+    tr = ds + kc;
+    ts = tr + ks;
+    tt = ts-ks;
+    ks = ts;
+    kc = tr-tt;
+  }
+  res=ks+kc;
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
+#  ifdef MPI
+  if(parallel) {
+    MPI_Allreduce(&res, &mres, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+    return mres;
+  }
+#endif
+
+  return res;
+}

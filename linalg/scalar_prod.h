@@ -24,6 +24,9 @@
 /*  <S,R>=SxR^* */
 _Complex double scalar_prod(const spinor * const S, const spinor * const R, const int N, const int parallel);
 _Complex double scalar_prod_32(const spinor32 * const S, const spinor32 * const R, const int N, const int parallel);
+_Complex double scalar_prod_ts(const spinor * const S, const spinor * const R, const int N, const int parallel);
+_Complex double scalar_prod_ts_32(const spinor32 * const S, const spinor32 * const R, const int N, const int parallel);
+
 _Complex double scalar_prod_su3vect(su3_vector * const S,su3_vector * const R, const int N, const int parallel);
 
 #endif
