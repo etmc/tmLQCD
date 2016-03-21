@@ -49,6 +49,7 @@ typedef struct {
   su3_32 * u_32;                /* 32 bit block local gauge field, for use in D */
   int spinpad;                  /* number of elements needed to store the boundaries of the spinor */
   int evenodd;                  /* block even or odd (0 or 1) */
+  int evenodd_id;               /* sequence of even and odd blocks */
 
   /* storage will be g_Ns x (9 * g_Ns)                 */
   /* build_little_diraclocal g_Ns x g_Ns block first (the diagonal part) */
