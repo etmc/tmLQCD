@@ -13,13 +13,22 @@ void _PSWITCH(little_D)(_C_TYPE * v, _C_TYPE *w) {
   _PSWITCH(little_field_gather)(w);
   
   /* all the mpilocal stuff first */
+#ifdef OMP
+#pragma omp parallel for
+#endif
   for(int i = 0; i < nb_blocks; i++) {
     /* diagonal term */
     _MV(dummy)("N", &g_N_s, &g_N_s, &_PSWITCH(CONE), _PSWITCH(block_list[i].little_dirac_operator),
                &g_N_s, w + i * g_N_s, &ONE, &_PSWITCH(CZERO), v + i * g_N_s, &ONE, 1);
   }
   /* offdiagonal terms */
+#ifdef OMP
+#pragma omp parallel for
+#endif
   for(int j = 1; j < 9; j++) {
+#ifdef OMP
+#pragma omp parallel for
+#endif
     for(int i = 0; i < nb_blocks; i++) {
       _MV(dummy)("N", &g_N_s, &g_N_s, &_PSWITCH(CONE), _PSWITCH(block_list[i].little_dirac_operator) + j * sq,
                  &g_N_s, w + (nb_blocks * j + i) * g_N_s, &ONE, &_PSWITCH(CONE), v + i * g_N_s, &ONE, 1);
@@ -49,9 +58,9 @@ void _PSWITCH(little_Q_pm)(_C_TYPE * v, _C_TYPE *w) {
 void _PSWITCH(little_D_sym)(_C_TYPE * v, _C_TYPE *w) {
   
   _C_TYPE* tmpc1, * tmpc2, * tmpc3;
-  tmpc1 = calloc(nb_blocks * 9 * g_N_s, sizeof(_C_TYPE));
-  tmpc2 = calloc(nb_blocks * 9 * g_N_s, sizeof(_C_TYPE));
-  tmpc3 = calloc(nb_blocks * 9 * g_N_s, sizeof(_C_TYPE));
+  tmpc1 = calloc(3*nb_blocks * 9 * g_N_s, sizeof(_C_TYPE));
+  tmpc2 = tmpc1 + nb_blocks * 9 * g_N_s;
+  tmpc3 = tmpc1 + 2*nb_blocks * 9 * g_N_s;
   
   if(dfl_subspace_updated) {
     compute_little_D(0);
@@ -64,8 +73,6 @@ void _PSWITCH(little_D_sym)(_C_TYPE * v, _C_TYPE *w) {
   _PSWITCH(little_Dhat_lhs)(v, w, tmpc3);
   
   free(tmpc1);
-  free(tmpc2);
-  free(tmpc3);
   return;
 }
 
