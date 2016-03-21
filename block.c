@@ -1104,7 +1104,7 @@ void compute_little_D(const int mul_g5) {
   */
   spinor *scratch, *temp, *_scratch;
   int mu=0;
-  doubel atime, etime;
+  double atime, etime;
   // the block volume
   int bvol = block_list[1].volume;
   int t_start, t_end, x_start, x_end, y_start, y_end, z_start, z_end;
