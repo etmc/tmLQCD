@@ -84,21 +84,21 @@ static int block_init = 0;
 int dT, dX, dY, dZ; /* Block dimension */
   
 
-int index_a(int t, int x, int y, int z){
+inline int index_a(int t, int x, int y, int z){
   /* Provides the absolute lexicographic index of (t, x, y, z)
      Useful to walk over the blocks, maybe could be just g_ipt[t][x][y][z]
      Claude Tadonki (claude.tadonki@u-psud.fr)
   */
   return ((t*LX + x)*LY + y)*(LZ) + z;
 }
-int index_b(int t, int x, int y, int z){
+inline int index_b(int t, int x, int y, int z){
   /* Provides the block lexicographic index of (t, x, y, z)
      Useful to walk inside a block
      Claude Tadonki (claude.tadonki@u-psud.fr)
   */
   return ((t*dX + x)*dY + y)*(dZ) + z;
 }
-int block_index(int t, int x, int y, int z){
+inline int block_index(int t, int x, int y, int z){
   /* Provides the lexicographic index of the block (t, x, y, z)
      Useful to walk over the blocks
      Claude Tadonki (claude.tadonki@u-psud.fr)
@@ -1104,6 +1104,7 @@ void compute_little_D(const int mul_g5) {
   */
   spinor *scratch, *temp, *_scratch;
   int mu=0;
+  doubel atime, etime;
   // the block volume
   int bvol = block_list[1].volume;
   int t_start, t_end, x_start, x_end, y_start, y_end, z_start, z_end;
@@ -1143,6 +1144,7 @@ void compute_little_D(const int mul_g5) {
   scratch = (spinor*)(((unsigned long int)(_scratch)+ALIGN_BASE)&~ALIGN_BASE);
   temp = scratch + VOLUMEPLUSRAND;
   // NEEDs TO BE REWRITTEN
+  atime = gettime();
 #ifdef OMP
 #pragma omp parallel for
 #endif
@@ -1160,7 +1162,10 @@ void compute_little_D(const int mul_g5) {
       }
     }
   }
-  
+  etime = gettime();
+  if(g_debug_level > 2 && g_proc_id == 0) {
+    printf("time for diagonal part in compute little D: %e\n", etime-atime);
+  }
   /* computation of little_Dhat^{-1}_ee */
 #ifdef OMP
 #pragma omp parallel for
@@ -1168,6 +1173,7 @@ void compute_little_D(const int mul_g5) {
   for(int blk = 0; blk < nb_blocks/2; blk++) {
     LUInvert(g_N_s, block_list[blk].little_dirac_operator_eo, g_N_s);
   }
+  atime = gettime();
   for (int i = 0; i < g_N_s; i++) {
     reconstruct_global_field_GEN_ID(scratch, block_list, i , nb_blocks);
     
@@ -1185,14 +1191,14 @@ void compute_little_D(const int mul_g5) {
       y_start = 0; y_end = dY;
       z_start = 0; z_end = dZ;
       switch(pm) { 
-      case 0: t_start = dT - 1; t_end = t_start + 1; mu = 0; is_up = 1; break; /* Boundary in direction +t */
-      case 1: t_start = 0;      t_end = t_start + 1; mu = 0; is_up = 0; break; /* Boundary in direction -t */
-      case 2: x_start = dX - 1; x_end = x_start + 1; mu = 1; is_up = 1; break; /* Boundary in direction +x */
-      case 3: x_start = 0;      x_end = x_start + 1; mu = 1; is_up = 0; break; /* Boundary in direction -x */
-      case 4: y_start = dY - 1; y_end = y_start + 1; mu = 2; is_up = 1; break; /* Boundary in direction +y */
-      case 5: y_start = 0;      y_end = y_start + 1; mu = 2; is_up = 0; break; /* Boundary in direction -y */
-      case 6: z_start = dZ - 1; z_end = z_start + 1; mu = 3; is_up = 1; break; /* Boundary in direction +z */
-      case 7: z_start = 0;      z_end = z_start + 1; mu = 3; is_up = 0; break; /* Boundary in direction -z */
+      case 0: t_start = dT - 1; t_end = t_start + 1; mu = 0; is_up = 1; break; // Boundary in dir +t
+      case 1: t_start = 0;      t_end = t_start + 1; mu = 0; is_up = 0; break; // Boundary in dir -t
+      case 2: x_start = dX - 1; x_end = x_start + 1; mu = 1; is_up = 1; break; // Boundary in dir +x
+      case 3: x_start = 0;      x_end = x_start + 1; mu = 1; is_up = 0; break; // Boundary in dir -x
+      case 4: y_start = dY - 1; y_end = y_start + 1; mu = 2; is_up = 1; break; // Boundary in dir +y
+      case 5: y_start = 0;      y_end = y_start + 1; mu = 2; is_up = 0; break; // Boundary in dir -y
+      case 6: z_start = dZ - 1; z_end = z_start + 1; mu = 3; is_up = 1; break; // Boundary in dir +z
+      case 7: z_start = 0;      z_end = z_start + 1; mu = 3; is_up = 0; break; // Boundary in dir -z
       default: ;
       }
       /* Dirac operator on the boundaries */
@@ -1202,7 +1208,7 @@ void compute_little_D(const int mul_g5) {
       for(int block_id = 0; block_id < nb_blocks; block_id++) {
 	spinor * r = temp + block_id*bvol, * s = NULL;
 	su3 * u;
-	int ib = block_id, iy = 0, ix = 0;
+	int ib, iy = 0, ix = 0;
 	int bz = block_id % nblks_z;
 	int by = ((block_id - bz) % (nblks_y*nblks_z)) / nblks_z;
 	int bx = ((block_id - bz - by*nblks_z) % (nblks_x*nblks_y*nblks_z)) / ( nblks_z*nblks_y);
@@ -1266,7 +1272,11 @@ void compute_little_D(const int mul_g5) {
 	  }
 	}
       }
-
+      etime = gettime();
+      if(g_debug_level > 2 && g_proc_id == 0) {
+	printf("time for second part in compute little D: %e\n", etime-atime);
+      }
+      atime = gettime();
       // Now all the scalar products
 #ifdef OMP
 #pragma omp parallel for
@@ -1298,7 +1308,12 @@ void compute_little_D(const int mul_g5) {
         }
       }
     }
+    etime = gettime();
+    if(g_debug_level > 2 && g_proc_id == 0) {
+      printf("time for third part in compute little D: %e\n", etime-atime);
+    }
   }
+  atime = gettime();
 #ifdef OMP
 #pragma omp parallel for
 #endif
@@ -1309,6 +1324,10 @@ void compute_little_D(const int mul_g5) {
       = (_Complex float)block_list[i].little_dirac_operator[ j ];
     block_list[i].little_dirac_operator_eo_32[ j ] 
       = (_Complex float)block_list[i].little_dirac_operator_eo[ j ];
+  }
+  etime = gettime();
+  if(g_debug_level > 2 && g_proc_id == 0) {
+    printf("time for fourth part in compute little D: %e\n", etime-atime);
   }
 
   if(g_debug_level > 2) {
