@@ -435,11 +435,11 @@ int init_blocks_eo_gaugefield_32() {
         for(int z = 0; z < dZ; z++) {
           if((t+x+y+z)%2 == 0) {
             ixeo = ix_even;
-	    ix_even += 8;
+            ix_even += 8;
           }
           else {
             ixeo = ix_odd;
-	    ix_odd += 8;
+            ix_odd += 8;
           }
           i = 0;
           for(int bt = 0; bt < nblks_t; bt ++) {
@@ -1157,8 +1157,8 @@ void compute_little_D(const int mul_g5) {
       for(int j = 0; j < g_N_s; j++) {
         M[i * g_N_s + j]  = scalar_prod_ts(block_list[blk].basis[j], bscratch, bvol, 0);
         block_list[blk].little_dirac_operator_32[i * g_N_s + j] = (_Complex float)M[i * g_N_s + j];
-	
-	block_list[block_list[blk].evenodd_id].little_dirac_operator_eo[i * g_N_s + j] = M[i * g_N_s + j];
+        
+        block_list[block_list[blk].evenodd_id].little_dirac_operator_eo[i * g_N_s + j] = M[i * g_N_s + j];
       }
     }
   }
@@ -1206,75 +1206,75 @@ void compute_little_D(const int mul_g5) {
 #pragma omp parallel for
 #endif
       for(int block_id = 0; block_id < nb_blocks; block_id++) {
-	spinor * r = temp + block_id*bvol, * s = NULL;
-	su3 * u;
-	int ib, iy = 0, ix = 0;
-	int bz = block_id % nblks_z;
-	int by = ((block_id - bz) % (nblks_y*nblks_z)) / nblks_z;
-	int bx = ((block_id - bz - by*nblks_z) % (nblks_x*nblks_y*nblks_z)) / ( nblks_z*nblks_y);
-	int bt = (block_id - bz - by*nblks_z - bx*nblks_z*nblks_y) / ( nblks_z*nblks_y*nblks_x);
-	for(int t = t_start; t < t_end; t++) {
-	  for(int x = x_start; x < x_end; x++) {
-	    for(int y = y_start; y < y_end; y++) {
-	      for(int z = z_start; z < z_end; z++) {
-		// We treat the case when we need to cross between blocks
-		// We are in block (bt, bx, by, bz) and compute direction pm
-		// We check inner block statement by ( b_ > 0 )&&( b_ < nblks_ - 1 )
-		// Other cases are treated in a standard way using the boundary of the scracth array 
-		ib = -1; // ib is the index of the selected block if any
-		if((pm==0)&&(bt<nblks_t-1)&&(t==t_end-1)){ //direction +t
-		  iy = index_b(0, x, y, z); /* lowest edge of upper block needed */
-		  ib = block_index(bt+1, bx, by, bz);
-		}
-		else if((pm==1)&&(bt>0)&&(t==0)){ //direction -t
-		  iy = index_b(dT - 1, x, y, z); /* highest edge of lower block needed */
-		  ib = block_index(bt-1, bx, by, bz);
-		}
-		else if((pm==2)&&(bx<nblks_x-1)&&(x==x_end-1)){ //direction +x
-		  iy = index_b(t, 0, y, z); /* lowest edge of upper block needed */
-		  ib = block_index(bt, bx+1, by, bz);
-		}
-		else if((pm==3)&&(bx>0)&&(x==0)){ //direction -x
-		  iy = index_b(t, dX - 1, y, z); /* highest edge of lower block needed */
-		  ib = block_index(bt, bx-1, by, bz);
-		}
-		else if((pm==4)&&(by<nblks_y-1)&&(y==y_end-1)){ //direction +y
-		  iy = index_b(t, x, 0, z); /* lowest edge of upper block needed */
-		  ib = block_index(bt, bx, by+1, bz);
-		}
-		else if((pm==5)&&(by>0)&&(y==0)){ //direction -y
-		  iy = index_b(t, x, dY - 1, z); /* highest edge of lower block needed */
-		  ib = block_index(bt, bx, by-1, bz);
-		}
-		else if((pm==6)&&(bz<nblks_z-1)&&(z==z_end-1)){ //direction +z
-		  iy = index_b(t, x, y, 0); /* lowest edge of upper block needed */
-		  ib = block_index(bt, bx, by, bz+1);
-		}
-		else if((pm==7)&&(bz>0)&&(z==0)){ //direction -z
-		  iy = index_b(t, x, y, dZ - 1); /* highest edge of lower block needed */
-		  ib = block_index(bt, bx, by, bz-1);
-		}
-		ix = index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z);// GAFFE ICI
-		if(is_up == 1) {
-		  s = &scratch[ g_iup[ ix ][mu] ]; 
-		  u = &g_gauge_field[ ix ][mu];
-		}
-		else {
-		  s = &scratch[ g_idn[ ix ][mu] ];
-		  u = &g_gauge_field[ g_idn[ix][mu] ][mu];
-		}
-		if(ib >= 0) s = &block_list[ib].basis[ i ][ iy ] ; 
-		boundary_D[pm](r, s, u);
-		if(mul_g5) gamma5(r, r, 1);
-		r++;
-	      }
-	    }
-	  }
-	}
+        spinor * r = temp + block_id*bvol, * s = NULL;
+        su3 * u;
+        int ib, iy = 0, ix = 0;
+        int bz = block_id % nblks_z;
+        int by = ((block_id - bz) % (nblks_y*nblks_z)) / nblks_z;
+        int bx = ((block_id - bz - by*nblks_z) % (nblks_x*nblks_y*nblks_z)) / ( nblks_z*nblks_y);
+        int bt = (block_id - bz - by*nblks_z - bx*nblks_z*nblks_y) / ( nblks_z*nblks_y*nblks_x);
+        for(int t = t_start; t < t_end; t++) {
+          for(int x = x_start; x < x_end; x++) {
+            for(int y = y_start; y < y_end; y++) {
+              for(int z = z_start; z < z_end; z++) {
+                // We treat the case when we need to cross between blocks
+                // We are in block (bt, bx, by, bz) and compute direction pm
+                // We check inner block statement by ( b_ > 0 )&&( b_ < nblks_ - 1 )
+                // Other cases are treated in a standard way using the boundary of the scracth array 
+                ib = -1; // ib is the index of the selected block if any
+                if((pm==0)&&(bt<nblks_t-1)&&(t==t_end-1)){ //direction +t
+                  iy = index_b(0, x, y, z); /* lowest edge of upper block needed */
+                  ib = block_index(bt+1, bx, by, bz);
+                }
+                else if((pm==1)&&(bt>0)&&(t==0)){ //direction -t
+                  iy = index_b(dT - 1, x, y, z); /* highest edge of lower block needed */
+                  ib = block_index(bt-1, bx, by, bz);
+                }
+                else if((pm==2)&&(bx<nblks_x-1)&&(x==x_end-1)){ //direction +x
+                  iy = index_b(t, 0, y, z); /* lowest edge of upper block needed */
+                  ib = block_index(bt, bx+1, by, bz);
+                }
+                else if((pm==3)&&(bx>0)&&(x==0)){ //direction -x
+                  iy = index_b(t, dX - 1, y, z); /* highest edge of lower block needed */
+                  ib = block_index(bt, bx-1, by, bz);
+                }
+                else if((pm==4)&&(by<nblks_y-1)&&(y==y_end-1)){ //direction +y
+                  iy = index_b(t, x, 0, z); /* lowest edge of upper block needed */
+                  ib = block_index(bt, bx, by+1, bz);
+                }
+                else if((pm==5)&&(by>0)&&(y==0)){ //direction -y
+                  iy = index_b(t, x, dY - 1, z); /* highest edge of lower block needed */
+                  ib = block_index(bt, bx, by-1, bz);
+                }
+                else if((pm==6)&&(bz<nblks_z-1)&&(z==z_end-1)){ //direction +z
+                  iy = index_b(t, x, y, 0); /* lowest edge of upper block needed */
+                  ib = block_index(bt, bx, by, bz+1);
+                }
+                else if((pm==7)&&(bz>0)&&(z==0)){ //direction -z
+                  iy = index_b(t, x, y, dZ - 1); /* highest edge of lower block needed */
+                  ib = block_index(bt, bx, by, bz-1);
+                }
+                ix = index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z);// GAFFE ICI
+                if(is_up == 1) {
+                  s = &scratch[ g_iup[ ix ][mu] ]; 
+                  u = &g_gauge_field[ ix ][mu];
+                }
+                else {
+                  s = &scratch[ g_idn[ ix ][mu] ];
+                  u = &g_gauge_field[ g_idn[ix][mu] ][mu];
+                }
+                if(ib >= 0) s = &block_list[ib].basis[ i ][ iy ] ; 
+                boundary_D[pm](r, s, u);
+                if(mul_g5) gamma5(r, r, 1);
+                r++;
+              }
+            }
+          }
+        }
       }
       etime = gettime();
       if(g_debug_level > 2 && g_proc_id == 0) {
-	printf("time for second part in compute little D: %e\n", etime-atime);
+        printf("time for second part in compute little D: %e\n", etime-atime);
       }
       atime = gettime();
       // Now all the scalar products
@@ -1282,35 +1282,35 @@ void compute_little_D(const int mul_g5) {
 #pragma omp parallel for
 #endif
       for(int ij = 0; ij < g_N_s*nb_blocks; ij++) {
-	int j = ij / nb_blocks;
-	int block_id = ij % nb_blocks;
+        int j = ij / nb_blocks;
+        int block_id = ij % nb_blocks;
         int iy = i * g_N_s + j  + (pm + 1) * g_N_s * g_N_s;
-	spinor * r = temp + block_id*bvol;
-	int block_id_eo =  block_list[block_id].evenodd_id;
-	block_list[block_id].little_dirac_operator[ iy ] = 0.0;
-	block_list[block_id_eo].little_dirac_operator_eo[ iy ] = 0.0;
-	// We need to contract g_N_s times with the same set of fields
-	// this is the loop over the block coordinates
-	for(int t = t_start; t < t_end; t++) {
-	  for(int x = x_start; x < x_end; x++) {
-	    for(int y = y_start; y < y_end; y++) {
-	      for(int z = z_start; z < z_end; z++) {
-		int ix = index_b(t, x, y, z); // TO BE INLINED
-		spinor * s = &block_list[block_id].basis[j][ ix ];
-		_Complex double c = scalar_prod_ts(s, r, 1, 0);
-		block_list[block_id].little_dirac_operator[ iy ] += c;
-		//printf("%e %e\n", creal(c), cimag(c));
-		block_list[block_id_eo].little_dirac_operator_eo[ iy ] += c;
-		r++;
-	      }
-	    }
-	  }
+        spinor * r = temp + block_id*bvol;
+        int block_id_eo =  block_list[block_id].evenodd_id;
+        block_list[block_id].little_dirac_operator[ iy ] = 0.0;
+        block_list[block_id_eo].little_dirac_operator_eo[ iy ] = 0.0;
+        // We need to contract g_N_s times with the same set of fields
+        // this is the loop over the block coordinates
+        for(int t = t_start; t < t_end; t++) {
+          for(int x = x_start; x < x_end; x++) {
+            for(int y = y_start; y < y_end; y++) {
+              for(int z = z_start; z < z_end; z++) {
+                int ix = index_b(t, x, y, z); // TO BE INLINED
+                spinor * s = &block_list[block_id].basis[j][ ix ];
+                _Complex double c = scalar_prod_ts(s, r, 1, 0);
+                block_list[block_id].little_dirac_operator[ iy ] += c;
+                //printf("%e %e\n", creal(c), cimag(c));
+                block_list[block_id_eo].little_dirac_operator_eo[ iy ] += c;
+                r++;
+              }
+            }
+          }
         }
       }
-    }
-    etime = gettime();
-    if(g_debug_level > 2 && g_proc_id == 0) {
-      printf("time for third part in compute little D: %e\n", etime-atime);
+      etime = gettime();
+      if(g_debug_level > 2 && g_proc_id == 0) {
+	printf("time for third part in compute little D: %e\n", etime-atime);
+      }
     }
   }
   atime = gettime();
@@ -1644,7 +1644,7 @@ void reconstruct_global_field_GEN(spinor * const rec_field, spinor ** const psi,
       int bx = ((block_id - bz - by*nblks_z) % (nblks_x*nblks_y*nblks_z)) / ( nblks_z*nblks_y);
       int bt = (block_id - bz - by*nblks_z - bx*nblks_z*nblks_y) / ( nblks_z*nblks_y*nblks_x);
       _spinor_assign(*(rec_field + index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z)), 
-		     *(psi[block_id] + ix));
+                     *(psi[block_id] + ix));
     }
   }
   return;
@@ -1666,7 +1666,7 @@ void reconstruct_global_field_GEN_ID(spinor * const rec_field, block * const blo
       int bx = ((block_id - bz - by*nblks_z) % (nblks_x*nblks_y*nblks_z)) / ( nblks_z*nblks_y);
       int bt = (block_id - bz - by*nblks_z - bx*nblks_z*nblks_y) / ( nblks_z*nblks_y*nblks_x);
       _spinor_assign(*(rec_field + index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z)), 
-      		     *(block_list[block_id].basis[id] + ix));
+                     *(block_list[block_id].basis[id] + ix));
     }
   }
   return;
