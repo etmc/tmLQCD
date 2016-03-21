@@ -1184,6 +1184,7 @@ void compute_little_D(const int mul_g5) {
     /* the initialisation causes troubles on a single processor */
     if(g_nproc == -1) zero_spinor_field(scratch, VOLUME);
     /* +-t +-x +-y +-z */
+
     for(int pm = 0; pm < 8; pm++) {
       /* We set up the generic bounds */
       t_start = 0; t_end = dT;
@@ -1206,7 +1207,16 @@ void compute_little_D(const int mul_g5) {
 #pragma omp parallel for
 #endif
       for(int block_id = 0; block_id < nb_blocks; block_id++) {
-        spinor * r = temp + block_id*bvol, * s = NULL;
+	int block_id_eo =  block_list[block_id].evenodd_id;
+
+	for(int j = 0; j < g_N_s; j++) {
+	  int iz = i * g_N_s + j  + (pm + 1) * g_N_s * g_N_s;
+	  block_list[block_id].little_dirac_operator[ iz ] = 0.0;
+	  block_list[block_id_eo].little_dirac_operator_eo[ iz ] = 0.0;
+	}
+
+	spinor r;
+	spinor * s = NULL;
         su3 * u;
         int ib, iy = 0, ix = 0;
         int bz = block_id % nblks_z;
@@ -1264,9 +1274,17 @@ void compute_little_D(const int mul_g5) {
                   u = &g_gauge_field[ g_idn[ix][mu] ][mu];
                 }
                 if(ib >= 0) s = &block_list[ib].basis[ i ][ iy ] ; 
-                boundary_D[pm](r, s, u);
-                if(mul_g5) gamma5(r, r, 1);
-                r++;
+                boundary_D[pm](&r, s, u);
+                if(mul_g5) gamma5(&r, &r, 1);
+		// now all the scalar products
+		for(int j = 0; j < g_N_s; j++) {
+		  int iz = i * g_N_s + j  + (pm + 1) * g_N_s * g_N_s;
+		  ix = index_b(t, x, y, z); 
+		  s = &block_list[block_id].basis[j][ ix ];
+		  _Complex double c = scalar_prod_ts(s, &r, 1, 0);
+		  block_list[block_id].little_dirac_operator[ iz ] += c;
+		  block_list[block_id_eo].little_dirac_operator_eo[ iz ] += c;
+		}
               }
             }
           }
@@ -1275,41 +1293,6 @@ void compute_little_D(const int mul_g5) {
       etime = gettime();
       if(g_debug_level > 2 && g_proc_id == 0) {
         printf("time for second part in compute little D: %e\n", etime-atime);
-      }
-      atime = gettime();
-      // Now all the scalar products
-#ifdef OMP
-#pragma omp parallel for
-#endif
-      for(int ij = 0; ij < g_N_s*nb_blocks; ij++) {
-        int j = ij / nb_blocks;
-        int block_id = ij % nb_blocks;
-        int iy = i * g_N_s + j  + (pm + 1) * g_N_s * g_N_s;
-        spinor * r = temp + block_id*bvol;
-        int block_id_eo =  block_list[block_id].evenodd_id;
-        block_list[block_id].little_dirac_operator[ iy ] = 0.0;
-        block_list[block_id_eo].little_dirac_operator_eo[ iy ] = 0.0;
-        // We need to contract g_N_s times with the same set of fields
-        // this is the loop over the block coordinates
-        for(int t = t_start; t < t_end; t++) {
-          for(int x = x_start; x < x_end; x++) {
-            for(int y = y_start; y < y_end; y++) {
-              for(int z = z_start; z < z_end; z++) {
-                int ix = index_b(t, x, y, z); // TO BE INLINED
-                spinor * s = &block_list[block_id].basis[j][ ix ];
-                _Complex double c = scalar_prod_ts(s, r, 1, 0);
-                block_list[block_id].little_dirac_operator[ iy ] += c;
-                //printf("%e %e\n", creal(c), cimag(c));
-                block_list[block_id_eo].little_dirac_operator_eo[ iy ] += c;
-                r++;
-              }
-            }
-          }
-        }
-      }
-      etime = gettime();
-      if(g_debug_level > 2 && g_proc_id == 0) {
-	printf("time for third part in compute little D: %e\n", etime-atime);
       }
     }
   }
