@@ -1107,9 +1107,9 @@ void compute_little_D(const int mul_g5) {
   // the block volume
   int bvol = block_list[1].volume;
   int t_start, t_end, x_start, x_end, y_start, y_end, z_start, z_end;
-  _Complex double c;
+  //_Complex double c;
   //int count=0;
-  int block_id = 0, block_id_e, block_id_o,is_up = 0, ib;
+  int is_up = 0;
   int dT, dX, dY, dZ;
   double musave = g_mu;
   double kappasave = g_kappa;
@@ -1266,32 +1266,32 @@ void compute_little_D(const int mul_g5) {
 	  }
 	}
       }
-      
+
       // Now all the scalar products
-      for(int j = 0; j < g_N_s; j++) {
-        int iy = i * g_N_s + j  + (pm + 1) * g_N_s * g_N_s;
 #ifdef OMP
 #pragma omp parallel for
 #endif
-	for(int block_id = 0; block_id < nb_blocks; block_id++) {
-	  spinor * r = temp + block_id*bvol;
-	  int block_id_eo =  block_list[block_id].evenodd_id;
-	  block_list[block_id].little_dirac_operator[ iy ] = 0.0;
-	  block_list[block_id_eo].little_dirac_operator_eo[ iy ] = 0.0;
-	  // We need to contract g_N_s times with the same set of fields
-	  // this is the loop over the block coordinates
-	  for(int t = t_start; t < t_end; t++) {
-	    for(int x = x_start; x < x_end; x++) {
-	      for(int y = y_start; y < y_end; y++) {
-		for(int z = z_start; z < z_end; z++) {
-		  int ix = index_b(t, x, y, z); // TO BE INLINED
-		  spinor * s = &block_list[block_id].basis[j][ ix ];
-		  _Complex double c = scalar_prod_ts(s, r, 1, 0);
-		  block_list[block_id].little_dirac_operator[ iy ] += c;
-		  //printf("%e %e\n", creal(c), cimag(c));
-		  block_list[block_id_eo].little_dirac_operator_eo[ iy ] += c;
-		  r++;
-		}
+      for(int ij = 0; ij < g_N_s*nb_blocks; ij++) {
+	int j = ij / nb_blocks;
+	int block_id = ij % nb_blocks;
+        int iy = i * g_N_s + j  + (pm + 1) * g_N_s * g_N_s;
+	spinor * r = temp + block_id*bvol;
+	int block_id_eo =  block_list[block_id].evenodd_id;
+	block_list[block_id].little_dirac_operator[ iy ] = 0.0;
+	block_list[block_id_eo].little_dirac_operator_eo[ iy ] = 0.0;
+	// We need to contract g_N_s times with the same set of fields
+	// this is the loop over the block coordinates
+	for(int t = t_start; t < t_end; t++) {
+	  for(int x = x_start; x < x_end; x++) {
+	    for(int y = y_start; y < y_end; y++) {
+	      for(int z = z_start; z < z_end; z++) {
+		int ix = index_b(t, x, y, z); // TO BE INLINED
+		spinor * s = &block_list[block_id].basis[j][ ix ];
+		_Complex double c = scalar_prod_ts(s, r, 1, 0);
+		block_list[block_id].little_dirac_operator[ iy ] += c;
+		//printf("%e %e\n", creal(c), cimag(c));
+		block_list[block_id_eo].little_dirac_operator_eo[ iy ] += c;
+		r++;
 	      }
 	    }
 	  }
@@ -1302,13 +1302,13 @@ void compute_little_D(const int mul_g5) {
 #ifdef OMP
 #pragma omp parallel for
 #endif
-  for(int i = 0; i < nb_blocks; i++) {
-    for(int j = 0; j < 9 * g_N_s * g_N_s; j++) {
-      block_list[i].little_dirac_operator_32[ j ] 
-        = (_Complex float)block_list[i].little_dirac_operator[ j ];
-      block_list[i].little_dirac_operator_eo_32[ j ] 
-        = (_Complex float)block_list[i].little_dirac_operator_eo[ j ];
-    }
+  for(int ij = 0; ij < nb_blocks*9*g_N_s*g_N_s; ij++) {
+    int i = ij / (9*g_N_s*g_N_s);
+    int j = ij % (9*g_N_s*g_N_s);
+    block_list[i].little_dirac_operator_32[ j ] 
+      = (_Complex float)block_list[i].little_dirac_operator[ j ];
+    block_list[i].little_dirac_operator_eo_32[ j ] 
+      = (_Complex float)block_list[i].little_dirac_operator_eo[ j ];
   }
 
   if(g_debug_level > 2) {
@@ -1610,28 +1610,22 @@ void copy_block_to_global(spinor * const globalfield, spinor * const blockfield,
 
 /* Reconstructs a global field from the little basis of nb_blocks blocks */
 void reconstruct_global_field_GEN(spinor * const rec_field, spinor ** const psi, const int nb_blocks) {
-  int ctr_t=0;
-  int x, y, z, t;
-  int bx, by, bz, bt, block_id;
-  for (t = 0; t < dT; t++) {
-    for (x = 0; x < dX; x++) {
-      for (y = 0; y < dY; y++) {
-        for (z = 0; z < dZ; z++) {
-          block_id = 0;
-          for(bt = 0; bt < nblks_t; bt++) {
-            for(bx = 0; bx < nblks_x; bx++) {
-              for(by = 0; by < nblks_y; by++) {
-                for(bz = 0; bz < nblks_z; bz++) {
-                  _spinor_assign(*(rec_field + index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z)), 
-                                 *(psi[block_id] + ctr_t));
-                  block_id++;
-                }
-              }
-            }
-          }
-          ctr_t++;
-        }
-      }
+
+#ifdef OMP
+#pragma omp parallel for
+#endif
+  for(int ix = 0; ix < dT*dX*dY*dZ; ix++) {
+    int z = ix % dZ;
+    int y = ((ix - z) % (dY*dZ)) / dZ;
+    int x = (ix - z - y*dZ) % (dX*dY*dZ) / (dZ*dY);
+    int t = (ix - z - y*dZ - x*dZ*dY) / (dZ*dY*dX);
+    for(int block_id = 0; block_id < nb_blocks; block_id++) {
+      int bz = block_id % nblks_z;
+      int by = ((block_id - bz) % (nblks_y*nblks_z)) / nblks_z;
+      int bx = ((block_id - bz - by*nblks_z) % (nblks_x*nblks_y*nblks_z)) / ( nblks_z*nblks_y);
+      int bt = (block_id - bz - by*nblks_z - bx*nblks_z*nblks_y) / ( nblks_z*nblks_y*nblks_x);
+      _spinor_assign(*(rec_field + index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z)), 
+		     *(psi[block_id] + ix));
     }
   }
   return;
@@ -1639,28 +1633,21 @@ void reconstruct_global_field_GEN(spinor * const rec_field, spinor ** const psi,
 
 /* Reconstructs a global field from the little basis of nb_blocks blocks taken from block_list[*].basis[id] */
 void reconstruct_global_field_GEN_ID(spinor * const rec_field, block * const block_list, const int id, const int nb_blocks) {
-  int ctr_t=0;
-  int x, y, z, t;
-  int bx, by, bz, bt, block_id;
-  for (t = 0; t < dT; t++) {
-    for (x = 0; x < dX; x++) {
-      for (y = 0; y < dY; y++) {
-        for (z = 0; z < dZ; z++) {
-          block_id = 0;
-          for(bt = 0; bt < nblks_t; bt++) {
-            for(bx = 0; bx < nblks_x; bx++) {
-              for(by = 0; by < nblks_y; by++) {
-                for(bz = 0; bz < nblks_z; bz++) {
-                  _spinor_assign(*(rec_field + index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z)), 
-                                 *(block_list[block_id].basis[id] + ctr_t));
-                  block_id++;
-                }
-              }
-            }
-          }
-          ctr_t++;
-        }
-      }
+#ifdef OMP
+#pragma omp parallel for
+#endif
+  for(int ix = 0; ix < dT*dX*dY*dZ; ix++) {
+    int z = ix % dZ;
+    int y = ((ix - z) % (dY*dZ)) / dZ;
+    int x = (ix - z - y*dZ) % (dX*dY*dZ) / (dZ*dY);
+    int t = (ix - z - y*dZ - x*dZ*dY) / (dZ*dY*dX);
+    for(int block_id = 0; block_id < nb_blocks; block_id++) {
+      int bz = block_id % nblks_z;
+      int by = ((block_id - bz) % (nblks_y*nblks_z)) / nblks_z;
+      int bx = ((block_id - bz - by*nblks_z) % (nblks_x*nblks_y*nblks_z)) / ( nblks_z*nblks_y);
+      int bt = (block_id - bz - by*nblks_z - bx*nblks_z*nblks_y) / ( nblks_z*nblks_y*nblks_x);
+      _spinor_assign(*(rec_field + index_a(dT*bt + t, dX*bx + x, dY*by + y, dZ*bz + z)), 
+      		     *(block_list[block_id].basis[id] + ix));
     }
   }
   return;
