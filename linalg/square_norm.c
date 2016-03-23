@@ -330,7 +330,7 @@ double square_norm_ts(const spinor * const P, const int N, const int parallel)
   double ALIGN mres;
 #endif
 
-#ifdef OMP
+#ifdef OMP2
 #pragma omp parallel reduction(+:res)
   {
 #endif
@@ -340,7 +340,7 @@ double square_norm_ts(const spinor * const P, const int N, const int parallel)
   ks = 0.0;
   kc = 0.0;
   
-#ifdef OMP
+#ifdef OMP2
 #pragma omp for
 #endif    
   for (int ix  =  0; ix < N; ix++) {
@@ -367,7 +367,7 @@ double square_norm_ts(const spinor * const P, const int N, const int parallel)
   }
   res=ks+kc;
 
-#ifdef OMP
+#ifdef OMP2
   } /* OpenMP closing brace */
 #endif
 

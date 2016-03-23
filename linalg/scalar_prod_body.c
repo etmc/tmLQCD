@@ -76,7 +76,7 @@ _Complex double _PSWITCH(scalar_prod_ts)(const _PTSWITCH(spinor) * const S, cons
   _Complex double ALIGN mres;
 #endif
 
-#ifdef OMP
+#ifdef OMP2
 #pragma omp parallel reduction(+:res)
   {
 #endif
@@ -92,7 +92,7 @@ _Complex double _PSWITCH(scalar_prod_ts)(const _PTSWITCH(spinor) * const S, cons
   __alignx(16, R);
 #endif
 
-#ifdef OMP
+#ifdef OMP2
 #pragma omp for
 #endif
   for (int ix = 0; ix < N; ix++)
@@ -115,7 +115,7 @@ _Complex double _PSWITCH(scalar_prod_ts)(const _PTSWITCH(spinor) * const S, cons
   kc=ks+kc;
 
   res = kc;
-#ifdef OMP
+#ifdef OMP2
   } /* OpenMP closing brace */
 #endif
 

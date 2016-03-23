@@ -172,7 +172,7 @@ float square_norm_ts_32(const spinor32 * const P, const int N, const int paralle
   float ALIGN32 mres;
 #endif
 
-#ifdef OMP
+#ifdef OMP2
 #pragma omp parallel reduction(+:res)
   {
 #endif
@@ -182,7 +182,7 @@ float square_norm_ts_32(const spinor32 * const P, const int N, const int paralle
   ks = 0.0;
   kc = 0.0;
   
-#ifdef OMP
+#ifdef OMP2
 #pragma omp for
 #endif    
   for (int ix  =  0; ix < N; ix++) {
@@ -208,7 +208,7 @@ float square_norm_ts_32(const spinor32 * const P, const int N, const int paralle
     kc = tr-tt;
   }
   res=ks+kc;
-#ifdef OMP
+#ifdef OMP2
   } /* OpenMP closing brace */
 #endif
 
