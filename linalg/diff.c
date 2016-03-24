@@ -310,6 +310,37 @@ void diff(spinor * const Q, const spinor * const R, const spinor * const S, cons
 
 #endif
 
+void diff_ts(spinor * const Q, const spinor * const R, const spinor * const S, const int N)
+{
+  spinor *q;
+  const spinor *r,*s;
+  
+  for (int ix = 0; ix < N; ix++)
+    {
+      q=(spinor *) Q + ix;
+      r=(spinor *) R + ix;
+      s=(spinor *) S + ix;
+      
+      q->s0.c0 = r->s0.c0 - s->s0.c0;
+      q->s0.c1 = r->s0.c1 - s->s0.c1;
+      q->s0.c2 = r->s0.c2 - s->s0.c2;
+      
+      q->s1.c0 = r->s1.c0 - s->s1.c0;
+      q->s1.c1 = r->s1.c1 - s->s1.c1;
+      q->s1.c2 = r->s1.c2 - s->s1.c2;
+      
+      q->s2.c0 = r->s2.c0 - s->s2.c0;
+      q->s2.c1 = r->s2.c1 - s->s2.c1;
+      q->s2.c2 = r->s2.c2 - s->s2.c2;
+      
+      q->s3.c0 = r->s3.c0 - s->s3.c0;
+      q->s3.c1 = r->s3.c1 - s->s3.c1;
+      q->s3.c2 = r->s3.c2 - s->s3.c2;
+    }
+}
+
+
+
 #ifdef WITHLAPH
 void diff_su3vect(su3_vector * const Q,su3_vector * const R,su3_vector * const S, const int N)
 {

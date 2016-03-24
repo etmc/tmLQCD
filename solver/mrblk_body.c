@@ -19,7 +19,7 @@ int _PSWITCH(mrblk)(_PTSWITCH(spinor) * const P, _PTSWITCH(spinor) * const Q,
 
   _PSWITCH(zero_spinor_field)(P, N);
   f(s[2], P, blk);
-  _PSWITCH(diff)(r, Q, s[2], N);
+  _PSWITCH(diff_ts)(r, Q, s[2], N);
   norm_r = _PSWITCH(square_norm_ts)(r, N, parallel);
   if(g_proc_id == g_stdio_proc && g_debug_level > 2 && blk == 0) {
     printf("MRblk iteration= %d  |res|^2= %e\n", i, norm_r);
@@ -32,14 +32,14 @@ int _PSWITCH(mrblk)(_PTSWITCH(spinor) * const P, _PTSWITCH(spinor) * const Q,
     alpha = _PSWITCH(scalar_prod_ts)(s[1], r, N, parallel);
     beta = _PSWITCH(square_norm_ts)(s[1], N, parallel);
     alpha /= beta;
-    _PSWITCH(assign_add_mul)(P, r, alpha, N);
+    _PSWITCH(assign_add_mul_ts)(P, r, alpha, N);
     if(i%50 == 0) {
-      f(s[2], P,blk);
+      f(s[2], P, blk);
     }
     else{
-      _PSWITCH(assign_add_mul)(s[2], s[1], alpha, N);
+      _PSWITCH(assign_add_mul_ts)(s[2], s[1], alpha, N);
     }
-    _PSWITCH(diff)(r, Q, s[2], N);
+    _PSWITCH(diff_ts)(r, Q, s[2], N);
     norm_r = _PSWITCH(square_norm_ts)(r, N, parallel);
     if(g_proc_id == g_stdio_proc && g_debug_level > 2 && blk == 0) {
       printf("MRblk iteration= %d  |res|^2= %g\n", i, norm_r);
