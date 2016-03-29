@@ -25,6 +25,9 @@
 #include<stdio.h>
 #include<math.h>
 #include<string.h>
+#ifdef OMP
+#include <omp.h>
+#endif
 #include"global.h"
 #include"su3.h"
 #include"linalg_eo.h"

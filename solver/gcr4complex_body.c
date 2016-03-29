@@ -18,7 +18,9 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-
+#ifdef OMP
+# define gcr4complexOMP
+#endif
 
 static void _PSWITCH(init_lgcr)(const int _M, const int _V);
 static void _PSWITCH(free_lgcr)();
@@ -159,7 +161,7 @@ static void _PSWITCH(free_lgcr)()
 
 void _PSWITCH(ldiff)(_C_TYPE * const Q, _C_TYPE * const R, _C_TYPE * const S, const int N) 
 {
-#ifdef OMP
+#ifdef gcr4complexOMP
 #pragma omp parallel for
 #endif
   for(int i = 0; i < N; ++i)
@@ -175,7 +177,7 @@ void _PSWITCH(lassign)(_C_TYPE * const R, _C_TYPE * const S, const int N)
 
 void _PSWITCH(ldiff_assign)(_C_TYPE * const Q, _C_TYPE * const S, const int N) 
 {
-#ifdef OMP
+#ifdef gcr4complexOMP
 #pragma omp parallel for
 #endif
   for(int i = 0; i < N; ++i)
@@ -185,7 +187,7 @@ void _PSWITCH(ldiff_assign)(_C_TYPE * const Q, _C_TYPE * const S, const int N)
 
 void _PSWITCH(ladd)(_C_TYPE * const Q, _C_TYPE * const R, _C_TYPE * const S, const int N) 
 {
-#ifdef OMP
+#ifdef gcr4complexOMP
 #pragma omp parallel for
 #endif
   for(int i = 0; i < N; ++i)
@@ -195,7 +197,7 @@ void _PSWITCH(ladd)(_C_TYPE * const Q, _C_TYPE * const R, _C_TYPE * const S, con
 
 void _PSWITCH(ladd_assign)(_C_TYPE * const Q, _C_TYPE * const S, const int N) 
 {
-#ifdef OMP
+#ifdef gcr4complexOMP
 #pragma omp parallel for
 #endif
   for(int i = 0; i < N; ++i)
@@ -206,11 +208,29 @@ void _PSWITCH(ladd_assign)(_C_TYPE * const Q, _C_TYPE * const S, const int N)
 _F_TYPE _PSWITCH(lsquare_norm)(_C_TYPE * const Q, const int N, const int parallel) 
 {
   double nrm = 0.0;
-  #ifdef OMP
-  #  pragma omp parallel for reduction(+:nrm)
-  #endif
-  for(int i = 0; i < N; ++i)
-    nrm += conj(Q[i]) * Q[i];
+#ifdef gcr4complexOMP
+#pragma omp parallel
+  {
+    int thread_num = omp_get_thread_num();
+#endif
+    
+#ifdef gcr4complexOMP
+#  pragma omp for 
+#endif
+    for(int i = 0; i < N; ++i)
+      nrm += creal(conj(Q[i]) * Q[i]);
+    
+#ifdef gcr4complexOMP
+    g_omp_acc_re[thread_num] = nrm;
+    
+  } /* OpenMP closing brace */
+  
+  /* having left the parallel section, we can now sum up the Kahan
+     corrected sums from each thread into kc */
+  nrm = 0.;
+  for(int i = 0; i < omp_num_threads; ++i)
+    nrm += g_omp_acc_re[i];
+#endif
 
 #ifdef MPI
   if(parallel)
@@ -226,13 +246,28 @@ _F_TYPE _PSWITCH(lsquare_norm)(_C_TYPE * const Q, const int N, const int paralle
 _C_TYPE _PSWITCH(lscalar_prod)(_C_TYPE * const R, _C_TYPE * const S, const int N, const int parallel) 
 {
   _Complex double res = 0.0;
+#ifdef gcr4complexOMP
+#pragma omp parallel
+  {
+    int thread_num = omp_get_thread_num();
+    
+#  pragma omp for 
+#endif
+    for(int i = 0; i < N; ++i)
+      res += conj(R[i]) * S[i];
 
-  #ifdef OMP
-  #  pragma omp parallel for reduction(+:res)
-  #endif
-  for(int i = 0; i < N; ++i)
-    res += conj(R[i]) * S[i];
-
+#ifdef gcr4complexOMP
+    g_omp_acc_cp[thread_num] = res;
+    
+  } /* OpenMP closing brace */
+  
+  /* having left the parallel section, we can now sum up the Kahan
+     corrected sums from each thread into kc */
+  res = 0.;
+  for(int i = 0; i < omp_num_threads; ++i)
+    res += g_omp_acc_cp[i];
+#endif
+    
 #ifdef MPI
   if(parallel)
     {
@@ -248,12 +283,27 @@ _F_TYPE _PSWITCH(lscalar_prod_r)(_C_TYPE * const R, _C_TYPE * const S, const int
 {
   double res = 0.0;
 
-  /* #ifdef OMP */
-  /* #pragma omp parallel for */
-  /* #endif */
+#ifdef gcr4complexOMP
+#pragma omp parallel
+  {
+    int thread_num = omp_get_thread_num();
+    
+#  pragma omp for
+#endif
   for(int i = 0; i < N; ++i) {
     res += creal(conj(R[i]) * S[i]);
   }
+#ifdef gcr4complexOMP
+    g_omp_acc_re[thread_num] = res;
+    
+  } /* OpenMP closing brace */
+  
+  /* having left the parallel section, we can now sum up the Kahan
+     corrected sums from each thread into kc */
+  res = 0.;
+  for(int i = 0; i < omp_num_threads; ++i)
+    res += g_omp_acc_re[i];
+#endif
 
 #ifdef MPI
   if(parallel) {
@@ -268,7 +318,7 @@ _F_TYPE _PSWITCH(lscalar_prod_r)(_C_TYPE * const R, _C_TYPE * const S, const int
 
 void _PSWITCH(lmul_r)(_C_TYPE * const R, const _F_TYPE c, _C_TYPE * const S, const int N) 
 {
-#ifdef OMP
+#ifdef gcr4complexOMP
 #pragma omp parallel for
 #endif
   for(int i = 0; i < N; ++i)
@@ -277,7 +327,7 @@ void _PSWITCH(lmul_r)(_C_TYPE * const R, const _F_TYPE c, _C_TYPE * const S, con
 
 void _PSWITCH(lmul)(_C_TYPE * const R, const _C_TYPE c, _C_TYPE * const S, const int N) 
 {
-#ifdef OMP
+#ifdef gcr4complexOMP
 #pragma omp parallel for
 #endif
   for(int i = 0; i < N; ++i)
@@ -286,7 +336,7 @@ void _PSWITCH(lmul)(_C_TYPE * const R, const _C_TYPE c, _C_TYPE * const S, const
 
 void _PSWITCH(lassign_add_mul)(_C_TYPE * const R, _C_TYPE * const S, const _C_TYPE c, const int N)
 {
-#ifdef OMP
+#ifdef gcr4complexOMP
 #pragma omp parallel for
 #endif
   for(int i = 0; i < N; ++i)
@@ -295,7 +345,7 @@ void _PSWITCH(lassign_add_mul)(_C_TYPE * const R, _C_TYPE * const S, const _C_TY
 
 void _PSWITCH(lassign_add_mul_r)(_C_TYPE * const R, _C_TYPE * const S, const _F_TYPE c, const int N)
 {
-#ifdef OMP
+#ifdef gcr4complexOMP
 #pragma omp parallel for
 #endif
   for(int i = 0; i < N; ++i)
@@ -304,7 +354,7 @@ void _PSWITCH(lassign_add_mul_r)(_C_TYPE * const R, _C_TYPE * const S, const _F_
 
 void _PSWITCH(lassign_mul_add_r)(_C_TYPE * const R, const _F_TYPE c, _C_TYPE * const S, const int N)
 {
-#ifdef OMP
+#ifdef gcr4complexOMP
 #pragma omp parallel for
 #endif
   for(int i = 0; i < N; ++i)
@@ -313,7 +363,7 @@ void _PSWITCH(lassign_mul_add_r)(_C_TYPE * const R, const _F_TYPE c, _C_TYPE * c
 
 void _PSWITCH(lassign_diff_mul)(_C_TYPE * const R, _C_TYPE * const S, const _C_TYPE c, const int N) 
 {
-#ifdef OMP
+#ifdef gcr4complexOMP
 #pragma omp parallel for
 #endif
   for(int i = 0; i < N; i++)
