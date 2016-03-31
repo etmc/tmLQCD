@@ -207,29 +207,29 @@ void _PSWITCH(ladd_assign)(_C_TYPE * const Q, _C_TYPE * const S, const int N)
 
 _F_TYPE _PSWITCH(lsquare_norm)(_C_TYPE * const Q, const int N, const int parallel) 
 {
-  double nrm = 0.0;
+  double nrm = 0.;
 #ifdef gcr4complexOMP
-#pragma omp parallel
+#  pragma omp parallel
   {
     int thread_num = omp_get_thread_num();
 #endif
-    
+    double tmp = 0.0;
 #ifdef gcr4complexOMP
 #  pragma omp for 
 #endif
     for(int i = 0; i < N; ++i)
-      nrm += creal(conj(Q[i]) * Q[i]);
+      tmp += creal(conj(Q[i]) * Q[i]);
     
 #ifdef gcr4complexOMP
-    g_omp_acc_re[thread_num] = nrm;
+    g_omp_acc_re[thread_num] = tmp;
     
-  } /* OpenMP closing brace */
+  } // OpenMP closing brace
   
-  /* having left the parallel section, we can now sum up the Kahan
-     corrected sums from each thread into kc */
-  nrm = 0.;
+  // having left the parallel section, we can now sum up
   for(int i = 0; i < omp_num_threads; ++i)
     nrm += g_omp_acc_re[i];
+#else
+  nrm = tmp;
 #endif
 
 #ifdef MPI
@@ -245,27 +245,29 @@ _F_TYPE _PSWITCH(lsquare_norm)(_C_TYPE * const Q, const int N, const int paralle
 
 _C_TYPE _PSWITCH(lscalar_prod)(_C_TYPE * const R, _C_TYPE * const S, const int N, const int parallel) 
 {
-  _Complex double res = 0.0;
+  _Complex double res = 0.;
 #ifdef gcr4complexOMP
-#pragma omp parallel
+#  pragma omp parallel
   {
     int thread_num = omp_get_thread_num();
-    
+#endif
+    _Complex double tmp = 0.0;
+#ifdef gcr4complexOMP
 #  pragma omp for 
 #endif
     for(int i = 0; i < N; ++i)
-      res += conj(R[i]) * S[i];
+      tmp += conj(R[i]) * S[i];
 
 #ifdef gcr4complexOMP
-    g_omp_acc_cp[thread_num] = res;
+    g_omp_acc_cp[thread_num] = tmp;
     
-  } /* OpenMP closing brace */
+  } // OpenMP closing brace
   
-  /* having left the parallel section, we can now sum up the Kahan
-     corrected sums from each thread into kc */
-  res = 0.;
+  // having left the parallel section, we can now sum up
   for(int i = 0; i < omp_num_threads; ++i)
     res += g_omp_acc_cp[i];
+#else
+  res = tmp;
 #endif
     
 #ifdef MPI
@@ -281,37 +283,38 @@ _C_TYPE _PSWITCH(lscalar_prod)(_C_TYPE * const R, _C_TYPE * const S, const int N
 
 _F_TYPE _PSWITCH(lscalar_prod_r)(_C_TYPE * const R, _C_TYPE * const S, const int N, const int parallel) 
 {
-  double res = 0.0;
-
+  double res = 0.;
 #ifdef gcr4complexOMP
-#pragma omp parallel
+#  pragma omp parallel
   {
     int thread_num = omp_get_thread_num();
-    
+#endif
+    double tmp = 0.0;
+#ifdef gcr4complexOMP
 #  pragma omp for
 #endif
-  for(int i = 0; i < N; ++i) {
-    res += creal(conj(R[i]) * S[i]);
-  }
+    for(int i = 0; i < N; ++i) {
+      tmp += creal(conj(R[i]) * S[i]);
+    }
 #ifdef gcr4complexOMP
-    g_omp_acc_re[thread_num] = res;
+    g_omp_acc_re[thread_num] = tmp;
     
-  } /* OpenMP closing brace */
+  } // OpenMP closing brace
   
-  /* having left the parallel section, we can now sum up the Kahan
-     corrected sums from each thread into kc */
-  res = 0.;
+  // having left the parallel section, we can now sum up
   for(int i = 0; i < omp_num_threads; ++i)
     res += g_omp_acc_re[i];
+#else
+  res = tmp;
 #endif
-
+  
 #ifdef MPI
   if(parallel) {
     double res2 = res;
     MPI_Allreduce(&res2, &res, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   }
 #endif
-
+  
   return((_F_TYPE)res);
 }
 
