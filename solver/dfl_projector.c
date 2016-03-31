@@ -446,45 +446,29 @@ void little_project(_Complex double * const out, _Complex double * const in, con
   return;
 }
 
-void little_project_eo(_Complex double * const out, _Complex double * const in, const int  N) {
-  int i, j;
-  static _Complex double *phi;
-  static _Complex double *psi;
+#define _PSWITCH(s) s
+#define _PTSWITCH(s) s
+#define _MPI_C_TYPE MPI_DOUBLE_COMPLEX
+#define _F_TYPE double
 
-  if(init_dfl_projector == 0) {
-    alloc_dfl_projector();
-  }
+#include "little_project_eo_body.c"
 
-  phi = work[2];
-  psi = work[3];
+#undef _PSWITCH
+#undef _F_TYPE
+#undef _MPI_C_TYPE
+#undef _PTSWITCH
 
-  /* NOTE IS THIS REALLY NECESSARY/CORRECT? */
-  for(i = 0; i < N; i++) {
-    phi[i] = lscalar_prod(little_dfl_fields_eo[i], in, nb_blocks*N, 0);
-  }
+#define _PSWITCH(s) s ## _32
+#define _PTSWITCH(s) s ## 32
+#define _MPI_C_TYPE MPI_COMPLEX
+#define _F_TYPE float
 
-#ifdef MPI
-  MPI_Allreduce(phi, psi, N, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
-#else
-  memcpy(psi, phi, N*sizeof(_Complex double));
-#endif
+#include "little_project_eo_body.c"
 
-  /* apply inverse of little_A_eo */
-  for(i = 0; i < N; i++) {
-    (phi[i]) = 0.0;
-    for(j = 0; j < N; j++) {
-      (phi[i]) += (little_A_eo[j*N + i]) * (psi[j]);
-    }
-  }
-
-  lmul(out, phi[0], little_dfl_fields_eo[0], nb_blocks*N);
-  for(i = 1; i < N; i++) {
-    lassign_add_mul(out, little_dfl_fields_eo[i], phi[i], nb_blocks*N);
-  }
-  return;
-}
-
-
+#undef _PSWITCH
+#undef _F_TYPE
+#undef _MPI_C_TYPE
+#undef _PTSWITCH
 
 void little_project2(_Complex double * const out, _Complex double * const in, const int  N) {
   int i;
@@ -552,16 +536,22 @@ void little_P_L_D(_Complex double * const out, _Complex double * const in) {
   return;
 }
 
-void little_mg_precon(_Complex double * const out, _Complex double * const in) {
-  // phi = PD_c^{-1} P^dagger in
-  little_project_eo(out, in, g_N_s);
-  // in - D*phi
-  little_D_sym(work[2], out);
-  ldiff(work[3], in, work[2], nb_blocks*g_N_s);
-  // sum with phi
-  ladd(out, work[3], out, nb_blocks*g_N_s);
-  return;
-}
+#define _PSWITCH(s) s
+#define _F_TYPE double
+
+#include "little_mg_precon_body.c"
+
+#undef _PSWITCH
+#undef _F_TYPE
+
+#define _PSWITCH(s) s ## _32
+#define _F_TYPE float
+
+#include "little_mg_precon_body.c"
+
+#undef _PSWITCH
+#undef _F_TYPE
+
 
 // little_P_L_D_sym * psi = (1 - PA^-1P little_D_sym) * little_D_sym * psi
 void little_P_L_D_sym(_Complex double * const out, _Complex double * const in) {

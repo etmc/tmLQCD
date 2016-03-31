@@ -68,6 +68,9 @@ _Complex double ** little_dfl_fields = NULL;
 static _Complex double *_little_dfl_fields = NULL;
 _Complex double ** little_dfl_fields_eo = NULL;
 static _Complex double *_little_dfl_fields_eo = NULL;
+_Complex float ** little_dfl_fields_eo_32 = NULL;
+static _Complex float *_little_dfl_fields_eo_32 = NULL;
+
 static int init_subspace = 0;
 static int init_little_subspace = 0;
 
@@ -420,7 +423,7 @@ void compute_little_little_D(const int Ns) {
 	    }       
 	  }
 	}
-      }  
+      }
       
       // orthonormalise
       for(int i = 0; i < Ns; i++) {
@@ -430,7 +433,12 @@ void compute_little_little_D(const int Ns) {
 	}
 	s = lsquare_norm(little_dfl_fields_eo[i], nb_blocks*Ns, 1);
 	lmul_r(little_dfl_fields_eo[i], 1./sqrt(creal(s)), little_dfl_fields_eo[i], nb_blocks*Ns);
+        // copy to 32Bit fields
+        for(int j = 0; j < nb_blocks*9*Ns; j++) {
+          little_dfl_fields_eo_32[i][j] = (_Complex float)little_dfl_fields_eo[i][j];
+        }
       }
+
       if(g_debug_level > 4) {
 	printf("Checking orthonormality of littel_dfl_fields_eo\n");
 	for(int i = 0; i < Ns; i++) {
@@ -456,6 +464,10 @@ void compute_little_little_D(const int Ns) {
       if(g_proc_id == 0 && g_debug_level > 4) printf("\n");
       LUInvert(Ns, little_A_eo, Ns);
       // inverse of eo little little D now in little_A_eo
+      // copy to the 32Bit version
+      for(int ij = 0; ij < Ns*Ns; ij++) {
+        little_A_eo_32[ij]  =  (_Complex float)little_A_eo[ij];
+      }
     }
     
     double etime = gettime();
@@ -471,33 +483,47 @@ void compute_little_little_D(const int Ns) {
   return;
 }
 
-
+// corresponding free routine is missing!
 
 int init_little_dfl_subspace(const int N_s) {
-  int i;
   if(init_little_subspace == 0) {
+    // why nb_blocks*9*N_s?
     if((void*)(_little_dfl_fields = (_Complex double*)calloc((N_s)*nb_blocks*9*N_s+4, sizeof(_Complex double))) == NULL) {
       return(1);
     }
     if((void*)(little_dfl_fields = (_Complex double**)calloc(N_s, sizeof(_Complex double*))) == NULL) {
       return(1);
     }
+    // why nb_blocks*9*N_s?
     if((void*)(_little_dfl_fields_eo = (_Complex double*)calloc((N_s)*nb_blocks*9*N_s+4, sizeof(_Complex double))) == NULL) {
       return(1);
     }
     if((void*)(little_dfl_fields_eo = (_Complex double**)calloc(N_s, sizeof(_Complex double*))) == NULL) {
       return(1);
     }
+    // why nb_blocks*9*N_s?
+    if((void*)(_little_dfl_fields_eo_32 = (_Complex float*)calloc((N_s)*nb_blocks*9*N_s+4, sizeof(_Complex float))) == NULL) {
+      return(1);
+    }
+    if((void*)(little_dfl_fields_eo_32 = (_Complex float**)calloc(N_s, sizeof(_Complex float*))) == NULL) {
+      return(1);
+    }
+
     little_dfl_fields[0] = (_Complex double*)(((unsigned long int)(_little_dfl_fields)+ALIGN_BASE)&~ALIGN_BASE);
     little_dfl_fields_eo[0] = (_Complex double*)(((unsigned long int)(_little_dfl_fields_eo)+ALIGN_BASE)&~ALIGN_BASE);
-    for (i = 1; i < N_s; i++) {
+    little_dfl_fields_eo_32[0] = (_Complex float*)(((unsigned long int)(_little_dfl_fields_eo_32)+ALIGN_BASE)&~ALIGN_BASE);
+    for (int i = 1; i < N_s; i++) {
       little_dfl_fields[i] = little_dfl_fields[i-1] + nb_blocks*9*N_s;
       little_dfl_fields_eo[i] = little_dfl_fields_eo[i-1] + nb_blocks*9*N_s;
+      little_dfl_fields_eo_32[i] = little_dfl_fields_eo_32[i-1] + nb_blocks*9*N_s;
     }
     if((void*)(little_A = (_Complex double*)calloc(N_s*N_s, sizeof(_Complex double))) == NULL) {
       return(1);
     }
     if((void*)(little_A_eo = (_Complex double*)calloc(N_s*N_s, sizeof(_Complex double))) == NULL) {
+      return(1);
+    }   
+    if((void*)(little_A_eo_32 = (_Complex float*)calloc(N_s*N_s, sizeof(_Complex float))) == NULL) {
       return(1);
     }   
     init_little_subspace = 1;

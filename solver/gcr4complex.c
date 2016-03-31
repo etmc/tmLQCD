@@ -54,14 +54,6 @@
 #define _C_TYPE _Complex float
 #define _F_TYPE float
 
-
-// dummy function until little_mg_precon is implemented in 
-// 32 Bit
-void little_mg_precon_32(_Complex float *xi, _Complex float * rho) {
-  memcpy(xi, rho, nb_blocks*g_N_s*sizeof(_Complex float));
-  return;
-}
-
 #include"gcr4complex_body.c"
 
 #undef _PSWITCH

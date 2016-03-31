@@ -29,7 +29,7 @@
 _Complex double * little_A;
 _Complex float * little_A32;
 _Complex double * little_A_eo;
-_Complex float * little_A_eo32;
+_Complex float * little_A_eo_32;
 
 
 typedef struct {

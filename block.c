@@ -53,7 +53,7 @@ int * bipt;
 _Complex double * little_A = NULL;
 _Complex float * little_A32 = NULL;
 _Complex double * little_A_eo = NULL;
-_Complex float * little_A_eo32 = NULL;
+_Complex float * little_A_eo_32 = NULL;
 int * block_idx;
 int * block_evenidx;
 int * block_oddidx;

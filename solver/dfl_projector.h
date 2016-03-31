@@ -36,6 +36,7 @@ void mg_precon(spinor * const out, spinor * const in);
 
 void little_project(_Complex double * const out, _Complex double * const in, const int  N);
 void little_project_eo(_Complex double * const out, _Complex double * const in, const int N);
+void little_project_eo_32(_Complex float * const out, _Complex float * const in, const int N);
 void little_P_L_D(_Complex double * const out, _Complex double * const in);
 void little_P_L_D_sym(_Complex double * const out, _Complex double * const in);
 void little_D_P_R(_Complex double * const out, _Complex double * const in);
@@ -44,6 +45,7 @@ void little_P_L(_Complex double * const out, _Complex double * const in);
 void little_P_R_sym(_Complex double * const out, _Complex double * const in);
 void little_P_L_sym(_Complex double * const out, _Complex double * const in);
 void little_mg_precon(_Complex double * const out, _Complex double * const in);
+void little_mg_precon_32(_Complex float * const out, _Complex float * const in);
 
 extern double dfl_little_D_prec;
 extern int dfl_sloppy_prec;

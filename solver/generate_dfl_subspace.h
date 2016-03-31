@@ -31,5 +31,6 @@ int generate_dfl_subspace_free(const int Ns, const int N);
 extern spinor ** dfl_fields;
 extern _Complex double ** little_dfl_fields;
 extern _Complex double ** little_dfl_fields_eo;
+extern _Complex float ** little_dfl_fields_eo_32;
 
 #endif
