@@ -20,6 +20,8 @@ int _PSWITCH(fgmres4complex)(_Complex _F_TYPE * const P, _Complex _F_TYPE * cons
   _Complex _F_TYPE * r0;
   _Complex _F_TYPE ** solver_field = NULL;
   const int nr_sf = 3;
+  int fltcntr = 0;
+  double alphasave = 0;
 
   _PSWITCH(init_lsolver_field)(&solver_field, /*why not N?*/ lda, nr_sf);/* #ifdef HAVE_LAPACK */
 
@@ -94,7 +96,12 @@ int _PSWITCH(fgmres4complex)(_Complex _F_TYPE * const P, _Complex _F_TYPE * cons
 	printf("lFGMRES\t%d\t%g iterated residue\n", restart*m+j, creal(_PSWITCH(alpha)[j+1])*creal(_PSWITCH(alpha)[j+1]));
 	fflush(stdout);
       }
-      if(((creal(_PSWITCH(alpha)[j+1]) <= eps) && (rel_prec == 0)) || ((creal(_PSWITCH(alpha)[j+1]) <= eps*norm) && (rel_prec == 1))){
+      if(creal(_PSWITCH(alpha)[j+1]) > 0.999*alphasave) {
+	fltcntr++;
+      }
+      else fltcntr = 0;
+      alphasave = creal(_PSWITCH(alpha)[j+1]);
+      if((fltcntr > 20) || ((creal(_PSWITCH(alpha)[j+1]) <= eps) && (rel_prec == 0)) || ((creal(_PSWITCH(alpha)[j+1]) <= eps*norm) && (rel_prec == 1))){
 	(_PSWITCH(alpha)[j]) = (_PSWITCH(alpha)[j]) * (1./creal(_PSWITCH(H)[j][j]));
 	_PSWITCH(lassign_add_mul)(solver_field[2], _PSWITCH(Z)[j], _PSWITCH(alpha)[j], N);
 	for(i = j-1; i >= 0; i--){
