@@ -1078,6 +1078,12 @@ static inline void rmQuotes(char *str){
     if(myverbose) printf("  Solver set to INCR-EIG-CG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
+  dflgcr {
+    optr->solver=DFLGCR;
+    g_dflgcr_flag = 1;
+    if(myverbose) printf("  Solver set to DFL-GCR line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
   dflfgmres {
     optr->solver=DFLFGMRES;
     g_dflgcr_flag = 1;
