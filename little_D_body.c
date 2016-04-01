@@ -88,7 +88,7 @@ void _PSWITCH(little_D_ee_inv)(_C_TYPE * v, _C_TYPE *w) {
 }
 
 
-void _PSWITCH(little_D_hop)(int eo,_C_TYPE * v, _C_TYPE *w) {
+void _PSWITCH(little_D_hop)(int eo, _C_TYPE * v, _C_TYPE *w) {
   int i, j, i_eo,sq = g_N_s*g_N_s;
   _PSWITCH(CONE) = 1.0;
   _PSWITCH(CMONE) = -1.0;
