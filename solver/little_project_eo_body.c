@@ -20,9 +20,8 @@
  ***********************************************************************/
 
 void _PSWITCH(little_project_eo)(_Complex _F_TYPE * const out, _Complex _F_TYPE * const in, const int  N) {
-  int i, j;
-  static _Complex _F_TYPE *phi;
-  static _Complex _F_TYPE *psi;
+  static _Complex _F_TYPE * phi;
+  static _Complex _F_TYPE * psi;
 
   if(init_dfl_projector == 0) {
     alloc_dfl_projector();
@@ -32,7 +31,7 @@ void _PSWITCH(little_project_eo)(_Complex _F_TYPE * const out, _Complex _F_TYPE 
   psi = (_Complex _F_TYPE *)work[3];
 
   /* NOTE IS THIS REALLY NECESSARY/CORRECT? */
-  for(i = 0; i < N; i++) {
+  for(int i = 0; i < N; i++) {
     phi[i] = _PSWITCH(lscalar_prod)(_PSWITCH(little_dfl_fields_eo)[i], in, nb_blocks*N, 0);
   }
 
@@ -43,16 +42,16 @@ void _PSWITCH(little_project_eo)(_Complex _F_TYPE * const out, _Complex _F_TYPE 
 #endif
 
   /* apply inverse of little_A_eo */
-  for(i = 0; i < N; i++) {
+  for(int i = 0; i < N; i++) {
     (phi[i]) = 0.0;
-    for(j = 0; j < N; j++) {
+    for(int j = 0; j < N; j++) {
       (phi[i]) += (_PSWITCH(little_A_eo)[j*N + i]) * (psi[j]);
     }
   }
-
   _PSWITCH(lmul)(out, phi[0], _PSWITCH(little_dfl_fields_eo)[0], nb_blocks*N);
-  for(i = 1; i < N; i++) {
+  for(int i = 1; i < N; i++) {
     _PSWITCH(lassign_add_mul)(out, _PSWITCH(little_dfl_fields_eo)[i], phi[i], nb_blocks*N);
   }
+
   return;
 }
