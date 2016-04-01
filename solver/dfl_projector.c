@@ -153,16 +153,16 @@ void project(spinor * const out, spinor * const in) {
         for (int j = 0; j < g_N_s*nb_blocks*9; j++) {
           inprod_o32[j] = (_Complex float) inprod_o[j];
         }
-	iter = fgmres4complex_32(invvec_eo32, inprod_o32, little_m, little_max_iter, prec, 1, 
-			     nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, 0, &little_D_sym_32);
-	// we could do more in 32bit precision!?
+        iter = fgmres4complex_32(invvec_eo32, inprod_o32, little_m, little_max_iter, prec, 1, 
+                                 nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, 0, &little_D_sym_32);
+        // we could do more in 32bit precision!?
         for (int j = 0; j < g_N_s*nb_blocks*9; j++) {
           invvec_eo[j] = (_Complex double) invvec_eo32[j];
         }
       }
       else {
-	iter = gcr4complex(invvec_eo, inprod_o, little_m, little_max_iter, prec, 1, 
-			   nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, 0, &little_D_sym);
+        iter = gcr4complex(invvec_eo, inprod_o, little_m, little_max_iter, prec, 1, 
+                           nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, 0, &little_D_sym);
       }
 
       little_D_hop(0, ctmp, invvec_eo);
@@ -212,16 +212,16 @@ void project(spinor * const out, spinor * const in) {
         for (int j = 0; j < g_N_s*nb_blocks*9; j++) {
           inprod_o32[j] = (_Complex float) inprod_o[j];
         }
-	iter = fgmres4complex_32(invvec_eo32, inprod_o32, little_m, little_max_iter, prec, 1, 
-			     nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, 0, &little_D_sym_32);
-	// we could do more in 32bit precision!?
+        iter = fgmres4complex_32(invvec_eo32, inprod_o32, little_m, little_max_iter, prec, 1, 
+                                 nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, 1, &little_D_sym_32);
+        // we could do more in 32bit precision!?
         for (int j = 0; j < g_N_s*nb_blocks*9; j++) {
           invvec_eo[j] = (_Complex double) invvec_eo32[j];
         }
       }
       else {
-	iter = gcr4complex(invvec_eo, inprod_o, little_m, little_max_iter, prec, 1, 
-			   nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, 1, &little_D_sym);
+        iter = gcr4complex(invvec_eo, inprod_o, little_m, little_max_iter, prec, 1, 
+                           nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, 1, &little_D_sym);
       }
       little_D_hop(0,ctmp, invvec_eo);
       little_D_ee_inv(invvec_eo,ctmp);
