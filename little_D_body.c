@@ -12,24 +12,14 @@ void _PSWITCH(little_D)(_C_TYPE * v, _C_TYPE *w) {
   
   _PSWITCH(little_field_gather)(w);
   
-  /* all the mpilocal stuff first */
 #ifdef OMP
 #pragma omp parallel for
 #endif
   for(int i = 0; i < nb_blocks; i++) {
-    /* diagonal term */
-    _MV(zgemv)("N", &g_N_s, &g_N_s, &_PSWITCH(CONE), _PSWITCH(block_list[i].little_dirac_operator),
-               &g_N_s, w + i * g_N_s, &ONE, &_PSWITCH(CZERO), v + i * g_N_s, &ONE, 1);
-  }
-  /* offdiagonal terms */
-#ifdef OMP
-#pragma omp parallel for
-#endif
-  for(int ij = nb_blocks; ij < 9*nb_blocks; ij++) {
-    int j = ij / nb_blocks;
-    int i = ij % nb_blocks;
-    _MV(zgemv)("N", &g_N_s, &g_N_s, &_PSWITCH(CONE), _PSWITCH(block_list[i].little_dirac_operator) + j * sq,
-	       &g_N_s, w + (nb_blocks * j + i) * g_N_s, &ONE, &_PSWITCH(CONE), v + i * g_N_s, &ONE, 1);
+    for(int j = 0; j < 9; j++) {
+      _MV(zgemv)("N", &g_N_s, &g_N_s, &_PSWITCH(CONE), _PSWITCH(block_list[i].little_dirac_operator) + j * sq,
+                 &g_N_s, w + (nb_blocks * j + i) * g_N_s, &ONE, &_PSWITCH(CONE), v + i * g_N_s, &ONE, 1);
+    }
   }
   return;
 }
