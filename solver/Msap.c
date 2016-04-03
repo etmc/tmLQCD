@@ -319,7 +319,7 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
   double kappasave = g_kappa;
   spinor ** solver_field = NULL;
   // also get space for mrblk! 6 = 3+3
-  const int nr_sf = 7;
+  const int nr_sf = 6;
 
   if(kappa_Msap > 0) {
     g_kappa = kappa_Msap;
@@ -387,7 +387,8 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
  	spinor32 * b_odd = (spinor32*) (b +blk*2*vols + vols);
  	spinor32 * a_even = (spinor32*) (a + blk*2*vols);
  	spinor32 * a_odd = (spinor32*) (a + blk*2*vols + vols);
-	spinor32 * c = (spinor32*) (solver_field[6] + blk*vols);
+        // mrblk needs 3 solver fields which we distribute according to the block number
+	spinor32 * c = (spinor32*) (solver_field[3] + blk*2*3*vols);
 
 	/* get part of r corresponding to block blk into b_even and b_odd */
 	copy_global_to_block_eo_32(b_even, b_odd, r, blk);
@@ -397,7 +398,7 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
 	  /* a_odd = b_odd - a_odd */
 	  diff_32(a_odd, b_odd, a_odd, vol);
 	  
-	  mrblk_32(b_odd, a_odd, (spinor32*) (solver_field[3] + blk*2*3*vols),
+	  mrblk_32(b_odd, a_odd, c,
 		   Niter, 1.e-31, 1, vol, &Msw_plus_block_psi_32, blk);
 	  
 	  Block_H_psi_32(&block_list[blk], b_even, b_odd, EO);
@@ -410,7 +411,7 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter)
 	  /* a_odd = b_odd - a_odd */
 	  diff_32(a_odd, b_odd, a_odd, vol);
 	  
-	  mrblk_32(b_odd, a_odd, (spinor32*) (solver_field[3] + blk*2*3*vols), 
+	  mrblk_32(b_odd, a_odd, c, 
 		   Niter, 1.e-31, 1, vol, &Mtm_plus_block_psi_32, blk);
 	  
 	  Block_H_psi_32(&block_list[blk], b_even, b_odd, EO);
