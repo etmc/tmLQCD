@@ -81,6 +81,7 @@ int mr4complex(_Complex double * const P, _Complex double * const Q,
       fflush(stdout);
     }
   }
+  free(_w_f);
   if(norm_r > eps_sq){
     return(-1);
   }
