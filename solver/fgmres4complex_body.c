@@ -166,9 +166,11 @@ static void _PSWITCH(init_lgmres)(const int _M, const int _V){
       free(_PSWITCH(V));
       free(_h);
       free(_v);
+      free(_z);
       free(_PSWITCH(alpha));
       free(_PSWITCH(c));
       free(_PSWITCH(s));
+      free(_PSWITCH(Z));
     }
     Vo = _V;
     M = _M;

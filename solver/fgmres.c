@@ -226,8 +226,10 @@ static void init_gmres(const int _M, const int _V){
     if(init == 1){
       free(H);
       free(V);
+      free(Z);
       free(_h);
       free(_v);
+      free(_z);
       free(alpha);
       free(c);
       free(s);
