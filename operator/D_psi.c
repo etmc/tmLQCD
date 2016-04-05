@@ -919,10 +919,12 @@ void D_psi_prec(spinor * const P, spinor * const Q){
 #undef _PSWITCH
 #undef _PTSWITCH
 
+#ifdef OMP
+#define static
+#endif
 
 /* direction +t */
 void boundary_D_0(spinor * const r, spinor * const s, su3 * const u) {
-
   static su3_vector chi, psi;
 
   _vector_add(psi,s->s0,s->s2);
@@ -1105,3 +1107,6 @@ void boundary_D_7(spinor * const r, spinor * const s, su3 * restrict u) {
   return;
 }
 
+#ifdef OMP
+#undef static
+#endif
