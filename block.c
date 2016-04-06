@@ -29,6 +29,7 @@
 #include <string.h>
 #include <complex.h>
 #include "global.h"
+#include "aligned_malloc.h"
 #include "boundary.h"
 #include "gettime.h"
 #include "read_input.h"
@@ -216,26 +217,26 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
     if(g_proc_id == 0 && g_debug_level > 4) {
       printf("%d %d (%d %d %d %d)\n", i, block_list[i].evenodd, block_list[i].coordinate[0], block_list[i].coordinate[1], block_list[i].coordinate[2], block_list[i].coordinate[3]);
     }
-
+    
     for (j = 0; j < g_N_s; j++) { /* write a zero element at the end of every spinor */
       _spinor_null(block_list[i].basis[j][VOLUME/nb_blocks]);
     }
 
-    if ((void*)(block_list[i].little_dirac_operator = calloc(9 * g_N_s * g_N_s, sizeof(_Complex double))) == NULL)
+    if ((void*)(block_list[i].little_dirac_operator =       aligned_malloc_zero(9 * g_N_s * g_N_s * sizeof(_Complex double))) == NULL)
       CALLOC_ERROR_CRASH;
-    if ((void*)(block_list[i].little_dirac_operator_32 = calloc(9 * g_N_s * g_N_s, sizeof(_Complex float))) == NULL)
+    if ((void*)(block_list[i].little_dirac_operator_32 =    aligned_malloc_zero(9 * g_N_s * g_N_s * sizeof(_Complex float))) == NULL)
       CALLOC_ERROR_CRASH;
-    if ((void*)(block_list[i].little_dirac_operator_eo = calloc(9*g_N_s * g_N_s, sizeof(_Complex double))) == NULL)
+    if ((void*)(block_list[i].little_dirac_operator_eo =    aligned_malloc_zero(9 * g_N_s * g_N_s * sizeof(_Complex double))) == NULL)
       CALLOC_ERROR_CRASH;
-    if ((void*)(block_list[i].little_dirac_operator_eo_32 = calloc(9*g_N_s * g_N_s, sizeof(_Complex float))) == NULL)
+    if ((void*)(block_list[i].little_dirac_operator_eo_32 = aligned_malloc_zero(9 * g_N_s * g_N_s * sizeof(_Complex float))) == NULL)
       CALLOC_ERROR_CRASH;
-
-    for (j = 0; j < 9 * g_N_s * g_N_s; ++j) {
-      block_list[i].little_dirac_operator[j] = 0.0;
-      block_list[i].little_dirac_operator_32[j] = 0.0;
-      block_list[i].little_dirac_operator_eo[j] = 0.0;
-      block_list[i].little_dirac_operator_eo_32[j] = 0.0;
-    }
+    
+    //    for (j = 0; j < 9 * g_N_s * g_N_s; ++j) {
+    //      block_list[i].little_dirac_operator[j] = 0.0;
+    //      block_list[i].little_dirac_operator_32[j] = 0.0;
+    //      block_list[i].little_dirac_operator_eo[j] = 0.0;
+    //      block_list[i].little_dirac_operator_eo_32[j] = 0.0;
+    //  }
   }
   if ((void*)(block_idx = calloc(8 * (VOLUME/nb_blocks), sizeof(int))) == NULL)
     CALLOC_ERROR_CRASH;
@@ -261,10 +262,10 @@ int free_blocks() {
   if(block_init == 1) {
     for(i = 0; i < nb_blocks; ++i) {
       free(block_list[i].basis);
-      free(block_list[i].little_dirac_operator);
-      free(block_list[i].little_dirac_operator_32);
-      free(block_list[i].little_dirac_operator_eo);
-      free(block_list[i].little_dirac_operator_eo_32);
+      aligned_free(block_list[i].little_dirac_operator);
+      aligned_free(block_list[i].little_dirac_operator_32);
+      aligned_free(block_list[i].little_dirac_operator_eo);
+      aligned_free(block_list[i].little_dirac_operator_eo_32);
     }
     free(block_ipt);
     free(bipt__);

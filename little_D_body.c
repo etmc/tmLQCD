@@ -26,7 +26,7 @@ void _PSWITCH(little_D)(_C_TYPE * v, _C_TYPE *w) {
 
 
 void _PSWITCH(little_Q_pm)(_C_TYPE * v, _C_TYPE *w) {
-  _C_TYPE * tmp = calloc(nb_blocks * 9 * g_N_s, sizeof(_C_TYPE));
+  _C_TYPE * tmp = (_C_TYPE*) aligned_malloc_zero(nb_blocks * 9 * g_N_s * sizeof(_C_TYPE));
   double musave= g_mu;
   if(dfl_subspace_updated) {
     g_mu = 0.;
@@ -36,7 +36,7 @@ void _PSWITCH(little_Q_pm)(_C_TYPE * v, _C_TYPE *w) {
   }
   _PSWITCH(little_D)(tmp, w);
   _PSWITCH(little_D)(v, tmp);
-  free(tmp);
+  aligned_free(tmp);
   _PSWITCH(lassign_add_mul)(v, w, g_mu*g_mu + g_mu2*g_mu2, nb_blocks*g_N_s);
   //memcpy(v, w, nb_blocks * g_N_s*sizeof(_C_TYPE));
 }
@@ -45,7 +45,7 @@ void _PSWITCH(little_Q_pm)(_C_TYPE * v, _C_TYPE *w) {
 void _PSWITCH(little_D_sym)(_C_TYPE * v, _C_TYPE *w) {
   
   _C_TYPE* tmpc1, * tmpc2, * tmpc3;
-  tmpc1 = calloc(3*nb_blocks * 9 * g_N_s, sizeof(_C_TYPE));
+  tmpc1 = (_C_TYPE*) aligned_malloc(3*nb_blocks * 9 * g_N_s * sizeof(_C_TYPE));
   tmpc2 = tmpc1 + nb_blocks * 9 * g_N_s;
   tmpc3 = tmpc1 + 2*nb_blocks * 9 * g_N_s;
   
@@ -59,7 +59,7 @@ void _PSWITCH(little_D_sym)(_C_TYPE * v, _C_TYPE *w) {
   _PSWITCH(little_D_hop)(1, tmpc3, tmpc2);
   _PSWITCH(little_Dhat_lhs)(v, w, tmpc3);
   
-  free(tmpc1);
+  aligned_free(tmpc1);
   return;
 }
 
