@@ -45,7 +45,7 @@ void _PSWITCH(little_Q_pm)(_C_TYPE * v, _C_TYPE *w) {
 void _PSWITCH(little_D_sym)(_C_TYPE * v, _C_TYPE *w) {
   
   _C_TYPE* tmpc1, * tmpc2, * tmpc3;
-  tmpc1 = (_C_TYPE*) aligned_malloc(3*nb_blocks * 9 * g_N_s * sizeof(_C_TYPE));
+  tmpc1 = (_C_TYPE*) aligned_malloc_zero(3*nb_blocks * 9 * g_N_s * sizeof(_C_TYPE));
   tmpc2 = tmpc1 + nb_blocks * 9 * g_N_s;
   tmpc3 = tmpc1 + 2*nb_blocks * 9 * g_N_s;
   
