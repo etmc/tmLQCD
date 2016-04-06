@@ -40,19 +40,20 @@
 #include<stdlib.h>
 #include<stdio.h>
 #include<math.h>
-#include"global.h"
-#include"su3.h"
-#include"linalg_eo.h"
-#include"gmres_precon.h"
-#include"operator/tm_operators.h"
-#include"sub_low_ev.h"
-#include"poly_precon.h"
+#include "global.h"
+#include "su3.h"
+#include "linalg_eo.h"
+#include "gmres_precon.h"
+#include "operator/tm_operators.h"
+#include "sub_low_ev.h"
+#include "poly_precon.h"
 #include "Msap.h"
-#include"gamma.h"
+#include "gamma.h"
 #include "start.h"
 #include "solver_field.h"
 #include "dfl_projector.h"
-#include"fgmres.h"
+#include "gettime.h"
+#include "fgmres.h"
 
 static void init_gmres(const int _M, const int _V);
 
@@ -77,11 +78,13 @@ int fgmres(spinor * const P,spinor * const Q,
 
   int restart, i, j, k;
   double beta, eps, norm;
+  double atime, etime, Ptime = 0., patime;
   _Complex double tmp1, tmp2;
   spinor * r0;
   spinor ** solver_field = NULL;
   const int nr_sf = 3;
 
+  atime = gettime();
   cumiter_lgcr = 0;
   if(N == VOLUME) {
     init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);/* #ifdef HAVE_LAPACK */
@@ -119,6 +122,7 @@ int fgmres(spinor * const P,spinor * const Q,
 
     for(j = 0; j < m; j++){
       /* solver_field[0]=A*M^-1*v_j */
+      patime = gettime();
       if(precon == 0) {
 	assign(Z[j], V[j], N);
       }
@@ -129,6 +133,7 @@ int fgmres(spinor * const P,spinor * const Q,
       else {
 	mg_precon(Z[j], V[j]);
       }
+      Ptime += gettime() - patime;
 
       f(r0, Z[j]); 
       /* Set h_ij and omega_j */
@@ -179,11 +184,13 @@ int fgmres(spinor * const P,spinor * const Q,
 	}
 	assign(P, solver_field[2], N);
 	finalize_solver(solver_field, nr_sf);
+        etime = gettime();
 	if(g_proc_id == g_stdio_proc && g_debug_level > 0){
-	  printf("FGMRES\t%d\t%g final iterated residue, cumulative little solver iterations %d\n", restart*m+j, creal(alpha[j+1])*creal(alpha[j+1]), cumiter_lgcr); 
+	  printf("FGMRES %d\t%g final iterated residue\n", restart*m+j, creal(alpha[j+1])*creal(alpha[j+1])); 
+	  printf("FGMRES cumulative little solver iterations %d, average %e\n", cumiter_lgcr, (double)cumiter_lgcr/(double)(restart*m+j));
+          printf("FGMRES total solve time in s %e, time in preconditioner %e\n", etime - atime, Ptime);
 	  fflush(stdout);
 	}
-
 	return(restart*m+j);
       }
       /* if not */
@@ -214,6 +221,14 @@ int fgmres(spinor * const P,spinor * const Q,
   /* If maximal number of restarts is reached */
   assign(P, solver_field[2], N);
   finalize_solver(solver_field, nr_sf);
+  etime = gettime();
+  if(g_proc_id == g_stdio_proc && g_debug_level > 0){
+    printf("FGMRES max number of restarts reached!\n");
+    printf("FGMRES %d\t%g final iterated residue\n", restart*m+j, creal(alpha[j+1])*creal(alpha[j+1])); 
+    printf("FGMRES cumulative little solver iterations %d, average %e\n", cumiter_lgcr, (double)cumiter_lgcr/(double)(restart*m+j));
+    printf("FGMRES total solve time in s %e, time in preconditioner %e\n", etime - atime, Ptime);
+    fflush(stdout);
+  }
   return(-1);
 }
 
