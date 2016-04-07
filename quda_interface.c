@@ -161,7 +161,7 @@ void _initQuda() {
   QudaPrecision cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
   QudaPrecision cuda_prec_precondition = QUDA_HALF_PRECISION;
 
-  QudaTune tune = QUDA_TUNE_YES;
+  QudaTune tune = QUDA_TUNE_NO;
 
 
   // *** the remainder should not be changed for this application
@@ -225,7 +225,8 @@ void _initQuda() {
   inv_param.clover_cuda_prec_precondition = cuda_prec_precondition;
 
   inv_param.preserve_source = QUDA_PRESERVE_SOURCE_YES;
-  inv_param.gamma_basis = QUDA_CHIRAL_GAMMA_BASIS;
+  inv_param.gamma_basis = QUDA_CHIRAL_GAMMA_BASIS; // CHIRAL -> UKQCD does not seem to be supported right now...
+  //inv_param.gamma_basis = QUDA_UKQCD_GAMMA_BASIS;
   inv_param.dirac_order = QUDA_DIRAC_ORDER;
 
   inv_param.input_location = QUDA_CPU_FIELD_LOCATION;
@@ -586,6 +587,9 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
     }
   }
 
+  // FIMXE hard-coded GCR as outer solver
+  inv_param.inv_type == QUDA_GCR_INVERTER;
+
   // direct or norm-op. solve
   if( inv_param.inv_type == QUDA_CG_INVERTER ) {
     if( even_odd_flag ) {
@@ -608,7 +612,10 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
     }
   }
 
+  // FIXME: force direct solve for now (multigrid)
+  inv_param.solve_type = QUDA_DIRECT_SOLVE;
 
+  // this fudge factor is already fixed in a pull-request
   inv_param.tol = sqrt(precision)*0.25;
   inv_param.maxiter = max_iter;
 
@@ -629,7 +636,7 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
   void* mg_preconditioner = NULL;
   if(use_multigrid_quda){
     // FIXME explicitly select compatible params for inv_param
-    // ...
+    // probably need two separate sets of params, one for the setup and one for the target solution
     
     // FIXME select appropriate MG params here
     // FIXME theoretically require a second inv_param struct for MG with proper settings
@@ -637,15 +644,17 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
     mg_param.invert_param = &inv_param;
     // FIXME for now, we do not touch mg_param.invert_param in here
     _setMultigridParam(&mg_param);
+    if(g_proc_id==0){ printf("calling mg preconditioner\n"); fflush(stdout); }
     mg_preconditioner = newMultigridQuda(&mg_param);
     inv_param.preconditioner = mg_preconditioner;
   }
 
+  if(g_proc_id==0){ printf("calling mg solver\n"); fflush(stdout); }
   // perform the inversion
   invertQuda(spinorOut, spinorIn, &inv_param);
 
   if(use_multigrid_quda){
-    destroyMuultigridQuda(mg_preconditioner);
+    destroyMultigridQuda(mg_preconditioner);
   }
 
   if( inv_param.verbosity == QUDA_VERBOSE )
@@ -914,38 +923,38 @@ void _setMultigridParam(QudaMultigridParam* mg_param) {
 
   //mg_param.invert_param = &inv_param;
   // FIXME: allow these parameters to be adjusted
-  mg_param->n_level = mg_levels;
+  mg_param->n_level = 2;
   for (int i=0; i<mg_param->n_level; i++) {
     for (int j=0; j<QUDA_MAX_DIM; j++) {
       // if not defined use 4
       mg_param->geo_block_size[i][j] = 4;
     }
     mg_param->spin_block_size[i] = 1;
-    mg_param->n_vec[i] = nvec[i] == 24;
+    mg_param->n_vec[i] = 24;
     mg_param->nu_pre[i] = 2;
     mg_param->nu_post[i] = 2;
 
     mg_param->cycle_type[i] = QUDA_MG_CYCLE_RECURSIVE;
 
-    mg_param->smoother[i] = inv_param->QUDA_MR_INVERTER;
+    mg_param->smoother[i] = QUDA_MR_INVERTER;
 
     // set the smoother / bottom solver tolerance (for MR smoothing this will be ignored)
-    mg_param->smoother_tol[i] = 0->1; // repurpose heavy-quark tolerance for now
+    mg_param->smoother_tol[i] = 10; // repurpose heavy-quark tolerance for now
 
     mg_param->global_reduction[i] = QUDA_BOOLEAN_YES;
 
     // set to QUDA_DIRECT_SOLVE for no even/odd preconditioning on the smoother
     // set to QUDA_DIRECT_PC_SOLVE for to enable even/odd preconditioning on the smoother
-    mg_param->smoother_solve_type[i] = QUDA_DIRECT_PC_SOLVE; // EVEN-ODD
+    mg_param->smoother_solve_type[i] = QUDA_DIRECT_SOLVE;//QUDA_DIRECT_PC_SOLVE; // EVEN-ODD
 
     // set to QUDA_MAT_SOLUTION to inject a full field into coarse grid
     // set to QUDA_MATPC_SOLUTION to inject single parity field into coarse grid
 
     // if we are using an outer even-odd preconditioned solve, then we
     // use single parity injection into the coarse grid
-    mg_param->coarse_grid_solution_type[i] = inv_param->solve_type == QUDA_DIRECT_PC_SOLVE ? QUDA_MATPC_SOLUTION : QUDA_MAT_SOLUTION;
+    mg_param->coarse_grid_solution_type[i] = mg_inv_param->solve_type == QUDA_DIRECT_PC_SOLVE ? QUDA_MATPC_SOLUTION : QUDA_MAT_SOLUTION;
 
-    mg_param->omega[i] = 0->85; // over/under relaxation factor
+    mg_param->omega[i] = 0.85; // over/under relaxation factor
 
     mg_param->location[i] = QUDA_CUDA_FIELD_LOCATION;
   }
@@ -954,13 +963,13 @@ void _setMultigridParam(QudaMultigridParam* mg_param) {
   mg_param->spin_block_size[0] = 2;
 
   // coarse grid solver is GCR
-  mg_param->smoother[mg_levels-1] = QUDA_GCR_INVERTER;
+  mg_param->smoother[mg_param->n_level-1] = QUDA_GCR_INVERTER;
 
   mg_param->compute_null_vector = QUDA_COMPUTE_NULL_VECTOR_YES;
     //generate_nullspace ? QUDA_COMPUTE_NULL_VECTOR_YES
     //: QUDA_COMPUTE_NULL_VECTOR_NO;
 
-  mg_param->generate_all_levels = QUDA_BOLEAN_YES;
+  mg_param->generate_all_levels = QUDA_BOOLEAN_YES;
     //generate_all_levels ? QUDA_BOOLEAN_YES :  QUDA_BOOLEAN_NO;
 
   mg_param->run_verify = QUDA_BOOLEAN_YES;
@@ -972,11 +981,11 @@ void _setMultigridParam(QudaMultigridParam* mg_param) {
   // these need to tbe set for now but are actually ignored by the MG setup
   // needed to make it pass the initialization test
   // in tmLQCD, these are set elsewhere, except for inv_type
-  inv_param->inv_type = QUDA_GCR_INVERTER;
+  mg_inv_param->inv_type = QUDA_MR_INVERTER;
   //inv_param->tol = 1e-10;
   //inv_param.maxiter = 1000;
   //inv_param.reliable_delta = 1e-10;
-  inv_param->gcrNkrylov = 10;
+  mg_inv_param->gcrNkrylov = 10;
 
   //inv_param.verbosity = QUDA_SUMMARIZE;
   //inv_param.verbosity_precondition = QUDA_SUMMARIZE;
