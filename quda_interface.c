@@ -52,6 +52,9 @@
 *     those will be applied directly to the gaugefield. Currently it is called just
 *     before the inversion is done (might result in wasted loads...).
 *
+*   void _setMultigridParam()
+*     borrowed from QUDA multigrid_invert_test
+*
 *   The functions
 *
 *     int invert_eo_quda(...);
@@ -134,6 +137,8 @@ int commsMap(const int *coords, void *fdata) {
 
 // variable to check if quda has been initialized
 static int quda_initialized = 0;
+
+void _setMultigridParam(QudaMultigridParam* mg_param);
 
 void _initQuda() {
   if( quda_initialized )
@@ -619,8 +624,29 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
   // reorder spinor
   reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0, NULL );
 
+  // FIXME should be set in input file and compatibility between various params should be checked
+  int use_multigrid_quda = 1;
+  void* mg_preconditioner = NULL;
+  if(use_multigrid_quda){
+    // FIXME explicitly select compatible params for inv_param
+    // ...
+    
+    // FIXME select appropriate MG params here
+    // FIXME theoretically require a second inv_param struct for MG with proper settings
+    QudaMultigridParam mg_param = newQudaMultigridParam();
+    mg_param.invert_param = &inv_param;
+    // FIXME for now, we do not touch mg_param.invert_param in here
+    _setMultigridParam(&mg_param);
+    mg_preconditioner = newMultigridQuda(&mg_param);
+    inv_param.preconditioner = mg_preconditioner;
+  }
+
   // perform the inversion
   invertQuda(spinorOut, spinorIn, &inv_param);
+
+  if(use_multigrid_quda){
+    destroyMuultigridQuda(mg_preconditioner);
+  }
 
   if( inv_param.verbosity == QUDA_VERBOSE )
     if(g_proc_id == 0)
@@ -827,5 +853,132 @@ void D_psi_quda(spinor * const P, spinor * const Q) {
   // reorder spinor
   reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, NULL );
   reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, NULL );
+}
+
+// FIXME: for now we don't touch invert_param in here, eventually we will probably require to sets of params
+void _setMultigridParam(QudaMultigridParam* mg_param) {
+  QudaInvertParam *mg_inv_param = mg_param->invert_param;
+
+  //inv_param.Ls = 1;
+
+  //inv_param.sp_pad = 0;
+  //inv_param.cl_pad = 0;
+
+  //inv_param.cpu_prec = cpu_prec;
+  //inv_param.cuda_prec = cuda_prec;
+  //inv_param.cuda_prec_sloppy = cuda_prec_sloppy;
+  //inv_param.cuda_prec_precondition = cuda_prec_precondition;
+  //inv_param.preserve_source = QUDA_PRESERVE_SOURCE_NO;
+  //inv_param.gamma_basis = QUDA_DEGRAND_ROSSI_GAMMA_BASIS;
+  //inv_param.dirac_order = QUDA_DIRAC_ORDER;
+
+  //if (dslash_type == QUDA_CLOVER_WILSON_DSLASH || dslash_type == QUDA_TWISTED_CLOVER_DSLASH) {
+  //  inv_param.clover_cpu_prec = cpu_prec;
+  //  inv_param.clover_cuda_prec = cuda_prec;
+  //  inv_param.clover_cuda_prec_sloppy = cuda_prec_sloppy;
+  //  inv_param.clover_cuda_prec_precondition = cuda_prec_precondition;
+  //  inv_param.clover_order = QUDA_PACKED_CLOVER_ORDER;
+  //}
+
+  //inv_param.input_location = QUDA_CPU_FIELD_LOCATION;
+  //inv_param.output_location = QUDA_CPU_FIELD_LOCATION;
+
+  //inv_param.tune = tune ? QUDA_TUNE_YES : QUDA_TUNE_NO;
+
+  //inv_param.dslash_type = dslash_type;
+
+  ////Free field!
+  //inv_param.mass = mass;
+  //inv_param.kappa = 1.0 / (2.0 * (1 + 3/anisotropy + mass));
+
+  //if (dslash_type == QUDA_TWISTED_MASS_DSLASH || dslash_type == QUDA_TWISTED_CLOVER_DSLASH) {
+  //  inv_param.mu = mu;
+  //  inv_param.twist_flavor = twist_flavor;
+  //  inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET) ? 2 : 1;
+
+  //  if (twist_flavor == QUDA_TWIST_NONDEG_DOUBLET) {
+  //    printfQuda("Twisted-mass doublet non supported (yet)\n");
+  //    exit(0);
+  //  }
+  //}
+
+  //inv_param.clover_coeff = clover_coeff;
+
+  //inv_param.dagger = QUDA_DAG_NO;
+  //inv_param.mass_normalization = QUDA_KAPPA_NORMALIZATION;
+
+  //inv_param.matpc_type = matpc_type;
+  //inv_param.solution_type = QUDA_MAT_SOLUTION;
+
+  //inv_param.solve_type = QUDA_DIRECT_SOLVE;
+
+  //mg_param.invert_param = &inv_param;
+  // FIXME: allow these parameters to be adjusted
+  mg_param->n_level = mg_levels;
+  for (int i=0; i<mg_param->n_level; i++) {
+    for (int j=0; j<QUDA_MAX_DIM; j++) {
+      // if not defined use 4
+      mg_param->geo_block_size[i][j] = 4;
+    }
+    mg_param->spin_block_size[i] = 1;
+    mg_param->n_vec[i] = nvec[i] == 24;
+    mg_param->nu_pre[i] = 2;
+    mg_param->nu_post[i] = 2;
+
+    mg_param->cycle_type[i] = QUDA_MG_CYCLE_RECURSIVE;
+
+    mg_param->smoother[i] = inv_param->QUDA_MR_INVERTER;
+
+    // set the smoother / bottom solver tolerance (for MR smoothing this will be ignored)
+    mg_param->smoother_tol[i] = 0->1; // repurpose heavy-quark tolerance for now
+
+    mg_param->global_reduction[i] = QUDA_BOOLEAN_YES;
+
+    // set to QUDA_DIRECT_SOLVE for no even/odd preconditioning on the smoother
+    // set to QUDA_DIRECT_PC_SOLVE for to enable even/odd preconditioning on the smoother
+    mg_param->smoother_solve_type[i] = QUDA_DIRECT_PC_SOLVE; // EVEN-ODD
+
+    // set to QUDA_MAT_SOLUTION to inject a full field into coarse grid
+    // set to QUDA_MATPC_SOLUTION to inject single parity field into coarse grid
+
+    // if we are using an outer even-odd preconditioned solve, then we
+    // use single parity injection into the coarse grid
+    mg_param->coarse_grid_solution_type[i] = inv_param->solve_type == QUDA_DIRECT_PC_SOLVE ? QUDA_MATPC_SOLUTION : QUDA_MAT_SOLUTION;
+
+    mg_param->omega[i] = 0->85; // over/under relaxation factor
+
+    mg_param->location[i] = QUDA_CUDA_FIELD_LOCATION;
+  }
+
+  // only coarsen the spin on the first restriction
+  mg_param->spin_block_size[0] = 2;
+
+  // coarse grid solver is GCR
+  mg_param->smoother[mg_levels-1] = QUDA_GCR_INVERTER;
+
+  mg_param->compute_null_vector = QUDA_COMPUTE_NULL_VECTOR_YES;
+    //generate_nullspace ? QUDA_COMPUTE_NULL_VECTOR_YES
+    //: QUDA_COMPUTE_NULL_VECTOR_NO;
+
+  mg_param->generate_all_levels = QUDA_BOLEAN_YES;
+    //generate_all_levels ? QUDA_BOOLEAN_YES :  QUDA_BOOLEAN_NO;
+
+  mg_param->run_verify = QUDA_BOOLEAN_YES;
+
+  // set file i/o parameters
+  strcpy(mg_param->vec_infile, "vectors");
+  strcpy(mg_param->vec_outfile, "vectors");
+
+  // these need to tbe set for now but are actually ignored by the MG setup
+  // needed to make it pass the initialization test
+  // in tmLQCD, these are set elsewhere, except for inv_type
+  inv_param->inv_type = QUDA_GCR_INVERTER;
+  //inv_param->tol = 1e-10;
+  //inv_param.maxiter = 1000;
+  //inv_param.reliable_delta = 1e-10;
+  inv_param->gcrNkrylov = 10;
+
+  //inv_param.verbosity = QUDA_SUMMARIZE;
+  //inv_param.verbosity_precondition = QUDA_SUMMARIZE;
 }
 
