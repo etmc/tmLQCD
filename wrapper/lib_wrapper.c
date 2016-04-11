@@ -214,7 +214,9 @@ int tmLQCD_read_gauge(const int nconfig) {
     fflush(stdout);
   }
 #ifdef MPI
-  xchange_gauge(g_gauge_field);
+  if(!lowmem_flag){
+    xchange_gauge(g_gauge_field);
+  }
 #endif
   if(!lowmem_flag){
     convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND);
@@ -282,7 +284,6 @@ int tmLQCD_finalise() {
 #endif
   
   free_gauge_field();
-  free_gauge_field_32();                                                                                                                                                                                                                     
   free_geometry_indices();
   if(!lowmem_flag){
     free_gauge_field_32();
