@@ -48,6 +48,7 @@ int mg_Nvec=24;
 int mg_lvl=3;
 int mg_blk[4] = {0, 0, 0, 0};
 double mg_cmu_factor = 5.0;
+double mg_dtau = 0.0;
 
 
 static int Cart_rank(MPI_Comm comm, const int coords[], int *rank) {
@@ -169,13 +170,17 @@ void MG_init()
    
 }
 
-void MG_update_mu(double mu)
+void MG_update_mu(double mu, double rho)
 {
-   mg_params.mu = mu;
-   for (int j=0;j < mg_params.number_of_levels-1; j++)
-      mg_params.coarse_mu[j] = mu;
-   mg_params.coarse_mu[mg_params.number_of_levels-1] =  mg_cmu_factor*mu;
-   MG4QCD_update_parameters(&mg_params, &mg_status);
+   // mu_oo = mu+rho -> Update this here
+   if (mu!=mg_params.mu)
+   {
+      mg_params.mu = mu;
+      for (int j=0;j < mg_params.number_of_levels-1; j++)
+	 mg_params.coarse_mu[j] = mu;
+      mg_params.coarse_mu[mg_params.number_of_levels-1] =  mg_cmu_factor*mu;
+      MG4QCD_update_parameters(&mg_params, &mg_status);
+   }
 }
 
 void MG_finalize()
@@ -190,6 +195,138 @@ static inline void print_out_vector(  spinor * v)
 	 printf("%d  %lf %lf\n",j, *(((double*) v) +2*j), *(((double*) v) +2*j+1) );
    
 }
+
+
+
+int MG_solver_degenerate(spinor * const phi_new, spinor * const phi_old,
+		   const double precision, const int max_iter,
+                   const int solver_flag, const int rel_prec,
+                   const int even_odd_flag, su3 **gf, matrix_mult f)
+{
+   double mu;
+   spinor ** solver_field = NULL;
+
+   if (mg_initialized==0) {
+      MG_init();
+      mg_initialized = 1;
+      if (g_proc_id == 0)
+	 printf("MG4QCD initialized\n");
+      MPI_Barrier(MPI_COMM_WORLD);
+   }
+   
+   if (mg_update_gauge==1) {
+      MG4QCD_set_configuration( (double*) &(gf[0][0]), &mg_status );
+      mg_update_gauge = 0;
+      if (mg_status.success == 1)
+	 if (g_proc_id == 0) 
+	    printf("MG4QCD cnfg set, plaquette %e\n", mg_status.info);
+   }
+   
+   if (mg_do_setup==1) {
+      if (g_proc_id == 0)
+	 printf("MG4QCD running setup\n");
+      MG4QCD_setup(&mg_status);
+      mg_do_setup = 0;
+      if (mg_status.success == 1)
+	 if (g_proc_id == 0)	
+	    printf("MG4QCD setup ran, time %.2f sec (%.2f %% on coarse grid)\n",
+		     mg_status.time, 100.*(mg_status.coarse_time/mg_status.time));
+   }
+   
+   if (mg_update_setup>0) {
+      if (g_proc_id == 0)
+	 printf("MG4QCD updating setup\n");
+      MG4QCD_update_setup(mg_update_setup, &mg_status);
+      mg_update_setup = 0;
+      if (mg_status.success == 1)
+	 if (g_proc_id == 0)	
+	    printf("MG4QCD setup ran, time %.2f sec (%.2f %% on coarse grid)\n",
+		     mg_status.time, 100.*(mg_status.coarse_time/mg_status.time));
+   }
+  
+#ifndef MGTEST   
+   init_solver_field(&solver_field, VOLUMEPLUSRAND, 3);
+#else
+   double differ[2];
+   init_solver_field(&solver_field, VOLUMEPLUSRAND, 4);
+#endif
+   
+  // for rescaling  convention in MG4QCD: (4+m)*\delta_{x,y} in tmLQCD: 1*\delta_{x,y} -> rescale by 1/4+m
+   double mg_scale=0.25/(g_kappa*g_kappa);
+   
+   if (even_odd_flag==1)
+   {
+      convert_odd_to_lexic(solver_field[0], phi_old);
+      mul_gamma5(solver_field[0],VOLUME);
+      MG4QCD_solve( (double*) solver_field[1], (double*) solver_field[0], sqrt(precision), &mg_status );
+      //MG4QCD_apply_operator( (double*) solver_field[1], (double*) solver_field[0], &mg_status );
+      MG_update_mu(-mu, 0.0);
+      // project Odd --> if even - odd
+      set_even_to_zero(solver_field[1]);
+      mul_gamma5(solver_field[1],VOLUME);
+      MG4QCD_solve( (double*) solver_field[2], (double*) solver_field[1], sqrt(precision), &mg_status );
+      mul_r(solver_field[2],mg_scale,solver_field[2],VOLUME);
+      convert_lexic_to_odd(phi_new, solver_field[2]);
+   }
+   else
+   {
+      mul_gamma5(solver_field[0],VOLUME);
+      MG4QCD_solve( (double*) solver_field[1], (double*) solver_field[0], sqrt(precision), &mg_status );
+      //MG4QCD_apply_operator( (double*) solver_field[1], (double*) solver_field[0], &mg_status );
+      MG_update_mu(-mu, 0.0);
+      
+      mul_gamma5(solver_field[1],VOLUME);
+      MG4QCD_solve( (double*) solver_field[2], (double*) solver_field[1], sqrt(precision), &mg_status );
+      //MG4QCD_apply_operator( (double*) solver_field[1], (double*) solver_field[0], &mg_status );
+      mul_r(solver_field[2],mg_scale,solver_field[2],VOLUME);  
+   }
+   
+   
+   if (mg_status.success) {
+      if (g_proc_id == 0)
+	 printf("Solving time %.2f sec (%.1f %% on coarse grid)\n", mg_status.time,
+	      100.*(mg_status.coarse_time/mg_status.time));
+      if (g_proc_id == 0)
+	 printf("Total iterations on fine grid %d\n", mg_status.iter_count);
+      if (g_proc_id == 0)
+	 printf("Total iterations on coarse grids %d\n", mg_status.coarse_iter_count);
+    } 
+   
+#ifdef MGTEST
+   double diff2[3]; 
+   bicgstab_complex(solver_field[3], solver_field[0], max_iter, precision, rel_prec, VOLUME, f);
+   
+   diff2[0] = sqrt(square_norm(solver_field[0], VOLUME, 1));
+   diff2[1] = sqrt(square_norm(solver_field[1], VOLUME, 1));
+   diff2[3] = sqrt(square_norm(solver_field[3], VOLUME, 1));
+   printf("%e %e %e\n",diff2[0],diff2[1],diff2[3]);
+   diff(solver_field[3], solver_field[3], solver_field[1], VOLUME);
+   
+   differ[0] = sqrt(square_norm(solver_field[3], VOLUME, 1));
+   differ[1] = sqrt(square_norm(solver_field[1], VOLUME, 1));
+   if (g_proc_id == 0)
+	 printf("Norm of the Difference of the Solution || D_{tmLQC}^{-1} s - D_{MG4QCD}^{-1}*s||/||s|| = %e/%e = %e \n", differ[0],differ[1],differ[0]/differ[1]);
+   
+   
+   f(solver_field[3], solver_field[1]);
+   diff(solver_field[1], solver_field[3], solver_field[0], VOLUME);
+   differ[0] = sqrt(square_norm(solver_field[1], VOLUME, 1));
+   differ[1] = sqrt(square_norm(solver_field[0], VOLUME, 1));
+   if (g_proc_id == 0)
+	 printf("Norm of the rel. Residual || s -D_{tmLQC} *D_{MG4QCD}^{-1}*s||/||s|| = %e/%e = %e \n", differ[0],differ[1],differ[0]/differ[1]);
+   
+#endif
+   
+#ifndef MGTEST   
+   finalize_solver(solver_field, 2);
+#else
+   finalize_solver(solver_field, 3);
+#endif   
+   
+   return mg_status.iter_count;
+}
+
+
 
 
 int MG_solver(spinor * const Even_new, spinor * const Odd_new,

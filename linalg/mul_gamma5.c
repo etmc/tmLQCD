@@ -16,25 +16,52 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-#ifndef _UPDATE_TM_H
-#define _UPDATE_TM_H
+/*******************************************************************************
+ *
+ * File mul_r.c
+ *
+ *   void mul_r(spinor * const R, const double c, spinor * const S){
+ *     Makes (*R) = c*(*S)        c is a real constant
+ *       
+ *******************************************************************************/
 
-#ifdef MG4QCD
-typedef struct{
-   double tauMC;
-   int gcopy_up2date;
-   int basis_up2date;
-   double tau_basis;
-}hmc_control_t;
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
+#ifdef OMP
+# include <omp.h>
+#endif
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+#include "su3.h"
+#include "mul_r.h"
 
-hmc_control_t reset_hmc_control(void);
-hmc_control_t update_hmc_control(double dtau);
-hmc_control_t get_hmc_control(void);
-hmc_control_t set_hmc_control(int gcopy_up2date,double tau_basis);
+void mul_gamma5(spinor * const R, const int N){
+#ifdef OMP
+#pragma omp parallel
+  {
 #endif
 
-int update_tm(double *plaquette_energy, double *rectangle_energy, 
-	      char * filename, const int return_check, const int acctest, 
-	      const int traj_counter);
-
+  int ix;
+  spinor *r;
+  
+#ifdef OMP
+#pragma omp for
 #endif
+  for (ix = 0; ix < N; ix++){
+    r=(spinor *) R + ix;
+    
+    r->s2.c0 *= -1.0;
+    r->s2.c1 *= -1.0;
+    r->s2.c2 *= -1.0;
+    
+    r->s3.c0 *= -1.0;
+    r->s3.c1 *= -1.0;
+    r->s3.c2 *= -1.0;
+  }
+#ifdef OMP
+  } /*OpenMP closing brace */
+#endif
+
+}

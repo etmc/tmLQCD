@@ -66,4 +66,9 @@
 
 #include "linalg/convert_eo_to_lexic.h"
 
+#include "linalg/convert_odd_to_lexic.h"
+#include "linalg/set_even_to_zero.h"
+#include "linalg/mul_gamma5.h"
+
+
 #endif

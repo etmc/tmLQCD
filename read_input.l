@@ -664,7 +664,7 @@ static inline void rmQuotes(char *str){
     mg_blk[0]=a;
     if(myverbose) printf("  MGBlockT set to %d line %d operator %d\n", mg_blk[0], line_of_file, current_operator);
   }
-  {SPC}*MGCoarseMuFactor{EQL}{DIGIT}+ {
+  {SPC}*MGCoarseMuFactor{EQL}{FLT}+ {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mg_cmu_factor=c;
     if(myverbose) printf("  MGCoarseMuFactor set to %f line %d operator %d\n", mg_cmu_factor, line_of_file, current_operator);

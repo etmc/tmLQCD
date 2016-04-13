@@ -32,9 +32,10 @@ extern int mg_Nvec;
 extern int mg_lvl;
 extern int mg_blk[4];
 extern double mg_cmu_factor;
+extern double mg_dtau;
 
 void MG_init(void);
-void MG_update_mu(double mu);
+void MG_update_mu(double mu,double rho);
 void MG_finalize(void);
 int MG_solver(spinor * const Even_new, spinor * const Odd_new,
                    spinor * const Even, spinor * const Odd,
