@@ -669,6 +669,11 @@ static inline void rmQuotes(char *str){
     mg_cmu_factor=c;
     if(myverbose) printf("  MGCoarseMuFactor set to %f line %d operator %d\n", mg_cmu_factor, line_of_file, current_operator);
   }
+  {SPC}*MGdtauUpdate{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mg_dtau=c;
+    if(myverbose) printf("  MGdtauUpdate set to %f line %d operator %d\n", mg_dtau, line_of_file, current_operator);
+  }
   
   {SPC}*ExtraMasses{EQL}{FLTLIST} {
     char * token = NULL;
@@ -1475,6 +1480,11 @@ static inline void rmQuotes(char *str){
   bicgstab {
     if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->solver = BICGSTAB;
+    BEGIN(solver_caller);
+  }
+  mg4qcd {
+    if(myverbose) printf("  Solver set to MG4QCD line %d operator %d\n", line_of_file, current_operator);
+    mnl->solver = MG;
     BEGIN(solver_caller);
   }
 }

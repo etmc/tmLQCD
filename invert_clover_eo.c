@@ -79,7 +79,7 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
      return MG_solver(Even_new, Odd_new, Even, Odd,
                                   precision, max_iter,
                                   solver_flag, rel_prec,
-                                  1, gf[0],&Qsw_psi);
+                                  1, gf[0],&Msw_plus_psi);
   }
 #endif
      

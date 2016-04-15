@@ -64,12 +64,13 @@
 extern su3 ** g_gauge_field_saved;
 
 #ifdef MG4QCD
-static hmc_control_t hmc_control={0.0,0,0.0};
+static hmc_control_t hmc_control={0.0,0,0,0.0};
 
 hmc_control_t reset_hmc_control(void)
 {
    hmc_control.tauMC=0.0;
    hmc_control.gcopy_up2date=0;
+   hmc_control.basis_up2date=0;
    hmc_control.tau_basis=0.0;
    
    return hmc_control;
@@ -79,6 +80,7 @@ hmc_control_t update_hmc_control(double dtau)
 {
    hmc_control.tauMC+=dtau;
    hmc_control.gcopy_up2date=0;
+   hmc_control.basis_up2date=0;
    
    return hmc_control;
 }
@@ -88,9 +90,10 @@ hmc_control_t get_hmc_control(void)
   return hmc_control;
 }
 
-hmc_control_t set_hmc_control(int gcopy_up2date,double tau_basis)
+hmc_control_t set_hmc_control(int gcopy_up2date,int basis_up2date,double tau_basis)
 {
    hmc_control.gcopy_up2date=gcopy_up2date;
+   hmc_control.basis_up2date=basis_up2date;
    hmc_control.tau_basis=tau_basis;
    
    return hmc_control;

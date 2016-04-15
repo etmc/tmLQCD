@@ -30,7 +30,7 @@ typedef struct{
 hmc_control_t reset_hmc_control(void);
 hmc_control_t update_hmc_control(double dtau);
 hmc_control_t get_hmc_control(void);
-hmc_control_t set_hmc_control(int gcopy_up2date,double tau_basis);
+hmc_control_t set_hmc_control(int gcopy_up2date,int basis_up2date,double tau_basis);
 #endif
 
 int update_tm(double *plaquette_energy, double *rectangle_energy, 

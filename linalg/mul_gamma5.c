@@ -52,13 +52,13 @@ void mul_gamma5(spinor * const R, const int N){
   for (ix = 0; ix < N; ix++){
     r=(spinor *) R + ix;
     
-    r->s2.c0 *= -1.0;
-    r->s2.c1 *= -1.0;
-    r->s2.c2 *= -1.0;
+    r->s2.c0 = -1.0*r->s2.c0;
+    r->s2.c1 = -1.0*r->s2.c1;
+    r->s2.c2 = -1.0*r->s2.c2;
     
-    r->s3.c0 *= -1.0;
-    r->s3.c1 *= -1.0;
-    r->s3.c2 *= -1.0;
+    r->s3.c0 = -1.0*r->s3.c0;
+    r->s3.c1 = -1.0*r->s3.c1;
+    r->s3.c2 = -1.0*r->s3.c2;
   }
 #ifdef OMP
   } /*OpenMP closing brace */

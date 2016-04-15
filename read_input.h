@@ -125,6 +125,7 @@ extern "C"
   extern int mg_lvl;
   extern int mg_blk[4];
   extern double mg_cmu_factor;
+  extern double mg_dtau;
   
   int read_input(char *);
   int reread_input(char *);
