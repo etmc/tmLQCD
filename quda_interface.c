@@ -165,7 +165,7 @@ void _initQuda() {
   QudaPrecision cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
   QudaPrecision cuda_prec_precondition = QUDA_HALF_PRECISION;
 
-  QudaTune tune = QUDA_TUNE_YES;
+  QudaTune tune = QUDA_TUNE_NO;
 
 
   // *** the remainder should not be changed for this application
@@ -310,6 +310,7 @@ void _initQuda() {
 void _endQuda() {
   if( quda_initialized ) {
     freeGaugeQuda();
+    freeCloverQuda(); // this is safe even if there is no Clover field loaded, at least it was in QUDA v0.7.2
     free((void*)tempSpinor);
     endQuda();
   }
@@ -430,7 +431,7 @@ void reorder_spinor_fromQuda( double* sp, QudaPrecision precision, int doublet, 
   double startTime = gettime();
 
   if( doublet ) {
-    memcpy( tempSpinor, sp, 2*VOLUME*24*sizeof(double) ); // FIXME BK: I think this is wrong
+    memcpy( tempSpinor, sp, 2*VOLUME*24*sizeof(double) ); // FIXME BK: I think this is wrong (why is there sp2?)
   }
   else {
     memcpy( tempSpinor, sp, VOLUME*24*sizeof(double) );
@@ -549,14 +550,6 @@ int invert_quda_direct(double * const propagator, double * const source,
   // set the sloppy precision of the mixed prec solver
   set_sloppy_prec(optr->sloppy_precision);
 
-  // load gauge after setting precision
-  atime=gettime();
-  if(loadGauge == 1)
-    _loadGaugeQuda(optr->compression_type);
-  if(gauge_persist == 1)
-    loadGauge = 0;
-  if(g_proc_id==0 && g_debug_level > 0 ) printf("# QUDA: Time for loadGaugeQuda: %.4e\n",gettime()-atime);
-
   // choose dslash type
   if( optr->mu != 0.0 && optr->c_sw > 0.0 ) {
     inv_param.dslash_type = QUDA_TWISTED_CLOVER_DSLASH;
@@ -629,12 +622,23 @@ int invert_quda_direct(double * const propagator, double * const source,
   // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
   inv_param.twist_flavor = (optr->mu < 0.0 ? QUDA_TWIST_PLUS : QUDA_TWIST_MINUS);
   inv_param.Ls = 1;
-
-  // NULL pointers to host fields to force
-  // construction instead of download of the clover field:
-  if( optr->c_sw > 0.0 )
-    loadCloverQuda(NULL, NULL, &inv_param);
-
+  
+  // load gauge after setting precision
+  if(loadGauge == 1){
+    atime = gettime();
+    _loadGaugeQuda(optr->compression_type);
+    if(g_proc_id==0 && g_debug_level > 0 ) printf("# QUDA: Time for loadGaugeQuda: %.4e\n",gettime()-atime);
+    // NULL pointers to force construction of the clover fields
+    if( optr->c_sw > 0.0 ) {
+      atime = gettime();
+      loadCloverQuda(NULL, NULL, &inv_param);
+      if(g_proc_id==0 && g_debug_level > 0 ) printf("# QUDA: Time for loadCloverQuda: %.4e\n",gettime()-atime);
+    }
+  }
+  
+  if(gauge_persist == 1)
+    loadGauge = 0;
+  
   // reorder spinor
   reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0, NULL );
 
@@ -661,8 +665,10 @@ int invert_quda_direct(double * const propagator, double * const source,
 
   // when gauge_persist == 1, we do not free the gauge so that it's more efficient!
   // and we also don't load it on subsequent calls
-  if(gauge_persist != 1)
+  if(gauge_persist != 1) {
     freeGaugeQuda();
+    freeCloverQuda(); // this is safe even if there is no Clover field loaded, at least it was in QUDA v0.7.2
+  }
 
   if( g_proc_id==0 && g_debug_level > 0 )
     printf("# QUDA: Total time for invert_quda_direct: %.4e\n",gettime()-atotaltime); 
@@ -812,6 +818,7 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 
   finalize_solver(solver_field, nr_sf);
   freeGaugeQuda();
+  freeCloverQuda(); // this is safe even if there is no Clover field loaded, at least it was in QUDA v0.7.2
 
   if(iteration >= max_iter)
     return(-1);
@@ -939,6 +946,7 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
 
   finalize_solver(solver_field, nr_sf);
   freeGaugeQuda();
+  freeCloverQuda(); // this is safe even if there is no Clover field loaded, at least it was in QUDA v0.7.2
 
   if(iteration >= max_iter)
     return(-1);
