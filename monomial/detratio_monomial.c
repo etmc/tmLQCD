@@ -67,7 +67,7 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     g_mu = mnl->mu2;
     boundary(mnl->kappa2);
 
-    if( (mnl->solver != CG) || (mnl->solver != MG) )  {
+    if( mnl->solver == BICGSTAB )  {
       fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (detratio_monomial.c)\n");
     }
 
