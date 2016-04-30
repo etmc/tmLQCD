@@ -86,7 +86,12 @@
 #ifdef QUDA
 #  include "quda_interface.h"
 #endif
+#ifdef MG4QCD
+#  include "mg4qcd_interface.h"
+#endif
 #include "meas/measurements.h"
+
+
 
 extern int nstore;
 int check_geometry();
@@ -106,6 +111,7 @@ int main(int argc, char *argv[])
   char * filename = NULL;
   double plaquette_energy;
   struct stout_parameters params_smear;
+  
   spinor **s, *s_;
 
 #ifdef _KOJAK_INST

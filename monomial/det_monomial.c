@@ -105,7 +105,7 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
      *********************************************************************/
     g_mu = mnl->mu;
     boundary(mnl->kappa);
-    if((mnl->solver == CG) || (mnl->solver == MIXEDCG) || (mnl->solver == RGMIXEDCG)) {
+    if((mnl->solver == CG) || (mnl->solver == MIXEDCG) || (mnl->solver == RGMIXEDCG) || (mnl->solver == MG)) {
       /* Invert Q_{+} Q_{-} */
       /* X -> w_fields[1] */
       chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
@@ -228,7 +228,7 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
     mnl->energy1 = square_norm(mnl->w_fields[1], VOLUME/2, 1);
   }
   else {
-    if((mnl->solver == CG) || (mnl->solver == MIXEDCG)) {
+    if((mnl->solver == CG) || (mnl->solver == MIXEDCG) || (mnl->solver == MG)) {
       chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_pm_psi);
       mnl->iter0 += solve_degenerate(mnl->w_fields[1], mnl->pf, mnl->solver_params, mnl->maxiter, 

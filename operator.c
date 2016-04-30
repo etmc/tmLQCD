@@ -62,6 +62,10 @@
 #ifdef QUDA
 #  include "quda_interface.h"
 #endif
+#ifdef MG4QCD
+#  include "mg4qcd_interface.h"
+#endif
+
 
 void dummy_D(spinor * const, spinor * const);
 void dummy_DbD(spinor * const s, spinor * const r, spinor * const p, spinor * const q);

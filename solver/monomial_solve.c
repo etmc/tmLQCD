@@ -50,6 +50,10 @@
 #include "operator/clovertm_operators.h"
 #include "operator/clovertm_operators_32.h"
 #include "monomial_solve.h"
+#ifdef MG4QCD
+#include "mg4qcd_interface.h"
+#endif
+
 
 #ifdef HAVE_GPU
 #include"../GPU/cudadefs.h"
@@ -116,6 +120,20 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
   else if(use_solver == BICGSTAB){
      iteration_count =  bicgstab_complex(P, Q, max_iter, eps_sq, rel_prec, N, f);     
   }
+#ifdef MG4QCD 
+  else if (use_solver == MG)
+  {
+     if(N==VOLUME/2)
+	 iteration_count =  MG_solver_degenerate(P, Q,
+			      eps_sq, max_iter,rel_prec,
+			      1 , g_gauge_field, f);
+     else
+	iteration_count =  MG_solver_degenerate(P, Q,
+			      eps_sq, max_iter,rel_prec,
+			      0 , g_gauge_field, f);
+	
+  }
+#endif     
   else{
     if(g_proc_id==0) printf("Error: solver not allowed for degenerate solve. Aborting...\n");
     exit(2);

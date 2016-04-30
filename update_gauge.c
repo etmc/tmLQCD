@@ -39,8 +39,9 @@
 #include "hamiltonian_field.h"
 #include "update_gauge.h"
 #include "init/init_gauge_field.h"
-
-
+#ifdef MG4QCD
+#include "update_tm.h"
+#endif
 /*******************************************************
  *
  * Updates the gauge field corresponding to the momenta
@@ -50,7 +51,14 @@
 
 void update_gauge(const double step, hamiltonian_field_t * const hf) {
   double atime, etime;
+#ifdef MG4QCD
+  hmc_control_t hmc_con;
+#endif    
   atime = gettime();
+#ifdef MG4QCD
+   hmc_con=update_hmc_control(step);
+#endif
+  
 #ifdef OMP
 #define static
 #pragma omp parallel
@@ -69,6 +77,9 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
 #undef static
 #endif
 
+  
+  
+  
 #ifdef OMP
 #pragma omp for
 #endif

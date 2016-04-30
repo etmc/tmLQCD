@@ -16,25 +16,10 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-#ifndef _UPDATE_TM_H
-#define _UPDATE_TM_H
 
-#ifdef MG4QCD
-typedef struct{
-   double tauMC;
-   int gcopy_up2date;
-   int basis_up2date;
-   double tau_basis;
-}hmc_control_t;
+#ifndef _SET_EVEN_TO_ZERO_H
+#define _SET_EVEN_TO_ZERO_H
 
-hmc_control_t reset_hmc_control(void);
-hmc_control_t update_hmc_control(double dtau);
-hmc_control_t get_hmc_control(void);
-hmc_control_t set_hmc_control(int gcopy_up2date,int basis_up2date,double tau_basis);
-#endif
-
-int update_tm(double *plaquette_energy, double *rectangle_energy, 
-	      char * filename, const int return_check, const int acctest, 
-	      const int traj_counter);
+void set_even_to_zero(spinor * const P);
 
 #endif

@@ -187,7 +187,6 @@ static inline void rmQuotes(char *str){
   
   int use_qudainverter;
 
-
 %}
 
 %option never-interactive
@@ -630,7 +629,62 @@ static inline void rmQuotes(char *str){
     (optr->solver_params).eigcg_rand_guess_opt = a;
     if(myverbose) printf("  EigCGrand_guess_opt set to %d line %d operator %d\n", a, line_of_file, current_operator);
   }
-
+  {SPC}*MGSetupIter{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_setup_iter=a;
+    if(myverbose) printf("  MG_Setup_Iter set to %d line %d operator %d\n", mg_setup_iter, line_of_file, current_operator);
+  }
+  {SPC}*MGCoarseSetupIter{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_coarse_setup_iter=a;
+    if(myverbose) printf("  MG_Coarse_Setup_Iter set to %d line %d operator %d\n", mg_coarse_setup_iter, line_of_file, current_operator);
+  }
+  {SPC}*MGNumberOfVectors{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_Nvec=a;
+    if(myverbose) printf("  MGNumberOfVectors set to %d line %d operator %d\n", mg_Nvec, line_of_file, current_operator);
+  }
+  {SPC}*MGNumberOfLevels{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_lvl=a;
+    if(myverbose) printf("  MGNumberOfLevels set to %d line %d operator %d\n", mg_lvl, line_of_file, current_operator);
+  }
+  {SPC}*MGBlockX{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_blk[3]=a;
+    if(myverbose) printf("  MGBlockX set to %d line %d operator %d\n", mg_blk[3], line_of_file, current_operator);
+  }
+  {SPC}*MGBlockY{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_blk[2]=a;
+    if(myverbose) printf("  MGBlockY set to %d line %d operator %d\n", mg_blk[2], line_of_file, current_operator);
+  }
+  {SPC}*MGBlockZ{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_blk[1]=a;
+    if(myverbose) printf("  MGBlockZ set to %d line %d operator %d\n", mg_blk[1], line_of_file, current_operator);
+  }
+  {SPC}*MGBlockT{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_blk[0]=a;
+    if(myverbose) printf("  MGBlockT set to %d line %d operator %d\n", mg_blk[0], line_of_file, current_operator);
+  }
+  {SPC}*MGCoarseMuFactor{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mg_cmu_factor=c;
+    if(myverbose) printf("  MGCoarseMuFactor set to %f line %d operator %d\n", mg_cmu_factor, line_of_file, current_operator);
+  }
+  {SPC}*MGdtauUpdate{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mg_dtau=c;
+    if(myverbose) printf("  MGdtauUpdate set to %f line %d operator %d\n", mg_dtau, line_of_file, current_operator);
+  }
+  {SPC}*MGdtauSetupIter{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_dtau_setup_iter=a;
+    if(myverbose) printf("  MG_dtau_Setup_Iter set to %d line %d operator %d\n", mg_dtau_setup_iter, line_of_file, current_operator);
+  }
+  
   {SPC}*ExtraMasses{EQL}{FLTLIST} {
     char * token = NULL;
     optr->no_extra_masses = 0;
@@ -937,7 +991,11 @@ static inline void rmQuotes(char *str){
     if(myverbose) printf("  Solver set to INCR-EIG-CG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
-
+  mg4qcd {
+    optr->solver = MG;
+    if(myverbose) printf("  Solver set to MG4QCD line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
 }
 
 
@@ -950,6 +1008,11 @@ static inline void rmQuotes(char *str){
   mixedcg {
     optr->solver=MIXEDCG;
     if(myverbose) printf("  Solver set to MixedCG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  mg4qcd {
+    optr->solver = MG;
+    if(myverbose) printf("  Solver set to MG4QCD line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
 }
@@ -1427,6 +1490,11 @@ static inline void rmQuotes(char *str){
   bicgstab {
     if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->solver = BICGSTAB;
+    BEGIN(solver_caller);
+  }
+  mg4qcd {
+    if(myverbose) printf("  Solver set to MG4QCD line %d operator %d\n", line_of_file, current_operator);
+    mnl->solver = MG;
     BEGIN(solver_caller);
   }
 }
