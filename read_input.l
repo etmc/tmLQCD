@@ -634,6 +634,11 @@ static inline void rmQuotes(char *str){
     mg_setup_iter=a;
     if(myverbose) printf("  MG_Setup_Iter set to %d line %d operator %d\n", mg_setup_iter, line_of_file, current_operator);
   }
+  {SPC}*MGCoarseSetupIter{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_coarse_setup_iter=a;
+    if(myverbose) printf("  MG_Coarse_Setup_Iter set to %d line %d operator %d\n", mg_coarse_setup_iter, line_of_file, current_operator);
+  }
   {SPC}*MGNumberOfVectors{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mg_Nvec=a;
@@ -673,6 +678,11 @@ static inline void rmQuotes(char *str){
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mg_dtau=c;
     if(myverbose) printf("  MGdtauUpdate set to %f line %d operator %d\n", mg_dtau, line_of_file, current_operator);
+  }
+  {SPC}*MGdtauSetupIter{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_dtau_setup_iter=a;
+    if(myverbose) printf("  MG_dtau_Setup_Iter set to %d line %d operator %d\n", mg_dtau_setup_iter, line_of_file, current_operator);
   }
   
   {SPC}*ExtraMasses{EQL}{FLTLIST} {

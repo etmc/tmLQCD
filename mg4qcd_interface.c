@@ -48,6 +48,8 @@ int mg_update_gauge=1; //TODO set to zero if gaugefield is up to date, set to on
 int mg_update_setup=0; //Number of additional setup iteration 
 int mg_initialized=0;
 int mg_setup_iter=5;
+int mg_coarse_setup_iter=3;
+int mg_dtau_setup_iter=1;
 int mg_Nvec=24;
 int mg_lvl=3;
 int mg_blk[4] = {0, 0, 0, 0};
@@ -169,6 +171,7 @@ void MG_init()
       mg_params.mg_basis_vectors[j]=fmax(28,mg_params.mg_basis_vectors[j-1]);
    
    mg_params.setup_iterations[0]=mg_setup_iter;
+   mg_params.setup_iterations[1]=mg_coarse_setup_iter;
   
    MG4QCD_update_parameters(&mg_params, &mg_status);
    
@@ -176,22 +179,36 @@ void MG_init()
 
 void MG_update_mu(double mu_tmLQCD, double rho_tmLQCD)
 {
-   double mu;
-   mu=0.5*mu_tmLQCD/g_kappa;
+  double mu, even_shift, odd_shift;
+  double rho;
+  mu=0.5*mu_tmLQCD/g_kappa;
+  rho=0.5*rho_tmLQCD/g_kappa;
    
-   // mu_oo = mu+rho -> Update this here
-   if (mu!=mg_params.mu)
-   {
+  // TOTRY: a) Considering a simmetric mu and shift
+  mu = mu + 0.5*rho;
+  even_shift = -0.5*rho;
+  odd_shift = 0.5*rho;
+  /* TOTRY: b) Shifting only odd sites
+  even_shift = 0.0;
+  odd_shift = rho;
+  */
+  MG4QCD_get_parameters(&mg_params);
+  
+  // mu_oo = mu+rho -> Update this here
+  if (mu != mg_params.mu || rho != mg_params.mu_odd_shift )
+    {
       mg_params.mu = mu;
       for (int j=0;j < mg_params.number_of_levels-1; j++)
-	 mg_params.coarse_mu[j] = mu;
+	mg_params.coarse_mu[j] = mu;
       mg_params.coarse_mu[mg_params.number_of_levels-1] =  mg_cmu_factor*mu;
+      mg_params.mu_even_shift = even_shift;
+      mg_params.mu_odd_shift = odd_shift;
       MG4QCD_update_parameters(&mg_params, &mg_status);
-   }
-   
-   if (rho_tmLQCD!=0.0)
-      printf("WARNING RHO IS NON-ZERO\n OPERATOR FOR HMC NOT AVAILABLE YET\n");
-   
+    }
+  
+  //   if (rho_tmLQCD!=0.0)
+  //      printf("WARNING RHO IS NON-ZERO\n OPERATOR FOR HMC NOT AVAILABLE YET\n");
+  
 }
 
 void MG_finalize()
@@ -225,11 +242,14 @@ static hmc_control_t check_hmc_control(void)
 	 ra=mg_dtau/(hmc_con.tauMC-hmc_con.tau_basis);
 	 if ((ra>=1.0)||(mg_dtau==0.0))
 	 {
-	    mg_update_setup=2; // tune this maybe 2 and check because detailed balance !!!!
+	    mg_update_setup=mg_dtau_setup_iter; // tune this maybe 2 and check because detailed balance !!!!
 	 }
       }
+      /* Does not work properly, because it repeates the setup at every inversion until hmc_con.tauMC==0.0
+       *   let's do the setup only once at the beginning by default? (since mg_do_setup is already 1)
       else if (hmc_con.tauMC==0.0)
-	mg_do_setup=1;
+	  mg_do_setup=1;
+      */ 
    }
    return hmc_con;
 }
@@ -241,6 +261,8 @@ int MG_solver_degenerate(spinor * const phi_new, spinor * const phi_old,
 {
    spinor ** solver_field = NULL;
    hmc_control_t hmc_con;
+   // for rescaling  convention in MG4QCD: (4+m)*\delta_{x,y} in tmLQCD: 1*\delta_{x,y} -> rescale by 1/4+m
+   double mg_scale=0.25/(g_kappa*g_kappa);
    
    hmc_con=check_hmc_control();
    
@@ -263,7 +285,7 @@ int MG_solver_degenerate(spinor * const phi_new, spinor * const phi_old,
 	hmc_con=set_hmc_control(1,hmc_con.basis_up2date,hmc_con.tau_basis);
       }
    }
-   
+  
    if (mg_do_setup==1) {
       if (g_proc_id == 0)
 	 printf("MG4QCD running setup\n");
@@ -292,39 +314,43 @@ int MG_solver_degenerate(spinor * const phi_new, spinor * const phi_old,
 	 hmc_con=set_hmc_control(hmc_con.gcopy_up2date,1,hmc_con.tauMC);
       }
    }
+
+   MG_update_mu(g_mu, g_mu3);
   
    init_solver_field(&solver_field, VOLUMEPLUSRAND,3);
-   
-  // for rescaling  convention in MG4QCD: (4+m)*\delta_{x,y} in tmLQCD: 1*\delta_{x,y} -> rescale by 1/4+m
-   double mg_scale=0.25/(g_kappa*g_kappa);
-   
-   MG_update_mu(g_mu, g_mu3);
-   
+    
    if (even_odd_flag==1)
    {
       convert_odd_to_lexic(solver_field[0], phi_old);
+      /* Sobstituted by built in function...
       set_even_to_zero(solver_field[0]);
       
       mul_gamma5(solver_field[0],VOLUME);
       MG4QCD_solve( (double*) solver_field[1], (double*) solver_field[0], sqrt(precision), &mg_status );
       //MG4QCD_apply_operator( (double*) solver_field[1], (double*) solver_field[0], &mg_status );
-      MG_update_mu(-g_mu, g_mu3);
+      MG_update_mu(-g_mu, -g_mu3);
       // project Odd --> if even - odd
       set_even_to_zero(solver_field[1]);
       mul_gamma5(solver_field[1],VOLUME);
       MG4QCD_solve( (double*) solver_field[2], (double*) solver_field[1], sqrt(precision), &mg_status );
+      */
+      MG4QCD_solve_squared_odd( (double*) solver_field[2], (double*) solver_field[0], sqrt(precision), &mg_status );
+      
       mul_r(solver_field[2],mg_scale,solver_field[2],VOLUME);
       convert_lexic_to_odd(phi_new, solver_field[2]);
    }
    else
    {
       assign(solver_field[0], phi_old, VOLUME);
+      /* Sobstituted by built in function...
       mul_gamma5(solver_field[0],VOLUME);
       MG4QCD_solve( (double*) solver_field[1], (double*) solver_field[0], sqrt(precision), &mg_status );
       
-      MG_update_mu(-g_mu, g_mu3);
+      MG_update_mu(-g_mu, -g_mu3);
       mul_gamma5(solver_field[1],VOLUME);
       MG4QCD_solve( (double*) solver_field[2], (double*) solver_field[1], sqrt(precision), &mg_status );
+      */
+      MG4QCD_solve_squared( (double*) solver_field[2], (double*) solver_field[0], sqrt(precision), &mg_status );
       mul_r(phi_new,mg_scale,solver_field[2],VOLUME);
    }
    
@@ -346,8 +372,8 @@ int MG_solver_degenerate(spinor * const phi_new, spinor * const phi_old,
    
    if (even_odd_flag==1)
    {
-      
       init_solver_field(&solver_field2, VOLUMEPLUSRAND, 2);
+     /* Hard test commented, soft test kept
       bicgstab_complex(solver_field2[0], phi_old, max_iter, precision, rel_prec, VOLUME/2, f);
       diff2[0] = sqrt(square_norm(phi_old, VOLUME/2, 1));
       diff2[1] = sqrt(square_norm(phi_new, VOLUME/2, 1));
@@ -361,7 +387,7 @@ int MG_solver_degenerate(spinor * const phi_new, spinor * const phi_old,
       if (g_proc_id == 0)
 	    printf("Norm of the Difference of the Solution || Q_{tmLQC}^{-2} s - Q_{MG4QCD}^{-2}*s||/||s|| = %e/%e = %e \n", differ[0],differ[1],differ[0]/differ[1]);
       
-
+     */
       f(solver_field2[0], phi_new);
       diff(solver_field2[0], solver_field2[0], phi_old, VOLUME/2);
       differ[0] = sqrt(square_norm(solver_field2[0], VOLUME/2, 1));
@@ -370,6 +396,7 @@ int MG_solver_degenerate(spinor * const phi_new, spinor * const phi_old,
    else
    {
       init_solver_field(&solver_field2, VOLUMEPLUSRAND, 2);
+     /* Hard test commented, soft test kept
       cg_her(solver_field2[0], phi_old, max_iter, precision, rel_prec, VOLUME, f);
       
       diff2[0] = sqrt(square_norm(phi_old, VOLUME, 1));
@@ -384,7 +411,7 @@ int MG_solver_degenerate(spinor * const phi_new, spinor * const phi_old,
       if (g_proc_id == 0)
 	    printf("Norm of the Difference of the Solution || Q_{tmLQC}^{-2} s - Q_{MG4QCD}^{-2}*s||/||s|| = %e/%e = %e \n", differ[0],differ[1],differ[0]/differ[1]);
       
-      
+     */
       f(solver_field2[1], phi_new);
       diff(solver_field2[1], solver_field2[1], phi_old, VOLUME);
       differ[0] = sqrt(square_norm(solver_field2[1], VOLUME, 1));
@@ -464,6 +491,7 @@ int MG_solver(spinor * const Even_new, spinor * const Odd_new,
   // for rescaling  convention in MG4QCD: (4+m)*\delta_{x,y} in tmLQCD: 1*\delta_{x,y} -> rescale by 1/4+m
    double mg_scale=0.5/g_kappa;
    
+   MG_update_mu(g_mu, g_mu3);
    
    convert_eo_to_lexic(solver_field[0],  Even, Odd);
    
@@ -489,7 +517,9 @@ int MG_solver(spinor * const Even_new, spinor * const Odd_new,
    double diff2[3]; 
    if (g_c_sw==-1.0)
    {
-      bicgstab_complex(solver_field[2], solver_field[0], max_iter, precision, rel_prec, VOLUME, f);
+    
+     /* Hard test commented, soft test kept
+     bicgstab_complex(solver_field[2], solver_field[0], max_iter, precision, rel_prec, VOLUME, f);
       
       diff2[0] = sqrt(square_norm(solver_field[0], VOLUME, 1));
       diff2[1] = sqrt(square_norm(solver_field[1], VOLUME, 1));
@@ -502,7 +532,7 @@ int MG_solver(spinor * const Even_new, spinor * const Odd_new,
       if (g_proc_id == 0)
 	    printf("Norm of the Difference of the Solution || D_{tmLQC}^{-1} s - D_{MG4QCD}^{-1}*s||/||s|| = %e/%e = %e \n", differ[0],differ[1],differ[0]/differ[1]);
       
-      
+     */
       f(solver_field[2], solver_field[1]);
       diff(solver_field[1], solver_field[2], solver_field[0], VOLUME);
       differ[0] = sqrt(square_norm(solver_field[1], VOLUME, 1));
@@ -512,7 +542,8 @@ int MG_solver(spinor * const Even_new, spinor * const Odd_new,
    }
    else
    {
-
+     
+     /* Hard test commented, soft test kept
       // fix this --> here the even-odd precond will be inverted..
       bicgstab_complex(solver_field[2], solver_field[0], max_iter, precision, rel_prec, VOLUME/2, f);
       
@@ -536,7 +567,7 @@ int MG_solver(spinor * const Even_new, spinor * const Odd_new,
       differ[1] = sqrt(square_norm(solver_field[0], VOLUME/2, 1));
       if (g_proc_id == 0)
 	    printf("Norm of the rel. Residual || s -D_{tmLQC} *D_{MG4QCD}^{-1}*s||/||s|| = %e/%e = %e \n", differ[0],differ[1],differ[0]/differ[1]);
-      
+     */
       
       M_full(solver_fieldeven[0],solver_fieldeven[1] ,Even_new, Odd_new);
       mul_gamma5(solver_fieldeven[0],VOLUME/2); 

@@ -28,6 +28,8 @@
 #include"solver/matrix_mult_typedef.h"
 
 extern int mg_setup_iter;
+extern int mg_coarse_setup_iter;
+extern int mg_dtau_setup_iter;
 extern int mg_Nvec;
 extern int mg_lvl;
 extern int mg_blk[4];
