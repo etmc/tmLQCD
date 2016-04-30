@@ -1,9 +1,9 @@
 # This is an example of input file for the LapH program.
 # Configure with --enable-laph, (lapack also needed. If parallel, --enable-indexindepgeom --enable-tsplitpar are also needed)
 # e.g., (parallel):
-# ./configure --enable-sse3 --enable-mpi --with-mpidimension=XYZ  --disable-halfspinor --enable-indexindepgeom --enable-tsplitpar --enable-laph --with-limedir=${limedir} --with-lemondir=${lemondir} --with-lapack=${lapacklib} CC="${mpicomp} -O3" CFLAGS="-msse3 -O3"
+# ./configure --enable-sse2 --enable-sse3 --enable-mpi --with-mpidimension=XYZ  --disable-halfspinor --enable-indexindepgeom --enable-tsplitpar --enable-laph --with-limedir=${limedir} --with-lemondir=${lemondir} --with-lapack=${lapacklib} CC="${mpicomp} -O3" CFLAGS="-msse3 -O3"
 # e.g. serial:
-# ./configure --enable-sse3 --disable-mpi --disable-halfspinor  --enable-laph --with-limedir=${limedir} --with-lapack=${lapacklib}
+# ./configure --enable-sse2 --enable-sse3 --disable-mpi --disable-halfspinor  --enable-laph --with-limedir=${limedir} --with-lapack=${lapacklib}
 # Compile with make LapH_ev
 # Executable LapH_ev 
 # Use this file as an example of input.

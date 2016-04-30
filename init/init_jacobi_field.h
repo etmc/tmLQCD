@@ -27,7 +27,5 @@
 # ifdef WITHLAPH
 int init_jacobi_field(const int V, const int nr);
 void free_jacobi_field();
-void random_gauss_jacobi_field(su3_vector * const k, const int V);
-void random_jacobi_field(su3_vector * const k, const int V);
 # endif
 #endif

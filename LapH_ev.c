@@ -39,6 +39,9 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include "global.h"
 #include <io/params.h>
 #include <io/gauge.h>
@@ -108,7 +111,22 @@ int main(int argc,char *argv[])
     printf("\n");
     fflush(stdout);
   }
-  
+
+#ifdef OMP
+  if(omp_num_threads > 0) 
+  {
+     omp_set_num_threads(omp_num_threads);
+  }
+  else {
+    if( g_proc_id == 0 )
+      printf("# No value provided for OmpNumThreads, running in single-threaded mode!\n");
+
+    omp_num_threads = 1;
+    omp_set_num_threads(omp_num_threads);
+  }
+
+  init_omp_accumulators(omp_num_threads);
+#endif  
 
 #ifndef WITHLAPH
   printf(" Error: WITHLAPH not defined");
@@ -194,7 +212,7 @@ int main(int argc,char *argv[])
 #endif
 
   for (k=0 ; k<3 ; k++)
-    random_jacobi_field(g_jacobi_field[k],SPACEVOLUME);
+    random_jacobi_field(g_jacobi_field[k]);
 
 
   /* Compute LapH Eigensystem */

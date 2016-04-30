@@ -77,6 +77,7 @@
 #include "ranlxd.h"
 #include "ranlxs.h"
 #include "start.h"
+#include "xchange/xchange.h"
 
 static void gauss_vector(double v[],int n)
 {
@@ -929,3 +930,19 @@ void write_test_spinor_field(spinor * const k, const int eoflag, char * postfix)
   }
   fclose(testout);
 }
+
+#ifdef WITHLAPH
+void random_jacobi_field(su3_vector * const k) {
+  int ix;
+  su3_vector *s;
+
+  for (ix=0; ix<SPACEVOLUME ;ix++)
+    {
+      s=k+ix;
+      random_su3_vector(s,RN_UNIF);
+    }
+#ifdef MPI
+  xchange_jacobi(k);
+#endif
+}
+#endif // WITHLAPH 

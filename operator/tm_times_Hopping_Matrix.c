@@ -99,7 +99,7 @@ void tm_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k, 
   return;
 }
 
-#elif (!defined _NO_COMM && !defined _USE_HALFSPINOR)
+#elif (!defined _NO_COMM && !defined _USE_HALFSPINOR && !defined _USE_TSPLITPAR)
 #  include "operator/hopping.h"
 #  if ((defined SSE2)||(defined SSE3))
 #    include "sse.h"
