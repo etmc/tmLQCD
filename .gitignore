@@ -16,3 +16,5 @@ invert
 offline_measurement
 lib/
 benchmark
+config.status
+config.h
