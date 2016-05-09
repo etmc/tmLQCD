@@ -122,8 +122,10 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
   nblks_dir[2] = nblks_y;
   nblks_dir[3] = nblks_z;
   nb_blocks = nblks_t*nblks_x*nblks_y*nblks_z;
-  if(nblks_t%2 == 1 || nblks_x%2 == 1 || nblks_y%2 == 1 || nblks_z%2 == 1 ) {
-    fprintf(stderr, "no of blocks in all directions must be even! Aborting...\n");
+  //if(nblks_t%2 == 1 || nblks_x%2 == 1 || nblks_y%2 == 1 || nblks_z%2 == 1 ) {
+  //    fprintf(stderr, "no of blocks in all directions must be even! Aborting...\n");
+  if(nblks_z%2 == 1) {
+    fprintf(stderr, "no of MPI local blocks in z direction must be even! Aborting...\n");
     exit(0);
   }
   dT = T/nblks_t; 
@@ -195,17 +197,21 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
     block_list[i].ns = g_N_s;
     block_list[i].spinpad = spinpad;
 
-    /* block coordinate on the mpilocal processor */
+    // block coordinate on the mpilocal processor
     block_list[i].mpilocal_coordinate[0] = (i / (nblks_x * nblks_y * nblks_z));
     block_list[i].mpilocal_coordinate[1] = (i / (nblks_y * nblks_z)) % nblks_x;
     block_list[i].mpilocal_coordinate[2] = (i / (nblks_z)) % nblks_y;
     block_list[i].mpilocal_coordinate[3] = i % nblks_z;
 
-    /* global block coordinate                    */
+    // global block coordinate
     for(j = 0; j < 4; j++) {
       block_list[i].coordinate[j] = nblks_dir[j] * g_proc_coords[j] + block_list[i].mpilocal_coordinate[j];
     }
-    /* even/odd id of block coordinate            */
+    // even/odd id of block coordinate
+    // using the global coordinates here should allow for
+    // odd (MPI) local no of blocks 
+    // -> of course the global number of blocks in each direction must be even.
+    // and at least the local no of blocks in z-direction must be even.
     block_list[i].evenodd = (block_list[i].coordinate[0] + block_list[i].coordinate[1] + 
                              block_list[i].coordinate[2] + block_list[i].coordinate[3]) % 2;
 
@@ -214,10 +220,14 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
 
     /* block_list[i].evenodd = i % 2; */
     if(g_proc_id == 0 && g_debug_level > 4) {
-      printf("%d %d (%d %d %d %d)\n", i, block_list[i].evenodd, block_list[i].coordinate[0], block_list[i].coordinate[1], block_list[i].coordinate[2], block_list[i].coordinate[3]);
+      printf("# Block id %d even odd id %d coordinate (%d %d %d %d)\n", 
+             i, block_list[i].evenodd, block_list[i].coordinate[0], block_list[i].coordinate[1], 
+             block_list[i].coordinate[2], block_list[i].coordinate[3]);
     }
 
-    for (j = 0; j < g_N_s; j++) { /* write a zero element at the end of every spinor */
+    for (j = 0; j < g_N_s; j++) { 
+      // write a zero element at the end of every spinor
+      // this we need for boundary points, which we treat like this
       _spinor_null(block_list[i].basis[j][VOLUME/nb_blocks]);
     }
 
@@ -229,13 +239,6 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
       CALLOC_ERROR_CRASH;
     if ((void*)(block_list[i].little_dirac_operator_eo_32 = calloc(9*g_N_s * g_N_s, sizeof(_Complex float))) == NULL)
       CALLOC_ERROR_CRASH;
-
-    for (j = 0; j < 9 * g_N_s * g_N_s; ++j) {
-      block_list[i].little_dirac_operator[j] = 0.0;
-      block_list[i].little_dirac_operator_32[j] = 0.0;
-      block_list[i].little_dirac_operator_eo[j] = 0.0;
-      block_list[i].little_dirac_operator_eo_32[j] = 0.0;
-    }
   }
   if ((void*)(block_idx = calloc(8 * (VOLUME/nb_blocks), sizeof(int))) == NULL)
     CALLOC_ERROR_CRASH;
@@ -376,19 +379,18 @@ int init_blocks_eo_gaugefield() {
   */
 
   int i, ix, ix_even = 0, ix_odd = (dT*dX*dY*dZ*8)/2, ixeo;
-  int even=0;
 
   for (int t = 0; t < dT;  t++) {
     for (int x = 0; x < dX; x++) {
       for (int y = 0; y < dY; y++) {
         for (int z = 0; z < dZ; z++) {
           if((t+x+y+z)%2 == 0) {
-            even = 1;
             ixeo = ix_even;
+            ix_even += 8;
           }
           else {
-            even = 0;
             ixeo = ix_odd;
+            ix_odd += 8;
           }
           i = 0;
           for(int bt = 0; bt < nblks_t; bt ++) {
@@ -409,8 +411,6 @@ int init_blocks_eo_gaugefield() {
               }
             }
           }
-          if(even) ix_even += 8;
-          else ix_odd += 8;
         }
       }
     }
@@ -780,16 +780,17 @@ int init_blocks_geometry() {
 
   i_even = 0;
   i_odd = 0;
-  for (int t=0;t<nblks_t;t++) {
-    for (int x=0;x<nblks_x;x++) {
-      for (int y=0;y<nblks_y;y++) {
-        for (int z=0;z<nblks_z;z++) {
-          if ((t+x+y+z)%2==0) {
-            index_block_eo[block_index(t,x,y,z)]=i_even;
+  for (int t = 0; t < nblks_t; t++) {
+    for (int x = 0; x < nblks_x; x++) {
+      for (int y = 0; y < nblks_y; y++) {
+        for (int z = 0; z < nblks_z; z++) {
+          ix = block_index(t,x,y,z);
+          if (block_list[ix].evenodd == 0) {
+            index_block_eo[ix] = i_even;
             i_even++;
           }
-          if ((t+x+y+z)%2==1) {
-            index_block_eo[block_index(t,x,y,z)]=i_odd;
+          else {
+            index_block_eo[ix] = i_odd;
             i_odd++;
           }
         }
@@ -1142,6 +1143,7 @@ void compute_little_D(const int mul_g5) {
     exit(-1);
   }
   scratch = (spinor*)(((unsigned long int)(_scratch)+ALIGN_BASE)&~ALIGN_BASE);
+  // not needed?
   temp = scratch + VOLUMEPLUSRAND;
   // NEEDs TO BE REWRITTEN
   atime = gettime();
