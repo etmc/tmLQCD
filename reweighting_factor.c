@@ -57,20 +57,20 @@ void reweighting_factor(const int N, const int nstore) {
       double c_sw = mnl->c_sw;
       if(c_sw < 0.) c_sw = 0.;
 
-      sw_term( (const su3**) hf.gaugefield, mnl->kappa2, c_sw); 
+      sw_term( (const su3**) hf.gaugefield, mnl->kappa, c_sw); 
       if(mnl->type != NDDETRATIO) {
-        trlog[j] = -sw_trace(0, mnl->mu2);
+        trlog[j] = -sw_trace(0, mnl->mu);
       }
       else {
-        trlog[j] = -sw_trace_nd(0, mnl->mubar2, mnl->epsbar2);
+        trlog[j] = -sw_trace_nd(0, mnl->mubar, mnl->epsbar);
       }
         
-      sw_term( (const su3**) hf.gaugefield, mnl->kappa, c_sw);
+      sw_term( (const su3**) hf.gaugefield, mnl->kappa2, c_sw);
       if(mnl->type != NDDETRATIO) {
-        trlog[j] -= -sw_trace(0, mnl->mu);
+        trlog[j] -= -sw_trace(0, mnl->mu2);
       }
       else {
-        trlog[j] -= -sw_trace_nd(0, mnl->mubar, mnl->epsbar);
+        trlog[j] -= -sw_trace_nd(0, mnl->mubar2, mnl->epsbar2);
       }
     }
     else {
