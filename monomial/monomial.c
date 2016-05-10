@@ -227,6 +227,17 @@ int init_monomials(const int V, const int even_odd_flag) {
 	  printf("# Initialised monomial of type CLOVERDETRATIO, no_monomials= %d\n", no_monomials);
 	}
       }
+      else if(monomial_list[i].type == CLOVERDETRATIORW) {
+	monomial_list[i].accfunction = &cloverdetratio_rwacc;
+	monomial_list[i].even_odd_flag = 1;
+	monomial_list[i].Qsq = &Qsw_pm_psi;
+	monomial_list[i].Qp = &Qsw_plus_psi;
+	monomial_list[i].Qm = &Qsw_minus_psi;
+	init_swpm(VOLUME);
+	if(g_proc_id == 0 && g_debug_level > 1) {
+	  printf("# Initialised monomial of type CLOVERDETRATIORW, no_monomials= %d, currently only available for reweighting!\n", no_monomials);
+	}
+      }
       else if(monomial_list[i].type == DETRATIO) {
 	monomial_list[i].hbfunction = &detratio_heatbath;
 	monomial_list[i].accfunction = &detratio_acc;
