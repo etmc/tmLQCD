@@ -49,20 +49,35 @@ void reweighting_factor(const int N, const int nstore) {
   double * trlog = (double*)calloc(no_monomials, sizeof(double));
 
   // we compute the trlog part first, because they are independent of 
-  // stochastic noise.
+  // stochastic noise. This is only needed for even/odd monomials
   for(int j = 0; j < no_monomials; j++) {
     mnl = &monomial_list[j];
-    if(mnl->type == CLOVERDETRATIORW) {
+    if(mnl->even_odd_flag) {
       init_sw_fields();
+      double c_sw = mnl->c_sw;
+      if(c_sw < 0.) c_sw = 0.;
 
-      sw_term( (const su3**) hf.gaugefield, mnl->kappa2, mnl->c_sw); 
-      trlog[j] = -sw_trace(0, mnl->mu2);
-
-      sw_term( (const su3**) hf.gaugefield, mnl->kappa, mnl->c_sw); 
-      trlog[j] -= -sw_trace(0, mnl->mu);
+      sw_term( (const su3**) hf.gaugefield, mnl->kappa2, c_sw); 
+      if(mnl->type != NDDETRATIO) {
+        trlog[j] = -sw_trace(0, mnl->mu2);
+      }
+      else {
+        trlog[j] = -sw_trace_nd(0, mnl->mubar2, mnl->epsbar2);
+      }
+        
+      sw_term( (const su3**) hf.gaugefield, mnl->kappa, c_sw);
+      if(mnl->type != NDDETRATIO) {
+        trlog[j] -= -sw_trace(0, mnl->mu);
+      }
+      else {
+        trlog[j] -= -sw_trace_nd(0, mnl->mubar, mnl->epsbar);
+      }
     }
     else {
       trlog[j] = 0.;
+    }
+    if(g_proc_id == 0 && g_debug_level > 0) {
+      printf("# monomial[%d] %s, trlog = %e\n", j, mnl->name, trlog[j]);
     }
   }
 
@@ -81,8 +96,8 @@ void reweighting_factor(const int N, const int nstore) {
           random_spinor_field_lexic(mnl->pf, mnl->rngrepro, RN_GAUSS);
           mnl->energy0 = square_norm(mnl->pf, n, 1);
         }
-	if(g_proc_id == 0 && g_debug_level > 0) {
-	  printf("monomial[%d] %s, energy0 = %e\n", j, mnl->name, mnl->energy0);
+	if(g_proc_id == 0 && g_debug_level > 1) {
+	  printf("# monomial[%d] %s, energy0 = %e\n", j, mnl->name, mnl->energy0);
 	}
 	if(mnl->type == NDDETRATIO) {
 	  if(mnl->even_odd_flag) {
@@ -103,7 +118,7 @@ void reweighting_factor(const int N, const int nstore) {
 	double y = mnl->accfunction(j, &hf);
 	data[i*no_monomials + j] = y;
 	if(g_proc_id == 0 && g_debug_level > 0) {
-	  printf("monomial[%d] %s, stochastic part: w_%d=%e exp(w_%d)=%e\n", j, mnl->name, j, j, y, exp(y));
+	  printf("# monomial[%d] %s, stochastic part: w_%d=%e exp(w_%d)=%e\n", j, mnl->name, j, j, y, exp(y));
 	}
       }
     }
