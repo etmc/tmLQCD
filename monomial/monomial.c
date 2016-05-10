@@ -137,7 +137,7 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].rat.crange[1] = 11;
 
   monomial_list[no_monomials].initialised = 1;
-  if(monomial_list[no_monomials].type == NDDETRATIO) {
+  if(monomial_list[no_monomials].type == NDDETRATIO || monomial_list[no_monomials].type == CLOVERDETRATIORW) {
     monomial_list[no_monomials].timescale = -5;
   }
 
@@ -437,7 +437,7 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].timescale = -5;
 	no++;
 	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# Initialised monomial of type NDDETRATIO, no_monomials= %d\n", no_monomials);
+	  printf("# Initialised monomial of type NDDETRATIO, no_monomials= %d, currently only available for reweighting!\n", no_monomials);
 	}
       }
     }
