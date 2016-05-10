@@ -56,6 +56,7 @@ double cloverdetratio_rwacc(const int id, hamiltonian_field_t * const hf) {
   g_mu = mnl->mu2;
   boundary(mnl->kappa2);
 
+  init_sw_fields();
   sw_term( (const su3**) hf->gaugefield, mnl->kappa2, mnl->c_sw); 
   sw_invert(EE, mnl->mu2);
   g_mu3 = mnl->rho2;
