@@ -83,13 +83,15 @@ void reweighting_factor(const int N, const int nstore) {
   }
   
   if(g_proc_id == 0) {
-    ofs = fopen("reweighting_factor.data", "a");
-    fprintf(ofs, "%d ", nstore);
+    char filename[50];
+    sprintf(filename, "reweighting_factor.data.%.5d", nstore);
+    ofs = fopen(filename, "w");
     for(j = 0; j < no_monomials; j++) {
-      fprintf(ofs, "%e %e ", sum[j]/N, sqrt((-sum[j]*sum[j]/N/N + sum_sq[j]/N)/(N-1)/N));
+      fprintf(ofs, "%.5d %e %e %e %e %e %e \n", j, mnl->kappa, mnl->kappa2, mnl->mu, mnl->mu2, sum[j]/N, sqrt((-sum[j]*sum[j]/N/N + sum_sq[j]/N)/(N-1)/N));
     }
-    fprintf(ofs, "\n");
     fclose(ofs);
   }
+  free(sum);
+  free(sum_sq);
 }
 
