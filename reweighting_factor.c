@@ -30,11 +30,12 @@
 #include "fatal_error.h"
 #include "monomial/monomial.h"
 #include "hamiltonian_field.h"
+#include "operator/clovertm_operators.h"
+#include "operator/clover_leaf.h"
 #include "reweighting_factor.h"
 
 void reweighting_factor(const int N, const int nstore) {
   int n = VOLUME;
-  double * data;
   monomial * mnl;
   FILE * ofs;
   hamiltonian_field_t hf;
@@ -44,7 +45,26 @@ void reweighting_factor(const int N, const int nstore) {
   hf.derivative = NULL;
   hf.update_gauge_copy = g_update_gauge_copy;
 
-  data = (double*)calloc(no_monomials*N, sizeof(double));
+  double * data = (double*)calloc(no_monomials*N, sizeof(double));
+  double * trlog = (double*)calloc(no_monomials, sizeof(double));
+
+  // we compute the trlog part first, because they are independent of 
+  // stochastic noise.
+  for(int j = 0; j < no_monomials; j++) {
+    mnl = &monomial_list[j];
+    if(mnl->type == CLOVERDETRATIORW) {
+      init_sw_fields();
+
+      sw_term( (const su3**) hf.gaugefield, mnl->kappa2, mnl->c_sw); 
+      trlog[j] = -sw_trace(0, mnl->mu2);
+
+      sw_term( (const su3**) hf.gaugefield, mnl->kappa, mnl->c_sw); 
+      trlog[j] -= -sw_trace(0, mnl->mu);
+    }
+    else {
+      trlog[j] = 0.;
+    }
+  }
 
   for(int i = 0; i < N; i++) {
     if(g_proc_id == 0 && g_debug_level > 0) {
@@ -83,7 +103,7 @@ void reweighting_factor(const int N, const int nstore) {
 	double y = mnl->accfunction(j, &hf);
 	data[i*no_monomials + j] = y;
 	if(g_proc_id == 0 && g_debug_level > 0) {
-	  printf("monomial[%d] %s, w_%d=%e W=%e\n", j, mnl->name, j, y, exp(y));
+	  printf("monomial[%d] %s, stochastic part: w_%d=%e exp(w_%d)=%e\n", j, mnl->name, j, j, y, exp(y));
 	}
       }
     }
@@ -97,13 +117,15 @@ void reweighting_factor(const int N, const int nstore) {
     }
     else {
       for(int j = 0; j < no_monomials; j++) {
+        mnl = &monomial_list[j];
         for(int i = 0; i < N; i++) {
-          fprintf(ofs, "%.2d %.5d %e %e %e %e %.10e\n", j, i, mnl->kappa, mnl->kappa2, mnl->mu, mnl->mu2, data[i*no_monomials + j]);
+          fprintf(ofs, "%.2d %.5d %e %e %e %e %.10e\n", j, i, mnl->kappa, mnl->kappa2, mnl->mu, mnl->mu2, data[i*no_monomials + j] + trlog[j]);
         }
       }
       fclose(ofs);
     }
   }
   free(data);
+  free(trlog);
 }
 
