@@ -147,7 +147,18 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
       // Pion full time slice sources
       if(SourceInfo.automaticTS) {
 	// chose timeslice randomly
-	if(g_proc_id == 0) {
+	int found = 0;
+	if(g_proc_id == 0 && !PropInfo.splitted) {
+          for(t = 0; t < g_nproc_t*T; t++) {
+            sprintf(source_filename, "%s.%.4d.%.5d.%.2d.inverted", SourceInfo.basename, nstore, isample, t);
+            if( (ifs = fopen(source_filename, "r")) != NULL) {
+              fclose(ifs);
+	      found = 1;
+	      break;
+            }
+          }
+	}
+	if(PropInfo.splitted || !found) {
 	  ranlxs(&u, 1);
 	  t = (int)(u*g_nproc_t*T);
 	}

@@ -183,6 +183,7 @@ int init_operators() {
             fprintf(stderr, "CGMMS doesn't need AddDownPropagator! Switching Off!\n");
           optr->DownProp = 0;
         }
+
         if(optr->solver == INCREIGCG){
           if (g_cart_id == 0 && optr->DownProp){
              fprintf(stderr,"Warning: When even-odd preconditioning is used, the eigenvalues for +mu and -mu will be little different\n");
