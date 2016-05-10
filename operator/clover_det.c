@@ -152,14 +152,13 @@ double sw_trace(const int ieo, const double mu) {
       _su3_dagger(v, sw[x][1][i]); 
       populate_6x6_matrix(a, &v, 3, 0);
       populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
-      // we add the twisted mass term
-      if(i == 0) add_tm(a, mu);
-      else add_tm(a, -mu);
+      // we add the twisted mass term (the sign is of no importance
+      // because we compute the modulus squared and they are complex
+      // conjugates of each other) 
+      add_tm(a, mu);
       // and compute the tr log (or log det)
       six_det(&det,a);
       tra = log(conj(det)*det);
-      // we need to compute only the one with +mu
-      // the one with -mu must be the complex conjugate!
       
       tr=tra+kc;
       ts=tr+ks;
@@ -214,11 +213,11 @@ double sw_trace_nd(const int ieo, const double mu, const double eps) {
 
   int x,ioff;
   su3 ALIGN v;
-  _Complex double ALIGN a[6][6];
+  _Complex double ALIGN a[6][6], t[6][6];
   double ALIGN tra;
   double ALIGN ks,kc,tr,ts,tt;
   _Complex double ALIGN det[2];
-  double se = (eps*eps)*(eps*eps)*(eps*eps);
+  double mu_sq_m_eps_sq = mu*mu - eps*eps;
   ks=0.0;
   kc=0.0;
 
@@ -240,15 +239,17 @@ double sw_trace_nd(const int ieo, const double mu, const double eps) {
       _su3_dagger(v, sw[x][1][i]); 
       populate_6x6_matrix(a, &v, 3, 0);
       populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
-      // we add the twisted mass term prop to tau^3
-      if(i == 0) add_tm(a, mu);
-      else add_tm(a, -mu);
-      six_det(&det[i], a);
+      
+      // square the matrix
+      six_mul_six(t,a,a);
+      // add the diagonal elements mu^2-eps^2  
+      add_shift_6x6(t,mu_sq_m_eps_sq);
+
+      six_det(&det[i], t);
     }
     // and compute the tr log (or log det)
-    // for the 2x2 matrix in flavour space
-    // with eps*tau^1 in the off diagonal
-    tra = log(conj(det[0])*det[0]*conj(det[1])*det[1] - se*se);
+    // taking into account that either determinant must be real
+    tra = log(creal(det[0])*creal(det[1]));
 
     tr=tra+kc;
     ts=tr+ks;

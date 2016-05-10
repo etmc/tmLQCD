@@ -1,8 +1,5 @@
 /***********************************************************************
- *
- * Copyright (C) 2009 Florian Burger
- *
- * Adapted from online_measurement.h by Florian Burger 2009/12/16
+ * Copyright (C) 2014 Florian Burger
  *
  * This file is part of tmLQCD.
  *
@@ -19,12 +16,17 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
+#ifndef _MONOMIAL_SOLVE_H
+#define _MONOMIAL_SOLVE_H
 
-#ifndef _PION_NORM_H
-#define _PION_NORM_H
 
-void pion_norm(const int traj, const int id, const int ieo);
+#include"solver/matrix_mult_typedef.h"
+#include"solver/solver_params.h"
+#include"su3.h"
+    int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_params, const int max_iter, 
+           double eps_sq, const int rel_prec, const int N, matrix_mult f, int solver_type);
+    int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn, 
+                     spinor * const Qup, spinor * const Qdn, 
+                     solver_pm_t * solver_pm);
 
 #endif
-
-

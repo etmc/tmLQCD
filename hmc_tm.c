@@ -23,10 +23,7 @@
  * Author: Carsten Urbach
  *         urbach@physik.fu-berlin.de
  *
- * Modified by Jenifer Gonzalez Lopez for the Schroedinger Functional
- *
  *******************************************************************************/
-#define MAIN_PROGRAM
 #include "lime.h"
 #if HAVE_CONFIG_H
 #include<config.h>
@@ -70,7 +67,7 @@
 #include "monomial/monomial.h"
 #include "integrator.h"
 #include "sighandler.h"
-#include "measurements.h"
+#include "meas/measurements.h"
 
 extern int nstore;
 
@@ -103,8 +100,6 @@ int main(int argc,char *argv[]) {
   /* Do we want to perform reversibility checks */
   /* See also return_check_flag in read_input.h */
   int return_check = 0;
-  /* For getopt */
-  int c;
 
   paramsXlfInfo *xlfInfo;
 
@@ -169,7 +164,10 @@ int main(int argc,char *argv[]) {
 
   DUM_BI_MATRIX = DUM_BI_SOLVER+6;
   NO_OF_BISPINORFIELDS = DUM_BI_MATRIX+6;
-
+  
+  //4 extra fields (corresponding to DUM_MATRIX+0..5) for deg. and ND matrix mult.
+  NO_OF_SPINORFIELDS_32 = 6;
+  
   tmlqcd_mpi_init(argc, argv);
 
   if(nstore == -1) {
@@ -195,8 +193,10 @@ int main(int argc,char *argv[]) {
   
 #ifdef _GAUGE_COPY
   status = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
+  status += init_gauge_field_32(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
   status = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
+  status += init_gauge_field_32(VOLUMEPLUSRAND + g_dbw2rand, 0);   
 #endif
   /* need temporary gauge field for gauge reread checks and in update_tm */
   status += init_gauge_tmp(VOLUME);
@@ -212,9 +212,11 @@ int main(int argc,char *argv[]) {
   }
   if(even_odd_flag) {
     j = init_spinor_field(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS);
+    j += init_spinor_field_32(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS_32);      
   }
   else {
     j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
+    j += init_spinor_field_32(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS_32);    
   }
   if (j != 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
@@ -284,9 +286,14 @@ int main(int argc,char *argv[]) {
     fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
     exit(-1);
   }
-  if(g_sloppy_precision_flag == 1) {
-    init_dirac_halfspinor32();
-  }
+
+  j = init_dirac_halfspinor32();
+  if (j != 0)
+  {
+    fprintf(stderr, "Not enough memory for 32-bit halffield! Aborting...\n");
+    exit(-1);
+  } 
+  
 #  if (defined _PERSISTENT)
   init_xchange_halffield();
 #  endif
@@ -326,7 +333,11 @@ int main(int argc,char *argv[]) {
 #ifdef MPI
   xchange_gauge(g_gauge_field);
 #endif
-
+    
+  /*Convert to a 32 bit gauge field, after xchange*/
+  convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND + g_dbw2rand);
+  
+    
   if(even_odd_flag) {
     j = init_monomials(VOLUMEPLUSRAND/2, even_odd_flag);
   }
@@ -420,6 +431,9 @@ int main(int argc,char *argv[]) {
        * then the configuration is currently stored in .conf.tmp, written out by update_tm.
        * In that case also a readback was performed, so no need to test .conf.tmp
        * In all other cases the gauge configuration still needs to be written out here. */
+
+      sprintf(tmp_filename,".conf.t%05d.tmp",trajectory_counter);
+
       if (!(return_check && accept))
         for (unsigned int attempt = 1; attempt <= io_max_attempts; ++attempt)
         {
@@ -455,9 +469,9 @@ int main(int argc,char *argv[]) {
             } else {
               if(g_proc_id==0) {
                 if(read_attempt+1 < 2) {
-                  fprintf(stdout, "# Reread attempt %d out of %d failed, trying again in %d seconds!\n",read_attempt+1,2,2);
+                  fprintf(stdout, "# Reread attempt %d out of %d failed, trying again in %d seconds!\n",read_attempt+1,2, 2);
                 } else {
-                  fprintf(stdout, "$ Reread attept %d out of %d failed, write will be reattempted!\n",read_attempt+1,2,2);
+                  fprintf(stdout, "# Reread attept %d out of %d failed, write will be reattempted!\n",read_attempt+1,2);
                 }
               }
               sleep(2);
@@ -545,8 +559,10 @@ int main(int argc,char *argv[]) {
 #endif
   free_gauge_tmp();
   free_gauge_field();
+  free_gauge_field_32();  
   free_geometry_indices();
   free_spinor_field();
+  free_spinor_field_32();  
   free_moment_field();
   free_monomials();
   if(g_running_phmc) {

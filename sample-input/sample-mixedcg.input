@@ -1,0 +1,46 @@
+#example input file for invert
+# for MIXEDCG solver
+# requires a 4^4 gauge configuration conf.0000
+
+L=4
+T=4
+
+DebugLevel = 5
+InitialStoreCounter = 0
+Measurements = 1
+2kappamu = 0.05
+kappa = 0.177
+BCAngleT = 1
+GaugeConfigInputFile = conf
+UseEvenOdd = yes
+
+SourceType = Volume
+ReadSource = no
+NoSamples = 12
+
+# residual reduction factor for inner solver in mixed cg (1.e-6 seems to work quite well in general)
+MixCGInnerEps = 1.e-6
+# maximum number of inner solver iterations for MIXEDCG per restart
+MixCGMaxIter = 10000
+
+BeginOperator TMWILSON
+  2kappaMu = 0.05
+  kappa = 0.177
+  UseEvenOdd = yes
+  Solver = MIXEDCG
+  SolverPrecision = 1e-14
+  # MIXECG internally calculates the number of outer iterations from MaxSolverIterations and MixCGMaIter, but does
+  # at least 10 outer iterations
+  MaxSolverIterations = 30000
+  AddDownPropagator = yes
+EndOperator
+
+BeginOperator CLOVER
+  2kappaMu = 0.05
+  kappa = 0.177
+  csw = 1.74
+  Solver = MIXEDCG
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 30000
+  AddDownPropagator = yes
+EndOperator

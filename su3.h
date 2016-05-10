@@ -42,6 +42,11 @@ typedef struct
    _Complex double c00, c01, c02, c10, c11, c12, c20, c21, c22;
 } su3;
 
+typedef struct 
+{
+   _Complex float c00, c01, c02, c10, c11, c12, c20, c21, c22;
+} su3_32;
+
 typedef struct
 {
    _Complex double c0,c1,c2;
@@ -56,6 +61,11 @@ typedef struct
 {
    su3_vector s0,s1,s2,s3;
 } spinor;
+
+typedef struct
+{
+   su3_vector32 s0,s1,s2,s3;
+} spinor32;
 
 typedef struct
 {
@@ -368,6 +378,17 @@ _sse_store_up(r);
   (u).c21 = conj((v).c12);			\
   (u).c22 = conj((v).c22); 
 
+#define _su3_transpose(u,v)			\
+  (u).c00 = ((v).c00);			\
+  (u).c01 = ((v).c10);			\
+  (u).c02 = ((v).c20);			\
+  (u).c10 = ((v).c01);			\
+  (u).c11 = ((v).c11);			\
+  (u).c12 = ((v).c21);			\
+  (u).c20 = ((v).c02);			\
+  (u).c21 = ((v).c12);			\
+  (u).c22 = ((v).c22);
+
 #define _itimes_su3(u,v)			\
   (u).c00 = I * (v).c00;			\
   (u).c01 = I * (v).c01;			\
@@ -620,6 +641,11 @@ _sse_store_up(r);
 
 #endif
 
+#define _su3_minus_const_times_im_trace_su3(w,c,v) \
+  (w).c00 -= I*c*(cimag((v).c00) + cimag((v).c11) + cimag((v).c22)); \
+  (w).c11 -= I*c*(cimag((v).c00) + cimag((v).c11) + cimag((v).c22)); \
+  (w).c22 -= I*c*(cimag((v).c00) + cimag((v).c11) + cimag((v).c22)); 
+
 #define _trace_su3_times_su3d(x,v,w)	\
   x =   (v).c00 * conj((w).c00)		\
       + (v).c01 * conj((w).c01)		\
@@ -681,6 +707,11 @@ _sse_store_up(r);
   (t).c21 = (u).c2 * conj((v).c1) + (w).c2 * conj((z).c1);	\
   (t).c22 = (u).c2 * conj((v).c2) + (w).c2 * conj((z).c2);
 
-
+#define _su3_add_equals_complex_identity(u, c) \
+  (u).c00 += (c); \
+  (u).c11 += (c); \
+  (u).c22 += (c);
 
 #endif
+
+

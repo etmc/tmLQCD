@@ -1,6 +1,6 @@
 /***********************************************************************
  *
- * Copyright (C) 2008 Carsten Urbach
+ * Copyright (C) 2012 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -16,11 +16,13 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
+ *
  ***********************************************************************/
+#ifndef _CLOVERDETRATIO_RWMONOMIAL_H
+#define _CLOVERDETRATIO_RWMONOMIAL_H
 
-#ifndef _ONLINE_MEASUREMENT_H
-#define _ONLINE_MEASUREMENT_H
+#include "hamiltonian_field.h"
 
-void online_measurement(const int traj, const int t0, const int ieo);
+double cloverdetratio_rwacc(const int no, hamiltonian_field_t * const hf);
 
 #endif

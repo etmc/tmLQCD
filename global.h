@@ -51,7 +51,7 @@
 /* size of the extra_masses array for operators using the CGMMS solver */
 #define MAX_EXTRA_MASSES 30
 
-#if defined MAIN_PROGRAM
+#if defined INIT_GLOBALS
 #  define EXTERN
 #else
 #  define EXTERN extern
@@ -65,11 +65,13 @@
 
 EXTERN int DUM_DERI, DUM_SOLVER, DUM_MATRIX;
 EXTERN int NO_OF_SPINORFIELDS;
+EXTERN int NO_OF_SPINORFIELDS_32;
 
 EXTERN int DUM_BI_DERI, DUM_BI_SOLVER, DUM_BI_MATRIX;
 EXTERN int NO_OF_BISPINORFIELDS;
 
 EXTERN int g_update_gauge_copy;
+EXTERN int g_update_gauge_copy_32;
 EXTERN int g_relative_precision_flag;
 EXTERN int g_debug_level;
 EXTERN int g_disable_IO_checks;
@@ -104,6 +106,7 @@ EXTERN int * g_field_z_ipt_even;
 EXTERN int * g_field_z_ipt_odd;
 
 EXTERN spinor ** g_spinor_field;
+EXTERN spinor32 ** g_spinor_field32;
 
 EXTERN bispinor ** g_bispinor_field;
 EXTERN spinor * g_tbuff;
@@ -170,13 +173,16 @@ EXTERN int g_running_phmc;
 /* End IF PHMC  */
 
 EXTERN su3 ** g_gauge_field;
+EXTERN su3_32 ** g_gauge_field_32;
 #ifdef _USE_HALFSPINOR
 EXTERN su3 *** g_gauge_field_copy;
+EXTERN su3_32 *** g_gauge_field_copy_32;
 #elif (defined _USE_TSPLITPAR )
 EXTERN su3 ** g_gauge_field_copyt;
 EXTERN su3 ** g_gauge_field_copys;
 #else
 EXTERN su3 ** g_gauge_field_copy;
+EXTERN su3_32 ** g_gauge_field_copy_32;
 #endif
 
 /*for temporalgauge in GPU part*/
@@ -250,14 +256,32 @@ EXTERN int tempT,tempV,tempR;
 EXTERN int ** g_iup3d;
 EXTERN int ** g_idn3d;
 #endif
-
+ 
 #undef EXTERN
 /* #undef ALIGN */
 
 void fatal_error(char const *error, char const *function);
 
-#ifdef MAIN_PROGRAM
-#endif
+/* enumeration type for the sloppy prec. of the inverter */
+typedef enum SloppyPrecision_s {
+  SLOPPY_DOUBLE = 0,
+  SLOPPY_SINGLE,
+  SLOPPY_HALF
+} SloppyPrecision;
+
+/* enumeration type for the compression of the inverter */
+typedef enum CompressionType_s {
+  NO_COMPRESSION = 18,
+  COMPRESSION_12 = 12,
+  COMPRESSION_8  = 8
+} CompressionType;
+
+/* enumeration type for the external inverter */
+typedef enum ExternalInverter_s {
+  NO_EXT_INV = 0,
+  QUDA_INVERTER,
+  QPHIX_INVERTER
+} ExternalInverter;
 
 #endif
 

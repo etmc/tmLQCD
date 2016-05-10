@@ -32,7 +32,9 @@
 #include "su3adj.h"
 #include "su3spinor.h"
 #include "operator/tm_operators.h"
+#include "operator/tm_operators_32.h"
 #include "operator/clovertm_operators.h"
+#include "operator/clovertm_operators_32.h"
 #include "operator/clover_leaf.h"
 #include "ranlxd.h"
 #include "sse.h"
@@ -92,7 +94,17 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].accprec = _default_g_eps_sq_acc;
   monomial_list[no_monomials].forceprec = _default_g_eps_sq_force;
   monomial_list[no_monomials].maxiter = _default_max_solver_iterations;
-  monomial_list[no_monomials].solver = _default_solver_flag;
+  if((monomial_list[no_monomials].type == NDRAT) ||
+     (monomial_list[no_monomials].type == NDRATCOR) ||
+     (monomial_list[no_monomials].type == NDCLOVERRAT) ||
+     (monomial_list[no_monomials].type == NDCLOVERRATCOR)
+  ) {
+    monomial_list[no_monomials].solver = _default_nd_solver_flag;    
+  }
+  else{
+    monomial_list[no_monomials].solver = _default_solver_flag;
+  }
+  monomial_list[no_monomials].solver_params.mcg_delta = _default_mixcg_innereps;
   monomial_list[no_monomials].even_odd_flag = _default_even_odd_flag;
   monomial_list[no_monomials].forcefactor = 1.;
   monomial_list[no_monomials].use_rectangles = 0;
@@ -180,6 +192,7 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].accfunction = &det_acc;
 	monomial_list[i].derivativefunction = &det_derivative;
 	monomial_list[i].Qsq = &Qtm_pm_psi;
+	monomial_list[i].Qsq32 = &Qtm_pm_psi_32;	
 	monomial_list[i].Qp = &Qtm_plus_psi;
 	monomial_list[i].Qm = &Qtm_minus_psi;
 	if(g_proc_id == 0 && g_debug_level > 1) {
@@ -214,11 +227,23 @@ int init_monomials(const int V, const int even_odd_flag) {
 	  printf("# Initialised monomial of type CLOVERDETRATIO, no_monomials= %d\n", no_monomials);
 	}
       }
+      else if(monomial_list[i].type == CLOVERDETRATIORW) {
+	monomial_list[i].accfunction = &cloverdetratio_rwacc;
+	monomial_list[i].even_odd_flag = 1;
+	monomial_list[i].Qsq = &Qsw_pm_psi;
+	monomial_list[i].Qp = &Qsw_plus_psi;
+	monomial_list[i].Qm = &Qsw_minus_psi;
+	init_swpm(VOLUME);
+	if(g_proc_id == 0 && g_debug_level > 1) {
+	  printf("# Initialised monomial of type CLOVERDETRATIORW, no_monomials= %d, currently only available for reweighting!\n", no_monomials);
+	}
+      }
       else if(monomial_list[i].type == DETRATIO) {
 	monomial_list[i].hbfunction = &detratio_heatbath;
 	monomial_list[i].accfunction = &detratio_acc;
 	monomial_list[i].derivativefunction = &detratio_derivative;
 	monomial_list[i].Qsq = &Qtm_pm_psi;
+	monomial_list[i].Qsq32 = &Qtm_pm_psi_32;	
 	monomial_list[i].Qp = &Qtm_plus_psi;
 	monomial_list[i].Qm = &Qtm_minus_psi;
 	if(g_proc_id == 0 && g_debug_level > 1) {

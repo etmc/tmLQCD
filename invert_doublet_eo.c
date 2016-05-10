@@ -45,7 +45,11 @@
 #include"read_input.h"
 #include"xchange/xchange.h"
 #include"operator/tm_operators_nd.h"
+#include"operator/tm_operators_nd_32.h"
 #include"invert_doublet_eo.h"
+#ifdef QUDA
+#  include "quda_interface.h"
+#endif
 
 
 #ifdef HAVE_GPU
@@ -61,71 +65,31 @@ extern su3* g_trafo;
 
 
 int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s, 
-		      spinor * const Even_new_c, spinor * const Odd_new_c, 
-		      spinor * const Even_s, spinor * const Odd_s,
-		      spinor * const Even_c, spinor * const Odd_c,
-		      const double precision, const int max_iter,
-		      const int solver_flag, const int rel_prec) {
+                      spinor * const Even_new_c, spinor * const Odd_new_c,
+                      spinor * const Even_s, spinor * const Odd_s,
+                      spinor * const Even_c, spinor * const Odd_c,
+                      const double precision, const int max_iter,
+                      const int solver_flag, const int rel_prec, solver_params_t solver_params,
+                      const ExternalInverter inverter, const SloppyPrecision sloppy, const CompressionType compression) {
 
   int iter = 0;
-  
+
+#ifdef QUDA
+  if( inverter==QUDA_INVERTER ) {
+    return invert_doublet_eo_quda( Even_new_s, Odd_new_s, Even_new_c, Odd_new_c,
+                                   Even_s, Odd_s, Even_c, Odd_c,
+                                   precision, max_iter,
+                                   solver_flag, rel_prec, 1,
+                                   sloppy, compression );
+  }
+#endif
   
 #ifdef HAVE_GPU
 #  ifdef TEMPORALGAUGE
-  
-  /* initialize temporal gauge here */
-  int retval;
-  double dret1, dret2;
-  double plaquette1 = 0.0;
-  double plaquette2 = 0.0;
-  
   if (usegpu_flag) {
-    
-    /* need VOLUME here (not N=VOLUME/2)*/
-    if ((retval = init_temporalgauge_trafo(VOLUME, g_gauge_field)) != 0 ) {				// initializes the transformation matrices
-      if (g_proc_id == 0) printf("Error while gauge fixing to temporal gauge. Aborting...\n");   	//	g_tempgauge_field as a copy of g_gauge_field
-      exit(200);
-    }
-    
-    /* do trafo */
-    plaquette1 = measure_plaquette(g_gauge_field);
-    apply_gtrafo(g_gauge_field, g_trafo);								// transformation of the gauge field
-    plaquette2 = measure_plaquette(g_gauge_field);
-    if (g_proc_id == 0) printf("\tPlaquette before gauge fixing: %.16e\n", plaquette1/6./VOLUME);
-    if (g_proc_id == 0) printf("\tPlaquette after gauge fixing:  %.16e\n", plaquette2/6./VOLUME);
-    
-    /* do trafo to odd_s part of source */
-    dret1 = square_norm(Odd_s, VOLUME/2 , 1);
-    apply_gtrafo_spinor_odd(Odd_s, g_trafo);								// odd spinor transformation, strange
-    dret2 = square_norm(Odd_s, VOLUME/2, 1);
-    if (g_proc_id == 0) printf("\tsquare norm before gauge fixing: %.16e\n", dret1); 
-    if (g_proc_id == 0) printf("\tsquare norm after gauge fixing:  %.16e\n", dret2);
-    
-    /* do trafo to odd_c part of source */
-    dret1 = square_norm(Odd_c, VOLUME/2 , 1);
-    apply_gtrafo_spinor_odd(Odd_c, g_trafo);								// odd spinor transformation, charm
-    dret2 = square_norm(Odd_c, VOLUME/2, 1);
-    if (g_proc_id == 0) printf("\tsquare norm before gauge fixing: %.16e\n", dret1); 
-    if (g_proc_id == 0) printf("\tsquare norm after gauge fixing:  %.16e\n", dret2);       
-    
-    /* do trafo to even_s part of source */
-    dret1 = square_norm(Even_s, VOLUME/2 , 1);
-    apply_gtrafo_spinor_even(Even_s, g_trafo);							// even spinor transformation, strange
-    dret2 = square_norm(Even_s, VOLUME/2, 1);
-    if (g_proc_id == 0) printf("\tsquare norm before gauge fixing: %.16e\n", dret1); 
-    if (g_proc_id == 0) printf("\tsquare norm after gauge fixing:  %.16e\n", dret2);
-    
-    /* do trafo to even_c part of source */
-    dret1 = square_norm(Even_c, VOLUME/2 , 1);
-    apply_gtrafo_spinor_even(Even_c, g_trafo);							// even spinor transformation, charm
-    dret2 = square_norm(Even_c, VOLUME/2, 1);
-    if (g_proc_id == 0) printf("\tsquare norm before gauge fixing: %.16e\n", dret1); 
-    if (g_proc_id == 0) printf("\tsquare norm after gauge fixing:  %.16e\n", dret2);
-    
-#    ifdef MPI
-    xchange_gauge(g_gauge_field);
-#    endif
-    
+    gtrafo_eo_nd(Even_s, Odd_s, Even_c, Odd_c, 
+                 (spinor*const)NULL, (spinor*const)NULL, (spinor*const)NULL, (spinor*const)NULL, 
+                 GTRAFO_APPLY);    
   } 
 #  endif  
 #endif /* HAVE_GPU*/
@@ -176,9 +140,14 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
 		     VOLUME/2, &Qtm_pm_ndpsi);
   }
 #else			// CPU, conjugate gradient
-  iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
-		   max_iter, precision, rel_prec, 
-		   VOLUME/2, &Qtm_pm_ndpsi);
+  if(solver_flag == RGMIXEDCG){
+    iter = rg_mixed_cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+                              solver_params, max_iter, precision, rel_prec, VOLUME/2,
+                              &Qtm_pm_ndpsi, &Qtm_pm_ndpsi_32);
+  } else {
+    iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+		     max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_ndpsi);
+  }
 #endif
   
   
@@ -201,83 +170,9 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
 #ifdef HAVE_GPU  
   /* return from temporal gauge again */
 #  ifdef TEMPORALGAUGE
-  
   if (usegpu_flag) { 
-    
-    /* undo trafo */
-    /* apply_inv_gtrafo(g_gauge_field, g_trafo);*/
-    /* copy back the saved original field located in g_tempgauge_field -> update necessary*/
-    plaquette1 = measure_plaquette(g_gauge_field);
-    copy_gauge_field(g_gauge_field, g_tempgauge_field);
-    g_update_gauge_copy = 1;
-    plaquette2 = measure_plaquette(g_gauge_field);
-    if (g_proc_id == 0) printf("\tPlaquette before inverse gauge fixing: %.16e\n", plaquette1/6./VOLUME);
-    if (g_proc_id == 0) printf("\tPlaquette after inverse gauge fixing:  %.16e\n", plaquette2/6./VOLUME);
-    
-    /* undo trafo to source Even_s */
-    dret1 = square_norm(Even_s, VOLUME/2 , 1);
-    apply_inv_gtrafo_spinor_even(Even_s, g_trafo);
-    dret2 = square_norm(Even_s, VOLUME/2, 1);
-    if (g_proc_id == 0) printf("\tsquare norm before gauge fixing: %.16e\n", dret1); 
-    if (g_proc_id == 0) printf("\tsquare norm after gauge fixing:  %.16e\n", dret2);
-    
-    
-    /* undo trafo to source Even_c */
-    dret1 = square_norm(Even_c, VOLUME/2 , 1);
-    apply_inv_gtrafo_spinor_even(Even_c, g_trafo);
-    dret2 = square_norm(Even_c, VOLUME/2, 1);
-    if (g_proc_id == 0) printf("\tsquare norm before gauge fixing: %.16e\n", dret1);
-    if (g_proc_id == 0) printf("\tsquare norm after gauge fixing:  %.16e\n", dret2); 
-    
-    /* undo trafo to source Odd_s */
-    dret1 = square_norm(Odd_s, VOLUME/2 , 1);
-    apply_inv_gtrafo_spinor_odd(Odd_s, g_trafo);
-    dret2 = square_norm(Odd_s, VOLUME/2, 1);
-    if (g_proc_id == 0) printf("\tsquare norm before gauge fixing: %.16e\n", dret1); 
-    if (g_proc_id == 0) printf("\tsquare norm after gauge fixing:  %.16e\n", dret2);
-    
-    /* undo trafo to source Odd_c */
-    dret1 = square_norm(Odd_c, VOLUME/2 , 1);
-    apply_inv_gtrafo_spinor_odd(Odd_c, g_trafo);
-    dret2 = square_norm(Odd_c, VOLUME/2, 1);
-    if (g_proc_id == 0) printf("\tsquare norm before gauge fixing: %.16e\n", dret1); 
-    if (g_proc_id == 0) printf("\tsquare norm after gauge fixing:  %.16e\n", dret2); 
-    
-    
-    // Even_new_s
-    dret1 = square_norm(Even_new_s, VOLUME/2 , 1);
-    apply_inv_gtrafo_spinor_even(Even_new_s, g_trafo);
-    dret2 = square_norm(Even_new_s, VOLUME/2, 1);
-    if (g_proc_id == 0) printf("\tsquare norm before gauge fixing: %.16e\n", dret1); 
-    if (g_proc_id == 0) printf("\tsquare norm after gauge fixing:  %.16e\n", dret2);
-    
-    // Even_new_c
-    dret1 = square_norm(Even_new_c, VOLUME/2 , 1);
-    apply_inv_gtrafo_spinor_even(Even_new_c, g_trafo);
-    dret2 = square_norm(Even_new_c, VOLUME/2, 1);
-    if (g_proc_id == 0) printf("\tsquare norm before gauge fixing: %.16e\n", dret1); 
-    if (g_proc_id == 0) printf("\tsquare norm after gauge fixing:  %.16e\n", dret2);
-    
-    // Odd_new_s
-    dret1 = square_norm(Odd_new_s, VOLUME/2 , 1);
-    apply_inv_gtrafo_spinor_odd(Odd_new_s, g_trafo);
-    dret2 = square_norm(Odd_new_s, VOLUME/2, 1);
-    if (g_proc_id == 0) printf("\tsquare norm before gauge fixing: %.16e\n", dret1); 
-    if (g_proc_id == 0) printf("\tsquare norm after gauge fixing:  %.16e\n", dret2);
-    
-    // Odd_new_c
-    dret1 = square_norm(Odd_new_c, VOLUME/2 , 1);
-    apply_inv_gtrafo_spinor_odd(Odd_new_c, g_trafo);
-    dret2 = square_norm(Odd_new_c, VOLUME/2, 1);
-    if (g_proc_id == 0) printf("\tsquare norm before gauge fixing: %.16e\n", dret1); 
-    if (g_proc_id == 0) printf("\tsquare norm after gauge fixing:  %.16e\n", dret2); 
-    
-    finalize_temporalgauge();
-    
-#    ifdef MPI
-    xchange_gauge(g_gauge_field);
-#    endif
-    
+    gtrafo_eo_nd(Even_s, Odd_s, Even_c, Odd_c, Even_new_s, Odd_new_s, Even_new_c, Odd_new_c,
+                 GTRAFO_REVERT);
   }
 #  endif
 #endif
@@ -286,14 +181,24 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
 
 
 int invert_cloverdoublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s, 
-			    spinor * const Even_new_c, spinor * const Odd_new_c, 
-			    spinor * const Even_s, spinor * const Odd_s,
-			    spinor * const Even_c, spinor * const Odd_c,
-			    const double precision, const int max_iter,
-			    const int solver_flag, const int rel_prec) {
+                      spinor * const Even_new_c, spinor * const Odd_new_c,
+                      spinor * const Even_s, spinor * const Odd_s,
+                      spinor * const Even_c, spinor * const Odd_c,
+                      const double precision, const int max_iter,
+                      const int solver_flag, const int rel_prec, solver_params_t solver_params,
+                      const ExternalInverter inverter, const SloppyPrecision sloppy, const CompressionType compression) {
   
   int iter = 0;
-  
+
+#ifdef QUDA
+  if( inverter==QUDA_INVERTER ) {
+    return invert_doublet_eo_quda( Even_new_s, Odd_new_s, Even_new_c, Odd_new_c,
+                                   Even_s, Odd_s, Even_c, Odd_c,
+                                   precision, max_iter,
+                                   solver_flag, rel_prec, 1,
+                                   sloppy, compression );
+  }
+#endif
   
   /* here comes the inversion using even/odd preconditioning */
   if(g_proc_id == 0) {printf("# Using even/odd preconditioning!\n"); fflush(stdout);}
@@ -319,9 +224,15 @@ int invert_cloverdoublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
   gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
   gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], VOLUME/2);
   
-  iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
-		   max_iter, precision, rel_prec, 
-		   VOLUME/2, &Qsw_pm_ndpsi);
+  if(solver_flag == RGMIXEDCG){
+    iter = rg_mixed_cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+                              solver_params, max_iter, precision, rel_prec, VOLUME/2,
+                              &Qsw_pm_ndpsi, &Qsw_pm_ndpsi_32);
+  } else {
+    iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+		                 max_iter, precision, rel_prec, 
+		                 VOLUME/2, &Qsw_pm_ndpsi);
+  }
   
   
   Qsw_dagger_ndpsi(Odd_new_s, Odd_new_c,

@@ -72,6 +72,52 @@ void finalize_solver(spinor ** solver_field, const int nr){
 }
 
 
+
+
+
+int init_solver_field_32(spinor32 *** const solver_field, const int V, const int nr) {
+  int i=0;
+
+  /* allocate nr+1 to save the linear field in solver_field[nr] */
+  if((void*)((*solver_field) = (spinor32**)malloc((nr+1)*sizeof(spinor32*))) == NULL) {
+    printf ("malloc errno in init_solver_field: %d\n",errno); 
+    errno = 0;
+    return(2);
+  }
+  
+  /* allocate the full chunk of memory to solver_field[nr] */
+#if (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
+  if((void*)((*solver_field)[nr] = (spinor32*)shmalloc((nr*V+1)*sizeof(spinor32))) == NULL) {
+    fprintf (stderr, "malloc errno in init_solver_field: %d\n",errno); 
+    errno = 0;
+    return(1);
+  }
+#else
+  if((void*)((*solver_field)[nr] = (spinor32*)calloc(nr*V+1, sizeof(spinor32))) == NULL) {
+    printf ("malloc errno in init_solver_field: %d\n",errno); 
+    errno = 0;
+    return(1);
+  }
+#endif
+
+  /* now cut in pieces and distribute to solver_field[0]-solver_field[nr-1] */
+#if ( defined SSE || defined SSE2 || defined SSE3)
+  (*solver_field)[0] = (spinor32*)(((unsigned long int)((*solver_field)[nr])+ALIGN_BASE32)&~ALIGN_BASE32);
+#else
+  (*solver_field)[0] = (spinor32*)(((unsigned long int)((*solver_field)[nr])+ALIGN_BASE32)&~ALIGN_BASE32);
+#endif
+  for(i = 1; i < nr; i++){
+    (*solver_field)[i] = (*solver_field)[i-1]+V;
+  }
+  return(0);
+}
+
+void finalize_solver_32(spinor32 ** solver_field, const int nr){
+  free(solver_field[nr]);
+  free(solver_field);
+  solver_field = NULL;
+}
+
 int init_bisolver_field(bispinor *** const solver_field, const int V, const int nr) {
   int i=0;
 

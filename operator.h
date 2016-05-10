@@ -1,3 +1,4 @@
+
 /***********************************************************************
  *
  * Copyright (C) 2009 Carsten Urbach
@@ -24,6 +25,8 @@
 #include <io/utils.h>
 #include "solver/dirac_operator_eigenvectors.h"
 #include "su3.h"
+#include "solver/solver_params.h"
+                                    
 
 #define TMWILSON 0
 #define OVERLAP 1
@@ -43,7 +46,7 @@ typedef struct {
   int deg_poly;
   int no_ev;
   
-  int sloppy_precision;
+  SloppyPrecision sloppy_precision;
   int even_odd_flag;
   int solver;
   int N_s;
@@ -55,6 +58,8 @@ typedef struct {
   int no_flavours;
   int DownProp;
   int no_ev_index;
+  ExternalInverter external_inverter;
+  CompressionType compression_type;
 
   int error_code;
 
@@ -81,6 +86,9 @@ typedef struct {
   spinor *sr0, *sr1, *sr2, *sr3;
   /* generic place for propagators */
   spinor *prop0, *prop1, *prop2, *prop3;
+
+  /*solver parameters struct*/
+  solver_params_t solver_params;
 
   /* multiple masses for CGMMS */
   double extra_masses[MAX_EXTRA_MASSES];
