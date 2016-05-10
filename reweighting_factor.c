@@ -27,14 +27,14 @@
 #include "global.h"
 #include "linalg_eo.h"
 #include "start.h"
+#include "fatal_error.h"
 #include "monomial/monomial.h"
 #include "hamiltonian_field.h"
 #include "reweighting_factor.h"
 
 void reweighting_factor(const int N, const int nstore) {
-  int i, j, n = VOLUME;
-  double sq_norm, x, y;
-  double * sum, * sum_sq;
+  int n = VOLUME;
+  double * data;
   monomial * mnl;
   FILE * ofs;
   hamiltonian_field_t hf;
@@ -44,39 +44,46 @@ void reweighting_factor(const int N, const int nstore) {
   hf.derivative = NULL;
   hf.update_gauge_copy = g_update_gauge_copy;
 
-  sum = (double*)calloc(no_monomials, sizeof(double));
-  sum_sq = (double*)calloc(no_monomials, sizeof(double));
+  data = (double*)calloc(no_monomials*N, sizeof(double));
 
-  for(i = 0; i < N; i++) {
-    sq_norm = 0.;
-    for(j = 0; j < no_monomials; j++) {
+  for(int i = 0; i < N; i++) {
+    if(g_proc_id == 0 && g_debug_level > 0) {
+      printf("# computing reweighting factors for sample %d\n", i);
+    }
+    for(int j = 0; j < no_monomials; j++) {
       mnl = &monomial_list[j];
       if(mnl->type != GAUGE) {
 	if(mnl->even_odd_flag) {
 	  random_spinor_field_eo(mnl->pf, mnl->rngrepro, RN_GAUSS);
+          mnl->energy0 = square_norm(mnl->pf, n/2, 1);
 	}
-	else random_spinor_field_lexic(mnl->pf, mnl->rngrepro, RN_GAUSS);
-	mnl->energy0 = square_norm(mnl->pf, n, 1);
+	else {
+          random_spinor_field_lexic(mnl->pf, mnl->rngrepro, RN_GAUSS);
+          mnl->energy0 = square_norm(mnl->pf, n, 1);
+        }
+	if(g_proc_id == 0 && g_debug_level > 0) {
+	  printf("monomial[%d] %s, energy0 = %e\n", j, mnl->name, mnl->energy0);
+	}
 	if(mnl->type == NDDETRATIO) {
 	  if(mnl->even_odd_flag) {
 	    random_spinor_field_eo(mnl->pf2, mnl->rngrepro, RN_GAUSS);
+            mnl->energy0 += square_norm(mnl->pf, n/2, 1);
 	  }
-	  else random_spinor_field_lexic(mnl->pf, mnl->rngrepro, RN_GAUSS);
-	  mnl->energy0 += square_norm(mnl->pf2, n, 1);
+	  else {
+            random_spinor_field_lexic(mnl->pf, mnl->rngrepro, RN_GAUSS);
+            mnl->energy0 += square_norm(mnl->pf2, n, 1);
+          }
 	}
       }
     }
 
-    for(j = 0; j < no_monomials; j++) {
+    for(int j = 0; j < no_monomials; j++) {
       mnl = &monomial_list[j];
       if(mnl->type != GAUGE) {
-	y = mnl->accfunction(j, &hf);
-	sq_norm -= y;
-	x = exp(sq_norm);
-	sum[j] += x;
-	sum_sq[j] += x*x;
+	double y = mnl->accfunction(j, &hf);
+	data[i*no_monomials + j] = y;
 	if(g_proc_id == 0 && g_debug_level > 0) {
-	  printf("monomial[%d] %s, w_%d=%e W=%e\n", j, mnl->name, j, y, x);
+	  printf("monomial[%d] %s, w_%d=%e W=%e\n", j, mnl->name, j, y, exp(y));
 	}
       }
     }
@@ -85,13 +92,18 @@ void reweighting_factor(const int N, const int nstore) {
   if(g_proc_id == 0) {
     char filename[50];
     sprintf(filename, "reweighting_factor.data.%.5d", nstore);
-    ofs = fopen(filename, "w");
-    for(j = 0; j < no_monomials; j++) {
-      fprintf(ofs, "%.5d %e %e %e %e %e %e \n", j, mnl->kappa, mnl->kappa2, mnl->mu, mnl->mu2, sum[j]/N, sqrt((-sum[j]*sum[j]/N/N + sum_sq[j]/N)/(N-1)/N));
+    if((ofs = fopen(filename, "w")) == NULL) {
+      fatal_error("Could not open file for data output", "reweighting_factor");
     }
-    fclose(ofs);
+    else {
+      for(int j = 0; j < no_monomials; j++) {
+        for(int i = 0; i < N; i++) {
+          fprintf(ofs, "%.2d %.5d %e %e %e %e %.10e\n", j, i, mnl->kappa, mnl->kappa2, mnl->mu, mnl->mu2, data[i*no_monomials + j]);
+        }
+      }
+      fclose(ofs);
+    }
   }
-  free(sum);
-  free(sum_sq);
+  free(data);
 }
 
