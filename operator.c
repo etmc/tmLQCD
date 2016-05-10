@@ -210,18 +210,18 @@ int init_operators() {
         optr->even_odd_flag = 1;
         optr->applyDbQsq = &Qtm_pm_ndpsi;
       }
+      if(optr->external_inverter==QUDA_INVERTER ) {
+#ifdef QUDA
+        _initQuda();
+#else
+        if(g_proc_id == 0) {
+          fprintf(stderr, "Error: You're trying to use QUDA but this build was not configured for QUDA usage.\n");
+          exit(-2);
+        }
+#endif
+      }
     } /* loop over operators */
 
-    if(optr->external_inverter==QUDA_INVERTER ) {
-#ifdef QUDA
-      _initQuda();
-#else
-      if(g_proc_id == 0) {
-        fprintf(stderr, "Error: You're trying to use QUDA but this build was not configured for QUDA usage.\n");
-        exit(-2);
-      }
-#endif
-    }
   }
   return(0);
 }
