@@ -109,6 +109,7 @@ static void Dsw_psi(spinor * const l, spinor * const k)
   convert_lexic_to_eo( eo_field[0], eo_field[1], k);
   Msw_full( eo_field[2], eo_field[3], eo_field[0], eo_field[1] );
   convert_eo_to_lexic( l, eo_field[2], eo_field[3]);
+  finalize_solver(eo_field, 4);
 }
 
 static int MG_pre_solve( su3 **gf )
@@ -309,6 +310,7 @@ static int MG_check(spinor * const phi_new, spinor * const phi_old, const int N,
   diff( check_vect[0], check_vect[0], phi_old, N);
   differ[0] = sqrt(square_norm(check_vect[0], N, 1));
   differ[1] = sqrt(square_norm(phi_old, N, 1));
+  finalize_solver(check_vect, 1);
   
   residual = differ[0]/differ[1];
   
@@ -522,4 +524,5 @@ int MG_solver_eo(spinor * const Even_new, spinor * const Odd_new,
   MG_solver( solver_field[1], solver_field[0], precision, max_iter, rel_prec, VOLUME, gf, f );
   
   convert_lexic_to_eo(Even_new, Odd_new, solver_field[1]);
+  finalize_solver(solver_field, 2);
 }
