@@ -75,12 +75,8 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
 
 #ifdef MG4QCD
   if ( solver_flag==MG )
-  {
-     return MG_solver(Even_new, Odd_new, Even, Odd,
-                                  precision, max_iter,
-                                  solver_flag, rel_prec,
-                                  1, gf[0],&Msw_plus_psi);
-  }
+    return MG_solver_eo(Even_new, Odd_new, Even, Odd, precision, max_iter,
+			rel_prec, VOLUME/2, gf[0], &Msw_full);
 #endif
      
    if(g_proc_id == 0 && g_debug_level > 0) {
@@ -125,7 +121,7 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
       iter = rg_mixed_cg_her(Odd_new, g_spinor_field[DUM_DERI], solver_params, max_iter, precision, rel_prec,
 						VOLUME/2, &Qsw_pm_psi, &Qsw_pm_psi_32);
       Qm(Odd_new, Odd_new);
-      }else{
+   }else{
       if(g_proc_id == 0) {printf("# This solver is not available for this operator. Exisiting!\n"); fflush(stdout);}
       return 0;
    }
