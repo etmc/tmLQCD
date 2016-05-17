@@ -40,7 +40,7 @@
 #include "update_gauge.h"
 #include "init/init_gauge_field.h"
 #ifdef MG4QCD
-#include "update_tm.h"
+#include "mg4qcd_interface.h"
 #endif
 /*******************************************************
  *
@@ -48,17 +48,13 @@
  *
  *******************************************************/
 
-
 void update_gauge(const double step, hamiltonian_field_t * const hf) {
   double atime, etime;
-#ifdef MG4QCD
-  hmc_control_t hmc_con;
-#endif    
   atime = gettime();
 #ifdef MG4QCD
-   hmc_con=update_hmc_control(step);
+  MG_update_gauge(step);
 #endif
-  
+
 #ifdef OMP
 #define static
 #pragma omp parallel

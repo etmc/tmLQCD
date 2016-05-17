@@ -60,45 +60,11 @@
 #include "hamiltonian_field.h"
 #include "update_tm.h"
 #include "gettime.h"
+#ifdef MG4QCD
+#include "mg4qcd_interface.h"
+#endif
 
 extern su3 ** g_gauge_field_saved;
-
-#ifdef MG4QCD
-static hmc_control_t hmc_control={0.0,0,0,0.0};
-
-hmc_control_t reset_hmc_control(void)
-{
-   hmc_control.tauMC=0.0;
-   hmc_control.gcopy_up2date=0;
-   hmc_control.basis_up2date=0;
-   hmc_control.tau_basis=0.0;
-   
-   return hmc_control;
-}
-
-hmc_control_t update_hmc_control(double dtau)
-{
-   hmc_control.tauMC+=dtau;
-   hmc_control.gcopy_up2date=0;
-   hmc_control.basis_up2date=0;
-   
-   return hmc_control;
-}
-
-hmc_control_t get_hmc_control(void)
-{
-  return hmc_control;
-}
-
-hmc_control_t set_hmc_control(int gcopy_up2date,int basis_up2date,double tau_basis)
-{
-   hmc_control.gcopy_up2date=gcopy_up2date;
-   hmc_control.basis_up2date=basis_up2date;
-   hmc_control.tau_basis=tau_basis;
-   
-   return hmc_control;
-}
-#endif
 
 int update_tm(double *plaquette_energy, double *rectangle_energy, 
               char * filename, const int return_check, const int acctest, 
@@ -120,10 +86,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   /* Energy correspondingupdate_tm to the Momenta part */
   double enep=0., enepx=0., ret_enep = 0.;
 
-#ifdef MG4QCD
-  hmc_control_t hmc_con;
-#endif  
-  
   /* Energy corresponding to the pseudo fermion part(s) */
   FILE * datafile=NULL, * ret_check_file=NULL;
   hamiltonian_field_t hf;
@@ -158,6 +120,10 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
   }
 
+#ifdef MG4QCD
+  MG_reset();
+#endif
+
   /* heatbath for all monomials */
   for(i = 0; i < Integrator.no_timescales; i++) {
     for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
@@ -168,10 +134,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   if(Integrator.monitor_forces) monitor_forces(&hf);
   /* initialize the momenta  */
   enep = random_su3adj_field(reproduce_randomnumber_flag, hf.momenta);
-
-#ifdef MG4QCD
-  hmc_con=reset_hmc_control();
-#endif
   
   g_sloppy_precision = 1;
 
@@ -226,7 +188,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
     if(accept) {
       /* save gauge file to disk before performing reversibility check */
-      xlfInfo = construct_paramsXlfInfo((*plaquette_energy)/(6.*VOLUME*g_nproc), -1);
+      xlfInfo = construct_paramsXlfInfo((*plaquette_energy)/(6.*VOLUME*g_nproc), traj_counter);
       // Should write this to temporary file first, and then check
       if(g_proc_id == 0 && g_debug_level > 0) {
         fprintf(stdout, "# Writing gauge field to file %s.\n", tmp_filename);
@@ -243,7 +205,11 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       }
       free(xlfInfo);
     }
-    
+
+#ifdef MG4QCD
+    MG_reset();
+#endif
+
     g_sloppy_precision = 1;
     /* run the trajectory back */
     Integrator.integrate[Integrator.no_timescales-1](-Integrator.tau, 

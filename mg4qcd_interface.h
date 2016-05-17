@@ -37,14 +37,19 @@ extern double mg_cmu_factor;
 extern double mg_dtau;
 
 void MG_init(void);
-void MG_update_mu(double mu_tmLQCD,double rho_tmLQCD); // take the tmLQCD convention: original mu = 0.5*g_mu/g_kappa;
+void MG_update_gauge(double step);
+// Convention: mu_MG = 0.5 * mu_tmLQCD / g_kappa;
+void MG_update_mu(double mu_tmLQCD, double odd_tmLQCD);
+void MG_reset(void);
 void MG_finalize(void);
-int MG_solver_degenerate(spinor * const phi_new, spinor * const phi_old,
-		   const double precision, const int max_iter,const int rel_prec,
-                   const int even_odd_flag, su3 **gf, matrix_mult f);
-int MG_solver(spinor * const Even_new, spinor * const Odd_new,
-                   spinor * const Even, spinor * const Odd,
-                   const double precision, const int max_iter,
-                   const int solver_flag, const int rel_prec,
-                   const int even_odd_flag, su3 **gf, matrix_mult f);
+
+int MG_solver(spinor * const phi_new, spinor * const phi_old,
+	      const double precision, const int max_iter,const int rel_prec,
+	      const int N, su3 **gf, matrix_mult f);
+
+int MG_solver_eo(spinor * const Even_new, spinor * const Odd_new,
+		 spinor * const Even, spinor * const Odd,
+		 const double precision, const int max_iter, const int rel_prec,
+		 const int N, su3 **gf, matrix_mult_full f_full);
+
 #endif /* MG4QCD_INTERFACE_H_ */

@@ -99,12 +99,8 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 
 #ifdef MG4QCD
   if ( solver_flag==MG )
-  {
-     return MG_solver(Even_new, Odd_new, Even, Odd,
-                                  precision, max_iter,
-                                  solver_flag, rel_prec,
-                                  1, g_gauge_field,&D_psi);
-  }
+    return MG_solver_eo(Even_new, Odd_new, Even, Odd, precision, max_iter,
+			rel_prec, VOLUME/2, g_gauge_field, &M_full);
 #endif
 
   /* here comes the inversion using even/odd preconditioning */
