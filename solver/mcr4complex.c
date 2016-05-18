@@ -41,10 +41,10 @@ static _Complex double * tmp = NULL;
 static int lmcr_init = 0;
 
 int mcr4complex(_Complex double * const P, _Complex double * const Q, 
-		const int m, const int max_restarts,
-		const double eps_sq, const int rel_prec,
-		const int N, const int parallel, 
-		const int lda, c_matrix_mult f) {
+                const int m, const int max_restarts,
+                const double eps_sq, const int rel_prec,
+                const int N, const int parallel, 
+                const int lda, c_matrix_mult f) {
 
   int k, l, restart, i, p=0;
   double norm_sq, norm,err;
@@ -55,18 +55,6 @@ int mcr4complex(_Complex double * const P, _Complex double * const Q,
 
   double atime, etime;
   init_lmcr(m, lda);
-
-  //    // XDU 2011/10/03 DEBUG
-  //    static _Complex double ** oldAp;
-  //    static _Complex double * _oldAp;
-  //    _Complex double tempc;
-  //
-  //    oldAp = calloc(10, sizeof(_Complex double *));
-  //    _oldAp = calloc(10*N, sizeof(_Complex double));
-  //    oldAp[0] = _oldAp;
-  //    for(i=1; i<10; i++)
-  //        oldAp[i] = oldAp[i-1] + N;
-  //    // XDU 2011/10/03 DEBUG
 
   norm_sq = lsquare_norm(Q, N, parallel);
   if(norm_sq < 1.e-20) {
@@ -111,12 +99,12 @@ int mcr4complex(_Complex double * const P, _Complex double * const Q,
       p++;
 
       if(g_proc_id == g_stdio_proc && g_debug_level > 1){
-	printf("mCR: %d\t%g iterated residue\n", p, err); 
-	fflush(stdout);
+        printf("mCR: %d\t%g iterated residue\n", p, err); 
+        fflush(stdout);
       }
       /* Precision reached? */
       if((k == m-1) || ((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*norm_sq) && (rel_prec == 1))) {
-	break;
+        break;
       }
 
       f(Achi, chi);

@@ -75,22 +75,22 @@ extern su3* g_trafo;
 #endif
 
 int invert_eo(spinor * const Even_new, spinor * const Odd_new, 
-	      spinor * const Even, spinor * const Odd,
-	      const double precision, const int max_iter,
-	      const int solver_flag, const int rel_prec,
-	      const int sub_evs_flag, const int even_odd_flag,
-	      const int no_extra_masses, double * const extra_masses, solver_params_t solver_params, const int id,
-	      const ExternalInverter inverter, const SloppyPrecision sloppy, const CompressionType compression )  {
+              spinor * const Even, spinor * const Odd,
+              const double precision, const int max_iter,
+              const int solver_flag, const int rel_prec,
+              const int sub_evs_flag, const int even_odd_flag,
+              const int no_extra_masses, double * const extra_masses, solver_params_t solver_params, const int id,
+              const ExternalInverter inverter, const SloppyPrecision sloppy, const CompressionType compression )  {
 
   int iter = 0;
 
 #ifdef QUDA
   if( inverter==QUDA_INVERTER ) {
     return invert_eo_quda(Even_new, Odd_new, Even, Odd,
-                                  precision, max_iter,
-                                  solver_flag, rel_prec,
-                                  even_odd_flag, solver_params,
-                                  sloppy, compression);
+                          precision, max_iter,
+                          solver_flag, rel_prec,
+                          even_odd_flag, solver_params,
+                          sloppy, compression);
   }
 #endif
 
@@ -175,7 +175,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     }
     else if(solver_flag == GMRESDR) {
       if(g_proc_id == 0) {printf("# Using GMRES-DR! m = %d, NrEv = %d\n", 
-				 gmres_m_parameter, gmresdr_nr_ev); fflush(stdout);}
+                                 gmres_m_parameter, gmresdr_nr_ev); fflush(stdout);}
       mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1., VOLUME/2);
       iter = gmres_dr(Odd_new, g_spinor_field[DUM_DERI], gmres_m_parameter, gmresdr_nr_ev, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME/2, &Mtm_plus_sym_psi);
     }
@@ -198,20 +198,20 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       Qtm_minus_psi(Odd_new, Odd_new);
     }
     else if(solver_flag == INCREIGCG) {
-       /* Here we invert the hermitean operator squared */
-       gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);  
-       if(g_proc_id == 0) {printf("# Using Incremental Eig-CG!\n"); fflush(stdout);}
-       iter = incr_eigcg(VOLUME/2,solver_params.eigcg_nrhs,solver_params.eigcg_nrhs1, Odd_new, g_spinor_field[DUM_DERI], solver_params.eigcg_ldh, &Qtm_pm_psi,
- 			 solver_params.eigcg_tolsq1, solver_params.eigcg_tolsq, solver_params.eigcg_restolsq , solver_params.eigcg_rand_guess_opt,
-                         rel_prec, max_iter, solver_params.eigcg_nev, solver_params.eigcg_vmax);
-       Qtm_minus_psi(Odd_new, Odd_new);
-     }
+      /* Here we invert the hermitean operator squared */
+      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);  
+      if(g_proc_id == 0) {printf("# Using Incremental Eig-CG!\n"); fflush(stdout);}
+      iter = incr_eigcg(VOLUME/2,solver_params.eigcg_nrhs,solver_params.eigcg_nrhs1, Odd_new, g_spinor_field[DUM_DERI], solver_params.eigcg_ldh, &Qtm_pm_psi,
+                        solver_params.eigcg_tolsq1, solver_params.eigcg_tolsq, solver_params.eigcg_restolsq , solver_params.eigcg_rand_guess_opt,
+                        rel_prec, max_iter, solver_params.eigcg_nev, solver_params.eigcg_vmax);
+      Qtm_minus_psi(Odd_new, Odd_new);
+    }
     else if(solver_flag == MIXEDCG) {
       /* Here we invert the hermitean operator squared */
       gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
       if(g_proc_id == 0) {printf("# Using Mixed Precision CG!\n"); fflush(stdout);}
       iter = mixed_cg_her(Odd_new, g_spinor_field[DUM_DERI], solver_params, max_iter, precision, rel_prec, 
-			  VOLUME/2, &Qtm_pm_psi, &Qtm_pm_psi_32);
+                          VOLUME/2, &Qtm_pm_psi, &Qtm_pm_psi_32);
       Qtm_minus_psi(Odd_new, Odd_new);
     }
     else if(solver_flag == RGMIXEDCG) {
@@ -219,7 +219,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
       if(g_proc_id == 0) {printf("# Using Mixed Precision CG!\n"); fflush(stdout);}
       iter = rg_mixed_cg_her(Odd_new, g_spinor_field[DUM_DERI], solver_params, max_iter, precision, rel_prec,
-			                       VOLUME/2, &Qtm_pm_psi, &Qtm_pm_psi_32);
+                             VOLUME/2, &Qtm_pm_psi, &Qtm_pm_psi_32);
       Qtm_minus_psi(Odd_new, Odd_new);
     }
     else if(solver_flag == CG) {
@@ -359,7 +359,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
         //iter = bicg_complex(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &D_psi_prec, &D_dagg_psi_prec);
         
         if(g_proc_id == 0) {printf("# Not using preconditioning (which one?)!\n");}
-	iter = bicg_complex(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &D_psi, &D_dagg_psi);
+        iter = bicg_complex(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &D_psi, &D_dagg_psi);
       } else {
         if(g_proc_id == 0) {printf("# Not using preconditioning (which one?)!\n");}
         iter = bicg_complex(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &D_psi, &D_dagg_psi);
@@ -391,16 +391,16 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     }
     else if(solver_flag == MIXEDCG) {
       if(g_proc_id == 0) {printf("# Using MIXEDCG!\n"); fflush(stdout);}
-    	gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
-    	iter = mixed_cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], solver_params, max_iter, 
+      gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
+      iter = mixed_cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], solver_params, max_iter, 
                           precision, rel_prec, VOLUME, &Q_pm_psi, &Q_pm_psi_32);
-	    Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
+      Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
     } else if(solver_flag == RGMIXEDCG) {
       if(g_proc_id == 0) {printf("# Using MIXEDCG!\n"); fflush(stdout);}
-    	gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
-    	iter = rg_mixed_cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], solver_params, max_iter, 
-                          precision, rel_prec, VOLUME, &Q_pm_psi, &Q_pm_psi_32);
-	    Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
+      gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
+      iter = rg_mixed_cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], solver_params, max_iter, 
+                             precision, rel_prec, VOLUME, &Q_pm_psi, &Q_pm_psi_32);
+      Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
     } else if(solver_flag == FGMRES) {
       if(g_proc_id == 0) {printf("# Using FGMRES! m = %d\n", gmres_m_parameter); fflush(stdout);}
       iter = fgmres(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, Msap_precon, &D_psi); 
@@ -421,19 +421,19 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       iter = cr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 0, &Q_plus_psi);
       /* Solve DdaggD */
       /* gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
-	 iter = cr(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 0, &Q_pm_psi);
-	 Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
+         iter = cr(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 0, &Q_pm_psi);
+         Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
       */  
     }
     else if (solver_flag == DFLGCR) {
       if(g_proc_id == 0) {printf("# Using deflated GCR solver! m = %d\n", gmres_m_parameter); fflush(stdout);}
       iter = gcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, 
-		 max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 2, &D_psi);
+                 max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 2, &D_psi);
     }
     else if (solver_flag == DFLFGMRES) {
       if(g_proc_id == 0) {printf("# Using deflated FGMRES solver! m = %d\n", gmres_m_parameter); fflush(stdout);}
       iter = fgmres(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, 
-		    max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 2, &D_psi);
+                    max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 2, &D_psi);
     }
     else if (solver_flag == CGMMS) {
       /* FIXME temporary workaround for the multiple masses interface */
@@ -474,7 +474,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       if(g_proc_id == 0) {printf("# Using PCG!\n"); fflush(stdout);}
       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
       iter = pcg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
-		     rel_prec, VOLUME, &Q_pm_psi);
+                     rel_prec, VOLUME, &Q_pm_psi);
       Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
     }
     else {
@@ -504,7 +504,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
         }
 
         iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
-		      rel_prec, VOLUME, &Q_pm_psi_prec);
+                      rel_prec, VOLUME, &Q_pm_psi_prec);
 
         if(g_prec_sequence_d_dagger_d[0] != 0.0){
           alpha = g_prec_sequence_d_dagger_d[0];

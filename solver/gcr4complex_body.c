@@ -1,5 +1,5 @@
 /***********************************************************************
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ * Copyright (C) 2002,2003,2004,2005,2006,2007,2008,2016 Carsten Urbach
  *               2010 claude Tadonki
  *
  * This file is part of tmLQCD.
@@ -71,7 +71,7 @@ int _PSWITCH(gcr4complex)(_C_TYPE * const P, _C_TYPE * const Q,
         memcpy(_PSWITCH(xi)[k], _PSWITCH(rho), N*sizeof(_C_TYPE));
       }
       else {
-	_PSWITCH(little_mg_precon)(_PSWITCH(xi)[k], _PSWITCH(rho));
+        _PSWITCH(little_mg_precon)(_PSWITCH(xi)[k], _PSWITCH(rho));
       }
       f(_PSWITCH(tmp), _PSWITCH(xi)[k]); 
       /* tmp will become chi[k] */

@@ -1,3 +1,39 @@
+/***********************************************************************
+ *
+ * Copyright (C) 2002,2003,2004,2005,2006,2007,2008,2016 Carsten Urbach
+ *
+ * This file is part of tmLQCD.
+ *
+ * tmLQCD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * tmLQCD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Generalized minimal residual (FGMRES) with a maximal number of restarts.    
+ * Solves Q=AP for _Complex double regular matrices A. Flexibel version of GMRES 
+ * with the ability for variable right preconditioning. 
+ *
+ * Inout:                                                                      
+ *  spinor * P       : guess for the solving spinor                                             
+ * Input:                                                                      
+ *  spinor * Q       : source spinor
+ *  int m            : Maximal dimension of Krylov subspace                                     
+ *  int max_restarts : maximal number of restarts                                   
+ *  double eps       : stopping criterium                                                     
+ *  matrix_mult f    : pointer to a function containing the matrix mult
+ *                     for type matrix_mult see matrix_mult_typedef.h
+ *
+ * Autor: Carsten Urbach <urbach@ifh.de>
+ ********************************************************************************/
+
 static void _PSWITCH(init_lgmres)(const int _M, const int _V);
 
 static _Complex _F_TYPE ** _PSWITCH(H);
@@ -9,10 +45,10 @@ static _F_TYPE * _PSWITCH(s);
 extern void little_mg_precon_32(_Complex float *, _Complex float *);
 
 int _PSWITCH(fgmres4complex)(_Complex _F_TYPE * const P, _Complex _F_TYPE * const Q,
-			     const int m, const int max_restarts,
-			     const double eps_sq, const int rel_prec,
-			     const int N, const int parallel,
-			     const int lda, const int precon, _PSWITCH(c_matrix_mult) f) {
+                             const int m, const int max_restarts,
+                             const double eps_sq, const int rel_prec,
+                             const int N, const int parallel,
+                             const int lda, const int precon, _PSWITCH(c_matrix_mult) f) {
 
   int restart, i, j, k;
   double beta, eps, norm;
@@ -57,10 +93,10 @@ int _PSWITCH(fgmres4complex)(_Complex _F_TYPE * const P, _Complex _F_TYPE * cons
       /* solver_field[0]=A*M^-1*v_j */
 
       if(precon == 0) {
-	_PSWITCH(lassign)(_PSWITCH(Z)[j], _PSWITCH(V)[j], N);
+        _PSWITCH(lassign)(_PSWITCH(Z)[j], _PSWITCH(V)[j], N);
       }
       else {
-	_PSWITCH(little_mg_precon)(_PSWITCH(Z)[j], _PSWITCH(V)[j]);
+        _PSWITCH(little_mg_precon)(_PSWITCH(Z)[j], _PSWITCH(V)[j]);
       }
 
       f(r0, _PSWITCH(Z)[j]); 
@@ -68,18 +104,18 @@ int _PSWITCH(fgmres4complex)(_Complex _F_TYPE * const P, _Complex _F_TYPE * cons
       /* solver_field[1] <- omega_j */
       _PSWITCH(lassign)(solver_field[1], solver_field[0], N);
       for(i = 0; i <= j; i++){
-	_PSWITCH(H)[i][j] = _PSWITCH(lscalar_prod)(_PSWITCH(V)[i], solver_field[1], N, parallel);
-	_PSWITCH(lassign_diff_mul)(solver_field[1], _PSWITCH(V)[i], _PSWITCH(H)[i][j], N);
+        _PSWITCH(H)[i][j] = _PSWITCH(lscalar_prod)(_PSWITCH(V)[i], solver_field[1], N, parallel);
+        _PSWITCH(lassign_diff_mul)(solver_field[1], _PSWITCH(V)[i], _PSWITCH(H)[i][j], N);
       }
 
       _PSWITCH(H)[j+1][j] = sqrt(_PSWITCH(lsquare_norm)(solver_field[1], N, parallel));
       for(i = 0; i < j; i++){
-	tmp1 = _PSWITCH(H)[i][j];
-	tmp2 = _PSWITCH(H)[i+1][j];
-	(_PSWITCH(H)[i][j]) = (tmp2) * (_PSWITCH(s)[i]);
-	(_PSWITCH(H)[i][j]) += conj(_PSWITCH(c)[i]) * (tmp1);
-	(_PSWITCH(H)[i+1][j]) = (tmp1) * (_PSWITCH(s)[i]);
-	(_PSWITCH(H)[i+1][j]) -= (_PSWITCH(c)[i]) * (tmp2);
+        tmp1 = _PSWITCH(H)[i][j];
+        tmp2 = _PSWITCH(H)[i+1][j];
+        (_PSWITCH(H)[i][j]) = (tmp2) * (_PSWITCH(s)[i]);
+        (_PSWITCH(H)[i][j]) += conj(_PSWITCH(c)[i]) * (tmp1);
+        (_PSWITCH(H)[i+1][j]) = (tmp1) * (_PSWITCH(s)[i]);
+        (_PSWITCH(H)[i+1][j]) -= (_PSWITCH(c)[i]) * (tmp2);
       }
 
       /* Set beta, s, _PSWITCH(c), _PSWITCH(alpha)[j],[j+1] */
@@ -93,37 +129,37 @@ int _PSWITCH(fgmres4complex)(_Complex _F_TYPE * const P, _Complex _F_TYPE * cons
 
       /* precision reached? */
       if(g_proc_id == g_stdio_proc && g_debug_level > 2){
-	printf("lFGMRES\t%d\t%g iterated residue\n", restart*m+j, creal(_PSWITCH(alpha)[j+1])*creal(_PSWITCH(alpha)[j+1]));
-	fflush(stdout);
+        printf("lFGMRES\t%d\t%g iterated residue\n", restart*m+j, creal(_PSWITCH(alpha)[j+1])*creal(_PSWITCH(alpha)[j+1]));
+        fflush(stdout);
       }
       if(creal(_PSWITCH(alpha)[j+1]) > 0.999*alphasave) {
-	fltcntr++;
+        fltcntr++;
       }
       else fltcntr = 0;
       alphasave = creal(_PSWITCH(alpha)[j+1]);
       if((fltcntr > 20) || ((creal(_PSWITCH(alpha)[j+1]) <= eps) && (rel_prec == 0)) || ((creal(_PSWITCH(alpha)[j+1]) <= eps*norm) && (rel_prec == 1))){
-	(_PSWITCH(alpha)[j]) = (_PSWITCH(alpha)[j]) * (1./creal(_PSWITCH(H)[j][j]));
-	_PSWITCH(lassign_add_mul)(solver_field[2], _PSWITCH(Z)[j], _PSWITCH(alpha)[j], N);
-	for(i = j-1; i >= 0; i--){
-	  for(k = i+1; k <= j; k++){
- 	    (tmp1) = (_PSWITCH(H)[i][k]) * (_PSWITCH(alpha)[k]); 
-	    (_PSWITCH(alpha)[i]) -= tmp1;
-	  }
-	  (_PSWITCH(alpha)[i]) = (_PSWITCH(alpha)[i]) * (1./creal(_PSWITCH(H)[i][i]));
-	  _PSWITCH(lassign_add_mul)(solver_field[2], _PSWITCH(Z)[i], _PSWITCH(alpha)[i], N);
-	}
-	for(i = 0; i < m; i++){
-	  _PSWITCH(alpha)[i] = creal(_PSWITCH(alpha)[i]);
-	}
-	_PSWITCH(lassign)(P, solver_field[2], N);
-	_PSWITCH(finalize_lsolver)(solver_field, nr_sf);
-	return(restart*m+j);
+        (_PSWITCH(alpha)[j]) = (_PSWITCH(alpha)[j]) * (1./creal(_PSWITCH(H)[j][j]));
+        _PSWITCH(lassign_add_mul)(solver_field[2], _PSWITCH(Z)[j], _PSWITCH(alpha)[j], N);
+        for(i = j-1; i >= 0; i--){
+          for(k = i+1; k <= j; k++){
+            (tmp1) = (_PSWITCH(H)[i][k]) * (_PSWITCH(alpha)[k]); 
+            (_PSWITCH(alpha)[i]) -= tmp1;
+          }
+          (_PSWITCH(alpha)[i]) = (_PSWITCH(alpha)[i]) * (1./creal(_PSWITCH(H)[i][i]));
+          _PSWITCH(lassign_add_mul)(solver_field[2], _PSWITCH(Z)[i], _PSWITCH(alpha)[i], N);
+        }
+        for(i = 0; i < m; i++){
+          _PSWITCH(alpha)[i] = creal(_PSWITCH(alpha)[i]);
+        }
+        _PSWITCH(lassign)(P, solver_field[2], N);
+        _PSWITCH(finalize_lsolver)(solver_field, nr_sf);
+        return(restart*m+j);
       }
       /* if not */
       else{
-	if(j != m-1){
-	  _PSWITCH(lmul_r)(_PSWITCH(V)[(j+1)], 1./creal(_PSWITCH(H)[j+1][j]), solver_field[1], N);
-	}
+        if(j != m-1){
+          _PSWITCH(lmul_r)(_PSWITCH(V)[(j+1)], 1./creal(_PSWITCH(H)[j+1][j]), solver_field[1], N);
+        }
       }
 
     }
@@ -133,8 +169,8 @@ int _PSWITCH(fgmres4complex)(_Complex _F_TYPE * const P, _Complex _F_TYPE * cons
     _PSWITCH(lassign_add_mul)(solver_field[2], _PSWITCH(Z)[j], _PSWITCH(alpha)[j], N);
     for(i = j-1; i >= 0; i--){
       for(k = i+1; k <= j; k++){
-	(tmp1) = (_PSWITCH(H)[i][k]) * (_PSWITCH(alpha)[k]);
-	(_PSWITCH(alpha)[i]) -= tmp1;
+        (tmp1) = (_PSWITCH(H)[i][k]) * (_PSWITCH(alpha)[k]);
+        (_PSWITCH(alpha)[i]) -= tmp1;
       }
       (_PSWITCH(alpha)[i]) = (_PSWITCH(alpha)[i]) * (1./creal(_PSWITCH(H)[i][i]));
       _PSWITCH(lassign_add_mul)(solver_field[2], _PSWITCH(Z)[i], _PSWITCH(alpha)[i], N);

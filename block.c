@@ -142,22 +142,22 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
   free_blocks();
   block_init = 1;
   block_list = calloc(nb_blocks, sizeof(block));
-  if((void*)(basis = (spinor*)calloc((nb_blocks + 1) * g_N_s * (VOLUME/nb_blocks + spinpad) + 1, sizeof(spinor))) == NULL) {
+  if((void*)(basis = (spinor*)aligned_malloc_zero((nb_blocks + 1) * g_N_s * (VOLUME/nb_blocks + spinpad)*sizeof(spinor))) == NULL) {
     CALLOC_ERROR_CRASH;
   }
-  if((void*)(u = (su3*)calloc(1+8*VOLUME, sizeof(su3))) == NULL) {
+  if((void*)(u = (su3*)aligned_malloc_zero(8 * VOLUME * sizeof(su3))) == 0) {
     CALLOC_ERROR_CRASH;
   }
-  if((void*)(u_32 = (su3_32*)calloc(1+8*VOLUME, sizeof(su3_32))) == NULL) {
+  if((void*)(u_32 = (su3_32*)aligned_malloc_zero(8 * VOLUME * sizeof(su3_32))) == 0) {
     CALLOC_ERROR_CRASH;
   }
   for(i = 0; i < nb_blocks; i++) {
     block_list[i].basis = (spinor**)calloc(g_N_s, sizeof(spinor*));
   }
   
-  block_list[0].basis[0] = (spinor*)(((unsigned long int)(basis)+ALIGN_BASE)&~ALIGN_BASE);
-  block_list[0].u = (su3*)(((unsigned long int)(u)+ALIGN_BASE)&~ALIGN_BASE);
-  block_list[0].u_32 = (su3_32*)(((unsigned long int)(u_32)+ALIGN_BASE)&~ALIGN_BASE);
+  block_list[0].basis[0] = basis;
+  block_list[0].u = u;
+  block_list[0].u_32 = u_32;
 
   for(j = 1; j < nb_blocks; j++) { 
     block_list[j].basis[0] = block_list[j-1].basis[0] + g_N_s*((VOLUME/nb_blocks) + spinpad) ;
@@ -239,13 +239,6 @@ int init_blocks(const int nt, const int nx, const int ny, const int nz) {
       CALLOC_ERROR_CRASH;
     if ((void*)(block_list[i].little_dirac_operator_eo_32 = aligned_malloc_zero(9 * g_N_s * g_N_s * sizeof(_Complex float))) == NULL)
       CALLOC_ERROR_CRASH;
-    
-    //    for (j = 0; j < 9 * g_N_s * g_N_s; ++j) {
-    //      block_list[i].little_dirac_operator[j] = 0.0;
-    //      block_list[i].little_dirac_operator_32[j] = 0.0;
-    //      block_list[i].little_dirac_operator_eo[j] = 0.0;
-    //      block_list[i].little_dirac_operator_eo_32[j] = 0.0;
-    //  }
   }
   if ((void*)(block_idx = calloc(8 * (VOLUME/nb_blocks), sizeof(int))) == NULL)
     CALLOC_ERROR_CRASH;
@@ -284,9 +277,9 @@ int free_blocks() {
     free(block_idx);
     free(block_evenidx);
     free(block_oddidx);
-    free(u);
-    free(u_32);
-    free(basis);
+    aligned_free(u);
+    aligned_free(u_32);
+    aligned_free(basis);
     free(block_list);
     block_init = 0;
   }
@@ -877,157 +870,6 @@ void block_contract_basis(int const idx, int const vecnum, int const dir, spinor
   }
 }
 
-void alt_block_compute_little_D() {
-  int i, j, k, l;
-  spinor *_rec, *rec, *_app, *app, *zero;
-  spinor *psi, **psi_blocks;
-
-  _rec = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-#if ( defined SSE || defined SSE2 || defined SSE3)
-  rec = (spinor*)(((unsigned long int)(_rec)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  rec = _rec;
-#endif  
-  _app = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-#if ( defined SSE || defined SSE2 || defined SSE3)
-  app = (spinor*)(((unsigned long int)(_app)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  app = _app;
-#endif  
-  zero = calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  psi = calloc(VOLUME+nb_blocks, sizeof(spinor));
-  psi_blocks = (spinor**)calloc(nb_blocks, sizeof(spinor*));
-  for(i=0;i<nb_blocks;i++) psi_blocks[i] = psi + i*(VOLUME/nb_blocks + 1);
-
-  for (j = 0; j < VOLUMEPLUSRAND; ++j){
-    _spinor_null(zero[j]);
-  }
-
-  for (k = 0; k < g_nproc; ++k) {
-    for (i = 0; i < g_N_s; ++i) {
-      for(l=0;l<nb_blocks;l++) {
-        /* Lower Z block */
-        for (j = 0; j < VOLUMEPLUSRAND; ++j){
-          _spinor_null(rec[j]);
-        }
-        if (g_cart_id == k) {
-          reconstruct_global_field_GEN_ID(rec, block_list, i, nb_blocks);
-        }
-
-        D_psi(app, rec);
-
-        split_global_field_GEN(psi_blocks, app, nb_blocks);
-        if (g_cart_id == k) {
-          block_contract_basis(0, i, NONE, psi);
-          block_contract_basis(1, i, Z_DN, psi);
-        }
-#ifdef MPI
-        else if (k == g_nb_t_up) {
-          block_contract_basis(0, i, T_UP, psi);
-        }
-        else if (k == g_nb_t_dn) {
-          block_contract_basis(0, i, T_DN, psi);
-        }
-        else if (k == g_nb_x_up) {
-          block_contract_basis(0, i, X_UP, psi);
-        }
-        else if (k == g_nb_x_dn) {
-          block_contract_basis(0, i, X_DN, psi);
-        }
-        else if (k == g_nb_y_up) {
-          block_contract_basis(0, i, Y_UP, psi);
-        }
-        else if (k == g_nb_y_dn) {
-          block_contract_basis(0, i, Y_DN, psi);
-        }
-        else if (k == g_nb_z_up) {
-          block_contract_basis(1, i, Z_UP, psi);
-        }
-#endif
-      }
-      /* Upper Z block */
-      /*      for (j = 0; j < VOLUMEPLUSRAND; ++j){
-              _spinor_null(rec[j]);
-              }
-
-              if (g_cart_id == k){
-              reconstruct_global_field(rec, zero, block_list[nb_blocks-1].basis[i]);
-              }
-
-              D_psi(app, rec);
-
-              split_global_field(psi_blocks, app);
-              if (g_cart_id == k){
-              block_contract_basis(0, i, Z_UP, psi);
-              block_contract_basis(1, i, NONE, psi);
-              }
-              #ifdef MPI
-              else if (k == g_nb_t_up){
-              block_contract_basis(1, i, T_UP, psi);
-              }
-              else if (k == g_nb_t_dn){
-              block_contract_basis(1, i, T_DN, psi);
-              }
-              else if (k == g_nb_x_up){
-              block_contract_basis(1, i, X_UP, psi);
-              }
-              else if (k == g_nb_x_dn){
-              block_contract_basis(1, i, X_DN, psi);
-              }
-              else if (k == g_nb_y_up){
-              block_contract_basis(1, i, Y_UP, psi);
-              }
-              else if (k == g_nb_y_dn){
-              block_contract_basis(1, i, Y_DN, psi);
-              }
-              else if (k == g_nb_z_dn){
-              block_contract_basis(0, i, Z_DN, psi);
-              }
-
-              MPI_Barrier(MPI_COMM_WORLD);
-              #endif */
-    }
-  }
-
-  if(g_debug_level > -1) {
-    if (g_N_s <= 5 && g_cart_id == 0){
-      printf("\n\n  *** CHECKING LITTLE D ***\n");
-      printf("\n  ** node 0, lower block **\n");
-      for (i = 0*g_N_s; i < 9 * g_N_s; ++i){
-        printf(" [ ");
-        for (j = 0; j < g_N_s; ++j){
-          printf("%s%1.3e %s %1.3e i", creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[0].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[0].little_dirac_operator[i * g_N_s + j]), cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[0].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[0].little_dirac_operator[i * g_N_s + j]));
-          if (j != g_N_s - 1){
-            printf(",\t");
-          }
-        }
-        printf(" ]\n");
-        if ((i % g_N_s) == (g_N_s - 1))
-          printf("\n");
-      }
-
-      printf("\n\n  *** CHECKING LITTLE D ***\n");
-      printf("\n  ** node 0, upper block **\n");
-      for (i = 0*g_N_s; i < 9 * g_N_s; ++i){
-        printf(" [ ");
-        for (j = 0; j < g_N_s; ++j){
-          printf("%s%1.3e %s %1.3e i", creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ", creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? creal(block_list[1].little_dirac_operator[i * g_N_s + j]) : -creal(block_list[1].little_dirac_operator[i * g_N_s + j]), cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "+" : "-", cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? cimag(block_list[1].little_dirac_operator[i * g_N_s + j]) : -cimag(block_list[1].little_dirac_operator[i * g_N_s + j]));
-          if (j != g_N_s - 1){
-            printf(",\t");
-          }
-        }
-        printf(" ]\n");
-        if ((i % g_N_s) == (g_N_s - 1))
-          printf("\n");
-      }
-    }
-  }
-
-  free(_rec);
-  free(_app);
-  free(zero);
-  free(psi);
-}
 
 
 /* checked CU */
@@ -1101,9 +943,7 @@ void compute_little_D_diagonal(const int mul_g5) {
 }
 
 
-/* what happens if this routine is called in a one dimensional parallelisation? */
-/* or even serially ?                                                           */
-/* checked CU */
+/* checked CU in 4d parallel case */
 void compute_little_D(const int mul_g5) {
   /* 
      This is the little dirac routine rewritten according to multidimensional blocking

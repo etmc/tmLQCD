@@ -93,11 +93,11 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   // Invert Q_{+} Q_{-}
   // X_o -> w_fields[1]
   chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
-	       mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
+               mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
   mnl->iter1 += solve_degenerate(mnl->w_fields[1], mnl->pf, mnl->solver_params, mnl->maxiter, mnl->forceprec, 
-				 g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver);
+                                 g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver);
   chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
-		      mnl->csg_N, &mnl->csg_n, N);
+                      mnl->csg_N, &mnl->csg_n, N);
   
   // Y_o -> w_fields[0]
   mnl->Qm(mnl->w_fields[0], mnl->w_fields[1]);
@@ -184,7 +184,7 @@ void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
   
   mnl->Qp(mnl->pf, mnl->w_fields[0]);
   chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
-		      mnl->csg_N, &mnl->csg_n, N);
+                      mnl->csg_N, &mnl->csg_n, N);
 
   g_mu = g_mu1;
   g_mu3 = 0.;
@@ -224,10 +224,10 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
   }
 
   chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
-	       mnl->csg_N, mnl->csg_n, N, mnl->Qsq);
+               mnl->csg_N, mnl->csg_n, N, mnl->Qsq);
   g_sloppy_precision_flag = 0;
   mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->pf, mnl->solver_params, mnl->maxiter, mnl->accprec,  
-				 g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver); 
+                                 g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver); 
   mnl->Qm(mnl->w_fields[0], mnl->w_fields[0]);
 
   g_sloppy_precision_flag = save_sloppy;
@@ -244,7 +244,7 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
     }
     if(g_debug_level > 3) {
       printf("called cloverdet_acc for id %d dH = %1.10e\n", 
-	     id, mnl->energy1 - mnl->energy0);
+             id, mnl->energy1 - mnl->energy0);
     }
   }
   return(mnl->energy1 - mnl->energy0);

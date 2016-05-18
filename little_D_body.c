@@ -1,3 +1,22 @@
+/***********************************************************************
+ *
+ * Copyright (C) 2008 Albert Deuzeman, Siebren Reker, Carsten Urbach
+ *
+ * This file is part of tmLQCD.
+ *
+ * tmLQCD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * tmLQCD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
+ ***********************************************************************/
 
 void _PSWITCH(little_D)(_C_TYPE * v, _C_TYPE *w) {
   int sq = g_N_s*g_N_s;
@@ -38,7 +57,6 @@ void _PSWITCH(little_Q_pm)(_C_TYPE * v, _C_TYPE *w) {
   _PSWITCH(little_D)(v, tmp);
   aligned_free(tmp);
   _PSWITCH(lassign_add_mul)(v, w, g_mu*g_mu + g_mu2*g_mu2, nb_blocks*g_N_s);
-  //memcpy(v, w, nb_blocks * g_N_s*sizeof(_C_TYPE));
 }
 
 

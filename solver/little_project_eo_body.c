@@ -1,6 +1,6 @@
 /***********************************************************************
  *
- * Copyright (C) 2008 Albert Deuzeman, Siebren Reker, Carsten Urbach
+ * Copyright (C) 2008,2016 Albert Deuzeman, Siebren Reker, Carsten Urbach
  *                    Claude Tadonki
  *
  * This file is part of tmLQCD.
