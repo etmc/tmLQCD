@@ -1,6 +1,26 @@
+/***********************************************************************
+ *
+ * Copyright (C) 2008 Albert Deuzeman, Siebren Reker, Carsten Urbach
+ *               2010 Claude Tadonki, Carsten Urbach
+ *
+ * This file is part of tmLQCD.
+ *
+ * tmLQCD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * tmLQCD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
+ ***********************************************************************/
 
 void _PSWITCH(little_field_gather)(_C_TYPE * w) {
-  int ib, request=0;
+  int ib;
   _C_TYPE * wt_buf=NULL, * wx_buf=NULL, * wy_buf=NULL, * wz_buf=NULL, 
     * w_buf=NULL, * w_source=NULL, * w_dest=NULL;
   _C_TYPE * wt=NULL, * wx=NULL, * wy=NULL, * wz=NULL;
@@ -17,6 +37,7 @@ void _PSWITCH(little_field_gather)(_C_TYPE * w) {
   wz = w + ( 3*(2*nb_blocks) + nb_blocks ) * g_N_s; // Were data in the direction z starts
 
 #ifdef MPI
+  int request = 0;
   int err;
   w_buf = calloc(8 * nb_blocks * g_N_s, sizeof(_C_TYPE)); // +-t +-x +-y +-z
 
@@ -91,7 +112,7 @@ void _PSWITCH(little_field_gather)(_C_TYPE * w) {
           for(int bz = 0; bz < nblks_z; bz++) {
             ib = block_index(bt, bx, by, bz) * g_N_s;
             switch(pm){ 
-            case 0: /* Direction +t */
+            case T_UP: /* Direction +t */
               w_dest = wt + ib;
               if( bt == nblks_t - 1 ) {
                 ib = block_index(0, bx, by, bz) * g_N_s; 
@@ -105,7 +126,7 @@ void _PSWITCH(little_field_gather)(_C_TYPE * w) {
               }
               // got it from the diagonal block
               break; 
-            case 1: /* Direction -t */
+            case T_DN: /* Direction -t */
               w_dest = wt + ib + nb_blocks * g_N_s;
               if( bt == 0 ) {
                 ib = block_index(nblks_t - 1, bx, by, bz) * g_N_s; 
@@ -119,7 +140,7 @@ void _PSWITCH(little_field_gather)(_C_TYPE * w) {
               }
               // got it from the diagonal block
               break; 
-            case 2: /* Direction +x */
+            case X_UP: /* Direction +x */
               w_dest = wx + ib;
               if( bx == nblks_x - 1 ) {
                 ib = block_index(bt, 0, by, bz) * g_N_s; 
@@ -133,7 +154,7 @@ void _PSWITCH(little_field_gather)(_C_TYPE * w) {
               }
               // got it from the diagonal block
               break; 
-            case 3: /* Direction -x */
+            case X_DN: /* Direction -x */
               w_dest = wx + ib + nb_blocks * g_N_s;
               if( bx == 0 ) {
                 ib = block_index(bt, nblks_x - 1, by, bz) * g_N_s; 
@@ -147,7 +168,7 @@ void _PSWITCH(little_field_gather)(_C_TYPE * w) {
               }
               // got it from the diagonal block
               break; 
-            case 4: /* Direction +y */
+            case Y_UP: /* Direction +y */
               w_dest = wy + ib;
               if( by == nblks_y - 1 ) {
                 ib = block_index(bt, bx, 0, bz) * g_N_s; 
@@ -161,7 +182,7 @@ void _PSWITCH(little_field_gather)(_C_TYPE * w) {
               }
               // got it from the diagonal block
               break; 
-            case 5: /* Direction -y */
+            case Y_DN: /* Direction -y */
               w_dest = wy + ib + nb_blocks * g_N_s;
               if( by == 0 ) {
                 ib = block_index(bt, bx, nblks_y - 1, bz) * g_N_s; 
@@ -175,7 +196,7 @@ void _PSWITCH(little_field_gather)(_C_TYPE * w) {
               }
               // got it from the diagonal block
               break; 
-            case 6: /* Direction +z */
+            case Z_UP: /* Direction +z */
               w_dest = wz + ib;
               if( bz == nblks_z - 1 ) {
                 ib = block_index(bt, bx, by, 0) * g_N_s; 
@@ -189,7 +210,7 @@ void _PSWITCH(little_field_gather)(_C_TYPE * w) {
               }
               // got it from the diagonal block
               break; 
-            case 7: /* Direction -z */
+            case Z_DN: /* Direction -z */
               w_dest = wz + ib + nb_blocks * g_N_s;
               if( bz == 0 ) {
                 ib = block_index(bt, bx, by, nblks_z - 1) * g_N_s; 
@@ -221,7 +242,7 @@ void _PSWITCH(little_field_gather)(_C_TYPE * w) {
 
 void _PSWITCH(little_field_gather_eo)(const int eo, _C_TYPE * w) {
 
-  int ib, ib2, request = 0;
+  int ib, ib2;
   _C_TYPE *wt = NULL, *wx = NULL, *wy = NULL, *wz = NULL;
   _C_TYPE *wt_buf = NULL, *wx_buf = NULL, *wy_buf = NULL, *wz_buf = NULL, *w_buf = NULL, *w_source = NULL, *w_dest = NULL;
 
@@ -232,6 +253,7 @@ void _PSWITCH(little_field_gather_eo)(const int eo, _C_TYPE * w) {
   wz = w + ( 3*(2*nb_blocks) + nb_blocks ) * g_N_s; // Were data in the direction z starts
 
 #ifdef MPI
+  int request = 0;
   int err;
   w_buf = calloc(8 * nb_blocks * g_N_s, sizeof(_C_TYPE)); // +-t +-x +-y +-z
 
@@ -307,7 +329,7 @@ void _PSWITCH(little_field_gather_eo)(const int eo, _C_TYPE * w) {
               ib2 = index_block_eo[block_index(bt, bx, by, bz)] * g_N_s;
               
               switch(pm){ 
-              case 0: /* Direction +t */
+              case T_UP: /* Direction +t */
                 w_dest = wt + ib2;
                 if( bt == nblks_t - 1 ) {
                   ib = index_block_eo[block_index(0,bx, by,bz)] * g_N_s; 
@@ -321,7 +343,7 @@ void _PSWITCH(little_field_gather_eo)(const int eo, _C_TYPE * w) {
                 }
                 // got it from the diagonal block
                 break; 
-              case 1: /* Direction -t */
+              case T_DN: /* Direction -t */
                 w_dest = wt + ib2 + nb_blocks * g_N_s;
                 if( bt == 0) {
                   ib = index_block_eo[block_index(nblks_t-1, bx,by,bz)] * g_N_s; 
@@ -334,7 +356,7 @@ void _PSWITCH(little_field_gather_eo)(const int eo, _C_TYPE * w) {
                 }
                 // got it from the diagonal block
                 break; 
-              case 2: /* Direction +x */
+              case X_UP: /* Direction +x */
                 w_dest = wx + ib2;
                 if( bx == nblks_x - 1 ) {
                   ib = index_block_eo[block_index(bt, 0, by,bz)] * g_N_s; 
@@ -348,7 +370,7 @@ void _PSWITCH(little_field_gather_eo)(const int eo, _C_TYPE * w) {
                 }
                 // got it from the diagonal block
                 break; 
-              case 3: /* Direction -x */
+              case X_DN: /* Direction -x */
                 w_dest = wx + ib2 + nb_blocks * g_N_s;
                 if( bx == 0) {ib = index_block_eo[block_index(bt, nblks_x-1, by,bz)] * g_N_s;
                   if(g_nproc_x > 1) w_source = wx_buf + ib + nb_blocks * g_N_s;
@@ -361,7 +383,7 @@ void _PSWITCH(little_field_gather_eo)(const int eo, _C_TYPE * w) {
                 }
                 // got it from the diagonal block
                 break; 
-              case 4: /* Direction +y */
+              case Y_UP: /* Direction +y */
                 w_dest = wy + ib2;
                 if( by == nblks_y - 1 ) {
                   ib = index_block_eo[block_index(bt, bx, 0,bz)] * g_N_s; 
@@ -375,7 +397,7 @@ void _PSWITCH(little_field_gather_eo)(const int eo, _C_TYPE * w) {
                 }
                 // got it from the diagonal block
                 break; 
-              case 5: /* Direction -y */
+              case Y_DN: /* Direction -y */
                 w_dest = wy + ib2 + nb_blocks * g_N_s;
                 if( by == 0) {
                   ib = index_block_eo[block_index(bt, bx, nblks_y-1, bz)] * g_N_s;
@@ -389,7 +411,7 @@ void _PSWITCH(little_field_gather_eo)(const int eo, _C_TYPE * w) {
                 }
                 // got it from the diagonal block
                 break; 
-              case 6: /* Direction +z */
+              case Z_UP: /* Direction +z */
                 w_dest = wz + ib2;
                 if( bz == nblks_z - 1 ) {
                   ib = index_block_eo[block_index(bt, bx, by, 0)] * g_N_s;
@@ -403,7 +425,7 @@ void _PSWITCH(little_field_gather_eo)(const int eo, _C_TYPE * w) {
                 }
                 // got it from the diagonal block
                 break; 
-              case 7: /* Direction -z */
+              case Z_DN: /* Direction -z */
                 w_dest = wz + ib2 + nb_blocks * g_N_s;
                 if( bz == 0) {
                   ib = index_block_eo[block_index(bt, bx, by, nblks_z - 1)] * g_N_s;

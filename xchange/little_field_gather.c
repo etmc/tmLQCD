@@ -36,15 +36,14 @@
 #include "little_field_gather.h"
 
 enum{
-  NONE = 0,
-  T_UP = 1,
-  T_DN = 2,
-  X_UP = 3,
-  X_DN = 4,
-  Y_UP = 5,
-  Y_DN = 6,
-  Z_UP = 7,
-  Z_DN = 8
+  T_UP = 0,
+  T_DN = 1,
+  X_UP = 2,
+  X_DN = 3,
+  Y_UP = 4,
+  Y_DN = 5,
+  Z_UP = 6,
+  Z_DN = 7
 } Direction;
 
 
