@@ -465,7 +465,7 @@ int MG_solver(spinor * const phi_new, spinor * const phi_old,
 {
   
   int success=0;
-  double mg_prec = rel_prec?sqrt(precision/square_norm(phi_old, N, 1)):sqrt(precision);
+  double mg_prec = rel_prec?sqrt(precision):sqrt(precision/square_norm(phi_old, N, 1));
   
   MG_pre_solve(gf);
   success = MG_solve( phi_new, phi_old, mg_prec, N, f );
