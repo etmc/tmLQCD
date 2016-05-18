@@ -78,10 +78,8 @@
 
 #define _default_random_seed 123456
 #define _default_rlxd_level 1
-//this is CG
-#define _default_solver_flag 1
-//this is CGMMSND
-#define _default_nd_solver_flag 14
+#define _default_solver_flag 1 // this is CG (see solver/solver_types.h)
+#define _default_nd_solver_flag 15 // this is CGMMSND (see solver/solver_types.h)
 #define _default_startoption 0
 #define _default_Ntherm 0
 #define _default_Nmeas 1

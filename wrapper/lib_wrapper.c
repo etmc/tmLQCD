@@ -54,6 +54,7 @@
 #include "invert_eo.h"
 #include "start.h"
 #include "operator.h"
+#include "measure_gauge_action.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "include/tmLQCD.h"
 
@@ -206,7 +207,12 @@ int tmLQCD_read_gauge(const int nconfig) {
 #ifdef MPI
   xchange_gauge(g_gauge_field);
 #endif
-  convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND);                                                                                                                                                                 
+  convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND);
+
+  double plaquette = measure_plaquette( (const su3** const) g_gauge_field)/(6.*VOLUME*g_nproc);
+  if (g_cart_id == 0) {
+    printf("# The computed plaquette value is %.16e.\n", plaquette);
+  }
   return(0);
 }
 

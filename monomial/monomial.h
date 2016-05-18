@@ -48,6 +48,7 @@
 #define RATCOR 18
 #define CLOVERRAT 19
 #define CLOVERRATCOR 20
+#define CLOVERDETRATIORW 21
 
 #define max_no_monomials 30
 
@@ -134,6 +135,7 @@ typedef struct {
 #include "monomial/clovernd_trlog_monomial.h"
 #include "monomial/cloverdet_monomial.h"
 #include "monomial/cloverdetratio_monomial.h"
+#include "monomial/cloverdetratio_rwmonomial.h"
 #include "monomial/cloverndpoly_monomial.h"
 #include "monomial/ndrat_monomial.h"
 #include "monomial/rat_monomial.h"

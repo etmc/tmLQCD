@@ -262,7 +262,7 @@ int init_operators() {
         }
 #endif
       }
-    }
+    } /* loop over operators */
   }
   return(0);
 }
