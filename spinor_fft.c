@@ -7,7 +7,7 @@
 #include <math.h>
 #include <time.h>
 #include <assert.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -30,7 +30,7 @@
 
 void  spinor_fft_print_reduct_dims(int *remaining_dims,FILE *logFile);
 
-#ifdef MPI
+#ifdef TM_USE_MPI
 void check_mpi_comm_membership(MPI_Comm commself,MPI_Comm commcheck,const char *name_a,const char *name_b,FILE *logFile);
 #endif
 
@@ -48,7 +48,7 @@ void spinor_fft_transpose_xp_t(spinor *fieldout,spinor* fieldin,int dim0,int dim
  */
 void spinor_fft_reduce_2d(spinor *localSpinorField,int *collectionRank,spinor*** field_collection,spinor **membuff){
   /* this implementation is intended for four dimensional parallelisation */
-#if (defined  PARALLELXYZT  && defined MPI && defined HAVE_FFTW)
+#if (defined  PARALLELXYZT  && defined TM_USE_MPI && defined HAVE_FFTW)
 
   int sendRecvCoord[4];
   int i;
@@ -199,7 +199,7 @@ void spinor_fft_reduce_2d(spinor *localSpinorField,int *collectionRank,spinor***
  */
 void spinor_fft_redist_2d(spinor *localSpinorField,int collectionRank,spinor** field_collection,spinor *membuff){
   /* this implementation is intended for four dimensional parallelisation */
-#if ( defined PARALLELXYZT && defined MPI && defined HAVE_FFTW)
+#if ( defined PARALLELXYZT && defined TM_USE_MPI && defined HAVE_FFTW)
 
   int sendRecvCoord[4];
   int i;
@@ -457,7 +457,7 @@ void spinor_fft_transpose_xp_t(spinor *fieldout,spinor* fieldin,int dim0,int dim
 }
 
 
-#ifdef MPI
+#ifdef TM_USE_MPI
 void check_mpi_comm_membership(MPI_Comm commself,MPI_Comm commcheck,const char *name_a,const char *name_b,FILE *logFile){
   int result;
   fprintf(logFile,"checking %s against %s : \n" , name_a,name_b);

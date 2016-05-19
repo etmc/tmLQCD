@@ -595,7 +595,7 @@ int init_poly_monomial(const int V, const int id){
     } 
     else {
       fprintf(stderr,"Reading local normalization from file FAILED\n Borting Ab\n");
-#ifdef MPI
+#ifdef TM_USE_MPI
       MPI_Finalize();
 #endif
       exit(6);
@@ -614,7 +614,7 @@ int init_poly_monomial(const int V, const int id){
   if((rootsFile=fopen(mnl->MDPolyRootsFile,"r")) != (FILE*)NULL) {
     if (fgets(title, 100, rootsFile) == NULL) {
       fprintf(stderr, "Cant read Roots file: %s Aborting...\n", mnl->MDPolyRootsFile);
-#ifdef MPI
+#ifdef TM_USE_MPI
       MPI_Finalize();
 #endif
       exit(6);
@@ -628,7 +628,7 @@ int init_poly_monomial(const int V, const int id){
   }
   else {
     fprintf(stderr, "Roots File %s is missing! Aborting...\n", mnl->MDPolyRootsFile );
-#ifdef MPI
+#ifdef TM_USE_MPI
     MPI_Finalize();
 #endif
     exit(6);

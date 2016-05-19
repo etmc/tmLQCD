@@ -98,7 +98,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
   } 
 
   /* for parallelization */
-#ifdef MPI
+#ifdef TM_USE_MPI
   xchange_2fields(k, l, ieo);
 #endif
   /************** loop over all lattice sites ****************/
@@ -408,7 +408,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
   }
 #endif
   /* for parallelization */
-#ifdef MPI
+#ifdef TM_USE_MPI
   xchange_2fields(k, l, ieo);
 #endif
 

@@ -71,7 +71,7 @@ void Proj_A_psi_su3vect(su3_vector * const y, su3_vector * const x, int tslice);
 void jderrorhandler_su3vect(const int i, char * message) 
 {
   fprintf(stderr, "jdher %s \n", message);
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Finalize();
 #endif
   exit(i);

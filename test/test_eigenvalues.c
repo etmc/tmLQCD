@@ -34,7 +34,7 @@
 #include <sys/time.h>
 #include <string.h>
 #include <signal.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
 #include "global.h"
@@ -47,7 +47,7 @@
 */
 #include "observables.h"
 #include "measure_rectangles.h"
-#ifdef MPI
+#ifdef TM_USE_MPI
 #include "xchange.h"
 #endif
 #include "io.h"
@@ -164,7 +164,7 @@ int main(int argc,char *argv[]) {
   if(g_rgi_C1 == 0.) {
     g_dbw2rand = 0;
   }
-#ifndef MPI
+#ifndef[blank]* TM_USE_MPI
   g_dbw2rand = 0;
 #endif
 
@@ -410,13 +410,13 @@ int main(int argc,char *argv[]) {
 	random_gauge_field();
       }
       rlxd_get(rlxd_state);
-#ifdef MPI
+#ifdef TM_USE_MPI
       MPI_Send(&rlxd_state[0], 105, MPI_INT, 1, 99, MPI_COMM_WORLD);
       MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_nproc-1, 99, MPI_COMM_WORLD, &status);
       rlxd_reset(rlxd_state);
 #endif
     }
-#ifdef MPI
+#ifdef TM_USE_MPI
     else {
       MPI_Recv(&rlxd_state[0], 105, MPI_INT, g_proc_id-1, 99, MPI_COMM_WORLD, &status);
       rlxd_reset(rlxd_state);
@@ -448,7 +448,7 @@ int main(int argc,char *argv[]) {
   }
 
   /*For parallelization: exchange the gaugefield */
-#ifdef MPI
+#ifdef TM_USE_MPI
   xchange_gauge(g_gauge_field);
 #endif
 #ifdef _GAUGE_COPY
@@ -562,7 +562,7 @@ int main(int argc,char *argv[]) {
     fprintf(parameterfile, "Acceptance Rate was: %e Prozent\n", 100.*(double)Rate/(double)Nmeas);
     fclose(parameterfile);
   }
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Finalize();
 #endif
   free_gauge_tmp();

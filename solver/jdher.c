@@ -84,7 +84,7 @@ void Proj_A_psi(spinor * const y, spinor * const x);
 
 void jderrorhandler(const int i, char * message) {
   fprintf(stderr, "jdher %s \n", message);
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Finalize();
 #endif
   exit(i);

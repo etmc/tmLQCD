@@ -41,7 +41,7 @@
 #ifdef BGQ
 #  include"DirectPut.h"
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
 #  include "xchange/xchange.h"
 #endif
 #include "boundary.h"
@@ -130,7 +130,7 @@ void tm_sub_Hopping_Matrix(const int ieo, spinor * const l, spinor * p, spinor *
   }
 #  endif
 
-#  if (defined MPI)
+#  if (defined TM_USE_MPI)
   xchange_field(k, ieo);
 #  endif
   

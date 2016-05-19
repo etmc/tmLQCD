@@ -281,7 +281,7 @@ void _PSWITCH(D_psi)(_PTSWITCH(spinor) * const P, _PTSWITCH(spinor) * const Q){
     _PSWITCH(update_backward_gauge)(_PSWITCH(g_gauge_field));
   }
 #endif
-# if defined MPI
+# if defined TM_USE_MPI
   _PTSWITCH(xchange_lexicfield)(Q);
 # endif
 

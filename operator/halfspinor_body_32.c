@@ -119,7 +119,7 @@ if(ieo == 0) {
   {
 #endif
     
-#    if (defined MPI && !defined _NO_COMM)
+#    if (defined TM_USE_MPI && !defined _NO_COMM)
 #      ifdef SPI
 
      // Initialize the barrier, resetting the hardware.

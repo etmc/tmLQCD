@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -279,7 +279,7 @@ void apply_little_D_spinor(spinor *r, spinor *s){
 #undef _PTSWITCH
 #undef _MV
 
-#ifdef MPI
+#ifdef TM_USE_MPI
 // in xchange/little_field_gather.c
 extern MPI_Request lrequests[16];
 extern MPI_Status lstatus[16];
@@ -288,7 +288,7 @@ extern int waitcount;
 
 
 void init_little_field_exchange(_Complex double * w) {
-#ifdef MPI
+#ifdef TM_USE_MPI
   int i = 0;
 #  if (defined PARALLELT || defined PARALLELX)
   int no_dirs = 2;
@@ -338,7 +338,7 @@ void init_little_field_exchange(_Complex double * w) {
 }
 
 void wait_little_field_exchange(const int mu) {
-#ifdef MPI
+#ifdef TM_USE_MPI
   int err;
   err = MPI_Waitall(2, &lrequests[2*mu], &lstatus[2*mu]);
   waitcount -= 2;

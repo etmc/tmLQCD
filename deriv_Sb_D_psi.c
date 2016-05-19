@@ -78,7 +78,7 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k,
   ioff2=(VOLUME+RAND)/2-ioff;
 
   /* for parallelization */
-#ifdef MPI
+#ifdef TM_USE_MPI
   xchange_field(k, ieo);
   xchange_field(l, (ieo+1)%2);
 #endif
@@ -384,7 +384,7 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k,
 #endif
 
   /* for parallelization */
-#ifdef MPI
+#ifdef TM_USE_MPI
   xchange_lexicfield(k);
   xchange_lexicfield(l);
 #endif

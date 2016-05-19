@@ -145,7 +145,7 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * lim
   for(t = 0; t < T; t++) {
     for(z = 0; z < LZ; z++) {
       for(y = 0; y < LY; y++) {
-#if (defined MPI)
+#if (defined TM_USE_MPI)
         limeReaderSeek(limereader,(n_uint64_t)
                        (g_proc_coords[1]*LX +
                         (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY
@@ -177,7 +177,7 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * lim
           }
           if(status < 0 && status != LIME_EOR) {
             fprintf(stderr, "LIME read error occurred with status = %d while reading in spinor_read_binary.c!\n", status);
-#ifdef MPI
+#ifdef TM_USE_MPI
             MPI_Abort(MPI_COMM_WORLD, 1);
             MPI_Finalize();
 #endif
@@ -187,7 +187,7 @@ int read_binary_spinor_data(spinor * const s, spinor * const r, LimeReader * lim
       }
     }
   }
-#ifdef MPI
+#ifdef TM_USE_MPI
   DML_checksum_combine(checksum);
 #endif
   return(0);
@@ -318,7 +318,7 @@ int read_binary_spinor_data_l(spinor * const s, LimeReader * limereader, DML_Che
   for(t = 0; t < T; t++) {
     for(z = 0; z < LZ; z++) {
       for(y = 0; y < LY; y++) {
-#if (defined MPI)
+#if (defined TM_USE_MPI)
         limeReaderSeek(limereader,(n_uint64_t)
                        (g_proc_coords[1]*LX +
                         (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY
@@ -342,7 +342,7 @@ int read_binary_spinor_data_l(spinor * const s, LimeReader * limereader, DML_Che
           }
           if(status < 0 && status != LIME_EOR) {
             fprintf(stderr, "LIME read error occurred with status = %d while reading in spinor_read_binary.c!\n", status);
-#ifdef MPI
+#ifdef TM_USE_MPI
             MPI_Abort(MPI_COMM_WORLD, 1);
             MPI_Finalize();
 #endif
@@ -352,7 +352,7 @@ int read_binary_spinor_data_l(spinor * const s, LimeReader * limereader, DML_Che
       }
     }
   }
-#ifdef MPI
+#ifdef TM_USE_MPI
   DML_checksum_combine(checksum);
 #endif
   return(0);

@@ -72,7 +72,7 @@ int init_dirac_halfspinor() {
 
   HalfSpinor = (halfspinor*)(((unsigned long int)(HalfSpinor_)+ALIGN_BASE+1)&~ALIGN_BASE);
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   if((void*)(sendBuffer_ = (halfspinor*)calloc(RAND/2+8, sizeof(halfspinor))) == NULL) {
     printf ("malloc errno : %d\n",errno); 
     errno = 0;
@@ -196,7 +196,7 @@ int init_dirac_halfspinor() {
       }
     }
   }
-#if (defined SPI && defined MPI)
+#if (defined SPI && defined TM_USE_MPI)
   // here comes the SPI initialisation
   uint64_t messageSizes[NUM_DIRS];
   uint64_t roffsets[NUM_DIRS], soffsets[NUM_DIRS];
@@ -364,7 +364,7 @@ int init_dirac_halfspinor32() {
 
   HalfSpinor32 = (halfspinor32*)(((unsigned long int)(HalfSpinor32_)+ALIGN_BASE)&~ALIGN_BASE);
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   //re-use memory from 64Bit version
   sendBuffer32 = (halfspinor32*)sendBuffer;
   recvBuffer32 = (halfspinor32*)recvBuffer;
@@ -479,7 +479,7 @@ int init_dirac_halfspinor32() {
       }
     }
   }
-#if (defined SPI && defined MPI)
+#if (defined SPI && defined TM_USE_MPI)
   // here comes the SPI initialisation
   uint64_t messageSizes[NUM_DIRS];
   uint64_t roffsets[NUM_DIRS], soffsets[NUM_DIRS];

@@ -81,7 +81,7 @@ double eigenvalues_Jacobi(int * nr_of_eigenvalues, const int max_iterations,
   int dims[]={1, LX*g_nproc_x, LY*g_nproc_y, LZ*g_nproc_z};
   FILE *efp;
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   double atime, etime;
   MPI_File fp;
   MPI_Offset siteSize=3*2*sizeof(double);
@@ -185,7 +185,7 @@ double eigenvalues_Jacobi(int * nr_of_eigenvalues, const int max_iterations,
   for(v0dim = 0; v0dim < (*nr_of_eigenvalues); v0dim++) {
     sprintf(filename, "eigenvector.%.3d.%.3d.%.4d", v0dim, tslice, nstore);
     s=(su3_vector*)&eigenvectors_su3v[v0dim*N2];
-#ifdef MPI 
+#ifdef TM_USE_MPI 
 # ifdef HAVE_LIBLEMON
     // SEGNO: dovrebbe stampare 8*2*3*SPACEVOLUME data per file, ma ne stampa 8*2*4n*SPACEVOLUME (n=4-1 per ev 0-3)
 

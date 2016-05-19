@@ -34,7 +34,7 @@
 #include <time.h>
 #include <string.h>
 #include <signal.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
 #ifdef OMP
@@ -48,7 +48,7 @@
 #include "start.h"
 /*#include "eigenvalues.h"*/
 #include "measure_gauge_action.h"
-#ifdef MPI
+#ifdef TM_USE_MPI
 #include "xchange/xchange.h"
 #endif
 #include <io/utils.h>
@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
   verbose = 0;
   g_use_clover_flag = 0;
 
-#ifdef MPI
+#ifdef TM_USE_MPI
 
 #  ifdef OMP
   int mpi_thread_provided;
@@ -181,7 +181,7 @@ int main(int argc, char *argv[])
   /* in this way even/odd can still be used by other operators */
   for(j = 0; j < no_operators; j++) if(!operator_list[j].even_odd_flag) even_odd_flag = 0;
 
-#ifndef MPI
+#ifndef[blank]* TM_USE_MPI
   g_dbw2rand = 0;
 #endif
 
@@ -305,7 +305,7 @@ int main(int argc, char *argv[])
       printf("# Finished reading gauge field.\n");
       fflush(stdout);
     }
-#ifdef MPI
+#ifdef TM_USE_MPI
     xchange_gauge(g_gauge_field);
 #endif
     /*Convert to a 32 bit gauge field, after xchange*/
@@ -352,7 +352,7 @@ int main(int argc, char *argv[])
                   0, compute_evs, nstore, even_odd_flag);
     }
     if (phmc_compute_evs != 0) {
-#ifdef MPI
+#ifdef TM_USE_MPI
       MPI_Finalize();
 #endif
       return(0);
@@ -409,7 +409,7 @@ int main(int argc, char *argv[])
     g_precWS=NULL;
     if(use_preconditioning == 1){
       /* todo load fftw wisdom */
-#if (defined HAVE_FFTW ) && !( defined MPI)
+#if (defined HAVE_FFTW ) && !( defined TM_USE_MPI)
       loadFFTWWisdom(g_spinor_field[0],g_spinor_field[1],T,LX);
 #else
       use_preconditioning=0;
@@ -497,7 +497,7 @@ int main(int argc, char *argv[])
 #ifdef QUDA
   _endQuda();
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 #endif

@@ -24,7 +24,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <stdint.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 #  include <mpi.h>
 #endif
 #ifdef OMP

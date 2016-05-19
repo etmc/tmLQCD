@@ -67,7 +67,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -216,7 +216,7 @@ void random_spinor_field_lexic(spinor * const k, const int repro, const enum RN_
 
   _rn_switch(rn_type,random_vector)
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   int rlxd_state[105];
   int rlxd_state_backup[105];
 #endif
@@ -225,7 +225,7 @@ void random_spinor_field_lexic(spinor * const k, const int repro, const enum RN_
   double v[24];
 
   if(repro) {
-#ifdef MPI
+#ifdef TM_USE_MPI
     if(g_proc_id != 0) {
       rlxd_get(rlxd_state_backup);
     } else if(g_proc_id == 0) {
@@ -248,7 +248,7 @@ void random_spinor_field_lexic(spinor * const k, const int repro, const enum RN_
 	  for(z = 0; z < g_nproc_z*LZ; z++) {
 	    Z = z - g_proc_coords[3]*LZ;
 	    coords[3] = z / LZ;
-#ifdef MPI
+#ifdef TM_USE_MPI
 	    MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
 	    if(g_cart_id == id) {
@@ -262,7 +262,7 @@ void random_spinor_field_lexic(spinor * const k, const int repro, const enum RN_
 	}
       }
     }
-#ifdef MPI
+#ifdef TM_USE_MPI
     if(g_proc_id != 0) {
       rlxd_reset(rlxd_state_backup);
     }
@@ -288,7 +288,7 @@ void random_spinor_field_eo(spinor * const k, const int repro, const enum RN_TYP
 
   _rn_switch(rn_type,random_vector)
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   int rlxd_state[105];
   int rlxd_state_backup[105];
 #endif
@@ -297,7 +297,7 @@ void random_spinor_field_eo(spinor * const k, const int repro, const enum RN_TYP
   double v[24];
 
   if(repro) {
-#ifdef MPI
+#ifdef TM_USE_MPI
     if(g_proc_id != 0) {
       rlxd_get(rlxd_state_backup);
     } else if(g_proc_id == 0) {
@@ -320,7 +320,7 @@ void random_spinor_field_eo(spinor * const k, const int repro, const enum RN_TYP
 	  for(z = 0; z < g_nproc_z*LZ; z++) {
 	    coords[3] = z / LZ;
 	    Z = z - g_proc_coords[3]*LZ;
-#ifdef MPI
+#ifdef TM_USE_MPI
 	    MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
 	    if((t0+x+y+z)%2 == 0) {
@@ -334,7 +334,7 @@ void random_spinor_field_eo(spinor * const k, const int repro, const enum RN_TYP
 	}
       }
     }
-#ifdef MPI
+#ifdef TM_USE_MPI
     if(g_proc_id != 0) {
       rlxd_reset(rlxd_state_backup);
     }
@@ -446,13 +446,13 @@ void random_gauge_field(const int repro, su3 ** const gf) {
   int id = 0; /* May not be initialized for scalar builds! */
   int coords[4];
   su3 ALIGN tmp;
-#ifdef MPI
+#ifdef TM_USE_MPI
   int rlxd_state[105];
   int rlxd_state_backup[105];
 #endif
 
   if(repro) {
-#ifdef MPI
+#ifdef TM_USE_MPI
     if(g_proc_id != 0) {
       rlxd_get(rlxd_state_backup);
     } else if(g_proc_id == 0) {
@@ -473,7 +473,7 @@ void random_gauge_field(const int repro, su3 ** const gf) {
 	  for(z = 0; z < g_nproc_z*LZ; z++) {
 	    Z = z - g_proc_coords[3]*LZ;
 	    coords[3] = z / LZ;
-#ifdef MPI
+#ifdef TM_USE_MPI
 	    MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
 	    for(mu = 0; mu < 4; mu++) {
@@ -489,7 +489,7 @@ void random_gauge_field(const int repro, su3 ** const gf) {
 	}
       }
     }
-#ifdef MPI
+#ifdef TM_USE_MPI
     if(g_proc_id != 0) {
       rlxd_reset(rlxd_state_backup);
     }
@@ -513,7 +513,7 @@ double random_su3adj_field(const int repro, su3adj ** const momenta) {
   su3adj *xm;
   int i, mu, t0, x, y, z, X, Y, Z, t, id = 0;
   int coords[4];
-#ifdef MPI
+#ifdef TM_USE_MPI
   int k;
   int rlxd_state[105];
   int rlxd_state_backup[105];
@@ -522,7 +522,7 @@ double random_su3adj_field(const int repro, su3adj ** const momenta) {
   double ALIGN tt, tr, ts, kc = 0., ks = 0., sum;
   
   if(repro) {
-#ifdef MPI
+#ifdef TM_USE_MPI
     if(g_proc_id != 0) {
       rlxd_get(rlxd_state_backup);
     } else if(g_proc_id == 0) {
@@ -543,7 +543,7 @@ double random_su3adj_field(const int repro, su3adj ** const momenta) {
 	  for(z = 0; z < g_nproc_z*LZ; z++) {
 	    Z = z - g_proc_coords[3]*LZ;
 	    coords[3] = z / LZ;
-#ifdef MPI
+#ifdef TM_USE_MPI
 	    MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
 	    if(g_cart_id == id) i = g_ipt[t][X][Y][Z];
@@ -577,7 +577,7 @@ double random_su3adj_field(const int repro, su3adj ** const momenta) {
       }
     }
     kc=0.5*(ks+kc);
-#ifdef MPI
+#ifdef TM_USE_MPI
     if(g_proc_id != 0) {
       rlxd_reset(rlxd_state_backup);
     }
@@ -610,7 +610,7 @@ double random_su3adj_field(const int repro, su3adj ** const momenta) {
     }
     kc=0.5*(ks+kc);
   }
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   return ks;
 #endif
@@ -778,7 +778,7 @@ void source_spinor_field_point_from_file(spinor * const P, spinor * const Q, int
   source_pe_coord[2] = source_coord[2]/LY;
   source_pe_coord[3] = source_coord[3]/LZ;
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Cart_rank(g_cart_grid, source_pe_coord, &source_pe_indx);
 #else
   source_pe_indx=0;
@@ -846,7 +846,7 @@ void start_ranlux(int level, int seed)
 
    if(loc_seed == 0) loc_seed++;
 
-   #ifdef MPI
+   #ifdef TM_USE_MPI
    unsigned int * seeds = calloc(g_nproc,sizeof(unsigned int));
    if(seeds == NULL) fatal_error("Memory allocation for seeds buffer failed!","start_ranlux");  
    MPI_Gather(&loc_seed,1,MPI_UNSIGNED,seeds,1,MPI_UNSIGNED,0,MPI_COMM_WORLD);
