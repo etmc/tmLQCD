@@ -105,7 +105,7 @@ int write_first_messages(FILE * parameterfile, char const * const executable, ch
 	  "# the code is compiled with MPI IO / Lemon\n");
 #  endif
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
   printf("# the code is compiled with openMP support\n");
   fprintf(parameterfile,
           "# the code is compiled with openMP support\n");

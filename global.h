@@ -250,7 +250,7 @@ EXTERN int g_nb_z_up, g_nb_z_dn;
 
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 EXTERN int omp_num_threads;
 #endif
 

@@ -1,5 +1,5 @@
 void _PSWITCH(mul_one_pm_imu_inv)(_PTSWITCH(spinor) * const l, const double _sign, const int N){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -19,7 +19,7 @@ void _PSWITCH(mul_one_pm_imu_inv)(_PTSWITCH(spinor) * const l, const double _sig
   z = nrm + (sign * nrm * g_mu) * I;
   w = conj(z);
   /************ loop over all lattice sites ************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(ix = 0; ix < N; ix++){
@@ -35,7 +35,7 @@ void _PSWITCH(mul_one_pm_imu_inv)(_PTSWITCH(spinor) * const l, const double _sig
     _vector_assign(r->s3, phi1);
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 
@@ -43,7 +43,7 @@ void _PSWITCH(mul_one_pm_imu_inv)(_PTSWITCH(spinor) * const l, const double _sig
 
 void _PSWITCH(assign_mul_one_pm_imu_inv)(_PTSWITCH(spinor) * const l, _PTSWITCH(spinor) * const k, 
 					 const double _sign, const int N){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -61,7 +61,7 @@ void _PSWITCH(assign_mul_one_pm_imu_inv)(_PTSWITCH(spinor) * const l, _PTSWITCH(
   w = conj(z);
 
   /************ loop over all lattice sites ************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(ix = 0; ix < N; ix++){
@@ -74,7 +74,7 @@ void _PSWITCH(assign_mul_one_pm_imu_inv)(_PTSWITCH(spinor) * const l, _PTSWITCH(
     _complex_times_vector(s->s3, w, r->s3);
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 }

@@ -23,7 +23,7 @@
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #ifdef MPI
@@ -56,7 +56,7 @@ void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigne
   fields[2] = x2;
   fields[3] = x0;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
 #endif
   {
@@ -65,7 +65,7 @@ void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigne
   su3 ALIGN z_tmp,z_tmp1;
 
 #ifdef MPI
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp single
 #endif
   {
@@ -77,7 +77,7 @@ void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigne
   // this can probably be improved...
 
   for( int f = 0; f < 3; ++f ){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for( int x = 0; x < VOLUME; ++x ){
@@ -107,7 +107,7 @@ void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigne
       }
     }
 #ifdef MPI
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp single
 #endif
     {

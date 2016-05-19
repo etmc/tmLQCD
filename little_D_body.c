@@ -31,7 +31,7 @@ void _PSWITCH(little_D)(_C_TYPE * v, _C_TYPE *w) {
   
   _PSWITCH(little_field_gather)(w);
   
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for
 #endif
   for(int i = 0; i < nb_blocks; i++) {

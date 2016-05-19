@@ -135,7 +135,7 @@ typedef struct
 (r).d7 -= (+creal((a).c21)-creal((a).c12)); \
 (r).d8 -= ((-cimag((a).c00)-cimag((a).c11) + 2.0 * cimag(a.c22))*0.577350269189625);
 
-#if ( defined OMP )
+#if ( defined TM_USE_OMP )
 
 #define _trace_lambda_mul_add_assign_nonlocal(r,c,a) \
 _Pragma("omp atomic") \

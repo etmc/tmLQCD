@@ -42,7 +42,7 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "global.h"
@@ -86,7 +86,7 @@
 // suppressing space-time indices
 
 void sw_term(const su3 ** const gf, const double kappa, const double c_sw) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -109,7 +109,7 @@ void sw_term(const su3 ** const gf, const double kappa, const double c_sw) {
         |  | |  |
         |__| |__| k  */
   
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(x = 0; x < VOLUME; x++) {
@@ -197,7 +197,7 @@ void sw_term(const su3 ** const gf, const double kappa, const double c_sw) {
     _itimes_su3_plus_su3(aux,magnetic[3],electric[3]);
     _su3_refac_acc(sw[x][2][1],ka_csw_8,aux);
   }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;
