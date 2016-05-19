@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
   /* in this way even/odd can still be used by other operators */
   for(j = 0; j < no_operators; j++) if(!operator_list[j].even_odd_flag) even_odd_flag = 0;
 
-#ifndef[blank]* TM_USE_MPI
+#ifndef TM_USE_MPI
   g_dbw2rand = 0;
 #endif
 

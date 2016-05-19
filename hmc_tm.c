@@ -184,7 +184,7 @@ int main(int argc,char *argv[]) {
     }
   }
   
-#ifndef[blank]* TM_USE_MPI
+#ifndef TM_USE_MPI
   g_dbw2rand = 0;
 #endif
   

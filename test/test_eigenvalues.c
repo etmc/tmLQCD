@@ -164,7 +164,7 @@ int main(int argc,char *argv[]) {
   if(g_rgi_C1 == 0.) {
     g_dbw2rand = 0;
   }
-#ifndef[blank]* TM_USE_MPI
+#ifndef TM_USE_MPI
   g_dbw2rand = 0;
 #endif
 

@@ -56,7 +56,7 @@ void copy_gauge_field (su3 ** to, su3 ** from)
 */
 int init_temporalgauge_trafo (const int V, su3** gfield) {
 
-#ifndef[blank]* TM_USE_MPI
+#ifndef TM_USE_MPI
 
    int it, iz, iy, ix;
    

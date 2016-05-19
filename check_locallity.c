@@ -146,7 +146,7 @@ int main(int argc,char *argv[]) {
 
   g_dbw2rand = 0;
 
-#ifndef[blank]* TM_USE_MPI
+#ifndef TM_USE_MPI
   g_dbw2rand = 0;
 #endif
 
