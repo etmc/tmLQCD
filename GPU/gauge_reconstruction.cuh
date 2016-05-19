@@ -963,7 +963,7 @@ __global__ void dev_check_gauge_reconstruction_8(typename dev_su3_2vT<RealT>::ty
 template<class RealT>
 void su3to2vf4(su3** gf, typename dev_su3_2vT<RealT>::type* h2d_gf){
   int i,j;
-  #ifndef[blank]* TM_USE_MPI
+  #ifndef TM_USE_MPI
     for (i = 0; i < VOLUME; i++) {
   #else
     for (i = 0; i < (VOLUME+RAND); i++) {
@@ -996,7 +996,7 @@ void su3to2vf4(su3** gf, typename dev_su3_2vT<RealT>::type* h2d_gf){
 template<class RealT>
 void su3to8(su3** gf, typename dev_su3_8T<RealT>::type* h2d_gf){
   int i,j;
-  #ifndef[blank]* TM_USE_MPI
+  #ifndef TM_USE_MPI
     for (i = 0; i < VOLUME; i++) {
   #else
     for (i = 0; i < (VOLUME+RAND); i++) {
