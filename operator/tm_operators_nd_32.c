@@ -40,7 +40,7 @@
 #include "operator/tm_operators_32.h"
 #include "operator/tm_operators_nd.h"
 #include "operator/clovertm_operators_32.h"
-#include "operator/D_psi_32.h"
+#include "operator/D_psi.h"
 #include "tm_operators_nd_32.h"
 
 

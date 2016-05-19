@@ -56,6 +56,7 @@
 #include "linalg/addto_32.h"
 #include "linalg/assign_to_32.h"
 #include "linalg/assign_mul_add_mul_r.h"
+#include "linalg/assign_mul_add_mul.h"
 #include "linalg/assign_mul_add_mul_r_32.h"
 #include "linalg/assign_mul_add_mul_add_mul_r.h"
 #include "linalg/mul_add_mul_r.h"

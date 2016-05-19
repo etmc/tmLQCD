@@ -22,6 +22,16 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#ifdef SSE
+# undef SSE
+#endif
+#ifdef SSE2
+# undef SSE2
+#endif
+#ifdef SSE3
+# undef SSE3
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -34,31 +44,126 @@
 #include "global.h"
 #include "su3.h"
 #include "sse.h"
+#include "gamma.h"
 #include "linalg_eo.h"
 #include "operator/Hopping_Matrix.h"
+#include "operator/tm_operators.h"
 #include "operator/Hopping_Matrix_32.h"
 
 #include "tm_operators.h"
 #include "tm_operators_32.h"
 
 #include "operator/clovertm_operators.h"
-
+#include "operator/D_psi.h"
 
 su3 *** sw;
 su3 *** sw_inv;
+
+/******************************************************************************
+ *
+ * assign_mul_one_sw_pm_imu_site_lexic applies (1 + T + imug5) to spinor l
+ * at a lexic site ix and stores it in k at the same site.
+ * l and k are pointers to the spinors at this site.
+ * it is assumed that the clover leaf is computed and stored
+ * in sw[VOLUME][3][2]
+ * the corresponding routine can be found in clover_leaf.c
+ * A.Abdel-Rehim
+ *****************************************************************************/
+
+#define _F_TYPE double
+#define _PTSWITCH(s) s
+#define _PSWITCH(s) s
+
+#include"assign_mul_one_sw_pm_imu_site_lexic_body.c"
+
+#undef _F_TYPE
+#undef _PSWITCH
+#undef _PTSWITCH
+
+#define _F_TYPE float
+#define _PTSWITCH(s) s ## 32
+#define _PSWITCH(s) s ## _32
+
+#include"assign_mul_one_sw_pm_imu_site_lexic_body.c"
+
+#undef _F_TYPE
+#undef _PSWITCH
+#undef _PTSWITCH
+
+/*****************************************************
+ * Full operator Q=gamma5*M acting on a spinor stored
+ * in even-odd ordering.
+ * A. Abdel-Rehim
+ ****************************************************/
+void Qsw_full(spinor * const Even_new, spinor * const Odd_new,
+              spinor * const Even, spinor * const Odd) {
+
+  /* Even sites */
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], Odd);
+  assign_mul_one_sw_pm_imu(EE, Even_new, Even, +g_mu);
+  assign_add_mul_r(Even_new, g_spinor_field[DUM_MATRIX], -1., VOLUME/2);
+  gamma5(Even_new,Even_new,VOLUME/2);
+
+  /* Odd sites */
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], Even);
+  assign_mul_one_sw_pm_imu(OO, Odd_new, Odd, +g_mu);
+  assign_add_mul_r(Odd_new, g_spinor_field[DUM_MATRIX], -1., VOLUME/2);
+  gamma5(Odd_new,Odd_new,VOLUME/2);
+}
+
+/**************************************************
+ * Full operator acting on spinors stored in 
+ * lexiographic order.
+ * A.Abdel-Rehim
+ **************************************************/
+
+//Msw_full_plus_psi is simply D_psi
+
+void Msw_full_minus_psi(spinor * const l, spinor * const k)
+{
+  g_mu = -g_mu;
+  D_psi(l, k);
+  g_mu = -g_mu;
+}
+
+void Qsw_full_plus_psi(spinor * const l, spinor * const k)
+{
+  D_psi(l, k);
+  gamma5(l, l, VOLUME);
+}
+
+void Qsw_full_minus_psi(spinor * const l, spinor * const k)
+{
+  g_mu = -g_mu;
+  D_psi(l, k);
+  g_mu = -g_mu;
+  gamma5(l, l, VOLUME);
+}
+
+void Qsw_full_pm_psi(spinor * const l, spinor * const k)
+{
+  g_mu = -g_mu;
+  D_psi(l, k);
+  gamma5(g_spinor_field[DUM_MATRIX], l, VOLUME);
+  g_mu = -g_mu;
+  D_psi(l, g_spinor_field[DUM_MATRIX]);
+  gamma5(l, l, VOLUME);
+}
+//******************************************************************
 
 su3_32 *** sw_32;
 su3_32 *** sw_inv_32;
 
 void clover_gamma5(const int ieo, 
-		   spinor * const l, const spinor * const k, const spinor * const j,
-		   const double mu);
+                   spinor * const l, const spinor * const k, const spinor * const j,
+                   const double mu);
 void clover(const int ieo, 
-	    spinor * const l, const spinor * const k, const spinor * const j,
-	    const double mu);
+            spinor * const l, const spinor * const k, const spinor * const j,
+            const double mu);
 
 void Msw_full(spinor * const Even_new, spinor * const Odd_new, 
-	      spinor * const Even, spinor * const Odd) {
+              spinor * const Even, spinor * const Odd) {
+
   /* Even sites */
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], Odd);
   assign_mul_one_sw_pm_imu(EE, Even_new, Even, +g_mu);
@@ -184,60 +289,60 @@ void clover_inv(spinor * const l, const int tau3sign, const double mu) {
 #pragma omp parallel
   {
 #endif
-  int icy;
-  su3_vector ALIGN psi, chi, phi1, phi3;
-  int ioff = 0;
-  const su3 *w1, *w2, *w3, *w4;
-  spinor *rn;
+    int icy;
+    su3_vector ALIGN psi, chi, phi1, phi3;
+    int ioff = 0;
+    const su3 *w1, *w2, *w3, *w4;
+    spinor *rn;
 
-  if(tau3sign < 0 && fabs(mu) > 0) {
-    ioff = VOLUME/2;
-  }
+    if(tau3sign < 0 && fabs(mu) > 0) {
+      ioff = VOLUME/2;
+    }
 
 #ifndef OMP
-  icy = ioff;
+    icy = ioff;
 #endif
-  /************************ loop over all lattice sites *************************/
+    /************************ loop over all lattice sites *************************/
 #ifdef OMP
 #pragma omp for
 #endif
-  for(int icx = 0; icx < (VOLUME/2); icx++) {
+    for(int icx = 0; icx < (VOLUME/2); icx++) {
 #ifdef OMP
-    icy = ioff + icx;
+      icy = ioff + icx;
 #endif
 
-    rn = l + icx;
-    _vector_assign(phi1,(*rn).s0);
-    _vector_assign(phi3,(*rn).s2);
+      rn = l + icx;
+      _vector_assign(phi1,(*rn).s0);
+      _vector_assign(phi3,(*rn).s2);
 
-    w1=&sw_inv[icy][0][0];
-    w2=w1+2;  /* &sw_inv[icy][1][0]; */
-    w3=w1+4;  /* &sw_inv[icy][2][0]; */
-    w4=w1+6;  /* &sw_inv[icy][3][0]; */
-    _su3_multiply(psi,*w1,phi1); 
-    _su3_multiply(chi,*w2,(*rn).s1);
-    _vector_add((*rn).s0,psi,chi);
-    _su3_multiply(psi,*w4,phi1); 
-    _su3_multiply(chi,*w3,(*rn).s1);
-    _vector_add((*rn).s1,psi,chi);
+      w1=&sw_inv[icy][0][0];
+      w2=w1+2;  /* &sw_inv[icy][1][0]; */
+      w3=w1+4;  /* &sw_inv[icy][2][0]; */
+      w4=w1+6;  /* &sw_inv[icy][3][0]; */
+      _su3_multiply(psi,*w1,phi1); 
+      _su3_multiply(chi,*w2,(*rn).s1);
+      _vector_add((*rn).s0,psi,chi);
+      _su3_multiply(psi,*w4,phi1); 
+      _su3_multiply(chi,*w3,(*rn).s1);
+      _vector_add((*rn).s1,psi,chi);
 
-    w1++; /* &sw_inv[icy][0][1]; */
-    w2++; /* &sw_inv[icy][1][1]; */
-    w3++; /* &sw_inv[icy][2][1]; */
-    w4++; /* &sw_inv[icy][3][1]; */
-    _su3_multiply(psi,*w1,phi3); 
-    _su3_multiply(chi,*w2,(*rn).s3);
-    _vector_add((*rn).s2,psi,chi);
-    _su3_multiply(psi,*w4,phi3); 
-    _su3_multiply(chi,*w3,(*rn).s3);
-    _vector_add((*rn).s3,psi,chi);
+      w1++; /* &sw_inv[icy][0][1]; */
+      w2++; /* &sw_inv[icy][1][1]; */
+      w3++; /* &sw_inv[icy][2][1]; */
+      w4++; /* &sw_inv[icy][3][1]; */
+      _su3_multiply(psi,*w1,phi3); 
+      _su3_multiply(chi,*w2,(*rn).s3);
+      _vector_add((*rn).s2,psi,chi);
+      _su3_multiply(psi,*w4,phi3); 
+      _su3_multiply(chi,*w3,(*rn).s3);
+      _vector_add((*rn).s3,psi,chi);
 
 #ifndef OMP
-    ++icy;
+      ++icy;
 #endif
 
-    /******************************** end of loop *********************************/
-  }
+      /******************************** end of loop *********************************/
+    }
 #ifdef OMP
   } /* OpenMP closing brace */
 #endif
@@ -249,79 +354,79 @@ void clover_inv_nd(const int ieo, spinor * const l_c, spinor * const l_s) {
 #pragma omp parallel
   {
 #endif
-  int icy;
-  su3_vector ALIGN psi, chi, phi1, phi3;
-  int ioff = 0;
-  const su3 *w1, *w2, *w3, *w4;
-  spinor *rn_s, *rn_c;
+    int icy;
+    su3_vector ALIGN psi, chi, phi1, phi3;
+    int ioff = 0;
+    const su3 *w1, *w2, *w3, *w4;
+    spinor *rn_s, *rn_c;
 
 
-  if(ieo == 1) ioff = VOLUME/2;
+    if(ieo == 1) ioff = VOLUME/2;
 
 #ifndef OMP
-  icy = ioff;
+    icy = ioff;
 #endif
 
 #ifdef OMP
 #pragma omp for
 #endif
-  for(unsigned int icx = 0; icx < (VOLUME/2); icx++) {
+    for(unsigned int icx = 0; icx < (VOLUME/2); icx++) {
 #ifdef OMP
-    icy = ioff + icx;
+      icy = ioff + icx;
 #endif
 
-    rn_s = l_s + icx;
-    rn_c = l_c + icx;
-    _vector_assign(phi1,(*rn_s).s0);
+      rn_s = l_s + icx;
+      rn_c = l_c + icx;
+      _vector_assign(phi1,(*rn_s).s0);
 
-    w1=&sw_inv[icy][0][0];
-    w2=w1+2;  /* &sw_inv[icy][1][0]; */
-    w3=w1+4;  /* &sw_inv[icy][2][0]; */
-    w4=w1+6;  /* &sw_inv[icy][3][0]; */
-    _su3_multiply(psi, *w1, phi1); 
-    _su3_multiply(chi, *w2, (*rn_s).s1);
-    _vector_add((*rn_s).s0, psi,chi);
-    _su3_multiply(psi, *w4, phi1); 
-    _su3_multiply(chi, *w3, (*rn_s).s1);
-    _vector_add((*rn_s).s1, psi, chi);
+      w1=&sw_inv[icy][0][0];
+      w2=w1+2;  /* &sw_inv[icy][1][0]; */
+      w3=w1+4;  /* &sw_inv[icy][2][0]; */
+      w4=w1+6;  /* &sw_inv[icy][3][0]; */
+      _su3_multiply(psi, *w1, phi1); 
+      _su3_multiply(chi, *w2, (*rn_s).s1);
+      _vector_add((*rn_s).s0, psi,chi);
+      _su3_multiply(psi, *w4, phi1); 
+      _su3_multiply(chi, *w3, (*rn_s).s1);
+      _vector_add((*rn_s).s1, psi, chi);
 
-    _vector_assign(phi1,(*rn_c).s0);
+      _vector_assign(phi1,(*rn_c).s0);
 
-    _su3_multiply(psi, *w1, phi1); 
-    _su3_multiply(chi, *w2, (*rn_c).s1);
-    _vector_add((*rn_c).s0, psi,chi);
-    _su3_multiply(psi, *w4, phi1); 
-    _su3_multiply(chi, *w3, (*rn_c).s1);
-    _vector_add((*rn_c).s1, psi, chi);
+      _su3_multiply(psi, *w1, phi1); 
+      _su3_multiply(chi, *w2, (*rn_c).s1);
+      _vector_add((*rn_c).s0, psi,chi);
+      _su3_multiply(psi, *w4, phi1); 
+      _su3_multiply(chi, *w3, (*rn_c).s1);
+      _vector_add((*rn_c).s1, psi, chi);
 
-    _vector_assign(phi3,(*rn_s).s2);
+      _vector_assign(phi3,(*rn_s).s2);
 
-    w1++; /* &sw_inv[icy][0][1]; */
-    w2++; /* &sw_inv[icy][1][1]; */
-    w3++; /* &sw_inv[icy][2][1]; */
-    w4++; /* &sw_inv[icy][3][1]; */
-    _su3_multiply(psi, *w1, phi3); 
-    _su3_multiply(chi, *w2, (*rn_s).s3);
-    _vector_add((*rn_s).s2, psi, chi);
-    _su3_multiply(psi, *w4, phi3); 
-    _su3_multiply(chi, *w3, (*rn_s).s3);
-    _vector_add((*rn_s).s3, psi, chi);
+      w1++; /* &sw_inv[icy][0][1]; */
+      w2++; /* &sw_inv[icy][1][1]; */
+      w3++; /* &sw_inv[icy][2][1]; */
+      w4++; /* &sw_inv[icy][3][1]; */
+      _su3_multiply(psi, *w1, phi3); 
+      _su3_multiply(chi, *w2, (*rn_s).s3);
+      _vector_add((*rn_s).s2, psi, chi);
+      _su3_multiply(psi, *w4, phi3); 
+      _su3_multiply(chi, *w3, (*rn_s).s3);
+      _vector_add((*rn_s).s3, psi, chi);
 
-    _vector_assign(phi3,(*rn_c).s2);
+      _vector_assign(phi3,(*rn_c).s2);
 
-    _su3_multiply(psi, *w1, phi3); 
-    _su3_multiply(chi, *w2, (*rn_c).s3);
-    _vector_add((*rn_c).s2, psi, chi);
-    _su3_multiply(psi, *w4, phi3); 
-    _su3_multiply(chi, *w3, (*rn_c).s3);
-    _vector_add((*rn_c).s3, psi, chi);
+      _su3_multiply(psi, *w1, phi3); 
+      _su3_multiply(chi, *w2, (*rn_c).s3);
+      _vector_add((*rn_c).s2, psi, chi);
+      _su3_multiply(psi, *w4, phi3); 
+      _su3_multiply(chi, *w3, (*rn_c).s3);
+      _vector_add((*rn_c).s3, psi, chi);
 
 #ifndef OMP
-    ++icy;
+      ++icy;
 #endif
 
-    /******************************** end of loop *********************************/
-  }
+      /******************************** end of loop *********************************/
+    }
 #ifdef OMP
   } /* OpenMP closing brace */
 #endif
@@ -341,69 +446,69 @@ void clover_inv_nd(const int ieo, spinor * const l_c, spinor * const l_s) {
  **************************************************************/
 
 void clover_gamma5(const int ieo, 
-		   spinor * const l, const spinor * const k, const spinor * const j,
-		   const double mu) {
+                   spinor * const l, const spinor * const k, const spinor * const j,
+                   const double mu) {
 #ifdef OMP
 #pragma omp parallel
   {
 #endif
-  su3_vector ALIGN chi, psi1, psi2;
-  int ix;
-  int ioff,icx;
-  const su3 *w1,*w2,*w3;
-  spinor *r;
-  const spinor *s,*t;
+    su3_vector ALIGN chi, psi1, psi2;
+    int ix;
+    int ioff,icx;
+    const su3 *w1,*w2,*w3;
+    spinor *r;
+    const spinor *s,*t;
 
-  if(ieo == 0) {
-    ioff = 0;
-  } 
-  else {
-    ioff = (VOLUME+RAND)/2;
-  }
+    if(ieo == 0) {
+      ioff = 0;
+    } 
+    else {
+      ioff = (VOLUME+RAND)/2;
+    }
 
-/************************ loop over all lattice sites *************************/
+    /************************ loop over all lattice sites *************************/
 #ifdef OMP
 #pragma omp for
 #endif
-  for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
-    ix = g_eo2lexic[icx];
+    for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
+      ix = g_eo2lexic[icx];
     
-    r = l + icx-ioff;
-    s = k + icx-ioff;
-    t = j + icx-ioff;
+      r = l + icx-ioff;
+      s = k + icx-ioff;
+      t = j + icx-ioff;
     
-    w1=&sw[ix][0][0];
-    w2=w1+2; /*&sw[ix][1][0];*/
-    w3=w1+4; /*&sw[ix][2][0];*/
-    _su3_multiply(psi1,*w1,(*s).s0); 
-    _su3_multiply(chi,*w2,(*s).s1);
-    _vector_add_assign(psi1,chi);
-    _su3_inverse_multiply(psi2,*w2,(*s).s0); 
-    _su3_multiply(chi,*w3,(*s).s1);
-    _vector_add_assign(psi2,chi); 
-    // add in the twisted mass term (plus in the upper components)
-    _vector_add_i_mul(psi1, mu, (*s).s0);
-    _vector_add_i_mul(psi2, mu, (*s).s1);
+      w1=&sw[ix][0][0];
+      w2=w1+2; /*&sw[ix][1][0];*/
+      w3=w1+4; /*&sw[ix][2][0];*/
+      _su3_multiply(psi1,*w1,(*s).s0); 
+      _su3_multiply(chi,*w2,(*s).s1);
+      _vector_add_assign(psi1,chi);
+      _su3_inverse_multiply(psi2,*w2,(*s).s0); 
+      _su3_multiply(chi,*w3,(*s).s1);
+      _vector_add_assign(psi2,chi); 
+      // add in the twisted mass term (plus in the upper components)
+      _vector_add_i_mul(psi1, mu, (*s).s0);
+      _vector_add_i_mul(psi2, mu, (*s).s1);
 
-    _vector_sub((*r).s0,psi1,(*t).s0);
-    _vector_sub((*r).s1,psi2,(*t).s1);
+      _vector_sub((*r).s0,psi1,(*t).s0);
+      _vector_sub((*r).s1,psi2,(*t).s1);
     
-    w1++; /*=&sw[ix][0][1];*/
-    w2++; /*=&sw[ix][1][1];*/
-    w3++; /*=&sw[ix][2][1];*/
-    _su3_multiply(psi1,*w1,(*s).s2); _su3_multiply(chi,*w2,(*s).s3);
-    _vector_add_assign(psi1,chi); 
-    _su3_inverse_multiply(psi2,*w2,(*s).s2); _su3_multiply(chi,*w3,(*s).s3);
-    _vector_add_assign(psi2,chi); 
-    // add in the twisted mass term (minus from g5 in the lower components)
-    _vector_add_i_mul(psi1, -mu, (*s).s2);
-    _vector_add_i_mul(psi2, -mu, (*s).s3);
+      w1++; /*=&sw[ix][0][1];*/
+      w2++; /*=&sw[ix][1][1];*/
+      w3++; /*=&sw[ix][2][1];*/
+      _su3_multiply(psi1,*w1,(*s).s2); _su3_multiply(chi,*w2,(*s).s3);
+      _vector_add_assign(psi1,chi); 
+      _su3_inverse_multiply(psi2,*w2,(*s).s2); _su3_multiply(chi,*w3,(*s).s3);
+      _vector_add_assign(psi2,chi); 
+      // add in the twisted mass term (minus from g5 in the lower components)
+      _vector_add_i_mul(psi1, -mu, (*s).s2);
+      _vector_add_i_mul(psi2, -mu, (*s).s3);
 
-    /**************** multiply with  gamma5 included ******************************/
-    _vector_sub((*r).s2,(*t).s2,psi1);
-    _vector_sub((*r).s3,(*t).s3,psi2);
-    /******************************** end of loop *********************************/
-  }
+      /**************** multiply with  gamma5 included ******************************/
+      _vector_sub((*r).s2,(*t).s2,psi1);
+      _vector_sub((*r).s3,(*t).s3,psi2);
+      /******************************** end of loop *********************************/
+    }
 #ifdef OMP
   } /* OMP closing brace */
 #endif
@@ -424,71 +529,71 @@ void clover_gamma5(const int ieo,
 
 
 void clover(const int ieo, 
-	    spinor * const l, const spinor * const k, const spinor * const j,
-	    const double mu) {
+            spinor * const l, const spinor * const k, const spinor * const j,
+            const double mu) {
 #ifdef OMP
 #pragma omp parallel
   {
 #endif
-  su3_vector ALIGN chi, psi1, psi2;
-  int ix;
-  int ioff;
-  const su3 *w1,*w2,*w3;
-  spinor *r;
-  const spinor *s,*t;
+    su3_vector ALIGN chi, psi1, psi2;
+    int ix;
+    int ioff;
+    const su3 *w1,*w2,*w3;
+    spinor *r;
+    const spinor *s,*t;
   
-  if(ieo == 0) {
-    ioff = 0;
-  } 
-  else {
-    ioff = (VOLUME+RAND)/2;
-  }
+    if(ieo == 0) {
+      ioff = 0;
+    } 
+    else {
+      ioff = (VOLUME+RAND)/2;
+    }
 #ifdef OMP
 #pragma omp for
 #endif
-  for(unsigned int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
-    ix = g_eo2lexic[icx];
+    for(unsigned int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
+      ix = g_eo2lexic[icx];
     
-    r = l + icx-ioff;
-    s = k + icx-ioff;
-    t = j + icx-ioff;
+      r = l + icx-ioff;
+      s = k + icx-ioff;
+      t = j + icx-ioff;
 
-    // upper two spin components first
-    w1=&sw[ix][0][0];
-    w2=w1+2; /*&sw[ix][1][0];*/
-    w3=w1+4; /*&sw[ix][2][0];*/
-    _su3_multiply(psi1,*w1,(*s).s0); 
-    _su3_multiply(chi,*w2,(*s).s1);
-    _vector_add_assign(psi1,chi);
-    _su3_inverse_multiply(psi2,*w2,(*s).s0); 
-    _su3_multiply(chi,*w3,(*s).s1);
-    _vector_add_assign(psi2,chi); 
+      // upper two spin components first
+      w1=&sw[ix][0][0];
+      w2=w1+2; /*&sw[ix][1][0];*/
+      w3=w1+4; /*&sw[ix][2][0];*/
+      _su3_multiply(psi1,*w1,(*s).s0); 
+      _su3_multiply(chi,*w2,(*s).s1);
+      _vector_add_assign(psi1,chi);
+      _su3_inverse_multiply(psi2,*w2,(*s).s0); 
+      _su3_multiply(chi,*w3,(*s).s1);
+      _vector_add_assign(psi2,chi); 
 
-    // add in the twisted mass term (plus in the upper components)
-    _vector_add_i_mul(psi1, mu, (*s).s0);
-    _vector_add_i_mul(psi2, mu, (*s).s1);
+      // add in the twisted mass term (plus in the upper components)
+      _vector_add_i_mul(psi1, mu, (*s).s0);
+      _vector_add_i_mul(psi2, mu, (*s).s1);
 
-    _vector_sub((*r).s0,psi1,(*t).s0);
-    _vector_sub((*r).s1,psi2,(*t).s1);
+      _vector_sub((*r).s0,psi1,(*t).s0);
+      _vector_sub((*r).s1,psi2,(*t).s1);
 
-    // now lower to spin components
-    w1++; /*=&sw[ix][0][1];*/
-    w2++; /*=&sw[ix][1][1];*/
-    w3++; /*=&sw[ix][2][1];*/
-    _su3_multiply(psi1,*w1,(*s).s2); 
-    _su3_multiply(chi,*w2,(*s).s3);
-    _vector_add_assign(psi1,chi); 
-    _su3_inverse_multiply(psi2,*w2,(*s).s2); 
-    _su3_multiply(chi,*w3,(*s).s3);
-    _vector_add_assign(psi2,chi); 
+      // now lower to spin components
+      w1++; /*=&sw[ix][0][1];*/
+      w2++; /*=&sw[ix][1][1];*/
+      w3++; /*=&sw[ix][2][1];*/
+      _su3_multiply(psi1,*w1,(*s).s2); 
+      _su3_multiply(chi,*w2,(*s).s3);
+      _vector_add_assign(psi1,chi); 
+      _su3_inverse_multiply(psi2,*w2,(*s).s2); 
+      _su3_multiply(chi,*w3,(*s).s3);
+      _vector_add_assign(psi2,chi); 
 
-    // add in the twisted mass term (minus from g5 in the lower components)
-    _vector_add_i_mul(psi1, -mu, (*s).s2);
-    _vector_add_i_mul(psi2, -mu, (*s).s3);
+      // add in the twisted mass term (minus from g5 in the lower components)
+      _vector_add_i_mul(psi1, -mu, (*s).s2);
+      _vector_add_i_mul(psi2, -mu, (*s).s3);
 
-    _vector_sub((*r).s2,psi1,(*t).s2);
-    _vector_sub((*r).s3,psi2,(*t).s3);
-  }
+      _vector_sub((*r).s2,psi1,(*t).s2);
+      _vector_sub((*r).s3,psi2,(*t).s3);
+    }
 #ifdef OMP
   } /* OpenMP closing brace */
 #endif
@@ -507,118 +612,118 @@ void clover(const int ieo,
  **************************************************************/
 
 void clover_nd(const int ieo, 
-	       spinor * const l_c, spinor * const l_s, 
-	       const spinor * const k_c, const spinor * const k_s, 
-	       const spinor * const j_c, const spinor * const j_s,
-	       const double mubar, const double epsbar) {
+               spinor * const l_c, spinor * const l_s, 
+               const spinor * const k_c, const spinor * const k_s, 
+               const spinor * const j_c, const spinor * const j_s,
+               const double mubar, const double epsbar) {
 #ifdef OMP
 #pragma omp parallel
   {
 #endif
-  su3_vector ALIGN chi, psi1, psi2;
-  int ix;
-  int ioff;
-  const su3 *w1,*w2,*w3;
-  spinor *r_s, *r_c;
-  const spinor *s_s, *s_c, *t_s, *t_c;
+    su3_vector ALIGN chi, psi1, psi2;
+    int ix;
+    int ioff;
+    const su3 *w1,*w2,*w3;
+    spinor *r_s, *r_c;
+    const spinor *s_s, *s_c, *t_s, *t_c;
   
-  if(ieo == 0) {
-    ioff = 0;
-  } 
-  else {
-    ioff = (VOLUME+RAND)/2;
-  }
-  /************************ loop over all lattice sites *************************/
+    if(ieo == 0) {
+      ioff = 0;
+    } 
+    else {
+      ioff = (VOLUME+RAND)/2;
+    }
+    /************************ loop over all lattice sites *************************/
 #ifdef OMP
 #pragma omp for
 #endif
-  for(unsigned int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
-    ix = g_eo2lexic[icx];
+    for(unsigned int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
+      ix = g_eo2lexic[icx];
     
-    r_s = l_s + icx-ioff;
-    r_c = l_c + icx-ioff;
-    s_s = k_s + icx-ioff;
-    s_c = k_c + icx-ioff;
-    t_s = j_s + icx-ioff;
-    t_c = j_c + icx-ioff;
+      r_s = l_s + icx-ioff;
+      r_c = l_c + icx-ioff;
+      s_s = k_s + icx-ioff;
+      s_c = k_c + icx-ioff;
+      t_s = j_s + icx-ioff;
+      t_c = j_c + icx-ioff;
 
-    // upper two spin components first
-    w1=&sw[ix][0][0];
-    w2=w1+2; /*&sw[ix][1][0];*/
-    w3=w1+4; /*&sw[ix][2][0];*/
-    _su3_multiply(psi1, *w1, (*s_s).s0); 
-    _su3_multiply(chi, *w2, (*s_s).s1);
-    _vector_add_assign(psi1, chi);
-    _su3_inverse_multiply(psi2, *w2, (*s_s).s0); 
-    _su3_multiply(chi, *w3, (*s_s).s1);
-    _vector_add_assign(psi2, chi); 
+      // upper two spin components first
+      w1=&sw[ix][0][0];
+      w2=w1+2; /*&sw[ix][1][0];*/
+      w3=w1+4; /*&sw[ix][2][0];*/
+      _su3_multiply(psi1, *w1, (*s_s).s0); 
+      _su3_multiply(chi, *w2, (*s_s).s1);
+      _vector_add_assign(psi1, chi);
+      _su3_inverse_multiply(psi2, *w2, (*s_s).s0); 
+      _su3_multiply(chi, *w3, (*s_s).s1);
+      _vector_add_assign(psi2, chi); 
 
-    // add in the twisted mass term (plus in the upper components)
-    _vector_add_i_mul(psi1, mubar, (*s_s).s0);
-    _vector_add_i_mul(psi2, mubar, (*s_s).s1);
+      // add in the twisted mass term (plus in the upper components)
+      _vector_add_i_mul(psi1, mubar, (*s_s).s0);
+      _vector_add_i_mul(psi2, mubar, (*s_s).s1);
 
-    _vector_add_mul(psi1, epsbar, (*s_c).s0);
-    _vector_add_mul(psi2, epsbar, (*s_c).s1);
+      _vector_add_mul(psi1, epsbar, (*s_c).s0);
+      _vector_add_mul(psi2, epsbar, (*s_c).s1);
 
-    _vector_sub((*r_s).s0, psi1, (*t_s).s0);
-    _vector_sub((*r_s).s1, psi2, (*t_s).s1);
+      _vector_sub((*r_s).s0, psi1, (*t_s).s0);
+      _vector_sub((*r_s).s1, psi2, (*t_s).s1);
 
-    _su3_multiply(psi1, *w1, (*s_c).s0); 
-    _su3_multiply(chi, *w2, (*s_c).s1);
-    _vector_add_assign(psi1, chi);
-    _su3_inverse_multiply(psi2, *w2, (*s_c).s0); 
-    _su3_multiply(chi, *w3, (*s_c).s1);
-    _vector_add_assign(psi2, chi); 
+      _su3_multiply(psi1, *w1, (*s_c).s0); 
+      _su3_multiply(chi, *w2, (*s_c).s1);
+      _vector_add_assign(psi1, chi);
+      _su3_inverse_multiply(psi2, *w2, (*s_c).s0); 
+      _su3_multiply(chi, *w3, (*s_c).s1);
+      _vector_add_assign(psi2, chi); 
 
-    // add in the twisted mass term (plus in the upper components)
-    _vector_add_i_mul(psi1, -mubar, (*s_c).s0);
-    _vector_add_i_mul(psi2, -mubar, (*s_c).s1);
+      // add in the twisted mass term (plus in the upper components)
+      _vector_add_i_mul(psi1, -mubar, (*s_c).s0);
+      _vector_add_i_mul(psi2, -mubar, (*s_c).s1);
 
-    _vector_add_mul(psi1, epsbar, (*s_s).s0);
-    _vector_add_mul(psi2, epsbar, (*s_s).s1);
+      _vector_add_mul(psi1, epsbar, (*s_s).s0);
+      _vector_add_mul(psi2, epsbar, (*s_s).s1);
 
-    _vector_sub((*r_c).s0, psi1, (*t_c).s0);
-    _vector_sub((*r_c).s1, psi2, (*t_c).s1);
+      _vector_sub((*r_c).s0, psi1, (*t_c).s0);
+      _vector_sub((*r_c).s1, psi2, (*t_c).s1);
 
 
-    // now lower to spin components
-    w1++; /*=&sw[ix][0][1];*/
-    w2++; /*=&sw[ix][1][1];*/
-    w3++; /*=&sw[ix][2][1];*/
-    _su3_multiply(psi1, *w1, (*s_s).s2); 
-    _su3_multiply(chi, *w2, (*s_s).s3);
-    _vector_add_assign(psi1, chi); 
-    _su3_inverse_multiply(psi2, *w2, (*s_s).s2); 
-    _su3_multiply(chi, *w3, (*s_s).s3);
-    _vector_add_assign(psi2, chi); 
+      // now lower to spin components
+      w1++; /*=&sw[ix][0][1];*/
+      w2++; /*=&sw[ix][1][1];*/
+      w3++; /*=&sw[ix][2][1];*/
+      _su3_multiply(psi1, *w1, (*s_s).s2); 
+      _su3_multiply(chi, *w2, (*s_s).s3);
+      _vector_add_assign(psi1, chi); 
+      _su3_inverse_multiply(psi2, *w2, (*s_s).s2); 
+      _su3_multiply(chi, *w3, (*s_s).s3);
+      _vector_add_assign(psi2, chi); 
 
-    // add in the twisted mass term (minus from g5 in the lower components)
-    _vector_add_i_mul(psi1, -mubar, (*s_s).s2);
-    _vector_add_i_mul(psi2, -mubar, (*s_s).s3);
+      // add in the twisted mass term (minus from g5 in the lower components)
+      _vector_add_i_mul(psi1, -mubar, (*s_s).s2);
+      _vector_add_i_mul(psi2, -mubar, (*s_s).s3);
 
-    _vector_add_mul(psi1, epsbar, (*s_c).s2);
-    _vector_add_mul(psi2, epsbar, (*s_c).s3);
+      _vector_add_mul(psi1, epsbar, (*s_c).s2);
+      _vector_add_mul(psi2, epsbar, (*s_c).s3);
 
-    _vector_sub((*r_s).s2,psi1,(*t_s).s2);
-    _vector_sub((*r_s).s3,psi2,(*t_s).s3);
+      _vector_sub((*r_s).s2,psi1,(*t_s).s2);
+      _vector_sub((*r_s).s3,psi2,(*t_s).s3);
 
-    _su3_multiply(psi1, *w1, (*s_c).s2); 
-    _su3_multiply(chi, *w2, (*s_c).s3);
-    _vector_add_assign(psi1, chi); 
-    _su3_inverse_multiply(psi2, *w2, (*s_c).s2); 
-    _su3_multiply(chi, *w3, (*s_c).s3);
-    _vector_add_assign(psi2, chi); 
+      _su3_multiply(psi1, *w1, (*s_c).s2); 
+      _su3_multiply(chi, *w2, (*s_c).s3);
+      _vector_add_assign(psi1, chi); 
+      _su3_inverse_multiply(psi2, *w2, (*s_c).s2); 
+      _su3_multiply(chi, *w3, (*s_c).s3);
+      _vector_add_assign(psi2, chi); 
 
-    // add in the twisted mass term (minus from g5 in the lower components)
-    _vector_add_i_mul(psi1, mubar, (*s_c).s2);
-    _vector_add_i_mul(psi2, mubar, (*s_c).s3);
+      // add in the twisted mass term (minus from g5 in the lower components)
+      _vector_add_i_mul(psi1, mubar, (*s_c).s2);
+      _vector_add_i_mul(psi2, mubar, (*s_c).s3);
 
-    _vector_add_mul(psi1, epsbar, (*s_s).s2);
-    _vector_add_mul(psi2, epsbar, (*s_s).s3);
+      _vector_add_mul(psi1, epsbar, (*s_s).s2);
+      _vector_add_mul(psi2, epsbar, (*s_s).s3);
 
-    _vector_sub((*r_c).s2, psi1, (*t_c).s2);
-    _vector_sub((*r_c).s3, psi2, (*t_c).s3);
-  }
+      _vector_sub((*r_c).s2, psi1, (*t_c).s2);
+      _vector_sub((*r_c).s3, psi2, (*t_c).s3);
+    }
 #ifdef OMP
   } /* OpenMP closing brace */
 #endif
@@ -626,118 +731,118 @@ void clover_nd(const int ieo,
 }
 
 void clover_gamma5_nd(const int ieo, 
-		      spinor * const l_c, spinor * const l_s, 
-		      const spinor * const k_c, const spinor * const k_s, 
-		      const spinor * const j_c, const spinor * const j_s,
-		      const double mubar, const double epsbar) {
+                      spinor * const l_c, spinor * const l_s, 
+                      const spinor * const k_c, const spinor * const k_s, 
+                      const spinor * const j_c, const spinor * const j_s,
+                      const double mubar, const double epsbar) {
 #ifdef OMP
 #pragma omp parallel
   {
 #endif
-  su3_vector ALIGN chi, psi1, psi2;
-  int ix;
-  int ioff;
-  const su3 *w1,*w2,*w3;
-  spinor *r_s, *r_c;
-  const spinor *s_s, *s_c, *t_s, *t_c;
+    su3_vector ALIGN chi, psi1, psi2;
+    int ix;
+    int ioff;
+    const su3 *w1,*w2,*w3;
+    spinor *r_s, *r_c;
+    const spinor *s_s, *s_c, *t_s, *t_c;
   
-  if(ieo == 0) {
-    ioff = 0;
-  } 
-  else {
-    ioff = (VOLUME+RAND)/2;
-  }
-  /************************ loop over all lattice sites *************************/
+    if(ieo == 0) {
+      ioff = 0;
+    } 
+    else {
+      ioff = (VOLUME+RAND)/2;
+    }
+    /************************ loop over all lattice sites *************************/
 #ifdef OMP
 #pragma omp for
 #endif
-  for(unsigned int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
-    ix = g_eo2lexic[icx];
+    for(unsigned int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
+      ix = g_eo2lexic[icx];
     
-    r_s = l_s + icx-ioff;
-    r_c = l_c + icx-ioff;
-    s_s = k_s + icx-ioff;
-    s_c = k_c + icx-ioff;
-    t_s = j_s + icx-ioff;
-    t_c = j_c + icx-ioff;
+      r_s = l_s + icx-ioff;
+      r_c = l_c + icx-ioff;
+      s_s = k_s + icx-ioff;
+      s_c = k_c + icx-ioff;
+      t_s = j_s + icx-ioff;
+      t_c = j_c + icx-ioff;
 
-    // upper two spin components first
-    w1=&sw[ix][0][0];
-    w2=w1+2; /*&sw[ix][1][0];*/
-    w3=w1+4; /*&sw[ix][2][0];*/
-    _su3_multiply(psi1, *w1, (*s_s).s0); 
-    _su3_multiply(chi, *w2, (*s_s).s1);
-    _vector_add_assign(psi1, chi);
-    _su3_inverse_multiply(psi2, *w2, (*s_s).s0); 
-    _su3_multiply(chi, *w3, (*s_s).s1);
-    _vector_add_assign(psi2, chi); 
+      // upper two spin components first
+      w1=&sw[ix][0][0];
+      w2=w1+2; /*&sw[ix][1][0];*/
+      w3=w1+4; /*&sw[ix][2][0];*/
+      _su3_multiply(psi1, *w1, (*s_s).s0); 
+      _su3_multiply(chi, *w2, (*s_s).s1);
+      _vector_add_assign(psi1, chi);
+      _su3_inverse_multiply(psi2, *w2, (*s_s).s0); 
+      _su3_multiply(chi, *w3, (*s_s).s1);
+      _vector_add_assign(psi2, chi); 
 
-    // add in the twisted mass term (plus in the upper components)
-    _vector_add_i_mul(psi1, mubar, (*s_s).s0);
-    _vector_add_i_mul(psi2, mubar, (*s_s).s1);
+      // add in the twisted mass term (plus in the upper components)
+      _vector_add_i_mul(psi1, mubar, (*s_s).s0);
+      _vector_add_i_mul(psi2, mubar, (*s_s).s1);
 
-    _vector_add_mul(psi1, epsbar, (*s_c).s0);
-    _vector_add_mul(psi2, epsbar, (*s_c).s1);
+      _vector_add_mul(psi1, epsbar, (*s_c).s0);
+      _vector_add_mul(psi2, epsbar, (*s_c).s1);
 
-    _vector_sub((*r_s).s0, psi1, (*t_s).s0);
-    _vector_sub((*r_s).s1, psi2, (*t_s).s1);
+      _vector_sub((*r_s).s0, psi1, (*t_s).s0);
+      _vector_sub((*r_s).s1, psi2, (*t_s).s1);
 
-    _su3_multiply(psi1, *w1, (*s_c).s0); 
-    _su3_multiply(chi, *w2, (*s_c).s1);
-    _vector_add_assign(psi1, chi);
-    _su3_inverse_multiply(psi2, *w2, (*s_c).s0); 
-    _su3_multiply(chi, *w3, (*s_c).s1);
-    _vector_add_assign(psi2, chi); 
+      _su3_multiply(psi1, *w1, (*s_c).s0); 
+      _su3_multiply(chi, *w2, (*s_c).s1);
+      _vector_add_assign(psi1, chi);
+      _su3_inverse_multiply(psi2, *w2, (*s_c).s0); 
+      _su3_multiply(chi, *w3, (*s_c).s1);
+      _vector_add_assign(psi2, chi); 
 
-    // add in the twisted mass term (plus in the upper components)
-    _vector_add_i_mul(psi1, -mubar, (*s_c).s0);
-    _vector_add_i_mul(psi2, -mubar, (*s_c).s1);
+      // add in the twisted mass term (plus in the upper components)
+      _vector_add_i_mul(psi1, -mubar, (*s_c).s0);
+      _vector_add_i_mul(psi2, -mubar, (*s_c).s1);
 
-    _vector_add_mul(psi1, epsbar, (*s_s).s0);
-    _vector_add_mul(psi2, epsbar, (*s_s).s1);
+      _vector_add_mul(psi1, epsbar, (*s_s).s0);
+      _vector_add_mul(psi2, epsbar, (*s_s).s1);
 
-    _vector_sub((*r_c).s0, psi1, (*t_c).s0);
-    _vector_sub((*r_c).s1, psi2, (*t_c).s1);
+      _vector_sub((*r_c).s0, psi1, (*t_c).s0);
+      _vector_sub((*r_c).s1, psi2, (*t_c).s1);
 
 
-    // now lower to spin components
-    w1++; /*=&sw[ix][0][1];*/
-    w2++; /*=&sw[ix][1][1];*/
-    w3++; /*=&sw[ix][2][1];*/
-    _su3_multiply(psi1, *w1, (*s_s).s2); 
-    _su3_multiply(chi, *w2, (*s_s).s3);
-    _vector_add_assign(psi1, chi); 
-    _su3_inverse_multiply(psi2, *w2, (*s_s).s2); 
-    _su3_multiply(chi, *w3, (*s_s).s3);
-    _vector_add_assign(psi2, chi); 
+      // now lower to spin components
+      w1++; /*=&sw[ix][0][1];*/
+      w2++; /*=&sw[ix][1][1];*/
+      w3++; /*=&sw[ix][2][1];*/
+      _su3_multiply(psi1, *w1, (*s_s).s2); 
+      _su3_multiply(chi, *w2, (*s_s).s3);
+      _vector_add_assign(psi1, chi); 
+      _su3_inverse_multiply(psi2, *w2, (*s_s).s2); 
+      _su3_multiply(chi, *w3, (*s_s).s3);
+      _vector_add_assign(psi2, chi); 
 
-    // add in the twisted mass term (minus from g5 in the lower components)
-    _vector_add_i_mul(psi1, -mubar, (*s_s).s2);
-    _vector_add_i_mul(psi2, -mubar, (*s_s).s3);
+      // add in the twisted mass term (minus from g5 in the lower components)
+      _vector_add_i_mul(psi1, -mubar, (*s_s).s2);
+      _vector_add_i_mul(psi2, -mubar, (*s_s).s3);
 
-    _vector_add_mul(psi1, epsbar, (*s_c).s2);
-    _vector_add_mul(psi2, epsbar, (*s_c).s3);
+      _vector_add_mul(psi1, epsbar, (*s_c).s2);
+      _vector_add_mul(psi2, epsbar, (*s_c).s3);
 
-    _vector_sub((*r_s).s2, (*t_s).s2, psi1);
-    _vector_sub((*r_s).s3, (*t_s).s3, psi2);
+      _vector_sub((*r_s).s2, (*t_s).s2, psi1);
+      _vector_sub((*r_s).s3, (*t_s).s3, psi2);
 
-    _su3_multiply(psi1, *w1, (*s_c).s2); 
-    _su3_multiply(chi, *w2, (*s_c).s3);
-    _vector_add_assign(psi1, chi); 
-    _su3_inverse_multiply(psi2, *w2, (*s_c).s2); 
-    _su3_multiply(chi, *w3, (*s_c).s3);
-    _vector_add_assign(psi2, chi); 
+      _su3_multiply(psi1, *w1, (*s_c).s2); 
+      _su3_multiply(chi, *w2, (*s_c).s3);
+      _vector_add_assign(psi1, chi); 
+      _su3_inverse_multiply(psi2, *w2, (*s_c).s2); 
+      _su3_multiply(chi, *w3, (*s_c).s3);
+      _vector_add_assign(psi2, chi); 
 
-    // add in the twisted mass term (minus from g5 in the lower components)
-    _vector_add_i_mul(psi1, mubar, (*s_c).s2);
-    _vector_add_i_mul(psi2, mubar, (*s_c).s3);
+      // add in the twisted mass term (minus from g5 in the lower components)
+      _vector_add_i_mul(psi1, mubar, (*s_c).s2);
+      _vector_add_i_mul(psi2, mubar, (*s_c).s3);
 
-    _vector_add_mul(psi1, epsbar, (*s_s).s2);
-    _vector_add_mul(psi2, epsbar, (*s_s).s3);
+      _vector_add_mul(psi1, epsbar, (*s_s).s2);
+      _vector_add_mul(psi2, epsbar, (*s_s).s3);
 
-    _vector_sub((*r_c).s2, (*t_c).s2, psi1);
-    _vector_sub((*r_c).s3, (*t_c).s3, psi2);
-  }
+      _vector_sub((*r_c).s2, (*t_c).s2, psi1);
+      _vector_sub((*r_c).s3, (*t_c).s3, psi2);
+    }
 #ifdef OMP
   } /* OpenMP closing brace */
 #endif
@@ -757,77 +862,87 @@ void clover_gamma5_nd(const int ieo,
  **************************************************************/
 
 
-void assign_mul_one_sw_pm_imu(const int ieo, 
-			      spinor * const k, const spinor * const l,
-			      const double mu) {
+
+/***************************************************
+ * Application of Mee (1+T+i*g_mu*gamma5) to spinor
+ * l and store the result in spinor k. Only even 
+ * sites will be computed.
+ * A. Abdel-Rehim
+ **************************************************/
+
+void Mee_sw_psi(spinor * const k, spinor * const l, const double mu) {
 #ifdef OMP
 #pragma omp parallel
   {
 #endif
-  su3_vector ALIGN chi, psi1, psi2;
-  int ix;
-  int ioff;
-  const su3 *w1, *w2, *w3;
-  spinor *r;
-  const spinor *s;
+    su3_vector ALIGN chi, psi1, psi2;
+    int ix;
+    //int ioff;
+    const su3 *w1, *w2, *w3;
+    spinor *r;
+    const spinor *s;
   
-  if(ieo == 0) {
-    ioff = 0;
-  } 
-  else {
-    ioff = (VOLUME+RAND)/2;
-  }
-  /************************ loop over all lattice sites *************************/
+    //if(ieo == 0) {
+    //  ioff = 0;
+    //} 
+    //else {
+    //  ioff = (VOLUME+RAND)/2;
+    //}
+    /************************ loop over even lattice sites *************************/
 #ifdef OMP
 #pragma omp for
 #endif
-  for(unsigned icx = ioff; icx < (VOLUME/2+ioff); icx++) {
-    ix = g_eo2lexic[icx];
+    //for(unsigned icx = ioff; icx < (VOLUME/2+ioff); icx++) {
+    for(unsigned icx = 0; icx < VOLUME/2; icx++) {
+      ix = g_eo2lexic[icx];
     
-    r = k + icx-ioff;
-    s = l + icx-ioff;
+      //r = k + icx-ioff;
+      //s = l + icx-ioff;
 
-    // upper two spin components first
-    w1=&sw[ix][0][0];
-    w2=w1+2; /*&sw[ix][1][0];*/
-    w3=w1+4; /*&sw[ix][2][0];*/
-    _su3_multiply(psi1,*w1,(*s).s0); 
-    _su3_multiply(chi,*w2,(*s).s1);
-    _vector_add_assign(psi1,chi);
-    _su3_inverse_multiply(psi2,*w2,(*s).s0); 
-    _su3_multiply(chi,*w3,(*s).s1);
-    _vector_add_assign(psi2,chi); 
+      r = k + icx;
+      s = l + icx;
+      // upper two spin components first
+      w1=&sw[ix][0][0];
+      w2=w1+2; /*&sw[ix][1][0];*/
+      w3=w1+4; /*&sw[ix][2][0];*/
+      _su3_multiply(psi1,*w1,(*s).s0); 
+      _su3_multiply(chi,*w2,(*s).s1);
+      _vector_add_assign(psi1,chi);
+      _su3_inverse_multiply(psi2,*w2,(*s).s0); 
+      _su3_multiply(chi,*w3,(*s).s1);
+      _vector_add_assign(psi2,chi); 
 
-    // add in the twisted mass term (plus in the upper components)
-    _vector_add_i_mul(psi1, mu, (*s).s0);
-    _vector_add_i_mul(psi2, mu, (*s).s1);
+      // add in the twisted mass term (plus in the upper components)
+      _vector_add_i_mul(psi1, mu, (*s).s0);
+      _vector_add_i_mul(psi2, mu, (*s).s1);
 
-    _vector_assign((*r).s0, psi1);
-    _vector_assign((*r).s1, psi2);
+      _vector_assign((*r).s0, psi1);
+      _vector_assign((*r).s1, psi2);
 
-    // now lower to spin components
-    w1++; /*=&sw[ix][0][1];*/
-    w2++; /*=&sw[ix][1][1];*/
-    w3++; /*=&sw[ix][2][1];*/
-    _su3_multiply(psi1,*w1,(*s).s2); 
-    _su3_multiply(chi,*w2,(*s).s3);
-    _vector_add_assign(psi1,chi); 
-    _su3_inverse_multiply(psi2,*w2,(*s).s2); 
-    _su3_multiply(chi,*w3,(*s).s3);
-    _vector_add_assign(psi2,chi); 
+      // now lower to spin components
+      w1++; /*=&sw[ix][0][1];*/
+      w2++; /*=&sw[ix][1][1];*/
+      w3++; /*=&sw[ix][2][1];*/
+      _su3_multiply(psi1,*w1,(*s).s2); 
+      _su3_multiply(chi,*w2,(*s).s3);
+      _vector_add_assign(psi1,chi); 
+      _su3_inverse_multiply(psi2,*w2,(*s).s2); 
+      _su3_multiply(chi,*w3,(*s).s3);
+      _vector_add_assign(psi2,chi); 
 
-    // add in the twisted mass term (minus from g5 in the lower components)
-    _vector_add_i_mul(psi1, -mu, (*s).s2);
-    _vector_add_i_mul(psi2, -mu, (*s).s3);
+      // add in the twisted mass term (minus from g5 in the lower components)
+      _vector_add_i_mul(psi1, -mu, (*s).s2);
+      _vector_add_i_mul(psi2, -mu, (*s).s3);
 
-    _vector_assign((*r).s2, psi1);
-    _vector_assign((*r).s3, psi2);
-  }
+      _vector_assign((*r).s2, psi1);
+      _vector_assign((*r).s3, psi2);
+    }
 #ifdef OMP
   } /* OpenMP closing brace */
 #endif
   return;
 }
+
 
 /**************************************************************
  *
@@ -843,115 +958,115 @@ void assign_mul_one_sw_pm_imu(const int ieo,
 
 
 void assign_mul_one_sw_pm_imu_eps(const int ieo, 
-				  spinor * const k_s, spinor * const k_c, 
-				  const spinor * const l_s, const spinor * const l_c,
-				  const double mu, const double eps) {
+                                  spinor * const k_s, spinor * const k_c, 
+                                  const spinor * const l_s, const spinor * const l_c,
+                                  const double mu, const double eps) {
 #ifdef OMP
 #pragma omp parallel
   {
 #endif
-  su3_vector ALIGN chi, psi1, psi2;
-  int ix;
-  int ioff;
-  const su3 *w1, *w2, *w3;
-  spinor *r_s, *r_c;
-  const spinor *s_s, *s_c;
+    su3_vector ALIGN chi, psi1, psi2;
+    int ix;
+    int ioff;
+    const su3 *w1, *w2, *w3;
+    spinor *r_s, *r_c;
+    const spinor *s_s, *s_c;
   
-  if(ieo == 0) {
-    ioff = 0;
-  } 
-  else {
-    ioff = (VOLUME+RAND)/2;
-  }
-  /************************ loop over all lattice sites *************************/
+    if(ieo == 0) {
+      ioff = 0;
+    } 
+    else {
+      ioff = (VOLUME+RAND)/2;
+    }
+    /************************ loop over all lattice sites *************************/
 #ifdef OMP
 #pragma omp for
 #endif
-  for(unsigned int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
-    ix = g_eo2lexic[icx];
+    for(unsigned int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
+      ix = g_eo2lexic[icx];
     
-    r_s = k_s + icx-ioff;
-    r_c = k_c + icx-ioff;
-    s_s = l_s + icx-ioff;
-    s_c = l_c + icx-ioff;
+      r_s = k_s + icx-ioff;
+      r_c = k_c + icx-ioff;
+      s_s = l_s + icx-ioff;
+      s_c = l_c + icx-ioff;
 
-    // upper two spin components first
-    w1=&sw[ix][0][0];
-    w2=w1+2; /*&sw[ix][1][0];*/
-    w3=w1+4; /*&sw[ix][2][0];*/
-    _su3_multiply(psi1, *w1, (*s_s).s0); 
-    _su3_multiply(chi, *w2, (*s_s).s1);
-    _vector_add_assign(psi1, chi);
-    _su3_inverse_multiply(psi2, *w2, (*s_s).s0); 
-    _su3_multiply(chi, *w3, (*s_s).s1);
-    _vector_add_assign(psi2, chi); 
+      // upper two spin components first
+      w1=&sw[ix][0][0];
+      w2=w1+2; /*&sw[ix][1][0];*/
+      w3=w1+4; /*&sw[ix][2][0];*/
+      _su3_multiply(psi1, *w1, (*s_s).s0); 
+      _su3_multiply(chi, *w2, (*s_s).s1);
+      _vector_add_assign(psi1, chi);
+      _su3_inverse_multiply(psi2, *w2, (*s_s).s0); 
+      _su3_multiply(chi, *w3, (*s_s).s1);
+      _vector_add_assign(psi2, chi); 
 
-    // add in the twisted mass term (plus in the upper components)
-    _vector_add_i_mul(psi1, mu, (*s_s).s0);
-    _vector_add_i_mul(psi2, mu, (*s_s).s1);
+      // add in the twisted mass term (plus in the upper components)
+      _vector_add_i_mul(psi1, mu, (*s_s).s0);
+      _vector_add_i_mul(psi2, mu, (*s_s).s1);
 
-    _vector_add_mul(psi1, eps, (*s_c).s0);
-    _vector_add_mul(psi2, eps, (*s_c).s1);
+      _vector_add_mul(psi1, eps, (*s_c).s0);
+      _vector_add_mul(psi2, eps, (*s_c).s1);
 
-    _vector_assign((*r_s).s0, psi1);
-    _vector_assign((*r_s).s1, psi2);
+      _vector_assign((*r_s).s0, psi1);
+      _vector_assign((*r_s).s1, psi2);
 
-    _su3_multiply(psi1, *w1, (*s_c).s0); 
-    _su3_multiply(chi, *w2, (*s_c).s1);
-    _vector_add_assign(psi1, chi);
-    _su3_inverse_multiply(psi2, *w2, (*s_c).s0); 
-    _su3_multiply(chi, *w3, (*s_c).s1);
-    _vector_add_assign(psi2, chi); 
+      _su3_multiply(psi1, *w1, (*s_c).s0); 
+      _su3_multiply(chi, *w2, (*s_c).s1);
+      _vector_add_assign(psi1, chi);
+      _su3_inverse_multiply(psi2, *w2, (*s_c).s0); 
+      _su3_multiply(chi, *w3, (*s_c).s1);
+      _vector_add_assign(psi2, chi); 
 
-    // add in the twisted mass term (plus in the upper components)
-    _vector_add_i_mul(psi1, -mu, (*s_c).s0);
-    _vector_add_i_mul(psi2, -mu, (*s_c).s1);
+      // add in the twisted mass term (plus in the upper components)
+      _vector_add_i_mul(psi1, -mu, (*s_c).s0);
+      _vector_add_i_mul(psi2, -mu, (*s_c).s1);
 
-    _vector_add_mul(psi1, eps, (*s_s).s0);
-    _vector_add_mul(psi2, eps, (*s_s).s1);
+      _vector_add_mul(psi1, eps, (*s_s).s0);
+      _vector_add_mul(psi2, eps, (*s_s).s1);
 
-    _vector_assign((*r_c).s0, psi1);
-    _vector_assign((*r_c).s1, psi2);
+      _vector_assign((*r_c).s0, psi1);
+      _vector_assign((*r_c).s1, psi2);
 
-    // now lower two spin components
-    w1++; /*=&sw[ix][0][1];*/
-    w2++; /*=&sw[ix][1][1];*/
-    w3++; /*=&sw[ix][2][1];*/
-    _su3_multiply(psi1, *w1, (*s_s).s2); 
-    _su3_multiply(chi, *w2, (*s_s).s3);
-    _vector_add_assign(psi1, chi); 
-    _su3_inverse_multiply(psi2, *w2, (*s_s).s2); 
-    _su3_multiply(chi, *w3, (*s_s).s3);
-    _vector_add_assign(psi2, chi); 
+      // now lower two spin components
+      w1++; /*=&sw[ix][0][1];*/
+      w2++; /*=&sw[ix][1][1];*/
+      w3++; /*=&sw[ix][2][1];*/
+      _su3_multiply(psi1, *w1, (*s_s).s2); 
+      _su3_multiply(chi, *w2, (*s_s).s3);
+      _vector_add_assign(psi1, chi); 
+      _su3_inverse_multiply(psi2, *w2, (*s_s).s2); 
+      _su3_multiply(chi, *w3, (*s_s).s3);
+      _vector_add_assign(psi2, chi); 
 
-    // add in the twisted mass term (minus from g5 in the lower components)
-    _vector_add_i_mul(psi1, -mu, (*s_s).s2);
-    _vector_add_i_mul(psi2, -mu, (*s_s).s3);
+      // add in the twisted mass term (minus from g5 in the lower components)
+      _vector_add_i_mul(psi1, -mu, (*s_s).s2);
+      _vector_add_i_mul(psi2, -mu, (*s_s).s3);
 
-    _vector_add_mul(psi1, eps, (*s_c).s2);
-    _vector_add_mul(psi2, eps, (*s_c).s3);
+      _vector_add_mul(psi1, eps, (*s_c).s2);
+      _vector_add_mul(psi2, eps, (*s_c).s3);
 
-    _vector_assign((*r_s).s2, psi1);
-    _vector_assign((*r_s).s3, psi2);
+      _vector_assign((*r_s).s2, psi1);
+      _vector_assign((*r_s).s3, psi2);
 
-    _su3_multiply(psi1, *w1, (*s_c).s2); 
-    _su3_multiply(chi, *w2, (*s_c).s3);
-    _vector_add_assign(psi1, chi); 
-    _su3_inverse_multiply(psi2, *w2, (*s_c).s2); 
-    _su3_multiply(chi, *w3, (*s_c).s3);
-    _vector_add_assign(psi2, chi); 
+      _su3_multiply(psi1, *w1, (*s_c).s2); 
+      _su3_multiply(chi, *w2, (*s_c).s3);
+      _vector_add_assign(psi1, chi); 
+      _su3_inverse_multiply(psi2, *w2, (*s_c).s2); 
+      _su3_multiply(chi, *w3, (*s_c).s3);
+      _vector_add_assign(psi2, chi); 
 
-    // add in the twisted mass term (minus from g5 in the lower components)
-    _vector_add_i_mul(psi1, mu, (*s_c).s2);
-    _vector_add_i_mul(psi2, mu, (*s_c).s3);
+      // add in the twisted mass term (minus from g5 in the lower components)
+      _vector_add_i_mul(psi1, mu, (*s_c).s2);
+      _vector_add_i_mul(psi2, mu, (*s_c).s3);
 
-    _vector_add_mul(psi1, eps, (*s_s).s2);
-    _vector_add_mul(psi2, eps, (*s_s).s3);
+      _vector_add_mul(psi1, eps, (*s_s).s2);
+      _vector_add_mul(psi2, eps, (*s_s).s3);
 
-    _vector_assign((*r_c).s2, psi1);
-    _vector_assign((*r_c).s3, psi2);
+      _vector_assign((*r_c).s2, psi1);
+      _vector_assign((*r_c).s3, psi2);
 
-  }
+    }
 #ifdef OMP
   } /* OpenMP closing brace */
 #endif
@@ -959,54 +1074,72 @@ void assign_mul_one_sw_pm_imu_eps(const int ieo,
 }
 
 
+#define _F_TYPE double
+#define _PSWITCH(s) s
+#define _PTSWITCH(s) s
 
-void assign_mul_one_sw_pm_imu_inv(const int ieo, 
-				  spinor * const k, const spinor * const l,
-				  const double mu) {
+#include "assign_mul_one_sw_pm_imu_inv_block_body.c"
+
+#undef _F_TYPE
+#undef _PSWITCH
+#undef _PTSWITCH
+
+#define _F_TYPE float
+#define _PSWITCH(s) s ## _32
+#define _PTSWITCH(s) s ## 32
+
+#include "assign_mul_one_sw_pm_imu_inv_block_body.c"
+
+#undef _F_TYPE
+#undef _PSWITCH
+#undef _PTSWITCH
+
+
+void Mee_sw_inv_psi(spinor * const k, spinor * const l, const double mu) {
 #ifdef OMP
 #pragma omp parallel
   {
 #endif
-  su3_vector ALIGN psi, chi, phi1, phi3;
-  const su3 *w1, *w2, *w3, *w4;
-  const spinor *rn;
-  spinor *s;
+    su3_vector ALIGN psi, chi, phi1, phi3;
+    const su3 *w1, *w2, *w3, *w4;
+    const spinor *rn;
+    spinor *s;
 
-  /************************ loop over all lattice sites *************************/
+    /************************ loop over all lattice sites *************************/
 #ifdef OMP
 #pragma omp for
 #endif
-  for(int icx = 0; icx < (VOLUME/2); icx++) {
+    for(int icx = 0; icx < (VOLUME/2); icx++) {
 
-    rn = l + icx;
-    s = k + icx;
-    _vector_assign(phi1,(*rn).s0);
-    _vector_assign(phi3,(*rn).s2);
+      rn = l + icx;
+      s = k + icx;
+      _vector_assign(phi1,(*rn).s0);
+      _vector_assign(phi3,(*rn).s2);
 
-    w1=&sw_inv[icx][0][0];
-    w2=w1+2;  /* &sw_inv[icx][1][0]; */
-    w3=w1+4;  /* &sw_inv[icx][2][0]; */
-    w4=w1+6;  /* &sw_inv[icx][3][0]; */
-    _su3_multiply(psi,*w1,phi1); 
-    _su3_multiply(chi,*w2,(*rn).s1);
-    _vector_add((*s).s0,psi,chi);
-    _su3_multiply(psi,*w4,phi1); 
-    _su3_multiply(chi,*w3,(*rn).s1);
-    _vector_add((*s).s1,psi,chi);
+      w1=&sw_inv[icx][0][0];
+      w2=w1+2;  /* &sw_inv[icx][1][0]; */
+      w3=w1+4;  /* &sw_inv[icx][2][0]; */
+      w4=w1+6;  /* &sw_inv[icx][3][0]; */
+      _su3_multiply(psi,*w1,phi1); 
+      _su3_multiply(chi,*w2,(*rn).s1);
+      _vector_add((*s).s0,psi,chi);
+      _su3_multiply(psi,*w4,phi1); 
+      _su3_multiply(chi,*w3,(*rn).s1);
+      _vector_add((*s).s1,psi,chi);
 
-    w1++; /* &sw_inv[icx][0][1]; */
-    w2++; /* &sw_inv[icx][1][1]; */
-    w3++; /* &sw_inv[icx][2][1]; */
-    w4++; /* &sw_inv[icx][3][1]; */
-    _su3_multiply(psi,*w1,phi3); 
-    _su3_multiply(chi,*w2,(*rn).s3);
-    _vector_add((*s).s2,psi,chi);
-    _su3_multiply(psi,*w4,phi3); 
-    _su3_multiply(chi,*w3,(*rn).s3);
-    _vector_add((*s).s3,psi,chi);
+      w1++; /* &sw_inv[icx][0][1]; */
+      w2++; /* &sw_inv[icx][1][1]; */
+      w3++; /* &sw_inv[icx][2][1]; */
+      w4++; /* &sw_inv[icx][3][1]; */
+      _su3_multiply(psi,*w1,phi3); 
+      _su3_multiply(chi,*w2,(*rn).s3);
+      _vector_add((*s).s2,psi,chi);
+      _su3_multiply(psi,*w4,phi3); 
+      _su3_multiply(chi,*w3,(*rn).s3);
+      _vector_add((*s).s3,psi,chi);
 
-    /******************************** end of loop *********************************/
-  }
+      /******************************** end of loop *********************************/
+    }
 #ifdef OMP
   } /* OpenMP closing brace */
 #endif
@@ -1062,16 +1195,16 @@ void init_sw_fields() {
     tmp = sw[0][0];
     for(int i = 0; i < V; i++) {
       for(int j = 0; j < 3; j++) {
-	sw[i][j] = tmp;
-	tmp = tmp+2;
+        sw[i][j] = tmp;
+        tmp = tmp+2;
       }
     }
     
     tmp = sw_inv[0][0];
     for(int i = 0; i < V; i++) {
       for(int j = 0; j < 4; j++) {
-	sw_inv[i][j] = tmp;
-	tmp = tmp+2;
+        sw_inv[i][j] = tmp;
+        tmp = tmp+2;
       }
     }
     

@@ -191,10 +191,16 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].hbfunction = &det_heatbath;
 	monomial_list[i].accfunction = &det_acc;
 	monomial_list[i].derivativefunction = &det_derivative;
-	monomial_list[i].Qsq = &Qtm_pm_psi;
-	monomial_list[i].Qsq32 = &Qtm_pm_psi_32;	
-	monomial_list[i].Qp = &Qtm_plus_psi;
-	monomial_list[i].Qm = &Qtm_minus_psi;
+	if(even_odd_flag) {
+	  monomial_list[i].Qsq = &Qtm_pm_psi;
+	  monomial_list[i].Qp = &Qtm_plus_psi;
+	  monomial_list[i].Qm = &Qtm_minus_psi;
+	}
+	else {
+	  monomial_list[i].Qsq = &Q_pm_psi;
+	  monomial_list[i].Qp = &Q_plus_psi;
+	  monomial_list[i].Qm = &Q_minus_psi;
+	}
 	if(g_proc_id == 0 && g_debug_level > 1) {
 	  printf("# Initialised monomial of type DET, no_monomials= %d\n", no_monomials);
 	}
@@ -203,10 +209,17 @@ int init_monomials(const int V, const int even_odd_flag) {
 	monomial_list[i].hbfunction = &cloverdet_heatbath;
 	monomial_list[i].accfunction = &cloverdet_acc;
 	monomial_list[i].derivativefunction = &cloverdet_derivative;
-	monomial_list[i].even_odd_flag = 1;
-	monomial_list[i].Qsq = &Qsw_pm_psi;
-	monomial_list[i].Qp = &Qsw_plus_psi;
-	monomial_list[i].Qm = &Qsw_minus_psi;
+	//monomial_list[i].derivativefunction = &det_derivative;
+	if(even_odd_flag) {
+	  monomial_list[i].Qsq = &Qsw_pm_psi;
+	  monomial_list[i].Qp = &Qsw_plus_psi;
+	  monomial_list[i].Qm = &Qsw_minus_psi;
+	}
+	else {
+	  monomial_list[i].Qsq = &Qsw_full_pm_psi;
+	  monomial_list[i].Qp = &Qsw_full_plus_psi;
+	  monomial_list[i].Qm = &Qsw_full_minus_psi;
+	}
 	init_swpm(VOLUME);
 	clover_monomials[no_clover_monomials] = i;
 	no_clover_monomials++;

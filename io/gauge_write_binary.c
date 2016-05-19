@@ -131,20 +131,21 @@ int write_binary_gauge_data(LimeWriter * limewriter, const int prec, DML_Checksu
   int coords[4];
   n_uint64_t bytes;
   DML_SiteRank rank;
-#ifdef MPI
   double tick = 0, tock = 0;
   char measure[64];
+#ifdef MPI
   MPI_Status mpi_status;
 #endif
 
   DML_checksum_init(checksum);
 
-#ifdef MPI
   if (g_debug_level > 0) {
+#ifdef MPI
     MPI_Barrier(g_cart_grid);
-    tick = MPI_Wtime();
-  }
 #endif
+    tick = gettime();
+  }
+
   if(prec == 32) bytes = (n_uint64_t)2*sizeof(su3);
   else bytes = (n_uint64_t)4*sizeof(su3);
   for(t0 = 0; t0 < T*g_nproc_t; t0++) {
@@ -235,10 +236,12 @@ int write_binary_gauge_data(LimeWriter * limewriter, const int prec, DML_Checksu
     }
   }
 
-#ifdef MPI
+
   if (g_debug_level > 0) {
+#ifdef MPI
     MPI_Barrier(g_cart_grid);
-    tock = MPI_Wtime();
+#endif
+    tock = gettime();
 
     if (g_cart_id == 0) {
       engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes, "b");
@@ -251,7 +254,6 @@ int write_binary_gauge_data(LimeWriter * limewriter, const int prec, DML_Checksu
       fprintf(stdout, " (%s per MPI process).\n", measure);
     }
   }
-#endif
 
   return(0);
 }

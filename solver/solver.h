@@ -22,7 +22,6 @@
 
 
 #include"solver/solver_types.h"
-
 #include"solver/matrix_mult_typedef.h"
 #include "solver/matrix_mult_typedef_bi.h"
 #include "solver/matrix_mult_typedef_nd.h"
@@ -56,6 +55,7 @@ typedef struct {
 #include"solver/gmres_dr.h"
 #include"solver/fgmres.h"
 #include"solver/bicgstab_complex.h"
+#include"solver/bicg_complex.h"
 #include"solver/cgs_real.h"
 #include"solver/bicgstabell.h"
 #include"solver/bicgstab2.h"
@@ -67,6 +67,8 @@ typedef struct {
 #include"solver/eigenvalues.h"
 #include"solver/cg_mms_tm.h"
 #include"solver/mixed_cg_her.h"
+#include"solver/mcr.h"
+#include"solver/cr.h"
 #include "solver/rg_mixed_cg_her.h"
 
 #include"solver/sub_low_ev.h"

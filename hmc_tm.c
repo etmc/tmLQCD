@@ -469,9 +469,10 @@ int main(int argc,char *argv[]) {
             } else {
               if(g_proc_id==0) {
                 if(read_attempt+1 < 2) {
-                  fprintf(stdout, "# Reread attempt %d out of %d failed, trying again in %d seconds!\n",read_attempt+1,2, 2);
-                } else {
-                  fprintf(stdout, "# Reread attept %d out of %d failed, write will be reattempted!\n",read_attempt+1,2);
+                  fprintf(stdout, "# Reread attempt %d out of %d failed, trying again in %d seconds!\n", read_attempt+1, 2, 2);
+                } 
+		else {
+                  fprintf(stdout, "# Reread attempt %d out of %d failed, write will be reattempted!\n", read_attempt+1, 2);
                 }
               }
               sleep(2);
@@ -571,6 +572,8 @@ int main(int argc,char *argv[]) {
   }
   free(input_filename);
   free(filename);
+  free(SourceInfo.basename);
+  free(PropInfo.basename);
 #ifdef MPI
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();

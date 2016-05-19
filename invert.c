@@ -71,7 +71,6 @@
 #include "block.h"
 #include "operator.h"
 #include "sighandler.h"
-#include "solver/dfl_projector.h"
 #include "solver/generate_dfl_subspace.h"
 #include "prepare_source.h"
 #include <io/params.h>
@@ -79,6 +78,7 @@
 #include <io/spinor.h>
 #include <io/utils.h>
 #include "solver/dirac_operator_eigenvectors.h"
+#include "source_generation.h"
 #include "P_M_eta.h"
 #include "operator/tm_operators.h"
 #include "operator/Dov_psi.h"
@@ -87,6 +87,7 @@
 #  include "quda_interface.h"
 #endif
 #include "meas/measurements.h"
+#include "source_generation.h"
 
 extern int nstore;
 int check_geometry();
@@ -119,7 +120,7 @@ int main(int argc, char *argv[])
 
   DUM_DERI = 8;
   DUM_MATRIX = DUM_DERI + 5;
-  NO_OF_SPINORFIELDS = DUM_MATRIX + 3;
+  NO_OF_SPINORFIELDS = DUM_MATRIX + 4;
 
   //4 extra fields (corresponding to DUM_MATRIX+0..5) for deg. and ND matrix mult.  
   NO_OF_SPINORFIELDS_32 = 6;
@@ -380,16 +381,6 @@ int main(int argc, char *argv[])
 	
         random_spinor_field_lexic(s[i], reproduce_randomnumber_flag,RN_Z2);
 	
-/* 	what is this here needed for?? */
-/*         spinor *aux_,*aux; */
-/* #if ( defined SSE || defined SSE2 || defined SSE3 ) */
-/*         aux_=calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
-/*         aux = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE); */
-/* #else */
-/*         aux_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
-/*         aux = aux_; */
-/* #endif */
-	
         if(g_proc_id == 0) {
           printf("source %d \n", i);
         }
@@ -406,33 +397,10 @@ int main(int argc, char *argv[])
       free(s_);
     }
 
-
-    /* move to operators as well */
-    if (g_dflgcr_flag == 1) {
-      /* set up deflation blocks */
+    //  set up blocks if Deflation is used 
+    if (g_dflgcr_flag) 
       init_blocks(nblocks_t, nblocks_x, nblocks_y, nblocks_z);
-
-      /* the can stay here for now, but later we probably need */
-      /* something like init_dfl_solver called somewhere else  */
-      /* create set of approximate lowest eigenvectors ("global deflation subspace") */
-
-      /*       g_mu = 0.; */
-      /*       boundary(0.125); */
-      generate_dfl_subspace(g_N_s, VOLUME, reproduce_randomnumber_flag);
-      /*       boundary(g_kappa); */
-      /*       g_mu = g_mu1; */
-
-      /* Compute little Dirac operators */
-      /*       alt_block_compute_little_D(); */
-      if (g_debug_level > 0) {
-        check_projectors(reproduce_randomnumber_flag);
-        check_local_D(reproduce_randomnumber_flag);
-      }
-      if (g_debug_level > 1) {
-        check_little_D_inversion(reproduce_randomnumber_flag);
-      }
-
-    }
+    
     if(SourceInfo.type == 1) {
       index_start = 0;
       index_end = 1;
@@ -454,7 +422,12 @@ int main(int argc, char *argv[])
     for(op_id = 0; op_id < no_operators; op_id++) {
       boundary(operator_list[op_id].kappa);
       g_kappa = operator_list[op_id].kappa; 
-      g_mu = 0.;
+      g_mu = operator_list[op_id].mu;
+      g_c_sw = operator_list[op_id].c_sw;
+      // DFLGCR and DFLFGMRES
+      if(operator_list[op_id].solver == DFLGCR || operator_list[op_id].solver == DFLFGMRES) {
+	generate_dfl_subspace(g_N_s, VOLUME, reproduce_randomnumber_flag);
+      }
 
       if(use_preconditioning==1 && PRECWSOPERATORSELECT[operator_list[op_id].solver]!=PRECWS_NO ){
         printf("# Using preconditioning with treelevel preconditioning operator: %s \n",
@@ -519,6 +492,8 @@ int main(int argc, char *argv[])
   free_chi_spinor_field();
   free(filename);
   free(input_filename);
+  free(SourceInfo.basename);
+  free(PropInfo.basename);
 #ifdef QUDA
   _endQuda();
 #endif

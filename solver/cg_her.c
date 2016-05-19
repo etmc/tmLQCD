@@ -66,7 +66,8 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
   int iteration;
   int save_sloppy = g_sloppy_precision;
   double atime, etime, flops;
-  spinor ** solver_field = NULL;
+  static spinor ** solver_field = NULL;
+  static int cg_init = 0;
   spinor * stmp;
   const int nr_sf = 3;
 
@@ -75,7 +76,7 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
   } 
   else {
     init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf); 
-  } 
+  }
   /* initialize residue r and search vector p */
   atime = gettime();
   squarenorm = square_norm(Q, N, 1);
@@ -129,10 +130,12 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
   /* 2 A + 2 Nc Ns + N_Count ( 2 A + 10 Nc Ns ) */
   /* 2*1608.0 because the linalg is over VOLUME/2 */
   flops = (2*(2*1608.0+2*3*4) + 2*3*4 + iteration*(2.*(2*1608.0+2*3*4) + 10*3*4))*N/1.0e6f;
-  if(g_debug_level > 0 && g_proc_id == 0 && N != VOLUME) {
+  if(g_debug_level > 0 && g_proc_id == 0) {
     printf("# CG: iter: %d eps_sq: %1.4e t/s: %1.4e\n", iteration, eps_sq, etime-atime); 
-    printf("# CG: flopcount (for e/o tmWilson only): t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
-           etime-atime, flops/(etime-atime), g_nproc*flops/(etime-atime));
+    if( N != VOLUME) {
+      printf("# CG: flopcount (for e/o tmWilson only): t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
+	     etime-atime, flops/(etime-atime), g_nproc*flops/(etime-atime));
+    }
   }
   finalize_solver(solver_field, nr_sf);
   if(iteration > max_iter) return(-1);
