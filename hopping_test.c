@@ -108,8 +108,7 @@ int main(int argc,char *argv[])
   int status = 0;
 #ifdef MPI
   DUM_DERI = 6;
-  DUM_SOLVER = DUM_DERI+2;
-  DUM_MATRIX = DUM_SOLVER+6;
+  DUM_MATRIX = DUM_DERI+8;
   NO_OF_SPINORFIELDS = DUM_MATRIX+2;
 
   MPI_Init(&argc, &argv);
