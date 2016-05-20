@@ -482,7 +482,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       mul_r(optr->prop3, 1./(2*optr->kappa), g_spinor_field[DUM_DERI+3], VOLUME/2);
 
       /* mirror source, but not for volume sources */
-      if(i == 0 && SourceInfo.no_flavours == 2 && SourceInfo.type != 1) {
+      if(i == 0 && SourceInfo.no_flavours == 2 && SourceInfo.type != SRC_TYPE_VOL) {
         if (g_cart_id == 0) {
           fprintf(stdout, "# Inversion done in %d iterations, squared residue = %e!\n",
                   optr->iterations, optr->reached_prec);
@@ -494,7 +494,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
         mul_one_pm_itau2(optr->sr1, optr->sr3, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], +1., VOLUME/2);
       }
       /* volume sources need only one inversion */
-      else if(SourceInfo.type == 1) i++;
+      else if(SourceInfo.type == SRC_TYPE_VOL) i++;
     }
   } else if(optr->type == OVERLAP) {
     g_mu = 0.;
@@ -547,7 +547,7 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
     strcpy(ending, "inverted");
   }
 
-  if(SourceInfo.type != 1) {
+  if(SourceInfo.type != SRC_TYPE_VOL) {
     if (PropInfo.splitted) {
       if(T_global > 99) sprintf(filename, "%s.%.4d.%.3d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, ending);
       else sprintf(filename, "%s.%.4d.%.2d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, ending);

@@ -1722,15 +1722,15 @@ static inline void rmQuotes(char *str){
 
 <SOURCETYPE>{
   Point {
-    SourceInfo.type = 0;
+    SourceInfo.type = SRC_TYPE_POINT;
     if(myverbose) printf("Using Point Sources\n");
   }
   Volume {
-    SourceInfo.type = 1;
+    SourceInfo.type = SRC_TYPE_VOL;
     if(myverbose) printf("Using Volume Sources\n");
   }
   TimeSlice {
-    SourceInfo.type = 2;
+    SourceInfo.type = SRC_TYPE_TS;
     if(myverbose) printf("Using TimeSlice Sources\n");
   }
 }
