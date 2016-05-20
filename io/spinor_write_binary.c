@@ -126,19 +126,19 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
   int coords[4];
   n_uint64_t bytes;
   DML_SiteRank rank;
-#ifdef MPI
   double tick = 0, tock = 0;
   char measure[64];
+#ifdef MPI
   MPI_Status mstatus;
 #endif
   DML_checksum_init(checksum);
 
-#ifdef MPI
   if (g_debug_level > 0) {
+#ifdef MPI
     MPI_Barrier(g_cart_grid);
-    tick = MPI_Wtime();
-  }
 #endif
+    tick = gettime();
+  }
 
   if(prec == 32) bytes = (n_uint64_t)sizeof(spinor)/2;
   else bytes = (n_uint64_t)sizeof(spinor);
@@ -229,10 +229,11 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
       }
     }
   }
-#ifdef MPI
   if (g_debug_level > 0) {
+#ifdef MPI
     MPI_Barrier(g_cart_grid);
-    tock = MPI_Wtime();
+#endif
+    tock = gettime();
 
     if (g_cart_id == 0) {
       engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes, "b");
@@ -246,7 +247,6 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
       fflush(stdout);
     }
   }
-#endif
   return(0);
 }
 #endif /* HAVE_LIBLEMON */
@@ -353,19 +353,19 @@ int write_binary_spinor_data_l(spinor * const s, LimeWriter * limewriter, DML_Ch
   int coords[4];
   n_uint64_t bytes;
   DML_SiteRank rank;
-#ifdef MPI
   double tick = 0, tock = 0;
   char measure[64];
+#ifdef MPI
   MPI_Status mstatus;
 #endif
   DML_checksum_init(checksum);
 
-#ifdef MPI
   if (g_debug_level > 0) {
+#ifdef MPI
     MPI_Barrier(g_cart_grid);
-    tick = MPI_Wtime();
-  }
 #endif
+    tick = gettime();
+  }
 
   if(prec == 32) bytes = (n_uint64_t)sizeof(spinor)/2;
   else bytes = (n_uint64_t)sizeof(spinor);
@@ -450,10 +450,11 @@ int write_binary_spinor_data_l(spinor * const s, LimeWriter * limewriter, DML_Ch
       }
     }
   }
-#ifdef MPI
   if (g_debug_level > 0) {
+#ifdef MPI
     MPI_Barrier(g_cart_grid);
-    tock = MPI_Wtime();
+#endif
+    tock = gettime();
 
     if (g_cart_id == 0) {
       engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes, "b");
@@ -467,7 +468,6 @@ int write_binary_spinor_data_l(spinor * const s, LimeWriter * limewriter, DML_Ch
       fflush(stdout);
     }
   }
-#endif
   return(0);
 }
 #endif /* HAVE_LIBLEMON */

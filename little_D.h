@@ -25,11 +25,21 @@
 
 extern int dfl_subspace_updated;
 void little_D(_Complex double * v, _Complex double *w);
+void little_Q_pm(_Complex double * v, _Complex double *w);
 void little_D_sym(_Complex double * v, _Complex double *w);
 void little_D_ee_inv(_Complex double * v, _Complex double *w);
 void little_D_hop(int eo,_Complex double * v, _Complex double *w);
 void little_Dhat_lhs(_Complex double * v, _Complex double *w, _Complex double *u);
 void little_Dhat_rhs(int eo, _Complex double * v, double r, _Complex double *w);
+
+void little_D_32(_Complex float * v, _Complex float *w);
+void little_Q_pm_32(_Complex float * v, _Complex float *w);
+void little_D_sym_32(_Complex float * v, _Complex float *w);
+void little_D_ee_inv_32(_Complex float * v, _Complex float *w);
+void little_D_hop_32(int eo,_Complex float * v, _Complex float *w);
+void little_Dhat_lhs_32(_Complex float * v, _Complex float *w, _Complex float *u);
+void little_Dhat_rhs_32(int eo, _Complex float * v, double r, _Complex float *w);
+
 void unit_little_D(_Complex double *v, _Complex double *w);
 void invert_little_D_spinor(spinor *r, spinor *s);
 void invert_little_D_eo_spinor(spinor *r, spinor *s);

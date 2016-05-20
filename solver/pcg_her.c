@@ -29,8 +29,10 @@
 #include "linalg_eo.h"
 #include "start.h"
 #include "solver/matrix_mult_typedef.h"
+#include "solver/cg_her.h"
 #include "sub_low_ev.h"
 #include "solver_field.h"
+#include "dfl_projector.h"
 #include "pcg_her.h"
 
 /* P output = solution , Q input = source */
@@ -48,50 +50,39 @@ int pcg_her(spinor * const P, spinor * const Q, const int max_iter,
     init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);
   }
   squarenorm = square_norm(Q, N, 1);
-  /*        !!!!   INITIALIZATION    !!!! */
+  /* x_0 = P */
   assign(solver_field[0], P, N);
-  /*        (r_0,r_0)  =  normsq         */
   normsp = square_norm(P, N, 1);
 
-  assign(solver_field[3], Q, N);
   /* initialize residue r and search vector p */
-  if(normsp==0){
-    /* if a starting solution vector equal to zero is chosen */
-    /* r0 */
-    assign(solver_field[1], solver_field[3], N);
-    /* p0 */
-  }
-  else{
-    /* if a starting solution vector different from zero is chosen */
-    /* r0 = b - A x0 */
-    f(solver_field[2], solver_field[0]);
-    diff(solver_field[1], solver_field[3], solver_field[2], N);
-  }
-  /* z0 = M^-1 r0 */
-  invert_eigenvalue_part(solver_field[3], solver_field[1], 10, N);
-  /* p0 = z0 */
+  /* r0 = b - A x0 */
+  f(solver_field[2], solver_field[0]);
+  diff(solver_field[1], Q, solver_field[2], N);
+  /* z_0 = M^-1 r_0 */
+  // here we could have a preconditioner for Q^2
+  assign(solver_field[3], solver_field[1], N);
+  /* p_0 = z_0 */
   assign(solver_field[2], solver_field[3], N);
-
-  /* Is this really real? */
+  /* (r_0, z_0) */
   pro2 = scalar_prod_r(solver_field[1], solver_field[3], N, 1);  
   /* main loop */
   for(iteration = 0; iteration < max_iter; iteration++) {
-    /* A p */
+    /* w_i = A p_i */
     f(solver_field[4], solver_field[2]);
-
+    /* (p_i, w_i) */
     pro = scalar_prod_r(solver_field[2], solver_field[4], N, 1);
-    /*  Compute alpha_cg(i+1)   */
-    alpha_cg=pro2/pro;
+    /*  Compute alpha_cg   */
+    alpha_cg = pro2 / pro;
      
     /*  Compute x_(i+1) = x_i + alpha_cg(i+1) p_i    */
     assign_add_mul_r(solver_field[0], solver_field[2],  alpha_cg, N);
-    /*  Compute r_(i+1) = r_i - alpha_cg(i+1) Qp_i   */
+    /*  Compute r_(i+1) = r_i - alpha_cg(i+1) A p_i   */
     assign_add_mul_r(solver_field[1], solver_field[4], -alpha_cg, N);
 
     /* Check whether the precision is reached ... */
-    err=square_norm(solver_field[1], N, 1);
-    if(g_debug_level > 1 && g_proc_id == g_stdio_proc) {
-      printf("%d\t%g\n",iteration,err); fflush( stdout);
+    err = square_norm(solver_field[1], N, 1);
+    if(g_debug_level > 2 && g_proc_id == g_stdio_proc) {
+      printf("PCG %d\t%g\n",iteration,err); fflush( stdout);
     }
 
     if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))) {
@@ -100,28 +91,25 @@ int pcg_her(spinor * const P, spinor * const Q, const int max_iter,
       finalize_solver(solver_field, nr_sf);
       return(iteration+1);
     }
-#ifdef _USE_HALFSPINOR
-    if(((err*err <= eps_sq) && (rel_prec == 0)) || ((err*err <= eps_sq*squarenorm) && (rel_prec == 1)) || iteration > 1400) {
-      g_sloppy_precision = 1;
-      if(g_debug_level > 2 && g_proc_id == g_stdio_proc) {
-	printf("sloppy precision on\n"); fflush( stdout);
-      }
-    }
-#endif
-    /* z_j */
-    beta_cg = 1/pro2;
-/*     invert_eigenvalue_part(solver_field[3], solver_field[1], 10, N); */
-    /* Compute beta_cg(i+1)
-       Compute p_(i+1) = r_i+1 + beta_(i+1) p_i     */
+
+    /* z_i+1 = M r_(i+1) */
+    // here we could have a preconditioner for Q^2
+    //mg_Qsq_precon(solver_field[3], solver_field[1]);
+    assign(solver_field[3], solver_field[1], N);
+    /* Compute beta_cg(i+1) */
+    beta_cg = 1. / pro2;
+    // here we might use Polak-Ribiere formula instead of the standard one
+    // beta = (z_i+1,r_i+1 - r_i) / (z_i,r_i)
+    //pro2 = -alpha_cg*scalar_prod_r(solver_field[4], solver_field[3], N, 1);
+    // standard choice
     pro2 = scalar_prod_r(solver_field[1], solver_field[3], N, 1);
     beta_cg *= pro2;
+    /* p_(i+1) = z_(i+1) + beta_cg p_i */
     assign_mul_add_r(solver_field[2], beta_cg, solver_field[3], N);
   }
   assign(P, solver_field[0], N);
-  g_sloppy_precision = 0;
-/*   return(-1); */
   finalize_solver(solver_field, nr_sf);
-  return(1);
+  return(-11);
 }
 
 

@@ -193,7 +193,7 @@ EXTERN su3adj ** df0;
 EXTERN su3adj ** ddummy;
 
 EXTERN int count00,count01,count10,count11,count20,count21;
-EXTERN double g_kappa, g_c_sw, g_ka_csw_8, g_beta;
+EXTERN double g_kappa, g_c_sw, g_beta;
 EXTERN double g_mu, g_mu1, g_mu2, g_mu3;
 EXTERN double g_rgi_C0, g_rgi_C1;
 
@@ -219,6 +219,19 @@ EXTERN double* g_omp_acc_re;
 EXTERN int g_dflgcr_flag;
 EXTERN int g_N_s;
 EXTERN int * index_block_eo;
+EXTERN int Msap_precon;
+EXTERN int NiterMsap;
+EXTERN int NcycleMsap;
+EXTERN int NiterMsap_dflgen;
+EXTERN int NcycleMsap_dflgen;
+EXTERN int NsmoothMsap_dflgen;
+EXTERN int usePL;
+EXTERN int little_solver;
+EXTERN int little_evenodd;
+EXTERN int little_gmres_m_parameter;
+EXTERN double little_solver_low_prec;
+EXTERN double little_solver_high_prec;
+EXTERN int little_solver_max_iter;
 
 #ifdef MPI
 EXTERN MPI_Status status;

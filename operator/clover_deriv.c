@@ -249,8 +249,8 @@ void sw_deriv_nd(const int ieo) {
 // result is again stored in swm and swp                 
 // includes a gamma5 multiplication for kk
 
-void sw_spinor(const int ieo, const spinor * const kk, const spinor * const ll, 
-	       const double fac) {
+void sw_spinor_eo(const int ieo, const spinor * const kk, const spinor * const ll, 
+		  const double fac) {
 #ifdef OMP
 #pragma omp parallel
   {
@@ -301,7 +301,64 @@ void sw_spinor(const int ieo, const spinor * const kk, const spinor * const ll,
     _su3_minus_su3(lswm[2],u2,v2);
     _su3_minus_su3(lswm[3],u3,v3);
     
-    /* add up to swm[0] and swp[0] */
+    /* add up to swm[x] and swp[x] */
+    _su3_refac_acc(swm[x][0], fac, lswm[0]);
+    _su3_refac_acc(swm[x][1], fac, lswm[1]);
+    _su3_refac_acc(swm[x][2], fac, lswm[2]);
+    _su3_refac_acc(swm[x][3], fac, lswm[3]);
+    _su3_refac_acc(swp[x][0], fac, lswp[0]);
+    _su3_refac_acc(swp[x][1], fac, lswp[1]);
+    _su3_refac_acc(swp[x][2], fac, lswp[2]);
+    _su3_refac_acc(swp[x][3], fac, lswp[3]);
+  }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+  return;
+}
+
+void sw_spinor(const spinor * const kk, const spinor * const ll, 
+	       const double fac) {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
+  int x;
+  const spinor *r,*s;
+  su3 ALIGN v0,v1,v2,v3;
+  su3 ALIGN u0,u1,u2,u3;
+  su3 ALIGN lswp[4],lswm[4];
+
+#ifdef OMP
+#pragma omp for
+#endif  
+  for(x = 0; x < VOLUME; x++) {
+    r = kk + x;
+    s = ll + x;
+    
+    _vector_tensor_vector(v0,(*r).s0,(*s).s0);
+    _vector_tensor_vector(v1,(*r).s0,(*s).s1);
+    _vector_tensor_vector(v2,(*r).s1,(*s).s1);
+    _vector_tensor_vector(v3,(*r).s1,(*s).s0);
+    // mvector takes g5 into account
+    _mvector_tensor_vector(u0,(*r).s2,(*s).s2);
+    _mvector_tensor_vector(u1,(*r).s2,(*s).s3);
+    _mvector_tensor_vector(u2,(*r).s3,(*s).s3);
+    _mvector_tensor_vector(u3,(*r).s3,(*s).s2);
+    
+    /* compute the insertion matrix */
+    _su3_plus_su3(lswp[0],u0,v0);
+    _su3_plus_su3(lswp[1],u1,v1);
+    _su3_plus_su3(lswp[2],u2,v2);
+    _su3_plus_su3(lswp[3],u3,v3);
+
+    _su3_minus_su3(lswm[0],u0,v0);
+    _su3_minus_su3(lswm[1],u1,v1);
+    _su3_minus_su3(lswm[2],u2,v2);
+    _su3_minus_su3(lswm[3],u3,v3);
+    
+    /* add up to swm[x] and swp[x] */
     _su3_refac_acc(swm[x][0], fac, lswm[0]);
     _su3_refac_acc(swm[x][1], fac, lswm[1]);
     _su3_refac_acc(swm[x][2], fac, lswm[2]);

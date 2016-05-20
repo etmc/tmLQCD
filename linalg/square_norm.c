@@ -321,6 +321,67 @@ double square_norm(const spinor * const P, const int N, const int parallel)
 
 #endif
 
+// threadsafe version
+
+double square_norm_ts(const spinor * const P, const int N, const int parallel)
+{
+  double ALIGN res = 0.0;
+#ifdef MPI
+  double ALIGN mres;
+#endif
+
+#ifdef OMP2
+#pragma omp parallel reduction(+:res)
+  {
+#endif
+  double ALIGN ks,kc,ds,tr,ts,tt;
+  const spinor *s;
+  
+  ks = 0.0;
+  kc = 0.0;
+  
+#ifdef OMP2
+#pragma omp for
+#endif    
+  for (int ix  =  0; ix < N; ix++) {
+    s = P + ix;
+    
+    ds = conj(s->s0.c0) * s->s0.c0 +
+         conj(s->s0.c1) * s->s0.c1 +
+         conj(s->s0.c2) * s->s0.c2 +
+         conj(s->s1.c0) * s->s1.c0 +
+         conj(s->s1.c1) * s->s1.c1 +
+         conj(s->s1.c2) * s->s1.c2 +
+         conj(s->s2.c0) * s->s2.c0 +
+         conj(s->s2.c1) * s->s2.c1 +
+         conj(s->s2.c2) * s->s2.c2 +
+         conj(s->s3.c0) * s->s3.c0 +
+         conj(s->s3.c1) * s->s3.c1 +
+         conj(s->s3.c2) * s->s3.c2;
+
+    tr = ds + kc;
+    ts = tr + ks;
+    tt = ts-ks;
+    ks = ts;
+    kc = tr-tt;
+  }
+  res=ks+kc;
+
+#ifdef OMP2
+  } /* OpenMP closing brace */
+#endif
+
+#  ifdef MPI
+  if(parallel) {
+    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    return mres;
+  }
+#endif
+
+  return res;
+}
+
+
 #ifdef WITHLAPH
 double square_norm_su3vect(su3_vector * const P, const int N, const int parallel) 
 {

@@ -27,7 +27,7 @@
 #    define _POSIX_C_SOURCE 199309L
 #  endif
 #  include <sys/time.h>
-#  include <bits/time.h>
+//#  include <bits/time.h>
 #endif
 #include <time.h>
 #if (defined BGL && !defined BGP)

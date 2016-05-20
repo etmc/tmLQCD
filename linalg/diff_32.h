@@ -24,6 +24,7 @@
 
 /* Makes the difference (*Q) = (*R) - (*S) */
 void diff_32(spinor32 * const Q, const spinor32 * const R, const spinor32 * const S, const int N);
+void diff_ts_32(spinor32 * const Q, const spinor32 * const R, const spinor32 * const S, const int N);
 
 
 #endif

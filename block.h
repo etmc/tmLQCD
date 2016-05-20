@@ -29,7 +29,7 @@
 _Complex double * little_A;
 _Complex float * little_A32;
 _Complex double * little_A_eo;
-_Complex float * little_A32_eo;
+_Complex float * little_A_eo_32;
 
 
 typedef struct {
@@ -46,15 +46,18 @@ typedef struct {
   int *oddidx;                 /* provides the next neighbours for spinors on the block even/odd case */
   spinor **basis;               /* generated orthonormal basis for little D [Ns x local_volume] */
   su3 * u;                      /* block local gauge field, for use in D */
+  su3_32 * u_32;                /* 32 bit block local gauge field, for use in D */
   int spinpad;                  /* number of elements needed to store the boundaries of the spinor */
   int evenodd;                  /* block even or odd (0 or 1) */
+  int evenodd_id;               /* sequence of even and odd blocks */
 
   /* storage will be g_Ns x (9 * g_Ns)                 */
   /* build_little_diraclocal g_Ns x g_Ns block first (the diagonal part) */
   /* then +t, -t, +x, -x, +y, -y, +z, -z               */
   _Complex double    *little_dirac_operator;  /* full dense representation of the little D */
-  _Complex float  *little_dirac_operator32;
+  _Complex float  *little_dirac_operator_32;
   _Complex double    *little_dirac_operator_eo;  /* full dense representation of the little D in e/o order */
+  _Complex float    *little_dirac_operator_eo_32; 
 } block;
 
 int init_blocks(const int nt, const int nx, const int ny, const int nz);
@@ -62,13 +65,24 @@ int free_blocks();
 
 int init_blocks_gaugefield();
 int init_blocks_eo_gaugefield();
+int init_blocks_gaugefield_32();
+int init_blocks_eo_gaugefield_32();
 
 void copy_global_to_block(spinor * const blockfield, spinor * const globalfield, const int blk);
 void copy_block_to_global(spinor * const globalfield, spinor * const blockfield, const int blk);
-void copy_global_to_block_eo(spinor * const beven, spinor * const bodd, spinor * const globalfield, const int blk);
-void copy_block_eo_to_global(spinor * const globalfield, spinor * const beven, spinor * const bodd, const int blk);
+void copy_global_to_block_eo(spinor * const beven, spinor * const bodd, 
+			     spinor * const globalfield, const int blk);
+void copy_global_to_block_eo_32(spinor32 * const beven, spinor32 * const bodd, 
+				spinor * const globalfield, const int blk);
+
+void copy_block_eo_to_global(spinor * const globalfield, 
+			     spinor * const beven, spinor * const bodd, const int blk);
+
 void add_block_to_global(spinor * const globalfield, spinor * const blockfield, const int blk);
-void add_eo_block_to_global(spinor * const globalfield, spinor * const beven, spinor * const bodd, const int blk);
+void add_eo_block_to_global(spinor * const globalfield, 
+			    spinor * const beven, spinor * const bodd, const int blk);
+void add_eo_block_32_to_global(spinor * const globalfield, 
+			       spinor32 * const beven, spinor32 * const bodd, const int blk);
 
 void block_convert_lexic_to_eo(spinor * const s, spinor * const r, spinor * const P);
 void block_convert_eo_to_lexic(spinor * const P, spinor * const s, spinor * const r);
@@ -76,8 +90,8 @@ void block_convert_eo_to_lexic(spinor * const P, spinor * const s, spinor * cons
 void block_orthonormalize(block *parent);
 void block_orthonormalize_free(block *parent);
 
-void compute_little_D();
-void compute_little_D_diagonal();
+void compute_little_D(const int mu_g5);
+void compute_little_D_diagonal(const int mul_g5);
 void alt_block_compute_little_D();
 
 extern int dfl_field_iter;

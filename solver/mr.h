@@ -50,9 +50,14 @@ int mr(spinor * const P, spinor * const Q,
        const int rel_prec, const int N, 
        const int parallel, matrix_mult f);
 
-int mrblk(spinor * const P, spinor * const Q,
+int mrblk(spinor * const P, spinor * const Q, spinor * const s_,
 	  const int max_iter, const double eps_sq,
 	  const int rel_prec, const int N, 
 	  matrix_mult_blk f, const int blk);
+
+int mrblk_32(spinor32 * const P, spinor32 * const Q, spinor32 * const s_,
+	     const int max_iter, const double eps_sq,
+	     const int rel_prec, const int N, 
+	     matrix_mult_blk32 f, const int blk);
 
 #endif

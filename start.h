@@ -25,25 +25,29 @@
    with the first argument set to a random number type as defined below and a function pointer
    (see start.c for examples) */
 
-#define _rn_switch(type,rn_fn_ptr) \
-  switch( type ) { \
-    case RN_Z2: \
-      rn_fn_ptr = z2_vector; \
-      break; \
-    case RN_UNIF: \
-      rn_fn_ptr = ranlxd; \
-      break; \
-    case RN_GAUSS: \
-    default: \
+#define _rn_switch(type,rn_fn_ptr)		\
+  switch( type ) {				\
+  case RN_Z2:					\
+    rn_fn_ptr = z2_vector;			\
+    break;					\
+  case RN_UNIF:					\
+    rn_fn_ptr = ranlxd;				\
+    break;					\
+  case RN_PM1UNIF:				\
+    rn_fn_ptr = pm1_unit;			\
+    break;					\
+  case RN_GAUSS:				\
+  default:					\
       rn_fn_ptr = gauss_vector; \
       break; \
   } \
 
 /* RN_GAUSS: gaussian ditributed random numbers
    RN_UNIF:  random numbers drawn from a uniform distribution (this is a simple call to ranlxd!)
+   RN_PM1UNIF: random numbers drawn from a uniform distribution in [-1,1]
    RN_Z2:    z2 noise */
 
-enum RN_TYPE { RN_GAUSS, RN_UNIF, RN_Z2 };
+enum RN_TYPE { RN_GAUSS, RN_UNIF, RN_Z2 , RN_PM1UNIF};
 
 void unit_spinor_field(const int k);
 void zero_spinor_field(spinor * const k, const int N);

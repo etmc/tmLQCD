@@ -59,10 +59,10 @@ double cloverdetratio_rwacc(const int id, hamiltonian_field_t * const hf) {
   init_sw_fields();
   sw_term( (const su3**) hf->gaugefield, mnl->kappa2, mnl->c_sw); 
   sw_invert(EE, mnl->mu2);
-  g_mu3 = mnl->rho2;
+  g_mu3 = 0.;
   mnl->Qp(mnl->w_fields[1], mnl->pf);
 
-  g_mu3 = mnl->rho;
+  g_mu3 = 0.;
   g_mu = mnl->mu;
   boundary(mnl->kappa);
   sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
@@ -86,10 +86,10 @@ double cloverdetratio_rwacc(const int id, hamiltonian_field_t * const hf) {
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
-      printf("# Time for %s monomial acc step: %e s\n", mnl->name, etime-atime);
+      printf("# Time for %s monomial rwacc step: %e s\n", mnl->name, etime-atime);
     }
     if(g_debug_level > 3) {
-      printf("called cloverdetratio_acc for id %d dH = %1.10e\n", 
+      printf("called cloverdetratio_rwacc for id %d dH = %1.10e\n", 
 	     id, mnl->energy1 - mnl->energy0);
     }
   }

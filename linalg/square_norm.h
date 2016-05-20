@@ -26,6 +26,7 @@
  *     Returns the square norm of *P */
 
 double square_norm(const spinor * const P, const int N, const int parallel);
+double square_norm_ts(const spinor * const P, const int N, const int parallel);
 double square_norm_su3vect(su3_vector * const P, const int N, const int parallel);
 
 
