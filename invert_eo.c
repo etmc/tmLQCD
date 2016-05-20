@@ -552,7 +552,7 @@ static void cgmms_write_props(spinor ** const P, double const * const shifts, co
 
   /* save all the results of (Q^dagger Q)^(-1) \gamma_5 \phi */
   for(int im = 0; im < no_shifts; im++) {
-    if(SourceInfo.type != 1) {
+    if(SourceInfo.type != SRC_TYPE_VOL) {
       if (PropInfo.splitted) {
         if(T_global > 99) sprintf(filename, "%s.%.2d.%.4d.%.3d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im);
         else sprintf(filename, "%s.%.2d.%.4d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im);
