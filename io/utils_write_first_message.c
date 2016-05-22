@@ -93,7 +93,7 @@ int write_first_messages(FILE * parameterfile, char const * const executable, ch
          "# the code is compiled for persistent MPI calls (halfspinor only)\n");
 #  endif
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
 #  ifdef _NON_BLOCKING
   printf("# the code is compiled for non-blocking MPI calls (spinor and gauge)\n");
   fprintf(parameterfile,

@@ -1030,7 +1030,7 @@ void compute_little_D(const int mul_g5) {
   for (int i = 0; i < g_N_s; i++) {
     reconstruct_global_field_GEN_ID(scratch, block_list, i , nb_blocks);
     
-#ifdef MPI
+#ifdef TM_USE_MPI
     xchange_lexicfield(scratch);
 #endif
     

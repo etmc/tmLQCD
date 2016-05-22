@@ -62,7 +62,7 @@ int mcr(spinor * const P, spinor * const Q,
 		init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);
 	}
 
-//#ifdef MPI
+//#ifdef TM_USE_MPI
 //	atime = MPI_Wtime();
 //#else
 //	atime = ((double)clock())/((double)(CLOCKS_PER_SEC));
@@ -117,7 +117,7 @@ int mcr(spinor * const P, spinor * const Q,
 	
 			err = square_norm(chi, N, 1);
 			iter ++;
-//#ifdef MPI
+//#ifdef TM_USE_MPI
 //			etime = MPI_Wtime();
 //#else
 //			etime = ((double)clock())/((double)(CLOCKS_PER_SEC));

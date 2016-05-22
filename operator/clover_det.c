@@ -39,7 +39,7 @@
 #include <math.h>
 #include <errno.h>
 #include <time.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
@@ -114,7 +114,7 @@ void six_det(_Complex double* const rval, _Complex double a[6][6])
 
 double sw_trace(const int ieo, const double mu) {
   double ALIGN res = 0.0;
-#ifdef MPI
+#ifdef TM_USE_MPI
   double ALIGN mres;
 #endif
 
@@ -180,7 +180,7 @@ double sw_trace(const int ieo, const double mu) {
   res=kc;
 #endif
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   return(mres);
 #else
@@ -201,7 +201,7 @@ double sw_trace(const int ieo, const double mu) {
 
 double sw_trace_nd(const int ieo, const double mu, const double eps) {
   double ALIGN res = 0.0;
-#ifdef MPI
+#ifdef TM_USE_MPI
   double ALIGN mres;
 #endif
 
@@ -270,7 +270,7 @@ double sw_trace_nd(const int ieo, const double mu, const double eps) {
   res=kc;
 #endif
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   return(mres);
 #else

@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
@@ -163,7 +163,7 @@ double square_norm(spinor * const P, const int N, const int parallel) {
   y00 = __fpadd(y00, y04);
   y00 = __fpadd(y00, y08);
   res = __creal(y00)+__cimag(y00);
-#  ifdef MPI
+#  ifdef TM_USE_MPI
   if(parallel) {
     MPI_Allreduce(&res, &res2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     return res2;
@@ -176,7 +176,7 @@ double square_norm(spinor * const P, const int N, const int parallel) {
 
 double square_norm(spinor * const P, const int N, const int parallel) {
   double ALIGN res = 0.0;
-#ifdef MPI
+#ifdef TM_USE_MPI
   double ALIGN mres;
 #endif
 
@@ -237,7 +237,7 @@ double square_norm(spinor * const P, const int N, const int parallel) {
   res = buffer[0] + buffer[1] + buffer[2] + buffer[3];
 #endif
 
-#  ifdef MPI
+#  ifdef TM_USE_MPI
   if(parallel) {
     MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     return mres;
@@ -253,7 +253,7 @@ double square_norm(spinor * const P, const int N, const int parallel) {
 double square_norm(const spinor * const P, const int N, const int parallel)
 {
   double ALIGN res = 0.0;
-#ifdef MPI
+#ifdef TM_USE_MPI
   double ALIGN mres;
 #endif
 
@@ -309,7 +309,7 @@ double square_norm(const spinor * const P, const int N, const int parallel)
   res = kc;
 #endif
 
-#  ifdef MPI
+#  ifdef TM_USE_MPI
   if(parallel) {
     MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     return mres;
@@ -326,7 +326,7 @@ double square_norm(const spinor * const P, const int N, const int parallel)
 double square_norm_ts(const spinor * const P, const int N, const int parallel)
 {
   double ALIGN res = 0.0;
-#ifdef MPI
+#ifdef TM_USE_MPI
   double ALIGN mres;
 #endif
 
@@ -371,7 +371,7 @@ double square_norm_ts(const spinor * const P, const int N, const int parallel)
   } /* OpenMP closing brace */
 #endif
 
-#  ifdef MPI
+#  ifdef TM_USE_MPI
   if(parallel) {
     MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     return mres;
@@ -407,7 +407,7 @@ double square_norm_su3vect(su3_vector * const P, const int N, const int parallel
       kc = tr-tt;
     }
   kc = ks + kc;
-#  ifdef MPI
+#  ifdef TM_USE_MPI
   if(parallel) {
     MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     return ks;

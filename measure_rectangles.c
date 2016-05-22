@@ -50,7 +50,7 @@
 
 double measure_rectangles(const su3 ** const gf) {
   static double res;
-#ifdef MPI
+#ifdef TM_USE_MPI
   double ALIGN mres;
 #endif
 
@@ -131,7 +131,7 @@ double measure_rectangles(const su3 ** const gf) {
     res += g_omp_acc_re[i];
 #else
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   res = mres;
 #endif

@@ -23,7 +23,7 @@
 // not parallelised!
 
 int write_luscher_gauge_binary(const double plaq, char* filename, su3 ** const gf) {
-#ifdef MPI
+#ifdef TM_USE_MPI
   fprintf(stdout, "Luescher DD-HMC format for gauges not implemented for MPI! Not writing anything!\n");
 #else
   FILE * ofs;

@@ -35,7 +35,7 @@
 #if (defined BGL && !defined BGP)
 #  include <rts.h>
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 # ifdef HAVE_LIBLEMON
 #  include <io/params.h>
@@ -89,7 +89,7 @@ double bgl_wtime() {
   return ( rts_get_timebase() * clockspeed );
 }
 #else
-# ifdef MPI
+# ifdef TM_USE_MPI
 double bgl_wtime() { return(MPI_Wtime()); }
 # else
 double bgl_wtime() { return(0); }
@@ -106,7 +106,7 @@ int main(int argc,char *argv[])
   double delta, deltamax;
   spinor rsp;
   int status = 0;
-#ifdef MPI
+#ifdef TM_USE_MPI
   DUM_DERI = 6;
   DUM_SOLVER = DUM_DERI+2;
   DUM_MATRIX = DUM_SOLVER+6;
@@ -158,7 +158,7 @@ int main(int argc,char *argv[])
 #ifdef _INDEX_INDEP_GEOM
     printf("# the code was compiled with index independent geometry\n");
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
 #  ifdef _NON_BLOCKING
     printf("# the code was compiled for non-blocking MPI calls (spinor and gauge)\n");
 #  endif
@@ -240,7 +240,7 @@ int main(int argc,char *argv[])
     exit(1);
   }
 
-#if (defined MPI && !(defined _USE_SHMEM))
+#if (defined TM_USE_MPI && !(defined _USE_SHMEM))
   check_xchange(); 
 #endif
 
@@ -259,7 +259,7 @@ int main(int argc,char *argv[])
   }
 
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   /*For parallelization: exchange the gaugefield */
   xchange_gauge(g_gauge_field);
 #endif
@@ -277,7 +277,7 @@ int main(int argc,char *argv[])
     }	else if (read_source_flag == 1) { /* yes */
       /* even first, odd second */
       read_spinorfield_cm_single(g_spinor_field[0],g_spinor_field[1],SourceInfo.basename,-1,0); 
-# if (!defined MPI)
+# if (!defined TM_USE_MPI)
       if (write_cp_flag == 1) {
 	strcat(SourceInfo.basename,".2");
 	read_spinorfield_cm_single(g_spinor_field[2],g_spinor_field[3],SourceInfo.basename,-1,0); 
@@ -359,7 +359,7 @@ int main(int argc,char *argv[])
       fflush(stdout);
     }
 
-#ifdef MPI
+#ifdef TM_USE_MPI
     MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();
 #endif

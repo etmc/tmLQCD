@@ -42,7 +42,7 @@
 #include "boundary.h"
 #include "gamma.h"
 #include "linalg_eo.h"
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include "xchange/xchange.h"
 #endif
 #include "update_backward_gauge.h"
@@ -97,7 +97,7 @@ void Dtm_psi(spinor * const P, spinor * const Q){
   }
 #endif
 
-# if defined MPI
+# if defined TM_USE_MPI
   xchange_lexicfield(Q);
 # endif
 
@@ -496,7 +496,7 @@ void Dsw_psi(spinor * const P, spinor * const Q){
   }
 #endif
 
-# if defined MPI
+# if defined TM_USE_MPI
   xchange_lexicfield(Q);
 # endif
 
