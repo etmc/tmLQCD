@@ -1734,11 +1734,11 @@ static inline void rmQuotes(char *str){
     if(myverbose) printf("Using TimeSlice Sources\n");
   }
   PionTimeSlice {
-    SourceInfo.type = 3;
+    SourceInfo.type = SRC_TYPE_PION_TS;
     if(myverbose) printf("Using PionTimeSlice Sources\n");
   }
   GenPionTimeSlice {
-    SourceInfo.type = 4;
+    SourceInfo.type = SRC_TYPE_GEN_PION_TS;
     if(myverbose) printf("Using GenPionTimeSlice Sources\n");
   }
 }
