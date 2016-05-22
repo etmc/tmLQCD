@@ -546,8 +546,9 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
   else {
     strcpy(ending, "inverted");
   }
-
-  if(SourceInfo.type != SRC_TYPE_VOL) {
+ 
+  // timeslice soruces are usually used for smearing/fuzzing and dilution, this is tracked via SourceInfo.ix in the filename 
+  if(SourceInfo.type == SRC_TYPE_POINT || SourceInfo.type == SRC_TYPE_TS) {
     if (PropInfo.splitted) {
       if(T_global > 99) sprintf(filename, "%s.%.4d.%.3d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, ending);
       else sprintf(filename, "%s.%.4d.%.2d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, ending);
@@ -557,7 +558,7 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
       else sprintf(filename, "%s.%.4d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, ending);
     }
   }
-  else if (SourceInfo.type == SRC_TYPE_POINT) {
+  else if (SourceInfo.type == SRC_TYPE_VOL) {
     sprintf(filename, "%s.%.4d.%.5d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, ending);
   }
   else if(SourceInfo.type == SRC_TYPE_PION_TS || SourceInfo.type == SRC_TYPE_GEN_PION_TS) {
