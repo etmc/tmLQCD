@@ -54,7 +54,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
   operator * optr = &operator_list[op_id];
   char source_filename[400];
   int source_type = SourceInfo.type;
-  loat u;
+  float u;
   SourceInfo.nstore = nstore;
   SourceInfo.sample = isample;
   SourceInfo.ix = ix;
