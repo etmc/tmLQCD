@@ -44,7 +44,7 @@
     ioff = (VOLUME+RAND)/2;
   }
 
-#ifndef OMP
+#ifndef TM_USE_OMP
   hi = &g_hi[16*ioff];
 
 #  if ((defined _GAUGE_COPY))
@@ -58,11 +58,11 @@
 #endif
 
   /**************** loop over all lattice sites ******************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #  pragma omp for
 #endif
   for(int icx = ioff; icx < (VOLUME/2+ioff); icx++){
-#ifdef OMP
+#ifdef TM_USE_OMP
     hi = &g_hi[16*icx];
 #  if ((defined _GAUGE_COPY))
     up=&g_gauge_field_copy[icx][0];
@@ -159,7 +159,7 @@
     _hop_z_p();
 
     /*********************** direction -3 ************************/
-#ifndef OMP
+#ifndef TM_USE_OMP
 #  if ((defined _GAUGE_COPY))
     up=um+1;
 #  else

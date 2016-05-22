@@ -1,7 +1,7 @@
 void _PSWITCH(assign_mul_one_sw_pm_imu)(const int ieo, 
 					_PTSWITCH(spinor) * const k, _PTSWITCH(spinor) * const l,
 					const _F_TYPE mu) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -19,7 +19,7 @@ void _PSWITCH(assign_mul_one_sw_pm_imu)(const int ieo,
       ioff = (VOLUME+RAND)/2;
     }
     /************************ loop over all lattice sites *************************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for(unsigned icx = ioff; icx < (VOLUME/2+ioff); icx++) {
@@ -64,7 +64,7 @@ void _PSWITCH(assign_mul_one_sw_pm_imu)(const int ieo,
       _vector_assign((*r).s2, psi1);
       _vector_assign((*r).s3, psi2);
     }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;
@@ -143,7 +143,7 @@ void _PSWITCH(assign_mul_one_sw_pm_imu_block)(const int ieo,
 void _PSWITCH(assign_mul_one_sw_pm_imu_inv)(const int ieo, 
 					    _PTSWITCH(spinor) * const k, _PTSWITCH(spinor) * const l,
 					    const _F_TYPE mu) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -153,7 +153,7 @@ void _PSWITCH(assign_mul_one_sw_pm_imu_inv)(const int ieo,
     _PTSWITCH(spinor) *s;
 
     /************************ loop over all lattice sites *************************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for(int icx = 0; icx < (VOLUME/2); icx++) {
@@ -187,7 +187,7 @@ void _PSWITCH(assign_mul_one_sw_pm_imu_inv)(const int ieo,
 
       /******************************** end of loop *********************************/
     }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;
