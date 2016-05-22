@@ -20,7 +20,7 @@
 _Complex double _PSWITCH(scalar_prod)(const _PTSWITCH(spinor) * const S, const _PTSWITCH(spinor) * const R, 
                                       const int N, const int parallel) {
   _Complex double ALIGN res = 0.0;
-#ifdef MPI
+#ifdef TM_USE_MPI
   _Complex double ALIGN mres;
 #endif
 
@@ -76,7 +76,7 @@ _Complex double _PSWITCH(scalar_prod)(const _PTSWITCH(spinor) * const S, const _
   res=kc;
 #endif
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   if(parallel == 1)
     {
       MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
@@ -90,7 +90,7 @@ _Complex double _PSWITCH(scalar_prod)(const _PTSWITCH(spinor) * const S, const _
 _Complex double _PSWITCH(scalar_prod_ts)(const _PTSWITCH(spinor) * const S, const _PTSWITCH(spinor) * const R, 
                                          const int N, const int parallel) {
   _Complex double ALIGN res = 0.0;
-#ifdef MPI
+#ifdef TM_USE_MPI
   _Complex double ALIGN mres;
 #endif
 
@@ -126,7 +126,7 @@ _Complex double _PSWITCH(scalar_prod_ts)(const _PTSWITCH(spinor) * const S, cons
 
   res = kc;
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   if(parallel == 1)
     {
       MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);

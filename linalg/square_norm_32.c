@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
@@ -19,7 +19,7 @@
 
 float square_norm_32(spinor32 * const P, const int N, const int parallel) {
   float ALIGN32 res = 0.0;
-#ifdef MPI
+#ifdef TM_USE_MPI
   float ALIGN32 mres;
 #endif
 
@@ -80,7 +80,7 @@ float square_norm_32(spinor32 * const P, const int N, const int parallel) {
   res = buffer[0] + buffer[1] + buffer[2] + buffer[3];
 #endif
 
-#  ifdef MPI
+#  ifdef TM_USE_MPI
   if(parallel) {
     MPI_Allreduce(&res, &mres, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
     return mres;
@@ -95,7 +95,7 @@ float square_norm_32(spinor32 * const P, const int N, const int parallel) {
 float square_norm_32(const spinor32 * const P, const int N, const int parallel)
 {
   float ALIGN32 res = 0.0;
-#ifdef MPI
+#ifdef TM_USE_MPI
   float ALIGN32 mres;
 #endif
 
@@ -151,7 +151,7 @@ float square_norm_32(const spinor32 * const P, const int N, const int parallel)
   res = kc;
 #endif
 
-#  ifdef MPI
+#  ifdef TM_USE_MPI
   if(parallel) {
     MPI_Allreduce(&res, &mres, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
     return mres;
@@ -168,7 +168,7 @@ float square_norm_32(const spinor32 * const P, const int N, const int parallel)
 float square_norm_ts_32(const spinor32 * const P, const int N, const int parallel)
 {
   float ALIGN32 res = 0.0;
-#ifdef MPI
+#ifdef TM_USE_MPI
   float ALIGN32 mres;
 #endif
 
@@ -212,7 +212,7 @@ float square_norm_ts_32(const spinor32 * const P, const int N, const int paralle
   } /* OpenMP closing brace */
 #endif
 
-#  ifdef MPI
+#  ifdef TM_USE_MPI
   if(parallel) {
     MPI_Allreduce(&res, &mres, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
     return mres;

@@ -26,7 +26,7 @@
 #include <math.h>
 #include <time.h>
 #include <assert.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -89,7 +89,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
                 }
               }
             }
-#ifdef MPI
+#ifdef TM_USE_MPI
             MPI_Bcast(&t, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif
             SourceInfo.t = t;
@@ -162,7 +162,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
           ranlxs(&u, 1);
           t = (int)(u*g_nproc_t*T);
         }
-#ifdef MPI
+#ifdef TM_USE_MPI
         MPI_Bcast(&t, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif
         SourceInfo.t = t;
@@ -186,7 +186,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
             }
           }
         }
-#ifdef MPI
+#ifdef TM_USE_MPI
         MPI_Bcast(&t, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif
         SourceInfo.t = t;
@@ -288,7 +288,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
         }
         if(read_spinor(g_spinor_field[2], g_spinor_field[3], source_filename, 0) != 0) {
           fprintf(stderr, "Error reading source! Aborting...\n");
-#ifdef MPI
+#ifdef TM_USE_MPI
           MPI_Abort(MPI_COMM_WORLD, 1);
           MPI_Finalize();
 #endif

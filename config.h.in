@@ -18,7 +18,7 @@
 #undef HAVE_CLOCK_GETTIME
 
 /* Compile with MPI support */
-#undef MPI
+#undef TM_USE_MPI
 
 /* Compile with OpenMP support */
 #undef TM_USE_OMP

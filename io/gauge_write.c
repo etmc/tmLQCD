@@ -49,7 +49,7 @@ int write_gauge_field(char * filename, const int prec, paramsXlfInfo const *xlfI
     fprintf(stdout, "#   Calculated            : A = %#010x B = %#010x.\n", checksum.suma, checksum.sumb);
     fflush(stdout);
   }
-#ifdef MPI
+#ifdef TM_USE_MPI
     MPI_Barrier(MPI_COMM_WORLD);
 #endif /* MPI */
 

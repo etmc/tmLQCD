@@ -32,7 +32,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
 #ifdef _USE_SHMEM
@@ -60,7 +60,7 @@
 
 void xchange_field(spinor * const l, const int ieo) {
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Request requests[16];
   MPI_Status status[16];
 #endif
@@ -83,7 +83,7 @@ void xchange_field(spinor * const l, const int ieo) {
   __alignx(16, l);
 #  endif
 
-#  ifdef MPI
+#  ifdef TM_USE_MPI
 
 
   /* In 4 dimensions there are two processors sharing the   */
@@ -268,7 +268,7 @@ void xchange_field(spinor * const l, const int ieo) {
 
 void xchange_field(spinor * const l, const int ieo) {
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Request requests[16];
   MPI_Status status[16];
 #endif
@@ -294,7 +294,7 @@ void xchange_field(spinor * const l, const int ieo) {
   __alignx(16, l);
 #  endif
 
-#  ifdef MPI
+#  ifdef TM_USE_MPI
 
 
   /* In 4 dimensions there are two processors sharing the   */
@@ -473,7 +473,7 @@ void xchange_field(spinor * const l, const int ieo) {
 /* exchanges the field  l */
 void xchange_field(spinor * const l, const int ieo) {
 
-#  ifdef MPI
+#  ifdef TM_USE_MPI
   int i,ix, mu, x0, x1, x2, x3, k;
 
 #ifdef _KOJAK_INST
@@ -589,7 +589,7 @@ void xchange_field(spinor * const l, const int ieo) {
 #pragma pomp inst begin(xchangefield)
 #endif
 
-#  ifdef MPI
+#  ifdef TM_USE_MPI
     
   MPI_Status status;
 
@@ -683,7 +683,7 @@ void xchange_field(spinor * const l, const int ieo) {
 #pragma pomp inst begin(xchangefield)
 #endif
 
-#  ifdef MPI
+#  ifdef TM_USE_MPI
     
   MPI_Status status;
   /* send the data to the neighbour on the left */

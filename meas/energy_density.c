@@ -32,7 +32,7 @@
 #include <math.h>
 #include <errno.h>
 #include <time.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
@@ -56,7 +56,7 @@ void measure_energy_density(const su3 ** const gf, double *ret)
   //  with the plaquette definition and with papers... I don't understand where it comes from...
   double normalization = - 4 / ( 4 * 16.0 * VOLUME * g_nproc);
   double res = 0;
-#ifdef MPI
+#ifdef TM_USE_MPI
   double ALIGN mres=0;
 #endif
 
@@ -144,7 +144,7 @@ void measure_energy_density(const su3 ** const gf, double *ret)
 #else
   res = kc;
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   res = mres;
 #endif

@@ -21,7 +21,7 @@
 # include<config.h>
 #endif
 #include <stdlib.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
@@ -59,7 +59,7 @@ _Complex double scalar_prod_su3vect(su3_vector * const S, su3_vector * const R, 
   double ALIGN ks, ds, tr, ts, tt;
   su3_vector *s, *r;
   _Complex double c;
-#ifdef MPI
+#ifdef TM_USE_MPI
   _Complex double d;
 #endif
 
@@ -83,7 +83,7 @@ _Complex double scalar_prod_su3vect(su3_vector * const S, su3_vector * const R, 
     }
   c = ks + c;
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   if(parallel == 1)
   {
     d = c;

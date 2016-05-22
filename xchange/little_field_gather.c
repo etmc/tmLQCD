@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -47,7 +47,7 @@ enum{
 } Direction;
 
 
-#ifdef MPI
+#ifdef TM_USE_MPI
 MPI_Request lrequests[16];
 MPI_Status lstatus[16];
 int waitcount = 0;
