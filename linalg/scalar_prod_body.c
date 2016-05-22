@@ -24,7 +24,7 @@ _Complex double _PSWITCH(scalar_prod)(const _PTSWITCH(spinor) * const S, const _
   _Complex double ALIGN mres;
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
     int thread_num = omp_get_thread_num();
@@ -41,7 +41,7 @@ _Complex double _PSWITCH(scalar_prod)(const _PTSWITCH(spinor) * const S, const _
     __alignx(16, R);
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for (int ix = 0; ix < N; ix++)
@@ -63,7 +63,7 @@ _Complex double _PSWITCH(scalar_prod)(const _PTSWITCH(spinor) * const S, const _
       }
     kc=ks+kc;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
     g_omp_acc_cp[thread_num] = kc;
 
   } /* OpenMP closing brace */

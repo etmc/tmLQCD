@@ -36,7 +36,7 @@
 #ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "global.h"
@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
 
 #ifdef TM_USE_MPI
 
-#  ifdef OMP
+#  ifdef TM_USE_OMP
   int mpi_thread_provided;
   MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
 #  else
@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
     exit(-1);
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   init_openmp();
 #endif
 
@@ -324,7 +324,7 @@ int main(int argc, char *argv[])
     nstore += Nsave;
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   free_omp_accumulators();
 #endif
 

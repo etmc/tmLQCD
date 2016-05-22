@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#ifdef OMP 
+#ifdef TM_USE_OMP 
 # include <omp.h>
 #endif
 #include "global.h"
@@ -55,7 +55,7 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
   
   double atime, etime;
   atime = gettime();
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -65,7 +65,7 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
   su3 *z;
   su3adj *xm;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(i = 0; i < VOLUME; i++) { 
@@ -84,7 +84,7 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
     }
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   etime = gettime();
@@ -105,7 +105,7 @@ void gauge_EMderivative(const int id, hamiltonian_field_t * const hf) {
   
   double atime, etime;
   atime = gettime();
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -115,7 +115,7 @@ void gauge_EMderivative(const int id, hamiltonian_field_t * const hf) {
   su3 *z;
   su3adj *xm;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(i = 0; i < VOLUME; i++) { 
@@ -151,7 +151,7 @@ void gauge_EMderivative(const int id, hamiltonian_field_t * const hf) {
     }
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   etime = gettime();

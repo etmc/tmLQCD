@@ -25,7 +25,7 @@
 #include<stdio.h>
 #include<math.h>
 #include<string.h>
-#ifdef OMP
+#ifdef TM_USE_OMP
 #include <omp.h>
 #endif
 #include"global.h"

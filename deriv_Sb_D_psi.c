@@ -389,7 +389,7 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k,
   xchange_lexicfield(l);
 #endif
   
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #pragma omp parallel
   {
@@ -405,7 +405,7 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k,
   spinor * restrict sp ALIGN;
   spinor * restrict sm ALIGN;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
 
@@ -417,7 +417,7 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k,
 #endif
 
   /************** loop over all lattice sites ****************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(ix = 0; ix < (VOLUME); ix++){
@@ -578,7 +578,7 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k,
 #pragma pomp inst end(derivSb)
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /*OpenMP closing brace */
 #endif
 }

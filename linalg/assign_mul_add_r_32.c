@@ -3,7 +3,7 @@
 #endif
 #include <stdlib.h>
 #include <complex.h>
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "su3.h"
@@ -16,7 +16,7 @@
 #if (defined BGQ && defined XLC)
 
 void assign_mul_add_r_32(spinor32 * const R, const float c, const spinor32 * const S, const int N) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -35,7 +35,7 @@ void assign_mul_add_r_32(spinor32 * const R, const float c, const spinor32 * con
   __alignx(16, S);
   __alignx(16, R);
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #else
 #pragma unroll(4)
@@ -70,7 +70,7 @@ void assign_mul_add_r_32(spinor32 * const R, const float c, const spinor32 * con
     vec_st(z4, 0, r+16);
     vec_st(z5, 0, r+20);
   }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif  
   return;
@@ -80,7 +80,7 @@ void assign_mul_add_r_32(spinor32 * const R, const float c, const spinor32 * con
 
 void assign_mul_add_r_32(spinor32 * const R, const float c, const spinor32 * const S, const int N)
 {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -88,7 +88,7 @@ void assign_mul_add_r_32(spinor32 * const R, const float c, const spinor32 * con
   const spinor32 *s;
   
   /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for (int ix = 0; ix < N; ++ix)
@@ -112,7 +112,7 @@ void assign_mul_add_r_32(spinor32 * const R, const float c, const spinor32 * con
     r->s3.c1 = c * r->s3.c1 + s->s3.c1;
     r->s3.c2 = c * r->s3.c2 + s->s3.c2;   
   }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 }

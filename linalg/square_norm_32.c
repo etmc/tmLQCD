@@ -7,7 +7,7 @@
 #ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 # include "global.h"
 #endif
@@ -23,7 +23,7 @@ float square_norm_32(spinor32 * const P, const int N, const int parallel) {
   float ALIGN32 mres;
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
     int thread_num = omp_get_thread_num();
@@ -35,7 +35,7 @@ float square_norm_32(spinor32 * const P, const int N, const int parallel) {
   ks = vec_splats(0.);
   kc = vec_splats(0.);
 
-#ifndef OMP
+#ifndef TM_USE_OMP
 #pragma unroll(4)
 #else
 #pragma omp for
@@ -70,7 +70,7 @@ float square_norm_32(spinor32 * const P, const int N, const int parallel) {
   }
   buffer = vec_add(kc,ks);
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   g_omp_acc_re[thread_num] = buffer[0] + buffer[1] + buffer[2] + buffer[3];
   } /* OpenMP closing brace */
 
@@ -99,7 +99,7 @@ float square_norm_32(const spinor32 * const P, const int N, const int parallel)
   float ALIGN32 mres;
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
     int thread_num = omp_get_thread_num();
@@ -111,7 +111,7 @@ float square_norm_32(const spinor32 * const P, const int N, const int parallel)
   ks = 0.0;
   kc = 0.0;
   
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif    
   for (int ix  =  0; ix < N; ix++) {
@@ -138,7 +138,7 @@ float square_norm_32(const spinor32 * const P, const int N, const int parallel)
   }
   kc=ks+kc;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   g_omp_acc_re[thread_num] = kc;
 
   } /* OpenMP closing brace */
@@ -172,7 +172,7 @@ float square_norm_ts_32(const spinor32 * const P, const int N, const int paralle
   float ALIGN32 mres;
 #endif
 
-#ifdef OMP2
+#ifdef TM_USE_OMP2
 #pragma omp parallel reduction(+:res)
   {
 #endif
@@ -182,7 +182,7 @@ float square_norm_ts_32(const spinor32 * const P, const int N, const int paralle
   ks = 0.0;
   kc = 0.0;
   
-#ifdef OMP2
+#ifdef TM_USE_OMP2
 #pragma omp for
 #endif    
   for (int ix  =  0; ix < N; ix++) {
@@ -208,7 +208,7 @@ float square_norm_ts_32(const spinor32 * const P, const int N, const int paralle
     kc = tr-tt;
   }
   res=ks+kc;
-#ifdef OMP2
+#ifdef TM_USE_OMP2
   } /* OpenMP closing brace */
 #endif
 

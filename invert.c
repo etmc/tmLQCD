@@ -37,7 +37,7 @@
 #ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "global.h"
@@ -95,6 +95,7 @@ int check_geometry();
 static void usage();
 static void process_args(int argc, char *argv[], char ** input_filename, char ** filename);
 static void set_default_filenames(char ** input_filename, char ** filename);
+static void invert_compute_modenumber();
 
 int main(int argc, char *argv[])
 {
@@ -107,7 +108,6 @@ int main(int argc, char *argv[])
   char * filename = NULL;
   double plaquette_energy;
   struct stout_parameters params_smear;
-  spinor **s, *s_;
 
 #ifdef _KOJAK_INST
 #pragma pomp inst init
@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
 
 #ifdef TM_USE_MPI
 
-#  ifdef OMP
+#  ifdef TM_USE_OMP
   int mpi_thread_provided;
   MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
 #  else
@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
     exit(-1);
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   init_openmp();
 #endif
 
@@ -359,49 +359,15 @@ int main(int argc, char *argv[])
     }
 
     /* Compute the mode number or topological susceptibility using spectral projectors, if wanted*/
-
     if(compute_modenumber != 0 || compute_topsus !=0){
-      
-      s_ = calloc(no_sources_z2*VOLUMEPLUSRAND+1, sizeof(spinor));
-      s  = calloc(no_sources_z2, sizeof(spinor*));
-      if(s_ == NULL) { 
-	printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
-      }
-      if(s == NULL) { 
-	printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
-      }
-      
-      
-      for(i = 0; i < no_sources_z2; i++) {
-#if (defined SSE3 || defined SSE2 || defined SSE)
-        s[i] = (spinor*)(((unsigned long int)(s_)+ALIGN_BASE)&~ALIGN_BASE)+i*VOLUMEPLUSRAND;
-#else
-        s[i] = s_+i*VOLUMEPLUSRAND;
-#endif
-	
-        random_spinor_field_lexic(s[i], reproduce_randomnumber_flag,RN_Z2);
-	
-        if(g_proc_id == 0) {
-          printf("source %d \n", i);
-        }
-	
-        if(compute_modenumber != 0){
-          mode_number(s[i], mstarsq);
-        }
-	
-        if(compute_topsus !=0) {
-          top_sus(s[i], mstarsq);
-        }
-      }
-      free(s);
-      free(s_);
+      invert_compute_modenumber(); 
     }
 
     //  set up blocks if Deflation is used 
     if (g_dflgcr_flag) 
       init_blocks(nblocks_t, nblocks_x, nblocks_y, nblocks_z);
     
-    if(SourceInfo.type == 1) {
+    if(SourceInfo.type == SRC_TYPE_VOL) {
       index_start = 0;
       index_end = 1;
     }
@@ -426,7 +392,7 @@ int main(int argc, char *argv[])
       g_c_sw = operator_list[op_id].c_sw;
       // DFLGCR and DFLFGMRES
       if(operator_list[op_id].solver == DFLGCR || operator_list[op_id].solver == DFLFGMRES) {
-	generate_dfl_subspace(g_N_s, VOLUME, reproduce_randomnumber_flag);
+        generate_dfl_subspace(g_N_s, VOLUME, reproduce_randomnumber_flag);
       }
 
       if(use_preconditioning==1 && PRECWSOPERATORSELECT[operator_list[op_id].solver]!=PRECWS_NO ){
@@ -478,7 +444,7 @@ int main(int argc, char *argv[])
     nstore += Nsave;
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   free_omp_accumulators();
 #endif
   free_blocks();
@@ -563,5 +529,34 @@ static void set_default_filenames(char ** input_filename, char ** filename) {
     *filename = calloc(7, sizeof(char));
     strcpy(*filename,"output");
   } 
+}
+
+static void invert_compute_modenumber() {
+  spinor * s_ = calloc(no_sources_z2*VOLUMEPLUSRAND+1, sizeof(spinor));
+  spinor ** s  = calloc(no_sources_z2, sizeof(spinor*));
+  if(s_ == NULL) { 
+    printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
+  }
+  if(s == NULL) { 
+    printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
+  }
+  for(int i = 0; i < no_sources_z2; i++) {
+    s[i] = (spinor*)(((unsigned long int)(s_)+ALIGN_BASE)&~ALIGN_BASE)+i*VOLUMEPLUSRAND;
+    random_spinor_field_lexic(s[i], reproduce_randomnumber_flag,RN_Z2);
+	
+    if(g_proc_id == 0) {
+      printf("source %d \n", i);
+    }
+	
+    if(compute_modenumber != 0){
+      mode_number(s[i], mstarsq);
+    }
+	  
+    if(compute_topsus !=0) {
+      top_sus(s[i], mstarsq);
+    }
+  }
+  free(s);
+  free(s_);
 }
 

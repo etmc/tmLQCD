@@ -42,7 +42,7 @@
 #ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "global.h"
@@ -57,7 +57,7 @@
 
 void sw_all(hamiltonian_field_t * const hf, const double kappa, 
 	    const double c_sw) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -69,7 +69,7 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa,
   su3 ALIGN v1,v2,vv1,vv2,plaq;
   su3 ALIGN vis[4][4];
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(x = 0; x < VOLUME; x++) {
@@ -200,7 +200,7 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa,
       }
     }
   }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;

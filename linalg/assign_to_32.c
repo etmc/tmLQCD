@@ -20,7 +20,7 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include <stdlib.h>
@@ -36,14 +36,14 @@
 /* S and R must not overlap */
 void assign_to_32(spinor32 * const R, spinor * const S, const int N)
 {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
   spinor32 *r;
   spinor *s;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for (int ix=0; ix<N; ix++)
@@ -68,7 +68,7 @@ void assign_to_32(spinor32 * const R, spinor * const S, const int N)
     r->s3.c2 = s->s3.c2;
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
  
@@ -83,14 +83,14 @@ void assign_to_32(spinor32 * const R, spinor * const S, const int N)
 /* S and R must not overlap */
 void assign_to_64(spinor * const R, spinor32 * const S, const int N)
 {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
   spinor *r;
   spinor32 *s;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for (int ix=0; ix<N; ix++)
@@ -115,7 +115,7 @@ void assign_to_64(spinor * const R, spinor32 * const S, const int N)
     r->s3.c2 = s->s3.c2;
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
  

@@ -4,7 +4,7 @@
 #ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 # include <global.h>
 #endif
@@ -22,7 +22,7 @@ float scalar_prod_r_32(const spinor32 * const S, const spinor32 * const R, const
   float ALIGN32 mres;
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
   int thread_num = omp_get_thread_num();
@@ -43,7 +43,7 @@ float scalar_prod_r_32(const spinor32 * const S, const spinor32 * const R, const
   ks = vec_splats(0.0);
   kc = vec_splats(0.0);
 
-#ifndef OMP
+#ifndef TM_USE_OMP
 #pragma unroll(2)
 #else
 #pragma omp for
@@ -85,7 +85,7 @@ float scalar_prod_r_32(const spinor32 * const S, const spinor32 * const R, const
   }
   buffer = vec_add(kc, ks);
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   g_omp_acc_re[thread_num] = buffer[0] + buffer[1] + buffer[2] + buffer[3];
   } /* OpenMP parallel closing brace */
   for( int i = 0; i < omp_num_threads; ++i)
@@ -113,7 +113,7 @@ float scalar_prod_r_32(const spinor32 * const S, const spinor32 * const R, const
   float ALIGN32 mres;
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
   int thread_num = omp_get_thread_num();
@@ -124,7 +124,7 @@ float scalar_prod_r_32(const spinor32 * const S, const spinor32 * const R, const
   ks = 0.0;
   kc = 0.0;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for (int ix = 0; ix < N; ++ix) {
@@ -144,7 +144,7 @@ float scalar_prod_r_32(const spinor32 * const S, const spinor32 * const R, const
   }
   kc=ks+kc;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   g_omp_acc_re[thread_num] = kc;
 
   } /* OpenMP closing brace */

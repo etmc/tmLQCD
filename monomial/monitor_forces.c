@@ -29,7 +29,7 @@
 #ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "global.h"
@@ -46,7 +46,7 @@ void monitor_forces(hamiltonian_field_t * const hf) {
 
   for(int id = 0; id < no_monomials; id++) {
     if(monomial_list[ id ].derivativefunction != NULL) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for
 #endif
       for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand);i++) { 
@@ -62,7 +62,7 @@ void monitor_forces(hamiltonian_field_t * const hf) {
 #endif
       
       double sum = 0., max = 0., sum2;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel private(sum2)
       {
 	int thread_num = omp_get_thread_num();
@@ -73,14 +73,14 @@ void monitor_forces(hamiltonian_field_t * const hf) {
 	  for(int mu = 0; mu < 4; mu++) {
 	    sum2 = _su3adj_square_norm(hf->derivative[i][mu]); 
 	    sum += sum2;
-#ifdef OMP
+#ifdef TM_USE_OMP
 	    if(sum2 > g_omp_acc_re[thread_num]) g_omp_acc_re[thread_num] = sum2;
 #else
 	    if(sum2 > max) max = sum2;
 #endif
 	  }
 	}
-#ifdef OMP
+#ifdef TM_USE_OMP
       } /* OMP closing brace */
       max = g_omp_acc_re[0];
       for( int i = 1; i < omp_num_threads; i++) {

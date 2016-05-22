@@ -1,10 +1,10 @@
 static inline void _PTSWITCH(p0add)(_PTSWITCH(spinor) * restrict const tmpr , _PTSWITCH(spinor) const * restrict const s, 
 				    _PSWITCH(su3) const * restrict const u, const _C_TYPE phase) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static _PTSWITCH(su3_vector) chi, psi;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
 
@@ -28,11 +28,11 @@ static inline void _PTSWITCH(p0add)(_PTSWITCH(spinor) * restrict const tmpr , _P
 
 static inline void _PTSWITCH(m0add)(_PTSWITCH(spinor) * restrict const tmpr, _PTSWITCH(spinor) const * restrict const s, 
 				    _PSWITCH(su3) const * restrict const u, const _C_TYPE phase) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static _PTSWITCH(su3_vector) chi, psi;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
 
@@ -55,11 +55,11 @@ static inline void _PTSWITCH(m0add)(_PTSWITCH(spinor) * restrict const tmpr, _PT
 
 static inline void _PTSWITCH(p1add)(_PTSWITCH(spinor) * restrict const tmpr, _PTSWITCH(spinor) const * restrict const s, 
 				    _PSWITCH(su3) const * restrict const u, const _C_TYPE phase) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static _PTSWITCH(su3_vector) chi, psi;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
 
@@ -82,11 +82,11 @@ static inline void _PTSWITCH(p1add)(_PTSWITCH(spinor) * restrict const tmpr, _PT
 
 static inline void _PTSWITCH(m1add)(_PTSWITCH(spinor) * restrict const tmpr, _PTSWITCH(spinor) const * restrict const s, 
 				    _PSWITCH(su3) const * restrict const u, const _C_TYPE phase) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static _PTSWITCH(su3_vector) chi, psi;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
 
@@ -109,11 +109,11 @@ static inline void _PTSWITCH(m1add)(_PTSWITCH(spinor) * restrict const tmpr, _PT
 
 static inline void _PTSWITCH(p2add)(_PTSWITCH(spinor) * restrict const tmpr, _PTSWITCH(spinor) const * restrict const s, 
 				    _PSWITCH(su3) const * restrict const u, const _C_TYPE phase) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static _PTSWITCH(su3_vector) chi, psi;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
 
@@ -137,11 +137,11 @@ static inline void _PTSWITCH(p2add)(_PTSWITCH(spinor) * restrict const tmpr, _PT
 
 static inline void _PTSWITCH(m2add)(_PTSWITCH(spinor) * restrict const tmpr, _PTSWITCH(spinor) const * restrict const s, 
 				    _PSWITCH(su3) const * restrict const u, const _C_TYPE phase) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static _PTSWITCH(su3_vector) chi, psi;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
 
@@ -164,11 +164,11 @@ static inline void _PTSWITCH(m2add)(_PTSWITCH(spinor) * restrict const tmpr, _PT
 
 static inline void _PTSWITCH(p3add)(_PTSWITCH(spinor) * restrict const tmpr, _PTSWITCH(spinor) const * restrict const s, 
 				    _PSWITCH(su3) const * restrict const u, const _C_TYPE phase) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static _PTSWITCH(su3_vector) chi, psi;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
 
@@ -192,11 +192,11 @@ static inline void _PTSWITCH(p3add)(_PTSWITCH(spinor) * restrict const tmpr, _PT
 static inline void _PTSWITCH(m3addandstore)(_PTSWITCH(spinor) * restrict const r, _PTSWITCH(spinor) const * restrict const s, 
 					    _PSWITCH(su3) const * restrict const u, const _C_TYPE phase,
 					    _PTSWITCH(spinor) const * restrict const tmpr) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static _PTSWITCH(su3_vector) chi, psi;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
 
@@ -285,7 +285,7 @@ void _PSWITCH(D_psi)(_PTSWITCH(spinor) * const P, _PTSWITCH(spinor) * const Q){
   _PTSWITCH(xchange_lexicfield)(Q);
 # endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -304,7 +304,7 @@ void _PSWITCH(D_psi)(_PTSWITCH(spinor) * const P, _PTSWITCH(spinor) * const Q){
 
   /************************ loop over all lattice sites *************************/
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for (ix = 0; ix < VOLUME; ix++) {
@@ -369,7 +369,7 @@ void _PSWITCH(D_psi)(_PTSWITCH(spinor) * const P, _PTSWITCH(spinor) * const Q){
     um=&_PSWITCH(g_gauge_field)[iy][3];
     _PTSWITCH(m3addandstore)(rr, sm, um, phase_3l, &tmpr);
   }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 }

@@ -42,7 +42,7 @@
 #ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "global.h"
@@ -70,7 +70,7 @@
 // this function depends on mu
 
 void sw_deriv(const int ieo, const double mu) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -89,15 +89,15 @@ void sw_deriv(const int ieo, const double mu) {
   }
   if(fabs(mu) > 0.) fac = 0.5;
 
-#ifndef OMP
+#ifndef TM_USE_OMP
   icy = 0;
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
-#ifdef OMP
+#ifdef TM_USE_OMP
     icy = icx - ioff;
 #endif
     x = g_eo2lexic[icx];
@@ -143,18 +143,18 @@ void sw_deriv(const int ieo, const double mu) {
       _su3_refac_acc(swp[x][2], fac, lswp[2]);
       _su3_refac_acc(swp[x][3], fac, lswp[3]);
     }
-#ifndef OMP
+#ifndef TM_USE_OMP
     ++icy;
 #endif
   }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;
 }
 
 void sw_deriv_nd(const int ieo) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -173,15 +173,15 @@ void sw_deriv_nd(const int ieo) {
     ioff = (VOLUME+RAND)/2;
   }
 
-#ifndef OMP
+#ifndef TM_USE_OMP
   icy = 0;
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
-#ifdef OMP
+#ifdef TM_USE_OMP
     icy = icx - ioff;
 #endif
     x = g_eo2lexic[icx];
@@ -232,11 +232,11 @@ void sw_deriv_nd(const int ieo) {
     _su3_refac_acc(swp[x][1], fac, lswp[1]);
     _su3_refac_acc(swp[x][2], fac, lswp[2]);
     _su3_refac_acc(swp[x][3], fac, lswp[3]);
-#ifndef OMP
+#ifndef TM_USE_OMP
     ++icy;
 #endif
   }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;
@@ -251,7 +251,7 @@ void sw_deriv_nd(const int ieo) {
 
 void sw_spinor_eo(const int ieo, const spinor * const kk, const spinor * const ll, 
 		  const double fac) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -272,7 +272,7 @@ void sw_spinor_eo(const int ieo, const spinor * const kk, const spinor * const l
   }
   /************************ loop over half of the lattice sites ***********/
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif  
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
@@ -311,7 +311,7 @@ void sw_spinor_eo(const int ieo, const spinor * const kk, const spinor * const l
     _su3_refac_acc(swp[x][2], fac, lswp[2]);
     _su3_refac_acc(swp[x][3], fac, lswp[3]);
   }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;
@@ -319,7 +319,7 @@ void sw_spinor_eo(const int ieo, const spinor * const kk, const spinor * const l
 
 void sw_spinor(const spinor * const kk, const spinor * const ll, 
 	       const double fac) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -330,7 +330,7 @@ void sw_spinor(const spinor * const kk, const spinor * const ll,
   su3 ALIGN u0,u1,u2,u3;
   su3 ALIGN lswp[4],lswm[4];
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif  
   for(x = 0; x < VOLUME; x++) {
@@ -368,7 +368,7 @@ void sw_spinor(const spinor * const kk, const spinor * const ll,
     _su3_refac_acc(swp[x][2], fac, lswp[2]);
     _su3_refac_acc(swp[x][3], fac, lswp[3]);
   }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;

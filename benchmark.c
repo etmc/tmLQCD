@@ -41,7 +41,7 @@
 #  include <io/gauge.h>
 # endif
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 # include "init/init_openmp.h"
 #endif
@@ -101,7 +101,7 @@ int main(int argc,char *argv[])
   DUM_MATRIX = DUM_SOLVER+6;
   NO_OF_SPINORFIELDS = DUM_MATRIX+2;
 
-#  ifdef OMP
+#  ifdef TM_USE_OMP
   int mpi_thread_provided;
   MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
 #  else
@@ -121,7 +121,7 @@ int main(int argc,char *argv[])
     exit(-1);
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   init_openmp();
 #endif
 
@@ -326,7 +326,7 @@ int main(int argc,char *argv[])
       printf("# Communication switched on: \n");
 #endif
       printf("\n%12d Mflops(total) %8d Mflops(process)", (int)(g_nproc*1608.0f/sdt),(int)(1608.0f/sdt));
-#ifdef OMP
+#ifdef TM_USE_OMP
       printf(" %8d Mflops(thread)",(int)(1608.0f/(omp_num_threads*sdt)));
 #endif
       printf(" [ %d bit arithmetic ]\n\n",(int)(sizeof(spinor)/3)); 
@@ -356,7 +356,7 @@ int main(int argc,char *argv[])
     if(g_proc_id==0) {
       printf("# The following result is printed just to make sure that the calculation is not optimized away: %e\n",antioptaway);
       printf("# Communication switched off: \n\n%12d Mflops(total) %8d Mflops(process)", (int)(g_nproc*1608.0f/dt),(int)(1608.0f/dt));
-#ifdef OMP
+#ifdef TM_USE_OMP
       printf(" %8d Mflops(thread)",(int)(1608.0f/(omp_num_threads*dt)));
 #endif
       printf(" [ %d bit arithmetic ]\n\n",(int)(sizeof(spinor)/3)); 
@@ -440,7 +440,7 @@ int main(int argc,char *argv[])
       printf("# The following result is just to make sure that the calculation is not optimized away: %e\n", antioptaway);
       printf("# Total compute time %e sec, variance of the time %e sec. (%d iterations).\n\n", sdt, sqdt, j_max);
       printf(" %12d Mflops(total) %8d Mflops(process)", (int)(1680.0f*g_nproc/sdt),(int)(1680.0f/sdt));
-#ifdef OMP
+#ifdef TM_USE_OMP
       printf(" %8d Mflops(thread)",(int)(1680.0f/(omp_num_threads*sdt)));
 #endif
       printf(" [ %d bit arithmetic ]\n\n",(int)(sizeof(spinor)/3)); 
@@ -461,7 +461,7 @@ int main(int argc,char *argv[])
 #endif
 
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   free_omp_accumulators();
 #endif
   free_gauge_field();

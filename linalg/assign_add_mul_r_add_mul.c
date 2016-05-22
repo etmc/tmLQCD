@@ -26,7 +26,7 @@
 #ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "su3.h"
@@ -86,14 +86,14 @@ void assign_add_mul_r_add_mul(spinor * const R, spinor * const S, spinor * const
 /* j, k input, l output */
 void assign_add_mul_r_add_mul(spinor * const R, spinor * const S, spinor * const U,
 			      const double c1,const double c2, const int N) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
 
    spinor *r,*s,*t;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
    for (int ix = 0; ix < N; ++ix)
@@ -119,7 +119,7 @@ void assign_add_mul_r_add_mul(spinor * const R, spinor * const S, spinor * const
      r->s3.c2 += c1 * s->s3.c2 + c2 * t->s3.c2;
    }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 

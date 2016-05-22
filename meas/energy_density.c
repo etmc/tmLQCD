@@ -35,7 +35,7 @@
 #ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "global.h"
@@ -60,7 +60,7 @@ void measure_energy_density(const su3 ** const gf, double *ret)
   double ALIGN mres=0;
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -76,7 +76,7 @@ void measure_energy_density(const su3 ** const gf, double *ret)
         |  | |  |
         |__| |__| k  */
   
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for(int x = 0; x < VOLUME; x++)
@@ -133,7 +133,7 @@ void measure_energy_density(const su3 ** const gf, double *ret)
       }   
     }
     kc=kc+ks;
-#ifdef OMP
+#ifdef TM_USE_OMP
     int thread_num = omp_get_thread_num();
     g_omp_acc_re[thread_num] = kc;
   } /* OpenMP parallel closing brace */

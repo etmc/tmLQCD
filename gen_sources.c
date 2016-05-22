@@ -39,7 +39,7 @@
 #ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "global.h"
@@ -102,7 +102,7 @@ int main(int argc,char *argv[]) {
   MPI_Init(&argc, &argv);
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   /* FIXME: in principle this should not be set like this as it could result
     in thread oversubscription when more than one process is run locally
     unfortunately, there does not seem to be a standard way to determine

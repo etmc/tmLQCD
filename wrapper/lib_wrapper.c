@@ -33,7 +33,7 @@
 #ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "global.h"
@@ -96,7 +96,7 @@ int tmLQCD_invert_init(int argc, char *argv[], const int _verbose) {
     fprintf(stderr, "tmLQCD_init_invert: Could not find input file: invert.input\nAborting...");
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   init_openmp();
 #endif
 
@@ -255,7 +255,7 @@ int tmLQCD_invert(double * const propagator, double * const source,
 
 int tmLQCD_finalise() {
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   free_omp_accumulators();
 #endif
 

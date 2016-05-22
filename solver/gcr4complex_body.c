@@ -18,7 +18,7 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 # define gcr4complexOMP
 #endif
 

@@ -24,7 +24,7 @@
 #ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #ifdef HAVE_CONFIG_H
@@ -41,7 +41,7 @@
 
 void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const int N)
 {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -52,16 +52,16 @@ void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const 
 			:
 			:
 			"m" (c));
-#ifndef OMP
+#ifndef TM_USE_OMP
   s=&P[0].s0;
   r=&Q[0].s0;
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for (ix = 0;ix < 4*N; ix++) {
-#ifdef OMP
+#ifdef TM_USE_OMP
     s=&P[0].s0+ix;
     r=&Q[0].s0+ix;
 #endif
@@ -78,11 +78,11 @@ void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const 
 			  :
 			  :);
     _sse_store(*s);
-#ifndef OMP
+#ifndef TM_USE_OMP
     s++; r++;
 #endif
   }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 }
@@ -90,7 +90,7 @@ void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const 
 #elif (defined BGQ && defined XLC)
 
 void assign_add_mul_r(spinor * const R, spinor * const S, const double c, const int N) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -108,7 +108,7 @@ void assign_add_mul_r(spinor * const R, spinor * const S, const double c, const 
   __alignx(32, S);
   __alignx(32, R);
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #else
 #pragma unroll(2)
@@ -143,7 +143,7 @@ void assign_add_mul_r(spinor * const R, spinor * const S, const double c, const 
     vec_st(z4, 0, r+16);
     vec_st(z5, 0, r+20);
   }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;
@@ -345,7 +345,7 @@ void assign_add_mul_r(spinor * const R, spinor * const S, const double c, const 
 
 void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const int N)
 {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -353,7 +353,7 @@ void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const 
   register spinor *q;
 
   /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for (int ix = 0; ix < N; ++ix)
@@ -376,7 +376,7 @@ void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const 
     p->s3.c1 += c * q->s3.c1;
     p->s3.c2 += c * q->s3.c2;
   }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 }
@@ -385,14 +385,14 @@ void assign_add_mul_r(spinor * const P, spinor * const Q, const double c, const 
 #ifdef WITHLAPH
 void assign_add_mul_r_su3vect(su3_vector * const P, su3_vector * const Q, const double c, const int N)
 {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
 
   su3_vector *p,*q;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for (int ix = 0; ix < N; ++ix) 
@@ -404,7 +404,7 @@ void assign_add_mul_r_su3vect(su3_vector * const P, su3_vector * const Q, const 
     p->c1 += c * q->c1;
     p->c2 += c * q->c2;
   }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 }
