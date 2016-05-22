@@ -388,8 +388,8 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       if (optr->solver != CGMMS && write_prop) /* CGMMS handles its own I/O */
         optr->write_prop(op_id, index_start, i);
       if(optr->DownProp) {
-	optr->mu = -optr->mu;
-	dfl_subspace_updated = 1;
+        optr->mu = -optr->mu;
+        dfl_subspace_updated = 1;
       } 
       else 
         break;
@@ -412,37 +412,37 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 
     for(i = 0; i < SourceInfo.no_flavours; i++) {
       if(optr->type != DBCLOVER) {
-	optr->iterations = invert_doublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3,
-					      optr->sr0, optr->sr1, optr->sr2, optr->sr3,
-					      optr->eps_sq, optr->maxiter,
-					      optr->solver, optr->rel_prec,
-					      optr->solver_params, optr->external_inverter, 
-					      optr->sloppy_precision, optr->compression_type);
+        optr->iterations = invert_doublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3,
+                                              optr->sr0, optr->sr1, optr->sr2, optr->sr3,
+                                              optr->eps_sq, optr->maxiter,
+                                              optr->solver, optr->rel_prec,
+                                              optr->solver_params, optr->external_inverter, 
+                                              optr->sloppy_precision, optr->compression_type);
       }
       else {
-	optr->iterations = invert_cloverdoublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3,
-						    optr->sr0, optr->sr1, optr->sr2, optr->sr3,
-						    optr->eps_sq, optr->maxiter,
-						    optr->solver, optr->rel_prec,
-						    optr->solver_params, optr->external_inverter, 
-						    optr->sloppy_precision, optr->compression_type);
+        optr->iterations = invert_cloverdoublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3,
+                                                    optr->sr0, optr->sr1, optr->sr2, optr->sr3,
+                                                    optr->eps_sq, optr->maxiter,
+                                                    optr->solver, optr->rel_prec,
+                                                    optr->solver_params, optr->external_inverter, 
+                                                    optr->sloppy_precision, optr->compression_type);
       }
       g_mu = optr->mubar;
       if(optr->type != DBCLOVER) {
-	M_full(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], optr->prop0, optr->prop1);
+        M_full(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], optr->prop0, optr->prop1);
       }
       else {
-	Msw_full(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], optr->prop0, optr->prop1);
+        Msw_full(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], optr->prop0, optr->prop1);
       }
       assign_add_mul_r(g_spinor_field[DUM_DERI+1], optr->prop2, -optr->epsbar, VOLUME/2);
       assign_add_mul_r(g_spinor_field[DUM_DERI+2], optr->prop3, -optr->epsbar, VOLUME/2);
     
       g_mu = -g_mu;
       if(optr->type != DBCLOVER) {
-	M_full(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+4], optr->prop2, optr->prop3);
+        M_full(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+4], optr->prop2, optr->prop3);
       }
       else {
-	Msw_full(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+4], optr->prop2, optr->prop3);
+        Msw_full(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+4], optr->prop2, optr->prop3);
       }
       assign_add_mul_r(g_spinor_field[DUM_DERI+3], optr->prop0, -optr->epsbar, VOLUME/2);
       assign_add_mul_r(g_spinor_field[DUM_DERI+4], optr->prop1, -optr->epsbar, VOLUME/2);
@@ -557,10 +557,10 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
       else sprintf(filename, "%s.%.4d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, ending);
     }
   }
-  else if (SourceInfo.type == 1) {
+  else if (SourceInfo.type == SRC_TYPE_POINT) {
     sprintf(filename, "%s.%.4d.%.5d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, ending);
   }
-  else if(SourceInfo.type == 3 || SourceInfo.type == 4) {
+  else if(SourceInfo.type == SRC_TYPE_PION_TS || SourceInfo.type == SRC_TYPE_GEN_PION_TS) {
     sprintf(filename, "%s.%.4d.%.5d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, SourceInfo.t, ending);
   }
 
@@ -582,10 +582,10 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
     sourceFormat = construct_paramsSourceFormat(SourceInfo.precision, optr->no_flavours, 4, 3);
     write_source_format(writer, sourceFormat);
     status = write_spinor(writer, &operator_list[op_id].sr0, &operator_list[op_id].sr1, 
-			  1, SourceInfo.precision);
+                          1, SourceInfo.precision);
     if(optr->no_flavours == 2) {
       status = write_spinor(writer, &operator_list[op_id].sr2, &operator_list[op_id].sr3, 
-			    1, SourceInfo.precision);
+                            1, SourceInfo.precision);
     }
     free(sourceFormat);
   }

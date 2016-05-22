@@ -62,7 +62,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
   if(optr->type != DBTMWILSON && optr->type != DBCLOVER) {
     SourceInfo.no_flavours = 1;
     /* no volume sources */
-    if(source_type == 0 || source_type == 2) {
+    if(source_type == SRC_TYPE_POINT || source_type == SRC_TYPE_TS) {
       /* either "Don't read inversion source from file" or                    */
       /* "Don't read inversion source from file, but save the one generated" */
       if (read_source_flag == 0 || read_source_flag == 2) {
@@ -76,24 +76,24 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
       /* "Read inversion source from file" */
       else {
         if (SourceInfo.splitted) {
-	  /* timeslice needs to be put into filename */
-	  if(SourceInfo.automaticTS) {
-	    /* automatic timeslice detection */
-	    if(g_proc_id == 0) {
-	      for(t = 0; t < g_nproc_t*T; t++) {
-		if(T_global > 99) sprintf(source_filename, "%s.%.4d.%.3d.%.2d", SourceInfo.basename, nstore, t, ix);
+          /* timeslice needs to be put into filename */
+          if(SourceInfo.automaticTS) {
+            /* automatic timeslice detection */
+            if(g_proc_id == 0) {
+              for(t = 0; t < g_nproc_t*T; t++) {
+                if(T_global > 99) sprintf(source_filename, "%s.%.4d.%.3d.%.2d", SourceInfo.basename, nstore, t, ix);
                 else sprintf(source_filename, "%s.%.4d.%.2d.%.2d", SourceInfo.basename, nstore, t, ix);
-		if( (ifs = fopen(source_filename, "r")) != NULL) {
-		  fclose(ifs);
-		  break;
-		}
-	      }
-	    }
+                if( (ifs = fopen(source_filename, "r")) != NULL) {
+                  fclose(ifs);
+                  break;
+                }
+              }
+            }
 #ifdef MPI
             MPI_Bcast(&t, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif
-	    SourceInfo.t = t;
-	  }
+            SourceInfo.t = t;
+          }
           if(T_global > 99) sprintf(source_filename, "%s.%.4d.%.3d.%.2d", SourceInfo.basename, nstore, SourceInfo.t, ix);
           else sprintf(source_filename, "%s.%.4d.%.2d.%.2d", SourceInfo.basename, nstore, SourceInfo.t, ix);
           if (g_cart_id == 0) {
@@ -122,7 +122,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
         else sprintf(source_filename, "%s.%.4d.%.2d.inverted", PropInfo.basename, nstore, SourceInfo.t);
       }
     }
-    else if(source_type == 1) {
+    else if(source_type == SRC_TYPE_VOL) {
       /* Volume sources */
       if(read_source_flag == 0 || read_source_flag == 2) {
         if(g_proc_id == 0 && g_debug_level > 0) {
@@ -143,25 +143,25 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
       }
       sprintf(source_filename, "%s.%.4d.%.5d.inverted", PropInfo.basename, nstore, isample);
     }
-    else if(source_type == 3) {
+    else if(source_type == SRC_TYPE_PION_TS) {
       // Pion full time slice sources
       if(SourceInfo.automaticTS) {
-	// chose timeslice randomly
-	int found = 0;
-	if(g_proc_id == 0 && !PropInfo.splitted) {
+        // chose timeslice randomly
+        int found = 0;
+        if(g_proc_id == 0 && !PropInfo.splitted) {
           for(t = 0; t < g_nproc_t*T; t++) {
             sprintf(source_filename, "%s.%.4d.%.5d.%.2d.inverted", SourceInfo.basename, nstore, isample, t);
             if( (ifs = fopen(source_filename, "r")) != NULL) {
               fclose(ifs);
-	      found = 1;
-	      break;
+              found = 1;
+              break;
             }
           }
-	}
-	if(PropInfo.splitted || !found) {
-	  ranlxs(&u, 1);
-	  t = (int)(u*g_nproc_t*T);
-	}
+        }
+        if(PropInfo.splitted || !found) {
+          ranlxs(&u, 1);
+          t = (int)(u*g_nproc_t*T);
+        }
 #ifdef MPI
         MPI_Bcast(&t, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif
@@ -173,7 +173,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
       source_generation_pion_only(g_spinor_field[0], g_spinor_field[1], SourceInfo.t, isample, nstore);
       sprintf(source_filename, "%s.%.4d.%.5d.%.2d.inverted", PropInfo.basename, nstore, isample, SourceInfo.t);
     }
-    else if(source_type == 4) {
+    else if(source_type == SRC_TYPE_GEN_PION_TS) {
       // Generalised Pion full time slice sources
       if(SourceInfo.automaticTS) {
         // automatic timeslice detection
@@ -265,7 +265,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
     SourceInfo.no_flavours = 2;
     zero_spinor_field(g_spinor_field[0], VOLUME/2);
     zero_spinor_field(g_spinor_field[1], VOLUME/2);
-    if(source_type == 0 || source_type == 2) {
+    if(source_type == SRC_TYPE_POINT || source_type == SRC_TYPE_TS) {
       if(read_source_flag == 0 || read_source_flag == 2) {
         if(source_location == 0) {
           source_spinor_field(g_spinor_field[2], g_spinor_field[3], is, ic);
@@ -296,7 +296,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
         }
       }
     }
-    else if(source_type == 1) {
+    else if(source_type == SRC_TYPE_VOL) {
       /* Volume sources */
       if(g_proc_id == 0 && g_debug_level > 0) {
         printf("# Preparing 2 flavour volume source\n");

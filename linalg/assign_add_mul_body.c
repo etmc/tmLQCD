@@ -20,13 +20,13 @@
 void _PSWITCH(assign_add_mul)(_PTSWITCH(spinor) * const R, _PTSWITCH(spinor) * const S, 
                               const _C_TYPE c, const int N)
 {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
     _PTSWITCH(spinor) *r,*s;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for (int ix=0; ix<N; ix++)
@@ -51,7 +51,7 @@ void _PSWITCH(assign_add_mul)(_PTSWITCH(spinor) * const R, _PTSWITCH(spinor) * c
         r->s3.c2 += c * s->s3.c2;
       }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;
