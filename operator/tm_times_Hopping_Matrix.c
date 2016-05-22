@@ -32,7 +32,7 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
-#ifdef OMP
+#ifdef TM_USE_OMP
 #include <omp.h>
 #endif
 #include <complex.h>
@@ -78,7 +78,7 @@ void tm_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k, 
   }
 #  endif
   
-#  ifdef OMP
+#  ifdef TM_USE_OMP
 #  pragma omp parallel
   {
     su3 * restrict u0 ALIGN;
@@ -93,7 +93,7 @@ void tm_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k, 
 #  endif
 #  include "operator/halfspinor_body.c"
 #  undef _MUL_G5_CMPLX    
-#  ifdef OMP
+#  ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #  endif
   return;
@@ -130,7 +130,7 @@ void tm_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k, 
   xchange_field(k, ieo);
 #  endif
   
-#  ifdef OMP
+#  ifdef TM_USE_OMP
 #    pragma omp parallel
   {
 #  endif
@@ -143,7 +143,7 @@ void tm_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k, 
 #  endif
 #  include "operator/hopping_body_dbl.c"
 #  undef _MUL_G5_CMPLX
-#  ifdef OMP
+#  ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #  endif
   return;

@@ -20,7 +20,7 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include <stdlib.h>
@@ -31,13 +31,13 @@
 
 void assign_mul_add(spinor * const R, const _Complex double c, spinor * const S, const int N)
 {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
   spinor *r,*s;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for (int ix=0; ix<N; ix++)
@@ -62,7 +62,7 @@ void assign_mul_add(spinor * const R, const _Complex double c, spinor * const S,
     r->s3.c2 = c * r->s3.c2 + s->s3.c2;
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 
