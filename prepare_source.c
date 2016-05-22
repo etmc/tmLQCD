@@ -205,7 +205,8 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
       extended_pion_source(g_spinor_field[0], g_spinor_field[1], g_spinor_field[2], g_spinor_field[3], 
                            SourceInfo.t, 0., 0., 0.);
       sprintf(source_filename, "%s.%.4d.%.5d.%.2d.inverted", PropInfo.basename, nstore, isample, SourceInfo.t);
-      PropInfo.splitted = 0;
+      // if the generalised pion propagator is to be written to the same file as the source, splitting must be disabled
+      if( strcmp(PropInfo.basename,SourceInfo.basename) == 0 ) PropInfo.splitted = 0;
     }
     else { 
       fprintf(stderr, "# source type %d not implemented yet.\nCannot proceed, aborting...\n", source_type);
