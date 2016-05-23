@@ -35,7 +35,7 @@ void _PSWITCH(little_project_eo)(_Complex _F_TYPE * const out, _Complex _F_TYPE 
     phi[i] = _PSWITCH(lscalar_prod)(_PSWITCH(little_dfl_fields_eo)[i], in, nb_blocks*N, 0);
   }
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Allreduce(phi, psi, N, _MPI_C_TYPE, MPI_SUM, MPI_COMM_WORLD);
 #else
   memcpy(psi, phi, N*sizeof(_Complex _F_TYPE));

@@ -58,7 +58,7 @@ extern "C" int bind_texture_spin(dev_spinor* s, int i){
   
   size_t size;
   
-  #ifdef MPI
+  #ifdef TM_USE_MPI
     if(even_odd_flag){
       size = sizeof(float4)*6*(VOLUME+RAND)/2;
     }
@@ -138,7 +138,7 @@ return(1);
 extern "C" int bind_texture_gf(dev_su3_2v * gf){
  //printf("Binding texture to gaugefield\n");
  
-  #ifdef MPI
+  #ifdef TM_USE_MPI
     #ifdef GF_8
      size_t size = sizeof(float4)*2*(VOLUME+RAND)*4;
     #else
@@ -177,7 +177,7 @@ extern "C" int bind_texture_nn(int* nn){
  //printf("Binding texture to nn field\n");
   size_t size;
   
-  #ifdef MPI
+  #ifdef TM_USE_MPI
     if(even_odd_flag){
       size = sizeof(int)*8*(VOLUME+RAND)/2;
     }

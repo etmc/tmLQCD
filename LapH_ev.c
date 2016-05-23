@@ -36,7 +36,7 @@
 #if (defined BGL && !defined BGP)
 #  include <rts.h>
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -57,7 +57,7 @@ int main(int argc,char *argv[])
   int tslice,j,k;
   char conf_filename[50];
   
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Init(&argc, &argv);
 #endif
   
@@ -100,7 +100,7 @@ int main(int argc,char *argv[])
     printf("# the code was compiled for persistent MPI calls (halfspinor only)\n");
 #  endif
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
 #  ifdef _NON_BLOCKING
     printf("# the code was compiled for non-blocking MPI calls (spinor and gauge)\n");
 #  endif
@@ -114,7 +114,7 @@ int main(int argc,char *argv[])
   printf(" Error: WITHLAPH not defined");
   exit(0);
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
 #ifndef _INDEX_INDEP_GEOM
   printf(" Error: _INDEX_INDEP_GEOM not defined");
   exit(0);
@@ -167,7 +167,7 @@ int main(int argc,char *argv[])
     fflush(stdout);
   }
   
-#ifdef MPI
+#ifdef TM_USE_MPI
   /*For parallelization: exchange the gaugefield */
   xchange_gauge(g_gauge_field);
 #endif
@@ -175,7 +175,7 @@ int main(int argc,char *argv[])
   /* Init Jacobi field */
   init_jacobi_field(SPACEVOLUME+SPACERAND,3);
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   {
      /* for debugging in parallel set i_gdb = 0 */
     volatile int i_gdb = 8;
@@ -203,7 +203,7 @@ int main(int argc,char *argv[])
     eigenvalues_Jacobi(&no_eigenvalues,5000, eigenvalue_precision,0,tslice,nstore);
   }
   
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Finalize();
 #endif
   return(0);

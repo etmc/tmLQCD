@@ -22,7 +22,7 @@
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 
@@ -37,7 +37,7 @@
 #include "measurements.h"
 
 void measure_oriented_plaquettes(const su3 ** const gf, double *plaq) {
-#ifdef MPI
+#ifdef TM_USE_MPI
   double ALIGN mplaq[6];
 #endif
 
@@ -77,7 +77,7 @@ void measure_oriented_plaquettes(const su3 ** const gf, double *plaq) {
     plaq[j] = kc[j]/(g_nproc*VOLUME);
   }
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Allreduce(plaq, mplaq, 6, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   for(int j = 0; j < 6; j++)
     plaq[j] = mplaq[j];

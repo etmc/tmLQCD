@@ -49,7 +49,7 @@ _Complex float ALIGN32 ka1_32 = (_Complex float) ka1;
 _Complex float ALIGN32 ka2_32 = (_Complex float) ka2;
 _Complex float ALIGN32 ka3_32 = (_Complex float) ka3;
 
-#ifndef OMP  
+#ifndef TM_USE_OMP  
 s = k;
 _prefetch_spinor_32(s);
 if(ieo == 0) {
@@ -70,13 +70,13 @@ if(ieo == 0) {
 
   phi2 = NBPointer32[ieo];
   
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #else
   ix=0;
 #endif
   for(unsigned int i = 0; i < (VOLUME)/2; i++){
-#ifdef OMP
+#ifdef TM_USE_OMP
     U=u0+i*4;
     s=k+i;
     ix=i*8;
@@ -108,18 +108,18 @@ if(ieo == 0) {
     
     _hop_z_m_pre32();
     
-#ifndef OMP
+#ifndef TM_USE_OMP
     s++;
     ix++;
 #endif
   }
   
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp single
   {
 #endif
     
-#    if (defined MPI && !defined _NO_COMM)
+#    if (defined TM_USE_MPI && !defined _NO_COMM)
 #      ifdef SPI
 
      // Initialize the barrier, resetting the hardware.
@@ -147,11 +147,11 @@ if(ieo == 0) {
 #      endif
 #    endif
     
-#ifdef OMP
+#ifdef TM_USE_OMP
   }
 #endif
  
-#ifndef OMP
+#ifndef TM_USE_OMP
   s = l;
   if(ieo == 0) {
     U = g_gauge_field_copy_32[1][0];
@@ -170,13 +170,13 @@ if(ieo == 0) {
   
   phi2 = NBPointer32[2 + ieo];
   
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #else
   ix = 0;
 #endif
   for(unsigned int i = 0; i < (VOLUME)/2; i++){
-#ifdef OMP
+#ifdef TM_USE_OMP
     ix=i*8;
     s=l+i;
     U=u0+i*4;
@@ -218,7 +218,7 @@ if(ieo == 0) {
     _hop_store_post32(s);
 #endif
     
-#ifndef OMP
+#ifndef TM_USE_OMP
     U++;
     ix++;
     s++;

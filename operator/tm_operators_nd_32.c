@@ -94,7 +94,7 @@ void M_ee_inv_ndpsi_32_orphaned(spinor32 * const l_s, spinor32 * const l_c,
   spinor32 *r_s, *r_c, *s_s, *s_c;
   su3_vector32 ALIGN32 phi1, phi2;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(unsigned int ix = 0; ix < (VOLUME/2); ++ix){
@@ -137,12 +137,12 @@ void M_ee_inv_ndpsi_32_orphaned(spinor32 * const l_s, spinor32 * const l_c,
 void M_ee_inv_ndpsi_32(spinor32 * const l_s, spinor32 * const l_c, 
 		    spinor32 * const k_s, spinor32 * const k_c,
 		    const float mu, const float eps) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
   M_ee_inv_ndpsi_32_orphaned(l_s, l_c, k_s, k_c, mu, eps);
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;
@@ -156,7 +156,7 @@ void M_oo_sub_g5_ndpsi_32_orphaned(spinor32 * const l_s, spinor32 * const l_c,
   spinor32 *r_s, *r_c, *s_s, *s_c, *t_s, *t_c;
   su3_vector32 ALIGN32 phi1, phi2;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(unsigned int ix = 0; ix < (VOLUME/2); ++ix){
@@ -201,12 +201,12 @@ void M_oo_sub_g5_ndpsi_32(spinor32 * const l_s, spinor32 * const l_c,
 		       spinor32 * const k_s, spinor32 * const k_c,
 		       spinor32 * const j_s, spinor32 * const j_c,
 		       const float mu, const float eps) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
   M_oo_sub_g5_ndpsi_32_orphaned(l_s,l_c,k_s,k_c,j_s,j_c,mu,eps);
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;
@@ -214,7 +214,7 @@ void M_oo_sub_g5_ndpsi_32(spinor32 * const l_s, spinor32 * const l_c,
 
 void Qtm_pm_ndpsi_32(spinor32 * const l_strange, spinor32 * const l_charm,
 		  spinor32 * const k_strange, spinor32 * const k_charm){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -256,7 +256,7 @@ void Qtm_pm_ndpsi_32(spinor32 * const l_strange, spinor32 * const l_charm,
   /* Twice  phmc_invmaxev  since we consider here  D Ddag  !!! */
   mul_r_32_orphaned(l_charm, (float) phmc_invmaxev*phmc_invmaxev, l_charm, VOLUME/2);
   mul_r_32_orphaned(l_strange, (float) phmc_invmaxev*phmc_invmaxev, l_strange, VOLUME/2);
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;
@@ -264,7 +264,7 @@ void Qtm_pm_ndpsi_32(spinor32 * const l_strange, spinor32 * const l_charm,
 
 void Qsw_pm_ndpsi_32(spinor32 * const l_strange, spinor32 * const l_charm,
       spinor32 * const k_strange, spinor32 * const k_charm) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -310,7 +310,7 @@ void Qsw_pm_ndpsi_32(spinor32 * const l_strange, spinor32 * const l_charm,
   mul_r_32_orphaned(l_charm, phmc_invmaxev*phmc_invmaxev, l_charm, VOLUME/2);
   mul_r_32_orphaned(l_strange, phmc_invmaxev*phmc_invmaxev, l_strange, VOLUME/2);
 
-#ifdef OMP /* OpenMP parallel closing brace */
+#ifdef TM_USE_OMP /* OpenMP parallel closing brace */
   }
 #endif
 

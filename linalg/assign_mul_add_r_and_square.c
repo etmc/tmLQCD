@@ -20,12 +20,12 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include<mpi.h>
 #endif
 #include <stdlib.h>
 #include <complex.h>
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 # include <global.h>
 #endif
@@ -38,11 +38,11 @@
 double assign_mul_add_r_and_square(spinor * const R, const double c, spinor * const S, 
 				   const int N, const int parallel) {
   double ALIGN res = 0.0;
-#ifdef MPI
+#ifdef TM_USE_MPI
   double ALIGN mres;
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
   int thread_num = omp_get_thread_num();
@@ -53,7 +53,7 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, spinor * co
   double *s, *r;
   double ALIGN _c = c;
   double ALIGN ds = 0.0;
-#ifndef OMP
+#ifndef TM_USE_OMP
   __prefetch_by_load(S);
   __prefetch_by_load(R);
 #endif
@@ -71,7 +71,7 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, spinor * co
   r5 = vec_splats(0.);
 
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for 
 #endif
   for(int i = 0; i < N; i++) {
@@ -117,7 +117,7 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, spinor * co
   y1 = vec_add(x2, y0);
   ds = y1[0] + y1[1] + y1[2] + y1[3];
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   g_omp_acc_re[thread_num] = ds;
   } /* OpenMP closing brace */
 
@@ -128,7 +128,7 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, spinor * co
   res = ds;
 #endif
 
-#  ifdef MPI
+#  ifdef TM_USE_MPI
   if(parallel) {
     MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     return(mres);
@@ -145,11 +145,11 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, spinor * co
 double assign_mul_add_r_and_square(spinor * const R, const double c, const spinor * const S, 
 				   const int N, const int parallel) {
   double ALIGN res = 0.0;
-#ifdef MPI
+#ifdef TM_USE_MPI
   double ALIGN mres;
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
   int thread_num = omp_get_thread_num();
@@ -159,7 +159,7 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, const spino
   double ALIGN ds = 0.0;
 
   /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for 
 #endif
   for (int ix = 0; ix < N; ++ix) {
@@ -195,7 +195,7 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, const spino
     ds += creal(r->s3.c2)*creal(r->s3.c2) + cimag(r->s3.c2)*cimag(r->s3.c2);
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   g_omp_acc_re[thread_num] = ds;
   } /* OpenMP closing brace */
 
@@ -206,7 +206,7 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, const spino
   res = ds;
 #endif
 
-#  ifdef MPI
+#  ifdef TM_USE_MPI
   if(parallel) {
     MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     return(mres);

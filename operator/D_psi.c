@@ -42,7 +42,7 @@
 #include "boundary.h"
 #include "gamma.h"
 #include "linalg_eo.h"
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include "xchange/xchange.h"
 #endif
 #include "update_backward_gauge.h"
@@ -97,11 +97,11 @@ void Dtm_psi(spinor * const P, spinor * const Q){
   }
 #endif
 
-# if defined MPI
+# if defined TM_USE_MPI
   xchange_lexicfield(Q);
 # endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -114,18 +114,18 @@ void Dtm_psi(spinor * const P, spinor * const Q){
     fact1 = 1. + g_mu * I;
     fact2 = conj(fact1);
 
-#ifndef OMP
+#ifndef TM_USE_OMP
     iy=g_iup[0][0];
     sp=(spinor *) Q + iy;
     up=&g_gauge_field[0][0];
 #endif
 
     /************************ loop over all lattice sites *************************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for (ix=0;ix<VOLUME;ix++){
-#ifdef OMP
+#ifdef TM_USE_OMP
       iy=g_iup[ix][0];
       up=&g_gauge_field[ix][0];
       sp=(spinor *) Q + iy;
@@ -476,7 +476,7 @@ void Dtm_psi(spinor * const P, spinor * const Q){
       /******************************** end of loop *********************************/
 
     }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 }
@@ -496,11 +496,11 @@ void Dsw_psi(spinor * const P, spinor * const Q){
   }
 #endif
 
-# if defined MPI
+# if defined TM_USE_MPI
   xchange_lexicfield(Q);
 # endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -509,18 +509,18 @@ void Dsw_psi(spinor * const P, spinor * const Q){
     spinor *s,*sp,*sm,*rn;
     spinor ALIGN stmp,rs;
 
-#ifndef OMP
+#ifndef TM_USE_OMP
     iy=g_iup[0][0];
     sp=(spinor *) Q + iy;
     up=&g_gauge_field[0][0];
 #endif
 
     /************************ loop over all lattice sites *************************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for (ix=0;ix<VOLUME;ix++){
-#ifdef OMP
+#ifdef TM_USE_OMP
       iy=g_iup[ix][0];
       up=&g_gauge_field[ix][0];
       sp=(spinor *) Q + iy;
@@ -866,7 +866,7 @@ void Dsw_psi(spinor * const P, spinor * const Q){
       /******************************** end of loop *********************************/
 
     }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 }
@@ -919,7 +919,7 @@ void D_psi_prec(spinor * const P, spinor * const Q){
 #undef _PSWITCH
 #undef _PTSWITCH
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
 
@@ -1107,6 +1107,6 @@ void boundary_D_7(spinor * const r, spinor * const s, su3 * restrict u) {
   return;
 }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif

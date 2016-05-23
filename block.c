@@ -994,13 +994,13 @@ void compute_little_D(const int mul_g5) {
   temp = scratch + VOLUMEPLUSRAND;
   // NEEDs TO BE REWRITTEN
   atime = gettime();
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
     spinor * bscratch;
     _Complex double * M;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(int blk = 0; blk < nb_blocks; blk++) {
@@ -1018,19 +1018,19 @@ void compute_little_D(const int mul_g5) {
     }
   }
   /* computation of little_Dhat^{-1}_ee */
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(int blk = 0; blk < nb_blocks/2; blk++) {
     LUInvert(g_N_s, block_list[blk].little_dirac_operator_eo, g_N_s);
   }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   for (int i = 0; i < g_N_s; i++) {
     reconstruct_global_field_GEN_ID(scratch, block_list, i , nb_blocks);
     
-#ifdef MPI
+#ifdef TM_USE_MPI
     xchange_lexicfield(scratch);
 #endif
     
@@ -1056,7 +1056,7 @@ void compute_little_D(const int mul_g5) {
       default: ;
       }
       /* Dirac operator on the boundaries */
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel 
       {
 #endif
@@ -1067,7 +1067,7 @@ void compute_little_D(const int mul_g5) {
         int bx, by, bz, bt;
 	int block_id_eo;
         _Complex double c;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
         for(int block_id = 0; block_id < nb_blocks; block_id++) {
@@ -1152,12 +1152,12 @@ void compute_little_D(const int mul_g5) {
             }
           }
         }
-#ifdef OMP
+#ifdef TM_USE_OMP
       } // OMP closing brace
 #endif
     }
   }
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for
 #endif
   for(int ij = 0; ij < nb_blocks*9*g_N_s*g_N_s; ij++) {
@@ -1473,7 +1473,7 @@ void copy_block_to_global(spinor * const globalfield, spinor * const blockfield,
 /* Reconstructs a global field from the little basis of nb_blocks blocks */
 void reconstruct_global_field_GEN(spinor * const rec_field, spinor ** const psi, const int nb_blocks) {
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for
 #endif
   for(int ix = 0; ix < dT*dX*dY*dZ; ix++) {
@@ -1495,7 +1495,7 @@ void reconstruct_global_field_GEN(spinor * const rec_field, spinor ** const psi,
 
 /* Reconstructs a global field from the little basis of nb_blocks blocks taken from block_list[*].basis[id] */
 void reconstruct_global_field_GEN_ID(spinor * const rec_field, block * const block_list, const int id, const int nb_blocks) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for
 #endif
   for(int ix = 0; ix < dT*dX*dY*dZ; ix++) {

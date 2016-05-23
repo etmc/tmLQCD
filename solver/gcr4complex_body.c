@@ -18,7 +18,7 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 # define gcr4complexOMP
 #endif
 
@@ -232,7 +232,7 @@ _F_TYPE _PSWITCH(lsquare_norm)(_C_TYPE * const Q, const int N, const int paralle
   nrm = tmp;
 #endif
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   if(parallel)
     {
       double nrm2 = nrm;
@@ -270,7 +270,7 @@ _C_TYPE _PSWITCH(lscalar_prod)(_C_TYPE * const R, _C_TYPE * const S, const int N
   res = tmp;
 #endif
     
-#ifdef MPI
+#ifdef TM_USE_MPI
   if(parallel)
     {
       _Complex double res2 = res;
@@ -308,7 +308,7 @@ _F_TYPE _PSWITCH(lscalar_prod_r)(_C_TYPE * const R, _C_TYPE * const S, const int
   res = tmp;
 #endif
   
-#ifdef MPI
+#ifdef TM_USE_MPI
   if(parallel) {
     double res2 = res;
     MPI_Allreduce(&res2, &res, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);

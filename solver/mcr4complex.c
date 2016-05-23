@@ -61,7 +61,7 @@ int mcr4complex(_Complex double * const P, _Complex double * const Q,
     norm_sq = 1.;
   }
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   atime = MPI_Wtime();
 #else
   atime = ((double)clock())/((double)(CLOCKS_PER_SEC));
@@ -132,7 +132,7 @@ int mcr4complex(_Complex double * const P, _Complex double * const Q,
 
     err = lsquare_norm(chi, N, parallel);
 
-#ifdef MPI
+#ifdef TM_USE_MPI
     etime = MPI_Wtime();
 #else
     etime = ((double)clock())/((double)(CLOCKS_PER_SEC));

@@ -35,10 +35,10 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "global.h"
@@ -106,7 +106,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   /* 
    *  copy the gauge field to gauge_tmp 
    */
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for private(w,v)
 #endif
   for(int ix=0;ix<VOLUME;ix++) { 
@@ -164,7 +164,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   /* the random number is only taken at node zero and then distributed to 
      the other sites */
   ranlxd(yy,1);
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Bcast(&yy[0], 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
 
@@ -222,13 +222,13 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     ks = 0.;
     kc = 0.;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel private(w,v,tt,tr,ts,ds,ks,kc)
     {
     int thread_num = omp_get_thread_num();
 #endif
     su3 ALIGN v0;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for(int ix = 0; ix < VOLUME; ++ix)
@@ -248,7 +248,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       }
     }
     kc=ks+kc;
-#ifdef OMP
+#ifdef TM_USE_OMP
     g_omp_acc_re[thread_num] = kc;
       
     } /* OpenMP parallel section closing brace */
@@ -260,7 +260,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     ret_gauge_diff = kc;
 #endif
 
-#ifdef MPI
+#ifdef TM_USE_MPI
     tmp = ret_gauge_diff;
     MPI_Reduce(&tmp, &ret_gauge_diff, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 #endif
@@ -304,7 +304,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     *rectangle_energy = new_rectangle_energy;
     /* put the links back to SU(3) group */
     if (!bc_flag) { /* periodic boundary conditions */
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for private(v)
 #endif
       for(int ix=0;ix<VOLUME;ix++) { 
@@ -316,7 +316,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
   }
   else { /* reject: copy gauge_tmp to hf.gaugefield */
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for private(w) private(v)
 #endif
     for(int ix=0;ix<VOLUME;ix++) {
@@ -330,7 +330,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   hf.update_gauge_copy = 1;
   g_update_gauge_copy = 1;
   g_update_gauge_copy_32 = 1;  
-#ifdef MPI
+#ifdef TM_USE_MPI
   xchange_gauge(hf.gaugefield);
 #endif
   

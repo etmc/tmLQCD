@@ -128,13 +128,13 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
   DML_SiteRank rank;
   double tick = 0, tock = 0;
   char measure[64];
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Status mstatus;
 #endif
   DML_checksum_init(checksum);
 
   if (g_debug_level > 0) {
-#ifdef MPI
+#ifdef TM_USE_MPI
     MPI_Barrier(g_cart_grid);
 #endif
     tick = gettime();
@@ -154,7 +154,7 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
         for(x = 0; x < LX*g_nproc_x; x++) {
           X = x - g_proc_coords[1]*LX;
           coords[1] = x / LX;
-#ifdef MPI
+#ifdef TM_USE_MPI
           MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
           if(g_cart_id == id) {
@@ -183,7 +183,7 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
                 status = limeWriteRecordData((void*)tmp, &bytes, limewriter);
               }
             }
-#ifdef MPI
+#ifdef TM_USE_MPI
             else{
               if(prec == 32) {
                 MPI_Recv((void*)tmp2, sizeof(spinor)/8, MPI_FLOAT, id, tag, g_cart_grid, &mstatus);
@@ -199,14 +199,14 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
 #endif
             if(status < 0 ) {
               fprintf(stderr, "LIME write error occurred with status = %d, while in write_binary_spinor_data (spinor_write_binary.c)!\n", status);
-#ifdef MPI
+#ifdef TM_USE_MPI
               MPI_Abort(MPI_COMM_WORLD, 1);
               MPI_Finalize();
 #endif
               exit(500);
             }
           }
-#ifdef MPI
+#ifdef TM_USE_MPI
           else{
             if(g_cart_id == id){
               if(prec == 32) {
@@ -222,7 +222,7 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
 #endif
           tag++;
         }
-#ifdef MPI
+#ifdef TM_USE_MPI
         MPI_Barrier(g_cart_grid);
 #endif
         tag=0;
@@ -230,7 +230,7 @@ int write_binary_spinor_data(spinor * const s, spinor * const r, LimeWriter * li
     }
   }
   if (g_debug_level > 0) {
-#ifdef MPI
+#ifdef TM_USE_MPI
     MPI_Barrier(g_cart_grid);
 #endif
     tock = gettime();
@@ -355,13 +355,13 @@ int write_binary_spinor_data_l(spinor * const s, LimeWriter * limewriter, DML_Ch
   DML_SiteRank rank;
   double tick = 0, tock = 0;
   char measure[64];
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Status mstatus;
 #endif
   DML_checksum_init(checksum);
 
   if (g_debug_level > 0) {
-#ifdef MPI
+#ifdef TM_USE_MPI
     MPI_Barrier(g_cart_grid);
 #endif
     tick = gettime();
@@ -381,7 +381,7 @@ int write_binary_spinor_data_l(spinor * const s, LimeWriter * limewriter, DML_Ch
         for(x = 0; x < LX*g_nproc_x; x++) {
           X = x - g_proc_coords[1]*LX;
           coords[1] = x / LX;
-#ifdef MPI
+#ifdef TM_USE_MPI
           MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
           if(g_cart_id == id) {
@@ -403,7 +403,7 @@ int write_binary_spinor_data_l(spinor * const s, LimeWriter * limewriter, DML_Ch
                 status = limeWriteRecordData((void*)tmp, &bytes, limewriter);
               }
             }
-#ifdef MPI
+#ifdef TM_USE_MPI
             else{
               if(prec == 32) {
                 MPI_Recv((void*)tmp2, sizeof(spinor)/8, MPI_FLOAT, id, tag, g_cart_grid, &mstatus);
@@ -419,7 +419,7 @@ int write_binary_spinor_data_l(spinor * const s, LimeWriter * limewriter, DML_Ch
 #endif
             if(status < 0 ) {
               fprintf(stderr, "LIME write error occurred with status = %d, while in write_binary_spinor_data_l (spinor_write_binary.c)!\n", status);
-#ifdef MPI
+#ifdef TM_USE_MPI
               MPI_Abort(MPI_COMM_WORLD, 1);
               MPI_Finalize();
 #endif
@@ -427,7 +427,7 @@ int write_binary_spinor_data_l(spinor * const s, LimeWriter * limewriter, DML_Ch
             }
 
           }
-#ifdef MPI
+#ifdef TM_USE_MPI
           else{
             if(g_cart_id == id){
               if(prec == 32) {
@@ -443,7 +443,7 @@ int write_binary_spinor_data_l(spinor * const s, LimeWriter * limewriter, DML_Ch
 #endif
           tag++;
         }
-#ifdef MPI
+#ifdef TM_USE_MPI
         MPI_Barrier(g_cart_grid);
 #endif
         tag=0;
@@ -451,7 +451,7 @@ int write_binary_spinor_data_l(spinor * const s, LimeWriter * limewriter, DML_Ch
     }
   }
   if (g_debug_level > 0) {
-#ifdef MPI
+#ifdef TM_USE_MPI
     MPI_Barrier(g_cart_grid);
 #endif
     tock = gettime();

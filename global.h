@@ -35,7 +35,7 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 #  include <mpi.h>
 #endif
 #ifdef FIXEDVOLUME
@@ -233,7 +233,7 @@ EXTERN double little_solver_low_prec;
 EXTERN double little_solver_high_prec;
 EXTERN int little_solver_max_iter;
 
-#ifdef MPI
+#ifdef TM_USE_MPI
 EXTERN MPI_Status status;
 EXTERN MPI_Request req1,req2,req3,req4;
 EXTERN MPI_Comm g_cart_grid;
@@ -250,7 +250,7 @@ EXTERN int g_nb_z_up, g_nb_z_dn;
 
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 EXTERN int omp_num_threads;
 #endif
 

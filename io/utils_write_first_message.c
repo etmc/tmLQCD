@@ -93,7 +93,7 @@ int write_first_messages(FILE * parameterfile, char const * const executable, ch
          "# the code is compiled for persistent MPI calls (halfspinor only)\n");
 #  endif
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
 #  ifdef _NON_BLOCKING
   printf("# the code is compiled for non-blocking MPI calls (spinor and gauge)\n");
   fprintf(parameterfile,
@@ -105,7 +105,7 @@ int write_first_messages(FILE * parameterfile, char const * const executable, ch
 	  "# the code is compiled with MPI IO / Lemon\n");
 #  endif
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
   printf("# the code is compiled with openMP support\n");
   fprintf(parameterfile,
           "# the code is compiled with openMP support\n");

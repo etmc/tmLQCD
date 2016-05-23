@@ -579,7 +579,7 @@ void tm_sub_H_eo_gamma5(spinor* const l, spinor * const p, spinor * const k,
 
 
 void Mee_inv_psi(spinor * const l, spinor * const k, const double mu){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -599,7 +599,7 @@ void Mee_inv_psi(spinor * const l, spinor * const k, const double mu){
   w = conj(z);
 
   /************ loop over all lattice sites ************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   //for(ix = 0; ix < N; ix++){
@@ -613,13 +613,13 @@ void Mee_inv_psi(spinor * const l, spinor * const k, const double mu){
     _complex_times_vector(s->s3, w, r->s3);
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 }
 
 void mul_one_pm_imu(spinor * const l, const double _sign){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -638,7 +638,7 @@ void mul_one_pm_imu(spinor * const l, const double _sign){
   w = conj(z);
 
   /************ loop over all lattice sites ************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(ix = 0; ix < (VOLUME/2); ix++){
@@ -654,14 +654,14 @@ void mul_one_pm_imu(spinor * const l, const double _sign){
     _vector_assign(r->s3, phi1);
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 
 }
 
 void assign_mul_one_pm_imu(spinor * const l, spinor * const k, const double _sign, const int N){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -678,7 +678,7 @@ void assign_mul_one_pm_imu(spinor * const l, spinor * const k, const double _sig
   w = conj(z);
 
   /************ loop over all lattice sites ************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(ix = 0; ix < N; ix++){
@@ -708,14 +708,14 @@ void assign_mul_one_pm_imu(spinor * const l, spinor * const k, const double _sig
     _complex_times_vector(s->s3, w, r->s3);
 #endif
   }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 }
 
 
 void Mee_psi(spinor * const l, spinor * const k, const double mu){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -733,7 +733,7 @@ void Mee_psi(spinor * const l, spinor * const k, const double mu){
   w = conj(z);
 
   /************ loop over all lattice sites ************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(ix = 0; ix < VOLUME/2; ix++){
@@ -763,7 +763,7 @@ void Mee_psi(spinor * const l, spinor * const k, const double mu){
     _complex_times_vector(s->s3, w, r->s3);
 #endif
   }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 }
@@ -774,14 +774,14 @@ void Mee_psi(spinor * const l, spinor * const k, const double mu){
 
 void mul_one_sub_mul_gamma5(spinor * const l, spinor * const k, 
 				   spinor * const j){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
   spinor *r, *s, *t;
 
   /************ loop over all lattice sites ************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(int ix = 0; ix < (VOLUME/2); ++ix)
@@ -798,7 +798,7 @@ void mul_one_sub_mul_gamma5(spinor * const l, spinor * const k,
     _vector_sub(t->s3, s->s3, r->s3);  
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 }
@@ -806,7 +806,7 @@ void mul_one_sub_mul_gamma5(spinor * const l, spinor * const k,
 
 void mul_one_pm_imu_sub_mul_gamma5(spinor * const l, spinor * const k, 
 				   spinor * const j, const double _sign){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -825,7 +825,7 @@ void mul_one_pm_imu_sub_mul_gamma5(spinor * const l, spinor * const k,
   w = conj(z);
   
   /************ loop over all lattice sites ************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(ix = 0; ix < (VOLUME/2); ix++){
@@ -846,7 +846,7 @@ void mul_one_pm_imu_sub_mul_gamma5(spinor * const l, spinor * const k,
     _vector_sub(t->s3, s->s3, phi4);
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 }

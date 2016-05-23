@@ -38,7 +38,7 @@
 #include <math.h>
 #include <errno.h>
 #include <time.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -285,7 +285,7 @@ void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const in
  **********************************************************/
 
 void clover_inv(spinor * const l, const int tau3sign, const double mu) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -299,15 +299,15 @@ void clover_inv(spinor * const l, const int tau3sign, const double mu) {
       ioff = VOLUME/2;
     }
 
-#ifndef OMP
+#ifndef TM_USE_OMP
     icy = ioff;
 #endif
     /************************ loop over all lattice sites *************************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for(int icx = 0; icx < (VOLUME/2); icx++) {
-#ifdef OMP
+#ifdef TM_USE_OMP
       icy = ioff + icx;
 #endif
 
@@ -337,20 +337,20 @@ void clover_inv(spinor * const l, const int tau3sign, const double mu) {
       _su3_multiply(chi,*w3,(*rn).s3);
       _vector_add((*rn).s3,psi,chi);
 
-#ifndef OMP
+#ifndef TM_USE_OMP
       ++icy;
 #endif
 
       /******************************** end of loop *********************************/
     }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;
 }
 
 void clover_inv_nd(const int ieo, spinor * const l_c, spinor * const l_s) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -363,15 +363,15 @@ void clover_inv_nd(const int ieo, spinor * const l_c, spinor * const l_s) {
 
     if(ieo == 1) ioff = VOLUME/2;
 
-#ifndef OMP
+#ifndef TM_USE_OMP
     icy = ioff;
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for(unsigned int icx = 0; icx < (VOLUME/2); icx++) {
-#ifdef OMP
+#ifdef TM_USE_OMP
       icy = ioff + icx;
 #endif
 
@@ -421,13 +421,13 @@ void clover_inv_nd(const int ieo, spinor * const l_c, spinor * const l_s) {
       _su3_multiply(chi, *w3, (*rn_c).s3);
       _vector_add((*rn_c).s3, psi, chi);
 
-#ifndef OMP
+#ifndef TM_USE_OMP
       ++icy;
 #endif
 
       /******************************** end of loop *********************************/
     }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;
@@ -448,7 +448,7 @@ void clover_inv_nd(const int ieo, spinor * const l_c, spinor * const l_s) {
 void clover_gamma5(const int ieo, 
                    spinor * const l, const spinor * const k, const spinor * const j,
                    const double mu) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -467,7 +467,7 @@ void clover_gamma5(const int ieo,
     }
 
     /************************ loop over all lattice sites *************************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
@@ -509,7 +509,7 @@ void clover_gamma5(const int ieo,
       _vector_sub((*r).s3,(*t).s3,psi2);
       /******************************** end of loop *********************************/
     }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OMP closing brace */
 #endif
   return;
@@ -531,7 +531,7 @@ void clover_gamma5(const int ieo,
 void clover(const int ieo, 
             spinor * const l, const spinor * const k, const spinor * const j,
             const double mu) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -548,7 +548,7 @@ void clover(const int ieo,
     else {
       ioff = (VOLUME+RAND)/2;
     }
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for(unsigned int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
@@ -594,7 +594,7 @@ void clover(const int ieo,
       _vector_sub((*r).s2,psi1,(*t).s2);
       _vector_sub((*r).s3,psi2,(*t).s3);
     }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;
@@ -616,7 +616,7 @@ void clover_nd(const int ieo,
                const spinor * const k_c, const spinor * const k_s, 
                const spinor * const j_c, const spinor * const j_s,
                const double mubar, const double epsbar) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -634,7 +634,7 @@ void clover_nd(const int ieo,
       ioff = (VOLUME+RAND)/2;
     }
     /************************ loop over all lattice sites *************************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for(unsigned int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
@@ -724,7 +724,7 @@ void clover_nd(const int ieo,
       _vector_sub((*r_c).s2, psi1, (*t_c).s2);
       _vector_sub((*r_c).s3, psi2, (*t_c).s3);
     }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;
@@ -735,7 +735,7 @@ void clover_gamma5_nd(const int ieo,
                       const spinor * const k_c, const spinor * const k_s, 
                       const spinor * const j_c, const spinor * const j_s,
                       const double mubar, const double epsbar) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -753,7 +753,7 @@ void clover_gamma5_nd(const int ieo,
       ioff = (VOLUME+RAND)/2;
     }
     /************************ loop over all lattice sites *************************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for(unsigned int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
@@ -843,7 +843,7 @@ void clover_gamma5_nd(const int ieo,
       _vector_sub((*r_c).s2, (*t_c).s2, psi1);
       _vector_sub((*r_c).s3, (*t_c).s3, psi2);
     }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;
@@ -871,7 +871,7 @@ void clover_gamma5_nd(const int ieo,
  **************************************************/
 
 void Mee_sw_psi(spinor * const k, spinor * const l, const double mu) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -889,7 +889,7 @@ void Mee_sw_psi(spinor * const k, spinor * const l, const double mu) {
     //  ioff = (VOLUME+RAND)/2;
     //}
     /************************ loop over even lattice sites *************************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     //for(unsigned icx = ioff; icx < (VOLUME/2+ioff); icx++) {
@@ -937,7 +937,7 @@ void Mee_sw_psi(spinor * const k, spinor * const l, const double mu) {
       _vector_assign((*r).s2, psi1);
       _vector_assign((*r).s3, psi2);
     }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;
@@ -961,7 +961,7 @@ void assign_mul_one_sw_pm_imu_eps(const int ieo,
                                   spinor * const k_s, spinor * const k_c, 
                                   const spinor * const l_s, const spinor * const l_c,
                                   const double mu, const double eps) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -979,7 +979,7 @@ void assign_mul_one_sw_pm_imu_eps(const int ieo,
       ioff = (VOLUME+RAND)/2;
     }
     /************************ loop over all lattice sites *************************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for(unsigned int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
@@ -1067,7 +1067,7 @@ void assign_mul_one_sw_pm_imu_eps(const int ieo,
       _vector_assign((*r_c).s3, psi2);
 
     }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;
@@ -1096,7 +1096,7 @@ void assign_mul_one_sw_pm_imu_eps(const int ieo,
 
 
 void Mee_sw_inv_psi(spinor * const k, spinor * const l, const double mu) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -1106,7 +1106,7 @@ void Mee_sw_inv_psi(spinor * const k, spinor * const l, const double mu) {
     spinor *s;
 
     /************************ loop over all lattice sites *************************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for(int icx = 0; icx < (VOLUME/2); icx++) {
@@ -1140,7 +1140,7 @@ void Mee_sw_inv_psi(spinor * const k, spinor * const l, const double mu) {
 
       /******************************** end of loop *********************************/
     }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;

@@ -36,7 +36,7 @@ void _PSWITCH(little_field_gather)(_C_TYPE * w) {
   wy = w + ( 2*(2*nb_blocks) + nb_blocks ) * g_N_s; // Were data in the direction y starts
   wz = w + ( 3*(2*nb_blocks) + nb_blocks ) * g_N_s; // Were data in the direction z starts
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   int request = 0;
   int err;
   w_buf = calloc(8 * nb_blocks * g_N_s, sizeof(_C_TYPE)); // +-t +-x +-y +-z
@@ -252,7 +252,7 @@ void _PSWITCH(little_field_gather_eo)(const int eo, _C_TYPE * w) {
   wy = w + ( 2*(2*nb_blocks) + nb_blocks ) * g_N_s; // Were data in the direction y starts
   wz = w + ( 3*(2*nb_blocks) + nb_blocks ) * g_N_s; // Were data in the direction z starts
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   int request = 0;
   int err;
   w_buf = calloc(8 * nb_blocks * g_N_s, sizeof(_C_TYPE)); // +-t +-x +-y +-z
