@@ -70,8 +70,8 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
                       spinor * const Even_c, spinor * const Odd_c,
                       const double precision, const int max_iter,
                       const int solver_flag, const int rel_prec, 
-		      solver_params_t solver_params, const ExternalInverter inverter, 
-		      const SloppyPrecision sloppy, const CompressionType compression) {
+                      solver_params_t solver_params, const ExternalInverter inverter, 
+                      const SloppyPrecision sloppy, const CompressionType compression) {
 
   int iter = 0;
 
@@ -99,8 +99,8 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
   /* here comes the inversion using even/odd preconditioning */
   if(g_proc_id == 0) {printf("# Using even/odd preconditioning!\n"); fflush(stdout);}
   M_ee_inv_ndpsi(Even_new_s, Even_new_c, 
-		 Even_s, Even_c,
-		 g_mubar, g_epsbar);
+                 Even_s, Even_c,
+                 g_mubar, g_epsbar);
   Hopping_Matrix(OE, g_spinor_field[DUM_DERI], Even_new_s);
   Hopping_Matrix(OE, g_spinor_field[DUM_DERI+1], Even_new_c);
   
@@ -123,44 +123,45 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
   
   
 #ifdef HAVE_GPU
-  if (usegpu_flag) {	// GPU, mixed precision solver
-#  if defined(MPI) && defined(PARALLELT)
+  if (usegpu_flag) {    // GPU, mixed precision solver
+#  if ( defined TM_USE_MPI  && defined PARALLELT )
     iter = mixedsolve_eo_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
-			    max_iter, precision, rel_prec);
-#  elif !defined(MPI) && !defined(PARALLELT)
+                            max_iter, precision, rel_prec);
+#  elif ( !defined TM_USE_MPI  && !defined PARALLELT )
     iter = mixedsolve_eo_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
-			    max_iter, precision, rel_prec);
+                            max_iter, precision, rel_prec);
 #  else
     printf("MPI and/or PARALLELT are not appropriately set for the GPU implementation. Aborting...\n");
     exit(-1);
 #  endif
   }
-  else {		// CPU, conjugate gradient
+  else {                // CPU, conjugate gradient
     iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
-		     max_iter, precision, rel_prec, 
-		     VOLUME/2, &Qtm_pm_ndpsi);
+                     max_iter, precision, rel_prec, 
+                     VOLUME/2, &Qtm_pm_ndpsi);
   }
-#else			// CPU, conjugate gradient
+#else                   // CPU, conjugate gradient
   if(solver_flag == RGMIXEDCG){
     iter = rg_mixed_cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
                               solver_params, max_iter, precision, rel_prec, VOLUME/2,
                               &Qtm_pm_ndpsi, &Qtm_pm_ndpsi_32);
-  } else {
+  } 
+  else {
     iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
-		     max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_ndpsi);
+                     max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_ndpsi);
   }
 #endif
   
   
   Qtm_dagger_ndpsi(Odd_new_s, Odd_new_c,
-		   Odd_new_s, Odd_new_c);
+                   Odd_new_s, Odd_new_c);
 
   /* Reconstruct the even sites                */
   Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd_new_s);
   Hopping_Matrix(EO, g_spinor_field[DUM_DERI+1], Odd_new_c);
   M_ee_inv_ndpsi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3],
-		 g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
-		 g_mubar, g_epsbar);
+                 g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+                 g_mubar, g_epsbar);
   
   /* The sign is plus, since in Hopping_Matrix */
   /* the minus is missing                      */
@@ -204,7 +205,7 @@ int invert_cloverdoublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
   /* here comes the inversion using even/odd preconditioning */
   if(g_proc_id == 0) {printf("# Using even/odd preconditioning!\n"); fflush(stdout);}
   Msw_ee_inv_ndpsi(Even_new_s, Even_new_c, 
-		   Even_s, Even_c);
+                   Even_s, Even_c);
   Hopping_Matrix(OE, g_spinor_field[DUM_DERI], Even_new_s);
   Hopping_Matrix(OE, g_spinor_field[DUM_DERI+1], Even_new_c);
   
@@ -231,19 +232,19 @@ int invert_cloverdoublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
                               &Qsw_pm_ndpsi, &Qsw_pm_ndpsi_32);
   } else {
     iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
-		                 max_iter, precision, rel_prec, 
-		                 VOLUME/2, &Qsw_pm_ndpsi);
+                                 max_iter, precision, rel_prec, 
+                                 VOLUME/2, &Qsw_pm_ndpsi);
   }
   
   
   Qsw_dagger_ndpsi(Odd_new_s, Odd_new_c,
-		   Odd_new_s, Odd_new_c);
+                   Odd_new_s, Odd_new_c);
   
   /* Reconstruct the even sites                */
   Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd_new_s);
   Hopping_Matrix(EO, g_spinor_field[DUM_DERI+1], Odd_new_c);
   Msw_ee_inv_ndpsi(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+3],
-		   g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+                   g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
   
   /* The sign is plus, since in Hopping_Matrix */
   /* the minus is missing                      */
