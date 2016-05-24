@@ -144,9 +144,12 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
       sprintf(source_filename, "%s.%.4d.%.5d.inverted", PropInfo.basename, nstore, isample);
     }
     else if(source_type == SRC_TYPE_PION_TS) {
-      // Pion full time slice sources
+      // If a pion timeslice source has already been inverted for the current sample and gauge configuration,
+      // we would like to re-use the same timeslice, which we ensure with the loop below. The reason for doing 
+      // this is that we cannot guarantee that the call to ranlxs below is reproducible.
+      // Note: source_generation_pion_only reinitialises the RNG with a systematically chosen seed and thus does
+      // not suffer from this problem when called below.
       if(SourceInfo.automaticTS) {
-        // chose timeslice randomly
         int found = 0;
         if(g_proc_id == 0 && !PropInfo.splitted) {
           for(t = 0; t < g_nproc_t*T; t++) {
@@ -158,6 +161,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
             }
           }
         }
+        // chose timeslice randomly
         if(PropInfo.splitted || !found) {
           ranlxs(&u, 1);
           t = (int)(u*g_nproc_t*T);
@@ -176,7 +180,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
     else if(source_type == SRC_TYPE_GEN_PION_TS) {
       // Generalised Pion full time slice sources
       if(SourceInfo.automaticTS) {
-        // automatic timeslice detection
+        // automatic timeslice detection based on an existing forward propagator
         if(g_proc_id == 0) {
           for(t = 0; t < g_nproc_t*T; t++) {
             sprintf(source_filename, "%s.%.4d.%.5d.%.2d.inverted", SourceInfo.basename, nstore, isample, t);
