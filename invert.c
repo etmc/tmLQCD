@@ -367,7 +367,7 @@ int main(int argc, char *argv[])
     if (g_dflgcr_flag) 
       init_blocks(nblocks_t, nblocks_x, nblocks_y, nblocks_z);
     
-    if(SourceInfo.type == SRC_TYPE_VOL) {
+    if(SourceInfo.type == SRC_TYPE_VOL || SourceInfo.type == SRC_TYPE_PION_TS || SourceInfo.type == SRC_TYPE_GEN_PION_TS) {
       index_start = 0;
       index_end = 1;
     }

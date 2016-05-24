@@ -235,6 +235,7 @@ static inline void rmQuotes(char *str){
 %X READSOURCE
 %x SOURCEFORMAT
 %x SOURCEFILE
+%x PROPFILE
 %x SOURCETS
 %x SOURCETYPE
 %x PROPSPLIT
@@ -344,6 +345,7 @@ static inline void rmQuotes(char *str){
 
 %%
 ^SourceFilename{EQL}               BEGIN(SOURCEFILE);
+^PropagatorFilename{EQL}           BEGIN(PROPFILE);
 ^T{EQL}                            BEGIN(TT);
 ^L{EQL}                            BEGIN(LL);
 ^LX{EQL}                           BEGIN(LLX);
@@ -1733,6 +1735,14 @@ static inline void rmQuotes(char *str){
     SourceInfo.type = SRC_TYPE_TS;
     if(myverbose) printf("Using TimeSlice Sources\n");
   }
+  PionTimeSlice {
+    SourceInfo.type = SRC_TYPE_PION_TS;
+    if(myverbose) printf("Using PionTimeSlice Sources\n");
+  }
+  GenPionTimeSlice {
+    SourceInfo.type = SRC_TYPE_GEN_PION_TS;
+    if(myverbose) printf("Using GenPionTimeSlice Sources\n");
+  }
 }
 <PROPSPLIT>{
   yes {
@@ -2084,13 +2094,16 @@ static inline void rmQuotes(char *str){
   if(myverbose!=0) printf("Don't read inversion source from file, but save the one generated\n");
 }
 <SOURCEFILE>{FILENAME} {
-  if(SourceInfo.basename == NULL) free(SourceInfo.basename);
+  if(SourceInfo.basename != NULL) free(SourceInfo.basename);
   SourceInfo.basename = (char*)malloc((strlen(yytext)+1)*sizeof(char));
   strcpy(SourceInfo.basename, yytext);
-  if(PropInfo.basename == NULL) free(PropInfo.basename);
+  if(myverbose!=0) printf("source input filename set to %s of length %lu\n",yytext,strlen(yytext));
+}
+<PROPFILE>{FILENAME} {
+  if(PropInfo.basename != NULL) free(PropInfo.basename);
   PropInfo.basename = (char*)malloc((strlen(yytext)+1)*sizeof(char));
   strcpy(PropInfo.basename, yytext);
-  if(myverbose!=0) printf("source input filename set to %s\n",yytext);
+  if(myverbose!=0) printf("propagator output filename set to %s\n",yytext);
 }
 <SOURCEFORMAT>etmc      {
   SourceInfo.format = 0;
@@ -2449,9 +2462,9 @@ int read_input(char * conf_file){
   X3 = _default_X3;
   g_rgi_C1 = _default_g_rgi_C1;
   read_source_flag= _default_read_source_flag;
-  if(SourceInfo.basename == NULL) SourceInfo.basename = (char*)malloc(strlen(_default_source_filename)+10);
+  SourceInfo.basename = (char*)malloc(strlen(_default_source_filename)+10);
   strcpy(SourceInfo.basename, _default_source_filename);
-  if(PropInfo.basename == NULL) PropInfo.basename = (char*)malloc(strlen(_default_source_filename)+10);
+  PropInfo.basename = (char*)malloc(strlen(_default_source_filename)+10);
   strcpy(PropInfo.basename, _default_source_filename);
   PropInfo.splitted = _default_propagator_splitted;
   SourceInfo.splitted = _default_source_splitted;

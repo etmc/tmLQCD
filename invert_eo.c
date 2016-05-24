@@ -554,13 +554,13 @@ static void cgmms_write_props(spinor ** const P, double const * const shifts, co
   for(int im = 0; im < no_shifts; im++) {
     if(SourceInfo.type != SRC_TYPE_VOL) {
       if (PropInfo.splitted) {
-        if(T_global > 99) sprintf(filename, "%s.%.2d.%.4d.%.3d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im);
-        else sprintf(filename, "%s.%.2d.%.4d.%.2d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im);
+        if(T_global > 99) sprintf(filename, "%s.%.2d.%.4d.%.3d.%.2d.cgmms.%.2d.inverted", PropInfo.basename, id, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im);
+        else sprintf(filename, "%s.%.2d.%.4d.%.2d.%.2d.cgmms.%.2d.inverted", PropInfo.basename, id, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, im);
       } else {
-        sprintf(filename, "%s.%.2d.%.4d.%.2d.cgmms.%.2d.inverted", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.t, im);
+        sprintf(filename, "%s.%.2d.%.4d.%.2d.cgmms.%.2d.inverted", PropInfo.basename, id, SourceInfo.nstore, SourceInfo.t, im);
       }
     } else {
-      sprintf(filename, "%s.%.2d.%.4d.%.5d.cgmms.%.2d.0", SourceInfo.basename, id, SourceInfo.nstore, SourceInfo.sample, im);
+      sprintf(filename, "%s.%.2d.%.4d.%.5d.cgmms.%.2d.0", PropInfo.basename, id, SourceInfo.nstore, SourceInfo.sample, im);
     }
     
     if(g_kappa != 0) {
