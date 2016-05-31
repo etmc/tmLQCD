@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
 
   /* starts the single and double precision random number */
   /* generator                                            */
-  start_ranlux(rlxd_level, random_seed);
+  start_ranlux(rlxd_level, random_seed^nstore);
 
   /* we need to make sure that we don't have even_odd_flag = 1 */
   /* if any of the operators doesn't use it                    */
