@@ -122,7 +122,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
         exit(200);
       }
       plaquette = measure_plaquette(g_gauge_field);
-      if(g_proc_id == 0) printf("Plaquette before gauge matrix_mult ffixing: %.16e\n", plaquette/6./VOLUME);
+      if(g_proc_id == 0) printf("Plaquette before gauge fixing: %.16e\n", plaquette/6./VOLUME);
       /* do trafo */
       apply_gtrafo(g_gauge_field, g_trafo);
       plaquette = measure_plaquette(g_gauge_field);
