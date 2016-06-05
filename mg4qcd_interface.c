@@ -414,7 +414,11 @@ void MG_init()
   
   mg_params.setup_iterations[0]=mg_setup_iter;
   mg_params.setup_iterations[1]=mg_coarse_setup_iter;
-  
+ 
+  // for now, we hard-code mixed_precision=1 because low precision in the solver seems to lead to
+  // convergence issues for certain source types
+  mg_params.mixed_precision = 1;
+
   MG4QCD_update_parameters(&mg_params, &mg_status);
   
 }
