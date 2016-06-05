@@ -159,6 +159,7 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
       iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
 		    rel_prec, VOLUME, Qsq);
+      Qm(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
     }
 #ifdef MG4QCD
     else if ( solver_flag == MG )
@@ -167,8 +168,6 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
                           rel_prec, VOLUME/2, gf[0], &Msw_full);
     }
 #endif
-     
-    Qm(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
     convert_lexic_to_eo(Even_new, Odd_new, g_spinor_field[DUM_DERI+1]);
   }
   return(iter);
