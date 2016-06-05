@@ -56,6 +56,9 @@
 #ifdef QUDA
 #  include "quda_interface.h"
 #endif
+#ifdef MG4QCD
+#  include "mg4qcd_interface.h"
+#endif
 
 static double cgmms_reached_prec = 0.0; 
 static void cgmms_write_props(spinor ** const P, double const * const extra_masses, const int no_extra_masses, const int id, const int iteration);
@@ -94,6 +97,12 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
   }
 #endif
 
+#ifdef MG4QCD
+  if ( solver_flag==MG )
+    return MG_solver_eo(Even_new, Odd_new, Even, Odd, precision, max_iter,
+			rel_prec, VOLUME/2, g_gauge_field, &M_full);
+#endif
+
   /* here comes the inversion using even/odd preconditioning */
   if(even_odd_flag) {
     if(g_proc_id == 0) {printf("# Using even/odd preconditioning!\n"); fflush(stdout);}
@@ -113,7 +122,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
         exit(200);
       }
       plaquette = measure_plaquette(g_gauge_field);
-      if(g_proc_id == 0) printf("Plaquette before gauge fixing: %.16e\n", plaquette/6./VOLUME);
+      if(g_proc_id == 0) printf("Plaquette before gauge matrix_mult ffixing: %.16e\n", plaquette/6./VOLUME);
       /* do trafo */
       apply_gtrafo(g_gauge_field, g_trafo);
       plaquette = measure_plaquette(g_gauge_field);

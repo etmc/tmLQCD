@@ -60,6 +60,9 @@
 #include "hamiltonian_field.h"
 #include "update_tm.h"
 #include "gettime.h"
+#ifdef MG4QCD
+#include "mg4qcd_interface.h"
+#endif
 
 extern su3 ** g_gauge_field_saved;
 
@@ -80,7 +83,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   /* Energy corresponding to the Gauge part */
   double new_plaquette_energy=0., new_rectangle_energy = 0.;
 
-  /* Energy corresponding to the Momenta part */
+  /* Energy correspondingupdate_tm to the Momenta part */
   double enep=0., enepx=0., ret_enep = 0.;
 
   /* Energy corresponding to the pseudo fermion part(s) */
@@ -117,6 +120,10 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
   }
 
+#ifdef MG4QCD
+  MG_reset();
+#endif
+
   /* heatbath for all monomials */
   for(i = 0; i < Integrator.no_timescales; i++) {
     for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
@@ -127,7 +134,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   if(Integrator.monitor_forces) monitor_forces(&hf);
   /* initialize the momenta  */
   enep = random_su3adj_field(reproduce_randomnumber_flag, hf.momenta);
-
+  
   g_sloppy_precision = 1;
 
   /* run the trajectory */
@@ -198,7 +205,11 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       }
       free(xlfInfo);
     }
-    
+
+#ifdef MG4QCD
+    MG_reset();
+#endif
+
     g_sloppy_precision = 1;
     /* run the trajectory back */
     Integrator.integrate[Integrator.no_timescales-1](-Integrator.tau, 
