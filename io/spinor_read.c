@@ -88,7 +88,7 @@ int read_spinor(spinor * const s, spinor * const r, char * filename, const int p
     }
     else {
       fprintf(stderr, "Length of scidac-binary-data record in %s does not match input parameters.\n", filename);
-      fprintf(stderr, "Found %ul bytes.\n", bytes);
+      fprintf(stderr, "Found %lu bytes.\n", bytes);
       return(-6);
     }
   }
