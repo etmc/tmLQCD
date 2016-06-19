@@ -30,10 +30,10 @@
 #include <time.h>
 #include <string.h>
 #include <signal.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "global.h"
@@ -41,7 +41,7 @@
 #include "getopt.h"
 #include "linalg_eo.h"
 #include "geometry_eo.h"
-#ifdef MPI
+#ifdef TM_USE_MPI
 #include "xchange/xchange.h"
 #endif
 #include <io/utils.h>
@@ -54,6 +54,7 @@
 #include "invert_eo.h"
 #include "start.h"
 #include "operator.h"
+#include "measure_gauge_action.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "include/tmLQCD.h"
 
@@ -84,7 +85,7 @@ int tmLQCD_invert_init(int argc, char *argv[], const int _verbose) {
   verbose = _verbose;
   g_use_clover_flag = 0;
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
 #else
   g_proc_id = 0;
@@ -95,7 +96,7 @@ int tmLQCD_invert_init(int argc, char *argv[], const int _verbose) {
     fprintf(stderr, "tmLQCD_init_invert: Could not find input file: invert.input\nAborting...");
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   init_openmp();
 #endif
 
@@ -203,10 +204,15 @@ int tmLQCD_read_gauge(const int nconfig) {
     printf("# Finished reading gauge field.\n");
     fflush(stdout);
   }
-#ifdef MPI
+#ifdef TM_USE_MPI
   xchange_gauge(g_gauge_field);
 #endif
-  convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND);                                                                                                                                                                 
+  convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND);
+
+  double plaquette = measure_plaquette( (const su3** const) g_gauge_field)/(6.*VOLUME*g_nproc);
+  if (g_cart_id == 0) {
+    printf("# The computed plaquette value is %.16e.\n", plaquette);
+  }
   return(0);
 }
 
@@ -249,7 +255,7 @@ int tmLQCD_invert(double * const propagator, double * const source,
 
 int tmLQCD_finalise() {
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   free_omp_accumulators();
 #endif
 
@@ -272,7 +278,7 @@ int tmLQCD_finalise() {
   free_spinor_field_32();
   free_moment_field();
   free_chi_spinor_field();
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
   return(0);
@@ -323,7 +329,7 @@ int tmLQCD_get_gauge_field_pointer(double ** gf) {
     fprintf(stderr, "tmLQCD_get_gauge_field_pointer: tmLQCD_invert_init must be called first. Aborting...\n");
     return(-1);
   }
-#ifdef MPI
+#ifdef TM_USE_MPI
   xchange_gauge(g_gauge_field);
 #endif
 

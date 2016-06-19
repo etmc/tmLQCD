@@ -93,7 +93,7 @@ int write_first_messages(FILE * parameterfile, char const * const executable, ch
          "# the code is compiled for persistent MPI calls (halfspinor only)\n");
 #  endif
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
 #  ifdef _NON_BLOCKING
   printf("# the code is compiled for non-blocking MPI calls (spinor and gauge)\n");
   fprintf(parameterfile,
@@ -105,7 +105,7 @@ int write_first_messages(FILE * parameterfile, char const * const executable, ch
 	  "# the code is compiled with MPI IO / Lemon\n");
 #  endif
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
   printf("# the code is compiled with openMP support\n");
   fprintf(parameterfile,
           "# the code is compiled with openMP support\n");
@@ -141,7 +141,7 @@ int write_first_messages(FILE * parameterfile, char const * const executable, ch
   fprintf(parameterfile, "# The lattice size is %d x %d x %d x %d\n", (int)(g_nproc_t*T), (int)(g_nproc_x*LX), 
 	  (int)(g_nproc_y*LY), (int)(g_nproc_z*LZ));
   fprintf(parameterfile, "# The local lattice size is %d x %d x %d x %d\n", (int)(T), (int)(LX), (int)(LY), (int)(LZ));
-  fprintf(parameterfile, "# g_beta = %f , g_kappa= %f, g_kappa*csw/8= %f \n",g_beta,g_kappa,g_ka_csw_8);
+  fprintf(parameterfile, "# g_beta = %f , g_kappa= %f, c_sw = %f \n",g_beta,g_kappa,g_c_sw);
   fprintf(parameterfile, "# boundary conditions for fermion fields (t,x,y,z) * pi: %f %f %f %f \n",X0,X1,X2,X3);
   if( strcmp(executable,"hmc") == 0 ) {
     fprintf(parameterfile, "# Nmeas=%d, Nsave=%d \n",

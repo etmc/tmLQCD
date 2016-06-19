@@ -111,7 +111,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
       /************************ end of loop ************************/
     }
 
-#    if (defined MPI && !defined _NO_COMM)
+#    if (defined TM_USE_MPI && !defined _NO_COMM)
     xchange_halffield32(); 
 #    endif
     s = l;
@@ -226,7 +226,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     }
 
-#    if (defined MPI && !defined _NO_COMM)
+#    if (defined TM_USE_MPI && !defined _NO_COMM)
     xchange_halffield(); 
 #    endif
     s = l;

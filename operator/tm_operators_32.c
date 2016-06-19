@@ -9,7 +9,7 @@
 #include "operator/Hopping_Matrix_32.h"
 #include "linalg_eo.h"
 #include "gamma.h"
-#include "operator/D_psi_32.h"
+#include "operator/D_psi.h"
 #include "tm_operators_32.h"
 
 
@@ -35,7 +35,7 @@ void mul_one_pm_imu_inv_32_orphaned(spinor32 * const l, const float _sign, const
   z = nrm + (sign * nrm * g_mu) * I;
   w = conj(z);
   /************ loop over all lattice sites ************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(ix = 0; ix < N; ix++){
@@ -69,7 +69,7 @@ void mul_one_pm_imu_sub_mul_gamma5_32_orphaned(spinor32 * const l, spinor32 * co
   w = conj(z);
   
   /************ loop over all lattice sites ************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(ix = 0; ix < (VOLUME/2); ix++){
@@ -93,7 +93,7 @@ void mul_one_pm_imu_sub_mul_gamma5_32_orphaned(spinor32 * const l, spinor32 * co
 
 void Qtm_pm_psi_32(spinor32 * const l, spinor32 * const k){
   /* Q_{-} */
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif  
@@ -106,7 +106,7 @@ void Qtm_pm_psi_32(spinor32 * const l, spinor32 * const k){
   mul_one_pm_imu_inv_32_orphaned(l, +1., VOLUME/2);
   Hopping_Matrix_32_orphaned(OE, g_spinor_field32[1], l);
   mul_one_pm_imu_sub_mul_gamma5_32_orphaned(l, g_spinor_field32[0], g_spinor_field32[1], +1.);
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif  
 }
@@ -114,7 +114,7 @@ void Qtm_pm_psi_32(spinor32 * const l, spinor32 * const k){
 void gamma5_32_orphaned(spinor32 * const l, spinor32 * const k, const int V){
   int ix;
   spinor32 *r,*s;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for (ix = 0; ix < V; ix++){
@@ -128,12 +128,12 @@ void gamma5_32_orphaned(spinor32 * const l, spinor32 * const k, const int V){
 }
 
 void gamma5_32(spinor32 * const l, spinor32 * const k, const int V){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
   gamma5_32_orphaned(l,k,V);
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /*OpenMP closing brace */
 #endif
 }

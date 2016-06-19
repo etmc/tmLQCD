@@ -39,19 +39,23 @@
 #include "hamiltonian_field.h"
 #include "update_gauge.h"
 #include "init/init_gauge_field.h"
-
-
+#ifdef MG4QCD
+#include "mg4qcd_interface.h"
+#endif
 /*******************************************************
  *
  * Updates the gauge field corresponding to the momenta
  *
  *******************************************************/
 
-
 void update_gauge(const double step, hamiltonian_field_t * const hf) {
   double atime, etime;
   atime = gettime();
-#ifdef OMP
+#ifdef MG4QCD
+  MG_update_gauge(step);
+#endif
+
+#ifdef TM_USE_OMP
 #define static
 #pragma omp parallel
   {
@@ -65,11 +69,11 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
 #pragma pomp inst begin(updategauge)
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(i = 0; i < VOLUME; i++) { 
@@ -85,11 +89,11 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
     }
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP parallel closing brace */
 #endif
   
-#ifdef MPI
+#ifdef TM_USE_MPI
   /* for parallelization */
   xchange_gauge(hf->gaugefield);
 #endif

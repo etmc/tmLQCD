@@ -36,10 +36,10 @@
 #include <time.h>
 #include <sys/time.h>
 #include <string.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "global.h"
@@ -98,11 +98,11 @@ int main(int argc,char *argv[]) {
   L=0;
   T=0;
   
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Init(&argc, &argv);
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   /* FIXME: in principle this should not be set like this as it could result
     in thread oversubscription when more than one process is run locally
     unfortunately, there does not seem to be a standard way to determine
@@ -280,7 +280,7 @@ int main(int argc,char *argv[]) {
     }
   }
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Finalize();
 #endif
   free_geometry_indices();

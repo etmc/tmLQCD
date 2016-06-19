@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -279,7 +279,7 @@ void degree_of_Ptilde(int * _degree, double ** coefs,
       fprintf(stderr, "Error: n_cheby=%d > phmc_max_ptilde_degree=%d in ptilde\n",
               degree, phmc_max_ptilde_degree);
       fprintf(stderr, "Increase n_chebymax\n");
-#ifdef MPI
+#ifdef TM_USE_MPI
       MPI_Finalize();
 #endif
       exit(-5);

@@ -134,6 +134,14 @@ typedef struct {
   char * basename;
 } paramsSourceInfo;
 
+typedef enum SRC_TYPE {
+  SRC_TYPE_POINT = 0,
+  SRC_TYPE_VOL,
+  SRC_TYPE_TS,
+  SRC_TYPE_PION_TS,
+  SRC_TYPE_GEN_PION_TS
+} SRC_TYPE;
+
 /* defined in gauge_read.c */
 extern paramsGaugeInfo GaugeInfo;
 /* defined in spinor_read.c */

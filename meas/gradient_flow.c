@@ -23,10 +23,10 @@
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
 
@@ -56,7 +56,7 @@ void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigne
   fields[2] = x2;
   fields[3] = x0;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
 #endif
   {
@@ -64,8 +64,8 @@ void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigne
   su3 ALIGN w,w1,w2;
   su3 ALIGN z_tmp,z_tmp1;
 
-#ifdef MPI
-#ifdef OMP
+#ifdef TM_USE_MPI
+#ifdef TM_USE_OMP
 #pragma omp single
 #endif
   {
@@ -77,7 +77,7 @@ void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigne
   // this can probably be improved...
 
   for( int f = 0; f < 3; ++f ){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for( int x = 0; x < VOLUME; ++x ){
@@ -106,8 +106,8 @@ void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigne
         _su3_times_su3(fields[f+1][x][mu],w,fields[f][x][mu]);
       }
     }
-#ifdef MPI
-#ifdef OMP
+#ifdef TM_USE_MPI
+#ifdef TM_USE_OMP
 #pragma omp single
 #endif
     {
@@ -148,7 +148,7 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
   aligned_su3_field_t x2 = aligned_su3_field_alloc(VOLUMEPLUSRAND+g_dbw2rand);
   aligned_su3_field_t z = aligned_su3_field_alloc(VOLUME);
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   xchange_gauge(g_gauge_field);
 #endif
   memcpy(vt.field[0],g_gauge_field[0],sizeof(su3)*4*(VOLUMEPLUSRAND+g_dbw2rand));

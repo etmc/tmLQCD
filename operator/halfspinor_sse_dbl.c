@@ -34,7 +34,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   }
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
 {
   su3 * restrict U0 ALIGN;
@@ -50,7 +50,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #pragma pomp inst begin(hoppingmatrix)
 #endif
 
-#ifndef OMP
+#ifndef TM_USE_OMP
   /* We will run through the source vector now */
   /* instead of the solution vector            */
   s = k;
@@ -74,13 +74,13 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   phi = NBPointer[ieo];
 
   /**************** loop over all lattice sites ******************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #else
   ix = 0;
 #endif
   for(int i = 0; i < (VOLUME)/2; i++){
-#ifdef OMP
+#ifdef TM_USE_OMP
     s = k+i;
     _prefetch_spinor(s);
     U = U0+i*4;
@@ -119,24 +119,24 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     /*********************** direction -3 ************************/
     _hop_z_m_pre();
-#ifndef OMP
+#ifndef TM_USE_OMP
     ix++;
     s++;
 #endif
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp single
 {
 #endif
-#    if (defined MPI && !defined _NO_COMM)
+#    if (defined TM_USE_MPI && !defined _NO_COMM)
   xchange_halffield(); 
 #    endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 }
 #endif
 
-#ifndef OMP
+#ifndef TM_USE_OMP
   s = l;
   if(ieo == 0) {
     U = g_gauge_field_copy[1][0];
@@ -157,13 +157,13 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
   
   /* Now we sum up and expand to a full spinor */
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #else
   ix = 0;
 #endif
   for(int i = 0; i < (VOLUME)/2; i++){
-#ifdef OMP
+#ifdef TM_USE_OMP
     U = U0 + i*4;
     _prefetch_su3(U);
     ix = i*8;
@@ -201,7 +201,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     ix++;
     /*********************** direction -3 ************************/
     _hop_z_m_post();
-#ifndef OMP
+#ifndef TM_USE_OMP
     ix++;
     U++;
     s++;
@@ -211,7 +211,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #pragma pomp inst end(hoppingmatrix)
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* omp parallel closing bracket */
 #endif
 }

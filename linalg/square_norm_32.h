@@ -7,4 +7,5 @@
  *     Returns the square norm of *P */
 
 float square_norm_32(const spinor32 * const P, const int N, const int parallel);
+float square_norm_ts_32(const spinor32 * const P, const int N, const int parallel);
 #endif

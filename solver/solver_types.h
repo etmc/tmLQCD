@@ -20,7 +20,11 @@ typedef enum SOLVER_TYPE {
  CGMMSND,
  INCREIGCG,
  MIXEDCGMMSND,
- SUMR
+ SUMR,
+ MCR,
+ CR,
+ BICG,
+ MG
 } SOLVER_TYPE;
 
 #endif

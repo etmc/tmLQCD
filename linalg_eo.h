@@ -56,6 +56,7 @@
 #include "linalg/addto_32.h"
 #include "linalg/assign_to_32.h"
 #include "linalg/assign_mul_add_mul_r.h"
+#include "linalg/assign_mul_add_mul.h"
 #include "linalg/assign_mul_add_mul_r_32.h"
 #include "linalg/assign_mul_add_mul_add_mul_r.h"
 #include "linalg/mul_add_mul_r.h"
@@ -65,5 +66,10 @@
 #include "linalg/mattimesvec.h"
 
 #include "linalg/convert_eo_to_lexic.h"
+
+#include "linalg/convert_odd_to_lexic.h"
+#include "linalg/set_even_to_zero.h"
+#include "linalg/mul_gamma5.h"
+
 
 #endif

@@ -33,16 +33,18 @@ libsolver_TARGETS = bicgstab_complex gmres incr_eigcg eigcg restart_X ortho \
 	            cgs_real cg_her mr chrono_guess \
 	            bicgstabell bicgstab2 eigenvalues fgmres \
 	            gcr gcr4complex diagonalise_general_matrix \
+	            cgne4complex mr4complex fgmres4complex \
 	            quicksort gmres_dr lu_solve jdher Msap \
-              jdher_bi gram-schmidt eigenvalues_bi \
-              bicgstab_complex_bi cg_her_bi pcg_her \
-              sub_low_ev cg_her_nd poly_precon \
-              generate_dfl_subspace dfl_projector \
-              cg_mms_tm cg_mms_tm_nd mixed_cg_mms_tm_nd \
-              solver_field sumr mixed_cg_her index_jd \
-							rg_mixed_cg_her rg_mixed_cg_her_nd \
-              dirac_operator_eigenvectors	spectral_proj \
-              jdher_su3vect cg_her_su3vect eigenvalues_Jacobi monomial_solve
+                    jdher_bi gram-schmidt eigenvalues_bi \
+                    bicgstab_complex_bi cg_her_bi pcg_her \
+                    sub_low_ev cg_her_nd poly_precon \
+                    generate_dfl_subspace dfl_projector \
+                    cg_mms_tm cg_mms_tm_nd mixed_cg_mms_tm_nd \
+                    solver_field sumr mixed_cg_her index_jd \
+		    rg_mixed_cg_her rg_mixed_cg_her_nd \
+                    dirac_operator_eigenvectors	spectral_proj \
+                    jdher_su3vect cg_her_su3vect eigenvalues_Jacobi \
+		    mcr cr mcr4complex bicg_complex monomial_solve
 
 libsolver_OBJECTS = $(addsuffix .o, ${libsolver_TARGETS})
 

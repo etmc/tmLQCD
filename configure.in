@@ -104,10 +104,30 @@ AC_ARG_ENABLE(mpi,
   enable_mpi=$enableval, enable_mpi=yes)
 if test $enable_mpi = yes; then
   AC_MSG_RESULT(yes)
-  AC_DEFINE(MPI,1,Compile with MPI support)
+  AC_DEFINE(TM_USE_MPI,1,Compile with MPI support)
 else
   AC_MSG_RESULT(no)
 fi
+
+AC_MSG_CHECKING(whether we want to use mg4qcd)
+AC_ARG_WITH(mg4qcd,
+            AS_HELP_STRING([--with-mg4qcd[=dir]], [use mg4qcd, to be found in dir]),
+             [echo yes
+              MG4QCD_AVAILABLE=1
+              MG4QCD_INTERFACE="mg4qcd_interface"
+              AC_DEFINE(MG4QCD,1,Using MG4QCD)
+              mg4qcd_dir=$withval
+              LDFLAGS="$LDFLAGS -L${mg4qcd_dir}/lib"
+              INCLUDES="$INCLUDES -I${mg4qcd_dir}/include/"
+              AC_CHECK_LIB([mg4qcd],
+                           [MG4QCD_finalize],
+                           [],
+                           [AC_MSG_ERROR([library mg4qcd was not found])])],
+             [echo no
+              MG4QCD_AVAILABLE=0
+              MG4QCD_INTERFACE=""
+              ])
+
 
 AC_MSG_CHECKING(whether to use QPX intrinsics)
 AC_ARG_ENABLE(qpx,
@@ -143,7 +163,7 @@ AC_ARG_ENABLE(omp,
   enable_omp=$enableval, enable_omp=yes)
 if test $enable_omp = yes; then
   AC_MSG_RESULT(yes)
-  AC_DEFINE(OMP,1,Compile with OpenMP support)
+  AC_DEFINE(TM_USE_OMP,1,Compile with OpenMP support)
   AC_CHECK_HEADERS([omp.h],,[AC_MSG_ERROR([Cannot find OpenMP headers!])])
   AC_OPENMP
 # -- AC_OPENMP provides a compiler-dependent OPENMP_CFLAGS so we can set it here
@@ -360,6 +380,7 @@ AC_SUBST(XLIB)
 AC_SUBST([LEMON_AVAILABLE])
 AC_SUBST(SPI_FILES)
 AC_SUBST(QUDA_INTERFACE)
+AC_SUBST(MG4QCD_INTERFACE)
 
 INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${abs_top_builddir}/  -I\${abs_top_srcdir}/ -I${lime_dir}/include/ -I${lemon_dir}/include/"
 DEPFLAGS="$DEPFLAGS"

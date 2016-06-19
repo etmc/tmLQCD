@@ -4,10 +4,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 # include "global.h"
 #endif
@@ -19,11 +19,11 @@
 
 float square_norm_32(spinor32 * const P, const int N, const int parallel) {
   float ALIGN32 res = 0.0;
-#ifdef MPI
+#ifdef TM_USE_MPI
   float ALIGN32 mres;
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
     int thread_num = omp_get_thread_num();
@@ -35,7 +35,7 @@ float square_norm_32(spinor32 * const P, const int N, const int parallel) {
   ks = vec_splats(0.);
   kc = vec_splats(0.);
 
-#ifndef OMP
+#ifndef TM_USE_OMP
 #pragma unroll(4)
 #else
 #pragma omp for
@@ -70,7 +70,7 @@ float square_norm_32(spinor32 * const P, const int N, const int parallel) {
   }
   buffer = vec_add(kc,ks);
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   g_omp_acc_re[thread_num] = buffer[0] + buffer[1] + buffer[2] + buffer[3];
   } /* OpenMP closing brace */
 
@@ -80,7 +80,7 @@ float square_norm_32(spinor32 * const P, const int N, const int parallel) {
   res = buffer[0] + buffer[1] + buffer[2] + buffer[3];
 #endif
 
-#  ifdef MPI
+#  ifdef TM_USE_MPI
   if(parallel) {
     MPI_Allreduce(&res, &mres, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
     return mres;
@@ -95,11 +95,11 @@ float square_norm_32(spinor32 * const P, const int N, const int parallel) {
 float square_norm_32(const spinor32 * const P, const int N, const int parallel)
 {
   float ALIGN32 res = 0.0;
-#ifdef MPI
+#ifdef TM_USE_MPI
   float ALIGN32 mres;
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
     int thread_num = omp_get_thread_num();
@@ -111,7 +111,7 @@ float square_norm_32(const spinor32 * const P, const int N, const int parallel)
   ks = 0.0;
   kc = 0.0;
   
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif    
   for (int ix  =  0; ix < N; ix++) {
@@ -138,7 +138,7 @@ float square_norm_32(const spinor32 * const P, const int N, const int parallel)
   }
   kc=ks+kc;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   g_omp_acc_re[thread_num] = kc;
 
   } /* OpenMP closing brace */
@@ -151,7 +151,7 @@ float square_norm_32(const spinor32 * const P, const int N, const int parallel)
   res = kc;
 #endif
 
-#  ifdef MPI
+#  ifdef TM_USE_MPI
   if(parallel) {
     MPI_Allreduce(&res, &mres, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
     return mres;
@@ -162,3 +162,62 @@ float square_norm_32(const spinor32 * const P, const int N, const int parallel)
 }
 
 #endif
+
+// threadsafe version
+
+float square_norm_ts_32(const spinor32 * const P, const int N, const int parallel)
+{
+  float ALIGN32 res = 0.0;
+#ifdef TM_USE_MPI
+  float ALIGN32 mres;
+#endif
+
+#ifdef TM_USE_OMP2
+#pragma omp parallel reduction(+:res)
+  {
+#endif
+  float ALIGN32 ks,kc,ds,tr,ts,tt;
+  const spinor32 *s;
+  
+  ks = 0.0;
+  kc = 0.0;
+  
+#ifdef TM_USE_OMP2
+#pragma omp for
+#endif    
+  for (int ix  =  0; ix < N; ix++) {
+    s = P + ix;
+    
+    ds = conj(s->s0.c0) * s->s0.c0 +
+         conj(s->s0.c1) * s->s0.c1 +
+         conj(s->s0.c2) * s->s0.c2 +
+         conj(s->s1.c0) * s->s1.c0 +
+         conj(s->s1.c1) * s->s1.c1 +
+         conj(s->s1.c2) * s->s1.c2 +
+         conj(s->s2.c0) * s->s2.c0 +
+         conj(s->s2.c1) * s->s2.c1 +
+         conj(s->s2.c2) * s->s2.c2 +
+         conj(s->s3.c0) * s->s3.c0 +
+         conj(s->s3.c1) * s->s3.c1 +
+         conj(s->s3.c2) * s->s3.c2;
+
+    tr = ds + kc;
+    ts = tr + ks;
+    tt = ts-ks;
+    ks = ts;
+    kc = tr-tt;
+  }
+  res=ks+kc;
+#ifdef TM_USE_OMP2
+  } /* OpenMP closing brace */
+#endif
+
+#  ifdef TM_USE_MPI
+  if(parallel) {
+    MPI_Allreduce(&res, &mres, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+    return mres;
+  }
+#endif
+
+  return res;
+}

@@ -49,7 +49,7 @@ void pion_norm_measurement(const int traj, const int id, const int ieo) {
   double atime, etime;
   float tmp;
   solver_params_t tmp_solver_params;
-#ifdef MPI
+#ifdef TM_USE_MPI
   double mpi_res = 0.;
 #endif
   FILE *ofs, *ofs2;
@@ -69,7 +69,7 @@ void pion_norm_measurement(const int traj, const int id, const int ieo) {
   }
   ranlxs(&tmp, 1);
   z0 = (int)(measurement_list[id].max_source_slice*tmp);
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Bcast(&z0, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif
 
@@ -108,14 +108,14 @@ void pion_norm_measurement(const int traj, const int id, const int ieo) {
 
 
     
-#if defined MPI
+#if defined TM_USE_MPI
     MPI_Reduce(&res, &mpi_res, 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_z_slices);
     res = mpi_res;
 #endif
     Cpp[z+g_proc_coords[3]*LZ] = +res/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_t*T)*2.;
   }
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   /* some gymnastics needed in case of parallelisation */
   if(g_mpi_z_rank == 0) {
     MPI_Gather(&Cpp[g_proc_coords[3]*LZ], LZ, MPI_DOUBLE, Cpp, LZ, MPI_DOUBLE, 0, g_mpi_ST_slices);
