@@ -221,6 +221,7 @@ int tmLQCD_read_gauge(const int nconfig) {
 #endif
   if(!lowmem_flag){
     convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND);
+  }
 
   double plaquette = measure_plaquette( (const su3** const) g_gauge_field)/(6.*VOLUME*g_nproc);
   if (g_cart_id == 0) {
