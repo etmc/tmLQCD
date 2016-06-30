@@ -20,8 +20,14 @@
 #ifndef _MSAP_H
 #define _MSAP_H
 
-void Msap(spinor * const P, spinor * const Q, const int Ncy);
-void Msap_eo(spinor * const P, spinor * const Q, const int Ncy);
+void Msap(spinor * const P, spinor * const Q, const int Ncy, const int Niter);
+void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter);
+void CGeoSmoother(spinor * const P, spinor * const Q, const int Ncy, const int dummy);
 void Mtm_plus_block_psi(spinor * const l, spinor * const k, const int i);
 void Mtm_plus_sym_block_psi(spinor * const l, spinor * const k, const int i);
+void Msw_plus_block_psi(spinor * l, spinor *  k, const int i);
+//This function doesn't work properly yet because we need the inverse of 1+Too+img5 where
+//Too is the clover term in the symmetric case
+void Msw_plus_sym_block_psi(spinor *  l, spinor *  k, const int i);
+
 #endif

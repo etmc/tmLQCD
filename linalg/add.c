@@ -25,7 +25,7 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include <stdlib.h>
@@ -37,7 +37,7 @@
 #if (defined BGQ && defined XLC)
 
 void add(spinor * const Q,const spinor * const R,const spinor * const S, const int N) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -56,7 +56,7 @@ void add(spinor * const Q,const spinor * const R,const spinor * const S, const i
   __prefetch_by_load(R);
   __prefetch_by_stream(1, Q);
 
-#ifndef OMP
+#ifndef TM_USE_OMP
 #pragma unroll(2)
 #else
 #pragma omp for
@@ -94,7 +94,7 @@ void add(spinor * const Q,const spinor * const R,const spinor * const S, const i
     vec_st(z5, 0, q+20);
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /*OpenMP parallel closing brace */
 #endif
   return;
@@ -104,7 +104,7 @@ void add(spinor * const Q,const spinor * const R,const spinor * const S, const i
 
 /* Q output, R input, S input */
 void add(spinor * const Q,const spinor * const R,const spinor * const S, const int N){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -112,7 +112,7 @@ void add(spinor * const Q,const spinor * const R,const spinor * const S, const i
   int ix;
   spinor *q,*r,*s;
   
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for (ix = 0; ix < N; ix++){
@@ -137,7 +137,7 @@ void add(spinor * const Q,const spinor * const R,const spinor * const S, const i
     q->s3.c2 = r->s3.c2 + s->s3.c2;
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 

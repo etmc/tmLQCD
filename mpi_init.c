@@ -22,7 +22,7 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
 #ifdef _USE_SHMEM
@@ -32,7 +32,7 @@
 #include "read_input.h"
 #include "mpi_init.h"
 
-#ifdef MPI
+#ifdef TM_USE_MPI
 /* Datatypes for the data exchange */
 MPI_Datatype mpi_su3;
 MPI_Datatype gauge_point;
@@ -208,7 +208,7 @@ void reduce_su3_ray(
 
 void tmlqcd_mpi_init(int argc,char *argv[]) {
   int i;
-#ifdef MPI
+#ifdef TM_USE_MPI
   int periods[] = {1,1,1,1};
   int dims[] = {0,0,0,0};
   int ndims = 0;
@@ -224,7 +224,7 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
     g_nb_list[i] = 0;
   }
 
-#ifdef MPI
+#ifdef TM_USE_MPI
 #  ifdef _USE_SHMEM
   /* we need that the PE number in MPI_COMM_WORL  */
   /* exactly correspond to the one in g_cart_grid */
@@ -745,7 +745,7 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
 
   MPI_Op_create(reduce_su3_ray, 0, &mpi_reduce_su3_ray);
 
-#else /*ifdef MPI */
+#else /*ifdef TM_USE_MPI */
   g_nproc = 1;
   g_proc_id = 0;
   g_nproc_x = 1;
@@ -776,14 +776,14 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   N_PROC_Z = 1;
 #  endif
   g_dbw2rand = 0;
-#endif   /*ifdef MPI */
+#endif   /*ifdef TM_USE_MPI */
 
   /* Here we perform some checks in order not to */
   /* run into trouble later                      */
 #if (defined PARALLELXYZT || defined PARALLELXYZ )
   if((T*LX*LY)%2 != 0 && even_odd_flag == 1) {
     fprintf(stderr, "T*LX*LY must be even!\nAborting prgram...\n");
-#  ifdef MPI 
+#  ifdef TM_USE_MPI 
     MPI_Finalize();
 #  endif
     exit(-1);
@@ -792,7 +792,7 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
 
   if(LZ%2 != 0 && even_odd_flag == 1) {
     fprintf(stderr, "LZ must be even!\nAborting prgram...\n");
-#ifdef MPI
+#ifdef TM_USE_MPI
     MPI_Finalize();
 #endif
     exit(-1);

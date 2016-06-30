@@ -18,14 +18,15 @@ Indices = 0
 ReadSource = no
 UseRelativePrecision = yes
 UseSloppyPrecision = yes
+UseEvenOdd = yes
 
 BeginOperator CLOVER
   2KappaMu = 0.1
   kappa = 0.160
   csw = 1.00
-# the following are not available for this operator (yet)
+# the following is the default for this operator and the only available option and therefore does not need and must not be set
 #  Solver = CG
-#  UseEvenOdd = yes
+  UseEvenOdd = yes
   SolverPrecision = 1.e-16
   MaxSolverIterations = 100
   PropagatorPrecision = 64

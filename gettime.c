@@ -27,13 +27,13 @@
 #    define _POSIX_C_SOURCE 199309L
 #  endif
 #  include <sys/time.h>
-#  include <bits/time.h>
+//#  include <bits/time.h>
 #endif
 #include <time.h>
 #if (defined BGL && !defined BGP)
 #  include <rts.h>
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
 
@@ -46,7 +46,7 @@ double gettime(void) {
   const double clockspeed=1.0e-6/700.0;
   t = rts_get_timebase() * clockspeed;
 
-#elif defined MPI
+#elif defined TM_USE_MPI
 
   t = MPI_Wtime();
 

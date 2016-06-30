@@ -21,10 +21,10 @@
 # include<config.h>
 #endif
 #include <stdlib.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 # include <global.h>
 #endif
@@ -32,73 +32,26 @@
 #include "scalar_prod.h"
 
 /*  <S,R>=S^* times R */
-_Complex double scalar_prod(const spinor * const S, const spinor * const R, const int N, const int parallel) {
-  _Complex double ALIGN res = 0.0;
-#ifdef MPI
-  _Complex double ALIGN mres;
-#endif
+#define _C_TYPE _Complex double
+#define _PSWITCH(s) s
+#define _PTSWITCH(s) s
 
-#ifdef OMP
-#pragma omp parallel
-  {
-  int thread_num = omp_get_thread_num();
-#endif
+#include"scalar_prod_body.c"
 
-  _Complex double ALIGN ds,tr,ts,tt,ks,kc;
-  const spinor *s,*r;
+#undef _C_TYPE
+#undef _PSWITCH
+#undef _PTSWITCH
 
-  ks = 0.0;
-  kc = 0.0;
+#define _C_TYPE _Complex float
+#define _PSWITCH(s) s ## _32
+#define _PTSWITCH(s) s ## 32
 
-#if (defined BGL && defined XLC)
-  __alignx(16, S);
-  __alignx(16, R);
-#endif
+#include"scalar_prod_body.c"
 
-#ifdef OMP
-#pragma omp for
-#endif
-  for (int ix = 0; ix < N; ix++)
-  {
-    s= S + ix;
-    r= R + ix;
-    
-    ds = r->s0.c0 * conj(s->s0.c0) + r->s0.c1 * conj(s->s0.c1) + r->s0.c2 * conj(s->s0.c2) +
-         r->s1.c0 * conj(s->s1.c0) + r->s1.c1 * conj(s->s1.c1) + r->s1.c2 * conj(s->s1.c2) +
-	 r->s2.c0 * conj(s->s2.c0) + r->s2.c1 * conj(s->s2.c1) + r->s2.c2 * conj(s->s2.c2) + 
-         r->s3.c0 * conj(s->s3.c0) + r->s3.c1 * conj(s->s3.c1) + r->s3.c2 * conj(s->s3.c2);
+#undef _C_TYPE
+#undef _PSWITCH
+#undef _PTSWITCH
 
-    /* Kahan Summation */
-    tr=ds+kc;
-    ts=tr+ks;
-    tt=ts-ks;
-    ks=ts;
-    kc=tr-tt;
-  }
-  kc=ks+kc;
-
-#ifdef OMP
-  g_omp_acc_cp[thread_num] = kc;
-
-  } /* OpenMP closing brace */
-
-  /* having left the parallel section, we can now sum up the Kahan
-     corrected sums from each thread into kc */
-  for(int i = 0; i < omp_num_threads; ++i)
-    res += g_omp_acc_cp[i];
-#else
-  res=kc;
-#endif
-
-#ifdef MPI
-  if(parallel == 1)
-  {
-    MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
-    return(mres);
-  }
-#endif
-  return(res);
-}
 
 #ifdef WITHLAPH
 _Complex double scalar_prod_su3vect(su3_vector * const S, su3_vector * const R, const int N, const int parallel)
@@ -106,7 +59,7 @@ _Complex double scalar_prod_su3vect(su3_vector * const S, su3_vector * const R, 
   double ALIGN ks, ds, tr, ts, tt;
   su3_vector *s, *r;
   _Complex double c;
-#ifdef MPI
+#ifdef TM_USE_MPI
   _Complex double d;
 #endif
 
@@ -130,7 +83,7 @@ _Complex double scalar_prod_su3vect(su3_vector * const S, su3_vector * const R, 
     }
   c = ks + c;
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   if(parallel == 1)
   {
     d = c;

@@ -134,7 +134,7 @@ int commsMap(const int *coords, void *fdata) {
 #endif
 
   int rank = 0;
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Cart_rank( g_cart_grid, n, &rank );
 #endif
 
@@ -292,7 +292,7 @@ void _initQuda() {
   }
 
   // initialize the QUDA library
-#ifdef MPI
+#ifdef TM_USE_MPI
   initQuda(-1); //sets device numbers automatically
 #else
   // when running in 'subprocess' mode, the external program should have provided us with a unique

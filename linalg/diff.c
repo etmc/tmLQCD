@@ -25,7 +25,7 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include <stdlib.h>
@@ -202,7 +202,7 @@ void diff(spinor * const Q,spinor * const R,spinor * const S, const int N)
 #elif (defined BGQ && defined XLC)
 
 void diff(spinor * const Q,const spinor * const R,const spinor * const S, const int N) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -220,7 +220,7 @@ void diff(spinor * const Q,const spinor * const R,const spinor * const S, const 
   __prefetch_by_load(R);
   __prefetch_by_load(Q);
 
-#ifndef OMP
+#ifndef TM_USE_OMP
 #pragma unroll(2)
 #else
 #pragma omp for
@@ -258,7 +258,7 @@ void diff(spinor * const Q,const spinor * const R,const spinor * const S, const 
     vec_st(z5, 0, q+20);
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP parallel closing brace */
 #endif
 
@@ -269,7 +269,7 @@ void diff(spinor * const Q,const spinor * const R,const spinor * const S, const 
 
 void diff(spinor * const Q, const spinor * const R, const spinor * const S, const int N)
 {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -278,7 +278,7 @@ void diff(spinor * const Q, const spinor * const R, const spinor * const S, cons
    const spinor *r,*s;
 
 /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
    for (int ix = 0; ix < N; ix++)
@@ -303,24 +303,55 @@ void diff(spinor * const Q, const spinor * const R, const spinor * const S, cons
      q->s3.c1 = r->s3.c1 - s->s3.c1;
      q->s3.c2 = r->s3.c2 - s->s3.c2;
    }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 }
 
 #endif
 
+void diff_ts(spinor * const Q, const spinor * const R, const spinor * const S, const int N)
+{
+  spinor *q;
+  const spinor *r,*s;
+  
+  for (int ix = 0; ix < N; ix++)
+    {
+      q=(spinor *) Q + ix;
+      r=(spinor *) R + ix;
+      s=(spinor *) S + ix;
+      
+      q->s0.c0 = r->s0.c0 - s->s0.c0;
+      q->s0.c1 = r->s0.c1 - s->s0.c1;
+      q->s0.c2 = r->s0.c2 - s->s0.c2;
+      
+      q->s1.c0 = r->s1.c0 - s->s1.c0;
+      q->s1.c1 = r->s1.c1 - s->s1.c1;
+      q->s1.c2 = r->s1.c2 - s->s1.c2;
+      
+      q->s2.c0 = r->s2.c0 - s->s2.c0;
+      q->s2.c1 = r->s2.c1 - s->s2.c1;
+      q->s2.c2 = r->s2.c2 - s->s2.c2;
+      
+      q->s3.c0 = r->s3.c0 - s->s3.c0;
+      q->s3.c1 = r->s3.c1 - s->s3.c1;
+      q->s3.c2 = r->s3.c2 - s->s3.c2;
+    }
+}
+
+
+
 #ifdef WITHLAPH
 void diff_su3vect(su3_vector * const Q,su3_vector * const R,su3_vector * const S, const int N)
 {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
 
   su3_vector *q,*r,*s;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for (int ix = 0; ix < N; ++ix) 
@@ -333,7 +364,7 @@ void diff_su3vect(su3_vector * const Q,su3_vector * const R,su3_vector * const S
     q->c1 = r->c1 - s->c1;
     q->c2 = r->c2 - s->c2;
   } 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 }

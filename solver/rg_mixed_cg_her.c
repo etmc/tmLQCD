@@ -72,7 +72,7 @@
 static void output_flops(const double seconds, const unsigned int N, const unsigned int iter_out, const unsigned int iter_in_sp, const unsigned int iter_in_dp, const double eps_sq);
 
 static inline unsigned int inner_loop_high(spinor * const x, spinor * const p, spinor * const q, spinor * const r, double * const rho1, const double delta,
-                                           matrix_mult f, const double eps_sq, const unsigned int N, const unsigned int iter ){
+                                           matrix_mult f, const double eps_sq, const unsigned int N, const unsigned int iter, const unsigned int max_iter ){
 
   static double alpha, beta, rho, rhomax;
   unsigned int j = 0;
@@ -84,7 +84,7 @@ static inline unsigned int inner_loop_high(spinor * const x, spinor * const p, s
   * iterated residual since the last update or if the target precision has been reached 
   * enforce convergence more strictly by a factor of 1.3 to avoid unnecessary restarts 
   * if the real residual is still a bit too large */
-  while( rho > delta*rhomax ){
+  while( rho > delta*rhomax && j+iter <= max_iter ){
     ++j;
     f(q,p);
     alpha = rho/scalar_prod_r(p,q,N,1);
@@ -107,7 +107,7 @@ static inline unsigned int inner_loop_high(spinor * const x, spinor * const p, s
 }
 
 static inline unsigned int inner_loop(spinor32 * const x, spinor32 * const p, spinor32 * const q, spinor32 * const r, float * const rho1, const float delta,
-                                      matrix_mult32 f32, const float eps_sq, const unsigned int N, const unsigned int iter,
+                                      matrix_mult32 f32, const float eps_sq, const unsigned int N, const unsigned int iter, const unsigned max_iter,
                                       float alpha, float beta, MCG_PIPELINED_TYPE pipelined, MCG_PR_TYPE pr ){
 
   static float rho, rhomax, pro;
@@ -119,7 +119,7 @@ static inline unsigned int inner_loop(spinor32 * const x, spinor32 * const p, sp
   if(pipelined==MCG_NO_PIPELINED){
     /* break out of inner loop if iterated residual goes below some fraction of the maximum observed
     * iterated residual since the last update */ 
-    while( rho > delta*rhomax ){
+    while( rho > delta*rhomax && j+iter <= max_iter ){
       ++j;
       f32(q,p);
       pro = scalar_prod_r_32(p,q,N,1);
@@ -147,7 +147,7 @@ static inline unsigned int inner_loop(spinor32 * const x, spinor32 * const p, sp
     // pipelined cg requires one more scalar product but may allow optimisations to be made
     // e.g.: one could do the collective communication for sqrnrm(r) while other stuff is being computed
     // it is also self-initialising (alpha=0, beta=0 will work)
-    while( rho > delta*rhomax ){
+    while( rho > delta*rhomax && j+iter <= max_iter ){
       ++j;
       assign_add_mul_r_32(x, p, alpha, N);
       assign_add_mul_r_32(r, q, -alpha, N);
@@ -232,14 +232,15 @@ int rg_mixed_cg_her(spinor * const P, spinor * const Q, solver_params_t solver_p
   }else{
     target_eps_sq = eps_sq;
   }
-  
-  // compute the maximum number of outer iterations based on the expected reduction
+ 
+  // compute maximum expected number of outer iterations based on expected reduction 
   // of the residual at each run of the inner solver
-  int N_outer = (int)ceil(log10( delta/eps_sq ))+4; // +4 is an arbitrary choice which seems to avoid switching to DP
+  int N_outer = (int)ceil(log10( sourcesquarenorm*delta/target_eps_sq ));
   if(g_debug_level > 0 && g_proc_id==0) 
     printf("#RG_Mixed CG: N_outer: %d \n", N_outer);
   
-  // should compute real residual here, for now we always use a zero guess
+  // should compute real residual here and solve subtracted problem with initial guess
+  // for now we always use a zero guess
   zero_spinor_field_32(x,N);
   zero_spinor_field(P,N);
   assign(phigh,Q,N);
@@ -251,9 +252,9 @@ int rg_mixed_cg_her(spinor * const P, spinor * const Q, solver_params_t solver_p
   assign_32(p,r,N);
   
   iter_in_sp += inner_loop(x, p, q, r, &rho_sp, delta, f32, (float)target_eps_sq, 
-                           N, iter_out+iter_in_sp+iter_in_dp, 0.0, 0.0, MCG_NO_PIPELINED, MCG_NO_PR);
+                           N, iter_out+iter_in_sp+iter_in_dp, max_iter, 0.0, 0.0, MCG_NO_PIPELINED, MCG_NO_PR);
 
-  for(iter_out = 1; iter_out < N_outer; iter_out++) {
+  for(iter_out = 1; iter_out < N_outer; ++iter_out) {
 
     // prepare for defect correction
     // update high precision solution 
@@ -274,7 +275,7 @@ int rg_mixed_cg_her(spinor * const P, spinor * const Q, solver_params_t solver_p
       zero_spinor_field(xhigh,N);
       beta_dp = 1/rho_dp;
       iter_in_dp += inner_loop_high(xhigh, phigh, qhigh, rhigh, &rho_dp, delta, f, 
-                                    target_eps_sq, N, iter_out+iter_in_sp+iter_in_dp);
+                                    target_eps_sq, N, iter_out+iter_in_sp+iter_in_dp, max_iter);
       rho_sp = rho_dp;
       // accumulate solution
       add(P,P,xhigh,N);
@@ -291,18 +292,22 @@ int rg_mixed_cg_her(spinor * const P, spinor * const Q, solver_params_t solver_p
       printf("RG_mixed CG residue reduction factor: %6d %10g\n", iter_in_sp+iter_in_dp+iter_out, beta_dp); fflush(stdout);
     }
 
-    if( rho_dp <= target_eps_sq ) {
+    if( rho_dp <= target_eps_sq || (iter_in_sp+iter_in_dp+iter_out) >= max_iter ) {
       etime = gettime();
       output_flops(etime-atime, N, iter_out, iter_in_sp, iter_in_dp, eps_sq);
       
       g_sloppy_precision_flag = save_sloppy;
       finalize_solver(solver_field, nr_sf);
-      finalize_solver_32(solver_field32, nr_sf32); 
-      return(iter_in_sp+iter_in_dp+iter_out);
+      finalize_solver_32(solver_field32, nr_sf32);
+      if( (iter_in_sp+iter_in_dp+iter_out) >= max_iter ){
+        return(-1);
+      } else {
+        return(iter_in_sp+iter_in_dp+iter_out);
+      }
     }
 
     // if it seems like we're stuck and reaching the iteration limit, we skip this correction and proceed in full precision above
-    if( iter_out >= (N_outer-3) ){
+    if( iter_out >= (N_outer-2) ){
       if(g_proc_id==0) printf("mixed CG: Reaching iteration limit, switching to DP!\n");
       high_control = 1;
       continue;
@@ -315,7 +320,7 @@ int rg_mixed_cg_her(spinor * const P, spinor * const Q, solver_params_t solver_p
 
     zero_spinor_field_32(x,N);
     iter_in_sp += inner_loop(x, p, q, r, &rho_sp, delta, f32, (float)target_eps_sq, 
-                             N, iter_out+iter_in_sp+iter_in_dp, 0.0, 0.0, MCG_NO_PIPELINED, MCG_NO_PR);
+                             N, iter_out+iter_in_sp+iter_in_dp, max_iter, 0.0, 0.0, MCG_NO_PIPELINED, MCG_NO_PR);
   }
   
   // convergence failure...

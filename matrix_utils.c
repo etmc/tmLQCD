@@ -30,7 +30,7 @@
 #endif
 #include "su3.h"
 
-#ifndef OMP
+#ifndef TM_USE_OMP
 static
 #endif
 void exponent_from_coefficients(su3 *out, _Complex double f0, _Complex double f1, _Complex double f2, su3 const *in)                                  

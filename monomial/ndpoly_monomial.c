@@ -502,7 +502,7 @@ int init_ndpoly_monomial(const int id) {
   */
   if(mnl->MDPolyLocNormConst < 0.0){
     fprintf(stderr, "Error, please specify LocNormConst in the input file! Aborting...\n");
-#ifdef MPI
+#ifdef TM_USE_MPI
     MPI_Finalize();
 #endif
     exit(6);
@@ -513,7 +513,7 @@ int init_ndpoly_monomial(const int id) {
   if((ifs = fopen(mnl->MDPolyRootsFile, "r")) != (FILE*)NULL) {
     if (fgets(title, 100, ifs) == NULL) {
       fprintf(stderr, "Error in reading %s! Aborting...\n", mnl->MDPolyRootsFile);
-#ifdef MPI
+#ifdef TM_USE_MPI
       MPI_Finalize();
 #endif
       exit(6);
@@ -528,7 +528,7 @@ int init_ndpoly_monomial(const int id) {
   }
   else {
     fprintf(stderr, "File %s is missing! Aborting...\n", mnl->MDPolyRootsFile);
-#ifdef MPI
+#ifdef TM_USE_MPI
     MPI_Finalize();
 #endif
     exit(6);

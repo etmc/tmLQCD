@@ -1,0 +1,31 @@
+# example input file for invert
+# for CG solver
+# requires a 4^4 gauge configuration conf.0000
+
+L=4
+T=4
+
+DebugLevel = 5
+InitialStoreCounter = 0
+Measurements = 1
+2kappamu = 0.05
+kappa = 0.177
+BCAngleT = 1
+GaugeConfigInputFile = conf
+UseEvenOdd = yes
+
+SourceType = GenPionTimeSlice
+ReadSource = no
+SourceTimeSlice = 0
+NoSamples = 1
+
+BeginOperator TMWILSON
+  2kappaMu = 0.05
+  kappa = 0.177
+  UseEvenOdd = yes
+  Solver = CG
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 1000
+  AddDownPropagator = no
+EndOperator
+

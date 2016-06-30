@@ -28,7 +28,7 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include <stdlib.h>
@@ -41,7 +41,7 @@ void mul_r_32_orphaned(spinor32 * const R, const float c, spinor32 * const S, co
   int ix;
   spinor32 *r,*s;
   
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for (ix = 0; ix < N; ix++){
@@ -67,12 +67,12 @@ void mul_r_32_orphaned(spinor32 * const R, const float c, spinor32 * const S, co
 }
 
 void mul_r_32(spinor32 * const R, const float c, spinor32 * const S, const int N){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
   mul_r_32_orphaned(R,c,S,N);
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /*OpenMP closing brace */
 #endif
 }

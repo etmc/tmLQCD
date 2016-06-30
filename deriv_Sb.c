@@ -98,7 +98,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
   } 
 
   /* for parallelization */
-#ifdef MPI
+#ifdef TM_USE_MPI
   xchange_2fields(k, l, ieo);
 #endif
   /************** loop over all lattice sites ****************/
@@ -408,11 +408,11 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
   }
 #endif
   /* for parallelization */
-#ifdef MPI
+#ifdef TM_USE_MPI
   xchange_2fields(k, l, ieo);
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #pragma omp parallel
   {
@@ -427,7 +427,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
   spinor * restrict sp ALIGN;
   spinor * restrict sm ALIGN;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
 
@@ -451,7 +451,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
   } 
 
   /************** loop over all lattice sites ****************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
@@ -636,7 +636,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
     /****************** end of loop ************************/
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 
