@@ -165,7 +165,7 @@ void _initQuda() {
   QudaPrecision cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
   QudaPrecision cuda_prec_precondition = QUDA_HALF_PRECISION;
 
-  QudaTune tune = QUDA_TUNE_NO;
+  QudaTune tune = QUDA_TUNE_YES;
 
 
   // *** the remainder should not be changed for this application
