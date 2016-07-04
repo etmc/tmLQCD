@@ -202,8 +202,8 @@
 /* Using QUDA GPU */
 #undef QUDA
 
-/* Using MG4QCD */
-#undef MG4QCD
+/* Using DDalphaAMG */
+#undef DDalphaAMG
 
 #endif
 

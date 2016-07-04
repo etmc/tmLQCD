@@ -56,8 +56,8 @@
 #ifdef QUDA
 #  include "quda_interface.h"
 #endif
-#ifdef MG4QCD
-#  include "mg4qcd_interface.h"
+#ifdef DDalphaAMG
+#  include "DDalphaAMG_interface.h"
 #endif
 
 static double cgmms_reached_prec = 0.0; 
@@ -97,7 +97,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
   }
 #endif
 
-#ifdef MG4QCD
+#ifdef DDalphaAMG
   if ( solver_flag==MG )
     return MG_solver_eo(Even_new, Odd_new, Even, Odd, precision, max_iter,
 			rel_prec, VOLUME/2, g_gauge_field, &M_full);

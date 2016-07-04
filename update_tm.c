@@ -60,8 +60,8 @@
 #include "hamiltonian_field.h"
 #include "update_tm.h"
 #include "gettime.h"
-#ifdef MG4QCD
-#include "mg4qcd_interface.h"
+#ifdef DDalphaAMG
+#include "DDalphaAMG_interface.h"
 #endif
 
 extern su3 ** g_gauge_field_saved;
@@ -120,7 +120,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
   }
 
-#ifdef MG4QCD
+#ifdef DDalphaAMG
   MG_reset();
 #endif
 
@@ -206,7 +206,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       free(xlfInfo);
     }
 
-#ifdef MG4QCD
+#ifdef DDalphaAMG
     MG_reset();
 #endif
 

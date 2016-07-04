@@ -50,8 +50,8 @@
 #include "operator/clovertm_operators.h"
 #include "operator/clovertm_operators_32.h"
 #include "monomial_solve.h"
-#ifdef MG4QCD
-#include "mg4qcd_interface.h"
+#ifdef DDalphaAMG
+#include "DDalphaAMG_interface.h"
 #endif
 
 
@@ -120,7 +120,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
   else if(use_solver == BICGSTAB){
      iteration_count =  bicgstab_complex(P, Q, max_iter, eps_sq, rel_prec, N, f);     
   }
-#ifdef MG4QCD 
+#ifdef DDalphaAMG 
   else if (use_solver == MG)
     iteration_count =  MG_solver(P, Q, eps_sq, max_iter,rel_prec, N , g_gauge_field, f);
 #endif     

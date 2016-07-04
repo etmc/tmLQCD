@@ -63,8 +63,8 @@
 #ifdef QUDA
 #  include "quda_interface.h"
 #endif
-#ifdef MG4QCD
-#  include "mg4qcd_interface.h"
+#ifdef DDalphaAMG
+#  include "DDalphaAMG_interface.h"
 #endif
 
 

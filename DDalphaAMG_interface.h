@@ -17,12 +17,12 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Interface for MG4QCD
+ * Interface for DDalphaAMG
  *
  *******************************************************************************/
 
-#ifndef MG4QCD_INTERFACE_H_
-#define MG4QCD_INTERFACE_H_
+#ifndef DDalphaAMG_INTERFACE_H_
+#define DDalphaAMG_INTERFACE_H_
 #include "global.h"
 #include "su3.h"
 #include"solver/matrix_mult_typedef.h"
@@ -52,4 +52,4 @@ int MG_solver_eo(spinor * const Even_new, spinor * const Odd_new,
 		 const double precision, const int max_iter, const int rel_prec,
 		 const int N, su3 **gf, matrix_mult_full f_full);
 
-#endif /* MG4QCD_INTERFACE_H_ */
+#endif /* DDalphaAMG_INTERFACE_H_ */
