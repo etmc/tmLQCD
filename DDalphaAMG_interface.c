@@ -101,22 +101,11 @@ static int vector_index_fct(int t, int z, int y, int x )
    return id;
 }
 
-static void Dsw_psi(spinor * const l, spinor * const k) 
-{
-  spinor ** eo_field = NULL;
-  
-  init_solver_field(&eo_field, VOLUME/2, 4);
-  convert_lexic_to_eo( eo_field[0], eo_field[1], k);
-  Msw_full( eo_field[2], eo_field[3], eo_field[0], eo_field[1] );
-  convert_eo_to_lexic( l, eo_field[2], eo_field[3]);
-  finalize_solver(eo_field, 4);
-}
-
 static int MG_check(spinor * const phi_new, spinor * const phi_old, const int N, const double precision, matrix_mult f) 
 {
   double differ[2], residual;
   spinor ** check_vect = NULL;
-  double acc_factor = 1.2;
+  double acc_factor = 2;
   
   init_solver_field(&check_vect, VOLUMEPLUSRAND,1);
   f( check_vect[0], phi_new);
@@ -127,10 +116,10 @@ static int MG_check(spinor * const phi_new, spinor * const phi_old, const int N,
   
   residual = differ[0]/differ[1];
   
-  if( residual > precision && residual < acc_factor*precision )
+  if( residual > precision && residual < acc_factor*precision ) {
     if(g_proc_id == 0)
       printf("WARNING: solution accepted even if the residual wasn't complitely acceptable (%e > %e) \n", residual, precision);
-  else if( residual > precision ) {
+  } else if( residual > acc_factor*precision ) {
     if(g_proc_id == 0) {
       printf("ERROR: something bad happened... MG converged giving the wrong solution!! Trying to restart... \n");
       printf("ERROR contd: || s - f_{tmLQC} * f_{DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e > %e \n", differ[0],differ[1],differ[0]/differ[1],precision);
@@ -248,7 +237,6 @@ static int MG_solve(spinor * const phi_new, spinor * const phi_old, const double
       printf("WARNING: expected N == VOLUME/2 for the required operator in MG_solve. Continuing with N == VOLUME\n");
   }
   else if ( f == D_psi ||         //          Full operator    with plus mu
-	    f == Dsw_psi ||       //          Full operator    with plus mu
 	    f == Q_plus_psi ||    // Gamma5 - Full operator    with plus mu 
 	    f == Q_minus_psi ||   // Gamma5 - Full operator    with minus mu
 	    f == Q_pm_psi ) {     //          Full operator    squared
@@ -257,7 +245,7 @@ static int MG_solve(spinor * const phi_new, spinor * const phi_old, const double
   }
   else if( g_proc_id == 0 )
     printf("WARNING: required operator unknown for MG_solve. Using standard operator: %s.\n",
-	   N==VOLUME?"Dsw_psi":"Msw_plus_psi");
+	   N==VOLUME?"D_psi":"Msw_plus_psi");
 
   // Setting mu
   if (      f == Msw_psi ||       //          Schur complement with mu=0 on odd sites
@@ -274,7 +262,6 @@ static int MG_solve(spinor * const phi_new, spinor * const phi_old, const double
 	    f == Qtm_plus_psi ||  // Gamma5 - Schur complement with plus mu 
 	    f == Qsw_plus_psi ||  // Gamma5 - Schur complement with plus mu
 	    f == D_psi ||         //          Full operator    with plus mu
-	    f == Dsw_psi ||       //          Full operator    with plus mu
 	    f == Q_plus_psi ||    // Gamma5 - Full operator    with plus mu 
 	    f == Qtm_pm_psi ||    //          Schur complement squared
 	    f == Qsw_pm_psi ||    //          Schur complement squared
@@ -309,8 +296,7 @@ static int MG_solve(spinor * const phi_new, spinor * const phi_old, const double
 	    f == Mtm_minus_psi || //          Schur complement with minus mu 
 	    f == Msw_minus_psi || //          Schur complement with minus mu
 	    f == Msw_psi ||       //          Schur complement with mu=0 on odd sites
-	    f == D_psi ||         //          Full operator    with plus mu
-	    f == Dsw_psi )        //          Full operator    with plus mu
+	    f == D_psi )          //          Full operator    with plus mu
     DDalphaAMG_solve( new, old, precision, &mg_status );
   else
     DDalphaAMG_solve( new, old, precision, &mg_status );
@@ -538,9 +524,9 @@ int MG_solver_eo(spinor * const Even_new, spinor * const Odd_new,
   else if (f_full == Q_full)
     f=&Q_plus_psi;
   else if (f_full == Msw_full)
-    f=&Dsw_psi;
+    f=&D_psi;
   else {
-    f=&Dsw_psi;
+    f=&D_psi;
     if( g_proc_id == 0 )
       printf("WARNING: required operator unknown for MG_solver_eo. Using standard operator.\n");
   }
