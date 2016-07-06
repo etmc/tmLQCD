@@ -124,7 +124,7 @@ void gaussian_volume_source(spinor * const P, spinor * const Q,
 
 void extended_pion_source(spinor * const P, spinor * const Q,
 			  spinor * const R, spinor * const S,
-			  const int t0,
+			  const int t0, const int ts,
 			  const double px, const double py, const double pz) {
   int lt, lx, ly, lz, i, x, y, z, id=0, t;
   int coords[4];
@@ -134,7 +134,7 @@ void extended_pion_source(spinor * const P, spinor * const Q,
   zero_spinor_field(P,VOLUME/2);
   zero_spinor_field(Q,VOLUME/2);
   
-  t=((g_nproc_t*T)/2+t0)%(g_nproc_t*T);
+  t=(ts + t0)%(g_nproc_t*T);
   lt = t - g_proc_coords[0]*T;
   coords[0] = t / T;
   for(x = 0; x < LX*g_nproc_x; x++) {

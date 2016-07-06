@@ -34,7 +34,7 @@ void source_generation_nucleon(spinor * const P, spinor * const Q,
 
 void extended_pion_source(spinor * const P, spinor * const Q,
 			  spinor * const R, spinor * const S,
-			  const int t0,
+			  const int t0, const int ts,
 			  const double px, const double py, const double pz);
 
 void source_generation_pion_zdir(spinor * const P, spinor * const Q,

@@ -267,7 +267,7 @@ int main(int argc,char *argv[]) {
       printf("Generating ext. pion source %s!\n", spinorfilename);
       extended_pion_source(g_spinor_field[2], g_spinor_field[3],
 			   g_spinor_field[0], g_spinor_field[1],
-			   t0, 0., 0., 0.);
+			   t0, (g_nproc_t*T)/2, 0., 0., 0.);
       if(!filenameflag) {
 	if(T_global > 99) sprintf(spinorfilename, "g%s.%.4d.%.4d.%.3d", filename, nstore, sample, t0); 
         else sprintf(spinorfilename, "g%s.%.4d.%.4d.%.2d", filename, nstore, sample, t0); 
