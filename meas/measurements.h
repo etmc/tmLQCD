@@ -44,7 +44,10 @@ typedef struct {
   int max_iter;
   /* for polyakov loop */
   int direction;
-  
+
+  // random seed
+  unsigned int seed;
+
   /* how it's usually called */
   char name[100];
 

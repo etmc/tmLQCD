@@ -172,8 +172,8 @@ void extended_pion_source(spinor * const P, spinor * const Q,
 }
 
 void source_generation_pion_only(spinor * const P, spinor * const Q,
-				 const int t,
-				 const int sample, const int nstore) {
+				 const int t, const int sample, 
+                                 const int nstore, const unsigned int _seed) {
 
   int reset = 0, i, x, y, z, is, ic, lt, lx, ly, lz, id=0;
   int coords[4], seed, r;
@@ -192,7 +192,7 @@ void source_generation_pion_only(spinor * const P, spinor * const Q,
   }
 
   /* Compute the seed */
-  seed =(int) abs(1 + sample + t*10*97 + nstore*100*53);
+  seed =(int) abs(_seed + sample + t*10*97 + nstore*100*53);
 
   rlxd_init(2, seed);
 

@@ -248,7 +248,7 @@ int main(int argc,char *argv[]) {
       printf("Generating source %s!\n", spinorfilename);
       fflush(stdout);
       source_generation_pion_only(g_spinor_field[0], g_spinor_field[1], 
-				  t0, sample, nstore);
+				  t0, sample, nstore, random_seed);
       
       co = scalar_prod(g_spinor_field[1], g_spinor_field[1], VOLUME/2, 1);
       write_source_type(0, spinorfilename);
