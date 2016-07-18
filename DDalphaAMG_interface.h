@@ -29,12 +29,14 @@
 
 extern int mg_setup_iter;
 extern int mg_coarse_setup_iter;
-extern int mg_dtau_setup_iter;
+extern int mg_update_setup_iter;
+extern int mg_omp_num_threads;
 extern int mg_Nvec;
 extern int mg_lvl;
 extern int mg_blk[4];
 extern double mg_cmu_factor;
-extern double mg_dtau;
+extern double mg_dtau_update;
+extern double mg_rho_update;
 
 void MG_init(void);
 void MG_update_gauge(double step);

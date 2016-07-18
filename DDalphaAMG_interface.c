@@ -49,12 +49,14 @@ int mg_update_setup=0; //Number of additional setup iteration
 int mg_initialized=0;
 int mg_setup_iter=5;
 int mg_coarse_setup_iter=3;
-int mg_dtau_setup_iter=1;
+int mg_update_setup_iter=1;
+int mg_omp_num_threads=0;
 int mg_Nvec=24;
 int mg_lvl=3;
 int mg_blk[4] = {0, 0, 0, 0};
 double mg_cmu_factor = 1.0;
-double mg_dtau = 0.0;
+double mg_dtau_update = 0.0;
+double mg_rho_update = -1.0;
 double mg_tau = 0.0;
 double gauge_tau = 0.0;
 
@@ -139,12 +141,15 @@ static int MG_pre_solve( su3 **gf )
 
   double dtau= mg_tau-gauge_tau;
   // Checking if:
-  //  mg_update_setup < mg_dtau_setup_iter : maybe you want to do more iteration at this run
-  //  mg_dtau < dtau  : regular condition for update of setup
-  //  mg_dtau < -dtau : during reversability check dtau is negative!
-  //  mg_dtau == 0.0  : updating at every change of configuration -> valid as well if configuration changed outside the HMC
-  if ( mg_do_setup == 0 && mg_update_setup < mg_dtau_setup_iter && ( mg_dtau < dtau || mg_dtau < -dtau || (mg_dtau==0.0 && mg_update_gauge==1)) ) 
-    mg_update_setup = mg_dtau_setup_iter;
+  //  mg_update_setup < mg_update_setup_iter : maybe you want to do more iteration at this run
+  //  mg_dtau_update < dtau  : regular condition for update of setup
+  //  mg_dtau_update < -dtau : during reversability check dtau is negative!
+  //  mg_dtau_update == 0.0  : updating at every change of configuration -> valid as well if configuration changed outside the HMC
+  //  mg_rho_update < 0.0    : parameter ignore
+  //  mg_rho_update == rho   : updating only if this condition and the others are satisfied
+  if ( mg_do_setup == 0 && mg_update_setup < mg_update_setup_iter && ( mg_dtau_update < dtau || mg_dtau_update < -dtau || (mg_dtau_update==0.0 && mg_update_gauge==1)) &&
+       (mg_rho_update < 0.0 || mg_rho_update == g_mu3)) 
+    mg_update_setup = mg_update_setup_iter;
   
   if(verbose && g_proc_id == 0)
     printf("Tau has been increased since last MG setup update of %e\n", dtau);
@@ -356,7 +361,10 @@ void MG_init()
 
   mg_init.number_of_levels=mg_lvl;
 #ifdef OMP
-  mg_init.number_openmp_threads=omp_num_threads;
+  if(mg_omp_num_threads<=0)
+      mg_init.number_openmp_threads=omp_num_threads;
+  else
+      mg_init.number_openmp_threads=mg_omp_num_threads;
 #else
   mg_init.number_openmp_threads=1;
 #endif   
