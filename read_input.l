@@ -673,7 +673,7 @@ static inline void rmQuotes(char *str){
   {SPC}*MGSetupMu{EQL}{FLT}+ {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mg_setup_mu=c;
-    if(myverbose) printf("  MGCoarseMuFactor set to %f line %d operator %d\n", mg_cmu_factor, line_of_file, current_operator);
+    if(myverbose) printf("  MGSetupMu set to %f line %d operator %d\n", mg_cmu_factor, line_of_file, current_operator);
   }
   {SPC}*MGCoarseMuFactor{EQL}{FLT}+ {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);

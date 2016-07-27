@@ -173,9 +173,11 @@ static int MG_pre_solve( su3 **gf )
   }
   
   if (mg_do_setup==1) {
-    if( mg_setup_mu == mg_setup_mu ) //is set as a NaN at the beginning, so true only if used
+    if( mg_setup_mu == mg_setup_mu ) { //is set as a NaN at the beginning, so true only if used
+      if (g_proc_id == 0)
+	printf("DDalphaAMG using mu=%f during setup\n", mg_setup_mu);
       MG_update_mu(mg_setup_mu, 0); 
-    else
+    } else
       MG_update_mu(g_mu, 0);
     if (g_proc_id == 0)
       printf("DDalphaAMG running setup\n");
@@ -190,9 +192,11 @@ static int MG_pre_solve( su3 **gf )
   }
   
   if (mg_update_setup>0) {
-    if( mg_setup_mu == mg_setup_mu ) //is set as a NaN at the beginning, so true only if used
+    if( mg_setup_mu == mg_setup_mu ) { //is set as a NaN at the beginning, so true only if used
+      if (g_proc_id == 0)
+	printf("DDalphaAMG using mu=%f during setup\n", mg_setup_mu);
       MG_update_mu(mg_setup_mu, 0); 
-    else
+    } else
       MG_update_mu(g_mu, 0);
     if (g_proc_id == 0)
       printf("DDalphaAMG updating setup\n");
