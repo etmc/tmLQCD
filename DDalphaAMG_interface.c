@@ -54,6 +54,7 @@ int mg_omp_num_threads=0;
 int mg_Nvec=24;
 int mg_lvl=3;
 int mg_blk[4] = {0, 0, 0, 0};
+double mg_setup_mu = 0./0.; //setting to NaN
 double mg_cmu_factor = 1.0;
 double mg_dtau_update = 0.0;
 double mg_rho_update = -1.0;
@@ -138,7 +139,7 @@ static int MG_check(spinor * const phi_new, spinor * const phi_old, const int N,
 
 static int MG_pre_solve( su3 **gf )
 {
-
+  
   double dtau= mg_tau-gauge_tau;
   // Checking if:
   //  mg_update_setup < mg_update_setup_iter : maybe you want to do more iteration at this run
@@ -172,7 +173,10 @@ static int MG_pre_solve( su3 **gf )
   }
   
   if (mg_do_setup==1) {
-    MG_update_mu(g_mu, 0);
+    if( mg_setup_mu == mg_setup_mu ) //is set as a NaN at the beginning, so true only if used
+      MG_update_mu(mg_setup_mu, 0); 
+    else
+      MG_update_mu(g_mu, 0);
     if (g_proc_id == 0)
       printf("DDalphaAMG running setup\n");
     DDalphaAMG_setup(&mg_status);
@@ -180,13 +184,16 @@ static int MG_pre_solve( su3 **gf )
     mg_tau = gauge_tau;
     if (mg_status.success && g_proc_id == 0)	
       printf("DDalphaAMG setup ran, time %.2f sec (%.2f %% on coarse grid)\n",
-	     mg_status.time, 100.*(mg_status.coarse_time/mg_status.time));
+             mg_status.time, 100.*(mg_status.coarse_time/mg_status.time));
     else if ( g_proc_id == 0)
       printf("ERROR: setup procedure did not run correctly");
   }
   
   if (mg_update_setup>0) {
-    MG_update_mu(g_mu, 0);
+    if( mg_setup_mu == mg_setup_mu ) //is set as a NaN at the beginning, so true only if used
+      MG_update_mu(mg_setup_mu, 0); 
+    else
+      MG_update_mu(g_mu, 0);
     if (g_proc_id == 0)
       printf("DDalphaAMG updating setup\n");
     DDalphaAMG_update_setup(mg_update_setup, &mg_status);
