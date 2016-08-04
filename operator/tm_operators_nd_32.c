@@ -316,3 +316,13 @@ void Qsw_pm_ndpsi_32(spinor32 * const l_strange, spinor32 * const l_charm,
 
   return;
 }
+
+void Qsw_pm_ndpsi_shift_32(spinor32* const l_strange, spinor32 * const l_charm,
+      spinor32 * const k_strange, spinor32 * const k_charm){
+  Qsw_pm_ndpsi_32(l_strange,l_charm,k_strange,k_charm);
+  assign_add_mul_r_32(l_strange, k_strange, (float)g_shift, VOLUME/2 );
+  assign_add_mul_r_32(l_charm, k_charm, (float)g_shift, VOLUME/2 );
+  return;
+}
+
+
