@@ -2,6 +2,7 @@
  *  
  * Copyright (C) 2008 Carsten Urbach
  *               2009 Florian Burger
+ *               2016 Georg Bergner
  *
  * This file is part of tmLQCD.
  *
@@ -35,7 +36,9 @@
 #include "polyakov_loop.h"
 #include "oriented_plaquettes.h"
 #include "gradient_flow.h"
+#include "reweightingmeas.h"
 #include "measurements.h"
+
 
 measurement measurement_list[max_no_measurements];
 int no_measurements = 0;
@@ -49,6 +52,7 @@ int add_measurement(const enum MEAS_TYPE meas_type) {
   measurement_list[no_measurements].measurefunc = &dummy_meas;
   measurement_list[no_measurements].type = meas_type;
   measurement_list[no_measurements].initialised = 1;
+  measurement_list[no_measurements].parameter=(void *)NULL;
   no_measurements++;
   return(no_measurements);
 }
@@ -80,6 +84,11 @@ int init_measurements(){
       measurement_list[i].measurefunc = &gradient_flow_measurement;
     }
     
+    if(measurement_list[i].type == REWEIGHTING) {
+      measurement_list[i].measurefunc = &reweighting_measurement;
+      initialize_reweighting_parameter(&measurement_list[i].parameter);
+    }
+
     measurement_list[i].id = i;
  }
 return(0);
@@ -88,7 +97,13 @@ return(0);
 
 
 void free_measurements(){
-
+	int i;
+	for(i = 0; i < no_measurements; i++) {
+		if(measurement_list[i].parameter){
+			free(measurement_list[i].parameter);
+			measurement_list[i].parameter=NULL;
+		}
+	}
  return;
 }
 

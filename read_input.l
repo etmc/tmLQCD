@@ -59,6 +59,7 @@ EQL {SPC}*={SPC}*
 #include"monomial/monomial.h"
 #include"solver/solver_types.h"
 #include"meas/measurements.h"
+#include"meas/reweightingmeas.h"
 #include"integrator.h"
 #include"operator.h"
 #include"phmc.h"
@@ -106,7 +107,7 @@ static inline void rmQuotes(char *str){
   char * type;
 
   int verbose = 0;
-  int myverbose = 0;
+  int myverbose = 1;
   int startoption;
   int Ntherm;
   int Nmeas;
@@ -265,6 +266,7 @@ static inline void rmQuotes(char *str){
 %x NOSOURCESZ2
 %x INITMEASUREMENT
 %x ONLINEMEAS
+%x REWEIGHTINGMEAS
 %x PIONNORMMEAS
 %x PLOOP
 %x ORIENTEDPLAQUETTESMEAS
@@ -1252,6 +1254,11 @@ static inline void rmQuotes(char *str){
     mnl->type = CLOVERDETRATIORW;
     strcpy((*mnl).name, "CLOVERDETRATIORW");
   }
+  else if(strcmp(yytext, "CLOVERDETRATIORWD")==0) {
+    mnl->type = CLOVERDETRATIORWD;
+    strcpy((*mnl).name, "CLOVERDETRATIORWD");
+  }
+  
   else if(strcmp(yytext, "DETRATIO")==0) {
     mnl->type = DETRATIO;
     strcpy((*mnl).name, "DETRATIO");
@@ -1355,6 +1362,7 @@ static inline void rmQuotes(char *str){
   else if(mnl->type == CLOVERDET) BEGIN(CLDETMONOMIAL);
   else if(mnl->type == CLOVERDETRATIO) BEGIN(CLDETRATMONOMIAL);
   else if(mnl->type == CLOVERDETRATIORW) BEGIN(CLDETRATRWMONOMIAL);
+  else if(mnl->type == CLOVERDETRATIORWD) BEGIN(CLDETRATRWMONOMIAL);
   else BEGIN(DETMONOMIAL);
 }
 
@@ -1887,6 +1895,7 @@ static inline void rmQuotes(char *str){
  if(myverbose) printf("initialising measurements line %d\n", line_of_file);
   current_measurement++;
   meas = &measurement_list[current_measurement];
+  meas->parameter=(void*)NULL;
   meas->id = current_measurement;
   meas->direction = 0;
   meas->max_iter = 15000;
@@ -1897,6 +1906,11 @@ static inline void rmQuotes(char *str){
   else if(strcmp(yytext, "PIONNORM")==0) {
     meas->type = PIONNORM;
     strcpy((*meas).name, "PIONNORM");
+  }
+  else if(strcmp(yytext, "REWEIGHTINGMEAS")==0) {
+    meas->type = REWEIGHTING;
+    initialize_reweighting_parameter(&meas->parameter);
+    strcpy((*meas).name, "REWEIGHTINGMEAS");
   }
   else if(strcmp(yytext, "POLYAKOVLOOP")==0) {
     meas->type = POLYAKOV;
@@ -1927,13 +1941,14 @@ static inline void rmQuotes(char *str){
   if(myverbose) printf("measurement has id %d\n", current_measurement);
 
   if(meas->type == ONLINE) BEGIN(ONLINEMEAS);
+  else if(meas->type == REWEIGHTING) BEGIN(REWEIGHTINGMEAS);
   else if(meas->type == PIONNORM) BEGIN(PIONNORMMEAS);
   else if(meas->type == POLYAKOV) BEGIN(PLOOP);
   else if(meas->type == ORIENTED_PLAQUETTES) BEGIN(ORIENTEDPLAQUETTESMEAS);
   else if(meas->type == GRADIENT_FLOW) BEGIN(GRADIENTFLOWMEAS);
 }
 
-<ONLINEMEAS,PIONNORMMEAS,PLOOP,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS>{
+<ONLINEMEAS,PIONNORMMEAS,PLOOP,REWEIGHTINGMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS>{
   ^EndMeasurement{SPC}* {
     if(myverbose) printf("Measurement with id %d parsed in line %d\n\n", meas->id, line_of_file);
     BEGIN(0);
@@ -1945,11 +1960,62 @@ static inline void rmQuotes(char *str){
   }
 }
 
-<ONLINEMEAS,PIONNORMMEAS>{
+<ONLINEMEAS,PIONNORMMEAS,REWEIGHTINGMEAS>{
   {SPC}*MaxSolverIterations{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     meas->max_iter = a;
     if(myverbose) printf("  MaxSolverIterations set to %d line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+}
+
+<REWEIGHTINGMEAS>{
+  {SPC}*Operator{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->reweighting_operator = a;
+    if(myverbose) printf("  ReweightingOperator set to %d line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+  {SPC}*Samples{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->reweighting_number_sources = a;
+    if(myverbose) printf("  ReweightingSamples set to %d line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+   {SPC}*InterpolationSteps{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->interpolationsteps = a;
+    if(myverbose) printf("  ReweightingSamples set to %d line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+  {SPC}*UseEvenOdd{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->use_evenodd = a;
+    if(myverbose) printf("  UseEvenOdd set to %d line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+  {SPC}*2KappaMu0{EQL}{FLT} {
+    sscanf(yytext, " %[20a-zA-Z] = %lf", name, &c);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->k2mu0 = c;
+    if(myverbose) printf("Reweighting 2KappaMu0 set to %e line %d\n", c, line_of_file);
+  }
+  {SPC}*Mu{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->rmu = c;
+    if(myverbose) printf("Reweighting Mu set to %e line %d\n", c, line_of_file);
+  }
+  {SPC}*Mu0{EQL}{FLT} {
+    sscanf(yytext, " %[0a-zA-Z] = %lf", name, &c);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->rmu0 = c;
+    if(myverbose) printf("Reweighting Mu0 set to %e line %d\n", c, line_of_file);
+  }
+   {SPC}*Kappa0{EQL}{FLT} {
+    sscanf(yytext, " %[20a-zA-Z] = %lf", name, &c);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->kappa0 = c;
+    if(myverbose) printf("Reweighting Kappa0 set to %e line %d\n", c, line_of_file);
   }
 }
 
@@ -2484,7 +2550,7 @@ static inline void rmQuotes(char *str){
   BEGIN(comment_caller);
 }
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID>{SPC}*\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,REWEIGHTINGMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID>{SPC}*\n   {
   line_of_file++;
 }
 <*>{SPC}*\n                       {

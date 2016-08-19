@@ -4,6 +4,8 @@
  *
  * Adapted from monomial.h by Florian Burger 2009/12/16
  *
+ * More flexible handling of measurements parameters by Georg Bergner 2016
+ *
  * This file is part of tmLQCD.
  *
  * tmLQCD is free software: you can redistribute it and/or modify
@@ -18,6 +20,9 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *
+ *
  ***********************************************************************/
 #ifndef _MEASUREMENTS_H
 #define _MEASUREMENTS_H
@@ -30,20 +35,21 @@ enum MEAS_TYPE {
   PIONNORM, 
   POLYAKOV, 
   ORIENTED_PLAQUETTES,
-  GRADIENT_FLOW 
+  GRADIENT_FLOW,
+  REWEIGHTING
   };
+
+
+
 
 typedef struct {
   enum MEAS_TYPE type;
   int initialised;
   int id;
   
-  /* frequency of the measurement */
-  int freq;
-  /* for maximal iterations in inversions for correlators */
-  int max_iter;
   /* for polyakov loop */
   int direction;
+
 
   // random seed
   unsigned int seed;
@@ -51,11 +57,22 @@ typedef struct {
   /* how it's usually called */
   char name[100];
 
+  
+  /* for maximal iterations in inversions for correlators */
+  int max_iter;
+
+
   /* maximum number of slice, the source can be put
     if the correlator is measured in T(Z)-direction this will be set to 
     T(LZ) by init_measurements
   */
   int max_source_slice;
+
+
+  void* parameter;
+
+  /* frequency of the measurement */
+  int freq;
   
   /* functions for the measurement */
   void (*measurefunc) (const int traj, const int id, const int ieo);
