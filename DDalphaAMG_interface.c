@@ -294,7 +294,7 @@ static int MG_solve(spinor * const phi_new, spinor * const phi_old, const double
 	    f == Qsw_psi ||       // Gamma5 - Schur complement with mu=0 on odd sites
 	    f == Q_plus_psi ||    // Gamma5 - Full operator    with plus mu 
 	    f == Q_minus_psi ) {  // Gamma5 - Full operator    with minus mu
-    mul_gamma5(phi_old, N);
+   // mul_gamma5(phi_old, N); // error in the original version
     DDalphaAMG_solve( new, old, precision, &mg_status );
     mul_gamma5(phi_old, N);
   }

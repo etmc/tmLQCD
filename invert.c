@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
   int j, i, ix = 0, isample = 0, op_id = 0;
   char datafilename[206];
   char parameterfilename[206];
-  char conf_filename[50];
+  char conf_filename[300];
   char * input_filename = NULL;
   char * filename = NULL;
   double plaquette_energy;
