@@ -1,0 +1,577 @@
+/***********************************************************************
+ *
+ * Measurements of the reweighting factors by Georg Bergner 2016
+ *
+ * Copyright (C) 2008 Carsten Urbach
+ *
+ * This file is part of tmLQCD.
+ *
+ * tmLQCD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * tmLQCD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
+ ***********************************************************************/
+
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+#include <time.h>
+#include "global.h"
+#include "start.h"
+#include "ranlxs.h"
+#include "su3spinor.h"
+#include "source_generation.h"
+#include "operator.h"
+#include "invert_eo.h"
+#include "solver/solver.h"
+#include "geometry_eo.h"
+#include "linalg/convert_eo_to_lexic.h"
+#include "measurements.h"
+#include "correlators.h"
+#include "gettime.h"
+#include "linalg/square_norm.h"
+#include "linalg/scalar_prod_r.h"
+#include "linalg/scalar_prod_i.h"
+#include "linalg/diff.h"
+#include "linalg/assign.h"
+#include "../read_input.h"
+#include "reweightingmeas.h"
+#include "../operator/Hopping_Matrix.h"
+#include "../operator/tm_operators.h"
+#include "../operator/clovertm_operators.h"
+#include "../operator/tm_operators_32.h"
+#include "../operator/clovertm_operators_32.h"
+#include "../operator/clover_leaf.h"
+#include "../DDalphaAMG_interface.h"
+#include "../boundary.h"
+
+/*#define CHECK_OPERATOR*/
+
+static double get_sw_reweighting(const double mu1, const double mu2,
+		const double kappa1, const double kappa2, const double csw1,
+		const double csw2) {
+	double ret;
+	sw_term((const su3**) g_gauge_field, kappa1, csw1);
+	ret = -sw_trace(0, mu1);
+	if (kappa1 != kappa2 || csw1 != csw2) {
+		sw_term((const su3**) g_gauge_field, kappa2, csw2);
+	}
+	ret += sw_trace(0, mu2);
+	return (ret);
+}
+
+static int is_schur_complement(const matrix_mult f) {
+	if (f == Msw_psi ||     //          Schur complement with mu=0 on odd sites
+			f == Qsw_psi || // Gamma5 - Schur complement with mu=0 on odd sites
+			f == Mtm_plus_psi ||  //          Schur complement with plus mu
+			f == Msw_plus_psi ||  //          Schur complement with plus mu
+			f == Qtm_plus_psi ||  // Gamma5 - Schur complement with plus mu
+			f == Qsw_plus_psi ||  // Gamma5 - Schur complement with plus mu
+			f == Mtm_minus_psi || //          Schur complement with minus mu
+			f == Msw_minus_psi || //          Schur complement with minus mu
+			f == Qtm_minus_psi || // Gamma5 - Schur complement with minus mu
+			f == Qsw_minus_psi || // Gamma5 - Schur complement with minus mu
+			f == Qtm_pm_psi ||    //          Schur complement squared
+			f == Qsw_pm_psi) {   //          Schur complement squared
+		return 1;
+	}
+	return 0;
+}
+
+static int is_sym_pos_definite(const matrix_mult f) {
+	if (f == Qtm_pm_psi ||    //          Schur complement squared
+			f == Qsw_pm_psi || f == Q_pm_psi) { //          Full operator    squared
+		return 1;
+	}
+	return 0;
+}
+
+static void update_global_parameters(const int op_id) {
+	operator * optr = &operator_list[op_id];
+	g_kappa = optr->kappa;
+	boundary(g_kappa);
+	g_mu = optr->mu;
+	g_c_sw = optr->c_sw;
+	if (optr->type == CLOVER) {
+		if (g_cart_id == 0 && g_debug_level > 1) {
+			printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
+		}
+		init_sw_fields(VOLUME);
+
+		sw_term((const su3**) g_gauge_field, optr->kappa, optr->c_sw);
+		/* this must be EE here!   */
+		/* to match clover_inv in Qsw_psi */
+		sw_invert(EE, optr->mu);
+		/* now copy double sw and sw_inv fields to 32bit versions */
+		copy_32_sw_fields();
+	}/*clover leave update*/
+}
+
+static int invert_operator_Q(spinor * const P, spinor * const Q,
+		const int op_id, const int pm) {
+
+	operator * optr = &operator_list[op_id];
+	int iteration_count = 0;
+	int use_solver = optr->solver;
+	int rel_prec = optr->rel_prec;
+	double eps_sq = optr->eps_sq;
+	double check_prec;
+	int max_iter = optr->maxiter;
+	matrix_mult f = optr->applyQm;
+	int is_squared = 0;
+	spinor * source = Q;
+	if (pm == 1) {
+		f = optr->applyQp;
+	}
+	solver_params_t solver_params = optr->solver_params;
+	int n = VOLUME;
+	if (is_schur_complement(f)) {
+		n = VOLUME / 2;
+	}
+
+	optr->iterations = 0;
+	optr->reached_prec = -1.;
+	update_global_parameters(op_id);
+
+	if (use_solver == MIXEDCG || use_solver == RGMIXEDCG || use_solver == CG) {
+		if (!is_sym_pos_definite(f)) {
+			f = optr->applyQsq;
+			is_squared = 1;
+			if (pm == 0) {
+				optr->applyQp(g_spinor_field[DUM_DERI], Q);
+				source = g_spinor_field[DUM_DERI];
+			}
+		}
+	}
+
+	/*check initial precision since some inverters fail if already converged*/
+	f(g_spinor_field[DUM_DERI + 2], P);
+	diff(g_spinor_field[DUM_DERI + 2], g_spinor_field[DUM_DERI + 2], source, n);
+	check_prec = square_norm(g_spinor_field[DUM_DERI + 2], VOLUME, 1);
+	if (g_proc_id == 0) {
+		printf("Inversion initial precision %e\n", check_prec);
+	}
+	if (check_prec < 1e-24) {
+		return (0);
+	}
+
+	if (use_solver == MIXEDCG || use_solver == RGMIXEDCG) {
+		// the default mixed solver is rg_mixed_cg_her
+		int (*msolver_fp)(spinor * const, spinor * const, solver_params_t,
+				const int, double, const int, const int, matrix_mult,
+				matrix_mult32) = rg_mixed_cg_her;
+
+		// but it might be necessary at some point to use the old version
+		if (use_solver == MIXEDCG) {
+			msolver_fp = mixed_cg_her;
+		}
+
+		if (usegpu_flag) {
+#ifdef HAVE_GPU
+#ifdef TEMPORALGAUGE
+			to_temporalgauge(g_gauge_field, source , P);
+#endif
+			iteration_count = linsolve_eo_gpu(P, source, max_iter, eps_sq, rel_prec, n, f);
+#ifdef TEMPORALGAUGE
+			from_temporalgauge(source, P);
+#endif
+#endif
+			return (iteration_count);
+		} else {
+			if (f == Qtm_pm_psi) {
+				iteration_count = msolver_fp(P, source, solver_params, max_iter,
+						eps_sq, rel_prec, n, f, &Qtm_pm_psi_32);
+				return (iteration_count);
+			} else if (f == Q_pm_psi) {
+				iteration_count = msolver_fp(P, source, solver_params, max_iter,
+						eps_sq, rel_prec, n, f, &Q_pm_psi_32);
+				return (iteration_count);
+			} else if (f == Qsw_pm_psi) {
+				copy_32_sw_fields();
+				iteration_count = msolver_fp(P, source, solver_params, max_iter,
+						eps_sq, rel_prec, n, f, &Qsw_pm_psi_32);
+				return (iteration_count);
+			} else {
+				if (g_proc_id == 0)
+					printf(
+							"Warning: 32 bit matrix not available. Falling back to CG in 64 bit\n");
+				use_solver = CG;
+			}
+		}
+	}
+	if (use_solver == CG) {
+		iteration_count = cg_her(P, source, max_iter, eps_sq, rel_prec, n, f);
+	} else if (use_solver == BICGSTAB) {
+		iteration_count = bicgstab_complex(P, source, max_iter, eps_sq,
+				rel_prec, n, f);
+	}
+#ifdef DDalphaAMG
+	else if (use_solver == MG)
+	iteration_count = MG_solver(P, source, eps_sq, max_iter,rel_prec, n , g_gauge_field, f);
+#endif
+	else {
+		if (g_proc_id == 0)
+			printf(
+					"Error: solver not allowed for degenerate solve. Aborting...\n");
+		return -1;
+	}
+	if (is_squared) {
+		f = optr->applyQm;
+		if (pm == 1) {
+			optr->applyQm(g_spinor_field[DUM_DERI], P);
+			assign(P, g_spinor_field[DUM_DERI], n);
+			f = optr->applyQp;
+		}
+	}
+	/*check precision*/
+	f(g_spinor_field[DUM_DERI], P);
+	diff(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], Q, n);
+	check_prec = square_norm(g_spinor_field[DUM_DERI], VOLUME, 1);
+	optr->reached_prec = check_prec;
+	optr->iterations = iteration_count;
+	if (g_proc_id == 0) {
+		printf("Inversion final precision %e\n", check_prec);
+	}
+	return (iteration_count);
+}
+
+static void interpolate(double * const rcurrent, const double rinitial,
+		const double rfinal, const int numsteps, const int thisstep) {
+	(*rcurrent) = rinitial+(thisstep+1)*(rfinal - rinitial) / ((double) numsteps);
+}
+
+static double log_determinant_estimate(const int operatorid, const int chebmax, const int estimators, const double spectmin, const double spectmax){
+
+}
+
+void reweighting_measurement(const int traj, const int id, const int ieo) {
+	reweighting_parameter* param;
+	double atime, etime;
+	operator * optr;
+	FILE *ofs;
+	FILE *ofs_full;
+	char *filename;
+	char *filename_full;
+	char buf[100];
+	char buf_full[100];
+	double square1, square2, prodre, prodim, prodreg5, prodimg5;
+	double kappa0, kappa, k2mu0, k2mu, csw0, csw;
+	double kappafinal, k2mufinal, cswfinal, rmufinal;
+	double kappainitial, k2muinitial, cswinitial, rmuinitial;
+	double mdiff, rmu, rmu0;
+	double tmp1, tmp2, tmp3;
+	int kapparew;
+	int murew;
+#ifdef CHECK_OPERATOR
+	double checkg5,check1,check2,check3,check4,check5;
+	double kappa_old;
+#endif
+	/* now we bring it to normal format */
+	/* here we use implicitly DUM_MATRIX and DUM_MATRIX+1 */
+	spinor * lexicfield1;
+	spinor * lexicfield2;
+#ifdef CHECK_OPERATOR
+	spinor * lexicfield3;
+	spinor * lexicfield4;
+#endif
+	int operatorid;
+	int numsamples, snum, internum;
+	unsigned long int site;
+
+	param = (reweighting_parameter*) measurement_list[id].parameter;
+	lexicfield1 = g_spinor_field[4];
+	lexicfield2 = g_spinor_field[6];
+#ifdef CHECK_OPERATOR
+	lexicfield3=g_spinor_field[8];
+	lexicfield4=g_spinor_field[10];
+#endif
+	operatorid = param->reweighting_operator;
+	numsamples = param->reweighting_number_sources;
+	filename = buf;
+	filename_full = buf_full;
+	sprintf(filename, "%s%.6d", "reweightingmeas.", traj);
+	sprintf(filename_full, "%s%.6d", "reweightingmeas_full_data.", traj);
+	if (g_proc_id == 0) {
+		fprintf(stdout, "Reweighting measurement %d with %d samples.\n", id,
+				numsamples);
+	}
+
+	init_operators();
+	if (no_operators < operatorid) {
+		if (g_proc_id == 0) {
+			fprintf(stderr,
+					"Warning! Number of operators smaller than the given number for the reweighting operator, unable to perform measurement!\n");
+		}
+		return;
+	}
+	atime = gettime();
+
+	optr = &operator_list[operatorid];
+	optr->DownProp = 0;
+	optr->sr0 = g_spinor_field[0];
+	optr->sr1 = g_spinor_field[1];
+	optr->prop0 = g_spinor_field[2];
+	optr->prop1 = g_spinor_field[3];
+
+	/* now checking parameters
+	 * The target values are obtained from the operator*/
+
+	kappafinal = optr->kappa;
+	k2mufinal = optr->mu;
+	cswfinal = optr->c_sw;
+
+	/* the initial values are obtained
+	 * from the parameter
+	 */
+	k2muinitial = param->k2mu0;
+	kappainitial = param->kappa0;
+	kapparew = 1;
+	if (kappainitial == kappafinal) {
+		kapparew = 0;
+	}
+	if (kappainitial == 0.0) {
+		kappainitial = kappafinal;
+		kapparew = 0;
+	}
+	if (cswinitial == 0.0) {
+		cswinitial = cswfinal;
+	}
+	/* be careful:
+	 * in the mu reweighting it is the parameter Mu and not 2KappaMu that
+	 * counts
+	 */
+	rmufinal = k2mufinal / 2.0 / kappafinal;
+	rmuinitial = k2muinitial / 2.0 / kappainitial;
+	murew = 1;
+	if (k2muinitial == 0.0) {
+		rmuinitial = rmufinal;
+		k2muinitial = 2.0 * kappainitial * rmuinitial;
+		murew = 0;
+	}
+	if (fabs(rmuinitial - rmufinal) < 1e-14) {
+		murew = 0;
+	}
+
+	/* second option:
+	 * determine mu and mu0 explicitly in the
+	 */
+	if(g_proc_id == 0 && (param->rmu!=0 || param->rmu0!=0)){
+		printf("WARNING: measurement uses custom mu values mu=%e, mu0=%e instead of the parameters of the operator.\n", param->rmu,
+						param->rmu0);
+	}
+	if(param->rmu0!=0){
+		rmuinitial=param->rmu0;
+		k2muinitial = 2.0*kappainitial*rmuinitial;
+	}
+	if(param->rmu!=0){
+		rmufinal=param->rmu;
+		k2mufinal = 2.0*kappafinal*rmufinal;
+	}
+	if (fabs(rmuinitial - rmufinal) > 1e-14) {
+		murew = 1;
+	}
+
+	if(murew && (g_proc_id == 0)){
+		printf("Mu reweighting chosen: ");
+		printf("mu=%e to mu=%e.\n", rmuinitial,
+								rmufinal);
+	}
+
+	if(kapparew && (g_proc_id == 0)){
+		printf("Kappa reweighting chosen: ");
+		printf("kappa=%e to kappa=%e\n", kappainitial,
+								kappafinal);
+	}
+
+	if(!murew && !kapparew){
+	if(g_proc_id == 0){
+		printf("ERROR: no mu or kappa reweighting.\n");
+	}
+	return;
+	}
+
+	if(murew && kapparew){
+	if(g_proc_id == 0){
+		printf("WARNING: Mu AND Kappa reweighting chosen. If unprecond version, the rawdata has to be combined by hand!\n");
+	}
+	}
+
+
+	kappa0 = kappa = kappainitial;
+	k2mu0 = k2mu = k2muinitial;
+	csw0 = csw = cswinitial;
+	rmu0 = rmu = rmuinitial;
+
+	if (param->interpolationsteps < 1)
+		param->interpolationsteps = 1;
+
+	for (internum = 0; internum < param->interpolationsteps; internum++) {
+		if (kapparew) {
+			kappa0 = kappa;
+			interpolate(&kappa, kappainitial, kappafinal,
+					param->interpolationsteps, internum);
+		}
+		if (murew) {
+			/* use quadratic interpolation in the case of mu*/
+	    	rmu0=rmu;
+			tmp1 = rmuinitial * rmuinitial;
+			tmp2 = rmufinal * rmufinal;
+			tmp3 = rmu * rmu;
+			interpolate(&tmp3, tmp1, tmp2, param->interpolationsteps, internum);
+			rmu = sqrt(tmp3);
+		}
+		k2mu = 2.0 * kappa * rmu;
+		k2mu0 = 2.0 * kappa0 * rmu0;
+		optr->kappa = kappa;
+		optr->mu = k2mu;
+		optr->c_sw = csw;
+
+		for (snum = 0; snum < numsamples; snum++) {
+			if (param->use_evenodd == 0) {
+				random_spinor_field_eo(optr->sr0, reproduce_randomnumber_flag,
+						RN_GAUSS);
+				random_spinor_field_eo(optr->sr1, reproduce_randomnumber_flag,
+						RN_GAUSS);
+				convert_eo_to_lexic(lexicfield1, optr->sr0, optr->sr1);
+				square1 = square_norm(lexicfield1, VOLUME, 1);
+				// we don't want to do inversion twice for this purpose here
+				// op_id = 0, index_start = 0, write_prop = 0
+				optr->inverter(operatorid, 0, 0);
+				convert_eo_to_lexic(lexicfield2, optr->prop0, optr->prop1);
+				square2 = square_norm(lexicfield2, VOLUME, 1);
+				prodre = scalar_prod_r(lexicfield1, lexicfield2, VOLUME, 1);
+				prodim = scalar_prod_i(lexicfield1, lexicfield2, VOLUME, 1);
+				for (site = 0; site < VOLUME; site++) {
+					_gamma5(lexicfield2[site], lexicfield2[site]);
+				}
+				prodreg5 = scalar_prod_r(lexicfield1, lexicfield2, VOLUME, 1);
+				prodimg5 = scalar_prod_i(lexicfield1, lexicfield2, VOLUME, 1);
+#ifdef CHECK_OPERATOR
+				for(site = 0; site < VOLUME; site++) {
+					_gamma5(lexicfield2[site], lexicfield1[site]);
+				}
+				checkg5=scalar_prod_r(lexicfield1,lexicfield2,VOLUME, 1); /* should be zero*/
+
+				kappa_old=optr->kappa;
+				optr->applyM(optr->prop0, optr->prop1, optr->sr0, optr->sr1); /* prop=D rand*/
+				mul_r(optr->prop0, (0.5/optr->kappa), optr->prop0, VOLUME / 2);/*correct normalisation*/
+				mul_r(optr->prop1, (0.5/optr->kappa), optr->prop1, VOLUME / 2);
+				convert_eo_to_lexic(lexicfield2, optr->prop0, optr->prop1);
+				check1 = -scalar_prod_r(lexicfield1,lexicfield2,VOLUME, 1);
+				check2 = -scalar_prod_i(lexicfield1,lexicfield2,VOLUME, 1);
+				check3 = scalar_prod_r(lexicfield2,lexicfield2,VOLUME ,1);
+
+				optr->kappa=1.0/(1.0/kappa_old+2.0);
+				optr->inverter(operatorid,0,0); /* to ensure that everything is updated*/
+				optr->applyM(optr->prop0, optr->prop1, optr->sr0, optr->sr1);
+				mul_r(optr->prop0, (0.5/optr->kappa), optr->prop0, VOLUME / 2);
+				mul_r(optr->prop1, (0.5/optr->kappa), optr->prop1, VOLUME / 2);
+				convert_eo_to_lexic(lexicfield3, optr->prop0, optr->prop1);
+				check1 += scalar_prod_r(lexicfield1,lexicfield3,VOLUME, 1);
+				check2 += scalar_prod_i(lexicfield1,lexicfield3,VOLUME, 1);
+				diff(lexicfield4,lexicfield3,lexicfield2,VOLUME);
+				check4=scalar_prod_r(lexicfield1,lexicfield1,VOLUME, 1);
+				check5=square_norm(lexicfield1,VOLUME ,1);
+
+				optr->kappa=kappa_old;
+#endif
+				if (g_mpi_time_rank == 0 && g_proc_coords[0] == 0) {
+					ofs = fopen(filename, "a");
+					ofs_full = fopen(filename_full, "a");
+					fprintf(ofs, "%d %d %d %d   ", traj, operatorid, internum,
+							snum);
+					fprintf(ofs_full, "%d %d %d %d   ", traj, operatorid,
+							internum, snum);
+#ifdef CHECK_OPERATOR
+					fprintf( ofs_full, "%e %e %e %e %e %e %e %e %e %e %e %e\n", square1, square2,prodre,prodim,prodreg5,prodimg5,checkg5,check1,check2,check3,check4,check5);
+#else
+					/*print all raw data for cross check*/
+					fprintf(ofs_full,
+							"%.6g %.6g %.6g %.6g %.6g %.6g %.6g %.6g   ", k2mu0,
+							k2mu, kappa0, kappa, csw0, csw, rmu0, rmu);
+					fprintf(ofs_full, "%.17g %.17g %.17g %.17g %.17g %.17g\n",
+							square1, square2, prodre, prodim, prodreg5,
+							prodimg5);
+					/*print two and one flavour reweighting log factors*/
+					if (murew) { /* ignoring rounding errors*/
+						fprintf(ofs, "%.17g %.17g %.17g\n",
+								(rmu * rmu - rmu0 * rmu0) * square2,
+								(rmu - rmu0) * prodreg5,
+								(rmu - rmu0) * prodimg5);
+					}
+					if (kapparew) {
+						mdiff = 0.5 / kappa - 0.5 / kappa0;
+						fprintf(ofs, "%.17g %.17g %.17g\n",
+								2.0 * mdiff * prodre + mdiff * mdiff * square2,
+								mdiff * prodre, mdiff * prodim);
+					}
+#endif
+					fclose(ofs);
+					fclose(ofs_full);
+				}
+			} else { /* end not even odd*/
+				set_even_to_zero(optr->sr0);
+				set_even_to_zero(optr->prop0);
+				random_spinor_field_eo(lexicfield1, reproduce_randomnumber_flag,
+						RN_GAUSS);
+				square1 = square_norm(lexicfield1, VOLUME / 2, 1);
+
+				optr->kappa = kappa0;
+				optr->mu = k2mu0;
+				update_global_parameters(operatorid);
+
+				optr->applyQm(optr->sr0, lexicfield1);
+				assign(optr->prop0, lexicfield1, VOLUME / 2);
+
+				optr->kappa = kappa;
+				optr->mu = k2mu;
+				/* done in inverter: update_global_parameters(operatorid);*/
+
+				invert_operator_Q(optr->prop0, optr->sr0, operatorid, 0);
+
+				square2 = square_norm(optr->prop0, VOLUME / 2, 1);
+
+				prodre = get_sw_reweighting(k2mu0, k2mu, kappa0, kappa, csw0,
+						csw);
+
+				if (g_mpi_time_rank == 0 && g_proc_coords[0] == 0) {
+					ofs = fopen(filename, "a");
+					ofs_full = fopen(filename_full, "a");
+					fprintf(ofs, "%d %d %d %d ", traj, operatorid, internum,
+							snum);
+					fprintf(ofs_full, "%d %d %d %d ", traj, operatorid,
+							internum, snum);
+					fprintf(ofs_full,
+							"%.6g %.6g %.6g %.6g %.6g %.6g %.6g %.6g   ", k2mu0,
+							k2mu, kappa0, kappa, csw0, csw, rmu, rmu0);
+					fprintf(ofs_full, "%.17g %.17g %.17g\n", square1, square2,
+							prodre);
+					fprintf(ofs, "%.17g\n", square1 - square2 + prodre);
+					fclose(ofs);
+					fclose(ofs_full);
+				}
+
+			}/* end even odd*/
+
+		}/* loop over estimators */
+
+	} /* loop over interpolation steps*/
+	etime = gettime();
+
+	if (g_proc_id == 0 && g_debug_level > 0) {
+		printf("REWEIGHTING: measurement done int t/s = %1.4e\n",
+				etime - atime);
+	}
+	return;
+}
