@@ -97,8 +97,7 @@ int main(int argc,char *argv[])
   static double dt2;
   
   DUM_DERI = 6;
-  DUM_SOLVER = DUM_DERI+2;
-  DUM_MATRIX = DUM_SOLVER+6;
+  DUM_MATRIX = DUM_DERI+8;
   NO_OF_SPINORFIELDS = DUM_MATRIX+2;
 
 #  ifdef TM_USE_OMP
