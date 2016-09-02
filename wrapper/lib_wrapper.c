@@ -141,6 +141,14 @@ int tmLQCD_invert_init(int argc, char *argv[], const int _verbose, const int ext
       return(-1);
     }
   }
+
+  if(g_cart_id == 0) {
+    FILE *parameterfile = parameterfile = fopen("tmLQCD-libwrapper.para", "w");
+    write_first_messages(parameterfile, "tmLQCD lib-wrapper", git_hash);
+    fclose(parameterfile);
+  }
+
+
   // define the geometry
   geometry();
 
