@@ -106,7 +106,7 @@ static void invert_compute_modenumber();
 int main(int argc, char *argv[])
 {
   FILE *parameterfile = NULL;
-  int j, i, ix = 0, isample = 0, op_id = 0;
+  int j, i;
   char datafilename[206];
   char parameterfilename[206];
   char conf_filename[300];
@@ -125,8 +125,8 @@ int main(int argc, char *argv[])
 #endif
 
   DUM_DERI = 8;
-  DUM_MATRIX = DUM_DERI + 5;
-  NO_OF_SPINORFIELDS = DUM_MATRIX + 4;
+  DUM_MATRIX = DUM_DERI + 5; /* 5 fields for doing the inversions (might be used by other opetations if no inverter used*/
+  NO_OF_SPINORFIELDS = DUM_MATRIX + 4; /* Don't access these fields if you apply multiplications!*/
 
   //4 extra fields (corresponding to DUM_MATRIX+0..5) for deg. and ND matrix mult.  
   NO_OF_SPINORFIELDS_32 = 6;

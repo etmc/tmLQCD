@@ -45,6 +45,13 @@
 #include "linalg/scalar_prod_i.h"
 #include "linalg/diff.h"
 #include "linalg/assign.h"
+#include "linalg/mul_r.h"
+#include "linalg/assign_mul_add_mul_r.h"
+#include "linalg/mul_diff_mul_r.h"
+#include "linalg/assign_mul_add_mul_add_mul_r.h"
+#include "linalg/assign_add_mul_add_mul_r.h"
+#include "linalg/assign_add_mul_r.h"
+#include "linalg/set_even_to_zero.h"
 #include "../read_input.h"
 #include "reweightingmeas.h"
 #include "../operator/Hopping_Matrix.h"
@@ -55,6 +62,7 @@
 #include "../operator/clover_leaf.h"
 #include "../DDalphaAMG_interface.h"
 #include "../boundary.h"
+#include "../global.h"
 
 /*#define CHECK_OPERATOR*/
 
@@ -248,11 +256,293 @@ static int invert_operator_Q(spinor * const P, spinor * const Q,
 
 static void interpolate(double * const rcurrent, const double rinitial,
 		const double rfinal, const int numsteps, const int thisstep) {
-	(*rcurrent) = rinitial+(thisstep+1)*(rfinal - rinitial) / ((double) numsteps);
+	(*rcurrent) = rinitial
+			+ (thisstep + 1) * (rfinal - rinitial) / ((double) numsteps);
 }
 
-static double log_determinant_estimate(const int operatorid, const int chebmax, const int estimators, const double spectmin, const double spectmax){
+static void chebyshev_coeff(const unsigned int np, double * const coeff,
+		const double a, const double b) {
+	double * fxk;
+	double * acxk;
+	fxk = malloc(np * sizeof(double));
+	acxk = malloc(np * sizeof(double));
+	int n, k;
+	double fakt;
+	for (n = 0; n < np; n++) {
+		acxk[n] = (3.14159265358979323846) * ((double) n + 0.5) / ((double) np);
+		fxk[n] = log(a * cos(acxk[n]) + b);
+	}
+	for (k = 0; k < np; k++) {
+		coeff[k] = 0;
+		fakt = (k == 0) ? 1.0 / (double) np : 2.0 / (double) np;
+		for (n = 0; n < np; n++) {
+			coeff[k] += fakt * cos(k * acxk[n]) * fxk[n];
+		}
+	}
+	free(fxk);
+	free(acxk);
+}
 
+static double poly_cheb(const unsigned int np, const double * const coeff,
+		const double x) {
+	double y, t1, t0, t2;
+	int j;
+	y = coeff[0];
+	if (np < 1) {
+		return y;
+	}
+	t0 = 1.0;
+	t1 = x;
+	y += coeff[1] * t1;
+	for (j = 1; j + 1 < np; j++) {
+		t2 = 2.0 * x * t1 - t0;
+		t0 = t1;
+		t1 = t2;
+		y += coeff[j + 1] * t1;
+	}
+	return y;
+}
+
+//#define TRIVIAL_TEST
+static double log_determinant_estimate(const int operatorid, const int chebmax,
+		const int estimators, const double minev, const double maxev,
+		const double kappa1, const double kappa2, const double kappa2Mu1,
+		const double kappa2Mu2, const double shift, const int traj) {
+	double * coeff;
+	const double t1 = maxev - minev;
+	const double t2 = maxev + minev;
+	const double a = 2.0 / t1;
+	const double b = -t2 / t1;
+	const double am = t1 / 2.0;
+	const double bm = t2 / 2.0;
+	int k, l, n;
+	double x, y, ldet, prodre;
+	FILE * ofs;
+	spinor * vs1;
+	spinor * vs2;
+	spinor * u;
+	spinor * v0;
+	spinor * v1;
+	spinor * v2;
+	spinor * vt0;
+	spinor * vt1;
+	spinor * vt2;
+	spinor * tmp;
+	operator * optr;
+	char* filename;
+	char buf[100];
+	n = VOLUME;
+
+	filename = buf;
+	sprintf(filename, "%s%.6d", "reweightingmeas_cheb.", traj);
+
+	vs1 = g_spinor_field[0];
+	vs2 = g_spinor_field[1];
+	u = g_spinor_field[2];
+	v0 = g_spinor_field[4];
+	v1 = g_spinor_field[6];
+	v2 = g_spinor_field[8];
+	vt0 = g_spinor_field[10];
+	vt1 = g_spinor_field[12];
+	vt2 = g_spinor_field[14];
+
+	optr = &operator_list[operatorid];
+	if (is_schur_complement(optr->applyQsq)) {
+		n = VOLUME / 2;
+		vs1 = g_spinor_field[0];
+		vs2 = g_spinor_field[1];
+		u = g_spinor_field[3];
+		v0 = g_spinor_field[4];
+		v1 = g_spinor_field[5];
+		v2 = g_spinor_field[6];
+		vt0 = g_spinor_field[7];
+		vt1 = g_spinor_field[8];
+		vt2 = g_spinor_field[9];
+		if (DUM_MATRIX < 10) {
+			if (g_proc_id == 0) {
+				fprintf(stderr, "Not enough spinor fields %d < 10 \n\n",
+						DUM_MATRIX);
+			}
+			return 0.0;
+		}
+
+	} else {
+		if (DUM_MATRIX < 16) {
+			if (g_proc_id == 0) {
+				fprintf(stderr, "Not enough spinor fields %d < 16 \n\n",
+						DUM_MATRIX);
+			}
+			return 0.0;
+		}
+	}
+
+	coeff = malloc(chebmax * sizeof(double));
+	chebyshev_coeff(chebmax, coeff, am, bm);
+	if (g_proc_id == 0 && g_debug_level > 3) {
+		ofs = fopen("polynomialapproxtest.txt", "a");
+		fprintf(ofs,
+				"# Test of the Chebyshev approximation of the log(x) function: index x y |y-log(x)| chebyshevorder minx, maxx\n");
+		for (k = 0; k < 200; k++) {
+			x = minev + (maxev - minev) * (double) k / (double) (200 - 1);
+			y = poly_cheb(chebmax, coeff, a * x + b);
+			fprintf(ofs, "%d %g %g %g %d %g %g\n", k, x, y, fabs(y - log(x)),
+					chebmax, minev, maxev);
+		}
+		fclose(ofs);
+	}
+
+	ldet = 0;
+	if (chebmax > 0) {
+		for (k = 0; k < estimators; k++) {
+			/*
+			 * Generate estimator (may be half of it is never used)
+			 */
+			random_spinor_field_eo(vs1, reproduce_randomnumber_flag, RN_Z2);
+			random_spinor_field_eo(vs2, reproduce_randomnumber_flag, RN_Z2);
+
+			assign(v0, vs1, n);
+			assign(vt0, vs1, n);
+
+#ifdef TRIVIAL_TEST
+			mul_r(v1,kappa1,vs1,n);
+#else
+			optr->kappa = kappa1;
+			optr->mu = kappa2Mu1;
+			update_global_parameters(operatorid);
+			optr->applyQsq(v1, vs1);
+#endif
+			/* Makes (*R)=c1*(*R)+c2*(*S) , c1 and c2 are real constants */
+			assign_mul_add_mul_r(v1, vs1, a, b, n);
+
+#ifdef TRIVIAL_TEST
+			mul_r(vt1,kappa2,vs1,n);
+#else
+			optr->kappa = kappa2;
+			optr->mu = kappa2Mu2;
+			update_global_parameters(operatorid);
+			optr->applyQsq(vt1, vs1);
+#endif
+			/* Makes (*R)=c1*(*R)+c2*(*S) , c1 and c2 are real constants */
+			assign_mul_add_mul_r(vt1, vs1, a, b, n);
+
+			/* Makes (*R)=c1*(*S)-c2*(*U) , c1 and c2 are complex constants */
+			mul_diff_mul_r(u, vt1, v1, coeff[1], coeff[1], n);
+
+#if 0
+			for (l = 1; l + 1 < chebmax; l++) {
+#ifndef TRIVIAL_TEST
+				optr->kappa = kappa1;
+				optr->mu = kappa2Mu1;
+				update_global_parameters(operatorid);
+
+				optr->applyQsq(v2, v1);
+#else
+				mul_r(v2,kappa1,v1,n);
+#endif
+				/* Makes (*R) = c1*(*R) + c2*(*S) + c3*(*U) */
+				assign_mul_add_mul_add_mul_r(v2, v1, v0, 2.0 * a, 2.0 * b, -1.0,
+						n);
+				tmp = v0;
+				v0 = v1;
+				v1 = v2;
+				v2 = tmp;
+
+#ifndef TRIVIAL_TEST
+				optr->kappa = kappa2;
+				optr->mu = kappa2Mu2;
+				update_global_parameters(operatorid);
+
+				optr->applyQsq(vt2, vt1);
+#else
+				mul_r(vt2,kappa2,vt1,n);
+#endif
+				/* Makes (*R) = c1*(*R) + c2*(*S) + c3*(*U) */
+				assign_mul_add_mul_add_mul_r(vt2, vt1, vt0, 2.0 * a, 2.0 * b,
+						-1.0, n);
+				tmp = vt0;
+				vt0 = vt1;
+				vt1 = vt2;
+				vt2 = tmp;
+
+				/* (*R) = (*R) + c1*(*S) + c2*(*U) */
+				assign_add_mul_add_mul_r(u, vt1, v1, coeff[l + 1],
+						-coeff[l + 1], n);
+
+			}
+
+#endif
+
+#ifndef TRIVIAL_TEST
+			optr->kappa = kappa1;
+			optr->mu = kappa2Mu1;
+			update_global_parameters(operatorid);
+#endif
+
+			for (l = 1; l + 1 < chebmax; l++) {
+#ifdef TRIVIAL_TEST
+				mul_r(v2,kappa1,v1,n);
+#else
+				optr->applyQsq(v2, v1);
+#endif
+
+				/* Makes (*R) = c1*(*R) + c2*(*S) + c3*(*U) */
+				assign_mul_add_mul_add_mul_r(v2, v1, v0, 2.0 * a, 2.0 * b, -1.0,
+						n);
+				tmp = v0;
+				v0 = v1;
+				v1 = v2;
+				v2 = tmp;
+				/*   (*P) = (*P) + c(*Q)        c is a real constant   */
+				assign_add_mul_r(u, v1, -coeff[l + 1], n);
+			}
+#ifndef TRIVIAL_TEST
+			optr->kappa = kappa2;
+			optr->mu = kappa2Mu2;
+			update_global_parameters(operatorid);
+#endif
+
+			for (l = 1; l + 1 < chebmax; l++) {
+#ifdef TRIVIAL_TEST
+				mul_r(vt2,kappa2,vt1,n);
+#else
+				optr->applyQsq(vt2, vt1);
+#endif
+				/* Makes (*R) = c1*(*R) + c2*(*S) + c3*(*U) */
+				assign_mul_add_mul_add_mul_r(vt2, vt1, vt0, 2.0 * a, 2.0 * b,
+						-1.0, n);
+				tmp = vt0;
+				vt0 = vt1;
+				vt1 = vt2;
+				vt2 = tmp;
+
+				/*   (*P) = (*P) + c(*Q)        c is a real constant   */
+				assign_add_mul_r(u, vt1, coeff[l + 1], n);
+
+			}
+
+			prodre = scalar_prod_r(vs1, u, n, 1);
+			ldet += prodre / ((double) estimators);
+			if (g_proc_id == 0 && g_debug_level > 3) {
+				ofs = fopen("estimators.txt", "a");
+				fprintf(ofs, "# Test of stochastic estimation\n");
+				fprintf(ofs, "%d %g %g %g %g  %g  %d %d %g %g  %g\n", k, kappa1,
+						kappa2, kappa2Mu1, kappa2Mu2, prodre, estimators,
+						chebmax, minev, maxev, ldet);
+				fclose(ofs);
+			}
+
+			if (g_proc_id == 0) {
+				ofs = fopen(filename, "a");
+				fprintf(ofs, "%d %g %g %g %g %d %g %g ", traj, kappa1, kappa2,
+						kappa2Mu1, kappa2Mu2, chebmax, minev, maxev);
+				fprintf(ofs, "     %g %g\n", prodre + shift, prodre);
+				fclose(ofs);
+			}
+
+		} /* estimator iteration*/
+	} /* chebmax>0*/
+	free(coeff);
+	return (ldet);
 }
 
 void reweighting_measurement(const int traj, const int id, const int ieo) {
@@ -265,7 +555,7 @@ void reweighting_measurement(const int traj, const int id, const int ieo) {
 	char *filename_full;
 	char buf[100];
 	char buf_full[100];
-	double square1, square2, prodre, prodim, prodreg5, prodimg5;
+	double square1, square2, prodre, prodim, prodreg5, prodimg5, cswpart;
 	double kappa0, kappa, k2mu0, k2mu, csw0, csw;
 	double kappafinal, k2mufinal, cswfinal, rmufinal;
 	double kappainitial, k2muinitial, cswinitial, rmuinitial;
@@ -336,6 +626,7 @@ void reweighting_measurement(const int traj, const int id, const int ieo) {
 	 */
 	k2muinitial = param->k2mu0;
 	kappainitial = param->kappa0;
+	cswinitial=0;
 	kapparew = 1;
 	if (kappainitial == kappafinal) {
 		kapparew = 0;
@@ -366,47 +657,58 @@ void reweighting_measurement(const int traj, const int id, const int ieo) {
 	/* second option:
 	 * determine mu and mu0 explicitly in the
 	 */
-	if(g_proc_id == 0 && (param->rmu!=0 || param->rmu0!=0)){
-		printf("WARNING: measurement uses custom mu values mu=%e, mu0=%e instead of the parameters of the operator.\n", param->rmu,
-						param->rmu0);
+	if (g_proc_id == 0 && (param->rmu != 0 || param->rmu0 != 0)) {
+		printf(
+				"WARNING: measurement uses custom mu values mu=%e, mu0=%e instead of the parameters of the operator.\n",
+				param->rmu, param->rmu0);
 	}
-	if(param->rmu0!=0){
-		rmuinitial=param->rmu0;
-		k2muinitial = 2.0*kappainitial*rmuinitial;
+	if (param->rmu0 != 0) {
+		rmuinitial = param->rmu0;
+		k2muinitial = 2.0 * kappainitial * rmuinitial;
 	}
-	if(param->rmu!=0){
-		rmufinal=param->rmu;
-		k2mufinal = 2.0*kappafinal*rmufinal;
+	if (param->rmu != 0) {
+		rmufinal = param->rmu;
+		k2mufinal = 2.0 * kappafinal * rmufinal;
 	}
 	if (fabs(rmuinitial - rmufinal) > 1e-14) {
 		murew = 1;
 	}
 
-	if(murew && (g_proc_id == 0)){
+	if (murew && (g_proc_id == 0)) {
 		printf("Mu reweighting chosen: ");
-		printf("mu=%e to mu=%e.\n", rmuinitial,
-								rmufinal);
+		printf("mu=%e to mu=%e.\n", rmuinitial, rmufinal);
 	}
 
-	if(kapparew && (g_proc_id == 0)){
+	if (kapparew && (g_proc_id == 0)) {
 		printf("Kappa reweighting chosen: ");
-		printf("kappa=%e to kappa=%e\n", kappainitial,
-								kappafinal);
+		printf("kappa=%e to kappa=%e\n", kappainitial, kappafinal);
 	}
 
-	if(!murew && !kapparew){
-	if(g_proc_id == 0){
-		printf("ERROR: no mu or kappa reweighting.\n");
-	}
-	return;
-	}
-
-	if(murew && kapparew){
-	if(g_proc_id == 0){
-		printf("WARNING: Mu AND Kappa reweighting chosen. If unprecond version, the rawdata has to be combined by hand!\n");
-	}
+	if (!murew && !kapparew) {
+		if (g_proc_id == 0) {
+			printf("ERROR: no mu or kappa reweighting.\n");
+		}
 	}
 
+	if (murew && kapparew) {
+		if (g_proc_id == 0) {
+			printf(
+					"WARNING: Mu AND Kappa reweighting chosen. If unprecond version, the rawdata has to be combined by hand!\n");
+		}
+	}
+
+	if (param->use_cheb) {
+		if (param->use_evenodd == 1) {
+			cswpart = get_sw_reweighting(k2muinitial, k2mufinal, kappainitial,
+					kappafinal, cswinitial, cswfinal);
+		}
+		log_determinant_estimate(operatorid, param->cheborder,
+				param->estimatorscheb, param->minev, param->maxev, kappainitial,
+				kappafinal, k2muinitial, k2mufinal, cswpart, traj);
+		if (param->only_cheb) {
+			return;
+		}
+	}
 
 	kappa0 = kappa = kappainitial;
 	k2mu0 = k2mu = k2muinitial;
@@ -424,7 +726,7 @@ void reweighting_measurement(const int traj, const int id, const int ieo) {
 		}
 		if (murew) {
 			/* use quadratic interpolation in the case of mu*/
-	    	rmu0=rmu;
+			rmu0 = rmu;
 			tmp1 = rmuinitial * rmuinitial;
 			tmp2 = rmufinal * rmufinal;
 			tmp3 = rmu * rmu;
@@ -436,6 +738,10 @@ void reweighting_measurement(const int traj, const int id, const int ieo) {
 		optr->kappa = kappa;
 		optr->mu = k2mu;
 		optr->c_sw = csw;
+
+		if (param->use_evenodd == 1) {
+			cswpart = get_sw_reweighting(k2mu0, k2mu, kappa0, kappa, csw0, csw);
+		}
 
 		for (snum = 0; snum < numsamples; snum++) {
 			if (param->use_evenodd == 0) {
@@ -542,8 +848,6 @@ void reweighting_measurement(const int traj, const int id, const int ieo) {
 
 				square2 = square_norm(optr->prop0, VOLUME / 2, 1);
 
-				prodre = get_sw_reweighting(k2mu0, k2mu, kappa0, kappa, csw0,
-						csw);
 
 				if (g_mpi_time_rank == 0 && g_proc_coords[0] == 0) {
 					ofs = fopen(filename, "a");
@@ -556,8 +860,8 @@ void reweighting_measurement(const int traj, const int id, const int ieo) {
 							"%.6g %.6g %.6g %.6g %.6g %.6g %.6g %.6g   ", k2mu0,
 							k2mu, kappa0, kappa, csw0, csw, rmu, rmu0);
 					fprintf(ofs_full, "%.17g %.17g %.17g\n", square1, square2,
-							prodre);
-					fprintf(ofs, "%.17g\n", square1 - square2 + prodre);
+							cswpart);
+					fprintf(ofs, "%.17g\n", square1 - square2 + cswpart);
 					fclose(ofs);
 					fclose(ofs_full);
 				}
@@ -567,6 +871,8 @@ void reweighting_measurement(const int traj, const int id, const int ieo) {
 		}/* loop over estimators */
 
 	} /* loop over interpolation steps*/
+
+
 	etime = gettime();
 
 	if (g_proc_id == 0 && g_debug_level > 0) {

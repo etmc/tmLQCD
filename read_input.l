@@ -2017,6 +2017,42 @@ static inline void rmQuotes(char *str){
     ((reweighting_parameter*)meas->parameter)->kappa0 = c;
     if(myverbose) printf("Reweighting Kappa0 set to %e line %d\n", c, line_of_file);
   }
+  {SPC}*UseCheb{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->use_cheb = a;
+    if(myverbose) printf("  UseCheb set to %d line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+  {SPC}*UseChebOnly{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->only_cheb = a;
+    if(myverbose) printf("  UseChebOnly set to %d line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+  {SPC}*ChebOrder{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->cheborder = a;
+    if(myverbose) printf("  ChebOrder set to %d line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+    {SPC}*ChebEst{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->estimatorscheb = a;
+    if(myverbose) printf("  ChebEst set to %d line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+  {SPC}*MinEv{EQL}{FLT} {
+    sscanf(yytext, " %[20a-zA-Z] = %lf", name, &c);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->minev = c;
+    if(myverbose) printf("Reweighting MinEv set to %e line %d\n", c, line_of_file);
+  }
+   {SPC}*MaxEv{EQL}{FLT} {
+    sscanf(yytext, " %[20a-zA-Z] = %lf", name, &c);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->maxev = c;
+    if(myverbose) printf("Reweighting MaxEv set to %e line %d\n", c, line_of_file);
+  }
 }
 
 <PLOOP>{
