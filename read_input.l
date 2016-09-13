@@ -2023,6 +2023,12 @@ static inline void rmQuotes(char *str){
     ((reweighting_parameter*)meas->parameter)->use_cheb = a;
     if(myverbose) printf("  UseCheb set to %d line %d measurement id=%d\n", a, line_of_file, meas->id);
   }
+  {SPC}*EvEst{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->evest = a;
+    if(myverbose) printf("  EvEst set to %d line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
   {SPC}*UseChebOnly{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     initialize_reweighting_parameter(&meas->parameter);

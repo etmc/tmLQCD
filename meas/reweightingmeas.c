@@ -63,21 +63,9 @@
 #include "../DDalphaAMG_interface.h"
 #include "../boundary.h"
 #include "../global.h"
+#include "solver/jdher.h"
 
 /*#define CHECK_OPERATOR*/
-
-static double get_sw_reweighting(const double mu1, const double mu2,
-		const double kappa1, const double kappa2, const double csw1,
-		const double csw2) {
-	double ret;
-	sw_term((const su3**) g_gauge_field, kappa1, csw1);
-	ret = -sw_trace(0, mu1);
-	if (kappa1 != kappa2 || csw1 != csw2) {
-		sw_term((const su3**) g_gauge_field, kappa2, csw2);
-	}
-	ret += sw_trace(0, mu2);
-	return (ret);
-}
 
 static int is_schur_complement(const matrix_mult f) {
 	if (f == Msw_psi ||     //          Schur complement with mu=0 on odd sites
@@ -96,6 +84,21 @@ static int is_schur_complement(const matrix_mult f) {
 	}
 	return 0;
 }
+
+static double get_sw_reweighting(const double mu1, const double mu2,
+		const double kappa1, const double kappa2, const double csw1,
+		const double csw2) {
+	double ret;
+	sw_term((const su3**) g_gauge_field, kappa1, csw1);
+	ret = -sw_trace(0, mu1);
+	if (kappa1 != kappa2 || csw1 != csw2) {
+		sw_term((const su3**) g_gauge_field, kappa2, csw2);
+	}
+	ret += sw_trace(0, mu2);
+	return (ret);
+}
+
+
 
 static int is_sym_pos_definite(const matrix_mult f) {
 	if (f == Qtm_pm_psi ||    //          Schur complement squared
@@ -125,6 +128,153 @@ static void update_global_parameters(const int op_id) {
 		copy_32_sw_fields();
 	}/*clover leave update*/
 }
+
+static void estimate_eigenvalues(const int operatorid, const int identifier) {
+#ifdef HAVE_LAPACK
+  vector_list min_ev;
+  vector_list max_ev;
+  spinor * eigenvectors_ = NULL;
+  char filename[200];
+  FILE * ofs;
+  double atime, etime;
+  int max_iterations=5000;
+  double  prec = 1.e-5;
+  int maxvectors;
+  /**********************
+   * For Jacobi-Davidson
+   **********************/
+  int verbosity = g_debug_level, converged = 0, blocksize = 1, blockwise = 0;
+  int solver_it_max = 50, j_max, j_min, ii;
+  /*int it_max = 10000;*/
+  /* _Complex double *eigv_ = NULL, *eigv; */
+  double decay_min = 1.7, decay_max = 1.5,
+    threshold_min = 1.e-3, threshold_max = 5.e-2;
+  double ev_max, ev_min;
+
+  /* static int v0dim = 0; */
+  int v0dim = 0;
+  int N = (VOLUME)/2, N2 = (VOLUMEPLUSRAND)/2;
+  operator * optr;
+
+  /**********************
+   * General variables
+   **********************/
+  int returncode=0;
+  int returncode2=0;
+
+
+  min_ev.s=2;
+  min_ev.el=malloc(min_ev.s*sizeof(double));
+  max_ev.s=2;
+  max_ev.el=malloc(max_ev.s*sizeof(double));
+
+	optr = &operator_list[operatorid];
+
+
+  if(!is_schur_complement(optr->applyQsq)) {
+    N = VOLUME;
+    N2 = VOLUMEPLUSRAND;
+  }
+
+  evlength = N2;
+  if(g_proc_id == g_stdio_proc && g_debug_level >0) {
+    printf("Number of eigenvalues to compute = %d %d\n",min_ev.s,max_ev.s);
+    printf("Using Jacobi-Davidson method! \n");
+  }
+
+
+  if(max_ev.s < 8){
+    j_max = 15;
+    j_min = 8;
+  }
+  else{
+    j_max = 2*max_ev.s;
+    j_min = max_ev.s;
+  }
+
+    maxvectors=min_ev.s>max_ev.s ? min_ev.s:max_ev.s;
+
+#if (defined SSE || defined SSE2 || defined SSE3)
+    eigenvectors_ = calloc(N2*maxvectors+1, sizeof(spinor));
+    eigenvectors = (spinor *)(((unsigned long int)(eigenvectors_)+ALIGN_BASE)&~ALIGN_BASE);
+#else
+    eigenvectors_= calloc(N2*maxvectors, sizeof(spinor));
+    eigenvectors = eigenvectors_;
+#endif
+
+   atime = gettime();
+
+	update_global_parameters(operatorid);
+    /* (re-) compute minimal eigenvalues */
+   converged = 0;
+   solver_it_max = 200;
+
+
+   jdher(N*sizeof(spinor)/sizeof(_Complex double), N2*sizeof(spinor)/sizeof(_Complex double),
+	  50., prec,max_ev.s, j_max, j_min,
+	  max_iterations, blocksize, blockwise, v0dim, (_Complex double*) eigenvectors,
+	  CG, solver_it_max,
+	  threshold_max, decay_max, verbosity,
+	  &converged, (_Complex double*) eigenvectors, max_ev.el,
+	  &returncode, JD_MAXIMAL, 1,
+	  optr->applyQsq);
+
+   max_ev.s = converged;
+
+   if(min_ev.s < 8){
+     j_max = 15;
+     j_min = 8;
+   }
+   else{
+     j_max = 2*min_ev.s;
+     j_min = min_ev.s;
+   }
+
+   converged = 0;
+   solver_it_max = 200;
+
+   jdher(N*sizeof(spinor)/sizeof(_Complex double), N2*sizeof(spinor)/sizeof(_Complex double),
+	  0., prec,
+	  min_ev.s, j_max, j_min,
+	  max_iterations, blocksize, blockwise, v0dim, (_Complex double*) eigenvectors,
+	  CG, solver_it_max,
+	  threshold_min, decay_min, verbosity,
+	  &converged, (_Complex double*) eigenvectors, min_ev.el,
+	  &returncode2, JD_MINIMAL, 1,
+	  optr->applyQsq);
+
+   min_ev.s = converged;
+
+   free(eigenvectors_);
+
+    etime = gettime();
+    if(g_proc_id == 0) {
+      printf("Eigenvalues computed in %e sec. gettime)\n", etime-atime);
+    }
+
+  ev_min= min_ev.el[min_ev.s-1];
+  ev_max= max_ev.el[max_ev.s-1];
+  eigenvalues_for_cg_computed = converged;
+
+  if(g_proc_id == 0){
+	sprintf(filename,"rew_ev_estimate.%d", nstore);
+	ofs = fopen(filename, "a");
+	for(ii = 0; ii < max_ev.s; ii++) {
+	      fprintf(ofs, "%d %e 1\n",ii,max_ev.el[ii]);
+	  }
+	for(ii = 0; ii < min_ev.s; ii++) {
+	      fprintf(ofs, "%d %e 1\n",ii,min_ev.el[ii]);
+	  }
+	 fclose(ofs);
+  }
+  free(min_ev.el);
+  free(max_ev.el);
+#else
+  fprintf(stderr, "lapack not available, so JD method for EV computation not available \n");
+#endif
+}
+
+
 
 static int invert_operator_Q(spinor * const P, spinor * const Q,
 		const int op_id, const int pm) {
@@ -303,11 +453,15 @@ static double poly_cheb(const unsigned int np, const double * const coeff,
 	return y;
 }
 
+/*Trivial test tests the function with the scaled idenetity matrix.*/
 //#define TRIVIAL_TEST
-static double log_determinant_estimate(const int operatorid, const int chebmax,
-		const int estimators, const double minev, const double maxev,
+/*Convergence chesk: comparison of order n and n+1.*/
+#define CHECK_CONVERGENCE
+static double log_determinant_estimate(const int operatorid, int chebmax,
+		int estimators, const double minev, const double maxev,
 		const double kappa1, const double kappa2, const double kappa2Mu1,
-		const double kappa2Mu2, const double shift, const int traj) {
+		const double kappa2Mu2, const double shift, const int traj,
+		const split_list * const split, const vector_list * const coefflist) {
 	double * coeff;
 	const double t1 = maxev - minev;
 	const double t2 = maxev + minev;
@@ -316,11 +470,17 @@ static double log_determinant_estimate(const int operatorid, const int chebmax,
 	const double am = t1 / 2.0;
 	const double bm = t2 / 2.0;
 	int k, l, n;
-	double x, y, ldet, prodre;
+	int orderstart, orderend;
+	int splitlength, sl;
+	double x, y, y1, ldet, prodre;
 	FILE * ofs;
 	spinor * vs1;
 	spinor * vs2;
 	spinor * u;
+#ifdef CHECK_CONVERGENCE
+	spinor * unm1;
+	double prodrenm1, ldetnm1;
+#endif
 	spinor * v0;
 	spinor * v1;
 	spinor * v2;
@@ -345,6 +505,9 @@ static double log_determinant_estimate(const int operatorid, const int chebmax,
 	vt0 = g_spinor_field[10];
 	vt1 = g_spinor_field[12];
 	vt2 = g_spinor_field[14];
+#ifdef CHECK_CONVERGENCE
+	unm1 = g_spinor_field[16];
+#endif
 
 	optr = &operator_list[operatorid];
 	if (is_schur_complement(optr->applyQsq)) {
@@ -358,7 +521,14 @@ static double log_determinant_estimate(const int operatorid, const int chebmax,
 		vt0 = g_spinor_field[7];
 		vt1 = g_spinor_field[8];
 		vt2 = g_spinor_field[9];
-		if (DUM_MATRIX < 10) {
+#ifdef CHECK_CONVERGENCE
+		unm1 = g_spinor_field[10];
+#endif
+#ifdef CHECK_CONVERGENCE
+		if (DUM_MATRIX < 11) {
+#else
+			if (DUM_MATRIX < 10) {
+#endif
 			if (g_proc_id == 0) {
 				fprintf(stderr, "Not enough spinor fields %d < 10 \n\n",
 						DUM_MATRIX);
@@ -367,7 +537,11 @@ static double log_determinant_estimate(const int operatorid, const int chebmax,
 		}
 
 	} else {
-		if (DUM_MATRIX < 16) {
+#ifdef CHECK_CONVERGENCE
+		if (DUM_MATRIX < 18) {
+#else
+			if (DUM_MATRIX < 16) {
+#endif
 			if (g_proc_id == 0) {
 				fprintf(stderr, "Not enough spinor fields %d < 16 \n\n",
 						DUM_MATRIX);
@@ -375,9 +549,16 @@ static double log_determinant_estimate(const int operatorid, const int chebmax,
 			return 0.0;
 		}
 	}
-
-	coeff = malloc(chebmax * sizeof(double));
-	chebyshev_coeff(chebmax, coeff, am, bm);
+	if (coefflist->el != NULL && coefflist->s != 0) {
+		chebmax = coefflist->s;
+		coeff = malloc(chebmax * sizeof(double));
+		for (k = 0; k < chebmax; k++) {
+			coeff[k] = coefflist->el[k];
+		}
+	} else {
+		coeff = malloc(chebmax * sizeof(double));
+		chebyshev_coeff(chebmax, coeff, am, bm);
+	}
 	if (g_proc_id == 0 && g_debug_level > 3) {
 		ofs = fopen("polynomialapproxtest.txt", "a");
 		fprintf(ofs,
@@ -385,162 +566,224 @@ static double log_determinant_estimate(const int operatorid, const int chebmax,
 		for (k = 0; k < 200; k++) {
 			x = minev + (maxev - minev) * (double) k / (double) (200 - 1);
 			y = poly_cheb(chebmax, coeff, a * x + b);
-			fprintf(ofs, "%d %g %g %g %d %g %g\n", k, x, y, fabs(y - log(x)),
-					chebmax, minev, maxev);
+			y1 = NAN;
+			if (chebmax > 0) {
+				y1 = poly_cheb(chebmax - 1, coeff, a * x + b);
+			}
+			fprintf(ofs, "%d %g   %g %g   %g %g   %d %g %g\n", k, x, y, y1,
+					fabs(y - log(x)), fabs(y1 - log(x)), chebmax, minev, maxev);
 		}
 		fclose(ofs);
 	}
 
-	ldet = 0;
-	if (chebmax > 0) {
-		for (k = 0; k < estimators; k++) {
-			/*
-			 * Generate estimator (may be half of it is never used)
-			 */
-			random_spinor_field_eo(vs1, reproduce_randomnumber_flag, RN_Z2);
-			random_spinor_field_eo(vs2, reproduce_randomnumber_flag, RN_Z2);
+	/* include T_min(x) to T_(max-1) (x) */
+	orderstart = 0;
+	orderend = chebmax;
+	splitlength = 1;
+	if (split->est != NULL && split->ord != NULL && split->s != 0) {
+		splitlength = split->s;
+		orderend = split->ord[0];
+		estimators = split->est[0];
+	}
+	for (sl = 0; sl < splitlength; sl++) {
+		ldet = 0;
+		if (sl > 0) {
+			orderstart = orderend;
+			orderend = split->ord[sl];
+			estimators = split->est[sl];
+		}
+#ifdef CHECK_CONVERGENCE
+		ldetnm1 = 0;
+#endif
+		if (orderend > 0) {
+			for (k = 0; k < estimators; k++) {
+				/*
+				 * Generate estimator (may be half of it is never used)
+				 */
+				random_spinor_field_eo(vs1, reproduce_randomnumber_flag, RN_Z2);
+				random_spinor_field_eo(vs2, reproduce_randomnumber_flag, RN_Z2);
 
-			assign(v0, vs1, n);
-			assign(vt0, vs1, n);
+				assign(v0, vs1, n);
+				assign(vt0, vs1, n);
 
 #ifdef TRIVIAL_TEST
-			mul_r(v1,kappa1,vs1,n);
+				mul_r(v1,kappa1,vs1,n);
 #else
-			optr->kappa = kappa1;
-			optr->mu = kappa2Mu1;
-			update_global_parameters(operatorid);
-			optr->applyQsq(v1, vs1);
+				optr->kappa = kappa1;
+				optr->mu = kappa2Mu1;
+				update_global_parameters(operatorid);
+				optr->applyQsq(v1, vs1);
 #endif
-			/* Makes (*R)=c1*(*R)+c2*(*S) , c1 and c2 are real constants */
-			assign_mul_add_mul_r(v1, vs1, a, b, n);
+				/* Makes (*R)=c1*(*R)+c2*(*S) , c1 and c2 are real constants */
+				assign_mul_add_mul_r(v1, vs1, a, b, n);
 
 #ifdef TRIVIAL_TEST
-			mul_r(vt1,kappa2,vs1,n);
+				mul_r(vt1,kappa2,vs1,n);
 #else
-			optr->kappa = kappa2;
-			optr->mu = kappa2Mu2;
-			update_global_parameters(operatorid);
-			optr->applyQsq(vt1, vs1);
+				optr->kappa = kappa2;
+				optr->mu = kappa2Mu2;
+				update_global_parameters(operatorid);
+				optr->applyQsq(vt1, vs1);
 #endif
-			/* Makes (*R)=c1*(*R)+c2*(*S) , c1 and c2 are real constants */
-			assign_mul_add_mul_r(vt1, vs1, a, b, n);
+				/* Makes (*R)=c1*(*R)+c2*(*S) , c1 and c2 are real constants */
+				assign_mul_add_mul_r(vt1, vs1, a, b, n);
 
-			/* Makes (*R)=c1*(*S)-c2*(*U) , c1 and c2 are complex constants */
-			mul_diff_mul_r(u, vt1, v1, coeff[1], coeff[1], n);
+				if (orderstart < 2) {
+					/* Makes (*R)=c1*(*S)-c2*(*U) , c1 and c2 are complex constants */
+					mul_diff_mul_r(u, vt1, v1, coeff[1], coeff[1], n);
 
+#ifdef CHECK_CONVERGENCE
+					if (orderend > 1) {
+						mul_diff_mul_r(unm1, vt1, v1, coeff[1], coeff[1], n);
+					}
+#endif
+				}
+
+				/*This part is only more efficient if not the clover term h
+				 * as to be recompted everytime the parameters are changed.*/
 #if 0
-			for (l = 1; l + 1 < chebmax; l++) {
+				for (l = 1; l + 1 < orderend; l++) {
+#ifndef TRIVIAL_TEST
+					optr->kappa = kappa1;
+					optr->mu = kappa2Mu1;
+					update_global_parameters(operatorid);
+
+					optr->applyQsq(v2, v1);
+#else
+					mul_r(v2,kappa1,v1,n);
+#endif
+					if(l+1>orderstart) {
+						/* Makes (*R) = c1*(*R) + c2*(*S) + c3*(*U) */
+						assign_mul_add_mul_add_mul_r(v2, v1, v0, 2.0 * a, 2.0 * b, -1.0,
+								n);
+					}
+					tmp = v0;
+					v0 = v1;
+					v1 = v2;
+					v2 = tmp;
+
+#ifndef TRIVIAL_TEST
+					optr->kappa = kappa2;
+					optr->mu = kappa2Mu2;
+					update_global_parameters(operatorid);
+
+					optr->applyQsq(vt2, vt1);
+#else
+					mul_r(vt2,kappa2,vt1,n);
+#endif
+					/* Makes (*R) = c1*(*R) + c2*(*S) + c3*(*U) */
+					assign_mul_add_mul_add_mul_r(vt2, vt1, vt0, 2.0 * a, 2.0 * b,
+							-1.0, n);
+					tmp = vt0;
+					vt0 = vt1;
+					vt1 = vt2;
+					vt2 = tmp;
+
+					if(l+1>orderstart) {
+						/* (*R) = (*R) + c1*(*S) + c2*(*U) */
+						assign_add_mul_add_mul_r(u, vt1, v1, coeff[l + 1],
+								-coeff[l + 1], n);
+					}
+
+				}
+
+#endif
+
 #ifndef TRIVIAL_TEST
 				optr->kappa = kappa1;
 				optr->mu = kappa2Mu1;
 				update_global_parameters(operatorid);
-
-				optr->applyQsq(v2, v1);
-#else
-				mul_r(v2,kappa1,v1,n);
 #endif
-				/* Makes (*R) = c1*(*R) + c2*(*S) + c3*(*U) */
-				assign_mul_add_mul_add_mul_r(v2, v1, v0, 2.0 * a, 2.0 * b, -1.0,
-						n);
-				tmp = v0;
-				v0 = v1;
-				v1 = v2;
-				v2 = tmp;
 
+				for (l = 1; l + 1 < orderend; l++) {
+#ifdef TRIVIAL_TEST
+					mul_r(v2,kappa1,v1,n);
+#else
+					optr->applyQsq(v2, v1);
+#endif
+
+					/* Makes (*R) = c1*(*R) + c2*(*S) + c3*(*U) */
+					assign_mul_add_mul_add_mul_r(v2, v1, v0, 2.0 * a, 2.0 * b,
+							-1.0, n);
+					tmp = v0;
+					v0 = v1;
+					v1 = v2;
+					v2 = tmp;
+					if (l + 1 > orderstart) {
+						/*   (*P) = (*P) + c(*Q)        c is a real constant   */
+						assign_add_mul_r(u, v1, -coeff[l + 1], n);
+#ifdef CHECK_CONVERGENCE
+						if (l + 2 < orderend) {
+							assign_add_mul_r(unm1, v1, -coeff[l + 1], n);
+						}
+#endif
+					}
+				}
 #ifndef TRIVIAL_TEST
 				optr->kappa = kappa2;
 				optr->mu = kappa2Mu2;
 				update_global_parameters(operatorid);
-
-				optr->applyQsq(vt2, vt1);
-#else
-				mul_r(vt2,kappa2,vt1,n);
-#endif
-				/* Makes (*R) = c1*(*R) + c2*(*S) + c3*(*U) */
-				assign_mul_add_mul_add_mul_r(vt2, vt1, vt0, 2.0 * a, 2.0 * b,
-						-1.0, n);
-				tmp = vt0;
-				vt0 = vt1;
-				vt1 = vt2;
-				vt2 = tmp;
-
-				/* (*R) = (*R) + c1*(*S) + c2*(*U) */
-				assign_add_mul_add_mul_r(u, vt1, v1, coeff[l + 1],
-						-coeff[l + 1], n);
-
-			}
-
 #endif
 
-#ifndef TRIVIAL_TEST
-			optr->kappa = kappa1;
-			optr->mu = kappa2Mu1;
-			update_global_parameters(operatorid);
-#endif
-
-			for (l = 1; l + 1 < chebmax; l++) {
+				for (l = 1; l + 1 < orderend; l++) {
 #ifdef TRIVIAL_TEST
-				mul_r(v2,kappa1,v1,n);
+					mul_r(vt2,kappa2,vt1,n);
 #else
-				optr->applyQsq(v2, v1);
+					optr->applyQsq(vt2, vt1);
 #endif
-
-				/* Makes (*R) = c1*(*R) + c2*(*S) + c3*(*U) */
-				assign_mul_add_mul_add_mul_r(v2, v1, v0, 2.0 * a, 2.0 * b, -1.0,
-						n);
-				tmp = v0;
-				v0 = v1;
-				v1 = v2;
-				v2 = tmp;
-				/*   (*P) = (*P) + c(*Q)        c is a real constant   */
-				assign_add_mul_r(u, v1, -coeff[l + 1], n);
-			}
-#ifndef TRIVIAL_TEST
-			optr->kappa = kappa2;
-			optr->mu = kappa2Mu2;
-			update_global_parameters(operatorid);
+					/* Makes (*R) = c1*(*R) + c2*(*S) + c3*(*U) */
+					assign_mul_add_mul_add_mul_r(vt2, vt1, vt0, 2.0 * a,
+							2.0 * b, -1.0, n);
+					tmp = vt0;
+					vt0 = vt1;
+					vt1 = vt2;
+					vt2 = tmp;
+					if (l + 1 > orderstart) {
+						/*   (*P) = (*P) + c(*Q)        c is a real constant   */
+						assign_add_mul_r(u, vt1, coeff[l + 1], n);
+#ifdef CHECK_CONVERGENCE
+						if (l + 2 < orderend) {
+							assign_add_mul_r(unm1, vt1, coeff[l + 1], n);
+						}
 #endif
+					}
+				}
 
-			for (l = 1; l + 1 < chebmax; l++) {
-#ifdef TRIVIAL_TEST
-				mul_r(vt2,kappa2,vt1,n);
-#else
-				optr->applyQsq(vt2, vt1);
+				prodre = scalar_prod_r(vs1, u, n, 1);
+				ldet += prodre / ((double) estimators);
+#ifdef CHECK_CONVERGENCE
+				prodrenm1 = scalar_prod_r(vs1, unm1, n, 1);
+				ldetnm1 += prodrenm1 / ((double) estimators);
 #endif
-				/* Makes (*R) = c1*(*R) + c2*(*S) + c3*(*U) */
-				assign_mul_add_mul_add_mul_r(vt2, vt1, vt0, 2.0 * a, 2.0 * b,
-						-1.0, n);
-				tmp = vt0;
-				vt0 = vt1;
-				vt1 = vt2;
-				vt2 = tmp;
+				if (g_proc_id == 0 && g_debug_level > 3) {
+					ofs = fopen("estimators.txt", "a");
+					fprintf(ofs, "# Test of stochastic estimation\n");
+					fprintf(ofs, "%d %g %g %g %g  %g  %d %d %d %g %g  %g   ", k,
+							kappa1, kappa2, kappa2Mu1, kappa2Mu2, prodre,
+							estimators, orderstart, orderend, minev, maxev,
+							ldet);
+#ifdef CHECK_CONVERGENCE
+					fprintf(ofs, " %g %g", prodrenm1, ldetnm1);
+#endif
+					fprintf(ofs, "\n");
+					fclose(ofs);
+				}
 
-				/*   (*P) = (*P) + c(*Q)        c is a real constant   */
-				assign_add_mul_r(u, vt1, coeff[l + 1], n);
+				if (g_proc_id == 0) {
+					ofs = fopen(filename, "a");
+					fprintf(ofs, "%d %d %g %g %g %g %d %d %g %g ", traj, sl,
+							kappa1, kappa2, kappa2Mu1, kappa2Mu2, orderend,
+							orderstart, minev, maxev);
+					fprintf(ofs, "     %.17g %.17g ", prodre + shift, prodre);
+#ifdef CHECK_CONVERGENCE
+					fprintf(ofs, "      %.17g \n", prodrenm1 + shift);
+#endif
+					fclose(ofs);
+				}
 
-			}
-
-			prodre = scalar_prod_r(vs1, u, n, 1);
-			ldet += prodre / ((double) estimators);
-			if (g_proc_id == 0 && g_debug_level > 3) {
-				ofs = fopen("estimators.txt", "a");
-				fprintf(ofs, "# Test of stochastic estimation\n");
-				fprintf(ofs, "%d %g %g %g %g  %g  %d %d %g %g  %g\n", k, kappa1,
-						kappa2, kappa2Mu1, kappa2Mu2, prodre, estimators,
-						chebmax, minev, maxev, ldet);
-				fclose(ofs);
-			}
-
-			if (g_proc_id == 0) {
-				ofs = fopen(filename, "a");
-				fprintf(ofs, "%d %g %g %g %g %d %g %g ", traj, kappa1, kappa2,
-						kappa2Mu1, kappa2Mu2, chebmax, minev, maxev);
-				fprintf(ofs, "     %g %g\n", prodre + shift, prodre);
-				fclose(ofs);
-			}
-
-		} /* estimator iteration*/
-	} /* chebmax>0*/
+			} /* estimator iteration*/
+		} /* orderend>0*/
+	} /* splitlength loop */
 	free(coeff);
 	return (ldet);
 }
@@ -626,7 +869,7 @@ void reweighting_measurement(const int traj, const int id, const int ieo) {
 	 */
 	k2muinitial = param->k2mu0;
 	kappainitial = param->kappa0;
-	cswinitial=0;
+	cswinitial = 0;
 	kapparew = 1;
 	if (kappainitial == kappafinal) {
 		kapparew = 0;
@@ -697,6 +940,12 @@ void reweighting_measurement(const int traj, const int id, const int ieo) {
 		}
 	}
 
+	cswpart = 0;
+
+	if(param->evest){
+		estimate_eigenvalues(operatorid,traj);
+	}
+
 	if (param->use_cheb) {
 		if (param->use_evenodd == 1) {
 			cswpart = get_sw_reweighting(k2muinitial, k2mufinal, kappainitial,
@@ -704,7 +953,8 @@ void reweighting_measurement(const int traj, const int id, const int ieo) {
 		}
 		log_determinant_estimate(operatorid, param->cheborder,
 				param->estimatorscheb, param->minev, param->maxev, kappainitial,
-				kappafinal, k2muinitial, k2mufinal, cswpart, traj);
+				kappafinal, k2muinitial, k2mufinal, cswpart, traj,
+				&param->splitlist, &param->coeff);
 		if (param->only_cheb) {
 			return;
 		}
@@ -848,7 +1098,6 @@ void reweighting_measurement(const int traj, const int id, const int ieo) {
 
 				square2 = square_norm(optr->prop0, VOLUME / 2, 1);
 
-
 				if (g_mpi_time_rank == 0 && g_proc_coords[0] == 0) {
 					ofs = fopen(filename, "a");
 					ofs_full = fopen(filename_full, "a");
@@ -872,7 +1121,6 @@ void reweighting_measurement(const int traj, const int id, const int ieo) {
 
 	} /* loop over interpolation steps*/
 
-
 	etime = gettime();
 
 	if (g_proc_id == 0 && g_debug_level > 0) {
@@ -880,4 +1128,129 @@ void reweighting_measurement(const int traj, const int id, const int ieo) {
 				etime - atime);
 	}
 	return;
+}
+
+void free_reweighting_parameter(void* par) {
+	reweighting_parameter* param;
+	param = (reweighting_parameter*) (par);
+	if (param->coeff.el)
+		free(param->coeff.el);
+	if (param->splitlist.ord)
+		free(param->splitlist.ord);
+	if (param->splitlist.est)
+		free(param->splitlist.est);
+	param->coeff.el = NULL;
+	param->coeff.s = 0;
+	param->splitlist.ord = NULL;
+	param->splitlist.est = NULL;
+	param->splitlist.s = 0;
+}
+
+static void read_coeff_from_file(vector_list* v) {
+	FILE* file;
+	unsigned int l;
+	double dat;
+
+	file = fopen("coeff.dat", "r");
+	l = 0;
+	dat = 0;
+
+	if (file) {
+		while (fscanf(file, "%lg ", &dat) > 0) {
+			l++;
+		}
+		v->s = l;
+		v->el = malloc(l * sizeof(double));
+		file = freopen("coeff.dat", "r", file);
+		l = 0;
+		while (fscanf(file, "%lg ", &dat) > 0) {
+			v->el[l++] = dat;
+		}
+		if (g_debug_level > 3) {
+			printf(
+					"The following coefficients have been read from file coeff.dat:\n");
+			for (l = 0; l < v->s; l++) {
+				printf("%d %lg\n", l, v->el[l]);
+			}
+		}
+	} else {
+		if (g_proc_id == 0) {
+			printf("File coeff.dat not present.\n");
+		}
+		v->el = NULL;
+		v->s = 0;
+	}
+
+}
+
+static void read_splitlist(split_list* list) {
+	FILE* file;
+	unsigned int l;
+	int dat1, dat2;
+
+	file = fopen("split.dat", "r");
+	l = 0;
+	dat1 = dat2 = 0;
+
+	if (file) {
+		while (fscanf(file, "%d ", &dat1) > 0 && fscanf(file, "%d ", &dat2) > 0) {
+			l++;
+		}
+		list->s = l;
+		list->ord = malloc(l * sizeof(unsigned int));
+		list->est = malloc(l * sizeof(unsigned int));
+
+		file = freopen("split.dat", "r", file);
+		l = 0;
+		while (fscanf(file, "%d ", &dat1) > 0 && fscanf(file, "%d ", &dat2) > 0) {
+			list->ord[l] = dat1;
+			list->est[l] = dat2;
+			l++;
+		}
+		if (g_debug_level > 3) {
+			printf(
+					"The following factor splits have been read from file split.dat:\n");
+			for (l = 0; l < list->s; l++) {
+				printf("%d %d %d\n", l, list->ord[l], list->est[l]);
+			}
+		}
+	} else {
+		if (g_proc_id == 0) {
+			printf("File split.dat not present.\n");
+		}
+		list->ord = NULL;
+		list->est = NULL;
+		list->s = 0;
+	}
+
+}
+
+void initialize_reweighting_parameter(void** parameter) {
+	reweighting_parameter* param;
+	if (!(*parameter)) {
+		(*parameter) = malloc(sizeof(reweighting_parameter));
+		param = (reweighting_parameter*) (*parameter);
+		param->reweighting_operator = 0;
+		param->reweighting_number_sources = 0;
+		param->use_evenodd = 0;
+		param->k2mu0 = 0.0;
+		param->kappa0 = 0.0;
+		param->rmu0 = 0.0;
+		param->rmu = 0.0;
+		param->minev = 1e-7;
+		param->maxev = 20.0;
+		param->interpolationsteps = 1;
+		param->estimatorscheb = 0;
+		param->cheborder = 0;
+		param->use_cheb = 0;
+		param->only_cheb = 0;
+		param->coeff.el = NULL;
+		param->coeff.s = 0;
+		param->splitlist.ord = NULL;
+		param->splitlist.est = NULL;
+		param->splitlist.s = 0;
+		param->evest=0;
+		read_coeff_from_file(&param->coeff);
+		read_splitlist(&param->splitlist);
+	}
 }

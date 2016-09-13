@@ -76,6 +76,7 @@ typedef struct {
   
   /* functions for the measurement */
   void (*measurefunc) (const int traj, const int id, const int ieo);
+	void (*destructor)(void* param);
 } measurement;
 
 
@@ -91,5 +92,6 @@ int init_measurements();
 void free_measurements();
 
 void dummy_meas(const int traj, const int id, const int ieo);
+void default_destructor(void* ptr);
 
 #endif
