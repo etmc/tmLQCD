@@ -28,9 +28,15 @@ typedef struct{
 	  int use_evenodd;
 	  double k2mu0;
 	  double kappa0;
-	  int interpolationsteps;
 	  double rmu0;
 	  double rmu;
+	  double minev;
+	  double maxev;
+	  int interpolationsteps;
+	  int estimatorscheb;
+	  int cheborder;
+	  int use_cheb;
+	  int only_cheb;
 
 } reweighting_parameter;
 
@@ -39,14 +45,20 @@ inline void initialize_reweighting_parameter(void** parameter){
 	if(!(*parameter)){
 		(*parameter)=malloc(sizeof(reweighting_parameter));
 		param=(reweighting_parameter*)(*parameter);
-		param->reweighting_number_sources=0;
 		param->reweighting_operator=0;
+		param->reweighting_number_sources=0;
 		param->use_evenodd=0;
 		param->k2mu0=0.0;
+		param->kappa0=0.0;
 		param->rmu0=0.0;
 		param->rmu=0.0;
-		param->kappa0=0.0;
+        param->minev=1e-7;
+        param->maxev=20.0;
 		param->interpolationsteps=1;
+		param->estimatorscheb=0;
+		param->cheborder=0;
+		param->use_cheb=0;
+		param->only_cheb=0;
 	}
 }
 
