@@ -34,10 +34,10 @@
 #include <time.h>
 #include <string.h>
 #include <signal.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "global.h"
@@ -48,7 +48,7 @@
 #include "start.h"
 /*#include "eigenvalues.h"*/
 #include "measure_gauge_action.h"
-#ifdef MPI
+#ifdef TM_USE_MPI
 #include "xchange/xchange.h"
 #endif
 #include <io/utils.h>
@@ -71,7 +71,6 @@
 #include "block.h"
 #include "operator.h"
 #include "sighandler.h"
-#include "solver/dfl_projector.h"
 #include "solver/generate_dfl_subspace.h"
 #include "prepare_source.h"
 #include <io/params.h>
@@ -79,6 +78,7 @@
 #include <io/spinor.h>
 #include <io/utils.h>
 #include "solver/dirac_operator_eigenvectors.h"
+#include "source_generation.h"
 #include "P_M_eta.h"
 #include "operator/tm_operators.h"
 #include "operator/Dov_psi.h"
@@ -87,6 +87,7 @@
 #  include "quda_interface.h"
 #endif
 #include "meas/measurements.h"
+#include "source_generation.h"
 
 extern int nstore;
 int check_geometry();
@@ -94,6 +95,7 @@ int check_geometry();
 static void usage();
 static void process_args(int argc, char *argv[], char ** input_filename, char ** filename);
 static void set_default_filenames(char ** input_filename, char ** filename);
+static void invert_compute_modenumber();
 
 int main(int argc, char *argv[])
 {
@@ -106,7 +108,6 @@ int main(int argc, char *argv[])
   char * filename = NULL;
   double plaquette_energy;
   struct stout_parameters params_smear;
-  spinor **s, *s_;
 
 #ifdef _KOJAK_INST
 #pragma pomp inst init
@@ -119,7 +120,7 @@ int main(int argc, char *argv[])
 
   DUM_DERI = 8;
   DUM_MATRIX = DUM_DERI + 5;
-  NO_OF_SPINORFIELDS = DUM_MATRIX + 3;
+  NO_OF_SPINORFIELDS = DUM_MATRIX + 4;
 
   //4 extra fields (corresponding to DUM_MATRIX+0..5) for deg. and ND matrix mult.  
   NO_OF_SPINORFIELDS_32 = 6;
@@ -127,9 +128,9 @@ int main(int argc, char *argv[])
   verbose = 0;
   g_use_clover_flag = 0;
 
-#ifdef MPI
+#ifdef TM_USE_MPI
 
-#  ifdef OMP
+#  ifdef TM_USE_OMP
   int mpi_thread_provided;
   MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
 #  else
@@ -150,7 +151,7 @@ int main(int argc, char *argv[])
     exit(-1);
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   init_openmp();
 #endif
 
@@ -173,14 +174,14 @@ int main(int argc, char *argv[])
 
   /* starts the single and double precision random number */
   /* generator                                            */
-  start_ranlux(rlxd_level, random_seed);
+  start_ranlux(rlxd_level, random_seed^nstore);
 
   /* we need to make sure that we don't have even_odd_flag = 1 */
   /* if any of the operators doesn't use it                    */
   /* in this way even/odd can still be used by other operators */
   for(j = 0; j < no_operators; j++) if(!operator_list[j].even_odd_flag) even_odd_flag = 0;
 
-#ifndef MPI
+#ifndef TM_USE_MPI
   g_dbw2rand = 0;
 #endif
 
@@ -304,7 +305,7 @@ int main(int argc, char *argv[])
       printf("# Finished reading gauge field.\n");
       fflush(stdout);
     }
-#ifdef MPI
+#ifdef TM_USE_MPI
     xchange_gauge(g_gauge_field);
 #endif
     /*Convert to a 32 bit gauge field, after xchange*/
@@ -351,89 +352,22 @@ int main(int argc, char *argv[])
                   0, compute_evs, nstore, even_odd_flag);
     }
     if (phmc_compute_evs != 0) {
-#ifdef MPI
+#ifdef TM_USE_MPI
       MPI_Finalize();
 #endif
       return(0);
     }
 
     /* Compute the mode number or topological susceptibility using spectral projectors, if wanted*/
-
     if(compute_modenumber != 0 || compute_topsus !=0){
-      
-      s_ = calloc(no_sources_z2*VOLUMEPLUSRAND+1, sizeof(spinor));
-      s  = calloc(no_sources_z2, sizeof(spinor*));
-      if(s_ == NULL) { 
-	printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
-      }
-      if(s == NULL) { 
-	printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
-      }
-      
-      
-      for(i = 0; i < no_sources_z2; i++) {
-#if (defined SSE3 || defined SSE2 || defined SSE)
-        s[i] = (spinor*)(((unsigned long int)(s_)+ALIGN_BASE)&~ALIGN_BASE)+i*VOLUMEPLUSRAND;
-#else
-        s[i] = s_+i*VOLUMEPLUSRAND;
-#endif
-	
-        random_spinor_field_lexic(s[i], reproduce_randomnumber_flag,RN_Z2);
-	
-/* 	what is this here needed for?? */
-/*         spinor *aux_,*aux; */
-/* #if ( defined SSE || defined SSE2 || defined SSE3 ) */
-/*         aux_=calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
-/*         aux = (spinor *)(((unsigned long int)(aux_)+ALIGN_BASE)&~ALIGN_BASE); */
-/* #else */
-/*         aux_=calloc(VOLUMEPLUSRAND, sizeof(spinor)); */
-/*         aux = aux_; */
-/* #endif */
-	
-        if(g_proc_id == 0) {
-          printf("source %d \n", i);
-        }
-	
-        if(compute_modenumber != 0){
-          mode_number(s[i], mstarsq);
-        }
-	
-        if(compute_topsus !=0) {
-          top_sus(s[i], mstarsq);
-        }
-      }
-      free(s);
-      free(s_);
+      invert_compute_modenumber(); 
     }
 
-
-    /* move to operators as well */
-    if (g_dflgcr_flag == 1) {
-      /* set up deflation blocks */
+    //  set up blocks if Deflation is used 
+    if (g_dflgcr_flag) 
       init_blocks(nblocks_t, nblocks_x, nblocks_y, nblocks_z);
-
-      /* the can stay here for now, but later we probably need */
-      /* something like init_dfl_solver called somewhere else  */
-      /* create set of approximate lowest eigenvectors ("global deflation subspace") */
-
-      /*       g_mu = 0.; */
-      /*       boundary(0.125); */
-      generate_dfl_subspace(g_N_s, VOLUME, reproduce_randomnumber_flag);
-      /*       boundary(g_kappa); */
-      /*       g_mu = g_mu1; */
-
-      /* Compute little Dirac operators */
-      /*       alt_block_compute_little_D(); */
-      if (g_debug_level > 0) {
-        check_projectors(reproduce_randomnumber_flag);
-        check_local_D(reproduce_randomnumber_flag);
-      }
-      if (g_debug_level > 1) {
-        check_little_D_inversion(reproduce_randomnumber_flag);
-      }
-
-    }
-    if(SourceInfo.type == 1) {
+    
+    if(SourceInfo.type == SRC_TYPE_VOL || SourceInfo.type == SRC_TYPE_PION_TS || SourceInfo.type == SRC_TYPE_GEN_PION_TS) {
       index_start = 0;
       index_end = 1;
     }
@@ -441,7 +375,7 @@ int main(int argc, char *argv[])
     g_precWS=NULL;
     if(use_preconditioning == 1){
       /* todo load fftw wisdom */
-#if (defined HAVE_FFTW ) && !( defined MPI)
+#if (defined HAVE_FFTW ) && !( defined TM_USE_MPI)
       loadFFTWWisdom(g_spinor_field[0],g_spinor_field[1],T,LX);
 #else
       use_preconditioning=0;
@@ -454,7 +388,12 @@ int main(int argc, char *argv[])
     for(op_id = 0; op_id < no_operators; op_id++) {
       boundary(operator_list[op_id].kappa);
       g_kappa = operator_list[op_id].kappa; 
-      g_mu = 0.;
+      g_mu = operator_list[op_id].mu;
+      g_c_sw = operator_list[op_id].c_sw;
+      // DFLGCR and DFLFGMRES
+      if(operator_list[op_id].solver == DFLGCR || operator_list[op_id].solver == DFLFGMRES) {
+        generate_dfl_subspace(g_N_s, VOLUME, reproduce_randomnumber_flag);
+      }
 
       if(use_preconditioning==1 && PRECWSOPERATORSELECT[operator_list[op_id].solver]!=PRECWS_NO ){
         printf("# Using preconditioning with treelevel preconditioning operator: %s \n",
@@ -481,7 +420,7 @@ int main(int argc, char *argv[])
           /* we use g_spinor_field[0-7] for sources and props for the moment */
           /* 0-3 in case of 1 flavour  */
           /* 0-7 in case of 2 flavours */
-          prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location);
+          prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location, random_seed);
           //randmize initial guess for eigcg if needed-----experimental
           if( (operator_list[op_id].solver == INCREIGCG) && (operator_list[op_id].solver_params.eigcg_rand_guess_opt) ){ //randomize the initial guess
               gaussian_volume_source( operator_list[op_id].prop0, operator_list[op_id].prop1,isample,ix,0); //need to check this
@@ -505,7 +444,7 @@ int main(int argc, char *argv[])
     nstore += Nsave;
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   free_omp_accumulators();
 #endif
   free_blocks();
@@ -519,10 +458,12 @@ int main(int argc, char *argv[])
   free_chi_spinor_field();
   free(filename);
   free(input_filename);
+  free(SourceInfo.basename);
+  free(PropInfo.basename);
 #ifdef QUDA
   _endQuda();
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 #endif
@@ -588,5 +529,34 @@ static void set_default_filenames(char ** input_filename, char ** filename) {
     *filename = calloc(7, sizeof(char));
     strcpy(*filename,"output");
   } 
+}
+
+static void invert_compute_modenumber() {
+  spinor * s_ = calloc(no_sources_z2*VOLUMEPLUSRAND+1, sizeof(spinor));
+  spinor ** s  = calloc(no_sources_z2, sizeof(spinor*));
+  if(s_ == NULL) { 
+    printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
+  }
+  if(s == NULL) { 
+    printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
+  }
+  for(int i = 0; i < no_sources_z2; i++) {
+    s[i] = (spinor*)(((unsigned long int)(s_)+ALIGN_BASE)&~ALIGN_BASE)+i*VOLUMEPLUSRAND;
+    random_spinor_field_lexic(s[i], reproduce_randomnumber_flag,RN_Z2);
+	
+    if(g_proc_id == 0) {
+      printf("source %d \n", i);
+    }
+	
+    if(compute_modenumber != 0){
+      mode_number(s[i], mstarsq);
+    }
+	  
+    if(compute_topsus !=0) {
+      top_sus(s[i], mstarsq);
+    }
+  }
+  free(s);
+  free(s_);
 }
 

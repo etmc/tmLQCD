@@ -124,7 +124,7 @@ void gaussian_volume_source(spinor * const P, spinor * const Q,
 
 void extended_pion_source(spinor * const P, spinor * const Q,
 			  spinor * const R, spinor * const S,
-			  const int t0,
+			  const int t0, const int ts,
 			  const double px, const double py, const double pz) {
   int lt, lx, ly, lz, i, x, y, z, id=0, t;
   int coords[4];
@@ -134,7 +134,7 @@ void extended_pion_source(spinor * const P, spinor * const Q,
   zero_spinor_field(P,VOLUME/2);
   zero_spinor_field(Q,VOLUME/2);
   
-  t=((g_nproc_t*T)/2+t0)%(g_nproc_t*T);
+  t=(ts + t0)%(g_nproc_t*T);
   lt = t - g_proc_coords[0]*T;
   coords[0] = t / T;
   for(x = 0; x < LX*g_nproc_x; x++) {
@@ -146,7 +146,7 @@ void extended_pion_source(spinor * const P, spinor * const Q,
       for(z = 0; z < LZ*g_nproc_z; z++) {
 	lz = z - g_proc_coords[3]*LZ;
 	coords[3] = z / LZ;
-#ifdef MPI
+#ifdef TM_USE_MPI
 	MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
 	if(g_cart_id == id) {
@@ -172,8 +172,8 @@ void extended_pion_source(spinor * const P, spinor * const Q,
 }
 
 void source_generation_pion_only(spinor * const P, spinor * const Q,
-				 const int t,
-				 const int sample, const int nstore) {
+				 const int t, const int sample, 
+                                 const int nstore, const unsigned int _seed) {
 
   int reset = 0, i, x, y, z, is, ic, lt, lx, ly, lz, id=0;
   int coords[4], seed, r;
@@ -192,7 +192,7 @@ void source_generation_pion_only(spinor * const P, spinor * const Q,
   }
 
   /* Compute the seed */
-  seed =(int) abs(1 + sample + t*10*97 + nstore*100*53);
+  seed =(int) abs(_seed + sample + t*10*97 + nstore*100*53);
 
   rlxd_init(2, seed);
 
@@ -207,7 +207,7 @@ void source_generation_pion_only(spinor * const P, spinor * const Q,
       for(z = 0; z < LZ*g_nproc_z; z++) {
 	lz = z - g_proc_coords[3]*LZ;
 	coords[3] = z / LZ;
-#ifdef MPI
+#ifdef TM_USE_MPI
 	MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
 	for(is = 0; is < 4; is++) {
@@ -294,7 +294,7 @@ void source_generation_pion_zdir(spinor * const P, spinor * const Q,
       ly = y - g_proc_coords[2]*LY;
       coords[2] = y / LY;
 
-#ifdef MPI
+#ifdef TM_USE_MPI
         MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
         for(is = 0; is < 4; is++) {
@@ -394,7 +394,7 @@ void source_generation_nucleon(spinor * const P, spinor * const Q,
 	for(zz = 0; zz < LZ*g_nproc_z; zz+=nx) {
 	  lz = zz - g_proc_coords[3]*LZ;
 	  coords[3] = zz / LZ;
-#ifdef MPI
+#ifdef TM_USE_MPI
 	  MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
 	  ranlxd(&rnumber, 1);

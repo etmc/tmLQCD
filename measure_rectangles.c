@@ -37,7 +37,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "global.h"
@@ -50,11 +50,11 @@
 
 double measure_rectangles(const su3 ** const gf) {
   static double res;
-#ifdef MPI
+#ifdef TM_USE_MPI
   double ALIGN mres;
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
   int thread_num = omp_get_thread_num();
@@ -67,7 +67,7 @@ double measure_rectangles(const su3 ** const gf) {
 
   kc = 0.0;
   ks = 0.0;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for (i = 0; i < VOLUME; i++) {
@@ -117,13 +117,13 @@ double measure_rectangles(const su3 ** const gf) {
     }
   }
   kc=(kc+ks)/3.0;
-#ifdef OMP
+#ifdef TM_USE_OMP
   g_omp_acc_re[thread_num] = kc;
 #else
   res = kc;
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP parallel closing brace */
   
   res = 0.0;
@@ -131,7 +131,7 @@ double measure_rectangles(const su3 ** const gf) {
     res += g_omp_acc_re[i];
 #else
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   res = mres;
 #endif

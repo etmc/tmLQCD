@@ -1,0 +1,50 @@
+# example input file for invert
+# for CG solver
+# requires a 4^4 gauge configuration conf.0000
+
+L=4
+T=4
+NrXProcs = 2
+NrYProcs = 2
+NrZProcs = 2
+
+NoBlocksT = 2
+NoBlocksX = 2
+NoBlocksY = 2
+NoBlocksZ = 2
+
+
+DebugLevel = 5
+InitialStoreCounter = 0
+Measurements = 1
+2kappamu = 0.001
+kappa = 0.177
+BCAngleT = 1
+ThetaX = 1
+GaugeConfigInputFile = conf
+UseEvenOdd = yes
+
+OmpNumThreads = 2
+
+ComputeReweightingFactor = yes
+NoReweightingSamples = 2
+
+## monomial only for reweighting
+BeginMonomial CLOVERDETRATIORW
+  Timescale = 1
+  CSW = 1.00
+  # nominator parameters
+  2KappaMu = 0.01
+  kappa = 0.138
+  rho = 0.0
+  # denominator parameters
+  2KappaMu2 = 0.01
+  ## for reweighting only rho=rho2 makes sense
+  rho2 = 0.0
+  kappa2 = 0.1380001
+  AcceptancePrecision =  1.e-20
+  Name = cloverdetratiorw
+  solver = CG
+EndMonomial
+
+

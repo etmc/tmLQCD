@@ -148,8 +148,10 @@ int init_geometry_indices(const int V) {
   for(i = 1; i < (T+4); i++){
     g_ipt[i] = g_ipt[i-1]+(LX+4);
   }
-  g_hi = (int*)calloc(16*(VOLUME+RAND)+2,sizeof(int));
-  if((void*) g_hi == NULL) return(40);
+  if(!lowmem_flag){
+    g_hi = (int*)calloc(16*(VOLUME+RAND)+2,sizeof(int));
+    if((void*) g_hi == NULL) return(40);
+  }
 
 #ifdef WITHLAPH
   g_idn3d = (int**)calloc(SPACEVOLUME, sizeof(int*));
@@ -172,7 +174,9 @@ void free_geometry_indices() {
   free(ipt_);
   free(ipt__);
   free(g_ipt);
-  free(g_hi);
+  if(!lowmem_flag){
+    free(g_hi);
+  }
   free(g_idn);
   free(g_iup);
   free(g_eo2lexic);

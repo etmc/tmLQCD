@@ -23,7 +23,7 @@ int read_spinorfield_cm_single(spinor * const s, spinor * const r, char * filena
   for(x = 0; x < LX; x++) {
     for(y = 0; y < LY; y++) {
       for(z = 0; z < LZ; z++) {
-#if (defined MPI)
+#if (defined TM_USE_MPI)
 	fseek(ifs,
 	      (g_proc_coords[0]*T+
 	       (((g_proc_coords[1]*LX+x)*g_nproc_y*LY+g_proc_coords[2]*LY+y)*g_nproc_z*LZ
@@ -98,7 +98,7 @@ int read_spinorfield_cm_swap_single(spinor * const s, spinor * const r, char * f
   ifs = fopen(filename, "r");
   if(ifs == (FILE *)NULL) {
     fprintf(stderr, "Could not open file %s\n Aborting...\n", filename);
-#ifdef MPI
+#ifdef TM_USE_MPI
     MPI_Abort(MPI_COMM_WORLD, 1);
     MPI_Finalize();
 #endif
@@ -108,7 +108,7 @@ int read_spinorfield_cm_swap_single(spinor * const s, spinor * const r, char * f
   for(x = 0; x < LX; x++) {
     for(y = 0; y < LY; y++) {
       for(z = 0; z < LZ; z++) {
-#if (defined MPI)
+#if (defined TM_USE_MPI)
         fseek(ifs,
               (g_proc_coords[0]*T+
                (((g_proc_coords[1]*LX+x)*g_nproc_y*LY+g_proc_coords[2]*LY+y)*g_nproc_z*LZ
@@ -158,7 +158,7 @@ int write_spinorfield_cm_single(spinor * const s, spinor * const r, char * filen
   spinor * p = NULL;
   float tmp[24];
   int coords[4];
-#ifdef MPI
+#ifdef TM_USE_MPI
   int  tag = 0;
   MPI_Status status;
 #endif
@@ -180,7 +180,7 @@ int write_spinorfield_cm_single(spinor * const s, spinor * const r, char * filen
 	for(t0 = 0; t0 < T*g_nproc_t; t0++) {
 	  t = t0 - T*g_proc_coords[0];
 	  coords[0] = t0 / T;
-#ifdef MPI
+#ifdef TM_USE_MPI
 	  MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
 	  if(g_cart_id == id) {
@@ -197,7 +197,7 @@ int write_spinorfield_cm_single(spinor * const s, spinor * const r, char * filen
 	    if(g_cart_id == id) {
 	      double2single_cm(tmp, p + i);
 	    }
-#ifdef MPI
+#ifdef TM_USE_MPI
 	    else {
 	      MPI_Recv(tmp, sizeof(spinor)/8, MPI_FLOAT, id, tag, g_cart_grid, &status);
 	    }
@@ -205,7 +205,7 @@ int write_spinorfield_cm_single(spinor * const s, spinor * const r, char * filen
 	    fwrite(tmp, sizeof(float), 24, ofs);
 	    //	    printf("%e,%e\n",tmp[0],tmp[5]);fflush(stdout);
 	  }
-#ifdef MPI
+#ifdef TM_USE_MPI
 	  else {
 	    if(g_cart_id == id) {
 	      double2single_cm(tmp, p + i);
@@ -215,7 +215,7 @@ int write_spinorfield_cm_single(spinor * const s, spinor * const r, char * filen
 	  tag++;
 #endif
 	}
-#ifdef MPI
+#ifdef TM_USE_MPI
 	MPI_Barrier(g_cart_grid); 
 	tag=0;
 #endif

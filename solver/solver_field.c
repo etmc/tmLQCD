@@ -152,3 +152,92 @@ void finalize_bisolver(bispinor ** solver_field, const int nr) {
   free(solver_field);
   solver_field = NULL;
 }
+
+
+/* little solver fields (deflation) */
+int init_lsolver_field(_Complex double *** const solver_field, const int V, const int nr) {
+  int i=0;
+
+  /* allocate nr+1 to save the linear field in solver_field[nr] */
+  if((void*)((*solver_field) = (_Complex double**)malloc((nr+1)*sizeof(_Complex double*))) == NULL) {
+    printf ("malloc errno in init_solver_field: %d\n",errno);
+    errno = 0;
+    return(2);
+  }
+
+  /* allocate the full chunk of memory to solver_field[nr] */
+#if (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
+  if((void*)((*solver_field)[nr] = (_Complex double*)shmalloc((nr*V+1)*sizeof(_Complex double))) == NULL) {
+    fprintf (stderr, "malloc errno in init_solver_field: %d\n",errno);
+    errno = 0;
+    return(1);
+  }
+#else
+  if((void*)((*solver_field)[nr] = (_Complex double*)calloc(nr*V+1, sizeof(_Complex double))) == NULL) {
+    printf ("malloc errno in init_solver_field: %d\n",errno);
+    errno = 0;
+    return(1);
+  }
+#endif
+
+  /* now cut in pieces and distribute to solver_field[0]-solver_field[nr-1] */
+#if ( defined SSE || defined SSE2 || defined SSE3)
+  (*solver_field)[0] = (_Complex double*)(((unsigned long int)((*solver_field)[nr])+ALIGN_BASE)&~ALIGN_BASE);
+#else
+  (*solver_field)[0] = (*solver_field)[nr];
+#endif
+  for(i = 1; i < nr; i++){
+    (*solver_field)[i] = (*solver_field)[i-1]+V;
+  }
+  return(0);
+}
+
+void finalize_lsolver(_Complex double ** solver_field, const int nr){
+  free(solver_field[nr]);
+  free(solver_field);
+  solver_field = NULL;
+}
+
+/* little solver fields (deflation) */
+int init_lsolver_field_32(_Complex float *** const solver_field, const int V, const int nr) {
+  int i=0;
+
+  /* allocate nr+1 to save the linear field in solver_field[nr] */
+  if((void*)((*solver_field) = (_Complex float**)malloc((nr+1)*sizeof(_Complex float*))) == NULL) {
+    printf ("malloc errno in init_solver_field: %d\n",errno);
+    errno = 0;
+    return(2);
+  }
+
+  /* allocate the full chunk of memory to solver_field[nr] */
+#if (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
+  if((void*)((*solver_field)[nr] = (_Complex float*)shmalloc((nr*V+1)*sizeof(_Complex float))) == NULL) {
+    fprintf (stderr, "malloc errno in init_solver_field: %d\n",errno);
+    errno = 0;
+    return(1);
+  }
+#else
+  if((void*)((*solver_field)[nr] = (_Complex float*)calloc(nr*V+1, sizeof(_Complex float))) == NULL) {
+    printf ("malloc errno in init_solver_field: %d\n",errno);
+    errno = 0;
+    return(1);
+  }
+#endif
+
+  /* now cut in pieces and distribute to solver_field[0]-solver_field[nr-1] */
+#if ( defined SSE || defined SSE2 || defined SSE3)
+  (*solver_field)[0] = (_Complex float*)(((unsigned long int)((*solver_field)[nr])+ALIGN_BASE)&~ALIGN_BASE);
+#else
+  (*solver_field)[0] = (*solver_field)[nr];
+#endif
+  for(i = 1; i < nr; i++){
+    (*solver_field)[i] = (*solver_field)[i-1]+V;
+  }
+  return(0);
+}
+
+void finalize_lsolver_32(_Complex float ** solver_field, const int nr){
+  free(solver_field[nr]);
+  free(solver_field);
+  solver_field = NULL;
+}

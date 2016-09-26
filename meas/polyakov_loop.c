@@ -35,7 +35,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -56,7 +56,7 @@ void polyakov_loop(_Complex double * pl_, const int mu) {
   su3 *v = NULL , *w = NULL;
   static _Complex double pl; 
   /* For the Kahan summation:*/
-#ifdef MPI
+#ifdef TM_USE_MPI
   static _Complex double pls; 
 #endif
   static _Complex double ks = 0.0, kc = 0.0, tr, ts, tt;
@@ -67,7 +67,7 @@ void polyakov_loop(_Complex double * pl_, const int mu) {
     fprintf(stderr, "Wrong parameter for Polyakov loop calculation in polyakov_loop.c:\n");
     fprintf(stderr, "Only direction %d and %d are allowed.\n",2,3);
     fprintf(stderr, "Actual value is %d! Aborting...\n",mu);
-#ifdef MPI
+#ifdef TM_USE_MPI
     MPI_Abort(MPI_COMM_WORLD, 10);
     MPI_Finalize();
 #endif
@@ -142,7 +142,7 @@ void polyakov_loop(_Complex double * pl_, const int mu) {
   
   
   /* Collect the results and return:*/
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Allreduce(&pl, &pls, 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   pl=pls;
 #endif
@@ -170,7 +170,7 @@ int polyakov_loop_0(const int nstore, _Complex double *pl) {
   
   FILE *ofs = NULL;
   
-#ifdef MPI
+#ifdef TM_USE_MPI
   int iproc;
   MPI_Status status;
   su3 *tmp_nnb = NULL;
@@ -217,7 +217,7 @@ int polyakov_loop_0(const int nstore, _Complex double *pl) {
   
   /********************************************************************************/
     
-#ifdef MPI
+#ifdef TM_USE_MPI
   /***************
    * global part *
    ***************/
@@ -273,7 +273,7 @@ int polyakov_loop_0(const int nstore, _Complex double *pl) {
     pl_tmp = ks + kc;
   }
   
-#ifdef MPI
+#ifdef TM_USE_MPI
   /* (3) sum over all contributions from all nodes (also nodes with pl_tmp=0;
      apparently the easiest way) */
   MPI_Reduce(&pl_tmp, pl, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, g_cart_grid);
@@ -303,7 +303,7 @@ int polyakov_loop_0(const int nstore, _Complex double *pl) {
     fprintf(ofs, "%25.16e\t%25.16e\n", creal(*pl), cimag(*pl)); 
     fclose(ofs);
   }
-#ifdef MPI
+#ifdef TM_USE_MPI
   free(tmp_nnb);
 #endif
   free(tmp_loc);
@@ -335,7 +335,7 @@ int polyakov_loop_dir(
 
   FILE *ofs;
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   int rank_slice, rank_ray;
   MPI_Comm slice, ray;
   su3 *tmp_ray;
@@ -434,7 +434,7 @@ int polyakov_loop_dir(
 
   /********************************************************************************/
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   /***************
    * global part *
    ***************/
@@ -484,7 +484,7 @@ int polyakov_loop_dir(
     kc = 0.0;
     ks = 0.0;
 
-#ifdef MPI
+#ifdef TM_USE_MPI
 #  ifdef PARALLELXYZT
     u = tmp_ray;
 #  else
@@ -506,7 +506,7 @@ int polyakov_loop_dir(
     }
     pl_tmp = ks + kc;
 
-#ifdef MPI
+#ifdef TM_USE_MPI
     MPI_Reduce(&pl_tmp, &pl, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, 0, slice);
   }
 #  ifndef PARALLELXYZT
@@ -524,7 +524,7 @@ int polyakov_loop_dir(
   /* normalization pl |-> pl / ( 3 * 3-dim. volume)*/
   VOLUME3 = VOL3;
    
-#ifdef MPI
+#ifdef TM_USE_MPI
   if(rank_slice==0 && rank_ray==0) { /* this process has the sum 
 					of the Polyakov loop values */
     if(dir==0) { 
@@ -550,7 +550,7 @@ int polyakov_loop_dir(
     }
     fprintf(ofs, "%4d\t%2d\t%25.16e\t%25.16e\n", nstore, dir, creal(pl), cimag(pl));
     fclose(ofs);
-#if defined MPI
+#if defined TM_USE_MPI
   }
 #endif
   free(tmp_loc);

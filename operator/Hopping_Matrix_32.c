@@ -69,12 +69,12 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#ifdef OMP
+#ifdef TM_USE_OMP
 #include <omp.h>
 #endif
 #include "global.h"
 #include "su3.h"
-#ifdef USE_MPI
+#ifdef TM_USE_MPI
 #  include "xchange/xchange.h"
 #endif
 #include "boundary.h"
@@ -104,7 +104,7 @@ void Hopping_Matrix_32_orphaned(const int ieo, spinor32 * const l, spinor32 * co
     }
   #endif
 
-  #ifdef OMP
+  #ifdef TM_USE_OMP
     su3_32 * restrict u0 ALIGN32;
   #endif
 
@@ -117,12 +117,12 @@ void Hopping_Matrix_32_orphaned(const int ieo, spinor32 * const l, spinor32 * co
 
 
 void Hopping_Matrix_32(const int ieo, spinor32 * const l, spinor32 * const k) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
   Hopping_Matrix_32_orphaned(ieo,l,k);
-#ifdef OMP
+#ifdef TM_USE_OMP
   }
 #endif
   return;

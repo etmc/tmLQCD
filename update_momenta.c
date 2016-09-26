@@ -42,7 +42,7 @@
 void update_momenta(int * mnllist, double step, const int no, 
 		    hamiltonian_field_t * const hf) {
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for
 #endif
   for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand);i++) { 
@@ -57,11 +57,11 @@ void update_momenta(int * mnllist, double step, const int no,
     }
   }
   
-#ifdef MPI
+#ifdef TM_USE_MPI
   xchange_deri(hf->derivative);
 #endif
     
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for
 #endif
   for(int i = 0; i < VOLUME; i++) {

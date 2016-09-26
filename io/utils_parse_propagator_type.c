@@ -82,10 +82,10 @@ int parse_propagator_type(READER * reader) {
       close_reader_record(reader);
       break;
     }
-    if ((sourcetypefound || proptypefound) == 0) {
-      fprintf(stderr, "Unable to find either source-type or propagator-type record.\nWARNING: Continuing in blind faith.\n");
-    }
     close_reader_record(reader);
+  }
+  if ((sourcetypefound || proptypefound) == 0) {
+    fprintf(stderr, "Unable to find either source-type or propagator-type record.\nWARNING: Continuing in blind faith.\n");
   }
   return(prop_type);
 }

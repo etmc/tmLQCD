@@ -36,10 +36,10 @@
 #include <time.h>
 #include <sys/time.h>
 #include <string.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "global.h"
@@ -98,11 +98,11 @@ int main(int argc,char *argv[]) {
   L=0;
   T=0;
   
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Init(&argc, &argv);
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   /* FIXME: in principle this should not be set like this as it could result
     in thread oversubscription when more than one process is run locally
     unfortunately, there does not seem to be a standard way to determine
@@ -248,7 +248,7 @@ int main(int argc,char *argv[]) {
       printf("Generating source %s!\n", spinorfilename);
       fflush(stdout);
       source_generation_pion_only(g_spinor_field[0], g_spinor_field[1], 
-				  t0, sample, nstore);
+				  t0, sample, nstore, random_seed);
       
       co = scalar_prod(g_spinor_field[1], g_spinor_field[1], VOLUME/2, 1);
       write_source_type(0, spinorfilename);
@@ -267,7 +267,7 @@ int main(int argc,char *argv[]) {
       printf("Generating ext. pion source %s!\n", spinorfilename);
       extended_pion_source(g_spinor_field[2], g_spinor_field[3],
 			   g_spinor_field[0], g_spinor_field[1],
-			   t0, 0., 0., 0.);
+			   t0, (g_nproc_t*T)/2, 0., 0., 0.);
       if(!filenameflag) {
 	if(T_global > 99) sprintf(spinorfilename, "g%s.%.4d.%.4d.%.3d", filename, nstore, sample, t0); 
         else sprintf(spinorfilename, "g%s.%.4d.%.4d.%.2d", filename, nstore, sample, t0); 
@@ -280,7 +280,7 @@ int main(int argc,char *argv[]) {
     }
   }
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Finalize();
 #endif
   free_geometry_indices();

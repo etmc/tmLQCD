@@ -36,10 +36,10 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "global.h"
@@ -52,7 +52,7 @@
 #include "start.h"
 #include "measure_gauge_action.h"
 #include "measure_rectangles.h"
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include "xchange/xchange.h"
 #endif
 #include "read_input.h"
@@ -123,9 +123,9 @@ int main(int argc,char *argv[]) {
   verbose = 1;
   g_use_clover_flag = 0;
 
-#ifdef MPI
+#ifdef TM_USE_MPI
 
-#  ifdef OMP
+#  ifdef TM_USE_OMP
   int mpi_thread_provided;
   MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
 #  else
@@ -146,13 +146,12 @@ int main(int argc,char *argv[]) {
     exit(-1);
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   init_openmp();
 #endif
 
   DUM_DERI = 4;
-  DUM_SOLVER = DUM_DERI+1;
-  DUM_MATRIX = DUM_SOLVER+6;
+  DUM_MATRIX = DUM_DERI+7;
   if(g_running_phmc) {
     NO_OF_SPINORFIELDS = DUM_MATRIX+8;
   }
@@ -184,7 +183,7 @@ int main(int argc,char *argv[]) {
     }
   }
   
-#ifndef MPI
+#ifndef TM_USE_MPI
   g_dbw2rand = 0;
 #endif
   
@@ -330,7 +329,7 @@ int main(int argc,char *argv[]) {
   }
 
   /*For parallelization: exchange the gaugefield */
-#ifdef MPI
+#ifdef TM_USE_MPI
   xchange_gauge(g_gauge_field);
 #endif
     
@@ -469,9 +468,10 @@ int main(int argc,char *argv[]) {
             } else {
               if(g_proc_id==0) {
                 if(read_attempt+1 < 2) {
-                  fprintf(stdout, "# Reread attempt %d out of %d failed, trying again in %d seconds!\n",read_attempt+1,2, 2);
-                } else {
-                  fprintf(stdout, "# Reread attept %d out of %d failed, write will be reattempted!\n",read_attempt+1,2);
+                  fprintf(stdout, "# Reread attempt %d out of %d failed, trying again in %d seconds!\n", read_attempt+1, 2, 2);
+                } 
+		else {
+                  fprintf(stdout, "# Reread attempt %d out of %d failed, write will be reattempted!\n", read_attempt+1, 2);
                 }
               }
               sleep(2);
@@ -496,7 +496,7 @@ int main(int argc,char *argv[]) {
             fprintf(stdout, "# Will attempt to write again in %d seconds.\n", io_timeout);
           
           sleep(io_timeout);
-#ifdef MPI
+#ifdef TM_USE_MPI
           MPI_Barrier(MPI_COMM_WORLD);
 #endif
         }
@@ -533,7 +533,7 @@ int main(int argc,char *argv[]) {
       verbose = 0;
     }
 
-#ifdef MPI
+#ifdef TM_USE_MPI
     MPI_Barrier(MPI_COMM_WORLD);
 #endif
     if(ix == 0 && g_proc_id == 0) {
@@ -554,7 +554,7 @@ int main(int argc,char *argv[]) {
     fclose(parameterfile);
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   free_omp_accumulators();
 #endif
   free_gauge_tmp();
@@ -571,7 +571,9 @@ int main(int argc,char *argv[]) {
   }
   free(input_filename);
   free(filename);
-#ifdef MPI
+  free(SourceInfo.basename);
+  free(PropInfo.basename);
+#ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 #endif

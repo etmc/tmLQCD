@@ -343,7 +343,7 @@ void Q_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
   /* by the constant  phmc_Cpol  */
   /* which renders the polynomial in monomials  */
   /* identical to the polynomial a la clenshaw */;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for private(r) private(s) private(phi1)
 #endif
   for(int ix = 0; ix < (VOLUME/2); ix++){
@@ -411,7 +411,7 @@ void Qsw_tau1_sub_const_ndpsi(spinor * const l_strange, spinor * const l_charm,
   /* by the constant  phmc_Cpol  */
   /* which renders the polynomial in monomials  */
   /* identical to the polynomial a la clenshaw */;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for private(r) private(s) private(phi1)
 #endif
   for(int ix = 0; ix < (VOLUME/2); ix++){
@@ -598,7 +598,7 @@ void mul_one_pm_itau2(spinor * const p, spinor * const q,
 
 void mul_one_pm_iconst(spinor * const l, spinor * const k, 
 		       const double mu_, const int sign_) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -611,7 +611,7 @@ void mul_one_pm_iconst(spinor * const l, spinor * const k,
   }
 
   /************ loop over all lattice sites ************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(unsigned int ix = 0; ix < (VOLUME/2); ++ix){
@@ -628,7 +628,7 @@ void mul_one_pm_iconst(spinor * const l, spinor * const k,
     _vector_assign(r->s3, phi1);
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 
@@ -639,7 +639,7 @@ void mul_one_pm_iconst(spinor * const l, spinor * const k,
 void M_ee_inv_ndpsi(spinor * const l_s, spinor * const l_c, 
 		    spinor * const k_s, spinor * const k_c,
 		    const double mu, const double eps) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -647,7 +647,7 @@ void M_ee_inv_ndpsi(spinor * const l_s, spinor * const l_c,
   spinor *r_s, *r_c, *s_s, *s_c;
   su3_vector ALIGN phi1, phi2;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(unsigned int ix = 0; ix < (VOLUME/2); ++ix){
@@ -686,7 +686,7 @@ void M_ee_inv_ndpsi(spinor * const l_s, spinor * const l_c,
 
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 
@@ -699,14 +699,14 @@ void M_oo_sub_g5_ndpsi(spinor * const l_s, spinor * const l_c,
 		       spinor * const k_s, spinor * const k_c,
 		       spinor * const j_s, spinor * const j_c,
 		       const double mu, const double eps) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
   spinor *r_s, *r_c, *s_s, *s_c, *t_s, *t_c;
   su3_vector ALIGN phi1, phi2;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(unsigned int ix = 0; ix < (VOLUME/2); ++ix){
@@ -746,7 +746,7 @@ void M_oo_sub_g5_ndpsi(spinor * const l_s, spinor * const l_c,
     _vector_sub(r_c->s3, t_c->s3, phi2);
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 
@@ -818,7 +818,7 @@ void Qtm_pm_sub_const_nrm_psi(spinor * const l, spinor * const k,
 
 
   /************ loop over all lattice sites ************/
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for private(ix) private(r) private(s) private(phi1)
 #endif
   for(ix = 0; ix < (VOLUME/2); ix++){

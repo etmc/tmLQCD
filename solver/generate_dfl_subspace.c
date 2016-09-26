@@ -17,9 +17,6 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
-
- This file was modified according to a flexible number of blocks
- by Claude Tadonki - PetaQCD - April 2010 ( claude.tadonki@lal.in2p3.fr )
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -30,11 +27,18 @@
 #include <math.h>
 #include <time.h>
 #include "global.h"
+#include "gettime.h"
 #include "su3.h"
 #include <complex.h>
+#include "read_input.h"
 #include "start.h"
+#include "gamma.h"
 #include "ranlxs.h"
+#include "init/init.h"
 #include "operator/D_psi.h"
+#include "operator/tm_operators.h"
+#include "operator/clover_leaf.h"
+#include "operator/clovertm_operators.h"
 #include "poly_precon.h"
 #include "Msap.h"
 #include "gmres_precon.h"
@@ -44,15 +48,19 @@
 #include "block.h"
 #include "little_D.h"
 #include "gcr4complex.h"
+#include "cgne4complex.h"
 #include "boundary.h"
 #include <io/params.h>
 #include <io/gauge.h>
 #include <io/spinor.h>
 #include <io/utils.h>
+#include "solver/solver.h"
 #include "solver_field.h"
+#include "dfl_projector.h"
 #include "generate_dfl_subspace.h"
 
 int init_little_dfl_subspace(const int N_s);
+void compute_little_little_D(const int N_s);
 
 spinor ** dfl_fields = NULL;
 static spinor * _dfl_fields = NULL;
@@ -60,342 +68,215 @@ _Complex double ** little_dfl_fields = NULL;
 static _Complex double *_little_dfl_fields = NULL;
 _Complex double ** little_dfl_fields_eo = NULL;
 static _Complex double *_little_dfl_fields_eo = NULL;
+_Complex float ** little_dfl_fields_eo_32 = NULL;
+static _Complex float *_little_dfl_fields_eo_32 = NULL;
+
 static int init_subspace = 0;
 static int init_little_subspace = 0;
 
 static void random_fields(const int Ns) {
-  
-  int i, j, ix;
-  float r,s[24];
-  double *t;
-  
-  r=(float)(1.0/sqrt(24.0*(double)(VOLUME)));
-  
-  for (i = 0; i < Ns; i++) {
-    t=(double*)(dfl_fields[i]);
-    for (ix = 0; ix < VOLUME; ix++){
-      ranlxs(s,24);
-      for (j = 0; j < 24; j++) {
- 	(*t) = (double)(r*(s[j]-0.5f)); 
-	(*t) = 1.; 
- 	t += 1; 
-      }
-    }
+
+  for (int i = 0; i < Ns; i++) {
+    random_spinor_field_lexic(dfl_fields[i], 0, RN_PM1UNIF);
   }
   return;
 }
 
-int generate_dfl_subspace(const int Ns, const int N, const int repro) {
-  int ix, i_o,i, j, k, p, blk, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(_Complex double),
+
+// this routine updates the deflation subspace
+
+int update_dfl_subspace(const int Ns, const int N, const int Nsmooth) {
+  int vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(_Complex double),
     vol = VOLUME*sizeof(spinor)/sizeof(_Complex double);
+  double musave = mu_dfl;
+  double kappasave = kappa_dfl;
+  double muMsapsave = mu_Msap;
+  mu_dfl = mu_dflgen;
+  kappa_dfl = kappa_dflgen;
+  mu_Msap = mu_dflgen;
+  
+  double nrm; 
+  for(int j = 0; j < Nsmooth; j++) {
+    //if(j - loop_SAP > 4) {
+    //  usePL = usePLsave;
+    //}
+    // build little D automatically when little_D is called and dfl_subspace_updated == 1
+    for (int i = 0; i < Ns; i++) {
+      /* add it to the basis */
+      split_global_field_GEN_ID(block_list, i, dfl_fields[i], nb_blocks);
+    }
+    /* perform local orthonormalization */
+    for(int i = 0; i < nb_blocks; i++) {
+      block_orthonormalize(block_list+i);
+    }
+    dfl_subspace_updated = 1;
+    compute_little_little_D(Ns);
+    
+    // why can't I use g_spinor_field[1] in mg_precon??
+    for(int i = 0; i < Ns; i++) {
+      g_sloppy_precision = 1;
+
+      // v <- C v
+      mg_precon(g_spinor_field[0], dfl_fields[i]);
+      assign(dfl_fields[i], g_spinor_field[0], VOLUME);
+      
+      g_sloppy_precision = 0;
+      ModifiedGS((_Complex double*)g_spinor_field[0], vol, i, (_Complex double*)dfl_fields[0], vpr);
+      nrm = sqrt(square_norm(g_spinor_field[0], N, 1));
+      mul_r(dfl_fields[i], 1./nrm, g_spinor_field[0], N);
+      
+    }
+  }
+  for(int i = 0; i < Ns; i++) {
+    /* add it to the basis */
+    split_global_field_GEN_ID(block_list, i, dfl_fields[i], nb_blocks);
+  }
+  /* perform local orthonormalization */
+  for(int i = 0; i < nb_blocks; i++) {
+    block_orthonormalize(block_list+i);
+  }
+  dfl_subspace_updated = 1;
+  mu_dfl = musave;
+  kappa_dfl = kappasave;
+  mu_Msap = muMsapsave;
+  return(0);
+}
+
+// this routine generates the deflation subspace
+
+int generate_dfl_subspace(const int Ns, const int N, const int repro) {
+  int p=0, vpr = VOLUMEPLUSRAND*sizeof(spinor)/sizeof(_Complex double),
+    vol = VOLUME*sizeof(spinor)/sizeof(_Complex double);
+  const int loop_SAP = 3;
   spinor **psi;
-  double nrm, e = 0.3, d = 1.1, atime, etime;
+  double nrm, atime, etime;
   _Complex double s;
   _Complex double * work;
-  WRITER *writer = NULL;  
-  FILE *fp_dfl_fields; 
-  char file_name[500]; // CT
-  double musave = g_mu;
+  double musave = mu_dfl;
+  double kappasave = kappa_dfl;
+  int usePLsave = usePL;
+  double muMsapsave = mu_Msap;
   spinor ** work_fields = NULL;
   const int nr_wf = 2;
+  g_mu2 = 0.;
+  kappa_dfl = kappa_dflgen;
+  mu_dfl = mu_dflgen;
+  mu_Msap = mu_dflgen;
 
-#ifdef MPI
-  atime = MPI_Wtime();
-#else
-  atime = (double)clock()/(double)(CLOCKS_PER_SEC);
-#endif
+  if(g_c_sw > 0) {
+    if (g_cart_id == 0 && g_debug_level > 1) {
+      printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
+    }
+    init_sw_fields(VOLUME);
+    sw_term( (const su3**) g_gauge_field, g_kappa, g_c_sw);
+    // this must be EE = 0, this is needed for Msap_eo!?
+    sw_invert(0, g_mu);
+    /* now copy double sw and sw_inv fields to 32bit versions */
+    copy_32_sw_fields();
+  }
+
+  // currently set to 0 during subspace generation
+  usePL = 0;
+  atime = gettime();
+
   init_solver_field(&work_fields, VOLUMEPLUSRAND, nr_wf);
   work = (_Complex double*)malloc(nb_blocks*9*Ns*sizeof(_Complex double));
   psi = (spinor **)calloc(nb_blocks, sizeof(spinor *));
   psi[0] = calloc(VOLUME + nb_blocks, sizeof(spinor));
-  for(i = 1; i < nb_blocks; i++) psi[i] = psi[i-1] + (VOLUME / nb_blocks) + 1;
-  
-  if(init_subspace == 0) i = init_dfl_subspace(Ns);
-  
-  if(init_little_subspace == 0) i = init_little_dfl_subspace(Ns);
-  
+  for(int i = 1; i < nb_blocks; i++) psi[i] = psi[i-1] + (VOLUME / nb_blocks) + 1;
+
+  if((g_proc_id == 0) && (g_debug_level > 0)) {
+    printf("# Initialising subspaces\n");
+    fflush(stdout);
+  }
+
+  if(init_subspace == 0) p = init_dfl_subspace(Ns);
+
+  if(init_little_subspace == 0) p = init_little_dfl_subspace(Ns);
+
+  if((g_proc_id == 0) && (g_debug_level > 0)) {
+    printf("# Generating random fields...");
+  }
+  double ta = gettime();
   random_fields(Ns);
-  if(g_debug_level > 4) {
-    for(e = 0.; e < 1.; e=e+0.05) {
-      random_spinor_field_lexic(dfl_fields[0], repro, RN_GAUSS);
-      nrm = sqrt(square_norm(dfl_fields[0], N, 1));
-      mul_r(dfl_fields[0], 1./nrm, dfl_fields[0], N);
-      d = 1.1;
-      /*       gmres_precon(work_fields[0], dfl_fields[0], 20, 1, 1.e-20, 0, N, &D_psi); */
-      poly_nonherm_precon(work_fields[0], dfl_fields[0], e, d, 30, N);
-      D_psi(work_fields[1], work_fields[0]);
-      diff(work_fields[0], work_fields[1], dfl_fields[0], N);
-      nrm = square_norm(work_fields[0], N, 1);
-      if(g_proc_id == 0) {
-	printf(" e= %f d= %f nrm = %1.5e\n", e, d, nrm);
-      }
-    }
-    d = 1.1;
-    e=0.3;
-  }
-  
-  boundary(g_kappa);
-  g_mu = 0.;
-  /*
-    CT: We try to read dfl_fields[i] from file if it exists, 
-    otherwise we recalculate it                               
-  */
-  /* CU: reading and writing should be done with lemon! */
-  for(p = 0; p < Ns; p++) {
-    sprintf(file_name,"dfl_fields.%.2d", p);
-    if((fp_dfl_fields = fopen(file_name,  "r")) == NULL) {
-      break;
-    }
-    else {
-      fclose(fp_dfl_fields);
-      if((i = read_spinor(dfl_fields[p], NULL, file_name, 0)) != 0) {
-	if(g_proc_id == 0) {
-	  fprintf(stderr, "Could not read from file %s err = %d\n", file_name, i);
-	}
-	break;
-      }
-    }
-  }
-  
-  if((g_proc_id == 0) && (p < Ns) && (g_debug_level > 0))  printf("Compute remaining fields from scratch\n");
-  /*CT: We do Ns x 80 x 20 evaluation of Dpsi */
-  /*      ModifiedGS((_Complex double*)dfl_fields[i], vol, i, (_Complex double*)dfl_fields[0], vpr); */
-  /*      nrm = sqrt(square_norm(dfl_fields[i], N, 1)); */
-  /*      mul_r(dfl_fields[i], 1./nrm, dfl_fields[i], N); */
-  if(p < Ns) {
-    if(1) {
-      for(i = 0; i < Ns; i++) {
-	/*    ModifiedGS((_Complex double*)dfl_fields[i], vol, i, (_Complex double*)dfl_fields[0], vpr);
-	      nrm = sqrt(square_norm(dfl_fields[i], N, 1));
-	      mul_r(dfl_fields[i], 1./nrm, dfl_fields[i], N);
-	*/
-	for(j = 0; j < 20; j++) {
-	  zero_spinor_field(g_spinor_field[0],VOLUME);  
-	  g_sloppy_precision = 1;
-	  Msap_eo(g_spinor_field[0], dfl_fields[i], j+1); 
-	  /*      poly_nonherm_precon(g_spinor_field[0], dfl_fields[i], e, d, 2, N);*/
-	  /*       gmres_precon(work_fields[0], dfl_fields[i], 20, 1, 1.e-20, 0, N, &D_psi); */
-	  
-	  for (ix=0;ix<VOLUME;ix++) {
-	    _spinor_assign((*(dfl_fields[i] + ix)),(*(g_spinor_field[0]+ix)));
-	  }
-	  
-	  g_sloppy_precision = 0;
-	  /*       for (i=0;i<Ns; i++) { */
-	  ModifiedGS((_Complex double*)g_spinor_field[0], vol, i, (_Complex double*)dfl_fields[0], vpr);
-	  nrm = sqrt(square_norm(g_spinor_field[0], N, 1));
-	  mul_r(dfl_fields[i], 1./nrm, g_spinor_field[0], N);
-	}
-      }
-  
-      for (i=0; i<Ns; i++) {
-	/* test quality */
-	if(g_debug_level > -1) {
-	  D_psi(work_fields[0], dfl_fields[i]);
-	  nrm = sqrt(square_norm(work_fields[0], N, 1));
-	  if(g_proc_id == 0) {
-	    printf(" ||D psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm*nrm);
-	  }
-	}
-      }
-    }
-
-    if(0) {
-      for(j = 0; j < 4; j++) {/*dfl_field_iter = 80  by default */
-	for(i = p; i < Ns; i++) {
-	  ModifiedGS((_Complex double*)dfl_fields[i], vol, i, (_Complex double*)dfl_fields[0], vpr);
-	  nrm = sqrt(square_norm(dfl_fields[i], N, 1));
-	  mul_r(dfl_fields[i], 1./nrm, dfl_fields[i], N);
-	  for(k = 0; k < 3; k++) {
-	    g_sloppy_precision = 1;
-	    /* dfl_poly_iter = 20 by default */
-	    zero_spinor_field(g_spinor_field[0],VOLUME);
-	    Msap_eo(g_spinor_field[0], dfl_fields[i], 4);
-	    /* poly_nonherm_precon(g_spinor_field[0], dfl_fields[i], e, d, 4, N);  */
-	    g_sloppy_precision = 0;
-	    ModifiedGS((_Complex double*)g_spinor_field[0], vol, i, (_Complex double*)dfl_fields[0], vpr);
-	    nrm = sqrt(square_norm(g_spinor_field[0], N, 1));
-	    mul_r(dfl_fields[i], 1./nrm, g_spinor_field[0], N);
-	  }
-	  
-	  /* test quality */
-	  if(g_debug_level > -1) {
-	    D_psi(work_fields[0], dfl_fields[i]);
-	    nrm = sqrt(square_norm(work_fields[0], N, 1));
-	    if(g_proc_id == 0) {
-	      printf(" ||D psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm);
-	    }
-	  }
-	}
-      }
-    }
-    for(i = 0; i < Ns; i++) {
-      /*
-	CT: We save dfl_fields[i] in a binary file, 
-	using a generic nomenclature proc_i__dfl_fields for later reads                               
-      */
-      sprintf(file_name,"dfl_fields.%.2d", i);
-      construct_writer(&writer, file_name, 0);
-      write_propagator_type(writer, 4);
-      write_spinor(writer, &dfl_fields[i], NULL, 1, 64);
-      destruct_writer(writer);
-    }
-  }
-  g_mu = musave;
-  g_sloppy_precision = 0;
-  boundary(g_kappa);
-  if(g_debug_level > 2) {
-    for(i = 0; i < Ns; i++) {
-      for(j = 0; j < Ns; j++) {
-	s = scalar_prod(dfl_fields[i], dfl_fields[j], N, 1);
-	if(g_proc_id == 0) {
-	  printf("<%d, %d> = %1.3e +i %1.3e\n", i, j, creal(s), cimag(s));
-	}
-      }
-    }
-  }
-  for (i = 0; i < Ns; i++) {
-    /* add it to the basis */
-    /* split_global_field(block_list[0].basis[i], block_list[1].basis[i], dfl_fields[i]); */
-    split_global_field_GEN_ID(block_list, i, dfl_fields[i], nb_blocks);
-  }
-  
-  /* perform local orthonormalization */
-  for(i = 0; i < nb_blocks; i++) block_orthonormalize(block_list+i);
-  /* block_orthonormalize(block_list+1); */
-  
-  dfl_subspace_updated = 1;
-  
-  for(j = 0; j < Ns; j++) {
-    for(i = 0; i < nb_blocks*9*Ns; i++) {
-      (little_dfl_fields[j][i]) = 0.0;
-      (work[i]) = 0.0;
-    }
-  }
-  
-  /* compute the little little basis */
-  /* r = work_fields[0]; */
-  /* q = g_spinor_field[DUM__SOLVER+1]; */
-  
-  for(i = 0; i < Ns; i++) {
-    /* split_global_field(r, q,  dfl_fields[i]); */
-    split_global_field_GEN(psi, dfl_fields[i], nb_blocks);
-    /* now take the local scalar products */
-    for(j = 0; j < Ns; j++) {
-      //p = r;
-      for(blk = 0; blk < nb_blocks; blk++) {
-	//if(blk == 0) p = r; else p = q;
-	little_dfl_fields[i][j + blk*Ns] = scalar_prod(block_list[blk].basis[j], psi[blk], block_list[0].volume, 0);
-      }
-    }
-  }
-  
-  /* orthonormalise */
-  for(i = 0; i < Ns; i++) {
-    for (j = 0; j < i; j++) {
-      s = lscalar_prod(little_dfl_fields[j], little_dfl_fields[i], nb_blocks*Ns, 1);
-      lassign_diff_mul(little_dfl_fields[i], little_dfl_fields[j], s, nb_blocks*Ns);
-    }
-    s = lsquare_norm(little_dfl_fields[i], nb_blocks*Ns, 1);
-    lmul_r(little_dfl_fields[i], 1./sqrt(creal(s)), little_dfl_fields[i], nb_blocks*Ns);
-  }
-  if(g_debug_level > 0) {
-    for(i = 0; i < Ns; i++) {
-      for(j = 0; j < Ns; j++) {
-	s = lscalar_prod(little_dfl_fields[i], little_dfl_fields[j], nb_blocks*Ns, 1);
-	if(g_proc_id == 0) {
-	  printf("<%d, %d> = %1.3e +i %1.3e\n", i, j, creal(s), cimag(s));
-	}
-      }
-    }
-  }
-  
-  for(i = 0; i < Ns; i++) {
-    little_D(work, little_dfl_fields[i]);
-    for(j = 0; j < Ns; j++) {
-      little_A[i * Ns + j]  = lscalar_prod(little_dfl_fields[j], work, nb_blocks*Ns, 1);
-      if(g_proc_id == 0 && g_debug_level > 4) {
-	printf("%1.3e %1.3ei, ", creal(little_A[i * Ns + j]), cimag(little_A[i * Ns + j]));
-      }
-    }
-    if(g_proc_id == 0 && g_debug_level > 4) printf("\n");
-  }
-  if(g_proc_id == 0 && g_debug_level > 4) printf("\n");
-  /* the precision in the inversion is not yet satisfactory! */
-  LUInvert(Ns, little_A, Ns);
-  /* inverse of little little D now in little_A */
-
-
-  for(j = 0; j < Ns; j++) {
-    for(i = 0; i < nb_blocks*9*Ns; i++) {
-      (little_dfl_fields_eo[j][i]) = 0.0;
-      (work[i]) = 0.0;
-    }
+  double tb = gettime();
+  if((g_proc_id == 0) && (g_debug_level > 0)) {
+    printf(" done in %e seconds\n", tb-ta);
+    fflush(stdout);
   }
 
-  /* compute the eo little little basis */
-  /* r = work_fields[0]; */
-  /* q = g_spinor_field[DUM__SOLVER+1]; */
+  if((g_proc_id == 0) && (p < Ns) && (g_debug_level > 0)) {
+    printf("# Compute approximate eigenvectors from scratch\n");
+    printf("# Using kappa= %e and mu = %e for the subspace generation\n", g_kappa, g_mu/g_kappa/2.);
+  }
+
+  for(int j = 0; j < loop_SAP; j++) {
+    for(int i = 0; i < Ns; i++) {
+      zero_spinor_field(g_spinor_field[0], VOLUME);  
+      g_sloppy_precision = 1;
+      Msap_eo(g_spinor_field[0], dfl_fields[i], NcycleMsap_dflgen, NiterMsap_dflgen); 
       
-  for(i = 0; i < Ns; i++) {
-    /* split_global_field(r, q,  dfl_fields[i]); */
-    split_global_field_GEN(psi, dfl_fields[i], nb_blocks);
-    /* now take the local scalar products */
-    for(j = 0; j < Ns; j++) {
-      i_o=0;
-      for(blk = 0; blk < nb_blocks; blk++) {
-         if (block_list[blk].evenodd==1) {
-	 little_dfl_fields_eo[i][j + (nb_blocks/2+i_o)*Ns] = scalar_prod(block_list[blk].basis[j], psi[blk], block_list[0].volume, 0);
-         i_o++;
-	 }	
+      assign(dfl_fields[i], g_spinor_field[0], VOLUME);
+      
+      g_sloppy_precision = 0;
+      ModifiedGS((_Complex double*)g_spinor_field[0], vol, i, (_Complex double*)dfl_fields[0], vpr);
+      nrm = sqrt(square_norm(g_spinor_field[0], N, 1));
+      mul_r(dfl_fields[i], 1./nrm, g_spinor_field[0], N);
+    }
+  }
+
+  update_dfl_subspace(Ns, N, NsmoothMsap_dflgen-loop_SAP);
+  
+  compute_little_D(0);
+  compute_little_little_D(Ns);
+  dfl_subspace_updated = 0;
+  mu_dfl = musave;
+  kappa_dfl = kappasave;
+  mu_Msap = muMsapsave;
+  usePL = usePLsave;
+  if(g_debug_level > 0 && g_proc_id == 0) {
+    printf("# Switched to target parameters kappa= %e, mu=%e\n", g_kappa, g_mu/2/g_kappa);
+  }
+  if(g_debug_level > 1) {
+    for(int i = 0; i < Ns; i++) {
+      /* test quality */
+      D_psi(work_fields[0], dfl_fields[i]);
+      nrm = sqrt(square_norm(work_fields[0], N, 1));
+      if(g_proc_id == 0) {
+	printf(" ||D psi_%d||/||psi_%d|| = %1.15e\n", i, i, nrm);
       }
     }
-  }  
-     
-  /* orthonormalise */
-  for(i = 0; i < Ns; i++) {
-    for (j = 0; j < i; j++) {
-      s = lscalar_prod(little_dfl_fields_eo[j], little_dfl_fields_eo[i], nb_blocks*Ns, 1);
-      lassign_diff_mul(little_dfl_fields_eo[i], little_dfl_fields_eo[j], s, nb_blocks*Ns);
-    }
-    s = lsquare_norm(little_dfl_fields_eo[i], nb_blocks*Ns, 1);
-    lmul_r(little_dfl_fields_eo[i], 1./sqrt(creal(s)), little_dfl_fields_eo[i], nb_blocks*Ns);
   }
-  if(g_debug_level > 0) {
-    for(i = 0; i < Ns; i++) {
-      for(j = 0; j < Ns; j++) {
-        s = lscalar_prod(little_dfl_fields_eo[i], little_dfl_fields_eo[j], nb_blocks*Ns, 1);
+  
+  if((g_proc_id == 0) && (g_debug_level > 0)) {
+    printf("# Approximate eigenvectors generated\n");
+  }
+  
+  g_mu1 = 0.;
+  g_mu2 = 0.;
+
+  g_sloppy_precision = 0;
+
+  if(g_debug_level > 4) {
+    printf("Checking orthonormality of dfl_fields\n");
+    for(int i = 0; i < Ns; i++) {
+      for(int j = 0; j < Ns; j++) {
+        s = scalar_prod(dfl_fields[i], dfl_fields[j], N, 1);
         if(g_proc_id == 0) {
           printf("<%d, %d> = %1.3e +i %1.3e\n", i, j, creal(s), cimag(s));
         }
       }
     }
   }
-  
-  for(i = 0; i < Ns; i++) {  
-    little_D_sym(work, little_dfl_fields_eo[i]);
-    for(j = 0; j < Ns; j++) {
-      little_A_eo[i * Ns + j]  = lscalar_prod(little_dfl_fields_eo[j], work, nb_blocks*Ns, 1);
-      if(g_proc_id == 0 && g_debug_level > 4) {
-        printf("%1.3e %1.3ei, ", creal(little_A_eo[i * Ns + j]), cimag(little_A_eo[i * Ns + j])); 
-      }
-    }
-    if(g_proc_id == 0 && g_debug_level > 4) printf("\n");
-  }
-  if(g_proc_id == 0 && g_debug_level > 4) printf("\n");
-  /* the precision in the inversion is not yet satisfactory! */
-  LUInvert(Ns, little_A_eo, Ns);
-  /* inverse of eo little little D now in little_A_eo */
 
+  dfl_subspace_updated = 1;
 
+  compute_little_little_D(Ns);
   
-#ifdef MPI
-  etime = MPI_Wtime();
-#else
-  etime = (double)clock()/(double)(CLOCKS_PER_SEC);
-#endif
+  etime = gettime();
+
   if(g_proc_id == 0) {
-    printf("time for subspace generation %1.3e s\n", etime-atime);
+    printf("# time for subspace generation %1.3e s\n", etime-atime);
     fflush(stdout);
   }
 
@@ -404,6 +285,14 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
   free(work);
   free(psi[0]);
   free(psi);
+
+  /* Cross-checks */
+  if (g_debug_level > 3) {
+    check_projectors(reproduce_randomnumber_flag);
+    check_local_D(reproduce_randomnumber_flag);
+    check_little_D_inversion(reproduce_randomnumber_flag);
+  }
+
   return(0);
 }
 
@@ -429,7 +318,7 @@ int generate_dfl_subspace_free(const int Ns, const int N) {
       D_psi(work_fields[0], dfl_fields[i]);
       nrm = sqrt(square_norm(work_fields[0], N, 1));
       if(g_proc_id == 0) {
-	printf(" ||D psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm); 
+        printf(" ||D psi_%d||/||psi_%d|| = %1.5e\n", i, i, nrm); 
       }
     }
   }
@@ -437,10 +326,10 @@ int generate_dfl_subspace_free(const int Ns, const int N) {
   if(g_debug_level > 4) {
     for(i = 0; i < 12; i++) {
       for(j = 0; j < 12; j++) {
-	s = scalar_prod(dfl_fields[i], dfl_fields[j], N, 1);
-	if(g_proc_id == 0) {
-	  printf("<%d, %d> = %1.3e +i %1.3e\n", i, j, creal(s), cimag(s));
-	}
+        s = scalar_prod(dfl_fields[i], dfl_fields[j], N, 1);
+        if(g_proc_id == 0) {
+          printf("<%d, %d> = %1.3e +i %1.3e\n", i, j, creal(s), cimag(s));
+        }
       }
     }
   }
@@ -448,36 +337,195 @@ int generate_dfl_subspace_free(const int Ns, const int N) {
   return(0);
 }
 
+
+void compute_little_little_D(const int Ns) {
+  int i_o;
+  _Complex double s;
+  if(usePL) {
+    double atime = gettime();
+    _Complex double * work = (_Complex double*)malloc(nb_blocks*9*Ns*sizeof(_Complex double));
+    spinor ** psi = (spinor **)calloc(nb_blocks, sizeof(spinor *));
+    psi[0] = calloc(VOLUME + nb_blocks, sizeof(spinor));
+    for(int i = 1; i < nb_blocks; i++) psi[i] = psi[i-1] + (VOLUME / nb_blocks) + 1;
+    
+    if(!little_evenodd) {
+      // compute the little little basis
+      for(int j = 0; j < Ns; j++) {
+	for(int i = 0; i < nb_blocks*9*Ns; i++) {
+	  (little_dfl_fields[j][i]) = 0.0;
+	  (work[i]) = 0.0;
+	}
+      }
+      
+      for(int i = 0; i < Ns; i++) {
+	split_global_field_GEN(psi, dfl_fields[i], nb_blocks);
+	// now take the local scalar products
+	for(int j = 0; j < Ns; j++) {
+	  for(int blk = 0; blk < nb_blocks; blk++) {
+	    little_dfl_fields[i][j + blk*Ns] = scalar_prod(block_list[blk].basis[j], psi[blk], block_list[0].volume, 0);
+	  }
+	}
+      }
+      
+      // orthonormalise 
+      for(int i = 0; i < Ns; i++) {
+	for(int j = 0; j < i; j++) {
+	  s = lscalar_prod(little_dfl_fields[j], little_dfl_fields[i], nb_blocks*Ns, 1);
+	  lassign_diff_mul(little_dfl_fields[i], little_dfl_fields[j], s, nb_blocks*Ns);
+	}
+	s = lsquare_norm(little_dfl_fields[i], nb_blocks*Ns, 1);
+	lmul_r(little_dfl_fields[i], 1./sqrt(creal(s)), little_dfl_fields[i], nb_blocks*Ns);
+      }
+      if(g_debug_level > 4) {
+	printf("Checking orthonormality of little dfl fields\n");
+	for(int i = 0; i < Ns; i++) {
+	  for(int j = 0; j < Ns; j++) {
+	    s = lscalar_prod(little_dfl_fields[i], little_dfl_fields[j], nb_blocks*Ns, 1);
+	    if(g_proc_id == 0) {
+	      printf("<%d, %d> = %1.3e +i %1.3e\n", i, j, creal(s), cimag(s));
+	    }
+	  }
+	}
+      }
+      
+      for(int i = 0; i < Ns; i++) {
+	little_D(work, little_dfl_fields[i]);
+	for(int j = 0; j < Ns; j++) {
+	  little_A[i * Ns + j]  = lscalar_prod(little_dfl_fields[j], work, nb_blocks*Ns, 1);
+	  if(g_proc_id == 0 && g_debug_level > 4) {
+	    printf("%1.3e %1.3ei, ", creal(little_A[i * Ns + j]), cimag(little_A[i * Ns + j]));
+	  }
+	}
+	if(g_proc_id == 0 && g_debug_level > 4) printf("\n");
+      }
+      if(g_proc_id == 0 && g_debug_level > 4) printf("\n");
+      LUInvert(Ns, little_A, Ns);
+      // inverse of little little D now in little_A 
+    }
+    else { // if little_evenodd = true
+      // compute the little little basis for the even/odd case 
+      for(int j = 0; j < Ns; j++) {
+	for(int i = 0; i < nb_blocks*Ns; i++) {
+	  (little_dfl_fields_eo[j][i]) = 0.0;
+	  (work[i]) = 0.0;
+	}
+      }
+      
+      for(int i = 0; i < Ns; i++) {
+	split_global_field_GEN(psi, dfl_fields[i], nb_blocks);
+	// now take the local scalar products
+        i_o=0;
+        for(int blk = 0; blk < nb_blocks; blk++) {
+          if (block_list[blk].evenodd==1) {
+            for(int j = 0; j < Ns; j++) {
+	      little_dfl_fields_eo[i][(nb_blocks/2+i_o)*Ns + j] = scalar_prod(block_list[blk].basis[j], psi[blk], block_list[0].volume, 0);
+            }
+            i_o++;
+	  }
+	}
+      }
+      
+      // orthonormalise
+      for(int i = 0; i < Ns; i++) {
+	for (int j = 0; j < i; j++) {
+	  s = lscalar_prod(little_dfl_fields_eo[j], little_dfl_fields_eo[i], nb_blocks*Ns, 1);
+	  lassign_diff_mul(little_dfl_fields_eo[i], little_dfl_fields_eo[j], s, nb_blocks*Ns);
+	}
+	s = lsquare_norm(little_dfl_fields_eo[i], nb_blocks*Ns, 1);
+	lmul_r(little_dfl_fields_eo[i], 1./sqrt(creal(s)), little_dfl_fields_eo[i], nb_blocks*Ns);
+      }
+      // copy to 32Bit fields
+      for(int i = 0; i < Ns; i++) {
+        for(int j = 0; j < nb_blocks*Ns; j++) {
+          little_dfl_fields_eo_32[i][j] = (_Complex float)little_dfl_fields_eo[i][j];
+        }
+      }
+
+      if(g_debug_level > 4) {
+	printf("Checking orthonormality of littel_dfl_fields_eo\n");
+	for(int i = 0; i < Ns; i++) {
+	  for(int j = 0; j < Ns; j++) {
+	    s = lscalar_prod(little_dfl_fields_eo[i], little_dfl_fields_eo[j], nb_blocks*Ns, 1);
+	    if(g_proc_id == 0) {
+	      printf("<%d, %d> = %1.3e +i %1.3e\n", i, j, creal(s), cimag(s));
+	    }
+	  }
+	}
+      }
+      
+      for(int i = 0; i < Ns; i++) {  
+	little_D_sym(work, little_dfl_fields_eo[i]);
+	for(int j = 0; j < Ns; j++) {
+	  little_A_eo[i * Ns + j]  = lscalar_prod(little_dfl_fields_eo[j], work, nb_blocks*Ns, 1);
+	  if(g_proc_id == 0 && g_debug_level > 4) {
+	    printf("%1.3e %1.3ei, ", creal(little_A_eo[i * Ns + j]), cimag(little_A_eo[i * Ns + j])); 
+	  }
+	}
+	if(g_proc_id == 0 && g_debug_level > 4) printf("\n");
+      }
+      if(g_proc_id == 0 && g_debug_level > 4) printf("\n");
+      LUInvert(Ns, little_A_eo, Ns);
+      // inverse of eo little little D now in little_A_eo
+      // copy to the 32Bit version
+      for(int ij = 0; ij < Ns*Ns; ij++) {
+        little_A_eo_32[ij]  =  (_Complex float)little_A_eo[ij];
+      }
+    }
+    
+    double etime = gettime();
+    if(g_proc_id == 0 && g_debug_level > 0) {
+      printf("# time for little little D computation %1.3e s\n", etime-atime);
+      fflush(stdout);
+    }
+    free(work);
+    free(psi[0]);
+    free(psi);
+  }
+
+  return;
+}
+
+// corresponding free routine is missing!
+
 int init_little_dfl_subspace(const int N_s) {
-  int i;
   if(init_little_subspace == 0) {
+    // why nb_blocks*9*N_s?
     if((void*)(_little_dfl_fields = (_Complex double*)calloc((N_s)*nb_blocks*9*N_s+4, sizeof(_Complex double))) == NULL) {
       return(1);
     }
     if((void*)(little_dfl_fields = (_Complex double**)calloc(N_s, sizeof(_Complex double*))) == NULL) {
       return(1);
     }
+    // why do we need this factor of 9??
     if((void*)(_little_dfl_fields_eo = (_Complex double*)calloc((N_s)*nb_blocks*9*N_s+4, sizeof(_Complex double))) == NULL) {
       return(1);
     }
     if((void*)(little_dfl_fields_eo = (_Complex double**)calloc(N_s, sizeof(_Complex double*))) == NULL) {
       return(1);
     }
-#if ( defined SSE || defined SSE2 || defined SSE3)
+    // why do we need this factor of 9??
+    if((void*)(_little_dfl_fields_eo_32 = (_Complex float*)calloc((N_s)*nb_blocks*9*N_s+4, sizeof(_Complex float))) == NULL) {
+      return(1);
+    }
+    if((void*)(little_dfl_fields_eo_32 = (_Complex float**)calloc(N_s, sizeof(_Complex float*))) == NULL) {
+      return(1);
+    }
+
     little_dfl_fields[0] = (_Complex double*)(((unsigned long int)(_little_dfl_fields)+ALIGN_BASE)&~ALIGN_BASE);
     little_dfl_fields_eo[0] = (_Complex double*)(((unsigned long int)(_little_dfl_fields_eo)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-    little_dfl_fields[0] = _little_dfl_fields;
-    little_dfl_fields_eo[0] = _little_dfl_fields_eo;
-#endif
-    for (i = 1; i < N_s; i++) {
+    little_dfl_fields_eo_32[0] = (_Complex float*)(((unsigned long int)(_little_dfl_fields_eo_32)+ALIGN_BASE)&~ALIGN_BASE);
+    for (int i = 1; i < N_s; i++) {
       little_dfl_fields[i] = little_dfl_fields[i-1] + nb_blocks*9*N_s;
       little_dfl_fields_eo[i] = little_dfl_fields_eo[i-1] + nb_blocks*9*N_s;
+      little_dfl_fields_eo_32[i] = little_dfl_fields_eo_32[i-1] + nb_blocks*9*N_s;
     }
     if((void*)(little_A = (_Complex double*)calloc(N_s*N_s, sizeof(_Complex double))) == NULL) {
       return(1);
     }
     if((void*)(little_A_eo = (_Complex double*)calloc(N_s*N_s, sizeof(_Complex double))) == NULL) {
+      return(1);
+    }   
+    if((void*)(little_A_eo_32 = (_Complex float*)calloc(N_s*N_s, sizeof(_Complex float))) == NULL) {
       return(1);
     }   
     init_little_subspace = 1;
@@ -494,11 +542,7 @@ int init_dfl_subspace(const int N_s) {
   if ((void*)(dfl_fields = calloc((N_s), sizeof(spinor *))) == NULL) {
     return(1);
   }
-#if ( defined SSE || defined SSE2 || defined SSE3)
   dfl_fields[0] = (spinor*)(((unsigned long int)(_dfl_fields)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  dfl_fields[0] = _dfl_fields;
-#endif
   for (i = 1; i < N_s; ++i) {
     dfl_fields[i] = dfl_fields[i-1] + VOLUMEPLUSRAND;
   }

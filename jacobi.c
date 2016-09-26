@@ -31,7 +31,7 @@
 #include <math.h>
 #include <errno.h>
 #include <time.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -45,7 +45,7 @@ void Jacobi(su3_vector * const l, su3_vector * const k,int t)
   int ix,mu,tcoord,coord;
   su3_vector lt;
         
-#ifdef MPI
+#ifdef TM_USE_MPI
   xchange_jacobi(k);
 #endif
 
@@ -66,7 +66,7 @@ void Jacobi(su3_vector * const l, su3_vector * const k,int t)
 	  l[ix].c2 -= lt.c2;
 	}
     }
-#ifdef MPI
+#ifdef TM_USE_MPI
   xchange_jacobi(l);
 #endif
 }

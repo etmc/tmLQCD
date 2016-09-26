@@ -1,5 +1,6 @@
 /***********************************************************************                                                             
  * Copyright (C) 2015 Bartosz Kostrzewa
+ *               2016 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -24,6 +25,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include "aligned_malloc.h"
 #include "su3.h"
 #include "su3adj.h"
@@ -43,6 +45,22 @@ void *aligned_malloc(size_t const size) {
   
   return ptr;
 }
+
+void *aligned_malloc_zero(size_t const size) {
+  void *mem = malloc(size+ALIGN_BASE+sizeof(void*));
+  void ** ptr;
+
+  if(mem == NULL) {
+    return(mem);
+  }
+
+  ptr = (void**)(((uintptr_t)mem+(uintptr_t)ALIGN_BASE+sizeof(void*)) & ~ (uintptr_t)(ALIGN_BASE));
+  ptr[-1] = mem;
+  memset(ptr, 0, size);
+
+  return ptr;
+}
+
 
 void aligned_free(void *ptr) {
   free(((void**)ptr)[-1]);

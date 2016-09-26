@@ -51,12 +51,12 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
-#ifdef OMP
+#ifdef TM_USE_OMP
 #include <omp.h>
 #endif
 #include "global.h"
 #include "su3.h"
-#ifdef MPI
+#ifdef TM_USE_MPI
 #  include "xchange/xchange.h"
 #endif
 #include "boundary.h"
@@ -91,7 +91,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
   }
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
   su3 * restrict u0 ALIGN;
@@ -99,7 +99,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
 
 #  include "operator/halfspinor_body.c"
 
-#  ifdef OMP
+#  ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #  endif
   return;
@@ -138,18 +138,18 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
   }
 #    endif
 
-#    if (defined MPI && !(defined _NO_COMM))
+#    if (defined TM_USE_MPI && !(defined _NO_COMM))
   xchange_field(k, ieo);
 #    endif
 
-#    ifdef OMP
+#    ifdef TM_USE_OMP
 #      pragma omp parallel
   {
 #    endif
 
 #    include "operator/hopping_body_dbl.c"
 
-#    ifdef OMP
+#    ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #    endif
   return;

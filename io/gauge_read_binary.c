@@ -129,19 +129,17 @@ int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum, par
   n_uint64_t bytes;
   su3 tmp[4];
   float tmp2[72];
-#ifdef MPI
   double tick = 0, tock = 0;
-#endif
   char measure[64];
   DML_SiteRank rank;
   DML_checksum_init(checksum);
 
-#ifdef MPI
   if (g_debug_level > 0) {
+#ifdef TM_USE_MPI
     MPI_Barrier(g_cart_grid);
-    tick = MPI_Wtime();
-  }
 #endif
+    tick = gettime();
+  }
 
   bytes = limeReaderBytes(limereader); /* datalength of ildg-binary-data record in bytes */
   if (bytes != (n_uint64_t)g_nproc * (n_uint64_t)VOLUME * 4 * (n_uint64_t)sizeof(su3) / (input->prec==64 ? 1 : 2)) {
@@ -157,7 +155,7 @@ int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum, par
   for(t = 0; t < T; t++) {
     for(z = 0; z < LZ; z++) {
       for(y = 0; y < LY; y++) {
-#ifdef MPI
+#ifdef TM_USE_MPI
         limeReaderSeek(limereader,(n_uint64_t)
                        (((n_uint64_t) g_proc_coords[1]*LX) +
                         ((n_uint64_t) (((g_proc_coords[0]*T+t)*g_nproc_z*LZ+g_proc_coords[3]*LZ+z)*g_nproc_y*LY
@@ -178,7 +176,7 @@ int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum, par
           }
           if(status < 0 && status != LIME_EOR) {
             fprintf(stderr, "LIME read error occurred with status = %d while reading in gauge_read_binary.c!\n", status);
-#ifdef MPI
+#ifdef TM_USE_MPI
               MPI_Abort(MPI_COMM_WORLD, 1);
               MPI_Finalize();
 #endif
@@ -201,10 +199,11 @@ int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum, par
     }
   }
 
-#ifdef MPI
   if (g_debug_level > 0) {
+#ifdef TM_USE_MPI
     MPI_Barrier(g_cart_grid);
-    tock = MPI_Wtime();
+#endif
+    tock = gettime();
 
     if (g_cart_id == 0) {
       engineering(measure, latticeSize[0] * latticeSize[1] * latticeSize[2] * latticeSize[3] * bytes, "b");
@@ -217,7 +216,7 @@ int read_binary_gauge_data(LimeReader * limereader, DML_Checksum * checksum, par
       fprintf(stdout, " (%s per MPI process).\n", measure);
     }
   }
-
+#ifdef TM_USE_MPI
   DML_checksum_combine(checksum);
 #endif
   return(0);
