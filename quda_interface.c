@@ -930,7 +930,7 @@ void _setMultigridParam(QudaMultigridParam* mg_param) {
       mg_param->geo_block_size[i][j] = 4;
     }
     mg_param->spin_block_size[i] = 1;
-    mg_param->n_vec[i] = 24;
+    mg_param->n_vec[i] = 4;
     mg_param->nu_pre[i] = 2;
     mg_param->nu_post[i] = 2;
 
@@ -975,8 +975,8 @@ void _setMultigridParam(QudaMultigridParam* mg_param) {
   mg_param->run_verify = QUDA_BOOLEAN_YES;
 
   // set file i/o parameters
-  strcpy(mg_param->vec_infile, "vectors");
-  strcpy(mg_param->vec_outfile, "vectors");
+  strcpy(mg_param->vec_infile, "");
+  strcpy(mg_param->vec_outfile, "");
 
   // these need to tbe set for now but are actually ignored by the MG setup
   // needed to make it pass the initialization test
