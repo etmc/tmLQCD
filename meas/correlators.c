@@ -60,7 +60,7 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
   double atime, etime;
   float tmp;
   operator * optr;
-#ifdef MPI
+#ifdef TM_USE_MPI
   double mpi_res = 0., mpi_respa = 0., mpi_resp4 = 0.;
   // send buffer for MPI_Gather
   double *sCpp = NULL, *sCpa = NULL, *sCp4 = NULL;
@@ -99,7 +99,7 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
   }
   ranlxs(&tmp, 1);
   t0 = (int)(measurement_list[id].max_source_slice*tmp);
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Bcast(&t0, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif
   if(g_debug_level > 1 && g_proc_id == 0) {
@@ -108,7 +108,7 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
   }
   atime = gettime();
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   sCpp = (double*) calloc(T, sizeof(double));
   sCpa = (double*) calloc(T, sizeof(double));
   sCp4 = (double*) calloc(T, sizeof(double));
@@ -123,7 +123,7 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
   Cp4 = (double*) calloc(T, sizeof(double));
 #endif
   source_generation_pion_only(g_spinor_field[0], g_spinor_field[1], 
-			      t0, 0, traj);
+			      t0, 0, traj, measurement_list[id].seed);
   optr->sr0 = g_spinor_field[0];
   optr->sr1 = g_spinor_field[1];
   optr->prop0 = g_spinor_field[2];
@@ -150,7 +150,7 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
       resp4 += _spinor_prod_im(g_spinor_field[DUM_MATRIX][i], phi);
     }
 
-#if defined MPI
+#if defined TM_USE_MPI
     MPI_Reduce(&res, &mpi_res, 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
     res = mpi_res;
     MPI_Reduce(&respa, &mpi_respa, 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
@@ -167,7 +167,7 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
 #endif
   }
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   /* some gymnastics needed in case of parallelisation */
   if(g_mpi_time_rank == 0) {
     MPI_Gather(sCpp, T, MPI_DOUBLE, Cpp, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
@@ -210,7 +210,7 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
     fprintf( ofs, "6  1  %d  %e  %e\n", t, Cp4[tt], 0.);
     fclose(ofs);
   }
-#ifdef MPI
+#ifdef TM_USE_MPI
   if(g_mpi_time_rank == 0) {
     free(Cpp); free(Cpa); free(Cp4);
   }

@@ -42,6 +42,11 @@ typedef struct
    _Complex double c00, c01, c02, c10, c11, c12, c20, c21, c22;
 } su3;
 
+typedef struct 
+{
+   _Complex float c00, c01, c02, c10, c11, c12, c20, c21, c22;
+} su3_32;
+
 typedef struct
 {
    _Complex double c0,c1,c2;
@@ -56,6 +61,11 @@ typedef struct
 {
    su3_vector s0,s1,s2,s3;
 } spinor;
+
+typedef struct
+{
+   su3_vector32 s0,s1,s2,s3;
+} spinor32;
 
 typedef struct
 {
@@ -121,6 +131,13 @@ typedef struct
    _vector_assign((r).s1,(s).s1);\
    _vector_assign((r).s2,(s).s2);\
    _vector_assign((r).s3,(s).s3);
+
+#define _spinor_add_assign(r,s) \
+   _vector_add_assign((r).s0,(s).s0);\
+   _vector_add_assign((r).s1,(s).s1);\
+   _vector_add_assign((r).s2,(s).s2);\
+   _vector_add_assign((r).s3,(s).s3);
+
 
 #define _vector_norm_square(r) \
    conj((r).c0) * (r).c0 + conj((r).c1) * (r).c1 + conj((r).c2) * (r).c2

@@ -29,6 +29,7 @@
 #include "global.h"
 #include "su3.h"
 #include "init_dirac_halfspinor.h"
+#include "fatal_error.h"
 
 #ifdef BGQ
 #  define SPI_ALIGN_BASE 0x7f
@@ -71,7 +72,7 @@ int init_dirac_halfspinor() {
 
   HalfSpinor = (halfspinor*)(((unsigned long int)(HalfSpinor_)+ALIGN_BASE+1)&~ALIGN_BASE);
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   if((void*)(sendBuffer_ = (halfspinor*)calloc(RAND/2+8, sizeof(halfspinor))) == NULL) {
     printf ("malloc errno : %d\n",errno); 
     errno = 0;
@@ -95,57 +96,55 @@ int init_dirac_halfspinor() {
       y = (j-t*(LX*LY*LZ)-x*(LY*LZ))/(LZ);
       z = (j-t*(LX*LY*LZ)-x*(LY*LZ) - y*LZ);
       for(int mu = 0; mu < 4; mu++) {
-	NBPointer[ieo][8*i + 2*mu + 0] = &HalfSpinor[ 8*g_lexic2eosub[ g_idn[j][mu] ] + 2*mu + 0];
-	NBPointer[ieo][8*i + 2*mu + 1] = &HalfSpinor[ 8*g_lexic2eosub[ g_iup[j][mu] ] + 2*mu + 1];
+        NBPointer[ieo][8*i + 2*mu + 0] = &HalfSpinor[ 8*g_lexic2eosub[ g_idn[j][mu] ] + 2*mu + 0];
+        NBPointer[ieo][8*i + 2*mu + 1] = &HalfSpinor[ 8*g_lexic2eosub[ g_iup[j][mu] ] + 2*mu + 1];
       }
 #if ((defined PARALLELT) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(t == 0) {
-	k = (g_lexic2eosub[g_idn[j][0]] - VOLUME/2);
-	NBPointer[ieo][8*i] = &sendBuffer[ k ];
+        k = (g_lexic2eosub[g_idn[j][0]] - VOLUME/2);
+        NBPointer[ieo][8*i] = &sendBuffer[ k ];
       }
       if(t == T-1) {
-	k = (g_lexic2eosub[g_iup[j][0]] - VOLUME/2);
-	NBPointer[ieo][8*i + 1] = &sendBuffer[ k ];
+        k = (g_lexic2eosub[g_iup[j][0]] - VOLUME/2);
+        NBPointer[ieo][8*i + 1] = &sendBuffer[ k ];
       }
 #endif
 #if ((defined PARALLELX) || (defined PARALLELXY) || (defined PARALLELXYZ) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(x == 0) {
-	k = (g_lexic2eosub[g_idn[j][1]] - VOLUME/2);
-	NBPointer[ieo][8*i + 2] = &sendBuffer[ k ];
+        k = (g_lexic2eosub[g_idn[j][1]] - VOLUME/2);
+        NBPointer[ieo][8*i + 2] = &sendBuffer[ k ];
       }
       if(x == LX-1) {
-	k = (g_lexic2eosub[g_iup[j][1]] - VOLUME/2);
-	NBPointer[ieo][8*i + 3] = &sendBuffer[ k ];
+        k = (g_lexic2eosub[g_iup[j][1]] - VOLUME/2);
+        NBPointer[ieo][8*i + 3] = &sendBuffer[ k ];
       }
 #endif
 #if ((defined PARALLELXY) || (defined PARALLELXYZ) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(y == 0) {
-	k = (g_lexic2eosub[g_idn[j][2]] - VOLUME/2);
-	NBPointer[ieo][8*i + 4] = &sendBuffer[ k ];
+        k = (g_lexic2eosub[g_idn[j][2]] - VOLUME/2);
+        NBPointer[ieo][8*i + 4] = &sendBuffer[ k ];
       }
       if(y == LY-1) {
-	k = (g_lexic2eosub[g_iup[j][2]] - VOLUME/2);
-	NBPointer[ieo][8*i + 5] = &sendBuffer[ k ];
+        k = (g_lexic2eosub[g_iup[j][2]] - VOLUME/2);
+        NBPointer[ieo][8*i + 5] = &sendBuffer[ k ];
       }
 #endif
 #if ((defined PARALLELXYZ) || (defined PARALLELXYZT))
       if(z == 0) {
-	k = (g_lexic2eosub[g_idn[j][3]] - VOLUME/2);
-	NBPointer[ieo][8*i + 6] = &sendBuffer[ k ];
+        k = (g_lexic2eosub[g_idn[j][3]] - VOLUME/2);
+        NBPointer[ieo][8*i + 6] = &sendBuffer[ k ];
       }
       if(z == LZ-1) {
-	k = (g_lexic2eosub[g_iup[j][3]] - VOLUME/2);
-	NBPointer[ieo][8*i + 7] = &sendBuffer[ k ];
+        k = (g_lexic2eosub[g_iup[j][3]] - VOLUME/2);
+        NBPointer[ieo][8*i + 7] = &sendBuffer[ k ];
       }
 #endif
     }
     for(int i = VOLUME/2; i < (VOLUME+RAND)/2; i++) {
       for(int mu = 0; mu < 8; mu++) {
-	NBPointer[ieo][8*i + mu] = NBPointer[ieo][0];
+        NBPointer[ieo][8*i + mu] = NBPointer[ieo][0];
       }
     }
-#ifdef MPI
-#endif
   }
   for(int ieo = 2; ieo < 4; ieo++) {
     for(int i = 0; i < VOLUME/2; i++) {
@@ -156,48 +155,48 @@ int init_dirac_halfspinor() {
       y = (j-t*(LX*LY*LZ)-x*(LY*LZ))/(LZ);
       z = (j-t*(LX*LY*LZ)-x*(LY*LZ) - y*LZ);
       for(int mu = 0; mu < 8; mu++) {
-	NBPointer[ieo][8*i + mu] = &HalfSpinor[8*i + mu];
+        NBPointer[ieo][8*i + mu] = &HalfSpinor[8*i + mu];
       }
 #if ((defined PARALLELT) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(t == T-1) {
-	NBPointer[ieo][8*i]     = &recvBuffer[ (g_lexic2eosub[ g_iup[j][0] ] - VOLUME/2)];
+        NBPointer[ieo][8*i]     = &recvBuffer[ (g_lexic2eosub[ g_iup[j][0] ] - VOLUME/2)];
       }
       if(t == 0) {
-	NBPointer[ieo][8*i + 1] = &recvBuffer[ (g_lexic2eosub[ g_idn[j][0] ] - VOLUME/2)];
+        NBPointer[ieo][8*i + 1] = &recvBuffer[ (g_lexic2eosub[ g_idn[j][0] ] - VOLUME/2)];
       }
 #endif
 #if ((defined PARALLELX) || (defined PARALLELXY) || (defined PARALLELXYZ) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(x == LX-1) { 
-	NBPointer[ieo][8*i + 2] = &recvBuffer[ (g_lexic2eosub[ g_iup[j][1] ] - VOLUME/2)];
+        NBPointer[ieo][8*i + 2] = &recvBuffer[ (g_lexic2eosub[ g_iup[j][1] ] - VOLUME/2)];
       }
       if(x == 0) {
-	NBPointer[ieo][8*i + 3] = &recvBuffer[ (g_lexic2eosub[ g_idn[j][1] ] - VOLUME/2)];
+        NBPointer[ieo][8*i + 3] = &recvBuffer[ (g_lexic2eosub[ g_idn[j][1] ] - VOLUME/2)];
       }
 #endif
 #if ((defined PARALLELXY) || (defined PARALLELXYZ) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(y == LY-1) {
-	NBPointer[ieo][8*i + 4] = &recvBuffer[ (g_lexic2eosub[ g_iup[j][2] ] - VOLUME/2)];
+        NBPointer[ieo][8*i + 4] = &recvBuffer[ (g_lexic2eosub[ g_iup[j][2] ] - VOLUME/2)];
       }
       if(y == 0) {
-	NBPointer[ieo][8*i + 5] = &recvBuffer[ (g_lexic2eosub[ g_idn[j][2] ] - VOLUME/2)];
+        NBPointer[ieo][8*i + 5] = &recvBuffer[ (g_lexic2eosub[ g_idn[j][2] ] - VOLUME/2)];
       }
 #endif
 #if ((defined PARALLELXYZ) || (defined PARALLELXYZT))
       if(z == LZ-1) {
-	NBPointer[ieo][8*i + 6] = &recvBuffer[ (g_lexic2eosub[ g_iup[j][3] ] - VOLUME/2)];
+        NBPointer[ieo][8*i + 6] = &recvBuffer[ (g_lexic2eosub[ g_iup[j][3] ] - VOLUME/2)];
       }
       if(z == 0) {
-	NBPointer[ieo][8*i + 7] = &recvBuffer[ (g_lexic2eosub[ g_idn[j][3] ] - VOLUME/2)];
+        NBPointer[ieo][8*i + 7] = &recvBuffer[ (g_lexic2eosub[ g_idn[j][3] ] - VOLUME/2)];
       }
 #endif
     }
     for(int i = VOLUME/2; i < (VOLUME+RAND)/2; i++) {
       for(int mu = 0; mu < 8; mu++) {
-	NBPointer[ieo][8*i + mu] = NBPointer[ieo][0];
+        NBPointer[ieo][8*i + mu] = NBPointer[ieo][0];
       }
     }
   }
-#if (defined SPI && defined MPI)
+#if (defined SPI && defined TM_USE_MPI)
   // here comes the SPI initialisation
   uint64_t messageSizes[NUM_DIRS];
   uint64_t roffsets[NUM_DIRS], soffsets[NUM_DIRS];
@@ -256,12 +255,12 @@ int init_dirac_halfspinor() {
 
   // Setup the FIFO handles
   rc = msg_InjFifoInit ( &injFifoHandle,
-			 0,                      /* startingSubgroupId */
-			 0,                      /* startingFifoId     */
-			 spi_num_dirs,           /* numFifos   */
-			 INJ_MEMORY_FIFO_SIZE+1, /* fifoSize */
-			 NULL                    /* Use default attributes */
-			 );
+       0,                      /* startingSubgroupId */
+       0,                      /* startingFifoId     */
+       spi_num_dirs,           /* numFifos   */
+       INJ_MEMORY_FIFO_SIZE+1, /* fifoSize */
+       NULL                    /* Use default attributes */
+       );
   if(rc != 0) {
     fprintf(stderr, "msg_InjFifoInit failed with rc=%d\n",rc);
     exit(1);
@@ -300,8 +299,8 @@ int init_dirac_halfspinor() {
   for (unsigned int j = 0; j < spi_num_dirs; j++) {
     descCount[ j ] =
       msg_InjFifoInject ( injFifoHandle,
-			  j,
-			  &SPIDescriptors[j]);
+        j,
+        &SPIDescriptors[j]);
   }
   // wait for receive completion
   while ( recvCounter > 0 );
@@ -320,16 +319,16 @@ int init_dirac_halfspinor() {
     if(i == 7) k = g_nb_z_dn;
     for(int mu = 0; mu < messageSizes[i]/sizeof(halfspinor); mu++) {
       if(k != (int)creal(recvBuffer[ soffsets[i]/sizeof(halfspinor) + mu ].s0.c0) ||
-	 k != (int)creal(recvBuffer[ soffsets[i]/sizeof(halfspinor) + mu ].s0.c1) ||
-	 k != (int)creal(recvBuffer[ soffsets[i]/sizeof(halfspinor) + mu ].s0.c2) ||
-	 k != (int)creal(recvBuffer[ soffsets[i]/sizeof(halfspinor) + mu ].s1.c0) ||
-	 k != (int)creal(recvBuffer[ soffsets[i]/sizeof(halfspinor) + mu ].s1.c1) ||
-	 k != (int)creal(recvBuffer[ soffsets[i]/sizeof(halfspinor) + mu ].s1.c2)) {
-	if(g_cart_id == 0) {
-	  printf("SPI exchange doesn't work for dir %d: %d != %d at point %d\n", 
-		 i, k ,(int)creal(recvBuffer[ soffsets[i]/sizeof(halfspinor) + mu ].s0.c0), mu);
-	}
-	j++;
+   k != (int)creal(recvBuffer[ soffsets[i]/sizeof(halfspinor) + mu ].s0.c1) ||
+   k != (int)creal(recvBuffer[ soffsets[i]/sizeof(halfspinor) + mu ].s0.c2) ||
+   k != (int)creal(recvBuffer[ soffsets[i]/sizeof(halfspinor) + mu ].s1.c0) ||
+   k != (int)creal(recvBuffer[ soffsets[i]/sizeof(halfspinor) + mu ].s1.c1) ||
+   k != (int)creal(recvBuffer[ soffsets[i]/sizeof(halfspinor) + mu ].s1.c2)) {
+  if(g_cart_id == 0) {
+    printf("SPI exchange doesn't work for dir %d: %d != %d at point %d\n", 
+     i, k ,(int)creal(recvBuffer[ soffsets[i]/sizeof(halfspinor) + mu ].s0.c0), mu);
+  }
+  j++;
       }
     }
   }
@@ -347,8 +346,9 @@ int init_dirac_halfspinor() {
 
 int init_dirac_halfspinor32() {
   int j=0, k;
-  int x, y, z, t, mu;
   
+  int x, y, z, t, mu;
+
   NBPointer32 = (halfspinor32***) calloc(4,sizeof(halfspinor32**));
   NBPointer32_ = (halfspinor32**) calloc(16,(VOLUME+RAND)*sizeof(halfspinor32*));
   NBPointer32[0] = NBPointer32_;
@@ -356,7 +356,7 @@ int init_dirac_halfspinor32() {
   NBPointer32[2] = NBPointer32_ + (16*(VOLUME+RAND)/2);
   NBPointer32[3] = NBPointer32_ + (24*(VOLUME+RAND)/2);
 
-  if((void*)(HalfSpinor32_ = (halfspinor32*)calloc(8*(VOLUME+RAND)+1, sizeof(halfspinor32))) == NULL) {
+  if((void*)(HalfSpinor32_ = (halfspinor32*)calloc(4*(VOLUME)+1, sizeof(halfspinor32))) == NULL) {
     printf ("malloc errno : %d\n",errno); 
     errno = 0;
     return(-1);
@@ -364,7 +364,7 @@ int init_dirac_halfspinor32() {
 
   HalfSpinor32 = (halfspinor32*)(((unsigned long int)(HalfSpinor32_)+ALIGN_BASE)&~ALIGN_BASE);
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   //re-use memory from 64Bit version
   sendBuffer32 = (halfspinor32*)sendBuffer;
   recvBuffer32 = (halfspinor32*)recvBuffer;
@@ -379,49 +379,54 @@ int init_dirac_halfspinor32() {
       y = (j-t*(LX*LY*LZ)-x*(LY*LZ))/(LZ);
       z = (j-t*(LX*LY*LZ)-x*(LY*LZ) - y*LZ);
       for(mu = 0; mu < 4; mu++) {
-	NBPointer32[ieo][8*i + 2*mu + 0] = &HalfSpinor32[ 8*g_lexic2eosub[ g_idn[j][mu] ] + 2*mu + 0];
-	NBPointer32[ieo][8*i + 2*mu + 1] = &HalfSpinor32[ 8*g_lexic2eosub[ g_iup[j][mu] ] + 2*mu + 1];
+        NBPointer32[ieo][8*i + 2*mu + 0] = &HalfSpinor32[ 8*g_lexic2eosub[ g_idn[j][mu] ] + 2*mu + 0];
+        NBPointer32[ieo][8*i + 2*mu + 1] = &HalfSpinor32[ 8*g_lexic2eosub[ g_iup[j][mu] ] + 2*mu + 1];
       }
 #if ((defined PARALLELT) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(t == 0) {
-	k = (g_lexic2eosub[g_idn[j][0]] - VOLUME/2);
-	NBPointer32[ieo][8*i] = &sendBuffer32[ k ];
+        k = (g_lexic2eosub[g_idn[j][0]] - VOLUME/2);
+        NBPointer32[ieo][8*i] = &sendBuffer32[ k ];
       }
       if(t == T-1) {
-	k = (g_lexic2eosub[g_iup[j][0]] - VOLUME/2);
-	NBPointer32[ieo][8*i + 1] = &sendBuffer32[ k ];
+        k = (g_lexic2eosub[g_iup[j][0]] - VOLUME/2);
+        NBPointer32[ieo][8*i + 1] = &sendBuffer32[ k ];
       }
 #endif
 #if ((defined PARALLELX) || (defined PARALLELXY) || (defined PARALLELXYZ) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(x == 0) {
-	k = (g_lexic2eosub[g_idn[j][1]] - VOLUME/2);
-	NBPointer32[ieo][8*i + 2] = &sendBuffer32[ k ];
+        k = (g_lexic2eosub[g_idn[j][1]] - VOLUME/2);
+        NBPointer32[ieo][8*i + 2] = &sendBuffer32[ k ];
       }
       if(x == LX-1) {
-	k = (g_lexic2eosub[g_iup[j][1]] - VOLUME/2);
-	NBPointer32[ieo][8*i + 3] = &sendBuffer32[ k ];
+        k = (g_lexic2eosub[g_iup[j][1]] - VOLUME/2);
+        NBPointer32[ieo][8*i + 3] = &sendBuffer32[ k ];
       }
 #endif
 #if ((defined PARALLELXY) || (defined PARALLELXYZ) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(y == 0) {
-	k = (g_lexic2eosub[g_idn[j][2]] - VOLUME/2);
-	NBPointer32[ieo][8*i + 4] = &sendBuffer32[ k ];
+        k = (g_lexic2eosub[g_idn[j][2]] - VOLUME/2);
+        NBPointer32[ieo][8*i + 4] = &sendBuffer32[ k ];
       }
       if(y == LY-1) {
-	k = (g_lexic2eosub[g_iup[j][2]] - VOLUME/2);
-	NBPointer32[ieo][8*i + 5] = &sendBuffer32[ k ];
+        k = (g_lexic2eosub[g_iup[j][2]] - VOLUME/2);
+        NBPointer32[ieo][8*i + 5] = &sendBuffer32[ k ];
       }
 #endif
 #if ((defined PARALLELXYZ) || (defined PARALLELXYZT))
       if(z == 0) {
-	k = (g_lexic2eosub[g_idn[j][3]] - VOLUME/2);
-	NBPointer32[ieo][8*i + 6] = &sendBuffer32[ k ];
+        k = (g_lexic2eosub[g_idn[j][3]] - VOLUME/2);
+        NBPointer32[ieo][8*i + 6] = &sendBuffer32[ k ];
       }
       if(z == LZ-1) {
-	k = (g_lexic2eosub[g_iup[j][3]] - VOLUME/2);
-	NBPointer32[ieo][8*i + 7] = &sendBuffer32[ k ];
+        k = (g_lexic2eosub[g_iup[j][3]] - VOLUME/2);
+        NBPointer32[ieo][8*i + 7] = &sendBuffer32[ k ];
       }
 #endif
+    }
+    for(int i = VOLUME/2; i < (VOLUME+RAND)/2; i++) {
+      for(int mu = 0; mu < 8; mu++) {
+        NBPointer32[ieo][8*i + mu] = NBPointer32[ieo][0];
+      }
     }
   }
   for(int ieo = 2; ieo < 4; ieo++) {
@@ -433,43 +438,48 @@ int init_dirac_halfspinor32() {
       y = (j-t*(LX*LY*LZ)-x*(LY*LZ))/(LZ);
       z = (j-t*(LX*LY*LZ)-x*(LY*LZ) - y*LZ);
       for(mu = 0; mu < 8; mu++) {
-	NBPointer32[ieo][8*i + mu] = &HalfSpinor32[8*i + mu];
+        NBPointer32[ieo][8*i + mu] = &HalfSpinor32[8*i + mu];
       }
 #if ((defined PARALLELT) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(t == T-1) {
-	NBPointer32[ieo][8*i]     = &recvBuffer32[ (g_lexic2eosub[ g_iup[j][0] ] - VOLUME/2)];
+        NBPointer32[ieo][8*i]     = &recvBuffer32[ (g_lexic2eosub[ g_iup[j][0] ] - VOLUME/2)];
       }
       if(t == 0) {
-	NBPointer32[ieo][8*i + 1] = &recvBuffer32[ (g_lexic2eosub[ g_idn[j][0] ] - VOLUME/2)];
+        NBPointer32[ieo][8*i + 1] = &recvBuffer32[ (g_lexic2eosub[ g_idn[j][0] ] - VOLUME/2)];
       }
 #endif
 #if ((defined PARALLELX) || (defined PARALLELXY) || (defined PARALLELXYZ) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(x == LX-1) { 
-	NBPointer32[ieo][8*i + 2] = &recvBuffer32[ (g_lexic2eosub[ g_iup[j][1] ] - VOLUME/2)];
+        NBPointer32[ieo][8*i + 2] = &recvBuffer32[ (g_lexic2eosub[ g_iup[j][1] ] - VOLUME/2)];
       }
       if(x == 0) {
-	NBPointer32[ieo][8*i + 3] = &recvBuffer32[ (g_lexic2eosub[ g_idn[j][1] ] - VOLUME/2)];
+        NBPointer32[ieo][8*i + 3] = &recvBuffer32[ (g_lexic2eosub[ g_idn[j][1] ] - VOLUME/2)];
       }
 #endif
 #if ((defined PARALLELXY) || (defined PARALLELXYZ) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(y == LY-1) {
-	NBPointer32[ieo][8*i + 4] = &recvBuffer32[ (g_lexic2eosub[ g_iup[j][2] ] - VOLUME/2)];
+        NBPointer32[ieo][8*i + 4] = &recvBuffer32[ (g_lexic2eosub[ g_iup[j][2] ] - VOLUME/2)];
       }
       if(y == 0) {
-	NBPointer32[ieo][8*i + 5] = &recvBuffer32[ (g_lexic2eosub[ g_idn[j][2] ] - VOLUME/2)];
+        NBPointer32[ieo][8*i + 5] = &recvBuffer32[ (g_lexic2eosub[ g_idn[j][2] ] - VOLUME/2)];
       }
 #endif
 #if ((defined PARALLELXYZ) || (defined PARALLELXYZT))
       if(z == LZ-1) {
-	NBPointer32[ieo][8*i + 6] = &recvBuffer32[ (g_lexic2eosub[ g_iup[j][3] ] - VOLUME/2)];
+        NBPointer32[ieo][8*i + 6] = &recvBuffer32[ (g_lexic2eosub[ g_iup[j][3] ] - VOLUME/2)];
       }
       if(z == 0) {
-	NBPointer32[ieo][8*i + 7] = &recvBuffer32[ (g_lexic2eosub[ g_idn[j][3] ] - VOLUME/2)];
+        NBPointer32[ieo][8*i + 7] = &recvBuffer32[ (g_lexic2eosub[ g_idn[j][3] ] - VOLUME/2)];
       }
 #endif
     }
+    for(int i = VOLUME/2; i < (VOLUME+RAND)/2; i++) {
+      for(int mu = 0; mu < 8; mu++) {
+        NBPointer32[ieo][8*i + mu] = NBPointer32[ieo][0];
+      }
+    }
   }
-#if (defined SPI && defined MPI)
+#if (defined SPI && defined TM_USE_MPI)
   // here comes the SPI initialisation
   uint64_t messageSizes[NUM_DIRS];
   uint64_t roffsets[NUM_DIRS], soffsets[NUM_DIRS];
@@ -504,12 +514,12 @@ int init_dirac_halfspinor32() {
 
   // test communication
   for(unsigned int i = 0; i < RAND/2; i++) {
-    sendBuffer32[i].s0.c0 = (double)g_cart_id;
-    sendBuffer32[i].s0.c1 = (double)g_cart_id;
-    sendBuffer32[i].s0.c2 = (double)g_cart_id;
-    sendBuffer32[i].s1.c0 = (double)g_cart_id;
-    sendBuffer32[i].s1.c1 = (double)g_cart_id;
-    sendBuffer32[i].s1.c2 = (double)g_cart_id;
+    sendBuffer32[i].s0.c0 = (float)g_cart_id;
+    sendBuffer32[i].s0.c1 = (float)g_cart_id;
+    sendBuffer32[i].s0.c2 = (float)g_cart_id;
+    sendBuffer32[i].s1.c0 = (float)g_cart_id;
+    sendBuffer32[i].s1.c1 = (float)g_cart_id;
+    sendBuffer32[i].s1.c2 = (float)g_cart_id;
   }
 
   // Initialize the barrier, resetting the hardware.
@@ -518,16 +528,18 @@ int init_dirac_halfspinor32() {
     printf("MUSPI_GIBarrierInit returned rc = %d\n", rc);
     exit(__LINE__);
   }
-  // reset the recv counter 
+  // reset the recv counter, note the division by 2, totalMessageSize has been set in init_dirac_halfspinor 
+  // which must be called first!
   recvCounter = totalMessageSize/2;
   global_barrier(); // make sure everybody is set recv counter
   
+  // could do communication with multiple threads
   //#pragma omp for nowait
   for (unsigned int j = 0; j < spi_num_dirs; j++) {
     descCount[ j ] =
       msg_InjFifoInject ( injFifoHandle,
-			  j,
-			  &SPIDescriptors32[j]);
+        j,
+        &SPIDescriptors32[j]);
   }
   // wait for receive completion
   while ( recvCounter > 0 );
@@ -546,16 +558,16 @@ int init_dirac_halfspinor32() {
     if(i == 7) k = g_nb_z_dn;
     for(int mu = 0; mu < messageSizes[i]/sizeof(halfspinor32); mu++) {
       if(k != (int)creal(recvBuffer32[ soffsets[i]/sizeof(halfspinor32) + mu ].s0.c0) ||
-	 k != (int)creal(recvBuffer32[ soffsets[i]/sizeof(halfspinor32) + mu ].s0.c1) ||
-	 k != (int)creal(recvBuffer32[ soffsets[i]/sizeof(halfspinor32) + mu ].s0.c2) ||
-	 k != (int)creal(recvBuffer32[ soffsets[i]/sizeof(halfspinor32) + mu ].s1.c0) ||
-	 k != (int)creal(recvBuffer32[ soffsets[i]/sizeof(halfspinor32) + mu ].s1.c1) ||
-	 k != (int)creal(recvBuffer32[ soffsets[i]/sizeof(halfspinor32) + mu ].s1.c2)) {
-	if(g_cart_id == 0) {
-	  printf("32 Bit SPI exchange doesn't work for dir %d: %d != %d at point %d\n", 
-		 i, k ,(int)creal(recvBuffer32[ soffsets[i]/sizeof(halfspinor32) + mu ].s0.c0), mu);
-	}
-	j++;
+   k != (int)creal(recvBuffer32[ soffsets[i]/sizeof(halfspinor32) + mu ].s0.c1) ||
+   k != (int)creal(recvBuffer32[ soffsets[i]/sizeof(halfspinor32) + mu ].s0.c2) ||
+   k != (int)creal(recvBuffer32[ soffsets[i]/sizeof(halfspinor32) + mu ].s1.c0) ||
+   k != (int)creal(recvBuffer32[ soffsets[i]/sizeof(halfspinor32) + mu ].s1.c1) ||
+   k != (int)creal(recvBuffer32[ soffsets[i]/sizeof(halfspinor32) + mu ].s1.c2)) {
+  if(g_cart_id == 0) {
+    printf("32 Bit SPI exchange doesn't work for dir %d: %d != %d at point %d\n", 
+     i, k ,(int)creal(recvBuffer32[ soffsets[i]/sizeof(halfspinor32) + mu ].s0.c0), mu);
+  }
+  j++;
       }
     }
   }

@@ -31,7 +31,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
 #include <complex.h>
@@ -70,7 +70,7 @@ double scalar_prod_i(spinor * const S,spinor * const R, const int N, const int p
   }
   kc=ks+kc;
   
-#if defined MPI
+#if defined TM_USE_MPI
   if(parallel == 1) {
     MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     kc = ks;

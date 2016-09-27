@@ -28,14 +28,14 @@
 
 #if defined _USE_HALFSPINOR
 void update_backward_gauge(su3 ** const gf) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
 
   int ix=0, kb=0, iy=0;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif 
   for(ix = 0; ix < VOLUME/2; ix++) {
@@ -59,7 +59,7 @@ void update_backward_gauge(su3 ** const gf) {
     _su3_assign(g_gauge_field_copy[1][ix][3], gf[kb][3]);
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 
@@ -67,17 +67,69 @@ void update_backward_gauge(su3 ** const gf) {
   return;
 }
 
+void update_backward_gauge_32_orphaned(su3_32 ** const gf) {
+
+  int ix=0, kb=0, iy=0;
+
+#ifdef TM_USE_OMP
+#pragma omp for
+#endif 
+  for(ix = 0; ix < VOLUME/2; ix++) {
+    iy = (VOLUME+RAND)/2+ix;
+    kb = g_idn[ g_eo2lexic[iy] ][0];
+    _su3_assign(g_gauge_field_copy_32[0][ix][0], gf[kb][0]);
+    kb = g_idn[ g_eo2lexic[iy] ][1];
+    _su3_assign(g_gauge_field_copy_32[0][ix][1], gf[kb][1]);
+    kb = g_idn[ g_eo2lexic[iy] ][2];
+    _su3_assign(g_gauge_field_copy_32[0][ix][2], gf[kb][2]);
+    kb = g_idn[ g_eo2lexic[iy] ][3];
+    _su3_assign(g_gauge_field_copy_32[0][ix][3], gf[kb][3]);
+
+    kb = g_idn[ g_eo2lexic[ix] ][0];
+    _su3_assign(g_gauge_field_copy_32[1][ix][0], gf[kb][0]);
+    kb = g_idn[ g_eo2lexic[ix] ][1];
+    _su3_assign(g_gauge_field_copy_32[1][ix][1], gf[kb][1]);
+    kb = g_idn[ g_eo2lexic[ix] ][2];
+    _su3_assign(g_gauge_field_copy_32[1][ix][2], gf[kb][2]);
+    kb = g_idn[ g_eo2lexic[ix] ][3];
+    _su3_assign(g_gauge_field_copy_32[1][ix][3], gf[kb][3]);
+  }
+
+// we use the implicit barrier at the end of the single section to catch all
+// threads, in the meantime, one of them modifies the global flag
+#ifdef TM_USE_OMP
+#pragma omp single
+  {
+#endif
+    g_update_gauge_copy_32 = 0;
+#ifdef TM_USE_OMP
+  } 
+#endif
+}
+
+void update_backward_gauge_32(su3_32 ** const gf) {
+#ifdef TM_USE_OMP
+#pragma omp parallel
+  {
+#endif
+  update_backward_gauge_32_orphaned(gf);
+#ifdef TM_USE_OMP
+  } /* OpenMP closing brace */
+#endif
+  return;
+}
+
 #elif _USE_TSPLITPAR 
 
 void update_backward_gauge(su3 ** const gf) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
 
   int ix=0, kb=0, kb2=0;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(ix = 0; ix < VOLUME/2;ix++) {
@@ -98,7 +150,7 @@ void update_backward_gauge(su3 ** const gf) {
     kb=g_idn[g_eo2lexic[ix]][3];
     _su3_assign(g_gauge_field_copys[ix][5],gf[kb][3]);
   }
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(ix = (VOLUME+RAND)/2; ix < (VOLUME+RAND)/2+VOLUME/2;ix++) {
@@ -120,7 +172,7 @@ void update_backward_gauge(su3 ** const gf) {
     _su3_assign(g_gauge_field_copys[ix][5],gf[kb][3]);
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 
@@ -131,14 +183,14 @@ void update_backward_gauge(su3 ** const gf) {
 #else
 
 void update_backward_gauge(su3 ** const gf) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
 
   int ix=0, kb=0, kb2=0;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(ix = 0; ix < VOLUME/2; ix++) {
@@ -159,7 +211,7 @@ void update_backward_gauge(su3 ** const gf) {
     kb=g_idn[g_eo2lexic[ix]][3];
     _su3_assign(g_gauge_field_copy[ix][7],gf[kb][3]);
   }
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(ix = (VOLUME+RAND)/2; ix < (VOLUME+RAND)/2+VOLUME/2; ix++) {
@@ -181,11 +233,79 @@ void update_backward_gauge(su3 ** const gf) {
     _su3_assign(g_gauge_field_copy[ix][7],gf[kb][3]);
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 
   g_update_gauge_copy = 0;
+  return;
+}
+
+void update_backward_gauge_32_orphaned(su3_32 ** const gf) {
+  int ix=0, kb=0, kb2=0;
+
+#ifdef TM_USE_OMP
+#pragma omp for nowait
+#endif
+  for(ix = 0; ix < VOLUME/2; ix++) {
+    kb2=g_eo2lexic[ix];
+    _su3_assign(g_gauge_field_copy_32[ix][0],gf[kb2][0]);
+    kb=g_idn[g_eo2lexic[ix]][0];
+    _su3_assign(g_gauge_field_copy_32[ix][1],gf[kb][0]);
+
+    _su3_assign(g_gauge_field_copy_32[ix][2],gf[kb2][1]);
+    kb=g_idn[g_eo2lexic[ix]][1];
+    _su3_assign(g_gauge_field_copy_32[ix][3],gf[kb][1]);
+
+    _su3_assign(g_gauge_field_copy_32[ix][4],gf[kb2][2]);
+    kb=g_idn[g_eo2lexic[ix]][2];
+    _su3_assign(g_gauge_field_copy_32[ix][5],gf[kb][2]);
+
+    _su3_assign(g_gauge_field_copy_32[ix][6],gf[kb2][3]);
+    kb=g_idn[g_eo2lexic[ix]][3];
+    _su3_assign(g_gauge_field_copy_32[ix][7],gf[kb][3]);
+  }
+#ifdef TM_USE_OMP
+#pragma omp for nowait
+#endif
+  for(ix = (VOLUME+RAND)/2; ix < (VOLUME+RAND)/2+VOLUME/2; ix++) {
+    kb2=g_eo2lexic[ix];
+    _su3_assign(g_gauge_field_copy_32[ix][0],gf[kb2][0]);
+    kb=g_idn[g_eo2lexic[ix]][0];
+    _su3_assign(g_gauge_field_copy_32[ix][1],gf[kb][0]);
+
+    _su3_assign(g_gauge_field_copy_32[ix][2],gf[kb2][1]);
+    kb=g_idn[g_eo2lexic[ix]][1];
+    _su3_assign(g_gauge_field_copy_32[ix][3],gf[kb][1]);
+
+    _su3_assign(g_gauge_field_copy_32[ix][4],gf[kb2][2]);
+    kb=g_idn[g_eo2lexic[ix]][2];
+    _su3_assign(g_gauge_field_copy_32[ix][5],gf[kb][2]);
+
+    _su3_assign(g_gauge_field_copy_32[ix][6],gf[kb2][3]);
+    kb=g_idn[g_eo2lexic[ix]][3];
+    _su3_assign(g_gauge_field_copy_32[ix][7],gf[kb][3]);
+  }
+// the threads are caught by the implicit barrier here
+#ifdef TM_USE_OMP
+#pragma omp single
+  {
+#endif
+  g_update_gauge_copy_32 = 0;
+#ifdef TM_USE_OMP
+ }
+#endif
+}
+
+void update_backward_gauge_32(su3_32 ** const gf) {
+#ifdef TM_USE_OMP
+#pragma omp parallel
+  {
+#endif
+  update_backward_gauge_32_orphaned(gf);
+#ifdef TM_USE_OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }
 

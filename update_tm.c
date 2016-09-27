@@ -35,10 +35,10 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "global.h"
@@ -65,7 +65,7 @@ extern su3 ** g_gauge_field_saved;
 
 int update_tm(double *plaquette_energy, double *rectangle_energy, 
               char * filename, const int return_check, const int acctest, 
-	      const int traj_counter) {
+              const int traj_counter) {
 
   su3 *v, *w;
   int accept, i=0, j=0, iostatus=0;
@@ -106,7 +106,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   /* 
    *  copy the gauge field to gauge_tmp 
    */
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for private(w,v)
 #endif
   for(int ix=0;ix<VOLUME;ix++) { 
@@ -133,7 +133,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   /* run the trajectory */
   if(Integrator.n_int[Integrator.no_timescales-1] > 0) {
     Integrator.integrate[Integrator.no_timescales-1](Integrator.tau, 
-						     Integrator.no_timescales-1, 1);
+                 Integrator.no_timescales-1, 1);
   }
 
   g_sloppy_precision = 0;
@@ -164,7 +164,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   /* the random number is only taken at node zero and then distributed to 
      the other sites */
   ranlxd(yy,1);
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Bcast(&yy[0], 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
 
@@ -181,7 +181,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
     if(accept) {
       /* save gauge file to disk before performing reversibility check */
-      xlfInfo = construct_paramsXlfInfo((*plaquette_energy)/(6.*VOLUME*g_nproc), -1);
+      xlfInfo = construct_paramsXlfInfo((*plaquette_energy)/(6.*VOLUME*g_nproc), traj_counter);
       // Should write this to temporary file first, and then check
       if(g_proc_id == 0 && g_debug_level > 0) {
         fprintf(stdout, "# Writing gauge field to file %s.\n", tmp_filename);
@@ -198,11 +198,11 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       }
       free(xlfInfo);
     }
+    
     g_sloppy_precision = 1;
     /* run the trajectory back */
     Integrator.integrate[Integrator.no_timescales-1](-Integrator.tau, 
                          Integrator.no_timescales-1, 1);
-
     g_sloppy_precision = 0;
 
     /*   compute the energy contributions from the pseudo-fermions  */
@@ -222,13 +222,13 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     ks = 0.;
     kc = 0.;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel private(w,v,tt,tr,ts,ds,ks,kc)
     {
     int thread_num = omp_get_thread_num();
 #endif
     su3 ALIGN v0;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for(int ix = 0; ix < VOLUME; ++ix)
@@ -237,8 +237,8 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       {
         v=&hf.gaugefield[ix][mu];
         w=&gauge_tmp[ix][mu];
-	_su3_minus_su3(v0, *v, *w);
-	_su3_square_norm(ds, v0);
+        _su3_minus_su3(v0, *v, *w);
+        _su3_square_norm(ds, v0);
 
         tr = sqrt(ds) + kc;
         ts = tr + ks;
@@ -248,7 +248,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       }
     }
     kc=ks+kc;
-#ifdef OMP
+#ifdef TM_USE_OMP
     g_omp_acc_re[thread_num] = kc;
       
     } /* OpenMP parallel section closing brace */
@@ -260,7 +260,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     ret_gauge_diff = kc;
 #endif
 
-#ifdef MPI
+#ifdef TM_USE_MPI
     tmp = ret_gauge_diff;
     MPI_Reduce(&tmp, &ret_gauge_diff, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 #endif
@@ -274,8 +274,8 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     /* Output */
     if(g_proc_id == 0) {
       ret_check_file = fopen("return_check.data","a");
-      fprintf(ret_check_file,"ddh = %1.4e ddU= %1.4e ddh/H = %1.4e\n",
-              ret_dh, ret_gauge_diff/4./((double)(VOLUME*g_nproc))/3., ret_dh/tmp);
+      fprintf(ret_check_file,"%08d ddh = %1.4e ddh/dh = %1.4e ddh/H = %1.4e ddU= %1.4e\n", traj_counter,
+              ret_dh, ret_dh/dh, ret_dh/tmp, ret_gauge_diff/4./((double)(VOLUME*g_nproc))/3.);
       fclose(ret_check_file);
     }
 
@@ -304,7 +304,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     *rectangle_energy = new_rectangle_energy;
     /* put the links back to SU(3) group */
     if (!bc_flag) { /* periodic boundary conditions */
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for private(v)
 #endif
       for(int ix=0;ix<VOLUME;ix++) { 
@@ -316,7 +316,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
   }
   else { /* reject: copy gauge_tmp to hf.gaugefield */
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for private(w) private(v)
 #endif
     for(int ix=0;ix<VOLUME;ix++) {
@@ -329,9 +329,14 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
   hf.update_gauge_copy = 1;
   g_update_gauge_copy = 1;
-#ifdef MPI
+  g_update_gauge_copy_32 = 1;  
+#ifdef TM_USE_MPI
   xchange_gauge(hf.gaugefield);
 #endif
+  
+  /*Convert to a 32 bit gauge field, after xchange*/
+  convert_32_gauge_field(g_gauge_field_32, hf.gaugefield, VOLUMEPLUSRAND + g_dbw2rand); 
+  
   etime=gettime();
 
   /* printing data in the .data file */
@@ -344,11 +349,11 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     for(i = 0; i < Integrator.no_timescales; i++) {
       for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
         if(monomial_list[ Integrator.mnls_per_ts[i][j] ].type != GAUGE
-	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != SFGAUGE 
-	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != NDPOLY
-	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != NDCLOVER
-	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != CLOVERNDTRLOG
-	   && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != CLOVERTRLOG ) {
+            && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != SFGAUGE 
+            && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != NDPOLY
+            && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != NDCLOVER
+            && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != CLOVERNDTRLOG
+            && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != CLOVERTRLOG ) {
           fprintf(datafile,"%d %d ",  monomial_list[ Integrator.mnls_per_ts[i][j] ].iter0, 
                   monomial_list[ Integrator.mnls_per_ts[i][j] ].iter1);
         }

@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -57,7 +57,7 @@ inline void addup_ddummy(su3adj** const df, const int ix, const int iy) {
 
 void xchange_deri(su3adj ** const df)
 {
-#  ifdef MPI
+#  ifdef TM_USE_MPI
   int ix,mu, t, y, z, x;
   MPI_Status status;
 
@@ -186,7 +186,7 @@ void xchange_deri(su3adj ** const df)
 
 void xchange_deri(su3adj ** const df)
 {
-#  ifdef MPI
+#  ifdef TM_USE_MPI
   int ix,iy, t, y, z, x;
   MPI_Status status;
 #    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)

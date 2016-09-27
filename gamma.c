@@ -36,14 +36,14 @@
 #include "su3.h"
 #include "su3spinor.h"
 #include "gamma.h"
-#ifdef OMP
+#ifdef TM_USE_OMP
 #include <omp.h>
 #endif
 
 /* (*Q) = gammaXY*(*P) */
 
 void gamma0( const int Q,  const int P, const int V){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for
 #endif
   for (int ix = 0; ix < V; ix++){
@@ -51,7 +51,7 @@ void gamma0( const int Q,  const int P, const int V){
   }
 }
 void gamma1( const int Q,  const int P, const int V){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for
 #endif
   for (int ix=0;ix<V;ix++){
@@ -59,7 +59,7 @@ void gamma1( const int Q,  const int P, const int V){
   }
 }
 void gamma2( const int Q,  const int P, const int V){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for
 #endif
   for (int ix=0;ix<V;ix++){
@@ -67,7 +67,7 @@ void gamma2( const int Q,  const int P, const int V){
   }
 }
 void gamma3( const int Q,  const int P, const int V){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for
 #endif
   for (int ix=0;ix<V;ix++){
@@ -75,13 +75,13 @@ void gamma3( const int Q,  const int P, const int V){
   }
 }
 void gamma5(spinor * const l, spinor * const k, const int V){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
   int ix;
   spinor *r,*s;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for (ix = 0; ix < V; ix++){
@@ -92,12 +92,12 @@ void gamma5(spinor * const l, spinor * const k, const int V){
     _vector_minus_assign((*r).s2,(*s).s2);
     _vector_minus_assign((*r).s3,(*s).s3);
   }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /*OpenMP closing brace */
 #endif
 }
 void gamma5new(spinor * const Q, spinor * const P, const int V){ 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for
 #endif
   for (int ix=0;ix<V;ix++){ 
@@ -105,7 +105,7 @@ void gamma5new(spinor * const Q, spinor * const P, const int V){
   } 
 }
 void gamma50( const int Q,  const int P, const int V){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for
 #endif
     for (int ix=0;ix<V;ix++){
@@ -113,7 +113,7 @@ void gamma50( const int Q,  const int P, const int V){
   }
 }
 void gamma51( const int Q,  const int P, const int V){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for
 #endif
   for (int ix=0;ix<V;ix++){
@@ -121,7 +121,7 @@ void gamma51( const int Q,  const int P, const int V){
   }
 }
 void gamma52( const int Q,  const int P, const int V){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for
 #endif
   for (int ix=0;ix<V;ix++){
@@ -129,7 +129,7 @@ void gamma52( const int Q,  const int P, const int V){
   }
 }
 void gamma53( const int Q,  const int P, const int V){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for
 #endif
   for (int ix=0;ix<V;ix++){
@@ -138,7 +138,7 @@ void gamma53( const int Q,  const int P, const int V){
 }
 
 void P_plus(spinor * const Q, spinor * const P, const int V){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for
 #endif
   for (int ix = 0; ix < V; ix++){
@@ -147,7 +147,7 @@ void P_plus(spinor * const Q, spinor * const P, const int V){
 }
 
 void P_minus(spinor * const Q, spinor * const P, const int V){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for
 #endif
   for (int ix = 0; ix < V; ix++){
@@ -157,7 +157,7 @@ void P_minus(spinor * const Q, spinor * const P, const int V){
 
 void Proj(spinor * const Q, spinor * const P, const int V, const int flag){
   if(flag == 0){ 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for
 #endif
     for (int ix = 0; ix < V; ix++){
@@ -165,7 +165,7 @@ void Proj(spinor * const Q, spinor * const P, const int V, const int flag){
     }
   }
   else if(flag == 1){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel for
 #endif
     for (int ix = 0; ix < V; ix++){

@@ -38,6 +38,7 @@
 #include "xchange/xchange.h"
 #include "hamiltonian_field.h"
 #include "update_gauge.h"
+#include "init/init_gauge_field.h"
 
 
 /*******************************************************
@@ -50,7 +51,7 @@
 void update_gauge(const double step, hamiltonian_field_t * const hf) {
   double atime, etime;
   atime = gettime();
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #pragma omp parallel
   {
@@ -64,11 +65,11 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
 #pragma pomp inst begin(updategauge)
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(i = 0; i < VOLUME; i++) { 
@@ -84,20 +85,26 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
     }
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP parallel closing brace */
 #endif
   
-#ifdef MPI
+#ifdef TM_USE_MPI
   /* for parallelization */
   xchange_gauge(hf->gaugefield);
 #endif
+  
+  /*Convert to a 32 bit gauge field, after xchange*/
+  convert_32_gauge_field(g_gauge_field_32, hf->gaugefield, VOLUMEPLUSRAND + g_dbw2rand);
+  
   /*
    * The backward copy of the gauge field
    * is not updated here!
    */
   hf->update_gauge_copy = 1;
   g_update_gauge_copy = 1;
+  g_update_gauge_copy_32 = 1;
+
   etime = gettime();
   if(g_debug_level > 1 && g_proc_id == 0) {
     printf("# Time gauge update: %e s\n", etime-atime); 

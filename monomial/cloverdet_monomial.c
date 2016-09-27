@@ -34,17 +34,20 @@
 #include "gettime.h"
 #include "linalg_eo.h"
 #include "deriv_Sb.h"
+#include "deriv_Sb_D_psi.h"
 #include "gamma.h"
 #include "operator/tm_operators.h"
 #include "operator/Hopping_Matrix.h"
 #include "solver/chrono_guess.h"
 #include "solver/solver.h"
+#include "solver/monomial_solve.h"
 #include "operator/clover_leaf.h"
 #include "read_input.h"
 #include "hamiltonian_field.h"
 #include "boundary.h"
 #include "monomial/monomial.h"
 #include "operator/clovertm_operators.h"
+#include "operator/clovertm_operators_32.h"
 #include "cloverdet_monomial.h"
 
 /* think about chronological solver ! */
@@ -52,6 +55,7 @@
 void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   double atime, etime;
+  int N = VOLUME/2;
   atime = gettime();
   for(int i = 0; i < VOLUME; i++) { 
     for(int mu = 0; mu < 4; mu++) { 
@@ -63,7 +67,6 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   mnl->forcefactor = 1.;
   /*********************************************************************
    * 
-   * even/odd version 
    *
    * This a term is det(\hat Q^2(\mu))
    *
@@ -76,7 +79,12 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   // we compute the clover term (1 + T_ee(oo)) for all sites x
   sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
   // we invert it for the even sites only
-  sw_invert(EE, mnl->mu);
+  if(!mnl->even_odd_flag) {
+    N = VOLUME;
+  }
+  else {
+    sw_invert(EE, mnl->mu);
+  }
   
   if(mnl->solver != CG && g_proc_id == 0) {
     fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (cloverdet_monomial.c)\n");
@@ -85,41 +93,48 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   // Invert Q_{+} Q_{-}
   // X_o -> w_fields[1]
   chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
-	       mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
-  mnl->iter1 += cg_her(mnl->w_fields[1], mnl->pf, mnl->maxiter, mnl->forceprec, 
-		       g_relative_precision_flag, VOLUME/2, mnl->Qsq);
+               mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
+  mnl->iter1 += solve_degenerate(mnl->w_fields[1], mnl->pf, mnl->solver_params, mnl->maxiter, mnl->forceprec, 
+                                 g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver);
   chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
-		      mnl->csg_N, &mnl->csg_n, VOLUME/2);
+                      mnl->csg_N, &mnl->csg_n, N);
   
   // Y_o -> w_fields[0]
   mnl->Qm(mnl->w_fields[0], mnl->w_fields[1]);
+  if(mnl->even_odd_flag) {
+    // apply Hopping Matrix M_{eo}
+    // to get the even sites of X_e
+    H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EO, -1, mnl->mu);
+    // \delta Q sandwitched by Y_o^\dagger and X_e
+    deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
+    
+    // to get the even sites of Y_e
+    H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1, mnl->mu);
+    // \delta Q sandwitched by Y_e^\dagger and X_o
+    // uses the gauge field in hf and changes the derivative fields in hf
+    deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor);
+    
+    // here comes the clover term...
+    // computes the insertion matrices for S_eff
+    // result is written to swp and swm
+    // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
+    sw_spinor_eo(EE, mnl->w_fields[2], mnl->w_fields[3], mnl->forcefactor);
+    
+    // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
+    sw_spinor_eo(OO, mnl->w_fields[0], mnl->w_fields[1], mnl->forcefactor);
   
-  // apply Hopping Matrix M_{eo}
-  // to get the even sites of X_e
-  H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EO, -1, mnl->mu);
-  // \delta Q sandwitched by Y_o^\dagger and X_e
-  deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
-  
-  // to get the even sites of Y_e
-  H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1, mnl->mu);
-  // \delta Q sandwitched by Y_e^\dagger and X_o
-  // uses the gauge field in hf and changes the derivative fields in hf
-  deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor);
-  
-  // here comes the clover term...
-  // computes the insertion matrices for S_eff
-  // result is written to swp and swm
-  // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
-  sw_spinor(EE, mnl->w_fields[2], mnl->w_fields[3], mnl->forcefactor);
-  
-  // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-  sw_spinor(OO, mnl->w_fields[0], mnl->w_fields[1], mnl->forcefactor);
-  
-  // compute the contribution for the det-part
-  // we again compute only the insertion matrices for S_det
-  // the result is added to swp and swm
-  // even sites only!
-  sw_deriv(EE, mnl->mu);
+    // compute the contribution for the det-part
+    // we again compute only the insertion matrices for S_det
+    // the result is added to swp and swm
+    // even sites only!
+    sw_deriv(EE, mnl->mu);
+  }
+  else {
+    /* \delta Q sandwitched by Y^\dagger and X */
+    deriv_Sb_D_psi(mnl->w_fields[0], mnl->w_fields[1], hf, mnl->forcefactor);
+
+    sw_spinor(mnl->w_fields[0], mnl->w_fields[1], mnl->forcefactor);
+  }
   
   // now we compute
   // finally, using the insertion matrices stored in swm and swp
@@ -143,6 +158,7 @@ void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   double atime, etime;
   atime = gettime();
+  int N = VOLUME/2;
 
   g_mu = mnl->mu;
   g_mu3 = mnl->rho;
@@ -155,14 +171,20 @@ void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   init_sw_fields();
   sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
-  sw_invert(EE, mnl->mu);
 
-  random_spinor_field_eo(mnl->w_fields[0], mnl->rngrepro, RN_GAUSS);
-  mnl->energy0 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
+  if(!mnl->even_odd_flag) {
+    N = VOLUME;
+    random_spinor_field_lexic(mnl->w_fields[0], mnl->rngrepro, RN_GAUSS);
+  }
+  else {
+    sw_invert(EE, mnl->mu);
+    random_spinor_field_eo(mnl->w_fields[0], mnl->rngrepro, RN_GAUSS);
+  }
+  mnl->energy0 = square_norm(mnl->w_fields[0], N, 1);
   
   mnl->Qp(mnl->pf, mnl->w_fields[0]);
   chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
-		      mnl->csg_N, &mnl->csg_n, VOLUME/2);
+                      mnl->csg_N, &mnl->csg_n, N);
 
   g_mu = g_mu1;
   g_mu3 = 0.;
@@ -185,6 +207,7 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
   int save_sloppy = g_sloppy_precision_flag;
   double atime, etime;
   atime = gettime();
+  int N = VOLUME/2;
 
   g_mu = mnl->mu;
   g_mu3 = mnl->rho;
@@ -192,18 +215,24 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
   boundary(mnl->kappa);
 
   sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
-  sw_invert(EE, mnl->mu);
 
-  chrono_guess(mnl->w_fields[0], mnl->pf, mnl->csg_field, mnl->csg_index_array,
-	       mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
+  if(!mnl->even_odd_flag) {
+    N = VOLUME;
+  }
+  else {
+    sw_invert(EE, mnl->mu);
+  }
+
+  chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+               mnl->csg_N, mnl->csg_n, N, mnl->Qsq);
   g_sloppy_precision_flag = 0;
-  mnl->iter0 = cg_her(mnl->w_fields[0], mnl->pf, mnl->maxiter, mnl->accprec,  
-		      g_relative_precision_flag, VOLUME/2, mnl->Qsq); 
+  mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->pf, mnl->solver_params, mnl->maxiter, mnl->accprec,  
+                                 g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver); 
   mnl->Qm(mnl->w_fields[0], mnl->w_fields[0]);
-  
+
   g_sloppy_precision_flag = save_sloppy;
   /* Compute the energy contr. from first field */
-  mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
+  mnl->energy1 = square_norm(mnl->w_fields[0], N, 1);
 
   g_mu = g_mu1;
   g_mu3 = 0.;
@@ -215,7 +244,7 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
     }
     if(g_debug_level > 3) {
       printf("called cloverdet_acc for id %d dH = %1.10e\n", 
-	     id, mnl->energy1 - mnl->energy0);
+             id, mnl->energy1 - mnl->energy0);
     }
   }
   return(mnl->energy1 - mnl->energy0);

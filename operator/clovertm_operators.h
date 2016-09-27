@@ -24,13 +24,35 @@
 #define _CLOVERTM_OPERATORS_H
 
 #include "su3.h"
+#include "block.h"
 
 extern su3 *** sw;
 extern su3 *** sw_inv;
+extern su3_32 *** sw_32;
+extern su3_32 *** sw_inv_32;
 extern su3 ** swm, ** swp;
 
-void assign_mul_one_sw_pm_imu(const int ieo, spinor * const k, const spinor * const l, const double mu);
-void assign_mul_one_sw_pm_imu_inv(const int ieo, spinor * const k, const spinor * const l, const double mu);
+void assign_mul_one_sw_pm_imu_site_lexic(const int ix, spinor * const k,  const spinor * const l, const double mu);
+void assign_mul_one_sw_pm_imu_site_lexic_32(const int ix, spinor32 * const k,  const spinor32 * const l, const float mu);
+
+void Qsw_full(spinor * const Even_new, spinor * const Odd_new,
+              spinor * const Even, spinor * const Odd);
+void Qsw_full_plus_psi(spinor * const l, spinor * const k);
+void Qsw_full_minus_psi(spinor * const l, spinor * const k);
+void Qsw_full_pm_psi(spinor * const l, spinor * const k);
+void Msw_full_minus_psi(spinor * const l, spinor * const k);
+
+void assign_mul_one_sw_pm_imu(const int ieo, spinor * const k, spinor * const l, const double mu);
+void assign_mul_one_sw_pm_imu_32(const int ieo, spinor32 * const k, spinor32 * const l, const float mu);
+void assign_mul_one_sw_pm_imu_block(const int ieo, spinor * const k, spinor * const l, const double mu, block *blk);
+void assign_mul_one_sw_pm_imu_block_32(const int ieo, spinor32 * const k, spinor32 * const l, const float mu, block *blk);
+void assign_mul_one_sw_pm_imu_inv(const int ieo, spinor * const k, spinor * const l, const double mu);
+void assign_mul_one_sw_pm_imu_inv_32(const int ieo, spinor32 * const k, spinor32 * const l, const float mu);
+void assign_mul_one_sw_pm_imu_inv_block(const int ieo, spinor * const k, spinor * const l, const double mu, block *blk);
+void assign_mul_one_sw_pm_imu_inv_block_32(const int ieo, spinor32 * const k, spinor32 * const l, const float mu, block *blk);
+
+void Mee_sw_psi(spinor * const l, spinor * const k, const double mu);
+void Mee_sw_inv_psi(spinor * const k, spinor * const l, const double mu);
 void Msw_full(spinor * const Even_new, spinor * const Odd_new, 
 	      spinor * const Even, spinor * const Odd);
 void clover_inv(spinor * const l, const int tau3sign, const double mu);
@@ -44,6 +66,7 @@ void Msw_plus_psi(spinor * const l, spinor * const k);
 void Msw_minus_psi(spinor * const l, spinor * const k);
 void H_eo_sw_inv_psi(spinor * const l, spinor * const k, const int ieo, const int tau3sign, const double mu);
 void init_sw_fields();
+void copy_32_sw_fields();
 
 void clover_nd(const int ieo, 
 	       spinor * const l_s, spinor * const l_c, 

@@ -70,6 +70,12 @@
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
 
+/* Compile with MPI support */
+#undef TM_USE_MPI
+
+/* Compile with OpenMP support */
+#undef TM_USE_OMP
+
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
@@ -189,6 +195,12 @@
 
 /* Compile with SPI for communications */
 #undef SPI
+
+/* Alignment for 32bit arrays -- necessary for SSE and automated vectorization */
+#undef ALIGN_BASE32
+
+/* Alignment of 32bit fields, compiler hint macro */
+#undef ALIGN32
 
 /* Compile with SSE2 support */
 #undef SSE2

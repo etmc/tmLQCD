@@ -21,5 +21,6 @@
 #define _XCHANGE_LEXICFIELD_H
 
 void xchange_lexicfield(spinor * const s);
+void xchange_lexicfield32(spinor32 * const s);
 
 #endif

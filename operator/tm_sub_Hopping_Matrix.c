@@ -32,7 +32,7 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
-#ifdef OMP
+#ifdef TM_USE_OMP
 #include <omp.h>
 #endif
 #include <complex.h>
@@ -41,7 +41,7 @@
 #ifdef BGQ
 #  include"DirectPut.h"
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
 #  include "xchange/xchange.h"
 #endif
 #include "boundary.h"
@@ -79,7 +79,7 @@ void tm_sub_Hopping_Matrix(const int ieo, spinor * const l, spinor * const p, sp
   }
 #  endif
   
-#  ifdef OMP
+#  ifdef TM_USE_OMP
 #  pragma omp parallel
   {
     su3 * restrict u0 ALIGN;
@@ -96,7 +96,7 @@ void tm_sub_Hopping_Matrix(const int ieo, spinor * const l, spinor * const p, sp
 #  endif
 #  include "operator/halfspinor_body.c"
 #  undef _TM_SUB_HOP    
-#  ifdef OMP
+#  ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #  endif
   return;
@@ -130,11 +130,11 @@ void tm_sub_Hopping_Matrix(const int ieo, spinor * const l, spinor * p, spinor *
   }
 #  endif
 
-#  if (defined MPI)
+#  if (defined TM_USE_MPI)
   xchange_field(k, ieo);
 #  endif
   
-#  ifdef OMP
+#  ifdef TM_USE_OMP
 #    pragma omp parallel
   {
 #  endif
@@ -149,7 +149,7 @@ void tm_sub_Hopping_Matrix(const int ieo, spinor * const l, spinor * p, spinor *
 #  endif
 #  include "operator/hopping_body_dbl.c"
 #  undef _TM_SUB_HOP
-#  ifdef OMP
+#  ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #  endif
   return;

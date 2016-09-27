@@ -20,23 +20,8 @@
 #ifndef _SOLVER_H
 #define _SOLVER_H
 
-#define BICGSTAB 0
-#define CG 1
-#define GMRES 2
-#define CGS 3
-#define MR 4
-#define BICGSTABELL 5
-#define FGMRES 6
-#define GCR 7
-#define GMRESDR 8
-#define PCG 9
-#define DFLGCR 10
-#define DFLFGMRES 11
-#define CGMMS 12
-#define MIXEDCG 13
-#define CGMMSND 14
-#define INCREIGCG 15
 
+#include"solver/solver_types.h"
 #include"solver/matrix_mult_typedef.h"
 #include "solver/matrix_mult_typedef_bi.h"
 #include "solver/matrix_mult_typedef_nd.h"
@@ -56,8 +41,12 @@ typedef struct {
   double squared_solver_prec;
   // single flavour matrix to invert
   matrix_mult M_psi;
+  // 32bit single flavour matrix to invert
+  matrix_mult32 M_psi32;  
   // flavour doublet matrix to invert
   matrix_mult_nd M_ndpsi;
+  // 32bit flavour doublet matrix to invert
+  matrix_mult_nd32 M_ndpsi32;  
   // pointer to array of shifts
   double * shifts;
 } solver_pm_t;
@@ -66,6 +55,7 @@ typedef struct {
 #include"solver/gmres_dr.h"
 #include"solver/fgmres.h"
 #include"solver/bicgstab_complex.h"
+#include"solver/bicg_complex.h"
 #include"solver/cgs_real.h"
 #include"solver/bicgstabell.h"
 #include"solver/bicgstab2.h"
@@ -77,6 +67,9 @@ typedef struct {
 #include"solver/eigenvalues.h"
 #include"solver/cg_mms_tm.h"
 #include"solver/mixed_cg_her.h"
+#include"solver/mcr.h"
+#include"solver/cr.h"
+#include "solver/rg_mixed_cg_her.h"
 
 #include"solver/sub_low_ev.h"
 #include"solver/gmres_precon.h"
@@ -86,9 +79,12 @@ typedef struct {
 #include "solver/cg_her_bi.h"
 
 #include "solver/cg_her_nd.h"
+#include "solver/rg_mixed_cg_her_nd.h"
 #include"solver/cg_mms_tm_nd.h"
+#include"solver/mixed_cg_mms_tm_nd.h"
 
 #include "solver/generate_dfl_subspace.h"
 
+#include "solver/sumr.h"
 
 #endif

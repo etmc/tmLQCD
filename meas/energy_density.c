@@ -32,10 +32,10 @@
 #include <math.h>
 #include <errno.h>
 #include <time.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "global.h"
@@ -56,11 +56,11 @@ void measure_energy_density(const su3 ** const gf, double *ret)
   //  with the plaquette definition and with papers... I don't understand where it comes from...
   double normalization = - 4 / ( 4 * 16.0 * VOLUME * g_nproc);
   double res = 0;
-#ifdef MPI
+#ifdef TM_USE_MPI
   double ALIGN mres=0;
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -76,7 +76,7 @@ void measure_energy_density(const su3 ** const gf, double *ret)
         |  | |  |
         |__| |__| k  */
   
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for(int x = 0; x < VOLUME; x++)
@@ -133,7 +133,7 @@ void measure_energy_density(const su3 ** const gf, double *ret)
       }   
     }
     kc=kc+ks;
-#ifdef OMP
+#ifdef TM_USE_OMP
     int thread_num = omp_get_thread_num();
     g_omp_acc_re[thread_num] = kc;
   } /* OpenMP parallel closing brace */
@@ -144,7 +144,7 @@ void measure_energy_density(const su3 ** const gf, double *ret)
 #else
   res = kc;
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   res = mres;
 #endif

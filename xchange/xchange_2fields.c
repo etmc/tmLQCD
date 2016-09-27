@@ -32,7 +32,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
 
@@ -59,7 +59,7 @@
 
 void xchange_2fields(spinor * const l, spinor * const k, const int ieo) {
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Request requests[32];
   MPI_Status status[32];
 #endif
@@ -72,7 +72,7 @@ void xchange_2fields(spinor * const l, spinor * const k, const int ieo) {
 #pragma pomp inst begin(xchange2fields)
 #endif
 
-#  ifdef MPI
+#  ifdef TM_USE_MPI
 
 #  if (defined BGL && defined XLC)
   __alignx(16, l);
@@ -226,7 +226,7 @@ void xchange_2fields(spinor * const l, spinor * const k, const int ieo) {
 #pragma pomp inst begin(xchange2fields)
 #endif
 
-#  ifdef MPI
+#  ifdef TM_USE_MPI
 
 #  if (defined BGL && defined XLC)
 #    ifdef PARALLELXYZT

@@ -35,7 +35,7 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 #  include <mpi.h>
 #endif
 #ifdef FIXEDVOLUME
@@ -63,13 +63,15 @@
 # include "bgl.h"
 #endif
 
-EXTERN int DUM_DERI, DUM_SOLVER, DUM_MATRIX;
+EXTERN int DUM_DERI, DUM_MATRIX;
 EXTERN int NO_OF_SPINORFIELDS;
+EXTERN int NO_OF_SPINORFIELDS_32;
 
 EXTERN int DUM_BI_DERI, DUM_BI_SOLVER, DUM_BI_MATRIX;
 EXTERN int NO_OF_BISPINORFIELDS;
 
 EXTERN int g_update_gauge_copy;
+EXTERN int g_update_gauge_copy_32;
 EXTERN int g_relative_precision_flag;
 EXTERN int g_debug_level;
 EXTERN int g_disable_IO_checks;
@@ -104,6 +106,7 @@ EXTERN int * g_field_z_ipt_even;
 EXTERN int * g_field_z_ipt_odd;
 
 EXTERN spinor ** g_spinor_field;
+EXTERN spinor32 ** g_spinor_field32;
 
 EXTERN bispinor ** g_bispinor_field;
 EXTERN spinor * g_tbuff;
@@ -170,13 +173,16 @@ EXTERN int g_running_phmc;
 /* End IF PHMC  */
 
 EXTERN su3 ** g_gauge_field;
+EXTERN su3_32 ** g_gauge_field_32;
 #ifdef _USE_HALFSPINOR
 EXTERN su3 *** g_gauge_field_copy;
+EXTERN su3_32 *** g_gauge_field_copy_32;
 #elif (defined _USE_TSPLITPAR )
 EXTERN su3 ** g_gauge_field_copyt;
 EXTERN su3 ** g_gauge_field_copys;
 #else
 EXTERN su3 ** g_gauge_field_copy;
+EXTERN su3_32 ** g_gauge_field_copy_32;
 #endif
 
 /*for temporalgauge in GPU part*/
@@ -187,7 +193,7 @@ EXTERN su3adj ** df0;
 EXTERN su3adj ** ddummy;
 
 EXTERN int count00,count01,count10,count11,count20,count21;
-EXTERN double g_kappa, g_c_sw, g_ka_csw_8, g_beta;
+EXTERN double g_kappa, g_c_sw, g_beta;
 EXTERN double g_mu, g_mu1, g_mu2, g_mu3;
 EXTERN double g_rgi_C0, g_rgi_C1;
 
@@ -213,8 +219,21 @@ EXTERN double* g_omp_acc_re;
 EXTERN int g_dflgcr_flag;
 EXTERN int g_N_s;
 EXTERN int * index_block_eo;
+EXTERN int Msap_precon;
+EXTERN int NiterMsap;
+EXTERN int NcycleMsap;
+EXTERN int NiterMsap_dflgen;
+EXTERN int NcycleMsap_dflgen;
+EXTERN int NsmoothMsap_dflgen;
+EXTERN int usePL;
+EXTERN int little_solver;
+EXTERN int little_evenodd;
+EXTERN int little_gmres_m_parameter;
+EXTERN double little_solver_low_prec;
+EXTERN double little_solver_high_prec;
+EXTERN int little_solver_max_iter;
 
-#ifdef MPI
+#ifdef TM_USE_MPI
 EXTERN MPI_Status status;
 EXTERN MPI_Request req1,req2,req3,req4;
 EXTERN MPI_Comm g_cart_grid;
@@ -231,7 +250,11 @@ EXTERN int g_nb_z_up, g_nb_z_dn;
 
 #endif
 
-#ifdef OMP
+EXTERN int subprocess_flag;
+EXTERN int lowmem_flag;
+EXTERN int g_external_id;
+
+#ifdef TM_USE_OMP
 EXTERN int omp_num_threads;
 #endif
 

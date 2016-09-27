@@ -33,6 +33,10 @@ typedef struct {
   su3adj* mem;
 } aligned_su3adj_field_t;
 
+void *aligned_malloc(size_t const size);
+void aligned_free(void *ptr);
+void *aligned_malloc_zero(size_t const size);
+
 aligned_su3_field_t aligned_su3_field_alloc(const unsigned int V);
 aligned_su3adj_field_t aligned_su3adj_field_alloc(const unsigned int V); 
 

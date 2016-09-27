@@ -39,10 +39,10 @@
 #include <math.h>
 #include <errno.h>
 #include <time.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "global.h"
@@ -165,7 +165,7 @@ void six_invert(int* ifail ,_Complex double a[6][6])
 // - is stored in sw_inv[VOLUME/2-(VOLUME-1)]
 
 void sw_invert(const int ieo, const double mu) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -182,15 +182,15 @@ void sw_invert(const int ieo, const double mu) {
     ioff=(VOLUME+RAND)/2;
   }
 
-#ifndef OMP
+#ifndef TM_USE_OMP
   icy=0;
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
-#ifdef OMP
+#ifdef TM_USE_OMP
     icy = icx - ioff;
 #endif
     x = g_eo2lexic[icx];
@@ -246,11 +246,11 @@ void sw_invert(const int ieo, const double mu) {
 	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][3][i], a, 3, 0);
       }
     }
-#ifndef OMP
+#ifndef TM_USE_OMP
     ++icy;
 #endif
   }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;
@@ -270,7 +270,7 @@ void sw_invert(const int ieo, const double mu) {
 // must be done elsewhere because of flavour structure
 
 void sw_invert_nd(const double mshift) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -279,7 +279,7 @@ void sw_invert_nd(const double mshift) {
   su3 ALIGN v;
   _Complex double ALIGN a[6][6], b[6][6];
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(int icx = 0; icx < (VOLUME/2); icx++) {
@@ -312,7 +312,7 @@ void sw_invert_nd(const double mshift) {
       get_3x3_block_matrix(&sw_inv[icx][3][i], b, 3, 0);
     }
   }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
   return;

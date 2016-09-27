@@ -751,7 +751,7 @@ void geometry(){
   int startvaluey = 0;
   int startvaluez = 0;
   int * xeven;
-#if defined MPI
+#if defined TM_USE_MPI
   int isp, *ones, *oneS, *oneL;
   int lsliceS, lsliceL, check_struct_zt;
 #endif
@@ -1459,8 +1459,9 @@ void geometry(){
     }
 #endif
   }
-
-  Hopping_Matrix_Indices();
+  if(!lowmem_flag){
+    Hopping_Matrix_Indices();
+  }
 
   free(xeven);
 }

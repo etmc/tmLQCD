@@ -78,7 +78,7 @@ __global__ void dev_Hopping_Matrix_ASYNC (const dev_su3_2v * gf,
             
             #ifdef TEMPORALGAUGE
               // gf == ID for t != T-1 => just read the spinor
-              #ifdef MPI
+              #ifdef TM_USE_MPI
                 if ( ((gfindex_site[pos]) < (dev_T-1)*spatialvol) || (dev_rank < dev_nproc-1) ) {
                 //if ((gfindex_site[pos]) < (dev_T-1)*spatialvol) { // FAKE TEMPORALGAUGE
               #else
@@ -143,7 +143,7 @@ __global__ void dev_Hopping_Matrix_ASYNC (const dev_su3_2v * gf,
             //color
             #ifdef TEMPORALGAUGE
               // gf == ID for t != T-1 => just read the spinor
-              #ifdef MPI
+              #ifdef TM_USE_MPI
                 if ( ((gfindex_nextsite[hoppos]) < (dev_T-1)*spatialvol) || (dev_rank > 0) ) {
                 //if ((gfindex_nextsite[hoppos]) < (dev_T-1)*spatialvol) { // FAKE TEMPORALGAUGE
               #else
@@ -1205,7 +1205,7 @@ __global__ void dev_Hopping_Matrix_half_ASYNC (const dev_su3_2v_half * gf,
             
             #ifdef TEMPORALGAUGE
               // gf == ID for t != T-1 => just read the spinor
-              #ifdef MPI
+              #ifdef TM_USE_MPI
                 if ( ((gfindex_site[pos]) < (dev_T-1)*spatialvol) || (dev_rank < dev_nproc-1) ) {
                 //if ((gfindex_site[pos]) < (dev_T-1)*spatialvol) { // FAKE TEMPORALGAUGE
               #else
@@ -1282,7 +1282,7 @@ __global__ void dev_Hopping_Matrix_half_ASYNC (const dev_su3_2v_half * gf,
             //color
             #ifdef TEMPORALGAUGE
               // gf == ID for t != T-1 => just read the spinor
-              #ifdef MPI
+              #ifdef TM_USE_MPI
                 if ( ((gfindex_nextsite[hoppos]) < (dev_T-1)*spatialvol) || (dev_rank > 0) ) {
                 //if ((gfindex_nextsite[hoppos]) < (dev_T-1)*spatialvol) { // FAKE TEMPORALGAUGE
               #else

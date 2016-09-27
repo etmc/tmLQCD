@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "su3.h"
@@ -45,11 +45,11 @@
 
 double measure_plaquette(const su3 ** const gf) {
   static double res;
-#ifdef MPI
+#ifdef TM_USE_MPI
   double ALIGN mres;
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
   int thread_num = omp_get_thread_num();
@@ -61,7 +61,7 @@ double measure_plaquette(const su3 ** const gf) {
   double ALIGN ac, ks, kc, tr, ts, tt;
 
   kc=0.0; ks=0.0;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for (int ix = 0; ix < VOLUME; ix++){
@@ -85,20 +85,20 @@ double measure_plaquette(const su3 ** const gf) {
     }
   }
   kc=(kc+ks)/3.0;
-#ifdef OMP
+#ifdef TM_USE_OMP
   g_omp_acc_re[thread_num] = kc;
 #else
   res = kc;
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP parallel closing brace */
 
   res = 0.0;
   for(int i=0; i < omp_num_threads; ++i)
     res += g_omp_acc_re[i];
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   res = mres;
 #endif
@@ -107,11 +107,11 @@ double measure_plaquette(const su3 ** const gf) {
 
 double measure_gauge_action(const su3 ** const gf, const double lambda) {
   static double res;
-#ifdef MPI
+#ifdef TM_USE_MPI
   double ALIGN mres;
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
   int thread_num = omp_get_thread_num();
@@ -123,7 +123,7 @@ double measure_gauge_action(const su3 ** const gf, const double lambda) {
   double ALIGN ac, ks, kc, tr, ts, tt;
 
   kc=0.0; ks=0.0;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for (int ix = 0; ix < VOLUME; ix++){
@@ -167,20 +167,20 @@ double measure_gauge_action(const su3 ** const gf, const double lambda) {
     }
   }
   kc=(kc+ks)/3.0;
-#ifdef OMP
+#ifdef TM_USE_OMP
   g_omp_acc_re[thread_num] = kc;
 #else
   res = kc;
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP parallel closing brace */
 
   res = 0.0;
   for(int i=0; i < omp_num_threads; ++i)
     res += g_omp_acc_re[i];
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   res = mres;
 #endif
