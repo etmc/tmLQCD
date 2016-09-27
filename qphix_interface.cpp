@@ -86,7 +86,7 @@ extern "C" {
 #include "boundary.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "solver/solver.h"
-#include "solver/solver_field.h"
+//#include "solver/solver_field.h"
 #include "gettime.h"
 }
 
@@ -851,12 +851,11 @@ runTest(const int lattSize[], const int qmp_geom[])
 #endif
 
   template<typename FT, int veclen, int soalen, bool compress>
-  void qdp_pack_cb_spinor(const double** psi_in,
+  void qdp_pack_cb_spinor(const double* psi_in,
 			  typename Geometry<FT,veclen,soalen, compress>::FourSpinorBlock* psi,
 			  Geometry<FT,veclen,soalen,compress>& s,
 			  int cb)
   {
-    // Get the subgrid latt size.
     int Nt = s.Nt();
     int Nz = s.Nz();
     int Ny = s.Ny();
@@ -865,28 +864,41 @@ runTest(const int lattSize[], const int qmp_geom[])
     int Pxy = s.getPxy();
     int Pxyz = s.getPxyz();
 
+//    double pionr[Nt];
+//    for( int t = 0; t < Nt; t++ )
+//		pionr[t] = 0.0;
+
 #pragma omp parallel for collapse(4)
-      for(int t=0; t < Nt; t++) {
-	for(int z=0; z < Nz; z++) {
-	  for(int y=0; y < Ny; y++) {
-	    for(int s=0; s < nvecs; s++) {
+    for(int t=0; t < Nt; t++) {
+      for(int z=0; z < Nz; z++) {
+	for(int y=0; y < Ny; y++) {
+	  for(int s=0; s < nvecs; s++) {
+	    for(int spin=0; spin < 4; spin++) {
 	      for(int col=0; col < 3; col++)  {
-		for(int spin=0; spin < 4; spin++) {
-		  for(int x=0; x < soalen; x++) {
+		for(int x=0; x < soalen; x++) {
 
-		    int ind = t*Pxyz+z*Pxy+y*nvecs+s; //((t*Nz+z)*Ny+y)*nvecs+s;
-		    int x_coord = s*soalen + x;
-		    int qdp_ind = ((t*Nz + z)*Ny + y)*Nxh + x_coord;
+		  int ind = t*Pxyz+z*Pxy+y*nvecs+s; //((t*Nz+z)*Ny+y)*nvecs+s;
+		  int x_coord = s*soalen + x;
+		  int qdp_ind = ((t*Nz + z)*Ny + y)*Nxh + x_coord;
 
-		    if( t==0 && y==0 && z==0 )
-		    	masterPrintf("s=%d, soalen=%d, x=%d, x_coord=%d\n", s, soalen, x, x_coord);
+		  int oddBit = (t+y+z) & 1;
+		  int evenBit = (oddBit?0:1);
 
-		    int tm_ix = g_ipt[t][x_coord+cb*Nxh][y][z];
-		    int tm_i  = g_lexic2eosub[ tm_ix ];
+		  int tm_t = t;
+		  int tm_z = z;
+		  int tm_y = y;
+		  int tm_x = x_coord*2+oddBit;
+//
+//		  if( tm_t%2 != cb ) tm_z++;
+//		  if( tm_z%2 != cb ) tm_y++;
+//		  if( tm_y%2 != cb ) tm_x++;
 
-		    psi[ind][col][spin][0][x] = psi_in[cb][24*tm_i+6*spin+2*col+0];
+		  int tm_idx = g_ipt[tm_t][tm_x][tm_y][tm_z];
+		  int tm_ieo = g_lexic2eosub[ tm_idx ];
+
+		    psi[ind][col][spin][0][x] = psi_in[24*tm_ieo+6*spin+2*col+0];
 		    		//psi_in.elem(rb[cb].start()+qdp_ind).elem(spin).elem(col).real();
-		    psi[ind][col][spin][1][x] = psi_in[cb][24*tm_i+6*spin+2*col+1];
+		    psi[ind][col][spin][1][x] = psi_in[24*tm_ieo+6*spin+2*col+0];
 		    		//psi_in.elem(rb[cb].start()+qdp_ind).elem(spin).elem(col).imag();
 
 		  }
@@ -899,15 +911,15 @@ runTest(const int lattSize[], const int qmp_geom[])
 
   }
 
-  template<typename FT, int veclen, int soalen, bool compress>
-  void qdp_pack_spinor(const double** psi_in,
-		       typename Geometry<FT,veclen,soalen, compress>::FourSpinorBlock* psi_even,
-		       typename Geometry<FT,veclen,soalen, compress>::FourSpinorBlock* psi_odd,
-		       Geometry<FT,veclen,soalen,compress>& s)
-  {
-    qdp_pack_cb_spinor(psi_in,psi_even,s,0);
-    qdp_pack_cb_spinor(psi_in,psi_odd,s,1);
-  }
+//  template<typename FT, int veclen, int soalen, bool compress>
+//  void qdp_pack_spinor(const double** psi_in,
+//		       typename Geometry<FT,veclen,soalen, compress>::FourSpinorBlock* psi_even,
+//		       typename Geometry<FT,veclen,soalen, compress>::FourSpinorBlock* psi_odd,
+//		       Geometry<FT,veclen,soalen,compress>& s)
+//  {
+//    qdp_pack_cb_spinor(psi_in,psi_even,s,0);
+//    qdp_pack_cb_spinor(psi_in,psi_odd,s,1);
+//  }
 
   template<typename FT, int veclen, int soalen, bool compress>
     void qdp_unpack_cb_spinor(typename Geometry<FT,veclen,soalen,compress>::FourSpinorBlock* chi_packed,
@@ -923,9 +935,9 @@ runTest(const int lattSize[], const int qmp_geom[])
     int Pxy = s.getPxy();
     int Pxyz = s.getPxyz();
 
-    double pionr[Nt];
-    for( int t = 0; t < Nt; t++ )
-		pionr[t] = 0.0;
+//    double pionr[Nt];
+//    for( int t = 0; t < Nt; t++ )
+//		pionr[t] = 0.0;
 
 #pragma omp parallel for collapse(4)
     for(int t=0; t < Nt; t++) {
@@ -940,32 +952,35 @@ runTest(const int lattSize[], const int qmp_geom[])
 		  int x_coord = s*soalen + x;
 		  int qdp_ind = ((t*Nz + z)*Ny + y)*Nxh + x_coord;
 
+		  int oddBit = (t+y+z) & 1;
+		  int evenBit = (oddBit?0:1);
+
 		  int tm_t = t;
 		  int tm_z = z;
 		  int tm_y = y;
-		  int tm_x = x_coord*2+cb;
-
-		  if( tm_t%2 != cb ) tm_z++;
-		  if( tm_z%2 != cb ) tm_y++;
-		  if( tm_y%2 != cb ) tm_x++;
+		  int tm_x = x_coord*2+oddBit;
+//
+//		  if( tm_t%2 != cb ) tm_z++;
+//		  if( tm_z%2 != cb ) tm_y++;
+//		  if( tm_y%2 != cb ) tm_x++;
 
 		  int tm_idx = g_ipt[tm_t][tm_x][tm_y][tm_z];
-//		  int tm_ieo = g_lexic2eosub[ tm_idx ];
+		  int tm_ieo = g_lexic2eosub[ tm_idx ];
 
 //		  if( tm_x==0 && tm_y==0 && tm_z==0 ) {
 //			if(  col==0 && spin==0 )
-		  if( cb== 1)
+//		  if( cb== 1)
 //			  masterPrintf("%d\t%e\tcb=%d, t=%d,x=%d,y=%d,z=%d\n",t,chi_packed[ind][col][spin][0][x]*chi_packed[ind][col][spin][0][x]
 //										   +chi_packed[ind][col][spin][1][x]*chi_packed[ind][col][spin][1][x],cb, t,tm_x,tm_y,tm_z);
 
-			  pionr[tm_t] = chi_packed[ind][col][spin][0][x]*chi_packed[ind][col][spin][0][x]
-				         +chi_packed[ind][col][spin][1][x]*chi_packed[ind][col][spin][1][x];
+//			  pionr[tm_t] = chi_packed[ind][col][spin][0][x]*chi_packed[ind][col][spin][0][x]
+//				         +chi_packed[ind][col][spin][1][x]*chi_packed[ind][col][spin][1][x];
 //		  }
 
 		  //chi.elem(rb[cb].start()+qdp_ind).elem(spin).elem(col).real()
-		  chi[24*tm_idx+6*spin+2*col+0] = chi_packed[ind][col][spin][0][x];
+		  chi[24*tm_ieo+6*spin+2*col+0] = chi_packed[ind][col][spin][0][x];
 		  //chi.elem(rb[cb].start()+qdp_ind).elem(spin).elem(col).imag()
-		  chi[24*tm_idx+6*spin+2*col+1] = chi_packed[ind][col][spin][1][x];
+		  chi[24*tm_ieo+6*spin+2*col+1] = chi_packed[ind][col][spin][1][x];
 
 		}
 	      }
@@ -974,20 +989,20 @@ runTest(const int lattSize[], const int qmp_geom[])
 	}
       }
     }
-    for( int t = 0; t < Nt; t++ )
-    	printf("%i\t%e\n", t, pionr[t]);
+//    for( int t = 0; t < Nt; t++ )
+//    	printf("%i\t%e\n", t, pionr[t]);
 
   }
 
-  template<typename FT, int veclen, int soalen, bool compress>
-    void qdp_unpack_spinor(typename Geometry<FT,veclen,soalen,compress>::FourSpinorBlock* chi_even,
-			   typename Geometry<FT,veclen,soalen,compress>::FourSpinorBlock* chi_odd,
-			   double* chi,
-			   Geometry<FT,veclen,soalen,compress>& s)
-  {
-    qdp_unpack_cb_spinor(chi_even,chi,s,0);
-    qdp_unpack_cb_spinor(chi_odd,chi,s,1);
-  }
+//  template<typename FT, int veclen, int soalen, bool compress>
+//    void qdp_unpack_spinor(typename Geometry<FT,veclen,soalen,compress>::FourSpinorBlock* chi_even,
+//			   typename Geometry<FT,veclen,soalen,compress>::FourSpinorBlock* chi_odd,
+//			   double* chi,
+//			   Geometry<FT,veclen,soalen,compress>& s)
+//  {
+//    qdp_unpack_cb_spinor(chi_even,chi,s,0);
+//    qdp_unpack_cb_spinor(chi_odd,chi,s,1);
+//  }
 
 template<typename FT, int V, int S, bool compress>
 void
@@ -1264,15 +1279,17 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
   Spinor *chi_s[2] = { c_even, c_odd };
   Spinor *prep_psi_s[2] = { prep_p_even, prep_p_odd };
 
-  spinor ** solver_field = NULL;
-  const int nr_sf = 2;
-  init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
+//  spinor ** solver_field = NULL;
+//  const int nr_sf = 2;
+//  init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
 
-#if 0
+#if 1
 // if(eo) convert to lexic
 //  convert_lexic_to_eo(solver_field[0], solver_field[1], Q);
 
-  qdp_pack_spinor<>((const double**)solver_field, p_even, p_odd, geom);
+//  qdp_pack_spinor<>((const double**)solver_field, p_even, p_odd, geom);
+  // need only odd sites
+  qdp_pack_cb_spinor((const double*)Q,p_odd,geom,1);
 #else
   masterPrintf("Filling Input spinor: ");
 
@@ -1427,11 +1444,11 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
 #endif
 
       // prepare source for CG: psi' -> M^\dagger psi'
-      M(prep_psi_s[1], psi_s[1] , -1);
+//      M(prep_psi_s[1], psi_s[1] , -1);
 
       // solve for c_odd'
       start = omp_get_wtime();
-      solver(chi_s[1], prep_psi_s[1], eps_sq, niters, rsd_final, site_flops, mv_apps,1,verbose);
+      solver(chi_s[1], psi_s[1], eps_sq, niters, rsd_final, site_flops, mv_apps,1,verbose);
       end = omp_get_wtime();
 
 
@@ -1454,7 +1471,11 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
 #endif
 
       // unpack
-      qdp_unpack_spinor<>(chi_s[0], chi_s[1], (double*)P, geom); //(const double**)solver_field, p_even, p_odd,
+//      qdp_unpack_spinor<>(chi_s[0], chi_s[1], (double*)P, geom);
+      // only odd sites
+      qdp_unpack_cb_spinor(chi_s[1],(double*)P,geom,1);
+
+      //(const double**)solver_field, p_even, p_odd,
 //      convert_eo_to_lexic(P, solver_field[0], solver_field[1]); //solver_field[0], solver_field[1], Q);
       //if(eo) convert from lexic to eo
     }
@@ -1465,7 +1486,7 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
 
   masterPrintf("Cleaning up\n");
 
-  finalize_solver(solver_field, nr_sf);
+//  finalize_solver(solver_field, nr_sf);
 
   geom.free(packed_gauge_cb0);
   geom.free(packed_gauge_cb1);
@@ -1781,11 +1802,17 @@ void _loadGaugeQphix()
 }
 
 
-// reorder spinor to QUDA format
-void reorder_spinor_toQphix( double* spinor )
+// reorder spinor to QPhiX format (odd sites only)
+void reorder_spinor_toQphix( double* sp )
 {
   double startTime = MPI_Wtime();
-  memcpy( tempSpinor, spinor, VOLUME*24*sizeof(double) );
+  // alloc space for a temp. spinor, used throughout this module TODO put somewhere central
+  tempSpinor  = (double*)malloc( (VOLUME)*24*sizeof(double) );
+  memcpy( tempSpinor, sp, (VOLUME/2)*24*sizeof(double) );
+  double *in,*out;
+  int Ns=4,Nc=3;
+  double K1[4] = {-1.0,1.0,1.0,-1.0};
+  int s1[4] = {3,2,1,0};
 
   // now copy and reorder from tempSpinor to spinor 
   for( int x0=0; x0<T; x0++ )
@@ -1797,26 +1824,45 @@ void reorder_spinor_toQphix( double* spinor )
           int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
           int tm_idx   = g_ipt[x0][x1][x2][x3];
 #else
-          int j = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
-          int tm_idx   = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;//g_ipt[x0][x3][x2][x1];
+          int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
+          int tm_idx = g_lexic2eosub[ g_ipt[x0][x1][x2][x3] ];
 #endif
-          
-          int oddBit = (x0+x1+x2+x3) & 1;
-//          int qphix_idx = 18*(oddBit*VOLUME/2+j/2);
+          // is this an odd site?
+          if((x0+x1+x2+x3+g_proc_coords[3]*LZ+g_proc_coords[2]*LY
+          + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 != 0) {
+           // gamma basis transformation
+            in  = tempSpinor + 24*tm_idx;
+            out = sp + 24*(j/2);
 
-          memcpy( &(spinor[24*(oddBit*VOLUME/2+j/2)]), &(tempSpinor[24*tm_idx]), 24*sizeof(double));
-        } 
+            for (int s=0; s<Ns; s++) {
+              for (int c=0; c<Nc; c++) {
+                for (int z=0; z<2; z++) {
+                  out[(s*Nc+c)*2+z] = K1[s]*in[(s1[s]*Nc+c)*2+z];
+                }
+              }
+            }
+          }
+
+//          int oddBit = (x0+x1+x2+x3) & 1;
+//          int qphix_idx = 18*(oddBit*VOLUME/2+j/2);
+//          memcpy( &(spinor[24*(oddBit*VOLUME/2+j/2)]), &(tempSpinor[24*tm_idx]), 24*sizeof(double));
+
+        }
         
   double endTime = MPI_Wtime();
   double diffTime = endTime - startTime;
   printf("time spent in reorder_spinor_toQphix: %f secs\n", diffTime);
 }
 
-// reorder spinor from QUDA format
-void reorder_spinor_fromQphix( double* spinor )
+// reorder spinor from QPhiX format (odd sites only)
+void reorder_spinor_fromQphix( double* sp, double normFac=1.0 )
 {
   double startTime = MPI_Wtime();
-  memcpy( tempSpinor, spinor, VOLUME*24*sizeof(double) );
+  memcpy( tempSpinor, sp, (VOLUME/2)*24*sizeof(double) );
+  double *in,*out;
+  int Ns=4,Nc=3;
+  double K1[4] = {-1.0,1.0,1.0,-1.0};
+  int s1[4] = {3,2,1,0};
 
   // now copy and reorder from tempSpinor to spinor 
   for( int x0=0; x0<T; x0++ )
@@ -1828,16 +1874,30 @@ void reorder_spinor_fromQphix( double* spinor )
           int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
           int tm_idx   = g_ipt[x0][x1][x2][x3];
 #else
-          int j = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
-          int tm_idx   = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;//g_ipt[x0][x3][x2][x1];
+          int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
+          int tm_idx = g_lexic2eosub[ g_ipt[x0][x1][x2][x3] ];
 #endif
-          
-          int oddBit = (x0+x1+x2+x3) & 1;
-//          int qphix_idx = 18*(oddBit*VOLUME/2+j/2);
+          // is this an odd site?
+          if((x0+x1+x2+x3+g_proc_coords[3]*LZ+g_proc_coords[2]*LY
+          + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 != 0) {
+           // gamma basis transformation
+            in  = tempSpinor + 24*(j/2);
+            out = sp + 24*tm_idx;
 
-          memcpy( &(spinor[24*tm_idx]), &(tempSpinor[24*(oddBit*VOLUME/2+j/2)]), 24*sizeof(double));
+            for (int s=0; s<Ns; s++) {
+              for (int c=0; c<Nc; c++) {
+                for (int z=0; z<2; z++) {
+                  out[(s*Nc+c)*2+z] = K1[s]*in[(s1[s]*Nc+c)*2+z] * normFac;
+                }
+              }
+            }
+          }
+
+//          int oddBit = (x0+x1+x2+x3) & 1;
+//          int qphix_idx = 18*(oddBit*VOLUME/2+j/2);
+//          memcpy( &(spinor[24*(oddBit*VOLUME/2+j/2)]), &(tempSpinor[24*tm_idx]), 24*sizeof(double));
+
         }
-        
   double endTime = MPI_Wtime();
   double diffTime = endTime - startTime;
   printf("time spent in reorder_spinor_fromQphix: %f secs\n", diffTime);
@@ -1916,6 +1976,9 @@ int invert_qphix(spinor * const P, spinor * const Q, const int max_iter, double 
   lattSize[1] = LY*g_nproc_y;
   lattSize[2] = LZ*g_nproc_z;
   lattSize[3] = T*g_nproc_t;
+
+  // reorder spinor
+  reorder_spinor_toQphix( (double*)Q );
 
   if ( precision == FLOAT_PREC ) {
     if ( QPHIX_SOALEN > VECLEN_SP ) {
@@ -2028,9 +2091,9 @@ int invert_qphix(spinor * const P, spinor * const Q, const int max_iter, double 
 //  // number of CG iterations
 //  iteration = inv_param.iter;
 //
-//  // reorder spinor
-//  reorder_spinor_fromQphix( (double*)spinorIn,  inv_param.cpu_prec );
-//  reorder_spinor_fromQphix( (double*)spinorOut, inv_param.cpu_prec );
+  // reorder spinor
+  reorder_spinor_fromQphix( (double*)P, 1.0/g_kappa );
+  reorder_spinor_fromQphix( (double*)Q );
 //
 //  double endTime = MPI_Wtime();
 //  double diffTime = endTime - startTime;
