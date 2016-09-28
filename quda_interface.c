@@ -122,6 +122,9 @@ double X0, X1, X2, X3;
 QudaGaugeParam  gauge_param;
 QudaInvertParam inv_param;
 
+// FIXME: params to pass to MG
+QudaInvertParam inv_mg_param;
+
 // pointer to the QUDA gaugefield
 double *gauge_quda[4];
 
@@ -163,6 +166,7 @@ void _initQuda() {
 
   gauge_param = newQudaGaugeParam();
   inv_param = newQudaInvertParam();
+  inv_mg_param = newQudaInvertParam();
 
   // *** QUDA parameters begin here (sloppy prec. will be adjusted in invert)
   QudaPrecision cpu_prec  = QUDA_DOUBLE_PRECISION;
@@ -789,8 +793,6 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
     }
   }
 
-  // FIXME: force direct solve for now (multigrid)
-  inv_param.solve_type = QUDA_DIRECT_SOLVE;
   inv_param.tol = sqrt(precision);
   inv_param.maxiter = max_iter;
 
@@ -814,10 +816,12 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
     // probably need two separate sets of params, one for the setup and one for the target solution
     
     // FIXME select appropriate MG params here
-    // FIXME theoretically require a second inv_param struct for MG with proper settings
     QudaMultigridParam mg_param = newQudaMultigridParam();
-    mg_param.invert_param = &inv_param;
-    // FIXME for now, we do not touch mg_param.invert_param in here
+    // mg_param requires inv_param, but it needs to be a separate params struct
+    // -> copy the current one and force QUDA_DIRECT_SOLVE for multigrid
+    inv_param.solve_type = QUDA_DIRECT_SOLVE;
+    inv_mg_param = inv_param;
+    mg_param.invert_param = &inv_mg_param;
     _setMultigridParam(&mg_param);
     if(g_proc_id==0){ printf("calling mg preconditioner\n"); fflush(stdout); }
     mg_preconditioner = newMultigridQuda(&mg_param);
@@ -1045,60 +1049,16 @@ void D_psi_quda(spinor * const P, spinor * const Q) {
 void _setMultigridParam(QudaMultigridParam* mg_param) {
   QudaInvertParam *mg_inv_param = mg_param->invert_param;
 
-  //inv_param.Ls = 1;
+  mg_inv_param->sp_pad = 0;
+  mg_inv_param->cl_pad = 0;
 
-  //inv_param.sp_pad = 0;
-  //inv_param.cl_pad = 0;
+  mg_inv_param->preserve_source = QUDA_PRESERVE_SOURCE_NO;
+  mg_inv_param->gamma_basis = QUDA_DEGRAND_ROSSI_GAMMA_BASIS;
+  mg_inv_param->dirac_order = QUDA_DIRAC_ORDER;
 
-  //inv_param.cpu_prec = cpu_prec;
-  //inv_param.cuda_prec = cuda_prec;
-  //inv_param.cuda_prec_sloppy = cuda_prec_sloppy;
-  //inv_param.cuda_prec_precondition = cuda_prec_precondition;
-  //inv_param.preserve_source = QUDA_PRESERVE_SOURCE_NO;
-  //inv_param.gamma_basis = QUDA_DEGRAND_ROSSI_GAMMA_BASIS;
-  //inv_param.dirac_order = QUDA_DIRAC_ORDER;
+  mg_inv_param->input_location = QUDA_CPU_FIELD_LOCATION;
+  mg_inv_param->output_location = QUDA_CPU_FIELD_LOCATION;
 
-  //if (dslash_type == QUDA_CLOVER_WILSON_DSLASH || dslash_type == QUDA_TWISTED_CLOVER_DSLASH) {
-  //  inv_param.clover_cpu_prec = cpu_prec;
-  //  inv_param.clover_cuda_prec = cuda_prec;
-  //  inv_param.clover_cuda_prec_sloppy = cuda_prec_sloppy;
-  //  inv_param.clover_cuda_prec_precondition = cuda_prec_precondition;
-  //  inv_param.clover_order = QUDA_PACKED_CLOVER_ORDER;
-  //}
-
-  //inv_param.input_location = QUDA_CPU_FIELD_LOCATION;
-  //inv_param.output_location = QUDA_CPU_FIELD_LOCATION;
-
-  //inv_param.tune = tune ? QUDA_TUNE_YES : QUDA_TUNE_NO;
-
-  //inv_param.dslash_type = dslash_type;
-
-  ////Free field!
-  //inv_param.mass = mass;
-  //inv_param.kappa = 1.0 / (2.0 * (1 + 3/anisotropy + mass));
-
-  //if (dslash_type == QUDA_TWISTED_MASS_DSLASH || dslash_type == QUDA_TWISTED_CLOVER_DSLASH) {
-  //  inv_param.mu = mu;
-  //  inv_param.twist_flavor = twist_flavor;
-  //  inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET) ? 2 : 1;
-
-  //  if (twist_flavor == QUDA_TWIST_NONDEG_DOUBLET) {
-  //    printfQuda("Twisted-mass doublet non supported (yet)\n");
-  //    exit(0);
-  //  }
-  //}
-
-  //inv_param.clover_coeff = clover_coeff;
-
-  //inv_param.dagger = QUDA_DAG_NO;
-  //inv_param.mass_normalization = QUDA_KAPPA_NORMALIZATION;
-
-  //inv_param.matpc_type = matpc_type;
-  //inv_param.solution_type = QUDA_MAT_SOLUTION;
-
-  //inv_param.solve_type = QUDA_DIRECT_SOLVE;
-
-  //mg_param.invert_param = &inv_param;
   // FIXME: allow these parameters to be adjusted
   mg_param->n_level = 2;
   for (int i=0; i<mg_param->n_level; i++) {
@@ -1164,7 +1124,7 @@ void _setMultigridParam(QudaMultigridParam* mg_param) {
   //inv_param.reliable_delta = 1e-10;
   mg_inv_param->gcrNkrylov = 10;
 
-  //inv_param.verbosity = QUDA_SUMMARIZE;
-  //inv_param.verbosity_precondition = QUDA_SUMMARIZE;
+  mg_inv_param->verbosity = QUDA_VERBOSE;
+  mg_inv_param->verbosity_precondition = QUDA_VERBOSE;
 }
 
