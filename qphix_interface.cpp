@@ -75,12 +75,12 @@
 
 #include "qphix_interface.h"
 
-#undef SEEK_SET
-#undef SEEK_CUR
-#undef SEEK_END
+// #undef SEEK_SET
+// #undef SEEK_CUR
+// #undef SEEK_END
 
 // include mpi.h first
-#include "mpi.h"
+#include <mpi.h>
 #include "global.h"
 extern "C" {
 #include "boundary.h"
@@ -212,9 +212,11 @@ int commsMap(const int *coords, void *fdata)
   int n[4] = {coords[3], coords[0], coords[1], coords[2]};
 #endif
 
-  int rank;
+  int rank = 0;
 
+#ifdef TM_USE_MPI
   MPI_Cart_rank( g_cart_grid, n, &rank );
+#endif
 
   return rank;
 }
@@ -1805,7 +1807,7 @@ void _loadGaugeQphix()
 // reorder spinor to QPhiX format (odd sites only)
 void reorder_spinor_toQphix( double* sp )
 {
-  double startTime = MPI_Wtime();
+  double startTime = gettime();
   // alloc space for a temp. spinor, used throughout this module TODO put somewhere central
   tempSpinor  = (double*)malloc( (VOLUME)*24*sizeof(double) );
   memcpy( tempSpinor, sp, (VOLUME/2)*24*sizeof(double) );
@@ -1849,7 +1851,7 @@ void reorder_spinor_toQphix( double* sp )
 
         }
         
-  double endTime = MPI_Wtime();
+  double endTime = gettime();
   double diffTime = endTime - startTime;
   printf("time spent in reorder_spinor_toQphix: %f secs\n", diffTime);
 }
@@ -1857,7 +1859,7 @@ void reorder_spinor_toQphix( double* sp )
 // reorder spinor from QPhiX format (odd sites only)
 void reorder_spinor_fromQphix( double* sp, double normFac=1.0 )
 {
-  double startTime = MPI_Wtime();
+  double startTime = gettime();
   memcpy( tempSpinor, sp, (VOLUME/2)*24*sizeof(double) );
   double *in,*out;
   int Ns=4,Nc=3;
@@ -1898,7 +1900,7 @@ void reorder_spinor_fromQphix( double* sp, double normFac=1.0 )
 //          memcpy( &(spinor[24*(oddBit*VOLUME/2+j/2)]), &(tempSpinor[24*tm_idx]), 24*sizeof(double));
 
         }
-  double endTime = MPI_Wtime();
+  double endTime = gettime();
   double diffTime = endTime - startTime;
   printf("time spent in reorder_spinor_fromQphix: %f secs\n", diffTime);
 }
@@ -2032,7 +2034,7 @@ int invert_qphix(spinor * const P, spinor * const Q, const int max_iter, double 
 
 
 
-//  double startTime = MPI_Wtime();
+//  double startTime = gettime();
 //
 //  if( inv_param.verbosity > QUDA_SILENT )
 //    printf("\nCalled invert_qphix\n\n");
@@ -2095,7 +2097,7 @@ int invert_qphix(spinor * const P, spinor * const Q, const int max_iter, double 
   reorder_spinor_fromQphix( (double*)P, 1.0/g_kappa );
   reorder_spinor_fromQphix( (double*)Q );
 //
-//  double endTime = MPI_Wtime();
+//  double endTime = gettime();
 //  double diffTime = endTime - startTime;
 //  printf("time spent in tmcgne_qphix: %f secs\n", diffTime);
 //

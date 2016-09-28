@@ -10,3 +10,5 @@ Makefile
 config.log
 *.mod.c
 *.opari.inc
+build/*
+tags

@@ -25,14 +25,14 @@
 #if (defined BGL && !defined BGP)
 #  include <rts.h>
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 # ifdef HAVE_LIBLEMON
 #  include <io/params.h>
 #  include <io/gauge.h>
 # endif
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 # include "init/init_openmp.h"
 #endif
@@ -168,7 +168,7 @@ int main(int argc,char *argv[])
   static double t1,t2,dt,sdt,dts,qdt,sqdt;
   double antioptaway=0.0;
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   static double dt2;
 
   DUM_DERI = 10;
@@ -176,7 +176,7 @@ int main(int argc,char *argv[])
   DUM_MATRIX = DUM_SOLVER+6;
   NO_OF_SPINORFIELDS = DUM_MATRIX+4;
 
-#  ifdef OMP
+#  ifdef TM_USE_OMP
   int mpi_thread_provided;
 //  MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
   _initQphix(argc, argv, 8, 8, 16, 1, 1, 1, 0, 2, 0/*c12*/, QPHIX_DOUBLE_PREC);
@@ -198,7 +198,7 @@ int main(int argc,char *argv[])
   }
 
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   init_openmp();
 #endif
 
@@ -244,7 +244,7 @@ int main(int argc,char *argv[])
     printf("# The code was compiled for persistent MPI calls (halfspinor only)\n");
 #  endif
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
 #  ifdef _NON_BLOCKING
     printf("# The code was compiled for non-blocking MPI calls (spinor and gauge)\n");
 #  endif
@@ -325,7 +325,7 @@ int main(int argc,char *argv[])
     fprintf(stderr, "Checking of geometry failed. Unable to proceed.\nAborting....\n");
     exit(1);
   }
-//#if (defined MPI && !(defined _USE_SHMEM))
+//#if (defined TM_USE_MPI && !(defined _USE_SHMEM))
 //  check_xchange();
 //#endif
 
@@ -333,7 +333,7 @@ int main(int argc,char *argv[])
 //  random_gauge_field(reproduce_randomnumber_flag, g_gauge_field);
   unit_g_gauge_field();
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   /*For parallelization: exchange the gaugefield */
   xchange_gauge(g_gauge_field);
 #endif
@@ -405,7 +405,7 @@ int main(int argc,char *argv[])
 			_spinor_assign(g_spinor_field[3][ix], g_spinor_field[1][ix]);
 		}
 
-#if defined MPI
+#if defined TM_USE_MPI
 	if(even_odd_flag)
 	{
 		// even fields
@@ -461,7 +461,7 @@ int main(int argc,char *argv[])
 	if(g_proc_id==0)
 		printf("\n# Operator 1:\n");
 
-#ifdef MPI
+#ifdef TM_USE_MPI
       MPI_Barrier(MPI_COMM_WORLD);
 #endif
       t1 = gettime();
@@ -584,7 +584,7 @@ int main(int argc,char *argv[])
 
       t2 = gettime();
       dt=t2-t1;
-#ifdef MPI
+#ifdef TM_USE_MPI
       MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
       sdt = dt;
@@ -624,7 +624,7 @@ int main(int argc,char *argv[])
 	if(g_proc_id==0)
 		printf("\n# Operator 2:\n");
 
-#ifdef MPI
+#ifdef TM_USE_MPI
       MPI_Barrier(MPI_COMM_WORLD);
 #endif
       t1 = gettime();
@@ -736,7 +736,7 @@ int main(int argc,char *argv[])
 
       t2 = gettime();
       dt=t2-t1;
-#ifdef MPI
+#ifdef TM_USE_MPI
       MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
       sdt = dt;
@@ -828,14 +828,14 @@ int main(int argc,char *argv[])
 #ifdef QUDA
   _endQphix(3);
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
   free_omp_accumulators();
 #endif
   free_gauge_field();
   free_geometry_indices();
   free_spinor_field();
   free_moment_field();
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 #endif
