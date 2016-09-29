@@ -176,7 +176,6 @@ void _initQuda() {
 
   QudaTune tune = QUDA_TUNE_NO;
 
-
   // *** the remainder should not be changed for this application
   // local lattice size
 #if USE_LZ_LY_LX_T
@@ -225,6 +224,9 @@ void _initQuda() {
   inv_param.tol_precondition = 1e-1;
   inv_param.maxiter_precondition = 10;
   inv_param.verbosity_precondition = QUDA_SILENT;
+  if( g_debug_level >= 5 )
+    inv_param.verbosity_precondition = QUDA_VERBOSE;
+
   inv_param.cuda_prec_precondition = cuda_prec_precondition;
   inv_param.omega = 1.0;
 
@@ -815,11 +817,19 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
     // FIXME explicitly select compatible params for inv_param
     // probably need two separate sets of params, one for the setup and one for the target solution
     
+    inv_param.solve_type = QUDA_DIRECT_SOLVE;
+    inv_param.inv_type = QUDA_GCR_INVERTER;
+    inv_param.gcrNkrylov = 10;
+    inv_param.inv_type_precondition = QUDA_MG_INVERTER;
+    inv_param.solution_type = QUDA_MAT_SOLUTION;
+    inv_param.schwarz_type = QUDA_ADDITIVE_SCHWARZ;
+    inv_param.precondition_cycle = 1;
+    inv_param.tol_precondition = 1e-1;
+    inv_param.maxiter_precondition = 1;
+    inv_param.omega = 1.0;
+    
     // FIXME select appropriate MG params here
     QudaMultigridParam mg_param = newQudaMultigridParam();
-    // mg_param requires inv_param, but it needs to be a separate params struct
-    // -> copy the current one and force QUDA_DIRECT_SOLVE for multigrid
-    inv_param.solve_type = QUDA_DIRECT_SOLVE;
     inv_mg_param = inv_param;
     mg_param.invert_param = &inv_mg_param;
     _setMultigridParam(&mg_param);
@@ -1052,7 +1062,7 @@ void _setMultigridParam(QudaMultigridParam* mg_param) {
   mg_inv_param->sp_pad = 0;
   mg_inv_param->cl_pad = 0;
 
-  mg_inv_param->preserve_source = QUDA_PRESERVE_SOURCE_NO;
+  mg_inv_param->preserve_source = QUDA_PRESERVE_SOURCE_YES;
   mg_inv_param->gamma_basis = QUDA_DEGRAND_ROSSI_GAMMA_BASIS;
   mg_inv_param->dirac_order = QUDA_DIRAC_ORDER;
 
@@ -1067,7 +1077,7 @@ void _setMultigridParam(QudaMultigridParam* mg_param) {
       mg_param->geo_block_size[i][j] = 4;
     }
     mg_param->spin_block_size[i] = 1;
-    mg_param->n_vec[i] = 4;
+    mg_param->n_vec[i] = 24;
     mg_param->nu_pre[i] = 2;
     mg_param->nu_post[i] = 2;
 
@@ -1076,13 +1086,15 @@ void _setMultigridParam(QudaMultigridParam* mg_param) {
     mg_param->smoother[i] = QUDA_MR_INVERTER;
 
     // set the smoother / bottom solver tolerance (for MR smoothing this will be ignored)
-    mg_param->smoother_tol[i] = 10; // repurpose heavy-quark tolerance for now
+    mg_param->smoother_tol[i] = 0.2; // repurpose heavy-quark tolerance for now
 
     mg_param->global_reduction[i] = QUDA_BOOLEAN_YES;
 
     // set to QUDA_DIRECT_SOLVE for no even/odd preconditioning on the smoother
     // set to QUDA_DIRECT_PC_SOLVE for to enable even/odd preconditioning on the smoother
-    mg_param->smoother_solve_type[i] = QUDA_DIRECT_SOLVE;//QUDA_DIRECT_PC_SOLVE; // EVEN-ODD
+    //mg_param->smoother_solve_type[i] = mg_inv_param->solve_type == QUDA_DIRECT_PC_SOLVE ? QUDA_DIRECT_PC_SOLVE : QUDA_DIRECT_SOLVE;
+    // Kate says this should be EO always for performance
+    mg_param->smoother_solve_type[i] = QUDA_DIRECT_PC_SOLVE;
 
     // set to QUDA_MAT_SOLUTION to inject a full field into coarse grid
     // set to QUDA_MATPC_SOLUTION to inject single parity field into coarse grid
@@ -1109,20 +1121,11 @@ void _setMultigridParam(QudaMultigridParam* mg_param) {
   mg_param->generate_all_levels = QUDA_BOOLEAN_YES;
     //generate_all_levels ? QUDA_BOOLEAN_YES :  QUDA_BOOLEAN_NO;
 
-  mg_param->run_verify = QUDA_BOOLEAN_YES;
+  mg_param->run_verify = QUDA_BOOLEAN_NO;
 
   // set file i/o parameters
   strcpy(mg_param->vec_infile, "");
   strcpy(mg_param->vec_outfile, "");
-
-  // these need to tbe set for now but are actually ignored by the MG setup
-  // needed to make it pass the initialization test
-  // in tmLQCD, these are set elsewhere, except for inv_type
-  mg_inv_param->inv_type = QUDA_MR_INVERTER;
-  //inv_param->tol = 1e-10;
-  //inv_param.maxiter = 1000;
-  //inv_param.reliable_delta = 1e-10;
-  mg_inv_param->gcrNkrylov = 10;
 
   mg_inv_param->verbosity = QUDA_VERBOSE;
   mg_inv_param->verbosity_precondition = QUDA_VERBOSE;
