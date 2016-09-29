@@ -1537,7 +1537,20 @@ void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, i
   }
  #endif
 
-  QPhiX::masterPrintf("Declared QMP Topology: %d %d %d %d\n",
+  QPhiX::masterPrintf("# Values used at initialisation:\n");
+  QPhiX::masterPrintf("#  By = %d\n", By);
+  QPhiX::masterPrintf("#  Bz = %d\n", Bz);
+  QPhiX::masterPrintf("#  NCores = %d\n", NCores);
+  QPhiX::masterPrintf("#  Sy = %d\n", Sy);
+  QPhiX::masterPrintf("#  Sz = %d\n", Sz);
+  QPhiX::masterPrintf("#  PadXY = %d\n", PadXY);
+  QPhiX::masterPrintf("#  PadXYZ = %d\n", PadXYZ);
+  QPhiX::masterPrintf("#  MinCt = %d\n", MinCt);
+  QPhiX::masterPrintf("#  N_simt = %d\n", N_simt);
+  QPhiX::masterPrintf("#  compress12 = %d\n", compress12);
+  QPhiX::masterPrintf("#  precision = %d\n", precision);
+
+  QPhiX::masterPrintf("# Declared QMP Topology: %d %d %d %d\n\n",
 		qmp_geom[0], qmp_geom[1], qmp_geom[2], qmp_geom[3]);
 
 
@@ -1548,15 +1561,15 @@ void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, i
   QPhiX::reportAffinity();
 #endif
 
-  QPhiX::masterPrintf("Launching TestCase\n");
+	// QPhiX::masterPrintf("Launching TestCase\n");
 
-  // Launch the test case.
-//  timeDslashNoQDP test(By_user, Bz_user, NCores_user, Sy_user, Sz_user, PadXY_user, PadXYZ_user, MinCt_user,  iters, compress12, prec_user);
+	// // Launch the test case.
+	// timeDslashNoQDP test(By_user, Bz_user, NCores_user, Sy_user, Sz_user, PadXY_user, PadXYZ_user, MinCt_user,  iters, compress12, prec_user);
 
-//  test.run(nrow_in, qmp_geometry);
-//#ifdef QPHIX_QMP_COMMS
-//  QMP_finalize_msg_passing();
-//#endif
+	// test.run(nrow_in, qmp_geometry);
+// #ifdef QPHIX_QMP_COMMS
+	// QMP_finalize_msg_passing();
+// #endif
 
 
 

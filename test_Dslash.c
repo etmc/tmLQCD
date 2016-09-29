@@ -168,26 +168,26 @@ int main(int argc,char *argv[])
   static double t1,t2,dt,sdt,dts,qdt,sqdt;
   double antioptaway=0.0;
 
-#ifdef TM_USE_MPI
   static double dt2;
 
   DUM_DERI = 10;
-  DUM_SOLVER = DUM_DERI+2;
-  DUM_MATRIX = DUM_SOLVER+6;
+  DUM_MATRIX = DUM_DERI+8;
   NO_OF_SPINORFIELDS = DUM_MATRIX+4;
 
-#  ifdef TM_USE_OMP
-  int mpi_thread_provided;
-//  MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
-  _initQphix(argc, argv, 8, 8, 16, 1, 1, 1, 0, 2, 0/*c12*/, QPHIX_DOUBLE_PREC);
-#  else
-  MPI_Init(&argc, &argv);
-#  endif
-  MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
-
+#ifdef TM_USE_MPI
+	#ifdef TM_USE_OMP
+		int mpi_thread_provided;
+		MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
+	#else
+		MPI_Init(&argc, &argv);
+	#endif
+		MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
 #else
   g_proc_id = 0;
 #endif
+
+	printf("# We're using QPhiX!\n");
+	_initQphix(argc, argv, 8, 8, 1, 1, 1, 0, 0, 1, 0/*c12*/, QPHIX_DOUBLE_PREC);
 
   g_rgi_C1 = 1.;
 
@@ -203,12 +203,6 @@ int main(int argc,char *argv[])
 #endif
 
   tmlqcd_mpi_init(argc, argv);
-
-#ifdef QUDA
-  if(g_proc_id==0)
-	  printf("# We're using QUDA!\n");
-  _initQphix(3);
-#endif
 
   if(g_proc_id==0) {
 #ifdef SSE
@@ -459,7 +453,7 @@ int main(int argc,char *argv[])
 
 	/************************** D_psi on CPU **************************/
 	if(g_proc_id==0)
-		printf("\n# Operator 1:\n");
+		printf("\n# Operator 1 (tmLQCD):\n");
 
 #ifdef TM_USE_MPI
       MPI_Barrier(MPI_COMM_WORLD);
@@ -481,7 +475,7 @@ int main(int argc,char *argv[])
 #else
 		invert_eo(g_spinor_field[0], g_spinor_field[1],
 				  g_spinor_field[2], g_spinor_field[3],
-				  1.0e-10, 1000,
+				  1.0e-10, 100,
 				  1, 1,
 				  0, even_odd_flag,
 				  0, NULL, solver_params, 0,
@@ -516,7 +510,7 @@ int main(int argc,char *argv[])
 			printf("\n# ||Ax-b||^2_o = %e\n\n", squarenorm);
 			fflush(stdout);
 		}
-      }
+      } // using EVEN-ODD
 	  else
 	  {
 		  // invert
@@ -622,7 +616,7 @@ int main(int argc,char *argv[])
 
 	/************************** D_psi_qphix on AVX/MIC **************************/
 	if(g_proc_id==0)
-		printf("\n# Operator 2:\n");
+		printf("\n# Operator 2 (QPhiX):\n");
 
 #ifdef TM_USE_MPI
       MPI_Barrier(MPI_COMM_WORLD);
@@ -669,7 +663,7 @@ int main(int argc,char *argv[])
 			printf("\n# ||Ax-b||^2_o = %e\n\n", squarenorm);
 			fflush(stdout);
 		}
-      }
+      } // using EVEN-ODD
 	  else
 	  {
 		// invert
@@ -825,9 +819,6 @@ int main(int argc,char *argv[])
 
 	// ---------------
 
-#ifdef QUDA
-  _endQphix(3);
-#endif
 #ifdef TM_USE_OMP
   free_omp_accumulators();
 #endif
