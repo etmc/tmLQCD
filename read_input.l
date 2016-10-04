@@ -902,6 +902,10 @@ static inline void rmQuotes(char *str){
     if(myverbose) printf("  Use QPhiX inverter line %d operator %d\n", line_of_file, current_operator);
     optr->external_inverter = QPHIX_INVERTER;
   }
+  {SPC}*UseQphixInverter{EQL}no {
+    if(myverbose) printf("  Use QPhiX inverter line %d operator %d\n", line_of_file, current_operator);
+    optr->external_inverter = NO_EXT_INV;
+  }
   {SPC}*UseSloppyPrecision{EQL}yes {
     if(myverbose) printf("  Use use sloppy precision (single) in the inverter (if supported by the inverter) line %d operator %d\n", line_of_file, current_operator);
     optr->sloppy_precision = SLOPPY_SINGLE;
