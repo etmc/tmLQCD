@@ -140,12 +140,12 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 #endif /* HAVE_GPU*/    
     
  
-//    assign_mul_one_pm_imu_inv(Even_new, Even, +1., VOLUME/2);
+    assign_mul_one_pm_imu_inv(Even_new, Even, +1., VOLUME/2);
     
-//    Hopping_Matrix(OE, g_spinor_field[DUM_DERI], Even_new);
+    Hopping_Matrix(OE, g_spinor_field[DUM_DERI], Even_new);
     /* The sign is plus, since in Hopping_Matrix */
     /* the minus is missing                      */
-//    assign_mul_add_r(g_spinor_field[DUM_DERI], +1., Odd, VOLUME/2);
+    assign_mul_add_r(g_spinor_field[DUM_DERI], +1., Odd, VOLUME/2);
     /* Do the inversion with the preconditioned  */
     /* matrix to get the odd sites               */
     
@@ -293,11 +293,11 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     }
     
     /* Reconstruct the even sites                */
-//    Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd_new);
-//    mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1., VOLUME/2);
+    Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd_new);
+    mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1., VOLUME/2);
     /* The sign is plus, since in Hopping_Matrix */
     /* the minus is missing                      */
-//    assign_add_mul_r(Even_new, g_spinor_field[DUM_DERI], +1., VOLUME/2);
+    assign_add_mul_r(Even_new, g_spinor_field[DUM_DERI], +1., VOLUME/2);
  
 #ifdef HAVE_GPU  
     /* return from temporal gauge again */
