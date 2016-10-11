@@ -97,6 +97,34 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
   }
 #endif
 
+#ifdef QPHIX
+	/* NOTE: Qphix does only the solve on the odd sites, unlike Quda! */
+  if( inverter==QPHIX_INVERTER ) {
+		/* Here we invert the hermitean operator squared */
+
+    Hopping_Matrix(OE, g_spinor_field[DUM_DERI], Even);
+		// HERE THE INVERSE OF THE CLOVER TERM IS MISSING
+		// physical normalisation
+    add(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], Odd, VOLUME/2);
+
+		/* gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2); */
+		iter = invert_qphix(Odd_new, Odd, max_iter, precision, rel_prec);
+		// Multiply with (M_oo^QPHIX)^{dagger}
+		Mtm_minus_psi(g_spinor_field[DUM_DERI], Odd_new);
+		mul_r(Odd_new, 1./(2*g_kappa), g_spinor_field[DUM_DERI], VOLUME/2);
+
+    /* Reconstruct the even sites                */
+    Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd_new);
+		// HERE THE INVERSE OF THE CLOVER TERM IS MISSING
+    assign_add_mul_r(Even_new, Even, 2.*g_kappa, VOLUME/2);
+    add(Even_new, g_spinor_field[DUM_DERI], Even_new, VOLUME/2);
+
+		mul_r(Even_new, 1./(2*g_kappa), Even_new, VOLUME/2);
+		mul_r(Odd_new, 1./(2*g_kappa), Odd_new, VOLUME/2);
+		return;
+  }
+#endif
+
   /* here comes the inversion using even/odd preconditioning */
   if(even_odd_flag) {
     if(g_proc_id == 0) {printf("# Using even/odd preconditioning!\n"); fflush(stdout);}
@@ -149,17 +177,6 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     /* Do the inversion with the preconditioned  */
     /* matrix to get the odd sites               */
     
-#ifdef QPHIX
-    /* NOTE: Qphix does only the solve on the odd sites, unlike Quda! */
-  if( inverter==QPHIX_INVERTER ) {
-      /* Here we invert the hermitean operator squared */
-      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
-//      iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi);
-      iter = invert_qphix(Odd_new, Odd, max_iter, precision, rel_prec);
-//      Qtm_minus_psi(Odd_new, Odd_new);
-  }
-  else
-#endif
 
     if(solver_flag == BICGSTAB) {
       if(g_proc_id == 0) {printf("# Using BiCGstab!\n"); fflush(stdout);}
