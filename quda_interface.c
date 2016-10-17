@@ -174,7 +174,7 @@ void _initQuda() {
   QudaPrecision cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
   QudaPrecision cuda_prec_precondition = QUDA_SINGLE_PRECISION;
 
-  QudaTune tune = QUDA_TUNE_NO;
+  QudaTune tune = QUDA_TUNE_YES;
 
   // *** the remainder should not be changed for this application
   // local lattice size
@@ -214,7 +214,7 @@ void _initQuda() {
 
   // require both L2 relative and heavy quark residual to determine convergence
 //  inv_param.residual_type = (QudaResidualType)(QUDA_L2_RELATIVE_RESIDUAL | QUDA_HEAVY_QUARK_RESIDUAL);
-  inv_param.tol_hq = 1.0;//1e-3; // specify a tolerance for the residual for heavy quark residual
+  inv_param.tol_hq = 0.1;//1e-3; // specify a tolerance for the residual for heavy quark residual
   inv_param.reliable_delta = 1e-2; // ignored by multi-shift solver
 
   // domain decomposition preconditioner parameters
@@ -241,7 +241,6 @@ void _initQuda() {
 
   inv_param.preserve_source = QUDA_PRESERVE_SOURCE_YES;
   inv_param.gamma_basis = QUDA_CHIRAL_GAMMA_BASIS; // CHIRAL -> UKQCD does not seem to be supported right now...
-  //inv_param.gamma_basis = QUDA_UKQCD_GAMMA_BASIS;
   inv_param.dirac_order = QUDA_DIRAC_ORDER;
 
   inv_param.input_location = QUDA_CPU_FIELD_LOCATION;
@@ -811,7 +810,7 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
   int use_multigrid_quda = 1;
   void* mg_preconditioner = NULL;
   QudaMultigridParam mg_param = newQudaMultigridParam();
-  if(use_multigrid_quda){
+  if( use_multigrid_quda && inv_param.inv_type != QUDA_CG_INVERTER ){
     // FIXME explicitly select compatible params for inv_param
     // probably need two separate sets of params, one for the setup and one for the target solution
     // coarsening does not support QUDA_MATPC_EVEN_EVEN_ASYMMETRIC
@@ -830,12 +829,24 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
     inv_mg_param = inv_param;
     mg_param.invert_param = &inv_mg_param;
     _setMultigridParam(&mg_param);
+
+    if(g_proc_id==0){
+      printf("----------------------------------------\n");
+      printQudaInvertParam(&inv_param);
+      printf("----------------------------------------\n");
+      printQudaInvertParam(&inv_mg_param);
+      printf("----------------------------------------\n");
+      printQudaMultigridParam(&mg_param);
+      printf("----------------------------------------\n");
+    }
+
+
     if(g_proc_id==0){ printf("calling mg preconditioner\n"); fflush(stdout); }
     mg_preconditioner = newMultigridQuda(&mg_param);
     inv_param.preconditioner = mg_preconditioner;
   }
 
-  if(g_proc_id==0){ printf("calling mg solver\n"); fflush(stdout); }
+  if(g_proc_id==0 && inv_param.inv_type_precondition == QUDA_MG_INVERTER){ printf("calling mg solver\n"); fflush(stdout); }
   // perform the inversion
   invertQuda(spinorOut, spinorIn, &inv_param);
 
@@ -1055,6 +1066,7 @@ void D_psi_quda(spinor * const P, spinor * const Q) {
 void _setMultigridParam(QudaMultigridParam* mg_param) {
   QudaInvertParam *mg_inv_param = mg_param->invert_param;
 
+  mg_inv_param->Ls = 1;
   mg_inv_param->sp_pad = 0;
   mg_inv_param->cl_pad = 0;
 
@@ -1064,35 +1076,55 @@ void _setMultigridParam(QudaMultigridParam* mg_param) {
 
   mg_inv_param->input_location = QUDA_CPU_FIELD_LOCATION;
   mg_inv_param->output_location = QUDA_CPU_FIELD_LOCATION;
- 
+  
+  // currently, only QUDA_DIRECT_SOLVE is supported for this, thus also QUDA_MAT_SOLUTION 
   mg_inv_param->solve_type = QUDA_DIRECT_SOLVE;
   mg_inv_param->solution_type = QUDA_MAT_SOLUTION;
 
-  // move away from maximal twist for subspace generation
-  //if(mg_inv_param->dslash_type != QUDA_WILSON_DSLASH ){
-  //  mg_inv_param->kappa = mg_inv_param->kappa - 0.006*mg_inv_param->kappa;
-  //  // and work at zero twisted mass
-  //  mg_inv_param->mu = 0.0;
-  //}
+  mg_inv_param->dagger = QUDA_DAG_NO;
+
+  // move away from maximal twist for subspace generation and increase mu on the coarse levels to get quick
+  // coarse grid solves
+  if(mg_inv_param->dslash_type != QUDA_WILSON_DSLASH && mg_inv_param->dslash_type != QUDA_CLOVER_WILSON_DSLASH){
+    // FIXME: the extent to which this has to happen depends on the action and should be
+    // user configurable
+    mg_inv_param->kappa = mg_inv_param->kappa - 0.0025*mg_inv_param->kappa;
+    if(mg_inv_param->dslash_type == QUDA_TWISTED_CLOVER_DSLASH) mg_inv_param->clover_coeff = mg_inv_param->kappa*g_c_sw;
+
+    // FIXME: provide access to the scaling parameter
+    // not sure if this is required
+    if(mg_inv_param->mu > 0.0) mg_inv_param->mu = 5.2*mg_inv_param->mu;
+  }
 
   // FIXME: allow these parameters to be adjusted
-  mg_param->n_level = 2;
+  mg_param->n_level = 3;
   for (int i=0; i<mg_param->n_level; i++) {
     for (int j=0; j<QUDA_MAX_DIM; j++) {
-      // if not defined use 4
-      mg_param->geo_block_size[i][j] = 4;
+
+      unsigned int extent = (j == 4) ? T : LX;
+      // determine how many lattice sites remain at this level
+      for(int k = i; k > 0; k--) extent = extent/mg_param->geo_block_size[k-1][j];
+      unsigned int even_block_size = 4;
+      if(extent < 8) even_block_size = 2;
+
+      // on the finest level, we use a block size of 4^4
+      // on all other levels, we compute how many blocks there are and use a block size of 3 for
+      // cases divisible by 3, otherwise we use 2
+      // if blocking is not possible, we use block size 1
+      if( extent == 1 ) mg_param->geo_block_size[i][j] = 1;
+      else mg_param->geo_block_size[i][j] = (i == 0) ? 4 : ( (extent % 3 == 0) ? 3 : even_block_size );
     }
     mg_param->spin_block_size[i] = 1;
-    mg_param->n_vec[i] = 32;
-    mg_param->nu_pre[i] = 2;
-    mg_param->nu_post[i] = 2;
+    mg_param->n_vec[i] = 24;
+    mg_param->nu_pre[i] = 4;
+    mg_param->nu_post[i] = 4;
 
     mg_param->cycle_type[i] = QUDA_MG_CYCLE_RECURSIVE;
 
     mg_param->smoother[i] = QUDA_MR_INVERTER;
 
     // set the smoother / bottom solver tolerance (for MR smoothing this will be ignored)
-    mg_param->smoother_tol[i] = 0.2; // repurpose heavy-quark tolerance for now
+    mg_param->smoother_tol[i] = 0.1; // repurpose heavy-quark tolerance for now
 
     mg_param->global_reduction[i] = QUDA_BOOLEAN_YES;
 
@@ -1101,7 +1133,6 @@ void _setMultigridParam(QudaMultigridParam* mg_param) {
 
     // set to QUDA_MAT_SOLUTION to inject a full field into coarse grid
     // set to QUDA_MATPC_SOLUTION to inject single parity field into coarse grid
-
     // if we are using an outer even-odd preconditioned solve, then we
     // use single parity injection into the coarse grid
     mg_param->coarse_grid_solution_type[i] = inv_param.solve_type == QUDA_DIRECT_PC_SOLVE ? QUDA_MATPC_SOLUTION : QUDA_MAT_SOLUTION;
@@ -1118,7 +1149,7 @@ void _setMultigridParam(QudaMultigridParam* mg_param) {
   mg_param->smoother[mg_param->n_level-1] = QUDA_GCR_INVERTER;
 
   mg_param->compute_null_vector = QUDA_COMPUTE_NULL_VECTOR_YES;
-  mg_param->generate_all_levels = QUDA_BOOLEAN_YES;
+  mg_param->generate_all_levels = QUDA_BOOLEAN_NO;
 
   mg_param->run_verify = QUDA_BOOLEAN_NO;
 
