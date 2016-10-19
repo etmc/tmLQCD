@@ -1,0 +1,132 @@
+%author: Simone Bacchio <s.bacchio@gmail.com>
+%date: 07/2016
+
+\subsection{DDalphaAMG: A library for multigrid preconditioning on LQCD}
+
+
+DD-$\alpha$AMG~\cite{Frommer:2013fsa} is an Adaptive Aggregation-based Domain Decomposition Multigrid method for Lattice QCD. A library named DDalphaAMG is publicly available\footnote{\url{https://github.com/DDalphaAMG/DDalphaAMG}} and it contains the full method with additional development tools. DD-$\alpha$AMG has been successfully extended to $N_f=2$ twisted mass fermions in~\cite{Alexandrou:2016}.
+
+%\subsubsection{Design goals of the interface}
+
+\subsubsection{Installation}
+
+Download the Twisted Mass version of the DDalphaAMG library at 
+\begin{Verbatim}[fontsize=\small]
+https://github.com/sbacchio/DDalphaAMG.
+\end{Verbatim}
+The Makefile should be ready for being compiled in a Intel environment. You may want to change the environment or just set some variables; you can do it editing the first lines of the Makefile:
+\begin{Verbatim}[fontsize=\small]
+CC = mpiicc
+
+# --- CFLAGS -----------------------------------------                          
+CFLAGS_gnu = -std=gnu99 -Wall -pedantic -fopenmp -O3 -ffast-math -msse4.2
+CFLAGS_intel = -std=gnu99 -Wall -pedantic -qopenmp -O3  -xHOST
+CFLAGS = $(CFLAGS_intel)
+\end{Verbatim}
+The library can be installed with
+\begin{Verbatim}[fontsize=\small]
+make -j library LIMEDIR="/your/lime/installation/dir" 
+\end{Verbatim}
+and tmLQCD can be configured and compiled by using
+\begin{Verbatim}[fontsize=\small]
+autoreconf -f
+./configure YOUR_OPTIONS --with-DDalphaAMG="/path/to/DDalphaAMG/dir"
+make -j
+\end{Verbatim}
+
+\subsubsection{Usage}
+For calling the solver with a standard setting of parameters, it is just necessary to use \texttt{DDalphaAMG} as a solver:
+\begin{Verbatim}[fontsize=\small]
+BeginOperator TMWILSON
+  2kappaMu = 0.05
+  kappa = 0.177
+  Solver = DDalphaAMG
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 100
+EndOperator
+\end{Verbatim}
+More options are available and explained in the next section. At the first call of the solver, a setup phase will be run and then the same setup will be used for all the inversions with the same configuration. Be aware that the change of configuration at the moment is supported just for HMC simulations for which specific parameters are defined.
+\subsubsection{More advanced settings}
+For tuning purpose, several parameters of DDalphaAMG can be set inside the section \texttt{DDalphaAMG} and here after the complete list of implemented parameters: 
+\begin{Verbatim}[fontsize=\small]
+BeginDDalphaAMG
+  MGOMPNumThreads = 1
+  MGBlockX = 4
+  MGBlockY = 4
+  MGBlockZ = 4
+  MGBlockT = 4
+  MGNumberOfVectors = 24
+  MGCoarseMuFactor = 5
+  MGSetupIter = 5
+  MGCoarseSetupIter = 3
+  MGNumberOfLevels = 3
+  MGdtauUpdate = 0.05
+  MGrhoUpdate = 0.0
+  MGUpdateSetupIter = 1
+EndDDalphaAMG
+\end{Verbatim}
+Not all the parameters have to be use and for all of them a standard value is defined. Here a brief explanation:
+\begin{description}
+	\item[\texttt{MGOMPNumThreads:}] the DDalphaAMG library does not have advantages on exploiting hyper-threading; while most of the applications of tmLQCD do. For this reason the \texttt{OMPNumThreads} for DDalphaAMG has been separated by the standard one. If this parameter is not used, the value of \texttt{OMPNumThreads} is used.
+	\item[\texttt{MGBlock?:}]\footnote{\label{fn:Alexandrou:2016} for a better understanding of these parameters we strongly suggest the reading of the numerical results presented in \cite{Alexandrou:2016}} block size in the directions X,Y,Z,T. The values have to divide the local size of the lattice and by default an optimal value is used.
+	\item[\texttt{MGNumberOfVectors:}]\footnoteref{fn:Alexandrou:2016} number of vectors used in the fine level. This parameter require some tuning.
+	\item[\texttt{MGCoarseMuFactor:}]\footnoteref{fn:Alexandrou:2016} multiplicative factor for the twisted mass term $\mu$ on the coarsest level. A good performance is achieved with a value between 3 and 6.
+	\item[\texttt{MGSetupIter, MGCoarseSetupIter:}] number of setup iterations in the fine and coarse grid respectively. For the fine grid a value between 3 and 5 is suggested. For the coarse grid 2, 3 iterations should be enough. 
+	\item[\texttt{MGNumberOfLevels:}] number of levels for the multigrid method. Can take values from 1 (no multigrid) to 4. A value of 3 is suggested.
+	\item[\texttt{MGdtauUpdate:}] for HMC, $d\tau$ interval after that the setup is updated. If 0, it will be updated every time the configuration is changed.
+	\item[\texttt{MGrhoUpdate:}] for HMC, rho value of the monomial at which the setup have to be updated. It can be combined with \texttt{MGdtauUpdate} or used standalone.
+	\item[\texttt{MGUpdateSetupIter:}] for HMC, number of setup iterations to do on the fine level when the setup has to be updated.
+\end{description}
+\subsubsection{Output analysis}
+Running tmLQCD programs with the option \texttt{-v}, the full output of DDalphaAMG is shown. Here some hints on the informations given. Just before the setup, the full set of parameters is printed, with an output similar to the following:
+\begin{Verbatim}[fontsize=\small]
++----------------------------------------------------------+
+| 3-level method                                           |
+| postsmoothing K-cycle                                    |
+| FGMRES + red-black multiplicative Schwarz                |
+|          restart length: 10                              |
+|                      m0: -0.430229                       |
+|                     csw: +1.740000                       |
+|                      mu: +0.001200                       |
++----------------------------------------------------------+
+|   preconditioner cycles: 1                               |
+|            inner solver: minimal residual iteration      |
+|               precision: single                          |
++---------------------- depth  0 --------------------------+
+|          global lattice: 96  48  48  48                  |
+|           local lattice: 16  8   8   24                  |
+|           block lattice: 4   4   4   4                   |
+|        post smooth iter: 2                               |
+|     smoother inner iter: 4                               |
+|              setup iter: 3                               |
+|            test vectors: 24                              |
++---------------------- depth  1 --------------------------+
+|          global lattice: 24  12  12  12                  |
+|           local lattice: 4   2   2   6                   |
+|           block lattice: 2   2   2   2                   |
+|        post smooth iter: 2                               |
+|     smoother inner iter: 4                               |
+|              setup iter: 3                               |
+|            test vectors: 28                              |
++---------------------- depth  2 --------------------------+
+|          global lattice: 12  6   6   6                   |
+|           local lattice: 2   1   1   3                   |
+|           block lattice: 1   1   1   1                   |
+|      coarge grid solver: odd even GMRES                  |
+|              iterations: 25                              |
+|                  cycles: 40                              |
+|               tolerance: 5e-02                           |
+|                      mu: +0.012000                       |
++----------------------------------------------------------+
+|          K-cycle length: 5                               |
+|        K-cycle restarts: 2                               |
+|       K-cycle tolerance: 1e-01                           |
++----------------------------------------------------------+
+\end{Verbatim}
+You may want to check that all the parameters agree to what expected and a good set of parameters is presented in \cite{Alexandrou:2016}.
+\subsubsection{Warnings and error messages}
+
+
+
+
+

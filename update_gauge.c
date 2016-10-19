@@ -39,8 +39,8 @@
 #include "hamiltonian_field.h"
 #include "update_gauge.h"
 #include "init/init_gauge_field.h"
-#ifdef MG4QCD
-#include "mg4qcd_interface.h"
+#ifdef DDalphaAMG
+#include "DDalphaAMG_interface.h"
 #endif
 /*******************************************************
  *
@@ -51,7 +51,7 @@
 void update_gauge(const double step, hamiltonian_field_t * const hf) {
   double atime, etime;
   atime = gettime();
-#ifdef MG4QCD
+#ifdef DDalphaAMG
   MG_update_gauge(step);
 #endif
 

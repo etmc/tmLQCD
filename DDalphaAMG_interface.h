@@ -17,24 +17,27 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Interface for MG4QCD
+ * Interface for DDalphaAMG
  *
  *******************************************************************************/
 
-#ifndef MG4QCD_INTERFACE_H_
-#define MG4QCD_INTERFACE_H_
+#ifndef DDalphaAMG_INTERFACE_H_
+#define DDalphaAMG_INTERFACE_H_
 #include "global.h"
 #include "su3.h"
 #include"solver/matrix_mult_typedef.h"
 
 extern int mg_setup_iter;
 extern int mg_coarse_setup_iter;
-extern int mg_dtau_setup_iter;
+extern int mg_update_setup_iter;
+extern int mg_omp_num_threads;
 extern int mg_Nvec;
 extern int mg_lvl;
 extern int mg_blk[4];
+extern double mg_setup_mu;
 extern double mg_cmu_factor;
-extern double mg_dtau;
+extern double mg_dtau_update;
+extern double mg_rho_update;
 
 void MG_init(void);
 void MG_update_gauge(double step);
@@ -52,4 +55,4 @@ int MG_solver_eo(spinor * const Even_new, spinor * const Odd_new,
 		 const double precision, const int max_iter, const int rel_prec,
 		 const int N, su3 **gf, matrix_mult_full f_full);
 
-#endif /* MG4QCD_INTERFACE_H_ */
+#endif /* DDalphaAMG_INTERFACE_H_ */

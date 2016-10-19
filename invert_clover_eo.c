@@ -53,8 +53,8 @@
 #ifdef QUDA
 #  include "quda_interface.h"
 #endif
-#ifdef MG4QCD
-#  include "mg4qcd_interface.h"
+#ifdef DDalphaAMG
+#  include "DDalphaAMG_interface.h"
 #endif
 
 int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new, 
@@ -80,7 +80,14 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
                             sloppy, compression);
     }
 #endif
-    
+#ifdef DDalphaAMG
+     if ( solver_flag == MG )
+    {
+      return MG_solver_eo(Even_new, Odd_new, Even, Odd, precision, max_iter,
+                          rel_prec, VOLUME/2, gf[0], &Msw_full);
+    }
+#endif
+
     assign_mul_one_sw_pm_imu_inv(EE, Even_new, Even, +g_mu);
     
     Hopping_Matrix(OE, g_spinor_field[DUM_DERI], Even_new); 
@@ -161,7 +168,7 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
 		    rel_prec, VOLUME, Qsq);
       Qm(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
     }
-#ifdef MG4QCD
+#ifdef DDalphaAMG
     else if ( solver_flag == MG )
     {
       return MG_solver_eo(Even_new, Odd_new, Even, Odd, precision, max_iter,

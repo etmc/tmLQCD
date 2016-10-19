@@ -68,8 +68,8 @@
 #include "integrator.h"
 #include "sighandler.h"
 #include "meas/measurements.h"
-#ifdef MG4QCD
-#include "mg4qcd_interface.h"
+#ifdef DDalphaAMG
+#include "DDalphaAMG_interface.h"
 #endif
 
 extern int nstore;
