@@ -57,6 +57,7 @@ int init_measurements(){
  int i;
   for(i = 0; i < no_measurements; i++) {
  
+    measurement_list[i].seed = random_seed;
     if(measurement_list[i].type == ONLINE) {
       measurement_list[i].measurefunc = &correlators_measurement;
       measurement_list[i].max_source_slice = g_nproc_t*T;
