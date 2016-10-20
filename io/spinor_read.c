@@ -24,12 +24,13 @@ paramsPropInfo PropInfo = {_default_propagator_splitted, _default_source_format_
 paramsSourceInfo SourceInfo = {0, _default_propagator_splitted, _default_source_format_flag, _default_prop_precision_flag, 0, 0, 0, 0, 0, 0, 0, 1, NULL};
 
 int read_spinor(spinor * const s, spinor * const r, char * filename, const int position_) {
-  int status = 0, getpos = 0, bytes = 0, prec = 0, prop_type, position = position_, rstat=0;
-  char *header_type = NULL;
-  READER *reader = NULL;
+  int status = 0, getpos = 0, prec = 0, prop_type, position = position_, rstat=0;
+  uint64_t bytes = 0;
+  char * header_type = NULL;
+  READER * reader = NULL;
   DML_Checksum checksum_read;
   DML_Checksum checksum;
-  char *checksum_string = NULL;
+  char * checksum_string = NULL;
   int DML_read_flag = 0;
   construct_reader(&reader, filename);
   /* determine the propagator type */
@@ -78,16 +79,16 @@ int read_spinor(spinor * const s, spinor * const r, char * filename, const int p
 
   bytes = ReaderBytes(reader);
 
-  if ((int)bytes == LX * g_nproc_x * LY * g_nproc_y * LZ * g_nproc_z * T * g_nproc_t * sizeof(spinor)) {
+  if ((uint64_t)bytes == LX * g_nproc_x * LY * g_nproc_y * LZ * g_nproc_z * T * g_nproc_t * sizeof(spinor)) {
     prec = 64;
   }
   else {
-    if ((int)bytes == LX * g_nproc_x * LY * g_nproc_y * LZ * g_nproc_z * T * g_nproc_t * sizeof(spinor) / 2) {
+    if ((uint64_t)bytes == LX * g_nproc_x * LY * g_nproc_y * LZ * g_nproc_z * T * g_nproc_t * sizeof(spinor) / 2) {
       prec = 32;
     }
     else {
       fprintf(stderr, "Length of scidac-binary-data record in %s does not match input parameters.\n", filename);
-      fprintf(stderr, "Found %d bytes.\n", bytes);
+      fprintf(stderr, "Found %lu bytes.\n", bytes);
       return(-6);
     }
   }

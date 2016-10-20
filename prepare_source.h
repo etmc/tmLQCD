@@ -22,7 +22,7 @@
 #define _PREPARE_SOURCE_H
 
 void prepare_source(const int nstore, const int isample, const int ix, const int op_id, 
-		    const int read_source_flag,
-		    const int source_location);
+		    const int read_source_flag, const int source_location,
+                    const unsigned int seed);
 
 #endif

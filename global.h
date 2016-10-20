@@ -63,7 +63,7 @@
 # include "bgl.h"
 #endif
 
-EXTERN int DUM_DERI, DUM_SOLVER, DUM_MATRIX;
+EXTERN int DUM_DERI, DUM_MATRIX;
 EXTERN int NO_OF_SPINORFIELDS;
 EXTERN int NO_OF_SPINORFIELDS_32;
 
@@ -249,6 +249,10 @@ EXTERN int g_nb_t_up, g_nb_t_dn;
 EXTERN int g_nb_z_up, g_nb_z_dn;
 
 #endif
+
+EXTERN int subprocess_flag;
+EXTERN int lowmem_flag;
+EXTERN int g_external_id;
 
 #ifdef TM_USE_OMP
 EXTERN int omp_num_threads;

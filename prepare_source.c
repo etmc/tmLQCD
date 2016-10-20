@@ -47,7 +47,7 @@
 
 void prepare_source(const int nstore, const int isample, const int ix, const int op_id, 
                     const int read_source_flag,
-                    const int source_location) {
+                    const int source_location, const unsigned int seed) {
 
   FILE * ifs = NULL;
   int is = ix / 3, ic = ix %3, err = 0, rstat=0, t = 0;
@@ -174,7 +174,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
       if(g_proc_id == 0 && g_debug_level > 0) {
         printf("# Preparing 1 flavour Pion TimeSlice at t = %d source\n", SourceInfo.t);
       }
-      source_generation_pion_only(g_spinor_field[0], g_spinor_field[1], SourceInfo.t, isample, nstore);
+      source_generation_pion_only(g_spinor_field[0], g_spinor_field[1], SourceInfo.t, isample, nstore, seed);
       sprintf(source_filename, "%s.%.4d.%.5d.%.2d.inverted", PropInfo.basename, nstore, isample, SourceInfo.t);
     }
     else if(source_type == SRC_TYPE_GEN_PION_TS) {
@@ -207,7 +207,7 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
         exit(-1);
       }
       extended_pion_source(g_spinor_field[0], g_spinor_field[1], g_spinor_field[2], g_spinor_field[3], 
-                           SourceInfo.t, 0., 0., 0.);
+                           SourceInfo.t, (g_nproc_t*T)/2, 0., 0., 0.);
       sprintf(source_filename, "%s.%.4d.%.5d.%.2d.inverted", PropInfo.basename, nstore, isample, SourceInfo.t);
       // if the generalised pion propagator is to be written to the same file as the source, splitting must be disabled
       if( strcmp(PropInfo.basename,SourceInfo.basename) == 0 ) PropInfo.splitted = 0;
