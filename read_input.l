@@ -124,8 +124,6 @@ static inline void rmQuotes(char *str){
   int return_check_flag, return_check_interval;
   int gauge_precision_read_flag;
   int gauge_precision_write_flag;
-  int g_disable_IO_checks;
-  int g_disable_src_IO_checks;
   int gmres_m_parameter, gmresdr_nr_ev;
   int reproduce_randomnumber_flag;
   double stout_rho;
