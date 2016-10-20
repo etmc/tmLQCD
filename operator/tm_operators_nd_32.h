@@ -25,6 +25,9 @@ void Q_pm_ndpsi_32(spinor32 * const l_strange, spinor32 * const l_charm, spinor3
 
 void Qtm_pm_ndpsi_32(spinor32 * const l_strange, spinor32 * const l_charm,
 		  spinor32 * const k_strange, spinor32 * const k_charm);
+void Qtm_pm_ndpsi_shift_32(spinor32 * const l_strange, spinor32 * const l_charm, spinor32 * const k_strange, spinor32 * const k_charm);
+
 void Qsw_pm_ndpsi_32(spinor32 * const l_strange, spinor32 * const l_charm,
       spinor32 * const k_strange, spinor32 * const k_charm);
+void Qsw_pm_ndpsi_shift_32(spinor32 * const l_strange, spinor32 * const l_charm, spinor32 * const k_strange, spinor32 * const k_charm);
 #endif
