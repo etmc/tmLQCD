@@ -54,6 +54,7 @@ int mg_omp_num_threads=0;
 int mg_Nvec=24;
 int mg_lvl=3;
 int mg_blk[4] = {0, 0, 0, 0};
+int mg_mixed_prec=1;
 double mg_setup_mu = 0./0.; //setting to NaN
 double mg_cmu_factor = 1.0;
 double mg_dtau_update = 0.0;
@@ -148,7 +149,7 @@ static int MG_pre_solve( su3 **gf )
   //  mg_dtau_update == 0.0  : updating at every change of configuration -> valid as well if configuration changed outside the HMC
   //  mg_rho_update < 0.0    : parameter ignore
   //  mg_rho_update == rho   : updating only if this condition and the others are satisfied
-  if ( mg_do_setup == 0 && mg_update_setup < mg_update_setup_iter && ( mg_dtau_update < dtau || mg_dtau_update < -dtau || (mg_dtau_update==0.0 && mg_update_gauge==1)) &&
+  if ( mg_do_setup == 0 && mg_update_setup < mg_update_setup_iter && ( mg_dtau_update < dtau+1e-6 || mg_dtau_update < -dtau-1e-6 || (mg_dtau_update==0.0 && mg_update_gauge==1)) &&
        (mg_rho_update < 0.0 || mg_rho_update == g_mu3)) 
     mg_update_setup = mg_update_setup_iter;
   
@@ -432,7 +433,10 @@ void MG_init()
   mg_params.setup_iterations[1]=mg_coarse_setup_iter;
  
   // with mixed_precision = 2 the library adapt the solving precision according to the vector components
-  mg_params.mixed_precision = 2;
+  if(mg_mixed_prec)
+    mg_params.mixed_precision = 2;
+  else
+    mg_params.mixed_precision = 1;
 
   DDalphaAMG_update_parameters(&mg_params, &mg_status);
   

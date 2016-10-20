@@ -680,6 +680,16 @@ static inline void rmQuotes(char *str){
     mg_cmu_factor=c;
     if(myverbose) printf("  MGCoarseMuFactor set to %f line %d operator %d\n", mg_cmu_factor, line_of_file, current_operator);
   }
+  {SPC}*MGMixedPrecision{EQL}yes {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    mg_mixed_prec = 1;
+    if(myverbose) printf("  MGMixedPrecision set to YES line %d operator %d\n",  line_of_file, current_operator);
+  }
+  {SPC}*MGMixedPrecision{EQL}no {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    mg_mixed_prec = 0;
+    if(myverbose) printf("  MGMixedPrecision set to NO line %d operator %d\n",  line_of_file, current_operator);
+  }
   {SPC}*MGdtauUpdate{EQL}{FLT}+ {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mg_dtau_update=c;
@@ -690,12 +700,6 @@ static inline void rmQuotes(char *str){
     mg_rho_update=c;
     if(myverbose) printf("  MG_rho_Update set to %f line %d operator %d\n", mg_rho_update, line_of_file, current_operator);
   }
-  {SPC}*MGdtauSetupIter{EQL}{DIGIT}+ { /*START TO_REMOVE*/
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    mg_update_setup_iter=a;
-    if(g_proc_id == 0) printf("  WARNING: MGdtauSetupIter renamed to MGUpdateSetupIter. This parameter will be removed soon.\n");
-    if(myverbose) printf("  MG_dtau_Setup_Iter set to %d line %d operator %d\n", mg_update_setup_iter, line_of_file, current_operator);
-    /*END TO_REMOVE*/ }
   {SPC}*MGUpdateSetupIter{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mg_update_setup_iter=a;

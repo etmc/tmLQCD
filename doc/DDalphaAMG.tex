@@ -56,10 +56,12 @@ BeginDDalphaAMG
   MGBlockZ = 4
   MGBlockT = 4
   MGNumberOfVectors = 24
+  MGNumberOfLevels = 3
   MGCoarseMuFactor = 5
   MGSetupIter = 5
   MGCoarseSetupIter = 3
-  MGNumberOfLevels = 3
+  MGSetupMu = 0.001
+  MGMixedPrecision = yes
   MGdtauUpdate = 0.05
   MGrhoUpdate = 0.0
   MGUpdateSetupIter = 1
@@ -67,17 +69,27 @@ EndDDalphaAMG
 \end{Verbatim}
 Not all the parameters have to be use and for all of them a standard value is defined. Here a brief explanation:
 \begin{description}
-	\item[\texttt{MGOMPNumThreads:}] the DDalphaAMG library does not have advantages on exploiting hyper-threading; while most of the applications of tmLQCD do. For this reason the \texttt{OMPNumThreads} for DDalphaAMG has been separated by the standard one. If this parameter is not used, the value of \texttt{OMPNumThreads} is used.
+	\item[\texttt{MGOMPNumThreads:}] the DDalphaAMG library does not take advantages on exploiting hyper-threading; while most of the applications of tmLQCD do. For this reason the \texttt{OMPNumThreads} for DDalphaAMG has been separated by the standard one. If this parameter is not used, the value of \texttt{OMPNumThreads} is used.
 	\item[\texttt{MGBlock?:}]\footnote{\label{fn:Alexandrou:2016} for a better understanding of these parameters we strongly suggest the reading of the numerical results presented in \cite{Alexandrou:2016}} block size in the directions X,Y,Z,T. The values have to divide the local size of the lattice and by default an optimal value is used.
 	\item[\texttt{MGNumberOfVectors:}]\footnoteref{fn:Alexandrou:2016} number of vectors used in the fine level. This parameter require some tuning.
+	\item[\texttt{MGNumberOfLevels:}] number of levels for the multigrid method. Can take values from 1 (no multigrid) to 4. A value of 3 is suggested.
 	\item[\texttt{MGCoarseMuFactor:}]\footnoteref{fn:Alexandrou:2016} multiplicative factor for the twisted mass term $\mu$ on the coarsest level. A good performance is achieved with a value between 3 and 6.
 	\item[\texttt{MGSetupIter, MGCoarseSetupIter:}] number of setup iterations in the fine and coarse grid respectively. For the fine grid a value between 3 and 5 is suggested. For the coarse grid 2, 3 iterations should be enough. 
-	\item[\texttt{MGNumberOfLevels:}] number of levels for the multigrid method. Can take values from 1 (no multigrid) to 4. A value of 3 is suggested.
+	\item[\texttt{MGSetupMu:}] out of the physical point, the
+          solver could have advantages on running the setup with a
+          lower mu, closer to the physical point.
+	\item[\texttt{MGMixedPrecision:}] using the mixed precision solver,
+          a speed-up of 20\% can be achieved. One has to be careful
+          that the mixed precision solver do not restart more than
+          once and that the restarted relative residual (in double
+          precision) is not order of magnitude higher than the one in single
+          precision, see Section~\ref{sec:DDalphaAMG_output}. In that
+          case the mixed precision solver is not suggested.
 	\item[\texttt{MGdtauUpdate:}] for HMC, $d\tau$ interval after that the setup is updated. If 0, it will be updated every time the configuration is changed.
 	\item[\texttt{MGrhoUpdate:}] for HMC, rho value of the monomial at which the setup have to be updated. It can be combined with \texttt{MGdtauUpdate} or used standalone.
 	\item[\texttt{MGUpdateSetupIter:}] for HMC, number of setup iterations to do on the fine level when the setup has to be updated.
 \end{description}
-\subsubsection{Output analysis}
+\subsubsection{Output analysis\label{sec:DDalphaAMG_output}}
 Running tmLQCD programs with the option \texttt{-v}, the full output of DDalphaAMG is shown. Here some hints on the informations given. Just before the setup, the full set of parameters is printed, with an output similar to the following:
 \begin{Verbatim}[fontsize=\small]
 +----------------------------------------------------------+

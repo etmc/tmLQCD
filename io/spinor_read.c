@@ -128,10 +128,12 @@ int read_spinor(spinor * const s, spinor * const r, char * filename, const int p
     }
   }
 
-  if (!DML_read_flag) {
-    fprintf(stderr, "LIME record with name: \"scidac-checksum\", in gauge file %s either missing or malformed.\n", filename);
-    fprintf(stderr, "Unable to verify integrity of gauge field data.\n");
-    return(-1);
+  if (!g_disable_IO_checks){
+    if (!DML_read_flag) {
+      fprintf(stderr, "LIME record with name: \"scidac-checksum\", in gauge file %s either missing or malformed.\n", filename);
+      fprintf(stderr, "Unable to verify integrity of spinor field data.\n");
+      return(-1);
+    }
   }
 
   if (g_cart_id == 0 && g_debug_level >= 0) {
