@@ -60,7 +60,7 @@ BeginDDalphaAMG
   MGCoarseMuFactor = 5
   MGSetupIter = 5
   MGCoarseSetupIter = 3
-  MGSetupMu = 0.001
+  MGSetup2KappaMu = 0.001
   MGMixedPrecision = yes
   MGdtauUpdate = 0.05
   MGrhoUpdate = 0.0
@@ -75,7 +75,7 @@ Not all the parameters have to be use and for all of them a standard value is de
 	\item[\texttt{MGNumberOfLevels:}] number of levels for the multigrid method. Can take values from 1 (no multigrid) to 4. A value of 3 is suggested.
 	\item[\texttt{MGCoarseMuFactor:}]\footnoteref{fn:Alexandrou:2016} multiplicative factor for the twisted mass term $\mu$ on the coarsest level. A good performance is achieved with a value between 3 and 6.
 	\item[\texttt{MGSetupIter, MGCoarseSetupIter:}] number of setup iterations in the fine and coarse grid respectively. For the fine grid a value between 3 and 5 is suggested. For the coarse grid 2, 3 iterations should be enough. 
-	\item[\texttt{MGSetupMu:}] out of the physical point, the
+	\item[\texttt{MGSetup2KappaMu:}] out of the physical point, the
           solver could have advantages on running the setup with a
           lower mu, closer to the physical point.
 	\item[\texttt{MGMixedPrecision:}] using the mixed precision solver,

@@ -35,11 +35,12 @@ void Block_H_psi(block * blk, spinor * const rr, spinor * const s, const int eo)
 void Block_D_psi_32(block * blk, spinor32 * const rr, spinor32 * const s);
 void Block_H_psi_32(block * blk, spinor32 * const rr, spinor32 * const s, const int eo);
 
-// TODO: this funtions are just defined for SSE!
-// /* csw=0 version*/
-// void Dtm_psi(spinor * const P, spinor * const Q);
-// /* csw>0 version*/
-// void Dsw_psi(spinor * const P, spinor * const Q);
+#if (defined SSE || defined SSE2 || defined SSE3 )
+/* csw=0 version*/
+void Dtm_psi(spinor * const P, spinor * const Q);
+/* csw>0 version*/
+void Dsw_psi(spinor * const P, spinor * const Q);
+#endif
 
 //c_sw=0
 void Block_Dtm_psi(block * blk, spinor * const rr, spinor * const s);

@@ -673,10 +673,10 @@ static inline void rmQuotes(char *str){
     mg_blk[0]=a;
     if(myverbose) printf("  MGBlockT set to %d line %d operator %d\n", mg_blk[0], line_of_file, current_operator);
   }
-  {SPC}*MGSetupMu{EQL}{FLT}+ {
+  {SPC}*MGSetup2KappaMu{EQL}{FLT}+ {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
-    mg_setup_mu=c;
-    if(myverbose) printf("  MGSetupMu set to %f line %d operator %d\n", mg_setup_mu, line_of_file, current_operator);
+    mg_setup_mu_factor=c/g_mu;
+    if(myverbose) printf("  MGSetup2KappaMu set to %f line %d operator %d\n", mg_setup_mu_factor*g_mu, line_of_file, current_operator);
   }
   {SPC}*MGCoarseMuFactor{EQL}{FLT}+ {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);

@@ -35,7 +35,7 @@ extern int mg_Nvec;
 extern int mg_lvl;
 extern int mg_blk[4];
 extern int mg_mixed_prec;
-extern double mg_setup_mu;
+extern double mg_setup_mu_factor;
 extern double mg_cmu_factor;
 extern double mg_dtau_update;
 extern double mg_rho_update;

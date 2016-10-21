@@ -38,6 +38,7 @@
 #include "operator/clovertm_operators.h"
 
 //Enable to test the solution. It cost an application more of the operator. 
+//TODO: test all the operators interfaced and then undefine this flag.
 #define MGTEST
 
 DDalphaAMG_init mg_init;
@@ -54,8 +55,8 @@ int mg_omp_num_threads=0;
 int mg_Nvec=24;
 int mg_lvl=3;
 int mg_blk[4] = {0, 0, 0, 0};
-int mg_mixed_prec=1;
-double mg_setup_mu = 0./0.; //setting to NaN
+int mg_mixed_prec=0;
+double mg_setup_mu_factor = 1.; 
 double mg_cmu_factor = 1.0;
 double mg_dtau_update = 0.0;
 double mg_rho_update = -1.0;
@@ -131,7 +132,7 @@ static int MG_check(spinor * const phi_new, spinor * const phi_old, const int N,
     return 0;
   } 
 
-  if (verbose && g_proc_id == 0)
+  if (g_debug_level > 0 && g_proc_id == 0)
     printf("MGTEST:  || s - f_{tmLQC} * f_{DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e \n", differ[0],differ[1],differ[0]/differ[1]);
   
   return 1;
@@ -153,7 +154,7 @@ static int MG_pre_solve( su3 **gf )
        (mg_rho_update < 0.0 || mg_rho_update == g_mu3)) 
     mg_update_setup = mg_update_setup_iter;
   
-  if(verbose && g_proc_id == 0)
+  if(g_debug_level > 0 && g_proc_id == 0)
     printf("Tau has been increased since last MG setup update of %e\n", dtau);
   
   if (mg_initialized==0) {
@@ -174,10 +175,10 @@ static int MG_pre_solve( su3 **gf )
   }
   
   if (mg_do_setup==1) {
-    if( mg_setup_mu == mg_setup_mu ) { //is set as a NaN at the beginning, so true only if used
+    if( mg_setup_mu_factor != 1.0 ) {
       if (g_proc_id == 0)
-	printf("DDalphaAMG using mu=%f during setup\n", mg_setup_mu);
-      MG_update_mu(mg_setup_mu, 0); 
+	printf("DDalphaAMG using mu=%f during setup\n", mg_setup_mu_factor*g_mu);
+      MG_update_mu(mg_setup_mu_factor*g_mu, 0); 
     } else
       MG_update_mu(g_mu, 0);
     if (g_proc_id == 0)
@@ -193,10 +194,10 @@ static int MG_pre_solve( su3 **gf )
   }
   
   if (mg_update_setup>0) {
-    if( mg_setup_mu == mg_setup_mu ) { //is set as a NaN at the beginning, so true only if used
+    if( mg_setup_mu_factor != 1.0 ) {
       if (g_proc_id == 0)
-	printf("DDalphaAMG using mu=%f during setup\n", mg_setup_mu);
-      MG_update_mu(mg_setup_mu, 0); 
+	printf("DDalphaAMG using mu=%f during setup\n", mg_setup_mu_factor*g_mu);
+      MG_update_mu(mg_setup_mu_factor*g_mu, 0); 
     } else
       MG_update_mu(g_mu, 0);
     if (g_proc_id == 0)
@@ -256,6 +257,10 @@ static int MG_solve(spinor * const phi_new, spinor * const phi_old, const double
   else if ( f == D_psi ||         //          Full operator    with plus mu
 	    f == Q_plus_psi ||    // Gamma5 - Full operator    with plus mu 
 	    f == Q_minus_psi ||   // Gamma5 - Full operator    with minus mu
+#if (defined SSE || defined SSE2 || defined SSE3 )
+            f == Dtm_psi ||       //          Full operator    with plus mu and csw = 0
+            f == Dsw_psi ||       //          Full operator    with plus mu
+#endif
 	    f == Q_pm_psi ) {     //          Full operator    squared
     if( N != VOLUME && g_proc_id == 0 )
       printf("WARNING: expected N == VOLUME for the required operator in MG_solve. Continuing with N == VOLUME/2\n");
@@ -279,6 +284,10 @@ static int MG_solve(spinor * const phi_new, spinor * const phi_old, const double
 	    f == Qtm_plus_psi ||  // Gamma5 - Schur complement with plus mu 
 	    f == Qsw_plus_psi ||  // Gamma5 - Schur complement with plus mu
 	    f == D_psi ||         //          Full operator    with plus mu
+#if (defined SSE || defined SSE2 || defined SSE3 )
+            f == Dtm_psi ||       //          Full operator    with plus mu and csw = 0
+            f == Dsw_psi ||       //          Full operator    with plus mu
+#endif
 	    f == Q_plus_psi ||    // Gamma5 - Full operator    with plus mu 
 	    f == Qtm_pm_psi ||    //          Schur complement squared
 	    f == Qsw_pm_psi ||    //          Schur complement squared
@@ -295,9 +304,9 @@ static int MG_solve(spinor * const phi_new, spinor * const phi_old, const double
 	    f == Qsw_psi ||       // Gamma5 - Schur complement with mu=0 on odd sites
 	    f == Q_plus_psi ||    // Gamma5 - Full operator    with plus mu 
 	    f == Q_minus_psi ) {  // Gamma5 - Full operator    with minus mu
-    mul_gamma5(phi_old, N);
+    mul_gamma5(old, VOLUME);
     DDalphaAMG_solve( new, old, precision, &mg_status );
-    mul_gamma5(phi_old, N);
+    mul_gamma5(old, VOLUME);
   }
   else if ( f == Qtm_pm_psi ||    //          Schur complement squared
 	    f == Qsw_pm_psi ) {   //          Schur complement squared
@@ -313,6 +322,10 @@ static int MG_solve(spinor * const phi_new, spinor * const phi_old, const double
 	    f == Mtm_minus_psi || //          Schur complement with minus mu 
 	    f == Msw_minus_psi || //          Schur complement with minus mu
 	    f == Msw_psi ||       //          Schur complement with mu=0 on odd sites
+#if (defined SSE || defined SSE2 || defined SSE3 )
+            f == Dtm_psi ||       //          Full operator    with plus mu and csw = 0
+            f == Dsw_psi ||       //          Full operator    with plus mu
+#endif
 	    f == D_psi )          //          Full operator    with plus mu
     DDalphaAMG_solve( new, old, precision, &mg_status );
   else
@@ -342,20 +355,20 @@ void MG_init()
   mg_init.Cart_rank=Cart_rank;
   mg_init.Cart_coords=Cart_coords;
   
-  mg_init.global_lattice[0]=T*N_PROC_T;
-  mg_init.global_lattice[1]=LZ*N_PROC_Z;
-  mg_init.global_lattice[2]=LY*N_PROC_Y;
-  mg_init.global_lattice[3]=LX*N_PROC_X;
+  mg_init.global_lattice[0]=T*g_nproc_t;
+  mg_init.global_lattice[1]=LZ*g_nproc_z;
+  mg_init.global_lattice[2]=LY*g_nproc_y;
+  mg_init.global_lattice[3]=LX*g_nproc_x;
   
-  mg_init.procs[0]=N_PROC_T;
-  mg_init.procs[1]=N_PROC_Z;
-  mg_init.procs[2]=N_PROC_Y;
-  mg_init.procs[3]=N_PROC_X;
+  mg_init.procs[0]=g_nproc_t;
+  mg_init.procs[1]=g_nproc_z;
+  mg_init.procs[2]=g_nproc_y;
+  mg_init.procs[3]=g_nproc_x;
   
   for(int i = 0; i<4; i++)
     if(mg_blk[i]==0)
-      mg_blk[i]=(((L/N_PROC_X)%2==0)?(((L/N_PROC_X)%4==0)?4:2):
-		 (((L/N_PROC_X)%3==0)?3:1));
+      mg_blk[i]=(((L/g_nproc_x)%2==0)?(((L/g_nproc_x)%4==0)?4:2):
+		 (((L/g_nproc_x)%3==0)?3:1));
   
   mg_init.block_lattice[0]=mg_blk[0];
   mg_init.block_lattice[1]=mg_blk[1];
@@ -416,9 +429,9 @@ void MG_init()
    * Printing level:
    *  -1: silent (errors or warnings)
    *   0: minimal //default
-   *   1: verbose
+   *   1: g_debug_level > 0
    */
-  if(verbose) {
+  if(g_debug_level > 0) {
     mg_params.print=1;
   }
   else
@@ -458,7 +471,7 @@ void MG_update_mu(double mu_tmLQCD, double odd_tmLQCD)
   
   if (mu != mg_params.mu || odd_shift != mg_params.mu_odd_shift || mg_params.mu_even_shift != 0.0 ) {
     //Taking advantage of this function for updating printing in HMC
-    if(verbose) 
+    if(g_debug_level > 0) 
       mg_params.print=1;
     else
       mg_params.print=0;
