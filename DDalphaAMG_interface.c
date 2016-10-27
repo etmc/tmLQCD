@@ -58,7 +58,8 @@ int mg_Nvec=24;
 int mg_lvl=3;
 int mg_blk[4] = {0, 0, 0, 0};
 int mg_mixed_prec=0;
-double mg_setup_mu_factor = 1.; 
+int mg_setup_mu_set = 0; //flag that enable the use of mg_setup_mu in the setup phase
+double mg_setup_mu = 0.; 
 double mg_cmu_factor = 1.0;
 double mg_dtau_update = 0.0;
 double mg_rho_update = -1.0;
@@ -180,7 +181,7 @@ static int MG_check_nd( spinor * const up_new, spinor * const dn_new, spinor * c
 static int MG_pre_solve( su3 **gf )
 {
   
-  double dtau= mg_tau-gauge_tau;
+  double dtau = abs(mg_tau-gauge_tau);
   // Checking if:
   //  mg_update_setup < mg_update_setup_iter : maybe you want to do more iteration at this run
   //  mg_dtau_update < dtau  : regular condition for update of setup
@@ -188,8 +189,8 @@ static int MG_pre_solve( su3 **gf )
   //  mg_dtau_update == 0.0  : updating at every change of configuration -> valid as well if configuration changed outside the HMC
   //  mg_rho_update < 0.0    : parameter ignore
   //  mg_rho_update == rho   : updating only if this condition and the others are satisfied
-  if ( mg_do_setup == 0 && mg_update_setup < mg_update_setup_iter && ( mg_dtau_update < dtau+1e-6 || mg_dtau_update < -dtau-1e-6 || (mg_dtau_update==0.0 && mg_update_gauge==1)) &&
-       (mg_rho_update < 0.0 || mg_rho_update == g_mu3)) 
+  if ( mg_do_setup == 0 && mg_update_setup < mg_update_setup_iter && ( mg_dtau_update < dtau+1e-6 || (mg_dtau_update==0.0 && mg_update_gauge==1)) &&
+       (mg_rho_update >= 0.0 && mg_rho_update == g_mu3)) 
     mg_update_setup = mg_update_setup_iter;
   
   if(g_debug_level > 0 && g_proc_id == 0)
@@ -213,10 +214,10 @@ static int MG_pre_solve( su3 **gf )
   }
   
   if (mg_do_setup==1) {
-    if( mg_setup_mu_factor != 1.0 ) {
+    if( mg_setup_mu_set ) {
       if (g_proc_id == 0)
-	printf("DDalphaAMG using mu=%f during setup\n", mg_setup_mu_factor*g_mu);
-      MG_update_mu(mg_setup_mu_factor*g_mu, 0); 
+	printf("DDalphaAMG using mu=%f during setup\n", mg_setup_mu);
+      MG_update_mu(mg_setup_mu, 0); 
     } else
       MG_update_mu(g_mu, 0);
     if (g_proc_id == 0)
@@ -232,10 +233,10 @@ static int MG_pre_solve( su3 **gf )
   }
   
   if (mg_update_setup>0) {
-    if( mg_setup_mu_factor != 1.0 ) {
+    if( mg_setup_mu_set ) {
       if (g_proc_id == 0)
-	printf("DDalphaAMG using mu=%f during setup\n", mg_setup_mu_factor*g_mu);
-      MG_update_mu(mg_setup_mu_factor*g_mu, 0); 
+	printf("DDalphaAMG using mu=%f during setup\n", mg_setup_mu);
+      MG_update_mu(mg_setup_mu, 0); 
     } else
       MG_update_mu(g_mu, 0);
     if (g_proc_id == 0)
@@ -295,10 +296,6 @@ static int MG_solve(spinor * const phi_new, spinor * const phi_old, const double
   else if ( f == D_psi ||         //          Full operator    with plus mu
 	    f == Q_plus_psi ||    // Gamma5 - Full operator    with plus mu 
 	    f == Q_minus_psi ||   // Gamma5 - Full operator    with minus mu
-#if (defined SSE || defined SSE2 || defined SSE3 )
-            f == Dtm_psi ||       //          Full operator    with plus mu and csw = 0
-            f == Dsw_psi ||       //          Full operator    with plus mu
-#endif
 	    f == Q_pm_psi ) {     //          Full operator    squared
     if( N != VOLUME && g_proc_id == 0 )
       printf("WARNING: expected N == VOLUME for the required operator in MG_solve. Continuing with N == VOLUME/2\n");
@@ -322,10 +319,6 @@ static int MG_solve(spinor * const phi_new, spinor * const phi_old, const double
 	    f == Qtm_plus_psi ||  // Gamma5 - Schur complement with plus mu 
 	    f == Qsw_plus_psi ||  // Gamma5 - Schur complement with plus mu
 	    f == D_psi ||         //          Full operator    with plus mu
-#if (defined SSE || defined SSE2 || defined SSE3 )
-            f == Dtm_psi ||       //          Full operator    with plus mu and csw = 0
-            f == Dsw_psi ||       //          Full operator    with plus mu
-#endif
 	    f == Q_plus_psi ||    // Gamma5 - Full operator    with plus mu 
 	    f == Qtm_pm_psi ||    //          Schur complement squared
 	    f == Qsw_pm_psi ||    //          Schur complement squared
@@ -361,10 +354,6 @@ static int MG_solve(spinor * const phi_new, spinor * const phi_old, const double
 	    f == Mtm_minus_psi || //          Schur complement with minus mu 
 	    f == Msw_minus_psi || //          Schur complement with minus mu
 	    f == Msw_psi ||       //          Schur complement with mu=0 on odd sites
-#if (defined SSE || defined SSE2 || defined SSE3 )
-            f == Dtm_psi ||       //          Full operator    with plus mu and csw = 0
-            f == Dsw_psi ||       //          Full operator    with plus mu
-#endif
 	    f == D_psi )          //          Full operator    with plus mu
     DDalphaAMG_solve( new, old, precision, &mg_status );
   else
@@ -714,7 +703,7 @@ int MG_solver(spinor * const phi_new, spinor * const phi_old,
     DDalphaAMG_finalize();
     MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();
-    exit(0);
+    exit(1);
   } 
   // mg_status should have been used last time for the inversion.
   return mg_status.iter_count;
