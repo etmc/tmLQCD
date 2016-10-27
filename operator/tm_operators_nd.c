@@ -237,6 +237,14 @@ void Qtm_pm_ndpsi(spinor * const l_strange, spinor * const l_charm,
   return;
 }
 
+void Qtm_pm_ndpsi_shift(spinor * const l_strange, spinor * const l_charm,
+                       spinor * const k_strange, spinor * const k_charm) {
+  Qtm_pm_ndpsi(l_strange,l_charm,k_strange,k_charm);  
+  assign_add_mul_r( l_strange, k_strange, g_shift, VOLUME/2 );
+  assign_add_mul_r( l_charm, k_charm, g_shift, VOLUME/2 );
+  return;
+}
+
 void Qsw_pm_ndpsi(spinor * const l_strange, spinor * const l_charm,
 		  spinor * const k_strange, spinor * const k_charm) {
 
@@ -284,6 +292,15 @@ void Qsw_pm_ndpsi(spinor * const l_strange, spinor * const l_charm,
   return;
 }
 
+void Qsw_pm_ndpsi_shift(spinor * const l_strange, spinor * const l_charm,
+                       spinor * const k_strange, spinor * const k_charm) {
+  Qsw_pm_ndpsi(l_strange,l_charm,k_strange,k_charm);
+  
+  assign_add_mul_r( l_strange, k_strange, g_shift, VOLUME/2 );
+  assign_add_mul_r( l_charm, k_charm, g_shift, VOLUME/2 );
+
+  return;
+}
 
 
 /******************************************

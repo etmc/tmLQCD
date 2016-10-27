@@ -1697,6 +1697,11 @@ static inline void rmQuotes(char *str){
     mnl->solver = CGMMSND;
     BEGIN(solver_caller);
   }
+  rgmixedcg {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = RGMIXEDCG;
+    BEGIN(solver_caller);
+  }
   mixedCGmmsnd {
     if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->solver = MIXEDCGMMSND;
@@ -1707,7 +1712,11 @@ static inline void rmQuotes(char *str){
     mnl->solver = 14;
     BEGIN(solver_caller);
   }
-
+  DDalphaAMG {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = MG;
+    BEGIN(solver_caller);
+  }
 }
 
 <GTYPE>{
@@ -2541,6 +2550,7 @@ int read_input(char * conf_file){
   g_mu1 = _default_g_mu1;
   g_mu2 = _default_g_mu2;
   g_mu3 = _default_g_mu3;
+  g_shift = _default_g_shift;
   g_dbw2rand = 0;
   g_running_phmc = 0;
   g_beta = _default_g_beta;

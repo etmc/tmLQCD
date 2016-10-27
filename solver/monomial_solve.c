@@ -39,6 +39,7 @@
 #endif
 #include "global.h"
 #include "read_input.h"
+#include "default_input_values.h"
 #include "solver/solver.h"
 #include "solver/matrix_mult_typedef.h"
 #include "solver/solver_types.h"
@@ -60,8 +61,8 @@
 extern  int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int max_iter, 
                             double eps, const int rel_prec, const int N, matrix_mult f);
 extern int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn, 
-		 spinor * const Qup, spinor * const Qdn, 
-		 solver_pm_t * solver_pm);
+     spinor * const Qup, spinor * const Qdn, 
+     solver_pm_t * solver_pm);
    #ifdef TEMPORALGAUGE
      #include "../temporalgauge.h" 
    #endif
@@ -86,10 +87,10 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
 
     if(usegpu_flag){   
       #ifdef HAVE_GPU     
-	      #ifdef TEMPORALGAUGE
+        #ifdef TEMPORALGAUGE
           to_temporalgauge(g_gauge_field, Q , P);
         #endif          
-        iteration_count = linsolve_eo_gpu(P, Q, max_iter, eps_sq, rel_prec, N, f);			     
+        iteration_count = linsolve_eo_gpu(P, Q, max_iter, eps_sq, rel_prec, N, f);           
         #ifdef TEMPORALGAUGE
           from_temporalgauge(Q, P);
         #endif
@@ -138,24 +139,64 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
   int iteration_count = 0; 
     if(solver_pm->type==MIXEDCGMMSND){
       if(usegpu_flag){
-	#ifdef HAVE_GPU      
-	  #ifdef TEMPORALGAUGE
-	    to_temporalgauge_mms(g_gauge_field , Qup, Qdn, Pup, Pdn, solver_pm->no_shifts);
-	  #endif        
-	  iteration_count = dev_cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_pm);  
-	  #ifdef TEMPORALGAUGE
-	    from_temporalgauge_mms(Qup, Qdn, Pup, Pdn, solver_pm->no_shifts);
-	  #endif 
-	#endif
+  #ifdef HAVE_GPU      
+    #ifdef TEMPORALGAUGE
+      to_temporalgauge_mms(g_gauge_field , Qup, Qdn, Pup, Pdn, solver_pm->no_shifts);
+    #endif        
+    iteration_count = dev_cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_pm);  
+    #ifdef TEMPORALGAUGE
+      from_temporalgauge_mms(Qup, Qdn, Pup, Pdn, solver_pm->no_shifts);
+    #endif 
+  #endif
+      } else {
+        iteration_count = mixed_cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_pm);
       }
-      else{
-	iteration_count = mixed_cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_pm);
-      }
-    }
-    else if (solver_pm->type==CGMMSND){
+    } else if (solver_pm->type == CGMMSND){
       iteration_count = cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_pm);
-    }
-    else{
+    } else if (solver_pm->type == RGMIXEDCG){
+      matrix_mult_nd   f    = Qtm_pm_ndpsi_shift;
+      matrix_mult_nd32 f32  = Qtm_pm_ndpsi_shift_32;
+      if( solver_pm->M_ndpsi == Qsw_pm_ndpsi ){ 
+        f    = Qsw_pm_ndpsi_shift;
+        f32  = Qsw_pm_ndpsi_shift_32;
+      }
+      iteration_count = 0;
+      // solver_params_t struct needs to be passed to all solvers except for cgmms, so we need to construct it here
+      // and set the one relevant parameter
+      solver_params_t temp_params;
+      temp_params.mcg_delta = _default_mixcg_innereps;
+      double iter_local = 0;
+      for(int i = 0; i < solver_pm->no_shifts; ++i){
+        g_shift = solver_pm->shifts[i]*solver_pm->shifts[i]; 
+        iter_local = rg_mixed_cg_her_nd( Pup[i], Pdn[i], Qup, Qdn, temp_params, solver_pm->max_iter,
+					solver_pm->squared_solver_prec, solver_pm->rel_prec, solver_pm->sdim, f, f32);
+        g_shift = _default_g_shift;
+        if(iter_local == -1){
+          return(-1);
+        } else {
+          iteration_count += iter_local;
+        }
+      }
+    } else if (solver_pm->type == MG){
+      matrix_mult_nd f = Qtm_pm_ndpsi_shift;
+      if( solver_pm->M_ndpsi == Qsw_pm_ndpsi ) 
+        f = Qsw_pm_ndpsi_shift;
+      iteration_count = 0;
+      // solver_params_t struct needs to be passed to all solvers except for cgmms, so we need to construct it here
+      // and set the one relevant parameter
+      double iter_local = 0;
+      for(int i = 0; i < solver_pm->no_shifts; ++i){
+        g_shift = solver_pm->shifts[i]*solver_pm->shifts[i]; 
+        iter_local = MG_solver_nd( Pup[i], Pdn[i], Qup, Qdn, solver_pm->squared_solver_prec, solver_pm->max_iter,
+				   solver_pm->rel_prec, solver_pm->sdim, g_gauge_field, f );
+        g_shift = _default_g_shift;
+        if(iter_local == -1){
+          return(-1);
+        } else {
+          iteration_count += iter_local;
+        }
+      }
+    } else {
       if(g_proc_id==0) printf("Error: solver not allowed for ND mms solve. Aborting...\n");
       exit(2);      
     }
