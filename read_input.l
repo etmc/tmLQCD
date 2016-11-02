@@ -1715,7 +1715,8 @@ static inline void rmQuotes(char *str){
   }
   DDalphaAMG {
     if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
-    mnl->solver = MG;
+    // mnl->solver = MG;
+    mnl->solver = MGMMSND;
     BEGIN(solver_caller);
   }
 }

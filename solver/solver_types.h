@@ -24,7 +24,8 @@ typedef enum SOLVER_TYPE {
  MCR,
  CR,
  BICG,
- MG
+ MG,
+ MGMMSND
 } SOLVER_TYPE;
 
 #endif

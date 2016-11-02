@@ -109,7 +109,7 @@ static int vector_index_fct(int t, int z, int y, int x )
    return id;
 }
 
-static int MG_check(spinor * const phi_new, spinor * const phi_old, const int N, const double precision, matrix_mult f) 
+static inline int MG_check(spinor * const phi_new, spinor * const phi_old, const int N, const double precision, matrix_mult f) 
 {
   double differ[2], residual;
   spinor ** check_vect = NULL;
@@ -142,7 +142,7 @@ static int MG_check(spinor * const phi_new, spinor * const phi_old, const int N,
   
 }
 
-static int MG_check_nd( spinor * const up_new, spinor * const dn_new, spinor * const up_old, spinor * const dn_old,
+static inline int MG_check_nd( spinor * const up_new, spinor * const dn_new, spinor * const up_old, spinor * const dn_old,
 			const int N, const double precision, matrix_mult_nd f) 
 {
   double differ[2], residual;
@@ -173,6 +173,52 @@ static int MG_check_nd( spinor * const up_new, spinor * const dn_new, spinor * c
   if (g_debug_level > 0 && g_proc_id == 0)
     printf("MGTEST:  || s - f_{tmLQC} * f_{DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e \n", differ[0],differ[1],differ[0]/differ[1]);
   
+  return 1;
+  
+}
+
+static inline int MG_mms_check_nd( spinor **const up_new, spinor **const dn_new, 
+                                   spinor * const up_old, spinor * const dn_old,
+                                   const double * shifts, const int no_shifts, 
+                                   const int N, const double precision, matrix_mult_nd f) 
+{
+  double differ[2], residual;
+  spinor ** check_vect = NULL;
+  double acc_factor = 2;
+  
+  init_solver_field(&check_vect, VOLUMEPLUSRAND,2);
+
+  for( int i = 0; i < no_shifts; i++ ) {
+
+    g_shift = shifts[i]*shifts[i]; 
+
+    f( check_vect[0], check_vect[1], up_new[i], dn_new[i]);
+    diff( check_vect[0], check_vect[0], up_old, N);
+    diff( check_vect[1], check_vect[1], dn_old, N);
+    differ[0] = sqrt(square_norm(check_vect[0], N, 1)+square_norm(check_vect[1], N, 1));
+    differ[1] = sqrt(square_norm(up_old, N, 1)+square_norm(dn_old, N, 1));
+  
+    residual = differ[0]/differ[1];
+    
+    if( residual > precision && residual < acc_factor*precision ) {
+      if(g_proc_id == 0)
+        printf("WARNING: solution accepted even if the residual wasn't complitely acceptable (%e > %e) \n", residual, precision);
+    } else if( residual > acc_factor*precision ) {
+      if(g_proc_id == 0) {
+        printf("ERROR: something bad happened... MG converged giving the wrong solution!! Trying to restart... \n");
+        printf("ERROR contd: || s - f_{tmLQC} * f_{DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e > %e \n", differ[0],differ[1],differ[0]/differ[1],precision);
+      }
+      finalize_solver(check_vect, 2);
+      return 0;
+    } 
+    
+    if (g_debug_level > 0 && g_proc_id == 0)
+      printf("MGTEST:  || s - f_{tmLQC} * f_{DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e \n", differ[0],differ[1],differ[0]/differ[1]);
+    
+  }
+
+  finalize_solver(check_vect, 2);
+
   return 1;
   
 }
@@ -483,6 +529,116 @@ static int MG_solve_nd( spinor * const up_new, spinor * const dn_new, spinor * c
   return mg_status.success;
 }
 
+static int MG_mms_solve_nd( spinor **const up_new, spinor **const dn_new, 
+                            spinor * const up_old, spinor * const dn_old,
+                            const double * shifts, const int no_shifts,
+                            const double precision, const int N, matrix_mult_nd f)
+{
+  
+  // for rescaling  convention in DDalphaAMG: (4+m)*\delta_{x,y} in tmLQCD: 1*\delta_{x,y} -> rescale by 1/4+m
+  // moreover in the nd case, the tmLQCD is multiplied by phmc_invmaxev
+  double mg_scale=0.5/g_kappa/phmc_invmaxev;
+  double *old1 = (double*) up_old; 
+  double *old2 = (double*) dn_old; 
+  double **new1, **new2, *mg_odd_shifts, *mg_even_shifts;
+  spinor ** solver_field = NULL;
+
+  //  if( N != VOLUME && N != VOLUME/2 ) {
+  if( N != VOLUME/2 ) { // no full VOLUME functions implemented at the moment 
+    if( g_proc_id == 0 )
+      printf("ERROR: N = %d in MG_solve. Expettected N == VOLUME (%d) or VOLUME/2 (%d)\n", N, VOLUME, VOLUME/2);
+    return 0;
+  }
+
+  new1 = (double**) malloc(no_shifts*sizeof(double*));
+  new2 = (double**) malloc(no_shifts*sizeof(double*));
+  mg_odd_shifts  = (double*) malloc(no_shifts*sizeof(double));
+  mg_even_shifts = (double*) malloc(no_shifts*sizeof(double));
+
+  if( N==VOLUME/2 ) {
+    init_solver_field(&solver_field, VOLUMEPLUSRAND,2+2*no_shifts);
+    old1 = (double*) solver_field[0];
+    old2 = (double*) solver_field[1];
+    convert_odd_to_lexic( (spinor*) old1, up_old);
+    convert_odd_to_lexic( (spinor*) old2, dn_old);
+
+    for( int i = 0; i < no_shifts; i++ ) {
+      new1[i] = (double*) solver_field[2+2*i];
+      new2[i] = (double*) solver_field[3+2*i];
+    }
+  } else {
+    for( int i = 0; i < no_shifts; i++ ) {
+      new1[i] = (double*) up_new[i];
+      new2[i] = (double*) dn_new[i];
+    }
+  }
+
+  MG_update_mubar_epsbar( g_mubar, g_epsbar, shifts[0] );
+  for( int i = 0; i < no_shifts; i++ ) {
+    mg_odd_shifts[i]  = shifts[i]*mg_scale;
+    mg_even_shifts[i] = 0;
+  }
+  // Checking if the operator is in the list and compatible with N
+  if (	    f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh)^2 - Schur complement squared with csw = 0 and shift
+	    f == Qsw_pm_ndpsi_shift ) { // (Gamma5 Dh)^2 - Schur complement squared with shift
+    if( N != VOLUME/2 ) {
+      if( g_proc_id == 0 )
+        printf("ERROR: expected N == VOLUME/2 for the required operator in MG_mms_solve_nd.\n");
+      return 0;
+    }
+  }  else if( g_proc_id == 0 )
+    printf("WARNING: required operator unknown for MG_solve. Using standard operator: %s.\n",
+	   N==VOLUME?"":"Qsw_pm_ndpsi_shift");
+
+  //Solving
+  /* TODO: Qtm_ndpsi_shift, Qsw_ndpsi_shift
+  if (      f == Qtm_ndpsi_shift ||     //  Gamma5 Dh    - Schur complement with csw = 0 and shift
+	    f == Qsw_ndpsi_shift ) {    //  Gamma5 Dh    - Schur complement with shift
+    mul_gamma5((spinor *const) old1, VOLUME);
+    mul_gamma5((spinor *const) old2, VOLUME);
+    DDalphaAMG_solve_ms_doublet( new1, old1, new2, old2, mg_even_shifts, mg_odd_shifts, no_shifts, 
+                                 precision, &mg_status );
+    if( N == VOLUME ) {
+      mul_gamma5((spinor *const) old1, VOLUME);
+      mul_gamma5((spinor *const) old2, VOLUME);
+    }
+  }
+ else*/if ( f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh)^2 - Schur complement squared with csw = 0 and shift
+	    f == Qsw_pm_ndpsi_shift ) { // (Gamma5 Dh)^2 - Schur complement squared with shift
+    mg_scale *= mg_scale;
+    // DDalphaAMG: tau1 gamma5 Dh tau1 gamma5 Dh
+    // tmLQCD:          gamma5 Dh tau1 gamma5 Dh tau1
+    DDalphaAMG_solve_ms_doublet_squared_odd( new2, old2, new1, old1, mg_even_shifts, mg_odd_shifts, no_shifts,
+                                             precision, &mg_status );
+  }
+  else
+    DDalphaAMG_solve_ms_doublet( new1, old1, new2, old2, mg_even_shifts, mg_odd_shifts, no_shifts, 
+                                 precision, &mg_status );
+
+  if (N==VOLUME/2) {
+    for( int i = 0; i < no_shifts; i++ ) {
+      convert_lexic_to_odd(up_new[i], (spinor*) new1[i]);
+      convert_lexic_to_odd(dn_new[i], (spinor*) new2[i]);
+    }
+    finalize_solver(solver_field, 2+2*no_shifts);
+  }
+
+  for( int i = 0; i < no_shifts; i++ ) {
+    mul_r(up_new[i], mg_scale, up_new[i], N);
+    mul_r(dn_new[i], mg_scale, dn_new[i], N);
+  }
+
+  if (g_proc_id == 0) {
+    printf("Solving time %.2f sec (%.1f %% on coarse grid)\n", mg_status.time,
+	   100.*(mg_status.coarse_time/mg_status.time));
+    printf("Total iterations on fine grid %d\n", mg_status.iter_count);
+    printf("Total iterations on coarse grids %d\n", mg_status.coarse_iter_count);
+    if (!mg_status.success) 
+      printf("ERROR: the solver did not converge!\n");
+  }
+  
+  return mg_status.success;
+}
 
 void MG_init()
 {
@@ -768,6 +924,49 @@ int MG_solver_nd(spinor * const up_new, spinor * const dn_new,
 #ifdef MGTEST
     if(success) 
       success = MG_check_nd( up_new, dn_new, up_old, dn_old, N, mg_prec, f );
+#endif
+  }
+  
+  if(!success) {
+    if( g_proc_id == 0 )
+      printf("ERROR: solver didn't converge after two trials!! Aborting... \n");
+    //TODO: handle abort
+    DDalphaAMG_finalize();
+    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Finalize();
+    exit(1);
+  } 
+  // mg_status should have been used last time for the inversion.
+  return mg_status.iter_count;
+}
+
+int MG_mms_solver_nd(spinor **const up_new, spinor **const dn_new,
+                     spinor * const up_old, spinor * const dn_old,
+                     const double * shifts, const int no_shifts,
+                     const double precision, const int max_iter, const int rel_prec,
+                     const int N, su3 **gf, matrix_mult_nd f)
+{
+  
+  int success=0;
+  double mg_prec = rel_prec?sqrt(precision):sqrt(precision/(square_norm(up_old, N, 1)+square_norm(dn_old, N, 1)));
+  
+  MG_pre_solve(gf);
+
+  success = MG_mms_solve_nd( up_new, dn_new, up_old, dn_old, shifts, no_shifts, mg_prec, N, f );
+  
+#ifdef MGTEST
+  if(success) 
+    success = MG_mms_check_nd( up_new, dn_new, up_old, dn_old, shifts, no_shifts, N, mg_prec, f );
+#endif
+  
+  if(!success) {
+    MG_reset();
+    MG_pre_solve(gf);
+    success = MG_mms_solve_nd( up_new, dn_new, up_old, dn_old, shifts, no_shifts, mg_prec, N, f);
+    
+#ifdef MGTEST
+    if(success) 
+      success = MG_mms_check_nd( up_new, dn_new, up_old, dn_old, shifts, no_shifts, N, mg_prec, f );
 #endif
   }
   
