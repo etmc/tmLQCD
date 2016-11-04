@@ -227,7 +227,7 @@ static inline int MG_mms_check_nd( spinor **const up_new, spinor **const dn_new,
 static int MG_pre_solve( su3 **gf )
 {
   
-  double dtau = abs(mg_tau-gauge_tau);
+  double dtau = fabs(mg_tau-gauge_tau);
   // Checking if:
   //  mg_update_setup < mg_update_setup_iter : maybe you want to do more iteration at this run
   //  mg_dtau_update < dtau  : regular condition for update of setup
