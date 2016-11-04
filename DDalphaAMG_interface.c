@@ -143,7 +143,7 @@ static int MG_check(spinor * const phi_new, spinor * const phi_old, const int N,
 static int MG_pre_solve( su3 **gf )
 {
   
-  double dtau = abs(mg_tau-gauge_tau);
+  double dtau = fabs(mg_tau-gauge_tau);
   // Checking if:
   //  mg_update_setup < mg_update_setup_iter : maybe you want to do more iteration at this run
   //  mg_dtau_update < dtau  : regular condition for update of setup
@@ -151,8 +151,8 @@ static int MG_pre_solve( su3 **gf )
   //  mg_dtau_update == 0.0  : updating at every change of configuration -> valid as well if configuration changed outside the HMC
   //  mg_rho_update < 0.0    : parameter ignore
   //  mg_rho_update == rho   : updating only if this condition and the others are satisfied
-  if ( mg_do_setup == 0 && mg_update_setup < mg_update_setup_iter && ( mg_dtau_update < dtau+1e-6 || (mg_dtau_update==0.0 && mg_update_gauge==1)) &&
-       (mg_rho_update >= 0.0 && mg_rho_update == g_mu3)) 
+  if ( mg_do_setup == 0 && mg_update_setup < mg_update_setup_iter && ( mg_dtau_update < dtau+1e-6 || (mg_dtau_update==0.0 && mg_update_gauge==1) ||
+                                                                       (mg_rho_update >= 0.0 && mg_rho_update == g_mu3) )) 
     mg_update_setup = mg_update_setup_iter;
   
   if(g_debug_level > 0 && g_proc_id == 0)
