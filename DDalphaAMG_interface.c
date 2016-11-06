@@ -760,7 +760,7 @@ void MG_update_mu(double mu_tmLQCD, double shift_tmLQCD)
   
   DDalphaAMG_get_parameters(&mg_params);
   
-  if (mu != mg_params.mu || shift != mg_params.mu_odd_shift || mg_params.mu_even_shift != 0.0 ) {
+  if (mu != mg_params.mu || shift != mg_params.mu_odd_shift || mg_params.mu_even_shift != 0.0 || mg_params.smoother_iterations != 4 ) {
     //Taking advantage of this function for updating printing in HMC
     if(g_debug_level > 0) 
       mg_params.print=1;
@@ -774,6 +774,7 @@ void MG_update_mu(double mu_tmLQCD, double shift_tmLQCD)
     mg_params.epsbar = 0.0;
     mg_params.epsbar_ig5_even_shift = 0.0;
     mg_params.epsbar_ig5_odd_shift = 0.0;
+    mg_params.smoother_iterations = 4;
     DDalphaAMG_update_parameters(&mg_params, &mg_status);
   }	 
 }
@@ -788,7 +789,7 @@ void MG_update_mubar_epsbar(double mubar_tmLQCD, double epsbar_tmLQCD, double sh
   DDalphaAMG_get_parameters(&mg_params);
   
   if ( mubar != mg_params.mu || mg_params.mu_odd_shift != 0.0 || mg_params.mu_even_shift != 0.0 ||
-       epsbar != mg_params.epsbar || shift != mg_params.epsbar_ig5_odd_shift || mg_params.epsbar_ig5_even_shift != 0.0 ) {
+       epsbar != mg_params.epsbar || shift != mg_params.epsbar_ig5_odd_shift || mg_params.epsbar_ig5_even_shift != 0.0 || mg_params.smoother_iterations != 2 ) {
     //Taking advantage of this function for updating printing in HMC
     if(g_debug_level > 0) 
       mg_params.print=1;
@@ -802,6 +803,7 @@ void MG_update_mubar_epsbar(double mubar_tmLQCD, double epsbar_tmLQCD, double sh
     mg_params.epsbar = epsbar;
     mg_params.epsbar_ig5_even_shift = 0.0;
     mg_params.epsbar_ig5_odd_shift = shift;
+    mg_params.smoother_iterations = 2;
     DDalphaAMG_update_parameters(&mg_params, &mg_status);
   }	 
 }
