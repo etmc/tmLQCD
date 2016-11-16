@@ -105,7 +105,7 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
      *********************************************************************/
     g_mu = mnl->mu;
     boundary(mnl->kappa);
-    if((mnl->solver == CG) || (mnl->solver == MIXEDCG) || (mnl->solver == RGMIXEDCG)) {
+    if((mnl->solver == CG) || (mnl->solver == MIXEDCG) || (mnl->solver == RGMIXEDCG) || (mnl->solver == MG)) {
       /* Invert Q_{+} Q_{-} */
       /* X -> w_fields[1] */
       chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
@@ -216,16 +216,24 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
   g_mu = mnl->mu;
   boundary(mnl->kappa);
   if(mnl->even_odd_flag) {
-
-    chrono_guess(mnl->w_fields[0], mnl->pf, mnl->csg_field, mnl->csg_index_array,
-    	 mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
     g_sloppy_precision_flag = 0;
-    mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->pf, mnl->solver_params, mnl->maxiter, 
-                                   mnl->accprec, g_relative_precision_flag,VOLUME/2, mnl->Qsq, mnl->solver);
-    mnl->Qm(mnl->w_fields[1], mnl->w_fields[0]);
+    if( mnl->solver == MG ){
+	chrono_guess(mnl->w_fields[0], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+		     mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qp);
+	mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->pf, mnl->solver_params, mnl->maxiter,
+				      mnl->accprec, g_relative_precision_flag, VOLUME/2, mnl->Qp, mnl->solver);
+	/* Compute the energy contr. from second field */
+	mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME/2, 1); 
+    } else {
+	chrono_guess(mnl->w_fields[0], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+		     mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
+	mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->pf, mnl->solver_params, mnl->maxiter, 
+				       mnl->accprec, g_relative_precision_flag,VOLUME/2, mnl->Qsq, mnl->solver);
+	mnl->Qm(mnl->w_fields[1], mnl->w_fields[0]);
+	/* Compute the energy contr. from first field */
+	mnl->energy1 = square_norm(mnl->w_fields[1], VOLUME/2, 1);
+    }
     g_sloppy_precision_flag = save_sloppy;
-    /* Compute the energy contr. from first field */
-    mnl->energy1 = square_norm(mnl->w_fields[1], VOLUME/2, 1);
   }
   else {
     if((mnl->solver == CG) || (mnl->solver == MIXEDCG)) {

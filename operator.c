@@ -63,6 +63,10 @@
 #ifdef QUDA
 #  include "quda_interface.h"
 #endif
+#ifdef DDalphaAMG
+#  include "DDalphaAMG_interface.h"
+#endif
+
 
 void dummy_D(spinor * const, spinor * const);
 void dummy_Mee(spinor * const, spinor * const, double const);

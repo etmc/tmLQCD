@@ -68,6 +68,9 @@
 #include "integrator.h"
 #include "sighandler.h"
 #include "meas/measurements.h"
+#ifdef DDalphaAMG
+#include "DDalphaAMG_interface.h"
+#endif
 
 extern int nstore;
 

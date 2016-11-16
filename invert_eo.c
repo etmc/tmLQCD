@@ -56,6 +56,9 @@
 #ifdef QUDA
 #  include "quda_interface.h"
 #endif
+#ifdef DDalphaAMG
+#  include "DDalphaAMG_interface.h"
+#endif
 
 static double cgmms_reached_prec = 0.0; 
 static void cgmms_write_props(spinor ** const P, double const * const extra_masses, const int no_extra_masses, const int id, const int iteration);
@@ -92,6 +95,12 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
                           even_odd_flag, solver_params,
                           sloppy, compression);
   }
+#endif
+
+#ifdef DDalphaAMG
+  if ( solver_flag==MG )
+    return MG_solver_eo(Even_new, Odd_new, Even, Odd, precision, max_iter,
+			rel_prec, VOLUME/2, g_gauge_field, &M_full);
 #endif
 
   /* here comes the inversion using even/odd preconditioning */

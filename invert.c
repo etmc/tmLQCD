@@ -86,8 +86,13 @@
 #ifdef QUDA
 #  include "quda_interface.h"
 #endif
+#ifdef DDalphaAMG
+#  include "DDalphaAMG_interface.h"
+#endif
 #include "meas/measurements.h"
 #include "source_generation.h"
+
+
 
 extern int nstore;
 int check_geometry();

@@ -60,6 +60,9 @@
 #include "hamiltonian_field.h"
 #include "update_tm.h"
 #include "gettime.h"
+#ifdef DDalphaAMG
+#include "DDalphaAMG_interface.h"
+#endif
 
 extern su3 ** g_gauge_field_saved;
 
@@ -117,6 +120,10 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
   }
 
+#ifdef DDalphaAMG
+  MG_reset();
+#endif
+
   /* heatbath for all monomials */
   for(i = 0; i < Integrator.no_timescales; i++) {
     for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
@@ -127,7 +134,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   if(Integrator.monitor_forces) monitor_forces(&hf);
   /* initialize the momenta  */
   enep = random_su3adj_field(reproduce_randomnumber_flag, hf.momenta);
-
+  
   g_sloppy_precision = 1;
 
   /* run the trajectory */
@@ -198,7 +205,11 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       }
       free(xlfInfo);
     }
-    
+
+#ifdef DDalphaAMG
+    MG_reset();
+#endif
+
     g_sloppy_precision = 1;
     /* run the trajectory back */
     Integrator.integrate[Integrator.no_timescales-1](-Integrator.tau, 
