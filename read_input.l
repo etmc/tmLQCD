@@ -124,7 +124,6 @@ static inline void rmQuotes(char *str){
   int return_check_flag, return_check_interval;
   int gauge_precision_read_flag;
   int gauge_precision_write_flag;
-  int g_disable_IO_checks;
   int gmres_m_parameter, gmresdr_nr_ev;
   int reproduce_randomnumber_flag;
   double stout_rho;
@@ -213,6 +212,7 @@ static inline void rmQuotes(char *str){
 %x GAUGERPREC
 %x GAUGEWPREC
 %x DSBLIOCHECK
+%x DSBLSRCIOCHECK
 %x PRECON
 %x WRITECP
 %x CPINT
@@ -395,6 +395,8 @@ static inline void rmQuotes(char *str){
 ^GaugeConfigReadPrecision{EQL}     BEGIN(GAUGERPREC);
 ^GaugeConfigWritePrecision{EQL}    BEGIN(GAUGEWPREC);
 ^DisableIOChecks{EQL}              BEGIN(DSBLIOCHECK);
+^DisableGaugeIOChecks{EQL}         BEGIN(DSBLIOCHECK);
+^DisableSourceIOChecks{EQL}        BEGIN(DSBLSRCIOCHECK);
 ^ReproduceRandomNumbers{EQL}       BEGIN(REPRORND);
 ^UseSloppyPrecision{EQL}           BEGIN(SLOPPYPREC);
 ^UseStoutSmearing{EQL}             BEGIN(USESTOUT);
@@ -2142,6 +2144,14 @@ static inline void rmQuotes(char *str){
   g_disable_IO_checks = 0;
   if(myverbose!=0) printf("Enable IO checks (and readback in case of Lemon IO)\n");
 }
+<DSBLSRCIOCHECK>yes {
+  g_disable_src_IO_checks = 1;
+  if(myverbose!=0) printf("Disable IO checks for sources\n");
+}
+<DSBLSRCIOCHECK>no {
+  g_disable_src_IO_checks = 0;
+  if(myverbose!=0) printf("Enable IO checks for sources\n");
+}
 <CPINT>{DIGIT}+   {
   cp_interval=atoi(yytext);
   if(myverbose!=0) printf("Write Checkpoint all %s measurements\n",yytext);
@@ -2606,6 +2616,7 @@ int read_input(char * conf_file){
   gauge_precision_read_flag = _default_gauge_precision_read_flag;
   gauge_precision_write_flag = _default_gauge_precision_write_flag;
   g_disable_IO_checks = _default_g_disable_IO_checks;
+  g_disable_src_IO_checks = _default_g_disable_IO_checks;
   reproduce_randomnumber_flag = _default_reproduce_randomnumber_flag;
   g_sloppy_precision_flag = _default_g_sloppy_precision_flag;
   use_stout_flag = _default_use_stout_flag;
