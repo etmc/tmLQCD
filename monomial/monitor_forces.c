@@ -96,7 +96,7 @@ void monitor_forces(hamiltonian_field_t * const hf) {
       max = sum2;
 #endif
       if(g_proc_id == 0) {
-	printf("# squared force for monomial %s on timescale %d: aver: %1.2e max: %1.2e\n", 
+	printf("# squared force for monomial %s on timescale %d: aver: %1.8e max: %1.8e\n", 
 	       monomial_list[ id ].name,
 	       monomial_list[ id ].timescale,
 	       sum/((double)(VOLUME*g_nproc))/4., max);
