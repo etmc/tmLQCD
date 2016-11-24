@@ -676,7 +676,7 @@ static inline void rmQuotes(char *str){
     if(myverbose) printf("  MGBlockT set to %d line %d operator %d\n", mg_blk[0], line_of_file, current_operator);
   }
   {SPC}*MGSetup2KappaMu{EQL}{FLT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mg_setup_mu=c;
     mg_setup_mu_set=1;
     if(myverbose) printf("  MGSetup2KappaMu set to %f line %d operator %d\n", mg_setup_mu, line_of_file, current_operator);
@@ -687,12 +687,12 @@ static inline void rmQuotes(char *str){
     if(myverbose) printf("  MGCoarseMuFactor set to %f line %d operator %d\n", mg_cmu_factor, line_of_file, current_operator);
   }
   {SPC}*MGMixedPrecision{EQL}yes {
-    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mg_mixed_prec = 1;
     if(myverbose) printf("  MGMixedPrecision set to YES line %d operator %d\n",  line_of_file, current_operator);
   }
   {SPC}*MGMixedPrecision{EQL}no {
-    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mg_mixed_prec = 0;
     if(myverbose) printf("  MGMixedPrecision set to NO line %d operator %d\n",  line_of_file, current_operator);
   }
