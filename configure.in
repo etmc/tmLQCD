@@ -125,7 +125,7 @@ AC_ARG_WITH(DDalphaAMG,
                            [AC_MSG_ERROR([library DDalphaAMG was not found])])],
              [echo no
               DDalphaAMG_AVAILABLE=0
-              DDalphaAMG_INTERFACE=""
+              DDalphaAMG_INTERFACE="DDalphaAMG_interface"
               ])
 
 
