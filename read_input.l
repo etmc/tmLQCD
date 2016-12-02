@@ -2059,6 +2059,12 @@ static inline void rmQuotes(char *str){
     ((reweighting_parameter*)meas->parameter)->maxev = c;
     if(myverbose) printf("Reweighting MaxEv set to %e line %d\n", c, line_of_file);
   }
+  {SPC}*ChebConvLimit{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->testchebconvergence = c;
+    if(myverbose) printf("Reweighting ChebConvLimit set to %e line %d\n", c, line_of_file);
+  }
 }
 
 <PLOOP>{
