@@ -48,6 +48,7 @@ typedef struct {
 	  double rmu;
 	  double minev;
 	  double maxev;
+	double testchebconvergence;
 	  int interpolationsteps;
 	  int estimatorscheb;
 	  int cheborder;

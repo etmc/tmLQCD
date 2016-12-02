@@ -65,7 +65,112 @@
 #include "../global.h"
 #include "solver/jdher.h"
 
+#include <errno.h>
+#ifdef _USE_SHMEM
+# include <mpp/shmem.h>
+#endif
+
 /*#define CHECK_OPERATOR*/
+
+typedef struct {
+	spinor* buffer;
+	spinor** ar;
+	unsigned int length;
+} spinor_array;
+
+static void set_zero(spinor * const R, const int N) {
+#ifdef TM_USE_OMP
+#pragma omp parallel
+	{
+#endif
+
+	int ix;
+	spinor *r;
+
+#ifdef TM_USE_OMP
+#pragma omp for
+#endif
+	for (ix = 0; ix < N; ++ix) {
+		r = (spinor *) R + ix;
+
+		r->s0.c0 = 0.0;
+		r->s0.c1 = 0.0;
+		r->s0.c2 = 0.0;
+
+		r->s1.c0 = 0.0;
+		r->s1.c1 = 0.0;
+		r->s1.c2 = 0.0;
+
+		r->s2.c0 = 0.0;
+		r->s2.c1 = 0.0;
+		r->s2.c2 = 0.0;
+
+		r->s3.c0 = 0.0;
+		r->s3.c1 = 0.0;
+		r->s3.c2 = 0.0;
+	}
+#ifdef TM_USE_OMP
+} /* OpenMP closing brace */
+#endif
+}
+
+static int alloc_spinor_field(spinor_array* ar, int evenodd) {
+	int i = 0;
+	unsigned long int volume = VOLUMEPLUSRAND / 2;
+	if (evenodd == 0) {
+		volume = VOLUMEPLUSRAND;
+	}
+	if (ar->buffer != NULL || ar->ar != NULL || ar->length == 0) {
+		return (3);
+	}
+#if (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
+	if((void*)(ar->buffer = (spinor*)shmalloc((ar->length*volume+1)*sizeof(spinor))) == NULL) {
+		printf ("malloc errno : %d\n",errno);
+		errno = 0;
+		return(1);
+	}
+#else
+	if ((void*) (ar->buffer = (spinor*) calloc(ar->length * volume + 1,
+			sizeof(spinor))) == NULL) {
+		printf("malloc errno : %d\n", errno);
+		errno = 0;
+		return (1);
+	}
+#endif
+	if ((void*) (ar->ar = (spinor**) malloc(ar->length * sizeof(spinor*)))
+			== NULL) {
+		printf("malloc errno : %d\n", errno);
+		errno = 0;
+		return (2);
+	}
+#if ( defined SSE || defined SSE2 || defined SSE3)
+	ar->ar = (spinor*)(((unsigned long int)(ar->buffer)+ALIGN_BASE)&~ALIGN_BASE);
+#else
+	ar->ar[0] = ar->buffer;
+#endif
+
+	for (i = 1; i < ar->length; i++) {
+		ar->ar[i] = g_spinor_field[i - 1] + volume;
+	}
+
+	return (0);
+}
+
+static void free_spinor_field(spinor_array* ar) {
+	if (ar->buffer != NULL) {
+#if (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
+		shfree(ar->buffer);
+#else
+		free(ar->buffer);
+#endif
+	}
+	if (ar->ar != NULL) {
+		free(ar->ar);
+	}
+	ar->ar = NULL;
+	ar->buffer = NULL;
+	ar->length = 0;
+}
 
 static int is_schur_complement(const matrix_mult f) {
 	if (f == Msw_psi ||     //          Schur complement with mu=0 on odd sites
@@ -98,8 +203,6 @@ static double get_sw_reweighting(const double mu1, const double mu2,
 	return (ret);
 }
 
-
-
 static int is_sym_pos_definite(const matrix_mult f) {
 	if (f == Qtm_pm_psi ||    //          Schur complement squared
 			f == Qsw_pm_psi || f == Q_pm_psi) { //          Full operator    squared
@@ -131,150 +234,141 @@ static void update_global_parameters(const int op_id) {
 
 static void estimate_eigenvalues(const int operatorid, const int identifier) {
 #ifdef HAVE_LAPACK
-  vector_list min_ev;
-  vector_list max_ev;
-  spinor * eigenvectors_ = NULL;
-  char filename[200];
-  FILE * ofs;
-  double atime, etime;
-  int max_iterations=5000;
-  double  prec = 1.e-5;
-  int maxvectors;
-  /**********************
-   * For Jacobi-Davidson
-   **********************/
-  int verbosity = g_debug_level, converged = 0, blocksize = 1, blockwise = 0;
-  int solver_it_max = 50, j_max, j_min, ii;
-  /*int it_max = 10000;*/
-  /* _Complex double *eigv_ = NULL, *eigv; */
-  double decay_min = 1.7, decay_max = 1.5,
-    threshold_min = 1.e-3, threshold_max = 5.e-2;
-  double ev_max, ev_min;
+	vector_list min_ev;
+	vector_list max_ev;
+	spinor * eigenvectors_ = NULL;
+	char filename[200];
+	FILE * ofs;
+	double atime, etime;
+	int max_iterations = 5000;
+	double prec = 1.e-5;
+	int maxvectors;
+	/**********************
+	 * For Jacobi-Davidson
+	 **********************/
+	int verbosity = g_debug_level, converged = 0, blocksize = 1, blockwise = 0;
+	int solver_it_max = 50, j_max, j_min, ii;
+	/*int it_max = 10000;*/
+	/* _Complex double *eigv_ = NULL, *eigv; */
+	double decay_min = 1.7, decay_max = 1.5, threshold_min = 1.e-3,
+			threshold_max = 5.e-2;
+	double ev_max, ev_min;
 
-  /* static int v0dim = 0; */
-  int v0dim = 0;
-  int N = (VOLUME)/2, N2 = (VOLUMEPLUSRAND)/2;
-  operator * optr;
+	/* static int v0dim = 0; */
+	int v0dim = 0;
+	int N = (VOLUME) / 2, N2 = (VOLUMEPLUSRAND) / 2;
+	operator * optr;
 
-  /**********************
-   * General variables
-   **********************/
-  int returncode=0;
-  int returncode2=0;
+	/**********************
+	 * General variables
+	 **********************/
+	int returncode = 0;
+	int returncode2 = 0;
 
-
-  min_ev.s=2;
-  min_ev.el=malloc(min_ev.s*sizeof(double));
-  max_ev.s=2;
-  max_ev.el=malloc(max_ev.s*sizeof(double));
+	min_ev.s = 2;
+	min_ev.el = malloc(min_ev.s * sizeof(double));
+	max_ev.s = 2;
+	max_ev.el = malloc(max_ev.s * sizeof(double));
 
 	optr = &operator_list[operatorid];
 
-
-  if(!is_schur_complement(optr->applyQsq)) {
-    N = VOLUME;
-    N2 = VOLUMEPLUSRAND;
-  }
-
-  evlength = N2;
-  if(g_proc_id == g_stdio_proc && g_debug_level >0) {
-    printf("Number of eigenvalues to compute = %d %d\n",min_ev.s,max_ev.s);
-    printf("Using Jacobi-Davidson method! \n");
-  }
+	if (!is_schur_complement(optr->applyQsq)) {
+		N = VOLUME;
+		N2 = VOLUMEPLUSRAND;
+	}
 
 
-  if(max_ev.s < 8){
-    j_max = 15;
-    j_min = 8;
-  }
-  else{
-    j_max = 2*max_ev.s;
-    j_min = max_ev.s;
-  }
+	evlength = N2;
+	if (g_proc_id == g_stdio_proc && g_debug_level > 0) {
+		printf("Number of eigenvalues to compute = %d %d\n", min_ev.s,
+				max_ev.s);
+		printf("Using Jacobi-Davidson method! \n");
+	}
 
-    maxvectors=min_ev.s>max_ev.s ? min_ev.s:max_ev.s;
+	if (max_ev.s < 8) {
+		j_max = 15;
+		j_min = 8;
+	} else {
+		j_max = 2 * max_ev.s;
+		j_min = max_ev.s;
+	}
+
+	maxvectors = min_ev.s > max_ev.s ? min_ev.s : max_ev.s;
 
 #if (defined SSE || defined SSE2 || defined SSE3)
-    eigenvectors_ = calloc(N2*maxvectors+1, sizeof(spinor));
-    eigenvectors = (spinor *)(((unsigned long int)(eigenvectors_)+ALIGN_BASE)&~ALIGN_BASE);
+	eigenvectors_ = calloc(N2*maxvectors+1, sizeof(spinor));
+	eigenvectors = (spinor *)(((unsigned long int)(eigenvectors_)+ALIGN_BASE)&~ALIGN_BASE);
 #else
-    eigenvectors_= calloc(N2*maxvectors, sizeof(spinor));
-    eigenvectors = eigenvectors_;
+	eigenvectors_ = calloc(N2 * maxvectors, sizeof(spinor));
+	eigenvectors = eigenvectors_;
 #endif
 
-   atime = gettime();
+	atime = gettime();
+
+
 
 	update_global_parameters(operatorid);
-    /* (re-) compute minimal eigenvalues */
-   converged = 0;
-   solver_it_max = 200;
+	/* (re-) compute minimal eigenvalues */
+	converged = 0;
+	solver_it_max = 200;
 
+	jdher(N * sizeof(spinor) / sizeof(_Complex double),
+			N2 * sizeof(spinor) / sizeof(_Complex double), 50., prec, max_ev.s,
+			j_max, j_min, max_iterations, blocksize, blockwise, v0dim,
+			(_Complex double*) eigenvectors, CG, solver_it_max, threshold_max,
+			decay_max, verbosity, &converged, (_Complex double*) eigenvectors,
+			max_ev.el, &returncode, JD_MAXIMAL, 1, optr->applyQsq);
 
-   jdher(N*sizeof(spinor)/sizeof(_Complex double), N2*sizeof(spinor)/sizeof(_Complex double),
-	  50., prec,max_ev.s, j_max, j_min,
-	  max_iterations, blocksize, blockwise, v0dim, (_Complex double*) eigenvectors,
-	  CG, solver_it_max,
-	  threshold_max, decay_max, verbosity,
-	  &converged, (_Complex double*) eigenvectors, max_ev.el,
-	  &returncode, JD_MAXIMAL, 1,
-	  optr->applyQsq);
+	max_ev.s = converged;
 
-   max_ev.s = converged;
+	if (min_ev.s < 8) {
+		j_max = 15;
+		j_min = 8;
+	} else {
+		j_max = 2 * min_ev.s;
+		j_min = min_ev.s;
+	}
 
-   if(min_ev.s < 8){
-     j_max = 15;
-     j_min = 8;
-   }
-   else{
-     j_max = 2*min_ev.s;
-     j_min = min_ev.s;
-   }
+	converged = 0;
+	solver_it_max = 200;
 
-   converged = 0;
-   solver_it_max = 200;
+	jdher(N * sizeof(spinor) / sizeof(_Complex double),
+			N2 * sizeof(spinor) / sizeof(_Complex double), 0., prec, min_ev.s,
+			j_max, j_min, max_iterations, blocksize, blockwise, v0dim,
+			(_Complex double*) eigenvectors, CG, solver_it_max, threshold_min,
+			decay_min, verbosity, &converged, (_Complex double*) eigenvectors,
+			min_ev.el, &returncode2, JD_MINIMAL, 1, optr->applyQsq);
 
-   jdher(N*sizeof(spinor)/sizeof(_Complex double), N2*sizeof(spinor)/sizeof(_Complex double),
-	  0., prec,
-	  min_ev.s, j_max, j_min,
-	  max_iterations, blocksize, blockwise, v0dim, (_Complex double*) eigenvectors,
-	  CG, solver_it_max,
-	  threshold_min, decay_min, verbosity,
-	  &converged, (_Complex double*) eigenvectors, min_ev.el,
-	  &returncode2, JD_MINIMAL, 1,
-	  optr->applyQsq);
+	min_ev.s = converged;
 
-   min_ev.s = converged;
+	free(eigenvectors_);
 
-   free(eigenvectors_);
+	etime = gettime();
+	if (g_proc_id == 0) {
+		printf("Eigenvalues computed in %e sec. gettime)\n", etime - atime);
+	}
 
-    etime = gettime();
-    if(g_proc_id == 0) {
-      printf("Eigenvalues computed in %e sec. gettime)\n", etime-atime);
-    }
+	ev_min = min_ev.el[min_ev.s - 1];
+	ev_max = max_ev.el[max_ev.s - 1];
+	eigenvalues_for_cg_computed = converged;
 
-  ev_min= min_ev.el[min_ev.s-1];
-  ev_max= max_ev.el[max_ev.s-1];
-  eigenvalues_for_cg_computed = converged;
-
-  if(g_proc_id == 0){
-	sprintf(filename,"rew_ev_estimate.%d", nstore);
-	ofs = fopen(filename, "a");
-	for(ii = 0; ii < max_ev.s; ii++) {
-	      fprintf(ofs, "%d %e 1\n",ii,max_ev.el[ii]);
-	  }
-	for(ii = 0; ii < min_ev.s; ii++) {
-	      fprintf(ofs, "%d %e 1\n",ii,min_ev.el[ii]);
-	  }
-	 fclose(ofs);
-  }
-  free(min_ev.el);
-  free(max_ev.el);
+	if (g_proc_id == 0) {
+		sprintf(filename, "rew_ev_estimate.%d", nstore);
+		ofs = fopen(filename, "a");
+		for (ii = 0; ii < max_ev.s; ii++) {
+			fprintf(ofs, "%d %e 1\n", ii, max_ev.el[ii]);
+		}
+		for (ii = 0; ii < min_ev.s; ii++) {
+			fprintf(ofs, "%d %e 1\n", ii, min_ev.el[ii]);
+		}
+		fclose(ofs);
+	}
+	free(min_ev.el);
+	free(max_ev.el);
 #else
-  fprintf(stderr, "lapack not available, so JD method for EV computation not available \n");
+	fprintf(stderr, "lapack not available, so JD method for EV computation not available \n");
 #endif
 }
-
-
 
 static int invert_operator_Q(spinor * const P, spinor * const Q,
 		const int op_id, const int pm) {
@@ -454,10 +548,10 @@ static double poly_cheb(const unsigned int np, const double * const coeff,
 }
 
 /*Trivial test tests the function with the scaled idenetity matrix.*/
-//#define TRIVIAL_TEST
+/*#define TRIVIAL_TEST*/
 /*Convergence chesk: comparison of order n and n+1.*/
 #define CHECK_CONVERGENCE
-static double log_determinant_estimate(const int operatorid, int chebmax,
+static void log_determinant_estimate(const int operatorid, int chebmax,
 		int estimators, const double minev, const double maxev,
 		const double kappa1, const double kappa2, const double kappa2Mu1,
 		const double kappa2Mu2, const double shift, const int traj,
@@ -469,17 +563,19 @@ static double log_determinant_estimate(const int operatorid, int chebmax,
 	const double b = -t2 / t1;
 	const double am = t1 / 2.0;
 	const double bm = t2 / 2.0;
+	double rel_shift;
 	int k, l, n;
 	int orderstart, orderend;
 	int splitlength, sl;
-	double x, y, y1, ldet, prodre;
+	spinor_array spinorarray;
+	static int written = 0;
+	double x, y, y1, prodre;
 	FILE * ofs;
-	spinor * vs1;
-	spinor * vs2;
+	spinor * vs;
 	spinor * u;
 #ifdef CHECK_CONVERGENCE
 	spinor * unm1;
-	double prodrenm1, ldetnm1;
+	double prodrenm1;
 #endif
 	spinor * v0;
 	spinor * v1;
@@ -491,64 +587,39 @@ static double log_determinant_estimate(const int operatorid, int chebmax,
 	operator * optr;
 	char* filename;
 	char buf[100];
+
+	spinorarray.ar = NULL;
+	spinorarray.buffer = NULL;
+	spinorarray.length = 0;
+
+
 	n = VOLUME;
 
 	filename = buf;
 	sprintf(filename, "%s%.6d", "reweightingmeas_cheb.", traj);
 
-	vs1 = g_spinor_field[0];
-	vs2 = g_spinor_field[1];
-	u = g_spinor_field[2];
-	v0 = g_spinor_field[4];
-	v1 = g_spinor_field[6];
-	v2 = g_spinor_field[8];
-	vt0 = g_spinor_field[10];
-	vt1 = g_spinor_field[12];
-	vt2 = g_spinor_field[14];
-#ifdef CHECK_CONVERGENCE
-	unm1 = g_spinor_field[16];
-#endif
-
 	optr = &operator_list[operatorid];
+
+	spinorarray.length = 9;
 	if (is_schur_complement(optr->applyQsq)) {
 		n = VOLUME / 2;
-		vs1 = g_spinor_field[0];
-		vs2 = g_spinor_field[1];
-		u = g_spinor_field[3];
-		v0 = g_spinor_field[4];
-		v1 = g_spinor_field[5];
-		v2 = g_spinor_field[6];
-		vt0 = g_spinor_field[7];
-		vt1 = g_spinor_field[8];
-		vt2 = g_spinor_field[9];
-#ifdef CHECK_CONVERGENCE
-		unm1 = g_spinor_field[10];
-#endif
-#ifdef CHECK_CONVERGENCE
-		if (DUM_MATRIX < 11) {
-#else
-			if (DUM_MATRIX < 10) {
-#endif
-			if (g_proc_id == 0) {
-				fprintf(stderr, "Not enough spinor fields %d < 10 \n\n",
-						DUM_MATRIX);
-			}
-			return 0.0;
-		}
-
+		alloc_spinor_field(&spinorarray, 1);
 	} else {
-#ifdef CHECK_CONVERGENCE
-		if (DUM_MATRIX < 18) {
-#else
-			if (DUM_MATRIX < 16) {
-#endif
-			if (g_proc_id == 0) {
-				fprintf(stderr, "Not enough spinor fields %d < 16 \n\n",
-						DUM_MATRIX);
-			}
-			return 0.0;
-		}
+		alloc_spinor_field(&spinorarray, 0);
 	}
+
+	vs = spinorarray.ar[0];
+	u = spinorarray.ar[1];
+	v0 = spinorarray.ar[2];
+	v1 = spinorarray.ar[3];
+	v2 = spinorarray.ar[4];
+	vt0 = spinorarray.ar[5];
+	vt1 = spinorarray.ar[6];
+	vt2 = spinorarray.ar[7];
+#ifdef CHECK_CONVERGENCE
+	unm1 = spinorarray.ar[8];
+#endif
+
 	if (coefflist->el != NULL && coefflist->s != 0) {
 		chebmax = coefflist->s;
 		coeff = malloc(chebmax * sizeof(double));
@@ -559,8 +630,9 @@ static double log_determinant_estimate(const int operatorid, int chebmax,
 		coeff = malloc(chebmax * sizeof(double));
 		chebyshev_coeff(chebmax, coeff, am, bm);
 	}
-	if (g_proc_id == 0 && g_debug_level > 3) {
-		ofs = fopen("polynomialapproxtest.txt", "a");
+	if (g_proc_id == 0 && g_debug_level > 3 && written == 0) {
+		written = 1;
+		ofs = fopen("polynomialapproxtest.txt", "w");
 		fprintf(ofs,
 				"# Test of the Chebyshev approximation of the log(x) function: index x y |y-log(x)| chebyshevorder minx, maxx\n");
 		for (k = 0; k < 200; k++) {
@@ -574,48 +646,65 @@ static double log_determinant_estimate(const int operatorid, int chebmax,
 					fabs(y - log(x)), fabs(y1 - log(x)), chebmax, minev, maxev);
 		}
 		fclose(ofs);
+		ofs = fopen("coeff_out.txt", "w");
+		for (k = 0; k < chebmax; k++) {
+			fprintf(ofs, "%g\n", coeff[k]);
+		}
+		fclose(ofs);
 	}
 
 	/* include T_min(x) to T_(max-1) (x) */
 	orderstart = 0;
 	orderend = chebmax;
 	splitlength = 1;
+	rel_shift = shift;
 	if (split->est != NULL && split->ord != NULL && split->s != 0) {
 		splitlength = split->s;
 		orderend = split->ord[0];
 		estimators = split->est[0];
 	}
 	for (sl = 0; sl < splitlength; sl++) {
-		ldet = 0;
 		if (sl > 0) {
 			orderstart = orderend;
 			orderend = split->ord[sl];
 			estimators = split->est[sl];
+			rel_shift = 0.0;
 		}
-#ifdef CHECK_CONVERGENCE
-		ldetnm1 = 0;
-#endif
+
 		if (orderend > 0) {
 			for (k = 0; k < estimators; k++) {
+				if (orderstart > 1 || orderend < 2) {
+					set_zero(u, n);
+#ifdef CHECK_CONVERGENCE
+					set_zero(unm1, n);
+#endif
+				}
 				/*
-				 * Generate estimator (may be half of it is never used)
+				 * Generate estimator
 				 */
-				random_spinor_field_eo(vs1, reproduce_randomnumber_flag, RN_Z2);
-				random_spinor_field_eo(vs2, reproduce_randomnumber_flag, RN_Z2);
+				if (n == VOLUME / 2) {
+					random_spinor_field_eo(vs, reproduce_randomnumber_flag,
+							RN_Z2);
+				} else {
+					random_spinor_field_lexic(vs, reproduce_randomnumber_flag,
+							RN_Z2);
+				}
 
-				assign(v0, vs1, n);
-				assign(vt0, vs1, n);
+				assign(v0, vs, n);
+				assign(vt0, vs, n);
 
 #ifdef TRIVIAL_TEST
+				prodre = scalar_prod_r(vs1, vs1, n, 1);
+				printf("Test noise <v|v>/Volume= %g, Volume=%d\n",prodre/(double)n,n);
 				mul_r(v1,kappa1,vs1,n);
 #else
 				optr->kappa = kappa1;
 				optr->mu = kappa2Mu1;
 				update_global_parameters(operatorid);
-				optr->applyQsq(v1, vs1);
+				optr->applyQsq(v1, vs);
 #endif
 				/* Makes (*R)=c1*(*R)+c2*(*S) , c1 and c2 are real constants */
-				assign_mul_add_mul_r(v1, vs1, a, b, n);
+				assign_mul_add_mul_r(v1, vs, a, b, n);
 
 #ifdef TRIVIAL_TEST
 				mul_r(vt1,kappa2,vs1,n);
@@ -623,10 +712,10 @@ static double log_determinant_estimate(const int operatorid, int chebmax,
 				optr->kappa = kappa2;
 				optr->mu = kappa2Mu2;
 				update_global_parameters(operatorid);
-				optr->applyQsq(vt1, vs1);
+				optr->applyQsq(vt1, vs);
 #endif
 				/* Makes (*R)=c1*(*R)+c2*(*S) , c1 and c2 are real constants */
-				assign_mul_add_mul_r(vt1, vs1, a, b, n);
+				assign_mul_add_mul_r(vt1, vs, a, b, n);
 
 				if (orderstart < 2) {
 					/* Makes (*R)=c1*(*S)-c2*(*U) , c1 and c2 are complex constants */
@@ -652,7 +741,7 @@ static double log_determinant_estimate(const int operatorid, int chebmax,
 #else
 					mul_r(v2,kappa1,v1,n);
 #endif
-					if(l+1>orderstart) {
+					if(l+1>=orderstart) {
 						/* Makes (*R) = c1*(*R) + c2*(*S) + c3*(*U) */
 						assign_mul_add_mul_add_mul_r(v2, v1, v0, 2.0 * a, 2.0 * b, -1.0,
 								n);
@@ -679,7 +768,7 @@ static double log_determinant_estimate(const int operatorid, int chebmax,
 					vt1 = vt2;
 					vt2 = tmp;
 
-					if(l+1>orderstart) {
+					if(l+1>=orderstart) {
 						/* (*R) = (*R) + c1*(*S) + c2*(*U) */
 						assign_add_mul_add_mul_r(u, vt1, v1, coeff[l + 1],
 								-coeff[l + 1], n);
@@ -709,7 +798,8 @@ static double log_determinant_estimate(const int operatorid, int chebmax,
 					v0 = v1;
 					v1 = v2;
 					v2 = tmp;
-					if (l + 1 > orderstart) {
+
+					if (l + 1 >= orderstart) {
 						/*   (*P) = (*P) + c(*Q)        c is a real constant   */
 						assign_add_mul_r(u, v1, -coeff[l + 1], n);
 #ifdef CHECK_CONVERGENCE
@@ -738,7 +828,7 @@ static double log_determinant_estimate(const int operatorid, int chebmax,
 					vt0 = vt1;
 					vt1 = vt2;
 					vt2 = tmp;
-					if (l + 1 > orderstart) {
+					if (l + 1 >= orderstart) {
 						/*   (*P) = (*P) + c(*Q)        c is a real constant   */
 						assign_add_mul_r(u, vt1, coeff[l + 1], n);
 #ifdef CHECK_CONVERGENCE
@@ -749,34 +839,20 @@ static double log_determinant_estimate(const int operatorid, int chebmax,
 					}
 				}
 
-				prodre = scalar_prod_r(vs1, u, n, 1);
-				ldet += prodre / ((double) estimators);
+				prodre = scalar_prod_r(vs, u, n, 1);
 #ifdef CHECK_CONVERGENCE
-				prodrenm1 = scalar_prod_r(vs1, unm1, n, 1);
-				ldetnm1 += prodrenm1 / ((double) estimators);
+				prodrenm1 = scalar_prod_r(vs, unm1, n, 1);
 #endif
-				if (g_proc_id == 0 && g_debug_level > 3) {
-					ofs = fopen("estimators.txt", "a");
-					fprintf(ofs, "# Test of stochastic estimation\n");
-					fprintf(ofs, "%d %g %g %g %g  %g  %d %d %d %g %g  %g   ", k,
-							kappa1, kappa2, kappa2Mu1, kappa2Mu2, prodre,
-							estimators, orderstart, orderend, minev, maxev,
-							ldet);
-#ifdef CHECK_CONVERGENCE
-					fprintf(ofs, " %g %g", prodrenm1, ldetnm1);
-#endif
-					fprintf(ofs, "\n");
-					fclose(ofs);
-				}
 
 				if (g_proc_id == 0) {
 					ofs = fopen(filename, "a");
 					fprintf(ofs, "%d %d %g %g %g %g %d %d %g %g ", traj, sl,
 							kappa1, kappa2, kappa2Mu1, kappa2Mu2, orderend,
 							orderstart, minev, maxev);
-					fprintf(ofs, "     %.17g %.17g ", prodre + shift, prodre);
+					fprintf(ofs, "     %.17g %.17g ", prodre + rel_shift,
+							prodre);
 #ifdef CHECK_CONVERGENCE
-					fprintf(ofs, "      %.17g \n", prodrenm1 + shift);
+					fprintf(ofs, "      %.17g \n", prodrenm1 + rel_shift);
 #endif
 					fclose(ofs);
 				}
@@ -785,7 +861,7 @@ static double log_determinant_estimate(const int operatorid, int chebmax,
 		} /* orderend>0*/
 	} /* splitlength loop */
 	free(coeff);
-	return (ldet);
+	free_spinor_field(&spinorarray);
 }
 
 void reweighting_measurement(const int traj, const int id, const int ieo) {
@@ -940,13 +1016,27 @@ void reweighting_measurement(const int traj, const int id, const int ieo) {
 		}
 	}
 
+	if (param->use_evenodd && !is_schur_complement(optr->applyQsq)
+			&& g_proc_id == 0) {
+		printf(
+				"WARNING: If you want to use the preconditioned version the operator should be even-odd preconditioned.\n");
+	}
+
 	cswpart = 0;
 
-	if(param->evest){
-		estimate_eigenvalues(operatorid,traj);
+	if (param->evest) {
+		if (g_proc_id == 0) {
+			printf("Calculating minimal/maximal eigenvalue estimates.\n");
+		}
+		estimate_eigenvalues(operatorid, traj);
 	}
 
 	if (param->use_cheb) {
+		if (is_schur_complement(optr->applyQsq) && !param->use_evenodd
+				&& g_proc_id == 0) {
+			printf(
+					"WARNING: If you want to use Chebyshev approximation without preconditioning you have to switch it of in the operator as well.\n");
+		}
 		if (param->use_evenodd == 1) {
 			cswpart = get_sw_reweighting(k2muinitial, k2mufinal, kappainitial,
 					kappafinal, cswinitial, cswfinal);
@@ -971,8 +1061,12 @@ void reweighting_measurement(const int traj, const int id, const int ieo) {
 	for (internum = 0; internum < param->interpolationsteps; internum++) {
 		if (kapparew) {
 			kappa0 = kappa;
-			interpolate(&kappa, kappainitial, kappafinal,
+			tmp1=1.0/kappainitial;
+			tmp2=1.0/kappafinal;
+			tmp3=1.0/kappa;
+			interpolate(&tmp3, tmp1,tmp2,
 					param->interpolationsteps, internum);
+			kappa=1.0/tmp3;
 		}
 		if (murew) {
 			/* use quadratic interpolation in the case of mu*/
@@ -1249,7 +1343,8 @@ void initialize_reweighting_parameter(void** parameter) {
 		param->splitlist.ord = NULL;
 		param->splitlist.est = NULL;
 		param->splitlist.s = 0;
-		param->evest=0;
+		param->evest = 0;
+		param->testchebconvergence = 0;
 		read_coeff_from_file(&param->coeff);
 		read_splitlist(&param->splitlist);
 	}

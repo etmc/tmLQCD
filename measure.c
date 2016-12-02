@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
 #endif
 
   DUM_DERI = 8;
-  DUM_MATRIX = DUM_DERI + 5; /* 5 fields for doing the inversions (might be used by other opetations if no inverter used*/
+  DUM_MATRIX = DUM_DERI + 5; /* 5 fields for doing the inversions (might be used by other operations if no inverter used*/
   NO_OF_SPINORFIELDS = DUM_MATRIX + 4; /* Don't access these fields if you apply multiplications!*/
 
   //4 extra fields (corresponding to DUM_MATRIX+0..5) for deg. and ND matrix mult.  
