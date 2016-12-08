@@ -631,8 +631,13 @@ static inline void rmQuotes(char *str){
 }
 
 <INITMULTIGRID>AMG{SPC}* {
+#ifdef DDalphaAMG
  if(myverbose) printf("Initialising DDalphaAMG line %d\n", line_of_file); 
  BEGIN(MULTIGRID);
+#else
+ printf("ERROR line %d: DDalphaAMG library not included\n", line_of_file);
+ exit(1);
+#endif
  }
 <MULTIGRID>{
   {SPC}*MGSetupIter{EQL}{DIGIT}+ {
@@ -1171,9 +1176,14 @@ static inline void rmQuotes(char *str){
     BEGIN(name_caller);
   }
   DDalphaAMG {
+#ifdef DDalphaAMG
     optr->solver = MG;
     if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
+#else
+    printf("ERROR line %d operator %d: DDalphaAMG library not included\n", line_of_file, current_operator);
+    exit(1);
+#endif
   }
 }
 

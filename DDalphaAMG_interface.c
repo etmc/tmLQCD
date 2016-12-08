@@ -20,7 +20,66 @@
  * Interface for DDalphaAMG
  *
  *******************************************************************************/
+
 #include "DDalphaAMG_interface.h"
+
+#ifndef DDalphaAMG
+
+int mg_setup_iter;
+int mg_coarse_setup_iter;
+int mg_update_setup_iter;
+int mg_omp_num_threads;
+int mg_Nvec;
+int mg_lvl;
+int mg_blk[4];
+int mg_mixed_prec;
+int mg_setup_mu_set;
+double mg_setup_mu;
+double mg_cmu_factor;
+double mg_dtau_update;
+double mg_rho_update;
+
+void MG_init(void) {
+    printf("ERROR: MG_init called but DDalphaAMG library not included.\n");
+    exit(1);
+}
+
+void MG_update_gauge(double step) {
+    printf("ERROR: MG_update_gauge called but DDalphaAMG library not included.\n");
+    exit(1);
+}
+
+void MG_update_mu(double mu_tmLQCD, double odd_tmLQCD) {
+    printf("ERROR: MG_update_mu called but DDalphaAMG library not included.\n");
+    exit(1);
+}
+
+void MG_reset(void) {
+    printf("ERROR: MG_reset called but DDalphaAMG library not included.\n");
+    exit(1);
+}
+
+void MG_finalize(void) {
+    printf("ERROR: MG_finalize called but DDalphaAMG library not included.\n");
+    exit(1);
+}
+
+int MG_solver(spinor * const phi_new, spinor * const phi_old,
+	      const double precision, const int max_iter,const int rel_prec,
+	      const int N, su3 **gf, matrix_mult f) {
+    printf("ERROR: MG_solver called but DDalphaAMG library not included.\n");
+    exit(1);
+}
+
+int MG_solver_eo(spinor * const Even_new, spinor * const Odd_new,
+		 spinor * const Even, spinor * const Odd,
+		 const double precision, const int max_iter, const int rel_prec,
+		 const int N, su3 **gf, matrix_mult_full f_full) {
+    printf("ERROR: MG_solver_eo called but DDalphaAMG library not included.\n");
+    exit(1);
+}
+
+#else
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -563,3 +622,5 @@ int MG_solver_eo(spinor * const Even_new, spinor * const Odd_new,
   
   return iter_count;
 }
+
+#endif

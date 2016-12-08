@@ -520,7 +520,7 @@ int main(int argc,char *argv[]) {
     /* online measurements */
 #ifdef DDalphaAMG
     // When the configuration is rejected, we have to update it in the MG and redo the setup.
-    int mg_update = accepted ? 0:1;
+    int mg_update = accept ? 0:1;
 #endif
     for(imeas = 0; imeas < no_measurements; imeas++){
       meas = &measurement_list[imeas];
