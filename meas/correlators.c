@@ -123,7 +123,7 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
   Cp4 = (double*) calloc(T, sizeof(double));
 #endif
   source_generation_pion_only(g_spinor_field[0], g_spinor_field[1], 
-			      t0, 0, traj);
+			      t0, 0, traj, measurement_list[id].seed);
   optr->sr0 = g_spinor_field[0];
   optr->sr1 = g_spinor_field[1];
   optr->prop0 = g_spinor_field[2];

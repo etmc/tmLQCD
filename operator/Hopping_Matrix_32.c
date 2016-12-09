@@ -74,7 +74,7 @@
 #endif
 #include "global.h"
 #include "su3.h"
-#ifdef USE_MPI
+#ifdef TM_USE_MPI
 #  include "xchange/xchange.h"
 #endif
 #include "boundary.h"

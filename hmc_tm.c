@@ -154,8 +154,7 @@ int main(int argc,char *argv[]) {
 #endif
 
   DUM_DERI = 4;
-  DUM_SOLVER = DUM_DERI+1;
-  DUM_MATRIX = DUM_SOLVER+6;
+  DUM_MATRIX = DUM_DERI+7;
   if(g_running_phmc) {
     NO_OF_SPINORFIELDS = DUM_MATRIX+8;
   }
@@ -519,12 +518,22 @@ int main(int argc,char *argv[]) {
     }
 
     /* online measurements */
+#ifdef DDalphaAMG
+    // When the configuration is rejected, we have to update it in the MG and redo the setup.
+    int mg_update = accept ? 0:1;
+#endif
     for(imeas = 0; imeas < no_measurements; imeas++){
       meas = &measurement_list[imeas];
       if(trajectory_counter%meas->freq == 0){
         if (g_proc_id == 0) {
           fprintf(stdout, "#\n# Beginning online measurement.\n");
         }
+#ifdef DDalphaAMG
+        if( mg_update ) {
+          mg_update = 0;
+          MG_reset();
+        }
+#endif
         meas->measurefunc(trajectory_counter, imeas, even_odd_flag);
       }
     }

@@ -53,6 +53,10 @@ typedef struct {
   /* for maximal iterations in inversions for correlators */
   int max_iter;
 
+  // random seed
+  unsigned int seed;
+
+
   /* maximum number of slice, the source can be put
     if the correlator is measured in T(Z)-direction this will be set to 
     T(LZ) by init_measurements

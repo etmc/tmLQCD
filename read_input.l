@@ -125,7 +125,6 @@ static inline void rmQuotes(char *str){
   int return_check_flag, return_check_interval;
   int gauge_precision_read_flag;
   int gauge_precision_write_flag;
-  int g_disable_IO_checks;
   int gmres_m_parameter, gmresdr_nr_ev;
   int reproduce_randomnumber_flag;
   double stout_rho;
@@ -214,6 +213,7 @@ static inline void rmQuotes(char *str){
 %x GAUGERPREC
 %x GAUGEWPREC
 %x DSBLIOCHECK
+%x DSBLSRCIOCHECK
 %x PRECON
 %x WRITECP
 %x CPINT
@@ -346,6 +346,8 @@ static inline void rmQuotes(char *str){
 %x MIXCGEPS
 %x MIXCGIT
 
+%x LOWMEM
+%x SUBPROCESS 
 
 %%
 ^SourceFilename{EQL}               BEGIN(SOURCEFILE);
@@ -395,6 +397,8 @@ static inline void rmQuotes(char *str){
 ^GaugeConfigReadPrecision{EQL}     BEGIN(GAUGERPREC);
 ^GaugeConfigWritePrecision{EQL}    BEGIN(GAUGEWPREC);
 ^DisableIOChecks{EQL}              BEGIN(DSBLIOCHECK);
+^DisableGaugeIOChecks{EQL}         BEGIN(DSBLIOCHECK);
+^DisableSourceIOChecks{EQL}        BEGIN(DSBLSRCIOCHECK);
 ^ReproduceRandomNumbers{EQL}       BEGIN(REPRORND);
 ^UseSloppyPrecision{EQL}           BEGIN(SLOPPYPREC);
 ^UseStoutSmearing{EQL}             BEGIN(USESTOUT);
@@ -446,7 +450,8 @@ static inline void rmQuotes(char *str){
 ^MixCGInnerEps{EQL}                BEGIN(MIXCGEPS);
 ^MixCGMaxIter{EQL}                 BEGIN(MIXCGIT);
 
-
+^EnableLowmem{EQL}                 BEGIN(LOWMEM);
+^EnableSubprocess{EQL}             BEGIN(SUBPROCESS);
 
 
 <INITGPU>Init{SPC}* {
@@ -628,8 +633,13 @@ static inline void rmQuotes(char *str){
 }
 
 <INITMULTIGRID>AMG{SPC}* {
+#ifdef DDalphaAMG
  if(myverbose) printf("Initialising DDalphaAMG line %d\n", line_of_file); 
  BEGIN(MULTIGRID);
+#else
+ printf("ERROR line %d: DDalphaAMG library not included\n", line_of_file);
+ exit(1);
+#endif
  }
 <MULTIGRID>{
   {SPC}*MGSetupIter{EQL}{DIGIT}+ {
@@ -672,15 +682,26 @@ static inline void rmQuotes(char *str){
     mg_blk[0]=a;
     if(myverbose) printf("  MGBlockT set to %d line %d operator %d\n", mg_blk[0], line_of_file, current_operator);
   }
-  {SPC}*MGSetupMu{EQL}{FLT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+  {SPC}*MGSetup2KappaMu{EQL}{FLT}+ {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mg_setup_mu=c;
-    if(myverbose) printf("  MGSetupMu set to %f line %d operator %d\n", mg_cmu_factor, line_of_file, current_operator);
+    mg_setup_mu_set=1;
+    if(myverbose) printf("  MGSetup2KappaMu set to %f line %d operator %d\n", mg_setup_mu, line_of_file, current_operator);
   }
   {SPC}*MGCoarseMuFactor{EQL}{FLT}+ {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mg_cmu_factor=c;
     if(myverbose) printf("  MGCoarseMuFactor set to %f line %d operator %d\n", mg_cmu_factor, line_of_file, current_operator);
+  }
+  {SPC}*MGMixedPrecision{EQL}yes {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mg_mixed_prec = 1;
+    if(myverbose) printf("  MGMixedPrecision set to YES line %d operator %d\n",  line_of_file, current_operator);
+  }
+  {SPC}*MGMixedPrecision{EQL}no {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mg_mixed_prec = 0;
+    if(myverbose) printf("  MGMixedPrecision set to NO line %d operator %d\n",  line_of_file, current_operator);
   }
   {SPC}*MGdtauUpdate{EQL}{FLT}+ {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
@@ -692,12 +713,6 @@ static inline void rmQuotes(char *str){
     mg_rho_update=c;
     if(myverbose) printf("  MG_rho_Update set to %f line %d operator %d\n", mg_rho_update, line_of_file, current_operator);
   }
-  {SPC}*MGdtauSetupIter{EQL}{DIGIT}+ { /*START TO_REMOVE*/
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    mg_update_setup_iter=a;
-    if(g_proc_id == 0) printf("  WARNING: MGdtauSetupIter renamed to MGUpdateSetupIter. This parameter will be removed soon.\n");
-    if(myverbose) printf("  MG_dtau_Setup_Iter set to %d line %d operator %d\n", mg_update_setup_iter, line_of_file, current_operator);
-    /*END TO_REMOVE*/ }
   {SPC}*MGUpdateSetupIter{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mg_update_setup_iter=a;
@@ -1163,9 +1178,14 @@ static inline void rmQuotes(char *str){
     BEGIN(name_caller);
   }
   DDalphaAMG {
+#ifdef DDalphaAMG
     optr->solver = MG;
     if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
+#else
+    printf("ERROR line %d operator %d: DDalphaAMG library not included\n", line_of_file, current_operator);
+    exit(1);
+#endif
   }
 }
 
@@ -2224,6 +2244,22 @@ static inline void rmQuotes(char *str){
   write_cp_flag=0;
   if(myverbose!=0) printf("Don't write Checkpoints\n");
 }
+<SUBPROCESS>yes     {
+  subprocess_flag=1;
+  if(myverbose!=0) printf("Running in \'subprocess\' mode\n");
+}
+<SUBPROCESS>no     {
+  subprocess_flag=0;
+  if(myverbose!=0) printf("Not running in \'subprocess\' mode\n");
+}
+<LOWMEM>yes     {
+  lowmem_flag=1;
+  if(g_proc_id==0) printf("!!! WARNING: running in \'lowmem\' mode, most functionality will NOT work without explicit memory allocations!\n");
+}
+<LOWMEM>no     {
+  lowmem_flag=0;
+  if(myverbose!=0) printf("Not running in \'lowmem\' mode\n");
+}
 <DSBLIOCHECK>yes {
   g_disable_IO_checks = 1;
   if(myverbose!=0) printf("Disable IO checks (and readback in case of Lemon IO)\n");
@@ -2231,6 +2267,14 @@ static inline void rmQuotes(char *str){
 <DSBLIOCHECK>no {
   g_disable_IO_checks = 0;
   if(myverbose!=0) printf("Enable IO checks (and readback in case of Lemon IO)\n");
+}
+<DSBLSRCIOCHECK>yes {
+  g_disable_src_IO_checks = 1;
+  if(myverbose!=0) printf("Disable IO checks for sources\n");
+}
+<DSBLSRCIOCHECK>no {
+  g_disable_src_IO_checks = 0;
+  if(myverbose!=0) printf("Enable IO checks for sources\n");
 }
 <CPINT>{DIGIT}+   {
   cp_interval=atoi(yytext);
@@ -2696,6 +2740,7 @@ int read_input(char * conf_file){
   gauge_precision_read_flag = _default_gauge_precision_read_flag;
   gauge_precision_write_flag = _default_gauge_precision_write_flag;
   g_disable_IO_checks = _default_g_disable_IO_checks;
+  g_disable_src_IO_checks = _default_g_disable_IO_checks;
   reproduce_randomnumber_flag = _default_reproduce_randomnumber_flag;
   g_sloppy_precision_flag = _default_g_sloppy_precision_flag;
   use_stout_flag = _default_use_stout_flag;
@@ -2732,6 +2777,9 @@ int read_input(char * conf_file){
 
   mixcg_innereps = _default_mixcg_innereps;
   mixcg_maxinnersolverit = _default_mixcg_maxinnersolverit;
+
+  lowmem_flag = _default_lowmem_flag;
+  subprocess_flag = _default_subprocess_flag;
 
   /* Put -1 in PropInfo.format to see if parse_config() will
   change the value. If not then set it to source_format_flag */

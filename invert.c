@@ -425,7 +425,7 @@ int main(int argc, char *argv[])
           /* we use g_spinor_field[0-7] for sources and props for the moment */
           /* 0-3 in case of 1 flavour  */
           /* 0-7 in case of 2 flavours */
-          prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location);
+          prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location, random_seed);
           //randmize initial guess for eigcg if needed-----experimental
           if( (operator_list[op_id].solver == INCREIGCG) && (operator_list[op_id].solver_params.eigcg_rand_guess_opt) ){ //randomize the initial guess
               gaussian_volume_source( operator_list[op_id].prop0, operator_list[op_id].prop1,isample,ix,0); //need to check this

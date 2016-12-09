@@ -19,5 +19,4 @@ offline_measurement
 measure
 lib/
 benchmark
-config.status
-config.h
+

@@ -83,7 +83,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   /* Energy corresponding to the Gauge part */
   double new_plaquette_energy=0., new_rectangle_energy = 0.;
 
-  /* Energy correspondingupdate_tm to the Momenta part */
+  /* Energy corresponding to the Momenta part */
   double enep=0., enepx=0., ret_enep = 0.;
 
   /* Energy corresponding to the pseudo fermion part(s) */
