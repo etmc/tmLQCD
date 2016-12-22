@@ -306,6 +306,7 @@ void jdher(int n, int lda, double tau, double tol,
    * necessary randomly generated.                                          *
    *                                                                        *
    **************************************************************************/
+
   /* copy V0 to V */
   _FT(zlacpy)(fupl_a, &n, &V0dim, V0, &lda, V, &lda, 1);
   j = V0dim;
@@ -422,7 +423,6 @@ void jdher(int n, int lda, double tau, double tol,
 	  keepind[keep] = act; 
 	  keep = keep + 1; 
 	}
-
 	
       }  /* for(act = 0; act < actblksize; act ++) */
 
