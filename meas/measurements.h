@@ -49,17 +49,13 @@ typedef struct {
   
   /* for polyakov loop */
   int direction;
+  
+  /* for maximal iterations in inversions for correlators */
+  int max_iter;
 
 
   // random seed
   unsigned int seed;
-
-  /* how it's usually called */
-  char name[100];
-
-  
-  /* for maximal iterations in inversions for correlators */
-  int max_iter;
 
 
   /* maximum number of slice, the source can be put
@@ -73,6 +69,10 @@ typedef struct {
 
   /* frequency of the measurement */
   int freq;
+
+
+  /* how it's usually called */
+  char name[100];
   
   /* functions for the measurement */
   void (*measurefunc) (const int traj, const int id, const int ieo);
