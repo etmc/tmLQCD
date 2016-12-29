@@ -25,4 +25,10 @@
 #define _FT(s) s ## _
 #endif
 
+#if (defined NOARPACKUNDERSCORE)
+#define _AFT(s) s
+#else
+#define _AFT(s) s ## _
+#endif
+
 #endif

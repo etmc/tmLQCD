@@ -46,6 +46,15 @@ extern "C"
 #endif
   } tmLQCD_mpi_params;
 
+  typedef struct {
+    char type_name[100];
+    int  eoprec;
+    void *evecs;
+    void *evals;
+    int  prec;
+    int  nev;
+  } tmLQCD_deflator_params;
+
   int tmLQCD_invert_init(int argc, char *argv[], const int verbose, const int external_id);
   int tmLQCD_read_gauge(const int nconfig);
   int tmLQCD_invert(double * const propagator, double * const source,

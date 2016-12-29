@@ -48,6 +48,7 @@
 #include "start.h"
 #include "solver/eigenvalues.h"
 #include "solver/solver.h"
+#include "solver/deflator.h"
 #include <io/params.h>
 #include <io/gauge.h>
 #include <io/spinor.h>

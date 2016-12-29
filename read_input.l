@@ -102,7 +102,7 @@ static inline void rmQuotes(char *str){
   double c;
   float cs;
   int reread = 0;
-  char name[100];
+  char name[100], fname[200];
   char * type;
 
   int verbose = 0;

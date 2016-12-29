@@ -25,6 +25,7 @@
 #include "solver/dirac_operator_eigenvectors.h"
 #include "su3.h"
 #include "solver/solver_params.h"
+#include "solver/deflator.h"
                                     
 
 #define TMWILSON 0

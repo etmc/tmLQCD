@@ -55,8 +55,13 @@
 #include "invert_eo.h"
 #include "start.h"
 #include "operator.h"
+#include "operator/clovertm_operators.h"
+#include "operator/clovertm_operators_32.h"
+#include "operator/clover_leaf.h"
+#include "solver/solver_types.h"
 #include "measure_gauge_action.h"
 #include "linalg/convert_eo_to_lexic.h"
+#include "operator/Hopping_Matrix.h"
 #include "include/tmLQCD.h"
 #include "fatal_error.h"
 
