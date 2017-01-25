@@ -31,7 +31,7 @@ void write_inverter_info(WRITER * writer, paramsInverterInfo const *info)
                      "multiple mass solver\n"
                      "epssq = %e\n"
                      "noiter = %d\n"
-                     "kappa = %f, inverted mu = %f, lowest mu = %f\n"
+                     "kappa = %.12f, inverted mu = %.12f, lowest mu = %.12f\n"
                      "inverter version = %s\n"
                      "date = %s",
                      info->inverter,
@@ -45,7 +45,7 @@ void write_inverter_info(WRITER * writer, paramsInverterInfo const *info)
       sprintf(message, "solver = %s\n"
                        "epssq = %e\n"
                        "noiter = %d\n"
-                       "kappa = %f, mu = %f\n"
+                       "kappa = %.12f, mu = %.12f\n"
                        "inverter version = %s\n"
                        "date = %s",
                        info->inverter,
@@ -56,7 +56,7 @@ void write_inverter_info(WRITER * writer, paramsInverterInfo const *info)
       sprintf(message, "solver = %s\n"
                        "epssq = %e\n"
                        "noiter = %d\n"
-                       "kappa = %f, mubar = %f, epsbar=%f\n"
+                       "kappa = %.12f, mubar = %.12f, epsbar=%.12f\n"
                        "inverter version = %s\n"
                        "date = %s",
                        info->inverter,

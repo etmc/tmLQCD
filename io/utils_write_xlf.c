@@ -31,11 +31,11 @@ void write_xlf_info(WRITER * writer, paramsXlfInfo const *info)
   if (info->kappa != 0.0) {
     sprintf(message, "plaquette = %14.12f\n"
                      " trajectory nr = %d\n"
-                     " beta = %f, kappa = %f, mu = %f, c2_rec = %f\n"
+                     " beta = %.12f, kappa = %.12f, mu = %.12f, c2_rec = %f\n"
                      " time = %ld\n"
                      " hmcversion = %s\n"
-                     " mubar = %f\n"
-                     " epsilonbar = %f\n"
+                     " mubar = %.12f\n"
+                     " epsilonbar = %.12f\n"
                      " date = %s",
                      info->plaq, info->counter, info->beta, info->kappa,
                      info->mu, info->c2_rec, info->time, info->package_version,
@@ -44,9 +44,9 @@ void write_xlf_info(WRITER * writer, paramsXlfInfo const *info)
   else {
     sprintf(message, "plaquette = %e\n"
                      " trajectory nr = %d\n"
-                     " beta = %f\n"
-                     " kappa = %f\n"
-                     " 2*kappa*mu = %f\n"
+                     " beta = %.12f\n"
+                     " kappa = %.12f\n"
+                     " 2*kappa*mu = %.12f\n"
                      " c2_rec = %f\n"
                      " date = %s",
                      info->plaq, info->counter, info->beta, info->kappa,
