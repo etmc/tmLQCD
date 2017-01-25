@@ -149,7 +149,7 @@ bool compress12;
 QphixPrec precision;
 
 int subLattSize[4] = {4,4,4,4};
-int lattSize[4] = {4,4,4,4};
+int lattSize[4]    = {4,4,4,4};
 
 // Hardwire these for now.
 int iters = 1;
@@ -204,13 +204,13 @@ double *fullSpinor1;
 double *fullSpinor2;
 
 
-
+enum EvenOdd { Even = 0, Odd };
 
 void print_ptr(void* ptr, string text)
 {
 	cout << endl << text << endl;
 	double* show_ptr = (double*) ptr;
-	for(int i=0; i<24*lattSize[0]*lattSize[1]*lattSize[2]*lattSize[3]; ++i) {
+	for(int i=0; i<24*lattSize[0]/2*lattSize[1]*lattSize[2]*lattSize[3]; ++i) {
 		if(abs(show_ptr[i]) > 1e-12) {
 			cout << i << " : " << show_ptr[i] << endl;
 		}
@@ -1170,96 +1170,103 @@ void _loadGaugeQphix()
 
 
 // Reorder an odd tmLQCD spinor to an (odd) QPhiX spinor
-void reorder_spinor_toQphix( const double* tm_spinor,  double* qphix_spinor )
+void reorder_spinor_toQphix(const int even_odd, double* tm_spinor,  double* qphix_spinor)
 {
-	double startTime = gettime();
-	// alloc space for a temp. spinor, used throughout this module TODO put somewhere central
-	tempSpinor  = (double*)malloc( (VOLUME)*24*sizeof(double) );
-	memcpy( tempSpinor, sp, (VOLUME/2)*24*sizeof(double) );
-	double *in,*out;
-	int Ns=4,Nc=3;
-	double K1[4] = {-1.0,1.0,1.0,-1.0};
-	int s1[4] = {3,2,1,0};
+  double startTime = gettime();
+  double *in;
+  double *out;
+  int Nz = 2;
+  int Ns = 4;
+  int Nc = 3;
 
-	// now copy and reorder from tempSpinor to spinor
-	for( int x0=0; x0<T; x0++ )
-		for( int x1=0; x1<LX; x1++ )
-			for( int x2=0; x2<LY; x2++ )
-				for( int x3=0; x3<LZ; x3++ )
-				{
-#if USE_LZ_LY_LX_T
-					int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
-					int tm_idx   = g_ipt[x0][x1][x2][x3];
-#else
-					int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
-					int tm_idx = g_lexic2eosub[ g_ipt[x0][x1][x2][x3] ];
-#endif
-					// is this an odd site?
-					if((x0+x1+x2+x3+g_proc_coords[3]*LZ+g_proc_coords[2]*LY
-								+ g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 != 0) {
-						// gamma basis transformation
-						in  = tempSpinor + 24*tm_idx;
-						out = sp + 24*(j/2);
+  double K1[4] = {-1.0, 1.0, 1.0, -1.0};
+  int change_spin[4] = {3, 2, 1, 0};
 
-						for (int s=0; s<Ns; s++) {
-							for (int c=0; c<Nc; c++) {
-								for (int z=0; z<2; z++) {
-									out[(s*Nc+c)*2+z] = K1[s]*in[(s1[s]*Nc+c)*2+z];
-								}
-							}
-						}
-					}
+  // now copy and reorder from tempSpinor to spinor
+  for( int x0=0; x0<T; x0++ )
+    for( int x1=0; x1<LX; x1++ )
+      for( int x2=0; x2<LY; x2++ )
+        for( int x3=0; x3<LZ; x3++ )
+        {
+          int qphix_idx = x1/2 + LX/2*x2 + LX/2*LY*x3 + LX/2*LY*LZ*x0;
+          int tm_idx    = g_lexic2eosub[ g_ipt[x0][x1][x2][x3] ];
 
-				}
+          // Proceed if this is an even_odd site in tmLQCD convention
+          if( (x0 + x1 + x2 + x3
+              + g_proc_coords[0] * T  + g_proc_coords[1] * LX
+              + g_proc_coords[3] * LZ + g_proc_coords[2] * LY
+              + even_odd) % 2 == 0) {
 
-	double endTime = gettime();
-	double diffTime = endTime - startTime;
-	printf("time spent in reorder_spinor_toQphix: %f secs\n", diffTime);
+            in  = tm_spinor    + 24 * tm_idx;
+            out = qphix_spinor + 24 * qphix_idx;
+
+            // gamma basis transformation
+            for (int s=0; s<Ns; s++) { // QPhiX spin index
+              for (int c=0; c<Nc; c++) {
+                for (int z=0; z<Nz; z++) {
+                  int qphix_internal_idx  = z + s*Nz + c*Nz*Ns;
+                  int tm_internal_idx     = z + c*Nz + change_spin[s]*Nz*Nc;
+                  out[qphix_internal_idx] = K1[s] * in[tm_internal_idx];
+                }
+              }
+            }
+
+          } // endif even_odd
+        } // volume
+
+  double endTime = gettime();
+  double diffTime = endTime - startTime;
+  printf("time spent in reorder_spinor_toQphix: %f secs\n", diffTime);
 }
 
 // Reorder an (odd) QPhiX spinor to an odd tmLQCD spinor and multiply output spinor (tm) with normFac
-void reorder_spinor_fromQphix( double* tm_spinor,  double* qphix_spinor, double normFac=1.0 )
+void reorder_spinor_fromQphix(const int even_odd, double* tm_spinor,  double* qphix_spinor, double normFac = 1.0)
 {
-	// double startTime = gettime();
-	// memcpy( tempSpinor, sp, (VOLUME/2)*24*sizeof(double) );
-	// double *in,*out;
-	// int Ns=4,Nc=3;
-	// double K1[4] = {-1.0,1.0,1.0,-1.0};
-	// int s1[4] = {3,2,1,0};
+  double startTime = gettime();
+  double *in;
+  double *out;
+  int Nz = 2;
+  int Ns = 4;
+  int Nc = 3;
 
-	// // now copy and reorder from tempSpinor to spinor 
-	// for( int x0=0; x0<T; x0++ )
-	// 	for( int x1=0; x1<LX; x1++ )
-	// 		for( int x2=0; x2<LY; x2++ )
-	// 			for( int x3=0; x3<LZ; x3++ )
-	// 			{
-// #if USE_LZ_LY_LX_T
-	// 				int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
-	// 				int tm_idx   = g_ipt[x0][x1][x2][x3];
-// #else
-	// 				int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
-	// 				int tm_idx = g_lexic2eosub[ g_ipt[x0][x1][x2][x3] ];
-// #endif
-	// 				// is this an odd site?
-	// 				if((x0+x1+x2+x3+g_proc_coords[3]*LZ+g_proc_coords[2]*LY
-	// 							+ g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 != 0) {
-	// 					// gamma basis transformation
-	// 					in  = tempSpinor + 24*(j/2);
-	// 					out = sp + 24*tm_idx;
+  double K1[4] = {-1.0, 1.0, 1.0, -1.0};
+  int change_spin[4] = {3, 2, 1, 0};
 
-	// 					for (int s=0; s<Ns; s++) {
-	// 						for (int c=0; c<Nc; c++) {
-	// 							for (int z=0; z<2; z++) {
-	// 								out[(s*Nc+c)*2+z] = K1[s]*in[(s1[s]*Nc+c)*2+z] * normFac;
-	// 							}
-	// 						}
-	// 					}
-	// 				}
+  // Reorder from QPhiX to tmLQCD
+  for( int x0=0; x0<T; x0++ )
+    for( int x1=0; x1<LX; x1++ )
+      for( int x2=0; x2<LY; x2++ )
+        for( int x3=0; x3<LZ; x3++ )
+        {
+          int qphix_idx = x1/2 + LX/2*x2 + LX/2*LY*x3 + LX/2*LY*LZ*x0;
+          int tm_idx    = g_lexic2eosub[ g_ipt[x0][x1][x2][x3] ];
 
-	// 			}
-	// double endTime = gettime();
-	// double diffTime = endTime - startTime;
-	// printf("time spent in reorder_spinor_fromQphix: %f secs\n", diffTime);
+          // Proceed if this is an even_odd site in tmLQCD convention
+          if( (x0 + x1 + x2 + x3
+              + g_proc_coords[0] * T  + g_proc_coords[1] * LX
+              + g_proc_coords[3] * LZ + g_proc_coords[2] * LY
+              + even_odd) % 2 == 0) {
+
+            in  = qphix_spinor + 24 * qphix_idx;
+            out =    tm_spinor + 24 * tm_idx;
+
+            // gamma basis transformation
+            for (int s=0; s<Ns; s++) { // tmlQCD spin index
+              for (int c=0; c<Nc; c++) {
+                for (int z=0; z<Nz; z++) {
+                  int tm_internal_idx    = z + c*Nz + s*Nz*Nc;
+                  int qphix_internal_idx = z + change_spin[s]*Nz + c*Nz*Ns;
+                  out[tm_internal_idx]   = normFac * K1[s] * in[qphix_internal_idx];
+                }
+              }
+            }
+
+          } // endif
+
+        }
+  double endTime = gettime();
+  double diffTime = endTime - startTime;
+  printf("time spent in reorder_spinor_fromQphix: %f secs\n", diffTime);
 }
 
 // if even_odd_flag set
@@ -1578,18 +1585,9 @@ invert(spinor * const tmlqcd_odd_out, spinor * const tmlqcd_odd_in, const int ma
 	QSpinor *qphix_out = (QSpinor*) geom.allocCBFourSpinor();
 
 	// Reorder odd input spinor from tmLQCD to QPhiX
-	print_ptr(tmlqcd_odd_in, " INPUT SPINOR (from tmLQCD):");
-	// TODO: How to use template arguments here???
-	reorder_spinor_toQphix( (double*)tmlqcd_odd_in, (double*)qphix_in );
-	print_ptr(qphix_in, " INPUT SPINOR (in QPhiX format):");
-
-	// TODO: HOW AND WHY DO I NEED QDP PACKING
-	// // Pack then input spinor (QPhiX) odd_in into QDP format
-	// // and write into p_odd
-	// print_ptr(Q, " INPUT SPINOR (before qdp_pack_cb_spinor):");
-	// qdp_pack_cb_spinor( (const double*) Q, p_odd, geom, 1 );
-	// // p_odd = (Spinor*) Q;
-	// print_ptr(psi_s[1], " INPUT SPINOR (after qdp_pack_cb_spinor):");
+	// print_ptr(tmlqcd_odd_in, " INPUT SPINOR (from tmLQCD):");
+	reorder_spinor_toQphix( Odd, (double*)tmlqcd_odd_in, (double*)qphix_in );
+	// print_ptr(qphix_in, " INPUT SPINOR (in QPhiX format):");
 
 	masterPrintf("Zeroing out output spinor: ");
 	start = omp_get_wtime();
@@ -1615,19 +1613,16 @@ invert(spinor * const tmlqcd_odd_out, spinor * const tmlqcd_odd_in, const int ma
 	masterPrintf(" %g sec\n", end -start);
 
 	// Apply QPhiX Dslash to odd spinor qphix_in
-	DQPhiX.dslash(qphix_out, qphix_in, u_packed[1], /* isign == non-conjugate */ 1, /* cb == odd */ 1);
-
-	// TODO: QDP UNPACKING
-	// print_ptr(chi_s[1], " OUTPUT SPINOR (before qdp_unpack_cb_spinor):");
-	// qdp_unpack_cb_spinor(chi_s[1], (double*)P, geom, 1);
-	// print_ptr(P, " OUTPUT SPINOR (after qdp_unpack_cb_spinor):");
+	DQPhiX.dslash(qphix_out, qphix_in, u_packed[1], /* isign == non-conjugate */ 1, /* cb == odd */ 0);
 
 
 	// Reorder spinor fields back to tmLQCD
-	reorder_spinor_fromQphix( (double*)tmlqcd_odd_out, (double*)qphix_out, 1./(2.*g_kappa) );
-	reorder_spinor_fromQphix( (double*)tmlqcd_odd_in,  (double*)qphix_in );
-	print_ptr(tmlqcd_odd_in, " INPUT SPINOR (reordered to tmLQCD):");
-	print_ptr(tmlqcd_odd_out, " OUTPUT SPINOR (reordered to tmLQCD):");
+	// print_ptr(qphix_in, " IN SPINOR (after dslash, before reordered to tmLQCD):");
+	// print_ptr(qphix_out, " out SPINOR (after dslash, before reordered to tmLQCD):");
+	reorder_spinor_fromQphix( Even, (double*)tmlqcd_odd_out, (double*)qphix_out, (1.*g_kappa) );
+	reorder_spinor_fromQphix( Odd,  (double*)tmlqcd_odd_in,  (double*)qphix_in );
+	// print_ptr(tmlqcd_odd_in, " INPUT SPINOR (reordered to tmLQCD):");
+	// print_ptr(tmlqcd_odd_out, " OUTPUT SPINOR (reordered to tmLQCD):");
 
 
 	masterPrintf("Cleaning up\n");

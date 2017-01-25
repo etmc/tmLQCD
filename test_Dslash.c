@@ -215,7 +215,7 @@ int main(int argc,char *argv[])
 
 	status = check_geometry();
 	if (status != 0) {
-		fprintf(stderr, "Checking of geometry failed. Unable to proceed.\nAborting....\n");
+		fprintf(stderr, "Checking if geometry failed. Unable to proceed.\nAborting....\n");
 		exit(1);
 	}
 
@@ -228,9 +228,10 @@ int main(int argc,char *argv[])
 #endif
 
 
-	// Init an ODD spinor with point source
+	// Init an ODD spinor with uniform random source
 	zero_spinor_field(g_spinor_field[0], VOLUME/2);
-	g_spinor_field[0][0].s0.c0 = 1.0;
+  random_spinor_field_eo(g_spinor_field[0], 0, RN_UNIF);
+
 
 	/************************** D_psi on CPU **************************/
 
@@ -253,27 +254,27 @@ int main(int argc,char *argv[])
 	MPI_Barrier(MPI_COMM_WORLD);
 #endif
 
-	printf("\n INPUT SPINOR:\n");
-	double* show_in = (double*) g_spinor_field[0];
-	for(int i=0; i<24*VOLUME/2; ++i) {
-		if(show_in[i] != 0.) {
-			printf("%d : %2f\n", i, show_in[i]);
-		}
-	}
-	printf("\n");
+	// printf("\n INPUT SPINOR:\n");
+	// double* show_in = (double*) g_spinor_field[0];
+	// for(int i=0; i<24*VOLUME/2; ++i) {
+	// 	if(show_in[i] != 0.) {
+	// 		printf("%d : %2f\n", i, show_in[i]);
+	// 	}
+	// }
+	// printf("\n");
 
 	t1 = gettime();
 	Hopping_Matrix(EO, g_spinor_field[1], g_spinor_field[0]);
 	t2 = gettime();
 
-	printf("\n OUTPUT SPINOR:\n");
-	double* show_out = (double*) g_spinor_field[1];
-	for(int i=0; i<24*VOLUME/2; ++i) {
-		if(show_out[i] != 0.) {
-			printf("%d : %2f\n", i, show_out[i]);
-		}
-	}
-	printf("\n");
+	// printf("\n OUTPUT SPINOR:\n");
+	// double* show_out = (double*) g_spinor_field[1];
+	// for(int i=0; i<24*VOLUME/2; ++i) {
+		// if(show_out[i] != 0.) {
+			// printf("%d : %2f\n", i, show_out[i]);
+		// }
+	// }
+	// printf("\n");
 
 	// print L2-norm of result:
 	squarenorm = square_norm(g_spinor_field[1], VOLUME/2, 1);
@@ -284,7 +285,7 @@ int main(int argc,char *argv[])
 	}
 
 
-	/************************** D_psi_qphix on AVX/MIC **************************/
+	/************************** D_psi_qphix on KNL **************************/
 
 	// void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, int Sz_, int PadXY_, int PadXYZ_, int MinCt_, int c12, QphixPrec precision_)
 	_initQphix(argc, argv, 1, 1, 1, 1, 1, 0, 0, 1, 0/*c12*/, QPHIX_DOUBLE_PREC);
@@ -332,14 +333,14 @@ int main(int argc,char *argv[])
 	for(int ix=0; ix<VOLUME/2; ix++ )
 	{
 		// odd
-		_vector_sub_assign( g_spinor_field[2][ix].s0, g_spinor_field[1][ix].s0 );
-		_vector_sub_assign( g_spinor_field[2][ix].s1, g_spinor_field[1][ix].s1 );
-		_vector_sub_assign( g_spinor_field[2][ix].s2, g_spinor_field[1][ix].s2 );
-		_vector_sub_assign( g_spinor_field[2][ix].s3, g_spinor_field[1][ix].s3 );
+		_vector_sub_assign( g_spinor_field[1][ix].s0, g_spinor_field[2][ix].s0 );
+		_vector_sub_assign( g_spinor_field[1][ix].s1, g_spinor_field[2][ix].s1 );
+		_vector_sub_assign( g_spinor_field[1][ix].s2, g_spinor_field[2][ix].s2 );
+		_vector_sub_assign( g_spinor_field[1][ix].s3, g_spinor_field[2][ix].s3 );
 	}
 
 	// print L2-norm of result1 - result2:
-	squarenorm = square_norm(g_spinor_field[2], VOLUME/2, 1);
+	squarenorm = square_norm(g_spinor_field[1], VOLUME/2, 1);
 	if(g_proc_id==0) {
 		printf("  ||result_1 - result_2||^2 = %e\n\n", squarenorm);
 		fflush(stdout);
