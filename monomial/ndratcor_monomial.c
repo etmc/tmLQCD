@@ -67,7 +67,7 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   solver_pm_t solver_pm;
   double atime, etime, delta;
-  spinor * up0, * dn0, * up1, * dn1, * tup, * tdn;
+  spinor * up0, * dn0, * up1, * dn1, * tup, * tdn, * Zup, * Zdn;
   double coefs[6] = {1./4., -3./32., 7./122., -77./2048., 231./8192., -1463./65536.};
   atime = gettime();
   nd_set_global_parameter(mnl);
@@ -108,23 +108,41 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
   solver_pm.rel_prec = g_relative_precision_flag;
 
   // apply B to the random field to generate pseudo-fermion fields
-  assign(mnl->w_fields[0], mnl->pf, VOLUME/2);
-  assign(mnl->w_fields[1], mnl->pf2, VOLUME/2);
   up0 = mnl->w_fields[0]; dn0 = mnl->w_fields[1];
   up1 = mnl->w_fields[2]; dn1 = mnl->w_fields[3];
-	 
-  for(int i = 1; i < 8; i++) {
-    apply_Z_ndpsi(up1, dn1, up0, dn0, id, hf, &solver_pm);
+  Zup = mnl->w_fields[4]; Zdn = mnl->w_fields[5];
+
+  apply_Z_ndpsi(up0, dn0, mnl->pf, mnl->pf2, id, hf, &solver_pm);
+  delta = coefs[0]*(scalar_prod_r(mnl->pf, up0, VOLUME/2, 1) + scalar_prod_r(mnl->pf2, dn0, VOLUME/2, 1));
+  if(g_debug_level > 2 && g_proc_id == 0)
+    printf("# NDRATCOR heatbath: c_%d*(R * Z^%d * R) = %e\n", 1, 1, delta);
+
+  if(delta*delta > mnl->accprec) {
+    assign_add_mul_r(mnl->pf, up0, coefs[0], VOLUME/2);
+    assign_add_mul_r(mnl->pf2, dn0, coefs[0], VOLUME/2);
     
-    delta = coefs[i-1]*(scalar_prod_r(mnl->pf, up1, VOLUME/2, 1) + scalar_prod_r(mnl->pf2, dn1, VOLUME/2, 1));
-    if(g_debug_level > 2 && g_proc_id == 0)
-      printf("# NDRATCOR heatbath: c_%d*(R * Z^%d * R) = %e\n", i, i, delta);
-    assign_add_mul_r(mnl->pf, up1, coefs[i-1], VOLUME/2);
-    assign_add_mul_r(mnl->pf2, dn1, coefs[i-1], VOLUME/2);
-    if(delta < mnl->accprec) break;
-    tup = up0; tdn = dn0;
-    up0 = up1; dn0 = dn1;
-    up1 = tup; dn1 = tdn;
+    // saving first application
+    assign(Zup, up0, VOLUME/2);
+    assign(Zdn, dn0, VOLUME/2);
+    
+    
+    for(int i = 2; i < 8; i++) {
+
+      // computing next order correction
+      delta = coefs[i-1]*(scalar_prod_r(Zup, up0, VOLUME/2, 1) + scalar_prod_r(Zup, dn0, VOLUME/2, 1)); 
+      if(g_debug_level > 2 && g_proc_id == 0)
+        printf("# NDRATCOR heatbath: c_%d*(R * Z^%d * R) = %e\n", i, i, delta);
+      if(delta*delta < mnl->accprec) break;
+
+      apply_Z_ndpsi(up1, dn1, up0, dn0, id, hf, &solver_pm);
+      
+      assign_add_mul_r(mnl->pf, up1, coefs[i-1], VOLUME/2);
+      assign_add_mul_r(mnl->pf2, dn1, coefs[i-1], VOLUME/2);
+
+      tup = up0; tdn = dn0;
+      up0 = up1; dn0 = dn1;
+      up1 = tup; dn1 = tdn;
+    }
   }
   etime = gettime();
   if(g_proc_id == 0) {
