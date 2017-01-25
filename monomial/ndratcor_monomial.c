@@ -114,7 +114,11 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
   up1 = mnl->w_fields[2]; dn1 = mnl->w_fields[3];
 	 
   for(int i = 1; i < 8; i++) {
-    delta = apply_Z_ndpsi(up1, dn1, up0, dn0, id, hf, &solver_pm);
+    apply_Z_ndpsi(up1, dn1, up0, dn0, id, hf, &solver_pm);
+    
+    delta = coefs[i-1]*(scalar_prod_r(mnl->pf, up1, VOLUME/2, 1) + scalar_prod_r(mnl->pf2, dn1, VOLUME/2, 1));
+    if(g_debug_level > 2 && g_proc_id == 0)
+      printf("# NDRATCOR heatbath: c_%d*(R * Z^%d * R) = %e\n", i, i, delta);
     assign_add_mul_r(mnl->pf, up1, coefs[i-1], VOLUME/2);
     assign_add_mul_r(mnl->pf2, dn1, coefs[i-1], VOLUME/2);
     if(delta < mnl->accprec) break;
@@ -138,7 +142,7 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
 double ndratcor_acc(const int id, hamiltonian_field_t * const hf) {
   solver_pm_t solver_pm;
   monomial * mnl = &monomial_list[id];
-  double atime, etime, delta;
+  double atime, etime, delta_e;
   spinor * up0, * dn0, * up1, * dn1, * tup, * tdn;
   double coefs[6] = {-1./2., 3./8., -5./16., 35./128., -63./256., 231./1024.};
   atime = gettime();
@@ -149,7 +153,7 @@ double ndratcor_acc(const int id, hamiltonian_field_t * const hf) {
     sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
     copy_32_sw_fields();
   }
-  mnl->energy1 = 0.;
+  mnl->energy1 = square_norm(mnl->pf, VOLUME/2, 1) + square_norm(mnl->pf2, VOLUME/2, 1);
 
   solver_pm.max_iter = mnl->maxiter;
   solver_pm.squared_solver_prec = mnl->accprec;
@@ -166,27 +170,37 @@ double ndratcor_acc(const int id, hamiltonian_field_t * const hf) {
   solver_pm.rel_prec = g_relative_precision_flag;
 
   // apply (Q R)^(-1) to pseudo-fermion fields
-  assign(mnl->w_fields[4], mnl->pf, VOLUME/2);
-  assign(mnl->w_fields[5], mnl->pf2, VOLUME/2);
   up0 = mnl->w_fields[0]; dn0 = mnl->w_fields[1];
   up1 = mnl->w_fields[2]; dn1 = mnl->w_fields[3];
 
-  delta = apply_Z_ndpsi(up0, dn0, mnl->pf, mnl->pf2, id, hf, &solver_pm);
-  assign_add_mul_r(mnl->w_fields[4], up0, coefs[0], VOLUME/2);
-  assign_add_mul_r(mnl->w_fields[5], dn0, coefs[0], VOLUME/2);
+  apply_Z_ndpsi(up0, dn0, mnl->pf, mnl->pf2, id, hf, &solver_pm);
+  delta_e = coefs[0]*(scalar_prod_r(mnl->pf, up0, VOLUME/2, 1) + scalar_prod_r(mnl->pf2, dn0, VOLUME/2, 1));
+  mnl->energy1 += delta_e;
+  if(g_debug_level > 2 && g_proc_id == 0)
+    printf("# NDRATCOR acc step: c_%d*(phi * Z^%d * phi) = %e\n", 1, 1, delta_e);
 
   for(int i = 2; i < 8; i++) {
-    if(delta < mnl->accprec) break;
-    delta = apply_Z_ndpsi(up1, dn1, up0, dn0, id, hf, &solver_pm);
-    assign_add_mul_r(mnl->w_fields[4], up1, coefs[i-1], VOLUME/2);
-    assign_add_mul_r(mnl->w_fields[5], dn1, coefs[i-1], VOLUME/2);
+    if(delta_e*delta_e < mnl->accprec) break;
+
+    delta_e = coefs[i-1]*(square_norm(up0, VOLUME/2, 1) + square_norm(dn0, VOLUME/2, 1)); 
+    mnl->energy1 += delta_e;
+    if(g_debug_level > 2 && g_proc_id == 0)
+      printf("# NDRATCOR acc step: c_%d*(phi * Z^%d * phi) = %e\n", i, i, delta_e);
+    i++;
+    if(delta_e*delta_e < mnl->accprec) break;
+
+    apply_Z_ndpsi(up1, dn1, up0, dn0, id, hf, &solver_pm);
+    delta_e = coefs[i-1]*(scalar_prod_r(up0, up1, VOLUME/2, 1) + scalar_prod_r(dn0, dn1, VOLUME/2, 1));
+    mnl->energy1 += delta_e;
+    if(g_debug_level > 2 && g_proc_id == 0)
+      printf("# NDRATCOR acc step: c_%d*(phi * Z^%d * phi) = %e\n", i, i, delta_e);
+
     tup = up0; tdn = dn0;
     up0 = up1; dn0 = dn1;
     up1 = tup; dn1 = tdn;
   }
 
-  mnl->energy1 = scalar_prod_r(mnl->pf, mnl->w_fields[4], VOLUME/2, 1);
-  mnl->energy1 += scalar_prod_r(mnl->pf2, mnl->w_fields[5], VOLUME/2, 1);
+
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
@@ -221,7 +235,7 @@ double apply_Z_ndpsi(spinor * const k_up, spinor * const k_dn,
   }
 
   // apply R a second time
-  solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+  mnl->iter0 += solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 	       k_up, k_dn,
 	       solver_pm);
   for(int j = (mnl->rat.np-1); j > -1; j--) {
@@ -239,11 +253,15 @@ double apply_Z_ndpsi(spinor * const k_up, spinor * const k_dn,
 		     g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np]);
   diff(k_up, k_up, l_up, VOLUME/2);
   diff(k_dn, k_dn, l_dn, VOLUME/2);
+
+  /* TO REMOVE: We don't need this quantity. 
   double resi = square_norm(k_up, VOLUME/2, 1) + square_norm(k_dn, VOLUME/2, 1);
   if(g_debug_level > 2 && g_proc_id == 0) {
     printf("# NDRATCOR: ||Z * phi|| = %e\n", resi);
   }
   return(resi);
+  */
+  return 0;
 }
 
 // computes ||(1 - C^dagger R C) phi||
