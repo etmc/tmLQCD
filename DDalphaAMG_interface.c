@@ -59,6 +59,7 @@ int mg_lvl=3;
 int mg_blk[4] = {0, 0, 0, 0};
 int mg_mixed_prec=0;
 int mg_setup_mu_set = 0; //flag that enable the use of mg_setup_mu in the setup phase
+int mg_no_shifts = -1;
 double mg_setup_mu = 0.; 
 double mg_cmu_factor = 1.0;
 double mg_dtau_update = 0.0;
@@ -184,7 +185,7 @@ static inline int MG_mms_check_nd( spinor **const up_new, spinor **const dn_new,
 {
   double differ[2], residual;
   spinor ** check_vect = NULL;
-  double acc_factor = 2;
+  double acc_factor = 20;
   
   init_solver_field(&check_vect, VOLUMEPLUSRAND,2);
 
