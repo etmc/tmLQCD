@@ -231,30 +231,52 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   }
   solver_pm.sdim = VOLUME/2;
   solver_pm.rel_prec = g_relative_precision_flag;
-  mnl->iter0 = solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-                   		      mnl->pf, mnl->pf2, &solver_pm);
 
-  assign(mnl->w_fields[2], mnl->pf, VOLUME/2);
-  assign(mnl->w_fields[3], mnl->pf2, VOLUME/2);
+  if( mnl->solver == MGMMSND ){
+    // With MG we can solve directly the unsquared operator
+    solver_pm.M_ndpsi = &Qtm_tau1_ndpsi_add_Ishift;
+    if(mnl->type == NDCLOVERRAT)
+      solver_pm.M_ndpsi = &Qsw_tau1_ndpsi_add_Ishift;
+    
+    mnl->iter0 = MG_mms_solver_nd( g_chi_up_spinor_field, g_chi_dn_spinor_field, mnl->pf, mnl->pf2, 
+                                   solver_pm.shifts, solver_pm.no_shifts,solver_pm.squared_solver_prec, 
+                                   solver_pm.max_iter, solver_pm.rel_prec, solver_pm.sdim, g_gauge_field, 
+                                   solver_pm.M_ndpsi );
 
-  // apply C to the random field to generate pseudo-fermion fields
-  for(int j = (mnl->rat.np-1); j > -1; j--) {
-    // Q_h * tau^1 - i nu_j
-    // this needs phmc_Cpol = 1 to work!
-    if(mnl->type == NDCLOVERRAT) {
-      Qsw_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
-			       g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-			       I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
+    assign(mnl->w_fields[2], mnl->pf, VOLUME/2);
+    assign(mnl->w_fields[3], mnl->pf2, VOLUME/2);
+
+    // apply C to the random field to generate pseudo-fermion fields
+    for(int j = (mnl->rat.np-1); j > -1; j--) {
+      assign_add_mul(mnl->pf, g_chi_up_spinor_field[j], I*mnl->rat.rnu[j], VOLUME/2);
+      assign_add_mul(mnl->pf2, g_chi_dn_spinor_field[j], I*mnl->rat.rnu[j], VOLUME/2);
     }
-    else {
-      Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
-			     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-			     I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
+
+  } else {
+    mnl->iter0 = solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+                              mnl->pf, mnl->pf2, &solver_pm);
+    
+    assign(mnl->w_fields[2], mnl->pf, VOLUME/2);
+    assign(mnl->w_fields[3], mnl->pf2, VOLUME/2);
+    
+    // apply C to the random field to generate pseudo-fermion fields
+    for(int j = (mnl->rat.np-1); j > -1; j--) {
+      // Q_h * tau^1 - i nu_j
+      // this needs phmc_Cpol = 1 to work!
+      if(mnl->type == NDCLOVERRAT) {
+        Qsw_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
+                                 g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
+                                 I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
+      }
+      else {
+        Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
+                               g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
+                               I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
+      }
+      assign_add_mul(mnl->pf, g_chi_up_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
+      assign_add_mul(mnl->pf2, g_chi_dn_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
     }
-    assign_add_mul(mnl->pf, g_chi_up_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
-    assign_add_mul(mnl->pf2, g_chi_dn_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
   }
-
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {

@@ -443,7 +443,7 @@ static int MG_solve(spinor * const phi_new, spinor * const phi_old, const double
 	    f == Q_minus_psi ) {  // Gamma5 - Full operator    with minus mu
     mul_gamma5((spinor *const) old, VOLUME);
     DDalphaAMG_solve( new, old, precision, &mg_status );
-    if( N == VOLUME )
+    if( N == VOLUME ) // in case of VOLUME/2 old is a just local vector
       mul_gamma5((spinor *const) old, VOLUME);
   }
   else if ( f == Qtm_pm_psi ||    //          Schur complement squared
@@ -519,6 +519,10 @@ static int MG_solve_nd( spinor * const up_new, spinor * const dn_new, spinor * c
 	    f == Qsw_ndpsi ||           //  Gamma5 Dh    - Schur complement
 	    f == Qtm_dagger_ndpsi ||    //  Gamma5 Dh    - Schur complement with mu = -mubar and csw = 0
 	    f == Qsw_dagger_ndpsi ||    //  Gamma5 Dh    - Schur complement with mu = -mubar
+            f == Qtm_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and plus shift
+            f == Qtm_tau1_ndpsi_sub_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and minus shift
+            f == Qsw_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with plus shift
+            f == Qsw_tau1_ndpsi_sub_Ishift || // Gamma5 Dh tau1 - Schur complement with minus shift
 	    f == Qtm_pm_ndpsi ||        // (Gamma5 Dh)^2 - Schur complement squared with csw = 0
 	    f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh)^2 - Schur complement squared with csw = 0 and shift
 	    f == Qsw_pm_ndpsi ||        // (Gamma5 Dh)^2 - Schur complement squared
@@ -538,6 +542,12 @@ static int MG_solve_nd( spinor * const up_new, spinor * const dn_new, spinor * c
   if (      f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh)^2 - Schur complement squared with csw = 0 and shift
 	    f == Qsw_pm_ndpsi_shift )   // (Gamma5 Dh)^2 - Schur complement squared with shift
     MG_update_mubar_epsbar( g_mubar, g_epsbar, sqrt(g_shift) );
+  else if ( f == Qtm_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and plus shift
+            f == Qsw_tau1_ndpsi_add_Ishift )  // Gamma5 Dh tau1 - Schur complement with plus shift
+    MG_update_mubar_epsbar( g_mubar, g_epsbar, sqrt(g_shift) );
+  else if ( f == Qtm_tau1_ndpsi_sub_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and minus shift
+            f == Qsw_tau1_ndpsi_sub_Ishift )  // Gamma5 Dh tau1 - Schur complement with minus shift
+    MG_update_mubar_epsbar( g_mubar, g_epsbar, -sqrt(g_shift) );
   else if ( f == Qtm_dagger_ndpsi ||    //  Gamma5 Dh    - Schur complement with mu = -mubar csw = 0
 	    f == Qsw_dagger_ndpsi )     //  Gamma5 Dh    - Schur complement with mu = -mubar
     MG_update_mubar_epsbar( -g_mubar, g_epsbar, 0 );
@@ -552,11 +562,24 @@ static int MG_solve_nd( spinor * const up_new, spinor * const dn_new, spinor * c
     mul_gamma5((spinor *const) old1, VOLUME);
     mul_gamma5((spinor *const) old2, VOLUME);
     DDalphaAMG_solve_doublet( new1, old1, new2, old2, precision, &mg_status );
-    if( N == VOLUME ) {
+    if( N == VOLUME ) { // in case of VOLUME/2 old is a just local vector
       mul_gamma5((spinor *const) old1, VOLUME);
       mul_gamma5((spinor *const) old2, VOLUME);
     }
   }
+  else if ( f == Qtm_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and plus shift
+            f == Qtm_tau1_ndpsi_sub_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and minus shift
+            f == Qsw_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with plus shift
+            f == Qsw_tau1_ndpsi_sub_Ishift ) {// Gamma5 Dh tau1 - Schur complement with minus shift
+    mul_gamma5((spinor *const) old1, VOLUME);
+    mul_gamma5((spinor *const) old2, VOLUME);
+    // tau1 exchange new1 <-> new2
+    DDalphaAMG_solve_doublet( new2, old1, new1, old2, precision, &mg_status );
+    if( N == VOLUME ) { // in case of VOLUME/2 old is a just local vector
+      mul_gamma5((spinor *const) old1, VOLUME);
+      mul_gamma5((spinor *const) old2, VOLUME);
+    }
+  }	    
   else if ( f == Qtm_pm_ndpsi ||        // (Gamma5 Dh)^2 - Schur complement squared with csw = 0
 	    f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh)^2 - Schur complement squared with csw = 0 and shift
 	    f == Qsw_pm_ndpsi ||        // (Gamma5 Dh)^2 - Schur complement squared
@@ -633,13 +656,12 @@ static int MG_mms_solve_nd( spinor **const up_new, spinor **const dn_new,
     }
   }
 
-  MG_update_mubar_epsbar( g_mubar, g_epsbar, shifts[0] );
-  for( int i = 0; i < no_shifts; i++ ) {
-    mg_odd_shifts[i]  = shifts[i]*mg_scale;
-    mg_even_shifts[i] = 0;
-  }
   // Checking if the operator is in the list and compatible with N
-  if (	    f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh)^2 - Schur complement squared with csw = 0 and shift
+  if (	    f == Qtm_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and plus shift
+            f == Qtm_tau1_ndpsi_sub_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and minus shift
+            f == Qsw_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with plus shift
+            f == Qsw_tau1_ndpsi_sub_Ishift || // Gamma5 Dh tau1 - Schur complement with minus shift
+            f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh)^2 - Schur complement squared with csw = 0 and shift
 	    f == Qsw_pm_ndpsi_shift ) { // (Gamma5 Dh)^2 - Schur complement squared with shift
     if( N != VOLUME/2 ) {
       if( g_proc_id == 0 )
@@ -650,20 +672,42 @@ static int MG_mms_solve_nd( spinor **const up_new, spinor **const dn_new,
     printf("WARNING: required operator unknown for MG_solve. Using standard operator: %s.\n",
 	   N==VOLUME?"":"Qsw_pm_ndpsi_shift");
 
+  // Setting mubar, epsbar and shifts
+  if (	    f == Qtm_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and plus shift
+            f == Qsw_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with plus shift
+            f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh)^2 - Schur complement squared with csw = 0 and shift
+	    f == Qsw_pm_ndpsi_shift ) { // (Gamma5 Dh)^2 - Schur complement squared with shift
+    MG_update_mubar_epsbar( g_mubar, g_epsbar, shifts[0] );
+    for( int i = 0; i < no_shifts; i++ ) {
+      mg_odd_shifts[i]  = shifts[i]*mg_scale;
+      mg_even_shifts[i] = 0;
+    }
+  }
+  else if ( f == Qtm_tau1_ndpsi_sub_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and minus shift
+            f == Qsw_tau1_ndpsi_sub_Ishift ) {// Gamma5 Dh tau1 - Schur complement with minus shift
+    MG_update_mubar_epsbar( g_mubar, g_epsbar, -shifts[0] );
+    for( int i = 0; i < no_shifts; i++ ) {
+      mg_odd_shifts[i]  = -shifts[i]*mg_scale;
+      mg_even_shifts[i] = 0;
+    }
+  }
+
   //Solving
-  /* TODO: Qtm_ndpsi_shift, Qsw_ndpsi_shift
-  if (      f == Qtm_ndpsi_shift ||     //  Gamma5 Dh    - Schur complement with csw = 0 and shift
-	    f == Qsw_ndpsi_shift ) {    //  Gamma5 Dh    - Schur complement with shift
+  if (      f == Qtm_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and plus shift
+            f == Qtm_tau1_ndpsi_sub_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and minus shift
+            f == Qsw_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with plus shift
+            f == Qsw_tau1_ndpsi_sub_Ishift ) {// Gamma5 Dh tau1 - Schur complement with minus shift
     mul_gamma5((spinor *const) old1, VOLUME);
     mul_gamma5((spinor *const) old2, VOLUME);
-    DDalphaAMG_solve_ms_doublet( new1, old1, new2, old2, mg_even_shifts, mg_odd_shifts, no_shifts, 
+    // tau1 exchange new1 <-> new2
+    DDalphaAMG_solve_ms_doublet( new2, old1, new1, old2, mg_even_shifts, mg_odd_shifts, no_shifts, 
                                  precision, &mg_status );
-    if( N == VOLUME ) {
+    if( N == VOLUME ) { // in case of VOLUME/2 old is a just local vector
       mul_gamma5((spinor *const) old1, VOLUME);
       mul_gamma5((spinor *const) old2, VOLUME);
     }
-  }
- else*/if ( f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh)^2 - Schur complement squared with csw = 0 and shift
+  }	    
+  else if ( f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh)^2 - Schur complement squared with csw = 0 and shift
 	    f == Qsw_pm_ndpsi_shift ) { // (Gamma5 Dh)^2 - Schur complement squared with shift
     mg_scale *= mg_scale;
     // DDalphaAMG: tau1 gamma5 Dh tau1 gamma5 Dh

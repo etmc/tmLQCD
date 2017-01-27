@@ -112,6 +112,63 @@ void Qsw_ndpsi(spinor * const l_strange, spinor * const l_charm,
 
 /******************************************
  *
+ * This is the implementation of 
+ *
+ *  Q_tau1_ndpsi_add/sub_Ishift =  ( M +/- I z_k )
+ *
+ *  with M = Qhat(2x2) tau_1   and z_k from sqrt(g_shift) 
+ *
+ *
+ *  needed in the evaluation of the heatbath when 
+ *  the Rational approximation is used
+ *
+ *
+ * For details, see documentation and comments of the
+ * above mentioned routines
+ *
+ * k_charm and k_strange are the input fields
+ * l_* the output fields
+ *
+ * it acts only on the odd part or only
+ * on a half spinor
+ ******************************************/
+
+
+void Qtm_tau1_ndpsi_add_Ishift(spinor * const l_strange, spinor * const l_charm,
+                               spinor * const k_strange, spinor * const k_charm) {
+
+  Q_tau1_sub_const_ndpsi(l_strange,l_charm,k_strange,k_charm,-I*sqrt(g_shift),1.,phmc_invmaxev);
+
+  return;
+}
+
+void Qtm_tau1_ndpsi_sub_Ishift(spinor * const l_strange, spinor * const l_charm,
+                               spinor * const k_strange, spinor * const k_charm) {
+
+  Q_tau1_sub_const_ndpsi(l_strange,l_charm,k_strange,k_charm, I*sqrt(g_shift),1.,phmc_invmaxev);
+
+  return;
+}
+
+void Qsw_tau1_ndpsi_add_Ishift(spinor * const l_strange, spinor * const l_charm,
+                               spinor * const k_strange, spinor * const k_charm) {
+
+  Qsw_tau1_sub_const_ndpsi(l_strange,l_charm,k_strange,k_charm,-I*sqrt(g_shift),1.,phmc_invmaxev);
+
+  return;
+}
+
+void Qsw_tau1_ndpsi_sub_Ishift(spinor * const l_strange, spinor * const l_charm,
+                               spinor * const k_strange, spinor * const k_charm) {
+
+  Qsw_tau1_sub_const_ndpsi(l_strange,l_charm,k_strange,k_charm, I*sqrt(g_shift),1.,phmc_invmaxev);
+
+  return;
+}
+
+
+/******************************************
+ *
  * This is the implementation of
  * 
  * Qhat(2x2)^dagger = tau_1  Qhat(2x2) tau_1 =
