@@ -978,7 +978,7 @@ void compute_little_D(const int mul_g5) {
 
   if(g_proc_id == 0 && g_debug_level > 1) {
     printf("# compute_little_D called with mul_g5 = %d\n", mul_g5);
-    printf("# compute_little_D parameters mu= %e, kappa= %e\n", g_mu/2./g_kappa, g_kappa);
+    printf("# compute_little_D parameters mu= %.12f, kappa= %.12f\n", g_mu/2./g_kappa, g_kappa);
   }
 
   /* for a full spinor field we need VOLUMEPLUSRAND                 */

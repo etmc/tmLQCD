@@ -2071,7 +2071,7 @@ static inline void rmQuotes(char *str){
 }
 <CSW>{FLT}  {
   g_c_sw=atof(yytext);
-  if(myverbose!=0) printf("c_sw=%lf \n", g_c_sw);
+  if(myverbose!=0) printf("c_sw=%s \n", yytext);
 }
 <STARTCOND>{
   cold {
