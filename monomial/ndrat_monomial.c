@@ -47,6 +47,9 @@
 #include "rational/rational.h"
 #include "phmc.h"
 #include "ndrat_monomial.h"
+#ifdef DDalphaAMG
+#  include "DDalphaAMG_interface.h"
+#endif
 
 void nd_set_global_parameter(monomial * const mnl) {
 
@@ -232,6 +235,7 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   solver_pm.sdim = VOLUME/2;
   solver_pm.rel_prec = g_relative_precision_flag;
 
+#ifdef DDalphaAMG
   if( mnl->solver == MGMMSND ){
     // With MG we can solve directly the unsquared operator
     solver_pm.M_ndpsi = &Qtm_tau1_ndpsi_add_Ishift;
@@ -251,8 +255,9 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
       assign_add_mul(mnl->pf, g_chi_up_spinor_field[j], I*mnl->rat.rnu[j], VOLUME/2);
       assign_add_mul(mnl->pf2, g_chi_dn_spinor_field[j], I*mnl->rat.rnu[j], VOLUME/2);
     }
-
-  } else {
+  } else 
+#endif
+    {
     mnl->iter0 = solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
                               mnl->pf, mnl->pf2, &solver_pm);
     

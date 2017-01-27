@@ -497,8 +497,7 @@ static int MG_solve_nd( spinor * const up_new, spinor * const dn_new, spinor * c
   double *new2 = (double*) dn_new;
   spinor ** solver_field = NULL;
   
-  //  if( N != VOLUME && N != VOLUME/2 ) {
-  if( N != VOLUME/2 ) { // no full VOLUME functions implemented at the moment 
+  if( N != VOLUME && N != VOLUME/2 ) {
     if( g_proc_id == 0 )
       printf("ERROR: N = %d in MG_solve. Expettected N == VOLUME (%d) or VOLUME/2 (%d)\n", N, VOLUME, VOLUME/2);
     return 0;
@@ -530,7 +529,7 @@ static int MG_solve_nd( spinor * const up_new, spinor * const dn_new, spinor * c
     if( N != VOLUME/2 && g_proc_id == 0 )
       printf("WARNING: expected N == VOLUME/2 for the required operator in MG_solve. Continuing with N == VOLUME\n");
   }
-  else if ( 0 ) {                       // No full operator for nd
+  else if ( f == D_ndpsi ) {            //  Dh
     if( N != VOLUME && g_proc_id == 0 )
       printf("WARNING: expected N == VOLUME for the required operator in MG_solve. Continuing with N == VOLUME/2\n");
   }
@@ -551,6 +550,8 @@ static int MG_solve_nd( spinor * const up_new, spinor * const dn_new, spinor * c
   else if ( f == Qtm_dagger_ndpsi ||    //  Gamma5 Dh    - Schur complement with mu = -mubar csw = 0
 	    f == Qsw_dagger_ndpsi )     //  Gamma5 Dh    - Schur complement with mu = -mubar
     MG_update_mubar_epsbar( -g_mubar, g_epsbar, 0 );
+  else if ( f == D_ndpsi )              //  Dh
+    MG_update_mubar_epsbar( g_mubar, g_epsbar, 0 );
   else
     MG_update_mubar_epsbar( g_mubar, g_epsbar, 0 );
   
@@ -589,6 +590,8 @@ static int MG_solve_nd( spinor * const up_new, spinor * const dn_new, spinor * c
     // tmLQCD:          gamma5 Dh tau1 gamma5 Dh tau1
     DDalphaAMG_solve_doublet_squared_odd( new2, old2, new1, old1, precision, &mg_status );
   }
+  else if ( f == D_ndpsi )              //  Dh
+    DDalphaAMG_solve_doublet( new1, old1, new2, old2, precision, &mg_status );
   else
     DDalphaAMG_solve_doublet( new1, old1, new2, old2, precision, &mg_status );
   
@@ -1044,6 +1047,42 @@ int MG_solver_nd(spinor * const up_new, spinor * const dn_new,
   } 
   // mg_status should have been used last time for the inversion.
   return mg_status.iter_count;
+}
+
+int MG_solver_nd_eo(spinor * const Even_new_up, spinor * const Odd_new_up, 
+                    spinor * const Even_new_dn, spinor * const Odd_new_dn,
+                    spinor * const Even_up, spinor * const Odd_up,
+                    spinor * const Even_dn, spinor * const Odd_dn,
+                    const double precision, const int max_iter, const int rel_prec,
+                    const int N, su3 **gf, matrix_mult_full_nd f_full)
+{
+  
+  int iter_count;
+  spinor ** solver_field = NULL;
+  matrix_mult_nd f;
+  
+  init_solver_field(&solver_field, VOLUMEPLUSRAND, 4);
+  convert_eo_to_lexic(solver_field[0], Even_up, Odd_up);
+  convert_eo_to_lexic(solver_field[1], Even_dn, Odd_dn);
+  
+  if (f_full == M_full_ndpsi)
+    f=&D_ndpsi;
+  else if (f_full == Msw_full_ndpsi)
+    f=&D_ndpsi;
+  else {
+    f=&D_ndpsi;
+    if( g_proc_id == 0 )
+      printf("WARNING: required operator unknown for MG_solver_eo. Using standard operator.\n");
+  }
+
+  iter_count = MG_solver_nd( solver_field[2], solver_field[3], solver_field[0], solver_field[1], precision, max_iter,
+                             rel_prec, VOLUME, gf, f );
+  
+  convert_lexic_to_eo(Even_new_up, Odd_new_up, solver_field[2]);
+  convert_lexic_to_eo(Even_new_dn, Odd_new_dn, solver_field[3]);
+  finalize_solver(solver_field, 4);
+  
+  return iter_count;
 }
 
 int MG_mms_solver_nd(spinor **const up_new, spinor **const dn_new,

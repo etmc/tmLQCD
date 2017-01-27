@@ -37,6 +37,7 @@
 #include "phmc.h"
 #include "gamma.h"
 #include "linalg_eo.h"
+#include "operator/D_psi.h"
 #include "operator/tm_operators.h"
 #include "operator/clovertm_operators.h"
 #include "operator/tm_operators_nd.h"
@@ -51,6 +52,74 @@ void M_oo_sub_g5_ndpsi(spinor * const l_s, spinor * const l_c,
 		       const double mu, const double eps);
 
 /* external functions */
+
+
+/******************************************
+ *
+ * This is the implementation of
+ *
+ *  M_full_ndpsi = D_w I_f + i gamma5 mubar tau3 - epsbar tau1
+ *  the full operator done for testing purpose
+ ******************************************/
+void M_full_ndpsi(spinor * const Even_new_s, spinor * const Odd_new_s, 
+                  spinor * const Even_new_c, spinor * const Odd_new_c, 
+                  spinor * const Even_s, spinor * const Odd_s,
+                  spinor * const Even_c, spinor * const Odd_c) {
+  
+  double mu = g_mu;
+  g_mu = g_mubar;
+  M_full(Even_new_s, Odd_new_s, Even_s, Odd_s);
+
+  assign_add_mul_r(Even_new_s, Even_c, -g_epsbar, VOLUME/2);
+  assign_add_mul_r(Odd_new_s, Odd_c, -g_epsbar, VOLUME/2);
+  
+  g_mu = -g_mu;
+  M_full(Even_new_c, Odd_new_c, Even_c, Odd_c);
+  
+  assign_add_mul_r(Even_new_c, Even_s, -g_epsbar, VOLUME/2);
+  assign_add_mul_r(Odd_new_c, Odd_s, -g_epsbar, VOLUME/2);
+
+  g_mu = mu;
+}
+
+void Msw_full_ndpsi(spinor * const Even_new_s, spinor * const Odd_new_s, 
+                    spinor * const Even_new_c, spinor * const Odd_new_c, 
+                    spinor * const Even_s, spinor * const Odd_s,
+                    spinor * const Even_c, spinor * const Odd_c) {
+
+  double mu = g_mu;
+  g_mu = g_mubar;
+  Msw_full(Even_new_s, Odd_new_s, Even_s, Odd_s);
+
+  assign_add_mul_r(Even_new_s, Even_c, -g_epsbar, VOLUME/2);
+  assign_add_mul_r(Odd_new_s, Odd_c, -g_epsbar, VOLUME/2);
+  
+  g_mu = -g_mu;
+  Msw_full(Even_new_c, Odd_new_c, Even_c, Odd_c);
+  
+  assign_add_mul_r(Even_new_c, Even_s, -g_epsbar, VOLUME/2);
+  assign_add_mul_r(Odd_new_c, Odd_s, -g_epsbar, VOLUME/2);
+
+  g_mu = mu;
+}
+
+// full VOLUME operator; it used D_psi which works with tm and tm+clover
+void D_ndpsi(spinor * const l_strange, spinor * const l_charm,
+             spinor * const k_strange, spinor * const k_charm) {
+
+  double mu = g_mu;
+  g_mu = g_mubar;
+  D_psi(l_strange,k_strange);
+
+  assign_add_mul_r(l_strange, k_charm, -g_epsbar, VOLUME);
+  
+  g_mu = -g_mu;
+  D_psi(l_charm,k_charm);
+  
+  assign_add_mul_r(l_charm, k_strange, -g_epsbar, VOLUME);
+
+  g_mu = mu;
+}
 
 /******************************************
  *

@@ -64,6 +64,13 @@ int MG_solver_nd(spinor * const up_new, spinor * const dn_new,
 		 const double precision, const int max_iter, const int rel_prec,
 		 const int N, su3 **gf, matrix_mult_nd f);
 
+int MG_solver_nd_eo(spinor * const Even_new_up, spinor * const Odd_new_up, 
+                    spinor * const Even_new_dn, spinor * const Odd_new_dn,
+                    spinor * const Even_up, spinor * const Odd_up,
+                    spinor * const Even_dn, spinor * const Odd_dn,
+                    const double precision, const int max_iter, const int rel_prec,
+                    const int N, su3 **gf, matrix_mult_full_nd f_full);
+
 int MG_mms_solver_nd(spinor **const up_new, spinor **const dn_new,
                      spinor * const up_old, spinor * const dn_old,
                      const double * shifts, const int no_shifts,
