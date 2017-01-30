@@ -44,7 +44,6 @@ extern double mg_rho_update;
 
 void MG_init(void);
 void MG_update_gauge(double step);
-// Convention: mu_MG = 0.5 * mu_tmLQCD / g_kappa;
 void MG_update_mu(double mu_tmLQCD, double odd_tmLQCD);
 void MG_update_mubar_epsbar(double mubar_tmLQCD, double epsbar_tmLQCD, double shift_tmLQCD);
 void MG_reset(void);

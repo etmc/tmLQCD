@@ -68,7 +68,7 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
   solver_pm_t solver_pm;
   double atime, etime, delta;
   spinor * up0, * dn0, * up1, * dn1, * tup, * tdn;
-  double coefs[6] = {1./4., -3./32., 7./122., -77./2048., 231./8192., -1463./65536.};
+  double coefs[6] = {1./4., -3./32., 7./128., -77./2048., 231./8192., -1463./65536.};
   atime = gettime();
   nd_set_global_parameter(mnl);
   g_mu3 = 0.;

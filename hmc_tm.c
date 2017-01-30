@@ -391,7 +391,7 @@ int main(int argc,char *argv[]) {
   if(g_proc_id == 0) {
     gettimeofday(&t1,NULL);
     countfile = fopen("history_hmc_tm", "a");
-    fprintf(countfile, "!!! Timestamp %ld, Nsave = %d, g_mu = %e, g_mu1 = %e, g_mu_2 = %e, g_mu3 = %e, beta = %f, kappa = %f, C1 = %f, ",
+    fprintf(countfile, "!!! Timestamp %ld, Nsave = %d, g_mu = %.12f, g_mu1 = %.12f, g_mu_2 = %.12f, g_mu3 = %.12f, beta = %.12f, kappa = %.12f, C1 = %f, ",
             t1.tv_sec, Nsave, g_mu, g_mu1, g_mu2, g_mu3, g_beta, g_kappa, g_rgi_C1);
     for(j = 0; j < Integrator.no_timescales; j++) {
       fprintf(countfile, "n_int[%d] = %d ", j, Integrator.no_mnls_per_ts[j]);
@@ -518,12 +518,22 @@ int main(int argc,char *argv[]) {
     }
 
     /* online measurements */
+#ifdef DDalphaAMG
+    // When the configuration is rejected, we have to update it in the MG and redo the setup.
+    int mg_update = accept ? 0:1;
+#endif
     for(imeas = 0; imeas < no_measurements; imeas++){
       meas = &measurement_list[imeas];
       if(trajectory_counter%meas->freq == 0){
         if (g_proc_id == 0) {
           fprintf(stdout, "#\n# Beginning online measurement.\n");
         }
+#ifdef DDalphaAMG
+        if( mg_update ) {
+          mg_update = 0;
+          MG_reset();
+        }
+#endif
         meas->measurefunc(trajectory_counter, imeas, even_odd_flag);
       }
     }
