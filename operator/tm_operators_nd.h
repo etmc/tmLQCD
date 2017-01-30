@@ -26,10 +26,34 @@ void mul_one_pm_itau2(spinor * const p, spinor * const q,
           spinor * const r, spinor * const s,
           const double sign, const int N);
 
+void M_full_ndpsi(spinor * const Even_new_s, spinor * const Odd_new_s, 
+                  spinor * const Even_new_c, spinor * const Odd_new_c, 
+                  spinor * const Even_s, spinor * const Odd_s,
+                  spinor * const Even_c, spinor * const Odd_c);
+
+void Msw_full_ndpsi(spinor * const Even_new_s, spinor * const Odd_new_s, 
+                    spinor * const Even_new_c, spinor * const Odd_new_c, 
+                    spinor * const Even_s, spinor * const Odd_s,
+                    spinor * const Even_c, spinor * const Odd_c);
+
+//This works with tm and tm+clover 
+void D_ndpsi(spinor * const l_strange, spinor * const l_charm,
+             spinor * const k_strange,  spinor * const k_charm);
+
 void Qtm_ndpsi(spinor * const l_strange, spinor * const l_charm,
          spinor * const k_strange,  spinor * const k_charm);
 void Qsw_ndpsi(spinor * const l_strange, spinor * const l_charm,
          spinor * const k_strange, spinor * const k_charm);
+
+void Qtm_tau1_ndpsi_add_Ishift(spinor * const l_strange, spinor * const l_charm,
+                               spinor * const k_strange,  spinor * const k_charm);
+void Qtm_tau1_ndpsi_sub_Ishift(spinor * const l_strange, spinor * const l_charm,
+                               spinor * const k_strange,  spinor * const k_charm);
+void Qsw_tau1_ndpsi_add_Ishift(spinor * const l_strange, spinor * const l_charm,
+                               spinor * const k_strange,  spinor * const k_charm);
+void Qsw_tau1_ndpsi_sub_Ishift(spinor * const l_strange, spinor * const l_charm,
+                               spinor * const k_strange,  spinor * const k_charm);
+
 
 void Qtm_dagger_ndpsi(spinor * const l_strange, spinor * const l_charm,
           spinor * const k_strange, spinor * const k_charm);

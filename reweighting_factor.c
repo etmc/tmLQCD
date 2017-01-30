@@ -54,24 +54,32 @@ void reweighting_factor(const int N, const int nstore) {
     mnl = &monomial_list[j];
     if(mnl->even_odd_flag) {
       init_sw_fields();
-      double c_sw = mnl->c_sw;
-      if(c_sw < 0.) c_sw = 0.;
 
-      sw_term( (const su3**) hf.gaugefield, mnl->kappa, c_sw); 
-      if(mnl->type != NDDETRATIO) {
-        trlog[j] = -sw_trace(0, mnl->mu);
-      }
-      else {
-        trlog[j] = -sw_trace_nd(0, mnl->mubar, mnl->epsbar);
-      }
+      if(mnl->type != NDCLOVERRATCOR && (mnl->kappa != mnl->kappa2
+                                       || (mnl->type == NDDETRATIO 
+                                           && (mnl->mubar != mnl->mubar2 || mnl->epsbar != mnl->epsbar2))
+                                       || (mnl->type != NDDETRATIO
+                                           && (mnl->mu != mnl->mu2)))) {
+        double c_sw = mnl->c_sw;
+        if(c_sw < 0.) c_sw = 0.;
         
-      sw_term( (const su3**) hf.gaugefield, mnl->kappa2, c_sw);
-      if(mnl->type != NDDETRATIO) {
-        trlog[j] -= -sw_trace(0, mnl->mu2);
-      }
-      else {
-        trlog[j] -= -sw_trace_nd(0, mnl->mubar2, mnl->epsbar2);
-      }
+        sw_term( (const su3**) hf.gaugefield, mnl->kappa, c_sw); 
+        if(mnl->type != NDDETRATIO) {
+          trlog[j] = -sw_trace(0, mnl->mu);
+        }
+        else {
+          trlog[j] = -sw_trace_nd(0, mnl->mubar, mnl->epsbar);
+        }
+        
+        sw_term( (const su3**) hf.gaugefield, mnl->kappa2, c_sw);
+        if(mnl->type != NDDETRATIO) {
+          trlog[j] -= -sw_trace(0, mnl->mu2);
+        }
+        else {
+          trlog[j] -= -sw_trace_nd(0, mnl->mubar2, mnl->epsbar2);
+        }
+      } else
+        trlog[j] = 0.;
     }
     else {
       trlog[j] = 0.;
@@ -96,18 +104,18 @@ void reweighting_factor(const int N, const int nstore) {
           random_spinor_field_lexic(mnl->pf, mnl->rngrepro, RN_GAUSS);
           mnl->energy0 = square_norm(mnl->pf, n, 1);
         }
-	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# monomial[%d] %s, energy0 = %e\n", j, mnl->name, mnl->energy0);
-	}
-	if(mnl->type == NDDETRATIO) {
+	if(mnl->type == NDDETRATIO || mnl->type == NDCLOVERRATCOR) {
 	  if(mnl->even_odd_flag) {
 	    random_spinor_field_eo(mnl->pf2, mnl->rngrepro, RN_GAUSS);
-            mnl->energy0 += square_norm(mnl->pf, n/2, 1);
+            mnl->energy0 += square_norm(mnl->pf2, n/2, 1);
 	  }
 	  else {
-            random_spinor_field_lexic(mnl->pf, mnl->rngrepro, RN_GAUSS);
+            random_spinor_field_lexic(mnl->pf2, mnl->rngrepro, RN_GAUSS);
             mnl->energy0 += square_norm(mnl->pf2, n, 1);
           }
+	}
+	if(g_proc_id == 0 && g_debug_level > 1) {
+	  printf("# monomial[%d] %s, energy0 = %e\n", j, mnl->name, mnl->energy0);
 	}
       }
     }

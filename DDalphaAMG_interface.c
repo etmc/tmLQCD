@@ -118,6 +118,7 @@ int mg_lvl=3;
 int mg_blk[4] = {0, 0, 0, 0};
 int mg_mixed_prec=0;
 int mg_setup_mu_set = 0; //flag that enable the use of mg_setup_mu in the setup phase
+int mg_no_shifts = -1;
 double mg_setup_mu = 0.; 
 double mg_cmu_factor = 1.0;
 double mg_dtau_update = 0.0;
@@ -243,7 +244,7 @@ static inline int MG_mms_check_nd( spinor **const up_new, spinor **const dn_new,
 {
   double differ[2], residual;
   spinor ** check_vect = NULL;
-  double acc_factor = 2;
+  double acc_factor = 20;
   
   init_solver_field(&check_vect, VOLUMEPLUSRAND,2);
 
@@ -442,7 +443,7 @@ static int MG_solve(spinor * const phi_new, spinor * const phi_old, const double
 	    f == Q_minus_psi ) {  // Gamma5 - Full operator    with minus mu
     mul_gamma5((spinor *const) old, VOLUME);
     DDalphaAMG_solve( new, old, precision, &mg_status );
-    if( N == VOLUME )
+    if( N == VOLUME ) // in case of VOLUME/2 old is a just local vector
       mul_gamma5((spinor *const) old, VOLUME);
   }
   else if ( f == Qtm_pm_psi ||    //          Schur complement squared
@@ -496,8 +497,7 @@ static int MG_solve_nd( spinor * const up_new, spinor * const dn_new, spinor * c
   double *new2 = (double*) dn_new;
   spinor ** solver_field = NULL;
   
-  //  if( N != VOLUME && N != VOLUME/2 ) {
-  if( N != VOLUME/2 ) { // no full VOLUME functions implemented at the moment 
+  if( N != VOLUME && N != VOLUME/2 ) {
     if( g_proc_id == 0 )
       printf("ERROR: N = %d in MG_solve. Expettected N == VOLUME (%d) or VOLUME/2 (%d)\n", N, VOLUME, VOLUME/2);
     return 0;
@@ -518,6 +518,10 @@ static int MG_solve_nd( spinor * const up_new, spinor * const dn_new, spinor * c
 	    f == Qsw_ndpsi ||           //  Gamma5 Dh    - Schur complement
 	    f == Qtm_dagger_ndpsi ||    //  Gamma5 Dh    - Schur complement with mu = -mubar and csw = 0
 	    f == Qsw_dagger_ndpsi ||    //  Gamma5 Dh    - Schur complement with mu = -mubar
+            f == Qtm_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and plus shift
+            f == Qtm_tau1_ndpsi_sub_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and minus shift
+            f == Qsw_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with plus shift
+            f == Qsw_tau1_ndpsi_sub_Ishift || // Gamma5 Dh tau1 - Schur complement with minus shift
 	    f == Qtm_pm_ndpsi ||        // (Gamma5 Dh)^2 - Schur complement squared with csw = 0
 	    f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh)^2 - Schur complement squared with csw = 0 and shift
 	    f == Qsw_pm_ndpsi ||        // (Gamma5 Dh)^2 - Schur complement squared
@@ -525,7 +529,7 @@ static int MG_solve_nd( spinor * const up_new, spinor * const dn_new, spinor * c
     if( N != VOLUME/2 && g_proc_id == 0 )
       printf("WARNING: expected N == VOLUME/2 for the required operator in MG_solve. Continuing with N == VOLUME\n");
   }
-  else if ( 0 ) {                       // No full operator for nd
+  else if ( f == D_ndpsi ) {            //  Dh
     if( N != VOLUME && g_proc_id == 0 )
       printf("WARNING: expected N == VOLUME for the required operator in MG_solve. Continuing with N == VOLUME/2\n");
   }
@@ -537,9 +541,17 @@ static int MG_solve_nd( spinor * const up_new, spinor * const dn_new, spinor * c
   if (      f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh)^2 - Schur complement squared with csw = 0 and shift
 	    f == Qsw_pm_ndpsi_shift )   // (Gamma5 Dh)^2 - Schur complement squared with shift
     MG_update_mubar_epsbar( g_mubar, g_epsbar, sqrt(g_shift) );
+  else if ( f == Qtm_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and plus shift
+            f == Qsw_tau1_ndpsi_add_Ishift )  // Gamma5 Dh tau1 - Schur complement with plus shift
+    MG_update_mubar_epsbar( g_mubar, g_epsbar, sqrt(g_shift) );
+  else if ( f == Qtm_tau1_ndpsi_sub_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and minus shift
+            f == Qsw_tau1_ndpsi_sub_Ishift )  // Gamma5 Dh tau1 - Schur complement with minus shift
+    MG_update_mubar_epsbar( g_mubar, g_epsbar, -sqrt(g_shift) );
   else if ( f == Qtm_dagger_ndpsi ||    //  Gamma5 Dh    - Schur complement with mu = -mubar csw = 0
 	    f == Qsw_dagger_ndpsi )     //  Gamma5 Dh    - Schur complement with mu = -mubar
     MG_update_mubar_epsbar( -g_mubar, g_epsbar, 0 );
+  else if ( f == D_ndpsi )              //  Dh
+    MG_update_mubar_epsbar( g_mubar, g_epsbar, 0 );
   else
     MG_update_mubar_epsbar( g_mubar, g_epsbar, 0 );
   
@@ -551,11 +563,24 @@ static int MG_solve_nd( spinor * const up_new, spinor * const dn_new, spinor * c
     mul_gamma5((spinor *const) old1, VOLUME);
     mul_gamma5((spinor *const) old2, VOLUME);
     DDalphaAMG_solve_doublet( new1, old1, new2, old2, precision, &mg_status );
-    if( N == VOLUME ) {
+    if( N == VOLUME ) { // in case of VOLUME/2 old is a just local vector
       mul_gamma5((spinor *const) old1, VOLUME);
       mul_gamma5((spinor *const) old2, VOLUME);
     }
   }
+  else if ( f == Qtm_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and plus shift
+            f == Qtm_tau1_ndpsi_sub_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and minus shift
+            f == Qsw_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with plus shift
+            f == Qsw_tau1_ndpsi_sub_Ishift ) {// Gamma5 Dh tau1 - Schur complement with minus shift
+    mul_gamma5((spinor *const) old1, VOLUME);
+    mul_gamma5((spinor *const) old2, VOLUME);
+    // tau1 exchange new1 <-> new2
+    DDalphaAMG_solve_doublet( new2, old1, new1, old2, precision, &mg_status );
+    if( N == VOLUME ) { // in case of VOLUME/2 old is a just local vector
+      mul_gamma5((spinor *const) old1, VOLUME);
+      mul_gamma5((spinor *const) old2, VOLUME);
+    }
+  }	    
   else if ( f == Qtm_pm_ndpsi ||        // (Gamma5 Dh)^2 - Schur complement squared with csw = 0
 	    f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh)^2 - Schur complement squared with csw = 0 and shift
 	    f == Qsw_pm_ndpsi ||        // (Gamma5 Dh)^2 - Schur complement squared
@@ -565,6 +590,8 @@ static int MG_solve_nd( spinor * const up_new, spinor * const dn_new, spinor * c
     // tmLQCD:          gamma5 Dh tau1 gamma5 Dh tau1
     DDalphaAMG_solve_doublet_squared_odd( new2, old2, new1, old1, precision, &mg_status );
   }
+  else if ( f == D_ndpsi )              //  Dh
+    DDalphaAMG_solve_doublet( new1, old1, new2, old2, precision, &mg_status );
   else
     DDalphaAMG_solve_doublet( new1, old1, new2, old2, precision, &mg_status );
   
@@ -632,13 +659,12 @@ static int MG_mms_solve_nd( spinor **const up_new, spinor **const dn_new,
     }
   }
 
-  MG_update_mubar_epsbar( g_mubar, g_epsbar, shifts[0] );
-  for( int i = 0; i < no_shifts; i++ ) {
-    mg_odd_shifts[i]  = shifts[i]*mg_scale;
-    mg_even_shifts[i] = 0;
-  }
   // Checking if the operator is in the list and compatible with N
-  if (	    f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh)^2 - Schur complement squared with csw = 0 and shift
+  if (	    f == Qtm_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and plus shift
+            f == Qtm_tau1_ndpsi_sub_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and minus shift
+            f == Qsw_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with plus shift
+            f == Qsw_tau1_ndpsi_sub_Ishift || // Gamma5 Dh tau1 - Schur complement with minus shift
+            f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh)^2 - Schur complement squared with csw = 0 and shift
 	    f == Qsw_pm_ndpsi_shift ) { // (Gamma5 Dh)^2 - Schur complement squared with shift
     if( N != VOLUME/2 ) {
       if( g_proc_id == 0 )
@@ -649,20 +675,42 @@ static int MG_mms_solve_nd( spinor **const up_new, spinor **const dn_new,
     printf("WARNING: required operator unknown for MG_solve. Using standard operator: %s.\n",
 	   N==VOLUME?"":"Qsw_pm_ndpsi_shift");
 
+  // Setting mubar, epsbar and shifts
+  if (	    f == Qtm_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and plus shift
+            f == Qsw_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with plus shift
+            f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh)^2 - Schur complement squared with csw = 0 and shift
+	    f == Qsw_pm_ndpsi_shift ) { // (Gamma5 Dh)^2 - Schur complement squared with shift
+    MG_update_mubar_epsbar( g_mubar, g_epsbar, shifts[0] );
+    for( int i = 0; i < no_shifts; i++ ) {
+      mg_odd_shifts[i]  = shifts[i]*mg_scale;
+      mg_even_shifts[i] = 0;
+    }
+  }
+  else if ( f == Qtm_tau1_ndpsi_sub_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and minus shift
+            f == Qsw_tau1_ndpsi_sub_Ishift ) {// Gamma5 Dh tau1 - Schur complement with minus shift
+    MG_update_mubar_epsbar( g_mubar, g_epsbar, -shifts[0] );
+    for( int i = 0; i < no_shifts; i++ ) {
+      mg_odd_shifts[i]  = -shifts[i]*mg_scale;
+      mg_even_shifts[i] = 0;
+    }
+  }
+
   //Solving
-  /* TODO: Qtm_ndpsi_shift, Qsw_ndpsi_shift
-  if (      f == Qtm_ndpsi_shift ||     //  Gamma5 Dh    - Schur complement with csw = 0 and shift
-	    f == Qsw_ndpsi_shift ) {    //  Gamma5 Dh    - Schur complement with shift
+  if (      f == Qtm_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and plus shift
+            f == Qtm_tau1_ndpsi_sub_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and minus shift
+            f == Qsw_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with plus shift
+            f == Qsw_tau1_ndpsi_sub_Ishift ) {// Gamma5 Dh tau1 - Schur complement with minus shift
     mul_gamma5((spinor *const) old1, VOLUME);
     mul_gamma5((spinor *const) old2, VOLUME);
-    DDalphaAMG_solve_ms_doublet( new1, old1, new2, old2, mg_even_shifts, mg_odd_shifts, no_shifts, 
+    // tau1 exchange new1 <-> new2
+    DDalphaAMG_solve_ms_doublet( new2, old1, new1, old2, mg_even_shifts, mg_odd_shifts, no_shifts, 
                                  precision, &mg_status );
-    if( N == VOLUME ) {
+    if( N == VOLUME ) { // in case of VOLUME/2 old is a just local vector
       mul_gamma5((spinor *const) old1, VOLUME);
       mul_gamma5((spinor *const) old2, VOLUME);
     }
-  }
- else*/if ( f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh)^2 - Schur complement squared with csw = 0 and shift
+  }	    
+  else if ( f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh)^2 - Schur complement squared with csw = 0 and shift
 	    f == Qsw_pm_ndpsi_shift ) { // (Gamma5 Dh)^2 - Schur complement squared with shift
     mg_scale *= mg_scale;
     // DDalphaAMG: tau1 gamma5 Dh tau1 gamma5 Dh
@@ -959,7 +1007,6 @@ int MG_solver_eo(spinor * const Even_new, spinor * const Odd_new,
   return iter_count;
 }
 
-
 int MG_solver_nd(spinor * const up_new, spinor * const dn_new,
 		 spinor * const up_old, spinor * const dn_old,
 		 const double precision, const int max_iter, const int rel_prec,
@@ -1000,6 +1047,42 @@ int MG_solver_nd(spinor * const up_new, spinor * const dn_new,
   } 
   // mg_status should have been used last time for the inversion.
   return mg_status.iter_count;
+}
+
+int MG_solver_nd_eo(spinor * const Even_new_up, spinor * const Odd_new_up, 
+                    spinor * const Even_new_dn, spinor * const Odd_new_dn,
+                    spinor * const Even_up, spinor * const Odd_up,
+                    spinor * const Even_dn, spinor * const Odd_dn,
+                    const double precision, const int max_iter, const int rel_prec,
+                    const int N, su3 **gf, matrix_mult_full_nd f_full)
+{
+  
+  int iter_count;
+  spinor ** solver_field = NULL;
+  matrix_mult_nd f;
+  
+  init_solver_field(&solver_field, VOLUMEPLUSRAND, 4);
+  convert_eo_to_lexic(solver_field[0], Even_up, Odd_up);
+  convert_eo_to_lexic(solver_field[1], Even_dn, Odd_dn);
+  
+  if (f_full == M_full_ndpsi)
+    f=&D_ndpsi;
+  else if (f_full == Msw_full_ndpsi)
+    f=&D_ndpsi;
+  else {
+    f=&D_ndpsi;
+    if( g_proc_id == 0 )
+      printf("WARNING: required operator unknown for MG_solver_eo. Using standard operator.\n");
+  }
+
+  iter_count = MG_solver_nd( solver_field[2], solver_field[3], solver_field[0], solver_field[1], precision, max_iter,
+                             rel_prec, VOLUME, gf, f );
+  
+  convert_lexic_to_eo(Even_new_up, Odd_new_up, solver_field[2]);
+  convert_lexic_to_eo(Even_new_dn, Odd_new_dn, solver_field[3]);
+  finalize_solver(solver_field, 4);
+  
+  return iter_count;
 }
 
 int MG_mms_solver_nd(spinor **const up_new, spinor **const dn_new,
