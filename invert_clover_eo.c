@@ -100,7 +100,7 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
     /* Here we invert the hermitean operator squared */
     gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
     if(g_proc_id == 0) {
-      printf("# mu = %f, kappa = %f, csw = %f\n", 
+      printf("# mu = %.12f, kappa = %.12f, csw = %.12f\n", 
              g_mu/2./g_kappa, g_kappa, g_c_sw);
       fflush(stdout);
     }
