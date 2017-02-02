@@ -7,8 +7,8 @@ main.pdf: main.tex
 
 clean:
 	latexmk -CA
-	rm -f main.spl main.tdo main.pdf
+	rm -f main.spl main.tdo main.pdf *converted-to.pdf
 
 distclean:
 	latexmk -CA
-	rm -f main.bbl main.spl main.tdo
+	rm -f main.bbl main.spl main.tdo *converted-to.pdf
