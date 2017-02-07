@@ -49,6 +49,8 @@ typedef struct {
   matrix_mult_nd32 M_ndpsi32;  
   // pointer to array of shifts
   double * shifts;
+  // squared desired residue for each shift in mms. If NULL use squared_solver_prec for all
+  double * mms_squared_solver_prec;
 } solver_pm_t;
 
 #include"solver/gmres.h"

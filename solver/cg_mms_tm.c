@@ -72,6 +72,16 @@ int cg_mms_tm(spinor ** const P, spinor * const Q,
   double atime, etime;
   const int nr_sf = 3;
 
+  // if solver_pm->mms_squared_solver_prec is NULL,
+  // filling it with solver_pm->squared_solver_prec
+  double *mms_squared_solver_prec = NULL;
+  if (solver_pm->mms_squared_solver_prec == NULL) {
+    mms_squared_solver_prec = (double*) malloc(solver_pm->no_shifts*sizeof(double));
+    for (int i=0; i<solver_pm->no_shifts; i++)
+      mms_squared_solver_prec[i] = solver_pm->squared_solver_prec;
+    solver_pm->mms_squared_solver_prec = mms_squared_solver_prec;
+  }
+
   atime = gettime();
   if(solver_pm->sdim == VOLUME) {
     init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
@@ -144,12 +154,14 @@ int cg_mms_tm(spinor ** const P, spinor * const Q,
       // this is useful for computing time and needed, because otherwise
       // zita might get smaller than DOUBLE_EPS and, hence, zero
       if(iteration > 0 && (iteration % 20 == 0) && (im == no_shifts-1)) {
-	double sn = square_norm(ps_mms_solver[im-1], N, 1);
-	if(alphas[no_shifts-1]*alphas[no_shifts-1]*sn <= solver_pm->squared_solver_prec) {
+	double sn = square_norm(ps_mms_solver[no_shifts-2], N, 1);
+        // while because more than one shift could be converged
+	while(alphas[no_shifts-1]*alphas[no_shifts-1]*sn <= solver_pm->mms_squared_solver_prec[no_shifts-1] && no_shifts>1) {
 	  no_shifts--;
 	  if(g_debug_level > 2 && g_proc_id == 0) {
 	    printf("# CGMMS: at iteration %d removed one shift, %d remaining\n", iteration, no_shifts);
       	  }
+          sn = square_norm(ps_mms_solver[no_shifts-2], N, 1);
 	}
       }
     }
@@ -167,8 +179,8 @@ int cg_mms_tm(spinor ** const P, spinor * const Q,
       printf("# CGMMS iteration: %d residue: %g\n", iteration, err); fflush( stdout );
     }
 
-    if( ((err <= solver_pm->squared_solver_prec) && (solver_pm->rel_prec == 0)) ||
-        ((err <= solver_pm->squared_solver_prec*squarenorm) && (solver_pm->rel_prec > 0)) ||
+    if( ((err <= solver_pm->mms_squared_solver_prec[0]) && (solver_pm->rel_prec == 0) && no_shifts==1) ||
+        ((err <= solver_pm->mms_squared_solver_prec[0]*squarenorm) && (solver_pm->rel_prec > 0) && no_shifts==1) ||
         (iteration == solver_pm->max_iter -1) ) {
       /* FIXME temporary output of precision until a better solution can be found */
       *cgmms_reached_prec = err;
@@ -194,6 +206,12 @@ int cg_mms_tm(spinor ** const P, spinor * const Q,
   else iteration++;
   if(g_debug_level > 0 && g_proc_id == 0) {
     printf("# CGMMS (%d shifts): iter: %d eps_sq: %1.4e %1.4e t/s\n", solver_pm->no_shifts, iteration, solver_pm->squared_solver_prec, etime - atime); 
+  }
+
+  // freeing mms_squared_solver_prec if it has been allocated
+  if(mms_squared_solver_prec != NULL) {
+    free(mms_squared_solver_prec);
+    solver_pm->mms_squared_solver_prec = NULL;
   }
   
   finalize_solver(solver_field, nr_sf);
