@@ -337,6 +337,9 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
         _su3_assign(*v,*w);
       }
     }
+#ifdef DDalphaAMG
+    MG_reset();
+#endif
   }
   hf.update_gauge_copy = 1;
   g_update_gauge_copy = 1;
