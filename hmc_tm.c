@@ -518,22 +518,12 @@ int main(int argc,char *argv[]) {
     }
 
     /* online measurements */
-#ifdef DDalphaAMG
-    // When the configuration is rejected, we have to update it in the MG and redo the setup.
-    int mg_update = accept ? 0:1;
-#endif
     for(imeas = 0; imeas < no_measurements; imeas++){
       meas = &measurement_list[imeas];
       if(trajectory_counter%meas->freq == 0){
         if (g_proc_id == 0) {
           fprintf(stdout, "#\n# Beginning online measurement.\n");
         }
-#ifdef DDalphaAMG
-        if( mg_update ) {
-          mg_update = 0;
-          MG_reset();
-        }
-#endif
         meas->measurefunc(trajectory_counter, imeas, even_odd_flag);
       }
     }
