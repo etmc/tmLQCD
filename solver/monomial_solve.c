@@ -170,17 +170,19 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
       f = Qsw_pm_ndpsi_shift;
     if( mg_no_shifts > 0 && mg_no_shifts < solver_pm->no_shifts ) {
       iteration_count = MG_mms_solver_nd( Pup, Pdn, Qup, Qdn, solver_pm->shifts, mg_no_shifts,
-                                          solver_pm->squared_solver_prec, solver_pm->max_iter, solver_pm->rel_prec,
+                                          solver_pm->mms_squared_solver_prec, solver_pm->max_iter, solver_pm->rel_prec,
                                           solver_pm->sdim, g_gauge_field, f );
       solver_pm->no_shifts -= mg_no_shifts;
       solver_pm->shifts += mg_no_shifts;
+      solver_pm->mms_squared_solver_prec += mg_no_shifts;
       iteration_count += cg_mms_tm_nd( Pup+mg_no_shifts, Pdn+mg_no_shifts, Qup, Qdn, solver_pm );
       // Restoring solver_pm
       solver_pm->no_shifts += mg_no_shifts;
       solver_pm->shifts -= mg_no_shifts;
+      solver_pm->mms_squared_solver_prec -= mg_no_shifts;
     } else
       iteration_count = MG_mms_solver_nd( Pup, Pdn, Qup, Qdn, solver_pm->shifts, solver_pm->no_shifts,
-                                          solver_pm->squared_solver_prec, solver_pm->max_iter, solver_pm->rel_prec,
+                                          solver_pm->mms_squared_solver_prec, solver_pm->max_iter, solver_pm->rel_prec,
                                           solver_pm->sdim, g_gauge_field, f );
   } else if (solver_pm->type == RGMIXEDCG){
     matrix_mult_nd   f    = Qtm_pm_ndpsi_shift;

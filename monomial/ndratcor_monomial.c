@@ -107,6 +107,10 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
   }
   solver_pm.sdim = VOLUME/2;
   solver_pm.rel_prec = g_relative_precision_flag;
+  // since each shift will be multiplied by mnl->rat.rmu, we scale the tolerance with it.
+  solver_pm.mms_squared_solver_prec = (double*) malloc(solver_pm.no_shifts*sizeof(double));
+  for(int i=0; i<solver_pm.no_shifts; i++)
+    solver_pm.mms_squared_solver_prec[i] = solver_pm.squared_solver_prec/mnl->rat.rmu[i]/mnl->rat.rmu[i];
 
   // apply B to the random field to generate pseudo-fermion fields
   up0 = mnl->w_fields[0]; dn0 = mnl->w_fields[1];
@@ -161,6 +165,10 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
       up1 = tup; dn1 = tdn;
     }
   }
+
+  free(solver_pm.mms_squared_solver_prec);
+  solver_pm.mms_squared_solver_prec = NULL;
+
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
@@ -203,6 +211,10 @@ double ndratcor_acc(const int id, hamiltonian_field_t * const hf) {
   }
   solver_pm.sdim = VOLUME/2;
   solver_pm.rel_prec = g_relative_precision_flag;
+  // since each shift will be multiplied by mnl->rat.rmu, we scale the tolerance with it.
+  solver_pm.mms_squared_solver_prec = (double*) malloc(solver_pm.no_shifts*sizeof(double));
+  for(int i=0; i<solver_pm.no_shifts; i++)
+    solver_pm.mms_squared_solver_prec[i] = solver_pm.squared_solver_prec/mnl->rat.rmu[i]/mnl->rat.rmu[i];
 
   // apply (Q R)^(-1) to pseudo-fermion fields
   up0 = mnl->w_fields[0]; dn0 = mnl->w_fields[1];
@@ -235,6 +247,8 @@ double ndratcor_acc(const int id, hamiltonian_field_t * const hf) {
     up1 = tup; dn1 = tdn;
   }
 
+  free(solver_pm.mms_squared_solver_prec);
+  solver_pm.mms_squared_solver_prec = NULL;
 
   etime = gettime();
   if(g_proc_id == 0) {
@@ -255,10 +269,9 @@ void apply_Z_ndpsi(spinor * const k_up, spinor * const k_dn,
                    solver_pm_t * solver_pm) {
   monomial * mnl = &monomial_list[id];
 
+  // apply R to the pseudo-fermion fields
   mnl->iter0 += solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 			                       l_up, l_dn, solver_pm);  
-  
-  // apply R to the pseudo-fermion fields
   assign(k_up, l_up, VOLUME/2);
   assign(k_dn, l_dn, VOLUME/2);
   for(int j = (mnl->rat.np-1); j > -1; j--) {
@@ -278,6 +291,7 @@ void apply_Z_ndpsi(spinor * const k_up, spinor * const k_dn,
     assign_add_mul_r(k_dn, g_chi_dn_spinor_field[j], 
 		     mnl->rat.rmu[j], VOLUME/2);
   }
+
   mul_r(g_chi_up_spinor_field[mnl->rat.np], mnl->rat.A*mnl->rat.A, 
 	k_up, VOLUME/2);
   mul_r(g_chi_dn_spinor_field[mnl->rat.np], mnl->rat.A*mnl->rat.A, 

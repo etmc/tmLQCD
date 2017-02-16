@@ -240,11 +240,11 @@ static inline int MG_check_nd( spinor * const up_new, spinor * const dn_new, spi
 static inline int MG_mms_check_nd( spinor **const up_new, spinor **const dn_new, 
                                    spinor * const up_old, spinor * const dn_old,
                                    const double * shifts, const int no_shifts, 
-                                   const int N, const double precision, matrix_mult_nd f) 
+                                   const int N, double * precision, matrix_mult_nd f) 
 {
   double differ[2], residual;
   spinor ** check_vect = NULL;
-  double acc_factor = 20;
+  double acc_factor = 2;
   
   init_solver_field(&check_vect, VOLUMEPLUSRAND,2);
 
@@ -260,13 +260,13 @@ static inline int MG_mms_check_nd( spinor **const up_new, spinor **const dn_new,
   
     residual = differ[0]/differ[1];
     
-    if( residual > precision && residual < acc_factor*precision ) {
+    if( residual > precision[i] && residual < acc_factor*precision[i] ) {
       if(g_proc_id == 0)
-        printf("WARNING: solution accepted even if the residual wasn't complitely acceptable (%e > %e) \n", residual, precision);
-    } else if( residual > acc_factor*precision ) {
+        printf("WARNING: solution accepted even if the residual wasn't complitely acceptable (%e > %e) \n", residual, precision[i]);
+    } else if( residual > acc_factor*precision[i] ) {
       if(g_proc_id == 0) {
         printf("ERROR: something bad happened... MG converged giving the wrong solution!! Trying to restart... \n");
-        printf("ERROR contd: || s - f_{tmLQC} * f_{DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e > %e \n", differ[0],differ[1],differ[0]/differ[1],precision);
+        printf("ERROR contd: || s - f_{tmLQC} * f_{DDalphaAMG}^{-1} * s || / ||s|| = %e / %e = %e > %e \n", differ[0],differ[1],differ[0]/differ[1],precision[i]);
       }
       finalize_solver(check_vect, 2);
       return 0;
@@ -618,7 +618,7 @@ static int MG_solve_nd( spinor * const up_new, spinor * const dn_new, spinor * c
 static int MG_mms_solve_nd( spinor **const up_new, spinor **const dn_new, 
                             spinor * const up_old, spinor * const dn_old,
                             const double * shifts, const int no_shifts,
-                            const double precision, const int N, matrix_mult_nd f)
+                            double * precision, const int N, matrix_mult_nd f)
 {
   
   // for rescaling  convention in DDalphaAMG: (4+m)*\delta_{x,y} in tmLQCD: 1*\delta_{x,y} -> rescale by 1/4+m
@@ -1088,13 +1088,21 @@ int MG_solver_nd_eo(spinor * const Even_new_up, spinor * const Odd_new_up,
 int MG_mms_solver_nd(spinor **const up_new, spinor **const dn_new,
                      spinor * const up_old, spinor * const dn_old,
                      const double * shifts, const int no_shifts,
-                     const double precision, const int max_iter, const int rel_prec,
+                     const double * precision, const int max_iter, const int rel_prec,
                      const int N, su3 **gf, matrix_mult_nd f)
 {
   
   int success=0;
-  double mg_prec = rel_prec?sqrt(precision):sqrt(precision/(square_norm(up_old, N, 1)+square_norm(dn_old, N, 1)));
-  
+  double mg_prec[no_shifts];
+  if(rel_prec) {
+    for(int i=0; i<no_shifts; i++)
+      mg_prec[i] = sqrt(precision[i]);
+  } else {
+    double nrhs = square_norm(up_old, N, 1)+square_norm(dn_old, N, 1);
+    for(int i=0; i<no_shifts; i++)
+      mg_prec[i] = sqrt(precision[i]/nrhs);
+  }  
+
   MG_pre_solve(gf);
 
   success = MG_mms_solve_nd( up_new, dn_new, up_old, dn_old, shifts, no_shifts, mg_prec, N, f );
