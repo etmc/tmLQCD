@@ -220,7 +220,46 @@ int main(int argc,char *argv[])
 	}
 
 	start_ranlux(1, 123456);
+  // random_gauge_field(0, g_gauge_field);
 	unit_g_gauge_field(); // unit 3x3 colour matrices
+  // g_gauge_field[ g_ipt[0][0][3][1] ][0].c00 = 1.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][0].c01 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][0].c02 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][0].c10 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][0].c11 = 1.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][0].c12 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][0].c20 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][0].c21 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][0].c22 = 1.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][1].c00 = 1.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][1].c01 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][1].c02 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][1].c10 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][1].c11 = 1.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][1].c12 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][1].c20 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][1].c21 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][1].c22 = 1.0;
+  // g_gauge_field[ g_ipt[0][0][0][1] ][0].c00 = 1.0;
+  // g_gauge_field[ g_ipt[0][0][0][1] ][0].c01 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][0][1] ][0].c02 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][0][1] ][0].c10 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][0][1] ][0].c11 = 1.0;
+  // g_gauge_field[ g_ipt[0][0][0][1] ][0].c12 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][0][1] ][0].c20 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][0][1] ][0].c21 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][0][1] ][0].c22 = 1.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][3].c00 = 1.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][3].c01 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][3].c02 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][3].c10 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][3].c11 = 1.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][3].c12 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][3].c20 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][3].c21 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][3][1] ][3].c22 = 1.0;
+
+  update_backward_gauge(g_gauge_field);
 
 #ifdef TM_USE_MPI
 	/*For parallelization: exchange the gaugefield */
@@ -228,9 +267,11 @@ int main(int argc,char *argv[])
 #endif
 
 
-	// Init an ODD spinor with uniform random source
-	zero_spinor_field(g_spinor_field[0], VOLUME/2);
-  random_spinor_field_eo(g_spinor_field[0], 0, RN_UNIF);
+	// Init a lexicographic spinor with uniform random source
+	zero_spinor_field(g_spinor_field[0], VOLUME);
+  // random_spinor_field_eo(g_spinor_field[0], 0, RN_UNIF);
+  // g_spinor_field[0][0].s0.c0 = 1.0; // even point source
+  g_spinor_field[0][1].s0.c0 = 1.0; // odd point source
 
 
 	/************************** D_psi on CPU **************************/
@@ -244,7 +285,7 @@ int main(int argc,char *argv[])
 
 	// print L2-norm of source:
 	double squarenorm;
-	squarenorm = square_norm(g_spinor_field[0], VOLUME/2, 1);
+	squarenorm = square_norm(g_spinor_field[0], VOLUME, 1);
 	if(g_proc_id==0) {
 		printf("  ||source||^2 = %e\n", squarenorm);
 		fflush(stdout);
@@ -254,30 +295,35 @@ int main(int argc,char *argv[])
 	MPI_Barrier(MPI_COMM_WORLD);
 #endif
 
-	// printf("\n INPUT SPINOR:\n");
-	// double* show_in = (double*) g_spinor_field[0];
-	// for(int i=0; i<24*VOLUME/2; ++i) {
-	// 	if(show_in[i] != 0.) {
-	// 		printf("%d : %2f\n", i, show_in[i]);
-	// 	}
-	// }
-	// printf("\n");
+	printf("\n INPUT SPINOR:\n");
+	double* show_in = (double*) g_spinor_field[0];
+	for(int i=0; i<24*VOLUME; ++i) {
+		if(show_in[i] != 0.) {
+			printf("%d : %2f\n", i, show_in[i]);
+		}
+	}
+	printf("\n");
+
+  convert_lexic_to_eo( /*even*/ g_spinor_field[1], /*odd*/ g_spinor_field[2], /*full*/ g_spinor_field[0]);
 
 	t1 = gettime();
-	Hopping_Matrix(EO, g_spinor_field[1], g_spinor_field[0]);
+	Hopping_Matrix(OE, /*odd*/ g_spinor_field[3], g_spinor_field[1]);
+	Hopping_Matrix(EO, /*even*/ g_spinor_field[4], g_spinor_field[2]);
 	t2 = gettime();
 
-	// printf("\n OUTPUT SPINOR:\n");
-	// double* show_out = (double*) g_spinor_field[1];
-	// for(int i=0; i<24*VOLUME/2; ++i) {
-		// if(show_out[i] != 0.) {
-			// printf("%d : %2f\n", i, show_out[i]);
-		// }
-	// }
-	// printf("\n");
+  convert_eo_to_lexic(g_spinor_field[1], g_spinor_field[4], g_spinor_field[3]);
+
+	printf("\n OUTPUT SPINOR:\n");
+	double* show_out = (double*) g_spinor_field[1];
+	for(int i=0; i<24*VOLUME; ++i) {
+		if(show_out[i] != 0.) {
+			printf("%d : %2f\n", i, show_out[i]);
+		}
+	}
+	printf("\n");
 
 	// print L2-norm of result:
-	squarenorm = square_norm(g_spinor_field[1], VOLUME/2, 1);
+	squarenorm = square_norm(g_spinor_field[1], VOLUME, 1);
 	if(g_proc_id==0) {
 		printf("  ||result_1||^2 = %e\n", squarenorm);
 		printf("  Time for MV mult: %e\n", t2-t1);
@@ -297,7 +343,7 @@ int main(int argc,char *argv[])
 	}
 
 	// print L2-norm of source:
-	squarenorm = square_norm(g_spinor_field[0], VOLUME/2, 1);
+	squarenorm = square_norm(g_spinor_field[0], VOLUME, 1);
 	if(g_proc_id==0) {
 		printf("  ||source||^2 = %e\n", squarenorm);
 		fflush(stdout);
@@ -307,13 +353,15 @@ int main(int argc,char *argv[])
 	MPI_Barrier(MPI_COMM_WORLD);
 #endif
 
+	zero_spinor_field(g_spinor_field[2], VOLUME);
+
 	t1 = gettime();
 	// int invert_qphix(spinor * const odd_out, spinor * const odd_in, const int max_iter, double eps_sq, const int rel_prec)
 	invert_qphix(g_spinor_field[2], g_spinor_field[0], 100, 1e-10, 1.);
 	t2 = gettime();
 
 	// print L2-norm of result:
-	squarenorm = square_norm(g_spinor_field[2], VOLUME/2, 1);
+	squarenorm = square_norm(g_spinor_field[2], VOLUME, 1);
 	if(g_proc_id==0) {
 		printf("  ||result_2||^2 = %e\n", squarenorm);
 		printf("  Time for MV mult: %e\n", t2-t1);
@@ -330,7 +378,7 @@ int main(int argc,char *argv[])
 	}
 
 	// subract result1 -= result2
-	for(int ix=0; ix<VOLUME/2; ix++ )
+	for(int ix=0; ix<VOLUME; ix++ )
 	{
 		// odd
 		_vector_sub_assign( g_spinor_field[1][ix].s0, g_spinor_field[2][ix].s0 );
@@ -340,7 +388,7 @@ int main(int argc,char *argv[])
 	}
 
 	// print L2-norm of result1 - result2:
-	squarenorm = square_norm(g_spinor_field[1], VOLUME/2, 1);
+	squarenorm = square_norm(g_spinor_field[1], VOLUME, 1);
 	if(g_proc_id==0) {
 		printf("  ||result_1 - result_2||^2 = %e\n\n", squarenorm);
 		fflush(stdout);
