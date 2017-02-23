@@ -23,11 +23,11 @@ AC_F77_LIBRARY_LDFLAGS
 AC_CHECK_TOOL(AR, ar, [ar])
 LIBS="$LIBS $FLIBS -lm"
 
-AC_PROG_LEX
-dnl AC_PROG_LEX sets $LEX to ":" if neither lex nor flex are found! 
-if test "$LEX" = ":"; then
-  AC_MSG_ERROR([(F)LEX is required for building read_input.c. Please install it and run configure again.])
-fi
+#AC_PROG_LEX
+#dnl AC_PROG_LEX sets $LEX to ":" if neither lex nor flex are found! 
+#if test "$LEX" = ":"; then
+#  AC_MSG_ERROR([(F)LEX is required for building read_input.c. Please install it and run configure again.])
+#fi
 
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
