@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <float.h>
 #include <time.h>
 #include <string.h>
 #if (defined BGL && !defined BGP)
@@ -269,9 +270,11 @@ int main(int argc,char *argv[])
 
 	// Init a lexicographic spinor with uniform random source
 	zero_spinor_field(g_spinor_field[0], VOLUME);
-  // random_spinor_field_eo(g_spinor_field[0], 0, RN_UNIF);
-  // g_spinor_field[0][0].s0.c0 = 1.0; // even point source
-  g_spinor_field[0][1].s0.c0 = 1.0; // odd point source
+  random_spinor_field_eo(g_spinor_field[0], 0, RN_UNIF);
+
+  // Coordinates are T, X, Y, Z
+  // g_spinor_field[0][ g_ipt[0][0][0][0] ].s0.c0 = 1.0; // even point source
+  // g_spinor_field[0][ g_ipt[0][0][0][1] ].s0.c0 = 1.0; // odd point source
 
 
 	/************************** D_psi on CPU **************************/
@@ -295,32 +298,18 @@ int main(int argc,char *argv[])
 	MPI_Barrier(MPI_COMM_WORLD);
 #endif
 
-	printf("\n INPUT SPINOR:\n");
-	double* show_in = (double*) g_spinor_field[0];
-	for(int i=0; i<24*VOLUME; ++i) {
-		if(show_in[i] != 0.) {
-			printf("%d : %2f\n", i, show_in[i]);
-		}
-	}
-	printf("\n");
-
+  // Split the full spinor in an even and an odd part
   convert_lexic_to_eo( /*even*/ g_spinor_field[1], /*odd*/ g_spinor_field[2], /*full*/ g_spinor_field[0]);
 
+  // Apply a dslash on both odd and even parts
 	t1 = gettime();
 	Hopping_Matrix(OE, /*odd*/ g_spinor_field[3], g_spinor_field[1]);
 	Hopping_Matrix(EO, /*even*/ g_spinor_field[4], g_spinor_field[2]);
 	t2 = gettime();
 
-  convert_eo_to_lexic(g_spinor_field[1], g_spinor_field[4], g_spinor_field[3]);
-
-	printf("\n OUTPUT SPINOR:\n");
-	double* show_out = (double*) g_spinor_field[1];
-	for(int i=0; i<24*VOLUME; ++i) {
-		if(show_out[i] != 0.) {
-			printf("%d : %2f\n", i, show_out[i]);
-		}
-	}
-	printf("\n");
+  // Recombine even and odd spinors to a full spinor
+	zero_spinor_field(g_spinor_field[1], VOLUME);
+  convert_eo_to_lexic( /*full*/ g_spinor_field[1],  /*even*/ g_spinor_field[4],  /*odd*/ g_spinor_field[3]);
 
 	// print L2-norm of result:
 	squarenorm = square_norm(g_spinor_field[1], VOLUME, 1);
@@ -367,6 +356,33 @@ int main(int argc,char *argv[])
 		printf("  Time for MV mult: %e\n", t2-t1);
 		fflush(stdout);
 	}
+
+
+	/************************** DEBUG PRINT OUTS **************************/
+
+	printf("\n INPUT SPINOR:\n");
+	double* show_in = (double*) g_spinor_field[0];
+	for(int i=0; i<24*VOLUME; ++i) {
+		if(show_in[i] != 0.) {
+      int j = i/24;
+			printf("%d %d %d %d : %2f\n", g_coord[j][0], g_coord[j][1],g_coord[j][2],g_coord[j][3],show_in[i]);
+		}
+	}
+	printf("\n");
+
+	printf("\n OUTPUT TMLQCD vs QPHIX SPINOR (tmlQCD format):\n");
+	double* show_out       = (double*) &(g_spinor_field[1][0]);
+	double* show_out_qphix = (double*) &(g_spinor_field[2][0]);
+  printf("%d %d %d %d : \t\t", T, LX, LY, LZ);
+  printf("%d %d %d %d : \n", T, LX, LY, LZ);
+	for(int i=0; i<24*VOLUME; ++i) {
+		if( fabs(show_out_qphix[i]) > DBL_EPSILON || fabs(show_out[i]) > DBL_EPSILON) {
+      int j = i/24;
+			printf("%d %d %d %d : %2g\t\t", g_coord[j][0], g_coord[j][1],g_coord[j][2],g_coord[j][3],show_out[i]);
+			printf("%d %d %d %d : %2g\n", g_coord[j][0], g_coord[j][1],g_coord[j][2],g_coord[j][3],show_out_qphix[i]);
+		}
+	}
+	printf("\n");
 
 
 	/************************** finished: get difference **************************/
