@@ -349,20 +349,18 @@ void unit_gauge_QPhiX(double* qphix_gauge)
 }
 
 // Reorder an odd tmLQCD spinor to an (odd) QPhiX spinor
-void reorder_gauge_toQphix(const int even_odd, double* qphix_gauge)
+void reorder_gauge_toQphix(double* qphix_gauge_cb0, double* qphix_gauge_cb1)
 {
   double startTime = gettime();
   double *in;
   double *out;
   int change_dim[4] = {3, 0, 1, 2};
-  // int change_dim[4] = {0, 1, 2, 3};
   int Nz = 2;
   int Ns = 4;
   int Nc = 3;
   int tm_idx = 0;
 
-  out =            qphix_gauge;
-  in  = (double*) &g_gauge_field[0][0].c00;
+  in = (double*) &g_gauge_field[0][0].c00;
 
   // now copy and reorder from tempSpinor to spinor
   for( int x0=0; x0<T; x0++ )
@@ -371,42 +369,37 @@ void reorder_gauge_toQphix(const int even_odd, double* qphix_gauge)
         for( int x3=0; x3<LZ; x3++ )
         {
           int qphix_idx = x1/2 + LX/2*x2 + LX/2*LY*x3 + LX/2*LY*LZ*x0;
-          bool odd_tml = ((x0 + x1 + x2 + x3
-              + g_proc_coords[0] * T  + g_proc_coords[1] * LX
-              + g_proc_coords[3] * LZ + g_proc_coords[2] * LY ) % 2) != 0;
 
-          // printf(" QPHIX E/O: t=%d, x=%d, y=%d, z=%d, is_odd = %d \n", x0,x1,x2,x3,(x1+1)%2);
-          // printf(" TMLQD E/O: t=%d, x=%d, y=%d, z=%d, is_odd = %d \n", x0,x1,x2,x3,odd_tml);
+          if( (x0+x1+x2+x3)&1 ) { // cb1
+            out = qphix_gauge_cb1;
+          } else { // cb0
+            out = qphix_gauge_cb0;
+          }
 
-          // Proceed if this is an even_odd site in tmLQCD convention
-          if( (x0 + x1 + x2 + x3
-              + g_proc_coords[0] * T  + g_proc_coords[1] * LX
-              + g_proc_coords[3] * LZ + g_proc_coords[2] * LY
-              + even_odd) % 2 == 0) {
+          for (int dim=0; dim<4; dim++) { // tmLQCD \mu
+            for (int dir=0; dir<2; dir++) { // backward/forward
 
-            for (int dim=0; dim<4; dim++) { // tmLQCD \mu
-              for (int dir=0; dir<2; dir++) { // backward/forward
+              if(dir==0) { // this is the adjoint gauge field to be
+                tm_idx = g_idn[ g_ipt[x0][x1][x2][x3] ][dim];
+              } else {
+                tm_idx = g_ipt[x0][x1][x2][x3];
+              }
 
-                if(dir==0) {
-                  tm_idx = g_ipt[x0][x1][x2][x3];
-                } else {
-                  tm_idx = g_idn[ g_ipt[x0][x1][x2][x3] ][dim];
-                }
-
-                for (int c1=0; c1<Nc; c1++) {
-                  for (int c2=0; c2<Nc; c2++) {
-                    for (int z=0; z<Nz; z++) {
-                      int q_mu = 2 * change_dim[dim] + dir;
-                      int t_inner_idx = z + c2*Nz + c1*Nz*Nc +  dim*Nz*Nc*Nc + tm_idx*Nz*Nc*Nc*4;
-                      int q_inner_idx = z + c2*Nz + c1*Nz*Nc + q_mu*Nz*Nc*Nc + qphix_idx*8*Nc*Nc*Nz; // QPHIX gauge field transposed w.r.t. tmLQCD
-                      out[q_inner_idx] = in[t_inner_idx];
-                    }
+              for (int c1=0; c1<Nc; c1++) {
+                for (int c2=0; c2<Nc; c2++) {
+                  for (int z=0; z<Nz; z++) {
+                    int q_mu = 2 * change_dim[dim] + dir;
+                    int t_inner_idx = z + c2*Nz + c1*Nz*Nc +  dim*Nz*Nc*Nc + tm_idx*Nz*Nc*Nc*4;
+                    // QPHIX gauge field transposed w.r.t. tmLQCD:
+                    int q_inner_idx = z + c1*Nz + c2*Nz*Nc + q_mu*Nz*Nc*Nc + qphix_idx*8*Nc*Nc*Nz;
+                    out[q_inner_idx] = in[t_inner_idx];
                   }
                 }
               }
-            }
 
-          } // endif even_odd
+            } // dir
+          } // dim
+
         } // volume
 
   double endTime = gettime();
@@ -582,17 +575,9 @@ invert(spinor * const tmlqcd_out, spinor * const tmlqcd_in, const int max_iter, 
   int Pxyz = geom.getPxyz();
 
   double start = omp_get_wtime();
-
-	// print_gauge_ptr( (double*) &g_gauge_field[0][0].c00, " INPUT GAUGE FIELD (tmLQCD):");
-	// reorder_gauge_toQphix(Odd, (double*) u_packed[0]);
-	// reorder_gauge_toQphix(Even,  (double*) u_packed[1]);
-  unit_gauge_QPhiX( (double*) u_packed[0] );
-  unit_gauge_QPhiX( (double*) u_packed[1] );
-	// print_gauge_ptr(u_packed[0], " ODD INPUT GAUGE FIELD (QPhiX):");
-	// print_gauge_ptr(u_packed[1], " EVEN INPUT GAUGE FIELD (QPhiX):");
-
+	reorder_gauge_toQphix((double*) u_packed[0], (double*) u_packed[1]); // uses global tmlQCD gauge field as input
 	double end = omp_get_wtime();
-	masterPrintf(" QGauge init took: %g sec\n", end - start);
+	masterPrintf(" QGauge reordering took: %g sec\n", end - start);
 
 
 	/************************
@@ -615,9 +600,6 @@ invert(spinor * const tmlqcd_out, spinor * const tmlqcd_in, const int max_iter, 
 
 	// Reorder input spinor from tmLQCD to QPhiX
 	reorder_spinor_toQphix( (double*) tmlqcd_in, (double*) qphix_in[0], (double*) qphix_in[1] );
-	// print_ptr(spinor_type::full, tmlqcd_in, " FULL TMLQCD INPUT SPINOR:");
-	// print_ptr(spinor_type::half, qphix_in[0], " cb=0 INPUT SPINOR (in QPhiX format):");
-	// print_ptr(spinor_type::half, qphix_in[1], " cb=1 INPUT SPINOR (in QPhiX format):");
 
 	masterPrintf("Zeroing out output spinor: ");
 	start = omp_get_wtime();
@@ -645,16 +627,12 @@ invert(spinor * const tmlqcd_out, spinor * const tmlqcd_in, const int max_iter, 
 	masterPrintf(" %g sec\n", end -start);
 
 	// Apply QPhiX Dslash to qphix_in spinors
-	DQPhiX.dslash(qphix_out[1], qphix_in[0], u_packed[0], /* isign == non-conjugate */ 1, /* cb == */ 1);
-	DQPhiX.dslash(qphix_out[0], qphix_in[1], u_packed[1], /* isign == non-conjugate */ 1, /* cb == */ 0);
+	DQPhiX.dslash(qphix_out[1], qphix_in[0], u_packed[1], /* isign == non-conjugate */ 1, /* cb == */ 1);
+	DQPhiX.dslash(qphix_out[0], qphix_in[1], u_packed[0], /* isign == non-conjugate */ 1, /* cb == */ 0);
 
 	// Reorder spinor fields back to tmLQCD
-	// print_ptr(spinor_type::half, qphix_out[0], " cb=0 OUTPUT SPINOR (after dslash, before reordered to tmLQCD):");
-	// print_ptr(spinor_type::half, qphix_out[1], " cb=1 OUTPUT SPINOR (after dslash, before reordered to tmLQCD):");
 	reorder_spinor_fromQphix((double*) tmlqcd_out, (double*) qphix_out[0], (double*) qphix_out[1], (1.*g_kappa));
 	reorder_spinor_fromQphix((double*) tmlqcd_in,  (double*) qphix_in[0],  (double*) qphix_in[1]);
-	// print_ptr(spinor_type::full, tmlqcd_in, " INPUT SPINOR (reordered to tmLQCD):");
-	// print_ptr(spinor_type::full, tmlqcd_out, " OUTPUT SPINOR (reordered to tmLQCD):");
 
 
 	masterPrintf("Cleaning up\n");

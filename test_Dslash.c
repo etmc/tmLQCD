@@ -221,26 +221,8 @@ int main(int argc,char *argv[])
 	}
 
 	start_ranlux(1, 123456);
-  // random_gauge_field(0, g_gauge_field);
-	unit_g_gauge_field(); // unit 3x3 colour matrices
-  // g_gauge_field[ g_ipt[0][0][3][1] ][0].c00 = 1.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][0].c01 = 0.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][0].c02 = 0.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][0].c10 = 0.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][0].c11 = 1.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][0].c12 = 0.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][0].c20 = 0.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][0].c21 = 0.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][0].c22 = 1.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][1].c00 = 1.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][1].c01 = 0.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][1].c02 = 0.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][1].c10 = 0.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][1].c11 = 1.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][1].c12 = 0.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][1].c20 = 0.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][1].c21 = 0.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][1].c22 = 1.0;
+  random_gauge_field(0, g_gauge_field);
+	// unit_g_gauge_field(); // unit 3x3 colour matrices
   // g_gauge_field[ g_ipt[0][0][0][1] ][0].c00 = 1.0;
   // g_gauge_field[ g_ipt[0][0][0][1] ][0].c01 = 0.0;
   // g_gauge_field[ g_ipt[0][0][0][1] ][0].c02 = 0.0;
@@ -250,15 +232,6 @@ int main(int argc,char *argv[])
   // g_gauge_field[ g_ipt[0][0][0][1] ][0].c20 = 0.0;
   // g_gauge_field[ g_ipt[0][0][0][1] ][0].c21 = 0.0;
   // g_gauge_field[ g_ipt[0][0][0][1] ][0].c22 = 1.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][3].c00 = 1.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][3].c01 = 0.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][3].c02 = 0.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][3].c10 = 0.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][3].c11 = 1.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][3].c12 = 0.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][3].c20 = 0.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][3].c21 = 0.0;
-  // g_gauge_field[ g_ipt[0][0][3][1] ][3].c22 = 1.0;
 
   update_backward_gauge(g_gauge_field);
 
@@ -360,29 +333,29 @@ int main(int argc,char *argv[])
 
 	/************************** DEBUG PRINT OUTS **************************/
 
-	printf("\n INPUT SPINOR:\n");
-	double* show_in = (double*) g_spinor_field[0];
-	for(int i=0; i<24*VOLUME; ++i) {
-		if(show_in[i] != 0.) {
-      int j = i/24;
-			printf("%d %d %d %d : %2f\n", g_coord[j][0], g_coord[j][1],g_coord[j][2],g_coord[j][3],show_in[i]);
-		}
-	}
-	printf("\n");
+	// printf("\n INPUT SPINOR:\n");
+	// double* show_in = (double*) g_spinor_field[0];
+	// for(int i=0; i<24*VOLUME; ++i) {
+	// 	if(show_in[i] != 0.) {
+      // int j = i/24;
+	// 		printf("%d %d %d %d : %2f\n", g_coord[j][0], g_coord[j][1],g_coord[j][2],g_coord[j][3],show_in[i]);
+	// 	}
+	// }
+	// printf("\n");
 
-	printf("\n OUTPUT TMLQCD vs QPHIX SPINOR (tmlQCD format):\n");
-	double* show_out       = (double*) &(g_spinor_field[1][0]);
-	double* show_out_qphix = (double*) &(g_spinor_field[2][0]);
-  printf("%d %d %d %d : \t\t", T, LX, LY, LZ);
-  printf("%d %d %d %d : \n", T, LX, LY, LZ);
-	for(int i=0; i<24*VOLUME; ++i) {
-		if( fabs(show_out_qphix[i]) > DBL_EPSILON || fabs(show_out[i]) > DBL_EPSILON) {
-      int j = i/24;
-			printf("%d %d %d %d : %2g\t\t", g_coord[j][0], g_coord[j][1],g_coord[j][2],g_coord[j][3],show_out[i]);
-			printf("%d %d %d %d : %2g\n", g_coord[j][0], g_coord[j][1],g_coord[j][2],g_coord[j][3],show_out_qphix[i]);
-		}
-	}
-	printf("\n");
+	// printf("\n OUTPUT TMLQCD vs QPHIX SPINOR (tmlQCD format):\n");
+	// double* show_out       = (double*) &(g_spinor_field[1][0]);
+	// double* show_out_qphix = (double*) &(g_spinor_field[2][0]);
+  // printf("%d %d %d %d : \t\t", T, LX, LY, LZ);
+  // printf("%d %d %d %d : \n", T, LX, LY, LZ);
+	// for(int i=0; i<24*VOLUME; ++i) {
+	// 	if( fabs(show_out_qphix[i]) > DBL_EPSILON || fabs(show_out[i]) > DBL_EPSILON) {
+      // int j = i/24;
+	// 		printf("%d %d %d %d : %2g\t\t", g_coord[j][0], g_coord[j][1],g_coord[j][2],g_coord[j][3],show_out[i]);
+	// 		printf("%d %d %d %d : %2g\n", g_coord[j][0], g_coord[j][1],g_coord[j][2],g_coord[j][3],show_out_qphix[i]);
+	// 	}
+	// }
+	// printf("\n");
 
 
 	/************************** finished: get difference **************************/
