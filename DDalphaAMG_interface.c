@@ -537,11 +537,14 @@ void MG_update_kappa(double kappa)
       return;
   }
   DDalphaAMG_get_parameters(&mg_params);
-
   if (kappa!= mg_params.kappa) {
-	mg_params.kappa=kappa;
+    if (g_proc_id == 0) {
+       printf("MG WARNING: setting kappa from %.14f to %.14f general kappa %.14f\n",mg_params.kappa,kappa,g_kappa);
+       }
+    mg_params.kappa=kappa;
     DDalphaAMG_update_parameters(&mg_params, &mg_status);
-  }
+   // DDalphaAMG_setup(&mg_status);
+ }
 }
 
 void MG_reset() {

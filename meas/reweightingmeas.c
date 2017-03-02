@@ -578,10 +578,20 @@ invert_operator_Q (spinor * const P, spinor * const Q, const int op_id,
   return (iteration_count);
 }
 
+//#define DEBUG_PARAMETER_CHANGE
+
 static void
 interpolate (double * const rcurrent, const double rinitial,
              const double rfinal, const int numsteps, const int thisstep)
 {
+#ifdef DEBUG_PARAMETER_CHANGE
+  if(thisstep==1){
+      (*rcurrent)=100;
+  }else{
+      (*rcurrent)=10;
+  }
+  return;
+#endif
   (*rcurrent) = rinitial
       + (thisstep + 1) * (rfinal - rinitial) / ((double) numsteps);
 }
@@ -1316,7 +1326,7 @@ reweighting_measurement (const int traj, const int id, const int ieo)
 #else
                   /*print all raw data for cross check*/
                   fprintf (ofs_full,
-                           "%.6g %.6g %.6g %.6g %.6g %.6g %.6g %.6g   ", k2mu0,
+                           "%.17g %.17g %.17g %.17g %.17g %.17g %.17g %.17g   ", k2mu0,
                            k2mu, kappa0, kappa, csw0, csw, rmu0, rmu);
                   fprintf (ofs_full, "%.17g %.17g %.17g %.17g %.17g %.17g\n",
                            square1, square2, prodre, prodim, prodreg5,
@@ -1374,7 +1384,7 @@ reweighting_measurement (const int traj, const int id, const int ieo)
                   fprintf (ofs_full, "%d %d %d %d ", traj, operatorid, internum,
                            snum);
                   fprintf (ofs_full,
-                           "%.6g %.6g %.6g %.6g %.6g %.6g %.6g %.6g   ", k2mu0,
+                           "%.17g %.17g %.17g %.17g %.17g %.17g %.17g %.17g   ", k2mu0,
                            k2mu, kappa0, kappa, csw0, csw, rmu, rmu0);
                   fprintf (ofs_full, "%.17g %.17g %.17g\n", square1, square2,
                            cswpart);
