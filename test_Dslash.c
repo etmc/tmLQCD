@@ -297,7 +297,7 @@ int main(int argc,char *argv[])
 	/************************** D_psi_qphix on KNL **************************/
 
 	// void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, int Sz_, int PadXY_, int PadXYZ_, int MinCt_, int c12, QphixPrec precision_)
-	_initQphix(argc, argv, 1, 1, 1, 1, 1, 0, 0, 1, 0/*c12*/, QPHIX_DOUBLE_PREC);
+	_initQphix(argc, argv, 1, 1, 1, 1, 1, 0, 0, 1, 1 /*c12*/, QPHIX_DOUBLE_PREC);
 
 	if(g_proc_id==0) {
 		printf("\n");

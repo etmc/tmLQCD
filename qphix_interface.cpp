@@ -358,6 +358,8 @@ void reorder_gauge_toQphix(double* qphix_gauge_cb0, double* qphix_gauge_cb1)
   int Nz = 2;
   int Ns = 4;
   int Nc = 3;
+  int Nc1 = compress12 ? 2 : 3;
+  int Nc2 = 3;
   int tm_idx = 0;
 
   in = (double*) &g_gauge_field[0][0].c00;
@@ -385,13 +387,18 @@ void reorder_gauge_toQphix(double* qphix_gauge_cb0, double* qphix_gauge_cb1)
                 tm_idx = g_ipt[x0][x1][x2][x3];
               }
 
-              for (int c1=0; c1<Nc; c1++) {
-                for (int c2=0; c2<Nc; c2++) {
+              for (int c1=0; c1<Nc1; c1++) { // QPhiX convention color 1
+                for (int c2=0; c2<Nc2; c2++) { // QPhiX convention color 2
                   for (int z=0; z<Nz; z++) {
+                    // Note:
+                    // 1. \mu in QPhiX runs from 0..7 for all eight neighbouring links
+                    //    Here, the ordering of the direction (backward/forward) is the same
+                    //    for tmlQCD and QPhiX, but we have to change ordering of the dimensions
+                    // 2. QPhiX gauge field matrices are transposed w.r.t. tmLQCD
+                    // 3. tmlQCD always uses 3x3 color matrices (Nc*Nc)
                     int q_mu = 2 * change_dim[dim] + dir;
-                    int t_inner_idx = z + c2*Nz + c1*Nz*Nc +  dim*Nz*Nc*Nc + tm_idx*Nz*Nc*Nc*4;
-                    // QPHIX gauge field transposed w.r.t. tmLQCD:
-                    int q_inner_idx = z + c1*Nz + c2*Nz*Nc + q_mu*Nz*Nc*Nc + qphix_idx*8*Nc*Nc*Nz;
+                    int t_inner_idx = z + c1*Nz + c2*Nz*Nc  +  dim*Nz*Nc *Nc  +    tm_idx*4*Nz*Nc *Nc ;
+                    int q_inner_idx = z + c2*Nz + c1*Nz*Nc2 + q_mu*Nz*Nc1*Nc2 + qphix_idx*8*Nz*Nc1*Nc2;
                     out[q_inner_idx] = in[t_inner_idx];
                   }
                 }
