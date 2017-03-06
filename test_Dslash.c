@@ -233,12 +233,13 @@ int main(int argc,char *argv[])
   // g_gauge_field[ g_ipt[0][0][0][1] ][0].c21 = 0.0;
   // g_gauge_field[ g_ipt[0][0][0][1] ][0].c22 = 1.0;
 
-  update_backward_gauge(g_gauge_field);
-
 #ifdef TM_USE_MPI
 	/*For parallelization: exchange the gaugefield */
 	xchange_gauge(g_gauge_field);
 #endif
+
+  g_update_gauge_copy = 1;
+  update_backward_gauge(g_gauge_field);
 
 
 	// Init a lexicographic spinor with uniform random source
