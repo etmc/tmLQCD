@@ -296,7 +296,7 @@ int main(int argc,char *argv[])
 
 	/************************** D_psi_qphix on KNL **************************/
 
-	_initQphix(argc, argv, /* By = */ 1, /* Bz = */ 1, /* Ncores = */ 1, /* Sy = */ 1, /* Sz = */ 1, /* PadXY = */ 1, /* PadXYZ = */ 0, /* MinCt = */ 1, /* compress12 = */ 1, QPHIX_DOUBLE_PREC);
+	_initQphix(argc, argv, /* By = */ 8, /* Bz = */ 8, /* Ncores = */ 2, /* Sy = */ 1, /* Sz = */ 1, /* PadXY = */ 1, /* PadXYZ = */ 1, /* MinCt = */ 2, /* compress12 = */ 1, QPHIX_DOUBLE_PREC);
 
 	if(g_proc_id==0) {
 		printf("\n");

@@ -181,36 +181,6 @@ const double rsdTarget<double>::value = (double)(1.0e-12);
 #define MAX(a,b) ((a)>(b)?(a):(b))
 
 
-enum EvenOdd { Even = 0, Odd };
-enum class spinor_type { half, full };
-
-void print_ptr(spinor_type type, void* ptr, string text)
-{
-	cout << endl << text << endl;
-	double* show_ptr = (double*) ptr;
-  long unsigned vol = 24*lattSize[0]*lattSize[1]*lattSize[2]*lattSize[3];
-  if(type == spinor_type::half) vol /= 2;
-
-	for(long unsigned i=0; i<vol; ++i) {
-		if(fabs(show_ptr[i]) > DBL_EPSILON) {
-			cout << i << " : " << show_ptr[i] << endl;
-		}
-	}
-	cout << endl;
-}
-
-void print_gauge_ptr(void* ptr, string text)
-{
-	cout << endl << text << endl;
-	double* show_ptr = (double*) ptr;
-	// for(int i=0; i<36; ++i) {
-	for(int i=0; i<36*lattSize[0]*lattSize[1]*lattSize[2]*lattSize[3]; ++i) {
-		if(fabs(show_ptr[i]) > DBL_EPSILON) {
-			cout << i << " : " << show_ptr[i] << endl;
-		}
-	}
-	cout << endl;
-}
 
 // function that maps coordinates in the communication grid to MPI ranks
 int commsMap(const int *coords, void *fdata)
@@ -278,23 +248,6 @@ void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, i
 	}
 #endif
 
-	// QPhiX::masterPrintf("# Values used at initialisation:\n");
-	// QPhiX::masterPrintf("#  By = %d\n", By);
-	// QPhiX::masterPrintf("#  Bz = %d\n", Bz);
-	// QPhiX::masterPrintf("#  NCores = %d\n", NCores);
-	// QPhiX::masterPrintf("#  Sy = %d\n", Sy);
-	// QPhiX::masterPrintf("#  Sz = %d\n", Sz);
-	// QPhiX::masterPrintf("#  PadXY = %d\n", PadXY);
-	// QPhiX::masterPrintf("#  PadXYZ = %d\n", PadXYZ);
-	// QPhiX::masterPrintf("#  MinCt = %d\n", MinCt);
-	// QPhiX::masterPrintf("#  N_simt = %d\n", N_simt);
-	// QPhiX::masterPrintf("#  compress12 = %d\n", compress12);
-	// QPhiX::masterPrintf("#  precision = %d\n", precision);
-
-	// QPhiX::masterPrintf("# Declared QMP Topology: %d %d %d %d\n\n",
-	// qmp_geom[0], qmp_geom[1], qmp_geom[2], qmp_geom[3]);
-
-
 #ifdef QPHIX_QPX_SOURCE
 	if( thread_bind ) {
 		QPhiX::setThreadAffinity(NCores_user, Sy_user*Sz_user);
@@ -346,7 +299,7 @@ void unit_gauge_QPhiX(double* qphix_gauge)
 
   double endTime = gettime();
   double diffTime = endTime - startTime;
-  printf("time spent in unit_gauge_QPhiX: %f secs\n", diffTime);
+  printf("  time spent in unit_gauge_QPhiX: %f secs\n", diffTime);
 }
 
 
@@ -437,7 +390,7 @@ void reorder_gauge_toQphix( Geometry<FT,VECLEN,SOALEN,compress12>& geom,
 
   double endTime = gettime();
   double diffTime = endTime - startTime;
-  printf("time spent in reorder_gauge_toQphix: %f secs\n", diffTime);
+  printf("  time spent in reorder_gauge_toQphix: %f secs\n", diffTime);
 }
 
 
@@ -504,7 +457,7 @@ void reorder_spinor_toQphix( Geometry<FT,VECLEN,SOALEN,compress12>& geom,
 
   double endTime = gettime();
   double diffTime = endTime - startTime;
-  printf("time spent in reorder_spinor_toQphix: %f secs\n", diffTime);
+  printf("  time spent in reorder_spinor_toQphix: %f secs\n", diffTime);
 }
 
 
@@ -573,50 +526,38 @@ void reorder_spinor_fromQphix( Geometry<FT,VECLEN,SOALEN,compress12>& geom,
 
   double endTime = gettime();
   double diffTime = endTime - startTime;
-  printf("time spent in reorder_spinor_fromQphix: %f secs\n", diffTime);
+  printf("  time spent in reorder_spinor_fromQphix: %f secs\n", diffTime);
 }
 
 
-template<typename FT, int V, int S, bool compress>
-void
-invert(spinor * const tmlqcd_out, spinor * const tmlqcd_in, const int max_iter, double eps_sq, const int rel_prec)
+  template<typename FT, int V, int S, bool compress>
+void invert(spinor * const tmlqcd_out, spinor * const tmlqcd_in, const int max_iter, double eps_sq, const int rel_prec)
 {
   typedef typename Geometry<FT,V,S,compress>::SU3MatrixBlock QGauge;
   typedef typename Geometry<FT,V,S,compress>::FourSpinorBlock QSpinor;
 
-  bool verbose = true;
-
-  // Work out the size of checkerboarded X-dimension
-  int X1h = lattSize[0]/2;
-  int Nx = lattSize[0];
-  int Ny = lattSize[1];
-  int Nz = lattSize[2];
-  int Nt = lattSize[3];
-
-  int lX1h = subLattSize[0]/2;
-  int lY = subLattSize[1];
-  int lZ = subLattSize[2];
-  int lT = subLattSize[3];
-
   // Diagnostic information:
   masterPrintf("VECLEN=%d SOALEN=%d\n", V, S);
+	masterPrintf("# Declared QMP Topology: %d %d %d %d\n",
+      qmp_geom[0], qmp_geom[1], qmp_geom[2], qmp_geom[3]);
   masterPrintf("Global Lattice Size = ");
-  for(int mu=0; mu < 4; mu++){
+  for(int mu=0; mu < 4; mu++)
+  {
      masterPrintf(" %d", lattSize[mu]);
   }
   masterPrintf("\n");
-
   masterPrintf("Local Lattice Size = ");
-  for(int mu=0; mu < 4; mu++){
+  for(int mu=0; mu < 4; mu++)
+  {
     masterPrintf(" %d", subLattSize[mu]);
   }
   masterPrintf("\n");
-
   masterPrintf("Block Sizes: By= %d Bz=%d\n", By, Bz);
   masterPrintf("Cores = %d\n", NCores);
   masterPrintf("SMT Grid: Sy=%d Sz=%d\n", Sy, Sz);
   masterPrintf("Pad Factors: PadXY=%d PadXYZ=%d\n", PadXY, PadXYZ);
   masterPrintf("Threads_per_core = %d\n", N_simt);
+  masterPrintf("MinCt = %d\n", MinCt);
   masterPrintf("Initializing QPhiX Dslash\n");
 
   // Create Scalar Dslash Class
@@ -625,7 +566,6 @@ invert(spinor * const tmlqcd_out, spinor * const tmlqcd_in, const int max_iter, 
   double coeff_t    = (FT)(1);
   Geometry<FT,V,S,compress> geom(subLattSize, By, Bz, NCores, Sy, Sz, PadXY, PadXYZ, MinCt);
   Dslash<FT,V,S,compress> DQPhiX(&geom, t_boundary, coeff_s, coeff_t);
-
 
 	/************************
 	 *                      *
@@ -640,18 +580,8 @@ invert(spinor * const tmlqcd_out, spinor * const tmlqcd_in, const int max_iter, 
   u_packed[0] = packed_gauge_cb0;
   u_packed[1] = packed_gauge_cb1;
 
-	// Initialise unit QGauge field
-  masterPrintf("Initializing Unit QGauge Field: ");
-  int nvecs = geom.nVecs();
-  int nyg = geom.nGY();
-  int Pxy = geom.getPxy();
-  int Pxyz = geom.getPxyz();
-
-  double start = omp_get_wtime();
+	// Reorder (global) input gauge field from tmLQCD to QPhiX
 	reorder_gauge_toQphix(geom, (double*) u_packed[0], (double*) u_packed[1]); // uses global tmlQCD gauge field as input
-	double end = omp_get_wtime();
-	masterPrintf(" QGauge reordering took: %g sec\n", end - start);
-
 
 	/************************
 	 *                      *
@@ -674,31 +604,6 @@ invert(spinor * const tmlqcd_out, spinor * const tmlqcd_in, const int max_iter, 
 	// Reorder input spinor from tmLQCD to QPhiX
 	reorder_spinor_toQphix( geom, (double*) tmlqcd_in, (double*) qphix_in[0], (double*) qphix_in[1] );
 
-	masterPrintf("Zeroing out output spinor: ");
-	start = omp_get_wtime();
-#pragma omp parallel for collapse(4)
-	for(int cb=0; cb < 2; cb++) {
-    for(int t=0; t < lT; t++) {
-      for(int z=0; z < lZ; z++) {
-        for(int y=0; y < lY; y++) {
-          for(int s=0; s < nvecs; s++) {
-            for(int spin=0; spin < 4; spin++) {
-              for(int col=0; col < 3; col++)  {
-                for(int x=0; x < S; x++) {
-                  int ind = t*Pxyz+z*Pxy+y*nvecs+s; //((t*Nz+z)*Ny+y)*nvecs+s;
-                  qphix_out[cb][ind][col][spin][0][x] = rep<FT,double> (0);
-                  qphix_out[cb][ind][col][spin][1][x] = rep<FT,double> (0);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-	}
-	end = omp_get_wtime();
-	masterPrintf(" %g sec\n", end -start);
-
 	// Apply QPhiX Dslash to qphix_in spinors
 	DQPhiX.dslash(qphix_out[1], qphix_in[0], u_packed[1], /* isign == non-conjugate */ 1, /* cb == */ 1);
 	DQPhiX.dslash(qphix_out[0], qphix_in[1], u_packed[0], /* isign == non-conjugate */ 1, /* cb == */ 0);
@@ -707,9 +612,7 @@ invert(spinor * const tmlqcd_out, spinor * const tmlqcd_in, const int max_iter, 
 	reorder_spinor_fromQphix(geom, (double*) tmlqcd_out, (double*) qphix_out[0], (double*) qphix_out[1], (1.*g_kappa));
 	reorder_spinor_fromQphix(geom, (double*) tmlqcd_in,  (double*) qphix_in[0],  (double*) qphix_in[1]);
 
-
 	masterPrintf("Cleaning up\n");
-
 	geom.free(packed_gauge_cb0);
 	geom.free(packed_gauge_cb1);
 	geom.free(packed_spinor_in_cb0);
