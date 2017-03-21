@@ -79,28 +79,31 @@
 double *gauge_qphix[4];
 
 typedef enum QphixPrec {
-	QPHIX_FLOAT_PREC=0,
-	QPHIX_HALF_PREC,
-	QPHIX_DOUBLE_PREC
+  QPHIX_FLOAT_PREC = 0,
+  QPHIX_HALF_PREC,
+  QPHIX_DOUBLE_PREC
 } QphixPrec;
 
-#ifdef __cplusplus /* If this is a C++ compiler, use C linkage */
+#ifdef __cplusplus              /* If this is a C++ compiler, use C linkage */
 extern "C" {
 #endif
 
 // wrapper functions
-void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, int Sz_, int PadXY_, int PadXYZ_, int MinCt_, int c12, QphixPrec precision_);
-void _endQphix();
-void _loadGaugeQphix();
+  void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, int Sz_,
+                  int PadXY_, int PadXYZ_, int MinCt_, int c12, QphixPrec precision_);
+  void _endQphix();
+  void _loadGaugeQphix();
 
 // to be called instead of tmcgne to use the QUDA inverter
-int invert_qphix(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, const int rel_prec );
+  int invert_qphix(spinor * const P, spinor * const Q, const int max_iter, double eps_sq,
+                   const int rel_prec);
 
 // apply the TM operator using QUDA
-void M_full_qphix(spinor * const Even_new, spinor * const Odd_new,  spinor * const Even, spinor * const Odd);
-void D_psi_qphix(spinor * const P, spinor * const Q);
+  void M_full_qphix(spinor * const Even_new, spinor * const Odd_new, spinor * const Even,
+                    spinor * const Odd);
+  void D_psi_qphix(spinor * const P, spinor * const Q);
 
-#ifdef __cplusplus /* If this is a C++ compiler, end C linkage */
+#ifdef __cplusplus              /* If this is a C++ compiler, end C linkage */
 }
 #endif
-#endif /* QPHIX_INTERFACE_H_ */
+#endif                          /* QPHIX_INTERFACE_H_ */

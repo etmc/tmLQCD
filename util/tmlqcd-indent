@@ -1,0 +1,2 @@
+#!/bin/bash
+indent -bl -br -brf -brs -ce -i2 -l100 -lp -nut -cdw -kr "$@"
