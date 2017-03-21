@@ -15,6 +15,9 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#ifdef QPHIX
+#include "qphix/qphix_config.h"
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -34,6 +37,9 @@
 #ifdef TM_USE_OMP
 # include <omp.h>
 # include "init/init_openmp.h"
+#endif
+#ifdef QPHIX_QMP_COMMS
+#include <qmp.h>
 #endif
 #include "gettime.h"
 #include "su3.h"
@@ -128,14 +134,27 @@ int main(int argc,char *argv[])
 	DUM_MATRIX = DUM_DERI+8;
 	NO_OF_SPINORFIELDS = DUM_MATRIX+4;
 
-#ifdef TM_USE_MPI
+#ifdef QPHIX_QMP_COMMS
+	// Initialize QMP
+	QMP_thread_level_t prv;
+  if( QMP_init_msg_passing(&argc, &argv, QMP_THREAD_SINGLE, &prv) != QMP_SUCCESS ) {
+		QMP_error("Failed to initialize QMP\n");
+		abort();
+	}
+	if ( QMP_is_primary_node() ) {
+		printf("QMP IS INITIALIZED\n");
+	}
+#elif defined(TM_USE_MPI) && !defined(QPHIX_QMP_COMMS)
 	#ifdef TM_USE_OMP
 		int mpi_thread_provided;
 		MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
 	#else
 		MPI_Init(&argc, &argv);
 	#endif
-	MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
+#endif // QPHIX_QMP_COMMS
+
+#if defined(TM_USE_MPI) || defined(QPHIX_QMP_COMMS)
+  MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
 #else
 	g_proc_id = 0;
 #endif
