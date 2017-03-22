@@ -63,6 +63,7 @@
 #include "operator/D_psi.h"
 //#include "phmc.h"
 #include "mpi_init.h"
+#include "init/init_parallel.h"
 #include "linalg/square_norm.h"
 #include "linalg/assign_add_mul_r.h"
 #include "linalg/convert_eo_to_lexic.h"
@@ -133,40 +134,15 @@ int main(int argc, char *argv[]) {
   DUM_MATRIX = DUM_DERI + 8;
   NO_OF_SPINORFIELDS = DUM_MATRIX + 4;
 
-#ifdef QPHIX_QMP_COMMS
-  // Initialize QMP
-  QMP_thread_level_t prv;
-  if (QMP_init_msg_passing(&argc, &argv, QMP_THREAD_SINGLE, &prv) != QMP_SUCCESS) {
-    QMP_error("Failed to initialize QMP\n");
-    abort();
-  }
-  if (QMP_is_primary_node()) {
-    printf("QMP IS INITIALIZED\n");
-  }
-#elif defined(TM_USE_MPI) && !defined(QPHIX_QMP_COMMS)
-#ifdef TM_USE_OMP
-  int mpi_thread_provided;
-  MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
-#else
-  MPI_Init(&argc, &argv);
-#endif
-#endif                          // QPHIX_QMP_COMMS
-
-#if defined(TM_USE_MPI) || defined(QPHIX_QMP_COMMS)
-  MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
-#else
-  g_proc_id = 0;
-#endif
+  init_parallel(argc, argv);
 
   /* Read the input file */
-  if ((status = read_input("test_Dslash.input")) != 0) {
-    fprintf(stderr, "Could not find input file: test_Dslash.input\nAborting...\n");
+  char input_filename[500];
+  snprintf(input_filename, 499, "test_Dslash.input");
+  if( (j = read_input(input_filename)) != 0) {
+    fprintf(stderr, "Could not find input file: %s\nAborting...\n", input_filename);
     exit(-1);
   }
-
-#ifdef TM_USE_OMP
-  init_openmp();
-#endif
 
   tmlqcd_mpi_init(argc, argv);
 
