@@ -23,7 +23,7 @@
 * File qphix_interface.h
 *
 * Author: Mario Schroeck <mario.schroeck@roma3.infn.it>
-* 
+*
 * Last changes: 03/2015
 *
 *
@@ -32,10 +32,10 @@
 * The externally accessible functions are
 *
 *   void _initQphix( int verbose )
-*     Initializes the QUDA library. Carries over the lattice size and the 
-*     MPI process grid and thus must be called after initializing MPI (and 
+*     Initializes the QUDA library. Carries over the lattice size and the
+*     MPI process grid and thus must be called after initializing MPI (and
 *     after 'read_infile(argc,argv)').
-*     Memory for the QUDA gaugefield on the host is allocated but not filled 
+*     Memory for the QUDA gaugefield on the host is allocated but not filled
 *     yet (the latter is done in _loadGaugeQphix(), see below).
 *     Performance critical settings are done here and can be changed.
 *     Input parameter: verbose (0=SILENT, 1=SUMMARIZE, 2=VERBOSE).
@@ -45,29 +45,32 @@
 *
 *   void _loadGaugeQphix()
 *     Copies and reorders the gaugefield on the host and copies it to the GPU.
-*     Must be called between last changes on the gaugefield (smearing, flip 
+*     Must be called between last changes on the gaugefield (smearing, flip
 *     boundary conditions, etc.) and first call of the inverter.
 *
 *   double tmcgne_quda(int nmx,double res,int k,int l,int *status,int *ifail)
-*     The same functionality as 'tmcgne' (see tmcg.c) but inversion is performed on 
+*     The same functionality as 'tmcgne' (see tmcg.c) but inversion is performed
+*on
 *     the GPU using QUDA. Final residuum check is performed on the host (CPU)
 *     with the function 'void tmQnohat_dble(int k,int l)' (see tmdirac.c).
 *
 *   void tmQnohat_quda(int k, int l)
-*     The implementation of the QUDA equivalent of 'tmQnohat_dble'. 
+*     The implementation of the QUDA equivalent of 'tmQnohat_dble'.
 *
 *
 * Notes:
 *
-* Minimum QUDA version is 0.7.0 (see https://github.com/lattice/quda/issues/151 
+* Minimum QUDA version is 0.7.0 (see https://github.com/lattice/quda/issues/151
 * and https://github.com/lattice/quda/issues/157).
 *
-* To enable compilation of the same code for QUDA usage and standard non-QUDA usage, 
-* all calls of these functions should be wrapped in precompiler switches of the form
+* To enable compilation of the same code for QUDA usage and standard non-QUDA
+*usage,
+* all calls of these functions should be wrapped in precompiler switches of the
+*form
 *
 *   #ifdef QUDA
 *     ...
-*   #endif  
+*   #endif
 *
 **************************************************************************/
 
@@ -78,32 +81,28 @@
 
 double *gauge_qphix[4];
 
-typedef enum QphixPrec {
-  QPHIX_FLOAT_PREC = 0,
-  QPHIX_HALF_PREC,
-  QPHIX_DOUBLE_PREC
-} QphixPrec;
+typedef enum QphixPrec { QPHIX_FLOAT_PREC = 0, QPHIX_HALF_PREC, QPHIX_DOUBLE_PREC } QphixPrec;
 
-#ifdef __cplusplus              /* If this is a C++ compiler, use C linkage */
+#ifdef __cplusplus /* If this is a C++ compiler, use C linkage */
 extern "C" {
 #endif
 
 // wrapper functions
-  void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, int Sz_,
-                  int PadXY_, int PadXYZ_, int MinCt_, int c12, QphixPrec precision_);
-  void _endQphix();
-  void _loadGaugeQphix();
+void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, int Sz_, int PadXY_,
+                int PadXYZ_, int MinCt_, int c12, QphixPrec precision_);
+void _endQphix();
+void _loadGaugeQphix();
 
 // to be called instead of tmcgne to use the QUDA inverter
-  int invert_qphix(spinor * const P, spinor * const Q, const int max_iter, double eps_sq,
-                   const int rel_prec);
+int invert_qphix(spinor *const P, spinor *const Q, const int max_iter, double eps_sq,
+                 const int rel_prec);
 
 // apply the TM operator using QUDA
-  void M_full_qphix(spinor * const Even_new, spinor * const Odd_new, spinor * const Even,
-                    spinor * const Odd);
-  void D_psi_qphix(spinor * const P, spinor * const Q);
+void M_full_qphix(spinor *const Even_new, spinor *const Odd_new, spinor *const Even,
+                  spinor *const Odd);
+void D_psi_qphix(spinor *const P, spinor *const Q);
 
-#ifdef __cplusplus              /* If this is a C++ compiler, end C linkage */
+#ifdef __cplusplus /* If this is a C++ compiler, end C linkage */
 }
 #endif
-#endif                          /* QPHIX_INTERFACE_H_ */
+#endif /* QPHIX_INTERFACE_H_ */

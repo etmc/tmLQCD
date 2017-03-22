@@ -20,7 +20,7 @@
  *******************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include <config.h>
 #endif
 #ifdef TM_USE_MPI
 #include <mpi.h>
@@ -36,11 +36,10 @@
 #include <qmp.h>
 #endif
 
-#include "init_parallel.h"
 #include "global.h"
+#include "init_parallel.h"
 
-void init_parallel(int argc, char *argv[]){
-
+void init_parallel(int argc, char *argv[]) {
 #ifdef QPHIX_QMP_COMMS
   // Initialize QMP
   QMP_thread_level_t prv;
@@ -58,7 +57,7 @@ void init_parallel(int argc, char *argv[]){
 #else
   MPI_Init(&argc, &argv);
 #endif
-#endif // QPHIX_QMP_COMMS
+#endif  // QPHIX_QMP_COMMS
 
 #if defined(TM_USE_MPI) || defined(QPHIX_QMP_COMMS)
   MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
@@ -69,6 +68,4 @@ void init_parallel(int argc, char *argv[]){
 #ifdef TM_USE_OMP
   init_openmp();
 #endif
-
 }
-
