@@ -69,6 +69,7 @@
 // include mpi.h first
 #include <mpi.h>
 #include "global.h"
+#include "config.h"
 extern "C" {
 #include "boundary.h"
 #include "linalg/convert_eo_to_lexic.h"
@@ -78,15 +79,15 @@ extern "C" {
 #include "update_backward_gauge.h"
 }
 
-#include "timeDslashNoQDP.h"
+#ifdef TM_USE_OMP
 #include <omp.h>
-#include "qphix/wilson.h"
-#if 1
-#include "qphix/blas.h"
-#include "qphix/invcg.h"
-//#include "qphix/invbicgstab.h"
-#include "qphix/print_utils.h"
 #endif
+
+#include "qphix/qphix_config.h"
+#include "qphix/wilson.h"
+#include "qphix/invcg.h"
+#include "qphix/invbicgstab.h"
+#include "qphix/print_utils.h"
 
 #include <cstdlib>
 #include <cstring>
@@ -105,10 +106,19 @@ using namespace QPhiX;
 #define VECLEN_DP 8
 #endif
 
+#if defined(QPHIX_AVX2_SOURCE)
+#define VECLEN_SP 8
+#define VECLEN_DP 4
+#endif
 
 #if defined(QPHIX_AVX_SOURCE)
 #define VECLEN_SP 8
 #define VECLEN_DP 4
+#endif
+
+#if defined(QPHIX_SSE_SOURCE)
+#define VECLEN_SP 4
+#define VECLEN_DP 2
 #endif
 
 #if defined(QPHIX_SCALAR_SOURCE)
@@ -230,22 +240,15 @@ void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, i
 	omp_set_num_threads(NCores*Sy*Sz);
 
 #ifdef QPHIX_QMP_COMMS
-	// Initialize QMP
-	QMP_thread_level_t prv;
-	if( QMP_init_msg_passing(&argc, &argv, QMP_THREAD_SINGLE, &prv) != QMP_SUCCESS ) {
-		QMP_error("Failed to initialize QMP\n");
-		abort();
-
-	}
-	if ( QMP_is_primary_node() ) {
-		printf("QMP IS INITIALIZED\n");
-	}
-
-	// Declare the logical topology
-	if ( QMP_declare_logical_topology(qmp_geom, 4)!= QMP_SUCCESS ) {
-		QMP_error("Failed to declare QMP Logical Topology\n");
-		abort();
-	}
+  // Declare the logical topology
+  qmp_geom[0] = g_nproc_x;
+  qmp_geom[1] = g_nproc_y;
+  qmp_geom[2] = g_nproc_z;
+  qmp_geom[3] = g_nproc_t;
+  if ( QMP_declare_logical_topology(qmp_geom, 4)!= QMP_SUCCESS ) {
+    QMP_error("Failed to declare QMP Logical Topology\n");
+    abort();
+  }
 #endif
 
 #ifdef QPHIX_QPX_SOURCE
@@ -623,7 +626,7 @@ void invert(spinor * const tmlqcd_out, spinor * const tmlqcd_in, const int max_i
 
 int invert_qphix(spinor * const odd_out, spinor * const odd_in, const int max_iter, double eps_sq, const int rel_prec)
 {
-	if( precision == DOUBLE_PREC ) {
+	if( precision == QPHIX_DOUBLE_PREC ) {
 		if ( QPHIX_SOALEN > VECLEN_DP ) {
 			masterPrintf("SOALEN=%d is greater than the double prec VECLEN=%d\n", QPHIX_SOALEN, VECLEN_DP);
 			abort();
@@ -636,7 +639,7 @@ int invert_qphix(spinor * const odd_out, spinor * const odd_in, const int max_it
 			invert<double,VECLEN_DP,QPHIX_SOALEN,false>(odd_out,odd_in,max_iter,eps_sq,rel_prec);
 		}
 	}
-	else if ( precision == FLOAT_PREC ) {
+	else if ( precision == QPHIX_FLOAT_PREC ) {
 		if ( QPHIX_SOALEN > VECLEN_SP ) {
 			masterPrintf("SOALEN=%d is greater than the single prec VECLEN=%d\n", QPHIX_SOALEN,VECLEN_SP);
 			abort();
@@ -650,7 +653,7 @@ int invert_qphix(spinor * const odd_out, spinor * const odd_in, const int max_it
 		}
 	}
 #if defined(QPHIX_MIC_SOURCE)
-	else if ( precision == HALF_PREC ) {
+	else if ( precision == QPHIX_HALF_PREC ) {
 		if ( QPHIX_SOALEN > VECLEN_HP ) {
 			masterPrintf("SOALEN=%d is greater than the single prec VECLEN=%d\n", QPHIX_SOALEN,VECLEN_SP);
 			abort();
