@@ -288,7 +288,7 @@ void unit_gauge_QPhiX(double *qphix_gauge) {
 
   double endTime = gettime();
   double diffTime = endTime - startTime;
-  printf("  time spent in unit_gauge_QPhiX: %f secs\n", diffTime);
+  masterPrintf("  time spent in unit_gauge_QPhiX: %f secs\n", diffTime);
 }
 
 // Reorder the tmLQCD gauge field to a cb0 and a cb1 QPhiX gauge field
@@ -386,7 +386,7 @@ void reorder_gauge_toQphix(Geometry<FT, VECLEN, SOALEN, compress12> &geom, doubl
 
   double endTime = gettime();
   double diffTime = endTime - startTime;
-  printf("  time spent in reorder_gauge_toQphix: %f secs\n", diffTime);
+  masterPrintf("  time spent in reorder_gauge_toQphix: %f secs\n", diffTime);
 }
 
 // Reorder tmLQCD spinor to a cb0 and cb1 QPhiX spinor
@@ -453,7 +453,7 @@ void reorder_spinor_toQphix(Geometry<FT, VECLEN, SOALEN, compress12> &geom, doub
 
   double endTime = gettime();
   double diffTime = endTime - startTime;
-  printf("  time spent in reorder_spinor_toQphix: %f secs\n", diffTime);
+  masterPrintf("  time spent in reorder_spinor_toQphix: %f secs\n", diffTime);
 }
 
 // Reorder a cb0 and cb1 QPhiX spinor to a tmLQCD spinor
@@ -521,7 +521,7 @@ void reorder_spinor_fromQphix(Geometry<FT, VECLEN, SOALEN, compress12> &geom, do
 
   double endTime = gettime();
   double diffTime = endTime - startTime;
-  printf("  time spent in reorder_spinor_fromQphix: %f secs\n", diffTime);
+  masterPrintf("  time spent in reorder_spinor_fromQphix: %f secs\n", diffTime);
 }
 
 template <typename FT, int V, int S, bool compress>
