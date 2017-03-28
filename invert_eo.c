@@ -56,7 +56,7 @@
 #ifdef QUDA
 #  include "quda_interface.h"
 #endif
-#ifdef QPHIX
+#ifdef TM_USE_QPHIX
 #  include "qphix_interface.h"
 #endif
 
@@ -97,7 +97,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
   }
 #endif
 
-#ifdef QPHIX
+#ifdef TM_USE_QPHIX
 	/* NOTE: Qphix does only the solve on the odd sites, unlike Quda! */
   if( inverter==QPHIX_INVERTER ) {
 		/* Here we invert the hermitean operator squared */

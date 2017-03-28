@@ -86,7 +86,7 @@
 #ifdef QUDA
 #  include "quda_interface.h"
 #endif
-#ifdef QPHIX
+#ifdef TM_USE_QPHIX
 #  include "qphix_interface.h"
 #endif
 #include "meas/measurements.h"
@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
   g_proc_id = 0;
 #endif
 
-#ifdef QPHIX
+#ifdef TM_USE_QPHIX
   _initQphix(argc, argv, 8, 8, 1, 1, 1, 0, 0, 1, 0/*c12*/, QPHIX_DOUBLE_PREC);
 #endif
 

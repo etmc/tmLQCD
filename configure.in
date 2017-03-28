@@ -955,7 +955,7 @@ AC_ARG_WITH(qphixdir,
             AS_HELP_STRING([--with-qphixdir[=dir]], [use QPhiX, to be found in dir]),
              [echo yes
               QPHIX_AVAILABLE=1
-              AC_DEFINE(QPHIX,1,Using QPhiX)
+              AC_DEFINE(TM_USE_QPHIX,1,Using QPhiX)
               qphix_dir=$withval
               LDFLAGS="$LDFLAGS -L${qphix_dir}/lib -lqphix_solver"
               INCLUDES="$INCLUDES -I${qphix_dir}/include/" 

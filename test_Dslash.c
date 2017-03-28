@@ -15,7 +15,7 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-#ifdef QPHIX
+#ifdef TM_USE_QPHIX
 #include "qphix/qphix_config.h"
 #endif
 #include <float.h>

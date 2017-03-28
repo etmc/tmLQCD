@@ -29,7 +29,7 @@
 #include <omp.h>
 #include "init/init_openmp.h"
 #endif
-#ifdef QPHIX
+#ifdef TM_USE_QPHIX
 #include "qphix/qphix_config.h"
 #endif
 #ifdef QPHIX_QMP_COMMS

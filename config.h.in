@@ -173,7 +173,7 @@
 #undef PARALLELXYZT
 
 /* Using QPhiX */
-#undef QPHIX
+#undef TM_USE_QPHIX
 
 /* Define as the return type of signal handlers (`int' or `void'). */
 #undef RETSIGTYPE
