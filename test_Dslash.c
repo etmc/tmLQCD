@@ -132,8 +132,6 @@ int main(int argc, char *argv[]) {
   DUM_MATRIX = DUM_DERI + 8;
   NO_OF_SPINORFIELDS = DUM_MATRIX + 4;
 
-  init_parallel(argc, argv);
-
   /* Read the input file */
   char input_filename[500];
   snprintf(input_filename, 499, "test_Dslash.input");
@@ -142,6 +140,7 @@ int main(int argc, char *argv[]) {
     exit(-1);
   }
 
+  init_parallel(argc, argv);
   tmlqcd_mpi_init(argc, argv);
 
 #ifdef _GAUGE_COPY
@@ -283,9 +282,10 @@ int main(int argc, char *argv[]) {
 
   /************************** D_psi_qphix on KNL **************************/
 
-  _initQphix(argc, argv, /* By = */ 8, /* Bz = */ 8, /* Ncores = */ 2,
+  // TODO: This should be hidden in the interface
+  _initQphix(argc, argv, /* By = */ 2, /* Bz = */ 2, /* Ncores = */ 1,
              /* Sy = */ 1, /* Sz = */ 1,
-             /* PadXY = */ 1, /* PadXYZ = */ 1, /* MinCt = */ 2,
+             /* PadXY = */ 1, /* PadXYZ = */ 1, /* MinCt = */ 1,
              /* compress12 = */ 1, QPHIX_DOUBLE_PREC);
 
   if (g_proc_id == 0) {
