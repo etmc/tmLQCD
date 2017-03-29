@@ -22,41 +22,26 @@
 *
 * File qphix_interface.c
 *
-* Author: Mario Schroeck <mario.schroeck@roma3.infn.it>
+* Author: Mario Schroeck <mario.schroeck@roma3.infn.it>,
+*         Peter Labus <Peter.Labus@sissa.it>
 *
-* Last changes: 03/2015
+* Last changes: 03/2017
 *
 *
-* Integration of the QUDA inverter for multi-GPU usage
+* Integration of the QPhiX library for Intel Xeon Phi usage
 *
 * The externally accessible functions are
 *
-*   void _initQphix( int verbose )
-*     Initializes the QUDA library. Carries over the lattice size and the
+*   void _initQphix(int argc, char **argv,
+*                   int By_, int Bz_, int NCores_,
+*                   int Sy_, int Sz_, int PadXY_,
+*                   int PadXYZ_, int MinCt_, int c12, QphixPrec precision_)
+*     Initializes the QPhiX library. Carries over the lattice size and the
 *     MPI process grid and thus must be called after initializing MPI (and
 *     after 'read_infile(argc,argv)').
-*     Memory for the QUDA gaugefield on the host is allocated but not filled
-*     yet (the latter is done in _loadGaugeQphix(), see below).
-*     Performance critical settings are done here and can be changed.
-*     Input parameter: verbose (0=SILENT, 1=SUMMARIZE, 2=VERBOSE).
 *
 *   void _endQphix()
-*     Finalizes the QUDA library. Call before MPI_Finalize().
-*
-*   void _loadGaugeQphix()
-*     Copies and reorders the gaugefield on the host and copies it to the GPU.
-*     Must be called between last changes on the gaugefield (smearing etc.)
-*     and first call of the inverter. In particular, 'boundary(const double
-*     kappa)' must be called before if nontrivial boundary conditions are to 
-*     be used since those will be applied directly to the gaugefield.
-*
-*   double tmcgne_qphix(int nmx,double res,int k,int l,int *status,int *ifail)
-*     The same functionality as 'tmcgne' (see tmcg.c) but inversion is performed
-*     on the GPU using QUDA. Final residuum check is performed on the host (CPU)
-*     with the function 'void tmQnohat_dble(int k,int l)' (see tmdirac.c).
-*
-*   void tmQnohat_qphix(int k, int l)
-*     The implementation of the QUDA equivalent of 'tmQnohat_dble'.
+*     Finalizes the QPhiX library. Call before MPI_Finalize().
 *
 **************************************************************************/
 
@@ -452,6 +437,7 @@ void reorder_spinor_fromQphix(Geometry<FT, VECLEN, SOALEN, compress12> &geom, do
   masterPrintf("  time spent in reorder_spinor_fromQphix: %f secs\n", diffTime);
 }
 
+// Apply the Dslash to a full tmlQCD spinor and return a full tmlQCD spinor
 template <typename FT, int V, int S, bool compress>
 void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
 
@@ -557,6 +543,7 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
   geom.free(packed_spinor_out_cb1);
 }
 
+// Template wrapper call-able from C code
 void D_psi_qphix(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
   if (precision == QPHIX_DOUBLE_PREC) {
     if (QPHIX_SOALEN > VECLEN_DP) {
