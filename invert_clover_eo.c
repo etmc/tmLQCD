@@ -78,6 +78,15 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
                             sloppy, compression);
     }
 #endif
+
+#ifdef TM_USE_QPHIX
+    if( inverter==QPHIX_INVERTER ) {
+      return invert_eo_qphix(Even_new, Odd_new, Even, Odd,
+                             precision, max_iter,
+                             solver_flag, rel_prec,
+                             solver_params, compression);
+  }
+#endif
     
     
     assign_mul_one_sw_pm_imu_inv(EE, Even_new, Even, +g_mu);

@@ -61,6 +61,8 @@
 #define QPHIX_INTERFACE_H_
 
 #include "su3.h"
+#include "global.h"
+#include "solver/solver_params.h"
 
 typedef enum QphixPrec { QPHIX_FLOAT_PREC = 0, QPHIX_HALF_PREC, QPHIX_DOUBLE_PREC } QphixPrec;
 
@@ -74,8 +76,9 @@ void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, i
 void _endQphix();
 
 // Wrapper functions for Full Solver and Dslash
-void invert_qphix(spinor *const P, spinor *const Q, const int max_iter, double eps_sq,
-                 const int rel_prec);
+int invert_eo_qphix(spinor * const Even_new, spinor * const Odd_new, spinor * const Even,
+    spinor * const Odd, const double precision, const int max_iter, const int solver_flag,
+    const int rel_prec, solver_params_t solver_params, const CompressionType compression);
 void D_psi_qphix(spinor* Odd_out, const spinor* Odd_in);
 
 #ifdef __cplusplus /* If this is a C++ compiler, end C linkage */

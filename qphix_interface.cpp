@@ -59,6 +59,7 @@ extern "C" {
 #include "boundary.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "solver/solver.h"
+#include "solver/solver_params.h"
 //#include "solver/solver_field.h"
 #include "gettime.h"
 #include "update_backward_gauge.h"
@@ -543,6 +544,23 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
   geom.free(packed_spinor_out_cb1);
 }
 
+// Templatized even-odd preconditioned solver using QPhiX Library
+template <typename FT, int V, int S, bool compress>
+int invert_eo(spinor * const Even_new,
+    spinor * const Odd_new,
+    spinor * const Even,
+    spinor * const Odd,
+    const double precision,
+    const int max_iter,
+    const int solver_flag,
+    const int rel_prec,
+    solver_params_t solver_params,
+    const CompressionType compression) {
+  masterPrintf("\n  This is QPhiX! ;-) \n\n");
+  return 0;
+}
+
+
 // Template wrapper for the Dslash operator call-able from C code
 void D_psi_qphix(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
   if (precision == QPHIX_DOUBLE_PREC) {
@@ -587,8 +605,112 @@ void D_psi_qphix(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
 #endif
 }
 
+// Template wrapper for Full Solver call-able from C code, return number of iterations
+int invert_eo_qphix(spinor * const Even_new,
+    spinor * const Odd_new,
+    spinor * const Even,
+    spinor * const Odd,
+    const double precision,
+    const int max_iter,
+    const int solver_flag,
+    const int rel_prec,
+    solver_params_t solver_params,
+    const CompressionType compression) {
 
-// Template wrapper for Full Solver call-able from C code
-void invert_qphix(spinor *const P, spinor *const Q, const int max_iter, double eps_sq,
-                 const int rel_prec){
+  if (precision < rsdTarget<double>::value) {
+    if (QPHIX_SOALEN > VECLEN_DP) {
+      masterPrintf("SOALEN=%d is greater than the double prec VECLEN=%d\n", QPHIX_SOALEN,
+                   VECLEN_DP);
+      abort();
+    }
+    masterPrintf("TIMING IN DOUBLE PRECISION \n");
+    if (compress12) {
+      return invert_eo<double, VECLEN_DP, QPHIX_SOALEN, true>(Even_new,
+                                                       Odd_new,
+                                                       Even,
+                                                       Odd,
+                                                       precision,
+                                                       max_iter,
+                                                       solver_flag,
+                                                       rel_prec,
+                                                       solver_params,
+                                                       compression);
+    } else {
+      return invert_eo<double, VECLEN_DP, QPHIX_SOALEN, false>(Even_new,
+                                                        Odd_new,
+                                                        Even,
+                                                        Odd,
+                                                        precision,
+                                                        max_iter,
+                                                        solver_flag,
+                                                        rel_prec,
+                                                        solver_params,
+                                                        compression);
+    }
+  } else if (precision < rsdTarget<float>::value) {
+    if (QPHIX_SOALEN > VECLEN_SP) {
+      masterPrintf("SOALEN=%d is greater than the single prec VECLEN=%d\n", QPHIX_SOALEN,
+                   VECLEN_SP);
+      abort();
+    }
+    masterPrintf("TIMING IN SINGLE PRECISION \n");
+    if (compress12) {
+      return invert_eo<float, VECLEN_DP, QPHIX_SOALEN, true>(Even_new,
+                                                      Odd_new,
+                                                      Even,
+                                                      Odd,
+                                                      precision,
+                                                      max_iter,
+                                                      solver_flag,
+                                                      rel_prec,
+                                                      solver_params,
+                                                      compression);
+    } else {
+      return invert_eo<float, VECLEN_DP, QPHIX_SOALEN, false>(Even_new,
+                                                       Odd_new,
+                                                       Even,
+                                                       Odd,
+                                                       precision,
+                                                       max_iter,
+                                                       solver_flag,
+                                                       rel_prec,
+                                                       solver_params,
+                                                       compression);
+    }
+  }
+#if defined(QPHIX_MIC_SOURCE)
+  else if (precision < rsdTarget<half>::value) {
+    if (QPHIX_SOALEN > VECLEN_HP) {
+      masterPrintf("SOALEN=%d is greater than the single prec VECLEN=%d\n", QPHIX_SOALEN,
+                   VECLEN_SP);
+      abort();
+    }
+    masterPrintf("TIMING IN HALF PRECISION \n");
+    if (compress12) {
+      return invert_eo<half, VECLEN_DP, QPHIX_SOALEN, true>(Even_new,
+                                                     Odd_new,
+                                                     Even,
+                                                     Odd,
+                                                     precision,
+                                                     max_iter,
+                                                     solver_flag,
+                                                     rel_prec,
+                                                     solver_params,
+                                                     compression);
+    } else {
+      return invert_eo<half, VECLEN_DP, QPHIX_SOALEN, false>(Even_new,
+                                                      Odd_new,
+                                                      Even,
+                                                      Odd,
+                                                      precision,
+                                                      max_iter,
+                                                      solver_flag,
+                                                      rel_prec,
+                                                      solver_params,
+                                                      compression);
+    }
+  }
+#endif
+
+  return -1;
 }
