@@ -183,22 +183,6 @@ const double rsdTarget<double>::value = (double)(1.0e-12);
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-// function that maps coordinates in the communication grid to MPI ranks
-int commsMap(const int *coords, void *fdata) {
-#if USE_LZ_LY_LX_T
-  int n[4] = {coords[3], coords[2], coords[1], coords[0]};
-#else
-  int n[4] = {coords[3], coords[0], coords[1], coords[2]};
-#endif
-
-  int rank = 0;
-
-#ifdef TM_USE_MPI
-  MPI_Cart_rank(g_cart_grid, n, &rank);
-#endif
-
-  return rank;
-}
 
 void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, int Sz_, int PadXY_,
                 int PadXYZ_, int MinCt_, int c12, QphixPrec precision_) {
@@ -248,48 +232,10 @@ void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, i
 #endif
 }
 
+
 // Finalize the QPhiX library
 void _endQphix() {}
 
-// TODO: Does not deal with paddings and SOALEN != 1
-// Set QPhiX gauge field to unit gauge
-void unit_gauge_QPhiX(double *qphix_gauge) {
-  double startTime = gettime();
-  int Nz = 2;
-  int Ns = 4;
-  int Nc = 3;
-
-  for (int x0 = 0; x0 < T; x0++)
-    for (int x1 = 0; x1 < LX / 2; x1++)
-      for (int x2 = 0; x2 < LY; x2++)
-        for (int x3 = 0; x3 < LZ; x3++) {
-          int qphix_idx = x1 + LX / 2 * x2 + LX / 2 * LY * x3 + LX / 2 * LY * LZ * x0;
-
-          for (int dim = 0; dim < 4; dim++) {    // tmLQCD \mu
-            for (int dir = 0; dir < 2; dir++) {  // backward/forward
-              for (int c1 = 0; c1 < Nc; c1++) {
-                for (int c2 = 0; c2 < Nc; c2++) {
-                  for (int z = 0; z < Nz; z++) {
-                    int q_mu = 2 * dim + dir;
-                    int q_inner_idx = z + c2 * Nz + c1 * Nz * Nc + q_mu * Nz * Nc * Nc +
-                                      qphix_idx * 8 * Nc * Nc * Nz;
-                    if (c1 == c2 && z == RE)
-                      // if ( c1 == c2 ) // 1. + I
-                      qphix_gauge[q_inner_idx] = 1.0;
-                    else
-                      qphix_gauge[q_inner_idx] = 0.0;
-                  }
-                }
-              }
-            }
-          }
-
-        }  // volume
-
-  double endTime = gettime();
-  double diffTime = endTime - startTime;
-  masterPrintf("  time spent in unit_gauge_QPhiX: %f secs\n", diffTime);
-}
 
 // Reorder the tmLQCD gauge field to a cb0 and a cb1 QPhiX gauge field
 template <typename FT, int VECLEN, int SOALEN, bool compress12>
