@@ -164,24 +164,6 @@ const double rsdTarget<float>::value = (double)(1.0e-7);
 template <>
 const double rsdTarget<double>::value = (double)(1.0e-12);
 
-// define order of the spatial indices
-// default is LX-LY-LZ-T, see below def. of local lattice size, this is related
-// to the gamma basis transformation from tmLQCD -> UKQCD
-// for details see https://github.com/lattice/qphix/issues/157
-#define USE_LZ_LY_LX_T 0
-
-// TRIVIAL_BC are trivial (anti-)periodic boundary conditions,
-// i.e. 1 or -1 on last timeslice
-// tmLQCD uses twisted BC, i.e. phases on all timeslices.
-// if using TRIVIAL_BC: can't compare inversion result to tmLQCD
-// if not using TRIVIAL_BC: BC will be applied to gauge field,
-// can't use 12 parameter reconstruction
-#define TRIVIAL_BC 0
-
-// final check of residual with DD functions on the CPU
-#define FINAL_RESIDUAL_CHECK_CPU_DD 1
-
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 
 void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, int Sz_, int PadXY_,
