@@ -100,7 +100,7 @@ int invert_qphix(spinor *const P, spinor *const Q, const int max_iter, double ep
 // apply the TM operator using QUDA
 void M_full_qphix(spinor *const Even_new, spinor *const Odd_new, spinor *const Even,
                   spinor *const Odd);
-void D_psi_qphix(spinor *const P, spinor *const Q);
+void D_psi_qphix(spinor* Odd_out, const spinor* Odd_in);
 
 #ifdef __cplusplus /* If this is a C++ compiler, end C linkage */
 }

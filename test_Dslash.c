@@ -306,9 +306,7 @@ int main(int argc, char *argv[]) {
   zero_spinor_field(g_spinor_field[2], VOLUME);
 
   t1 = gettime();
-  // int invert_qphix(spinor * const odd_out, spinor * const odd_in, const int
-  // max_iter, double eps_sq, const int rel_prec)
-  invert_qphix(g_spinor_field[2], g_spinor_field[0], 100, 1e-10, 1.);
+  D_psi_qphix(g_spinor_field[2], g_spinor_field[0]);
   t2 = gettime();
 
   // print L2-norm of result:

@@ -525,12 +525,20 @@ void reorder_spinor_fromQphix(Geometry<FT, VECLEN, SOALEN, compress12> &geom, do
 }
 
 template <typename FT, int V, int S, bool compress>
-void invert(spinor *const tmlqcd_out, spinor *const tmlqcd_in, const int max_iter, double eps_sq,
-            const int rel_prec) {
+void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
+
   typedef typename Geometry<FT, V, S, compress>::SU3MatrixBlock QGauge;
   typedef typename Geometry<FT, V, S, compress>::FourSpinorBlock QSpinor;
 
-  // Diagnostic information:
+  /************************
+   *                      *
+   *     Diagnostic       *
+   *     Information      *
+   *         &            *
+   *    Creating Dslash   *
+   *                      *
+  ************************/
+
   masterPrintf("VECLEN=%d SOALEN=%d\n", V, S);
   masterPrintf("# Declared QMP Topology: %d %d %d %d\n", qmp_geom[0], qmp_geom[1], qmp_geom[2],
                qmp_geom[3]);
@@ -552,7 +560,7 @@ void invert(spinor *const tmlqcd_out, spinor *const tmlqcd_in, const int max_ite
   masterPrintf("MinCt = %d\n", MinCt);
   masterPrintf("Initializing QPhiX Dslash\n");
 
-  // Create Scalar Dslash Class
+  // Create Dslash Class
   double t_boundary = (FT)(1);
   double coeff_s = (FT)(1);
   double coeff_t = (FT)(1);
@@ -621,8 +629,7 @@ void invert(spinor *const tmlqcd_out, spinor *const tmlqcd_in, const int max_ite
   geom.free(packed_spinor_out_cb1);
 }
 
-int invert_qphix(spinor *const odd_out, spinor *const odd_in, const int max_iter, double eps_sq,
-                 const int rel_prec) {
+void D_psi_qphix(spinor* odd_out, const spinor* odd_in) {
   if (precision == QPHIX_DOUBLE_PREC) {
     if (QPHIX_SOALEN > VECLEN_DP) {
       masterPrintf("SOALEN=%d is greater than the double prec VECLEN=%d\n", QPHIX_SOALEN,
@@ -631,9 +638,9 @@ int invert_qphix(spinor *const odd_out, spinor *const odd_in, const int max_iter
     }
     masterPrintf("TIMING IN DOUBLE PRECISION \n");
     if (compress12) {
-      invert<double, VECLEN_DP, QPHIX_SOALEN, true>(odd_out, odd_in, max_iter, eps_sq, rel_prec);
+      D_psi<double, VECLEN_DP, QPHIX_SOALEN, true>(odd_out, odd_in);
     } else {
-      invert<double, VECLEN_DP, QPHIX_SOALEN, false>(odd_out, odd_in, max_iter, eps_sq, rel_prec);
+      D_psi<double, VECLEN_DP, QPHIX_SOALEN, false>(odd_out, odd_in);
     }
   } else if (precision == QPHIX_FLOAT_PREC) {
     if (QPHIX_SOALEN > VECLEN_SP) {
@@ -643,9 +650,9 @@ int invert_qphix(spinor *const odd_out, spinor *const odd_in, const int max_iter
     }
     masterPrintf("TIMING IN SINGLE PRECISION \n");
     if (compress12) {
-      invert<float, VECLEN_SP, QPHIX_SOALEN, true>(odd_out, odd_in, max_iter, eps_sq, rel_prec);
+      D_psi<float, VECLEN_SP, QPHIX_SOALEN, true>(odd_out, odd_in);
     } else {
-      invert<float, VECLEN_SP, QPHIX_SOALEN, false>(odd_out, odd_in, max_iter, eps_sq, rel_prec);
+      D_psi<float, VECLEN_SP, QPHIX_SOALEN, false>(odd_out, odd_in);
     }
   }
 #if defined(QPHIX_MIC_SOURCE)
@@ -657,12 +664,10 @@ int invert_qphix(spinor *const odd_out, spinor *const odd_in, const int max_iter
     }
     masterPrintf("TIMING IN HALF PRECISION \n");
     if (compress12) {
-      invert<half, VECLEN_HP, QPHIX_SOALEN, true>(odd_out, odd_in, max_iter, eps_sq, rel_prec);
+      D_psi<half, VECLEN_HP, QPHIX_SOALEN, true>(odd_out, odd_in);
     } else {
-      invert<half, VECLEN_HP, QPHIX_SOALEN, false>(odd_out, odd_in, max_iter, eps_sq, rel_prec);
+      D_psi<half, VECLEN_HP, QPHIX_SOALEN, false>(odd_out, odd_in);
     }
   }
 #endif
-
-  return 0;
 }
