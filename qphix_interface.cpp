@@ -543,7 +543,7 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
   geom.free(packed_spinor_out_cb1);
 }
 
-// Template wrapper call-able from C code
+// Template wrapper for the Dslash operator call-able from C code
 void D_psi_qphix(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
   if (precision == QPHIX_DOUBLE_PREC) {
     if (QPHIX_SOALEN > VECLEN_DP) {
@@ -585,4 +585,10 @@ void D_psi_qphix(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
     }
   }
 #endif
+}
+
+
+// Template wrapper for Full Solver call-able from C code
+void invert_qphix(spinor *const P, spinor *const Q, const int max_iter, double eps_sq,
+                 const int rel_prec){
 }

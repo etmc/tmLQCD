@@ -22,53 +22,36 @@
 *
 * File qphix_interface.h
 *
-* Author: Mario Schroeck <mario.schroeck@roma3.infn.it>
+* Author: Mario Schroeck <mario.schroeck@roma3.infn.it>,
+*         Peter Labus <Peter.Labus@sissa.it>
 *
-* Last changes: 03/2015
+* Last changes: 03/2017
 *
 *
-* Integration of the QUDA inverter for multi-GPU usage
+* Integration of the QPhiX library for Intel Xeon Phi usage
 *
 * The externally accessible functions are
 *
-*   void _initQphix( int verbose )
-*     Initializes the QUDA library. Carries over the lattice size and the
+*   void _initQphix(int argc, char **argv,
+*                   int By_, int Bz_, int NCores_,
+*                   int Sy_, int Sz_, int PadXY_,
+*                   int PadXYZ_, int MinCt_, int c12, QphixPrec precision_)
+*     Initializes the QPhiX library. Carries over the lattice size and the
 *     MPI process grid and thus must be called after initializing MPI (and
 *     after 'read_infile(argc,argv)').
-*     Memory for the QUDA gaugefield on the host is allocated but not filled
-*     yet (the latter is done in _loadGaugeQphix(), see below).
-*     Performance critical settings are done here and can be changed.
-*     Input parameter: verbose (0=SILENT, 1=SUMMARIZE, 2=VERBOSE).
 *
 *   void _endQphix()
-*     Finalizes the QUDA library. Call before MPI_Finalize().
-*
-*   void _loadGaugeQphix()
-*     Copies and reorders the gaugefield on the host and copies it to the GPU.
-*     Must be called between last changes on the gaugefield (smearing, flip
-*     boundary conditions, etc.) and first call of the inverter.
-*
-*   double tmcgne_quda(int nmx,double res,int k,int l,int *status,int *ifail)
-*     The same functionality as 'tmcgne' (see tmcg.c) but inversion is performed
-*on
-*     the GPU using QUDA. Final residuum check is performed on the host (CPU)
-*     with the function 'void tmQnohat_dble(int k,int l)' (see tmdirac.c).
-*
-*   void tmQnohat_quda(int k, int l)
-*     The implementation of the QUDA equivalent of 'tmQnohat_dble'.
+*     Finalizes the QPhiX library. Call before MPI_Finalize().
+* Integration of the QUDA inverter for multi-GPU usage
 *
 *
 * Notes:
 *
-* Minimum QUDA version is 0.7.0 (see https://github.com/lattice/quda/issues/151
-* and https://github.com/lattice/quda/issues/157).
+* To enable compilation of the same code for QPhiX usage and standard non-QPhiX
+* usage, all calls of these functions should be wrapped in precompiler switches
+* of the form
 *
-* To enable compilation of the same code for QUDA usage and standard non-QUDA
-*usage,
-* all calls of these functions should be wrapped in precompiler switches of the
-*form
-*
-*   #ifdef QUDA
+*   #ifdef TM_USE_QPHIX
 *     ...
 *   #endif
 *
@@ -79,27 +62,20 @@
 
 #include "su3.h"
 
-double *gauge_qphix[4];
-
 typedef enum QphixPrec { QPHIX_FLOAT_PREC = 0, QPHIX_HALF_PREC, QPHIX_DOUBLE_PREC } QphixPrec;
 
 #ifdef __cplusplus /* If this is a C++ compiler, use C linkage */
 extern "C" {
 #endif
 
-// wrapper functions
+// Initialize and Finalize QPhiX
 void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, int Sz_, int PadXY_,
                 int PadXYZ_, int MinCt_, int c12, QphixPrec precision_);
 void _endQphix();
-void _loadGaugeQphix();
 
-// to be called instead of tmcgne to use the QUDA inverter
-int invert_qphix(spinor *const P, spinor *const Q, const int max_iter, double eps_sq,
+// Wrapper functions for Full Solver and Dslash
+void invert_qphix(spinor *const P, spinor *const Q, const int max_iter, double eps_sq,
                  const int rel_prec);
-
-// apply the TM operator using QUDA
-void M_full_qphix(spinor *const Even_new, spinor *const Odd_new, spinor *const Even,
-                  spinor *const Odd);
 void D_psi_qphix(spinor* Odd_out, const spinor* Odd_in);
 
 #ifdef __cplusplus /* If this is a C++ compiler, end C linkage */
