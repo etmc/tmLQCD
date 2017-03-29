@@ -126,13 +126,7 @@ int main(int argc,char *argv[]) {
   process_args(argc,argv,&input_filename,&filename);
   set_default_filenames(&input_filename,&filename);
 
-  /* Read the input file */
-  if( (status = read_input(input_filename)) != 0) {
-    fprintf(stderr, "Could not find input file: %s\nAborting...\n", input_filename);
-    exit(-1);
-  }
-
-  init_parallel(argc, argv);
+  init_parallel_and_read_input(argc, argv, input_filename);
 
   DUM_DERI = 4;
   DUM_MATRIX = DUM_DERI+7;

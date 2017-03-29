@@ -22,6 +22,6 @@
 #ifndef _INIT_PARALLEL_H
 #define _INIT_PARALLEL_H
 
-void init_parallel(int argc, char *argv[]);
+void init_parallel_and_read_input(int argc, char *argv[], char input_filename[]);
 
 #endif

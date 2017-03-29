@@ -39,7 +39,7 @@
 #include "global.h"
 #include "init_parallel.h"
 
-void init_parallel(int argc, char *argv[]) {
+void init_parallel_and_read_input(int argc, char *argv[], char input_filename[]) {
 #ifdef QPHIX_QMP_COMMS
   // Initialize QMP
   QMP_thread_level_t prv;
@@ -64,6 +64,13 @@ void init_parallel(int argc, char *argv[]) {
 #else
   g_proc_id = 0;
 #endif
+
+// Read the input file
+int status = read_input(input_filename);
+if (status != 0) {
+  fprintf(stderr, "Could not find input file: %s\nAborting...\n", input_filename);
+  exit(-1);
+}
 
 #ifdef TM_USE_OMP
   init_openmp();

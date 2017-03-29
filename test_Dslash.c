@@ -132,15 +132,11 @@ int main(int argc, char *argv[]) {
   DUM_MATRIX = DUM_DERI + 8;
   NO_OF_SPINORFIELDS = DUM_MATRIX + 4;
 
-  /* Read the input file */
+  /* Set the input file */
   char input_filename[500];
   snprintf(input_filename, 499, "test_Dslash.input");
-  if ((j = read_input(input_filename)) != 0) {
-    fprintf(stderr, "Could not find input file: %s\nAborting...\n", input_filename);
-    exit(-1);
-  }
 
-  init_parallel(argc, argv);
+  init_parallel_and_read_input(argc, argv, input_filename);
   tmlqcd_mpi_init(argc, argv);
 
 #ifdef _GAUGE_COPY

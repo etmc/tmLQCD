@@ -135,13 +135,7 @@ int main(int argc, char *argv[])
   process_args(argc,argv,&input_filename,&filename);
   set_default_filenames(&input_filename, &filename);
 
-  /* Read the input file */
-  if( (j = read_input(input_filename)) != 0) {
-    fprintf(stderr, "Could not find input file: %s\nAborting...\n", input_filename);
-    exit(-1);
-  }
-
-  init_parallel(argc, argv);
+  init_parallel_and_read_input(argc, argv, input_filename);
 
   /* this DBW2 stuff is not needed for the inversion ! */
   if (g_dflgcr_flag == 1) {
