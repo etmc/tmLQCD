@@ -573,7 +573,7 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
    *                      *
   ************************/
 
-  // Allocate data for the gauges
+  // Allocate data for the gauge fields
   QGauge *u_packed[2];
   QGauge *packed_gauge_cb0 =
       (QGauge *)geom.allocCBGauge();  // Links emanating from ODD sites (cb=0)
@@ -592,7 +592,7 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
    *                      *
   ************************/
 
-  // Allocate data for the spinors
+  // Allocate data for the even/odd (checkerboarded) QPhiX spinors
   QSpinor *qphix_in[2];
   QSpinor *qphix_out[2];
   QSpinor *packed_spinor_in_cb0 = (QSpinor *)geom.allocCBFourSpinor();
@@ -629,7 +629,7 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
   geom.free(packed_spinor_out_cb1);
 }
 
-void D_psi_qphix(spinor* odd_out, const spinor* odd_in) {
+void D_psi_qphix(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
   if (precision == QPHIX_DOUBLE_PREC) {
     if (QPHIX_SOALEN > VECLEN_DP) {
       masterPrintf("SOALEN=%d is greater than the double prec VECLEN=%d\n", QPHIX_SOALEN,
@@ -638,9 +638,9 @@ void D_psi_qphix(spinor* odd_out, const spinor* odd_in) {
     }
     masterPrintf("TIMING IN DOUBLE PRECISION \n");
     if (compress12) {
-      D_psi<double, VECLEN_DP, QPHIX_SOALEN, true>(odd_out, odd_in);
+      D_psi<double, VECLEN_DP, QPHIX_SOALEN, true>(tmlqcd_out, tmlqcd_in);
     } else {
-      D_psi<double, VECLEN_DP, QPHIX_SOALEN, false>(odd_out, odd_in);
+      D_psi<double, VECLEN_DP, QPHIX_SOALEN, false>(tmlqcd_out, tmlqcd_in);
     }
   } else if (precision == QPHIX_FLOAT_PREC) {
     if (QPHIX_SOALEN > VECLEN_SP) {
@@ -650,9 +650,9 @@ void D_psi_qphix(spinor* odd_out, const spinor* odd_in) {
     }
     masterPrintf("TIMING IN SINGLE PRECISION \n");
     if (compress12) {
-      D_psi<float, VECLEN_SP, QPHIX_SOALEN, true>(odd_out, odd_in);
+      D_psi<float, VECLEN_SP, QPHIX_SOALEN, true>(tmlqcd_out, tmlqcd_in);
     } else {
-      D_psi<float, VECLEN_SP, QPHIX_SOALEN, false>(odd_out, odd_in);
+      D_psi<float, VECLEN_SP, QPHIX_SOALEN, false>(tmlqcd_out, tmlqcd_in);
     }
   }
 #if defined(QPHIX_MIC_SOURCE)
@@ -664,9 +664,9 @@ void D_psi_qphix(spinor* odd_out, const spinor* odd_in) {
     }
     masterPrintf("TIMING IN HALF PRECISION \n");
     if (compress12) {
-      D_psi<half, VECLEN_HP, QPHIX_SOALEN, true>(odd_out, odd_in);
+      D_psi<half, VECLEN_HP, QPHIX_SOALEN, true>(tmlqcd_out, tmlqcd_in);
     } else {
-      D_psi<half, VECLEN_HP, QPHIX_SOALEN, false>(odd_out, odd_in);
+      D_psi<half, VECLEN_HP, QPHIX_SOALEN, false>(tmlqcd_out, tmlqcd_in);
     }
   }
 #endif
