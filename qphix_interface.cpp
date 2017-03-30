@@ -546,17 +546,150 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
 
 // Templatized even-odd preconditioned solver using QPhiX Library
 template <typename FT, int V, int S, bool compress>
-int invert_eo(spinor * const Even_new,
-    spinor * const Odd_new,
-    spinor * const Even,
-    spinor * const Odd,
+int invert_eo(spinor * const tmlqcd_even_out,
+    spinor * const tmlqcd_odd_out,
+    spinor * const tmlqcd_even_in,
+    spinor * const tmlqcd_odd_in,
     const double precision,
     const int max_iter,
     const int solver_flag,
     const int rel_prec,
     solver_params_t solver_params,
     const CompressionType compression) {
-  masterPrintf("\n  This is QPhiX! ;-) \n\n");
+
+  typedef typename Geometry<FT, V, S, compress>::SU3MatrixBlock QGauge;
+  typedef typename Geometry<FT, V, S, compress>::FourSpinorBlock QSpinor;
+
+  /***************
+   *             *
+   *    SETUP    *
+   *             *
+  ***************/
+
+  // FIXME: This should be called properly somewhere else
+  _initQphix(0, nullptr, /* By = */ 2, /* Bz = */ 2, /* Ncores = */ 1,
+             /* Sy = */ 1, /* Sz = */ 1,
+             /* PadXY = */ 1, /* PadXYZ = */ 1, /* MinCt = */ 1,
+             /* compress12 = */ 1, QPHIX_DOUBLE_PREC);
+
+  masterPrintf("\n");
+  masterPrintf("# VECLEN=%d SOALEN=%d\n", V, S);
+  masterPrintf("# Declared QMP Topology: %d %d %d %d\n",
+      qmp_geom[0], qmp_geom[1], qmp_geom[2], qmp_geom[3]);
+  masterPrintf("# Global Lattice Size = %d %d %d %d\n",
+      lattSize[0], lattSize[1], lattSize[2], lattSize[3]);
+  masterPrintf("#  Local Lattice Size = %d %d %d %d\n",
+      subLattSize[0], subLattSize[1], subLattSize[2], subLattSize[3]);
+  masterPrintf("# Block Sizes: By = %d, Bz = %d\n", By, Bz);
+  masterPrintf("# Cores = %d\n", NCores);
+  masterPrintf("# SMT Grid: Sy = %d, Sz = %d\n", Sy, Sz);
+  masterPrintf("# Pad Factors: PadXY = %d, PadXYZ = %d\n", PadXY, PadXYZ);
+  masterPrintf("# Threads_per_core = %d\n", N_simt);
+  masterPrintf("# MinCt = %d\n", MinCt);
+  masterPrintf("# Initializing QPhiX Geometry...\n");
+
+  // Create a Geometry Class
+  double t_boundary = (FT)(1);
+  double coeff_s = (FT)(1);
+  double coeff_t = (FT)(1);
+  Geometry<FT, V, S, compress> geom(subLattSize, By, Bz, NCores, Sy, Sz, PadXY, PadXYZ, MinCt);
+  masterPrintf("# ...done.\n");
+
+  /************************
+   *                      *
+   *     GAUGE FIELDS     *
+   *                      *
+  ************************/
+
+  // Allocate data for the gauge fields
+  QGauge *u_packed[2];
+  QGauge *packed_gauge_cb0 = (QGauge *)geom.allocCBGauge();
+  QGauge *packed_gauge_cb1 = (QGauge *)geom.allocCBGauge();
+  u_packed[0] = packed_gauge_cb0;
+  u_packed[1] = packed_gauge_cb1;
+
+  // Reorder (global) input gauge field from tmLQCD to QPhiX
+  reorder_gauge_toQphix(geom, (double *)u_packed[0], (double *)u_packed[1]);
+
+  /************************
+   *                      *
+   *     SPINOR FIELDS    *
+   *                      *
+  ************************/
+
+  // Allocate data for the even/odd (checkerboarded) QPhiX spinors
+  // and for full tmlQCD buffer spinor
+  QSpinor *packed_spinor_in_cb0 = (QSpinor *)geom.allocCBFourSpinor();
+  QSpinor *packed_spinor_in_cb1 = (QSpinor *)geom.allocCBFourSpinor();
+  QSpinor *packed_spinor_out_cb0 = (QSpinor *)geom.allocCBFourSpinor();
+  QSpinor *packed_spinor_out_cb1 = (QSpinor *)geom.allocCBFourSpinor();
+  QSpinor *qphix_in[2];
+  QSpinor *qphix_out[2];
+  qphix_in[0] = packed_spinor_in_cb0;
+  qphix_in[1] = packed_spinor_in_cb1;
+  qphix_out[0] = packed_spinor_out_cb0;
+  qphix_out[1] = packed_spinor_out_cb1;
+
+  // FIXME Need to allocate or can use some global fermion field?
+  spinor *tmlqcd_full_buffer;
+
+  /************************
+   *                      *
+   *    PREPARE SOURCE    *
+   *                      *
+  ************************/
+
+  // Reorder input spinor from tmLQCD to QPhiX:
+  // a) Merge the even & odd tmlQCD input spinors to a full spinor
+  // b) Convert full tmlQCD spinor to a cb0 & cb1 QPhiX spinor
+  convert_eo_to_lexic(tmlqcd_full_buffer, // new full spinor
+                      tmlqcd_even_in,     // even spinor
+                      tmlqcd_odd_in);     // odd spinor
+  reorder_spinor_toQphix(geom, (double *)tmlqcd_full_buffer,
+                         (double *)qphix_in[0], (double *)qphix_in[1]);
+
+  /************************
+   *                      *
+   *     SOLVE ON CB0     *
+   *                      *
+  ************************/
+
+  // TODO Construct and Call QPhiX Solver
+  // Dslash<FT, V, S, compress> DQPhiX(&geom, t_boundary, coeff_s, coeff_t);
+  // DQPhiX.dslash(qphix_out[1], qphix_in[0], u_packed[1],
+  //               /* isign == non-conjugate */ 1, /* cb == */
+  //               1);
+  // DQPhiX.dslash(qphix_out[0], qphix_in[1], u_packed[0],
+  //               /* isign == non-conjugate */ 1, /* cb == */
+  //               0);
+
+  /**************************
+   *                        *
+   *  RECONSTRUCT SOLUTION  *
+   *                        *
+  **************************/
+
+  // Reorder spinor fields back to tmLQCD
+  reorder_spinor_fromQphix(geom, (double *)tmlqcd_full_buffer, (double *)qphix_out[0],
+                           (double *)qphix_out[1], (1. * g_kappa));
+  convert_lexic_to_eo(tmlqcd_full_buffer, // full spinor
+                      tmlqcd_even_out,    // new even spinor
+                      tmlqcd_odd_out);    // new odd spinor
+
+
+  masterPrintf("Cleaning up\n");
+  // TODO Deallocate tmlqcd_full_buffer
+  geom.free(packed_gauge_cb0);
+  geom.free(packed_gauge_cb1);
+  geom.free(packed_spinor_in_cb0);
+  geom.free(packed_spinor_in_cb1);
+  geom.free(packed_spinor_out_cb0);
+  geom.free(packed_spinor_out_cb1);
+
+  // FIXME: This should be called properly somewhere else
+  _endQphix();
+
+  // TODO: Return #iterations needed in solve
   return 0;
 }
 
