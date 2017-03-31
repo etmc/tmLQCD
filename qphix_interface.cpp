@@ -60,7 +60,7 @@ extern "C" {
 #include "linalg/convert_eo_to_lexic.h"
 #include "solver/solver.h"
 #include "solver/solver_params.h"
-//#include "solver/solver_field.h"
+#include "solver/solver_field.h"
 #include "gettime.h"
 #include "update_backward_gauge.h"
 }
@@ -572,8 +572,7 @@ int invert_eo(spinor * const tmlqcd_even_out,
              /* PadXY = */ 1, /* PadXYZ = */ 1, /* MinCt = */ 1,
              /* compress12 = */ 1, QPHIX_DOUBLE_PREC);
 
-  masterPrintf("\n");
-  masterPrintf("# VECLEN=%d SOALEN=%d\n", V, S);
+  masterPrintf("# VECLEN = %d, SOALEN = %d\n", V, S);
   masterPrintf("# Declared QMP Topology: %d %d %d %d\n",
       qmp_geom[0], qmp_geom[1], qmp_geom[2], qmp_geom[3]);
   masterPrintf("# Global Lattice Size = %d %d %d %d\n",
@@ -618,7 +617,6 @@ int invert_eo(spinor * const tmlqcd_even_out,
   ************************/
 
   // Allocate data for the even/odd (checkerboarded) QPhiX spinors
-  // and for full tmlQCD buffer spinor
   QSpinor *packed_spinor_in_cb0 = (QSpinor *)geom.allocCBFourSpinor();
   QSpinor *packed_spinor_in_cb1 = (QSpinor *)geom.allocCBFourSpinor();
   QSpinor *packed_spinor_out_cb0 = (QSpinor *)geom.allocCBFourSpinor();
@@ -630,8 +628,11 @@ int invert_eo(spinor * const tmlqcd_even_out,
   qphix_out[0] = packed_spinor_out_cb0;
   qphix_out[1] = packed_spinor_out_cb1;
 
-  // FIXME Need to allocate or can use some global fermion field?
-  spinor *tmlqcd_full_buffer;
+  // Allocate tmlQCD full spinor buffer to store lexic in- and output spinor
+  spinor **solver_fields = nullptr;
+  const int nr_solver_fields = 1;
+  init_solver_field(&solver_fields, VOLUMEPLUSRAND, nr_solver_fields);
+  spinor *tmlqcd_full_buffer = solver_fields[0];
 
   /************************
    *                      *
@@ -677,14 +678,15 @@ int invert_eo(spinor * const tmlqcd_even_out,
                       tmlqcd_odd_out);    // new odd spinor
 
 
-  masterPrintf("Cleaning up\n");
-  // TODO Deallocate tmlqcd_full_buffer
+  masterPrintf("# Cleaning up\n\n");
+
   geom.free(packed_gauge_cb0);
   geom.free(packed_gauge_cb1);
   geom.free(packed_spinor_in_cb0);
   geom.free(packed_spinor_in_cb1);
   geom.free(packed_spinor_out_cb0);
   geom.free(packed_spinor_out_cb1);
+  finalize_solver(solver_fields, nr_solver_fields);
 
   // FIXME: This should be called properly somewhere else
   _endQphix();
@@ -750,13 +752,16 @@ int invert_eo_qphix(spinor * const Even_new,
     solver_params_t solver_params,
     const CompressionType compression) {
 
+  masterPrintf("\n");
+
   if (precision < rsdTarget<double>::value) {
     if (QPHIX_SOALEN > VECLEN_DP) {
       masterPrintf("SOALEN=%d is greater than the double prec VECLEN=%d\n", QPHIX_SOALEN,
                    VECLEN_DP);
       abort();
     }
-    masterPrintf("TIMING IN DOUBLE PRECISION \n");
+    masterPrintf("# INITIALIZING QPHIX SOLVER\n");
+    masterPrintf("# USING DOUBLE PRECISION\n");
     if (compress12) {
       return invert_eo<double, VECLEN_DP, QPHIX_SOALEN, true>(Even_new,
                                                        Odd_new,
@@ -786,7 +791,8 @@ int invert_eo_qphix(spinor * const Even_new,
                    VECLEN_SP);
       abort();
     }
-    masterPrintf("TIMING IN SINGLE PRECISION \n");
+    masterPrintf("# INITIALIZING QPHIX SOLVER\n");
+    masterPrintf("# USING SINGLE PRECISION\n");
     if (compress12) {
       return invert_eo<float, VECLEN_DP, QPHIX_SOALEN, true>(Even_new,
                                                       Odd_new,
@@ -818,7 +824,8 @@ int invert_eo_qphix(spinor * const Even_new,
                    VECLEN_SP);
       abort();
     }
-    masterPrintf("TIMING IN HALF PRECISION \n");
+    masterPrintf("# INITIALIZING QPHIX SOLVER\n");
+    masterPrintf("# USING HALF PRECISION\n");
     if (compress12) {
       return invert_eo<half, VECLEN_DP, QPHIX_SOALEN, true>(Even_new,
                                                      Odd_new,
