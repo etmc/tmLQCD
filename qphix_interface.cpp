@@ -561,21 +561,17 @@ int invert_eo(spinor * const tmlqcd_even_out,
   typedef typename Geometry<FT, V, S, compress>::SU3MatrixBlock QGauge;
   typedef typename Geometry<FT, V, S, compress>::FourSpinorBlock QSpinor;
 
-  /***************
-   *             *
-   *    SETUP    *
-   *             *
-  ***************/
+  /************************
+   *                      *
+   *    SETUP GEOMETRY    *
+   *                      *
+  ************************/
 
   // FIXME: This should be called properly somewhere else
   _initQphix(0, nullptr, /* By = */ 2, /* Bz = */ 2, /* Ncores = */ 1,
              /* Sy = */ 1, /* Sz = */ 1,
              /* PadXY = */ 1, /* PadXYZ = */ 1, /* MinCt = */ 1,
              /* compress12 = */ 1, QPHIX_DOUBLE_PREC);
-
-  // TODO: Should this be tuned?
-  // Number of threads used in QPhiX BLAS routines
-  int n_blas_simt = 1;
 
   masterPrintf("# VECLEN = %d, SOALEN = %d\n", V, S);
   masterPrintf("# Declared QMP Topology: %d %d %d %d\n",
@@ -594,14 +590,6 @@ int invert_eo(spinor * const tmlqcd_even_out,
   // Create a Geometry Class
   masterPrintf("# Initializing QPhiX Geometry...\n");
   Geometry<FT, V, S, compress> geom(subLattSize, By, Bz, NCores, Sy, Sz, PadXY, PadXYZ, MinCt);
-  masterPrintf("# ...done.\n");
-
-  // Create a Dlash Class
-  masterPrintf("# Initializing QPhiX Dslash...\n");
-  double t_boundary = (FT)(1);
-  double coeff_s = (FT)(1);
-  double coeff_t = (FT)(1);
-  Dslash<FT, V, S, compress> DQPhiX(&geom, t_boundary, coeff_s, coeff_t);
   masterPrintf("# ...done.\n");
 
   /************************
@@ -655,6 +643,46 @@ int invert_eo(spinor * const tmlqcd_even_out,
 
   masterPrintf("# ...done.\n");
 
+  /************************************************
+   *                                              *
+   *    SETUP DSLASH / FERMION MATRIX / SOLVER    *
+   *                                              *
+  ************************************************/
+
+  // Time Boundary Conditions and Anisotropy Coefficents
+  double t_boundary = 1.0;
+  double coeff_s = 1.0;
+  double coeff_t = 1.0;
+
+  // TODO: Is this correct?
+  // The Wilson Mass re-express in terms of \kappa
+  double mass = 1.0 / (2.0 * g_kappa) - 4.0;
+
+  // FIXME: This depends on the action chosen
+  // Create a Dlash Object
+  masterPrintf("# Creating QPhiX Dslash...\n");
+  Dslash<FT, V, S, compress> DslashQPhiX(&geom, t_boundary, coeff_s, coeff_t);
+  masterPrintf("# ...done.\n");
+
+  // FIXME: This depends on the action chosen
+  // Create an even-odd preconditioned Fermion Matrix Object
+  masterPrintf("# Creating Even Odd Wilson Operator...\n");
+  EvenOddWilsonOperator<FT, V, S, compress> FermionMatrixQPhiX(mass, u_packed, &geom, t_boundary, coeff_s, coeff_t);
+  masterPrintf("# ...done.\n");
+
+  // FIXME: This depends on the solver chosen
+  // Create a Linear Solver Object
+  masterPrintf("# Creating CG Solver...\n");
+  InvCG<FT, V, S, compress> SolverQPhiX(FermionMatrixQPhiX, max_iter);
+  masterPrintf("# ...done.\n");
+
+  // Tune the solver to obtain ideal number of threads for all BLAS routines
+  // and get number of aypx threads
+  masterPrintf("# Tuning Solver\n");
+  SolverQPhiX.tune();
+  const int n_blas_simt = SolverQPhiX.getAypxThreads();
+  masterPrintf("# ...done.\n");
+
   /************************
    *                      *
    *    PREPARE SOURCE    *
@@ -679,7 +707,7 @@ int invert_eo(spinor * const tmlqcd_even_out,
   // in two steps
   // a) Apply Dslash to b_e and save result in qphix_in_prepared
   // b) Apply AYPX to rescale last result (=y) and add b_o (=x)
-  DQPhiX.dslash(qphix_in_prepared, qphix_in[1], u_packed[0], /* non-conjugate */ 1, /* target cb == */ 0);
+  DslashQPhiX.dslash(qphix_in_prepared, qphix_in[1], u_packed[0], /* non-conjugate */ 1, /* target cb == */ 0);
   QPhiX::aypx(g_kappa, qphix_in[0], qphix_in_prepared, geom, n_blas_simt);
 
   masterPrintf("# ...done.\n");
@@ -690,7 +718,27 @@ int invert_eo(spinor * const tmlqcd_even_out,
    *                      *
   ************************/
 
-  // TODO Construct and Call QPhiX Solver
+  masterPrintf("# Calling the solver...\n");
+
+  // Set variables need for solve
+  bool verbose = true;
+  int niters = -1;
+  double rsd_final = -1.0;
+  uint64_t site_flops = -1;
+  uint64_t mv_apps = -1;
+
+  // Call the solver and measure time spend
+  double start = omp_get_wtime();
+  SolverQPhiX(qphix_out[0], qphix_in_prepared, precision, niters, rsd_final, site_flops, mv_apps, 1, verbose);
+  double end = omp_get_wtime();
+
+  // Calculate number of GFLOP/s
+  unsigned long num_cb_sites = lattSize[0]/2 * lattSize[1] * lattSize[2] * lattSize[3];
+  unsigned long total_flops = (site_flops + (72 + 2*1320) * mv_apps) * num_cb_sites;
+  masterPrintf("# Solver Time = %g sec\n", (end-start));
+  masterPrintf("# CG GFLOPS = %g\n", 1.0e-9 * total_flops / (end-start));
+
+  masterPrintf("# ...done.\n");
 
   /**************************
    *                        *
@@ -700,7 +748,7 @@ int invert_eo(spinor * const tmlqcd_even_out,
 
   // Reorder spinor fields back to tmLQCD
   reorder_spinor_fromQphix(geom, (double *)tmlqcd_full_buffer, (double *)qphix_out[0],
-                           (double *)qphix_out[1], (1. * g_kappa));
+                           (double *)qphix_out[1], (1.0 * g_kappa));
   convert_lexic_to_eo(tmlqcd_full_buffer, // full spinor
                       tmlqcd_even_out,    // new even spinor
                       tmlqcd_odd_out);    // new odd spinor
@@ -720,8 +768,7 @@ int invert_eo(spinor * const tmlqcd_even_out,
   // FIXME: This should be called properly somewhere else
   _endQphix();
 
-  // TODO: Return #iterations needed in solve
-  return 0;
+  return niters;
 }
 
 
