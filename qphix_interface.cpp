@@ -70,8 +70,9 @@ extern "C" {
 #include <cfloat>
 #include <cstdlib>
 #include <cstring>
-#include "qphix/invbicgstab.h"
+#include "qphix/blas_new_c.h"
 #include "qphix/invcg.h"
+#include "qphix/invbicgstab.h"
 #include "qphix/print_utils.h"
 #include "qphix/qphix_config.h"
 #include "qphix/wilson.h"
@@ -572,6 +573,10 @@ int invert_eo(spinor * const tmlqcd_even_out,
              /* PadXY = */ 1, /* PadXYZ = */ 1, /* MinCt = */ 1,
              /* compress12 = */ 1, QPHIX_DOUBLE_PREC);
 
+  // TODO: Should this be tuned?
+  // Number of threads used in QPhiX BLAS routines
+  int n_blas_simt = 1;
+
   masterPrintf("# VECLEN = %d, SOALEN = %d\n", V, S);
   masterPrintf("# Declared QMP Topology: %d %d %d %d\n",
       qmp_geom[0], qmp_geom[1], qmp_geom[2], qmp_geom[3]);
@@ -585,13 +590,18 @@ int invert_eo(spinor * const tmlqcd_even_out,
   masterPrintf("# Pad Factors: PadXY = %d, PadXYZ = %d\n", PadXY, PadXYZ);
   masterPrintf("# Threads_per_core = %d\n", N_simt);
   masterPrintf("# MinCt = %d\n", MinCt);
-  masterPrintf("# Initializing QPhiX Geometry...\n");
 
   // Create a Geometry Class
+  masterPrintf("# Initializing QPhiX Geometry...\n");
+  Geometry<FT, V, S, compress> geom(subLattSize, By, Bz, NCores, Sy, Sz, PadXY, PadXYZ, MinCt);
+  masterPrintf("# ...done.\n");
+
+  // Create a Dlash Class
+  masterPrintf("# Initializing QPhiX Dslash...\n");
   double t_boundary = (FT)(1);
   double coeff_s = (FT)(1);
   double coeff_t = (FT)(1);
-  Geometry<FT, V, S, compress> geom(subLattSize, By, Bz, NCores, Sy, Sz, PadXY, PadXYZ, MinCt);
+  Dslash<FT, V, S, compress> DQPhiX(&geom, t_boundary, coeff_s, coeff_t);
   masterPrintf("# ...done.\n");
 
   /************************
@@ -599,6 +609,8 @@ int invert_eo(spinor * const tmlqcd_even_out,
    *     GAUGE FIELDS     *
    *                      *
   ************************/
+
+  masterPrintf("# Allocating and preparing gauge fields...\n");
 
   // Allocate data for the gauge fields
   QGauge *u_packed[2];
@@ -610,13 +622,17 @@ int invert_eo(spinor * const tmlqcd_even_out,
   // Reorder (global) input gauge field from tmLQCD to QPhiX
   reorder_gauge_toQphix(geom, (double *)u_packed[0], (double *)u_packed[1]);
 
+  masterPrintf("# ...done.\n");
+
   /************************
    *                      *
    *     SPINOR FIELDS    *
    *                      *
   ************************/
 
-  // Allocate data for the even/odd (checkerboarded) QPhiX spinors
+  masterPrintf("# Allocating fermion fields...\n");
+
+  // Allocate data for the even/odd (checkerboarded) QPhiX in/out spinors
   QSpinor *packed_spinor_in_cb0 = (QSpinor *)geom.allocCBFourSpinor();
   QSpinor *packed_spinor_in_cb1 = (QSpinor *)geom.allocCBFourSpinor();
   QSpinor *packed_spinor_out_cb0 = (QSpinor *)geom.allocCBFourSpinor();
@@ -628,11 +644,16 @@ int invert_eo(spinor * const tmlqcd_even_out,
   qphix_out[0] = packed_spinor_out_cb0;
   qphix_out[1] = packed_spinor_out_cb1;
 
+  // Allocate data for odd (cb0) QPhiX prepared in spinor
+  QSpinor *qphix_in_prepared = (QSpinor *)geom.allocCBFourSpinor();
+
   // Allocate tmlQCD full spinor buffer to store lexic in- and output spinor
   spinor **solver_fields = nullptr;
   const int nr_solver_fields = 1;
   init_solver_field(&solver_fields, VOLUMEPLUSRAND, nr_solver_fields);
   spinor *tmlqcd_full_buffer = solver_fields[0];
+
+  masterPrintf("# ...done.\n");
 
   /************************
    *                      *
@@ -640,7 +661,9 @@ int invert_eo(spinor * const tmlqcd_even_out,
    *                      *
   ************************/
 
-  // Reorder input spinor from tmLQCD to QPhiX:
+  masterPrintf("# Preparing odd source...\n");
+
+  // 1. Reorder input spinor from tmLQCD to QPhiX:
   // a) Merge the even & odd tmlQCD input spinors to a full spinor
   // b) Convert full tmlQCD spinor to a cb0 & cb1 QPhiX spinor
   convert_eo_to_lexic(tmlqcd_full_buffer, // new full spinor
@@ -649,6 +672,18 @@ int invert_eo(spinor * const tmlqcd_even_out,
   reorder_spinor_toQphix(geom, (double *)tmlqcd_full_buffer,
                          (double *)qphix_in[0], (double *)qphix_in[1]);
 
+  // 2. Prepare the odd (cb0) source:
+  //
+  //      \tilde b_o = \kappa Dslash_oe b_e + b_o
+  //
+  // in two steps
+  // a) Apply Dslash to b_e and save result in qphix_in_prepared
+  // b) Apply AYPX to rescale last result (=y) and add b_o (=x)
+  DQPhiX.dslash(qphix_in_prepared, qphix_in[1], u_packed[0], /* non-conjugate */ 1, /* target cb == */ 0);
+  QPhiX::aypx(g_kappa, qphix_in[0], qphix_in_prepared, geom, n_blas_simt);
+
+  masterPrintf("# ...done.\n");
+
   /************************
    *                      *
    *     SOLVE ON CB0     *
@@ -656,13 +691,6 @@ int invert_eo(spinor * const tmlqcd_even_out,
   ************************/
 
   // TODO Construct and Call QPhiX Solver
-  // Dslash<FT, V, S, compress> DQPhiX(&geom, t_boundary, coeff_s, coeff_t);
-  // DQPhiX.dslash(qphix_out[1], qphix_in[0], u_packed[1],
-  //               /* isign == non-conjugate */ 1, /* cb == */
-  //               1);
-  // DQPhiX.dslash(qphix_out[0], qphix_in[1], u_packed[0],
-  //               /* isign == non-conjugate */ 1, /* cb == */
-  //               0);
 
   /**************************
    *                        *
@@ -686,6 +714,7 @@ int invert_eo(spinor * const tmlqcd_even_out,
   geom.free(packed_spinor_in_cb1);
   geom.free(packed_spinor_out_cb0);
   geom.free(packed_spinor_out_cb1);
+  geom.free(qphix_in_prepared);
   finalize_solver(solver_fields, nr_solver_fields);
 
   // FIXME: This should be called properly somewhere else
