@@ -697,8 +697,10 @@ int invert_eo(spinor * const tmlqcd_even_out,
   convert_eo_to_lexic(tmlqcd_full_buffer, // new full spinor
                       tmlqcd_even_in,     // even spinor
                       tmlqcd_odd_in);     // odd spinor
-  reorder_spinor_toQphix(geom, (double *)tmlqcd_full_buffer,
-                         (double *)qphix_in[0], (double *)qphix_in[1]);
+  reorder_spinor_toQphix(geom,
+                         (double *)tmlqcd_full_buffer,
+                         (double *)qphix_in[0],
+                         (double *)qphix_in[1]);
 
   // 2. Prepare the odd (cb0) source:
   //
@@ -732,6 +734,7 @@ int invert_eo(spinor * const tmlqcd_even_out,
   SolverQPhiX(qphix_out[0], qphix_in_prepared, precision, niters, rsd_final, site_flops, mv_apps, 1, verbose);
   double end = omp_get_wtime();
 
+  // FIXME: This will depend on the solver used...
   // Calculate number of GFLOP/s
   unsigned long num_cb_sites = lattSize[0]/2 * lattSize[1] * lattSize[2] * lattSize[3];
   unsigned long total_flops = (site_flops + (72 + 2*1320) * mv_apps) * num_cb_sites;
@@ -746,12 +749,31 @@ int invert_eo(spinor * const tmlqcd_even_out,
    *                        *
   **************************/
 
-  // Reorder spinor fields back to tmLQCD
-  reorder_spinor_fromQphix(geom, (double *)tmlqcd_full_buffer, (double *)qphix_out[0],
-                           (double *)qphix_out[1], (1.0 * g_kappa));
+  masterPrintf("# Reconstruction even solution...\n");
+
+  // 1. Reconstruct the even (cb1) solution:
+  //
+  //      x_e = 2 * \kappa (b_e + 1/2 Dslash_eo x_o)
+  //
+  // in three steps
+  // a) Apply Dslash to x_o and save result in qphix_out[1]
+  // b) Rescale qphix_out[1] by \kappa
+  // c) Apply AXPY to add 2 * \kappa * b_e
+  DslashQPhiX.dslash(qphix_out[1], qphix_out[0], u_packed[1], /* non-conjugate */ 1, /* target cb == */ 1);
+  QPhiX::axy(g_kappa, qphix_out[1], qphix_out[1], geom, n_blas_simt);
+  QPhiX::axpy(2.0 * g_kappa, qphix_in[1], qphix_out[1], geom, n_blas_simt);
+
+  // 2. Reorder spinor fields back to tmLQCD, rescaling by a factor 1/\kappa
+  reorder_spinor_fromQphix(geom,
+                           (double *)tmlqcd_full_buffer,
+                           (double *)qphix_out[0],
+                           (double *)qphix_out[1],
+                           (1.0 * g_kappa));
   convert_lexic_to_eo(tmlqcd_full_buffer, // full spinor
                       tmlqcd_even_out,    // new even spinor
                       tmlqcd_odd_out);    // new odd spinor
+
+  masterPrintf("# ...done.\n");
 
 
   masterPrintf("# Cleaning up\n\n");
