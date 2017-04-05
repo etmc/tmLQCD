@@ -734,21 +734,24 @@ int invert_eo(spinor * const tmlqcd_even_out,
   uint64_t site_flops = -1;
   uint64_t mv_apps = -1;
 
+  // Set the right precision for the QPhiX solver
+  double rhs_norm2 = 1.0;
+  QPhiX::norm2Spinor(rhs_norm2, qphix_in_prepared, geom, n_blas_simt);
+  const double RsdTarget = sqrt(precision / rhs_norm2);
+
   // Call the solver and measure time spend
   double start = omp_get_wtime();
   // USING CG:
   // We are solving M M^dagger qphix_buffer = qphix_in_prepared here
-  // (that is, isign = -1 for the solver). After that multiply with M^dagger
-  // FIXME: What precision do I have to pass here, to obtain the same end
-  // precision as tmlQCD does?
-  SolverQPhiX(qphix_buffer, qphix_in_prepared, precision, niters, rsd_final, site_flops, mv_apps, -1, verbose);
+  // (that is, isign = -1 for the solver). After that multiply with M^dagger.
+  SolverQPhiX(qphix_buffer, qphix_in_prepared, RsdTarget, niters, rsd_final, site_flops, mv_apps, -1, verbose);
   FermionMatrixQPhiX(qphix_out[0], qphix_buffer, /* conjugate */ -1);
   double end = omp_get_wtime();
 
   // FIXME: This will depend on the solver used...
   // Calculate number of GFLOP/s
-  unsigned long num_cb_sites = lattSize[0]/2 * lattSize[1] * lattSize[2] * lattSize[3];
-  unsigned long total_flops = (site_flops + (72 + 2*1320) * mv_apps) * num_cb_sites;
+  uint64_t num_cb_sites = lattSize[0]/2 * lattSize[1] * lattSize[2] * lattSize[3];
+  uint64_t total_flops = (site_flops + (72 + 2*1320) * mv_apps) * num_cb_sites;
   masterPrintf("# Solver Time = %g sec\n", (end-start));
   masterPrintf("# CG GFLOPS = %g\n", 1.0e-9 * total_flops / (end-start));
 
