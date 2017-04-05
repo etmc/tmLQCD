@@ -633,7 +633,10 @@ int invert_eo(spinor * const tmlqcd_even_out,
   qphix_out[1] = packed_spinor_out_cb1;
 
   // Allocate data for odd (cb0) QPhiX prepared in spinor
+  // and a buffer for the CG solver (to do the M^dagger matrix
+  // multiplication after the solve)
   QSpinor *qphix_in_prepared = (QSpinor *)geom.allocCBFourSpinor();
+  QSpinor *qphix_buffer = (QSpinor *)geom.allocCBFourSpinor();
 
   // Allocate tmlQCD full spinor buffer to store lexic in- and output spinor
   spinor **solver_fields = nullptr;
@@ -654,8 +657,7 @@ int invert_eo(spinor * const tmlqcd_even_out,
   double coeff_s = 1.0;
   double coeff_t = 1.0;
 
-  // TODO: Is this correct?
-  // The Wilson Mass re-express in terms of \kappa
+  // The Wilson mass re-express in terms of \kappa
   double mass = 1.0 / (2.0 * g_kappa) - 4.0;
 
   // FIXME: This depends on the action chosen
@@ -694,9 +696,11 @@ int invert_eo(spinor * const tmlqcd_even_out,
   // 1. Reorder input spinor from tmLQCD to QPhiX:
   // a) Merge the even & odd tmlQCD input spinors to a full spinor
   // b) Convert full tmlQCD spinor to a cb0 & cb1 QPhiX spinor
+
   convert_eo_to_lexic(tmlqcd_full_buffer, // new full spinor
                       tmlqcd_even_in,     // even spinor
                       tmlqcd_odd_in);     // odd spinor
+
   reorder_spinor_toQphix(geom,
                          (double *)tmlqcd_full_buffer,
                          (double *)qphix_in[0],
@@ -709,6 +713,7 @@ int invert_eo(spinor * const tmlqcd_even_out,
   // in two steps
   // a) Apply Dslash to b_e and save result in qphix_in_prepared
   // b) Apply AYPX to rescale last result (=y) and add b_o (=x)
+
   DslashQPhiX.dslash(qphix_in_prepared, qphix_in[1], u_packed[0], /* non-conjugate */ 1, /* target cb == */ 0);
   QPhiX::aypx(g_kappa, qphix_in[0], qphix_in_prepared, geom, n_blas_simt);
 
@@ -731,7 +736,13 @@ int invert_eo(spinor * const tmlqcd_even_out,
 
   // Call the solver and measure time spend
   double start = omp_get_wtime();
-  SolverQPhiX(qphix_out[0], qphix_in_prepared, precision, niters, rsd_final, site_flops, mv_apps, 1, verbose);
+  // USING CG:
+  // We are solving M M^dagger qphix_buffer = qphix_in_prepared here
+  // (that is, isign = -1 for the solver). After that multiply with M^dagger
+  // FIXME: What precision do I have to pass here, to obtain the same end
+  // precision as tmlQCD does?
+  SolverQPhiX(qphix_buffer, qphix_in_prepared, precision, niters, rsd_final, site_flops, mv_apps, -1, verbose);
+  FermionMatrixQPhiX(qphix_out[0], qphix_buffer, /* conjugate */ -1);
   double end = omp_get_wtime();
 
   // FIXME: This will depend on the solver used...
@@ -759,22 +770,30 @@ int invert_eo(spinor * const tmlqcd_even_out,
   // a) Apply Dslash to x_o and save result in qphix_out[1]
   // b) Rescale qphix_out[1] by \kappa
   // c) Apply AXPY to add 2 * \kappa * b_e
-  DslashQPhiX.dslash(qphix_out[1], qphix_out[0], u_packed[1], /* non-conjugate */ 1, /* target cb == */ 1);
-  QPhiX::axy(g_kappa, qphix_out[1], qphix_out[1], geom, n_blas_simt);
+
+  DslashQPhiX.dslash(qphix_buffer, qphix_out[0], u_packed[1], /* non-conjugate */ 1, /* target cb == */ 1);
+  QPhiX::axy(g_kappa, qphix_buffer, qphix_out[1], geom, n_blas_simt);
   QPhiX::axpy(2.0 * g_kappa, qphix_in[1], qphix_out[1], geom, n_blas_simt);
 
   // 2. Reorder spinor fields back to tmLQCD, rescaling by a factor 1/\kappa
+
   reorder_spinor_fromQphix(geom,
                            (double *)tmlqcd_full_buffer,
                            (double *)qphix_out[0],
                            (double *)qphix_out[1],
-                           (1.0 * g_kappa));
-  convert_lexic_to_eo(tmlqcd_full_buffer, // full spinor
-                      tmlqcd_even_out,    // new even spinor
-                      tmlqcd_odd_out);    // new odd spinor
+                           1.0 / (2.0 * g_kappa));
+
+  convert_lexic_to_eo(tmlqcd_even_out,     // new even spinor
+                      tmlqcd_odd_out,      // new odd spinor
+                      tmlqcd_full_buffer); // full spinor
 
   masterPrintf("# ...done.\n");
 
+  /******************
+   *                *
+   *    CLEAN UP    *
+   *                *
+  ******************/
 
   masterPrintf("# Cleaning up\n\n");
 
@@ -785,10 +804,13 @@ int invert_eo(spinor * const tmlqcd_even_out,
   geom.free(packed_spinor_out_cb0);
   geom.free(packed_spinor_out_cb1);
   geom.free(qphix_in_prepared);
+  geom.free(qphix_buffer);
   finalize_solver(solver_fields, nr_solver_fields);
 
   // FIXME: This should be called properly somewhere else
   _endQphix();
+
+  masterPrintf("# ...done.\n");
 
   return niters;
 }
