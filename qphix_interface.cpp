@@ -669,20 +669,28 @@ int invert_eo(spinor * const tmlqcd_even_out,
   // FIXME: This depends on the action chosen
   // Create an even-odd preconditioned Fermion Matrix Object
   masterPrintf("# Creating Even Odd Wilson Operator...\n");
-  EvenOddWilsonOperator<FT, V, S, compress> FermionMatrixQPhiX(mass, u_packed, &geom, t_boundary, coeff_s, coeff_t);
+  EvenOddWilsonOperator<FT, V, S, compress>
+    FermionMatrixQPhiX(mass, u_packed, &geom, t_boundary, coeff_s, coeff_t);
   masterPrintf("# ...done.\n");
 
   // FIXME: This depends on the solver chosen
   // Create a Linear Solver Object
-  masterPrintf("# Creating CG Solver...\n");
-  InvCG<FT, V, S, compress> SolverQPhiX(FermionMatrixQPhiX, max_iter);
+  AbstractSolver<FT, V, S, compress>* SolverQPhiX;
+  if(solver_flag == CG) {
+    masterPrintf("# Creating CG Solver...\n");
+    SolverQPhiX = new InvCG<FT, V, S, compress> (FermionMatrixQPhiX, max_iter);
+  } else if(solver_flag == BICGSTAB) {
+    masterPrintf("# Creating BiCGStab Solver...\n");
+    SolverQPhiX = new InvBiCGStab<FT, V, S, compress> (FermionMatrixQPhiX, max_iter);
+  }
   masterPrintf("# ...done.\n");
 
   // Tune the solver to obtain ideal number of threads for all BLAS routines
   // and get number of aypx threads
   masterPrintf("# Tuning Solver\n");
-  SolverQPhiX.tune();
-  const int n_blas_simt = SolverQPhiX.getAypxThreads();
+  // SolverQPhiX->tune();
+  // const int n_blas_simt = SolverQPhiX->getAypxThreads();
+  const int n_blas_simt = 1;
   masterPrintf("# ...done.\n");
 
   /************************
@@ -739,21 +747,40 @@ int invert_eo(spinor * const tmlqcd_even_out,
   QPhiX::norm2Spinor(rhs_norm2, qphix_in_prepared, geom, n_blas_simt);
   const double RsdTarget = sqrt(precision / rhs_norm2);
 
-  // Call the solver and measure time spend
+  // Calling the solver
   double start = omp_get_wtime();
-  // USING CG:
-  // We are solving M M^dagger qphix_buffer = qphix_in_prepared here
-  // (that is, isign = -1 for the solver). After that multiply with M^dagger.
-  SolverQPhiX(qphix_buffer, qphix_in_prepared, RsdTarget, niters, rsd_final, site_flops, mv_apps, -1, verbose);
-  FermionMatrixQPhiX(qphix_out[0], qphix_buffer, /* conjugate */ -1);
+  if(solver_flag == CG) {
+
+    // USING CG:
+    // We are solving
+    //   M M^dagger qphix_buffer = qphix_in_prepared
+    // here, that is, isign = -1 for the QPhiX CG solver.
+    // After that multiply with M^dagger:
+    //   qphix_out[0] = M^dagger M^dagger^-1 M^-1 qphix_in_prepared
+    SolverQPhiX->operator()
+      (qphix_buffer, qphix_in_prepared, RsdTarget, niters, rsd_final, site_flops, mv_apps, -1, verbose);
+    FermionMatrixQPhiX(qphix_out[0], qphix_buffer, /* conjugate */ -1);
+
+  } else if(solver_flag == BICGSTAB) {
+
+    // USING BiCGStab:
+    // Solve M qphix_out[0] = qphix_in_prepared, directly.
+    SolverQPhiX->operator()
+      (qphix_out[0], qphix_in_prepared, RsdTarget, niters, rsd_final, site_flops, mv_apps, 1, verbose);
+
+  } else {
+
+    masterPrintf(" Solver not yet supported by QPhiX!\n");
+    masterPrintf(" Aborting...\n");
+    abort();
+
+  }
   double end = omp_get_wtime();
 
-  // FIXME: This will depend on the solver used...
-  // Calculate number of GFLOP/s
   uint64_t num_cb_sites = lattSize[0]/2 * lattSize[1] * lattSize[2] * lattSize[3];
   uint64_t total_flops = (site_flops + (72 + 2*1320) * mv_apps) * num_cb_sites;
   masterPrintf("# Solver Time = %g sec\n", (end-start));
-  masterPrintf("# CG GFLOPS = %g\n", 1.0e-9 * total_flops / (end-start));
+  masterPrintf("# Performance in GFLOPS = %g\n", 1.0e-9 * total_flops / (end-start));
 
   masterPrintf("# ...done.\n");
 
