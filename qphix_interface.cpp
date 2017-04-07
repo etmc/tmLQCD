@@ -143,13 +143,13 @@ struct rsdTarget {
 };
 
 template <>
-const double rsdTarget<half>::value = (double)(1.0e-4);
+const double rsdTarget<half>::value = 1.0e-4;
 
 template <>
-const double rsdTarget<float>::value = (double)(1.0e-7);
+const double rsdTarget<float>::value = 1.0e-7;
 
 template <>
-const double rsdTarget<double>::value = (double)(1.0e-12);
+const double rsdTarget<double>::value = 1.0e-12;
 
 
 
@@ -233,7 +233,7 @@ void reorder_gauge_toQphix(Geometry<FT, VECLEN, SOALEN, compress12> &geom, doubl
 
   // Get the base pointer for the (global) tmlQCD gauge field
   uint64_t tm_idx = 0;
-  in = (double *)&g_gauge_field[0][0].c00;
+  in = reinterpret_cast<double*>(&g_gauge_field[0][0].c00);
 
   // This will loop over the entire lattice and calculate
   // the array and internal indices for both tmlQCD & QPhiX
@@ -721,9 +721,9 @@ int invert_eo(spinor * const tmlqcd_even_out,
                       tmlqcd_odd_in);     // odd spinor
 
   reorder_spinor_toQphix(geom,
-                         (double *)tmlqcd_full_buffer,
-                         (double *)qphix_in[0],
-                         (double *)qphix_in[1]);
+                         reinterpret_cast<double*>(tmlqcd_full_buffer),
+                         reinterpret_cast<double*>(qphix_in[0]),
+                         reinterpret_cast<double*>(qphix_in[1]));
 
   // 2. Prepare the odd (cb0) source:
   //
@@ -811,9 +811,9 @@ int invert_eo(spinor * const tmlqcd_even_out,
   // 2. Reorder spinor fields back to tmLQCD, rescaling by a factor 1/\kappa
 
   reorder_spinor_fromQphix(geom,
-                           (double *)tmlqcd_full_buffer,
-                           (double *)qphix_out[0],
-                           (double *)qphix_out[1],
+                           reinterpret_cast<double*>(tmlqcd_full_buffer),
+                           reinterpret_cast<double*>(qphix_out[0]),
+                           reinterpret_cast<double*>(qphix_out[1]),
                            1.0 / (2.0 * g_kappa));
 
   convert_lexic_to_eo(tmlqcd_even_out,     // new even spinor
