@@ -673,7 +673,6 @@ int invert_eo(spinor * const tmlqcd_even_out,
     FermionMatrixQPhiX(mass, u_packed, &geom, t_boundary, coeff_s, coeff_t);
   masterPrintf("# ...done.\n");
 
-  // FIXME: This depends on the solver chosen
   // Create a Linear Solver Object
   AbstractSolver<FT, V, S, compress>* SolverQPhiX;
   if(solver_flag == CG) {
@@ -682,15 +681,27 @@ int invert_eo(spinor * const tmlqcd_even_out,
   } else if(solver_flag == BICGSTAB) {
     masterPrintf("# Creating BiCGStab Solver...\n");
     SolverQPhiX = new InvBiCGStab<FT, V, S, compress> (FermionMatrixQPhiX, max_iter);
+  } else {
+    // TODO: Implement multi-shift CG, Richardson multi-precision
+    masterPrintf(" Solver not yet supported by QPhiX!\n");
+    masterPrintf(" Aborting...\n");
+    abort();
   }
   masterPrintf("# ...done.\n");
 
   // Tune the solver to obtain ideal number of threads for all BLAS routines
-  // and get number of aypx threads
   masterPrintf("# Tuning Solver\n");
-  // SolverQPhiX->tune();
-  // const int n_blas_simt = SolverQPhiX->getAypxThreads();
-  const int n_blas_simt = 1;
+  SolverQPhiX->tune();
+  int n_blas_simt = 1;
+  if(solver_flag == CG) {
+    // FIXME: Is there any better way than this cast?
+    n_blas_simt = reinterpret_cast< InvCG<FT, V, S, compress>* > (SolverQPhiX)->getAypxThreads();
+  } else if(solver_flag == BICGSTAB) {
+    // FIXME: BiCGStab does not have getters yet for the BLAS threads,
+    // and simply sets the number for threads equal to the SMT threads
+    // available.
+    // n_blas_simt = reinterpret_cast< InvBiCGStab<FT, V, S, compress>* > (SolverQPhiX)->getAypxThreads();
+  }
   masterPrintf("# ...done.\n");
 
   /************************
@@ -757,22 +768,14 @@ int invert_eo(spinor * const tmlqcd_even_out,
     // here, that is, isign = -1 for the QPhiX CG solver.
     // After that multiply with M^dagger:
     //   qphix_out[0] = M^dagger M^dagger^-1 M^-1 qphix_in_prepared
-    SolverQPhiX->operator()
-      (qphix_buffer, qphix_in_prepared, RsdTarget, niters, rsd_final, site_flops, mv_apps, -1, verbose);
+    (*SolverQPhiX)(qphix_buffer, qphix_in_prepared, RsdTarget, niters, rsd_final, site_flops, mv_apps, -1, verbose);
     FermionMatrixQPhiX(qphix_out[0], qphix_buffer, /* conjugate */ -1);
 
   } else if(solver_flag == BICGSTAB) {
 
     // USING BiCGStab:
     // Solve M qphix_out[0] = qphix_in_prepared, directly.
-    SolverQPhiX->operator()
-      (qphix_out[0], qphix_in_prepared, RsdTarget, niters, rsd_final, site_flops, mv_apps, 1, verbose);
-
-  } else {
-
-    masterPrintf(" Solver not yet supported by QPhiX!\n");
-    masterPrintf(" Aborting...\n");
-    abort();
+    (*SolverQPhiX)(qphix_out[0], qphix_in_prepared, RsdTarget, niters, rsd_final, site_flops, mv_apps, 1, verbose);
 
   }
   double end = omp_get_wtime();
