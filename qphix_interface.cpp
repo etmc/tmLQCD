@@ -132,10 +132,7 @@ QphixPrec precision;
 
 int subLattSize[4];
 int lattSize[4];
-
-// Hardwire these for now.
-int iters = 1;
-int qmp_geom[4] = {1, 1, 1, 1};
+int qmp_geom[4];
 
 template <typename T>
 struct rsdTarget {
