@@ -544,7 +544,7 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
 
 // Templatized even-odd preconditioned solver using QPhiX Library
 template <typename FT, int V, int S, bool compress>
-int invert_eo(spinor * const tmlqcd_even_out,
+int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
     spinor * const tmlqcd_odd_out,
     spinor * const tmlqcd_even_in,
     spinor * const tmlqcd_odd_in,
@@ -913,27 +913,29 @@ int invert_eo_qphix(spinor * const Even_new,
     masterPrintf("# INITIALIZING QPHIX SOLVER\n");
     masterPrintf("# USING DOUBLE PRECISION\n");
     if (compress12) {
-      return invert_eo<double, VECLEN_DP, QPHIX_SOALEN, true>(Even_new,
-                                                       Odd_new,
-                                                       Even,
-                                                       Odd,
-                                                       precision,
-                                                       max_iter,
-                                                       solver_flag,
-                                                       rel_prec,
-                                                       solver_params,
-                                                       compression);
+      return invert_eo_qphix_helper<double, VECLEN_DP, QPHIX_SOALEN, true>
+        (Even_new,
+         Odd_new,
+         Even,
+         Odd,
+         precision,
+         max_iter,
+         solver_flag,
+         rel_prec,
+         solver_params,
+         compression);
     } else {
-      return invert_eo<double, VECLEN_DP, QPHIX_SOALEN, false>(Even_new,
-                                                        Odd_new,
-                                                        Even,
-                                                        Odd,
-                                                        precision,
-                                                        max_iter,
-                                                        solver_flag,
-                                                        rel_prec,
-                                                        solver_params,
-                                                        compression);
+      return invert_eo_qphix_helper<double, VECLEN_DP, QPHIX_SOALEN, false>
+        (Even_new,
+         Odd_new,
+         Even,
+         Odd,
+         precision,
+         max_iter,
+         solver_flag,
+         rel_prec,
+         solver_params,
+         compression);
     }
   } else if (precision < rsdTarget<float>::value) {
     if (QPHIX_SOALEN > VECLEN_SP) {
@@ -944,27 +946,29 @@ int invert_eo_qphix(spinor * const Even_new,
     masterPrintf("# INITIALIZING QPHIX SOLVER\n");
     masterPrintf("# USING SINGLE PRECISION\n");
     if (compress12) {
-      return invert_eo<float, VECLEN_DP, QPHIX_SOALEN, true>(Even_new,
-                                                      Odd_new,
-                                                      Even,
-                                                      Odd,
-                                                      precision,
-                                                      max_iter,
-                                                      solver_flag,
-                                                      rel_prec,
-                                                      solver_params,
-                                                      compression);
+      return invert_eo_qphix_helper<float, VECLEN_DP, QPHIX_SOALEN, true>
+        (Even_new,
+         Odd_new,
+         Even,
+         Odd,
+         precision,
+         max_iter,
+         solver_flag,
+         rel_prec,
+         solver_params,
+         compression);
     } else {
-      return invert_eo<float, VECLEN_DP, QPHIX_SOALEN, false>(Even_new,
-                                                       Odd_new,
-                                                       Even,
-                                                       Odd,
-                                                       precision,
-                                                       max_iter,
-                                                       solver_flag,
-                                                       rel_prec,
-                                                       solver_params,
-                                                       compression);
+      return invert_eo_qphix_helper<float, VECLEN_DP, QPHIX_SOALEN, false>
+        (Even_new,
+         Odd_new,
+         Even,
+         Odd,
+         precision,
+         max_iter,
+         solver_flag,
+         rel_prec,
+         solver_params,
+         compression);
     }
   }
 #if defined(QPHIX_MIC_SOURCE)
@@ -977,27 +981,29 @@ int invert_eo_qphix(spinor * const Even_new,
     masterPrintf("# INITIALIZING QPHIX SOLVER\n");
     masterPrintf("# USING HALF PRECISION\n");
     if (compress12) {
-      return invert_eo<half, VECLEN_DP, QPHIX_SOALEN, true>(Even_new,
-                                                     Odd_new,
-                                                     Even,
-                                                     Odd,
-                                                     precision,
-                                                     max_iter,
-                                                     solver_flag,
-                                                     rel_prec,
-                                                     solver_params,
-                                                     compression);
+      return invert_eo_qphix_helper<half, VECLEN_DP, QPHIX_SOALEN, true>
+        (Even_new,
+         Odd_new,
+         Even,
+         Odd,
+         precision,
+         max_iter,
+         solver_flag,
+         rel_prec,
+         solver_params,
+         compression);
     } else {
-      return invert_eo<half, VECLEN_DP, QPHIX_SOALEN, false>(Even_new,
-                                                      Odd_new,
-                                                      Even,
-                                                      Odd,
-                                                      precision,
-                                                      max_iter,
-                                                      solver_flag,
-                                                      rel_prec,
-                                                      solver_params,
-                                                      compression);
+      return invert_eo_qphix_helper<half, VECLEN_DP, QPHIX_SOALEN, false>
+        (Even_new,
+         Odd_new,
+         Even,
+         Odd,
+         precision,
+         max_iter,
+         solver_flag,
+         rel_prec,
+         solver_params,
+         compression);
     }
   }
 #endif
