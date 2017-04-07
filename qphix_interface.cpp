@@ -657,27 +657,47 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
   // The Wilson mass re-express in terms of \kappa
   double mass = 1.0 / (2.0 * g_kappa) - 4.0;
 
-  // FIXME: This depends on the action chosen
-  // Create a Dlash Object
-  masterPrintf("# Creating QPhiX Dslash...\n");
-  Dslash<FT, V, S, compress> DslashQPhiX(&geom, t_boundary, coeff_s, coeff_t);
-  masterPrintf("# ...done.\n");
+  g_c_sw = 0.0; // FIXME: THIS IS SET FOR DEBUGGING
 
-  // FIXME: This depends on the action chosen
-  // Create an even-odd preconditioned Fermion Matrix Object
-  masterPrintf("# Creating Even Odd Wilson Operator...\n");
-  EvenOddWilsonOperator<FT, V, S, compress>
-    FermionMatrixQPhiX(mass, u_packed, &geom, t_boundary, coeff_s, coeff_t);
-  masterPrintf("# ...done.\n");
+  // Create a Dslash & an even-odd preconditioned Fermion Matrix object,
+  // depending on the chosen fermion action
+  //.FIXME: This must be a pointer to an abstract Dslash object
+  Dslash<FT, V, S, compress>* DslashQPhiX;
+  EvenOddLinearOperator<FT, V, S, compress>* FermionMatrixQPhiX;
+  if( g_mu != 0.0 && g_c_sw != 0.0 ) { // TWISTED-MASS-CLOVER
+    // TODO: Implement me!
+    masterPrintf("# TWISTED-MASS-CLOVER CASE NOT YET IMPLEMENTED!\n");
+    masterPrintf(" Aborting...\n");
+    abort();
+  } else if( g_mu != 0.0 ) { // TWISTED-MASS
+    // TODO: Implement me!
+    masterPrintf("# TWISTED-MASS CASE NOT YET IMPLEMENTED!\n");
+    masterPrintf(" Aborting...\n");
+    abort();
+  } else if( g_c_sw != 0.0 ) { // WILSON CLOVER
+    // TODO: Implement me!
+    masterPrintf("# WILSON CLOVER CASE NOT YET IMPLEMENTED!\n");
+    masterPrintf(" Aborting...\n");
+    abort();
+  } else { // WILSON
+    masterPrintf("# Creating QPhiX Wilson Dslash...\n");
+    DslashQPhiX = new Dslash<FT, V, S, compress>(&geom, t_boundary, coeff_s, coeff_t);
+    masterPrintf("# ...done.\n");
+
+    masterPrintf("# Creating QPhiX Wilson Fermion Matrix...\n");
+    FermionMatrixQPhiX = new EvenOddWilsonOperator<FT, V, S, compress>
+      (mass, u_packed, &geom, t_boundary, coeff_s, coeff_t);
+    masterPrintf("# ...done.\n");
+  }
 
   // Create a Linear Solver Object
   AbstractSolver<FT, V, S, compress>* SolverQPhiX;
   if(solver_flag == CG) {
     masterPrintf("# Creating CG Solver...\n");
-    SolverQPhiX = new InvCG<FT, V, S, compress> (FermionMatrixQPhiX, max_iter);
+    SolverQPhiX = new InvCG<FT, V, S, compress> (*FermionMatrixQPhiX, max_iter);
   } else if(solver_flag == BICGSTAB) {
     masterPrintf("# Creating BiCGStab Solver...\n");
-    SolverQPhiX = new InvBiCGStab<FT, V, S, compress> (FermionMatrixQPhiX, max_iter);
+    SolverQPhiX = new InvBiCGStab<FT, V, S, compress> (*FermionMatrixQPhiX, max_iter);
   } else {
     // TODO: Implement multi-shift CG, Richardson multi-precision
     masterPrintf(" Solver not yet supported by QPhiX!\n");
@@ -730,7 +750,8 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
   // a) Apply Dslash to b_e and save result in qphix_in_prepared
   // b) Apply AYPX to rescale last result (=y) and add b_o (=x)
 
-  DslashQPhiX.dslash(qphix_in_prepared, qphix_in[1], u_packed[0], /* non-conjugate */ 1, /* target cb == */ 0);
+  DslashQPhiX->dslash(qphix_in_prepared, qphix_in[1], u_packed[0],
+      /* non-conjugate */ 1, /* target cb == */ 0);
   QPhiX::aypx(g_kappa, qphix_in[0], qphix_in_prepared, geom, n_blas_simt);
 
   masterPrintf("# ...done.\n");
@@ -766,7 +787,7 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
     // After that multiply with M^dagger:
     //   qphix_out[0] = M^dagger M^dagger^-1 M^-1 qphix_in_prepared
     (*SolverQPhiX)(qphix_buffer, qphix_in_prepared, RsdTarget, niters, rsd_final, site_flops, mv_apps, -1, verbose);
-    FermionMatrixQPhiX(qphix_out[0], qphix_buffer, /* conjugate */ -1);
+    (*FermionMatrixQPhiX)(qphix_out[0], qphix_buffer, /* conjugate */ -1);
 
   } else if(solver_flag == BICGSTAB) {
 
@@ -801,7 +822,8 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
   // b) Rescale qphix_out[1] by \kappa
   // c) Apply AXPY to add 2 * \kappa * b_e
 
-  DslashQPhiX.dslash(qphix_buffer, qphix_out[0], u_packed[1], /* non-conjugate */ 1, /* target cb == */ 1);
+  DslashQPhiX->dslash(qphix_buffer, qphix_out[0], u_packed[1],
+      /* non-conjugate */ 1, /* target cb == */ 1);
   QPhiX::axy(g_kappa, qphix_buffer, qphix_out[1], geom, n_blas_simt);
   QPhiX::axpy(2.0 * g_kappa, qphix_in[1], qphix_out[1], geom, n_blas_simt);
 
