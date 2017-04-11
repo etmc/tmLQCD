@@ -657,14 +657,12 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
   // The Wilson mass re-express in terms of \kappa
   double mass = 1.0 / (2.0 * g_kappa) - 4.0;
 
-  g_c_sw = 0.0; // FIXME: THIS IS SET FOR DEBUGGING
-
   // Create a Dslash & an even-odd preconditioned Fermion Matrix object,
   // depending on the chosen fermion action
   //.FIXME: This must be a pointer to an abstract Dslash object
   Dslash<FT, V, S, compress>* DslashQPhiX;
   EvenOddLinearOperator<FT, V, S, compress>* FermionMatrixQPhiX;
-  if( g_mu != 0.0 && g_c_sw != 0.0 ) { // TWISTED-MASS-CLOVER
+  if( g_mu != 0.0 && g_c_sw > 0.0 ) { // TWISTED-MASS-CLOVER
     // TODO: Implement me!
     masterPrintf("# TWISTED-MASS-CLOVER CASE NOT YET IMPLEMENTED!\n");
     masterPrintf(" Aborting...\n");
@@ -674,7 +672,7 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
     masterPrintf("# TWISTED-MASS CASE NOT YET IMPLEMENTED!\n");
     masterPrintf(" Aborting...\n");
     abort();
-  } else if( g_c_sw != 0.0 ) { // WILSON CLOVER
+  } else if( g_c_sw > 0.0 ) { // WILSON CLOVER
     // TODO: Implement me!
     masterPrintf("# WILSON CLOVER CASE NOT YET IMPLEMENTED!\n");
     masterPrintf(" Aborting...\n");
