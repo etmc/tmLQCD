@@ -706,19 +706,11 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
   }
   masterPrintf("# ...done.\n");
 
-  // Tune the solver to obtain ideal number of threads for all BLAS routines
-  masterPrintf("# Tuning Solver\n");
-  SolverQPhiX->tune();
-  int n_blas_simt = 1;
-  if(solver_flag == CG) {
-    // FIXME: Is there any better way than this cast?
-    n_blas_simt = reinterpret_cast< InvCG<FT, V, S, compress>* > (SolverQPhiX)->getAypxThreads();
-  } else if(solver_flag == BICGSTAB) {
-    // FIXME: BiCGStab does not have getters yet for the BLAS threads,
-    // and simply sets the number for threads equal to the SMT threads
-    // available.
-    // n_blas_simt = reinterpret_cast< InvBiCGStab<FT, V, S, compress>* > (SolverQPhiX)->getAypxThreads();
-  }
+  // Set number of BLAS threads by hand.
+  // In case some implements the tune routines in QPhiX
+  // this may be updated...
+  masterPrintf("# Setting number of BLAS threads...\n");
+  const int n_blas_simt = N_simt;
   masterPrintf("# ...done.\n");
 
   /************************
