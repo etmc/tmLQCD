@@ -50,7 +50,7 @@ class Dslash {
 };
 
 template <typename FT, int veclen, int soalen, bool compress12>
-class WilsonDslash : public ::QPhiX::Dslash<FT, veclen, soalen, compress12> {
+class WilsonDslash : public ::QPhiX::Dslash<FT, veclen, soalen, compress12>, public Dslash {
  public:
   WilsonDslash(template ::QPhiX::Geometry<FT, veclen, soalen, compress12> *geom_,
                double const t_boundary_,
@@ -82,7 +82,7 @@ class WilsonDslash : public ::QPhiX::Dslash<FT, veclen, soalen, compress12> {
 };
 
 template <typename FT, int veclen, int soalen, bool compress12>
-class WilsonTMDslash : public ::QPhiX::Dslash<FT, veclen, soalen, compress12> {
+class WilsonTMDslash : public ::QPhiX::Dslash<FT, veclen, soalen, compress12>, public Dslash {
  public:
   WilsonTMDslash(template ::QPhiX::Geometry<FT, veclen, soalen, compress12> *geom_,
                  double const t_boundary_,
