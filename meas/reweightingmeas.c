@@ -260,156 +260,6 @@ update_global_parameters (const int op_id)
     }/*clover leave update*/
 }
 
-static void
-estimate_eigenvalues (const int operatorid, const int identifier)
-{
-#ifdef HAVE_LAPACK
-  vector_list min_ev;
-  vector_list max_ev;
-  spinor * eigenvectors_ = NULL;
-  char filename[200];
-  FILE * ofs;
-  double atime, etime;
-  int max_iterations = 5000;
-  double prec = 1.e-5;
-  int maxvectors;
-  /**********************
-   * For Jacobi-Davidson
-   **********************/
-  int verbosity = g_debug_level, converged = 0, blocksize = 1, blockwise = 0;
-  int solver_it_max = 50, j_max, j_min, ii;
-  /*int it_max = 10000;*/
-  /* _Complex double *eigv_ = NULL, *eigv; */
-  double decay_min = 1.7, decay_max = 1.5, threshold_min = 1.e-3,
-  threshold_max = 5.e-2;
-  double ev_max, ev_min;
-
-  /* static int v0dim = 0; */
-  int v0dim = 0;
-  int N = (VOLUME) / 2, N2 = (VOLUMEPLUSRAND) / 2;
-  operator * optr;
-
-  /**********************
-   * General variables
-   **********************/
-  int returncode = 0;
-  int returncode2 = 0;
-
-  min_ev.s = 2;
-  min_ev.el = malloc(min_ev.s * sizeof(double));
-  max_ev.s = 2;
-  max_ev.el = malloc(max_ev.s * sizeof(double));
-
-  optr = &operator_list[operatorid];
-
-  if (!is_schur_complement(optr->applyQsq))
-    {
-      N = VOLUME;
-      N2 = VOLUMEPLUSRAND;
-    }
-
-  evlength = N2;
-  if (g_proc_id == g_stdio_proc && g_debug_level > 0)
-    {
-      printf("Number of eigenvalues to compute = %d %d\n", min_ev.s,
-          max_ev.s);
-      printf("Using Jacobi-Davidson method! \n");
-    }
-
-  if (max_ev.s < 8)
-    {
-      j_max = 15;
-      j_min = 8;
-    }
-  else
-    {
-      j_max = 2 * max_ev.s;
-      j_min = max_ev.s;
-    }
-
-  maxvectors = min_ev.s > max_ev.s ? min_ev.s : max_ev.s;
-
-#if (defined SSE || defined SSE2 || defined SSE3)
-  eigenvectors_ = calloc(N2*maxvectors+1, sizeof(spinor));
-  eigenvectors = (spinor *)(((unsigned long int)(eigenvectors_)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  eigenvectors_ = calloc(N2 * maxvectors, sizeof(spinor));
-  eigenvectors = eigenvectors_;
-#endif
-
-  atime = gettime();
-
-  update_global_parameters(operatorid);
-  /* (re-) compute minimal eigenvalues */
-  converged = 0;
-  solver_it_max = 200;
-
-  jdher(N * sizeof(spinor) / sizeof(_Complex double),
-      N2 * sizeof(spinor) / sizeof(_Complex double), 50., prec, max_ev.s,
-      j_max, j_min, max_iterations, blocksize, blockwise, v0dim,
-      (_Complex double*) eigenvectors, CG, solver_it_max, threshold_max,
-      decay_max, verbosity, &converged, (_Complex double*) eigenvectors,
-      max_ev.el, &returncode, JD_MAXIMAL, 1, optr->applyQsq);
-
-  max_ev.s = converged;
-
-  if (min_ev.s < 8)
-    {
-      j_max = 15;
-      j_min = 8;
-    }
-  else
-    {
-      j_max = 2 * min_ev.s;
-      j_min = min_ev.s;
-    }
-
-  converged = 0;
-  solver_it_max = 200;
-
-  jdher(N * sizeof(spinor) / sizeof(_Complex double),
-      N2 * sizeof(spinor) / sizeof(_Complex double), 0., prec, min_ev.s,
-      j_max, j_min, max_iterations, blocksize, blockwise, v0dim,
-      (_Complex double*) eigenvectors, CG, solver_it_max, threshold_min,
-      decay_min, verbosity, &converged, (_Complex double*) eigenvectors,
-      min_ev.el, &returncode2, JD_MINIMAL, 1, optr->applyQsq);
-
-  min_ev.s = converged;
-
-  free(eigenvectors_);
-
-  etime = gettime();
-  if (g_proc_id == 0)
-    {
-      printf("Eigenvalues computed in %e sec. gettime)\n", etime - atime);
-    }
-
-  ev_min = min_ev.el[min_ev.s - 1];
-  ev_max = max_ev.el[max_ev.s - 1];
-  eigenvalues_for_cg_computed = converged;
-
-  if (g_proc_id == 0)
-    {
-      sprintf(filename, "rew_ev_estimate.%d", nstore);
-      ofs = fopen(filename, "a");
-      for (ii = 0; ii < max_ev.s; ii++)
-        {
-          fprintf(ofs, "%d %e 1\n", ii, max_ev.el[ii]);
-        }
-      for (ii = 0; ii < min_ev.s; ii++)
-        {
-          fprintf(ofs, "%d %e 1\n", ii, min_ev.el[ii]);
-        }
-      fclose(ofs);
-    }
-  free(min_ev.el);
-  free(max_ev.el);
-#else
-  fprintf (
-      stderr,
-      "lapack not available, so JD method for EV computation not available \n");
-#endif
-}
 
 static int
 invert_operator_Q (spinor * const P, spinor * const Q, const int op_id,
@@ -1189,9 +1039,9 @@ reweighting_measurement (const int traj, const int id, const int ieo)
     {
       if (g_proc_id == 0)
         {
-          printf ("Calculating minimal/maximal eigenvalue estimates.\n");
+          printf ("Calculating minimal/maximal eigenvalue estimates -- no longer supported!\n");
         }
-      estimate_eigenvalues (operatorid, traj);
+      //estimate_eigenvalues (operatorid, traj);
     }
 
   if (param->use_cheb)
