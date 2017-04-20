@@ -51,8 +51,11 @@
 // #undef SEEK_CUR
 // #undef SEEK_END
 
+#ifdef TM_USE_MPI
 // include mpi.h first
 #include <mpi.h>
+#endif
+
 #include "config.h"
 #include "global.h"
 extern "C" {
