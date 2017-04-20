@@ -38,7 +38,7 @@ class Dslash {
     \param[out] out Output spinor \f$ \psi \f$.
     \param[in] in Input spinor \f$ \chi \f$.
     */
-  virtual void a_chi(Spinor *const out, Spinor const *const in, int const isign) const = 0;
+  virtual void A_chi(Spinor *const out, Spinor const *const in, int const isign) const = 0;
 
   /**
     Computes \f$ \psi_\mathrm e = A_\mathrm{ee}^{-1} \chi_\mathrm e \f$.
@@ -46,7 +46,7 @@ class Dslash {
     \param[out] out Output spinor \f$ \psi \f$.
     \param[in] in Input spinor \f$ \chi \f$.
     */
-  virtual void a_inv_chi(Spinor *const out, Spinor const *const in, int const isign) const = 0;
+  virtual void A_inv_chi(Spinor *const out, Spinor const *const in, int const isign) const = 0;
 };
 
 template <typename FT, int veclen, int soalen, bool compress12>
@@ -64,12 +64,12 @@ class WilsonDslash : public ::QPhiX::Dslash<FT, veclen, soalen, compress12>, pub
         mass_factor_a(mu_ / mass_factor_alpha),
         mass_factor_b(mass_factor_alpha / (mass_factor_alpha * mass_factor_alpha + mu_ * mu_)) {}
 
-  void a_chi(Spinor *const out, Spinor const *const in, int const isign) const override {
+  void A_chi(Spinor *const out, Spinor const *const in, int const isign) const override {
     int const n_blas_simt = 1;
     ::QPhiX::axy(mass_factor_beta, in, out, getGeometry(), n_blas_simt);
   }
 
-  void a_inv_chi(Spinor *const out, Spinor const *const in, int const isign) const override {
+  void A_inv_chi(Spinor *const out, Spinor const *const in, int const isign) const override {
     int const n_blas_simt = 1;
     ::QPhiX::axy(1.0 / mass_factor_beta, in, out, getGeometry(), n_blas_simt);
   }
@@ -97,7 +97,7 @@ class WilsonTMDslash : public ::QPhiX::Dslash<FT, veclen, soalen, compress12>, p
         mass_factor_a(mu_ / mass_factor_alpha),
         mass_factor_b(mass_factor_alpha / (mass_factor_alpha * mass_factor_alpha + mu_ * mu_)) {}
 
-  void a_chi(Spinor *const out, Spinor const *const in, int const isign) const override {
+  void A_chi(Spinor *const out, Spinor const *const in, int const isign) const override {
     size_t const num_blocks = getGeometry().get_num_blocks();
     for (size_t block = 0u; block < num_blocks; ++block) {
       for (int color = 0; color < 3; ++color) {
@@ -122,7 +122,7 @@ class WilsonTMDslash : public ::QPhiX::Dslash<FT, veclen, soalen, compress12>, p
     }
   }
 
-  void a_inv_chi(Spinor *const out, Spinor const *const in, int const isign) const override {
+  void A_inv_chi(Spinor *const out, Spinor const *const in, int const isign) const override {
     size_t const num_blocks = getGeometry().get_num_blocks();
     for (size_t block = 0u; block < num_blocks; ++block) {
       for (int color = 0; color < 3; ++color) {
