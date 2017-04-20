@@ -51,6 +51,8 @@
 // #undef SEEK_CUR
 // #undef SEEK_END
 
+#include "qphix_base_classes.hpp"
+
 #ifdef TM_USE_MPI
 // include mpi.h first
 #include <mpi.h>
