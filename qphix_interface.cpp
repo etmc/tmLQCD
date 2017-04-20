@@ -482,8 +482,20 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
   double t_boundary = (FT)(1);
   double coeff_s = (FT)(1);
   double coeff_t = (FT)(1);
+
   Geometry<FT, V, S, compress> geom(subLattSize, By, Bz, NCores, Sy, Sz, PadXY, PadXYZ, MinCt);
-  Dslash<FT, V, S, compress> DQPhiX(&geom, t_boundary, coeff_s, coeff_t);
+
+  // tmLQCD only stores kappa, QPhiX uses the mass. Convert here.
+  double const mass = 1 / (2.0 * g_kappa) - 4;
+
+#if 1 // Change the operator to use here.
+  tmlqcd::WilsonDslash<FT, V, S, compress> concrete_dslash(&geom, t_boundary, coeff_s, coeff_t, mass);
+#else
+  tmlqcd::WilsonTMDslash<FT, V, S, compress> concrete_dslash(&geom, t_boundary, coeff_s, coeff_t, mass, 0.0);
+#endif
+
+  tmlqcd::Dslash<FT, V, S, compress> &polymorphic_dslash = concrete_dslash;
+
 
   /************************
    *                      *
@@ -526,12 +538,16 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
   reorder_spinor_toQphix(geom, (double *)tmlqcd_in, (double *)qphix_in[0], (double *)qphix_in[1]);
 
   // Apply QPhiX Dslash to qphix_in spinors
-  DQPhiX.dslash(qphix_out[1], qphix_in[0], u_packed[1],
-                /* isign == non-conjugate */ 1, /* cb == */
-                1);
-  DQPhiX.dslash(qphix_out[0], qphix_in[1], u_packed[0],
-                /* isign == non-conjugate */ 1, /* cb == */
-                0);
+  polymorphic_dslash.dslash(qphix_out[1],
+                            qphix_in[0],
+                            u_packed[1],
+                            /* isign == non-conjugate */ 1, /* cb == */
+                            1);
+  polymorphic_dslash.dslash(qphix_out[0],
+                            qphix_in[1],
+                            u_packed[0],
+                            /* isign == non-conjugate */ 1, /* cb == */
+                            0);
 
   // Reorder spinor fields back to tmLQCD
   reorder_spinor_fromQphix(geom, (double *)tmlqcd_out, (double *)qphix_out[0],
