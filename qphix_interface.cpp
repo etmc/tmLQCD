@@ -70,12 +70,12 @@ extern "C" {
 #include <cfloat>
 #include <cstdlib>
 #include <cstring>
-#include "qphix/blas_new_c.h"
-#include "qphix/invcg.h"
-#include "qphix/invbicgstab.h"
-#include "qphix/print_utils.h"
-#include "qphix/qphix_config.h"
-#include "qphix/wilson.h"
+#include <qphix/blas_new_c.h>
+#include <qphix/invcg.h>
+#include <qphix/invbicgstab.h>
+#include <qphix/print_utils.h>
+#include <qphix/qphix_config.h>
+#include <qphix/wilson.h>
 using namespace std;
 using namespace QPhiX;
 
@@ -118,6 +118,15 @@ using namespace QPhiX;
 #include <qmp.h>
 #endif
 
+int qphix_input_By;
+int qphix_input_Bz;
+int qphix_input_NCores;
+int qphix_input_Sy;
+int qphix_input_Sz;
+int qphix_input_PadXY;
+int qphix_input_PadXYZ;
+int qphix_input_MinCt;
+
 int By;
 int Bz;
 int NCores;
@@ -128,7 +137,7 @@ int PadXYZ;
 int MinCt;
 int N_simt;
 bool compress12;
-QphixPrec precision;
+QphixPrec qphix_precision;
 
 int subLattSize[4];
 int lattSize[4];
@@ -174,9 +183,10 @@ void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, i
   MinCt = MinCt_;
   N_simt = Sy_ * Sz_;
   compress12 = c12;
-  precision = precision_;
+  qphix_precision = precision_;
 
-  omp_set_num_threads(NCores * Sy * Sz);
+  // this is called within tmLQCD already, it should not be called here
+  //omp_set_num_threads(NCores * Sy * Sz);
 
 #ifdef QPHIX_QMP_COMMS
   // Declare the logical topology
@@ -564,11 +574,7 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
    *                      *
   ************************/
 
-  // FIXME: This should be called properly somewhere else
-  _initQphix(0, nullptr, /* By = */ 2, /* Bz = */ 2, /* Ncores = */ 1,
-             /* Sy = */ 1, /* Sz = */ 1,
-             /* PadXY = */ 1, /* PadXYZ = */ 1, /* MinCt = */ 1,
-             /* compress12 = */ 1, QPHIX_DOUBLE_PREC);
+  // _initQphix should have been called at this point
 
   masterPrintf("# VECLEN = %d, SOALEN = %d\n", V, S);
   masterPrintf("# Declared QMP Topology: %d %d %d %d\n",
@@ -860,7 +866,7 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
 
 // Template wrapper for the Dslash operator call-able from C code
 void D_psi_qphix(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
-  if (precision == QPHIX_DOUBLE_PREC) {
+  if (qphix_precision == QPHIX_DOUBLE_PREC) {
     if (QPHIX_SOALEN > VECLEN_DP) {
       masterPrintf("SOALEN=%d is greater than the double prec VECLEN=%d\n", QPHIX_SOALEN,
                    VECLEN_DP);
@@ -872,7 +878,7 @@ void D_psi_qphix(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
     } else {
       D_psi<double, VECLEN_DP, QPHIX_SOALEN, false>(tmlqcd_out, tmlqcd_in);
     }
-  } else if (precision == QPHIX_FLOAT_PREC) {
+  } else if (qphix_precision == QPHIX_FLOAT_PREC) {
     if (QPHIX_SOALEN > VECLEN_SP) {
       masterPrintf("SOALEN=%d is greater than the single prec VECLEN=%d\n", QPHIX_SOALEN,
                    VECLEN_SP);
@@ -886,7 +892,7 @@ void D_psi_qphix(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
     }
   }
 #if defined(QPHIX_MIC_SOURCE)
-  else if (precision == QPHIX_HALF_PREC) {
+  else if (qphix_precision == QPHIX_HALF_PREC) {
     if (QPHIX_SOALEN > VECLEN_HP) {
       masterPrintf("SOALEN=%d is greater than the single prec VECLEN=%d\n", QPHIX_SOALEN,
                    VECLEN_SP);
@@ -924,6 +930,11 @@ int invert_eo_qphix(spinor * const Even_new,
     }
     masterPrintf("# INITIALIZING QPHIX SOLVER\n");
     masterPrintf("# USING DOUBLE PRECISION\n");
+    _initQphix(0, nullptr, qphix_input_By, qphix_input_Bz, qphix_input_NCores,
+           qphix_input_Sy, qphix_input_Sz,
+           qphix_input_PadXY, qphix_input_PadXYZ, qphix_input_MinCt,
+           compression, QPHIX_DOUBLE_PREC);
+    
     if (compress12) {
       return invert_eo_qphix_helper<double, VECLEN_DP, QPHIX_SOALEN, true>
         (Even_new,
@@ -949,7 +960,11 @@ int invert_eo_qphix(spinor * const Even_new,
          solver_params,
          compression);
     }
+#ifdef QPHIX_MIC_SOURCE
   } else if (precision < rsdTarget<float>::value) {
+#else
+  } else {
+#endif
     if (QPHIX_SOALEN > VECLEN_SP) {
       masterPrintf("SOALEN=%d is greater than the single prec VECLEN=%d\n", QPHIX_SOALEN,
                    VECLEN_SP);
@@ -957,8 +972,13 @@ int invert_eo_qphix(spinor * const Even_new,
     }
     masterPrintf("# INITIALIZING QPHIX SOLVER\n");
     masterPrintf("# USING SINGLE PRECISION\n");
+    _initQphix(0, nullptr, qphix_input_By, qphix_input_Bz, qphix_input_NCores,
+           qphix_input_Sy, qphix_input_Sz,
+           qphix_input_PadXY, qphix_input_PadXYZ, qphix_input_MinCt,
+           compression, QPHIX_FLOAT_PREC);
+
     if (compress12) {
-      return invert_eo_qphix_helper<float, VECLEN_DP, QPHIX_SOALEN, true>
+      return invert_eo_qphix_helper<float, VECLEN_SP, QPHIX_SOALEN, true>
         (Even_new,
          Odd_new,
          Even,
@@ -970,7 +990,7 @@ int invert_eo_qphix(spinor * const Even_new,
          solver_params,
          compression);
     } else {
-      return invert_eo_qphix_helper<float, VECLEN_DP, QPHIX_SOALEN, false>
+      return invert_eo_qphix_helper<float, VECLEN_SP, QPHIX_SOALEN, false>
         (Even_new,
          Odd_new,
          Even,
@@ -992,8 +1012,13 @@ int invert_eo_qphix(spinor * const Even_new,
     }
     masterPrintf("# INITIALIZING QPHIX SOLVER\n");
     masterPrintf("# USING HALF PRECISION\n");
+    _initQphix(0, nullptr, qphix_input_By, qphix_input_Bz, qphix_input_NCores,
+           qphix_input_Sy, qphix_input_Sz,
+           qphix_input_PadXY, qphix_input_PadXYZ, qphix_input_MinCt,
+           compression, QPHIX_HALF_PREC);
+    
     if (compress12) {
-      return invert_eo_qphix_helper<half, VECLEN_DP, QPHIX_SOALEN, true>
+      return invert_eo_qphix_helper<half, VECLEN_SP, QPHIX_SOALEN, true>
         (Even_new,
          Odd_new,
          Even,
@@ -1005,7 +1030,7 @@ int invert_eo_qphix(spinor * const Even_new,
          solver_params,
          compression);
     } else {
-      return invert_eo_qphix_helper<half, VECLEN_DP, QPHIX_SOALEN, false>
+      return invert_eo_qphix_helper<half, VECLEN_SP, QPHIX_SOALEN, false>
         (Even_new,
          Odd_new,
          Even,

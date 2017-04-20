@@ -1,0 +1,64 @@
+L=24
+T=48
+
+# number of MPI tasks in T direction is computed automatically
+ 
+# number of MPI tasks in Z direction
+nrzprocs=2
+
+# currently only two-dimensional parallelisation works properly
+# also, qphix is slower when parallelized in x or y (especially x is poblematic)
+nrxprocs=1
+nryprocs=1
+
+# OpenMP threads per MPI task
+# down below, Ncores * Sy * Sz = ompnumthreads
+ompnumthreads = 12
+
+DebugLevel = 3
+InitialStoreCounter = 1000
+Measurements = 1
+2kappamu = 0.0008238
+kappa = 0.1373
+csw = 1.57551
+BCAngleT = 0
+GaugeConfigInputFile = conf
+disableiochecks=yes
+UseEvenOdd = yes
+
+SourceType = point
+indices = 0
+ReadSource = no
+
+userelativeprecision = no
+
+BeginExternalInverter QPHIX
+  # physical cores per MPI task
+  NCores = 12
+  
+  # block sizes (see qphix papers for details)
+  By = 4
+  Bz = 4
+  MinCt = 2
+  
+  # thread geometry
+  # ompnumthreads = Ncores * Sy * Sz
+  # hyperthreads should be specified here
+  Sy = 1
+  Sz = 1
+  
+  # paddings in XY and XYZ blocks
+  PadXY = 0
+  PadXYZ = 0
+EndExternalInverter
+
+BeginOperator WILSON
+  kappa = 0.132
+  Solver = cg
+  # solverprecision must be <= 1e-13 such that the CG in double precision is launched
+  # the other floating point precisions (single, half) seem to segfault currently
+  SolverPrecision = 1e-17
+  MaxSolverIterations = 20000
+  useqphixinverter = yes
+EndOperator
+
