@@ -207,7 +207,8 @@ void _initQuda() {
   // require both L2 relative and heavy quark residual to determine convergence
 //  inv_param.residual_type = (QudaResidualType)(QUDA_L2_RELATIVE_RESIDUAL | QUDA_HEAVY_QUARK_RESIDUAL);
   inv_param.tol_hq = 1.0;//1e-3; // specify a tolerance for the residual for heavy quark residual
-  inv_param.reliable_delta = 1e-2; // ignored by multi-shift solver
+  inv_param.reliable_delta = 1e-3; // ignored by multi-shift solver
+  inv_param.use_sloppy_partial_accumulator = 0;
 
   // domain decomposition preconditioner parameters
   inv_param.inv_type_precondition = QUDA_CG_INVERTER;
@@ -552,28 +553,37 @@ int invert_quda_direct(double * const propagator, double * const source,
 
   // choose dslash type
   if( optr->mu != 0.0 && optr->c_sw > 0.0 ) {
+    inv_param.twist_flavor = QUDA_TWIST_SINGLET;
     inv_param.dslash_type = QUDA_TWISTED_CLOVER_DSLASH;
     inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
     inv_param.solution_type = QUDA_MAT_SOLUTION;
     inv_param.clover_order = QUDA_PACKED_CLOVER_ORDER;
-    inv_param.mu = fabs(optr->mu/2./optr->kappa);
+    // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
+    inv_param.mu = -optr->mu/2./optr->kappa;
     inv_param.clover_coeff = optr->c_sw*optr->kappa;
-
+    inv_param.compute_clover_inverse = 1;
+    inv_param.compute_clover = 1;
   }
   else if( optr->mu != 0.0 ) {
+    inv_param.twist_flavor = QUDA_TWIST_SINGLET;
     inv_param.dslash_type = QUDA_TWISTED_MASS_DSLASH;
     inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN_ASYMMETRIC;
     inv_param.solution_type = QUDA_MAT_SOLUTION;
-    inv_param.mu = fabs(optr->mu/2./optr->kappa);
+    // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
+    inv_param.mu = optr->mu/2./optr->kappa;
   }
   else if( optr->c_sw > 0.0 ) {
+    inv_param.twist_flavor = QUDA_TWIST_NO;
     inv_param.dslash_type = QUDA_CLOVER_WILSON_DSLASH;
     inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
     inv_param.solution_type = QUDA_MAT_SOLUTION;
     inv_param.clover_order = QUDA_PACKED_CLOVER_ORDER;
     inv_param.clover_coeff = optr->c_sw*optr->kappa;
+    inv_param.compute_clover_inverse = 1;
+    inv_param.compute_clover = 1;
   }
   else {
+    inv_param.twist_flavor = QUDA_TWIST_NO;
     inv_param.dslash_type = QUDA_WILSON_DSLASH;
     inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
     inv_param.solution_type = QUDA_MAT_SOLUTION;
@@ -619,8 +629,6 @@ int invert_quda_direct(double * const propagator, double * const source,
   inv_param.tol = sqrt(optr->eps_sq);
   inv_param.maxiter = optr->maxiter;
 
-  // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
-  inv_param.twist_flavor = (optr->mu < 0.0 ? QUDA_TWIST_PLUS : QUDA_TWIST_MINUS);
   inv_param.Ls = 1;
   
   // load gauge after setting precision
@@ -704,6 +712,7 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
     inv_param.residual_type = QUDA_L2_ABSOLUTE_RESIDUAL;
 
   inv_param.kappa = g_kappa;
+  //inv_param.mass = 1/(2*g_kappa)-4.0;
 
   // figure out which BC to use (theta, trivial...)
   set_boundary_conditions(&compression);
@@ -716,28 +725,37 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 
   // choose dslash type
   if( g_mu != 0.0 && g_c_sw > 0.0 ) {
+    inv_param.twist_flavor = QUDA_TWIST_SINGLET;
     inv_param.dslash_type = QUDA_TWISTED_CLOVER_DSLASH;
     inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
     inv_param.solution_type = QUDA_MAT_SOLUTION;
     inv_param.clover_order = QUDA_PACKED_CLOVER_ORDER;
-    inv_param.mu = fabs(g_mu/2./g_kappa);
+    // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
+    inv_param.mu = -g_mu/2./g_kappa;
     inv_param.clover_coeff = g_c_sw*g_kappa;
-
+    inv_param.compute_clover_inverse = 1;
+    inv_param.compute_clover = 1;
   }
   else if( g_mu != 0.0 ) {
+    inv_param.twist_flavor = QUDA_TWIST_SINGLET;
     inv_param.dslash_type = QUDA_TWISTED_MASS_DSLASH;
     inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN_ASYMMETRIC;
     inv_param.solution_type = QUDA_MAT_SOLUTION;
-    inv_param.mu = fabs(g_mu/2./g_kappa);
+    // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
+    inv_param.mu = -g_mu/2./g_kappa;
   }
   else if( g_c_sw > 0.0 ) {
+    inv_param.twist_flavor = QUDA_TWIST_NO;
     inv_param.dslash_type = QUDA_CLOVER_WILSON_DSLASH;
     inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
     inv_param.solution_type = QUDA_MAT_SOLUTION;
     inv_param.clover_order = QUDA_PACKED_CLOVER_ORDER;
     inv_param.clover_coeff = g_c_sw*g_kappa;
+    inv_param.compute_clover_inverse = 1;
+    inv_param.compute_clover = 1;
   }
   else {
+    inv_param.twist_flavor = QUDA_TWIST_NO;
     inv_param.dslash_type = QUDA_WILSON_DSLASH;
     inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
     inv_param.solution_type = QUDA_MAT_SOLUTION;
@@ -783,8 +801,6 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
   inv_param.tol = sqrt(precision);
   inv_param.maxiter = max_iter;
 
-  // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
-  inv_param.twist_flavor = (g_mu < 0.0 ? QUDA_TWIST_PLUS : QUDA_TWIST_MINUS);
   inv_param.Ls = 1;
 
   // NULL pointers to host fields to force
@@ -856,9 +872,11 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   inv_param.kappa = g_kappa;
 
   // IMPORTANT: use opposite TM mu-flavor since gamma5 -> -gamma5
-  inv_param.mu      = -g_mubar /2./g_kappa;
-  inv_param.epsilon =  g_epsbar/2./g_kappa;
-
+  inv_param.mu           = -g_mubar /2./g_kappa;
+  inv_param.epsilon      =  g_epsbar/2./g_kappa;
+  // FIXME: in principle, there is also QUDA_TWIST_DEG_DOUBLET
+  inv_param.twist_flavor =  QUDA_TWIST_NONDEG_DOUBLET; 
+  inv_param.Ls = 2;
 
   // figure out which BC to use (theta, trivial...)
   set_boundary_conditions(&compression);
@@ -872,10 +890,12 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   // choose dslash type
   if( g_c_sw > 0.0 ) {
     inv_param.dslash_type = QUDA_TWISTED_CLOVER_DSLASH;
-    inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
+    inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN; // FIXME: note sure if this is the correct PC type
     inv_param.solution_type = QUDA_MAT_SOLUTION;
     inv_param.clover_order = QUDA_PACKED_CLOVER_ORDER;
     inv_param.clover_coeff = g_c_sw*g_kappa;
+    inv_param.compute_clover = 1;
+    inv_param.compute_clover_inverse = 1;
   }
   else {
     inv_param.dslash_type = QUDA_TWISTED_MASS_DSLASH;
@@ -909,9 +929,6 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
 
   inv_param.tol = sqrt(precision);
   inv_param.maxiter = max_iter;
-
-  inv_param.twist_flavor = QUDA_TWIST_NONDEG_DOUBLET;
-  inv_param.Ls = 2;
 
   // NULL pointers to host fields to force
   // construction instead of download of the clover field:
@@ -957,11 +974,11 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
 // if even_odd_flag set
 void M_full_quda(spinor * const Even_new, spinor * const Odd_new,  spinor * const Even, spinor * const Odd) {
   inv_param.kappa = g_kappa;
-  inv_param.mu = fabs(g_mu);
+  // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
+  inv_param.mu = -g_mu;
   inv_param.epsilon = 0.0;
 
-  // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
-  inv_param.twist_flavor = (g_mu < 0.0 ? QUDA_TWIST_PLUS : QUDA_TWIST_MINUS);
+  inv_param.twist_flavor = QUDA_TWIST_SINGLET;
   inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ||
        inv_param.twist_flavor == QUDA_TWIST_DEG_DOUBLET ) ? 2 : 1;
 
@@ -984,11 +1001,11 @@ void M_full_quda(spinor * const Even_new, spinor * const Odd_new,  spinor * cons
 // no even-odd
 void D_psi_quda(spinor * const P, spinor * const Q) {
   inv_param.kappa = g_kappa;
-  inv_param.mu = fabs(g_mu);
+  // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
+  inv_param.mu = -g_mu;
   inv_param.epsilon = 0.0;
 
-  // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
-  inv_param.twist_flavor = (g_mu < 0.0 ? QUDA_TWIST_PLUS : QUDA_TWIST_MINUS);
+  inv_param.twist_flavor = QUDA_TWIST_SINGLET;
   inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ||
        inv_param.twist_flavor == QUDA_TWIST_DEG_DOUBLET ) ? 2 : 1;
 
