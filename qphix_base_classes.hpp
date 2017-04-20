@@ -17,16 +17,23 @@
 #pragma once
 
 #include <qphix/blas_new_c.h>
+#include <qphix/dslash_def.h>
+#include <qphix/tm_dslash_def.h>
 
 namespace tmlqcd {
 
+namespace {
 size_t constexpr re = 0;
 size_t constexpr im = 1;
+}
 
 template <typename FT, int veclen, int soalen, bool compress12>
 class Dslash {
  public:
-  typedef typename ::QPhiX::Geometry::FourSpinorBlock Spinor;
+  typedef template ::QPhiX::Geometry<FT, veclen, soalen, compress12>::typename FourSpinorBlock
+      Spinor;
+  typedef template ::QPhiX::Geometry<FT, veclen, soalen, compress12>::typename SU3MatrixBlock
+      SU3MatrixBlock;
 
   /**
     Computes \f$ \psi_\mathrm o = A_\mathrm{oo} \chi_\mathrm o \f$.
@@ -47,18 +54,32 @@ class Dslash {
     \param[in] in Input spinor \f$ \chi \f$.
     */
   virtual void A_inv_chi(Spinor *const out, Spinor const *const in, int const isign) const = 0;
+
+  virtual void dslash(Spinor *const res,
+                      const Spinor *const psi,
+                      const SU3MatrixBlock *const u,
+                      int const isign,
+                      int const cb) const = 0;
+
+  virtual void achimbdpsi(Spinor *const res,
+                          const Spinor *const psi,
+                          const Spinor *const chi,
+                          const SU3MatrixBlock *const u,
+                          double const alpha,
+                          double const beta,
+                          int const isign,
+                          int const cb) const = 0;
 };
 
 template <typename FT, int veclen, int soalen, bool compress12>
-class WilsonDslash : public ::QPhiX::Dslash<FT, veclen, soalen, compress12>, public Dslash {
+class WilsonDslash : public Dslash {
  public:
   WilsonDslash(template ::QPhiX::Geometry<FT, veclen, soalen, compress12> *geom_,
                double const t_boundary_,
                double const aniso_coeff_S_,
                double const aniso_coeff_T_,
                double const mass_)
-      : ::QPhiX::Dslash<FT, veclen, soalen, compress12>(
-            geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
+      : upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
         mass_factor_alpha(4.0 + mass_),
         mass_factor_beta(1.0 / (4.0 * alpha)),
         mass_factor_a(mu_ / mass_factor_alpha),
@@ -66,15 +87,36 @@ class WilsonDslash : public ::QPhiX::Dslash<FT, veclen, soalen, compress12>, pub
 
   void A_chi(Spinor *const out, Spinor const *const in, int const isign) const override {
     int const n_blas_simt = 1;
-    ::QPhiX::axy(mass_factor_beta, in, out, getGeometry(), n_blas_simt);
+    ::QPhiX::axy(mass_factor_beta, in, out, upstream_dslash.getGeometry(), n_blas_simt);
   }
 
   void A_inv_chi(Spinor *const out, Spinor const *const in, int const isign) const override {
     int const n_blas_simt = 1;
-    ::QPhiX::axy(1.0 / mass_factor_beta, in, out, getGeometry(), n_blas_simt);
+    ::QPhiX::axy(1.0 / mass_factor_beta, in, out, upstream_dslash.getGeometry(), n_blas_simt);
+  }
+
+  void dslash(Spinor *const res,
+              const Spinor *const psi,
+              const SU3MatrixBlock *const u,
+              int const isign,
+              int const cb) const override {
+    upstream_dslash.dslash(res, psi, u, isign, cb);
+  }
+
+  void achimbdpsi(Spinor *const res,
+                  const Spinor *const psi,
+                  const Spinor *const chi,
+                  const SU3MatrixBlock *const u,
+                  double const alpha,
+                  double const beta,
+                  int const isign,
+                  int const cb) const override {
+    upstream_dslash.dslashAChiMinusBDPsi(psi, chi, u, alpha, beta, isign, cb);
   }
 
  private:
+  ::QPhiX::Dslash<FT, veclen, soalen, compress12> upstream_dslash;
+
   double const mass_factor_alpha;
   double const mass_factor_beta;
   double const mass_factor_a;
@@ -82,23 +124,22 @@ class WilsonDslash : public ::QPhiX::Dslash<FT, veclen, soalen, compress12>, pub
 };
 
 template <typename FT, int veclen, int soalen, bool compress12>
-class WilsonTMDslash : public ::QPhiX::Dslash<FT, veclen, soalen, compress12>, public Dslash {
+class WilsonTMDslash : public Dslash {
  public:
   WilsonTMDslash(template ::QPhiX::Geometry<FT, veclen, soalen, compress12> *geom_,
                  double const t_boundary_,
                  double const aniso_coeff_S_,
                  double const aniso_coeff_T_,
                  double const mass_,
-                 double const mu_)
-      : ::QPhiX::Dslash<FT, veclen, soalen, compress12>(
-            geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
+                 double const twisted_mass_)
+      : upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_, mass_, twisted_mass_),
         mass_factor_alpha(4.0 + mass_),
         mass_factor_beta(1.0 / (4.0 * alpha)),
         mass_factor_a(mu_ / mass_factor_alpha),
         mass_factor_b(mass_factor_alpha / (mass_factor_alpha * mass_factor_alpha + mu_ * mu_)) {}
 
   void A_chi(Spinor *const out, Spinor const *const in, int const isign) const override {
-    size_t const num_blocks = getGeometry().get_num_blocks();
+    size_t const num_blocks = upstream_dslash.getGeometry().get_num_blocks();
     for (size_t block = 0u; block < num_blocks; ++block) {
       for (int color = 0; color < 3; ++color) {
         for (int spin_block = 0; spin_block < 2; ++spin_block) {
@@ -123,7 +164,7 @@ class WilsonTMDslash : public ::QPhiX::Dslash<FT, veclen, soalen, compress12>, p
   }
 
   void A_inv_chi(Spinor *const out, Spinor const *const in, int const isign) const override {
-    size_t const num_blocks = getGeometry().get_num_blocks();
+    size_t const num_blocks = upstream_dslash.getGeometry().get_num_blocks();
     for (size_t block = 0u; block < num_blocks; ++block) {
       for (int color = 0; color < 3; ++color) {
         for (int spin_block = 0; spin_block < 2; ++spin_block) {
@@ -148,7 +189,28 @@ class WilsonTMDslash : public ::QPhiX::Dslash<FT, veclen, soalen, compress12>, p
     }
   }
 
+  void dslash(Spinor *const res,
+              const Spinor *const psi,
+              const SU3MatrixBlock *const u,
+              int const isign,
+              int const cb) const override {
+    upstream_dslash.tmdslash(res, psi, u, isign, cb);
+  }
+
+  void achimbdpsi(Spinor *const res,
+                  const Spinor *const psi,
+                  const Spinor *const chi,
+                  const SU3MatrixBlock *const u,
+                  double const alpha,
+                  double const beta,
+                  int const isign,
+                  int const cb) const override {
+    upstream_dslash.tmdslashAChiMinusBDPsi(psi, chi, u, alpha, beta, isign, cb);
+  }
+
  private:
+  ::QPhiX::Dslash<FT, veclen, soalen, compress12> upstream_dslash;
+
   double const mass_factor_alpha;
   double const mass_factor_beta;
   double const mass_factor_a;
