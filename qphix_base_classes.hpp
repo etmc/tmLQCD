@@ -198,8 +198,8 @@ class Dslash {
   /**
     Forwarder for the `dslash`.
 
-    \todo Make this member function `const`. For this the member function in QPhiX that is called
-    internally must be marked `const` as well.
+    \todo Make this member function `const`. For this the member function in
+    QPhiX that is called internally must be marked `const` as well.
     */
   virtual void dslash(Spinor *const res,
                       const Spinor *const psi,
