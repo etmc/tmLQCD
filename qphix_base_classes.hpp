@@ -150,6 +150,26 @@ void full_clover_product(
     }
   }
 }
+
+template <typename FT, int veclen, int soalen, bool compress12>
+class FourSpinorCBWrapper {
+ public:
+  typedef
+      typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FourSpinorBlock FourSpinorBlock;
+
+  FourSpinorCBWrapper(::QPhiX::Geometry<FT, veclen, soalen, compress12> &geom_)
+      : geom(geom_), spinor(geom.allocCBFourSpinor()) {}
+
+  ~FourSpinorCBWrapper() { geom.free(spinor); }
+
+  FourSpinorBlock *data() const { return spinor; }
+
+ private:
+  ::QPhiX::Geometry<FT, veclen, soalen, compress12> &geom;
+  FourSpinorBlock *const spinor;
+};
+
+template <typename FT, int veclen, int soalen, bool compress12>
 class Dslash {
  public:
   typedef typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FourSpinorBlock Spinor;
