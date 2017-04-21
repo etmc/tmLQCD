@@ -153,6 +153,13 @@ void full_clover_product(
   }
 }
 
+/**
+  RAII container for checkerboarded four spinors.
+
+  The four spinors are C-style arrays with no length information and most
+  importantly no cleanup. This wrapper enables automatic cleanup using the
+  QPhiX::Geometry object.
+  */
 template <typename FT, int veclen, int soalen, bool compress12>
 class FourSpinorCBWrapper {
  public:
