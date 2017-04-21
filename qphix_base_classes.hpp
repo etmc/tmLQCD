@@ -146,7 +146,7 @@ class WilsonTMDslash : public Dslash<FT, veclen, soalen, compress12> {
                  double const twisted_mass_)
       : upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
         mass_factor_alpha(4.0 + mass_),
-        mass_factor_beta(1.0 / (4.0 * mass_factor_alpha)),
+        mass_factor_beta(0.25),
         mass_factor_a(twisted_mass_ / mass_factor_alpha),
         mass_factor_b(mass_factor_alpha /
                       (mass_factor_alpha * mass_factor_alpha + twisted_mass_ * twisted_mass_)) {}
