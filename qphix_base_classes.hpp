@@ -165,6 +165,7 @@ class FourSpinorCBWrapper {
   ~FourSpinorCBWrapper() { geom.free(spinor); }
 
   FourSpinorBlock *data() const { return spinor; }
+  size_t num_blocks() const { return geom.get_num_blocks(); }
 
  private:
   ::QPhiX::Geometry<FT, veclen, soalen, compress12> &geom;
