@@ -51,8 +51,13 @@
 // #undef SEEK_CUR
 // #undef SEEK_END
 
+#include "qphix_base_classes.hpp"
+
+#ifdef TM_USE_MPI
 // include mpi.h first
 #include <mpi.h>
+#endif
+
 #include "config.h"
 #include "global.h"
 extern "C" {
@@ -487,8 +492,20 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
   double t_boundary = (FT)(1);
   double coeff_s = (FT)(1);
   double coeff_t = (FT)(1);
+
   Geometry<FT, V, S, compress> geom(subLattSize, By, Bz, NCores, Sy, Sz, PadXY, PadXYZ, MinCt);
-  Dslash<FT, V, S, compress> DQPhiX(&geom, t_boundary, coeff_s, coeff_t);
+
+  // tmLQCD only stores kappa, QPhiX uses the mass. Convert here.
+  double const mass = 1 / (2.0 * g_kappa) - 4;
+
+#if 1 // Change the operator to use here.
+  tmlqcd::WilsonDslash<FT, V, S, compress> concrete_dslash(&geom, t_boundary, coeff_s, coeff_t, mass);
+#else
+  tmlqcd::WilsonTMDslash<FT, V, S, compress> concrete_dslash(&geom, t_boundary, coeff_s, coeff_t, mass, 0.0);
+#endif
+
+  tmlqcd::Dslash<FT, V, S, compress> &polymorphic_dslash = concrete_dslash;
+
 
   /************************
    *                      *
@@ -527,16 +544,29 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
   qphix_out[0] = packed_spinor_out_cb0;
   qphix_out[1] = packed_spinor_out_cb1;
 
+  QSpinor *tmp_spinor = (QSpinor *)geom.allocCBFourSpinor();
+
   // Reorder input spinor from tmLQCD to QPhiX
   reorder_spinor_toQphix(geom, (double *)tmlqcd_in, (double *)qphix_in[0], (double *)qphix_in[1]);
 
   // Apply QPhiX Dslash to qphix_in spinors
-  DQPhiX.dslash(qphix_out[1], qphix_in[0], u_packed[1],
-                /* isign == non-conjugate */ 1, /* cb == */
-                1);
-  DQPhiX.dslash(qphix_out[0], qphix_in[1], u_packed[0],
-                /* isign == non-conjugate */ 1, /* cb == */
-                0);
+  polymorphic_dslash.dslash(qphix_out[1],
+                            qphix_in[0],
+                            u_packed[1],
+                            /* isign == non-conjugate */ 1, /* cb == */
+                            1);
+  polymorphic_dslash.dslash(qphix_out[0],
+                            qphix_in[1],
+                            u_packed[0],
+                            /* isign == non-conjugate */ 1, /* cb == */
+                            0);
+
+  if (std::is_same<decltype(concrete_dslash), tmlqcd::WilsonTMDslash<FT, V, S, compress>>::value) {
+    for (int cb : {0, 1}) {
+      polymorphic_dslash.A_chi(tmp_spinor, qphix_out[cb], 1);
+      copySpinor(qphix_out[cb], tmp_spinor, geom, 1);
+    }
+  }
 
   // Reorder spinor fields back to tmLQCD
   reorder_spinor_fromQphix(geom, (double *)tmlqcd_out, (double *)qphix_out[0],
@@ -544,12 +574,14 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
   reorder_spinor_fromQphix(geom, (double *)tmlqcd_in, (double *)qphix_in[0], (double *)qphix_in[1]);
 
   masterPrintf("Cleaning up\n");
+
   geom.free(packed_gauge_cb0);
   geom.free(packed_gauge_cb1);
   geom.free(packed_spinor_in_cb0);
   geom.free(packed_spinor_in_cb1);
   geom.free(packed_spinor_out_cb0);
   geom.free(packed_spinor_out_cb1);
+  geom.free(tmp_spinor);
 }
 
 // Templatized even-odd preconditioned solver using QPhiX Library
