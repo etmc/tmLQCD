@@ -123,14 +123,14 @@ using namespace QPhiX;
 #include <qmp.h>
 #endif
 
-int qphix_input_By;
-int qphix_input_Bz;
-int qphix_input_NCores;
-int qphix_input_Sy;
-int qphix_input_Sz;
-int qphix_input_PadXY;
-int qphix_input_PadXYZ;
-int qphix_input_MinCt;
+int qphix_input_By = 0;
+int qphix_input_Bz = 0;
+int qphix_input_NCores = 0;
+int qphix_input_Sy = 0;
+int qphix_input_Sz = 0;
+int qphix_input_PadXY = 0;
+int qphix_input_PadXYZ = 0;
+int qphix_input_MinCt= 1;
 
 int By;
 int Bz;
@@ -162,7 +162,7 @@ const double rsdTarget<float>::value = 1.0e-7;
 template <>
 const double rsdTarget<double>::value = 1.0e-12;
 
-
+void checkQphixInputParameters();
 
 void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, int Sz_, int PadXY_,
                 int PadXYZ_, int MinCt_, int c12, QphixPrec precision_) {
@@ -954,6 +954,8 @@ int invert_eo_qphix(spinor * const Even_new,
 
   masterPrintf("\n");
 
+  checkQphixInputParameters();
+
   if (precision < rsdTarget<double>::value) {
     if (QPHIX_SOALEN > VECLEN_DP) {
       masterPrintf("SOALEN=%d is greater than the double prec VECLEN=%d\n", QPHIX_SOALEN,
@@ -1079,3 +1081,14 @@ int invert_eo_qphix(spinor * const Even_new,
 
   return -1;
 }
+
+void checkQphixInputParameters() {
+  if( qphix_input_By == 0 || qphix_input_Bz == 0){
+    masterPrintf("QPHIX Error: By and Bz may not be 0 ! Aborting.\n");
+    abort();
+  }
+  if( qphix_input_NCores * qphix_input_Sy * qphix_input_Sz != omp_num_threads ){
+    masterPrintf("QPHIX Error: NCores * Sy * Sz != ompnumthreads ! Aborting.\n");
+    abort();
+  }
+} 
