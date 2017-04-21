@@ -33,7 +33,7 @@ int const n_blas_simt = 1;
 }
 
 /**
-  Complex muliplication accumulate.
+  Complex multiplication accumulate.
 
   Computes \f$ (r + \mathrm i i) += (a + \mathrm i b) * (c + \mathrm i d) \f$.
   */
