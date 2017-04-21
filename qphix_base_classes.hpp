@@ -25,6 +25,7 @@ namespace tmlqcd {
 namespace {
 size_t constexpr re = 0;
 size_t constexpr im = 1;
+int const n_blas_simt = 1;
 }
 
 template <typename FT, int veclen, int soalen, bool compress12>
@@ -97,12 +98,10 @@ class WilsonDslash : public Dslash<FT, veclen, soalen, compress12> {
         mass_factor_beta(1.0 / (4.0 * mass_factor_alpha)) {}
 
   void A_chi(Spinor *const out, Spinor const *const in, int const isign) override {
-    int const n_blas_simt = 1;
     ::QPhiX::axy(mass_factor_beta, in, out, upstream_dslash.getGeometry(), n_blas_simt);
   }
 
   void A_inv_chi(Spinor *const out, Spinor const *const in, int const isign) override {
-    int const n_blas_simt = 1;
     ::QPhiX::axy(1.0 / mass_factor_beta, in, out, upstream_dslash.getGeometry(), n_blas_simt);
   }
 
