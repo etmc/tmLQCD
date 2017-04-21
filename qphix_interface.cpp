@@ -534,6 +534,8 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
   qphix_out[0] = packed_spinor_out_cb0;
   qphix_out[1] = packed_spinor_out_cb1;
 
+  QSpinor *tmp_spinor = (QSpinor *)geom.allocCBFourSpinor();
+
   // Reorder input spinor from tmLQCD to QPhiX
   reorder_spinor_toQphix(geom, (double *)tmlqcd_in, (double *)qphix_in[0], (double *)qphix_in[1]);
 
@@ -549,18 +551,27 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
                             /* isign == non-conjugate */ 1, /* cb == */
                             0);
 
+  if (std::is_same<decltype(concrete_dslash), tmlqcd::WilsonTMDslash<FT, V, S, compress>>::value) {
+    for (int cb : {0, 1}) {
+      polymorphic_dslash.A_chi(tmp_spinor, qphix_out[cb], 1);
+      copySpinor(qphix_out[cb], tmp_spinor, geom, 1);
+    }
+  }
+
   // Reorder spinor fields back to tmLQCD
   reorder_spinor_fromQphix(geom, (double *)tmlqcd_out, (double *)qphix_out[0],
                            (double *)qphix_out[1], (1. * g_kappa));
   reorder_spinor_fromQphix(geom, (double *)tmlqcd_in, (double *)qphix_in[0], (double *)qphix_in[1]);
 
   masterPrintf("Cleaning up\n");
+
   geom.free(packed_gauge_cb0);
   geom.free(packed_gauge_cb1);
   geom.free(packed_spinor_in_cb0);
   geom.free(packed_spinor_in_cb1);
   geom.free(packed_spinor_out_cb0);
   geom.free(packed_spinor_out_cb1);
+  geom.free(tmp_spinor);
 }
 
 // Templatized even-odd preconditioned solver using QPhiX Library
