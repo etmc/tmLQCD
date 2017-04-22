@@ -189,8 +189,19 @@ static inline void rmQuotes(char *str){
   double mu_Msap;
 
   int use_preconditioning;
+
+#ifdef TM_USE_QPHIX
+  extern int qphix_input_By;
+  extern int qphix_input_Bz;
+  extern int qphix_input_NCores;
+  extern int qphix_input_Sy;
+  extern int qphix_input_Sz;
+  extern int qphix_input_PadXY;
+  extern int qphix_input_PadXYZ;
+  extern int qphix_input_MinCt;
+#endif
+
   
-  int use_qudainverter;
 %}
 
 %option never-interactive
@@ -347,6 +358,8 @@ static inline void rmQuotes(char *str){
 %x LOWMEM
 %x SUBPROCESS 
 
+%x INITEXTERNALINVERTER
+
 %%
 ^SourceFilename{EQL}               BEGIN(SOURCEFILE);
 ^PropagatorFilename{EQL}           BEGIN(PROPFILE);
@@ -417,8 +430,6 @@ static inline void rmQuotes(char *str){
 ^NoSamples{EQL}                    BEGIN(NOSAMPLES);
 ^SplittedPropagator{EQL}           BEGIN(PROPSPLIT);
 ^UsePreconditioning{EQL}           BEGIN(PRECONDITIONING);
-^UseQudaInverter{EQL}              BEGIN(QUDAINVERTER);
-^UseQphixInverter{EQL}             BEGIN(QPHIXINVERTER);
 ^UseCompression{EQL}               BEGIN(COMPRESSION);
 
 ^BeginMeasurement{SPC}+            BEGIN(INITMEASUREMENT);
@@ -429,6 +440,8 @@ static inline void rmQuotes(char *str){
 ^BeginMonomial{SPC}+               BEGIN(INITMONOMIAL);
 ^BeginInt                         BEGIN(INITINTEGRATOR);
 ^BeginOperator{SPC}+               BEGIN(INITOPERATOR);
+
+^BeginExternalInverter{SPC}+       BEGIN(INITEXTERNALINVERTER);
 
 ^PropagatorComparison{EQL}         BEGIN(PCOMP);
 ^NbCoresPerNode{EQL}               BEGIN(NBCORES);
@@ -1192,6 +1205,61 @@ static inline void rmQuotes(char *str){
   }
 }
 
+<INITEXTERNALINVERTER>{TYPE} {
+  if(strcmp(yytext, "QPHIX")==0) {
+    if(myverbose) printf("Setting QPHIX external inverter parameters line %d\n", line_of_file);
+    BEGIN(QPHIXINVERTER);
+  } else {
+    printf("Error on line %d, inverter '%s' is unknown. Exiting!\n", line_of_file, yytext);
+    exit(1);
+  }
+}
+<QPHIXINVERTER>{
+  {SPC}*NCores{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    qphix_input_NCores = a;
+    if(myverbose) printf("  Ncores = %d, line %d\n", a, line_of_file );
+  }
+  {SPC}*By{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    qphix_input_By = a;
+    if(myverbose) printf("  By = %d, line %d\n", a, line_of_file );
+  }
+  {SPC}*Bz{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    qphix_input_Bz = a;
+    if(myverbose) printf("  Bz = %d, line %d\n", a, line_of_file );
+  }
+  {SPC}*Sy{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    qphix_input_Sy = a;
+    if(myverbose) printf("  Sy = %d, line %d\n", a, line_of_file );
+  }
+  {SPC}*Sz{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    qphix_input_Sz = a;
+    if(myverbose) printf("  Sz = %d, line %d\n", a, line_of_file );
+  }
+  {SPC}*PadXY{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    qphix_input_PadXY = a;
+    if(myverbose) printf("  PadXY = %d, line %d\n", a, line_of_file );
+  }
+  {SPC}*PadXYZ{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    qphix_input_PadXYZ = a;
+    if(myverbose) printf("  PadXYZ = %d, line %d\n", a, line_of_file );
+  }
+  {SPC}*MinCt{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    qphix_input_MinCt = a;
+    if(myverbose) printf("  MinCt = %d, line %d\n", a, line_of_file );
+  }
+  ^EndExternalInverter{SPC}*  {
+    if(myverbose) printf("QPHIX external inverter parameters parsed on line %d\n\n", line_of_file);
+    BEGIN(0);
+  }
+}
 
 <CSWSOLVER>{
   increigcg {
@@ -2489,7 +2557,7 @@ static inline void rmQuotes(char *str){
   BEGIN(comment_caller);
 }
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID>{SPC}*\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID,INITEXTERNALINVERTER,QPHIXINVERTER>{SPC}*\n   {
   line_of_file++;
 }
 <*>{SPC}*\n                       {
