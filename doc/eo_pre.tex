@@ -23,7 +23,7 @@ representation in the $\chi$-basis written as
 \end{equation}
 For convenience we define
 $\tilde\mu=2\kappa\mu$. Using the matrix $M$ one can define the
-hermitian (two flavor) operator:
+hermitian (two flavour) operator:
 \begin{equation}
   \label{eq:eo1}
   Q\equiv \gamma_5 M = \begin{pmatrix}
@@ -221,7 +221,7 @@ where $\hat Q^h_{oo}$ is given in flavour space by
     \frac{M_{oe}(1+i\bar\mu\gamma_5)M_{eo}}{1+\bar\mu^2-\bar\epsilon^2}\\
   \end{pmatrix}
 \end{equation*}
-with the previous definitions of $M_{eo}$ etc. The inplementation for
+with the previous definitions of $M_{eo}$ etc. The implementation for
 the HMC is very similar to the mass degenerate case. $\hat Q^h$ has
 again a hermitian conjugate given by
 \[
@@ -247,7 +247,7 @@ term written as
 with the clover term $T$. For convenience we define
 $\tilde\mu\equiv2\kappa\mu$ and $\tilde c_{SW} = 2\kappa
 c_{SW}$. Using the matrix $M$ one can define the 
-(two flavor) operator:
+(two flavour) operator:
 \begin{equation}
   \label{eq:eosw1}
   Q\equiv \gamma_5 M = \begin{pmatrix}
@@ -314,7 +314,7 @@ fermion determinant, this reads
     i\tilde\mu\gamma_5)]\, .\\
   \end{split}
 \end{equation}
-Note that for $\tilde\mu=0$  $\det(1+T_{ee})$ is real. For
+Note that for $\tilde\mu=0$, $\det(1+T_{ee})$ is real. For
 $\tilde\mu\neq0$ however, $\det(1+T_{ee}+i\tilde\mu\gamma_5)$ is the
 complex conjugate of $\det(1+T_{ee}-i\tilde\mu\gamma_5)$ as the
 product of the two must be real. The latter can be seen from
@@ -395,7 +395,7 @@ where $R$ is a random spinor field taken from a Gaussian distribution
 with norm one.
 
 The additional bit in the action $S_{\det}$ needs to be treated
-seperately. The variation of this part is
+separately. The variation of this part is
 \begin{equation}
   \label{eq:eosw11}
   \delta S_{\det} = -\tr \left\{ \left[(1+i\tilde\mu\gamma_5 + T_{ee})^{-1}  +
@@ -410,7 +410,7 @@ For the implementation it is useful to compute the term
 \begin{equation}
   \label{eq:Tee}
   1+T_{a\alpha,b\beta} = 1 + \frac{i}{2} c_\mathrm{sw}
-  \kappa\sigma_{\mu\nu}^{\alpha\beta}F_{\mu\nu}^{\alpha\beta}(x)
+  \kappa\sigma_{\mu\nu}^{\alpha\beta}F_{\mu\nu}^{ab}(x)
 \end{equation}  
 once for all $x$. This is implemented in {\ttfamily clover\_leaf.c} in
 the routine {\ttfamily sw\_term}. The twisted mass term is not
@@ -418,7 +418,7 @@ included in this routine, as this would require double the storage for
 plus and minus $\mu$, respectively. It is easier to add the twisted
 mass term in later on. 
 
-The term in eq.~(\ref{eq:Tee}) correpsonds to a $12\times12$ matrix
+The term in eq.~(\ref{eq:Tee}) corresponds to a $12\times12$ matrix
 in colour and spin which reduces to two complex $6\times6$ matrices
 per site because it is block-diagonal in spin (one matrix for the two
 upper spin components, one for the two lower ones). 
@@ -604,7 +604,7 @@ where the sign in the second line comes from the first term and in the third lin
 proportionality of $D$ to the identity matrix was used.
 
 The implementation {\ttfamily sw\_trace\_nd} in {\ttfamily clover\_det.c} populates
-a temporary $6\times6$ array from the {\ttfamily sw} array, squares it and
+a temporary $6\times6$ array from the {\ttfamily sw} array, squares it 
 and adds $\bar{\mu}^2 - \bar{\epsilon}^2$ to the diagonal. Using $\det(\gamma_5) = 1$, 
 the contribution to the effective action is then:
 \begin{equation}
@@ -741,7 +741,7 @@ from eq.~(\ref{eq:Dheo}).
 
 In case inverting the full matrix $M$ is much faster than inverting
 the even/odd preconditioned matrix -- as might be the case with
-deflation, one may use for symmetric even/odd preconditioining
+deflation, one may use for symmetric even/odd preconditioning
 \begin{equation}
   (\hat M^\pm)^{-1}\phi_o\ =\ P_{l\to o}\ (M_\pm)^{-1}\ P_{o\to l}\
   M^\pm_{oo}\ \phi_o

@@ -109,6 +109,26 @@ else
   AC_MSG_RESULT(no)
 fi
 
+AC_MSG_CHECKING(whether we want to use DDalphaAMG)
+AC_ARG_WITH(DDalphaAMG,
+            AS_HELP_STRING([--with-DDalphaAMG[=dir]], [use DDalphaAMG, to be found in dir]),
+             [echo yes
+              DDalphaAMG_AVAILABLE=1
+              DDalphaAMG_INTERFACE="DDalphaAMG_interface"
+              AC_DEFINE(DDalphaAMG,1,Using DDalphaAMG)
+              DDalphaAMG_dir=$withval
+              LDFLAGS="$LDFLAGS -L${DDalphaAMG_dir}/lib"
+              INCLUDES="$INCLUDES -I${DDalphaAMG_dir}/include/"
+              AC_CHECK_LIB([DDalphaAMG],
+                           [DDalphaAMG_finalize],
+                           [],
+                           [AC_MSG_ERROR([library DDalphaAMG was not found])])],
+             [echo no
+              DDalphaAMG_AVAILABLE=0
+              DDalphaAMG_INTERFACE="DDalphaAMG_interface"
+              ])
+
+
 AC_MSG_CHECKING(whether to use QPX intrinsics)
 AC_ARG_ENABLE(qpx,
   AS_HELP_STRING([--enable-qpx], [enable use of qpx intrinsics [default=no]]),
@@ -362,6 +382,7 @@ AC_SUBST([LEMON_AVAILABLE])
 AC_SUBST(SPI_FILES)
 AC_SUBST(QUDA_INTERFACE)
 AC_SUBST(QPHIX_INTERFACE)
+AC_SUBST(DDalphaAMG_INTERFACE)
 
 INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${abs_top_builddir}/  -I\${abs_top_srcdir}/ -I${lime_dir}/include/ -I${lemon_dir}/include/"
 DEPFLAGS="$DEPFLAGS"

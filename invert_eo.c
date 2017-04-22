@@ -59,6 +59,9 @@
 #ifdef TM_USE_QPHIX
 #  include "qphix_interface.h"
 #endif
+#ifdef DDalphaAMG
+#  include "DDalphaAMG_interface.h"
+#endif
 
 static double cgmms_reached_prec = 0.0; 
 static void cgmms_write_props(spinor ** const P, double const * const extra_masses, const int no_extra_masses, const int id, const int iteration);
@@ -104,6 +107,12 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
                            solver_flag, rel_prec,
                            solver_params, compression);
   }
+#endif
+
+#ifdef DDalphaAMG
+  if ( solver_flag==MG )
+    return MG_solver_eo(Even_new, Odd_new, Even, Odd, precision, max_iter,
+			rel_prec, VOLUME/2, g_gauge_field, &M_full);
 #endif
 
   /* here comes the inversion using even/odd preconditioning */
@@ -240,7 +249,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
       if(g_proc_id == 0) {
         printf("# Using CG!\n"); 
-        printf("# mu = %f, kappa = %f\n", g_mu/2./g_kappa, g_kappa);
+        printf("# mu = %.12f, kappa = %.12f\n", g_mu/2./g_kappa, g_kappa);
         fflush(stdout);
       }
 #ifdef HAVE_GPU

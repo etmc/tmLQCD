@@ -53,7 +53,9 @@
 #ifdef QUDA
 #  include "quda_interface.h"
 #endif
-
+#ifdef DDalphaAMG
+#  include "DDalphaAMG_interface.h"
+#endif
 
 int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new, 
                      spinor * const Even, spinor * const Odd,
@@ -88,7 +90,14 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
   }
 #endif
     
-    
+#ifdef DDalphaAMG
+     if ( solver_flag == MG )
+    {
+      return MG_solver_eo(Even_new, Odd_new, Even, Odd, precision, max_iter,
+                          rel_prec, VOLUME/2, gf[0], &Msw_full);
+    }
+#endif
+
     assign_mul_one_sw_pm_imu_inv(EE, Even_new, Even, +g_mu);
     
     Hopping_Matrix(OE, g_spinor_field[DUM_DERI], Even_new); 
@@ -101,7 +110,7 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
     /* Here we invert the hermitean operator squared */
     gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
     if(g_proc_id == 0) {
-      printf("# mu = %f, kappa = %f, csw = %f\n", 
+      printf("# mu = %.12f, kappa = %.12f, csw = %.12f\n", 
              g_mu/2./g_kappa, g_kappa, g_c_sw);
       fflush(stdout);
     }
@@ -142,7 +151,6 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
     /* The sign is plus, since in Hopping_Matrix */
     /* the minus is missing                      */
     assign_add_mul_r(Even_new, g_spinor_field[DUM_DERI], +1., VOLUME/2);
-
   }
 
   else {
@@ -168,9 +176,15 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
       iter = cg_her(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], max_iter, precision, 
 		    rel_prec, VOLUME, Qsq);
-
       Qm(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]);
     }
+#ifdef DDalphaAMG
+    else if ( solver_flag == MG )
+    {
+      return MG_solver_eo(Even_new, Odd_new, Even, Odd, precision, max_iter,
+                          rel_prec, VOLUME/2, gf[0], &Msw_full);
+    }
+#endif
     convert_lexic_to_eo(Even_new, Odd_new, g_spinor_field[DUM_DERI+1]);
   }
   return(iter);
