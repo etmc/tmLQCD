@@ -22,8 +22,6 @@
 #include <qphix/tm_clov_dslash_def.h>
 #include <qphix/tm_dslash_def.h>
 
-#include <cassert>
-
 namespace tmlqcd {
 
 namespace {
@@ -185,10 +183,6 @@ class Dslash {
   typedef typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FourSpinorBlock Spinor;
   typedef typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::SU3MatrixBlock SU3MatrixBlock;
 
-  Dslash(typename ::QPhiX::Geometry<FT, veclen, soalen, compress12> &geom_) : tmp(geom_) {}
-
-  virtual ~Dslash() {}
-
   /**
     Computes \f$ \psi_\mathrm o = A_\mathrm{oo} \chi_\mathrm o \f$.
 
@@ -222,30 +216,6 @@ class Dslash {
                       int const cb) = 0;
 
   /**
-    Plain Wilson Dslash.
-
-    In the source preparation and solution reconstruction, there is a step
-    where the plain Wilson Dslash has to be used. This could have been solved
-    by creating an instance of the Wilson Dslash in the solver. The solution
-    chosen is that the actual Dslash is used and the result is then corrected
-    by multiplying with the clover term again. This way a plain Wilson Dslash
-    is provided.
-
-    This implementation is meant for all Dslash types which are _not_ the plain
-    Wilson Dslash. That particular one has to override this method with does
-    _no_ correction.
-    */
-  virtual void wilson_dslash(Spinor *const res,
-                             const Spinor *const psi,
-                             const SU3MatrixBlock *const u,
-                             int const isign,
-                             int const cb) {
-    assert(isign == 1 && "isign = -1 is not implemented");
-    dslash(tmp.data(), psi, u, isign, cb);
-    A_chi(res, tmp.data(), isign);
-  }
-
-  /**
     Forwarder for the `achimbdpsi`.
 
     \todo Make this member function `const`. For this the member function in QPhiX that is called
@@ -259,9 +229,6 @@ class Dslash {
                           double const beta,
                           int const isign,
                           int const cb) = 0;
-
- protected:
-  FourSpinorCBWrapper<FT, veclen, soalen, compress12> tmp;
 };
 
 template <typename FT, int veclen, int soalen, bool compress12>
@@ -275,8 +242,7 @@ class WilsonDslash : public Dslash<FT, veclen, soalen, compress12> {
                double const aniso_coeff_S_,
                double const aniso_coeff_T_,
                double const mass_)
-      : Dslash<FT, veclen, soalen, compress12>(*geom_),
-        upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
+      : upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
         mass_factor_alpha(4.0 + mass_),
         mass_factor_beta(1.0 / (4.0 * mass_factor_alpha)) {}
 
@@ -294,14 +260,6 @@ class WilsonDslash : public Dslash<FT, veclen, soalen, compress12> {
               int const isign,
               int const cb) override {
     upstream_dslash.dslash(res, psi, u, isign, cb);
-  }
-
-  void wilson_dslash(Spinor *const res,
-              const Spinor *const psi,
-              const SU3MatrixBlock *const u,
-              int const isign,
-              int const cb) override {
-    dslash(res, psi, u, isign, cb);
   }
 
   void achimbdpsi(Spinor *const res,
@@ -334,8 +292,7 @@ class WilsonTMDslash : public Dslash<FT, veclen, soalen, compress12> {
                  double const aniso_coeff_T_,
                  double const mass_,
                  double const twisted_mass_)
-      : Dslash<FT, veclen, soalen, compress12>(*geom_),
-        upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
+      : upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
         mass_factor_alpha(4.0 + mass_),
         mass_factor_beta(0.25),
         derived_mu(twisted_mass_ / mass_factor_alpha),
@@ -426,8 +383,7 @@ class WilsonClovDslash : public Dslash<FT, veclen, soalen, compress12> {
                    double const mass_,
                    CloverBlock *const clover_,
                    CloverBlock *const inv_clover_)
-      : Dslash<FT, veclen, soalen, compress12>(*geom_),
-        upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
+      : upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
         mass_factor_alpha(4.0 + mass_),
         mass_factor_beta(1.0 / (4.0 * mass_factor_alpha)),
         clover(clover_),
@@ -486,8 +442,7 @@ class WilsonClovTMDslash : public Dslash<FT, veclen, soalen, compress12> {
                      double const twisted_mass_,
                      FullCloverBlock *const clover_[2],
                      FullCloverBlock *const inv_clover_[2])
-      : Dslash<FT, veclen, soalen, compress12>(*geom_),
-        upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
+      : upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
         mass_factor_alpha(4.0 + mass_),
         mass_factor_beta(0.25),
         derived_mu(twisted_mass_ / mass_factor_alpha),
