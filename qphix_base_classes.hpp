@@ -157,6 +157,9 @@ void full_clover_product(
   The four spinors are C-style arrays with no length information and most
   importantly no cleanup. This wrapper enables automatic cleanup using the
   QPhiX::Geometry object.
+
+  Perhaps it would be even better to use `std::vector` with a custom allocator
+  for this structure.
   */
 template <typename FT, int veclen, int soalen, bool compress12>
 class FourSpinorCBWrapper {
@@ -169,8 +172,12 @@ class FourSpinorCBWrapper {
 
   ~FourSpinorCBWrapper() { geom.free(spinor); }
 
-  FourSpinorBlock *data() const { return spinor; }
+  FourSpinorBlock const *data() const { return spinor; }
+  FourSpinorBlock *data() { return spinor; }
+
   size_t num_blocks() const { return geom.get_num_blocks(); }
+
+  FourSpinorBlock &operator[](size_t i) { return spinor[i]; }
 
  private:
   ::QPhiX::Geometry<FT, veclen, soalen, compress12> &geom;
