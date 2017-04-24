@@ -314,7 +314,7 @@ class WilsonTMDslash : public Dslash<FT, veclen, soalen, compress12> {
                        (mass_factor_alpha * mass_factor_alpha + twisted_mass_ * twisted_mass_)) {}
 
   void A_chi(Spinor *const out, Spinor const *const in, int const isign) override {
-      helper_A_chi(out, in, derived_mu * isign, mass_factor_alpha);
+      helper_A_chi(out, in, - derived_mu * isign, mass_factor_alpha);
   }
 
 
