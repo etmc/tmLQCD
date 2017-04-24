@@ -81,6 +81,8 @@ extern "C" {
 #include <qphix/print_utils.h>
 #include <qphix/qphix_config.h>
 #include <qphix/wilson.h>
+#include <qphix/twisted_mass.h>
+
 using namespace std;
 using namespace QPhiX;
 
@@ -712,10 +714,15 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
     masterPrintf(" Aborting...\n");
     abort();
   } else if( g_mu != 0.0 ) { // TWISTED-MASS
-    // TODO: Implement me!
-    masterPrintf("# TWISTED-MASS CASE NOT YET IMPLEMENTED!\n");
-    masterPrintf(" Aborting...\n");
-    abort();
+    masterPrintf("# Creating QPhiX Twisted Mass Wilson Dslash...\n");
+    DslashQPhiX = new tmlqcd::WilsonTMDslash<FT, V, S, compress>
+      (&geom, t_boundary, coeff_s, coeff_t, mass, g_mu);
+    masterPrintf("# ...done.\n");
+
+    masterPrintf("# Creating QPhiX Twisted Mass Wilson Fermion Matrix...\n");
+    FermionMatrixQPhiX = new EvenOddTMWilsonOperator<FT, V, S, compress>
+      (mass, g_mu, u_packed, &geom, t_boundary, coeff_s, coeff_t);
+    masterPrintf("# ...done.\n");
   } else if( g_c_sw > 0.0 ) { // WILSON CLOVER
     // TODO: Implement me!
     masterPrintf("# WILSON CLOVER CASE NOT YET IMPLEMENTED!\n");
