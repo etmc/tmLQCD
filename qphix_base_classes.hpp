@@ -306,7 +306,7 @@ class WilsonTMDslash : public Dslash<FT, veclen, soalen, compress12> {
                  double const aniso_coeff_T_,
                  double const mass_,
                  double const twisted_mass_)
-      : upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
+      : upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_, mass_, twisted_mass_),
         mass_factor_alpha(4.0 + mass_),
         mass_factor_beta(0.25),
         derived_mu(twisted_mass_ / mass_factor_alpha),
@@ -327,7 +327,7 @@ class WilsonTMDslash : public Dslash<FT, veclen, soalen, compress12> {
               const SU3MatrixBlock *const u,
               int const isign,
               int const cb) override {
-    upstream_dslash.tmdslash(res, psi, u, derived_mu, derived_mu_inv, isign, cb);
+    upstream_dslash.dslash(res, psi, u, isign, cb);
   }
 
   void achimbdpsi(Spinor *const res,
@@ -338,8 +338,8 @@ class WilsonTMDslash : public Dslash<FT, veclen, soalen, compress12> {
                   double const beta,
                   int const isign,
                   int const cb) override {
-    upstream_dslash.tmdslashAChiMinusBDPsi(
-        res, psi, chi, u, derived_mu, derived_mu_inv, isign, cb);
+    upstream_dslash.dslashAChiMinusBDPsi(
+        res, psi, chi, u, alpha, beta, isign, cb);
   }
 
  private:
