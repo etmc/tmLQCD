@@ -124,7 +124,6 @@ static inline void rmQuotes(char *str){
   int return_check_flag, return_check_interval;
   int gauge_precision_read_flag;
   int gauge_precision_write_flag;
-  int g_disable_IO_checks;
   int gmres_m_parameter, gmresdr_nr_ev;
   int reproduce_randomnumber_flag;
   double stout_rho;
@@ -223,6 +222,7 @@ static inline void rmQuotes(char *str){
 %x GAUGERPREC
 %x GAUGEWPREC
 %x DSBLIOCHECK
+%x DSBLSRCIOCHECK
 %x PRECON
 %x WRITECP
 %x CPINT
@@ -291,6 +291,9 @@ static inline void rmQuotes(char *str){
 
 %x DEFLATION
 %x INITDEFLATION
+
+%x MULTIGRID
+%x INITMULTIGRID
 
 %x INITOPERATOR
 %x TMOP
@@ -405,6 +408,8 @@ static inline void rmQuotes(char *str){
 ^GaugeConfigReadPrecision{EQL}     BEGIN(GAUGERPREC);
 ^GaugeConfigWritePrecision{EQL}    BEGIN(GAUGEWPREC);
 ^DisableIOChecks{EQL}              BEGIN(DSBLIOCHECK);
+^DisableGaugeIOChecks{EQL}         BEGIN(DSBLIOCHECK);
+^DisableSourceIOChecks{EQL}        BEGIN(DSBLSRCIOCHECK);
 ^ReproduceRandomNumbers{EQL}       BEGIN(REPRORND);
 ^UseSloppyPrecision{EQL}           BEGIN(SLOPPYPREC);
 ^UseStoutSmearing{EQL}             BEGIN(USESTOUT);
@@ -433,7 +438,7 @@ static inline void rmQuotes(char *str){
 ^MStarSq{EQL}                      BEGIN(MSTARSQ);
 ^NoSourcesZ2{EQL}                  BEGIN(NOSOURCESZ2);
 ^BeginMonomial{SPC}+               BEGIN(INITMONOMIAL);
-^BeginInt                          BEGIN(INITINTEGRATOR);
+^BeginInt                         BEGIN(INITINTEGRATOR);
 ^BeginOperator{SPC}+               BEGIN(INITOPERATOR);
 
 ^BeginExternalInverter{SPC}+       BEGIN(INITEXTERNALINVERTER);
@@ -453,6 +458,7 @@ static inline void rmQuotes(char *str){
 
 ^BeginGPU                          BEGIN(INITGPU);
 ^BeginDeflation		           BEGIN(INITDEFLATION);
+^BeginDDalpha       	           BEGIN(INITMULTIGRID);
 ^MixCGInnerEps{EQL}                BEGIN(MIXCGEPS);
 ^MixCGMaxIter{EQL}                 BEGIN(MIXCGIT);
 
@@ -638,6 +644,102 @@ static inline void rmQuotes(char *str){
   }
 }
 
+<INITMULTIGRID>AMG{SPC}* {
+#ifdef DDalphaAMG
+ if(myverbose) printf("Initialising DDalphaAMG line %d\n", line_of_file); 
+ BEGIN(MULTIGRID);
+#else
+ printf("ERROR line %d: DDalphaAMG library not included\n", line_of_file);
+ exit(1);
+#endif
+ }
+<MULTIGRID>{
+  {SPC}*MGSetupIter{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_setup_iter=a;
+    if(myverbose) printf("  MG_Setup_Iter set to %d line %d operator %d\n", mg_setup_iter, line_of_file, current_operator);
+  }
+  {SPC}*MGCoarseSetupIter{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_coarse_setup_iter=a;
+    if(myverbose) printf("  MG_Coarse_Setup_Iter set to %d line %d operator %d\n", mg_coarse_setup_iter, line_of_file, current_operator);
+  }
+  {SPC}*MGNumberOfVectors{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_Nvec=a;
+    if(myverbose) printf("  MGNumberOfVectors set to %d line %d operator %d\n", mg_Nvec, line_of_file, current_operator);
+  }
+  {SPC}*MGNumberOfLevels{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_lvl=a;
+    if(myverbose) printf("  MGNumberOfLevels set to %d line %d operator %d\n", mg_lvl, line_of_file, current_operator);
+  }
+  {SPC}*MGBlockX{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_blk[3]=a;
+    if(myverbose) printf("  MGBlockX set to %d line %d operator %d\n", mg_blk[3], line_of_file, current_operator);
+  }
+  {SPC}*MGBlockY{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_blk[2]=a;
+    if(myverbose) printf("  MGBlockY set to %d line %d operator %d\n", mg_blk[2], line_of_file, current_operator);
+  }
+  {SPC}*MGBlockZ{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_blk[1]=a;
+    if(myverbose) printf("  MGBlockZ set to %d line %d operator %d\n", mg_blk[1], line_of_file, current_operator);
+  }
+  {SPC}*MGBlockT{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_blk[0]=a;
+    if(myverbose) printf("  MGBlockT set to %d line %d operator %d\n", mg_blk[0], line_of_file, current_operator);
+  }
+  {SPC}*MGSetup2KappaMu{EQL}{FLT}+ {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    mg_setup_mu=c;
+    mg_setup_mu_set=1;
+    if(myverbose) printf("  MGSetup2KappaMu set to %f line %d operator %d\n", mg_setup_mu, line_of_file, current_operator);
+  }
+  {SPC}*MGCoarseMuFactor{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mg_cmu_factor=c;
+    if(myverbose) printf("  MGCoarseMuFactor set to %f line %d operator %d\n", mg_cmu_factor, line_of_file, current_operator);
+  }
+  {SPC}*MGMixedPrecision{EQL}yes {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mg_mixed_prec = 1;
+    if(myverbose) printf("  MGMixedPrecision set to YES line %d operator %d\n",  line_of_file, current_operator);
+  }
+  {SPC}*MGMixedPrecision{EQL}no {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mg_mixed_prec = 0;
+    if(myverbose) printf("  MGMixedPrecision set to NO line %d operator %d\n",  line_of_file, current_operator);
+  }
+  {SPC}*MGdtauUpdate{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mg_dtau_update=c;
+    if(myverbose) printf("  MGdtauUpdate set to %f line %d operator %d\n", mg_dtau_update, line_of_file, current_operator);
+  }
+  {SPC}*MGrhoUpdate{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mg_rho_update=c;
+    if(myverbose) printf("  MG_rho_Update set to %f line %d operator %d\n", mg_rho_update, line_of_file, current_operator);
+  }
+  {SPC}*MGUpdateSetupIter{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_update_setup_iter=a;
+    if(myverbose) printf("  MG_Update_Setup_Iter set to %d line %d operator %d\n", mg_update_setup_iter, line_of_file, current_operator);
+  }
+  {SPC}*MGOMPNumThreads{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_omp_num_threads=a;
+    if(myverbose) printf("  MG_omp_num_threads set to %d line %d operator %d\n", mg_omp_num_threads, line_of_file, current_operator);
+  }
+  EndDDalphaAMG{SPC}* {
+  if(myverbose) printf("DDalphaAMG parsed in line %d\n\n", line_of_file);
+  BEGIN(0);
+  }
+}
 
 
 <INITOPERATOR>{TYPE} {
@@ -766,8 +868,7 @@ static inline void rmQuotes(char *str){
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     (optr->solver_params).eigcg_rand_guess_opt = a;
     if(myverbose) printf("  EigCGrand_guess_opt set to %d line %d operator %d\n", a, line_of_file, current_operator);
-  }
-
+  }  
   {SPC}*ExtraMasses{EQL}{FLTLIST} {
     char * token = NULL;
     optr->no_extra_masses = 0;
@@ -1092,6 +1193,16 @@ static inline void rmQuotes(char *str){
     if(myverbose) printf("  Solver set to INCR-EIG-CG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
+  DDalphaAMG {
+#ifdef DDalphaAMG
+    optr->solver = MG;
+    if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+#else
+    printf("ERROR line %d operator %d: DDalphaAMG library not included\n", line_of_file, current_operator);
+    exit(1);
+#endif
+  }
 }
 
 <INITEXTERNALINVERTER>{TYPE} {
@@ -1171,6 +1282,11 @@ static inline void rmQuotes(char *str){
   mixedcg {
     optr->solver=MIXEDCG;
     if(myverbose) printf("  Solver set to MixedCG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  DDalphaAMG {
+    optr->solver = MG;
+    if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
 }
@@ -1654,6 +1770,11 @@ static inline void rmQuotes(char *str){
     mnl->solver = BICGSTAB;
     BEGIN(solver_caller);
   }
+  DDalphaAMG {
+    if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
+    mnl->solver = MG;
+    BEGIN(solver_caller);
+  }
 }
 
 <NDMSOLVER>{
@@ -2023,7 +2144,7 @@ static inline void rmQuotes(char *str){
 }
 <CSW>{FLT}  {
   g_c_sw=atof(yytext);
-  if(myverbose!=0) printf("c_sw=%lf \n", g_c_sw);
+  if(myverbose!=0) printf("c_sw=%s \n", yytext);
 }
 <STARTCOND>{
   cold {
@@ -2105,6 +2226,14 @@ static inline void rmQuotes(char *str){
 <DSBLIOCHECK>no {
   g_disable_IO_checks = 0;
   if(myverbose!=0) printf("Enable IO checks (and readback in case of Lemon IO)\n");
+}
+<DSBLSRCIOCHECK>yes {
+  g_disable_src_IO_checks = 1;
+  if(myverbose!=0) printf("Disable IO checks for sources\n");
+}
+<DSBLSRCIOCHECK>no {
+  g_disable_src_IO_checks = 0;
+  if(myverbose!=0) printf("Enable IO checks for sources\n");
 }
 <CPINT>{DIGIT}+   {
   cp_interval=atoi(yytext);
@@ -2428,7 +2557,7 @@ static inline void rmQuotes(char *str){
   BEGIN(comment_caller);
 }
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITEXTERNALINVERTER,QPHIXINVERTER>{SPC}*\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID,INITEXTERNALINVERTER,QPHIXINVERTER>{SPC}*\n   {
   line_of_file++;
 }
 <*>{SPC}*\n                       {
@@ -2440,8 +2569,8 @@ static inline void rmQuotes(char *str){
   BEGIN(ERROR);
 }
 <ERROR>[^\t\n]*             {
-  fprintf(stderr, "Parsing error in line %d\nAborting...!\n", line_of_file);
-  fprintf(stderr, "Could not make sense out off: %s\n", yytext);
+  if(g_proc_id == 0) fprintf(stderr, "Parsing error in line %d\nAborting...!\n", line_of_file);
+  if(g_proc_id == 0) fprintf(stderr, "Could not make sense out off: %s\n", yytext);
   exit(1);
 }
 
@@ -2570,6 +2699,7 @@ int read_input(char * conf_file){
   gauge_precision_read_flag = _default_gauge_precision_read_flag;
   gauge_precision_write_flag = _default_gauge_precision_write_flag;
   g_disable_IO_checks = _default_g_disable_IO_checks;
+  g_disable_src_IO_checks = _default_g_disable_IO_checks;
   reproduce_randomnumber_flag = _default_reproduce_randomnumber_flag;
   g_sloppy_precision_flag = _default_g_sloppy_precision_flag;
   use_stout_flag = _default_use_stout_flag;

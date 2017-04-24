@@ -1,21 +1,5 @@
-/***********************************************************************
- * Copyright (C) 2017 Martin Ueding <dev@martin-ueding.de>
- *
- * This file is part of tmLQCD.
- *
- * tmLQCD is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * tmLQCD is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ***********************************************************************/
+// Copyright © 2017 Martin Ueding <dev@martin-ueding.de>
+// Licensed unter the [BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause).
 
 /**
   \file Additions to QPhiX that are only needed for tmLQCD.
@@ -33,7 +17,9 @@
 #pragma once
 
 #include <qphix/blas_new_c.h>
+#include <qphix/clover_dslash_def.h>
 #include <qphix/dslash_def.h>
+#include <qphix/tm_clov_dslash_def.h>
 #include <qphix/tm_dslash_def.h>
 
 namespace tmlqcd {
@@ -41,7 +27,167 @@ namespace tmlqcd {
 namespace {
 size_t constexpr re = 0;
 size_t constexpr im = 1;
+int const n_blas_simt = 1;
 }
+
+template <typename FT, int veclen, int soalen, bool compress12>
+size_t get_num_blocks(::QPhiX::Geometry<FT, veclen, soalen, compress12> &geom) {
+  return geom.Nt() * geom.Nz() * geom.Ny() * geom.nVecs();
+}
+
+/**
+  Complex multiplication accumulate.
+
+  Computes \f$ (r + \mathrm i i) += (a + \mathrm i b) * (c + \mathrm i d) \f$.
+  */
+template <typename FT>
+void cplx_mul_acc(FT &r_out, FT &i_out, FT const &a, FT const &b, FT const &c, FT const &d) {
+  r_out += a * c - b * d;
+  i_out += a * d + b * c;
+}
+
+template <typename FT, int veclen, int soalen, bool compress12>
+void clover_product(
+    typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FourSpinorBlock *const out,
+    typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FourSpinorBlock const *const in,
+    typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::CloverBlock *local_clover,
+    ::QPhiX::Geometry<FT, veclen, soalen, compress12> &geom) {
+  ::QPhiX::zeroSpinor<FT, veclen, soalen, compress12>(out, geom, n_blas_simt);
+
+  // Iterate through all the block.
+  auto const num_blocks = get_num_blocks(geom);
+  for (auto block = 0u; block < num_blocks; ++block) {
+    // The clover term is block-diagonal in spin. Therefore we need
+    // to iterate over the two blocks of spin.
+    for (auto s_block : {0, 1}) {
+      // Extract the diagonal and triangular parts.
+      auto const &diag_in = s_block == 0 ? local_clover[block].diag1 : local_clover[block].diag2;
+      auto const &off_diag_in = s_block == 0 ? local_clover[block].off_diag1 : local_clover[block].off_diag1;
+      // Input two-spinor component.
+      for (auto two_s_in : {0, 1}) {
+        // Reconstruct four spinor index.
+        auto const four_s_in = 2 * s_block + two_s_in;
+        // Output two-spinor component.
+        for (auto two_s_out : {0, 1}) {
+          // Reconstruct four spinor index.
+          auto const four_s_out = 2 * s_block + two_s_out;
+          // Input color.
+          for (auto c_in : {0, 1, 2}) {
+            // Spin-color index (0, ..., 5).
+            auto const sc_in = 3 * two_s_in + c_in;
+            // Output color.
+            for (auto c_out : {0, 1, 2}) {
+              // Spin-color index (0, ..., 5).
+              auto const sc_out = 3 * two_s_out + c_out;
+              // SIMD vector.
+              for (auto v = 0; v < veclen; ++v) {
+                  if (sc_out == sc_in) {
+                    cplx_mul_acc(out[block][c_out][four_s_out][re][v],
+                                 out[block][c_out][four_s_out][im][v],
+                                 diag_in[sc_in][v],
+                                 0.0,
+                                 in[block][c_in][four_s_in][re][v],
+                                 in[block][c_in][four_s_in][im][v]);
+                  }
+                  else if (sc_out < sc_in) {
+                    auto const idx15 = sc_in * (sc_in - 1) / 2 + sc_out;
+                    cplx_mul_acc(out[block][c_out][four_s_out][re][v],
+                                 out[block][c_out][four_s_out][im][v],
+                                 off_diag_in[idx15][re][v],
+                                 off_diag_in[idx15][im][v],
+                                 in[block][c_in][four_s_in][re][v],
+                                 in[block][c_in][four_s_in][im][v]);
+                  }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+template <typename FT, int veclen, int soalen, bool compress12>
+void full_clover_product(
+    typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FourSpinorBlock *const out,
+    typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FourSpinorBlock const *const in,
+    typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FullCloverBlock *local_clover,
+    ::QPhiX::Geometry<FT, veclen, soalen, compress12> &geom) {
+  ::QPhiX::zeroSpinor<FT, veclen, soalen, compress12>(out, geom, n_blas_simt);
+
+  // Iterate through all the block.
+  auto const num_blocks = get_num_blocks(geom);
+  for (auto block = 0u; block < num_blocks; ++block) {
+    // The clover term is block-diagonal in spin. Therefore we need
+    // to iterate over the two blocks of spin.
+    for (auto s_block : {0, 1}) {
+      // Extract the spin block as a handy alias.
+      auto const &block_in = s_block == 0 ? local_clover[block].block1 : local_clover[block].block2;
+      // Input two-spinor component.
+      for (auto two_s_in : {0, 1}) {
+        // Reconstruct four spinor index.
+        auto const four_s_in = 2 * s_block + two_s_in;
+        // Output two-spinor component.
+        for (auto two_s_out : {0, 1}) {
+          // Reconstruct four spinor index.
+          auto const four_s_out = 2 * s_block + two_s_out;
+          // Input color.
+          for (auto c_in : {0, 1, 2}) {
+            // Spin-color index (0, ..., 5).
+            auto const sc_in = 3 * two_s_in + c_in;
+            // Output color.
+            for (auto c_out : {0, 1, 2}) {
+              // Spin-color index (0, ..., 5).
+              auto const sc_out = 3 * two_s_out + c_out;
+              // SIMD vector.
+              for (auto v = 0; v < veclen; ++v) {
+                cplx_mul_acc(out[block][c_out][four_s_out][re][v],
+                             out[block][c_out][four_s_out][im][v],
+                             block_in[sc_out][sc_in][re][v],
+                             block_in[sc_out][sc_in][im][v],
+                             in[block][c_in][four_s_in][re][v],
+                             in[block][c_in][four_s_in][im][v]);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+  RAII container for checkerboarded four spinors.
+
+  The four spinors are C-style arrays with no length information and most
+  importantly no cleanup. This wrapper enables automatic cleanup using the
+  QPhiX::Geometry object.
+
+  Perhaps it would be even better to use `std::vector` with a custom allocator
+  for this structure.
+  */
+template <typename FT, int veclen, int soalen, bool compress12>
+class FourSpinorCBWrapper {
+ public:
+  typedef
+      typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FourSpinorBlock FourSpinorBlock;
+
+  FourSpinorCBWrapper(::QPhiX::Geometry<FT, veclen, soalen, compress12> &geom_)
+      : geom(geom_), spinor(geom.allocCBFourSpinor()) {}
+
+  ~FourSpinorCBWrapper() { geom.free(spinor); }
+
+  FourSpinorBlock const *data() const { return spinor; }
+  FourSpinorBlock *data() { return spinor; }
+
+  size_t num_blocks() const { return get_num_blocks(geom); }
+
+  FourSpinorBlock &operator[](size_t i) { return spinor[i]; }
+
+ private:
+  ::QPhiX::Geometry<FT, veclen, soalen, compress12> &geom;
+  FourSpinorBlock *const spinor;
+};
 
 template <typename FT, int veclen, int soalen, bool compress12>
 class Dslash {
@@ -72,8 +218,8 @@ class Dslash {
   /**
     Forwarder for the `dslash`.
 
-    \todo Make this member function `const`. For this the member function in QPhiX that is called
-    internally must be marked `const` as well.
+    \todo Make this member function `const`. For this the member function in
+    QPhiX that is called internally must be marked `const` as well.
     */
   virtual void dslash(Spinor *const res,
                       const Spinor *const psi,
@@ -215,7 +361,7 @@ void WilsonTMDslash<FT, veclen, soalen, compress12>::helper_A_chi(Spinor *const 
                                                                   Spinor const *const in,
                                                                   double const factor_a,
                                                                   double const factor_b) {
-  size_t const num_blocks = upstream_dslash.getGeometry().get_num_blocks();
+  size_t const num_blocks = get_num_blocks(upstream_dslash.getGeometry());
   for (size_t block = 0u; block < num_blocks; ++block) {
     for (int color = 0; color < 3; ++color) {
       for (int spin_block = 0; spin_block < 2; ++spin_block) {
@@ -236,5 +382,126 @@ void WilsonTMDslash<FT, veclen, soalen, compress12>::helper_A_chi(Spinor *const 
     }
   }
 };
-}
 
+template <typename FT, int veclen, int soalen, bool compress12>
+class WilsonClovDslash : public Dslash<FT, veclen, soalen, compress12> {
+ public:
+  typedef typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FourSpinorBlock Spinor;
+  typedef typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::SU3MatrixBlock SU3MatrixBlock;
+  typedef typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::CloverBlock CloverBlock;
+
+  WilsonClovDslash(::QPhiX::Geometry<FT, veclen, soalen, compress12> *geom_,
+                   double const t_boundary_,
+                   double const aniso_coeff_S_,
+                   double const aniso_coeff_T_,
+                   double const mass_,
+                   CloverBlock *const clover_,
+                   CloverBlock *const inv_clover_)
+      : upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
+        mass_factor_alpha(4.0 + mass_),
+        mass_factor_beta(1.0 / (4.0 * mass_factor_alpha)),
+        clover(clover_),
+        inv_clover(inv_clover_) {}
+
+  void A_chi(Spinor *const out, Spinor const *const in, int const isign_ignored) override {
+    clover_product(out, in, clover, upstream_dslash.getGeometry());
+  }
+
+  void A_inv_chi(Spinor *const out, Spinor const *const in, int const isign_ignored) override {
+    clover_product(out, in, inv_clover, upstream_dslash.getGeometry());
+  }
+
+  void dslash(Spinor *const res,
+              const Spinor *const psi,
+              const SU3MatrixBlock *const u,
+              int const isign,
+              int const cb) override {
+    upstream_dslash.dslash(res, psi, u, inv_clover, isign, cb);
+  }
+
+  void achimbdpsi(Spinor *const res,
+                  const Spinor *const psi,
+                  const Spinor *const chi,
+                  const SU3MatrixBlock *const u,
+                  double const alpha,
+                  double const beta,
+                  int const isign,
+                  int const cb) override {
+    upstream_dslash.dslashAChiMinusBDPsi(res, psi, chi, u, clover, mass_factor_beta, isign, cb);
+  }
+
+ private:
+  ::QPhiX::ClovDslash<FT, veclen, soalen, compress12> upstream_dslash;
+
+  double const mass_factor_alpha;
+  double const mass_factor_beta;
+
+  CloverBlock *const clover;
+  CloverBlock *const inv_clover;
+};
+
+template <typename FT, int veclen, int soalen, bool compress12>
+class WilsonClovTMDslash : public Dslash<FT, veclen, soalen, compress12> {
+ public:
+  typedef typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FourSpinorBlock Spinor;
+  typedef typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::SU3MatrixBlock SU3MatrixBlock;
+  typedef
+      typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FullCloverBlock FullCloverBlock;
+
+  WilsonClovTMDslash(::QPhiX::Geometry<FT, veclen, soalen, compress12> *geom_,
+                     double const t_boundary_,
+                     double const aniso_coeff_S_,
+                     double const aniso_coeff_T_,
+                     double const mass_,
+                     double const twisted_mass_,
+                     FullCloverBlock *const clover_[2],
+                     FullCloverBlock *const inv_clover_[2])
+      : upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
+        mass_factor_alpha(4.0 + mass_),
+        mass_factor_beta(0.25),
+        derived_mu(twisted_mass_ / mass_factor_alpha),
+        derived_mu_inv(mass_factor_alpha /
+                       (mass_factor_alpha * mass_factor_alpha + twisted_mass_ * twisted_mass_)),
+        clover(clover_),
+        inv_clover(inv_clover_) {}
+
+  void A_chi(Spinor *const out, Spinor const *const in, int const isign) override {
+    full_clover_product(out, in, clover[isign], upstream_dslash.getGeometry());
+  }
+
+
+  void A_inv_chi(Spinor *const out, Spinor const *const in, int const isign) override {
+    full_clover_product(out, in, inv_clover[isign], upstream_dslash.getGeometry());
+  }
+
+  void dslash(Spinor *const res,
+              const Spinor *const psi,
+              const SU3MatrixBlock *const u,
+              int const isign,
+              int const cb) override {
+    upstream_dslash.dslash(res, psi, u, inv_clover, isign, cb);
+  }
+
+  void achimbdpsi(Spinor *const res,
+                  const Spinor *const psi,
+                  const Spinor *const chi,
+                  const SU3MatrixBlock *const u,
+                  double const alpha,
+                  double const beta,
+                  int const isign,
+                  int const cb) override {
+    upstream_dslash.dslashAChiMinusBDPsi(res, psi, chi, u, clover, mass_factor_beta, isign, cb);
+  }
+
+ private:
+  ::QPhiX::TMClovDslash<FT, veclen, soalen, compress12> upstream_dslash;
+
+  double const mass_factor_alpha;
+  double const mass_factor_beta;
+  double const derived_mu;
+  double const derived_mu_inv;
+
+  FullCloverBlock *const clover[2];
+  FullCloverBlock *const inv_clover[2];
+};
+}
