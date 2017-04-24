@@ -124,6 +124,20 @@ extern "C"
   extern int nblocks_t, nblocks_x, nblocks_y, nblocks_z;
   extern double kappa_dflgen, mu_dflgen, kappa_dfl, mu_dfl, kappa_Msap, mu_Msap;
 
+  extern int mg_setup_iter;
+  extern int mg_coarse_setup_iter;
+  extern int mg_Nvec;
+  extern int mg_lvl;
+  extern int mg_blk[4];
+  extern int mg_mixed_prec;
+  extern int mg_setup_mu_set;
+  extern double mg_setup_mu;
+  extern double mg_cmu_factor;
+  extern double mg_dtau_update;
+  extern double mg_rho_update;
+  extern int mg_update_setup_iter;
+  extern int mg_omp_num_threads;
+
   int read_input(char *);
   int reread_input(char *);
   

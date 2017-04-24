@@ -223,13 +223,20 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
     sw_invert(EE, mnl->mu);
   }
 
-  chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
-               mnl->csg_N, mnl->csg_n, N, mnl->Qsq);
   g_sloppy_precision_flag = 0;
-  mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->pf, mnl->solver_params, mnl->maxiter, mnl->accprec,  
-                                 g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver); 
-  mnl->Qm(mnl->w_fields[0], mnl->w_fields[0]);
 
+  if( mnl->solver == MG ){
+      chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+		   mnl->csg_N, mnl->csg_n, N, mnl->Qp);
+      mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->pf, mnl->solver_params, mnl->maxiter, mnl->accprec,  
+				     g_relative_precision_flag, VOLUME/2, mnl->Qp, mnl->solver); 
+  } else {
+      chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+		   mnl->csg_N, mnl->csg_n, N, mnl->Qsq);
+      mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->pf, mnl->solver_params, mnl->maxiter, mnl->accprec,  
+				     g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver); 
+      mnl->Qm(mnl->w_fields[0], mnl->w_fields[0]);
+  }
   g_sloppy_precision_flag = save_sloppy;
   /* Compute the energy contr. from first field */
   mnl->energy1 = square_norm(mnl->w_fields[0], N, 1);

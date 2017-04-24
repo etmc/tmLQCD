@@ -1,10 +1,7 @@
 /* config.h.in.  Generated from configure.in by autoheader.  */
 
-/* Align base */
-#undef ALIGN
-
-/* Align base */
-#undef ALIGN_BASE
+#ifndef CONFIG_H_IN
+#define CONFIG_H_IN
 
 /* Optimize for Blue Gene/L */
 #undef BGL
@@ -70,11 +67,17 @@
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
 
+/* 1 if clock_gettime is available for use in benchmark */
+#undef HAVE_CLOCK_GETTIME
+
 /* Compile with MPI support */
 #undef TM_USE_MPI
 
 /* Compile with OpenMP support */
 #undef TM_USE_OMP
+
+/* Compile with FFTW support */
+#undef HAVE_FFTW
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
@@ -151,6 +154,9 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* Index independent addressing */
+#undef _INDEX_INDEP_GEOM
+
 /* T parallelisation */
 #undef PARALLELT
 
@@ -169,6 +175,20 @@
 /* XYZ parallelisation */
 #undef PARALLELXYZ
 
+/* timeslice-splitted communications */
+#undef _USE_TSPLITPAR
+
+/* Fixed volume at compiletime */
+#undef FIXEDVOLUME
+
+/* Define to 1 if fseeko (and presumably ftello) exists and is declared. */
+#undef HAVE_FSEEKO
+
+/* Alignment for arrays -- necessary for SSE and automated vectorization */
+#undef ALIGN_BASE
+
+/* Alignment compiler hint macro */
+#undef ALIGN
 /* XYZT parallelisation */
 #undef PARALLELXYZT
 
@@ -239,6 +259,9 @@
 /* Define for large files, on AIX-style hosts. */
 #undef _LARGE_FILES
 
+/* Use even/odd geometry in the gauge fields */
+#undef _NEW_GEOMETRY
+
 /* Compile with MPI support */
 #undef _MPI
 
@@ -275,10 +298,41 @@
 /* Define to `long int' if <sys/types.h> does not define. */
 #undef off_t
 
+/* Define to `unsigned' if <sys/types.h> does not define. */
+#undef size_t
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
+
+/* Define to 1 if the system has the type `uint16_t'. */
+#undef HAVE_UINT16_T
+
+/* Define to 1 if the system has the type `uint32_t'. */
+#undef HAVE_UINT32_T
+
+/* Define to 1 if the system has the type `uint64_t'. */
+#undef HAVE_UINT64_T
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+
+/* Define to 1 if Dirac operator with halfspinor should be used */
+#undef _USE_HALFSPINOR
+
+/* Define to 1 if shmem API should be used */
+#undef _USE_SHMEM
+
+/* Define to 1 if KOJAK instrumentalisation should be done*/
+#undef _KOJAK_INST
+
 /* Define to the equivalent of the C99 'restrict' keyword, or to
    nothing if this is not supported.  Do not define if restrict is
    supported directly.  */
 #undef restrict
+
 /* Work around a bug in Sun C++: it does not support _Restrict or
    __restrict__, even though the corresponding Sun C compiler ends up with
    "#define restrict _Restrict" or "#define restrict __restrict__" in the
@@ -289,5 +343,25 @@
 # define __restrict__
 #endif
 
-/* Define to `unsigned int' if <sys/types.h> does not define. */
-#undef size_t
+/* Define to 1 if persistent MPI calls for halfspinor should be used */
+#undef _PERSISTENT
+
+/* Define to 1 if non-blocking MPI calls for spinor and gauge should be used */
+#undef _NON_BLOCKING
+
+/* Define if we want to use CUDA GPU */
+#undef HAVE_GPU
+
+/* Define if we want to compute the LapH eigenvectors */
+#undef WITHLAPH
+
+/* Define to 1 if you have the `quda' library (-lquda). */
+#undef HAVE_LIBQUDA
+
+/* Using QUDA GPU */
+#undef QUDA
+
+/* Using DDalphaAMG */
+#undef DDalphaAMG
+
+#endif

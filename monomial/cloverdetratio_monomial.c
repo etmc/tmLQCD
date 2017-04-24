@@ -260,12 +260,20 @@ void cloverdetratio_heatbath(const int id, hamiltonian_field_t * const hf) {
   g_mu3 = mnl->rho2;
   zero_spinor_field(mnl->pf,VOLUME/2);
 
-  mnl->iter0 = solve_degenerate(mnl->pf, mnl->w_fields[1], mnl->solver_params, mnl->maxiter, mnl->accprec,  
-		      g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver); 
-
-  chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
-		      mnl->csg_N, &mnl->csg_n, VOLUME/2);
-  mnl->Qm(mnl->pf, mnl->pf);
+  if( mnl->solver == MG ){
+      mnl->iter0 = solve_degenerate(mnl->pf, mnl->w_fields[1], mnl->solver_params, mnl->maxiter, mnl->accprec,  
+				    g_relative_precision_flag, VOLUME/2, mnl->Qp, mnl->solver); 
+      
+      chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
+			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
+  } else {
+      mnl->iter0 = solve_degenerate(mnl->pf, mnl->w_fields[1], mnl->solver_params, mnl->maxiter, mnl->accprec,  
+				    g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver); 
+      
+      chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
+			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
+      mnl->Qm(mnl->pf, mnl->pf);
+  }
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
@@ -299,10 +307,15 @@ double cloverdetratio_acc(const int id, hamiltonian_field_t * const hf) {
   chrono_guess(mnl->w_fields[0], mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array, 
 	       mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_plus_psi);
   g_sloppy_precision_flag = 0;    
-  mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->solver_params, mnl->maxiter, mnl->accprec,  
-		      g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver);
-  mnl->Qm(mnl->w_fields[0], mnl->w_fields[0]);
 
+  if( mnl->solver == MG ){
+      mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->solver_params, mnl->maxiter, 
+				     mnl->accprec, g_relative_precision_flag, VOLUME/2, mnl->Qp, mnl->solver);
+  } else {
+      mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->solver_params, mnl->maxiter, 
+				     mnl->accprec, g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver);
+      mnl->Qm(mnl->w_fields[0], mnl->w_fields[0]);
+  }
   g_sloppy_precision_flag = save_sloppy;
 
   /* Compute the energy contr. from second field */

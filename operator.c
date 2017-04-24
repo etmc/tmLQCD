@@ -63,6 +63,10 @@
 #ifdef QUDA
 #  include "quda_interface.h"
 #endif
+#ifdef DDalphaAMG
+#  include "DDalphaAMG_interface.h"
+#endif
+
 
 void dummy_D(spinor * const, spinor * const);
 void dummy_Mee(spinor * const, spinor * const, double const);
@@ -314,7 +318,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
     g_c_sw = optr->c_sw;
     if(optr->type == CLOVER) {
       if (g_cart_id == 0 && g_debug_level > 1) {
-        printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
+        printf("#\n# csw = %.12f, computing clover leafs\n", g_c_sw);
       }
       init_sw_fields(VOLUME);
       
@@ -332,7 +336,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       // we need this here again for the sign switch at i == 1
       g_mu = optr->mu;
       if (g_cart_id == 0) {
-        printf("#\n# 2 kappa mu = %e, kappa = %e, c_sw = %e\n", g_mu, g_kappa, g_c_sw);
+        printf("#\n# 2 kappa mu = %.12f, kappa = %.12f, c_sw = %.12f\n", g_mu, g_kappa, g_c_sw);
       }
       if(i > 0) {
         zero_spinor_field(optr->prop0, VOLUME/2);

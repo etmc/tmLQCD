@@ -1,4 +1,5 @@
-\documentclass[a4paper,12pt,dvips]{article}
+\documentclass[a4paper,12pt]{article}
+\usepackage{graphicx}
 %amsmath
 \usepackage{amssymb}
 \usepackage{amsmath}
@@ -15,6 +16,11 @@
 \usepackage{pifont}
 \usepackage{algorithm}
 \usepackage{algorithmic}
+\usepackage{fancyvrb}
+
+\makeatletter
+\newcommand\footnoteref[1]{\protected@xdef\@thefnmark{\ref{#1}}\@footnotemark}
+\makeatother
 
 %\setlength{\parindent}{0pt}
 % Absatzabstand
@@ -71,6 +77,7 @@
 
 \section{Interfaces to external QCD libraries}
 \myinput{quda.tex}
+\myinput{DDalphaAMG.tex}
 
 \clearpage
 \bibliographystyle{h-physrev5}

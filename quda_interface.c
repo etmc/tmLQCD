@@ -589,7 +589,7 @@ int invert_quda_direct(double * const propagator, double * const source,
     inv_param.inv_type = QUDA_CG_INVERTER;
     if(g_proc_id == 0) {
       printf("# QUDA: Using mixed precision CG!\n");
-      printf("# QUDA: mu = %f, kappa = %f\n", optr->mu/2./optr->kappa, optr->kappa);
+      printf("# QUDA: mu = %.12f, kappa = %.12f\n", optr->mu/2./optr->kappa, optr->kappa);
       fflush(stdout);
     }
   }
@@ -753,7 +753,7 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
     inv_param.inv_type = QUDA_CG_INVERTER;
     if(g_proc_id == 0) {
       printf("# QUDA: Using mixed precision CG!\n");
-      printf("# QUDA: mu = %f, kappa = %f\n", g_mu/2./g_kappa, g_kappa);
+      printf("# QUDA: mu = %.12f, kappa = %.12f\n", g_mu/2./g_kappa, g_kappa);
       fflush(stdout);
     }
   }
@@ -893,7 +893,7 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
     inv_param.inv_type = QUDA_CG_INVERTER;
     if(g_proc_id == 0) {
       printf("# QUDA: Using mixed precision CG!\n");
-      printf("# QUDA: mu = %f, kappa = %f\n", g_mu/2./g_kappa, g_kappa);
+      printf("# QUDA: mu = %.12f, kappa = %.12f\n", g_mu/2./g_kappa, g_kappa);
       fflush(stdout);
     }
   }
