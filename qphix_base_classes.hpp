@@ -114,12 +114,12 @@ class WilsonDslash : public Dslash<FT, veclen, soalen, compress12> {
 
   void A_chi(Spinor *const out, Spinor const *const in, int const isign) override {
     int const n_blas_simt = 1;
-    ::QPhiX::axy(mass_factor_beta, in, out, upstream_dslash.getGeometry(), n_blas_simt);
+    ::QPhiX::axy(mass_factor_alpha, in, out, upstream_dslash.getGeometry(), n_blas_simt);
   }
 
   void A_inv_chi(Spinor *const out, Spinor const *const in, int const isign) override {
     int const n_blas_simt = 1;
-    ::QPhiX::axy(1.0 / mass_factor_beta, in, out, upstream_dslash.getGeometry(), n_blas_simt);
+    ::QPhiX::axy(1.0 / mass_factor_alpha, in, out, upstream_dslash.getGeometry(), n_blas_simt);
   }
 
   void dslash(Spinor *const res,
