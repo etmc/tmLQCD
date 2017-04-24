@@ -30,6 +30,11 @@ size_t constexpr im = 1;
 int const n_blas_simt = 1;
 }
 
+template <typename FT, int veclen, int soalen, bool compress12>
+size_t get_num_blocks(::QPhiX::Geometry<FT, veclen, soalen, compress12> &geom) {
+  return geom.Nt() * geom.Nz() * geom.Ny() * geom.nVecs();
+}
+
 /**
   Complex multiplication accumulate.
 
@@ -50,7 +55,7 @@ void clover_product(
   ::QPhiX::zeroSpinor<FT, veclen, soalen, compress12>(out, geom, n_blas_simt);
 
   // Iterate through all the block.
-  auto const num_blocks = geom.get_num_blocks();
+  auto const num_blocks = get_num_blocks(geom);
   for (auto block = 0u; block < num_blocks; ++block) {
     // The clover term is block-diagonal in spin. Therefore we need
     // to iterate over the two blocks of spin.
@@ -111,7 +116,7 @@ void full_clover_product(
   ::QPhiX::zeroSpinor<FT, veclen, soalen, compress12>(out, geom, n_blas_simt);
 
   // Iterate through all the block.
-  auto const num_blocks = geom.get_num_blocks();
+  auto const num_blocks = get_num_blocks(geom);
   for (auto block = 0u; block < num_blocks; ++block) {
     // The clover term is block-diagonal in spin. Therefore we need
     // to iterate over the two blocks of spin.
@@ -175,7 +180,7 @@ class FourSpinorCBWrapper {
   FourSpinorBlock const *data() const { return spinor; }
   FourSpinorBlock *data() { return spinor; }
 
-  size_t num_blocks() const { return geom.get_num_blocks(); }
+  size_t num_blocks() const { return get_num_blocks(geom); }
 
   FourSpinorBlock &operator[](size_t i) { return spinor[i]; }
 
@@ -354,7 +359,7 @@ void WilsonTMDslash<FT, veclen, soalen, compress12>::helper_A_chi(Spinor *const 
                                                                   Spinor const *const in,
                                                                   double const factor_a,
                                                                   double const factor_b) {
-  size_t const num_blocks = upstream_dslash.getGeometry().get_num_blocks();
+  size_t const num_blocks = get_num_blocks(upstream_dslash.getGeometry());
   for (size_t block = 0u; block < num_blocks; ++block) {
     for (int color = 0; color < 3; ++color) {
       for (int spin_block = 0; spin_block < 2; ++spin_block) {
