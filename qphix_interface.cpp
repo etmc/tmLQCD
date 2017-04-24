@@ -500,7 +500,7 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
   // tmLQCD only stores kappa, QPhiX uses the mass. Convert here.
   double const mass = 1 / (2.0 * g_kappa) - 4;
 
-#if 1 // Change the operator to use here.
+#if 0 // Change the operator to use here.
   tmlqcd::WilsonDslash<FT, V, S, compress> concrete_dslash(&geom, t_boundary, coeff_s, coeff_t, mass);
 #else
   tmlqcd::WilsonTMDslash<FT, V, S, compress> concrete_dslash(&geom, t_boundary, coeff_s, coeff_t, mass, 0.0);

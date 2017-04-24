@@ -281,7 +281,7 @@ int main(int argc, char *argv[]) {
   // TODO: This should be hidden in the interface
   _initQphix(argc, argv, /* By = */ 2, /* Bz = */ 2, /* Ncores = */ 1,
              /* Sy = */ 1, /* Sz = */ 1,
-             /* PadXY = */ 1, /* PadXYZ = */ 1, /* MinCt = */ 1,
+             /* PadXY = */ 0, /* PadXYZ = */ 0, /* MinCt = */ 1,
              /* compress12 = */ 1, QPHIX_DOUBLE_PREC);
 
   if (g_proc_id == 0) {
