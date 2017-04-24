@@ -688,17 +688,23 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
   ************************************************/
 
   // Time Boundary Conditions and Anisotropy Coefficents
-  double t_boundary = 1.0;
-  double coeff_s = 1.0;
-  double coeff_t = 1.0;
+  const double t_boundary = 1.0;
+  const double coeff_s = 1.0;
+  const double coeff_t = 1.0;
 
   // The Wilson mass re-express in terms of \kappa
-  double mass = 1.0 / (2.0 * g_kappa) - 4.0;
+  const double mass = 1.0 / (2.0 * g_kappa) - 4.0;
+
+  // Create a Wilson Dslash for source preparation
+  // and solution reconstruction
+  masterPrintf("# Creating plain QPhiX Wilson Dslash (for preparation)...\n");
+  QPhiX::Dslash<FT, V, S, compress>* WilsonDslash =
+    new QPhiX::Dslash<FT, V, S, compress>(&geom, t_boundary, coeff_s, coeff_t);
+  masterPrintf("# ...done.\n");
 
   // Create a Dslash & an even-odd preconditioned Fermion Matrix object,
   // depending on the chosen fermion action
-  //.FIXME: This must be a pointer to an abstract Dslash object
-  Dslash<FT, V, S, compress>* DslashQPhiX;
+  tmlqcd::Dslash<FT, V, S, compress>* DslashQPhiX;
   EvenOddLinearOperator<FT, V, S, compress>* FermionMatrixQPhiX;
   if( g_mu != 0.0 && g_c_sw > 0.0 ) { // TWISTED-MASS-CLOVER
     // TODO: Implement me!
@@ -717,7 +723,7 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
     abort();
   } else { // WILSON
     masterPrintf("# Creating QPhiX Wilson Dslash...\n");
-    DslashQPhiX = new Dslash<FT, V, S, compress>(&geom, t_boundary, coeff_s, coeff_t);
+    DslashQPhiX = new tmlqcd::WilsonDslash<FT, V, S, compress>(&geom, t_boundary, coeff_s, coeff_t, mass);
     masterPrintf("# ...done.\n");
 
     masterPrintf("# Creating QPhiX Wilson Fermion Matrix...\n");
@@ -770,17 +776,24 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
                          reinterpret_cast<double*>(qphix_in[0]),
                          reinterpret_cast<double*>(qphix_in[1]));
 
-  // 2. Prepare the odd (cb0) source:
+  // 2. Prepare the odd (cb0) source
   //
-  //      \tilde b_o = \kappa Dslash_oe b_e + b_o
+  //      \tilde b_o = 1/2 Dslash^{Wilson}_oe A^{-1}_{ee} b_e + b_o
   //
-  // in two steps
-  // a) Apply Dslash to b_e and save result in qphix_in_prepared
-  // b) Apply AYPX to rescale last result (=y) and add b_o (=x)
+  // in three steps:
+  // a) Apply A^{-1} to b_e and save result in qphix_buffer
+  // b) Apply Wilson Dslash to qphix_buffer and save result in qphix_in_prepared
+  // c) Apply AYPX to rescale last result (=y) and add b_o (=x)
 
-  DslashQPhiX->dslash(qphix_in_prepared, qphix_in[1], u_packed[0],
-      /* non-conjugate */ 1, /* target cb == */ 0);
-  QPhiX::aypx(g_kappa, qphix_in[0], qphix_in_prepared, geom, n_blas_simt);
+  DslashQPhiX->A_inv_chi(qphix_buffer, // out spinor
+                         qphix_in[1],  // in spinor
+                         1);           // non-conjugate
+  WilsonDslash->dslash(qphix_in_prepared, // out spinor
+                       qphix_buffer,      // in spinor
+                       u_packed[0],       // gauge field on target cb
+                       1,                 // non-conjugate
+                       0);                // target cb == odd
+  QPhiX::aypx(0.5, qphix_in[0], qphix_in_prepared, geom, n_blas_simt);
 
   masterPrintf("# ...done.\n");
 
@@ -814,14 +827,16 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
     // here, that is, isign = -1 for the QPhiX CG solver.
     // After that multiply with M^dagger:
     //   qphix_out[0] = M^dagger M^dagger^-1 M^-1 qphix_in_prepared
-    (*SolverQPhiX)(qphix_buffer, qphix_in_prepared, RsdTarget, niters, rsd_final, site_flops, mv_apps, -1, verbose);
+    (*SolverQPhiX)(qphix_buffer, qphix_in_prepared, RsdTarget, niters, rsd_final,
+                   site_flops, mv_apps, -1, verbose);
     (*FermionMatrixQPhiX)(qphix_out[0], qphix_buffer, /* conjugate */ -1);
 
   } else if(solver_flag == BICGSTAB) {
 
     // USING BiCGStab:
     // Solve M qphix_out[0] = qphix_in_prepared, directly.
-    (*SolverQPhiX)(qphix_out[0], qphix_in_prepared, RsdTarget, niters, rsd_final, site_flops, mv_apps, 1, verbose);
+    (*SolverQPhiX)(qphix_out[0], qphix_in_prepared, RsdTarget, niters, rsd_final,
+                   site_flops, mv_apps, 1, verbose);
 
   }
   double end = omp_get_wtime();
@@ -841,19 +856,24 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
 
   masterPrintf("# Reconstruction even solution...\n");
 
-  // 1. Reconstruct the even (cb1) solution:
+  // 1. Reconstruct the even (cb1) solution
   //
-  //      x_e = 2 * \kappa (b_e + 1/2 Dslash_eo x_o)
+  //      x_e = A^{-1}_{ee} (b_e + 1/2 Dslash^{Wilson}_eo x_o)
   //
-  // in three steps
-  // a) Apply Dslash to x_o and save result in qphix_out[1]
-  // b) Rescale qphix_out[1] by \kappa
-  // c) Apply AXPY to add 2 * \kappa * b_e
+  // in three steps:
+  // b) Apply Wilson Dslash to x_o and save result in qphix_buffer
+  // c) Apply AYPX to rescale last result (=y) and add b_e (=x)
+  // c) Apply A^{-1} to qphix_buffer and save result in x_e
 
-  DslashQPhiX->dslash(qphix_buffer, qphix_out[0], u_packed[1],
-      /* non-conjugate */ 1, /* target cb == */ 1);
-  QPhiX::axy(g_kappa, qphix_buffer, qphix_out[1], geom, n_blas_simt);
-  QPhiX::axpy(2.0 * g_kappa, qphix_in[1], qphix_out[1], geom, n_blas_simt);
+  WilsonDslash->dslash(qphix_buffer, // out spinor
+                       qphix_out[0], // in spinor
+                       u_packed[1],  // gauge field on target cb
+                       1,            // non-conjugate
+                       1);           // target cb == even
+  QPhiX::aypx(0.5, qphix_in[1], qphix_buffer, geom, n_blas_simt);
+  DslashQPhiX->A_inv_chi(qphix_out[1],  // out spinor
+                         qphix_buffer, // in spinor
+                         1);           // non-conjugate
 
   // 2. Reorder spinor fields back to tmLQCD, rescaling by a factor 1/\kappa
 
