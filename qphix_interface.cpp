@@ -503,7 +503,7 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
 #if 0 // Change the operator to use here.
   tmlqcd::WilsonDslash<FT, V, S, compress> concrete_dslash(&geom, t_boundary, coeff_s, coeff_t, mass);
 #else
-  tmlqcd::WilsonTMDslash<FT, V, S, compress> concrete_dslash(&geom, t_boundary, coeff_s, coeff_t, mass, 0.0);
+  tmlqcd::WilsonTMDslash<FT, V, S, compress> concrete_dslash(&geom, t_boundary, coeff_s, coeff_t, mass, 1.21);
 #endif
 
   tmlqcd::Dslash<FT, V, S, compress> &polymorphic_dslash = concrete_dslash;
@@ -715,13 +715,14 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
     abort();
   } else if( g_mu != 0.0 ) { // TWISTED-MASS
     masterPrintf("# Creating QPhiX Twisted Mass Wilson Dslash...\n");
+    const double TwistedMass = - g_mu / (2.0 * g_kappa);
     DslashQPhiX = new tmlqcd::WilsonTMDslash<FT, V, S, compress>
-      (&geom, t_boundary, coeff_s, coeff_t, mass, g_mu);
+      (&geom, t_boundary, coeff_s, coeff_t, mass, TwistedMass);
     masterPrintf("# ...done.\n");
 
     masterPrintf("# Creating QPhiX Twisted Mass Wilson Fermion Matrix...\n");
     FermionMatrixQPhiX = new EvenOddTMWilsonOperator<FT, V, S, compress>
-      (mass, g_mu, u_packed, &geom, t_boundary, coeff_s, coeff_t);
+      (mass, TwistedMass, u_packed, &geom, t_boundary, coeff_s, coeff_t);
     masterPrintf("# ...done.\n");
   } else if( g_c_sw > 0.0 ) { // WILSON CLOVER
     // TODO: Implement me!
@@ -853,8 +854,6 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
   masterPrintf("# Solver Time = %g sec\n", (end-start));
   masterPrintf("# Performance in GFLOPS = %g\n", 1.0e-9 * total_flops / (end-start));
 
-  masterPrintf("# ...done.\n");
-
   /**************************
    *                        *
    *  RECONSTRUCT SOLUTION  *
@@ -878,11 +877,11 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
                        1,            // non-conjugate
                        1);           // target cb == even
   QPhiX::aypx(0.5, qphix_in[1], qphix_buffer, geom, n_blas_simt);
-  DslashQPhiX->A_inv_chi(qphix_out[1],  // out spinor
+  DslashQPhiX->A_inv_chi(qphix_out[1], // out spinor
                          qphix_buffer, // in spinor
                          1);           // non-conjugate
 
-  // 2. Reorder spinor fields back to tmLQCD, rescaling by a factor 1/\kappa
+  // 2. Reorder spinor fields back to tmLQCD, rescaling by a factor 1/(2*\kappa)
 
   reorder_spinor_fromQphix(geom,
                            reinterpret_cast<double*>(tmlqcd_full_buffer),
@@ -902,7 +901,7 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
    *                *
   ******************/
 
-  masterPrintf("# Cleaning up\n\n");
+  masterPrintf("# Cleaning up\n");
 
   geom.free(packed_gauge_cb0);
   geom.free(packed_gauge_cb1);
@@ -917,7 +916,7 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
   // FIXME: This should be called properly somewhere else
   _endQphix();
 
-  masterPrintf("# ...done.\n");
+  masterPrintf("# ...done.\n\n");
 
   return niters;
 }
