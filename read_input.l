@@ -285,6 +285,9 @@ static inline void rmQuotes(char *str){
 %x MULTIGRID
 %x INITMULTIGRID
 
+%x EXACTDEFLATION
+%x INITEXACTDEFLATION
+
 %x INITOPERATOR
 %x TMOP
 %x DBTMOP
@@ -630,6 +633,104 @@ static inline void rmQuotes(char *str){
   }
 }
 
+
+<EXACTDEFLATION>{
+  {SPC}*Nev{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->deflator_params).nev = a;
+    if(myverbose) printf("  nev set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*Ncv{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->deflator_params).ncv = a;
+    if(myverbose) printf("  ncv set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EvalsKind{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->deflator_params).evals_kind  = a;
+    if(myverbose) printf("  evals_kind set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EvecsMaxiter{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->deflator_params).eig_maxiter = a;
+    if(myverbose) printf("  eig_maxiter set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EvecsTolerance{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z1] = %lf", name, &c);
+    (optr->deflator_params).eig_tol = c;
+    if(myverbose) printf("  eig_tol set to %lf line %d operator %d\n", c, line_of_file, current_operator);
+  }
+  {SPC}*ChebPolyDegree{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->deflator_params).cheb_k = a;
+    if(myverbose) printf("  cheb_k set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*AccMode{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->deflator_params).use_acc = a;
+    if(myverbose) printf("   polynomial acceleration mode set to  %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*CompEvecs{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->deflator_params).comp_evecs = a;
+    if(myverbose) printf("   compute evecs option set to   %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*LogFile{EQL}{FILENAME}+ {
+    sscanf(yytext, " %[a-zA-Z] = %s", name, fname);
+    strncpy( (optr->deflator_params).logfile, fname, 200);
+    if(myverbose) printf("   logfile name is  set to %s line %d operator %d\n", fname, line_of_file, current_operator);
+  }
+  {SPC}*EVminHPD{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z1] = %lf", name, &c);
+    (optr->deflator_params).op_evmin = c;
+    if(myverbose) printf("  op_evmin set to %lf line %d operator %d\n", c, line_of_file, current_operator);
+  }
+  {SPC}*EVmaxHPD{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z1] = %lf", name, &c);
+    (optr->deflator_params).op_evmax = c;
+    if(myverbose) printf("  op_evmax set to %lf line %d operator %d\n", c, line_of_file, current_operator);
+  }
+  {SPC}*EvecsRead{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->deflator_params).read_ev        = a;
+    if(myverbose) printf("  read_ev set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EvecsWrite{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->deflator_params).write_ev = a;
+    if(myverbose) printf("  write_ev set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*ProjectionType{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->deflator_params).projection_type = a;
+    if(myverbose) printf("  projection_type set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EvecsFile{EQL}{FILENAME}+ {
+    sscanf(yytext, " %[a-zA-Z] = %s", name, fname);
+    strncpy( (optr->deflator_params).evecs_filename, fname, 200);
+    if(myverbose) printf("   evecs file name is set to %s line %d operator %d\n", fname, line_of_file, current_operator);
+  }
+  {SPC}*EvecsWriteprec{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->deflator_params).evecs_writeprec = a;
+    if(myverbose) printf("   evecs precision for writing set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EvecsFileformat{EQL}{FILENAME}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, fname);
+    strncpy( (optr->deflator_params).evecs_fileformat, fname, 100);
+    if(myverbose) printf("   evecs precision for writing set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EvecsPrecision{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    (optr->deflator_params).prec = 64;
+    if(myverbose) printf("  precision for eigenvectors set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*EndExactDeflation{SPC}* {
+  if(myverbose) printf("EXACTDEFLATION parsed in line %d\n\n", line_of_file);
+  BEGIN(name_caller);
+  }
+}
+
 <INITMULTIGRID>AMG{SPC}* {
 #ifdef DDalphaAMG
  if(myverbose) printf("Initialising DDalphaAMG line %d\n", line_of_file); 
@@ -809,6 +910,10 @@ static inline void rmQuotes(char *str){
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->rel_prec = 0;
     if(myverbose) printf("  SolverRelativePrecision set to NO line %d operator %d\n",  line_of_file, current_operator);
+  }
+  {SPC}*BeginExactDeflation {
+    printf("[read_input] starting exact deflator init\n");
+    BEGIN(EXACTDEFLATION);
   }
   {SPC}*mcgdelta{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z1] = %lf", name, &c);
@@ -1185,6 +1290,12 @@ static inline void rmQuotes(char *str){
     exit(1);
 #endif
   }
+  exactdeflatedcg {
+    optr->solver = EXACTDEFLATEDCG;
+    if(myverbose) printf("  Solver set to EXACTDEFLATEDCG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+
 }
 
 
@@ -1214,6 +1325,11 @@ static inline void rmQuotes(char *str){
   DDalphaAMG {
     optr->solver = MG;
     if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  exactdeflatedcg {
+    optr->solver = EXACTDEFLATEDCG;
+    if(myverbose) printf("  Solver set to EXACTDEFLATEDCG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
 }
@@ -2484,7 +2600,7 @@ static inline void rmQuotes(char *str){
   BEGIN(comment_caller);
 }
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID>{SPC}*\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID,INITEXACTDEFLATION,EXACTDEFLATION>{SPC}*\n   {
   line_of_file++;
 }
 <*>{SPC}*\n                       {

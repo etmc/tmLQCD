@@ -130,6 +130,37 @@ int add_operator(const int type) {
   optr->inverter = &op_invert;
   optr->write_prop = &op_write_prop;
 
+  /* init deflator parameters */
+  (optr->deflator_params).type            = -1;
+  (optr->deflator_params).eoprec          = _default_even_odd_flag;
+  (optr->deflator_params).f               = NULL;
+  (optr->deflator_params).f32             = NULL;
+  (optr->deflator_params).f_final         = NULL;
+  (optr->deflator_params).f_initial       = NULL;
+  (optr->deflator_params).evecs           = NULL;
+  (optr->deflator_params).evals           = NULL;
+  (optr->deflator_params).prec            = 64;
+  (optr->deflator_params).nconv           = -1;
+  (optr->deflator_params).nev             = 0;
+  (optr->deflator_params).ncv             = 0;
+  (optr->deflator_params).evals_kind      = 0;
+  (optr->deflator_params).comp_evecs      = 0;
+  (optr->deflator_params).eig_tol         = 0.;
+  (optr->deflator_params).eig_maxiter     = 0;
+  (optr->deflator_params).use_acc         = 0;
+  (optr->deflator_params).cheb_k          = 0;
+  (optr->deflator_params).op_evmin        = 0.0;
+  (optr->deflator_params).op_evmax        = 0.0;
+  (optr->deflator_params).write_ev        = 0;
+  (optr->deflator_params).read_ev         = 0;
+  (optr->deflator_params).evecs_writeprec = 64;
+  (optr->deflator_params).init            = NULL;
+  strcpy( (optr->deflator_params).type_name,       "NA");
+  strcpy((optr->deflator_params).logfile,          "arpack_log" );
+  strcpy((optr->deflator_params).evecs_filename,   "eigenvectors");
+  strcpy((optr->deflator_params).evecs_fileformat, "single");
+
+
   /* Overlap needs special treatment */
   if(optr->type == OVERLAP) {
     optr->even_odd_flag = 0;
@@ -165,12 +196,28 @@ int init_operators() {
       optr = operator_list + i;
       /* This is a hack, it should be set on an operator basis. */
       optr->rel_prec = g_relative_precision_flag;
+
+      if(optr->solver == EXACTDEFLATEDCG) {
+        (optr->deflator_params).eoprec = optr->even_odd_flag;
+        (optr->deflator_params).type   = optr->type;
+        (optr->deflator_params).init   = make_exactdeflator;
+      }
+
       if(optr->type == TMWILSON || optr->type == WILSON) {
         if(optr->c_sw > 0) {
           init_sw_fields();
         }
         optr->applyM = &M_full;
         optr->applyQ = &Q_full;
+
+        if(optr->solver == EXACTDEFLATEDCG) {
+          if(optr->type == TMWILSON ) {
+            strcpy( (optr->deflator_params).type_name, "TMWILSON" );
+          } else if( optr->type == WILSON) {
+            strcpy( (optr->deflator_params).type_name, "WILSON" );
+          }
+        }
+
         if(optr->even_odd_flag) {
           optr->applyMee    = &Mee_psi;
           optr->applyMeeInv = &Mee_inv_psi;
@@ -179,6 +226,15 @@ int init_operators() {
           optr->applyQsq = &Qtm_pm_psi;
           optr->applyMp = &Mtm_plus_psi;
           optr->applyMm = &Mtm_minus_psi;
+
+          if(optr->solver == EXACTDEFLATEDCG) {
+            /* the the operators in the deflator */
+            (optr->deflator_params).f         = &Qtm_pm_psi;
+            (optr->deflator_params).f32       = &Qtm_pm_psi_32;
+            (optr->deflator_params).f_final   = &Qtm_plus_psi;
+            (optr->deflator_params).f_initial = &Qtm_minus_psi;
+          }
+
         }
         else {
           optr->applyQp = &Q_plus_psi;
@@ -186,6 +242,14 @@ int init_operators() {
           optr->applyQsq = &Q_pm_psi;
           optr->applyMp = &D_psi;
           optr->applyMm = &M_minus_psi;
+
+          if(optr->solver == EXACTDEFLATEDCG) {
+            /* the the operators in the deflator */
+            (optr->deflator_params).f         = &Q_pm_psi;
+            (optr->deflator_params).f32       = &Q_pm_psi_32;
+            (optr->deflator_params).f_final   = &Q_plus_psi;
+            (optr->deflator_params).f_initial = &Q_minus_psi;
+          }
         }
         if(optr->solver == CGMMS) {
           if (g_cart_id == 0 && optr->even_odd_flag == 1)
@@ -211,6 +275,11 @@ int init_operators() {
         }
         optr->applyM = &Msw_full;
         optr->applyQ = &Qsw_full;
+
+        if(optr->solver == EXACTDEFLATEDCG) {
+          strcpy( (optr->deflator_params).type_name, "CLOVER" );
+        }
+
         if(optr->even_odd_flag) {
           optr->applyMee    = &Mee_sw_psi;
           optr->applyMeeInv = &Mee_sw_inv_psi;
@@ -219,6 +288,14 @@ int init_operators() {
           optr->applyQsq = &Qsw_pm_psi;
           optr->applyMp = &Msw_plus_psi;
           optr->applyMm = &Msw_minus_psi;
+
+          if(optr->solver == EXACTDEFLATEDCG) {
+            /* the the operators in the deflator */
+            (optr->deflator_params).f         = &Qsw_pm_psi;
+            (optr->deflator_params).f32       = &Qsw_pm_psi_32;
+            (optr->deflator_params).f_final   = &Qsw_plus_psi;
+            (optr->deflator_params).f_initial = &Qsw_minus_psi;
+          }
         }
         else {
           optr->applyQp = &Qsw_full_plus_psi;
@@ -226,6 +303,14 @@ int init_operators() {
           optr->applyQsq = &Qsw_full_pm_psi;
           optr->applyMp = &D_psi;
           optr->applyMm = &Msw_full_minus_psi;
+
+          if(optr->solver == EXACTDEFLATEDCG) {
+            /* the the operators in the deflator */
+            (optr->deflator_params).f         = Qsw_full_pm_psi;
+            (optr->deflator_params).f32       = NULL;
+            (optr->deflator_params).f_final   = &Qsw_full_plus_psi;
+            (optr->deflator_params).f_initial = &Qsw_full_minus_psi;
+          }
         }
         if(optr->solver == CGMMS) {
           if (g_cart_id == 0 && optr->even_odd_flag == 1)

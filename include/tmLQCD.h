@@ -41,6 +41,9 @@ extern "C"
   typedef struct {
     unsigned int nproc, nproc_t, nproc_x, nproc_y, nproc_z, cart_id, proc_id, time_rank, omp_num_threads;
     unsigned int proc_coords[4];
+#ifdef TM_USE_MPI
+    MPI_Comm cart_grid;
+#endif
   } tmLQCD_mpi_params;
 
   int tmLQCD_invert_init(int argc, char *argv[], const int verbose, const int external_id);
@@ -57,6 +60,12 @@ extern "C"
   int invert_quda_direct(double * const propgator, double * const source,
                     const int op_id, const int gauge_persist);
 #endif
+
+  int tmLQCD_invert_eo(double * const propagator, double * const source, const int op_id);
+    
+  int tmLQCD_get_deflator_params(tmLQCD_deflator_params*params, const int op_id);
+  int tmLQCD_init_deflator(const int op_id);
+  int tmLQCD_set_deflator_fields(const int op_id1, const int op_id2);
 
 #ifdef __cplusplus
 }
