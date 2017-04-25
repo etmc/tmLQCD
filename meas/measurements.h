@@ -30,68 +30,64 @@
 #define max_no_measurements 20
 
 /* Give the measurement types an unambiguous ID*/
-enum MEAS_TYPE { 
-  ONLINE, 
-  PIONNORM, 
-  POLYAKOV, 
-  ORIENTED_PLAQUETTES,
-  GRADIENT_FLOW,
-  REWEIGHTING
-  };
+enum MEAS_TYPE
+{
+  ONLINE, PIONNORM, POLYAKOV, ORIENTED_PLAQUETTES, GRADIENT_FLOW, REWEIGHTING
+};
 
-
-
-
-typedef struct {
+typedef struct
+{
   enum MEAS_TYPE type;
   int initialised;
   int id;
-  
+
   /* for polyakov loop */
   int direction;
-  
+
   /* for maximal iterations in inversions for correlators */
   int max_iter;
-
 
   // random seed
   unsigned int seed;
 
-
   /* maximum number of slice, the source can be put
-    if the correlator is measured in T(Z)-direction this will be set to 
-    T(LZ) by init_measurements
-  */
+   if the correlator is measured in T(Z)-direction this will be set to
+   T(LZ) by init_measurements
+   */
   int max_source_slice;
-
 
   void* parameter;
 
   /* frequency of the measurement */
   int freq;
 
-
   /* how it's usually called */
   char name[100];
-  
-  /* functions for the measurement */
-  void (*measurefunc) (const int traj, const int id, const int ieo);
-	void (*destructor)(void* param);
-} measurement;
 
+  /* functions for the measurement */
+  void
+  (*measurefunc) (const int traj, const int id, const int ieo);
+  void
+  (*destructor) (void* param);
+} measurement;
 
 /* list of all monomials */
 extern measurement measurement_list[max_no_measurements];
 extern int no_measurements;
 
 /* add a new measurement to the list of measurements */
-int add_measurement(const enum MEAS_TYPE);
+int
+add_measurement (const enum MEAS_TYPE);
 /* initialise all measurements in the list */
-int init_measurements();
+int
+init_measurements ();
 /* free space again */
-void free_measurements();
+void
+free_measurements ();
 
-void dummy_meas(const int traj, const int id, const int ieo);
-void default_destructor(void* ptr);
+void
+dummy_meas (const int traj, const int id, const int ieo);
+void
+default_destructor (void* ptr);
 
 #endif
