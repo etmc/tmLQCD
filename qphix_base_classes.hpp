@@ -361,26 +361,38 @@ void WilsonTMDslash<FT, veclen, soalen, compress12>::helper_A_chi(Spinor *const 
                                                                   Spinor const *const in,
                                                                   double const factor_a,
                                                                   double const factor_b) {
-  size_t const num_blocks = get_num_blocks(upstream_dslash.getGeometry());
-  for (size_t block = 0u; block < num_blocks; ++block) {
-    for (int color = 0; color < 3; ++color) {
-      for (int spin_block = 0; spin_block < 2; ++spin_block) {
-        // Implement the $\gamma_5$ structure.
-        auto const signed_factor_a = factor_a * (spin_block == 0 ? 1.0 : -1.0);
+  auto const nVecs = upstream_dslash.getGeometry().nVecs();
+  auto const Pxy = upstream_dslash.getGeometry().getPxy();
+  auto const Pxyz = upstream_dslash.getGeometry().getPxyz();
 
-        for (int half_spin = 0; half_spin < 2; ++half_spin) {
-          auto const four_spin = 2 * spin_block + half_spin;
-          for (int v = 0; v < soalen; ++v) {
-            auto &out_bcs = out[block][color][four_spin];
-            auto const &in_bcs = in[block][color][four_spin];
+  for (uint64_t t = 0; t < T; t++)
+    for (uint64_t x = 0; x < LX/2; x++)
+      for (uint64_t y = 0; y < LY; y++)
+        for (uint64_t z = 0; z < LZ; z++) {
 
-            out_bcs[re][v] = factor_b * (in_bcs[re][v] + signed_factor_a * in_bcs[im][v]);
-            out_bcs[im][v] = factor_b * (in_bcs[im][v] - signed_factor_a * in_bcs[re][v]);
+          uint64_t const SIMD_vector = x / soalen;
+          uint64_t const x_internal = x % soalen;
+          uint64_t const qphix_idx = t * Pxyz + z * Pxy + y * nVecs + SIMD_vector;
+
+          for (int color = 0; color < 3; ++color) {
+            for (int spin_block = 0; spin_block < 2; ++spin_block) {
+              // Implement the $\gamma_5$ structure.
+              auto const signed_factor_a = factor_a * (spin_block == 0 ? 1.0 : -1.0);
+
+              for (int half_spin = 0; half_spin < 2; ++half_spin) {
+                auto const four_spin = 2 * spin_block + half_spin;
+                for (int v = 0; v < soalen; ++v) {
+                  auto &out_bcs = out[qphix_idx][color][four_spin];
+                  auto const &in_bcs = in[qphix_idx][color][four_spin];
+
+                  out_bcs[re][v] = factor_b * (in_bcs[re][v] + signed_factor_a * in_bcs[im][v]);
+                  out_bcs[im][v] = factor_b * (in_bcs[im][v] - signed_factor_a * in_bcs[re][v]);
+                }
+              }
+            }
           }
-        }
-      }
-    }
-  }
+
+        } // volume
 };
 
 template <typename FT, int veclen, int soalen, bool compress12>
