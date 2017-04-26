@@ -162,7 +162,7 @@ template <>
 const double rsdTarget<float>::value = 1.0e-7;
 
 template <>
-const double rsdTarget<double>::value = 1.0e-12;
+const double rsdTarget<double>::value = 1.0e-08;
 
 void checkQphixInputParameters();
 
@@ -983,9 +983,9 @@ int invert_eo_qphix(spinor * const Even_new,
     const int solver_flag,
     const int rel_prec,
     solver_params_t solver_params,
+    const SloppyPrecision sloppy,
     const CompressionType compression) {
 
-  masterPrintf("\n");
 
   checkQphixInputParameters();
 
@@ -1001,7 +1001,7 @@ int invert_eo_qphix(spinor * const Even_new,
            qphix_input_Sy, qphix_input_Sz,
            qphix_input_PadXY, qphix_input_PadXYZ, qphix_input_MinCt,
            compression, QPHIX_DOUBLE_PREC);
-    
+
     if (compress12) {
       return invert_eo_qphix_helper<double, VECLEN_DP, QPHIX_SOALEN, true>
         (Even_new,

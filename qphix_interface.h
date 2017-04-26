@@ -78,7 +78,8 @@ void _endQphix();
 // Wrapper functions for Full Solver and Dslash
 int invert_eo_qphix(spinor * const Even_new, spinor * const Odd_new, spinor * const Even,
     spinor * const Odd, const double precision, const int max_iter, const int solver_flag,
-    const int rel_prec, solver_params_t solver_params, const CompressionType compression);
+    const int rel_prec, solver_params_t solver_params, const SloppyPrecision sloppy,
+    const CompressionType compression);
 void D_psi_qphix(spinor* Odd_out, const spinor* Odd_in);
 
 #ifdef __cplusplus /* If this is a C++ compiler, end C linkage */
