@@ -222,11 +222,11 @@ void _endQphix() {}
 
 // Reorder the tmLQCD gauge field to a cb0 and a cb1 QPhiX gauge field
 template <typename FT, int VECLEN, int SOALEN, bool compress12>
-void reorder_gauge_toQphix(Geometry<FT, VECLEN, SOALEN, compress12> &geom, double *qphix_gauge_cb0,
-                           double *qphix_gauge_cb1) {
+void reorder_gauge_to_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, FT *qphix_gauge_cb0,
+                            FT *qphix_gauge_cb1) {
   double startTime = gettime();
   double *in;
-  double *out;
+  FT *out;
 
   // Number of elements in spin, color & complex
   // Here c1 is QPhiX's outer color, and c2 the inner one
@@ -315,16 +315,14 @@ void reorder_gauge_toQphix(Geometry<FT, VECLEN, SOALEN, compress12> &geom, doubl
 
   double endTime = gettime();
   double diffTime = endTime - startTime;
-  masterPrintf("  time spent in reorder_gauge_toQphix: %f secs\n", diffTime);
+  masterPrintf("  time spent in reorder_gauge_to_QPhiX: %f secs\n", diffTime);
 }
 
 // Reorder tmLQCD spinor to a cb0 and cb1 QPhiX spinor
 template <typename FT, int VECLEN, int SOALEN, bool compress12>
-void reorder_spinor_toQphix(Geometry<FT, VECLEN, SOALEN, compress12> &geom, double *tm_spinor,
-                            double *qphix_spinor_cb0, double *qphix_spinor_cb1) {
+void reorder_spinor_to_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, double const *tm_spinor,
+                             FT *qphix_spinor_cb0, FT *qphix_spinor_cb1) {
   double startTime = gettime();
-  double *in;
-  double *out;
 
   // Number of elements in spin, color & complex
   int Ns = 4;
@@ -360,7 +358,8 @@ void reorder_spinor_toQphix(Geometry<FT, VECLEN, SOALEN, compress12> &geom, doub
           // Calculate base point for every spinor field element (tmlQCD) or
           // for every SIMD vector of spinors, a.k.a FourSpinorBlock (QPhiX),
           // which will depend on the checkerboard (cb)
-          in = tm_spinor + Ns * Nc * Nz * tm_idx;
+          const double *in = tm_spinor + Ns * Nc * Nz * tm_idx;
+          FT *out;
           if ((t + x + y + z) & 1)
             out = qphix_spinor_cb1 + SOALEN * Nz * Nc * Ns * qphix_idx;  // cb1
           else
@@ -382,17 +381,15 @@ void reorder_spinor_toQphix(Geometry<FT, VECLEN, SOALEN, compress12> &geom, doub
 
   double endTime = gettime();
   double diffTime = endTime - startTime;
-  masterPrintf("  time spent in reorder_spinor_toQphix: %f secs\n", diffTime);
+  masterPrintf("  time spent in reorder_spinor_to_QPhiX: %f secs\n", diffTime);
 }
 
 // Reorder a cb0 and cb1 QPhiX spinor to a tmLQCD spinor
 template <typename FT, int VECLEN, int SOALEN, bool compress12>
-void reorder_spinor_fromQphix(Geometry<FT, VECLEN, SOALEN, compress12> &geom, double *tm_spinor,
-                              double *qphix_spinor_cb0, double *qphix_spinor_cb1,
-                              double normFac = 1.0) {
+void reorder_spinor_from_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, double *tm_spinor,
+                               FT const *qphix_spinor_cb0, FT const *qphix_spinor_cb1,
+                               double normFac = 1.0) {
   double startTime = gettime();
-  double *in;
-  double *out;
 
   // Number of elements in spin, color & complex
   int Ns = 4;
@@ -428,11 +425,12 @@ void reorder_spinor_fromQphix(Geometry<FT, VECLEN, SOALEN, compress12> &geom, do
           // Calculate base point for every spinor field element (tmlQCD) or
           // for every SIMD vector of spinors, a.k.a FourSpinorBlock (QPhiX),
           // which will depend on the checkerboard (cb)
+          const FT *in;
           if ((t + x + y + z) & 1)
             in = qphix_spinor_cb1 + SOALEN * Nz * Nc * Ns * qphix_idx;  // cb1
           else
             in = qphix_spinor_cb0 + SOALEN * Nz * Nc * Ns * qphix_idx;  // cb0
-          out = tm_spinor + Ns * Nc * Nz * tm_idx;
+          double *out = tm_spinor + Ns * Nc * Nz * tm_idx;
 
           // Copy the internal elements, performing a gamma basis transformation
           for (int spin = 0; spin < Ns; spin++)  // tmlQCD spin index
@@ -450,7 +448,7 @@ void reorder_spinor_fromQphix(Geometry<FT, VECLEN, SOALEN, compress12> &geom, do
 
   double endTime = gettime();
   double diffTime = endTime - startTime;
-  masterPrintf("  time spent in reorder_spinor_fromQphix: %f secs\n", diffTime);
+  masterPrintf("  time spent in reorder_spinor_from_QPhiX: %f secs\n", diffTime);
 }
 
 // Apply the Dslash to a full tmlQCD spinor and return a full tmlQCD spinor
@@ -524,9 +522,11 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
   u_packed[0] = packed_gauge_cb0;
   u_packed[1] = packed_gauge_cb1;
 
-  // Reorder (global) input gauge field from tmLQCD to QPhiX
-  reorder_gauge_toQphix(geom, (double *)u_packed[0],
-                        (double *)u_packed[1]);  // uses global tmlQCD gauge field as input
+  // Reorder (global) input gauge field from tmLQCD to QPhiX,
+  // which uses global tmlQCD gauge field as input
+  reorder_gauge_to_QPhiX(geom,
+                         reinterpret_cast<FT*>(u_packed[0]),
+                         reinterpret_cast<FT*>(u_packed[1]));
 
   /************************
    *                      *
@@ -549,7 +549,10 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
   QSpinor *tmp_spinor = (QSpinor *)geom.allocCBFourSpinor();
 
   // Reorder input spinor from tmLQCD to QPhiX
-  reorder_spinor_toQphix(geom, (double *)tmlqcd_in, (double *)qphix_in[0], (double *)qphix_in[1]);
+  reorder_spinor_to_QPhiX(geom,
+                          reinterpret_cast<double const*>(tmlqcd_in),
+                          reinterpret_cast<FT*>(qphix_in[0]),
+                          reinterpret_cast<FT*>(qphix_in[1]));
 
   // Apply QPhiX Dslash to qphix_in spinors
   polymorphic_dslash.dslash(qphix_out[1],
@@ -571,9 +574,11 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
   }
 
   // Reorder spinor fields back to tmLQCD
-  reorder_spinor_fromQphix(geom, (double *)tmlqcd_out, (double *)qphix_out[0],
-                           (double *)qphix_out[1], (1. * g_kappa));
-  reorder_spinor_fromQphix(geom, (double *)tmlqcd_in, (double *)qphix_in[0], (double *)qphix_in[1]);
+  reorder_spinor_from_QPhiX(geom,
+                            reinterpret_cast<double*>(tmlqcd_out),
+                            reinterpret_cast<FT*>(qphix_out[0]),
+                            reinterpret_cast<FT*>(qphix_out[1]),
+                            (1. * g_kappa));
 
   masterPrintf("Cleaning up\n");
 
@@ -645,7 +650,9 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
   u_packed[1] = packed_gauge_cb1;
 
   // Reorder (global) input gauge field from tmLQCD to QPhiX
-  reorder_gauge_toQphix(geom, (double *)u_packed[0], (double *)u_packed[1]);
+  reorder_gauge_to_QPhiX(geom,
+                         reinterpret_cast<FT*>(u_packed[0]),
+                         reinterpret_cast<FT*>(u_packed[1]));
 
   masterPrintf("# ...done.\n");
 
@@ -779,10 +786,10 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
                       tmlqcd_even_in,     // even spinor
                       tmlqcd_odd_in);     // odd spinor
 
-  reorder_spinor_toQphix(geom,
-                         reinterpret_cast<double*>(tmlqcd_full_buffer),
-                         reinterpret_cast<double*>(qphix_in[0]),
-                         reinterpret_cast<double*>(qphix_in[1]));
+  reorder_spinor_to_QPhiX(geom,
+                          (double*) tmlqcd_full_buffer,
+                          reinterpret_cast<FT*>(qphix_in[0]),
+                          reinterpret_cast<FT*>(qphix_in[1]));
 
   // 2. Prepare the odd (cb0) source
   //
@@ -883,11 +890,11 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
 
   // 2. Reorder spinor fields back to tmLQCD, rescaling by a factor 1/(2*\kappa)
 
-  reorder_spinor_fromQphix(geom,
-                           reinterpret_cast<double*>(tmlqcd_full_buffer),
-                           reinterpret_cast<double*>(qphix_out[0]),
-                           reinterpret_cast<double*>(qphix_out[1]),
-                           1.0 / (2.0 * g_kappa));
+  reorder_spinor_from_QPhiX(geom,
+                            reinterpret_cast<double*>(tmlqcd_full_buffer),
+                            reinterpret_cast<FT*>(qphix_out[0]),
+                            reinterpret_cast<FT*>(qphix_out[1]),
+                            1.0 / (2.0 * g_kappa));
 
   convert_lexic_to_eo(tmlqcd_even_out,     // new even spinor
                       tmlqcd_odd_out,      // new odd spinor
