@@ -224,31 +224,29 @@ void _endQphix() {}
 template <typename FT, int VECLEN, int SOALEN, bool compress12>
 void reorder_gauge_to_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, FT *qphix_gauge_cb0,
                             FT *qphix_gauge_cb1) {
-  double startTime = gettime();
-  double *in;
-  FT *out;
+  const double startTime = gettime();
 
   // Number of elements in spin, color & complex
   // Here c1 is QPhiX's outer color, and c2 the inner one
-  int Ns = 4;
-  int Nc1 = compress12 ? 2 : 3;
-  int Nc2 = 3;
-  int Nz = 2;
+  const int Ns = 4;
+  const int Nc1 = compress12 ? 2 : 3;
+  const int Nc2 = 3;
+  const int Nz = 2;
 
   // Geometric parameters for QPhiX data layout
-  auto nyg = geom.nGY();
-  auto nVecs = geom.nVecs();
-  auto Pxy = geom.getPxy();
-  auto Pxyz = geom.getPxyz();
+  const auto nyg = geom.nGY();
+  const auto nVecs = geom.nVecs();
+  const auto Pxy = geom.getPxy();
+  const auto Pxyz = geom.getPxyz();
 
   // This is needed to translate between the different
   // orderings of the direction index "\mu" in tmlQCD
   // and QPhiX, respectively
-  int change_dim[4] = {3, 0, 1, 2};
+  const int change_dim[4] = {3, 0, 1, 2};
 
   // Get the base pointer for the (global) tmlQCD gauge field
   uint64_t tm_idx = 0;
-  in = reinterpret_cast<double*>(&g_gauge_field[0][0].c00);
+  const double *in = reinterpret_cast<double*>(&g_gauge_field[0][0].c00);
 
   // This will loop over the entire lattice and calculate
   // the array and internal indices for both tmlQCD & QPhiX
@@ -259,15 +257,16 @@ void reorder_gauge_to_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, FT *
           // These are the QPhiX SIMD vector in checkerboarded x direction
           // (up to LX/2), the index inside one single Structure of Arrays (SOA)
           // and the internal position inside the ("packed") SIMD vector
-          uint64_t SIMD_vector = (x / 2) / SOALEN;
-          uint64_t x_one_SOA = (x / 2) % SOALEN;
-          uint64_t x_internal = (y % nyg) * SOALEN + x_one_SOA;
+          const uint64_t SIMD_vector = (x / 2) / SOALEN;
+          const uint64_t x_one_SOA = (x / 2) % SOALEN;
+          const uint64_t x_internal = (y % nyg) * SOALEN + x_one_SOA;
 
           // Calculate the array index in QPhiX, given a global
           // lattice index (t,x,y,z). This is also called the
           // "block" in QPhiX and the QPhiX/QDP packers.
-          uint64_t qphix_idx = (t * Pxyz + z * Pxy) / nyg + (y / nyg) * nVecs + SIMD_vector;
+          const uint64_t qphix_idx = (t * Pxyz + z * Pxy) / nyg + (y / nyg) * nVecs + SIMD_vector;
 
+          FT *out;
           if ((t + x + y + z) & 1)
             out = qphix_gauge_cb1;  // cb1
           else
@@ -295,16 +294,16 @@ void reorder_gauge_to_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, FT *
                     //    is the same
                     //    for tmlQCD and QPhiX, but we have to change the
                     //    ordering of the dimensions.
-                    int q_mu = 2 * change_dim[dim] + dir;
+                    const int q_mu = 2 * change_dim[dim] + dir;
 
                     // 2. QPhiX gauge field matrices are transposed w.r.t.
                     // tmLQCD.
                     // 3. tmlQCD always uses 3x3 color matrices (Nc2*Nc2).
-                    uint64_t t_inner_idx = z + c1 * Nz + c2 * Nz * Nc2 + dim * Nz * Nc2 * Nc2 +
-                                           tm_idx * Nz * Nc2 * Nc2 * 4;
-                    uint64_t q_inner_idx = x_internal + z * VECLEN + c2 * VECLEN * Nz +
-                                           c1 * VECLEN * Nz * Nc2 + q_mu * VECLEN * Nz * Nc2 * Nc1 +
-                                           qphix_idx * VECLEN * Nz * Nc2 * Nc1 * 8;
+                    const uint64_t t_inner_idx = z + c1 * Nz + c2 * Nz * Nc2 + dim * Nz * Nc2 * Nc2 +
+                                                 tm_idx * Nz * Nc2 * Nc2 * 4;
+                    const uint64_t q_inner_idx = x_internal + z * VECLEN + c2 * VECLEN * Nz +
+                                                 c1 * VECLEN * Nz * Nc2 + q_mu * VECLEN * Nz * Nc2 * Nc1 +
+                                                 qphix_idx * VECLEN * Nz * Nc2 * Nc1 * 8;
 
                     out[q_inner_idx] = in[t_inner_idx];
                   }
@@ -314,8 +313,8 @@ void reorder_gauge_to_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, FT *
 
         }  // volume
 
-  double endTime = gettime();
-  double diffTime = endTime - startTime;
+  const double endTime = gettime();
+  const double diffTime = endTime - startTime;
   masterPrintf("  time spent in reorder_gauge_to_QPhiX: %f secs\n", diffTime);
 }
 
@@ -323,22 +322,22 @@ void reorder_gauge_to_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, FT *
 template <typename FT, int VECLEN, int SOALEN, bool compress12>
 void reorder_spinor_to_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, double const *tm_spinor,
                              FT *qphix_spinor_cb0, FT *qphix_spinor_cb1) {
-  double startTime = gettime();
+  const double startTime = gettime();
 
   // Number of elements in spin, color & complex
-  int Ns = 4;
-  int Nc = 3;
-  int Nz = 2;
+  const int Ns = 4;
+  const int Nc = 3;
+  const int Nz = 2;
 
   // Geometric parameters for QPhiX data layout
-  auto nVecs = geom.nVecs();
-  auto Pxy = geom.getPxy();
-  auto Pxyz = geom.getPxyz();
+  const auto nVecs = geom.nVecs();
+  const auto Pxy = geom.getPxy();
+  const auto Pxyz = geom.getPxyz();
 
   // This is needed to translate between the different
   // gamma bases tmlQCD and QPhiX are using
-  int change_sign[4] = {1, -1, -1, 1};
-  int change_spin[4] = {3, 2, 1, 0};
+  const int change_sign[4] = {1, -1, -1, 1};
+  const int change_spin[4] = {3, 2, 1, 0};
 
   // This will loop over the entire lattice and calculate
   // the array and internal indices for both tmlQCD & QPhiX
@@ -348,13 +347,13 @@ void reorder_spinor_to_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, dou
         for (uint64_t z = 0; z < LZ; z++) {
           // These are the QPhiX SIMD vector in checkerboarded x direction
           // (up to LX/2) and the internal position inside the SIMD vector
-          uint64_t SIMD_vector = (x / 2) / SOALEN;
-          uint64_t x_internal = (x / 2) % SOALEN;
+          const uint64_t SIMD_vector = (x / 2) / SOALEN;
+          const uint64_t x_internal = (x / 2) % SOALEN;
 
           // Calculate the array index in tmlQCD & QPhiX,
           // given a global lattice index (t,x,y,z)
-          uint64_t qphix_idx = t * Pxyz + z * Pxy + y * nVecs + SIMD_vector;
-          uint64_t tm_idx = g_ipt[t][x][y][z];
+          const uint64_t qphix_idx = t * Pxyz + z * Pxy + y * nVecs + SIMD_vector;
+          const uint64_t tm_idx = g_ipt[t][x][y][z];
 
           // Calculate base point for every spinor field element (tmlQCD) or
           // for every SIMD vector of spinors, a.k.a FourSpinorBlock (QPhiX),
@@ -371,17 +370,17 @@ void reorder_spinor_to_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, dou
             for (int color = 0; color < Nc; color++)
               for (int z = 0; z < Nz; z++)  // RE or IM
               {
-                uint64_t qId =
-                    x_internal + z * SOALEN + spin * SOALEN * Nz + color * SOALEN * Nz * Ns;
-                uint64_t tId = z + color * Nz + change_spin[spin] * Nz * Nc;
+                const uint64_t qId = x_internal + z * SOALEN + spin * SOALEN * Nz
+                                     + color * SOALEN * Nz * Ns;
+                const uint64_t tId = z + color * Nz + change_spin[spin] * Nz * Nc;
 
                 out[qId] = change_sign[spin] * in[tId];
               }
 
         }  // volume
 
-  double endTime = gettime();
-  double diffTime = endTime - startTime;
+  const double endTime = gettime();
+  const double diffTime = endTime - startTime;
   masterPrintf("  time spent in reorder_spinor_to_QPhiX: %f secs\n", diffTime);
 }
 
@@ -390,22 +389,22 @@ template <typename FT, int VECLEN, int SOALEN, bool compress12>
 void reorder_spinor_from_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, double *tm_spinor,
                                FT const *qphix_spinor_cb0, FT const *qphix_spinor_cb1,
                                double normFac = 1.0) {
-  double startTime = gettime();
+  const double startTime = gettime();
 
   // Number of elements in spin, color & complex
-  int Ns = 4;
-  int Nc = 3;
-  int Nz = 2;
+  const int Ns = 4;
+  const int Nc = 3;
+  const int Nz = 2;
 
   // Geometric parameters for QPhiX data layout
-  auto nVecs = geom.nVecs();
-  auto Pxy = geom.getPxy();
-  auto Pxyz = geom.getPxyz();
+  const auto nVecs = geom.nVecs();
+  const auto Pxy = geom.getPxy();
+  const auto Pxyz = geom.getPxyz();
 
   // This is needed to translate between the different
   // gamma bases tmlQCD and QPhiX are using
-  int change_sign[4] = {1, -1, -1, 1};
-  int change_spin[4] = {3, 2, 1, 0};
+  const int change_sign[4] = {1, -1, -1, 1};
+  const int change_spin[4] = {3, 2, 1, 0};
 
   // This will loop over the entire lattice and calculate
   // the array and internal indices for both tmlQCD & QPhiX
@@ -415,13 +414,13 @@ void reorder_spinor_from_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, d
         for (uint64_t z = 0; z < LZ; z++) {
           // These are the QPhiX SIMD vector in checkerboarded x direction
           // (up to LX/2) and the internal position inside the SIMD vector
-          uint64_t SIMD_vector = (x / 2) / SOALEN;
-          uint64_t x_internal = (x / 2) % SOALEN;
+          const uint64_t SIMD_vector = (x / 2) / SOALEN;
+          const uint64_t x_internal = (x / 2) % SOALEN;
 
           // Calculate the array index in tmlQCD & QPhiX,
           // given a global lattice index (t,x,y,z)
-          uint64_t qphix_idx = t * Pxyz + z * Pxy + y * nVecs + SIMD_vector;
-          uint64_t tm_idx = g_ipt[t][x][y][z];
+          const uint64_t qphix_idx = t * Pxyz + z * Pxy + y * nVecs + SIMD_vector;
+          const uint64_t tm_idx = g_ipt[t][x][y][z];
 
           // Calculate base point for every spinor field element (tmlQCD) or
           // for every SIMD vector of spinors, a.k.a FourSpinorBlock (QPhiX),
@@ -438,17 +437,17 @@ void reorder_spinor_from_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, d
             for (int color = 0; color < Nc; color++)
               for (int z = 0; z < Nz; z++)  // RE or IM
               {
-                uint64_t qId = x_internal + z * SOALEN + change_spin[spin] * SOALEN * Nz +
-                               color * SOALEN * Nz * Ns;
-                uint64_t tId = z + color * Nz + spin * Nz * Nc;
+                const uint64_t qId = x_internal + z * SOALEN + change_spin[spin] * SOALEN * Nz
+                                     + color * SOALEN * Nz * Ns;
+                const uint64_t tId = z + color * Nz + spin * Nz * Nc;
 
                 out[tId] = normFac * change_sign[spin] * in[qId];
               }
 
         }  // volume
 
-  double endTime = gettime();
-  double diffTime = endTime - startTime;
+  const double endTime = gettime();
+  const double diffTime = endTime - startTime;
   masterPrintf("  time spent in reorder_spinor_from_QPhiX: %f secs\n", diffTime);
 }
 
