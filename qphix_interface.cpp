@@ -168,6 +168,8 @@ void checkQphixInputParameters();
 
 void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, int Sz_, int PadXY_,
                 int PadXYZ_, int MinCt_, int c12, QphixPrec precision_) {
+  static bool qmp_topo_initialised = false;
+
   // Global Lattice Size
   lattSize[0] = LX * g_nproc_x;
   lattSize[1] = LY * g_nproc_y;
@@ -197,13 +199,16 @@ void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, i
 
 #ifdef QPHIX_QMP_COMMS
   // Declare the logical topology
-  qmp_geom[0] = g_nproc_x;
-  qmp_geom[1] = g_nproc_y;
-  qmp_geom[2] = g_nproc_z;
-  qmp_geom[3] = g_nproc_t;
-  if (QMP_declare_logical_topology(qmp_geom, 4) != QMP_SUCCESS) {
-    QMP_error("Failed to declare QMP Logical Topology\n");
-    abort();
+  if( !qmp_topo_initialised ){
+    qmp_geom[0] = g_nproc_x;
+    qmp_geom[1] = g_nproc_y;
+    qmp_geom[2] = g_nproc_z;
+    qmp_geom[3] = g_nproc_t;
+    if (QMP_declare_logical_topology(qmp_geom, 4) != QMP_SUCCESS) {
+      QMP_error("Failed to declare QMP Logical Topology\n");
+      abort();
+    }
+    qmp_topo_initialised = true;
   }
 #endif
 
