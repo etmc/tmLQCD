@@ -242,7 +242,8 @@ void reorder_gauge_to_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, FT *
   auto Pxyz = geom.getPxyz();
 
   // This is needed to translate between the different
-  // orderings of "\mu" in tmlQCD and QPhiX, respectively
+  // orderings of the direction index "\mu" in tmlQCD
+  // and QPhiX, respectively
   int change_dim[4] = {3, 0, 1, 2};
 
   // Get the base pointer for the (global) tmlQCD gauge field
