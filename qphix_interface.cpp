@@ -90,7 +90,7 @@ using namespace QPhiX;
 #define QPHIX_SOALEN 8
 #endif
 
-#if defined(QPHIX_MIC_SOURCE)
+#if ( defined(QPHIX_MIC_SOURCE) || defined(QPHIX_AVX512_SOURCE) )
 #define VECLEN_SP 16
 #define VECLEN_HP 16
 #define VECLEN_DP 8
