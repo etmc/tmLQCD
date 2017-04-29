@@ -46,11 +46,6 @@
 **************************************************************************/
 
 #include "qphix_interface.h"
-
-// #undef SEEK_SET
-// #undef SEEK_CUR
-// #undef SEEK_END
-
 #include "qphix_base_classes.hpp"
 
 #ifdef TM_USE_MPI
@@ -87,7 +82,7 @@ using namespace std;
 using namespace QPhiX;
 
 #ifndef QPHIX_SOALEN
-#define QPHIX_SOALEN 8
+#error QPHIX_SOALEN must be defined. Check your qphix/qphix_config.h and qphix/qphix_config_internal.h !
 #endif
 
 #if ( defined(QPHIX_MIC_SOURCE) || defined(QPHIX_AVX512_SOURCE) )
