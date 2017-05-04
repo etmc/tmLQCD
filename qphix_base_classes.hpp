@@ -19,6 +19,7 @@
 #include <qphix/blas_new_c.h>
 #include <qphix/clover_dslash_def.h>
 #include <qphix/dslash_def.h>
+#include <qphix/geometry.h>
 #include <qphix/tm_clov_dslash_def.h>
 #include <qphix/tm_dslash_def.h>
 
@@ -30,6 +31,12 @@ namespace {
 size_t constexpr re = 0;
 size_t constexpr im = 1;
 int const n_blas_simt = 1;
+
+// TODO Are those really correct? Martin thinks that the site `(0, 0, 0, 0)` should be even and with
+// `cb = (x + y + z + y) & 1` that should be zero. Peter says that it is the other way around.
+// Either way, make sure that the following is correct.
+int constexpr cb_even = 1;
+int constexpr cb_odd = 0;
 }
 
 template <typename FT, int veclen, int soalen, bool compress12>
@@ -373,8 +380,17 @@ class FourSpinorCBWrapper {
 template <typename FT, int veclen, int soalen, bool compress12>
 class Dslash {
  public:
-  typedef typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FourSpinorBlock Spinor;
-  typedef typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::SU3MatrixBlock SU3MatrixBlock;
+  typedef ::QPhiX::Geometry<FT, veclen, soalen, compress12> Geom;
+  typedef typename Geom::FourSpinorBlock Spinor;
+  typedef typename Geom::SU3MatrixBlock SU3MatrixBlock;
+
+  explicit Dslash(Geom *geom, double const t_boundary_, double const aniso_coeff_S_,
+                  double const aniso_coeff_T_, double const mass_)
+      : geom(geom),
+        t_boundary(t_boundary_),
+        aniso_coeff_S(aniso_coeff_S_),
+        aniso_coeff_T(aniso_coeff_T_),
+        mass(mass_) {}
 
   /**
     Computes \f$ \psi_\mathrm o = A_\mathrm{oo} \chi_\mathrm o \f$.
@@ -422,6 +438,48 @@ class Dslash {
                           double const beta,
                           int const isign,
                           int const cb) = 0;
+
+  /**
+    Prepares the sources on the odd checkerboard.
+
+    This computes
+    \f[
+        \tilde b_o = \frac 12 D_{oe} M_{ee}^{-1} b_e + b_o \,.
+    \f]
+
+    \param[out] tilde_b_odd Prepared source
+    \param[in] b_even Source (right hand side) on the even lattice sites
+    \param]in] b_odd Source on the odd lattice sites
+    \param[in] u Gauge field on the odd lattice sites
+    */
+  virtual void prepare_source(Spinor *const tilde_b_odd, Spinor const *const b_even,
+                              Spinor const *const b_odd, SU3MatrixBlock const *const u);
+
+  /**
+    Reconstructs the solution on the even lattices sites.
+
+    This computes
+    \f[
+        x_e = M_{ee}^{-1} \left( b_e - \frac 12 D_{eo} x_o \right) \,.
+    \f]
+
+    \param[out] x_even Solution on the even lattices sites
+    \param[in] b_even Source (right hand side) on the even lattice sites
+    \param[in] x_odd Solution on the odd lattices sites
+    \param[in] u Gauge field on the even lattice sites
+    */
+  virtual void reconstruct_solution(Spinor *const x_even, Spinor const *const b_even,
+                                    Spinor const *const x_odd, SU3MatrixBlock const *const u);
+
+  Geom *getGeometry() const { return geom; }
+
+ private:
+  Geom *const geom;
+
+  double const t_boundary;
+  double const aniso_coeff_S;
+  double const aniso_coeff_T;
+  double const mass;
 };
 
 template <typename FT, int veclen, int soalen, bool compress12>
@@ -430,12 +488,11 @@ class WilsonDslash : public Dslash<FT, veclen, soalen, compress12> {
   typedef typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FourSpinorBlock Spinor;
   typedef typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::SU3MatrixBlock SU3MatrixBlock;
 
-  WilsonDslash(::QPhiX::Geometry<FT, veclen, soalen, compress12> *geom_,
-               double const t_boundary_,
-               double const aniso_coeff_S_,
-               double const aniso_coeff_T_,
-               double const mass_)
-      : upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
+  WilsonDslash(::QPhiX::Geometry<FT, veclen, soalen, compress12> *geom_, double const t_boundary_,
+               double const aniso_coeff_S_, double const aniso_coeff_T_, double const mass_)
+      : Dslash<FT, veclen, soalen, compress12>(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_,
+                                               mass_),
+        upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
         mass_factor_alpha(4.0 + mass_),
         mass_factor_beta(1.0 / (4.0 * mass_factor_alpha)) {}
 
@@ -481,13 +538,12 @@ class WilsonTMDslash : public Dslash<FT, veclen, soalen, compress12> {
   typedef typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FourSpinorBlock Spinor;
   typedef typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::SU3MatrixBlock SU3MatrixBlock;
 
-  WilsonTMDslash(::QPhiX::Geometry<FT, veclen, soalen, compress12> *geom_,
-                 double const t_boundary_,
-                 double const aniso_coeff_S_,
-                 double const aniso_coeff_T_,
-                 double const mass_,
+  WilsonTMDslash(::QPhiX::Geometry<FT, veclen, soalen, compress12> *geom_, double const t_boundary_,
+                 double const aniso_coeff_S_, double const aniso_coeff_T_, double const mass_,
                  double const twisted_mass_)
-      : upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_, mass_, twisted_mass_),
+      : Dslash<FT, veclen, soalen, compress12>(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_,
+                                               mass_),
+        upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_, mass_, twisted_mass_),
         mass_factor_alpha(4.0 + mass_),
         mass_factor_beta(0.25),
         derived_mu(twisted_mass_ / mass_factor_alpha),
@@ -538,45 +594,6 @@ class WilsonTMDslash : public Dslash<FT, veclen, soalen, compress12> {
 };
 
 template <typename FT, int veclen, int soalen, bool compress12>
-void WilsonTMDslash<FT, veclen, soalen, compress12>::helper_A_chi(Spinor *const out,
-                                                                  Spinor const *const in,
-                                                                  double const factor_a,
-                                                                  double const factor_b) {
-  auto const nVecs = upstream_dslash.getGeometry().nVecs();
-  auto const Pxy = upstream_dslash.getGeometry().getPxy();
-  auto const Pxyz = upstream_dslash.getGeometry().getPxyz();
-
-  for (uint64_t t = 0; t < T; t++)
-    for (uint64_t x = 0; x < LX/2; x++)
-      for (uint64_t y = 0; y < LY; y++)
-        for (uint64_t z = 0; z < LZ; z++) {
-
-          uint64_t const SIMD_vector = x / soalen;
-          uint64_t const x_internal = x % soalen;
-          uint64_t const qphix_idx = t * Pxyz + z * Pxy + y * nVecs + SIMD_vector;
-
-          for (int color = 0; color < 3; ++color) {
-            for (int spin_block = 0; spin_block < 2; ++spin_block) {
-              // Implement the $\gamma_5$ structure.
-              auto const signed_factor_a = factor_a * (spin_block == 0 ? 1.0 : -1.0);
-
-              for (int half_spin = 0; half_spin < 2; ++half_spin) {
-                auto const four_spin = 2 * spin_block + half_spin;
-                for (int v = 0; v < soalen; ++v) {
-                  auto &out_bcs = out[qphix_idx][color][four_spin];
-                  auto const &in_bcs = in[qphix_idx][color][four_spin];
-
-                  out_bcs[re][v] = factor_b * (in_bcs[re][v] + signed_factor_a * in_bcs[im][v]);
-                  out_bcs[im][v] = factor_b * (in_bcs[im][v] - signed_factor_a * in_bcs[re][v]);
-                }
-              }
-            }
-          }
-
-        } // volume
-};
-
-template <typename FT, int veclen, int soalen, bool compress12>
 class WilsonClovDslash : public Dslash<FT, veclen, soalen, compress12> {
  public:
   typedef typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FourSpinorBlock Spinor;
@@ -584,13 +601,12 @@ class WilsonClovDslash : public Dslash<FT, veclen, soalen, compress12> {
   typedef typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::CloverBlock CloverBlock;
 
   WilsonClovDslash(::QPhiX::Geometry<FT, veclen, soalen, compress12> *geom_,
-                   double const t_boundary_,
-                   double const aniso_coeff_S_,
-                   double const aniso_coeff_T_,
-                   double const mass_,
-                   CloverBlock *const clover_,
+                   double const t_boundary_, double const aniso_coeff_S_,
+                   double const aniso_coeff_T_, double const mass_, CloverBlock *const clover_,
                    CloverBlock *const inv_clover_)
-      : upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
+      : Dslash<FT, veclen, soalen, compress12>(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_,
+                                               mass_),
+        upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
         mass_factor_alpha(4.0 + mass_),
         mass_factor_beta(1.0 / (4.0 * mass_factor_alpha)),
         clover(clover_),
@@ -642,14 +658,12 @@ class WilsonClovTMDslash : public Dslash<FT, veclen, soalen, compress12> {
       typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FullCloverBlock FullCloverBlock;
 
   WilsonClovTMDslash(::QPhiX::Geometry<FT, veclen, soalen, compress12> *geom_,
-                     double const t_boundary_,
-                     double const aniso_coeff_S_,
-                     double const aniso_coeff_T_,
-                     double const mass_,
-                     double const twisted_mass_,
-                     FullCloverBlock *const clover_[2],
-                     FullCloverBlock *const inv_clover_[2])
-      : upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
+                     double const t_boundary_, double const aniso_coeff_S_,
+                     double const aniso_coeff_T_, double const mass_, double const twisted_mass_,
+                     FullCloverBlock *const clover_[2], FullCloverBlock *const inv_clover_[2])
+      : Dslash<FT, veclen, soalen, compress12>(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_,
+                                               mass_),
+        upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
         mass_factor_alpha(4.0 + mass_),
         mass_factor_beta(0.25),
         derived_mu(twisted_mass_ / mass_factor_alpha),
@@ -697,4 +711,76 @@ class WilsonClovTMDslash : public Dslash<FT, veclen, soalen, compress12> {
   FullCloverBlock *const clover[2];
   FullCloverBlock *const inv_clover[2];
 };
+
+
+
+template <typename FT, int veclen, int soalen, bool compress12>
+void WilsonTMDslash<FT, veclen, soalen, compress12>::helper_A_chi(Spinor *const out,
+                                                                  Spinor const *const in,
+                                                                  double const factor_a,
+                                                                  double const factor_b) {
+  auto const nVecs = upstream_dslash.getGeometry().nVecs();
+  auto const Pxy = upstream_dslash.getGeometry().getPxy();
+  auto const Pxyz = upstream_dslash.getGeometry().getPxyz();
+
+  for (uint64_t t = 0; t < T; t++)
+    for (uint64_t x = 0; x < LX/2; x++)
+      for (uint64_t y = 0; y < LY; y++)
+        for (uint64_t z = 0; z < LZ; z++) {
+
+          uint64_t const SIMD_vector = x / soalen;
+          uint64_t const x_internal = x % soalen;
+          uint64_t const qphix_idx = t * Pxyz + z * Pxy + y * nVecs + SIMD_vector;
+
+          for (int color = 0; color < 3; ++color) {
+            for (int spin_block = 0; spin_block < 2; ++spin_block) {
+              // Implement the $\gamma_5$ structure.
+              auto const signed_factor_a = factor_a * (spin_block == 0 ? 1.0 : -1.0);
+
+              for (int half_spin = 0; half_spin < 2; ++half_spin) {
+                auto const four_spin = 2 * spin_block + half_spin;
+                for (int v = 0; v < soalen; ++v) {
+                  auto &out_bcs = out[qphix_idx][color][four_spin];
+                  auto const &in_bcs = in[qphix_idx][color][four_spin];
+
+                  out_bcs[re][v] = factor_b * (in_bcs[re][v] + signed_factor_a * in_bcs[im][v]);
+                  out_bcs[im][v] = factor_b * (in_bcs[im][v] - signed_factor_a * in_bcs[re][v]);
+                }
+              }
+            }
+          }
+
+        } // volume
+};
+
+template <typename FT, int veclen, int soalen, bool compress12>
+void Dslash<FT, veclen, soalen, compress12>::prepare_source(Spinor *const tilde_b_odd,
+                                                            Spinor const *const b_even,
+                                                            Spinor const *const b_odd,
+                                                            SU3MatrixBlock const *const u) {
+  auto Mee_be = QPhiX::makeFourSpinorHandle(*geom);
+  WilsonDslash<FT, veclen, soalen, compress12> plain_dslash(geom, t_boundary, aniso_coeff_S,
+                                                            aniso_coeff_T, mass);
+
+  A_inv_chi(Mee_be.get(), b_even, 1);
+
+  plain_dslash.dslash(tilde_b_odd, Mee_be.get(), u, 1, cb_odd);
+
+  // FIXME Perhaps use a variable number of BLAS threads here (last parameter).
+  QPhiX::aypx(0.5, Mee_be.get(), tilde_b_odd, *geom, 1);
+}
+
+template <typename FT, int veclen, int soalen, bool compress12>
+void Dslash<FT, veclen, soalen, compress12>::reconstruct_solution(Spinor *const x_even,
+                                                                  Spinor const *const b_even,
+                                                                  Spinor const *const x_odd,
+                                                                  SU3MatrixBlock const *const u) {
+  auto tmp = QPhiX::makeFourSpinorHandle(*geom);
+  WilsonDslash<FT, veclen, soalen, compress12> plain_dslash(geom, t_boundary, aniso_coeff_S,
+                                                            aniso_coeff_T, mass);
+
+  plain_dslash.dslash(tmp.get(), x_odd, u, 1, cb_even);
+  QPhiX::aypx(0.5, b_even, tmp.get(), *geom, 1);
+  A_inv_chi(x_even, tmp.get(), 1);
+}
 }
