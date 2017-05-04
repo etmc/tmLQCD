@@ -48,12 +48,35 @@ void cplx_mul_acc(FT &r_out, FT &i_out, FT const &a, FT const &b, FT const &c, F
   i_out += a * d + b * c;
 }
 
+/**
+  Wrapper for the clover multiplication function.
+
+  The `struct` is needed in order to allow for partial template specialization in the `Clover`
+  parameter.
+
+  \tparam Clover Type of clover block to use, must be a type from Geometry such that there exists a
+  specialization for it.
+  */
 template <typename FT, int veclen, int soalen, bool compress12, typename Clover>
 struct InnerCloverProduct {
+  /**
+  Multiplies the clover term for a single lattice size to a spinor.
+
+  This function is intended to be used in a loop over all lattice sites. It is expected from the
+  caller to have figured out all the correct indices. There are template specializations for the two
+  different types of clover term that are used in QPhiX.
+
+  \param[out] out Output spinor block. It is assumed to be zeroed properly, the function will just
+  accumulate values into that output variable. Use \ref QPhiX::zeroSpinor for that.
+  \param[in] in Input spinor block.
+  \param[in] clover Single clover block that contains the lattice site of the spinor.
+  \param[in] xi SIMD index for the arrays with length `soalen`, as in the spinors.
+  \param[in] veclen_idx SIMD index for the arrays with length `veclen`, as in the clover term.
+  */
   static void multiply(
       typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FourSpinorBlock &out,
       typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FourSpinorBlock const &in,
-      Clover const &clover);
+      Clover const &clover, int const xi, int const veclen_idx);
 };
 
 template <typename FT, int veclen, int soalen, bool compress12>
