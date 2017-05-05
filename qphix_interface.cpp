@@ -61,7 +61,9 @@ extern "C" {
 #include "solver/solver.h"
 #include "solver/solver_params.h"
 #include "solver/solver_field.h"
+#include "operator/clovertm_operators.h"
 #include "gettime.h"
+#include "geometry_eo.h"
 #include "update_backward_gauge.h"
 }
 #ifdef TM_USE_OMP
@@ -219,6 +221,140 @@ void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, i
 // Finalize the QPhiX library
 void _endQphix() {}
 
+// Reorder the tmLQCD clover field to a Wilson QPhiX clover field
+template <typename FT, int VECLEN, int SOALEN, bool compress12>
+void reorder_clover_to_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, FT *qphix_clover) {
+  const double startTime = gettime();
+
+  // Need to rescale for QPhiX by alpha
+  const double alpha = 1.0 / ( 2.0 * g_kappa );
+
+  // Number of elements in spin, color & complex
+  const int Ns = 4;
+  const int Nc = 3;
+  const int Nz = 2;
+
+  // Geometric parameters for QPhiX data layout
+  const auto nyg = geom.nGY();
+  const auto nVecs = geom.nVecs();
+  const auto Pxy = geom.getPxy();
+  const auto Pxyz = geom.getPxyz();
+
+  // Get the base pointer for the (global) tmlQCD clover field
+  const double *in = reinterpret_cast<double*>(&sw[0][0][0].c00);
+
+  FT *out = qphix_clover;
+
+  // This will loop over the entire lattice and calculate
+  // the array and internal indices for both tmlQCD & QPhiX
+  for (uint64_t t = 0; t < T; t++)
+    for (uint64_t x = 0; x < LX; x++)
+      for (uint64_t y = 0; y < LY; y++)
+        for (uint64_t z = 0; z < LZ; z++) {
+
+          // Only copy the odd-odd elements of the clover term
+          if ((t + x + y + z) & 1 == 0) continue;
+
+          const uint64_t tm_idx = Index(t, x, y, z);
+
+          // These are the QPhiX SIMD vector in checkerboarded x direction
+          // (up to LX/2), the index inside one single Structure of Arrays (SOA)
+          // and the internal position inside the ("packed") SIMD vector
+          const uint64_t SIMD_vector = (x / 2) / SOALEN;
+          const uint64_t x_one_SOA = (x / 2) % SOALEN;
+          const uint64_t x_internal = (y % nyg) * SOALEN + x_one_SOA;
+
+          // Calculate the array index in QPhiX, given a global
+          // lattice index (t,x,y,z). This is also called the
+          // "block" in QPhiX and the QPhiX/QDP packers.
+          const uint64_t qphix_idx = (t * Pxyz + z * Pxy) / nyg + (y / nyg) * nVecs + SIMD_vector;
+
+          // Calculate the index where the tile for a given site begins
+          const uint64_t qphix_base = qphix_idx * VECLEN * 2 * ( 6 + 15 * Nz );
+          const uint64_t tm_base = tm_idx * 3 * 2 * Nc * Nc * Nz;
+
+          // FIXME:
+          // Is there any better way to do that?
+          // Use at least a lookup table
+          out[qphix_base +  0*VECLEN + x_internal] = alpha * in[tm_base +   0];
+          out[qphix_base +  1*VECLEN + x_internal] = alpha * in[tm_base +   8];
+          out[qphix_base +  2*VECLEN + x_internal] = alpha * in[tm_base +  16];
+          out[qphix_base +  3*VECLEN + x_internal] = alpha * in[tm_base +  72];
+          out[qphix_base +  4*VECLEN + x_internal] = alpha * in[tm_base +  80];
+          out[qphix_base +  5*VECLEN + x_internal] = alpha * in[tm_base +  88];
+          out[qphix_base +  6*VECLEN + x_internal] = alpha * in[tm_base +   2];
+          out[qphix_base +  7*VECLEN + x_internal] = alpha * in[tm_base +   3];
+          out[qphix_base +  8*VECLEN + x_internal] = alpha * in[tm_base +   4];
+          out[qphix_base +  9*VECLEN + x_internal] = alpha * in[tm_base +   5];
+          out[qphix_base + 10*VECLEN + x_internal] = alpha * in[tm_base +  36];
+          out[qphix_base + 11*VECLEN + x_internal] = alpha * in[tm_base +  37];
+          out[qphix_base + 12*VECLEN + x_internal] = alpha * in[tm_base +  38];
+          out[qphix_base + 13*VECLEN + x_internal] = alpha * in[tm_base +  39];
+          out[qphix_base + 14*VECLEN + x_internal] = alpha * in[tm_base +  40];
+          out[qphix_base + 15*VECLEN + x_internal] = alpha * in[tm_base +  41];
+          out[qphix_base + 16*VECLEN + x_internal] = alpha * in[tm_base +  10];
+          out[qphix_base + 17*VECLEN + x_internal] = alpha * in[tm_base +  11];
+          out[qphix_base + 18*VECLEN + x_internal] = alpha * in[tm_base +  42];
+          out[qphix_base + 19*VECLEN + x_internal] = alpha * in[tm_base +  43];
+          out[qphix_base + 20*VECLEN + x_internal] = alpha * in[tm_base +  44];
+          out[qphix_base + 21*VECLEN + x_internal] = alpha * in[tm_base +  45];
+          out[qphix_base + 22*VECLEN + x_internal] = alpha * in[tm_base +  46];
+          out[qphix_base + 23*VECLEN + x_internal] = alpha * in[tm_base +  47];
+          out[qphix_base + 24*VECLEN + x_internal] = alpha * in[tm_base +  48];
+          out[qphix_base + 25*VECLEN + x_internal] = alpha * in[tm_base +  49];
+          out[qphix_base + 26*VECLEN + x_internal] = alpha * in[tm_base +  50];
+          out[qphix_base + 27*VECLEN + x_internal] = alpha * in[tm_base +  51];
+          out[qphix_base + 28*VECLEN + x_internal] = alpha * in[tm_base +  52];
+          out[qphix_base + 29*VECLEN + x_internal] = alpha * in[tm_base +  53];
+          out[qphix_base + 30*VECLEN + x_internal] = alpha * in[tm_base +  74];
+          out[qphix_base + 31*VECLEN + x_internal] = alpha * in[tm_base +  75];
+          out[qphix_base + 32*VECLEN + x_internal] = alpha * in[tm_base +  76];
+          out[qphix_base + 33*VECLEN + x_internal] = alpha * in[tm_base +  77];
+          out[qphix_base + 34*VECLEN + x_internal] = alpha * in[tm_base +  82];
+          out[qphix_base + 35*VECLEN + x_internal] = alpha * in[tm_base +  83];
+          out[qphix_base + 36*VECLEN + x_internal] = alpha * in[tm_base +  18];
+          out[qphix_base + 37*VECLEN + x_internal] = alpha * in[tm_base +  26];
+          out[qphix_base + 38*VECLEN + x_internal] = alpha * in[tm_base +  34];
+          out[qphix_base + 39*VECLEN + x_internal] = alpha * in[tm_base +  90];
+          out[qphix_base + 40*VECLEN + x_internal] = alpha * in[tm_base +  98];
+          out[qphix_base + 41*VECLEN + x_internal] = alpha * in[tm_base + 106];
+          out[qphix_base + 42*VECLEN + x_internal] = alpha * in[tm_base +  20];
+          out[qphix_base + 43*VECLEN + x_internal] = alpha * in[tm_base +  21];
+          out[qphix_base + 44*VECLEN + x_internal] = alpha * in[tm_base +  22];
+          out[qphix_base + 45*VECLEN + x_internal] = alpha * in[tm_base +  23];
+          out[qphix_base + 46*VECLEN + x_internal] = alpha * in[tm_base +  54];
+          out[qphix_base + 47*VECLEN + x_internal] = alpha * in[tm_base +  55];
+          out[qphix_base + 48*VECLEN + x_internal] = alpha * in[tm_base +  56];
+          out[qphix_base + 49*VECLEN + x_internal] = alpha * in[tm_base +  57];
+          out[qphix_base + 50*VECLEN + x_internal] = alpha * in[tm_base +  58];
+          out[qphix_base + 51*VECLEN + x_internal] = alpha * in[tm_base +  59];
+          out[qphix_base + 52*VECLEN + x_internal] = alpha * in[tm_base +  28];
+          out[qphix_base + 53*VECLEN + x_internal] = alpha * in[tm_base +  29];
+          out[qphix_base + 54*VECLEN + x_internal] = alpha * in[tm_base +  60];
+          out[qphix_base + 55*VECLEN + x_internal] = alpha * in[tm_base +  61];
+          out[qphix_base + 56*VECLEN + x_internal] = alpha * in[tm_base +  62];
+          out[qphix_base + 57*VECLEN + x_internal] = alpha * in[tm_base +  63];
+          out[qphix_base + 58*VECLEN + x_internal] = alpha * in[tm_base +  64];
+          out[qphix_base + 59*VECLEN + x_internal] = alpha * in[tm_base +  65];
+          out[qphix_base + 60*VECLEN + x_internal] = alpha * in[tm_base +  66];
+          out[qphix_base + 61*VECLEN + x_internal] = alpha * in[tm_base +  67];
+          out[qphix_base + 62*VECLEN + x_internal] = alpha * in[tm_base +  68];
+          out[qphix_base + 63*VECLEN + x_internal] = alpha * in[tm_base +  69];
+          out[qphix_base + 64*VECLEN + x_internal] = alpha * in[tm_base +  70];
+          out[qphix_base + 65*VECLEN + x_internal] = alpha * in[tm_base +  71];
+          out[qphix_base + 66*VECLEN + x_internal] = alpha * in[tm_base +  92];
+          out[qphix_base + 67*VECLEN + x_internal] = alpha * in[tm_base +  93];
+          out[qphix_base + 68*VECLEN + x_internal] = alpha * in[tm_base +  94];
+          out[qphix_base + 69*VECLEN + x_internal] = alpha * in[tm_base +  95];
+          out[qphix_base + 70*VECLEN + x_internal] = alpha * in[tm_base + 100];
+          out[qphix_base + 71*VECLEN + x_internal] = alpha * in[tm_base + 101];
+
+        }  // volume
+
+  const double endTime = gettime();
+  const double diffTime = endTime - startTime;
+  masterPrintf("  time spent in reorder_clover_to_QPhiX: %f secs\n", diffTime);
+}
 
 // Reorder the tmLQCD gauge field to a cb0 and a cb1 QPhiX gauge field
 template <typename FT, int VECLEN, int SOALEN, bool compress12>
