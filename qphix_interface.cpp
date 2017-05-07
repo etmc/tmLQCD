@@ -18,6 +18,12 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  *
  ***********************************************************************/
+
+// XXX The following comment block seems be mostly redundant. The “Last changes” can be inferred
+// from git, and the externally accessible functions should be listed in the header files. Functions
+// starting with an underscore are often meant to be private (because the C language lacks
+// encapsulation …), so it seems strange that those functions are declared as the global ones.
+
 /***********************************************************************
 *
 * File qphix_interface.c
@@ -82,9 +88,15 @@ extern "C" {
 
 #include <vector>
 
+// XXX Can we please not do that? tmLQCD and QPhiX are libraries of the same domain and define the
+// same stuff with slightly different names. One has to be an expert in both libraries to know where
+// a symbol comes from. Martin would prefer to have `QPhiX::` in front of the QPhiX types and
+// functions.
 using namespace std;
 using namespace QPhiX;
 
+// XXX The following block of code also occurs many times in QPhiX. It seems appropriate to put that
+// into the QPhiX library.
 #ifndef QPHIX_SOALEN
 #error QPHIX_SOALEN must be defined. Check your qphix/qphix_config.h and qphix/qphix_config_internal.h !
 #endif
@@ -265,6 +277,10 @@ void reorder_clover_to_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, FT 
         for (uint64_t z = 0; z < LZ; z++) {
 
           // Only copy the odd-odd elements of the clover term
+          // XXX This looks like `0` is `even`. In other parts of the QPhiX code, it seems like `1`
+          // is `even`. Either way, there is a magic number here which should be refactored into a
+          // global constant, probably best an enum. Then also this should be a function like
+          // `is_even` or `is_odd` to make the code more readable and less error prone.
           if ((t + x + y + z) & 1 == 0) continue;
 
           const uint64_t tm_idx = Index(t, x, y, z);
