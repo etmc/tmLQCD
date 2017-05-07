@@ -39,11 +39,6 @@ int constexpr cb_even = 1;
 int constexpr cb_odd = 0;
 }
 
-template <typename FT, int veclen, int soalen, bool compress12>
-size_t get_num_blocks(::QPhiX::Geometry<FT, veclen, soalen, compress12> &geom) {
-  return geom.Nt() * geom.Nz() * geom.Ny() * geom.nVecs();
-}
-
 /**
   Complex multiplication accumulate.
 
@@ -343,39 +338,6 @@ void full_clover_product(
     }
   }
 }
-
-/**
-  RAII container for checkerboarded four spinors.
-
-  The four spinors are C-style arrays with no length information and most
-  importantly no cleanup. This wrapper enables automatic cleanup using the
-  QPhiX::Geometry object.
-
-  Perhaps it would be even better to use `std::vector` with a custom allocator
-  for this structure.
-  */
-template <typename FT, int veclen, int soalen, bool compress12>
-class FourSpinorCBWrapper {
- public:
-  typedef
-      typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FourSpinorBlock FourSpinorBlock;
-
-  FourSpinorCBWrapper(::QPhiX::Geometry<FT, veclen, soalen, compress12> &geom_)
-      : geom(geom_), spinor(geom.allocCBFourSpinor()) {}
-
-  ~FourSpinorCBWrapper() { geom.free(spinor); }
-
-  FourSpinorBlock const *data() const { return spinor; }
-  FourSpinorBlock *data() { return spinor; }
-
-  size_t num_blocks() const { return get_num_blocks(geom); }
-
-  FourSpinorBlock &operator[](size_t i) { return spinor[i]; }
-
- private:
-  ::QPhiX::Geometry<FT, veclen, soalen, compress12> &geom;
-  FourSpinorBlock *const spinor;
-};
 
 /**
   Abstract base class for all single-flavor Dslash variants.
