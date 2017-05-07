@@ -302,7 +302,7 @@ void reorder_clover_to_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, FT 
           const uint64_t tm_base = tm_idx * 3 * 2 * Nc * Nc * Nz;
 
           // FIXME Is there any better way to do that?
-          for (uint64_t lt_idx = 0; lt_idx < lookup_table.size(); ++lt_index) {
+          for (uint64_t lt_idx = 0; lt_idx < lookup_table.size(); ++lt_idx) {
             out[qphix_base + lt_idx * VECLEN + x_internal] =
                 alpha * in[tm_base + lookup_table[lt_idx]];
           }
