@@ -80,6 +80,8 @@ extern "C" {
 #include <qphix/wilson.h>
 #include <qphix/twisted_mass.h>
 
+#include <vector>
+
 using namespace std;
 using namespace QPhiX;
 
@@ -226,6 +228,16 @@ template <typename FT, int VECLEN, int SOALEN, bool compress12>
 void reorder_clover_to_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, FT *qphix_clover) {
   const double startTime = gettime();
 
+  std::vector<uint64_t> const lookup_table{
+      0,  8,  16, 72, 80, 88,  2,  3,  4,  5,  36, 37, 38, 39, 40, 41, 10,  11,
+      42, 43, 44, 45, 46, 47,  48, 49, 50, 51, 52, 53, 74, 75, 76, 77, 82,  83,
+      18, 26, 34, 90, 98, 106, 20, 21, 22, 23, 54, 55, 56, 57, 58, 59, 28,  29,
+      60, 61, 62, 63, 64, 65,  66, 67, 68, 69, 70, 71, 92, 93, 94, 95, 100, 101};
+
+  assert(lookup_table.size() == 72 &&
+         "Number of elements in the lookup table needs to exactly match the number of elements in "
+         "the clover data structure.");
+
   // Need to rescale for QPhiX by alpha
   const double alpha = 1.0 / ( 2.0 * g_kappa );
 
@@ -273,81 +285,11 @@ void reorder_clover_to_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, FT 
           const uint64_t qphix_base = qphix_idx * VECLEN * 2 * ( 6 + 15 * Nz );
           const uint64_t tm_base = tm_idx * 3 * 2 * Nc * Nc * Nz;
 
-          // FIXME:
-          // Is there any better way to do that?
-          // Use at least a lookup table
-          out[qphix_base +  0*VECLEN + x_internal] = alpha * in[tm_base +   0];
-          out[qphix_base +  1*VECLEN + x_internal] = alpha * in[tm_base +   8];
-          out[qphix_base +  2*VECLEN + x_internal] = alpha * in[tm_base +  16];
-          out[qphix_base +  3*VECLEN + x_internal] = alpha * in[tm_base +  72];
-          out[qphix_base +  4*VECLEN + x_internal] = alpha * in[tm_base +  80];
-          out[qphix_base +  5*VECLEN + x_internal] = alpha * in[tm_base +  88];
-          out[qphix_base +  6*VECLEN + x_internal] = alpha * in[tm_base +   2];
-          out[qphix_base +  7*VECLEN + x_internal] = alpha * in[tm_base +   3];
-          out[qphix_base +  8*VECLEN + x_internal] = alpha * in[tm_base +   4];
-          out[qphix_base +  9*VECLEN + x_internal] = alpha * in[tm_base +   5];
-          out[qphix_base + 10*VECLEN + x_internal] = alpha * in[tm_base +  36];
-          out[qphix_base + 11*VECLEN + x_internal] = alpha * in[tm_base +  37];
-          out[qphix_base + 12*VECLEN + x_internal] = alpha * in[tm_base +  38];
-          out[qphix_base + 13*VECLEN + x_internal] = alpha * in[tm_base +  39];
-          out[qphix_base + 14*VECLEN + x_internal] = alpha * in[tm_base +  40];
-          out[qphix_base + 15*VECLEN + x_internal] = alpha * in[tm_base +  41];
-          out[qphix_base + 16*VECLEN + x_internal] = alpha * in[tm_base +  10];
-          out[qphix_base + 17*VECLEN + x_internal] = alpha * in[tm_base +  11];
-          out[qphix_base + 18*VECLEN + x_internal] = alpha * in[tm_base +  42];
-          out[qphix_base + 19*VECLEN + x_internal] = alpha * in[tm_base +  43];
-          out[qphix_base + 20*VECLEN + x_internal] = alpha * in[tm_base +  44];
-          out[qphix_base + 21*VECLEN + x_internal] = alpha * in[tm_base +  45];
-          out[qphix_base + 22*VECLEN + x_internal] = alpha * in[tm_base +  46];
-          out[qphix_base + 23*VECLEN + x_internal] = alpha * in[tm_base +  47];
-          out[qphix_base + 24*VECLEN + x_internal] = alpha * in[tm_base +  48];
-          out[qphix_base + 25*VECLEN + x_internal] = alpha * in[tm_base +  49];
-          out[qphix_base + 26*VECLEN + x_internal] = alpha * in[tm_base +  50];
-          out[qphix_base + 27*VECLEN + x_internal] = alpha * in[tm_base +  51];
-          out[qphix_base + 28*VECLEN + x_internal] = alpha * in[tm_base +  52];
-          out[qphix_base + 29*VECLEN + x_internal] = alpha * in[tm_base +  53];
-          out[qphix_base + 30*VECLEN + x_internal] = alpha * in[tm_base +  74];
-          out[qphix_base + 31*VECLEN + x_internal] = alpha * in[tm_base +  75];
-          out[qphix_base + 32*VECLEN + x_internal] = alpha * in[tm_base +  76];
-          out[qphix_base + 33*VECLEN + x_internal] = alpha * in[tm_base +  77];
-          out[qphix_base + 34*VECLEN + x_internal] = alpha * in[tm_base +  82];
-          out[qphix_base + 35*VECLEN + x_internal] = alpha * in[tm_base +  83];
-          out[qphix_base + 36*VECLEN + x_internal] = alpha * in[tm_base +  18];
-          out[qphix_base + 37*VECLEN + x_internal] = alpha * in[tm_base +  26];
-          out[qphix_base + 38*VECLEN + x_internal] = alpha * in[tm_base +  34];
-          out[qphix_base + 39*VECLEN + x_internal] = alpha * in[tm_base +  90];
-          out[qphix_base + 40*VECLEN + x_internal] = alpha * in[tm_base +  98];
-          out[qphix_base + 41*VECLEN + x_internal] = alpha * in[tm_base + 106];
-          out[qphix_base + 42*VECLEN + x_internal] = alpha * in[tm_base +  20];
-          out[qphix_base + 43*VECLEN + x_internal] = alpha * in[tm_base +  21];
-          out[qphix_base + 44*VECLEN + x_internal] = alpha * in[tm_base +  22];
-          out[qphix_base + 45*VECLEN + x_internal] = alpha * in[tm_base +  23];
-          out[qphix_base + 46*VECLEN + x_internal] = alpha * in[tm_base +  54];
-          out[qphix_base + 47*VECLEN + x_internal] = alpha * in[tm_base +  55];
-          out[qphix_base + 48*VECLEN + x_internal] = alpha * in[tm_base +  56];
-          out[qphix_base + 49*VECLEN + x_internal] = alpha * in[tm_base +  57];
-          out[qphix_base + 50*VECLEN + x_internal] = alpha * in[tm_base +  58];
-          out[qphix_base + 51*VECLEN + x_internal] = alpha * in[tm_base +  59];
-          out[qphix_base + 52*VECLEN + x_internal] = alpha * in[tm_base +  28];
-          out[qphix_base + 53*VECLEN + x_internal] = alpha * in[tm_base +  29];
-          out[qphix_base + 54*VECLEN + x_internal] = alpha * in[tm_base +  60];
-          out[qphix_base + 55*VECLEN + x_internal] = alpha * in[tm_base +  61];
-          out[qphix_base + 56*VECLEN + x_internal] = alpha * in[tm_base +  62];
-          out[qphix_base + 57*VECLEN + x_internal] = alpha * in[tm_base +  63];
-          out[qphix_base + 58*VECLEN + x_internal] = alpha * in[tm_base +  64];
-          out[qphix_base + 59*VECLEN + x_internal] = alpha * in[tm_base +  65];
-          out[qphix_base + 60*VECLEN + x_internal] = alpha * in[tm_base +  66];
-          out[qphix_base + 61*VECLEN + x_internal] = alpha * in[tm_base +  67];
-          out[qphix_base + 62*VECLEN + x_internal] = alpha * in[tm_base +  68];
-          out[qphix_base + 63*VECLEN + x_internal] = alpha * in[tm_base +  69];
-          out[qphix_base + 64*VECLEN + x_internal] = alpha * in[tm_base +  70];
-          out[qphix_base + 65*VECLEN + x_internal] = alpha * in[tm_base +  71];
-          out[qphix_base + 66*VECLEN + x_internal] = alpha * in[tm_base +  92];
-          out[qphix_base + 67*VECLEN + x_internal] = alpha * in[tm_base +  93];
-          out[qphix_base + 68*VECLEN + x_internal] = alpha * in[tm_base +  94];
-          out[qphix_base + 69*VECLEN + x_internal] = alpha * in[tm_base +  95];
-          out[qphix_base + 70*VECLEN + x_internal] = alpha * in[tm_base + 100];
-          out[qphix_base + 71*VECLEN + x_internal] = alpha * in[tm_base + 101];
+          // FIXME Is there any better way to do that?
+          for (uint64_t lt_idx = 0; lt_idx < lookup_table.size(); ++lt_index) {
+            out[qphix_base + lt_idx * VECLEN + x_internal] =
+                alpha * in[tm_base + lookup_table[lt_idx]];
+          }
 
         }  // volume
 
