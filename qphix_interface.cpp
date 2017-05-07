@@ -88,13 +88,6 @@ extern "C" {
 
 #include <vector>
 
-// XXX Can we please not do that? tmLQCD and QPhiX are libraries of the same domain and define the
-// same stuff with slightly different names. One has to be an expert in both libraries to know where
-// a symbol comes from. Martin would prefer to have `QPhiX::` in front of the QPhiX types and
-// functions.
-using namespace std;
-using namespace QPhiX;
-
 // XXX The following block of code also occurs many times in QPhiX. It seems appropriate to put that
 // into the QPhiX library.
 #ifndef QPHIX_SOALEN
@@ -167,7 +160,7 @@ struct rsdTarget {
 };
 
 template <>
-const double rsdTarget<half>::value = 1.0e-4;
+const double rsdTarget<QPhiX::half>::value = 1.0e-4;
 
 template <>
 const double rsdTarget<float>::value = 1.0e-7;
@@ -237,7 +230,8 @@ void _endQphix() {}
 
 // Reorder the tmLQCD clover field to a Wilson QPhiX clover field
 template <typename FT, int VECLEN, int SOALEN, bool compress12>
-void reorder_clover_to_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, FT *qphix_clover) {
+void reorder_clover_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom,
+                             FT *qphix_clover) {
   const double startTime = gettime();
 
   std::vector<uint64_t> const lookup_table{
@@ -311,13 +305,13 @@ void reorder_clover_to_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, FT 
 
   const double endTime = gettime();
   const double diffTime = endTime - startTime;
-  masterPrintf("  time spent in reorder_clover_to_QPhiX: %f secs\n", diffTime);
+  QPhiX::masterPrintf("  time spent in reorder_clover_to_QPhiX: %f secs\n", diffTime);
 }
 
 // Reorder the tmLQCD gauge field to a cb0 and a cb1 QPhiX gauge field
 template <typename FT, int VECLEN, int SOALEN, bool compress12>
-void reorder_gauge_to_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, FT *qphix_gauge_cb0,
-                            FT *qphix_gauge_cb1) {
+void reorder_gauge_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom,
+                            FT *qphix_gauge_cb0, FT *qphix_gauge_cb1) {
   const double startTime = gettime();
 
   // Number of elements in spin, color & complex
@@ -409,13 +403,13 @@ void reorder_gauge_to_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, FT *
 
   const double endTime = gettime();
   const double diffTime = endTime - startTime;
-  masterPrintf("  time spent in reorder_gauge_to_QPhiX: %f secs\n", diffTime);
+  QPhiX::masterPrintf("  time spent in reorder_gauge_to_QPhiX: %f secs\n", diffTime);
 }
 
 // Reorder tmLQCD spinor to a cb0 and cb1 QPhiX spinor
 template <typename FT, int VECLEN, int SOALEN, bool compress12>
-void reorder_spinor_to_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, double const *tm_spinor,
-                             FT *qphix_spinor_cb0, FT *qphix_spinor_cb1) {
+void reorder_spinor_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom,
+                             double const *tm_spinor, FT *qphix_spinor_cb0, FT *qphix_spinor_cb1) {
   const double startTime = gettime();
 
   // Number of elements in spin, color & complex
@@ -475,14 +469,14 @@ void reorder_spinor_to_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, dou
 
   const double endTime = gettime();
   const double diffTime = endTime - startTime;
-  masterPrintf("  time spent in reorder_spinor_to_QPhiX: %f secs\n", diffTime);
+  QPhiX::masterPrintf("  time spent in reorder_spinor_to_QPhiX: %f secs\n", diffTime);
 }
 
 // Reorder a cb0 and cb1 QPhiX spinor to a tmLQCD spinor
 template <typename FT, int VECLEN, int SOALEN, bool compress12>
-void reorder_spinor_from_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, double *tm_spinor,
-                               FT const *qphix_spinor_cb0, FT const *qphix_spinor_cb1,
-                               double normFac = 1.0) {
+void reorder_spinor_from_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom,
+                               double *tm_spinor, FT const *qphix_spinor_cb0,
+                               FT const *qphix_spinor_cb1, double normFac = 1.0) {
   const double startTime = gettime();
 
   // Number of elements in spin, color & complex
@@ -542,15 +536,15 @@ void reorder_spinor_from_QPhiX(Geometry<FT, VECLEN, SOALEN, compress12> &geom, d
 
   const double endTime = gettime();
   const double diffTime = endTime - startTime;
-  masterPrintf("  time spent in reorder_spinor_from_QPhiX: %f secs\n", diffTime);
+  QPhiX::masterPrintf("  time spent in reorder_spinor_from_QPhiX: %f secs\n", diffTime);
 }
 
 // Apply the Dslash to a full tmlQCD spinor and return a full tmlQCD spinor
 template <typename FT, int V, int S, bool compress>
 void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
 
-  typedef typename Geometry<FT, V, S, compress>::SU3MatrixBlock QGauge;
-  typedef typename Geometry<FT, V, S, compress>::FourSpinorBlock QSpinor;
+  typedef typename QPhiX::Geometry<FT, V, S, compress>::SU3MatrixBlock QGauge;
+  typedef typename QPhiX::Geometry<FT, V, S, compress>::FourSpinorBlock QSpinor;
 
   /************************
    *                      *
@@ -561,33 +555,34 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
    *                      *
   ************************/
 
-  masterPrintf("VECLEN=%d SOALEN=%d\n", V, S);
-  masterPrintf("# Declared QMP Topology: %d %d %d %d\n", qmp_geom[0], qmp_geom[1], qmp_geom[2],
+  QPhiX::masterPrintf("VECLEN=%d SOALEN=%d\n", V, S);
+  QPhiX::masterPrintf("# Declared QMP Topology: %d %d %d %d\n", qmp_geom[0], qmp_geom[1], qmp_geom[2],
                qmp_geom[3]);
-  masterPrintf("Global Lattice Size = ");
+  QPhiX::masterPrintf("Global Lattice Size = ");
   for (int mu = 0; mu < 4; mu++) {
-    masterPrintf(" %d", lattSize[mu]);
+    QPhiX::masterPrintf(" %d", lattSize[mu]);
   }
-  masterPrintf("\n");
-  masterPrintf("Local Lattice Size = ");
+  QPhiX::masterPrintf("\n");
+  QPhiX::masterPrintf("Local Lattice Size = ");
   for (int mu = 0; mu < 4; mu++) {
-    masterPrintf(" %d", subLattSize[mu]);
+    QPhiX::masterPrintf(" %d", subLattSize[mu]);
   }
-  masterPrintf("\n");
-  masterPrintf("Block Sizes: By= %d Bz=%d\n", By, Bz);
-  masterPrintf("Cores = %d\n", NCores);
-  masterPrintf("SMT Grid: Sy=%d Sz=%d\n", Sy, Sz);
-  masterPrintf("Pad Factors: PadXY=%d PadXYZ=%d\n", PadXY, PadXYZ);
-  masterPrintf("Threads_per_core = %d\n", N_simt);
-  masterPrintf("MinCt = %d\n", MinCt);
-  masterPrintf("Initializing QPhiX Dslash\n");
+  QPhiX::masterPrintf("\n");
+  QPhiX::masterPrintf("Block Sizes: By= %d Bz=%d\n", By, Bz);
+  QPhiX::masterPrintf("Cores = %d\n", NCores);
+  QPhiX::masterPrintf("SMT Grid: Sy=%d Sz=%d\n", Sy, Sz);
+  QPhiX::masterPrintf("Pad Factors: PadXY=%d PadXYZ=%d\n", PadXY, PadXYZ);
+  QPhiX::masterPrintf("Threads_per_core = %d\n", N_simt);
+  QPhiX::masterPrintf("MinCt = %d\n", MinCt);
+  QPhiX::masterPrintf("Initializing QPhiX Dslash\n");
 
   // Create Dslash Class
   double t_boundary = (FT)(1);
   double coeff_s = (FT)(1);
   double coeff_t = (FT)(1);
 
-  Geometry<FT, V, S, compress> geom(subLattSize, By, Bz, NCores, Sy, Sz, PadXY, PadXYZ, MinCt);
+  QPhiX::Geometry<FT, V, S, compress> geom(subLattSize, By, Bz, NCores, Sy, Sz, PadXY, PadXYZ,
+                                           MinCt);
 
   // tmLQCD only stores kappa, QPhiX uses the mass. Convert here.
   double const mass = 1 / (2.0 * g_kappa) - 4;
@@ -595,7 +590,8 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
 #if 0 // Change the operator to use here.
   tmlqcd::WilsonDslash<FT, V, S, compress> concrete_dslash(&geom, t_boundary, coeff_s, coeff_t, mass);
 #else
-  tmlqcd::WilsonTMDslash<FT, V, S, compress> concrete_dslash(&geom, t_boundary, coeff_s, coeff_t, mass, 1.21);
+  tmlqcd::WilsonTMDslash<FT, V, S, compress> concrete_dslash(&geom, t_boundary, coeff_s, coeff_t,
+                                                             mass, 1.21);
 #endif
 
   tmlqcd::Dslash<FT, V, S, compress> &polymorphic_dslash = concrete_dslash;
@@ -674,7 +670,7 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
                             reinterpret_cast<FT*>(qphix_out[1]),
                             (1. * g_kappa));
 
-  masterPrintf("Cleaning up\n");
+  QPhiX::masterPrintf("Cleaning up\n");
 
   geom.free(packed_gauge_cb0);
   geom.free(packed_gauge_cb1);
@@ -698,8 +694,8 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
     solver_params_t solver_params,
     const CompressionType compression) {
 
-  typedef typename Geometry<FT, V, S, compress>::SU3MatrixBlock QGauge;
-  typedef typename Geometry<FT, V, S, compress>::FourSpinorBlock QSpinor;
+  typedef typename QPhiX::Geometry<FT, V, S, compress>::SU3MatrixBlock QGauge;
+  typedef typename QPhiX::Geometry<FT, V, S, compress>::FourSpinorBlock QSpinor;
 
   /************************
    *                      *
@@ -709,24 +705,25 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
 
   // _initQphix should have been called at this point
 
-  masterPrintf("# VECLEN = %d, SOALEN = %d\n", V, S);
-  masterPrintf("# Declared QMP Topology: %d %d %d %d\n",
+  QPhiX::masterPrintf("# VECLEN = %d, SOALEN = %d\n", V, S);
+  QPhiX::masterPrintf("# Declared QMP Topology: %d %d %d %d\n",
       qmp_geom[0], qmp_geom[1], qmp_geom[2], qmp_geom[3]);
-  masterPrintf("# Global Lattice Size = %d %d %d %d\n",
+  QPhiX::masterPrintf("# Global Lattice Size = %d %d %d %d\n",
       lattSize[0], lattSize[1], lattSize[2], lattSize[3]);
-  masterPrintf("#  Local Lattice Size = %d %d %d %d\n",
+  QPhiX::masterPrintf("#  Local Lattice Size = %d %d %d %d\n",
       subLattSize[0], subLattSize[1], subLattSize[2], subLattSize[3]);
-  masterPrintf("# Block Sizes: By = %d, Bz = %d\n", By, Bz);
-  masterPrintf("# Cores = %d\n", NCores);
-  masterPrintf("# SMT Grid: Sy = %d, Sz = %d\n", Sy, Sz);
-  masterPrintf("# Pad Factors: PadXY = %d, PadXYZ = %d\n", PadXY, PadXYZ);
-  masterPrintf("# Threads_per_core = %d\n", N_simt);
-  masterPrintf("# MinCt = %d\n", MinCt);
+  QPhiX::masterPrintf("# Block Sizes: By = %d, Bz = %d\n", By, Bz);
+  QPhiX::masterPrintf("# Cores = %d\n", NCores);
+  QPhiX::masterPrintf("# SMT Grid: Sy = %d, Sz = %d\n", Sy, Sz);
+  QPhiX::masterPrintf("# Pad Factors: PadXY = %d, PadXYZ = %d\n", PadXY, PadXYZ);
+  QPhiX::masterPrintf("# Threads_per_core = %d\n", N_simt);
+  QPhiX::masterPrintf("# MinCt = %d\n", MinCt);
 
   // Create a Geometry Class
-  masterPrintf("# Initializing QPhiX Geometry...\n");
-  Geometry<FT, V, S, compress> geom(subLattSize, By, Bz, NCores, Sy, Sz, PadXY, PadXYZ, MinCt);
-  masterPrintf("# ...done.\n");
+  QPhiX::masterPrintf("# Initializing QPhiX Geometry...\n");
+  QPhiX::Geometry<FT, V, S, compress> geom(subLattSize, By, Bz, NCores, Sy, Sz, PadXY, PadXYZ,
+                                           MinCt);
+  QPhiX::masterPrintf("# ...done.\n");
 
   /************************
    *                      *
@@ -734,7 +731,7 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
    *                      *
   ************************/
 
-  masterPrintf("# Allocating and preparing gauge fields...\n");
+  QPhiX::masterPrintf("# Allocating and preparing gauge fields...\n");
 
   // Allocate data for the gauge fields
   QGauge *u_packed[2];
@@ -748,7 +745,7 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
                          reinterpret_cast<FT*>(u_packed[0]),
                          reinterpret_cast<FT*>(u_packed[1]));
 
-  masterPrintf("# ...done.\n");
+  QPhiX::masterPrintf("# ...done.\n");
 
   /************************
    *                      *
@@ -756,7 +753,7 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
    *                      *
   ************************/
 
-  masterPrintf("# Allocating fermion fields...\n");
+  QPhiX::masterPrintf("# Allocating fermion fields...\n");
 
   // Allocate data for the even/odd (checkerboarded) QPhiX in/out spinors
   QSpinor *packed_spinor_in_cb0 = (QSpinor *)geom.allocCBFourSpinor();
@@ -782,7 +779,7 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
   init_solver_field(&solver_fields, VOLUMEPLUSRAND, nr_solver_fields);
   spinor *tmlqcd_full_buffer = solver_fields[0];
 
-  masterPrintf("# ...done.\n");
+  QPhiX::masterPrintf("# ...done.\n");
 
   /************************************************
    *                                              *
@@ -800,69 +797,69 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
 
   // Create a Wilson Dslash for source preparation
   // and solution reconstruction
-  masterPrintf("# Creating plain QPhiX Wilson Dslash (for preparation)...\n");
+  QPhiX::masterPrintf("# Creating plain QPhiX Wilson Dslash (for preparation)...\n");
   QPhiX::Dslash<FT, V, S, compress>* WilsonDslash =
     new QPhiX::Dslash<FT, V, S, compress>(&geom, t_boundary, coeff_s, coeff_t);
-  masterPrintf("# ...done.\n");
+  QPhiX::masterPrintf("# ...done.\n");
 
   // Create a Dslash & an even-odd preconditioned Fermion Matrix object,
   // depending on the chosen fermion action
   tmlqcd::Dslash<FT, V, S, compress>* DslashQPhiX;
-  EvenOddLinearOperator<FT, V, S, compress>* FermionMatrixQPhiX;
+  QPhiX::EvenOddLinearOperator<FT, V, S, compress> *FermionMatrixQPhiX;
   if( g_mu != 0.0 && g_c_sw > 0.0 ) { // TWISTED-MASS-CLOVER
     // TODO: Implement me!
-    masterPrintf("# TWISTED-MASS-CLOVER CASE NOT YET IMPLEMENTED!\n");
-    masterPrintf(" Aborting...\n");
+    QPhiX::masterPrintf("# TWISTED-MASS-CLOVER CASE NOT YET IMPLEMENTED!\n");
+    QPhiX::masterPrintf(" Aborting...\n");
     abort();
   } else if( g_mu != 0.0 ) { // TWISTED-MASS
-    masterPrintf("# Creating QPhiX Twisted Mass Wilson Dslash...\n");
+    QPhiX::masterPrintf("# Creating QPhiX Twisted Mass Wilson Dslash...\n");
     const double TwistedMass = - g_mu / (2.0 * g_kappa);
     DslashQPhiX = new tmlqcd::WilsonTMDslash<FT, V, S, compress>
       (&geom, t_boundary, coeff_s, coeff_t, mass, TwistedMass);
-    masterPrintf("# ...done.\n");
+    QPhiX::masterPrintf("# ...done.\n");
 
-    masterPrintf("# Creating QPhiX Twisted Mass Wilson Fermion Matrix...\n");
-    FermionMatrixQPhiX = new EvenOddTMWilsonOperator<FT, V, S, compress>
+    QPhiX::masterPrintf("# Creating QPhiX Twisted Mass Wilson Fermion Matrix...\n");
+    FermionMatrixQPhiX = new QPhiX::EvenOddTMWilsonOperator<FT, V, S, compress>
       (mass, TwistedMass, u_packed, &geom, t_boundary, coeff_s, coeff_t);
-    masterPrintf("# ...done.\n");
+    QPhiX::masterPrintf("# ...done.\n");
   } else if( g_c_sw > 0.0 ) { // WILSON CLOVER
     // TODO: Implement me!
-    masterPrintf("# WILSON CLOVER CASE NOT YET IMPLEMENTED!\n");
-    masterPrintf(" Aborting...\n");
+    QPhiX::masterPrintf("# WILSON CLOVER CASE NOT YET IMPLEMENTED!\n");
+    QPhiX::masterPrintf(" Aborting...\n");
     abort();
   } else { // WILSON
-    masterPrintf("# Creating QPhiX Wilson Dslash...\n");
+    QPhiX::masterPrintf("# Creating QPhiX Wilson Dslash...\n");
     DslashQPhiX = new tmlqcd::WilsonDslash<FT, V, S, compress>(&geom, t_boundary, coeff_s, coeff_t, mass);
-    masterPrintf("# ...done.\n");
+    QPhiX::masterPrintf("# ...done.\n");
 
-    masterPrintf("# Creating QPhiX Wilson Fermion Matrix...\n");
-    FermionMatrixQPhiX = new EvenOddWilsonOperator<FT, V, S, compress>
+    QPhiX::masterPrintf("# Creating QPhiX Wilson Fermion Matrix...\n");
+    FermionMatrixQPhiX = new QPhiX::EvenOddWilsonOperator<FT, V, S, compress>
       (mass, u_packed, &geom, t_boundary, coeff_s, coeff_t);
-    masterPrintf("# ...done.\n");
+    QPhiX::masterPrintf("# ...done.\n");
   }
 
   // Create a Linear Solver Object
-  AbstractSolver<FT, V, S, compress>* SolverQPhiX;
+  QPhiX::AbstractSolver<FT, V, S, compress>* SolverQPhiX;
   if(solver_flag == CG) {
-    masterPrintf("# Creating CG Solver...\n");
-    SolverQPhiX = new InvCG<FT, V, S, compress> (*FermionMatrixQPhiX, max_iter);
+    QPhiX::masterPrintf("# Creating CG Solver...\n");
+    SolverQPhiX = new QPhiX::InvCG<FT, V, S, compress> (*FermionMatrixQPhiX, max_iter);
   } else if(solver_flag == BICGSTAB) {
-    masterPrintf("# Creating BiCGStab Solver...\n");
-    SolverQPhiX = new InvBiCGStab<FT, V, S, compress> (*FermionMatrixQPhiX, max_iter);
+    QPhiX::masterPrintf("# Creating BiCGStab Solver...\n");
+    SolverQPhiX = new QPhiX::InvBiCGStab<FT, V, S, compress> (*FermionMatrixQPhiX, max_iter);
   } else {
     // TODO: Implement multi-shift CG, Richardson multi-precision
-    masterPrintf(" Solver not yet supported by QPhiX!\n");
-    masterPrintf(" Aborting...\n");
+    QPhiX::masterPrintf(" Solver not yet supported by QPhiX!\n");
+    QPhiX::masterPrintf(" Aborting...\n");
     abort();
   }
-  masterPrintf("# ...done.\n");
+  QPhiX::masterPrintf("# ...done.\n");
 
   // Set number of BLAS threads by hand.
   // In case some implements the tune routines in QPhiX
   // this may be updated...
-  masterPrintf("# Setting number of BLAS threads...\n");
+  QPhiX::masterPrintf("# Setting number of BLAS threads...\n");
   const int n_blas_simt = N_simt;
-  masterPrintf("# ...done.\n");
+  QPhiX::masterPrintf("# ...done.\n");
 
   /************************
    *                      *
@@ -870,7 +867,7 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
    *                      *
   ************************/
 
-  masterPrintf("# Preparing odd source...\n");
+  QPhiX::masterPrintf("# Preparing odd source...\n");
 
   // 1. Reorder input spinor from tmLQCD to QPhiX:
   // a) Merge the even & odd tmlQCD input spinors to a full spinor
@@ -904,7 +901,7 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
                        0);                // target cb == odd
   QPhiX::aypx(0.5, qphix_in[0], qphix_in_prepared, geom, n_blas_simt);
 
-  masterPrintf("# ...done.\n");
+  QPhiX::masterPrintf("# ...done.\n");
 
   /************************
    *                      *
@@ -912,7 +909,7 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
    *                      *
   ************************/
 
-  masterPrintf("# Calling the solver...\n");
+  QPhiX::masterPrintf("# Calling the solver...\n");
 
   // Set variables need for solve
   bool verbose = true;
@@ -952,8 +949,8 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
 
   uint64_t num_cb_sites = lattSize[0]/2 * lattSize[1] * lattSize[2] * lattSize[3];
   uint64_t total_flops = (site_flops + (72 + 2*1320) * mv_apps) * num_cb_sites;
-  masterPrintf("# Solver Time = %g sec\n", (end-start));
-  masterPrintf("# Performance in GFLOPS = %g\n", 1.0e-9 * total_flops / (end-start));
+  QPhiX::masterPrintf("# Solver Time = %g sec\n", (end-start));
+  QPhiX::masterPrintf("# Performance in GFLOPS = %g\n", 1.0e-9 * total_flops / (end-start));
 
   /**************************
    *                        *
@@ -961,7 +958,7 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
    *                        *
   **************************/
 
-  masterPrintf("# Reconstruction even solution...\n");
+  QPhiX::masterPrintf("# Reconstruction even solution...\n");
 
   // 1. Reconstruct the even (cb1) solution
   //
@@ -994,7 +991,7 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
                       tmlqcd_odd_out,      // new odd spinor
                       tmlqcd_full_buffer); // full spinor
 
-  masterPrintf("# ...done.\n");
+  QPhiX::masterPrintf("# ...done.\n");
 
   /******************
    *                *
@@ -1002,7 +999,7 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
    *                *
   ******************/
 
-  masterPrintf("# Cleaning up\n");
+  QPhiX::masterPrintf("# Cleaning up\n");
 
   geom.free(packed_gauge_cb0);
   geom.free(packed_gauge_cb1);
@@ -1017,7 +1014,7 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
   // FIXME: This should be called properly somewhere else
   _endQphix();
 
-  masterPrintf("# ...done.\n\n");
+  QPhiX::masterPrintf("# ...done.\n\n");
 
   return niters;
 }
@@ -1027,11 +1024,11 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
 void D_psi_qphix(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
   if (qphix_precision == QPHIX_DOUBLE_PREC) {
     if (QPHIX_SOALEN > VECLEN_DP) {
-      masterPrintf("SOALEN=%d is greater than the double prec VECLEN=%d\n", QPHIX_SOALEN,
+      QPhiX::masterPrintf("SOALEN=%d is greater than the double prec VECLEN=%d\n", QPHIX_SOALEN,
                    VECLEN_DP);
       abort();
     }
-    masterPrintf("TIMING IN DOUBLE PRECISION \n");
+    QPhiX::masterPrintf("TIMING IN DOUBLE PRECISION \n");
     if (compress12) {
       D_psi<double, VECLEN_DP, QPHIX_SOALEN, true>(tmlqcd_out, tmlqcd_in);
     } else {
@@ -1039,11 +1036,11 @@ void D_psi_qphix(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
     }
   } else if (qphix_precision == QPHIX_FLOAT_PREC) {
     if (QPHIX_SOALEN > VECLEN_SP) {
-      masterPrintf("SOALEN=%d is greater than the single prec VECLEN=%d\n", QPHIX_SOALEN,
+      QPhiX::masterPrintf("SOALEN=%d is greater than the single prec VECLEN=%d\n", QPHIX_SOALEN,
                    VECLEN_SP);
       abort();
     }
-    masterPrintf("TIMING IN SINGLE PRECISION \n");
+    QPhiX::masterPrintf("TIMING IN SINGLE PRECISION \n");
     if (compress12) {
       D_psi<float, VECLEN_SP, QPHIX_SOALEN, true>(tmlqcd_out, tmlqcd_in);
     } else {
@@ -1053,15 +1050,15 @@ void D_psi_qphix(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
 #if defined(QPHIX_MIC_SOURCE)
   else if (qphix_precision == QPHIX_HALF_PREC) {
     if (QPHIX_SOALEN > VECLEN_HP) {
-      masterPrintf("SOALEN=%d is greater than the single prec VECLEN=%d\n", QPHIX_SOALEN,
+      QPhiX::masterPrintf("SOALEN=%d is greater than the single prec VECLEN=%d\n", QPHIX_SOALEN,
                    VECLEN_SP);
       abort();
     }
-    masterPrintf("TIMING IN HALF PRECISION \n");
+    QPhiX::masterPrintf("TIMING IN HALF PRECISION \n");
     if (compress12) {
-      D_psi<half, VECLEN_HP, QPHIX_SOALEN, true>(tmlqcd_out, tmlqcd_in);
+      D_psi<QPhiX::half, VECLEN_HP, QPHIX_SOALEN, true>(tmlqcd_out, tmlqcd_in);
     } else {
-      D_psi<half, VECLEN_HP, QPHIX_SOALEN, false>(tmlqcd_out, tmlqcd_in);
+      D_psi<QPhiX::half, VECLEN_HP, QPHIX_SOALEN, false>(tmlqcd_out, tmlqcd_in);
     }
   }
 #endif
@@ -1085,12 +1082,12 @@ int invert_eo_qphix(spinor * const Even_new,
 
   if (precision < rsdTarget<double>::value) {
     if (QPHIX_SOALEN > VECLEN_DP) {
-      masterPrintf("SOALEN=%d is greater than the double prec VECLEN=%d\n", QPHIX_SOALEN,
+      QPhiX::masterPrintf("SOALEN=%d is greater than the double prec VECLEN=%d\n", QPHIX_SOALEN,
                    VECLEN_DP);
       abort();
     }
-    masterPrintf("# INITIALIZING QPHIX SOLVER\n");
-    masterPrintf("# USING DOUBLE PRECISION\n");
+    QPhiX::masterPrintf("# INITIALIZING QPHIX SOLVER\n");
+    QPhiX::masterPrintf("# USING DOUBLE PRECISION\n");
     _initQphix(0, nullptr, qphix_input_By, qphix_input_Bz, qphix_input_NCores,
            qphix_input_Sy, qphix_input_Sz,
            qphix_input_PadXY, qphix_input_PadXYZ, qphix_input_MinCt,
@@ -1127,12 +1124,12 @@ int invert_eo_qphix(spinor * const Even_new,
   } else {
 #endif
     if (QPHIX_SOALEN > VECLEN_SP) {
-      masterPrintf("SOALEN=%d is greater than the single prec VECLEN=%d\n", QPHIX_SOALEN,
+      QPhiX::masterPrintf("SOALEN=%d is greater than the single prec VECLEN=%d\n", QPHIX_SOALEN,
                    VECLEN_SP);
       abort();
     }
-    masterPrintf("# INITIALIZING QPHIX SOLVER\n");
-    masterPrintf("# USING SINGLE PRECISION\n");
+    QPhiX::masterPrintf("# INITIALIZING QPHIX SOLVER\n");
+    QPhiX::masterPrintf("# USING SINGLE PRECISION\n");
     _initQphix(0, nullptr, qphix_input_By, qphix_input_Bz, qphix_input_NCores,
            qphix_input_Sy, qphix_input_Sz,
            qphix_input_PadXY, qphix_input_PadXYZ, qphix_input_MinCt,
@@ -1165,21 +1162,21 @@ int invert_eo_qphix(spinor * const Even_new,
     }
   }
 #if defined(QPHIX_MIC_SOURCE)
-  else if (precision < rsdTarget<half>::value) {
+  else if (precision < rsdTarget<QPhiX::half>::value) {
     if (QPHIX_SOALEN > VECLEN_HP) {
-      masterPrintf("SOALEN=%d is greater than the single prec VECLEN=%d\n", QPHIX_SOALEN,
+      QPhiX::masterPrintf("SOALEN=%d is greater than the single prec VECLEN=%d\n", QPHIX_SOALEN,
                    VECLEN_SP);
       abort();
     }
-    masterPrintf("# INITIALIZING QPHIX SOLVER\n");
-    masterPrintf("# USING HALF PRECISION\n");
+    QPhiX::masterPrintf("# INITIALIZING QPHIX SOLVER\n");
+    QPhiX::masterPrintf("# USING HALF PRECISION\n");
     _initQphix(0, nullptr, qphix_input_By, qphix_input_Bz, qphix_input_NCores,
            qphix_input_Sy, qphix_input_Sz,
            qphix_input_PadXY, qphix_input_PadXYZ, qphix_input_MinCt,
            compression, QPHIX_HALF_PREC);
     
     if (compress12) {
-      return invert_eo_qphix_helper<half, VECLEN_SP, QPHIX_SOALEN, true>
+      return invert_eo_qphix_helper<QPhiX::half, VECLEN_SP, QPHIX_SOALEN, true>
         (Even_new,
          Odd_new,
          Even,
@@ -1191,7 +1188,7 @@ int invert_eo_qphix(spinor * const Even_new,
          solver_params,
          compression);
     } else {
-      return invert_eo_qphix_helper<half, VECLEN_SP, QPHIX_SOALEN, false>
+      return invert_eo_qphix_helper<QPhiX::half, VECLEN_SP, QPHIX_SOALEN, false>
         (Even_new,
          Odd_new,
          Even,
@@ -1211,11 +1208,11 @@ int invert_eo_qphix(spinor * const Even_new,
 
 void checkQphixInputParameters() {
   if( qphix_input_By == 0 || qphix_input_Bz == 0){
-    masterPrintf("QPHIX Error: By and Bz may not be 0 ! Aborting.\n");
+    QPhiX::masterPrintf("QPHIX Error: By and Bz may not be 0 ! Aborting.\n");
     abort();
   }
   if( qphix_input_NCores * qphix_input_Sy * qphix_input_Sz != omp_num_threads ){
-    masterPrintf("QPHIX Error: NCores * Sy * Sz != ompnumthreads ! Aborting.\n");
+    QPhiX::masterPrintf("QPHIX Error: NCores * Sy * Sz != ompnumthreads ! Aborting.\n");
     abort();
   }
 } 
