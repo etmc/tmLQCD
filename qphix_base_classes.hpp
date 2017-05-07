@@ -377,6 +377,24 @@ class FourSpinorCBWrapper {
   FourSpinorBlock *const spinor;
 };
 
+/**
+  Abstract base class for all single-flavor Dslash variants.
+
+  There are four Dslash operators which are implemented in QPhiX:
+
+  - Wilson
+  - Wilson clover
+  - Wilson twisted mass
+  - Wilson clover with twisted mass
+
+  Each of these has a the actual Dslash operation and a so-called “achimbdpsi” operation. These act
+  on four-spinors given a gauge field. This base class provides a uniform interface to all four
+  kinds.
+
+  This code should eventually be migrated into the QPhiX repository. Currently these classes are
+  mere delegators. In the QPhiX repository, the actual classes there should be used as concrete
+  classes.
+  */
 template <typename FT, int veclen, int soalen, bool compress12>
 class Dslash {
  public:
@@ -645,7 +663,18 @@ class WilsonClovDslash : public Dslash<FT, veclen, soalen, compress12> {
   double const mass_factor_alpha;
   double const mass_factor_beta;
 
+  /**
+    Reference to the clover term.
+
+    This class has to provide a `dslash` and `achimbdpsi` member function with the prescribed
+    argument list which does not contain the clover term. The user of these classes should not have
+    to differentiate between non-clover and clover variants. In order to provide the function
+    signature, the clover term is a member. This means that the user has to construct a new operator
+    each time the clover time has changed.
+    */
   CloverBlock *const clover;
+
+  /// See \ref clover.
   CloverBlock *const inv_clover;
 };
 
