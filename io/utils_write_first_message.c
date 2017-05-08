@@ -22,139 +22,124 @@
 #include "utils.ih"
 #include <read_input.h>
 
+void print_fprint(FILE* parameterfile, const char * const msg){
+  if(g_proc_id == 0){
+    printf(msg);
+    if( (void*)parameterfile != NULL ) fprintf(parameterfile, msg);
+  }
+}
+
 int write_first_messages(FILE * parameterfile, char const * const executable, char const * const git_hash) {
   char message[1024];
-  snprintf(message, 1024, "This is the %s code for twisted mass Wilson QCD\n\nVersion %s, commit %s\n",executable,PACKAGE_VERSION,git_hash);
-  printf("%s",message);
-  fprintf(parameterfile,"%s",message);
-
+  snprintf(message, 1023, "This is the %s code for twisted mass Wilson QCD\n\nVersion %s, commit %s\n",executable,PACKAGE_VERSION,git_hash);
+  print_fprint(parameterfile, message);
+  
 #ifdef SSE
-  printf("# The code is compiled with SSE instructions\n");
-  fprintf(parameterfile, 
-	  "# The code is compiled with SSE instructions\n");
+  snprintf(message, 1023, "# The code is compiled with SSE instructions\n");
+  print_fprint(parameterfile, message);
 #endif
 #ifdef SSE2
-  printf("# The code is compiled with SSE2 instructions\n");
-  fprintf(parameterfile, 
-	  "# The code is compiled with SSE2 instructions\n");
+  snprintf(message, 1023, "# The code is compiled with SSE2 instructions\n");
+  print_fprint(parameterfile, message);
 #endif
 #ifdef SSE3
-  printf("# The code is compiled with SSE3 instructions\n");
-  fprintf(parameterfile, 
-	  "# The code is compiled with SSE3 instructions\n");
+  snprintf(message, 1023, "# The code is compiled with SSE3 instructions\n");
+  print_fprint(parameterfile, message);
 #endif
 #ifdef P4
-  printf("# The code is compiled for Pentium4\n");
-  fprintf(parameterfile, 
-	  "# The code is compiled for Pentium4\n");
+  snprintf(message, 1023, "# The code is compiled for Pentium4\n");
+  print_fprint(parameterfile, message);
 #endif
 #if (defined BGL && !defined BGP)
-  printf("# The code is compiled for Blue Gene/L\n");
-  fprintf(parameterfile, 
-	  "# The code is compiled for Blue Gene/L\n");
+  snprintf(message, 1023, "# The code is compiled for Blue Gene/L\n");
+  print_fprint(parameterfile, message);
 #endif
 #ifdef BGP
-  printf("# The code is compiled for Blue Gene/P\n");
-  fprintf(parameterfile,
-          "# The code is compiled for Blue Gene/P\n");
+  snprintf(message, 1023, "# The code is compiled for Blue Gene/P\n");
+  print_fprint(parameterfile, message);
 #endif
 #if (defined BGQ && defined XLC)
-  printf("# The code is compiled with QPX intrinsics for Blue Gene/Q\n");
-  fprintf(parameterfile,
-          "# The code is compiled with QPX intrinsics for Blue Gene/Q\n");
+  snprintf(message, 1023, "# The code is compiled for Blue Gene/Q\n");
+  print_fprint(parameterfile, message);
 #endif
 #ifdef SPI
-  printf("# Compiled with BG/Q SPI communication\n");
-  fprintf(parameterfile,
-	  "# Compiled with IBM Blue Gene/Q SPI communication\n");
+  snprintf(message, 1023, "# The code is compiled with Blue Gene/Q SPI communication\n");
+  print_fprint(parameterfile, message);
 #endif
 #ifdef OPTERON
-  printf("# The code is compiled for AMD Opteron\n");
-  fprintf(parameterfile,
-	  "# The code is compiled for AMD Opteron\n");
+  snprintf(message, 1023, "# The code is compiled for AMD Opteron\n");
+  print_fprint(parameterfile, message);
 #endif
 #ifdef _GAUGE_COPY
-  printf("# The code is compiled with -D_GAUGE_COPY\n");
-  fprintf(parameterfile,
-	  "# The code is compiled with -D_GAUGE_COPY\n");
+  snprintf(message, 1023, "# The code is compiled with -D_GAUGE_COPY\n");
+  print_fprint(parameterfile, message);
 #endif
 #ifdef _USE_HALFSPINOR
-  printf("# The code is compiled with -D_USE_HALFSPINOR\n");
-  fprintf(parameterfile,
-	  "# The code is compiled with -D_USE_HALFSPINOR\n");
+  snprintf(message, 1023, "# the code is compiled with -D_USE_HALFSPINOR\n");
+  print_fprint(parameterfile, message);
 #endif
 #ifdef _USE_SHMEM
-  printf("# the code is compiled with -D_USE_SHMEM\n");
-  fprintf(parameterfile,
-         "# the code is compiled with -D_USE_SHMEM\n");
+  snprintf(message, 1023, "# the code is compiled with -D_USE_SHMEM\n");
+  print_fprint(parameterfile, message);
 #  ifdef _PERSISTENT
-  printf("# the code is compiled for persistent MPI calls (halfspinor only)\n");
-  fprintf(parameterfile,
-         "# the code is compiled for persistent MPI calls (halfspinor only)\n");
+  snprintf(message, 1023, "# the code is compiled for persistent MPI calls (halfspinor only)\n");
+  print_fprint(parameterfile, message);
 #  endif
 #endif
 #ifdef TM_USE_MPI
 #  ifdef _NON_BLOCKING
-  printf("# the code is compiled for non-blocking MPI calls (spinor and gauge)\n");
-  fprintf(parameterfile,
-         "# the code is compiled for non-blocking MPI calls (spinor and gauge)\n");
+  snprintf(message, 1023, "# the code is compiled for non-blocking MPI calls (spinor and gauge)\n");
+  print_fprint(parameterfile, message);
 #  endif
 #  ifdef HAVE_LIBLEMON
-  printf("# the code is compiled with MPI IO / Lemon\n");
-  fprintf(parameterfile,
-	  "# the code is compiled with MPI IO / Lemon\n");
+  snprintf(message, 1023, "# the code is compiled with MPI IO / Lemon\n");
+  print_fprint(parameterfile, message);
 #  endif
 #endif
 #ifdef TM_USE_OMP
-  printf("# the code is compiled with openMP support\n");
-  fprintf(parameterfile,
-          "# the code is compiled with openMP support\n");
+  snprintf(message, 1023, "# the code is compiled with OpenMP support\n");
+  print_fprint(parameterfile, message);
 #endif
   if( bc_flag == 0 ) {
-    printf("# Periodic boundary conditions are used\n");
-    fprintf(parameterfile, "# Periodic boundary conditions are used\n");
+    snprintf(message, 1023, "# Periodic boundary conditions are used\n");
+    print_fprint(parameterfile, message);
   }
   if( bc_flag == 1 ) {
-    printf("# Schroedinger Functional boundary conditions are used\n");
-    fprintf(parameterfile, "# Schroedinger Functional boundary conditions are used\n");
+    snprintf(message, 1023, "# Schroedinger Functional boundary conditions are used\n");
+    print_fprint(parameterfile, message);
   }
-  printf("# The lattice size is %d x %d x %d x %d\n",
+  snprintf(message, 1023, "# The lattice size is %d x %d x %d x %d\n",
 	 (int)(T*g_nproc_t), (int)(LX*g_nproc_x), (int)(LY*g_nproc_y), (int)(LZ*g_nproc_z));
-  printf("# The local lattice size is %d x %d x %d x %d\n", 
+  print_fprint(parameterfile, message);
+  
+  snprintf(message, 1023, "# The local lattice size is %d x %d x %d x %d\n", 
       (int)(T), (int)(LX), (int)(LY),(int) LZ);
+  print_fprint(parameterfile, message);
+  
+  
   if(even_odd_flag) {
-    printf("# Even/odd preconditioning is used\n");
-    fprintf(parameterfile, "# Even/odd preconditioning is used\n");
+    snprintf(message, 1023, "# Even/odd preconditioning is used\n");
+    print_fprint(parameterfile, message);
   }
   else {
-    printf("# Even/odd preconditioning is not used\n");
-    fprintf(parameterfile, "# Even/odd preconditioning is not used\n");
+    snprintf(message, 1023, "# Even/odd preconditioning is not used\n");
+    print_fprint(parameterfile, message);
   }
-  printf("# beta = %.12f , kappa= %.12f\n", g_beta, g_kappa);
-  printf("# boundary conditions for fermion fields (t,x,y,z) * pi: %f %f %f %f \n",X0,X1,X2,X3);
+  snprintf(message, 1023, "# Using %s precision for the inversions!\n", 
+	         g_relative_precision_flag ? "relative" : "absolute");
+  print_fprint(parameterfile, message);
+
+  snprintf(message, 1023, "# beta = %.12f , kappa= %.12f, mu= %.12f\n", g_beta, g_kappa, g_mu/2/g_kappa);
+  print_fprint(parameterfile, message);
+
+  snprintf(message, 1023, "# boundary conditions for fermion fields (t,x,y,z) * pi: %f %f %f %f \n",X0,X1,X2,X3);
+  print_fprint(parameterfile, message);
+
   if( strcmp(executable,"hmc") == 0 ) {
-    printf("# mu = %.12f\n", g_mu/2./g_kappa);
-    printf("# g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
-    printf("# Using %s precision for the inversions!\n", 
-	   g_relative_precision_flag ? "relative" : "absolute");
-  }
-  fprintf(parameterfile, "# The lattice size is %d x %d x %d x %d\n", (int)(g_nproc_t*T), (int)(g_nproc_x*LX), 
-	  (int)(g_nproc_y*LY), (int)(g_nproc_z*LZ));
-  fprintf(parameterfile, "# The local lattice size is %d x %d x %d x %d\n", (int)(T), (int)(LX), (int)(LY), (int)(LZ));
-  fprintf(parameterfile, "# g_beta = %.12f , g_kappa= %.12f, c_sw = %.12f \n",g_beta,g_kappa,g_c_sw);
-  fprintf(parameterfile, "# boundary conditions for fermion fields (t,x,y,z) * pi: %f %f %f %f \n",X0,X1,X2,X3);
-  if( strcmp(executable,"hmc") == 0 ) {
-    fprintf(parameterfile, "# Nmeas=%d, Nsave=%d \n",
-	    Nmeas,Nsave);
-    fprintf(parameterfile, "# mu = %.12f\n", g_mu/2./g_kappa);
-    fprintf(parameterfile, "# g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
-    fprintf(parameterfile, "# Using %s precision for the inversions!\n", 
-	    g_relative_precision_flag ? "relative" : "absolute");
-  }
-  if( strcmp(executable,"invert") == 0 ) {
-    printf("# beta = %.12f, mu = %.12f, kappa = %.12f\n", g_beta, g_mu/2./g_kappa, g_kappa);
-    fprintf(parameterfile,
-	    "# beta = %.12f, mu = %.12f, kappa = %.12f\n", g_beta, g_mu/2./g_kappa, g_kappa);
+    snprintf(message, 1023, "# g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
+    print_fprint(parameterfile, message);
+    snprintf(message, 1023, "# Nmeas=%d, Nsave=%d \n", Nmeas,Nsave);
+    print_fprint(parameterfile, message);
   }
   fflush(stdout); fflush(parameterfile);
   return(0);

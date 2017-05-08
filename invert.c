@@ -221,11 +221,11 @@ int main(int argc, char *argv[])
   }
   if (even_odd_flag) {
     j = init_spinor_field(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS);
-    j += init_spinor_field_32(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS_32);   
+    j += init_spinor_field_32(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS_32);
   }
   else {
     j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
-    j += init_spinor_field_32(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS_32);   
+    j += init_spinor_field_32(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS_32);
   }
   if (j != 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
