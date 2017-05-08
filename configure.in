@@ -943,7 +943,7 @@ AC_ARG_WITH(qudadir,
 						    AS_HELP_STRING([--with-cudadir[=dir]], [if using QUDA, then set CUDA lib dir [default=/usr/local/cuda/lib]]),
 						    cuda_dir=$withval, cuda_dir="/usr/local/cuda/lib")
 						  AC_MSG_RESULT($cuda_dir)
-						  LDFLAGS="$LDFLAGS -L$cuda_dir"
+						  LDFLAGS="$LDFLAGS -L$cuda_dir -lcuda -lcublas"
               AC_CHECK_LIB([cudart],
                            [cudaMalloc],
                            [],
