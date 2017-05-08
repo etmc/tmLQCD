@@ -3,7 +3,7 @@
 
 # refresh Makefile and other stuff
 
-PROGRAMS_WITH_GIT_HASH := hmc_tm invert
+PROGRAMS_WITH_GIT_HASH := hmc_tm invert offline_measurement
 
 .SUFFIXES:
 
