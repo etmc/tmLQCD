@@ -36,8 +36,10 @@ libsolver_TARGETS = bicgstab_complex gmres incr_eigcg eigcg restart_X ortho \
 	            cgne4complex mr4complex fgmres4complex \
 	            quicksort gmres_dr lu_solve jdher Msap \
                     jdher_bi gram-schmidt eigenvalues_bi \
+		    eigenvalues_arpack arpack_cg \
+		    deflator deflated_cg \
                     bicgstab_complex_bi cg_her_bi pcg_her \
-                    sub_low_ev cg_her_nd poly_precon \
+                    sub_low_ev cg_her_nd poly_precon precon \
                     generate_dfl_subspace dfl_projector \
                     cg_mms_tm cg_mms_tm_nd mixed_cg_mms_tm_nd \
                     solver_field sumr mixed_cg_her index_jd \

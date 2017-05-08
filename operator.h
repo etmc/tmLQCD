@@ -25,6 +25,7 @@
 #include "solver/dirac_operator_eigenvectors.h"
 #include "su3.h"
 #include "solver/solver_params.h"
+#include "solver/deflator.h"
                                     
 
 #define TMWILSON 0
@@ -88,6 +89,9 @@ typedef struct {
 
   /*solver parameters struct*/
   solver_params_t solver_params;
+
+  /* deflator parameters struct */
+  deflator_params_t deflator_params;
 
   /* multiple masses for CGMMS */
   double extra_masses[MAX_EXTRA_MASSES];

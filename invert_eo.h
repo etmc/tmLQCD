@@ -28,6 +28,7 @@
 #define _INVERT_EO_H
 #include "global.h"
 #include "solver/solver_params.h"
+#include "solver/deflator.h"
 
 int invert_eo(spinor * const Even_new, spinor * const Odd_new, 
               spinor * const Even, spinor * const Odd,
