@@ -1013,7 +1013,7 @@ int invert_eo_qphix(spinor *const Even_new, spinor *const Odd_new, spinor *const
 }
 
 void tmlqcd::checkQphixInputParameters(const QphixParams_t &params) {
-  if (params.Ct == 0) {
+  if (params.MinCt == 0) {
     QPhiX::masterPrintf("QPHIX Error: MinCt cannot be 0! Minimal value: 1. Aborting.\n");
     abort();
   }
