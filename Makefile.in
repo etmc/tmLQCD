@@ -73,7 +73,7 @@ NOOPTMOD = test/check_xchange test/check_geometry
 
 PROGRAMS = hmc_tm benchmark invert gen_sources  \
 	check_locallity test_lemon hopping_test LapH_ev \
-	offline_measurement test_Dslash
+	offline_measurement @QPHIX_PROGRAMS@
 
 ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES}
 SUBDIRS = ${USESUBDIRS}
@@ -82,7 +82,7 @@ SUBDIRS = ${USESUBDIRS}
 .SUFFIXES:
 
 # need to build modules before subdirs!
-all: Makefile dep $(SUBDIRS) hmc_tm invert benchmark offline_measurement test_Dslash
+all: Makefile dep $(SUBDIRS) hmc_tm invert benchmark offline_measurement @QPHIX_PROGRAMS@
 
 $(SUBDIRS):
 	$(MAKE) --directory=$@
