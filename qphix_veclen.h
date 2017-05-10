@@ -30,7 +30,7 @@
 #error QPHIX_SOALEN must be defined. Check your qphix/qphix_config.h and qphix/qphix_config_internal.h !
 #endif
 
-#if ( defined(QPHIX_MIC_SOURCE) || defined(QPHIX_AVX512_SOURCE) )
+#if (defined(QPHIX_MIC_SOURCE) || defined(QPHIX_AVX512_SOURCE))
 #define VECLEN_SP 16
 #define VECLEN_HP 16
 #define VECLEN_DP 8
@@ -61,5 +61,4 @@
 #define VECLEN_DP 4
 #endif
 
-#endif // QPHIX_VECLEN_H
-
+#endif  // QPHIX_VECLEN_H

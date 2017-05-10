@@ -37,4 +37,4 @@ typedef struct QphixParams_t {
 
 typedef enum QphixPrec_t { QPHIX_FLOAT_PREC = 0, QPHIX_HALF_PREC, QPHIX_DOUBLE_PREC } QphixPrec_t;
 
-#endif // QPHIX_TYPES_H
+#endif  // QPHIX_TYPES_H

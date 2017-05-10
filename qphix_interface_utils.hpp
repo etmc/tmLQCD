@@ -27,8 +27,7 @@
 
 namespace tmlqcd {
 
-  void checkQphixInputParameters(const QphixParams_t &params);
-  void printQphixDiagnostics(int VECLEN, int SOALEN, bool compress);
+void checkQphixInputParameters(const QphixParams_t &params);
+void printQphixDiagnostics(int VECLEN, int SOALEN, bool compress);
 
-} // namespace tmlqcd
-
+}  // namespace tmlqcd

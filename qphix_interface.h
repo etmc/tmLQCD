@@ -60,24 +60,24 @@
 #ifndef QPHIX_INTERFACE_H_
 #define QPHIX_INTERFACE_H_
 
-#include "su3.h"
 #include "global.h"
-#include "solver/solver_params.h"
 #include "qphix_types.h"
+#include "solver/solver_params.h"
+#include "su3.h"
 
 #ifdef __cplusplus /* If this is a C++ compiler, use C linkage */
 extern "C" {
 #endif
 
 // Initialize and Finalize QPhiX
-void _initQphix(int argc, char **argv, QphixParams_t params, int c12, QphixPrec_t precision);
+void _initQphix(int argc, char** argv, QphixParams_t params, int c12, QphixPrec_t precision);
 void _endQphix();
 
 // Wrapper functions for Full Solver and Dslash
-int invert_eo_qphix(spinor * const Even_new, spinor * const Odd_new, spinor * const Even,
-    spinor * const Odd, const double precision, const int max_iter, const int solver_flag,
-    const int rel_prec, solver_params_t solver_params, const SloppyPrecision sloppy,
-    const CompressionType compression);
+int invert_eo_qphix(spinor* const Even_new, spinor* const Odd_new, spinor* const Even,
+                    spinor* const Odd, const double precision, const int max_iter,
+                    const int solver_flag, const int rel_prec, solver_params_t solver_params,
+                    const SloppyPrecision sloppy, const CompressionType compression);
 void D_psi_qphix(spinor* Odd_out, const spinor* Odd_in);
 
 #ifdef __cplusplus /* If this is a C++ compiler, end C linkage */
