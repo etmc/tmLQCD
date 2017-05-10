@@ -32,11 +32,9 @@ size_t constexpr re = 0;
 size_t constexpr im = 1;
 int const n_blas_simt = 1;
 
-// TODO Are those really correct? Martin thinks that the site `(0, 0, 0, 0)` should be even and with
-// `cb = (x + y + z + y) & 1` that should be zero. Peter says that it is the other way around.
-// Either way, make sure that the following is correct.
-int constexpr cb_even = 1;
-int constexpr cb_odd = 0;
+// The even checkerboard is given by ( (x + y + z + t ) & 1 == 0 ) -> cb0 is even
+int constexpr cb_even = 0;
+int constexpr cb_odd = 1;
 }
 
 /**
@@ -594,7 +592,7 @@ class WilsonClovDslash : public Dslash<FT, veclen, soalen, compress12> {
     argument list which does not contain the clover term. The user of these classes should not have
     to differentiate between non-clover and clover variants. In order to provide the function
     signature, the clover term is a member. This means that the user has to construct a new operator
-    each time the clover time has changed.
+    each time the clover term has changed.
     */
   CloverBlock *const clover;
 

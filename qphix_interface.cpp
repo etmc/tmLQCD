@@ -278,9 +278,9 @@ void reorder_gauge_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geo
 
           FT *out;
           if ((t + x + y + z) & 1)
-            out = qphix_gauge_cb1;  // cb1
+            out = qphix_gauge_cb1;  // odd -> cb1
           else
-            out = qphix_gauge_cb0;  // cb0
+            out = qphix_gauge_cb0;  // even -> cb0
 
           for (int dim = 0; dim < 4; dim++)  // dimension == tmLQCD \mu
           {
@@ -371,9 +371,9 @@ void reorder_spinor_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &ge
           const double *in = tm_spinor + Ns * Nc * Nz * tm_idx;
           FT *out;
           if ((t + x + y + z) & 1)
-            out = qphix_spinor_cb1 + SOALEN * Nz * Nc * Ns * qphix_idx;  // cb1
+            out = qphix_spinor_cb1 + SOALEN * Nz * Nc * Ns * qphix_idx;  // odd -> cb1
           else
-            out = qphix_spinor_cb0 + SOALEN * Nz * Nc * Ns * qphix_idx;  // cb0
+            out = qphix_spinor_cb0 + SOALEN * Nz * Nc * Ns * qphix_idx;  // even -> cb0
 
           // Copy the internal elements, performing a gamma basis transformation
           for (int spin = 0; spin < Ns; spin++)  // QPhiX spin index
@@ -495,7 +495,7 @@ void D_psi(spinor *tmlqcd_out, const spinor *tmlqcd_in) {
                                                            mass);
 #else
   tmlqcd::WilsonTMDslash<FT, V, S, compress> concrete_dslash(&geom, t_boundary, coeff_s, coeff_t,
-                                                             mass, 1.21);
+                                                             mass, 0.003);
 #endif
 
   tmlqcd::Dslash<FT, V, S, compress> &polymorphic_dslash = concrete_dslash;
@@ -509,9 +509,9 @@ void D_psi(spinor *tmlqcd_out, const spinor *tmlqcd_in) {
   // Allocate data for the gauge fields
   QGauge *u_packed[2];
   QGauge *packed_gauge_cb0 =
-      (QGauge *)geom.allocCBGauge();  // Links emanating from ODD sites (cb=0)
+      (QGauge *)geom.allocCBGauge();  // Links emanating from EVEN sites (cb=0)
   QGauge *packed_gauge_cb1 =
-      (QGauge *)geom.allocCBGauge();  // Links emanating from EVEN sites (cb=1)
+      (QGauge *)geom.allocCBGauge();  // Links emanating from ODD sites (cb=1)
   u_packed[0] = packed_gauge_cb0;
   u_packed[1] = packed_gauge_cb1;
 
@@ -642,7 +642,7 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
   qphix_out[0] = packed_spinor_out_cb0;
   qphix_out[1] = packed_spinor_out_cb1;
 
-  // Allocate data for odd (cb0) QPhiX prepared in spinor
+  // Allocate data for odd (cb1) QPhiX prepared in spinor
   // and a buffer for the CG solver (to do the M^dagger matrix
   // multiplication after the solve)
   QSpinor *qphix_in_prepared = (QSpinor *)geom.allocCBFourSpinor();
@@ -756,7 +756,7 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
   reorder_spinor_to_QPhiX(geom, (double *)tmlqcd_full_buffer, reinterpret_cast<FT *>(qphix_in[0]),
                           reinterpret_cast<FT *>(qphix_in[1]));
 
-  // 2. Prepare the odd (cb0) source
+  // 2. Prepare the odd (cb1) source
   //
   //      \tilde b_o = 1/2 Dslash^{Wilson}_oe A^{-1}_{ee} b_e + b_o
   //
@@ -766,20 +766,20 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
   // c) Apply AYPX to rescale last result (=y) and add b_o (=x)
 
   DslashQPhiX->A_inv_chi(qphix_buffer,     // out spinor
-                         qphix_in[1],      // in spinor
+                         qphix_in[0],      // in spinor
                          1);               // non-conjugate
   WilsonDslash->dslash(qphix_in_prepared,  // out spinor
                        qphix_buffer,       // in spinor
-                       u_packed[0],        // gauge field on target cb
+                       u_packed[1],        // gauge field on target cb
                        1,                  // non-conjugate
-                       0);                 // target cb == odd
-  QPhiX::aypx(0.5, qphix_in[0], qphix_in_prepared, geom, n_blas_simt);
+                       1);                 // target cb == odd
+  QPhiX::aypx(0.5, qphix_in[1], qphix_in_prepared, geom, n_blas_simt);
 
   QPhiX::masterPrintf("# ...done.\n");
 
   /************************
    *                      *
-   *     SOLVE ON CB0     *
+   *     SOLVE ON CB1     *
    *                      *
   ************************/
 
@@ -805,15 +805,15 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
     //   M M^dagger qphix_buffer = qphix_in_prepared
     // here, that is, isign = -1 for the QPhiX CG solver.
     // After that multiply with M^dagger:
-    //   qphix_out[0] = M^dagger M^dagger^-1 M^-1 qphix_in_prepared
+    //   qphix_out[1] = M^dagger M^dagger^-1 M^-1 qphix_in_prepared
     (*SolverQPhiX)(qphix_buffer, qphix_in_prepared, RsdTarget, niters, rsd_final, site_flops,
                    mv_apps, -1, verbose);
-    (*FermionMatrixQPhiX)(qphix_out[0], qphix_buffer, /* conjugate */ -1);
+    (*FermionMatrixQPhiX)(qphix_out[1], qphix_buffer, /* conjugate */ -1);
 
   } else if (solver_flag == BICGSTAB) {
     // USING BiCGStab:
-    // Solve M qphix_out[0] = qphix_in_prepared, directly.
-    (*SolverQPhiX)(qphix_out[0], qphix_in_prepared, RsdTarget, niters, rsd_final, site_flops,
+    // Solve M qphix_out[1] = qphix_in_prepared, directly.
+    (*SolverQPhiX)(qphix_out[1], qphix_in_prepared, RsdTarget, niters, rsd_final, site_flops,
                    mv_apps, 1, verbose);
   }
   double end = omp_get_wtime();
@@ -841,12 +841,12 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
   // c) Apply A^{-1} to qphix_buffer and save result in x_e
 
   WilsonDslash->dslash(qphix_buffer,  // out spinor
-                       qphix_out[0],  // in spinor
-                       u_packed[1],   // gauge field on target cb
+                       qphix_out[1],  // in spinor (solution on odd cb)
+                       u_packed[0],   // gauge field on target cb
                        1,             // non-conjugate
-                       1);            // target cb == even
-  QPhiX::aypx(0.5, qphix_in[1], qphix_buffer, geom, n_blas_simt);
-  DslashQPhiX->A_inv_chi(qphix_out[1],  // out spinor
+                       0);            // target cb == even
+  QPhiX::aypx(0.5, qphix_in[0], qphix_buffer, geom, n_blas_simt);
+  DslashQPhiX->A_inv_chi(qphix_out[0],  // out spinor
                          qphix_buffer,  // in spinor
                          1);            // non-conjugate
 
