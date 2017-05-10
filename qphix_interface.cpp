@@ -1093,8 +1093,12 @@ int invert_eo_qphix(spinor * const Even_new,
 }
 
 void tmlqcd::checkQphixInputParameters(const QphixParams_t &params) {
+  if( params.Ct == 0 ){
+    QPhiX::masterPrintf("QPHIX Error: MinCt cannot be 0! Minimal value: 1. Aborting.\n");
+    abort();
+  }
   if( params.By == 0 || params.Bz == 0){
-    QPhiX::masterPrintf("QPHIX Error: By and Bz may not be 0 ! Aborting.\n");
+    QPhiX::masterPrintf("QPHIX Error: By and Bz may not be 0! Minimal value: 1. Aborting.\n");
     abort();
   }
   if( params.NCores * params.Sy * params.Sz != omp_num_threads ){
