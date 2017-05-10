@@ -1,6 +1,8 @@
 /***********************************************************************
  *
  * Copyright (C) 2015 Mario Schroeck
+ *               2016 Peter Labus
+ *               2017 Peter Labus, Martin Ueding, Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -19,43 +21,13 @@
  *
  ***********************************************************************/
 
-// XXX The following comment block seems be mostly redundant. The “Last changes” can be inferred
-// from git, and the externally accessible functions should be listed in the header files. Functions
-// starting with an underscore are often meant to be private (because the C language lacks
-// encapsulation …), so it seems strange that those functions are declared as the global ones.
-
-/***********************************************************************
-*
-* File qphix_interface.c
-*
-* Author: Mario Schroeck <mario.schroeck@roma3.infn.it>,
-*         Peter Labus <Peter.Labus@sissa.it>
-*
-* Last changes: 03/2017
-*
-*
-* Integration of the QPhiX library for Intel Xeon Phi usage
-*
-* The externally accessible functions are
-*
-*   void _initQphix(int argc, char **argv,
-*                   int By_, int Bz_, int NCores_,
-*                   int Sy_, int Sz_, int PadXY_,
-*                   int PadXYZ_, int MinCt_, int c12, QphixPrec precision_)
-*     Initializes the QPhiX library. Carries over the lattice size and the
-*     MPI process grid and thus must be called after initializing MPI (and
-*     after 'read_infile(argc,argv)').
-*
-*   void _endQphix()
-*     Finalizes the QPhiX library. Call before MPI_Finalize().
-*
-**************************************************************************/
-
 #include "qphix_interface.h"
 #include "qphix_base_classes.hpp"
+#include "qphix_veclen.h"
+#include "qphix_interface_utils.hpp"
+#include "qphix_types.h"
 
 #ifdef TM_USE_MPI
-// include mpi.h first
 #include <mpi.h>
 #endif
 
@@ -88,55 +60,7 @@ extern "C" {
 
 #include <vector>
 
-// XXX The following block of code also occurs many times in QPhiX. It seems appropriate to put that
-// into the QPhiX library.
-#ifndef QPHIX_SOALEN
-#error QPHIX_SOALEN must be defined. Check your qphix/qphix_config.h and qphix/qphix_config_internal.h !
-#endif
-
-#if ( defined(QPHIX_MIC_SOURCE) || defined(QPHIX_AVX512_SOURCE) )
-#define VECLEN_SP 16
-#define VECLEN_HP 16
-#define VECLEN_DP 8
-#endif
-
-#if defined(QPHIX_AVX2_SOURCE)
-#define VECLEN_SP 8
-#define VECLEN_DP 4
-#endif
-
-#if defined(QPHIX_AVX_SOURCE)
-#define VECLEN_SP 8
-#define VECLEN_DP 4
-#endif
-
-#if defined(QPHIX_SSE_SOURCE)
-#define VECLEN_SP 4
-#define VECLEN_DP 2
-#endif
-
-#if defined(QPHIX_SCALAR_SOURCE)
-#define VECLEN_SP 1
-#define VECLEN_DP 1
-#endif
-
-#if defined(QPHIX_QPX_SOURCE)
-#define VECLEN_SP 4
-#define VECLEN_DP 4
-#endif
-
-#ifdef QPHIX_QMP_COMMS
-#include <qmp.h>
-#endif
-
-int qphix_input_By = 0;
-int qphix_input_Bz = 0;
-int qphix_input_NCores = 0;
-int qphix_input_Sy = 0;
-int qphix_input_Sz = 0;
-int qphix_input_PadXY = 0;
-int qphix_input_PadXYZ = 0;
-int qphix_input_MinCt= 1;
+QphixParams_t qphix_input;
 
 int By;
 int Bz;
@@ -148,7 +72,7 @@ int PadXYZ;
 int MinCt;
 int N_simt;
 bool compress12;
-QphixPrec qphix_precision;
+QphixPrec_t qphix_precision;
 
 int subLattSize[4];
 int lattSize[4];
@@ -168,10 +92,7 @@ const double rsdTarget<float>::value = 1.0e-7;
 template <>
 const double rsdTarget<double>::value = 1.0e-08;
 
-void checkQphixInputParameters();
-
-void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, int Sz_, int PadXY_,
-                int PadXYZ_, int MinCt_, int c12, QphixPrec precision_) {
+void _initQphix(int argc, char **argv, QphixParams_t params, int c12, QphixPrec_t precision_) {
   static bool qmp_topo_initialised = false;
 
   // Global Lattice Size
@@ -186,20 +107,21 @@ void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, i
   subLattSize[2] = LZ;
   subLattSize[3] = T;
 
-  By = By_;
-  Bz = Bz_;
-  NCores = NCores_;
-  Sy = Sy_;
-  Sz = Sz_;
-  PadXY = PadXY_;
-  PadXYZ = PadXYZ_;
-  MinCt = MinCt_;
-  N_simt = Sy_ * Sz_;
-  compress12 = c12;
+  By = params.By;
+  Bz = params.Bz;
+  NCores = params.NCores;
+  Sy = params.Sy;
+  Sz = params.Sz;
+  PadXY = params.PadXY;
+  PadXYZ = params.PadXYZ;
+  MinCt = params.MinCt;
+  N_simt = Sy * Sz;
+  if( c12 == 8 ){
+    QPhiX::masterPrintf("# INFO QphiX: 8-parameter gauge compression not supported, using two row compression instead!\n");
+    c12 = 12;
+  }
+  compress12 = c12 == 12 ? true : false;
   qphix_precision = precision_;
-
-  // this is called within tmLQCD already, it should not be called here
-  //omp_set_num_threads(NCores * Sy * Sz);
 
 #ifdef QPHIX_QMP_COMMS
   // Declare the logical topology
@@ -555,26 +477,7 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
    *                      *
   ************************/
 
-  QPhiX::masterPrintf("VECLEN=%d SOALEN=%d\n", V, S);
-  QPhiX::masterPrintf("# Declared QMP Topology: %d %d %d %d\n", qmp_geom[0], qmp_geom[1], qmp_geom[2],
-               qmp_geom[3]);
-  QPhiX::masterPrintf("Global Lattice Size = ");
-  for (int mu = 0; mu < 4; mu++) {
-    QPhiX::masterPrintf(" %d", lattSize[mu]);
-  }
-  QPhiX::masterPrintf("\n");
-  QPhiX::masterPrintf("Local Lattice Size = ");
-  for (int mu = 0; mu < 4; mu++) {
-    QPhiX::masterPrintf(" %d", subLattSize[mu]);
-  }
-  QPhiX::masterPrintf("\n");
-  QPhiX::masterPrintf("Block Sizes: By= %d Bz=%d\n", By, Bz);
-  QPhiX::masterPrintf("Cores = %d\n", NCores);
-  QPhiX::masterPrintf("SMT Grid: Sy=%d Sz=%d\n", Sy, Sz);
-  QPhiX::masterPrintf("Pad Factors: PadXY=%d PadXYZ=%d\n", PadXY, PadXYZ);
-  QPhiX::masterPrintf("Threads_per_core = %d\n", N_simt);
-  QPhiX::masterPrintf("MinCt = %d\n", MinCt);
-  QPhiX::masterPrintf("Initializing QPhiX Dslash\n");
+  tmlqcd::printQphixDiagnostics(V,S,compress);
 
   // Create Dslash Class
   double t_boundary = (FT)(1);
@@ -587,7 +490,8 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
   // tmLQCD only stores kappa, QPhiX uses the mass. Convert here.
   double const mass = 1 / (2.0 * g_kappa) - 4;
 
-#if 0 // Change the operator to use here.
+  // FIXME: Wilson Dslash hard-coded for now
+#if 1 // Change the operator to use here.
   tmlqcd::WilsonDslash<FT, V, S, compress> concrete_dslash(&geom, t_boundary, coeff_s, coeff_t, mass);
 #else
   tmlqcd::WilsonTMDslash<FT, V, S, compress> concrete_dslash(&geom, t_boundary, coeff_s, coeff_t,
@@ -595,7 +499,6 @@ void D_psi(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
 #endif
 
   tmlqcd::Dslash<FT, V, S, compress> &polymorphic_dslash = concrete_dslash;
-
 
   /************************
    *                      *
@@ -703,21 +606,7 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
    *                      *
   ************************/
 
-  // _initQphix should have been called at this point
-
-  QPhiX::masterPrintf("# VECLEN = %d, SOALEN = %d\n", V, S);
-  QPhiX::masterPrintf("# Declared QMP Topology: %d %d %d %d\n",
-      qmp_geom[0], qmp_geom[1], qmp_geom[2], qmp_geom[3]);
-  QPhiX::masterPrintf("# Global Lattice Size = %d %d %d %d\n",
-      lattSize[0], lattSize[1], lattSize[2], lattSize[3]);
-  QPhiX::masterPrintf("#  Local Lattice Size = %d %d %d %d\n",
-      subLattSize[0], subLattSize[1], subLattSize[2], subLattSize[3]);
-  QPhiX::masterPrintf("# Block Sizes: By = %d, Bz = %d\n", By, Bz);
-  QPhiX::masterPrintf("# Cores = %d\n", NCores);
-  QPhiX::masterPrintf("# SMT Grid: Sy = %d, Sz = %d\n", Sy, Sz);
-  QPhiX::masterPrintf("# Pad Factors: PadXY = %d, PadXYZ = %d\n", PadXY, PadXYZ);
-  QPhiX::masterPrintf("# Threads_per_core = %d\n", N_simt);
-  QPhiX::masterPrintf("# MinCt = %d\n", MinCt);
+  if( g_debug_level > 1 ) { tmlqcd::printQphixDiagnostics(V,S,compress); }
 
   // Create a Geometry Class
   QPhiX::masterPrintf("# Initializing QPhiX Geometry...\n");
@@ -1022,6 +911,10 @@ int invert_eo_qphix_helper(spinor * const tmlqcd_even_out,
 
 // Template wrapper for the Dslash operator call-able from C code
 void D_psi_qphix(spinor* tmlqcd_out, const spinor* tmlqcd_in) {
+  tmlqcd::checkQphixInputParameters(qphix_input);
+  // FIXME: two-row gauge compression and double precision hard-coded
+  _initQphix(0, nullptr, qphix_input, 12, QPHIX_DOUBLE_PREC);
+
   if (qphix_precision == QPHIX_DOUBLE_PREC) {
     if (QPHIX_SOALEN > VECLEN_DP) {
       QPhiX::masterPrintf("SOALEN=%d is greater than the double prec VECLEN=%d\n", QPHIX_SOALEN,
@@ -1077,8 +970,7 @@ int invert_eo_qphix(spinor * const Even_new,
     const SloppyPrecision sloppy,
     const CompressionType compression) {
 
-
-  checkQphixInputParameters();
+  tmlqcd::checkQphixInputParameters(qphix_input);
 
   if (precision < rsdTarget<double>::value) {
     if (QPHIX_SOALEN > VECLEN_DP) {
@@ -1088,9 +980,7 @@ int invert_eo_qphix(spinor * const Even_new,
     }
     QPhiX::masterPrintf("# INITIALIZING QPHIX SOLVER\n");
     QPhiX::masterPrintf("# USING DOUBLE PRECISION\n");
-    _initQphix(0, nullptr, qphix_input_By, qphix_input_Bz, qphix_input_NCores,
-           qphix_input_Sy, qphix_input_Sz,
-           qphix_input_PadXY, qphix_input_PadXYZ, qphix_input_MinCt,
+    _initQphix(0, nullptr, qphix_input,
            compression, QPHIX_DOUBLE_PREC);
 
     if (compress12) {
@@ -1130,9 +1020,7 @@ int invert_eo_qphix(spinor * const Even_new,
     }
     QPhiX::masterPrintf("# INITIALIZING QPHIX SOLVER\n");
     QPhiX::masterPrintf("# USING SINGLE PRECISION\n");
-    _initQphix(0, nullptr, qphix_input_By, qphix_input_Bz, qphix_input_NCores,
-           qphix_input_Sy, qphix_input_Sz,
-           qphix_input_PadXY, qphix_input_PadXYZ, qphix_input_MinCt,
+    _initQphix(0, nullptr, qphix_input,
            compression, QPHIX_FLOAT_PREC);
 
     if (compress12) {
@@ -1170,9 +1058,7 @@ int invert_eo_qphix(spinor * const Even_new,
     }
     QPhiX::masterPrintf("# INITIALIZING QPHIX SOLVER\n");
     QPhiX::masterPrintf("# USING HALF PRECISION\n");
-    _initQphix(0, nullptr, qphix_input_By, qphix_input_Bz, qphix_input_NCores,
-           qphix_input_Sy, qphix_input_Sz,
-           qphix_input_PadXY, qphix_input_PadXYZ, qphix_input_MinCt,
+    _initQphix(0, nullptr, qphix_input,
            compression, QPHIX_HALF_PREC);
     
     if (compress12) {
@@ -1206,13 +1092,38 @@ int invert_eo_qphix(spinor * const Even_new,
   return -1;
 }
 
-void checkQphixInputParameters() {
-  if( qphix_input_By == 0 || qphix_input_Bz == 0){
+void tmlqcd::checkQphixInputParameters(const QphixParams_t &params) {
+  if( params.By == 0 || params.Bz == 0){
     QPhiX::masterPrintf("QPHIX Error: By and Bz may not be 0 ! Aborting.\n");
     abort();
   }
-  if( qphix_input_NCores * qphix_input_Sy * qphix_input_Sz != omp_num_threads ){
+  if( params.NCores * params.Sy * params.Sz != omp_num_threads ){
     QPhiX::masterPrintf("QPHIX Error: NCores * Sy * Sz != ompnumthreads ! Aborting.\n");
     abort();
+  }
+}
+
+void tmlqcd::printQphixDiagnostics(int VECLEN, int SOALEN, bool compress) {
+  QPhiX::masterPrintf("# QphiX: VECLEN=%d SOALEN=%d\n", VECLEN, SOALEN);
+  QPhiX::masterPrintf("# QphiX: Declared QMP Topology: %d %d %d %d\n", qmp_geom[0], qmp_geom[1], qmp_geom[2],
+               qmp_geom[3]);
+  QPhiX::masterPrintf("# QphiX: Global Lattice Size = ");
+  for (int mu = 0; mu < 4; mu++) {
+    QPhiX::masterPrintf(" %d", lattSize[mu]);
+  }
+  QPhiX::masterPrintf("\n");
+  QPhiX::masterPrintf("# QphiX: Local Lattice Size = ");
+  for (int mu = 0; mu < 4; mu++) {
+    QPhiX::masterPrintf(" %d", subLattSize[mu]);
+  }
+  QPhiX::masterPrintf("\n");
+  QPhiX::masterPrintf("# QphiX: Block Sizes: By= %d Bz=%d\n", By, Bz);
+  QPhiX::masterPrintf("# QphiX: Cores = %d\n", NCores);
+  QPhiX::masterPrintf("# QphiX: SMT Grid: Sy=%d Sz=%d\n", Sy, Sz);
+  QPhiX::masterPrintf("# QphiX: Pad Factors: PadXY=%d PadXYZ=%d\n", PadXY, PadXYZ);
+  QPhiX::masterPrintf("# QphiX: Threads_per_core = %d\n", N_simt);
+  QPhiX::masterPrintf("# QphiX: MinCt = %d\n", MinCt);
+  if(compress){
+    QPhiX::masterPrintf("# QphiX: Using two-row gauge compression (compress12)\n");
   }
 } 

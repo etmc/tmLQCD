@@ -63,6 +63,9 @@ EQL {SPC}*={SPC}*
 #include"operator.h"
 #include"phmc.h"
 #include<io/params.h>
+#ifdef TM_USE_QPHIX
+#include "qphix_types.h"
+#endif
 
 static inline void rmQuotes(char *str){
   char* strsave=str;
@@ -191,14 +194,7 @@ static inline void rmQuotes(char *str){
   int use_preconditioning;
 
 #ifdef TM_USE_QPHIX
-  extern int qphix_input_By;
-  extern int qphix_input_Bz;
-  extern int qphix_input_NCores;
-  extern int qphix_input_Sy;
-  extern int qphix_input_Sz;
-  extern int qphix_input_PadXY;
-  extern int qphix_input_PadXYZ;
-  extern int qphix_input_MinCt;
+  extern QphixParams_t qphix_input;
 #endif
 
   
@@ -1217,42 +1213,42 @@ static inline void rmQuotes(char *str){
 <QPHIXINVERTER>{
   {SPC}*NCores{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    qphix_input_NCores = a;
+    qphix_input.NCores = a;
     if(myverbose) printf("  Ncores = %d, line %d\n", a, line_of_file );
   }
   {SPC}*By{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    qphix_input_By = a;
+    qphix_input.By = a;
     if(myverbose) printf("  By = %d, line %d\n", a, line_of_file );
   }
   {SPC}*Bz{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    qphix_input_Bz = a;
+    qphix_input.Bz = a;
     if(myverbose) printf("  Bz = %d, line %d\n", a, line_of_file );
   }
   {SPC}*Sy{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    qphix_input_Sy = a;
+    qphix_input.Sy = a;
     if(myverbose) printf("  Sy = %d, line %d\n", a, line_of_file );
   }
   {SPC}*Sz{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    qphix_input_Sz = a;
+    qphix_input.Sz = a;
     if(myverbose) printf("  Sz = %d, line %d\n", a, line_of_file );
   }
   {SPC}*PadXY{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    qphix_input_PadXY = a;
+    qphix_input.PadXY = a;
     if(myverbose) printf("  PadXY = %d, line %d\n", a, line_of_file );
   }
   {SPC}*PadXYZ{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    qphix_input_PadXYZ = a;
+    qphix_input.PadXYZ = a;
     if(myverbose) printf("  PadXYZ = %d, line %d\n", a, line_of_file );
   }
   {SPC}*MinCt{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    qphix_input_MinCt = a;
+    qphix_input.MinCt = a;
     if(myverbose) printf("  MinCt = %d, line %d\n", a, line_of_file );
   }
   ^EndExternalInverter{SPC}*  {

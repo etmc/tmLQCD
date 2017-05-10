@@ -1,16 +1,25 @@
-/*
- * test_Dslash.c
+/***********************************************************************
  *
- *  Created on: Nov 13, 2014
- *      Author: mario
- */
-
-/*******************************************************************************
+ * Copyright (C) 2015 Mario Schroeck
+ *               2016 Peter Labus
+ *               2017 Peter Labus, Martin Ueding, Bartosz Kostrzewa
  *
- * test program for Dslash (D_psi)
+ * This file is part of tmLQCD.
  *
+ * tmLQCD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *******************************************************************************/
+ * tmLQCD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -61,8 +70,7 @@
 #include "su3adj.h"
 #include "test/check_geometry.h"
 #include "xchange/xchange.h"
-//#include "phmc.h"
-#include "init/init_parallel.h"
+#include "update_backward_gauge.h"
 #include "invert_clover_eo.h"
 #include "invert_eo.h"
 #include "linalg/assign_add_mul_r.h"
@@ -73,22 +81,7 @@
 #include "operator/clovertm_operators.h"
 #include "prepare_source.h"
 #include "qphix_interface.h"
-
-#ifdef PARALLELT
-#define SLICE (LX * LY * LZ / 2)
-#elif defined PARALLELXT
-#define SLICE ((LX * LY * LZ / 2) + (T * LY * LZ / 2))
-#elif defined PARALLELXYT
-#define SLICE ((LX * LY * LZ / 2) + (T * LY * LZ / 2) + (T * LX * LZ / 2))
-#elif defined PARALLELXYZT
-#define SLICE ((LX * LY * LZ / 2) + (T * LY * LZ / 2) + (T * LX * LZ / 2) + (T * LX * LY / 2))
-#elif defined PARALLELX
-#define SLICE ((LY * LZ * T / 2))
-#elif defined PARALLELXY
-#define SLICE ((LY * LZ * T / 2) + (LX * LZ * T / 2))
-#elif defined PARALLELXYZ
-#define SLICE ((LY * LZ * T / 2) + (LX * LZ * T / 2) + (LX * LY * T / 2))
-#endif
+#include "init/init.h"
 
 int check_xchange();
 
@@ -134,7 +127,7 @@ int main(int argc, char *argv[]) {
 
   /* Set the input file */
   char input_filename[500];
-  snprintf(input_filename, 499, "test_Dslash.input");
+  snprintf(input_filename, 500, "test_Dslash.input");
 
   init_parallel_and_read_input(argc, argv, input_filename);
   tmlqcd_mpi_init(argc, argv);
@@ -277,12 +270,6 @@ int main(int argc, char *argv[]) {
   }
 
   /************************** D_psi_qphix on KNL **************************/
-
-  // TODO: This should be hidden in the interface
-  _initQphix(argc, argv, /* By = */ 2, /* Bz = */ 2, /* Ncores = */ 1,
-             /* Sy = */ 1, /* Sz = */ 1,
-             /* PadXY = */ 1, /* PadXYZ = */ 1, /* MinCt = */ 1,
-             /* compress12 = */ 1, QPHIX_DOUBLE_PREC);
 
   if (g_proc_id == 0) {
     printf("\n");

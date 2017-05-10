@@ -36,8 +36,9 @@
 #include <qmp.h>
 #endif
 
-#include "global.h"
 #include "init_parallel.h"
+#include "global.h"
+#include "read_input.h"
 
 void init_parallel_and_read_input(int argc, char *argv[], char input_filename[]) {
 #ifdef QPHIX_QMP_COMMS

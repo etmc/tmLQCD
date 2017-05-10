@@ -63,16 +63,14 @@
 #include "su3.h"
 #include "global.h"
 #include "solver/solver_params.h"
-
-typedef enum QphixPrec { QPHIX_FLOAT_PREC = 0, QPHIX_HALF_PREC, QPHIX_DOUBLE_PREC } QphixPrec;
+#include "qphix_types.h"
 
 #ifdef __cplusplus /* If this is a C++ compiler, use C linkage */
 extern "C" {
 #endif
 
 // Initialize and Finalize QPhiX
-void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, int Sz_, int PadXY_,
-                int PadXYZ_, int MinCt_, int c12, QphixPrec precision_);
+void _initQphix(int argc, char **argv, QphixParams_t params, int c12, QphixPrec_t precision);
 void _endQphix();
 
 // Wrapper functions for Full Solver and Dslash
