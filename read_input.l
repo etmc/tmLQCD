@@ -347,6 +347,8 @@ static inline void rmQuotes(char *str){
 %x LOWMEM
 %x SUBPROCESS 
 
+%x INITEXTERNALINVERTER
+
 %%
 ^SourceFilename{EQL}               BEGIN(SOURCEFILE);
 ^PropagatorFilename{EQL}           BEGIN(PROPFILE);
@@ -417,7 +419,6 @@ static inline void rmQuotes(char *str){
 ^NoSamples{EQL}                    BEGIN(NOSAMPLES);
 ^SplittedPropagator{EQL}           BEGIN(PROPSPLIT);
 ^UsePreconditioning{EQL}           BEGIN(PRECONDITIONING);
-^UseQudaInverter{EQL}              BEGIN(QUDAINVERTER);
 ^UseCompression{EQL}               BEGIN(COMPRESSION);
 
 ^BeginMeasurement{SPC}+            BEGIN(INITMEASUREMENT);
@@ -428,6 +429,8 @@ static inline void rmQuotes(char *str){
 ^BeginMonomial{SPC}+               BEGIN(INITMONOMIAL);
 ^BeginInt                         BEGIN(INITINTEGRATOR);
 ^BeginOperator{SPC}+               BEGIN(INITOPERATOR);
+
+^BeginExternalInverter{SPC}+       BEGIN(INITEXTERNALINVERTER);
 
 ^PropagatorComparison{EQL}         BEGIN(PCOMP);
 ^NbCoresPerNode{EQL}               BEGIN(NBCORES);
@@ -1187,6 +1190,26 @@ static inline void rmQuotes(char *str){
   }
 }
 
+<INITEXTERNALINVERTER>{TYPE} {
+  if(strcmp(yytext, "QUDA")==0) {
+#ifdef QUDA
+    if(myverbose) printf("Setting QUDA external inverter parameters line %d\n", line_of_file);
+    BEGIN(QUDAINVERTER);
+#else
+    printf("tmLQCD built withtout QUDA support. Exiting!\n");
+    exit(1);
+#endif
+  } else {
+    printf("Error on line %d, inverter '%s' is unknown. Exiting!\n", line_of_file, yytext);
+    exit(1);
+  }
+}
+<QUDAINVERTER>{
+  ^EndExternalInverter{SPC}*  {
+    if(myverbose) printf("QUDA external inverter parameters parsed on line %d\n\n", line_of_file);
+    BEGIN(0);
+  }
+}
 
 <CSWSOLVER>{
   bicgstab {
@@ -2489,7 +2512,7 @@ static inline void rmQuotes(char *str){
   BEGIN(comment_caller);
 }
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID>{SPC}*\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID,INITEXTERNALINVERTER,QUDAINVERTER>{SPC}*\n   {
   line_of_file++;
 }
 <*>{SPC}*\n                       {
