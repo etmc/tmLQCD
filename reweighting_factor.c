@@ -134,7 +134,7 @@ void reweighting_factor(const int N, const int nstore) {
       for(int j = 0; j < no_monomials; j++) {
         mnl = &monomial_list[j];
         for(int i = 0; i < N; i++) {
-          fprintf(ofs, "%.2d %.5d %e %e %e %e %.10e\n", j, i, mnl->kappa, mnl->kappa2, mnl->mu, mnl->mu2, data[i*no_monomials + j] + trlog[j]);
+          fprintf(ofs, "%.2d %.5d %.12f %.12f %.12f %.12f %.10e\n", j, i, mnl->kappa, mnl->kappa2, mnl->mu, mnl->mu2, data[i*no_monomials + j] + trlog[j]);
         }
       }
       fclose(ofs);

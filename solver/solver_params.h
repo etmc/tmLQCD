@@ -56,6 +56,7 @@ typedef struct {
      where the maximum is over the iterated residuals since the last update */  
   float mcg_delta; 
 
+  
 } solver_params_t;
 
 #endif

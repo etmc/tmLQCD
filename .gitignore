@@ -8,5 +8,14 @@ read_input.c
 *~
 Makefile
 config.log
+config.h
+config.status
 *.mod.c
 *.opari.inc
+*.a
+hmc_tm
+invert
+offline_measurement
+lib/
+benchmark
+

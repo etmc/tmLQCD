@@ -68,6 +68,9 @@
 #include "integrator.h"
 #include "sighandler.h"
 #include "meas/measurements.h"
+#ifdef DDalphaAMG
+#include "DDalphaAMG_interface.h"
+#endif
 
 extern int nstore;
 
@@ -388,7 +391,7 @@ int main(int argc,char *argv[]) {
   if(g_proc_id == 0) {
     gettimeofday(&t1,NULL);
     countfile = fopen("history_hmc_tm", "a");
-    fprintf(countfile, "!!! Timestamp %ld, Nsave = %d, g_mu = %e, g_mu1 = %e, g_mu_2 = %e, g_mu3 = %e, beta = %f, kappa = %f, C1 = %f, ",
+    fprintf(countfile, "!!! Timestamp %ld, Nsave = %d, g_mu = %.12f, g_mu1 = %.12f, g_mu_2 = %.12f, g_mu3 = %.12f, beta = %.12f, kappa = %.12f, C1 = %f, ",
             t1.tv_sec, Nsave, g_mu, g_mu1, g_mu2, g_mu3, g_beta, g_kappa, g_rgi_C1);
     for(j = 0; j < Integrator.no_timescales; j++) {
       fprintf(countfile, "n_int[%d] = %d ", j, Integrator.no_mnls_per_ts[j]);

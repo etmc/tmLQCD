@@ -23,7 +23,8 @@ typedef enum SOLVER_TYPE {
  SUMR,
  MCR,
  CR,
- BICG
+ BICG,
+ MG
 } SOLVER_TYPE;
 
 #endif

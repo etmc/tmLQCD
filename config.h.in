@@ -1,4 +1,5 @@
-/* config.h.in.  Generated from configure.in by autoheader.  */
+/* Hand-written config.h.in. */
+
 #ifndef _CONFIG_H
 #define _CONFIG_H
 
@@ -201,6 +202,9 @@
 
 /* Using QUDA GPU */
 #undef QUDA
+
+/* Using DDalphaAMG */
+#undef DDalphaAMG
 
 #endif
 
