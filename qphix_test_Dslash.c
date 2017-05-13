@@ -82,6 +82,7 @@
 #include "prepare_source.h"
 #include "qphix_interface.h"
 #include "init/init.h"
+#include "linalg/diff_and_square_norm.h"
 
 int check_xchange();
 
@@ -177,13 +178,10 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "Not enough memory for halfspinor fields! Aborting...\n");
     exit(0);
   }
-  if (g_sloppy_precision_flag == 1) {
-    g_sloppy_precision = 1;
-    j = init_dirac_halfspinor32();
-    if (j != 0) {
-      fprintf(stderr, "Not enough memory for 32-Bit halfspinor fields! Aborting...\n");
-      exit(0);
-    }
+  j = init_dirac_halfspinor32();
+  if (j != 0) {
+    fprintf(stderr, "Not enough memory for 32-Bit halfspinor fields! Aborting...\n");
+    exit(0);
   }
 #if (defined _PERSISTENT)
   init_xchange_halffield();
@@ -197,8 +195,8 @@ int main(int argc, char *argv[]) {
   }
 
   start_ranlux(1, 123456);
-  random_gauge_field(0, g_gauge_field);
-// unit_g_gauge_field(); // unit 3x3 colour matrices
+  random_gauge_field(1, g_gauge_field);
+  // unit_g_gauge_field(); // unit 3x3 colour matrices
 // g_gauge_field[ g_ipt[0][0][0][1] ][0].c00 = 1.0;
 // g_gauge_field[ g_ipt[0][0][0][1] ][0].c01 = 0.0;
 // g_gauge_field[ g_ipt[0][0][0][1] ][0].c02 = 0.0;
@@ -219,13 +217,13 @@ int main(int argc, char *argv[]) {
 
   // Init a lexicographic spinor with uniform random source
   zero_spinor_field(g_spinor_field[0], VOLUME);
-  random_spinor_field_eo(g_spinor_field[0], 0, RN_UNIF);
+  random_spinor_field_lexic(g_spinor_field[0], 1, RN_UNIF);
 
   // Coordinates are T, X, Y, Z
   // g_spinor_field[0][ g_ipt[0][0][0][0] ].s0.c0 = 1.0; // even point source
   // g_spinor_field[0][ g_ipt[0][0][0][1] ].s0.c0 = 1.0; // odd point source
 
-  /************************** D_psi on CPU **************************/
+  /************************** tmLQCD D_psi **************************/
 
   if (g_proc_id == 0) {
     printf("\n\n");
@@ -264,12 +262,12 @@ int main(int argc, char *argv[]) {
   // print L2-norm of result:
   squarenorm = square_norm(g_spinor_field[1], VOLUME, 1);
   if (g_proc_id == 0) {
-    printf("  ||result_1||^2 = %e\n", squarenorm);
+    printf("  ||result_1||^2 = %.16e\n", squarenorm);
     printf("  Time for MV mult: %e\n", t2 - t1);
     fflush(stdout);
   }
 
-  /************************** D_psi_qphix on KNL **************************/
+  /************************** D_psi_qphix **************************/
 
   if (g_proc_id == 0) {
     printf("\n");
@@ -295,7 +293,7 @@ int main(int argc, char *argv[]) {
   // print L2-norm of result:
   squarenorm = square_norm(g_spinor_field[2], VOLUME, 1);
   if (g_proc_id == 0) {
-    printf("  ||result_2||^2 = %e\n", squarenorm);
+    printf("  ||result_2||^2 = %.16e\n", squarenorm);
     printf("  Time for MV mult: %e\n", t2 - t1);
     fflush(stdout);
   }
@@ -338,17 +336,9 @@ int main(int argc, char *argv[]) {
     printf("# Comparison tmLQCD vs QPhiX:\n");
     printf("# ===========================\n\n");
   }
-  // subract result1 -= result2
-  for (int ix = 0; ix < VOLUME; ix++) {
-    // odd
-    _vector_sub_assign(g_spinor_field[1][ix].s0, g_spinor_field[2][ix].s0);
-    _vector_sub_assign(g_spinor_field[1][ix].s1, g_spinor_field[2][ix].s1);
-    _vector_sub_assign(g_spinor_field[1][ix].s2, g_spinor_field[2][ix].s2);
-    _vector_sub_assign(g_spinor_field[1][ix].s3, g_spinor_field[2][ix].s3);
-  }
 
   // print L2-norm of result1 - result2:
-  squarenorm = square_norm(g_spinor_field[1], VOLUME, 1);
+  squarenorm = diff_and_square_norm(g_spinor_field[1], g_spinor_field[2], VOLUME);
   if (g_proc_id == 0) {
     printf("  ||result_1 - result_2||^2 = %e\n\n", squarenorm);
     fflush(stdout);

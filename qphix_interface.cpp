@@ -60,6 +60,8 @@ extern "C" {
 
 #include <vector>
 
+using namespace tmlqcd;
+
 QphixParams_t qphix_input;
 
 int By;
@@ -278,9 +280,9 @@ void reorder_gauge_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geo
 
           FT *out;
           if ((t + x + y + z) & 1)
-            out = qphix_gauge_cb1;  // cb1
+            out = qphix_gauge_cb1;  // odd -> cb1
           else
-            out = qphix_gauge_cb0;  // cb0
+            out = qphix_gauge_cb0;  // even -> cb0
 
           for (int dim = 0; dim < 4; dim++)  // dimension == tmLQCD \mu
           {
@@ -371,9 +373,9 @@ void reorder_spinor_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &ge
           const double *in = tm_spinor + Ns * Nc * Nz * tm_idx;
           FT *out;
           if ((t + x + y + z) & 1)
-            out = qphix_spinor_cb1 + SOALEN * Nz * Nc * Ns * qphix_idx;  // cb1
+            out = qphix_spinor_cb1 + SOALEN * Nz * Nc * Ns * qphix_idx;  // odd -> cb1
           else
-            out = qphix_spinor_cb0 + SOALEN * Nz * Nc * Ns * qphix_idx;  // cb0
+            out = qphix_spinor_cb0 + SOALEN * Nz * Nc * Ns * qphix_idx;  // even -> cb0
 
           // Copy the internal elements, performing a gamma basis transformation
           for (int spin = 0; spin < Ns; spin++)  // QPhiX spin index
@@ -495,7 +497,7 @@ void D_psi(spinor *tmlqcd_out, const spinor *tmlqcd_in) {
                                                            mass);
 #else
   tmlqcd::WilsonTMDslash<FT, V, S, compress> concrete_dslash(&geom, t_boundary, coeff_s, coeff_t,
-                                                             mass, 1.21);
+                                                             mass, 0.003);
 #endif
 
   tmlqcd::Dslash<FT, V, S, compress> &polymorphic_dslash = concrete_dslash;
@@ -509,16 +511,16 @@ void D_psi(spinor *tmlqcd_out, const spinor *tmlqcd_in) {
   // Allocate data for the gauge fields
   QGauge *u_packed[2];
   QGauge *packed_gauge_cb0 =
-      (QGauge *)geom.allocCBGauge();  // Links emanating from ODD sites (cb=0)
+      (QGauge *)geom.allocCBGauge();  // Links emanating from EVEN sites (cb=0)
   QGauge *packed_gauge_cb1 =
-      (QGauge *)geom.allocCBGauge();  // Links emanating from EVEN sites (cb=1)
-  u_packed[0] = packed_gauge_cb0;
-  u_packed[1] = packed_gauge_cb1;
+      (QGauge *)geom.allocCBGauge();  // Links emanating from ODD sites (cb=1)
+  u_packed[cb_even] = packed_gauge_cb0;
+  u_packed[cb_odd] = packed_gauge_cb1;
 
   // Reorder (global) input gauge field from tmLQCD to QPhiX,
   // which uses global tmlQCD gauge field as input
-  reorder_gauge_to_QPhiX(geom, reinterpret_cast<FT *>(u_packed[0]),
-                         reinterpret_cast<FT *>(u_packed[1]));
+  reorder_gauge_to_QPhiX(geom, reinterpret_cast<FT *>(u_packed[cb_even]),
+                         reinterpret_cast<FT *>(u_packed[cb_odd]));
 
   /************************
    *                      *
@@ -533,24 +535,22 @@ void D_psi(spinor *tmlqcd_out, const spinor *tmlqcd_in) {
   QSpinor *packed_spinor_in_cb1 = (QSpinor *)geom.allocCBFourSpinor();
   QSpinor *packed_spinor_out_cb0 = (QSpinor *)geom.allocCBFourSpinor();
   QSpinor *packed_spinor_out_cb1 = (QSpinor *)geom.allocCBFourSpinor();
-  qphix_in[0] = packed_spinor_in_cb0;
-  qphix_in[1] = packed_spinor_in_cb1;
-  qphix_out[0] = packed_spinor_out_cb0;
-  qphix_out[1] = packed_spinor_out_cb1;
+  qphix_in[cb_even] = packed_spinor_in_cb0;
+  qphix_in[cb_odd] = packed_spinor_in_cb1;
+  qphix_out[cb_even] = packed_spinor_out_cb0;
+  qphix_out[cb_odd] = packed_spinor_out_cb1;
 
   QSpinor *tmp_spinor = (QSpinor *)geom.allocCBFourSpinor();
 
   // Reorder input spinor from tmLQCD to QPhiX
   reorder_spinor_to_QPhiX(geom, reinterpret_cast<double const *>(tmlqcd_in),
-                          reinterpret_cast<FT *>(qphix_in[0]), reinterpret_cast<FT *>(qphix_in[1]));
+                          reinterpret_cast<FT *>(qphix_in[cb_even]), reinterpret_cast<FT *>(qphix_in[cb_odd]));
 
   // Apply QPhiX Dslash to qphix_in spinors
-  polymorphic_dslash.dslash(qphix_out[1], qphix_in[0], u_packed[1],
-                            /* isign == non-conjugate */ 1, /* cb == */
-                            1);
-  polymorphic_dslash.dslash(qphix_out[0], qphix_in[1], u_packed[0],
-                            /* isign == non-conjugate */ 1, /* cb == */
-                            0);
+  polymorphic_dslash.dslash(qphix_out[cb_odd], qphix_in[cb_even], u_packed[cb_odd],
+                            /* isign == non-conjugate */ 1, cb_odd);
+  polymorphic_dslash.dslash(qphix_out[cb_even], qphix_in[cb_odd], u_packed[cb_even],
+                            /* isign == non-conjugate */ 1, cb_even);
 
   if (std::is_same<decltype(concrete_dslash), tmlqcd::WilsonTMDslash<FT, V, S, compress>>::value) {
     for (int cb : {0, 1}) {
@@ -561,8 +561,8 @@ void D_psi(spinor *tmlqcd_out, const spinor *tmlqcd_in) {
 
   // Reorder spinor fields back to tmLQCD
   reorder_spinor_from_QPhiX(geom, reinterpret_cast<double *>(tmlqcd_out),
-                            reinterpret_cast<FT *>(qphix_out[0]),
-                            reinterpret_cast<FT *>(qphix_out[1]), (1. * g_kappa));
+                            reinterpret_cast<FT *>(qphix_out[cb_even]),
+                            reinterpret_cast<FT *>(qphix_out[cb_odd]), (1. * g_kappa));
 
   QPhiX::masterPrintf("Cleaning up\n");
 
@@ -613,12 +613,12 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
   QGauge *u_packed[2];
   QGauge *packed_gauge_cb0 = (QGauge *)geom.allocCBGauge();
   QGauge *packed_gauge_cb1 = (QGauge *)geom.allocCBGauge();
-  u_packed[0] = packed_gauge_cb0;
-  u_packed[1] = packed_gauge_cb1;
+  u_packed[cb_even] = packed_gauge_cb0;
+  u_packed[cb_odd] = packed_gauge_cb1;
 
   // Reorder (global) input gauge field from tmLQCD to QPhiX
-  reorder_gauge_to_QPhiX(geom, reinterpret_cast<FT *>(u_packed[0]),
-                         reinterpret_cast<FT *>(u_packed[1]));
+  reorder_gauge_to_QPhiX(geom, reinterpret_cast<FT *>(u_packed[cb_even]),
+                         reinterpret_cast<FT *>(u_packed[cb_odd]));
 
   QPhiX::masterPrintf("# ...done.\n");
 
@@ -637,12 +637,12 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
   QSpinor *packed_spinor_out_cb1 = (QSpinor *)geom.allocCBFourSpinor();
   QSpinor *qphix_in[2];
   QSpinor *qphix_out[2];
-  qphix_in[0] = packed_spinor_in_cb0;
-  qphix_in[1] = packed_spinor_in_cb1;
-  qphix_out[0] = packed_spinor_out_cb0;
-  qphix_out[1] = packed_spinor_out_cb1;
+  qphix_in[cb_even] = packed_spinor_in_cb0;
+  qphix_in[cb_odd] = packed_spinor_in_cb1;
+  qphix_out[cb_even] = packed_spinor_out_cb0;
+  qphix_out[cb_odd] = packed_spinor_out_cb1;
 
-  // Allocate data for odd (cb0) QPhiX prepared in spinor
+  // Allocate data for odd (cb1) QPhiX prepared in spinor
   // and a buffer for the CG solver (to do the M^dagger matrix
   // multiplication after the solve)
   QSpinor *qphix_in_prepared = (QSpinor *)geom.allocCBFourSpinor();
@@ -688,7 +688,7 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
     abort();
   } else if (g_mu != 0.0) {  // TWISTED-MASS
     QPhiX::masterPrintf("# Creating QPhiX Twisted Mass Wilson Dslash...\n");
-    const double TwistedMass = -g_mu / (2.0 * g_kappa);
+    const double TwistedMass = -g_mu;
     DslashQPhiX = new tmlqcd::WilsonTMDslash<FT, V, S, compress>(&geom, t_boundary, coeff_s,
                                                                  coeff_t, mass, TwistedMass);
     QPhiX::masterPrintf("# ...done.\n");
@@ -753,10 +753,10 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
                       tmlqcd_even_in,      // even spinor
                       tmlqcd_odd_in);      // odd spinor
 
-  reorder_spinor_to_QPhiX(geom, (double *)tmlqcd_full_buffer, reinterpret_cast<FT *>(qphix_in[0]),
-                          reinterpret_cast<FT *>(qphix_in[1]));
+  reorder_spinor_to_QPhiX(geom, (double *)tmlqcd_full_buffer, reinterpret_cast<FT *>(qphix_in[cb_even]),
+                          reinterpret_cast<FT *>(qphix_in[cb_odd]));
 
-  // 2. Prepare the odd (cb0) source
+  // 2. Prepare the odd (cb1) source
   //
   //      \tilde b_o = 1/2 Dslash^{Wilson}_oe A^{-1}_{ee} b_e + b_o
   //
@@ -765,21 +765,21 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
   // b) Apply Wilson Dslash to qphix_buffer and save result in qphix_in_prepared
   // c) Apply AYPX to rescale last result (=y) and add b_o (=x)
 
-  DslashQPhiX->A_inv_chi(qphix_buffer,     // out spinor
-                         qphix_in[1],      // in spinor
-                         1);               // non-conjugate
-  WilsonDslash->dslash(qphix_in_prepared,  // out spinor
-                       qphix_buffer,       // in spinor
-                       u_packed[0],        // gauge field on target cb
-                       1,                  // non-conjugate
-                       0);                 // target cb == odd
-  QPhiX::aypx(0.5, qphix_in[0], qphix_in_prepared, geom, n_blas_simt);
+  DslashQPhiX->A_inv_chi(qphix_buffer,      // out spinor
+                         qphix_in[cb_even], // in spinor
+                         1);                // non-conjugate
+  WilsonDslash->dslash(qphix_in_prepared,   // out spinor
+                       qphix_buffer,        // in spinor
+                       u_packed[cb_odd],    // gauge field on target cb
+                       1,                   // non-conjugate
+                       cb_odd);             // target cb
+  QPhiX::aypx(0.5, qphix_in[cb_odd], qphix_in_prepared, geom, n_blas_simt);
 
   QPhiX::masterPrintf("# ...done.\n");
 
   /************************
    *                      *
-   *     SOLVE ON CB0     *
+   *   SOLVE ON ODD CB    *
    *                      *
   ************************/
 
@@ -805,15 +805,15 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
     //   M M^dagger qphix_buffer = qphix_in_prepared
     // here, that is, isign = -1 for the QPhiX CG solver.
     // After that multiply with M^dagger:
-    //   qphix_out[0] = M^dagger M^dagger^-1 M^-1 qphix_in_prepared
+    //   qphix_out[1] = M^dagger M^dagger^-1 M^-1 qphix_in_prepared
     (*SolverQPhiX)(qphix_buffer, qphix_in_prepared, RsdTarget, niters, rsd_final, site_flops,
                    mv_apps, -1, verbose);
-    (*FermionMatrixQPhiX)(qphix_out[0], qphix_buffer, /* conjugate */ -1);
+    (*FermionMatrixQPhiX)(qphix_out[cb_odd], qphix_buffer, /* conjugate */ -1);
 
   } else if (solver_flag == BICGSTAB) {
     // USING BiCGStab:
-    // Solve M qphix_out[0] = qphix_in_prepared, directly.
-    (*SolverQPhiX)(qphix_out[0], qphix_in_prepared, RsdTarget, niters, rsd_final, site_flops,
+    // Solve M qphix_out[1] = qphix_in_prepared, directly.
+    (*SolverQPhiX)(qphix_out[cb_odd], qphix_in_prepared, RsdTarget, niters, rsd_final, site_flops,
                    mv_apps, 1, verbose);
   }
   double end = omp_get_wtime();
@@ -840,21 +840,21 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
   // c) Apply AYPX to rescale last result (=y) and add b_e (=x)
   // c) Apply A^{-1} to qphix_buffer and save result in x_e
 
-  WilsonDslash->dslash(qphix_buffer,  // out spinor
-                       qphix_out[0],  // in spinor
-                       u_packed[1],   // gauge field on target cb
-                       1,             // non-conjugate
-                       1);            // target cb == even
-  QPhiX::aypx(0.5, qphix_in[1], qphix_buffer, geom, n_blas_simt);
-  DslashQPhiX->A_inv_chi(qphix_out[1],  // out spinor
-                         qphix_buffer,  // in spinor
-                         1);            // non-conjugate
+  WilsonDslash->dslash(qphix_buffer,       // out spinor
+                       qphix_out[cb_odd],  // in spinor (solution on odd cb)
+                       u_packed[cb_even],  // gauge field on target cb
+                       1,                  // non-conjugate
+                       cb_even);           // target cb == even
+  QPhiX::aypx(0.5, qphix_in[0], qphix_buffer, geom, n_blas_simt);
+  DslashQPhiX->A_inv_chi(qphix_out[cb_even],  // out spinor
+                         qphix_buffer,        // in spinor
+                         1);                  // non-conjugate
 
   // 2. Reorder spinor fields back to tmLQCD, rescaling by a factor 1/(2*\kappa)
 
   reorder_spinor_from_QPhiX(geom, reinterpret_cast<double *>(tmlqcd_full_buffer),
-                            reinterpret_cast<FT *>(qphix_out[0]),
-                            reinterpret_cast<FT *>(qphix_out[1]), 1.0 / (2.0 * g_kappa));
+                            reinterpret_cast<FT *>(qphix_out[cb_even]),
+                            reinterpret_cast<FT *>(qphix_out[cb_odd]), 1.0 / (2.0 * g_kappa));
 
   convert_lexic_to_eo(tmlqcd_even_out,      // new even spinor
                       tmlqcd_odd_out,       // new odd spinor

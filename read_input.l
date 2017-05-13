@@ -63,9 +63,7 @@ EQL {SPC}*={SPC}*
 #include"operator.h"
 #include"phmc.h"
 #include<io/params.h>
-#ifdef TM_USE_QPHIX
 #include "qphix_types.h"
-#endif
 
 static inline void rmQuotes(char *str){
   char* strsave=str;
@@ -193,10 +191,13 @@ static inline void rmQuotes(char *str){
 
   int use_preconditioning;
 
+  /* macro control over read_input.l is poor. In order to support compilation without
+   * QphiX, we need to have this declared here as a dummy */
 #ifdef TM_USE_QPHIX
   extern QphixParams_t qphix_input;
+#else
+  QphixParams_t qphix_input;
 #endif
-
   
 %}
 
@@ -1203,8 +1204,13 @@ static inline void rmQuotes(char *str){
 
 <INITEXTERNALINVERTER>{TYPE} {
   if(strcmp(yytext, "QPHIX")==0) {
+#ifdef TM_USE_QPHIX
     if(myverbose) printf("Setting QPHIX external inverter parameters line %d\n", line_of_file);
     BEGIN(QPHIXINVERTER);
+#else
+    printf("tmLQCD built withtout QPHIX support. Exiting!\n");
+    exit(1);
+#endif
   } else {
     printf("Error on line %d, inverter '%s' is unknown. Exiting!\n", line_of_file, yytext);
     exit(1);
