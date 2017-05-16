@@ -107,10 +107,15 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
   }
   solver_pm.sdim = VOLUME/2;
   solver_pm.rel_prec = g_relative_precision_flag;
-  // since each shift will be multiplied by mnl->rat.rmu, we scale the tolerance with it.
   solver_pm.mms_squared_solver_prec = (double*) malloc(solver_pm.no_shifts*sizeof(double));
-  for(int i=0; i<solver_pm.no_shifts; i++)
-    solver_pm.mms_squared_solver_prec[i] = solver_pm.squared_solver_prec/mnl->rat.rmu[i]/mnl->rat.rmu[i];
+  for(int i=0; i<solver_pm.no_shifts; i++) {
+#ifdef SPERIMENTAL
+    // since each shift will be multiplied by mnl->rat.rmu, we scale the tolerance with it.
+    solver_pm.mms_squared_solver_prec[i] = solver_pm.squared_solver_prec/solver_pm.shifts[i]/solver_pm.shifts[i];
+#else
+    solver_pm.mms_squared_solver_prec[i] = solver_pm.squared_solver_prec;
+#endif
+  }
 
   // apply B to the random field to generate pseudo-fermion fields
   up0 = mnl->w_fields[0]; dn0 = mnl->w_fields[1];
@@ -211,10 +216,15 @@ double ndratcor_acc(const int id, hamiltonian_field_t * const hf) {
   }
   solver_pm.sdim = VOLUME/2;
   solver_pm.rel_prec = g_relative_precision_flag;
-  // since each shift will be multiplied by mnl->rat.rmu, we scale the tolerance with it.
   solver_pm.mms_squared_solver_prec = (double*) malloc(solver_pm.no_shifts*sizeof(double));
-  for(int i=0; i<solver_pm.no_shifts; i++)
-    solver_pm.mms_squared_solver_prec[i] = solver_pm.squared_solver_prec/mnl->rat.rmu[i]/mnl->rat.rmu[i];
+  for(int i=0; i<solver_pm.no_shifts; i++) {
+#ifdef SPERIMENTAL
+    // since each shift will be multiplied by solver_pm.shifts, we scale the tolerance with it.
+    solver_pm.mms_squared_solver_prec[i] = solver_pm.squared_solver_prec/solver_pm.shifts[i]/solver_pm.shifts[i];
+#else
+    solver_pm.mms_squared_solver_prec[i] = solver_pm.squared_solver_prec;
+#endif
+  }
 
   // apply (Q R)^(-1) to pseudo-fermion fields
   up0 = mnl->w_fields[0]; dn0 = mnl->w_fields[1];
