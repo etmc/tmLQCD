@@ -607,3 +607,18 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
   destruct_writer(writer);
   return;
 }
+
+void op_set_globals(const int op_id){
+  operator* op = &operator_list[op_id];
+
+  g_kappa = op->kappa;
+  g_mu    = op->mu;
+
+  if( op->type == CLOVER || op->type == DBCLOVER ){
+    g_c_sw = op->c_sw;
+  }
+  if( op->type == DBTMWILSON || op-> type == DBCLOVER){
+    g_mubar = op->mubar;
+    g_epsbar = op->epsbar;
+  }
+}
