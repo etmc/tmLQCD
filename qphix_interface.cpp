@@ -814,10 +814,9 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
   double end = omp_get_wtime();
 
   uint64_t num_cb_sites = lattSize[0] / 2 * lattSize[1] * lattSize[2] * lattSize[3];
-  // FIXME: this probably needs to be adjusted depending on the operator used
+  // FIXME: this needs to be adjusted depending on the operator used
   uint64_t total_flops = (site_flops + (72 + 2 * 1320) * mv_apps) * num_cb_sites;
   QPhiX::masterPrintf("# Solver Time = %g sec\n", (end - start));
-  QPhiX::masterPrintf("# Flops per site = %ld \n", site_flops );
   QPhiX::masterPrintf("# Performance in GFLOPS = %g\n", 1.0e-9 * total_flops / (end - start));
 
   /**************************
