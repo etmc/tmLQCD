@@ -233,6 +233,9 @@ int main(int argc, char *argv[]) {
     prepare_source(0 /*nstore*/, 0 /*isample*/, 0 /*ix*/, op_id,
                    0 /*read_source_flag*/, 0 /*source_location*/,
                    12345 /* seed */);
+    
+    // test our eo spinor packers
+    testSpinorPackers(op->prop0, op->prop1, op->sr0, op->sr1);
 
     /************************** tmLQCD D_psi **************************/
     if (g_proc_id == 0) {
@@ -281,7 +284,7 @@ int main(int argc, char *argv[]) {
 #endif
 
     t1 = gettime();
-    Mfull_qphix(qphix_out_cb_spinors[0], qphix_out_cb_spinors[1], op->sr0, op->sr1, op->type);
+    Mfull_eo_qphix(qphix_out_cb_spinors[0], qphix_out_cb_spinors[1], op->sr0, op->sr1, op->type);
     t2 = gettime();
 
     // print L2-norm of result:

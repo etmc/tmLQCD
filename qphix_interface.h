@@ -81,6 +81,12 @@ int invert_eo_qphix(spinor* const Even_new, spinor* const Odd_new, spinor* const
                     const SloppyPrecision sloppy, const CompressionType compression);
 void Mfull_qphix(spinor* Even_out, spinor* Odd_out, const spinor* Even_in, 
                  const spinor* Even_odd, const op_type_t op_type);
+void Mfull_eo_qphix(spinor* Even_out, spinor* Odd_out, const spinor* Even_in, 
+                    const spinor* Even_odd, const op_type_t op_type);
+
+
+void testSpinorPackers(spinor* Even_out, spinor* Odd_out,
+                       const spinor * const Even_in, const spinor* const Odd_in);
 
 #ifdef __cplusplus /* If this is a C++ compiler, end C linkage */
 }
