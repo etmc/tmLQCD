@@ -111,9 +111,21 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
     solver_pm.M_ndpsi32 = &Qsw_pm_ndpsi_32;
   }
   solver_pm.sdim = VOLUME/2;
+  solver_pm.mms_squared_solver_prec = (double*) malloc(solver_pm.no_shifts*sizeof(double));
+  for(int i=0; i<solver_pm.no_shifts; i++) {
+#ifdef SPERIMENTAL
+    // since each shift will be multiplied by solver_pm.shifts, we scale the tolerance with it.
+    solver_pm.mms_squared_solver_prec[i] = solver_pm.squared_solver_prec/solver_pm.shifts[i]/solver_pm.shifts[i];
+#else
+    solver_pm.mms_squared_solver_prec[i] = solver_pm.squared_solver_prec;
+#endif
+  }
   // this generates all X_j,o (odd sites only) -> g_chi_up|dn_spinor_field
   mnl->iter1 += solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
                    		      mnl->pf, mnl->pf2,&solver_pm);
+
+  free(solver_pm.mms_squared_solver_prec);
+  solver_pm.mms_squared_solver_prec = NULL;
   
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     if(mnl->type == NDCLOVERRAT) {
@@ -234,6 +246,15 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   }
   solver_pm.sdim = VOLUME/2;
   solver_pm.rel_prec = g_relative_precision_flag;
+  solver_pm.mms_squared_solver_prec = (double*) malloc(solver_pm.no_shifts*sizeof(double));
+  for(int i=0; i<solver_pm.no_shifts; i++) {
+#ifdef SPERIMENTAL
+    // since each shift will be multiplied by solver_pm.shifts, we scale the tolerance with it.
+    solver_pm.mms_squared_solver_prec[i] = solver_pm.squared_solver_prec/solver_pm.shifts[i]/solver_pm.shifts[i];
+#else
+    solver_pm.mms_squared_solver_prec[i] = solver_pm.squared_solver_prec;
+#endif
+  }
 
 #ifdef DDalphaAMG
   if( mnl->solver == MGMMSND ){
@@ -243,7 +264,7 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
       solver_pm.M_ndpsi = &Qsw_tau1_ndpsi_add_Ishift;
     
     mnl->iter0 = MG_mms_solver_nd( g_chi_up_spinor_field, g_chi_dn_spinor_field, mnl->pf, mnl->pf2, 
-                                   solver_pm.shifts, solver_pm.no_shifts,solver_pm.squared_solver_prec, 
+                                   solver_pm.shifts, solver_pm.no_shifts,solver_pm.mms_squared_solver_prec, 
                                    solver_pm.max_iter, solver_pm.rel_prec, solver_pm.sdim, g_gauge_field, 
                                    solver_pm.M_ndpsi );
 
@@ -282,6 +303,10 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
       assign_add_mul(mnl->pf2, g_chi_dn_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
     }
   }
+
+  free(solver_pm.mms_squared_solver_prec);
+  solver_pm.mms_squared_solver_prec = NULL;
+
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
@@ -322,6 +347,16 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
   }
   solver_pm.sdim = VOLUME/2;
   solver_pm.rel_prec = g_relative_precision_flag;
+  solver_pm.mms_squared_solver_prec = (double*) malloc(solver_pm.no_shifts*sizeof(double));
+  for(int i=0; i<solver_pm.no_shifts; i++) {
+#ifdef SPERIMENTAL
+    // since each shift will be multiplied by solver_pm.shifts, we scale the tolerance with it.
+    solver_pm.mms_squared_solver_prec[i] = solver_pm.squared_solver_prec/solver_pm.shifts[i]/solver_pm.shifts[i];
+#else
+    solver_pm.mms_squared_solver_prec[i] = solver_pm.squared_solver_prec;
+#endif
+  }
+
   mnl->iter0 += solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
                              mnl->pf, mnl->pf2,&solver_pm);
 
@@ -337,6 +372,10 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
 
   mnl->energy1 = scalar_prod_r(mnl->pf, mnl->w_fields[0], VOLUME/2, 1);
   mnl->energy1 += scalar_prod_r(mnl->pf2, mnl->w_fields[1], VOLUME/2, 1);
+
+  free(solver_pm.mms_squared_solver_prec);
+  solver_pm.mms_squared_solver_prec = NULL;
+
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
