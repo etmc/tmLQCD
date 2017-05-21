@@ -428,7 +428,7 @@ class Dslash {
     \alpha^{-1} D \f$.
     */
   virtual void A_inv_dslash(Spinor *const res, const Spinor *const psi,
-      const SU3MatrixBlock *const u, int const isign, int const cb) {
+                            const SU3MatrixBlock *const u, int const isign, int const cb) {
     dslash(res, psi, u, isign, cb);
   };
 
@@ -519,8 +519,8 @@ class WilsonDslash : public Dslash<FT, veclen, soalen, compress12> {
     dslash(res, psi, u, isign, cb);
   };
 
-  void A_inv_dslash(Spinor *const res, const Spinor *const psi,
-      const SU3MatrixBlock *const u, int const isign, int const cb) override {
+  void A_inv_dslash(Spinor *const res, const Spinor *const psi, const SU3MatrixBlock *const u,
+                    int const isign, int const cb) override {
     auto tmp = QPhiX::makeFourSpinorHandle(upstream_dslash.getGeometry());
     dslash(tmp.get(), psi, u, isign, cb);
     A_inv_chi(res, tmp.get(), isign);
