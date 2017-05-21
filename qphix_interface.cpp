@@ -264,28 +264,24 @@ void reorder_gauge_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geo
   // orderings of the direction index "\mu" in tmlQCD
   // and QPhiX, respectively
   // in qphix, the Dirac operator is applied in the order
-  //   +-x -> +-y -> +-z -> +-t
+  //   -+x -> -+y -> -+z -> -+t
   // while tmlqcd does
-  //   +-t -> +-x -> +-y -> +-z
+  //   -+t -> -+x -> -+y -> -+z
   // same as the lattice ordering
-  // The mappingnbetween the application dimensions is thus:
+  // The mappingn between the application dimensions is thus:
   //  tmlqcd_dim(t -> x -> y -> z) = qphix_dim( t(3) -> x(0) -> y(1) -> z(2) )
   const int change_dim[4] = {3, 0, 1, 2};
-  
-  // while the lattice is ordered 
+  // while the QPhiX lattice is ordered (up to the AoSoA business)
   //  (t,z,y,x) (rightmost running fastest)
-  // we are reordering from tmlqcd (t,x,y,z) to qphix (t,z,y,x) 
-  // and simulteneously exchange x and z directions on the tmLQCD side
-  // ==> (t,x,y,z) -> (t,x,y,z)
-  // so we also need to adjust where the links point in this mapping
+  
+  // we are exchanging the x and z directions in the transition to qphix, so
+  // we need the mapping t->t, x->z, y->y, z->x
   const int tm_xz_dim[4] = {0,3,2,1};
 
   // Get the base pointer for the (global) tmlQCD gauge field
   uint64_t tm_idx = 0;
   const double *in = reinterpret_cast<double *>(&g_gauge_field[0][0].c00);
 
-  // This will loop over the entire lattice and calculate
-  // the array and internal indices for both tmlQCD & QPhiX
   for (uint64_t t = 0; t < T; t++)
     for (uint64_t x = 0; x < LX; x++)
       for (uint64_t y = 0; y < LY; y++)
@@ -372,27 +368,27 @@ void reorder_eo_spinor_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> 
   const auto Nxh = geom.Nxh();
 
   const double sqrt2inv = 1.0/sqrt(2.0);
-  
-  // This is needed to translate between the different
-  // gamma bases tmlQCD and QPhiX are using
-  //const int change_sign[4] = {1, -1, -1, 1}; // plabus
-  //const int change_spin[4] = {3, 2, 1, 0}; // plabus
-  //
-
-  // Exchanging the X and Z dimensions requires also exchanging the corresponding gamma
-  // matrices. As a result, one has to perform a similarity transformation of the form
+ 
+  // Exchanging the X and Z dimensions requires one to perform a similarity transformation
+  // on the spin components to preserve the action of the Dirac operator
   //
   // \Psi_qphix(t,x,y,z) = V \Psi_tmlqcd(t,z,y,x)
-  //
+  //                    
   //             1/     1  1 0  0
   // where V = sqrt(2)  1 -1 0  0
   //                    0  0 1  1
   //                    0  0 1 -1
+  //
+  // to derive the above, it should be noted that the ordering of the spin components differs
+  // between tmLQCD and QPhiX  t,x,y,z -> x,y,z,t
+  
   const double V[4][4] = {{sqrt2inv,  sqrt2inv, 0, 0},
                           {sqrt2inv, -sqrt2inv, 0 ,0},
                           {0, 0, sqrt2inv,  sqrt2inv},
-                          {0, 0, sqrt2inv, -sqrt2inv}};
-
+                          {0, 0, sqrt2inv, -sqrt2inv}
+                          };
+                          
+                          
   // we have to zero out the spinor first, because we will accumulate below
   QPhiX::zeroSpinor(qphix_spinor, geom, 1);
 
@@ -406,9 +402,13 @@ void reorder_eo_spinor_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> 
               for(int x_soa = 0; x_soa < SOALEN; x_soa++){
                 int64_t q_ind         = t * Pxyz + z * Pxy + y * nVecs + v;
                 int64_t q_cb_x_coord  = v * SOALEN + x_soa;
-                int64_t tm_x_coord    = q_cb_x_coord*2 + cb;
-                // exchange x and z directions
-                int64_t tm_eo_ind     = g_lexic2eosub[ g_ipt[t][z][y][tm_x_coord] ];
+                // when t+y+z is odd and we're on an odd checkerboard OR
+                // when t+y+z is even and we're on an even checkerboard
+                // the full x coordinate is 2*x_cb
+                // otherwise, it is 2*x_cb+1
+                int64_t tm_x_coord    = q_cb_x_coord*2 + ( ((t+y+z)&1)^cb );
+                // exchange x and z dimensions
+                int64_t tm_eo_ind = g_lexic2eosub[ g_ipt[t][z][y][tm_x_coord] ];
                 for(int t_spin = 0; t_spin < Ns; t_spin++){
                   int64_t tm_eo_offset  = tm_eo_ind*Nc*Ns*Nz + t_spin*Nc*Nz + Nz*col;
                   for(int reim = 0; reim < 2; reim++){
@@ -442,30 +442,27 @@ void reorder_eo_spinor_from_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12
   const auto Pxyz = geom.getPxyz();
   const auto Nxh = geom.Nxh();
   
-  // This is needed to translate between the different
-  // gamma bases tmlQCD and QPhiX are using
-  //const int change_sign[4] = {-1, 1, 1, -1};
-  //const int change_spin[4] = {0, 3, 2, 1};
-  
-  const int change_sign[4] = {-1, 1, -1, 1};
-  const int change_spin[4] = {3, 2, 1, 0};
- 
   const double sqrt2inv = 1.0/sqrt(2.0);
-
-  // Exchanging the X and Z dimensions requires also exchanging the corresponding gamma
-  // matrices. As a result, one has to perform a similarity transformation of the form
+ 
+  // Exchanging the X and Z dimensions requires one to perform a similarity transformation
+  // on the spin components to preserve the action of the Dirac operator
   //
   // \Psi_qphix(t,x,y,z) = V \Psi_tmlqcd(t,z,y,x)
-  //
+  //                    
   //             1/     1  1 0  0
   // where V = sqrt(2)  1 -1 0  0
   //                    0  0 1  1
   //                    0  0 1 -1
+  //
+  // to derive the above, it should be noted that the ordering of the spin components differs
+  // between tmLQCD and QPhiX  t,x,y,z -> x,y,z,t
+  
   const double V[4][4] = {{sqrt2inv,  sqrt2inv, 0, 0},
                           {sqrt2inv, -sqrt2inv, 0 ,0},
                           {0, 0, sqrt2inv,  sqrt2inv},
-                          {0, 0, sqrt2inv, -sqrt2inv}};
-
+                          {0, 0, sqrt2inv, -sqrt2inv}
+                          };
+                          
   // we have to zero out the spinor first, because we will accumulate below
   zero_spinor_field(reinterpret_cast<spinor*>(tm_eo_spinor), VOLUME/2);
 
@@ -479,8 +476,12 @@ void reorder_eo_spinor_from_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12
               for(int x_soa = 0; x_soa < SOALEN; x_soa++){
                 int64_t q_ind         = t * Pxyz + z * Pxy + y * nVecs + v;
                 int64_t q_cb_x_coord  = v * SOALEN + x_soa;
-                int64_t tm_x_coord    = q_cb_x_coord*2 + cb;
-                // exchange x and z directions
+                // when t+y+z is odd and we're on an odd checkerboard OR
+                // when t+y+z is even and we're on an even checkerboard
+                // the full x coordinate is 2*x_cb
+                // otherwise, it is 2*x_cb+1
+                int64_t tm_x_coord    = q_cb_x_coord*2 + ( ((t+y+z)&1)^cb );
+                // exchange x and z dimensions
                 int64_t tm_eo_ind     = g_lexic2eosub[ g_ipt[t][z][y][tm_x_coord] ];
                 for(int t_spin = 0; t_spin < Ns; t_spin++){
                   int64_t tm_eo_offset  = tm_eo_ind*Nc*Ns*Nz + t_spin*Nc*Nz + Nz*col;
@@ -738,7 +739,7 @@ void Mfull_eo_helper(spinor *Even_out, spinor* Odd_out,
 //                             reinterpret_cast<FT *>(qphix_out[cb_odd]), (2. * g_kappa));
   
   reorder_eo_spinor_from_QPhiX(geom, reinterpret_cast<double *>(Even_out),
-                               qphix_out[cb_even], cb_even, 2*.0 * g_kappa);
+                               qphix_out[cb_even], cb_even, 2.0 * g_kappa);
   reorder_eo_spinor_from_QPhiX(geom, reinterpret_cast<double *>(Odd_out),
                                qphix_out[cb_odd], cb_odd, 2.0 * g_kappa);
 
@@ -1186,7 +1187,9 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
 }
 
 // Template wrapper for the Dslash operator call-able from C code
-void Mfull_qphix(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, const spinor *Odd_in, const op_type_t op_type ) {
+void Mfull_qphix(spinor *Even_out, spinor *Odd_out, 
+                 const spinor *Even_in, const spinor *Odd_in, 
+                 const op_type_t op_type ) {
   tmlqcd::checkQphixInputParameters(qphix_input);
   // FIXME: two-row gauge compression and double precision hard-coded
   _initQphix(0, nullptr, qphix_input, 12, QPHIX_DOUBLE_PREC);
@@ -1245,8 +1248,9 @@ void Mfull_qphix(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, const
 }
 
 // Template wrapper for the Dslash operator call-able from C code
-void Mfull_eo_phix(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, const spinor *Odd_in, const op_type_t 
-op_type ) {
+void Mfull_eo_qphix(spinor *Even_out, spinor *Odd_out, 
+                   const spinor *Even_in, const spinor *Odd_in, 
+                   const op_type_t op_type ) {
   tmlqcd::checkQphixInputParameters(qphix_input);
   // FIXME: two-row gauge compression and double precision hard-coded
   _initQphix(0, nullptr, qphix_input, 12, QPHIX_DOUBLE_PREC);

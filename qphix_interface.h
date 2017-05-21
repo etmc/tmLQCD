@@ -79,10 +79,14 @@ int invert_eo_qphix(spinor* const Even_new, spinor* const Odd_new, spinor* const
                     spinor* const Odd, const double precision, const int max_iter,
                     const int solver_flag, const int rel_prec, solver_params_t solver_params,
                     const SloppyPrecision sloppy, const CompressionType compression);
-void Mfull_qphix(spinor* Even_out, spinor* Odd_out, const spinor* Even_in, 
-                 const spinor* Even_odd, const op_type_t op_type);
-void Mfull_eo_qphix(spinor* Even_out, spinor* Odd_out, const spinor* Even_in, 
-                    const spinor* Even_odd, const op_type_t op_type);
+
+void Mfull_qphix(spinor* Even_out, spinor* Odd_out, 
+                 const spinor* Even_in, const spinor* Odd_in, 
+                 const op_type_t op_type);
+
+void Mfull_eo_qphix(spinor* Even_out, spinor* Odd_out, 
+                    const spinor* Even_in, const spinor* Odd_in,
+                    const op_type_t op_type);
 
 
 void testSpinorPackers(spinor* Even_out, spinor* Odd_out,
