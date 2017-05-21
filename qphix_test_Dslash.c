@@ -194,8 +194,8 @@ int main(int argc, char *argv[]) {
   }
 
   start_ranlux(1, 123456);
-  //random_gauge_field(1, g_gauge_field);
-  unit_g_gauge_field(); // unit 3x3 colour matrices
+  random_gauge_field(1, g_gauge_field);
+  //unit_g_gauge_field(); // unit 3x3 colour matrices
 // g_gauge_field[ g_ipt[0][0][0][1] ][0].c00 = 1.0;
 // g_gauge_field[ g_ipt[0][0][0][1] ][0].c01 = 0.0;
 // g_gauge_field[ g_ipt[0][0][0][1] ][0].c02 = 0.0;
