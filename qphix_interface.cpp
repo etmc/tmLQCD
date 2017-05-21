@@ -891,7 +891,7 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
   QPhiX::masterPrintf("# Calling the solver...\n");
 
   // Set variables need for solve
-  bool verbose = true;
+  bool verbose = g_debug_level > 2 ? true : false;
   int niters = -1;
   double rsd_final = -1.0;
   uint64_t site_flops = -1;
