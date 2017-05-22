@@ -1059,7 +1059,7 @@ int invert_eo_qphix(spinor *const Even_new, spinor *const Odd_new, spinor *const
   if (rel_prec == 1) {
     QPhiX::masterPrintf("# QPHIX: Using relative precision\n");
     target_precision = precision * src_norm;
-    precision_lambda = target_precision;
+    precision_lambda = precision;
   }
   QPhiX::masterPrintf("# QPHIX: precision_lambda: %g, target_precision: %g\n\n", precision_lambda,
                       target_precision);
