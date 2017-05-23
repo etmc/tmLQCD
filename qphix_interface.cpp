@@ -46,6 +46,7 @@ extern "C" {
 #include "solver/solver.h"
 #include "solver/solver_field.h"
 #include "solver/solver_params.h"
+#include "xchange/xchange_gauge.h"
 }
 #ifdef TM_USE_OMP
 #include <omp.h>
@@ -233,7 +234,7 @@ void reorder_clover_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &ge
 
 // Reorder the tmLQCD gauge field to a cb0 and a cb1 QPhiX gauge field
 template <typename FT, int VECLEN, int SOALEN, bool compress12>
-void reorder_gauge_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom,
+void reorder_gauge_to_QPhiX_old(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom,
                             FT *qphix_gauge_cb0, FT *qphix_gauge_cb1) {
   const double startTime = gettime();
 
@@ -263,7 +264,6 @@ void reorder_gauge_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geo
   const int change_dim[4] = {3, 0, 1, 2};
 
   // Get the base pointer for the (global) tmlQCD gauge field
-  uint64_t tm_idx = 0;
   const double *in = reinterpret_cast<double *>(&g_gauge_field[0][0].c00);
 
 #pragma omp parallel for collapse(4)
@@ -271,6 +271,7 @@ void reorder_gauge_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geo
     for (uint64_t x = 0; x < LX; x++)
       for (uint64_t y = 0; y < LY; y++)
         for (uint64_t z = 0; z < LZ; z++) {
+          uint64_t tm_idx = 0;
           // These are the QPhiX SIMD vector in checkerboarded x direction
           // (up to LX/2), the index inside one single Structure of Arrays (SOA)
           // and the internal position inside the ("packed") SIMD vector
@@ -332,6 +333,120 @@ void reorder_gauge_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geo
 
   const double endTime = gettime();
   const double diffTime = endTime - startTime;
+  QPhiX::masterPrintf("  time spent in reorder_gauge_to_QPhiX: %f secs\n", diffTime);
+}
+
+template <typename FT, int VECLEN, int SOALEN, bool compress12>
+void reorder_gauge_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom,
+                            typename QPhiX::Geometry<FT, VECLEN, SOALEN, compress12>::SU3MatrixBlock *qphix_gauge_cb0,
+                            typename QPhiX::Geometry<FT, VECLEN, SOALEN, compress12>::SU3MatrixBlock *qphix_gauge_cb1){
+  const double startTime = gettime();
+
+  // Number of elements in spin, color & complex
+  // Here c1 is QPhiX's outer color, and c2 the inner one
+  const int Ns = 4;
+  const int Nc1 = compress12 ? 2 : 3;
+  const int Nc2 = 3;
+  const int Nz = 2;
+
+  // Geometric parameters for QPhiX data layout
+  const auto ngy = geom.nGY();
+  const auto nVecs = geom.nVecs();
+  const auto Pxy = geom.getPxy();
+  const auto Pxyz = geom.getPxyz();
+
+  // This is needed to translate between the different
+  // orderings of the direction index "\mu" in tmlQCD
+  // and QPhiX, respectively
+  // in qphix, the Dirac operator is applied in the order
+  //   -+x -> -+y -> -+z -> -+t
+  // while tmlqcd does
+  //   -+t -> -+x -> -+y -> -+z
+  // same as the lattice ordering
+  // The mappingn between the application dimensions is thus:
+  //  tmlqcd_dim(t(0) -> x(1) -> y(2) -> z(3)) = qphix_dim( t(3) -> x(0) -> y(1) -> z(2) )
+  const int change_dim[4] = {1, 2, 3, 0};
+
+  // Get the base pointer for the (global) tmlQCD gauge field
+  xchange_gauge(g_gauge_field);
+  const double *in = reinterpret_cast<double *>(&g_gauge_field[0][0].c00);
+
+#pragma omp parallel for collapse(4)
+  for (int64_t t = 0; t < T; t++)
+    for (int64_t z = 0; z < LZ; z++)
+      for (int64_t y = 0; y < LY; y++)
+        for (int64_t v = 0; v < nVecs; v++){
+
+          int64_t block = (t * Pxyz + z * Pxy) / ngy + (y / ngy) * nVecs + v;
+
+          for (int dim = 0; dim < 4; dim++)  // dimension == QPhiX \mu
+            for (int c1 = 0; c1 < Nc1; c1++)    // QPhiX convention color 1 (runs up to 2 or 3)
+              for (int c2 = 0; c2 < Nc2; c2++)  // QPhiX convention color 2 (always runs up to 3)
+                for (int x_soa = 0; x_soa < SOALEN; x_soa++){
+                  int64_t xx = ( y % ngy ) * SOALEN + x_soa;
+                  int64_t q_cb_x_coord = x_soa + v*SOALEN;
+//                   QPhiX::masterPrintf("t: %ld, y: %ld, z: %ld, q_cb_x_coord: %ld match: %ld\n", 
+//                                       t, y, z, q_cb_x_coord, (int64_t)((x_soa + SOALEN * (v + nVecs))%(LX/2)));
+                  
+                  int64_t tm_x_coord_cb0 = q_cb_x_coord * 2 + 
+                                           (((t + y + z 
+//                                            + g_proc_coords[2]*LY + 
+//                                            g_proc_coords[3]*LZ + g_proc_coords[0]*T
+                                          ) & 1) ^ 0);
+                  int64_t tm_x_coord_cb1 = q_cb_x_coord * 2 +
+                                           (((t + y + z
+//                                            + g_proc_coords[2]*LY + 
+//                                            g_proc_coords[3]*LZ + g_proc_coords[0]*T
+                                          ) & 1) ^ 1);
+                  
+                  int64_t tm_idx_cb0;
+                  int64_t tm_idx_cb1;
+                 
+                  // backward / forward
+                  for (int dir = 0; dir < 2; dir++) {
+                    if (dir == 0){
+                      tm_idx_cb0 = g_idn[g_ipt[t][tm_x_coord_cb0][y][z]][change_dim[dim]];
+                      tm_idx_cb1 = g_idn[g_ipt[t][tm_x_coord_cb1][y][z]][change_dim[dim]];
+                      if( tm_idx_cb0 >= VOLUME || tm_idx_cb1 >= VOLUME ){
+                        QPhiX::masterPrintf("Accessing boundary gauge field at t%ld z%ld"
+                                            "y%ld x%ld / x%ld\n",t,z,y,tm_x_coord_cb0, tm_x_coord_cb1 );
+                        if( fabs( creal(g_gauge_field[tm_idx_cb0][0].c00) ) <= DBL_EPSILON ){
+                          QPhiX::masterPrintf("gauge field on cb0 is zero!\n");
+                        }
+                        if( fabs( creal(g_gauge_field[tm_idx_cb1][0].c00) ) <= DBL_EPSILON ){
+                          QPhiX::masterPrintf("gauge field on cb1 is zero!\n");
+                        }
+                      }
+                    } else {
+                      tm_idx_cb0 = g_ipt[t][tm_x_coord_cb0][y][z];
+                      tm_idx_cb1 = g_ipt[t][tm_x_coord_cb1][y][z];
+                    }
+                    for (int reim = 0; reim < Nz; reim++) {
+                      // Note:
+                      // -----
+                      // 1. \mu in QPhiX runs from 0..7 for all eight neighbouring
+                      // links.
+                      //    Here, the ordering of the direction (backward/forward)
+                      //    is the same
+                      //    for tmlQCD and QPhiX, but we have to change the
+                      //    ordering of the dimensions.
+                      int q_mu = 2 * dim + dir;
+
+                      // 2. QPhiX gauge field matrices are transposed w.r.t.
+                      // tmLQCD.
+                      // 3. tmlQCD always uses 3x3 color matrices (Nc2*Nc2).
+                      int64_t t_inner_idx_cb0 = reim + c1 * Nz + c2 * Nz * Nc2 +
+                                                change_dim[dim] * Nz * Nc2 * Nc2 + tm_idx_cb0 * Nz * Nc2 * Nc2 * 4;
+                      int64_t t_inner_idx_cb1 = reim + c1 * Nz + c2 * Nz * Nc2 +
+                                                change_dim[dim] * Nz * Nc2 * Nc2 + tm_idx_cb1 * Nz * Nc2 * Nc2 * 4;
+                      qphix_gauge_cb0[block][q_mu][c1][c2][reim][xx] = in[t_inner_idx_cb0];
+                      qphix_gauge_cb1[block][q_mu][c1][c2][reim][xx] = in[t_inner_idx_cb1];
+                    }
+                  }
+                } // for(dim,c1,c2,x_soa)
+        } // outer loop (t,z,y,v)
+       
+  const double diffTime = gettime() - startTime;
   QPhiX::masterPrintf("  time spent in reorder_gauge_to_QPhiX: %f secs\n", diffTime);
 }
 
@@ -638,8 +753,7 @@ void Mfull_helper(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, cons
   u_packed[cb_even] = packed_gauge_cb0;
   u_packed[cb_odd] = packed_gauge_cb1;
 
-  reorder_gauge_to_QPhiX(geom, reinterpret_cast<FT *>(u_packed[cb_even]),
-                         reinterpret_cast<FT *>(u_packed[cb_odd]));
+  reorder_gauge_to_QPhiX(geom, u_packed[cb_even], u_packed[cb_odd]);
 
   /************************
    *                      *
@@ -734,8 +848,7 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
   u_packed[cb_odd] = packed_gauge_cb1;
 
   // Reorder (global) input gauge field from tmLQCD to QPhiX
-  reorder_gauge_to_QPhiX(geom, reinterpret_cast<FT *>(u_packed[cb_even]),
-                         reinterpret_cast<FT *>(u_packed[cb_odd]));
+  reorder_gauge_to_QPhiX(geom, u_packed[cb_even], u_packed[cb_odd]);
 
   QPhiX::masterPrintf("# ...done.\n");
 
@@ -1201,6 +1314,6 @@ void testSpinorPackers(spinor *Even_out, spinor *Odd_out, const spinor *const Ev
   diff(tmp[0], Even_out, Even_in, VOLUME / 2);
   diff(tmp[1], Odd_out, Odd_in, VOLUME / 2);
   double l2norm = square_norm(tmp[0], VOLUME / 2, 1) + square_norm(tmp[1], VOLUME / 2, 1);
-  QPhiX::masterPrintf("Difference: %lf\n", l2norm);
+  QPhiX::masterPrintf("QPHIX eo spinor packer back and forth difference L2 norm: %lf\n", l2norm);
   finalize_solver(tmp, 2);
 }
