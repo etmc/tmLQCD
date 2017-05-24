@@ -410,12 +410,8 @@ void reorder_gauge_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geo
                       if( tm_idx_cb0 >= VOLUME || tm_idx_cb1 >= VOLUME ){
                         QPhiX::masterPrintf("Accessing boundary gauge field at t%ld z%ld"
                                             "y%ld x%ld / x%ld\n",t,z,y,tm_x_coord_cb0, tm_x_coord_cb1 );
-                        if( fabs( creal(g_gauge_field[tm_idx_cb0][0].c00) ) <= DBL_EPSILON ){
-                          QPhiX::masterPrintf("gauge field on cb0 is zero!\n");
-                        }
-                        if( fabs( creal(g_gauge_field[tm_idx_cb1][0].c00) ) <= DBL_EPSILON ){
-                          QPhiX::masterPrintf("gauge field on cb1 is zero!\n");
-                        }
+                        QPhiX::masterPrintf("gauge field on cb0.c00 = %lf\n", creal(g_gauge_field[tm_idx_cb0][change_dim[dim]].c00) );
+                        QPhiX::masterPrintf("gauge field on cb1.c00 = %lf\n", creal(g_gauge_field[tm_idx_cb1][change_dim[dim]].c00) );
                       }
                     } else {
                       tm_idx_cb0 = g_ipt[t][tm_x_coord_cb0][y][z];
