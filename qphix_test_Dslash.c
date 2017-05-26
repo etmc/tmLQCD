@@ -86,7 +86,7 @@
 #include "xchange/xchange.h"
 
 int check_xchange();
-void compare_spinors(spinor* s1, spinor* s2);
+double compare_spinors(spinor* s1, spinor* s2);
 
 int main(int argc, char *argv[]) {
   int j;
@@ -162,8 +162,8 @@ int main(int argc, char *argv[]) {
   }
 
   start_ranlux(1, 123456);
-  //random_gauge_field(1, g_gauge_field);
-  unit_g_gauge_field(); // unit 3x3 colour matrices
+  random_gauge_field(1, g_gauge_field);
+  //unit_g_gauge_field(); // unit 3x3 colour matrices
   //g_gauge_field[ g_ipt[0][0][0][1] ][0].c00 = 1.0;
   //g_gauge_field[ g_ipt[0][0][0][1] ][0].c01 = 0.0;
   //g_gauge_field[ g_ipt[0][0][0][1] ][0].c02 = 0.0;
@@ -192,6 +192,8 @@ int main(int argc, char *argv[]) {
   spinor** tmp;
   init_solver_field(&tmp, VOLUME, 2);
 
+  double* difference_l2norm = calloc(no_operators, sizeof(double));
+
   /* we will loop over the operators defined in the input file
    * and first apply the tmLQCD operator to the test spinor, then
    * the QPhiX operator and then compare */
@@ -218,6 +220,8 @@ int main(int argc, char *argv[]) {
 
     tm_t1 = gettime();
     op->applyM(op->prop0, op->prop1, op->sr0, op->sr1);
+    //Hopping_Matrix(OE, op->prop0, op->sr1);
+    //Hopping_Matrix(EO, op->prop1, op->sr0);
     tm_t2 = gettime();
 
 #ifdef TM_USE_MPI
@@ -261,10 +265,22 @@ int main(int argc, char *argv[]) {
     convert_eo_to_lexic(tmp[0], op->prop0, op->prop1);
     convert_eo_to_lexic(tmp[1], qphix_out_cb_spinors[0], qphix_out_cb_spinors[1]);
 
-    compare_spinors(tmp[0], tmp[1]);
+    difference_l2norm[op_id] = compare_spinors(tmp[0], tmp[1]);
 
   }  // for(op_id)
 
+  int failed = 0;
+  for(int op_id = 0; op_id < no_operators; op_id++){
+    if(g_proc_id==0){
+      printf("op_id: %d, |diff|^2 = %.16e\n", op_id, difference_l2norm[op_id]);
+    }
+    // check if the l2 norm of the difference is tolerable up to rounding
+    if( difference_l2norm[op_id] > 2*g_nproc*VOLUME*DBL_EPSILON ){
+      failed = 1;
+    }
+  }
+
+  free(difference_l2norm);
   finalize_solver(qphix_out_cb_spinors, 2);
   finalize_solver(tmp, 2);
 #ifdef TM_USE_OMP
@@ -278,17 +294,12 @@ int main(int argc, char *argv[]) {
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 #endif
-  return (0);
+  return (failed);
 }
 
-void compare_spinors(spinor* s1, spinor* s2){
-  if( g_proc_id==0 ) printf("\n OUTPUT TMLQCD vs QPHIX SPINOR (tmlQCD format):\n");
+double compare_spinors(spinor* s1, spinor* s2){
   double* show_out;
   double* show_out_qphix;
-  if( g_proc_id==0 ) printf("g_proc_id T=%3d LX=%3d LY=%3d LZ=%3d %26s",
-                            g_nproc_t*T, g_nproc_x*LX, g_nproc_y*LY, g_nproc_z*LZ, " ");
-  if( g_proc_id==0 ) printf("T=%3d LX=%3d LY=%3d LZ=%3d \n",
-                            g_nproc_t*T, g_nproc_x*LX, g_nproc_y*LY, g_nproc_z*LZ);
 #ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
@@ -296,12 +307,17 @@ void compare_spinors(spinor* s1, spinor* s2){
   int x,y,z,t, id=0;
   // list non-zero elements in spinors, but only if the source type was a point source
   if( SourceInfo.type == SRC_TYPE_POINT ){
+    if( g_proc_id==0 ) printf("\n OUTPUT TMLQCD vs QPHIX SPINOR (tmlQCD format):\n");
+    if( g_proc_id==0 ) printf("g_proc_id | T=%3d LX=%3d LY=%3d LZ=%3d %26s",
+                              g_nproc_t*T, g_nproc_x*LX, g_nproc_y*LY, g_nproc_z*LZ, " ");
+    if( g_proc_id==0 ) printf("T=%3d LX=%3d LY=%3d LZ=%3d \n",
+                              g_nproc_t*T, g_nproc_x*LX, g_nproc_y*LY, g_nproc_z*LZ);
     for(int t_global = 0; t_global < g_nproc_t*T; t_global++){
       coords[0] = t_global / T;
       for(int x_global = 0; x_global < g_nproc_x*LX; x_global++){
         coords[1] = x_global / LX;
         for(int y_global = 0; y_global < g_nproc_y*LY; y_global++){
-          coords[2] = y_global / LX; 
+          coords[2] = y_global / LY; 
           for(int z_global = 0; z_global < g_nproc_z*LZ; z_global++){
             coords[3] =  z_global / LZ;
 #ifdef TM_USE_MPI
@@ -316,15 +332,15 @@ void compare_spinors(spinor* s1, spinor* s2){
               show_out       = (double*)(&s1[idx]);
               show_out_qphix = (double*)(&s2[idx]);
               for(int sc = 0; sc < 24; sc++){
-                if( fabs(show_out_qphix[sc]) > DBL_EPSILON || fabs(show_out[sc]) > DBL_EPSILON) {
+                if( fabs(show_out_qphix[sc]) > 2*DBL_EPSILON || fabs(show_out[sc]) > 2*DBL_EPSILON) {
                   fflush(stdout);
-                  printf("%9d %5d %6d %6d %6d s%1d c%1d reim%1d : %+5lf %2s", g_proc_id,
-                          t_global, x_global, y_global, z_global, sc/6, sc%6, sc%2,
+                  printf("%9d | %5d %6d %6d %6d s%1d c%1d reim%1d : %+5lf %2s", g_proc_id,
+                          t_global, x_global, y_global, z_global, sc/6, (sc/2)%3, sc%2,
                           show_out[sc], " ");
                   printf("%5d %6d %6d %6d s%1d c%1d reim%1d : %+5lf",
-                          t_global, x_global, y_global, z_global, sc/6, sc%6, sc%2,
+                          t_global, x_global, y_global, z_global, sc/6, (sc/2)%3, sc%2,
                           show_out_qphix[sc]);
-                  if( fabs( show_out[sc] - show_out_qphix[sc] ) > DBL_EPSILON ) printf(" !!! ");
+                  if( fabs( show_out[sc] - show_out_qphix[sc] ) > 2*DBL_EPSILON ) printf(" !!! ");
                   printf("\n");
                 }
               }
@@ -348,7 +364,7 @@ void compare_spinors(spinor* s1, spinor* s2){
   }
 
   if(g_proc_id == 0) printf("\n OUTPUT TMLQCD vs QPHIX SPINOR (tmlQCD format):\n");
-  if( g_proc_id==0 ) printf("g_proc_id T=%3d LX=%3d LY=%3d LZ=%3d \n", g_nproc_t*T, g_nproc_x*LX, g_nproc_y*LY, 
+  if( g_proc_id==0 ) printf("g_proc_id | T=%3d LX=%3d LY=%3d LZ=%3d \n", g_nproc_t*T, g_nproc_x*LX, g_nproc_y*LY, 
                             g_nproc_z*LZ);
   double squarenorm = diff_and_square_norm(s1,s2,VOLUME);
 
@@ -361,7 +377,7 @@ void compare_spinors(spinor* s1, spinor* s2){
     for(int x_global = 0; x_global < g_nproc_x*LX; x_global++){
       coords[1] = x_global / LX;
       for(int y_global = 0; y_global < g_nproc_y*LY; y_global++){
-        coords[2] = y_global / LX; 
+        coords[2] = y_global / LY; 
         for(int z_global = 0; z_global < g_nproc_z*LZ; z_global++){
           coords[3] =  z_global / LZ;
 #ifdef TM_USE_MPI
@@ -375,10 +391,12 @@ void compare_spinors(spinor* s1, spinor* s2){
             int idx = g_ipt[t][x][y][z];
             show_out       = (double*)(&s1[idx]);
             for(int sc = 0; sc < 24; sc++){
-              if( fabs(show_out[sc]) > DBL_EPSILON ) {
+              // when a volume source is used, these will be zero up to significant rounding
+              // we account for that by the scaling of DBL_EPSILON
+              if( fabs(show_out[sc]) > 8*24*DBL_EPSILON ) {
                 fflush(stdout);
-                printf("%9d %5d %6d %6d %6d s%1d c%1d reim%1d : %+5lf\n", g_proc_id,
-                        t_global, x_global, y_global, z_global, sc/6, sc%6, sc%2,
+                printf("%9d | %5d %6d %6d %6d s%1d c%1d reim%1d : %+5lf\n", g_proc_id,
+                        t_global, x_global, y_global, z_global, sc/6, (sc/2)%3, sc%2,
                         show_out[sc]);
               }
             }
@@ -395,4 +413,5 @@ void compare_spinors(spinor* s1, spinor* s2){
     printf("\n  ||result_1 - result_2||^2 = %e\n\n", squarenorm);
     fflush(stdout);
   }
+  return squarenorm;
 }

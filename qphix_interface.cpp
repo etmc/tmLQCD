@@ -82,6 +82,7 @@ QphixPrec_t qphix_precision;
 int subLattSize[4];
 int lattSize[4];
 int qmp_geom[4];
+int qmp_tm_map[4];
 
 template <typename T>
 struct rsdTarget {
@@ -130,13 +131,42 @@ void _initQphix(int argc, char **argv, QphixParams_t params, int c12, QphixPrec_
 #ifdef QPHIX_QMP_COMMS
   // Declare the logical topology
   if (!qmp_topo_initialised) {
-    qmp_geom[0] = g_nproc_x;
+    // the QMP topology is the one implied by the number of processes in each
+    // dimension as required by QPHIX ( x fastest to t slowest running )
+    qmp_geom[0] = g_nproc_x; 
     qmp_geom[1] = g_nproc_y;
     qmp_geom[2] = g_nproc_z;
     qmp_geom[3] = g_nproc_t;
-    if (QMP_declare_logical_topology(qmp_geom, 4) != QMP_SUCCESS) {
+
+    // in order for the topologies to agree between tmLQCD and QPhiX, the dimensions need to be permuted
+    // since Z is fastest in tmLQCD and X is second-slowest
+    qmp_tm_map[0] = 2;
+    qmp_tm_map[1] = 1;
+    qmp_tm_map[2] = 0;
+    qmp_tm_map[3] = 3; 
+    if (QMP_declare_logical_topology_map(qmp_geom, 4, qmp_tm_map, 4) != QMP_SUCCESS) {
       QMP_error("Failed to declare QMP Logical Topology\n");
       abort();
+    }
+    // longish test to check if the logical coordinates are correctly mapped
+    if(g_debug_level >= 5){
+      for(int proc = 0; proc < g_nproc; proc++){
+        if( proc == g_proc_id ){
+          const int coordinates[4] = { g_proc_coords[1], g_proc_coords[2], g_proc_coords[3], g_proc_coords[0] };
+          int id = QMP_get_node_number_from( coordinates );
+          int* qmp_coords = QMP_get_logical_coordinates_from(id);
+          fflush(stdout);
+          printf("QMP id: %3d x:%3d y:%3d z:%3d t:%3d\n", id, 
+                 qmp_coords[0], qmp_coords[1], qmp_coords[2], qmp_coords[3]); 
+          printf("MPI id: %3d x:%3d y:%3d z:%3d t:%3d\n\n", g_proc_id, 
+                 g_proc_coords[1], g_proc_coords[2], g_proc_coords[3], g_proc_coords[0]);
+          free(qmp_coords);
+          fflush(stdout);
+          MPI_Barrier(MPI_COMM_WORLD);
+        } else {
+          MPI_Barrier(MPI_COMM_WORLD);
+        }
+      }
     }
     qmp_topo_initialised = true;
   }
@@ -385,9 +415,6 @@ void reorder_gauge_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geo
                 for (int x_soa = 0; x_soa < SOALEN; x_soa++){
                   int64_t xx = ( y % ngy ) * SOALEN + x_soa;
                   int64_t q_cb_x_coord = x_soa + v*SOALEN;
-//                   QPhiX::masterPrintf("t: %ld, y: %ld, z: %ld, q_cb_x_coord: %ld match: %ld\n", 
-//                                       t, y, z, q_cb_x_coord, (int64_t)((x_soa + SOALEN * (v + nVecs))%(LX/2)));
-                  
                   int64_t tm_x_coord_cb0 = q_cb_x_coord * 2 + 
                                            (((t + y + z 
 //                                            + g_proc_coords[2]*LY + 
@@ -407,7 +434,7 @@ void reorder_gauge_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geo
                     if (dir == 0){
                       tm_idx_cb0 = g_idn[g_ipt[t][tm_x_coord_cb0][y][z]][change_dim[dim]];
                       tm_idx_cb1 = g_idn[g_ipt[t][tm_x_coord_cb1][y][z]][change_dim[dim]];
-                      if( tm_idx_cb0 >= VOLUME || tm_idx_cb1 >= VOLUME ){
+                      if( g_debug_level > 4 && (tm_idx_cb0 >= VOLUME || tm_idx_cb1 >= VOLUME) ){
                         QPhiX::masterPrintf("Accessing boundary gauge field at t%ld z%ld"
                                             "y%ld x%ld / x%ld\n",t,z,y,tm_x_coord_cb0, tm_x_coord_cb1 );
                         QPhiX::masterPrintf("gauge field on cb0.c00 = %lf\n", creal(g_gauge_field[tm_idx_cb0][change_dim[dim]].c00) );
@@ -1259,14 +1286,21 @@ void tmlqcd::checkQphixInputParameters(const QphixParams_t &params) {
 
 void tmlqcd::printQphixDiagnostics(int VECLEN, int SOALEN, bool compress) {
   QPhiX::masterPrintf("# QphiX: VECLEN=%d SOALEN=%d\n", VECLEN, SOALEN);
-  QPhiX::masterPrintf("# QphiX: Declared QMP Topology: %d %d %d %d\n", qmp_geom[0], qmp_geom[1],
-                      qmp_geom[2], qmp_geom[3]);
-  QPhiX::masterPrintf("# QphiX: Global Lattice Size = ");
+  
+  QPhiX::masterPrintf("# QphiX: Declared QMP Topology (xyzt):");
+  for(int mu = 0; mu < 4; mu++) QPhiX::masterPrintf(" %d", qmp_geom[mu]);
+  QPhiX::masterPrintf("\n");
+  
+  QPhiX::masterPrintf("# QphiX: Mapping of dimensions QMP -> tmLQCD (xyzt):");
+  for(int mu = 0; mu < 4; mu++) QPhiX::masterPrintf(" %d->%d", mu, qmp_tm_map[mu] );
+  QPhiX::masterPrintf("\n");
+
+  QPhiX::masterPrintf("# QphiX: Global Lattice Size (xyzt) = ");
   for (int mu = 0; mu < 4; mu++) {
     QPhiX::masterPrintf(" %d", lattSize[mu]);
   }
   QPhiX::masterPrintf("\n");
-  QPhiX::masterPrintf("# QphiX: Local Lattice Size = ");
+  QPhiX::masterPrintf("# QphiX: Local Lattice Size (xyzt) = ");
   for (int mu = 0; mu < 4; mu++) {
     QPhiX::masterPrintf(" %d", subLattSize[mu]);
   }
