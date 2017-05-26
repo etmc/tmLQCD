@@ -259,9 +259,11 @@ void reorder_clover_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &ge
 
         }  // volume
 
-  const double endTime = gettime();
-  const double diffTime = endTime - startTime;
-  QPhiX::masterPrintf("  time spent in reorder_clover_to_QPhiX: %f secs\n", diffTime);
+  const double diffTime = gettime() - startTime;
+  if (g_debug_level > 1) {
+    QPhiX::masterPrintf("# QPHIX-interface: time spent in reorder_clover_to_QPhiX: %f secs\n",
+                        diffTime);
+  }
 }
 
 template <typename FT, int VECLEN, int SOALEN, bool compress12>
@@ -356,7 +358,10 @@ void reorder_gauge_to_QPhiX(
         }          // outer loop (t,z,y,v)
 
   const double diffTime = gettime() - startTime;
-  QPhiX::masterPrintf("  time spent in reorder_gauge_to_QPhiX: %f secs\n", diffTime);
+  if (g_debug_level > 1) {
+    QPhiX::masterPrintf("# QPHIX-interface: time spent in reorder_gauge_to_QPhiX: %f secs\n",
+                        diffTime);
+  }
 }
 
 // Reorder tmLQCD eo-spinor to a FourSpinorBlock QPhiX spinor on the given checkerboard
@@ -412,6 +417,11 @@ void reorder_eo_spinor_to_QPhiX(
       }
     }
   }
+  const double diffTime = gettime() - startTime;
+  if (g_debug_level > 1) {
+    QPhiX::masterPrintf("# QPHIX-interface: time spent in reorder_eo_spinor_to_QPhiX: %f secs\n",
+                        diffTime);
+  }
 }
 
 template <typename FT, int VECLEN, int SOALEN, bool compress12>
@@ -465,6 +475,11 @@ void reorder_eo_spinor_from_QPhiX(
         }
       }
     }
+  }
+  const double diffTime = gettime() - startTime;
+  if (g_debug_level > 1) {
+    QPhiX::masterPrintf("# QPHIX-interface: time spent in reorder_eo_spinor_from_QPhiX: %f secs\n",
+                        diffTime);
   }
 }
 
@@ -533,7 +548,7 @@ void reorder_spinor_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &ge
   const double endTime = gettime();
   const double diffTime = endTime - startTime;
   if (g_debug_level > 1)
-    QPhiX::masterPrintf("# QPHIX-interface:  time spent in reorder_spinor_to_QPhiX: %f secs\n",
+    QPhiX::masterPrintf("# QPHIX-interface: time spent in reorder_spinor_to_QPhiX: %f secs\n",
                         diffTime);
 }
 
