@@ -391,11 +391,46 @@ class Dslash {
   /**
     Forwarder for the `dslash`.
 
+    This will call the `dslash` function of the respective QPhiX dslash class. There is a subtle
+    difference between the Wilson and all other cases. The Wilson dslash is just the hopping matrix,
+    just the operator \f$ D \f$. For every other case (clover, twisted mass, twisted mass clover),
+    the `dslash` member function will compute \f$ A^{-1} D \f$. In the Wilson case, this \f$ A =
+    \alpha = 4 + m = 1/(2 \kappa) \f$. Since that is _not_ included in the Wilson `dslash`, you will
+    obtain different results when using WilsonDslash::dslash and WilsonTMDslash::dslash with \f$
+    \mu = 0 \f$.
+
     \todo Make this member function `const`. For this the member function in
     QPhiX that is called internally must be marked `const` as well.
     */
   virtual void dslash(Spinor *const res, const Spinor *const psi, const SU3MatrixBlock *const u,
                       int const isign, int const cb) = 0;
+
+  /**
+    Always plain Wilson dslash.
+
+    In contrast to the \ref dslash member function which just forwards the implementation of QPhiX,
+    this will always give you the “naked” plain Wilson dslash without any factors of \f$ A^{-1} \f$
+    applied.
+    */
+  virtual void plain_dslash(Spinor *const res, const Spinor *const psi,
+                            const SU3MatrixBlock *const u, int const isign, int const cb) {
+    // XXX Perhaps rather implement this with an instance of the WilsonDslash instead?
+
+    auto tmp = QPhiX::makeFourSpinorHandle(*geom);
+    dslash(tmp.get(), psi, u, isign, cb);
+    A_chi(res, tmp.get(), isign);
+  };
+
+  /**
+    Always “dressed” dslash.
+
+    This computes \f$ A^{-1} D \f$ for all variants. In the Wilson case, this will give \f$
+    \alpha^{-1} D \f$.
+    */
+  virtual void A_inv_dslash(Spinor *const res, const Spinor *const psi,
+                            const SU3MatrixBlock *const u, int const isign, int const cb) {
+    dslash(res, psi, u, isign, cb);
+  };
 
   /**
     Forwarder for the `achimbdpsi`.
@@ -478,6 +513,18 @@ class WilsonDslash : public Dslash<FT, veclen, soalen, compress12> {
               int const isign, int const cb) override {
     upstream_dslash.dslash(res, psi, u, isign, cb);
   }
+
+  void plain_dslash(Spinor *const res, const Spinor *const psi, const SU3MatrixBlock *const u,
+                    int const isign, int const cb) override {
+    dslash(res, psi, u, isign, cb);
+  };
+
+  void A_inv_dslash(Spinor *const res, const Spinor *const psi, const SU3MatrixBlock *const u,
+                    int const isign, int const cb) override {
+    auto tmp = QPhiX::makeFourSpinorHandle(upstream_dslash.getGeometry());
+    dslash(tmp.get(), psi, u, isign, cb);
+    A_inv_chi(res, tmp.get(), isign);
+  };
 
   void achimbdpsi(Spinor *const res, const Spinor *const psi, const Spinor *const chi,
                   const SU3MatrixBlock *const u, double const alpha, double const beta,

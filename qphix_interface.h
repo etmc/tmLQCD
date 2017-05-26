@@ -61,6 +61,7 @@
 #define QPHIX_INTERFACE_H_
 
 #include "global.h"
+#include "operator_types.h"
 #include "qphix_types.h"
 #include "solver/solver_params.h"
 #include "su3.h"
@@ -78,7 +79,12 @@ int invert_eo_qphix(spinor* const Even_new, spinor* const Odd_new, spinor* const
                     spinor* const Odd, const double precision, const int max_iter,
                     const int solver_flag, const int rel_prec, solver_params_t solver_params,
                     const SloppyPrecision sloppy, const CompressionType compression);
-void D_psi_qphix(spinor* Odd_out, const spinor* Odd_in);
+
+void Mfull_qphix(spinor* Even_out, spinor* Odd_out, const spinor* Even_in, const spinor* Odd_in,
+                 const op_type_t op_type);
+
+void testSpinorPackers(spinor* Even_out, spinor* Odd_out, const spinor* const Even_in,
+                       const spinor* const Odd_in);
 
 #ifdef __cplusplus /* If this is a C++ compiler, end C linkage */
 }
