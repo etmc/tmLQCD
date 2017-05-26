@@ -133,33 +133,35 @@ void _initQphix(int argc, char **argv, QphixParams_t params, int c12, QphixPrec_
   if (!qmp_topo_initialised) {
     // the QMP topology is the one implied by the number of processes in each
     // dimension as required by QPHIX ( x fastest to t slowest running )
-    qmp_geom[0] = g_nproc_x; 
+    qmp_geom[0] = g_nproc_x;
     qmp_geom[1] = g_nproc_y;
     qmp_geom[2] = g_nproc_z;
     qmp_geom[3] = g_nproc_t;
 
-    // in order for the topologies to agree between tmLQCD and QPhiX, the dimensions need to be permuted
+    // in order for the topologies to agree between tmLQCD and QPhiX, the dimensions need to be
+    // permuted
     // since Z is fastest in tmLQCD and X is second-slowest
     qmp_tm_map[0] = 2;
     qmp_tm_map[1] = 1;
     qmp_tm_map[2] = 0;
-    qmp_tm_map[3] = 3; 
+    qmp_tm_map[3] = 3;
     if (QMP_declare_logical_topology_map(qmp_geom, 4, qmp_tm_map, 4) != QMP_SUCCESS) {
       QMP_error("Failed to declare QMP Logical Topology\n");
       abort();
     }
     // longish test to check if the logical coordinates are correctly mapped
-    if(g_debug_level >= 5){
-      for(int proc = 0; proc < g_nproc; proc++){
-        if( proc == g_proc_id ){
-          const int coordinates[4] = { g_proc_coords[1], g_proc_coords[2], g_proc_coords[3], g_proc_coords[0] };
-          int id = QMP_get_node_number_from( coordinates );
-          int* qmp_coords = QMP_get_logical_coordinates_from(id);
+    if (g_debug_level >= 5) {
+      for (int proc = 0; proc < g_nproc; proc++) {
+        if (proc == g_proc_id) {
+          const int coordinates[4] = {g_proc_coords[1], g_proc_coords[2], g_proc_coords[3],
+                                      g_proc_coords[0]};
+          int id = QMP_get_node_number_from(coordinates);
+          int *qmp_coords = QMP_get_logical_coordinates_from(id);
           fflush(stdout);
-          printf("QMP id: %3d x:%3d y:%3d z:%3d t:%3d\n", id, 
-                 qmp_coords[0], qmp_coords[1], qmp_coords[2], qmp_coords[3]); 
-          printf("MPI id: %3d x:%3d y:%3d z:%3d t:%3d\n\n", g_proc_id, 
-                 g_proc_coords[1], g_proc_coords[2], g_proc_coords[3], g_proc_coords[0]);
+          printf("QMP id: %3d x:%3d y:%3d z:%3d t:%3d\n", id, qmp_coords[0], qmp_coords[1],
+                 qmp_coords[2], qmp_coords[3]);
+          printf("MPI id: %3d x:%3d y:%3d z:%3d t:%3d\n\n", g_proc_id, g_proc_coords[1],
+                 g_proc_coords[2], g_proc_coords[3], g_proc_coords[0]);
           free(qmp_coords);
           fflush(stdout);
           MPI_Barrier(MPI_COMM_WORLD);
@@ -263,9 +265,10 @@ void reorder_clover_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &ge
 }
 
 template <typename FT, int VECLEN, int SOALEN, bool compress12>
-void reorder_gauge_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom,
-                            typename QPhiX::Geometry<FT, VECLEN, SOALEN, compress12>::SU3MatrixBlock *qphix_gauge_cb0,
-                            typename QPhiX::Geometry<FT, VECLEN, SOALEN, compress12>::SU3MatrixBlock *qphix_gauge_cb1){
+void reorder_gauge_to_QPhiX(
+    QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom,
+    typename QPhiX::Geometry<FT, VECLEN, SOALEN, compress12>::SU3MatrixBlock *qphix_gauge_cb0,
+    typename QPhiX::Geometry<FT, VECLEN, SOALEN, compress12>::SU3MatrixBlock *qphix_gauge_cb1) {
   const double startTime = gettime();
 
   // Number of elements in spin, color & complex
@@ -301,25 +304,24 @@ void reorder_gauge_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geo
   for (int64_t t = 0; t < T; t++)
     for (int64_t z = 0; z < LZ; z++)
       for (int64_t y = 0; y < LY; y++)
-        for (int64_t v = 0; v < nVecs; v++){
-
+        for (int64_t v = 0; v < nVecs; v++) {
           int64_t block = (t * Pxyz + z * Pxy) / ngy + (y / ngy) * nVecs + v;
 
-          for (int dim = 0; dim < 4; dim++)  // dimension == QPhiX \mu
+          for (int dim = 0; dim < 4; dim++)     // dimension == QPhiX \mu
             for (int c1 = 0; c1 < Nc1; c1++)    // QPhiX convention color 1 (runs up to 2 or 3)
               for (int c2 = 0; c2 < Nc2; c2++)  // QPhiX convention color 2 (always runs up to 3)
-                for (int x_soa = 0; x_soa < SOALEN; x_soa++){
-                  int64_t xx = ( y % ngy ) * SOALEN + x_soa;
-                  int64_t q_cb_x_coord = x_soa + v*SOALEN;
-                  int64_t tm_x_coord_cb0 = q_cb_x_coord * 2 + ( ((t + y + z) & 1) ^ 0 );
-                  int64_t tm_x_coord_cb1 = q_cb_x_coord * 2 + ( ((t + y + z) & 1) ^ 1);
-                  
+                for (int x_soa = 0; x_soa < SOALEN; x_soa++) {
+                  int64_t xx = (y % ngy) * SOALEN + x_soa;
+                  int64_t q_cb_x_coord = x_soa + v * SOALEN;
+                  int64_t tm_x_coord_cb0 = q_cb_x_coord * 2 + (((t + y + z) & 1) ^ 0);
+                  int64_t tm_x_coord_cb1 = q_cb_x_coord * 2 + (((t + y + z) & 1) ^ 1);
+
                   int64_t tm_idx_cb0;
                   int64_t tm_idx_cb1;
-                 
+
                   // backward / forward
                   for (int dir = 0; dir < 2; dir++) {
-                    if (dir == 0){
+                    if (dir == 0) {
                       tm_idx_cb0 = g_idn[g_ipt[t][tm_x_coord_cb0][y][z]][change_dim[dim]];
                       tm_idx_cb1 = g_idn[g_ipt[t][tm_x_coord_cb1][y][z]][change_dim[dim]];
                     } else {
@@ -341,16 +343,18 @@ void reorder_gauge_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geo
                       // tmLQCD.
                       // 3. tmlQCD always uses 3x3 color matrices (Nc2*Nc2).
                       int64_t t_inner_idx_cb0 = reim + c1 * Nz + c2 * Nz * Nc2 +
-                                                change_dim[dim] * Nz * Nc2 * Nc2 + tm_idx_cb0 * Nz * Nc2 * Nc2 * 4;
+                                                change_dim[dim] * Nz * Nc2 * Nc2 +
+                                                tm_idx_cb0 * Nz * Nc2 * Nc2 * 4;
                       int64_t t_inner_idx_cb1 = reim + c1 * Nz + c2 * Nz * Nc2 +
-                                                change_dim[dim] * Nz * Nc2 * Nc2 + tm_idx_cb1 * Nz * Nc2 * Nc2 * 4;
+                                                change_dim[dim] * Nz * Nc2 * Nc2 +
+                                                tm_idx_cb1 * Nz * Nc2 * Nc2 * 4;
                       qphix_gauge_cb0[block][q_mu][c1][c2][reim][xx] = in[t_inner_idx_cb0];
                       qphix_gauge_cb1[block][q_mu][c1][c2][reim][xx] = in[t_inner_idx_cb1];
                     }
                   }
-                } // for(dim,c1,c2,x_soa)
-        } // outer loop (t,z,y,v)
-       
+                }  // for(dim,c1,c2,x_soa)
+        }          // outer loop (t,z,y,v)
+
   const double diffTime = gettime() - startTime;
   QPhiX::masterPrintf("  time spent in reorder_gauge_to_QPhiX: %f secs\n", diffTime);
 }
@@ -1168,13 +1172,13 @@ void tmlqcd::checkQphixInputParameters(const QphixParams_t &params) {
 
 void tmlqcd::printQphixDiagnostics(int VECLEN, int SOALEN, bool compress) {
   QPhiX::masterPrintf("# QphiX: VECLEN=%d SOALEN=%d\n", VECLEN, SOALEN);
-  
+
   QPhiX::masterPrintf("# QphiX: Declared QMP Topology (xyzt):");
-  for(int mu = 0; mu < 4; mu++) QPhiX::masterPrintf(" %d", qmp_geom[mu]);
+  for (int mu = 0; mu < 4; mu++) QPhiX::masterPrintf(" %d", qmp_geom[mu]);
   QPhiX::masterPrintf("\n");
-  
+
   QPhiX::masterPrintf("# QphiX: Mapping of dimensions QMP -> tmLQCD (xyzt):");
-  for(int mu = 0; mu < 4; mu++) QPhiX::masterPrintf(" %d->%d", mu, qmp_tm_map[mu] );
+  for (int mu = 0; mu < 4; mu++) QPhiX::masterPrintf(" %d->%d", mu, qmp_tm_map[mu]);
   QPhiX::masterPrintf("\n");
 
   QPhiX::masterPrintf("# QphiX: Global Lattice Size (xyzt) = ");

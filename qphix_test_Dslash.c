@@ -88,10 +88,10 @@
 int check_xchange();
 double compare_spinors(spinor* s1, spinor* s2);
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   int j;
 #ifdef HAVE_LIBLEMON
-  paramsXlfInfo *xlfInfo;
+  paramsXlfInfo* xlfInfo;
 #endif
   int status = 0;
 
@@ -163,16 +163,16 @@ int main(int argc, char *argv[]) {
 
   start_ranlux(1, 123456);
   random_gauge_field(1, g_gauge_field);
-  //unit_g_gauge_field(); // unit 3x3 colour matrices
-  //g_gauge_field[ g_ipt[0][0][0][1] ][0].c00 = 1.0;
-  //g_gauge_field[ g_ipt[0][0][0][1] ][0].c01 = 0.0;
-  //g_gauge_field[ g_ipt[0][0][0][1] ][0].c02 = 0.0;
-  //g_gauge_field[ g_ipt[0][0][0][1] ][0].c10 = 0.0;
-  //g_gauge_field[ g_ipt[0][0][0][1] ][0].c11 = 1.0;
-  //g_gauge_field[ g_ipt[0][0][0][1] ][0].c12 = 0.0;
-  //g_gauge_field[ g_ipt[0][0][0][1] ][0].c20 = 0.0;
-  //g_gauge_field[ g_ipt[0][0][0][1] ][0].c21 = 0.0;
-  //g_gauge_field[ g_ipt[0][0][0][1] ][0].c22 = 1.0;
+// unit_g_gauge_field(); // unit 3x3 colour matrices
+// g_gauge_field[ g_ipt[0][0][0][1] ][0].c00 = 1.0;
+// g_gauge_field[ g_ipt[0][0][0][1] ][0].c01 = 0.0;
+// g_gauge_field[ g_ipt[0][0][0][1] ][0].c02 = 0.0;
+// g_gauge_field[ g_ipt[0][0][0][1] ][0].c10 = 0.0;
+// g_gauge_field[ g_ipt[0][0][0][1] ][0].c11 = 1.0;
+// g_gauge_field[ g_ipt[0][0][0][1] ][0].c12 = 0.0;
+// g_gauge_field[ g_ipt[0][0][0][1] ][0].c20 = 0.0;
+// g_gauge_field[ g_ipt[0][0][0][1] ][0].c21 = 0.0;
+// g_gauge_field[ g_ipt[0][0][0][1] ][0].c22 = 1.0;
 
 #ifdef TM_USE_MPI
   /*For parallelization: exchange the gaugefield */
@@ -186,9 +186,9 @@ int main(int argc, char *argv[]) {
 
   init_operators();
 
-  spinor **qphix_out_cb_spinors;
+  spinor** qphix_out_cb_spinors;
   init_solver_field(&qphix_out_cb_spinors, VOLUME / 2, 2);
-  
+
   spinor** tmp;
   init_solver_field(&tmp, VOLUME, 2);
 
@@ -198,7 +198,7 @@ int main(int argc, char *argv[]) {
    * and first apply the tmLQCD operator to the test spinor, then
    * the QPhiX operator and then compare */
   for (int op_id = 0; op_id < no_operators; ++op_id) {
-    operator *op = &operator_list[op_id];
+    operator* op =& operator_list[op_id];
     op_set_globals(op_id);
     boundary(g_kappa);
     // check BC
@@ -212,7 +212,7 @@ int main(int argc, char *argv[]) {
      * source at source_location (s0,c0), a volume source or a time-slice source for the given
      * operator */
     prepare_source(0 /*nstore*/, 0 /*isample*/, 0 /*ix*/, op_id, 0 /*read_source_flag*/,
-                   source_location , 12345 /* seed */);
+                   source_location, 12345 /* seed */);
 
 #ifdef TM_USE_MPI
     MPI_Barrier(MPI_COMM_WORLD);
@@ -220,8 +220,8 @@ int main(int argc, char *argv[]) {
 
     tm_t1 = gettime();
     op->applyM(op->prop0, op->prop1, op->sr0, op->sr1);
-    //Hopping_Matrix(OE, op->prop0, op->sr1);
-    //Hopping_Matrix(EO, op->prop1, op->sr0);
+    // Hopping_Matrix(OE, op->prop0, op->sr1);
+    // Hopping_Matrix(EO, op->prop1, op->sr0);
     tm_t2 = gettime();
 
 #ifdef TM_USE_MPI
@@ -236,7 +236,7 @@ int main(int argc, char *argv[]) {
       printf("  ||source||^2 = %e\n\n", squarenorm);
       fflush(stdout);
     }
-   
+
     // print L2-norm of result:
     squarenorm = square_norm(op->prop0, VOLUME / 2, 1) + square_norm(op->prop1, VOLUME / 2, 1);
     if (g_proc_id == 0) {
@@ -247,8 +247,8 @@ int main(int argc, char *argv[]) {
       printf("  ||result_1||^2 = %.16e\n", squarenorm);
       printf("  Time for MV mult: %e\n", tm_t2 - tm_t1);
       fflush(stdout);
-    }    
-    
+    }
+
     // print L2-norm of result:
     squarenorm = square_norm(qphix_out_cb_spinors[0], VOLUME / 2, 1) +
                  square_norm(qphix_out_cb_spinors[1], VOLUME / 2, 1);
@@ -270,12 +270,12 @@ int main(int argc, char *argv[]) {
   }  // for(op_id)
 
   int failed = 0;
-  for(int op_id = 0; op_id < no_operators; op_id++){
-    if(g_proc_id==0){
+  for (int op_id = 0; op_id < no_operators; op_id++) {
+    if (g_proc_id == 0) {
       printf("op_id: %d, |diff|^2 = %.16e\n", op_id, difference_l2norm[op_id]);
     }
     // check if the l2 norm of the difference is tolerable up to rounding
-    if( difference_l2norm[op_id] > 2*g_nproc*VOLUME*DBL_EPSILON ){
+    if (difference_l2norm[op_id] > 2 * g_nproc * VOLUME * DBL_EPSILON) {
       failed = 1;
     }
   }
@@ -297,50 +297,52 @@ int main(int argc, char *argv[]) {
   return (failed);
 }
 
-double compare_spinors(spinor* s1, spinor* s2){
+double compare_spinors(spinor* s1, spinor* s2) {
   double* show_out;
   double* show_out_qphix;
 #ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
   int coords[4];
-  int x,y,z,t, id=0;
+  int x, y, z, t, id = 0;
   // list non-zero elements in spinors, but only if the source type was a point source
-  if( SourceInfo.type == SRC_TYPE_POINT ){
-    if( g_proc_id==0 ) printf("\n OUTPUT TMLQCD vs QPHIX SPINOR (tmlQCD format):\n");
-    if( g_proc_id==0 ) printf("g_proc_id | T=%3d LX=%3d LY=%3d LZ=%3d %26s",
-                              g_nproc_t*T, g_nproc_x*LX, g_nproc_y*LY, g_nproc_z*LZ, " ");
-    if( g_proc_id==0 ) printf("T=%3d LX=%3d LY=%3d LZ=%3d \n",
-                              g_nproc_t*T, g_nproc_x*LX, g_nproc_y*LY, g_nproc_z*LZ);
-    for(int t_global = 0; t_global < g_nproc_t*T; t_global++){
+  if (SourceInfo.type == SRC_TYPE_POINT) {
+    if (g_proc_id == 0) printf("\n OUTPUT TMLQCD vs QPHIX SPINOR (tmlQCD format):\n");
+    if (g_proc_id == 0)
+      printf("g_proc_id | T=%3d LX=%3d LY=%3d LZ=%3d %26s", g_nproc_t * T, g_nproc_x * LX,
+             g_nproc_y * LY, g_nproc_z * LZ, " ");
+    if (g_proc_id == 0)
+      printf("T=%3d LX=%3d LY=%3d LZ=%3d \n", g_nproc_t * T, g_nproc_x * LX, g_nproc_y * LY,
+             g_nproc_z * LZ);
+    for (int t_global = 0; t_global < g_nproc_t * T; t_global++) {
       coords[0] = t_global / T;
-      for(int x_global = 0; x_global < g_nproc_x*LX; x_global++){
+      for (int x_global = 0; x_global < g_nproc_x * LX; x_global++) {
         coords[1] = x_global / LX;
-        for(int y_global = 0; y_global < g_nproc_y*LY; y_global++){
-          coords[2] = y_global / LY; 
-          for(int z_global = 0; z_global < g_nproc_z*LZ; z_global++){
-            coords[3] =  z_global / LZ;
+        for (int y_global = 0; y_global < g_nproc_y * LY; y_global++) {
+          coords[2] = y_global / LY;
+          for (int z_global = 0; z_global < g_nproc_z * LZ; z_global++) {
+            coords[3] = z_global / LZ;
 #ifdef TM_USE_MPI
             MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
-            if(g_proc_id == id){
-              t = t_global - g_proc_coords[0]*T;
-              x = x_global - g_proc_coords[1]*LX;
-              y = y_global - g_proc_coords[2]*LY;
-              z = z_global - g_proc_coords[3]*LZ;
+            if (g_proc_id == id) {
+              t = t_global - g_proc_coords[0] * T;
+              x = x_global - g_proc_coords[1] * LX;
+              y = y_global - g_proc_coords[2] * LY;
+              z = z_global - g_proc_coords[3] * LZ;
               int idx = g_ipt[t][x][y][z];
-              show_out       = (double*)(&s1[idx]);
+              show_out = (double*)(&s1[idx]);
               show_out_qphix = (double*)(&s2[idx]);
-              for(int sc = 0; sc < 24; sc++){
-                if( fabs(show_out_qphix[sc]) > 2*DBL_EPSILON || fabs(show_out[sc]) > 2*DBL_EPSILON) {
+              for (int sc = 0; sc < 24; sc++) {
+                if (fabs(show_out_qphix[sc]) > 2 * DBL_EPSILON ||
+                    fabs(show_out[sc]) > 2 * DBL_EPSILON) {
                   fflush(stdout);
-                  printf("%9d | %5d %6d %6d %6d s%1d c%1d reim%1d : %+5lf %2s", g_proc_id,
-                          t_global, x_global, y_global, z_global, sc/6, (sc/2)%3, sc%2,
-                          show_out[sc], " ");
-                  printf("%5d %6d %6d %6d s%1d c%1d reim%1d : %+5lf",
-                          t_global, x_global, y_global, z_global, sc/6, (sc/2)%3, sc%2,
-                          show_out_qphix[sc]);
-                  if( fabs( show_out[sc] - show_out_qphix[sc] ) > 2*DBL_EPSILON ) printf(" !!! ");
+                  printf("%9d | %5d %6d %6d %6d s%1d c%1d reim%1d : %+5lf %2s", g_proc_id, t_global,
+                         x_global, y_global, z_global, sc / 6, (sc / 2) % 3, sc % 2, show_out[sc],
+                         " ");
+                  printf("%5d %6d %6d %6d s%1d c%1d reim%1d : %+5lf", t_global, x_global, y_global,
+                         z_global, sc / 6, (sc / 2) % 3, sc % 2, show_out_qphix[sc]);
+                  if (fabs(show_out[sc] - show_out_qphix[sc]) > 2 * DBL_EPSILON) printf(" !!! ");
                   printf("\n");
                 }
               }
@@ -348,11 +350,11 @@ double compare_spinors(spinor* s1, spinor* s2){
 #ifdef TM_USE_MPI
             MPI_Barrier(MPI_COMM_WORLD);
 #endif
-          } // z
-        } // y
-      } // x
-    } // t
-  } // if( SourceInfo.type == SRC_TYPE_POINT )
+          }  // z
+        }    // y
+      }      // x
+    }        // t
+  }          // if( SourceInfo.type == SRC_TYPE_POINT )
 
 #ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
@@ -363,52 +365,52 @@ double compare_spinors(spinor* s1, spinor* s2){
     printf("# ===========================\n\n");
   }
 
-  if(g_proc_id == 0) printf("\n OUTPUT TMLQCD vs QPHIX SPINOR (tmlQCD format):\n");
-  if( g_proc_id==0 ) printf("g_proc_id | T=%3d LX=%3d LY=%3d LZ=%3d \n", g_nproc_t*T, g_nproc_x*LX, g_nproc_y*LY, 
-                            g_nproc_z*LZ);
-  double squarenorm = diff_and_square_norm(s1,s2,VOLUME);
+  if (g_proc_id == 0) printf("\n OUTPUT TMLQCD vs QPHIX SPINOR (tmlQCD format):\n");
+  if (g_proc_id == 0)
+    printf("g_proc_id | T=%3d LX=%3d LY=%3d LZ=%3d \n", g_nproc_t * T, g_nproc_x * LX,
+           g_nproc_y * LY, g_nproc_z * LZ);
+  double squarenorm = diff_and_square_norm(s1, s2, VOLUME);
 
 #ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
-  id=0;
-  for(int t_global = 0; t_global < g_nproc_t*T; t_global++){
+  id = 0;
+  for (int t_global = 0; t_global < g_nproc_t * T; t_global++) {
     coords[0] = t_global / T;
-    for(int x_global = 0; x_global < g_nproc_x*LX; x_global++){
+    for (int x_global = 0; x_global < g_nproc_x * LX; x_global++) {
       coords[1] = x_global / LX;
-      for(int y_global = 0; y_global < g_nproc_y*LY; y_global++){
-        coords[2] = y_global / LY; 
-        for(int z_global = 0; z_global < g_nproc_z*LZ; z_global++){
-          coords[3] =  z_global / LZ;
+      for (int y_global = 0; y_global < g_nproc_y * LY; y_global++) {
+        coords[2] = y_global / LY;
+        for (int z_global = 0; z_global < g_nproc_z * LZ; z_global++) {
+          coords[3] = z_global / LZ;
 #ifdef TM_USE_MPI
           MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
-          if(g_proc_id == id){
-            t = t_global - g_proc_coords[0]*T;
-            x = x_global - g_proc_coords[1]*LX;
-            y = y_global - g_proc_coords[2]*LY;
-            z = z_global - g_proc_coords[3]*LZ;
+          if (g_proc_id == id) {
+            t = t_global - g_proc_coords[0] * T;
+            x = x_global - g_proc_coords[1] * LX;
+            y = y_global - g_proc_coords[2] * LY;
+            z = z_global - g_proc_coords[3] * LZ;
             int idx = g_ipt[t][x][y][z];
-            show_out       = (double*)(&s1[idx]);
-            for(int sc = 0; sc < 24; sc++){
+            show_out = (double*)(&s1[idx]);
+            for (int sc = 0; sc < 24; sc++) {
               // when a volume source is used, these will be zero up to significant rounding
               // we account for that by the scaling of DBL_EPSILON
-              if( fabs(show_out[sc]) > 8*24*DBL_EPSILON ) {
+              if (fabs(show_out[sc]) > 8 * 24 * DBL_EPSILON) {
                 fflush(stdout);
-                printf("%9d | %5d %6d %6d %6d s%1d c%1d reim%1d : %+5lf\n", g_proc_id,
-                        t_global, x_global, y_global, z_global, sc/6, (sc/2)%3, sc%2,
-                        show_out[sc]);
+                printf("%9d | %5d %6d %6d %6d s%1d c%1d reim%1d : %+5lf\n", g_proc_id, t_global,
+                       x_global, y_global, z_global, sc / 6, (sc / 2) % 3, sc % 2, show_out[sc]);
               }
             }
           }
 #ifdef TM_USE_MPI
           MPI_Barrier(MPI_COMM_WORLD);
 #endif
-        } // z
-      } // y
-    } // x
-  } // t
-  
+        }  // z
+      }    // y
+    }      // x
+  }        // t
+
   if (g_proc_id == 0) {
     printf("\n  ||result_1 - result_2||^2 = %e\n\n", squarenorm);
     fflush(stdout);
