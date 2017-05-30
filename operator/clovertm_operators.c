@@ -53,6 +53,7 @@
 #include "tm_operators.h"
 #include "tm_operators_32.h"
 
+#include "operator/clover_invert.c"
 #include "operator/clovertm_operators.h"
 #include "operator/D_psi.h"
 
@@ -168,11 +169,12 @@ void Msw_full(spinor * const Even_new, spinor * const Odd_new,
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX], Odd);
   assign_mul_one_sw_pm_imu(EE, Even_new, Even, +g_mu);
   assign_add_mul_r(Even_new, g_spinor_field[DUM_MATRIX], -1., VOLUME/2);
-  
+
   /* Odd sites */
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], Even);
   assign_mul_one_sw_pm_imu(OO, Odd_new, Odd, +g_mu);
   assign_add_mul_r(Odd_new, g_spinor_field[DUM_MATRIX], -1., VOLUME/2);
+
 }
 
 
@@ -334,6 +336,74 @@ void clover_inv(spinor * const l, const int tau3sign, const double mu) {
       _su3_multiply(chi,*w2,(*rn).s3);
       _vector_add((*rn).s2,psi,chi);
       _su3_multiply(psi,*w4,phi3); 
+      _su3_multiply(chi,*w3,(*rn).s3);
+      _vector_add((*rn).s3,psi,chi);
+
+#ifndef TM_USE_OMP
+      ++icy;
+#endif
+
+      /******************************** end of loop *********************************/
+    }
+#ifdef TM_USE_OMP
+  } /* OpenMP closing brace */
+#endif
+  return;
+}
+
+// apply clover term to an even-odd-ordered VOLUME/2 spinor on ieo=0 (even) and ieo=1 (odd) sites
+void clover_mult(spinor * const l, int ieo) {
+#ifdef TM_USE_OMP
+#pragma omp parallel
+  {
+#endif
+    int icy, ix;
+    su3_vector ALIGN psi, chi, phi1, phi3;
+    int ioff = 0;
+    const su3 *w1, *w2, *w3;
+    spinor *rn;
+
+    if(ieo > 0) {
+      ioff = (VOLUME+RAND)/2;
+    }
+
+#ifndef TM_USE_OMP
+    icy = 0;
+#endif
+    
+    /************************ loop over all lattice sites *************************/
+#ifdef TM_USE_OMP
+#pragma omp for
+#endif
+    for(int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
+#ifdef TM_USE_OMP
+      icy = icx - ioff;
+#endif
+      ix = g_eo2lexic[icx];
+
+      rn = l + icy;
+      _vector_assign(phi1,(*rn).s0);
+      _vector_assign(phi3,(*rn).s2);
+
+      w1=&sw[ix][0][0];
+      w2=w1+2;  /* &sw_inv[ix][1][0]; */
+      w3=w1+4;  /* &sw_inv[ix][2][0]; */
+      _su3_multiply(psi,*w1,phi1); 
+      _su3_multiply(chi,*w2,(*rn).s1);
+      _vector_add((*rn).s0,psi,chi);
+      
+      _su3_inverse_multiply(psi,*w2,phi1); 
+      _su3_multiply(chi,*w3,(*rn).s1);
+      _vector_add((*rn).s1,psi,chi);
+
+      w1++; /* &sw[ix][0][1]; */
+      w2++; /* &sw[ix][1][1]; */
+      w3++; /* &sw[ix][2][1]; */
+      _su3_multiply(psi,*w1,phi3); 
+      _su3_multiply(chi,*w2,(*rn).s3);
+      _vector_add((*rn).s2,psi,chi);
+      
+      _su3_inverse_multiply(psi,*w2,phi3); 
       _su3_multiply(chi,*w3,(*rn).s3);
       _vector_add((*rn).s3,psi,chi);
 

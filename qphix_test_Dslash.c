@@ -162,8 +162,12 @@ int main(int argc, char* argv[]) {
   }
 
   start_ranlux(1, 123456);
-  random_gauge_field(1, g_gauge_field);
-// unit_g_gauge_field(); // unit 3x3 colour matrices
+  if (startoption == 0) {
+    unit_g_gauge_field();  // unit 3x3 colour matrices
+  } else {
+    random_gauge_field(1, g_gauge_field);
+  }
+
 // g_gauge_field[ g_ipt[0][0][0][1] ][0].c00 = 1.0;
 // g_gauge_field[ g_ipt[0][0][0][1] ][0].c01 = 0.0;
 // g_gauge_field[ g_ipt[0][0][0][1] ][0].c02 = 0.0;
@@ -200,6 +204,10 @@ int main(int argc, char* argv[]) {
   for (int op_id = 0; op_id < no_operators; ++op_id) {
     operator* op =& operator_list[op_id];
     op_set_globals(op_id);
+    if (op->type == CLOVER || op->type == DBCLOVER) {
+      sw_term((const su3**)g_gauge_field, op->kappa, op->c_sw);
+      sw_invert(EE, op->mu);
+    }
     boundary(g_kappa);
     // check BC
     if (g_proc_id == 0) {
@@ -208,10 +216,12 @@ int main(int argc, char* argv[]) {
       printf("phase_2 = %f + I*%f\n", creal(phase_2), cimag(phase_2));
       printf("phase_3 = %f + I*%f\n\n", creal(phase_3), cimag(phase_3));
     }
-    /* depending on what has been set in the input file, this will create a point
-     * source at source_location (s0,c0), a volume source or a time-slice source for the given
-     * operator */
-    prepare_source(0 /*nstore*/, 0 /*isample*/, 0 /*ix*/, op_id, 0 /*read_source_flag*/,
+    /* depending on what has been set in the input file, this will create
+     * 1) a point source at source_location, spin/colour corresponding to index_start
+     * 2) a volume source
+     * 3) a time-slice source
+     * for the given operator */
+    prepare_source(0 /*nstore*/, 0 /*isample*/, index_start, op_id, 0 /*read_source_flag*/,
                    source_location, 12345 /* seed */);
 
 #ifdef TM_USE_MPI
@@ -306,6 +316,7 @@ double compare_spinors(spinor* s1, spinor* s2) {
   int coords[4];
   int x, y, z, t, id = 0;
   // list non-zero elements in spinors, but only if the source type was a point source
+  // otherwise the output is overwhelming
   if (SourceInfo.type == SRC_TYPE_POINT) {
     if (g_proc_id == 0) printf("\n OUTPUT TMLQCD vs QPHIX SPINOR (tmlQCD format):\n");
     if (g_proc_id == 0)
