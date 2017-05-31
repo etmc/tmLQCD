@@ -197,6 +197,7 @@ void reorder_clover_to_QPhiX(
     QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom,
     typename QPhiX::Geometry<FT, VECLEN, SOALEN, compress12>::CloverBlock *qphix_clover, int cb,
     bool inverse) {
+
   const double startTime = gettime();
 
   /* the spin-colour clover term in sw_term and the corresponding inverse
@@ -226,7 +227,28 @@ void reorder_clover_to_QPhiX(
    * and two sets of off-diagonal complex components.
    *
    * In addition, colour matrices are transposed in QPhiX.
-   *
+   * 
+   * The tmLQCD clover term is stored as:
+   * 
+   *      s00 s01
+   *          s11
+   * T =          s22 s23 
+   *                  s33
+   * 
+   * with indexing
+   * 
+   *     sw[0][0] sw[1][0]
+   *              sw[2][0]
+   *                       sw[0][1] sw[1][1]
+   *                                sw[2][1]
+   * 
+   * The inverse has four su3 blocks instead and is indexed
+   *     sw_inv[0][0] sw_inv[1][0]
+   *     sw_inv[3][0] sw_inv[2][0]
+   *                               sw_inv[0][1] sw_inv[1][1]
+   *                               sw_inv[3][1] sw_inv[2][1]
+   * 
+   * where blocks sw_inv[3][0] and sw_inv[3][1] are relevant only when mu > 0
    */
 
   // rescale to get clover term (or its inverse) in the physical normalisation
@@ -244,33 +266,34 @@ void reorder_clover_to_QPhiX(
   const auto nVecs = geom.nVecs();
   const auto Pxy = geom.getPxy();
   const auto Pxyz = geom.getPxyz();
-
+  
+  // packer for Wilson clover (real diagonal + complex upper-triangular)
   /* for the index in the off_diagN arrays, we map to an index in the su3 struct
-   * keeping in mind colour transposition and complex conjugation
-   * The off-diagonal in QPhiX is stored as follows:
-   *
-   * 0 1 3 6 10
-   *   2 4 7 11
-   *     5 8 12
-   *       9 13
-   *         14
-   *
-   * which we are going to map to su3 in blocks
-   *
-   *     0* 1*
-   *        2*
-   *
-   * 3   4  5
-   * 6   7  8
-   * 10 11 12
-   *
-   *   9* 13*
-   *      14*
-   *
-   * where the asterisk indicates complex conjugation. As a linear array then,
-   * these mappings are:
-   *
-   */
+  * keeping in mind colour transposition and complex conjugation
+  * The off-diagonal in QPhiX is stored as follows:
+  *
+  * 0 1 3 6 10
+  *   2 4 7 11
+  *     5 8 12
+  *       9 13
+  *         14
+  *
+  * which we are going to map to su3 in blocks
+  *
+  *     0* 1*
+  *        2*
+  *
+  * 3   4  5
+  * 6   7  8
+  * 10 11 12
+  *
+  *   9* 13*
+  *      14*
+  *
+  * where the asterisk indicates complex conjugation. As a linear array then,
+  * these mappings are:
+  *
+  */
   const int od_su3_offsets[15] = {Nz,
                                   2 * Nz,            //     0 1
                                   Nc * Nz + 2 * Nz,  //       2
@@ -303,18 +326,18 @@ void reorder_clover_to_QPhiX(
             int64_t q_cb_x_coord = x_soa + v * SOALEN;
             int64_t tm_x_coord = q_cb_x_coord * 2 + (((t + y + z) & 1) ^ cb);
 
-            // the inverse of the clover term is in even-odd ordering
-            // while the clover term itself is lexicographically ordered
+//             the inverse of the clover term is in even-odd ordering
+//             while the clover term itself is lexicographically ordered
             int64_t tm_idx =
                 inverse ? g_lexic2eosub[g_ipt[t][tm_x_coord][y][z]] : g_ipt[t][tm_x_coord][y][z];
 
             int b_idx;
 
-            // we begin with the diagonal elements in CloverBlock
+//             we begin with the diagonal elements in CloverBlock
             for (int d = 0; d < 6; d++) {
-              // choose the block in sw which corresponds to the block in T'
+//               choose the block in sw which corresponds to the block in T'
               b_idx = d < 3 ? 2 : 0;
-              // get the right colour components
+//               get the right colour components
               qphix_clover[block].diag1[d][xx] =
                   *(reinterpret_cast<double const *const>(&tm_clover[tm_idx][b_idx][1].c00) +
                     (Nc * Nz + Nz) * (d % 3)) *
@@ -380,13 +403,165 @@ void reorder_clover_to_QPhiX(
       }      // for(y)
     }        // for(z)
   }          // for(t)
+ 
 
   const double diffTime = gettime() - startTime;
   if (g_debug_level > 1) {
-    QPhiX::masterPrintf("# QPHIX-interface: time spent in reorder_clover_to_QPhiX: %f secs\n",
+    QPhiX::masterPrintf("# QPHIX-interface: time spent in reorder_clover_to_QPhiX (CloverBlock): %f secs\n",
                         diffTime);
   }
 }
+
+template <typename FT, int VECLEN, int SOALEN, bool compress12>
+void reorder_clover_to_QPhiX(
+    QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom,
+    typename QPhiX::Geometry<FT, VECLEN, SOALEN, compress12>::FullCloverBlock *qphix_clover[2], int cb,
+    bool inverse) {
+
+  const double startTime = gettime();
+
+  /* the spin-colour clover term in sw_term and the corresponding inverse
+   * in sw_inv are stored in the tmLQCD gamma basis.
+   * When we translate spinors to QPhiX, we apply a transformation V to the tmLQCD
+   * spinor and then apply the same transformation to the output spinor
+   * ( we have V^dagger = V and V*V = 1 )
+   * Thus, in order to translate the clover field, we need to copy
+   *   (1+T)' = V*(1+T)*V, where T is the spin-colour clover-term
+   * This way, the clover term will be in the correct gamma basis.
+   *
+   * The tmLQCD clover term is stored in half-spinor blocks of colour matrices
+   * for which we need to work out what (1+T)'=V*(1+T)*V implies.
+   * Below, each sAB represents one 3x3 colour matrix
+   *
+   *                +s33 -s32    0    0
+   *  T' = V*T*V =  -s23 +s22    0    0
+   *                   0    0 +s11 -s10
+   *                   0    0 -s01 +s00
+   *
+   * Such that the half-spinor blocks are inverted and within these, the ordering is
+   * reversed. Note that the off-diagonal 3x3 colour blocks are hermitian conjugate to
+   * each other and this is preserved by the transformation.
+   *
+   * The QPhiX (tmclover) clover term and its inverse are stored as a pair of full 
+   * 6x6 complex matrices which are transposed in colour relative to tmLQCD.
+   * 
+   * The tmLQCD clover term is stored as:
+   * 
+   *      s00 s01
+   *          s11
+   * T =          s22 s23 
+   *                  s33
+   * 
+   * with indexing
+   * 
+   *     sw[0][0] sw[1][0]
+   *              sw[2][0]
+   *                       sw[0][1] sw[1][1]
+   *                                sw[2][1]
+   * 
+   * The inverse has four su3 blocks instead and is indexed
+   *     sw_inv[0][0] sw_inv[1][0]
+   *     sw_inv[3][0] sw_inv[2][0]
+   *                               sw_inv[0][1] sw_inv[1][1]
+   *                               sw_inv[3][1] sw_inv[2][1]
+   * 
+   * where blocks sw_inv[3][0] and sw_inv[3][1] are relevant only when mu > 0   *
+   */
+
+  // rescale to get clover term (or its inverse) in the physical normalisation
+  // rather than the kappa normalisation
+  const double scale = inverse ? 2.0 * g_kappa : 1.0 / (2.0 * g_kappa);
+  su3 ***tm_clover = inverse ? sw_inv : sw;
+
+  // Number of elements in spin, color & complex
+  const int Ns = 4;
+  const int Nc = 3;
+  const int Nz = 2;
+
+  // Geometric parameters for QPhiX data layout
+  const auto ngy = geom.nGY();
+  const auto nVecs = geom.nVecs();
+  const auto Pxy = geom.getPxy();
+  const auto Pxyz = geom.getPxyz();
+
+#pragma omp parallel for collapse(4)
+  for (int64_t t = 0; t < T; t++) {
+    for (int64_t z = 0; z < LZ; z++) {
+      for (int64_t y = 0; y < LY; y++) {
+        for (int64_t v = 0; v < nVecs; v++) {
+          int64_t block = (t * Pxyz + z * Pxy) / ngy + (y / ngy) * nVecs + v;
+
+          for (int64_t x_soa = 0; x_soa < SOALEN; x_soa++) {
+            int64_t xx = (y % ngy) * SOALEN + x_soa;
+            int64_t q_cb_x_coord = x_soa + v * SOALEN;
+            int64_t tm_x_coord = q_cb_x_coord * 2 + (((t + y + z) & 1) ^ cb);
+
+//             the inverse of the clover term is in even-odd ordering
+//             while the clover term itself is lexicographically ordered
+            int64_t tm_idx =
+                inverse ? g_lexic2eosub[g_ipt[t][tm_x_coord][y][z]] : g_ipt[t][tm_x_coord][y][z];
+
+            for(int fl : {0, 1} ){
+              for( int q_hs : {0, 1} ){
+                auto &hs_block = ( (q_hs == 0) ? qphix_clover[fl][block].block1 : qphix_clover[fl][block].block2 );
+                for( int q_sc1 = 0; q_sc1 < 6; q_sc1++ ){
+                  for( int q_sc2 = 0; q_sc2 < 6; q_sc2++ ){
+                    const int q_s1 = q_sc1/3;
+                    const int q_s2 = q_sc2/3;
+                    const int q_c1 = q_sc1%3;
+                    const int q_c2 = q_sc2%3;
+                    
+                    // invert in spin as required by V*T*V
+                    const int t_hs = 1-q_hs;
+                    // the indices inside the half-spinor are also transposed
+                    const int t_s1 = 1-q_s2;
+                    const int t_s2 = 1-q_s1;
+                    // carry out the mapping from T' to T, keeping in mind that for the inverse
+                    // there are four blocks also on the tmLQCD side
+                    // otherwise there are just three
+                    const int t_b_idx = t_s1 + t_s2 + ( (inverse && t_s1 == 1 && t_s2 == 0) ? 2 : 0 );
+                    for( int reim : {0, 1} ){
+                      hs_block[q_sc1][q_sc2][reim][xx] =
+                        scale *
+                        // off-diagonal (odd-numbered) blocks change sign 
+                        (t_b_idx & 1 ? (-1.0) : 1.0 ) *
+                        // if we're not doing the inverse, the lower-left block needs complex conjugation
+                        // because it actually comes from the top-right block
+                        ( ( (!inverse) && (t_s1 == 0 && t_s2 == 1) && reim == 1) ? (-1.0) : 1.0 ) *
+                        // in all cases, in the spin-diagonal blocks, anything off-diagonal in colour needs to
+                        // be complex-conjugated
+                        ( (t_s1 == t_s2) && (q_c1 != q_c2) && (reim == 1) ? (-1.0) : (1.0) ) *
+                        *( reinterpret_cast<double const *const>(&(tm_clover[tm_idx][t_b_idx][t_hs].c00)) + 
+                           // if we're not doing the inverse and we're in the lower left block, we 
+                           // don't need to transpose in colour, since the hermitian conjugate
+                           // already implies this
+                           Nz*( ( (!inverse && t_s1 == 1 && t_s2 == 0) ? 
+                                   Nc*q_c1 + q_c2 :
+                                   Nc*q_c2 + q_c1 ) ) + reim );
+#if 0
+                        QPhiX::masterPrintf("hs_block[sc1:%d][sc2:%d][reim:%d][xx:%d]: %lf\n",
+                                             q_sc1, q_sc2, reim, xx, hs_block[q_sc1][q_sc2][reim][xx]);
+#endif
+                    }
+                  } // q_sc2
+                }   // q_sc1
+              }     // q_hs
+            }       // fl
+            
+          }  // x_soa
+        }    // for(v)
+      }      // for(y)
+    }        // for(z)
+  }          // for(t)
+ 
+
+  const double diffTime = gettime() - startTime;
+  if (g_debug_level > 1) {
+    QPhiX::masterPrintf("# QPHIX-interface: time spent in reorder_clover_to_QPhiX (FullCloverBlock): %f secs\n",
+                        diffTime);
+  }
+}
+
 
 template <typename FT, int VECLEN, int SOALEN, bool compress12>
 void reorder_gauge_to_QPhiX(
@@ -758,7 +933,7 @@ void Mfull_helper(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, cons
   if (g_debug_level > 1) tmlqcd::printQphixDiagnostics(V, S, compress);
 
   // Create Dslash Class
-  double t_boundary = (FT)(1);
+  double t_boundary = X0 > DBL_EPSILON ? (FT)(-1) : (FT)(1);
   double coeff_s = (FT)(1);
   double coeff_t = (FT)(1);
 
@@ -769,8 +944,29 @@ void Mfull_helper(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, cons
 
   tmlqcd::Dslash<FT, V, S, compress> *polymorphic_dslash;
 
-  QClover *clover[2] = {nullptr, nullptr};
-  QClover *inv_clover[2] = {nullptr, nullptr};
+  QGauge *u_packed[2];
+  QSpinor *qphix_in[2];
+  QSpinor *qphix_out[2];
+
+  QClover *clover[2];
+  QClover *inv_clover[2];
+
+  QFullClover *fullclover[2][2];
+  QFullClover *inv_fullclover[2][2];
+  
+  QSpinor *tmp_spinor = (QSpinor *)geom.allocCBFourSpinor();
+  for (int cb : {0, 1}) {
+    u_packed[cb] = (QGauge *)geom.allocCBGauge();
+    qphix_in[cb] = (QSpinor *)geom.allocCBFourSpinor();
+    qphix_out[cb] = (QSpinor *)geom.allocCBFourSpinor();
+    clover[cb] = nullptr;
+    inv_clover[cb] = nullptr;
+    for (int fl : {0, 1}) {
+      fullclover[cb][fl] = nullptr;
+      inv_fullclover[cb][fl] = nullptr;
+    }
+  }
+  reorder_gauge_to_QPhiX(geom, u_packed[cb_even], u_packed[cb_odd]);
 
   if (op_type == WILSON) {
     polymorphic_dslash =
@@ -791,56 +987,31 @@ void Mfull_helper(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, cons
     polymorphic_dslash = new tmlqcd::WilsonClovDslash<FT, V, S, compress>(
         &geom, t_boundary, coeff_s, coeff_t, mass, clover, inv_clover);
   } else if (op_type == CLOVER && g_mu > DBL_EPSILON) {
-    QPhiX::masterPrintf(
-        "tmlqcd::Mfull_helper; Twisted clover operator pass-through not implemented yet\n");
-    abort();
+    for (int cb : {0, 1}) {
+      for(int fl : {0, 1}){
+        fullclover[cb][fl] = (QFullClover *)geom.allocCBFullClov();
+        inv_fullclover[cb][fl] = (QFullClover *)geom.allocCBFullClov();
+        
+        QPhiX::masterPrintf("fullclover[%d][%d] -> %p, inv_fullclover[%d][%d] -> %p\n",
+                             cb, fl, (void*)fullclover[cb][fl], cb, fl, (void*)inv_fullclover[cb][fl]);
+      }
+      reorder_clover_to_QPhiX(geom, fullclover[cb], cb, false);
+      sw_invert(cb, -g_mu);
+      reorder_clover_to_QPhiX(geom, inv_fullclover[cb], cb, true);
+    }
+
+     polymorphic_dslash = new tmlqcd::WilsonClovTMDslash<FT, V, S, compress>(
+         &geom, t_boundary, coeff_s, coeff_t, mass, -g_mu/(2.0*g_kappa), fullclover, inv_fullclover);
   } else {
     QPhiX::masterPrintf("tmlqcd::Mfull_helper; No such operator type: %d\n", op_type);
     abort();
   }
 
-  /************************
-   *                      *
-   *     GAUGE FIELDS     *
-   *                      *
-  ************************/
-
-  // Allocate data for the gauge fields
-  QGauge *u_packed[2];
-  QGauge *packed_gauge_cb0 =
-      (QGauge *)geom.allocCBGauge();  // Links emanating from EVEN sites (cb=0)
-  QGauge *packed_gauge_cb1 =
-      (QGauge *)geom.allocCBGauge();  // Links emanating from ODD sites (cb=1)
-  u_packed[cb_even] = packed_gauge_cb0;
-  u_packed[cb_odd] = packed_gauge_cb1;
-
-  reorder_gauge_to_QPhiX(geom, u_packed[cb_even], u_packed[cb_odd]);
-
-  /************************
-   *                      *
-   *     SPINOR FIELDS    *
-   *                      *
-  ************************/
-
-  // Allocate data for the even/odd (checkerboarded) QPhiX spinors
-  QSpinor *qphix_in[2];
-  QSpinor *qphix_out[2];
-  QSpinor *packed_spinor_in_cb0 = (QSpinor *)geom.allocCBFourSpinor();
-  QSpinor *packed_spinor_in_cb1 = (QSpinor *)geom.allocCBFourSpinor();
-  QSpinor *packed_spinor_out_cb0 = (QSpinor *)geom.allocCBFourSpinor();
-  QSpinor *packed_spinor_out_cb1 = (QSpinor *)geom.allocCBFourSpinor();
-  qphix_in[cb_even] = packed_spinor_in_cb0;
-  qphix_in[cb_odd] = packed_spinor_in_cb1;
-  qphix_out[cb_even] = packed_spinor_out_cb0;
-  qphix_out[cb_odd] = packed_spinor_out_cb1;
-
-  QSpinor *tmp_spinor = (QSpinor *)geom.allocCBFourSpinor();
-
   reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Even_in),
                              qphix_in[cb_even], cb_even);
-  reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Odd_in), qphix_in[cb_odd],
-                             cb_odd);
-
+  reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Odd_in), 
+                             qphix_in[cb_odd],  cb_odd);  
+#if 0
   // Apply QPhiX Mfull
   polymorphic_dslash->plain_dslash(qphix_out[cb_odd], qphix_in[cb_even], u_packed[cb_odd],
                                    /* isign == non-conjugate */ 1, cb_odd);
@@ -850,12 +1021,13 @@ void Mfull_helper(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, cons
     polymorphic_dslash->A_chi(tmp_spinor, qphix_in[cb], 1, cb);
     QPhiX::aypx(-0.5, tmp_spinor, qphix_out[cb], geom, 1);
   }
-
-  /*  for (int cb : {0, 1}) {
-      polymorphic_dslash->A_chi(tmp_spinor, qphix_in[cb], 1, cb);
-      polymorphic_dslash->A_inv_chi(qphix_out[cb], tmp_spinor, 1, cb);
-    } */
-
+  
+#else
+  for (int cb : {0, 1}) {
+    polymorphic_dslash->A_chi(qphix_out[cb], qphix_in[cb], 1, cb);
+  }
+#endif
+    
   reorder_eo_spinor_from_QPhiX(geom, reinterpret_cast<double *>(Even_out), qphix_out[cb_even],
                                cb_even, 2.0 * g_kappa);
   reorder_eo_spinor_from_QPhiX(geom, reinterpret_cast<double *>(Odd_out), qphix_out[cb_odd], cb_odd,
@@ -868,6 +1040,10 @@ void Mfull_helper(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, cons
     geom.free(qphix_out[cb]);
     geom.free(clover[cb]);
     geom.free(inv_clover[cb]);
+    for( int fl : {0, 1}) {
+      geom.free(fullclover[cb][fl]);
+      geom.free(inv_fullclover[cb][fl]);
+    }
   };
   delete (polymorphic_dslash);
 }
@@ -914,9 +1090,9 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
     qphix_out[cb] = (QSpinor *)geom.allocCBFourSpinor();
     qphix_clover[cb] = nullptr;
     qphix_inv_clover[cb] = nullptr;
-    for (int hs : {0, 1}) {
-      qphix_fullclover[cb][hs] = nullptr;
-      qphix_inv_fullclover[cb][hs] = nullptr;
+    for (int fl : {0, 1}) {
+      qphix_fullclover[cb][fl] = nullptr;
+      qphix_inv_fullclover[cb][fl] = nullptr;
     }
   }
   QSpinor *qphix_in_prepared = (QSpinor *)geom.allocCBFourSpinor();
@@ -1077,7 +1253,7 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
   const double RsdTarget = sqrt(precision / rhs_norm2);
 
   // Calling the solver
-  double start = omp_get_wtime();
+  double start = gettime();
   if (solver_flag == CG) {
     // USING CG:
     // We are solving
@@ -1095,7 +1271,7 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
     (*SolverQPhiX)(qphix_out[cb_odd], qphix_in_prepared, RsdTarget, niters, rsd_final, site_flops,
                    mv_apps, 1, verbose);
   }
-  double end = omp_get_wtime();
+  double end = gettime();
 
   uint64_t num_cb_sites = lattSize[0] / 2 * lattSize[1] * lattSize[2] * lattSize[3];
   // FIXME: this needs to be adjusted depending on the operator used
@@ -1155,10 +1331,12 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
     geom.free(qphix_out[cb]);
     geom.free(qphix_clover[cb]);
     geom.free(qphix_inv_clover[cb]);
-    for (int hs : {0, 1}) {
-      geom.free(qphix_fullclover[cb][hs]);
-      geom.free(qphix_inv_fullclover[cb][hs]);
+    for (int fl : {0, 1}) {
+      geom.free(qphix_fullclover[cb][fl]);
+      geom.free(qphix_inv_fullclover[cb][fl]);
     }
+//     delete[] qphix_fullclover[cb];
+//     delete[] qphix_inv_fullclover[cb];
   }
   geom.free(qphix_in_prepared);
   geom.free(qphix_buffer);
