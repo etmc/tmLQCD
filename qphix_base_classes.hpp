@@ -288,58 +288,6 @@ void clover_product(
 #endif
 }
 
-template <typename FT, int veclen, int soalen, bool compress12>
-void full_clover_product(
-    typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FourSpinorBlock *const out,
-    typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FourSpinorBlock const *const in,
-    typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FullCloverBlock *local_clover,
-    ::QPhiX::Geometry<FT, veclen, soalen, compress12> &geom) {
-  ::QPhiX::zeroSpinor<FT, veclen, soalen, compress12>(out, geom, n_blas_simt);
-
-  // Iterate through all the block.
-  auto const num_blocks =  (geom.Nt() * geom.getPxyz() + geom.Nz() * geom.getPxy() ) / geom.nGY() + (geom.Ny() / geom.nGY()) * geom.nVecs();
-  QPhiX::masterPrintf("num_blocks=%d\n",num_blocks);
-  for (auto block = 0u; block < num_blocks; ++block) {
-    // The clover term is block-diagonal in spin. Therefore we need
-    // to iterate over the two blocks of spin.
-    for (auto s_block : {0, 1}) {
-      // Extract the spin block as a handy alias.
-      auto const &block_in = s_block == 0 ? local_clover[block].block1 : local_clover[block].block2;
-      // Input two-spinor component.
-      for (auto two_s_in : {0, 1}) {
-        // Reconstruct four spinor index.
-        auto const four_s_in = 2 * s_block + two_s_in;
-        // Output two-spinor component.
-        for (auto two_s_out : {0, 1}) {
-          // Reconstruct four spinor index.
-          auto const four_s_out = 2 * s_block + two_s_out;
-          // Input color.
-          for (auto c_in : {0, 1, 2}) {
-            // Spin-color index (0, ..., 5).
-            auto const sc_in = 3 * two_s_in + c_in;
-            // Output color.
-            for (auto c_out : {0, 1, 2}) {
-              // Spin-color index (0, ..., 5).
-              auto const sc_out = 3 * two_s_out + c_out;
-              // SIMD vector.
-              for (auto v = 0; v < veclen; ++v) {
-#if 0
-                QPhiX::masterPrintf("block_in[sc1:%d][sc2:%d][reim:%d][v:%d]: %lf\n", sc_out, sc_in, re, v ,block_in[sc_out][sc_in][re][v]);
-#endif
-                // FIXME this cannot be correct, spinors and gauge-fields have different blockings!
-                cplx_mul_acc(out[block][c_out][four_s_out][re][v],
-                             out[block][c_out][four_s_out][im][v], block_in[sc_out][sc_in][re][v],
-                             block_in[sc_out][sc_in][im][v], in[block][c_in][four_s_in][re][v],
-                             in[block][c_in][four_s_in][im][v]);
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
 /**
   Abstract base class for all single-flavor Dslash variants.
 
@@ -696,18 +644,18 @@ class WilsonClovTMDslash : public Dslash<FT, veclen, soalen, compress12> {
     QPhiX::masterPrintf("clover[%d][0] -> %p, clover[%d][1] -> %p\n", 
                         cb, (void*)clover[cb][0], cb, (void*)clover[cb][1]);
     if( isign == -1 ){
-      full_clover_product(out, in, clover[cb][1], upstream_dslash.getGeometry());
+      clover_product(out, in, clover[cb][1], upstream_dslash.getGeometry());
     } else {
-      full_clover_product(out, in, clover[cb][0], upstream_dslash.getGeometry());
+      clover_product(out, in, clover[cb][0], upstream_dslash.getGeometry());
     }
   }
 
   void A_inv_chi(Spinor *const out, Spinor const *const in, int const isign,
                  int const cb) override {
     if( isign == -1 ){
-      full_clover_product(out, in, inv_clover[cb][1], upstream_dslash.getGeometry());
+      clover_product(out, in, inv_clover[cb][1], upstream_dslash.getGeometry());
     } else {
-      full_clover_product(out, in, inv_clover[cb][0], upstream_dslash.getGeometry());
+      clover_product(out, in, inv_clover[cb][0], upstream_dslash.getGeometry());
     }
   }
 
