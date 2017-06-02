@@ -1128,15 +1128,12 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
   tmlqcd::Dslash<FT, V, S, compress> *DslashQPhiX;
   QPhiX::EvenOddLinearOperator<FT, V, S, compress> *FermionMatrixQPhiX;
   if (g_mu > DBL_EPSILON && g_c_sw > DBL_EPSILON) {  // TWISTED-MASS-CLOVER
-    for (int cb : {0, 1}) {
-      for (int fl : {0, 1}) {
-        qphix_fullclover[cb][fl] = (QFullClover *)geom.allocCBFullClov();
-        qphix_inv_fullclover[cb][fl] = (QFullClover *)geom.allocCBFullClov();
-      }
-      reorder_clover_to_QPhiX(geom, qphix_fullclover[cb], cb, false);
-      sw_invert(cb, g_mu);
-      reorder_clover_to_QPhiX(geom, qphix_inv_fullclover[cb], cb, true);
+    for (int fl : {0, 1}) {
+      qphix_fullclover[cb_odd][fl] = (QFullClover *)geom.allocCBFullClov();
+      qphix_inv_fullclover[cb_even][fl] = (QFullClover *)geom.allocCBFullClov();
     }
+    reorder_clover_to_QPhiX(geom, qphix_fullclover[cb_odd], cb_odd, false);
+    reorder_clover_to_QPhiX(geom, qphix_inv_fullclover[cb_even], cb_even, true);
 
     DslashQPhiX = new tmlqcd::WilsonClovTMDslash<FT, V, S, compress>(
         &geom, t_boundary, coeff_s, coeff_t, mass, -g_mu / (2.0 * g_kappa), qphix_fullclover,
@@ -1159,14 +1156,11 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
         mass, TwistedMass, u_packed, &geom, t_boundary, coeff_s, coeff_t);
     QPhiX::masterPrintf("# ...done.\n");
   } else if (g_c_sw > DBL_EPSILON) {  // WILSON CLOVER
-    for (int cb : {0, 1}) {
-      qphix_clover[cb] = (QClover *)geom.allocCBClov();
-      qphix_inv_clover[cb] = (QClover *)geom.allocCBClov();
+    qphix_clover[cb_odd] = (QClover *)geom.allocCBClov();
+    qphix_inv_clover[cb_even] = (QClover *)geom.allocCBClov();
 
-      reorder_clover_to_QPhiX(geom, qphix_clover[cb], cb, false);
-      sw_invert(cb, 0);
-      reorder_clover_to_QPhiX(geom, qphix_inv_clover[cb], cb, true);
-    }
+    reorder_clover_to_QPhiX(geom, qphix_clover[cb_odd], cb_odd, false);
+    reorder_clover_to_QPhiX(geom, qphix_inv_clover[cb_even], cb_even, true);
 
     QPhiX::masterPrintf("# Creating QPhiX Wilson Clover Dslash...\n");
     DslashQPhiX = new tmlqcd::WilsonClovDslash<FT, V, S, compress>(
