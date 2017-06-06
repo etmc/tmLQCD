@@ -372,7 +372,7 @@ class Dslash {
 
     auto tmp = QPhiX::makeFourSpinorHandle(*geom);
     dslash(tmp.get(), psi, u, isign, cb);
-    A_chi(res, tmp.get(), isign, 1 - cb);
+    A_chi(res, tmp.get(), isign, cb);
   };
 
   /**
@@ -580,7 +580,7 @@ class WilsonClovDslash : public Dslash<FT, veclen, soalen, compress12> {
 
   void dslash(Spinor *const res, const Spinor *const psi, const SU3MatrixBlock *const u,
               int const isign, int const cb) override {
-    upstream_dslash.dslash(res, psi, u, inv_clover[1 - cb], isign, cb);
+    upstream_dslash.dslash(res, psi, u, inv_clover[cb], isign, cb);
   }
 
   void achimbdpsi(Spinor *const res, const Spinor *const psi, const Spinor *const chi,
@@ -602,7 +602,8 @@ class WilsonClovDslash : public Dslash<FT, veclen, soalen, compress12> {
     argument list which does not contain the clover term. The user of these classes should not have
     to differentiate between non-clover and clover variants. In order to provide the function
     signature, the clover term is a member. This means that the user has to construct a new operator
-    each time the clover term has changed.
+    if the pointers to the clover field need to be changed. Seperate pointers are kept for the fields
+    on the even and odd checkerboards, hence the array dimension.
     */
   CloverBlock *clover[2];
 
@@ -658,7 +659,7 @@ class WilsonClovTMDslash : public Dslash<FT, veclen, soalen, compress12> {
 
   void dslash(Spinor *const res, const Spinor *const psi, const SU3MatrixBlock *const u,
               int const isign, int const cb) override {
-    upstream_dslash.dslash(res, psi, u, (const FullCloverBlock **)inv_clover[1 - cb], isign, cb);
+    upstream_dslash.dslash(res, psi, u, (const FullCloverBlock **)inv_clover[cb], isign, cb);
   }
 
   void achimbdpsi(Spinor *const res, const Spinor *const psi, const Spinor *const chi,
@@ -676,6 +677,10 @@ class WilsonClovTMDslash : public Dslash<FT, veclen, soalen, compress12> {
   double const derived_mu;
   double const derived_mu_inv;
 
+  /* For twisted clover, there are two fields on each checkerboard which differ in the sign
+   * of the twisted quark mass. In effect then, the inner index can be thought of as being
+   * in flavour space while the outer index is the checkerboard index. 
+   */
   FullCloverBlock *clover[2][2];
   FullCloverBlock *inv_clover[2][2];
 };
