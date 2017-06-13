@@ -1004,16 +1004,16 @@ static inline void rmQuotes(char *str){
   }
 }
 
-<WILSONOP,TMOP,DBTMOP,CLOVEROP,DBCLOVEROP>{  
-  {SPC}*UseQudaInverter{EQL}yes {
+<WILSONOP,TMOP,DBTMOP,CLOVEROP,DBCLOVEROP>{
+  {SPC}*UseExternalInverter{EQL}quda {
     if(myverbose) printf("  Use Quda inverter line %d operator %d\n", line_of_file, current_operator);
     optr->external_inverter = QUDA_INVERTER;
   }
-  {SPC}*UseQphixInverter{EQL}yes {
+  {SPC}*UseExternalInverter{EQL}qphix {
     if(myverbose) printf("  Use QPhiX inverter line %d operator %d\n", line_of_file, current_operator);
     optr->external_inverter = QPHIX_INVERTER;
   }
-  {SPC}*UseQphixInverter{EQL}no {
+  {SPC}*UseExternalInverter{EQL}no {
     if(myverbose) printf("  Use QPhiX inverter line %d operator %d\n", line_of_file, current_operator);
     optr->external_inverter = NO_EXT_INV;
   }
@@ -1528,6 +1528,57 @@ static inline void rmQuotes(char *str){
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->epsbar = c;
     if(myverbose) printf("  2KappaEpsbar set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+}
+
+<DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
+  {SPC}*UseExternalInverter{EQL}quda {
+    if(myverbose) printf("  Use Quda inverter line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->external_inverter = QUDA_INVERTER;
+  }
+  {SPC}*UseExternalInverter{EQL}qphix {
+    if(myverbose) printf("  Use QPhiX inverter line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->external_inverter = QPHIX_INVERTER;
+  }
+  {SPC}*UseExternalInverter{EQL}no {
+    if(myverbose) printf("  Use QPhiX inverter line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->external_inverter = NO_EXT_INV;
+  }
+  {SPC}*UseSloppyPrecision{EQL}yes {
+    if(myverbose) printf("  Use use sloppy precision (single) in the inverter (if supported by the inverter) line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->sloppy_precision = SLOPPY_SINGLE;
+  }
+  {SPC}*UseSloppyPrecision{EQL}float {
+    if(myverbose) printf("  Use use sloppy precision (single) in the inverter (if supported by the inverter) line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->sloppy_precision = SLOPPY_SINGLE;
+  }
+  {SPC}*UseSloppyPrecision{EQL}single {
+    if(myverbose) printf("  Use use sloppy precision (single) in the inverter (if supported by the inverter) line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->sloppy_precision = SLOPPY_SINGLE;
+  }
+  {SPC}*UseSloppyPrecision{EQL}no {
+    if(myverbose) printf("  Use use sloppy precision (single) in the inverter line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->sloppy_precision = SLOPPY_DOUBLE;
+  }
+  {SPC}*UseSloppyPrecision{EQL}double {
+    if(myverbose) printf("  Use use sloppy precision (single) in the inverter line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->sloppy_precision = SLOPPY_DOUBLE;
+  }
+  {SPC}*UseSloppyPrecision{EQL}half {
+    if(myverbose) printf("  Use use sloppy precision (half) in the inverter (if supported by the inverter) line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->sloppy_precision = SLOPPY_HALF;
+  }
+  {SPC}*UseCompression{EQL}12 {
+    if(myverbose) printf("  Use 12 compression in the inverter (if supported) line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->compression_type = COMPRESSION_12;
+  }
+  {SPC}*UseCompression{EQL}8 {
+    if(myverbose) printf("  Use 8 compression in the inverter (if supported) line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->compression_type = COMPRESSION_8;
+  }
+  {SPC}*UseCompression{EQL}18 {
+    if(myverbose) printf("  Not using compression in the inverter line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->compression_type = NO_COMPRESSION;
   }
 }
 

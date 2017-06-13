@@ -94,8 +94,9 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   // X_o -> w_fields[1]
   chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
                mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
-  mnl->iter1 += solve_degenerate(mnl->w_fields[1], mnl->pf, mnl->solver_params, mnl->maxiter, mnl->forceprec, 
-                                 g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver);
+  mnl->iter1 += solve_degenerate(mnl->w_fields[1], mnl->pf, mnl->solver_params, mnl->maxiter,
+                                 mnl->forceprec, g_relative_precision_flag, VOLUME/2, mnl->Qsq, 
+                                 mnl->solver, mnl->external_inverter, mnl->sloppy_precision, mnl->compression_type);
   chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
                       mnl->csg_N, &mnl->csg_n, N);
   
@@ -229,12 +230,14 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
       chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 		   mnl->csg_N, mnl->csg_n, N, mnl->Qp);
       mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->pf, mnl->solver_params, mnl->maxiter, mnl->accprec,  
-				     g_relative_precision_flag, VOLUME/2, mnl->Qp, mnl->solver); 
+				     g_relative_precision_flag, VOLUME/2, mnl->Qp, mnl->solver,
+                                     mnl->external_inverter, mnl->sloppy_precision, mnl->compression_type); 
   } else {
       chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 		   mnl->csg_N, mnl->csg_n, N, mnl->Qsq);
       mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->pf, mnl->solver_params, mnl->maxiter, mnl->accprec,  
-				     g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver); 
+				     g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver,
+                                     mnl->external_inverter, mnl->sloppy_precision, mnl->compression_type); 
       mnl->Qm(mnl->w_fields[0], mnl->w_fields[0]);
   }
   g_sloppy_precision_flag = save_sloppy;

@@ -83,15 +83,6 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
                             sloppy, compression);
     }
 #endif
-
-#ifdef TM_USE_QPHIX
-    if( inverter==QPHIX_INVERTER ) {
-      return invert_eo_qphix(Even_new, Odd_new, Even, Odd,
-                             precision, max_iter,
-                             solver_flag, rel_prec,
-                             solver_params, sloppy, compression);
-  }
-#endif
     
 #ifdef DDalphaAMG
      if ( solver_flag == MG )
@@ -100,6 +91,12 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
                           rel_prec, VOLUME/2, gf[0], &Msw_full);
     }
 #endif
+
+    if(g_proc_id == 0) {
+      printf("# mu = %.12f, kappa = %.12f, csw = %.12f\n", 
+             g_mu/2./g_kappa, g_kappa, g_c_sw);
+      fflush(stdout);
+    }
 
     assign_mul_one_sw_pm_imu_inv(EE, Even_new, Even, +g_mu);
     
@@ -111,21 +108,29 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
     /* matrix to get the odd sites               */
     
     /* Here we invert the hermitean operator squared */
-    gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
-    if(g_proc_id == 0) {
-      printf("# mu = %.12f, kappa = %.12f, csw = %.12f\n", 
-             g_mu/2./g_kappa, g_kappa, g_c_sw);
-      fflush(stdout);
-    }
+#ifdef TM_USE_QPHIX
+    if( inverter==QPHIX_INVERTER ) {
+      // QPhiX inverts M(mu)M(mu)^dag or M(mu), no gamma_5 multiplication required
+      iter = invert_eo_qphix(NULL, Odd_new, NULL, g_spinor_field[DUM_DERI],
+                            precision, max_iter,
+                            solver_flag, rel_prec,
+                            solver_params,
+                            sloppy,
+                            compression, Qsq);
+      // for solver_params.solution_type == TM_SOLUTION_M (the default)
+      // QPhiX applies M(mu)^dag internally for normal equation solves, no call to tmLQCD operaor required
+    } else
+#endif    
     if(solver_flag == CG) {
       if(g_proc_id == 0) {printf("# Using CG!\n"); fflush(stdout);}
+      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
       iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, 
                     precision, rel_prec, 
                     VOLUME/2, Qsq);
       Qm(Odd_new, Odd_new);
     }
     else if(solver_flag == INCREIGCG){
-      
+      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
       if(g_proc_id == 0) {printf("# Using Incremental Eig-CG!\n"); fflush(stdout);}
       iter = incr_eigcg(VOLUME/2,solver_params.eigcg_nrhs, solver_params.eigcg_nrhs1, Odd_new, g_spinor_field[DUM_DERI], solver_params.eigcg_ldh, Qsq,
                         solver_params.eigcg_tolsq1, solver_params.eigcg_tolsq, solver_params.eigcg_restolsq , solver_params.eigcg_rand_guess_opt, 
@@ -133,18 +138,20 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
       Qm(Odd_new, Odd_new);
     }
     else if(solver_flag == MIXEDCG){
+      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
       iter = mixed_cg_her(Odd_new, g_spinor_field[DUM_DERI], solver_params, 
 			  max_iter, precision, rel_prec, 
                           VOLUME/2, &Qsw_pm_psi, &Qsw_pm_psi_32);
       Qm(Odd_new, Odd_new);
     }
     else if(solver_flag == RGMIXEDCG){
+      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
       iter = rg_mixed_cg_her(Odd_new, g_spinor_field[DUM_DERI], solver_params, max_iter, precision, rel_prec,
 			                     VOLUME/2, &Qsw_pm_psi, &Qsw_pm_psi_32);
       Qm(Odd_new, Odd_new);
     }
     else{
-      if(g_proc_id == 0) {printf("# This solver is not available for this operator. Exisiting!\n"); fflush(stdout);}
+      if(g_proc_id == 0) {printf("# This solver is not available for this operator. Exiting!\n"); fflush(stdout);}
       return 0;
     }
     

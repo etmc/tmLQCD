@@ -93,6 +93,7 @@ int add_operator(const int type) {
   optr->sloppy_precision = _default_operator_sloppy_precision_flag;
   optr->compression_type = _default_compression_type;
   optr->external_inverter = _default_external_inverter;
+  optr->solver_params.solution_type = TM_SOLUTION_M;
   optr->coefs = NULL;
   optr->rel_prec = _default_g_relative_precision_flag;
   optr->eps_sq = _default_solver_precision;

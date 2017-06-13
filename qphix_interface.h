@@ -64,6 +64,7 @@
 #include "operator_types.h"
 #include "qphix_types.h"
 #include "solver/solver_params.h"
+#include "solver/matrix_mult_typedef.h"
 #include "su3.h"
 
 #ifdef __cplusplus /* If this is a C++ compiler, use C linkage */
@@ -71,14 +72,16 @@ extern "C" {
 #endif
 
 // Initialize and Finalize QPhiX
-void _initQphix(int argc, char** argv, QphixParams_t params, int c12, QphixPrec_t precision);
+void initQPhiX(int argc, char** argv, QphixParams_t params, int c12, QphixPrec_t precision);
 void _endQphix();
 
 // Wrapper functions for Full Solver and Dslash
 int invert_eo_qphix(spinor* const Even_new, spinor* const Odd_new, spinor* const Even,
                     spinor* const Odd, const double precision, const int max_iter,
                     const int solver_flag, const int rel_prec, solver_params_t solver_params,
-                    const SloppyPrecision sloppy, const CompressionType compression);
+                    const SloppyPrecision sloppy, const CompressionType compression,
+                    matrix_mult mat_op
+                   );
 
 void Mfull_qphix(spinor* Even_out, spinor* Odd_out, const spinor* Even_in, const spinor* Odd_in,
                  const op_type_t op_type);

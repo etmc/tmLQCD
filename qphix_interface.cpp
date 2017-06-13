@@ -46,6 +46,7 @@ extern "C" {
 #include "operator/clover_leaf.h"
 #include "operator/clovertm_operators.h"
 #include "operator_types.h"
+#include "solver/matrix_mult_typedef.h"
 #include "solver/solver.h"
 #include "solver/solver_field.h"
 #include "solver/solver_params.h"
@@ -983,7 +984,7 @@ void Mfull_helper(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, cons
   } else if (op_type == TMWILSON) {
     polymorphic_dslash = new tmlqcd::WilsonTMDslash<FT, V, S, compress>(
         &geom, t_boundary, coeff_s, coeff_t, mass, -g_mu / (2.0 * g_kappa));
-  } else if (op_type == CLOVER && g_mu <= DBL_EPSILON) {
+  } else if (op_type == CLOVER && fabs(g_mu) <= DBL_EPSILON) {
     for (int cb : {0, 1}) {
       clover[cb] = (QClover *)geom.allocCBClov();
       inv_clover[cb] = (QClover *)geom.allocCBClov();
@@ -995,7 +996,7 @@ void Mfull_helper(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, cons
 
     polymorphic_dslash = new tmlqcd::WilsonClovDslash<FT, V, S, compress>(
         &geom, t_boundary, coeff_s, coeff_t, mass, clover, inv_clover);
-  } else if (op_type == CLOVER && g_mu > DBL_EPSILON) {
+  } else if (op_type == CLOVER && fabs(g_mu) > DBL_EPSILON) {
     for (int cb : {0, 1}) {
       for (int fl : {0, 1}) {
         fullclover[cb][fl] = (QFullClover *)geom.allocCBFullClov();
@@ -1055,7 +1056,7 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
                            spinor *const tmlqcd_even_in, spinor *const tmlqcd_odd_in,
                            const double precision, const int max_iter, const int solver_flag,
                            const int rel_prec, solver_params_t solver_params,
-                           const CompressionType compression) {
+                           const CompressionType compression, matrix_mult mat_op) {
   // TODO: it would perhaps be beneficial to keep the fields resident
   typedef typename QPhiX::Geometry<FT, V, S, compress>::SU3MatrixBlock QGauge;
   typedef typename QPhiX::Geometry<FT, V, S, compress>::FourSpinorBlock QSpinor;
@@ -1087,8 +1088,9 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
 
   for (int cb : {0, 1}) {
     u_packed[cb] = (QGauge *)geom.allocCBGauge();
-    qphix_in[cb] = (QSpinor *)geom.allocCBFourSpinor();
-    qphix_out[cb] = (QSpinor *)geom.allocCBFourSpinor();
+    // when the source is prepared externally, there is no need to allocate memory for spinors on the even checkerbaord
+    qphix_in[cb] = ( cb == cb_even && !tmlqcd_even_in ) ? nullptr : (QSpinor *)geom.allocCBFourSpinor();
+    qphix_out[cb] = ( cb == cb_even && !tmlqcd_even_out ) ? nullptr : (QSpinor *)geom.allocCBFourSpinor();
     qphix_clover[cb] = nullptr;
     qphix_inv_clover[cb] = nullptr;
     for (int fl : {0, 1}) {
@@ -1096,8 +1098,10 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
       qphix_inv_fullclover[cb][fl] = nullptr;
     }
   }
-  QSpinor *qphix_in_prepared = (QSpinor *)geom.allocCBFourSpinor();
+
   QSpinor *qphix_buffer = (QSpinor *)geom.allocCBFourSpinor();
+  // rather hackish way to support solves also for the case where the source is prepared externally
+  QSpinor *qphix_in_prepared = tmlqcd_even_in ? (QSpinor *)geom.allocCBFourSpinor() : qphix_in[cb_odd];
 
   // Reorder (global) input gauge field from tmLQCD to QPhiX
   reorder_gauge_to_QPhiX(geom, u_packed[cb_even], u_packed[cb_odd]);
@@ -1127,7 +1131,7 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
   // depending on the chosen fermion action
   tmlqcd::Dslash<FT, V, S, compress> *DslashQPhiX;
   QPhiX::EvenOddLinearOperator<FT, V, S, compress> *FermionMatrixQPhiX;
-  if (g_mu > DBL_EPSILON && g_c_sw > DBL_EPSILON) {  // TWISTED-MASS-CLOVER
+  if ( fabs(g_mu) > DBL_EPSILON && g_c_sw > DBL_EPSILON) {  // TWISTED-MASS-CLOVER
     for (int fl : {0, 1}) {
       qphix_fullclover[cb_odd][fl] = (QFullClover *)geom.allocCBFullClov();
       qphix_inv_fullclover[cb_even][fl] = (QFullClover *)geom.allocCBFullClov();
@@ -1144,7 +1148,7 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
         u_packed, qphix_fullclover[cb_odd], qphix_inv_fullclover[cb_even], &geom, t_boundary, coeff_s,
         coeff_t);
     QPhiX::masterPrintf("# ...done.\n");    
-  } else if (g_mu > DBL_EPSILON) {  // TWISTED-MASS
+  } else if ( fabs(g_mu) > DBL_EPSILON) {  // TWISTED-MASS
     QPhiX::masterPrintf("# Creating QPhiX Twisted Mass Wilson Dslash...\n");
     const double TwistedMass = -g_mu / (2.0 * g_kappa);
     DslashQPhiX = new tmlqcd::WilsonTMDslash<FT, V, S, compress>(&geom, t_boundary, coeff_s,
@@ -1207,40 +1211,43 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
   const int n_blas_simt = N_simt;
   QPhiX::masterPrintf("# ...done.\n");
 
-  /************************
-   *                      *
-   *    PREPARE SOURCE    *
-   *                      *
-  ************************/
-
-  QPhiX::masterPrintf("# Preparing odd source...\n");
-
-  reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(tmlqcd_even_in),
-                             qphix_in[cb_even], cb_even);
   reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(tmlqcd_odd_in),
                              qphix_in[cb_odd], cb_odd);
+  
+  if( tmlqcd_even_in ){
+    /************************
+    *                      *
+    *    PREPARE SOURCE    * (if required)
+    *                      *
+    ************************/
 
-  // 2. Prepare the odd (cb1) source
-  //
-  //      \tilde b_o = 1/2 Dslash^{Wilson}_oe A^{-1}_{ee} b_e + b_o
-  //
-  // in three steps:
-  // a) Apply A^{-1} to b_e and save result in qphix_buffer
-  // b) Apply Wilson Dslash to qphix_buffer and save result in qphix_in_prepared
-  // c) Apply AYPX to rescale last result (=y) and add b_o (=x)
+    QPhiX::masterPrintf("# Preparing odd source...\n");
+    reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(tmlqcd_even_in),
+                              qphix_in[cb_even], cb_even);
 
-  DslashQPhiX->A_inv_chi(qphix_buffer,       // out spinor
-                         qphix_in[cb_even],  // in spinor
-                         1,                  // non-conjugate
-                         cb_even);
-  WilsonDslash->dslash(qphix_in_prepared,  // out spinor
-                       qphix_buffer,       // in spinor
-                       u_packed[cb_odd],   // gauge field on target cb
-                       1,                  // non-conjugate
-                       cb_odd);            // target cb
-  QPhiX::aypx(0.5, qphix_in[cb_odd], qphix_in_prepared, geom, n_blas_simt);
 
-  QPhiX::masterPrintf("# ...done.\n");
+    // 2. Prepare the odd (cb1) source
+    //
+    //      \tilde b_o = 1/2 Dslash^{Wilson}_oe A^{-1}_{ee} b_e + b_o
+    //
+    // in three steps:
+    // a) Apply A^{-1} to b_e and save result in qphix_buffer
+    // b) Apply Wilson Dslash to qphix_buffer and save result in qphix_in_prepared
+    // c) Apply AYPX to rescale last result (=y) and add b_o (=x)
+
+    DslashQPhiX->A_inv_chi(qphix_buffer,       // out spinor
+                          qphix_in[cb_even],  // in spinor
+                          1,                  // non-conjugate
+                          cb_even);
+    WilsonDslash->dslash(qphix_in_prepared,  // out spinor
+                        qphix_buffer,       // in spinor
+                        u_packed[cb_odd],   // gauge field on target cb
+                        1,                  // non-conjugate
+                        cb_odd);            // target cb
+    QPhiX::aypx(0.5, qphix_in[cb_odd], qphix_in_prepared, geom, n_blas_simt);
+
+    QPhiX::masterPrintf("# ...done.\n");
+  }
 
   /************************
    *                      *
@@ -1269,17 +1276,25 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
     // We are solving
     //   M M^dagger qphix_buffer = qphix_in_prepared
     // here, that is, isign = -1 for the QPhiX CG solver.
-    // After that multiply with M^dagger:
-    //   qphix_out[1] = M^dagger M^dagger^-1 M^-1 qphix_in_prepared
     (*SolverQPhiX)(qphix_buffer, qphix_in_prepared, RsdTarget, niters, rsd_final, site_flops,
                    mv_apps, -1, verbose);
-    (*FermionMatrixQPhiX)(qphix_out[cb_odd], qphix_buffer, /* conjugate */ -1);
-
+    // After that. if required by the solution type, multiply with M^dagger:
+    //   qphix_out[1] = M^dagger M^dagger^-1 M^-1 qphix_in_prepared
+    if( solver_params.solution_type == TM_SOLUTION_M ){
+      (*FermionMatrixQPhiX)(qphix_out[cb_odd], qphix_buffer, /* conjugate */ -1);
+    } else {
+      QPhiX::copySpinor(qphix_out[cb_odd], qphix_buffer, geom, n_blas_simt);
+    }
   } else if (solver_flag == BICGSTAB) {
-    // USING BiCGStab:
-    // Solve M qphix_out[1] = qphix_in_prepared, directly.
-    (*SolverQPhiX)(qphix_out[cb_odd], qphix_in_prepared, RsdTarget, niters, rsd_final, site_flops,
+    (*SolverQPhiX)(qphix_buffer, qphix_in_prepared, RsdTarget, niters, rsd_final, site_flops,
                    mv_apps, 1, verbose);
+    // for M^dagger^-1 M^-1 solution type, need to call BiCGstab twice
+    if( solver_params.solution_type == TM_SOLUTION_M_MDAG ){
+      (*SolverQPhiX)(qphix_out[cb_odd], qphix_buffer, RsdTarget, niters, rsd_final, site_flops,
+                     mv_apps, -1, verbose);
+    } else {
+      QPhiX::copySpinor(qphix_out[cb_odd], qphix_buffer, geom, n_blas_simt);
+    }
   }
   double end = gettime();
 
@@ -1289,41 +1304,49 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
   QPhiX::masterPrintf("# Solver Time = %g sec\n", (end - start));
   QPhiX::masterPrintf("# Performance in GFLOPS = %g\n", 1.0e-9 * total_flops / (end - start));
 
+  double rescale = 0.5 / g_kappa;
+  // the inverse of M M^dag comes with a factor of alpha^2
+  if( solver_params.solution_type == TM_SOLUTION_M_MDAG ){
+    rescale *= rescale;
+  }
+  
+  if( tmlqcd_even_in ){
   /**************************
    *                        *
-   *  RECONSTRUCT SOLUTION  *
+   *  RECONSTRUCT SOLUTION  * (if required)
    *                        *
   **************************/
+    QPhiX::masterPrintf("# Reconstruction even solution...\n");
 
-  QPhiX::masterPrintf("# Reconstruction even solution...\n");
+    // 1. Reconstruct the even (cb1) solution
+    //
+    //      x_e = A^{-1}_{ee} (b_e + 1/2 Dslash^{Wilson}_eo x_o)
+    //
+    // in three steps:
+    // b) Apply Wilson Dslash to x_o and save result in qphix_buffer
+    // c) Apply AYPX to rescale last result (=y) and add b_e (=x)
+    // c) Apply A^{-1} to qphix_buffer and save result in x_e
 
-  // 1. Reconstruct the even (cb1) solution
-  //
-  //      x_e = A^{-1}_{ee} (b_e + 1/2 Dslash^{Wilson}_eo x_o)
-  //
-  // in three steps:
-  // b) Apply Wilson Dslash to x_o and save result in qphix_buffer
-  // c) Apply AYPX to rescale last result (=y) and add b_e (=x)
-  // c) Apply A^{-1} to qphix_buffer and save result in x_e
+    WilsonDslash->dslash(qphix_buffer,       // out spinor
+                        qphix_out[cb_odd],  // in spinor (solution on odd cb)
+                        u_packed[cb_even],  // gauge field on target cb
+                        1,                  // non-conjugate
+                        cb_even);           // target cb == even
+    QPhiX::aypx(0.5, qphix_in[0], qphix_buffer, geom, n_blas_simt);
+    DslashQPhiX->A_inv_chi(qphix_out[cb_even],  // out spinor
+                          qphix_buffer,        // in spinor
+                          1,                   // non-conjugate
+                          cb_even);            // non-conjugate
 
-  WilsonDslash->dslash(qphix_buffer,       // out spinor
-                       qphix_out[cb_odd],  // in spinor (solution on odd cb)
-                       u_packed[cb_even],  // gauge field on target cb
-                       1,                  // non-conjugate
-                       cb_even);           // target cb == even
-  QPhiX::aypx(0.5, qphix_in[0], qphix_buffer, geom, n_blas_simt);
-  DslashQPhiX->A_inv_chi(qphix_out[cb_even],  // out spinor
-                         qphix_buffer,        // in spinor
-                         1,                   // non-conjugate
-                         cb_even);            // non-conjugate
+    // 2. Reorder spinor fields back to tmLQCD, rescaling by a factor 1/(2*\kappa)
+    //    to account for the operator normalisation in QPhiX
 
-  // 2. Reorder spinor fields back to tmLQCD, rescaling by a factor 1/(2*\kappa)
-  //    to account for the operator normalisation in QPhiX
-
-  reorder_eo_spinor_from_QPhiX(geom, reinterpret_cast<double *const>(tmlqcd_even_out),
-                               qphix_out[cb_even], cb_even, 1.0 / (2.0 * g_kappa));
+    reorder_eo_spinor_from_QPhiX(geom, reinterpret_cast<double *const>(tmlqcd_even_out),
+                                qphix_out[cb_even], cb_even, rescale);
+  }
+  
   reorder_eo_spinor_from_QPhiX(geom, reinterpret_cast<double *const>(tmlqcd_odd_out),
-                               qphix_out[cb_odd], cb_odd, 1.0 / (2.0 * g_kappa));
+                               qphix_out[cb_odd], cb_odd, rescale);
 
   QPhiX::masterPrintf("# ...done.\n");
 
@@ -1337,19 +1360,21 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
 
   for (int cb : {0, 1}) {
     geom.free(u_packed[cb]);
-    geom.free(qphix_in[cb]);
-    geom.free(qphix_out[cb]);
+    // the alloc and free functions for spinors are not consistent with allow nullptr to be free'd
+    // so we check for null here
+    if( qphix_in[cb] ) geom.free(qphix_in[cb]);
+    if( qphix_out[cb] ) geom.free(qphix_out[cb]);
     geom.free(qphix_clover[cb]);
     geom.free(qphix_inv_clover[cb]);
     for (int fl : {0, 1}) {
       geom.free(qphix_fullclover[cb][fl]);
       geom.free(qphix_inv_fullclover[cb][fl]);
     }
-    //     delete[] qphix_fullclover[cb];
-    //     delete[] qphix_inv_fullclover[cb];
   }
-  geom.free(qphix_in_prepared);
   geom.free(qphix_buffer);
+  if( tmlqcd_even_in ) {
+    geom.free(qphix_in_prepared);
+  }
 
   // FIXME: This should be called properly somewhere else
   _endQphix();
@@ -1418,11 +1443,14 @@ void Mfull_qphix(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, const
 int invert_eo_qphix(spinor *const Even_new, spinor *const Odd_new, spinor *const Even,
                     spinor *const Odd, const double precision, const int max_iter,
                     const int solver_flag, const int rel_prec, solver_params_t solver_params,
-                    const SloppyPrecision sloppy, const CompressionType compression) {
+                    const SloppyPrecision sloppy, const CompressionType compression,
+                    matrix_mult mat_op
+                   ) {
   tmlqcd::checkQphixInputParameters(qphix_input);
 
   double target_precision = precision;
-  double src_norm = (square_norm(Even, VOLUME / 2, 1) + square_norm(Odd, VOLUME / 2, 1));
+  double src_norm = square_norm(Odd, VOLUME / 2, 1);
+  if(Even) src_norm += square_norm(Even, VOLUME / 2, 1);
   double precision_lambda = target_precision / src_norm;
   if (rel_prec == 1) {
     QPhiX::masterPrintf("# QPHIX: Using relative precision\n");
@@ -1446,11 +1474,11 @@ int invert_eo_qphix(spinor *const Even_new, spinor *const Odd_new, spinor *const
     if (compress12) {
       return invert_eo_qphix_helper<QPhiX::half, VECLEN_HP, QPHIX_SOALEN, true>(
           Even_new, Odd_new, Even, Odd, target_precision, max_iter, solver_flag, rel_prec,
-          solver_params, compression);
+          solver_params, compression, mat_op);
     } else {
       return invert_eo_qphix_helper<QPhiX::half, VECLEN_HP, QPHIX_SOALEN, false>(
           Even_new, Odd_new, Even, Odd, target_precision, max_iter, solver_flag, rel_prec,
-          solver_params, compression);
+          solver_params, compression, mat_op);
     }
   }
 #else
@@ -1472,11 +1500,11 @@ int invert_eo_qphix(spinor *const Even_new, spinor *const Odd_new, spinor *const
     if (compress12) {
       return invert_eo_qphix_helper<float, VECLEN_SP, QPHIX_SOALEN, true>(
           Even_new, Odd_new, Even, Odd, target_precision, max_iter, solver_flag, rel_prec,
-          solver_params, compression);
+          solver_params, compression, mat_op);
     } else {
       return invert_eo_qphix_helper<float, VECLEN_SP, QPHIX_SOALEN, false>(
           Even_new, Odd_new, Even, Odd, target_precision, max_iter, solver_flag, rel_prec,
-          solver_params, compression);
+          solver_params, compression, mat_op);
     }
   } else {
     if (QPHIX_SOALEN > VECLEN_DP) {
@@ -1491,11 +1519,11 @@ int invert_eo_qphix(spinor *const Even_new, spinor *const Odd_new, spinor *const
     if (compress12) {
       return invert_eo_qphix_helper<double, VECLEN_DP, QPHIX_SOALEN, true>(
           Even_new, Odd_new, Even, Odd, target_precision, max_iter, solver_flag, rel_prec,
-          solver_params, compression);
+          solver_params, compression, mat_op);
     } else {
       return invert_eo_qphix_helper<double, VECLEN_DP, QPHIX_SOALEN, false>(
           Even_new, Odd_new, Even, Odd, target_precision, max_iter, solver_flag, rel_prec,
-          solver_params, compression);
+          solver_params, compression, mat_op);
     }
   }  // if( sloppy || target_precision )
   return -1;

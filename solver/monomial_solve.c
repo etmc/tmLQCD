@@ -29,7 +29,7 @@
            double eps_sq, const int rel_prec, const int N, matrix_mult f)
  *   int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn, 
  *                    spinor * const Qup, spinor * const Qdn, 
- *                    solver_pm_t * solver_pm)  
+ *                    solver_params_t * solver_params)  
  *
  **************************************************************************/
 
@@ -39,6 +39,7 @@
 #endif
 #include "global.h"
 #include "read_input.h"
+#include "linalg/mul_gamma5.h"
 #include "solver/solver.h"
 #include "solver/matrix_mult_typedef.h"
 #include "solver/solver_types.h"
@@ -53,6 +54,9 @@
 #ifdef DDalphaAMG
 #include "DDalphaAMG_interface.h"
 #endif
+#ifdef TM_USE_QPHIX
+#include "qphix_interface.h"
+#endif
 
 
 #ifdef HAVE_GPU
@@ -61,7 +65,7 @@ extern  int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int max_i
                             double eps, const int rel_prec, const int N, matrix_mult f);
 extern int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn, 
 		 spinor * const Qup, spinor * const Qdn, 
-		 solver_pm_t * solver_pm);
+		 solver_params_t * solver_params);
    #ifdef TEMPORALGAUGE
      #include "../temporalgauge.h" 
    #endif
@@ -70,10 +74,18 @@ extern int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
 
 int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_params,
                      const int max_iter, double eps_sq, const int rel_prec, 
-                     const int N, matrix_mult f, int solver_type){
+                     const int N, matrix_mult f, int solver_type, const ExternalInverter external_inverter,
+                     const SloppyPrecision sloppy, const CompressionType compression){
   int iteration_count = 0;
   int use_solver = solver_type;
-  
+#ifdef TM_USE_QPHIX
+  if(external_inverter == QPHIX_INVERTER){
+    iteration_count = invert_eo_qphix(NULL, P, NULL, Q, eps_sq, max_iter, solver_type, rel_prec, solver_params, sloppy, compression, f);
+    // QPhiX operates with M and M^dag directly -> need an additional factor of gamma_5 to get ( Q^+ Q^- )^{-1}
+    mul_gamma5(P, VOLUME/2);
+    return(iteration_count);
+  } else
+#endif  
   if(use_solver == MIXEDCG || use_solver == RGMIXEDCG){
     // the default mixed solver is rg_mixed_cg_her
     int (*msolver_fp)(spinor * const, spinor * const, solver_params_t, 
@@ -89,7 +101,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
 	      #ifdef TEMPORALGAUGE
           to_temporalgauge(g_gauge_field, Q , P);
         #endif          
-        iteration_count = linsolve_eo_gpu(P, Q, max_iter, eps_sq, rel_prec, N, f);			     
+        iteration_count = linsolve_eo_gpu(P, Q, max_iter, eps_sq, rel_prec, N, f);
         #ifdef TEMPORALGAUGE
           from_temporalgauge(Q, P);
         #endif
@@ -134,26 +146,26 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
 
 int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn, 
                  spinor * const Qup, spinor * const Qdn, 
-                 solver_pm_t * solver_pm){ 
+                 solver_params_t * solver_params){ 
   int iteration_count = 0; 
-    if(solver_pm->type==MIXEDCGMMSND){
+    if(solver_params->type==MIXEDCGMMSND){
       if(usegpu_flag){
 	#ifdef HAVE_GPU      
 	  #ifdef TEMPORALGAUGE
-	    to_temporalgauge_mms(g_gauge_field , Qup, Qdn, Pup, Pdn, solver_pm->no_shifts);
+	    to_temporalgauge_mms(g_gauge_field , Qup, Qdn, Pup, Pdn, solver_params->no_shifts);
 	  #endif        
-	  iteration_count = dev_cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_pm);  
+	  iteration_count = dev_cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_params);  
 	  #ifdef TEMPORALGAUGE
-	    from_temporalgauge_mms(Qup, Qdn, Pup, Pdn, solver_pm->no_shifts);
+	    from_temporalgauge_mms(Qup, Qdn, Pup, Pdn, solver_params->no_shifts);
 	  #endif 
 	#endif
       }
       else{
-	iteration_count = mixed_cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_pm);
+	iteration_count = mixed_cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_params);
       }
     }
-    else if (solver_pm->type==CGMMSND){
-      iteration_count = cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_pm);
+    else if (solver_params->type==CGMMSND){
+      iteration_count = cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_params);
     }
     else{
       if(g_proc_id==0) printf("Error: solver not allowed for ND mms solve. Aborting...\n");

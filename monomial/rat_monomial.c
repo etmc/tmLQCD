@@ -54,7 +54,7 @@
 
 void rat_derivative(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
-  solver_pm_t solver_pm;
+  solver_params_t solver_params;
   double atime, etime, dummy;
   atime = gettime();
   g_mu = 0;
@@ -78,17 +78,17 @@ void rat_derivative(const int id, hamiltonian_field_t * const hf) {
   //mnl->forcefactor = mnl->EVMaxInv*mnl->EVMaxInv;
   mnl->forcefactor = 1.;
 
-  solver_pm.max_iter = mnl->maxiter;
-  solver_pm.squared_solver_prec = mnl->forceprec;
-  solver_pm.no_shifts = mnl->rat.np;
-  solver_pm.shifts = mnl->rat.mu;
-  solver_pm.rel_prec = g_relative_precision_flag;
-  solver_pm.type = CGMMS;
-  solver_pm.M_psi = mnl->Qsq;
-  solver_pm.sdim = VOLUME/2;
+  solver_params.max_iter = mnl->maxiter;
+  solver_params.squared_solver_prec = mnl->forceprec;
+  solver_params.no_shifts = mnl->rat.np;
+  solver_params.shifts = mnl->rat.mu;
+  solver_params.rel_prec = g_relative_precision_flag;
+  solver_params.type = CGMMS;
+  solver_params.M_psi = mnl->Qsq;
+  solver_params.sdim = VOLUME/2;
   // this generates all X_j,o (odd sites only) -> g_chi_up_spinor_field
   mnl->iter1 += cg_mms_tm(g_chi_up_spinor_field, mnl->pf,
-			  &solver_pm, &dummy);
+			  &solver_params, &dummy);
   
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     mnl->Qp(mnl->w_fields[0], g_chi_up_spinor_field[j]);
@@ -145,7 +145,7 @@ void rat_derivative(const int id, hamiltonian_field_t * const hf) {
 
 void rat_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
-  solver_pm_t solver_pm;
+  solver_params_t solver_params;
   double atime, etime, dummy;
   atime = gettime();
   // only for non-twisted operators
@@ -173,16 +173,16 @@ void rat_heatbath(const int id, hamiltonian_field_t * const hf) {
   mnl->energy0 = square_norm(mnl->pf, VOLUME/2, 1);
 
   // set solver parameters
-  solver_pm.max_iter = mnl->maxiter;
-  solver_pm.squared_solver_prec = mnl->accprec;
-  solver_pm.no_shifts = mnl->rat.np;
-  solver_pm.shifts = mnl->rat.nu;
-  solver_pm.type = CGMMS;
-  solver_pm.M_psi = mnl->Qsq;
-  solver_pm.sdim = VOLUME/2;
-  solver_pm.rel_prec = g_relative_precision_flag;
+  solver_params.max_iter = mnl->maxiter;
+  solver_params.squared_solver_prec = mnl->accprec;
+  solver_params.no_shifts = mnl->rat.np;
+  solver_params.shifts = mnl->rat.nu;
+  solver_params.type = CGMMS;
+  solver_params.M_psi = mnl->Qsq;
+  solver_params.sdim = VOLUME/2;
+  solver_params.rel_prec = g_relative_precision_flag;
   mnl->iter0 = cg_mms_tm(g_chi_up_spinor_field, mnl->pf,
-			 &solver_pm, &dummy);
+			 &solver_params, &dummy);
 
   assign(mnl->w_fields[2], mnl->pf, VOLUME/2);
 
@@ -208,7 +208,7 @@ void rat_heatbath(const int id, hamiltonian_field_t * const hf) {
 
 
 double rat_acc(const int id, hamiltonian_field_t * const hf) {
-  solver_pm_t solver_pm;
+  solver_params_t solver_params;
   monomial * mnl = &monomial_list[id];
   double atime, etime, dummy;
   atime = gettime();
@@ -223,16 +223,16 @@ double rat_acc(const int id, hamiltonian_field_t * const hf) {
   }
   mnl->energy1 = 0.;
 
-  solver_pm.max_iter = mnl->maxiter;
-  solver_pm.squared_solver_prec = mnl->accprec;
-  solver_pm.no_shifts = mnl->rat.np;
-  solver_pm.shifts = mnl->rat.mu;
-  solver_pm.type = CGMMS;
-  solver_pm.M_psi = mnl->Qsq;
-  solver_pm.sdim = VOLUME/2;
-  solver_pm.rel_prec = g_relative_precision_flag;
+  solver_params.max_iter = mnl->maxiter;
+  solver_params.squared_solver_prec = mnl->accprec;
+  solver_params.no_shifts = mnl->rat.np;
+  solver_params.shifts = mnl->rat.mu;
+  solver_params.type = CGMMS;
+  solver_params.M_psi = mnl->Qsq;
+  solver_params.sdim = VOLUME/2;
+  solver_params.rel_prec = g_relative_precision_flag;
   mnl->iter0 += cg_mms_tm(g_chi_up_spinor_field, mnl->pf,
-			  &solver_pm, &dummy);
+			  &solver_params, &dummy);
 
   // apply R to the pseudo-fermion fields
   assign(mnl->w_fields[0], mnl->pf, VOLUME/2);
