@@ -56,74 +56,49 @@
 #include "gettime.h"
 #include "global.h"
 #include "init/init.h"
-#include "operator.h"
-#include "operator/D_psi.h"
-#include "operator/Hopping_Matrix.h"
-#include "operator/Hopping_Matrix_nocom.h"
-#include "operator/clovertm_operators.h"
-#include "operator/tm_operators.h"
-#include "ranlxd.h"
-#include "read_input.h"
-#include "solver/cg_her.h"
-#include "start.h"
-#include "su3.h"
-#include "su3adj.h"
-#include "test/check_geometry.h"
-#include "xchange/xchange.h"
-#include "update_backward_gauge.h"
+#include "init/init.h"
 #include "invert_clover_eo.h"
 #include "invert_eo.h"
 #include "linalg/assign_add_mul_r.h"
 #include "linalg/convert_eo_to_lexic.h"
+#include "linalg/diff_and_square_norm.h"
 #include "linalg/square_norm.h"
 #include "mpi_init.h"
+#include "operator.h"
+#include "operator/D_psi.h"
+#include "operator/Hopping_Matrix.h"
+#include "operator/Hopping_Matrix_nocom.h"
 #include "operator/clover_leaf.h"
 #include "operator/clovertm_operators.h"
+#include "operator/clovertm_operators.h"
+#include "operator/tm_operators.h"
 #include "prepare_source.h"
 #include "qphix_interface.h"
-#include "init/init.h"
-#include "linalg/diff_and_square_norm.h"
+#include "ranlxd.h"
+#include "read_input.h"
+#include "solver/cg_her.h"
+#include "solver/solver_field.h"
+#include "start.h"
+#include "su3.h"
+#include "su3adj.h"
+#include "test/check_geometry.h"
+#include "update_backward_gauge.h"
+#include "xchange/xchange.h"
 
 int check_xchange();
+double compare_spinors(spinor* s1, spinor* s2);
 
-// Full Dslash for twised mass
-void _M_full(spinor *const Even_new, spinor *const Odd_new, spinor *const Even, spinor *const Odd) {
-  /* Even sites */
-  Hopping_Matrix(EO, g_spinor_field[8], Odd);
-  assign_mul_one_pm_imu(Even_new, Even, 1., VOLUME / 2);
-  assign_add_mul_r(Even_new, g_spinor_field[8], -1., VOLUME / 2);
-
-  /* Odd sites */
-  Hopping_Matrix(OE, g_spinor_field[8], Even);
-  assign_mul_one_pm_imu(Odd_new, Odd, 1., VOLUME / 2);
-  assign_add_mul_r(Odd_new, g_spinor_field[8], -1., VOLUME / 2);
-}
-
-// Full Dslash for twised mass and clover
-void _Msw_full(spinor *const Even_new, spinor *const Odd_new, spinor *const Even,
-               spinor *const Odd) {
-  /* Even sites */
-  Hopping_Matrix(EO, g_spinor_field[8], Odd);
-  assign_mul_one_sw_pm_imu(EE, Even_new, Even, +g_mu);
-  assign_add_mul_r(Even_new, g_spinor_field[8], -1., VOLUME / 2);
-
-  /* Odd sites */
-  Hopping_Matrix(OE, g_spinor_field[8], Even);
-  assign_mul_one_sw_pm_imu(OO, Odd_new, Odd, +g_mu);
-  assign_add_mul_r(Odd_new, g_spinor_field[8], -1., VOLUME / 2);
-}
-
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   int j;
 #ifdef HAVE_LIBLEMON
-  paramsXlfInfo *xlfInfo;
+  paramsXlfInfo* xlfInfo;
 #endif
   int status = 0;
 
-  static double t1, t2;
+  static double tm_t1, tm_t2, q_t1, q_t2;
 
-  DUM_DERI = 10;
-  DUM_MATRIX = DUM_DERI + 8;
+  DUM_DERI = 8;
+  DUM_MATRIX = DUM_DERI + 5;
   NO_OF_SPINORFIELDS = DUM_MATRIX + 4;
 
   /* Set the input file */
@@ -132,14 +107,15 @@ int main(int argc, char *argv[]) {
 
   init_parallel_and_read_input(argc, argv, input_filename);
   tmlqcd_mpi_init(argc, argv);
+  g_dbw2rand = 0;
 
 #ifdef _GAUGE_COPY
-  init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
+  init_gauge_field(VOLUMEPLUSRAND, 1);
 #else
-  init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
+  init_gauge_field(VOLUMEPLUSRAND, 0);
 #endif
 
-  init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
+  init_geometry_indices(VOLUMEPLUSRAND);
   j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
   if (j != 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
@@ -162,16 +138,7 @@ int main(int argc, char *argv[]) {
 
   /* define the geometry */
   geometry();
-  /* define the boundary conditions for the fermion fields */
-  boundary(g_kappa);
 
-  // check BC
-  if (g_proc_id == 0) {
-    printf("\nphase_0 = %f + I*%f\n", creal(phase_0), cimag(phase_0));
-    printf("phase_1 = %f + I*%f\n", creal(phase_1), cimag(phase_1));
-    printf("phase_2 = %f + I*%f\n", creal(phase_2), cimag(phase_2));
-    printf("phase_3 = %f + I*%f\n\n", creal(phase_3), cimag(phase_3));
-  }
 #ifdef _USE_HALFSPINOR
   j = init_dirac_halfspinor();
   if (j != 0) {
@@ -195,8 +162,12 @@ int main(int argc, char *argv[]) {
   }
 
   start_ranlux(1, 123456);
-  random_gauge_field(1, g_gauge_field);
-  // unit_g_gauge_field(); // unit 3x3 colour matrices
+  if (startoption == 0) {
+    unit_g_gauge_field();  // unit 3x3 colour matrices
+  } else {
+    random_gauge_field(1, g_gauge_field);
+  }
+
 // g_gauge_field[ g_ipt[0][0][0][1] ][0].c00 = 1.0;
 // g_gauge_field[ g_ipt[0][0][0][1] ][0].c01 = 0.0;
 // g_gauge_field[ g_ipt[0][0][0][1] ][0].c02 = 0.0;
@@ -213,138 +184,115 @@ int main(int argc, char *argv[]) {
 #endif
 
   g_update_gauge_copy = 1;
+#ifdef _GAUGE_COPY
   update_backward_gauge(g_gauge_field);
-
-  // Init a lexicographic spinor with uniform random source
-  zero_spinor_field(g_spinor_field[0], VOLUME);
-  random_spinor_field_lexic(g_spinor_field[0], 1, RN_UNIF);
-
-  // Coordinates are T, X, Y, Z
-  // g_spinor_field[0][ g_ipt[0][0][0][0] ].s0.c0 = 1.0; // even point source
-  // g_spinor_field[0][ g_ipt[0][0][0][1] ].s0.c0 = 1.0; // odd point source
-
-  /************************** tmLQCD D_psi **************************/
-
-  if (g_proc_id == 0) {
-    printf("\n\n");
-    printf("# -------------------------------------------- #\n\n");
-    printf("# Dslash 1 (tmLQCD):\n");
-    printf("# ====================\n\n");
-  }
-  // print L2-norm of source:
-  double squarenorm;
-  squarenorm = square_norm(g_spinor_field[0], VOLUME, 1);
-  if (g_proc_id == 0) {
-    printf("  ||source||^2 = %e\n", squarenorm);
-    fflush(stdout);
-  }
-#ifdef TM_USE_MPI
-  MPI_Barrier(MPI_COMM_WORLD);
 #endif
 
-  // Split the full spinor in an even and an odd part
-  convert_lexic_to_eo(/*even */ g_spinor_field[1],
-                      /*odd */ g_spinor_field[2], /*full */
-                      g_spinor_field[0]);
+  init_operators();
 
-  // Apply a dslash on both odd and even parts
-  t1 = gettime();
-  Hopping_Matrix(OE, /*odd */ g_spinor_field[3], g_spinor_field[1]);
-  Hopping_Matrix(EO, /*even */ g_spinor_field[4], g_spinor_field[2]);
-  t2 = gettime();
+  spinor** qphix_out_cb_spinors;
+  init_solver_field(&qphix_out_cb_spinors, VOLUME / 2, 2);
 
-  // Recombine even and odd spinors to a full spinor
-  zero_spinor_field(g_spinor_field[1], VOLUME);
-  convert_eo_to_lexic(/*full */ g_spinor_field[1],
-                      /*even */ g_spinor_field[4], /*odd */
-                      g_spinor_field[3]);
+  spinor** tmp;
+  init_solver_field(&tmp, VOLUME, 2);
 
-  // print L2-norm of result:
-  squarenorm = square_norm(g_spinor_field[1], VOLUME, 1);
-  if (g_proc_id == 0) {
-    printf("  ||result_1||^2 = %.16e\n", squarenorm);
-    printf("  Time for MV mult: %e\n", t2 - t1);
-    fflush(stdout);
-  }
+  double* difference_l2norm = calloc(no_operators, sizeof(double));
 
-  /************************** D_psi_qphix **************************/
+  /* we will loop over the operators defined in the input file
+   * and first apply the tmLQCD operator to the test spinor, then
+   * the QPhiX operator and then compare */
+  for (int op_id = 0; op_id < no_operators; ++op_id) {
+    operator* op =& operator_list[op_id];
+    op_set_globals(op_id);
+    if (op->type == CLOVER || op->type == DBCLOVER) {
+      sw_term((const su3**)g_gauge_field, op->kappa, op->c_sw);
+      sw_invert(EE, op->mu);
+    }
+    boundary(g_kappa);
+    // check BC
+    if (g_proc_id == 0) {
+      printf("\nphase_0 = %f + I*%f\n", creal(phase_0), cimag(phase_0));
+      printf("phase_1 = %f + I*%f\n", creal(phase_1), cimag(phase_1));
+      printf("phase_2 = %f + I*%f\n", creal(phase_2), cimag(phase_2));
+      printf("phase_3 = %f + I*%f\n\n", creal(phase_3), cimag(phase_3));
+    }
+    /* depending on what has been set in the input file, this will create
+     * 1) a point source at source_location, spin/colour corresponding to index_start
+     * 2) a volume source
+     * 3) a time-slice source
+     * for the given operator */
+    prepare_source(0 /*nstore*/, 0 /*isample*/, index_start, op_id, 0 /*read_source_flag*/,
+                   source_location, 12345 /* seed */);
 
-  if (g_proc_id == 0) {
-    printf("\n");
-    printf("# Dslash 2 (QPhiX):\n");
-    printf("# ====================\n\n");
-  }
-  // print L2-norm of source:
-  squarenorm = square_norm(g_spinor_field[0], VOLUME, 1);
-  if (g_proc_id == 0) {
-    printf("  ||source||^2 = %e\n", squarenorm);
-    fflush(stdout);
-  }
 #ifdef TM_USE_MPI
-  MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
 #endif
 
-  zero_spinor_field(g_spinor_field[2], VOLUME);
+    tm_t1 = gettime();
+    op->applyM(op->prop0, op->prop1, op->sr0, op->sr1);
+    // Hopping_Matrix(OE, op->prop0, op->sr1);
+    // Hopping_Matrix(EO, op->prop1, op->sr0);
+    tm_t2 = gettime();
 
-  t1 = gettime();
-  D_psi_qphix(g_spinor_field[2], g_spinor_field[0]);
-  t2 = gettime();
+#ifdef TM_USE_MPI
+    MPI_Barrier(MPI_COMM_WORLD);
+#endif
+    q_t1 = gettime();
+    Mfull_qphix(qphix_out_cb_spinors[0], qphix_out_cb_spinors[1], op->sr0, op->sr1, op->type);
+    q_t2 = gettime();
 
-  // print L2-norm of result:
-  squarenorm = square_norm(g_spinor_field[2], VOLUME, 1);
-  if (g_proc_id == 0) {
-    printf("  ||result_2||^2 = %.16e\n", squarenorm);
-    printf("  Time for MV mult: %e\n", t2 - t1);
-    fflush(stdout);
+    double squarenorm = square_norm(op->sr0, VOLUME / 2, 1) + square_norm(op->sr1, VOLUME / 2, 1);
+    if (g_proc_id == 0) {
+      printf("  ||source||^2 = %e\n\n", squarenorm);
+      fflush(stdout);
+    }
+
+    // print L2-norm of result:
+    squarenorm = square_norm(op->prop0, VOLUME / 2, 1) + square_norm(op->prop1, VOLUME / 2, 1);
+    if (g_proc_id == 0) {
+      printf("\n\n");
+      printf("# -------------------------------------------- #\n\n");
+      printf("# Dslash 1 (tmLQCD) op_type=%d:\n", op->type);
+      printf("# ====================\n\n");
+      printf("  ||result_1||^2 = %.16e\n", squarenorm);
+      printf("  Time for MV mult: %e\n", tm_t2 - tm_t1);
+      fflush(stdout);
+    }
+
+    // print L2-norm of result:
+    squarenorm = square_norm(qphix_out_cb_spinors[0], VOLUME / 2, 1) +
+                 square_norm(qphix_out_cb_spinors[1], VOLUME / 2, 1);
+    if (g_proc_id == 0) {
+      printf("\n\n");
+      printf("# -------------------------------------------- #\n\n");
+      printf("# Dslash 2 (QPhiX) op_type=%d:\n", op->type);
+      printf("# ====================\n\n");
+      printf("  ||result_2||^2 = %.16e\n", squarenorm);
+      printf("  Time for MV mult: %e\n", q_t2 - q_t1);
+      fflush(stdout);
+    }
+
+    convert_eo_to_lexic(tmp[0], op->prop0, op->prop1);
+    convert_eo_to_lexic(tmp[1], qphix_out_cb_spinors[0], qphix_out_cb_spinors[1]);
+
+    difference_l2norm[op_id] = compare_spinors(tmp[0], tmp[1]);
+
+  }  // for(op_id)
+
+  int failed = 0;
+  for (int op_id = 0; op_id < no_operators; op_id++) {
+    if (g_proc_id == 0) {
+      printf("op_id: %d, |diff|^2 = %.16e\n", op_id, difference_l2norm[op_id]);
+    }
+    // check if the l2 norm of the difference is tolerable up to rounding
+    if (difference_l2norm[op_id] > 2 * g_nproc * VOLUME * DBL_EPSILON) {
+      failed = 1;
+    }
   }
 
-  /************************** DEBUG PRINT OUTS **************************/
-
-  // printf("\n INPUT SPINOR:\n");
-  // double* show_in = (double*) g_spinor_field[0];
-  // for(int i=0; i<24*VOLUME; ++i) {
-  //      if(show_in[i] != 0.) {
-  // int j = i/24;
-  //              printf("%d %d %d %d : %2f\n", g_coord[j][0],
-  //              g_coord[j][1],g_coord[j][2],g_coord[j][3],show_in[i]);
-  //      }
-  // }
-  // printf("\n");
-
-  // printf("\n OUTPUT TMLQCD vs QPHIX SPINOR (tmlQCD format):\n");
-  // double* show_out       = (double*) &(g_spinor_field[1][0]);
-  // double* show_out_qphix = (double*) &(g_spinor_field[2][0]);
-  // printf("%d %d %d %d : \t\t", T, LX, LY, LZ);
-  // printf("%d %d %d %d : \n", T, LX, LY, LZ);
-  // for(int i=0; i<24*VOLUME; ++i) {
-  //      if( fabs(show_out_qphix[i]) > DBL_EPSILON || fabs(show_out[i]) >
-  //      DBL_EPSILON) {
-  // int j = i/24;
-  //              printf("%d %d %d %d : %2g\t\t", g_coord[j][0],
-  //              g_coord[j][1],g_coord[j][2],g_coord[j][3],show_out[i]);
-  //              printf("%d %d %d %d : %2g\n", g_coord[j][0],
-  //              g_coord[j][1],g_coord[j][2],g_coord[j][3],show_out_qphix[i]);
-  //      }
-  // }
-  // printf("\n");
-
-  /************************** finished: get difference
-   * **************************/
-
-  if (g_proc_id == 0) {
-    printf("\n");
-    printf("# Comparison tmLQCD vs QPhiX:\n");
-    printf("# ===========================\n\n");
-  }
-
-  // print L2-norm of result1 - result2:
-  squarenorm = diff_and_square_norm(g_spinor_field[1], g_spinor_field[2], VOLUME);
-  if (g_proc_id == 0) {
-    printf("  ||result_1 - result_2||^2 = %e\n\n", squarenorm);
-    fflush(stdout);
-  }
-// ---------------
-
+  free(difference_l2norm);
+  finalize_solver(qphix_out_cb_spinors, 2);
+  finalize_solver(tmp, 2);
 #ifdef TM_USE_OMP
   free_omp_accumulators();
 #endif
@@ -356,5 +304,127 @@ int main(int argc, char *argv[]) {
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 #endif
-  return (0);
+  return (failed);
+}
+
+double compare_spinors(spinor* s1, spinor* s2) {
+  double* show_out;
+  double* show_out_qphix;
+#ifdef TM_USE_MPI
+  MPI_Barrier(MPI_COMM_WORLD);
+#endif
+  int coords[4];
+  int x, y, z, t, id = 0;
+  // list non-zero elements in spinors, but only if the source type was a point source
+  // otherwise the output is overwhelming
+  if (SourceInfo.type == SRC_TYPE_POINT) {
+    if (g_proc_id == 0) printf("\n OUTPUT TMLQCD vs QPHIX SPINOR (tmlQCD format):\n");
+    if (g_proc_id == 0)
+      printf("g_proc_id | T=%3d LX=%3d LY=%3d LZ=%3d %26s", g_nproc_t * T, g_nproc_x * LX,
+             g_nproc_y * LY, g_nproc_z * LZ, " ");
+    if (g_proc_id == 0)
+      printf("T=%3d LX=%3d LY=%3d LZ=%3d \n", g_nproc_t * T, g_nproc_x * LX, g_nproc_y * LY,
+             g_nproc_z * LZ);
+    for (int t_global = 0; t_global < g_nproc_t * T; t_global++) {
+      coords[0] = t_global / T;
+      for (int x_global = 0; x_global < g_nproc_x * LX; x_global++) {
+        coords[1] = x_global / LX;
+        for (int y_global = 0; y_global < g_nproc_y * LY; y_global++) {
+          coords[2] = y_global / LY;
+          for (int z_global = 0; z_global < g_nproc_z * LZ; z_global++) {
+            coords[3] = z_global / LZ;
+#ifdef TM_USE_MPI
+            MPI_Cart_rank(g_cart_grid, coords, &id);
+#endif
+            if (g_proc_id == id) {
+              t = t_global - g_proc_coords[0] * T;
+              x = x_global - g_proc_coords[1] * LX;
+              y = y_global - g_proc_coords[2] * LY;
+              z = z_global - g_proc_coords[3] * LZ;
+              int idx = g_ipt[t][x][y][z];
+              show_out = (double*)(&s1[idx]);
+              show_out_qphix = (double*)(&s2[idx]);
+              for (int sc = 0; sc < 24; sc++) {
+                if (fabs(show_out_qphix[sc]) > 2 * DBL_EPSILON ||
+                    fabs(show_out[sc]) > 2 * DBL_EPSILON) {
+                  fflush(stdout);
+                  printf("%9d | %5d %6d %6d %6d s%1d c%1d reim%1d : %+5lf %2s", g_proc_id, t_global,
+                         x_global, y_global, z_global, sc / 6, (sc / 2) % 3, sc % 2, show_out[sc],
+                         " ");
+                  printf("%5d %6d %6d %6d s%1d c%1d reim%1d : %+5lf", t_global, x_global, y_global,
+                         z_global, sc / 6, (sc / 2) % 3, sc % 2, show_out_qphix[sc]);
+                  if (fabs(show_out[sc] - show_out_qphix[sc]) > 2 * DBL_EPSILON) printf(" !!! ");
+                  printf("\n");
+                }
+              }
+            }
+#ifdef TM_USE_MPI
+            MPI_Barrier(MPI_COMM_WORLD);
+#endif
+          }  // z
+        }    // y
+      }      // x
+    }        // t
+  }          // if( SourceInfo.type == SRC_TYPE_POINT )
+
+#ifdef TM_USE_MPI
+  MPI_Barrier(MPI_COMM_WORLD);
+#endif
+  if (g_proc_id == 0) {
+    printf("\n");
+    printf("# Comparison tmLQCD vs QPhiX:\n");
+    printf("# ===========================\n\n");
+  }
+
+  if (g_proc_id == 0) printf("\n OUTPUT TMLQCD vs QPHIX SPINOR (tmlQCD format):\n");
+  if (g_proc_id == 0)
+    printf("g_proc_id | T=%3d LX=%3d LY=%3d LZ=%3d \n", g_nproc_t * T, g_nproc_x * LX,
+           g_nproc_y * LY, g_nproc_z * LZ);
+  double squarenorm = diff_and_square_norm(s1, s2, VOLUME);
+
+#ifdef TM_USE_MPI
+  MPI_Barrier(MPI_COMM_WORLD);
+#endif
+  id = 0;
+  for (int t_global = 0; t_global < g_nproc_t * T; t_global++) {
+    coords[0] = t_global / T;
+    for (int x_global = 0; x_global < g_nproc_x * LX; x_global++) {
+      coords[1] = x_global / LX;
+      for (int y_global = 0; y_global < g_nproc_y * LY; y_global++) {
+        coords[2] = y_global / LY;
+        for (int z_global = 0; z_global < g_nproc_z * LZ; z_global++) {
+          coords[3] = z_global / LZ;
+#ifdef TM_USE_MPI
+          MPI_Cart_rank(g_cart_grid, coords, &id);
+#endif
+          if (g_proc_id == id) {
+            t = t_global - g_proc_coords[0] * T;
+            x = x_global - g_proc_coords[1] * LX;
+            y = y_global - g_proc_coords[2] * LY;
+            z = z_global - g_proc_coords[3] * LZ;
+            int idx = g_ipt[t][x][y][z];
+            show_out = (double*)(&s1[idx]);
+            for (int sc = 0; sc < 24; sc++) {
+              // when a volume source is used, these will be zero up to significant rounding
+              // we account for that by the scaling of DBL_EPSILON
+              if (fabs(show_out[sc]) > 8 * 24 * DBL_EPSILON) {
+                fflush(stdout);
+                printf("%9d | %5d %6d %6d %6d s%1d c%1d reim%1d : %+5lf\n", g_proc_id, t_global,
+                       x_global, y_global, z_global, sc / 6, (sc / 2) % 3, sc % 2, show_out[sc]);
+              }
+            }
+          }
+#ifdef TM_USE_MPI
+          MPI_Barrier(MPI_COMM_WORLD);
+#endif
+        }  // z
+      }    // y
+    }      // x
+  }        // t
+
+  if (g_proc_id == 0) {
+    printf("\n  ||result_1 - result_2||^2 = %e\n\n", squarenorm);
+    fflush(stdout);
+  }
+  return squarenorm;
 }

@@ -157,7 +157,7 @@ struct InnerCloverProduct<
     // The clover term is block-diagonal in spin. Therefore we need
     // to iterate over the two blocks of spin.
     for (auto s_block : {0, 1}) {
-      // Extract the diagonal and triangular parts.
+      // handy reference to half-spinor block
       auto const &block_in = s_block == 0 ? clov_block.block1 : clov_block.block2;
       // Input two-spinor component.
       for (auto two_s_in : {0, 1}) {
@@ -288,53 +288,6 @@ void clover_product(
 #endif
 }
 
-template <typename FT, int veclen, int soalen, bool compress12>
-void full_clover_product(
-    typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FourSpinorBlock *const out,
-    typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FourSpinorBlock const *const in,
-    typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FullCloverBlock *local_clover,
-    ::QPhiX::Geometry<FT, veclen, soalen, compress12> &geom) {
-  ::QPhiX::zeroSpinor<FT, veclen, soalen, compress12>(out, geom, n_blas_simt);
-
-  // Iterate through all the block.
-  auto const num_blocks = get_num_blocks(geom);
-  for (auto block = 0u; block < num_blocks; ++block) {
-    // The clover term is block-diagonal in spin. Therefore we need
-    // to iterate over the two blocks of spin.
-    for (auto s_block : {0, 1}) {
-      // Extract the spin block as a handy alias.
-      auto const &block_in = s_block == 0 ? local_clover[block].block1 : local_clover[block].block2;
-      // Input two-spinor component.
-      for (auto two_s_in : {0, 1}) {
-        // Reconstruct four spinor index.
-        auto const four_s_in = 2 * s_block + two_s_in;
-        // Output two-spinor component.
-        for (auto two_s_out : {0, 1}) {
-          // Reconstruct four spinor index.
-          auto const four_s_out = 2 * s_block + two_s_out;
-          // Input color.
-          for (auto c_in : {0, 1, 2}) {
-            // Spin-color index (0, ..., 5).
-            auto const sc_in = 3 * two_s_in + c_in;
-            // Output color.
-            for (auto c_out : {0, 1, 2}) {
-              // Spin-color index (0, ..., 5).
-              auto const sc_out = 3 * two_s_out + c_out;
-              // SIMD vector.
-              for (auto v = 0; v < veclen; ++v) {
-                cplx_mul_acc(out[block][c_out][four_s_out][re][v],
-                             out[block][c_out][four_s_out][im][v], block_in[sc_out][sc_in][re][v],
-                             block_in[sc_out][sc_in][im][v], in[block][c_in][four_s_in][re][v],
-                             in[block][c_in][four_s_in][im][v]);
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
 /**
   Abstract base class for all single-flavor Dslash variants.
 
@@ -378,7 +331,7 @@ class Dslash {
     \param[out] out Output spinor \f$ \psi \f$.
     \param[in] in Input spinor \f$ \chi \f$.
     */
-  virtual void A_chi(Spinor *const out, Spinor const *const in, int const isign) = 0;
+  virtual void A_chi(Spinor *const out, Spinor const *const in, int const isign, int const cb) = 0;
 
   /**
     Computes \f$ \psi_\mathrm e = A_\mathrm{ee}^{-1} \chi_\mathrm e \f$.
@@ -386,16 +339,52 @@ class Dslash {
     \param[out] out Output spinor \f$ \psi \f$.
     \param[in] in Input spinor \f$ \chi \f$.
     */
-  virtual void A_inv_chi(Spinor *const out, Spinor const *const in, int const isign) = 0;
+  virtual void A_inv_chi(Spinor *const out, Spinor const *const in, int const isign,
+                         int const cb) = 0;
 
   /**
     Forwarder for the `dslash`.
+
+    This will call the `dslash` function of the respective QPhiX dslash class. There is a subtle
+    difference between the Wilson and all other cases. The Wilson dslash is just the hopping matrix,
+    just the operator \f$ D \f$. For every other case (clover, twisted mass, twisted mass clover),
+    the `dslash` member function will compute \f$ A^{-1} D \f$. In the Wilson case, this \f$ A =
+    \alpha = 4 + m = 1/(2 \kappa) \f$. Since that is _not_ included in the Wilson `dslash`, you will
+    obtain different results when using WilsonDslash::dslash and WilsonTMDslash::dslash with \f$
+    \mu = 0 \f$.
 
     \todo Make this member function `const`. For this the member function in
     QPhiX that is called internally must be marked `const` as well.
     */
   virtual void dslash(Spinor *const res, const Spinor *const psi, const SU3MatrixBlock *const u,
                       int const isign, int const cb) = 0;
+
+  /**
+    Always plain Wilson dslash.
+
+    In contrast to the \ref dslash member function which just forwards the implementation of QPhiX,
+    this will always give you the “naked” plain Wilson dslash without any factors of \f$ A^{-1} \f$
+    applied.
+    */
+  virtual void plain_dslash(Spinor *const res, const Spinor *const psi,
+                            const SU3MatrixBlock *const u, int const isign, int const cb) {
+    // XXX Perhaps rather implement this with an instance of the WilsonDslash instead?
+
+    auto tmp = QPhiX::makeFourSpinorHandle(*geom);
+    dslash(tmp.get(), psi, u, isign, cb);
+    A_chi(res, tmp.get(), isign, cb);
+  };
+
+  /**
+    Always “dressed” dslash.
+
+    This computes \f$ A^{-1} D \f$ for all variants. In the Wilson case, this will give \f$
+    \alpha^{-1} D \f$.
+    */
+  virtual void A_inv_dslash(Spinor *const res, const Spinor *const psi,
+                            const SU3MatrixBlock *const u, int const isign, int const cb) {
+    dslash(res, psi, u, isign, cb);
+  };
 
   /**
     Forwarder for the `achimbdpsi`.
@@ -464,12 +453,14 @@ class WilsonDslash : public Dslash<FT, veclen, soalen, compress12> {
         mass_factor_alpha(4.0 + mass_),
         mass_factor_beta(1.0 / (4.0 * mass_factor_alpha)) {}
 
-  void A_chi(Spinor *const out, Spinor const *const in, int const isign) override {
+  void A_chi(Spinor *const out, Spinor const *const in, int const isign_ignored,
+             int const cb_ignored) override {
     int const n_blas_simt = 1;
     ::QPhiX::axy(mass_factor_alpha, in, out, upstream_dslash.getGeometry(), n_blas_simt);
   }
 
-  void A_inv_chi(Spinor *const out, Spinor const *const in, int const isign) override {
+  void A_inv_chi(Spinor *const out, Spinor const *const in, int const isign_ignored,
+                 int const cb_ignored) override {
     int const n_blas_simt = 1;
     ::QPhiX::axy(1.0 / mass_factor_alpha, in, out, upstream_dslash.getGeometry(), n_blas_simt);
   }
@@ -478,6 +469,18 @@ class WilsonDslash : public Dslash<FT, veclen, soalen, compress12> {
               int const isign, int const cb) override {
     upstream_dslash.dslash(res, psi, u, isign, cb);
   }
+
+  void plain_dslash(Spinor *const res, const Spinor *const psi, const SU3MatrixBlock *const u,
+                    int const isign, int const cb) override {
+    dslash(res, psi, u, isign, cb);
+  };
+
+  void A_inv_dslash(Spinor *const res, const Spinor *const psi, const SU3MatrixBlock *const u,
+                    int const isign, int const cb) override {
+    auto tmp = QPhiX::makeFourSpinorHandle(upstream_dslash.getGeometry());
+    dslash(tmp.get(), psi, u, isign, cb);
+    A_inv_chi(res, tmp.get(), isign, cb);
+  };
 
   void achimbdpsi(Spinor *const res, const Spinor *const psi, const Spinor *const chi,
                   const SU3MatrixBlock *const u, double const alpha, double const beta,
@@ -510,11 +513,13 @@ class WilsonTMDslash : public Dslash<FT, veclen, soalen, compress12> {
         derived_mu_inv(mass_factor_alpha /
                        (mass_factor_alpha * mass_factor_alpha + twisted_mass_ * twisted_mass_)) {}
 
-  void A_chi(Spinor *const out, Spinor const *const in, int const isign) override {
+  void A_chi(Spinor *const out, Spinor const *const in, int const isign,
+             int const cb_ignored) override {
     helper_A_chi(out, in, -derived_mu * isign, mass_factor_alpha);
   }
 
-  void A_inv_chi(Spinor *const out, Spinor const *const in, int const isign) override {
+  void A_inv_chi(Spinor *const out, Spinor const *const in, int const isign,
+                 int const cb_ignored) override {
     helper_A_chi(out, in, derived_mu * isign, derived_mu_inv);
   }
 
@@ -550,33 +555,38 @@ class WilsonClovDslash : public Dslash<FT, veclen, soalen, compress12> {
 
   WilsonClovDslash(::QPhiX::Geometry<FT, veclen, soalen, compress12> *geom_,
                    double const t_boundary_, double const aniso_coeff_S_,
-                   double const aniso_coeff_T_, double const mass_, CloverBlock *const clover_,
-                   CloverBlock *const inv_clover_)
+                   double const aniso_coeff_T_, double const mass_,
+                   CloverBlock *const (&clover_)[2], CloverBlock *const (&inv_clover_)[2])
       : Dslash<FT, veclen, soalen, compress12>(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_,
                                                mass_),
         upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
         mass_factor_alpha(4.0 + mass_),
-        mass_factor_beta(1.0 / (4.0 * mass_factor_alpha)),
-        clover(clover_),
-        inv_clover(inv_clover_) {}
-
-  void A_chi(Spinor *const out, Spinor const *const in, int const isign_ignored) override {
-    clover_product(out, in, clover, upstream_dslash.getGeometry());
+        mass_factor_beta(1.0 / (4.0 * mass_factor_alpha)) {
+    for (int cb : {0, 1}) {
+      clover[cb] = clover_[cb];
+      inv_clover[cb] = inv_clover_[cb];
+    }
   }
 
-  void A_inv_chi(Spinor *const out, Spinor const *const in, int const isign_ignored) override {
-    clover_product(out, in, inv_clover, upstream_dslash.getGeometry());
+  void A_chi(Spinor *const out, Spinor const *const in, int const isign_ignored,
+             int const cb) override {
+    clover_product(out, in, clover[cb], upstream_dslash.getGeometry());
+  }
+
+  void A_inv_chi(Spinor *const out, Spinor const *const in, int const isign_ignored,
+                 int const cb) override {
+    clover_product(out, in, inv_clover[cb], upstream_dslash.getGeometry());
   }
 
   void dslash(Spinor *const res, const Spinor *const psi, const SU3MatrixBlock *const u,
               int const isign, int const cb) override {
-    upstream_dslash.dslash(res, psi, u, inv_clover, isign, cb);
+    upstream_dslash.dslash(res, psi, u, inv_clover[cb], isign, cb);
   }
 
   void achimbdpsi(Spinor *const res, const Spinor *const psi, const Spinor *const chi,
                   const SU3MatrixBlock *const u, double const alpha, double const beta,
                   int const isign, int const cb) override {
-    upstream_dslash.dslashAChiMinusBDPsi(res, psi, chi, u, clover, mass_factor_beta, isign, cb);
+    upstream_dslash.dslashAChiMinusBDPsi(res, psi, chi, u, clover[cb], mass_factor_beta, isign, cb);
   }
 
  private:
@@ -592,12 +602,13 @@ class WilsonClovDslash : public Dslash<FT, veclen, soalen, compress12> {
     argument list which does not contain the clover term. The user of these classes should not have
     to differentiate between non-clover and clover variants. In order to provide the function
     signature, the clover term is a member. This means that the user has to construct a new operator
-    each time the clover term has changed.
+    if the pointers to the clover field need to be changed. Seperate pointers are kept for the fields
+    on the even and odd checkerboards, hence the array dimension.
     */
-  CloverBlock *const clover;
+  CloverBlock *clover[2];
 
   /// See \ref clover.
-  CloverBlock *const inv_clover;
+  CloverBlock *inv_clover[2];
 };
 
 template <typename FT, int veclen, int soalen, bool compress12>
@@ -611,7 +622,8 @@ class WilsonClovTMDslash : public Dslash<FT, veclen, soalen, compress12> {
   WilsonClovTMDslash(::QPhiX::Geometry<FT, veclen, soalen, compress12> *geom_,
                      double const t_boundary_, double const aniso_coeff_S_,
                      double const aniso_coeff_T_, double const mass_, double const twisted_mass_,
-                     FullCloverBlock *const clover_[2], FullCloverBlock *const inv_clover_[2])
+                     FullCloverBlock *const (&clover_)[2][2],
+                     FullCloverBlock *const (&inv_clover_)[2][2])
       : Dslash<FT, veclen, soalen, compress12>(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_,
                                                mass_),
         upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
@@ -619,27 +631,42 @@ class WilsonClovTMDslash : public Dslash<FT, veclen, soalen, compress12> {
         mass_factor_beta(0.25),
         derived_mu(twisted_mass_ / mass_factor_alpha),
         derived_mu_inv(mass_factor_alpha /
-                       (mass_factor_alpha * mass_factor_alpha + twisted_mass_ * twisted_mass_)),
-        clover(clover_),
-        inv_clover(inv_clover_) {}
-
-  void A_chi(Spinor *const out, Spinor const *const in, int const isign) override {
-    full_clover_product(out, in, clover[isign], upstream_dslash.getGeometry());
+                       (mass_factor_alpha * mass_factor_alpha + twisted_mass_ * twisted_mass_)) {
+    for (int cb : {0, 1}) {
+      for (int fl : {0, 1}) {
+        clover[cb][fl] = clover_[cb][fl];
+        inv_clover[cb][fl] = inv_clover_[cb][fl];
+      }
+    }
   }
 
-  void A_inv_chi(Spinor *const out, Spinor const *const in, int const isign) override {
-    full_clover_product(out, in, inv_clover[isign], upstream_dslash.getGeometry());
+  void A_chi(Spinor *const out, Spinor const *const in, int const isign, int const cb) override {
+    if (isign == -1) {
+      clover_product(out, in, clover[cb][1], upstream_dslash.getGeometry());
+    } else {
+      clover_product(out, in, clover[cb][0], upstream_dslash.getGeometry());
+    }
+  }
+
+  void A_inv_chi(Spinor *const out, Spinor const *const in, int const isign,
+                 int const cb) override {
+    if (isign == -1) {
+      clover_product(out, in, inv_clover[cb][1], upstream_dslash.getGeometry());
+    } else {
+      clover_product(out, in, inv_clover[cb][0], upstream_dslash.getGeometry());
+    }
   }
 
   void dslash(Spinor *const res, const Spinor *const psi, const SU3MatrixBlock *const u,
               int const isign, int const cb) override {
-    upstream_dslash.dslash(res, psi, u, inv_clover, isign, cb);
+    upstream_dslash.dslash(res, psi, u, (const FullCloverBlock **)inv_clover[cb], isign, cb);
   }
 
   void achimbdpsi(Spinor *const res, const Spinor *const psi, const Spinor *const chi,
                   const SU3MatrixBlock *const u, double const alpha, double const beta,
                   int const isign, int const cb) override {
-    upstream_dslash.dslashAChiMinusBDPsi(res, psi, chi, u, clover, mass_factor_beta, isign, cb);
+    upstream_dslash.dslashAChiMinusBDPsi(res, psi, chi, u, (const FullCloverBlock **)clover[cb],
+                                         mass_factor_beta, isign, cb);
   }
 
  private:
@@ -650,8 +677,12 @@ class WilsonClovTMDslash : public Dslash<FT, veclen, soalen, compress12> {
   double const derived_mu;
   double const derived_mu_inv;
 
-  FullCloverBlock *const clover[2];
-  FullCloverBlock *const inv_clover[2];
+  /* For twisted clover, there are two fields on each checkerboard which differ in the sign
+   * of the twisted quark mass. In effect then, the inner index can be thought of as being
+   * in flavour space while the outer index is the checkerboard index. 
+   */
+  FullCloverBlock *clover[2][2];
+  FullCloverBlock *inv_clover[2][2];
 };
 
 template <typename FT, int veclen, int soalen, bool compress12>
@@ -701,7 +732,7 @@ void Dslash<FT, veclen, soalen, compress12>::prepare_source(Spinor *const tilde_
   WilsonDslash<FT, veclen, soalen, compress12> plain_dslash(geom, t_boundary, aniso_coeff_S,
                                                             aniso_coeff_T, mass);
 
-  A_inv_chi(Mee_be.get(), b_even, 1);
+  A_inv_chi(Mee_be.get(), b_even, 1, cb_even);
 
   plain_dslash.dslash(tilde_b_odd, Mee_be.get(), u, 1, cb_odd);
 
@@ -720,6 +751,6 @@ void Dslash<FT, veclen, soalen, compress12>::reconstruct_solution(Spinor *const 
 
   plain_dslash.dslash(tmp.get(), x_odd, u, 1, cb_even);
   QPhiX::aypx(0.5, b_even, tmp.get(), *geom, 1);
-  A_inv_chi(x_even, tmp.get(), 1);
+  A_inv_chi(x_even, tmp.get(), 1, cb_even);
 }
 }

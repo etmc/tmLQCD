@@ -31,33 +31,41 @@
 #include <mpi.h>
 #endif
 
-#include "config.h"
-#include "global.h"
 extern "C" {
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "boundary.h"
 #include "geometry_eo.h"
 #include "gettime.h"
+#include "global.h"
 #include "linalg/convert_eo_to_lexic.h"
+#include "linalg/diff.h"
+#include "linalg/square_norm.h"
+#include "linalg/square_norm.h"
+#include "operator/clover_leaf.h"
 #include "operator/clovertm_operators.h"
+#include "operator_types.h"
 #include "solver/solver.h"
 #include "solver/solver_field.h"
 #include "solver/solver_params.h"
-#include "update_backward_gauge.h"
+#include "xchange/xchange_gauge.h"
 }
 #ifdef TM_USE_OMP
 #include <omp.h>
 #endif
 #include <qphix/blas_new_c.h>
+#include <qphix/clover.h>
 #include <qphix/invbicgstab.h>
 #include <qphix/invcg.h>
 #include <qphix/print_utils.h>
 #include <qphix/qphix_config.h>
 #include <qphix/twisted_mass.h>
+#include <qphix/twisted_mass_clover.h>
 #include <qphix/wilson.h>
 #include <cfloat>
 #include <cstdlib>
 #include <cstring>
-
 #include <vector>
 
 using namespace tmlqcd;
@@ -79,6 +87,10 @@ QphixPrec_t qphix_precision;
 int subLattSize[4];
 int lattSize[4];
 int qmp_geom[4];
+int qmp_tm_map[4];
+
+// angles for boundary phases, values come from read_input
+extern double X0, X1, X2, X3;
 
 template <typename T>
 struct rsdTarget {
@@ -86,13 +98,10 @@ struct rsdTarget {
 };
 
 template <>
-const double rsdTarget<QPhiX::half>::value = 1.0e-4;
+const double rsdTarget<QPhiX::half>::value = 1.0e-3;
 
 template <>
-const double rsdTarget<float>::value = 1.0e-7;
-
-template <>
-const double rsdTarget<double>::value = 1.0e-08;
+const double rsdTarget<float>::value = 1.0e-8;
 
 void _initQphix(int argc, char **argv, QphixParams_t params, int c12, QphixPrec_t precision_) {
   static bool qmp_topo_initialised = false;
@@ -130,13 +139,44 @@ void _initQphix(int argc, char **argv, QphixParams_t params, int c12, QphixPrec_
 #ifdef QPHIX_QMP_COMMS
   // Declare the logical topology
   if (!qmp_topo_initialised) {
+    // the QMP topology is the one implied by the number of processes in each
+    // dimension as required by QPHIX ( x fastest to t slowest running )
     qmp_geom[0] = g_nproc_x;
     qmp_geom[1] = g_nproc_y;
     qmp_geom[2] = g_nproc_z;
     qmp_geom[3] = g_nproc_t;
-    if (QMP_declare_logical_topology(qmp_geom, 4) != QMP_SUCCESS) {
+
+    // in order for the topologies to agree between tmLQCD and QPhiX, the dimensions need to be
+    // permuted
+    // since Z is fastest in tmLQCD and X is second-slowest
+    qmp_tm_map[0] = 2;
+    qmp_tm_map[1] = 1;
+    qmp_tm_map[2] = 0;
+    qmp_tm_map[3] = 3;
+    if (QMP_declare_logical_topology_map(qmp_geom, 4, qmp_tm_map, 4) != QMP_SUCCESS) {
       QMP_error("Failed to declare QMP Logical Topology\n");
       abort();
+    }
+    // longish test to check if the logical coordinates are correctly mapped
+    if (g_debug_level >= 5) {
+      for (int proc = 0; proc < g_nproc; proc++) {
+        if (proc == g_proc_id) {
+          const int coordinates[4] = {g_proc_coords[1], g_proc_coords[2], g_proc_coords[3],
+                                      g_proc_coords[0]};
+          int id = QMP_get_node_number_from(coordinates);
+          int *qmp_coords = QMP_get_logical_coordinates_from(id);
+          fflush(stdout);
+          printf("QMP id: %3d x:%3d y:%3d z:%3d t:%3d\n", id, qmp_coords[0], qmp_coords[1],
+                 qmp_coords[2], qmp_coords[3]);
+          printf("MPI id: %3d x:%3d y:%3d z:%3d t:%3d\n\n", g_proc_id, g_proc_coords[1],
+                 g_proc_coords[2], g_proc_coords[3], g_proc_coords[0]);
+          free(qmp_coords);
+          fflush(stdout);
+          MPI_Barrier(MPI_COMM_WORLD);
+        } else {
+          MPI_Barrier(MPI_COMM_WORLD);
+        }
+      }
     }
     qmp_topo_initialised = true;
   }
@@ -153,24 +193,68 @@ void _initQphix(int argc, char **argv, QphixParams_t params, int c12, QphixPrec_
 // Finalize the QPhiX library
 void _endQphix() {}
 
-// Reorder the tmLQCD clover field to a Wilson QPhiX clover field
 template <typename FT, int VECLEN, int SOALEN, bool compress12>
-void reorder_clover_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom,
-                             FT *qphix_clover) {
+void reorder_clover_to_QPhiX(
+    QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom,
+    typename QPhiX::Geometry<FT, VECLEN, SOALEN, compress12>::CloverBlock *qphix_clover, int cb,
+    bool inverse) {
   const double startTime = gettime();
 
-  std::vector<uint64_t> const lookup_table{
-      0,  8,  16, 72, 80, 88,  2,  3,  4,  5,  36, 37, 38, 39, 40, 41, 10,  11,
-      42, 43, 44, 45, 46, 47,  48, 49, 50, 51, 52, 53, 74, 75, 76, 77, 82,  83,
-      18, 26, 34, 90, 98, 106, 20, 21, 22, 23, 54, 55, 56, 57, 58, 59, 28,  29,
-      60, 61, 62, 63, 64, 65,  66, 67, 68, 69, 70, 71, 92, 93, 94, 95, 100, 101};
+  /* the spin-colour clover term in sw_term and the corresponding inverse
+   * in sw_inv are stored in the tmLQCD gamma basis.
+   * When we translate spinors to QPhiX, we apply a transformation V to the tmLQCD
+   * spinor and then apply the same transformation to the output spinor
+   * ( we have V^dagger = V and V*V = 1 )
+   * Thus, in order to translate the clover field, we need to copy
+   *   (1+T)' = V*(1+T)*V, where T is the spin-colour clover-term
+   * This way, the clover term will be in the correct gamma basis.
+   *
+   * The tmLQCD clover term is stored in half-spinor blocks of colour matrices
+   * for which we need to work out what (1+T)'=V*(1+T)*V implies.
+   * Below, each sAB represents one 3x3 colour matrix
+   *
+   *                +s33 -s32    0    0
+   *  T' = V*T*V =  -s23 +s22    0    0
+   *                   0    0 +s11 -s10
+   *                   0    0 -s01 +s00
+   *
+   * Such that the half-spinor blocks are inverted and within these, the ordering is
+   * reversed. Note that the off-diagonal 3x3 colour blocks are hermitian conjugate to
+   * each other and this is preserved by the transformation.
+   *
+   * The QPhiX (Wilson) clover term is stored as 12 reals on the diagonal
+   * in two 6-element vectors, one for each half-spinor spin pair
+   * and two sets of off-diagonal complex components.
+   *
+   * In addition, colour matrices are transposed in QPhiX.
+   *
+   * The tmLQCD clover term is stored as:
+   *
+   *      s00 s01
+   *          s11
+   * T =          s22 s23
+   *                  s33
+   *
+   * with indexing
+   *
+   *     sw[0][0] sw[1][0]
+   *              sw[2][0]
+   *                       sw[0][1] sw[1][1]
+   *                                sw[2][1]
+   *
+   * The inverse has four su3 blocks instead and is indexed
+   *     sw_inv[0][0] sw_inv[1][0]
+   *     sw_inv[3][0] sw_inv[2][0]
+   *                               sw_inv[0][1] sw_inv[1][1]
+   *                               sw_inv[3][1] sw_inv[2][1]
+   *
+   * where blocks sw_inv[3][0] and sw_inv[3][1] are relevant only when mu > 0
+   */
 
-  assert(lookup_table.size() == 72 &&
-         "Number of elements in the lookup table needs to exactly match the number of elements in "
-         "the clover data structure.");
-
-  // Need to rescale for QPhiX by alpha
-  const double alpha = 1.0 / (2.0 * g_kappa);
+  // rescale to get clover term (or its inverse) in the physical normalisation
+  // rather than the kappa normalisation
+  const double scale = inverse ? 2.0 * g_kappa : 1.0 / (2.0 * g_kappa);
+  su3 ***tm_clover = inverse ? sw_inv : sw;
 
   // Number of elements in spin, color & complex
   const int Ns = 4;
@@ -178,64 +262,321 @@ void reorder_clover_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &ge
   const int Nz = 2;
 
   // Geometric parameters for QPhiX data layout
-  const auto nyg = geom.nGY();
+  const auto ngy = geom.nGY();
   const auto nVecs = geom.nVecs();
   const auto Pxy = geom.getPxy();
   const auto Pxyz = geom.getPxyz();
 
-  // Get the base pointer for the (global) tmlQCD clover field
-  const double *in = reinterpret_cast<double *>(&sw[0][0][0].c00);
+  // packer for Wilson clover (real diagonal + complex upper-triangular)
+  /* for the index in the off_diagN arrays, we map to an index in the su3 struct
+  * keeping in mind complex conjugation
+  * The off-diagonal in QPhiX is stored as follows:
+  *
+  * 0 1 3 6 10
+  *   2 4 7 11
+  *     5 8 12
+  *       9 13
+  *         14
+  *
+  * which we are going to map to su3 in blocks
+  *
+  *     0* 1*
+  *        2*
+  *
+  * 3   4  5
+  * 6   7  8
+  * 10 11 12
+  *
+  *   9* 13*
+  *      14*
+  *
+  * where the asterisk indicates complex conjugation. As a linear array then,
+  * these mappings are:
+  *
+  */
+  const int od_su3_offsets[15] = {Nz,
+                                  2 * Nz,            //     0 1
+                                  Nc * Nz + 2 * Nz,  //       2
 
-  FT *out = qphix_clover;
+                                  0,
+                                  Nz,
+                                  2 * Nz,  // 3  4  5
+                                  Nc * Nz,
+                                  Nc * Nz + Nz,
+                                  Nc * Nz + 2 * Nz,  // 6  7  8
 
-  // This will loop over the entire lattice and calculate
-  // the array and internal indices for both tmlQCD & QPhiX
-  for (uint64_t t = 0; t < T; t++)
-    for (uint64_t x = 0; x < LX; x++)
-      for (uint64_t y = 0; y < LY; y++)
-        for (uint64_t z = 0; z < LZ; z++) {
-          // Only copy the odd-odd elements of the clover term
-          // XXX This looks like `0` is `even`. In other parts of the QPhiX code, it seems like `1`
-          // is `even`. Either way, there is a magic number here which should be refactored into a
-          // global constant, probably best an enum. Then also this should be a function like
-          // `is_even` or `is_odd` to make the code more readable and less error prone.
-          if ((t + x + y + z) & 1 == 0) continue;
+                                  Nz,  //     9
 
-          const uint64_t tm_idx = Index(t, x, y, z);
+                                  2 * Nc * Nz,
+                                  2 * Nc * Nz + Nz,
+                                  2 * Nc * Nz + 2 * Nz,  // 10 11 12
 
-          // These are the QPhiX SIMD vector in checkerboarded x direction
-          // (up to LX/2), the index inside one single Structure of Arrays (SOA)
-          // and the internal position inside the ("packed") SIMD vector
-          const uint64_t SIMD_vector = (x / 2) / SOALEN;
-          const uint64_t x_one_SOA = (x / 2) % SOALEN;
-          const uint64_t x_internal = (y % nyg) * SOALEN + x_one_SOA;
+                                  2 * Nz,
+                                  Nc * Nz + 2 * Nz};  // 13 14
 
-          // Calculate the array index in QPhiX, given a global
-          // lattice index (t,x,y,z). This is also called the
-          // "block" in QPhiX and the QPhiX/QDP packers.
-          const uint64_t qphix_idx = (t * Pxyz + z * Pxy) / nyg + (y / nyg) * nVecs + SIMD_vector;
+#pragma omp parallel for collapse(4)
+  for (int64_t t = 0; t < T; t++) {
+    for (int64_t z = 0; z < LZ; z++) {
+      for (int64_t y = 0; y < LY; y++) {
+        for (int64_t v = 0; v < nVecs; v++) {
+          int64_t block = (t * Pxyz + z * Pxy) / ngy + (y / ngy) * nVecs + v;
 
-          // Calculate the index where the tile for a given site begins
-          const uint64_t qphix_base = qphix_idx * VECLEN * 2 * (6 + 15 * Nz);
-          const uint64_t tm_base = tm_idx * 3 * 2 * Nc * Nc * Nz;
+          for (int64_t x_soa = 0; x_soa < SOALEN; x_soa++) {
+            int64_t xx = (y % ngy) * SOALEN + x_soa;
+            int64_t q_cb_x_coord = x_soa + v * SOALEN;
+            int64_t tm_x_coord = q_cb_x_coord * 2 + (((t + y + z) & 1) ^ cb);
 
-          // FIXME Is there any better way to do that?
-          for (uint64_t lt_idx = 0; lt_idx < lookup_table.size(); ++lt_idx) {
-            out[qphix_base + lt_idx * VECLEN + x_internal] =
-                alpha * in[tm_base + lookup_table[lt_idx]];
-          }
+            //             the inverse of the clover term is in even-odd ordering
+            //             while the clover term itself is lexicographically ordered
+            int64_t tm_idx =
+                inverse ? g_lexic2eosub[g_ipt[t][tm_x_coord][y][z]] : g_ipt[t][tm_x_coord][y][z];
 
-        }  // volume
+            int b_idx;
 
-  const double endTime = gettime();
-  const double diffTime = endTime - startTime;
-  QPhiX::masterPrintf("  time spent in reorder_clover_to_QPhiX: %f secs\n", diffTime);
+            //             we begin with the diagonal elements in CloverBlock
+            for (int d = 0; d < 6; d++) {
+              //               choose the block in sw which corresponds to the block in T'
+              b_idx = d < 3 ? 2 : 0;
+              //               get the right colour components
+              qphix_clover[block].diag1[d][xx] =
+                  *(reinterpret_cast<double const *const>(&tm_clover[tm_idx][b_idx][1].c00) +
+                    (Nc * Nz + Nz) * (d % 3)) *
+                  scale;
+
+              qphix_clover[block].diag2[d][xx] =
+                  *(reinterpret_cast<double const *const>(&tm_clover[tm_idx][b_idx][0].c00) +
+                    (Nc * Nz + Nz) * (d % 3)) *
+                  scale;
+            }
+
+            b_idx = 2;  // s33 and s11
+            for (int od : {0, 1, 2}) {
+              for (int reim : {0, 1}) {
+                qphix_clover[block].off_diag1[od][reim][xx] =
+                    (reim == 1 ? -1.0 : 1.0) *
+                    *(reinterpret_cast<double const *const>(&tm_clover[tm_idx][b_idx][1].c00) +
+                      od_su3_offsets[od] + reim) *
+                    scale;
+
+                qphix_clover[block].off_diag2[od][reim][xx] =
+                    (reim == 1 ? -1.0 : 1.0) *
+                    *(reinterpret_cast<double const *const>(&tm_clover[tm_idx][b_idx][0].c00) +
+                      od_su3_offsets[od] + reim) *
+                    scale;
+              }
+            }
+
+            b_idx = 1;  // s32 and s10
+            for (int od : {3, 4, 5, 6, 7, 8, 10, 11, 12}) {
+              for (int reim : {0, 1}) {
+                qphix_clover[block].off_diag1[od][reim][xx] =
+                    *(reinterpret_cast<double const *const>(&tm_clover[tm_idx][b_idx][1].c00) +
+                      od_su3_offsets[od] + reim) *
+                    (-scale);
+
+                qphix_clover[block].off_diag2[od][reim][xx] =
+                    *(reinterpret_cast<double const *const>(&tm_clover[tm_idx][b_idx][0].c00) +
+                      od_su3_offsets[od] + reim) *
+                    (-scale);
+              }
+            }
+
+            b_idx = 0;  // s22 and s00
+            for (int od : {9, 13, 14}) {
+              for (int reim : {0, 1}) {
+                qphix_clover[block].off_diag1[od][reim][xx] =
+                    (reim == 1 ? -1.0 : 1.0) *
+                    *(reinterpret_cast<double const *const>(&tm_clover[tm_idx][b_idx][1].c00) +
+                      od_su3_offsets[od] + reim) *
+                    scale;
+
+                qphix_clover[block].off_diag2[od][reim][xx] =
+                    (reim == 1 ? -1.0 : 1.0) *
+                    *(reinterpret_cast<double const *const>(&tm_clover[tm_idx][b_idx][0].c00) +
+                      od_su3_offsets[od] + reim) *
+                    scale;
+              }
+            }
+
+          }  // x_soa
+        }    // for(v)
+      }      // for(y)
+    }        // for(z)
+  }          // for(t)
+
+  const double diffTime = gettime() - startTime;
+  if (g_debug_level > 1) {
+    QPhiX::masterPrintf(
+        "# QPHIX-interface: time spent in reorder_clover_to_QPhiX (CloverBlock): %f secs\n",
+        diffTime);
+  }
 }
 
-// Reorder the tmLQCD gauge field to a cb0 and a cb1 QPhiX gauge field
 template <typename FT, int VECLEN, int SOALEN, bool compress12>
-void reorder_gauge_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom,
-                            FT *qphix_gauge_cb0, FT *qphix_gauge_cb1) {
+void reorder_clover_to_QPhiX(
+    QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom,
+    typename QPhiX::Geometry<FT, VECLEN, SOALEN, compress12>::FullCloverBlock *qphix_clover[2],
+    int cb, bool inverse) {
+  const double startTime = gettime();
+
+  /* the spin-colour clover term in sw_term and the corresponding inverse
+   * in sw_inv are stored in the tmLQCD gamma basis.
+   * When we translate spinors to QPhiX, we apply a transformation V to the tmLQCD
+   * spinor and then apply the same transformation to the output spinor
+   * ( we have V^dagger = V and V*V = 1 )
+   * Thus, in order to translate the clover field, we need to copy
+   *   (1+T)' = V*(1+T)*V, where T is the spin-colour clover-term
+   * This way, the clover term will be in the correct gamma basis.
+   *
+   * The tmLQCD clover term is stored in half-spinor blocks of colour matrices
+   * for which we need to work out what (1+T)'=V*(1+T)*V implies.
+   * Below, each sAB represents one 3x3 colour matrix
+   *
+   *                +s33 -s32    0    0
+   *  T' = V*T*V =  -s23 +s22    0    0
+   *                   0    0 +s11 -s10
+   *                   0    0 -s01 +s00
+   *
+   * Such that the half-spinor blocks are inverted and within these, the ordering is
+   * reversed. Note that the off-diagonal 3x3 colour blocks are hermitian conjugate to
+   * each other and this is preserved by the transformation.
+   *
+   * The QPhiX (tmclover) clover term and its inverse are stored as a pair of full
+   * 6x6 complex matrices which are multiplied with the spinor in exactly the same way
+   * as in tmLQCD.
+   *
+   * The tmLQCD clover term is stored as:
+   *
+   *      s00 s01
+   *          s11
+   * T =          s22 s23
+   *                  s33
+   *
+   * with indexing
+   *
+   *     sw[0][0] sw[1][0]
+   *              sw[2][0]
+   *                       sw[0][1] sw[1][1]
+   *                                sw[2][1]
+   *
+   * The inverse has four su3 blocks instead and is indexed
+   *     sw_inv[0][0] sw_inv[1][0]
+   *     sw_inv[3][0] sw_inv[2][0]
+   *                               sw_inv[0][1] sw_inv[1][1]
+   *                               sw_inv[3][1] sw_inv[2][1]
+   *
+   * where blocks sw_inv[3][0] and sw_inv[3][1] are relevant only when mu > 0   *
+   */
+
+  // rescale to get clover term (or its inverse) in the physical normalisation
+  // rather than the kappa normalisation
+  const double scale = inverse ? 2.0 * g_kappa : 1.0 / (2.0 * g_kappa);
+  su3 ***tm_clover = inverse ? sw_inv : sw;
+
+  // Number of elements in spin, color & complex
+  const int Ns = 4;
+  const int Nc = 3;
+  const int Nz = 2;
+
+  const double amu = g_mu / (2.0 * g_kappa);
+
+  // Geometric parameters for QPhiX data layout
+  const auto ngy = geom.nGY();
+  const auto nVecs = geom.nVecs();
+  const auto Pxy = geom.getPxy();
+  const auto Pxyz = geom.getPxyz();
+
+#pragma omp parallel for collapse(4)
+  for (int64_t t = 0; t < T; t++) {
+    for (int64_t z = 0; z < LZ; z++) {
+      for (int64_t y = 0; y < LY; y++) {
+        for (int64_t v = 0; v < nVecs; v++) {
+          int64_t block = (t * Pxyz + z * Pxy) / ngy + (y / ngy) * nVecs + v;
+
+          for (int64_t x_soa = 0; x_soa < SOALEN; x_soa++) {
+            int64_t xx = (y % ngy) * SOALEN + x_soa;
+            int64_t q_cb_x_coord = x_soa + v * SOALEN;
+            int64_t tm_x_coord = q_cb_x_coord * 2 + (((t + y + z) & 1) ^ cb);
+
+            //             the inverse of the clover term is in even-odd ordering
+            //             while the clover term itself is lexicographically ordered
+            int64_t tm_idx =
+                inverse ? g_lexic2eosub[g_ipt[t][tm_x_coord][y][z]] : g_ipt[t][tm_x_coord][y][z];
+
+            for (int fl : {0, 1}) {
+              if (inverse && fl == 1) {
+                // the inverse clover term for the second flavour is stored at an offset
+                tm_idx += VOLUME / 2;
+              }
+              for (int q_hs : {0, 1}) {
+                auto &hs_block =
+                    ((q_hs == 0) ? qphix_clover[fl][block].block1 : qphix_clover[fl][block].block2);
+                for (int q_sc1 = 0; q_sc1 < 6; q_sc1++) {
+                  for (int q_sc2 = 0; q_sc2 < 6; q_sc2++) {
+                    const int q_s1 = q_sc1 / 3;
+                    const int q_s2 = q_sc2 / 3;
+                    const int q_c1 = q_sc1 % 3;
+                    const int q_c2 = q_sc2 % 3;
+
+                    // invert in spin as required by V*T*V
+                    const int t_hs = 1 - q_hs;
+                    // the indices inside the half-spinor are also inverted
+                    // (which transposes them, of course)
+                    const int t_s1 = 1 - q_s1;
+                    const int t_s2 = 1 - q_s2;
+                    // carry out the mapping from T' to T, keeping in mind that for the inverse
+                    // there are four blocks also on the tmLQCD side, otherwise there are just three
+                    const int t_b_idx = t_s1 + t_s2 + ((inverse && t_s1 == 1 && t_s2 == 0) ? 2 : 0);
+                    for (int reim : {0, 1}) {
+                      hs_block[q_sc1][q_sc2][reim][xx] =
+                          scale *
+                              // off-diagonal (odd-numbered) blocks change sign
+                              (t_b_idx & 1 ? (-1.0) : 1.0) *
+                              // if not doing the inverse and in the bottom-left block, need to
+                              // complex conjugate
+                              ((!inverse && (t_s1 == 1 && t_s2 == 0) && reim == 1) ? -1.0 : 1.0) *
+                              *(reinterpret_cast<double const *const>(
+                                    &(tm_clover[tm_idx][t_b_idx][t_hs].c00)) +
+                                // if not doing the inverse and in the bottom-left block, transpose
+                                // in colour
+                                // because we're actually reading out of the top-right block
+                                Nz * ((!inverse && (t_s1 == 1 && t_s2 == 0)) ? Nc * q_c2 + q_c1
+                                                                             : Nc * q_c1 + q_c2) +
+                                reim) +
+                          // in the QPhiX gamma basis, the twisted quark mass enters with the
+                          // opposite
+                          // sign for consistency
+                          ((!inverse && q_sc1 == q_sc2 && q_hs == 0 && reim == 1)
+                               ? -amu * (1 - 2 * fl)
+                               : 0) +
+                          ((!inverse && q_sc1 == q_sc2 && q_hs == 1 && reim == 1)
+                               ? amu * (1 - 2 * fl)
+                               : 0);
+                    }
+                  }  // q_sc2
+                }    // q_sc1
+              }      // q_hs
+            }        // fl
+
+          }  // x_soa
+        }    // for(v)
+      }      // for(y)
+    }        // for(z)
+  }          // for(t)
+
+  const double diffTime = gettime() - startTime;
+  if (g_debug_level > 1) {
+    QPhiX::masterPrintf(
+        "# QPHIX-interface: time spent in reorder_clover_to_QPhiX (FullCloverBlock): %f secs\n",
+        diffTime);
+  }
+}
+
+template <typename FT, int VECLEN, int SOALEN, bool compress12>
+void reorder_gauge_to_QPhiX(
+    QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom,
+    typename QPhiX::Geometry<FT, VECLEN, SOALEN, compress12>::SU3MatrixBlock *qphix_gauge_cb0,
+    typename QPhiX::Geometry<FT, VECLEN, SOALEN, compress12>::SU3MatrixBlock *qphix_gauge_cb1) {
   const double startTime = gettime();
 
   // Number of elements in spin, color & complex
@@ -246,7 +587,7 @@ void reorder_gauge_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geo
   const int Nz = 2;
 
   // Geometric parameters for QPhiX data layout
-  const auto nyg = geom.nGY();
+  const auto ngy = geom.nGY();
   const auto nVecs = geom.nVecs();
   const auto Pxy = geom.getPxy();
   const auto Pxyz = geom.getPxyz();
@@ -254,83 +595,201 @@ void reorder_gauge_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geo
   // This is needed to translate between the different
   // orderings of the direction index "\mu" in tmlQCD
   // and QPhiX, respectively
-  const int change_dim[4] = {3, 0, 1, 2};
+  // in qphix, the Dirac operator is applied in the order
+  //   -+x -> -+y -> -+z -> -+t
+  // while tmlqcd does
+  //   -+t -> -+x -> -+y -> -+z
+  // same as the lattice ordering
+  // The mappingn between the application dimensions is thus:
+  //  tmlqcd_dim(t(0) -> x(1) -> y(2) -> z(3)) = qphix_dim( t(3) -> x(0) -> y(1) -> z(2) )
+  const int change_dim[4] = {1, 2, 3, 0};
 
   // Get the base pointer for the (global) tmlQCD gauge field
-  uint64_t tm_idx = 0;
+  xchange_gauge(g_gauge_field);
   const double *in = reinterpret_cast<double *>(&g_gauge_field[0][0].c00);
 
-  // This will loop over the entire lattice and calculate
-  // the array and internal indices for both tmlQCD & QPhiX
-  for (uint64_t t = 0; t < T; t++)
-    for (uint64_t x = 0; x < LX; x++)
-      for (uint64_t y = 0; y < LY; y++)
-        for (uint64_t z = 0; z < LZ; z++) {
-          // These are the QPhiX SIMD vector in checkerboarded x direction
-          // (up to LX/2), the index inside one single Structure of Arrays (SOA)
-          // and the internal position inside the ("packed") SIMD vector
-          const uint64_t SIMD_vector = (x / 2) / SOALEN;
-          const uint64_t x_one_SOA = (x / 2) % SOALEN;
-          const uint64_t x_internal = (y % nyg) * SOALEN + x_one_SOA;
+#pragma omp parallel for collapse(4)
+  for (int64_t t = 0; t < T; t++)
+    for (int64_t z = 0; z < LZ; z++)
+      for (int64_t y = 0; y < LY; y++)
+        for (int64_t v = 0; v < nVecs; v++) {
+          int64_t block = (t * Pxyz + z * Pxy) / ngy + (y / ngy) * nVecs + v;
 
-          // Calculate the array index in QPhiX, given a global
-          // lattice index (t,x,y,z). This is also called the
-          // "block" in QPhiX and the QPhiX/QDP packers.
-          const uint64_t qphix_idx = (t * Pxyz + z * Pxy) / nyg + (y / nyg) * nVecs + SIMD_vector;
+          for (int dim = 0; dim < 4; dim++)     // dimension == QPhiX \mu
+            for (int c1 = 0; c1 < Nc1; c1++)    // QPhiX convention color 1 (runs up to 2 or 3)
+              for (int c2 = 0; c2 < Nc2; c2++)  // QPhiX convention color 2 (always runs up to 3)
+                for (int x_soa = 0; x_soa < SOALEN; x_soa++) {
+                  int64_t xx = (y % ngy) * SOALEN + x_soa;
+                  int64_t q_cb_x_coord = x_soa + v * SOALEN;
+                  int64_t tm_x_coord_cb0 = q_cb_x_coord * 2 + (((t + y + z) & 1) ^ 0);
+                  int64_t tm_x_coord_cb1 = q_cb_x_coord * 2 + (((t + y + z) & 1) ^ 1);
 
-          FT *out;
-          if ((t + x + y + z) & 1)
-            out = qphix_gauge_cb1;  // odd -> cb1
-          else
-            out = qphix_gauge_cb0;  // even -> cb0
+                  int64_t tm_idx_cb0;
+                  int64_t tm_idx_cb1;
 
-          for (int dim = 0; dim < 4; dim++)  // dimension == tmLQCD \mu
-          {
-            for (int dir = 0; dir < 2; dir++)  // direction == backward/forward
-            {
-              if (dir == 0) tm_idx = g_idn[g_ipt[t][x][y][z]][dim];  // this is the adjoint
-                                                                     // gauge field to be
-                                                                     // (backwards shift)
-              else
-                tm_idx = g_ipt[t][x][y][z];  // this is the normal gauge field
-                                             // to be (same lattice site)
+                  // backward / forward
+                  for (int dir = 0; dir < 2; dir++) {
+                    if (dir == 0) {
+                      tm_idx_cb0 = g_idn[g_ipt[t][tm_x_coord_cb0][y][z]][change_dim[dim]];
+                      tm_idx_cb1 = g_idn[g_ipt[t][tm_x_coord_cb1][y][z]][change_dim[dim]];
+                    } else {
+                      tm_idx_cb0 = g_ipt[t][tm_x_coord_cb0][y][z];
+                      tm_idx_cb1 = g_ipt[t][tm_x_coord_cb1][y][z];
+                    }
+                    for (int reim = 0; reim < Nz; reim++) {
+                      // Note:
+                      // -----
+                      // 1. \mu in QPhiX runs from 0..7 for all eight neighbouring
+                      // links.
+                      //    Here, the ordering of the direction (backward/forward)
+                      //    is the same
+                      //    for tmlQCD and QPhiX, but we have to change the
+                      //    ordering of the dimensions.
+                      int q_mu = 2 * dim + dir;
 
-              for (int c1 = 0; c1 < Nc1; c1++)    // QPhiX convention color 1 (runs up to 2 or 3)
-                for (int c2 = 0; c2 < Nc2; c2++)  // QPhiX convention color 2 (always runs up to 3)
-                  for (int z = 0; z < Nz; z++) {
-                    // Note:
-                    // -----
-                    // 1. \mu in QPhiX runs from 0..7 for all eight neighbouring
-                    // links.
-                    //    Here, the ordering of the direction (backward/forward)
-                    //    is the same
-                    //    for tmlQCD and QPhiX, but we have to change the
-                    //    ordering of the dimensions.
-                    const int q_mu = 2 * change_dim[dim] + dir;
-
-                    // 2. QPhiX gauge field matrices are transposed w.r.t.
-                    // tmLQCD.
-                    // 3. tmlQCD always uses 3x3 color matrices (Nc2*Nc2).
-                    const uint64_t t_inner_idx = z + c1 * Nz + c2 * Nz * Nc2 +
-                                                 dim * Nz * Nc2 * Nc2 + tm_idx * Nz * Nc2 * Nc2 * 4;
-                    const uint64_t q_inner_idx =
-                        x_internal + z * VECLEN + c2 * VECLEN * Nz + c1 * VECLEN * Nz * Nc2 +
-                        q_mu * VECLEN * Nz * Nc2 * Nc1 + qphix_idx * VECLEN * Nz * Nc2 * Nc1 * 8;
-
-                    out[q_inner_idx] = in[t_inner_idx];
+                      // 2. QPhiX gauge field matrices are transposed w.r.t.
+                      // tmLQCD.
+                      // 3. tmlQCD always uses 3x3 color matrices (Nc2*Nc2).
+                      int64_t t_inner_idx_cb0 = reim + c1 * Nz + c2 * Nz * Nc2 +
+                                                change_dim[dim] * Nz * Nc2 * Nc2 +
+                                                tm_idx_cb0 * Nz * Nc2 * Nc2 * 4;
+                      int64_t t_inner_idx_cb1 = reim + c1 * Nz + c2 * Nz * Nc2 +
+                                                change_dim[dim] * Nz * Nc2 * Nc2 +
+                                                tm_idx_cb1 * Nz * Nc2 * Nc2 * 4;
+                      qphix_gauge_cb0[block][q_mu][c1][c2][reim][xx] = in[t_inner_idx_cb0];
+                      qphix_gauge_cb1[block][q_mu][c1][c2][reim][xx] = in[t_inner_idx_cb1];
+                    }
                   }
+                }  // for(dim,c1,c2,x_soa)
+        }          // outer loop (t,z,y,v)
 
-            }  // direction
-          }    // dimension
-
-        }  // volume
-
-  const double endTime = gettime();
-  const double diffTime = endTime - startTime;
-  QPhiX::masterPrintf("  time spent in reorder_gauge_to_QPhiX: %f secs\n", diffTime);
+  const double diffTime = gettime() - startTime;
+  if (g_debug_level > 1) {
+    QPhiX::masterPrintf("# QPHIX-interface: time spent in reorder_gauge_to_QPhiX: %f secs\n",
+                        diffTime);
+  }
 }
 
-// Reorder tmLQCD spinor to a cb0 and cb1 QPhiX spinor
+// Reorder tmLQCD eo-spinor to a FourSpinorBlock QPhiX spinor on the given checkerboard
+template <typename FT, int VECLEN, int SOALEN, bool compress12>
+void reorder_eo_spinor_to_QPhiX(
+    QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom, double const *const tm_eo_spinor,
+    typename QPhiX::Geometry<FT, VECLEN, SOALEN, compress12>::FourSpinorBlock *qphix_spinor,
+    const int cb) {
+  const double startTime = gettime();
+
+  const int Ns = 4;
+  const int Nc = 3;
+  const int Nz = 2;
+
+  const auto nVecs = geom.nVecs();
+  const auto Pxy = geom.getPxy();
+  const auto Pxyz = geom.getPxyz();
+  const auto Nxh = geom.Nxh();
+
+  // This is needed to translate between the different
+  // gamma bases tmlQCD and QPhiX are using
+  // (note, this is a 4x4 matrix with 4 non-zero elements)
+  const int change_sign[4] = {1, -1, -1, 1};
+  const int change_spin[4] = {3, 2, 1, 0};
+
+#pragma omp parallel for collapse(4)
+  for (int64_t t = 0; t < T; t++) {
+    for (int64_t z = 0; z < LZ; z++) {
+      for (int64_t y = 0; y < LY; y++) {
+        for (int64_t v = 0; v < nVecs; v++) {
+          for (int col = 0; col < Nc; col++) {
+            for (int q_spin = 0; q_spin < Ns; q_spin++) {
+              for (int x_soa = 0; x_soa < SOALEN; x_soa++) {
+                int64_t q_ind = t * Pxyz + z * Pxy + y * nVecs + v;
+                int64_t q_cb_x_coord = v * SOALEN + x_soa;
+                // when t+y+z is odd and we're on an odd (1) checkerboard OR
+                // when t+y+z is even and we're on an even (0) checkerboard
+                // the full x coordinate is 2*x_cb
+                // otherwise, it is 2*x_cb+1
+                int64_t tm_x_coord = q_cb_x_coord * 2 + (((t + y + z) & 1) ^ cb);
+                // exchange x and z dimensions
+                int64_t tm_eo_ind = g_lexic2eosub[g_ipt[t][tm_x_coord][y][z]];
+                int64_t tm_eo_offset =
+                    tm_eo_ind * Nc * Ns * Nz + change_spin[q_spin] * Nc * Nz + Nz * col;
+                for (int reim = 0; reim < 2; reim++) {
+                  qphix_spinor[q_ind][col][q_spin][reim][x_soa] =
+                      change_sign[q_spin] * tm_eo_spinor[tm_eo_offset + reim];
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  const double diffTime = gettime() - startTime;
+  if (g_debug_level > 1) {
+    QPhiX::masterPrintf("# QPHIX-interface: time spent in reorder_eo_spinor_to_QPhiX: %f secs\n",
+                        diffTime);
+  }
+}
+
+template <typename FT, int VECLEN, int SOALEN, bool compress12>
+void reorder_eo_spinor_from_QPhiX(
+    QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom, double *const tm_eo_spinor,
+    typename QPhiX::Geometry<FT, VECLEN, SOALEN, compress12>::FourSpinorBlock *qphix_spinor,
+    const int cb, double normFac = 1.0) {
+  const double startTime = gettime();
+
+  const int Ns = 4;
+  const int Nc = 3;
+  const int Nz = 2;
+
+  const auto nVecs = geom.nVecs();
+  const auto Pxy = geom.getPxy();
+  const auto Pxyz = geom.getPxyz();
+  const auto Nxh = geom.Nxh();
+
+  // This is needed to translate between the different
+  // gamma bases tmlQCD and QPhiX are using
+  // (note, this is a 4x4 matrix with 4 non-zero elements)
+  const int change_sign[4] = {1, -1, -1, 1};
+  const int change_spin[4] = {3, 2, 1, 0};
+
+#pragma omp parallel for collapse(4)
+  for (int64_t t = 0; t < T; t++) {
+    for (int64_t z = 0; z < LZ; z++) {
+      for (int64_t y = 0; y < LY; y++) {
+        for (int64_t v = 0; v < nVecs; v++) {
+          for (int col = 0; col < Nc; col++) {
+            for (int q_spin = 0; q_spin < Ns; q_spin++) {
+              for (int x_soa = 0; x_soa < SOALEN; x_soa++) {
+                int64_t q_ind = t * Pxyz + z * Pxy + y * nVecs + v;
+                int64_t q_cb_x_coord = v * SOALEN + x_soa;
+                // when t+y+z is odd and we're on an odd checkerboard (1) OR
+                // when t+y+z is even and we're on an even (0) checkerboard
+                // the full x coordinate is 2*x_cb
+                // otherwise, it is 2*x_cb+1
+                int64_t tm_x_coord = q_cb_x_coord * 2 + (((t + y + z) & 1) ^ cb);
+                // exchange x and z dimensions
+                int64_t tm_eo_ind = g_lexic2eosub[g_ipt[t][tm_x_coord][y][z]];
+                int64_t tm_eo_offset =
+                    tm_eo_ind * Nc * Ns * Nz + change_spin[q_spin] * Nc * Nz + Nz * col;
+                for (int reim = 0; reim < 2; reim++) {
+                  tm_eo_spinor[tm_eo_offset + reim] =
+                      change_sign[q_spin] * normFac * qphix_spinor[q_ind][col][q_spin][reim][x_soa];
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  const double diffTime = gettime() - startTime;
+  if (g_debug_level > 1) {
+    QPhiX::masterPrintf("# QPHIX-interface: time spent in reorder_eo_spinor_from_QPhiX: %f secs\n",
+                        diffTime);
+  }
+}
+
+// Reorder a full tmLQCD spinor to a cb0 and cb1 QPhiX spinor
 template <typename FT, int VECLEN, int SOALEN, bool compress12>
 void reorder_spinor_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom,
                              double const *tm_spinor, FT *qphix_spinor_cb0, FT *qphix_spinor_cb1) {
@@ -351,8 +810,9 @@ void reorder_spinor_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &ge
   const int change_sign[4] = {1, -1, -1, 1};
   const int change_spin[4] = {3, 2, 1, 0};
 
-  // This will loop over the entire lattice and calculate
-  // the array and internal indices for both tmlQCD & QPhiX
+// This will loop over the entire lattice and calculate
+// the array and internal indices for both tmlQCD & QPhiX
+#pragma omp parallel for collapse(4)
   for (uint64_t t = 0; t < T; t++)
     for (uint64_t x = 0; x < LX; x++)
       for (uint64_t y = 0; y < LY; y++)
@@ -391,12 +851,14 @@ void reorder_spinor_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &ge
 
         }  // volume
 
-  const double endTime = gettime();
-  const double diffTime = endTime - startTime;
-  QPhiX::masterPrintf("  time spent in reorder_spinor_to_QPhiX: %f secs\n", diffTime);
+  const double diffTime = gettime() - startTime;
+  if (g_debug_level > 1) {
+    QPhiX::masterPrintf("# QPHIX-interface: time spent in reorder_spinor_to_QPhiX: %f secs\n",
+                        diffTime);
+  }
 }
 
-// Reorder a cb0 and cb1 QPhiX spinor to a tmLQCD spinor
+// Reorder a cb0 and cb1 QPhiX spinor to a full tmLQCD spinor
 template <typename FT, int VECLEN, int SOALEN, bool compress12>
 void reorder_spinor_from_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom,
                                double *tm_spinor, FT const *qphix_spinor_cb0,
@@ -418,8 +880,9 @@ void reorder_spinor_from_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &
   const int change_sign[4] = {1, -1, -1, 1};
   const int change_spin[4] = {3, 2, 1, 0};
 
-  // This will loop over the entire lattice and calculate
-  // the array and internal indices for both tmlQCD & QPhiX
+// This will loop over the entire lattice and calculate
+// the array and internal indices for both tmlQCD & QPhiX
+#pragma omp parallel for collapse(4)
   for (uint64_t t = 0; t < T; t++)
     for (uint64_t x = 0; x < LX; x++)
       for (uint64_t y = 0; y < LY; y++)
@@ -458,132 +921,146 @@ void reorder_spinor_from_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &
 
         }  // volume
 
-  const double endTime = gettime();
-  const double diffTime = endTime - startTime;
-  QPhiX::masterPrintf("  time spent in reorder_spinor_from_QPhiX: %f secs\n", diffTime);
+  const double diffTime = gettime() - startTime;
+  if (g_debug_level > 1) {
+    QPhiX::masterPrintf("# QPHIX-interface: time spent in reorder_spinor_from_QPhiX: %f secs\n",
+                        diffTime);
+  }
 }
 
-// Apply the Dslash to a full tmlQCD spinor and return a full tmlQCD spinor
+// Apply the full QPhiX fermion matrix to checkerboarded tm spinors
 template <typename FT, int V, int S, bool compress>
-void D_psi(spinor *tmlqcd_out, const spinor *tmlqcd_in) {
+void Mfull_helper(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, const spinor *Odd_in,
+                  const op_type_t op_type) {
+  // TODO: this should use handles for gauge and spinors because these are definitely temporary
+  // objects
   typedef typename QPhiX::Geometry<FT, V, S, compress>::SU3MatrixBlock QGauge;
   typedef typename QPhiX::Geometry<FT, V, S, compress>::FourSpinorBlock QSpinor;
+  typedef typename QPhiX::Geometry<FT, V, S, compress>::CloverBlock QClover;
+  typedef typename QPhiX::Geometry<FT, V, S, compress>::FullCloverBlock QFullClover;
 
-  /************************
-   *                      *
-   *     Diagnostic       *
-   *     Information      *
-   *         &            *
-   *    Creating Dslash   *
-   *                      *
-  ************************/
-
-  tmlqcd::printQphixDiagnostics(V, S, compress);
+  if (g_debug_level > 1) tmlqcd::printQphixDiagnostics(V, S, compress);
 
   // Create Dslash Class
-  double t_boundary = (FT)(1);
+  double t_boundary = X0 > DBL_EPSILON ? (FT)(-1) : (FT)(1);
   double coeff_s = (FT)(1);
   double coeff_t = (FT)(1);
 
   QPhiX::Geometry<FT, V, S, compress> geom(subLattSize, By, Bz, NCores, Sy, Sz, PadXY, PadXYZ,
                                            MinCt);
 
-  // tmLQCD only stores kappa, QPhiX uses the mass. Convert here.
   double const mass = 1 / (2.0 * g_kappa) - 4;
 
-// FIXME: Wilson Dslash hard-coded for now
-#if 1  // Change the operator to use here.
-  tmlqcd::WilsonDslash<FT, V, S, compress> concrete_dslash(&geom, t_boundary, coeff_s, coeff_t,
-                                                           mass);
-#else
-  tmlqcd::WilsonTMDslash<FT, V, S, compress> concrete_dslash(&geom, t_boundary, coeff_s, coeff_t,
-                                                             mass, 0.003);
-#endif
+  tmlqcd::Dslash<FT, V, S, compress> *polymorphic_dslash;
 
-  tmlqcd::Dslash<FT, V, S, compress> &polymorphic_dslash = concrete_dslash;
-
-  /************************
-   *                      *
-   *     GAUGE FIELDS     *
-   *                      *
-  ************************/
-
-  // Allocate data for the gauge fields
   QGauge *u_packed[2];
-  QGauge *packed_gauge_cb0 =
-      (QGauge *)geom.allocCBGauge();  // Links emanating from EVEN sites (cb=0)
-  QGauge *packed_gauge_cb1 =
-      (QGauge *)geom.allocCBGauge();  // Links emanating from ODD sites (cb=1)
-  u_packed[cb_even] = packed_gauge_cb0;
-  u_packed[cb_odd] = packed_gauge_cb1;
-
-  // Reorder (global) input gauge field from tmLQCD to QPhiX,
-  // which uses global tmlQCD gauge field as input
-  reorder_gauge_to_QPhiX(geom, reinterpret_cast<FT *>(u_packed[cb_even]),
-                         reinterpret_cast<FT *>(u_packed[cb_odd]));
-
-  /************************
-   *                      *
-   *     SPINOR FIELDS    *
-   *                      *
-  ************************/
-
-  // Allocate data for the even/odd (checkerboarded) QPhiX spinors
   QSpinor *qphix_in[2];
   QSpinor *qphix_out[2];
-  QSpinor *packed_spinor_in_cb0 = (QSpinor *)geom.allocCBFourSpinor();
-  QSpinor *packed_spinor_in_cb1 = (QSpinor *)geom.allocCBFourSpinor();
-  QSpinor *packed_spinor_out_cb0 = (QSpinor *)geom.allocCBFourSpinor();
-  QSpinor *packed_spinor_out_cb1 = (QSpinor *)geom.allocCBFourSpinor();
-  qphix_in[cb_even] = packed_spinor_in_cb0;
-  qphix_in[cb_odd] = packed_spinor_in_cb1;
-  qphix_out[cb_even] = packed_spinor_out_cb0;
-  qphix_out[cb_odd] = packed_spinor_out_cb1;
+
+  QClover *clover[2];
+  QClover *inv_clover[2];
+
+  QFullClover *fullclover[2][2];
+  QFullClover *inv_fullclover[2][2];
 
   QSpinor *tmp_spinor = (QSpinor *)geom.allocCBFourSpinor();
-
-  // Reorder input spinor from tmLQCD to QPhiX
-  reorder_spinor_to_QPhiX(geom, reinterpret_cast<double const *>(tmlqcd_in),
-                          reinterpret_cast<FT *>(qphix_in[cb_even]), reinterpret_cast<FT *>(qphix_in[cb_odd]));
-
-  // Apply QPhiX Dslash to qphix_in spinors
-  polymorphic_dslash.dslash(qphix_out[cb_odd], qphix_in[cb_even], u_packed[cb_odd],
-                            /* isign == non-conjugate */ 1, cb_odd);
-  polymorphic_dslash.dslash(qphix_out[cb_even], qphix_in[cb_odd], u_packed[cb_even],
-                            /* isign == non-conjugate */ 1, cb_even);
-
-  if (std::is_same<decltype(concrete_dslash), tmlqcd::WilsonTMDslash<FT, V, S, compress>>::value) {
-    for (int cb : {0, 1}) {
-      polymorphic_dslash.A_chi(tmp_spinor, qphix_out[cb], 1);
-      copySpinor(qphix_out[cb], tmp_spinor, geom, 1);
+  for (int cb : {0, 1}) {
+    u_packed[cb] = (QGauge *)geom.allocCBGauge();
+    qphix_in[cb] = (QSpinor *)geom.allocCBFourSpinor();
+    qphix_out[cb] = (QSpinor *)geom.allocCBFourSpinor();
+    clover[cb] = nullptr;
+    inv_clover[cb] = nullptr;
+    for (int fl : {0, 1}) {
+      fullclover[cb][fl] = nullptr;
+      inv_fullclover[cb][fl] = nullptr;
     }
   }
+  reorder_gauge_to_QPhiX(geom, u_packed[cb_even], u_packed[cb_odd]);
 
-  // Reorder spinor fields back to tmLQCD
-  reorder_spinor_from_QPhiX(geom, reinterpret_cast<double *>(tmlqcd_out),
-                            reinterpret_cast<FT *>(qphix_out[cb_even]),
-                            reinterpret_cast<FT *>(qphix_out[cb_odd]), (1. * g_kappa));
+  if (op_type == WILSON) {
+    polymorphic_dslash =
+        new tmlqcd::WilsonDslash<FT, V, S, compress>(&geom, t_boundary, coeff_s, coeff_t, mass);
+  } else if (op_type == TMWILSON) {
+    polymorphic_dslash = new tmlqcd::WilsonTMDslash<FT, V, S, compress>(
+        &geom, t_boundary, coeff_s, coeff_t, mass, -g_mu / (2.0 * g_kappa));
+  } else if (op_type == CLOVER && g_mu <= DBL_EPSILON) {
+    for (int cb : {0, 1}) {
+      clover[cb] = (QClover *)geom.allocCBClov();
+      inv_clover[cb] = (QClover *)geom.allocCBClov();
 
-  QPhiX::masterPrintf("Cleaning up\n");
+      reorder_clover_to_QPhiX(geom, clover[cb], cb, false);
+      sw_invert(cb, 0);
+      reorder_clover_to_QPhiX(geom, inv_clover[cb], cb, true);
+    }
 
-  geom.free(packed_gauge_cb0);
-  geom.free(packed_gauge_cb1);
-  geom.free(packed_spinor_in_cb0);
-  geom.free(packed_spinor_in_cb1);
-  geom.free(packed_spinor_out_cb0);
-  geom.free(packed_spinor_out_cb1);
+    polymorphic_dslash = new tmlqcd::WilsonClovDslash<FT, V, S, compress>(
+        &geom, t_boundary, coeff_s, coeff_t, mass, clover, inv_clover);
+  } else if (op_type == CLOVER && g_mu > DBL_EPSILON) {
+    for (int cb : {0, 1}) {
+      for (int fl : {0, 1}) {
+        fullclover[cb][fl] = (QFullClover *)geom.allocCBFullClov();
+        inv_fullclover[cb][fl] = (QFullClover *)geom.allocCBFullClov();
+      }
+      reorder_clover_to_QPhiX(geom, fullclover[cb], cb, false);
+      sw_invert(cb, g_mu);
+      reorder_clover_to_QPhiX(geom, inv_fullclover[cb], cb, true);
+    }
+
+    polymorphic_dslash = new tmlqcd::WilsonClovTMDslash<FT, V, S, compress>(
+        &geom, t_boundary, coeff_s, coeff_t, mass, -g_mu / (2.0 * g_kappa), fullclover,
+        inv_fullclover);
+  } else {
+    QPhiX::masterPrintf("tmlqcd::Mfull_helper; No such operator type: %d\n", op_type);
+    abort();
+  }
+
+  reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Even_in),
+                             qphix_in[cb_even], cb_even);
+  reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Odd_in), qphix_in[cb_odd],
+                             cb_odd);
+
+  // Apply QPhiX Mfull
+  polymorphic_dslash->plain_dslash(qphix_out[cb_odd], qphix_in[cb_even], u_packed[cb_odd],
+                                   /* isign == non-conjugate */ 1, cb_odd);
+  polymorphic_dslash->plain_dslash(qphix_out[cb_even], qphix_in[cb_odd], u_packed[cb_even],
+                                   /* isign == non-conjugate */ 1, cb_even);
+  for (int cb : {0, 1}) {
+    polymorphic_dslash->A_chi(tmp_spinor, qphix_in[cb], 1, cb);
+    QPhiX::aypx(-0.5, tmp_spinor, qphix_out[cb], geom, 1);
+  }
+
+  reorder_eo_spinor_from_QPhiX(geom, reinterpret_cast<double *>(Even_out), qphix_out[cb_even],
+                               cb_even, 2.0 * g_kappa);
+  reorder_eo_spinor_from_QPhiX(geom, reinterpret_cast<double *>(Odd_out), qphix_out[cb_odd], cb_odd,
+                               2.0 * g_kappa);
+
   geom.free(tmp_spinor);
+  for (int cb : {0, 1}) {
+    geom.free(u_packed[cb]);
+    geom.free(qphix_in[cb]);
+    geom.free(qphix_out[cb]);
+    geom.free(clover[cb]);
+    geom.free(inv_clover[cb]);
+    for (int fl : {0, 1}) {
+      geom.free(fullclover[cb][fl]);
+      geom.free(inv_fullclover[cb][fl]);
+    }
+  };
+  delete (polymorphic_dslash);
 }
 
-// Templatized even-odd preconditioned solver using QPhiX Library
+// Templated even-odd preconditioned solver using QPhiX Library
 template <typename FT, int V, int S, bool compress>
 int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_odd_out,
                            spinor *const tmlqcd_even_in, spinor *const tmlqcd_odd_in,
                            const double precision, const int max_iter, const int solver_flag,
                            const int rel_prec, solver_params_t solver_params,
                            const CompressionType compression) {
+  // TODO: it would perhaps be beneficial to keep the fields resident
   typedef typename QPhiX::Geometry<FT, V, S, compress>::SU3MatrixBlock QGauge;
   typedef typename QPhiX::Geometry<FT, V, S, compress>::FourSpinorBlock QSpinor;
+  typedef typename QPhiX::Geometry<FT, V, S, compress>::CloverBlock QClover;
+  typedef typename QPhiX::Geometry<FT, V, S, compress>::FullCloverBlock QFullClover;
 
   /************************
    *                      *
@@ -595,66 +1072,35 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
     tmlqcd::printQphixDiagnostics(V, S, compress);
   }
 
-  // Create a Geometry Class
-  QPhiX::masterPrintf("# Initializing QPhiX Geometry...\n");
   QPhiX::Geometry<FT, V, S, compress> geom(subLattSize, By, Bz, NCores, Sy, Sz, PadXY, PadXYZ,
                                            MinCt);
-  QPhiX::masterPrintf("# ...done.\n");
 
-  /************************
-   *                      *
-   *     GAUGE FIELDS     *
-   *                      *
-  ************************/
-
-  QPhiX::masterPrintf("# Allocating and preparing gauge fields...\n");
-
-  // Allocate data for the gauge fields
   QGauge *u_packed[2];
-  QGauge *packed_gauge_cb0 = (QGauge *)geom.allocCBGauge();
-  QGauge *packed_gauge_cb1 = (QGauge *)geom.allocCBGauge();
-  u_packed[cb_even] = packed_gauge_cb0;
-  u_packed[cb_odd] = packed_gauge_cb1;
-
-  // Reorder (global) input gauge field from tmLQCD to QPhiX
-  reorder_gauge_to_QPhiX(geom, reinterpret_cast<FT *>(u_packed[cb_even]),
-                         reinterpret_cast<FT *>(u_packed[cb_odd]));
-
-  QPhiX::masterPrintf("# ...done.\n");
-
-  /************************
-   *                      *
-   *     SPINOR FIELDS    *
-   *                      *
-  ************************/
-
-  QPhiX::masterPrintf("# Allocating fermion fields...\n");
-
-  // Allocate data for the even/odd (checkerboarded) QPhiX in/out spinors
-  QSpinor *packed_spinor_in_cb0 = (QSpinor *)geom.allocCBFourSpinor();
-  QSpinor *packed_spinor_in_cb1 = (QSpinor *)geom.allocCBFourSpinor();
-  QSpinor *packed_spinor_out_cb0 = (QSpinor *)geom.allocCBFourSpinor();
-  QSpinor *packed_spinor_out_cb1 = (QSpinor *)geom.allocCBFourSpinor();
   QSpinor *qphix_in[2];
   QSpinor *qphix_out[2];
-  qphix_in[cb_even] = packed_spinor_in_cb0;
-  qphix_in[cb_odd] = packed_spinor_in_cb1;
-  qphix_out[cb_even] = packed_spinor_out_cb0;
-  qphix_out[cb_odd] = packed_spinor_out_cb1;
 
-  // Allocate data for odd (cb1) QPhiX prepared in spinor
-  // and a buffer for the CG solver (to do the M^dagger matrix
-  // multiplication after the solve)
+  QClover *qphix_clover[2];
+  QClover *qphix_inv_clover[2];
+
+  QFullClover *qphix_fullclover[2][2];
+  QFullClover *qphix_inv_fullclover[2][2];
+
+  for (int cb : {0, 1}) {
+    u_packed[cb] = (QGauge *)geom.allocCBGauge();
+    qphix_in[cb] = (QSpinor *)geom.allocCBFourSpinor();
+    qphix_out[cb] = (QSpinor *)geom.allocCBFourSpinor();
+    qphix_clover[cb] = nullptr;
+    qphix_inv_clover[cb] = nullptr;
+    for (int fl : {0, 1}) {
+      qphix_fullclover[cb][fl] = nullptr;
+      qphix_inv_fullclover[cb][fl] = nullptr;
+    }
+  }
   QSpinor *qphix_in_prepared = (QSpinor *)geom.allocCBFourSpinor();
   QSpinor *qphix_buffer = (QSpinor *)geom.allocCBFourSpinor();
 
-  // Allocate tmlQCD full spinor buffer to store lexic in- and output spinor
-  spinor **solver_fields = nullptr;
-  const int nr_solver_fields = 1;
-  init_solver_field(&solver_fields, VOLUMEPLUSRAND, nr_solver_fields);
-  spinor *tmlqcd_full_buffer = solver_fields[0];
-
-  QPhiX::masterPrintf("# ...done.\n");
+  // Reorder (global) input gauge field from tmLQCD to QPhiX
+  reorder_gauge_to_QPhiX(geom, u_packed[cb_even], u_packed[cb_odd]);
 
   /************************************************
    *                                              *
@@ -662,33 +1108,45 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
    *                                              *
   ************************************************/
 
-  // Time Boundary Conditions and Anisotropy Coefficents
-  const double t_boundary = 1.0;
+  // Time Boundary Conditions, for now naive periodic or anti-periodic
+  const double t_boundary = X0 > 0.0 ? -1.0 : 1.0;
+
+  // Anisotropy Coefficents
   const double coeff_s = 1.0;
   const double coeff_t = 1.0;
 
-  // The Wilson mass re-express in terms of \kappa
+  // The Wilson mass
   const double mass = 1.0 / (2.0 * g_kappa) - 4.0;
 
   // Create a Wilson Dslash for source preparation
   // and solution reconstruction
-  QPhiX::masterPrintf("# Creating plain QPhiX Wilson Dslash (for preparation)...\n");
   QPhiX::Dslash<FT, V, S, compress> *WilsonDslash =
       new QPhiX::Dslash<FT, V, S, compress>(&geom, t_boundary, coeff_s, coeff_t);
-  QPhiX::masterPrintf("# ...done.\n");
 
   // Create a Dslash & an even-odd preconditioned Fermion Matrix object,
   // depending on the chosen fermion action
   tmlqcd::Dslash<FT, V, S, compress> *DslashQPhiX;
   QPhiX::EvenOddLinearOperator<FT, V, S, compress> *FermionMatrixQPhiX;
-  if (g_mu != 0.0 && g_c_sw > 0.0) {  // TWISTED-MASS-CLOVER
-    // TODO: Implement me!
-    QPhiX::masterPrintf("# TWISTED-MASS-CLOVER CASE NOT YET IMPLEMENTED!\n");
-    QPhiX::masterPrintf(" Aborting...\n");
-    abort();
-  } else if (g_mu != 0.0) {  // TWISTED-MASS
+  if (g_mu > DBL_EPSILON && g_c_sw > DBL_EPSILON) {  // TWISTED-MASS-CLOVER
+    for (int fl : {0, 1}) {
+      qphix_fullclover[cb_odd][fl] = (QFullClover *)geom.allocCBFullClov();
+      qphix_inv_fullclover[cb_even][fl] = (QFullClover *)geom.allocCBFullClov();
+    }
+    reorder_clover_to_QPhiX(geom, qphix_fullclover[cb_odd], cb_odd, false);
+    reorder_clover_to_QPhiX(geom, qphix_inv_fullclover[cb_even], cb_even, true);
+
+    DslashQPhiX = new tmlqcd::WilsonClovTMDslash<FT, V, S, compress>(
+        &geom, t_boundary, coeff_s, coeff_t, mass, -g_mu / (2.0 * g_kappa), qphix_fullclover,
+        qphix_inv_fullclover);
+
+    QPhiX::masterPrintf("# Creating QPhiX Twisted Clover Fermion Matrix...\n");
+    FermionMatrixQPhiX = new QPhiX::EvenOddTMCloverOperator<FT, V, S, compress>(
+        u_packed, qphix_fullclover[cb_odd], qphix_inv_fullclover[cb_even], &geom, t_boundary, coeff_s,
+        coeff_t);
+    QPhiX::masterPrintf("# ...done.\n");    
+  } else if (g_mu > DBL_EPSILON) {  // TWISTED-MASS
     QPhiX::masterPrintf("# Creating QPhiX Twisted Mass Wilson Dslash...\n");
-    const double TwistedMass = -g_mu;
+    const double TwistedMass = -g_mu / (2.0 * g_kappa);
     DslashQPhiX = new tmlqcd::WilsonTMDslash<FT, V, S, compress>(&geom, t_boundary, coeff_s,
                                                                  coeff_t, mass, TwistedMass);
     QPhiX::masterPrintf("# ...done.\n");
@@ -697,11 +1155,23 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
     FermionMatrixQPhiX = new QPhiX::EvenOddTMWilsonOperator<FT, V, S, compress>(
         mass, TwistedMass, u_packed, &geom, t_boundary, coeff_s, coeff_t);
     QPhiX::masterPrintf("# ...done.\n");
-  } else if (g_c_sw > 0.0) {  // WILSON CLOVER
-    // TODO: Implement me!
-    QPhiX::masterPrintf("# WILSON CLOVER CASE NOT YET IMPLEMENTED!\n");
-    QPhiX::masterPrintf(" Aborting...\n");
-    abort();
+  } else if (g_c_sw > DBL_EPSILON) {  // WILSON CLOVER
+    qphix_clover[cb_odd] = (QClover *)geom.allocCBClov();
+    qphix_inv_clover[cb_even] = (QClover *)geom.allocCBClov();
+
+    reorder_clover_to_QPhiX(geom, qphix_clover[cb_odd], cb_odd, false);
+    reorder_clover_to_QPhiX(geom, qphix_inv_clover[cb_even], cb_even, true);
+
+    QPhiX::masterPrintf("# Creating QPhiX Wilson Clover Dslash...\n");
+    DslashQPhiX = new tmlqcd::WilsonClovDslash<FT, V, S, compress>(
+        &geom, t_boundary, coeff_s, coeff_t, mass, qphix_clover, qphix_inv_clover);
+    QPhiX::masterPrintf("# ...done.\n");
+
+    QPhiX::masterPrintf("# Creating QPhiX Wilson Clover Fermion Matrix...\n");
+    FermionMatrixQPhiX = new QPhiX::EvenOddCloverOperator<FT, V, S, compress>(
+        u_packed, qphix_clover[cb_odd], qphix_inv_clover[cb_even], &geom, t_boundary, coeff_s,
+        coeff_t);
+    QPhiX::masterPrintf("# ...done.\n");
   } else {  // WILSON
     QPhiX::masterPrintf("# Creating QPhiX Wilson Dslash...\n");
     DslashQPhiX =
@@ -745,16 +1215,10 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
 
   QPhiX::masterPrintf("# Preparing odd source...\n");
 
-  // 1. Reorder input spinor from tmLQCD to QPhiX:
-  // a) Merge the even & odd tmlQCD input spinors to a full spinor
-  // b) Convert full tmlQCD spinor to a cb0 & cb1 QPhiX spinor
-
-  convert_eo_to_lexic(tmlqcd_full_buffer,  // new full spinor
-                      tmlqcd_even_in,      // even spinor
-                      tmlqcd_odd_in);      // odd spinor
-
-  reorder_spinor_to_QPhiX(geom, (double *)tmlqcd_full_buffer, reinterpret_cast<FT *>(qphix_in[cb_even]),
-                          reinterpret_cast<FT *>(qphix_in[cb_odd]));
+  reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(tmlqcd_even_in),
+                             qphix_in[cb_even], cb_even);
+  reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(tmlqcd_odd_in),
+                             qphix_in[cb_odd], cb_odd);
 
   // 2. Prepare the odd (cb1) source
   //
@@ -765,14 +1229,15 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
   // b) Apply Wilson Dslash to qphix_buffer and save result in qphix_in_prepared
   // c) Apply AYPX to rescale last result (=y) and add b_o (=x)
 
-  DslashQPhiX->A_inv_chi(qphix_buffer,      // out spinor
-                         qphix_in[cb_even], // in spinor
-                         1);                // non-conjugate
-  WilsonDslash->dslash(qphix_in_prepared,   // out spinor
-                       qphix_buffer,        // in spinor
-                       u_packed[cb_odd],    // gauge field on target cb
-                       1,                   // non-conjugate
-                       cb_odd);             // target cb
+  DslashQPhiX->A_inv_chi(qphix_buffer,       // out spinor
+                         qphix_in[cb_even],  // in spinor
+                         1,                  // non-conjugate
+                         cb_even);
+  WilsonDslash->dslash(qphix_in_prepared,  // out spinor
+                       qphix_buffer,       // in spinor
+                       u_packed[cb_odd],   // gauge field on target cb
+                       1,                  // non-conjugate
+                       cb_odd);            // target cb
   QPhiX::aypx(0.5, qphix_in[cb_odd], qphix_in_prepared, geom, n_blas_simt);
 
   QPhiX::masterPrintf("# ...done.\n");
@@ -786,7 +1251,7 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
   QPhiX::masterPrintf("# Calling the solver...\n");
 
   // Set variables need for solve
-  bool verbose = true;
+  bool verbose = g_debug_level > 2 ? true : false;
   int niters = -1;
   double rsd_final = -1.0;
   uint64_t site_flops = -1;
@@ -798,7 +1263,7 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
   const double RsdTarget = sqrt(precision / rhs_norm2);
 
   // Calling the solver
-  double start = omp_get_wtime();
+  double start = gettime();
   if (solver_flag == CG) {
     // USING CG:
     // We are solving
@@ -816,9 +1281,10 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
     (*SolverQPhiX)(qphix_out[cb_odd], qphix_in_prepared, RsdTarget, niters, rsd_final, site_flops,
                    mv_apps, 1, verbose);
   }
-  double end = omp_get_wtime();
+  double end = gettime();
 
   uint64_t num_cb_sites = lattSize[0] / 2 * lattSize[1] * lattSize[2] * lattSize[3];
+  // FIXME: this needs to be adjusted depending on the operator used
   uint64_t total_flops = (site_flops + (72 + 2 * 1320) * mv_apps) * num_cb_sites;
   QPhiX::masterPrintf("# Solver Time = %g sec\n", (end - start));
   QPhiX::masterPrintf("# Performance in GFLOPS = %g\n", 1.0e-9 * total_flops / (end - start));
@@ -848,17 +1314,16 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
   QPhiX::aypx(0.5, qphix_in[0], qphix_buffer, geom, n_blas_simt);
   DslashQPhiX->A_inv_chi(qphix_out[cb_even],  // out spinor
                          qphix_buffer,        // in spinor
-                         1);                  // non-conjugate
+                         1,                   // non-conjugate
+                         cb_even);            // non-conjugate
 
   // 2. Reorder spinor fields back to tmLQCD, rescaling by a factor 1/(2*\kappa)
+  //    to account for the operator normalisation in QPhiX
 
-  reorder_spinor_from_QPhiX(geom, reinterpret_cast<double *>(tmlqcd_full_buffer),
-                            reinterpret_cast<FT *>(qphix_out[cb_even]),
-                            reinterpret_cast<FT *>(qphix_out[cb_odd]), 1.0 / (2.0 * g_kappa));
-
-  convert_lexic_to_eo(tmlqcd_even_out,      // new even spinor
-                      tmlqcd_odd_out,       // new odd spinor
-                      tmlqcd_full_buffer);  // full spinor
+  reorder_eo_spinor_from_QPhiX(geom, reinterpret_cast<double *const>(tmlqcd_even_out),
+                               qphix_out[cb_even], cb_even, 1.0 / (2.0 * g_kappa));
+  reorder_eo_spinor_from_QPhiX(geom, reinterpret_cast<double *const>(tmlqcd_odd_out),
+                               qphix_out[cb_odd], cb_odd, 1.0 / (2.0 * g_kappa));
 
   QPhiX::masterPrintf("# ...done.\n");
 
@@ -870,15 +1335,21 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
 
   QPhiX::masterPrintf("# Cleaning up\n");
 
-  geom.free(packed_gauge_cb0);
-  geom.free(packed_gauge_cb1);
-  geom.free(packed_spinor_in_cb0);
-  geom.free(packed_spinor_in_cb1);
-  geom.free(packed_spinor_out_cb0);
-  geom.free(packed_spinor_out_cb1);
+  for (int cb : {0, 1}) {
+    geom.free(u_packed[cb]);
+    geom.free(qphix_in[cb]);
+    geom.free(qphix_out[cb]);
+    geom.free(qphix_clover[cb]);
+    geom.free(qphix_inv_clover[cb]);
+    for (int fl : {0, 1}) {
+      geom.free(qphix_fullclover[cb][fl]);
+      geom.free(qphix_inv_fullclover[cb][fl]);
+    }
+    //     delete[] qphix_fullclover[cb];
+    //     delete[] qphix_inv_fullclover[cb];
+  }
   geom.free(qphix_in_prepared);
   geom.free(qphix_buffer);
-  finalize_solver(solver_fields, nr_solver_fields);
 
   // FIXME: This should be called properly somewhere else
   _endQphix();
@@ -889,7 +1360,8 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
 }
 
 // Template wrapper for the Dslash operator call-able from C code
-void D_psi_qphix(spinor *tmlqcd_out, const spinor *tmlqcd_in) {
+void Mfull_qphix(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, const spinor *Odd_in,
+                 const op_type_t op_type) {
   tmlqcd::checkQphixInputParameters(qphix_input);
   // FIXME: two-row gauge compression and double precision hard-coded
   _initQphix(0, nullptr, qphix_input, 12, QPHIX_DOUBLE_PREC);
@@ -900,11 +1372,13 @@ void D_psi_qphix(spinor *tmlqcd_out, const spinor *tmlqcd_in) {
                           VECLEN_DP);
       abort();
     }
-    QPhiX::masterPrintf("TIMING IN DOUBLE PRECISION \n");
+    QPhiX::masterPrintf("TESTING IN DOUBLE PRECISION \n");
     if (compress12) {
-      D_psi<double, VECLEN_DP, QPHIX_SOALEN, true>(tmlqcd_out, tmlqcd_in);
+      Mfull_helper<double, VECLEN_DP, QPHIX_SOALEN, true>(Even_out, Odd_out, Even_in, Odd_in,
+                                                          op_type);
     } else {
-      D_psi<double, VECLEN_DP, QPHIX_SOALEN, false>(tmlqcd_out, tmlqcd_in);
+      Mfull_helper<double, VECLEN_DP, QPHIX_SOALEN, false>(Even_out, Odd_out, Even_in, Odd_in,
+                                                           op_type);
     }
   } else if (qphix_precision == QPHIX_FLOAT_PREC) {
     if (QPHIX_SOALEN > VECLEN_SP) {
@@ -912,61 +1386,80 @@ void D_psi_qphix(spinor *tmlqcd_out, const spinor *tmlqcd_in) {
                           VECLEN_SP);
       abort();
     }
-    QPhiX::masterPrintf("TIMING IN SINGLE PRECISION \n");
+    QPhiX::masterPrintf("TESTING IN SINGLE PRECISION \n");
     if (compress12) {
-      D_psi<float, VECLEN_SP, QPHIX_SOALEN, true>(tmlqcd_out, tmlqcd_in);
+      Mfull_helper<float, VECLEN_SP, QPHIX_SOALEN, true>(Even_out, Odd_out, Even_in, Odd_in,
+                                                         op_type);
     } else {
-      D_psi<float, VECLEN_SP, QPHIX_SOALEN, false>(tmlqcd_out, tmlqcd_in);
+      Mfull_helper<float, VECLEN_SP, QPHIX_SOALEN, false>(Even_out, Odd_out, Even_in, Odd_in,
+                                                          op_type);
     }
   }
-#if defined(QPHIX_MIC_SOURCE)
+#if (defined(QPHIX_MIC_SOURCE) || defined(QPHIX_AVX512_SOURCE))
   else if (qphix_precision == QPHIX_HALF_PREC) {
     if (QPHIX_SOALEN > VECLEN_HP) {
-      QPhiX::masterPrintf("SOALEN=%d is greater than the single prec VECLEN=%d\n", QPHIX_SOALEN,
-                          VECLEN_SP);
+      QPhiX::masterPrintf("SOALEN=%d is greater than the half prec VECLEN=%d\n", QPHIX_SOALEN,
+                          VECLEN_HP);
       abort();
     }
-    QPhiX::masterPrintf("TIMING IN HALF PRECISION \n");
+    QPhiX::masterPrintf("TESTING IN HALF PRECISION \n");
     if (compress12) {
-      D_psi<QPhiX::half, VECLEN_HP, QPHIX_SOALEN, true>(tmlqcd_out, tmlqcd_in);
+      Mfull_helper<QPhiX::half, VECLEN_HP, QPHIX_SOALEN, true>(Even_out, Odd_out, Even_in, Odd_in,
+                                                               op_type);
     } else {
-      D_psi<QPhiX::half, VECLEN_HP, QPHIX_SOALEN, false>(tmlqcd_out, tmlqcd_in);
+      Mfull_helper<QPhiX::half, VECLEN_HP, QPHIX_SOALEN, false>(Even_out, Odd_out, Even_in, Odd_in,
+                                                                op_type);
     }
   }
 #endif
 }
 
-// Template wrapper for Full Solver call-able from C code, return number of iterations
+// Template wrapper for QPhiX solvers callable from C code, return number of iterations
 int invert_eo_qphix(spinor *const Even_new, spinor *const Odd_new, spinor *const Even,
                     spinor *const Odd, const double precision, const int max_iter,
                     const int solver_flag, const int rel_prec, solver_params_t solver_params,
                     const SloppyPrecision sloppy, const CompressionType compression) {
   tmlqcd::checkQphixInputParameters(qphix_input);
 
-  if (precision < rsdTarget<double>::value) {
-    if (QPHIX_SOALEN > VECLEN_DP) {
-      QPhiX::masterPrintf("SOALEN=%d is greater than the double prec VECLEN=%d\n", QPHIX_SOALEN,
-                          VECLEN_DP);
+  double target_precision = precision;
+  double src_norm = (square_norm(Even, VOLUME / 2, 1) + square_norm(Odd, VOLUME / 2, 1));
+  double precision_lambda = target_precision / src_norm;
+  if (rel_prec == 1) {
+    QPhiX::masterPrintf("# QPHIX: Using relative precision\n");
+    target_precision = precision * src_norm;
+    precision_lambda = precision;
+  }
+  QPhiX::masterPrintf("# QPHIX: precision_lambda: %g, target_precision: %g\n\n", precision_lambda,
+                      target_precision);
+
+#if (defined(QPHIX_MIC_SOURCE) || defined(QPHIX_AVX512_SOURCE))
+  if (sloppy == SLOPPY_HALF || precision_lambda >= rsdTarget<QPhiX::half>::value) {
+    if (QPHIX_SOALEN > VECLEN_HP) {
+      QPhiX::masterPrintf("SOALEN=%d is greater than the half prec VECLEN=%d\n", QPHIX_SOALEN,
+                          VECLEN_HP);
       abort();
     }
     QPhiX::masterPrintf("# INITIALIZING QPHIX SOLVER\n");
-    QPhiX::masterPrintf("# USING DOUBLE PRECISION\n");
-    _initQphix(0, nullptr, qphix_input, compression, QPHIX_DOUBLE_PREC);
+    QPhiX::masterPrintf("# USING HALF PRECISION\n");
+    _initQphix(0, nullptr, qphix_input, compression, QPHIX_HALF_PREC);
 
     if (compress12) {
-      return invert_eo_qphix_helper<double, VECLEN_DP, QPHIX_SOALEN, true>(
-          Even_new, Odd_new, Even, Odd, precision, max_iter, solver_flag, rel_prec, solver_params,
-          compression);
+      return invert_eo_qphix_helper<QPhiX::half, VECLEN_HP, QPHIX_SOALEN, true>(
+          Even_new, Odd_new, Even, Odd, target_precision, max_iter, solver_flag, rel_prec,
+          solver_params, compression);
     } else {
-      return invert_eo_qphix_helper<double, VECLEN_DP, QPHIX_SOALEN, false>(
-          Even_new, Odd_new, Even, Odd, precision, max_iter, solver_flag, rel_prec, solver_params,
-          compression);
+      return invert_eo_qphix_helper<QPhiX::half, VECLEN_HP, QPHIX_SOALEN, false>(
+          Even_new, Odd_new, Even, Odd, target_precision, max_iter, solver_flag, rel_prec,
+          solver_params, compression);
     }
-#ifdef QPHIX_MIC_SOURCE
-  } else if (precision < rsdTarget<float>::value) {
+  }
 #else
-  } else {
+  if (sloppy == SLOPPY_HALF) {
+    QPhiX::masterPrintf("QPHIX interface: half precision not supported on this architecture!\n");
+    abort();
+  } else
 #endif
+  if (sloppy == SLOPPY_SINGLE || precision_lambda >= rsdTarget<float>::value) {
     if (QPHIX_SOALEN > VECLEN_SP) {
       QPhiX::masterPrintf("SOALEN=%d is greater than the single prec VECLEN=%d\n", QPHIX_SOALEN,
                           VECLEN_SP);
@@ -978,37 +1471,33 @@ int invert_eo_qphix(spinor *const Even_new, spinor *const Odd_new, spinor *const
 
     if (compress12) {
       return invert_eo_qphix_helper<float, VECLEN_SP, QPHIX_SOALEN, true>(
-          Even_new, Odd_new, Even, Odd, precision, max_iter, solver_flag, rel_prec, solver_params,
-          compression);
+          Even_new, Odd_new, Even, Odd, target_precision, max_iter, solver_flag, rel_prec,
+          solver_params, compression);
     } else {
       return invert_eo_qphix_helper<float, VECLEN_SP, QPHIX_SOALEN, false>(
-          Even_new, Odd_new, Even, Odd, precision, max_iter, solver_flag, rel_prec, solver_params,
-          compression);
+          Even_new, Odd_new, Even, Odd, target_precision, max_iter, solver_flag, rel_prec,
+          solver_params, compression);
     }
-  }
-#if defined(QPHIX_MIC_SOURCE)
-  else if (precision < rsdTarget<QPhiX::half>::value) {
-    if (QPHIX_SOALEN > VECLEN_HP) {
-      QPhiX::masterPrintf("SOALEN=%d is greater than the single prec VECLEN=%d\n", QPHIX_SOALEN,
-                          VECLEN_SP);
+  } else {
+    if (QPHIX_SOALEN > VECLEN_DP) {
+      QPhiX::masterPrintf("SOALEN=%d is greater than the double prec VECLEN=%d\n", QPHIX_SOALEN,
+                          VECLEN_DP);
       abort();
     }
     QPhiX::masterPrintf("# INITIALIZING QPHIX SOLVER\n");
-    QPhiX::masterPrintf("# USING HALF PRECISION\n");
-    _initQphix(0, nullptr, qphix_input, compression, QPHIX_HALF_PREC);
+    QPhiX::masterPrintf("# USING DOUBLE PRECISION\n");
+    _initQphix(0, nullptr, qphix_input, compression, QPHIX_DOUBLE_PREC);
 
     if (compress12) {
-      return invert_eo_qphix_helper<QPhiX::half, VECLEN_SP, QPHIX_SOALEN, true>(
-          Even_new, Odd_new, Even, Odd, precision, max_iter, solver_flag, rel_prec, solver_params,
-          compression);
+      return invert_eo_qphix_helper<double, VECLEN_DP, QPHIX_SOALEN, true>(
+          Even_new, Odd_new, Even, Odd, target_precision, max_iter, solver_flag, rel_prec,
+          solver_params, compression);
     } else {
-      return invert_eo_qphix_helper<QPhiX::half, VECLEN_SP, QPHIX_SOALEN, false>(
-          Even_new, Odd_new, Even, Odd, precision, max_iter, solver_flag, rel_prec, solver_params,
-          compression);
+      return invert_eo_qphix_helper<double, VECLEN_DP, QPHIX_SOALEN, false>(
+          Even_new, Odd_new, Even, Odd, target_precision, max_iter, solver_flag, rel_prec,
+          solver_params, compression);
     }
-  }
-#endif
-
+  }  // if( sloppy || target_precision )
   return -1;
 }
 
@@ -1029,14 +1518,21 @@ void tmlqcd::checkQphixInputParameters(const QphixParams_t &params) {
 
 void tmlqcd::printQphixDiagnostics(int VECLEN, int SOALEN, bool compress) {
   QPhiX::masterPrintf("# QphiX: VECLEN=%d SOALEN=%d\n", VECLEN, SOALEN);
-  QPhiX::masterPrintf("# QphiX: Declared QMP Topology: %d %d %d %d\n", qmp_geom[0], qmp_geom[1],
-                      qmp_geom[2], qmp_geom[3]);
-  QPhiX::masterPrintf("# QphiX: Global Lattice Size = ");
+
+  QPhiX::masterPrintf("# QphiX: Declared QMP Topology (xyzt):");
+  for (int mu = 0; mu < 4; mu++) QPhiX::masterPrintf(" %d", qmp_geom[mu]);
+  QPhiX::masterPrintf("\n");
+
+  QPhiX::masterPrintf("# QphiX: Mapping of dimensions QMP -> tmLQCD (xyzt):");
+  for (int mu = 0; mu < 4; mu++) QPhiX::masterPrintf(" %d->%d", mu, qmp_tm_map[mu]);
+  QPhiX::masterPrintf("\n");
+
+  QPhiX::masterPrintf("# QphiX: Global Lattice Size (xyzt) = ");
   for (int mu = 0; mu < 4; mu++) {
     QPhiX::masterPrintf(" %d", lattSize[mu]);
   }
   QPhiX::masterPrintf("\n");
-  QPhiX::masterPrintf("# QphiX: Local Lattice Size = ");
+  QPhiX::masterPrintf("# QphiX: Local Lattice Size (xyzt) = ");
   for (int mu = 0; mu < 4; mu++) {
     QPhiX::masterPrintf(" %d", subLattSize[mu]);
   }
@@ -1050,4 +1546,36 @@ void tmlqcd::printQphixDiagnostics(int VECLEN, int SOALEN, bool compress) {
   if (compress) {
     QPhiX::masterPrintf("# QphiX: Using two-row gauge compression (compress12)\n");
   }
+}
+
+void testSpinorPackers(spinor *Even_out, spinor *Odd_out, const spinor *const Even_in,
+                       const spinor *const Odd_in) {
+  tmlqcd::checkQphixInputParameters(qphix_input);
+  // FIXME: two-row gauge compression and double precision hard-coded
+  _initQphix(0, nullptr, qphix_input, 12, QPHIX_DOUBLE_PREC);
+
+  QPhiX::Geometry<double, VECLEN_SP, QPHIX_SOALEN, true> geom(subLattSize, By, Bz, NCores, Sy, Sz,
+                                                              PadXY, PadXYZ, MinCt);
+
+  auto qphix_cb_even = QPhiX::makeFourSpinorHandle(geom);
+  auto qphix_cb_odd = QPhiX::makeFourSpinorHandle(geom);
+
+  spinor **tmp;
+  init_solver_field(&tmp, VOLUME / 2, 2);
+
+  reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Even_in),
+                             qphix_cb_even.get(), cb_even);
+  reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Odd_in),
+                             qphix_cb_odd.get(), cb_odd);
+
+  reorder_eo_spinor_from_QPhiX(geom, reinterpret_cast<double *>(Even_out), qphix_cb_even.get(),
+                               cb_even, 1.0);
+  reorder_eo_spinor_from_QPhiX(geom, reinterpret_cast<double *>(Odd_out), qphix_cb_odd.get(),
+                               cb_odd, 1.0);
+
+  diff(tmp[0], Even_out, Even_in, VOLUME / 2);
+  diff(tmp[1], Odd_out, Odd_in, VOLUME / 2);
+  double l2norm = square_norm(tmp[0], VOLUME / 2, 1) + square_norm(tmp[1], VOLUME / 2, 1);
+  QPhiX::masterPrintf("QPHIX eo spinor packer back and forth difference L2 norm: %lf\n", l2norm);
+  finalize_solver(tmp, 2);
 }

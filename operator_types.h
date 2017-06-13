@@ -1,5 +1,7 @@
 /***********************************************************************
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ *
+ * Copyright (C) 2009 Carsten Urbach
+ *               2017 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -17,10 +19,16 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _CONVERT_EO_TO_LEXIC_H
-#define _CONVERT_EO_TO_LEXIC_H
+#ifndef OPERATOR_TYPES_H
+#define OPERATOR_TYPES_H
 
-void convert_eo_to_lexic(spinor * const P, const spinor * const s, const spinor * const r);
-void convert_lexic_to_eo(spinor * const s, spinor * const r, const spinor * const P);
+typedef enum op_type_t {
+  TMWILSON = 0,
+  OVERLAP,
+  WILSON,
+  DBTMWILSON,
+  CLOVER,
+  DBCLOVER
+} op_type_t;
 
-#endif
+#endif // OPERATOR_TYPES_H
