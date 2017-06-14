@@ -29,6 +29,11 @@
 
 #define max_no_operators 10
 
+typedef enum backup_restore_t {
+  TM_BACKUP_GLOBALS = 0,
+  TM_RESTORE_GLOBALS
+} backup_restore_t;
+
 typedef struct {
   /* ID of the operator */
   int type;
@@ -135,5 +140,6 @@ int add_operator(const int type);
 int init_operators();
 
 void op_set_globals(const int op_id);
+void op_backup_restore_globals(const backup_restore_t mode);
 
 #endif
