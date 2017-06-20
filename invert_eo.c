@@ -166,7 +166,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
                             solver_flag, rel_prec,
                             solver_params,
                             sloppy,
-                            compression, &Qtm_pm_psi);
+                            compression, &Qtm_pm_psi);    
       // for solver_params.solution_type == TM_SOLUTION_M (the default)
       // QPhiX applies M(mu)^dag internally for normal equation solves, no call to tmLQCD operaor required
     } else

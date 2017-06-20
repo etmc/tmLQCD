@@ -40,6 +40,8 @@
 #include "global.h"
 #include "read_input.h"
 #include "linalg/mul_gamma5.h"
+#include "linalg/diff.h"
+#include "linalg/square_norm.h"
 #include "solver/solver.h"
 #include "solver/matrix_mult_typedef.h"
 #include "solver/solver_types.h"
@@ -58,6 +60,9 @@
 #include "qphix_interface.h"
 #endif
 
+/* BaKo: this and the stuff below will be removed as soon as everything works
+ *       for all operators */       
+#define WIP
 
 #ifdef HAVE_GPU
 #include"../GPU/cudadefs.h"
@@ -83,6 +88,18 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     iteration_count = invert_eo_qphix(NULL, P, NULL, Q, eps_sq, max_iter, solver_type, rel_prec, solver_params, sloppy, compression, f);
     // QPhiX operates with M and M^dag directly -> need an additional factor of gamma_5 to get ( Q^+ Q^- )^{-1}
     mul_gamma5(P, VOLUME/2);
+#ifdef WIP
+    spinor** temp;
+    init_solver_field(&temp, VOLUME/2, 2);
+    f(temp[1], P);
+    gamma5(temp[2], Q, VOLUME/2);
+    diff(temp[1], temp[1], temp[2], VOLUME/2);
+    double diffnorm = square_norm(temp[1], VOLUME/2, 1); 
+    if( g_proc_id == 0 ){
+      printf("# QPhiX residual check: %e\n", diffnorm);
+    }
+    finalize_solver(temp, 2);
+#endif // WIP
     return(iteration_count);
   } else
 #endif  
@@ -127,7 +144,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     }
   } 
   if(use_solver == CG){
-     iteration_count =  cg_her(P, Q, max_iter, eps_sq, rel_prec, N, f);   
+    iteration_count =  cg_her(P, Q, max_iter, eps_sq, rel_prec, N, f);
   }
   else if(use_solver == BICGSTAB){
      iteration_count =  bicgstab_complex(P, Q, max_iter, eps_sq, rel_prec, N, f);     
@@ -140,6 +157,17 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     if(g_proc_id==0) printf("Error: solver not allowed for degenerate solve. Aborting...\n");
     exit(2);
   }
+#ifdef WIP
+    spinor** temp;
+    init_solver_field(&temp, VOLUME/2, 1);
+    f(temp[1], P);
+    diff(temp[1], temp[1], Q, VOLUME/2);
+    double diffnorm = square_norm(temp[1], VOLUME/2, 1); 
+    if( g_proc_id == 0 ){
+      printf("# tmLQCD residual check: %e\n", diffnorm);
+    }
+    finalize_solver(temp, 1);
+#endif // WIP
   return(iteration_count);
 }
 

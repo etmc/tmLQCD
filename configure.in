@@ -985,20 +985,28 @@ AC_ARG_WITH(qphixdir,
               QPHIX_AVAILABLE=1
               AC_DEFINE(TM_USE_QPHIX,1,Using QPhiX)
               qphix_dir=$withval
-              LDFLAGS="$LDFLAGS -L${qphix_dir}/lib -lqphix_solver"
+              LDFLAGS="$LDFLAGS -L${qphix_dir}/lib -lqphix_solver -lqphix_codegen"
               INCLUDES="$INCLUDES -I${qphix_dir}/include/" 
               QPHIX_INTERFACE="qphix_interface"
               QPHIX_PROGRAMS="qphix_test_Dslash"
 
-						  # QMP: TODO AC_CHECK_LIB
+              # QMP: TODO AC_CHECK_LIB
               AC_MSG_CHECKING([where to search for QMP libs])
-						  AC_ARG_WITH(qmpdir,
-						    AS_HELP_STRING([--with-qmpdir[=dir]], [if using QPhiX, then set QMP lib dir]),
-						    qmp_dir=$withval
-						    LDFLAGS="$LDFLAGS -L${qmp_dir}/lib -lqmp"
-						    INCLUDES="$INCLUDES -I${qmp_dir}/include/"
-						  )
-						  AC_MSG_RESULT($qmp_dir)
+              AC_ARG_WITH(qmpdir,
+                          AS_HELP_STRING([--with-qmpdir[=dir]], [if using QPhiX, then set QMP lib dir]),
+                          qmp_dir=$withval
+                          LDFLAGS="$LDFLAGS -L${qmp_dir}/lib -lqmp"
+                          INCLUDES="$INCLUDES -I${qmp_dir}/include/"
+                          )
+              AC_MSG_RESULT($qmp_dir)
+
+              AC_MSG_CHECKING([Setting QPhiX SOALEN])
+              AC_ARG_ENABLE(qphix-soalen,
+                            AS_HELP_STRING([--enable-qphix-soalen], [if using QPhiX, set SOALEN [default=4]]),
+                            enable_qphix_soalen=$enableval, enable_qphix_soalen=4)
+              AC_MSG_RESULT($enable_qphix_soalen)
+              AC_DEFINE_UNQUOTED(QPHIX_SOALEN, ${enable_qphix_soalen}, Structure of Array length to use with QPhiX)
+
               AC_PROG_CXX
               #QPhiX needs to be linked with C++ linker
               CCLD=${CXX}

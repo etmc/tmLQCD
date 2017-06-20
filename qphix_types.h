@@ -33,6 +33,7 @@ typedef struct QphixParams_t {
   int PadXY;
   int PadXYZ;
   int MinCt;
+  int soalen;
 } QphixParams_t;
 
 typedef enum QphixPrec_t { QPHIX_FLOAT_PREC = 0, QPHIX_HALF_PREC, QPHIX_DOUBLE_PREC } QphixPrec_t;

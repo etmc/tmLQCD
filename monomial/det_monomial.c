@@ -174,12 +174,14 @@ void det_heatbath(const int id, hamiltonian_field_t * const hf) {
     mnl->energy0 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
 
     mnl->Qp(mnl->pf, mnl->w_fields[0]);
+    
     // FIXME: there needs to be a better way to take care of this... this is an ugly
     // hack to get the right number of factors of gamma5 in the result of solve_degenerate
     // when using QPhiX solvers qhich employ M(mu) and M^dag(mu) directly, rather than Q+ and Q-
     if(mnl->external_inverter == QPHIX_INVERTER){
       mul_gamma5(mnl->pf, VOLUME/2);
     }
+    
     chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
     if(mnl->solver != CG) {
