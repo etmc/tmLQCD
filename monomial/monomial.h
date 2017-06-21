@@ -26,6 +26,7 @@
 #include "hamiltonian_field.h"
 #include "rational/rational.h"
 #include "solver/solver_params.h"
+#include "misc_types.h"
 
 #define DET 0
 #define DETRATIO 1
@@ -173,5 +174,8 @@ int init_poly_monomial(const int V,const int id);
 void dummy_derivative(const int id, hamiltonian_field_t * const hf);
 void dummy_heatbath(const int id, hamiltonian_field_t * const hf);
 double dummy_acc(const int id, hamiltonian_field_t * const hf);
+
+void mnl_set_globals(const int id);
+void mnl_backup_restore_globals(const backup_restore_t mode);
 
 #endif

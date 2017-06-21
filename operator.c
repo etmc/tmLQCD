@@ -619,6 +619,7 @@ void op_backup_restore_globals(const backup_restore_t mode){
     g_mu     = backup_mu;
     g_mubar  = backup_mubar;
     g_epsbar = backup_epsbar;
+    boundary(g_kappa);
   }
 }
   

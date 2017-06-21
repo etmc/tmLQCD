@@ -42,6 +42,7 @@
 #include "monomial/monomial.h"
 #include "boundary.h"
 #include "detratio_monomial.h"
+#include "misc_types.h"
 
 /* think about chronological solver ! */
 
@@ -51,6 +52,11 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
   
   atime = gettime();
   mnl->forcefactor = 1.;
+  
+  mnl_backup_restore_globals(TM_BACKUP_GLOBALS);
+  g_mu = mnl->mu2;
+  g_kappa = mnl->kappa2;
+  boundary(g_kappa);  
 
   if(mnl->even_odd_flag) {
     /*
@@ -64,12 +70,12 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
      *********************************************************************/
     /* First term coming from the second field */
     /* Multiply with W_+ */
-    g_mu = mnl->mu2;
-    boundary(mnl->kappa2);
-
     Qtm_plus_psi(mnl->w_fields[2], mnl->pf);
+    
     g_mu = mnl->mu;
-    boundary(mnl->kappa);
+    g_kappa = mnl->kappa;
+    boundary(g_kappa);
+    
     /* Invert Q_{+} Q_{-} */
     /* X_W -> w_fields[1] */
     chrono_guess(mnl->w_fields[1], mnl->w_fields[2], mnl->csg_field, 
@@ -101,13 +107,14 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     H_eo_tm_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1);
     /* \delta Q sandwitched by Y_e^\dagger and X_o */
     deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor); 
-
-    g_mu = mnl->mu2;
-    boundary(mnl->kappa2);
     
     /* Second term coming from the second field */
     /* The sign is opposite!! */
     mul_r(mnl->w_fields[0], -1., mnl->pf, VOLUME/2);
+    
+    g_mu = mnl->mu2;
+    g_kappa = mnl->kappa2;
+    boundary(g_kappa);
 
     /* apply Hopping Matrix M_{eo} */
     /* to get the even sites of X */
@@ -128,12 +135,13 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
      *
      *********************************************************************/
     /* First term coming from the second field */
-    /* Multiply with W_+ */
-    g_mu = mnl->mu2;
-    boundary(mnl->kappa2);	
+    /* Multiply with W_+ */	
     Q_plus_psi(mnl->w_fields[2], mnl->pf);
+    
     g_mu = mnl->mu;
-    boundary(mnl->kappa);
+    g_kappa = mnl->kappa;
+    boundary(g_kappa);
+    
     if((mnl->solver == CG) || (mnl->solver == MIXEDCG) || (mnl->solver == RGMIXEDCG)  || (mnl->solver == MG)) {
       /* If CG is used anyhow */
       /*       gamma5(mnl->w_fields[1], mnl->w_fields[2], VOLUME/2); */
@@ -181,7 +189,8 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     deriv_Sb_D_psi(mnl->w_fields[0], mnl->w_fields[1], hf, mnl->forcefactor); 
     
     g_mu = mnl->mu2;
-    boundary(mnl->kappa2);
+    g_kappa = mnl->kappa2;
+    boundary(g_kappa);
     
     /* Second term coming from the second field */
     /* The sign is opposite!! */
@@ -190,8 +199,7 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     /* \delta Q sandwitched by Y^\dagger and X */
     deriv_Sb_D_psi(mnl->w_fields[0], mnl->w_fields[1], hf, mnl->forcefactor);
   }
-  g_mu = g_mu1;
-  boundary(g_kappa);
+  mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
   etime = gettime();
   if(g_debug_level > 1 && g_proc_id == 0) {
     printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
@@ -204,8 +212,12 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   double atime, etime;
   atime = gettime();
+  mnl_backup_restore_globals(TM_BACKUP_GLOBALS);
+  
   g_mu = mnl->mu;
-  boundary(mnl->kappa);
+  g_kappa = mnl->kappa;
+  boundary(g_kappa);
+  
   mnl->csg_n = 0;
   mnl->csg_n2 = 0;
   mnl->iter0 = 0;
@@ -215,8 +227,11 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
     mnl->energy0  = square_norm(mnl->w_fields[0], VOLUME/2, 1);
 
     mnl->Qp(mnl->w_fields[1], mnl->w_fields[0]);
+    
     g_mu = mnl->mu2;
-    boundary(mnl->kappa2);
+    g_kappa = mnl->kappa2;
+    boundary(g_kappa);
+    
     zero_spinor_field(mnl->w_fields[0], VOLUME/2);
     if( mnl->solver == MG ){
       mnl->iter0 = solve_degenerate(mnl->pf, mnl->w_fields[1], mnl->solver_params, mnl->maxiter, mnl->accprec,
@@ -227,6 +242,7 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
       mnl->iter0 = solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->solver_params, mnl->maxiter,
 				    mnl->accprec, g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver, mnl->external_inverter, mnl->sloppy_precision, mnl->compression_type);
       mnl->Qm(mnl->pf, mnl->w_fields[0]);
+
       chrono_add_solution(mnl->w_fields[0], mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
     }
@@ -236,8 +252,11 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
     mnl->energy0 = square_norm(mnl->w_fields[0], VOLUME, 1);
 
     Q_plus_psi(mnl->w_fields[1], mnl->w_fields[0]);
+    
     g_mu = mnl->mu2;
-    boundary(mnl->kappa2);
+    g_kappa = mnl->kappa2;
+    boundary(g_kappa);
+    
     zero_spinor_field(mnl->pf,VOLUME);
     if((mnl->solver == CG) || (mnl->solver == MIXEDCG)){
       mnl->iter0 = solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->solver_params,
@@ -263,6 +282,7 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
 			  mnl->csg_N2, &mnl->csg_n2, VOLUME/2);           
     }
   }
+  mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
@@ -272,8 +292,6 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
       printf("called detratio_heatbath for id %d energy %f\n", id, mnl->energy0);
     }
   }
-  g_mu = g_mu1;
-  boundary(g_kappa);
   return;
 }
 
@@ -282,12 +300,20 @@ double detratio_acc(const int id, hamiltonian_field_t * const hf) {
   int save_sloppy = g_sloppy_precision_flag;
   double etime, atime;
   atime = gettime();
+  
+  mnl_backup_restore_globals(TM_BACKUP_GLOBALS);
+  
   g_mu = mnl->mu2;
-  boundary(mnl->kappa2);
+  g_kappa = mnl->kappa2;
+  boundary(g_kappa);
+  
   if(even_odd_flag) {
     mnl->Qp(mnl->w_fields[1], mnl->pf);
+    
     g_mu = mnl->mu;
-    boundary(mnl->kappa);
+    g_kappa = mnl->kappa;
+    boundary(g_kappa);
+    
     g_sloppy_precision_flag = 0;
     if( mnl->solver == MG ){
       chrono_guess(mnl->w_fields[0], mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array, 
@@ -311,8 +337,11 @@ double detratio_acc(const int id, hamiltonian_field_t * const hf) {
   }
   else {
     Q_plus_psi(mnl->w_fields[1], mnl->pf);
+    
     g_mu = mnl->mu;
-    boundary(mnl->kappa);
+    g_kappa = mnl->kappa;
+    boundary(g_kappa);
+    
     chrono_guess(mnl->w_fields[0], mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array, 
 		 mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_plus_psi);
     g_sloppy_precision_flag = 0;
@@ -335,8 +364,7 @@ double detratio_acc(const int id, hamiltonian_field_t * const hf) {
     }
     g_sloppy_precision_flag = save_sloppy;
   }
-  g_mu = g_mu1;
-  boundary(g_kappa);
+  mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {

@@ -28,6 +28,7 @@
 #include <errno.h>
 #include <string.h>
 #include "global.h"
+#include "boundary.h"
 #include "su3.h"
 #include "su3adj.h"
 #include "su3spinor.h"
@@ -42,8 +43,6 @@
 #include "default_input_values.h"
 #include "read_input.h"
 #include "monomial/monomial.h"
-
-
 
 monomial monomial_list[max_no_monomials];
 int no_monomials = 0;
@@ -668,4 +667,35 @@ double dummy_acc(const int id, hamiltonian_field_t * const hf) {
     fprintf(stderr, "callers monomial ID was %d\n", id);
   }
   return(0.);
+}
+
+void mnl_backup_restore_globals(const backup_restore_t mode){
+  static double backup_kappa;
+  static double backup_mu;
+  static double backup_mu1;
+  static double backup_mu2;
+  static double backup_mu3;
+  static double backup_c_sw;
+  static double backup_mubar;
+  static double backup_epsbar;
+  if( mode == TM_BACKUP_GLOBALS ){
+    backup_kappa  = g_kappa;
+    backup_c_sw   = g_c_sw;
+    backup_mu     = g_mu;
+    backup_mu1    = g_mu1;
+    backup_mu2    = g_mu2;
+    backup_mu3    = g_mu3;
+    backup_mubar  = g_mubar;
+    backup_epsbar = g_epsbar;
+  } else {
+    g_kappa  = backup_kappa;
+    g_c_sw   = backup_c_sw;
+    g_mu     = backup_mu;
+    g_mu1    = backup_mu1;
+    g_mu2    = backup_mu2;
+    g_mu3    = backup_mu3;
+    g_mubar  = backup_mubar;
+    g_epsbar = backup_epsbar;
+    boundary(g_kappa);
+  }
 }

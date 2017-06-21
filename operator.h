@@ -26,13 +26,9 @@
 #include "su3.h"
 #include "solver/solver_params.h"
 #include "operator_types.h"
+#include "misc_types.h"
 
 #define max_no_operators 10
-
-typedef enum backup_restore_t {
-  TM_BACKUP_GLOBALS = 0,
-  TM_RESTORE_GLOBALS
-} backup_restore_t;
 
 typedef struct {
   /* ID of the operator */

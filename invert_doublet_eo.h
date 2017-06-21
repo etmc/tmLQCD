@@ -31,6 +31,7 @@
 #define _INVERT_DOUBLET_EO_H
 
 #include "global.h"
+#include "misc_types.h"
 #include "solver/solver_params.h"
 
 int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s, 

@@ -3,6 +3,7 @@
 
 #include "global.h"
 #include "su3.h"
+#include "misc_types.h"
 #include "solver/matrix_mult_typedef.h"
 #include "solver/solver_params.h"
 

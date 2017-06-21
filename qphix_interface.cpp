@@ -39,6 +39,7 @@ extern "C" {
 #include "geometry_eo.h"
 #include "gettime.h"
 #include "global.h"
+#include "misc_types.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "linalg/diff.h"
 #include "linalg/square_norm.h"

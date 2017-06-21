@@ -61,6 +61,7 @@
 #define QPHIX_INTERFACE_H_
 
 #include "global.h"
+#include "misc_types.h"
 #include "operator_types.h"
 #include "qphix_types.h"
 #include "solver/matrix_mult_typedef.h"

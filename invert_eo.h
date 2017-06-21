@@ -27,6 +27,7 @@
 #ifndef _INVERT_EO_H
 #define _INVERT_EO_H
 #include "global.h"
+#include "misc_types.h"
 #include "solver/solver_params.h"
 
 int invert_eo(spinor * const Even_new, spinor * const Odd_new, 
