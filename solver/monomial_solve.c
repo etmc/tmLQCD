@@ -100,7 +100,6 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
 
 #ifdef WIP
     f(temp[1], P);
-    //gamma5(temp[2], Q, VOLUME/2);
     diff(temp[1], temp[1], Q, VOLUME/2);
     double diffnorm = square_norm(temp[1], VOLUME/2, 1); 
     if( g_proc_id == 0 ){
