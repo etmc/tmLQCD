@@ -89,29 +89,25 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
 #ifdef TM_USE_QPHIX
   if(external_inverter == QPHIX_INVERTER){
     spinor** temp;
-#ifdef WIP
-    init_solver_field(&temp, VOLUME/2, 2);
-#else
     init_solver_field(&temp, VOLUME/2, 1);
-#endif
+    
     // usign CG for the HMC, we always want to have the solution of (Q Q^dagger) x = b, which is equivalent to
     // gamma_5 (M M^dagger)^{-1} gamma_5 b
     // FIXME: this needs to be adjusted to also support BICGSTAB
     gamma5(temp[1], Q, VOLUME/2);
     iteration_count = invert_eo_qphix(NULL, P, NULL, temp[1], eps_sq, max_iter, solver_type, rel_prec, solver_params, sloppy, compression, f);
     mul_gamma5(P, VOLUME/2);
+
 #ifdef WIP
     f(temp[1], P);
-    gamma5(temp[2], Q, VOLUME/2);
-    diff(temp[1], temp[1], temp[2], VOLUME/2);
+    //gamma5(temp[2], Q, VOLUME/2);
+    diff(temp[1], temp[1], Q, VOLUME/2);
     double diffnorm = square_norm(temp[1], VOLUME/2, 1); 
     if( g_proc_id == 0 ){
       printf("# QPhiX residual check: %e\n", diffnorm);
     }
-    finalize_solver(temp, 2);
-#else
-    finalize_solver(temp, 1);
 #endif // WIP
+    finalize_solver(temp, 1);
     return(iteration_count);
   } else
 #endif  
