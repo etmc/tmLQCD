@@ -1156,14 +1156,11 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
   // The Wilson mass
   const double mass = 1.0 / (2.0 * g_kappa) - 4.0;
 
-  // Create a Wilson Dslash for source preparation
-  // and solution reconstruction
-  QPhiX::Dslash<FT, V, S, compress> *WilsonDslash = new QPhiX::Dslash<FT, V, S, compress>(
-      &geom, t_boundary, coeff_s, coeff_t, use_tbc, tbc_phases);
-
-  // Create a Dslash & an even-odd preconditioned Fermion Matrix object,
-  // depending on the chosen fermion action
+  // we may need these for source preparation and even site reconstruction
+  // one could now also use the polymorphic functionality
+  QPhiX::Dslash<FT, V, S, compress> *WilsonDslash;
   tmlqcd::Dslash<FT, V, S, compress> *DslashQPhiX;
+  
   QPhiX::EvenOddLinearOperator<FT, V, S, compress> *FermionMatrixQPhiX;
   if (fabs(g_mu) > DBL_EPSILON && g_c_sw > DBL_EPSILON) {  // TWISTED-MASS-CLOVER
     for (int fl : {0, 1}) {
@@ -1172,23 +1169,27 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
     }
     reorder_clover_to_QPhiX(geom, qphix_fullclover[cb_odd], cb_odd, false);
     reorder_clover_to_QPhiX(geom, qphix_inv_fullclover[cb_even], cb_even, true);
-
-    DslashQPhiX = new tmlqcd::WilsonClovTMDslash<FT, V, S, compress>(
-        &geom, t_boundary, coeff_s, coeff_t, mass, -g_mu / (2.0 * g_kappa), qphix_fullclover,
-        qphix_inv_fullclover, use_tbc, tbc_phases);
-
+    
+    if( tmlqcd_even_in ){
+      QPhiX::masterPrintf("# Creating QPhiX Twisted Clover Dslash...\n");
+      DslashQPhiX = new tmlqcd::WilsonClovTMDslash<FT, V, S, compress>(
+          &geom, t_boundary, coeff_s, coeff_t, mass, -g_mu / (2.0 * g_kappa), qphix_fullclover,
+          qphix_inv_fullclover, use_tbc, tbc_phases);
+      QPhiX::masterPrintf("# ...done.\n");
+    }
     QPhiX::masterPrintf("# Creating QPhiX Twisted Clover Fermion Matrix...\n");
     FermionMatrixQPhiX = new QPhiX::EvenOddTMCloverOperator<FT, V, S, compress>(
         u_packed, qphix_fullclover[cb_odd], qphix_inv_fullclover[cb_even], &geom, t_boundary,
         coeff_s, coeff_t, use_tbc, tbc_phases);
     QPhiX::masterPrintf("# ...done.\n");
   } else if (fabs(g_mu) > DBL_EPSILON) {  // TWISTED-MASS
-    QPhiX::masterPrintf("# Creating QPhiX Twisted Mass Wilson Dslash...\n");
     const double TwistedMass = -g_mu / (2.0 * g_kappa);
-    DslashQPhiX = new tmlqcd::WilsonTMDslash<FT, V, S, compress>(
-        &geom, t_boundary, coeff_s, coeff_t, mass, TwistedMass, use_tbc, tbc_phases);
-    QPhiX::masterPrintf("# ...done.\n");
-
+    if( tmlqcd_even_in ) {
+      QPhiX::masterPrintf("# Creating QPhiX Twisted Mass Wilson Dslash...\n");
+      DslashQPhiX = new tmlqcd::WilsonTMDslash<FT, V, S, compress>(
+          &geom, t_boundary, coeff_s, coeff_t, mass, TwistedMass, use_tbc, tbc_phases);
+      QPhiX::masterPrintf("# ...done.\n");
+    }
     QPhiX::masterPrintf("# Creating QPhiX Twisted Mass Wilson Fermion Matrix...\n");
     FermionMatrixQPhiX = new QPhiX::EvenOddTMWilsonOperator<FT, V, S, compress>(
         mass, TwistedMass, u_packed, &geom, t_boundary, coeff_s, coeff_t, use_tbc, tbc_phases);
@@ -1200,11 +1201,13 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
     reorder_clover_to_QPhiX(geom, qphix_clover[cb_odd], cb_odd, false);
     reorder_clover_to_QPhiX(geom, qphix_inv_clover[cb_even], cb_even, true);
 
-    QPhiX::masterPrintf("# Creating QPhiX Wilson Clover Dslash...\n");
-    DslashQPhiX = new tmlqcd::WilsonClovDslash<FT, V, S, compress>(
-        &geom, t_boundary, coeff_s, coeff_t, mass, qphix_clover, qphix_inv_clover, use_tbc,
-        tbc_phases);
-    QPhiX::masterPrintf("# ...done.\n");
+    if( tmlqcd_even_in ){
+      QPhiX::masterPrintf("# Creating QPhiX Wilson Clover Dslash...\n");
+      DslashQPhiX = new tmlqcd::WilsonClovDslash<FT, V, S, compress>(
+          &geom, t_boundary, coeff_s, coeff_t, mass, qphix_clover, qphix_inv_clover, use_tbc,
+          tbc_phases);
+      QPhiX::masterPrintf("# ...done.\n");
+    }
 
     QPhiX::masterPrintf("# Creating QPhiX Wilson Clover Fermion Matrix...\n");
     FermionMatrixQPhiX = new QPhiX::EvenOddCloverOperator<FT, V, S, compress>(
@@ -1212,10 +1215,12 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
         coeff_t, use_tbc, tbc_phases);
     QPhiX::masterPrintf("# ...done.\n");
   } else {  // WILSON
-    QPhiX::masterPrintf("# Creating QPhiX Wilson Dslash...\n");
-    DslashQPhiX = new tmlqcd::WilsonDslash<FT, V, S, compress>(&geom, t_boundary, coeff_s, coeff_t,
-                                                               mass, use_tbc, tbc_phases);
-    QPhiX::masterPrintf("# ...done.\n");
+    if( tmlqcd_even_in ){
+      QPhiX::masterPrintf("# Creating QPhiX Wilson Dslash...\n");
+      DslashQPhiX = new tmlqcd::WilsonDslash<FT, V, S, compress>(&geom, t_boundary, coeff_s, coeff_t,
+                                                                mass, use_tbc, tbc_phases);
+      QPhiX::masterPrintf("# ...done.\n");
+    }
 
     QPhiX::masterPrintf("# Creating QPhiX Wilson Fermion Matrix...\n");
     FermionMatrixQPhiX = new QPhiX::EvenOddWilsonOperator<FT, V, S, compress>(
@@ -1255,6 +1260,8 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
     *    PREPARE SOURCE    * (if required)
     *                      *
     ************************/
+    WilsonDslash = new QPhiX::Dslash<FT, V, S, compress>(
+      &geom, t_boundary, coeff_s, coeff_t, use_tbc, tbc_phases);
 
     QPhiX::masterPrintf("# Preparing odd source...\n");
     reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(tmlqcd_even_in),
@@ -1377,6 +1384,9 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
 
     reorder_eo_spinor_from_QPhiX(geom, reinterpret_cast<double *const>(tmlqcd_even_out),
                                  qphix_out[cb_even], cb_even, rescale);
+
+    delete WilsonDslash;
+    delete DslashQPhiX;
   }
 
   reorder_eo_spinor_from_QPhiX(geom, reinterpret_cast<double *const>(tmlqcd_odd_out),
@@ -1392,6 +1402,8 @@ int invert_eo_qphix_helper(spinor *const tmlqcd_even_out, spinor *const tmlqcd_o
 
   QPhiX::masterPrintf("# Cleaning up\n");
 
+  delete(FermionMatrixQPhiX);
+  delete(SolverQPhiX);
   for (int cb : {0, 1}) {
     geom.free(u_packed[cb]);
     // the alloc and free functions for spinors are not consistent with allow nullptr to be free'd

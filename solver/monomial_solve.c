@@ -91,7 +91,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     spinor** temp;
     init_solver_field(&temp, VOLUME/2, 1);
     
-    // usign CG for the HMC, we always want to have the solution of (Q Q^dagger) x = b, which is equivalent to
+    // using CG for the HMC, we always want to have the solution of (Q Q^dagger) x = b, which is equivalent to
     // gamma_5 (M M^dagger)^{-1} gamma_5 b
     // FIXME: this needs to be adjusted to also support BICGSTAB
     gamma5(temp[1], Q, VOLUME/2);
