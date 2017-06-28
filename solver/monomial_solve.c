@@ -95,7 +95,8 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     // gamma_5 (M M^dagger)^{-1} gamma_5 b
     // FIXME: this needs to be adjusted to also support BICGSTAB
     gamma5(temp[1], Q, VOLUME/2);
-    iteration_count = invert_eo_qphix(NULL, P, NULL, temp[1], eps_sq, max_iter, solver_type, rel_prec, solver_params, sloppy, compression, f);
+    iteration_count = invert_eo_qphix_oneflavour(P, temp[1], eps_sq, max_iter, solver_type, 
+                                                 rel_prec, solver_params, sloppy, compression);
     mul_gamma5(P, VOLUME/2);
 
 #ifdef WIP

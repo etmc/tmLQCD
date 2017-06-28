@@ -161,12 +161,12 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 #ifdef TM_USE_QPHIX
     if( inverter==QPHIX_INVERTER ) {
       // QPhiX inverts M(mu)M(mu)^dag or M(mu), no gamma_5 source multiplication required
-      iter = invert_eo_qphix(NULL, Odd_new, NULL, g_spinor_field[DUM_DERI],
-                            precision, max_iter,
-                            solver_flag, rel_prec,
-                            solver_params,
-                            sloppy,
-                            compression, &Qtm_pm_psi);    
+      iter = invert_eo_qphix_oneflavour(Odd_new, g_spinor_field[DUM_DERI],
+                                        precision, max_iter,
+                                        solver_flag, rel_prec,
+                                        solver_params,
+                                        sloppy,
+                                        compression);    
       // for solver_params.solution_type == TM_SOLUTION_M (the default)
       // QPhiX applies M(mu)^dag internally for normal equation solves, no call to tmLQCD operaor required
     } else
