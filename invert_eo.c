@@ -86,12 +86,12 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
               const int solver_flag, const int rel_prec,
               const int sub_evs_flag, const int even_odd_flag,
               const int no_extra_masses, double * const extra_masses, solver_params_t solver_params, const int id,
-              const ExternalInverter inverter, const SloppyPrecision sloppy, const CompressionType compression )  {
+              const ExternalInverter external_inverter, const SloppyPrecision sloppy, const CompressionType compression )  {
 
   int iter = 0;
 
 #ifdef QUDA
-  if( inverter==QUDA_INVERTER ) {
+  if( external_inverter==QUDA_INVERTER ) {
     return invert_eo_quda(Even_new, Odd_new, Even, Odd,
                           precision, max_iter,
                           solver_flag, rel_prec,
@@ -159,10 +159,10 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     /* matrix to get the odd sites               */
     
 #ifdef TM_USE_QPHIX
-    if( inverter==QPHIX_INVERTER ) {
+    if( external_inverter==QPHIX_INVERTER ) {
       // QPhiX inverts M(mu)M(mu)^dag or M(mu), no gamma_5 source multiplication required
       iter = invert_eo_qphix_oneflavour(Odd_new, g_spinor_field[DUM_DERI],
-                                        precision, max_iter,
+                                        max_iter, precision,
                                         solver_flag, rel_prec,
                                         solver_params,
                                         sloppy,

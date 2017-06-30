@@ -76,23 +76,22 @@ extern "C" {
 void initQPhiX(int argc, char** argv, QphixParams_t params, int c12, QphixPrec_t precision);
 void _endQphix();
 
-int invert_eo_qphix_oneflavour(spinor * const Odd_out, spinor* const Odd_in, 
-                               const double precision, const int max_iter,
-                               const int solver_flag, const int rel_prec, solver_params_t solver_params,
-                               const SloppyPrecision sloppy, const CompressionType compression);
+int invert_eo_qphix_oneflavour(spinor* const Odd_out, spinor* const Odd_in, const int max_iter,
+                               const double precision, const int solver_flag, const int rel_prec,
+                               solver_params_t solver_params, const SloppyPrecision sloppy,
+                               const CompressionType compression);
 
-int invert_eo_qphix_twoflavour(spinor * Odd_out_s, spinor * Odd_out_c,
-                               spinor * Odd_in_s, spinor * Odd_in_c, 
-                               const double precision, const int max_iter,
-                               const int solver_flag, const int rel_prec, solver_params_t solver_params,
-                               const SloppyPrecision sloppy, const CompressionType compression);
+int invert_eo_qphix_twoflavour(spinor* Odd_out_s, spinor* Odd_out_c, spinor* Odd_in_s,
+                               spinor* Odd_in_c, const int max_iter, const double precision,
+                               const int solver_flag, const int rel_prec,
+                               solver_params_t solver_params, const SloppyPrecision sloppy,
+                               const CompressionType compression);
 
-int invert_eo_qphix_nflavour(spinor ** Odd_out, spinor ** Odd_in,
-                            const double target_precision, const double precision_lambda,
-                            const int max_iter,
-                            const int solver_flag, solver_params_t solver_params,
-                            const SloppyPrecision sloppy, const CompressionType compression,
-                            const int num_flavour);
+int invert_eo_qphix_nflavour(spinor** Odd_out, spinor** Odd_in, const double target_precision,
+                             const double precision_lambda, const int max_iter,
+                             const int solver_flag, solver_params_t solver_params,
+                             const SloppyPrecision sloppy, const CompressionType compression,
+                             const int num_flavour);
 
 void Mfull_qphix(spinor* Even_out, spinor* Odd_out, const spinor* Even_in, const spinor* Odd_in,
                  const op_type_t op_type);

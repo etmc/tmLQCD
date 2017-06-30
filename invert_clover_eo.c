@@ -66,7 +66,7 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
                      const int solver_flag, const int rel_prec, const int even_odd_flag,
 		     solver_params_t solver_params,
                      su3 *** gf, matrix_mult Qsq, matrix_mult Qm,
-                     const ExternalInverter inverter, const SloppyPrecision sloppy, const CompressionType compression) {
+                     const ExternalInverter external_inverter, const SloppyPrecision sloppy, const CompressionType compression) {
   int iter;
 
   if(even_odd_flag) {  
@@ -75,7 +75,7 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
     }
     
 #ifdef QUDA
-    if( inverter==QUDA_INVERTER ) {
+    if( external_inverter==QUDA_INVERTER ) {
       return invert_eo_quda(Even_new, Odd_new, Even, Odd,
                             precision, max_iter,
                             solver_flag, rel_prec,
@@ -109,10 +109,10 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
     
     /* Here we invert the hermitean operator squared */
 #ifdef TM_USE_QPHIX
-    if( inverter==QPHIX_INVERTER ) {
+    if( external_inverter==QPHIX_INVERTER ) {
       // QPhiX inverts M(mu)M(mu)^dag or M(mu), no gamma_5 multiplication required
       iter = invert_eo_qphix_oneflavour(Odd_new, g_spinor_field[DUM_DERI],
-                                        precision, max_iter,
+                                        max_iter, precision,
                                         solver_flag, rel_prec,
                                         solver_params,
                                         sloppy,
