@@ -98,7 +98,8 @@ extern double X0, X1, X2, X3;
 bool use_tbc[4];
 double tbc_phases[4][2];
 // we always use twisted boundary conditions, which means that we are always
-// periodic in time
+// periodic in time and any possible anti-periodicity is implemented via
+// the phase
 double constexpr t_boundary = 1.0;
 
 template <typename T>
@@ -1132,7 +1133,7 @@ int invert_eo_qphix_helper(spinor **tmlqcd_odd_out, spinor **tmlqcd_odd_in,
   uint64_t mv_apps = -1;
 
   double rescale = 0.5 / g_kappa;
-  // the inverse of M M^dag comes with a factor of alpha^2
+  // the inverse of M M^dag, as required for the HMC, comes with a factor of alpha^2
   if (solver_params.solution_type == TM_SOLUTION_M_MDAG) {
     rescale *= rescale;
   }
@@ -1298,29 +1299,29 @@ int invert_eo_qphix_helper(spinor **tmlqcd_odd_out, spinor **tmlqcd_odd_in,
       qphix_buffer[fl] = q_spinor_handles.back().get();
     }
 
-    QPhiX::TwoFlavEvenOddLinearOperator<FT, V, S, compress> *FermionMatrixQPhiX;
+    QPhiX::TwoFlavEvenOddLinearOperator<FT, V, S, compress> *TwoFlavFermionMatrixQPhiX;
     if (g_c_sw > DBL_EPSILON) {  // DBCLOVER
       // complain, not implemented yet
     } else {  // DBTMWILSON
-      FermionMatrixQPhiX = new QPhiX::EvenOddNDTMWilsonReuseOperator<FT, V, S, compress>(
+      TwoFlavFermionMatrixQPhiX = new QPhiX::EvenOddNDTMWilsonReuseOperator<FT, V, S, compress>(
           mass, -0.5 * g_mubar / g_kappa, 0.5 * g_epsbar / g_kappa, u_packed, &geom, t_boundary,
           coeff_s, coeff_t, use_tbc, tbc_phases);
     }
 
     //
-    QPhiX::AbstractSolver<FT, V, S, compress, nf> *SolverQPhiX;
+    QPhiX::AbstractSolver<FT, V, S, compress, nf> *TwoFlavSolverQPhiX;
     if (solver_flag == CG) {
       QPhiX::masterPrintf("# Creating CG Solver...\n");
-      SolverQPhiX =
+      TwoFlavSolverQPhiX =
           new QPhiX::InvCG<FT, V, S, compress,
                            typename QPhiX::TwoFlavEvenOddLinearOperator<FT, V, S, compress> >(
-              *FermionMatrixQPhiX, max_iter);
+              *TwoFlavFermionMatrixQPhiX, max_iter);
     } else if (solver_flag == BICGSTAB) {
       QPhiX::masterPrintf("# Creating CG Solver...\n");
-      SolverQPhiX =
+      TwoFlavSolverQPhiX =
           new QPhiX::InvBiCGStab<FT, V, S, compress,
                                  typename QPhiX::TwoFlavEvenOddLinearOperator<FT, V, S, compress> >(
-              *FermionMatrixQPhiX, max_iter);
+              *TwoFlavFermionMatrixQPhiX, max_iter);
     } else {
       // TODO: Implement multi-shift CG, Richardson multi-precision
       QPhiX::masterPrintf(" Solver not yet supported by QPhiX!\n");
@@ -1348,22 +1349,22 @@ int invert_eo_qphix_helper(spinor **tmlqcd_odd_out, spinor **tmlqcd_odd_in,
       // We are solving
       //   M M^dagger qphix_buffer = qphix_in_prepared
       // here, that is, isign = -1 for the QPhiX CG solver.
-      (*SolverQPhiX)(qphix_buffer, qphix_in, RsdTarget, niters, rsd_final, site_flops, mv_apps, -1,
+      (*TwoFlavSolverQPhiX)(qphix_buffer, qphix_in, RsdTarget, niters, rsd_final, site_flops, mv_apps, -1,
                      verbose);
       // After that. if required by the solution type, multiply with M^dagger:
       //   qphix_out[1] = M^dagger M^dagger^-1 M^-1 qphix_in_prepared
       if (solver_params.solution_type == TM_SOLUTION_M) {
-        (*FermionMatrixQPhiX)(qphix_out, qphix_buffer, /* conjugate */ -1);
+        (*TwoFlavFermionMatrixQPhiX)(qphix_out, qphix_buffer, /* conjugate */ -1);
       } else {
         QPhiX::copySpinor<FT, V, S, compress, nf>(qphix_out, qphix_buffer, geom, n_blas_simt);
       }
     } else if (solver_flag == BICGSTAB) {
-      (*SolverQPhiX)(qphix_buffer, qphix_in, RsdTarget, niters, rsd_final, site_flops, mv_apps, 1,
-                     verbose);
+      (*TwoFlavSolverQPhiX)(qphix_buffer, qphix_in, RsdTarget, niters, rsd_final, site_flops, mv_apps, 1,
+                            verbose);
       // for M^dagger^-1 M^-1 solution type, need to call BiCGstab twice
       if (solver_params.solution_type == TM_SOLUTION_M_MDAG) {
-        (*SolverQPhiX)(qphix_out, qphix_buffer, RsdTarget, niters, rsd_final, site_flops, mv_apps,
-                       -1, verbose);
+        (*TwoFlavSolverQPhiX)(qphix_out, qphix_buffer, RsdTarget, niters, rsd_final, site_flops, mv_apps,
+                              -1, verbose);
       } else {
         QPhiX::copySpinor<FT, V, S, compress, nf>(qphix_out, qphix_buffer, geom, n_blas_simt);
       }
@@ -1381,12 +1382,12 @@ int invert_eo_qphix_helper(spinor **tmlqcd_odd_out, spinor **tmlqcd_odd_in,
                                    qphix_out[fl], cb_odd, rescale);
     }
 
-    delete FermionMatrixQPhiX;
-    delete SolverQPhiX;
+    delete TwoFlavFermionMatrixQPhiX;
+    delete TwoFlavSolverQPhiX;
 
-  } else {
+  } else { // if(num_flavour)
     // complain, this number of flavours is not valid
-  }
+  } // if(num_flavour)
 
   for (int cb : {0, 1}) {
     geom.free(u_packed[cb]);
