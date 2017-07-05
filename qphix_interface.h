@@ -61,20 +61,17 @@
 #define QPHIX_INTERFACE_H_
 
 #include "global.h"
-#include "misc_types.h"
-#include "operator_types.h"
 #include "qphix_types.h"
-#include "solver/matrix_mult_typedef.h"
-#include "solver/solver_params.h"
-#include "su3.h"
 
 #ifdef __cplusplus /* If this is a C++ compiler, use C linkage */
 extern "C" {
 #endif
 
-// Initialize and Finalize QPhiX
-void initQPhiX(int argc, char** argv, QphixParams_t params, int c12, QphixPrec_t precision);
-void _endQphix();
+#include "misc_types.h"
+#include "operator_types.h"
+#include "solver/matrix_mult_typedef.h"
+#include "solver/solver_params.h"
+#include "su3.h"
 
 int invert_eo_qphix_oneflavour(spinor* const Odd_out, spinor* const Odd_in, const int max_iter,
                                const double precision, const int solver_flag, const int rel_prec,
@@ -88,8 +85,9 @@ int invert_eo_qphix_twoflavour(spinor* Odd_out_s, spinor* Odd_out_c, spinor* Odd
                                const CompressionType compression);
 
 int invert_eo_qphix_nflavour(spinor** Odd_out, spinor** Odd_in, const double target_precision,
-                             const double precision_lambda, const int max_iter,
-                             const int solver_flag, solver_params_t solver_params,
+                             const int max_iter,
+                             const int solver_flag, const int rel_prec,
+                             solver_params_t solver_params,
                              const SloppyPrecision sloppy, const CompressionType compression,
                              const int num_flavour);
 
