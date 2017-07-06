@@ -1276,15 +1276,26 @@ int invert_eo_qphix_helper(spinor **tmlqcd_odd_out, spinor **tmlqcd_odd_in,
     if (fabs(g_mu) > DBL_EPSILON && g_c_sw > DBL_EPSILON) {  // TWISTED-MASS-CLOVER
       for (int fl : {0, 1}) {
         qphix_fullclover[fl] = (QFullClover *)geom.allocCBFullClov();
-        qphix_inv_fullclover[fl] = (QFullClover *)geom.allocCBFullClov();
+        qphix_inv_fullclover[fl] = (QFullClover *)geom.allocCBFullClov(); 
       }
       reorder_clover_to_QPhiX(geom, qphix_fullclover, cb_odd, false);
       reorder_clover_to_QPhiX(geom, qphix_inv_fullclover, cb_even, true);
-
+      
       QPhiX::masterPrintf("# Creating QPhiX Twisted Clover Fermion Matrix...\n");
       FermionMatrixQPhiX = new QPhiX::EvenOddTMCloverOperator<FT, V, S, compress>(
           u_packed, qphix_fullclover, qphix_inv_fullclover, &geom, t_boundary, coeff_s, coeff_t,
-          use_tbc, tbc_phases);
+          use_tbc, tbc_phases, -0.5*g_mu3/g_kappa);
+      if( solver_is_mixed(solver_flag) ){
+        for( int fl : {0, 1} ){
+          qphix_fullclover_inner[fl] = (QFullClover_inner *)geom_inner.allocCBFullClov();
+          qphix_inv_fullclover_inner[fl] = (QFullClover_inner *)geom_inner.allocCBFullClov();
+        }
+        reorder_clover_to_QPhiX(geom_inner, qphix_fullclover_inner, cb_odd, false);        
+        reorder_clover_to_QPhiX(geom_inner, qphix_inv_fullclover_inner, cb_even, true);
+        InnerFermionMatrixQPhiX = new QPhiX::EvenOddTMCloverOperator<FT_inner, V_inner, S_inner, compress_inner>(
+          u_packed_inner, qphix_fullclover_inner, qphix_inv_fullclover_inner, &geom_inner, t_boundary, coeff_s, coeff_t,
+          use_tbc, tbc_phases, -0.5*g_mu3/g_kappa);
+      }
       QPhiX::masterPrintf("# ...done.\n");
     } else if (fabs(g_mu) > DBL_EPSILON) {  // TWISTED-MASS
       const double TwistedMass = -g_mu / (2.0 * g_kappa);
@@ -1306,7 +1317,16 @@ int invert_eo_qphix_helper(spinor **tmlqcd_odd_out, spinor **tmlqcd_odd_in,
       QPhiX::masterPrintf("# Creating QPhiX Wilson Clover Fermion Matrix...\n");
       FermionMatrixQPhiX = new QPhiX::EvenOddCloverOperator<FT, V, S, compress>(
           u_packed, qphix_clover, qphix_inv_clover, &geom, t_boundary, coeff_s, coeff_t, use_tbc,
-          tbc_phases);
+          tbc_phases, -0.5*g_mu3/g_kappa);
+      if( solver_is_mixed(solver_flag) ){
+        qphix_clover_inner = (QClover_inner *)geom_inner.allocCBClov();
+        qphix_inv_clover_inner = (QClover_inner *)geom_inner.allocCBClov();
+        reorder_clover_to_QPhiX(geom_inner, qphix_clover_inner, cb_odd, false);        
+        reorder_clover_to_QPhiX(geom_inner, qphix_inv_clover_inner, cb_even, true);
+        InnerFermionMatrixQPhiX = new QPhiX::EvenOddCloverOperator<FT_inner, V_inner, S_inner, compress_inner>(
+          u_packed_inner, qphix_clover_inner, qphix_inv_clover_inner, &geom_inner, t_boundary, coeff_s, coeff_t,
+          use_tbc, tbc_phases, -0.5*g_mu3/g_kappa);
+      }
       QPhiX::masterPrintf("# ...done.\n");
 
     } else {  // WILSON

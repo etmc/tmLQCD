@@ -65,6 +65,7 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
    *********************************************************************/
   /* First term coming from the second field */
   /* Multiply with W_+ */
+  mnl_backup_restore_globals(TM_BACKUP_GLOBALS);
   g_mu = mnl->mu;
   g_mu3 = mnl->rho2; //rho2
   boundary(mnl->kappa);
@@ -141,9 +142,7 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
 
   sw_all(hf, mnl->kappa, mnl->c_sw);
   
-  g_mu = g_mu1;
-  g_mu3 = 0.;
-  boundary(g_kappa);
+  mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
   etime = gettime();
   if(g_debug_level > 1 && g_proc_id == 0) {
     printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
@@ -174,8 +173,11 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
    *********************************************************************/
   /* First term coming from the second field */
   /* Multiply with W_+ */
+  mnl_backup_restore_globals(TM_BACKUP_GLOBALS);
   g_mu = mnl->mu;
-  boundary(mnl->kappa);
+  g_kappa = mnl->kappa;
+  g_c_sw = mnl->c_sw;
+  boundary(g_kappa);
 
   // we compute the clover term (1 + T_ee(oo)) for all sites x
   sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
@@ -226,10 +228,8 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   sw_spinor_eo(OE, mnl->w_fields[0], mnl->w_fields[1], mnl->forcefactor);
 
   sw_all(hf, mnl->kappa, mnl->c_sw);
-  
-  g_mu = g_mu1;
-  g_mu3 = 0.;
-  boundary(g_kappa);
+
+  mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
   etime = gettime();
     if(g_debug_level > 1 && g_proc_id == 0) {
     printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
@@ -242,9 +242,11 @@ void cloverdetratio_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   double atime, etime;
   atime = gettime();
+  mnl_backup_restore_globals(TM_BACKUP_GLOBALS);
   g_mu = mnl->mu;
   g_c_sw = mnl->c_sw;
-  boundary(mnl->kappa);
+  g_kappa = mnl->kappa;
+  boundary(g_kappa);
   mnl->csg_n = 0;
   mnl->csg_n2 = 0;
   mnl->iter0 = 0;
@@ -287,9 +289,7 @@ void cloverdetratio_heatbath(const int id, hamiltonian_field_t * const hf) {
       printf("called cloverdetratio_heatbath for id %d energy %f\n", id, mnl->energy0);
     }
   }
-  g_mu3 = 0.;
-  g_mu = g_mu1;
-  boundary(g_kappa);
+  mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
   return;
 }
 
@@ -298,7 +298,10 @@ double cloverdetratio_acc(const int id, hamiltonian_field_t * const hf) {
   int save_sloppy = g_sloppy_precision_flag;
   double atime, etime;
   atime = gettime();
+  mnl_backup_restore_globals(TM_BACKUP_GLOBALS);
   g_mu = mnl->mu;
+  g_kappa = mnl->kappa;
+  g_c_sw = mnl->c_sw;
   boundary(mnl->kappa);
 
   sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
@@ -327,9 +330,7 @@ double cloverdetratio_acc(const int id, hamiltonian_field_t * const hf) {
   /* Compute the energy contr. from second field */
   mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
 
-  g_mu = g_mu1;
-  g_mu3 = 0.;
-  boundary(g_kappa);
+  mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
