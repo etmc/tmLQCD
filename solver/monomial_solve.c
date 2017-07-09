@@ -94,15 +94,15 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     // using CG for the HMC, we always want to have the solution of (Q Q^dagger) x = b, which is equivalent to
     // gamma_5 (M M^dagger)^{-1} gamma_5 b
     // FIXME: this needs to be adjusted to also support BICGSTAB
-    gamma5(temp[1], Q, VOLUME/2);
-    iteration_count = invert_eo_qphix_oneflavour(P, temp[1], max_iter, eps_sq, solver_type, 
+    gamma5(temp[0], Q, VOLUME/2);
+    iteration_count = invert_eo_qphix_oneflavour(P, temp[0], max_iter, eps_sq, solver_type, 
                                                  rel_prec, solver_params, sloppy, compression);
     mul_gamma5(P, VOLUME/2);
 
 #ifdef WIP
-    f(temp[1], P);
-    diff(temp[1], temp[1], Q, VOLUME/2);
-    double diffnorm = square_norm(temp[1], VOLUME/2, 1); 
+    f(temp[0], P);
+    diff(temp[0], temp[0], Q, VOLUME/2);
+    double diffnorm = square_norm(temp[0], VOLUME/2, 1); 
     if( g_proc_id == 0 ){
       printf("# QPhiX residual check: %e\n", diffnorm);
     }
@@ -168,9 +168,9 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
 #ifdef WIP
     spinor** temp;
     init_solver_field(&temp, VOLUME/2, 1);
-    f(temp[1], P);
-    diff(temp[1], temp[1], Q, VOLUME/2);
-    double diffnorm = square_norm(temp[1], VOLUME/2, 1); 
+    f(temp[0], P);
+    diff(temp[0], temp[0], Q, VOLUME/2);
+    double diffnorm = square_norm(temp[0], VOLUME/2, 1); 
     if( g_proc_id == 0 ){
       printf("# tmLQCD residual check: %e\n", diffnorm);
     }
