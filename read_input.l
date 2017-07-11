@@ -1110,6 +1110,11 @@ static inline void rmQuotes(char *str){
     if(myverbose) printf("  Solver set to MixedBiCGstab line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
+  mixedcg {
+    optr->solver=MIXEDCG;
+    if(myverbose) printf("  Solver set to MixedCG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
   rgmixedcg {
     optr->solver=RGMIXEDCG;
     if(myverbose) printf("  Solver set to RGMixedCG line %d operator %d\n", line_of_file, current_operator);
