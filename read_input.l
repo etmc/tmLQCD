@@ -1956,6 +1956,19 @@ static inline void rmQuotes(char *str){
     meas->max_iter = a;
     if(myverbose) printf("  MaxSolverIterations set to %d line %d measurement id=%d\n", a, line_of_file, meas->id);
   }
+  {SPC}*AllTimeSlices{EQL}yes {
+    meas->all_time_slices = 1;
+    if(myverbose) printf("  Inversions for correlators will be done on all time-slices, line %d, measurement id=%d\n", line_of_file, meas->id);
+  }
+  {SPC}*AllTimeSlices{EQL}no {
+    meas->all_time_slices = 0;
+    if(myverbose) printf("  Inversions for correlators will NOT be done on all time-slices, line %d, measurement id=%d\n", line_of_file, meas->id);
+  }
+  {SPC}*NoSamples{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    meas->no_samples = a;
+    if(myverbose) printf("  Number of samples for correlators measurement set to %d, line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
 }
 
 <PLOOP>{
