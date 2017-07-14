@@ -1976,6 +1976,8 @@ static inline void rmQuotes(char *str){
   /*set default frequency here, in case it is not specified
     in the input file */  
   meas->freq = _default_measurement_freq;
+  meas->no_samples = 1;
+  meas->all_time_slices = 0;
   if(!reread) {
     if(add_measurement(meas->type) < 0) {
       fprintf(stderr, "Something went wrong in adding measurements\nAborting...!\n");
