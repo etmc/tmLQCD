@@ -314,9 +314,18 @@ void _endQuda() {
 
 
 void _loadGaugeQuda( const int compression ) {
-  if( inv_param.verbosity > QUDA_SILENT )
-    if(g_proc_id == 0)
+  if( inv_param.verbosity > QUDA_SILENT ){
+    if(g_proc_id == 0) {
       printf("# QUDA: Called _loadGaugeQuda\n");
+      if( compression == 18 ){
+        if( quda_input.fermionbc == TM_QUDA_THETABC ){
+          printf("# QUDA: Theta boundary conditions will be applied to gauge field\n");
+        } else if ( quda_input.fermionbc == TM_QUDA_APBC ){
+          printf("# QUDA: Temporal ABPC will be applied to gauge feild\n");
+        }
+      }
+    }
+  }
 
   _Complex double tmpcplx;
 
@@ -374,7 +383,7 @@ void _loadGaugeQuda( const int compression ) {
             }
           } else if ( quda_input.fermionbc == TM_QUDA_APBC && x0+g_proc_coords[0]*T == g_nproc_t*T-1 ) {
             for( int i=0; i<18; i++ ) {
-              gauge_quda[3][quda_idx+2*i]   = -gauge_quda[3][quda_idx+2*i];
+              gauge_quda[3][quda_idx+i]   = -gauge_quda[3][quda_idx+i];
             }
           } // quda_input.fermionbc
         } // compression
@@ -471,10 +480,10 @@ void set_boundary_conditions( CompressionType* compression ) {
   if( fabs(X1)>0.0 || fabs(X2)>0.0 || fabs(X3)>0.0 || (fabs(X0)!=0.0 && fabs(X0)!=1.0) ) {
     if( *compression!=NO_COMPRESSION ) {
       if(g_proc_id == 0) {
-          printf("\n# QUDA: WARNING you can't use compression %d with boundary conditions for fermion fields (t,x,y,z)*pi: (%f,%f,%f,%f) \n", *compression,X0,X1,X2,X3);
-          printf("# QUDA: disabling compression.\n\n");
-          *compression=NO_COMPRESSION;
+        printf("\n# QUDA: WARNING you can't use compression %d with boundary conditions for fermion fields (t,x,y,z)*pi: (%f,%f,%f,%f) \n", *compression,X0,X1,X2,X3);
+        printf("# QUDA: disabling compression.\n\n");
       }
+      *compression=NO_COMPRESSION;
     }
   }
 
@@ -482,9 +491,9 @@ void set_boundary_conditions( CompressionType* compression ) {
     if( *compression!=NO_COMPRESSION ){
       if(g_proc_id == 0){
         printf("# QUDA: WARNING forced (A)PBC were selected in the input file.\n");
-        printf("# QUDA: Disabling compression to maek sure that these are not lost due to gauge compression.\n");
-        *compression=NO_COMPRESSION;
+        printf("# QUDA: Disabling compression to make sure that these are not lost due to gauge compression.\n");
       }
+      *compression=NO_COMPRESSION;
     }
   }
 
@@ -725,10 +734,9 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 
   // figure out which BC to use (theta, trivial...)
   set_boundary_conditions(&compression);
-
   // set the sloppy precision of the mixed prec solver
   set_sloppy_prec(sloppy_precision);
-
+  
   // load gauge after setting precision
   _loadGaugeQuda(compression);
 
