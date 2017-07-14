@@ -63,6 +63,7 @@ EQL {SPC}*={SPC}*
 #include"operator.h"
 #include"phmc.h"
 #include<io/params.h>
+#include "quda_types.h"
 
 static inline void rmQuotes(char *str){
   char* strsave=str;
@@ -189,8 +190,17 @@ static inline void rmQuotes(char *str){
   double mu_Msap;
 
   int use_preconditioning;
-  
-  int use_qudainverter;
+
+  /* macro control over read_input.l is poor. In order to support compilation without
+   * a given external library, we need to have these declared here as a dummy.
+   * Note that no parameters will actually be passed, the input file reader will
+   * terminate the program if one attempts to set the parameters but tmLQCD has
+   * been compiled without the interface in question. */
+#ifdef TM_USE_QUDA
+  extern tm_QudaParams_t quda_input;
+#else
+  tm_QudaParams_t quda_input;
+#endif
 
 %}
 
@@ -339,6 +349,7 @@ static inline void rmQuotes(char *str){
 %x PRECONDITIONING
 
 %x QUDAINVERTER
+%x QPHIXINVERTER
 %x COMPRESSION
 
 %x MIXCGEPS
@@ -346,6 +357,8 @@ static inline void rmQuotes(char *str){
 
 %x LOWMEM
 %x SUBPROCESS 
+
+%x INITEXTERNALINVERTER
 
 %%
 ^SourceFilename{EQL}               BEGIN(SOURCEFILE);
@@ -417,7 +430,6 @@ static inline void rmQuotes(char *str){
 ^NoSamples{EQL}                    BEGIN(NOSAMPLES);
 ^SplittedPropagator{EQL}           BEGIN(PROPSPLIT);
 ^UsePreconditioning{EQL}           BEGIN(PRECONDITIONING);
-^UseQudaInverter{EQL}              BEGIN(QUDAINVERTER);
 ^UseCompression{EQL}               BEGIN(COMPRESSION);
 
 ^BeginMeasurement{SPC}+            BEGIN(INITMEASUREMENT);
@@ -426,8 +438,10 @@ static inline void rmQuotes(char *str){
 ^MStarSq{EQL}                      BEGIN(MSTARSQ);
 ^NoSourcesZ2{EQL}                  BEGIN(NOSOURCESZ2);
 ^BeginMonomial{SPC}+               BEGIN(INITMONOMIAL);
-^BeginInt                         BEGIN(INITINTEGRATOR);
+^BeginInt                          BEGIN(INITINTEGRATOR);
 ^BeginOperator{SPC}+               BEGIN(INITOPERATOR);
+
+^BeginExternalInverter{SPC}+       BEGIN(INITEXTERNALINVERTER);
 
 ^PropagatorComparison{EQL}         BEGIN(PCOMP);
 ^NbCoresPerNode{EQL}               BEGIN(NBCORES);
@@ -443,8 +457,8 @@ static inline void rmQuotes(char *str){
 ^DflPolyIter{EQL}                  BEGIN(DFLPOLYITER);
 
 ^BeginGPU                          BEGIN(INITGPU);
-^BeginDeflation		           BEGIN(INITDEFLATION);
-^BeginDDalpha       	           BEGIN(INITMULTIGRID);
+^BeginDeflation		                 BEGIN(INITDEFLATION);
+^BeginDDalpha       	             BEGIN(INITMULTIGRID);
 ^MixCGInnerEps{EQL}                BEGIN(MIXCGEPS);
 ^MixCGMaxIter{EQL}                 BEGIN(MIXCGIT);
 
@@ -994,11 +1008,11 @@ static inline void rmQuotes(char *str){
 }
 
 <WILSONOP,TMOP,DBTMOP,CLOVEROP,DBCLOVEROP>{  
-  {SPC}*UseQudaInverter{EQL}yes {
+  {SPC}*UseExternalInverter{EQL}quda {
     if(myverbose) printf("  Use Quda inverter line %d operator %d\n", line_of_file, current_operator);
     optr->external_inverter = QUDA_INVERTER;
   }
-  {SPC}*UseQudaInverter{EQL}no {
+  {SPC}*UseExternalInverter{EQL}no {
     if(myverbose) printf("  Do not use Quda inverter line %d operator %d\n", line_of_file, current_operator);
     optr->external_inverter = NO_EXT_INV;
   }
@@ -1236,6 +1250,46 @@ static inline void rmQuotes(char *str){
   }
 }
 
+<INITEXTERNALINVERTER>{TYPE} {                                                                                                                    
+  if(strcmp(yytext, "QPHIX")==0) {
+#ifdef TM_USE_QPHIX
+    if(myverbose) printf("Setting QPHIX external inverter parameters line %d\n", line_of_file);
+    BEGIN(QPHIXINVERTER);
+#else
+    printf("tmLQCD built withtout QPHIX support. Exiting!\n");
+    exit(1);
+#endif
+  } else if ( strcmp(yytext, "QUDA")==0) {
+#ifdef TM_USE_QUDA
+    if(myverbose) printf("Setting QUDA external inverter parameters line %d\n", line_of_file);
+    BEGIN(QUDAINVERTER);
+#else
+    printf("tmLQCD built withtout QUDA support. Exiting!\n");
+    exit(1);
+#endif
+  } else {
+    printf("Error on line %d, inverter '%s' is unknown. Exiting!\n", line_of_file, yytext);
+    exit(1);
+  }
+}
+<QUDAINVERTER>{
+  {SPC}*FermionBC{EQL}theta {
+    quda_input.fermionbc = TM_QUDA_THETABC;
+    if(myverbose) printf("  Force theta fermionic boundary conditions for QUDA inversions, line %d\n", line_of_file);
+  }
+  {SPC}*FermionBC{EQL}apbc {
+    quda_input.fermionbc = TM_QUDA_APBC;
+    if(myverbose) printf("  Force anti-periodic fermionic boundary conditions for QUDA inversions, line %d\n", line_of_file);
+  }
+  {SPC}*FermionBC{EQL}pbc {
+    quda_input.fermionbc = TM_QUDA_PBC;
+    if(myverbose) printf("  Force periodic fermionic boundary conditions for QUDA inversions, line %d\n", line_of_file);
+  }
+  ^EndExternalInverter{SPC}*  { 
+    if(myverbose) printf("QUDA external inverter parameters parsed on line %d\n\n", line_of_file);
+    BEGIN(0);
+  }
+}
 
 <INITMONOMIAL>{TYPE} {
   current_monomial++;
@@ -2502,7 +2556,7 @@ static inline void rmQuotes(char *str){
   BEGIN(comment_caller);
 }
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID>{SPC}*\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID,INITEXTERNALINVERTER,QUDAINVERTER>{SPC}*\n   {
   line_of_file++;
 }
 <*>{SPC}*\n                       {
@@ -2649,7 +2703,6 @@ int read_input(char * conf_file){
   g_sloppy_precision_flag = _default_g_sloppy_precision_flag;
   use_stout_flag = _default_use_stout_flag;
   use_preconditioning = _default_use_preconditioning;
-  use_qudainverter = _default_use_qudainverter;
   stout_rho = _default_stout_rho;
   stout_no_iter = _default_stout_no_iter;
 
@@ -2684,6 +2737,8 @@ int read_input(char * conf_file){
 
   lowmem_flag = _default_lowmem_flag;
   subprocess_flag = _default_subprocess_flag;
+
+  quda_input.fermionbc = TM_QUDA_THETABC;
 
   /* Put -1 in PropInfo.format to see if parse_config() will
   change the value. If not then set it to source_format_flag */

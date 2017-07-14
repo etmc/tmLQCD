@@ -53,7 +53,7 @@
 #include "init/init_spinor_field.h"
 #include <io/params.h>
 #include <io/spinor.h>
-#ifdef QUDA
+#ifdef TM_USE_QUDA
 #  include "quda_interface.h"
 #endif
 #ifdef DDalphaAMG
@@ -87,7 +87,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 
   int iter = 0;
 
-#ifdef QUDA
+#ifdef TM_USE_QUDA
   if( inverter==QUDA_INVERTER ) {
     return invert_eo_quda(Even_new, Odd_new, Even, Odd,
                           precision, max_iter,
