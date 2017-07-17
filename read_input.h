@@ -116,8 +116,6 @@ extern "C"
 
   extern int use_preconditioning;
 
-  extern int use_qudainverter;
-
   extern int subprocess_flag;
   extern int lowmem_flag; 
 

@@ -83,7 +83,7 @@
 #include "operator/tm_operators.h"
 #include "operator/Dov_psi.h"
 #include "solver/spectral_proj.h"
-#ifdef QUDA
+#ifdef TM_USE_QUDA
 #  include "quda_interface.h"
 #endif
 #ifdef DDalphaAMG
@@ -465,7 +465,7 @@ int main(int argc, char *argv[])
   free(input_filename);
   free(SourceInfo.basename);
   free(PropInfo.basename);
-#ifdef QUDA
+#ifdef TM_USE_QUDA
   _endQuda();
 #endif
 #ifdef TM_USE_MPI

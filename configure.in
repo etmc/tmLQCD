@@ -939,7 +939,7 @@ AC_ARG_WITH(qudadir,
             AS_HELP_STRING([--with-qudadir[=dir]], [use QUDA, to be found in dir]),
              [echo yes
               QUDA_AVAILABLE=1
-              AC_DEFINE(QUDA,1,Using QUDA GPU)
+              AC_DEFINE(TM_USE_QUDA,1,Using QUDA GPU)
               quda_dir=$withval
               LDFLAGS="$LDFLAGS -L${quda_dir}/lib"
               INCLUDES="$INCLUDES -I${quda_dir}/include/"
