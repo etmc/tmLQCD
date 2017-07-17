@@ -50,7 +50,7 @@
 #include"invert_clover_eo.h"
 #include "solver/dirac_operator_eigenvectors.h"
 #include "solver/dfl_projector.h"
-#ifdef QUDA
+#ifdef TM_USE_QUDA
 #  include "quda_interface.h"
 #endif
 #ifdef DDalphaAMG
@@ -74,7 +74,7 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
       printf("# Using even/odd preconditioning!\n"); fflush(stdout);
     }
     
-#ifdef QUDA
+#ifdef TM_USE_QUDA
     if( external_inverter==QUDA_INVERTER ) {
       return invert_eo_quda(Even_new, Odd_new, Even, Odd,
                             precision, max_iter,

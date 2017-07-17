@@ -201,7 +201,7 @@
 #undef HAVE_LIBQUDA
 
 /* Using QUDA GPU */
-#undef QUDA
+#undef TM_USE_QUDA
 
 /* Using DDalphaAMG */
 #undef DDalphaAMG

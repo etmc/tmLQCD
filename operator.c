@@ -60,7 +60,7 @@
 #include "operator/clover_leaf.h"
 #include "operator.h"
 #include "gettime.h"
-#ifdef QUDA
+#ifdef TM_USE_QUDA
 #  include "quda_interface.h"
 #endif
 #ifdef DDalphaAMG
@@ -259,7 +259,7 @@ int init_operators() {
         //  optr->applyDbQsq = &Qtm_pm_ndpsi;
       }
       if(optr->external_inverter==QUDA_INVERTER ) {
-#ifdef QUDA
+#ifdef TM_USE_QUDA
         _initQuda();
 #else
         if(g_proc_id == 0) {

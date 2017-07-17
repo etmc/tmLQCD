@@ -47,7 +47,7 @@
 #include"operator/tm_operators_nd.h"
 #include"operator/tm_operators_nd_32.h"
 #include"invert_doublet_eo.h"
-#ifdef QUDA
+#ifdef TM_USE_QUDA
 #  include "quda_interface.h"
 #endif
 #ifdef TM_USE_QPHIX
@@ -76,7 +76,7 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
 
   int iter = 0;
 
-#ifdef QUDA
+#ifdef TM_USE_QUDA
   if( external_inverter==QUDA_INVERTER ) {
     return invert_doublet_eo_quda( Even_new_s, Odd_new_s, Even_new_c, Odd_new_c,
                                    Even_s, Odd_s, Even_c, Odd_c,
@@ -201,7 +201,7 @@ int invert_cloverdoublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
   
   int iter = 0;
 
-#ifdef QUDA
+#ifdef TM_USE_QUDA
   if( external_inverter==QUDA_INVERTER ) {
     return invert_doublet_eo_quda( Even_new_s, Odd_new_s, Even_new_c, Odd_new_c,
                                    Even_s, Odd_s, Even_c, Odd_c,
