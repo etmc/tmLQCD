@@ -82,12 +82,11 @@ extern int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
 
 int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_params,
                      const int max_iter, double eps_sq, const int rel_prec, 
-                     const int N, matrix_mult f, int solver_type, const ExternalInverter external_inverter,
-                     const SloppyPrecision sloppy, const CompressionType compression){
+                     const int N, matrix_mult f, int solver_type){
   int iteration_count = 0;
   int use_solver = solver_type;
 #ifdef TM_USE_QPHIX
-  if(external_inverter == QPHIX_INVERTER){
+  if(solver_params.external_inverter == QPHIX_INVERTER){
     spinor** temp;
     init_solver_field(&temp, VOLUME/2, 1);
     
@@ -96,7 +95,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     // FIXME: this needs to be adjusted to also support BICGSTAB
     gamma5(temp[0], Q, VOLUME/2);
     iteration_count = invert_eo_qphix_oneflavour(P, temp[0], max_iter, eps_sq, solver_type, 
-                                                 rel_prec, solver_params, sloppy, compression);
+                                                 rel_prec, solver_params, solver_params.sloppy_precision, solver_params.compression_type);
     mul_gamma5(P, VOLUME/2);
 
 #ifdef WIP
@@ -179,6 +178,57 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
   return(iteration_count);
 }
 
+int solve_mshift_oneflavour(spinor ** const P, spinor * const Q, solver_params_t* solver_params){
+  int iteration_count = 0;
+  spinor ** temp;
+  
+#ifdef TM_USE_QPHIX
+  if( solver_params->external_inverter == QPHIX_INVERTER ){
+    spinor** temp;
+    init_solver_field(&temp, VOLUME/2, 1);
+    gamma5(temp[0], Q, VOLUME/2);
+    iteration_count = invert_eo_qphix_oneflavour_mshift(P, temp[0],
+                                                        solver_params->max_iter, solver_params->squared_solver_prec,
+                                                        solver_params->type, solver_params->rel_prec,
+                                                        *solver_params,
+                                                        solver_params->sloppy_precision,
+                                                        solver_params->compression_type);
+    for( int shift = 0; shift < solver_params->no_shifts; shift++){
+      mul_gamma5(P[shift], VOLUME/2);
+    }
+#ifdef WIP
+    // FIXME: in the shift-by-shift branch, the shifted operator exists explicitly and could be used to 
+    // truly check the residual here
+    solver_params->M_psi(temp[0], P[0]);
+    diff(temp[0], temp[0], Q, VOLUME/2);
+    double diffnorm = square_norm(temp[0], VOLUME/2, 1); 
+    if( g_proc_id == 0 ){
+      printf("# QPhiX residual check: %e\n", diffnorm);
+    }
+#endif // WIP
+    finalize_solver(temp, 1);
+    return(iteration_count);
+  }
+#endif // TM_USE_QPHIX
+
+  double reached_prec = -1.0;
+  iteration_count = cg_mms_tm(P, Q, solver_params, &reached_prec);
+#ifdef WIP
+  init_solver_field(&temp, VOLUME/2, 1);
+  // FIXME: in the shift-by-shift branch, the shifted operator exists explicitly and could be used to 
+  // truly check the residual here
+  solver_params->M_psi(temp[0], P[0]);
+  diff(temp[0], temp[0], Q, VOLUME/2);
+  double diffnorm = square_norm(temp[0], VOLUME/2, 1); 
+  if( g_proc_id == 0 ){
+    printf("# tmLQCD residual check: %e\n", diffnorm);
+  }
+  finalize_solver(temp, 1);
+#endif // WIP      
+
+  return iteration_count;
+}
+
 
 int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn, 
                  spinor * const Qup, spinor * const Qdn, 
@@ -201,7 +251,53 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
       }
     }
     else if (solver_params->type==CGMMSND){
+      spinor** temp;
+#ifdef TM_USE_QPHIX
+      if( solver_params->external_inverter == QPHIX_INVERTER ){
+        init_solver_field(&temp, VOLUME/2, 2);
+        // by switching up and down below, we do the gamma5 tau1 (M.M^dagger)^{-1} tau1 gamma5 = [ Q(+mu,eps) Q(-mu,eps) ]^{-1}
+        gamma5(temp[0], Qup, VOLUME/2);
+        gamma5(temp[1], Qdn, VOLUME/2);
+        iteration_count = invert_eo_qphix_twoflavour_mshift(/*Pup, Pdn, temp[0], temp[1],*/
+                                                            Pdn, Pup, temp[1], temp[0],
+                                                            solver_params->max_iter, solver_params->squared_solver_prec,
+                                                            solver_params->type, solver_params->rel_prec,
+                                                            *solver_params,
+                                                            solver_params->sloppy_precision,
+                                                            solver_params->compression_type);
+        for( int shift = 0; shift < solver_params->no_shifts; shift++){
+          mul_gamma5(Pup[shift], VOLUME/2);
+          mul_gamma5(Pdn[shift], VOLUME/2);
+        }
+#ifdef WIP
+        // FIXME: in the shift-by-shift branch, the shifted operator exists explicitly and could be used to 
+        // truly check the residual here
+        solver_params->M_ndpsi(temp[0], temp[1], Pup[0], Pdn[0]);
+        diff(temp[0], temp[0], Qup, VOLUME/2);
+        diff(temp[1], temp[1], Qdn, VOLUME/2);
+        double diffnorm = square_norm(temp[0], VOLUME/2, 1) + square_norm(temp[1], VOLUME/2, 1); 
+        if( g_proc_id == 0 ){
+          printf("# QPhiX residual check: %e\n", diffnorm);
+        }
+#endif // WIP
+        finalize_solver(temp, 2);
+        return(iteration_count);
+      }
+#endif
       iteration_count = cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_params);
+#ifdef WIP
+      init_solver_field(&temp, VOLUME/2, 2);
+      // FIXME: in the shift-by-shift branch, the shifted operator exists explicitly and could be used to 
+      // truly check the residual here
+      solver_params->M_ndpsi(temp[0], temp[1], Pup[0], Pdn[0]);
+      diff(temp[0], temp[0], Qup, VOLUME/2);
+      diff(temp[1], temp[1], Qdn, VOLUME/2);
+      double diffnorm = square_norm(temp[0], VOLUME/2, 1) + square_norm(temp[1], VOLUME/2, 1); 
+      if( g_proc_id == 0 ){
+        printf("# tmLQCD residual check: %e\n", diffnorm);
+      }
+      finalize_solver(temp, 2);
+#endif // WIP      
     }
     else{
       if(g_proc_id==0) printf("Error: solver not allowed for ND mms solve. Aborting...\n");

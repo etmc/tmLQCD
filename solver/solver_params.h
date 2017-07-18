@@ -34,6 +34,8 @@
 #include "solver/matrix_mult_typedef.h"
 #include "solver/matrix_mult_typedef_nd.h"
 
+#include "misc_types.h"
+
 typedef enum solution_type_t {
   TM_SOLUTION_M_MDAG = 0,
   TM_SOLUTION_M
@@ -89,6 +91,10 @@ typedef struct {
   double * shifts;
   
   solution_type_t solution_type;
+  
+  CompressionType compression_type;
+  SloppyPrecision sloppy_precision;
+  ExternalInverter external_inverter;
   
 } solver_params_t;
 

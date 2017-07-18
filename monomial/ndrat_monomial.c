@@ -74,7 +74,7 @@ void nd_set_global_parameter(monomial * const mnl) {
 
 void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
-  solver_params_t solver_params;
+//   solver_params_t solver_params;
   double atime, etime;
   atime = gettime();
   nd_set_global_parameter(mnl);
@@ -94,23 +94,23 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   }
   mnl->forcefactor = mnl->EVMaxInv;
 
-  solver_params.max_iter = mnl->maxiter;
-  solver_params.squared_solver_prec = mnl->forceprec;
-  solver_params.no_shifts = mnl->rat.np;
-  solver_params.shifts = mnl->rat.mu;
-  solver_params.rel_prec = g_relative_precision_flag;
-  solver_params.type = mnl->solver; 
+  mnl->solver_params.max_iter = mnl->maxiter;
+  mnl->solver_params.squared_solver_prec = mnl->forceprec;
+  mnl->solver_params.no_shifts = mnl->rat.np;
+  mnl->solver_params.shifts = mnl->rat.mu;
+  mnl->solver_params.rel_prec = g_relative_precision_flag;
+  mnl->solver_params.type = mnl->solver; 
 
-  solver_params.M_ndpsi = &Qtm_pm_ndpsi;
-  solver_params.M_ndpsi32 = &Qtm_pm_ndpsi_32;    
+  mnl->solver_params.M_ndpsi = &Qtm_pm_ndpsi;
+  mnl->solver_params.M_ndpsi32 = &Qtm_pm_ndpsi_32;    
   if(mnl->type == NDCLOVERRAT) {
-    solver_params.M_ndpsi = &Qsw_pm_ndpsi;
-    solver_params.M_ndpsi32 = &Qsw_pm_ndpsi_32;
+    mnl->solver_params.M_ndpsi = &Qsw_pm_ndpsi;
+    mnl->solver_params.M_ndpsi32 = &Qsw_pm_ndpsi_32;
   }
-  solver_params.sdim = VOLUME/2;
+  mnl->solver_params.sdim = VOLUME/2;
   // this generates all X_j,o (odd sites only) -> g_chi_up|dn_spinor_field
   mnl->iter1 += solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-                   		      mnl->pf, mnl->pf2,&solver_params);
+                             mnl->pf, mnl->pf2, &(mnl->solver_params) );
   
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     if(mnl->type == NDCLOVERRAT) {
@@ -193,7 +193,6 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
 
 void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
-  solver_params_t solver_params;
   double atime, etime;
   atime = gettime();
   nd_set_global_parameter(mnl);
@@ -218,21 +217,21 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   random_spinor_field_eo(mnl->pf2, mnl->rngrepro, RN_GAUSS);
   mnl->energy0 += square_norm(mnl->pf2, VOLUME/2, 1);
   // set solver parameters
-  solver_params.max_iter = mnl->maxiter;
-  solver_params.squared_solver_prec = mnl->accprec;
-  solver_params.no_shifts = mnl->rat.np;
-  solver_params.shifts = mnl->rat.nu;
-  solver_params.type = mnl->solver;
-  solver_params.M_ndpsi = &Qtm_pm_ndpsi;
-  solver_params.M_ndpsi32 = &Qtm_pm_ndpsi_32;    
+  mnl->solver_params.max_iter = mnl->maxiter;
+  mnl->solver_params.squared_solver_prec = mnl->accprec;
+  mnl->solver_params.no_shifts = mnl->rat.np;
+  mnl->solver_params.shifts = mnl->rat.nu;
+  mnl->solver_params.type = mnl->solver;
+  mnl->solver_params.M_ndpsi = &Qtm_pm_ndpsi;
+  mnl->solver_params.M_ndpsi32 = &Qtm_pm_ndpsi_32;    
   if(mnl->type == NDCLOVERRAT) {
-    solver_params.M_ndpsi = &Qsw_pm_ndpsi;
-    solver_params.M_ndpsi32 = &Qsw_pm_ndpsi_32;
+    mnl->solver_params.M_ndpsi = &Qsw_pm_ndpsi;
+    mnl->solver_params.M_ndpsi32 = &Qsw_pm_ndpsi_32;
   }
-  solver_params.sdim = VOLUME/2;
-  solver_params.rel_prec = g_relative_precision_flag;
+  mnl->solver_params.sdim = VOLUME/2;
+  mnl->solver_params.rel_prec = g_relative_precision_flag;
   mnl->iter0 = solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-                   		      mnl->pf, mnl->pf2, &solver_params);
+                            mnl->pf, mnl->pf2, &(mnl->solver_params) );
 
   assign(mnl->w_fields[2], mnl->pf, VOLUME/2);
   assign(mnl->w_fields[3], mnl->pf2, VOLUME/2);
@@ -269,7 +268,6 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
 
 
 double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
-  solver_params_t solver_params;
   monomial * mnl = &monomial_list[id];
   double atime, etime;
   atime = gettime();
@@ -281,22 +279,22 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
   }
   mnl->energy1 = 0.;
 
-  solver_params.max_iter = mnl->maxiter;
-  solver_params.squared_solver_prec = mnl->accprec;
-  solver_params.no_shifts = mnl->rat.np;
-  solver_params.shifts = mnl->rat.mu;
-  solver_params.type = mnl->solver;
+  mnl->solver_params.max_iter = mnl->maxiter;
+  mnl->solver_params.squared_solver_prec = mnl->accprec;
+  mnl->solver_params.no_shifts = mnl->rat.np;
+  mnl->solver_params.shifts = mnl->rat.mu;
+  mnl->solver_params.type = mnl->solver;
   
-  solver_params.M_ndpsi = &Qtm_pm_ndpsi;
-  solver_params.M_ndpsi32 = &Qtm_pm_ndpsi_32; 
+  mnl->solver_params.M_ndpsi = &Qtm_pm_ndpsi;
+  mnl->solver_params.M_ndpsi32 = &Qtm_pm_ndpsi_32; 
   if(mnl->type == NDCLOVERRAT) {
-    solver_params.M_ndpsi = &Qsw_pm_ndpsi;
-    solver_params.M_ndpsi32 = &Qsw_pm_ndpsi_32;
+    mnl->solver_params.M_ndpsi = &Qsw_pm_ndpsi;
+    mnl->solver_params.M_ndpsi32 = &Qsw_pm_ndpsi_32;
   }
-  solver_params.sdim = VOLUME/2;
-  solver_params.rel_prec = g_relative_precision_flag;
+  mnl->solver_params.sdim = VOLUME/2;
+  mnl->solver_params.rel_prec = g_relative_precision_flag;
   mnl->iter0 += solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-                             mnl->pf, mnl->pf2,&solver_params);
+                             mnl->pf, mnl->pf2, &(mnl->solver_params) );
 
   // apply R to the pseudo-fermion fields
   assign(mnl->w_fields[0], mnl->pf, VOLUME/2);

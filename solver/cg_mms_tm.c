@@ -86,11 +86,11 @@ int cg_mms_tm(spinor ** const P, spinor * const Q,
   alphas[0] = 1.0;
   betas[0] = 0.0;
   sigma[0] = solver_params->shifts[0]*solver_params->shifts[0];
-  if(g_proc_id == 0 && g_debug_level > 2) printf("# CGMMS: shift %d is %e\n", 0, sigma[0]);
+  if(g_proc_id == 0 && g_debug_level > 1) printf("# CGMMS: shift %d is %e\n", 0, sigma[0]);
 
   for(int im = 1; im < no_shifts; im++) {
     sigma[im] = solver_params->shifts[im]*solver_params->shifts[im] - sigma[0];
-    if(g_proc_id == 0 && g_debug_level > 2) printf("# CGMMS: shift %d is %e\n", im, sigma[im]);
+    if(g_proc_id == 0 && g_debug_level > 1) printf("# CGMMS: shift %d is %e\n", im, sigma[im]);
     // these will be the result spinor fields
     zero_spinor_field(P[im], N);
     // these are intermediate fields

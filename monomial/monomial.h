@@ -64,10 +64,6 @@ typedef struct {
   int rngrepro;
   int solver;
   
-  ExternalInverter external_inverter;
-  CompressionType  compression_type;
-  SloppyPrecision sloppy_precision;
-  
   int iter0, iter1, iter2;
   int csg_N, csg_N2;
   int csg_n, csg_n2;

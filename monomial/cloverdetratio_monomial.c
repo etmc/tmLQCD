@@ -87,8 +87,7 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
   chrono_guess(mnl->w_fields[1], mnl->w_fields[2], mnl->csg_field, 
 	       mnl->csg_index_array, mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
   mnl->iter1 += solve_degenerate(mnl->w_fields[1], mnl->w_fields[2], mnl->solver_params, mnl->maxiter, 
-		       mnl->forceprec, g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver,
-                       mnl->external_inverter, mnl->sloppy_precision, mnl->compression_type);
+		       mnl->forceprec, g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver);
   chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
 		      mnl->csg_N, &mnl->csg_n, VOLUME/2);
   /* Y_W -> w_fields[0]  */
@@ -198,8 +197,7 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   chrono_guess(mnl->w_fields[1], mnl->w_fields[2], mnl->csg_field, 
 	       mnl->csg_index_array, mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
   mnl->iter1 += solve_degenerate(mnl->w_fields[1], mnl->w_fields[2], mnl->solver_params, mnl->maxiter, 
-		       mnl->forceprec, g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver,
-                       mnl->external_inverter, mnl->sloppy_precision, mnl->compression_type);
+		       mnl->forceprec, g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver);
   chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
 		      mnl->csg_N, &mnl->csg_n, VOLUME/2);
   // Apply Q_{-} to get Y_W -> w_fields[0] 
@@ -266,15 +264,13 @@ void cloverdetratio_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   if( mnl->solver == MG ){
       mnl->iter0 = solve_degenerate(mnl->pf, mnl->w_fields[1], mnl->solver_params, mnl->maxiter, mnl->accprec,  
-				    g_relative_precision_flag, VOLUME/2, mnl->Qp, mnl->solver,
-                                    mnl->external_inverter, mnl->sloppy_precision, mnl->compression_type); 
+				    g_relative_precision_flag, VOLUME/2, mnl->Qp, mnl->solver); 
       
       chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
   } else {
       mnl->iter0 = solve_degenerate(mnl->pf, mnl->w_fields[1], mnl->solver_params, mnl->maxiter, mnl->accprec,  
-				    g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver,
-                                    mnl->external_inverter, mnl->sloppy_precision, mnl->compression_type); 
+				    g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver); 
       
       chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
@@ -317,12 +313,10 @@ double cloverdetratio_acc(const int id, hamiltonian_field_t * const hf) {
 
   if( mnl->solver == MG ){
       mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->solver_params, mnl->maxiter, 
-				     mnl->accprec, g_relative_precision_flag, VOLUME/2, mnl->Qp, mnl->solver,
-                                     mnl->external_inverter, mnl->sloppy_precision, mnl->compression_type);
+				     mnl->accprec, g_relative_precision_flag, VOLUME/2, mnl->Qp, mnl->solver);
   } else {
       mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->solver_params, mnl->maxiter, 
-				     mnl->accprec, g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver,
-                                     mnl->external_inverter, mnl->sloppy_precision, mnl->compression_type);
+				     mnl->accprec, g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver);
       mnl->Qm(mnl->w_fields[0], mnl->w_fields[0]);
   }
   g_sloppy_precision_flag = save_sloppy;

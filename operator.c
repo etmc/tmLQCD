@@ -94,6 +94,7 @@ int add_operator(const int type) {
   optr->compression_type = _default_compression_type;
   optr->external_inverter = _default_external_inverter;
   optr->solver_params.solution_type = TM_SOLUTION_M;
+  optr->solver_params.no_shifts = 1;
   optr->coefs = NULL;
   optr->rel_prec = _default_g_relative_precision_flag;
   optr->eps_sq = _default_solver_precision;
@@ -190,9 +191,11 @@ int init_operators() {
           optr->applyMm = &M_minus_psi;
         }
         if(optr->solver == CGMMS) {
-          if (g_cart_id == 0 && optr->even_odd_flag == 1)
-            fprintf(stderr, "CG Multiple mass solver works only without even/odd! Forcing!\n");
-          optr->even_odd_flag = 0;
+          if( optr->external_inverter != QPHIX_INVERTER ){
+            if (g_cart_id == 0 && optr->even_odd_flag == 1)
+              fprintf(stderr, "CG Multiple mass solver works only without even/odd! Forcing!\n");
+            optr->even_odd_flag = 0;
+          }
           if (g_cart_id == 0 && optr->DownProp)
             fprintf(stderr, "CGMMS doesn't need AddDownPropagator! Switching Off!\n");
           optr->DownProp = 0;
@@ -230,9 +233,11 @@ int init_operators() {
           optr->applyMm = &Msw_full_minus_psi;
         }
         if(optr->solver == CGMMS) {
-          if (g_cart_id == 0 && optr->even_odd_flag == 1)
-            fprintf(stderr, "CG Multiple mass solver works only without even/odd! Forcing!\n");
-          optr->even_odd_flag = 0;
+          if( optr->external_inverter != QPHIX_INVERTER ){
+            if (g_cart_id == 0 && optr->even_odd_flag == 1)
+              fprintf(stderr, "CG Multiple mass solver works only without even/odd! Forcing!\n");
+            optr->even_odd_flag = 0;
+          }
           if (g_cart_id == 0 && optr->DownProp)
             fprintf(stderr, "CGMMS doesn't need AddDownPropagator! Switching Off!\n");
           optr->DownProp = 0;

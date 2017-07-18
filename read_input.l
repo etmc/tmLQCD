@@ -204,9 +204,9 @@ static inline void rmQuotes(char *str){
 #endif
 
 #ifdef TM_USE_QPHIX
-  extern QphixParams_t qphix_input;
+  extern tm_QPhiXParams_t qphix_input;
 #else
-  QphixParams_t qphix_input;
+  tm_QPhiXParams_t qphix_input;
 #endif
   
 %}
@@ -335,6 +335,7 @@ static inline void rmQuotes(char *str){
 %x MCSTR
 %x MSOLVER
 %x NDMSOLVER
+%x RATMSOLVER
 %x GTYPE
 
 %x COMMENT
@@ -1285,7 +1286,7 @@ static inline void rmQuotes(char *str){
   }
 }
 
-<INITEXTERNALINVERTER>{TYPE} {                                                                                                                    
+<INITEXTERNALINVERTER>{TYPE} {
   if(strcmp(yytext, "QPHIX")==0) {
 #ifdef TM_USE_QPHIX
     if(myverbose) printf("Setting QPHIX external inverter parameters line %d\n", line_of_file);
@@ -1594,51 +1595,51 @@ static inline void rmQuotes(char *str){
 <DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
   {SPC}*UseExternalInverter{EQL}quda {
     if(myverbose) printf("  Use Quda inverter line %d monomial %d\n", line_of_file, current_monomial);
-    mnl->external_inverter = QUDA_INVERTER;
+    mnl->solver_params.external_inverter = QUDA_INVERTER;
   }
   {SPC}*UseExternalInverter{EQL}qphix {
     if(myverbose) printf("  Use QPhiX inverter line %d monomial %d\n", line_of_file, current_monomial);
-    mnl->external_inverter = QPHIX_INVERTER;
+    mnl->solver_params.external_inverter = QPHIX_INVERTER;
   }
   {SPC}*UseExternalInverter{EQL}no {
     if(myverbose) printf("  Use QPhiX inverter line %d monomial %d\n", line_of_file, current_monomial);
-    mnl->external_inverter = NO_EXT_INV;
+    mnl->solver_params.external_inverter = NO_EXT_INV;
   }
   {SPC}*UseSloppyPrecision{EQL}yes {
     if(myverbose) printf("  Use use sloppy precision (single) in the inverter (if supported by the inverter) line %d monomial %d\n", line_of_file, current_monomial);
-    mnl->sloppy_precision = SLOPPY_SINGLE;
+    mnl->solver_params.sloppy_precision = SLOPPY_SINGLE;
   }
   {SPC}*UseSloppyPrecision{EQL}float {
     if(myverbose) printf("  Use use sloppy precision (single) in the inverter (if supported by the inverter) line %d monomial %d\n", line_of_file, current_monomial);
-    mnl->sloppy_precision = SLOPPY_SINGLE;
+    mnl->solver_params.sloppy_precision = SLOPPY_SINGLE;
   }
   {SPC}*UseSloppyPrecision{EQL}single {
     if(myverbose) printf("  Use use sloppy precision (single) in the inverter (if supported by the inverter) line %d monomial %d\n", line_of_file, current_monomial);
-    mnl->sloppy_precision = SLOPPY_SINGLE;
+    mnl->solver_params.sloppy_precision = SLOPPY_SINGLE;
   }
   {SPC}*UseSloppyPrecision{EQL}no {
     if(myverbose) printf("  Use use sloppy precision (single) in the inverter line %d monomial %d\n", line_of_file, current_monomial);
-    mnl->sloppy_precision = SLOPPY_DOUBLE;
+    mnl->solver_params.sloppy_precision = SLOPPY_DOUBLE;
   }
   {SPC}*UseSloppyPrecision{EQL}double {
     if(myverbose) printf("  Use use sloppy precision (single) in the inverter line %d monomial %d\n", line_of_file, current_monomial);
-    mnl->sloppy_precision = SLOPPY_DOUBLE;
+    mnl->solver_params.sloppy_precision = SLOPPY_DOUBLE;
   }
   {SPC}*UseSloppyPrecision{EQL}half {
     if(myverbose) printf("  Use use sloppy precision (half) in the inverter (if supported by the inverter) line %d monomial %d\n", line_of_file, current_monomial);
-    mnl->sloppy_precision = SLOPPY_HALF;
+    mnl->solver_params.sloppy_precision = SLOPPY_HALF;
   }
   {SPC}*UseCompression{EQL}12 {
     if(myverbose) printf("  Use 12 compression in the inverter (if supported) line %d monomial %d\n", line_of_file, current_monomial);
-    mnl->compression_type = COMPRESSION_12;
+    mnl->solver_params.compression_type = COMPRESSION_12;
   }
   {SPC}*UseCompression{EQL}8 {
     if(myverbose) printf("  Use 8 compression in the inverter (if supported) line %d monomial %d\n", line_of_file, current_monomial);
-    mnl->compression_type = COMPRESSION_8;
+    mnl->solver_params.compression_type = COMPRESSION_8;
   }
   {SPC}*UseCompression{EQL}18 {
     if(myverbose) printf("  Not using compression in the inverter line %d monomial %d\n", line_of_file, current_monomial);
-    mnl->compression_type = NO_COMPRESSION;
+    mnl->solver_params.compression_type = NO_COMPRESSION;
   }
 }
 
@@ -1669,6 +1670,13 @@ static inline void rmQuotes(char *str){
   {SPC}*Solver{EQL} {
    solver_caller=YY_START;
    BEGIN(NDMSOLVER);
+  }
+}
+
+<RATMONOMIAL,CLRATMONOMIAL>{
+  {SPC}*Solver{EQL} {
+    solver_caller=YY_START;
+    BEGIN(RATMSOLVER);
   }
 }
 
@@ -1916,7 +1924,14 @@ static inline void rmQuotes(char *str){
     mnl->solver = 14;
     BEGIN(solver_caller);
   }
+}
 
+<RATMSOLVER>{
+  cgmms {
+    if( myverbose ) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = CGMMS;
+    BEGIN(solver_caller);
+  }
 }
 
 <GTYPE>{

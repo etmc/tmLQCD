@@ -105,9 +105,13 @@ int add_monomial(const int type) {
   }
   monomial_list[no_monomials].solver_params.mcg_delta = _default_mixcg_innereps;
   monomial_list[no_monomials].solver_params.solution_type = TM_SOLUTION_M_MDAG;
-  monomial_list[no_monomials].compression_type = _default_compression_type;
-  monomial_list[no_monomials].external_inverter = _default_external_inverter;
-  monomial_list[no_monomials].sloppy_precision = _default_operator_sloppy_precision_flag;
+  // the defaut is 1 because the QPhiX interface is generalised in such a way
+  // that normal solves correspond to solves with one shift, this does not 
+  // affect the used parameters in any way!
+  monomial_list[no_monomials].solver_params.no_shifts = 1;
+  monomial_list[no_monomials].solver_params.compression_type = _default_compression_type;
+  monomial_list[no_monomials].solver_params.external_inverter = _default_external_inverter;
+  monomial_list[no_monomials].solver_params.sloppy_precision = _default_operator_sloppy_precision_flag;
   monomial_list[no_monomials].even_odd_flag = _default_even_odd_flag;
   monomial_list[no_monomials].forcefactor = 1.;
   monomial_list[no_monomials].use_rectangles = 0;
