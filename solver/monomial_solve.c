@@ -252,14 +252,19 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
     }
     else if (solver_params->type==CGMMSND){
       spinor** temp;
+      
+      spinor** checkPup;
+      spinor** checkPdn;
 #ifdef TM_USE_QPHIX
       if( solver_params->external_inverter == QPHIX_INVERTER ){
         init_solver_field(&temp, VOLUME/2, 2);
+        init_solver_field(&checkPup, VOLUME/2, solver_params->no_shifts);
+        init_solver_field(&checkPdn, VOLUME/2, solver_params->no_shifts);
         // by switching up and down below, we do the gamma5 tau1 (M.M^dagger)^{-1} tau1 gamma5 = [ Q(+mu,eps) Q(-mu,eps) ]^{-1}
         gamma5(temp[0], Qup, VOLUME/2);
         gamma5(temp[1], Qdn, VOLUME/2);
         iteration_count = invert_eo_qphix_twoflavour_mshift(Pup, Pdn, temp[0], temp[1],
-//                                                          Pdn, Pup, temp[1], temp[0],
+//                                                             Pdn, Pup, temp[1], temp[0],
                                                             solver_params->max_iter, solver_params->squared_solver_prec,
                                                             solver_params->type, solver_params->rel_prec,
                                                             *solver_params,
@@ -269,18 +274,32 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
           mul_gamma5(Pup[shift], VOLUME/2);
           mul_gamma5(Pdn[shift], VOLUME/2);
         }
+        
+        cg_mms_tm_nd(checkPup, checkPdn, Qup, Qdn, solver_params);
+        
+        for(int shift = 0; shift < solver_params->no_shifts; shift++){
+          diff(temp[0], checkPup[shift], Pup[shift], VOLUME/2);
+          diff(temp[1], checkPdn[shift], Pdn[shift], VOLUME/2);
+          
+          if(g_proc_id==0){
+            printf("|| Pup[%d] - checkPup[%d] ||^2 = %.6e \n", shift, shift, square_norm(temp[0],VOLUME/2,1));
+            printf("|| Pdn[%d] - checkPdn[%d] ||^2 = %.6e \n", shift, shift, square_norm(temp[1],VOLUME/2,1));
+          }
+        }
 #ifdef WIP
         // FIXME: in the shift-by-shift branch, the shifted operator exists explicitly and could be used to 
         // truly check the residual here
-        solver_params->M_ndpsi(temp[0], temp[1], Pup[0], Pdn[0]);
-        diff(temp[0], temp[0], Qup, VOLUME/2);
-        diff(temp[1], temp[1], Qdn, VOLUME/2);
-        double diffnorm = square_norm(temp[0], VOLUME/2, 1) + square_norm(temp[1], VOLUME/2, 1); 
-        if( g_proc_id == 0 ){
-          printf("# QPhiX residual check: %e\n", diffnorm);
-        }
+//         solver_params->M_ndpsi(temp[0], temp[1], Pup[0], Pdn[0]);
+//         diff(temp[0], temp[0], Qup, VOLUME/2);
+//         diff(temp[1], temp[1], Qdn, VOLUME/2);
+//         double diffnorm = square_norm(temp[0], VOLUME/2, 1) + square_norm(temp[1], VOLUME/2, 1); 
+//         if( g_proc_id == 0 ){
+//           printf("# QPhiX residual check: %e\n", diffnorm);
+//         }
 #endif // WIP
         finalize_solver(temp, 2);
+        finalize_solver(checkPup, solver_params->no_shifts);
+        finalize_solver(checkPdn, solver_params->no_shifts);
         return(iteration_count);
       }
 #endif

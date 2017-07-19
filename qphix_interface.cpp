@@ -40,6 +40,7 @@ extern "C" {
 #include "geometry_eo.h"
 #include "gettime.h"
 #include "global.h"
+#include "struct_accessors.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "linalg/diff.h"
 #include "linalg/square_norm.h"
@@ -74,6 +75,8 @@ extern "C" {
 #include <cstdlib>
 #include <cstring>
 #include <vector>
+#include <complex>
+#include <cmath>
 
 using namespace tmlqcd;
 
@@ -722,8 +725,11 @@ void reorder_gauge_to_QPhiX(
                       int64_t t_inner_idx_cb1 = reim + c1 * Nz + c2 * Nz * Nc2 +
                                                 change_dim[dim] * Nz * Nc2 * Nc2 +
                                                 tm_idx_cb1 * Nz * Nc2 * Nc2 * 4;
-                      qphix_gauge_cb0[block][q_mu][c1][c2][reim][xx] = QPhiX::rep<FT, double>(in[t_inner_idx_cb0]);
-                      qphix_gauge_cb1[block][q_mu][c1][c2][reim][xx] = QPhiX::rep<FT, double>(in[t_inner_idx_cb1]);
+                                                
+                      qphix_gauge_cb0[block][q_mu][c1][c2][reim][xx] = QPhiX::rep<FT, double>(
+                        su3_get_elem(&(g_gauge_field[tm_idx_cb0][change_dim[dim]]), c2, c1, reim ) );
+                      qphix_gauge_cb1[block][q_mu][c1][c2][reim][xx] = QPhiX::rep<FT, double>(
+                        su3_get_elem(&(g_gauge_field[tm_idx_cb1][change_dim[dim]]), c2, c1, reim ) );
                     }
                   }
                 }  // for(dim,c1,c2,x_soa)
@@ -739,7 +745,7 @@ void reorder_gauge_to_QPhiX(
 // Reorder tmLQCD eo-spinor to a FourSpinorBlock QPhiX spinor on the given checkerboard
 template <typename FT, int VECLEN, int SOALEN, bool compress12>
 void reorder_eo_spinor_to_QPhiX(
-    QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom, double const *const tm_eo_spinor,
+    QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom, spinor const *const tm_eo_spinor,
     typename QPhiX::Geometry<FT, VECLEN, SOALEN, compress12>::FourSpinorBlock *qphix_spinor,
     const int cb) {
   const double startTime = gettime();
@@ -776,12 +782,15 @@ void reorder_eo_spinor_to_QPhiX(
                 int64_t tm_x_coord = q_cb_x_coord * 2 + (((t + y + z) & 1) ^ cb);
                 // exchange x and z dimensions
                 int64_t tm_eo_ind = g_lexic2eosub[g_ipt[t][tm_x_coord][y][z]];
-                int64_t tm_eo_offset =
-                    tm_eo_ind * Nc * Ns * Nz + change_spin[q_spin] * Nc * Nz + Nz * col;
+
                 for (int reim = 0; reim < 2; reim++) {
                   qphix_spinor[q_ind][col][q_spin][reim][x_soa] =
                     QPhiX::rep<FT, double>(
-                      change_sign[q_spin] * tm_eo_spinor[tm_eo_offset + reim]
+                         change_sign[q_spin] * spinor_get_elem( &(tm_eo_spinor[tm_eo_ind]), 
+                                                                change_spin[q_spin],
+                                                                col,
+                                                                reim
+                                                              )
                     );
                 }
               }
@@ -800,7 +809,7 @@ void reorder_eo_spinor_to_QPhiX(
 
 template <typename FT, int VECLEN, int SOALEN, bool compress12>
 void reorder_eo_spinor_from_QPhiX(
-    QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom, double *const tm_eo_spinor,
+    QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom, spinor* tm_eo_spinor,
     typename QPhiX::Geometry<FT, VECLEN, SOALEN, compress12>::FourSpinorBlock *qphix_spinor,
     const int cb, double normFac = 1.0) {
   const double startTime = gettime();
@@ -837,14 +846,17 @@ void reorder_eo_spinor_from_QPhiX(
                 int64_t tm_x_coord = q_cb_x_coord * 2 + (((t + y + z) & 1) ^ cb);
                 // exchange x and z dimensions
                 int64_t tm_eo_ind = g_lexic2eosub[g_ipt[t][tm_x_coord][y][z]];
-                int64_t tm_eo_offset =
-                    tm_eo_ind * Nc * Ns * Nz + change_spin[q_spin] * Nc * Nz + Nz * col;
-                for (int reim = 0; reim < 2; reim++) {
-                  tm_eo_spinor[tm_eo_offset + reim] = 
-                    QPhiX::rep<double, FT>(
-                      change_sign[q_spin] * normFac * qphix_spinor[q_ind][col][q_spin][reim][x_soa]
-                    );
-                }
+
+                spinor_set_elem( &(tm_eo_spinor[tm_eo_ind]),
+                                 change_spin[q_spin],
+                                 col,
+                                 QPhiX::rep<double, FT>(
+                                  change_sign[q_spin] * normFac * qphix_spinor[q_ind][col][q_spin][0][x_soa]
+                                 ),
+                                 QPhiX::rep<double, FT>(
+                                  change_sign[q_spin] * normFac * qphix_spinor[q_ind][col][q_spin][1][x_soa]
+                                 )
+                               );
               }
             }
           }
@@ -1129,11 +1141,14 @@ void Mfull_helper(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, cons
     abort();
   }
 
-  reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Even_in),
+//   reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Even_in),
+//                              qphix_in[cb_even], cb_even);
+//   reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Odd_in), qphix_in[cb_odd],
+//                              cb_odd);
+  reorder_eo_spinor_to_QPhiX(geom, Even_in,
                              qphix_in[cb_even], cb_even);
-  reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Odd_in), qphix_in[cb_odd],
+  reorder_eo_spinor_to_QPhiX(geom, Odd_in, qphix_in[cb_odd],
                              cb_odd);
-
   // Apply QPhiX Mfull
   polymorphic_dslash->plain_dslash(qphix_out[cb_odd], qphix_in[cb_even], u_packed[cb_odd],
                                    /* isign == non-conjugate */ 1, cb_odd);
@@ -1144,9 +1159,9 @@ void Mfull_helper(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, cons
     QPhiX::aypx(-0.5, tmp_spinor, qphix_out[cb], geom, 1);
   }
 
-  reorder_eo_spinor_from_QPhiX(geom, reinterpret_cast<double *>(Even_out), qphix_out[cb_even],
+  reorder_eo_spinor_from_QPhiX(geom, Even_out, qphix_out[cb_even],
                                cb_even, 2.0 * g_kappa);
-  reorder_eo_spinor_from_QPhiX(geom, reinterpret_cast<double *>(Odd_out), qphix_out[cb_odd], cb_odd,
+  reorder_eo_spinor_from_QPhiX(geom, Odd_out, qphix_out[cb_odd], cb_odd,
                                2.0 * g_kappa);
 
   geom.free(tmp_spinor);
@@ -1390,9 +1405,10 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     }
     QPhiX::masterPrintf("# ...done.\n");
 
-    reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(tmlqcd_odd_in[0][0]),
+//     reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(tmlqcd_odd_in[0][0]),
+//                                qphix_in[0], cb_odd);
+    reorder_eo_spinor_to_QPhiX(geom, tmlqcd_odd_in[0][0],
                                qphix_in[0], cb_odd);
-
     QPhiX::masterPrintf("# Calling the solver...\n");
 
     // Set the right precision for the QPhiX solver
@@ -1444,7 +1460,7 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     end_time = gettime();
     
     for(int shift = 0; shift < num_shifts; shift++ ){
-      reorder_eo_spinor_from_QPhiX(geom, reinterpret_cast<double *const>(tmlqcd_odd_out[shift][0]),
+      reorder_eo_spinor_from_QPhiX(geom, tmlqcd_odd_out[shift][0],
                                    qphix_out[shift], cb_odd, rescale);
     }
 
@@ -1553,8 +1569,10 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     QPhiX::masterPrintf("# QPHIX: ...done.\n");
 
     for (int fl : {0, 1}) {
-      reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(tmlqcd_odd_in[0][fl]),
-                                 qphix_in[fl], cb_odd);
+//       reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(tmlqcd_odd_in[0][fl]),
+//                                  qphix_in[fl], cb_odd);
+      reorder_eo_spinor_to_QPhiX(geom, tmlqcd_odd_in[0][fl],
+                                 qphix_in[fl], cb_odd);      
     }
 
     QPhiX::masterPrintf("# QPHIX: Calling the solver...\n");
@@ -1609,7 +1627,7 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
 
     for(int shift = 0; shift < num_shifts; shift++){
       for (int fl : {0, 1}) {
-        reorder_eo_spinor_from_QPhiX(geom, reinterpret_cast<double *const>(tmlqcd_odd_out[shift][fl]),
+        reorder_eo_spinor_from_QPhiX(geom, tmlqcd_odd_out[shift][fl],
                                     qphix_out[shift][fl], cb_odd, rescale);
       }
     }
@@ -2037,14 +2055,18 @@ void testSpinorPackers(spinor *Even_out, spinor *Odd_out, const spinor *const Ev
   spinor **tmp;
   init_solver_field(&tmp, VOLUME / 2, 2);
 
-  reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Even_in),
+//   reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Even_in),
+//                              qphix_cb_even.get(), cb_even);
+//   reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Odd_in),
+//                              qphix_cb_odd.get(), cb_odd);
+  reorder_eo_spinor_to_QPhiX(geom, Even_in,
                              qphix_cb_even.get(), cb_even);
-  reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Odd_in),
+  reorder_eo_spinor_to_QPhiX(geom, Odd_in,
                              qphix_cb_odd.get(), cb_odd);
-
-  reorder_eo_spinor_from_QPhiX(geom, reinterpret_cast<double *>(Even_out), qphix_cb_even.get(),
+  
+  reorder_eo_spinor_from_QPhiX(geom, Even_out, qphix_cb_even.get(),
                                cb_even, 1.0);
-  reorder_eo_spinor_from_QPhiX(geom, reinterpret_cast<double *>(Odd_out), qphix_cb_odd.get(),
+  reorder_eo_spinor_from_QPhiX(geom, Odd_out, qphix_cb_odd.get(),
                                cb_odd, 1.0);
 
   diff(tmp[0], Even_out, Even_in, VOLUME / 2);

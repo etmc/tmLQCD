@@ -47,4 +47,9 @@ typedef enum backup_restore_t {
   TM_RESTORE_GLOBALS
 } backup_restore_t;
 
+typedef enum real_imag_t {
+  TM_REAL = 0,
+  TM_IMAG
+} real_imag_t;
+
 #endif // MISC_TYPES_H

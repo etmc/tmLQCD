@@ -74,7 +74,6 @@ void nd_set_global_parameter(monomial * const mnl) {
 
 void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
-//   solver_params_t solver_params;
   double atime, etime;
   atime = gettime();
   nd_set_global_parameter(mnl);
