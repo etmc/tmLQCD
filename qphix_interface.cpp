@@ -1218,9 +1218,15 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
   // Set variables need for solve
   bool verbose = g_debug_level > 2 ? true : false;
   int niters = -1;
+  int niters2 = 0;
   double rsd_final = -1.0;
-  uint64_t site_flops = -1;
-  uint64_t mv_apps = -1;
+  uint64_t site_flops = 0;
+  uint64_t site_flops2 = 0;
+  uint64_t mv_apps = 0;
+  uint64_t mv_apps2 = 0;
+  
+  double start_time;
+  double end_time;
   
   // support for multi-shift solves via the length of the output vector,
   // which counts the shifts on the outer index and the flavour on the inner index
@@ -1395,7 +1401,7 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     const double RsdTarget = sqrt(target_precision / rhs_norm2);
 
     // Calling the solver
-    double start = gettime();
+    start_time = gettime();
     if (solver_flag == CG || solver_flag == MIXEDCG || solver_flag == RGMIXEDCG) {
       // USING CG:
       // We are solving
@@ -1407,6 +1413,7 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
       //   qphix_out[1] = M^dagger ( M^dagger^-1 M^-1 ) qphix_in_prepared
       if (solver_params.solution_type == TM_SOLUTION_M) {
         (*FermionMatrixQPhiX)(qphix_out[0], qphix_buffer, /* conjugate */ -1);
+        mv_apps++;
       } else {
         QPhiX::copySpinor(qphix_out[0], qphix_buffer, geom, n_blas_simt);
       }
@@ -1417,7 +1424,7 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
         RsdTargetArr[shift] = RsdTarget;
         RsdFinalArr[shift] = -1.0;
         shifts[shift] = solver_params.shifts[shift]*solver_params.shifts[shift]/(4*g_kappa*g_kappa);
-        if(g_debug_level > 2 ) QPhiX::masterPrintf("# [%d] = %.6e\n", shift, shifts[shift]);
+        if(g_debug_level > 2 ) QPhiX::masterPrintf("# QPHIX CGMMS: shift[%d] = %.6e\n", shift, shifts[shift]);
       }
       if(g_debug_level > 2 ) QPhiX::masterPrintf("\n");
       (*MultiSolverQPhiX)(qphix_out.data(), qphix_in[0], num_shifts, shifts.data(), 
@@ -1428,27 +1435,21 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
                      verbose);
       // for M^dagger^-1 M^-1 solution type, need to call BiCGstab twice
       if (solver_params.solution_type == TM_SOLUTION_M_MDAG) {
-        (*SolverQPhiX)(qphix_out[0], qphix_buffer, RsdTarget, niters, rsd_final, site_flops, mv_apps,
+        (*SolverQPhiX)(qphix_out[0], qphix_buffer, RsdTarget, niters2, rsd_final, site_flops, mv_apps2,
                        -1, verbose);
       } else {
         QPhiX::copySpinor(qphix_out[0], qphix_buffer, geom, n_blas_simt);
       }
     }
-    double end = gettime();
-
-    uint64_t num_cb_sites = lattSize[0] / 2 * lattSize[1] * lattSize[2] * lattSize[3];
-    // FIXME: this needs to be adjusted depending on the operator used
-    uint64_t total_flops = (site_flops + (72 + 2 * 1320) * mv_apps) * num_cb_sites;
-    QPhiX::masterPrintf("# Solver Time = %g sec\n", (end - start));
-    QPhiX::masterPrintf("# Performance in GFLOPS = %g\n", 1.0e-9 * total_flops / (end - start));
+    end_time = gettime();
     
     for(int shift = 0; shift < num_shifts; shift++ ){
       reorder_eo_spinor_from_QPhiX(geom, reinterpret_cast<double *const>(tmlqcd_odd_out[shift][0]),
                                    qphix_out[shift], cb_odd, rescale);
     }
 
-    QPhiX::masterPrintf("# ...done.\n");
-    QPhiX::masterPrintf("# Cleaning up\n");
+    QPhiX::masterPrintf("# QPHIX: ...done.\n");
+    QPhiX::masterPrintf("# QPHIX: Cleaning up\n");
     delete (FermionMatrixQPhiX);
     delete (InnerFermionMatrixQPhiX);
     delete (SolverQPhiX);
@@ -1460,7 +1461,7 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
       geom.free(qphix_fullclover[fl]);
       geom.free(qphix_inv_fullclover[fl]);
     }
-    QPhiX::masterPrintf("# ...done.\n\n");
+    QPhiX::masterPrintf("# QPHIX: ...done.\n\n");
 
   } else if (num_flavour == 2) {
     // for explicit template arguments
@@ -1491,7 +1492,7 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     if (g_c_sw > DBL_EPSILON) {  // DBCLOVER
       // complain, not implemented yet
     } else {  // DBTMWILSON
-      QPhiX::masterPrintf("# Creating two-flavour QPhiX Wilson Twisted Mass Fermion Matrix...\n");
+      QPhiX::masterPrintf("# QPHIX: Creating two-flavour QPhiX Wilson Twisted Mass Fermion Matrix...\n");
       TwoFlavFermionMatrixQPhiX = new QPhiX::EvenOddNDTMWilsonReuseOperator<FT, V, S, compress>(
           mass, -0.5 * g_mubar / g_kappa, 0.5 * g_epsbar / g_kappa, u_packed, &geom, t_boundary,
           coeff_s, coeff_t, use_tbc, tbc_phases);
@@ -1545,19 +1546,18 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
                                                   typename QPhiX::TwoFlavEvenOddLinearOperator<FT, V, S, compress>
                                                   >( *TwoFlavFermionMatrixQPhiX, max_iter, num_shifts );
     } else {
-      // TODO: Implement multi-shift CG, Richardson multi-precision
       QPhiX::masterPrintf(" Solver not yet supported by QPhiX!\n");
       QPhiX::masterPrintf(" Aborting...\n");
       abort();
     }
-    QPhiX::masterPrintf("# ...done.\n");
+    QPhiX::masterPrintf("# QPHIX: ...done.\n");
 
     for (int fl : {0, 1}) {
       reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(tmlqcd_odd_in[0][fl]),
                                  qphix_in[fl], cb_odd);
     }
 
-    QPhiX::masterPrintf("# Calling the solver...\n");
+    QPhiX::masterPrintf("# QPHIX: Calling the solver...\n");
 
     // Set the right precision for the QPhiX solver
     double rhs_norm2 = 1.0;
@@ -1565,7 +1565,7 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     const double RsdTarget = sqrt(target_precision / rhs_norm2);
 
     // Calling the solver
-    double start = gettime();
+    start_time = gettime();
     if (solver_flag == CG || solver_flag == MIXEDCG) {
       // USING CG:
       // We are solving
@@ -1577,40 +1577,35 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
       //   qphix_out[1] = M^dagger M^dagger^-1 M^-1 qphix_in_prepared
       if (solver_params.solution_type == TM_SOLUTION_M) {
         (*TwoFlavFermionMatrixQPhiX)(qphix_out[0], qphix_buffer, /* conjugate */ -1);
+        mv_apps++;
       } else {
         QPhiX::copySpinor<FT, V, S, compress, nf>(qphix_out[0], qphix_buffer, geom, n_blas_simt);
       }
-    } else if (solver_flag == BICGSTAB) {
+    } else if (solver_flag == BICGSTAB || solver_flag == MIXEDBICGSTAB) {
       (*TwoFlavSolverQPhiX)(qphix_buffer, qphix_in, RsdTarget, niters, rsd_final, site_flops, mv_apps, 1,
                             verbose);
       // for M^dagger^-1 M^-1 solution type, need to call BiCGstab twice
       if (solver_params.solution_type == TM_SOLUTION_M_MDAG) {
-        (*TwoFlavSolverQPhiX)(qphix_out[0], qphix_buffer, RsdTarget, niters, rsd_final, site_flops, mv_apps,
+        (*TwoFlavSolverQPhiX)(qphix_out[0], qphix_buffer, RsdTarget, niters2, rsd_final, site_flops, mv_apps2,
                               -1, verbose);
       } else {
         QPhiX::copySpinor<FT, V, S, compress, nf>(qphix_out[0], qphix_buffer, geom, n_blas_simt);
       }
     } else if (solver_flag == CGMMSND ){
       // TODO: handle the residuals properly
-      if(g_debug_level > 1 ) QPhiX::masterPrintf("# QPHIX CGMMSND: shifts: \n");
+      if(g_debug_level > 2 ) QPhiX::masterPrintf("# QPHIX CGMMSND: shifts: \n");
       for( int shift = 0; shift < num_shifts; shift++ ){
         RsdTargetArr[shift] = RsdTarget;
         RsdFinalArr[shift] = -1.0;
         shifts[shift] = solver_params.shifts[shift]*solver_params.shifts[shift]/(4*g_kappa*g_kappa); 
-        if(g_debug_level > 1 ) QPhiX::masterPrintf("# [%d] = %lf\n", shift, shifts[shift]);
+        if(g_debug_level > 2 ) QPhiX::masterPrintf("# [%d] = %lf\n", shift, shifts[shift]);
       }
-      if(g_debug_level > 1 ) QPhiX::masterPrintf("\n");
+      if(g_debug_level > 2 ) QPhiX::masterPrintf("\n");
       (*TwoFlavMultiSolverQPhiX)(qphix_out.data(), qphix_in, num_shifts, shifts.data(), 
                           RsdTargetArr.data(), niters, RsdFinalArr.data(), site_flops, mv_apps, -1, verbose );
       rsd_final = RsdFinalArr[0];
     }
-    double end = gettime();
-
-    uint64_t num_cb_sites = lattSize[0] / 2 * lattSize[1] * lattSize[2] * lattSize[3];
-    // FIXME: this needs to be adjusted depending on the operator used
-    uint64_t total_flops = (site_flops + (72 + 2 * 2 * 1320) * mv_apps) * num_cb_sites;
-    QPhiX::masterPrintf("# Solver Time = %g sec\n", (end - start));
-    QPhiX::masterPrintf("# Performance in GFLOPS = %g\n", 1.0e-9 * total_flops / (end - start));
+    end_time = gettime();
 
     for(int shift = 0; shift < num_shifts; shift++){
       for (int fl : {0, 1}) {
@@ -1642,7 +1637,29 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
 
   QPhiX::masterPrintf("# ...done.\n\n");
 
-  return niters;
+  uint64_t num_cb_sites = lattSize[0] / 2 * lattSize[1] * lattSize[2] * lattSize[3];
+  // FIXME: this needs to be adjusted depending on the operator used
+  uint64_t op_flops_per_site = 1320;
+  uint64_t total_flops = (site_flops + site_flops2 + 
+                          (2 * num_flavour * op_flops_per_site) * (mv_apps+mv_apps2) ) * num_cb_sites;
+  QPhiX::masterPrintf("# QPHIX: Solver Time = %g sec\n", (end_time - start_time));
+  QPhiX::masterPrintf("# QPHIX: Performance in GFLOPS = %g\n\n", 1.0e-9 * total_flops / (end_time - start_time));  
+
+  if( solver_is_mixed(solver_flag) ){
+    // the mixed solver reports the outer iterations, we would like to get
+    // some better total
+    niters = mv_apps / 2;
+    if( solver_flag == MIXEDBICGSTAB && solver_params.solution_type == TM_SOLUTION_M_MDAG ){
+      niters2 = mv_apps2 / 2;
+    }
+  }
+  // solver did not converge in maximum number of iterations
+  // FIXME: non-convergence does not work correctly yet
+  if( (niters+niters2) > max_iter ){
+    niters = -1;
+    niters2 = 0;
+  }
+  return (niters+niters2);
 }
 
 // Template wrapper for the Dslash operator call-able from C code
@@ -1828,7 +1845,7 @@ int invert_eo_qphix_nflavour_mshift(std::vector< std::vector< spinor* > > &Odd_o
                       target_precision);
 
   // mixed solvers require inner and outer precisions, which we specify explicitly here
-  if( solver_flag == MIXEDCG || solver_flag == RGMIXEDCG ){
+  if( solver_is_mixed(solver_flag) ){
 #if (defined(QPHIX_MIC_SOURCE) || defined(QPHIX_AVX512_SOURCE))
     if( sloppy == SLOPPY_HALF ){
       if( QPHIX_SOALEN > VECLEN_DP || QPHIX_SOALEN > VECLEN_HP ){
@@ -1892,7 +1909,7 @@ int invert_eo_qphix_nflavour_mshift(std::vector< std::vector< spinor* > > &Odd_o
             Odd_out, Odd_in, target_precision, max_iter, solver_flag, solver_params, num_flavour);
       }
     } // if( sloppy )
-  } else { // if( solver_flag == *MIXEDCG )
+  } else { // if( solver_is_mixed )
 #if (defined(QPHIX_MIC_SOURCE) || defined(QPHIX_AVX512_SOURCE))
     if (sloppy == SLOPPY_HALF || precision_lambda >= rsdTarget<QPhiX::half>::value) {
       if (QPHIX_SOALEN > VECLEN_HP) {
