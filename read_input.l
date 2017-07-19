@@ -1673,7 +1673,7 @@ static inline void rmQuotes(char *str){
   }
 }
 
-<RATMONOMIAL,CLRATMONOMIAL>{
+<RATMONOMIAL,CLRATMONOMIAL,RATCORMONOMIAL,CLRATCORMONOMIAL>{
   {SPC}*Solver{EQL} {
     solver_caller=YY_START;
     BEGIN(RATMSOLVER);

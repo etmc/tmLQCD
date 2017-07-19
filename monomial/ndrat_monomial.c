@@ -259,7 +259,7 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
     if(g_debug_level > 1) {
       printf("# Time for %s monomial heatbath: %e s\n", mnl->name, etime-atime);
     }
-    if(g_debug_level > 3) { 
+    if(g_debug_level > 3) {
       printf("called ndrat_heatbath for id %d energy %f\n", id, mnl->energy0);
     }
   }
@@ -313,8 +313,8 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
     if(g_debug_level > 1) {
       printf("# Time for %s monomial acc step: %e s\n", mnl->name, etime-atime);
     }
-    if(g_debug_level > 0) { // shoud be 3
-      printf("called ndrat_acc for id %d dH = %1.10e\n", id, mnl->energy1 - mnl->energy0);
+    if(g_debug_level > 3) {
+      printf("called ndrat_acc for id %d, H_1 = %.10e, dH = %1.10e\n", id, mnl->energy1,  mnl->energy1 - mnl->energy0);
     }
   }
   return(mnl->energy1 - mnl->energy0);

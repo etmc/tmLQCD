@@ -64,4 +64,6 @@
 
 #include "solver/sumr.h"
 
+#include "solver/monomial_solve.h"
+
 #endif

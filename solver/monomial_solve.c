@@ -258,8 +258,8 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
         // by switching up and down below, we do the gamma5 tau1 (M.M^dagger)^{-1} tau1 gamma5 = [ Q(+mu,eps) Q(-mu,eps) ]^{-1}
         gamma5(temp[0], Qup, VOLUME/2);
         gamma5(temp[1], Qdn, VOLUME/2);
-        iteration_count = invert_eo_qphix_twoflavour_mshift(/*Pup, Pdn, temp[0], temp[1],*/
-                                                            Pdn, Pup, temp[1], temp[0],
+        iteration_count = invert_eo_qphix_twoflavour_mshift(Pup, Pdn, temp[0], temp[1],
+//                                                          Pdn, Pup, temp[1], temp[0],
                                                             solver_params->max_iter, solver_params->squared_solver_prec,
                                                             solver_params->type, solver_params->rel_prec,
                                                             *solver_params,

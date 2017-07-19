@@ -1222,9 +1222,9 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
   uint64_t site_flops = -1;
   uint64_t mv_apps = -1;
   
-  // support for multi-shift solves
+  // support for multi-shift solves via the length of the output vector,
+  // which counts the shifts on the outer index and the flavour on the inner index
   const int num_shifts = tmlqcd_odd_out.size();
-  QPhiX::masterPrintf("# QPHIX: number of shifts %d\n\n", num_shifts);
   std::vector < double > shifts; shifts.resize( num_shifts );
   std::vector <double> RsdTargetArr; RsdTargetArr.resize(num_shifts);
   std::vector <double> RsdFinalArr; RsdFinalArr.resize(num_shifts);
@@ -1412,14 +1412,14 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
       }
     } else if (solver_flag == CGMMS ){
       // TODO: handle the residuals properly
-      if(g_debug_level > 1 ) QPhiX::masterPrintf("# QPHIX CGMMS: shifts: \n");
+      if(g_debug_level > 2 ) QPhiX::masterPrintf("# QPHIX CGMMS: shifts: \n");
       for( int shift = 0; shift < num_shifts; shift++ ){
         RsdTargetArr[shift] = RsdTarget;
         RsdFinalArr[shift] = -1.0;
         shifts[shift] = solver_params.shifts[shift]*solver_params.shifts[shift]/(4*g_kappa*g_kappa);
-        if(g_debug_level > 1 ) QPhiX::masterPrintf("# [%d] = %.6e\n", shift, shifts[shift]);
+        if(g_debug_level > 2 ) QPhiX::masterPrintf("# [%d] = %.6e\n", shift, shifts[shift]);
       }
-      if(g_debug_level > 1 ) QPhiX::masterPrintf("\n");
+      if(g_debug_level > 2 ) QPhiX::masterPrintf("\n");
       (*MultiSolverQPhiX)(qphix_out.data(), qphix_in[0], num_shifts, shifts.data(), 
                           RsdTargetArr.data(), niters, RsdFinalArr.data(), site_flops, mv_apps, -1, verbose );
       rsd_final = RsdFinalArr[0];
@@ -1592,17 +1592,16 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
       }
     } else if (solver_flag == CGMMSND ){
       // TODO: handle the residuals properly
-      if(g_debug_level > 2 ) QPhiX::masterPrintf("# QPHIX CGMMSND: shifts: \n");
+      if(g_debug_level > 1 ) QPhiX::masterPrintf("# QPHIX CGMMSND: shifts: \n");
       for( int shift = 0; shift < num_shifts; shift++ ){
         RsdTargetArr[shift] = RsdTarget;
         RsdFinalArr[shift] = -1.0;
-        shifts[shift] = solver_params.shifts[shift]*solver_params.shifts[shift]/(4*g_kappa*g_kappa)/*  - 
-                        shift > 0 ? shifts[0] : 0*/;
-        if(g_debug_level > 2 ) QPhiX::masterPrintf("# [%d] = %lf\n", shift, shifts[shift]);
+        shifts[shift] = solver_params.shifts[shift]*solver_params.shifts[shift]/(4*g_kappa*g_kappa); 
+        if(g_debug_level > 1 ) QPhiX::masterPrintf("# [%d] = %lf\n", shift, shifts[shift]);
       }
-      if(g_debug_level > 2 ) QPhiX::masterPrintf("\n");
+      if(g_debug_level > 1 ) QPhiX::masterPrintf("\n");
       (*TwoFlavMultiSolverQPhiX)(qphix_out.data(), qphix_in, num_shifts, shifts.data(), 
-                          RsdTargetArr.data(), niters, RsdFinalArr.data(), site_flops, mv_apps, 1, verbose );
+                          RsdTargetArr.data(), niters, RsdFinalArr.data(), site_flops, mv_apps, -1, verbose );
       rsd_final = RsdFinalArr[0];
     }
     double end = gettime();
