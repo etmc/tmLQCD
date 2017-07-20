@@ -134,52 +134,52 @@ static inline double spinor_get_elem(const spinor* const matrix, int s, int c, i
 static inline void spinor_set_elem_linear(spinor* const matrix, int sc, const double rein, const double imin){
   switch(sc){
     case 0:
-      *(reinterpret_cast<double*const>(&(matrix->s0.c0))  ) = rein;
-      *(reinterpret_cast<double*const>(&(matrix->s0.c0))+1) = imin;
+      *(((double*const)(&(matrix->s0.c0)))  ) = rein;
+      *(((double*const)(&(matrix->s0.c0)))+1) = imin;
       break;
     case 1:
-      *(reinterpret_cast<double*const>(&(matrix->s0.c1))  ) = rein;
-      *(reinterpret_cast<double*const>(&(matrix->s0.c1))+1) = imin;
+      *(((double*const)(&(matrix->s0.c1)))  ) = rein;
+      *(((double*const)(&(matrix->s0.c1)))+1) = imin;
       break;
     case 2:
-      *(reinterpret_cast<double*const>(&(matrix->s0.c2))  ) = rein;
-      *(reinterpret_cast<double*const>(&(matrix->s0.c2))+1) = imin;
+      *(((double*const)(&(matrix->s0.c2)))  ) = rein;
+      *(((double*const)(&(matrix->s0.c2)))+1) = imin;
       break;
     case 3:
-      *(reinterpret_cast<double*const>(&(matrix->s1.c0))  ) = rein;
-      *(reinterpret_cast<double*const>(&(matrix->s1.c0))+1) = imin;
+      *(((double*const)(&(matrix->s1.c0)))  ) = rein;
+      *(((double*const)(&(matrix->s1.c0)))+1) = imin;
       break;
     case 4:
-      *(reinterpret_cast<double*const>(&(matrix->s1.c1))  ) = rein;
-      *(reinterpret_cast<double*const>(&(matrix->s1.c1))+1) = imin;
+      *(((double*const)(&(matrix->s1.c1)))  ) = rein;
+      *(((double*const)(&(matrix->s1.c1)))+1) = imin;
       break;
     case 5:
-      *(reinterpret_cast<double*const>(&(matrix->s1.c2))  ) = rein;
-      *(reinterpret_cast<double*const>(&(matrix->s1.c2))+1) = imin;
+      *(((double*const)(&(matrix->s1.c2)))  ) = rein;
+      *(((double*const)(&(matrix->s1.c2)))+1) = imin;
       break;
     case 6:
-      *(reinterpret_cast<double*const>(&(matrix->s2.c0))  ) = rein;
-      *(reinterpret_cast<double*const>(&(matrix->s2.c0))+1) = imin;
+      *(((double*const)(&(matrix->s2.c0)))  ) = rein;
+      *(((double*const)(&(matrix->s2.c0)))+1) = imin;
       break;
     case 7:
-      *(reinterpret_cast<double*const>(&(matrix->s2.c1))  ) = rein;
-      *(reinterpret_cast<double*const>(&(matrix->s2.c1))+1) = imin;
+      *(((double*const)(&(matrix->s2.c1)))  ) = rein;
+      *(((double*const)(&(matrix->s2.c1)))+1) = imin;
       break;
     case 8:
-      *(reinterpret_cast<double*const>(&(matrix->s2.c2))  ) = rein;
-      *(reinterpret_cast<double*const>(&(matrix->s2.c2))+1) = imin;
+      *(((double*const)(&(matrix->s2.c2)))  ) = rein;
+      *(((double*const)(&(matrix->s2.c2)))+1) = imin;
       break;
     case 9:
-      *(reinterpret_cast<double*const>(&(matrix->s3.c0))  ) = rein;
-      *(reinterpret_cast<double*const>(&(matrix->s3.c0))+1) = imin;
+      *(((double*const)(&(matrix->s3.c0)))  ) = rein;
+      *(((double*const)(&(matrix->s3.c0)))+1) = imin;
       break;
     case 10:
-      *(reinterpret_cast<double*const>(&(matrix->s3.c1))  ) = rein;
-      *(reinterpret_cast<double*const>(&(matrix->s3.c1))+1) = imin;
+      *(((double*const)(&(matrix->s3.c1)))  ) = rein;
+      *(((double*const)(&(matrix->s3.c1)))+1) = imin;
       break;
     case 11:
-      *(reinterpret_cast<double*const>(&(matrix->s3.c2))  ) = rein;
-      *(reinterpret_cast<double*const>(&(matrix->s3.c2))+1) = imin;
+      *(((double*const)(&(matrix->s3.c2)))  ) = rein;
+      *(((double*const)(&(matrix->s3.c2)))+1) = imin;
       break;
     default:
       exit(-224);

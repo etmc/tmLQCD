@@ -84,6 +84,7 @@
 #include "test/check_geometry.h"
 #include "update_backward_gauge.h"
 #include "xchange/xchange.h"
+#include "struct_accessors.h"
 
 int check_xchange();
 double compare_spinors(spinor* s1, spinor* s2);
@@ -308,8 +309,6 @@ int main(int argc, char* argv[]) {
 }
 
 double compare_spinors(spinor* s1, spinor* s2) {
-  double* show_out;
-  double* show_out_qphix;
 #ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
@@ -342,18 +341,19 @@ double compare_spinors(spinor* s1, spinor* s2) {
               y = y_global - g_proc_coords[2] * LY;
               z = z_global - g_proc_coords[3] * LZ;
               int idx = g_ipt[t][x][y][z];
-              show_out = (double*)(&s1[idx]);
-              show_out_qphix = (double*)(&s2[idx]);
               for (int sc = 0; sc < 24; sc++) {
-                if (fabs(show_out_qphix[sc]) > 2 * DBL_EPSILON ||
-                    fabs(show_out[sc]) > 2 * DBL_EPSILON) {
+                double e_tmlqcd = spinor_get_elem_linear(s2,sc/2,sc%2);
+                double e_qphix = spinor_get_elem_linear(s1,sc/2,sc%2);
+                
+                if (fabs(e_tmlqcd) > 2 * DBL_EPSILON ||
+                    fabs(e_qphix) > 2 * DBL_EPSILON) {
                   fflush(stdout);
                   printf("%9d | %5d %6d %6d %6d s%1d c%1d reim%1d : %+5lf %2s", g_proc_id, t_global,
-                         x_global, y_global, z_global, sc / 6, (sc / 2) % 3, sc % 2, show_out[sc],
+                         x_global, y_global, z_global, sc / 6, (sc / 2) % 3, sc % 2, e_tmlqcd ,
                          " ");
                   printf("%5d %6d %6d %6d s%1d c%1d reim%1d : %+5lf", t_global, x_global, y_global,
-                         z_global, sc / 6, (sc / 2) % 3, sc % 2, show_out_qphix[sc]);
-                  if (fabs(show_out[sc] - show_out_qphix[sc]) > 2 * DBL_EPSILON) printf(" !!! ");
+                         z_global, sc / 6, (sc / 2) % 3, sc % 2, e_qphix);
+                  if (fabs(e_tmlqcd - e_qphix) > 2 * DBL_EPSILON) printf(" !!! ");
                   printf("\n");
                 }
               }
@@ -403,14 +403,14 @@ double compare_spinors(spinor* s1, spinor* s2) {
             y = y_global - g_proc_coords[2] * LY;
             z = z_global - g_proc_coords[3] * LZ;
             int idx = g_ipt[t][x][y][z];
-            show_out = (double*)(&s1[idx]);
             for (int sc = 0; sc < 24; sc++) {
+              double e_diff = spinor_get_elem_linear(s1,sc/2,sc%2);
               // when a volume source is used, these will be zero up to significant rounding
               // we account for that by the scaling of DBL_EPSILON
-              if (fabs(show_out[sc]) > 8 * 24 * DBL_EPSILON) {
+              if (fabs(e_diff) > 8 * 24 * DBL_EPSILON) {
                 fflush(stdout);
                 printf("%9d | %5d %6d %6d %6d s%1d c%1d reim%1d : %+5lf\n", g_proc_id, t_global,
-                       x_global, y_global, z_global, sc / 6, (sc / 2) % 3, sc % 2, show_out[sc]);
+                       x_global, y_global, z_global, sc / 6, (sc / 2) % 3, sc % 2, e_diff);
               }
             }
           }
