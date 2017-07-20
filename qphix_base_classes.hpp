@@ -122,7 +122,7 @@ struct InnerCloverProduct<FT, veclen, soalen, compress12,
               if (sc_out == sc_in) {
                 cplx_mul_acc(spinor_out[c_out][four_s_out][re][xi],
                              spinor_out[c_out][four_s_out][im][xi], diag_in[sc_in][veclen_idx],
-                             FT{0}, spinor_in[c_in][four_s_in][re][xi],
+                             QPhiX::rep<FT,double>(0.0), spinor_in[c_in][four_s_in][re][xi],
                              spinor_in[c_in][four_s_in][im][xi]);
               } else if (sc_out < sc_in) {
                 auto const idx15 = sc_in * (sc_in - 1) / 2 + sc_out;
