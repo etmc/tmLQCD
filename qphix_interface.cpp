@@ -716,16 +716,6 @@ void reorder_gauge_to_QPhiX(
                       //    ordering of the dimensions.
                       int q_mu = 2 * dim + dir;
 
-                      // 2. QPhiX gauge field matrices are transposed w.r.t.
-                      // tmLQCD.
-                      // 3. tmlQCD always uses 3x3 color matrices (Nc2*Nc2).
-                      int64_t t_inner_idx_cb0 = reim + c1 * Nz + c2 * Nz * Nc2 +
-                                                change_dim[dim] * Nz * Nc2 * Nc2 +
-                                                tm_idx_cb0 * Nz * Nc2 * Nc2 * 4;
-                      int64_t t_inner_idx_cb1 = reim + c1 * Nz + c2 * Nz * Nc2 +
-                                                change_dim[dim] * Nz * Nc2 * Nc2 +
-                                                tm_idx_cb1 * Nz * Nc2 * Nc2 * 4;
-                                                
                       qphix_gauge_cb0[block][q_mu][c1][c2][reim][xx] = QPhiX::rep<FT, double>(
                         su3_get_elem(&(g_gauge_field[tm_idx_cb0][change_dim[dim]]), c2, c1, reim ) );
                       qphix_gauge_cb1[block][q_mu][c1][c2][reim][xx] = QPhiX::rep<FT, double>(
@@ -850,11 +840,11 @@ void reorder_eo_spinor_from_QPhiX(
                 spinor_set_elem( &(tm_eo_spinor[tm_eo_ind]),
                                  change_spin[q_spin],
                                  col,
-                                 QPhiX::rep<double, FT>(
-                                  change_sign[q_spin] * normFac * qphix_spinor[q_ind][col][q_spin][0][x_soa]
+                                 change_sign[q_spin] * normFac * QPhiX::rep<double, FT>(
+                                  qphix_spinor[q_ind][col][q_spin][0][x_soa]
                                  ),
-                                 QPhiX::rep<double, FT>(
-                                  change_sign[q_spin] * normFac * qphix_spinor[q_ind][col][q_spin][1][x_soa]
+                                 change_sign[q_spin] * normFac * QPhiX::rep<double, FT>(
+                                  qphix_spinor[q_ind][col][q_spin][1][x_soa]
                                  )
                                );
               }
