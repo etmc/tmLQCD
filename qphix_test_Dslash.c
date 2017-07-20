@@ -342,8 +342,8 @@ double compare_spinors(spinor* s1, spinor* s2) {
               z = z_global - g_proc_coords[3] * LZ;
               int idx = g_ipt[t][x][y][z];
               for (int sc = 0; sc < 24; sc++) {
-                double e_tmlqcd = spinor_get_elem_linear(s2,sc/2,sc%2);
-                double e_qphix = spinor_get_elem_linear(s1,sc/2,sc%2);
+                double e_tmlqcd = spinor_get_elem_linear(&s2[idx],sc/2,sc%2);
+                double e_qphix = spinor_get_elem_linear(&s1[idx],sc/2,sc%2);
                 
                 if (fabs(e_tmlqcd) > 2 * DBL_EPSILON ||
                     fabs(e_qphix) > 2 * DBL_EPSILON) {
@@ -404,7 +404,7 @@ double compare_spinors(spinor* s1, spinor* s2) {
             z = z_global - g_proc_coords[3] * LZ;
             int idx = g_ipt[t][x][y][z];
             for (int sc = 0; sc < 24; sc++) {
-              double e_diff = spinor_get_elem_linear(s1,sc/2,sc%2);
+              double e_diff = spinor_get_elem_linear(&s1[idx],sc/2,sc%2);
               // when a volume source is used, these will be zero up to significant rounding
               // we account for that by the scaling of DBL_EPSILON
               if (fabs(e_diff) > 8 * 24 * DBL_EPSILON) {
