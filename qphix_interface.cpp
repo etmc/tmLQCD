@@ -1944,8 +1944,7 @@ int invert_eo_qphix_nflavour_mshift(std::vector< std::vector< spinor* > > &Odd_o
             Odd_out, Odd_in, target_precision, max_iter, solver_flag, solver_params, num_flavour);
       } else {
         return invert_eo_qphix_helper<QPhiX::half, VECLEN_HP, QPHIX_SOALEN, false>(
-            Odd_out, Odd_in, target_precision, max_iter, solver_flag, rel_prec, solver_params,
-            num_flavour);
+            Odd_out, Odd_in, target_precision, max_iter, solver_flag, solver_params, num_flavour);
       }
     } else
  #else
