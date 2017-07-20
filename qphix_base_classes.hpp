@@ -128,7 +128,9 @@ struct InnerCloverProduct<FT, veclen, soalen, compress12,
                 auto const idx15 = sc_in * (sc_in - 1) / 2 + sc_out;
                 cplx_mul_acc(
                     spinor_out[c_out][four_s_out][re][xi], spinor_out[c_out][four_s_out][im][xi],
-                    off_diag_in[idx15][re][veclen_idx], -off_diag_in[idx15][im][veclen_idx],
+                    off_diag_in[idx15][re][veclen_idx],
+                    // aww hell, maybe one should just add negation to QPhiX::half ?
+                    QPhiX::rep<FT,double>(-QPhiX::rep<double,FT>(off_diag_in[idx15][im][veclen_idx])),
                     spinor_in[c_in][four_s_in][re][xi], spinor_in[c_in][four_s_in][im][xi]);
               } else {
                 auto const idx15 = sc_out * (sc_out - 1) / 2 + sc_in;
