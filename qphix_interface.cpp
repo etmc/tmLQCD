@@ -1055,7 +1055,7 @@ void Mfull_helper(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, cons
   typedef typename QPhiX::Geometry<FT, V, S, compress>::CloverBlock QClover;
   typedef typename QPhiX::Geometry<FT, V, S, compress>::FullCloverBlock QFullClover;
 
-  if (g_debug_level > 1) tmlqcd::printQphixDiagnostics(V, S, compress);
+  if (g_debug_level > 1) tmlqcd::printQphixDiagnostics(V, S, compress, V, S, compress);
 
   double coeff_s = (FT)(1);
   double coeff_t = (FT)(1);
@@ -1196,7 +1196,7 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
   ************************/
 
   if (g_debug_level > 1) {
-    tmlqcd::printQphixDiagnostics(V, S, compress);
+    tmlqcd::printQphixDiagnostics(V, S, compress, V_inner, S_inner, compress_inner);
   }
 
   QPhiX::Geometry<FT, V, S, compress> geom(subLattSize, By, Bz, NCores, Sy, Sz, PadXY, PadXYZ,
@@ -1997,8 +1997,8 @@ void tmlqcd::checkQphixInputParameters(const tm_QPhiXParams_t &params) {
   }
 }
 
-void tmlqcd::printQphixDiagnostics(int VECLEN, int SOALEN, bool compress) {
-  QPhiX::masterPrintf("# QphiX: VECLEN=%d SOALEN=%d\n", VECLEN, SOALEN);
+void tmlqcd::printQphixDiagnostics(int VECLEN, int SOALEN, bool compress, int VECLEN_inner, int SOALEN_inner, bool compress_inner) {
+  QPhiX::masterPrintf("# QphiX: VECLEN=%d SOALEN=%d VECLEN_inner=%d, SOALEN_inner=%d\n", VECLEN, SOALEN, VECLEN_inner, SOALEN_inner);
 
   QPhiX::masterPrintf("# QphiX: Declared QMP Topology (xyzt):");
   for (int mu = 0; mu < 4; mu++) QPhiX::masterPrintf(" %d", qmp_geom[mu]);
@@ -2026,6 +2026,9 @@ void tmlqcd::printQphixDiagnostics(int VECLEN, int SOALEN, bool compress) {
   QPhiX::masterPrintf("# QphiX: MinCt = %d\n", MinCt);
   if (compress) {
     QPhiX::masterPrintf("# QphiX: Using two-row gauge compression (compress12)\n");
+  }
+  if (compress_inner) {
+    QPhiX::masterPrintf("# QphiX: Inner solver using two-row gauge compression (compress12)\n");
   }
 }
 
