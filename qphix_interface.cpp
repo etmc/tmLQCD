@@ -1461,15 +1461,16 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     delete (SolverQPhiX);
     delete (InnerSolverQPhiX);
     delete (MultiSolverQPhiX);
-    geom.free(qphix_clover);
-    geom.free(qphix_inv_clover);
-    geom_inner.free(qphix_clover_inner);
-    geom_inner.free(qphix_inv_clover_inner);
+    // on KNL, it seems that munmap is problematic, so we check for nullptr
+    if(qphix_clover) geom.free(qphix_clover);
+    if(qphix_inv_clover) geom.free(qphix_inv_clover);
+    if(qphix_clover_inner) geom_inner.free(qphix_clover_inner);
+    if(qphix_inv_clover_inner) geom_inner.free(qphix_inv_clover_inner);
     for (int fl : {0, 1}) {
-      geom.free(qphix_fullclover[fl]);
-      geom.free(qphix_inv_fullclover[fl]);
-      geom_inner.free(qphix_fullclover_inner[fl]);
-      geom_inner.free(qphix_inv_fullclover_inner[fl]);
+      if(qphix_fullclover[fl]) geom.free(qphix_fullclover[fl]);
+      if(qphix_inv_fullclover[fl]) geom.free(qphix_inv_fullclover[fl]);
+      if(qphix_fullclover_inner[fl]) geom_inner.free(qphix_fullclover_inner[fl]);
+      if(qphix_inv_fullclover_inner[fl]) geom_inner.free(qphix_inv_fullclover_inner[fl]);
     }
     QPhiX::masterPrintf("# QPHIX: ...done.\n\n");
 
@@ -1640,8 +1641,8 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
   } // if(num_flavour)
 
   for (int cb : {0, 1}) {
-    geom.free(u_packed[cb]);
-    geom_inner.free(u_packed_inner[cb]);
+    if(u_packed[cb]) geom.free(u_packed[cb]);
+    if(u_packed_inner[cb]) geom_inner.free(u_packed_inner[cb]);
   }
 
   // FIXME: This should be called properly somewhere else
