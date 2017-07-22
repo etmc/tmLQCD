@@ -1463,9 +1463,13 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     delete (MultiSolverQPhiX);
     geom.free(qphix_clover);
     geom.free(qphix_inv_clover);
+    geom_inner.free(qphix_clover_inner);
+    geom_inner.free(qphix_inv_clover_inner);
     for (int fl : {0, 1}) {
       geom.free(qphix_fullclover[fl]);
       geom.free(qphix_inv_fullclover[fl]);
+      geom_inner.free(qphix_fullclover_inner[fl]);
+      geom_inner.free(qphix_inv_fullclover_inner[fl]);
     }
     QPhiX::masterPrintf("# QPHIX: ...done.\n\n");
 
