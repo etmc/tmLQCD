@@ -88,7 +88,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
 #ifdef TM_USE_QPHIX
   if(solver_params.external_inverter == QPHIX_INVERTER){
     spinor** temp;
-    init_solver_field(&temp, VOLUME/2, 1);
+    init_solver_field(&temp, VOLUMEPLUSRAND/2, 1);
     
     // using CG for the HMC, we always want to have the solution of (Q Q^dagger) x = b, which is equivalent to
     // gamma_5 (M M^dagger)^{-1} gamma_5 b
@@ -166,7 +166,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
   }
 #ifdef WIP
     spinor** temp;
-    init_solver_field(&temp, VOLUME/2, 1);
+    init_solver_field(&temp, VOLUMEPLUSRAND/2, 1);
     f(temp[0], P);
     diff(temp[0], temp[0], Q, VOLUME/2);
     double diffnorm = square_norm(temp[0], VOLUME/2, 1); 
@@ -185,7 +185,7 @@ int solve_mshift_oneflavour(spinor ** const P, spinor * const Q, solver_params_t
 #ifdef TM_USE_QPHIX
   if( solver_params->external_inverter == QPHIX_INVERTER ){
     spinor** temp;
-    init_solver_field(&temp, VOLUME/2, 1);
+    init_solver_field(&temp, VOLUMEPLUSRAND/2, 1);
     gamma5(temp[0], Q, VOLUME/2);
     iteration_count = invert_eo_qphix_oneflavour_mshift(P, temp[0],
                                                         solver_params->max_iter, solver_params->squared_solver_prec,
@@ -214,7 +214,7 @@ int solve_mshift_oneflavour(spinor ** const P, spinor * const Q, solver_params_t
   double reached_prec = -1.0;
   iteration_count = cg_mms_tm(P, Q, solver_params, &reached_prec);
 #ifdef WIP
-  init_solver_field(&temp, VOLUME/2, 1);
+  init_solver_field(&temp, VOLUMEPLUSRAND/2, 1);
   // FIXME: in the shift-by-shift branch, the shifted operator exists explicitly and could be used to 
   // truly check the residual here
   solver_params->M_psi(temp[0], P[0]);
@@ -257,9 +257,9 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
       spinor** checkPdn;
 #ifdef TM_USE_QPHIX
       if( solver_params->external_inverter == QPHIX_INVERTER ){
-        init_solver_field(&temp, VOLUME/2, 2);
-        init_solver_field(&checkPup, VOLUME/2, solver_params->no_shifts);
-        init_solver_field(&checkPdn, VOLUME/2, solver_params->no_shifts);
+        init_solver_field(&temp, VOLUMEPLUSRAND/2, 2);
+        init_solver_field(&checkPup, VOLUMEPLUSRAND/2, solver_params->no_shifts);
+        init_solver_field(&checkPdn, VOLUMEPLUSRAND/2, solver_params->no_shifts);
         // by switching up and down below, we do the gamma5 tau1 (M.M^dagger)^{-1} tau1 gamma5 = [ Q(+mu,eps) Q(-mu,eps) ]^{-1}
         gamma5(temp[0], Qup, VOLUME/2);
         gamma5(temp[1], Qdn, VOLUME/2);
@@ -305,7 +305,7 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
 #endif
       iteration_count = cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_params);
 #ifdef WIP
-      init_solver_field(&temp, VOLUME/2, 2);
+      init_solver_field(&temp, VOLUMEPLUSRAND/2, 2);
       // FIXME: in the shift-by-shift branch, the shifted operator exists explicitly and could be used to 
       // truly check the residual here
       solver_params->M_ndpsi(temp[0], temp[1], Pup[0], Pdn[0]);
