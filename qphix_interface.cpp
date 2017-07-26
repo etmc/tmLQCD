@@ -46,6 +46,9 @@ extern "C" {
 #include "linalg/square_norm.h"
 #include "linalg/square_norm.h"
 #include "misc_types.h"
+// for the normalisation of the heavy doublet when running
+// RHMC
+#include "phmc.h"
 #include "operator/clover_leaf.h"
 #include "operator/clovertm_operators.h"
 #include "operator_types.h"
@@ -1607,10 +1610,16 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     } else if (solver_flag == CGMMSND ){
       // TODO: handle the residuals properly
       if(g_debug_level > 2 ) QPhiX::masterPrintf("# QPHIX CGMMSND: shifts: \n");
+      // tmLQCD weights the operator with 1/maxev in the RHMC relative to the shifts
+      // we will do this externally on the inverse (in monomial_solve) and thus need to weight
+      // the shifts by maxev^2
+      const double maxev_sq = (1.0/phmc_invmaxev)*(1.0/phmc_invmaxev);
       for( int shift = 0; shift < num_shifts; shift++ ){
         RsdTargetArr[shift] = RsdTarget;
         RsdFinalArr[shift] = -1.0;
-        shifts[shift] = solver_params.shifts[shift]*solver_params.shifts[shift]/(4*g_kappa*g_kappa); 
+        shifts[shift] = maxev_sq *
+                        solver_params.shifts[shift]*solver_params.shifts[shift] /
+                        (4*g_kappa*g_kappa); 
         if(g_debug_level > 2 ) QPhiX::masterPrintf("# [%d] = %lf\n", shift, shifts[shift]);
       }
       if(g_debug_level > 2 ) QPhiX::masterPrintf("\n");
