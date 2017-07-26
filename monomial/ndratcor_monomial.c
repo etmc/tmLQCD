@@ -65,7 +65,6 @@ double apply_Z_ndpsi(spinor * const k_up, spinor * const k_dn,
 
 void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
-  solver_params_t solver_params;
   double atime, etime, delta;
   spinor * up0, * dn0, * up1, * dn1, * tup, * tdn;
   double coefs[6] = {1./4., -3./32., 7./128., -77./2048., 231./8192., -1463./65536.};
@@ -93,19 +92,19 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
   random_spinor_field_eo(mnl->pf2, mnl->rngrepro, RN_GAUSS);
   mnl->energy0 += square_norm(mnl->pf2, VOLUME/2, 1);
 
-  solver_params.max_iter = mnl->maxiter;
-  solver_params.squared_solver_prec = mnl->accprec;
-  solver_params.no_shifts = mnl->rat.np;
-  solver_params.shifts = mnl->rat.mu;
-  solver_params.type = mnl->solver;
-  solver_params.M_ndpsi = &Qtm_pm_ndpsi;
-  solver_params.M_ndpsi32 = &Qtm_pm_ndpsi_32;    
+  mnl->solver_params.max_iter = mnl->maxiter;
+  mnl->solver_params.squared_solver_prec = mnl->accprec;
+  mnl->solver_params.no_shifts = mnl->rat.np;
+  mnl->solver_params.shifts = mnl->rat.mu;
+  mnl->solver_params.type = mnl->solver;
+  mnl->solver_params.M_ndpsi = &Qtm_pm_ndpsi;
+  mnl->solver_params.M_ndpsi32 = &Qtm_pm_ndpsi_32;    
   if(mnl->type == NDCLOVERRATCOR) {
-    solver_params.M_ndpsi = &Qsw_pm_ndpsi;
-    solver_params.M_ndpsi32 = &Qsw_pm_ndpsi_32;
+    mnl->solver_params.M_ndpsi = &Qsw_pm_ndpsi;
+    mnl->solver_params.M_ndpsi32 = &Qsw_pm_ndpsi_32;
   }
-  solver_params.sdim = VOLUME/2;
-  solver_params.rel_prec = g_relative_precision_flag;
+  mnl->solver_params.sdim = VOLUME/2;
+  mnl->solver_params.rel_prec = g_relative_precision_flag;
 
   // apply B to the random field to generate pseudo-fermion fields
   assign(mnl->w_fields[0], mnl->pf, VOLUME/2);
@@ -114,7 +113,7 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
   up1 = mnl->w_fields[2]; dn1 = mnl->w_fields[3];
 	 
   for(int i = 1; i < 8; i++) {
-    delta = apply_Z_ndpsi(up1, dn1, up0, dn0, id, hf, &solver_params);
+    delta = apply_Z_ndpsi(up1, dn1, up0, dn0, id, hf, &(mnl->solver_params) );
     assign_add_mul_r(mnl->pf, up1, coefs[i-1], VOLUME/2);
     assign_add_mul_r(mnl->pf2, dn1, coefs[i-1], VOLUME/2);
     if(delta < mnl->accprec) break;
@@ -136,7 +135,6 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
 
 
 double ndratcor_acc(const int id, hamiltonian_field_t * const hf) {
-  solver_params_t solver_params;
   monomial * mnl = &monomial_list[id];
   double atime, etime, delta;
   spinor * up0, * dn0, * up1, * dn1, * tup, * tdn;
@@ -151,19 +149,19 @@ double ndratcor_acc(const int id, hamiltonian_field_t * const hf) {
   }
   mnl->energy1 = 0.;
 
-  solver_params.max_iter = mnl->maxiter;
-  solver_params.squared_solver_prec = mnl->accprec;
-  solver_params.no_shifts = mnl->rat.np;
-  solver_params.shifts = mnl->rat.mu;
-  solver_params.type = mnl->solver;
-  solver_params.M_ndpsi = &Qtm_pm_ndpsi;
-  solver_params.M_ndpsi32 = &Qtm_pm_ndpsi_32;    
+  mnl->solver_params.max_iter = mnl->maxiter;
+  mnl->solver_params.squared_solver_prec = mnl->accprec;
+  mnl->solver_params.no_shifts = mnl->rat.np;
+  mnl->solver_params.shifts = mnl->rat.mu;
+  mnl->solver_params.type = mnl->solver;
+  mnl->solver_params.M_ndpsi = &Qtm_pm_ndpsi;
+  mnl->solver_params.M_ndpsi32 = &Qtm_pm_ndpsi_32;    
   if(mnl->type == NDCLOVERRATCOR) {
-    solver_params.M_ndpsi = &Qsw_pm_ndpsi;
-    solver_params.M_ndpsi32 = &Qsw_pm_ndpsi_32;
+    mnl->solver_params.M_ndpsi = &Qsw_pm_ndpsi;
+    mnl->solver_params.M_ndpsi32 = &Qsw_pm_ndpsi_32;
   }
-  solver_params.sdim = VOLUME/2;
-  solver_params.rel_prec = g_relative_precision_flag;
+  mnl->solver_params.sdim = VOLUME/2;
+  mnl->solver_params.rel_prec = g_relative_precision_flag;
 
   // apply (Q R)^(-1) to pseudo-fermion fields
   assign(mnl->w_fields[4], mnl->pf, VOLUME/2);
@@ -171,13 +169,13 @@ double ndratcor_acc(const int id, hamiltonian_field_t * const hf) {
   up0 = mnl->w_fields[0]; dn0 = mnl->w_fields[1];
   up1 = mnl->w_fields[2]; dn1 = mnl->w_fields[3];
 
-  delta = apply_Z_ndpsi(up0, dn0, mnl->pf, mnl->pf2, id, hf, &solver_params);
+  delta = apply_Z_ndpsi(up0, dn0, mnl->pf, mnl->pf2, id, hf, &(mnl->solver_params));
   assign_add_mul_r(mnl->w_fields[4], up0, coefs[0], VOLUME/2);
   assign_add_mul_r(mnl->w_fields[5], dn0, coefs[0], VOLUME/2);
 
   for(int i = 2; i < 8; i++) {
     if(delta < mnl->accprec) break;
-    delta = apply_Z_ndpsi(up1, dn1, up0, dn0, id, hf, &solver_params);
+    delta = apply_Z_ndpsi(up1, dn1, up0, dn0, id, hf, &(mnl->solver_params) );
     assign_add_mul_r(mnl->w_fields[4], up1, coefs[i-1], VOLUME/2);
     assign_add_mul_r(mnl->w_fields[5], dn1, coefs[i-1], VOLUME/2);
     tup = up0; tdn = dn0;
