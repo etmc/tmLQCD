@@ -49,7 +49,7 @@
 #include "boundary.h"
 #include "gamma.h"
 #include "linalg_eo.h"
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include "xchange/xchange.h"
 #endif
 #include "update_backward_gauge.h"
@@ -127,6 +127,9 @@ void D_psi_prec(spinor * const P, spinor * const Q){
 #undef _PSWITCH
 #undef _PTSWITCH
 
+#ifdef TM_USE_OMP
+#  define static
+#endif
 
 /* direction +t */
 void boundary_D_0(spinor * const r, spinor * const s, su3 * const u) {
@@ -312,6 +315,11 @@ void boundary_D_7(spinor * const r, spinor * const s, su3 * restrict u) {
 
   return;
 }
+
+#ifdef TM_USE_OMP
+#  undef static
+#endif
+
 
 // now come the SSE versions
 // currently they are disabled, because incompatible
