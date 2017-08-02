@@ -3,6 +3,7 @@
  * Copyright (C) 1995 Ulli Wolff, Stefan Sint
  *               2001,2005 Martin Hasenbusch
  *               2011,2012 Carsten Urbach
+ *               2017      Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -256,9 +257,155 @@ void sw_invert(const int ieo, const double mu) {
   return;
 }
 
+/* This function computes 
+ * 
+ *   \bar\epsilon / ( (1 + Tee)^2 + \bar\mu^2 - \bar\epsilon^2 )
+ * 
+ * for use in the QPhiX packing routine for the non-degenerate
+ * clover doublet
+ *
+ * sw should be populated with (1+Tee) and sw_inv should contain 
+ * 1 / ( (1 + Tee)^2 + \bar\mu^2 - \bar\epsilon^2 ) 
+ * the last VOLUME/2 elements (which should not be relevant at this stage) 
+ * of sw_inv will be overwritten
+ */ 
+
+void sw_invert_epsbar(const double epsbar) {
+#ifdef TM_USE_OMP
+#pragma omp parallel
+  {
+#endif
+  int icy, i;
+  _Complex double ALIGN a[6][6];
+
+#ifndef TM_USE_OMP
+  icy=VOLUME/2;
+#endif
+
+#ifdef TM_USE_OMP
+#pragma omp for
+#endif
+  for(int icx = 0; icx < VOLUME/2; icx++) {
+#ifdef TM_USE_OMP
+    icy = icx + VOLUME/2;
+#endif
+    for(i = 0; i < 2; i++) {
+      // extract 1/((1+Tee)^2 + \bar\mu^2 - \bar\epsilon^2)
+      populate_6x6_matrix(a, &sw_inv[icx][0][i], 0, 0);
+      populate_6x6_matrix(a, &sw_inv[icx][1][i], 0, 3);
+      populate_6x6_matrix(a, &sw_inv[icx][2][i], 3, 3);
+      populate_6x6_matrix(a, &sw_inv[icx][3][i], 3, 0);
+
+      // scale by epsbar
+      scale_real_6x6(a, epsbar);
+
+      /*  and write the result into the last VOLUME/2 elements of sw_inv */
+      get_3x3_block_matrix(&sw_inv[icy][0][i], a, 0, 0);
+      get_3x3_block_matrix(&sw_inv[icy][1][i], a, 0, 3);
+      get_3x3_block_matrix(&sw_inv[icy][2][i], a, 3, 3);
+      get_3x3_block_matrix(&sw_inv[icy][3][i], a, 3, 0);
+    }
+#ifndef TM_USE_OMP
+    icy++;
+#endif
+  }
+#ifdef TM_USE_OMP
+  } /* OpenMP closing brace */
+#endif
+  return;
+}
+
+/* This function computes 
+ * 
+ *   (1 + Tee - I*\bar\mu\gamma_5\tau3 ) / ( 1 + Tee + \bar\mu^2 - \bar\eps^2 )
+ * 
+ * for use in the QPhiX packing routine for the non-degenerate
+ * clover doublet
+ *
+ * sw should be populated with (1+Tee) and 
+ * sw_inv should contain 1 / ( (1 + Tee)^2 + \bar\mu^2 - \bar\eps^2 )
+ *
+ * !! all elements of sw_inv will be overwritten !!
+ */ 
+
+void sw_invert_mubar(const double mubar) {
+#ifdef TM_USE_OMP
+#pragma omp parallel
+  {
+#endif
+  int err=0;
+  int icy, i, x;
+  su3 ALIGN v;
+  _Complex double ALIGN a[6][6];
+  _Complex double ALIGN b[6][6];
+  _Complex double ALIGN c[6][6];
+  _Complex double ALIGN d[6][6];
+
+#ifndef TM_USE_OMP
+  icy=VOLUME/2;
+#endif
+
+#ifdef TM_USE_OMP
+#pragma omp for
+#endif
+  for(int icx = 0; icx < VOLUME/2; icx++) {
+#ifdef TM_USE_OMP
+    icy = icx + VOLUME/2;
+#endif
+    x = g_eo2lexic[icx];
+    
+    for(i = 0; i < 2; i++) {
+      // extract (1+Tee)
+      populate_6x6_matrix(a, &sw[x][0][i], 0, 0);
+      populate_6x6_matrix(a, &sw[x][1][i], 0, 3);
+      _su3_dagger(v, sw[x][1][i]); 
+      populate_6x6_matrix(a, &v, 3, 0);
+      populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
+
+      copy_6x6(b,a);
+
+      // we add the twisted quark masses for both the 'up' and the 'down' flavour
+      // (note that this is the inverse, so -mu is associated with 'up')
+      // the i index denotes the halfspinor block and thus implements gamma5
+      add_tm(a, -(i==0?1.0:-1.0)*mubar);
+      add_tm(b, +(i==0?1.0:-1.0)*mubar);
+  
+      // extract 1/((1+Tee)^2 + \bar\mu^2 - \bar\eps^2)
+      populate_6x6_matrix(c, &sw_inv[icx][0][i], 0, 0);
+      populate_6x6_matrix(c, &sw_inv[icx][1][i], 0, 3);
+      populate_6x6_matrix(c, &sw_inv[icx][2][i], 3, 3);
+      populate_6x6_matrix(c, &sw_inv[icx][3][i], 3, 0);
+  
+      // multiply the two together and store in d
+      mult_6x6(d, a, c);
+  
+      /*  and write the result into sw_inv */
+      get_3x3_block_matrix(&sw_inv[icx][0][i], d, 0, 0);
+      get_3x3_block_matrix(&sw_inv[icx][1][i], d, 0, 3);
+      get_3x3_block_matrix(&sw_inv[icx][2][i], d, 3, 3);
+      get_3x3_block_matrix(&sw_inv[icx][3][i], d, 3, 0);
+
+      // and the same for the 'down'
+      mult_6x6(d, b, c);
+  
+      get_3x3_block_matrix(&sw_inv[icy][0][i], d, 0, 0);
+      get_3x3_block_matrix(&sw_inv[icy][1][i], d, 0, 3);
+      get_3x3_block_matrix(&sw_inv[icy][2][i], d, 3, 3);
+      get_3x3_block_matrix(&sw_inv[icy][3][i], d, 3, 0);
+    }
+#ifndef TM_USE_OMP
+    icy++;
+#endif
+  }
+#ifdef TM_USE_OMP
+  } /* OpenMP closing brace */
+#endif
+  return;
+}
+
 // This function computes
 //
-// 1/((1+T)^2 + barmu^2 - bareps^2)^{-1}
+// 1/((1+T)^2 + \bar\mu^2 - \bar\epsilon^2)
 //
 // for all even x,
 // which is stored in sw_inv[0-(VOLUME/2-1)]

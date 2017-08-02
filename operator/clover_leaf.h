@@ -2,6 +2,7 @@
  *
  * Copyright (C) 2005 Martin Hasenbusch
  *               2011 Carsten Urbach
+ *               2017 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -32,6 +33,8 @@ double sw_trace(const int ieo, const double mu);
 double sw_trace_nd(const int ieo, const double mu, const double eps);
 void sw_invert(const int ieo, const double mu);
 void sw_invert_nd(const double mshift);
+void sw_invert_epsbar(const double epsbar);
+void sw_invert_mubar(const double mubar);
 void sw_deriv(const int ieo, const double mu);
 void sw_deriv_nd(const int ieo);
 void sw_spinor_eo(const int ieo, const spinor * const kk, const spinor * const ll, const double fac);
@@ -43,5 +46,8 @@ void mult_6x6(_Complex double a[6][6], _Complex double b[6][6], _Complex double 
 void add_6x6(_Complex double a[6][6], _Complex double b[6][6], _Complex double d[6][6]);
 void sub_6x6(_Complex double a[6][6], _Complex double b[6][6], _Complex double d[6][6]);
 void copy_6x6(_Complex double a[6][6], const _Complex double b[6][6]);
+void scale_real_6x6(_Complex double a[6][6], const double scale);
+void scale_cplx_6x6(_Complex double a[6][6], const _Complex double scale);
+void one_6x6(_Complex double a[6][6]);
 
 #endif

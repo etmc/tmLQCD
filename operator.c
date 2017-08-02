@@ -641,4 +641,14 @@ void op_set_globals(const int op_id){
     g_mubar = op->mubar;
     g_epsbar = op->epsbar;
   }
+  if(g_debug_level > 2 && g_proc_id == 0){
+    printf("# op_set_globals set globals to:\n");
+    printf("# g_kappa = %.12lf\n", g_kappa);
+    printf("# g_c_sw = %.12lf\n", g_c_sw);
+    printf("# g_mu = %.12lf\n", g_mu);
+    printf("# g_mu2 = %.12lf\n", g_mu2);
+    printf("# g_mu3 = %.12lf\n", g_mu3);
+    printf("# g_mubar = %.12lf\n", g_mubar);
+    printf("# g_epsbar = %.12lf\n", g_epsbar);
+  }
 }

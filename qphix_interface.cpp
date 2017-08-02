@@ -52,6 +52,7 @@ extern "C" {
 #include "operator/clover_leaf.h"
 #include "operator/clovertm_operators.h"
 #include "operator_types.h"
+#include "operator/Hopping_Matrix.h"
 #include "solver/matrix_mult_typedef.h"
 #include "solver/solver_types.h"
 #include "solver/solver.h"
@@ -69,6 +70,7 @@ extern "C" {
 #include <qphix/inv_richardson_multiprec.h>
 #include <qphix/minvcg.h>
 #include <qphix/ndtm_reuse_operator.h>
+#include <qphix/ndtm_reuse_operator_clover.h>
 #include <qphix/print_utils.h>
 #include <qphix/qphix_config.h>
 #include <qphix/twisted_mass.h>
@@ -251,7 +253,7 @@ template <typename FT, int VECLEN, int SOALEN, bool compress12>
 void reorder_clover_to_QPhiX(
     QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom,
     typename QPhiX::Geometry<FT, VECLEN, SOALEN, compress12>::CloverBlock *qphix_clover, int cb,
-    bool inverse) {
+    bool inverse, bool fl_offdiag = false) {
   const double startTime = gettime();
 
   /* the spin-colour clover term in sw_term and the corresponding inverse
@@ -303,6 +305,15 @@ void reorder_clover_to_QPhiX(
    *                               sw_inv[3][1] sw_inv[2][1]
    *
    * where blocks sw_inv[3][0] and sw_inv[3][1] are relevant only when mu > 0
+   * 
+   * There is a special case for the non-degenerate twisted clover operator. The flavour-off-diagonal
+   * components of the inverse clover term do not have an imaginary part on the spin-colour diagonal.
+   * They can thus be stored as CloverBlock, which is done in the QPhiX implementation
+   * of the ND tmclover operator.
+   * 
+   * As a hack, this inverse is prepared by sw_invert_epsbar and placed in to the last
+   * VOLUME/2 sites of sw_inv. Reading from there is triggered by the boolean
+   * fl_offdiag.
    */
 
   // rescale to get clover term (or its inverse) in the physical normalisation
@@ -380,10 +391,13 @@ void reorder_clover_to_QPhiX(
             int64_t q_cb_x_coord = x_soa + v * SOALEN;
             int64_t tm_x_coord = q_cb_x_coord * 2 + (((t + y + z) & 1) ^ cb);
 
-            //             the inverse of the clover term is in even-odd ordering
-            //             while the clover term itself is lexicographically ordered
+            // the inverse of the clover term is in even-odd ordering
+            // while the clover term itself is lexicographically ordered
+            // for the special case of the nd tmclover operator, the inverse of the flavour off-diagonal
+            // components is stored in the last VOLUME/2 elements of sw_inv
             int64_t tm_idx =
-                inverse ? g_lexic2eosub[g_ipt[t][tm_x_coord][y][z]] : g_ipt[t][tm_x_coord][y][z];
+                (inverse ? g_lexic2eosub[g_ipt[t][tm_x_coord][y][z]] : g_ipt[t][tm_x_coord][y][z]) +
+                ( (inverse && fl_offdiag) ? VOLUME/2 : 0 );
 
             int b_idx;
 
@@ -1003,49 +1017,50 @@ void reorder_spinor_from_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &
   }
 }
 
-// WIP: it is probably easier to simply call the reorder routine twice...
-//template <typename FT_out, int V_out, int S_out, bool compress_out, typename FT_in, int V_in, int S_in, bool compress_in>
-//void convert_QPhiX_gauge(typename QPhiX::Geometry<FT_out, V_out, S_out, compress_out>::SU3MatrixBlock gauge_out,
-//                         typename QPhiX::Geometry<FT_in,  V_in,  S_in,  compress_in>::SU3MatrixBlock const * const gauge_in,
-//                         QPhiX::Geometry<FT_out, V_out, S_out, compress_out> &geom_out,
-//                         QPhiX::Geometry<FT_in, V_in, S_in, compress_in> &geom_in){
-//  const double startTime = gettime();
-//
-//  if( compress_out != compress_in ){
-//    QPhiX::masterPrintf("QPhiX interface: when converting between gauge field precisions, only gauge fields with the same compression can be converted into each other. Aborting!\n");
-//    abort();
-//  }
-//  if( S_out != S_in ){
-//    QPhiX::masterPrintf("QPhiX interface: when converting between gauge field precisions, only gauge fields with the same SOALEN can be converted into each other. Aborting!\n");
-//    abort();
-//  }
-//
-//  // Number of elements in spin, color & complex
-//  // Here c1 is QPhiX's outer color, and c2 the inner one
-//  const int Ns = 4;
-//  const int Nc1 = compress_out ? 2 : 3;
-//  const int Nc2 = 3;
-//  const int Nz = 2;
-//
-//  // Geometric parameters for QPhiX data layout
-//  const auto ngy = geom.nGY();
-//  const auto nVecs = geom.nVecs();
-//  const auto Pxy = geom.getPxy();
-//  const auto Pxyz = geom.getPxyz();
-//
-//#pragma omp parallel for collapse(4)
-//  for (int64_t t = 0; t < T; t++)
-//    for (int64_t z = 0; z < LZ; z++)
-//      for (int64_t y = 0; y < LY; y++)
-//        for (int64_t v = 0; v < nVecs; v++) {
-//          int64_t block = (t * Pxyz + z * Pxy) / ngy + (y / ngy) * nVecs + v;
-//
-//          for (int dim = 0; dim < 4; dim++)     // dimension == QPhiX \mu
-//            for (int c1 = 0; c1 < Nc1; c1++)    // QPhiX convention color 1 (runs up to 2 or 3)
-//              for (int c2 = 0; c2 < Nc2; c2++)  // QPhiX convention color 2 (always runs up to 3)
-//                for (int x_soa = 0; x_soa < SOALEN; x_soa++) {
-//
-//}
+template <typename FT, int V, int S, bool compress12,
+          typename FT_inner, int V_inner, int S_inner, bool compress12_inner>
+void pack_nd_clover(QPhiX::Geometry<FT, V, S, compress12> &geom,
+                   QPhiX::Geometry<FT_inner, V_inner, S_inner, compress12_inner> &geom_inner,
+                   typename QPhiX::Geometry<FT, V, S, compress12>::FullCloverBlock *full_invclov[2],
+                   typename QPhiX::Geometry<FT, V, S, compress12>::CloverBlock *invclov_odiag,
+                   typename QPhiX::Geometry<FT, V, S, compress12>::CloverBlock *clov,
+                   typename QPhiX::Geometry<FT_inner, V_inner, S_inner, compress12_inner>::FullCloverBlock *full_invclov_inner[2],
+                   typename QPhiX::Geometry<FT_inner, V_inner, S_inner, compress12_inner>::CloverBlock *invclov_odiag_inner,
+                   typename QPhiX::Geometry<FT_inner, V_inner, S_inner, compress12_inner>::CloverBlock *clov_inner,
+                   const int cb,
+                   bool pack_inner){
+  
+  typedef typename QPhiX::Geometry<FT, V, S, compress12>::CloverBlock QClover;
+  typedef typename QPhiX::Geometry<FT, V, S, compress12>::FullCloverBlock QFullClover;
+  typedef typename QPhiX::Geometry<FT_inner, V_inner, S_inner, compress12_inner>::CloverBlock QClover_inner;
+  typedef typename QPhiX::Geometry<FT_inner, V_inner, S_inner, compress12_inner>::FullCloverBlock QFullClover_inner;
+
+  double start = gettime(); 
+  reorder_clover_to_QPhiX(geom, clov, cb, false);
+  if(pack_inner){
+    reorder_clover_to_QPhiX(geom_inner, clov_inner, cb, false);
+  }
+  
+  sw_invert_epsbar(g_epsbar);
+  reorder_clover_to_QPhiX(geom, invclov_odiag, 1-cb, true, true);
+  if(pack_inner){
+    reorder_clover_to_QPhiX(geom_inner, invclov_odiag_inner, 1-cb, true, true);
+  }
+
+  // no minus sign here, the difference in the sign of gamma5 
+  // is taken care of internally
+  sw_invert_mubar(g_mubar);
+  reorder_clover_to_QPhiX(geom, full_invclov, 1-cb, true);
+  if(pack_inner){
+    reorder_clover_to_QPhiX(geom_inner, full_invclov_inner, 1-cb, true);
+  }
+
+  sw_invert_nd(g_mubar*g_mubar-g_epsbar*g_epsbar);
+  
+  if(g_debug_level > 1){
+    QPhiX::masterPrintf("# QPHIX-inteface: ND TMClover clover-field packing took %.4lf seconds\n", gettime()-start);
+  }
+}
 
 // Apply the full QPhiX fermion matrix to checkerboarded tm spinors
 template <typename FT, int V, int S, bool compress>
@@ -1078,7 +1093,6 @@ void Mfull_helper(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, cons
   QClover *clover[2];
   QClover *inv_clover[2];
 
-  QFullClover *fullclover[2][2];
   QFullClover *inv_fullclover[2][2];
 
   QSpinor *tmp_spinor = (QSpinor *)geom.allocCBFourSpinor();
@@ -1089,7 +1103,6 @@ void Mfull_helper(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, cons
     clover[cb] = nullptr;
     inv_clover[cb] = nullptr;
     for (int fl : {0, 1}) {
-      fullclover[cb][fl] = nullptr;
       inv_fullclover[cb][fl] = nullptr;
     }
   }
@@ -1116,17 +1129,17 @@ void Mfull_helper(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, cons
 
   } else if (op_type == CLOVER && fabs(g_mu) > DBL_EPSILON) {
     for (int cb : {0, 1}) {
+      clover[cb] = (QClover *)geom.allocCBClov();
       for (int fl : {0, 1}) {
-        fullclover[cb][fl] = (QFullClover *)geom.allocCBFullClov();
         inv_fullclover[cb][fl] = (QFullClover *)geom.allocCBFullClov();
       }
-      reorder_clover_to_QPhiX(geom, fullclover[cb], cb, false);
+      reorder_clover_to_QPhiX(geom, clover[cb], cb, false);
       sw_invert(cb, g_mu);
       reorder_clover_to_QPhiX(geom, inv_fullclover[cb], cb, true);
     }
 
     polymorphic_dslash = new tmlqcd::WilsonClovTMDslash<FT, V, S, compress>(
-        &geom, t_boundary, coeff_s, coeff_t, mass, -g_mu / (2.0 * g_kappa), fullclover,
+        &geom, t_boundary, coeff_s, coeff_t, mass, -g_mu / (2.0 * g_kappa), clover,
         inv_fullclover, use_tbc, tbc_phases);
 
   } else {
@@ -1165,7 +1178,6 @@ void Mfull_helper(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, cons
     geom.free(clover[cb]);
     geom.free(inv_clover[cb]);
     for (int fl : {0, 1}) {
-      geom.free(fullclover[cb][fl]);
       geom.free(inv_fullclover[cb][fl]);
     }
   };
@@ -1279,10 +1291,8 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     QClover_inner *qphix_clover_inner = nullptr;
     QClover_inner *qphix_inv_clover_inner = nullptr;
 
-    QFullClover *qphix_fullclover[2] = {nullptr, nullptr};
     QFullClover *qphix_inv_fullclover[2] = {nullptr, nullptr};
     
-    QFullClover_inner *qphix_fullclover_inner[2] = {nullptr, nullptr};
     QFullClover_inner *qphix_inv_fullclover_inner[2] = {nullptr, nullptr};
 
     q_spinor_handles.push_back(makeFourSpinorHandle(geom));
@@ -1299,27 +1309,27 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     QPhiX::EvenOddLinearOperator<FT, V, S, compress> *FermionMatrixQPhiX = nullptr;
     QPhiX::EvenOddLinearOperator<FT_inner, V_inner, S_inner, compress_inner> *InnerFermionMatrixQPhiX = nullptr;
     if ( ( fabs(g_mu) > DBL_EPSILON ) && g_c_sw > DBL_EPSILON) {  // TWISTED-MASS-CLOVER
+      qphix_clover = (QClover *)geom.allocCBClov();
       for (int fl : {0, 1}) {
-        qphix_fullclover[fl] = (QFullClover *)geom.allocCBFullClov();
         qphix_inv_fullclover[fl] = (QFullClover *)geom.allocCBFullClov(); 
       }
-      reorder_clover_to_QPhiX(geom, qphix_fullclover, cb_odd, false);
+      reorder_clover_to_QPhiX(geom, qphix_clover, cb_odd, false);
       reorder_clover_to_QPhiX(geom, qphix_inv_fullclover, cb_even, true);
       
       QPhiX::masterPrintf("# Creating QPhiX Twisted Clover Fermion Matrix...\n");
       FermionMatrixQPhiX = new QPhiX::EvenOddTMCloverOperator<FT, V, S, compress>(
-          u_packed, qphix_fullclover, qphix_inv_fullclover, &geom, t_boundary, coeff_s, coeff_t,
-          use_tbc, tbc_phases, -0.5*g_mu3/g_kappa);
+          u_packed, qphix_clover, qphix_inv_fullclover, &geom, t_boundary, coeff_s, coeff_t,
+          use_tbc, tbc_phases, -0.5*(g_mu3+g_mu)/g_kappa);
       if( solver_is_mixed(solver_flag) ){
+        qphix_clover_inner = (QClover_inner *)geom_inner.allocCBClov();
         for( int fl : {0, 1} ){
-          qphix_fullclover_inner[fl] = (QFullClover_inner *)geom_inner.allocCBFullClov();
           qphix_inv_fullclover_inner[fl] = (QFullClover_inner *)geom_inner.allocCBFullClov();
         }
-        reorder_clover_to_QPhiX(geom_inner, qphix_fullclover_inner, cb_odd, false);        
+        reorder_clover_to_QPhiX(geom_inner, qphix_clover_inner, cb_odd, false);        
         reorder_clover_to_QPhiX(geom_inner, qphix_inv_fullclover_inner, cb_even, true);
         InnerFermionMatrixQPhiX = new QPhiX::EvenOddTMCloverOperator<FT_inner, V_inner, S_inner, compress_inner>(
-          u_packed_inner, qphix_fullclover_inner, qphix_inv_fullclover_inner, &geom_inner, t_boundary, coeff_s, coeff_t,
-          use_tbc, tbc_phases, -0.5*g_mu3/g_kappa);
+          u_packed_inner, qphix_clover_inner, qphix_inv_fullclover_inner, &geom_inner, t_boundary, coeff_s, coeff_t,
+          use_tbc, tbc_phases, -0.5*(g_mu3+g_mu)/g_kappa);
       }
       QPhiX::masterPrintf("# ...done.\n");
     } else if ( fabs(g_mu) > DBL_EPSILON ) {  // TWISTED-MASS
@@ -1470,9 +1480,7 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     if(qphix_clover_inner) geom_inner.free(qphix_clover_inner);
     if(qphix_inv_clover_inner) geom_inner.free(qphix_inv_clover_inner);
     for (int fl : {0, 1}) {
-      if(qphix_fullclover[fl]) geom.free(qphix_fullclover[fl]);
       if(qphix_inv_fullclover[fl]) geom.free(qphix_inv_fullclover[fl]);
-      if(qphix_fullclover_inner[fl]) geom_inner.free(qphix_fullclover_inner[fl]);
       if(qphix_inv_fullclover_inner[fl]) geom_inner.free(qphix_inv_fullclover_inner[fl]);
     }
     QPhiX::masterPrintf("# QPHIX: ...done.\n\n");
@@ -1499,12 +1507,53 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
       q_spinor_handles.push_back(makeFourSpinorHandle(geom));
       qphix_buffer[fl] = q_spinor_handles.back().get();
     }
+    
+    QClover *qphix_clover = nullptr;
+    QClover_inner *qphix_clover_inner = nullptr;
+    
+    QClover *qphix_invclov_odiag = nullptr;
+    QClover_inner *qphix_invclov_odiag_inner = nullptr;
+
+    QFullClover *qphix_inv_fullclover[2] = {nullptr, nullptr};
+    QFullClover_inner *qphix_inv_fullclover_inner[2] = {nullptr, nullptr};
 
     QPhiX::TwoFlavEvenOddLinearOperator<FT, V, S, compress> *TwoFlavFermionMatrixQPhiX = nullptr;
     QPhiX::TwoFlavEvenOddLinearOperator<FT_inner, V_inner, S_inner, compress_inner> *InnerTwoFlavFermionMatrixQPhiX = nullptr;
     
     if (g_c_sw > DBL_EPSILON) {  // DBCLOVER
-      // complain, not implemented yet
+      qphix_clover = (QClover *)geom.allocCBClov();
+      qphix_invclov_odiag = (QClover *)geom.allocCBClov();
+      if( solver_is_mixed(solver_flag) ){
+        qphix_clover_inner = (QClover_inner *)geom_inner.allocCBClov();
+        qphix_invclov_odiag_inner = (QClover_inner *)geom_inner.allocCBClov();
+      }
+
+      for (int fl : {0, 1}) {
+        qphix_inv_fullclover[fl] = (QFullClover *)geom.allocCBFullClov();
+        if( solver_is_mixed(solver_flag) ){
+          qphix_inv_fullclover_inner[fl] = (QFullClover_inner*)geom_inner.allocCBFullClov();
+        }
+      }
+
+      pack_nd_clover(geom, geom_inner, 
+                     qphix_inv_fullclover, qphix_invclov_odiag, qphix_clover,
+                     qphix_inv_fullclover_inner, qphix_invclov_odiag_inner, qphix_clover_inner,
+                     cb_odd,
+                     solver_is_mixed(solver_flag));
+
+      QPhiX::masterPrintf("# QPHIX: Creating two-flavour QPhiX Wilson Twisted Clover Fermion Matrix...\n");
+      TwoFlavFermionMatrixQPhiX = new QPhiX::EvenOddNDTMCloverReuseOperator<FT, V, S, compress>(
+          -0.5 * g_mubar / g_kappa, 0.5 * g_epsbar / g_kappa, 
+          u_packed, qphix_clover, qphix_invclov_odiag, qphix_inv_fullclover,
+          &geom, t_boundary,
+          coeff_s, coeff_t, use_tbc, tbc_phases);
+      if( solver_is_mixed(solver_flag) ){
+        InnerTwoFlavFermionMatrixQPhiX = new QPhiX::EvenOddNDTMCloverReuseOperator<FT_inner, V_inner, S_inner, compress_inner>(
+            -0.5 * g_mubar / g_kappa, 0.5 * g_epsbar / g_kappa, 
+            u_packed_inner, qphix_clover_inner, qphix_invclov_odiag_inner, qphix_inv_fullclover_inner,
+            &geom_inner, t_boundary,
+            coeff_s, coeff_t, use_tbc, tbc_phases);
+      }
     } else {  // DBTMWILSON
       QPhiX::masterPrintf("# QPHIX: Creating two-flavour QPhiX Wilson Twisted Mass Fermion Matrix...\n");
       TwoFlavFermionMatrixQPhiX = new QPhiX::EvenOddNDTMWilsonReuseOperator<FT, V, S, compress>(
@@ -1644,6 +1693,15 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     for( int shift = 0; shift < num_shifts; shift++ ){
       delete[] qphix_out[shift];
     }
+    
+    if(qphix_clover) geom.free(qphix_clover);
+    if(qphix_invclov_odiag) geom.free(qphix_invclov_odiag);
+    if(qphix_clover_inner) geom_inner.free(qphix_clover_inner);
+    if(qphix_invclov_odiag_inner) geom_inner.free(qphix_invclov_odiag_inner);
+    for (int fl : {0, 1}) {
+      if(qphix_inv_fullclover[fl]) geom.free(qphix_inv_fullclover[fl]);
+      if(qphix_inv_fullclover_inner[fl]) geom_inner.free(qphix_inv_fullclover_inner[fl]);
+    }    
 
   } else { // if(num_flavour)
     // complain, this number of flavours is not valid
