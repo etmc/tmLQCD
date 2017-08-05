@@ -77,6 +77,8 @@
   !______________________________________________________________!
 */
 
+// for debugging purposes, the print statements can be enabled
+// #define CLOVER_INVERT_DEBUG
 
 /* six_invert and six_det are called from multiple threads, they are thus
  * made thread-safe by removing the static keywords but they are NOT
@@ -264,8 +266,8 @@ void sw_invert(const int ieo, const double mu) {
  * for use in the QPhiX packing routine for the non-degenerate
  * clover doublet
  *
- * sw should be populated with (1+Tee) and sw_inv should contain 
- * 1 / ( (1 + Tee)^2 + \bar\mu^2 - \bar\epsilon^2 ) 
+ * sw_inv should contain 
+ *   1 / ( (1 + Tee)^2 + \bar\mu^2 - \bar\epsilon^2 ) 
  * the last VOLUME/2 elements (which should not be relevant at this stage) 
  * of sw_inv will be overwritten
  */ 
@@ -298,6 +300,10 @@ void sw_invert_epsbar(const double epsbar) {
 
       // scale by epsbar
       scale_real_6x6(a, epsbar);
+
+#ifdef CLOVER_INVERT_DEBUG
+      if(icx==0) print_6x6(a, "sw_invert_epsbar epsilon*sw_inv");
+#endif
 
       /*  and write the result into the last VOLUME/2 elements of sw_inv */
       get_3x3_block_matrix(&sw_inv[icy][0][i], a, 0, 0);
@@ -369,6 +375,13 @@ void sw_invert_mubar(const double mubar) {
       // the i index denotes the halfspinor block and thus implements gamma5
       add_tm(a, -(i==0?1.0:-1.0)*mubar);
       add_tm(b, +(i==0?1.0:-1.0)*mubar);
+
+#ifdef CLOVER_INVERT_DEBUG
+      if(icx==0) {
+        print_6x6(a,"sw_invert_mubar sw_up");
+        print_6x6(b,"sw_invert_mubar sw_dn");
+      }
+#endif
   
       // extract 1/((1+Tee)^2 + \bar\mu^2 - \bar\eps^2)
       populate_6x6_matrix(c, &sw_inv[icx][0][i], 0, 0);
@@ -385,6 +398,10 @@ void sw_invert_mubar(const double mubar) {
       get_3x3_block_matrix(&sw_inv[icx][2][i], d, 3, 3);
       get_3x3_block_matrix(&sw_inv[icx][3][i], d, 3, 0);
 
+#ifdef CLOVER_INVERT_DEBUG
+      if(icx==0) print_6x6(d,"sw_invert_mubar sw_inv_up");
+#endif
+
       // and the same for the 'down'
       mult_6x6(d, b, c);
   
@@ -392,6 +409,10 @@ void sw_invert_mubar(const double mubar) {
       get_3x3_block_matrix(&sw_inv[icy][1][i], d, 0, 3);
       get_3x3_block_matrix(&sw_inv[icy][2][i], d, 3, 3);
       get_3x3_block_matrix(&sw_inv[icy][3][i], d, 3, 0);
+
+#ifdef CLOVER_INVERT_DEBUG
+      if(icx==0) print_6x6(d,"sw_invert_mubar sw_inv_dn");
+#endif
     }
 #ifndef TM_USE_OMP
     icy++;
@@ -439,6 +460,10 @@ void sw_invert_nd(const double mshift) {
       populate_6x6_matrix(a, &v, 3, 0);
       populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
 
+#ifdef CLOVER_INVERT_DEBUG
+      if(icx==0) print_6x6(a, "sw_invert_nd sw");
+#endif
+
       // compute (1+T)^2 and store in b
       mult_6x6(b, a, a);
       // we add the mass shift term, which is a real number
@@ -451,6 +476,10 @@ void sw_invert_nd(const double mshift) {
 	printf("# inversion failed in six_invert_nd code %d\n", err);
 	err = 0;
       }
+
+#ifdef CLOVER_INVERT_DEBUG
+      if(icx==0) print_6x6(b, "sw_invert_nd sw_inv");
+#endif
 
       /*  copy "a" back to sw_inv */
       get_3x3_block_matrix(&sw_inv[icx][0][i], b, 0, 0);

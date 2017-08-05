@@ -49,5 +49,6 @@ void copy_6x6(_Complex double a[6][6], const _Complex double b[6][6]);
 void scale_real_6x6(_Complex double a[6][6], const double scale);
 void scale_cplx_6x6(_Complex double a[6][6], const _Complex double scale);
 void one_6x6(_Complex double a[6][6]);
+void print_6x6(_Complex double a[6][6], const char * const text );
 
 #endif

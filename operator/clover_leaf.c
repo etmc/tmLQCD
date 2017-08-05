@@ -123,8 +123,18 @@ void one_6x6(_Complex double a[6][6]){
   }
 }
 
-
-
+void print_6x6(_Complex double a[6][6], const char * const text){
+  if(g_proc_id==0){
+    printf("%s\n",text);
+    for(int i = 0; i < 6; i++){
+      for(int j = 0; j < 6; j++){
+        printf("(%+.2e %+.2e) ", creal(a[i][j]), cimag(a[i][j]));
+      }
+      printf("\n");
+    }
+    printf("\n");
+  }
+}
 
 su3 * _swp;
 
