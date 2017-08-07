@@ -1131,6 +1131,11 @@ static inline void rmQuotes(char *str){
     if(myverbose) printf("  Solver set to RGMixedCG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
+  dummyhermtest {
+    optr->solver=DUMMYHERMTEST;
+    if(myverbose) printf("  Solver set to DummyHermTest line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
 }
 
 <TMSOLVER>{

@@ -49,6 +49,7 @@ extern "C" {
 // for the normalisation of the heavy doublet when running
 // RHMC
 #include "phmc.h"
+#include "start.h"
 #include "operator/clover_leaf.h"
 #include "operator/clovertm_operators.h"
 #include "operator_types.h"
@@ -68,6 +69,7 @@ extern "C" {
 #include <qphix/invbicgstab.h>
 #include <qphix/invcg.h>
 #include <qphix/inv_richardson_multiprec.h>
+#include <qphix/inv_dummy_hermtest.h>
 #include <qphix/minvcg.h>
 #include <qphix/ndtm_reuse_operator.h>
 #include <qphix/ndtm_reuse_operator_clover.h>
@@ -1379,7 +1381,13 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     QPhiX::AbstractSolver<FT, V, S, compress> *SolverQPhiX = nullptr;
     QPhiX::AbstractSolver<FT_inner, V_inner, S_inner, compress_inner> *InnerSolverQPhiX = nullptr;
     QPhiX::AbstractMultiSolver<FT, V, S, compress, nf> *MultiSolverQPhiX = nullptr;
-    if (solver_flag == CG) {
+    if( solver_flag == DUMMYHERMTEST ) {
+      QPhiX::masterPrintf("# QPHIX: Creating dummy solver for hermiticity test...\n");
+      SolverQPhiX =
+        new QPhiX::InvDummyHermTest<FT, V, S, compress,
+                                    typename QPhiX::EvenOddLinearOperator<FT, V, S, compress> >(
+              *FermionMatrixQPhiX, max_iter);
+    } else if (solver_flag == CG) {
       QPhiX::masterPrintf("# QPHIX: Creating CG solver...\n");
       SolverQPhiX = new QPhiX::InvCG<FT, V, S, compress>(*FermionMatrixQPhiX, max_iter);
     } else if (solver_flag == BICGSTAB) {
@@ -1421,7 +1429,15 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
 
     // Calling the solver
     start_time = gettime();
-    if (solver_flag == CG || solver_flag == MIXEDCG || solver_flag == RGMIXEDCG) {
+    if ( solver_flag == DUMMYHERMTEST ){
+      random_spinor_field_eo(tmlqcd_odd_out[0][0], 0, RN_GAUSS);
+      reorder_eo_spinor_to_QPhiX(geom, tmlqcd_odd_out[0][0], qphix_buffer, cb_odd);      
+      for(int isign : {-1, 1} ){
+        (*SolverQPhiX)(qphix_buffer, qphix_in[0], RsdTarget, niters, rsd_final, site_flops, mv_apps, isign,
+                       verbose);
+      }
+      QPhiX::copySpinor(qphix_out[0], qphix_buffer, geom, n_blas_simt);
+    } else if (solver_flag == CG || solver_flag == MIXEDCG || solver_flag == RGMIXEDCG) {
       // USING CG:
       // We are solving
       //   M M^dagger qphix_buffer = qphix_in_prepared
@@ -1571,7 +1587,13 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     QPhiX::AbstractSolver<FT, V, S, compress, nf> *TwoFlavSolverQPhiX = nullptr;
     QPhiX::AbstractSolver<FT_inner, V_inner, S_inner, compress_inner, nf> *InnerTwoFlavSolverQPhiX = nullptr;
     QPhiX::AbstractMultiSolver<FT, V, S, compress, nf> *TwoFlavMultiSolverQPhiX = nullptr;
-    if (solver_flag == CG) {
+    if( solver_flag == DUMMYHERMTEST ) {
+      QPhiX::masterPrintf("# QPHIX: Creating dummy solver for hermiticity test...\n");
+      TwoFlavSolverQPhiX =
+        new QPhiX::InvDummyHermTest<FT, V, S, compress,
+                                    typename QPhiX::TwoFlavEvenOddLinearOperator<FT, V, S, compress> >(
+              *TwoFlavFermionMatrixQPhiX, max_iter);
+    } else if (solver_flag == CG) {
       QPhiX::masterPrintf("# QPHIX: Creating CG solver...\n");
       TwoFlavSolverQPhiX =
           new QPhiX::InvCG<FT, V, S, compress,
@@ -1631,7 +1653,17 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
 
     // Calling the solver
     start_time = gettime();
-    if (solver_flag == CG || solver_flag == MIXEDCG) {
+    if ( solver_flag == DUMMYHERMTEST ){
+      for(int fl : {0, 1}){
+        random_spinor_field_eo(tmlqcd_odd_out[0][fl], 0, RN_GAUSS);
+        reorder_eo_spinor_to_QPhiX(geom, tmlqcd_odd_out[0][fl], qphix_buffer[fl], cb_odd);      
+      }
+      for( int isign : {-1, 1} ){
+        (*TwoFlavSolverQPhiX)(qphix_buffer, qphix_in, RsdTarget, niters, rsd_final, site_flops, mv_apps, isign,
+                       verbose);
+      }
+      QPhiX::copySpinor<FT, V, S, compress, nf>(qphix_out[0], qphix_buffer, geom, n_blas_simt);
+    } else if (solver_flag == CG || solver_flag == MIXEDCG) {
       // USING CG:
       // We are solving
       //   M M^dagger qphix_buffer = qphix_in_prepared
