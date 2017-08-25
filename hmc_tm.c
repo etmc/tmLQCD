@@ -203,6 +203,8 @@ int main(int argc,char *argv[]) {
   /* need temporary gauge field for gauge reread checks and in update_tm */
   status += init_gauge_tmp(VOLUME);
 
+  status += init_gauge_fg(VOLUME);
+
   if (status != 0) {
     fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
     exit(0);
@@ -522,11 +524,11 @@ int main(int argc,char *argv[]) {
     // When the configuration is rejected, we have to update it in the MG and redo the setup.
     int mg_update = accept ? 0:1;
 #endif
-    for(imeas = 0; imeas < no_measurements; imeas++){
-      meas = &measurement_list[imeas];
-      if(trajectory_counter%meas->freq == 0){
-        if (g_proc_id == 0) {
-          fprintf(stdout, "#\n# Beginning online measurement.\n");
+     for(imeas = 0; imeas < no_measurements; imeas++){
+       meas = &measurement_list[imeas];
+       if(trajectory_counter%meas->freq == 0){
+         if (g_proc_id == 0) {
+           fprintf(stdout, "#\n# Beginning online measurement.\n");
         }
 #ifdef DDalphaAMG
         if( mg_update ) {
@@ -534,9 +536,9 @@ int main(int argc,char *argv[]) {
           MG_reset();
         }
 #endif
-        meas->measurefunc(trajectory_counter, imeas, even_odd_flag);
-      }
-    }
+         meas->measurefunc(trajectory_counter, imeas, even_odd_flag);
+       }
+     }
 
     if(g_proc_id == 0) {
       verbose = 1;
