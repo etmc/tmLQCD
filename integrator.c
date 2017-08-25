@@ -13,7 +13,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
@@ -28,6 +28,7 @@
 #include "global.h"
 #include "monomial/monomial.h"
 #include "update_momenta.h"
+#include "update_momenta_fg.h"
 #include "update_gauge.h"
 #include "hamiltonian_field.h"
 #include "integrator.h"
@@ -43,6 +44,8 @@ static const double omf4_lamb = 0.6822365335719091;
 void integrate_2mn(const double tau, const int S, const int halfstep, const double tau2);
 /* second order minimal norm integration scheme in velocity version */
 void integrate_2mnp(const double tau, const int S, const int halfstep, const double tau2);
+/* fourth order force gradient integration scheme */
+void integrate_2mnfg(const double tau, const int S, const int halfstep, const double tau2);
 /* Leap Frog integration scheme */
 void integrate_leap_frog(const double tau, const int S, const int halfstep, const double tau2);
 /* fourth order OMF scheme */
@@ -76,6 +79,9 @@ int init_integrator() {
       }
       else if(Integrator.type[i] == OMF4) {
 	Integrator.integrate[i] = &integrate_omf4;
+      }
+      else if(Integrator.type[i] == MN2FG) {
+	Integrator.integrate[i] = &integrate_2mnfg;
       }
     }
   }
@@ -224,12 +230,12 @@ void integrate_2mn(const double tau, const int S, const int halfstep, const doub
   }
   else {
     for(i = 1; i < itgr->n_int[S]; i++){
-      itgr->integrate[S-1](eps/2., S-1, 0, eps/2.);
+      itgr->integrate[S-1](eps/2., S-1, 0, eps/2);
       update_momenta(itgr->mnls_per_ts[S], oneminus2lambda*eps, itgr->no_mnls_per_ts[S], &itgr->hf);
-      itgr->integrate[S-1](eps/2., S-1, 0, eps/2.);
+      itgr->integrate[S-1](eps/2., S-1, 0, eps/2);
       update_momenta(itgr->mnls_per_ts[S], 2*itgr->lambda[S]*eps, itgr->no_mnls_per_ts[S], &itgr->hf);
     }
-    itgr->integrate[S-1](eps/2., S-1, 0, eps/2.);
+    itgr->integrate[S-1](eps/2., S-1, 0, eps/2);
     update_momenta(itgr->mnls_per_ts[S], oneminus2lambda*eps, itgr->no_mnls_per_ts[S], &itgr->hf);
     if(S == itgr->no_timescales-1) {
       itgr->integrate[S-1](eps/2., S-1, 1, eps/2.);
@@ -278,6 +284,55 @@ void integrate_2mnp(const double tau, const int S, const int halfstep, const dou
   }
 }
 
+/* For 2MNFG lamda MUST be equal to 1/6 */
+void integrate_2mnfg(const double tau, const int S, const int halfstep, const double tau2) {
+  int i,j=0;
+  integrator * itgr = &Integrator;
+  double eps,eps2, oneminus2lambda = (1.-2.*itgr->lambda[S]);
+
+  if(S == itgr->no_timescales-1) {
+    dohalfstep(tau, S);
+  }
+  
+  eps  = tau/((double)itgr->n_int[S]);
+  eps2 = tau2/((double)itgr->n_int[S]);
+  if(S == 0) {
+
+    for(j = 1; j < itgr->n_int[0]; j++) {
+      update_gauge(0.5*eps, &itgr->hf);
+      update_momenta_fg(itgr->mnls_per_ts[0], oneminus2lambda*eps, itgr->no_mnls_per_ts[0], &itgr->hf, eps);
+      update_gauge(0.5*eps, &itgr->hf);
+      update_momenta(itgr->mnls_per_ts[0], 2.*itgr->lambda[0]*eps, itgr->no_mnls_per_ts[0], &itgr->hf);
+    }
+    update_gauge(0.5*eps, &itgr->hf);
+    update_momenta_fg(itgr->mnls_per_ts[0], oneminus2lambda*eps, itgr->no_mnls_per_ts[0], &itgr->hf, eps);
+    update_gauge(0.5*eps, &itgr->hf);
+    if(halfstep != 1) {
+      update_momenta(itgr->mnls_per_ts[0], itgr->lambda[0]*(eps+eps2), itgr->no_mnls_per_ts[0], &itgr->hf);
+    }
+  }
+  else {
+    for(i = 1; i < itgr->n_int[S]; i++){
+      itgr->integrate[S-1](eps/2., S-1, 0, eps/2);
+      update_momenta_fg(itgr->mnls_per_ts[S], oneminus2lambda*eps, itgr->no_mnls_per_ts[S], &itgr->hf, eps);
+      itgr->integrate[S-1](eps/2., S-1, 0, eps/2);
+      update_momenta(itgr->mnls_per_ts[S], 2*itgr->lambda[S]*eps, itgr->no_mnls_per_ts[S], &itgr->hf);
+    }
+    itgr->integrate[S-1](eps/2., S-1, 0, eps/2);
+    update_momenta_fg(itgr->mnls_per_ts[S], oneminus2lambda*eps, itgr->no_mnls_per_ts[S], &itgr->hf, eps);
+    if(S == itgr->no_timescales-1) {
+      itgr->integrate[S-1](eps/2., S-1, 1, eps/2.);
+    }
+    else itgr->integrate[S-1](eps/2., S-1, halfstep, eps2/2.);
+    if(halfstep != 1 && S != itgr->no_timescales-1) {
+      update_momenta(itgr->mnls_per_ts[S], itgr->lambda[S]*(eps+eps2), itgr->no_mnls_per_ts[S], &itgr->hf);
+    }
+  }
+
+  if(S == itgr->no_timescales-1) {
+    dohalfstep(tau, S);
+  }
+}
 
 void integrate_leap_frog(const double tau, const int S, const int halfstep,const double tau2) {
   int i;
@@ -329,7 +384,7 @@ void dohalfstep(const double tau, const int S) {
       update_momenta(itgr->mnls_per_ts[i], 0.5*eps, itgr->no_mnls_per_ts[i], &itgr->hf);
       eps /= ((double)itgr->n_int[i-1]);
     }
-    else if(itgr->type[i] == MN2){
+    else if((itgr->type[i] == MN2) || (itgr->type[i] == MN2FG)){
       update_momenta(itgr->mnls_per_ts[i], itgr->lambda[i]*eps, itgr->no_mnls_per_ts[i], &itgr->hf);
       eps /= ((double)itgr->n_int[i-1])*2;
     }
@@ -341,7 +396,7 @@ void dohalfstep(const double tau, const int S) {
   if(itgr->type[0] == LEAPFROG) {
     update_momenta(itgr->mnls_per_ts[0], 0.5*eps, itgr->no_mnls_per_ts[0], &itgr->hf);
   }
-  else if(itgr->type[0] == MN2) {
+  else if((itgr->type[0] == MN2)||(itgr->type[0] == MN2FG)) {
     update_momenta(itgr->mnls_per_ts[0], itgr->lambda[0]*eps, itgr->no_mnls_per_ts[0], &itgr->hf);
   }
   else if(itgr->type[0] == OMF4) {
