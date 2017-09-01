@@ -202,7 +202,7 @@ void _initQuda() {
   // require both L2 relative and heavy quark residual to determine convergence
 //  inv_param.residual_type = (QudaResidualType)(QUDA_L2_RELATIVE_RESIDUAL | QUDA_HEAVY_QUARK_RESIDUAL);
   inv_param.tol_hq = 1.0;//1e-3; // specify a tolerance for the residual for heavy quark residual
-  inv_param.reliable_delta = 1e-3; // ignored by multi-shift solver
+  inv_param.reliable_delta = 1e-2; // ignored by multi-shift solver
   inv_param.use_sloppy_partial_accumulator = 0;
 
   // domain decomposition preconditioner parameters
@@ -327,11 +327,18 @@ void _loadGaugeQuda( const int compression ) {
     }
   }
 
+#ifdef TM_USE_OMP
+#pragma omp parallel
+  {
+#endif
   _Complex double tmpcplx;
 
   size_t gSize = (gauge_param.cpu_prec == QUDA_DOUBLE_PRECISION) ? sizeof(double) : sizeof(float);
   
   // now copy and reorder
+#ifdef TM_USE_OMP
+  #pragma omp for
+#endif
   for( int x0=0; x0<T; x0++ )
     for( int x1=0; x1<LX; x1++ )
       for( int x2=0; x2<LY; x2++ )
@@ -388,6 +395,9 @@ void _loadGaugeQuda( const int compression ) {
           } // quda_input.fermionbc
         } // compression
       } // volume loop
+#ifdef TM_USE_OMP
+  }
+#endif
 
   loadGaugeQuda((void*)gauge_quda, &gauge_param);
 }
@@ -406,6 +416,9 @@ void reorder_spinor_toQuda( double* sp, QudaPrecision precision, int doublet, do
   }
 
   // now copy and reorder from tempSpinor to spinor
+#ifdef TM_USE_OMP
+  #pragma omp parallel for
+#endif
   for( int x0=0; x0<T; x0++ )
     for( int x1=0; x1<LX; x1++ )
       for( int x2=0; x2<LY; x2++ )
@@ -447,6 +460,9 @@ void reorder_spinor_fromQuda( double* sp, QudaPrecision precision, int doublet, 
   }
 
   // now copy and reorder from tempSpinor to spinor
+#ifdef TM_USE_OMP
+  #pragma omp parallel for
+#endif
   for( int x0=0; x0<T; x0++ )
     for( int x1=0; x1<LX; x1++ )
       for( int x2=0; x2<LY; x2++ )
@@ -588,7 +604,7 @@ int invert_quda_direct(double * const propagator, double * const source,
     inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN_ASYMMETRIC;
     inv_param.solution_type = QUDA_MAT_SOLUTION;
     // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
-    inv_param.mu = optr->mu/2./optr->kappa;
+    inv_param.mu = -optr->mu/2./optr->kappa;
   }
   else if( optr->c_sw > 0.0 ) {
     inv_param.twist_flavor = QUDA_TWIST_NO;
@@ -684,7 +700,8 @@ int invert_quda_direct(double * const propagator, double * const source,
   optr->iterations = inv_param.iter;
 
   // reorder spinor
-  reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, NULL );
+  // BaKo 20170901: not sure why the source was also re-ordered
+  //reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, NULL );
   reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, NULL );
   // propagator in usual normalisation, this is only necessary in invert_quda_direct
   mul_r((spinor*)spinorOut, (2*optr->kappa), (spinor*)spinorOut, VOLUME );
@@ -844,9 +861,10 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
   int iteration = inv_param.iter;
 
   // reorder spinor
-  reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, NULL );
+  //reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, NULL );
+  // BaKo 20170901: not sure why the source was also re-ordered
   reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, NULL );
-  convert_lexic_to_eo(Even,     Odd,     solver_field[0]);
+  //convert_lexic_to_eo(Even,     Odd,     solver_field[0]);
   convert_lexic_to_eo(Even_new, Odd_new, solver_field[1]);
 
   finalize_solver(solver_field, nr_sf);
@@ -971,10 +989,11 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   int iteration = inv_param.iter;
 
   // reorder spinor
-  reorder_spinor_fromQuda( (double*)spinorIn,    inv_param.cpu_prec, 1, (double*)spinorIn_c );
+  // BaKo 20170901: not sure why the source was also re-ordered
+  //reorder_spinor_fromQuda( (double*)spinorIn,    inv_param.cpu_prec, 1, (double*)spinorIn_c );
   reorder_spinor_fromQuda( (double*)spinorOut,   inv_param.cpu_prec, 1, (double*)spinorOut_c );
-  convert_lexic_to_eo(Even_s,     Odd_s,     solver_field[0]);
-  convert_lexic_to_eo(Even_c,     Odd_c,     solver_field[1]);
+  //convert_lexic_to_eo(Even_s,     Odd_s,     solver_field[0]);
+  //convert_lexic_to_eo(Even_c,     Odd_c,     solver_field[1]);
   convert_lexic_to_eo(Even_new_s, Odd_new_s, solver_field[2]);
   convert_lexic_to_eo(Even_new_c, Odd_new_c, solver_field[3]);
 
