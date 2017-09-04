@@ -57,7 +57,7 @@ void nd_set_global_parameter(monomial * const mnl) {
   boundary(g_kappa);
   phmc_cheb_evmin = mnl->EVMin;
   phmc_invmaxev = mnl->EVMaxInv;
-  phmc_cheb_evmax = 1.;
+  phmc_cheb_evmax = mnl->EVMax;
   phmc_Cpol = 1.;
   // used for preconditioning in cloverdetrat
   g_mu3 = 0.;
@@ -325,30 +325,36 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
 
 int init_ndrat_monomial(const int id) {
   monomial * mnl = &monomial_list[id];  
-
-  mnl->EVMin = mnl->StildeMin / mnl->StildeMax;
-  mnl->EVMax = 1.;
-  mnl->EVMaxInv = 1./(sqrt(mnl->StildeMax));
+  int scale = 0;
 
   if(mnl->type == RAT || mnl->type == CLOVERRAT ||
-     mnl->type == RATCOR || mnl->type == CLOVERRATCOR) {
-    init_rational(&mnl->rat, 1);
+     mnl->type == RATCOR || mnl->type == CLOVERRATCOR) 
+    scale = 1;
 
-    if(init_chi_spinor_field(VOLUMEPLUSRAND/2, (mnl->rat.np+2)/2) != 0) {
-      fprintf(stderr, "Not enough memory for Chi fields! Aborting...\n");
-      exit(0);
-    }
-  }
-  else {
-    init_rational(&mnl->rat, 0);
+  if(scale) {
+    // When scale = 1 
+    //   the rational approximation is done for the standard operator 
+    //   which have eigenvalues between EVMin and EVMax.  Indeed the 
+    //   parameters of the rational approximation are scaled. Thus 
+    //   additional scaling of the operator (EVMaxInv) is not required.
+    mnl->EVMin = mnl->StildeMin;
+    mnl->EVMax = mnl->StildeMax;
+    mnl->EVMaxInv = 1.;
+  } else {
+    // When scale = 0 
+    //   the rational approximation is done for the normalized operator 
+    //   which have eigenvalues between EVMin/EVMax and 1. Thus the 
+    //   operator need to be scaled by EVMaxInv=1/EVMax.
     mnl->EVMin = mnl->StildeMin / mnl->StildeMax;
     mnl->EVMax = 1.;
-    mnl->EVMaxInv = 1./(sqrt(mnl->StildeMax));
-    
-    if(init_chi_spinor_field(VOLUMEPLUSRAND/2, (mnl->rat.np+1)) != 0) {
-      fprintf(stderr, "Not enough memory for Chi fields! Aborting...\n");
-      exit(0);
-    }
+    mnl->EVMaxInv = 1./sqrt(mnl->StildeMax);
+  }
+
+  init_rational(&mnl->rat, scale);
+
+  if(init_chi_spinor_field(VOLUMEPLUSRAND/2, (mnl->rat.np+2)/2) != 0) {
+    fprintf(stderr, "Not enough memory for Chi fields! Aborting...\n");
+    exit(0);
   }
 
   return(0);

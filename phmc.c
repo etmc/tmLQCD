@@ -235,7 +235,7 @@ void phmc_compute_ev(const int trajectory_counter,
 	   mnl->name, trajectory_counter, temp2);
   }
   if(g_proc_id == 0) {
-    if(temp2 > 1.) {
+    if(temp2 > mnl->EVMax) {
       fprintf(stderr, "\nWarning: largest eigenvalue for monomial %s larger than upper bound!\n\n", mnl->name);
     }
     if(temp < mnl->EVMin) {
@@ -243,7 +243,7 @@ void phmc_compute_ev(const int trajectory_counter,
     }
     countfile = fopen(phmcfilename, "a");
     fprintf(countfile, "%.8d %1.5e %1.5e %1.5e %1.5e\n", 
-	    trajectory_counter, temp, temp2, mnl->EVMin, 1.);
+	    trajectory_counter, temp, temp2, mnl->EVMin, mnl->EVMax);
     fclose(countfile);
   }
   etime = gettime();
