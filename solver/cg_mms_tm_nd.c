@@ -155,10 +155,12 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
       // falls below a threshold
       // this is useful for computing time and needed, because otherwise
       // zita might get smaller than DOUBLE_EPS and, hence, zero
-      if(iteration > 0 && (iteration % 20 == 0) && (im == shifts-1)) {
+      if(iteration > 0 && (iteration % 10 == 0) && (im == shifts-1)) {
 	double sn = square_norm(ps_mms_solver[2*im], N, 1);
 	sn += square_norm(ps_mms_solver[2*im+1], N, 1);
-	if(alphas[shifts-1]*alphas[shifts-1]*sn <= solver_pm->squared_solver_prec) {
+        err = alphas[shifts-1]*alphas[shifts-1]*sn;
+	if(((err <= solver_pm->squared_solver_prec) && (solver_pm->rel_prec == 0)) ||
+           ((err <= solver_pm->squared_solver_prec*squarenorm) && (solver_pm->rel_prec > 0))) {
 	  shifts--;
 	  if(g_debug_level > 2 && g_proc_id == 0) {
 	    printf("# CGMMSND: at iteration %d removed one shift, %d remaining\n", iteration, shifts);
