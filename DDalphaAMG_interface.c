@@ -34,6 +34,7 @@ int mg_lvl;
 int mg_blk[4];
 int mg_mixed_prec;
 int mg_setup_mu_set;
+double mg_mms_mass = 0;
 double mg_setup_mu;
 double mg_cmu_factor;
 double mg_dtau_update;
@@ -118,7 +119,7 @@ int mg_lvl=3;
 int mg_blk[4] = {0, 0, 0, 0};
 int mg_mixed_prec=0;
 int mg_setup_mu_set = 0; //flag that enable the use of mg_setup_mu in the setup phase
-int mg_no_shifts = -1;
+double mg_mms_mass = 0.1; // mass shift value for switching from MMS-CG to MG. MMS-CG is used for larger masses than the value.
 double mg_setup_mu = 0.; 
 double mg_cmu_factor = 1.0;
 double mg_dtau_update = 0.0;

@@ -37,7 +37,7 @@ extern int mg_lvl;
 extern int mg_blk[4];
 extern int mg_mixed_prec;
 extern int mg_setup_mu_set;
-extern int mg_no_shifts; // Number of shifts to solve with MG in solve_mms_nd
+extern double mg_mms_mass;
 extern double mg_setup_mu;
 extern double mg_cmu_factor;
 extern double mg_dtau_update;

@@ -164,26 +164,34 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
     }
   } else if (solver_pm->type == CGMMSND){
     iteration_count = cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_pm);
-  } else if (solver_pm->type == MGMMSND){
-    matrix_mult_nd f = Qtm_pm_ndpsi_shift;
-    if( solver_pm->M_ndpsi == Qsw_pm_ndpsi ) 
-      f = Qsw_pm_ndpsi_shift;
-    if( mg_no_shifts > 0 && mg_no_shifts < solver_pm->no_shifts ) {
+  } else if (solver_pm->type == MGMMSND) {
+    // if the mg_mms_mass is larger than the smallest shift we use MG
+    if (mg_mms_mass >= solver_pm->shifts[0]) { 
+
+      // if the mg_mms_mass is smaller than the larger shifts, we use CGMMS for those
+      int no_shifts = solver_pm->no_shifts;
+      int mg_no_shifts = solver_pm->no_shifts;
+      while (mg_mms_mass < solver_pm->shifts[mg_no_shifts-1]) { mg_no_shifts--; }
+      if (mg_no_shifts < no_shifts) {
+        solver_pm->no_shifts = no_shifts - mg_no_shifts;
+        solver_pm->shifts += mg_no_shifts;
+        solver_pm->mms_squared_solver_prec += mg_no_shifts;
+        iteration_count = cg_mms_tm_nd( Pup+mg_no_shifts, Pdn+mg_no_shifts, Qup, Qdn, solver_pm );
+        // Restoring solver_pm
+        solver_pm->no_shifts = no_shifts;
+        solver_pm->shifts -= mg_no_shifts;
+        solver_pm->mms_squared_solver_prec -= mg_no_shifts;
+      }
+            
+      matrix_mult_nd f = Qtm_pm_ndpsi_shift;
+      if( solver_pm->M_ndpsi == Qsw_pm_ndpsi ) 
+        f = Qsw_pm_ndpsi_shift;
       iteration_count = MG_mms_solver_nd( Pup, Pdn, Qup, Qdn, solver_pm->shifts, mg_no_shifts,
                                           solver_pm->mms_squared_solver_prec, solver_pm->max_iter, solver_pm->rel_prec,
                                           solver_pm->sdim, g_gauge_field, f );
-      solver_pm->no_shifts -= mg_no_shifts;
-      solver_pm->shifts += mg_no_shifts;
-      solver_pm->mms_squared_solver_prec += mg_no_shifts;
-      iteration_count += cg_mms_tm_nd( Pup+mg_no_shifts, Pdn+mg_no_shifts, Qup, Qdn, solver_pm );
-      // Restoring solver_pm
-      solver_pm->no_shifts += mg_no_shifts;
-      solver_pm->shifts -= mg_no_shifts;
-      solver_pm->mms_squared_solver_prec -= mg_no_shifts;
-    } else
-      iteration_count = MG_mms_solver_nd( Pup, Pdn, Qup, Qdn, solver_pm->shifts, solver_pm->no_shifts,
-                                          solver_pm->mms_squared_solver_prec, solver_pm->max_iter, solver_pm->rel_prec,
-                                          solver_pm->sdim, g_gauge_field, f );
+    } else {
+      iteration_count = cg_mms_tm_nd( Pup, Pdn, Qup, Qdn, solver_pm );
+    }
   } else if (solver_pm->type == RGMIXEDCG){
     matrix_mult_nd   f    = Qtm_pm_ndpsi_shift;
     matrix_mult_nd32 f32  = Qtm_pm_ndpsi_shift_32;
@@ -208,7 +216,7 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
         iteration_count += iter_local;
       }
     }
-  } else if (solver_pm->type == MG){
+  } else if (solver_pm->type == MG) {
     matrix_mult_nd f = Qtm_pm_ndpsi_shift;
     if( solver_pm->M_ndpsi == Qsw_pm_ndpsi ) 
       f = Qsw_pm_ndpsi_shift;
