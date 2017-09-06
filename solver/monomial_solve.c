@@ -51,6 +51,7 @@
 #include "operator/clovertm_operators.h"
 #include "operator/clovertm_operators_32.h"
 #include "monomial_solve.h"
+#include "linalg_eo.h"
 #ifdef DDalphaAMG
 #include "DDalphaAMG_interface.h"
 #endif
@@ -205,7 +206,31 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
     solver_params_t temp_params;
     temp_params.mcg_delta = _default_mixcg_innereps;
     double iter_local = 0;
-    for(int i = 0; i < solver_pm->no_shifts; ++i){
+    for(int i = solver_pm->no_shifts-1; i>=0; i--){
+      // preparing initial guess                                                                                                                                                                       
+      if(i==solver_pm->no_shifts-1) {
+        zero_spinor_field(Pup[i], solver_pm->sdim);
+        zero_spinor_field(Pdn[i], solver_pm->sdim);
+      } else {
+        double coeff;
+        for( int j = solver_pm->no_shifts-1; j > i; j-- ) {
+          coeff = 1;
+          for( int k = solver_pm->no_shifts-1; k > i; k-- ) {
+            if(j!=k)
+              coeff *= (solver_pm->shifts[k]*solver_pm->shifts[k]-solver_pm->shifts[i]*solver_pm->shifts[i])/
+                (solver_pm->shifts[k]*solver_pm->shifts[k]-solver_pm->shifts[j]*solver_pm->shifts[j]);
+          }
+          if(j==solver_pm->no_shifts-1) {
+            mul(Pup[i], coeff, Pup[j], solver_pm->sdim);
+            mul(Pdn[i], coeff, Pdn[j], solver_pm->sdim);
+          } else {
+            assign_add_mul(Pup[i], Pup[j], coeff, solver_pm->sdim);
+            assign_add_mul(Pdn[i], Pdn[j], coeff, solver_pm->sdim);
+          }
+        }
+      }
+      
+      // inverting
       g_shift = solver_pm->shifts[i]*solver_pm->shifts[i]; 
       iter_local = rg_mixed_cg_her_nd( Pup[i], Pdn[i], Qup, Qdn, temp_params, solver_pm->max_iter,
                                        solver_pm->mms_squared_solver_prec[i], solver_pm->rel_prec, solver_pm->sdim, f, f32);
