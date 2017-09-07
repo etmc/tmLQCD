@@ -38,6 +38,7 @@
 # include<config.h>
 #endif
 #include "global.h"
+#include "start.h"
 #include "read_input.h"
 #include "default_input_values.h"
 #include "solver/solver.h"
@@ -165,7 +166,9 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
     }
   } else if (solver_pm->type == CGMMSND){
     iteration_count = cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_pm);
-  } else if (solver_pm->type == MGMMSND) {
+  }
+#ifdef DDalphaAMG
+  else if (solver_pm->type == MG) {
     // if the mg_mms_mass is larger than the smallest shift we use MG
     if (mg_mms_mass >= solver_pm->shifts[0]) { 
 
@@ -183,17 +186,45 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
         solver_pm->shifts -= mg_no_shifts;
         solver_pm->mms_squared_solver_prec -= mg_no_shifts;
       }
-            
+
       matrix_mult_nd f = Qtm_pm_ndpsi_shift;
       if( solver_pm->M_ndpsi == Qsw_pm_ndpsi ) 
         f = Qsw_pm_ndpsi_shift;
-      iteration_count = MG_mms_solver_nd( Pup, Pdn, Qup, Qdn, solver_pm->shifts, mg_no_shifts,
-                                          solver_pm->mms_squared_solver_prec, solver_pm->max_iter, solver_pm->rel_prec,
-                                          solver_pm->sdim, g_gauge_field, f );
+      for(int i = solver_pm->no_shifts-1; i>=0; i--){
+        // preparing initial guess                                                                                                                                                                       
+        if(i==solver_pm->no_shifts-1) {
+          zero_spinor_field(Pup[i], solver_pm->sdim);
+          zero_spinor_field(Pdn[i], solver_pm->sdim);
+        } else {
+          double coeff;
+          for( int j = solver_pm->no_shifts-1; j > i; j-- ) {
+            coeff = 1;
+            for( int k = solver_pm->no_shifts-1; k > i; k-- ) {
+              if(j!=k)
+                coeff *= (solver_pm->shifts[k]*solver_pm->shifts[k]-solver_pm->shifts[i]*solver_pm->shifts[i])/
+                  (solver_pm->shifts[k]*solver_pm->shifts[k]-solver_pm->shifts[j]*solver_pm->shifts[j]);
+            }
+            if(j==solver_pm->no_shifts-1) {
+              mul(Pup[i], coeff, Pup[j], solver_pm->sdim);
+              mul(Pdn[i], coeff, Pdn[j], solver_pm->sdim);
+            } else {
+              assign_add_mul(Pup[i], Pup[j], coeff, solver_pm->sdim);
+              assign_add_mul(Pdn[i], Pdn[j], coeff, solver_pm->sdim);
+            }
+          }
+        }
+        
+        g_shift = solver_pm->shifts[i]*solver_pm->shifts[i]; 
+        iteration_count += MG_solver_nd( Pup[i], Pdn[i], Qup, Qdn, solver_pm->mms_squared_solver_prec[i], solver_pm->max_iter,
+                                         solver_pm->rel_prec, solver_pm->sdim, g_gauge_field, f );
+        g_shift = _default_g_shift;
+      }
     } else {
       iteration_count = cg_mms_tm_nd( Pup, Pdn, Qup, Qdn, solver_pm );
     }
-  } else if (solver_pm->type == RGMIXEDCG){
+  }
+#endif
+  else if (solver_pm->type == RGMIXEDCG){
     matrix_mult_nd   f    = Qtm_pm_ndpsi_shift;
     matrix_mult_nd32 f32  = Qtm_pm_ndpsi_shift_32;
     if( solver_pm->M_ndpsi == Qsw_pm_ndpsi ){ 
@@ -234,25 +265,6 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
       g_shift = solver_pm->shifts[i]*solver_pm->shifts[i]; 
       iter_local = rg_mixed_cg_her_nd( Pup[i], Pdn[i], Qup, Qdn, temp_params, solver_pm->max_iter,
                                        solver_pm->mms_squared_solver_prec[i], solver_pm->rel_prec, solver_pm->sdim, f, f32);
-      g_shift = _default_g_shift;
-      if(iter_local == -1){
-        return(-1);
-      } else {
-        iteration_count += iter_local;
-      }
-    }
-  } else if (solver_pm->type == MG) {
-    matrix_mult_nd f = Qtm_pm_ndpsi_shift;
-    if( solver_pm->M_ndpsi == Qsw_pm_ndpsi ) 
-      f = Qsw_pm_ndpsi_shift;
-    iteration_count = 0;
-    // solver_params_t struct needs to be passed to all solvers except for cgmms, so we need to construct it here
-    // and set the one relevant parameter
-    double iter_local = 0;
-    for(int i = 0; i < solver_pm->no_shifts; ++i){
-      g_shift = solver_pm->shifts[i]*solver_pm->shifts[i]; 
-      iter_local = MG_solver_nd( Pup[i], Pdn[i], Qup, Qdn, solver_pm->mms_squared_solver_prec[i], solver_pm->max_iter,
-                                 solver_pm->rel_prec, solver_pm->sdim, g_gauge_field, f );
       g_shift = _default_g_shift;
       if(iter_local == -1){
         return(-1);

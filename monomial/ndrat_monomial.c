@@ -257,7 +257,7 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   }
 
 #ifdef DDalphaAMG
-  if( mnl->solver == MGMMSND ){
+  if( mnl->solver == MG ){
     // With MG we can solve directly the unsquared operator
     solver_pm.M_ndpsi = &Qtm_tau1_ndpsi_add_Ishift;
     if(mnl->type == NDCLOVERRAT)
