@@ -34,6 +34,7 @@ int mg_lvl;
 int mg_blk[4];
 int mg_mixed_prec;
 int mg_setup_mu_set;
+int mg_no_shifts = 0;
 double mg_mms_mass = 0;
 double mg_setup_mu;
 double mg_cmu_factor;
@@ -120,6 +121,7 @@ int mg_lvl=3;
 int mg_blk[4] = {0, 0, 0, 0};
 int mg_mixed_prec=0;
 int mg_setup_mu_set = 0; //flag that enable the use of mg_setup_mu in the setup phase
+int mg_no_shifts = 0; // number of shifts to invert with MG. MMS-CG is used for the others at larger mass.
 double mg_mms_mass = 0.1; // mass shift value for switching from MMS-CG to MG. MMS-CG is used for larger masses than the value.
 double mg_setup_mu = 0.; 
 double mg_cmu_factor = 1.0;
@@ -209,7 +211,7 @@ static inline int MG_check_nd( spinor * const up_new, spinor * const dn_new, spi
 {
   double differ[2], residual;
   spinor ** check_vect = NULL;
-  double acc_factor = 2;
+  double acc_factor = 4;
   
   init_solver_field(&check_vect, VOLUMEPLUSRAND,2);
   f( check_vect[0], check_vect[1], up_new, dn_new);
@@ -752,7 +754,7 @@ static int MG_solve_nd( spinor * up_new, spinor * dn_new, spinor * const up_old,
       mul_r(new1tmp, 1/mg_scale, new1tmp, VOLUME);
       mul_r(new2tmp, 1/mg_scale, new2tmp, VOLUME);
       DDalphaAMG_solve_doublet_with_guess( (double*) new2tmp, (double*) old1, (double*) new1tmp, (double*) old2,
-                                           precision, &mg_status );
+                                           precision/2, &mg_status );
       if( N == VOLUME ) { // in case of VOLUME/2 old is a just local vector
         mul_gamma5(old1, VOLUME);
         mul_gamma5(old2, VOLUME);
@@ -769,7 +771,7 @@ static int MG_solve_nd( spinor * up_new, spinor * dn_new, spinor * const up_old,
                 f == Qsw_pm_ndpsi_shift )   // (Gamma5 Dh tau1)^2 - Schur complement squared with shift
         MG_update_mubar_epsbar( g_mubar, g_epsbar, -sqrt(g_shift) );
       DDalphaAMG_solve_doublet_with_guess( (double*) new2, (double*) new1tmp, (double*) new1, (double*) new2tmp,
-                                           precision, &mg_status );      
+                                           precision/2, &mg_status );      
     } else {
       mg_scale *= mg_scale;
       DDalphaAMG_solve_doublet_squared_odd( (double*) new2, (double*) old2, (double*) new1, (double*) old1,
@@ -1226,8 +1228,16 @@ int MG_solver_nd(spinor * const up_new, spinor * const dn_new,
   success = MG_solve_nd( up_new, dn_new, up_old, dn_old, mg_prec, N, f );
   
 #ifdef MGTEST
-  if(success) 
+  if(success) {
     success = MG_check_nd( up_new, dn_new, up_old, dn_old, N, mg_prec, f );
+
+    if(!success) {
+      success = MG_solve_nd( up_new, dn_new, up_old, dn_old, mg_prec, N, f);
+    
+      if(success) 
+        success = MG_check_nd( up_new, dn_new, up_old, dn_old, N, mg_prec, f );
+    }
+  }
 #endif
   
   if(!success) {

@@ -131,6 +131,7 @@ extern "C"
   extern int mg_blk[4];
   extern int mg_mixed_prec;
   extern int mg_setup_mu_set;
+  extern int mg_no_shifts;
   extern double mg_mms_mass;
   extern double mg_setup_mu;
   extern double mg_cmu_factor;

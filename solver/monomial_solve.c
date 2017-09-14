@@ -166,16 +166,68 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
     }
   } else if (solver_pm->type == CGMMSND){
     iteration_count = cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_pm);
+#define TEST
+#ifdef TEST
+    double differ[2], residual;
+    spinor ** check_vect = NULL;
+    matrix_mult_nd f = Qtm_pm_ndpsi_shift;
+    if( solver_pm->M_ndpsi == Qsw_pm_ndpsi ) 
+      f = Qsw_pm_ndpsi_shift;
+    
+    init_solver_field(&check_vect, VOLUMEPLUSRAND/2,4);
+    differ[1] = sqrt(square_norm(Qup, solver_pm->sdim, 1)+square_norm(Qdn, solver_pm->sdim, 1));
+    
+    for(int i = solver_pm->no_shifts-1; i>=0; i--){
+      // preparing initial guess
+      if(i==solver_pm->no_shifts-1) {
+        zero_spinor_field(check_vect[0], solver_pm->sdim);
+        zero_spinor_field(check_vect[1], solver_pm->sdim);
+      } else {
+        double coeff;
+        for( int j = solver_pm->no_shifts-1; j > i; j-- ) {
+          coeff = 1;
+          for( int k = solver_pm->no_shifts-1; k > i; k-- ) {
+            if(j!=k)
+              coeff *= (solver_pm->shifts[k]*solver_pm->shifts[k]-solver_pm->shifts[i]*solver_pm->shifts[i])/
+                (solver_pm->shifts[k]*solver_pm->shifts[k]-solver_pm->shifts[j]*solver_pm->shifts[j]);
+          }
+          if(j==solver_pm->no_shifts-1) {
+            mul_r(check_vect[0], coeff, Pup[j], solver_pm->sdim);
+            mul_r(check_vect[1], coeff, Pdn[j], solver_pm->sdim);
+          } else {
+            assign_add_mul_r(check_vect[0], Pup[j], coeff, solver_pm->sdim);
+            assign_add_mul_r(check_vect[1], Pdn[j], coeff, solver_pm->sdim);
+          }
+        }
+      }
+      
+      g_shift = solver_pm->shifts[i]*solver_pm->shifts[i]; 
+    
+      f( check_vect[2], check_vect[3], check_vect[0], check_vect[1]);
+      diff( check_vect[2], check_vect[2], Qup, solver_pm->sdim);
+      diff( check_vect[3], check_vect[3], Qdn, solver_pm->sdim);
+      differ[0] = sqrt(square_norm(check_vect[2], solver_pm->sdim, 1)+square_norm(check_vect[3], solver_pm->sdim, 1));
+      
+      residual = differ[0]/differ[1];
+      
+      if(g_proc_id == 0)
+        printf("CHECH: shift: %d relative residual: %e\n",i,residual); 
+      g_shift = _default_g_shift;
+    }
+    finalize_solver(check_vect, 4);
+#endif
   }
 #ifdef DDalphaAMG
   else if (solver_pm->type == MG) {
     // if the mg_mms_mass is larger than the smallest shift we use MG
-    if (mg_mms_mass >= solver_pm->shifts[0]) { 
+    if (mg_no_shifts > 0 || mg_mms_mass >= solver_pm->shifts[0]) { 
 
       // if the mg_mms_mass is smaller than the larger shifts, we use CGMMS for those
+      if(mg_mms_mass >= solver_pm->shifts[0]) {
+        mg_no_shifts = solver_pm->no_shifts;
+        while (mg_mms_mass < solver_pm->shifts[mg_no_shifts-1]) { mg_no_shifts--; }
+      }
       int no_shifts = solver_pm->no_shifts;
-      int mg_no_shifts = solver_pm->no_shifts;
-      while (mg_mms_mass < solver_pm->shifts[mg_no_shifts-1]) { mg_no_shifts--; }
       if (mg_no_shifts < no_shifts) {
         solver_pm->no_shifts = no_shifts - mg_no_shifts;
         solver_pm->shifts += mg_no_shifts;
@@ -190,26 +242,27 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
       matrix_mult_nd f = Qtm_pm_ndpsi_shift;
       if( solver_pm->M_ndpsi == Qsw_pm_ndpsi ) 
         f = Qsw_pm_ndpsi_shift;
-      for(int i = solver_pm->no_shifts-1; i>=0; i--){
-        // preparing initial guess                                                                                                                                                                       
-        if(i==solver_pm->no_shifts-1) {
+
+      for(int i = mg_no_shifts-1; i>=0; i--){
+        // preparing initial guess
+        if(i==no_shifts-1) {
           zero_spinor_field(Pup[i], solver_pm->sdim);
           zero_spinor_field(Pdn[i], solver_pm->sdim);
         } else {
           double coeff;
-          for( int j = solver_pm->no_shifts-1; j > i; j-- ) {
+          for( int j = no_shifts-1; j > i; j-- ) {
             coeff = 1;
-            for( int k = solver_pm->no_shifts-1; k > i; k-- ) {
+            for( int k = no_shifts-1; k > i; k-- ) {
               if(j!=k)
                 coeff *= (solver_pm->shifts[k]*solver_pm->shifts[k]-solver_pm->shifts[i]*solver_pm->shifts[i])/
                   (solver_pm->shifts[k]*solver_pm->shifts[k]-solver_pm->shifts[j]*solver_pm->shifts[j]);
             }
-            if(j==solver_pm->no_shifts-1) {
-              mul(Pup[i], coeff, Pup[j], solver_pm->sdim);
-              mul(Pdn[i], coeff, Pdn[j], solver_pm->sdim);
+            if(j==no_shifts-1) {
+              mul_r(Pup[i], coeff, Pup[j], solver_pm->sdim);
+              mul_r(Pdn[i], coeff, Pdn[j], solver_pm->sdim);
             } else {
-              assign_add_mul(Pup[i], Pup[j], coeff, solver_pm->sdim);
-              assign_add_mul(Pdn[i], Pdn[j], coeff, solver_pm->sdim);
+              assign_add_mul_r(Pup[i], Pup[j], coeff, solver_pm->sdim);
+              assign_add_mul_r(Pdn[i], Pdn[j], coeff, solver_pm->sdim);
             }
           }
         }
@@ -252,11 +305,11 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
                 (solver_pm->shifts[k]*solver_pm->shifts[k]-solver_pm->shifts[j]*solver_pm->shifts[j]);
           }
           if(j==solver_pm->no_shifts-1) {
-            mul(Pup[i], coeff, Pup[j], solver_pm->sdim);
-            mul(Pdn[i], coeff, Pdn[j], solver_pm->sdim);
+            mul_r(Pup[i], coeff, Pup[j], solver_pm->sdim);
+            mul_r(Pdn[i], coeff, Pdn[j], solver_pm->sdim);
           } else {
-            assign_add_mul(Pup[i], Pup[j], coeff, solver_pm->sdim);
-            assign_add_mul(Pdn[i], Pdn[j], coeff, solver_pm->sdim);
+            assign_add_mul_r(Pup[i], Pup[j], coeff, solver_pm->sdim);
+            assign_add_mul_r(Pdn[i], Pdn[j], coeff, solver_pm->sdim);
           }
         }
       }

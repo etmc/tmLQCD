@@ -721,10 +721,16 @@ static inline void rmQuotes(char *str){
     mg_omp_num_threads=a;
     if(myverbose) printf("  MG_omp_num_threads set to %d line %d operator %d\n", mg_omp_num_threads, line_of_file, current_operator);
   }
-  {SPC}*MGMMSMass{EQL}{DIGIT}+ {
+  {SPC}*MGNumberOfShifts{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_no_shifts=a;
+    mg_mms_mass=0;
+    if(myverbose) printf("  MG_Num_of_shifts set to %d line %d operator %d\n", mg_omp_num_threads, line_of_file, current_operator);
+  }
+  {SPC}*MGMMSMass{EQL}{FLT}+ {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mg_mms_mass=c;
-    if(myverbose) printf("  MGMMSMass set to %f line %d operator %d\n", mg_mms_mass, line_of_file, current_operator);
+    if(myverbose) printf("  MG_MMS_Mass set to %f line %d operator %d\n", mg_mms_mass, line_of_file, current_operator);
   }
   EndDDalphaAMG{SPC}* {
   if(myverbose) printf("DDalphaAMG parsed in line %d\n\n", line_of_file);
