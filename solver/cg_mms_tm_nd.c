@@ -165,17 +165,20 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
       // falls below a threshold
       // this is useful for computing time and needed, because otherwise
       // zita might get smaller than DOUBLE_EPS and, hence, zero
-      if(iteration > 0 && (iteration % 20 == 0) && (im == shifts-1)) {
-          double sn = square_norm(ps_mms_solver[2*(shifts-1)], N, 1);
-          sn += square_norm(ps_mms_solver[2*(shifts-1)+1], N, 1);
-        // while because more than one shift could be converged
-          while(alphas[shifts-1]*alphas[shifts-1]*sn <= solver_pm->mms_squared_solver_prec[shifts-1] && shifts>1) {
+      if(iteration > 0 && (iteration % 10 == 0) && (im == shifts-1)) {
+        double sn = square_norm(ps_mms_solver[2*(shifts-1)], N, 1);
+        sn += square_norm(ps_mms_solver[2*(shifts-1)+1], N, 1);
+        err = alphas[shifts-1]*alphas[shifts-1]*sn;
+	while(((err <= solver_pm->squared_solver_prec[shifts-1]) && (solver_pm->rel_prec == 0)) ||
+              ((err <= solver_pm->squared_solver_prec[shifts-1]*squarenorm) && (solver_pm->rel_prec > 0))
+              && shifts>1) {
 	  shifts--;
 	  if(g_debug_level > 2 && g_proc_id == 0) {
 	    printf("# CGMMSND: at iteration %d removed one shift, %d remaining\n", iteration, shifts);
 	  }
           sn = square_norm(ps_mms_solver[2*(shifts-1)], N, 1);
           sn += square_norm(ps_mms_solver[2*(shifts-1)+1], N, 1);
+          err = alphas[shifts-1]*alphas[shifts-1]*sn;
 	}
       }
     }
