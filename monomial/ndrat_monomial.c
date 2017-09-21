@@ -47,6 +47,7 @@
 #include "rational/rational.h"
 #include "phmc.h"
 #include "ndrat_monomial.h"
+#include "default_input_values.h"
 #ifdef DDalphaAMG
 #  include "DDalphaAMG_interface.h"
 #endif
@@ -257,17 +258,78 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   }
 
 #ifdef DDalphaAMG
-  if( mnl->solver == MG ){
-    // With MG we can solve directly the unsquared operator
-    solver_pm.M_ndpsi = &Qtm_tau1_ndpsi_add_Ishift;
-    if(mnl->type == NDCLOVERRAT)
-      solver_pm.M_ndpsi = &Qsw_tau1_ndpsi_add_Ishift;
-    
-    mnl->iter0 = MG_mms_solver_nd( g_chi_up_spinor_field, g_chi_dn_spinor_field, mnl->pf, mnl->pf2, 
-                                   solver_pm.shifts, solver_pm.no_shifts,solver_pm.mms_squared_solver_prec, 
-                                   solver_pm.max_iter, solver_pm.rel_prec, solver_pm.sdim, g_gauge_field, 
-                                   solver_pm.M_ndpsi );
+  // With MG we can solve directly the unsquared operator
+  if( mnl->solver == MG && (mg_no_shifts > 0 || mg_mms_mass >= solver_pm.shifts[0]) ){
 
+    // if the mg_mms_mass is smaller than the largest shifts, we use CGMMS for those
+    // in case mg_no_shifts is used, then mg_mms_mass = 0
+    if(mg_mms_mass >= solver_pm.shifts[0]) {
+      mg_no_shifts = solver_pm.no_shifts;
+      while (mg_mms_mass < solver_pm.shifts[mg_no_shifts-1]) { mg_no_shifts--; }
+    }
+    int no_shifts = solver_pm.no_shifts;
+    if (mg_no_shifts < no_shifts) {
+      solver_pm.no_shifts = no_shifts - mg_no_shifts;
+      solver_pm.shifts += mg_no_shifts;
+      solver_pm.mms_squared_solver_prec += mg_no_shifts;
+      // We store the solutions not in the right place (without shifting of mg_no_shifts)
+      // for them applying the operator and storing at the right place the unsquared solution.
+      mnl->iter0 = cg_mms_tm_nd( g_chi_up_spinor_field, g_chi_dn_spinor_field, mnl->pf, mnl->pf2, &solver_pm );
+      for(int j = solver_pm.no_shifts-1; j >= 0; j--) {
+        // Q_h * tau^1 - i nu_j
+        // this needs phmc_Cpol = 1 to work!
+        if(mnl->type == NDCLOVERRAT) {
+          Qsw_tau1_sub_const_ndpsi(g_chi_up_spinor_field[j+mg_no_shifts], g_chi_dn_spinor_field[j+mg_no_shifts],
+                                   g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
+                                   I*solver_pm.shifts[j], 1., mnl->EVMaxInv);
+        }
+        else {
+          Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[j+mg_no_shifts], g_chi_dn_spinor_field[j+mg_no_shifts],
+                                 g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
+                                 I*solver_pm.shifts[j], 1., mnl->EVMaxInv);
+        }
+      }
+      // Restoring solver_pm
+      solver_pm.no_shifts = no_shifts;
+      solver_pm.shifts -= mg_no_shifts;
+      solver_pm.mms_squared_solver_prec -= mg_no_shifts;
+    }
+
+    matrix_mult_nd f = Qtm_tau1_ndpsi_add_Ishift;
+    if( solver_pm.M_ndpsi == Qsw_pm_ndpsi )
+      f = Qsw_tau1_ndpsi_add_Ishift;
+
+    // preparing initial guess
+    for(int i = mg_no_shifts-1; i>=0; i--){
+      if(i==no_shifts-1) {
+        zero_spinor_field(g_chi_up_spinor_field[i], solver_pm.sdim);
+        zero_spinor_field(g_chi_dn_spinor_field[i], solver_pm.sdim);
+      } else {
+        double coeff;
+        for( int j = no_shifts-1; j > i; j-- ) {
+          coeff = 1;
+          for( int k = no_shifts-1; k > i; k-- ) {
+            if(j!=k)
+              coeff *= (solver_pm.shifts[k]-solver_pm.shifts[i])/(solver_pm.shifts[k]-solver_pm.shifts[j]);
+          }
+          if(j==no_shifts-1) {
+            mul_r(g_chi_up_spinor_field[i], coeff, g_chi_up_spinor_field[j], solver_pm.sdim);
+            mul_r(g_chi_dn_spinor_field[i], coeff, g_chi_dn_spinor_field[j], solver_pm.sdim);
+          } else {
+            assign_add_mul_r(g_chi_up_spinor_field[i], g_chi_up_spinor_field[j], coeff, solver_pm.sdim);
+            assign_add_mul_r(g_chi_dn_spinor_field[i], g_chi_dn_spinor_field[j], coeff, solver_pm.sdim);
+          }
+        }
+      }
+      
+      // g_shift = shift^2 and then in Qsw_tau1_ndpsi_add_Ishift the square root is taken
+      g_shift = solver_pm.shifts[i]*solver_pm.shifts[i]; 
+      mnl->iter0 += MG_solver_nd( g_chi_up_spinor_field[i], g_chi_dn_spinor_field[i], mnl->pf, mnl->pf2,
+                                  solver_pm.mms_squared_solver_prec[i],
+                                  solver_pm.max_iter, solver_pm.rel_prec, solver_pm.sdim, g_gauge_field, f );
+      g_shift = _default_g_shift;
+    }
+    
     assign(mnl->w_fields[2], mnl->pf, VOLUME/2);
     assign(mnl->w_fields[3], mnl->pf2, VOLUME/2);
 
