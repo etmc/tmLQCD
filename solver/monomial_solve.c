@@ -166,8 +166,10 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
     }
   } else if (solver_pm->type == CGMMSND){
     iteration_count = cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_pm);
-#define TEST
+    /*
+#undef TEST
 #ifdef TEST
+    //Testing the initial guess
     double differ[2], residual;
     spinor ** check_vect = NULL;
     matrix_mult_nd f = Qtm_pm_ndpsi_shift;
@@ -216,6 +218,7 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
     }
     finalize_solver(check_vect, 4);
 #endif
+    */
   }
 #ifdef DDalphaAMG
   else if (solver_pm->type == MG) {
@@ -223,6 +226,7 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
     if (mg_no_shifts > 0 || mg_mms_mass >= solver_pm->shifts[0]) { 
 
       // if the mg_mms_mass is smaller than the larger shifts, we use CGMMS for those
+      // in case mg_no_shifts is used, then mg_mms_mass = 0
       if(mg_mms_mass >= solver_pm->shifts[0]) {
         mg_no_shifts = solver_pm->no_shifts;
         while (mg_mms_mass < solver_pm->shifts[mg_no_shifts-1]) { mg_no_shifts--; }
