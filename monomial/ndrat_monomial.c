@@ -480,9 +480,17 @@ int init_ndrat_monomial(const int id) {
 
   init_rational(&mnl->rat, scale);
 
-  if(init_chi_spinor_field(VOLUMEPLUSRAND/2, (mnl->rat.np+2)/2) != 0) {
-    fprintf(stderr, "Not enough memory for Chi fields! Aborting...\n");
-    exit(0);
+  if(mnl->type == RAT || mnl->type == CLOVERRAT ||
+     mnl->type == RATCOR || mnl->type == CLOVERRATCOR) {
+    if(init_chi_spinor_field(VOLUMEPLUSRAND/2, (mnl->rat.np+2)/2) != 0) {
+      fprintf(stderr, "Not enough memory for Chi fields! Aborting...\n");
+      exit(0);
+    }
+  } else {
+    if(init_chi_spinor_field(VOLUMEPLUSRAND/2, (mnl->rat.np+1)) != 0) {
+      fprintf(stderr, "Not enough memory for Chi fields! Aborting...\n");
+      exit(0);
+    }
   }
 
   return(0);
