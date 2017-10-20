@@ -145,7 +145,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
       }
     }
   } 
-  if(use_solver == CG){
+  else if(use_solver == CG){
     iteration_count =  cg_her(P, Q, max_iter, eps_sq, rel_prec, N, f);
   }
   else if(use_solver == BICGSTAB){
@@ -192,7 +192,7 @@ int solve_mshift_oneflavour(spinor ** const P, spinor * const Q, solver_params_t
     for( int shift = 0; shift < solver_params->no_shifts; shift++){
       mul_gamma5(P[shift], VOLUME/2);
     }
-  }
+  } else
 #endif // TM_USE_QPHIX
   if( solver_params->external_inverter == NO_EXT_INV ){
     double reached_prec = -1.0;
@@ -214,42 +214,6 @@ int solve_mshift_oneflavour(spinor ** const P, spinor * const Q, solver_params_t
     finalize_solver(temp, 1);
   }
   return iteration_count;
-}
-
-// this is a debugging function which can be used to write the solutions of the multi-shift inversion to file
-void write_mms_nd_props(spinor** const Pup, spinor ** const Pdn, solver_params_t * solver_params, const char * name,
-                        const int iteration_count ){
-  int append = 0;
-  char filename[300];
-  WRITER * writer = NULL;
-  paramsInverterInfo *inverterInfo = NULL;
-  paramsPropagatorFormat *propagatorFormat = NULL;
-  
-  const int num_flavour = 1;
-  const int precision = 64;
-
-  sprintf(filename, "%s.cgmms.prop", name);
-  
-  for(int im = 0; im < solver_params->no_shifts; im++) {
-    if(im==0) construct_writer(&writer, filename, 0);
-    else construct_writer(&writer, filename, 1);
-    
-    if (im==0) {
-      inverterInfo = construct_paramsInverterInfo(0.0, iteration_count, DBTMWILSON, num_flavour);
-      inverterInfo->cgmms_mass = solver_params->shifts[im]/(2 * g_kappa);
-      write_spinor_info(writer, 0, inverterInfo, 0);
-      free(inverterInfo);
-    }
-    
-    propagatorFormat = construct_paramsPropagatorFormat(precision, num_flavour);
-    write_propagator_format(writer, propagatorFormat);
-    free(propagatorFormat);
-    
-    int status = write_spinor(writer, &Pup[im], &Pdn[im], num_flavour, precision);
-    if(g_proc_id==0) printf("Writer status: %d\n", status);
-    
-    destruct_writer(writer);
-  }
 }
 
 int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn, 
