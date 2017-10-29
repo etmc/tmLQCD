@@ -1,7 +1,7 @@
 %author: Mario Schroeck <mario.schroeck@roma3.infn.it>
 %date: 04/2015
 
-\subsection{QUDA: A library for QCD on GPUs}
+\subsection{QUDA: A library for QCD on GPUs}\label{subsec:quda}
 
 
 The QUDA \cite{Clark:2009wm, Babich:2011np, Strelchenko:2013vaa} interface is complementary to tmLQCD's own CUDA kernels for computations on the GPU by Florian Burger.
@@ -69,7 +69,7 @@ Note that a {\ttfamily C++} compiler is required for linking against the QUDA li
 
 
 \subsubsection{Usage}
-Any main program that reads and handles the operator declaration from an input file can easily be set up to use the QUDA inverter by setting the {\ttfamily UseQudaInverter} flag to {\ttfamily yes}. For example, in the input file for the {\ttfamily invert} executable, add the flag to the operator declaration as
+Any main program that reads and handles the operator declaration from an input file can easily be set up to use the QUDA inverter by setting the {\ttfamily UseExternalInverter} flag to {\ttfamily quda}. For example, in the input file for the {\ttfamily invert} executable, add the flag to the operator declaration as
 \begin{verbatim}
 BeginOperator TMWILSON
   2kappaMu = 0.05
@@ -78,7 +78,7 @@ BeginOperator TMWILSON
   Solver = CG
   SolverPrecision = 1e-14
   MaxSolverIterations = 1000
-  UseQudaInverter = yes
+  UseExternalInverter = quda
 EndOperator
 \end{verbatim}
 and the operator of interest will be inverted using QUDA. The initialization of QUDA is done automatically within the operator initialization,  the QUDA library should be finalized by a call to {\ttfamily \_endQuda()} just before finalizing MPI. When you use the QUDA interface for work that is being published, don't forget to cite \cite{Clark:2009wm, Babich:2011np, Strelchenko:2013vaa}.
