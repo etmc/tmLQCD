@@ -73,14 +73,14 @@ void update_momenta_fg(int * mnllist, double step, const int no,
   */
 
   int i,mu;
-  double step_fg
+  double step_fg;
   static su3 v,w;
   su3 *z;
   su3 *ztmp;
   static su3adj deriv;
   su3adj *Fm;
 
-  step_fg=-step0*step0/24
+  step_fg=-step0*step0/24;
   /*
      #ifdef _KOJAK_INST
      #pragma pomp inst begin(updategauge)
