@@ -26,6 +26,7 @@
 #include "su3.h"
 #include "solver/solver_params.h"
 #include "operator_types.h"
+#include "misc_types.h"
 
 #define max_no_operators 10
 
@@ -135,5 +136,6 @@ int add_operator(const int type);
 int init_operators();
 
 void op_set_globals(const int op_id);
+void op_backup_restore_globals(const backup_restore_t mode);
 
 #endif

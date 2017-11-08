@@ -26,10 +26,6 @@
 
 #include <qphix/qphix_config.h>
 
-#ifndef QPHIX_SOALEN
-#error QPHIX_SOALEN must be defined. Check your qphix/qphix_config.h and qphix/qphix_config_internal.h !
-#endif
-
 #if (defined(QPHIX_MIC_SOURCE) || defined(QPHIX_AVX512_SOURCE))
 #define VECLEN_SP 16
 #define VECLEN_HP 16

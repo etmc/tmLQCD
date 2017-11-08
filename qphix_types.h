@@ -24,7 +24,7 @@
 #ifndef QPHIX_TYPES_H
 #define QPHIX_TYPES_H
 
-typedef struct QphixParams_t {
+typedef struct tm_QPhiXParams_t {
   int By;
   int Bz;
   int NCores;
@@ -33,7 +33,8 @@ typedef struct QphixParams_t {
   int PadXY;
   int PadXYZ;
   int MinCt;
-} QphixParams_t;
+  int soalen;
+} tm_QPhiXParams_t;
 
 typedef enum QphixPrec_t { QPHIX_FLOAT_PREC = 0, QPHIX_HALF_PREC, QPHIX_DOUBLE_PREC } QphixPrec_t;
 

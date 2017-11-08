@@ -32,6 +32,7 @@ fi
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 AC_CHECK_PROG(CCDEP, gcc, "gcc", "$CC")
+AC_CHECK_PROG(CXXDEP, g++, "g++", "$CXX")
 #(endian="", AC_DEFINE(LITTLE_ENDIAN,1,The endian of the architechture))
 
 # AC_PROG_FC([ifort gfortran])
@@ -372,6 +373,7 @@ AC_SUBST(CCDEP)
 AC_SUBST(CXXDEP)
 AC_SUBST(CCLD)
 AC_SUBST(DEPFLAGS)
+AC_SUBST(CXXDEPFLAGS)
 AC_SUBST(DEBUG_FLAG)
 AC_SUBST(PROFILE_FLAG)
 AC_SUBST(XCHANGELIB)
@@ -639,6 +641,10 @@ dnl the GNU compiler
     if test $enable_mpi = yes; then
       CCDEP="gcc"
     fi
+    CXXDEP="$CXX"
+    if test $enable_mpi = yes; then
+      CXXDEP="g++"
+    fi
     DEBUG_FLAG="-g"
 dnl other compilers
   else
@@ -661,6 +667,7 @@ dnl check for icc
       DEBUG_FLAG="-g"
       PROFILE_FLAG="-p -g"
       CCDEP="$CC"
+      CXXDEP="$CXX"
 
     else
       # other compilers might support SSE inline assembly too
@@ -677,6 +684,7 @@ dnl check for icc
       CFLAGS="$CFLAGS -O"
       DEBUG_FLAG="-g"
       CCDEP="$CC"
+      CXXDEP="$CXX"
     fi
   fi
 
@@ -811,6 +819,7 @@ else
   SOPTARGS=
 fi
 
+CXXDEPFLAGS="$DEPFLAGS --std=c++11"
 
 AC_MSG_CHECKING(whether we want to switch on optimisation)
 AC_ARG_ENABLE(optimize,
@@ -942,7 +951,7 @@ AC_ARG_WITH(qudadir,
             AS_HELP_STRING([--with-qudadir[=dir]], [use QUDA, to be found in dir]),
              [echo yes
               QUDA_AVAILABLE=1
-              AC_DEFINE(QUDA,1,Using QUDA GPU)
+              AC_DEFINE(TM_USE_QUDA,1,Using QUDA GPU)
               quda_dir=$withval
               LDFLAGS="$LDFLAGS -L${quda_dir}/lib"
               INCLUDES="$INCLUDES -I${quda_dir}/include/"
@@ -985,24 +994,31 @@ AC_ARG_WITH(qphixdir,
               QPHIX_AVAILABLE=1
               AC_DEFINE(TM_USE_QPHIX,1,Using QPhiX)
               qphix_dir=$withval
-              LDFLAGS="$LDFLAGS -L${qphix_dir}/lib -lqphix_solver"
+              LDFLAGS="$LDFLAGS -L${qphix_dir}/lib -lqphix_solver -lqphix_codegen"
               INCLUDES="$INCLUDES -I${qphix_dir}/include/" 
               QPHIX_INTERFACE="qphix_interface"
               QPHIX_PROGRAMS="qphix_test_Dslash"
 
-						  # QMP: TODO AC_CHECK_LIB
+              # QMP: TODO AC_CHECK_LIB
               AC_MSG_CHECKING([where to search for QMP libs])
-						  AC_ARG_WITH(qmpdir,
-						    AS_HELP_STRING([--with-qmpdir[=dir]], [if using QPhiX, then set QMP lib dir]),
-						    qmp_dir=$withval
-						    LDFLAGS="$LDFLAGS -L${qmp_dir}/lib -lqmp"
-						    INCLUDES="$INCLUDES -I${qmp_dir}/include/"
-						  )
-						  AC_MSG_RESULT($qmp_dir)
+              AC_ARG_WITH(qmpdir,
+                          AS_HELP_STRING([--with-qmpdir[=dir]], [if using QPhiX, then set QMP lib dir]),
+                          qmp_dir=$withval
+                          LDFLAGS="$LDFLAGS -L${qmp_dir}/lib -lqmp"
+                          INCLUDES="$INCLUDES -I${qmp_dir}/include/"
+                          )
+              AC_MSG_RESULT($qmp_dir)
+
+              AC_MSG_CHECKING([Setting QPhiX SOALEN])
+              AC_ARG_ENABLE(qphix-soalen,
+                            AS_HELP_STRING([--enable-qphix-soalen], [if using QPhiX, set SOALEN [default=4]]),
+                            enable_qphix_soalen=$enableval, enable_qphix_soalen=4)
+              AC_MSG_RESULT($enable_qphix_soalen)
+              AC_DEFINE_UNQUOTED(QPHIX_SOALEN, ${enable_qphix_soalen}, Structure of Array length to use with QPhiX)
+
               AC_PROG_CXX
               #QPhiX needs to be linked with C++ linker
               CCLD=${CXX}
-              CXXDEP=${CXX}
              ],
              [echo no
               QPHIX_AVAILABLE=0

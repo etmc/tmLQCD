@@ -111,7 +111,7 @@ int write_first_messages(FILE * parameterfile, char const * const executable, ch
           "# the code is compiled with openMP support\n");
 #endif
   if( bc_flag == 0 ) {
-    printf("# Periodic boundary conditions are used\n");
+    printf("# Non-Schroedinger (anti-periodic, periodic or twisted) boundary conditions are used\n");
     fprintf(parameterfile, "# Periodic boundary conditions are used\n");
   }
   if( bc_flag == 1 ) {

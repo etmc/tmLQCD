@@ -72,7 +72,8 @@ double cloverdetratio_rwacc(const int id, hamiltonian_field_t * const hf) {
 	       mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_plus_psi);
   g_sloppy_precision_flag = 0;    
   if( mnl->solver == MG ) {
-    mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->solver_params, mnl->maxiter, mnl->accprec,
+    mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->solver_params, 
+                                   mnl->maxiter, mnl->accprec,
 				   g_relative_precision_flag, VOLUME/2, mnl->Qp, mnl->solver);
   } else {
     mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->solver_params, mnl->maxiter, mnl->accprec,

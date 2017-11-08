@@ -1,7 +1,5 @@
 /***********************************************************************
- *
- *
- * Copyright (C) 2015 Florian Burger
+ * Copyright (C) 2017 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -18,16 +16,19 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  *
- ***********************************************************************/
+ *******************************************************************************/
 
-#ifndef _MIXED_CG_MMS_TM_ND_H
-#define _MIXED_CG_MMS_TM_ND_H
+#ifndef TM_QUDA_TYPES_H
+#define TM_QUDA_TYPES_H
 
-#include"su3.h"
-#include"solver.h"
+typedef enum tm_quda_ferm_bc_t {
+  TM_QUDA_THETABC = 0,
+  TM_QUDA_APBC,
+  TM_QUDA_PBC
+} tm_quda_ferm_bc_t;
 
-int mixed_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn, 
-		 spinor * const Qup, spinor * const Qdn, 
-		 solver_params_t * solver_params);
+typedef struct tm_QudaParams_t {
+  tm_quda_ferm_bc_t fermionbc;
+} tm_QudaParams_t;
 
-#endif
+#endif // TM_QUDA_TYPES_H

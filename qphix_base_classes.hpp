@@ -122,13 +122,15 @@ struct InnerCloverProduct<FT, veclen, soalen, compress12,
               if (sc_out == sc_in) {
                 cplx_mul_acc(spinor_out[c_out][four_s_out][re][xi],
                              spinor_out[c_out][four_s_out][im][xi], diag_in[sc_in][veclen_idx],
-                             FT{0}, spinor_in[c_in][four_s_in][re][xi],
+                             QPhiX::rep<FT,double>(0.0), spinor_in[c_in][four_s_in][re][xi],
                              spinor_in[c_in][four_s_in][im][xi]);
               } else if (sc_out < sc_in) {
                 auto const idx15 = sc_in * (sc_in - 1) / 2 + sc_out;
                 cplx_mul_acc(
                     spinor_out[c_out][four_s_out][re][xi], spinor_out[c_out][four_s_out][im][xi],
-                    off_diag_in[idx15][re][veclen_idx], -off_diag_in[idx15][im][veclen_idx],
+                    off_diag_in[idx15][re][veclen_idx],
+                    // aww hell, maybe one should just add negation to QPhiX::half ?
+                    QPhiX::rep<FT,double>(-QPhiX::rep<double,FT>(off_diag_in[idx15][im][veclen_idx])),
                     spinor_in[c_in][four_s_in][re][xi], spinor_in[c_in][four_s_in][im][xi]);
               } else {
                 auto const idx15 = sc_out * (sc_out - 1) / 2 + sc_in;
@@ -314,7 +316,8 @@ class Dslash {
   typedef typename Geom::SU3MatrixBlock SU3MatrixBlock;
 
   explicit Dslash(Geom *geom, double const t_boundary_, double const aniso_coeff_S_,
-                  double const aniso_coeff_T_, double const mass_)
+                  double const aniso_coeff_T_, double const mass_, bool use_tbc_[4] = nullptr,
+                  double tbc_phases_[4][2] = nullptr)
       : geom(geom),
         t_boundary(t_boundary_),
         aniso_coeff_S(aniso_coeff_S_),
@@ -446,10 +449,11 @@ class WilsonDslash : public Dslash<FT, veclen, soalen, compress12> {
   typedef typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::SU3MatrixBlock SU3MatrixBlock;
 
   WilsonDslash(::QPhiX::Geometry<FT, veclen, soalen, compress12> *geom_, double const t_boundary_,
-               double const aniso_coeff_S_, double const aniso_coeff_T_, double const mass_)
+               double const aniso_coeff_S_, double const aniso_coeff_T_, double const mass_,
+               bool use_tbc_[4] = nullptr, double tbc_phases_[4][2] = nullptr)
       : Dslash<FT, veclen, soalen, compress12>(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_,
-                                               mass_),
-        upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
+                                               mass_, use_tbc_, tbc_phases_),
+        upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_, use_tbc_, tbc_phases_),
         mass_factor_alpha(4.0 + mass_),
         mass_factor_beta(1.0 / (4.0 * mass_factor_alpha)) {}
 
@@ -503,10 +507,12 @@ class WilsonTMDslash : public Dslash<FT, veclen, soalen, compress12> {
 
   WilsonTMDslash(::QPhiX::Geometry<FT, veclen, soalen, compress12> *geom_, double const t_boundary_,
                  double const aniso_coeff_S_, double const aniso_coeff_T_, double const mass_,
-                 double const twisted_mass_)
+                 double const twisted_mass_, bool use_tbc_[4] = nullptr,
+                 double tbc_phases_[4][2] = nullptr)
       : Dslash<FT, veclen, soalen, compress12>(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_,
-                                               mass_),
-        upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_, mass_, twisted_mass_),
+                                               mass_, use_tbc_, tbc_phases_),
+        upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_, mass_, twisted_mass_,
+                        use_tbc_, tbc_phases_),
         mass_factor_alpha(4.0 + mass_),
         mass_factor_beta(0.25),
         derived_mu(twisted_mass_ / mass_factor_alpha),
@@ -556,10 +562,11 @@ class WilsonClovDslash : public Dslash<FT, veclen, soalen, compress12> {
   WilsonClovDslash(::QPhiX::Geometry<FT, veclen, soalen, compress12> *geom_,
                    double const t_boundary_, double const aniso_coeff_S_,
                    double const aniso_coeff_T_, double const mass_,
-                   CloverBlock *const (&clover_)[2], CloverBlock *const (&inv_clover_)[2])
+                   CloverBlock *const (&clover_)[2], CloverBlock *const (&inv_clover_)[2],
+                   bool use_tbc_[4] = nullptr, double tbc_phases_[4][2] = nullptr)
       : Dslash<FT, veclen, soalen, compress12>(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_,
-                                               mass_),
-        upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
+                                               mass_, use_tbc_, tbc_phases_),
+        upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_, use_tbc_, tbc_phases_),
         mass_factor_alpha(4.0 + mass_),
         mass_factor_beta(1.0 / (4.0 * mass_factor_alpha)) {
     for (int cb : {0, 1}) {
@@ -618,34 +625,34 @@ class WilsonClovTMDslash : public Dslash<FT, veclen, soalen, compress12> {
   typedef typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::SU3MatrixBlock SU3MatrixBlock;
   typedef
       typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::FullCloverBlock FullCloverBlock;
+  typedef
+      typename ::QPhiX::Geometry<FT, veclen, soalen, compress12>::CloverBlock CloverBlock;
 
   WilsonClovTMDslash(::QPhiX::Geometry<FT, veclen, soalen, compress12> *geom_,
                      double const t_boundary_, double const aniso_coeff_S_,
                      double const aniso_coeff_T_, double const mass_, double const twisted_mass_,
-                     FullCloverBlock *const (&clover_)[2][2],
-                     FullCloverBlock *const (&inv_clover_)[2][2])
+                     CloverBlock *const (&clover_)[2],
+                     FullCloverBlock *const (&inv_clover_)[2][2], bool use_tbc_[4] = nullptr,
+                     double tbc_phases_[4][2] = nullptr)
       : Dslash<FT, veclen, soalen, compress12>(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_,
-                                               mass_),
-        upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_),
+                                               mass_, use_tbc_, tbc_phases_),
+        upstream_dslash(geom_, t_boundary_, aniso_coeff_S_, aniso_coeff_T_, use_tbc_, tbc_phases_),
         mass_factor_alpha(4.0 + mass_),
         mass_factor_beta(0.25),
         derived_mu(twisted_mass_ / mass_factor_alpha),
         derived_mu_inv(mass_factor_alpha /
                        (mass_factor_alpha * mass_factor_alpha + twisted_mass_ * twisted_mass_)) {
     for (int cb : {0, 1}) {
+      clover[cb] = clover_[cb];
       for (int fl : {0, 1}) {
-        clover[cb][fl] = clover_[cb][fl];
         inv_clover[cb][fl] = inv_clover_[cb][fl];
       }
     }
   }
 
   void A_chi(Spinor *const out, Spinor const *const in, int const isign, int const cb) override {
-    if (isign == -1) {
-      clover_product(out, in, clover[cb][1], upstream_dslash.getGeometry());
-    } else {
-      clover_product(out, in, clover[cb][0], upstream_dslash.getGeometry());
-    }
+    clover_product(out, in, clover[cb], upstream_dslash.getGeometry());
+    // TODO: add twisted mass here
   }
 
   void A_inv_chi(Spinor *const out, Spinor const *const in, int const isign,
@@ -665,7 +672,7 @@ class WilsonClovTMDslash : public Dslash<FT, veclen, soalen, compress12> {
   void achimbdpsi(Spinor *const res, const Spinor *const psi, const Spinor *const chi,
                   const SU3MatrixBlock *const u, double const alpha, double const beta,
                   int const isign, int const cb) override {
-    upstream_dslash.dslashAChiMinusBDPsi(res, psi, chi, u, (const FullCloverBlock **)clover[cb],
+    upstream_dslash.dslashAChiMinusBDPsi(res, psi, chi, u, clover[cb],
                                          mass_factor_beta, isign, cb);
   }
 
@@ -677,11 +684,11 @@ class WilsonClovTMDslash : public Dslash<FT, veclen, soalen, compress12> {
   double const derived_mu;
   double const derived_mu_inv;
 
+  CloverBlock *clover[2];
   /* For twisted clover, there are two fields on each checkerboard which differ in the sign
    * of the twisted quark mass. In effect then, the inner index can be thought of as being
    * in flavour space while the outer index is the checkerboard index. 
    */
-  FullCloverBlock *clover[2][2];
   FullCloverBlock *inv_clover[2][2];
 };
 

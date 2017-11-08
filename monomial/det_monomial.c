@@ -49,6 +49,11 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
   double atime, etime;
   atime = gettime();
   mnl->forcefactor = 1.;
+  mnl_backup_restore_globals(TM_BACKUP_GLOBALS);
+  
+  g_mu = mnl->mu;
+  g_kappa = mnl->kappa;
+  boundary(g_kappa);
 
   if(mnl->even_odd_flag) {
     /*********************************************************************
@@ -59,9 +64,6 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
      *
      *********************************************************************/
     
-    g_mu = mnl->mu;
-    boundary(mnl->kappa);
-
     /* Invert Q_{+} Q_{-} */
     /* X_o -> w_fields[1] */
     chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
@@ -103,8 +105,7 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
      * This term is det(Q^2 + \mu_1^2)
      *
      *********************************************************************/
-    g_mu = mnl->mu;
-    boundary(mnl->kappa);
+    
     if((mnl->solver == CG) || (mnl->solver == MIXEDCG) || (mnl->solver == RGMIXEDCG) || (mnl->solver == MG)) {
       /* Invert Q_{+} Q_{-} */
       /* X -> w_fields[1] */
@@ -147,8 +148,7 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
     /* \delta Q sandwitched by Y^\dagger and X */
     deriv_Sb_D_psi(mnl->w_fields[0], mnl->w_fields[1], hf, mnl->forcefactor);
   }
-  g_mu = g_mu1;
-  boundary(g_kappa);
+  mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
   etime = gettime();
   if(g_debug_level > 1 && g_proc_id == 0) {
     printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
@@ -162,8 +162,12 @@ void det_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   double atime, etime;
   atime = gettime();
+  
+  mnl_backup_restore_globals(TM_BACKUP_GLOBALS);
   g_mu = mnl->mu;
-  boundary(mnl->kappa);
+  g_kappa = mnl->kappa;
+  boundary(g_kappa);
+  
   mnl->csg_n = 0;
   mnl->csg_n2 = 0;
   mnl->iter0 = 0;
@@ -174,6 +178,7 @@ void det_heatbath(const int id, hamiltonian_field_t * const hf) {
     mnl->energy0 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
 
     mnl->Qp(mnl->pf, mnl->w_fields[0]);
+    
     chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
     if(mnl->solver != CG) {
@@ -193,8 +198,7 @@ void det_heatbath(const int id, hamiltonian_field_t * const hf) {
 			  mnl->csg_N2, &mnl->csg_n2, VOLUME);
     }
   }
-  g_mu = g_mu1;
-  boundary(g_kappa);
+  mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
@@ -213,8 +217,12 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
   int save_sloppy = g_sloppy_precision_flag;
   double atime, etime;
   atime = gettime();
+  
+  mnl_backup_restore_globals(TM_BACKUP_GLOBALS);
   g_mu = mnl->mu;
+  g_kappa = mnl->kappa;
   boundary(mnl->kappa);
+  
   if(mnl->even_odd_flag) {
     g_sloppy_precision_flag = 0;
     if( mnl->solver == MG ){
@@ -236,7 +244,7 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
     g_sloppy_precision_flag = save_sloppy;
   }
   else {
-    if((mnl->solver == CG) || (mnl->solver == MIXEDCG)) {
+    if((mnl->solver == CG) || (mnl->solver == MIXEDCG) || (mnl->solver == RGMIXEDCG)) {
       chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_pm_psi);
       mnl->iter0 += solve_degenerate(mnl->w_fields[1], mnl->pf, mnl->solver_params, mnl->maxiter, 
@@ -255,8 +263,7 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
       mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME, 1);
     }
   }
-  g_mu = g_mu1;
-  boundary(g_kappa);
+  mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
