@@ -406,7 +406,11 @@ static int MG_solve(spinor * const phi_new, spinor * const phi_old, const double
   else if ( f == D_psi ||         //          Full operator    with plus mu
 	    f == Q_plus_psi ||    // Gamma5 - Full operator    with plus mu 
 	    f == Q_minus_psi ||   // Gamma5 - Full operator    with minus mu
-	    f == Q_pm_psi ) {     //          Full operator    squared
+	    f == Q_pm_psi ||      //          Full operator    squared
+            f == Qsw_full_plus_psi || // Gamma5 - Full operator    with plus mu
+            f == Qsw_full_minus_psi|| //Gamma5 - Full operator    with plus mu
+            f == Qsw_full_pm_psi   || //          Full operator    squared
+            f == Msw_full_minus_psi) {//         Full operator    with minus mu
     if( N != VOLUME && g_proc_id == 0 )
       printf("WARNING: expected N == VOLUME for the required operator in MG_solve. Continuing with N == VOLUME/2\n");
   }
@@ -422,6 +426,8 @@ static int MG_solve(spinor * const phi_new, spinor * const phi_old, const double
 	    f == Msw_minus_psi || //          Schur complement with minus mu
 	    f == Qtm_minus_psi || // Gamma5 - Schur complement with minus mu 
 	    f == Qsw_minus_psi || // Gamma5 - Schur complement with minus mu
+            f == Qsw_full_minus_psi|| //Gamma5 - Full operator    with plus mu
+            f == Msw_full_minus_psi|| //         Full operator    with minus mu
 	    f == Q_minus_psi )    // Gamma5 - Full operator    with minus mu
     MG_update_mu(-g_mu, -g_mu3);
   else if ( f == Mtm_plus_psi ||  //          Schur complement with plus mu 
@@ -432,6 +438,8 @@ static int MG_solve(spinor * const phi_new, spinor * const phi_old, const double
 	    f == Q_plus_psi ||    // Gamma5 - Full operator    with plus mu 
 	    f == Qtm_pm_psi ||    //          Schur complement squared
 	    f == Qsw_pm_psi ||    //          Schur complement squared
+            f == Qsw_full_plus_psi || // Gamma5 - Full operator    with plus mu
+            f == Qsw_full_pm_psi   || //          Full operator    squared
 	    f == Q_pm_psi )       //          Full operator    squared
     MG_update_mu(g_mu, g_mu3); 
   else
@@ -444,7 +452,10 @@ static int MG_solve(spinor * const phi_new, spinor * const phi_old, const double
 	    f == Qsw_minus_psi || // Gamma5 - Schur complement with minus mu 
 	    f == Qsw_psi ||       // Gamma5 - Schur complement with mu=0 on odd sites
 	    f == Q_plus_psi ||    // Gamma5 - Full operator    with plus mu 
-	    f == Q_minus_psi ) {  // Gamma5 - Full operator    with minus mu
+	    f == Q_minus_psi ||   // Gamma5 - Full operator    with minus mu
+            f == Qsw_full_plus_psi || // Gamma5 - Full operator    with plus mu
+            f == Qsw_full_minus_psi|| //Gamma5 - Full operator    with plus mu
+            f == Qsw_full_pm_psi ) {  //          Full operator    squared
     mul_gamma5((spinor *const) old, VOLUME);
     DDalphaAMG_solve( new, old, precision, &mg_status );
     if( N == VOLUME ) // in case of VOLUME/2 old is a just local vector
@@ -464,8 +475,10 @@ static int MG_solve(spinor * const phi_new, spinor * const phi_old, const double
 	    f == Mtm_minus_psi || //          Schur complement with minus mu 
 	    f == Msw_minus_psi || //          Schur complement with minus mu
 	    f == Msw_psi ||       //          Schur complement with mu=0 on odd sites
-	    f == D_psi )          //          Full operator    with plus mu
+	    f == D_psi ||         //          Full operator    with plus mu
+            f == Msw_full_minus_psi) {//         Full operator    with minus mu
     DDalphaAMG_solve( new, old, precision, &mg_status );
+  }
   else
     DDalphaAMG_solve( new, old, precision, &mg_status );
   
@@ -1200,6 +1213,8 @@ int MG_solver_eo(spinor * const Even_new, spinor * const Odd_new,
     f=&Q_plus_psi;
   else if (f_full == Msw_full)
     f=&D_psi;
+  else if (f_full == Qsw_full)
+    f=&Qsw_full_plus_psi;
   else {
     f=&D_psi;
     if( g_proc_id == 0 )
