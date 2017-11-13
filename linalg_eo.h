@@ -30,7 +30,7 @@
 #include "linalg/scalar_prod_r_32.h"
 #include "linalg/scalar_prod_i.h"
 #include "linalg/square_and_prod_r.h"
-#include "linalg/square_and_max.h"
+#include "linalg/square_and_minmax.h"
 #include "linalg/assign_add_mul_r.h"
 #include "linalg/assign_add_mul_r_32.h"
 #include "linalg/assign_mul_bra_add_mul_r.h"
