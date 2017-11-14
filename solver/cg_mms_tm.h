@@ -28,6 +28,6 @@
 #include "matrix_mult_typedef.h"
 #include "su3.h"
 
-int cg_mms_tm(spinor ** const P,spinor * const Q, solver_pm_t * const params, double * reached_prec);
+int cg_mms_tm(spinor ** const P,spinor * const Q, solver_params_t * const params, double * reached_prec);
 
 #endif

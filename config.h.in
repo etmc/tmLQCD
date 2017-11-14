@@ -206,5 +206,11 @@
 /* Using DDalphaAMG */
 #undef DDalphaAMG
 
+/* Using QPHIX */
+#undef TM_USE_QPHIX
+
+/* Structure of Array length to use with QPhiX */
+#undef QPHIX_SOALEN
+
 #endif
 

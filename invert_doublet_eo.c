@@ -50,7 +50,9 @@
 #ifdef TM_USE_QUDA
 #  include "quda_interface.h"
 #endif
-
+#ifdef TM_USE_QPHIX
+#include "qphix_interface.h"
+#endif
 
 #ifdef HAVE_GPU
 #  include"GPU/cudadefs.h"
@@ -63,20 +65,19 @@ extern su3* g_trafo;
 #  endif
 #endif
 
-
 int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s, 
                       spinor * const Even_new_c, spinor * const Odd_new_c,
                       spinor * const Even_s, spinor * const Odd_s,
                       spinor * const Even_c, spinor * const Odd_c,
                       const double precision, const int max_iter,
                       const int solver_flag, const int rel_prec, 
-                      solver_params_t solver_params, const ExternalInverter inverter, 
+                      solver_params_t solver_params, const ExternalInverter external_inverter, 
                       const SloppyPrecision sloppy, const CompressionType compression) {
 
   int iter = 0;
 
 #ifdef TM_USE_QUDA
-  if( inverter==QUDA_INVERTER ) {
+  if( external_inverter==QUDA_INVERTER ) {
     return invert_doublet_eo_quda( Even_new_s, Odd_new_s, Even_new_c, Odd_new_c,
                                    Even_s, Odd_s, Even_c, Odd_c,
                                    precision, max_iter,
@@ -118,43 +119,51 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
     printf("# Using CG for TMWILSON flavour doublet!\n"); 
     fflush(stdout);
   }
-  gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
-  gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], VOLUME/2);
-  
+  if ( external_inverter == NO_EXT_INV ){
+    gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
+    gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], VOLUME/2);
   
 #ifdef HAVE_GPU
-  if (usegpu_flag) {    // GPU, mixed precision solver
-#  if ( defined TM_USE_MPI  && defined PARALLELT )
-    iter = mixedsolve_eo_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
-                            max_iter, precision, rel_prec);
-#  elif ( !defined TM_USE_MPI  && !defined PARALLELT )
-    iter = mixedsolve_eo_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
-                            max_iter, precision, rel_prec);
-#  else
-    printf("MPI and/or PARALLELT are not appropriately set for the GPU implementation. Aborting...\n");
-    exit(-1);
-#  endif
-  }
-  else {                // CPU, conjugate gradient
-    iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
-                     max_iter, precision, rel_prec, 
-                     VOLUME/2, &Qtm_pm_ndpsi);
-  }
+    if (usegpu_flag) {    // GPU, mixed precision solver
+#    if ( defined TM_USE_MPI  && defined PARALLELT )
+      iter = mixedsolve_eo_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+                              max_iter, precision, rel_prec);
+#    elif ( !defined TM_USE_MPI  && !defined PARALLELT )
+      iter = mixedsolve_eo_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+                              max_iter, precision, rel_prec);
+#    else
+      printf("MPI and/or PARALLELT are not appropriately set for the GPU implementation. Aborting...\n");
+      exit(-1);
+#    endif
+    }
+    else {                // CPU, conjugate gradient
+      iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+                       max_iter, precision, rel_prec, 
+                       VOLUME/2, &Qtm_pm_ndpsi);
+    }
 #else                   // CPU, conjugate gradient
-  if(solver_flag == RGMIXEDCG){
-    iter = rg_mixed_cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
-                              solver_params, max_iter, precision, rel_prec, VOLUME/2,
-                              &Qtm_pm_ndpsi, &Qtm_pm_ndpsi_32);
-  } 
-  else {
-    iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
-                     max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_ndpsi);
-  }
+    if(solver_flag == RGMIXEDCG){
+      iter = rg_mixed_cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+                                solver_params, max_iter, precision, rel_prec, VOLUME/2,
+                                &Qtm_pm_ndpsi, &Qtm_pm_ndpsi_32);
+    } 
+    else {
+      iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+                       max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_ndpsi);
+    }
 #endif
-  
-  
-  Qtm_dagger_ndpsi(Odd_new_s, Odd_new_c,
-                   Odd_new_s, Odd_new_c);
+    Qtm_dagger_ndpsi(Odd_new_s, Odd_new_c,
+                     Odd_new_s, Odd_new_c);
+  } // if(NO_EXT_INV)
+#ifdef TM_USE_QPHIX
+  else if (external_inverter == QPHIX_INVERTER ) {
+    // using QPhiX, we invert M M^dagger y = b, so we don't need gamma_5 multiplications
+    iter = invert_eo_qphix_twoflavour(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+                                      max_iter, precision, solver_flag, rel_prec,
+                                      solver_params, sloppy, compression);
+    // and it multiplies y internally by M^dagger, returning M^{-1} b as required
+  }
+#endif // TM_USE_QPHIX
 
   /* Reconstruct the even sites                */
   Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd_new_s);
@@ -188,12 +197,12 @@ int invert_cloverdoublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
                       spinor * const Even_c, spinor * const Odd_c,
                       const double precision, const int max_iter,
                       const int solver_flag, const int rel_prec, solver_params_t solver_params,
-                      const ExternalInverter inverter, const SloppyPrecision sloppy, const CompressionType compression) {
+                      const ExternalInverter external_inverter, const SloppyPrecision sloppy, const CompressionType compression) {
   
   int iter = 0;
 
 #ifdef TM_USE_QUDA
-  if( inverter==QUDA_INVERTER ) {
+  if( external_inverter==QUDA_INVERTER ) {
     return invert_doublet_eo_quda( Even_new_s, Odd_new_s, Even_new_c, Odd_new_c,
                                    Even_s, Odd_s, Even_c, Odd_c,
                                    precision, max_iter,
@@ -205,40 +214,49 @@ int invert_cloverdoublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
   /* here comes the inversion using even/odd preconditioning */
   if(g_proc_id == 0) {printf("# Using even/odd preconditioning!\n"); fflush(stdout);}
   Msw_ee_inv_ndpsi(Even_new_s, Even_new_c, 
-                   Even_s, Even_c);
+                  Even_s, Even_c);
   Hopping_Matrix(OE, g_spinor_field[DUM_DERI], Even_new_s);
   Hopping_Matrix(OE, g_spinor_field[DUM_DERI+1], Even_new_c);
   
   /* The sign is plus, since in Hopping_Matrix */
   /* the minus is missing                      */
   assign_mul_add_r(g_spinor_field[DUM_DERI], +1., Odd_s, VOLUME/2);
-  assign_mul_add_r(g_spinor_field[DUM_DERI+1], +1., Odd_c, VOLUME/2);
-  
-  /* Do the inversion with the preconditioned  */
-  /* matrix to get the odd sites               */
-  
-  /* Here we invert the hermitean operator squared */
-  
-  if(g_proc_id == 0) {
-    printf("# Using CG for TMWILSON flavour doublet!\n"); 
-    fflush(stdout);
+  assign_mul_add_r(g_spinor_field[DUM_DERI+1], +1., Odd_c, VOLUME/2);  
+  if( external_inverter == NO_EXT_INV ){    
+    /* Do the inversion with the preconditioned  */
+    /* matrix to get the odd sites               */
+    
+    /* Here we invert the hermitean operator squared */
+    
+    if(g_proc_id == 0) {
+      printf("# Using CG for TMWILSON flavour doublet!\n"); 
+      fflush(stdout);
+    }
+    gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
+    gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], VOLUME/2);
+    
+    if(solver_flag == RGMIXEDCG){
+      iter = rg_mixed_cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+                                solver_params, max_iter, precision, rel_prec, VOLUME/2,
+                                &Qsw_pm_ndpsi, &Qsw_pm_ndpsi_32);
+    } else {
+      iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+                                  max_iter, precision, rel_prec, 
+                                  VOLUME/2, &Qsw_pm_ndpsi);
+    }
+    
+    Qsw_dagger_ndpsi(Odd_new_s, Odd_new_c,
+                    Odd_new_s, Odd_new_c);
+  } // if(NO_EXT_INV)
+#ifdef TM_USE_QPHIX
+  else if (external_inverter == QPHIX_INVERTER ) {
+    // using QPhiX, we invert M M^dagger y = b, so we don't need gamma_5 multiplications
+    iter = invert_eo_qphix_twoflavour(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
+                                      max_iter, precision, solver_flag, rel_prec,
+                                      solver_params, sloppy, compression);
+    // and it multiplies y internally by M^dagger, returning M^{-1} b as required
   }
-  gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
-  gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], VOLUME/2);
-  
-  if(solver_flag == RGMIXEDCG){
-    iter = rg_mixed_cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
-                              solver_params, max_iter, precision, rel_prec, VOLUME/2,
-                              &Qsw_pm_ndpsi, &Qsw_pm_ndpsi_32);
-  } else {
-    iter = cg_her_nd(Odd_new_s, Odd_new_c, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1],
-                                 max_iter, precision, rel_prec, 
-                                 VOLUME/2, &Qsw_pm_ndpsi);
-  }
-  
-  
-  Qsw_dagger_ndpsi(Odd_new_s, Odd_new_c,
-                   Odd_new_s, Odd_new_c);
+#endif // TM_USE_QPHIX
   
   /* Reconstruct the even sites                */
   Hopping_Matrix(EO, g_spinor_field[DUM_DERI], Odd_new_s);

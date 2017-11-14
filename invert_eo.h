@@ -27,6 +27,7 @@
 #ifndef _INVERT_EO_H
 #define _INVERT_EO_H
 #include "global.h"
+#include "misc_types.h"
 #include "solver/solver_params.h"
 
 int invert_eo(spinor * const Even_new, spinor * const Odd_new, 
@@ -35,6 +36,6 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
               const int solver_flag, const int rel_prec,
               const int sub_evs_flag, const int even_odd_flag,
               const int no_extra_masses, double * const extra_masses, solver_params_t solver_params, const int id,
-              const ExternalInverter inverter, const SloppyPrecision sloppy, const CompressionType compression );
+              const ExternalInverter external_inverter, const SloppyPrecision sloppy, const CompressionType compression );
 
 #endif
