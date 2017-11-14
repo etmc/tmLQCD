@@ -23,7 +23,6 @@
 
 #include "qphix_interface.h"
 #include "qphix_interface.hpp"
-#include "qphix_base_classes.hpp"
 #include "qphix_interface_utils.hpp"
 #include "qphix_types.h"
 #include "qphix_veclen.h"
@@ -1064,127 +1063,132 @@ void pack_nd_clover(QPhiX::Geometry<FT, V, S, compress12> &geom,
   }
 }
 
+// Due to github issue #404, the helper functions to apply the full QPhiX operator
+// are currently disabled because they conflict with the new interfaces in QPhiX
+// itself. If required, these should be rewritten to use these interfaces
+// rather than the base classes in qphix_base_classes.hpp
+
 // Apply the full QPhiX fermion matrix to checkerboarded tm spinors
-template <typename FT, int V, int S, bool compress>
-void Mfull_helper(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, const spinor *Odd_in,
-                  const op_type_t op_type) {
-  // TODO: this should use handles for gauge and spinors because these are definitely temporary
-  // objects
-  typedef typename QPhiX::Geometry<FT, V, S, compress>::SU3MatrixBlock QGauge;
-  typedef typename QPhiX::Geometry<FT, V, S, compress>::FourSpinorBlock QSpinor;
-  typedef typename QPhiX::Geometry<FT, V, S, compress>::CloverBlock QClover;
-  typedef typename QPhiX::Geometry<FT, V, S, compress>::FullCloverBlock QFullClover;
-
-  if (g_debug_level > 1) tmlqcd::printQphixDiagnostics(V, S, compress, V, S, compress);
-
-  double coeff_s = (FT)(1);
-  double coeff_t = (FT)(1);
-
-  QPhiX::Geometry<FT, V, S, compress> geom(subLattSize, By, Bz, NCores, Sy, Sz, PadXY, PadXYZ,
-                                           MinCt);
-
-  // Wilson mass
-  double mass = 1 / (2.0 * g_kappa) - 4;
-
-  tmlqcd::Dslash<FT, V, S, compress> *polymorphic_dslash;
-
-  QGauge *u_packed[2];
-  QSpinor *qphix_in[2];
-  QSpinor *qphix_out[2];
-
-  QClover *clover[2];
-  QClover *inv_clover[2];
-
-  QFullClover *inv_fullclover[2][2];
-
-  QSpinor *tmp_spinor = (QSpinor *)geom.allocCBFourSpinor();
-  for (int cb : {0, 1}) {
-    u_packed[cb] = (QGauge *)geom.allocCBGauge();
-    qphix_in[cb] = (QSpinor *)geom.allocCBFourSpinor();
-    qphix_out[cb] = (QSpinor *)geom.allocCBFourSpinor();
-    clover[cb] = nullptr;
-    inv_clover[cb] = nullptr;
-    for (int fl : {0, 1}) {
-      inv_fullclover[cb][fl] = nullptr;
-    }
-  }
-  reorder_gauge_to_QPhiX(geom, u_packed[cb_even], u_packed[cb_odd]);
-
-  if (op_type == WILSON) {
-    polymorphic_dslash = new tmlqcd::WilsonDslash<FT, V, S, compress>(
-        &geom, t_boundary, coeff_s, coeff_t, mass, use_tbc, tbc_phases);
-  } else if (op_type == TMWILSON) {
-    polymorphic_dslash = new tmlqcd::WilsonTMDslash<FT, V, S, compress>(
-        &geom, t_boundary, coeff_s, coeff_t, mass, -g_mu / (2.0 * g_kappa), use_tbc, tbc_phases);
-  } else if (op_type == CLOVER && fabs(g_mu) <= DBL_EPSILON) {
-    for (int cb : {0, 1}) {
-      clover[cb] = (QClover *)geom.allocCBClov();
-      inv_clover[cb] = (QClover *)geom.allocCBClov();
-
-      reorder_clover_to_QPhiX(geom, clover[cb], cb, false);
-      sw_invert(cb, 0);
-      reorder_clover_to_QPhiX(geom, inv_clover[cb], cb, true);
-    }
-
-    polymorphic_dslash = new tmlqcd::WilsonClovDslash<FT, V, S, compress>(
-        &geom, t_boundary, coeff_s, coeff_t, mass, clover, inv_clover, use_tbc, tbc_phases);
-
-  } else if (op_type == CLOVER && fabs(g_mu) > DBL_EPSILON) {
-    for (int cb : {0, 1}) {
-      clover[cb] = (QClover *)geom.allocCBClov();
-      for (int fl : {0, 1}) {
-        inv_fullclover[cb][fl] = (QFullClover *)geom.allocCBFullClov();
-      }
-      reorder_clover_to_QPhiX(geom, clover[cb], cb, false);
-      sw_invert(cb, g_mu);
-      reorder_clover_to_QPhiX(geom, inv_fullclover[cb], cb, true);
-    }
-
-    polymorphic_dslash = new tmlqcd::WilsonClovTMDslash<FT, V, S, compress>(
-        &geom, t_boundary, coeff_s, coeff_t, mass, -g_mu / (2.0 * g_kappa), clover,
-        inv_fullclover, use_tbc, tbc_phases);
-
-  } else {
-    QPhiX::masterPrintf("tmlqcd::Mfull_helper; No such operator type: %d\n", op_type);
-    abort();
-  }
-
-//   reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Even_in),
-//                              qphix_in[cb_even], cb_even);
-//   reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Odd_in), qphix_in[cb_odd],
-//                              cb_odd);
-  reorder_eo_spinor_to_QPhiX(geom, Even_in,
-                             qphix_in[cb_even], cb_even);
-  reorder_eo_spinor_to_QPhiX(geom, Odd_in, qphix_in[cb_odd],
-                             cb_odd);
-  // Apply QPhiX Mfull
-  polymorphic_dslash->plain_dslash(qphix_out[cb_odd], qphix_in[cb_even], u_packed[cb_odd],
-                                   /* isign == non-conjugate */ 1, cb_odd);
-  polymorphic_dslash->plain_dslash(qphix_out[cb_even], qphix_in[cb_odd], u_packed[cb_even],
-                                   /* isign == non-conjugate */ 1, cb_even);
-  for (int cb : {0, 1}) {
-    polymorphic_dslash->A_chi(tmp_spinor, qphix_in[cb], 1, cb);
-    QPhiX::aypx(-0.5, tmp_spinor, qphix_out[cb], geom, 1);
-  }
-
-  reorder_eo_spinor_from_QPhiX(geom, Even_out, qphix_out[cb_even],
-                               cb_even, 2.0 * g_kappa);
-  reorder_eo_spinor_from_QPhiX(geom, Odd_out, qphix_out[cb_odd], cb_odd,
-                               2.0 * g_kappa);
-
-  geom.free(tmp_spinor);
-  for (int cb : {0, 1}) {
-    geom.free(u_packed[cb]);
-    geom.free(qphix_in[cb]);
-    geom.free(qphix_out[cb]);
-    geom.free(clover[cb]);
-    geom.free(inv_clover[cb]);
-    for (int fl : {0, 1}) {
-      geom.free(inv_fullclover[cb][fl]);
-    }
-  };
-  delete (polymorphic_dslash);
-}
+//template <typename FT, int V, int S, bool compress>
+//void Mfull_helper(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, const spinor *Odd_in,
+//                  const op_type_t op_type) {
+//  // TODO: this should use handles for gauge and spinors because these are definitely temporary
+//  // objects
+//  typedef typename QPhiX::Geometry<FT, V, S, compress>::SU3MatrixBlock QGauge;
+//  typedef typename QPhiX::Geometry<FT, V, S, compress>::FourSpinorBlock QSpinor;
+//  typedef typename QPhiX::Geometry<FT, V, S, compress>::CloverBlock QClover;
+//  typedef typename QPhiX::Geometry<FT, V, S, compress>::FullCloverBlock QFullClover;
+//
+//  if (g_debug_level > 1) tmlqcd::printQphixDiagnostics(V, S, compress, V, S, compress);
+//
+//  double coeff_s = (FT)(1);
+//  double coeff_t = (FT)(1);
+//
+//  QPhiX::Geometry<FT, V, S, compress> geom(subLattSize, By, Bz, NCores, Sy, Sz, PadXY, PadXYZ,
+//                                           MinCt);
+//
+//  // Wilson mass
+//  double mass = 1 / (2.0 * g_kappa) - 4;
+//
+//  tmlqcd::Dslash<FT, V, S, compress> *polymorphic_dslash;
+//
+//  QGauge *u_packed[2];
+//  QSpinor *qphix_in[2];
+//  QSpinor *qphix_out[2];
+//
+//  QClover *clover[2];
+//  QClover *inv_clover[2];
+//
+//  QFullClover *inv_fullclover[2][2];
+//
+//  QSpinor *tmp_spinor = (QSpinor *)geom.allocCBFourSpinor();
+//  for (int cb : {0, 1}) {
+//    u_packed[cb] = (QGauge *)geom.allocCBGauge();
+//    qphix_in[cb] = (QSpinor *)geom.allocCBFourSpinor();
+//    qphix_out[cb] = (QSpinor *)geom.allocCBFourSpinor();
+//    clover[cb] = nullptr;
+//    inv_clover[cb] = nullptr;
+//    for (int fl : {0, 1}) {
+//      inv_fullclover[cb][fl] = nullptr;
+//    }
+//  }
+//  reorder_gauge_to_QPhiX(geom, u_packed[cb_even], u_packed[cb_odd]);
+//
+//  if (op_type == WILSON) {
+//    polymorphic_dslash = new tmlqcd::WilsonDslash<FT, V, S, compress>(
+//        &geom, t_boundary, coeff_s, coeff_t, mass, use_tbc, tbc_phases);
+//  } else if (op_type == TMWILSON) {
+//    polymorphic_dslash = new tmlqcd::WilsonTMDslash<FT, V, S, compress>(
+//        &geom, t_boundary, coeff_s, coeff_t, mass, -g_mu / (2.0 * g_kappa), use_tbc, tbc_phases);
+//  } else if (op_type == CLOVER && fabs(g_mu) <= DBL_EPSILON) {
+//    for (int cb : {0, 1}) {
+//      clover[cb] = (QClover *)geom.allocCBClov();
+//      inv_clover[cb] = (QClover *)geom.allocCBClov();
+//
+//      reorder_clover_to_QPhiX(geom, clover[cb], cb, false);
+//      sw_invert(cb, 0);
+//      reorder_clover_to_QPhiX(geom, inv_clover[cb], cb, true);
+//    }
+//
+//    polymorphic_dslash = new tmlqcd::WilsonClovDslash<FT, V, S, compress>(
+//        &geom, t_boundary, coeff_s, coeff_t, mass, clover, inv_clover, use_tbc, tbc_phases);
+//
+//  } else if (op_type == CLOVER && fabs(g_mu) > DBL_EPSILON) {
+//    for (int cb : {0, 1}) {
+//      clover[cb] = (QClover *)geom.allocCBClov();
+//      for (int fl : {0, 1}) {
+//        inv_fullclover[cb][fl] = (QFullClover *)geom.allocCBFullClov();
+//      }
+//      reorder_clover_to_QPhiX(geom, clover[cb], cb, false);
+//      sw_invert(cb, g_mu);
+//      reorder_clover_to_QPhiX(geom, inv_fullclover[cb], cb, true);
+//    }
+//
+//    polymorphic_dslash = new tmlqcd::WilsonClovTMDslash<FT, V, S, compress>(
+//        &geom, t_boundary, coeff_s, coeff_t, mass, -g_mu / (2.0 * g_kappa), clover,
+//        inv_fullclover, use_tbc, tbc_phases);
+//
+//  } else {
+//    QPhiX::masterPrintf("tmlqcd::Mfull_helper; No such operator type: %d\n", op_type);
+//    abort();
+//  }
+//
+////   reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Even_in),
+////                              qphix_in[cb_even], cb_even);
+////   reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Odd_in), qphix_in[cb_odd],
+////                              cb_odd);
+//  reorder_eo_spinor_to_QPhiX(geom, Even_in,
+//                             qphix_in[cb_even], cb_even);
+//  reorder_eo_spinor_to_QPhiX(geom, Odd_in, qphix_in[cb_odd],
+//                             cb_odd);
+//  // Apply QPhiX Mfull
+//  polymorphic_dslash->plain_dslash(qphix_out[cb_odd], qphix_in[cb_even], u_packed[cb_odd],
+//                                   /* isign == non-conjugate */ 1, cb_odd);
+//  polymorphic_dslash->plain_dslash(qphix_out[cb_even], qphix_in[cb_odd], u_packed[cb_even],
+//                                   /* isign == non-conjugate */ 1, cb_even);
+//  for (int cb : {0, 1}) {
+//    polymorphic_dslash->A_chi(tmp_spinor, qphix_in[cb], 1, cb);
+//    QPhiX::aypx(-0.5, tmp_spinor, qphix_out[cb], geom, 1);
+//  }
+//
+//  reorder_eo_spinor_from_QPhiX(geom, Even_out, qphix_out[cb_even],
+//                               cb_even, 2.0 * g_kappa);
+//  reorder_eo_spinor_from_QPhiX(geom, Odd_out, qphix_out[cb_odd], cb_odd,
+//                               2.0 * g_kappa);
+//
+//  geom.free(tmp_spinor);
+//  for (int cb : {0, 1}) {
+//    geom.free(u_packed[cb]);
+//    geom.free(qphix_in[cb]);
+//    geom.free(qphix_out[cb]);
+//    geom.free(clover[cb]);
+//    geom.free(inv_clover[cb]);
+//    for (int fl : {0, 1}) {
+//      geom.free(inv_fullclover[cb][fl]);
+//    }
+//  };
+//  delete (polymorphic_dslash);
+//}
 
 // Templated even-odd preconditioned solver using QPhiX Library
 template <typename FT, int V, int S, bool compress, 
@@ -1774,60 +1778,65 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
   return (niters+niters2);
 }
 
-// Template wrapper for the Dslash operator call-able from C code
-void Mfull_qphix(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, const spinor *Odd_in,
-                 const op_type_t op_type) {
-  tmlqcd::checkQphixInputParameters(qphix_input);
-  // FIXME: two-row gauge compression and double precision hard-coded
-  _initQphix(0, nullptr, qphix_input, 12, QPHIX_DOUBLE_PREC);
+// Due to github issue #404, the helper functions to apply the full QPhiX operator
+// are currently disabled because they conflict with the new interfaces in QPhiX
+// itself. If required, these should be rewritten to use these interfaces
+// rather than the base classes in qphix_base_classes.hpp
 
-  if (qphix_precision == QPHIX_DOUBLE_PREC) {
-    if (QPHIX_SOALEN > VECLEN_DP) {
-      QPhiX::masterPrintf("SOALEN=%d is greater than the double prec VECLEN=%d\n", QPHIX_SOALEN,
-                          VECLEN_DP);
-      abort();
-    }
-    QPhiX::masterPrintf("TESTING IN DOUBLE PRECISION \n");
-    if (compress12) {
-      Mfull_helper<double, VECLEN_DP, QPHIX_SOALEN, true>(Even_out, Odd_out, Even_in, Odd_in,
-                                                          op_type);
-    } else {
-      Mfull_helper<double, VECLEN_DP, QPHIX_SOALEN, false>(Even_out, Odd_out, Even_in, Odd_in,
-                                                           op_type);
-    }
-  } else if (qphix_precision == QPHIX_FLOAT_PREC) {
-    if (QPHIX_SOALEN > VECLEN_SP) {
-      QPhiX::masterPrintf("SOALEN=%d is greater than the single prec VECLEN=%d\n", QPHIX_SOALEN,
-                          VECLEN_SP);
-      abort();
-    }
-    QPhiX::masterPrintf("TESTING IN SINGLE PRECISION \n");
-    if (compress12) {
-      Mfull_helper<float, VECLEN_SP, QPHIX_SOALEN, true>(Even_out, Odd_out, Even_in, Odd_in,
-                                                         op_type);
-    } else {
-      Mfull_helper<float, VECLEN_SP, QPHIX_SOALEN, false>(Even_out, Odd_out, Even_in, Odd_in,
-                                                          op_type);
-    }
-  }
-#if (defined(QPHIX_MIC_SOURCE) || defined(QPHIX_AVX512_SOURCE))
-  else if (qphix_precision == QPHIX_HALF_PREC) {
-    if (QPHIX_SOALEN > VECLEN_HP) {
-      QPhiX::masterPrintf("SOALEN=%d is greater than the half prec VECLEN=%d\n", QPHIX_SOALEN,
-                          VECLEN_HP);
-      abort();
-    }
-    QPhiX::masterPrintf("TESTING IN HALF PRECISION \n");
-    if (compress12) {
-      Mfull_helper<QPhiX::half, VECLEN_HP, QPHIX_SOALEN, true>(Even_out, Odd_out, Even_in, Odd_in,
-                                                               op_type);
-    } else {
-      Mfull_helper<QPhiX::half, VECLEN_HP, QPHIX_SOALEN, false>(Even_out, Odd_out, Even_in, Odd_in,
-                                                                op_type);
-    }
-  }
-#endif
-}
+// Template wrapper for the Dslash operator call-able from C code
+//void Mfull_qphix(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, const spinor *Odd_in,
+//                 const op_type_t op_type) {
+//  tmlqcd::checkQphixInputParameters(qphix_input);
+//  // FIXME: two-row gauge compression and double precision hard-coded
+//  _initQphix(0, nullptr, qphix_input, 12, QPHIX_DOUBLE_PREC);
+//
+//  if (qphix_precision == QPHIX_DOUBLE_PREC) {
+//    if (QPHIX_SOALEN > VECLEN_DP) {
+//      QPhiX::masterPrintf("SOALEN=%d is greater than the double prec VECLEN=%d\n", QPHIX_SOALEN,
+//                          VECLEN_DP);
+//      abort();
+//    }
+//    QPhiX::masterPrintf("TESTING IN DOUBLE PRECISION \n");
+//    if (compress12) {
+//      Mfull_helper<double, VECLEN_DP, QPHIX_SOALEN, true>(Even_out, Odd_out, Even_in, Odd_in,
+//                                                          op_type);
+//    } else {
+//      Mfull_helper<double, VECLEN_DP, QPHIX_SOALEN, false>(Even_out, Odd_out, Even_in, Odd_in,
+//                                                           op_type);
+//    }
+//  } else if (qphix_precision == QPHIX_FLOAT_PREC) {
+//    if (QPHIX_SOALEN > VECLEN_SP) {
+//      QPhiX::masterPrintf("SOALEN=%d is greater than the single prec VECLEN=%d\n", QPHIX_SOALEN,
+//                          VECLEN_SP);
+//      abort();
+//    }
+//    QPhiX::masterPrintf("TESTING IN SINGLE PRECISION \n");
+//    if (compress12) {
+//      Mfull_helper<float, VECLEN_SP, QPHIX_SOALEN, true>(Even_out, Odd_out, Even_in, Odd_in,
+//                                                         op_type);
+//    } else {
+//      Mfull_helper<float, VECLEN_SP, QPHIX_SOALEN, false>(Even_out, Odd_out, Even_in, Odd_in,
+//                                                          op_type);
+//    }
+//  }
+//#if (defined(QPHIX_MIC_SOURCE) || defined(QPHIX_AVX512_SOURCE))
+//  else if (qphix_precision == QPHIX_HALF_PREC) {
+//    if (QPHIX_SOALEN > VECLEN_HP) {
+//      QPhiX::masterPrintf("SOALEN=%d is greater than the half prec VECLEN=%d\n", QPHIX_SOALEN,
+//                          VECLEN_HP);
+//      abort();
+//    }
+//    QPhiX::masterPrintf("TESTING IN HALF PRECISION \n");
+//    if (compress12) {
+//      Mfull_helper<QPhiX::half, VECLEN_HP, QPHIX_SOALEN, true>(Even_out, Odd_out, Even_in, Odd_in,
+//                                                               op_type);
+//    } else {
+//      Mfull_helper<QPhiX::half, VECLEN_HP, QPHIX_SOALEN, false>(Even_out, Odd_out, Even_in, Odd_in,
+//                                                                op_type);
+//    }
+//  }
+//#endif
+//}
 
 // we have a unified interface for n-flavour inversions, but we need to provide wrappers
 // which can be called by the tmLQCD solver drivers for one and two-flavour inversions

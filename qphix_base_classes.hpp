@@ -1,6 +1,14 @@
 // Copyright © 2017 Martin Ueding <dev@martin-ueding.de>
 // Licensed unter the [BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause).
 
+// Due to github issue #404, the helper functions to apply the full QPhiX operator
+// are currently disabled because they conflict with the new interfaces in QPhiX
+// itself. If required, these should be rewritten to use these interfaces
+// rather than the base classes in qphix_base_classes.hpp
+
+// This file should be deprecated or updated to provide any functionality
+// not covered by QPhiX itself.
+
 /**
   \file Additions to QPhiX that are only needed for tmLQCD.
 
