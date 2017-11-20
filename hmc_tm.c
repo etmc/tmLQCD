@@ -59,6 +59,7 @@
 #include "mpi_init.h"
 #include "sighandler.h"
 #include "update_tm.h"
+#include "update_smd.h"
 #include "init/init.h"
 #include "test/check_geometry.h"
 #include "boundary.h"
@@ -387,9 +388,16 @@ int main(int argc,char *argv[]) {
 
     return_check = return_check_flag && (trajectory_counter%return_check_interval == 0);
 
-    accept = update_tm(&plaquette_energy, &rectangle_energy, datafilename, 
-		       return_check, trajectory_counter>=Ntherm, trajectory_counter);
-    Rate += accept;
+    if(use_smd_flag) {
+      update_smd(&plaquette_energy, &rectangle_energy, datafilename, 
+                 return_check, trajectory_counter>=Ntherm, trajectory_counter);
+      Rate += 1;
+    }
+    else{
+      accept = update_tm(&plaquette_energy, &rectangle_energy, datafilename, 
+                         return_check, trajectory_counter>=Ntherm, trajectory_counter);
+      Rate += accept;
+    }
 
     /* Save gauge configuration all Nsave times */
     if((Nsave !=0) && (trajectory_counter%Nsave == 0) && (trajectory_counter!=0)) {

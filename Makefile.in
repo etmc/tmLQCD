@@ -50,7 +50,7 @@ MODULES = read_input gamma measure_gauge_action start \
 	test/overlaptests \
 	invert_eo invert_doublet_eo update_gauge \
 	getopt sighandler reweighting_factor \
-	source_generation boundary update_tm ranlxd  \
+	source_generation boundary update_tm update_smd ranlxd  \
 	mpi_init deriv_Sb deriv_Sb_D_psi ranlxs \
 	geometry_eo invert_overlap aligned_malloc \
 	prepare_source chebyshev_polynomial_nd Ptilde_nd  \
@@ -124,7 +124,7 @@ ${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir
 # C++ modules
 $(addsuffix .o,${CXXMODULES}): %.o: ${srcdir}/%.cpp %.d Makefile $(abs_top_builddir)/config.h
 	${CXXCOMPILE} -c $<
-	
+
 ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h ${top_srcdir}/git_hash.h
 	${COMPILE} ${OPTARGS} -c $<
 

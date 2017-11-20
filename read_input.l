@@ -159,6 +159,9 @@ static inline void rmQuotes(char *str){
   int device_num;
   double innersolver_precision;
 
+  int use_smd_flag;
+  double smd_gamma;
+
   double innersolver_precision_abs;
   double innersolver_precision_rel;
   int innersolver_precision_check_abs;
@@ -287,6 +290,9 @@ static inline void rmQuotes(char *str){
 %x ORIENTEDPLAQUETTESMEAS
 %x GRADIENTFLOWMEAS
 
+%x USESMD
+%x SMDGAMMA
+
 %x REWEIGH
 %x REWSAMPLES
 
@@ -407,6 +413,8 @@ static inline void rmQuotes(char *str){
 ^ThetaY{EQL}                       BEGIN(BOUNDY);
 ^ThetaZ{EQL}                       BEGIN(BOUNDZ);
 ^ReadSource{EQL}                   BEGIN(READSOURCE);
+^UseSMD{EQL}                       BEGIN(USESMD);
+^SMDGamma{EQL}                     BEGIN(SMDGAMMA);
 ^UseRelativePrecision{EQL}         BEGIN(RELPREC);
 ^ReversibilityCheck{EQL}           BEGIN(REVCHECK);
 ^ReversibilityCheckIntervall{EQL}  BEGIN(REVINT);
@@ -2192,6 +2200,21 @@ static inline void rmQuotes(char *str){
   }
 }
 
+<USESMD>yes                   {
+  use_smd_flag = 1;
+  if(myverbose!=0) printf("Use SMD update instead of HMC update\n");
+}
+
+<USESMD>no                    {
+  use_smd_flag = 0;
+  if(myverbose!=0) printf("Use no SMD update\n");
+}
+
+<SMDGAMMA>{FLT}               {
+  smd_gamma = atof(yytext);
+  if(myverbose!=0) printf("smdgamma =%s \n", yytext);
+}
+
 <TT>{DIGIT}+                  {
 #ifndef FIXEDVOLUME
   T_global = atoi(yytext);
@@ -2819,6 +2842,9 @@ int read_input(char * conf_file){
   little_evenodd = _default_little_evenodd;
   little_solver = _default_little_solver;
   little_gmres_m_parameter = _default_little_gmres_m_parameter;
+
+  use_smd_flag = _default_use_smd_flag;
+  smd_gamma = _default_smd_gamma;
 
   random_seed = _default_random_seed;
   rlxd_level = _default_rlxd_level;

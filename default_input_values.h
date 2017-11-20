@@ -162,6 +162,9 @@
 #define _default_mstarsq 0.01
 #define _default_no_sources_z2 1
 
+#define _default_use_smd_flag 0
+#define _default_smd_gamma 0.3
+
 /* sf default values */
 #define _default_g_eta 0.
 #define _default_g_Tbsf 3
