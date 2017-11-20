@@ -40,13 +40,13 @@ static const double omf4_vartheta = 0.08398315262876693;
 static const double omf4_lamb = 0.6822365335719091;
 
 /* second order minimal norm integration scheme */
-void integrate_2mn(const double tau, const int S, const int halfstep, const double tau2);
+void integrate_2mn(const double tau, const int S, const int halfstep, const double next_tau);
 /* second order minimal norm integration scheme in velocity version */
-void integrate_2mnp(const double tau, const int S, const int halfstep, const double tau2);
+void integrate_2mnp(const double tau, const int S, const int halfstep, const double next_tau);
 /* Leap Frog integration scheme */
-void integrate_leap_frog(const double tau, const int S, const int halfstep, const double tau2);
+void integrate_leap_frog(const double tau, const int S, const int halfstep, const double next_tau);
 /* fourth order OMF scheme */
-void integrate_omf4(const double tau, const int S, const int halfstep,const double tau2 );
+void integrate_omf4(const double tau, const int S, const int halfstep,const double next_tau );
 /* half step function */
 void dohalfstep(const double tau, const int S);
 
@@ -120,7 +120,7 @@ void integrator_unset_fields() {
   return;
 }
 
-void integrate_omf4(const double tau, const int S, const int halfstep, const double tau2) {
+void integrate_omf4(const double tau, const int S, const int halfstep, const double next_tau) {
   int i,j=0;
   integrator * itgr = &Integrator;
   double eps,eps2;
@@ -129,7 +129,7 @@ void integrate_omf4(const double tau, const int S, const int halfstep, const dou
     dohalfstep(tau, S);
   }
   eps  = tau/((double)itgr->n_int[S]);
-  eps2 = tau2/((double)itgr->n_int[S]);
+  eps2 = next_tau/((double)itgr->n_int[S]);
   
   if(S == 0) {
 
@@ -196,7 +196,7 @@ void integrate_omf4(const double tau, const int S, const int halfstep, const dou
 
 /* the following are only needed locally */
 
-void integrate_2mn(const double tau, const int S, const int halfstep, const double tau2) {
+void integrate_2mn(const double tau, const int S, const int halfstep, const double next_tau) {
   int i,j=0;
   integrator * itgr = &Integrator;
   double eps,eps2, oneminus2lambda = (1.-2.*itgr->lambda[S]);
@@ -206,7 +206,7 @@ void integrate_2mn(const double tau, const int S, const int halfstep, const doub
   }
   
   eps  = tau/((double)itgr->n_int[S]);
-  eps2 = tau2/((double)itgr->n_int[S]);
+  eps2 = next_tau/((double)itgr->n_int[S]);
   if(S == 0) {
 
     for(j = 1; j < itgr->n_int[0]; j++) {
@@ -245,11 +245,11 @@ void integrate_2mn(const double tau, const int S, const int halfstep, const doub
   }
 }
 
-void integrate_2mnp(const double tau, const int S, const int halfstep, const double tau2) {
+void integrate_2mnp(const double tau, const int S, const int halfstep, const double next_tau) {
   int i;
   integrator * itgr = &Integrator;
   double eps  = tau/((double)itgr->n_int[S]);
-  double eps2 = tau2/((double)itgr->n_int[S]); // dummy stepsize
+  double eps2 = next_tau/((double)itgr->n_int[S]); // dummy stepsize
   double oneminus2lambda = (1.-2.*itgr->lambda[S]);
   
   if(S == 0) {
@@ -278,7 +278,7 @@ void integrate_2mnp(const double tau, const int S, const int halfstep, const dou
   }
 }
 
-void integrate_leap_frog(const double tau, const int S, const int halfstep,const double tau2) {
+void integrate_leap_frog(const double tau, const int S, const int halfstep,const double next_tau) {
   int i;
   integrator * itgr = &Integrator;
   double eps, eps0, eps2;
@@ -288,7 +288,7 @@ void integrate_leap_frog(const double tau, const int S, const int halfstep,const
   }
 
   eps = tau/((double)itgr->n_int[S]);
-  eps2 = tau2/((double)itgr->n_int[S]);
+  eps2 = next_tau/((double)itgr->n_int[S]);
   if(S == 0) {
     eps0 = tau/((double)itgr->n_int[0]); //what is the meaning of this variable ??
     for(i = 1; i < itgr->n_int[0]; i++) {
