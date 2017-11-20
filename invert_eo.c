@@ -56,6 +56,9 @@
 #ifdef TM_USE_QUDA
 #  include "quda_interface.h"
 #endif
+#ifdef TM_USE_QPHIX
+#  include "qphix_interface.h"
+#endif
 #ifdef DDalphaAMG
 #  include "DDalphaAMG_interface.h"
 #endif
@@ -83,12 +86,12 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
               const int solver_flag, const int rel_prec,
               const int sub_evs_flag, const int even_odd_flag,
               const int no_extra_masses, double * const extra_masses, solver_params_t solver_params, const int id,
-              const ExternalInverter inverter, const SloppyPrecision sloppy, const CompressionType compression )  {
+              const ExternalInverter external_inverter, const SloppyPrecision sloppy, const CompressionType compression )  {
 
   int iter = 0;
 
 #ifdef TM_USE_QUDA
-  if( inverter==QUDA_INVERTER ) {
+  if( external_inverter==QUDA_INVERTER ) {
     return invert_eo_quda(Even_new, Odd_new, Even, Odd,
                           precision, max_iter,
                           solver_flag, rel_prec,
@@ -148,13 +151,26 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
  
     assign_mul_one_pm_imu_inv(Even_new, Even, +1., VOLUME/2);
     
-    Hopping_Matrix(OE, g_spinor_field[DUM_DERI], Even_new); 
+    Hopping_Matrix(OE, g_spinor_field[DUM_DERI], Even_new);
     /* The sign is plus, since in Hopping_Matrix */
     /* the minus is missing                      */
     assign_mul_add_r(g_spinor_field[DUM_DERI], +1., Odd, VOLUME/2);
     /* Do the inversion with the preconditioned  */
     /* matrix to get the odd sites               */
     
+#ifdef TM_USE_QPHIX
+    if( external_inverter==QPHIX_INVERTER ) {
+      // QPhiX inverts M(mu)M(mu)^dag or M(mu), no gamma_5 source multiplication required
+      iter = invert_eo_qphix_oneflavour(Odd_new, g_spinor_field[DUM_DERI],
+                                        max_iter, precision,
+                                        solver_flag, rel_prec,
+                                        solver_params,
+                                        sloppy,
+                                        compression);
+      // for solver_params.solution_type == TM_SOLUTION_M (the default)
+      // QPhiX applies M(mu)^dag internally for normal equation solves, no call to tmLQCD operaor required
+    } else
+#endif
     if(solver_flag == BICGSTAB) {
       if(g_proc_id == 0) {printf("# Using BiCGstab!\n"); fflush(stdout);}
       mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1., VOLUME/2); 
@@ -451,7 +467,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       for(int i = 0; i < no_extra_masses; ++i)
         shifts[i+1] = extra_masses[i];
       g_mu = 0;
-      solver_pm_t solver_params;
+      solver_params_t solver_params;
       solver_params.shifts = shifts;
       solver_params.no_shifts = no_extra_masses+1;
       solver_params.rel_prec = rel_prec;

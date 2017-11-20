@@ -86,6 +86,9 @@
 #ifdef TM_USE_QUDA
 #  include "quda_interface.h"
 #endif
+#ifdef TM_USE_QPHIX
+#  include "qphix_interface.h"
+#endif
 #ifdef DDalphaAMG
 #  include "DDalphaAMG_interface.h"
 #endif
@@ -133,32 +136,11 @@ int main(int argc, char *argv[])
   verbose = 0;
   g_use_clover_flag = 0;
 
-#ifdef TM_USE_MPI
-
-#  ifdef TM_USE_OMP
-  int mpi_thread_provided;
-  MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
-#  else
-  MPI_Init(&argc, &argv);
-#  endif
-
-  MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
-#else
-  g_proc_id = 0;
-#endif
 
   process_args(argc,argv,&input_filename,&filename);
   set_default_filenames(&input_filename, &filename);
 
-  /* Read the input file */
-  if( (j = read_input(input_filename)) != 0) {
-    fprintf(stderr, "Could not find input file: %s\nAborting...\n", input_filename);
-    exit(-1);
-  }
-
-#ifdef TM_USE_OMP
-  init_openmp();
-#endif
+  init_parallel_and_read_input(argc, argv, input_filename);
 
   /* this DBW2 stuff is not needed for the inversion ! */
   if (g_dflgcr_flag == 1) {
