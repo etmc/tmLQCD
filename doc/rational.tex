@@ -1,4 +1,4 @@
-\subsection{Rational HMC}
+\subsection{Rational HMC} \label{subsec:rationalhmc}
 
 For the heavy doublet one may alternatively use a rational
 approximation 
@@ -207,39 +207,6 @@ which can be done in different ways:
 \item the third is to use a more precise rational approximation for
   the heatbath and acceptance steps.
 \end{itemize}
-
-\subsubsection{CGMMS Solver}
-
-\begin{algorithm}
-  \caption{CGMMS algorithm}
-  \label{alg:cgm}
-  \begin{algorithmic}[1]
-    \vspace{.2cm}
-    \STATE $n=0, x_0^k = 0, r_0 = p_0 = p_0^k = b, k_\mathrm{max},
-    \delta, \epsilon$
-    \STATE  $\biggl.\biggr.\alpha_{-1} = \zeta_{-1}^k = \zeta_0^k = 1, \beta_0^k = \beta_0 = 0$
-    \REPEAT
-    \STATE $\alpha_n = (r_n, r_n) / (p_n, A p_n)$
-    \FOR{$k = 1$ to $k_\mathrm{max}$}
-    \STATE $\biggl.\biggr.\zeta_{n+1}^k = (\zeta^k_n  \alpha_{n-1}) / 
-      (\alpha_n \beta_n(1 - \zeta_n^k / \zeta^k_{n-1}) + \alpha_{n-1}
-      (1-\sigma_k\alpha_n))$
-    \STATE $\alpha^k_n = (\alpha_n \zeta_{n+1}^k)/ \zeta_n^k$
-    \STATE $\biggl.\biggr.x_{n+1}^k = x_n^k + \alpha_n^k p_n^k$
-    \IF{$\|\alpha^{k_\mathrm{max}} p^{k_\mathrm{max}}\| < \delta$}
-    \STATE $k_\mathrm{max} = k_\mathrm{max} -1$
-    \ENDIF
-    \ENDFOR
-    \STATE $x_{n+1} = x_n + \alpha_n p_n$
-    \STATE $\biggl.\biggr.r_{n+1} = r_n - \alpha_n Ap_n$
-    \STATE $\beta_{n+1} = (r_{n+1}, r_{n+1}) / (r_n, r_n)$
-    \STATE $\beta_{n+1}^k = \frac{\beta_{n+1} \zeta_{n+1}^k \alpha_n^k}{\zeta_{n}^k\alpha_n}$
-    \STATE $\biggl.\biggr.p_{n+1}^k = \zeta_{n+1}^k r_{n+1} + \beta_{n+1}^k p_n^k$
-    \STATE $n=n+1$
-    \UNTIL{$\|r_n\|<\epsilon$}
-  \end{algorithmic}
-\end{algorithm}
-
 
 For evaluating the rational approximation $\mathcal{R}$ applied to a
 spinor field $\psi$ a multi-mass or multi-shift solver (see

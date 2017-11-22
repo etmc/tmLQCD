@@ -31,6 +31,7 @@
 #define _INVERT_DOUBLET_EO_H
 
 #include "global.h"
+#include "misc_types.h"
 #include "solver/solver_params.h"
 
 int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s, 
@@ -39,7 +40,7 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
                       spinor * const Even_c, spinor * const Odd_c,
                       const double precision, const int max_iter,
                       const int solver_flag, const int rel_prec, solver_params_t solver_params,
-                      const ExternalInverter inverter, const SloppyPrecision sloppy, const CompressionType compression);
+                      const ExternalInverter extenral_inverter, const SloppyPrecision sloppy, const CompressionType compression);
 
 
 /* This is the full matrix multiplication */
@@ -56,5 +57,5 @@ int invert_cloverdoublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
                       spinor * const Even_c, spinor * const Odd_c,
                       const double precision, const int max_iter,
                       const int solver_flag, const int rel_prec, solver_params_t solver_params,
-                      const ExternalInverter inverter, const SloppyPrecision sloppy, const CompressionType compression);
+                      const ExternalInverter external_inverter, const SloppyPrecision sloppy, const CompressionType compression);
 #endif

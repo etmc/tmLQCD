@@ -126,32 +126,10 @@ int main(int argc,char *argv[]) {
   verbose = 1;
   g_use_clover_flag = 0;
 
-#ifdef TM_USE_MPI
-
-#  ifdef TM_USE_OMP
-  int mpi_thread_provided;
-  MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
-#  else
-  MPI_Init(&argc, &argv);
-#  endif
-
-  MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
-#else
-  g_proc_id = 0;
-#endif
-
   process_args(argc,argv,&input_filename,&filename);
   set_default_filenames(&input_filename,&filename);
 
-  /* Read the input file */
-  if( (status = read_input(input_filename)) != 0) {
-    fprintf(stderr, "Could not find input file: %s\nAborting...\n", input_filename);
-    exit(-1);
-  }
-
-#ifdef TM_USE_OMP
-  init_openmp();
-#endif
+  init_parallel_and_read_input(argc, argv, input_filename);
 
   DUM_DERI = 4;
   DUM_MATRIX = DUM_DERI+7;
@@ -524,11 +502,11 @@ int main(int argc,char *argv[]) {
     // When the configuration is rejected, we have to update it in the MG and redo the setup.
     int mg_update = accept ? 0:1;
 #endif
-     for(imeas = 0; imeas < no_measurements; imeas++){
-       meas = &measurement_list[imeas];
-       if(trajectory_counter%meas->freq == 0){
-         if (g_proc_id == 0) {
-           fprintf(stdout, "#\n# Beginning online measurement.\n");
+    for(imeas = 0; imeas < no_measurements; imeas++){
+      meas = &measurement_list[imeas];
+      if(trajectory_counter%meas->freq == 0){
+        if (g_proc_id == 0) {
+          fprintf(stdout, "#\n# Beginning online measurement.\n");
         }
 #ifdef DDalphaAMG
         if( mg_update ) {
@@ -536,9 +514,9 @@ int main(int argc,char *argv[]) {
           MG_reset();
         }
 #endif
-         meas->measurefunc(trajectory_counter, imeas, even_odd_flag);
-       }
-     }
+        meas->measurefunc(trajectory_counter, imeas, even_odd_flag);
+      }
+    }
 
     if(g_proc_id == 0) {
       verbose = 1;

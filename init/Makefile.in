@@ -33,7 +33,7 @@ LIBRARIES = libinit
 libinit_TARGETS = init_moment_field init_gauge_tmp init_gauge_fg init_gauge_field \
 	init_geometry_indices init_spinor_field init_dirac_halfspinor \
 	init_chi_spinor_field init_bispinor_field init_jacobi_field \
-	init_omp_accumulators init_openmp
+	init_omp_accumulators init_openmp init_parallel
 
 libinit_STARGETS = 
 

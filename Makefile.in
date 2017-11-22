@@ -13,10 +13,14 @@ subdir = .
 AR = @AR@
 RANLIB = @RANLIB@
 CC = @CC@
+CXX = @CXX@
 CCDEP = @CCDEP@
+CXXDEP = @CXXDEP@
 CFLAGS = @CFLAGS@
+CXXFLAGS = @CXXFLAGS@
 LDFLAGS = @LDFLAGS@
 DEPFLAGS = @DEPFLAGS@
+CXXDEPFLAGS = @CXXDEPFLAGS@
 CPPFLAGS = @CPPFLAGS@
 CCLD = @CCLD@
 LEX = @LEX@
@@ -35,6 +39,7 @@ INCLUDES = @INCLUDES@
 LINK = $(CCLD) -o $@ ${LDFLAGS}
 
 COMPILE = ${CC} ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
+CXXCOMPILE = ${CXX} ${DEFS} ${INCLUDES} -o $@ ${CXXFLAGS} ${LDFLAGS}
 
 SMODULES = 
 
@@ -53,8 +58,10 @@ MODULES = read_input gamma measure_gauge_action start \
         update_momenta update_momenta_fg integrator  phmc \
 	little_D block operator \
 	temporalgauge spinor_fft X_psi P_M_eta \
-	jacobi fatal_error invert_clover_eo gettime @SPI_FILES@ \
-	@QUDA_INTERFACE@ @DDalphaAMG_INTERFACE@
+	jacobi fatal_error invert_clover_eo gettime \
+        @SPI_FILES@ @QUDA_INTERFACE@ @DDalphaAMG_INTERFACE@
+
+CXXMODULES = @QPHIX_INTERFACE@
 
 ## the GPU modules (all .cu files in $GPUDIR)
 GPUSOURCES := $(wildcard $(srcdir)/$(GPUDIR)/*.cu)
@@ -67,7 +74,7 @@ NOOPTMOD = test/check_xchange test/check_geometry
 
 PROGRAMS = hmc_tm benchmark invert gen_sources  \
 	check_locallity test_lemon hopping_test LapH_ev \
-	offline_measurement
+	offline_measurement @QPHIX_PROGRAMS@
 
 ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES}
 SUBDIRS = ${USESUBDIRS}
@@ -76,7 +83,7 @@ SUBDIRS = ${USESUBDIRS}
 .SUFFIXES:
 
 # need to build modules before subdirs!
-all: Makefile dep $(SUBDIRS) hmc_tm invert benchmark offline_measurement
+all: Makefile dep $(SUBDIRS) hmc_tm invert benchmark offline_measurement @QPHIX_PROGRAMS@
 
 $(SUBDIRS):
 	$(MAKE) --directory=$@
@@ -87,6 +94,7 @@ ${top_srcdir}/git_hash.h:
 	@ ( cd @srcdir@ && sh GIT-VERSION-GEN )
 
 -include $(addsuffix .d,$(ALLOBJ))
+-include $(addsuffix .d,$(CXXMODULES))
 
 include ${top_srcdir}/Makefile.global
 
@@ -113,16 +121,21 @@ $(addsuffix .o,$(filter ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefil
 ${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h
 	${COMPILE} ${SOPTARGS} -c $<
 
+# C++ modules
+$(addsuffix .o,${CXXMODULES}): %.o: ${srcdir}/%.cpp %.d Makefile $(abs_top_builddir)/config.h
+	${CXXCOMPILE} -c $<
+	
 ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h ${top_srcdir}/git_hash.h
 	${COMPILE} ${OPTARGS} -c $<
 
-${PROGRAMS}: %: %.o libhmc.a $(SUBDIRS)
-	 ${LINK} $@.o $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS)
+${PROGRAMS}: %: %.o libhmc.a $(SUBDIRS) $(addsuffix .o,${CXXMODULES})
+	 ${LINK} $@.o $(addsuffix .o,${CXXMODULES}) $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS) ${LDFLAGS}
+
 
 # The rules for unit tests are kept in a separate file for tidyness
 include ${top_srcdir}/Makefile.tests
 
-dep: $(addsuffix .d,$(ALLOBJ))
+dep: $(addsuffix .d,$(ALLOBJ)) $(addsuffix .d,$(CXXMODULES))
 	@ echo "...dependency files built"
 
 install: Makefile
@@ -146,7 +159,7 @@ compile-clean: compile-clean-recursive Makefile
 	rm -f *.o *.d test/*.o test/*.d tests/*.o tests/*.d
 
 clean: clean-recursive Makefile
-	rm -f benchmark hmc_tm invert *.o *.d test/*.o test/*.d tests/*.o tests/*.d
+	rm -f benchmark hmc_tm invert test_Dslash *.o *.d test/*.o test/*.d tests/*.o tests/*.d
 
 distclean: distclean-recursive Makefile
 	rm -f benchmark hmc_tm invert *.o *.d *~ Makefile config.log config.status fixed_volume.h
