@@ -30,6 +30,8 @@
 
 void square_and_minmax(double * const sum, double * const min, double * const max, const spinor * const P, const int N);
 void square_and_minmax_rel(double * const sum, double * const min, double * const max, const spinor * const P,  const spinor * const Q, const int N);
+void square_and_minmax_abs(double * const sum, double * const min, double * const max, double * const min_abs, double * const max_abs, const spinor * const P, const int N);
+void square_and_minmax_rel_abs(double * const sum, double * const min, double * const max, double * const min_abs, double * const max_abs, const spinor * const P,  const spinor * const Q, const int N);
 
 
 

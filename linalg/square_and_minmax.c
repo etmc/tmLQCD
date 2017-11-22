@@ -1,5 +1,5 @@
 /***********************************************************************
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ * copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -83,9 +83,8 @@ void square_and_minmax(double * const sum, double * const min, double * const ma
 
   MPI_Allreduce(&kc, sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
-#endif
-
-#if defined TM_USE_MPI
+  MPI_Allreduce(min, &kc, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+  *min = kc;
 
   MPI_Allreduce(max, &kc, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
   *max = kc;
@@ -144,12 +143,280 @@ void square_and_minmax_rel(double * const sum, double * const min, double * cons
 
   MPI_Allreduce(&kc, sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
-#endif
-
-#if defined TM_USE_MPI
+  MPI_Allreduce(min, &kc, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+  *min = kc;
 
   MPI_Allreduce(max, &kc, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
   *max = kc;
+
+#endif
+
+  return;
+}
+
+void square_and_minmax_abs(double * const sum, double * const min, double * const max,  double * const min_abs, double * const max_abs, const spinor * const P, const int N)
+{
+  int ix;
+  double ALIGN ks,kc,ds,dds,tr,ts,tt;
+  spinor *s;
+  
+  ks=0.0;
+  kc=0.0;
+  *max = 0.0;
+  *min = -1;
+  *max_abs = 0.0;
+  *min_abs = -1;
+
+#if (defined BGL && defined XLC)
+  __alignx(16, S);
+  __alignx(16, R);
+#endif
+  
+  for (ix = 0; ix < N; ix++)
+  {
+    s=(spinor *) P + ix;
+
+    dds=s->s0.c0 * conj(s->s0.c0);
+    ds=dds;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+
+    dds=s->s0.c1 * conj(s->s0.c1);
+    ds+=dds;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+
+    dds=s->s0.c2 * conj(s->s0.c2);
+    ds+=dds;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+
+    dds=s->s1.c0 * conj(s->s1.c0);
+    ds+=dds;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+
+    dds=s->s1.c1 * conj(s->s1.c1);
+    ds+=dds;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+
+    dds=s->s1.c2 * conj(s->s1.c2);
+    ds+=dds;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+
+    dds=s->s2.c0 * conj(s->s2.c0);
+    ds+=dds;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+
+    dds=s->s2.c1 * conj(s->s2.c1);
+    ds+=dds;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+
+    dds=s->s2.c2 * conj(s->s2.c2);
+    ds+=dds;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+
+    dds=s->s3.c0 * conj(s->s3.c0);
+    ds+=dds;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+
+    dds=s->s3.c1 * conj(s->s3.c1);
+    ds+=dds;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+
+    dds=s->s3.c2 * conj(s->s3.c2);
+    ds+=dds;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+
+    tr=ds + kc;
+    ts=tr + ks;
+    tt=ts-ks;
+    ks=ts;
+    kc=tr-tt;
+
+    if(ds > *max) *max = ds;
+    if(ds < *min || *min < 0) *min = ds;
+  }
+  kc=ks + kc;
+  *sum=kc;
+
+#if defined TM_USE_MPI
+
+  MPI_Allreduce(&kc, sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+  MPI_Allreduce(min, &kc, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+  *min = kc;
+
+  MPI_Allreduce(max, &kc, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+  *max = kc;
+
+  MPI_Allreduce(min_abs, &kc, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+  *min_abs = kc;
+
+  MPI_Allreduce(max_abs, &kc, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+  *max_abs = kc;
+
+#endif
+
+  return;
+}
+
+void square_and_minmax_rel_abs(double * const sum, double * const min, double * const max, double * const min_abs, double * const max_abs, const spinor * const P, const spinor * const Q, const int N)
+{
+  int ix;
+  double ALIGN ks,kc,ds,dds,dr,ddr,tr,ts,tt;
+  spinor *s, *r;
+  
+  ks=0.0;
+  kc=0.0;
+  *max = 0.0;
+  *min = -1;
+  *max_abs = 0.0;
+  *min_abs = -1;
+
+#if (defined BGL && defined XLC)
+  __alignx(16, S);
+  __alignx(16, R);
+#endif
+  
+  for (ix = 0; ix < N; ix++)
+  {
+    s=(spinor *) P + ix;
+    r=(spinor *) Q + ix;
+
+    dds=s->s0.c0 * conj(s->s0.c0);
+    ddr=r->s0.c0 * conj(r->s0.c0);
+    ds=dds;
+    dr=ddr;
+    dds/=ddr;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+
+    dds=s->s0.c1 * conj(s->s0.c1);
+    ddr=r->s0.c1 * conj(r->s0.c1);
+    ds+=dds;
+    dr+=ddr;
+    dds/=ddr;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+
+    dds=s->s0.c2 * conj(s->s0.c2);
+    ddr=r->s0.c2 * conj(r->s0.c2);
+    ds+=dds;
+    dr+=ddr;
+    dds/=ddr;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+
+    dds=s->s1.c0 * conj(s->s1.c0);
+    ddr=r->s1.c0 * conj(r->s1.c0);
+    ds+=dds;
+    dr+=ddr;
+    dds/=ddr;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+
+    dds=s->s1.c1 * conj(s->s1.c1);
+    ddr=r->s1.c1 * conj(r->s1.c1);
+    ds+=dds;
+    dr+=ddr;
+    dds/=ddr;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+
+    dds=s->s1.c2 * conj(s->s1.c2);
+    ddr=r->s1.c2 * conj(r->s1.c2);
+    ds+=dds;
+    dr+=ddr;
+    dds/=ddr;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+
+    dds=s->s2.c0 * conj(s->s2.c0);
+    ddr=r->s2.c0 * conj(r->s2.c0);
+    ds+=dds;
+    dr+=ddr;
+    dds/=ddr;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+
+    dds=s->s2.c1 * conj(s->s2.c1);
+    ddr=r->s2.c1 * conj(r->s2.c1);
+    ds+=dds;
+    dr+=ddr;
+    dds/=ddr;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+
+    dds=s->s2.c2 * conj(s->s2.c2);
+    ddr=r->s2.c2 * conj(r->s2.c2);
+    ds+=dds;
+    dr+=ddr;
+    dds/=ddr;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+
+    dds=s->s3.c0 * conj(s->s3.c0);
+    ddr=r->s3.c0 * conj(r->s3.c0);
+    ds+=dds;
+    dr+=ddr;
+    dds/=ddr;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+
+    dds=s->s3.c1 * conj(s->s3.c1);
+    ddr=r->s3.c1 * conj(r->s3.c1);
+    ds+=dds;
+    dr+=ddr;
+    dds/=ddr;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+
+    dds=s->s3.c2 * conj(s->s3.c2);
+    ddr=r->s3.c2 * conj(r->s3.c2);
+    ds+=dds;
+    dr+=ddr;
+    dds/=ddr;
+    if(dds > *max_abs) *max_abs = dds;
+    else if(dds < *min_abs || *min_abs < 0) *min_abs = dds;
+    
+    ds = ds/dr;
+
+    tr=ds + kc;
+    ts=tr + ks;
+    tt=ts-ks;
+    ks=ts;
+    kc=tr-tt;
+
+    if(ds > *max) *max = ds;
+    if(ds < *min || *min < 0) *min = ds;
+  }
+  kc=ks + kc;
+  *sum=kc;
+
+#if defined TM_USE_MPI
+
+  MPI_Allreduce(&kc, sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+  MPI_Allreduce(min, &kc, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+  *min = kc;
+
+  MPI_Allreduce(max, &kc, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+  *max = kc;
+
+  MPI_Allreduce(min_abs, &kc, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+  *min_abs = kc;
+
+  MPI_Allreduce(max_abs, &kc, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+  *max_abs = kc;
 
 #endif
 
