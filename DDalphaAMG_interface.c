@@ -542,11 +542,12 @@ static int MG_solve_nd( spinor * up_new, spinor * dn_new, spinor * const up_old,
   if(no_solver_field>0)
     init_solver_field(&solver_field, VOLUMEPLUSRAND,no_solver_field);
 
+  int assign_solver_field = 0;
   if (N==VOLUME/2) {
-    old1 = solver_field[--no_solver_field];
-    old2 = solver_field[--no_solver_field];
-    new1 = solver_field[--no_solver_field];
-    new2 = solver_field[--no_solver_field];
+    old1 = solver_field[assign_solver_field++];
+    old2 = solver_field[assign_solver_field++];
+    new1 = solver_field[assign_solver_field++];
+    new2 = solver_field[assign_solver_field++];
     convert_odd_to_lexic(old1, up_old);
     convert_odd_to_lexic(old2, dn_old);
     set_even_to_zero(old1);
@@ -558,8 +559,8 @@ static int MG_solve_nd( spinor * up_new, spinor * dn_new, spinor * const up_old,
 	    f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh tau1)^2 - Schur complement squared with csw = 0 and shift
 	    f == Qsw_pm_ndpsi ||        // (Gamma5 Dh tau1)^2 - Schur complement squared
 	    f == Qsw_pm_ndpsi_shift )) {// (Gamma5 Dh tau1)^2 - Schur complement squared with shift
-    new1tmp = solver_field[--no_solver_field];
-    new2tmp = solver_field[--no_solver_field];
+    new1tmp = solver_field[assign_solver_field++];
+    new2tmp = solver_field[assign_solver_field++];
   }
 
   // Reconstracting initial guess in case of oe
