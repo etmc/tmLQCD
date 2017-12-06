@@ -136,7 +136,8 @@ void update_smd(double *plaquette_energy, double *rectangle_energy,
   // run the trajectory
   if(Integrator.n_int[Integrator.no_timescales-1] > 0) {
     Integrator.integrate[Integrator.no_timescales-1](Integrator.tau, 
-                                                     Integrator.no_timescales-1, 1);
+                                                     Integrator.no_timescales-1, 1,
+                                                     Integrator.tau);
   }
 
   g_sloppy_precision = 0;
