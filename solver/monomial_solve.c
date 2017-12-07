@@ -26,7 +26,11 @@
  *
  *
  *   int solve_degenerate(spinor * const P, spinor * const Q, const int max_iter, 
-           double eps_sq, const int rel_prec, const int N, matrix_mult f)
+ *                       double eps_sq, const int rel_prec, const int N, matrix_mult f)
+ *
+ *   int solve_mms_tm(spinor ** const P, spinor * const Q,
+ *                    solver_pm_t * solver_pm)  
+ *
  *   int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn, 
  *                    spinor * const Qup, spinor * const Qdn, 
  *                    solver_pm_t * solver_pm)  
@@ -134,6 +138,132 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
   return(iteration_count);
 }
 
+
+int solve_mms_tm(spinor ** const P, spinor * const Q,
+                 solver_pm_t * solver_pm){ 
+  int iteration_count = 0; 
+
+ if (solver_pm->type == CGMMS){
+    iteration_count = cg_mms_tm(P, Q, solver_pm);
+  }
+#ifdef DDalphaAMG
+  else if (solver_pm->type == MG) {
+    // if the mg_mms_mass is larger than the smallest shift we use MG
+    if (mg_no_shifts > 0 || mg_mms_mass >= solver_pm->shifts[0]) { 
+      // if solver_pm->mms_squared_solver_prec is NULL,
+      // filling it with solver_pm->squared_solver_prec
+      double *mms_squared_solver_prec = NULL;
+      if (solver_pm->mms_squared_solver_prec == NULL) {
+        mms_squared_solver_prec = (double*) malloc(solver_pm->no_shifts*sizeof(double));
+        for (int i=0; i<solver_pm->no_shifts; i++)
+          mms_squared_solver_prec[i] = solver_pm->squared_solver_prec;
+        solver_pm->mms_squared_solver_prec = mms_squared_solver_prec;
+      }
+
+      // if the mg_mms_mass is smaller than the larger shifts, we use CGMMS for those
+      // in case mg_no_shifts is used, then mg_mms_mass = 0
+      if(mg_mms_mass >= solver_pm->shifts[0]) {
+        mg_no_shifts = solver_pm->no_shifts;
+        while (mg_mms_mass < solver_pm->shifts[mg_no_shifts-1]) { mg_no_shifts--; }
+      }
+      int no_shifts = solver_pm->no_shifts;
+      if (mg_no_shifts < no_shifts) {
+        solver_pm->no_shifts = no_shifts - mg_no_shifts;
+        solver_pm->shifts += mg_no_shifts;
+        solver_pm->mms_squared_solver_prec += mg_no_shifts;
+        iteration_count = cg_mms_tm( P+mg_no_shifts, Q, solver_pm );
+        // Restoring solver_pm
+        solver_pm->no_shifts = no_shifts;
+        solver_pm->shifts -= mg_no_shifts;
+        solver_pm->mms_squared_solver_prec -= mg_no_shifts;
+      }
+
+      for(int i = mg_no_shifts-1; i>=0; i--){
+        // preparing initial guess
+        if(i==no_shifts-1) {
+          zero_spinor_field(P[i], solver_pm->sdim);
+        } else {
+          double coeff;
+          for( int j = no_shifts-1; j > i; j-- ) {
+            coeff = 1;
+            for( int k = no_shifts-1; k > i; k-- ) {
+              if(j!=k)
+                coeff *= (solver_pm->shifts[k]*solver_pm->shifts[k]-solver_pm->shifts[i]*solver_pm->shifts[i])/
+                  (solver_pm->shifts[k]*solver_pm->shifts[k]-solver_pm->shifts[j]*solver_pm->shifts[j]);
+            }
+            if(j==no_shifts-1) {
+              mul_r(P[i], coeff, P[j], solver_pm->sdim);
+            } else {
+              assign_add_mul_r(P[i], P[j], coeff, solver_pm->sdim);
+            }
+          }
+        }
+        g_mu3 = solver_pm->shifts[i]; 
+        iteration_count += MG_solver( P[i], Q, solver_pm->mms_squared_solver_prec[i], solver_pm->max_iter,
+                                         solver_pm->rel_prec, solver_pm->sdim, g_gauge_field, solver_pm->M_psi );
+        g_mu3 = _default_g_mu3;
+      }
+      // freeing mms_squared_solver_prec if it has been allocated
+      if(mms_squared_solver_prec != NULL) {
+        free(mms_squared_solver_prec);
+        solver_pm->mms_squared_solver_prec = NULL;
+      }
+    } else {
+      iteration_count = cg_mms_tm( P, Q, solver_pm );
+    }
+  }
+#endif
+  else if (solver_pm->type == RGMIXEDCG){
+    matrix_mult32 f32  = Qtm_pm_psi_32;
+    if( solver_pm->M_psi == Qsw_pm_psi ){ 
+      f32  = Qsw_pm_psi_32;
+    }
+    iteration_count = 0;
+    // solver_params_t struct needs to be passed to all solvers except for cgmms, so we need to construct it here
+    // and set the one relevant parameter
+    solver_params_t temp_params;
+    temp_params.mcg_delta = _default_mixcg_innereps;
+    double iter_local = 0;
+    for(int i = solver_pm->no_shifts-1; i>=0; i--){
+      // preparing initial guess                                                                                                                                                                       
+      if(i==solver_pm->no_shifts-1) {
+        zero_spinor_field(P[i], solver_pm->sdim);
+      } else {
+        double coeff;
+        for( int j = solver_pm->no_shifts-1; j > i; j-- ) {
+          coeff = 1;
+          for( int k = solver_pm->no_shifts-1; k > i; k-- ) {
+            if(j!=k)
+              coeff *= (solver_pm->shifts[k]*solver_pm->shifts[k]-solver_pm->shifts[i]*solver_pm->shifts[i])/
+                (solver_pm->shifts[k]*solver_pm->shifts[k]-solver_pm->shifts[j]*solver_pm->shifts[j]);
+          }
+          if(j==solver_pm->no_shifts-1) {
+            mul_r(P[i], coeff, P[j], solver_pm->sdim);
+          } else {
+            assign_add_mul_r(P[i], P[j], coeff, solver_pm->sdim);
+          }
+        }
+      }
+      
+      // inverting
+      g_mu3 = solver_pm->shifts[i]; 
+      iter_local = rg_mixed_cg_her( P[i], Q, temp_params, solver_pm->max_iter,
+                                    solver_pm->mms_squared_solver_prec[i], solver_pm->rel_prec, solver_pm->sdim,
+                                    solver_pm->M_psi, f32);
+      g_mu3 = _default_g_mu3;
+      if(iter_local == -1){
+        return(-1);
+      } else {
+        iteration_count += iter_local;
+      }
+    }
+  } else {
+    if(g_proc_id==0) printf("Error: solver not allowed for TM mms solve. Aborting...\n");
+    exit(2);      
+  }
+
+  return(iteration_count);
+}
 
 int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn, 
                  spinor * const Qup, spinor * const Qdn, 

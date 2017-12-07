@@ -62,7 +62,8 @@ void ratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
   solver_pm_t solver_pm;
   double atime, etime, delta;
   spinor * up0, * up1, * tup;
-  double coefs[6] = {1./4., -3./32., 7./122., -77./2048., 231./8192., -1463./65536.};
+  double coefs[6] = {1./4., -3./32., 7./128., -77./2048., 231./8192., -1463./65536.}; // series of (1+x)^(1/4)
+  double coefs_check[6] = {1./2., -1./8., 1./16., -5./128., 7./256., -21./1024.}; // series of (1+x)^(1/2)
   atime = gettime();
   nd_set_global_parameter(mnl);
   g_mu = 0.;
@@ -91,7 +92,7 @@ void ratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
   solver_pm.squared_solver_prec = mnl->accprec;
   solver_pm.no_shifts = mnl->rat.np;
   solver_pm.shifts = mnl->rat.mu;
-  solver_pm.type = CGMMS;
+  solver_pm.type = mnl->solver;
   solver_pm.M_psi = mnl->Qsq;
   solver_pm.sdim = VOLUME/2;
   solver_pm.rel_prec = g_relative_precision_flag;
@@ -186,10 +187,9 @@ double apply_Z_psi(spinor * const k_up,	spinor * const l_up,
 		     const int id, hamiltonian_field_t * const hf,
 		     solver_pm_t * solver_pm) {
   monomial * mnl = &monomial_list[id];
-  double dummy;
 
-  mnl->iter0 += cg_mms_tm(g_chi_up_spinor_field, l_up,
-			  solver_pm, &dummy);  
+  mnl->iter0 += solve_mms_tm(g_chi_up_spinor_field, l_up,
+			  solver_pm);  
   
   // apply R to the pseudo-fermion fields
   assign(k_up, l_up, VOLUME/2);
@@ -199,8 +199,8 @@ double apply_Z_psi(spinor * const k_up,	spinor * const l_up,
   }
 
   // apply R a second time
-  cg_mms_tm(g_chi_up_spinor_field, k_up,
-	    solver_pm, &dummy);
+  solve_mms_tm(g_chi_up_spinor_field, k_up,
+	    solver_pm);
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     assign_add_mul_r(k_up, g_chi_up_spinor_field[j], 
 		     mnl->rat.rmu[j], VOLUME/2);
@@ -224,8 +224,8 @@ void check_C_psi(spinor * const k_up, spinor * const l_up,
 		 const int id, hamiltonian_field_t * const hf,
 		 solver_pm_t * solver_pm) {
   monomial * mnl = &monomial_list[id];
-  double dummy;
-  mnl->iter0 = cg_mms_tm(g_chi_up_spinor_field, l_up, solver_pm, &dummy);
+
+  mnl->iter0 = solve_mms_tm(g_chi_up_spinor_field, l_up, solver_pm);
 
   assign(k_up, l_up, VOLUME/2);
 
@@ -244,16 +244,16 @@ void check_C_psi(spinor * const k_up, spinor * const l_up,
   }
   //apply R
   solver_pm->shifts = mnl->rat.mu;
-  cg_mms_tm(g_chi_up_spinor_field, k_up,
-	    solver_pm, &dummy);
+  solve_mms_tm(g_chi_up_spinor_field, k_up,
+	    solver_pm);
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     assign_add_mul_r(k_up, g_chi_up_spinor_field[j], 
 		     mnl->rat.rmu[j], VOLUME/2);
   }
   // apply C^dagger
   solver_pm->shifts = mnl->rat.nu;
-  cg_mms_tm(g_chi_up_spinor_field, k_up,
-	    solver_pm, &dummy);
+  solve_mms_tm(g_chi_up_spinor_field, k_up,
+	    solver_pm);
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     if(mnl->type == NDCLOVERRATCOR || mnl->type == NDCLOVERRAT) {
       //Qsw_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],

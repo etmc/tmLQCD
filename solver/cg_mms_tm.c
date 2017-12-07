@@ -63,7 +63,7 @@ static void free_mms_tm();
 
 /* P output = solution , Q input = source */
 int cg_mms_tm(spinor ** const P, spinor * const Q,
-		 solver_pm_t * solver_pm, double * cgmms_reached_prec) {
+		 solver_pm_t * solver_pm) {
 
   static double normsq, pro, err, squarenorm;
   int iteration, N = solver_pm->sdim, no_shifts = solver_pm->no_shifts;
@@ -153,15 +153,22 @@ int cg_mms_tm(spinor ** const P, spinor * const Q,
       // falls below a threshold
       // this is useful for computing time and needed, because otherwise
       // zita might get smaller than DOUBLE_EPS and, hence, zero
-      if(iteration > 0 && (iteration % 20 == 0) && (im == no_shifts-1)) {
+      if(iteration > 0 && (iteration % 10 == 0) && (im == no_shifts-1)) {
 	double sn = square_norm(ps_mms_solver[no_shifts-2], N, 1);
+        err = alphas[no_shifts-1]*alphas[no_shifts-1]*sn;
         // while because more than one shift could be converged
-	while(alphas[no_shifts-1]*alphas[no_shifts-1]*sn <= solver_pm->mms_squared_solver_prec[no_shifts-1] && no_shifts>1) {
+	while(((err <= solver_pm->mms_squared_solver_prec[no_shifts-1]) && (solver_pm->rel_prec == 0)) ||
+              ((err <= solver_pm->mms_squared_solver_prec[no_shifts-1]*squarenorm) && (solver_pm->rel_prec > 0))) {
 	  no_shifts--;
 	  if(g_debug_level > 2 && g_proc_id == 0) {
 	    printf("# CGMMS: at iteration %d removed one shift, %d remaining\n", iteration, no_shifts);
       	  }
-          sn = square_norm(ps_mms_solver[no_shifts-2], N, 1);
+          if(no_shifts>1) {
+            sn = square_norm(ps_mms_solver[no_shifts-2], N, 1);
+            err = alphas[no_shifts-1]*alphas[no_shifts-1]*sn;
+          } else {
+            break;
+          }
 	}
       }
     }
@@ -182,9 +189,7 @@ int cg_mms_tm(spinor ** const P, spinor * const Q,
     if( ((err <= solver_pm->mms_squared_solver_prec[0]) && (solver_pm->rel_prec == 0) && no_shifts==1) ||
         ((err <= solver_pm->mms_squared_solver_prec[0]*squarenorm) && (solver_pm->rel_prec > 0) && no_shifts==1) ||
         (iteration == solver_pm->max_iter -1) ) {
-      /* FIXME temporary output of precision until a better solution can be found */
-      *cgmms_reached_prec = err;
-      break;
+        break;
     }
 
     /* Compute betas[0](i+1) = (r(i+1),r(i+1))/(r(i),r(i))

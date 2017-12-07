@@ -1233,9 +1233,14 @@ static inline void rmQuotes(char *str){
     BEGIN(name_caller);
   }
   DDalphaAMG {
+#ifdef DDalphaAMG
     optr->solver = MG;
     if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
+#else
+    printf("ERROR line %d operator %d: DDalphaAMG library not included\n", line_of_file, current_operator);
+    exit(1);
+#endif
   }
 }
 
@@ -1502,7 +1507,14 @@ static inline void rmQuotes(char *str){
   }
 }
 
-<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL>{
+<RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
+  {SPC}*Solver{EQL} {
+   solver_caller=YY_START;
+   BEGIN(MSOLVER);
+  }
+}
+
+<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
   {SPC}*2KappaMu{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mu = c;
@@ -1718,10 +1730,20 @@ static inline void rmQuotes(char *str){
     mnl->solver = BICGSTAB;
     BEGIN(solver_caller);
   }
+  cgmms {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = CGMMS;
+    BEGIN(solver_caller);
+  }
   DDalphaAMG {
+#ifdef DDalphaAMG
     if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
     mnl->solver = MG;
     BEGIN(solver_caller);
+#else
+    printf("ERROR line %d operator %d: DDalphaAMG library not included\n", line_of_file, current_operator);
+    exit(1);
+#endif
   }
 }
 
@@ -1747,9 +1769,14 @@ static inline void rmQuotes(char *str){
     BEGIN(solver_caller);
   }
   DDalphaAMG {
-    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+#ifdef DDalphaAMG
+    if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
     mnl->solver = MG;
     BEGIN(solver_caller);
+#else
+    printf("ERROR line %d operator %d: DDalphaAMG library not included\n", line_of_file, current_operator);
+    exit(1);
+#endif
   }
 }
 
