@@ -19,6 +19,9 @@
  ***********************************************************************/
 
 #include "gauge.ih"
+#ifdef DDalphaAMG
+# include "DDalphaAMG_interface.h"
+#endif
 
 extern int gauge_precision_read_flag;
 paramsGaugeInfo GaugeInfo = { 0., 0, {0,0}, NULL, NULL};
@@ -181,6 +184,11 @@ int read_gauge_field(char * filename, su3 ** const gf) {
   destruct_reader(reader);
 
   g_update_gauge_copy = 1;
+
+#ifdef DDalphaAMG
+  if(gf==g_gauge_field)
+    MG_reset();
+#endif
 
   return(0);
 }

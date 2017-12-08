@@ -55,6 +55,7 @@ void Mee_sw_psi(spinor * const l, spinor * const k, const double mu);
 void Mee_sw_inv_psi(spinor * const k, spinor * const l, const double mu);
 void Msw_full(spinor * const Even_new, spinor * const Odd_new, 
 	      spinor * const Even, spinor * const Odd);
+
 void clover_inv(spinor * const l, const int tau3sign, const double mu);
 void Qsw_psi(spinor * const l, spinor * const k);
 void Qsw_plus_psi(spinor * const l, spinor * const k);
@@ -73,6 +74,7 @@ void clover_nd(const int ieo,
 	       const spinor * const k_s, const spinor * const k_c, 
 	       const spinor * const j_s, const spinor * const j_c,
 	       const double mubar, const double epsbar);
+
 void clover_gamma5_nd(const int ieo, 
 		      spinor * const l_s, spinor * const l_c, 
 		      const spinor * const k_s, const spinor * const k_c, 

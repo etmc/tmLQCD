@@ -1,0 +1,189 @@
+%author: Bartosz Kostrzewa <bartosz_kostrzewa@fastmail.com>
+%date: 10/2017
+
+\subsection{QPhiX: Optimised kernels and solvers for Intel Processors}\label{subsec:qphix}
+
+
+The QPhiX \cite{Joo2013} interface provides a library of MPI- and OpenMP-parallel linear operators and solvers for Wilson-type lattice fermions as well as a code-generator for the kernels employed by these operators.
+QPhiX has been extended to include all the operators relevant for tmLQCD, including the non-degenerate operator with and without the clover term.
+
+\subsubsection{Installation}
+If not already installed, you have to install QPhiX first. At the time of writing, the version with support for all twisted mass operators is in branch 
+\begin{itemize}
+  \item{\texttt{tm\_functor\_merge\_two-flav-mshift\_backport} of \\ \url{https://github.com/kostrzewa/qphix},}
+\end{itemize}
+which is due to be merged into the 
+\begin{itemize}
+\item{\texttt{devel} branch of \url{https://github.com/JeffersonLab/qphix}.}
+\end{itemize}
+
+It depends on QMP (\url{https://github.com/usqcd-software/qmp}), which is built and installed through the usual \texttt{configure, make, make install} mechanism.
+
+QPhiX is built using CMake and requires the availability of python 3, as well as the jinja2 library (\url{https://jinja.pocoo.org}).
+The latter can easily be installed via the pip package installer:
+\begin{framed}
+\begin{Verbatim}
+pip install --user jinja  
+\end{Verbatim}
+\end{framed}
+
+\textbf{QPhiX AVX2 Compilation}: 
+In order to compile QPhiX using GCC on an AVX2 machine, CMake is called in this way:
+\begin{framed}
+\begin{Verbatim}[fontsize=\small]
+CXX=mpicxx \
+CXXFLAGS="-mavx2 -mtune=core-avx2 -march=core-avx2 -std=c++11 -O3 -fopenmp" \
+cmake -Disa=avx2  \
+      -DQMP_DIR=${QMP_INSTALL_DIR} \
+      -Dparallel_arch=parscalar \
+      -Dhost_cxx=g++ \
+      -Dhost_cxxflags="-std=c++11 -O3" \
+      -Dtwisted_mass=TRUE \
+      -Dtm_clover=TRUE \
+      -Dclover=TRUE \
+      -Dtesting=FALSE  \
+      -DCMAKE_INSTALL_PREFIX=${QPHIX_INSTALL_DIR} ${QPHIX_SRC_DIR}
+\end{Verbatim}
+\end{framed}
+where \texttt{QMP\_INSTALL\_DIR}, \texttt{QPHIX\_INSTALL\_DIR} and \texttt{QPHIX\_SRC\_DIR} should be replaced with the QMP installation directory, the target installation directory for QPhiX and the QPhiX source directory respectively.
+
+In the command above:
+\begin{itemize}
+  \item{{\texttt{-Dtesting=FALSE} disables the building of all tests, which would additionally require QDP++ to be available}
+  \item{\texttt{-Dhost\_cxx} and \texttt{-Dhost\_cxxflags} define the compiler used for building the code generator executables. This can be any compiler and \texttt{g++} works just fine for this purpose.+}
+\end{itemize}
+
+\textbf{QPhiX AVX512 Compilation}: 
+On a KNL-based machine like Marconi A2 instead, the Intel compiler and Intel MPI library should be used instead:
+\begin{framed}
+\begin{Verbatim}
+CXX=mpiicpc \
+CXXFLAGS="-xMIC-AVX512 -std=c++11 -O3 -qopenmp" \
+CFLAGS="-xMIC-AVX512 -O3 -std=c99 -qopenmp" \
+cmake -Disa=avx512  \
+      -DQMP_DIR==${QMP_INSTALL_DIR} \
+      -Dparallel_arch=parscalar \
+      -Dhost_cxx=g++ \
+      -Dhost_cxxflags="-std=c++11 -O3" \
+      -Dtwisted_mass=TRUE \
+      -Dtm_clover=TRUE \
+      -Dclover=TRUE \
+      -Dtesting=FALSE  \
+      -DCMAKE_INSTALL_PREFIX=${QPHIX_INSTALL_DIR} ${QPHIX_SRC_DIR}
+\end{Verbatim}
+\end{framed}
+
+\textbf{tmLQCD AVX512 Compilation}: Once QPhiX is built and installed, tmLQCD can be configured as follows on a KNL AVX512 machine, for example:
+\begin{framed}
+\begin{Verbatim}[fontsize=\small]
+$ cd ${TMLQCD_SRC_DIR}
+$ autoconf
+$ cd ${TMLQCD_BUILD_DIR}
+$ ${TMLQCD_SRC_DIR}/configure \
+  --host=x86_64-linux-gnu \
+  --with-limedir=${LIME_INSTALL_DIR} \
+  --with-lemondir=${LEMON_INSTALL_DIR} \
+  --with-mpidimension=4 --enable-omp --enable-mpi \
+  --disable-sse2 --disable-sse3 \
+  --with-lapack="-Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a
+                 ${MKLROOT}/lib/intel64/libmkl_core.a
+                 ${MKLROOT}/lib/intel64/libmkl_intel_thread.a
+                 -Wl,--end-group -lpthread -lm -ldl" \
+  --disable-halfspinor --enable-gaugecopy \
+  --enable-alignment=64 \
+  --enable-qphix-soalen=4 \
+  --with-qphixdir=${QPHIX_INSTALL_DIR} \
+  --with-qmpdir=${QMP_INSTALL_DIR} \
+  CC=mpiicc CXX=mpiicpc F77=ifort \
+  CFLAGS="-O3 -std=c99 -qopenmp -xMIC-AVX512 -fma -debug full" \
+  CXXFLAGS="-O3 -std=c++11 -qopenmp -xMIC-AVX512 -fma -g -debug full" \
+  LDFLAGS="-qopenmp"
+\end{Verbatim}
+\end{framed}
+\textbf{IMPORTANT:} On AVX512 machines, for some reason, the half-spinor tmLQCD operators do not work (likely an issue with MPI and alignment).
+As a result, \texttt{--disable-halfspinor} is passed when building on these architectures.
+
+\texttt{--enable-qphix-soalen=4} sets the QPhiX \emph{structure of array} (SoA) length, which defines the size of the innermost direction in the blocked data-structures in QPhiX.
+\emph{Half} the \emph{local} lattice extent in $X$ direction, $L_x/2$, has to be divisible by this number.
+Setting this equal to the double-precision SIMD length on a given architecture means that a full double-precision SIMD vector can be loaded in a single instruction, while values below the SIMD vector length will result in multiple load and store instructions, while all computation are always carried out on full vectors.
+
+For now, the same SoA length is used for all supported arithmetic precisions as this facilitates thinking about possible parallelisation strategies.
+
+On AVX512 machines, a setting this to $8$ would be optimal, but at the time of writing QPhiX issue \#$98$\footnote{\url{https://github.com/JeffersonLab/qphix/issues/98}} prevents this, as it seems that the mixed-precision solver diverges when this is done.
+At the cost of a mild performance hit, it is recomended that $4$ be used until the issue has been resolved.
+
+The QPhiX interface can be combined with DD$\alpha$AMG without problems, but buildign together with the QUDA interface is only possible using GCC or clang, since QUDA is not compatible with the Intel compiler.
+On the QPhiX side, this will result in a potentially significant reduction of performance.
+
+\subsubsection{Usage}
+
+\noindent\textbf{QPhiX global parameters}: The blocking and threading parameters for QPhiX are passed by adding the following section to the tmLQCD input file:
+\begin{framed}
+\begin{Verbatim}
+BeginExternalInverter QPHIX
+  # physical cores per MPI task
+  NCores = 34
+  # block sizes (see qphix papers for details)
+  By = 8
+  Bz = 8
+  MinCt = 1
+  # (hyper-)thread geometry
+  # ompnumthreads = NCores * Sy * Sz
+  # hyperthreads should be specified here
+  Sy = 1
+  Sz = 2
+  # paddings in XY and XYZ blocks
+  PadXY = 1
+  PadXYZ = 0
+EndExternalInverter    
+\end{Verbatim}
+\end{framed}
+
+\begin{itemize}
+  \item{\texttt{NCores}: number of physical cores per MPI task. On KNL, it might even make sense to specify twice the number of physical cores since each core contains two vector processing units (VPUs). Another possiblity would be to specify the number of tiles per MPI tasks and consider cores and VPUs throuh \texttt{Sz} and \texttt{Sy} below. The only case that has been tested for performance is to set this equal to the number of physical cores per MPI task.}
+  \item{\texttt{By, Bz}: the QPhiX data structures are organised into blocks which can be efficiently loaded into CPU caches. \texttt{By} and \texttt{Bz} define the size of these blocks in the $Y$ and $Z$ lattice dimensions. The local lattice extent in the given dimension should be divisible by the respective block extent. Generally, $4$ or $8$ are good values and the larger of the two may be preferable.}
+  \item{\texttt{MinCt}: number of cores given an individual time-slice to process. This is useful for dual-socket systems when running with a single MPI task per node. In this case, this should be set to $2$ which will allow the kernels to run in a NUMA-friendly fashion. The local $T$ dimension must be divisible by this number. On KNL, this should be set to $1$.}
+  \item{\texttt{Sy, Sz}: thread blocking parameters. When multiple threads share resources (this is the case for cores and hyperthreads on KNL, for example), these parameters make it possible to consider this in the volume-traversal loops implemented in QPhiX. On KNL, the only setting which has been tested for performance is to set this equal to $2$, given that \texttt{NCores} has been set to the number of physical cores. \texttt{Sz} then splits the local $Z$ direction among two hyperthreads.}
+  \item{\texttt{PadXY(Z)}: Adds padding to the QPhiX data structures which may result in higer overall performance. Only value tested on KNL is \texttt{PadXY=1} and \texttt{PadXYZ=0}.}
+\end{itemize}
+
+\noindent\textbf{IMPORTANT}: The global setting \texttt{OmpNumThreads} should be set to \texttt{NCores * Sy * Sz}, otherwise the QPhiX interface will abort execution.
+
+\noindent\textbf{QPhiX operator / monomial parameters}: QPhiX solvers are available in operators for inversions and monomials for performing HMC with the same parameters.
+For a clover determinant, using QPhiX solvers instead of tmLQCD-native ones would be achieved as follows:
+\begin{framed}
+\begin{Verbatim}
+BeginMonomial CLOVERDET
+  Timescale = 1
+  kappa = 0.1394267
+  2KappaMu = 0.00069713350
+  CSW = 1.69
+  rho = 0.238419657
+  MaxSolverIterations = 5000
+  AcceptancePrecision =  1.e-21
+  ForcePrecision = 1.e-16
+  Name = cloverdetlight
+  Solver = mixedcg
+  UseExternalInverter = qphix
+  UseCompression = 12
+  UseSloppyPrecision = single
+EndMonomial  
+\end{Verbatim}
+\end{framed}
+\begin{itemize}
+  \item{\texttt{Solver}: specify the solver type (see below for the solvers supported by the QPhiX interface).} 
+  \item{\texttt{UseExternalInverter}: the external inverter \texttt{qphix} should be used for this monomial.}
+  \item{\texttt{UseCompression}: gauge compression should be used (\texttt{12}). This improves performance by increasing the flop/byte ratio. Twisted boundary conditions are fully supported in all directions.}
+  \item{\texttt{UseSloppyPrecision}: for a solver using just a single arithmetic precision (like basic \texttt{cg} or \texttt{bicgstab}), this sets the arithmetic precision employed. For a mixed-precision solver such as \texttt{mixedcg}, this sets the arithmetic precision of the inner solver.}
+\end{itemize}
+
+\noindent\textbf{Supported solvers}: The QPhiX interface provides support for the solvers:
+\begin{itemize}
+\item{\texttt{cg}}
+\item{\texttt{mixedcg}}
+\item{\texttt{bicgstab}}
+\item{\texttt{mixedbicgstab}}
+\item{\texttt{cgmms} (single-flavour rational \emph{monomials} only)}
+\item{\texttt{cgmmsnd} (two-flavour non-degenerate \emph{monomials} only}
+\end{itemize}
+Note that as usual, \texttt{bicgstab} and \texttt{mixedbicgstab} do not converge for twisted mass fermions at maximal twist.

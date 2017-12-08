@@ -26,32 +26,7 @@
 #include "solver/matrix_mult_typedef_bi.h"
 #include "solver/matrix_mult_typedef_nd.h"
 
-typedef struct {
-  // solver type
-  int type;
-  // maximal number of iterations
-  int max_iter;
-  // use relative precision
-  int rel_prec;
-  // number of shifts in multi shift solvers
-  int no_shifts;
-  // dimension of spinors
-  int sdim;
-  // squared desired residue
-  double squared_solver_prec;
-  // single flavour matrix to invert
-  matrix_mult M_psi;
-  // 32bit single flavour matrix to invert
-  matrix_mult32 M_psi32;  
-  // flavour doublet matrix to invert
-  matrix_mult_nd M_ndpsi;
-  // 32bit flavour doublet matrix to invert
-  matrix_mult_nd32 M_ndpsi32;  
-  // pointer to array of shifts
-  double * shifts;
-  // squared desired residue for each shift in mms. If NULL use squared_solver_prec for all
-  double * mms_squared_solver_prec;
-} solver_pm_t;
+#include "solver/solver_params.h"
 
 #include"solver/gmres.h"
 #include"solver/gmres_dr.h"
@@ -88,5 +63,7 @@ typedef struct {
 #include "solver/generate_dfl_subspace.h"
 
 #include "solver/sumr.h"
+
+#include "solver/monomial_solve.h"
 
 #endif

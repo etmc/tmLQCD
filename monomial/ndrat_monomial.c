@@ -78,7 +78,6 @@ void nd_set_global_parameter(monomial * const mnl) {
 
 void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
-  solver_pm_t solver_pm;
   double atime, etime;
   atime = gettime();
   nd_set_global_parameter(mnl);
@@ -98,36 +97,25 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   }
   mnl->forcefactor = mnl->EVMaxInv;
 
-  solver_pm.max_iter = mnl->maxiter;
-  solver_pm.squared_solver_prec = mnl->forceprec;
-  solver_pm.no_shifts = mnl->rat.np;
-  solver_pm.shifts = mnl->rat.mu;
-  solver_pm.rel_prec = g_relative_precision_flag;
-  solver_pm.type = mnl->solver; 
+  mnl->solver_params.max_iter = mnl->maxiter;
+  mnl->solver_params.squared_solver_prec = mnl->forceprec;
+  mnl->solver_params.no_shifts = mnl->rat.np;
+  mnl->solver_params.shifts = mnl->rat.mu;
+  mnl->solver_params.rel_prec = g_relative_precision_flag;
+  mnl->solver_params.type = mnl->solver; 
 
-  solver_pm.M_ndpsi = &Qtm_pm_ndpsi;
-  solver_pm.M_ndpsi32 = &Qtm_pm_ndpsi_32;    
+  mnl->solver_params.M_ndpsi = &Qtm_pm_ndpsi;
+  mnl->solver_params.M_ndpsi32 = &Qtm_pm_ndpsi_32;    
   if(mnl->type == NDCLOVERRAT) {
-    solver_pm.M_ndpsi = &Qsw_pm_ndpsi;
-    solver_pm.M_ndpsi32 = &Qsw_pm_ndpsi_32;
+    mnl->solver_params.M_ndpsi = &Qsw_pm_ndpsi;
+    mnl->solver_params.M_ndpsi32 = &Qsw_pm_ndpsi_32;
   }
-  solver_pm.sdim = VOLUME/2;
-  solver_pm.mms_squared_solver_prec = (double*) malloc(solver_pm.no_shifts*sizeof(double));
-  for(int i=0; i<solver_pm.no_shifts; i++) {
-#ifdef SPERIMENTAL
-    // since each shift will be multiplied by solver_pm.shifts, we scale the tolerance with it.
-    solver_pm.mms_squared_solver_prec[i] = solver_pm.squared_solver_prec/solver_pm.shifts[i]/solver_pm.shifts[i];
-#else
-    solver_pm.mms_squared_solver_prec[i] = solver_pm.squared_solver_prec;
-#endif
-  }
+  mnl->solver_params.sdim = VOLUME/2;
+
   // this generates all X_j,o (odd sites only) -> g_chi_up|dn_spinor_field
   mnl->iter1 += solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-                   		      mnl->pf, mnl->pf2,&solver_pm);
+                             mnl->pf, mnl->pf2, &(mnl->solver_params) );
 
-  free(solver_pm.mms_squared_solver_prec);
-  solver_pm.mms_squared_solver_prec = NULL;
-  
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     if(mnl->type == NDCLOVERRAT) {
       // multiply with Q_h * tau^1 + i mu_j to get Y_j,o (odd sites)
@@ -209,7 +197,6 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
 
 void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
-  solver_pm_t solver_pm;
   double atime, etime;
   atime = gettime();
   nd_set_global_parameter(mnl);
@@ -234,99 +221,96 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   random_spinor_field_eo(mnl->pf2, mnl->rngrepro, RN_GAUSS);
   mnl->energy0 += square_norm(mnl->pf2, VOLUME/2, 1);
   // set solver parameters
-  solver_pm.max_iter = mnl->maxiter;
-  solver_pm.squared_solver_prec = mnl->accprec;
-  solver_pm.no_shifts = mnl->rat.np;
-  solver_pm.shifts = mnl->rat.nu;
-  solver_pm.type = mnl->solver;
-  solver_pm.M_ndpsi = &Qtm_pm_ndpsi;
-  solver_pm.M_ndpsi32 = &Qtm_pm_ndpsi_32;    
+  mnl->solver_params.max_iter = mnl->maxiter;
+  mnl->solver_params.squared_solver_prec = mnl->accprec;
+  mnl->solver_params.no_shifts = mnl->rat.np;
+  mnl->solver_params.shifts = mnl->rat.nu;
+  mnl->solver_params.type = mnl->solver;
+  mnl->solver_params.M_ndpsi = &Qtm_pm_ndpsi;
+  mnl->solver_params.M_ndpsi32 = &Qtm_pm_ndpsi_32;    
   if(mnl->type == NDCLOVERRAT) {
-    solver_pm.M_ndpsi = &Qsw_pm_ndpsi;
-    solver_pm.M_ndpsi32 = &Qsw_pm_ndpsi_32;
+    mnl->solver_params.M_ndpsi = &Qsw_pm_ndpsi;
+    mnl->solver_params.M_ndpsi32 = &Qsw_pm_ndpsi_32;
   }
-  solver_pm.sdim = VOLUME/2;
-  solver_pm.rel_prec = g_relative_precision_flag;
-  solver_pm.mms_squared_solver_prec = (double*) malloc(solver_pm.no_shifts*sizeof(double));
-  for(int i=0; i<solver_pm.no_shifts; i++) {
-#ifdef SPERIMENTAL
-    // since each shift will be multiplied by solver_pm.shifts, we scale the tolerance with it.
-    solver_pm.mms_squared_solver_prec[i] = solver_pm.squared_solver_prec/solver_pm.shifts[i]/solver_pm.shifts[i];
-#else
-    solver_pm.mms_squared_solver_prec[i] = solver_pm.squared_solver_prec;
-#endif
-  }
+  mnl->solver_params.sdim = VOLUME/2;
+  mnl->solver_params.rel_prec = g_relative_precision_flag;
+
+  // this generates all X_j,o (odd sites only) -> g_chi_up|dn_spinor_field
+  mnl->iter0 = solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+                            mnl->pf, mnl->pf2, &(mnl->solver_params) );
 
 #ifdef DDalphaAMG
   // With MG we can solve directly the unsquared operator
-  if( mnl->solver == MG && (mg_no_shifts > 0 || mg_mms_mass >= solver_pm.shifts[0]) ){
+  if( mnl->solver == MG && (mg_no_shifts > 0 || mg_mms_mass >= mnl->solver_params.shifts[0]) ){
 
     // if the mg_mms_mass is smaller than the largest shifts, we use CGMMS for those
     // in case mg_no_shifts is used, then mg_mms_mass = 0
-    if(mg_mms_mass >= solver_pm.shifts[0]) {
-      mg_no_shifts = solver_pm.no_shifts;
-      while (mg_mms_mass < solver_pm.shifts[mg_no_shifts-1]) { mg_no_shifts--; }
+    if(mg_mms_mass >= mnl->solver_params.shifts[0]) {
+      mg_no_shifts = mnl->solver_params.no_shifts;
+      while (mg_mms_mass < mnl->solver_params.shifts[mg_no_shifts-1]) { mg_no_shifts--; }
     }
-    int no_shifts = solver_pm.no_shifts;
+    int no_shifts = mnl->solver_params.no_shifts;
     if (mg_no_shifts < no_shifts) {
-      solver_pm.no_shifts = no_shifts - mg_no_shifts;
-      solver_pm.shifts += mg_no_shifts;
-      solver_pm.mms_squared_solver_prec += mg_no_shifts;
+      mnl->solver_params.no_shifts = no_shifts - mg_no_shifts;
+      mnl->solver_params.shifts += mg_no_shifts;
+      if(mnl->solver_params.mms_squared_solver_prec!=NULL)
+        mnl->solver_params.mms_squared_solver_prec += mg_no_shifts;
       // We store the solutions not in the right place (without shifting of mg_no_shifts)
       // for them applying the operator and storing at the right place the unsquared solution.
-      mnl->iter0 = cg_mms_tm_nd( g_chi_up_spinor_field, g_chi_dn_spinor_field, mnl->pf, mnl->pf2, &solver_pm );
-      for(int j = solver_pm.no_shifts-1; j >= 0; j--) {
+      mnl->iter0 = cg_mms_tm_nd( g_chi_up_spinor_field, g_chi_dn_spinor_field, mnl->pf, mnl->pf2, &(mnl->solver_params) );
+      for(int j = mnl->solver_params.no_shifts-1; j >= 0; j--) {
         // Q_h * tau^1 - i nu_j
         // this needs phmc_Cpol = 1 to work!
         if(mnl->type == NDCLOVERRAT) {
           Qsw_tau1_sub_const_ndpsi(g_chi_up_spinor_field[j+mg_no_shifts], g_chi_dn_spinor_field[j+mg_no_shifts],
                                    g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-                                   I*solver_pm.shifts[j], 1., mnl->EVMaxInv);
+                                   I*mnl->solver_params.shifts[j], 1., mnl->EVMaxInv);
         }
         else {
           Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[j+mg_no_shifts], g_chi_dn_spinor_field[j+mg_no_shifts],
                                  g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-                                 I*solver_pm.shifts[j], 1., mnl->EVMaxInv);
+                                 I*mnl->solver_params.shifts[j], 1., mnl->EVMaxInv);
         }
       }
-      // Restoring solver_pm
-      solver_pm.no_shifts = no_shifts;
-      solver_pm.shifts -= mg_no_shifts;
-      solver_pm.mms_squared_solver_prec -= mg_no_shifts;
+      // Restoring mnl->solver_params
+      mnl->solver_params.no_shifts = no_shifts;
+      mnl->solver_params.shifts -= mg_no_shifts;
+      if(mnl->solver_params.mms_squared_solver_prec!=NULL)
+        mnl->solver_params.mms_squared_solver_prec -= mg_no_shifts;
     }
 
     matrix_mult_nd f = Qtm_tau1_ndpsi_add_Ishift;
-    if( solver_pm.M_ndpsi == Qsw_pm_ndpsi )
+    if( mnl->solver_params.M_ndpsi == Qsw_pm_ndpsi )
       f = Qsw_tau1_ndpsi_add_Ishift;
 
     // preparing initial guess
     for(int i = mg_no_shifts-1; i>=0; i--){
       if(i==no_shifts-1) {
-        zero_spinor_field(g_chi_up_spinor_field[i], solver_pm.sdim);
-        zero_spinor_field(g_chi_dn_spinor_field[i], solver_pm.sdim);
+        zero_spinor_field(g_chi_up_spinor_field[i], mnl->solver_params.sdim);
+        zero_spinor_field(g_chi_dn_spinor_field[i], mnl->solver_params.sdim);
       } else {
         double coeff;
         for( int j = no_shifts-1; j > i; j-- ) {
           coeff = 1;
           for( int k = no_shifts-1; k > i; k-- ) {
             if(j!=k)
-              coeff *= (solver_pm.shifts[k]-solver_pm.shifts[i])/(solver_pm.shifts[k]-solver_pm.shifts[j]);
+              coeff *= (mnl->solver_params.shifts[k]-mnl->solver_params.shifts[i])/(mnl->solver_params.shifts[k]-mnl->solver_params.shifts[j]);
           }
           if(j==no_shifts-1) {
-            mul_r(g_chi_up_spinor_field[i], coeff, g_chi_up_spinor_field[j], solver_pm.sdim);
-            mul_r(g_chi_dn_spinor_field[i], coeff, g_chi_dn_spinor_field[j], solver_pm.sdim);
+            mul_r(g_chi_up_spinor_field[i], coeff, g_chi_up_spinor_field[j], mnl->solver_params.sdim);
+            mul_r(g_chi_dn_spinor_field[i], coeff, g_chi_dn_spinor_field[j], mnl->solver_params.sdim);
           } else {
-            assign_add_mul_r(g_chi_up_spinor_field[i], g_chi_up_spinor_field[j], coeff, solver_pm.sdim);
-            assign_add_mul_r(g_chi_dn_spinor_field[i], g_chi_dn_spinor_field[j], coeff, solver_pm.sdim);
+            assign_add_mul_r(g_chi_up_spinor_field[i], g_chi_up_spinor_field[j], coeff, mnl->solver_params.sdim);
+            assign_add_mul_r(g_chi_dn_spinor_field[i], g_chi_dn_spinor_field[j], coeff, mnl->solver_params.sdim);
           }
         }
       }
       
       // g_shift = shift^2 and then in Qsw_tau1_ndpsi_add_Ishift the square root is taken
-      g_shift = solver_pm.shifts[i]*solver_pm.shifts[i]; 
+      g_shift = mnl->solver_params.shifts[i]*mnl->solver_params.shifts[i]; 
       mnl->iter0 += MG_solver_nd( g_chi_up_spinor_field[i], g_chi_dn_spinor_field[i], mnl->pf, mnl->pf2,
-                                  solver_pm.mms_squared_solver_prec[i],
-                                  solver_pm.max_iter, solver_pm.rel_prec, solver_pm.sdim, g_gauge_field, f );
+                                  mnl->solver_params.mms_squared_solver_prec[i],
+                                  mnl->solver_params.max_iter, mnl->solver_params.rel_prec, mnl->solver_params.sdim, g_gauge_field, f );
       g_shift = _default_g_shift;
     }
     
@@ -342,7 +326,7 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
 #endif
     {
     mnl->iter0 = solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-                              mnl->pf, mnl->pf2, &solver_pm);
+                              mnl->pf, mnl->pf2, &(mnl->solver_params));
     
     assign(mnl->w_fields[2], mnl->pf, VOLUME/2);
     assign(mnl->w_fields[3], mnl->pf2, VOLUME/2);
@@ -366,15 +350,15 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
     }
   }
 
-  free(solver_pm.mms_squared_solver_prec);
-  solver_pm.mms_squared_solver_prec = NULL;
+  free(mnl->solver_params.mms_squared_solver_prec);
+  mnl->solver_params.mms_squared_solver_prec = NULL;
 
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
       printf("# Time for %s monomial heatbath: %e s\n", mnl->name, etime-atime);
     }
-    if(g_debug_level > 3) { 
+    if(g_debug_level > 3) {
       printf("called ndrat_heatbath for id %d energy %f\n", id, mnl->energy0);
     }
   }
@@ -383,7 +367,6 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
 
 
 double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
-  solver_pm_t solver_pm;
   monomial * mnl = &monomial_list[id];
   double atime, etime;
   atime = gettime();
@@ -395,32 +378,23 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
   }
   mnl->energy1 = 0.;
 
-  solver_pm.max_iter = mnl->maxiter;
-  solver_pm.squared_solver_prec = mnl->accprec;
-  solver_pm.no_shifts = mnl->rat.np;
-  solver_pm.shifts = mnl->rat.mu;
-  solver_pm.type = mnl->solver;
+  mnl->solver_params.max_iter = mnl->maxiter;
+  mnl->solver_params.squared_solver_prec = mnl->accprec;
+  mnl->solver_params.no_shifts = mnl->rat.np;
+  mnl->solver_params.shifts = mnl->rat.mu;
+  mnl->solver_params.type = mnl->solver;
   
-  solver_pm.M_ndpsi = &Qtm_pm_ndpsi;
-  solver_pm.M_ndpsi32 = &Qtm_pm_ndpsi_32; 
+  mnl->solver_params.M_ndpsi = &Qtm_pm_ndpsi;
+  mnl->solver_params.M_ndpsi32 = &Qtm_pm_ndpsi_32; 
   if(mnl->type == NDCLOVERRAT) {
-    solver_pm.M_ndpsi = &Qsw_pm_ndpsi;
-    solver_pm.M_ndpsi32 = &Qsw_pm_ndpsi_32;
+    mnl->solver_params.M_ndpsi = &Qsw_pm_ndpsi;
+    mnl->solver_params.M_ndpsi32 = &Qsw_pm_ndpsi_32;
   }
-  solver_pm.sdim = VOLUME/2;
-  solver_pm.rel_prec = g_relative_precision_flag;
-  solver_pm.mms_squared_solver_prec = (double*) malloc(solver_pm.no_shifts*sizeof(double));
-  for(int i=0; i<solver_pm.no_shifts; i++) {
-#ifdef SPERIMENTAL
-    // since each shift will be multiplied by solver_pm.shifts, we scale the tolerance with it.
-    solver_pm.mms_squared_solver_prec[i] = solver_pm.squared_solver_prec/solver_pm.shifts[i]/solver_pm.shifts[i];
-#else
-    solver_pm.mms_squared_solver_prec[i] = solver_pm.squared_solver_prec;
-#endif
-  }
+  mnl->solver_params.sdim = VOLUME/2;
+  mnl->solver_params.rel_prec = g_relative_precision_flag;
 
-  mnl->iter0 += solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-                             mnl->pf, mnl->pf2,&solver_pm);
+  mnl->iter0 = solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+                            mnl->pf, mnl->pf2, &(mnl->solver_params) );
 
   // apply R to the pseudo-fermion fields
   assign(mnl->w_fields[0], mnl->pf, VOLUME/2);
@@ -435,16 +409,16 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
   mnl->energy1 = scalar_prod_r(mnl->pf, mnl->w_fields[0], VOLUME/2, 1);
   mnl->energy1 += scalar_prod_r(mnl->pf2, mnl->w_fields[1], VOLUME/2, 1);
 
-  free(solver_pm.mms_squared_solver_prec);
-  solver_pm.mms_squared_solver_prec = NULL;
+  free(mnl->solver_params.mms_squared_solver_prec);
+  mnl->solver_params.mms_squared_solver_prec = NULL;
 
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
       printf("# Time for %s monomial acc step: %e s\n", mnl->name, etime-atime);
     }
-    if(g_debug_level > 0) { // shoud be 3
-      printf("called ndrat_acc for id %d dH = %1.10e\n", id, mnl->energy1 - mnl->energy0);
+    if(g_debug_level > 3) {
+      printf("called ndrat_acc for id %d, H_1 = %.10e, dH = %1.10e\n", id, mnl->energy1,  mnl->energy1 - mnl->energy0);
     }
   }
   return(mnl->energy1 - mnl->energy0);

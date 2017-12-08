@@ -127,7 +127,7 @@
 #define _default_prop_precision_flag 32
 #define _default_reproduce_randomnumber_flag 1
 #define _default_g_sloppy_precision_flag 0
-#define _default_operator_sloppy_precision_flag 1
+#define _default_operator_sloppy_precision_flag 0
 #define _default_compression_type 18
 #define _default_stout_rho 0.1
 #define _default_rho 0.
@@ -191,12 +191,12 @@
 #define _default_omp_num_threads 0
 
 /* default mixed precision solver values */
-#define _default_mixcg_innereps 1.0e-6
+#define _default_mixcg_innereps 5.0e-5
 #define _default_mixcg_maxinnersolverit 5000
 
 #define _default_use_preconditioning 0
 
-#define _default_use_qudainverter 0
+#define _default_external_inverter 0
 
 #define _default_subprocess_flag 0
 #define _default_lowmem_flag 0

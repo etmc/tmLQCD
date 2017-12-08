@@ -1,4 +1,5 @@
-/* config.h.in.  Generated from configure.in by autoheader.  */
+/* Hand-written config.h.in. */
+
 #ifndef _CONFIG_H
 #define _CONFIG_H
 
@@ -200,10 +201,16 @@
 #undef HAVE_LIBQUDA
 
 /* Using QUDA GPU */
-#undef QUDA
+#undef TM_USE_QUDA
 
 /* Using DDalphaAMG */
 #undef DDalphaAMG
+
+/* Using QPHIX */
+#undef TM_USE_QPHIX
+
+/* Structure of Array length to use with QPhiX */
+#undef QPHIX_SOALEN
 
 #endif
 

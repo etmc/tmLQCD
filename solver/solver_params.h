@@ -1,5 +1,6 @@
 /***************************************************************************
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ *               2017                               Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -27,8 +28,18 @@
  ****************************************************************************/
 
 
-#ifndef _SOLVER_PARAMS_H
-#define _SOLVER_PARAMS_H
+#ifndef SOLVER_PARAMS_H
+#define SOLVER_PARAMS_H
+
+#include "solver/matrix_mult_typedef.h"
+#include "solver/matrix_mult_typedef_nd.h"
+
+#include "misc_types.h"
+
+typedef enum solution_type_t {
+  TM_SOLUTION_M_MDAG = 0,
+  TM_SOLUTION_M
+} solution_type_t;
 
 typedef struct {
 
@@ -56,6 +67,36 @@ typedef struct {
      where the maximum is over the iterated residuals since the last update */  
   float mcg_delta; 
 
+  // solver type
+  int type;
+  // maximal number of iterations
+  int max_iter;
+  // use relative precision
+  int rel_prec;
+  // number of shifts in multi shift solvers
+  int no_shifts;
+  // dimension of spinors
+  int sdim;
+  // squared desired residue
+  double squared_solver_prec;
+  // single flavour matrix to invert
+  matrix_mult M_psi;
+  // 32bit single flavour matrix to invert
+  matrix_mult32 M_psi32;  
+  // flavour doublet matrix to invert
+  matrix_mult_nd M_ndpsi;
+  // 32bit flavour doublet matrix to invert
+  matrix_mult_nd32 M_ndpsi32;  
+  // pointer to array of shifts
+  double * shifts;
+  // squared desired residue for each shift in mms. If NULL use squared_solver_prec for all
+  double * mms_squared_solver_prec;
+  
+  solution_type_t solution_type;
+  
+  CompressionType compression_type;
+  SloppyPrecision sloppy_precision;
+  ExternalInverter external_inverter;
   
 } solver_params_t;
 
