@@ -271,7 +271,7 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
     temp_params.mcg_delta = _default_mixcg_innereps;
     double iter_local = 0;
     for(int i = solver_params->no_shifts-1; i>=0; i--){
-      // preparing initial guess                                                                                                                                                                       
+      // preparing initial guess
       init_guess_mms(P, Q, i, solver_params);
       
       // inverting
@@ -426,7 +426,7 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
     temp_params.mcg_delta = _default_mixcg_innereps;
     double iter_local = 0;
     for(int i = solver_params->no_shifts-1; i>=0; i--){
-      // preparing initial guess                                                                                                                                                                       
+      // preparing initial guess
       init_guess_mms_nd(Pup, Pdn, Qup, Qdn, i, solver_params);
       
       // inverting
@@ -451,4 +451,50 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
     solver_params->mms_squared_solver_prec = NULL;
   }
   return(iteration_count);
+}
+
+int solve_mms_nd_plus(spinor ** const Pup, spinor ** const Pdn, 
+                      spinor * const Qup, spinor * const Qdn, 
+                      solver_params_t * solver_params){ 
+
+  int iteration_count = 0; 
+
+#ifdef DDalphaAMG
+  // With MG we can solve directly the unsquared operator
+  if( solver_params->type == MG ){
+    matrix_mult_nd f = Qtm_tau1_ndpsi_add_Ishift;
+    if( solver_params->M_ndpsi == Qsw_pm_ndpsi )
+      f = Qsw_tau1_ndpsi_add_Ishift;
+    for(int i = solver_params->no_shifts-1; i>=0; i--){
+      // preparing initial guess
+      init_guess_mms_nd_plus(Pup, Pdn, Qup, Qdn, i, solver_params);
+  
+      // g_shift = shift^2 and then in Qsw_tau1_ndpsi_add_Ishift the square root is taken
+      g_shift = solver_params->shifts[i]*solver_params->shifts[i]; 
+      iteration_count += MG_solver_nd( Pup[i], Pdn[i], Qup, Qdn, solver_params->mms_squared_solver_prec[i],
+                                       solver_params->max_iter, solver_params->rel_prec, solver_params->sdim,
+                                       g_gauge_field, f );
+      g_shift = _default_g_shift;
+    }
+  } else 
+#endif
+  {
+    iteration_count = solve_mms_nd(Pup, Pdn, Qup, Qdn, solver_params);
+    
+    // apply operator for retrieving unsquared solution
+    matrix_mult_nd f = Qtm_tau1_ndpsi_sub_Ishift;
+    if( solver_params->M_ndpsi == Qsw_pm_ndpsi )
+      f = Qsw_tau1_ndpsi_sub_Ishift;
+    spinor** temp;
+    init_solver_field(&temp, VOLUMEPLUSRAND/2, 1);
+    for(int i = solver_params->no_shifts-1; i>=0; i--){
+      g_shift = solver_params->shifts[i]*solver_params->shifts[i]; 
+      f(temp[0],temp[1],Pup[i],Pdn[i]);
+      assign(Pup[i], temp[0], VOLUME/2);
+      assign(Pdn[i], temp[1], VOLUME/2);
+      g_shift = _default_g_shift;
+    }
+    finalize_solver(temp, 2);
+  }
+  return iteration_count;
 }

@@ -48,9 +48,6 @@
 #include "phmc.h"
 #include "ndrat_monomial.h"
 #include "default_input_values.h"
-#ifdef DDalphaAMG
-#  include "DDalphaAMG_interface.h"
-#endif
 
 void nd_set_global_parameter(monomial * const mnl) {
 
@@ -236,118 +233,16 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   mnl->solver_params.rel_prec = g_relative_precision_flag;
 
   // this generates all X_j,o (odd sites only) -> g_chi_up|dn_spinor_field
-  mnl->iter0 = solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-                            mnl->pf, mnl->pf2, &(mnl->solver_params) );
-
-#ifdef DDalphaAMG
-  // With MG we can solve directly the unsquared operator
-  if( mnl->solver == MG && (mg_no_shifts > 0 || mg_mms_mass >= mnl->solver_params.shifts[0]) ){
-
-    // if the mg_mms_mass is smaller than the largest shifts, we use CGMMS for those
-    // in case mg_no_shifts is used, then mg_mms_mass = 0
-    if(mg_mms_mass >= mnl->solver_params.shifts[0]) {
-      mg_no_shifts = mnl->solver_params.no_shifts;
-      while (mg_mms_mass < mnl->solver_params.shifts[mg_no_shifts-1]) { mg_no_shifts--; }
-    }
-    int no_shifts = mnl->solver_params.no_shifts;
-    if (mg_no_shifts < no_shifts) {
-      mnl->solver_params.no_shifts = no_shifts - mg_no_shifts;
-      mnl->solver_params.shifts += mg_no_shifts;
-      if(mnl->solver_params.mms_squared_solver_prec!=NULL)
-        mnl->solver_params.mms_squared_solver_prec += mg_no_shifts;
-      // We store the solutions not in the right place (without shifting of mg_no_shifts)
-      // for them applying the operator and storing at the right place the unsquared solution.
-      mnl->iter0 = cg_mms_tm_nd( g_chi_up_spinor_field, g_chi_dn_spinor_field, mnl->pf, mnl->pf2, &(mnl->solver_params) );
-      for(int j = mnl->solver_params.no_shifts-1; j >= 0; j--) {
-        // Q_h * tau^1 - i nu_j
-        // this needs phmc_Cpol = 1 to work!
-        if(mnl->type == NDCLOVERRAT) {
-          Qsw_tau1_sub_const_ndpsi(g_chi_up_spinor_field[j+mg_no_shifts], g_chi_dn_spinor_field[j+mg_no_shifts],
-                                   g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-                                   I*mnl->solver_params.shifts[j], 1., mnl->EVMaxInv);
-        }
-        else {
-          Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[j+mg_no_shifts], g_chi_dn_spinor_field[j+mg_no_shifts],
-                                 g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-                                 I*mnl->solver_params.shifts[j], 1., mnl->EVMaxInv);
-        }
-      }
-      // Restoring mnl->solver_params
-      mnl->solver_params.no_shifts = no_shifts;
-      mnl->solver_params.shifts -= mg_no_shifts;
-      if(mnl->solver_params.mms_squared_solver_prec!=NULL)
-        mnl->solver_params.mms_squared_solver_prec -= mg_no_shifts;
-    }
-
-    matrix_mult_nd f = Qtm_tau1_ndpsi_add_Ishift;
-    if( mnl->solver_params.M_ndpsi == Qsw_pm_ndpsi )
-      f = Qsw_tau1_ndpsi_add_Ishift;
-
-    // preparing initial guess
-    for(int i = mg_no_shifts-1; i>=0; i--){
-      if(i==no_shifts-1) {
-        zero_spinor_field(g_chi_up_spinor_field[i], mnl->solver_params.sdim);
-        zero_spinor_field(g_chi_dn_spinor_field[i], mnl->solver_params.sdim);
-      } else {
-        double coeff;
-        for( int j = no_shifts-1; j > i; j-- ) {
-          coeff = 1;
-          for( int k = no_shifts-1; k > i; k-- ) {
-            if(j!=k)
-              coeff *= (mnl->solver_params.shifts[k]-mnl->solver_params.shifts[i])/(mnl->solver_params.shifts[k]-mnl->solver_params.shifts[j]);
-          }
-          if(j==no_shifts-1) {
-            mul_r(g_chi_up_spinor_field[i], coeff, g_chi_up_spinor_field[j], mnl->solver_params.sdim);
-            mul_r(g_chi_dn_spinor_field[i], coeff, g_chi_dn_spinor_field[j], mnl->solver_params.sdim);
-          } else {
-            assign_add_mul_r(g_chi_up_spinor_field[i], g_chi_up_spinor_field[j], coeff, mnl->solver_params.sdim);
-            assign_add_mul_r(g_chi_dn_spinor_field[i], g_chi_dn_spinor_field[j], coeff, mnl->solver_params.sdim);
-          }
-        }
-      }
-      
-      // g_shift = shift^2 and then in Qsw_tau1_ndpsi_add_Ishift the square root is taken
-      g_shift = mnl->solver_params.shifts[i]*mnl->solver_params.shifts[i]; 
-      mnl->iter0 += MG_solver_nd( g_chi_up_spinor_field[i], g_chi_dn_spinor_field[i], mnl->pf, mnl->pf2,
-                                  mnl->solver_params.mms_squared_solver_prec[i],
-                                  mnl->solver_params.max_iter, mnl->solver_params.rel_prec, mnl->solver_params.sdim, g_gauge_field, f );
-      g_shift = _default_g_shift;
-    }
+  mnl->iter0 = solve_mms_nd_plus(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+                                 mnl->pf, mnl->pf2, &(mnl->solver_params) );
+  
+  assign(mnl->w_fields[2], mnl->pf, VOLUME/2);
+  assign(mnl->w_fields[3], mnl->pf2, VOLUME/2);
     
-    assign(mnl->w_fields[2], mnl->pf, VOLUME/2);
-    assign(mnl->w_fields[3], mnl->pf2, VOLUME/2);
-
-    // apply C to the random field to generate pseudo-fermion fields
-    for(int j = (mnl->rat.np-1); j > -1; j--) {
+  // apply C to the random field to generate pseudo-fermion fields
+  for(int j = (mnl->rat.np-1); j > -1; j--) {
       assign_add_mul(mnl->pf, g_chi_up_spinor_field[j], I*mnl->rat.rnu[j], VOLUME/2);
       assign_add_mul(mnl->pf2, g_chi_dn_spinor_field[j], I*mnl->rat.rnu[j], VOLUME/2);
-    }
-  } else 
-#endif
-    {
-    mnl->iter0 = solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-                              mnl->pf, mnl->pf2, &(mnl->solver_params));
-    
-    assign(mnl->w_fields[2], mnl->pf, VOLUME/2);
-    assign(mnl->w_fields[3], mnl->pf2, VOLUME/2);
-    
-    // apply C to the random field to generate pseudo-fermion fields
-    for(int j = (mnl->rat.np-1); j > -1; j--) {
-      // Q_h * tau^1 - i nu_j
-      // this needs phmc_Cpol = 1 to work!
-      if(mnl->type == NDCLOVERRAT) {
-        Qsw_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
-                                 g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-                                 I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
-      }
-      else {
-        Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
-                               g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-                               I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
-      }
-      assign_add_mul(mnl->pf, g_chi_up_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
-      assign_add_mul(mnl->pf2, g_chi_dn_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
-    }
   }
 
   free(mnl->solver_params.mms_squared_solver_prec);

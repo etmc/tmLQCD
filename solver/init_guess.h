@@ -33,4 +33,7 @@ int init_guess_mms_nd(spinor ** const Pup, spinor ** const Pdn,
                       spinor * const Qup, spinor * const Qdn, 
                       int shift, solver_params_t * solver_params);
 
+int init_guess_mms_nd_plus(spinor ** const Pup, spinor ** const Pdn, 
+                           spinor * const Qup, spinor * const Qdn, 
+                           int shift, solver_params_t * solver_params);
 #endif

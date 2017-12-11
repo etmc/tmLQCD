@@ -20,9 +20,6 @@
  *
  ***********************************************************************/
 
-#ifndef _INIT_GUESS_H
-#define _INIT_GUESS_H
-
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
@@ -116,14 +113,14 @@ int init_guess_mms_nd(spinor ** const Pup, spinor ** const Pdn,
   if(g_debug_level > 2){
     double old_g_shift = g_shift;
     matrix_mult_nd f = Qtm_pm_ndpsi_shift;
+    if( solver_params->M_ndpsi == Qsw_pm_ndpsi ) 
+      f = Qsw_pm_ndpsi_shift;
     spinor** temp;
     if(solver_params->sdim == VOLUME/2) {
       init_solver_field(&temp, VOLUMEPLUSRAND/2, 2);
     } else {
       init_solver_field(&temp, VOLUMEPLUSRAND, 2);
     }
-    if( solver_params->M_ndpsi == Qsw_pm_ndpsi ) 
-      f = Qsw_pm_ndpsi_shift;
 
     g_shift = shifts[shift]*shifts[shift]; 
     f( temp[0], temp[1], Pup[shift], Pdn[shift]);
@@ -140,4 +137,54 @@ int init_guess_mms_nd(spinor ** const Pup, spinor ** const Pdn,
   }
 }
 
-#endif
+int init_guess_mms_nd_plus(spinor ** const Pup, spinor ** const Pdn, 
+                           spinor * const Qup, spinor * const Qdn, 
+                           int shift, solver_params_t * solver_params) {
+  double * shifts=solver_params->shifts;
+  int no_shifts = solver_params->no_shifts;
+  if(shift==no_shifts-1) {
+    zero_spinor_field(Pup[shift], solver_params->sdim);
+    zero_spinor_field(Pdn[shift], solver_params->sdim);
+  } else {
+    double coeff;
+    for( int j = no_shifts-1; j > shift; j-- ) {
+      coeff = 1;
+      for( int k = no_shifts-1; k > shift; k-- ) {
+        if(j!=k)
+          coeff *= (shifts[k]-shifts[shift])/(shifts[k]-shifts[j]);
+      }
+      if(j==no_shifts-1) {
+        mul_r(Pup[shift], coeff, Pup[j], solver_params->sdim);
+        mul_r(Pdn[shift], coeff, Pdn[j], solver_params->sdim);
+      } else {
+        assign_add_mul_r(Pup[shift], Pup[j], coeff, solver_params->sdim);
+        assign_add_mul_r(Pdn[shift], Pdn[j], coeff, solver_params->sdim);
+      }
+    }
+  }
+  if(g_debug_level > 2){
+    double old_g_shift = g_shift;
+    matrix_mult_nd f = Qtm_tau1_ndpsi_add_Ishift;
+    if( solver_params->M_ndpsi == Qsw_pm_ndpsi )
+      f = Qsw_tau1_ndpsi_add_Ishift;
+    spinor** temp;
+    if(solver_params->sdim == VOLUME/2) {
+      init_solver_field(&temp, VOLUMEPLUSRAND/2, 2);
+    } else {
+      init_solver_field(&temp, VOLUMEPLUSRAND, 2);
+    }
+
+    g_shift = shifts[shift]*shifts[shift]; 
+    f( temp[0], temp[1], Pup[shift], Pdn[shift]);
+    g_shift = old_g_shift;
+
+    diff( temp[0], temp[0], Qup, solver_params->sdim);
+    diff( temp[1], temp[1], Qdn, solver_params->sdim);
+    double res = sqrt(square_norm(temp[0], solver_params->sdim, 1)+square_norm(temp[1], solver_params->sdim, 1))/
+      sqrt(square_norm(Qup, solver_params->sdim, 1)+square_norm(Qdn, solver_params->sdim, 1));
+      
+    finalize_solver(temp, 2);
+    if(g_proc_id == 0)
+        printf("INITIAL GUESS: shift: %d relative residual: %e\n",shift,res); 
+  }
+}
