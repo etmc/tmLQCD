@@ -191,11 +191,9 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
                                                         solver_params->compression_type);
     for( int shift = 0; shift < solver_params->no_shifts; shift++){
       mul_gamma5(P[shift], VOLUME/2);
-    }
-    if(g_debug_level > 0){
-      for(int i = mg_no_shifts-1; i>=0; i--){
-        g_mu3 = solver_params->shifts[i]; 
-        solver_params->M_psi(temp[0], P[i]);
+      if(g_debug_level > 0){
+        g_mu3 = solver_params->shifts[shift]; 
+        solver_params->M_psi(temp[0], P[shift]);
         g_mu3 = _default_g_mu3;
         diff(temp[0], temp[0], Q, VOLUME/2);
         double diffnorm = square_norm(temp[0], VOLUME/2, 1); 
@@ -305,17 +303,20 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
     for( int shift = 0; shift < solver_params->no_shifts; shift++){
       mul_r_gamma5(Pup[shift], maxev_sq, VOLUME/2);
       mul_r_gamma5(Pdn[shift], maxev_sq, VOLUME/2);
-    }
-    if( g_debug_level > 0 ){
-      // FIXME: in the shift-by-shift branch, the shifted operator exists explicitly and could be used to 
-      // truly check the residual here
-      solver_params->M_ndpsi(temp[0], temp[1], Pup[0], Pdn[0]);
-      diff(temp[0], temp[0], Qup, VOLUME/2);
-      diff(temp[1], temp[1], Qdn, VOLUME/2);
-      double diffnorm = square_norm(temp[0], VOLUME/2, 1) + square_norm(temp[1], VOLUME/2, 1); 
-      if( g_proc_id == 0 ){
-        printf("# solve_mms_nd residual check: %e\n", diffnorm);
-        printf("# NOTE that this currently repors the residual for the *unishfted* operator!\n");
+      if( g_debug_level > 0 ){
+        matrix_mult_nd f = Qtm_pm_ndpsi_shift;
+        if( solver_params->M_ndpsi == Qsw_pm_ndpsi ) 
+          f = Qsw_pm_ndpsi_shift;
+        g_shift = solver_params->shifts[i]*solver_params->shifts[i]; 
+        f(temp[0], temp[1], Pup[shift], Pdn[shift]);
+        g_shift = _default_g_shift;
+        diff(temp[0], temp[0], Qup, VOLUME/2);
+        diff(temp[1], temp[1], Qdn, VOLUME/2);
+        double diffnorm = square_norm(temp[0], VOLUME/2, 1) + square_norm(temp[1], VOLUME/2, 1); 
+        if( g_proc_id == 0 ){
+          printf("# solve_mms_nd residual check: %e\n", diffnorm);
+          printf("# NOTE that this currently repors the residual for the *unishfted* operator!\n");
+        }
       }
     }
     finalize_solver(temp, 2);
