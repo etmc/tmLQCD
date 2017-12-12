@@ -90,7 +90,7 @@ void rat_derivative(const int id, hamiltonian_field_t * const hf) {
   mnl->solver_params.sdim = VOLUME/2;
   // this generates all X_j,o (odd sites only) -> g_chi_up_spinor_field
   mnl->iter1 += solve_mms_tm(g_chi_up_spinor_field, mnl->pf,
-                                        &(mnl->solver_params) );
+                             &(mnl->solver_params) );
   
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     mnl->Qp(mnl->w_fields[0], g_chi_up_spinor_field[j]);

@@ -160,7 +160,6 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
       up1 = tup; dn1 = tdn;
     }
   }
-
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
@@ -253,7 +252,6 @@ void apply_Z_ndpsi(spinor * const k_up, spinor * const k_dn,
 		     solver_params_t * solver_params) {
   monomial * mnl = &monomial_list[id];
 
-  // apply R to the pseudo-fermion fields
   mnl->iter0 += solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 			                       l_up, l_dn, solver_params);  
   
@@ -277,7 +275,6 @@ void apply_Z_ndpsi(spinor * const k_up, spinor * const k_dn,
     assign_add_mul_r(k_dn, g_chi_dn_spinor_field[j], 
 		     mnl->rat.rmu[j], VOLUME/2);
   }
-
   mul_r(g_chi_up_spinor_field[mnl->rat.np], mnl->rat.A*mnl->rat.A, 
 	k_up, VOLUME/2);
   mul_r(g_chi_dn_spinor_field[mnl->rat.np], mnl->rat.A*mnl->rat.A, 
