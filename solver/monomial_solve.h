@@ -33,5 +33,8 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
 int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn, 
                  spinor * const Qup, spinor * const Qdn, 
                  solver_params_t * solver_params);
+int solve_mms_nd_plus(spinor ** const Pup, spinor ** const Pdn, 
+                      spinor * const Qup, spinor * const Qdn, 
+                      solver_params_t * solver_params);
 
 #endif
