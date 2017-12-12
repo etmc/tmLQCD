@@ -218,19 +218,45 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
         mg_no_shifts = solver_params->no_shifts;
         while (mg_mms_mass < solver_params->shifts[mg_no_shifts-1]) { mg_no_shifts--; }
       }
+      // Number of initial guesses provided by gcmms
+      // README: tunable value. 1 it's fine for now.
+      int no_cgmms_init_guess = 1;
+      if(no_cgmms_init_guess > mg_no_shifts) {
+        no_cgmms_init_guess = mg_no_shifts;
+      }
       int no_shifts = solver_params->no_shifts;
       if (mg_no_shifts < no_shifts) {
-        solver_params->no_shifts = no_shifts - mg_no_shifts;
-        solver_params->shifts += mg_no_shifts;
-        iteration_count = cg_mms_tm( P+mg_no_shifts, Q, solver_params );
+        spinor ** P_cg = P+(mg_no_shifts - no_cgmms_init_guess);
+        solver_params->no_shifts = no_shifts - (mg_no_shifts - no_cgmms_init_guess);
+        solver_params->shifts += (mg_no_shifts - no_cgmms_init_guess);
+        // switching last shift
+        if (no_cgmms_init_guess > 0) {
+          double tmp = solver_params->shifts[0];
+          solver_params->shifts[0] = solver_params->shifts[no_cgmms_init_guess];
+          solver_params->shifts[no_cgmms_init_guess] = tmp;
+          spinor * tmpP = P_cg[0];
+          P_cg[0] = P_cg[no_cgmms_init_guess];
+          P_cg[no_cgmms_init_guess] = tmpP;
+        }
+        iteration_count = cg_mms_tm( P_cg, Q, solver_params );
         // Restoring solver_params
+        // switching last shift
+        if (no_cgmms_init_guess > 0) {
+          spinor * tmpP = P_cg[0];
+          double tmp = solver_params->shifts[0];
+          solver_params->shifts[0] = solver_params->shifts[no_cgmms_init_guess];
+          solver_params->shifts[no_cgmms_init_guess] = tmp;
+          P_cg[0] = P_cg[no_cgmms_init_guess];
+          P_cg[no_cgmms_init_guess] = tmpP;
+        }
         solver_params->no_shifts = no_shifts;
-        solver_params->shifts -= mg_no_shifts;
+        solver_params->shifts -= (mg_no_shifts - no_cgmms_init_guess);
       }
 
       for(int i = mg_no_shifts-1; i>=0; i--){
-        // preparing initial guess                                                                                                                                                                       
-        init_guess_mms(P, Q, i, solver_params);
+        // preparing initial guess
+        if(i<mg_no_shifts-no_cgmms_init_guess)
+          init_guess_mms(P, Q, i, solver_params);
         g_mu3 = solver_params->shifts[i]; 
         iteration_count += MG_solver( P[i], Q, solver_params->squared_solver_prec, solver_params->max_iter,
                                          solver_params->rel_prec, solver_params->sdim, g_gauge_field, solver_params->M_psi );
@@ -357,14 +383,44 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
         mg_no_shifts = solver_params->no_shifts;
         while (mg_mms_mass < solver_params->shifts[mg_no_shifts-1]) { mg_no_shifts--; }
       }
+      // Number of initial guesses provided by gcmms
+      // README: tunable value. 1 it's fine for now.
+      int no_cgmms_init_guess = 2;
+      if(no_cgmms_init_guess > mg_no_shifts) {
+        no_cgmms_init_guess = mg_no_shifts;
+      }
       int no_shifts = solver_params->no_shifts;
       if (mg_no_shifts < no_shifts) {
-        solver_params->no_shifts = no_shifts - mg_no_shifts;
-        solver_params->shifts += mg_no_shifts;
-        iteration_count = cg_mms_tm_nd( Pup+mg_no_shifts, Pdn+mg_no_shifts, Qup, Qdn, solver_params );
+        spinor ** Pup_cg = Pup+(mg_no_shifts - no_cgmms_init_guess);
+        spinor ** Pdn_cg = Pdn+(mg_no_shifts - no_cgmms_init_guess);
+        solver_params->no_shifts = no_shifts - (mg_no_shifts - no_cgmms_init_guess);
+        solver_params->shifts += (mg_no_shifts - no_cgmms_init_guess);
+        if (no_cgmms_init_guess > 0) {
+          double tmp = solver_params->shifts[0];
+          solver_params->shifts[0] = solver_params->shifts[no_cgmms_init_guess];
+          solver_params->shifts[no_cgmms_init_guess] = tmp;
+          spinor * tmpP = Pup_cg[0];
+          Pup_cg[0] = Pup_cg[no_cgmms_init_guess];
+          Pup_cg[no_cgmms_init_guess] = tmpP;
+          tmpP = Pdn_cg[0];
+          Pdn_cg[0] = Pdn_cg[no_cgmms_init_guess];
+          Pdn_cg[no_cgmms_init_guess] = tmpP;
+        }
+        iteration_count = cg_mms_tm_nd( Pup_cg, Pdn_cg, Qup, Qdn, solver_params );
         // Restoring solver_params
+        if (no_cgmms_init_guess > 0) {
+          double tmp = solver_params->shifts[0];
+          solver_params->shifts[0] = solver_params->shifts[no_cgmms_init_guess];
+          solver_params->shifts[no_cgmms_init_guess] = tmp;
+          spinor * tmpP = Pup_cg[0];
+          Pup_cg[0] = Pup_cg[no_cgmms_init_guess];
+          Pup_cg[no_cgmms_init_guess] = tmpP;
+          tmpP = Pdn_cg[0];
+          Pdn_cg[0] = Pdn_cg[no_cgmms_init_guess];
+          Pdn_cg[no_cgmms_init_guess] = tmpP;
+        }
         solver_params->no_shifts = no_shifts;
-        solver_params->shifts -= mg_no_shifts;
+        solver_params->shifts -= (mg_no_shifts - no_cgmms_init_guess);
       }
 
       matrix_mult_nd f = Qtm_pm_ndpsi_shift;
@@ -373,8 +429,8 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
 
       for(int i = mg_no_shifts-1; i>=0; i--){
         // preparing initial guess
-        init_guess_mms_nd(Pup, Pdn, Qup, Qdn, i, solver_params);
-        
+        if(i<mg_no_shifts-no_cgmms_init_guess)
+          init_guess_mms_nd(Pup, Pdn, Qup, Qdn, i, solver_params);
         g_shift = solver_params->shifts[i]*solver_params->shifts[i]; 
         iteration_count += MG_solver_nd( Pup[i], Pdn[i], Qup, Qdn, solver_params->squared_solver_prec, solver_params->max_iter,
                                          solver_params->rel_prec, solver_params->sdim, g_gauge_field, f );
