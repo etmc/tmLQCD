@@ -267,7 +267,7 @@ int rg_mixed_cg_her_nd(spinor * const P_up, spinor * const P_dn, spinor * const 
 
   assign_to_32(r_up,rhigh_up,N); assign_to_32(r_dn,rhigh_dn,N);
   rho_sp = rho_dp;
-  assign_32(p_up,r_up,N); assign_32(p_dn,r_dn,N); 
+  assign_32(p_up,r_up,N); assign_32(p_dn,r_dn,N);
 
   iter_in_sp += inner_loop(x_up, x_dn, p_up, p_dn, q_up, q_dn, r_up, r_dn, &rho_sp, delta, 
                            f32, (float)target_eps_sq, 

@@ -245,9 +245,6 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
       assign_add_mul(mnl->pf2, g_chi_dn_spinor_field[j], I*mnl->rat.rnu[j], VOLUME/2);
   }
 
-  free(mnl->solver_params.mms_squared_solver_prec);
-  mnl->solver_params.mms_squared_solver_prec = NULL;
-
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
@@ -303,9 +300,6 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
 
   mnl->energy1 = scalar_prod_r(mnl->pf, mnl->w_fields[0], VOLUME/2, 1);
   mnl->energy1 += scalar_prod_r(mnl->pf2, mnl->w_fields[1], VOLUME/2, 1);
-
-  free(mnl->solver_params.mms_squared_solver_prec);
-  mnl->solver_params.mms_squared_solver_prec = NULL;
 
   etime = gettime();
   if(g_proc_id == 0) {

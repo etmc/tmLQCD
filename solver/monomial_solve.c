@@ -213,16 +213,6 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
   else if (solver_params->type == MG) {
     // if the mg_mms_mass is larger than the smallest shift we use MG
     if (mg_no_shifts > 0 || mg_mms_mass >= solver_params->shifts[0]) { 
-      // if solver_params->mms_squared_solver_prec is NULL,
-      // filling it with solver_params->squared_solver_prec
-      double *mms_squared_solver_prec = NULL;
-      if (solver_params->mms_squared_solver_prec == NULL) {
-        mms_squared_solver_prec = (double*) malloc(solver_params->no_shifts*sizeof(double));
-        for (int i=0; i<solver_params->no_shifts; i++)
-          mms_squared_solver_prec[i] = solver_params->squared_solver_prec;
-        solver_params->mms_squared_solver_prec = mms_squared_solver_prec;
-      }
-
       // if the mg_mms_mass is smaller than the larger shifts, we use CGMMS for those
       // in case mg_no_shifts is used, then mg_mms_mass = 0
       if(mg_mms_mass >= solver_params->shifts[0]) {
@@ -233,26 +223,19 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
       if (mg_no_shifts < no_shifts) {
         solver_params->no_shifts = no_shifts - mg_no_shifts;
         solver_params->shifts += mg_no_shifts;
-        solver_params->mms_squared_solver_prec += mg_no_shifts;
         iteration_count = cg_mms_tm( P+mg_no_shifts, Q, solver_params );
         // Restoring solver_params
         solver_params->no_shifts = no_shifts;
         solver_params->shifts -= mg_no_shifts;
-        solver_params->mms_squared_solver_prec -= mg_no_shifts;
       }
 
       for(int i = mg_no_shifts-1; i>=0; i--){
         // preparing initial guess                                                                                                                                                                       
         init_guess_mms(P, Q, i, solver_params);
         g_mu3 = solver_params->shifts[i]; 
-        iteration_count += MG_solver( P[i], Q, solver_params->mms_squared_solver_prec[i], solver_params->max_iter,
+        iteration_count += MG_solver( P[i], Q, solver_params->squared_solver_prec, solver_params->max_iter,
                                          solver_params->rel_prec, solver_params->sdim, g_gauge_field, solver_params->M_psi );
         g_mu3 = _default_g_mu3;
-      }
-      // freeing mms_squared_solver_prec if it has been allocated
-      if(mms_squared_solver_prec != NULL) {
-        free(mms_squared_solver_prec);
-        solver_params->mms_squared_solver_prec = NULL;
       }
     } else {
       iteration_count = cg_mms_tm( P, Q, solver_params );
@@ -277,7 +260,7 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
       // inverting
       g_mu3 = solver_params->shifts[i]; 
       iter_local = rg_mixed_cg_her( P[i], Q, temp_params, solver_params->max_iter,
-                                    solver_params->mms_squared_solver_prec[i], solver_params->rel_prec, solver_params->sdim,
+                                    solver_params->squared_solver_prec, solver_params->rel_prec, solver_params->sdim,
                                     solver_params->M_psi, f32);
       g_mu3 = _default_g_mu3;
       if(iter_local == -1){
@@ -298,16 +281,6 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
                  spinor * const Qup, spinor * const Qdn, 
                  solver_params_t * solver_params){ 
   int iteration_count = 0; 
-
-  // if solver_params->mms_squared_solver_prec is NULL,
-  // filling it with solver_params->squared_solver_prec
-  double *mms_squared_solver_prec = NULL;
-  if (solver_params->mms_squared_solver_prec == NULL) {
-    mms_squared_solver_prec = (double*) malloc(solver_params->no_shifts*sizeof(double));
-    for (int i=0; i<solver_params->no_shifts; i++)
-      mms_squared_solver_prec[i] = solver_params->squared_solver_prec;
-    solver_params->mms_squared_solver_prec = mms_squared_solver_prec;
-  }
 
 #ifdef TM_USE_QPHIX
   if(solver_params->external_inverter == QPHIX_INVERTER){
@@ -386,12 +359,10 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
       if (mg_no_shifts < no_shifts) {
         solver_params->no_shifts = no_shifts - mg_no_shifts;
         solver_params->shifts += mg_no_shifts;
-        solver_params->mms_squared_solver_prec += mg_no_shifts;
         iteration_count = cg_mms_tm_nd( Pup+mg_no_shifts, Pdn+mg_no_shifts, Qup, Qdn, solver_params );
         // Restoring solver_params
         solver_params->no_shifts = no_shifts;
         solver_params->shifts -= mg_no_shifts;
-        solver_params->mms_squared_solver_prec -= mg_no_shifts;
       }
 
       matrix_mult_nd f = Qtm_pm_ndpsi_shift;
@@ -403,7 +374,7 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
         init_guess_mms_nd(Pup, Pdn, Qup, Qdn, i, solver_params);
         
         g_shift = solver_params->shifts[i]*solver_params->shifts[i]; 
-        iteration_count += MG_solver_nd( Pup[i], Pdn[i], Qup, Qdn, solver_params->mms_squared_solver_prec[i], solver_params->max_iter,
+        iteration_count += MG_solver_nd( Pup[i], Pdn[i], Qup, Qdn, solver_params->squared_solver_prec, solver_params->max_iter,
                                          solver_params->rel_prec, solver_params->sdim, g_gauge_field, f );
         g_shift = _default_g_shift;
       }
@@ -432,7 +403,7 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
       // inverting
       g_shift = solver_params->shifts[i]*solver_params->shifts[i]; 
       iter_local = rg_mixed_cg_her_nd( Pup[i], Pdn[i], Qup, Qdn, temp_params, solver_params->max_iter,
-                                       solver_params->mms_squared_solver_prec[i], solver_params->rel_prec, solver_params->sdim, f, f32);
+                                       solver_params->squared_solver_prec, solver_params->rel_prec, solver_params->sdim, f, f32);
       g_shift = _default_g_shift;
       if(iter_local == -1){
         return(-1);
@@ -445,11 +416,6 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
     exit(2);      
   }
 
-  // freeing mms_squared_solver_prec if it has been allocated
-  if(mms_squared_solver_prec != NULL) {
-    free(mms_squared_solver_prec);
-    solver_params->mms_squared_solver_prec = NULL;
-  }
   return(iteration_count);
 }
 
@@ -471,7 +437,7 @@ int solve_mms_nd_plus(spinor ** const Pup, spinor ** const Pdn,
   
       // g_shift = shift^2 and then in Qsw_tau1_ndpsi_add_Ishift the square root is taken
       g_shift = solver_params->shifts[i]*solver_params->shifts[i]; 
-      iteration_count += MG_solver_nd( Pup[i], Pdn[i], Qup, Qdn, solver_params->mms_squared_solver_prec[i],
+      iteration_count += MG_solver_nd( Pup[i], Pdn[i], Qup, Qdn, solver_params->squared_solver_prec,
                                        solver_params->max_iter, solver_params->rel_prec, solver_params->sdim,
                                        g_gauge_field, f );
       g_shift = _default_g_shift;

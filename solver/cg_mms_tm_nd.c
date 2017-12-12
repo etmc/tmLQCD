@@ -74,16 +74,6 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
 
   if(g_proc_id == 0 && g_debug_level > 2) printf("# CGMMSND: solving %d shifts\n", shifts);
 
-  // if solver_params->mms_squared_solver_prec is NULL,
-  // filling it with solver_params->squared_solver_prec
-  double *mms_squared_solver_prec = NULL;
-  if (solver_params->mms_squared_solver_prec == NULL) {
-    mms_squared_solver_prec = (double*) malloc(solver_params->no_shifts*sizeof(double));
-    for (int i=0; i<solver_params->no_shifts; i++)
-      mms_squared_solver_prec[i] = solver_params->squared_solver_prec;
-    solver_params->mms_squared_solver_prec = mms_squared_solver_prec;
-  }
-
   atime = gettime();
   if(solver_params->sdim == VOLUME) {
     init_solver_field(&solver_field, VOLUMEPLUSRAND, 2*nr_sf);
@@ -171,8 +161,8 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
         double sn = square_norm(ps_mms_solver[2*(shifts-1)], N, 1);
         sn += square_norm(ps_mms_solver[2*(shifts-1)+1], N, 1);
         err = alphas[shifts-1]*alphas[shifts-1]*sn;
-	while(((err <= solver_params->mms_squared_solver_prec[shifts-1]) && (solver_params->rel_prec == 0)) ||
-              ((err <= solver_params->mms_squared_solver_prec[shifts-1]*squarenorm) && (solver_params->rel_prec > 0))) {
+	while(((err <= solver_params->squared_solver_prec) && (solver_params->rel_prec == 0)) ||
+              ((err <= solver_params->squared_solver_prec*squarenorm) && (solver_params->rel_prec > 0))) {
           // for testing purpose
 	  if(g_debug_level > 3) {
 	    if (g_proc_id == 0) printf("# CGMMSND: residual of remaining shifts\n");
@@ -216,8 +206,8 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
       printf("# CGMMSND iteration: %d residue: %g\n", iteration, err); fflush( stdout );
     }
 
-    if( ((err <= solver_params->mms_squared_solver_prec[0]) && (solver_params->rel_prec == 0) && shifts==1) ||
-	((err <= solver_params->mms_squared_solver_prec[0]*squarenorm) && (solver_params->rel_prec > 0) && shifts==1) ||
+    if( ((err <= solver_params->squared_solver_prec) && (solver_params->rel_prec == 0) && shifts==1) ||
+	((err <= solver_params->squared_solver_prec*squarenorm) && (solver_params->rel_prec > 0) && shifts==1) ||
         (iteration == solver_params->max_iter -1) ) {
       break;
     }
@@ -245,12 +235,6 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
     printf("# CGMMSND (%d shifts): iter: %d eps_sq: %1.4e %1.4e t/s\n", solver_params->no_shifts, iteration, solver_params->squared_solver_prec, etime - atime); 
   }
 
-  // freeing mms_squared_solver_prec if it has been allocated
-  if(mms_squared_solver_prec != NULL) {
-    free(mms_squared_solver_prec);
-    solver_params->mms_squared_solver_prec = NULL;
-  }
-  
   finalize_solver(solver_field, 2*nr_sf);
   return(iteration);
 }
