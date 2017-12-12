@@ -176,8 +176,8 @@ int cg_mms_tm(spinor ** const P, spinor * const Q,
       printf("# CGMMS iteration: %d residue: %g\n", iteration, err); fflush( stdout );
     }
 
-    if( ((err <= solver_params->squared_solver_prec) && (solver_params->rel_prec == 0) && no_shifts==1) ||
-        ((err <= solver_params->squared_solver_prec*squarenorm) && (solver_params->rel_prec > 0) && no_shifts==1) ||
+    if( ((err <= solver_params->squared_solver_prec) && (solver_params->rel_prec == 0)) ||
+        ((err <= solver_params->squared_solver_prec*squarenorm) && (solver_params->rel_prec > 0)) ||
         (iteration == solver_params->max_iter -1) ) {
         break;
     }

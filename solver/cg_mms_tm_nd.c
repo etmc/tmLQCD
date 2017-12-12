@@ -201,13 +201,13 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
     /* Check whether the precision eps_sq is reached */
 
     err = square_norm(solver_field[0], N, 1) + square_norm(solver_field[1], N, 1);
-    
+
     if(g_debug_level > 2 && g_proc_id == g_stdio_proc) {
       printf("# CGMMSND iteration: %d residue: %g\n", iteration, err); fflush( stdout );
     }
 
-    if( ((err <= solver_params->squared_solver_prec) && (solver_params->rel_prec == 0) && shifts==1) ||
-	((err <= solver_params->squared_solver_prec*squarenorm) && (solver_params->rel_prec > 0) && shifts==1) ||
+    if( ((err <= solver_params->squared_solver_prec) && (solver_params->rel_prec == 0)) ||
+	((err <= solver_params->squared_solver_prec*squarenorm) && (solver_params->rel_prec > 0)) ||
         (iteration == solver_params->max_iter -1) ) {
       break;
     }
