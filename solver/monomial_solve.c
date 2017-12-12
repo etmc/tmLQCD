@@ -193,14 +193,15 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
       mul_gamma5(P[shift], VOLUME/2);
     }
     if(g_debug_level > 0){
-      // FIXME: in the shift-by-shift branch, the shifted operator exists explicitly and could be used to 
-      // truly check the residual here
-      solver_params->M_psi(temp[0], P[0]);
-      diff(temp[0], temp[0], Q, VOLUME/2);
-      double diffnorm = square_norm(temp[0], VOLUME/2, 1); 
-      if( g_proc_id == 0 ){
-        printf("# solve_mshift_oneflavour residual check: %e\n", diffnorm);
-        printf("# NOTE that this currently repors the residual for the *unishfted* operator!\n");
+      for(int i = mg_no_shifts-1; i>=0; i--){
+        g_mu3 = solver_params->shifts[i]; 
+        solver_params->M_psi(temp[0], P[i]);
+        g_mu3 = _default_g_mu3;
+        diff(temp[0], temp[0], Q, VOLUME/2);
+        double diffnorm = square_norm(temp[0], VOLUME/2, 1); 
+        if( g_proc_id == 0 ){
+          printf("# solve_mms_tm residual check: shift %d, res. %e\n", i, diffnorm);
+        }
       }
     }
     finalize_solver(temp, 1);
