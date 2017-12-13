@@ -28,7 +28,7 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include <stdlib.h>
@@ -38,7 +38,7 @@
 #include "mul_r.h"
 
 void mul_gamma5(spinor * const R, const int N){
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -46,7 +46,7 @@ void mul_gamma5(spinor * const R, const int N){
   int ix;
   spinor *r;
   
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for (ix = 0; ix < N; ix++){
@@ -60,7 +60,7 @@ void mul_gamma5(spinor * const R, const int N){
     r->s3.c1 = -1.0*r->s3.c1;
     r->s3.c2 = -1.0*r->s3.c2;
   }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /*OpenMP closing brace */
 #endif
 

@@ -337,7 +337,7 @@ static int MG_pre_solve( su3 **gf )
     DDalphaAMG_setup(&mg_status);
     mg_do_setup = 0;
     mg_tau = gauge_tau;
-    if (mg_status.success && g_proc_id == 0)        
+    if (mg_status.success && g_proc_id == 0)
       printf("DDalphaAMG setup ran, time %.2f sec (%.2f %% on coarse grid)\n",
              mg_status.time, 100.*(mg_status.coarse_time/mg_status.time));
     else if ( g_proc_id == 0)
@@ -356,7 +356,7 @@ static int MG_pre_solve( su3 **gf )
     DDalphaAMG_update_setup(mg_update_setup, &mg_status);
     mg_update_setup = 0;
     mg_tau = gauge_tau;
-    if (mg_status.success && g_proc_id == 0)        
+    if (mg_status.success && g_proc_id == 0)
       printf("DDalphaAMG setup ran, time %.2f sec (%.2f %% on coarse grid)\n",
              mg_status.time, 100.*(mg_status.coarse_time/mg_status.time));
     else if ( g_proc_id == 0)
