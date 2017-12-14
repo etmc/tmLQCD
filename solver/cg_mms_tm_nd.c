@@ -93,12 +93,12 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
   alphas[0] = 1.0;
   betas[0] = 0.0;
   sigma[0] = solver_params->shifts[0]*solver_params->shifts[0];
-  if(g_proc_id == 0 && g_debug_level > 2) printf("# CGMMSND: shift %d is %e\n", 0, sigma[0]);
+  if(g_proc_id == 0 && g_debug_level > 2) printf("# CGMMSND: shift %d is %e\n", 0, solver_params->shifts[0]);
 
   /* currently only implemented for P=0 */
   for(int im = 1; im < shifts; im++) {
     sigma[im] = solver_params->shifts[im]*solver_params->shifts[im] - sigma[0];
-    if(g_proc_id == 0 && g_debug_level > 2) printf("# CGMMSND: shift %d is %e\n", im, sigma[im]);
+    if(g_proc_id == 0 && g_debug_level > 2) printf("# CGMMSND: shift %d is %e\n", im, solver_params->shifts[im]);
     // these will be the result spinor fields
     zero_spinor_field(Pup[im], N);
     zero_spinor_field(Pdn[im], N);
@@ -163,6 +163,7 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
         err = alphas[shifts-1]*alphas[shifts-1]*sn;
 	while(((err <= solver_params->squared_solver_prec) && (solver_params->rel_prec == 0)) ||
               ((err <= solver_params->squared_solver_prec*squarenorm) && (solver_params->rel_prec > 0))) {
+	  shifts--;
           // for testing purpose
 	  if(g_debug_level > 3) {
 	    if (g_proc_id == 0) printf("# CGMMSND: residual of remaining shifts\n");
@@ -171,11 +172,10 @@ int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
               sn = square_norm(ps_mms_solver[2*is], N, 1);
               sn += square_norm(ps_mms_solver[2*is+1], N, 1);
               err = alphas[is]*alphas[is]*sn;
-              if (g_proc_id == 0) printf("#\t %d\t\t %e\t %e\n", is, sigma[is], solver_params->rel_prec ? err/squarenorm : err);
+              if (g_proc_id == 0) printf("#\t %d\t\t %e\t %e\n", is, solver_params->shifts[is], solver_params->rel_prec ? err/squarenorm : err);
             }
-            if (g_proc_id == 0) printf("#\t %d\t\t %e\t %e\n", 0, sigma[0], solver_params->rel_prec ? normsq/squarenorm : normsq);
+            if (g_proc_id == 0) printf("#\t %d\t\t %e\t %e\n", 0, solver_params->shifts[0], solver_params->rel_prec ? normsq/squarenorm : normsq);
 	  }
-	  shifts--;
 	  if(g_debug_level > 2 && g_proc_id == 0) {
 	    printf("# CGMMSND: at iteration %d removed one shift with residual %e. %d shifts remaining\n", iteration, solver_params->rel_prec ? err/squarenorm : err, shifts);
 	  }
