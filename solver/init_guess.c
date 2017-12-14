@@ -79,7 +79,7 @@ int init_guess_mms(spinor ** const P, spinor * const Q,
       
     finalize_solver(temp, 1);
     if(g_proc_id == 0)
-        printf("INITIAL GUESS: shift: %d relative residual: %e\n",shift,res); 
+      printf("INITIAL GUESS: shift id=%d value=%e  relative residual: %e\n",shift,shifts[shift],res); 
   }
 
 }
@@ -133,7 +133,7 @@ int init_guess_mms_nd(spinor ** const Pup, spinor ** const Pdn,
       
     finalize_solver(temp, 2);
     if(g_proc_id == 0)
-        printf("INITIAL GUESS: shift: %d relative residual: %e\n",shift,res); 
+      printf("INITIAL GUESS ND: shift id=%d value=%e  relative residual: %e\n",shift,shifts[shift],res); 
   }
 }
 
@@ -185,6 +185,6 @@ int init_guess_mms_nd_plus(spinor ** const Pup, spinor ** const Pdn,
       
     finalize_solver(temp, 2);
     if(g_proc_id == 0)
-        printf("INITIAL GUESS: shift: %d relative residual: %e\n",shift,res); 
+      printf("INITIAL GUESS ND PLUS: shift id=%d value=%e  relative residual: %e\n",shift,shifts[shift],res); 
   }
 }
