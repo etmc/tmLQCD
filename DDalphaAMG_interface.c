@@ -104,6 +104,10 @@ int MG_solver_eo(spinor * const Even_new, spinor * const Odd_new,
 //Enable to test the solution. It cost an application more of the operator. 
 //TODO: test all the operators interfaced and then undefine this flag.
 #define MGTEST
+//Enable variant for shifted operator in the ND sector.
+//The variant is used in case of initial guess for the squared operator.
+//It is faster and tests prove also to be safe (read Appendix A of arxiv:1801.##### by S.Bacchio et al.)
+#define VARIANT_FOR_SHIFTED
 
 DDalphaAMG_init mg_init;
 DDalphaAMG_parameters mg_params;
@@ -212,7 +216,13 @@ static inline int MG_check_nd( spinor * const up_new, spinor * const dn_new, spi
   double differ[2], residual;
   spinor ** check_vect = NULL;
   double acc_factor = 4;
-  
+#ifdef VARIANT_FOR_SHIFTED
+  if((  f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh tau1)^2 - Schur complement squared with csw = 0 and shift
+        f == Qsw_pm_ndpsi_shift )   // (Gamma5 Dh tau1)^2 - Schur complement squared with shift
+     && g_shift != 0 )
+    acc_factor = 1/sqrt(phmc_cheb_evmin/phmc_cheb_evmax + g_shift);
+#endif
+
   init_solver_field(&check_vect, VOLUMEPLUSRAND,2);
   f( check_vect[0], check_vect[1], up_new, dn_new);
   diff( check_vect[0], check_vect[0], up_old, N);
@@ -225,7 +235,7 @@ static inline int MG_check_nd( spinor * const up_new, spinor * const dn_new, spi
   
   if( residual > precision && residual < acc_factor*precision ) {
     if(g_proc_id == 0)
-      printf("WARNING: solution accepted even if the residual wasn't complitely acceptable (%e > %e) \n", residual, precision);
+      printf("WARNING: solution accepted even if the residual wasn't complitely acceptable (%e > %e). Max acc. factor %f.\n", residual, precision, acc_factor);
   } else if( residual > acc_factor*precision ) {
     if(g_proc_id == 0) {
       printf("ERROR: something bad happened... MG converged giving the wrong solution!! Trying to restart... \n");
@@ -587,25 +597,46 @@ static int MG_solve_nd( spinor * up_new, spinor * dn_new, spinor * const up_old,
 
     /* Reconstruct the even sites                */
     if (    f == Qtm_pm_ndpsi       ||  // (Gamma5 Dh tau1)^2 - Schur complement squared with csw = 0
-            f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh tau1)^2 - Schur complement squared with csw = 0 and shift
             f == Qsw_pm_ndpsi       ||  // (Gamma5 Dh tau1)^2 - Schur complement squared
+            f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh tau1)^2 - Schur complement squared with csw = 0 and shift
             f == Qsw_pm_ndpsi_shift ||  // (Gamma5 Dh tau1)^2 - Schur complement squared with shift
             f == Qtm_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and plus shift
             f == Qtm_tau1_ndpsi_sub_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and minus shift
             f == Qsw_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with plus shift
             f == Qsw_tau1_ndpsi_sub_Ishift ) {// Gamma5 Dh tau1 - Schur complement with minus shift
-      // tau1 exchange tmp11 <-> tmp12
-      Hopping_Matrix(EO, tmp12, up_new);
-      Hopping_Matrix(EO, tmp11, dn_new);
+#ifdef VARIANT_FOR_SHIFTED
+      if((  f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh tau1)^2 - Schur complement squared with csw = 0 and shift
+            f == Qsw_pm_ndpsi_shift )   // (Gamma5 Dh tau1)^2 - Schur complement squared with shift
+         && g_shift != 0 ) {
+        if( f == Qtm_pm_ndpsi_shift ) { // (Gamma5 Dh tau1)^2 - Schur complement squared with csw = 0 and shift
+          Qtm_tau1_ndpsi_add_Ishift(tmp12, tmp11, up_new, dn_new); // tau1 exchange tmp11 <-> tmp12  
+        } else {                        // (Gamma5 Dh tau1)^2 - Schur complement squared with shift
+          Qsw_tau1_ndpsi_add_Ishift(tmp12, tmp11, up_new, dn_new); // tau1 exchange tmp11 <-> tmp12
+        }
+        // tau1 exchange new1tmp <-> new2tmp
+        convert_odd_to_lexic( new2, tmp11);
+        convert_odd_to_lexic( new1, tmp12);
+        Hopping_Matrix(EO, tmp21, tmp11);
+        Hopping_Matrix(EO, tmp22, tmp12);
+        Msw_ee_inv_ndpsi(tmp11, tmp12, tmp21, tmp22);
+        convert_even_to_lexic(new2, tmp11);
+        convert_even_to_lexic(new1, tmp12);
+      } else
+#endif
+      {
+        // tau1 exchange tmp11 <-> tmp12
+        Hopping_Matrix(EO, tmp12, up_new);
+        Hopping_Matrix(EO, tmp11, dn_new);
 
-      Msw_ee_inv_ndpsi(tmp21, tmp22, tmp11, tmp12);
+        Msw_ee_inv_ndpsi(tmp21, tmp22, tmp11, tmp12);
 
-      /* Assigning with plus sign for the even
-       * since in Hopping_Matrix the minus is missing
-       */
-      // tau1 exchange tmp22 <-> tmp21
-      convert_eo_to_lexic(new1, tmp22, up_new);
-      convert_eo_to_lexic(new2, tmp21, dn_new);
+        /* Assigning with plus sign for the even
+         * since in Hopping_Matrix the minus is missing
+         */
+        // tau1 exchange tmp22 <-> tmp21
+        convert_eo_to_lexic(new1, tmp22, up_new);
+        convert_eo_to_lexic(new2, tmp21, dn_new);
+      }
     } else {
       Hopping_Matrix(EO, tmp11, up_new);
       Hopping_Matrix(EO, tmp12, dn_new);
@@ -771,23 +802,39 @@ static int MG_solve_nd( spinor * up_new, spinor * dn_new, spinor * const up_old,
       mul_r(new2tmp, 1/mg_scale, new2tmp, VOLUME);
       DDalphaAMG_solve_doublet_with_guess( (double*) new2tmp, (double*) old1, (double*) new1tmp, (double*) old2,
                                            precision/2, &mg_status );
+#ifdef VARIANT_FOR_SHIFTED
+      if((  f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh tau1)^2 - Schur complement squared with csw = 0 and shift
+            f == Qsw_pm_ndpsi_shift )   // (Gamma5 Dh tau1)^2 - Schur complement squared with shift
+         && g_shift != 0 ) {
+        // Removing normalization from initial guess
+        mul_r(new1, 1/mg_scale, new1, VOLUME);
+        mul_r(new2, 1/mg_scale, new2, VOLUME);
+        MG_update_mubar_epsbar( g_mubar, g_epsbar, -sqrt(g_shift) );
+        DDalphaAMG_solve_doublet_with_guess( (double*) new2, (double*) old1, (double*) new1, (double*) old2,
+                                             precision/2, &mg_status );
+        assign_mul_add_mul(new1, -_Complex_I/2./sqrt(g_shift), new1tmp, _Complex_I/2./sqrt(g_shift), VOLUME);
+        assign_mul_add_mul(new2, -_Complex_I/2./sqrt(g_shift), new2tmp, _Complex_I/2./sqrt(g_shift), VOLUME);
+      } else 
+#endif
+      {
+        mul_gamma5(new1tmp, VOLUME);
+        mul_gamma5(new2tmp, VOLUME);
+        set_even_to_zero(new1tmp);
+        set_even_to_zero(new2tmp);
+        // Removing normalization from initial guess
+        mg_scale *= mg_scale;
+        mul_r(new1, 1/mg_scale, new1, VOLUME);
+        mul_r(new2, 1/mg_scale, new2, VOLUME);
+        if (      f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh tau1)^2 - Schur complement squared with csw = 0 and shift
+                  f == Qsw_pm_ndpsi_shift )   // (Gamma5 Dh tau1)^2 - Schur complement squared with shift
+          MG_update_mubar_epsbar( g_mubar, g_epsbar, -sqrt(g_shift) );
+        DDalphaAMG_solve_doublet_with_guess( (double*) new2, (double*) new1tmp, (double*) new1, (double*) new2tmp,
+                                             precision/2, &mg_status );      
+      }
       if( N == VOLUME ) { // in case of VOLUME/2 old is a just local vector
         mul_gamma5(old1, VOLUME);
         mul_gamma5(old2, VOLUME);
       }
-      mul_gamma5(new1tmp, VOLUME);
-      mul_gamma5(new2tmp, VOLUME);
-      set_even_to_zero(new1tmp);
-      set_even_to_zero(new2tmp);
-      // Removing normalization from initial guess
-      mg_scale *= mg_scale;
-      mul_r(new1, 1/mg_scale, new1, VOLUME);
-      mul_r(new2, 1/mg_scale, new2, VOLUME);
-      if (      f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh tau1)^2 - Schur complement squared with csw = 0 and shift
-                f == Qsw_pm_ndpsi_shift )   // (Gamma5 Dh tau1)^2 - Schur complement squared with shift
-        MG_update_mubar_epsbar( g_mubar, g_epsbar, -sqrt(g_shift) );
-      DDalphaAMG_solve_doublet_with_guess( (double*) new2, (double*) new1tmp, (double*) new1, (double*) new2tmp,
-                                           precision/2, &mg_status );      
     } else {
       mg_scale *= mg_scale;
       DDalphaAMG_solve_doublet_squared_odd( (double*) new2, (double*) old2, (double*) new1, (double*) old1,
