@@ -1427,6 +1427,12 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     QPhiX::masterPrintf("# Calling the solver...\n");
 
     // Set the right precision for the QPhiX solver
+    // we get target_precision externally and and is given such, that it's either
+    // already relative or absolute
+    // Most QPhiX solvers allow setting absolute or relative residual
+    // by passing an appropriate flag, but this is not true for the multi-shift solver.
+    // As a result, we follow that solver and call ALL solvers with
+    // QPhiX::RELATIVE, which gives results consistent with tmLQCD in all cases. 
     double rhs_norm2 = 1.0;
     QPhiX::norm2Spinor(rhs_norm2, qphix_in[0], geom, n_blas_simt);
     const double RsdTarget = sqrt(target_precision / rhs_norm2);
@@ -1438,7 +1444,7 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
       reorder_eo_spinor_to_QPhiX(geom, tmlqcd_odd_out[0][0], qphix_buffer, cb_odd);      
       for(int isign : {-1, 1} ){
         (*SolverQPhiX)(qphix_buffer, qphix_in[0], RsdTarget, niters, rsd_final, site_flops, mv_apps, isign,
-                       verbose);
+                       verbose, cb_odd, QPhiX::RELATIVE);
       }
       QPhiX::copySpinor(qphix_out[0], qphix_buffer, geom, n_blas_simt);
     } else if (solver_flag == CG || solver_flag == MIXEDCG || solver_flag == RGMIXEDCG) {
@@ -1447,7 +1453,7 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
       //   M M^dagger qphix_buffer = qphix_in_prepared
       // here, that is, isign = -1 for the QPhiX CG solver.
       (*SolverQPhiX)(qphix_buffer, qphix_in[0], RsdTarget, niters, rsd_final, site_flops, mv_apps, -1,
-                     verbose);
+                     verbose, cb_odd, QPhiX::RELATIVE);
       // After that. if required by the solution type, multiply with M^dagger:
       //   qphix_out[1] = M^dagger ( M^dagger^-1 M^-1 ) qphix_in_prepared
       if (solver_params.solution_type == TM_SOLUTION_M) {
@@ -1471,11 +1477,11 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
       rsd_final = RsdFinalArr[0];
     } else if (solver_flag == BICGSTAB || solver_flag == MIXEDBICGSTAB) {
       (*SolverQPhiX)(qphix_buffer, qphix_in[0], RsdTarget, niters, rsd_final, site_flops, mv_apps, 1,
-                     verbose);
+                     verbose, cb_odd, QPhiX::RELATIVE);
       // for M^dagger^-1 M^-1 solution type, need to call BiCGstab twice
       if (solver_params.solution_type == TM_SOLUTION_M_MDAG) {
         (*SolverQPhiX)(qphix_out[0], qphix_buffer, RsdTarget, niters2, rsd_final, site_flops, mv_apps2,
-                       -1, verbose);
+                       -1, verbose, cb_odd, QPhiX::RELATIVE);
       } else {
         QPhiX::copySpinor(qphix_out[0], qphix_buffer, geom, n_blas_simt);
       }
@@ -1651,6 +1657,12 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     QPhiX::masterPrintf("# QPHIX: Calling the solver...\n");
 
     // Set the right precision for the QPhiX solver
+    // we get target_precision externally and and is given such, that it's either
+    // already relative or absolute
+    // Most QPhiX solvers allow setting absolute or relative residual
+    // by passing an appropriate flag, but this is not true for the multi-shift solver.
+    // As a result, we follow that solver and call ALL solvers with
+    // QPhiX::RELATIVE, which gives results consistent with tmLQCD in all cases. 
     double rhs_norm2 = 1.0;
     QPhiX::norm2Spinor<FT, V, S, compress, nf>(rhs_norm2, qphix_in, geom, n_blas_simt);
     const double RsdTarget = sqrt(target_precision / rhs_norm2);
@@ -1664,7 +1676,7 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
       }
       for( int isign : {-1, 1} ){
         (*TwoFlavSolverQPhiX)(qphix_buffer, qphix_in, RsdTarget, niters, rsd_final, site_flops, mv_apps, isign,
-                       verbose);
+                       verbose, cb_odd, QPhiX::RELATIVE);
       }
       QPhiX::copySpinor<FT, V, S, compress, nf>(qphix_out[0], qphix_buffer, geom, n_blas_simt);
     } else if (solver_flag == CG || solver_flag == MIXEDCG) {
@@ -1673,7 +1685,7 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
       //   M M^dagger qphix_buffer = qphix_in_prepared
       // here, that is, isign = -1 for the QPhiX CG solver.
       (*TwoFlavSolverQPhiX)(qphix_buffer, qphix_in, RsdTarget, niters, rsd_final, site_flops, mv_apps, -1,
-                     verbose);
+                     verbose, cb_odd, QPhiX::RELATIVE);
       // After that. if required by the solution type, multiply with M^dagger:
       //   qphix_out[1] = M^dagger M^dagger^-1 M^-1 qphix_in_prepared
       if (solver_params.solution_type == TM_SOLUTION_M) {
@@ -1684,11 +1696,11 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
       }
     } else if (solver_flag == BICGSTAB || solver_flag == MIXEDBICGSTAB) {
       (*TwoFlavSolverQPhiX)(qphix_buffer, qphix_in, RsdTarget, niters, rsd_final, site_flops, mv_apps, 1,
-                            verbose);
+                            verbose, cb_odd, QPhiX::RELATIVE);
       // for M^dagger^-1 M^-1 solution type, need to call BiCGstab twice
       if (solver_params.solution_type == TM_SOLUTION_M_MDAG) {
         (*TwoFlavSolverQPhiX)(qphix_out[0], qphix_buffer, RsdTarget, niters2, rsd_final, site_flops, mv_apps2,
-                              -1, verbose);
+                              -1, verbose, cb_odd, QPhiX::RELATIVE);
       } else {
         QPhiX::copySpinor<FT, V, S, compress, nf>(qphix_out[0], qphix_buffer, geom, n_blas_simt);
       }
