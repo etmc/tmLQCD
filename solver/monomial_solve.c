@@ -231,12 +231,13 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
         double * shifts_start = solver_params->shifts;
         solver_params->no_shifts = nshifts - (mg_nshifts - no_cgmms_init_guess);
         solver_params->shifts += (mg_nshifts - no_cgmms_init_guess);
+        solver_params->type = CGMMS;
         // switching last shift. We run CGMMS for the shift we want to solve.
         if (no_cgmms_init_guess > 0) {
           SWAP(solver_params->shifts[0], solver_params->shifts[no_cgmms_init_guess]);
           SWAP(P_cg[0], P_cg[no_cgmms_init_guess]);
         }
-        iteration_count = cg_mms_tm( P_cg, Q, solver_params );
+        iteration_count = solve_mms_tm( P_cg, Q, solver_params );
         // Switching back last shift
         if (no_cgmms_init_guess > 0) {
           SWAP(solver_params->shifts[0], solver_params->shifts[no_cgmms_init_guess]);
@@ -245,6 +246,7 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
         // Restoring solver_params
         solver_params->no_shifts = nshifts;
         solver_params->shifts = shifts_start;
+        solver_params->type = MG;
       } else {
         no_cgmms_init_guess = 0;
       }
@@ -329,7 +331,7 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
         matrix_mult_nd f = Qtm_pm_ndpsi_shift;
         if( solver_params->M_ndpsi == Qsw_pm_ndpsi ) 
           f = Qsw_pm_ndpsi_shift;
-        g_shift = solver_params->shifts[i]*solver_params->shifts[i]; 
+        g_shift = solver_params->shifts[shift]*solver_params->shifts[shift]; 
         f(temp[0], temp[1], Pup[shift], Pdn[shift]);
         g_shift = _default_g_shift;
         diff(temp[0], temp[0], Qup, VOLUME/2);
@@ -386,12 +388,13 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
         double * shifts_start = solver_params->shifts;
         solver_params->no_shifts = nshifts - (mg_nshifts - no_cgmms_init_guess);
         solver_params->shifts += (mg_nshifts - no_cgmms_init_guess);
+        solver_params-> type = CGMMSND;
         if (no_cgmms_init_guess > 0) {
           SWAP(solver_params->shifts[0], solver_params->shifts[no_cgmms_init_guess]);
           SWAP(Pup_cg[0], Pup_cg[no_cgmms_init_guess]);
           SWAP(Pdn_cg[0], Pdn_cg[no_cgmms_init_guess]);
         }
-        iteration_count = cg_mms_tm_nd( Pup_cg, Pdn_cg, Qup, Qdn, solver_params );
+        iteration_count = solve_mms_nd( Pup_cg, Pdn_cg, Qup, Qdn, solver_params );
         // Switching back last shift
         if (no_cgmms_init_guess > 0) {
           SWAP(solver_params->shifts[0], solver_params->shifts[no_cgmms_init_guess]);
@@ -401,6 +404,7 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
         // Restoring solver_params
         solver_params->no_shifts = nshifts;
         solver_params->shifts = shifts_start;
+        solver_params-> type = MG;
       } else {
         no_cgmms_init_guess = 0;
       }
