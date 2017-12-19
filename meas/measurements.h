@@ -56,6 +56,10 @@ typedef struct {
     T(LZ) by init_measurements
   */
   int max_source_slice;
+
+  /* for correlators, can also measure all time-slices or average over samples */
+  int all_time_slices;
+  int no_samples;
   
   /* functions for the measurement */
   void (*measurefunc) (const int traj, const int id, const int ieo);

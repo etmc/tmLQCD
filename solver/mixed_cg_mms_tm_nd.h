@@ -28,6 +28,6 @@
 
 int mixed_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn, 
 		 spinor * const Qup, spinor * const Qdn, 
-		 solver_pm_t * solver_pm);
+		 solver_params_t * solver_params);
 
 #endif

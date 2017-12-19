@@ -72,8 +72,11 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
    *
    *********************************************************************/
   
+  mnl_backup_restore_globals(TM_BACKUP_GLOBALS);
+  g_c_sw = mnl->c_sw;
   g_mu = mnl->mu;
   g_mu3 = mnl->rho;
+  g_kappa = mnl->kappa;
   boundary(mnl->kappa);
   
   // we compute the clover term (1 + T_ee(oo)) for all sites x
@@ -94,8 +97,9 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   // X_o -> w_fields[1]
   chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
                mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
-  mnl->iter1 += solve_degenerate(mnl->w_fields[1], mnl->pf, mnl->solver_params, mnl->maxiter, mnl->forceprec, 
-                                 g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver);
+  mnl->iter1 += solve_degenerate(mnl->w_fields[1], mnl->pf, mnl->solver_params, mnl->maxiter,
+                                 mnl->forceprec, g_relative_precision_flag, VOLUME/2, mnl->Qsq, 
+                                 mnl->solver);
   chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
                       mnl->csg_N, &mnl->csg_n, N);
   
@@ -142,9 +146,7 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   // uses the gaugefields in hf and changes the derivative field in hf
   sw_all(hf, mnl->kappa, mnl->c_sw);
 
-  g_mu = g_mu1;
-  g_mu3 = 0.;
-  boundary(g_kappa);
+  mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
   etime = gettime();
   if(g_debug_level > 1 && g_proc_id == 0) {
     printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
@@ -160,9 +162,11 @@ void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
   atime = gettime();
   int N = VOLUME/2;
 
+  mnl_backup_restore_globals(TM_BACKUP_GLOBALS);
   g_mu = mnl->mu;
   g_mu3 = mnl->rho;
   g_c_sw = mnl->c_sw;
+  g_kappa = mnl->kappa;
   boundary(mnl->kappa);
   mnl->csg_n = 0;
   mnl->csg_n2 = 0;
@@ -186,9 +190,7 @@ void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
   chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
                       mnl->csg_N, &mnl->csg_n, N);
 
-  g_mu = g_mu1;
-  g_mu3 = 0.;
-  boundary(g_kappa);
+  mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
@@ -209,9 +211,11 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
   atime = gettime();
   int N = VOLUME/2;
 
+  mnl_backup_restore_globals(TM_BACKUP_GLOBALS);
   g_mu = mnl->mu;
   g_mu3 = mnl->rho;
   g_c_sw = mnl->c_sw;
+  g_kappa = mnl->kappa;
   boundary(mnl->kappa);
 
   sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
@@ -241,9 +245,7 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
   /* Compute the energy contr. from first field */
   mnl->energy1 = square_norm(mnl->w_fields[0], N, 1);
 
-  g_mu = g_mu1;
-  g_mu3 = 0.;
-  boundary(g_kappa);
+  mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {

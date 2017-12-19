@@ -435,7 +435,7 @@ void MG_init()
   mg_init.theta[3] = X1;
 
   mg_init.number_of_levels=mg_lvl;
-#ifdef OMP
+#ifdef TM_USE_OMP
   if(mg_omp_num_threads<=0)
       mg_init.number_openmp_threads=omp_num_threads;
   else
