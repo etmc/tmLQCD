@@ -96,11 +96,14 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
                      const int N, matrix_mult f, int solver_type){
   int iteration_count = 0;
 
+  // temporary field required by the QPhiX solve or by residual check
+  spinor** temp;
+  if(g_debug_level > 2 || solver_params.external_inverter == QPHIX_INVERTER){
+    init_solver_field(&temp, VOLUMEPLUSRAND/2, 1);
+  }
+
 #ifdef TM_USE_QPHIX
   if(solver_params.external_inverter == QPHIX_INVERTER){
-    spinor** temp;
-    // temporary field required by the QPhiX solve
-    init_solver_field(&temp, VOLUMEPLUSRAND/2, 1);
     // using CG for the HMC, we always want to have the solution of (Q Q^dagger) x = b, which is equivalent to
     // gamma_5 (M M^dagger)^{-1} gamma_5 b
     // FIXME: this needs to be adjusted to also support BICGSTAB
@@ -108,15 +111,6 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     iteration_count = invert_eo_qphix_oneflavour(P, temp[0], max_iter, eps_sq, solver_type, 
                                                  rel_prec, solver_params, solver_params.sloppy_precision, solver_params.compression_type);
     mul_gamma5(P, VOLUME/2);
-    if(g_debug_level > 0){
-      f(temp[0], P);
-      diff(temp[0], temp[0], Q, VOLUME/2);
-      double diffnorm = square_norm(temp[0], VOLUME/2, 1); 
-      if( g_proc_id == 0 ){
-        printf("# solve_degenerate residual check: %e\n", diffnorm);
-      }
-    }
-    finalize_solver(temp, 1);
   } else
 #endif
   if(solver_type == MIXEDCG || solver_type == RGMIXEDCG){
@@ -171,6 +165,18 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     exit(2);
   }
 
+  if(g_debug_level > 2){
+    f(temp[0], P);
+    diff(temp[0], temp[0], Q, VOLUME/2);
+    double diffnorm = square_norm(temp[0], VOLUME/2, 1); 
+    if( g_proc_id == 0 ){
+      printf("# solve_degenerate residual check: %e\n", diffnorm);
+    }
+  }
+  if(g_debug_level > 2 || solver_params.external_inverter == QPHIX_INVERTER){
+    finalize_solver(temp, 1);
+  }
+
   return(iteration_count);
 }
 
@@ -178,10 +184,14 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
                  solver_params_t * solver_params){ 
   int iteration_count = 0; 
 
+  // temporary field required by the QPhiX solve or by residual check
+  spinor ** temp;
+  if(g_debug_level > 2 || solver_params->external_inverter == QPHIX_INVERTER){
+    init_solver_field(&temp, VOLUMEPLUSRAND/2, 1);
+  }
+
 #ifdef TM_USE_QPHIX
   if( solver_params->external_inverter == QPHIX_INVERTER ){
-    spinor ** temp;
-    init_solver_field(&temp, VOLUMEPLUSRAND/2, 1);
     gamma5(temp[0], Q, VOLUME/2);
     iteration_count = invert_eo_qphix_oneflavour_mshift(P, temp[0],
                                                         solver_params->max_iter, solver_params->squared_solver_prec,
@@ -191,18 +201,7 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
                                                         solver_params->compression_type);
     for( int shift = 0; shift < solver_params->no_shifts; shift++){
       mul_gamma5(P[shift], VOLUME/2);
-      if(g_debug_level > 0){
-        g_mu3 = solver_params->shifts[shift]; 
-        solver_params->M_psi(temp[0], P[shift]);
-        g_mu3 = _default_g_mu3;
-        diff(temp[0], temp[0], Q, VOLUME/2);
-        double diffnorm = square_norm(temp[0], VOLUME/2, 1); 
-        if( g_proc_id == 0 ){
-          printf("# solve_mms_tm residual check: shift %d, res. %e\n", i, diffnorm);
-        }
-      }
     }
-    finalize_solver(temp, 1);
   } else
 #endif // TM_USE_QPHIX
   if (solver_params->type == CGMMS){
@@ -297,6 +296,22 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
     exit(2);      
   }
 
+  if(g_debug_level > 2){
+    for( int shift = 0; shift < solver_params->no_shifts; shift++){
+      g_mu3 = solver_params->shifts[shift]; 
+      solver_params->M_psi(temp[0], P[shift]);
+      g_mu3 = _default_g_mu3;
+      diff(temp[0], temp[0], Q, VOLUME/2);
+      double diffnorm = square_norm(temp[0], VOLUME/2, 1); 
+      if( g_proc_id == 0 ){
+        printf("# solve_mms_tm residual check: shift %d, res. %e\n", shift, diffnorm);
+      }
+    }
+  }
+  if(g_debug_level > 2 || solver_params->external_inverter == QPHIX_INVERTER){
+    finalize_solver(temp, 1);
+  }
+
   return(iteration_count);
 }
 
@@ -305,10 +320,14 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
                  solver_params_t * solver_params){ 
   int iteration_count = 0; 
 
+  // temporary field required by the QPhiX solve or by residual check
+  spinor ** temp;
+  if(g_debug_level > 2 || solver_params->external_inverter == QPHIX_INVERTER){
+    init_solver_field(&temp, VOLUMEPLUSRAND/2, 2);
+  }
+
 #ifdef TM_USE_QPHIX
   if(solver_params->external_inverter == QPHIX_INVERTER){
-    spinor** temp;
-    init_solver_field(&temp, VOLUMEPLUSRAND/2, 2);
     //  gamma5 (M.M^dagger)^{-1} gamma5 = [ Q(+mu,eps) Q(-mu,eps) ]^{-1}
     gamma5(temp[0], Qup, VOLUME/2);
     gamma5(temp[1], Qdn, VOLUME/2);
@@ -327,23 +346,7 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
     for( int shift = 0; shift < solver_params->no_shifts; shift++){
       mul_r_gamma5(Pup[shift], maxev_sq, VOLUME/2);
       mul_r_gamma5(Pdn[shift], maxev_sq, VOLUME/2);
-      if( g_debug_level > 0 ){
-        matrix_mult_nd f = Qtm_pm_ndpsi_shift;
-        if( solver_params->M_ndpsi == Qsw_pm_ndpsi ) 
-          f = Qsw_pm_ndpsi_shift;
-        g_shift = solver_params->shifts[shift]*solver_params->shifts[shift]; 
-        f(temp[0], temp[1], Pup[shift], Pdn[shift]);
-        g_shift = _default_g_shift;
-        diff(temp[0], temp[0], Qup, VOLUME/2);
-        diff(temp[1], temp[1], Qdn, VOLUME/2);
-        double diffnorm = square_norm(temp[0], VOLUME/2, 1) + square_norm(temp[1], VOLUME/2, 1); 
-        if( g_proc_id == 0 ){
-          printf("# solve_mms_nd residual check: %e\n", diffnorm);
-          printf("# NOTE that this currently repors the residual for the *unishfted* operator!\n");
-        }
-      }
     }
-    finalize_solver(temp, 2);
   } else
 #endif //TM_USE_QPHIX
   if(solver_params->type==MIXEDCGMMSND){
@@ -458,6 +461,26 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
   } else {
     if(g_proc_id==0) printf("Error: solver not allowed for ND mms solve. Aborting...\n");
     exit(2);      
+  }
+
+  if( g_debug_level > 2 ){
+    for( int shift = 0; shift < solver_params->no_shifts; shift++){
+      matrix_mult_nd f = Qtm_pm_ndpsi_shift;
+      if( solver_params->M_ndpsi == Qsw_pm_ndpsi ) 
+        f = Qsw_pm_ndpsi_shift;
+      g_shift = solver_params->shifts[shift]*solver_params->shifts[shift]; 
+      f(temp[0], temp[1], Pup[shift], Pdn[shift]);
+      g_shift = _default_g_shift;
+      diff(temp[0], temp[0], Qup, VOLUME/2);
+      diff(temp[1], temp[1], Qdn, VOLUME/2);
+      double diffnorm = square_norm(temp[0], VOLUME/2, 1) + square_norm(temp[1], VOLUME/2, 1); 
+      if( g_proc_id == 0 ){
+        printf("# solve_mms_nd residual check: %e\n", diffnorm);
+      }
+    }
+  }
+  if(g_debug_level > 2 || solver_params->external_inverter == QPHIX_INVERTER){
+    finalize_solver(temp, 2);
   }
 
   return(iteration_count);
