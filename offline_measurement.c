@@ -38,7 +38,7 @@
 #endif
 #ifdef TM_USE_OMP
 # include <omp.h>
-#endif 
+#endif
 #include "global.h"
 #include "git_hash.h"
 #include "getopt.h"
