@@ -27,6 +27,12 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#ifdef SSE2
+# undef SSE2
+#endif
+#ifdef SSE3
+# undef SSE3
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include "global.h"
