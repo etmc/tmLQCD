@@ -28,6 +28,7 @@
 // we are compiling without it, such that tm_QudaParams_t can be
 // defined properly anyway
 #define QUDA_MAX_MG_LEVEL 4
+#include "quda_solver_translate.h"
 #endif
 
 typedef enum tm_quda_ferm_bc_t {
@@ -39,12 +40,18 @@ typedef enum tm_quda_ferm_bc_t {
 
 /* tm_QudaParams_t provides an interface between the tmLQCD input file and the
  * available QUDA parameters. At the moment, only the fermionic bounday conditions
- * and the MG parameters are exposed like this, but a further refactoring should
+ * and the MG parameters are exposed like this, but a further refactoring might
  * turn this into a complete representation of the possible input parameters */
 typedef struct tm_QudaParams_t {
   tm_quda_ferm_bc_t fermionbc;
+
   int               mg_n_level;
   int               mg_n_vec[QUDA_MAX_MG_LEVEL];
+  // in principle we can have mu scaling factors for all levels, but in practice
+  // only the coarsest one is scaled
+  double            mg_mu_factor;
+  QudaInverterType    mg_setup_inv_type;
+  int               mg_setup_maxiter;
 } tm_QudaParams_t;
 
 #endif // TM_QUDA_TYPES_H

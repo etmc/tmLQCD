@@ -200,4 +200,10 @@
 #define _default_subprocess_flag 0
 #define _default_lowmem_flag 0
 
+/* default input values for QUDA interface */
+#define _default_quda_mg_n_level 2
+#define _default_quda_mg_n_vec 24
+#define _default_quda_mg_mu_factor 1.0
+#define _default_quda_mg_setup_maxiter 1000
+
 #endif

@@ -1321,20 +1321,38 @@ static inline void rmQuotes(char *str){
 <QUDAINVERTER>{
   {SPC}*FermionBC{EQL}theta {
     quda_input.fermionbc = TM_QUDA_THETABC;
-    if(myverbose) printf("  Force theta fermionic boundary conditions for QUDA inversions, line %d\n", line_of_file);
+    if(myverbose) printf("  Force theta fermionic temporal boundary conditions for QUDA inversions, line %d\n", line_of_file);
   }
   {SPC}*FermionBC{EQL}apbc {
     quda_input.fermionbc = TM_QUDA_APBC;
-    if(myverbose) printf("  Force anti-periodic fermionic boundary conditions for QUDA inversions, line %d\n", line_of_file);
+    if(myverbose) printf("  Force anti-periodic temporal fermionic boundary conditions for QUDA inversions, line %d\n", line_of_file);
   }
   {SPC}*FermionBC{EQL}pbc {
     quda_input.fermionbc = TM_QUDA_PBC;
-    if(myverbose) printf("  Force periodic fermionic boundary conditions for QUDA inversions, line %d\n", line_of_file);
+    if(myverbose) printf("  Force periodic temporal fermionic boundary conditions for QUDA inversions, line %d\n", line_of_file);
   }
   {SPC}*MGNumberOfLevels{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     quda_input.mg_n_level=a;
-    if(myverbose) printf("  MGNumberOfLevels set to %d line %d operator %d\n", mg_lvl, line_of_file, current_operator);
+    if(myverbose) printf("  MGNumberOfLevels set to %d line %d\n", quda_input.mg_n_level, line_of_file);
+  }
+  {SPC}*MGCoarseMuFactor{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    quda_input.mg_mu_factor=c;
+    if(myverbose) printf("  MGCoarseMuFactor set to %f line %d\n", quda_input.mg_mu_factor, line_of_file);
+  }
+  {SPC}*MGSetupSolver{EQL}cg {
+    quda_input.mg_setup_inv_type = QUDA_CG_INVERTER;
+    if(myverbose) printf("  MGSetupSolver set to CG line %d\n", line_of_file);
+  }
+  {SPC}*MGSetupSolver{EQL}bicgstab {
+    quda_input.mg_setup_inv_type = QUDA_BICGSTAB_INVERTER;
+    if(myverbose) printf("  MGSetupSolver set to BiCGstab line %d\n", line_of_file);
+  }
+  {SPC}*MGSetupMaxSolverIterations{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    quda_input.mg_setup_maxiter=a;
+    if(myverbose) printf("  MGMaxSetupSolverIterations set to %d line %d\n", quda_input.mg_setup_maxiter, line_of_file);
   }
   ^EndExternalInverter{SPC}*  { 
     if(myverbose) printf("QUDA external inverter parameters parsed on line %d\n\n", line_of_file);
@@ -2906,8 +2924,16 @@ int read_input(char * conf_file){
 
   lowmem_flag = _default_lowmem_flag;
   subprocess_flag = _default_subprocess_flag;
-
+ 
+  /* default parameters for QUDA */
   quda_input.fermionbc = TM_QUDA_THETABC;
+  quda_input.mg_n_level = _default_quda_mg_n_level;
+  for( int level = 0; level < QUDA_MAX_MG_LEVEL; ++level){
+    quda_input.mg_n_vec[level] = _default_quda_mg_n_vec;
+  }
+  quda_input.mg_mu_factor = _default_quda_mg_mu_factor;
+  quda_input.mg_setup_inv_type = QUDA_CG_INVERTER;
+  quda_input.mg_setup_maxiter = _default_quda_mg_setup_maxiter;
 
   /* Put -1 in PropInfo.format to see if parse_config() will
   change the value. If not then set it to source_format_flag */

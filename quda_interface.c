@@ -832,11 +832,11 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
 
   if( even_odd_flag ) {
     inv_param.solve_type = QUDA_NORMERR_PC_SOLVE;
-    if(g_proc_id == 0) printf("# QUDA: Using preconditioning!\n");
+    if(g_proc_id == 0) printf("# QUDA: Using EO preconditioning!\n");
   }
   else {
     inv_param.solve_type = QUDA_NORMERR_SOLVE;
-    if(g_proc_id == 0) printf("# QUDA: Not using preconditioning!\n");
+    if(g_proc_id == 0) printf("# QUDA: Not using EO preconditioning!\n");
   }
 
   inv_param.tol = sqrt(precision);
@@ -1023,21 +1023,21 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
   if( inv_param.inv_type == QUDA_CG_INVERTER ) {
     if( even_odd ) {
       inv_param.solve_type = QUDA_NORMERR_PC_SOLVE;
-      if(g_proc_id == 0) printf("# QUDA: Using preconditioning!\n");
+      if(g_proc_id == 0) printf("# QUDA: Using EO preconditioning!\n");
     }
     else {
       inv_param.solve_type = QUDA_NORMERR_SOLVE;
-      if(g_proc_id == 0) printf("# QUDA: Not using preconditioning!\n");
+      if(g_proc_id == 0) printf("# QUDA: Not using EO preconditioning!\n");
     }
   }
   else {
     if( even_odd ) {
       inv_param.solve_type = QUDA_DIRECT_PC_SOLVE;
-      if(g_proc_id == 0) printf("# QUDA: Using preconditioning!\n");
+      if(g_proc_id == 0) printf("# QUDA: Using EO preconditioning!\n");
     }
     else {
       inv_param.solve_type = QUDA_DIRECT_SOLVE;
-      if(g_proc_id == 0) printf("# QUDA: Not using preconditioning!\n");
+      if(g_proc_id == 0) printf("# QUDA: Not using EO preconditioning!\n");
     }
   }
 
@@ -1117,11 +1117,12 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   mg_param->n_level = quda_input.mg_n_level;
   for (int i=0; i < mg_param->n_level; i++) {
     mg_param->precision_null[i] = QUDA_HALF_PRECISION;
-    mg_param->setup_inv_type[i] = QUDA_BICGSTAB_INVERTER;
+    mg_param->setup_inv_type[i] = quda_input.mg_setup_inv_type;
+    // Kate says: experimental, leave at 1 (will be used for bootstrap-style setup later)
     mg_param->num_setup_iter[i] = 1;
-    mg_param->setup_maxiter[i] = 1000;
+    mg_param->setup_maxiter[i] = quda_input.mg_setup_maxiter;
     // FIXME: this needs to be exposed in the input file reader
-    if( i == (mg_param->n_level - 1) && fabs(mg_inv_param->mu) > 0.0) mg_param->mu_factor[i] = 5.0;
+    if( i == (mg_param->n_level - 1) && fabs(mg_inv_param->mu) > 0.0) mg_param->mu_factor[i] = quda_input.mg_mu_factor;
     for (int j=0; j<QUDA_MAX_DIM; j++) {
 
       unsigned int extent = (j == 4) ? T : LX;
@@ -1144,7 +1145,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     mg_param->coarse_solver_maxiter[i] = 70;
     // spin block size on level zero will be reset to 2 below
     mg_param->spin_block_size[i] = 1;
-    mg_param->n_vec[i] = 24;
+    mg_param->n_vec[i] = quda_input.mg_n_vec[i];
     mg_param->nu_pre[i] = 4;
     mg_param->nu_post[i] = 4;
 
