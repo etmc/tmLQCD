@@ -1131,6 +1131,11 @@ static inline void rmQuotes(char *str){
     if(myverbose) printf("  Solver set to RGMixedCG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
+  MG {
+    optr->solver = MG;
+    if(myverbose) printf("  Solver set to MG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
   dummyhermtest {
     optr->solver=DUMMYHERMTEST;
     if(myverbose) printf("  Solver set to DummyHermTest line %d operator %d\n", line_of_file, current_operator);
@@ -1325,6 +1330,11 @@ static inline void rmQuotes(char *str){
   {SPC}*FermionBC{EQL}pbc {
     quda_input.fermionbc = TM_QUDA_PBC;
     if(myverbose) printf("  Force periodic fermionic boundary conditions for QUDA inversions, line %d\n", line_of_file);
+  }
+  {SPC}*MGNumberOfLevels{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    quda_input.mg_n_level=a;
+    if(myverbose) printf("  MGNumberOfLevels set to %d line %d operator %d\n", mg_lvl, line_of_file, current_operator);
   }
   ^EndExternalInverter{SPC}*  { 
     if(myverbose) printf("QUDA external inverter parameters parsed on line %d\n\n", line_of_file);

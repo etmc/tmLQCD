@@ -79,7 +79,7 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
       return invert_eo_quda(Even_new, Odd_new, Even, Odd,
                             precision, max_iter,
                             solver_flag, rel_prec,
-                            1, solver_params,
+                            even_odd_flag, solver_params,
                             sloppy, compression);
     }
 #endif
@@ -167,6 +167,15 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
     if(g_proc_id == 0) {
       printf("# Not using even/odd preconditioning!\n"); fflush(stdout);
     }
+#ifdef TM_USE_QUDA
+    if( external_inverter==QUDA_INVERTER ) {
+      return invert_eo_quda(Even_new, Odd_new, Even, Odd,
+                            precision, max_iter,
+                            solver_flag, rel_prec,
+                            even_odd_flag, solver_params,
+                            sloppy, compression);
+    }
+#endif
     convert_eo_to_lexic(g_spinor_field[DUM_DERI], Even, Odd);
 
     if(solver_flag == DFLGCR) {
