@@ -815,6 +815,16 @@ static inline void rmQuotes(char *str){
     PropInfo.precision = 64;
     if(myverbose) printf("  PropagatorPrecision set to 64 line %d operator %d\n", line_of_file, current_operator);
   }
+  {SPC}*WritePropagator{EQL}yes {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    optr->write_prop_flag = 1;
+    if(myverbose) printf("  WritePropagator set to YES line %d operator %d\n",  line_of_file, current_operator);
+  }
+  {SPC}*WritePropagator{EQL}no {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    optr->write_prop_flag = 0;
+    if(myverbose) printf("  WritePropagator set to NO line %d operator %d\n",  line_of_file, current_operator);
+  }
   {SPC}*SolverPrecision{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->eps_sq = c;
@@ -1349,10 +1359,53 @@ static inline void rmQuotes(char *str){
     quda_input.mg_setup_inv_type = QUDA_BICGSTAB_INVERTER;
     if(myverbose) printf("  MGSetupSolver set to BiCGstab line %d\n", line_of_file);
   }
+  {SPC}*MGSetupSolverTolerance{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    quda_input.mg_setup_tol=c;
+    if(myverbose) printf("  MGSetupSolverTolerance set to %f line %d\n", quda_input.mg_setup_tol, line_of_file);
+  }
   {SPC}*MGSetupMaxSolverIterations{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     quda_input.mg_setup_maxiter=a;
-    if(myverbose) printf("  MGMaxSetupSolverIterations set to %d line %d\n", quda_input.mg_setup_maxiter, line_of_file);
+    if(myverbose) printf("  MGSetupMaxSolverIterations set to %d line %d\n", quda_input.mg_setup_maxiter, line_of_file);
+  }
+  {SPC}*MGCoarseSolverTolerance{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    quda_input.mg_coarse_solver_tol=c;
+    if(myverbose) printf("  MGCoarseSolverTolerance set to %f line %d\n", quda_input.mg_coarse_solver_tol, line_of_file);
+  }
+  {SPC}*MGCoarseMaxSolverIterations{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    quda_input.mg_coarse_solver_maxiter=a;
+    if(myverbose) printf("  MGCoarseMaxSolverIterations set to %d line %d\n", quda_input.mg_coarse_solver_maxiter, line_of_file);
+  }
+  {SPC}*MGSmootherTolerance{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    quda_input.mg_smoother_tol=c;
+    if(myverbose) printf("  MGSmootherTolerance set to %f line %d\n", quda_input.mg_smoother_tol, line_of_file);
+  }
+  {SPC}*MGSmootherPreIterations{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    quda_input.mg_nu_pre=a;
+    if(myverbose) printf("  MGSmootherPreIterations set to %d line %d\n", quda_input.mg_nu_pre, line_of_file);
+  }
+  {SPC}*MGSmootherPostIterations{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    quda_input.mg_nu_post=a;
+    if(myverbose) printf("  MGSmootherPostIterations set to %d line %d\n", quda_input.mg_nu_post, line_of_file);
+  }
+  {SPC}*MGOverUnderRelaxationFactor{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    quda_input.mg_omega=c;
+    if(myverbose) printf("  MGOverUnderRelaxationFactor set to %f line %d\n", quda_input.mg_omega, line_of_file);
+  }
+  {SPC}*MGRunVerify{EQL}yes {
+    quda_input.mg_run_verify = QUDA_BOOLEAN_YES;
+    if(myverbose) printf("  MGRunVerify set to YES in line %d\n", line_of_file);
+  }
+  {SPC}*MGRunVerify{EQL}no {
+    quda_input.mg_run_verify = QUDA_BOOLEAN_NO;
+    if(myverbose) printf("  MGRunVerify set to NO in line %d\n", line_of_file);
   }
   ^EndExternalInverter{SPC}*  { 
     if(myverbose) printf("QUDA external inverter parameters parsed on line %d\n\n", line_of_file);
@@ -1363,42 +1416,42 @@ static inline void rmQuotes(char *str){
   {SPC}*NCores{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     qphix_input.NCores = a;
-    if(myverbose) printf("  Ncores = %d, line %d\n", a, line_of_file );
+    if(myverbose) printf("  Ncores = %d, line %d\n", qphix_input.NCores, line_of_file );
   }
   {SPC}*By{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     qphix_input.By = a;
-    if(myverbose) printf("  By = %d, line %d\n", a, line_of_file );
+    if(myverbose) printf("  By = %d, line %d\n", qphix_input.By, line_of_file );
   }
   {SPC}*Bz{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     qphix_input.Bz = a;
-    if(myverbose) printf("  Bz = %d, line %d\n", a, line_of_file );
+    if(myverbose) printf("  Bz = %d, line %d\n", qphix_input.Bz, line_of_file );
   }
   {SPC}*Sy{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     qphix_input.Sy = a;
-    if(myverbose) printf("  Sy = %d, line %d\n", a, line_of_file );
+    if(myverbose) printf("  Sy = %d, line %d\n", qphix_input.Sy, line_of_file );
   }
   {SPC}*Sz{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     qphix_input.Sz = a;
-    if(myverbose) printf("  Sz = %d, line %d\n", a, line_of_file );
+    if(myverbose) printf("  Sz = %d, line %d\n", qphix_input.Sz, line_of_file );
   }
   {SPC}*PadXY{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     qphix_input.PadXY = a;
-    if(myverbose) printf("  PadXY = %d, line %d\n", a, line_of_file );
+    if(myverbose) printf("  PadXY = %d, line %d\n", qphix_input.PadXY, line_of_file );
   }
   {SPC}*PadXYZ{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     qphix_input.PadXYZ = a;
-    if(myverbose) printf("  PadXYZ = %d, line %d\n", a, line_of_file );
+    if(myverbose) printf("  PadXYZ = %d, line %d\n", qphix_input.PadXYZ, line_of_file );
   }
   {SPC}*MinCt{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     qphix_input.MinCt = a;
-    if(myverbose) printf("  MinCt = %d, line %d\n", a, line_of_file );
+    if(myverbose) printf("  MinCt = %d, line %d\n", qphix_input.MinCt, line_of_file );
   }
   ^EndExternalInverter{SPC}*  {
     if(myverbose) printf("QPHIX external inverter parameters parsed on line %d\n\n", line_of_file);
@@ -2934,6 +2987,14 @@ int read_input(char * conf_file){
   quda_input.mg_mu_factor = _default_quda_mg_mu_factor;
   quda_input.mg_setup_inv_type = QUDA_CG_INVERTER;
   quda_input.mg_setup_maxiter = _default_quda_mg_setup_maxiter;
+  quda_input.mg_setup_tol = _default_quda_mg_setup_tol;
+  quda_input.mg_coarse_solver_tol = _default_quda_mg_coarse_solver_tol;
+  quda_input.mg_coarse_solver_maxiter = _default_quda_mg_coarse_solver_maxiter;
+  quda_input.mg_nu_pre = _default_quda_mg_nu_pre;
+  quda_input.mg_nu_post = _default_quda_mg_nu_post;
+  quda_input.mg_smoother_tol = _default_quda_mg_smoother_tol;
+  quda_input.mg_omega = _default_quda_mg_omega;
+  quda_input.mg_run_verify = QUDA_BOOLEAN_YES;
 
   /* Put -1 in PropInfo.format to see if parse_config() will
   change the value. If not then set it to source_format_flag */

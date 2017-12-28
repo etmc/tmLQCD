@@ -124,6 +124,7 @@
 #define _default_gauge_precision_write_flag 64
 #define _default_g_disable_IO_checks 0
 #define _default_prop_precision_flag 32
+#define _default_write_prop_flag 1
 #define _default_reproduce_randomnumber_flag 1
 #define _default_g_sloppy_precision_flag 0
 #define _default_operator_sloppy_precision_flag 0
@@ -201,9 +202,17 @@
 #define _default_lowmem_flag 0
 
 /* default input values for QUDA interface */
+/* These follow the recommendations of https://github.com/lattice/quda/wiki/Multigrid-Solver */
 #define _default_quda_mg_n_level 2
 #define _default_quda_mg_n_vec 24
-#define _default_quda_mg_mu_factor 1.0
+#define _default_quda_mg_mu_factor 8.0
+#define _default_quda_mg_setup_tol 5e-6
 #define _default_quda_mg_setup_maxiter 1000
+#define _default_quda_mg_coarse_solver_tol 0.25
+#define _default_quda_mg_coarse_solver_maxiter 75
+#define _default_quda_mg_smoother_tol 0.25
+#define _default_quda_mg_nu_pre 4
+#define _default_quda_mg_nu_post 4
+#define _default_quda_mg_omega 0.85
 
 #endif

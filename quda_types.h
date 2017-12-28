@@ -28,6 +28,8 @@
 // we are compiling without it, such that tm_QudaParams_t can be
 // defined properly anyway
 #define QUDA_MAX_MG_LEVEL 4
+#define QUDA_BOOLEAN_YES 1
+#define QUDA_BOOLEAN_NO 0
 #include "quda_solver_translate.h"
 #endif
 
@@ -50,8 +52,16 @@ typedef struct tm_QudaParams_t {
   // in principle we can have mu scaling factors for all levels, but in practice
   // only the coarsest one is scaled
   double            mg_mu_factor;
-  QudaInverterType    mg_setup_inv_type;
+  QudaInverterType  mg_setup_inv_type;
+  double            mg_setup_tol;
   int               mg_setup_maxiter;
+  int               mg_coarse_solver_maxiter;
+  double            mg_coarse_solver_tol;
+  int               mg_nu_pre;
+  int               mg_nu_post;
+  double            mg_smoother_tol;
+  double            mg_omega;
+  int               mg_run_verify;
 } tm_QudaParams_t;
 
 #endif // TM_QUDA_TYPES_H

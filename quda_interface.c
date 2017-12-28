@@ -24,9 +24,10 @@
 *
 * File quda_interface.h
 *
-* Author: Mario Schroeck <mario.schroeck@roma3.infn.it>
+* Authors: Mario Schroeck <mario.schroeck@roma3.infn.it>
+*          Bartosz Kostrzewa <bartosz_kostrzewa@fastmail.com>
 * 
-* Last changes: 06/2015
+* Last changes: 12/2017
 *
 *
 * Interface to QUDA for multi-GPU inverters
@@ -54,7 +55,8 @@
 *     before the inversion is done (might result in wasted loads...).
 *
 *   void _setQudaMultigridParam()
-*     borrowed from QUDA multigrid_invert_test
+*     borrowed from QUDA multigrid_invert_test, sets up the input parameters
+*     for running the QUDA-MG implementation
 *
 *   The functions
 *
@@ -89,6 +91,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <float.h>
 #include "quda_interface.h"
 #include "quda_types.h"
 #include "boundary.h"
@@ -1098,6 +1101,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   // the MG internal Gamma basis is always DEGRAND_ROSSI
   mg_inv_param->gamma_basis = QUDA_DEGRAND_ROSSI_GAMMA_BASIS;
   mg_inv_param->dirac_order = QUDA_DIRAC_ORDER;
+  // just to be safe, we also set the input and output gamma basis again
   inv_param.gamma_basis = QUDA_CHIRAL_GAMMA_BASIS; // CHIRAL -> UKQCD does not seem to be supported right now...
 
   mg_inv_param->input_location = QUDA_CPU_FIELD_LOCATION;
@@ -1113,47 +1117,86 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   mg_param->pre_orthonormalize = QUDA_BOOLEAN_NO;
   mg_param->post_orthonormalize = QUDA_BOOLEAN_YES;
 
-  // FIXME: allow these parameters to be adjusted
   mg_param->n_level = quda_input.mg_n_level;
   for (int i=0; i < mg_param->n_level; i++) {
     mg_param->precision_null[i] = QUDA_HALF_PRECISION;
     mg_param->setup_inv_type[i] = quda_input.mg_setup_inv_type;
     // Kate says: experimental, leave at 1 (will be used for bootstrap-style setup later)
     mg_param->num_setup_iter[i] = 1;
+    mg_param->setup_tol[i] = quda_input.mg_setup_tol;
     mg_param->setup_maxiter[i] = quda_input.mg_setup_maxiter;
-    // FIXME: this needs to be exposed in the input file reader
-    if( i == (mg_param->n_level - 1) && fabs(mg_inv_param->mu) > 0.0) mg_param->mu_factor[i] = quda_input.mg_mu_factor;
-    for (int j=0; j<QUDA_MAX_DIM; j++) {
-
-      unsigned int extent = (j == 4) ? T : LX;
-      // determine how many lattice sites remain at this level
-      for(int k = i; k > 0; k--) extent = extent/mg_param->geo_block_size[k-1][j];
-      // on the finest level, we use a block size of 4^4
-      // on all other levels, we compute how many blocks there are and use a block size of 
-      // - 3 for cases divisible by 3 or otherwise
-      // - 4 if the remaining extent is larger or equal to 8 and
-      // - 2 otherwise
-      // if aggregation is not possible, we use block size 1
-      unsigned int even_block_size = 4;
-      if(extent < 8) even_block_size = 2;
-      if( extent == 1 ) mg_param->geo_block_size[i][j] = 1;
-      else mg_param->geo_block_size[i][j] = (i == 0) ? 4 : ( (extent % 3 == 0) ? 3 : even_block_size );
+    // If doing twisted mass, we can scale the twisted mass on the coarsest grid,
+    // which significantly increases speed of convergence as a result of making
+    // the coarsest grid solve a lot better conditioned.
+    // Dean Howarth has some RG arguments on why the coarse mass parameter should be
+    // rescaled for the coarse operator to be optimal.
+    if( i == (mg_param->n_level - 1) && fabs(mg_inv_param->mu) > 2*DBL_EPSILON ) {
+      mg_param->mu_factor[i] = quda_input.mg_mu_factor;
+      if( g_proc_id == 0 && g_debug_level >= 2 ){
+        printf("# QUDA: MG setting coarse mu scaling factor on level %d to %lf\n", i, mg_param->mu_factor[i]);
+      }
     }
+    
+    for (int j=0; j<4; j++) {
+      int extent;
+      switch(j){
+        case 0:
+          extent = LX;
+          break;
+        case 1:
+          extent = LY;
+          break;
+        case 2:
+          extent = LZ;
+          break;
+        case 3:
+        default:
+          extent = T;
+          break;
+      }
+      // determine how many lattice sites remain at this level
+      for(int k = i; k > 0; k--) {
+        extent = extent/mg_param->geo_block_size[k-1][j];
+      }
+
+      // on all levels, we try to use a block size of 4^4 and compute the
+      // number of fine or aggregate lattice sites on a given level,
+      // resulting in block sizes of:
+      // - 4 if the extent is larger or equal to 16 and
+      // - 2 otherwise
+      // if aggregation using an even number of lattice points is not possible,
+      // we use block size 1 (we could also use a block size of 3 for cases divisible by 3, but
+      // in this case a standard installation of QUDA will not contain the necessary
+      // instantiations, might take this up with Kate at some point)
+      int even_block_size = 4;
+      if( extent < 16 ) even_block_size = 2;
+      
+      if( extent == 1 || extent % 2 != 0 ) {
+        mg_param->geo_block_size[i][j] = 1;
+      } else { 
+        mg_param->geo_block_size[i][j] = even_block_size;
+      }
+      if( g_proc_id == 0 && g_debug_level >= 2 ) { 
+        printf("# QUDA: MG level %d, extent of (xyzt) dim %d: %d\n", i, j, extent);
+        printf("# QUDA: MG aggregation size set to: %d\n", mg_param->geo_block_size[i][j]);
+        fflush(stdout);
+      }
+    } // for( j=0 to j=3 ) (space-time dimensions)
 
     mg_param->coarse_solver[i] = QUDA_GCR_INVERTER;
-    mg_param->coarse_solver_tol[i] = 0.25;
-    mg_param->coarse_solver_maxiter[i] = 70;
+    mg_param->coarse_solver_tol[i] = quda_input.mg_coarse_solver_tol;
+    mg_param->coarse_solver_maxiter[i] = quda_input.mg_coarse_solver_maxiter;
     // spin block size on level zero will be reset to 2 below
     mg_param->spin_block_size[i] = 1;
     mg_param->n_vec[i] = quda_input.mg_n_vec[i];
-    mg_param->nu_pre[i] = 4;
-    mg_param->nu_post[i] = 4;
+    mg_param->nu_pre[i] = quda_input.mg_nu_pre;
+    mg_param->nu_post[i] = quda_input.mg_nu_post;
 
     mg_param->cycle_type[i] = QUDA_MG_CYCLE_RECURSIVE;
     mg_param->location[i] = QUDA_CUDA_FIELD_LOCATION;
     
     mg_param->smoother[i] = QUDA_MR_INVERTER;
-    mg_param->smoother_tol[i] = 0.25;
+    mg_param->smoother_tol[i] = quda_input.mg_smoother_tol;
     mg_param->smoother_schwarz_cycle[i] = 1;
     // Kate says this should be EO always for performance
     mg_param->smoother_solve_type[i] = QUDA_DIRECT_PC_SOLVE;
@@ -1167,10 +1210,10 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     // use single parity injection into the coarse grid
     mg_param->coarse_grid_solution_type[i] = inv_param.solve_type == QUDA_DIRECT_PC_SOLVE ? QUDA_MATPC_SOLUTION : QUDA_MAT_SOLUTION;
 
-    mg_param->omega[i] = 0.85; // over/under relaxation factor
+    mg_param->omega[i] = quda_input.mg_omega; // over/under relaxation factor
 
     mg_param->location[i] = QUDA_CUDA_FIELD_LOCATION;
-  }
+  } // for(i=0 to n_level-1)
 
   // only coarsen the spin on the first restriction
   mg_param->spin_block_size[0] = 2;
@@ -1178,7 +1221,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   mg_param->compute_null_vector = QUDA_COMPUTE_NULL_VECTOR_YES;
   mg_param->generate_all_levels = QUDA_BOOLEAN_YES;
 
-  mg_param->run_verify = QUDA_BOOLEAN_YES;
+  mg_param->run_verify = quda_input.mg_run_verify;
 
   // set file i/o parameters
   strcpy(mg_param->vec_infile, "");
