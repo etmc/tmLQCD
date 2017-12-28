@@ -48,6 +48,7 @@ typedef struct {
   int maxiter;
   int iterations;
   int prop_precision;
+  int write_prop_flag;
   int no_flavours;
   int DownProp;
   int no_ev_index;
