@@ -135,8 +135,7 @@ The MG setup can be tuned using the following parameters in the \texttt{BeginExt
   \item{ \texttt{MGCoarseSolverTolerance}: unsquared relative target residual on the coarse grids. (positive float, default $0.25$) }
   \item{ \texttt{MGCoarseMaxSolveriterations}: maximum number of iterations on coarse grids. (positive integer, default $75$) }
   \item{ \texttt{MGSmootherTolerance}: unsquared relative target residual of the smoother on all levels. (positive float, default $0.25$) }
-    %% BaKo 2017.12.28: these claims should be checked, not sure if this is before and after prolongation or at some other step during the cycle
-  \item{ \texttt{MGSmootherPreIterations}: number of smoothing steps before prolongation. (zero or positive integer, default $4$)}
+  \item{ \texttt{MGSmootherPreIterations}: number of smoothing steps before coarse grid correction. (zero or positive integer, default $4$)}
   \item{ \texttt{MGSmootherPostIterations}: number of smoothing steps after prolongation. (zero or positive integer, default $4$)}
   \item{ \texttt{MGOverUnderRelaxationFactor}: Over- or under-relaxation factor. (positive float, default $0.85$)}
   \item{ \texttt{MGCoarseMuFactor}: Scaling factor for twisted mass on coarsest level, accelerates convergence and reduces condition numer of coarse grid. (positive float, usually $ > 1.0$, default $8.0$)}
