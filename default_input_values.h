@@ -214,5 +214,6 @@
 #define _default_quda_mg_nu_pre 4
 #define _default_quda_mg_nu_post 4
 #define _default_quda_mg_omega 0.85
+#define _default_quda_mg_enable_size_three_blocks 0
 
 #endif

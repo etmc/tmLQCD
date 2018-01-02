@@ -62,6 +62,7 @@ typedef struct tm_QudaParams_t {
   double            mg_smoother_tol;
   double            mg_omega;
   int               mg_run_verify;
+  int               mg_enable_size_three_blocks;
 } tm_QudaParams_t;
 
 #endif // TM_QUDA_TYPES_H

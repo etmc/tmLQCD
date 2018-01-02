@@ -116,16 +116,6 @@ BeginOperator TMWILSON
 EndOperator
 \end{verbatim}
 
-The aggregation parameters are set automatically:
-\begin{itemize}
-  \item{ A default block size of $4$ is attempted if the MPI-partitioned fine or aggregate lattice extent is larger or equal to $16$ lattice sites. }
-  \item{ If the number of aggregate lattice sites in a given direction is even and smaller than $16$, a block size of $2$ is used. }
-  \item{ If the number of remaining lattice sites is odd, aggregation is disabled for this direction at this level. }
-\end{itemize}
-In principle, for cases where an aggregate dimension on the second level (or coarser) is divisible by $3$, an aggregate size of $3$ could be used.
-However, a standard installation of QUDA does not seem to have the necessary instantiations by default (at the time of writing, 2017.12.28).
-This option is thus left to advanced users who are able to add the necessary instantiations to the restriction and prolongation operators in QUDA and who can supplement \texttt{\_setQudaMultigridParam} in the QUDA interface in \texttt{tmLQCD} with the necessary logic.
-
 The MG setup can be tuned using the following parameters in the \texttt{BeginExternalInverter QUDA} section:
 \begin{itemize}
   \item{ \texttt{MGNumberOfLevels}: number of levels to be used in the MG, $3$ is usually ideal but $2$ can be similarly efficient depending on the quark mass (positive integer, default $3$) }
@@ -142,22 +132,34 @@ The MG setup can be tuned using the following parameters in the \texttt{BeginExt
   \item{ \texttt{MGRunVerify}: Check GPU coarse operators against CPU coarse operators and verify Galerkin projectors during setup phase. This is usually fast enough to always be performed, although sometimes it seems to fail even though the setup works fine. (\emph{yes} or \emph{no}, default \emph{yes}) } 
 \end{itemize}
 
+The aggregation parameters are set automatically:
+\begin{itemize}
+  \item{ A default block size of $4$ is attempted if the MPI-partitioned fine or aggregate lattice extent is larger or equal to $16$ lattice sites. }
+  \item{ If the number of aggregate lattice sites in a given direction is even and smaller than $16$, a block size of $2$ is used. }
+  \item{ The option \texttt{MGEnableSizeThreeBlocks} can be set to \texttt{yes}. Then, for levels coarser than the fine grid, extents smaller than $16$ and divisible by $3$, a block size of $3$ will be used. This will almost certainly require the addition of instantiations of block sizes to QUDA in the restrictor and transfer operator. (\texttt{lib/restrictor.cu} and \texttt{lib/transfer\_util.cu}) }
+  \item{ In all other cases, aggregation is disabled for this direction and level. This includes, for instance, extents divisible by primes other than $2$ or $3$. }
+\end{itemize}
+
+
 Note that at the time of writing (2017.12.28), only double-single mixed-precision is supported for the MG-preconditioned GCR solver and the solve will abort if a double-half precision solve is attempted.
+
+A typical MG setup might look like this for twisted mass clover quarks. 
 
 \begin{verbatim}
 BeginExternalInverter QUDA
   MGNumberOfLevels = 3
   MGSetupSolver = cg
-  MGSetupSolverTolerance = 5e-6
+  MGSetupSolverTolerance = 1e-6
   MGSetupMaxSolverIterations = 1000
   MGCoarseSolverTolerance = 0.25
   MGCoarseSolverIterations = 75
   MGSmootherTolerance = 0.25
-  MGSmootherPreIterations = 4
+  MGSmootherPreIterations = 2
   MGSmootherPostIterations = 4
   MGOverUnderRelaxationFactor = 0.85
-  MGCoarseMuFactor = 8.0
+  MGCoarseMuFactor = 12.0
   MGRunVerify = yes
+  MGEnableSizeThreeBlocks = no
 EndExternalInverter
 \end{verbatim}
 

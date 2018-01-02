@@ -1407,6 +1407,14 @@ static inline void rmQuotes(char *str){
     quda_input.mg_run_verify = QUDA_BOOLEAN_NO;
     if(myverbose) printf("  MGRunVerify set to NO in line %d\n", line_of_file);
   }
+  {SPC}*MGEnableSizeThreeBlocks{EQL}yes {
+    quda_input.mg_enable_size_three_blocks = 1;
+    if(myverbose) printf("  MGEnableSizeThreeBlocks set to YES in line %d\n", line_of_file);
+  }
+  {SPC}*MGEnableSizeThreeBlocks{EQL}no {
+    quda_input.mg_enable_size_three_blocks = 0;
+    if(myverbose) printf("  MGEnableSizeThreeBlocks set to NO in line %d\n", line_of_file);
+  }
   ^EndExternalInverter{SPC}*  { 
     if(myverbose) printf("QUDA external inverter parameters parsed on line %d\n\n", line_of_file);
     BEGIN(0);
@@ -2995,6 +3003,7 @@ int read_input(char * conf_file){
   quda_input.mg_smoother_tol = _default_quda_mg_smoother_tol;
   quda_input.mg_omega = _default_quda_mg_omega;
   quda_input.mg_run_verify = QUDA_BOOLEAN_YES;
+  quda_input.mg_enable_size_three_blocks = _default_quda_mg_enable_size_three_blocks;
 
   /* Put -1 in PropInfo.format to see if parse_config() will
   change the value. If not then set it to source_format_flag */
