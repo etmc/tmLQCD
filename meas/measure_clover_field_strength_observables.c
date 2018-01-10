@@ -184,16 +184,16 @@ void measure_clover_field_strength_observables(const su3 ** const gf, field_stre
     // TODO: 
     // 1) omp reduction for multiple quantities in a single loop
 #ifdef TM_USE_OMP
-    int thread_num = omp_get_thread_num();
-    g_omp_acc_re[thread_num] = E;
+    g_omp_acc_re[ omp_get_thread_num() ] = E;
   } /* OpenMP parallel closing brace */
 
   for(int i=0; i < omp_num_threads; ++i) {
     Eres += g_omp_acc_re[i];
   }
 #else
-  res = E;
+  Eres = E;
 #endif
+
 #ifdef TM_USE_MPI
   MPI_Allreduce(&Eres, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   Eres = mres;
