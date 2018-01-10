@@ -46,6 +46,7 @@
 #include "gradient_flow.h"
 #include "measure_clover_field_strength_observables.h"
 #include "meas/field_strength_types.h"
+#include "meas/measurements.h"
 
 void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigned int type, const double eps ) {
   double zfac[5] = { 1, (8.0)/(9.0), (-17.0)/(36.0), (3.0)/(4.0), -1 };
@@ -131,11 +132,15 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
 
   double t[3], P[3];
   field_strength_obs_t fso[3];
-  double W=0, eps=0.01, tsqE=0;
+  double W=0, tsqE=0;
   double t1, t2;
 
+  double eps = measurement_list[id].gf_eps;
+  double tmax = measurement_list[id].gf_tmax;
+
   if( g_proc_id == 0 ) {
-    printf("# Doing gradient flow measurement.\n");
+    printf("# Doing gradient flow measurement. id=%d\n", id);
+    printf("# eps=%lf, tmax=%lf\n", eps, tmax);
   }
   
   FILE *outfile;
@@ -175,7 +180,9 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
     printf("time for field strength observables measurement: %lf\n",t2-t1);
   }
 
-  while( t[1] < 9.99 ) {
+
+
+  while( t[1] < tmax ) {
     t[0] = t[2];
     fso[0].E = fso[2].E;
     fso[0].Q = fso[2].Q;
