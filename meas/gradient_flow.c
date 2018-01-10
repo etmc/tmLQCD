@@ -1,7 +1,7 @@
 /***********************************************************************
  *
- * Copyright (C) 2013 Albert Deuzeman 
- *               2015 Bartosz Kostrzewa
+ * Copyright (C) 2013      Albert Deuzeman 
+ *               2015,2018 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -36,7 +36,6 @@
 #include "global.h"
 #include "fatal_error.h"
 #include "aligned_malloc.h"
-#include "energy_density.h"
 #include "expo.h"
 #include "get_staples.h"
 #include "get_rectangle_staples.h"
@@ -45,16 +44,25 @@
 #include "matrix_utils.h"
 #include "xchange/xchange_gauge.h"
 #include "gradient_flow.h"
+#include "measure_clover_field_strength_observables.h"
+#include "meas/field_strength_types.h"
 
 void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigned int type, const double eps ) {
   double zfac[5] = { 1, (8.0)/(9.0), (-17.0)/(36.0), (3.0)/(4.0), -1 };
   double zepsfac[3] = { 0.25, 1, 1 };
   su3** fields[4];
 
+  double t1;
+  if( g_debug_level >= 4 ) t1 = gettime();
+
   fields[0] = x0;
   fields[1] = x1;
   fields[2] = x2;
   fields[3] = x0;
+
+#ifdef TM_USE_MPI
+  xchange_gauge(x0);
+#endif
 
 #ifdef TM_USE_OMP
 #pragma omp parallel
@@ -63,15 +71,6 @@ void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigne
  
   su3 ALIGN w,w1,w2;
   su3 ALIGN z_tmp,z_tmp1;
-
-#ifdef TM_USE_MPI
-#ifdef TM_USE_OMP
-#pragma omp single
-#endif
-  {
-  xchange_gauge(x0);
-  }
-#endif
 
   // implementation of third-order Runge-Kutta integrator following Luescher's hep-lat/1006.4518
   // this can probably be improved...
@@ -111,16 +110,27 @@ void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigne
 #pragma omp single
 #endif
     {
-    xchange_gauge(fields[f+1]); 
+      double tex = gettime();
+      xchange_gauge(fields[f+1]); 
+      if( g_proc_id == 0 && g_debug_level >= 4 ){
+        printf("Time for gauge exchange in gradient flow step: %lf\n", gettime()-tex);
+      }
     }
 #endif
   }
+
+  } /* OpenMP parallel closing brace */
+  
+  if( g_proc_id == 0 && g_debug_level >= 4 ){
+    printf("Time for gradient flow step: %lf\n", gettime()-t1);
   }
+
 }
 
 void gradient_flow_measurement(const int traj, const int id, const int ieo) {
 
-  double E[3],t[3], P[3];
+  double t[3], P[3];
+  field_strength_obs_t fso[3];
   double W=0, eps=0.01, tsqE=0;
   double t1, t2;
 
@@ -153,41 +163,42 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
 #endif
   memcpy(vt.field[0],g_gauge_field[0],sizeof(su3)*4*(VOLUMEPLUSRAND+g_dbw2rand));
 
-  t[0] = E[0] = P[0] = 0.0;
-  t[1] = E[1] = P[1] = 0.0;
-  t[2] = E[2] = P[2] = 0.0;
+  t[0] = fso[0].E = fso[0].Q = P[0] = 0.0;
+  t[1] = fso[1].E = fso[1].Q = P[1] = 0.0;
+  t[2] = fso[2].E = fso[2].Q = P[2] = 0.0;
 
   t1 = gettime();
-  measure_energy_density(vt.field,&E[2]);
+  measure_clover_field_strength_observables(vt.field, &fso[2]);
   P[2] = measure_plaquette(vt.field)/(6.0*VOLUME*g_nproc);
   t2 = gettime();
-  if(g_proc_id==0 && g_debug_level > 2) {
-    printf("time for energy density measurement: %lf\n",t2-t1);
+  if(g_proc_id==0 && g_debug_level > 1) {
+    printf("time for field strength observables measurement: %lf\n",t2-t1);
   }
 
   while( t[1] < 9.99 ) {
     t[0] = t[2];
-    E[0] = E[2];
+    fso[0].E = fso[2].E;
+    fso[0].Q = fso[2].Q;
     P[0] = P[2];
     for(int step = 1; step < 3; ++step) {
       t[step] = t[step-1]+eps;
       step_gradient_flow(vt.field,x1.field,x2.field,z.field,0,eps);
-      measure_energy_density(vt.field,&E[step]);
+      measure_clover_field_strength_observables(vt.field, &fso[step]);
       P[step] = measure_plaquette(vt.field)/(6.0*VOLUME*g_nproc);
     }
-    W = t[1]*t[1]*( 2*E[1] + t[1]*((E[2]-E[0])/(2*eps)) ) ;
-    tsqE = t[1]*t[1]*E[1];
+    W = t[1]*t[1]*( 2*fso[1].E + t[1]*((fso[2].E - fso[0].E)/(2*eps)) ) ;
+    tsqE = t[1]*t[1]*fso[1].E;
     
-    if(g_proc_id==0 && g_debug_level > 3){
+    if(g_proc_id==0 && g_debug_level >= 3){
       printf("sym(plaq)  t=%lf 1-P(t)=%1.8lf E(t)=%2.8lf(%2.8lf) t^2E=%2.8lf(%2.8lf) W(t)=%2.8lf \n",t[1],1-P[1],
-        E[1],36*(1-P[1]),
+        fso[1].E,36*(1-P[1]),
         tsqE,t[1]*t[1]*36*(1-P[1]),
         W);
     }
     if(g_proc_id==0){
       fprintf(outfile,"%06d %f %2.12lf %2.12lf %2.12lf %2.12lf %2.12lf %2.12lf \n",
                       traj,t[1],P[1],
-                      36*(1-P[1]),E[1],
+                      36*(1-P[1]),fso[1].E,
                       t[1]*t[1]*36*(1-P[1]),tsqE,
                       W);
       fflush(outfile);
@@ -203,7 +214,7 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
   t2 = gettime();
   
   if( g_proc_id == 0 ) {
-    if(g_debug_level>2){
+    if(g_debug_level>1){
       printf("Gradient flow measurement done in %f seconds!\n",t2-t1);
     }
     fclose(outfile);

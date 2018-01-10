@@ -4,7 +4,7 @@
 *               2001,2005 Martin Hasenbusch
 *               2011,2012 Carsten Urbach
 *               2013      Albert Deuzeman
-*               2015      Bartosz Kostrzewa
+*               2015,2018 Bartosz Kostrzewa
 *
 * This file is part of tmLQCD.
 *
@@ -43,8 +43,11 @@
 #include "sse.h"
 #include "su3adj.h"
 #include "matrix_utils.h"
+#include "field_strength_types.h" 
+#include "kahan_summation.h"
+#include "tensors.h"
 
-void measure_energy_density(const su3 ** const gf, double *ret)
+void measure_clover_field_strength_observables(const su3 ** const gf, field_strength_obs_t * const fso)
 {
   // we have iG_\mu\nu = 1/4 P_T.A. [clover] where P is the projection to the
   // traceless anti-hermitian part
@@ -52,10 +55,15 @@ void measure_energy_density(const su3 ** const gf, double *ret)
   // our traceless anti-hermitian projection includes a factor of 0.5, so instead of 
   // the usual (1/8)^2 we get (1/4)^2 of the clover
   // 1/4 from the definition of the energy density <E> = 1\4 (G_\mu\nu)^2
-  // The factor of 4 makes the result agree (at large t and keeping in mind discretization errors)
-  //  with the plaquette definition and with papers... I don't understand where it comes from...
-  double normalization = - 4 / ( 4 * 16.0 * VOLUME * g_nproc);
-  double res = 0;
+  // The additional multiplication by 4 (the first factor), originates in the fact
+  // that we only accumulate over the diagonal and upper triangle below
+  const double energy_density_normalization = - 4 / ( 4 * 16.0 * VOLUME * g_nproc);
+  double Eres = 0;
+  double Qres = 0;
+ 
+  // Euclidean 4D totally anti-symemtric tensor 
+  epsilon4_t eps4 = new_epsilon4();
+
 #ifdef TM_USE_MPI
   double ALIGN mres=0;
 #endif
@@ -65,10 +73,20 @@ void measure_energy_density(const su3 ** const gf, double *ret)
   {
 #endif
     su3 ALIGN v1, v2, plaq;
-    double ALIGN ac,tr,ts,tt,kc=0,ks=0;
-    su3 ALIGN trace;
+    double ALIGN E, Q;
+    
+    // kahan accumulators for energy density and top. charge
+    kahan_re_t E_kahan = new_kahan_re();
+    kahan_re_t Q_kahan = new_kahan_re();
+
+    // for the measurement of the top. charge density, we need to temporarily
+    // store the components of Fmunu
+    // for simplicity of notation, we allocate 4x4 but will only use the
+    // and the upper triangle
+    su3 Fmunu[4][4];
   
-    /*  compute the clover-leave */
+    /*  compute the clover-leaves, store them in Fmunu and compute the energy density
+     *  later compute the topological charge */
   /*  l  __   __
         |  | |  |
         |__| |__|
@@ -120,33 +138,66 @@ void measure_energy_density(const su3 ** const gf, double *ret)
           _su3d_times_su3(v1, *w1, *w2);
           _su3_times_su3d(v2, *w3, *w4);
           _su3_times_su3_acc(plaq, v1, v2);
-          project_traceless_antiherm(&plaq);  
-          _trace_su3_times_su3(ac, plaq, plaq); // This should actually be the energy density already...
+          project_traceless_antiherm(&plaq);
+          _su3_assign(Fmunu[k][l], plaq);
           
-          // Kahan summation for each thread
-          tr=ac+kc;
-          ts=tr+ks;
-          tt=ts-ks;
-          ks=ts;
-          kc=tr-tt;
+          // compute and accumulate the energy density at this stage
+          _trace_su3_times_su3(E, plaq, plaq);
+          kahan_sum_re_step(E, &E_kahan);
         }
-      }   
+      }
+      
+      // sum up the topological charge contribution now
+      for( int i = 0; i < eps4.N; i++ ){
+        double sign = 1.0;
+
+        int i1 = eps4.eps_idx[i][0];
+        int i2 = eps4.eps_idx[i][1];
+        int i3 = eps4.eps_idx[i][2];
+        int i4 = eps4.eps_idx[i][3];
+        // account for the fact that we've stored only the diagonal and upper triangle
+        // of Fmunu
+        if( eps4.eps_idx[i][1] < eps4.eps_idx[i][0] ){
+          sign *= -1.0;
+          i2 = eps4.eps_idx[i][0];
+          i1 = eps4.eps_idx[i][1];
+        }
+        if( eps4.eps_idx[i][3] < eps4.eps_idx[i][2] ){
+          sign *= -1.0;
+          i3 = eps4.eps_idx[i][3];
+          i4 = eps4.eps_idx[i][2];
+        }
+        _trace_su3_times_su3( Q, 
+                              Fmunu[ i1 ][ i2 ],
+                              Fmunu[ i3 ][ i4 ] );
+
+        // (Kahan) accumulate topological charge and take care of signs coming
+        // from Fmunu symmetries and the Levi-Civita
+        kahan_sum_re_step(sign*eps4.eps_val[i]*Q, &Q_kahan);
+      }
     }
-    kc=kc+ks;
+    
+    E = kahan_sum_re_final(&E_kahan);
+    Q = kahan_sum_re_final(&Q_kahan);
+
+    // TODO: 
+    // 1) omp reduction for multiple doubles in a single loop
+    // 2) 
 #ifdef TM_USE_OMP
     int thread_num = omp_get_thread_num();
-    g_omp_acc_re[thread_num] = kc;
+    g_omp_acc_re[thread_num] = E;
   } /* OpenMP parallel closing brace */
 
   for(int i=0; i < omp_num_threads; ++i) {
-    res += g_omp_acc_re[i];
+    Eres += g_omp_acc_re[i];
   }
 #else
-  res = kc;
+  res = E;
 #endif
 #ifdef TM_USE_MPI
-  MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  res = mres;
+  MPI_Allreduce(&Eres, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  Eres = mres;
 #endif
-  *ret = normalization * res;
+  fso->E = energy_density_normalization * Eres;
+  fso->Q = Qres;
 }
