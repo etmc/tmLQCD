@@ -56,7 +56,7 @@ void measure_clover_field_strength_observables(const su3 ** const gf, field_stre
   // the usual (1/8)^2 we get (1/4)^2 of the clover
   // 1/4 from the definition of the energy density <E> = 1\4 (G_\mu\nu)^2
   // The additional multiplication by 4 (the first factor), originates in the fact
-  // that we only accumulate over the diagonal and upper triangle below
+  // that we only accumulate over the upper triangle of G_\mu\nu below
   const double energy_density_normalization = - 4 / ( 4 * 16.0 * VOLUME * g_nproc);
   double Eres = 0;
   double Qres = 0;
@@ -80,12 +80,12 @@ void measure_clover_field_strength_observables(const su3 ** const gf, field_stre
     kahan_re_t Q_kahan = new_kahan_re();
 
     // for the measurement of the top. charge density, we need to temporarily
-    // store the components of Fmunu
+    // store the components of Gmunu
     // for simplicity of notation, we allocate 4x4 but will only use the
-    // and the upper triangle
-    su3 Fmunu[4][4];
+    // upper triangle
+    su3 Gmunu[4][4];
   
-    /*  compute the clover-leaves, store them in Fmunu and compute the energy density
+    /*  compute the clover-leaves, store them in Gmunu and compute the energy density
      *  later compute the topological charge */
   /*  l  __   __
         |  | |  |
@@ -139,7 +139,7 @@ void measure_clover_field_strength_observables(const su3 ** const gf, field_stre
           _su3_times_su3d(v2, *w3, *w4);
           _su3_times_su3_acc(plaq, v1, v2);
           project_traceless_antiherm(&plaq);
-          _su3_assign(Fmunu[k][l], plaq);
+          _su3_assign(Gmunu[k][l], plaq);
           
           // compute and accumulate the energy density at this stage
           _trace_su3_times_su3(E, plaq, plaq);
@@ -155,8 +155,9 @@ void measure_clover_field_strength_observables(const su3 ** const gf, field_stre
         int i2 = eps4.eps_idx[i][1];
         int i3 = eps4.eps_idx[i][2];
         int i4 = eps4.eps_idx[i][3];
-        // account for the fact that we've stored only the diagonal and upper triangle
-        // of Fmunu
+
+        // account for the fact that we've stored only the upper triangle
+        // use transposed indices and adjust for the sign
         if( eps4.eps_idx[i][1] < eps4.eps_idx[i][0] ){
           sign *= -1.0;
           i2 = eps4.eps_idx[i][0];
@@ -168,11 +169,11 @@ void measure_clover_field_strength_observables(const su3 ** const gf, field_stre
           i4 = eps4.eps_idx[i][2];
         }
         _trace_su3_times_su3( Q, 
-                              Fmunu[ i1 ][ i2 ],
-                              Fmunu[ i3 ][ i4 ] );
+                              Gmunu[ i1 ][ i2 ],
+                              Gmunu[ i3 ][ i4 ] );
 
         // (Kahan) accumulate topological charge and take care of signs coming
-        // from Fmunu symmetries and the Levi-Civita
+        // from Gmunu symmetries and the Levi-Civita
         kahan_sum_re_step(sign*eps4.eps_val[i]*Q, &Q_kahan);
       }
     }
@@ -181,8 +182,7 @@ void measure_clover_field_strength_observables(const su3 ** const gf, field_stre
     Q = kahan_sum_re_final(&Q_kahan);
 
     // TODO: 
-    // 1) omp reduction for multiple doubles in a single loop
-    // 2) 
+    // 1) omp reduction for multiple quantities in a single loop
 #ifdef TM_USE_OMP
     int thread_num = omp_get_thread_num();
     g_omp_acc_re[thread_num] = E;
@@ -199,5 +199,7 @@ void measure_clover_field_strength_observables(const su3 ** const gf, field_stre
   Eres = mres;
 #endif
   fso->E = energy_density_normalization * Eres;
+  // TODO: 
+  // 2) Reduction of Q and normalisation of top. charge
   fso->Q = Qres;
 }
