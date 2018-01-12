@@ -93,7 +93,7 @@ void measure_clover_field_strength_observables(const su3 ** const gf, field_stre
 #pragma omp parallel
   {
 #endif
-    su3 ALIGN v1, v2, plaq;
+    su3 ALIGN v1, v2;
     double ALIGN E;
     double ALIGN Q;
     
@@ -105,7 +105,7 @@ void measure_clover_field_strength_observables(const su3 ** const gf, field_stre
     // store the components of Gmunu
     // for simplicity of notation, we allocate 4x4 but will only use the
     // upper triangle
-    su3 Gmunu[4][4];
+    su3 ALIGN Gmunu[4][4];
   
     /*  compute the clover-leaves, store them in Gmunu and compute the energy density
      *  later compute the topological charge */
@@ -138,33 +138,32 @@ void measure_clover_field_strength_observables(const su3 ** const gf, field_stre
           const su3 *w4 = &gf[x][l];
           _su3_times_su3(v1, *w1, *w2);
           _su3_times_su3(v2, *w4, *w3);
-          _su3_times_su3d(plaq, v1, v2);
+          _su3_times_su3d(Gmunu[k][l], v1, v2);
           w1 = &gf[x][l];
           w2 = &gf[xplmk][k];
           w3 = &gf[xmk][l];
           w4 = &gf[xmk][k];
           _su3_times_su3d(v1, *w1, *w2);
           _su3d_times_su3(v2, *w3, *w4);
-          _su3_times_su3_acc(plaq, v1, v2);
+          _su3_times_su3_acc(Gmunu[k][l], v1, v2);
           w1 = &gf[xmk][k];
           w2 = &gf[xmkml][l];
           w3 = &gf[xmkml][k];
           w4 = &gf[xml][l];
           _su3_times_su3(v1, *w2, *w1);
           _su3_times_su3(v2, *w3, *w4);
-          _su3d_times_su3_acc(plaq, v1, v2);
+          _su3d_times_su3_acc(Gmunu[k][l], v1, v2);
           w1 = &gf[xml][l];
           w2 = &gf[xml][k];
           w3 = &gf[xpkml][l];
           w4 = &gf[x][k];
           _su3d_times_su3(v1, *w1, *w2);
           _su3_times_su3d(v2, *w3, *w4);
-          _su3_times_su3_acc(plaq, v1, v2);
-          project_traceless_antiherm(&plaq);
-          _su3_assign(Gmunu[k][l], plaq);
+          _su3_times_su3_acc(Gmunu[k][l], v1, v2);
+          project_traceless_antiherm(&Gmunu[k][l]);
           
           // compute and accumulate the energy density at this stage
-          _trace_su3_times_su3(E, plaq, plaq);
+          _trace_su3_times_su3(E, Gmunu[k][l], Gmunu[k][l]);
           kahan_sum_re_step(E, &E_kahan);
         }
       }
