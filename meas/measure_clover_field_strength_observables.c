@@ -222,6 +222,5 @@ void measure_clover_field_strength_observables(const su3 ** const gf, field_stre
   Qres = mres;
 #endif
   fso->E = energy_density_normalization * Eres;
-  // TODO: normalisation of top. charge
   fso->Q = topo_charge_normalization * Qres;
 }
