@@ -48,6 +48,7 @@
 #include "meas/field_strength_types.h"
 #include "meas/measurements.h"
 
+
 void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigned int type, const double eps ) {
   double zfac[5] = { 1, (8.0)/(9.0), (-17.0)/(36.0), (3.0)/(4.0), -1 };
   double zepsfac[3] = { 0.25, 1, 1 };
@@ -155,7 +156,7 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
       fatal_error(error_message,"gradient_flow_measurement");
     }
 
-    fprintf(outfile, "traj t P Eplaq Esym tsqEplaq tsqEsym Wsym\n");
+    fprintf(outfile, "traj t P Eplaq Esym tsqEplaq tsqEsym Wsym Qsym\n");
   }
 
   aligned_su3_field_t vt = aligned_su3_field_alloc(VOLUMEPLUSRAND+g_dbw2rand);
@@ -177,10 +178,8 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
   P[2] = measure_plaquette(vt.field)/(6.0*VOLUME*g_nproc);
   t2 = gettime();
   if(g_proc_id==0 && g_debug_level > 1) {
-    printf("time for field strength observables measurement: %lf\n",t2-t1);
+    printf("# GRADFLOW: time for field strength observables measurement: %lf\n",t2-t1);
   }
-
-
 
   while( t[1] < tmax ) {
     t[0] = t[2];
@@ -197,20 +196,29 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
     tsqE = t[1]*t[1]*fso[1].E;
     
     if(g_proc_id==0 && g_debug_level >= 3){
-      printf("sym(plaq)  t=%lf 1-P(t)=%1.8lf E(t)=%2.8lf(%2.8lf) t^2E=%2.8lf(%2.8lf) W(t)=%2.8lf \n",t[1],1-P[1],
-        fso[1].E,36*(1-P[1]),
-        tsqE,t[1]*t[1]*36*(1-P[1]),
-        W);
+      printf("# GRADFLOW: sym(plaq)  t=%lf 1-P(t)=%1.8lf E(t)=%2.8lf(%2.8lf) t^2E=%2.8lf(%2.8lf) W(t)=%2.8lf Q(t)=%.8lf \n",
+             t[1],
+             1-P[1],
+             fso[1].E,
+             36*(1-P[1]),
+             tsqE,
+             t[1]*t[1]*36*(1-P[1]),
+             W, 
+             fso[1].Q );
     }
     if(g_proc_id==0){
-      fprintf(outfile,"%06d %f %2.12lf %2.12lf %2.12lf %2.12lf %2.12lf %2.12lf \n",
-                      traj,t[1],P[1],
-                      36*(1-P[1]),fso[1].E,
-                      t[1]*t[1]*36*(1-P[1]),tsqE,
-                      W);
+      fprintf(outfile,"%06d %f %2.12lf %2.12lf %2.12lf %2.12lf %2.12lf %2.12lf %.12lf \n",
+                      traj,
+                      t[1],
+                      P[1],
+                      36*(1-P[1]),
+                      fso[1].E,
+                      t[1]*t[1]*36*(1-P[1]),
+                      tsqE,
+                      W,
+                      fso[1].Q );
       fflush(outfile);
     }
-
   }
 
   aligned_su3_field_free(&vt);
@@ -222,7 +230,7 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
   
   if( g_proc_id == 0 ) {
     if(g_debug_level>1){
-      printf("Gradient flow measurement done in %f seconds!\n",t2-t1);
+      printf("# GRADFLOW: Gradient flow measurement done in %f seconds!\n",t2-t1);
     }
     fclose(outfile);
   }

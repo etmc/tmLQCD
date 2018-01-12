@@ -45,7 +45,12 @@
 #include "matrix_utils.h"
 #include "field_strength_types.h" 
 #include "kahan_summation.h"
+#include "omp_accumulator.h"
 #include "tensors.h"
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 void measure_clover_field_strength_observables(const su3 ** const gf, field_strength_obs_t * const fso)
 {
@@ -54,15 +59,31 @@ void measure_clover_field_strength_observables(const su3 ** const gf, field_stre
   // the minus sign compensates for the i^2 in the lattice definition of G_\mu\nu
   // our traceless anti-hermitian projection includes a factor of 0.5, so instead of 
   // the usual (1/8)^2 we get (1/4)^2 of the clover
-  // 1/4 from the definition of the energy density <E> = 1\4 (G_\mu\nu)^2
-  // The additional multiplication by 4 (the first factor), originates in the fact
-  // that we only accumulate over the upper triangle of G_\mu\nu below
+  // 1/4 from the definition of the energy density <E> = 1\4 Tr[ G_\mu\nu G_\mu\nu ]
+  //
+  // The additional multiplication by 4 (the first factor below), originates in the fact
+  // that we only accumulate over the upper triangle of G_\mu\nu below, which
+  // such that iG_\mu\nu = 1/2 P_T.A. [clover upper triangle]
+  
   const double energy_density_normalization = - 4 / ( 4 * 16.0 * VOLUME * g_nproc);
+
+  // for the toplogical charge, we would naively have a normalisation of -1/(16 * 32 * pi^2)
+  // but we only sum up contributions from the upper triangle of Gmunu, saving a factor of 4
+  const double topo_charge_normalization = - 1 / ( 4 * 32.0 * M_PI * M_PI );
   double Eres = 0;
   double Qres = 0;
  
   // Euclidean 4D totally anti-symemtric tensor 
   epsilon4_t eps4 = new_epsilon4();
+
+#ifdef TM_USE_OMP
+  // accumulators for thread-local sums
+  omp_re_acc_t Eacc = new_omp_re_acc();
+  omp_re_acc_t Qacc = new_omp_re_acc();
+  // this involves memory allocation, so we need corresponding frees!
+  omp_re_acc_init(&Eacc, 1);
+  omp_re_acc_init(&Qacc, 1);
+#endif
 
 #ifdef TM_USE_MPI
   double ALIGN mres=0;
@@ -73,7 +94,8 @@ void measure_clover_field_strength_observables(const su3 ** const gf, field_stre
   {
 #endif
     su3 ALIGN v1, v2, plaq;
-    double ALIGN E, Q;
+    double ALIGN E;
+    double ALIGN Q;
     
     // kahan accumulators for energy density and top. charge
     kahan_re_t E_kahan = new_kahan_re();
@@ -149,57 +171,57 @@ void measure_clover_field_strength_observables(const su3 ** const gf, field_stre
       
       // sum up the topological charge contribution now
       for( int i = 0; i < eps4.N; i++ ){
-        double sign = 1.0;
-
         int i1 = eps4.eps_idx[i][0];
         int i2 = eps4.eps_idx[i][1];
         int i3 = eps4.eps_idx[i][2];
         int i4 = eps4.eps_idx[i][3];
 
-        // account for the fact that we've stored only the upper triangle
-        // use transposed indices and adjust for the sign
+        // when Gmunu components from the lower triangle are to be used,
+        // we can simply skip them and multiply our normalisation by a factor of two
         if( eps4.eps_idx[i][1] < eps4.eps_idx[i][0] ){
-          sign *= -1.0;
-          i2 = eps4.eps_idx[i][0];
-          i1 = eps4.eps_idx[i][1];
+          continue;
         }
         if( eps4.eps_idx[i][3] < eps4.eps_idx[i][2] ){
-          sign *= -1.0;
-          i3 = eps4.eps_idx[i][3];
-          i4 = eps4.eps_idx[i][2];
+          continue;
         }
+        
         _trace_su3_times_su3( Q, 
                               Gmunu[ i1 ][ i2 ],
                               Gmunu[ i3 ][ i4 ] );
 
         // (Kahan) accumulate topological charge and take care of signs coming
-        // from Gmunu symmetries and the Levi-Civita
-        kahan_sum_re_step(sign*eps4.eps_val[i]*Q, &Q_kahan);
+        // the Levi-Civita
+        kahan_sum_re_step(eps4.eps_val[i]*Q, &Q_kahan);
       }
+
     }
     
     E = kahan_sum_re_final(&E_kahan);
     Q = kahan_sum_re_final(&Q_kahan);
 
-    // TODO: 
-    // 1) omp reduction for multiple quantities in a single loop
 #ifdef TM_USE_OMP
-    g_omp_acc_re[ omp_get_thread_num() ] = E;
+    omp_re_acc_add(&Eacc, &E, 1);
+    omp_re_acc_add(&Qacc, &Q, 1);
   } /* OpenMP parallel closing brace */
 
-  for(int i=0; i < omp_num_threads; ++i) {
-    Eres += g_omp_acc_re[i];
-  }
+  omp_re_acc_reduce(&Eres, &Eacc);  
+  omp_re_acc_reduce(&Qres, &Qacc);
+  // free omp accumulator memory
+  omp_re_acc_free(&Eacc);
+  omp_re_acc_free(&Qacc); 
+
 #else
   Eres = E;
+  Qres = Q;
 #endif
 
 #ifdef TM_USE_MPI
   MPI_Allreduce(&Eres, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   Eres = mres;
+  MPI_Allreduce(&Qres, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  Qres = mres;
 #endif
   fso->E = energy_density_normalization * Eres;
-  // TODO: 
-  // 2) Reduction of Q and normalisation of top. charge
-  fso->Q = Qres;
+  // TODO: normalisation of top. charge
+  fso->Q = topo_charge_normalization * Qres;
 }
