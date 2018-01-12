@@ -50,7 +50,7 @@ static inline double kahan_sum_re_final(const kahan_re_t * acc){
   return( acc->kc + acc->ks );
 }
 
-static inline void kahan_sum_cplx_step(const complex double in, kahan_cplx_t * acc){
+static inline void kahan_sum_cplx_step(const complex double in, kahan_cplx_t * const acc){
   acc->tr = in + acc->kc;
   acc->ts = acc->tr + acc->ks;
   acc->tt = acc->ts - acc->ks;
