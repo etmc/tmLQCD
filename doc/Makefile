@@ -3,7 +3,7 @@
 all: main.pdf
 
 main.pdf: main.tex
-	latexmk -bibtex -pdf -pdflatex="pdflatex -interaction=nonstopmode" -use-make main.tex
+	latexmk -f -bibtex -pdf -pdflatex="pdflatex -interaction=nonstopmode" -use-make main.tex
 
 clean:
 	latexmk -CA

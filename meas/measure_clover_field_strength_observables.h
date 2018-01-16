@@ -1,6 +1,6 @@
 /***********************************************************************
  *
- * Copyright (C) 2015 Bartosz Kostrzewa
+ * Copyright (C) 2015,2018 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -18,9 +18,11 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _ENERGY_DENSITY_H
-#define _ENERGY_DENSITY_H
+#ifndef MEASURE_CLOVER_FIELD_STRENGTH_OBSERVABLES_H
+#define MEASURE_CLOVER_FIELD_STRENGTH_OBSERVABLES_H
 
-void measure_energy_density(const su3 ** const gf, double *ret);
+#include "meas/field_strength_types.h"
+
+void measure_clover_field_strength_observables(const su3 ** const gf, field_strength_obs_t * const ret);
 
 #endif  
