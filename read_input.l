@@ -66,6 +66,8 @@ EQL {SPC}*={SPC}*
 #include "qphix_types.h"
 #include "quda_types.h"
 
+// some general parsing helpers
+
 static inline void rmQuotes(char *str){
   char* strsave=str;
 
@@ -77,6 +79,34 @@ static inline void rmQuotes(char *str){
 
   while( !( *str=='\0' || *str == '\"' || *str == '\n') ) *(strsave++)=*(str++);
   *strsave='\0';
+}
+
+static inline void fltlist_tokenize(const char * const str, char * const paramname, const int paramname_length){
+  char error_message[200];
+  char * token = (char*)NULL;
+  // the first token is the parameter name, we will return it, 
+  // but first check if tokenization was successful
+  token = strtok(str, "\n\t =,\\");
+  if( (void*)token == NULL ){
+    snprintf(error_message, 200, "Unable to parse '%s' in fltlist_tokenize!\n", paramname);
+    yy_fatal_error(error_message);
+  } else {
+    // return what we parsed
+    snprintf(paramname, paramname_length, "%s", token);
+  }
+}
+
+static inline double fltlist_next_token(int * const list_end){
+  double retval;
+  char * token = strtok(NULL," =,\t");
+  if( (void*)token == NULL ){
+    *list_end = 1;
+    return(0.0);
+  } else {
+    *list_end = 0;
+    sscanf(token,"%lf",&retval);
+    return(retval);
+  }
 }
 
   /* Name of the parsing routine */
@@ -208,6 +238,33 @@ static inline void rmQuotes(char *str){
 #else
   tm_QPhiXParams_t qphix_input;
 #endif
+
+// specific parsing helpers
+  static inline void parse_quda_mg_blocksize(const char * const input, const int dim){
+    char paramname[100];
+    char error_message[200];
+    int list_end = 0;
+    int level = 0;
+    int blocksize = 0;
+    
+    fltlist_tokenize(input, paramname, 100);
+    blocksize = (int)fltlist_next_token(&list_end);
+    while( list_end != 1 ){
+      if( level >= (QUDA_MAX_MG_LEVEL-1) ){
+        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+        yy_fatal_error(error_message);
+      }
+      
+      quda_input.mg_blocksize[level][dim] = blocksize;
+      if(myverbose){ 
+        printf("  %s, level %d set to %d line %d\n", paramname,
+                level, quda_input.mg_blocksize[level][dim], line_of_file);
+      }
+      
+      level++;
+      blocksize = (int)fltlist_next_token(&list_end);
+    }
+  }
   
 %}
 
@@ -1345,6 +1402,19 @@ static inline void rmQuotes(char *str){
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     quda_input.mg_n_level=a;
     if(myverbose) printf("  MGNumberOfLevels set to %d line %d\n", quda_input.mg_n_level, line_of_file);
+  }
+  {SPC}*MGBlockSizesX{EQL}{FLTLIST} {
+    // note the dimensions here are QUDA (XYZT!)
+    parse_quda_mg_blocksize(yytext, 0);
+  }
+  {SPC}*MGBlockSizesY{EQL}{FLTLIST} {
+    parse_quda_mg_blocksize(yytext, 1);
+  }
+  {SPC}*MGBlockSizesZ{EQL}{FLTLIST} {
+    parse_quda_mg_blocksize(yytext, 2);
+  }
+  {SPC}*MGBlockSizesT{EQL}{FLTLIST} {
+    parse_quda_mg_blocksize(yytext, 3);
   }
   {SPC}*MGCoarseMuFactor{EQL}{FLT}+ {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
@@ -2991,6 +3061,9 @@ int read_input(char * conf_file){
   quda_input.mg_n_level = _default_quda_mg_n_level;
   for( int level = 0; level < QUDA_MAX_MG_LEVEL; ++level){
     quda_input.mg_n_vec[level] = _default_quda_mg_n_vec;
+    for( int dim = 0; dim < 4; ++dim ){
+      quda_input.mg_blocksize[level][dim] = 0;
+    }
   }
   quda_input.mg_mu_factor = _default_quda_mg_mu_factor;
   quda_input.mg_setup_inv_type = QUDA_CG_INVERTER;

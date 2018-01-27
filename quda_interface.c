@@ -1011,7 +1011,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     inv_param.precondition_cycle = 1;
     inv_param.tol_precondition = 1e-1;
     inv_param.maxiter_precondition = 1;
-    inv_param.omega = 0.85;
+    inv_param.omega = quda_input.mg_omega;
   }
   else {
     /* Here we invert the hermitean operator squared */
@@ -1154,32 +1154,41 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
           extent = T;
           break;
       }
-      // determine how many lattice sites remain at this level
+      // determine how many lattice sites remain at the current level
       for(int k = level; k > 0; k--) {
         extent = extent/mg_param->geo_block_size[k-1][dim];
       }
 
-      // on all levels, we try to use a block size of 4^4 and compute the
-      // number of fine or aggregate lattice sites on a given level,
-      // resulting in block sizes of:
-      // - 4 if the extent is larger or equal to 16 and
-      // - 2 otherwise
-      // When an extent is divisible by three and smaller than 16 and when we're
-      // not on the finest grid and when the user has explicitly enabled support 
-      // for these block lengths  (and therefore also adjusted QUDA to instantiate them), 
-      // we use a block length of 3.
-      // If aggregation using an even number of lattice points (if size 3 is disabled)
-      // is not possible or if the extent is 1 or some divisible only by some prime number
-      // other than 3 or 2, we use a block size of 1
-      int even_block_size = 4;
-      if( extent < 16 ) even_block_size = 2;
-      
-      if ( extent < 16 && extent % 3 == 0 && level > 0 && quda_input.mg_enable_size_three_blocks ) {
-        mg_param->geo_block_size[level][dim] = 3;
-      } else if ( extent % even_block_size == 0 ) { 
-        mg_param->geo_block_size[level][dim] = even_block_size;
+      if( quda_input.mg_blocksize[level][dim] != 0 ){
+        // the block size for this level and dimension has been set non-zero in the input file
+        // we respect this no matter what
+        mg_param->geo_block_size[level][dim] = quda_input.mg_blocksize[level][dim];
+
+        // otherwise we employ our blocking algorithm
       } else {
-        mg_param->geo_block_size[level][dim] = 1;
+        // on all levels, we try to use a block size of 4^4 and compute the
+        // number of fine or aggregate lattice sites on a given level,
+        // resulting in block sizes of:
+        // - 4 if the extent is larger or equal to 16 and
+        // - 2 otherwise
+        // When an extent is divisible by three and smaller than 16 and when we're
+        // not on the finest grid and when the user has explicitly enabled support 
+        // for these block lengths  (and therefore also adjusted QUDA to instantiate them), 
+        // we use a block length of 3.
+        // If aggregation using an even number of lattice points (if size 3 is disabled)
+        // is not possible or if the extent is 1 or some divisible only by some prime number
+        // other than 3 or 2, we use a block size of 1
+        int even_block_size = 4;
+        if( extent < 16 ) even_block_size = 2;
+     
+        // special treatment of size 24 lattice extents on the fine grid
+        if ( extent <= 24 && extent % 3 == 0 && quda_input.mg_enable_size_three_blocks ) {
+          mg_param->geo_block_size[level][dim] = 3;
+        } else if ( extent % even_block_size == 0 ) { 
+          mg_param->geo_block_size[level][dim] = even_block_size;
+        } else {
+          mg_param->geo_block_size[level][dim] = 1;
+        }
       }
 
       // this output is only relevant on levels 0, 1, ..., n-2
