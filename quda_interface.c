@@ -1097,6 +1097,12 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   mg_inv_param->sp_pad = 0;
   mg_inv_param->cl_pad = 0;
 
+  // in the MG, the residual type should always be relative,
+  // otherwisethe solver fails to converge
+  // in the outer solver, we are still free to choose
+  // absolute or relative
+  mg_inv_param->residual_type = QUDA_L2_RELATIVE_RESIDUAL;
+
   mg_inv_param->preserve_source = QUDA_PRESERVE_SOURCE_NO;
   // the MG internal Gamma basis is always DEGRAND_ROSSI
   mg_inv_param->gamma_basis = QUDA_DEGRAND_ROSSI_GAMMA_BASIS;
@@ -1125,13 +1131,13 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     mg_param->num_setup_iter[level] = 1;
     mg_param->setup_tol[level] = quda_input.mg_setup_tol;
     mg_param->setup_maxiter[level] = quda_input.mg_setup_maxiter;
-    // If doing twisted mass, we can scale the twisted mass on the coarsest grid,
+    // If doing twisted mass, we can scale the twisted mass on the coarser grids
     // which significantly increases speed of convergence as a result of making
     // the coarsest grid solve a lot better conditioned.
     // Dean Howarth has some RG arguments on why the coarse mass parameter should be
     // rescaled for the coarse operator to be optimal.
-    if( level == (mg_param->n_level - 1) && fabs(mg_inv_param->mu) > 2*DBL_EPSILON ) {
-      mg_param->mu_factor[level] = quda_input.mg_mu_factor;
+    if( fabs(mg_inv_param->mu) > 2*DBL_EPSILON ) {
+      mg_param->mu_factor[level] = quda_input.mg_mu_factor[level];
       if( g_proc_id == 0 && g_debug_level >= 2 ){
         printf("# QUDA: MG setting coarse mu scaling factor on level %d to %lf\n", level, mg_param->mu_factor[level]);
       }

@@ -50,9 +50,7 @@ typedef struct tm_QudaParams_t {
   int               mg_n_level;
   int               mg_n_vec[QUDA_MAX_MG_LEVEL];
   int               mg_blocksize[QUDA_MAX_MG_LEVEL][4];
-  // in principle we can have mu scaling factors for all levels, but in practice
-  // only the coarsest one is scaled
-  double            mg_mu_factor;
+  double            mg_mu_factor[QUDA_MAX_MG_LEVEL];
   QudaInverterType  mg_setup_inv_type;
   double            mg_setup_tol;
   int               mg_setup_maxiter;

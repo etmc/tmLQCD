@@ -251,7 +251,7 @@ static inline double fltlist_next_token(int * const list_end){
     blocksize = (int)fltlist_next_token(&list_end);
     while( list_end != 1 ){
       if( level >= (QUDA_MAX_MG_LEVEL-1) ){
-        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+        snprintf(error_message, 200, "Exceeded maximum number of levels (%d-1) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
         yy_fatal_error(error_message);
       }
       
@@ -1403,8 +1403,31 @@ static inline double fltlist_next_token(int * const list_end){
     quda_input.mg_n_level=a;
     if(myverbose) printf("  MGNumberOfLevels set to %d line %d\n", quda_input.mg_n_level, line_of_file);
   }
+  {SPC}*MGNumberOfVectors{EQL}{FLTLIST} {
+    char paramname[100];
+    char error_message[200];
+    int list_end = 0;
+    int level = 0;
+
+    fltlist_tokenize(yytext, paramname, 100);
+    int n_vec = (int)fltlist_next_token(&list_end);
+    while( list_end != 1 ){
+      if( level >= (QUDA_MAX_MG_LEVEL-1) ){
+        snprintf(error_message, 200, "Exceeded maximum number of levels (%d-1) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+        yy_fatal_error(error_message);
+      }
+      
+      quda_input.mg_n_vec[level] = n_vec;
+      if(myverbose){ 
+        printf("  %s, level %d set to %d line %d\n", paramname,
+                level, quda_input.mg_n_vec[level], line_of_file);
+      }
+      level++;
+      n_vec = fltlist_next_token(&list_end);
+    }
+  }
   {SPC}*MGBlockSizesX{EQL}{FLTLIST} {
-    // note the dimensions here are QUDA (XYZT!)
+    // note the dimensions here are in QUDA order (XYZT!)
     parse_quda_mg_blocksize(yytext, 0);
   }
   {SPC}*MGBlockSizesY{EQL}{FLTLIST} {
@@ -1416,10 +1439,28 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*MGBlockSizesT{EQL}{FLTLIST} {
     parse_quda_mg_blocksize(yytext, 3);
   }
-  {SPC}*MGCoarseMuFactor{EQL}{FLT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
-    quda_input.mg_mu_factor=c;
-    if(myverbose) printf("  MGCoarseMuFactor set to %f line %d\n", quda_input.mg_mu_factor, line_of_file);
+  {SPC}*MGCoarseMuFactor{EQL}{FLTLIST} {
+    char paramname[100];
+    char error_message[200];
+    int list_end = 0;
+    int level = 0;
+
+    fltlist_tokenize(yytext, paramname, 100);
+    double mu_factor = fltlist_next_token(&list_end);
+    while( list_end != 1 ){
+      if( level > QUDA_MAX_MG_LEVEL ){
+        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+        yy_fatal_error(error_message);
+      }
+      
+      quda_input.mg_mu_factor[level] = mu_factor;
+      if(myverbose){ 
+        printf("  %s, level %d set to %lf line %d\n", paramname,
+                level, quda_input.mg_mu_factor[level], line_of_file);
+      }
+      level++;
+      mu_factor = fltlist_next_token(&list_end);
+    }
   }
   {SPC}*MGSetupSolver{EQL}cg {
     quda_input.mg_setup_inv_type = QUDA_CG_INVERTER;
@@ -3061,11 +3102,11 @@ int read_input(char * conf_file){
   quda_input.mg_n_level = _default_quda_mg_n_level;
   for( int level = 0; level < QUDA_MAX_MG_LEVEL; ++level){
     quda_input.mg_n_vec[level] = _default_quda_mg_n_vec;
+    quda_input.mg_mu_factor[level] = _default_quda_mg_mu_factor;
     for( int dim = 0; dim < 4; ++dim ){
       quda_input.mg_blocksize[level][dim] = 0;
     }
   }
-  quda_input.mg_mu_factor = _default_quda_mg_mu_factor;
   quda_input.mg_setup_inv_type = QUDA_CG_INVERTER;
   quda_input.mg_setup_maxiter = _default_quda_mg_setup_maxiter;
   quda_input.mg_setup_tol = _default_quda_mg_setup_tol;
