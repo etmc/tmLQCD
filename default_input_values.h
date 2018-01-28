@@ -211,9 +211,13 @@
 #define _default_quda_mg_coarse_solver_tol 0.25
 #define _default_quda_mg_coarse_solver_maxiter 75
 #define _default_quda_mg_smoother_tol 0.25
-#define _default_quda_mg_nu_pre 4
+#define _default_quda_mg_nu_pre 0
 #define _default_quda_mg_nu_post 4
 #define _default_quda_mg_omega 0.85
 #define _default_quda_mg_enable_size_three_blocks 0
+
+// gradient flow measurement step size and maximum flow time
+#define _default_gf_eps 0.01
+#define _default_gf_tmax 9.99
 
 #endif

@@ -2330,11 +2330,16 @@ static inline double fltlist_next_token(int * const list_end){
     fprintf(stderr, "Unknown measurement type %s in line %d\n", yytext, line_of_file);
     exit(1);
   }
-  /*set default frequency here, in case it is not specified
-    in the input file */  
+  // set default measurement parameters. This has to be done here, since init_measurements would
+  // override the inputs
   meas->freq = _default_measurement_freq;
+
   meas->no_samples = 1;
   meas->all_time_slices = 0;
+
+  meas->gf_eps = _default_gf_eps;
+  meas->gf_tmax = _default_gf_tmax;
+
   if(!reread) {
     if(add_measurement(meas->type) < 0) {
       fprintf(stderr, "Something went wrong in adding measurements\nAborting...!\n");
@@ -2383,6 +2388,19 @@ static inline double fltlist_next_token(int * const list_end){
     if(myverbose) printf("  Number of samples for correlators measurement set to %d, line %d measurement id=%d\n", a, line_of_file, meas->id);
   }
 }
+
+<GRADIENTFLOWMEAS>{
+  {SPC}*StepSize{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    meas->gf_eps = c;
+    if(myverbose) printf("  Gradient flow step size set to %lf line %d, measurement id=%d\n", meas->gf_eps, line_of_file, meas->id);
+  }
+  {SPC}*MaxFlowTime{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    meas->gf_tmax = c;
+    if(myverbose) printf("  Maximum gradient flow time size set to %lf line %d, measurement id=%d\n", meas->gf_tmax, line_of_file, meas->id);
+  }
+} 
 
 <PLOOP>{
   {SPC}*Direction{EQL}[03] {
