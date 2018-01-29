@@ -20,3 +20,13 @@ invert
 offline_measurement
 lib/
 benchmark
+Makefile.in
+/aclocal.m4
+/compile
+/config.guess
+/config.h.in
+/config.sub
+/depcomp
+/install-sh
+/missing
+/ylwrap

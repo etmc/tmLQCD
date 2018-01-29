@@ -1,6 +1,3 @@
-#
-# Process this file with autoconf to produce a configure script
-#
 AC_PREREQ(2.59)
 AC_INIT(tmLQCD, 5.2.0, curbach@gmx.de)
 AC_CONFIG_HEADER(config.h)
@@ -12,6 +9,8 @@ AC_ARG_PROGRAM
 if test "$host_vendor" = "cray"; then
   ac_cv_c_bigendian=yes
 fi
+
+AM_INIT_AUTOMAKE([1.0 no-define foreign subdir-objects])
 
 AC_PROG_CC
 AC_PROG_CC_C99
@@ -119,7 +118,7 @@ AC_ARG_WITH(DDalphaAMG,
               AC_DEFINE(DDalphaAMG,1,Using DDalphaAMG)
               DDalphaAMG_dir=$withval
               LDFLAGS="$LDFLAGS -L${DDalphaAMG_dir}/lib"
-              INCLUDES="$INCLUDES -I${DDalphaAMG_dir}/include/"
+              AM_CPPFLAGS="$AM_CPPFLAGS -I${DDalphaAMG_dir}/include/"
               AC_CHECK_LIB([DDalphaAMG],
                            [DDalphaAMG_finalize],
                            [],
@@ -156,7 +155,7 @@ else
   AC_MSG_RESULT(no)
   SPI_FILES=""
 fi
-
+AM_CONDITIONAL([USE_SPI],[test "$enable_spi" != "no" ],[true],[false])
 
 AC_MSG_CHECKING(whether we want to use OpenMP)
 AC_ARG_ENABLE(omp,
@@ -200,7 +199,7 @@ else
   fftw_lib=${enable_fftw}
   LDFLAGS="$LDFLAGS -L${fftw_lib}/lib64"
   LIBS="-lfftw3 ${LIBS}"
-  INCLUDES="-I${fftw_lib}/include ${INCLUDES}"
+  AM_CPPFLAGS="-I${fftw_lib}/include ${AM_CPPFLAGS}"
 fi
 
 if test $enable_mpi = yes; then
@@ -366,7 +365,7 @@ AC_CHECK_FUNCS([gettimeofday pow sqrt])
 dnl We now define some replacement variables
 AC_SUBST(OPTARGS)
 AC_SUBST(SOPTARGS)
-AC_SUBST(INCLUDES)
+AC_SUBST(AM_CPPFLAGS)
 AC_SUBST(AUTOCONF)
 AC_SUBST(SOLVEROUT)
 AC_SUBST(CCDEP)
@@ -387,7 +386,7 @@ AC_SUBST(QPHIX_INTERFACE)
 AC_SUBST(QPHIX_PROGRAMS)
 AC_SUBST(DDalphaAMG_INTERFACE)
 
-INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${abs_top_builddir}/  -I\${abs_top_srcdir}/ -I${lime_dir}/include/ -I${lemon_dir}/include/"
+AM_CPPFLAGS="$AM_CPPFLAGS -I\$(HOME)/include/ -I. -I\${abs_top_builddir}/  -I\${abs_top_srcdir}/ -I${lime_dir}/include/ -I${lemon_dir}/include/"
 DEPFLAGS="$DEPFLAGS"
 
 AC_MSG_CHECKING(what alignment we want for arrays)
@@ -400,32 +399,32 @@ if test "$withalign" = "none"; then
   AC_DEFINE(ALIGN_BASE, 0x00, [Align base])
   AC_DEFINE(ALIGN, [])
   AC_DEFINE(ALIGN_BASE32, 0x00, [Align base32])
-  AC_DEFINE(ALIGN32, [], [])
+  AC_DEFINE(ALIGN32, [], [""])
 elif test $withalign = 16; then
   AC_MSG_RESULT(16 bytes)
   AC_DEFINE(ALIGN_BASE, 0x0F, [Align base])
   AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
   AC_DEFINE(ALIGN_BASE32, 0x0F, [Align base32])
-  AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))], [])
+  AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))], [""])
 elif test $withalign = 32; then
   AC_MSG_RESULT(32 bytes)
   AC_DEFINE(ALIGN_BASE, 0x1F, [Align base])
   AC_DEFINE(ALIGN, [__attribute__ ((aligned (32)))])
   AC_DEFINE(ALIGN_BASE32, 0x1F, [Align base32])
-  AC_DEFINE(ALIGN32, [__attribute__ ((aligned (32)))], [])
+  AC_DEFINE(ALIGN32, [__attribute__ ((aligned (32)))], [""])
 elif test $withalign = 64; then
   AC_MSG_RESULT(64 bytes)
   AC_DEFINE(ALIGN_BASE, 0x3F, [Align base])
   AC_DEFINE(ALIGN, [__attribute__ ((aligned (64)))])
   AC_DEFINE(ALIGN_BASE32, 0x3F, [Align base32])
-  AC_DEFINE(ALIGN32, [__attribute__ ((aligned (64)))], [])
+  AC_DEFINE(ALIGN32, [__attribute__ ((aligned (64)))], [""])
 elif test $withalign = auto; then
   withautoalign=1
   AC_MSG_RESULT(auto)
   AC_DEFINE(ALIGN_BASE, 0x00, [Align base])
   AC_DEFINE(ALIGN, [], [])
   AC_DEFINE(ALIGN_BASE32, 0x00, [Align base32])
-  AC_DEFINE(ALIGN32, [], [])
+  AC_DEFINE(ALIGN32, [], [""])
 else
   AC_MSG_RESULT(Unusable value for array alignment)
   AC_MSG_ERROR([Allowed values are: auto, none, 16, 32, 64])
@@ -448,7 +447,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
         AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
         AC_MSG_RESULT(increasing array 32 bit alignment to 16 bytes for P4 instructions)
         AC_DEFINE(ALIGN_BASE32, 0x0F, [Align base])
-        AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))])
+        AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))], [""])
         withautoalign=16
       fi
     elif test $withalign -lt 16; then
@@ -472,7 +471,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
         AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
         AC_MSG_RESULT(increasing array 32 bit alignment to 16 bytes for Opteron instructions)
         AC_DEFINE(ALIGN_BASE32, 0x0F, [Align base32])
-        AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))])
+        AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))], [""])
         withautoalign=16
       fi
     elif test $withalign -lt 16; then
@@ -516,7 +515,7 @@ if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
         AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
         AC_MSG_RESULT(increasing 32bit array alignment to 16 bytes for SSE instructions)
         AC_DEFINE(ALIGN_BASE32, 0x0F, [Align base32])	
-        AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))])
+        AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))], [""])
         withautoalign=16
       fi
     fi
@@ -532,7 +531,7 @@ if test $enable_qpx = yes; then
       AC_DEFINE(ALIGN, [__attribute__ ((aligned (32)))])
       AC_MSG_RESULT(increasing 32bit array alignment to 16 bytes for use of QPX instructions on BG/Q)
       AC_DEFINE(ALIGN_BASE32, 0x0F, [Align base32])
-      AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))])
+      AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))], [""])
       withautoalign=32
     fi
   elif test $withalign -lt 32; then
@@ -568,7 +567,7 @@ elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "
       AC_DEFINE(ALIGN, [__attribute__ ((aligned (32)))])
       AC_MSG_RESULT(increasing array 32 bit alignment to 16 bytes for BG/Q and generic POWER optimization)
       AC_DEFINE(ALIGN_BASE32, 0x0F, [Align base])
-      AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))])
+      AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))], [""])
       withautoalign=32
     fi
   fi
@@ -746,7 +745,7 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_
     DEPFLAGS="-M"
   fi
   CPPFLAGS="-I/bgl/BlueLight/ppcfloor/bglsys/include"
-  INCLUDES="$INCLUDES -I/bgl/BlueLight/ppcfloor/bglsys/include/"
+  AM_CPPFLAGS="$AM_CPPFLAGS -I/bgl/BlueLight/ppcfloor/bglsys/include/"
 
 #The BLue Gene/P
 elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" = "bprts"; then
@@ -777,7 +776,7 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_
     DEPFLAGS="-M"
   fi
   CPPFLAGS="-I/bgsys/drivers/ppcfloor/arch/include/ -I/bgsys/drivers/ppcfloor/comm/include"
-  INCLUDES="$INCLUDES -I/bgsys/local/include/ -I/bgsys/drivers/ppcfloor/arch/include/ -I/bgsys/drivers/ppcfloor/comm/include"
+  AM_CPPFLAGS="$AM_CPPFLAGS -I/bgsys/local/include/ -I/bgsys/drivers/ppcfloor/arch/include/ -I/bgsys/drivers/ppcfloor/comm/include"
 
 
 
@@ -954,7 +953,7 @@ AC_ARG_WITH(qudadir,
               AC_DEFINE(TM_USE_QUDA,1,Using QUDA GPU)
               quda_dir=$withval
               LDFLAGS="$LDFLAGS -L${quda_dir}/lib"
-              INCLUDES="$INCLUDES -I${quda_dir}/include/"
+              AM_CPPFLAGS="$AM_CPPFLAGS -I${quda_dir}/include/"
               QUDA_INTERFACE="quda_interface"
               AC_MSG_CHECKING([where to search for CUDA libs])
 						  AC_ARG_WITH(cudadir,
@@ -984,7 +983,7 @@ AC_ARG_WITH(qudadir,
               ]
               )
 AC_SUBST([QUDA_AVAILABLE])
-
+AM_CONDITIONAL([USE_QUDA],[test "$QUDA_AVAILABLE" != "0" ],[true],[false])
 
 # QPhiX library for Intel Xeon and Xeon Phis
 AC_MSG_CHECKING(whether we want to use QPhiX)
@@ -995,7 +994,7 @@ AC_ARG_WITH(qphixdir,
               AC_DEFINE(TM_USE_QPHIX,1,Using QPhiX)
               qphix_dir=$withval
               LDFLAGS="$LDFLAGS -L${qphix_dir}/lib -lqphix_solver -lqphix_codegen"
-              INCLUDES="$INCLUDES -I${qphix_dir}/include/" 
+              AM_CPPFLAGS="$AM_CPPFLAGS -I${qphix_dir}/include/" 
               QPHIX_INTERFACE="qphix_interface"
               QPHIX_PROGRAMS=""
               # Due to github issue #404, the qphix test_Dslash code has been disabled by BaKo
@@ -1010,7 +1009,7 @@ AC_ARG_WITH(qphixdir,
                           AS_HELP_STRING([--with-qmpdir[=dir]], [if using QPhiX, then set QMP lib dir]),
                           qmp_dir=$withval
                           LDFLAGS="$LDFLAGS -L${qmp_dir}/lib -lqmp"
-                          INCLUDES="$INCLUDES -I${qmp_dir}/include/"
+                          AM_CPPFLAGS="$AM_CPPFLAGS -I${qmp_dir}/include/"
                           )
               AC_MSG_RESULT($qmp_dir)
 
