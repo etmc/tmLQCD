@@ -14,13 +14,8 @@ LDADD=-ltmLQCD
 
 bin_PROGRAMS = \
 	hmc_tm \
-	benchmark \
 	invert \
-	gen_sources \
-	check_locallity \
-	test_lemon \
-	hopping_test \
-	LapH_ev \
+	benchmark \
 	offline_measurement
 
 # run the GIT-VERSION-GEN script to generate version information in git_hash.h
@@ -104,6 +99,7 @@ lib_libtmLQCD_a_SOURCES= \
 	init/init_jacobi_field.c \
 	init/init_omp_accumulators.c \
 	init/init_openmp.c \
+	init/init_parallel.c \
 	\
 	io/utils_engineering.c \
 	io/utils_parse_checksum_xml.c \
@@ -192,40 +188,40 @@ lib_libtmLQCD_a_SOURCES= \
 	linalg/assign_mul_add_r_32.c \
 	linalg/assign_add_mul_r_32.c \
 	linalg/square_norm_32.c \
+	linalg/square_norm.c \
 	linalg/assign_to_32.c \
 	linalg/diff_32.c \
 	linalg/diff.c \
 	linalg/assign_add_mul_r.c \
 	linalg/assign_mul_add_r.c \
-	linalg/square_norm.c \
 	\
 	meas/measurements.c \
         meas/oriented_plaquettes.c \
         meas/correlators.c \
         meas/pion_norm.c \
         meas/polyakov_loop.c \
-        meas/energy_density.c \
+        meas/measure_clover_field_strength_observables.c \
 	meas/gradient_flow.c \
 	\
-	monomial/nddetratio_monomial.c \
-	monomial/monomial.c \
-	monomial/det_monomial.c \
-	monomial/detratio_monomial.c \
-	monomial/gauge_monomial.c \
-	monomial/ndpoly_monomial.c \
-	monomial/clover_trlog_monomial.c \
-	monomial/cloverdet_monomial.c \
-	monomial/cloverdetratio_monomial.c \
-	monomial/cloverdetratio_rwmonomial.c \
-	monomial/clovernd_trlog_monomial.c \
-	monomial/poly_monomial.c \
-	monomial/cloverndpoly_monomial.c \
-	monomial/moment_energy.c \
-	monomial/ndrat_monomial.c \
-	monomial/ndratcor_monomial.c \
-	monomial/rat_monomial.c \
-	monomial/ratcor_monomial.c \
-	monomial/monitor_forces.c \
+        monomial/nddetratio_monomial.c \
+        monomial/monomial.c \
+        monomial/det_monomial.c \
+        monomial/detratio_monomial.c \
+        monomial/gauge_monomial.c \
+        monomial/ndpoly_monomial.c \
+        monomial/clover_trlog_monomial.c \
+        monomial/cloverdet_monomial.c \
+        monomial/cloverdetratio_monomial.c \
+        monomial/cloverdetratio_rwmonomial.c \
+        monomial/clovernd_trlog_monomial.c \
+        monomial/poly_monomial.c \
+        monomial/cloverndpoly_monomial.c \
+        monomial/moment_energy.c \
+        monomial/ndrat_monomial.c \
+        monomial/ndratcor_monomial.c \
+        monomial/rat_monomial.c \
+        monomial/ratcor_monomial.c \
+        monomial/monitor_forces.c \
 	\
 	operator/clover_accumulate_deriv.c \
 	operator/clover_deriv.c \
@@ -253,61 +249,62 @@ lib_libtmLQCD_a_SOURCES= \
 	rational/elliptic.c \
 	rational/rational.c \
 	\
-	solver/bicgstab_complex.c \
-	solver/gmres.c \
-	solver/incr_eigcg.c \
-	solver/eigcg.c \
-	solver/restart_X.c \
-	solver/ortho.c \
-	solver/cgs_real.c \
-	solver/cg_her.c \
-	solver/mr.c \
-	solver/chrono_guess.c \
-	solver/bicgstabell.c \
-	solver/bicgstab2.c \
-	solver/eigenvalues.c \
-	solver/fgmres.c \
-	solver/gcr.c \
-	solver/gcr4complex.c \
-	solver/diagonalise_general_matrix.c \
-	solver/cgne4complex.c \
-	solver/mr4complex.c \
-	solver/fgmres4complex.c \
-	solver/quicksort.c \
-	solver/gmres_dr.c \
-	solver/lu_solve.c \
-	solver/jdher.c \
-	solver/Msap.c \
-	solver/jdher_bi.c \
-	solver/gram-schmidt.c \
-	solver/eigenvalues_bi.c \
-	solver/bicgstab_complex_bi.c \
-	solver/cg_her_bi.c \
-	solver/pcg_her.c \
-	solver/sub_low_ev.c \
-	solver/cg_her_nd.c \
-	solver/poly_precon.c \
-	solver/generate_dfl_subspace.c \
-	solver/dfl_projector.c \
-	solver/cg_mms_tm.c \
-	solver/cg_mms_tm_nd.c \
-	solver/mixed_cg_mms_tm_nd.c \
-	solver/solver_field.c \
-	solver/sumr.c \
-	solver/mixed_cg_her.c \
-	solver/index_jd.c \
-	solver/rg_mixed_cg_her.c \
-	solver/rg_mixed_cg_her_nd.c \
-	solver/dirac_operator_eigenvectors.c \
-	solver/spectral_proj.c \
-	solver/jdher_su3vect.c \
-	solver/cg_her_su3vect.c \
-	solver/eigenvalues_Jacobi.c \
-	solver/mcr.c \
-	solver/cr.c \
-	solver/mcr4complex.c \
-	solver/bicg_complex.c \
-	solver/monomial_solve.c \
+        solver/bicgstab_complex.c \
+        solver/gmres.c \
+        solver/incr_eigcg.c \
+        solver/eigcg.c \
+        solver/restart_X.c \
+        solver/ortho.c \
+        solver/cgs_real.c \
+        solver/cg_her.c \
+        solver/mr.c \
+        solver/chrono_guess.c \
+        solver/bicgstabell.c \
+        solver/bicgstab2.c \
+        solver/eigenvalues.c \
+        solver/fgmres.c \
+        solver/gcr.c \
+        solver/gcr4complex.c \
+        solver/diagonalise_general_matrix.c \
+        solver/cgne4complex.c \
+        solver/mr4complex.c \
+        solver/fgmres4complex.c \
+        solver/quicksort.c \
+        solver/gmres_dr.c \
+        solver/lu_solve.c \
+        solver/jdher.c \
+        solver/Msap.c \
+        solver/jdher_bi.c \
+        solver/gram-schmidt.c \
+        solver/eigenvalues_bi.c \
+        solver/bicgstab_complex_bi.c \
+        solver/cg_her_bi.c \
+        solver/pcg_her.c \
+        solver/sub_low_ev.c \
+        solver/cg_her_nd.c \
+        solver/poly_precon.c \
+        solver/generate_dfl_subspace.c \
+        solver/dfl_projector.c \
+        solver/cg_mms_tm.c \
+        solver/cg_mms_tm_nd.c \
+        solver/mixed_cg_mms_tm_nd.c \
+        solver/solver_field.c \
+        solver/sumr.c \
+        solver/mixed_cg_her.c \
+        solver/index_jd.c \
+        solver/rg_mixed_cg_her.c \
+        solver/rg_mixed_cg_her_nd.c \
+        solver/dirac_operator_eigenvectors.c \
+        solver/spectral_proj.c \
+        solver/jdher_su3vect.c \
+        solver/cg_her_su3vect.c \
+        solver/eigenvalues_Jacobi.c \
+        solver/mcr.c \
+        solver/cr.c \
+        solver/mcr4complex.c \
+        solver/bicg_complex.c \
+        solver/monomial_solve.c \
+        solver/solver_types.c \
 	\
 	wrapper/lib_wrapper.c \
 	\
@@ -319,7 +316,9 @@ lib_libtmLQCD_a_SOURCES= \
 	xchange/xchange_2fields.c \
 	xchange/xchange_field_tslice.c \
 	xchange/xchange_jacobi.c \
-	xchange/little_field_gather.c
+	xchange/little_field_gather.c \
+	\
+	DDalphaAMG_interface.c
 
 if USE_SPI
 lib_libtmLQCD_a_SOURCES+= \

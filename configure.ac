@@ -358,7 +358,6 @@ AC_HEADER_TIME
 dnl Checks for library functions.
 AC_SYS_LARGEFILE
 AC_FUNC_FSEEKO
-AC_FUNC_MALLOC
 AC_TYPE_SIGNAL
 AC_CHECK_FUNCS([gettimeofday pow sqrt])
 
@@ -1070,14 +1069,6 @@ if test ! -e tests/regressions; then
 fi
 
 
-LIBS="-lhmc -lmonomial -loperator -lsolver -linit -lmeas -llinalg -lhmc -lxchange -lrational -lio $LIBS"
-AUTOCONF=autoconf
-
-for i in $USESUBDIRS
-do
-  make_files="$make_files $i/Makefile"
-done
-
-AC_CONFIG_FILES([Makefile $make_files])
+AC_CONFIG_FILES([Makefile])
 
 AC_OUTPUT
