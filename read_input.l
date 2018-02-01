@@ -3120,7 +3120,15 @@ int read_input(char * conf_file){
   quda_input.mg_n_level = _default_quda_mg_n_level;
   for( int level = 0; level < QUDA_MAX_MG_LEVEL; ++level){
     quda_input.mg_n_vec[level] = _default_quda_mg_n_vec;
-    quda_input.mg_mu_factor[level] = _default_quda_mg_mu_factor;
+    if( level > 0 ){
+      quda_input.mg_mu_factor[level] = _default_quda_mg_mu_factor;
+    } else {
+      quda_input.mg_mu_factor[level] = 1.0;
+    }
+
+    /* note: when the user does not specify any blocking parameters,
+     * a reasonable set will be computed automatically in the MG setup
+     * of the QUDA interface */
     for( int dim = 0; dim < 4; ++dim ){
       quda_input.mg_blocksize[level][dim] = 0;
     }
