@@ -46,7 +46,7 @@ fi
 # Compile tmLQCD.
 sudo apt-get install -y flex libblas-dev liblapack-dev gfortran
 
-autoreconf
+autoreconf --verbose --install --force
 
 ./configure \
     --disable-mpi \
