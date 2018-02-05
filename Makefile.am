@@ -3,8 +3,6 @@ lib_LIBRARIES=lib/libtmLQCD.a
 AM_LDFLAGS=-L@top_builddir@/lib 
 LDADD=@top_builddir@/lib/libtmLQCD.a
 
-AM_YFLAGS = -Ptmlqcd -i 
-
 ## the GPU modules (all .cu files in $GPUDIR)
 #GPUSOURCES := $(wildcard $(srcdir)/$(GPUDIR)/*.cu)
 #GPUOBJECTS := $(patsubst $(srcdir)/$(GPUDIR)/%.cu, $(GPUDIR)/%.o, $(GPUSOURCES))
