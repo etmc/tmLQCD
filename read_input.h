@@ -100,6 +100,9 @@ extern "C"
   extern double innersolver_precision;
   extern int device_num;
 
+  extern int use_smd_flag;
+  extern double smd_gamma;
+
   extern int max_mms_shifts;
   extern int use_mixed_mms; 
   

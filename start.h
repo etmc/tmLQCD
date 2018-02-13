@@ -62,6 +62,7 @@ void unit_g_gauge_field(void);
 void random_gauge_field(const int repro, su3 ** const gf);
 
 double random_su3adj_field(const int repro, su3adj ** const momenta);
+double random_su3adj_field_smd(const int repro, su3adj ** const momenta, const double epsilon, const double gamma);
 
 void set_spinor_field(int k, const double c);
 void set_gauge_field(const double c);

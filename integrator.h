@@ -32,7 +32,7 @@
 #define MN2p 7
 #define OMF4 8
 
-typedef void (*integratefk)(const double, const int, const int);
+typedef void (*integratefk)(const double, const int, const int, const double);
 
 typedef struct {
   /* gauge, momenta and derivative fields to be used during integration */

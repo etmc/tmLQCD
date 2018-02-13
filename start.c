@@ -535,45 +535,45 @@ double random_su3adj_field(const int repro, su3adj ** const momenta) {
       t = t0 - T*g_proc_coords[0];
       coords[0] = t0 / T;
       for(x = 0; x < g_nproc_x*LX; x++) {
-	X = x - g_proc_coords[1]*LX;
-	coords[1] = x / LX;
-	for(y = 0; y < g_nproc_y*LY; y++) {
-	  Y = y - g_proc_coords[2]*LY;
-	  coords[2] = y / LY;
-	  for(z = 0; z < g_nproc_z*LZ; z++) {
-	    Z = z - g_proc_coords[3]*LZ;
-	    coords[3] = z / LZ;
+        X = x - g_proc_coords[1]*LX;
+        coords[1] = x / LX;
+        for(y = 0; y < g_nproc_y*LY; y++) {
+          Y = y - g_proc_coords[2]*LY;
+          coords[2] = y / LY;
+          for(z = 0; z < g_nproc_z*LZ; z++) {
+            Z = z - g_proc_coords[3]*LZ;
+            coords[3] = z / LZ;
 #ifdef TM_USE_MPI
-	    MPI_Cart_rank(g_cart_grid, coords, &id);
+            MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
-	    if(g_cart_id == id) i = g_ipt[t][X][Y][Z];
-	    for(mu = 0; mu < 4; mu++) {
-	      gauss_vector(yy,8);
-	      if(g_cart_id == id) {
-		sum = 0.;
-		xm = &momenta[i][mu];
-		(*xm).d1 = 1.4142135623731*yy[0];
-		(*xm).d2 = 1.4142135623731*yy[1];
-		sum += (*xm).d1*(*xm).d1+(*xm).d2*(*xm).d2;
-		(*xm).d3 = 1.4142135623731*yy[2];
-		(*xm).d4 = 1.4142135623731*yy[3];
-		sum += (*xm).d3*(*xm).d3+(*xm).d4*(*xm).d4;
-		(*xm).d5 = 1.4142135623731*yy[4];
-		(*xm).d6 = 1.4142135623731*yy[5];
-		sum += (*xm).d5*(*xm).d5+(*xm).d6*(*xm).d6;
-	  (*xm).d7 = 1.4142135623731*yy[6];
-	  (*xm).d8 = 1.4142135623731*yy[7];
-	  sum+=(*xm).d7*(*xm).d7+(*xm).d8*(*xm).d8;
-	  tr=sum+kc;
-		tr = sum+kc;
-		ts = tr+ks;
-		tt = ts-ks;
-		ks = ts;
-		kc = tr-tt;
-	      }
-	    }
-	  }
-	}
+            if(g_cart_id == id) i = g_ipt[t][X][Y][Z];
+            for(mu = 0; mu < 4; mu++) {
+              gauss_vector(yy,8);
+              if(g_cart_id == id) {
+                sum = 0.;
+                xm = &momenta[i][mu];
+                (*xm).d1 = 1.4142135623731*yy[0];
+                (*xm).d2 = 1.4142135623731*yy[1];
+                sum += (*xm).d1*(*xm).d1+(*xm).d2*(*xm).d2;
+                (*xm).d3 = 1.4142135623731*yy[2];
+                (*xm).d4 = 1.4142135623731*yy[3];
+                sum += (*xm).d3*(*xm).d3+(*xm).d4*(*xm).d4;
+                (*xm).d5 = 1.4142135623731*yy[4];
+                (*xm).d6 = 1.4142135623731*yy[5];
+                sum += (*xm).d5*(*xm).d5+(*xm).d6*(*xm).d6;
+                (*xm).d7 = 1.4142135623731*yy[6];
+                (*xm).d8 = 1.4142135623731*yy[7];
+                sum+=(*xm).d7*(*xm).d7+(*xm).d8*(*xm).d8;
+                tr=sum+kc;
+                tr = sum+kc;
+                ts = tr+ks;
+                tt = ts-ks;
+                ks = ts;
+                kc = tr-tt;
+              }
+            }
+          }
+        }
       }
     }
     kc=0.5*(ks+kc);
@@ -586,26 +586,138 @@ double random_su3adj_field(const int repro, su3adj ** const momenta) {
   else {
     for(i = 0; i < VOLUME; i++) { 
       for(mu = 0; mu < 4; mu++) {
-	sum=0.;
-	xm=&momenta[i][mu];
-	gauss_vector(yy,8);
-	(*xm).d1=1.4142135623731*yy[0];
-	(*xm).d2=1.4142135623731*yy[1];
-	sum+=(*xm).d1*(*xm).d1+(*xm).d2*(*xm).d2;
-	(*xm).d3=1.4142135623731*yy[2];
-	(*xm).d4=1.4142135623731*yy[3];
-	sum+=(*xm).d3*(*xm).d3+(*xm).d4*(*xm).d4;
-	(*xm).d5=1.4142135623731*yy[4];
-	(*xm).d6=1.4142135623731*yy[5];
-	sum+=(*xm).d5*(*xm).d5+(*xm).d6*(*xm).d6;
-	(*xm).d7=1.4142135623731*yy[6];
-	(*xm).d8=1.4142135623731*yy[7];
-	sum+=(*xm).d7*(*xm).d7+(*xm).d8*(*xm).d8;
-	tr=sum+kc;
-	ts=tr+ks;
-	tt=ts-ks;
-	ks=ts;
-	kc=tr-tt;
+        sum=0.;
+        xm=&momenta[i][mu];
+        gauss_vector(yy,8);
+        (*xm).d1=1.4142135623731*yy[0];
+        (*xm).d2=1.4142135623731*yy[1];
+        sum+=(*xm).d1*(*xm).d1+(*xm).d2*(*xm).d2;
+        (*xm).d3=1.4142135623731*yy[2];
+        (*xm).d4=1.4142135623731*yy[3];
+        sum+=(*xm).d3*(*xm).d3+(*xm).d4*(*xm).d4;
+        (*xm).d5=1.4142135623731*yy[4];
+        (*xm).d6=1.4142135623731*yy[5];
+        sum+=(*xm).d5*(*xm).d5+(*xm).d6*(*xm).d6;
+        (*xm).d7=1.4142135623731*yy[6];
+        (*xm).d8=1.4142135623731*yy[7];
+        sum+=(*xm).d7*(*xm).d7+(*xm).d8*(*xm).d8;
+        tr=sum+kc;
+        ts=tr+ks;
+        tt=ts-ks;
+        ks=ts;
+        kc=tr-tt;
+      }
+    }
+    kc=0.5*(ks+kc);
+  }
+#ifdef TM_USE_MPI
+  MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  return ks;
+#endif
+  return kc;
+}
+
+
+/* writes gaussian distributed random momenta of length VOLUME into momenta array
+   performs rotation according to SMD prescription
+   and returns their energy contribution */
+double random_su3adj_field_smd(const int repro, su3adj ** const momenta, const double epsilon, const double gamma) {
+  su3adj *xm;
+  int i, mu, t0, x, y, z, X, Y, Z, t, id = 0;
+  int coords[4];
+#ifdef TM_USE_MPI
+  int k;
+  int rlxd_state[105];
+  int rlxd_state_backup[105];
+#endif
+  double ALIGN yy[16];
+  double ALIGN tt, tr, ts, kc = 0., ks = 0., sum;
+  
+  if(repro) {
+#ifdef TM_USE_MPI
+    if(g_proc_id != 0) {
+      rlxd_get(rlxd_state_backup);
+    } else if(g_proc_id == 0) {
+      rlxd_get(rlxd_state);
+    }
+    MPI_Bcast(rlxd_state, 105, MPI_INT, 0, MPI_COMM_WORLD);
+    rlxd_reset(rlxd_state);
+#endif
+    for(t0 = 0; t0 < g_nproc_t*T; t0++) {
+      t = t0 - T*g_proc_coords[0];
+      coords[0] = t0 / T;
+      for(x = 0; x < g_nproc_x*LX; x++) {
+        X = x - g_proc_coords[1]*LX;
+        coords[1] = x / LX;
+        for(y = 0; y < g_nproc_y*LY; y++) {
+          Y = y - g_proc_coords[2]*LY;
+          coords[2] = y / LY;
+          for(z = 0; z < g_nproc_z*LZ; z++) {
+            Z = z - g_proc_coords[3]*LZ;
+            coords[3] = z / LZ;
+#ifdef TM_USE_MPI
+            MPI_Cart_rank(g_cart_grid, coords, &id);
+#endif
+            if(g_cart_id == id) i = g_ipt[t][X][Y][Z];
+            for(mu = 0; mu < 4; mu++) {
+              gauss_vector(yy, 16);
+              if(g_cart_id == id) {
+                sum = 0.;
+                xm = &momenta[i][mu];
+                (*xm).d1 = 1.4142135623731*(exp(-gamma*epsilon)*yy[0] + sqrt(1 - exp(-2*gamma*epsilon))*yy[8]);
+                (*xm).d2 = 1.4142135623731*(exp(-gamma*epsilon)*yy[1] + sqrt(1 - exp(-2*gamma*epsilon))*yy[9]);
+                sum += (*xm).d1*(*xm).d1+(*xm).d2*(*xm).d2;
+                (*xm).d3 = 1.4142135623731*(exp(-gamma*epsilon)*yy[2] + sqrt(1 - exp(-2*gamma*epsilon))*yy[10]);
+                (*xm).d4 = 1.4142135623731*(exp(-gamma*epsilon)*yy[3] + sqrt(1 - exp(-2*gamma*epsilon))*yy[11]);
+                sum += (*xm).d3*(*xm).d3+(*xm).d4*(*xm).d4;
+                (*xm).d5 = 1.4142135623731*(exp(-gamma*epsilon)*yy[4] + sqrt(1 - exp(-2*gamma*epsilon))*yy[12]);
+                (*xm).d6 = 1.4142135623731*(exp(-gamma*epsilon)*yy[5] + sqrt(1 - exp(-2*gamma*epsilon))*yy[13]);
+                sum += (*xm).d5*(*xm).d5+(*xm).d6*(*xm).d6;
+                (*xm).d7 = 1.4142135623731*(exp(-gamma*epsilon)*yy[6] + sqrt(1 - exp(-2*gamma*epsilon))*yy[14]);
+                (*xm).d8 = 1.4142135623731*(exp(-gamma*epsilon)*yy[7] + sqrt(1 - exp(-2*gamma*epsilon))*yy[15]);
+                sum+=(*xm).d7*(*xm).d7+(*xm).d8*(*xm).d8;
+                tr = sum + kc;
+                tr = sum + kc;
+                ts = tr + ks;
+                tt = ts - ks;
+                ks = ts;
+                kc = tr - tt;
+              }
+            }
+          }
+        }
+      }
+    }
+    kc=0.5*(ks+kc);
+#ifdef TM_USE_MPI
+    if(g_proc_id != 0) {
+      rlxd_reset(rlxd_state_backup);
+    }
+#endif
+  }
+  else {
+    for(i = 0; i < VOLUME; i++) { 
+      for(mu = 0; mu < 4; mu++) {
+        sum=0.;
+        xm=&momenta[i][mu];
+        gauss_vector(yy, 16);
+        (*xm).d1 = 1.4142135623731*(exp(-gamma*epsilon)*yy[0] + sqrt(1 - exp(-2*gamma*epsilon))*yy[8]);
+        (*xm).d2 = 1.4142135623731*(exp(-gamma*epsilon)*yy[1] + sqrt(1 - exp(-2*gamma*epsilon))*yy[9]);
+        sum += (*xm).d1*(*xm).d1+(*xm).d2*(*xm).d2;
+        (*xm).d3 = 1.4142135623731*(exp(-gamma*epsilon)*yy[2] + sqrt(1 - exp(-2*gamma*epsilon))*yy[10]);
+        (*xm).d4 = 1.4142135623731*(exp(-gamma*epsilon)*yy[3] + sqrt(1 - exp(-2*gamma*epsilon))*yy[11]);
+        sum += (*xm).d3*(*xm).d3+(*xm).d4*(*xm).d4;
+        (*xm).d5 = 1.4142135623731*(exp(-gamma*epsilon)*yy[4] + sqrt(1 - exp(-2*gamma*epsilon))*yy[12]);
+        (*xm).d6 = 1.4142135623731*(exp(-gamma*epsilon)*yy[5] + sqrt(1 - exp(-2*gamma*epsilon))*yy[13]);
+        sum += (*xm).d5*(*xm).d5+(*xm).d6*(*xm).d6;
+        (*xm).d7 = 1.4142135623731*(exp(-gamma*epsilon)*yy[6] + sqrt(1 - exp(-2*gamma*epsilon))*yy[14]);
+        (*xm).d8 = 1.4142135623731*(exp(-gamma*epsilon)*yy[7] + sqrt(1 - exp(-2*gamma*epsilon))*yy[15]);
+        sum+=(*xm).d7*(*xm).d7+(*xm).d8*(*xm).d8;
+        tr = sum + kc;
+        ts = tr + ks;
+        tt = ts - ks;
+        ks = ts;
+        kc = tr - tt;
       }
     }
     kc=0.5*(ks+kc);
