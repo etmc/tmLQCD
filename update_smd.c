@@ -129,7 +129,13 @@ void update_smd(double *plaquette_energy, double *rectangle_energy,
   if(Integrator.monitor_forces) monitor_forces(&hf);
   /* initialize the momenta  */
   double epsilon = Integrator.tau/(double)Integrator.n_int[Integrator.no_timescales-1];
-  enep = random_su3adj_field_smd(reproduce_randomnumber_flag, hf.momenta, epsilon, smd_gamma);
+  // perform rotations or not...
+  if(smd_gamma < 0) {
+      enep = random_su3adj_field(reproduce_randomnumber_flag, hf.momenta);
+  }
+  else {
+    enep = random_su3adj_field_smd(reproduce_randomnumber_flag, hf.momenta, epsilon, smd_gamma);
+  }
   
   g_sloppy_precision = 1;
 
