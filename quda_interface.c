@@ -633,10 +633,6 @@ int invert_quda_direct(double * const propagator, double * const source,
   // perform the inversion
   invertQuda(spinorOut, spinorIn, &inv_param);
 
-  if( inv_param.verbosity == QUDA_VERBOSE )
-    if(g_proc_id == 0)
-      printf("# QUDA: Device memory used:  Spinor: %f GiB,  Gauge: %f GiB, Clover: %f GiB\n",
-             inv_param.spinorGiB, gauge_param.gaugeGiB, inv_param.cloverGiB);
   if( inv_param.verbosity > QUDA_SILENT )
     if(g_proc_id == 0)
       printf("# QUDA: Done: %i iter / %g secs = %g Gflops\n",
@@ -722,10 +718,6 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
   invertQuda(spinorOut, spinorIn, &inv_param);
 
 
-  if( inv_param.verbosity == QUDA_VERBOSE )
-    if(g_proc_id == 0)
-      printf("# QUDA: Device memory used:  Spinor: %f GiB,  Gauge: %f GiB, Clover: %f GiB\n",
-             inv_param.spinorGiB, gauge_param.gaugeGiB, inv_param.cloverGiB);
   if( inv_param.verbosity > QUDA_SILENT )
     if(g_proc_id == 0)
       printf("# QUDA: Done: %i iter / %g secs = %g Gflops\n",
@@ -856,10 +848,6 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   // perform the inversion
   invertQuda(spinorOut, spinorIn, &inv_param);
 
-  if( inv_param.verbosity == QUDA_VERBOSE )
-    if(g_proc_id == 0)
-      printf("# QUDA: Device memory used:  Spinor: %f GiB,  Gauge: %f GiB, Clover: %f GiB\n",
-             inv_param.spinorGiB, gauge_param.gaugeGiB, inv_param.cloverGiB);
   if( inv_param.verbosity > QUDA_SILENT )
     if(g_proc_id == 0)
       printf("# QUDA: Done: %i iter / %g secs = %g Gflops\n",
