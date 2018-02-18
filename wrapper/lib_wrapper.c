@@ -44,6 +44,9 @@
 #ifdef TM_USE_MPI
 #include "xchange/xchange.h"
 #endif
+#ifdef TM_USE_QUDA
+#include "quda_interface.h"
+#endif
 #include <io/utils.h>
 #include <io/gauge.h>
 #include "read_input.h"
@@ -295,6 +298,10 @@ int tmLQCD_finalise() {
     finalize_temporalgauge();
 #  endif
   }
+#endif
+
+#ifdef TM_USE_QUDA
+  _endQuda();
 #endif
   
   free_gauge_field();
