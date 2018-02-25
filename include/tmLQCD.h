@@ -29,6 +29,9 @@
 
 #include "config.h"
 
+#include "struct_accessors.h"
+#include "global.h"
+
 #ifdef __cplusplus
 extern "C"
 {
