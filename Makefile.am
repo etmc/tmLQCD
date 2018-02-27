@@ -83,6 +83,7 @@ include init/Makefile.am
 include io/Makefile.am
 include linalg/Makefile.am
 include meas/Makefile.am
+include monomial/Makefile.am
 include operator/Makefile.am
 include rational/Makefile.am
 include solver/Makefile.am
