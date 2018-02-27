@@ -1,0 +1,22 @@
+lib_libtmLQCD_a_SOURCES+= \
+	%D%/D_psi.c \
+	%D%/Dov_proj.c \
+	%D%/Dov_psi.c \
+	%D%/Hopping_Matrix.c \
+	%D%/Hopping_Matrix_32.c \
+	%D%/Hopping_Matrix_32_nocom.c \
+	%D%/Hopping_Matrix_nocom.c \
+	%D%/clover_accumulate_deriv.c \
+	%D%/clover_deriv.c \
+	%D%/clover_det.c \
+	%D%/clover_invert.c \
+	%D%/clover_leaf.c \
+	%D%/clover_term.c \
+	%D%/clovertm_operators.c \
+	%D%/clovertm_operators_32.c \
+	%D%/tm_operators.c \
+	%D%/tm_operators_32.c \
+	%D%/tm_operators_nd.c \
+	%D%/tm_operators_nd_32.c \
+	%D%/tm_sub_Hopping_Matrix.c \
+	%D%/tm_times_Hopping_Matrix.c
