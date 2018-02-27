@@ -212,6 +212,9 @@ static inline void rmQuotes(char *str){
 %}
 
 %option never-interactive
+%option case-insensitive
+%option prefix="tmlqcd"
+%option outfile="read_input.c"
 
 %x STARTCOND
 %x THERMSWEEPS
