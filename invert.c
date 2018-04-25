@@ -59,6 +59,7 @@
 #include "boundary.h"
 #include "solver/solver.h"
 #include "init/init.h"
+#include "init/init_gauge_tmp.h"
 #include "smearing/stout.h"
 #include "invert_eo.h"
 #include "monomial/monomial.h"
@@ -94,7 +95,7 @@
 #endif
 #include "meas/measurements.h"
 #include "source_generation.h"
-
+#include "expo.h"
 
 
 extern int nstore;
@@ -179,6 +180,9 @@ int main(int argc, char *argv[])
   j = init_gauge_field(VOLUMEPLUSRAND, 0);
   j += init_gauge_field_32(VOLUMEPLUSRAND, 0);  
 #endif
+  if(restoresu3_flag) {
+    j += init_gauge_tmp(VOLUMEPLUSRAND);
+  }
  
   if (j != 0) {
     fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
@@ -286,7 +290,19 @@ int main(int argc, char *argv[])
       fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", i, conf_filename);
       exit(-2);
     }
-
+    if (restoresu3_flag) {
+      if (g_cart_id == 0) 
+        printf("# Restoring SU(3) matrices.\n");
+      for(int ix=0;ix<VOLUME;ix++) {
+        for(int mu=0;mu<4;mu++){
+          su3 *v, *w;
+          v=&(g_gauge_field[ix][mu]);
+          w=&(gauge_tmp[ix][mu]);
+          _su3_assign(*w,*v);
+          restoresu3_in_place(v);
+        }
+      }
+    }
 
     if (g_cart_id == 0) {
       printf("# Finished reading gauge field.\n");
@@ -294,6 +310,9 @@ int main(int argc, char *argv[])
     }
 #ifdef TM_USE_MPI
     xchange_gauge(g_gauge_field);
+    if (restoresu3_flag) {
+      xchange_gauge(gauge_tmp);
+    }
 #endif
     /*Convert to a 32 bit gauge field, after xchange*/
     convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND);
@@ -303,6 +322,15 @@ int main(int argc, char *argv[])
     if (g_cart_id == 0) {
       printf("# The computed plaquette value is %e.\n", plaquette_energy / (6.*VOLUME*g_nproc));
       fflush(stdout);
+    }
+
+    if (restoresu3_flag) {
+      double plaquette_old = measure_plaquette( (const su3**) gauge_tmp);
+      if (g_cart_id == 0) {
+        printf("# The computed plaquette value before restoring SU(3) is %e\n which differ from the new one of %e.\n",
+               plaquette_old / (6.*VOLUME*g_nproc), (plaquette_energy-plaquette_old) / (6.*VOLUME*g_nproc));
+        fflush(stdout);
+      }
     }
 
     if (use_stout_flag == 1){
@@ -436,6 +464,7 @@ int main(int argc, char *argv[])
 #endif
   free_blocks();
   free_dfl_subspace();
+  free_gauge_tmp();
   free_gauge_field();
   free_gauge_field_32();
   free_geometry_indices();

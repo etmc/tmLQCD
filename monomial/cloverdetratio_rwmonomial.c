@@ -45,13 +45,30 @@
 #include "monomial/monomial.h"
 #include "boundary.h"
 #include "cloverdetratio_rwmonomial.h"
-
+#include "expo.h"
+#include "xchange/xchange.h"
+#include "init/init_gauge_tmp.h"
+#include "DDalphaAMG_interface.h"
 
 double cloverdetratio_rwacc(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   int save_sloppy = g_sloppy_precision_flag;
   double atime, etime;
   atime = gettime();
+
+  if (restoresu3_flag) {
+    for(int ix=0;ix<VOLUME;ix++) {
+      for(int mu=0;mu<4;mu++){
+        su3 *v, *w;
+        v=&(hf->gaugefield[ix][mu]);
+        w=&(gauge_tmp[ix][mu]);
+        _su3_assign(*v,*w);
+      }
+    }
+#ifdef TM_USE_MPI
+    xchange_gauge(hf->gaugefield);
+#endif
+  }
 
   g_mu = mnl->mu2;
   boundary(mnl->kappa2);
@@ -61,6 +78,21 @@ double cloverdetratio_rwacc(const int id, hamiltonian_field_t * const hf) {
   sw_invert(EE, mnl->mu2);
   g_mu3 = 0.;
   mnl->Qp(mnl->w_fields[1], mnl->pf);
+
+
+  if (restoresu3_flag) {
+    for(int ix=0;ix<VOLUME;ix++) {
+      for(int mu=0;mu<4;mu++){
+        su3 *v;
+        v=&(hf->gaugefield[ix][mu]);
+        restoresu3_in_place(v);
+      }
+    }
+#ifdef TM_USE_MPI
+    xchange_gauge(hf->gaugefield);
+#endif
+    mg_update_gauge = 1;
+  }
 
   g_mu3 = 0.;
   g_mu = mnl->mu;
