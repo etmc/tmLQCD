@@ -28,6 +28,7 @@
 int mg_setup_iter;
 int mg_coarse_setup_iter;
 int mg_update_setup_iter;
+int mg_update_gauge;
 int mg_omp_num_threads;
 int mg_Nvec;
 int mg_lvl;
@@ -101,9 +102,6 @@ int MG_solver_eo(spinor * const Even_new, spinor * const Odd_new,
 #include "operator/clovertm_operators.h"
 #include "operator/Hopping_Matrix.h"
 
-//Enable to test the solution. It cost an application more of the operator. 
-//TODO: test all the operators interfaced and then undefine this flag.
-#define MGTEST
 //Enable variant for shifted operator in the ND sector.
 //The variant is used in case of initial guess for the squared operator.
 //It is faster and tests prove also to be safe (read Appendix A of arxiv:1801.##### by S.Bacchio et al.)
@@ -540,7 +538,7 @@ static int MG_solve_nd( spinor * up_new, spinor * dn_new, spinor * const up_old,
   // Checking if initial guess is given
   sqnorm = square_norm(up_new, N, 1);
   sqnorm += square_norm(dn_new, N, 1);
-  if ( sqnorm>0 ) init_guess = 1;
+  if ( sqnorm > 1e-14 ) init_guess = 1;
 
   // In case of initial guess and squared operator, we do the inversion in two step and we need two more vectors
   if ( init_guess && (
@@ -575,7 +573,7 @@ static int MG_solve_nd( spinor * up_new, spinor * dn_new, spinor * const up_old,
     new2tmp = solver_field[assign_solver_field++];
   }
 
-  // Reconstracting initial guess in case of oe
+  // Reconstructing initial guess in case of oe
   if ( init_guess && N==VOLUME/2 ) {
     init_solver_field(&oe_solver_field, VOLUMEPLUSRAND, 4);
     spinor* tmp11 = oe_solver_field[0];
@@ -583,17 +581,17 @@ static int MG_solve_nd( spinor * up_new, spinor * dn_new, spinor * const up_old,
     spinor* tmp12 = oe_solver_field[2];
     spinor* tmp22 = oe_solver_field[3];
 
-#ifdef MGTEST
-    double differ[2];
-    f( tmp11, tmp12, up_new, dn_new);
-    diff( tmp11, tmp11, up_old, N);
-    diff( tmp12, tmp12, dn_old, N);
-    differ[0] = sqrt(square_norm(tmp11, N, 1)+square_norm(tmp12, N, 1));
-    differ[1] = sqrt(square_norm(up_old, N, 1)+square_norm(dn_old, N, 1));
+    if (g_debug_level > 2) {
+      double differ[2];
+      f( tmp11, tmp12, up_new, dn_new);
+      diff( tmp11, tmp11, up_old, N);
+      diff( tmp12, tmp12, dn_old, N);
+      differ[0] = sqrt(square_norm(tmp11, N, 1)+square_norm(tmp12, N, 1));
+      differ[1] = sqrt(square_norm(up_old, N, 1)+square_norm(dn_old, N, 1));
   
-    if(g_proc_id == 0)
-      printf("MG TEST: using initial guess. Relative residual = %e  \n", differ[0]/differ[1]);
-#endif
+      if(g_proc_id == 0)
+        printf("MG TEST: using initial guess. Relative residual = %e  \n", differ[0]/differ[1]);
+    }
 
     /* Reconstruct the even sites                */
     if (    f == Qtm_pm_ndpsi       ||  // (Gamma5 Dh tau1)^2 - Schur complement squared with csw = 0
@@ -680,25 +678,6 @@ static int MG_solve_nd( spinor * up_new, spinor * dn_new, spinor * const up_old,
     } 
     finalize_solver(oe_solver_field, 4);
   } 
-#ifdef MGTEST
-  else {
-    init_solver_field(&oe_solver_field, VOLUMEPLUSRAND, 2);
-    spinor* tmp1 = oe_solver_field[0];
-    spinor* tmp2 = oe_solver_field[1];
-
-    double differ[2];
-    f( tmp1, tmp2, up_new, dn_new);
-    diff( tmp1, tmp1, up_old, N);
-    diff( tmp2, tmp2, dn_old, N);
-    differ[0] = sqrt(square_norm(tmp1, N, 1)+square_norm(tmp2, N, 1));
-    differ[1] = sqrt(square_norm(up_old, N, 1)+square_norm(dn_old, N, 1));
-  
-    if(g_proc_id == 0)
-      printf("MG TEST: using initial guess. Relative residual = %e  \n", differ[0]/differ[1]);
-    finalize_solver(oe_solver_field, 2);
-  }
-#endif
-
 
   // Checking if the operator is in the list and compatible with N
   if (      f == Qtm_ndpsi ||           //  Gamma5 Dh    - Schur complement with csw = 0
@@ -1013,6 +992,11 @@ static int MG_mms_solve_nd( spinor **const up_new, spinor **const dn_new,
     if (!mg_status.success) 
       printf("ERROR: the solver did not converge!\n");
   }
+
+  free(new1);
+  free(new2);
+  free(mg_odd_shifts);
+  free(mg_even_shifts);
   
   return mg_status.success;
 }
@@ -1215,20 +1199,16 @@ int MG_solver(spinor * const phi_new, spinor * const phi_old,
 
   success = MG_solve( phi_new, phi_old, mg_prec, N, f );
 
-#ifdef MGTEST
-  if(success) 
+  if(success && g_debug_level > 2) 
     success = MG_check( phi_new, phi_old, N, mg_prec, f );
-#endif
   
   if(!success) {
     MG_reset();
     MG_pre_solve(gf);
     success = MG_solve( phi_new, phi_old, mg_prec, N, f);
     
-#ifdef MGTEST
-    if(success) 
+    if(success && g_debug_level > 2) 
       success = MG_check( phi_new, phi_old, N, mg_prec, f );
-#endif
   }
   
   if(!success) {
@@ -1292,8 +1272,7 @@ int MG_solver_nd(spinor * const up_new, spinor * const dn_new,
 
   success = MG_solve_nd( up_new, dn_new, up_old, dn_old, mg_prec, N, f );
   
-#ifdef MGTEST
-  if(success) {
+  if(success && g_debug_level > 2) {
     success = MG_check_nd( up_new, dn_new, up_old, dn_old, N, mg_prec, f );
 
     if(!success) {
@@ -1303,17 +1282,14 @@ int MG_solver_nd(spinor * const up_new, spinor * const dn_new,
         success = MG_check_nd( up_new, dn_new, up_old, dn_old, N, mg_prec, f );
     }
   }
-#endif
   
   if(!success) {
     MG_reset();
     MG_pre_solve(gf);
     success = MG_solve_nd( up_new, dn_new, up_old, dn_old, mg_prec, N, f);
     
-#ifdef MGTEST
-    if(success) 
+    if(success && g_debug_level > 2) 
       success = MG_check_nd( up_new, dn_new, up_old, dn_old, N, mg_prec, f );
-#endif
   }
   
   if(!success) {
@@ -1387,20 +1363,16 @@ int MG_mms_solver_nd(spinor **const up_new, spinor **const dn_new,
 
   success = MG_mms_solve_nd( up_new, dn_new, up_old, dn_old, shifts, no_shifts, mg_prec, N, f );
   
-#ifdef MGTEST
-  if(success) 
+  if(success && g_debug_level > 2) 
     success = MG_mms_check_nd( up_new, dn_new, up_old, dn_old, shifts, no_shifts, N, mg_prec, f );
-#endif
   
   if(!success) {
     MG_reset();
     MG_pre_solve(gf);
     success = MG_mms_solve_nd( up_new, dn_new, up_old, dn_old, shifts, no_shifts, mg_prec, N, f);
     
-#ifdef MGTEST
-    if(success) 
+    if(success && g_debug_level > 2) 
       success = MG_mms_check_nd( up_new, dn_new, up_old, dn_old, shifts, no_shifts, N, mg_prec, f );
-#endif
   }
   
   if(!success) {

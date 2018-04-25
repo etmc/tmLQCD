@@ -31,6 +31,7 @@
 extern int mg_setup_iter;
 extern int mg_coarse_setup_iter;
 extern int mg_update_setup_iter;
+extern int mg_update_gauge;
 extern int mg_omp_num_threads;
 extern int mg_Nvec;
 extern int mg_lvl;
