@@ -55,7 +55,7 @@ MODULES = read_input gamma measure_gauge_action start \
 	geometry_eo invert_overlap aligned_malloc \
 	prepare_source chebyshev_polynomial_nd Ptilde_nd  \
 	reweighting_factor_nd rnd_gauge_trafo \
-        update_momenta integrator  phmc \
+        update_momenta update_momenta_fg integrator  phmc \
 	little_D block operator \
 	temporalgauge spinor_fft X_psi P_M_eta \
 	jacobi fatal_error invert_clover_eo gettime \
