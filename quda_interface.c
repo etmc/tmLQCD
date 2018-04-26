@@ -1,6 +1,7 @@
 /***********************************************************************
  *
- * Copyright (C) 2015 Mario Schroeck
+ * Copyright (C) 2015       Mario Schroeck
+ *               2016, 2017 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -81,11 +82,12 @@
 *
 **************************************************************************/
 
-#include "quda_interface.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include "quda_interface.h"
+#include "quda_types.h"
 #include "boundary.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "linalg/mul_r.h"
@@ -105,19 +107,12 @@ double X0, X1, X2, X3;
 // for details see https://github.com/lattice/quda/issues/157
 #define USE_LZ_LY_LX_T 0
 
-// TRIVIAL_BC are trivial (anti-)periodic boundary conditions,
-// i.e. 1 or -1 on last timeslice
-// tmLQCD uses twisted BC, i.e. phases on all timeslices.
-// if using TRIVIAL_BC: can't compare inversion result to tmLQCD
-// if not using TRIVIAL_BC: BC will be applied to gauge field,
-// can't use 12 parameter reconstruction
-#define TRIVIAL_BC 0
-
 #define MAX(a,b) ((a)>(b)?(a):(b))
 
 // gauge and invert paramameter structs; init. in _initQuda()
 QudaGaugeParam  gauge_param;
 QudaInvertParam inv_param;
+tm_QudaParams_t quda_input;
 
 // pointer to the QUDA gaugefield
 double *gauge_quda[4];
@@ -207,7 +202,7 @@ void _initQuda() {
   // require both L2 relative and heavy quark residual to determine convergence
 //  inv_param.residual_type = (QudaResidualType)(QUDA_L2_RELATIVE_RESIDUAL | QUDA_HEAVY_QUARK_RESIDUAL);
   inv_param.tol_hq = 1.0;//1e-3; // specify a tolerance for the residual for heavy quark residual
-  inv_param.reliable_delta = 1e-3; // ignored by multi-shift solver
+  inv_param.reliable_delta = 1e-2; // ignored by multi-shift solver
   inv_param.use_sloppy_partial_accumulator = 0;
 
   // domain decomposition preconditioner parameters
@@ -319,15 +314,31 @@ void _endQuda() {
 
 
 void _loadGaugeQuda( const int compression ) {
-  if( inv_param.verbosity > QUDA_SILENT )
-    if(g_proc_id == 0)
+  if( inv_param.verbosity > QUDA_SILENT ){
+    if(g_proc_id == 0) {
       printf("# QUDA: Called _loadGaugeQuda\n");
+      if( compression == 18 ){
+        if( quda_input.fermionbc == TM_QUDA_THETABC ){
+          printf("# QUDA: Theta boundary conditions will be applied to gauge field\n");
+        } else if ( quda_input.fermionbc == TM_QUDA_APBC ){
+          printf("# QUDA: Temporal ABPC will be applied to gauge feild\n");
+        }
+      }
+    }
+  }
 
+#ifdef TM_USE_OMP
+#pragma omp parallel
+  {
+#endif
   _Complex double tmpcplx;
 
   size_t gSize = (gauge_param.cpu_prec == QUDA_DOUBLE_PRECISION) ? sizeof(double) : sizeof(float);
   
   // now copy and reorder
+#ifdef TM_USE_OMP
+  #pragma omp for
+#endif
   for( int x0=0; x0<T; x0++ )
     for( int x1=0; x1<LX; x1++ )
       for( int x2=0; x2<LY; x2++ )
@@ -352,34 +363,41 @@ void _loadGaugeQuda( const int compression ) {
           memcpy( &(gauge_quda[1][quda_idx]), &(g_gauge_field[tm_idx][2]), 18*gSize);
           memcpy( &(gauge_quda[2][quda_idx]), &(g_gauge_field[tm_idx][3]), 18*gSize);
           memcpy( &(gauge_quda[3][quda_idx]), &(g_gauge_field[tm_idx][0]), 18*gSize);
-
+#endif
         if( compression == 18 ) {
           // apply boundary conditions
-          for( int i=0; i<9; i++ ) {
-            tmpcplx = gauge_quda[0][quda_idx+2*i] + I*gauge_quda[0][quda_idx+2*i+1];
-            tmpcplx *= -phase_1/g_kappa;
-            gauge_quda[0][quda_idx+2*i]   = creal(tmpcplx);
-            gauge_quda[0][quda_idx+2*i+1] = cimag(tmpcplx);
+          if ( quda_input.fermionbc == TM_QUDA_THETABC ){
+            for( int i=0; i<9; i++ ) {
+              tmpcplx = gauge_quda[0][quda_idx+2*i] + I*gauge_quda[0][quda_idx+2*i+1];
+              tmpcplx *= -phase_1/g_kappa;
+              gauge_quda[0][quda_idx+2*i]   = creal(tmpcplx);
+              gauge_quda[0][quda_idx+2*i+1] = cimag(tmpcplx);
 
-            tmpcplx = gauge_quda[1][quda_idx+2*i] + I*gauge_quda[1][quda_idx+2*i+1];
-            tmpcplx *= -phase_2/g_kappa;
-            gauge_quda[1][quda_idx+2*i]   = creal(tmpcplx);
-            gauge_quda[1][quda_idx+2*i+1] = cimag(tmpcplx);
+              tmpcplx = gauge_quda[1][quda_idx+2*i] + I*gauge_quda[1][quda_idx+2*i+1];
+              tmpcplx *= -phase_2/g_kappa;
+              gauge_quda[1][quda_idx+2*i]   = creal(tmpcplx);
+              gauge_quda[1][quda_idx+2*i+1] = cimag(tmpcplx);
 
-            tmpcplx = gauge_quda[2][quda_idx+2*i] + I*gauge_quda[2][quda_idx+2*i+1];
-            tmpcplx *= -phase_3/g_kappa;
-            gauge_quda[2][quda_idx+2*i]   = creal(tmpcplx);
-            gauge_quda[2][quda_idx+2*i+1] = cimag(tmpcplx);
+              tmpcplx = gauge_quda[2][quda_idx+2*i] + I*gauge_quda[2][quda_idx+2*i+1];
+              tmpcplx *= -phase_3/g_kappa;
+              gauge_quda[2][quda_idx+2*i]   = creal(tmpcplx);
+              gauge_quda[2][quda_idx+2*i+1] = cimag(tmpcplx);
 
-            tmpcplx = gauge_quda[3][quda_idx+2*i] + I*gauge_quda[3][quda_idx+2*i+1];
-            tmpcplx *= -phase_0/g_kappa;
-            gauge_quda[3][quda_idx+2*i]   = creal(tmpcplx);
-            gauge_quda[3][quda_idx+2*i+1] = cimag(tmpcplx);
-          }
-        }
-
+              tmpcplx = gauge_quda[3][quda_idx+2*i] + I*gauge_quda[3][quda_idx+2*i+1];
+              tmpcplx *= -phase_0/g_kappa;
+              gauge_quda[3][quda_idx+2*i]   = creal(tmpcplx);
+              gauge_quda[3][quda_idx+2*i+1] = cimag(tmpcplx);
+            }
+          } else if ( quda_input.fermionbc == TM_QUDA_APBC && x0+g_proc_coords[0]*T == g_nproc_t*T-1 ) {
+            for( int i=0; i<18; i++ ) {
+              gauge_quda[3][quda_idx+i]   = -gauge_quda[3][quda_idx+i];
+            }
+          } // quda_input.fermionbc
+        } // compression
+      } // volume loop
+#ifdef TM_USE_OMP
+  }
 #endif
-        }
 
   loadGaugeQuda((void*)gauge_quda, &gauge_param);
 }
@@ -398,6 +416,9 @@ void reorder_spinor_toQuda( double* sp, QudaPrecision precision, int doublet, do
   }
 
   // now copy and reorder from tempSpinor to spinor
+#ifdef TM_USE_OMP
+  #pragma omp parallel for
+#endif
   for( int x0=0; x0<T; x0++ )
     for( int x1=0; x1<LX; x1++ )
       for( int x2=0; x2<LY; x2++ )
@@ -439,6 +460,9 @@ void reorder_spinor_fromQuda( double* sp, QudaPrecision precision, int doublet, 
   }
 
   // now copy and reorder from tempSpinor to spinor
+#ifdef TM_USE_OMP
+  #pragma omp parallel for
+#endif
   for( int x0=0; x0<T; x0++ )
     for( int x1=0; x1<LX; x1++ )
       for( int x2=0; x2<LY; x2++ )
@@ -472,17 +496,27 @@ void set_boundary_conditions( CompressionType* compression ) {
   if( fabs(X1)>0.0 || fabs(X2)>0.0 || fabs(X3)>0.0 || (fabs(X0)!=0.0 && fabs(X0)!=1.0) ) {
     if( *compression!=NO_COMPRESSION ) {
       if(g_proc_id == 0) {
-          printf("\n# QUDA: WARNING you can't use compression %d with boundary conditions for fermion fields (t,x,y,z)*pi: (%f,%f,%f,%f) \n", *compression,X0,X1,X2,X3);
-          printf("# QUDA: disabling compression.\n\n");
-          *compression=NO_COMPRESSION;
+        printf("\n# QUDA: WARNING you can't use compression %d with boundary conditions for fermion fields (t,x,y,z)*pi: (%f,%f,%f,%f) \n", *compression,X0,X1,X2,X3);
+        printf("# QUDA: disabling compression.\n\n");
       }
+      *compression=NO_COMPRESSION;
+    }
+  }
+
+  if( quda_input.fermionbc == TM_QUDA_APBC || quda_input.fermionbc == TM_QUDA_PBC ){
+    if( *compression!=NO_COMPRESSION ){
+      if(g_proc_id == 0){
+        printf("# QUDA: WARNING forced (A)PBC were selected in the input file.\n");
+        printf("# QUDA: Disabling compression to make sure that these are not lost due to gauge compression.\n");
+      }
+      *compression=NO_COMPRESSION;
     }
   }
 
   QudaReconstructType link_recon;
   QudaReconstructType link_recon_sloppy;
 
-  if( *compression==NO_COMPRESSION ) { // theta BC
+  if( *compression==NO_COMPRESSION ) { // theta BC or "hard-coded" (A)PBC
     gauge_param.t_boundary = QUDA_PERIODIC_T; // BC will be applied to gaugefield
     link_recon = 18;
     link_recon_sloppy = 18;
@@ -570,7 +604,7 @@ int invert_quda_direct(double * const propagator, double * const source,
     inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN_ASYMMETRIC;
     inv_param.solution_type = QUDA_MAT_SOLUTION;
     // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
-    inv_param.mu = optr->mu/2./optr->kappa;
+    inv_param.mu = -optr->mu/2./optr->kappa;
   }
   else if( optr->c_sw > 0.0 ) {
     inv_param.twist_flavor = QUDA_TWIST_NO;
@@ -666,7 +700,8 @@ int invert_quda_direct(double * const propagator, double * const source,
   optr->iterations = inv_param.iter;
 
   // reorder spinor
-  reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, NULL );
+  // BaKo 20170901: not sure why the source was also re-ordered
+  //reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, NULL );
   reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, NULL );
   // propagator in usual normalisation, this is only necessary in invert_quda_direct
   mul_r((spinor*)spinorOut, (2*optr->kappa), (spinor*)spinorOut, VOLUME );
@@ -716,10 +751,9 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 
   // figure out which BC to use (theta, trivial...)
   set_boundary_conditions(&compression);
-
   // set the sloppy precision of the mixed prec solver
   set_sloppy_prec(sloppy_precision);
-
+  
   // load gauge after setting precision
   _loadGaugeQuda(compression);
 
@@ -827,9 +861,10 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
   int iteration = inv_param.iter;
 
   // reorder spinor
-  reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, NULL );
+  //reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, NULL );
+  // BaKo 20170901: not sure why the source was also re-ordered
   reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, NULL );
-  convert_lexic_to_eo(Even,     Odd,     solver_field[0]);
+  //convert_lexic_to_eo(Even,     Odd,     solver_field[0]);
   convert_lexic_to_eo(Even_new, Odd_new, solver_field[1]);
 
   finalize_solver(solver_field, nr_sf);
@@ -954,10 +989,11 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   int iteration = inv_param.iter;
 
   // reorder spinor
-  reorder_spinor_fromQuda( (double*)spinorIn,    inv_param.cpu_prec, 1, (double*)spinorIn_c );
+  // BaKo 20170901: not sure why the source was also re-ordered
+  //reorder_spinor_fromQuda( (double*)spinorIn,    inv_param.cpu_prec, 1, (double*)spinorIn_c );
   reorder_spinor_fromQuda( (double*)spinorOut,   inv_param.cpu_prec, 1, (double*)spinorOut_c );
-  convert_lexic_to_eo(Even_s,     Odd_s,     solver_field[0]);
-  convert_lexic_to_eo(Even_c,     Odd_c,     solver_field[1]);
+  //convert_lexic_to_eo(Even_s,     Odd_s,     solver_field[0]);
+  //convert_lexic_to_eo(Even_c,     Odd_c,     solver_field[1]);
   convert_lexic_to_eo(Even_new_s, Odd_new_s, solver_field[2]);
   convert_lexic_to_eo(Even_new_c, Odd_new_c, solver_field[3]);
 

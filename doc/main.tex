@@ -17,6 +17,11 @@
 \usepackage{algorithm}
 \usepackage{algorithmic}
 \usepackage{fancyvrb}
+\usepackage{cancel}
+\usepackage{framed}
+
+\usepackage[a4paper, total={16cm, 25cm}]{geometry}
+\usepackage{fancyvrb}
 
 \makeatletter
 \newcommand\footnoteref[1]{\protected@xdef\@thefnmark{\ref{#1}}\@footnotemark}
@@ -78,6 +83,7 @@
 \section{Interfaces to external QCD libraries}
 \myinput{quda.tex}
 \myinput{DDalphaAMG.tex}
+\myinput{qphix.tex}
 
 \clearpage
 \bibliographystyle{h-physrev5}
@@ -97,6 +103,9 @@
 
   \section{Deflation}
   \myinput{deflation}
+  
+  \section{Solvers}
+  \myinput{solvers}
 \end{appendix}
 
 

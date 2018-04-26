@@ -33,7 +33,7 @@
 #include "su3.h"
 #include "convert_eo_to_lexic.h"
 
-void convert_eo_to_lexic(spinor * const P, spinor * const s, spinor * const r) {
+void convert_eo_to_lexic(spinor * const P, const spinor * const s, const spinor * const r) {
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -76,7 +76,7 @@ void convert_eo_to_lexic(spinor * const P, spinor * const s, spinor * const r) {
  *      s: new spinor even 
  *      r: new spinor odd 
  */
-void convert_lexic_to_eo(spinor * const s, spinor * const r, spinor * const P) {
+void convert_lexic_to_eo(spinor * const s, spinor * const r, const spinor * const P) {
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {

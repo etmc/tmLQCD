@@ -2,6 +2,7 @@
 
 all: main.pdf
 
+
 main.pdf: $(wildcard *.tex) bibliography.bib Makefile
 	latexmk -f -bibtex -pdf -pdflatex="pdflatex -interaction=nonstopmode" -use-make main.tex
 

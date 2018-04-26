@@ -60,7 +60,7 @@
 #include "operator/clover_leaf.h"
 #include "operator.h"
 #include "gettime.h"
-#ifdef QUDA
+#ifdef TM_USE_QUDA
 #  include "quda_interface.h"
 #endif
 #ifdef DDalphaAMG
@@ -92,6 +92,9 @@ int add_operator(const int type) {
   optr->c_sw = _default_c_sw;
   optr->sloppy_precision = _default_operator_sloppy_precision_flag;
   optr->compression_type = _default_compression_type;
+  optr->external_inverter = _default_external_inverter;
+  optr->solver_params.solution_type = TM_SOLUTION_M;
+  optr->solver_params.no_shifts = 1;
   optr->coefs = NULL;
   optr->rel_prec = _default_g_relative_precision_flag;
   optr->eps_sq = _default_solver_precision;
@@ -188,9 +191,11 @@ int init_operators() {
           optr->applyMm = &M_minus_psi;
         }
         if(optr->solver == CGMMS) {
-          if (g_cart_id == 0 && optr->even_odd_flag == 1)
-            fprintf(stderr, "CG Multiple mass solver works only without even/odd! Forcing!\n");
-          optr->even_odd_flag = 0;
+          if( optr->external_inverter != QPHIX_INVERTER ){
+            if (g_cart_id == 0 && optr->even_odd_flag == 1)
+              fprintf(stderr, "CG Multiple mass solver works only without even/odd! Forcing!\n");
+            optr->even_odd_flag = 0;
+          }
           if (g_cart_id == 0 && optr->DownProp)
             fprintf(stderr, "CGMMS doesn't need AddDownPropagator! Switching Off!\n");
           optr->DownProp = 0;
@@ -228,9 +233,11 @@ int init_operators() {
           optr->applyMm = &Msw_full_minus_psi;
         }
         if(optr->solver == CGMMS) {
-          if (g_cart_id == 0 && optr->even_odd_flag == 1)
-            fprintf(stderr, "CG Multiple mass solver works only without even/odd! Forcing!\n");
-          optr->even_odd_flag = 0;
+          if( optr->external_inverter != QPHIX_INVERTER ){
+            if (g_cart_id == 0 && optr->even_odd_flag == 1)
+              fprintf(stderr, "CG Multiple mass solver works only without even/odd! Forcing!\n");
+            optr->even_odd_flag = 0;
+          }
           if (g_cart_id == 0 && optr->DownProp)
             fprintf(stderr, "CGMMS doesn't need AddDownPropagator! Switching Off!\n");
           optr->DownProp = 0;
@@ -257,7 +264,7 @@ int init_operators() {
         //  optr->applyDbQsq = &Qtm_pm_ndpsi;
       }
       if(optr->external_inverter==QUDA_INVERTER ) {
-#ifdef QUDA
+#ifdef TM_USE_QUDA
         _initQuda();
 #else
         if(g_proc_id == 0) {
@@ -307,33 +314,25 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
   double atime = 0., etime = 0., nrm1 = 0., nrm2 = 0.;
   int i;
   optr->iterations = 0;
-  optr->reached_prec = -1.;
-  g_kappa = optr->kappa;
+  optr->reached_prec = -1.; 
+  
+  op_backup_restore_globals(TM_BACKUP_GLOBALS);
+  op_set_globals(op_id);
   boundary(g_kappa);
   
   atime = gettime();
   if(optr->type == TMWILSON || optr->type == WILSON || optr->type == CLOVER) {
-    g_mu = optr->mu;
-    g_c_sw = optr->c_sw;
     if(optr->type == CLOVER) {
       if (g_cart_id == 0 && g_debug_level > 1) {
         printf("#\n# csw = %.12f, computing clover leafs\n", g_c_sw);
       }
       init_sw_fields(VOLUME);
-      
       sw_term( (const su3**) g_gauge_field, optr->kappa, optr->c_sw); 
-      /* this must be EE here!   */
-      /* to match clover_inv in Qsw_psi */
-      sw_invert(EE, optr->mu);
-      /* now copy double sw and sw_inv fields to 32bit versions */
-      copy_32_sw_fields();
     }
     
     // this loop is for +mu (i=0) and -mu (i=1)
     // the latter if AddDownPropagator = yes is chosen
     for(i = 0; i < 2; i++) {
-      // we need this here again for the sign switch at i == 1
-      g_mu = optr->mu;
       if (g_cart_id == 0) {
         printf("#\n# 2 kappa mu = %.12f, kappa = %.12f, c_sw = %.12f\n", g_mu, g_kappa, g_c_sw);
       }
@@ -362,8 +361,9 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
         /* this must be EE here!   */
         /* to match clover_inv in Qsw_psi */
         if(optr->even_odd_flag || optr->solver == DFLFGMRES || optr->solver == DFLGCR)
-          sw_invert(EE, optr->mu); //this is needed only when we use even-odd preconditioning
-        /* now copy double sw and sw_inv fields to 32bit versions */
+          sw_invert(EE, g_mu); //this is needed only when we use even-odd preconditioning
+          
+        /* only now copy double sw and sw_inv fields to 32bit versions */
         copy_32_sw_fields();
         
         optr->iterations = invert_clover_eo(optr->prop0, optr->prop1, optr->sr0, optr->sr1,
@@ -389,21 +389,19 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
         mul_r(optr->prop0, (2*optr->kappa), optr->prop0, VOLUME / 2);
         mul_r(optr->prop1, (2*optr->kappa), optr->prop1, VOLUME / 2);
       }
-      if (optr->solver != CGMMS && write_prop) /* CGMMS handles its own I/O */
+      /* CGMMS handles its own I/O */
+      if (optr->solver != CGMMS && write_prop) { 
         optr->write_prop(op_id, index_start, i);
+      }
       if(optr->DownProp) {
-        optr->mu = -optr->mu;
+        g_mu = -g_mu;
         dfl_subspace_updated = 1;
       } 
       else 
         break;
     }
   } else if(optr->type == DBTMWILSON || optr->type == DBCLOVER) {
-    g_mubar = optr->mubar;
-    g_epsbar = optr->epsbar;
-    g_c_sw = 0.;
     if(optr->type == DBCLOVER) {
-      g_c_sw = optr->c_sw;
       if (g_cart_id == 0 && g_debug_level > 1) {
         printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
       }
@@ -461,7 +459,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       nrm1 += square_norm(g_spinor_field[DUM_DERI+3], VOLUME/2, 1); 
       nrm1 += square_norm(g_spinor_field[DUM_DERI+4], VOLUME/2, 1); 
       optr->reached_prec = nrm1;
-      g_mu = g_mu1;
+
       /* For standard normalisation */
       /* we have to mult. by 2*kappa */
       mul_r(g_spinor_field[DUM_DERI], (2*optr->kappa), optr->prop0, VOLUME/2);
@@ -526,6 +524,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
             optr->iterations, optr->reached_prec);
     fprintf(stdout, "# Inversion done in %1.2e sec. \n", etime - atime);
   }
+  op_backup_restore_globals(TM_RESTORE_GLOBALS);
   return;
 }
 
@@ -605,4 +604,51 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
   // check status for errors!?
   destruct_writer(writer);
   return;
+}
+
+void op_backup_restore_globals(const backup_restore_t mode){
+  static double backup_kappa;
+  static double backup_mu;
+  static double backup_c_sw;
+  static double backup_mubar;
+  static double backup_epsbar;
+  if( mode == TM_BACKUP_GLOBALS ){
+    backup_kappa  = g_kappa;
+    backup_c_sw   = g_c_sw;
+    backup_mu     = g_mu;
+    backup_mubar  = g_mubar;
+    backup_epsbar = g_epsbar;
+  } else {
+    g_kappa  = backup_kappa;
+    g_c_sw   = backup_c_sw;
+    g_mu     = backup_mu;
+    g_mubar  = backup_mubar;
+    g_epsbar = backup_epsbar;
+    boundary(g_kappa);
+  }
+}
+  
+void op_set_globals(const int op_id){
+  operator* op = &operator_list[op_id];
+
+  g_kappa = op->kappa;
+  g_mu    = op->mu;
+
+  if( op->type == CLOVER || op->type == DBCLOVER ){
+    g_c_sw = op->c_sw;
+  }
+  if( op->type == DBTMWILSON || op-> type == DBCLOVER){
+    g_mubar = op->mubar;
+    g_epsbar = op->epsbar;
+  }
+  if(g_debug_level > 2 && g_proc_id == 0){
+    printf("# op_set_globals set globals to:\n");
+    printf("# g_kappa = %.12lf\n", g_kappa);
+    printf("# g_c_sw = %.12lf\n", g_c_sw);
+    printf("# g_mu = %.12lf\n", g_mu);
+    printf("# g_mu2 = %.12lf\n", g_mu2);
+    printf("# g_mu3 = %.12lf\n", g_mu3);
+    printf("# g_mubar = %.12lf\n", g_mubar);
+    printf("# g_epsbar = %.12lf\n", g_epsbar);
+  }
 }
