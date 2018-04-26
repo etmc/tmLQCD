@@ -1,9 +1,10 @@
-.PHONY: main.pdf all clean
+.PHONY: all clean
 
 all: main.pdf
 
-main.pdf: main.tex
-	latexmk -bibtex -pdf -pdflatex="pdflatex -interaction=nonstopmode" -use-make main.tex
+
+main.pdf: $(wildcard *.tex) bibliography.bib Makefile
+	latexmk -f -bibtex -pdf -pdflatex="pdflatex -interaction=nonstopmode" -use-make main.tex
 
 clean:
 	latexmk -CA

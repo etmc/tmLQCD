@@ -28,10 +28,10 @@
  * in modulus. The code will use shift[i]^2, which are all >0
  *
  * parameters:
- * shifts are given to the solver in solver_pm->shifts
- * number of shifts is in solver_pm->no_shifts
- * the operator to invert in solver_pm->M_ndpsi
- * the 32 bit operator to invert in solver_pm->M_ndpsi32
+ * shifts are given to the solver in solver_params->shifts
+ * number of shifts is in solver_params->no_shifts
+ * the operator to invert in solver_params->M_ndpsi
+ * the 32 bit operator to invert in solver_params->M_ndpsi32
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -68,14 +68,14 @@ static void free_mms_tm_nd_32();
 
 int mixed_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn, 
 		 spinor * const Qup, spinor * const Qdn, 
-		 solver_pm_t * solver_pm) {
+		 solver_params_t * solver_params) {
 
-  double eps_sq = solver_pm->squared_solver_prec;
-  int noshifts = solver_pm->no_shifts;
-  int rel_prec = solver_pm->rel_prec;
-  int max_iter = solver_pm->max_iter;
+  double eps_sq = solver_params->squared_solver_prec;
+  int noshifts = solver_params->no_shifts;
+  int rel_prec = solver_params->rel_prec;
+  int max_iter = solver_params->max_iter;
   int check_abs, check_rel;
-  double * shifts = solver_pm->shifts;
+  double * shifts = solver_params->shifts;
   int Nshift = noshifts;
  
   // algorithm
@@ -92,7 +92,7 @@ int mixed_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
   
   int use_eo=1, eofactor=2;
   //not even-odd?
-  if(solver_pm->sdim == VOLUME) {
+  if(solver_params->sdim == VOLUME) {
     eofactor = 1;
     use_eo = 0;
   }
@@ -109,7 +109,7 @@ int mixed_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
   if( (g_cart_id == 0 && g_debug_level > 2)) printf("# CGMMSND_mixed: Initial mms residue: %.6e\n", rr);
   if(rr < 1.0e-4){
     if( (g_cart_id == 0 && g_debug_level > 2)) printf("# CGMMSND_mixed: norm of source too low: falling back to double mms solver %.6e\n", rr);
-    return(cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_pm));
+    return(cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_params));
   }
   
   r0r0   = rr;	// for relative precision 
@@ -210,8 +210,8 @@ int mixed_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
                     square_norm_32(help_low_dn,N,1);   
    printf("square_norm(Q_low) = %e\n", sqn_low);  
    
-   solver_pm->M_ndpsi32(sf32[2], sf32[3], help_low_up, help_low_dn);
-   solver_pm->M_ndpsi(sf[2], sf[3], help_high_up, help_high_dn);
+   solver_params->M_ndpsi32(sf32[2], sf32[3], help_low_up, help_low_dn);
+   solver_params->M_ndpsi(sf[2], sf[3], help_high_up, help_high_dn);
    
    assign_to_64(sf[4], sf32[2], N);
    assign_to_64(sf[5], sf32[3], N);   
@@ -273,7 +273,7 @@ int mixed_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
     
   for (j = 0; j < max_iter; j++) {   
       // A*d(k)
-    solver_pm->M_ndpsi32(Ad_up, Ad_dn, d_up,  d_dn);     
+    solver_params->M_ndpsi32(Ad_up, Ad_dn, d_up,  d_dn);     
     //add zero'th shift
     assign_add_mul_r_32(Ad_up, d_up, (float) sigma[0], N);
     assign_add_mul_r_32(Ad_dn, d_dn, (float) sigma[0], N);
@@ -384,7 +384,7 @@ int mixed_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
       addto_32(x_dn_d, x_dn, N);      
  
       
-      solver_pm->M_ndpsi(Ax_up_d, Ax_dn_d, x_up_d,  x_dn_d);
+      solver_params->M_ndpsi(Ax_up_d, Ax_dn_d, x_up_d,  x_dn_d);
       //add zero'th shift
       assign_add_mul_r(Ax_up_d, x_up_d, sigma[0], N);
       assign_add_mul_r(Ax_dn_d, x_dn_d, sigma[0], N);
@@ -478,7 +478,7 @@ int mixed_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
     if(g_cart_id == 0) printf("# CGMMSND_mixed: Checking mms result:\n");
     //loop over all shifts (-> Nshift) 
     for(int im = 0; im < Nshift; im++){
-      solver_pm->M_ndpsi(sf[0], sf[1], Pup[im], Pdn[im]);
+      solver_params->M_ndpsi(sf[0], sf[1], Pup[im], Pdn[im]);
       assign_add_mul_r(sf[0], Pup[im] , shifts[im]*shifts[im], N);
       assign_add_mul_r(sf[1], Pdn[im] , shifts[im]*shifts[im], N);
       diff(sf[2], sf[0], Qup, N);

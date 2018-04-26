@@ -3,7 +3,9 @@
 
 # refresh Makefile and other stuff
 
-PROGRAMS_WITH_GIT_HASH := hmc_tm invert offline_measurement
+
+
+PROGRAMS_WITH_GIT_HASH := hmc_tm invert offline_measurement test_Dslash
 
 .SUFFIXES:
 
@@ -30,7 +32,9 @@ $(top_srcdir)/configure: $(top_srcdir)/configure.in
 # we filter the list of all objects and treat these separately
 $(addsuffix .d, $(filter-out ${PROGRAMS_WITH_GIT_HASH},${ALLOBJ})): %.d: ${srcdir}/%.c Makefile
 	@ $(CCDEP) ${DEPFLAGS} ${DEFS} ${INCLUDES} $< > $@
-
+$(addsuffix .d, $(filter-out ${PROGRAMS_WITH_GIT_HASH},${CXXMODULES})): %.d: ${srcdir}/%.cpp Makefile
+	@ $(CXXDEP) ${CXXDEPFLAGS} ${DEFS} ${INCLUDES} $< > $@
+	
 # dirty hack to prevent make from entering an infinite loop because a phony target is given as a real
 # dependency (make will build invert.d and hmc_tm.d indefinitely)
 # when git_hash.h does not exist (as checked using wildcard) it is given as a dependency of invert.d and hmc_tm.d

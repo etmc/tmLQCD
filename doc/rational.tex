@@ -1,4 +1,4 @@
-\subsection{Rational HMC}
+\subsection{Rational HMC} \label{subsec:rationalhmc}
 
 For the heavy doublet one may alternatively use a rational
 approximation 
@@ -117,13 +117,13 @@ force.
 The rational approximation has a finite precision. In the HMC one can
 account for this effect by estimating
 \[
-1 - |\hat Q_h| R\,,
+1 - |\hat Q_h| \mathcal{R}\,,
 \]
 which can be done in different ways:
 \begin{itemize}
 \item we include an additional monomial for
   \[
-  \det (|\hat Q_h| R)
+  \det (|\hat Q_h| \mathcal{R})
   \]
   in the Hamiltonian. If the rational apprximation is precise enough,
   it is sufficient to only include this in the heatbath and acceptance
@@ -159,44 +159,54 @@ which can be done in different ways:
   \frac{3}{8}Z^2 - \frac{5}{16}Z^3 + ...) \phi\, .
   \]
   Also here the series can be truncated after the first few terms.
+  Since the correction monomial is not used in the force computation of MD,
+  its final purpose for the HMC is to compute the energy difference
+  \[
+  dH_{corr} = R^\dagger \left(1-(1+Z_{old})^{1/4}(1+Z_{new})^{-1/2}(1+Z_{old})^{1/4}\right)R\,.
+  \]
+  Considering $\mathcal{O}(Z_{old}) = \mathcal{O}(Z_{new}) = \mathcal{O}(Z)$ and
+  using the previous series expansions, we obtain
+  \begin{align*}
+  dH_{corr} & =  R^\dagger \left( \frac{1}{2} Z_{old} - \frac{1}{2} Z_{new} \right)R\\
+  & + R^\dagger \left( - \frac{1}{8} Z_{old}^2 - \frac{1}{8} \left\{Z_{old} , Z_{new} \right\}  + \frac{3}{8} Z_{new}^2 \right)R\\
+  & + R^\dagger \left( \frac{1}{16} Z_{old}^3 + \frac{3}{64} \left\{ Z_{old}^2 , Z_{new} \right\} - \frac{1}{32} Z_{old} Z_{new} Z_{old} + \frac{3}{32} \left\{ Z_{old} , Z_{new}^2 \right\} - \frac{5}{16} Z_{new}^3 \right)R\\
+  & + \mathcal{O}(Z^4).
+  \end{align*}
+  The coefficients in front of the terms $R^\dagger Z_{old}^n R$ are given by the series of
+  \[
+  (1+Z_{old})^{1/2} -1 =  \frac{1}{2} Z_{old} - \frac{1}{8} Z_{old}^2 + \frac{1}{16} Z_{old}^3 + ...
+  \]
+  For this reason, computing $\phi = B(Z_{old})\cdot R$, we use as a stopping criterium
+  \[
+  c_n R^\dagger Z_{old}^n R < \text{tolerance}
+  \]
+  where $c_n$ are the coefficients from the series of $(1+Z_{old})^{1/2}$.
+  Since $Z$ is hermitian, we can compute in advance the next order correction of the series evaluating
+  \[
+  c_n (R Z_{old})^\dagger\cdot (Z_{old}^{n-1} R) < \text{tolerance}\,;
+  \]
+  in this way we save an application of Z in the evaluation of $\phi = B(Z_{old})\cdot R$.
+  
+  Exploting the hermiticity of $Z$, we can also save applications of it in the computation of
+  \[
+  dH_{corr} = R^\dagger R - \phi^\dagger\left((1+Z_{new})^{-1/2}\right)\phi\,,
+  \]
+  which is done in the acceptance step. Indeed defining $\chi_i = Z_{new}^i\phi$, $dH_{corr}$ reads as
+  \[
+  dH_{corr} = R^\dagger R - \phi^\dagger\phi + \frac{1}{2}\phi^\dagger\chi_1\phi - \frac{3}{8}\chi_1^\dagger\chi_1 + \frac{5}{16} \chi_1^\dagger\chi_2 - ...\,,
+  \]
+  that requires $n$ applications of $Z_{new}$ for computing $dH_{corr}$ up to $\mathcal{O}(Z_{new}^{2n})$.
+  Here we use as stopping criterium,
+  \[
+  c_n \phi^\dagger Z_{new}^{n} \phi < \text{tolerance}\,;
+  \]
+  where $c_n$ are the coefficients from the series of $(1+Z_{new})^{-1/2}$.
+
 \item the second possibility is to include this correction as a
   reweighting factor.
 \item the third is to use a more precise rational approximation for
   the heatbath and acceptance steps.
 \end{itemize}
-
-\subsubsection{CGMMS Solver}
-
-\begin{algorithm}
-  \caption{CGMMS algorithm}
-  \label{alg:cgm}
-  \begin{algorithmic}[1]
-    \vspace{.2cm}
-    \STATE $n=0, x_0^k = 0, r_0 = p_0 = p_0^k = b, k_\mathrm{max},
-    \delta, \epsilon$
-    \STATE  $\biggl.\biggr.\alpha_{-1} = \zeta_{-1}^k = \zeta_0^k = 1, \beta_0^k = \beta_0 = 0$
-    \REPEAT
-    \STATE $\alpha_n = (r_n, r_n) / (p_n, A p_n)$
-    \FOR{$k = 1$ to $k_\mathrm{max}$}
-    \STATE $\biggl.\biggr.\zeta_{n+1}^k = (\zeta^k_n  \alpha_{n-1}) / 
-      (\alpha_n \beta_n(1 - \zeta_n^k / \zeta^k_{n-1}) + \alpha_{n-1}
-      (1-\sigma_k\alpha_n))$
-    \STATE $\alpha^k_n = (\alpha_n \zeta_{n+1}^k)/ \zeta_n^k$
-    \STATE $\biggl.\biggr.x_{n+1}^k = x_n^k + \alpha_n^k p_n^k$
-    \IF{$\|\alpha^{k_\mathrm{max}} p^{k_\mathrm{max}}\| < \delta$}
-    \STATE $k_\mathrm{max} = k_\mathrm{max} -1$
-    \ENDIF
-    \ENDFOR
-    \STATE $x_{n+1} = x_n + \alpha_n p_n$
-    \STATE $\biggl.\biggr.r_{n+1} = r_n - \alpha_n Ap_n$
-    \STATE $\beta_{n+1} = (r_{n+1}, r_{n+1}) / (r_n, r_n)$
-    \STATE $\beta_{n+1}^k = \frac{\beta_{n+1} \zeta_{n+1}^k \alpha_n^k}{\zeta_{n}^k\alpha_n}$
-    \STATE $\biggl.\biggr.p_{n+1}^k = \zeta_{n+1}^k r_{n+1} + \beta_{n+1}^k p_n^k$
-    \STATE $n=n+1$
-    \UNTIL{$\|r_n\|<\epsilon$}
-  \end{algorithmic}
-\end{algorithm}
-
 
 For evaluating the rational approximation $\mathcal{R}$ applied to a
 spinor field $\psi$ a multi-mass or multi-shift solver (see

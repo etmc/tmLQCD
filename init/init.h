@@ -25,7 +25,9 @@
 #include "init/init_dirac_halfspinor.h"
 #include "init/init_gauge_field.h"
 #include "init/init_gauge_tmp.h"
+#include "init/init_gauge_fg.h"
 #include "init/init_geometry_indices.h"
+#include "init/init_parallel.h"
 #ifdef WITHLAP
 #  include "init/init_jacobi_field.h"
 #endif

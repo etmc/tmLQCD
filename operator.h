@@ -25,14 +25,8 @@
 #include "solver/dirac_operator_eigenvectors.h"
 #include "su3.h"
 #include "solver/solver_params.h"
-                                    
-
-#define TMWILSON 0
-#define OVERLAP 1
-#define WILSON 2
-#define DBTMWILSON 3
-#define CLOVER 4
-#define DBCLOVER 5
+#include "operator_types.h"
+#include "misc_types.h"
 
 #define max_no_operators 10
 
@@ -140,5 +134,8 @@ extern int no_operators;
 
 int add_operator(const int type);
 int init_operators();
+
+void op_set_globals(const int op_id);
+void op_backup_restore_globals(const backup_restore_t mode);
 
 #endif

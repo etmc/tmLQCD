@@ -12,10 +12,11 @@ config.h
 config.status
 *.mod.c
 *.opari.inc
+build/*
+tags
 *.a
 hmc_tm
 invert
 offline_measurement
 lib/
 benchmark
-
