@@ -128,6 +128,7 @@ void update_momenta_fg(int * mnllist, double step, const int no,
       exposu3(&w,&deriv);
       restoresu3(&v,&w);
       _su3_times_su3(w, v, *z);
+      restoresu3(&v,&w);
       _su3_assign(*z, w);
     }
   }
