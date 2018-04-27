@@ -82,6 +82,14 @@ int MG_solver_eo(spinor * const Even_new, spinor * const Odd_new,
     exit(1);
 }
 
+int MG_solver_nd(spinor * const up_new, spinor * const dn_new,
+		 spinor * const up_old, spinor * const dn_old,
+		 const double precision, const int max_iter, const int rel_prec,
+		 const int N, su3 **gf, matrix_mult_nd f) {
+    printf("ERROR: MG_solver_nd called but DDalphaAMG library not included.\n");
+    exit(1);
+}
+
 #else
 #include <stdio.h>
 #include <stdlib.h>
