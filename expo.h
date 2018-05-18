@@ -19,10 +19,11 @@
 #ifndef _EXPO_H
 #define _EXPO_H
 
-extern void exposu3(su3* const vr, const su3adj* const p);
-extern void exposu3_check(su3* const vr, const su3adj* const p, int im);
-extern void restoresu3(su3* const vr, const su3* const u);
-extern void restoresu3_in_place(su3* const u);
-extern void exposu3_in_place(su3* const u);
+void init_exposu3();
+void exposu3(su3* const vr, const su3adj* const p);
+void exposu3_check(su3* const vr, const su3adj* const p, int im);
+void restoresu3(su3* const vr, const su3* const u);
+void restoresu3_in_place(su3* const u);
+void exposu3_in_place(su3* const u);
 
 #endif

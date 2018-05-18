@@ -53,6 +53,7 @@
 #include "su3adj.h"
 #include "expo.h"
 #include "float.h"
+#include "global.h"
 
 static double imag_det(const su3adj* p) {
   double d,tos3,o3,os3;
@@ -76,6 +77,25 @@ static void mul_su3alg(su3adj* p,double d) {
   (*p).d8*=d;
 }
 
+void init_exposu3() {
+  int k;
+  double fctr = 1.0;
+  g_exposu3_no_c = 0;
+  
+  while (fctr>DBL_EPSILON) {
+    g_exposu3_no_c++;
+    fctr/=(double)(g_exposu3_no_c);
+  }
+  g_exposu3_no_c += 7;
+  g_exposu3_no_c += (g_exposu3_no_c%2);
+  
+  g_exposu3_c=malloc((g_exposu3_no_c+1)*sizeof(*g_exposu3_c));
+  
+  g_exposu3_c[0]=1.0;
+  for (k=0; k < g_exposu3_no_c; k++)
+    g_exposu3_c[k+1]=g_exposu3_c[k]/(double)(k+1);
+}
+
 void exposu3(su3* const vr, const su3adj* const p) {
   int n,m,mm;
   su3 ALIGN v,v2,vt;
@@ -84,29 +104,6 @@ void exposu3(su3* const vr, const su3adj* const p) {
   _Complex double t;
   _Complex double ALIGN p0,p1,p2;
   _Complex double ALIGN q0,q1,q2;
-  static int init_flag=0, no_c;
-  static double *c;
-
-  if (init_flag==0) {
-    int k;
-    double fctr = 1.0;
-    no_c = 0;
-
-    while (fctr>DBL_EPSILON) {
-      no_c++;
-      fctr/=(double)(no_c);
-    }
-    no_c += 7;
-    no_c += (no_c%2);
- 
-    c=malloc((no_c+1)*sizeof(*c));
-   
-   c[0]=1.0;
-   for (k=0; k < no_c; k++)
-     c[k+1]=c[k]/(double)(k+1);
-
-    init_flag=1;
-  }
   
   _make_su3(v,*p);
   _su3_times_su3(v2,v,v);
@@ -139,19 +136,19 @@ void exposu3(su3* const vr, const su3adj* const p) {
  /*  printf(" d= %.16f and t=%.16f + 1i %.16f \n",d,creal(t),cimag(t));*/
   
   if(fabs(d)>(1.000001*(1.000002-fabs(t))))
-    printf("The norm of X is larger than 1 and N = %d \n", no_c);
+    printf("The norm of X is larger than 1 and N = %d \n", g_exposu3_no_c);
   
   
-  p0=c[no_c];
+  p0=g_exposu3_c[g_exposu3_no_c];
   p1=0.0;
   p2=0.0;
   
-  for (n=(no_c-1);n>=0;n--) {
+  for (n=(g_exposu3_no_c-1);n>=0;n--) {
     q0=p0;
     q1=p1;
     q2=p2;
     
-    p0=c[n]-I*d*q2;
+    p0=g_exposu3_c[n]-I*d*q2;
     p1=q0-t*q2;
     p2=q1;
   }

@@ -212,6 +212,10 @@ EXTERN int g_mpi_z_rank;
 EXTERN int g_mpi_ST_rank;
 EXTERN int g_nb_list[8];
 
+/* Variables for exposu3 */
+EXTERN int g_exposu3_no_c;
+EXTERN double * g_exposu3_c;
+
 /* OpenMP Kahan accumulation arrays */
 EXTERN _Complex double *g_omp_acc_cp;
 EXTERN double* g_omp_acc_re;
