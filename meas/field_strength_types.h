@@ -1,5 +1,6 @@
 /***********************************************************************
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ *
+ * Copyright (C) 2018 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -17,27 +18,12 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _INIT_H
-#define _INIT_H
+#ifndef FIELD_STRENGTH_TYPES_H
+#define FIELD_STRENGTH_TYPES_H
 
-#include "init/init_bispinor_field.h"
-#include "init/init_chi_spinor_field.h"
-#include "init/init_dirac_halfspinor.h"
-#include "init/init_gauge_field.h"
-#include "init/init_gauge_tmp.h"
-#include "init/init_gauge_fg.h"
-#include "init/init_geometry_indices.h"
-#include "init/init_parallel.h"
-#ifdef WITHLAP
-#  include "init/init_jacobi_field.h"
-#endif
-#include "init/init_moment_field.h"
-#include "init/init_spinor_field.h"
-#include "init/init_stout_smear_vars.h"
-#ifdef TM_USE_OMP
-# include <omp.h>
-# include "init/init_omp_accumulators.h"
-# include "init/init_openmp.h"
-#endif
+typedef struct field_strength_obs_t {
+  double E;
+  double Q;
+} field_strength_obs_t;
 
 #endif

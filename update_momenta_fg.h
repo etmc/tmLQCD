@@ -1,6 +1,5 @@
 /***********************************************************************
- *
- * Copyright (C) 2015 Bartosz Kostrzewa
+ * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
  * This file is part of tmLQCD.
  *
@@ -17,10 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
+#ifndef _UPDATE_MOMENTA_FG_H
+#define _UPDATE_MOMENTA_FG_H
 
-#ifndef _ENERGY_DENSITY_H
-#define _ENERGY_DENSITY_H
+#include "hamiltonian_field.h"
 
-void measure_energy_density(const su3 ** const gf, double *ret);
+void update_momenta_fg(int * mnllist, double step, const int no, hamiltonian_field_t * const hf, double step_fg);
 
-#endif  
+#endif

@@ -200,4 +200,8 @@
 #define _default_subprocess_flag 0
 #define _default_lowmem_flag 0
 
+// gradient flow measurement step size and maximum flow time
+#define _default_gf_eps 0.01
+#define _default_gf_tmax 9.99
+
 #endif
