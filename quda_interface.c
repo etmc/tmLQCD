@@ -157,23 +157,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
                                const double eps_sq, const int maxiter,
                                const int gauge_persist);
 
-void _initQuda() {
-  if( quda_initialized )
-    return;
-
-  if( g_debug_level > 0 )
-    if(g_proc_id == 0)
-      printf("\n# QUDA: Detected QUDA version %d.%d.%d\n\n", QUDA_VERSION_MAJOR, QUDA_VERSION_MINOR, QUDA_VERSION_SUBMINOR);
-  if( QUDA_VERSION_MAJOR == 0 && QUDA_VERSION_MINOR < 7) {
-    fprintf(stderr, "Error: minimum QUDA version required is 0.7.0 (for support of chiral basis and removal of bug in mass normalization with preconditioning).\n");
-    exit(-2);
-  }
-
-  gauge_param = newQudaGaugeParam();
-  inv_param = newQudaInvertParam();
-  inv_mg_param = newQudaInvertParam();
-  quda_mg_param = newQudaMultigridParam();
-
+void _setDefaultQudaParam(void){
   // *** QUDA parameters begin here (sloppy prec. will be adjusted in invert)
   QudaPrecision cpu_prec  = QUDA_DOUBLE_PRECISION;
   QudaPrecision cuda_prec = QUDA_DOUBLE_PRECISION;
@@ -280,6 +264,26 @@ void _initQuda() {
 
   // general verbosity
   setVerbosityQuda( QUDA_SUMMARIZE, "# QUDA: ", stdout);
+}
+
+void _initQuda() {
+  if( quda_initialized )
+    return;
+
+  if( g_debug_level > 0 )
+    if(g_proc_id == 0)
+      printf("\n# QUDA: Detected QUDA version %d.%d.%d\n\n", QUDA_VERSION_MAJOR, QUDA_VERSION_MINOR, QUDA_VERSION_SUBMINOR);
+  if( QUDA_VERSION_MAJOR == 0 && QUDA_VERSION_MINOR < 7) {
+    fprintf(stderr, "Error: minimum QUDA version required is 0.7.0 (for support of chiral basis and removal of bug in mass normalization with preconditioning).\n");
+    exit(-2);
+  }
+
+  gauge_param = newQudaGaugeParam();
+  inv_param = newQudaInvertParam();
+  inv_mg_param = newQudaInvertParam();
+  quda_mg_param = newQudaMultigridParam();
+
+  _setDefaultQudaParam();
 
   // declare the grid mapping used for communications in a multi-GPU grid
 #if USE_LZ_LY_LX_T
@@ -579,6 +583,7 @@ void set_sloppy_prec( const SloppyPrecision sloppy_precision ) {
 
 int invert_quda_direct(double * const propagator, double * const source,
                 const int op_id, const int gauge_persist) {
+  _setDefaultQudaParam();
 
   double atime, atotaltime = gettime();
   void *spinorIn  = (void*)source; // source
@@ -672,6 +677,7 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
                    const int even_odd_flag, solver_params_t solver_params,
                    SloppyPrecision sloppy_precision,
                    CompressionType compression) {
+  _setDefaultQudaParam();
 
   spinor ** solver_field = NULL;
   const int nr_sf = 2;
@@ -756,6 +762,7 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
                            const int solver_flag, const int rel_prec, const int even_odd_flag,
                            const SloppyPrecision sloppy_precision,
                            CompressionType compression) {
+  _setDefaultQudaParam();
 
   spinor ** solver_field = NULL;
   const int nr_sf = 4;
