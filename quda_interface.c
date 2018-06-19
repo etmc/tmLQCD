@@ -583,7 +583,6 @@ void set_sloppy_prec( const SloppyPrecision sloppy_precision ) {
 
 int invert_quda_direct(double * const propagator, double * const source,
                 const int op_id, const int gauge_persist) {
-  _setDefaultQudaParam();
 
   double atime, atotaltime = gettime();
   void *spinorIn  = (void*)source; // source
@@ -677,7 +676,6 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
                    const int even_odd_flag, solver_params_t solver_params,
                    SloppyPrecision sloppy_precision,
                    CompressionType compression) {
-  _setDefaultQudaParam();
 
   spinor ** solver_field = NULL;
   const int nr_sf = 2;
@@ -762,7 +760,6 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
                            const int solver_flag, const int rel_prec, const int even_odd_flag,
                            const SloppyPrecision sloppy_precision,
                            CompressionType compression) {
-  _setDefaultQudaParam();
 
   spinor ** solver_field = NULL;
   const int nr_sf = 4;
@@ -1053,34 +1050,41 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     }
   }
 
-  // run the MG setup if required
+  if( g_proc_id == 0){
+    printf("# QUDA: mu = %.12f, kappa = %.12f, csw = %.12f\n", mu/2./kappa, kappa, c_sw);
+  }
+  if(g_proc_id == 0 && g_debug_level > 2){
+    printf("------------- OUTER SOLVER InvertParam --------------\n");
+    printQudaInvertParam(&inv_param);
+    printf("----------------------------------------\n");
+  }
+
+    // run the MG setup if required
   if( inv_param.inv_type_precondition == QUDA_MG_INVERTER ){
     // we begin by setting the inverter params for the quda_mg_param struct equal to the outer inv_param
     inv_mg_param = inv_param;
+    // when the preconditioner for the outer solver has already been set below, the line just
+    // above would set a preconditioner for the MG smoothers, which is not allows
+    // so we set this to NULL explicitly
+    inv_mg_param.preconditioner = NULL;
     quda_mg_param.invert_param = &inv_mg_param;
     _setQudaMultigridParam(&quda_mg_param);
     if( performMultigridSetup == 1 ){
         if(g_proc_id==0){ printf("# QUDA: Performing MG Preconditioner Setup\n"); fflush(stdout); }
         mg_preconditioner = newMultigridQuda(&quda_mg_param);
       }
-      if( gauge_persist == 1)
+      if( gauge_persist == 1){
         performMultigridSetup = 0;
+      }
       inv_param.preconditioner = mg_preconditioner;
   }
   
-  if( g_proc_id == 0){
-    printf("# QUDA: mu = %.12f, kappa = %.12f, csw = %.12f\n", mu/2./kappa, kappa, c_sw);
-  }
-  if(g_proc_id == 0 && g_debug_level > 2){
+  if(g_proc_id == 0 && g_debug_level > 2 && inv_param.inv_type_precondition == QUDA_MG_INVERTER){
+    printf("--------------- MG InvertParam ------------------\n");
+    printQudaInvertParam(quda_mg_param.invert_param);
+    printf("---------------- MG MultigridParam ------------------------\n");
+    printQudaMultigridParam(&quda_mg_param);
     printf("----------------------------------------\n");
-    printQudaInvertParam(&inv_param);
-    printf("----------------------------------------\n");
-    if( inv_param.inv_type_precondition == QUDA_MG_INVERTER ){
-      printQudaInvertParam(quda_mg_param.invert_param);
-      printf("----------------------------------------\n");
-      printQudaMultigridParam(&quda_mg_param);
-      printf("----------------------------------------\n");
-    }
   }
 }
 
