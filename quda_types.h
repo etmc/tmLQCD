@@ -21,14 +21,47 @@
 #ifndef TM_QUDA_TYPES_H
 #define TM_QUDA_TYPES_H
 
+#ifdef TM_USE_QUDA
+#include <quda.h>
+#else
+// some definitions which are found in quda.h must be reproduced in case
+// we are compiling without it, such that tm_QudaParams_t can be
+// defined properly anyway
+#define QUDA_MAX_MG_LEVEL 4
+#define QUDA_BOOLEAN_YES 1
+#define QUDA_BOOLEAN_NO 0
+#include "quda_solver_translate.h"
+#endif
+
 typedef enum tm_quda_ferm_bc_t {
   TM_QUDA_THETABC = 0,
   TM_QUDA_APBC,
   TM_QUDA_PBC
 } tm_quda_ferm_bc_t;
 
+
+/* tm_QudaParams_t provides an interface between the tmLQCD input file and the
+ * available QUDA parameters. At the moment, only the fermionic bounday conditions
+ * and the MG parameters are exposed like this, but a further refactoring might
+ * turn this into a complete representation of the possible input parameters */
 typedef struct tm_QudaParams_t {
   tm_quda_ferm_bc_t fermionbc;
+
+  int               mg_n_level;
+  int               mg_n_vec[QUDA_MAX_MG_LEVEL];
+  int               mg_blocksize[QUDA_MAX_MG_LEVEL][4];
+  double            mg_mu_factor[QUDA_MAX_MG_LEVEL];
+  QudaInverterType  mg_setup_inv_type;
+  double            mg_setup_tol;
+  int               mg_setup_maxiter;
+  int               mg_coarse_solver_maxiter;
+  double            mg_coarse_solver_tol;
+  int               mg_nu_pre;
+  int               mg_nu_post;
+  double            mg_smoother_tol;
+  double            mg_omega;
+  int               mg_run_verify;
+  int               mg_enable_size_three_blocks;
 } tm_QudaParams_t;
 
 #endif // TM_QUDA_TYPES_H
