@@ -17,27 +17,45 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _INIT_H
-#define _INIT_H
+#ifdef HAVE_CONFIG_H
+# include<config.h>
+#endif
+#include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
+#include "global.h"
+#include "su3.h"
+#include "sse.h"
+#include "init_gauge_fg.h"
 
-#include "init/init_bispinor_field.h"
-#include "init/init_chi_spinor_field.h"
-#include "init/init_dirac_halfspinor.h"
-#include "init/init_gauge_field.h"
-#include "init/init_gauge_tmp.h"
-#include "init/init_gauge_fg.h"
-#include "init/init_geometry_indices.h"
-#include "init/init_parallel.h"
-#ifdef WITHLAP
-#  include "init/init_jacobi_field.h"
-#endif
-#include "init/init_moment_field.h"
-#include "init/init_spinor_field.h"
-#include "init/init_stout_smear_vars.h"
-#ifdef TM_USE_OMP
-# include <omp.h>
-# include "init/init_omp_accumulators.h"
-# include "init/init_openmp.h"
-#endif
+su3 * gauge_fg_ = NULL;
+su3 ** gauge_fg = NULL;
 
+int init_gauge_fg(const int V) {
+  int i=0;
+
+  if((void*)(gauge_fg = (su3**)calloc(V, sizeof(su3*))) == NULL) {
+    fprintf(stderr, "malloc errno : %d\n", errno);
+    errno = 0;
+    return(1);
+  }
+  if((void*)(gauge_fg_ = (su3*)calloc(4*V+1, sizeof(su3))) == NULL) {
+    fprintf(stderr, "malloc errno : %d\n", errno);
+    errno = 0;
+    return(1);
+  }
+#if (defined SSE || defined SSE2 || defined SSE3)
+  gauge_fg[0] = (su3*)(((unsigned long int)(gauge_fg_)+ALIGN_BASE)&~ALIGN_BASE);
+#else
+  gauge_fg[0] = gauge_fg_;
 #endif
+  for(i = 1; i < V; i++){
+    gauge_fg[i] = gauge_fg[i-1]+4;
+  }
+  return(0);
+}
+
+void free_gauge_fg() {
+  free(gauge_fg_);
+  free(gauge_fg);
+}
