@@ -624,7 +624,6 @@ int invert_quda_direct(double * const propagator, double * const source,
   double atime, atotaltime = gettime();
   void *spinorIn  = (void*)source; // source
   void *spinorOut = (void*)propagator; // solution
-  static int loadGauge = 1;
   
   operator * optr = &operator_list[op_id];
   // g_kappa is necessary for the gauge field to be correctly translated from tmLQCD to QUDA
@@ -1073,7 +1072,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
       double atime = gettime();
       if( quda_mg_preconditioner != NULL ){
         destroyMultigridQuda(quda_mg_preconditioner);
-        quda_mg_preconditioner = NULL
+        quda_mg_preconditioner = NULL;
       }
       if(g_proc_id==0){ printf("# QUDA: Performing MG Preconditioner Setup\n"); fflush(stdout); }
       quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
