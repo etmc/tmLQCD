@@ -53,6 +53,13 @@
 *     must be called before if nontrivial boundary conditions are to be used since
 *     those will be applied directly to the gaugefield. Currently it is called just
 *     before the inversion is done (might result in wasted loads...).
+*     It checks whether the curently loaded gauge field corresponds to the gauge field
+*     about to be loaded and returns with a no-op if they agree.
+*
+*   void _loadCloverQuda()
+*     Wrapper for loadCloverQuda() which checks that the currently loaded gauge field
+*     and the clover field about to be constructed agree. If they do, the currently
+*     loaded clover field is reused.
 *
 *   void _setQudaMultigridParam()
 *     borrowed from QUDA multigrid_invert_test, sets up the input parameters
