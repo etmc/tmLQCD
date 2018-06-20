@@ -105,6 +105,10 @@
 #include "global.h"
 #include "operator.h"
 
+// nstore is generally like a gauge id, for measurements it identifies the gauge field
+// uniquely 
+extern int nstore;
+
 double X0, X1, X2, X3;
 
 // define order of the spatial indices
@@ -115,13 +119,17 @@ double X0, X1, X2, X3;
 
 #define MAX(a,b) ((a)>(b)?(a):(b))
 
+int quda_gauge_id;
+int quda_clover_gauge_id;
+int quda_mg_setup_gauge_id;
+
 // gauge and invert paramameter structs; init. in _initQuda()
 QudaGaugeParam  gauge_param;
 QudaInvertParam inv_param;
 // params to pass to MG
 QudaMultigridParam quda_mg_param;
 QudaInvertParam inv_mg_param;
-void* mg_preconditioner;
+void* quda_mg_preconditioner;
 
 // input params specific to tmLQCD QUDA interface
 tm_QudaParams_t quda_input;
@@ -154,10 +162,15 @@ static int quda_initialized = 0;
 void _setQudaMultigridParam(QudaMultigridParam* mg_param);
 void _setOneFlavourSolverParam(const double kappa, const double c_sw, const double mu, 
                                const int solver_type, const int even_odd,
-                               const double eps_sq, const int maxiter,
-                               const int gauge_persist);
+                               const double eps_sq, const int maxiter);
 
 void _setDefaultQudaParam(void){
+  quda_gauge_id = -1;
+  quda_clover_gauge_id = -1;
+  quda_mg_setup_gauge_id = -1;
+
+  quda_mg_preconditioner = NULL;
+
   // *** QUDA parameters begin here (sloppy prec. will be adjusted in invert)
   QudaPrecision cpu_prec  = QUDA_DOUBLE_PRECISION;
   QudaPrecision cuda_prec = QUDA_DOUBLE_PRECISION;
@@ -330,6 +343,10 @@ void _initQuda() {
 // finalize the QUDA library
 void _endQuda() {
   if( quda_initialized ) {
+    if( quda_mg_preconditioner != NULL ){
+      destroyMultigridQuda(quda_mg_preconditioner);
+      quda_mg_preconditioner = NULL;
+    }
     freeGaugeQuda();
     freeCloverQuda(); // this is safe even if there is no Clover field loaded, at least it was in QUDA v0.7.2
     free((void*)tempSpinor);
@@ -337,8 +354,27 @@ void _endQuda() {
   }
 }
 
+void _loadCloverQuda(QudaInvertParam* inv_param){
+  if( quda_clover_gauge_id != quda_gauge_id ){
+    double atime = gettime();
+    freeCloverQuda();
+    loadCloverQuda(NULL, NULL, inv_param);
+    quda_clover_gauge_id = quda_gauge_id;
+    if(g_proc_id==0 && g_debug_level > 0 ) printf("# QUDA: Time for loadCloverQuda: %.4e\n",gettime()-atime);
+  } else {
+    if(g_proc_id==0 && g_debug_level > 0 ) printf("# QUDA: Clover field and inverse already loaded for gauge %d\n", quda_gauge_id);
+  }
+}
 
 void _loadGaugeQuda( const int compression ) {
+  // check if the currently loaded gauge field is also the current gauge field
+  // and if so, return immediately
+  if( quda_gauge_id == nstore ){
+    return;
+  } else {
+    freeGaugeQuda();
+  }
+
   if( inv_param.verbosity > QUDA_SILENT ){
     if(g_proc_id == 0) {
       printf("# QUDA: Called _loadGaugeQuda\n");
@@ -425,6 +461,7 @@ void _loadGaugeQuda( const int compression ) {
 #endif
 
   loadGaugeQuda((void*)gauge_quda, &gauge_param);
+  quda_gauge_id = nstore;
 }
 
 
@@ -582,7 +619,7 @@ void set_sloppy_prec( const SloppyPrecision sloppy_precision ) {
 }
 
 int invert_quda_direct(double * const propagator, double * const source,
-                const int op_id, const int gauge_persist) {
+                const int op_id) {
 
   double atime, atotaltime = gettime();
   void *spinorIn  = (void*)source; // source
@@ -610,15 +647,11 @@ int invert_quda_direct(double * const propagator, double * const source,
   // set the sloppy precision of the mixed prec solver
   set_sloppy_prec(optr->sloppy_precision);
  
-  // load gauge after setting precision
-  if(loadGauge == 1){
-    atime = gettime();
-    _loadGaugeQuda(optr->compression_type);
-    if(g_proc_id==0 && g_debug_level > 0 ) printf("# QUDA: Time for loadGaugeQuda: %.4e\n",gettime()-atime);
-  }
-  if(gauge_persist == 1) {
-    loadGauge = 0;
-  }
+  // load gauge after setting precision, this is a no-op if the current gauge field
+  // is already loaded
+  atime = gettime();
+  _loadGaugeQuda(optr->compression_type);
+  if(g_proc_id==0 && g_debug_level > 0 ) printf("# QUDA: Time for loadGaugeQuda: %.4e\n",gettime()-atime);
 
   // this will also construct the clover field and its inverse, if required
   // it will also run the MG setup
@@ -628,8 +661,7 @@ int invert_quda_direct(double * const propagator, double * const source,
                             optr->solver,
                             optr->even_odd_flag,
                             optr->eps_sq,
-                            optr->maxiter,
-                            gauge_persist);
+                            optr->maxiter);
   
   // reorder spinor
   reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0, NULL );
@@ -649,16 +681,6 @@ int invert_quda_direct(double * const propagator, double * const source,
   // propagator in usual normalisation, this is only necessary in invert_quda_direct
   // since the rescaling is otherwise done in the operator inversion driver
   mul_r((spinor*)spinorOut, (2*optr->kappa), (spinor*)spinorOut, VOLUME );
-
-  // when gauge_persist == 1, we do not free the gauge so that it's more efficient!
-  // and we also don't load it on subsequent calls, neither do we destroy the MG setup
-  if(gauge_persist != 1) {
-    if( inv_param.inv_type_precondition == QUDA_MG_INVERTER ){
-      destroyMultigridQuda(mg_preconditioner);
-    }
-    freeGaugeQuda();
-    freeCloverQuda(); // this is safe even if there is no Clover field loaded, at least it was in QUDA v0.7.2
-  }
 
   if( g_proc_id==0 && g_debug_level > 0 )
     printf("# QUDA: Total time for invert_quda_direct: %.4e\n",gettime()-atotaltime); 
@@ -712,8 +734,7 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
                             solver_flag,
                             even_odd_flag,
                             precision,
-                            max_iter,
-                            0 /* gauge_persist */);
+                            max_iter);
 
   // reorder spinor
   reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0, NULL );
@@ -740,11 +761,6 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
   convert_lexic_to_eo(Even_new, Odd_new, solver_field[1]);
 
   finalize_solver(solver_field, nr_sf);
-  if( inv_param.inv_type_precondition == QUDA_MG_INVERTER ){
-    destroyMultigridQuda(mg_preconditioner);
-  }
-  freeGaugeQuda();
-  freeCloverQuda(); // this is safe even if there is no Clover field loaded, at least it was in QUDA v0.7.2
 
   if(iteration >= max_iter)
     return(-1);
@@ -841,10 +857,9 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   inv_param.tol = sqrt(precision);
   inv_param.maxiter = max_iter;
 
-  // NULL pointers to host fields to force
-  // construction instead of download of the clover field:
-  if( g_c_sw > 0.0 )
-    loadCloverQuda(NULL, NULL, &inv_param);
+  if( g_c_sw > 0.0 ){
+    _loadCloverQuda(&inv_param);
+  }
 
   // reorder spinor
   reorder_spinor_toQuda( (double*)spinorIn,   inv_param.cpu_prec, 1, (double*)spinorIn_c );
@@ -872,8 +887,6 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   convert_lexic_to_eo(Even_new_c, Odd_new_c, solver_field[3]);
 
   finalize_solver(solver_field, nr_sf);
-  freeGaugeQuda();
-  freeCloverQuda(); // this is safe even if there is no Clover field loaded, at least it was in QUDA v0.7.2
 
   if(iteration >= max_iter)
     return(-1);
@@ -936,13 +949,7 @@ void D_psi_quda(spinor * const P, spinor * const Q) {
 
 void _setOneFlavourSolverParam(const double kappa, const double c_sw, const double mu, 
                                const int solver_type, const int even_odd,
-                               const double eps_sq, const int maxiter,
-                               const int gauge_persist) {
-
-  // FIXME: this needs to be reset when the gauge field changes
-  // maybe it should be moved to the file scope?
-  static int performMultigridSetup = 1;
-  static int computeClover = 1;
+                               const double eps_sq, const int maxiter) {
 
   inv_param.tol = sqrt(eps_sq);
   inv_param.maxiter = maxiter;
@@ -1039,15 +1046,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
   // load clover field if required, doing so in this odd place because we need
   // basic stuff to be set in inv_param
   if( c_sw > 0.0 ) {
-    if( computeClover == 1 ){
-      double atime = gettime();
-      // NULL pointers to force construction of the clover fields
-      loadCloverQuda(NULL, NULL, &inv_param);
-      if(g_proc_id==0 && g_debug_level > 0 ) printf("# QUDA: Time for loadCloverQuda: %.4e\n",gettime()-atime);
-    }
-    if( gauge_persist == 1 ){
-      computeClover = 0;
-    }
+    _loadCloverQuda(&inv_param);
   }
 
   if( g_proc_id == 0){
@@ -1064,19 +1063,31 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     // we begin by setting the inverter params for the quda_mg_param struct equal to the outer inv_param
     inv_mg_param = inv_param;
     // when the preconditioner for the outer solver has already been set below, the line just
-    // above would set a preconditioner for the MG smoothers, which is not allows
+    // above would set a preconditioner for the MG smoothers, which is not allowed
     // so we set this to NULL explicitly
     inv_mg_param.preconditioner = NULL;
     quda_mg_param.invert_param = &inv_mg_param;
     _setQudaMultigridParam(&quda_mg_param);
-    if( performMultigridSetup == 1 ){
-        if(g_proc_id==0){ printf("# QUDA: Performing MG Preconditioner Setup\n"); fflush(stdout); }
-        mg_preconditioner = newMultigridQuda(&quda_mg_param);
+
+    if( quda_mg_setup_gauge_id != quda_gauge_id  ){
+      double atime = gettime();
+      if( quda_mg_preconditioner != NULL ){
+        destroyMultigridQuda(quda_mg_preconditioner);
+        quda_mg_preconditioner = NULL
       }
-      if( gauge_persist == 1){
-        performMultigridSetup = 0;
+      if(g_proc_id==0){ printf("# QUDA: Performing MG Preconditioner Setup\n"); fflush(stdout); }
+      quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
+      inv_param.preconditioner = quda_mg_preconditioner;
+      quda_mg_setup_gauge_id = quda_gauge_id;
+      if(g_proc_id == 0 && g_debug_level > 0){
+        printf("# QUDA: MG Preconditioner Setup took %3.f seconds\n", gettime()-atime);
+        fflush(stdout);
       }
-      inv_param.preconditioner = mg_preconditioner;
+     } else {
+      if(g_proc_id==0 && g_debug_level > 0){ 
+        printf("# QUDA: Reusing MG Preconditioner Setup for gauge %d\n", quda_gauge_id); fflush(stdout); 
+      }
+    }
   }
   
   if(g_proc_id == 0 && g_debug_level > 2 && inv_param.inv_type_precondition == QUDA_MG_INVERTER){

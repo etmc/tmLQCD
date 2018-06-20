@@ -91,16 +91,13 @@
 void _initQuda();
 void _endQuda();
 void _loadGaugeQuda();
+void _loadCloverQuda();
 
 // direct line to QUDA inverter, no messing about with even/odd reordering
 // source and propagator  Should be full VOLUME spinor fields 
 // op_id                  Index of the operator to be inverted (0 to N-1)
-// gauge_persist          Whether the gauge field should be kept on the device once
-//                        it has been loaded (for multiple inversions with the same
-//                        gauge field). Must be freed with an explicit call to
-//                        freeGaugeQuda() or _endQuda() (0 or 1)
 int invert_quda_direct(double * const propgator, double * const source,
-                const int op_id, const int gauge_persist);
+                const int op_id);
 
 // to be called instead of tmLQCD functions to use the QUDA inverter
 int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,

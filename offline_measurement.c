@@ -327,6 +327,9 @@ int main(int argc, char *argv[])
 #ifdef TM_USE_OMP
   free_omp_accumulators();
 #endif
+#ifdef TM_USE_QUDA
+  _endQuda();
+#endif
 
   free_blocks();
   free_dfl_subspace();
