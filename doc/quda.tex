@@ -1,7 +1,7 @@
 %author: Mario Schroeck <mario.schroeck@roma3.infn.it>
 %author: Bartosz Kostrzewa <bartosz_kostrzewa@fastmail.com>
 %date: 04/2015
-%date: 06/2017, 12/2017
+%date: 06/2017, 12/2017, 06/2018
 
 \subsection{QUDA: A library for QCD on GPUs}\label{subsec:quda}
 
@@ -30,30 +30,29 @@ If not already installed, you have to install QUDA first. Download the most rece
 QUDA can be installed without any dependencies, consider, e.g., the following minimal configuration:
 
 \begin{verbatim}
-./configure CC=mpicc CXX=mpiCC \
-CFLAGS="-O3 -std=c99" CXXFLAGS="-O3 -std=c++0x" \
---prefix=$QUDADIR \
---with-mpi=$MPI_PATH \
---with-cuda=$CUDADIR \
---enable-os=linux \
---enable-cpu-arch=x86_64 \
---enable-gpu-arch=sm_35 \
---enable-multi-gpu \
---enable-wilson-dirac \
---enable-clover-dirac \
---enable-twisted-mass-dirac \
---enable-ndeg-twisted-mass-dirac \
---enable-twisted-clover-dirac \
---enable-device-pack
+cmake \
+  -DQUDA_DIRAC_STAGGERED=OFF \
+  -DQUDA_DIRAC_DOMAIN_WALL=OFF \
+  -DQUDA_DIRAC_WILSON=ON \
+  -DQUDA_DIRAC_CLOVER=ON \
+  -DQUDA_DIRAC_TWISTED_MASS=ON \
+  -DQUDA_DIRAC_TWISTED_CLOVER=ON \
+  -DQUDA_DIRAC_NDEG_TWISTED_MASS=ON \
+  -DQUDA_DYNAMIC_CLOVER=OFF \
+  -DQUDA_MPI=ON \
+  -DQUDA_INTERFACE_MILC=OFF \
+  -DQUDA_INTERFACE_QDP=ON \ 
+  -DQUDA_MULTIGRID=ON \
+  -DQUDA_GPU_ARCH=sm_37 \
+  ${path_to_quda}
 \end{verbatim}
 where {\ttfamily \$CUDADIR} and {\ttfamily \$MPI\_PATH} have to be set appropriately.
 {\ttfamily \$QUDADIR} is your choice for the installation directory of QUDA.
 Note that if you want to use QUDA in a scalar build of tmLQCD, you should remove the lines {\ttfamily --enable-multi-gpu} and {\ttfamily --with-mpi=\$MPI\_PATH} in the configuration (and probably you want to replace the MPI compilers).
-In order to profit from QUDA's autotuning functionality, set the environment variable {\ttfamily QUDA\_RESOURCE\_PATH} to a directory of your choice, e.g., add
-\begin{verbatim}
-export QUDA_RESOURCE_PATH=${HOME}/quda_resources/
-\end{verbatim}
-to your {\ttfamily $\sim$/.bash\_profile}.
+In order to profit from QUDA's autotuning functionality, set the environment variable {\ttfamily QUDA\_RESOURCE\_PATH} to a directory of your choice.
+Every time that you update your QUDA installation or change some of the many QUDA environment variables, the files in the directory will have to be deleted or a new directory chosen.
+It is convenient to base the directory dynamically on the head git commit of your QUDA source tree as well as the value of the {\ttfamily QUDA\_ENABLE\_GDR} environment variable.
+There may be other environment variables which make one set of auto-tuning results incompatible with another.
 
 Once QUDA is installed, a minimal configuration of tmLQCD could look like, e.g.,
 \begin{verbatim}
