@@ -1086,7 +1086,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
       inv_param.preconditioner = quda_mg_preconditioner;
       quda_mg_setup_gauge_id = quda_gauge_id;
       if(g_proc_id == 0 && g_debug_level > 0){
-        printf("# QUDA: MG Preconditioner Setup took %3.f seconds\n", gettime()-atime);
+        printf("# QUDA: MG Preconditioner Setup took %.3f seconds\n", gettime()-atime);
         fflush(stdout);
       }
      } else {
