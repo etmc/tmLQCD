@@ -54,6 +54,7 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
 #ifdef DDalphaAMG
   MG_update_gauge(step);
 #endif
+  if (g_exposu3_no_c == 0) init_exposu3();
 
 #ifdef TM_USE_OMP
 #define static
@@ -72,8 +73,6 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
 #ifdef TM_USE_OMP
 #undef static
 #endif
-
-  if (g_exposu3_no_c == 0) init_exposu3();
 
 #ifdef TM_USE_OMP
 #pragma omp for
