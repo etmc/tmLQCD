@@ -1,8 +1,7 @@
 /***********************************************************************
  *
- * Copyright (C) 2001 Martin Hasebusch
- *
- * some changes by C. Urbach 2002-2008,2012
+ * Copyright (C) 2017 Jacob Finkenrath
+ *               2018 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -49,71 +48,26 @@
 #ifdef DDalphaAMG
 #include "DDalphaAMG_interface.h"
 #endif
-/*******************************************************
- *
- * Temporarily updates the gauge field corresponding to 
- * the approximated force gradient term to finally update
- * the momenta
- *
- *******************************************************/
 
-void update_momenta_fg(int * mnllist, double step, const int no,
-		       hamiltonian_field_t * const hf, double step0) {
-  double atime, etime;
-  atime = gettime();
-#ifdef DDalphaAMG
-  MG_update_gauge(0.0);
+inline void calculate_fg(const double step_fg,
+                         hamiltonian_field_t * const hf){
+#ifdef TM_USE_OMP
+#define static
+#pragma omp parallel
+  {
 #endif
 
-  /* #ifdef TM_USE_OMP
-     #define static
-     #pragma omp parallel
-     {
-     #endif
-  */
-
-  int i,mu;
-  double step_fg;
   static su3 v,w;
   su3 *z;
   su3 *ztmp;
   static su3adj deriv;
   su3adj *Fm;
 
-  step_fg=-step0*step0/24;
-  /*
-     #ifdef _KOJAK_INST
-     #pragma pomp inst begin(updategauge)
-     #endif
-
-     #ifdef TM_USE_OMP
-     #pragma omp parallel for
-     #endif
-  */
-
-  for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand);i++) {
-    for(int mu=0;mu<4;mu++) {
-      _zero_su3adj(hf->derivative[i][mu]);
-    }
-  }
-
-  for(int k = 0; k < no; k++) {
-    if(monomial_list[ mnllist[k] ].derivativefunction != NULL) {
-      monomial_list[ mnllist[k] ].derivativefunction(mnllist[k], hf);
-    }
-  }
-
-#ifdef TM_USE_MPI
-  xchange_deri(hf->derivative);
+#ifdef TM_USE_OMP
+#pragma omp for
 #endif
-
-  /* #ifdef TM_USE_OMP
-     #pragma omp parallel for
-     #endif
-  */
-
-  for(i = 0; i < VOLUME; i++) { 
-    for(mu = 0; mu < 4; mu++){
+  for(int i = 0; i < VOLUME; i++) { 
+    for(int mu = 0; mu < 4; mu++){
       /* Cope gauge field to be temporarily updated */
       z = &hf->gaugefield[i][mu];
       ztmp = &gauge_fg[i][mu];
@@ -131,6 +85,79 @@ void update_momenta_fg(int * mnllist, double step, const int no,
       _su3_assign(*z, v);
     }
   }
+#ifdef TM_USE_OMP
+  } // OpenMP parallel section closing brace
+#undef static
+#endif
+}
+
+inline void fg_update_momenta_reset_gaugefield(const double step,
+                                               hamiltonian_field_t * const hf){
+#ifdef TM_USE_OMP
+#pragma omp parallel
+  {
+#endif
+  su3 *z;
+  su3 *ztmp;
+#ifdef TM_USE_OMP
+#pragma omp for
+#endif
+  for(int i = 0; i < VOLUME; i++) { 
+    for(int mu = 0; mu < 4; mu++){
+      /* Update momenta (the minus comes from an extra minus in trace_lambda)
+       and restore initial gauge field */
+      _su3adj_minus_const_times_su3adj(hf->momenta[i][mu], step, hf->derivative[i][mu]);
+  
+      z = &hf->gaugefield[i][mu];
+      ztmp = &gauge_fg[i][mu];
+      _su3_assign(*z,*ztmp);
+  
+    }
+  }
+#ifdef TM_USE_OMP
+  } // OpenMP parallel section closing brace
+#endif
+}
+
+/*******************************************************
+ *
+ * Temporarily updates the gauge field corresponding to 
+ * the approximated force gradient term to finally update
+ * the momenta
+ *
+ *******************************************************/
+void update_momenta_fg(int * mnllist, double step, const int no,
+		       hamiltonian_field_t * const hf, double step0) {
+  double atime, etime;
+  atime = gettime();
+#ifdef DDalphaAMG
+  MG_update_gauge(0.0);
+#endif
+  if (g_exposu3_no_c == 0) init_exposu3();
+
+  double step_fg=-step0*step0/24;
+
+#ifdef TM_USE_OMP
+#pragma omp parallel for
+#endif
+  for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand);i++) {
+    for(int mu=0;mu<4;mu++) {
+      _zero_su3adj(hf->derivative[i][mu]);
+    }
+  }
+
+  // calculate derivatives to estimate force gradient
+  for(int k = 0; k < no; k++) {
+    if(monomial_list[ mnllist[k] ].derivativefunction != NULL) {
+      monomial_list[ mnllist[k] ].derivativefunction(mnllist[k], hf);
+    }
+  }
+
+#ifdef TM_USE_MPI
+  xchange_deri(hf->derivative);
+#endif
+  // estimate force gradient and propagate to gauge field
+  calculate_fg(step_fg, hf);
 
 #ifdef TM_USE_MPI
      /* for parallelization */
@@ -148,17 +175,10 @@ void update_momenta_fg(int * mnllist, double step, const int no,
    g_update_gauge_copy = 1;
    g_update_gauge_copy_32 = 1;
 
-
-   /* #ifdef TM_USE_OMP
-      #pragma omp parallel for
-      #endif
-   */
-   /* Calculate derivate based on the temporary updated
-      gauge field U'=ztmp:
-      1) Set derivative to zero
-      2) Recalcuate derivate
-   */
-    
+  // calculate forces with force-gradient updated gauge field
+#ifdef TM_USE_OMP
+#pragma omp parallel for
+#endif
   for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand);i++) {
     for(int mu=0;mu<4;mu++) {
       _zero_su3adj(hf->derivative[i][mu]);
@@ -174,25 +194,10 @@ void update_momenta_fg(int * mnllist, double step, const int no,
 #ifdef TM_USE_MPI
   xchange_deri(hf->derivative);
 #endif
-
-  for(i = 0; i < VOLUME; i++) { 
-    for(mu = 0; mu < 4; mu++){
-      /* Update momenta (the minus comes from an extra minus in trace_lambda)
-	 and restore initial gauge field */
-      _su3adj_minus_const_times_su3adj(hf->momenta[i][mu], step, hf->derivative[i][mu]);
-
-      z = &hf->gaugefield[i][mu];
-      ztmp = &gauge_fg[i][mu];
-      _su3_assign(*z,*ztmp);
-
-    }
-  }
-
-  /* #ifdef TM_USE_OMP
-     } /* OpenMP parallel closing brace /
-     #endif
-  */
   
+  // and finally update the momenta and reset the gauge field 
+  fg_update_momenta_reset_gaugefield(step, hf);
+
 #ifdef TM_USE_MPI
   /* for parallelization */
   xchange_gauge(hf->gaugefield);
@@ -218,9 +223,4 @@ void update_momenta_fg(int * mnllist, double step, const int no,
     printf("# Time gauge update: %e s\n", etime-atime); 
   } 
   return;
-
-  /* #ifdef _KOJAK_INST
-     #pragma pomp inst end(updategauge)
-     #endif
-  */
 }
