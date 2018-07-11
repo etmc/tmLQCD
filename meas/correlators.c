@@ -127,7 +127,7 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
 #endif
       if(g_debug_level > 1 && g_proc_id == 0) {
         printf("# timeslice set to %d (T=%d) for online measurement\n", t0, g_nproc_t*T);
-        printf("# online measurements parameters: kappa = %g, mu = %g\n", optr->kappa, optr->mu/2./optr->kappa);
+        printf("# online measurements parameters: kappa = %.12f, mu = %.12f\n", optr->kappa, optr->mu/2./optr->kappa);
       }
       atime = gettime();
 
