@@ -28,6 +28,7 @@
 #define _TMLQCD_H
 
 #include "config.h"
+#include "su3.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -52,6 +53,20 @@ extern "C"
   int tmLQCD_get_gauge_field_pointer(double ** gf);
   int tmLQCD_get_mpi_params(tmLQCD_mpi_params * params);
   int tmLQCD_get_lat_params(tmLQCD_lat_params * params);
+
+// generates a point source at the global coordinates passed via the
+// four element vector global_txyz_src_pos in the ordering {t,x,y,z}
+// the spin index 'is' and the colour index 'ic'
+void full_source_spinor_field_point(spinor * const full_spinor,
+                                    const int is, const int ic,
+                                    const int * const global_txyz_src_pos);
+
+// as full_source_spinor_field_point but with output directly to checkerboarded
+// spinors
+void eo_source_spinor_field_point(spinor * const even_cb_spinor,
+                                  spinor * const odd_cb_spinor,
+                                  const int is, const int ic,
+                                  const int * const global_txyz_src_pos);
 
 #ifdef TM_USE_QUDA
   int invert_quda_direct(double * const propgator, double * const source,

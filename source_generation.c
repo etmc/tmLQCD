@@ -28,6 +28,8 @@
 #include "ranlxd.h"
 #include "su3spinor.h"
 #include "source_generation.h"
+#include "solver/solver_field.h"
+#include "linalg/convert_eo_to_lexic.c"
 
 #ifndef M_PI
 # define M_PI           3.14159265358979323846
@@ -456,3 +458,77 @@ void source_generation_nucleon(spinor * const P, spinor * const Q,
   }
   return;
 }
+
+void full_source_spinor_field_point(spinor * const full_spinor,
+                                    const int is, const int ic,
+                                    const int * const global_txyz_src_pos){
+  spinor ** temp_cb_spinors;
+  init_solver_field(&temp_cb_spinors, VOLUME/2, 2);
+  eo_source_spinor_field_point(temp_cb_spinors[0], temp_cb_spinors[1], is, ic, global_txyz_src_pos);
+  convert_eo_to_lexic(full_spinor, temp_cb_spinors[0], temp_cb_spinors[1]);
+  finalize_solver(temp_cb_spinors, 2);
+}
+
+// create a point source at the lattice-global coordinates specified by the
+// four-element array global_txyz_src_pos
+void eo_source_spinor_field_point(spinor * const even_cb_spinor, 
+                                  spinor * const odd_cb_spinor,
+                                  const int is, const int ic,
+                                  const int * const global_txyz_src_pos){
+  zero_spinor_field(even_cb_spinor, VOLUME/2);
+  zero_spinor_field(odd_cb_spinor, VOLUME/2);
+
+  if( (global_txyz_src_pos[0] >= g_nproc_t * T || global_txyz_src_pos[0] < 0) ||
+      (global_txyz_src_pos[1] >= g_nproc_x * LX || global_txyz_src_pos[1] < 0) ||
+      (global_txyz_src_pos[2] >= g_nproc_y * LY || global_txyz_src_pos[2] < 0) ||
+      (global_txyz_src_pos[3] >= g_nproc_z * LZ || global_txyz_src_pos[3] < 0) ){
+    char error_message[500];
+    snprintf(error_message,
+             500,
+             "Coordinates t=%d x=%d y=%d z=%d are outside the global lattice extent!\n",
+             global_txyz_src_pos[0],
+             global_txyz_src_pos[1],
+             global_txyz_src_pos[2],
+             global_txyz_src_pos[3]);
+    fatal_error(error_message, "source_spinor_field_point");
+  }
+
+  if( (g_proc_coords[0] == global_txyz_src_pos[0] / T) &&
+      (g_proc_coords[1] == global_txyz_src_pos[1] / LX) &&
+      (g_proc_coords[2] == global_txyz_src_pos[2] / LY) &&
+      (g_proc_coords[3] == global_txyz_src_pos[3] / LZ) ) {
+    
+    const int idx = g_ipt[ global_txyz_src_pos[0] % T ]
+                           [ global_txyz_src_pos[1] % LX ]
+                           [ global_txyz_src_pos[2] % LY ]
+                           [ global_txyz_src_pos[3] % LZ ];
+
+    const int eo_idx = g_lexic2eosub[ idx ];
+
+    spinor * s = (g_lexic2eo[idx] < VOLUME/2 ? even_cb_spinor : odd_cb_spinor) +
+                 eo_idx;
+
+    /* put source to 1.0 */
+    if (is==0){
+      if      (ic==0) s->s0.c0 = 1.0;
+      else if (ic==1) s->s0.c1 = 1.0;
+      else if (ic==2) s->s0.c2 = 1.0;
+    }
+    else if (is==1){
+      if      (ic==0) s->s1.c0 = 1.0;
+      else if (ic==1) s->s1.c1 = 1.0;
+      else if (ic==2) s->s1.c2 = 1.0;
+    }
+    else if (is==2){
+      if      (ic==0) s->s2.c0 = 1.0;
+      else if (ic==1) s->s2.c1 = 1.0;
+      else if (ic==2) s->s2.c2 = 1.0;
+    }
+    else if (is==3){
+      if      (ic==0) s->s3.c0 = 1.0;
+      else if (ic==1) s->s3.c1 = 1.0;
+      else if (ic==2) s->s3.c2 = 1.0;
+    }
+  }
+}
+
