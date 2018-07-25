@@ -81,7 +81,7 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
   }
   // we measure before the trajectory!
   if((mnl->rec_ev != 0) && (hf->traj_counter%mnl->rec_ev == 0)) {
-    if(mnl->type != NDCLOVERRAT) phmc_compute_ev(hf->traj_counter-1, id, &Qtm_pm_ndbipsi);
+    if(mnl->type != NDCLOVERRATCOR) phmc_compute_ev(hf->traj_counter-1, id, &Qtm_pm_ndbipsi);
     else phmc_compute_ev(hf->traj_counter-1, id, &Qsw_pm_ndbipsi);
   }
 

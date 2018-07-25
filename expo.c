@@ -132,7 +132,7 @@ void exposu3(su3* const vr, const su3adj* const p) {
   /* t= -tr(X^2)/2*/
   t = -0.5*(v2.c00 +v2.c11+v2.c22);
   /* d= -1i * det(X)*/
-  d=-imag_det(p);
+  d=-imag_det(&pa);
  /*  printf(" d= %.16f and t=%.16f + 1i %.16f \n",d,creal(t),cimag(t));*/
   
   if(fabs(d)>(1.000001*(1.000002-fabs(t))))
