@@ -3,8 +3,9 @@
 
 # refresh Makefile and other stuff
 
-PROGRAMS_WITH_GIT_HASH := hmc_tm invert offline_measurement test_Dslash
 
+
+PROGRAMS_WITH_GIT_HASH := hmc_tm invert offline_measurement test_Dslash
 
 .SUFFIXES:
 
