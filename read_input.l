@@ -3144,6 +3144,7 @@ int read_input(char * conf_file){
   quda_input.mg_omega = _default_quda_mg_omega;
   quda_input.mg_run_verify = QUDA_BOOLEAN_YES;
   quda_input.mg_enable_size_three_blocks = _default_quda_mg_enable_size_three_blocks;
+  quda_input.mg_reset_setup_threshold = _default_quda_mg_reset_setup_threshold;
 
   /* Put -1 in PropInfo.format to see if parse_config() will
   change the value. If not then set it to source_format_flag */

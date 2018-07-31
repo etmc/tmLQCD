@@ -215,6 +215,7 @@
 #define _default_quda_mg_nu_post 4
 #define _default_quda_mg_omega 0.85
 #define _default_quda_mg_enable_size_three_blocks 0
+#define _default_quda_mg_reset_setup_threshold 0.0
 
 // gradient flow measurement step size and maximum flow time
 #define _default_gf_eps 0.01

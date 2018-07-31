@@ -145,7 +145,7 @@ static inline int check_quda_mg_setup_state(const tm_QudaMGSetupState_t * const 
   // when the MG setup has not been initialised or when the "gauge_id" has changed by more
   // than the mg_redo_setup_threhold, we need to (re-)do the setup completely
   if( (quda_mg_setup_state->initialised != 1) ||
-      ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) > quda_params->mg_update_setup_threshold ) ){
+      ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) > quda_params->mg_reset_setup_threshold ) ){
     return TM_QUDA_MG_SETUP_RESET;
   // in other cases, e.g., when the operator parameters change or if the gauge_id has "moved" only a little,
   // we don't need to redo the setup, we can simply rebuild the coarse operators with the
