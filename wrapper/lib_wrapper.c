@@ -223,6 +223,10 @@ int tmLQCD_read_gauge(const int nconfig) {
     printf("# Finished reading gauge field.\n");
     fflush(stdout);
   }
+
+  // set the global nstore parameter
+  nstore = nconfig;
+
 #ifdef TM_USE_MPI
   if(!lowmem_flag){
     xchange_gauge(g_gauge_field);
