@@ -43,7 +43,6 @@ typedef enum tm_quda_ferm_bc_t {
   TM_QUDA_PBC
 } tm_quda_ferm_bc_t;
 
-
 /* tm_QudaParams_t provides an interface between the tmLQCD input file and the
  * available QUDA parameters. At the moment, only the fermionic bounday conditions
  * and the MG parameters are exposed like this, but a further refactoring might
@@ -66,6 +65,7 @@ typedef struct tm_QudaParams_t {
   double            mg_omega;
   int               mg_run_verify;
   int               mg_enable_size_three_blocks;
+  double            mg_reset_setup_threshold;
 } tm_QudaParams_t;
 
 typedef struct tm_QudaMGSetupState_t {
@@ -88,6 +88,13 @@ typedef struct tm_QudaGaugeState_t {
   int gauge_id;
   int loaded;
 } tm_QudaGaugeState_t;
+
+typedef enum tm_QudaMGSetupState_enum_t {
+  TM_QUDA_MG_SETUP_RESET = -1,
+  TM_QUDA_MG_SETUP_UPDATE,
+  TM_QUDA_MG_SETUP_REUSE
+} tm_QudaMGSetupState_enum_t; 
+
 
 static inline int check_quda_clover_state(const tm_QudaCloverState_t * const quda_clover_state,
                                           const tm_QudaGaugeState_t * const quda_gauge_state){
@@ -133,14 +140,27 @@ static inline void reset_quda_gauge_state(tm_QudaGaugeState_t * const quda_gauge
 }
 
 static inline int check_quda_mg_setup_state(const tm_QudaMGSetupState_t * const quda_mg_setup_state,
-                                            const tm_QudaGaugeState_t * const quda_gauge_state){
-  if( quda_mg_setup_state->initialised != 1 ){
-    return -1;
+                                            const tm_QudaGaugeState_t * const quda_gauge_state,
+                                            const tm_QudaParams_t * const quda_params){
+  // when the MG setup has not been initialised or when the "gauge_id" has changed by more
+  // than the mg_redo_setup_threhold, we need to (re-)do the setup completely
+  if( (quda_mg_setup_state->initialised != 1) ||
+      ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) > quda_params->mg_update_setup_threshold ) ){
+    return TM_QUDA_MG_SETUP_RESET;
+  // in other cases, e.g., when the operator parameters change or if the gauge_id has "moved" only a little,
+  // we don't need to redo the setup, we can simply rebuild the coarse operators with the
+  // new parameters (within reason).
+  // Note that we use 2*DBL_EPSILON to have a little bit more wiggle room in case of badly
+  // implemented floating point or something like that...
+  // TODO: perhaps introduce thresholds also for c_sw, kappa and mu, which might need some
+  // more sophisticated logic tree...
+  } else if( ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) < 2*DBL_EPSILON ) &&
+             ( fabs(quda_mg_setup_state->c_sw - g_c_sw) < 2*DBL_EPSILON) &&
+             ( fabs(quda_mg_setup_state->kappa - g_kappa) < 2*DBL_EPSILON) &&
+             ( fabs(quda_mg_setup_state->mu - g_mu) < 2*DBL_EPSILON) ){
+    return TM_QUDA_MG_SETUP_REUSE;
   } else {
-    return  ( (quda_mg_setup_state->gauge_id == quda_gauge_state->gauge_id) &&
-              ( fabs(quda_mg_setup_state->c_sw - g_c_sw) < 2*DBL_EPSILON) &&
-              ( fabs(quda_mg_setup_state->kappa - g_kappa) < 2*DBL_EPSILON) &&
-              ( fabs(quda_mg_setup_state->mu - g_mu) < 2*DBL_EPSILON) );
+    return TM_QUDA_MG_SETUP_UPDATE;
   }
 }
 

@@ -1078,9 +1078,10 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     quda_mg_param.invert_param = &inv_mg_param;
     _setQudaMultigridParam(&quda_mg_param);
 
-    if( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state) == -1  ){
+    if( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_RESET ){
       double atime = gettime();
       if( quda_mg_preconditioner != NULL ){
+        if(g_proc_id==0){ printf("# QUDA: Destroying MG Preconditioner Setup\n"); fflush(stdout); }
         destroyMultigridQuda(quda_mg_preconditioner);
         reset_quda_mg_setup_state(&quda_mg_setup_state);
         quda_mg_preconditioner = NULL;
@@ -1093,7 +1094,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
         printf("# QUDA: MG Preconditioner Setup took %.3f seconds\n", gettime()-atime);
         fflush(stdout);
       }
-    } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state) == 0 )  {
+    } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_UPDATE )  {
       if(g_proc_id==0 && g_debug_level > 0){ 
         printf("# QUDA: Updating MG Preconditioner Setup for gauge %d\n", quda_gauge_state.gauge_id); fflush(stdout); 
       }
