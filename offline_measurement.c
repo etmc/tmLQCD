@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
       char error_message[500];
       snprintf(error_message,
                500,
-               "Encoding error or gauge configuration filename"
+               "Encoding error or gauge configuration filename "
                "longer than %d characters! See offline_measurement.c CONF_FILENAME_LENGTH\n", 
                CONF_FILENAME_LENGTH);
       fatal_error(error_message, "offline_measurement.c");

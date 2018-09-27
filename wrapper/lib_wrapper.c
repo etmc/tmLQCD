@@ -214,7 +214,7 @@ int tmLQCD_read_gauge(const int nconfig) {
     char error_message[500];
     snprintf(error_message,
              500,
-             "Encoding error or gauge configuration filename"
+             "Encoding error or gauge configuration filename "
              "longer than %d characters! See wrapper/lib_wrapper.c CONF_FILENAME_LENGTH\n", 
              CONF_FILENAME_LENGTH);
     fatal_error(error_message, "tmLQCD_read_gauge");
