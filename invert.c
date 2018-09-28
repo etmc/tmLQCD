@@ -421,7 +421,7 @@ int main(int argc, char *argv[])
           if( (operator_list[op_id].solver == INCREIGCG) && (operator_list[op_id].solver_params.eigcg_rand_guess_opt) ){ //randomize the initial guess
               gaussian_volume_source( operator_list[op_id].prop0, operator_list[op_id].prop1,isample,ix,0); //need to check this
           } 
-          operator_list[op_id].inverter(op_id, index_start, 1);
+          operator_list[op_id].inverter(op_id, index_start, operator_list[op_id].write_prop_flag);
         }
       }
 
