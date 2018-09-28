@@ -8,11 +8,9 @@ The QPhiX \cite{Joo2013} interface provides a library of MPI- and OpenMP-paralle
 QPhiX has been extended to include all the operators relevant for tmLQCD, including the non-degenerate operator with and without the clover term.
 
 \subsubsection{Installation}
-If not already installed, you have to install QPhiX first. At the time of writing, the version with support for all twisted mass operators is in branch 
-\begin{itemize}
-  \item{\texttt{tm\_functor\_merge\_two-flav-mshift\_backport} of \\ \url{https://github.com/kostrzewa/qphix},}
-\end{itemize}
-which is due to be merged into the 
+If not already installed, you have to install QPhiX first.
+At the time of writing, the version with support for all twisted mass operators is in branch 
+
 \begin{itemize}
 \item{\texttt{devel} branch of \url{https://github.com/JeffersonLab/qphix}.}
 \end{itemize}
@@ -54,12 +52,12 @@ In the command above:
 \end{itemize}
 
 \textbf{QPhiX AVX512 Compilation}: 
-On a KNL-based machine like Marconi A2 instead, the Intel compiler and Intel MPI library should be used instead:
+On a KNL-based machine like Marconi-KNL instead, the Intel compiler and Intel MPI library should be used:
 \begin{framed}
 \begin{Verbatim}
 CXX=mpiicpc \
-CXXFLAGS="-xMIC-AVX512 -std=c++11 -O3 -qopenmp" \
-CFLAGS="-xMIC-AVX512 -O3 -std=c99 -qopenmp" \
+CXXFLAGS="-xKNL -std=c++11 -O3 -qopenmp" \
+CFLAGS="-xKNL -O3 -std=c99 -qopenmp" \
 cmake -Disa=avx512  \
       -DQMP_DIR==${QMP_INSTALL_DIR} \
       -Dparallel_arch=parscalar \
@@ -72,6 +70,8 @@ cmake -Disa=avx512  \
       -DCMAKE_INSTALL_PREFIX=${QPHIX_INSTALL_DIR} ${QPHIX_SRC_DIR}
 \end{Verbatim}
 \end{framed}
+
+Note that for Skylake, the correct code for targetting vectorisation is \texttt{SKYLAKE-AVX512}.
 
 \textbf{tmLQCD AVX512 Compilation}: Once QPhiX is built and installed, tmLQCD can be configured as follows on a KNL AVX512 machine, for example:
 \begin{framed}
@@ -95,24 +95,25 @@ $ ${TMLQCD_SRC_DIR}/configure \
   --with-qphixdir=${QPHIX_INSTALL_DIR} \
   --with-qmpdir=${QMP_INSTALL_DIR} \
   CC=mpiicc CXX=mpiicpc F77=ifort \
-  CFLAGS="-O3 -std=c99 -qopenmp -xMIC-AVX512 -fma -debug full" \
-  CXXFLAGS="-O3 -std=c++11 -qopenmp -xMIC-AVX512 -fma -g -debug full" \
+  CFLAGS="-O3 -std=c99 -qopenmp -xKNL" \
+  CXXFLAGS="-O3 -std=c++11 -qopenmp -xKNL" \
   LDFLAGS="-qopenmp"
 \end{Verbatim}
 \end{framed}
-\textbf{IMPORTANT:} On AVX512 machines, for some reason, the half-spinor tmLQCD operators do not work (likely an issue with MPI and alignment).
+\textbf{IMPORTANT:} On AVX512 machines, for some reason, the half-spinor tmLQCD operators do not work.
+This is likely related to MPI and alignment, but we were unable to resolve it at the time of writing.
 As a result, \texttt{--disable-halfspinor} is passed when building on these architectures.
 
-\texttt{--enable-qphix-soalen=4} sets the QPhiX \emph{structure of array} (SoA) length, which defines the size of the innermost direction in the blocked data-structures in QPhiX.
+\texttt{--enable-qphix-soalen=4} sets the QPhiX \emph{structure of array} (SoA) length, which defines the size of the innermost direction in the blocked data structures in QPhiX.
 \emph{Half} the \emph{local} lattice extent in $X$ direction, $L_x/2$, has to be divisible by this number.
 Setting this equal to the double-precision SIMD length on a given architecture means that a full double-precision SIMD vector can be loaded in a single instruction, while values below the SIMD vector length will result in multiple load and store instructions, while all computation are always carried out on full vectors.
 
 For now, the same SoA length is used for all supported arithmetic precisions as this facilitates thinking about possible parallelisation strategies.
+On AVX512 machines, a setting this to $8$ is optimal whereas $4$ is recommended for AVX2.
 
-On AVX512 machines, a setting this to $8$ would be optimal, but at the time of writing QPhiX issue \#$98$\footnote{\url{https://github.com/JeffersonLab/qphix/issues/98}} prevents this, as it seems that the mixed-precision solver diverges when this is done.
-At the cost of a mild performance hit, it is recomended that $4$ be used until the issue has been resolved.
+Note that compiling for KNL requires cross-compilation (if not on a KNL build node), but it seems to be sufficient to specify \texttt{--host=x86\_64-linux-gnu} for all test programs to compile correctly during the configuration stage. 
 
-The QPhiX interface can be combined with DD$\alpha$AMG without problems, but buildign together with the QUDA interface is only possible using GCC or clang, since QUDA is not compatible with the Intel compiler.
+The QPhiX interface can be combined with DD$\alpha$AMG without problems, but building together with the QUDA interface is only possible using GCC or clang, since QUDA is not compatible with the Intel compiler.
 On the QPhiX side, this will result in a potentially significant reduction of performance.
 
 \subsubsection{Usage}
@@ -126,10 +127,13 @@ BeginExternalInverter QPHIX
   # block sizes (see qphix papers for details)
   By = 8
   Bz = 8
+  # split the processing of time slices into this many
+  # independent blocks
   MinCt = 1
-  # (hyper-)thread geometry
+  # (hyper-)thread geometry per core
   # ompnumthreads = NCores * Sy * Sz
-  # hyperthreads should be specified here
+  # if only a single thread per core is launched
+  # these should both be left as '1'
   Sy = 1
   Sz = 2
   # paddings in XY and XYZ blocks
@@ -142,7 +146,7 @@ EndExternalInverter
 \begin{itemize}
   \item{\texttt{NCores}: number of physical cores per MPI task. On KNL, it might even make sense to specify twice the number of physical cores since each core contains two vector processing units (VPUs). Another possiblity would be to specify the number of tiles per MPI tasks and consider cores and VPUs throuh \texttt{Sz} and \texttt{Sy} below. The only case that has been tested for performance is to set this equal to the number of physical cores per MPI task.}
   \item{\texttt{By, Bz}: the QPhiX data structures are organised into blocks which can be efficiently loaded into CPU caches. \texttt{By} and \texttt{Bz} define the size of these blocks in the $Y$ and $Z$ lattice dimensions. The local lattice extent in the given dimension should be divisible by the respective block extent. Generally, $4$ or $8$ are good values and the larger of the two may be preferable.}
-  \item{\texttt{MinCt}: number of cores given an individual time-slice to process. This is useful for dual-socket systems when running with a single MPI task per node. In this case, this should be set to $2$ which will allow the kernels to run in a NUMA-friendly fashion. The local $T$ dimension must be divisible by this number. On KNL, this should be set to $1$.}
+  \item{\texttt{MinCt}: Processing of time slices is split into MinCt blocks. This is useful for dual-socket systems when running with a single MPI task per node. In this case, this should be set to $2$ which will allow the kernels to run in a NUMA-friendly fashion. The local $T$ dimension must be divisible by this number. On KNL, this should be set to $1$. Note that in all cases tested so far, running with $2$ MPI tasks per node on dual-socket systems was superior.}
   \item{\texttt{Sy, Sz}: thread blocking parameters. When multiple threads share resources (this is the case for cores and hyperthreads on KNL, for example), these parameters make it possible to consider this in the volume-traversal loops implemented in QPhiX. On KNL, the only setting which has been tested for performance is to set this equal to $2$, given that \texttt{NCores} has been set to the number of physical cores. \texttt{Sz} then splits the local $Z$ direction among two hyperthreads.}
   \item{\texttt{PadXY(Z)}: Adds padding to the QPhiX data structures which may result in higer overall performance. Only value tested on KNL is \texttt{PadXY=1} and \texttt{PadXYZ=0}.}
 \end{itemize}
@@ -184,6 +188,22 @@ EndMonomial
 \item{\texttt{bicgstab}}
 \item{\texttt{mixedbicgstab}}
 \item{\texttt{cgmms} (single-flavour rational \emph{monomials} only)}
-\item{\texttt{cgmmsnd} (two-flavour non-degenerate \emph{monomials} only}
+\item{\texttt{cgmmsnd} (two-flavour non-degenerate rational \emph{monomials} only)}
 \end{itemize}
 Note that as usual, \texttt{bicgstab} and \texttt{mixedbicgstab} do not converge for twisted mass fermions at maximal twist.
+
+Note also that if the solver is any of \texttt{cg}, \texttt{bicgstab}, \texttt{cgmms} or \texttt{cgmmsnd} and \texttt{UseSloppyPrecision = single} is set, the selected solver will run in single precision arithmetic.
+Only \texttt{mixedcg} and \texttt{mixedbicgstab} are mixed precision solvers which use the sloppy precision as the precision of the inner solver.
+
+\subsubsection{Notes about QPhiX performance}
+
+\begin{itemize}
+  \item{\textbf{MPI Task and Thread pinning:} QPhiX performs best when MPI tasks are pinned to the resources assigned to them and when threads are bound to individual cores or hyperthreads. This is conventiently achieved for Intel MPI by taking control of resource pinning from the job scheduler, setting \texttt{I\_MPI\_PIN=1} and \texttt{I\_MPI\_PIN\_DOMAIN=N}, where \texttt{N} should be set to a pinning domain appropriate for the chosen parallelisation. In order to then distribute application threads in an optimal fashion across the cores that have been assigned to a given MPI task in this way, setting \texttt{KMP\_AFFINITY="balanced,granularity=fine"} is recommended.}
+  \begin{itemize}
+    \item{Generally, the size of the pinning domain is the number of hyperthreads per core supported by the CPU in question, times the number of cores that a given MPI task should run on. If hyperthreading is disabled on the machine in question, it is simply the number of cores that each MPI task should be allocated.}
+  \end{itemize}
+  \item{\textbf{Halo packing overheads:} In QPhiX, communication in the Y and especially in the X dimension incurs halo packing overheads. These are usually greater than the gain from having a more balanced surface to bulk ratio. It is thus recommended to do as little MPI parallelisation as possible in the X dimension and similarly limit it in the Y dimension, although the latter is less performance-critical.}
+  \item{\textbf{OmniPath networking performance:} On machines based on Intel Knight's Landing or Skylake processors with OmniPath networks, best single node performance is generally reached with a single MPI task per node (KNL) or a single MPI task per socket (Skylake). However, until computing centres have implemented the recommendations of Ref.~\cite{Boyle:2017xcy}, more than one or two MPI tasks per node are required to saturate network bandwidth on these machines. Generally, $4$ to $8$ MPI tasks per node seem to work well.}
+\end{itemize}
+
+
