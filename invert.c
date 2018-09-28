@@ -95,7 +95,7 @@
 #include "meas/measurements.h"
 #include "source_generation.h"
 
-
+#define CONF_FILENAME_LENGTH 500
 
 extern int nstore;
 int check_geometry();
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
   int j, i, ix = 0, isample = 0, op_id = 0;
   char datafilename[206];
   char parameterfilename[206];
-  char conf_filename[50];
+  char conf_filename[CONF_FILENAME_LENGTH];
   char * input_filename = NULL;
   char * filename = NULL;
   double plaquette_energy;
@@ -276,7 +276,16 @@ int main(int argc, char *argv[])
 #endif
 
   for (j = 0; j < Nmeas; j++) {
-    sprintf(conf_filename, "%s.%.4d", gauge_input_filename, nstore);
+    int n_written = snprintf(conf_filename, CONF_FILENAME_LENGTH, "%s.%.4d", gauge_input_filename, nstore);
+    if( n_written < 0 || n_written >= CONF_FILENAME_LENGTH ){
+      char error_message[500];
+      snprintf(error_message,
+               500,
+               "Encoding error or gauge configuration filename "
+               "longer than %d characters! See invert.c CONF_FILENAME_LENGTH\n", 
+               CONF_FILENAME_LENGTH);
+      fatal_error(error_message, "invert.c");
+    }
     if (g_cart_id == 0) {
       printf("#\n# Trying to read gauge field from file %s in %s precision.\n",
             conf_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));

@@ -79,7 +79,18 @@
 #include "operator/tm_operators.h"
 #include "operator/Dov_psi.h"
 #include "gettime.h"
+#ifdef TM_USE_QUDA
+#  include "quda_interface.h"
+#endif
+#ifdef TM_USE_QPHIX
+#  include "qphix_interface.h"
+#endif
+#ifdef DDalphaAMG
+#  include "DDalphaAMG_interface.h"
+#endif
 #include "meas/measurements.h"
+
+#define CONF_FILENAME_LENGTH 500
 
 extern int nstore;
 int check_geometry();
@@ -94,7 +105,7 @@ int main(int argc, char *argv[])
   int j, i, ix = 0, isample = 0, op_id = 0;
   char datafilename[206];
   char parameterfilename[206];
-  char conf_filename[50];
+  char conf_filename[CONF_FILENAME_LENGTH];
   char * input_filename = NULL;
   char * filename = NULL;
   double plaquette_energy;
@@ -119,32 +130,9 @@ int main(int argc, char *argv[])
   verbose = 0;
   g_use_clover_flag = 0;
 
-#ifdef TM_USE_MPI
-
-#  ifdef TM_USE_OMP
-  int mpi_thread_provided;
-  MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
-#  else
-  MPI_Init(&argc, &argv);
-#  endif
-
-  MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
-#else
-  g_proc_id = 0;
-#endif
-
   process_args(argc,argv,&input_filename,&filename);
   set_default_filenames(&input_filename, &filename);
-
-  /* Read the input file */
-  if( (j = read_input(input_filename)) != 0) {
-    fprintf(stderr, "Could not find input file: %s\nAborting...\n", input_filename);
-    exit(-1);
-  }
-
-#ifdef TM_USE_OMP
-  init_openmp();
-#endif
+  init_parallel_and_read_input(argc, argv, input_filename);
 
   /* this DBW2 stuff is not needed for the inversion ! */
   if (g_dflgcr_flag == 1) {
@@ -162,7 +150,7 @@ int main(int argc, char *argv[])
 
   /* starts the single and double precision random number */
   /* generator                                            */
-  start_ranlux(rlxd_level, random_seed);
+  start_ranlux(rlxd_level, random_seed^nstore);
   
   /* we need to make sure that we don't have even_odd_flag = 1 */
   /* if any of the operators doesn't use it                    */
@@ -279,7 +267,16 @@ int main(int argc, char *argv[])
 #endif
 
   for (j = 0; j < Nmeas; j++) {
-    sprintf(conf_filename, "%s.%.4d", gauge_input_filename, nstore);
+    int n_written = snprintf(conf_filename, CONF_FILENAME_LENGTH, "%s.%.4d", gauge_input_filename, nstore);
+    if( n_written < 0 || n_written > CONF_FILENAME_LENGTH ){
+      char error_message[500];
+      snprintf(error_message,
+               500,
+               "Encoding error or gauge configuration filename "
+               "longer than %d characters! See offline_measurement.c CONF_FILENAME_LENGTH\n", 
+               CONF_FILENAME_LENGTH);
+      fatal_error(error_message, "offline_measurement.c");
+    }
     if (g_cart_id == 0) {
       printf("#\n# Trying to read gauge field from file %s in %s precision.\n",
             conf_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));

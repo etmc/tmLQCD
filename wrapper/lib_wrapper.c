@@ -74,6 +74,7 @@ extern void finalize_gpu_fields();
 #  endif
 #endif
 
+#define CONF_FILENAME_LENGTH 500
 
 static int tmLQCD_invert_initialised = 0;
 
@@ -100,6 +101,7 @@ int tmLQCD_invert_init(int argc, char *argv[], const int _verbose, const int ext
   /* Read the input file */
   if( (read_input("invert.input")) != 0) {
     fprintf(stderr, "tmLQCD_init_invert: Could not find input file: invert.input\nAborting...");
+    return(-1);
   }
 
 #ifndef TM_USE_MPI
@@ -204,13 +206,22 @@ int tmLQCD_invert_init(int argc, char *argv[], const int _verbose, const int ext
 }
 
 int tmLQCD_read_gauge(const int nconfig) {
-  char conf_filename[500];
+  char conf_filename[CONF_FILENAME_LENGTH];
   if(!tmLQCD_invert_initialised) {
     fprintf(stderr, "tmLQCD_read_gauge: tmLQCD_inver_init must be called first. Aborting...\n");
     return(-1);
   }
 
-  sprintf(conf_filename, "%s.%.4d", gauge_input_filename, nconfig);
+  int n_written = snprintf(conf_filename, CONF_FILENAME_LENGTH, "%s.%.4d", gauge_input_filename, nconfig);
+  if( n_written < 0 || n_written >= CONF_FILENAME_LENGTH ){
+    char error_message[500];
+    snprintf(error_message,
+             500,
+             "Encoding error or gauge configuration filename "
+             "longer than %d characters! See wrapper/lib_wrapper.c CONF_FILENAME_LENGTH\n", 
+             CONF_FILENAME_LENGTH);
+    fatal_error(error_message, "tmLQCD_read_gauge");
+  }
   int j=0;
   if (g_cart_id == 0) {
     printf("#\n# Trying to read gauge field from file %s.\n",
@@ -225,6 +236,10 @@ int tmLQCD_read_gauge(const int nconfig) {
     printf("# Finished reading gauge field.\n");
     fflush(stdout);
   }
+
+  // set the global nstore parameter
+  nstore = nconfig;
+
 #ifdef TM_USE_MPI
   if(!lowmem_flag){
     xchange_gauge(g_gauge_field);
