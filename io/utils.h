@@ -36,10 +36,13 @@
 
 
 #ifndef isnan
-# define isnan(x)						 \
-  (sizeof (x) == sizeof (long double) ? isnan_ld (x)		 \
-   : sizeof (x) == sizeof (double) ? isnan_d (x)		 \
-   : isnan_f (x))
+
+# define isnan(x)						\
+  ( ( sizeof(x) == sizeof(long double) ) ? isnan_ld(x)		\
+    : ( ( sizeof(x) == sizeof(double) ) ? isnan_d(x)		\
+                                        : isnan_f (x)           \
+      )                                                         \
+  )
 
 #endif
 
