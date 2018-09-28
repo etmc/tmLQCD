@@ -53,7 +53,6 @@ autoconf
     --disable-mpi \
     --with-lapack='-llapack -lblas' \
     --with-limedir=$PWD/../c-lime \
-    #--with-qphixdir=$HOME/Build/local \
     CC=/usr/bin/gcc \
     CXX=/usr/bin/g++ \
     CFLAGS='-O2 --std=c99 -fopenmp -g -fPIC' \
