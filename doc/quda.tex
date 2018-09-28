@@ -38,7 +38,7 @@ cmake \
   -DQUDA_DIRAC_TWISTED_MASS=ON \
   -DQUDA_DIRAC_TWISTED_CLOVER=ON \
   -DQUDA_DIRAC_NDEG_TWISTED_MASS=ON \
-  -DQUDA_DYNAMIC_CLOVER=OFF \
+  -DQUDA_DYNAMIC_CLOVER=ON \
   -DQUDA_MPI=ON \
   -DQUDA_INTERFACE_MILC=OFF \
   -DQUDA_INTERFACE_QDP=ON \ 
@@ -48,7 +48,8 @@ cmake \
 \end{verbatim}
 where {\ttfamily \$CUDADIR} and {\ttfamily \$MPI\_PATH} have to be set appropriately.
 {\ttfamily \$QUDADIR} is your choice for the installation directory of QUDA.
-Note that if you want to use QUDA in a scalar build of tmLQCD, you should remove the lines {\ttfamily --enable-multi-gpu} and {\ttfamily --with-mpi=\$MPI\_PATH} in the configuration (and probably you want to replace the MPI compilers).
+Note that for Wilson clover quarks, you should set \texttt{-DQUDA\_DYNAMIC\_CLOVER=OFF}, whereas the opposite is strictly necessary for twisted mass clover quarks, which means that you will require two QUDA and tmLQCD builds for the time being if you intend to work with both actions.
+Note also that if you want to use QUDA in a scalar build of tmLQCD, you should remove the lines {\ttfamily --enable-multi-gpu} and {\ttfamily --with-mpi=\$MPI\_PATH} in the configuration (and probably you want to replace the MPI compilers).
 In order to profit from QUDA's autotuning functionality, set the environment variable {\ttfamily QUDA\_RESOURCE\_PATH} to a directory of your choice.
 Every time that you update your QUDA installation or change some of the many QUDA environment variables, the files in the directory will have to be deleted or a new directory chosen.
 It is convenient to base the directory dynamically on the head git commit of your QUDA source tree as well as the value of the {\ttfamily QUDA\_ENABLE\_GDR} environment variable.

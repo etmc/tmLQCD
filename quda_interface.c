@@ -126,9 +126,9 @@ double X0, X1, X2, X3;
 
 #define MAX(a,b) ((a)>(b)?(a):(b))
 
-int quda_gauge_id;
-int quda_clover_gauge_id;
-int quda_mg_setup_gauge_id;
+tm_QudaMGSetupState_t quda_mg_setup_state;
+tm_QudaGaugeState_t quda_gauge_state;
+tm_QudaCloverState_t quda_clover_state;
 
 // gauge and invert paramameter structs; init. in _initQuda()
 QudaGaugeParam  gauge_param;
@@ -172,9 +172,9 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
                                const double eps_sq, const int maxiter);
 
 void _setDefaultQudaParam(void){
-  quda_gauge_id = -1;
-  quda_clover_gauge_id = -1;
-  quda_mg_setup_gauge_id = -1;
+  reset_quda_gauge_state(&quda_gauge_state);
+  reset_quda_clover_state(&quda_clover_state);
+  reset_quda_mg_setup_state(&quda_mg_setup_state);
 
   quda_mg_preconditioner = NULL;
 
@@ -362,24 +362,27 @@ void _endQuda() {
 }
 
 void _loadCloverQuda(QudaInvertParam* inv_param){
-  if( quda_clover_gauge_id != quda_gauge_id ){
+  // check if loaded clover and gauge fields agree
+  if( check_quda_clover_state(&quda_clover_state, &quda_gauge_state) ){
+    if(g_proc_id==0 && g_debug_level > 0 ) printf("# QUDA: Clover field and inverse already loaded for gauge %d\n", quda_gauge_state.gauge_id);
+  } else {
     double atime = gettime();
     freeCloverQuda();
+    reset_quda_clover_state(&quda_clover_state);
     loadCloverQuda(NULL, NULL, inv_param);
-    quda_clover_gauge_id = quda_gauge_id;
+    set_quda_clover_state(&quda_clover_state, &quda_gauge_state);
     if(g_proc_id==0 && g_debug_level > 0 ) printf("# QUDA: Time for loadCloverQuda: %.4e\n",gettime()-atime);
-  } else {
-    if(g_proc_id==0 && g_debug_level > 0 ) printf("# QUDA: Clover field and inverse already loaded for gauge %d\n", quda_gauge_id);
   }
 }
 
 void _loadGaugeQuda( const int compression ) {
   // check if the currently loaded gauge field is also the current gauge field
   // and if so, return immediately
-  if( quda_gauge_id == nstore ){
+  if( check_quda_gauge_state(&quda_gauge_state, nstore) ){
     return;
   } else {
     freeGaugeQuda();
+    reset_quda_gauge_state(&quda_gauge_state);
   }
 
   if( inv_param.verbosity > QUDA_SILENT ){
@@ -389,7 +392,7 @@ void _loadGaugeQuda( const int compression ) {
         if( quda_input.fermionbc == TM_QUDA_THETABC ){
           printf("# QUDA: Theta boundary conditions will be applied to gauge field\n");
         } else if ( quda_input.fermionbc == TM_QUDA_APBC ){
-          printf("# QUDA: Temporal ABPC will be applied to gauge feild\n");
+          printf("# QUDA: Temporal ABPC will be applied to gauge field\n");
         }
       }
     }
@@ -468,7 +471,7 @@ void _loadGaugeQuda( const int compression ) {
 #endif
 
   loadGaugeQuda((void*)gauge_quda, &gauge_param);
-  quda_gauge_id = nstore;
+  set_quda_gauge_state(&quda_gauge_state, nstore);
 }
 
 
@@ -1058,7 +1061,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
   if( g_proc_id == 0){
     printf("# QUDA: mu = %.12f, kappa = %.12f, csw = %.12f\n", mu/2./kappa, kappa, c_sw);
   }
-  if(g_proc_id == 0 && g_debug_level > 2){
+  if(g_proc_id == 0 && g_debug_level > 3){
     printf("------------- OUTER SOLVER InvertParam --------------\n");
     printQudaInvertParam(&inv_param);
     printf("----------------------------------------\n");
@@ -1075,28 +1078,41 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     quda_mg_param.invert_param = &inv_mg_param;
     _setQudaMultigridParam(&quda_mg_param);
 
-    if( quda_mg_setup_gauge_id != quda_gauge_id  ){
+    if( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_RESET ){
       double atime = gettime();
       if( quda_mg_preconditioner != NULL ){
+        if(g_proc_id==0){ printf("# QUDA: Destroying MG Preconditioner Setup\n"); fflush(stdout); }
         destroyMultigridQuda(quda_mg_preconditioner);
+        reset_quda_mg_setup_state(&quda_mg_setup_state);
         quda_mg_preconditioner = NULL;
       }
       if(g_proc_id==0){ printf("# QUDA: Performing MG Preconditioner Setup\n"); fflush(stdout); }
       quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
       inv_param.preconditioner = quda_mg_preconditioner;
-      quda_mg_setup_gauge_id = quda_gauge_id;
+      set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
       if(g_proc_id == 0 && g_debug_level > 0){
-        printf("# QUDA: MG Preconditioner Setup took %3.f seconds\n", gettime()-atime);
+        printf("# QUDA: MG Preconditioner Setup took %.3f seconds\n", gettime()-atime);
+        fflush(stdout);
+      }
+    } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_UPDATE )  {
+      if(g_proc_id==0 && g_debug_level > 0){ 
+        printf("# QUDA: Updating MG Preconditioner Setup for gauge %d\n", quda_gauge_state.gauge_id); fflush(stdout); 
+      }
+      double atime = gettime();
+      updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
+      set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
+      if(g_proc_id == 0 && g_debug_level > 0){
+        printf("# QUDA: MG Preconditioner Setup Update took %.3f seconds\n", gettime()-atime);
         fflush(stdout);
       }
      } else {
       if(g_proc_id==0 && g_debug_level > 0){ 
-        printf("# QUDA: Reusing MG Preconditioner Setup for gauge %d\n", quda_gauge_id); fflush(stdout); 
+        printf("# QUDA: Reusing MG Preconditioner Setup for gauge %d\n", quda_gauge_state.gauge_id); fflush(stdout); 
       }
     }
   }
   
-  if(g_proc_id == 0 && g_debug_level > 2 && inv_param.inv_type_precondition == QUDA_MG_INVERTER){
+  if(g_proc_id == 0 && g_debug_level > 3 && inv_param.inv_type_precondition == QUDA_MG_INVERTER){
     printf("--------------- MG InvertParam ------------------\n");
     printQudaInvertParam(quda_mg_param.invert_param);
     printf("---------------- MG MultigridParam ------------------------\n");
