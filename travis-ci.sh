@@ -44,6 +44,7 @@ if ! [[ -f git_hash.h ]]; then
 fi
 
 # Compile tmLQCD.
+sudo apt-get update
 sudo apt-get install -y flex libblas-dev liblapack-dev gfortran
 
 autoconf
