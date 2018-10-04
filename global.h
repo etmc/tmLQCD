@@ -291,7 +291,7 @@ void fatal_error(char const *error, char const *function);
  * We use memcpy because is optimal when the amount to copy is known at compilation time. 
  * "sizeof(x) == sizeof(y) ? (signed)sizeof(x) : -1" is a compile time check that the types are compatible.
  */
-#define SWAP(x,y) do \ 
+#define SWAP(x,y) do \
 { unsigned char swap_temp[sizeof(x) == sizeof(y) ? (signed)sizeof(x) : -1]; \
   memcpy(swap_temp,&y,sizeof(x)); \
   memcpy(&y,&x,       sizeof(x)); \
