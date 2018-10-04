@@ -35,14 +35,6 @@
 #include <io/dml.h>
 
 
-#ifndef isnan
-# define isnan(x)						 \
-  (sizeof (x) == sizeof (long double) ? isnan_ld (x)		 \
-   : sizeof (x) == sizeof (double) ? isnan_d (x)		 \
-   : isnan_f (x))
-
-#endif
-
 /* These are factory functions, since the constructors for c-lime and lemon are different
    and they need different ways of opening files. Moving this to utility functions unclutters
    the main code, since we don't need additional #ifdefs anymore.

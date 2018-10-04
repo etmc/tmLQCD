@@ -1,5 +1,7 @@
 %author: Mario Schroeck <mario.schroeck@roma3.infn.it>
+%author: Bartosz Kostrzewa <bartosz_kostrzewa@fastmail.com>
 %date: 04/2015
+%date: 06/2017, 12/2017, 06/2018
 
 \subsection{QUDA: A library for QCD on GPUs}\label{subsec:quda}
 
@@ -28,30 +30,30 @@ If not already installed, you have to install QUDA first. Download the most rece
 QUDA can be installed without any dependencies, consider, e.g., the following minimal configuration:
 
 \begin{verbatim}
-./configure CC=mpicc CXX=mpiCC \
-CFLAGS="-O3 -std=c99" CXXFLAGS="-O3 -std=c++0x" \
---prefix=$QUDADIR \
---with-mpi=$MPI_PATH \
---with-cuda=$CUDADIR \
---enable-os=linux \
---enable-cpu-arch=x86_64 \
---enable-gpu-arch=sm_35 \
---enable-multi-gpu \
---enable-wilson-dirac \
---enable-clover-dirac \
---enable-twisted-mass-dirac \
---enable-ndeg-twisted-mass-dirac \
---enable-twisted-clover-dirac \
---enable-device-pack
+cmake \
+  -DQUDA_DIRAC_STAGGERED=OFF \
+  -DQUDA_DIRAC_DOMAIN_WALL=OFF \
+  -DQUDA_DIRAC_WILSON=ON \
+  -DQUDA_DIRAC_CLOVER=ON \
+  -DQUDA_DIRAC_TWISTED_MASS=ON \
+  -DQUDA_DIRAC_TWISTED_CLOVER=ON \
+  -DQUDA_DIRAC_NDEG_TWISTED_MASS=ON \
+  -DQUDA_DYNAMIC_CLOVER=ON \
+  -DQUDA_MPI=ON \
+  -DQUDA_INTERFACE_MILC=OFF \
+  -DQUDA_INTERFACE_QDP=ON \ 
+  -DQUDA_MULTIGRID=ON \
+  -DQUDA_GPU_ARCH=sm_37 \
+  ${path_to_quda}
 \end{verbatim}
 where {\ttfamily \$CUDADIR} and {\ttfamily \$MPI\_PATH} have to be set appropriately.
 {\ttfamily \$QUDADIR} is your choice for the installation directory of QUDA.
-Note that if you want to use QUDA in a scalar build of tmLQCD, you should remove the lines {\ttfamily --enable-multi-gpu} and {\ttfamily --with-mpi=\$MPI\_PATH} in the configuration (and probably you want to replace the MPI compilers).
-In order to profit from QUDA's autotuning functionality, set the environment variable {\ttfamily QUDA\_RESOURCE\_PATH} to a directory of your choice, e.g., add
-\begin{verbatim}
-export QUDA_RESOURCE_PATH=${HOME}/quda_resources/
-\end{verbatim}
-to your {\ttfamily $\sim$/.bash\_profile}.
+Note that for Wilson clover quarks, you should set \texttt{-DQUDA\_DYNAMIC\_CLOVER=OFF}, whereas the opposite is strictly necessary for twisted mass clover quarks, which means that you will require two QUDA and tmLQCD builds for the time being if you intend to work with both actions.
+Note also that if you want to use QUDA in a scalar build of tmLQCD, you should remove the lines {\ttfamily --enable-multi-gpu} and {\ttfamily --with-mpi=\$MPI\_PATH} in the configuration (and probably you want to replace the MPI compilers).
+In order to profit from QUDA's autotuning functionality, set the environment variable {\ttfamily QUDA\_RESOURCE\_PATH} to a directory of your choice.
+Every time that you update your QUDA installation or change some of the many QUDA environment variables, the files in the directory will have to be deleted or a new directory chosen.
+It is convenient to base the directory dynamically on the head git commit of your QUDA source tree as well as the value of the {\ttfamily QUDA\_ENABLE\_GDR} environment variable.
+There may be other environment variables which make one set of auto-tuning results incompatible with another.
 
 Once QUDA is installed, a minimal configuration of tmLQCD could look like, e.g.,
 \begin{verbatim}
@@ -66,7 +68,6 @@ CXX=mpiCC \
 --with-cudadir=${CUDADIR}/lib
 \end{verbatim}
 Note that a {\ttfamily C++} compiler is required for linking against the QUDA library, therefore set {\ttfamily CXX} appropriately. {\ttfamily \${QUDADIR}} is where you installed QUDA in the previous step and {\ttfamily \${CUDADIR}} is required again for linking.
-
 
 \subsubsection{Usage}
 Any main program that reads and handles the operator declaration from an input file can easily be set up to use the QUDA inverter by setting the {\ttfamily UseExternalInverter} flag to {\ttfamily quda}. For example, in the input file for the {\ttfamily invert} executable, add the flag to the operator declaration as
@@ -83,19 +84,124 @@ EndOperator
 \end{verbatim}
 and the operator of interest will be inverted using QUDA. The initialization of QUDA is done automatically within the operator initialization,  the QUDA library should be finalized by a call to {\ttfamily \_endQuda()} just before finalizing MPI. When you use the QUDA interface for work that is being published, don't forget to cite \cite{Clark:2009wm, Babich:2011np, Strelchenko:2013vaa}.
 
+\subsubsection{General settings}
+Some properties of the QUDA interface can be configured via the {\ttfamily ExternalInverter} section.
+\begin{verbatim}
+BeginExternalInverter QUDA
+  FermionBC = [theta, pbc, apbc]
+EndExternalInverter
+\end{verbatim}
+
+The option {\ttfamily FermionBC} shown above forces twisted ({\ttfamily theta}), periodic ({\ttfamily pbc}) or antiperiodic ({\ttfamily apbc}) temporal quark field boundary conditions.
+This setting exists because at the time of writing (2017.12.28), there seems to be a bug or incompatibility in QUDA which causes (anti-)periodic boundary conditions with gauge compression to produce incorrect propagators.
+
+\subsubsection{QUDA-MG interface}
+The interface has support for the QUDA Multigrid (MG) solver implementation and allows a number of parameters to be adjusted in order to tune the MG setup.
+The defaults for these parameters follow the recommendations of \url{https://github.com/lattice/quda/wiki/Multigrid-Solver}, which also provides useful hints for further tuning.
+Although some of the parameters can be set on a per-level basis, the interface currently only exposes a single setting for all levels, where appropriate.
+The K-cycle is used by default and there is currently no user-exposed option for changing this.
+
+The MG-preconditioned GCR solver is selected as follows:
+\begin{verbatim}
+BeginOperator TMWILSON
+  2kappaMu = 0.05
+  kappa = 0.177
+  UseEvenOdd = yes
+  Solver = mg
+  SolverPrecision = 1e-18
+  MaxSolverIterations = 200
+  UseExternalInverter = quda
+  UseSloppyPrecision = single
+EndOperator
+\end{verbatim}
+
+The MG setup can be tuned using the following parameters in the \texttt{BeginExternalInverter QUDA} section:
+\begin{itemize}
+  \item{ \texttt{MGNumberOfLevels}: number of levels to be used in the MG, $3$ is usually ideal but $2$ can be similarly efficient depending on the quark mass (positive integer, default $3$) }
+  \item{ \texttt{MGSetupSolver}: solver used for generating null vectors. \texttt{CG} or \texttt{BiCGstab} (default \texttt{CG}). Usage of \texttt{BiCGstab} may be recommended for Wilson or clover Wilson quarks. }
+  \item{ \texttt{MGSetupSolverTolerance}: relative target residual (unsquared!) during setup phase. (positive float, default $1\cdot10^{-6}$) }
+  \item{ \texttt{MGSetupMaxSolverIterations}: maximum number of iterations during setup phase. (positive integer, default $1000$) }
+  \item{ \texttt{MGCoarseSolverTolerance}: unsquared relative target residual on the coarse grids. (positive float, default $0.25$) }
+  \item{ \texttt{MGCoarseMaxSolveriterations}: maximum number of iterations on coarse grids. (positive integer, default $75$) }
+  \item{ \texttt{MGEnableSizeThreeBlocks}: By default, QUDA has limited support for size $3$ aggregates. If set to \emph{yes}, the automatic blocking algorithm will attempt to use them for lattice extents divisible by $3$ when the local lattice extent at a given level is smaller than $16$ aggregate sites. This requires you to instantiate the necessary block sizes in QUDA (see comments below). (boolean \emph{yes} or \emph{no}, default \emph{no}) }
+  \item{ \texttt{MGBlockSizes[X,Y,Z,T]}: aggregate sizes on each level. When these are set for a given lattice dimension, the automatic blocking algorithm for that dimension is overridden and the specified blockings are forced. When the required aggregate sizes are not instantiated in QUDA, the setup phase will fail with an informative error message. (comma-separated list of integers, for a three level solver, for example, this needs to be specified for the first and second level)} 
+  \item{ \texttt{MGSmootherTolerance}: unsquared relative target residual of the smoother on all levels. (positive float, default $0.25$) }
+  \item{ \texttt{MGSmootherPreIterations}: number of smoothing steps before coarse grid correction. (zero or positive integer, default $4$)}
+  \item{ \texttt{MGSmootherPostIterations}: number of smoothing steps after prolongation. (zero or positive integer, default $4$)}
+  \item{ \texttt{MGOverUnderRelaxationFactor}: Over- or under-relaxation factor. (positive float, default $0.85$)}
+  \item{ \texttt{MGCoarseMuFactor}: Scaling factor for twisted mass on a per-level basis, accelerates convergence and reduces condition numer of coarse grid. From experience it seems that it's reasonable to set this $>1.0$ only on the coarsest level, but it might also help on intermediate levels. If running with twisted mass, this should always be set and tuned for maximum efficiency. (positive float, usually $ > 1.0$, default $8.0$ from the second level upwards).}
+  \item{ \texttt{MGRunVerify}: Check GPU coarse operators against CPU coarse operators and verify Galerkin projectors during setup phase. This is usually fast enough to always be performed, although sometimes it seems to fail even though the setup works fine. (\emph{yes} or \emph{no}, default \emph{yes}) } 
+\end{itemize}
+
+If no blocking is specified manually, the aggregation parameters are set automatically as follows:
+\begin{itemize}
+  \item{ A default block size of $4$ is attempted if the MPI-partitioned fine or aggregate lattice extent is larger or equal to $16$ lattice sites. }
+  \item{ If the number of aggregate lattice sites in a given direction is even and smaller than $16$, a block size of $2$ is used. }
+  \item{ The option \texttt{MGEnableSizeThreeBlocks} can be set to \texttt{yes}. Then, for levels coarser than the fine grid, extents smaller than $16$ and divisible by $3$, a block size of $3$ will be used. This will almost certainly require the addition of instantiations of block sizes to QUDA in the restrictor and transfer operator. (\texttt{lib/restrictor.cu} and \texttt{lib/transfer\_util.cu}) }
+  \item{ In all other cases, aggregation is disabled for this direction and level. This includes, for instance, extents divisible by primes other than $2$ or $3$. }
+\end{itemize}
+
+
+Note that at the time of writing (2017.12.28), only double-single mixed-precision is supported for the MG-preconditioned GCR solver and the solve will abort if a double-half precision solve is attempted.
+
+A typical MG setup might look like this for twisted mass clover quarks: 
+
+\begin{verbatim}
+BeginExternalInverter QUDA
+  MGNumberOfLevels = 3
+  MGSetupSolver = cg
+  MGSetupSolverTolerance = 1e-6
+  MGSetupMaxSolverIterations = 1000
+  MGCoarseSolverTolerance = 0.25
+  MGCoarseSolverIterations = 75
+  MGSmootherTolerance = 0.25
+  MGSmootherPreIterations = 2
+  MGSmootherPostIterations = 4
+  MGOverUnderRelaxationFactor = 0.85
+  MGCoarseMuFactor = 1.0, 1.0, 12.0
+  MGRunVerify = yes
+  MGEnableSizeThreeBlocks = no
+EndExternalInverter
+\end{verbatim}
+
+Alternatively, a blocking can be specified manually:
+
+\begin{verbatim}
+BeginExternalInverter QUDA
+  MGNumberOfLevels = 3
+  MGBlockSizesX = 4, 3
+  MGBlockSizesY = 4, 3
+  MGBlockSizesZ = 6, 4
+  MGBlockSizesT = 6, 4
+  MGSetupSolver = cg
+  MGSetupSolverTolerance = 1e-6
+  MGSetupMaxSolverIterations = 1000
+  MGCoarseSolverTolerance = 0.25
+  MGCoarseSolverIterations = 75
+  MGSmootherTolerance = 0.25
+  MGSmootherPreIterations = 2
+  MGSmootherPostIterations = 4
+  MGOverUnderRelaxationFactor = 0.85
+  MGCoarseMuFactor = 1.0, 1.0, 12.0
+  MGRunVerify = yes
+  MGEnableSizeThreeBlocks = no
+EndExternalInverter
+\end{verbatim}
 
 \subsubsection{More advanced settings}
 To achieve higher performance you may choose single (default) or even half precision as sloppy precision for the inner solver of the mixed precision inverter with reliable updates. After {\ttfamily BeginOperator} and before {\ttfamily EndOperator} set {\ttfamily UseSloppyPrecision = double|single|half}.
+The MG-preconditioned GCR solver only works in double-single mixed precision, but the null vectors are stored in half precision as recommended by Kate Clark.
 
-To activate compression of the gauge fields (in order to save bandwidth and thus to achieve higher performance), set {\ttfamily UseCompression = 8|12|18} within {\ttfamily BeginOperator} and {\ttfamily EndOperator}. The default is 18 which corresponds to no compression. Note that if you use compression, trivial (anti)periodic boundary conditions will be applied to the gauge fields, instead of the default $\theta$-boundary conditions. As a consequence, the residual check on tmLQCD side will fail. Moreover, compression is not applicable when using general $\theta$-boundary conditions in the spatial directions. If trying to do so, compression will be activated automatically and the user gets informed via the standard output.
-
+To activate compression of the gauge fields (in order to save bandwidth and thus to achieve higher performance), set {\ttfamily UseCompression = 8|12|18} within {\ttfamily BeginOperator} and {\ttfamily EndOperator}. 
+The default is 18 which corresponds to no compression. 
+Note that if you use compression, trivial (anti)periodic boundary conditions will be applied to the gauge fields, instead of the default $\theta$-boundary conditions. 
+As a consequence, the residual check on tmLQCD side will fail. 
+Moreover, compression is not applicable when using general $\theta$-boundary conditions in the spatial directions. 
+If trying to do so, compression will be de-activated automatically and the user gets informed via the standard output.
+The \texttt{FermionBC} setting can be used to force particular temporal boundary conditions to be applied to the gauge field in the Dirac operator.
 
 \subsubsection{Functionality}
-The QUDA interface can currently be used to invert {\ttfamily TMWILSON, WILSON, DBTMWILSON} and {\ttfamily CLOVER} within a 4D multi-GPU (MPI) parallel environment with CG or BICGSTAB. QUDA uses even-odd preconditioning, if wanted ({\ttfamily UseEvenOdd = yes}), and the interface is set up to use a mixed precision solver by default. For more details on the QUDA settings check the function {\ttfamily \_initQuda()} in {\ttfamily quda\_interface.c}.
-
-
-
-
+The QUDA interface can currently be used to invert {\ttfamily TMWILSON, WILSON, DBTMWILSON} and {\ttfamily CLOVER} within a 4D multi-GPU (MPI) parallel environment with CG, BICGSTAB or MG-preconditioned GCR. QUDA uses even-odd preconditioning, if wanted ({\ttfamily UseEvenOdd = yes}), and the interface is set up to use a mixed precision solver by default. For more details on the QUDA settings check the function {\ttfamily \_initQuda()} in {\ttfamily quda\_interface.c}.
 
 
 

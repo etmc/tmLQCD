@@ -55,7 +55,7 @@ extern "C"
 
 #ifdef TM_USE_QUDA
   int invert_quda_direct(double * const propgator, double * const source,
-                    const int op_id, const int gauge_persist);
+                    const int op_id);
 #endif
 
 #ifdef __cplusplus

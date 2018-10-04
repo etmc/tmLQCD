@@ -113,6 +113,7 @@ int add_operator(const int type) {
   optr->prop3 = NULL;
   optr->error_code = 0;
   optr->prop_precision = _default_prop_precision_flag;
+  optr->write_prop_flag = _default_write_prop_flag;
   optr->no_flavours = 1;
   optr->DownProp = 0;
   optr->conf_input = _default_gauge_input_filename;
