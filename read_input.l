@@ -807,12 +807,15 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*MGNumberOfShifts{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mg_no_shifts=a;
+    // when the number of shifts is specified, mg_mss_mass must be set to zero!
     mg_mms_mass=0;
     if(myverbose) printf("  MG_Num_of_shifts set to %d line %d operator %d\n", mg_no_shifts, line_of_file, current_operator);
   }
   {SPC}*MGMMSMass{EQL}{FLT}+ {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mg_mms_mass=c;
+    // when mg_mms_mass is specified, mg_no_shifts should be set to zero!
+    mg_no_shifts=0;
     if(myverbose) printf("  MG_MMS_Mass set to %f line %d operator %d\n", mg_mms_mass, line_of_file, current_operator);
   }
   EndDDalphaAMG{SPC}* {
