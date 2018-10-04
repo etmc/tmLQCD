@@ -97,6 +97,7 @@ int tmLQCD_invert_init(int argc, char *argv[], const int _verbose, const int ext
   /* Read the input file */
   if( (read_input("invert.input")) != 0) {
     fprintf(stderr, "tmLQCD_init_invert: Could not find input file: invert.input\nAborting...");
+    return(-1);
   }
 
 #ifndef TM_USE_MPI
