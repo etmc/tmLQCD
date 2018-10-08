@@ -532,3 +532,102 @@ void eo_source_spinor_field_point(spinor * const even_cb_spinor,
   }
 }
 
+void full_source_spinor_field_spin_diluted_oet_ts(spinor * const full_spinor,
+                                                  const int src_ts,
+                                                  const int src_d,
+                                                  const int sample,
+                                                  const int nstore,
+                                                  const unsigned int oet_seed){
+  spinor ** temp_cb_spinors;
+  init_solver_field(&temp_cb_spinors, VOLUME/2, 2);
+  eo_source_spinor_field_spin_diluted_oet_ts(temp_cb_spinors[0], 
+                                             temp_cb_spinors[1],
+                                             src_ts,
+                                             src_d,
+                                             sample,
+                                             nstore,
+                                             oet_seed);
+  convert_eo_to_lexic(full_spinor, temp_cb_spinors[0], temp_cb_spinors[1]);
+  finalize_solver(temp_cb_spinors, 2);
+}
+
+void eo_source_spinor_field_spin_diluted_oet_ts(spinor * const even_cb_spinor,
+                                                spinor * const odd_cb_spinor,
+                                                const int src_ts,
+                                                const int src_d,
+                                                const int sample,
+                                                const int nstore,
+                                                const unsigned int oet_seed){
+  int reset = 0, i, x, y, z, ic, lt, lx, ly, lz, id=0;
+  int coords[4], seed, r;
+  double rnumber, si=0., co=0.;
+  int rlxd_state[105];
+  const double sqr2 = 1./sqrt(2.);
+  _Complex double * p = NULL;
+  
+  zero_spinor_field(even_cb_spinor,VOLUME/2);
+  zero_spinor_field(odd_cb_spinor,VOLUME/2);
+
+  /* save the ranlxd_state if neccessary */
+  if(ranlxd_init == 1) {
+    rlxd_get(rlxd_state);
+    reset = 1;
+  }
+
+  seed =(int) abs(oet_seed + sample + src_ts*10*97 + nstore);
+
+  rlxd_init(2, seed);
+
+  lt = src_ts - g_proc_coords[0]*T;
+  coords[0] = src_ts / T;
+  for(x = 0; x < LX*g_nproc_x; x++) {
+    lx = x - g_proc_coords[1]*LX;
+    coords[1] = x / LX;
+    for(y = 0; y < LY*g_nproc_y; y++) {
+      ly = y - g_proc_coords[2]*LY;
+      coords[2] = y / LY;
+      for(z = 0; z < LZ*g_nproc_z; z++) {
+	      lz = z - g_proc_coords[3]*LZ;
+	      coords[3] = z / LZ;
+#ifdef TM_USE_MPI
+	MPI_Cart_rank(g_cart_grid, coords, &id);
+#endif
+	    for(ic = 0; ic < 3; ic++) {
+	      ranlxd(&rnumber, 1);
+	      if(g_cart_id  == id) {
+	        r = (int)floor(4.*rnumber);
+	        if(r == 0){
+	          si = sqr2;
+	          co = sqr2;
+	        } else if(r == 1) {
+	          si = -sqr2;
+	          co = sqr2;
+	        } else if(r==2) {
+	          si = sqr2;
+	          co = -sqr2;
+	        } else {
+	          si = -sqr2;
+	          co = -sqr2;
+	        }
+	        
+	        i = g_lexic2eosub[ g_ipt[lt][lx][ly][lz] ];
+	        if((lt+lx+ly+lz+g_proc_coords[3]*LZ+g_proc_coords[2]*LY 
+	            + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
+	          p = (_Complex double*)(even_cb_spinor + i);
+	        } else {
+	          p = (_Complex double*)(odd_cb_spinor + i);
+	        }  
+	          (*(p+3*src_d+ic)) = co + si * I;
+	        }
+	      } // ic
+      } // z
+    } // y
+  } // x
+	    
+  /* reset the ranlxd if neccessary */
+  if(reset) {
+    rlxd_reset(rlxd_state);
+  }
+  return;
+
+} 

@@ -41,6 +41,21 @@ void source_generation_pion_zdir(spinor * const P, spinor * const Q,
                                  const int z,
                                  const int sample, const int nstore);
 
+void full_source_spinor_field_spin_diluted_oet_ts(spinor * const full_spinor,
+                                                  const int src_ts,
+                                                  const int src_d,
+                                                  const int sample,
+                                                  const int nstore,
+                                                  const unsigned int oet_seed);
+
+void eo_source_spinor_fied_spin_diluted_oet_ts(spinor * const even_cb_spinor,
+                                               spinor * const odd_cb_spinor,
+                                               const int src_ts,
+                                               const int src_d,
+                                               const int sample,
+                                               const int nstore,
+                                               const unsigned int oet_seed);
+
 // generates a point source at the global coordinates passed via the
 // four element vector global_txyz_src_pos in the ordering {t,x,y,z}
 // the spin index 'is' and the colour index 'ic'

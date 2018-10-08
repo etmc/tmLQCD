@@ -68,6 +68,21 @@ void eo_source_spinor_field_point(spinor * const even_cb_spinor,
                                   const int is, const int ic,
                                   const int * const global_txyz_src_pos);
 
+void full_source_spinor_field_spin_diluted_oet_ts(spinor * const full_spinor,
+                                                  const int src_ts,
+                                                  const int src_d,
+                                                  const int sample,
+                                                  const int nstore,
+                                                  const unsigned int oet_seed);
+
+void eo_source_spinor_fied_spin_diluted_oet_ts(spinor * const even_cb_spinor,
+                                               spinor * const odd_cb_spinor,
+                                               const int src_ts,
+                                               const int src_d,
+                                               const int sample,   
+                                               const int nstore,                                            
+                                               const unsigned int oet_seed);
+
 #ifdef TM_USE_QUDA
   int invert_quda_direct(double * const propgator, double * const source,
                     const int op_id);
