@@ -30,6 +30,8 @@
 #ifndef _PARSER_H
 #define _PARSER_H
 
+#include "misc_types.h"
+
 #define COLD 0
 #define HOT 1
 #define RESTART 2
@@ -135,6 +137,8 @@ extern "C"
   extern double mg_rho_update;
   extern int mg_update_setup_iter;
   extern int mg_omp_num_threads;
+
+  extern tm_mpi_thread_level_t g_mpi_thread_level;
 
   int read_input(char *);
   int reread_input(char *);

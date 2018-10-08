@@ -21,6 +21,18 @@
 #ifndef MISC_TYPES_H
 #define MISC_TYPES_H
 
+#ifdef TM_USE_MPI
+#include <mpi.h>
+#endif
+
+#ifdef TM_USE_QPHIX
+#include "qphix/qphix_config.h"
+#endif
+
+#ifdef QPHIX_QMP_COMMS
+#include <qmp.h>
+#endif
+
 /* enumeration type for the sloppy prec. of the inverter */
 typedef enum SloppyPrecision_s {
   SLOPPY_DOUBLE = 0,
@@ -51,5 +63,27 @@ typedef enum real_imag_t {
   TM_REAL = 0,
   TM_IMAG
 } real_imag_t;
+
+/* own type to set the MPI thread level when MPI alone
+ * or MPI and QMP are in use 
+ * the default type is defined so that the type always exists, even
+ * if the code is compiled without MPI support */
+
+#ifdef QPHIX_QMP_COMMS
+typedef enum tm_mpi_thread_level_t {
+  TM_MPI_THREAD_SINGLE = QMP_THREAD_SINGLE,
+  TM_MPI_THREAD_MULTIPLE = QMP_THREAD_MULTIPLE
+} tm_mpi_thread_level_t;
+#elif TM_USE_MPI
+typedef enum tm_mpi_thread_level_t {
+  TM_MPI_THREAD_SINGLE = MPI_THREAD_SERIALIZED,
+  TM_MPI_THREAD_MULTIPLE = MPI_THREAD_MULTIPLE
+} tm_mpi_thread_level_t;
+#else
+typedef enum tm_mpi_thread_level_t {
+  TM_MPI_THREAD_SINGLE = 0,
+  TM_MPI_THREAD_MULTIPLE
+} tm_mpi_thread_level_t;
+#endif
 
 #endif // MISC_TYPES_H

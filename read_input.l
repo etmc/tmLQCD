@@ -65,6 +65,7 @@ EQL {SPC}*={SPC}*
 #include<io/params.h>
 #include "qphix_types.h"
 #include "quda_types.h"
+#include "misc_types.h"
 
 // some general parsing helpers
 
@@ -221,6 +222,8 @@ static inline double fltlist_next_token(int * const list_end){
   double mu_Msap;
 
   int use_preconditioning;
+
+  tm_mpi_thread_level_t g_mpi_thread_level;
 
   /* macro control over read_input.l is poor. In order to support compilation without
    * a given external library, we need to have these declared here as a dummy.
@@ -402,6 +405,7 @@ static inline double fltlist_next_token(int * const list_end){
 %x NBCORES
 
 %x OMPNUMTHREADS
+%x MPITHREADLEVEL
 
 %x DFLNBLOCKT
 %x DFLNBLOCKX
@@ -512,6 +516,7 @@ static inline double fltlist_next_token(int * const list_end){
 ^NbCoresPerNode{EQL}               BEGIN(NBCORES);
 
 ^OMPNumThreads{EQL}                BEGIN(OMPNUMTHREADS);
+^MPIThreadLevel{EQL}               BEGIN(MPITHREADLEVEL);
 
 ^NoBlocksT{EQL}                    BEGIN(DFLNBLOCKT);
 ^NoBlocksX{EQL}                    BEGIN(DFLNBLOCKX);
@@ -2478,6 +2483,14 @@ static inline double fltlist_next_token(int * const list_end){
   omp_num_threads=atoi(yytext);
   if(myverbose!=0) printf("omp_num_threads = %s \n", yytext);
 }
+<MPITHREADLEVEL>single {
+  g_mpi_thread_level=TM_MPI_THREAD_SINGLE;
+  if(myverbose!=0) printf("Limit support to single-threaded / serialized MPI comms\n");
+}
+<MPITHREADLEVEL>multiple {
+  g_mpi_thread_level=TM_MPI_THREAD_MULTIPLE;
+  if(myverbose!=0) printf("Support for MPI comms from mutliple threads enabled\n");
+}
 <DFLNBLOCKT>{DIGIT}+               {
   nblocks_t=atoi(yytext);
   if(myverbose!=0) printf("nblocks_t = %s \n", yytext);
@@ -3002,6 +3015,8 @@ int read_input(char * conf_file){
   nb_cores = 1;
 
   omp_num_threads=_default_omp_num_threads;
+
+  g_mpi_thread_level = _default_g_mpi_thread_level;
 
   nblocks_t = 1;
   nblocks_x = 1;

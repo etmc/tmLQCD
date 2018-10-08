@@ -36,6 +36,7 @@
 #include <qmp.h>
 #endif
 
+#include "fatal_error.h"
 #include "init_parallel.h"
 #include "global.h"
 #include "read_input.h"
@@ -44,8 +45,12 @@ void init_parallel_and_read_input(int argc, char *argv[], char input_filename[])
 #ifdef QPHIX_QMP_COMMS
   // Initialize QMP
   QMP_thread_level_t prv;
-  if (QMP_init_msg_passing(&argc, &argv, QMP_THREAD_SINGLE, &prv) != QMP_SUCCESS) {
+  if (QMP_init_msg_passing(&argc, &argv, g_mpi_thread_level, &prv) != QMP_SUCCESS) {
     QMP_error("Failed to initialize QMP\n");
+    abort();
+  }
+  if( prv != g_mpi_thread_level ) {
+    QMP_error("Provided thread level does not match requested thread level!\n");
     abort();
   }
   if (QMP_is_primary_node()) {
@@ -54,7 +59,10 @@ void init_parallel_and_read_input(int argc, char *argv[], char input_filename[])
 #elif defined(TM_USE_MPI) && !defined(QPHIX_QMP_COMMS)
 #ifdef TM_USE_OMP
   int mpi_thread_provided;
-  MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
+  MPI_Init_thread(&argc, &argv, g_mpi_thread_level, &mpi_thread_provided);
+  if( mpi_thread_provided != g_mpi_thread_level ){
+    fatal_error("Provided thread level does not match requested one!", "init_parallel_and_read_input");
+  }
 #else
   MPI_Init(&argc, &argv);
 #endif

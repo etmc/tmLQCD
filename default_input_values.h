@@ -32,6 +32,8 @@
 #ifndef _DEFAULT_INPUT_VALUES_H
 #define _DEFAULT_INPUT_VALUES_H
 
+#include "misc_types.h"
+
 #define _default_T_global 4
 #define _default_L 4
 #define _default_LX 0
@@ -220,5 +222,7 @@
 // gradient flow measurement step size and maximum flow time
 #define _default_gf_eps 0.01
 #define _default_gf_tmax 9.99
+
+#define _default_g_mpi_thread_level TM_MPI_THREAD_SINGLE
 
 #endif
