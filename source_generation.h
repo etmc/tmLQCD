@@ -41,4 +41,18 @@ void source_generation_pion_zdir(spinor * const P, spinor * const Q,
                                  const int z,
                                  const int sample, const int nstore);
 
+// generates a point source at the global coordinates passed via the
+// four element vector global_txyz_src_pos in the ordering {t,x,y,z}
+// the spin index 'is' and the colour index 'ic'
+void full_source_spinor_field_point(spinor * const full_spinor,
+                                    const int is, const int ic,
+                                    const int * const global_txyz_src_pos);
+
+// as full_source_spinor_field_point but with output directly to checkerboarded
+// spinors
+void eo_source_spinor_field_point(spinor * const even_cb_spinor,
+                                  spinor * const odd_cb_spinor,
+                                  const int is, const int ic,
+                                  const int * const global_txyz_src_pos);
+
 #endif
