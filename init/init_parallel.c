@@ -40,6 +40,7 @@
 #include "init_parallel.h"
 #include "global.h"
 #include "read_input.h"
+#include "tm_debug_printf.h"
 
 void init_parallel_and_read_input(int argc, char *argv[], char input_filename[]) {
 #ifdef QPHIX_QMP_COMMS
@@ -73,6 +74,8 @@ void init_parallel_and_read_input(int argc, char *argv[], char input_filename[])
 #else
   g_proc_id = 0;
 #endif
+
+  print_mpi_thread_level(g_mpi_thread_level);  
 
 // Read the input file
 int status = read_input(input_filename);

@@ -79,6 +79,8 @@ EXTERN int g_debug_level;
 EXTERN int g_disable_IO_checks;
 EXTERN int g_disable_src_IO_checks;
 
+EXTERN tm_mpi_thread_level_t g_mpi_thread_level;
+
 EXTERN int T_global;
 #ifndef FIXEDVOLUME
 EXTERN int T, L, LX, LY, LZ, VOLUME;

@@ -29,6 +29,7 @@
 #include "init/init_gauge_fg.h"
 #include "init/init_geometry_indices.h"
 #include "init/init_parallel.h"
+#include "init/init_critical_globals.h"
 #ifdef WITHLAP
 #  include "init/init_jacobi_field.h"
 #endif

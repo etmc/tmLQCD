@@ -39,6 +39,26 @@
 #define TM_GAUGE_PROPAGATE_THRESHOLD 10.0
 #define TM_GAUGE_PROPAGATE_MIN 0.01
 
+/* enumeration type for the identity of the program
+ * which is being executed
+ * this is useful to unify various utility functions which
+ * otherwise lead to a lot of code duplication */
+typedef enum tm_ProgramId_t {
+  TM_PROGRAM_HMC_TM = 0,
+  TM_PROGRAM_INVERT,
+  TM_PROGRAM_OFFLINE_MEASUREMENT,
+  TM_PROGRAM_BENCHMARK,
+  TM_PROGRAM_EXTERNAL
+} tm_ProgramId_t;
+
+/* enumeration type for return value 
+ * we follow http://tldp.org/LDP/abs/html/exitcodes.html for the starting 
+ * value */
+typedef enum tm_ExitCode_t {
+  TM_EXIT_SUCCESS = 0,
+  TM_EXIT_INVALID_CMDLINE_ARG = 166
+} tm_ExitCode_t;
+
 /* enumeration type for the sloppy prec. of the inverter */
 typedef enum SloppyPrecision_s {
   SLOPPY_DOUBLE = 0,
@@ -91,6 +111,17 @@ typedef enum tm_mpi_thread_level_t {
   TM_MPI_THREAD_MULTIPLE
 } tm_mpi_thread_level_t;
 #endif
+
+static inline void print_mpi_thread_level(const tm_mpi_thread_level_t thread_level)
+{
+  const char * const thread_level_string_single = "single";
+  const char * const thread_level_string_multiple = "multiple";
+  const char * selected_thread_level_string = thread_level_string_single;
+  if( thread_level == TM_MPI_THREAD_MULTIPLE ){
+    selected_thread_level_string = thread_level_string_multiple;
+  }
+  tm_debug_printf(0, 0, "MPI thread level set to '%s'\n", selected_thread_level_string);
+}
 
 /* types to track the state of a gauge field, could be added to a compound
  * gauge field type to provide meta-information or it can be kept

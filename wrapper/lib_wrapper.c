@@ -61,6 +61,7 @@
 #include "linalg/convert_eo_to_lexic.h"
 #include "include/tmLQCD.h"
 #include "fatal_error.h"
+#include "misc_types.h"
 
 #ifdef HAVE_GPU
 extern void init_mixedsolve_eo(su3** gf);
@@ -79,6 +80,8 @@ extern void finalize_gpu_fields();
 static int tmLQCD_invert_initialised = 0;
 
 int tmLQCD_invert_init(int argc, char *argv[], const int _verbose, const int external_id) {
+
+  init_critical_globals(TM_PROGRAM_EXTERNAL); 
 
   DUM_DERI = 8;
   DUM_MATRIX = DUM_DERI + 5;
