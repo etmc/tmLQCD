@@ -117,6 +117,8 @@ int main(int argc, char *argv[])
   double plaquette_energy;
   struct stout_parameters params_smear;
 
+  init_global_states();
+
 #ifdef _KOJAK_INST
 #pragma pomp inst init
 #pragma pomp inst begin(main)
@@ -296,13 +298,14 @@ int main(int argc, char *argv[])
       exit(-2);
     }
 
-
     if (g_cart_id == 0) {
       printf("# Finished reading gauge field.\n");
       fflush(stdout);
     }
+
 #ifdef TM_USE_MPI
     xchange_gauge(g_gauge_field);
+    update_tm_gauge_exchange(&g_gauge_state);
 #endif
     /*Convert to a 32 bit gauge field, after xchange*/
     convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND);

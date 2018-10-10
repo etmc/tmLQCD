@@ -20,6 +20,7 @@
 #ifndef _INIT_H
 #define _INIT_H
 
+#include "init/init_global_states.h"
 #include "init/init_bispinor_field.h"
 #include "init/init_chi_spinor_field.h"
 #include "init/init_dirac_halfspinor.h"

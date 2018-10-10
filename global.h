@@ -43,10 +43,12 @@
 #endif
 #include "su3.h"
 #include "su3adj.h"
-//#  include <tormpi_export.h>
+
+#include "misc_types.h"
 
 #define N_CHEBYMAX 49
 #define NTILDE_CHEBYMAX 2000
+
 
 /* size of the extra_masses array for operators using the CGMMS solver */
 #define MAX_EXTRA_MASSES 30
@@ -274,7 +276,17 @@ EXTERN int tempT,tempV,tempR;
 EXTERN int ** g_iup3d;
 EXTERN int ** g_idn3d;
 #endif
- 
+
+/* keeping track of what the gauge, clover and inverse clover
+ * field contain in order to avoid unnecessary inversions
+ * of the latter */
+EXTERN tm_GaugeState_t g_gauge_state;
+EXTERN tm_GaugeState_t g_gauge_state_32;
+EXTERN tm_CloverState_t g_clover_state;
+EXTERN tm_CloverState_t g_clover_state_32;
+EXTERN tm_CloverInverseState_t g_clover_inverse_state;
+EXTERN tm_CloverInverseState_t g_clover_inverse_state_32;
+
 #undef EXTERN
 /* #undef ALIGN */
 

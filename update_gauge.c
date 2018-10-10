@@ -29,6 +29,7 @@
 #include <math.h>
 #include <time.h>
 #include "global.h"
+#include "misc_types.h"
 #include "gettime.h"
 #include "su3.h"
 #include "su3adj.h"
@@ -51,6 +52,7 @@
 void update_gauge(const double step, hamiltonian_field_t * const hf) {
   double atime, etime;
   atime = gettime();
+  update_tm_gauge_id(&g_gauge_state, step);
 #ifdef DDalphaAMG
   MG_update_gauge(step);
 #endif
@@ -96,10 +98,14 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
 #ifdef TM_USE_MPI
   /* for parallelization */
   xchange_gauge(hf->gaugefield);
+  update_tm_gauge_exchange(&g_gauge_state);
 #endif
   
   /*Convert to a 32 bit gauge field, after xchange*/
   convert_32_gauge_field(g_gauge_field_32, hf->gaugefield, VOLUMEPLUSRAND + g_dbw2rand);
+  update_tm_gauge_id(&g_gauge_state_32, step);
+  update_tm_gauge_exchange(&g_gauge_state_32);
+  
   
   /*
    * The backward copy of the gauge field

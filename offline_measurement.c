@@ -109,6 +109,8 @@ int main(int argc, char *argv[])
   char * input_filename = NULL;
   char * filename = NULL;
   double plaquette_energy;
+  
+  init_global_states();
 
 #ifdef _KOJAK_INST
 #pragma pomp inst init
@@ -294,6 +296,7 @@ int main(int argc, char *argv[])
 
 #ifdef TM_USE_MPI
     xchange_gauge(g_gauge_field);
+    update_tm_gauge_exchange(&g_gauge_state);
 #endif
 
     /*compute the energy of the gauge field*/
