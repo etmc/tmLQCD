@@ -29,7 +29,7 @@ void tm_debug_printf(const int proc_id,
                      const char * format,
                      ...)
 {
-  if( g_proc_id == proc_id && dbg_level_threshold >= g_debug_level ){
+  if( g_proc_id == proc_id && g_debug_level >= dbg_level_threshold ){
     va_list arglist;
     va_start(arglist, format);
     vprintf(format, arglist);
