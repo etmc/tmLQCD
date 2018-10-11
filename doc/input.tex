@@ -19,6 +19,11 @@ be called with
   makes the code a bit more verbose. Unrelated to input parameter
   {\ttfamily DebugLevel}.
 
+\item {\ttfamily -m}:\\
+  Controls whether support for multi-threaded MPI communication is to be
+  requested upon QMP or MPI initialisation. Posible values {\ttfamily single} 
+  or {\ttfamily multiple}. Default is {\ttfamily single}.
+
 \item {\ttfamily -?|-h}:\\
   This will produce help output and exit then.
 
@@ -186,10 +191,6 @@ supported general input paramters:
   environment variable needs to be set to the same value for correct
   operation. The default is 1.
 
-\item {\ttfamily MPIThreadLevel}:\\
-  Controls whether support for multi-threaded MPI communication is to be
-  requested upon QMP or MPI initialisation. Posible values {\ttfamily single} 
-  or {\ttfamily multiple}. Default is {\ttfamily single}.
 
 \end{enumerate}
 
