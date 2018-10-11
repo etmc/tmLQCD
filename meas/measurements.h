@@ -64,6 +64,21 @@ typedef struct
   /* how it's usually called */
   char name[100];
 
+  /* maximum number of slice, the source can be put
+    if the correlator is measured in T(Z)-direction this will be set to 
+    T(LZ) by init_measurements
+  */
+  int max_source_slice;
+
+  /* for correlators, can also measure all time-slices or average over samples */
+  int all_time_slices;
+  int no_samples;
+
+  // step size for gradient flow measurement
+  double gf_eps;
+  // maximum flow time for gf measuremnt
+  double gf_tmax;
+
   /* functions for the measurement */
   void
   (*measurefunc) (const int traj, const int id, const int ieo);

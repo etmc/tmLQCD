@@ -26,10 +26,10 @@
 #include "su3.h"
 #include "su3spinor.h"
 
-_Complex double * little_A;
-_Complex float * little_A32;
-_Complex double * little_A_eo;
-_Complex float * little_A_eo_32;
+extern _Complex double * little_A;
+extern _Complex float * little_A32;
+extern _Complex double * little_A_eo;
+extern _Complex float * little_A_eo_32;
 
 
 typedef struct {

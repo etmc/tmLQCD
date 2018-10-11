@@ -124,9 +124,10 @@
 #define _default_gauge_precision_write_flag 64
 #define _default_g_disable_IO_checks 0
 #define _default_prop_precision_flag 32
+#define _default_write_prop_flag 1
 #define _default_reproduce_randomnumber_flag 1
 #define _default_g_sloppy_precision_flag 0
-#define _default_operator_sloppy_precision_flag 1
+#define _default_operator_sloppy_precision_flag 0
 #define _default_compression_type 18
 #define _default_stout_rho 0.1
 #define _default_rho 0.
@@ -190,14 +191,34 @@
 #define _default_omp_num_threads 0
 
 /* default mixed precision solver values */
-#define _default_mixcg_innereps 1.0e-6
+#define _default_mixcg_innereps 5.0e-5
 #define _default_mixcg_maxinnersolverit 5000
 
 #define _default_use_preconditioning 0
 
-#define _default_use_qudainverter 0
+#define _default_external_inverter 0
 
 #define _default_subprocess_flag 0
 #define _default_lowmem_flag 0
+
+/* default input values for QUDA interface */
+/* These follow the recommendations of https://github.com/lattice/quda/wiki/Multigrid-Solver */
+#define _default_quda_mg_n_level 2
+#define _default_quda_mg_n_vec 24
+#define _default_quda_mg_mu_factor 8.0
+#define _default_quda_mg_setup_tol 1e-6
+#define _default_quda_mg_setup_maxiter 1000
+#define _default_quda_mg_coarse_solver_tol 0.25
+#define _default_quda_mg_coarse_solver_maxiter 75
+#define _default_quda_mg_smoother_tol 0.25
+#define _default_quda_mg_nu_pre 0
+#define _default_quda_mg_nu_post 4
+#define _default_quda_mg_omega 0.85
+#define _default_quda_mg_enable_size_three_blocks 0
+#define _default_quda_mg_reset_setup_threshold 0.0
+
+// gradient flow measurement step size and maximum flow time
+#define _default_gf_eps 0.01
+#define _default_gf_tmax 9.99
 
 #endif

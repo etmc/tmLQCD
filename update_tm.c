@@ -140,7 +140,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   /* run the trajectory */
   if(Integrator.n_int[Integrator.no_timescales-1] > 0) {
     Integrator.integrate[Integrator.no_timescales-1](Integrator.tau, 
-                 Integrator.no_timescales-1, 1);
+                 Integrator.no_timescales-1, 1, Integrator.tau);
   }
 
   g_sloppy_precision = 0;
@@ -213,7 +213,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     g_sloppy_precision = 1;
     /* run the trajectory back */
     Integrator.integrate[Integrator.no_timescales-1](-Integrator.tau, 
-                         Integrator.no_timescales-1, 1);
+                         Integrator.no_timescales-1, 1, -Integrator.tau);
     g_sloppy_precision = 0;
 
     /*   compute the energy contributions from the pseudo-fermions  */
@@ -337,6 +337,9 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
         _su3_assign(*v,*w);
       }
     }
+#ifdef DDalphaAMG
+    MG_reset();
+#endif
   }
   hf.update_gauge_copy = 1;
   g_update_gauge_copy = 1;

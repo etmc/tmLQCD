@@ -111,7 +111,7 @@ int write_first_messages(FILE * parameterfile, char const * const executable, ch
           "# the code is compiled with openMP support\n");
 #endif
   if( bc_flag == 0 ) {
-    printf("# Periodic boundary conditions are used\n");
+    printf("# Non-Schroedinger (anti-periodic, periodic or twisted) boundary conditions are used\n");
     fprintf(parameterfile, "# Periodic boundary conditions are used\n");
   }
   if( bc_flag == 1 ) {
@@ -130,10 +130,10 @@ int write_first_messages(FILE * parameterfile, char const * const executable, ch
     printf("# Even/odd preconditioning is not used\n");
     fprintf(parameterfile, "# Even/odd preconditioning is not used\n");
   }
-  printf("# beta = %f , kappa= %f\n", g_beta, g_kappa);
+  printf("# beta = %.12f , kappa= %.12f\n", g_beta, g_kappa);
   printf("# boundary conditions for fermion fields (t,x,y,z) * pi: %f %f %f %f \n",X0,X1,X2,X3);
   if( strcmp(executable,"hmc") == 0 ) {
-    printf("# mu = %f\n", g_mu/2./g_kappa);
+    printf("# mu = %.12f\n", g_mu/2./g_kappa);
     printf("# g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
     printf("# Using %s precision for the inversions!\n", 
 	   g_relative_precision_flag ? "relative" : "absolute");
@@ -141,20 +141,20 @@ int write_first_messages(FILE * parameterfile, char const * const executable, ch
   fprintf(parameterfile, "# The lattice size is %d x %d x %d x %d\n", (int)(g_nproc_t*T), (int)(g_nproc_x*LX), 
 	  (int)(g_nproc_y*LY), (int)(g_nproc_z*LZ));
   fprintf(parameterfile, "# The local lattice size is %d x %d x %d x %d\n", (int)(T), (int)(LX), (int)(LY), (int)(LZ));
-  fprintf(parameterfile, "# g_beta = %f , g_kappa= %f, c_sw = %f \n",g_beta,g_kappa,g_c_sw);
+  fprintf(parameterfile, "# g_beta = %.12f , g_kappa= %.12f, c_sw = %.12f \n",g_beta,g_kappa,g_c_sw);
   fprintf(parameterfile, "# boundary conditions for fermion fields (t,x,y,z) * pi: %f %f %f %f \n",X0,X1,X2,X3);
   if( strcmp(executable,"hmc") == 0 ) {
     fprintf(parameterfile, "# Nmeas=%d, Nsave=%d \n",
 	    Nmeas,Nsave);
-    fprintf(parameterfile, "# mu = %f\n", g_mu/2./g_kappa);
+    fprintf(parameterfile, "# mu = %.12f\n", g_mu/2./g_kappa);
     fprintf(parameterfile, "# g_rgi_C0 = %f, g_rgi_C1 = %f\n", g_rgi_C0, g_rgi_C1);
     fprintf(parameterfile, "# Using %s precision for the inversions!\n", 
 	    g_relative_precision_flag ? "relative" : "absolute");
   }
   if( strcmp(executable,"invert") == 0 ) {
-    printf("# beta = %f, mu = %f, kappa = %f\n", g_beta, g_mu/2./g_kappa, g_kappa);
+    printf("# beta = %.12f, mu = %.12f, kappa = %.12f\n", g_beta, g_mu/2./g_kappa, g_kappa);
     fprintf(parameterfile,
-	    "# beta = %f, mu = %f, kappa = %f\n", g_beta, g_mu/2./g_kappa, g_kappa);
+	    "# beta = %.12f, mu = %.12f, kappa = %.12f\n", g_beta, g_mu/2./g_kappa, g_kappa);
   }
   fflush(stdout); fflush(parameterfile);
   return(0);

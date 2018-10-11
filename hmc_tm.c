@@ -126,32 +126,10 @@ int main(int argc,char *argv[]) {
   verbose = 1;
   g_use_clover_flag = 0;
 
-#ifdef TM_USE_MPI
-
-#  ifdef TM_USE_OMP
-  int mpi_thread_provided;
-  MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
-#  else
-  MPI_Init(&argc, &argv);
-#  endif
-
-  MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
-#else
-  g_proc_id = 0;
-#endif
-
   process_args(argc,argv,&input_filename,&filename);
   set_default_filenames(&input_filename,&filename);
 
-  /* Read the input file */
-  if( (status = read_input(input_filename)) != 0) {
-    fprintf(stderr, "Could not find input file: %s\nAborting...\n", input_filename);
-    exit(-1);
-  }
-
-#ifdef TM_USE_OMP
-  init_openmp();
-#endif
+  init_parallel_and_read_input(argc, argv, input_filename);
 
   DUM_DERI = 4;
   DUM_MATRIX = DUM_DERI+7;
@@ -202,6 +180,8 @@ int main(int argc,char *argv[]) {
 #endif
   /* need temporary gauge field for gauge reread checks and in update_tm */
   status += init_gauge_tmp(VOLUME);
+
+  status += init_gauge_fg(VOLUME);
 
   if (status != 0) {
     fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
@@ -391,7 +371,7 @@ int main(int argc,char *argv[]) {
   if(g_proc_id == 0) {
     gettimeofday(&t1,NULL);
     countfile = fopen("history_hmc_tm", "a");
-    fprintf(countfile, "!!! Timestamp %ld, Nsave = %d, g_mu = %e, g_mu1 = %e, g_mu_2 = %e, g_mu3 = %e, beta = %f, kappa = %f, C1 = %f, ",
+    fprintf(countfile, "!!! Timestamp %ld, Nsave = %d, g_mu = %.12f, g_mu1 = %.12f, g_mu_2 = %.12f, g_mu3 = %.12f, beta = %.12f, kappa = %.12f, C1 = %f, ",
             t1.tv_sec, Nsave, g_mu, g_mu1, g_mu2, g_mu3, g_beta, g_kappa, g_rgi_C1);
     for(j = 0; j < Integrator.no_timescales; j++) {
       fprintf(countfile, "n_int[%d] = %d ", j, Integrator.no_mnls_per_ts[j]);
