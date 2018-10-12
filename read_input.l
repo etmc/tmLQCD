@@ -1802,12 +1802,20 @@ static inline double fltlist_next_token(int * const list_end){
   }
 }
 
-<DETMONOMIAL,POLYMONOMIAL,CLDETRATRWMONOMIAL,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{
+<DETMONOMIAL,POLYMONOMIAL,CLDETRATRWMONOMIAL>{
   {SPC}*2KappaMu2{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mu2 = c;
     if(myverbose) printf("  2KappaMu2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
+  {SPC}*Kappa2{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    mnl->kappa2 = c;
+    if(myverbose) printf("  kappa2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+}
+
+<NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{
   {SPC}*Kappa2{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->kappa2 = c;
