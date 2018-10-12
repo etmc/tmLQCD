@@ -159,6 +159,9 @@ int init_monomials(const int V, const int even_odd_flag) {
   spinor * __pf = NULL;
   double sw_mu=0., sw_k=0., sw_c=0.;
   double swn_mubar=0., swn_epsbar = 0., swn_k=0., swn_c=0.;
+
+  if (g_exposu3_no_c == 0) init_exposu3();
+  
   for(int i = 0; i < no_monomials; i++) {
     if((monomial_list[i].type != GAUGE) && (monomial_list[i].type != SFGAUGE)) no++;
     /* non-degenerate monomials need two pseudo fermion fields */

@@ -3,7 +3,6 @@
 void stout_exclude_none(su3_tuple *buff_out, double const coeff, su3_tuple **staples, su3_tuple *buff_in)
 {
   static su3 tmp;
-  if (g_exposu3_no_c == 0) init_exposu3();
 
 #define _MULTIPLY_AND_EXPONENTIATE(x, principal) \
   { \

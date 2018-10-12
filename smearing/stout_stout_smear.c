@@ -14,7 +14,6 @@ int stout_smear(su3_tuple *m_field_out, struct stout_parameters const *params, s
     buffer = (su3_tuple*)(((unsigned long int)(buffer) + ALIGN_BASE) & ~ALIGN_BASE);
 #endif
     
-    if (g_exposu3_no_c == 0) init_exposu3();
     if (buffer == (su3_tuple*)NULL)
       return -1;
     initialized = 1;

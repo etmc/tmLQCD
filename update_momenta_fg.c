@@ -107,8 +107,6 @@ void update_momenta_fg(int * mnllist, double step, const int no,
   xchange_deri(hf->derivative);
 #endif
 
-  if (g_exposu3_no_c == 0) init_exposu3();
-
   /* #ifdef TM_USE_OMP
      #pragma omp parallel for
      #endif
