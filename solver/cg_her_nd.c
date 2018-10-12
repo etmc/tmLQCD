@@ -162,7 +162,8 @@ int cg_her_nd(spinor * const P_up,spinor * P_dn, spinor * const Q_up, spinor * c
   
   finalize_solver(up_field, nr_sf);
   finalize_solver(dn_field, nr_sf);
-  return(iteration+1);
+  if(iteration > max_iter) return(-1);
+  return(iteration);
 }
 
 
