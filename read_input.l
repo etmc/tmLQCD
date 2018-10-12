@@ -2163,11 +2163,6 @@ static inline double fltlist_next_token(int * const list_end){
     mnl->solver = BICGSTAB;
     BEGIN(solver_caller);
   }
-  cgmms {
-    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
-    mnl->solver = CGMMS;
-    BEGIN(solver_caller);
-  }
   mixedbicgstab {
     if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->solver=MIXEDBICGSTAB;
