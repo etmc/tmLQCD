@@ -102,6 +102,8 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     init_solver_field(&temp, VOLUMEPLUSRAND/2, 1);
   }
 
+  solver_params.use_initial_guess = 0;
+
 #ifdef TM_USE_QPHIX
   if(solver_params.external_inverter == QPHIX_INVERTER){
     // using CG for the HMC, we always want to have the solution of (Q Q^dagger) x = b, which is equivalent to
@@ -183,6 +185,8 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
 int solve_mms_tm(spinor ** const P, spinor * const Q,
                  solver_params_t * solver_params){ 
   int iteration_count = 0; 
+
+  solver_params->use_initial_guess = 0;
 
   // temporary field required by the QPhiX solve or by residual check
   spinor ** temp;
@@ -302,14 +306,16 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
     double iter_local = 0;
     for(int i = solver_params->no_shifts-1; i>=0; i--){
       // preparing initial guess
-      init_guess_mms(P, Q, i, solver_params);
-      
+      init_guess_mms(P, Q, i, solver_params); 
+      solver_params.use_initial_guess = 1;
+     
       // inverting
       g_mu3 = solver_params->shifts[i]; 
       iter_local = rg_mixed_cg_her( P[i], Q, temp_params, solver_params->max_iter,
                                     solver_params->squared_solver_prec, solver_params->rel_prec, solver_params->sdim,
                                     solver_params->M_psi, f32);
       g_mu3 = _default_g_mu3;
+      solver_params.use_initial_guess = 0;
       if(iter_local == -1){
         return(-1);
       } else {
@@ -344,6 +350,7 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
                  spinor * const Qup, spinor * const Qdn, 
                  solver_params_t * solver_params){ 
   int iteration_count = 0; 
+  solver_params->use_initial_guess = 0;
 
   // temporary field required by the QPhiX solve or by residual check
   spinor ** temp;
@@ -506,12 +513,14 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
     for(int i = solver_params->no_shifts-1; i>=0; i--){
       // preparing initial guess
       init_guess_mms_nd(Pup, Pdn, Qup, Qdn, i, solver_params);
+      solver_params->use_initial_guess = 1;
       
       // inverting
       g_shift = solver_params->shifts[i]*solver_params->shifts[i]; 
       iter_local = rg_mixed_cg_her_nd( Pup[i], Pdn[i], Qup, Qdn, temp_params, solver_params->max_iter,
                                        solver_params->squared_solver_prec, solver_params->rel_prec, solver_params->sdim, f, f32);
       g_shift = _default_g_shift;
+      solver_params->use_initial_guess = 0;
       if(iter_local == -1){
         return(-1);
       } else {

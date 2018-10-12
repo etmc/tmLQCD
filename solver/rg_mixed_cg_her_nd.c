@@ -250,10 +250,7 @@ int rg_mixed_cg_her_nd(spinor * const P_up, spinor * const P_dn, spinor * const 
   
   zero_spinor_field_32(x_up,N); zero_spinor_field_32(x_dn,N);
 
-  guesssquarenorm = square_norm(P_up, N, 1);
-  guesssquarenorm += square_norm(P_dn, N, 1);
-
-  if(guesssquarenorm == 0) {
+  if(solver_params.use_initial_guess == 0) {
     assign(phigh_up,Q_up,N); assign(phigh_dn,Q_dn,N);
     assign(rhigh_up,Q_up,N); assign(rhigh_dn,Q_dn,N);
     rho_dp = sourcesquarenorm;
