@@ -307,7 +307,7 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
     for(int i = solver_params->no_shifts-1; i>=0; i--){
       // preparing initial guess
       init_guess_mms(P, Q, i, solver_params); 
-      solver_params.use_initial_guess = 1;
+      solver_params->use_initial_guess = 1;
      
       // inverting
       g_mu3 = solver_params->shifts[i]; 
@@ -315,7 +315,7 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
                                     solver_params->squared_solver_prec, solver_params->rel_prec, solver_params->sdim,
                                     solver_params->M_psi, f32);
       g_mu3 = _default_g_mu3;
-      solver_params.use_initial_guess = 0;
+      solver_params->use_initial_guess = 0;
       if(iter_local == -1){
         return(-1);
       } else {

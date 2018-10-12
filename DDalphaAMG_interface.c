@@ -917,7 +917,7 @@ static int MG_mms_solve_nd( spinor **const up_new, spinor **const dn_new,
   }
 
   // Checking if the operator is in the list and compatible with N
-  if (            f == Qtm_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and plus shift
+  if (      f == Qtm_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and plus shift
             f == Qtm_tau1_ndpsi_sub_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and minus shift
             f == Qsw_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with plus shift
             f == Qsw_tau1_ndpsi_sub_Ishift || // Gamma5 Dh tau1 - Schur complement with minus shift
@@ -933,7 +933,7 @@ static int MG_mms_solve_nd( spinor **const up_new, spinor **const dn_new,
            N==VOLUME?"":"Qsw_pm_ndpsi_shift");
 
   // Setting mubar, epsbar and shifts
-  if (            f == Qtm_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and plus shift
+  if (      f == Qtm_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with csw = 0 and plus shift
             f == Qsw_tau1_ndpsi_add_Ishift || // Gamma5 Dh tau1 - Schur complement with plus shift
             f == Qtm_pm_ndpsi_shift ||  // (Gamma5 Dh tau1)^2 - Schur complement squared with csw = 0 and shift
             f == Qsw_pm_ndpsi_shift ) { // (Gamma5 Dh tau1)^2 - Schur complement squared with shift
