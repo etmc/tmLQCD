@@ -395,6 +395,7 @@ static inline double fltlist_next_token(int * const list_end){
 %x MNAME
 %x MCSTR
 %x MSOLVER
+%x RATMSOLVER
 %x NDMSOLVER
 %x GTYPE
 
@@ -1924,7 +1925,7 @@ static inline double fltlist_next_token(int * const list_end){
   }
 }
 
-<NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL>{
+<NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{
   {SPC}*Solver{EQL} {
    solver_caller=YY_START;
    BEGIN(NDMSOLVER);
@@ -1934,11 +1935,11 @@ static inline double fltlist_next_token(int * const list_end){
 <RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
   {SPC}*Solver{EQL} {
    solver_caller=YY_START;
-   BEGIN(MSOLVER);
+   BEGIN(RATMSOLVER);
   }
 }
 
-<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{
+<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
   {SPC}*2KappaMu{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mu = c;
@@ -2163,6 +2164,29 @@ static inline double fltlist_next_token(int * const list_end){
     if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->solver=MIXEDBICGSTAB;
     BEGIN(name_caller);
+  }
+  DDalphaAMG {
+#ifdef DDalphaAMG
+    if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
+    mnl->solver = MG;
+    BEGIN(solver_caller);
+#else
+    printf("ERROR line %d operator %d: DDalphaAMG library not included\n", line_of_file, current_operator);
+    exit(1);
+#endif
+  }
+}
+
+<RATMSOLVER>{
+  rgmixedCG {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = RGMIXEDCG;
+    BEGIN(solver_caller);
+  }
+  cgmms {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = CGMMS;
+    BEGIN(solver_caller);
   }
   DDalphaAMG {
 #ifdef DDalphaAMG
@@ -3164,6 +3188,7 @@ int read_input(char * conf_file){
   use_preconditioning = _default_use_preconditioning;
   stout_rho = _default_stout_rho;
   stout_no_iter = _default_stout_no_iter;
+  restoresu3_flag = _default_restoresu3_flag;
 
   /* check for reread ! */ 
   phmc_compute_evs = _default_phmc_compute_evs;
