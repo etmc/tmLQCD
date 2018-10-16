@@ -66,6 +66,8 @@ typedef struct tm_QudaParams_t {
   int               mg_run_verify;
   int               mg_enable_size_three_blocks;
   double            mg_reset_setup_threshold;
+  // TODO: extend by mg_smoother_type[QUDA_MAX_MG_LEVEL] and mg_solver[QUDA_MAX_MG_LEVEL]
+  // with correct datatype for the purpose, QudaInverterType
 } tm_QudaParams_t;
 
 typedef struct tm_QudaMGSetupState_t {
