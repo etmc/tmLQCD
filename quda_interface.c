@@ -1249,7 +1249,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     mg_param->cycle_type[level] = QUDA_MG_CYCLE_RECURSIVE;
     mg_param->location[level] = QUDA_CUDA_FIELD_LOCATION;
     
-    mg_param->smoother[level] = QUDA_MR_INVERTER;
+    mg_param->smoother[level] = quda_input.mg_smoother_type[level];
     mg_param->smoother_tol[level] = quda_input.mg_smoother_tol;
     // unless the Schwarz-alternating smoother is used, this should be 1
     mg_param->smoother_schwarz_cycle[level] = 1;

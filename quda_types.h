@@ -61,6 +61,7 @@ typedef struct tm_QudaParams_t {
   double            mg_coarse_solver_tol;
   int               mg_nu_pre;
   int               mg_nu_post;
+  int		    mg_smoother_type[QUDA_MAX_MG_LEVEL];
   double            mg_smoother_tol;
   double            mg_omega;
   int               mg_run_verify;
