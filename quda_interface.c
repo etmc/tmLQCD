@@ -1237,7 +1237,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
       }
     } // for( dim=0 to dim=3 ) (space-time dimensions)
 
-    mg_param->coarse_solver[level] = QUDA_GCR_INVERTER;
+    mg_param->coarse_solver[level] = quda_input.mg_coarse_solver_type[level];
     mg_param->coarse_solver_tol[level] = quda_input.mg_coarse_solver_tol;
     mg_param->coarse_solver_maxiter[level] = quda_input.mg_coarse_solver_maxiter;
     // spin block size on level zero will be reset to 2 below

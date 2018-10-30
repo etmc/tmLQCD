@@ -57,6 +57,7 @@ typedef struct tm_QudaParams_t {
   QudaInverterType  mg_setup_inv_type;
   double            mg_setup_tol;
   int               mg_setup_maxiter;
+  int 		    mg_coarse_solver_type[QUDA_MAX_MG_LEVEL];
   int               mg_coarse_solver_maxiter;
   double            mg_coarse_solver_tol;
   int               mg_nu_pre;
