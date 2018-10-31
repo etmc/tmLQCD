@@ -76,6 +76,10 @@ typedef struct tm_QudaMGSetupState_t {
   double kappa;
   double mu;
   int initialised;
+  double theta_x;
+  double theta_y;
+  double theta_z;
+  double theta_t;
 } tm_QudaMGSetupState_t;
 
 typedef struct tm_QudaCloverState_t {
@@ -89,6 +93,10 @@ typedef struct tm_QudaCloverState_t {
 typedef struct tm_QudaGaugeState_t {
   int gauge_id;
   int loaded;
+  double theta_x;
+  double theta_y;
+  double theta_z;
+  double theta_t;
 } tm_QudaGaugeState_t;
 
 typedef enum tm_QudaMGSetupState_enum_t {
@@ -125,15 +133,31 @@ static inline void reset_quda_clover_state(tm_QudaCloverState_t * const quda_clo
 }
 
 static inline int check_quda_gauge_state(const tm_QudaGaugeState_t * const quda_gauge_state,
-                                         const int gauge_id){
+                                         const int gauge_id,
+                                         const double theta_x,
+                                         const double theta_y,
+                                         const double theta_z,
+                                         const double theta_t){
   return( quda_gauge_state->loaded &&
+          (fabs(quda_gauge_state->theta_x - theta_x) < 2*DBL_EPSILON) &&
+          (fabs(quda_gauge_state->theta_y - theta_y) < 2*DBL_EPSILON) &&
+          (fabs(quda_gauge_state->theta_z - theta_z) < 2*DBL_EPSILON) &&
+          (fabs(quda_gauge_state->theta_t - theta_t) < 2*DBL_EPSILON) &&
           (quda_gauge_state->gauge_id == gauge_id) );
 }
 
 static inline void set_quda_gauge_state(tm_QudaGaugeState_t * const quda_gauge_state,
-                                        const int gauge_id){
+                                        const int gauge_id,
+                                        const double theta_x,
+                                        const double theta_y,
+                                        const double theta_z,
+                                        const double theta_t){
   quda_gauge_state->gauge_id = gauge_id;
   quda_gauge_state->loaded = 1;
+  quda_gauge_state->theta_x = theta_x;
+  quda_gauge_state->theta_y = theta_y;
+  quda_gauge_state->theta_z = theta_z;
+  quda_gauge_state->theta_t = theta_t;
 }
 
 static inline void reset_quda_gauge_state(tm_QudaGaugeState_t * const quda_gauge_state){
@@ -146,7 +170,13 @@ static inline int check_quda_mg_setup_state(const tm_QudaMGSetupState_t * const 
                                             const tm_QudaParams_t * const quda_params){
   // when the MG setup has not been initialised or when the "gauge_id" has changed by more
   // than the mg_redo_setup_threhold, we need to (re-)do the setup completely
+  // similarly, if the boundary conditions for the gauge field change, we need
+  // to redo the setup
   if( (quda_mg_setup_state->initialised != 1) ||
+      ( fabs(quda_mg_setup_state->theta_x - quda_gauge_state->theta_x) > 2*DBL_EPSILON ) || 
+      ( fabs(quda_mg_setup_state->theta_y - quda_gauge_state->theta_y) > 2*DBL_EPSILON ) || 
+      ( fabs(quda_mg_setup_state->theta_z - quda_gauge_state->theta_z) > 2*DBL_EPSILON ) || 
+      ( fabs(quda_mg_setup_state->theta_t - quda_gauge_state->theta_t) > 2*DBL_EPSILON ) || 
       ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) > quda_params->mg_reset_setup_threshold ) ){
     return TM_QUDA_MG_SETUP_RESET;
   // in other cases, e.g., when the operator parameters change or if the gauge_id has "moved" only a little,
@@ -169,6 +199,10 @@ static inline int check_quda_mg_setup_state(const tm_QudaMGSetupState_t * const 
 static inline void set_quda_mg_setup_state(tm_QudaMGSetupState_t * const quda_mg_setup_state,
                                            const tm_QudaGaugeState_t * const quda_gauge_state){
   quda_mg_setup_state->gauge_id = quda_gauge_state->gauge_id;
+  quda_mg_setup_state->theta_x = quda_gauge_state->theta_x;
+  quda_mg_setup_state->theta_y = quda_gauge_state->theta_y;
+  quda_mg_setup_state->theta_z = quda_gauge_state->theta_z;
+  quda_mg_setup_state->theta_t = quda_gauge_state->theta_t;
   quda_mg_setup_state->c_sw = g_c_sw;
   quda_mg_setup_state->kappa = g_kappa;
   quda_mg_setup_state->mu = g_mu;
