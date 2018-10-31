@@ -378,7 +378,7 @@ void _loadCloverQuda(QudaInvertParam* inv_param){
 void _loadGaugeQuda( const int compression ) {
   // check if the currently loaded gauge field is also the current gauge field
   // and if so, return immediately
-  if( check_quda_gauge_state(&quda_gauge_state, nstore) ){
+  if( check_quda_gauge_state(&quda_gauge_state, nstore, X1, X2, X3, X0) ){
     return;
   } else {
     freeGaugeQuda();
@@ -471,9 +471,8 @@ void _loadGaugeQuda( const int compression ) {
 #endif
 
   loadGaugeQuda((void*)gauge_quda, &gauge_param);
-  set_quda_gauge_state(&quda_gauge_state, nstore);
+  set_quda_gauge_state(&quda_gauge_state, nstore, X1, X2, X3, X0);
 }
-
 
 // reorder spinor to QUDA format
 void reorder_spinor_toQuda( double* sp, QudaPrecision precision, int doublet, double* sp2 ) {
@@ -628,12 +627,23 @@ void set_sloppy_prec( const SloppyPrecision sloppy_precision ) {
   inv_param.clover_cuda_prec_sloppy = cuda_prec_sloppy;
 }
 
-int invert_quda_direct(double * const propagator, double * const source,
-                const int op_id) {
+
+
+int invert_quda_direct_theta(double * const propagator, double * const source,
+                const int op_id,
+                const double theta_x,
+                const double theta_y,
+                const double theta_z,
+                const double theta_t) {
 
   double atime, atotaltime = gettime();
   void *spinorIn  = (void*)source; // source
   void *spinorOut = (void*)propagator; // solution
+
+  X1 = theta_x;
+  X2 = theta_y;
+  X3 = theta_z;
+  X0 = theta_t;
   
   operator * optr = &operator_list[op_id];
   // g_kappa is necessary for the gauge field to be correctly translated from tmLQCD to QUDA
@@ -657,7 +667,7 @@ int invert_quda_direct(double * const propagator, double * const source,
   set_sloppy_prec(optr->sloppy_precision);
  
   // load gauge after setting precision, this is a no-op if the current gauge field
-  // is already loaded
+  // is already loaded and the boundary conditions have not changed
   atime = gettime();
   _loadGaugeQuda(optr->compression_type);
   if(g_proc_id==0 && g_debug_level > 0 ) printf("# QUDA: Time for loadGaugeQuda: %.4e\n",gettime()-atime);
@@ -775,6 +785,17 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
     return(-1);
 
   return(iteration);
+}
+
+int invert_quda_direct(double * const propagator, double * const source,
+                const int op_id) {
+  return invert_quda_direct_theta(propagator,
+                                  source, 
+                                  op_id,
+                                  X1,
+                                  X2,
+                                  X3,
+                                  X0);
 }
 
 int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
