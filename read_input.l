@@ -1531,7 +1531,6 @@ static inline double fltlist_next_token(int * const list_end){
         level++;
       }
       strlist_next_token(&list_end, token, 100);
-        // TODO: parse inputs "gcr", "cagcr", "mr" and assign to quda_input.mg_smoother_type[level]      
     }
   }
   {SPC}*MGSmootherType{EQL}{STRLIST} {
@@ -1561,7 +1560,6 @@ static inline double fltlist_next_token(int * const list_end){
         level++;
       }
       strlist_next_token(&list_end, token, 100);
-        // TODO: parse inputs "gcr", "cagcr", "mr" and assign to quda_input.mg_smoother_type[level]      
     }
   }
   {SPC}*MGSetupSolver{EQL}cg {
@@ -3235,6 +3233,8 @@ int read_input(char * conf_file){
     } else {
       quda_input.mg_mu_factor[level] = 1.0;
     }
+    quda_input.mg_coarse_solver_type[level] = QUDA_GCR_INVERTER;
+    quda_input.mg_smoother_type[level] = QUDA_MR_INVERTER ;
 
     /* note: when the user does not specify any blocking parameters,
      * a reasonable set will be computed automatically in the MG setup
