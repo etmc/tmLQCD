@@ -2,7 +2,7 @@
  *
  * Measurements of the reweighting factors by Georg Bergner 2016
  *
- * Copyright (C) 2008 Carsten Urbach
+ * Copyright (C) 2016 Georg Bergner
  *
  * This file is part of tmLQCD.
  *
