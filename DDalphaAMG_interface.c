@@ -533,6 +533,10 @@ void MG_update_mu(double mu_tmLQCD, double odd_tmLQCD)
   }	 
 }
 
+/*
+ * This extra interface has been required for the reweighting measurements.
+ * The update of the parameters was not taken into account properly.
+ */
 void MG_update_kappa(double kappa)
 {
   if(mg_initialized!=1){
@@ -545,7 +549,6 @@ void MG_update_kappa(double kappa)
        }
     mg_params.kappa=kappa;
     DDalphaAMG_update_parameters(&mg_params, &mg_status);
-   // DDalphaAMG_setup(&mg_status);
  }
 }
 

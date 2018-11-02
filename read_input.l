@@ -1605,10 +1605,6 @@ static inline double fltlist_next_token(int * const list_end){
     mnl->type = CLOVERDETRATIORW;
     strcpy((*mnl).name, "CLOVERDETRATIORW");
   }
-  else if(strcmp(yytext, "CLOVERDETRATIORWD")==0) {
-    mnl->type = CLOVERDETRATIORWD;
-    strcpy((*mnl).name, "CLOVERDETRATIORWD");
-  }
   
   else if(strcmp(yytext, "DETRATIO")==0) {
     mnl->type = DETRATIO;
@@ -1713,7 +1709,6 @@ static inline double fltlist_next_token(int * const list_end){
   else if(mnl->type == CLOVERDET) BEGIN(CLDETMONOMIAL);
   else if(mnl->type == CLOVERDETRATIO) BEGIN(CLDETRATMONOMIAL);
   else if(mnl->type == CLOVERDETRATIORW) BEGIN(CLDETRATRWMONOMIAL);
-  else if(mnl->type == CLOVERDETRATIORWD) BEGIN(CLDETRATRWMONOMIAL);
   else BEGIN(DETMONOMIAL);
 }
 

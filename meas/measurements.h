@@ -50,12 +50,6 @@ typedef struct
   // random seed
   unsigned int seed;
 
-  /* maximum number of slice, the source can be put
-   if the correlator is measured in T(Z)-direction this will be set to
-   T(LZ) by init_measurements
-   */
-  int max_source_slice;
-
   void* parameter;
 
   /* frequency of the measurement */

@@ -74,7 +74,7 @@ NOOPTMOD = test/check_xchange test/check_geometry
 
 PROGRAMS = hmc_tm benchmark invert gen_sources  \
 	check_locallity test_lemon hopping_test LapH_ev \
-	offline_measurement measure @QPHIX_PROGRAMS@
+	offline_measurement @QPHIX_PROGRAMS@
 
 ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES}
 SUBDIRS = ${USESUBDIRS}
@@ -83,7 +83,7 @@ SUBDIRS = ${USESUBDIRS}
 .SUFFIXES:
 
 # need to build modules before subdirs!
-all: Makefile dep $(SUBDIRS) hmc_tm invert benchmark offline_measurement measure @QPHIX_PROGRAMS@
+all: Makefile dep $(SUBDIRS) hmc_tm invert benchmark offline_measurement @QPHIX_PROGRAMS@
 
 $(SUBDIRS):
 	$(MAKE) --directory=$@
@@ -124,7 +124,7 @@ ${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir
 # C++ modules
 $(addsuffix .o,${CXXMODULES}): %.o: ${srcdir}/%.cpp %.d Makefile $(abs_top_builddir)/config.h
 	${CXXCOMPILE} -c $<
-	
+
 ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h ${top_srcdir}/git_hash.h
 	${COMPILE} ${OPTARGS} -c $<
 

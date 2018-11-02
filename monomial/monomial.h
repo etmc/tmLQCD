@@ -139,7 +139,6 @@ typedef struct {
 #include "monomial/cloverdet_monomial.h"
 #include "monomial/cloverdetratio_monomial.h"
 #include "monomial/cloverdetratio_rwmonomial.h"
-#include "monomial/cloverdetratio_rwdmonomial.h"
 #include "monomial/cloverndpoly_monomial.h"
 #include "monomial/ndrat_monomial.h"
 #include "monomial/rat_monomial.h"
