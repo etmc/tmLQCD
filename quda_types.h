@@ -57,19 +57,17 @@ typedef struct tm_QudaParams_t {
   QudaInverterType  mg_setup_inv_type;
   double            mg_setup_tol;
   int               mg_setup_maxiter;
-  int               mg_coarse_solver_type[QUDA_MAX_MG_LEVEL];
+  QudaInverterType  mg_coarse_solver_type[QUDA_MAX_MG_LEVEL];
   int               mg_coarse_solver_maxiter;
   double            mg_coarse_solver_tol;
   int               mg_nu_pre;
   int               mg_nu_post;
-  int               mg_smoother_type[QUDA_MAX_MG_LEVEL];
+  QudaInverterTupe  mg_smoother_type[QUDA_MAX_MG_LEVEL];
   double            mg_smoother_tol;
   double            mg_omega;
   int               mg_run_verify;
   int               mg_enable_size_three_blocks;
   double            mg_reset_setup_threshold;
-  // TODO: extend by mg_smoother_type[QUDA_MAX_MG_LEVEL] and mg_solver[QUDA_MAX_MG_LEVEL]
-  // with correct datatype for the purpose, QudaInverterType
 } tm_QudaParams_t;
 
 typedef struct tm_QudaMGSetupState_t {
