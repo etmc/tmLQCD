@@ -1512,24 +1512,26 @@ static inline double fltlist_next_token(int * const list_end){
     int level = 0;
     strlist_tokenize(yytext, paramname, 100);
     strlist_next_token(&list_end, token, 100);
+    printf("Token in the beginning=%s\n",token);
     while( list_end != 1 ){
       if( level > QUDA_MAX_MG_LEVEL ){
         snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
         yy_fatal_error(error_message);
-
       }
       if( strcmp(token, "cagcr") == 0 ){
         quda_input.mg_coarse_solver_type[level]=QUDA_CA_GCR_INVERTER;
-        level++;
       }
       else if( strcmp(token, "gcr") == 0 ){
         quda_input.mg_coarse_solver_type[level]=QUDA_GCR_INVERTER;
-        level++;
       }
       else if( strcmp(token, "mr") == 0){
         quda_input.mg_coarse_solver_type[level]=QUDA_MR_INVERTER;
-        level++;
       }
+      else {
+        printf("Error, inverter '%s' is unknown. Exiting!\n", yytext);
+        exit(1);
+      }
+      level++;
       strlist_next_token(&list_end, token, 100);
     }
   }
@@ -1549,16 +1551,18 @@ static inline double fltlist_next_token(int * const list_end){
       }
       if( strcmp(token, "cagcr") == 0 ){
         quda_input.mg_smoother_type[level]=QUDA_CA_GCR_INVERTER;
-        level++;        
       }
       else if( strcmp(token, "gcr") == 0 ){
         quda_input.mg_smoother_type[level]=QUDA_GCR_INVERTER;
-        level++;
       }
       else if( strcmp(token, "mr") == 0){
         quda_input.mg_smoother_type[level]=QUDA_MR_INVERTER;
-        level++;
       }
+      else {
+        printf("Error, inverter '%s' is unknown. Exiting!\n", yytext);
+        exit(1);
+      }
+      level++;
       strlist_next_token(&list_end, token, 100);
     }
   }
