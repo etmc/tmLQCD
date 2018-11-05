@@ -29,7 +29,7 @@ typedef enum QudaInverterType_s {
  QUDA_CG_INVERTER = CG,
  QUDA_MR_INVERTER = MR,
  QUDA_GCR_INVERTER = GCR,
- QUDA_CA_GCR_INVERT = CA_GCR
+ QUDA_CA_GCR_INVERTER = CA_GCR
 } QudaInverterType;
 
 #endif
