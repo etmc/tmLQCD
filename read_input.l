@@ -1504,6 +1504,37 @@ static inline double fltlist_next_token(int * const list_end){
       }
     }
   }
+  {SPC}*MGCoarseSolverType{EQL}{STRLIST} {
+    char paramname[100];
+    char token[100];
+    char error_message[200];
+    int list_end = 0;
+    int level = 0;
+    strlist_tokenize(yytext, paramname, 100);
+    strlist_next_token(&list_end, token, 100);
+    printf("Token in the beginning=%s\n",token);
+    while( list_end != 1 ){
+      if( level > QUDA_MAX_MG_LEVEL ){
+        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+        yy_fatal_error(error_message);
+      }
+      if( strcmp(token, "cagcr") == 0 ){
+        quda_input.mg_coarse_solver_type[level]=QUDA_CA_GCR_INVERTER;
+      }
+      else if( strcmp(token, "gcr") == 0 ){
+        quda_input.mg_coarse_solver_type[level]=QUDA_GCR_INVERTER;
+      }
+      else if( strcmp(token, "mr") == 0){
+        quda_input.mg_coarse_solver_type[level]=QUDA_MR_INVERTER;
+      }
+      else {
+        printf("Error, inverter '%s' is unknown. Exiting!\n", yytext);
+        exit(1);
+      }
+      level++;
+      strlist_next_token(&list_end, token, 100);
+    }
+  }
   {SPC}*MGSmootherType{EQL}{STRLIST} {
     char paramname[100];
     char token[100];
@@ -1516,10 +1547,23 @@ static inline double fltlist_next_token(int * const list_end){
       if( level > QUDA_MAX_MG_LEVEL ){
         snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
         yy_fatal_error(error_message);
+        
       }
-      if( !strcmp(token, "gcr") ){
-      // TODO: parse inputs "gcr", "cagcr", "mr" and assign to quda_input.mg_smoother_type[level]
+      if( strcmp(token, "cagcr") == 0 ){
+        quda_input.mg_smoother_type[level]=QUDA_CA_GCR_INVERTER;
       }
+      else if( strcmp(token, "gcr") == 0 ){
+        quda_input.mg_smoother_type[level]=QUDA_GCR_INVERTER;
+      }
+      else if( strcmp(token, "mr") == 0){
+        quda_input.mg_smoother_type[level]=QUDA_MR_INVERTER;
+      }
+      else {
+        printf("Error, inverter '%s' is unknown. Exiting!\n", yytext);
+        exit(1);
+      }
+      level++;
+      strlist_next_token(&list_end, token, 100);
     }
   }
   {SPC}*MGSetupSolver{EQL}cg {
@@ -3193,6 +3237,8 @@ int read_input(char * conf_file){
     } else {
       quda_input.mg_mu_factor[level] = 1.0;
     }
+    quda_input.mg_coarse_solver_type[level] = QUDA_GCR_INVERTER;
+    quda_input.mg_smoother_type[level] = QUDA_MR_INVERTER ;
 
     /* note: when the user does not specify any blocking parameters,
      * a reasonable set will be computed automatically in the MG setup
