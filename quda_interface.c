@@ -2,6 +2,7 @@
  *
  * Copyright (C) 2015       Mario Schroeck
  *               2016, 2017 Bartosz Kostrzewa
+ *               2018       Bartosz Kostrzewa, Ferenc Pittler
  *
  * This file is part of tmLQCD.
  *
