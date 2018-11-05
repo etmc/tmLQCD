@@ -77,7 +77,6 @@ inline void calculate_fg(const double step_fg,
       Fm = &hf->derivative[i][mu];
       _zero_su3adj(deriv);
       _su3adj_assign_const_times_su3adj(deriv, step_fg, *Fm);
-      /*_su3adj_assign_const_times_su3adj(deriv, 0.0, *Fm);*/
       exposu3(&w,&deriv);
       restoresu3(&v,&w);
       _su3_times_su3(w, v, *z);
