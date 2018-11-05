@@ -1486,24 +1486,6 @@ static inline double fltlist_next_token(int * const list_end){
       mu_factor = fltlist_next_token(&list_end);
     }
   }
-  {SPC}*MGSolver{EQL}{STRLIST} {
-    char paramname[100];
-    char token[100];
-    char error_message[200];
-    int list_end = 0;
-    int level = 0;
-    strlist_tokenize(yytext, paramname, 100);
-    strlist_next_token(&list_end, token, 100);
-    while( list_end != 1 ){
-      if( level > QUDA_MAX_MG_LEVEL ){
-        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
-        yy_fatal_error(error_message);
-      }
-      if( !strcmp(token, "gcr") ){
-      // TODO: parse inputs "gcr", "cagcr" and assign to quda_input.mg_solver[level]
-      }
-    }
-  }
   {SPC}*MGCoarseSolverType{EQL}{STRLIST} {
     char paramname[100];
     char token[100];
