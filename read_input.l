@@ -1,4 +1,4 @@
-/***********************************************************************
+/**********************************************************************
  *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
@@ -1510,8 +1510,8 @@ static inline double fltlist_next_token(int * const list_end){
         quda_input.mg_coarse_solver_type[level]=QUDA_MR_INVERTER;
       }
       else {
-        printf("Error, inverter '%s' is unknown. Exiting!\n", yytext);
-        exit(1);
+        snprintf(error_message, 200, "Unknown inverter %s passed in the parsing of %s!\n", yytext, paramname);
+        yy_fatal_error(error_message);
       }
       level++;
       strlist_next_token(&list_end, token, 100);
@@ -1529,7 +1529,6 @@ static inline double fltlist_next_token(int * const list_end){
       if( level > QUDA_MAX_MG_LEVEL ){
         snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
         yy_fatal_error(error_message);
-        
       }
       if( strcmp(token, "cagcr") == 0 ){
         quda_input.mg_smoother_type[level]=QUDA_CA_GCR_INVERTER;
@@ -1541,8 +1540,8 @@ static inline double fltlist_next_token(int * const list_end){
         quda_input.mg_smoother_type[level]=QUDA_MR_INVERTER;
       }
       else {
-        printf("Error, inverter '%s' is unknown. Exiting!\n", yytext);
-        exit(1);
+        snprintf(error_message, 200, "Unknown inverter %s passed in the parsing of %s!\n", yytext, paramname);
+        yy_fatal_error(error_message);
       }
       level++;
       strlist_next_token(&list_end, token, 100);
