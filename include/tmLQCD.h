@@ -84,8 +84,27 @@ void eo_source_spinor_fied_spin_diluted_oet_ts(spinor * const even_cb_spinor,
                                                const unsigned int oet_seed);
 
 #ifdef TM_USE_QUDA
+// direct line to QUDA inverter, no messing about with even/odd reordering
+// source and propagator  Should be full VOLUME spinor fields 
+// op_id                  Index of the operator to be inverted (0 to N-1)
   int invert_quda_direct(double * const propgator, double * const source,
                     const int op_id);
+
+// direct line to QUDA inverter, no messing about with even/odd reordering
+// source and propagator  Should be full VOLUME spinor fields 
+// op_id                  Index of the operator to be inverted (0 to N-1)
+// theta_[x,y,z,t]        theta angles for twisted boundary conditions to be
+//                        set before the gauge field is uploaded to the card
+//                        overriding input file these are specified
+//                        like Theta[X,Y,Z,T] in the input file as a fraction
+//                        of \pi/L
+//                        Anti-periodic in T would correspond to theta_t = 1.0
+int invert_quda_direct_theta(double * const propgator, double * const source,
+                const int op_id,
+                const double theta_x,
+                const double theta_y,
+                const double theta_z,
+                const double theta_t);
 #endif
 
 #ifdef __cplusplus

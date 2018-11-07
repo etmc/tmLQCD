@@ -1,4 +1,4 @@
-/***********************************************************************
+/**********************************************************************
  *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
@@ -42,7 +42,7 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 NAME [a-zA-Z0-9_]+
 CSTR \"[a-zA-Z0-9\-\._]+\"
 TYPE [0-9A-Z]+
-FLTLIST [0-9"."","" "]*
+STRLIST [0-9"."","" "a-zA-Z]*
 EQL {SPC}*={SPC}*
 
 %{
@@ -82,14 +82,18 @@ static inline void rmQuotes(char *str){
   *strsave='\0';
 }
 
-static inline void fltlist_tokenize(const char * const str, char * const paramname, const int paramname_length){
+/* tokenize the comma-delimited list 'str' and return the first token,
+   which is the name of the list 'list = token1, token2, token3, ..',
+   via the 'paramname' parameter 
+   the length of the array holding 'paramname' parameter must be passed as well */
+static inline void strlist_tokenize(const char * const str, char * const paramname, const int paramname_length){
   char error_message[200];
   char * token = (char*)NULL;
   // the first token is the parameter name, we will return it, 
   // but first check if tokenization was successful
   token = strtok(str, "\n\t =,\\");
   if( (void*)token == NULL ){
-    snprintf(error_message, 200, "Unable to parse '%s' in fltlist_tokenize!\n", paramname);
+    snprintf(error_message, 200, "Unable to parse '%s' in strlist_tokenize!\n", paramname);
     yy_fatal_error(error_message);
   } else {
     // return what we parsed
@@ -97,9 +101,29 @@ static inline void fltlist_tokenize(const char * const str, char * const paramna
   }
 }
 
+/* obtain the next token in the list of comma-separated strings
+   'list_end' is a parameter which is set to 1 if the end of the list is reached
+   'token' will hold the value of the token
+   'token_length' is the length of the array to which the token should be written */
+static inline void strlist_next_token(int * const list_end, char * const token_out, const int token_length){
+  char * token = (char*)NULL;
+  token = strtok(NULL," =,\t");
+  if( (void*)token == NULL ){
+    *list_end = 1;
+  } else {
+    *list_end = 0;
+    snprintf(token_out, token_length, "%s", token);
+  }
+}
+
+/* when the list of tokens is a list of doubles or integers, this function
+   can be used to obtain the next token in the list directly as a double
+   'list_end' is a parameter which is set to 1 if the end of the list 
+   has been reached */
 static inline double fltlist_next_token(int * const list_end){
   double retval;
-  char * token = strtok(NULL," =,\t");
+  char * token = (char*)NULL;
+  token = strtok(NULL," =,\t");
   if( (void*)token == NULL ){
     *list_end = 1;
     return(0.0);
@@ -248,7 +272,7 @@ static inline double fltlist_next_token(int * const list_end){
     int level = 0;
     int blocksize = 0;
     
-    fltlist_tokenize(input, paramname, 100);
+    strlist_tokenize(input, paramname, 100);
     blocksize = (int)fltlist_next_token(&list_end);
     while( list_end != 1 ){
       if( level >= (QUDA_MAX_MG_LEVEL-1) ){
@@ -945,7 +969,7 @@ static inline double fltlist_next_token(int * const list_end){
     (optr->solver_params).eigcg_rand_guess_opt = a;
     if(myverbose) printf("  EigCGrand_guess_opt set to %d line %d operator %d\n", a, line_of_file, current_operator);
   }  
-  {SPC}*ExtraMasses{EQL}{FLTLIST} {
+  {SPC}*ExtraMasses{EQL}{STRLIST} {
     char * token = NULL;
     optr->no_extra_masses = 0;
     double mass;
@@ -1404,13 +1428,13 @@ static inline double fltlist_next_token(int * const list_end){
     quda_input.mg_n_level=a;
     if(myverbose) printf("  MGNumberOfLevels set to %d line %d\n", quda_input.mg_n_level, line_of_file);
   }
-  {SPC}*MGNumberOfVectors{EQL}{FLTLIST} {
+  {SPC}*MGNumberOfVectors{EQL}{STRLIST} {
     char paramname[100];
     char error_message[200];
     int list_end = 0;
     int level = 0;
 
-    fltlist_tokenize(yytext, paramname, 100);
+    strlist_tokenize(yytext, paramname, 100);
     int n_vec = (int)fltlist_next_token(&list_end);
     while( list_end != 1 ){
       if( level >= (QUDA_MAX_MG_LEVEL-1) ){
@@ -1427,26 +1451,26 @@ static inline double fltlist_next_token(int * const list_end){
       n_vec = fltlist_next_token(&list_end);
     }
   }
-  {SPC}*MGBlockSizesX{EQL}{FLTLIST} {
+  {SPC}*MGBlockSizesX{EQL}{STRLIST} {
     // note the dimensions here are in QUDA order (XYZT!)
     parse_quda_mg_blocksize(yytext, 0);
   }
-  {SPC}*MGBlockSizesY{EQL}{FLTLIST} {
+  {SPC}*MGBlockSizesY{EQL}{STRLIST} {
     parse_quda_mg_blocksize(yytext, 1);
   }
-  {SPC}*MGBlockSizesZ{EQL}{FLTLIST} {
+  {SPC}*MGBlockSizesZ{EQL}{STRLIST} {
     parse_quda_mg_blocksize(yytext, 2);
   }
-  {SPC}*MGBlockSizesT{EQL}{FLTLIST} {
+  {SPC}*MGBlockSizesT{EQL}{STRLIST} {
     parse_quda_mg_blocksize(yytext, 3);
   }
-  {SPC}*MGCoarseMuFactor{EQL}{FLTLIST} {
+  {SPC}*MGCoarseMuFactor{EQL}{STRLIST} {
     char paramname[100];
     char error_message[200];
     int list_end = 0;
     int level = 0;
 
-    fltlist_tokenize(yytext, paramname, 100);
+    strlist_tokenize(yytext, paramname, 100);
     double mu_factor = fltlist_next_token(&list_end);
     while( list_end != 1 ){
       if( level > QUDA_MAX_MG_LEVEL ){
@@ -1461,6 +1485,67 @@ static inline double fltlist_next_token(int * const list_end){
       }
       level++;
       mu_factor = fltlist_next_token(&list_end);
+    }
+  }
+  {SPC}*MGCoarseSolverType{EQL}{STRLIST} {
+    char paramname[100];
+    char token[100];
+    char error_message[200];
+    int list_end = 0;
+    int level = 0;
+    strlist_tokenize(yytext, paramname, 100);
+    strlist_next_token(&list_end, token, 100);
+    printf("Token in the beginning=%s\n",token);
+    while( list_end != 1 ){
+      if( level > QUDA_MAX_MG_LEVEL ){
+        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+        yy_fatal_error(error_message);
+      }
+      if( strcmp(token, "cagcr") == 0 ){
+        quda_input.mg_coarse_solver_type[level]=QUDA_CA_GCR_INVERTER;
+      }
+      else if( strcmp(token, "gcr") == 0 ){
+        quda_input.mg_coarse_solver_type[level]=QUDA_GCR_INVERTER;
+      }
+      else if( strcmp(token, "mr") == 0){
+        quda_input.mg_coarse_solver_type[level]=QUDA_MR_INVERTER;
+      }
+      else {
+        snprintf(error_message, 200, "Unknown inverter %s passed in the parsing of %s!\n", yytext, paramname);
+        yy_fatal_error(error_message);
+      }
+      level++;
+      strlist_next_token(&list_end, token, 100);
+    }
+  }
+  {SPC}*MGSmootherType{EQL}{STRLIST} {
+    char paramname[100];
+    char token[100];
+    char error_message[200];
+    int list_end = 0;
+    int level = 0;
+    strlist_tokenize(yytext, paramname, 100);
+    strlist_next_token(&list_end, token, 100);
+    while( list_end != 1 ){
+      if( level > QUDA_MAX_MG_LEVEL ){
+        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+        yy_fatal_error(error_message);
+      }
+      if( strcmp(token, "cagcr") == 0 ){
+        quda_input.mg_smoother_type[level]=QUDA_CA_GCR_INVERTER;
+      }
+      else if( strcmp(token, "gcr") == 0 ){
+        quda_input.mg_smoother_type[level]=QUDA_GCR_INVERTER;
+      }
+      else if( strcmp(token, "mr") == 0){
+        quda_input.mg_smoother_type[level]=QUDA_MR_INVERTER;
+      }
+      else {
+        snprintf(error_message, 200, "Unknown inverter %s passed in the parsing of %s!\n", yytext, paramname);
+        yy_fatal_error(error_message);
+      }
+      level++;
+      strlist_next_token(&list_end, token, 100);
     }
   }
   {SPC}*MGSetupSolver{EQL}cg {
@@ -3134,6 +3219,8 @@ int read_input(char * conf_file){
     } else {
       quda_input.mg_mu_factor[level] = 1.0;
     }
+    quda_input.mg_coarse_solver_type[level] = QUDA_GCR_INVERTER;
+    quda_input.mg_smoother_type[level] = QUDA_MR_INVERTER ;
 
     /* note: when the user does not specify any blocking parameters,
      * a reasonable set will be computed automatically in the MG setup
