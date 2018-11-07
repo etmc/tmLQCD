@@ -74,6 +74,7 @@
 #ifdef TM_USE_QPHIX
 #include "qphix_interface.h"
 #endif
+#include "fatal_error.h"
 
 #include <io/params.h>
 #include <io/spinor.h>
@@ -163,8 +164,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     iteration_count =  MG_solver(P, Q, eps_sq, max_iter,rel_prec, N , g_gauge_field, f);
 #endif     
   else{
-    if(g_proc_id==0) printf("Error: solver not allowed for degenerate solve. Aborting...\n");
-    exit(2);
+    fatal_error("Error: solver not allowed for degenerate solve. Aborting...\n", "solve_degenerate");
   }
 
   if(g_debug_level > 2){
@@ -323,8 +323,7 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
       }
     }
   } else {
-    if(g_proc_id==0) printf("Error: solver not allowed for TM mms solve. Aborting...\n");
-    exit(2);      
+    fatal_error("Error: solver not allowed for TM mms solve. Aborting...\n", "solve_mms_tm");
   }
 
   if(g_debug_level > 2){
@@ -528,8 +527,7 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
       }
     }
   } else {
-    if(g_proc_id==0) printf("Error: solver not allowed for ND mms solve. Aborting...\n");
-    exit(2);      
+    fatal_error("Error: solver not allowed for ND mms solve. Aborting...\n", "solve_mss_nd");
   }
 
   if( g_debug_level > 2 ){
