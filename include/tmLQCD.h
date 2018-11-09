@@ -41,6 +41,11 @@ extern "C"
   typedef struct {
     unsigned int nproc, nproc_t, nproc_x, nproc_y, nproc_z, cart_id, proc_id, time_rank, omp_num_threads;
     unsigned int proc_coords[4];
+#ifdef TM_USE_MPI
+    MPI_Comm cart_grid;
+#else
+    int cart_grid;
+#endif
   } tmLQCD_mpi_params;
 
   int tmLQCD_invert_init(int argc, char *argv[], const int verbose, const int external_id);
