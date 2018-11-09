@@ -370,7 +370,9 @@ int tmLQCD_get_mpi_params(tmLQCD_mpi_params * params) {
   params->proc_coords[1] = g_proc_coords[1];
   params->proc_coords[2] = g_proc_coords[2];
   params->proc_coords[3] = g_proc_coords[3];
-
+#ifdef TM_USE_MPI
+  params->cart_grid = g_cart_grid;
+#endif
   return(0);
 }
 
