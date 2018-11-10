@@ -299,6 +299,29 @@ int tmLQCD_invert(double * const propagator, double * const source,
   return(0);
 }
 
+int tmLQCD_invert_eo(double * const prop_odd, double * const prop_even,
+                     double * const src_odd, double * const src_even,
+		     const int op_id, const int write_prop) {
+
+  unsigned int index_start = 0;
+  if(!tmLQCD_invert_initialised) {
+    fprintf(stderr, "tmLQCD_invert_eo: tmLQCD_inver_init must be called first. Aborting...\n");
+    return(-1);
+  }
+  if(op_id < 0 || op_id >= no_operators) {
+    fprintf(stderr, "tmLQCD_invert_eo: op_id=%d not in valid range. Aborting...\n", op_id);
+    return(-2);
+  }
+  
+  operator_list[od_id].sr0 = src_odd;
+  operator_list[op_id].sr1 = src_even;
+  operator_list[op_id].prop0 = prop_odd;
+  operator_list[op_id].prop1 = prop_even;
+  operator_list[op_id].inverter(op_id, index_start, write_prop);
+  
+  return(0); 
+}
+
 
 int tmLQCD_finalise() {
 

@@ -62,8 +62,18 @@ extern "C"
 
   int tmLQCD_invert_init(int argc, char *argv[], const int verbose, const int external_id);
   int tmLQCD_read_gauge(const int nconfig);
+
+  // invert with source and propagator provided in TXYZ spin colour complex lexicographic order
+  // propagator has kappa normalisation
   int tmLQCD_invert(double * const propagator, double * const source,
 		    const int op_id, const int write_prop);
+  
+  // invert with source and propagator provided in TXYZ spin colour complex odd-even order
+  // propagator has kappa normalisation
+  int tmLQCD_invert_eo(double * const prop_odd, double * const prop_even,
+                       double * const src_odd, double * const src_even,
+		       const int op_id, const int write_prop);
+
   int tmLQCD_finalise();
 
   int tmLQCD_get_gauge_field_pointer(double ** gf);
