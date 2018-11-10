@@ -304,8 +304,7 @@ int tmLQCD_invert(double* const propagator, double* const source, const int op_i
   return (0);
 }
 
-int tmLQCD_invert_eo(double* const prop_odd, double* const prop_even, double* const src_odd,
-                     double* const src_even, const int op_id, const int write_prop) {
+int tmLQCD_invert_eo(double* const sol_odd, double* const src_odd, const int op_id){
   unsigned int index_start = 0;
   if (!tmLQCD_invert_initialised) {
     fprintf(stderr, "tmLQCD_invert_eo: tmLQCD_inver_init must be called first. Aborting...\n");
@@ -316,11 +315,8 @@ int tmLQCD_invert_eo(double* const prop_odd, double* const prop_even, double* co
     return (-2);
   }
 
-  operator_list[op_id].sr0 = (spinor*)src_odd;
-  operator_list[op_id].sr1 = (spinor*)src_even;
-  operator_list[op_id].prop0 = (spinor*)prop_odd;
-  operator_list[op_id].prop1 = (spinor*)prop_even;
-  operator_list[op_id].inverter(op_id, index_start, write_prop);
+  // here we need to provide a way to call the selected solver directly on the
+  // e/o precon prepared problem
 
   return (0);
 }
