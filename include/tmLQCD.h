@@ -30,64 +30,59 @@
 #include "config.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif /* __cplusplus */
-  
-  typedef struct {
-    unsigned int LX, LY, LZ, T, nstore, nsave, no_operators;
-  } tmLQCD_lat_params;
 
-  typedef struct {
-    unsigned int nproc, nproc_t, nproc_x, nproc_y, nproc_z, cart_id, proc_id, time_rank, omp_num_threads;
-    unsigned int proc_coords[4];
-  } tmLQCD_mpi_params;
+typedef struct {
+  unsigned int LX, LY, LZ, T, nstore, nsave, no_operators;
+} tmLQCD_lat_params;
 
+typedef struct {
+  unsigned int nproc, nproc_t, nproc_x, nproc_y, nproc_z, cart_id, proc_id, time_rank,
+      omp_num_threads;
+  unsigned int proc_coords[4];
+} tmLQCD_mpi_params;
 
-  typedef struct {
-    // for the boundary phases
-    // a value of 1.0 implies a theta angle of \pi/L
-    double theta_x;
-    double theta_y;
-    double theta_z;
-    double theta_t;
+typedef struct {
+  // for the boundary phases
+  // a value of 1.0 implies a theta angle of \pi/L
+  double theta_x;
+  double theta_y;
+  double theta_z;
+  double theta_t;
 
-    // the twisted mass parameters are specified WITHOUT the 2kappa factor
-    double mu;
-    double mubar;
-    double epsbar;
-    double kappa;
-    double c_sw;
-  } tmLQCD_op_params;
+  // the twisted mass parameters are specified WITHOUT the 2kappa factor
+  double mu;
+  double mubar;
+  double epsbar;
+  double kappa;
+  double c_sw;
+} tmLQCD_op_params;
 
-  int tmLQCD_invert_init(int argc, char *argv[], const int verbose, const int external_id);
-  int tmLQCD_read_gauge(const int nconfig);
+int tmLQCD_invert_init(int argc, char *argv[], const int verbose, const int external_id);
+int tmLQCD_read_gauge(const int nconfig);
 
-  // invert with source and propagator provided in TXYZ spin colour complex lexicographic order
-  // propagator has kappa normalisation
-  int tmLQCD_invert(double * const propagator, double * const source,
-		    const int op_id, const int write_prop);
-  
-  // invert with source and propagator provided in TXYZ spin colour complex odd-even order
-  // propagator has kappa normalisation
-  int tmLQCD_invert_eo(double * const prop_odd, double * const prop_even,
-                       double * const src_odd, double * const src_even,
-		       const int op_id, const int write_prop);
+// invert with source and propagator provided in TXYZ spin colour complex lexicographic order
+// propagator has kappa normalisation
+int tmLQCD_invert(double *const propagator, double *const source, const int op_id,
+                  const int write_prop);
 
-  int tmLQCD_finalise();
+// invert with source and propagator provided in TXYZ spin colour complex odd-even order
+// propagator has kappa normalisation
+int tmLQCD_invert_eo(double *const prop_odd, double *const prop_even, double *const src_odd,
+                     double *const src_even, const int op_id, const int write_prop);
 
-  int tmLQCD_get_gauge_field_pointer(double ** gf);
-  int tmLQCD_get_mpi_params(tmLQCD_mpi_params * params);
-  int tmLQCD_get_lat_params(tmLQCD_lat_params * params);
+int tmLQCD_finalise();
 
-  int tmLQCD_set_op_params(tmLQCD_op_params const * const params,
-                           const int op_id);
-  int tmLQCD_get_op_params(tmLQCD_op_params * params,
-                           const int op_id);
+int tmLQCD_get_gauge_field_pointer(double **gf);
+int tmLQCD_get_mpi_params(tmLQCD_mpi_params *params);
+int tmLQCD_get_lat_params(tmLQCD_lat_params *params);
+
+int tmLQCD_set_op_params(tmLQCD_op_params const *const params, const int op_id);
+int tmLQCD_get_op_params(tmLQCD_op_params *params, const int op_id);
 
 #ifdef TM_USE_QUDA
-  int invert_quda_direct(double * const propgator, double * const source,
-                    const int op_id);
+int invert_quda_direct(double *const propgator, double *const source, const int op_id);
 #endif
 
 #ifdef __cplusplus
