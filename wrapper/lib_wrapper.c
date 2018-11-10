@@ -76,6 +76,9 @@ extern void finalize_gpu_fields();
 
 #define CONF_FILENAME_LENGTH 500
 
+// we want to be able to modify the boundary phase angles
+extern double X0, X1, X2, X3;
+
 static int tmLQCD_invert_initialised = 0;
 
 int tmLQCD_invert_init(int argc, char *argv[], const int _verbose, const int external_id) {
@@ -390,3 +393,51 @@ int tmLQCD_get_gauge_field_pointer(double ** gf) {
 
   return(0);
 }
+
+int tmLQCD_get_op_params(tmLQCD_op_params * params, const int op_id){
+  if(!tmLQCD_invert_initialised){
+    fprintf(stderr, "tmLQCD_get_op_params: tmLQCD_invert_init must be called first. Aborting...\n");
+    return(-1);
+  }
+  if(op_id < 0 || op_id >= no_operators) {
+    fprintf(stderr, "tmLQCD_get_op_params: op_id=%d not in valid range. Aborting...\n", op_id);
+    return(-2);
+  }
+
+  params->kappa = operator_list[op_id].kappa;
+  params->mu = 0.5 * operator_list[op_id].mu / operator_list[op_id].kappa;
+  params->mubar = 0.5 * operator_list[op_id].mubar / operator_list[op_id].kappa;
+  params->epsbar = 0.5 * operator_list[op_id].epsbar / operator_list[op_id].kappa;
+  params->c_sw = operator_list[op_id].c_sw;
+
+  params->theta_x = X1;
+  params->theta_y = X2;
+  params->theta_z = X3;
+  params->theta_t = X0;
+  return(0);
+}
+
+int tmLQCD_set_op_params(tmLQCD_op_params const * const params, const int op_id){
+  if(!tmLQCD_invert_initialised){
+    fprintf(stderr, "tmLQCD_set_op_params: tmLQCD_invert_init must be called first. Aborting...\n");
+    return(-1);
+  }
+  if(op_id < 0 || op_id >= no_operators) {
+    fprintf(stderr, "tmLQCD_set_op_params: op_id=%d not in valid range. Aborting...\n", op_id);
+    return(-2);
+  }
+
+  operator_list[op_id].kappa = params->kappa;
+  operator_list[op_id].mu = 2*params->kappa*params->mu;
+  operator_list[op_id].mubar = 2*params->kappa*params->mubar;
+  operator_list[op_od].epsbar = 2*params->kappa*params->epsbar;
+  operator_list[op_id].c_sw = params->c_sw;
+
+  X1 = params->theta_x;
+  X2 = params->theta_y;
+  X3 = params->theta_z;
+  X0 = params->theta_t;
+  boundary(params->kappa);
+  return(0);
+}
+
