@@ -43,11 +43,16 @@ extern "C"
     unsigned int proc_coords[4];
   } tmLQCD_mpi_params;
 
+
   typedef struct {
+    // for the boundary phases
+    // a value of 1.0 implies a theta angle of \pi/L
     double theta_x;
     double theta_y;
     double theta_z;
     double theta_t;
+
+    // the twisted mass parameters are specified WITHOUT the 2kappa factor
     double mu;
     double mubar;
     double epsbar;
