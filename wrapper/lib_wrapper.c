@@ -472,6 +472,16 @@ int tmLQCD_invert_qphix_direct(double * const Odd_out, double * const Odd_in, co
   static double clover_term_c_sw = -1.0;
   static double clover_term_kappa = -1.0;
   static double inv_clover_term_mu = 0.0;
+  
+  if (!tmLQCD_invert_initialised) {
+    fprintf(stderr, "tmLQCD_invert: tmLQCD_inver_init must be called first. Aborting...\n");
+    return (-1);
+  }
+
+  if (op_id < 0 || op_id >= no_operators) {
+    fprintf(stderr, "tmLQCD_invert: op_id=%d not in valid range. Aborting...\n", op_id);
+    return (-2);
+  }
 
   op_backup_restore_globals(TM_BACKUP_GLOBALS);
   op_set_globals(op_id);
