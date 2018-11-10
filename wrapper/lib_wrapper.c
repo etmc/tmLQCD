@@ -48,6 +48,9 @@
 #ifdef TM_USE_QUDA
 #include "quda_interface.h"
 #endif
+#ifdef TM_USE_QPHIX
+#include "qphix_interface.h"
+#endif
 #include <io/gauge.h>
 #include <io/utils.h>
 #include "boundary.h"
@@ -461,3 +464,21 @@ int tmLQCD_set_op_params(tmLQCD_op_params const* const params, const int op_id) 
   boundary(params->kappa);
   return (0);
 }
+
+#ifdef TM_USE_QPHIX
+int tmLQCD_invert_qphix_direct(double * const sol_odd, double * const src_odd, const int op_id){
+  op_backup_restore_globals(TM_BACKUP_GLOBALS);
+  op_set_globals(op_id);
+  int niter = invert_eo_qphix_oneflavour((spinor *const) sol_odd, (spinor* const) src_odd,
+                                         operator_list[op_id].maxiter,
+                                         operator_list[op_id].eps_sq,
+                                         operator_list[op_id].solver,
+                                         operator_list[op_id].rel_prec,
+                                         operator_list[op_id].solver_params,
+                                         operator_list[op_id].sloppy_precision,
+                                         operator_list[op_id].compression_type
+                                         );
+  op_backup_restore_globals(TM_RESTORE_GLOBALS);
+  return(niter);
+}
+#endif
