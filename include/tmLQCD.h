@@ -75,7 +75,7 @@ int tmLQCD_invert(double *const propagator, double *const source, const int op_i
                   const int write_prop);
 
 // invert on odd part of lattice with prepared source
-int tmLQCD_invert_eo(double *const sol_odd, double *const src_odd, const int op_id);
+int tmLQCD_invert_eo(double *const Odd_out, double *const Odd_in, const int op_id);
 
 int tmLQCD_finalise();
 
@@ -91,7 +91,7 @@ int tmLQCD_get_op_params(tmLQCD_op_params *params, const int op_id);
 int invert_quda_direct(double *const propgator, double *const source, const int op_id);
 #endif
 #ifdef TM_USE_QPHIX
-int tmLQCD_invert_qphix_direct(double *const sol_odd, double *const src_odd, const int op_id);
+int tmLQCD_invert_qphix_direct(double *const Odd_out, double *const Odd_in, const int op_id);
 #endif
 
 #ifdef __cplusplus

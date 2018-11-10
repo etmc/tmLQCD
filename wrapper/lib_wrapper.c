@@ -307,7 +307,7 @@ int tmLQCD_invert(double* const propagator, double* const source, const int op_i
   return (0);
 }
 
-int tmLQCD_invert_eo(double* const sol_odd, double* const src_odd, const int op_id){
+int tmLQCD_invert_eo(double* const Odd_out, double* const Odd_in, const int op_id){
   unsigned int index_start = 0;
   if (!tmLQCD_invert_initialised) {
     fprintf(stderr, "tmLQCD_invert_eo: tmLQCD_inver_init must be called first. Aborting...\n");
@@ -466,10 +466,10 @@ int tmLQCD_set_op_params(tmLQCD_op_params const* const params, const int op_id) 
 }
 
 #ifdef TM_USE_QPHIX
-int tmLQCD_invert_qphix_direct(double * const sol_odd, double * const src_odd, const int op_id){
+int tmLQCD_invert_qphix_direct(double * const Odd_out, double * const Odd_in, const int op_id){
   op_backup_restore_globals(TM_BACKUP_GLOBALS);
   op_set_globals(op_id);
-  int niter = invert_eo_qphix_oneflavour((spinor *const) sol_odd, (spinor* const) src_odd,
+  int niter = invert_eo_qphix_oneflavour((spinor *const) Odd_out, (spinor* const) Odd_in,
                                          operator_list[op_id].maxiter,
                                          operator_list[op_id].eps_sq,
                                          operator_list[op_id].solver,
