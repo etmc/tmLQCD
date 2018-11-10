@@ -1,6 +1,7 @@
 /***********************************************************************
  *
  * Copyright (C) 2014 Carsten Urbach
+ *               2018 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -58,6 +59,12 @@ typedef struct {
   double kappa;
   double c_sw;
 } tmLQCD_op_params;
+
+// in order to be able to initialise QMP if QPhiX is used, we need
+// to allow tmLQCD to intialise MPI via QMP
+// the input file has to be read because we set the number of threads as well
+int tmLQCD_init_parallel_and_read_input(int argc, char* argv[], const _verbose,
+                                        char const * const input_filename);
 
 int tmLQCD_invert_init(int argc, char *argv[], const int verbose, const int external_id);
 int tmLQCD_read_gauge(const int nconfig);

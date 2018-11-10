@@ -1,6 +1,7 @@
 /***********************************************************************
  *
  * Copyright (C) 2014 Carsten Urbach
+ *               2018 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -80,6 +81,13 @@ extern void finalize_gpu_fields();
 extern double X0, X1, X2, X3;
 
 static int tmLQCD_invert_initialised = 0;
+
+int tmLQCD_init_parallel_and_read_input(int argc, char* argv[], const _verbose,
+                                        char const * const input_filename){
+  verbose = _verbose;
+  init_parallel_and_read_input(argc, argv, input_filename);
+  return(0);
+}
 
 int tmLQCD_invert_init(int argc, char* argv[], const int _verbose, const int external_id) {
   DUM_DERI = 8;
