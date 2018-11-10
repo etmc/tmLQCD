@@ -74,10 +74,8 @@ int tmLQCD_read_gauge(const int nconfig);
 int tmLQCD_invert(double *const propagator, double *const source, const int op_id,
                   const int write_prop);
 
-// invert with source and propagator provided in TXYZ spin colour complex odd-even order
-// propagator has kappa normalisation
-int tmLQCD_invert_eo(double *const prop_odd, double *const prop_even, double *const src_odd,
-                     double *const src_even, const int op_id, const int write_prop);
+// invert on odd part of lattice with prepared source
+int tmLQCD_invert_eo(double *const sol_odd, double *const src_odd, const int op_id);
 
 int tmLQCD_finalise();
 
