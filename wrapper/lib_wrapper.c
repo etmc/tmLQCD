@@ -430,7 +430,7 @@ int tmLQCD_set_op_params(tmLQCD_op_params const * const params, const int op_id)
   operator_list[op_id].kappa = params->kappa;
   operator_list[op_id].mu = 2*params->kappa*params->mu;
   operator_list[op_id].mubar = 2*params->kappa*params->mubar;
-  operator_list[op_od].epsbar = 2*params->kappa*params->epsbar;
+  operator_list[op_id].epsbar = 2*params->kappa*params->epsbar;
   operator_list[op_id].c_sw = params->c_sw;
 
   X1 = params->theta_x;
