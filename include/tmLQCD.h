@@ -87,10 +87,11 @@ int tmLQCD_set_op_params(tmLQCD_op_params const *const params, const int op_id);
 int tmLQCD_get_op_params(tmLQCD_op_params *params, const int op_id);
 
 #ifdef TM_USE_QUDA
+// FIXME: this should be renamed to e consistent
 int invert_quda_direct(double *const propgator, double *const source, const int op_id);
 #endif
 #ifdef TM_USE_QPHIX
-int invert_qphix_direct(double *const sol_odd, double *const src_odd, const int op_id);
+int tmLQCD_invert_qphix_direct(double *const sol_odd, double *const src_odd, const int op_id);
 #endif
 
 #ifdef __cplusplus
