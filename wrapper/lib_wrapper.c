@@ -82,7 +82,7 @@ extern double X0, X1, X2, X3;
 
 static int tmLQCD_invert_initialised = 0;
 
-int tmLQCD_init_parallel_and_read_input(int argc, char* argv[], const _verbose,
+int tmLQCD_init_parallel_and_read_input(int argc, char* argv[], const int _verbose,
                                         char const * const input_filename){
   verbose = _verbose;
   init_parallel_and_read_input(argc, argv, input_filename);
