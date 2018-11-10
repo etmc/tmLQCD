@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <float.h>
 #ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
@@ -62,6 +63,7 @@
 #include "measure_gauge_action.h"
 #include "mpi_init.h"
 #include "operator.h"
+#include "operator/clover_leaf.h"
 #include "read_input.h"
 #include "sighandler.h"
 #include "start.h"
@@ -467,8 +469,36 @@ int tmLQCD_set_op_params(tmLQCD_op_params const* const params, const int op_id) 
 
 #ifdef TM_USE_QPHIX
 int tmLQCD_invert_qphix_direct(double * const Odd_out, double * const Odd_in, const int op_id){
+  static double clover_term_c_sw = -1.0;
+  static double clover_term_kappa = -1.0;
+  static double inv_clover_term_mu = 0.0;
+
   op_backup_restore_globals(TM_BACKUP_GLOBALS);
   op_set_globals(op_id);
+  boundary(g_kappa);
+  
+  // if this is a clover operator, we check if the clover term and its inverse
+  // which might be currently in memory are consistent with the requested parameters
+  // if not, we recompute them
+  if( operator_list[op_id].type == CLOVER ){
+    if( (fabs(g_c_sw - clover_term_c_sw) > 2*DBL_EPSILON ) ||
+        (fabs(g_kappa - clover_term_kappa) > 2*DBL_EPSILON ) ){
+      sw_term((const su3**)g_gauge_field,
+              g_kappa,
+              g_c_sw);
+      clover_term_kappa = g_kappa;
+      clover_term_c_sw = g_c_sw;
+    }
+    if( fabs(g_mu - inv_clover_term_mu) > 2*DBL_EPSILON ){
+      // in the hopping matrix and elsewhere "even_even" is called "EE"
+      // but it's only defined in operator/HoppingMatrix.h, we don't want to
+      // include that here
+      const int even_even = 0;
+      sw_invert(even_even, g_mu);
+      inv_clover_term_mu = g_mu;
+    }
+  }
+  
   int niter = invert_eo_qphix_oneflavour((spinor *const) Odd_out, (spinor* const) Odd_in,
                                          operator_list[op_id].maxiter,
                                          operator_list[op_id].eps_sq,
