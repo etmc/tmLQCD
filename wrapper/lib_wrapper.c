@@ -308,10 +308,10 @@ int tmLQCD_invert_eo(double* const prop_odd, double* const prop_even, double* co
     return (-2);
   }
 
-  operator_list[od_id].sr0 = src_odd;
-  operator_list[op_id].sr1 = src_even;
-  operator_list[op_id].prop0 = prop_odd;
-  operator_list[op_id].prop1 = prop_even;
+  operator_list[op_id].sr0 = (spinor*)src_odd;
+  operator_list[op_id].sr1 = (spinor*)src_even;
+  operator_list[op_id].prop0 = (spinor*)prop_odd;
+  operator_list[op_id].prop1 = (spinor*)prop_even;
   operator_list[op_id].inverter(op_id, index_start, write_prop);
 
   return (0);
