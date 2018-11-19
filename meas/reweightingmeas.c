@@ -53,6 +53,7 @@
 #include "../DDalphaAMG_interface.h"
 #include "../boundary.h"
 #include "../global.h"
+#include "../init/init_spinor_field.h"
 #include "solver/jdher.h"
 
 #include <errno.h>
@@ -75,7 +76,6 @@ typedef struct {
  * Allocation of the spinor field redirects to allocate_spinor_field_array.
  */
 static int alloc_spinor_field(spinor_array* ar, int evenodd) {
-  int i = 0;
   unsigned long int volume = VOLUMEPLUSRAND / 2;
   if (evenodd == 0) {
     volume = VOLUMEPLUSRAND;
@@ -83,9 +83,9 @@ static int alloc_spinor_field(spinor_array* ar, int evenodd) {
   return (allocate_spinor_field_array(&ar->ar,&ar->buffer,volume, ar->length));
 }
 
-static void free_spinor_field(spinor_array* ar) {
+static void free_spinor_field_spinor_array(spinor_array* ar) {
   if (ar->buffer != NULL) {
-    free_spinor_field_array(ar->buffer);
+    free_spinor_field_array(&ar->buffer);
   }
   if (ar->ar != NULL) {
     free(ar->ar);
@@ -627,7 +627,7 @@ static void log_determinant_estimate(const int operatorid, int chebmax,
     } /* orderend>0*/
   } /* splitlength loop */
   free(coeff);
-  free_spinor_field(&spinorarray);
+  free_spinor_field_spinor_array(&spinorarray);
 }
 
 void reweighting_measurement(const int traj, const int id, const int ieo) {
@@ -824,8 +824,15 @@ void reweighting_measurement(const int traj, const int id, const int ieo) {
       tmp1 = 1.0 / kappainitial;
       tmp2 = 1.0 / kappafinal;
       tmp3 = 1.0 / kappa;
-      interpolate(&tmp3, tmp1, tmp2, param->interpolationsteps, internum);
-      kappa = 1.0 / tmp3;
+      if(internum<param->kappaarray.s){
+       kappa=param->kappaarray.el[internum];
+      }else{
+       interpolate(&tmp3, tmp1, tmp2, param->interpolationsteps, internum);
+       kappa = 1.0 / tmp3;
+      }
+      if (g_proc_id == 0 && g_debug_level > 0) {
+        printf("REWEIGHTING: kappa from %.14f to %.14f\n", kappa0,kappa);
+      }
       updateinverter = 1;
     }
     if (murew) {
@@ -948,6 +955,10 @@ void reweighting_measurement(const int traj, const int id, const int ieo) {
   return;
 }
 
+/**
+ * Destructor for the parameter, frees allocated memory.
+ * @param par reweighting parameter.
+ */
 void free_reweighting_parameter(void* par) {
   reweighting_parameter* param;
   param = (reweighting_parameter*) (par);
@@ -957,6 +968,10 @@ void free_reweighting_parameter(void* par) {
     free(param->splitlist.ord);
   if (param->splitlist.est)
     free(param->splitlist.est);
+  if(param->kappaarray.el)
+    free(param->kappaarray.el);
+  param->kappaarray.el=NULL;
+  param->kappaarray.s=0;
   param->coeff.el = NULL;
   param->coeff.s = 0;
   param->splitlist.ord = NULL;
@@ -964,6 +979,11 @@ void free_reweighting_parameter(void* par) {
   param->splitlist.s = 0;
 }
 
+/**
+ * Coefficients provided for the Chebyshev approximation of log(x).
+ * Values are read from coeff.dat.
+ * @param v (output) value
+ */
 static void read_coeff_from_file(vector_list* v) {
   FILE* file;
   unsigned int l;
@@ -991,6 +1011,7 @@ static void read_coeff_from_file(vector_list* v) {
         printf("%d %lg\n", l, v->el[l]);
       }
     }
+    fclose(file);
   } else {
     if (g_proc_id == 0) {
       printf("File coeff.dat not present.\n");
@@ -1001,6 +1022,10 @@ static void read_coeff_from_file(vector_list* v) {
 
 }
 
+/**
+ *
+ * @param list
+ */
 static void read_splitlist(split_list* list) {
   FILE* file;
   unsigned int l;
@@ -1032,6 +1057,7 @@ static void read_splitlist(split_list* list) {
         printf("%d %d %d\n", l, list->ord[l], list->est[l]);
       }
     }
+    fclose(file);
   } else {
     if (g_proc_id == 0) {
       printf("File split.dat not present.\n");
@@ -1039,6 +1065,49 @@ static void read_splitlist(split_list* list) {
     list->ord = NULL;
     list->est = NULL;
     list->s = 0;
+  }
+
+}
+
+static void read_kappalist(vector_list* kappaarray) {
+  FILE* file;
+  unsigned int l;
+  double dat;
+
+  file = fopen("kappa.dat", "r");
+  l = 0;
+  dat = 0;
+
+  if (file) {
+    while (fscanf(file, "%lg ", &dat) > 0) {
+      l++;
+    }
+    if(l==0){
+     fclose(file);
+     return;
+    }
+    kappaarray->s=l;
+    kappaarray->el = malloc(l * sizeof(double));
+
+    file = freopen("kappa.dat", "r", file);
+    l = 0;
+    while (fscanf(file, "%lg ", &dat) > 0) {
+      kappaarray->el[l++] = dat;
+    }
+    if (g_debug_level > 3) {
+      printf(
+          "The following kappa value have been obtained from kappa.dat:\n");
+      for (l = 0; l < kappaarray->s; l++) {
+        printf("%d %lg\n", l, kappaarray->el[l]);
+      }
+    }
+    fclose(file);
+  } else {
+    if (g_proc_id == 0) {
+      printf("File kappa.dat not present.\n");
+    }
+    kappaarray->el = NULL;
+    kappaarray->s = 0;
   }
 
 }
@@ -1053,6 +1122,8 @@ void initialize_reweighting_parameter(void** parameter) {
     param->use_evenodd = 0;
     param->k2mu0 = 0.0;
     param->kappa0 = 0.0;
+    param->kappaarray.el= NULL;
+    param->kappaarray.s=0;
     param->rmu0 = 0.0;
     param->rmu = 0.0;
     param->minev = 1e-7;
@@ -1071,5 +1142,9 @@ void initialize_reweighting_parameter(void** parameter) {
     param->testchebconvergence = 0;
     read_coeff_from_file(&param->coeff);
     read_splitlist(&param->splitlist);
+    read_kappalist(&param->kappaarray);
+    if(param->kappaarray.s!=0){
+      param->interpolationsteps=param->kappaarray.s;
+    }
   }
 }

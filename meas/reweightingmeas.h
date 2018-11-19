@@ -2,7 +2,7 @@
  *
  * Measurements of the reweighting factors by Georg Bergner 2016
  *
- * Copyright (C) 2008 Carsten Urbach
+ * Copyright (C) 20016 Georg Bergner
  *
  * This file is part of tmLQCD.
  *
@@ -25,11 +25,19 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+/**
+ * This struct collects data for the Chebyshev reweighting factor measurements.
+ * These are the coefficients for the log(x) approximation provided from outside.
+ */
 typedef struct{
 	double* el;
 	unsigned int s;
 } vector_list;
 
+/**
+ * This struct collects data for the Chebyshev reweighting factor measurements.
+ * The split_list allows to combine different approximations.
+ */
 typedef struct {
 	unsigned int * ord;
 	unsigned int* est;
@@ -38,17 +46,21 @@ typedef struct {
 } split_list;
 
 
+/**
+ * Parameters for the reweighting factor measurements.
+ */
 typedef struct {
 	  int reweighting_operator;
 	  int reweighting_number_sources;
 	  int use_evenodd;
 	  double k2mu0;
 	  double kappa0;
+	  vector_list kappaarray;
 	  double rmu0;
 	  double rmu;
 	  double minev;
 	  double maxev;
-	double testchebconvergence;
+	  double testchebconvergence;
 	  int interpolationsteps;
 	  int estimatorscheb;
 	  int cheborder;
@@ -59,11 +71,24 @@ typedef struct {
 	split_list splitlist;
 } reweighting_parameter;
 
+/**
+ * Destructor for parameter.
+ * @param par
+ */
 void free_reweighting_parameter(void* par);
 
-
+/**
+ * Constructor for parameter.
+ * @param parameter
+ */
 void initialize_reweighting_parameter(void** parameter);
 
+/**
+ * main measurement.
+ * @param traj
+ * @param t0
+ * @param ieo
+ */
 void reweighting_measurement(const int traj, const int t0, const int ieo);
 
 #endif
