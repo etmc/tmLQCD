@@ -26,7 +26,10 @@
 // input file reader can be compiled
 typedef enum QudaInverterType_s {
  QUDA_BICGSTAB_INVERTER = BICGSTAB,
- QUDA_CG_INVERTER = CG
+ QUDA_CG_INVERTER = CG,
+ QUDA_MR_INVERTER = MR,
+ QUDA_GCR_INVERTER = GCR,
+ QUDA_CA_GCR_INVERTER = CA_GCR
 } QudaInverterType;
 
 #endif
