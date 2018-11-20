@@ -34,6 +34,11 @@ typedef struct{
 	unsigned int s;
 } vector_list;
 
+inline void allocate(vector_list* v, const unsigned int length){
+  v->s=length;
+  v->el = malloc(length * sizeof(double));
+}
+
 /**
  * This struct collects data for the Chebyshev reweighting factor measurements.
  * The split_list allows to combine different approximations.

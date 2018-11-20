@@ -267,6 +267,32 @@ static inline double fltlist_next_token(int * const list_end){
     }
   }
   
+  static inline void parse_double_vector(const char * const input,vector_list* vector){
+    char paramname[100];
+    char* inputcopy;
+    int list_end = 0;
+    int l=0;
+    double value = 0;
+    inputcopy=strdup(input);
+    fltlist_tokenize(inputcopy, paramname, 100);
+    value = (double)fltlist_next_token(&list_end);
+    while( list_end != 1 ){
+      l++;
+      value = (double)fltlist_next_token(&list_end);
+    }
+    free(inputcopy);
+    allocate(vector,l);
+    fltlist_tokenize(input, paramname, 100);
+    value = (double)fltlist_next_token(&list_end);
+    l=0;
+    while( list_end != 1 ){
+      vector->el[l]=value;
+      l++;
+      value = (double)fltlist_next_token(&list_end);
+    }
+  }
+  
+  
 %}
 
 %option never-interactive
@@ -2505,6 +2531,11 @@ static inline double fltlist_next_token(int * const list_end){
     ((reweighting_parameter*)meas->parameter)->testchebconvergence = c;
     if(myverbose) printf("Reweighting ChebConvLimit set to %e line %d\n", c, line_of_file);
   }
+    {SPC}*KappaSteps{EQL}{FLTLIST} {
+      initialize_reweighting_parameter(&meas->parameter);
+      parse_double_vector(yytext,&((reweighting_parameter*)meas->parameter)->kappaarray);
+      if(myverbose) printf("Reweighting KappaSteps %d line %d\n", ((reweighting_parameter*)meas->parameter)->kappaarray.s, line_of_file);
+    }
 }
 
 <GRADIENTFLOWMEAS>{

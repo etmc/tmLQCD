@@ -1151,6 +1151,6 @@ void initialize_reweighting_parameter(void** parameter) {
     param->testchebconvergence = 0;
     read_coeff_from_file(&param->coeff);
     read_splitlist(&param->splitlist);
-    read_kappalist(&param->kappaarray);
+    //read_kappalist(&param->kappaarray);
   }
 }
