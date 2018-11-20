@@ -818,6 +818,14 @@ void reweighting_measurement(const int traj, const int id, const int ieo) {
   if (param->interpolationsteps < 1)
     param->interpolationsteps = 1;
 
+  if(param->kappaarray.s!=0){
+    param->interpolationsteps=param->kappaarray.s;
+  }
+
+  if (g_proc_id == 0 && g_debug_level > 0) {
+    printf("REWEIGHTING: interpolation steps %d\n",param->interpolationsteps);
+  }
+
   for (internum = 0; internum < param->interpolationsteps; internum++) {
     if (kapparew) {
       kappa0 = kappa;
@@ -829,9 +837,6 @@ void reweighting_measurement(const int traj, const int id, const int ieo) {
       }else{
        interpolate(&tmp3, tmp1, tmp2, param->interpolationsteps, internum);
        kappa = 1.0 / tmp3;
-      }
-      if (g_proc_id == 0 && g_debug_level > 0) {
-        printf("REWEIGHTING: kappa from %.14f to %.14f\n", kappa0,kappa);
       }
       updateinverter = 1;
     }
@@ -845,8 +850,12 @@ void reweighting_measurement(const int traj, const int id, const int ieo) {
       rmu = sqrt(tmp3);
       updateinverter = 1;
     }
+
     k2mu = 2.0 * kappa * rmu;
     k2mu0 = 2.0 * kappa0 * rmu0;
+    if (g_proc_id == 0 && g_debug_level > 0) {
+      printf("REWEIGHTING: kappa from %.14f to %.14f, mu %.16f to %.16f, 2kappamu %.16f to %.16f\n", kappa0,kappa,rmu,rmu0,k2mu0,k2mu);
+    }
     optr->kappa = kappa;
     optr->mu = k2mu;
     optr->c_sw = csw;
@@ -1143,8 +1152,5 @@ void initialize_reweighting_parameter(void** parameter) {
     read_coeff_from_file(&param->coeff);
     read_splitlist(&param->splitlist);
     read_kappalist(&param->kappaarray);
-    if(param->kappaarray.s!=0){
-      param->interpolationsteps=param->kappaarray.s;
-    }
   }
 }
