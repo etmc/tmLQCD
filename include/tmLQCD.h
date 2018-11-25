@@ -91,9 +91,43 @@ int tmLQCD_get_lat_params(tmLQCD_lat_params *params);
 int tmLQCD_set_op_params(tmLQCD_op_params const *const params, const int op_id);
 int tmLQCD_get_op_params(tmLQCD_op_params *params, const int op_id);
 
+  // need interfaces with (double*) pointers for these since we don't want to export
+  // all of tmLQCDs data types
+//// generates a point source at the global coordinates passed via the
+//// four element vector global_txyz_src_pos in the ordering {t,x,y,z}
+//// the spin index 'is' and the colour index 'ic'
+//void full_source_spinor_field_point(spinor * const full_spinor,
+//                                    const int is, const int ic,
+//                                    const int * const global_txyz_src_pos);
+//
+//// as full_source_spinor_field_point but with output directly to checkerboarded
+//// spinors
+//void eo_source_spinor_field_point(spinor * const even_cb_spinor,
+//                                  spinor * const odd_cb_spinor,
+//                                  const int is, const int ic,
+//                                  const int * const global_txyz_src_pos);
+//
+//void full_source_spinor_field_spin_diluted_oet_ts(spinor * const full_spinor,
+//                                                  const int src_ts,
+//                                                  const int src_d,
+//                                                  const int sample,
+//                                                  const int nstore,
+//                                                  const unsigned int oet_seed);
+//
+//void eo_source_spinor_fied_spin_diluted_oet_ts(spinor * const even_cb_spinor,
+//                                               spinor * const odd_cb_spinor,
+//                                               const int src_ts,
+//                                               const int src_d,
+//                                               const int sample,   
+//                                               const int nstore,                                            
+//                                               const unsigned int oet_seed);
+
 #ifdef TM_USE_QUDA
 // FIXME: this needs to reworked into tmLQCD_invert, such that there is just
 // one inversion pathway
+// direct line to QUDA inverter, no messing about with even/odd reordering
+// source and propagator  Should be full VOLUME spinor fields 
+// op_id                  Index of the operator to be inverted (0 to N-1)
 int invert_quda_direct(double *const propgator, double *const source, const int op_id);
 #endif
 

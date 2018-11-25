@@ -1,5 +1,6 @@
-/***************************************************************************
- * Copyright (C) 2017                               Bartosz Kostrzewa
+/***********************************************************************
+ *
+ * Copyright (C) 2018  Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -7,29 +8,25 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ****************************************************************************/
+ *
+ *******************************************************************************/
 
-#ifndef QUDA_SOLVER_TRANSLATE_H
-#define QUDA_SOLVER_TRANSLATE_H
+#include "global.h"
+#include "misc_types.h"
 
-#include "solver/solver_types.h"
-
-// these exist only in case we are compiling without QUDA support, such that the
-// input file reader can be compiled
-typedef enum QudaInverterType_s {
- QUDA_BICGSTAB_INVERTER = BICGSTAB,
- QUDA_CG_INVERTER = CG,
- QUDA_MR_INVERTER = MR,
- QUDA_GCR_INVERTER = GCR,
- QUDA_CA_GCR_INVERTER = CA_GCR
-} QudaInverterType;
-
-#endif
+void init_global_states(void) {
+  g_gauge_state = new_tm_GaugeState("g_gauge_field");
+  g_gauge_state_32 = new_tm_GaugeState("g_gauge_field_32");
+  g_clover_state = new_tm_CloverState();
+  g_clover_state_32 = new_tm_CloverState();
+  g_clover_inverse_state = new_tm_CloverInverseState();
+  g_clover_inverse_state_32 = new_tm_CloverInverseState();
+}

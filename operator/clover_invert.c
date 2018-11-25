@@ -210,10 +210,11 @@ void sw_invert(const int ieo, const double mu) {
       // and invert the resulting matrix
 
       six_invert(&err,a); 
-      // here we need to catch the error! 
+      // here we need to catch the error! probably this check should be
+      // performed by all processes?! 
       if(err > 0 && g_proc_id == 0) {
-	printf("# inversion failed in six_invert code %d\n", err);
-	err = 0;
+	      printf("# inversion failed in six_invert code %d\n", err);
+	      err = 0;
       }
 
       /*  copy "a" back to sw_inv */
@@ -225,28 +226,28 @@ void sw_invert(const int ieo, const double mu) {
 
     if(fabs(mu) > 0.) {
       for(i = 0; i < 2; i++) {
-	populate_6x6_matrix(a, &sw[x][0][i], 0, 0);
-	populate_6x6_matrix(a, &sw[x][1][i], 0, 3);
-	_su3_dagger(v, sw[x][1][i]); 
-	populate_6x6_matrix(a, &v, 3, 0);
-	populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
+        populate_6x6_matrix(a, &sw[x][0][i], 0, 0);
+        populate_6x6_matrix(a, &sw[x][1][i], 0, 3);
+        _su3_dagger(v, sw[x][1][i]); 
+        populate_6x6_matrix(a, &v, 3, 0);
+        populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
 
-	// we add the twisted mass term
-	if(i == 0) add_tm(a, -mu);
-	else add_tm(a, +mu);
-	// and invert the resulting matrix
-	six_invert(&err,a); 
-	// here we need to catch the error! 
-	if(err > 0 && g_proc_id == 0) {
-	  printf("# %d\n", err);
-	  err = 0;
-	}
+        // we add the twisted mass term
+        if(i == 0) add_tm(a, -mu);
+        else add_tm(a, +mu);
+        // and invert the resulting matrix
+        six_invert(&err,a); 
+        // here we need to catch the error! 
+        if(err > 0 && g_proc_id == 0) {
+          printf("# %d\n", err);
+          err = 0;
+        }
 
-	/*  copy "a" back to sw_inv */
-	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][0][i], a, 0, 0);
-	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][1][i], a, 0, 3);
-	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][2][i], a, 3, 3);
-	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][3][i], a, 3, 0);
+        /*  copy "a" back to sw_inv */
+        get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][0][i], a, 0, 0);
+        get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][1][i], a, 0, 3);
+        get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][2][i], a, 3, 3);
+        get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][3][i], a, 3, 0);
       }
     }
 #ifndef TM_USE_OMP

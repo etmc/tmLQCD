@@ -77,6 +77,7 @@
 #include "ranlxd.h"
 #include "ranlxs.h"
 #include "start.h"
+#include "misc_types.h"
 
 static void gauss_vector(double v[],int n)
 {
@@ -436,6 +437,7 @@ void unit_g_gauge_field(void)
     }
   }
   g_update_gauge_copy = 1;
+  update_tm_gauge_id(&g_gauge_state, TM_GAUGE_PROPAGATE_THRESHOLD);
   return;
 }
 
@@ -504,6 +506,7 @@ void random_gauge_field(const int repro, su3 ** const gf) {
   }
 
   g_update_gauge_copy = 1;
+  update_tm_gauge_id(&g_gauge_state, TM_GAUGE_PROPAGATE_THRESHOLD);
   return;
 }
 

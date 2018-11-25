@@ -28,6 +28,8 @@
 #include "ranlxd.h"
 #include "su3spinor.h"
 #include "source_generation.h"
+#include "solver/solver_field.h"
+#include "linalg/convert_eo_to_lexic.c"
 
 #ifndef M_PI
 # define M_PI           3.14159265358979323846
@@ -456,3 +458,176 @@ void source_generation_nucleon(spinor * const P, spinor * const Q,
   }
   return;
 }
+
+void full_source_spinor_field_point(spinor * const full_spinor,
+                                    const int is, const int ic,
+                                    const int * const global_txyz_src_pos){
+  spinor ** temp_cb_spinors;
+  init_solver_field(&temp_cb_spinors, VOLUME/2, 2);
+  eo_source_spinor_field_point(temp_cb_spinors[0], temp_cb_spinors[1], is, ic, global_txyz_src_pos);
+  convert_eo_to_lexic(full_spinor, temp_cb_spinors[0], temp_cb_spinors[1]);
+  finalize_solver(temp_cb_spinors, 2);
+}
+
+// create a point source at the lattice-global coordinates specified by the
+// four-element array global_txyz_src_pos
+void eo_source_spinor_field_point(spinor * const even_cb_spinor, 
+                                  spinor * const odd_cb_spinor,
+                                  const int is, const int ic,
+                                  const int * const global_txyz_src_pos){
+  zero_spinor_field(even_cb_spinor, VOLUME/2);
+  zero_spinor_field(odd_cb_spinor, VOLUME/2);
+
+  if( (global_txyz_src_pos[0] >= g_nproc_t * T || global_txyz_src_pos[0] < 0) ||
+      (global_txyz_src_pos[1] >= g_nproc_x * LX || global_txyz_src_pos[1] < 0) ||
+      (global_txyz_src_pos[2] >= g_nproc_y * LY || global_txyz_src_pos[2] < 0) ||
+      (global_txyz_src_pos[3] >= g_nproc_z * LZ || global_txyz_src_pos[3] < 0) ){
+    char error_message[500];
+    snprintf(error_message,
+             500,
+             "Coordinates t=%d x=%d y=%d z=%d are outside the global lattice extent!\n",
+             global_txyz_src_pos[0],
+             global_txyz_src_pos[1],
+             global_txyz_src_pos[2],
+             global_txyz_src_pos[3]);
+    fatal_error(error_message, "source_spinor_field_point");
+  }
+
+  if( (g_proc_coords[0] == global_txyz_src_pos[0] / T) &&
+      (g_proc_coords[1] == global_txyz_src_pos[1] / LX) &&
+      (g_proc_coords[2] == global_txyz_src_pos[2] / LY) &&
+      (g_proc_coords[3] == global_txyz_src_pos[3] / LZ) ) {
+    
+    const int idx = g_ipt[ global_txyz_src_pos[0] % T ]
+                           [ global_txyz_src_pos[1] % LX ]
+                           [ global_txyz_src_pos[2] % LY ]
+                           [ global_txyz_src_pos[3] % LZ ];
+
+    const int eo_idx = g_lexic2eosub[ idx ];
+
+    spinor * s = (g_lexic2eo[idx] < VOLUME/2 ? even_cb_spinor : odd_cb_spinor) +
+                 eo_idx;
+
+    /* put source to 1.0 */
+    if (is==0){
+      if      (ic==0) s->s0.c0 = 1.0;
+      else if (ic==1) s->s0.c1 = 1.0;
+      else if (ic==2) s->s0.c2 = 1.0;
+    }
+    else if (is==1){
+      if      (ic==0) s->s1.c0 = 1.0;
+      else if (ic==1) s->s1.c1 = 1.0;
+      else if (ic==2) s->s1.c2 = 1.0;
+    }
+    else if (is==2){
+      if      (ic==0) s->s2.c0 = 1.0;
+      else if (ic==1) s->s2.c1 = 1.0;
+      else if (ic==2) s->s2.c2 = 1.0;
+    }
+    else if (is==3){
+      if      (ic==0) s->s3.c0 = 1.0;
+      else if (ic==1) s->s3.c1 = 1.0;
+      else if (ic==2) s->s3.c2 = 1.0;
+    }
+  }
+}
+
+void full_source_spinor_field_spin_diluted_oet_ts(spinor * const full_spinor,
+                                                  const int src_ts,
+                                                  const int src_d,
+                                                  const int sample,
+                                                  const int nstore,
+                                                  const unsigned int oet_seed){
+  spinor ** temp_cb_spinors;
+  init_solver_field(&temp_cb_spinors, VOLUME/2, 2);
+  eo_source_spinor_field_spin_diluted_oet_ts(temp_cb_spinors[0], 
+                                             temp_cb_spinors[1],
+                                             src_ts,
+                                             src_d,
+                                             sample,
+                                             nstore,
+                                             oet_seed);
+  convert_eo_to_lexic(full_spinor, temp_cb_spinors[0], temp_cb_spinors[1]);
+  finalize_solver(temp_cb_spinors, 2);
+}
+
+void eo_source_spinor_field_spin_diluted_oet_ts(spinor * const even_cb_spinor,
+                                                spinor * const odd_cb_spinor,
+                                                const int src_ts,
+                                                const int src_d,
+                                                const int sample,
+                                                const int nstore,
+                                                const unsigned int oet_seed){
+  int reset = 0, i, x, y, z, ic, lt, lx, ly, lz, id=0;
+  int coords[4], seed, r;
+  double rnumber, si=0., co=0.;
+  int rlxd_state[105];
+  const double sqr2 = 1./sqrt(2.);
+  _Complex double * p = NULL;
+  
+  zero_spinor_field(even_cb_spinor,VOLUME/2);
+  zero_spinor_field(odd_cb_spinor,VOLUME/2);
+
+  /* save the ranlxd_state if neccessary */
+  if(ranlxd_init == 1) {
+    rlxd_get(rlxd_state);
+    reset = 1;
+  }
+
+  seed =(int) abs(oet_seed + sample + src_ts*10*97 + nstore);
+
+  rlxd_init(2, seed);
+
+  lt = src_ts - g_proc_coords[0]*T;
+  coords[0] = src_ts / T;
+  for(x = 0; x < LX*g_nproc_x; x++) {
+    lx = x - g_proc_coords[1]*LX;
+    coords[1] = x / LX;
+    for(y = 0; y < LY*g_nproc_y; y++) {
+      ly = y - g_proc_coords[2]*LY;
+      coords[2] = y / LY;
+      for(z = 0; z < LZ*g_nproc_z; z++) {
+	      lz = z - g_proc_coords[3]*LZ;
+	      coords[3] = z / LZ;
+#ifdef TM_USE_MPI
+	MPI_Cart_rank(g_cart_grid, coords, &id);
+#endif
+	    for(ic = 0; ic < 3; ic++) {
+	      ranlxd(&rnumber, 1);
+	      if(g_cart_id  == id) {
+	        r = (int)floor(4.*rnumber);
+	        if(r == 0){
+	          si = sqr2;
+	          co = sqr2;
+	        } else if(r == 1) {
+	          si = -sqr2;
+	          co = sqr2;
+	        } else if(r==2) {
+	          si = sqr2;
+	          co = -sqr2;
+	        } else {
+	          si = -sqr2;
+	          co = -sqr2;
+	        }
+	        
+	        i = g_lexic2eosub[ g_ipt[lt][lx][ly][lz] ];
+	        if((lt+lx+ly+lz+g_proc_coords[3]*LZ+g_proc_coords[2]*LY 
+	            + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
+	          p = (_Complex double*)(even_cb_spinor + i);
+	        } else {
+	          p = (_Complex double*)(odd_cb_spinor + i);
+	        }  
+	          (*(p+3*src_d+ic)) = co + si * I;
+	        }
+	      } // ic
+      } // z
+    } // y
+  } // x
+	    
+  /* reset the ranlxd if neccessary */
+  if(reset) {
+    rlxd_reset(rlxd_state);
+  }
+  return;
+
+} 

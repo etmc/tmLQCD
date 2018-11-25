@@ -1,6 +1,6 @@
-/***************************************************************************
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
- *               2017                               Bartosz Kostrzewa
+/***********************************************************************
+ *  
+ * Copyright (C) 2018 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -16,40 +16,19 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
- ****************************************************************************/
+ ***********************************************************************/
 
-#ifndef _SOLVER_TYPES_H
-#define _SOLVER_TYPES_H
+#ifndef TM_DEBUG_PRINTF_H
+#define TM_DEBUG_PRINTF_H
 
-typedef enum SOLVER_TYPE {
- BICGSTAB = 0,
- CG,
- GMRES,
- CGS,
- MR,
- BICGSTABELL,
- FGMRES,
- GCR,
- GMRESDR,
- PCG,
- DFLGCR,
- DFLFGMRES,
- CGMMS,
- MIXEDCG,
- RGMIXEDCG,
- CGMMSND,
- INCREIGCG,
- MIXEDCGMMSND,
- SUMR,
- MCR,
- CR,
- BICG,
- MG,
- MIXEDBICGSTAB,
- DUMMYHERMTEST,
- CA_GCR
-} SOLVER_TYPE;
+/* Function along the lines of printf which produces output on a single
+ * or all MPI tasks (unordered) when g_debug_level is at or
+ * above the provided threshold 
+ * to have output by all MPI tasks, simply pass g_proc_id for proc_id */
 
-int solver_is_mixed( const int solver_type );
+void tm_debug_printf(const int proc_id,
+                     const int dbg_level_threshold,
+                     const char * format,
+                     ...);
 
 #endif

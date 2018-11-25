@@ -62,6 +62,9 @@
 #include "read_input.h"
 #include "sighandler.h"
 #include "start.h"
+#include "include/tmLQCD.h"
+#include "fatal_error.h"
+#include "misc_types.h"
 
 #ifdef HAVE_GPU
 extern void init_mixedsolve_eo(su3** gf);
@@ -90,6 +93,8 @@ int tmLQCD_init_parallel_and_read_input(int argc, char* argv[], const int _verbo
 }
 
 int tmLQCD_invert_init(int argc, char* argv[], const int _verbose, const int external_id) {
+  init_critical_globals(TM_PROGRAM_EXTERNAL); 
+  
   DUM_DERI = 8;
   DUM_MATRIX = DUM_DERI + 5;
   NO_OF_SPINORFIELDS = DUM_MATRIX + 3;
@@ -392,8 +397,11 @@ int tmLQCD_get_mpi_params(tmLQCD_mpi_params* params) {
   params->proc_coords[1] = g_proc_coords[1];
   params->proc_coords[2] = g_proc_coords[2];
   params->proc_coords[3] = g_proc_coords[3];
+  // g_cart_grid only exists when MPI is in use
 #ifdef TM_USE_MPI
   params->cart_grid = g_cart_grid;
+#else
+  params->cart_grid = -1;
 #endif
   return(0);
 }

@@ -2,6 +2,7 @@
  *
  * Copyright (C) 2015       Mario Schroeck
  *               2016, 2017 Bartosz Kostrzewa
+ *               2018       Bartosz Kostrzewa, Ferenc Pittler
  *
  * This file is part of tmLQCD.
  *
@@ -378,7 +379,7 @@ void _loadCloverQuda(QudaInvertParam* inv_param){
 void _loadGaugeQuda( const int compression ) {
   // check if the currently loaded gauge field is also the current gauge field
   // and if so, return immediately
-  if( check_quda_gauge_state(&quda_gauge_state, nstore) ){
+  if( check_quda_gauge_state(&quda_gauge_state, nstore, X1, X2, X3, X0) ){
     return;
   } else {
     freeGaugeQuda();
@@ -471,9 +472,8 @@ void _loadGaugeQuda( const int compression ) {
 #endif
 
   loadGaugeQuda((void*)gauge_quda, &gauge_param);
-  set_quda_gauge_state(&quda_gauge_state, nstore);
+  set_quda_gauge_state(&quda_gauge_state, nstore, X1, X2, X3, X0);
 }
-
 
 // reorder spinor to QUDA format
 void reorder_spinor_toQuda( double* sp, QudaPrecision precision, int doublet, double* sp2 ) {
@@ -628,12 +628,23 @@ void set_sloppy_prec( const SloppyPrecision sloppy_precision ) {
   inv_param.clover_cuda_prec_sloppy = cuda_prec_sloppy;
 }
 
-int invert_quda_direct(double * const propagator, double * const source,
-                const int op_id) {
+
+
+int invert_quda_direct_theta(double * const propagator, double * const source,
+                const int op_id,
+                const double theta_x,
+                const double theta_y,
+                const double theta_z,
+                const double theta_t) {
 
   double atime, atotaltime = gettime();
   void *spinorIn  = (void*)source; // source
   void *spinorOut = (void*)propagator; // solution
+
+  X1 = theta_x;
+  X2 = theta_y;
+  X3 = theta_z;
+  X0 = theta_t;
   
   operator * optr = &operator_list[op_id];
   // g_kappa is necessary for the gauge field to be correctly translated from tmLQCD to QUDA
@@ -657,7 +668,7 @@ int invert_quda_direct(double * const propagator, double * const source,
   set_sloppy_prec(optr->sloppy_precision);
  
   // load gauge after setting precision, this is a no-op if the current gauge field
-  // is already loaded
+  // is already loaded and the boundary conditions have not changed
   atime = gettime();
   _loadGaugeQuda(optr->compression_type);
   if(g_proc_id==0 && g_debug_level > 0 ) printf("# QUDA: Time for loadGaugeQuda: %.4e\n",gettime()-atime);
@@ -775,6 +786,17 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
     return(-1);
 
   return(iteration);
+}
+
+int invert_quda_direct(double * const propagator, double * const source,
+                const int op_id) {
+  return invert_quda_direct_theta(propagator,
+                                  source, 
+                                  op_id,
+                                  X1,
+                                  X2,
+                                  X3,
+                                  X0);
 }
 
 int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
@@ -1237,7 +1259,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
       }
     } // for( dim=0 to dim=3 ) (space-time dimensions)
 
-    mg_param->coarse_solver[level] = QUDA_GCR_INVERTER;
+    mg_param->coarse_solver[level] = quda_input.mg_coarse_solver_type[level];
     mg_param->coarse_solver_tol[level] = quda_input.mg_coarse_solver_tol;
     mg_param->coarse_solver_maxiter[level] = quda_input.mg_coarse_solver_maxiter;
     // spin block size on level zero will be reset to 2 below
@@ -1249,7 +1271,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     mg_param->cycle_type[level] = QUDA_MG_CYCLE_RECURSIVE;
     mg_param->location[level] = QUDA_CUDA_FIELD_LOCATION;
     
-    mg_param->smoother[level] = QUDA_MR_INVERTER;
+    mg_param->smoother[level] = quda_input.mg_smoother_type[level];
     mg_param->smoother_tol[level] = quda_input.mg_smoother_tol;
     // unless the Schwarz-alternating smoother is used, this should be 1
     mg_param->smoother_schwarz_cycle[level] = 1;

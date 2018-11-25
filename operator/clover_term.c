@@ -51,6 +51,7 @@
 #include "su3adj.h"
 #include "operator/clovertm_operators.h"
 #include "operator/clover_leaf.h"
+#include "misc_types.h"
 
 // the clover term is written as
 //
@@ -115,43 +116,43 @@ void sw_term(const su3 ** const gf, const double kappa, const double c_sw) {
   for(x = 0; x < VOLUME; x++) {
     for(k = 0; k < 4; k++) {
       for(l = k+1; l < 4; l++) {
-	xpk=g_iup[x][k];
-	xpl=g_iup[x][l];
-	xmk=g_idn[x][k];
-	xml=g_idn[x][l];
-	xpkml=g_idn[xpk][l];
-	xplmk=g_idn[xpl][k];
-	xmkml=g_idn[xml][k];
-	w1=&gf[x][k];
-	w2=&gf[xpk][l];
-	w3=&gf[xpl][k];
-	w4=&gf[x][l];
-	_su3_times_su3(v1,*w1,*w2);
-	_su3_times_su3(v2,*w4,*w3);
-	_su3_times_su3d(plaq,v1,v2);
-	w1=&gf[x][l];
-	w2=&gf[xplmk][k];
-	w3=&gf[xmk][l];
-	w4=&gf[xmk][k];
-	_su3_times_su3d(v1,*w1,*w2);
-	_su3d_times_su3(v2,*w3,*w4);
-	_su3_times_su3_acc(plaq,v1,v2);
-	w1=&gf[xmk][k];
-	w2=&gf[xmkml][l];
-	w3=&gf[xmkml][k];
-	w4=&gf[xml][l];
-	_su3_times_su3(v1,*w2,*w1);
-	_su3_times_su3(v2,*w3,*w4);
-	_su3d_times_su3_acc(plaq,v1,v2);
-	w1=&gf[xml][l];
-	w2=&gf[xml][k];
-	w3=&gf[xpkml][l];
-	w4=&gf[x][k];
-	_su3d_times_su3(v1,*w1,*w2);
-	_su3_times_su3d(v2,*w3,*w4);
-	_su3_times_su3_acc(plaq,v1,v2);
-	_su3_dagger(v2,plaq); 
-	_su3_minus_su3(fkl[k][l],plaq,v2);
+        xpk=g_iup[x][k];
+        xpl=g_iup[x][l];
+        xmk=g_idn[x][k];
+        xml=g_idn[x][l];
+        xpkml=g_idn[xpk][l];
+        xplmk=g_idn[xpl][k];
+        xmkml=g_idn[xml][k];
+        w1=&gf[x][k];
+        w2=&gf[xpk][l];
+        w3=&gf[xpl][k];
+        w4=&gf[x][l];
+        _su3_times_su3(v1,*w1,*w2);
+        _su3_times_su3(v2,*w4,*w3);
+        _su3_times_su3d(plaq,v1,v2);
+        w1=&gf[x][l];
+        w2=&gf[xplmk][k];
+        w3=&gf[xmk][l];
+        w4=&gf[xmk][k];
+        _su3_times_su3d(v1,*w1,*w2);
+        _su3d_times_su3(v2,*w3,*w4);
+        _su3_times_su3_acc(plaq,v1,v2);
+        w1=&gf[xmk][k];
+        w2=&gf[xmkml][l];
+        w3=&gf[xmkml][k];
+        w4=&gf[xml][l];
+        _su3_times_su3(v1,*w2,*w1);
+        _su3_times_su3(v2,*w3,*w4);
+        _su3d_times_su3_acc(plaq,v1,v2);
+        w1=&gf[xml][l];
+        w2=&gf[xml][k];
+        w3=&gf[xpkml][l];
+        w4=&gf[x][k];
+        _su3d_times_su3(v1,*w1,*w2);
+        _su3_times_su3d(v2,*w3,*w4);
+        _su3_times_su3_acc(plaq,v1,v2);
+        _su3_dagger(v2,plaq); 
+        _su3_minus_su3(fkl[k][l],plaq,v2);
       }
     }
 
