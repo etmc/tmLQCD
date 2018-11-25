@@ -123,17 +123,14 @@ int tmLQCD_get_op_params(tmLQCD_op_params *params, const int op_id);
 //                                               const unsigned int oet_seed);
 
 #ifdef TM_USE_QUDA
-<<<<<<< HEAD
 // FIXME: this needs to reworked into tmLQCD_invert, such that there is just
 // one inversion pathway
 // direct line to QUDA inverter, no messing about with even/odd reordering
 // source and propagator  Should be full VOLUME spinor fields 
 // op_id                  Index of the operator to be inverted (0 to N-1)
-=======
-// FIXME: this should be renamed to e consistent
->>>>>>> 895f32c3d924fff9591d545fccfe00ffd21e2d5b
 int invert_quda_direct(double *const propgator, double *const source, const int op_id);
 #endif
+
 #ifdef TM_USE_QPHIX
 int tmLQCD_invert_qphix_direct(double *const Odd_out, double *const Odd_in, const int op_id);
 #endif
