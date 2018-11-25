@@ -630,22 +630,13 @@ void set_sloppy_prec( const SloppyPrecision sloppy_precision ) {
 
 
 
-int invert_quda_direct_theta(double * const propagator, double * const source,
-                const int op_id,
-                const double theta_x,
-                const double theta_y,
-                const double theta_z,
-                const double theta_t) {
+int invert_quda_direct(double * const propagator, double * const source,
+                       const int op_id) {
 
   double atime, atotaltime = gettime();
   void *spinorIn  = (void*)source; // source
   void *spinorOut = (void*)propagator; // solution
 
-  X1 = theta_x;
-  X2 = theta_y;
-  X3 = theta_z;
-  X0 = theta_t;
-  
   operator * optr = &operator_list[op_id];
   // g_kappa is necessary for the gauge field to be correctly translated from tmLQCD to QUDA
   g_kappa = optr->kappa;
@@ -786,17 +777,6 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
     return(-1);
 
   return(iteration);
-}
-
-int invert_quda_direct(double * const propagator, double * const source,
-                const int op_id) {
-  return invert_quda_direct_theta(propagator,
-                                  source, 
-                                  op_id,
-                                  X1,
-                                  X2,
-                                  X3,
-                                  X0);
 }
 
 int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
