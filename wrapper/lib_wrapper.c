@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <float.h>
 #ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
@@ -48,6 +49,9 @@
 #ifdef TM_USE_QUDA
 #include "quda_interface.h"
 #endif
+#ifdef TM_USE_QPHIX
+#include "qphix_interface.h"
+#endif
 #include <io/gauge.h>
 #include <io/utils.h>
 #include "boundary.h"
@@ -59,6 +63,7 @@
 #include "measure_gauge_action.h"
 #include "mpi_init.h"
 #include "operator.h"
+#include "operator/clover_leaf.h"
 #include "read_input.h"
 #include "sighandler.h"
 #include "start.h"
@@ -309,7 +314,7 @@ int tmLQCD_invert(double* const propagator, double* const source, const int op_i
   return (0);
 }
 
-int tmLQCD_invert_eo(double* const sol_odd, double* const src_odd, const int op_id){
+int tmLQCD_invert_eo(double* const Odd_out, double* const Odd_in, const int op_id){
   unsigned int index_start = 0;
   if (!tmLQCD_invert_initialised) {
     fprintf(stderr, "tmLQCD_invert_eo: tmLQCD_inver_init must be called first. Aborting...\n");
@@ -471,3 +476,59 @@ int tmLQCD_set_op_params(tmLQCD_op_params const* const params, const int op_id) 
   boundary(params->kappa);
   return (0);
 }
+
+#ifdef TM_USE_QPHIX
+int tmLQCD_invert_qphix_direct(double * const Odd_out, double * const Odd_in, const int op_id){
+  static double clover_term_c_sw = -1.0;
+  static double clover_term_kappa = -1.0;
+  static double inv_clover_term_mu = 0.0;
+  
+  if (!tmLQCD_invert_initialised) {
+    fprintf(stderr, "tmLQCD_invert: tmLQCD_inver_init must be called first. Aborting...\n");
+    return (-1);
+  }
+
+  if (op_id < 0 || op_id >= no_operators) {
+    fprintf(stderr, "tmLQCD_invert: op_id=%d not in valid range. Aborting...\n", op_id);
+    return (-2);
+  }
+
+  op_backup_restore_globals(TM_BACKUP_GLOBALS);
+  op_set_globals(op_id);
+  boundary(g_kappa);
+  
+  // if this is a clover operator, we check if the clover term and its inverse
+  // which might be currently in memory are consistent with the requested parameters
+  // if not, we recompute them
+  if( operator_list[op_id].type == CLOVER ){
+    if( (fabs(g_c_sw - clover_term_c_sw) > 2*DBL_EPSILON ) ||
+        (fabs(g_kappa - clover_term_kappa) > 2*DBL_EPSILON ) ){
+      sw_term((const su3**)g_gauge_field,
+              g_kappa,
+              g_c_sw);
+      clover_term_kappa = g_kappa;
+      clover_term_c_sw = g_c_sw;
+    }
+    if( fabs(g_mu - inv_clover_term_mu) > 2*DBL_EPSILON ){
+      // in the hopping matrix and elsewhere "even_even" is called "EE"
+      // but it's only defined in operator/HoppingMatrix.h, we don't want to
+      // include that here
+      const int even_even = 0;
+      sw_invert(even_even, g_mu);
+      inv_clover_term_mu = g_mu;
+    }
+  }
+  
+  int niter = invert_eo_qphix_oneflavour((spinor *const) Odd_out, (spinor* const) Odd_in,
+                                         operator_list[op_id].maxiter,
+                                         operator_list[op_id].eps_sq,
+                                         operator_list[op_id].solver,
+                                         operator_list[op_id].rel_prec,
+                                         operator_list[op_id].solver_params,
+                                         operator_list[op_id].sloppy_precision,
+                                         operator_list[op_id].compression_type
+                                         );
+  op_backup_restore_globals(TM_RESTORE_GLOBALS);
+  return(niter);
+}
+#endif
