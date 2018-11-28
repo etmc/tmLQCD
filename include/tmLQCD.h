@@ -128,7 +128,7 @@ int tmLQCD_get_op_params(tmLQCD_op_params *params, const int op_id);
 // direct line to QUDA inverter, no messing about with even/odd reordering
 // source and propagator  Should be full VOLUME spinor fields 
 // op_id                  Index of the operator to be inverted (0 to N-1)
-int invert_quda_direct(double *const propgator, double *const source, const int op_id);
+int invert_quda_direct(double *const propgator, double const *const source, const int op_id);
 #endif
 
 #ifdef TM_USE_QPHIX

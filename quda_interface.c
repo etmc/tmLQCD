@@ -630,11 +630,16 @@ void set_sloppy_prec( const SloppyPrecision sloppy_precision ) {
 
 
 
-int invert_quda_direct(double * const propagator, double * const source,
+int invert_quda_direct(double * const propagator, double const * const source,
                        const int op_id) {
+  
+  spinor ** solver_field = NULL;
+  init_solver_field(&solver_field, VOLUME, 1);
+
+  memcpy((void*)(solver_field[0]), (void*)(source), VOLUME*sizeof(spinor));
 
   double atime, atotaltime = gettime();
-  void *spinorIn  = (void*)source; // source
+  void *spinorIn  = (void*)solver_field[0]; // source
   void *spinorOut = (void*)propagator; // solution
 
   operator * optr = &operator_list[op_id];
@@ -693,6 +698,8 @@ int invert_quda_direct(double * const propagator, double * const source,
   // since the rescaling is otherwise done in the operator inversion driver
   mul_r((spinor*)spinorOut, (2*optr->kappa), (spinor*)spinorOut, VOLUME );
 
+  finalize_solver(solver_field, 1);
+  
   if( g_proc_id==0 && g_debug_level > 0 )
     printf("# QUDA: Total time for invert_quda_direct: %.4e\n",gettime()-atotaltime); 
 
