@@ -112,6 +112,7 @@
 #include "quda.h"
 #include "global.h"
 #include "operator.h"
+#include "tm_debug_printf.h"
 
 // nstore is generally like a gauge id, for measurements it identifies the gauge field
 // uniquely 
@@ -392,7 +393,9 @@ void _loadGaugeQuda( const int compression ) {
       if( compression == 18 ){
         if( quda_input.fermionbc == TM_QUDA_THETABC ){
           printf("# QUDA: Theta boundary conditions will be applied to gauge field\n");
-        } else if ( quda_input.fermionbc == TM_QUDA_APBC ){
+        }
+      } else {
+        if( quda_input.fermionbc == TM_QUDA_APBC ){
           printf("# QUDA: Temporal ABPC will be applied to gauge field\n");
         }
       }
@@ -436,36 +439,37 @@ void _loadGaugeQuda( const int compression ) {
           memcpy( &(gauge_quda[2][quda_idx]), &(g_gauge_field[tm_idx][3]), 18*gSize);
           memcpy( &(gauge_quda[3][quda_idx]), &(g_gauge_field[tm_idx][0]), 18*gSize);
 #endif
-        if( compression == 18 ) {
-          // apply boundary conditions
-          if ( quda_input.fermionbc == TM_QUDA_THETABC ){
-            for( int i=0; i<9; i++ ) {
-              tmpcplx = gauge_quda[0][quda_idx+2*i] + I*gauge_quda[0][quda_idx+2*i+1];
-              tmpcplx *= -phase_1/g_kappa;
-              gauge_quda[0][quda_idx+2*i]   = creal(tmpcplx);
-              gauge_quda[0][quda_idx+2*i+1] = cimag(tmpcplx);
+        if( compression == 18 && quda_input.fermionbc == TM_QUDA_THETABC ) {
+          // apply theta boundary conditions if compression is not used
+          for( int i=0; i<9; i++ ) {
+            tmpcplx = gauge_quda[0][quda_idx+2*i] + I*gauge_quda[0][quda_idx+2*i+1];
+            tmpcplx *= -phase_1/g_kappa;
+            gauge_quda[0][quda_idx+2*i]   = creal(tmpcplx);
+            gauge_quda[0][quda_idx+2*i+1] = cimag(tmpcplx);
 
-              tmpcplx = gauge_quda[1][quda_idx+2*i] + I*gauge_quda[1][quda_idx+2*i+1];
-              tmpcplx *= -phase_2/g_kappa;
-              gauge_quda[1][quda_idx+2*i]   = creal(tmpcplx);
-              gauge_quda[1][quda_idx+2*i+1] = cimag(tmpcplx);
+            tmpcplx = gauge_quda[1][quda_idx+2*i] + I*gauge_quda[1][quda_idx+2*i+1];
+            tmpcplx *= -phase_2/g_kappa;
+            gauge_quda[1][quda_idx+2*i]   = creal(tmpcplx);
+            gauge_quda[1][quda_idx+2*i+1] = cimag(tmpcplx);
 
-              tmpcplx = gauge_quda[2][quda_idx+2*i] + I*gauge_quda[2][quda_idx+2*i+1];
-              tmpcplx *= -phase_3/g_kappa;
-              gauge_quda[2][quda_idx+2*i]   = creal(tmpcplx);
-              gauge_quda[2][quda_idx+2*i+1] = cimag(tmpcplx);
+            tmpcplx = gauge_quda[2][quda_idx+2*i] + I*gauge_quda[2][quda_idx+2*i+1];
+            tmpcplx *= -phase_3/g_kappa;
+            gauge_quda[2][quda_idx+2*i]   = creal(tmpcplx);
+            gauge_quda[2][quda_idx+2*i+1] = cimag(tmpcplx);
 
-              tmpcplx = gauge_quda[3][quda_idx+2*i] + I*gauge_quda[3][quda_idx+2*i+1];
-              tmpcplx *= -phase_0/g_kappa;
-              gauge_quda[3][quda_idx+2*i]   = creal(tmpcplx);
-              gauge_quda[3][quda_idx+2*i+1] = cimag(tmpcplx);
-            }
-          } else if ( quda_input.fermionbc == TM_QUDA_APBC && x0+g_proc_coords[0]*T == g_nproc_t*T-1 ) {
+            tmpcplx = gauge_quda[3][quda_idx+2*i] + I*gauge_quda[3][quda_idx+2*i+1];
+            tmpcplx *= -phase_0/g_kappa;
+            gauge_quda[3][quda_idx+2*i]   = creal(tmpcplx);
+            gauge_quda[3][quda_idx+2*i+1] = cimag(tmpcplx);
+          }
+          // when compression is not used, we can still force naive anti-periodic boundary conditions
+        } else {
+          if ( quda_input.fermionbc == TM_QUDA_APBC && x0+g_proc_coords[0]*T == g_nproc_t*T-1 ) {
             for( int i=0; i<18; i++ ) {
               gauge_quda[3][quda_idx+i]   = -gauge_quda[3][quda_idx+i];
             }
           } // quda_input.fermionbc
-        } // compression
+        } // if(compression & boundary conditions)
       } // volume loop
 #ifdef TM_USE_OMP
   } // OpenMP parallel closing brace 
@@ -559,13 +563,14 @@ void reorder_spinor_fromQuda( double* sp, QudaPrecision precision, int doublet, 
 
   double endTime = gettime();
   double diffTime = endTime - startTime;
-  if(g_proc_id == 0)
-    printf("# QUDA: time spent in reorder_spinor_fromQuda: %f secs\n", diffTime);
+  tm_debug_printf(0,0,"# QUDA: time spent in reorder_spinor_fromQuda: %f secs\n", diffTime);
 }
 
 void set_boundary_conditions( CompressionType* compression ) {
-  // we can't have compression and theta-BC
-  if( fabs(X1)>0.0 || fabs(X2)>0.0 || fabs(X3)>0.0 || (fabs(X0)!=0.0 && fabs(X0)!=1.0) ) {
+  // we can't have compression and theta-BC, but we will support compression
+  // for theta_0 = 0.0 or theta_0 = 1.0 (using naive periodic or anti-periodic boundary conditions
+  // warning the user that the residual check will fail)
+  if( fabs(X1)>0.0 || fabs(X2)>0.0 || fabs(X3)>0.0 || (fabs(X0) > 2*DBL_EPSILON && fabs(fabs(X0)-1.0) > 2*DBL_EPSILON  ) ) {
     if( *compression!=NO_COMPRESSION ) {
       if(g_proc_id == 0) {
         printf("\n# QUDA: WARNING you can't use compression %d with boundary conditions for fermion fields (t,x,y,z)*pi: (%f,%f,%f,%f) \n", *compression,X0,X1,X2,X3);
@@ -575,31 +580,45 @@ void set_boundary_conditions( CompressionType* compression ) {
     }
   }
 
-  if( quda_input.fermionbc == TM_QUDA_APBC || quda_input.fermionbc == TM_QUDA_PBC ){
-    if( *compression!=NO_COMPRESSION ){
-      if(g_proc_id == 0){
-        printf("# QUDA: WARNING forced (A)PBC were selected in the input file.\n");
-        printf("# QUDA: Disabling compression to make sure that these are not lost due to gauge compression.\n");
-      }
-      *compression=NO_COMPRESSION;
-    }
-  }
-
   QudaReconstructType link_recon;
   QudaReconstructType link_recon_sloppy;
 
-  if( *compression==NO_COMPRESSION ) { // theta BC or "hard-coded" (A)PBC
-    gauge_param.t_boundary = QUDA_PERIODIC_T; // BC will be applied to gaugefield
+  if( *compression==NO_COMPRESSION ) {
+    // without compression, any kind of boundary conditions are supported
+    // and will be applied to the gauge field as required
+    if( quda_input.fermionbc != TM_QUDA_APBC ){
+      gauge_param.t_boundary = QUDA_PERIODIC_T;
+    } else {
+      gauge_param.t_boundary = QUDA_ANTI_PERIODIC_T;
+    }
     link_recon = 18;
     link_recon_sloppy = 18;
-  }
-  else { // trivial BC
-    gauge_param.t_boundary = ( fabs(X0)>0.0 ? QUDA_ANTI_PERIODIC_T : QUDA_PERIODIC_T );
+  } else {
+    // if we reach this point with compression (see logic above), theta_0 is either 0.0 or 1.0
+    // if it is 1.0, we explicitly enabled TM_QUDA_APBC to force simple anti-periodic boundary
+    // conditions
+    if( fabs(X0)>0.0 ){
+      quda_input.fermionbc = TM_QUDA_APBC;
+      tm_debug_printf(0, 0,
+          "# QUDA: WARNING You have set temporal theta-BC but gauge compression is enabled. "
+          "This will be overriden to use naive APBC instead. This works fine, but the residual "
+          "check on the host (CPU) will fail.\n");
+    }
+
+    if( quda_input.fermionbc == TM_QUDA_APBC ) {
+      gauge_param.t_boundary = QUDA_ANTI_PERIODIC_T;
+    } else {
+      gauge_param.t_boundary = QUDA_PERIODIC_T;
+    }
+
     link_recon = 12;
     link_recon_sloppy = *compression;
-    if( g_debug_level > 0 )
-      if(g_proc_id == 0)
-        printf("\n# QUDA: WARNING using %d compression with trivial (A)PBC instead of theta-BC ((t,x,y,z)*pi: (%f,%f,%f,%f))! This works fine but the residual check on the host (CPU) will fail.\n",*compression,X0,X1,X2,X3);
+
+    tm_debug_printf(0, 0, 
+        "\n# QUDA: WARNING using %d compression with trivial (A)PBC instead "
+        "of theta-BC ((t,x,y,z)*pi: (%f,%f,%f,%f))! This works fine but the residual "
+        "check on the host (CPU) will fail.\n",
+        *compression,X0,X1,X2,X3);
   }
 
   gauge_param.reconstruct = link_recon;
