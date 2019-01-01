@@ -99,7 +99,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
 
   // temporary field required by the QPhiX solve or by residual check
   spinor** temp;
-  if(g_debug_level > 1 || solver_params.external_inverter == QPHIX_INVERTER){
+  if(g_debug_level > 2 || solver_params.external_inverter == QPHIX_INVERTER){
     init_solver_field(&temp, VOLUMEPLUSRAND/2, 1);
   }
 
@@ -167,7 +167,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     fatal_error("Error: solver not allowed for degenerate solve. Aborting...\n", "solve_degenerate");
   }
 
-  if(g_debug_level > 1){
+  if(g_debug_level > 2){
     f(temp[0], P);
     diff(temp[0], temp[0], Q, VOLUME/2);
     double diffnorm = square_norm(temp[0], VOLUME/2, 1); 
@@ -175,7 +175,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
       printf("# solve_degenerate residual check: %e\n", diffnorm);
     }
   }
-  if(g_debug_level > 1 || solver_params.external_inverter == QPHIX_INVERTER){
+  if(g_debug_level > 2 || solver_params.external_inverter == QPHIX_INVERTER){
     finalize_solver(temp, 1);
   }
 
@@ -190,7 +190,7 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
 
   // temporary field required by the QPhiX solve or by residual check
   spinor ** temp;
-  if(g_debug_level > 1 || (solver_params->external_inverter == QPHIX_INVERTER  && solver_params->type != MG)){
+  if(g_debug_level > 2 || (solver_params->external_inverter == QPHIX_INVERTER  && solver_params->type != MG)){
     init_solver_field(&temp, VOLUMEPLUSRAND/2, 1);
   }
 
@@ -326,7 +326,7 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
     fatal_error("Error: solver not allowed for TM mms solve. Aborting...\n", "solve_mms_tm");
   }
 
-  if(g_debug_level > 1){
+  if(g_debug_level > 2){
     for( int shift = 0; shift < solver_params->no_shifts; shift++){
       g_mu3 = solver_params->shifts[shift]; 
       solver_params->M_psi(temp[0], P[shift]);
@@ -338,7 +338,7 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
       }
     }
   }
-  if(g_debug_level > 1 || (solver_params->external_inverter == QPHIX_INVERTER && solver_params->type != MG)){
+  if(g_debug_level > 2 || (solver_params->external_inverter == QPHIX_INVERTER && solver_params->type != MG)){
     finalize_solver(temp, 1);
   }
 
@@ -353,7 +353,7 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
 
   // temporary field required by the QPhiX solve or by residual check
   spinor ** temp;
-  if(g_debug_level > 1 || (solver_params->external_inverter == QPHIX_INVERTER && solver_params->type != MG)){
+  if(g_debug_level > 2 || (solver_params->external_inverter == QPHIX_INVERTER && solver_params->type != MG)){
     init_solver_field(&temp, VOLUMEPLUSRAND/2, 2);
   }
 
@@ -530,7 +530,7 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
     fatal_error("Error: solver not allowed for ND mms solve. Aborting...\n", "solve_mss_nd");
   }
 
-  if( g_debug_level > 1 ){
+  if( g_debug_level > 2 ){
     for( int shift = 0; shift < solver_params->no_shifts; shift++){
       matrix_mult_nd f = Qtm_pm_ndpsi_shift;
       if( solver_params->M_ndpsi == Qsw_pm_ndpsi ) 
@@ -546,7 +546,7 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
       }
     }
   }
-  if(g_debug_level > 1 || (solver_params->external_inverter == QPHIX_INVERTER  && solver_params->type != MG)){
+  if(g_debug_level > 2 || (solver_params->external_inverter == QPHIX_INVERTER  && solver_params->type != MG)){
     finalize_solver(temp, 2);
   }
 
