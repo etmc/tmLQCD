@@ -59,6 +59,7 @@ EQL {SPC}*={SPC}*
 #include"monomial/monomial.h"
 #include"solver/solver_types.h"
 #include"meas/measurements.h"
+#include"meas/reweightingmeas.h"
 #include"integrator.h"
 #include"operator.h"
 #include"phmc.h"
@@ -266,6 +267,32 @@ static inline double fltlist_next_token(int * const list_end){
     }
   }
   
+  static inline void parse_double_vector(const char * const input,vector_list* vector){
+    char paramname[100];
+    char* inputcopy;
+    int list_end = 0;
+    int l=0;
+    double value = 0;
+    inputcopy=strdup(input);
+    fltlist_tokenize(inputcopy, paramname, 100);
+    value = (double)fltlist_next_token(&list_end);
+    while( list_end != 1 ){
+      l++;
+      value = (double)fltlist_next_token(&list_end);
+    }
+    free(inputcopy);
+    allocate(vector,l);
+    fltlist_tokenize(input, paramname, 100);
+    value = (double)fltlist_next_token(&list_end);
+    l=0;
+    while( list_end != 1 ){
+      vector->el[l]=value;
+      l++;
+      value = (double)fltlist_next_token(&list_end);
+    }
+  }
+  
+  
 %}
 
 %option never-interactive
@@ -339,6 +366,7 @@ static inline double fltlist_next_token(int * const list_end){
 %x NOSOURCESZ2
 %x INITMEASUREMENT
 %x ONLINEMEAS
+%x REWEIGHTINGMEAS
 %x PIONNORMMEAS
 %x PLOOP
 %x ORIENTEDPLAQUETTESMEAS
@@ -1603,6 +1631,7 @@ static inline double fltlist_next_token(int * const list_end){
     mnl->type = CLOVERDETRATIORW;
     strcpy((*mnl).name, "CLOVERDETRATIORW");
   }
+  
   else if(strcmp(yytext, "DETRATIO")==0) {
     mnl->type = DETRATIO;
     strcpy((*mnl).name, "DETRATIO");
@@ -2311,6 +2340,7 @@ static inline double fltlist_next_token(int * const list_end){
  if(myverbose) printf("initialising measurements line %d\n", line_of_file);
   current_measurement++;
   meas = &measurement_list[current_measurement];
+  meas->parameter=(void*)NULL;
   meas->id = current_measurement;
   meas->direction = 0;
   meas->max_iter = 15000;
@@ -2321,6 +2351,11 @@ static inline double fltlist_next_token(int * const list_end){
   else if(strcmp(yytext, "PIONNORM")==0) {
     meas->type = PIONNORM;
     strcpy((*meas).name, "PIONNORM");
+  }
+  else if(strcmp(yytext, "REWEIGHTINGMEAS")==0) {
+    meas->type = REWEIGHTING;
+    initialize_reweighting_parameter(&meas->parameter);
+    strcpy((*meas).name, "REWEIGHTINGMEAS");
   }
   else if(strcmp(yytext, "POLYAKOVLOOP")==0) {
     meas->type = POLYAKOV;
@@ -2358,13 +2393,14 @@ static inline double fltlist_next_token(int * const list_end){
   if(myverbose) printf("measurement has id %d\n", current_measurement);
 
   if(meas->type == ONLINE) BEGIN(ONLINEMEAS);
+  else if(meas->type == REWEIGHTING) BEGIN(REWEIGHTINGMEAS);
   else if(meas->type == PIONNORM) BEGIN(PIONNORMMEAS);
   else if(meas->type == POLYAKOV) BEGIN(PLOOP);
   else if(meas->type == ORIENTED_PLAQUETTES) BEGIN(ORIENTEDPLAQUETTESMEAS);
   else if(meas->type == GRADIENT_FLOW) BEGIN(GRADIENTFLOWMEAS);
 }
 
-<ONLINEMEAS,PIONNORMMEAS,PLOOP,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS>{
+<ONLINEMEAS,PIONNORMMEAS,PLOOP,REWEIGHTINGMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS>{
   ^EndMeasurement{SPC}* {
     if(myverbose) printf("Measurement with id %d parsed in line %d\n\n", meas->id, line_of_file);
     BEGIN(0);
@@ -2376,7 +2412,7 @@ static inline double fltlist_next_token(int * const list_end){
   }
 }
 
-<ONLINEMEAS,PIONNORMMEAS>{
+<ONLINEMEAS,PIONNORMMEAS,REWEIGHTINGMEAS>{
   {SPC}*MaxSolverIterations{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     meas->max_iter = a;
@@ -2397,6 +2433,111 @@ static inline double fltlist_next_token(int * const list_end){
   }
 }
 
+
+<REWEIGHTINGMEAS>{
+  {SPC}*Operator{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->reweighting_operator = a;
+    if(myverbose) printf("  ReweightingOperator set to %d line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+  {SPC}*Samples{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->reweighting_number_sources = a;
+    if(myverbose) printf("  ReweightingSamples set to %d line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+   {SPC}*InterpolationSteps{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->interpolationsteps = a;
+    if(myverbose) printf("  ReweightingSamples set to %d line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+  {SPC}*UseEvenOdd{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->use_evenodd = a;
+    if(myverbose) printf("  UseEvenOdd set to %d line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+  {SPC}*2KappaMu0{EQL}{FLT} {
+    sscanf(yytext, " %[20a-zA-Z] = %lf", name, &c);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->k2mu0 = c;
+    if(myverbose) printf("Reweighting 2KappaMu0 set to %e line %d\n", c, line_of_file);
+  }
+  {SPC}*Mu{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->rmu = c;
+    if(myverbose) printf("Reweighting Mu set to %e line %d\n", c, line_of_file);
+  }
+  {SPC}*Mu0{EQL}{FLT} {
+    sscanf(yytext, " %[0a-zA-Z] = %lf", name, &c);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->rmu0 = c;
+    if(myverbose) printf("Reweighting Mu0 set to %e line %d\n", c, line_of_file);
+  }
+   {SPC}*Kappa0{EQL}{FLT} {
+    sscanf(yytext, " %[20a-zA-Z] = %lf", name, &c);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->kappa0 = c;
+    if(myverbose) printf("Reweighting Kappa0 set to %e line %d\n", c, line_of_file);
+  }
+  {SPC}*UseCheb{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->use_cheb = a;
+    if(myverbose) printf("  UseCheb set to %d line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+  {SPC}*EvEst{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->evest = a;
+    if(myverbose) printf("  EvEst set to %d line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+  {SPC}*UseChebOnly{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->only_cheb = a;
+    if(myverbose) printf("  UseChebOnly set to %d line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+  {SPC}*ChebOrder{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->cheborder = a;
+    if(myverbose) printf("  ChebOrder set to %d line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+    {SPC}*ChebEst{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->estimatorscheb = a;
+    if(myverbose) printf("  ChebEst set to %d line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+  {SPC}*MinEv{EQL}{FLT} {
+    sscanf(yytext, " %[20a-zA-Z] = %lf", name, &c);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->minev = c;
+    if(myverbose) printf("Reweighting MinEv set to %e line %d\n", c, line_of_file);
+  }
+   {SPC}*MaxEv{EQL}{FLT} {
+    sscanf(yytext, " %[20a-zA-Z] = %lf", name, &c);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->maxev = c;
+    if(myverbose) printf("Reweighting MaxEv set to %e line %d\n", c, line_of_file);
+  }
+  {SPC}*ChebConvLimit{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    initialize_reweighting_parameter(&meas->parameter);
+    ((reweighting_parameter*)meas->parameter)->testchebconvergence = c;
+    if(myverbose) printf("Reweighting ChebConvLimit set to %e line %d\n", c, line_of_file);
+  }
+    {SPC}*KappaSteps{EQL}{FLTLIST} {
+      initialize_reweighting_parameter(&meas->parameter);
+      parse_double_vector(yytext,&((reweighting_parameter*)meas->parameter)->kappaarray);
+      if(myverbose) printf("Reweighting KappaSteps %d line %d\n", ((reweighting_parameter*)meas->parameter)->kappaarray.s, line_of_file);
+    }
+}
+
 <GRADIENTFLOWMEAS>{
   {SPC}*StepSize{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
@@ -2409,6 +2550,7 @@ static inline double fltlist_next_token(int * const list_end){
     if(myverbose) printf("  Maximum gradient flow time size set to %lf line %d, measurement id=%d\n", meas->gf_tmax, line_of_file, meas->id);
   }
 } 
+
 
 <PLOOP>{
   {SPC}*Direction{EQL}[03] {
@@ -2941,7 +3083,7 @@ static inline double fltlist_next_token(int * const list_end){
   BEGIN(comment_caller);
 }
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID,INITEXTERNALINVERTER,QUDAINVERTER,QPHIXINVERTER>{SPC}*\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,REWEIGHTINGMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID,INITEXTERNALINVERTER,QUDAINVERTER,QPHIXINVERTER>{SPC}*\n   {
   line_of_file++;
 }
 <*>{SPC}*\n                       {

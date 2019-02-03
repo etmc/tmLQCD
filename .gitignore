@@ -18,5 +18,6 @@ tags
 hmc_tm
 invert
 offline_measurement
+measure
 lib/
 benchmark

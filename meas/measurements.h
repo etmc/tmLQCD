@@ -4,6 +4,8 @@
  *
  * Adapted from monomial.h by Florian Burger 2009/12/16
  *
+ * More flexible handling of measurements parameters by Georg Bergner 2016
+ *
  * This file is part of tmLQCD.
  *
  * tmLQCD is free software: you can redistribute it and/or modify
@@ -18,6 +20,9 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *
+ *
  ***********************************************************************/
 #ifndef _MEASUREMENTS_H
 #define _MEASUREMENTS_H
@@ -25,28 +30,30 @@
 #define max_no_measurements 20
 
 /* Give the measurement types an unambiguous ID*/
-enum MEAS_TYPE { 
-  ONLINE, 
-  PIONNORM, 
-  POLYAKOV, 
-  ORIENTED_PLAQUETTES,
-  GRADIENT_FLOW 
-  };
+enum MEAS_TYPE
+{
+  ONLINE, PIONNORM, POLYAKOV, ORIENTED_PLAQUETTES, GRADIENT_FLOW, REWEIGHTING
+};
 
-typedef struct {
+typedef struct
+{
   enum MEAS_TYPE type;
   int initialised;
   int id;
-  
-  /* frequency of the measurement */
-  int freq;
-  /* for maximal iterations in inversions for correlators */
-  int max_iter;
+
   /* for polyakov loop */
   int direction;
 
+  /* for maximal iterations in inversions for correlators */
+  int max_iter;
+
   // random seed
   unsigned int seed;
+
+  void* parameter;
+
+  /* frequency of the measurement */
+  int freq;
 
   /* how it's usually called */
   char name[100];
@@ -67,21 +74,29 @@ typedef struct {
   double gf_tmax;
 
   /* functions for the measurement */
-  void (*measurefunc) (const int traj, const int id, const int ieo);
+  void
+  (*measurefunc) (const int traj, const int id, const int ieo);
+  void
+  (*destructor) (void* param);
 } measurement;
-
 
 /* list of all monomials */
 extern measurement measurement_list[max_no_measurements];
 extern int no_measurements;
 
 /* add a new measurement to the list of measurements */
-int add_measurement(const enum MEAS_TYPE);
+int
+add_measurement (const enum MEAS_TYPE);
 /* initialise all measurements in the list */
-int init_measurements();
+int
+init_measurements ();
 /* free space again */
-void free_measurements();
+void
+free_measurements ();
 
-void dummy_meas(const int traj, const int id, const int ieo);
+void
+dummy_meas (const int traj, const int id, const int ieo);
+void
+default_destructor (void* ptr);
 
 #endif

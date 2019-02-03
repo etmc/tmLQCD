@@ -50,6 +50,7 @@
 #define CLOVERRAT 19
 #define CLOVERRATCOR 20
 #define CLOVERDETRATIORW 21
+#define CLOVERDETRATIORWD 22
 
 #define max_no_monomials 30
 

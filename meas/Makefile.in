@@ -34,6 +34,7 @@ LIBRARIES = libmeas
 libmeas_TARGETS = measurements \
 	oriented_plaquettes \
 	correlators \
+	reweightingmeas \
 	pion_norm \
 	polyakov_loop \
 	measure_clover_field_strength_observables \

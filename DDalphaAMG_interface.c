@@ -533,6 +533,25 @@ void MG_update_mu(double mu_tmLQCD, double odd_tmLQCD)
   }	 
 }
 
+/*
+ * This extra interface has been required for the reweighting measurements.
+ * The update of the parameters was not taken into account properly.
+ */
+void MG_update_kappa(double kappa)
+{
+  if(mg_initialized!=1){
+      return;
+  }
+  DDalphaAMG_get_parameters(&mg_params);
+  if (kappa!= mg_params.kappa) {
+    if (g_proc_id == 0) {
+       printf("MG WARNING: setting kappa from %.14f to %.14f general kappa %.14f\n",mg_params.kappa,kappa,g_kappa);
+       }
+    mg_params.kappa=kappa;
+    DDalphaAMG_update_parameters(&mg_params, &mg_status);
+ }
+}
+
 void MG_reset() {
 
   if(mg_do_setup == 0)

@@ -44,6 +44,7 @@ extern double mg_rho_update;
 void MG_init(void);
 void MG_update_gauge(double step);
 void MG_update_mu(double mu_tmLQCD, double odd_tmLQCD);
+void MG_update_kappa(double kappa);
 void MG_reset(void);
 void MG_finalize(void);
 
