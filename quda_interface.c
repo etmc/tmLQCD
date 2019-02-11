@@ -214,6 +214,8 @@ void _setDefaultQudaParam(void){
   gauge_param.reconstruct_sloppy = 18;
   gauge_param.cuda_prec_precondition = cuda_prec_precondition;
   gauge_param.reconstruct_precondition = 18;
+  gauge_param.cuda_prec_refinement_sloppy = cuda_prec_sloppy;
+  gauge_param.reconstruct_refinement_sloppy = 18;
   gauge_param.gauge_fix = QUDA_GAUGE_FIXED_NO;
 
   inv_param.dagger = QUDA_DAG_NO;
@@ -238,17 +240,19 @@ void _setDefaultQudaParam(void){
   if( g_debug_level >= 5 )
     inv_param.verbosity_precondition = QUDA_VERBOSE;
 
-  inv_param.cuda_prec_precondition = cuda_prec_precondition;
   inv_param.omega = 1.0;
 
   inv_param.cpu_prec = cpu_prec;
   inv_param.cuda_prec = cuda_prec;
   inv_param.cuda_prec_sloppy = cuda_prec_sloppy;
+  inv_param.cuda_prec_refinement_sloppy = cuda_prec_sloppy;
+  inv_param.cuda_prec_precondition = cuda_prec_precondition;
 
   inv_param.clover_cpu_prec = cpu_prec;
   inv_param.clover_cuda_prec = cuda_prec;
   inv_param.clover_cuda_prec_sloppy = cuda_prec_sloppy;
   inv_param.clover_cuda_prec_precondition = cuda_prec_precondition;
+  inv_param.clover_cuda_prec_refinement_sloppy = cuda_prec_sloppy;
 
   inv_param.preserve_source = QUDA_PRESERVE_SOURCE_YES;
   inv_param.gamma_basis = QUDA_CHIRAL_GAMMA_BASIS; // CHIRAL -> UKQCD does not seem to be supported right now...
@@ -624,8 +628,11 @@ void set_sloppy_prec( const SloppyPrecision sloppy_precision ) {
     if(g_proc_id == 0) printf("# QUDA: Using single prec. as sloppy!\n");
   }
   gauge_param.cuda_prec_sloppy = cuda_prec_sloppy;
+  gauge_param.cuda_prec_refinement_sloppy = cuda_prec_sloppy;
+  
   inv_param.cuda_prec_sloppy = cuda_prec_sloppy;
   inv_param.clover_cuda_prec_sloppy = cuda_prec_sloppy;
+  inv_param.clover_cuda_prec_refinement_sloppy = cuda_prec_sloppy;
 }
 
 
