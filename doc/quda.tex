@@ -122,6 +122,7 @@ The MG setup can be tuned using the following parameters in the \texttt{BeginExt
   \item{ \texttt{MGSetupSolverTolerance}: relative target residual (unsquared!) during setup phase. (positive float, default $1\cdot10^{-6}$) }
   \item{ \texttt{MGSetupMaxSolverIterations}: maximum number of iterations during setup phase. (positive integer, default $1000$) }
   \item{ \texttt{MGCoarseSolverTolerance}: unsquared relative target residual on the coarse grids. (positive float, default $0.25$) }
+  \item{ \texttt{MGNumberOfVectors}: number of null vectors to compute on a per-level basis. (possible values $\left[ 24, 32 \right]$, default $24$)}
   \item{ \texttt{MGCoarseMaxSolveriterations}: maximum number of iterations on coarse grids. (positive integer, default $75$) }
   \item{ \texttt{MGEnableSizeThreeBlocks}: By default, QUDA has limited support for size $3$ aggregates. If set to \emph{yes}, the automatic blocking algorithm will attempt to use them for lattice extents divisible by $3$ when the local lattice extent at a given level is smaller than $16$ aggregate sites. This requires you to instantiate the necessary block sizes in QUDA (see comments below). (boolean \emph{yes} or \emph{no}, default \emph{no}) }
   \item{ \texttt{MGBlockSizes[X,Y,Z,T]}: aggregate sizes on each level. When these are set for a given lattice dimension, the automatic blocking algorithm for that dimension is overridden and the specified blockings are forced. When the required aggregate sizes are not instantiated in QUDA, the setup phase will fail with an informative error message. (comma-separated list of integers, for a three level solver, for example, this needs to be specified for the first and second level)} 
@@ -159,6 +160,7 @@ BeginExternalInverter QUDA
   MGSmootherPostIterations = 4
   MGOverUnderRelaxationFactor = 0.85
   MGCoarseMuFactor = 1.0, 1.0, 12.0
+  MGNumberOfVectors = 24, 24, 32
   MGRunVerify = yes
   MGEnableSizeThreeBlocks = no
 EndExternalInverter

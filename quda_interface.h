@@ -99,6 +99,22 @@ void _loadCloverQuda();
 int invert_quda_direct(double * const propgator, double * const source,
                 const int op_id);
 
+// direct line to QUDA inverter, no messing about with even/odd reordering
+// source and propagator  Should be full VOLUME spinor fields 
+// op_id                  Index of the operator to be inverted (0 to N-1)
+// theta_[x,y,z,t]        theta angles for twisted boundary conditions to be
+//                        set before the gauge field is uploaded to the card
+//                        overriding input file these are specified
+//                        like Theta[X,Y,Z,T] in the input file as a fraction
+//                        of \pi/L
+//                        Anti-periodic in T would correspond to theta_t = 1.0
+int invert_quda_direct_theta(double * const propgator, double * const source,
+                const int op_id,
+                const double theta_x,
+                const double theta_y,
+                const double theta_z,
+                const double theta_t);
+
 // to be called instead of tmLQCD functions to use the QUDA inverter
 int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
                    spinor * const Even, spinor * const Odd,
