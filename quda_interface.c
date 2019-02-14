@@ -112,6 +112,7 @@
 #include "quda.h"
 #include "global.h"
 #include "operator.h"
+#include "tm_debug_printf.h"
 
 // nstore is generally like a gauge id, for measurements it identifies the gauge field
 // uniquely 
@@ -1230,6 +1231,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
         // the block size for this level and dimension has been set non-zero in the input file
         // we respect this no matter what
         mg_param->geo_block_size[level][dim] = quda_input.mg_blocksize[level][dim];
+        
 
         // otherwise we employ our blocking algorithm
       } else {
@@ -1256,6 +1258,17 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
         } else {
           mg_param->geo_block_size[level][dim] = 1;
         }
+      }
+      
+      // all lattice extents must be even after blocking on all levels
+      if( (extent / quda_input.mg_blocksize[level][dim]) % 2 != 0 ){
+        tm_debug_printf(0, 0,
+                        "MG level %d, dim (xyzt) %d. Block size of %d would result "
+                        "in odd extent on level %d, aborting!\n"
+                        "Adjust your block sizes or parallelisation!\n",
+                        level, dim, mg_param->geo_block_size[level][dim]);
+        fflush(stdout);
+        fatal_error("Blocking error.\n", "_setQudaMultigridParam");
       }
 
       // this output is only relevant on levels 0, 1, ..., n-2
