@@ -1501,6 +1501,10 @@ static inline double fltlist_next_token(int * const list_end){
         snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
         yy_fatal_error(error_message);
       }
+      /* Make token to lower case */
+      for(int i = 0; token[i]; i++){
+        token[i] = tolower(token[i]);
+      }
       if( strcmp(token, "cagcr") == 0 ){
         quda_input.mg_coarse_solver_type[level]=QUDA_CA_GCR_INVERTER;
       }
@@ -1530,6 +1534,10 @@ static inline double fltlist_next_token(int * const list_end){
       if( level > QUDA_MAX_MG_LEVEL ){
         snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
         yy_fatal_error(error_message);
+      }
+      /* Make token to lower case */
+      for(int i = 0; token[i]; i++){
+        token[i] = tolower(token[i]);
       }
       if( strcmp(token, "cagcr") == 0 ){
         quda_input.mg_smoother_type[level]=QUDA_CA_GCR_INVERTER;
