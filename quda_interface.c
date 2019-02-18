@@ -112,6 +112,7 @@
 #include "quda.h"
 #include "global.h"
 #include "operator.h"
+#include "tm_debug_printf.h"
 
 // nstore is generally like a gauge id, for measurements it identifies the gauge field
 // uniquely 
@@ -214,6 +215,8 @@ void _setDefaultQudaParam(void){
   gauge_param.reconstruct_sloppy = 18;
   gauge_param.cuda_prec_precondition = cuda_prec_precondition;
   gauge_param.reconstruct_precondition = 18;
+  gauge_param.cuda_prec_refinement_sloppy = cuda_prec_sloppy;
+  gauge_param.reconstruct_refinement_sloppy = 18;
   gauge_param.gauge_fix = QUDA_GAUGE_FIXED_NO;
 
   inv_param.dagger = QUDA_DAG_NO;
@@ -238,17 +241,19 @@ void _setDefaultQudaParam(void){
   if( g_debug_level >= 5 )
     inv_param.verbosity_precondition = QUDA_VERBOSE;
 
-  inv_param.cuda_prec_precondition = cuda_prec_precondition;
   inv_param.omega = 1.0;
 
   inv_param.cpu_prec = cpu_prec;
   inv_param.cuda_prec = cuda_prec;
   inv_param.cuda_prec_sloppy = cuda_prec_sloppy;
+  inv_param.cuda_prec_refinement_sloppy = cuda_prec_sloppy;
+  inv_param.cuda_prec_precondition = cuda_prec_precondition;
 
   inv_param.clover_cpu_prec = cpu_prec;
   inv_param.clover_cuda_prec = cuda_prec;
   inv_param.clover_cuda_prec_sloppy = cuda_prec_sloppy;
   inv_param.clover_cuda_prec_precondition = cuda_prec_precondition;
+  inv_param.clover_cuda_prec_refinement_sloppy = cuda_prec_sloppy;
 
   inv_param.preserve_source = QUDA_PRESERVE_SOURCE_YES;
   inv_param.gamma_basis = QUDA_CHIRAL_GAMMA_BASIS; // CHIRAL -> UKQCD does not seem to be supported right now...
@@ -624,8 +629,11 @@ void set_sloppy_prec( const SloppyPrecision sloppy_precision ) {
     if(g_proc_id == 0) printf("# QUDA: Using single prec. as sloppy!\n");
   }
   gauge_param.cuda_prec_sloppy = cuda_prec_sloppy;
+  gauge_param.cuda_prec_refinement_sloppy = cuda_prec_sloppy;
+  
   inv_param.cuda_prec_sloppy = cuda_prec_sloppy;
   inv_param.clover_cuda_prec_sloppy = cuda_prec_sloppy;
+  inv_param.clover_cuda_prec_refinement_sloppy = cuda_prec_sloppy;
 }
 
 
@@ -1223,6 +1231,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
         // the block size for this level and dimension has been set non-zero in the input file
         // we respect this no matter what
         mg_param->geo_block_size[level][dim] = quda_input.mg_blocksize[level][dim];
+        
 
         // otherwise we employ our blocking algorithm
       } else {
@@ -1249,6 +1258,18 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
         } else {
           mg_param->geo_block_size[level][dim] = 1;
         }
+      }
+      
+      // all lattice extents must be even after blocking on all levels
+      if( level < mg_param->n_level-1 && 
+          (extent / mg_param->geo_block_size[level][dim]) % 2 != 0 ){
+        tm_debug_printf(0, 0,
+                        "MG level %d, dim %d (xyzt) has extent %d. Block size of %d would result "
+                        "in odd extent on level %d, aborting!\n"
+                        "Adjust your block sizes or parallelisation, all local lattice extents on all levels must be even!\n",
+                        level, dim, extent, mg_param->geo_block_size[level][dim], level+1);
+        fflush(stdout);
+        fatal_error("Blocking error.\n", "_setQudaMultigridParam");
       }
 
       // this output is only relevant on levels 0, 1, ..., n-2
@@ -1291,6 +1312,21 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     mg_param->omega[level] = quda_input.mg_omega; // over/under relaxation factor
 
     mg_param->location[level] = QUDA_CUDA_FIELD_LOCATION;
+
+#ifdef TM_QUDA_EXPERIMENTAL
+    // BEGIN EXPERIMENTAL BaKo, 20190214 feature/dwf-rewrite branch introduces these
+    // for control of CA solvers
+    mg_param->setup_ca_basis[level]      = quda_input.mg_setup_ca_basis[level];
+    mg_param->setup_ca_basis_size[level] = quda_input.mg_setup_ca_basis_size[level];
+    mg_param->setup_ca_lambda_min[level] = quda_input.mg_setup_ca_lambda_min[level];
+    mg_param->setup_ca_lambda_max[level] = quda_input.mg_setup_ca_lambda_max[level];
+
+    mg_param->coarse_solver_ca_basis[level]      = quda_input.mg_coarse_solver_ca_basis[level];
+    mg_param->coarse_solver_ca_basis_size[level] = quda_input.mg_coarse_solver_ca_basis_size[level];
+    mg_param->coarse_solver_ca_lambda_min[level] = quda_input.mg_coarse_solver_ca_lambda_min[level];
+    mg_param->coarse_solver_ca_lambda_max[level] = quda_input.mg_coarse_solver_ca_lambda_max[level];
+    // END EXPERIMENTAL BaKo, 20190214
+#endif
   } // for(i=0 to n_level-1)
 
   // only coarsen the spin on the first restriction
