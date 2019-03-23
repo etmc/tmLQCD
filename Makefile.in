@@ -59,6 +59,7 @@ MODULES = read_input gamma measure_gauge_action start \
 	little_D block operator \
 	temporalgauge spinor_fft X_psi P_M_eta \
 	jacobi fatal_error invert_clover_eo gettime \
+	tm_debug_printf \
         @SPI_FILES@ @QUDA_INTERFACE@ @DDalphaAMG_INTERFACE@
 
 CXXMODULES = @QPHIX_INTERFACE@
