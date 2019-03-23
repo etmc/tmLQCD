@@ -1205,12 +1205,13 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
         extent = extent/mg_param->geo_block_size[k-1][dim];
       }
 
-      if( quda_input.mg_blocksize[level][dim] != 0 ){
+      if( level == (quda_input.mg_n_level-1) ){
+        // for the coarsest level, the block size is always set to 1
+        mg_param->geo_block_size[level][dim] = 1;
+      } else if( quda_input.mg_blocksize[level][dim] != 0 ){
         // the block size for this level and dimension has been set non-zero in the input file
         // we respect this no matter what
         mg_param->geo_block_size[level][dim] = quda_input.mg_blocksize[level][dim];
-        
-
         // otherwise we employ our blocking algorithm
       } else {
         // on all levels, we try to use a block size of 4^4 and compute the
@@ -1238,8 +1239,15 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
         }
       }
       
+      // this output is only relevant on levels 0, 1, ..., n-2
+      if( level < (mg_param->n_level-1) && g_proc_id == 0 && g_debug_level >= 2 ) {
+        printf("# QUDA: MG level %d, extent of (xyzt) dim %d: %d\n", level, dim, extent);
+        printf("# QUDA: MG aggregation size set to: %d\n", mg_param->geo_block_size[level][dim]);
+        fflush(stdout);
+      }
+
       // all lattice extents must be even after blocking on all levels
-      if( (extent / quda_input.mg_blocksize[level][dim]) % 2 != 0 ){
+      if( (extent / mg_param->geo_block_size[level][dim]) % 2 != 0 ){
         tm_debug_printf(0, 0,
                         "MG level %d, dim (xyzt) %d. Block size of %d would result "
                         "in odd extent on level %d, aborting!\n"
@@ -1249,12 +1257,6 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
         fatal_error("Blocking error.\n", "_setQudaMultigridParam");
       }
 
-      // this output is only relevant on levels 0, 1, ..., n-2
-      if( level < (mg_param->n_level-1) && g_proc_id == 0 && g_debug_level >= 2 ) { 
-        printf("# QUDA: MG level %d, extent of (xyzt) dim %d: %d\n", level, dim, extent);
-        printf("# QUDA: MG aggregation size set to: %d\n", mg_param->geo_block_size[level][dim]);
-        fflush(stdout);
-      }
     } // for( dim=0 to dim=3 ) (space-time dimensions)
 
     mg_param->coarse_solver[level] = QUDA_GCR_INVERTER;
