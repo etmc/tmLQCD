@@ -1495,7 +1495,6 @@ static inline double fltlist_next_token(int * const list_end){
     int level = 0;
     strlist_tokenize(yytext, paramname, 100);
     strlist_next_token(&list_end, token, 100);
-    printf("Token in the beginning=%s\n",token);
     while( list_end != 1 ){
       if( level > QUDA_MAX_MG_LEVEL ){
         snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
