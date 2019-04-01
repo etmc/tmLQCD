@@ -1518,6 +1518,7 @@ static inline double fltlist_next_token(int * const list_end){
         snprintf(error_message, 200, "Unknown inverter %s passed in the parsing of %s!\n", yytext, paramname);
         yy_fatal_error(error_message);
       }
+      if(myverbose) printf("  MGCoarseSolverType on level %d set to %s line %d\n", level, token, line_of_file);
       level++;
       strlist_next_token(&list_end, token, 100);
     }
@@ -1552,6 +1553,7 @@ static inline double fltlist_next_token(int * const list_end){
         snprintf(error_message, 200, "Unknown inverter %s passed in the parsing of %s!\n", yytext, paramname);
         yy_fatal_error(error_message);
       }
+      if(myverbose) printf("  MGSmootherType on level %d set to %s line %d\n", level, token, line_of_file);
       level++;
       strlist_next_token(&list_end, token, 100);
     }
