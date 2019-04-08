@@ -89,11 +89,13 @@ extern void finalize_gpu_fields();
 extern double X0, X1, X2, X3;
 
 static int tmLQCD_invert_initialised = 0;
+static int tmLQCD_input_read = 0;
 
 int tmLQCD_init_parallel_and_read_input(int argc, char* argv[], const int _verbose,
                                         char const * const input_filename){
   verbose = _verbose;
   init_parallel_and_read_input(argc, argv, input_filename);
+  tmLQCD_input_read = 1;
   return(0);
 }
 
@@ -118,10 +120,13 @@ int tmLQCD_invert_init(int argc, char* argv[], const int _verbose, const int ext
   g_proc_id = 0;
 #endif
 
-  /* Read the input file */
-  if ((read_input("invert.input")) != 0) {
-    fprintf(stderr, "tmLQCD_init_invert: Could not find input file: invert.input\nAborting...");
-    return (-1);
+  if( !tmLQCD_input_read ){
+    /* Read the input file */
+    if ((read_input("invert.input")) != 0) {
+      fprintf(stderr, "tmLQCD_init_invert: Could not find input file: invert.input\nAborting...");
+      return (-1);
+    }
+    tmLQCD_input_read = 1;
   }
 
 #ifndef TM_USE_MPI
