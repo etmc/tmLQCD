@@ -21,16 +21,14 @@
 #ifndef TM_QUDA_TYPES_H
 #define TM_QUDA_TYPES_H
 
+#ifdef HAVE_CONFIG_H
+#  include<config.h>
+#endif
+
 #ifdef TM_USE_QUDA
 #include <quda.h>
 #else
-// some definitions which are found in quda.h must be reproduced in case
-// we are compiling without it, such that tm_QudaParams_t can be
-// defined properly anyway
-#define QUDA_MAX_MG_LEVEL 4
-#define QUDA_BOOLEAN_YES 1
-#define QUDA_BOOLEAN_NO 0
-#include "quda_solver_translate.h"
+#include "quda_dummy_types.h"
 #endif
 
 #include "global.h"
@@ -68,6 +66,21 @@ typedef struct tm_QudaParams_t {
   int               mg_run_verify;
   int               mg_enable_size_three_blocks;
   double            mg_reset_setup_threshold;
+#ifdef TM_QUDA_EXPERIMENTAL
+  // BEGIN EXPERIMENTAL BaKo, 20190214 feature/dwf-rewrite branch introduces these
+  // for control of CA solvers
+  QudaCABasis       mg_setup_ca_basis[QUDA_MAX_MG_LEVEL];
+  int               mg_setup_ca_basis_size[QUDA_MAX_MG_LEVEL];
+  double            mg_setup_ca_lambda_min[QUDA_MAX_MG_LEVEL];
+  double            mg_setup_ca_lambda_max[QUDA_MAX_MG_LEVEL];
+
+  QudaCABasis       mg_coarse_solver_ca_basis[QUDA_MAX_MG_LEVEL];
+  int               mg_coarse_solver_ca_basis_size[QUDA_MAX_MG_LEVEL];
+  double            mg_coarse_solver_ca_lambda_min[QUDA_MAX_MG_LEVEL];
+  double            mg_coarse_solver_ca_lambda_max[QUDA_MAX_MG_LEVEL];
+  // END EXPERIMENTAL BaKo, 20190214
+#endif // TM_QUDA_EXPERIMENTAL
+
 } tm_QudaParams_t;
 
 typedef struct tm_QudaMGSetupState_t {
