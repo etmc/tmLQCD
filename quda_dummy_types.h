@@ -17,10 +17,20 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 
-#ifndef QUDA_SOLVER_TRANSLATE_H
-#define QUDA_SOLVER_TRANSLATE_H
+#ifndef QUDA_DUMMY_TYPES_H
+#define QUDA_DUMMY_TYPES_H
 
 #include "solver/solver_types.h"
+
+// some definitions which are found in quda.h must be reproduced in case
+// we are compiling without it, such that tm_QudaParams_t can be
+// defined properly anyway
+#define QUDA_MAX_MG_LEVEL 4
+#define QUDA_BOOLEAN_YES 1
+#define QUDA_BOOLEAN_NO 0
+
+#include <limits.h>
+#define QUDA_INVALID_ENUM INT_MIN
 
 // these exist only in case we are compiling without QUDA support, such that the
 // input file reader can be compiled
@@ -31,5 +41,11 @@ typedef enum QudaInverterType_s {
  QUDA_GCR_INVERTER = GCR,
  QUDA_CA_GCR_INVERTER = CA_GCR
 } QudaInverterType;
+
+typedef QudaCABasis_s {
+  QUDA_POWER_BASIS,
+  QUDA_CHEBYSHEV_BASIS,
+  QUDA_INVALID_BASIS = QUDA_INVALID_ENUM
+} QudaCABasis;
 
 #endif

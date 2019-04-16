@@ -1495,11 +1495,14 @@ static inline double fltlist_next_token(int * const list_end){
     int level = 0;
     strlist_tokenize(yytext, paramname, 100);
     strlist_next_token(&list_end, token, 100);
-    printf("Token in the beginning=%s\n",token);
     while( list_end != 1 ){
       if( level > QUDA_MAX_MG_LEVEL ){
         snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
         yy_fatal_error(error_message);
+      }
+      /* Make token to lower case */
+      for(int i = 0; token[i]; i++){
+        token[i] = tolower(token[i]);
       }
       if( strcmp(token, "cagcr") == 0 ){
         quda_input.mg_coarse_solver_type[level]=QUDA_CA_GCR_INVERTER;
@@ -1514,6 +1517,7 @@ static inline double fltlist_next_token(int * const list_end){
         snprintf(error_message, 200, "Unknown inverter %s passed in the parsing of %s!\n", yytext, paramname);
         yy_fatal_error(error_message);
       }
+      if(myverbose) printf("  MGCoarseSolverType on level %d set to %s line %d\n", level, token, line_of_file);
       level++;
       strlist_next_token(&list_end, token, 100);
     }
@@ -1531,6 +1535,10 @@ static inline double fltlist_next_token(int * const list_end){
         snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
         yy_fatal_error(error_message);
       }
+      /* Make token to lower case */
+      for(int i = 0; token[i]; i++){
+        token[i] = tolower(token[i]);
+      }
       if( strcmp(token, "cagcr") == 0 ){
         quda_input.mg_smoother_type[level]=QUDA_CA_GCR_INVERTER;
       }
@@ -1544,6 +1552,7 @@ static inline double fltlist_next_token(int * const list_end){
         snprintf(error_message, 200, "Unknown inverter %s passed in the parsing of %s!\n", yytext, paramname);
         yy_fatal_error(error_message);
       }
+      if(myverbose) printf("  MGSmootherType on level %d set to %s line %d\n", level, token, line_of_file);
       level++;
       strlist_next_token(&list_end, token, 100);
     }
@@ -3221,6 +3230,24 @@ int read_input(char * conf_file){
     }
     quda_input.mg_coarse_solver_type[level] = QUDA_GCR_INVERTER;
     quda_input.mg_smoother_type[level] = QUDA_MR_INVERTER ;
+
+#ifdef TM_QUDA_EXPERIMENTAL
+    // BEGIN EXPERIMENTAL BaKo, 20190214 feature/dwf-rewrite branch introduces these
+    // for control of CA solvers
+    // these defaults are taken from tests/multigrid_evolve_test.cpp
+    // and will not work for CA-CG (as they are exactly the values
+    // that QUDA asserts against)
+    quda_input.mg_setup_ca_basis[level] = QUDA_POWER_BASIS;
+    quda_input.mg_setup_ca_basis_size[level] = 4;
+    quda_input.mg_setup_ca_lambda_min[level] = 0.0;
+    quda_input.mg_setup_ca_lambda_max[level] = -1.0;
+    quda_input.mg_coarse_solver_ca_basis[level] = QUDA_POWER_BASIS;
+    quda_input.mg_coarse_solver_ca_basis_size[level] = 4;
+    quda_input.mg_coarse_solver_ca_lambda_min[level] = 0.0;
+    quda_input.mg_coarse_solver_ca_lambda_max[level] = -1.0;
+    // END EXPERIMENTAL BaKo, 20190214
+#endif
+
 
     /* note: when the user does not specify any blocking parameters,
      * a reasonable set will be computed automatically in the MG setup
