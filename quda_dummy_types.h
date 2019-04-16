@@ -42,7 +42,7 @@ typedef enum QudaInverterType_s {
  QUDA_CA_GCR_INVERTER = CA_GCR
 } QudaInverterType;
 
-typedef QudaCABasis_s {
+typedef enum QudaCABasis_s {
   QUDA_POWER_BASIS,
   QUDA_CHEBYSHEV_BASIS,
   QUDA_INVALID_BASIS = QUDA_INVALID_ENUM
