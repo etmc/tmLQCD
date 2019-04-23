@@ -75,10 +75,10 @@ include ${top_srcdir}/Makefile.global
 
 # rule to compile objects
 
-${liblinalg_OBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/config.h
+${liblinalg_OBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/tmlqcd_config.h
 	$(COMPILE) ${OPTARGS} -c $<
 
-${liblinalg_SOBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/config.h
+${liblinalg_SOBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/tmlqcd_config.h
 	$(COMPILE) ${SOPTARGS} -c $<
 
 # rule to make liblinalg

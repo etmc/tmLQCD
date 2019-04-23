@@ -30,7 +30,7 @@
  *******************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #ifdef SSE2
 #  define OpSSE2

@@ -2,7 +2,7 @@
 #define _IO_CM_H
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 
 #include <stdlib.h>

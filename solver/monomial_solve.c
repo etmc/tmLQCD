@@ -36,7 +36,7 @@
 
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #include "global.h"
 #include "read_input.h"

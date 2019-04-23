@@ -1,6 +1,6 @@
 
 #if HAVE_CONFIG_H
-#include<config.h>
+#include<tmlqcd_config.h>
 #endif
 #include "../global.h"
 #include "test_rat_init.h"
