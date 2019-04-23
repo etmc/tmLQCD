@@ -24,7 +24,7 @@
 #ifndef QPHIX_VECLEN_H
 #define QPHIX_VECLEN_H
 
-#include <qphix/qphix_config.h>
+#include <qphix/qphix_tmlqcd_config.h>
 
 #if (defined(QPHIX_MIC_SOURCE) || defined(QPHIX_AVX512_SOURCE))
 #define VECLEN_SP 16

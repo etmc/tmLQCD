@@ -60,10 +60,10 @@ include ${top_srcdir}/Makefile.global
 
 # rule to compile objects
 
-${libxchange_OBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/config.h
+${libxchange_OBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/tmlqcd_config.h
 	$(COMPILE) ${OPTARGS} -c $<
 
-${libxchange_SOBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/config.h
+${libxchange_SOBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/tmlqcd_config.h
 	$(COMPILE) ${SOPTARGS} -c $<
 
 # rule to make libxchange

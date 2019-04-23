@@ -33,7 +33,7 @@
 
 extern "C" {
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include "tmlqcd_config.h"
 #endif
 #include "boundary.h"
 #include "geometry_eo.h"
@@ -73,7 +73,7 @@ extern "C" {
 #include <qphix/ndtm_reuse_operator.h>
 #include <qphix/ndtm_reuse_operator_clover.h>
 #include <qphix/print_utils.h>
-#include <qphix/qphix_config.h>
+#include <qphix/qphix_tmlqcd_config.h>
 #include <qphix/twisted_mass.h>
 #include <qphix/twisted_mass_clover.h>
 #include <qphix/wilson.h>
