@@ -111,6 +111,7 @@
 #include "quda.h"
 #include "global.h"
 #include "operator.h"
+#include "tm_debug_printf.h"
 
 // nstore is generally like a gauge id, for measurements it identifies the gauge field
 // uniquely 
@@ -213,6 +214,8 @@ void _setDefaultQudaParam(void){
   gauge_param.reconstruct_sloppy = 18;
   gauge_param.cuda_prec_precondition = cuda_prec_precondition;
   gauge_param.reconstruct_precondition = 18;
+  gauge_param.cuda_prec_refinement_sloppy = cuda_prec_sloppy;
+  gauge_param.reconstruct_refinement_sloppy = 18;
   gauge_param.gauge_fix = QUDA_GAUGE_FIXED_NO;
 
   inv_param.dagger = QUDA_DAG_NO;
@@ -237,17 +240,19 @@ void _setDefaultQudaParam(void){
   if( g_debug_level >= 5 )
     inv_param.verbosity_precondition = QUDA_VERBOSE;
 
-  inv_param.cuda_prec_precondition = cuda_prec_precondition;
   inv_param.omega = 1.0;
 
   inv_param.cpu_prec = cpu_prec;
   inv_param.cuda_prec = cuda_prec;
   inv_param.cuda_prec_sloppy = cuda_prec_sloppy;
+  inv_param.cuda_prec_refinement_sloppy = cuda_prec_sloppy;
+  inv_param.cuda_prec_precondition = cuda_prec_precondition;
 
   inv_param.clover_cpu_prec = cpu_prec;
   inv_param.clover_cuda_prec = cuda_prec;
   inv_param.clover_cuda_prec_sloppy = cuda_prec_sloppy;
   inv_param.clover_cuda_prec_precondition = cuda_prec_precondition;
+  inv_param.clover_cuda_prec_refinement_sloppy = cuda_prec_sloppy;
 
   inv_param.preserve_source = QUDA_PRESERVE_SOURCE_YES;
   inv_param.gamma_basis = QUDA_CHIRAL_GAMMA_BASIS; // CHIRAL -> UKQCD does not seem to be supported right now...
@@ -624,8 +629,11 @@ void set_sloppy_prec( const SloppyPrecision sloppy_precision ) {
     if(g_proc_id == 0) printf("# QUDA: Using single prec. as sloppy!\n");
   }
   gauge_param.cuda_prec_sloppy = cuda_prec_sloppy;
+  gauge_param.cuda_prec_refinement_sloppy = cuda_prec_sloppy;
+  
   inv_param.cuda_prec_sloppy = cuda_prec_sloppy;
   inv_param.clover_cuda_prec_sloppy = cuda_prec_sloppy;
+  inv_param.clover_cuda_prec_refinement_sloppy = cuda_prec_sloppy;
 }
 
 int invert_quda_direct(double * const propagator, double * const source,
@@ -1197,11 +1205,13 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
         extent = extent/mg_param->geo_block_size[k-1][dim];
       }
 
-      if( quda_input.mg_blocksize[level][dim] != 0 ){
+      if( level == (quda_input.mg_n_level-1) ){
+        // for the coarsest level, the block size is always set to 1
+        mg_param->geo_block_size[level][dim] = 1;
+      } else if( quda_input.mg_blocksize[level][dim] != 0 ){
         // the block size for this level and dimension has been set non-zero in the input file
         // we respect this no matter what
         mg_param->geo_block_size[level][dim] = quda_input.mg_blocksize[level][dim];
-
         // otherwise we employ our blocking algorithm
       } else {
         // on all levels, we try to use a block size of 4^4 and compute the
@@ -1228,13 +1238,25 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
           mg_param->geo_block_size[level][dim] = 1;
         }
       }
-
+      
       // this output is only relevant on levels 0, 1, ..., n-2
-      if( level < (mg_param->n_level-1) && g_proc_id == 0 && g_debug_level >= 2 ) { 
+      if( level < (mg_param->n_level-1) && g_proc_id == 0 && g_debug_level >= 2 ) {
         printf("# QUDA: MG level %d, extent of (xyzt) dim %d: %d\n", level, dim, extent);
         printf("# QUDA: MG aggregation size set to: %d\n", mg_param->geo_block_size[level][dim]);
         fflush(stdout);
       }
+
+      // all lattice extents must be even after blocking on all levels
+      if( (extent / mg_param->geo_block_size[level][dim]) % 2 != 0 ){
+        tm_debug_printf(0, 0,
+                        "MG level %d, dim (xyzt) %d. Block size of %d would result "
+                        "in odd extent on level %d, aborting!\n"
+                        "Adjust your block sizes or parallelisation!\n",
+                        level, dim, mg_param->geo_block_size[level][dim]);
+        fflush(stdout);
+        fatal_error("Blocking error.\n", "_setQudaMultigridParam");
+      }
+
     } // for( dim=0 to dim=3 ) (space-time dimensions)
 
     mg_param->coarse_solver[level] = QUDA_GCR_INVERTER;
