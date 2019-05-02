@@ -68,12 +68,8 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
   double *sCpp = NULL, *sCpa = NULL, *sCp4 = NULL;
 #endif
   FILE *ofs;
-  char *filename;
-  char *filename_tmp;
-  char buf[100], buf2[100];
+  char filename[100];
   spinor phi;
-  filename=buf;
-  filename_tmp = buf2;
 
   init_operators();
   if(no_operators < 1) {
@@ -131,22 +127,19 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
       }
       atime = gettime();
 
-      int runs = 1;
-      if (restoresu3_flag) runs = 2;
-
 #ifdef TM_USE_MPI
       sCpp = (double*) calloc(T, sizeof(double));
       sCpa = (double*) calloc(T, sizeof(double));
       sCp4 = (double*) calloc(T, sizeof(double));
       if(g_mpi_time_rank == 0) {
-        Cpp = (double*) calloc(g_nproc_t*T*runs, sizeof(double));
-        Cpa = (double*) calloc(g_nproc_t*T*runs, sizeof(double));
-        Cp4 = (double*) calloc(g_nproc_t*T*runs, sizeof(double));
+        Cpp = (double*) calloc(g_nproc_t*T, sizeof(double));
+        Cpa = (double*) calloc(g_nproc_t*T, sizeof(double));
+        Cp4 = (double*) calloc(g_nproc_t*T, sizeof(double));
       }
 #else
-      Cpp = (double*) calloc(T*runs, sizeof(double));
-      Cpa = (double*) calloc(T*runs, sizeof(double));
-      Cp4 = (double*) calloc(T*runs, sizeof(double));
+      Cpp = (double*) calloc(T, sizeof(double));
+      Cpa = (double*) calloc(T, sizeof(double));
+      Cp4 = (double*) calloc(T, sizeof(double));
 #endif
       source_generation_pion_only(g_spinor_field[0], g_spinor_field[1], 
 	    		      t0, sample, traj, measurement_list[id].seed);
@@ -155,149 +148,87 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
       optr->prop0 = g_spinor_field[2];
       optr->prop1 = g_spinor_field[3];
 
-      for( int r = 0; r<runs; r++) {
-        
-        if (restoresu3_flag) {
-          for(int ix=0;ix<VOLUME;ix++) {
-            for(int mu=0;mu<4;mu++){
-              su3 *v, *w;
-              v=&(g_gauge_field[ix][mu]);
-              w=&(gauge_tmp[ix][mu]);
-              if(r == 0){
-                _su3_assign(*v,*w);
-              } else {
-                restoresu3_in_place(v);
-              }
-            }
-          }
-#ifdef TM_USE_MPI
-          xchange_gauge(g_gauge_field);
-#endif
-          mg_update_gauge = 1;
-        }
+      // op_id = 0, index_start = 0, write_prop = 0
+      optr->inverter(0, 0, 0);
 
-        // op_id = 0, index_start = 0, write_prop = 0
-        optr->inverter(0, 0, 0);
-
-        /* now we bring it to normal format */
-        /* here we use implicitly DUM_MATRIX and DUM_MATRIX+1 */
-        convert_eo_to_lexic(g_spinor_field[DUM_MATRIX], g_spinor_field[2], g_spinor_field[3]);
+      /* now we bring it to normal format */
+      /* here we use implicitly DUM_MATRIX and DUM_MATRIX+1 */
+      convert_eo_to_lexic(g_spinor_field[DUM_MATRIX], g_spinor_field[2], g_spinor_field[3]);
       
-        /* now we sum only over local space for every t */
-        for(t = 0; t < T; t++) {
-          j = g_ipt[t][0][0][0];
-          res = 0.;
-          respa = 0.;
-          resp4 = 0.;
-          for(i = j; i < j+LX*LY*LZ; i++) {
-            res += _spinor_prod_re(g_spinor_field[DUM_MATRIX][i], g_spinor_field[DUM_MATRIX][i]);
-            _gamma0(phi, g_spinor_field[DUM_MATRIX][i]);
-            respa += _spinor_prod_re(g_spinor_field[DUM_MATRIX][i], phi);
-            _gamma5(phi, phi);
-            resp4 += _spinor_prod_im(g_spinor_field[DUM_MATRIX][i], phi);
-          }
-          
+      /* now we sum only over local space for every t */
+      for(t = 0; t < T; t++) {
+        j = g_ipt[t][0][0][0];
+        res = 0.;
+        respa = 0.;
+        resp4 = 0.;
+        for(i = j; i < j+LX*LY*LZ; i++) {
+          res += _spinor_prod_re(g_spinor_field[DUM_MATRIX][i], g_spinor_field[DUM_MATRIX][i]);
+          _gamma0(phi, g_spinor_field[DUM_MATRIX][i]);
+          respa += _spinor_prod_re(g_spinor_field[DUM_MATRIX][i], phi);
+          _gamma5(phi, phi);
+          resp4 += _spinor_prod_im(g_spinor_field[DUM_MATRIX][i], phi);
+        }
+        
 #if defined TM_USE_MPI
-          MPI_Reduce(&res, &mpi_res, 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
-          res = mpi_res;
-          MPI_Reduce(&respa, &mpi_respa, 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
-          respa = mpi_respa;
-          MPI_Reduce(&resp4, &mpi_resp4, 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
-          resp4 = mpi_resp4;
-          sCpp[t] = +res/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
-          sCpa[t] = -respa/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
-          sCp4[t] = +resp4/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
+        MPI_Reduce(&res, &mpi_res, 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
+        res = mpi_res;
+        MPI_Reduce(&respa, &mpi_respa, 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
+        respa = mpi_respa;
+        MPI_Reduce(&resp4, &mpi_resp4, 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
+        resp4 = mpi_resp4;
+        sCpp[t] = +res/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
+        sCpa[t] = -respa/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
+        sCp4[t] = +resp4/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
 #else
-          Cpp[t+g_nproc_t*T*r] = +res/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
-          Cpa[t+g_nproc_t*T*r] = -respa/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
-          Cp4[t+g_nproc_t*T*r] = +resp4/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
+        Cpp[t+g_nproc_t*T] = +res/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
+        Cpa[t+g_nproc_t*T] = -respa/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
+        Cp4[t+g_nproc_t*T] = +resp4/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
 #endif
         }
         
 #ifdef TM_USE_MPI
         /* some gymnastics needed in case of parallelisation */
         if(g_mpi_time_rank == 0) {
-          MPI_Gather(sCpp, T, MPI_DOUBLE, Cpp+g_nproc_t*T*r, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
-          MPI_Gather(sCpa, T, MPI_DOUBLE, Cpa+g_nproc_t*T*r, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
-          MPI_Gather(sCp4, T, MPI_DOUBLE, Cp4+g_nproc_t*T*r, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
+          MPI_Gather(sCpp, T, MPI_DOUBLE, Cpp+g_nproc_t*T, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
+          MPI_Gather(sCpa, T, MPI_DOUBLE, Cpa+g_nproc_t*T, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
+          MPI_Gather(sCp4, T, MPI_DOUBLE, Cp4+g_nproc_t*T, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
         }
 #endif
         
         /* and write everything into a file */
         if(g_mpi_time_rank == 0 && g_proc_coords[0] == 0) {
-          if(runs > 1) {
-            sprintf(filename_tmp,"%s.r%02d", filename, r);
-            ofs = fopen(filename_tmp, "w");
-          } else {
-            ofs = fopen(filename, "w");
-          }
-          fprintf( ofs, "1  1  0  %e  %e\n", Cpp[t0+g_nproc_t*T*r], 0.);
+          ofs = fopen(filename, "w");
+          fprintf( ofs, "1  1  0  %e  %e\n", Cpp[t0+g_nproc_t*T], 0.);
           for(t = 1; t < g_nproc_t*T/2; t++) {
             tt = (t0+t)%(g_nproc_t*T);
-            fprintf( ofs, "1  1  %d  %e  ", t, Cpp[tt+g_nproc_t*T*r]);
+            fprintf( ofs, "1  1  %d  %e  ", t, Cpp[tt+g_nproc_t*T]);
             tt = (t0+g_nproc_t*T-t)%(g_nproc_t*T);
-            fprintf( ofs, "%e\n", Cpp[tt+g_nproc_t*T*r]);
+            fprintf( ofs, "%e\n", Cpp[tt+g_nproc_t*T]);
           }
           tt = (t0+g_nproc_t*T/2)%(g_nproc_t*T);
-          fprintf( ofs, "1  1  %d  %e  %e\n", t, Cpp[tt+g_nproc_t*T*r], 0.);
+          fprintf( ofs, "1  1  %d  %e  %e\n", t, Cpp[tt+g_nproc_t*T], 0.);
           
-          fprintf( ofs, "2  1  0  %e  %e\n", Cpa[t0+g_nproc_t*T*r], 0.);
+          fprintf( ofs, "2  1  0  %e  %e\n", Cpa[t0+g_nproc_t*T], 0.);
           for(t = 1; t < g_nproc_t*T/2; t++) {
             tt = (t0+t)%(g_nproc_t*T);
-            fprintf( ofs, "2  1  %d  %e  ", t, Cpa[tt+g_nproc_t*T*r]);
+            fprintf( ofs, "2  1  %d  %e  ", t, Cpa[tt+g_nproc_t*T]);
             tt = (t0+g_nproc_t*T-t)%(g_nproc_t*T);
-            fprintf( ofs, "%e\n", Cpa[tt+g_nproc_t*T*r]);
+            fprintf( ofs, "%e\n", Cpa[tt+g_nproc_t*T]);
           }
           tt = (t0+g_nproc_t*T/2)%(g_nproc_t*T);
-          fprintf( ofs, "2  1  %d  %e  %e\n", t, Cpa[tt+g_nproc_t*T*r], 0.);
+          fprintf( ofs, "2  1  %d  %e  %e\n", t, Cpa[tt+g_nproc_t*T], 0.);
           
-          fprintf( ofs, "6  1  0  %e  %e\n", Cp4[t0+g_nproc_t*T*r], 0.);
+          fprintf( ofs, "6  1  0  %e  %e\n", Cp4[t0+g_nproc_t*T], 0.);
           for(t = 1; t < g_nproc_t*T/2; t++) {
             tt = (t0+t)%(g_nproc_t*T);
-            fprintf( ofs, "6  1  %d  %e  ", t, Cp4[tt+g_nproc_t*T*r]);
+            fprintf( ofs, "6  1  %d  %e  ", t, Cp4[tt+g_nproc_t*T]);
             tt = (t0+g_nproc_t*T-t)%(g_nproc_t*T);
-            fprintf( ofs, "%e\n", Cp4[tt+g_nproc_t*T*r]);
+            fprintf( ofs, "%e\n", Cp4[tt+g_nproc_t*T]);
           }
           tt = (t0+g_nproc_t*T/2)%(g_nproc_t*T);
-          fprintf( ofs, "6  1  %d  %e  %e\n", t, Cp4[tt+g_nproc_t*T*r], 0.);
+          fprintf( ofs, "6  1  %d  %e  %e\n", t, Cp4[tt+g_nproc_t*T], 0.);
           fclose(ofs);
         }
-      }
-      if(g_mpi_time_rank == 0 && g_proc_coords[0] == 0 && runs == 2) {
-        sprintf(filename_tmp,"%s.diff", filename);
-        ofs = fopen(filename_tmp, "w");
-        fprintf( ofs, "1  1  0  %e  %e\n", Cpp[t0] - Cpp[t0+g_nproc_t*T], 0.);
-          for(t = 1; t < g_nproc_t*T/2; t++) {
-            tt = (t0+t)%(g_nproc_t*T);
-            fprintf( ofs, "1  1  %d  %e  ", t, Cpp[tt] - Cpp[tt+g_nproc_t*T]);
-            tt = (t0+g_nproc_t*T-t)%(g_nproc_t*T);
-            fprintf( ofs, "%e\n", Cpp[tt] - Cpp[tt+g_nproc_t*T]);
-          }
-          tt = (t0+g_nproc_t*T/2)%(g_nproc_t*T);
-          fprintf( ofs, "1  1  %d  %e  %e\n", t, Cpp[tt] - Cpp[tt+g_nproc_t*T], 0.);
-          
-          fprintf( ofs, "2  1  0  %e  %e\n", Cpa[t0] - Cpa[t0+g_nproc_t*T], 0.);
-          for(t = 1; t < g_nproc_t*T/2; t++) {
-            tt = (t0+t)%(g_nproc_t*T);
-            fprintf( ofs, "2  1  %d  %e  ", t, Cpa[tt] - Cpa[tt+g_nproc_t*T]);
-            tt = (t0+g_nproc_t*T-t)%(g_nproc_t*T);
-            fprintf( ofs, "%e\n", Cpa[tt] - Cpa[tt+g_nproc_t*T]);
-          }
-          tt = (t0+g_nproc_t*T/2)%(g_nproc_t*T);
-          fprintf( ofs, "2  1  %d  %e  %e\n", t, Cpa[tt] - Cpa[tt+g_nproc_t*T], 0.);
-          
-          fprintf( ofs, "6  1  0  %e  %e\n", Cp4[t0] - Cp4[t0+g_nproc_t*T], 0.);
-          for(t = 1; t < g_nproc_t*T/2; t++) {
-            tt = (t0+t)%(g_nproc_t*T);
-            fprintf( ofs, "6  1  %d  %e  ", t, Cp4[tt] - Cp4[tt+g_nproc_t*T]);
-            tt = (t0+g_nproc_t*T-t)%(g_nproc_t*T);
-            fprintf( ofs, "%e\n", Cp4[tt] - Cp4[tt+g_nproc_t*T]);
-          }
-          tt = (t0+g_nproc_t*T/2)%(g_nproc_t*T);
-          fprintf( ofs, "6  1  %d  %e  %e\n", t, Cp4[tt] - Cp4[tt+g_nproc_t*T], 0.);
-          fclose(ofs);
-        }
-
 #ifdef TM_USE_MPI
       if(g_mpi_time_rank == 0) {
         free(Cpp); free(Cpa); free(Cp4);
@@ -306,8 +237,8 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
 #else
       free(Cpp); free(Cpa); free(Cp4);
 #endif
-    }
-  } 
+    } // for(max_time_slices)
+  } // for(max_samples)
   etime = gettime();
   if(g_proc_id == 0 && g_debug_level > 0) {
     printf("ONLINE: measurement done int t/s = %1.4e\n", etime - atime);
