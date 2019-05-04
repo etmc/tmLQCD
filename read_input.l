@@ -177,7 +177,6 @@ static inline double fltlist_next_token(int * const list_end){
   int bc_flag;
   int online_measurement_flag;
   int online_measurement_freq;
-  int restoresu3_flag;
   int reweighting_flag;
   int reweighting_samples;
   int no_samples;
@@ -345,7 +344,6 @@ static inline double fltlist_next_token(int * const list_end){
 %x ORIENTEDPLAQUETTESMEAS
 %x GRADIENTFLOWMEAS
 
-%x RESTORESU3
 %x REWEIGH
 %x REWSAMPLES
 
@@ -492,7 +490,6 @@ static inline double fltlist_next_token(int * const list_end){
 ^PropagatorType{EQL}               BEGIN(WRPROPFLAG);
 ^RanluxdLevel{EQL}                 BEGIN(RLXDLEVEL);
 ^GCRPreconditioner{EQL}            BEGIN(PRECON);
-^RestoreSU3{EQL}                   BEGIN(RESTORESU3);
 ^ComputeReweightingFactor{EQL}     BEGIN(REWEIGH);
 ^NoReweightingSamples{EQL}         BEGIN(REWSAMPLES);
 ^SourceTimeSlice{EQL}              BEGIN(SOURCETS);
@@ -3006,14 +3003,6 @@ static inline double fltlist_next_token(int * const list_end){
   reweighting_flag = 0;
   if(myverbose!=0) printf("Do not compute reweighting factor\n");
 }
-<RESTORESU3>yes {
-  restoresu3_flag = 1;
-  if(myverbose!=0) printf("Restore SU(3) gauge-field\n");
-}
-<RESTORESU3>no {
-  restoresu3_flag = 0;
-  if(myverbose!=0) printf("Do not restore SU(3) gauge-field\n");
-}
 <REWSAMPLES>{DIGIT}+ {
   reweighting_samples = atoi(yytext);
   if(myverbose!=0) printf("Number of reweighting samples set to %d\n", reweighting_samples);
@@ -3191,7 +3180,6 @@ int read_input(char * conf_file){
   use_preconditioning = _default_use_preconditioning;
   stout_rho = _default_stout_rho;
   stout_no_iter = _default_stout_no_iter;
-  restoresu3_flag = _default_restoresu3_flag;
 
   /* check for reread ! */ 
   phmc_compute_evs = _default_phmc_compute_evs;

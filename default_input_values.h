@@ -155,7 +155,6 @@
 #define _default_timescale 1
 #define _default_reweighting_flag 0
 #define _default_reweighting_samples 10
-#define _default_restoresu3_flag 0
 #define _default_source_type_flag 0
 #define _default_no_samples 1
 #define _default_online_measurement_flag 1
