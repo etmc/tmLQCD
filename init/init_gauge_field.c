@@ -27,6 +27,7 @@
 #include "su3.h"
 #include "sse.h"
 #include "init_gauge_field.h"
+#include "expo.h"
 
 su3 * gauge_field = NULL;
 su3_32 * gauge_field_32 = NULL;
@@ -47,6 +48,8 @@ int init_gauge_field(const int V, const int back) {
 #else
   g_gauge_field_copy = NULL;
 #endif
+
+  if (g_exposu3_no_c == 0) init_exposu3();
 
   if((void*)(g_gauge_field = (su3**)calloc(V, sizeof(su3*))) == NULL) {
     printf ("malloc errno : %d\n",errno); 

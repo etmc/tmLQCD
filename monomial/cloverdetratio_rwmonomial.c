@@ -45,7 +45,10 @@
 #include "monomial/monomial.h"
 #include "boundary.h"
 #include "cloverdetratio_rwmonomial.h"
-
+#include "expo.h"
+#include "xchange/xchange.h"
+#include "init/init_gauge_tmp.h"
+#include "DDalphaAMG_interface.h"
 
 double cloverdetratio_rwacc(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];

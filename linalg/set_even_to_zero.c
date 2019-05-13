@@ -26,7 +26,7 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 #endif
 #include "global.h"
@@ -34,7 +34,7 @@
 #include "set_even_to_zero.h"
 
 void set_even_to_zero(spinor * const P) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -42,7 +42,7 @@ void set_even_to_zero(spinor * const P) {
   int x, y, z, t, i, ix;
   spinor * p = NULL;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(x = 0; x < LX; x++) {
@@ -78,7 +78,7 @@ void set_even_to_zero(spinor * const P) {
     }
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /*OpenMP closing brace */
 #endif
 

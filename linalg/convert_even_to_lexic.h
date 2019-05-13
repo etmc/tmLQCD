@@ -16,14 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-#ifndef _EXPO_H
-#define _EXPO_H
 
-void init_exposu3();
-void exposu3(su3* const vr, const su3adj* const p);
-void exposu3_check(su3* const vr, const su3adj* const p, int im);
-void restoresu3(su3* const vr, const su3* const u);
-void restoresu3_in_place(su3* const u);
-void exposu3_in_place(su3* const u);
+#ifndef _CONVERT_EVEN_TO_LEXIC_H
+#define _CONVERT_EVEN_TO_LEXIC_H
+
+void convert_even_to_lexic(spinor * const P, spinor * const r);
+void convert_lexic_to_even(spinor * const r, spinor * const P);
 
 #endif

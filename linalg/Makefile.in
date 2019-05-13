@@ -34,7 +34,7 @@ liblinalg_TARGETS = assign_add_mul_r_add_mul \
 	assign_mul_bra_add_mul_ket_add_r \
 	scalar_prod_r scalar_prod_i \
 	square_and_prod_r assign_mul_bra_add_mul_r mul_r mul_r_32 \
-	diff_and_square_norm assign \
+	diff_and_square_norm square_and_minmax assign \
 	scalar_prod mul_diff_r mul_diff_mul assign_add_mul assign_mul_add add \
 	assign_diff_mul mul_add_mul mul assign_add_mul_add_mul \
 	assign_mul_bra_add_mul_ket_add assign_mul_add_mul_add_mul_add_mul_r \
@@ -46,8 +46,8 @@ liblinalg_TARGETS = assign_add_mul_r_add_mul \
 	assign_mul_add_r_and_square \
 	addto_32 scalar_prod_r_32 assign_mul_add_r_32 assign_add_mul_r_32 \
 	square_norm_32 assign_to_32 diff_32 \
-	convert_odd_to_lexic set_even_to_zero mul_gamma5 \
-	mul_r_gamma5
+	convert_odd_to_lexic convert_even_to_lexic set_even_to_zero \
+	mul_gamma5 mul_r_gamma5
 
 liblinalg_STARGETS = diff assign_add_mul_r assign_mul_add_r square_norm
 

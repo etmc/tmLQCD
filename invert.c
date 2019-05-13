@@ -94,6 +94,7 @@
 #endif
 #include "meas/measurements.h"
 #include "source_generation.h"
+#include "expo.h"
 
 #define CONF_FILENAME_LENGTH 500
 
@@ -179,7 +180,6 @@ int main(int argc, char *argv[])
   j = init_gauge_field(VOLUMEPLUSRAND, 0);
   j += init_gauge_field_32(VOLUMEPLUSRAND, 0);  
 #endif
- 
   if (j != 0) {
     fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
     exit(-1);
@@ -295,7 +295,6 @@ int main(int argc, char *argv[])
       fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", i, conf_filename);
       exit(-2);
     }
-
 
     if (g_cart_id == 0) {
       printf("# Finished reading gauge field.\n");

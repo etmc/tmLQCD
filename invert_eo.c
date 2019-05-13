@@ -485,7 +485,7 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       if(g_proc_id == 0) {printf("# Using multi mass CG!\n"); fflush(stdout);}
       
       gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
-      iter = cg_mms_tm(P, g_spinor_field[DUM_DERI+1],&solver_params,&cgmms_reached_prec);
+      iter = cg_mms_tm(P, g_spinor_field[DUM_DERI+1],&solver_params);
       g_mu = shifts[0];
       Q_minus_psi(g_spinor_field[DUM_DERI+1], P[0]);
       

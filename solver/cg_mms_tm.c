@@ -63,7 +63,7 @@ static void free_mms_tm();
 
 /* P output = solution , Q input = source */
 int cg_mms_tm(spinor ** const P, spinor * const Q,
-		 solver_params_t * solver_params, double * cgmms_reached_prec) {
+		 solver_params_t * solver_params) {
 
   static double normsq, pro, err, squarenorm;
   int iteration, N = solver_params->sdim, no_shifts = solver_params->no_shifts;
@@ -143,13 +143,22 @@ int cg_mms_tm(spinor ** const P, spinor * const Q,
       // falls below a threshold
       // this is useful for computing time and needed, because otherwise
       // zita might get smaller than DOUBLE_EPS and, hence, zero
-      if(iteration > 0 && (iteration % 20 == 0) && (im == no_shifts-1)) {
-	double sn = square_norm(ps_mms_solver[im-1], N, 1);
-	if(alphas[no_shifts-1]*alphas[no_shifts-1]*sn <= solver_params->squared_solver_prec) {
+      if(iteration > 0 && (iteration % 10 == 0) && (im == no_shifts-1)) {
+	double sn = square_norm(ps_mms_solver[no_shifts-2], N, 1);
+        err = alphas[no_shifts-1]*alphas[no_shifts-1]*sn;
+        // while because more than one shift could be converged
+	while(((err <= solver_params->squared_solver_prec) && (solver_params->rel_prec == 0)) ||
+              ((err <= solver_params->squared_solver_prec*squarenorm) && (solver_params->rel_prec > 0))) {
 	  no_shifts--;
 	  if(g_debug_level > 2 && g_proc_id == 0) {
 	    printf("# CGMMS: at iteration %d removed one shift, %d remaining\n", iteration, no_shifts);
       	  }
+          if(no_shifts>1) {
+            sn = square_norm(ps_mms_solver[no_shifts-2], N, 1);
+            err = alphas[no_shifts-1]*alphas[no_shifts-1]*sn;
+          } else {
+            break;
+          }
 	}
       }
     }
@@ -170,9 +179,7 @@ int cg_mms_tm(spinor ** const P, spinor * const Q,
     if( ((err <= solver_params->squared_solver_prec) && (solver_params->rel_prec == 0)) ||
         ((err <= solver_params->squared_solver_prec*squarenorm) && (solver_params->rel_prec > 0)) ||
         (iteration == solver_params->max_iter -1) ) {
-      /* FIXME temporary output of precision until a better solution can be found */
-      *cgmms_reached_prec = err;
-      break;
+        break;
     }
 
     /* Compute betas[0](i+1) = (r(i+1),r(i+1))/(r(i),r(i))
@@ -195,7 +202,7 @@ int cg_mms_tm(spinor ** const P, spinor * const Q,
   if(g_debug_level > 0 && g_proc_id == 0) {
     printf("# CGMMS (%d shifts): iter: %d eps_sq: %1.4e %1.4e t/s\n", solver_params->no_shifts, iteration, solver_params->squared_solver_prec, etime - atime); 
   }
-  
+
   finalize_solver(solver_field, nr_sf);
   return(iteration);
 }

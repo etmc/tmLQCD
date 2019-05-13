@@ -1137,7 +1137,7 @@ void spinorStructEigenvecQtm(spinor *fv,double kappa,double mu,int epsilon,int k
   double q[8];
   double p_mu[4];
   double p_mu_t[4];
-  double psq,psq_tilde,M_wilson,prefactor,beta,norm_factor,swap_dummy;
+  double psq,psq_tilde,M_wilson,prefactor,beta,norm_factor;
   double *fv_=(double*)fv;
   int index;
 
@@ -1165,10 +1165,10 @@ void spinorStructEigenvecQtm(spinor *fv,double kappa,double mu,int epsilon,int k
 
   /* multiply with i ... */
   /* .. so first swap re <-> im .. */
-  SWAP(q[0],q[1],swap_dummy);
-  SWAP(q[2],q[3],swap_dummy);
-  SWAP(q[4],q[5],swap_dummy);
-  SWAP(q[6],q[7],swap_dummy);
+  SWAP(q[0],q[1]);
+  SWAP(q[2],q[3]);
+  SWAP(q[4],q[5]);
+  SWAP(q[6],q[7]);
 
   /* and multiply new real part (former imag part) with -1 */
   q[0]*=-prefactor; q[1]*=prefactor; q[2]*=-prefactor; q[3]*=prefactor;
@@ -1216,7 +1216,7 @@ void spinorStructEigenvecQtmSu3Vector(spinor *fv,double kappa,double mu,int epsi
   double q[8];
   double p_mu[4];
   double p_mu_t[4];
-  double psq,psq_tilde,M_wilson,prefactor,beta,norm_factor,swap_dummy;
+  double psq,psq_tilde,M_wilson,prefactor,beta,norm_factor;
 
   calcPmuLattice(rawp,p_mu,tt,ll);
   psq=p_mu[0]*p_mu[0]+
@@ -1242,10 +1242,10 @@ void spinorStructEigenvecQtmSu3Vector(spinor *fv,double kappa,double mu,int epsi
 
   /* multiply with i ... */
   /* .. so first swap re <-> im .. */
-  SWAP(q[0],q[1],swap_dummy);
-  SWAP(q[2],q[3],swap_dummy);
-  SWAP(q[4],q[5],swap_dummy);
-  SWAP(q[6],q[7],swap_dummy);
+  SWAP(q[0],q[1]);
+  SWAP(q[2],q[3]);
+  SWAP(q[4],q[5]);
+  SWAP(q[6],q[7]);
 
   /* and multiply new real part (former imag part) with -1 */
   q[0]*=-prefactor; q[1]*=prefactor; q[2]*=-prefactor; q[3]*=prefactor;
@@ -2092,7 +2092,7 @@ int * makeDiagFalloffPmuMap(int n,int maxdmanhat){
 
     for(int i = 0;i<10;i++){
       ranlxd(r,2);
-      SWAP(drawp[(int)(r[0]*4.)],drawp[(int)(r[1]*4.)],r[2]);
+      SWAP(drawp[(int)(r[0]*4.)],drawp[(int)(r[1]*4.)]);
 
   }
     fprintf(drawpStatFile," %d %d %d %d\n",drawp[0],drawp[1],drawp[2],drawp[3]);

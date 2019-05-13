@@ -38,6 +38,8 @@
 #include "operator/Hopping_Matrix.h"
 #include "phmc.h"
 #include "boundary.h"
+#include "operator/clovertm_operators.h"
+#include "operator/clover_leaf.h"
 #include "gamma.h"
 #include "operator/tm_operators_nd.h"
 #include "chebyshev_polynomial_nd.h"
@@ -47,6 +49,7 @@
 #include "monomial/monomial.h"
 #include "hamiltonian_field.h"
 #include "nddetratio_monomial.h"
+#include "DDalphaAMG_interface.h"
 
 
 
@@ -54,24 +57,43 @@ double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
   int iter;
   monomial * mnl = &monomial_list[id];
   double atime, etime;
+  matrix_mult_nd Q_pm_ndpsi = Qtm_pm_ndpsi, Q_dagger_ndpsi = Qtm_dagger_ndpsi, Q_ndpsi = Qtm_ndpsi;
   atime = gettime();
   
   g_mubar = mnl->mubar;
   g_epsbar = mnl->epsbar;
   boundary(mnl->kappa);
 
-  iter = cg_her_nd(mnl->w_fields[0], mnl->w_fields[1], mnl->pf, mnl->pf2,
-		   mnl->maxiter, mnl->accprec, g_relative_precision_flag, 
-		   VOLUME/2, &Qtm_pm_ndpsi);
-  Qtm_dagger_ndpsi(mnl->w_fields[2], mnl->w_fields[3],
-			mnl->w_fields[0], mnl->w_fields[1]);
+  if(mnl->type == NDCLOVERDETRATIO) {
+    Q_pm_ndpsi = Qsw_pm_ndpsi;
+    Q_dagger_ndpsi = Qsw_dagger_ndpsi;
+    Q_ndpsi = Qsw_ndpsi;
+    init_sw_fields();
+    sw_term((const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
+    sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
+  }
+  if( mnl->solver == MG ) {
+    iter = MG_solver_nd(mnl->w_fields[2], mnl->w_fields[3], mnl->pf, mnl->pf2,
+                        mnl->accprec, mnl->maxiter, g_relative_precision_flag, 
+                        VOLUME/2, g_gauge_field, Q_ndpsi);
+  } else {
+    iter = cg_her_nd(mnl->w_fields[0], mnl->w_fields[1], mnl->pf, mnl->pf2,
+                     mnl->maxiter, mnl->accprec, g_relative_precision_flag, 
+                     VOLUME/2, Q_pm_ndpsi);
+    Q_dagger_ndpsi(mnl->w_fields[2], mnl->w_fields[3],
+                   mnl->w_fields[0], mnl->w_fields[1]);
+  }
 
   g_mubar = mnl->mubar2;
   g_epsbar = mnl->epsbar2;
   boundary(mnl->kappa2);
 
-  Qtm_ndpsi(mnl->w_fields[0], mnl->w_fields[1],
-		  mnl->w_fields[2], mnl->w_fields[3]);
+  if(mnl->type == NDCLOVERDETRATIO) {
+    sw_term((const su3**) hf->gaugefield, mnl->kappa2, mnl->c_sw); 
+    sw_invert_nd(mnl->mubar2*mnl->mubar2 - mnl->epsbar2*mnl->epsbar2);
+  }
+  Q_ndpsi(mnl->w_fields[0], mnl->w_fields[1],
+            mnl->w_fields[2], mnl->w_fields[3]);
   
   mnl->energy1  = scalar_prod_r(mnl->pf , mnl->w_fields[0], VOLUME/2, 1);
   mnl->energy1 += scalar_prod_r(mnl->pf2, mnl->w_fields[1], VOLUME/2, 1);

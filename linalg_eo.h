@@ -30,6 +30,7 @@
 #include "linalg/scalar_prod_r_32.h"
 #include "linalg/scalar_prod_i.h"
 #include "linalg/square_and_prod_r.h"
+#include "linalg/square_and_minmax.h"
 #include "linalg/assign_add_mul_r.h"
 #include "linalg/assign_add_mul_r_32.h"
 #include "linalg/assign_mul_bra_add_mul_r.h"
@@ -66,7 +67,7 @@
 #include "linalg/mattimesvec.h"
 
 #include "linalg/convert_eo_to_lexic.h"
-
+#include "linalg/convert_even_to_lexic.h"
 #include "linalg/convert_odd_to_lexic.h"
 #include "linalg/set_even_to_zero.h"
 #include "linalg/mul_gamma5.h"

@@ -385,14 +385,16 @@ static inline double fltlist_next_token(int * const list_end){
 %x CLRATCORMONOMIAL
 %x NDCLRATMONOMIAL
 %x NDRATCORMONOMIAL
+%x NDDETRATMONOMIAL
+%x NDCLDETRATMONOMIAL
 %x NDCLRATCORMONOMIAL
 %x POLYMONOMIAL
 %x CLPOLYMONOMIAL
 %x MNAME
 %x MCSTR
 %x MSOLVER
-%x NDMSOLVER
 %x RATMSOLVER
+%x NDMSOLVER
 %x GTYPE
 
 %x COMMENT
@@ -800,6 +802,20 @@ static inline double fltlist_next_token(int * const list_end){
     mg_omp_num_threads=a;
     if(myverbose) printf("  MG_omp_num_threads set to %d line %d operator %d\n", mg_omp_num_threads, line_of_file, current_operator);
   }
+  {SPC}*MGNumberOfShifts{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_no_shifts=a;
+    // when the number of shifts is specified, mg_mss_mass must be set to zero!
+    mg_mms_mass=0;
+    if(myverbose) printf("  MG_Num_of_shifts set to %d line %d operator %d\n", mg_no_shifts, line_of_file, current_operator);
+  }
+  {SPC}*MGMMSMass{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mg_mms_mass=c;
+    // when mg_mms_mass is specified, mg_no_shifts should be set to zero!
+    mg_no_shifts=0;
+    if(myverbose) printf("  MG_MMS_Mass set to %f line %d operator %d\n", mg_mms_mass, line_of_file, current_operator);
+  }
   EndDDalphaAMG{SPC}* {
   if(myverbose) printf("DDalphaAMG parsed in line %d\n\n", line_of_file);
   BEGIN(0);
@@ -1198,10 +1214,15 @@ static inline double fltlist_next_token(int * const list_end){
     if(myverbose) printf("  Solver set to RGMixedCG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
-  MG {
+  DDalphaAMG {
+#ifdef DDalphaAMG
     optr->solver = MG;
-    if(myverbose) printf("  Solver set to MG line %d operator %d\n", line_of_file, current_operator);
+    if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
+#else
+    printf("ERROR line %d operator %d: DDalphaAMG library not included\n", line_of_file, current_operator);
+    exit(1);
+#endif
   }
   dummyhermtest {
     optr->solver=DUMMYHERMTEST;
@@ -1344,9 +1365,14 @@ static inline double fltlist_next_token(int * const list_end){
     BEGIN(name_caller);
   }
   DDalphaAMG {
+#ifdef DDalphaAMG
     optr->solver = MG;
     if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
+#else
+    printf("ERROR line %d operator %d: DDalphaAMG library not included\n", line_of_file, current_operator);
+    exit(1);
+#endif
   }
 }
 
@@ -1612,6 +1638,11 @@ static inline double fltlist_next_token(int * const list_end){
     strcpy((*mnl).name, "NDDETRATIO");
     g_running_phmc = 1;
   }
+  else if(strcmp(yytext, "NDCLOVERDETRATIO")==0) {
+    mnl->type = NDCLOVERDETRATIO;
+    strcpy((*mnl).name, "NDDCLOVERETRATIO");
+    g_running_phmc = 1;
+  }
   else if(strcmp(yytext, "NDPOLY")==0) {
     mnl->type = NDPOLY;
     strcpy((*mnl).name, "NDPOLY");
@@ -1694,10 +1725,13 @@ static inline double fltlist_next_token(int * const list_end){
   else if(mnl->type == NDRAT) BEGIN(NDRATMONOMIAL);
   else if(mnl->type == RAT) BEGIN(RATMONOMIAL);
   else if(mnl->type == NDCLOVERRAT) BEGIN(NDCLRATMONOMIAL);
+  else if(mnl->type == NDDETRATIO) BEGIN(NDDETRATMONOMIAL);
   else if(mnl->type == CLOVERRAT) BEGIN(CLRATMONOMIAL);
   else if(mnl->type == NDRATCOR) BEGIN(NDRATCORMONOMIAL);
   else if(mnl->type == RATCOR) BEGIN(RATCORMONOMIAL);
   else if(mnl->type == NDCLOVERRATCOR) BEGIN(NDCLRATCORMONOMIAL);
+  else if(mnl->type == NDDETRATIO) BEGIN(NDDETRATMONOMIAL);
+  else if(mnl->type == NDCLOVERDETRATIO) BEGIN(NDCLDETRATMONOMIAL);
   else if(mnl->type == CLOVERRATCOR) BEGIN(CLRATCORMONOMIAL);
   else if(mnl->type == POLY || mnl->type == POLYDETRATIO)  {
           fprintf(stderr,"starting to parse poly(detratio) monomial\n");
@@ -1711,9 +1745,9 @@ static inline double fltlist_next_token(int * const list_end){
 
 
 
-<DETMONOMIAL,GAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,CLRATMONOMIAL,RATCORMONOMIAL,CLRATCORMONOMIAL>{
+<DETMONOMIAL,GAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,CLRATMONOMIAL,RATCORMONOMIAL,CLRATCORMONOMIAL,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{
   {SPC}*Timescale{EQL}{DIGIT}+ {
-    if(mnl->type == NDDETRATIO) {
+    if(mnl->type == NDDETRATIO || mnl->type == NDCLOVERDETRATIO) {
       mnl->timescale = -5;
       if(myverbose) printf("  timescales set to %d line %d monomial %d since NDDETRATIO is not for MD evolution\n", a, line_of_file, current_monomial);
     }
@@ -1733,7 +1767,7 @@ static inline double fltlist_next_token(int * const list_end){
   }
 }
 
-<CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,CLPOLYMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
+<CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,CLPOLYMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,NDCLDETRATMONOMIAL>{
   {SPC}*CSW{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mnl->c_sw = c;
@@ -1757,7 +1791,7 @@ static inline double fltlist_next_token(int * const list_end){
   }
 }
 
-<DETMONOMIAL,POLYMONOMIAL,NDPOLYMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,RATMONOMIAL,CLRATMONOMIAL,RATCORMONOMIAL,CLRATCORMONOMIAL>{
+<DETMONOMIAL,POLYMONOMIAL,NDPOLYMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,RATMONOMIAL,CLRATMONOMIAL,RATCORMONOMIAL,CLRATCORMONOMIAL,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{
   {SPC}*Kappa{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mnl->kappa = c;
@@ -1778,6 +1812,14 @@ static inline double fltlist_next_token(int * const list_end){
   }
 }
 
+<NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{
+  {SPC}*Kappa2{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    mnl->kappa2 = c;
+    if(myverbose) printf("  kappa2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+}
+
 <NDCLRATMONOMIAL,CLRATMONOMIAL>{
   {SPC}*AddTrLog{EQL}yes {
     mnl->trlog = 1;
@@ -1789,7 +1831,7 @@ static inline double fltlist_next_token(int * const list_end){
   }
 }
 
-<NDPOLYMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL>{
+<NDPOLYMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{
   {SPC}*2KappaMubar{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mubar = c;
@@ -1802,7 +1844,19 @@ static inline double fltlist_next_token(int * const list_end){
   }
 }
 
-<DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
+<NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{
+  {SPC}*2KappaMubar2{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    mnl->mubar2 = c;
+    if(myverbose) printf("  2KappaMubar2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*2KappaEpsbar2{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    mnl->epsbar2 = c;
+    if(myverbose) printf("  2KappaEpsbar2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+}
+<DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{
   {SPC}*UseExternalInverter{EQL}quda {
     if(myverbose) printf("  Use Quda inverter line %d monomial %d\n", line_of_file, current_monomial);
     mnl->solver_params.external_inverter = QUDA_INVERTER;
@@ -1853,7 +1907,7 @@ static inline double fltlist_next_token(int * const list_end){
   }
 }
 
-<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
+<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{
   {SPC}*ForcePrecision{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     mnl->forceprec = c;
@@ -1876,21 +1930,21 @@ static inline double fltlist_next_token(int * const list_end){
   }
 }
 
-<NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL>{
+<NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{
   {SPC}*Solver{EQL} {
    solver_caller=YY_START;
    BEGIN(NDMSOLVER);
   }
 }
 
-<RATMONOMIAL,CLRATMONOMIAL,RATCORMONOMIAL,CLRATCORMONOMIAL>{
+<RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
   {SPC}*Solver{EQL} {
-    solver_caller=YY_START;
-    BEGIN(RATMSOLVER);
+   solver_caller=YY_START;
+   BEGIN(RATMSOLVER);
   }
 }
 
-<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL>{
+<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
   {SPC}*2KappaMu{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mu = c;
@@ -2112,9 +2166,37 @@ static inline double fltlist_next_token(int * const list_end){
     BEGIN(name_caller);
   }
   DDalphaAMG {
+#ifdef DDalphaAMG
     if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
     mnl->solver = MG;
     BEGIN(solver_caller);
+#else
+    printf("ERROR line %d operator %d: DDalphaAMG library not included\n", line_of_file, current_operator);
+    exit(1);
+#endif
+  }
+}
+
+<RATMSOLVER>{
+  rgmixedCG {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = RGMIXEDCG;
+    BEGIN(solver_caller);
+  }
+  cgmms {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = CGMMS;
+    BEGIN(solver_caller);
+  }
+  DDalphaAMG {
+#ifdef DDalphaAMG
+    if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
+    mnl->solver = MG;
+    BEGIN(solver_caller);
+#else
+    printf("ERROR line %d operator %d: DDalphaAMG library not included\n", line_of_file, current_operator);
+    exit(1);
+#endif
   }
 }
 
@@ -2122,6 +2204,11 @@ static inline double fltlist_next_token(int * const list_end){
   cgmmsnd {
     if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->solver = CGMMSND;
+    BEGIN(solver_caller);
+  }
+  rgmixedcg {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = RGMIXEDCG;
     BEGIN(solver_caller);
   }
   mixedCGmmsnd {
@@ -2134,13 +2221,15 @@ static inline double fltlist_next_token(int * const list_end){
     mnl->solver = 14;
     BEGIN(solver_caller);
   }
-}
-
-<RATMSOLVER>{
-  cgmms {
-    if( myverbose ) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
-    mnl->solver = CGMMS;
+  DDalphaAMG {
+#ifdef DDalphaAMG
+    if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
+    mnl->solver = MG;
     BEGIN(solver_caller);
+#else
+    printf("ERROR line %d operator %d: DDalphaAMG library not included\n", line_of_file, current_operator);
+    exit(1);
+#endif
   }
 }
 
@@ -2908,15 +2997,15 @@ static inline double fltlist_next_token(int * const list_end){
 }
 <REWEIGH>yes {
   reweighting_flag = 1;
-  if(myverbose!=0) fprintf(stderr, "Compute reweighting factor\n");
+  if(myverbose!=0) printf("Compute reweighting factor\n");
 }
 <REWEIGH>no {
   reweighting_flag = 0;
-  if(myverbose!=0) fprintf(stderr, "Do not compute reweighting factor\n");
+  if(myverbose!=0) printf("Do not compute reweighting factor\n");
 }
 <REWSAMPLES>{DIGIT}+ {
   reweighting_samples = atoi(yytext);
-  if(myverbose!=0) fprintf(stderr, "Number of reweighting samples set to %d\n", reweighting_samples);
+  if(myverbose!=0) printf("Number of reweighting samples set to %d\n", reweighting_samples);
 }
 
 <MIXCGIT>{DIGIT}+ {
@@ -2941,7 +3030,7 @@ static inline double fltlist_next_token(int * const list_end){
   BEGIN(comment_caller);
 }
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID,INITEXTERNALINVERTER,QUDAINVERTER,QPHIXINVERTER>{SPC}*\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID,INITEXTERNALINVERTER,QUDAINVERTER,QPHIXINVERTER,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{SPC}*\n   {
   line_of_file++;
 }
 <*>{SPC}*\n                       {
@@ -3019,6 +3108,7 @@ int read_input(char * conf_file){
   g_mu1 = _default_g_mu1;
   g_mu2 = _default_g_mu2;
   g_mu3 = _default_g_mu3;
+  g_shift = _default_g_shift;
   g_dbw2rand = 0;
   g_running_phmc = 0;
   g_beta = _default_g_beta;

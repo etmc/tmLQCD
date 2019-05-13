@@ -31,9 +31,9 @@
 #endif
 #include "global.h"
 #include "su3.h"
-#include "convert_odd_to_lexic.h"
+#include "convert_even_to_lexic.h"
 
-void convert_odd_to_lexic(spinor * const P, spinor * const r) {
+void convert_even_to_lexic(spinor * const P, spinor * const r) {
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -52,7 +52,7 @@ void convert_odd_to_lexic(spinor * const P, spinor * const r) {
 	  ix = g_ipt[t][x][y][z];
 	  i = g_lexic2eosub[ ix ];
 	  if((t+x+y+z+g_proc_coords[3]*LZ+g_proc_coords[2]*LY 
-	      + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 != 0) {
+	      + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
 	       p = r;
 	       memcpy((P+ix), (p+i), sizeof(spinor));
 	  }
@@ -70,9 +70,9 @@ void convert_odd_to_lexic(spinor * const P, spinor * const r) {
 
 /*
  *      P: spinor with full volume 
- *      r: new spinor odd 
+ *      r: new spinor even
  */
-void convert_lexic_to_odd(spinor * const r, spinor * const P) {
+void convert_lexic_to_even(spinor * const r, spinor * const P) {
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -91,7 +91,7 @@ void convert_lexic_to_odd(spinor * const r, spinor * const P) {
 	  ix = g_ipt[t][x][y][z];
 	  i = g_lexic2eosub[ ix ];
 	  if((t+x+y+z+g_proc_coords[3]*LZ+g_proc_coords[2]*LY 
-	      + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 != 0) {
+	      + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
 	    p = r;
 	    memcpy((p+i), (P+ix), sizeof(spinor));
 	  }

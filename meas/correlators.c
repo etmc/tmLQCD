@@ -240,8 +240,8 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
 #else
       free(Cpp); free(Cpa); free(Cp4);
 #endif
-    }
-  } 
+    } // for(max_time_slices)
+  } // for(max_samples)
   etime = gettime();
   if(g_proc_id == 0 && g_debug_level > 0) {
     printf("ONLINE: measurement done int t/s = %1.4e\n", etime - atime);
