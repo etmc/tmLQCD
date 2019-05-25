@@ -37,13 +37,8 @@
 #include "su3.h"
 #include "assign_add_mul_r_32.h"
 
-
 #if (defined BGQ && defined XLC)
-void assign_add_mul_r_32(spinor32 * const R, spinor32 * const S, const float c, const int N) {
-#ifdef TM_USE_OMP
-#pragma omp parallel
-  {
-#endif
+void assign_add_mul_r_32_orphaned(spinor32 * const R, spinor32 * const S, const float c, const int N) {
   vector4double x0, x1, x2, x3, x4, x5, y0, y1, y2, y3, y4, y5;
   vector4double z0, z1, z2, z3, z4, z5, k;
   float *s, *r;
@@ -93,20 +88,13 @@ void assign_add_mul_r_32(spinor32 * const R, spinor32 * const S, const float c, 
     vec_st(z4, 0, r+16);
     vec_st(z5, 0, r+20);
   }
-#ifdef TM_USE_OMP
-  } /* OpenMP closing brace */
-#endif
   return;
 }
 
 #else
 
-void assign_add_mul_r_32(spinor32 * const R, spinor32 * const S, const float c, const int N)
+void assign_add_mul_r_32_orphaned(spinor32 * const R, spinor32 * const S, const float c, const int N)
 {
-#ifdef TM_USE_OMP
-#pragma omp parallel
-  {
-#endif
   spinor32 *r,*s;
 
 #ifdef TM_USE_OMP
@@ -134,10 +122,20 @@ void assign_add_mul_r_32(spinor32 * const R, spinor32 * const S, const float c, 
     r->s3.c2 += c * s->s3.c2;
   }
 
-#ifdef TM_USE_OMP
-  } /* OpenMP closing brace */
-#endif
-
 }
 
 #endif
+
+void assign_add_mul_r_32(spinor32 * const R, spinor32 * const S, const float c, const int N)
+{
+#ifdef TM_USE_OMP
+#pragma omp parallel
+  {
+#endif
+  assign_add_mul_r_32_orphaned(R,S,c,N);
+#ifdef TM_USE_OMP
+  } /* OpenMP closing brace */
+#endif
+return;
+}
+

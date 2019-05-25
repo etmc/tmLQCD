@@ -52,6 +52,7 @@
 #define _default_g_mu1 0.0
 #define _default_g_mu2 0.0
 #define _default_g_mu3 0.0
+#define _default_g_shift 0.0
 #define _default_c_sw -1.0
 #define _default_g_beta 6.0
 #define _default_g_N_s 20
@@ -125,7 +126,7 @@
 #define _default_gauge_precision_read_flag 64
 #define _default_gauge_precision_write_flag 64
 #define _default_g_disable_IO_checks 0
-#define _default_prop_precision_flag 32
+#define _default_prop_precision_flag 64
 #define _default_write_prop_flag 1
 #define _default_reproduce_randomnumber_flag 1
 #define _default_g_sloppy_precision_flag 0

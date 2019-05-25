@@ -45,7 +45,7 @@ libsolver_TARGETS = bicgstab_complex gmres incr_eigcg eigcg restart_X ortho \
                     dirac_operator_eigenvectors	spectral_proj \
                     jdher_su3vect cg_her_su3vect eigenvalues_Jacobi \
 		    mcr cr mcr4complex bicg_complex monomial_solve \
-		    solver_types
+		    solver_types init_guess
 
 libsolver_OBJECTS = $(addsuffix .o, ${libsolver_TARGETS})
 

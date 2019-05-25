@@ -55,7 +55,7 @@
 
 void rat_derivative(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
-  double atime, etime, dummy;
+  double atime, etime;
   atime = gettime();
   mnl_backup_restore_globals(TM_BACKUP_GLOBALS);
   g_kappa = mnl->kappa;
@@ -85,12 +85,12 @@ void rat_derivative(const int id, hamiltonian_field_t * const hf) {
   mnl->solver_params.no_shifts = mnl->rat.np;
   mnl->solver_params.shifts = mnl->rat.mu;
   mnl->solver_params.rel_prec = g_relative_precision_flag;
-  mnl->solver_params.type = CGMMS;
+  mnl->solver_params.type = mnl->solver;
   mnl->solver_params.M_psi = mnl->Qsq;
   mnl->solver_params.sdim = VOLUME/2;
   // this generates all X_j,o (odd sites only) -> g_chi_up_spinor_field
-  mnl->iter1 += solve_mshift_oneflavour(g_chi_up_spinor_field, mnl->pf,
-                                        &(mnl->solver_params) );
+  mnl->iter1 += solve_mms_tm(g_chi_up_spinor_field, mnl->pf,
+                             &(mnl->solver_params) );
   
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     mnl->Qp(mnl->w_fields[0], g_chi_up_spinor_field[j]);
@@ -148,7 +148,7 @@ void rat_derivative(const int id, hamiltonian_field_t * const hf) {
 
 void rat_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
-  double atime, etime, dummy;
+  double atime, etime;
   atime = gettime();
   mnl_backup_restore_globals(TM_BACKUP_GLOBALS);
   g_kappa = mnl->kappa;
@@ -181,12 +181,13 @@ void rat_heatbath(const int id, hamiltonian_field_t * const hf) {
   mnl->solver_params.squared_solver_prec = mnl->accprec;
   mnl->solver_params.no_shifts = mnl->rat.np;
   mnl->solver_params.shifts = mnl->rat.nu;
-  mnl->solver_params.type = CGMMS;
+  mnl->solver_params.type = mnl->solver;
   mnl->solver_params.M_psi = mnl->Qsq;
   mnl->solver_params.sdim = VOLUME/2;
   mnl->solver_params.rel_prec = g_relative_precision_flag;
-  mnl->iter0 = solve_mshift_oneflavour(g_chi_up_spinor_field, mnl->pf,
-			               &(mnl->solver_params) );
+
+  mnl->iter0 = solve_mms_tm(g_chi_up_spinor_field, mnl->pf,
+                            &(mnl->solver_params) );
 
   assign(mnl->w_fields[2], mnl->pf, VOLUME/2);
 
@@ -214,7 +215,7 @@ void rat_heatbath(const int id, hamiltonian_field_t * const hf) {
 
 double rat_acc(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
-  double atime, etime, dummy;
+  double atime, etime;
   atime = gettime();
   mnl_backup_restore_globals(TM_BACKUP_GLOBALS);
   g_kappa = mnl->kappa;
@@ -233,12 +234,12 @@ double rat_acc(const int id, hamiltonian_field_t * const hf) {
   mnl->solver_params.squared_solver_prec = mnl->accprec;
   mnl->solver_params.no_shifts = mnl->rat.np;
   mnl->solver_params.shifts = mnl->rat.mu;
-  mnl->solver_params.type = CGMMS;
+  mnl->solver_params.type = mnl->solver;
   mnl->solver_params.M_psi = mnl->Qsq;
   mnl->solver_params.sdim = VOLUME/2;
   mnl->solver_params.rel_prec = g_relative_precision_flag;
-  mnl->iter0 += solve_mshift_oneflavour(g_chi_up_spinor_field, mnl->pf,
-			                &(mnl->solver_params) );
+  mnl->iter0 += solve_mms_tm(g_chi_up_spinor_field, mnl->pf,
+                             &(mnl->solver_params) );
 
   // apply R to the pseudo-fermion fields
   assign(mnl->w_fields[0], mnl->pf, VOLUME/2);

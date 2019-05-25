@@ -28,6 +28,7 @@
 #include "global.h"
 #include "su3.h"
 #include "sse.h"
+#include "expo.h"
 #include "init_stout_smear_vars.h"
 
 su3 * gauge_field_saved;
@@ -90,6 +91,8 @@ int init_stout_smear_vars(const int V, const int stout_no_iter)
   i = 0;
   k = 0;
   mu = 0;
+
+  if (g_exposu3_no_c == 0) init_exposu3();
 
   /*
    *  this is the field where we store the smeared force matrices \Sigma^{(k)}_\mu(x)

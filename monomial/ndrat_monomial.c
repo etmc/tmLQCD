@@ -47,6 +47,7 @@
 #include "rational/rational.h"
 #include "phmc.h"
 #include "ndrat_monomial.h"
+#include "default_input_values.h"
 
 void nd_set_global_parameter(monomial * const mnl) {
 
@@ -57,7 +58,7 @@ void nd_set_global_parameter(monomial * const mnl) {
   boundary(g_kappa);
   phmc_cheb_evmin = mnl->EVMin;
   phmc_invmaxev = mnl->EVMaxInv;
-  phmc_cheb_evmax = 1.;
+  phmc_cheb_evmax = mnl->EVMax;
   phmc_Cpol = 1.;
   // used for preconditioning in cloverdetrat
   g_mu3 = 0.;
@@ -99,7 +100,6 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   mnl->solver_params.shifts = mnl->rat.mu;
   mnl->solver_params.rel_prec = g_relative_precision_flag;
   mnl->solver_params.type = mnl->solver; 
-
   mnl->solver_params.M_ndpsi = &Qtm_pm_ndpsi;
   mnl->solver_params.M_ndpsi32 = &Qtm_pm_ndpsi_32;    
   if(mnl->type == NDCLOVERRAT) {
@@ -107,10 +107,11 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
     mnl->solver_params.M_ndpsi32 = &Qsw_pm_ndpsi_32;
   }
   mnl->solver_params.sdim = VOLUME/2;
+
   // this generates all X_j,o (odd sites only) -> g_chi_up|dn_spinor_field
   mnl->iter1 += solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
                              mnl->pf, mnl->pf2, &(mnl->solver_params) );
-  
+
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     if(mnl->type == NDCLOVERRAT) {
       // multiply with Q_h * tau^1 + i mu_j to get Y_j,o (odd sites)
@@ -229,28 +230,16 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   }
   mnl->solver_params.sdim = VOLUME/2;
   mnl->solver_params.rel_prec = g_relative_precision_flag;
-  mnl->iter0 = solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-                            mnl->pf, mnl->pf2, &(mnl->solver_params) );
+  mnl->iter0 = solve_mms_nd_plus(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+                                 mnl->pf, mnl->pf2, &(mnl->solver_params) );
 
   assign(mnl->w_fields[2], mnl->pf, VOLUME/2);
   assign(mnl->w_fields[3], mnl->pf2, VOLUME/2);
 
   // apply C to the random field to generate pseudo-fermion fields
   for(int j = (mnl->rat.np-1); j > -1; j--) {
-    // Q_h * tau^1 - i nu_j
-    // this needs phmc_Cpol = 1 to work!
-    if(mnl->type == NDCLOVERRAT) {
-      Qsw_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
-			       g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-			       I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
-    }
-    else {
-      Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
-			     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-			     I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
-    }
-    assign_add_mul(mnl->pf, g_chi_up_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
-    assign_add_mul(mnl->pf2, g_chi_dn_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
+      assign_add_mul(mnl->pf, g_chi_up_spinor_field[j], I*mnl->rat.rnu[j], VOLUME/2);
+      assign_add_mul(mnl->pf2, g_chi_dn_spinor_field[j], I*mnl->rat.rnu[j], VOLUME/2);
   }
 
   etime = gettime();
@@ -293,7 +282,7 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
   mnl->solver_params.sdim = VOLUME/2;
   mnl->solver_params.rel_prec = g_relative_precision_flag;
   mnl->iter0 += solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
-                             mnl->pf, mnl->pf2, &(mnl->solver_params) );
+                            mnl->pf, mnl->pf2, &(mnl->solver_params) );
 
   // apply R to the pseudo-fermion fields
   assign(mnl->w_fields[0], mnl->pf, VOLUME/2);
@@ -322,26 +311,40 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
 
 int init_ndrat_monomial(const int id) {
   monomial * mnl = &monomial_list[id];  
+  int scale = 0;
 
-  mnl->EVMin = mnl->StildeMin / mnl->StildeMax;
-  mnl->EVMax = 1.;
-  mnl->EVMaxInv = 1./(sqrt(mnl->StildeMax));
+  if(mnl->type == RAT || mnl->type == CLOVERRAT ||
+     mnl->type == RATCOR || mnl->type == CLOVERRATCOR) 
+    scale = 1;
+
+  if(scale) {
+    // When scale = 1 
+    //   the rational approximation is done for the standard operator 
+    //   which have eigenvalues between EVMin and EVMax.  Indeed the 
+    //   parameters of the rational approximation are scaled. Thus 
+    //   additional scaling of the operator (EVMaxInv) is not required.
+    mnl->EVMin = mnl->StildeMin;
+    mnl->EVMax = mnl->StildeMax;
+    mnl->EVMaxInv = 1.;
+  } else {
+    // When scale = 0 
+    //   the rational approximation is done for the normalized operator 
+    //   which have eigenvalues between EVMin/EVMax and 1. Thus the 
+    //   operator need to be scaled by EVMaxInv=1/EVMax.
+    mnl->EVMin = mnl->StildeMin / mnl->StildeMax;
+    mnl->EVMax = 1.;
+    mnl->EVMaxInv = 1./sqrt(mnl->StildeMax);
+  }
+
+  init_rational(&mnl->rat, scale);
 
   if(mnl->type == RAT || mnl->type == CLOVERRAT ||
      mnl->type == RATCOR || mnl->type == CLOVERRATCOR) {
-    init_rational(&mnl->rat, 1);
-
     if(init_chi_spinor_field(VOLUMEPLUSRAND/2, (mnl->rat.np+2)/2) != 0) {
       fprintf(stderr, "Not enough memory for Chi fields! Aborting...\n");
       exit(0);
     }
-  }
-  else {
-    init_rational(&mnl->rat, 0);
-    mnl->EVMin = mnl->StildeMin / mnl->StildeMax;
-    mnl->EVMax = 1.;
-    mnl->EVMaxInv = 1./(sqrt(mnl->StildeMax));
-    
+  } else {
     if(init_chi_spinor_field(VOLUMEPLUSRAND/2, (mnl->rat.np+1)) != 0) {
       fprintf(stderr, "Not enough memory for Chi fields! Aborting...\n");
       exit(0);

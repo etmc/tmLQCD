@@ -40,11 +40,6 @@
 #define M_PI  3.14159265358979323846
 #endif
 
-#define SWAP(x,y,d)\
-  d=x;\
-  x=y;\
-  y=d;
-
 #define min(x,y)\
   ((x<y)?x:y)
 #define max(x,y)\
