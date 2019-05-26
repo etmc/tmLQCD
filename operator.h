@@ -28,7 +28,7 @@
 #include "operator_types.h"
 #include "misc_types.h"
 
-#define max_no_operators 10
+#define max_no_operators 50
 
 typedef struct {
   /* ID of the operator */
