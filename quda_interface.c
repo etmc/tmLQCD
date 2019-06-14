@@ -1333,6 +1333,10 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     mg_param->coarse_solver_ca_lambda_min[level] = quda_input.mg_coarse_solver_ca_lambda_min[level];
     mg_param->coarse_solver_ca_lambda_max[level] = quda_input.mg_coarse_solver_ca_lambda_max[level];
     // END EXPERIMENTAL BaKo, 20190214
+    
+    // BaKo 20190614 new parameters added to develop branch
+    mg_param->run_low_mode_check = quda_input.mg_run_low_mode_check;
+    mg_param->run_oblique_proj_check = quda_input.mg_run_oblique_proj_check;
 #endif
   } // for(i=0 to n_level-1)
 

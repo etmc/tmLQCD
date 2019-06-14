@@ -69,6 +69,8 @@ typedef struct tm_QudaParams_t {
 #ifdef TM_QUDA_EXPERIMENTAL
   // BEGIN EXPERIMENTAL BaKo, 20190214 feature/dwf-rewrite branch introduces these
   // for control of CA solvers
+  // BaKo, 20190614: these are now in the develop branch, but we keep them
+  // experimental until the very newest develop commits pass all correctness checks
   QudaCABasis       mg_setup_ca_basis[QUDA_MAX_MG_LEVEL];
   int               mg_setup_ca_basis_size[QUDA_MAX_MG_LEVEL];
   double            mg_setup_ca_lambda_min[QUDA_MAX_MG_LEVEL];
@@ -79,6 +81,12 @@ typedef struct tm_QudaParams_t {
   double            mg_coarse_solver_ca_lambda_min[QUDA_MAX_MG_LEVEL];
   double            mg_coarse_solver_ca_lambda_max[QUDA_MAX_MG_LEVEL];
   // END EXPERIMENTAL BaKo, 20190214
+
+  // BaKo 20190614, further develop branch additions
+  int mg_run_low_mode_check;
+  int mg_run_oblique_proj_check;
+  // END 20190614
+
 #endif // TM_QUDA_EXPERIMENTAL
 
 } tm_QudaParams_t;

@@ -3344,6 +3344,11 @@ int read_input(char * conf_file){
     quda_input.mg_coarse_solver_ca_lambda_min[level] = 0.0;
     quda_input.mg_coarse_solver_ca_lambda_max[level] = -1.0;
     // END EXPERIMENTAL BaKo, 20190214
+
+    // BaKo: 20190614 more new parameters in current develop branch
+    quda_input.mg_run_low_mode_check = QUDA_BOOLEAN_NO;
+    quda_input.mg_run_oblique_proj_check = QUDA_BOOLEAN_NO; 
+    // END
 #endif
 
 
