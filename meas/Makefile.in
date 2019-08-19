@@ -61,7 +61,7 @@ include ${top_srcdir}/Makefile.global
 
 # rule to compile objects
 
-%.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/tmlqcd_config.h
+%.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/include/tmlqcd_config.h
 	$(COMPILE) -c $<
 
 libmeas.a: ${libmeas_OBJECTS} Makefile

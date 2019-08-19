@@ -3,7 +3,7 @@
 #
 AC_PREREQ(2.59)
 AC_INIT(tmLQCD, 5.2.0, curbach@gmx.de)
-AC_CONFIG_HEADER(tmlqcd_config.h)
+AC_CONFIG_HEADER(include/tmlqcd_config.h)
 AC_CONFIG_SRCDIR([hmc_tm.c])
 AC_CANONICAL_HOST()
 AC_PREFIX_DEFAULT($HOME)
@@ -387,7 +387,7 @@ AC_SUBST(QPHIX_INTERFACE)
 AC_SUBST(QPHIX_PROGRAMS)
 AC_SUBST(DDalphaAMG_INTERFACE)
 
-INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${abs_top_builddir}/  -I\${abs_top_srcdir}/ -I${lime_dir}/include/ -I${lemon_dir}/include/"
+INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${abs_top_builddir}/  -I\${abs_top_builddir}/include/ -I\${abs_top_srcdir}/ -I${lime_dir}/include/ -I${lemon_dir}/include/"
 DEPFLAGS="$DEPFLAGS"
 
 AC_MSG_CHECKING(what alignment we want for arrays)

@@ -58,10 +58,10 @@ profile all-profile: all
 include ${top_srcdir}/Makefile.global
 
 # rule to compile objects
-${liboperator_OBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/tmlqcd_config.h
+${liboperator_OBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/include/tmlqcd_config.h
 	$(COMPILE) ${OPTARGS} -c $<
 
-${liboperator_SOBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/tmlqcd_config.h
+${liboperator_SOBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/include/tmlqcd_config.h
 	$(COMPILE) ${SOPTARGS} -c $<
 
 # rule to make liboperator
