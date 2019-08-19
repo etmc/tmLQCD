@@ -112,21 +112,21 @@ libhmc.a: ${addsuffix .o, ${MODULES} ${SMODULES}} Makefile
 	@$(RANLIB) libhmc.a
 	@cp libhmc.a ${top_builddir}/lib/libhmc.a
 
-$(addsuffix .o,$(filter-out ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/tmlqcd_config.h
+$(addsuffix .o,$(filter-out ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/include/tmlqcd_config.h
 	${COMPILE} ${OPTARGS} -c $<
 
 #here we don't need optimisation
-$(addsuffix .o,$(filter ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/tmlqcd_config.h
+$(addsuffix .o,$(filter ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/include/tmlqcd_config.h
 	${COMPILE} -c $<
 
-${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/tmlqcd_config.h
+${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/include/tmlqcd_config.h
 	${COMPILE} ${SOPTARGS} -c $<
 
 # C++ modules
-$(addsuffix .o,${CXXMODULES}): %.o: ${srcdir}/%.cpp %.d Makefile $(abs_top_builddir)/tmlqcd_config.h
+$(addsuffix .o,${CXXMODULES}): %.o: ${srcdir}/%.cpp %.d Makefile $(abs_top_builddir)/include/tmlqcd_config.h
 	${CXXCOMPILE} -c $<
 	
-${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/tmlqcd_config.h ${top_srcdir}/git_hash.h
+${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/include/tmlqcd_config.h ${top_srcdir}/git_hash.h
 	${COMPILE} ${OPTARGS} -c $<
 
 ${PROGRAMS}: %: %.o libhmc.a $(SUBDIRS) $(addsuffix .o,${CXXMODULES})
@@ -164,7 +164,7 @@ clean: clean-recursive Makefile
 
 distclean: distclean-recursive Makefile
 	rm -f benchmark hmc_tm invert *.o *.d *~ Makefile config.log config.status fixed_volume.h
-	rm -f tmlqcd_config.h
+	rm -f include/tmlqcd_config.h
 
 .PHONY: all ${SUBDIRS} ${top_srcdir}/git_hash.h clean compile-clean distclean dep install \
 	all-recursive all-debug-recursive all-profile-recursive \
