@@ -57,9 +57,13 @@ double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
   int iter;
   monomial * mnl = &monomial_list[id];
   double atime, etime;
+  double kappa_tmp;
   matrix_mult_nd Q_pm_ndpsi = Qtm_pm_ndpsi, Q_dagger_ndpsi = Qtm_dagger_ndpsi, Q_ndpsi = Qtm_ndpsi;
   atime = gettime();
   
+  kappa_tmp=g_kappa;
+  
+  g_kappa=mnl->kappa;
   g_mubar = mnl->mubar;
   g_epsbar = mnl->epsbar;
   boundary(mnl->kappa);
@@ -84,6 +88,7 @@ double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
                    mnl->w_fields[0], mnl->w_fields[1]);
   }
 
+  g_kappa=mnl->kappa2;
   g_mubar = mnl->mubar2;
   g_epsbar = mnl->epsbar2;
   boundary(mnl->kappa2);
@@ -107,5 +112,8 @@ double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
 	     id, mnl->energy0 - mnl->energy1);
     }
   }
+  
+  g_kappa=kappa_tmp;
+  
   return(mnl->energy1 - mnl->energy0);
 }
