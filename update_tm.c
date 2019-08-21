@@ -188,7 +188,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
     if(accept) {
       /* save gauge file to disk before performing reversibility check */
-      xlfInfo = construct_paramsXlfInfo((*plaquette_energy)/(6.*VOLUME*g_nproc), traj_counter);
+      xlfInfo = construct_paramsXlfInfo((new_plaquette_energy)/(6.*VOLUME*g_nproc), traj_counter);
       // Should write this to temporary file first, and then check
       if(g_proc_id == 0 && g_debug_level > 0) {
         fprintf(stdout, "# Writing gauge field to file %s.\n", tmp_filename);
