@@ -3,6 +3,7 @@
  * Copyright (C) 2015       Mario Schroeck
  *               2016, 2017 Bartosz Kostrzewa
  *               2018       Bartosz Kostrzewa, Ferenc Pittler
+ *               2019       Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -28,9 +29,6 @@
 * Authors: Mario Schroeck <mario.schroeck@roma3.infn.it>
 *          Bartosz Kostrzewa <bartosz_kostrzewa@fastmail.com>
 * 
-* Last changes: 12/2017
-*
-*
 * Interface to QUDA for multi-GPU inverters
 *
 * The externally accessible functions are
@@ -139,6 +137,11 @@ QudaInvertParam inv_param;
 QudaMultigridParam quda_mg_param;
 QudaInvertParam inv_mg_param;
 void* quda_mg_preconditioner;
+// MGEigSolver params for all levels, these need to be around as they
+// will be populated in _setQudaMultigridParam and then assigned
+// on a per-level basis to QudaInvertParam members (if the EigSolver is enabled
+// on the given level)
+QudaEigParam mg_eig_param[QUDA_MAX_MG_LEVEL];
 
 // input params specific to tmLQCD QUDA interface
 tm_QudaParams_t quda_input;
@@ -308,6 +311,9 @@ void _initQuda() {
   inv_param = newQudaInvertParam();
   inv_mg_param = newQudaInvertParam();
   quda_mg_param = newQudaMultigridParam();
+  for( int level = 0; level < QUDA_MAX_MG_LEVEL; ++level ){
+    mg_eig_param[level] = newQudaEigParam();
+  }
 
   _setDefaultQudaParam();
 
@@ -1156,6 +1162,8 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
   }
 }
 
+
+
 void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   QudaInvertParam *mg_inv_param = mg_param->invert_param;
 
@@ -1209,6 +1217,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
         printf("# QUDA: MG setting coarse mu scaling factor on level %d to %lf\n", level, mg_param->mu_factor[level]);
       }
     }
+
     
     for (int dim=0; dim<4; dim++) {
       int extent;
@@ -1332,6 +1341,56 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     
     mg_param->run_low_mode_check = quda_input.mg_run_low_mode_check;
     mg_param->run_oblique_proj_check = quda_input.mg_run_oblique_proj_check;
+
+    // set the MG EigSolver parameters, almost equivalent to
+    // setEigParam from QUDA's multigrid_invert_test, except
+    // for cuda_prec_ritz (on 20190822)
+		if( quda_input.mg_use_eig_solver[level] == QUDA_BOOLEAN_YES ){
+      mg_eig_param[level].eig_type = quda_input.mg_eig_type[level];
+      mg_eig_param[level].spectrum = quda_input.mg_eig_spectrum[level];
+      if ((quda_input.mg_eig_type[level] == QUDA_EIG_TR_LANCZOS || 
+           quda_input.mg_eig_type[level] == QUDA_EIG_IR_LANCZOS)
+          && !(quda_input.mg_eig_spectrum[level] == QUDA_SPECTRUM_LR_EIG || 
+               quda_input.mg_eig_spectrum[level] == QUDA_SPECTRUM_SR_EIG)) {
+        tm_debug_printf(0, 0,
+                        "ERROR: MG level %d: Only real spectrum type (LR or SR)"
+                          "can be passed to the a Lanczos type solver!\n",
+                        level);
+        fflush(stdout);
+        fatal_error("Eigensolver parameter error.\n", "_setQudaMultigridParam");
+      }
+
+      mg_eig_param[level].nEv = quda_input.mg_eig_nEv[level];
+      mg_eig_param[level].nKr = quda_input.mg_eig_nKr[level];
+      mg_eig_param[level].nConv = quda_input.mg_n_vec[level];
+      mg_eig_param[level].require_convergence = quda_input.mg_eig_require_convergence[level];
+
+      mg_eig_param[level].tol = quda_input.mg_eig_tol[level];
+      mg_eig_param[level].check_interval = quda_input.mg_eig_check_interval[level];
+      mg_eig_param[level].max_restarts = quda_input.mg_eig_max_restarts[level];
+			// in principle this can be set to a different precision, but we always
+      // use double precision in the outer solver
+      mg_eig_param[level].cuda_prec_ritz = QUDA_DOUBLE_PRECISION;
+
+      // this seems to be set to NO in multigrid_invert_test
+      mg_eig_param[level].compute_svd = QUDA_BOOLEAN_NO;
+      mg_eig_param[level].use_norm_op = quda_input.mg_eig_use_normop[level]; 
+      mg_eig_param[level].use_dagger = quda_input.mg_eig_use_dagger[level];
+      mg_eig_param[level].use_poly_acc = quda_input.mg_eig_use_poly_acc[level]; 
+      mg_eig_param[level].poly_deg = quda_input.mg_eig_poly_deg[level];
+      mg_eig_param[level].a_min = quda_input.mg_eig_amin[level];
+      mg_eig_param[level].a_max = quda_input.mg_eig_amax[level];
+
+      // set file i/o parameters
+      // Give empty strings, Multigrid will handle IO.
+      strcpy(mg_eig_param[level].vec_infile, "");
+      strcpy(mg_eig_param[level].vec_outfile, "");
+      strncpy(mg_eig_param[level].QUDA_logfile, "quda_eig.log", 512);
+
+      mg_param->eig_param[level] = &(mg_eig_param[level]);
+    } else {
+      mg_param->eig_param[level] = NULL;
+    } // if(quda_input.mg_use_eig_solver[level] == QUDA_BOOLEAN_YES)
   } // for(i=0 to n_level-1)
 
   // only coarsen the spin on the first restriction
