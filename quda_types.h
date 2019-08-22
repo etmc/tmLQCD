@@ -67,6 +67,8 @@ typedef struct tm_QudaParams_t {
   int               mg_enable_size_three_blocks;
   double            mg_reset_setup_threshold;
   
+  // parameters related to communication-avoiding
+  // solvers  
   QudaCABasis       mg_setup_ca_basis[QUDA_MAX_MG_LEVEL];
   int               mg_setup_ca_basis_size[QUDA_MAX_MG_LEVEL];
   double            mg_setup_ca_lambda_min[QUDA_MAX_MG_LEVEL];
@@ -76,7 +78,25 @@ typedef struct tm_QudaParams_t {
   int               mg_coarse_solver_ca_basis_size[QUDA_MAX_MG_LEVEL];
   double            mg_coarse_solver_ca_lambda_min[QUDA_MAX_MG_LEVEL];
   double            mg_coarse_solver_ca_lambda_max[QUDA_MAX_MG_LEVEL];
-  
+
+  // parameters related to coarse grid deflation in the MG
+  int mg_use_eig_solver[QUDA_MAX_MG_LEVEL];
+  int mg_eig_nEv[QUDA_MAX_MG_LEVEL];
+  int mg_eig_nKr[QUDA_MAX_MG_LEVEL];
+  int mg_eig_require_convergence[QUDA_MAX_MG_LEVEL];
+  int mg_eig_check_interval[QUDA_MAX_MG_LEVEL];
+  int mg_eig_max_restarts[QUDA_MAX_MG_LEVEL];
+  double mg_eig_tol[QUDA_MAX_MG_LEVEL];                                                                                                      
+  int mg_eig_use_poly_acc[QUDA_MAX_MG_LEVEL];
+  int mg_eig_poly_deg[QUDA_MAX_MG_LEVEL];
+  double mg_eig_amin[QUDA_MAX_MG_LEVEL];
+  double mg_eig_amax[QUDA_MAX_MG_LEVEL];
+  int mg_eig_use_normop[QUDA_MAX_MG_LEVEL];
+  int mg_eig_use_dagger[QUDA_MAX_MG_LEVEL];
+  QudaEigSpectrumType mg_eig_spectrum[QUDA_MAX_MG_LEVEL];
+  QudaEigType mg_eig_type[QUDA_MAX_MG_LEVEL];
+  int mg_coarse_guess;
+
   int mg_run_low_mode_check;
   int mg_run_oblique_proj_check;
 
