@@ -42,7 +42,7 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 NAME [a-zA-Z0-9_]+
 CSTR \"[a-zA-Z0-9\-\._]+\"
 TYPE [0-9A-Z]+
-STRLIST [0-9"."","" ""_"a-zA-Z]*
+STRLIST [0-9"."","" ""_""-"a-zA-Z]*
 EQL {SPC}*={SPC}*
 
 %{
@@ -125,7 +125,7 @@ static inline void strlist_next_token(int * const list_end, char * const token_o
 static inline double fltlist_next_token(int * const list_end){
   double retval;
   char * token = (char*)NULL;
-  token = strtok(NULL," =,\t");
+  token = strtok(NULL," ,=\t");
   if( (void*)token == NULL ){
     *list_end = 1;
     return(0.0);
@@ -410,7 +410,7 @@ static inline double fltlist_next_token(int * const list_end){
         par_array[level] = QUDA_BOOLEAN_NO;
       }
       else {
-        snprintf(error_message, 200, "Only 'yes' and 'no' are possible for %s!\n", paramname);
+        snprintf(error_message, 200, "ERROR: Only 'yes' and 'no' are possible for %s!\n", paramname);
         yy_fatal_error(error_message);
       }
       if(myverbose) printf("  %s on level %d set to %s line %d\n", paramname, level, token, line_of_file);
@@ -1670,10 +1670,10 @@ static inline double fltlist_next_token(int * const list_end){
         quda_input.mg_coarse_solver_type[level] = QUDA_MR_INVERTER;
       }
       else {
-        snprintf(error_message, 200, "Unknown inverter %s passed in the parsing of %s!\n", yytext, paramname);
+        snprintf(error_message, 200, "Unknown inverter %s passed in the parsing of %s!\n", token, paramname);
         yy_fatal_error(error_message);
       }
-      if(myverbose) printf("  MGCoarseSolverType on level %d set to %s line %d\n", level, token, line_of_file);
+      if(myverbose) printf("  %s on level %d set to %s line %d\n", paramname, level, token, line_of_file);
       level++;
       strlist_next_token(&list_end, token, 100);
     }
@@ -1716,10 +1716,10 @@ static inline double fltlist_next_token(int * const list_end){
         quda_input.mg_smoother_type[level] = QUDA_MR_INVERTER;
       }
       else {
-        snprintf(error_message, 200, "Unknown inverter %s passed in the parsing of %s!\n", yytext, paramname);
+        snprintf(error_message, 200, "Unknown inverter %s passed in the parsing of %s!\n", token, paramname);
         yy_fatal_error(error_message);
       }
-      if(myverbose) printf("  MGSmootherType on level %d set to %s line %d\n", level, token, line_of_file);
+      if(myverbose) printf("  %s on level %d set to %s line %d\n", paramname, level, token, line_of_file);
       level++;
       strlist_next_token(&list_end, token, 100);
     }
@@ -1810,6 +1810,9 @@ static inline double fltlist_next_token(int * const list_end){
     quda_input.mg_reset_setup_threshold = c;
     if(myverbose) printf("  MGResetSetupThreshold set to %f line %d\n", quda_input.mg_reset_setup_threshold, line_of_file);
   }
+  {SPC}*MGUseEigSolver{EQL}{STRLIST} {
+    parse_quda_mg_bool_par_array(yytext, &(quda_input.mg_use_eig_solver[0]));
+  }
   {SPC}*MGEigSolverType{EQL}{STRLIST} {
     char paramname[100];
     char token[100];
@@ -1838,16 +1841,16 @@ static inline double fltlist_next_token(int * const list_end){
         token[i] = tolower(token[i]);
       }
       if( strcmp(token, "tr_lanczos") == 0 ){
-        quda_input.mg_smoother_type[level] = QUDA_EIG_TR_LANCZOS;
+        quda_input.mg_eig_type[level] = QUDA_EIG_TR_LANCZOS;
       }
       else if( strcmp(token, "ir_lanczos") == 0 ){
-        quda_input.mg_smoother_type[level] = QUDA_EIG_IR_LANCZOS;
+        quda_input.mg_eig_type[level] = QUDA_EIG_IR_LANCZOS;
       }
       else if( strcmp(token, "ir_arnoldi") == 0){
-        quda_input.mg_smoother_type[level] = QUDA_EIG_IR_ARNOLDI;
+        quda_input.mg_eig_type[level] = QUDA_EIG_IR_ARNOLDI;
       }
       else {
-        snprintf(error_message, 200, "Unknown type '%s' passed in the parsing of '%s'!\n", yytext, paramname);
+        snprintf(error_message, 200, "Unknown type '%s' passed in the parsing of '%s'!\n", token, paramname);
         yy_fatal_error(error_message);
       }
       if(myverbose) printf("  MGEigSolverType on level %d set to '%s' line %d\n", level, token, line_of_file);
@@ -1884,28 +1887,28 @@ static inline double fltlist_next_token(int * const list_end){
         token[i] = tolower(token[i]);
       }
       if( strcmp(token, "smallest_real") == 0 ){
-        quda_input.mg_smoother_type[level] = QUDA_SPECTRUM_SR_EIG;
+        quda_input.mg_eig_spectrum[level] = QUDA_SPECTRUM_SR_EIG;
       }
       else if( strcmp(token, "largest_real") == 0 ){
-        quda_input.mg_smoother_type[level] = QUDA_SPECTRUM_LR_EIG;
+        quda_input.mg_eig_spectrum[level] = QUDA_SPECTRUM_LR_EIG;
       }
       else if( strcmp(token, "smallest_modulus") == 0){
-        quda_input.mg_smoother_type[level] = QUDA_SPECTRUM_SM_EIG;
+        quda_input.mg_eig_spectrum[level] = QUDA_SPECTRUM_SM_EIG;
       }
       else if( strcmp(token, "largest_modulus") == 0){
-        quda_input.mg_smoother_type[level] = QUDA_SPECTRUM_LM_EIG;
+        quda_input.mg_eig_spectrum[level] = QUDA_SPECTRUM_LM_EIG;
       }
       else if( strcmp(token, "smallest_imaginary") == 0){
-        quda_input.mg_smoother_type[level] = QUDA_SPECTRUM_SI_EIG;
+        quda_input.mg_eig_spectrum[level] = QUDA_SPECTRUM_SI_EIG;
       }
       else if( strcmp(token, "largest_imaginary") == 0){
-        quda_input.mg_smoother_type[level] = QUDA_SPECTRUM_LI_EIG;
+        quda_input.mg_eig_spectrum[level] = QUDA_SPECTRUM_LI_EIG;
       }
       else {
-        snprintf(error_message, 200, "Unknown spectrum type '%s' passed in the parsing of '%s'!\n", yytext, paramname);
+        snprintf(error_message, 200, "Unknown spectrum type '%s' passed in the parsing of '%s'!\n", token, paramname);
         yy_fatal_error(error_message);
       }
-      if(myverbose) printf("  MGEigSolverSpectrum on level %d set to '%s' line %d\n", level, token, line_of_file);
+      if(myverbose) printf("  %s on level %d set to '%s' line %d\n", paramname, level, token, line_of_file);
       level++;
       strlist_next_token(&list_end, token, 100);
     }
@@ -1918,9 +1921,6 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*MGEigSolverCoarseGuess{EQL}no {
     quda_input.mg_coarse_guess = QUDA_BOOLEAN_NO;
     if(myverbose) printf("  MGEigSolverCoarseGuess set to NO in line %d\n", line_of_file);
-  }
-  {SPC}*MGUseEigSolver{EQL}{STRLIST} {
-    parse_quda_mg_bool_par_array(yytext, &(quda_input.mg_use_eig_solver[0]));
   }
   {SPC}*MGEigSolverNumberOfVectors{EQL}{STRLIST} {
     parse_quda_mg_int_par_array(yytext, &(quda_input.mg_eig_nEv[0]));
