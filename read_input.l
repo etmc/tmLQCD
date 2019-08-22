@@ -3329,12 +3329,6 @@ int read_input(char * conf_file){
     quda_input.mg_coarse_solver_type[level] = QUDA_GCR_INVERTER;
     quda_input.mg_smoother_type[level] = QUDA_MR_INVERTER ;
 
-#ifdef TM_QUDA_EXPERIMENTAL
-    // BEGIN EXPERIMENTAL BaKo, 20190214 feature/dwf-rewrite branch introduces these
-    // for control of CA solvers
-    // these defaults are taken from tests/multigrid_evolve_test.cpp
-    // and will not work for CA-CG (as they are exactly the values
-    // that QUDA asserts against)
     quda_input.mg_setup_ca_basis[level] = QUDA_POWER_BASIS;
     quda_input.mg_setup_ca_basis_size[level] = 4;
     quda_input.mg_setup_ca_lambda_min[level] = 0.0;
@@ -3343,14 +3337,8 @@ int read_input(char * conf_file){
     quda_input.mg_coarse_solver_ca_basis_size[level] = 4;
     quda_input.mg_coarse_solver_ca_lambda_min[level] = 0.0;
     quda_input.mg_coarse_solver_ca_lambda_max[level] = -1.0;
-    // END EXPERIMENTAL BaKo, 20190214
-
-    // BaKo: 20190614 more new parameters in current develop branch
     quda_input.mg_run_low_mode_check = QUDA_BOOLEAN_NO;
     quda_input.mg_run_oblique_proj_check = QUDA_BOOLEAN_NO; 
-    // END
-#endif
-
 
     /* note: when the user does not specify any blocking parameters,
      * a reasonable set will be computed automatically in the MG setup
