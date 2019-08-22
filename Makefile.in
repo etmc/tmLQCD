@@ -99,9 +99,12 @@ ${top_srcdir}/git_hash.h:
 
 include ${top_srcdir}/Makefile.global
 
+# follow https://www.owlfolio.org/possibly-useful/flex-input-scanner-rules-are-too-complicated/
+# and pass the -Ca option such that more than 32k "NFA" states are allowed
+# our ruleset is so complicated that this has become necessary!
 ${top_srcdir}/read_input.c: ${top_srcdir}/read_input.l
 ifneq (,$(findstring lex,${LEX}))
-	${LEX} -Ptmlqcd -i -t ${top_srcdir}/read_input.l > ${top_srcdir}/read_input.c
+	${LEX} -Ca -Ptmlqcd -i -t ${top_srcdir}/read_input.l > ${top_srcdir}/read_input.c
 else
 	$(error Unable to find (f)lex, read_input.c not built. Please install (f)lex!)
 endif
