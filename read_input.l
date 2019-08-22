@@ -42,7 +42,7 @@ FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
 NAME [a-zA-Z0-9_]+
 CSTR \"[a-zA-Z0-9\-\._]+\"
 TYPE [0-9A-Z]+
-STRLIST [0-9"."","" "a-zA-Z]*
+STRLIST [0-9"."","" ""_"a-zA-Z]*
 EQL {SPC}*={SPC}*
 
 %{
@@ -264,7 +264,7 @@ static inline double fltlist_next_token(int * const list_end){
   tm_QPhiXParams_t qphix_input;
 #endif
 
-// specific parsing helpers
+  // specific parsing helpers
   static inline void parse_quda_mg_blocksize(const char * const input, const int dim){
     char paramname[100];
     char error_message[200];
@@ -275,7 +275,7 @@ static inline double fltlist_next_token(int * const list_end){
     strlist_tokenize(input, paramname, 100);
     blocksize = (int)fltlist_next_token(&list_end);
     while( list_end != 1 ){
-      if( level >= (QUDA_MAX_MG_LEVEL-1) ){
+      if( level >= QUDA_MAX_MG_LEVEL ){
         snprintf(error_message, 200, "Exceeded maximum number of levels (%d-1) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
         yy_fatal_error(error_message);
       }
@@ -288,6 +288,88 @@ static inline double fltlist_next_token(int * const list_end){
       
       level++;
       blocksize = (int)fltlist_next_token(&list_end);
+    }
+  }
+  
+  static inline void parse_quda_mg_int_par_array(const char * const input, int ** const par_array){
+    char paramname[100];
+    char error_message[200];
+    int list_end = 0;
+    int level = 0;
+    
+    strlist_tokenize(input, paramname, 100);
+    int parval = (int)fltlist_next_token(&list_end);
+    while( list_end != 1 ){
+      if( level >= QUDA_MAX_MG_LEVEL ){
+        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+        yy_fatal_error(error_message);
+      }
+      
+      (*par_array)[level] = parval;
+      if(myverbose){ 
+        printf("  %s, level %d set to %d line %d\n", paramname,
+                level, (*par_array)[level], line_of_file);
+      }
+      
+      level++;
+      parval = (int)fltlist_next_token(&list_end);
+    }
+  }
+  
+  static inline void parse_quda_mg_dbl_par_array(const char * const input, double ** const par_array){
+    char paramname[100];
+    char error_message[200];
+    int list_end = 0;
+    int level = 0;
+    
+    strlist_tokenize(input, paramname, 100);
+    double parval = fltlist_next_token(&list_end);
+    while( list_end != 1 ){
+      if( level >= QUDA_MAX_MG_LEVEL ){
+        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+        yy_fatal_error(error_message);
+      }
+      
+      (*par_array)[level] = parval;
+      if(myverbose){ 
+        printf("  %s, level %d set to %d line %d\n", paramname,
+                level, (*par_array)[level], line_of_file);
+      }
+      
+      level++;
+      parval = fltlist_next_token(&list_end);
+    }
+  }
+
+  static inline void parse_quda_mg_bool_par_array(const char * const input, int ** const par_array){
+    char paramname[100];
+    char token[100];
+    char error_message[200];
+    int list_end = 0;
+    int level = 0;
+    strlist_tokenize(input, paramname, 100);
+    strlist_next_token(&list_end, token, 100);
+    while( list_end != 1 ){
+      if( level >= QUDA_MAX_MG_LEVEL ){
+        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+        yy_fatal_error(error_message);
+      }
+      for(int i = 0; token[i]; i++){
+        token[i] = tolower(token[i]);
+      }
+      if( strcmp(token, "yes") == 0 ){
+        (*par_array)[level] = QUDA_BOOLEAN_YES;
+      }
+      else if( strcmp(token, "no") == 0 ){
+        (*par_array)[level] = QUDA_BOOLEAN_NO;
+      }
+      else {
+        snprintf(error_message, 200, "Onlye 'yes' and 'no' are possible for %s!\n", yytext, paramname);
+        yy_fatal_error(error_message);
+      }
+      if(myverbose) printf("  %s on level %d set to %s line %d\n", paramname, level, token, line_of_file);
+      level++;
+      strlist_next_token(&list_end, token, 100);
     }
   }
   
@@ -1463,27 +1545,7 @@ static inline double fltlist_next_token(int * const list_end){
     if(myverbose) printf("  MGNumberOfLevels set to %d line %d\n", quda_input.mg_n_level, line_of_file);
   }
   {SPC}*MGNumberOfVectors{EQL}{STRLIST} {
-    char paramname[100];
-    char error_message[200];
-    int list_end = 0;
-    int level = 0;
-
-    strlist_tokenize(yytext, paramname, 100);
-    int n_vec = (int)fltlist_next_token(&list_end);
-    while( list_end != 1 ){
-      if( level >= (QUDA_MAX_MG_LEVEL-1) ){
-        snprintf(error_message, 200, "Exceeded maximum number of levels (%d-1) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
-        yy_fatal_error(error_message);
-      }
-      
-      quda_input.mg_n_vec[level] = n_vec;
-      if(myverbose){ 
-        printf("  %s, level %d set to %d line %d\n", paramname,
-                level, quda_input.mg_n_vec[level], line_of_file);
-      }
-      level++;
-      n_vec = fltlist_next_token(&list_end);
-    }
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_n_vec) );
   }
   {SPC}*MGBlockSizesX{EQL}{STRLIST} {
     // note the dimensions here are in QUDA order (XYZT!)
@@ -1499,27 +1561,7 @@ static inline double fltlist_next_token(int * const list_end){
     parse_quda_mg_blocksize(yytext, 3);
   }
   {SPC}*MGCoarseMuFactor{EQL}{STRLIST} {
-    char paramname[100];
-    char error_message[200];
-    int list_end = 0;
-    int level = 0;
-
-    strlist_tokenize(yytext, paramname, 100);
-    double mu_factor = fltlist_next_token(&list_end);
-    while( list_end != 1 ){
-      if( level > QUDA_MAX_MG_LEVEL ){
-        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
-        yy_fatal_error(error_message);
-      }
-      
-      quda_input.mg_mu_factor[level] = mu_factor;
-      if(myverbose){ 
-        printf("  %s, level %d set to %lf line %d\n", paramname,
-                level, quda_input.mg_mu_factor[level], line_of_file);
-      }
-      level++;
-      mu_factor = fltlist_next_token(&list_end);
-    }
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_mu_factor));
   }
   {SPC}*MGCoarseSolverType{EQL}{STRLIST} {
     char paramname[100];
@@ -1530,7 +1572,7 @@ static inline double fltlist_next_token(int * const list_end){
     strlist_tokenize(yytext, paramname, 100);
     strlist_next_token(&list_end, token, 100);
     while( list_end != 1 ){
-      if( level > QUDA_MAX_MG_LEVEL ){
+      if( level >= QUDA_MAX_MG_LEVEL ){
         snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
         yy_fatal_error(error_message);
       }
@@ -1539,13 +1581,13 @@ static inline double fltlist_next_token(int * const list_end){
         token[i] = tolower(token[i]);
       }
       if( strcmp(token, "cagcr") == 0 ){
-        quda_input.mg_coarse_solver_type[level]=QUDA_CA_GCR_INVERTER;
+        quda_input.mg_coarse_solver_type[level] = QUDA_CA_GCR_INVERTER;
       }
       else if( strcmp(token, "gcr") == 0 ){
-        quda_input.mg_coarse_solver_type[level]=QUDA_GCR_INVERTER;
+        quda_input.mg_coarse_solver_type[level] = QUDA_GCR_INVERTER;
       }
       else if( strcmp(token, "mr") == 0){
-        quda_input.mg_coarse_solver_type[level]=QUDA_MR_INVERTER;
+        quda_input.mg_coarse_solver_type[level] = QUDA_MR_INVERTER;
       }
       else {
         snprintf(error_message, 200, "Unknown inverter %s passed in the parsing of %s!\n", yytext, paramname);
@@ -1565,7 +1607,7 @@ static inline double fltlist_next_token(int * const list_end){
     strlist_tokenize(yytext, paramname, 100);
     strlist_next_token(&list_end, token, 100);
     while( list_end != 1 ){
-      if( level > QUDA_MAX_MG_LEVEL ){
+      if( level >= QUDA_MAX_MG_LEVEL ){
         snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
         yy_fatal_error(error_message);
       }
@@ -1574,13 +1616,13 @@ static inline double fltlist_next_token(int * const list_end){
         token[i] = tolower(token[i]);
       }
       if( strcmp(token, "cagcr") == 0 ){
-        quda_input.mg_smoother_type[level]=QUDA_CA_GCR_INVERTER;
+        quda_input.mg_smoother_type[level] = QUDA_CA_GCR_INVERTER;
       }
       else if( strcmp(token, "gcr") == 0 ){
-        quda_input.mg_smoother_type[level]=QUDA_GCR_INVERTER;
+        quda_input.mg_smoother_type[level] = QUDA_GCR_INVERTER;
       }
       else if( strcmp(token, "mr") == 0){
-        quda_input.mg_smoother_type[level]=QUDA_MR_INVERTER;
+        quda_input.mg_smoother_type[level] = QUDA_MR_INVERTER;
       }
       else {
         snprintf(error_message, 200, "Unknown inverter %s passed in the parsing of %s!\n", yytext, paramname);
@@ -1647,6 +1689,22 @@ static inline double fltlist_next_token(int * const list_end){
     quda_input.mg_run_verify = QUDA_BOOLEAN_NO;
     if(myverbose) printf("  MGRunVerify set to NO in line %d\n", line_of_file);
   }
+  {SPC}*MGRunLowModeCheck{EQL}yes {
+    quda_input.mg_run_low_mode_check = QUDA_BOOLEAN_YES;
+    if(myverbose) printf("  MGRunLowModeCheck set to YES in line %d\n", line_of_file);
+  }
+  {SPC}*MGRunLowModeCheck{EQL}no {
+    quda_input.mg_run_low_mode_check = QUDA_BOOLEAN_NO;
+    if(myverbose) printf("  MGRunLowModeCheck set to NO in line %d\n", line_of_file);
+  }
+  {SPC}*MGObliqueProjectionCheck{EQL}yes {
+    quda_input.mg_run_oblique_proj_check = QUDA_BOOLEAN_YES;
+    if(myverbose) printf("  MGRunObliqueProjectionCheck set to YES in line %d\n", line_of_file);
+  }
+  {SPC}*MGRunVerify{EQL}no {
+    quda_input.mg_run_oblique_proj_check = QUDA_BOOLEAN_NO;
+    if(myverbose) printf("  MGRunObliqueProjectionCheck set to NO in line %d\n", line_of_file);
+  }
   {SPC}*MGEnableSizeThreeBlocks{EQL}yes {
     quda_input.mg_enable_size_three_blocks = 1;
     if(myverbose) printf("  MGEnableSizeThreeBlocks set to YES in line %d\n", line_of_file);
@@ -1657,8 +1715,134 @@ static inline double fltlist_next_token(int * const list_end){
   }
   {SPC}*MGResetSetupThreshold{EQL}{FLT}+ {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
-    quda_input.mg_reset_setup_threshold=c;
+    quda_input.mg_reset_setup_threshold = c;
     if(myverbose) printf("  MGResetSetupThreshold set to %f line %d\n", quda_input.mg_reset_setup_threshold, line_of_file);
+  }
+  {SPC}*MGEigSolverType{EQL}{STRLIST} {
+    char paramname[100];
+    char token[100];
+    char error_message[200];
+    int list_end = 0;
+    int level = 0;
+    strlist_tokenize(yytext, paramname, 100);
+    strlist_next_token(&list_end, token, 100);
+    while( list_end != 1 ){
+      if( level >= QUDA_MAX_MG_LEVEL ){
+        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing '%s'!\n", QUDA_MAX_MG_LEVEL, paramname);
+        yy_fatal_error(error_message);
+      }
+      /* Make token to lower case */
+      for(int i = 0; token[i]; i++){
+        token[i] = tolower(token[i]);
+      }
+      if( strcmp(token, "tr_lanczos") == 0 ){
+        quda_input.mg_smoother_type[level] = QUDA_EIG_TR_LANCZOS;
+      }
+      else if( strcmp(token, "ir_lanczos") == 0 ){
+        quda_input.mg_smoother_type[level] = QUDA_EIG_IR_LANCZOS;
+      }
+      else if( strcmp(token, "ir_arnoldi") == 0){
+        quda_input.mg_smoother_type[level] = QUDA_EIG_IR_ARNOLDI;
+      }
+      else {
+        snprintf(error_message, 200, "Unknown type '%s' passed in the parsing of '%s'!\n", yytext, paramname);
+        yy_fatal_error(error_message);
+      }
+      if(myverbose) printf("  MGEigSolverType on level %d set to '%s' line %d\n", level, token, line_of_file);
+      level++;
+      strlist_next_token(&list_end, token, 100);
+    }
+  }
+  {SPC}*MGEigSolverSpectrum{EQL}{STRLIST} {
+    char paramname[100];
+    char token[100];
+    char error_message[200];
+    int list_end = 0;
+    int level = 0;
+    strlist_tokenize(yytext, paramname, 100);
+    strlist_next_token(&list_end, token, 100);
+    while( list_end != 1 ){
+      if( level >= QUDA_MAX_MG_LEVEL ){
+        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing '%s'!\n", QUDA_MAX_MG_LEVEL, paramname);
+        yy_fatal_error(error_message);
+      }
+      /* Make token to lower case */
+      for(int i = 0; token[i]; i++){
+        token[i] = tolower(token[i]);
+      }
+      if( strcmp(token, "smallest_real") == 0 ){
+        quda_input.mg_smoother_type[level] = QUDA_SPECTRUM_SR_EIG;
+      }
+      else if( strcmp(token, "largest_real") == 0 ){
+        quda_input.mg_smoother_type[level] = QUDA_SPECTRUM_LR_EIG;
+      }
+      else if( strcmp(token, "smallest_modulus") == 0){
+        quda_input.mg_smoother_type[level] = QUDA_SPECTRUM_SM_EIG;
+      }
+      else if( strcmp(token, "largest_modulus") == 0){
+        quda_input.mg_smoother_type[level] = QUDA_SPECTRUM_LM_EIG;
+      }
+      else if( strcmp(token, "smallest_imaginary") == 0){
+        quda_input.mg_smoother_type[level] = QUDA_SPECTRUM_SI_EIG;
+      }
+      else if( strcmp(token, "largest_imaginary") == 0){
+        quda_input.mg_smoother_type[level] = QUDA_SPECTRUM_LI_EIG;
+      }
+      else {
+        snprintf(error_message, 200, "Unknown spectrum type '%s' passed in the parsing of '%s'!\n", yytext, paramname);
+        yy_fatal_error(error_message);
+      }
+      if(myverbose) printf("  MGEigSolverSpectrum on level %d set to '%s' line %d\n", level, token, line_of_file);
+      level++;
+      strlist_next_token(&list_end, token, 100);
+    }
+  }
+  {SPC}*MGEigSolverCoarseGuess{EQL}yes {
+    quda_input.mg_coarse_guess = QUDA_BOOLEAN_YES;
+    if(myverbose) printf("  MGEigSolverCoarseGuess set to YES in line %d\n", line_of_file);
+  }
+  {SPC}*MGEigSolverCoarseGuess{EQL}no {
+    quda_input.mg_coarse_guess = QUDA_BOOLEAN_NO;
+    if(myverbose) printf("  MGEigSolverCoarseGuess set to NO in line %d\n", line_of_file);
+  }
+  {SPC}*MGUseEigSolver{EQL}{STRLIST} {
+    parse_quda_mg_bool_par_array(yytext, &(quda_input.mg_use_eig_solver));
+  }
+  {SPC}*MGEigSolverNumberOfVectors{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_eig_nEv));
+  }
+  {SPC}*MGEigSolverKrylovSubspaceSize{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_eig_nKr));
+  }
+  {SPC}*MGEigSolverRequireConvergence{EQL}{STRLIST} {
+    parse_quda_mg_bool_par_array(yytext, &(quda_input.mg_eig_require_convergence));
+  }
+  {SPC}*MGEigSolverCheckConvergenceInterval{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_eig_check_interval));
+  }
+  {SPC}*MGEigSolverMaxRestarts{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_eig_max_restarts));
+  }
+  {SPC}*MGEigSolverTolerance{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_eig_tol));
+  }
+  {SPC}*MGEigSolverUseNormOp{EQL}{STRLIST} {
+    parse_quda_mg_bool_par_array(yytext, &(quda_input.mg_eig_use_normop));
+  }
+  {SPC}*MGEigSolverUseDagger{EQL}{STRLIST} {
+    parse_quda_mg_bool_par_array(yytext, &(quda_input.mg_eig_use_dagger));
+  }
+  {SPC}*MGEigSolverUsePolynomialAcceleration{EQL}{STRLIST} {
+    parse_quda_mg_bool_par_array(yytext, &(quda_input.mg_eig_use_poly_acc));
+  }
+  {SPC}*MGEigSolverPolynomialDegree{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_eig_poly_deg));
+  }
+  {SPC}*MGEigSolverPolyMin{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_eig_amin));
+  }
+  {SPC}*MGEigSolverPolyMax{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_eig_amax);
   }
   ^EndExternalInverter{SPC}*  { 
     if(myverbose) printf("QUDA external inverter parameters parsed on line %d\n\n", line_of_file);
@@ -3328,6 +3512,11 @@ int read_input(char * conf_file){
     }
     quda_input.mg_coarse_solver_type[level] = QUDA_GCR_INVERTER;
     quda_input.mg_smoother_type[level] = QUDA_MR_INVERTER ;
+
+    // note, as mg_eig_param in quda_interface.c are initialised with
+    // newQudaEigParam, there is no need to set further defaults for that
+    // part of the QUDA MG params
+    quda_input.mg_use_eig_solver[level] = QUDA_BOOLEAN_NO;
 
     quda_input.mg_setup_ca_basis[level] = QUDA_POWER_BASIS;
     quda_input.mg_setup_ca_basis_size[level] = 4;
