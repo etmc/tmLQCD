@@ -226,7 +226,7 @@ void _setDefaultQudaParam(void){
   inv_param.mass_normalization = QUDA_KAPPA_NORMALIZATION;
   inv_param.solver_normalization = QUDA_DEFAULT_NORMALIZATION;
 
-  inv_param.pipeline = 0;
+  inv_param.pipeline = quda_input.pipeline;
   inv_param.gcrNkrylov = 20;
 
   inv_param.residual_type = (QudaResidualType)(QUDA_L2_RELATIVE_RESIDUAL);
@@ -1060,7 +1060,9 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     inv_param.precondition_cycle = 1;
     inv_param.tol_precondition = 1e-1;
     inv_param.maxiter_precondition = 1;
-    inv_param.omega = quda_input.mg_omega;
+    // this under/overrelaxation parameter is not related to the ones
+    // used in the MG 
+    inv_param.omega = 1.0;
   }
   else {
     /* Here we invert the hermitean operator squared */
@@ -1200,25 +1202,6 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
 
   mg_param->n_level = quda_input.mg_n_level;
   for (int level=0; level < mg_param->n_level; level++) {
-    mg_param->precision_null[level] = QUDA_HALF_PRECISION;
-    mg_param->setup_inv_type[level] = quda_input.mg_setup_inv_type;
-    // Kate says: experimental, leave at 1 (will be used for bootstrap-style setup later)
-    mg_param->num_setup_iter[level] = 1;
-    mg_param->setup_tol[level] = quda_input.mg_setup_tol;
-    mg_param->setup_maxiter[level] = quda_input.mg_setup_maxiter;
-    // If doing twisted mass, we can scale the twisted mass on the coarser grids
-    // which significantly increases speed of convergence as a result of making
-    // the coarsest grid solve a lot better conditioned.
-    // Dean Howarth has some RG arguments on why the coarse mass parameter should be
-    // rescaled for the coarse operator to be optimal.
-    if( fabs(mg_inv_param->mu) > 2*DBL_EPSILON ) {
-      mg_param->mu_factor[level] = quda_input.mg_mu_factor[level];
-      if( g_proc_id == 0 && g_debug_level >= 2 ){
-        printf("# QUDA: MG setting coarse mu scaling factor on level %d to %lf\n", level, mg_param->mu_factor[level]);
-      }
-    }
-
-    
     for (int dim=0; dim<4; dim++) {
       int extent;
       switch(dim){
@@ -1295,21 +1278,41 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
       }
 
     } // for( dim=0 to dim=3 ) (space-time dimensions)
-
+    
+    mg_param->verbosity[level] = quda_input.mg_verbosity[level];
+    mg_param->precision_null[level] = QUDA_HALF_PRECISION;
+    mg_param->setup_inv_type[level] = quda_input.mg_setup_inv_type;
+    // Kate says: experimental, leave at 1 (will be used for bootstrap-style setup later)
+    mg_param->num_setup_iter[level] = 1;
+    mg_param->setup_tol[level] = quda_input.mg_setup_tol[level];
+    mg_param->setup_maxiter[level] = quda_input.mg_setup_maxiter[level];
+    // If doing twisted mass, we can scale the twisted mass on the coarser grids
+    // which significantly increases speed of convergence as a result of making
+    // the coarsest grid solve a lot better conditioned.
+    // Dean Howarth has some RG arguments on why the coarse mass parameter should be
+    // rescaled for the coarse operator to be optimal.
+    if( fabs(mg_inv_param->mu) > 2*DBL_EPSILON ) {
+      mg_param->mu_factor[level] = quda_input.mg_mu_factor[level];
+      if( g_proc_id == 0 && g_debug_level >= 2 ){
+        printf("# QUDA: MG setting coarse mu scaling factor on level %d to %lf\n", level, mg_param->mu_factor[level]);
+      }
+    }
+    
     mg_param->coarse_solver[level] = quda_input.mg_coarse_solver_type[level];
-    mg_param->coarse_solver_tol[level] = quda_input.mg_coarse_solver_tol;
-    mg_param->coarse_solver_maxiter[level] = quda_input.mg_coarse_solver_maxiter;
+    mg_param->coarse_solver_tol[level] = quda_input.mg_coarse_solver_tol[level];
+    mg_param->coarse_solver_maxiter[level] = quda_input.mg_coarse_solver_maxiter[level];
     // spin block size on level zero will be reset to 2 below
     mg_param->spin_block_size[level] = 1;
     mg_param->n_vec[level] = quda_input.mg_n_vec[level];
-    mg_param->nu_pre[level] = quda_input.mg_nu_pre;
-    mg_param->nu_post[level] = quda_input.mg_nu_post;
+    mg_param->nu_pre[level] = quda_input.mg_nu_pre[level];
+    mg_param->nu_post[level] = quda_input.mg_nu_post[level];
 
     mg_param->cycle_type[level] = QUDA_MG_CYCLE_RECURSIVE;
     mg_param->location[level] = QUDA_CUDA_FIELD_LOCATION;
+    mg_param->setup_location[level] = QUDA_CUDA_FIELD_LOCATION;
     
     mg_param->smoother[level] = quda_input.mg_smoother_type[level];
-    mg_param->smoother_tol[level] = quda_input.mg_smoother_tol;
+    mg_param->smoother_tol[level] = quda_input.mg_smoother_tol[level];
     // unless the Schwarz-alternating smoother is used, this should be 1
     mg_param->smoother_schwarz_cycle[level] = 1;
     // Kate says this should be EO always for performance
@@ -1325,7 +1328,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     // use single parity injection into the coarse grid
     mg_param->coarse_grid_solution_type[level] = inv_param.solve_type == QUDA_DIRECT_PC_SOLVE ? QUDA_MATPC_SOLUTION : QUDA_MAT_SOLUTION;
 
-    mg_param->omega[level] = quda_input.mg_omega; // over/under relaxation factor
+    mg_param->omega[level] = quda_input.mg_omega[level]; // over/under relaxation factor
 
     mg_param->location[level] = QUDA_CUDA_FIELD_LOCATION;
 
@@ -1339,13 +1342,12 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     mg_param->coarse_solver_ca_lambda_min[level] = quda_input.mg_coarse_solver_ca_lambda_min[level];
     mg_param->coarse_solver_ca_lambda_max[level] = quda_input.mg_coarse_solver_ca_lambda_max[level];
     
-    mg_param->run_low_mode_check = quda_input.mg_run_low_mode_check;
-    mg_param->run_oblique_proj_check = quda_input.mg_run_oblique_proj_check;
 
     // set the MG EigSolver parameters, almost equivalent to
     // setEigParam from QUDA's multigrid_invert_test, except
     // for cuda_prec_ritz (on 20190822)
 		if( quda_input.mg_use_eig_solver[level] == QUDA_BOOLEAN_YES ){
+      mg_param->use_eig_solver[level] = QUDA_BOOLEAN_YES;
       mg_eig_param[level].eig_type = quda_input.mg_eig_type[level];
       mg_eig_param[level].spectrum = quda_input.mg_eig_spectrum[level];
       if ((quda_input.mg_eig_type[level] == QUDA_EIG_TR_LANCZOS || 
@@ -1390,6 +1392,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
       mg_param->eig_param[level] = &(mg_eig_param[level]);
     } else {
       mg_param->eig_param[level] = NULL;
+      mg_param->use_eig_solver[level] = QUDA_BOOLEAN_NO;
     } // if(quda_input.mg_use_eig_solver[level] == QUDA_BOOLEAN_YES)
   } // for(i=0 to n_level-1)
 
@@ -1399,6 +1402,8 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   mg_param->compute_null_vector = QUDA_COMPUTE_NULL_VECTOR_YES;
   mg_param->generate_all_levels = QUDA_BOOLEAN_YES;
 
+  mg_param->run_low_mode_check = quda_input.mg_run_low_mode_check;
+  mg_param->run_oblique_proj_check = quda_input.mg_run_oblique_proj_check;
   mg_param->run_verify = quda_input.mg_run_verify;
 
   // set file i/o parameters

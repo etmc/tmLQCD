@@ -65,4 +65,12 @@ typedef enum QudaEigType_s {
   QUDA_EIG_INVALID = QUDA_INVALID_ENUM
 } QudaEigType; 
 
+typedef enum QudaVerbosity_s {
+    QUDA_SILENT,
+    QUDA_SUMMARIZE,
+    QUDA_VERBOSE,
+    QUDA_DEBUG_VERBOSE,
+    QUDA_INVALID_VERBOSITY = QUDA_INVALID_ENUM
+} QudaVerbosity;
+
 #endif

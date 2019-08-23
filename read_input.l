@@ -86,14 +86,30 @@ static inline void rmQuotes(char *str){
 /* tokenize the comma-delimited list 'str' and return the first token,
    which is the name of the list 'list = token1, token2, token3, ..',
    via the 'paramname' parameter 
-   the length of the array holding 'paramname' parameter must be passed as well */
-static inline void strlist_tokenize(char * str, char * const paramname, const int paramname_length){
+   the length of the array holding 'paramname' parameter must be passed as well
+   the memory pointed to by 'input_copy' has to be freed afterwards!*/
+static inline void strlist_tokenize(char const * const input,
+                                    char * input_copy,
+                                    char * const paramname,
+                                    const int paramname_length)
+{
   char error_message[200];
   char * token = (char*)NULL;
+  
+  const int input_length = strlen(input) + 1;
+  if( input_length > 20000 ){
+    yy_fatal_error("Likely overflow bug in 'strlist_tokenize' of 'read_input.l'.\n"
+                   "Encountered string of length exceeding 20k characters!\n");
+  }
+  input_copy = malloc(input_length);
+  if( input_copy == NULL ){
+    yy_fatal_error("Could not allocate memory for 'input_copy' in 'strlist_tokenize' of 'read_input.l'!\n");
+  }
+  strncpy(input_copy, input, input_length);
 
   // the first token is the parameter name, we will return it, 
   // but first check if tokenization was successful
-  token = strtok(str, "\n\t =,\\");
+  token = strtok(input_copy, "\n\t =,\\");
   if( (void*)token == NULL ){
     snprintf(error_message, 200, "Unable to parse '%s' in strlist_tokenize!\n", paramname);
     yy_fatal_error(error_message);
@@ -274,18 +290,8 @@ static inline double fltlist_next_token(int * const list_end){
     int level = 0;
     int blocksize = 0;
     
-    const int input_length = strlen(input) + 1;
-    if( input_length > 20000 ){
-      yy_fatal_error("Likely overflow bug in 'parse_quda_mg_blocksize' of 'read_input.l'.\n"
-                     "Encountered string of length exceeding 20k characters!\n");
-    }
-    char * input_copy = malloc(input_length);
-    if( input_copy == NULL ){
-      yy_fatal_error("Could not allocate memory for 'input_copy' in 'parse_quda_mg_blocksize' of 'read_input.l'!\n");
-    }
-    strncpy(input_copy, input, input_length);
-
-    strlist_tokenize(input_copy, paramname, 100);
+    char * input_copy = (char*)NULL;
+    strlist_tokenize(input, input_copy, paramname, 100);
     blocksize = (int)fltlist_next_token(&list_end);
     while( list_end != 1 ){
       if( level >= QUDA_MAX_MG_LEVEL ){
@@ -310,18 +316,8 @@ static inline double fltlist_next_token(int * const list_end){
     char error_message[200];
     int list_end = 0;
     int level = 0;
-    
-    const int input_length = strlen(input) + 1;
-    if( input_length > 20000 ){
-      yy_fatal_error("Likely overflow bug in 'parse_quda_mg_int_par_array' of 'read_input.l'.\n"
-                     "Encountered string of length exceeding 20k characters!\n");
-    }
-    char * input_copy = malloc(input_length);
-    if( input_copy == NULL ){
-      yy_fatal_error("Could not allocate memory for 'input_copy' in 'parse_quda_mg_int_par_array' of 'read_input.l'!\n");
-    }
-    strncpy(input_copy, input, input_length);
-    strlist_tokenize(input_copy, paramname, 100);
+    char * input_copy = (char*)NULL;
+    strlist_tokenize(input, input_copy, paramname, 100);
     int parval = (int)fltlist_next_token(&list_end);
     while( list_end != 1 ){
       if( level >= QUDA_MAX_MG_LEVEL ){
@@ -347,17 +343,8 @@ static inline double fltlist_next_token(int * const list_end){
     int list_end = 0;
     int level = 0;
     
-    const int input_length = strlen(input) + 1;
-    if( input_length > 20000 ){
-      yy_fatal_error("Likely overflow bug in 'parse_quda_mg_dbl_par_array' of 'read_input.l'.\n"
-                     "Encountered string of length exceeding 20k characters!\n");
-    }
-    char * input_copy = malloc(input_length);
-    if( input_copy == NULL ){
-      yy_fatal_error("Could not allocate memory for 'input_copy' in 'parse_quda_mg_dbl_par_array' of 'read_input.l'!\n");
-    }
-    strncpy(input_copy, input, input_length);
-    strlist_tokenize(input_copy, paramname, 100);
+    char * input_copy = (char*)NULL;
+    strlist_tokenize(input, input_copy, paramname, 100);
     double parval = fltlist_next_token(&list_end);
     while( list_end != 1 ){
       if( level >= QUDA_MAX_MG_LEVEL ){
@@ -383,17 +370,8 @@ static inline double fltlist_next_token(int * const list_end){
     char error_message[200];
     int list_end = 0;
     int level = 0;
-    const int input_length = strlen(input) + 1;
-    if( input_length > 20000 ){
-      yy_fatal_error("Likely overflow bug in 'parse_quda_mg_bool_par_array' of 'read_input.l'.\n"
-                     "Encountered string of length exceeding 20k characters!\n");
-    }
-    char * input_copy = malloc(input_length);
-    if( input_copy == NULL ){
-      yy_fatal_error("Could not allocate memory for 'input_copy' in 'parse_quda_mg_bool_par_array' of 'read_input.l'!\n");
-    }
-    strncpy(input_copy, input, input_length);
-    strlist_tokenize(input_copy, paramname, 100);
+    char * input_copy = (char*)NULL;
+    strlist_tokenize(input, input_copy, paramname, 100);
     strlist_next_token(&list_end, token, 100);
     while( list_end != 1 ){
       if( level >= QUDA_MAX_MG_LEVEL ){
@@ -411,6 +389,49 @@ static inline double fltlist_next_token(int * const list_end){
       }
       else {
         snprintf(error_message, 200, "ERROR: Only 'yes' and 'no' are possible for %s!\n", paramname);
+        yy_fatal_error(error_message);
+      }
+      if(myverbose) printf("  %s on level %d set to %s line %d\n", paramname, level, token, line_of_file);
+      level++;
+      strlist_next_token(&list_end, token, 100);
+    }
+    free(input_copy);
+  }
+  
+  static inline void parse_quda_mg_verbosity_par_array(char const * const input, QudaVerbosity * par_array){
+    char paramname[100];
+    char token[100];
+    char error_message[200];
+    int list_end = 0;
+    int level = 0;
+    char * input_copy = (char*)NULL;
+    strlist_tokenize(input, input_copy, paramname, 100);
+    strlist_next_token(&list_end, token, 100);
+    while( list_end != 1 ){
+      if( level >= QUDA_MAX_MG_LEVEL ){
+        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+        yy_fatal_error(error_message);
+      }
+      for(int i = 0; token[i]; i++){
+        token[i] = tolower(token[i]);
+      }
+      if( strcmp(token, "silent") == 0 ){
+        par_array[level] = QUDA_SILENT;
+      }
+      else if( strcmp(token, "summarize") == 0 ){
+        par_array[level] = QUDA_SUMMARIZE;
+      }
+      else if( strcmp(token, "verbose") == 0 ){
+        par_array[level] = QUDA_VERBOSE;
+      }
+      else if( strcmp(token, "debug_verbose") == 0 ){
+        par_array[level] = QUDA_DEBUG_VERBOSE;
+      }
+      else {
+        snprintf(error_message, 200, 
+                 "ERROR: Unknown verbosity level '%s' for '%s'!"
+                   " Only 'silent', 'summarize', 'verbose' and 'debug_verbose' supported!\n",
+                 token, paramname);
         yy_fatal_error(error_message);
       }
       if(myverbose) printf("  %s on level %d set to %s line %d\n", paramname, level, token, line_of_file);
@@ -1609,10 +1630,18 @@ static inline double fltlist_next_token(int * const list_end){
     quda_input.fermionbc = TM_QUDA_PBC;
     if(myverbose) printf("  Force periodic temporal fermionic boundary conditions for QUDA inversions, line %d\n", line_of_file);
   }
+  {SPC}*Pipeline{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    quda_input.pipeline = a;
+    if(myverbose) printf("  Pipeline length set to %d line %d\n", quda_input.pipeline, line_of_file);
+  }
   {SPC}*MGNumberOfLevels{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    quda_input.mg_n_level=a;
+    quda_input.mg_n_level = a;
     if(myverbose) printf("  MGNumberOfLevels set to %d line %d\n", quda_input.mg_n_level, line_of_file);
+  }
+  {SPC}*MGVerbosity{EQL}{STRLIST} {
+    parse_quda_mg_verbosity_par_array(yytext, &(quda_input.mg_verbosity[0]));
   }
   {SPC}*MGNumberOfVectors{EQL}{STRLIST} {
     parse_quda_mg_int_par_array(yytext, &(quda_input.mg_n_vec[0]) );
@@ -1639,17 +1668,8 @@ static inline double fltlist_next_token(int * const list_end){
     char error_message[200];
     int list_end = 0;
     int level = 0;
-    const int input_length = strlen(yytext) + 1;
-    if( input_length > 20000 ){
-      yy_fatal_error("Likely overflow bug in parsing of 'MGCoarseSolverType' of 'read_input.l'.\n"
-                     "Encountered string of length exceeding 20k characters!\n");
-    }
-    char * input_copy = malloc(input_length);
-    if( input_copy == NULL ){
-      yy_fatal_error("Could not allocate memory for 'input_copy' in parsing of 'MGCoarseSolverType' of 'read_input.l'!\n");
-    }
-    strncpy(input_copy, yytext, input_length);
-    strlist_tokenize(input_copy, paramname, 100);
+    char * input_copy = (char*)NULL;
+    strlist_tokenize(yytext, input_copy, paramname, 100);
     strlist_next_token(&list_end, token, 100);
     while( list_end != 1 ){
       if( level >= QUDA_MAX_MG_LEVEL ){
@@ -1685,17 +1705,8 @@ static inline double fltlist_next_token(int * const list_end){
     char error_message[200];
     int list_end = 0;
     int level = 0;
-    const int input_length = strlen(yytext) + 1;
-    if( input_length > 20000 ){
-      yy_fatal_error("Likely overflow bug in parsing of 'MGSmootherType' of 'read_input.l'.\n"
-                     "Encountered string of length exceeding 20k characters!\n");
-    }
-    char * input_copy = malloc(input_length);
-    if( input_copy == NULL ){
-      yy_fatal_error("Could not allocate memory for 'input_copy' in parsing of 'MGSmootherType' of 'read_input.l'!\n");
-    }
-    strncpy(input_copy, yytext, input_length);
-    strlist_tokenize(input_copy, paramname, 100);
+    char * input_copy = (char*)NULL;
+    strlist_tokenize(yytext, input_copy, paramname, 100);
     strlist_next_token(&list_end, token, 100);
     while( list_end != 1 ){
       if( level >= QUDA_MAX_MG_LEVEL ){
@@ -1733,45 +1744,29 @@ static inline double fltlist_next_token(int * const list_end){
     quda_input.mg_setup_inv_type = QUDA_BICGSTAB_INVERTER;
     if(myverbose) printf("  MGSetupSolver set to BiCGstab line %d\n", line_of_file);
   }
-  {SPC}*MGSetupSolverTolerance{EQL}{FLT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
-    quda_input.mg_setup_tol=c;
-    if(myverbose) printf("  MGSetupSolverTolerance set to %f line %d\n", quda_input.mg_setup_tol, line_of_file);
+  {SPC}*MGSetupSolverTolerance{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_setup_tol[0]));
   }
-  {SPC}*MGSetupMaxSolverIterations{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    quda_input.mg_setup_maxiter=a;
-    if(myverbose) printf("  MGSetupMaxSolverIterations set to %d line %d\n", quda_input.mg_setup_maxiter, line_of_file);
+  {SPC}*MGSetupMaxSolverIterations{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_setup_maxiter[0]));
   }
-  {SPC}*MGCoarseSolverTolerance{EQL}{FLT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
-    quda_input.mg_coarse_solver_tol=c;
-    if(myverbose) printf("  MGCoarseSolverTolerance set to %f line %d\n", quda_input.mg_coarse_solver_tol, line_of_file);
+  {SPC}*MGCoarseSolverTolerance{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_coarse_solver_tol[0]));
   }
-  {SPC}*MGCoarseMaxSolverIterations{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    quda_input.mg_coarse_solver_maxiter=a;
-    if(myverbose) printf("  MGCoarseMaxSolverIterations set to %d line %d\n", quda_input.mg_coarse_solver_maxiter, line_of_file);
+  {SPC}*MGCoarseMaxSolverIterations{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_coarse_solver_maxiter[0]));
   }
-  {SPC}*MGSmootherTolerance{EQL}{FLT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
-    quda_input.mg_smoother_tol=c;
-    if(myverbose) printf("  MGSmootherTolerance set to %f line %d\n", quda_input.mg_smoother_tol, line_of_file);
+  {SPC}*MGSmootherTolerance{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_smoother_tol[0]));
   }
-  {SPC}*MGSmootherPreIterations{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    quda_input.mg_nu_pre=a;
-    if(myverbose) printf("  MGSmootherPreIterations set to %d line %d\n", quda_input.mg_nu_pre, line_of_file);
+  {SPC}*MGSmootherPreIterations{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_nu_pre[0]));
   }
-  {SPC}*MGSmootherPostIterations{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    quda_input.mg_nu_post=a;
-    if(myverbose) printf("  MGSmootherPostIterations set to %d line %d\n", quda_input.mg_nu_post, line_of_file);
+  {SPC}*MGSmootherPostIterations{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_nu_post[0]));
   }
-  {SPC}*MGOverUnderRelaxationFactor{EQL}{FLT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
-    quda_input.mg_omega=c;
-    if(myverbose) printf("  MGOverUnderRelaxationFactor set to %f line %d\n", quda_input.mg_omega, line_of_file);
+  {SPC}*MGOverUnderRelaxationFactor{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_omega[0]));
   }
   {SPC}*MGRunVerify{EQL}yes {
     quda_input.mg_run_verify = QUDA_BOOLEAN_YES;
@@ -1789,11 +1784,11 @@ static inline double fltlist_next_token(int * const list_end){
     quda_input.mg_run_low_mode_check = QUDA_BOOLEAN_NO;
     if(myverbose) printf("  MGRunLowModeCheck set to NO in line %d\n", line_of_file);
   }
-  {SPC}*MGObliqueProjectionCheck{EQL}yes {
+  {SPC}*MGRunObliqueProjectionCheck{EQL}yes {
     quda_input.mg_run_oblique_proj_check = QUDA_BOOLEAN_YES;
     if(myverbose) printf("  MGRunObliqueProjectionCheck set to YES in line %d\n", line_of_file);
   }
-  {SPC}*MGRunVerify{EQL}no {
+  {SPC}*MGRunObliqueProjectionCheck{EQL}no {
     quda_input.mg_run_oblique_proj_check = QUDA_BOOLEAN_NO;
     if(myverbose) printf("  MGRunObliqueProjectionCheck set to NO in line %d\n", line_of_file);
   }
@@ -1819,17 +1814,8 @@ static inline double fltlist_next_token(int * const list_end){
     char error_message[200];
     int list_end = 0;
     int level = 0;
-    const int input_length = strlen(yytext) + 1;
-    if( input_length > 20000 ){
-      yy_fatal_error("Likely overflow bug in parsing of 'MGEigSolverType' of 'read_input.l'.\n"
-                     "Encountered string of length exceeding 20k characters!\n");
-    }
-    char * input_copy = malloc(input_length);
-    if( input_copy == NULL ){
-      yy_fatal_error("Could not allocate memory for 'input_copy' in parsing of 'MGEigSolverType' of 'read_input.l'!\n");
-    }
-    strncpy(input_copy, yytext, input_length);
-    strlist_tokenize(input_copy, paramname, 100);
+    char * input_copy = (char*)NULL;
+    strlist_tokenize(yytext, input_copy, paramname, 100);
     strlist_next_token(&list_end, token, 100);
     while( list_end != 1 ){
       if( level >= QUDA_MAX_MG_LEVEL ){
@@ -1865,17 +1851,8 @@ static inline double fltlist_next_token(int * const list_end){
     char error_message[200];
     int list_end = 0;
     int level = 0;
-    const int input_length = strlen(yytext) + 1;
-    if( input_length > 20000 ){
-      yy_fatal_error("Likely overflow bug in parsing of 'MGEigSolverSpectrum' of 'read_input.l'.\n"
-                     "Encountered string of length exceeding 20k characters!\n");
-    }
-    char * input_copy = malloc(input_length);
-    if( input_copy == NULL ){
-      yy_fatal_error("Could not allocate memory for 'input_copy' in parsing of 'MGEigSolverSpectrum' of 'read_input.l'!\n");
-    }
-    strncpy(input_copy, yytext, input_length);
-    strlist_tokenize(input_copy, paramname, 100);
+    char * input_copy = (char*)NULL;
+    strlist_tokenize(yytext, input_copy, paramname, 100);
     strlist_next_token(&list_end, token, 100);
     while( list_end != 1 ){
       if( level >= QUDA_MAX_MG_LEVEL ){
@@ -3616,32 +3593,47 @@ int read_input(char * conf_file){
  
   /* default parameters for QUDA */
   quda_input.fermionbc = TM_QUDA_THETABC;
+  quda_input.pipeline = 0;
   quda_input.mg_n_level = _default_quda_mg_n_level;
   for( int level = 0; level < QUDA_MAX_MG_LEVEL; ++level){
+    quda_input.mg_verbosity[level] = QUDA_SILENT;
+    quda_input.mg_omega[level] = _default_quda_mg_omega;
+    quda_input.mg_setup_maxiter[level] = _default_quda_mg_setup_maxiter;
+    quda_input.mg_setup_tol[level] = _default_quda_mg_setup_tol;
+    quda_input.mg_coarse_solver_tol[level] = _default_quda_mg_coarse_solver_tol;
+    quda_input.mg_coarse_solver_maxiter[level] = _default_quda_mg_coarse_solver_maxiter;
+    quda_input.mg_nu_pre[level] = _default_quda_mg_nu_pre;
+    quda_input.mg_nu_post[level] = _default_quda_mg_nu_post;
+    quda_input.mg_smoother_tol[level] = _default_quda_mg_smoother_tol;
+
     quda_input.mg_n_vec[level] = _default_quda_mg_n_vec;
-    if( level > 0 ){
-      quda_input.mg_mu_factor[level] = _default_quda_mg_mu_factor;
-    } else {
-      quda_input.mg_mu_factor[level] = 1.0;
-    }
+    quda_input.mg_mu_factor[level] = 1.0;
     quda_input.mg_coarse_solver_type[level] = QUDA_GCR_INVERTER;
     quda_input.mg_smoother_type[level] = QUDA_MR_INVERTER ;
 
-    // note, as mg_eig_param in quda_interface.c are initialised with
-    // newQudaEigParam, there is no need to set further defaults for that
-    // part of the QUDA MG params
     quda_input.mg_use_eig_solver[level] = QUDA_BOOLEAN_NO;
+    quda_input.mg_eig_tol[level] = 1.0e-3;
+    quda_input.mg_eig_require_convergence[level] = QUDA_BOOLEAN_YES;
+    quda_input.mg_eig_type[level] = QUDA_EIG_TR_LANCZOS;
+    quda_input.mg_eig_spectrum[level] = QUDA_SPECTRUM_SR_EIG;
+    quda_input.mg_eig_check_interval[level] = 5;
+    quda_input.mg_eig_max_restarts[level] = 100;
+    quda_input.mg_eig_use_normop[level] = QUDA_BOOLEAN_NO;
+    quda_input.mg_eig_use_dagger[level] = QUDA_BOOLEAN_NO;
+    quda_input.mg_eig_use_poly_acc[level] = QUDA_BOOLEAN_YES;
+    quda_input.mg_eig_poly_deg[level] = 100;
+    quda_input.mg_eig_amin[level] = 1.0;
+    quda_input.mg_eig_amax[level] = 5.0;
 
     quda_input.mg_setup_ca_basis[level] = QUDA_POWER_BASIS;
     quda_input.mg_setup_ca_basis_size[level] = 4;
     quda_input.mg_setup_ca_lambda_min[level] = 0.0;
     quda_input.mg_setup_ca_lambda_max[level] = -1.0;
+  
     quda_input.mg_coarse_solver_ca_basis[level] = QUDA_POWER_BASIS;
     quda_input.mg_coarse_solver_ca_basis_size[level] = 4;
     quda_input.mg_coarse_solver_ca_lambda_min[level] = 0.0;
     quda_input.mg_coarse_solver_ca_lambda_max[level] = -1.0;
-    quda_input.mg_run_low_mode_check = QUDA_BOOLEAN_NO;
-    quda_input.mg_run_oblique_proj_check = QUDA_BOOLEAN_NO; 
 
     /* note: when the user does not specify any blocking parameters,
      * a reasonable set will be computed automatically in the MG setup
@@ -3651,17 +3643,11 @@ int read_input(char * conf_file){
     }
   }
   quda_input.mg_setup_inv_type = QUDA_CG_INVERTER;
-  quda_input.mg_setup_maxiter = _default_quda_mg_setup_maxiter;
-  quda_input.mg_setup_tol = _default_quda_mg_setup_tol;
-  quda_input.mg_coarse_solver_tol = _default_quda_mg_coarse_solver_tol;
-  quda_input.mg_coarse_solver_maxiter = _default_quda_mg_coarse_solver_maxiter;
-  quda_input.mg_nu_pre = _default_quda_mg_nu_pre;
-  quda_input.mg_nu_post = _default_quda_mg_nu_post;
-  quda_input.mg_smoother_tol = _default_quda_mg_smoother_tol;
-  quda_input.mg_omega = _default_quda_mg_omega;
   quda_input.mg_run_verify = QUDA_BOOLEAN_YES;
   quda_input.mg_enable_size_three_blocks = _default_quda_mg_enable_size_three_blocks;
   quda_input.mg_reset_setup_threshold = _default_quda_mg_reset_setup_threshold;
+  quda_input.mg_run_low_mode_check = QUDA_BOOLEAN_NO;
+  quda_input.mg_run_oblique_proj_check = QUDA_BOOLEAN_NO; 
 
   /* Put -1 in PropInfo.format to see if parse_config() will
   change the value. If not then set it to source_format_flag */

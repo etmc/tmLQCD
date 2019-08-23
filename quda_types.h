@@ -48,57 +48,60 @@ typedef enum tm_quda_ferm_bc_t {
 typedef struct tm_QudaParams_t {
   tm_quda_ferm_bc_t fermionbc;
 
-  int               mg_n_level;
-  int               mg_n_vec[QUDA_MAX_MG_LEVEL];
-  int               mg_blocksize[QUDA_MAX_MG_LEVEL][4];
-  double            mg_mu_factor[QUDA_MAX_MG_LEVEL];
-  QudaInverterType  mg_setup_inv_type;
-  double            mg_setup_tol;
-  int               mg_setup_maxiter;
-  QudaInverterType  mg_coarse_solver_type[QUDA_MAX_MG_LEVEL];
-  int               mg_coarse_solver_maxiter;
-  double            mg_coarse_solver_tol;
-  int               mg_nu_pre;
-  int               mg_nu_post;
-  QudaInverterType  mg_smoother_type[QUDA_MAX_MG_LEVEL];
-  double            mg_smoother_tol;
-  double            mg_omega;
-  int               mg_run_verify;
-  int               mg_enable_size_three_blocks;
-  double            mg_reset_setup_threshold;
+  int                  pipeline;
+
+  int                  mg_n_level;
+  QudaVerbosity        mg_verbosity[QUDA_MAX_MG_LEVEL];                
+  int                  mg_n_vec[QUDA_MAX_MG_LEVEL];
+  int                  mg_blocksize[QUDA_MAX_MG_LEVEL][4];
+  double               mg_mu_factor[QUDA_MAX_MG_LEVEL];
+  QudaInverterType     mg_setup_inv_type;
+  double               mg_setup_tol[QUDA_MAX_MG_LEVEL];
+  int                  mg_setup_maxiter[QUDA_MAX_MG_LEVEL];
+  QudaInverterType     mg_coarse_solver_type[QUDA_MAX_MG_LEVEL];
+  int                  mg_coarse_solver_maxiter[QUDA_MAX_MG_LEVEL];
+  double               mg_coarse_solver_tol[QUDA_MAX_MG_LEVEL];
+  int                  mg_nu_pre[QUDA_MAX_MG_LEVEL];
+  int                  mg_nu_post[QUDA_MAX_MG_LEVEL];
+  QudaInverterType     mg_smoother_type[QUDA_MAX_MG_LEVEL];
+  double               mg_smoother_tol[QUDA_MAX_MG_LEVEL];
+  double               mg_omega[QUDA_MAX_MG_LEVEL];
+  int                  mg_run_verify;
+  int                  mg_enable_size_three_blocks;
+  double               mg_reset_setup_threshold;
   
   // parameters related to communication-avoiding
   // solvers  
-  QudaCABasis       mg_setup_ca_basis[QUDA_MAX_MG_LEVEL];
-  int               mg_setup_ca_basis_size[QUDA_MAX_MG_LEVEL];
-  double            mg_setup_ca_lambda_min[QUDA_MAX_MG_LEVEL];
-  double            mg_setup_ca_lambda_max[QUDA_MAX_MG_LEVEL];
+  QudaCABasis          mg_setup_ca_basis[QUDA_MAX_MG_LEVEL];
+  int                  mg_setup_ca_basis_size[QUDA_MAX_MG_LEVEL];
+  double               mg_setup_ca_lambda_min[QUDA_MAX_MG_LEVEL];
+  double               mg_setup_ca_lambda_max[QUDA_MAX_MG_LEVEL];
 
-  QudaCABasis       mg_coarse_solver_ca_basis[QUDA_MAX_MG_LEVEL];
-  int               mg_coarse_solver_ca_basis_size[QUDA_MAX_MG_LEVEL];
-  double            mg_coarse_solver_ca_lambda_min[QUDA_MAX_MG_LEVEL];
-  double            mg_coarse_solver_ca_lambda_max[QUDA_MAX_MG_LEVEL];
+  QudaCABasis          mg_coarse_solver_ca_basis[QUDA_MAX_MG_LEVEL];
+  int                  mg_coarse_solver_ca_basis_size[QUDA_MAX_MG_LEVEL];
+  double               mg_coarse_solver_ca_lambda_min[QUDA_MAX_MG_LEVEL];
+  double               mg_coarse_solver_ca_lambda_max[QUDA_MAX_MG_LEVEL];
 
   // parameters related to coarse grid deflation in the MG
-  int mg_use_eig_solver[QUDA_MAX_MG_LEVEL];
-  int mg_eig_nEv[QUDA_MAX_MG_LEVEL];
-  int mg_eig_nKr[QUDA_MAX_MG_LEVEL];
-  int mg_eig_require_convergence[QUDA_MAX_MG_LEVEL];
-  int mg_eig_check_interval[QUDA_MAX_MG_LEVEL];
-  int mg_eig_max_restarts[QUDA_MAX_MG_LEVEL];
-  double mg_eig_tol[QUDA_MAX_MG_LEVEL];                                                                                                      
-  int mg_eig_use_poly_acc[QUDA_MAX_MG_LEVEL];
-  int mg_eig_poly_deg[QUDA_MAX_MG_LEVEL];
-  double mg_eig_amin[QUDA_MAX_MG_LEVEL];
-  double mg_eig_amax[QUDA_MAX_MG_LEVEL];
-  int mg_eig_use_normop[QUDA_MAX_MG_LEVEL];
-  int mg_eig_use_dagger[QUDA_MAX_MG_LEVEL];
-  QudaEigSpectrumType mg_eig_spectrum[QUDA_MAX_MG_LEVEL];
-  QudaEigType mg_eig_type[QUDA_MAX_MG_LEVEL];
-  int mg_coarse_guess;
+  int                  mg_use_eig_solver[QUDA_MAX_MG_LEVEL];
+  int                  mg_eig_nEv[QUDA_MAX_MG_LEVEL];
+  int                  mg_eig_nKr[QUDA_MAX_MG_LEVEL];
+  int                  mg_eig_require_convergence[QUDA_MAX_MG_LEVEL];
+  int                  mg_eig_check_interval[QUDA_MAX_MG_LEVEL];
+  int                  mg_eig_max_restarts[QUDA_MAX_MG_LEVEL];
+  double               mg_eig_tol[QUDA_MAX_MG_LEVEL];
+  int                  mg_eig_use_poly_acc[QUDA_MAX_MG_LEVEL];
+  int                  mg_eig_poly_deg[QUDA_MAX_MG_LEVEL];
+  double               mg_eig_amin[QUDA_MAX_MG_LEVEL];
+  double               mg_eig_amax[QUDA_MAX_MG_LEVEL];
+  int                  mg_eig_use_normop[QUDA_MAX_MG_LEVEL];
+  int                  mg_eig_use_dagger[QUDA_MAX_MG_LEVEL];
+  QudaEigSpectrumType  mg_eig_spectrum[QUDA_MAX_MG_LEVEL];
+  QudaEigType          mg_eig_type[QUDA_MAX_MG_LEVEL];
+  int                  mg_coarse_guess;
 
-  int mg_run_low_mode_check;
-  int mg_run_oblique_proj_check;
+  int                  mg_run_low_mode_check;
+  int                  mg_run_oblique_proj_check;
 
 } tm_QudaParams_t;
 

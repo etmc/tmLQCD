@@ -208,7 +208,7 @@
 /* These follow the recommendations of https://github.com/lattice/quda/wiki/Multigrid-Solver */
 #define _default_quda_mg_n_level 2
 #define _default_quda_mg_n_vec 24
-#define _default_quda_mg_mu_factor 8.0
+#define _default_quda_mg_mu_factor 1.0
 #define _default_quda_mg_setup_tol 1e-6
 #define _default_quda_mg_setup_maxiter 1000
 #define _default_quda_mg_coarse_solver_tol 0.25
