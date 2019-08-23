@@ -1238,9 +1238,9 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
         // resulting in block sizes of:
         // - 4 if the extent is larger or equal to 16 and
         // - 2 otherwise
-        // When an extent is divisible by three and smaller than 16 and when we're
-        // not on the finest grid and when the user has explicitly enabled support 
-        // for these block lengths  (and therefore also adjusted QUDA to instantiate them), 
+        // When an extent is divisible by three, smaller or equal to 24 and when we're
+        // not on the finest grid [and the user has explicitly enabled support 
+        // for these block lengths  (and therefore also adjusted QUDA to instantiate them)],
         // we use a block length of 3.
         // If aggregation using an even number of lattice points (if size 3 is disabled)
         // is not possible or if the extent is 1 or some divisible only by some prime number
