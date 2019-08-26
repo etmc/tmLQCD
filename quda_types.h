@@ -49,6 +49,8 @@ typedef struct tm_QudaParams_t {
   tm_quda_ferm_bc_t fermionbc;
 
   int                  pipeline;
+  double               reliable_delta;
+  int                  gcrNkrylov;
 
   int                  mg_n_level;
   QudaVerbosity        mg_verbosity[QUDA_MAX_MG_LEVEL];                

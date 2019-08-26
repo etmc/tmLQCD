@@ -1667,6 +1667,16 @@ static inline double fltlist_next_token(int * const list_end){
     quda_input.pipeline = a;
     if(myverbose) printf("  Pipeline length set to %d line %d\n", quda_input.pipeline, line_of_file);
   }
+  {SPC}*gcrNkrylov{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    quda_input.gcrNkrylov = a;
+    if(myverbose) printf("  gcrNkrylov set to %d line %d\n", quda_input.gcrNkrylov, line_of_file);
+  }
+  {SPC}*ReliableDelta{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    quda_input.reliable_delta = c;
+    if(myverbose) printf("  ReliableDelta set to %e line %d\n", quda_input.reliable_delta, line_of_file);
+  }
   {SPC}*MGNumberOfLevels{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     quda_input.mg_n_level = a;
@@ -3650,6 +3660,8 @@ int read_input(char * conf_file){
   /* default parameters for QUDA */
   quda_input.fermionbc = TM_QUDA_THETABC;
   quda_input.pipeline = 0;
+  quda_input.gcrNkrylov = 10;
+  quda_input.reliable_delta = 1e-5;
   quda_input.mg_n_level = _default_quda_mg_n_level;
   for( int level = 0; level < QUDA_MAX_MG_LEVEL; ++level){
     quda_input.mg_verbosity[level] = QUDA_SILENT;

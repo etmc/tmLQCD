@@ -227,7 +227,7 @@ void _setDefaultQudaParam(void){
   inv_param.solver_normalization = QUDA_DEFAULT_NORMALIZATION;
 
   inv_param.pipeline = quda_input.pipeline;
-  inv_param.gcrNkrylov = 20;
+  inv_param.gcrNkrylov = quda_input.gcrNkrylov;
 
   inv_param.residual_type = (QudaResidualType)(QUDA_L2_RELATIVE_RESIDUAL);
   inv_param.tol_hq = 0.1;
@@ -1053,10 +1053,10 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     // coarsening does not support QUDA_MATPC_EVEN_EVEN_ASYMMETRIC
     if( inv_param.matpc_type == QUDA_MATPC_EVEN_EVEN_ASYMMETRIC ) inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
     inv_param.inv_type = QUDA_GCR_INVERTER;
-    inv_param.gcrNkrylov = 20;
+    inv_param.gcrNkrylov = quda_input.gcrNkrylov;
     inv_param.inv_type_precondition = QUDA_MG_INVERTER;
     inv_param.schwarz_type = QUDA_ADDITIVE_SCHWARZ;
-    inv_param.reliable_delta = 1e-5;
+    inv_param.reliable_delta = quda_input.reliable_delta;
     inv_param.precondition_cycle = 1;
     inv_param.tol_precondition = 1e-1;
     inv_param.maxiter_precondition = 1;
