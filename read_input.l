@@ -68,6 +68,8 @@ EQL {SPC}*={SPC}*
 #include "quda_types.h"
 #include "misc_types.h"
 
+#include <ctype.h>
+
 // some general parsing helpers
 
 static inline void rmQuotes(char *str){
