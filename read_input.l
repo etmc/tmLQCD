@@ -1791,13 +1791,13 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*MGSetupSolverTolerance{EQL}{STRLIST} {
     parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_setup_tol[0]));
   }
-  {SPC}*MGSetupSolverMaxIterations{EQL}{STRLIST} {
+  {SPC}*MGSetupMaxSolverIterations{EQL}{STRLIST} {
     parse_quda_mg_int_par_array(yytext, &(quda_input.mg_setup_maxiter[0]));
   }
   {SPC}*MGCoarseSolverTolerance{EQL}{STRLIST} {
     parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_coarse_solver_tol[0]));
   }
-  {SPC}*MGCoarseSolverMaxIterations{EQL}{STRLIST} {
+  {SPC}*MGCoarseMaxSolverIterations{EQL}{STRLIST} {
     parse_quda_mg_int_par_array(yytext, &(quda_input.mg_coarse_solver_maxiter[0]));
   }
   {SPC}*MGSmootherTolerance{EQL}{STRLIST} {
