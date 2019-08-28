@@ -1791,7 +1791,7 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*MGSetupSolverTolerance{EQL}{STRLIST} {
     parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_setup_tol[0]));
   }
-  {SPC}*MGSetupMaxSolverIterations{EQL}{STRLIST} {
+  {SPC}*MGSetupSolverMaxIterations{EQL}{STRLIST} {
     parse_quda_mg_int_par_array(yytext, &(quda_input.mg_setup_maxiter[0]));
   }
   {SPC}*MGCoarseSolverTolerance{EQL}{STRLIST} {
