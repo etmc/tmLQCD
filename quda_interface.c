@@ -1412,6 +1412,9 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   strcpy(mg_param->vec_outfile, "");
 
   mg_inv_param->verbosity = QUDA_SUMMARIZE;
+  if( g_debug_level >= 3 ){
+    mg_inv_param->verbosity = QUDA_VERBOSE;
+  }
   mg_inv_param->verbosity_precondition = QUDA_SUMMARIZE;;
 }
 
