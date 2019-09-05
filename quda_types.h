@@ -70,6 +70,7 @@ typedef struct tm_QudaParams_t {
   double               mg_omega[QUDA_MAX_MG_LEVEL];
   int                  mg_run_verify;
   int                  mg_enable_size_three_blocks;
+  double               mg_reset_setup_mu_threshold;
   double               mg_reset_setup_threshold;
   
   // parameters related to communication-avoiding
@@ -226,7 +227,7 @@ static inline int check_quda_mg_setup_state(const tm_QudaMGSetupState_t * const 
   } else if( ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) < 2*DBL_EPSILON ) &&
              ( fabs(quda_mg_setup_state->c_sw - g_c_sw) < 2*DBL_EPSILON) &&
              ( fabs(quda_mg_setup_state->kappa - g_kappa) < 2*DBL_EPSILON) &&
-             ( fabs(quda_mg_setup_state->mu - g_mu) < 2*DBL_EPSILON) ){
+             ( fabs(quda_mg_setup_state->mu - g_mu) < quda_params->mg_reset_setup_mu_threshold) ){
     return TM_QUDA_MG_SETUP_REUSE;
   } else {
     return TM_QUDA_MG_SETUP_UPDATE;

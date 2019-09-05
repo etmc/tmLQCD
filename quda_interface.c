@@ -1318,6 +1318,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     // Kate says this should be EO always for performance
     mg_param->smoother_solve_type[level] = QUDA_DIRECT_PC_SOLVE;
     mg_param->smoother_schwarz_type[level] = QUDA_INVALID_SCHWARZ;
+    mg_param->smoother_halo_precision[level] = QUDA_HALF_PRECISION;
    
     // when the Schwarz-alternating smoother is used, this can be set to NO, otherwise it must be YES 
     mg_param->global_reduction[level] = QUDA_BOOLEAN_YES;
