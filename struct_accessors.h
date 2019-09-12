@@ -28,40 +28,40 @@
 static inline double su3_get_elem_linear(const su3* const matrix, int cc, int reim){
   switch(cc){
     case 0:
-      if(reim==0) return( creal(matrix->c00) );
-      else return( cimag(matrix->c00) );
+      if(reim==0) return( ((double*)(&matrix->c00))[1] );
+      else return( ((double*)(&matrix->c00))[2] );
       break;
     case 1:
-      if(reim==0) return( creal(matrix->c01) );
-      else return( cimag(matrix->c01) );
+      if(reim==0) return( ((double*)(&matrix->c01))[1] );
+      else return( ((double*)(&matrix->c01))[2] );
       break;
     case 2:
-      if(reim==0) return( creal(matrix->c02) );
-      else return( cimag(matrix->c02) );
+      if(reim==0) return( ((double*)(&matrix->c02))[1] );
+      else return( ((double*)(&matrix->c02))[2] );
       break;
     case 3:
-      if(reim==0) return( creal(matrix->c10) );
-      else return( cimag(matrix->c10) );
+      if(reim==0) return( ((double*)(&matrix->c10))[1] );
+      else return( ((double*)(&matrix->c10))[2] );
       break;
     case 4:
-      if(reim==0) return( creal(matrix->c11) );
-      else return( cimag(matrix->c11) );
+      if(reim==0) return( ((double*)(&matrix->c11))[1] );
+      else return( ((double*)(&matrix->c11))[2] );
       break;
     case 5:
-      if(reim==0) return( creal(matrix->c12) );
-      else return( cimag(matrix->c12) );
+      if(reim==0) return( ((double*)(&matrix->c12))[1] );
+      else return( ((double*)(&matrix->c12))[2] );
       break;
     case 6:
-      if(reim==0) return( creal(matrix->c20) );
-      else return( cimag(matrix->c20) );
+      if(reim==0) return( ((double*)(&matrix->c20))[1] );
+      else return( ((double*)(&matrix->c20))[2] );
       break;
     case 7:
-      if(reim==0) return( creal(matrix->c21) );
-      else return( cimag(matrix->c21) );
+      if(reim==0) return( ((double*)(&matrix->c21))[1] );
+      else return( ((double*)(&matrix->c21))[2] );
       break;
     case 8:
-      if(reim==0) return( creal(matrix->c22) );
-      else return( cimag(matrix->c22) );
+      if(reim==0) return( ((double*)(&matrix->c22))[1] );
+      else return( ((double*)(&matrix->c22))[2] );
       break;
     default:
       exit(-222);
@@ -75,52 +75,52 @@ static inline double su3_get_elem(const su3* const matrix, int c0, int c1, int r
 static inline double spinor_get_elem_linear(const spinor* const matrix, int sc, int reim){
   switch(sc){
     case 0:
-      if(reim==0) return( creal(matrix->s0.c0) );
-      else return( cimag(matrix->s0.c0) );
+      if(reim==0) return( ((double*)(&matrix->s0.c0))[1] );
+      else return( ((double*)(&matrix->s0.c0))[2] );
       break;
     case 1:
-      if(reim==0) return( creal(matrix->s0.c1) );
-      else return( cimag(matrix->s0.c1) );
+      if(reim==0) return( ((double*)(&matrix->s0.c1))[1] );
+      else return( ((double*)(&matrix->s0.c1))[2] );
       break;
     case 2:
-      if(reim==0) return( creal(matrix->s0.c2) );
-      else return( cimag(matrix->s0.c2) );
+      if(reim==0) return( ((double*)(&matrix->s0.c2))[1] );
+      else return( ((double*)(&matrix->s0.c2))[2] );
       break;
     case 3:
-      if(reim==0) return( creal(matrix->s1.c0) );
-      else return( cimag(matrix->s1.c0) );
+      if(reim==0) return( ((double*)(&matrix->s1.c0))[1] );
+      else return( ((double*)(&matrix->s1.c0))[2] );
       break;
     case 4:
-      if(reim==0) return( creal(matrix->s1.c1) );
-      else return( cimag(matrix->s1.c1) );
+      if(reim==0) return( ((double*)(&matrix->s1.c1))[1] );
+      else return( ((double*)(&matrix->s1.c1))[2] );
       break;
     case 5:
-      if(reim==0) return( creal(matrix->s1.c2) );
-      else return( cimag(matrix->s1.c2) );
+      if(reim==0) return( ((double*)(&matrix->s1.c2))[1] );
+      else return( ((double*)(&matrix->s1.c2))[2] );
       break;
     case 6:
-      if(reim==0) return( creal(matrix->s2.c0) );
-      else return( cimag(matrix->s2.c0) );
+      if(reim==0) return( ((double*)(&matrix->s2.c0))[1] );
+      else return( ((double*)(&matrix->s2.c0))[2] );
       break;
     case 7:
-      if(reim==0) return( creal(matrix->s2.c1) );
-      else return( cimag(matrix->s2.c1) );
+      if(reim==0) return( ((double*)(&matrix->s2.c1))[1] );
+      else return( ((double*)(&matrix->s2.c1))[2] );
       break;
     case 8:
-      if(reim==0) return( creal(matrix->s2.c2) );
-      else return( cimag(matrix->s2.c2) );
+      if(reim==0) return( ((double*)(&matrix->s2.c2))[1] );
+      else return( ((double*)(&matrix->s2.c2))[2] );
       break;
     case 9:
-      if(reim==0) return( creal(matrix->s3.c0) );
-      else return( cimag(matrix->s3.c0) );
+      if(reim==0) return( ((double*)(&matrix->s3.c0))[1] );
+      else return( ((double*)(&matrix->s3.c0))[2] );
       break;
     case 10:
-      if(reim==0) return( creal(matrix->s3.c1) );
-      else return( cimag(matrix->s3.c1) );
+      if(reim==0) return( ((double*)(&matrix->s3.c1))[1] );
+      else return( ((double*)(&matrix->s3.c1))[2] );
       break;
     case 11:
-      if(reim==0) return( creal(matrix->s3.c2) );
-      else return( cimag(matrix->s3.c2) );
+      if(reim==0) return( ((double*)(&matrix->s3.c2))[1] );
+      else return( ((double*)(&matrix->s3.c2))[2] );
       break;
     default:
       exit(-223);
