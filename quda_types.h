@@ -87,6 +87,7 @@ typedef struct tm_QudaParams_t {
 
   // parameters related to coarse grid deflation in the MG
   int                  mg_use_eig_solver[QUDA_MAX_MG_LEVEL];
+  int                  mg_eig_preserve_deflation;
   int                  mg_eig_nEv[QUDA_MAX_MG_LEVEL];
   int                  mg_eig_nKr[QUDA_MAX_MG_LEVEL];
   int                  mg_eig_require_convergence[QUDA_MAX_MG_LEVEL];

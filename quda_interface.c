@@ -1124,34 +1124,35 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     if( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_RESET ){
       double atime = gettime();
       if( quda_mg_preconditioner != NULL ){
-        if(g_proc_id==0){ printf("# QUDA: Destroying MG Preconditioner Setup\n"); fflush(stdout); }
+        tm_debug_printf(0,0,"# QUDA: Destroying MG Preconditioner Setup\n");
         destroyMultigridQuda(quda_mg_preconditioner);
         reset_quda_mg_setup_state(&quda_mg_setup_state);
         quda_mg_preconditioner = NULL;
       }
-      if(g_proc_id==0){ printf("# QUDA: Performing MG Preconditioner Setup\n"); fflush(stdout); }
+      tm_debug_printf(0,0,"# QUDA: Performing MG Preconditioner Setup\n");
+#ifdef TM_QUDA_EXPERIMENTAL
+      if( quda_mg_param.preserve_deflation == QUDA_BOOLEAN_YES ){
+        quda_mg_param.preserve_deflation = QUDA_BOOLEAN_NO;
+      }
+#endif 
       quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
       inv_param.preconditioner = quda_mg_preconditioner;
       set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
-      if(g_proc_id == 0 && g_debug_level > 0){
-        printf("# QUDA: MG Preconditioner Setup took %.3f seconds\n", gettime()-atime);
-        fflush(stdout);
-      }
+      tm_debug_printf(0,1,"# QUDA: MG Preconditioner Setup took %.3f seconds\n", gettime()-atime);
     } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_UPDATE )  {
-      if(g_proc_id==0 && g_debug_level > 0){ 
-        printf("# QUDA: Updating MG Preconditioner Setup for gauge %d\n", quda_gauge_state.gauge_id); fflush(stdout); 
+      tm_debug_printf(0,0,"# QUDA: Updating MG Preconditioner Setup for gauge %d\n", quda_gauge_state.gauge_id);
+#ifdef TM_QUDA_EXPERIMENTAL
+      if( quda_input.mg_eig_preserve_deflation == QUDA_BOOLEAN_YES ){
+        tm_debug_printf(0,0,"# QUDA: Reusing deflation subspace for gauge %d\n", quda_gauge_state.gauge_id);
+        quda_mg_param.preserve_deflation = QUDA_BOOLEAN_YES; 
       }
+#endif
       double atime = gettime();
       updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
       set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
-      if(g_proc_id == 0 && g_debug_level > 0){
-        printf("# QUDA: MG Preconditioner Setup Update took %.3f seconds\n", gettime()-atime);
-        fflush(stdout);
-      }
+      tm_debug_printf(0,1,"# QUDA: MG Preconditioner Setup Update took %.3f seconds\n", gettime()-atime);
      } else {
-      if(g_proc_id==0 && g_debug_level > 0){ 
-        printf("# QUDA: Reusing MG Preconditioner Setup for gauge %d\n", quda_gauge_state.gauge_id); fflush(stdout); 
-      }
+      tm_debug_printf(0,0,"# QUDA: Reusing MG Preconditioner Setup for gauge %d\n", quda_gauge_state.gauge_id);
     }
   }
   

@@ -1940,6 +1940,14 @@ static inline double fltlist_next_token(int * const list_end){
     }
     free(input_copy);
   }
+  {SPC}*MGEigPreserveDeflationSubspace{EQL}yes {
+    quda_input.mg_eig_preserve_deflation = QUDA_BOOLEAN_YES;
+    if(myverbose) printf("  MGEigPreserveDeflationSubspace set to YES in line %d\n", line_of_file);
+  }
+  {SPC}*MGEigPreserveDeflationSubspace{EQL}no {
+    quda_input.mg_eig_preserve_deflation = QUDA_BOOLEAN_YES;
+    if(myverbose) printf("  MGEigPreserveDeflationSubspace set to YES in line %d\n", line_of_file);
+  }
   {SPC}*MGEigSolverCoarseGuess{EQL}yes {
     quda_input.mg_coarse_guess = QUDA_BOOLEAN_YES;
     if(myverbose) printf("  MGEigSolverCoarseGuess set to YES in line %d\n", line_of_file);
@@ -3687,6 +3695,7 @@ int read_input(char * conf_file){
     quda_input.mg_smoother_type[level] = QUDA_MR_INVERTER ;
 
     quda_input.mg_use_eig_solver[level] = QUDA_BOOLEAN_NO;
+    quda_input.mg_eig_preserve_deflation = QUDA_BOOLEAN_NO;
     quda_input.mg_eig_tol[level] = 1.0e-3;
     quda_input.mg_eig_require_convergence[level] = QUDA_BOOLEAN_YES;
     quda_input.mg_eig_type[level] = QUDA_EIG_TR_LANCZOS;
