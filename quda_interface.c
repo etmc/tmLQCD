@@ -1130,11 +1130,6 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
         quda_mg_preconditioner = NULL;
       }
       tm_debug_printf(0,0,"# QUDA: Performing MG Preconditioner Setup\n");
-#ifdef TM_QUDA_EXPERIMENTAL
-      if( quda_mg_param.preserve_deflation == QUDA_BOOLEAN_YES ){
-        quda_mg_param.preserve_deflation = QUDA_BOOLEAN_NO;
-      }
-#endif 
       quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
       inv_param.preconditioner = quda_mg_preconditioner;
       set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
@@ -1143,8 +1138,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
       tm_debug_printf(0,0,"# QUDA: Updating MG Preconditioner Setup for gauge %d\n", quda_gauge_state.gauge_id);
 #ifdef TM_QUDA_EXPERIMENTAL
       if( quda_input.mg_eig_preserve_deflation == QUDA_BOOLEAN_YES ){
-        tm_debug_printf(0,0,"# QUDA: Reusing deflation subspace for gauge %d\n", quda_gauge_state.gauge_id);
-        quda_mg_param.preserve_deflation = QUDA_BOOLEAN_YES; 
+        tm_debug_printf(0,0,"# QUDA: Deflation subspace for gauge %d will be re-used!\n", quda_gauge_state.gauge_id);
       }
 #endif
       double atime = gettime();
@@ -1200,6 +1194,10 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   mg_param->setup_type = QUDA_NULL_VECTOR_SETUP;
   mg_param->pre_orthonormalize = QUDA_BOOLEAN_NO;
   mg_param->post_orthonormalize = QUDA_BOOLEAN_YES;
+
+#ifdef TM_QUDA_EXPERIMENTAL
+  mg_param->preserve_deflation = quda_input.mg_eig_preserve_deflation;
+#endif
 
   mg_param->n_level = quda_input.mg_n_level;
   for (int level=0; level < mg_param->n_level; level++) {
