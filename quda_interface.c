@@ -1346,7 +1346,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     // set the MG EigSolver parameters, almost equivalent to
     // setEigParam from QUDA's multigrid_invert_test, except
     // for cuda_prec_ritz (on 20190822)
-		if( quda_input.mg_use_eig_solver[level] == QUDA_BOOLEAN_YES ){
+    if( quda_input.mg_use_eig_solver[level] == QUDA_BOOLEAN_YES ){
       mg_param->use_eig_solver[level] = QUDA_BOOLEAN_YES;
       mg_eig_param[level].eig_type = quda_input.mg_eig_type[level];
       mg_eig_param[level].spectrum = quda_input.mg_eig_spectrum[level];
