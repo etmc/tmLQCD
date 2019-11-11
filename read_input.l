@@ -1331,6 +1331,14 @@ static inline double fltlist_next_token(int * const list_end){
   }
 }
 
+<TMSOLVER,CSWSOLVER>{
+  mg {
+    optr->solver=MG;
+    if(myverbose) printf("  Solver set to MG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+}
+
 <CSWSOLVER>{
   bicgstab {
     optr->solver = BICGSTAB;
