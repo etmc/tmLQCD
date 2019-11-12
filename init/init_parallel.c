@@ -30,7 +30,7 @@
 #include "init/init_openmp.h"
 #endif
 #ifdef TM_USE_QPHIX
-#include "qphix/qphix_tmlqcd_config.h"
+#include "qphix/qphix_config.h"
 #endif
 #ifdef QPHIX_QMP_COMMS
 #include <qmp.h>
