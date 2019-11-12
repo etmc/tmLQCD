@@ -24,6 +24,7 @@
  *
  *******************************************************************************/
 
+#include "tmlqcd_config.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -201,7 +202,10 @@ int tmLQCD_invert_init(int argc, char *argv[], const int _verbose, const int ext
 #  endif
   }
 #endif
-  tmLQCD_invert_initialised = 1;  
+  tmLQCD_invert_initialised = 1;
+#ifdef TM_USE_MPI
+  MPI_Barrier(MPI_COMM_WORLD);
+#endif 
   return(0);
 }
 

@@ -33,7 +33,7 @@
 
 extern "C" {
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include "tmlqcd_config.h"
 #endif
 #include "boundary.h"
 #include "geometry_eo.h"

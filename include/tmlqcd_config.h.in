@@ -1,4 +1,4 @@
-/* Hand-written config.h.in. */
+/* Hand-written tmlqcd_config.h.in. */
 
 #ifndef _CONFIG_H
 #define _CONFIG_H

@@ -28,7 +28,7 @@
 
 
 #ifdef HAVE_CONFIG_H
-  #include<config.h>
+  #include<tmlqcd_config.h>
 #endif
  
  /* texture for nearest neighbours*/

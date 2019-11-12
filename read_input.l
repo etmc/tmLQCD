@@ -47,7 +47,7 @@ EQL {SPC}*={SPC}*
 
 %{
 #ifdef HAVE_CONFIG_H
-#  include<config.h>
+#  include<tmlqcd_config.h>
 #endif
 #include<stdlib.h>
 #include<stdio.h>
@@ -1328,6 +1328,14 @@ static inline double fltlist_next_token(int * const list_end){
     printf("ERROR line %d operator %d: DDalphaAMG library not included\n", line_of_file, current_operator);
     exit(1);
 #endif
+  }
+}
+
+<TMSOLVER,CSWSOLVER>{
+  mg {
+    optr->solver=MG;
+    if(myverbose) printf("  Solver set to MG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
   }
 }
 

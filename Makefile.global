@@ -16,8 +16,8 @@ Makefile: ${top_srcdir}/Makefile.global $(srcdir)/Makefile.in $(abs_top_builddir
 $(abs_top_builddir)/config.status: $(top_srcdir)/configure
 	( cd ${abs_top_builddir} && $(SHELL) ./config.status --recheck ) 
 
-$(abs_top_builddir)/config.h: $(top_srcdir)/config.h.in $(abs_top_builddir)/config.status $(top_srcdir)/configure
-	( cd ${abs_top_builddir} && $(SHELL) ./config.status --header=config.h )
+$(abs_top_builddir)/include/tmlqcd_config.h: $(top_srcdir)/include/tmlqcd_config.h.in $(abs_top_builddir)/config.status $(top_srcdir)/configure
+	( cd ${abs_top_builddir} && $(SHELL) ./config.status --header=include/tmlqcd_config.h )
 
 # rebuild configure if configure.in changes but ignore errors
 # on many machines some of the macros fail to be recognized

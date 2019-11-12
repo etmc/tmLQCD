@@ -28,7 +28,7 @@
 # include <omp.h>
 #endif
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #include "su3.h"
 #include "assign_add_mul_r.h"

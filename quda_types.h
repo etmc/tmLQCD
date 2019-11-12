@@ -21,6 +21,10 @@
 #ifndef TM_QUDA_TYPES_H
 #define TM_QUDA_TYPES_H
 
+#ifdef HAVE_CONFIG_H
+#  include<tmlqcd_config.h>
+#endif
+
 #ifdef TM_USE_QUDA
 #include <quda.h>
 #else

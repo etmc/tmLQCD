@@ -27,7 +27,11 @@
 #ifndef _TMLQCD_H
 #define _TMLQCD_H
 
-#include "config.h"
+#include "tmlqcd_config.h"
+
+#ifdef TM_USE_MPI
+#include <mpi.h>
+#endif
 
 #ifdef __cplusplus
 extern "C"
