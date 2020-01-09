@@ -231,6 +231,7 @@ void _setDefaultQudaParam(void){
 
   inv_param.residual_type = (QudaResidualType)(QUDA_L2_RELATIVE_RESIDUAL);
   inv_param.tol_hq = 0.1;
+  inv_param.use_alternative_reliable = 0;
   inv_param.reliable_delta = 1e-3; // ignored by multi-shift solver
   inv_param.use_sloppy_partial_accumulator = 0;
 
