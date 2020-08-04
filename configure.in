@@ -745,7 +745,7 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_
   else
     DEPFLAGS="-M"
   fi
-  CPPFLAGS="-I/bgl/BlueLight/ppcfloor/bglsys/include"
+  CPPFLAGS="-I/bgl/BlueLight/ppcfloor/bglsys/include "
   INCLUDES="$INCLUDES -I/bgl/BlueLight/ppcfloor/bglsys/include/"
 
 #The BLue Gene/P
@@ -776,8 +776,8 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_
   else
     DEPFLAGS="-M"
   fi
-  CPPFLAGS="-I/bgsys/drivers/ppcfloor/arch/include/ -I/bgsys/drivers/ppcfloor/comm/include"
-  INCLUDES="$INCLUDES -I/bgsys/local/include/ -I/bgsys/drivers/ppcfloor/arch/include/ -I/bgsys/drivers/ppcfloor/comm/include"
+  CPPFLAGS="-I/bgsys/drivers/ppcfloor/arch/include/ -I/bgsys/drivers/ppcfloor/comm/include "
+  INCLUDES="$INCLUDES -I/bgsys/local/include/ -I/bgsys/drivers/ppcfloor/arch/include/ -I/bgsys/drivers/ppcfloor/comm/include "
 
 
 

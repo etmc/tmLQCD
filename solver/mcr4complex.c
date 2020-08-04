@@ -19,16 +19,16 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #include<stdlib.h>
 #include<stdio.h>
 #include<math.h>
 #include<string.h>
-#include"global.h"
-#include"su3.h"
-#include"linalg_eo.h"
-#include"mcr4complex.h"
+#include "global.h"
+#include "su3.h"
+#include "linalg_eo.h"
+#include "mcr4complex.h"
 #include "time.h"
 
 static void init_lmcr(const int _M, const int _V);

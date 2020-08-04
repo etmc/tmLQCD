@@ -22,7 +22,7 @@
 #ifndef _SOLVER_FIELD_H
 #define _SOLVER_FIELD_H
 
-#include"su3.h"
+#include "su3.h"
 
 int init_solver_field(spinor *** const solver_field, const int V, const int nr);
 void finalize_solver(spinor ** solver_field, const int nr);

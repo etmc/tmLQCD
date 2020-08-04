@@ -19,14 +19,14 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #include "global.h"
 #include <complex.h>
@@ -256,7 +256,7 @@ void apply_little_D_spinor(spinor *r, spinor *s){
 #endif
 #define _C_TYPE _Complex double
 
-#include"little_D_body.c"
+#include "little_D_body.c"
 
 #undef _C_TYPE
 #undef _PSWITCH
@@ -272,7 +272,7 @@ void apply_little_D_spinor(spinor *r, spinor *s){
 #endif
 #define _C_TYPE _Complex float
 
-#include"little_D_body.c"
+#include "little_D_body.c"
 
 #undef _C_TYPE
 #undef _PSWITCH

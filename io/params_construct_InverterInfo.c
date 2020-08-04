@@ -17,7 +17,7 @@
 * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
 ***********************************************************************/
 
-#include "params.ih"
+#include "io/params.ih"
 #include "solver/solver.h"
 
 /* This needs fixing */

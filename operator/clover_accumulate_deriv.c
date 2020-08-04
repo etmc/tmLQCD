@@ -21,7 +21,7 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #ifdef SSE
 # undef SSE
@@ -40,10 +40,10 @@
 #include <errno.h>
 #include <time.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
-# include <omp.h>
+#include <omp.h>
 #endif
 #include "global.h"
 #include "su3.h"

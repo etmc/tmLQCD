@@ -1,4 +1,4 @@
-#include "params.ih"
+#include "io/params.ih"
 
 paramsXlfInfo *construct_paramsXlfInfo(double const plaq, int const counter)
 {

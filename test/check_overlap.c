@@ -24,9 +24,9 @@
  *
  *******************************************************************************/
 
-#include"lime.h"
+#include "lime.h"
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>

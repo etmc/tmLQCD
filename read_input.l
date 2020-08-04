@@ -47,21 +47,21 @@ EQL {SPC}*={SPC}*
 
 %{
 #ifdef HAVE_CONFIG_H
-#  include<tmlqcd_config.h>
+#  include "tmlqcd_config.h"
 #endif
 #include<stdlib.h>
 #include<stdio.h>
 #include<string.h>
 #define INIT_GLOBALS
-#include"global.h"
-#include"read_input.h"
-#include"default_input_values.h"
-#include"monomial/monomial.h"
-#include"solver/solver_types.h"
-#include"meas/measurements.h"
-#include"integrator.h"
-#include"operator.h"
-#include"phmc.h"
+#include "global.h"
+#include "read_input.h"
+#include "default_input_values.h"
+#include "monomial/monomial.h"
+#include "solver/solver_types.h"
+#include "meas/measurements.h"
+#include "integrator.h"
+#include "operator.h"
+#include "phmc.h"
 #include<io/params.h>
 #include "qphix_types.h"
 #include "quda_types.h"

@@ -20,7 +20,7 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 
 // work-around for missing single precision implementation of inline SSE
@@ -46,7 +46,7 @@
 #include <errno.h>
 #include <time.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #include "global.h"
 #include "su3.h"

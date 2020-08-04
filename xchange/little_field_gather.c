@@ -21,14 +21,14 @@
 
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #include "global.h"
 #include <complex.h>
@@ -59,7 +59,7 @@ int waitcount = 0;
 #define _C_TYPE _Complex double
 #define _MPI_C_TYPE MPI_DOUBLE_COMPLEX
 
-#include"little_field_gather_body.c"
+#include "little_field_gather_body.c"
 
 #undef _PSWITCH
 #undef _PTSWITCH
@@ -71,7 +71,7 @@ int waitcount = 0;
 #define _C_TYPE _Complex float
 #define _MPI_C_TYPE MPI_COMPLEX
 
-#include"little_field_gather_body.c"
+#include "little_field_gather_body.c"
 
 #undef _PSWITCH
 #undef _PTSWITCH

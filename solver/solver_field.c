@@ -20,13 +20,13 @@
  *******************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #include<stdlib.h>
 #include<errno.h>
-#include"global.h"
-#include"su3.h"
-#include"solver_field.h"
+#include "global.h"
+#include "su3.h"
+#include "solver_field.h"
 
 int init_solver_field(spinor *** const solver_field, const int V, const int nr) {
   int i=0;

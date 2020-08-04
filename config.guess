@@ -1313,8 +1313,8 @@ esac
 eval $set_cc_for_build
 cat >$dummy.c <<EOF
 #ifdef _SEQUENT_
-# include <sys/types.h>
-# include <sys/utsname.h>
+#include <sys/types.h>
+#include <sys/utsname.h>
 #endif
 main ()
 {

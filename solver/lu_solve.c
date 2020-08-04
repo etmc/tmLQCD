@@ -17,13 +17,13 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #include<stdlib.h>
 #include<math.h>
 #include "global.h"
 #include <complex.h>
-#include"solver/lu_solve.h"
+#include "solver/lu_solve.h"
 
 /* Solve M a = b by LU decomposition with partial pivoting */
 

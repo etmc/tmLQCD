@@ -25,7 +25,7 @@
  **************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #ifdef SSE2
 # undef SSE2

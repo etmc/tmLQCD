@@ -21,7 +21,7 @@
 #define _UTILS_H
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 
 #include <stdlib.h>

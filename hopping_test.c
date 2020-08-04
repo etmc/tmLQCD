@@ -24,7 +24,7 @@
 *******************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -36,7 +36,7 @@
 #  include <rts.h>
 #endif
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 # ifdef HAVE_LIBLEMON
 #  include <io/params.h>
 #  include <io/gauge.h>

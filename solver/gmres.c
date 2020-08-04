@@ -46,16 +46,16 @@
  ********************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #include<stdlib.h>
 #include<stdio.h>
 #include<math.h>
-#include"global.h"
-#include"su3.h"
-#include"linalg_eo.h"
+#include "global.h"
+#include "su3.h"
+#include "linalg_eo.h"
 #include "solver_field.h"
-#include"gmres.h"
+#include "gmres.h"
 
 
 static void init_gmres(const int _M, const int _V);

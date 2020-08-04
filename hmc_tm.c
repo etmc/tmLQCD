@@ -24,10 +24,11 @@
  *         urbach@physik.fu-berlin.de
  *
  *******************************************************************************/
-#include "lime.h"
 #if HAVE_CONFIG_H
-#include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
+
+#include <lime.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -37,10 +38,10 @@
 #include <signal.h>
 #include <unistd.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
-# include <omp.h>
+#include <omp.h>
 #endif
 #include "global.h"
 #include "git_hash.h"
@@ -53,7 +54,7 @@
 #include "measure_gauge_action.h"
 #include "measure_rectangles.h"
 #ifdef TM_USE_MPI
-# include "xchange/xchange.h"
+#include "xchange/xchange.h"
 #endif
 #include "read_input.h"
 #include "mpi_init.h"

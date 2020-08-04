@@ -24,9 +24,9 @@
  *
  *******************************************************************************/
 
-#include"lime.h"
+#include "lime.h"
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -38,7 +38,7 @@
 #include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
-# include <omp.h>
+#include <omp.h>
 #endif
 #include "global.h"
 #include "git_hash.h"

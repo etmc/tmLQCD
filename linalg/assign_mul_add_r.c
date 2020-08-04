@@ -18,12 +18,12 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <complex.h>
 #ifdef TM_USE_OMP
-# include <omp.h>
+#include <omp.h>
 #endif
 #include "su3.h"
 #include "assign_mul_add_r.h"
@@ -144,7 +144,7 @@ void assign_mul_add_r(spinor * const R, const double c, const spinor * const S, 
 
 #elif ((defined BGL) && (defined XLC))
 
-#  include"bgl.h"
+#  include "bgl.h"
 
 void assign_mul_add_r(spinor * const R, const double c, const spinor * const S, const int N) {
   int ix = 1;

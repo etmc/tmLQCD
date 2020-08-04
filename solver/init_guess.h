@@ -23,8 +23,8 @@
 #ifndef _INIT_GUESS_H
 #define _INIT_GUESS_H
 
-#include"su3.h"
-#include"solver.h"
+#include "su3.h"
+#include "solver.h"
 
 int init_guess_mms(spinor ** const P, spinor * const Q,
                    int shift, solver_params_t * const params);

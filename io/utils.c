@@ -17,7 +17,7 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#include"utils.ih"
+#include "utils.ih"
 
 int isnan_f  (float       x) { return x != x; }
 int isnan_d  (double      x) { return x != x; }

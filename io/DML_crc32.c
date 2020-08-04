@@ -41,10 +41,10 @@
 */
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
-#include"dml.h"
+#include "dml.h"
 
 typedef uint32_t uLong;            /* At least 32 bits */
 typedef unsigned char Byte;

@@ -21,7 +21,7 @@
 /* #endif */
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #ifndef _STD_C99_COMPLEX
 #include "complex.h"

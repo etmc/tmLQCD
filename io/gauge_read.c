@@ -20,7 +20,7 @@
 
 #include "gauge.ih"
 #ifdef DDalphaAMG
-# include "DDalphaAMG_interface.h"
+#include "DDalphaAMG_interface.h"
 #endif
 
 extern int gauge_precision_read_flag;

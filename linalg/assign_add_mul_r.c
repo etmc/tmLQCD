@@ -22,13 +22,13 @@
 #include <stdio.h>
 #include <math.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
-# include <omp.h>
+#include <omp.h>
 #endif
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #include "su3.h"
 #include "assign_add_mul_r.h"
@@ -151,7 +151,7 @@ void assign_add_mul_r(spinor * const R, spinor * const S, const double c, const 
 
 #elif ((defined BGL) && (defined XLC))
 
-#  include"bgl.h"
+#  include "bgl.h"
 
 void assign_add_mul_r(spinor * const R, spinor * const S, const double c, const int N) {
   int ix = 1;

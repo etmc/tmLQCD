@@ -20,8 +20,8 @@
 #ifndef _MCR4COMPLEX_H
 #define _MCR4COMPLEX_H
 
-#include"solver/matrix_mult_typedef.h"
-#include"su3.h"
+#include "solver/matrix_mult_typedef.h"
+#include "su3.h"
 
 void ldiff(_Complex double * Q, _Complex double * const R, _Complex double * const S, const int N);
 void ladd(_Complex double * Q, _Complex double * const R, _Complex double * const S, const int N);
