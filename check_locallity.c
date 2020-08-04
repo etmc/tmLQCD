@@ -55,8 +55,8 @@
 
 void usage(){
   fprintf(stdout, "Code for locallity check of the Dirac operator\n");
-  fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
-  fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
+  fprintf(stdout, "Version %s \n\n", TMLQCD_PACKAGE_VERSION);
+  fprintf(stdout, "Please send bug reports to %s\n", TMLQCD_PACKAGE_BUGREPORT);
   fprintf(stdout, "Usage:   invert [options]\n");
   fprintf(stdout, "Options: [-f input-filename]\n");
   fprintf(stdout, "         [-o output-filename]\n");

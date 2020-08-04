@@ -35,6 +35,6 @@
 #include <math.h>
 #include <errno.h>
 
-#include <global.h>
-#include <io/eospinor.h>
-#include <io/utils.h>
+#include "global.h"
+#include "io/eospinor.h"
+#include "io/utils.h"

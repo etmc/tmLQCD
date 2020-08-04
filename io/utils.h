@@ -24,16 +24,15 @@
 #include "tmlqcd_config.h"
 #endif
 
+#include "su3.h"
+#include "io/selector.h"
+#include "io/params.h"
+#include "io/dml.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <endian.h>
 #include <string.h>
-
-#include "su3.h"
-#include <io/selector.h>
-#include <io/params.h>
-#include <io/dml.h>
-
 
 /* These are factory functions, since the constructors for c-lime and lemon are different
    and they need different ways of opening files. Moving this to utility functions unclutters

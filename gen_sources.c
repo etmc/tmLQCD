@@ -56,8 +56,8 @@
 
 void usage() {
   fprintf(stdout, "Code to generate stochastic sources\n");
-  fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
-  fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
+  fprintf(stdout, "Version %s \n\n", TMLQCD_PACKAGE_VERSION);
+  fprintf(stdout, "Please send bug reports to %s\n", TMLQCD_PACKAGE_BUGREPORT);
   fprintf(stdout, "Usage:   gen_sources [options]\n");
   fprintf(stdout, "Options: -L spatial lattice size\n");
   fprintf(stdout, "         -T temporal lattice size\n");

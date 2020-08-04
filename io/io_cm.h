@@ -20,11 +20,11 @@
 
 #include <global.h>
 
-#include <io/gauge.h>
-#include <io/spinor.h>
-#include <io/utils.h>
+#include "io/gauge.h"
+#include "io/spinor.h"
+#include "io/utils.h"
 
-#include <su3.h>
+#include "su3.h"
 
 
 int read_spinorfield_cm_single(spinor * const s, spinor * const r, char * filename, const int ts, const int vol);

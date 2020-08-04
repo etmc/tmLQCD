@@ -20,6 +20,10 @@
 #ifndef _INIT_H
 #define _INIT_H
 
+#ifdef HAVE_CONFIG_H
+#include "tmlqcd_config.h"
+#endif
+
 #include "init/init_bispinor_field.h"
 #include "init/init_chi_spinor_field.h"
 #include "init/init_dirac_halfspinor.h"

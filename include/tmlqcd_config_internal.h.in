@@ -1,4 +1,6 @@
-/* Hand-written tmlqcd_config.h.in. */
+/* Hand-written "config.h.in". Note that it's no this file which should be
+ * include, but rather the "tmlqcd_config.h" which renames a few of the defines
+ * into static const variables. */
 
 #ifndef _CONFIG_H
 #define _CONFIG_H

@@ -35,8 +35,8 @@
 #include <unistd.h>
 #include <math.h>
 
-#include <global.h>
-#include <su3.h>
-#include <read_input.h>
+#include "global.h"
+#include "su3.h" 
+#include "read_input.h"
 
-#include <io/utils.h>
+#include "io/utils.h"
