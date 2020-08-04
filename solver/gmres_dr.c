@@ -38,9 +38,9 @@
 #ifdef HAVE_CONFIG_H
 #include "tmlqcd_config.h"
 #endif
-#include<stdlib.h>
-#include<stdio.h>
-#include<math.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
 #include "global.h"
 #include <complex.h>
 #include "su3.h"

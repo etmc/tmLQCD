@@ -284,7 +284,6 @@ EXTERN int ** g_idn3d;
 
 void fatal_error(char const *error, char const *function);
 
-#endif
 
 /*
  * Comments: generic macro for swapping values or pointers.
@@ -297,3 +296,5 @@ void fatal_error(char const *error, char const *function);
   memcpy(&y,&x,       sizeof(x)); \
   memcpy(&x,swap_temp,sizeof(x)); \
 } while(0)
+
+#endif

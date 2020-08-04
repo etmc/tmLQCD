@@ -23,6 +23,8 @@
 #include "solver/matrix_mult_typedef.h"
 #include "su3.h"
 
+#include <complex.h>
+
 void ldiff(_Complex double * Q, _Complex double * const R, _Complex double * const S, const int N);
 void ladd(_Complex double * Q, _Complex double * const R, _Complex double * const S, const int N);
 double lsquare_norm(_Complex double * const Q, const int N, const int parallel);

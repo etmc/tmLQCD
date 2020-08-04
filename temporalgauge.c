@@ -12,7 +12,7 @@
 #include "stdlib.h"
 #include "linalg_eo.h"
 #ifdef TM_USE_MPI
-  #include<mpi.h>
+  #include <mpi.h>
   #include "mpi_init.h"
 #endif
 

@@ -19,7 +19,7 @@
 #ifndef _DFL_PROJECTOR_H
 #define _DFL_PROJECTOR_H
 
-#include "su3spinor.h"
+#include "su3.h"
 
 extern int cumiter_lgcr;
 

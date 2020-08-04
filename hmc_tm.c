@@ -28,6 +28,7 @@
 #include "tmlqcd_config.h"
 #endif
 
+
 #include <lime.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -45,8 +46,8 @@
 #endif
 #include "global.h"
 #include "git_hash.h"
-#include <io/params.h>
-#include <io/gauge.h>
+#include "io/params.h"
+#include "io/gauge.h"
 #include "getopt.h"
 #include "ranlxd.h"
 #include "geometry_eo.h"

@@ -22,8 +22,8 @@
 #ifdef HAVE_CONFIG_H
 #include "tmlqcd_config.h"
 #endif
-#include<stdlib.h>
-#include<errno.h>
+#include <stdlib.h>
+#include <errno.h>
 #include "global.h"
 #include "su3.h"
 #include "solver_field.h"

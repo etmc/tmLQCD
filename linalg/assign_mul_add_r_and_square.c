@@ -21,7 +21,7 @@
 #include "tmlqcd_config.h"
 #endif
 #ifdef TM_USE_MPI
-#include<mpi.h>
+#include <mpi.h>
 #endif
 #include <stdlib.h>
 #include <complex.h>

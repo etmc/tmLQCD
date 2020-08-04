@@ -24,7 +24,7 @@
 #define _MIXED_CG_MMS_TM_ND_H
 
 #include "su3.h"
-#include "solver.h"
+#include "solver/solver_params.h"
 
 int mixed_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn, 
 		 spinor * const Qup, spinor * const Qdn, 

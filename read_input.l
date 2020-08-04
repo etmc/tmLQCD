@@ -49,9 +49,9 @@ EQL {SPC}*={SPC}*
 #ifdef HAVE_CONFIG_H
 #  include "tmlqcd_config.h"
 #endif
-#include<stdlib.h>
-#include<stdio.h>
-#include<string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #define INIT_GLOBALS
 #include "global.h"
 #include "read_input.h"
@@ -62,7 +62,7 @@ EQL {SPC}*={SPC}*
 #include "integrator.h"
 #include "operator.h"
 #include "phmc.h"
-#include<io/params.h>
+#include <io/params.h>
 #include "qphix_types.h"
 #include "quda_types.h"
 

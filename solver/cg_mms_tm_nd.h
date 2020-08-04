@@ -24,8 +24,8 @@
 #ifndef _CG_MMS_TM_ND_H
 #define _CG_MMS_TM_ND_H
 
+#include "solver/solver_params.h"
 #include "su3.h"
-#include "solver.h"
 
 int cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn, 
 		 spinor * const Qup, spinor * const Qdn, 

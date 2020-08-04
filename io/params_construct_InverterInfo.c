@@ -18,7 +18,7 @@
 ***********************************************************************/
 
 #include "io/params.ih"
-#include "solver/solver.h"
+#include "solver/solver_types.h"
 
 /* This needs fixing */
 

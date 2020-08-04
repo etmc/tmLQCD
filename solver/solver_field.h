@@ -24,6 +24,8 @@
 
 #include "su3.h"
 
+#include <complex.h>
+
 int init_solver_field(spinor *** const solver_field, const int V, const int nr);
 void finalize_solver(spinor ** solver_field, const int nr);
 int init_solver_field_32(spinor32 *** const solver_field, const int V, const int nr);

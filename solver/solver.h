@@ -20,7 +20,6 @@
 #ifndef _SOLVER_H
 #define _SOLVER_H
 
-
 #include "solver/solver_types.h"
 #include "solver/matrix_mult_typedef.h"
 #include "solver/matrix_mult_typedef_bi.h"
