@@ -1362,9 +1362,9 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
         fatal_error("Eigensolver parameter error.\n", "_setQudaMultigridParam");
       }
 
-      mg_eig_param[level].nEv = quda_input.mg_eig_nEv[level];
-      mg_eig_param[level].nKr = quda_input.mg_eig_nKr[level];
-      mg_eig_param[level].nConv = quda_input.mg_n_vec[level];
+      mg_eig_param[level].n_ev = quda_input.mg_eig_nEv[level];
+      mg_eig_param[level].n_kr = quda_input.mg_eig_nKr[level];
+      mg_eig_param[level].n_conv = quda_input.mg_n_vec[level];
       mg_eig_param[level].require_convergence = quda_input.mg_eig_require_convergence[level];
 
       mg_eig_param[level].tol = quda_input.mg_eig_tol[level];
