@@ -1844,6 +1844,11 @@ static inline double fltlist_next_token(int * const list_end){
     quda_input.mg_enable_size_three_blocks = 0;
     if(myverbose) printf("  MGEnableSizeThreeBlocks set to NO in line %d\n", line_of_file);
   }
+  {SPC}*MGResetSetupMuThreshold{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    quda_input.mg_reset_setup_mu_threshold = c;
+    if(myverbose) printf("  MGResetSetupMuThreshold set to %f line %d\n", quda_input.mg_reset_setup_mu_threshold, line_of_file);
+  }
   {SPC}*MGResetSetupThreshold{EQL}{FLT}+ {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     quda_input.mg_reset_setup_threshold = c;
@@ -1934,6 +1939,26 @@ static inline double fltlist_next_token(int * const list_end){
       strlist_next_token(&list_end, token, 100);
     }
     free(input_copy);
+  }
+  {SPC}*MGEigPreserveDeflationSubspace{EQL}yes {
+#ifdef TM_QUDA_EXPERIMENTAL
+    quda_input.mg_eig_preserve_deflation = QUDA_BOOLEAN_YES;
+    if(myverbose) printf("  MGEigPreserveDeflationSubspace set to YES in line %d\n", line_of_file);
+#else
+    char error_message[300];
+    snprintf(error_message, 300, "You attempted to set 'MGEigPreserveDeflationSubspace' even though tmLQCD was compiled with '--disable-quda-experimental'. In order to use experimental QUDA features, tmLQCD must be compiled with '--enable-quda-experimental'");
+    yy_fatal_error(error_message);
+#endif
+  }
+  {SPC}*MGEigPreserveDeflationSubspace{EQL}no {
+#ifdef TM_QUDA_EXPERIMENTAL
+    quda_input.mg_eig_preserve_deflation = QUDA_BOOLEAN_YES;
+    if(myverbose) printf("  MGEigPreserveDeflationSubspace set to YES in line %d\n", line_of_file);
+#else
+    char error_message[300];
+    snprintf(error_message, 300, "You attempted to set 'MGEigPreserveDeflationSubspace' even though tmLQCD was compiled with '--disable-quda-experimental'. In order to use experimental QUDA features, tmLQCD must be compiled with '--enable-quda-experimental'");
+    yy_fatal_error(error_message);
+#endif
   }
   {SPC}*MGEigSolverCoarseGuess{EQL}yes {
     quda_input.mg_coarse_guess = QUDA_BOOLEAN_YES;
@@ -3682,6 +3707,7 @@ int read_input(char * conf_file){
     quda_input.mg_smoother_type[level] = QUDA_MR_INVERTER ;
 
     quda_input.mg_use_eig_solver[level] = QUDA_BOOLEAN_NO;
+    quda_input.mg_eig_preserve_deflation = QUDA_BOOLEAN_NO;
     quda_input.mg_eig_tol[level] = 1.0e-3;
     quda_input.mg_eig_require_convergence[level] = QUDA_BOOLEAN_YES;
     quda_input.mg_eig_type[level] = QUDA_EIG_TR_LANCZOS;
@@ -3716,6 +3742,7 @@ int read_input(char * conf_file){
   quda_input.mg_run_verify = QUDA_BOOLEAN_YES;
   quda_input.mg_enable_size_three_blocks = _default_quda_mg_enable_size_three_blocks;
   quda_input.mg_reset_setup_threshold = _default_quda_mg_reset_setup_threshold;
+  quda_input.mg_reset_setup_mu_threshold = _default_quda_mg_reset_setup_mu_threshold;
   quda_input.mg_run_low_mode_check = QUDA_BOOLEAN_NO;
   quda_input.mg_run_oblique_proj_check = QUDA_BOOLEAN_NO; 
 

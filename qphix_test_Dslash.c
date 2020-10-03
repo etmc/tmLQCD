@@ -25,7 +25,7 @@
 #include <tmlqcd_config.h>
 #endif
 #ifdef TM_USE_QPHIX
-#include <qphix/qphix_tmlqcd_config.h>
+#include <qphix/qphix_config.h>
 #endif
 #include <float.h>
 #include <math.h>

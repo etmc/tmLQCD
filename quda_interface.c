@@ -231,6 +231,7 @@ void _setDefaultQudaParam(void){
 
   inv_param.residual_type = (QudaResidualType)(QUDA_L2_RELATIVE_RESIDUAL);
   inv_param.tol_hq = 0.1;
+  inv_param.use_alternative_reliable = 0;
   inv_param.reliable_delta = 1e-3; // ignored by multi-shift solver
   inv_param.use_sloppy_partial_accumulator = 0;
 
@@ -1124,34 +1125,29 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     if( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_RESET ){
       double atime = gettime();
       if( quda_mg_preconditioner != NULL ){
-        if(g_proc_id==0){ printf("# QUDA: Destroying MG Preconditioner Setup\n"); fflush(stdout); }
+        tm_debug_printf(0,0,"# QUDA: Destroying MG Preconditioner Setup\n");
         destroyMultigridQuda(quda_mg_preconditioner);
         reset_quda_mg_setup_state(&quda_mg_setup_state);
         quda_mg_preconditioner = NULL;
       }
-      if(g_proc_id==0){ printf("# QUDA: Performing MG Preconditioner Setup\n"); fflush(stdout); }
+      tm_debug_printf(0,0,"# QUDA: Performing MG Preconditioner Setup\n");
       quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
       inv_param.preconditioner = quda_mg_preconditioner;
       set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
-      if(g_proc_id == 0 && g_debug_level > 0){
-        printf("# QUDA: MG Preconditioner Setup took %.3f seconds\n", gettime()-atime);
-        fflush(stdout);
-      }
+      tm_debug_printf(0,1,"# QUDA: MG Preconditioner Setup took %.3f seconds\n", gettime()-atime);
     } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_UPDATE )  {
-      if(g_proc_id==0 && g_debug_level > 0){ 
-        printf("# QUDA: Updating MG Preconditioner Setup for gauge %d\n", quda_gauge_state.gauge_id); fflush(stdout); 
+      tm_debug_printf(0,0,"# QUDA: Updating MG Preconditioner Setup for gauge %d\n", quda_gauge_state.gauge_id);
+#ifdef TM_QUDA_EXPERIMENTAL
+      if( quda_input.mg_eig_preserve_deflation == QUDA_BOOLEAN_YES ){
+        tm_debug_printf(0,0,"# QUDA: Deflation subspace for gauge %d will be re-used!\n", quda_gauge_state.gauge_id);
       }
+#endif
       double atime = gettime();
       updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
       set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
-      if(g_proc_id == 0 && g_debug_level > 0){
-        printf("# QUDA: MG Preconditioner Setup Update took %.3f seconds\n", gettime()-atime);
-        fflush(stdout);
-      }
+      tm_debug_printf(0,1,"# QUDA: MG Preconditioner Setup Update took %.3f seconds\n", gettime()-atime);
      } else {
-      if(g_proc_id==0 && g_debug_level > 0){ 
-        printf("# QUDA: Reusing MG Preconditioner Setup for gauge %d\n", quda_gauge_state.gauge_id); fflush(stdout); 
-      }
+      tm_debug_printf(0,0,"# QUDA: Reusing MG Preconditioner Setup for gauge %d\n", quda_gauge_state.gauge_id);
     }
   }
   
@@ -1199,6 +1195,10 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   mg_param->setup_type = QUDA_NULL_VECTOR_SETUP;
   mg_param->pre_orthonormalize = QUDA_BOOLEAN_NO;
   mg_param->post_orthonormalize = QUDA_BOOLEAN_YES;
+
+#ifdef TM_QUDA_EXPERIMENTAL
+  mg_param->preserve_deflation = quda_input.mg_eig_preserve_deflation;
+#endif
 
   mg_param->n_level = quda_input.mg_n_level;
   for (int level=0; level < mg_param->n_level; level++) {
@@ -1318,6 +1318,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     // Kate says this should be EO always for performance
     mg_param->smoother_solve_type[level] = QUDA_DIRECT_PC_SOLVE;
     mg_param->smoother_schwarz_type[level] = QUDA_INVALID_SCHWARZ;
+    mg_param->smoother_halo_precision[level] = QUDA_HALF_PRECISION;
    
     // when the Schwarz-alternating smoother is used, this can be set to NO, otherwise it must be YES 
     mg_param->global_reduction[level] = QUDA_BOOLEAN_YES;
@@ -1346,7 +1347,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     // set the MG EigSolver parameters, almost equivalent to
     // setEigParam from QUDA's multigrid_invert_test, except
     // for cuda_prec_ritz (on 20190822)
-		if( quda_input.mg_use_eig_solver[level] == QUDA_BOOLEAN_YES ){
+    if( quda_input.mg_use_eig_solver[level] == QUDA_BOOLEAN_YES ){
       mg_param->use_eig_solver[level] = QUDA_BOOLEAN_YES;
       mg_eig_param[level].eig_type = quda_input.mg_eig_type[level];
       mg_eig_param[level].spectrum = quda_input.mg_eig_spectrum[level];
@@ -1411,6 +1412,9 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   strcpy(mg_param->vec_outfile, "");
 
   mg_inv_param->verbosity = QUDA_SUMMARIZE;
+  if( g_debug_level >= 3 ){
+    mg_inv_param->verbosity = QUDA_VERBOSE;
+  }
   mg_inv_param->verbosity_precondition = QUDA_SUMMARIZE;;
 }
 
