@@ -70,6 +70,8 @@ EQL {SPC}*={SPC}*
 
 #include <ctype.h>
 
+#define ERR_MSG_LEN 500
+
 // some general parsing helpers
 
 static inline void rmQuotes(char *str){
@@ -97,7 +99,7 @@ static inline void strlist_tokenize(char const * const input,
                                     char * const paramname,
                                     const int paramname_length)
 {
-  char error_message[200];
+  char error_message[ERR_MSG_LEN];
   char * token = (char*)NULL;
   
   const int input_length = strlen(input) + 1;
@@ -116,7 +118,7 @@ static inline void strlist_tokenize(char const * const input,
   // but first check if tokenization was successful
   token = strtok((*input_copy), "= \t");
   if( (void*)token == NULL ){
-    snprintf(error_message, 200, "Unable to parse '%s' in strlist_tokenize!\n", paramname);
+    snprintf(error_message, ERR_MSG_LEN, "Unable to parse '%s' in strlist_tokenize!\n", paramname);
     yy_fatal_error(error_message);
   } else {
     // return what we parsed
@@ -290,7 +292,7 @@ static inline double fltlist_next_token(int * const list_end){
   // specific parsing helpers
   static inline void parse_quda_mg_blocksize(char const * const input, const int dim){
     char paramname[100];
-    char error_message[200];
+    char error_message[ERR_MSG_LEN];
     int list_end = 0;
     int level = 0;
     int blocksize = 0;
@@ -300,7 +302,7 @@ static inline double fltlist_next_token(int * const list_end){
     blocksize = (int)fltlist_next_token(&list_end);
     while( list_end != 1 ){
       if( level >= QUDA_MAX_MG_LEVEL ){
-        snprintf(error_message, 200, "Exceeded maximum number of levels (%d-1) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+        snprintf(error_message, ERR_MSG_LEN, "Exceeded maximum number of levels (%d-1) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
         yy_fatal_error(error_message);
       }
       
@@ -318,7 +320,7 @@ static inline double fltlist_next_token(int * const list_end){
   
   static inline void parse_quda_mg_int_par_array(char const * const input, int * par_array){
     char paramname[100];
-    char error_message[200];
+    char error_message[ERR_MSG_LEN];
     int list_end = 0;
     int level = 0;
     char * input_copy = (char*)NULL;
@@ -326,7 +328,7 @@ static inline double fltlist_next_token(int * const list_end){
     int parval = (int)fltlist_next_token(&list_end);
     while( list_end != 1 ){
       if( level >= QUDA_MAX_MG_LEVEL ){
-        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+        snprintf(error_message, ERR_MSG_LEN, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
         yy_fatal_error(error_message);
       }
       
@@ -344,7 +346,7 @@ static inline double fltlist_next_token(int * const list_end){
   
   static inline void parse_quda_mg_dbl_par_array(char const * const input, double * par_array){
     char paramname[100];
-    char error_message[200];
+    char error_message[ERR_MSG_LEN];
     int list_end = 0;
     int level = 0;
     
@@ -353,7 +355,7 @@ static inline double fltlist_next_token(int * const list_end){
     double parval = fltlist_next_token(&list_end);
     while( list_end != 1 ){
       if( level >= QUDA_MAX_MG_LEVEL ){
-        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+        snprintf(error_message, ERR_MSG_LEN, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
         yy_fatal_error(error_message);
       }
       
@@ -372,7 +374,7 @@ static inline double fltlist_next_token(int * const list_end){
   static inline void parse_quda_mg_bool_par_array(char const * const input, int * par_array){
     char paramname[100];
     char token[100];
-    char error_message[200];
+    char error_message[ERR_MSG_LEN];
     int list_end = 0;
     int level = 0;
     char * input_copy = (char*)NULL;
@@ -380,7 +382,7 @@ static inline double fltlist_next_token(int * const list_end){
     strlist_next_token(&list_end, token, 100);
     while( list_end != 1 ){
       if( level >= QUDA_MAX_MG_LEVEL ){
-        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+        snprintf(error_message, ERR_MSG_LEN, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
         yy_fatal_error(error_message);
       }
       for(int i = 0; token[i]; i++){
@@ -393,7 +395,7 @@ static inline double fltlist_next_token(int * const list_end){
         par_array[level] = QUDA_BOOLEAN_NO;
       }
       else {
-        snprintf(error_message, 200, "ERROR: Only 'yes' and 'no' are possible for %s!\n", paramname);
+        snprintf(error_message, ERR_MSG_LEN, "ERROR: Only 'yes' and 'no' are possible for %s!\n", paramname);
         yy_fatal_error(error_message);
       }
       if(myverbose) printf("  %s on level %d set to '%s' line %d\n", paramname, level, token, line_of_file);
@@ -406,7 +408,7 @@ static inline double fltlist_next_token(int * const list_end){
   static inline void parse_quda_mg_verbosity_par_array(char const * const input, QudaVerbosity * par_array){
     char paramname[100];
     char token[100];
-    char error_message[200];
+    char error_message[ERR_MSG_LEN];
     int list_end = 0;
     int level = 0;
     char * input_copy = (char*)NULL;
@@ -414,7 +416,7 @@ static inline double fltlist_next_token(int * const list_end){
     strlist_next_token(&list_end, token, 100);
     while( list_end != 1 ){
       if( level >= QUDA_MAX_MG_LEVEL ){
-        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+        snprintf(error_message, ERR_MSG_LEN, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
         yy_fatal_error(error_message);
       }
       for(int i = 0; token[i]; i++){
@@ -433,7 +435,7 @@ static inline double fltlist_next_token(int * const list_end){
         par_array[level] = QUDA_DEBUG_VERBOSE;
       }
       else {
-        snprintf(error_message, 200, 
+        snprintf(error_message, ERR_MSG_LEN, 
                  "ERROR: Unknown verbosity level '%s' for '%s'!"
                    " Only 'silent', 'summarize', 'verbose' and 'debug_verbose' supported!\n",
                  token, paramname);
@@ -449,7 +451,7 @@ static inline double fltlist_next_token(int * const list_end){
   static inline void parse_quda_mg_cabasis_par_array(char const * const input, QudaCABasis * par_array){
     char paramname[100];
     char token[100];
-    char error_message[200];
+    char error_message[ERR_MSG_LEN];
     int list_end = 0;
     int level = 0;
     char * input_copy = (char*)NULL;
@@ -457,7 +459,7 @@ static inline double fltlist_next_token(int * const list_end){
     strlist_next_token(&list_end, token, 100);
     while( list_end != 1 ){
       if( level >= QUDA_MAX_MG_LEVEL ){
-        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+        snprintf(error_message, ERR_MSG_LEN, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
         yy_fatal_error(error_message);
       }
       for(int i = 0; token[i]; i++){
@@ -470,7 +472,7 @@ static inline double fltlist_next_token(int * const list_end){
         par_array[level] = QUDA_CHEBYSHEV_BASIS;
       }
       else {
-        snprintf(error_message, 200, 
+        snprintf(error_message, ERR_MSG_LEN, 
                  "ERROR: Unknown CA basis '%s' for '%s'!"
                    " Only 'power' and 'chebyshev' supported!\n",
                  token, paramname);
@@ -1709,7 +1711,7 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*MGCoarseSolverType{EQL}{STRLIST} {
     char paramname[100];
     char token[100];
-    char error_message[200];
+    char error_message[ERR_MSG_LEN];
     int list_end = 0;
     int level = 0;
     char * input_copy = (char*)NULL;
@@ -1717,7 +1719,7 @@ static inline double fltlist_next_token(int * const list_end){
     strlist_next_token(&list_end, token, 100);
     while( list_end != 1 ){
       if( level >= QUDA_MAX_MG_LEVEL ){
-        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+        snprintf(error_message, ERR_MSG_LEN, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
         yy_fatal_error(error_message);
       }
       /* Make token to lower case */
@@ -1734,7 +1736,7 @@ static inline double fltlist_next_token(int * const list_end){
         quda_input.mg_coarse_solver_type[level] = QUDA_MR_INVERTER;
       }
       else {
-        snprintf(error_message, 200, "Unknown inverter '%s' passed in the parsing of %s!\n", token, paramname);
+        snprintf(error_message, ERR_MSG_LEN, "Unknown inverter '%s' passed in the parsing of %s!\n", token, paramname);
         yy_fatal_error(error_message);
       }
       if(myverbose) printf("  %s on level %d set to '%s' line %d\n", paramname, level, token, line_of_file);
@@ -1746,7 +1748,7 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*MGSmootherType{EQL}{STRLIST} {
     char paramname[100];
     char token[100];
-    char error_message[200];
+    char error_message[ERR_MSG_LEN];
     int list_end = 0;
     int level = 0;
     char * input_copy = (char*)NULL;
@@ -1754,7 +1756,7 @@ static inline double fltlist_next_token(int * const list_end){
     strlist_next_token(&list_end, token, 100);
     while( list_end != 1 ){
       if( level >= QUDA_MAX_MG_LEVEL ){
-        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing '%s'!\n", QUDA_MAX_MG_LEVEL, paramname);
+        snprintf(error_message, ERR_MSG_LEN, "Exceeded maximum number of levels (%d) parsing '%s'!\n", QUDA_MAX_MG_LEVEL, paramname);
         yy_fatal_error(error_message);
       }
       /* Make token to lower case */
@@ -1771,7 +1773,7 @@ static inline double fltlist_next_token(int * const list_end){
         quda_input.mg_smoother_type[level] = QUDA_MR_INVERTER;
       }
       else {
-        snprintf(error_message, 200, "Unknown inverter '%s' passed in the parsing of '%s'!\n", token, paramname);
+        snprintf(error_message, ERR_MSG_LEN, "Unknown inverter '%s' passed in the parsing of '%s'!\n", token, paramname);
         yy_fatal_error(error_message);
       }
       if(myverbose) printf("  %s on level %d set to '%s' line %d\n", paramname, level, token, line_of_file);
@@ -1860,7 +1862,7 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*MGEigSolverType{EQL}{STRLIST} {
     char paramname[100];
     char token[100];
-    char error_message[200];
+    char error_message[ERR_MSG_LEN];
     int list_end = 0;
     int level = 0;
     char * input_copy = (char*)NULL;
@@ -1868,7 +1870,7 @@ static inline double fltlist_next_token(int * const list_end){
     strlist_next_token(&list_end, token, 100);
     while( list_end != 1 ){
       if( level >= QUDA_MAX_MG_LEVEL ){
-        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing '%s'!\n", QUDA_MAX_MG_LEVEL, paramname);
+        snprintf(error_message, ERR_MSG_LEN, "Exceeded maximum number of levels (%d) parsing '%s'!\n", QUDA_MAX_MG_LEVEL, paramname);
         yy_fatal_error(error_message);
       }
       /* Make token to lower case */
@@ -1885,7 +1887,7 @@ static inline double fltlist_next_token(int * const list_end){
         quda_input.mg_eig_type[level] = QUDA_EIG_IR_ARNOLDI;
       }
       else {
-        snprintf(error_message, 200, "Unknown type '%s' passed in the parsing of '%s'!\n", token, paramname);
+        snprintf(error_message, ERR_MSG_LEN, "Unknown type '%s' passed in the parsing of '%s'!\n", token, paramname);
         yy_fatal_error(error_message);
       }
       if(myverbose) printf("  MGEigSolverType on level %d set to '%s' line %d\n", level, token, line_of_file);
@@ -1897,7 +1899,7 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*MGEigSolverSpectrum{EQL}{STRLIST} {
     char paramname[100];
     char token[100];
-    char error_message[200];
+    char error_message[ERR_MSG_LEN];
     int list_end = 0;
     int level = 0;
     char * input_copy = (char*)NULL;
@@ -1905,7 +1907,7 @@ static inline double fltlist_next_token(int * const list_end){
     strlist_next_token(&list_end, token, 100);
     while( list_end != 1 ){
       if( level >= QUDA_MAX_MG_LEVEL ){
-        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing '%s'!\n", QUDA_MAX_MG_LEVEL, paramname);
+        snprintf(error_message, ERR_MSG_LEN, "Exceeded maximum number of levels (%d) parsing '%s'!\n", QUDA_MAX_MG_LEVEL, paramname);
         yy_fatal_error(error_message);
       }
       /* Make token to lower case */
@@ -1931,7 +1933,7 @@ static inline double fltlist_next_token(int * const list_end){
         quda_input.mg_eig_spectrum[level] = QUDA_SPECTRUM_LI_EIG;
       }
       else {
-        snprintf(error_message, 200, "Unknown spectrum type '%s' passed in the parsing of '%s'!\n", token, paramname);
+        snprintf(error_message, ERR_MSG_LEN, "Unknown spectrum type '%s' passed in the parsing of '%s'!\n", token, paramname);
         yy_fatal_error(error_message);
       }
       if(myverbose) printf("  %s on level %d set to '%s' line %d\n", paramname, level, token, line_of_file);
@@ -1945,8 +1947,8 @@ static inline double fltlist_next_token(int * const list_end){
     quda_input.mg_eig_preserve_deflation = QUDA_BOOLEAN_YES;
     if(myverbose) printf("  MGEigPreserveDeflationSubspace set to YES in line %d\n", line_of_file);
 #else
-    char error_message[300];
-    snprintf(error_message, 300, "You attempted to set 'MGEigPreserveDeflationSubspace' even though tmLQCD was compiled with '--disable-quda-experimental'. In order to use experimental QUDA features, tmLQCD must be compiled with '--enable-quda-experimental'");
+    char error_message[ERR_MSG_LEN];
+    snprintf(error_message, ERR_MSG_LEN, "You attempted to set 'MGEigPreserveDeflationSubspace' even though tmLQCD was compiled with '--disable-quda-experimental'. In order to use experimental QUDA features, tmLQCD must be compiled with '--enable-quda-experimental'");
     yy_fatal_error(error_message);
 #endif
   }
@@ -1955,8 +1957,8 @@ static inline double fltlist_next_token(int * const list_end){
     quda_input.mg_eig_preserve_deflation = QUDA_BOOLEAN_YES;
     if(myverbose) printf("  MGEigPreserveDeflationSubspace set to YES in line %d\n", line_of_file);
 #else
-    char error_message[300];
-    snprintf(error_message, 300, "You attempted to set 'MGEigPreserveDeflationSubspace' even though tmLQCD was compiled with '--disable-quda-experimental'. In order to use experimental QUDA features, tmLQCD must be compiled with '--enable-quda-experimental'");
+    char error_message[ERR_MSG_LEN];
+    snprintf(error_message, ERR_MSG_LEN, "You attempted to set 'MGEigPreserveDeflationSubspace' even though tmLQCD was compiled with '--disable-quda-experimental'. In order to use experimental QUDA features, tmLQCD must be compiled with '--enable-quda-experimental'");
     yy_fatal_error(error_message);
 #endif
   }
