@@ -1880,9 +1880,6 @@ static inline double fltlist_next_token(int * const list_end){
       if( strcmp(token, "tr_lanczos") == 0 ){
         quda_input.mg_eig_type[level] = QUDA_EIG_TR_LANCZOS;
       }
-      else if( strcmp(token, "ir_lanczos") == 0 ){
-        quda_input.mg_eig_type[level] = QUDA_EIG_IR_LANCZOS;
-      }
       else if( strcmp(token, "ir_arnoldi") == 0){
         quda_input.mg_eig_type[level] = QUDA_EIG_IR_ARNOLDI;
       }

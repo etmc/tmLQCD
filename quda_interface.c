@@ -1352,7 +1352,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
       mg_eig_param[level].eig_type = quda_input.mg_eig_type[level];
       mg_eig_param[level].spectrum = quda_input.mg_eig_spectrum[level];
       if ((quda_input.mg_eig_type[level] == QUDA_EIG_TR_LANCZOS || 
-           quda_input.mg_eig_type[level] == QUDA_EIG_IR_LANCZOS)
+           quda_input.mg_eig_type[level] == QUDA_EIG_IR_ARNOLDI)
           && !(quda_input.mg_eig_spectrum[level] == QUDA_SPECTRUM_LR_EIG || 
                quda_input.mg_eig_spectrum[level] == QUDA_SPECTRUM_SR_EIG)) {
         tm_debug_printf(0, 0,

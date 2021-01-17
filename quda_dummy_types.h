@@ -60,7 +60,6 @@ typedef enum QudaEigSpectrumType_s {
 
 typedef enum QudaEigType_s {
   QUDA_EIG_TR_LANCZOS, // Thick restarted lanczos solver
-  QUDA_EIG_IR_LANCZOS, // Implicitly Restarted Lanczos solver (not implemented)
   QUDA_EIG_IR_ARNOLDI, // Implicitly Restarted Arnoldi solver (not implemented)
   QUDA_EIG_INVALID = QUDA_INVALID_ENUM
 } QudaEigType; 
