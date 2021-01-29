@@ -20,6 +20,7 @@
  *
  ***********************************************************************/
 
+#include <lime.h>
 #ifdef HAVE_CONFIG_H
 # include<tmlqcd_config.h>
 #endif
@@ -28,7 +29,6 @@
 #include <math.h>
 #include <time.h>
 
-#include <lime.h>
 #include "sighandler.h"
 #include "read_input.h"
 #include "monomial/monomial.h"

@@ -40,7 +40,7 @@ paramsInverterInfo *construct_paramsInverterInfo(double const epssq, const int i
   info->kappa = g_kappa;
   info->mu = g_mu / 2. / g_kappa;
 
-  strcpy(info->package_version, PACKAGE_VERSION);
+  strcpy(info->package_version, TMLQCD_PACKAGE_VERSION);
 
   if(noflavours == 2) {
     info->mubar = g_mubar / 2. / g_kappa;

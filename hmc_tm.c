@@ -578,8 +578,8 @@ int main(int argc,char *argv[]) {
 
 static void usage(){
   fprintf(stdout, "HMC for Wilson twisted mass QCD\n");
-  fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
-  fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
+  fprintf(stdout, "Version %s \n\n", TMLQCD_PACKAGE_VERSION);
+  fprintf(stdout, "Please send bug reports to %s\n", TMLQCD_PACKAGE_BUGREPORT);
   fprintf(stdout, "Usage:   hmc_tm [options]\n");
   fprintf(stdout, "Options: [-f input-filename]  default: hmc.input\n");
   fprintf(stdout, "         [-o output-filename] default: output\n");
@@ -606,7 +606,7 @@ static void process_args(int argc, char *argv[], char ** input_filename, char **
         break;
       case 'V':
         if(g_proc_id == 0) {
-          fprintf(stdout,"%s %s\n",PACKAGE_STRING,git_hash);
+          fprintf(stdout,"%s %s\n",TMLQCD_PACKAGE_STRING,git_hash);
         }
         exit(0);
         break;
