@@ -20,10 +20,10 @@
  ************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include <tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #ifdef TM_USE_OMP
-# include <omp.h>
+#include <omp.h>
 #endif
 
 #include <string.h>

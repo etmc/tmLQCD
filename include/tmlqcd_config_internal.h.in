@@ -1,7 +1,6 @@
-/* Hand-written tmlqcd_config.h.in. */
-
-#ifndef _CONFIG_H
-#define _CONFIG_H
+/* Hand-written "config.h.in". Note that it's no this file which should be
+ * include, but rather the "tmlqcd_config.h" which renames a few of the defines
+ * into static const variables. */
 
 /* We are on a CRAY */
 #undef CRAY
@@ -211,6 +210,4 @@
 
 /* Structure of Array length to use with QPhiX */
 #undef QPHIX_SOALEN
-
-#endif
 

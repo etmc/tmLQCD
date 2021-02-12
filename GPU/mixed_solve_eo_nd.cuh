@@ -63,7 +63,7 @@
 
 
 #ifdef HAVE_CONFIG_H
-  #include<tmlqcd_config.h>
+  #include "tmlqcd_config.h"
 #endif
 
 extern "C" {

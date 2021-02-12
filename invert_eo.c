@@ -32,22 +32,22 @@
  ****************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
-#include<stdlib.h>
-#include"global.h"
-#include"linalg_eo.h"
-#include"operator/tm_operators.h"
-#include"operator/Hopping_Matrix.h"
-#include"operator/D_psi.h"
-#include"operator/tm_operators_32.h"
-#include"gamma.h"
-#include"solver/solver.h"
-#include"read_input.h"
-#include"xchange/xchange.h"
-#include"solver/poly_precon.h"
-#include"solver/dfl_projector.h"
-#include"invert_eo.h"
+#include <stdlib.h>
+#include "global.h"
+#include "linalg_eo.h"
+#include "operator/tm_operators.h"
+#include "operator/Hopping_Matrix.h"
+#include "operator/D_psi.h"
+#include "operator/tm_operators_32.h"
+#include "gamma.h"
+#include "solver/solver.h"
+#include "read_input.h"
+#include "xchange/xchange.h"
+#include "solver/poly_precon.h"
+#include "solver/dfl_projector.h"
+#include "invert_eo.h"
 #include "solver/dirac_operator_eigenvectors.h"
 /* FIXME temporary includes and declarations until IO and interface for invert and CGMMS are generelized */
 #include "init/init_spinor_field.h"
@@ -67,9 +67,9 @@ static double cgmms_reached_prec = 0.0;
 static void cgmms_write_props(spinor ** const P, double const * const extra_masses, const int no_extra_masses, const int id, const int iteration);
 
 #ifdef HAVE_GPU
-#include"GPU/cudadefs.h"
-#include"temporalgauge.h"
-#include"measure_gauge_action.h"
+#include "GPU/cudadefs.h"
+#include "temporalgauge.h"
+#include "measure_gauge_action.h"
 
 extern int mixed_solve (spinor * const P, spinor * const Q, const int max_iter, 
                         double eps, const int rel_prec,const int N);

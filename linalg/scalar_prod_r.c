@@ -24,14 +24,14 @@
  *******************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
-# include <omp.h>
-# include <global.h>
+#include <omp.h>
+#include <global.h>
 #endif
 #include "su3.h"
 #include "scalar_prod_r.h"

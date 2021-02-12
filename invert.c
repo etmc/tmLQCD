@@ -24,9 +24,9 @@
  *
  *******************************************************************************/
 
-#include"lime.h"
+#include "lime.h"
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -38,7 +38,7 @@
 #include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
-# include <omp.h>
+#include <omp.h>
 #endif
 #include "global.h"
 #include "git_hash.h"
@@ -471,8 +471,8 @@ int main(int argc, char *argv[])
 static void usage()
 {
   fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
-  fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
-  fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
+  fprintf(stdout, "Version %s \n\n", TMLQCD_PACKAGE_VERSION);
+  fprintf(stdout, "Please send bug reports to %s\n", TMLQCD_PACKAGE_BUGREPORT);
   fprintf(stdout, "Usage:   invert [options]\n");
   fprintf(stdout, "Options: [-f input-filename]\n");
   fprintf(stdout, "         [-o output-filename]\n");
@@ -499,7 +499,7 @@ static void process_args(int argc, char *argv[], char ** input_filename, char **
         break;
       case 'V':
         if(g_proc_id == 0) {
-          fprintf(stdout,"%s %s\n",PACKAGE_STRING,git_hash);
+          fprintf(stdout,"%s %s\n",TMLQCD_PACKAGE_STRING,git_hash);
         }
         exit(0);
         break;

@@ -47,7 +47,7 @@
  ****************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -63,7 +63,7 @@
 #include "init/init_dirac_halfspinor.h"
 #include "update_backward_gauge.h"
 #ifdef BGQ
-#  include"DirectPut.h"
+#  include "DirectPut.h"
 #endif
 #include "operator/Hopping_Matrix.h"
 
@@ -125,7 +125,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
 #      include "xlc_prefetch.h"
 
 #    elif defined XLC
-#      include"xlc_prefetch.h"
+#      include "xlc_prefetch.h"
 
 #    endif
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {

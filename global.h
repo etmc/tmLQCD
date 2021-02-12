@@ -31,7 +31,7 @@
  *
  ***************************************************************/
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -60,7 +60,7 @@
 #if ((defined SSE)||(defined SSE2)||(defined SSE3))
 #  include "sse.h"
 #elif defined BGL
-# include "bgl.h"
+#include "bgl.h"
 #endif
 
 EXTERN int DUM_DERI, DUM_MATRIX;
@@ -284,7 +284,6 @@ EXTERN int ** g_idn3d;
 
 void fatal_error(char const *error, char const *function);
 
-#endif
 
 /*
  * Comments: generic macro for swapping values or pointers.
@@ -297,3 +296,5 @@ void fatal_error(char const *error, char const *function);
   memcpy(&y,&x,       sizeof(x)); \
   memcpy(&x,swap_temp,sizeof(x)); \
 } while(0)
+
+#endif

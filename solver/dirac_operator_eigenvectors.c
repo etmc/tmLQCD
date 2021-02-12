@@ -19,7 +19,7 @@
  ************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-#include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -29,7 +29,7 @@
   #include <fftw3.h>
 #endif
 #ifdef _USE_SHMEM
-# include <mpp/shmem.h>
+#include <mpp/shmem.h>
 #endif
 #include <string.h>
 #include <stdlib.h>

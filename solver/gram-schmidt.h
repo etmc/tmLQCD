@@ -18,6 +18,7 @@
  ***********************************************************************/
 #ifndef _GRAM_SCHMIDT_H
 #define _GRAM_SCHMIDT_H
+
 #include <complex.h>
 
 void IteratedClassicalGS(_Complex double v[], double *vnrm, int n, int m, _Complex double A[], 

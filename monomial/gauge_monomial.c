@@ -19,13 +19,13 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #ifdef TM_USE_OMP 
-# include <omp.h>
+#include <omp.h>
 #endif
 #include "global.h"
 #include "su3.h"

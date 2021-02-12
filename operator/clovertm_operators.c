@@ -20,7 +20,7 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #ifdef SSE
 # undef SSE
@@ -39,7 +39,7 @@
 #include <errno.h>
 #include <time.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #include "global.h"
 #include "su3.h"
@@ -74,7 +74,7 @@ su3 *** sw_inv;
 #define _PTSWITCH(s) s
 #define _PSWITCH(s) s
 
-#include"assign_mul_one_sw_pm_imu_site_lexic_body.c"
+#include "assign_mul_one_sw_pm_imu_site_lexic_body.c"
 
 #undef _F_TYPE
 #undef _PSWITCH
@@ -84,7 +84,7 @@ su3 *** sw_inv;
 #define _PTSWITCH(s) s ## 32
 #define _PSWITCH(s) s ## _32
 
-#include"assign_mul_one_sw_pm_imu_site_lexic_body.c"
+#include "assign_mul_one_sw_pm_imu_site_lexic_body.c"
 
 #undef _F_TYPE
 #undef _PSWITCH

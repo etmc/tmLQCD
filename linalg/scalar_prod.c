@@ -18,15 +18,15 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
-# include <omp.h>
-# include <global.h>
+#include <omp.h>
+#include <global.h>
 #endif
 #include "su3.h"
 #include "scalar_prod.h"
@@ -36,7 +36,7 @@
 #define _PSWITCH(s) s
 #define _PTSWITCH(s) s
 
-#include"scalar_prod_body.c"
+#include "scalar_prod_body.c"
 
 #undef _C_TYPE
 #undef _PSWITCH
@@ -46,7 +46,7 @@
 #define _PSWITCH(s) s ## _32
 #define _PTSWITCH(s) s ## 32
 
-#include"scalar_prod_body.c"
+#include "scalar_prod_body.c"
 
 #undef _C_TYPE
 #undef _PSWITCH

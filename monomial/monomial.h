@@ -28,6 +28,8 @@
 #include "solver/solver_params.h"
 #include "misc_types.h"
 
+#include <complex.h>
+
 #define DET 0
 #define DETRATIO 1
 #define GAUGE 2

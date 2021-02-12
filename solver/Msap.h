@@ -20,6 +20,8 @@
 #ifndef _MSAP_H
 #define _MSAP_H
 
+#include "su3.h"
+
 void Msap(spinor * const P, spinor * const Q, const int Ncy, const int Niter);
 void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter);
 void CGeoSmoother(spinor * const P, spinor * const Q, const int Ncy, const int dummy);

@@ -42,17 +42,17 @@
  ********************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
-#include<stdlib.h>
-#include<stdio.h>
-#include<math.h>
-#include"global.h"
-#include"su3.h"
-#include"linalg_eo.h"
-#include"start.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+#include "global.h"
+#include "su3.h"
+#include "linalg_eo.h"
+#include "start.h"
 #include "solver_field.h"
-#include"gmres_precon.h"
+#include "gmres_precon.h"
 
 #ifdef _SOLVER_OUTPUT
 #define _SO(x) x

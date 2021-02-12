@@ -23,10 +23,10 @@
  *******************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #ifdef TM_USE_OMP
-# include <omp.h>
+#include <omp.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -45,7 +45,7 @@
  *
  ***************************************/
 
-#  include"bgl.h"
+#  include "bgl.h"
 
 void diff(spinor * const Q,spinor * const R,spinor * const S, const int N)
 {

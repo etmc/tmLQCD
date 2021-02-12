@@ -19,7 +19,6 @@
 #ifndef _GENERATE_DFL_SUBSPACE
 #define _GENERATE_DFL_SUBSPACE
 
-#include "su3.h"
 #include <complex.h>
 
 int init_dfl_subspace(const int);

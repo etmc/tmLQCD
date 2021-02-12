@@ -32,21 +32,21 @@
  ****************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
-#include<stdlib.h>
-#include"global.h"
-#include"linalg_eo.h"
-#include"operator/tm_operators.h"
-#include"operator/Hopping_Matrix.h"
-#include"operator/D_psi.h"
-#include"gamma.h"
-#include"solver/solver.h"
-#include"read_input.h"
-#include"xchange/xchange.h"
-#include"operator/tm_operators_nd.h"
-#include"operator/tm_operators_nd_32.h"
-#include"invert_doublet_eo.h"
+#include <stdlib.h>
+#include "global.h"
+#include "linalg_eo.h"
+#include "operator/tm_operators.h"
+#include "operator/Hopping_Matrix.h"
+#include "operator/D_psi.h"
+#include "gamma.h"
+#include "solver/solver.h"
+#include "read_input.h"
+#include "xchange/xchange.h"
+#include "operator/tm_operators_nd.h"
+#include "operator/tm_operators_nd_32.h"
+#include "invert_doublet_eo.h"
 #ifdef TM_USE_QUDA
 #  include "quda_interface.h"
 #endif
@@ -58,9 +58,9 @@
 #endif
 
 #ifdef HAVE_GPU
-#  include"GPU/cudadefs.h"
-#  include"temporalgauge.h"
-#  include"measure_gauge_action.h"
+#  include "GPU/cudadefs.h"
+#  include "temporalgauge.h"
+#  include "measure_gauge_action.h"
 int mixedsolve_eo_nd (spinor *, spinor *, spinor *, spinor *, int, double, int);
 int mixedsolve_eo_nd_mpi(spinor *, spinor *, spinor *, spinor *, int, double, int);
 #  ifdef TEMPORALGAUGE

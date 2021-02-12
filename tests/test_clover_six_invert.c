@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #include <complex.h>
 #include <cu/cu.h>
 

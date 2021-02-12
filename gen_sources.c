@@ -28,7 +28,7 @@
 
 #include "lime.h"
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -37,10 +37,10 @@
 #include <sys/time.h>
 #include <string.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
-# include <omp.h>
+#include <omp.h>
 #endif
 #include "global.h"
 #include "getopt.h"
@@ -56,8 +56,8 @@
 
 void usage() {
   fprintf(stdout, "Code to generate stochastic sources\n");
-  fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
-  fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
+  fprintf(stdout, "Version %s \n\n", TMLQCD_PACKAGE_VERSION);
+  fprintf(stdout, "Please send bug reports to %s\n", TMLQCD_PACKAGE_BUGREPORT);
   fprintf(stdout, "Usage:   gen_sources [options]\n");
   fprintf(stdout, "Options: -L spatial lattice size\n");
   fprintf(stdout, "         -T temporal lattice size\n");

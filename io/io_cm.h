@@ -2,7 +2,7 @@
 #define _IO_CM_H
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 
 #include <stdlib.h>
@@ -12,7 +12,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #include <unistd.h>
 #include <math.h>
@@ -20,11 +20,11 @@
 
 #include <global.h>
 
-#include <io/gauge.h>
-#include <io/spinor.h>
-#include <io/utils.h>
+#include "io/gauge.h"
+#include "io/spinor.h"
+#include "io/utils.h"
 
-#include <su3.h>
+#include "su3.h"
 
 
 int read_spinorfield_cm_single(spinor * const s, spinor * const r, char * filename, const int ts, const int vol);

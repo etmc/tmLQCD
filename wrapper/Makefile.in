@@ -58,10 +58,10 @@ include ${top_srcdir}/Makefile.global
 
 # rule to compile objects
 
-${libwrapper_OBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/include/tmlqcd_config.h
+${libwrapper_OBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/include/tmlqcd_config_internal.h
 	$(COMPILE) ${OPTARGS} -c $<
 
-${libwrapper_SOBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/include/tmlqcd_config.h
+${libwrapper_SOBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/include/tmlqcd_config_internal.h
 	$(COMPILE) ${SOPTARGS} -c $<
 
 # rule to make libwrapper

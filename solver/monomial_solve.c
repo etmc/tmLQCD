@@ -40,7 +40,7 @@
 
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #include "global.h"
 #include "start.h"
@@ -80,7 +80,7 @@
 #include <io/spinor.h>
 
 #ifdef HAVE_GPU
-#include"../GPU/cudadefs.h"
+#include "../GPU/cudadefs.h"
 extern  int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int max_iter, 
                             double eps, const int rel_prec, const int N, matrix_mult f);
 extern int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn, 

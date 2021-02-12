@@ -1,14 +1,15 @@
-#include <lime.h>
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
+
+#include "io/params.h"
+#include "io/utils.h"
+
+#include "global.h"
+
+#include <lime.h>
 
 #include <string.h>
 #include <time.h>
 #include <sys/time.h>
-
-#include <global.h>
-
-#include <io/params.h>
-#include <io/utils.h>
 

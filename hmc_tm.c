@@ -24,10 +24,12 @@
  *         urbach@physik.fu-berlin.de
  *
  *******************************************************************************/
-#include "lime.h"
 #if HAVE_CONFIG_H
-#include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
+
+
+#include <lime.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -37,15 +39,15 @@
 #include <signal.h>
 #include <unistd.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
-# include <omp.h>
+#include <omp.h>
 #endif
 #include "global.h"
 #include "git_hash.h"
-#include <io/params.h>
-#include <io/gauge.h>
+#include "io/params.h"
+#include "io/gauge.h"
 #include "getopt.h"
 #include "ranlxd.h"
 #include "geometry_eo.h"
@@ -53,7 +55,7 @@
 #include "measure_gauge_action.h"
 #include "measure_rectangles.h"
 #ifdef TM_USE_MPI
-# include "xchange/xchange.h"
+#include "xchange/xchange.h"
 #endif
 #include "read_input.h"
 #include "mpi_init.h"
@@ -578,8 +580,8 @@ int main(int argc,char *argv[]) {
 
 static void usage(){
   fprintf(stdout, "HMC for Wilson twisted mass QCD\n");
-  fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
-  fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
+  fprintf(stdout, "Version %s \n\n", TMLQCD_PACKAGE_VERSION);
+  fprintf(stdout, "Please send bug reports to %s\n", TMLQCD_PACKAGE_BUGREPORT);
   fprintf(stdout, "Usage:   hmc_tm [options]\n");
   fprintf(stdout, "Options: [-f input-filename]  default: hmc.input\n");
   fprintf(stdout, "         [-o output-filename] default: output\n");
@@ -606,7 +608,7 @@ static void process_args(int argc, char *argv[], char ** input_filename, char **
         break;
       case 'V':
         if(g_proc_id == 0) {
-          fprintf(stdout,"%s %s\n",PACKAGE_STRING,git_hash);
+          fprintf(stdout,"%s %s\n",TMLQCD_PACKAGE_STRING,git_hash);
         }
         exit(0);
         break;

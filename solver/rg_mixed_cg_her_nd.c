@@ -50,7 +50,7 @@
  **************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -67,6 +67,7 @@
 
 #include "solver_field.h"
 #include "solver/rg_mixed_cg_her.h"
+#include "solver/rg_mixed_cg_typedef.h"
 #include "gettime.h"
 
 static void output_flops(const double seconds, const unsigned int N, const unsigned int iter_out, 

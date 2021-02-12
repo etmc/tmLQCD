@@ -32,22 +32,22 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include "tmlqcd_config.h"
 #endif
-#include<stdlib.h>
-#include"global.h"
-#include"su3.h"
-#include"linalg_eo.h"
-#include"operator/tm_operators.h"
-#include"operator/Hopping_Matrix.h"
-#include"operator/clovertm_operators.h"
-#include"operator/clovertm_operators_32.h"
-#include"operator/D_psi.h"
-#include"gamma.h"
-#include"read_input.h"
-#include"solver/solver.h"
-#include"solver/solver_params.h"
-#include"invert_clover_eo.h"
+#include <stdlib.h>
+#include "global.h"
+#include "su3.h"
+#include "linalg_eo.h"
+#include "operator/tm_operators.h"
+#include "operator/Hopping_Matrix.h"
+#include "operator/clovertm_operators.h"
+#include "operator/clovertm_operators_32.h"
+#include "operator/D_psi.h"
+#include "gamma.h"
+#include "read_input.h"
+#include "solver/solver.h"
+#include "solver/solver_params.h"
+#include "invert_clover_eo.h"
 #include "solver/dirac_operator_eigenvectors.h"
 #include "solver/dfl_projector.h"
 #ifdef TM_USE_QUDA
