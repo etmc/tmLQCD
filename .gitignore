@@ -30,3 +30,7 @@ Makefile.in
 /install-sh
 /missing
 /ylwrap
+/GPATH
+/GRTAGS
+/GTAGS
+/compile_commands.json
