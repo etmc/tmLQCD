@@ -18,24 +18,24 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
-#include<stdlib.h>
-#include<stdio.h>
-#include<math.h>
-#include"global.h"
-#include"su3.h"
-#include"linalg_eo.h"
-#include"solver/gmres_precon.h"
-#include"start.h"
-#include"operator/tm_operators.h"
-#include"solver/poly_precon.h"
-#include"solver/cg_her.h"
-#include"operator/D_psi.h"
-#include"Msap.h"
-#include"dfl_projector.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+#include "global.h"
+#include "su3.h"
+#include "linalg_eo.h"
+#include "solver/gmres_precon.h"
+#include "start.h"
+#include "operator/tm_operators.h"
+#include "solver/poly_precon.h"
+#include "solver/cg_her.h"
+#include "operator/D_psi.h"
+#include "Msap.h"
+#include "dfl_projector.h"
 #include "solver_field.h"
-#include"gcr.h"
+#include "gcr.h"
 
 static void init_gcr(const int _M, const int _V);
 

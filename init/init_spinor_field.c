@@ -18,13 +18,13 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
 #ifdef _USE_SHMEM
-# include <mpp/shmem.h>
+#include <mpp/shmem.h>
 #endif
 #include "global.h"
 #include "su3.h"

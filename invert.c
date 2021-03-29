@@ -24,9 +24,9 @@
  *
  *******************************************************************************/
 
-#include"lime.h"
+#include "lime.h"
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -38,7 +38,7 @@
 #include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
-# include <omp.h>
+#include <omp.h>
 #endif
 #include "global.h"
 #include "git_hash.h"
@@ -94,8 +94,9 @@
 #endif
 #include "meas/measurements.h"
 #include "source_generation.h"
+#include "expo.h"
 
-
+#define CONF_FILENAME_LENGTH 500
 
 extern int nstore;
 int check_geometry();
@@ -111,7 +112,7 @@ int main(int argc, char *argv[])
   int j, i, ix = 0, isample = 0, op_id = 0;
   char datafilename[206];
   char parameterfilename[206];
-  char conf_filename[50];
+  char conf_filename[CONF_FILENAME_LENGTH];
   char * input_filename = NULL;
   char * filename = NULL;
   double plaquette_energy;
@@ -179,7 +180,6 @@ int main(int argc, char *argv[])
   j = init_gauge_field(VOLUMEPLUSRAND, 0);
   j += init_gauge_field_32(VOLUMEPLUSRAND, 0);  
 #endif
- 
   if (j != 0) {
     fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
     exit(-1);
@@ -276,7 +276,16 @@ int main(int argc, char *argv[])
 #endif
 
   for (j = 0; j < Nmeas; j++) {
-    sprintf(conf_filename, "%s.%.4d", gauge_input_filename, nstore);
+    int n_written = snprintf(conf_filename, CONF_FILENAME_LENGTH, "%s.%.4d", gauge_input_filename, nstore);
+    if( n_written < 0 || n_written >= CONF_FILENAME_LENGTH ){
+      char error_message[500];
+      snprintf(error_message,
+               500,
+               "Encoding error or gauge configuration filename "
+               "longer than %d characters! See invert.c CONF_FILENAME_LENGTH\n", 
+               CONF_FILENAME_LENGTH);
+      fatal_error(error_message, "invert.c");
+    }
     if (g_cart_id == 0) {
       printf("#\n# Trying to read gauge field from file %s in %s precision.\n",
             conf_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
@@ -286,7 +295,6 @@ int main(int argc, char *argv[])
       fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", i, conf_filename);
       exit(-2);
     }
-
 
     if (g_cart_id == 0) {
       printf("# Finished reading gauge field.\n");
@@ -412,7 +420,7 @@ int main(int argc, char *argv[])
           if( (operator_list[op_id].solver == INCREIGCG) && (operator_list[op_id].solver_params.eigcg_rand_guess_opt) ){ //randomize the initial guess
               gaussian_volume_source( operator_list[op_id].prop0, operator_list[op_id].prop1,isample,ix,0); //need to check this
           } 
-          operator_list[op_id].inverter(op_id, index_start, 1);
+          operator_list[op_id].inverter(op_id, index_start, operator_list[op_id].write_prop_flag);
         }
       }
 
@@ -463,8 +471,8 @@ int main(int argc, char *argv[])
 static void usage()
 {
   fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
-  fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
-  fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
+  fprintf(stdout, "Version %s \n\n", TMLQCD_PACKAGE_VERSION);
+  fprintf(stdout, "Please send bug reports to %s\n", TMLQCD_PACKAGE_BUGREPORT);
   fprintf(stdout, "Usage:   invert [options]\n");
   fprintf(stdout, "Options: [-f input-filename]\n");
   fprintf(stdout, "         [-o output-filename]\n");
@@ -491,7 +499,7 @@ static void process_args(int argc, char *argv[], char ** input_filename, char **
         break;
       case 'V':
         if(g_proc_id == 0) {
-          fprintf(stdout,"%s %s\n",PACKAGE_STRING,git_hash);
+          fprintf(stdout,"%s %s\n",TMLQCD_PACKAGE_STRING,git_hash);
         }
         exit(0);
         break;

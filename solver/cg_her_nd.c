@@ -39,7 +39,7 @@
  **************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -48,6 +48,7 @@
 #include "su3.h"
 #include "linalg_eo.h"
 #include "start.h"
+#include "gettime.h"
 #include "solver/matrix_mult_typedef_nd.h"
 #include "sub_low_ev.h"
 #include "solver_field.h"
@@ -60,6 +61,7 @@ int cg_her_nd(spinor * const P_up,spinor * P_dn, spinor * const Q_up, spinor * c
   double normsp, normsq, pro, err, alpha_cg, beta_cg, squarenorm;
   int iteration;
   double err1, err2;
+  double atime, etime, flops;
   spinor ** up_field = NULL;
   spinor ** dn_field = NULL;  
   const int nr_sf = 5;
@@ -67,6 +69,7 @@ int cg_her_nd(spinor * const P_up,spinor * P_dn, spinor * const Q_up, spinor * c
   init_solver_field(&up_field, VOLUMEPLUSRAND, nr_sf);
   init_solver_field(&dn_field, VOLUMEPLUSRAND, nr_sf);
 
+  atime = gettime();
   squarenorm = square_norm(Q_up, N, 1);
   squarenorm+= square_norm(Q_dn, N, 1);
   /*        !!!!   INITIALIZATION    !!!! */
@@ -130,12 +133,7 @@ int cg_her_nd(spinor * const P_up,spinor * P_dn, spinor * const Q_up, spinor * c
     }
 
     if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))) {
-      assign(P_up, up_field[0], N);
-      assign(P_dn, dn_field[0], N);
-      g_sloppy_precision = 0;
-      finalize_solver(up_field, nr_sf);
-      finalize_solver(dn_field, nr_sf);
-      return(iteration+1);
+      break;
     }
 #ifdef _USE_HALFSPINOR
     if(((err*err <= eps_sq) && (rel_prec == 0)) || ((err*err <= eps_sq*squarenorm) && (rel_prec == 1))) {
@@ -156,10 +154,16 @@ int cg_her_nd(spinor * const P_up,spinor * P_dn, spinor * const Q_up, spinor * c
   assign(P_up, up_field[0], N);
   assign(P_dn, dn_field[0], N);
   g_sloppy_precision = 0;  
+
+  etime = gettime();
+  if(g_debug_level > 0 && g_proc_id == 0) {
+    printf("# CG: iter: %d eps_sq: %1.4e t/s: %1.4e\n", iteration, eps_sq, etime-atime); 
+  }
   
   finalize_solver(up_field, nr_sf);
   finalize_solver(dn_field, nr_sf);
-  return(-1);
+  if(iteration > max_iter) return(-1);
+  return(iteration);
 }
 
 

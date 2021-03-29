@@ -48,7 +48,7 @@
  ****************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
 
 // work-around for missing single precision implementation of inline SSE
@@ -81,7 +81,7 @@
 #include "init/init_dirac_halfspinor.h"
 #include "update_backward_gauge.h"
 #ifdef SPI
-#  include"DirectPut.h"
+#  include "DirectPut.h"
 #endif
 #include "operator/Hopping_Matrix_32.h"
 

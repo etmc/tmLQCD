@@ -18,13 +18,13 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
 #if (defined SPI)
-# include "DirectPut.h"
+#include "DirectPut.h"
 #endif
 #include "global.h"
 #include "su3.h"

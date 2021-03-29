@@ -22,7 +22,7 @@
 
 #include <lime.h>
 #ifdef HAVE_LIBLEMON
-# include <lemon.h>
+#include <lemon.h>
 #endif /* HAVE_LIBLEMON */
 
 #ifdef HAVE_LIBLEMON

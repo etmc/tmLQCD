@@ -34,7 +34,7 @@
  ************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
 #ifdef SSE
 # undef SSE
@@ -52,48 +52,132 @@
 #include "su3.h"
 #include "su3adj.h"
 #include "expo.h"
+#include "float.h"
+#include "global.h"
+
+static double imag_det(const su3adj* p) {
+  double d,tos3,o3,os3;
+  tos3=2.0/sqrt(3.0);
+  o3=1.0/3.0;
+  os3=1.0/sqrt(3.0);
+  
+  d=tos3*(*p).d8*(o3*(*p).d8*(*p).d8-(*p).d3*(*p).d3)+2*((*p).d2*(*p).d4*(*p).d7-(*p).d1*(*p).d4*(*p).d6-(*p).d2*(*p).d5*(*p).d6-(*p).d1*(*p).d5*(*p).d7);
+  d+=(os3*(*p).d8-(*p).d3)*((*p).d4*(*p).d4+(*p).d5*(*p).d5)+(os3*(*p).d8+(*p).d3)*((*p).d6*(*p).d6+(*p).d7*(*p).d7)-tos3*(*p).d8*((*p).d1*(*p).d1+(*p).d2*(*p).d2);	
+  return d;
+}
+
+static void mul_su3alg(su3adj* p,double d) {
+  (*p).d1*=d;
+  (*p).d2*=d;
+  (*p).d3*=d;
+  (*p).d4*=d;
+  (*p).d5*=d;
+  (*p).d6*=d;
+  (*p).d7*=d;
+  (*p).d8*=d;
+}
+
+void init_exposu3() {
+  int k;
+  double fctr = 1.0;
+  g_exposu3_no_c = 0;
+  
+  while (fctr>DBL_EPSILON) {
+    g_exposu3_no_c++;
+    fctr/=(double)(g_exposu3_no_c);
+  }
+  g_exposu3_no_c += 7;
+  g_exposu3_no_c += (g_exposu3_no_c%2);
+  
+  g_exposu3_c=malloc((g_exposu3_no_c+1)*sizeof(*g_exposu3_c));
+  
+  g_exposu3_c[0]=1.0;
+  for (k=0; k < g_exposu3_no_c; k++)
+    g_exposu3_c[k+1]=g_exposu3_c[k]/(double)(k+1);
+}
 
 void exposu3(su3* const vr, const su3adj* const p) {
-  int i;
-  su3 ALIGN v,v2;
-  double ALIGN fac,r;
-  double ALIGN a,b;
-  _Complex double ALIGN a0,a1,a2,a1p;
-
-  /* it writes 'p=vec(h_{j,mu})' in matrix form 'v' */  
+  int n,m,mm;
+  su3 ALIGN v,v2,vt;
+  su3adj pa;
+  double ALIGN d,tc;
+  _Complex double t;
+  _Complex double ALIGN p0,p1,p2;
+  _Complex double ALIGN q0,q1,q2;
+  
   _make_su3(v,*p);
+  _su3_times_su3(v2,v,v);
+  tc = -2.0*(v2.c00 +v2.c11+v2.c22);
+  
+  pa.d1=(*p).d1;
+  pa.d2=(*p).d2;
+  pa.d3=(*p).d3;
+  pa.d4=(*p).d4;
+  pa.d5=(*p).d5;
+  pa.d6=(*p).d6;
+  pa.d7=(*p).d7;
+  pa.d8=(*p).d8;
+  
+  mm=0;
+  while (tc>1.0) {
+    mul_su3alg(&pa,0.5);
+    tc*=0.5;
+    mm+=1;
+  }
+  
+  /* it writes 'p=vec(h_{j,mu})' in matrix form 'v'  */
+  _make_su3(v,pa);
   /* calculates v^2 */
   _su3_times_su3(v2,v,v);
-  /* */
-  a = 0.5 * (creal(v2.c00) + creal(v2.c11) + creal(v2.c22));
-  /* 1/3 imaginary part of tr v*v2 */
-  b = 0.33333333333333333 * cimag(v.c00 * v2.c00 + v.c01 * v2.c10 + v.c02 * v2.c20 +
-                                  v.c10 * v2.c01 + v.c11 * v2.c11 + v.c12 * v2.c21 +
-                                  v.c20 * v2.c02 + v.c21 * v2.c12 + v.c22 * v2.c22  );
-  a0  = 0.16059043836821615e-9;
-  a1  = 0.11470745597729725e-10;
-  a2  = 0.76471637318198165e-12;
-  fac = 0.20876756987868099e-8;      /*  1/12! */
-  r   = 12.0;
-  for(i = 3; i <= 15; ++i)
-  {
-    a1p = a0 + a * a2;
-    a0 = fac + b * I * a2;
-    a2 = a1;
-    a1 = a1p;
-    fac *= r;
-    r -= 1.0;
+  /* t= -tr(X^2)/2*/
+  t = -0.5*(v2.c00 +v2.c11+v2.c22);
+  /* d= -1i * det(X)*/
+  d=-imag_det(&pa);
+ /*  printf(" d= %.16f and t=%.16f + 1i %.16f \n",d,creal(t),cimag(t));*/
+  
+  if(fabs(d)>(1.000001*(1.000002-fabs(t))))
+    printf("The norm of X is larger than 1 and N = %d \n", g_exposu3_no_c);
+  
+  
+  p0=g_exposu3_c[g_exposu3_no_c];
+  p1=0.0;
+  p2=0.0;
+  
+  for (n=(g_exposu3_no_c-1);n>=0;n--) {
+    q0=p0;
+    q1=p1;
+    q2=p2;
+    
+    p0=g_exposu3_c[n]-I*d*q2;
+    p1=q0-t*q2;
+    p2=q1;
   }
+   
   /* vr = a0 + a1*v + a2*v2 */
-  vr->c00 = a0 + a1 * v.c00 + a2 * v2.c00;
-  vr->c01 =      a1 * v.c01 + a2 * v2.c01;
-  vr->c02 =      a1 * v.c02 + a2 * v2.c02;
-  vr->c10 =      a1 * v.c10 + a2 * v2.c10;
-  vr->c11 = a0 + a1 * v.c11 + a2 * v2.c11;
-  vr->c12 =      a1 * v.c12 + a2 * v2.c12;
-  vr->c20 =      a1 * v.c20 + a2 * v2.c20;
-  vr->c21 =      a1 * v.c21 + a2 * v2.c21;
-  vr->c22 = a0 + a1 * v.c22 + a2 * v2.c22;
+  vt.c00 = p0 + p1 * v.c00 + p2 * v2.c00;
+  vt.c01 =      p1 * v.c01 + p2 * v2.c01;
+  vt.c02 =      p1 * v.c02 + p2 * v2.c02;
+  vt.c10 =      p1 * v.c10 + p2 * v2.c10;
+  vt.c11 = p0 + p1 * v.c11 + p2 * v2.c11;
+  vt.c12 =      p1 * v.c12 + p2 * v2.c12;
+  vt.c20 =      p1 * v.c20 + p2 * v2.c20;
+  vt.c21 =      p1 * v.c21 + p2 * v2.c21;
+  vt.c22 = p0 + p1 * v.c22 + p2 * v2.c22;
+  
+  for(m=0;m<mm;m++) {
+    _su3_times_su3(v2,vt,vt);
+    vt=v2;
+  }
+  
+  vr->c00=vt.c00;
+  vr->c01=vt.c01; 
+  vr->c02=vt.c02; 
+  vr->c10=vt.c10;
+  vr->c11=vt.c11;
+  vr->c12=vt.c12;
+  vr->c20=vt.c20;
+  vr->c21=vt.c21;
+  vr->c22=vt.c22;
 }
 
 void exposu3_check(su3* const vr, const su3adj* const p, int im) {
@@ -135,6 +219,12 @@ void restoresu3(su3* const vr, const su3* const u) {
   vr->c20 = conj(vr->c01 * vr->c12 - vr->c02 * vr->c11);
   vr->c21 = conj(vr->c02 * vr->c10 - vr->c00 * vr->c12);
   vr->c22 = conj(vr->c00 * vr->c11 - vr->c01 * vr->c10);
+
+  /* compute  row 2 as the conjugate of the cross-product of 3 and 1 */
+  vr->c10 = conj(vr->c21 * vr->c02 - vr->c22 * vr->c01);
+  vr->c11 = conj(vr->c22 * vr->c00 - vr->c20 * vr->c02);
+  vr->c12 = conj(vr->c20 * vr->c01 - vr->c21 * vr->c00);
+
 }
 
 void restoresu3_in_place(su3* const u) {
@@ -156,6 +246,12 @@ void restoresu3_in_place(su3* const u) {
   u->c20 = conj(u->c01 * u->c12 - u->c02 * u->c11);
   u->c21 = conj(u->c02 * u->c10 - u->c00 * u->c12);
   u->c22 = conj(u->c00 * u->c11 - u->c01 * u->c10);
+
+  /* compute  row 2 as the conjugate of the cross-product of 3 and 1 */
+  u->c10 = conj(u->c21 * u->c02 - u->c22 * u->c01);
+  u->c11 = conj(u->c22 * u->c00 - u->c20 * u->c02);
+  u->c12 = conj(u->c20 * u->c01 - u->c21 * u->c00);
+
 }
                                 
 /* Exponentiates a hermitian 3x3 matrix Q */

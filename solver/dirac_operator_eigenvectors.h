@@ -22,7 +22,7 @@
 #define _DIRAC_EIGENVALUES_H
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include "tmlqcd_config.h"
 #endif
 #ifdef HAVE_FFTW
   #include <fftw3.h>
@@ -39,11 +39,6 @@
 #ifndef M_PI
 #define M_PI  3.14159265358979323846
 #endif
-
-#define SWAP(x,y,d)\
-  d=x;\
-  x=y;\
-  y=d;
 
 #define min(x,y)\
   ((x<y)?x:y)

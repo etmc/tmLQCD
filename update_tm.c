@@ -29,17 +29,17 @@
 
 #include <lime.h>
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
-# include <omp.h>
+#include <omp.h>
 #endif
 #include "global.h"
 #include "start.h"
@@ -140,7 +140,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   /* run the trajectory */
   if(Integrator.n_int[Integrator.no_timescales-1] > 0) {
     Integrator.integrate[Integrator.no_timescales-1](Integrator.tau, 
-                 Integrator.no_timescales-1, 1);
+                 Integrator.no_timescales-1, 1, Integrator.tau);
   }
 
   g_sloppy_precision = 0;
@@ -188,7 +188,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
     if(accept) {
       /* save gauge file to disk before performing reversibility check */
-      xlfInfo = construct_paramsXlfInfo((*plaquette_energy)/(6.*VOLUME*g_nproc), traj_counter);
+      xlfInfo = construct_paramsXlfInfo((new_plaquette_energy)/(6.*VOLUME*g_nproc), traj_counter);
       // Should write this to temporary file first, and then check
       if(g_proc_id == 0 && g_debug_level > 0) {
         fprintf(stdout, "# Writing gauge field to file %s.\n", tmp_filename);
@@ -213,7 +213,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     g_sloppy_precision = 1;
     /* run the trajectory back */
     Integrator.integrate[Integrator.no_timescales-1](-Integrator.tau, 
-                         Integrator.no_timescales-1, 1);
+                         Integrator.no_timescales-1, 1, -Integrator.tau);
     g_sloppy_precision = 0;
 
     /*   compute the energy contributions from the pseudo-fermions  */

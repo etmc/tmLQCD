@@ -19,7 +19,7 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -28,7 +28,7 @@
 #include <errno.h>
 #include <time.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #include "global.h"
 #include "default_input_values.h"
@@ -113,6 +113,7 @@ int add_operator(const int type) {
   optr->prop3 = NULL;
   optr->error_code = 0;
   optr->prop_precision = _default_prop_precision_flag;
+  optr->write_prop_flag = _default_write_prop_flag;
   optr->no_flavours = 1;
   optr->DownProp = 0;
   optr->conf_input = _default_gauge_input_filename;
@@ -420,6 +421,10 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
                                               optr->solver, optr->rel_prec,
                                               optr->solver_params, optr->external_inverter, 
                                               optr->sloppy_precision, optr->compression_type);
+        // checking solution
+        M_full_ndpsi( g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2],
+                      g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+4],
+                      optr->prop0, optr->prop1, optr->prop2, optr->prop3 );
       }
       else {
         optr->iterations = invert_cloverdoublet_eo( optr->prop0, optr->prop1, optr->prop2, optr->prop3,
@@ -428,27 +433,12 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
                                                     optr->solver, optr->rel_prec,
                                                     optr->solver_params, optr->external_inverter, 
                                                     optr->sloppy_precision, optr->compression_type);
+        // checking solution
+        Msw_full_ndpsi( g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2],
+                        g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+4],
+                        optr->prop0, optr->prop1, optr->prop2, optr->prop3 );
       }
-      g_mu = optr->mubar;
-      if(optr->type != DBCLOVER) {
-        M_full(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], optr->prop0, optr->prop1);
-      }
-      else {
-        Msw_full(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], optr->prop0, optr->prop1);
-      }
-      assign_add_mul_r(g_spinor_field[DUM_DERI+1], optr->prop2, -optr->epsbar, VOLUME/2);
-      assign_add_mul_r(g_spinor_field[DUM_DERI+2], optr->prop3, -optr->epsbar, VOLUME/2);
-    
-      g_mu = -g_mu;
-      if(optr->type != DBCLOVER) {
-        M_full(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+4], optr->prop2, optr->prop3);
-      }
-      else {
-        Msw_full(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+4], optr->prop2, optr->prop3);
-      }
-      assign_add_mul_r(g_spinor_field[DUM_DERI+3], optr->prop0, -optr->epsbar, VOLUME/2);
-      assign_add_mul_r(g_spinor_field[DUM_DERI+4], optr->prop1, -optr->epsbar, VOLUME/2);
-
+ 
       diff(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], optr->sr0, VOLUME/2); 
       diff(g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI+2], optr->sr1, VOLUME/2); 
       diff(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+3], optr->sr2, VOLUME/2); 

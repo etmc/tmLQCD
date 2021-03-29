@@ -24,22 +24,22 @@
  *******************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
-# include <omp.h>
-# include "global.h"
+#include <omp.h>
+#include "global.h"
 #endif
 #include <complex.h>
 #include "su3.h"
 #if (defined SSE || defined SSE2 || defined SSE3)
-# include "sse.h"
+#include "sse.h"
 #endif
 #include "square_norm.h"
 
@@ -53,7 +53,7 @@
  *
  ***************************************/
 
-#  include"bgl.h"
+#  include "bgl.h"
 double square_norm(spinor * const P, const int N, const int parallel) {
   int ix=0;
   double res, res2;

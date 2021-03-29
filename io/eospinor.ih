@@ -19,7 +19,7 @@
 
 #include <lime.h>
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
 
 #include <stdlib.h>
@@ -29,12 +29,12 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #ifdef MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #include <unistd.h>
 #include <math.h>
 #include <errno.h>
 
-#include <global.h>
-#include <io/eospinor.h>
-#include <io/utils.h>
+#include "global.h"
+#include "io/eospinor.h"
+#include "io/utils.h"

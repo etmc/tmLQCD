@@ -88,6 +88,8 @@ Not all the parameters have to be use and for all of them a standard value is de
 	\item[\texttt{MGdtauUpdate:}] for HMC, $d\tau$ interval after that the setup is updated. If 0, it will be updated every time the configuration is changed.
 	\item[\texttt{MGrhoUpdate:}] for HMC, rho value of the monomial at which the setup have to be updated. It can be combined with \texttt{MGdtauUpdate} or used standalone.
 	\item[\texttt{MGUpdateSetupIter:}] for HMC, number of setup iterations to do on the fine level when the setup has to be updated.
+	\item[\texttt{MGNumberOfShifts:}] for MG in multi-shift systems, number of shifted linear systems, N, to be solved by DDalphaAMG. MG will solve the N smaller shifts.
+	\item[\texttt{MGMMSMass:}] for MG in multi-shift systems, alternative to the previous. MG will solve all the mass-shifts smaller than the given value.
 \end{description}
 \subsubsection{Output analysis\label{sec:DDalphaAMG_output}}
 Running tmLQCD programs with the option \texttt{-v}, the full output of DDalphaAMG is shown. Here some hints on the informations given. Just before the setup, the full set of parameters is printed, with an output similar to the following:

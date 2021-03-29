@@ -63,10 +63,10 @@ include ${top_srcdir}/Makefile.global
 
 # rule to compile objects
 
-${libmonomial_OBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/config.h
+${libmonomial_OBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/include/tmlqcd_config_internal.h
 	$(COMPILE) ${OPTARGS} -c $<
 
-${libmonomial_SOBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/config.h
+${libmonomial_SOBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/include/tmlqcd_config_internal.h
 	$(COMPILE) ${SOPTARGS} -c $<
 
 # rule to make libmonomial

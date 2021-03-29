@@ -23,7 +23,7 @@
  *
  *******************************************************************************/
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <limits.h>
 #include <stdio.h>

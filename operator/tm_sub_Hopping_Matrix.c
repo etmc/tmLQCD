@@ -28,7 +28,7 @@
  ****************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -39,7 +39,7 @@
 #include "global.h"
 #include "su3.h"
 #ifdef BGQ
-#  include"DirectPut.h"
+#  include "DirectPut.h"
 #endif
 #ifdef TM_USE_MPI
 #  include "xchange/xchange.h"
@@ -116,7 +116,7 @@ void tm_sub_Hopping_Matrix(const int ieo, spinor * const l, spinor * const p, sp
 #    include "xlc_prefetch.h"
 
 #  elif defined XLC
-#    include"xlc_prefetch.h"
+#    include "xlc_prefetch.h"
 
 #  endif
 void tm_sub_Hopping_Matrix(const int ieo, spinor * const l, spinor * p, spinor * const k, 

@@ -20,7 +20,7 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -144,7 +144,7 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].rat.crange[1] = 11;
 
   monomial_list[no_monomials].initialised = 1;
-  if(monomial_list[no_monomials].type == NDDETRATIO || monomial_list[no_monomials].type == CLOVERDETRATIORW) {
+  if(monomial_list[no_monomials].type == NDDETRATIO || monomial_list[no_monomials].type == NDCLOVERDETRATIO || monomial_list[no_monomials].type == CLOVERDETRATIORW) {
     monomial_list[no_monomials].timescale = -5;
   }
 
@@ -159,10 +159,13 @@ int init_monomials(const int V, const int even_odd_flag) {
   spinor * __pf = NULL;
   double sw_mu=0., sw_k=0., sw_c=0.;
   double swn_mubar=0., swn_epsbar = 0., swn_k=0., swn_c=0.;
+
+  if (g_exposu3_no_c == 0) init_exposu3();
+  
   for(int i = 0; i < no_monomials; i++) {
     if((monomial_list[i].type != GAUGE) && (monomial_list[i].type != SFGAUGE)) no++;
     /* non-degenerate monomials need two pseudo fermion fields */
-    if((monomial_list[i].type == NDPOLY) || (monomial_list[i].type == NDDETRATIO) || 
+    if((monomial_list[i].type == NDPOLY) || (monomial_list[i].type == NDDETRATIO) || (monomial_list[i].type == NDCLOVERDETRATIO) || 
        (monomial_list[i].type == NDCLOVER) || (monomial_list[i].type == NDRAT)||
        (monomial_list[i].type == NDRATCOR) || (monomial_list[i].type == NDCLOVERRATCOR) ||
        (monomial_list[i].type == NDCLOVERRAT)) no++;
@@ -458,6 +461,17 @@ int init_monomials(const int V, const int even_odd_flag) {
 	no++;
 	if(g_proc_id == 0 && g_debug_level > 1) {
 	  printf("# Initialised monomial of type NDDETRATIO, no_monomials= %d, currently only available for reweighting!\n", no_monomials);
+	}
+      }
+      else if(monomial_list[i].type == NDCLOVERDETRATIO) {
+	monomial_list[i].hbfunction = &dummy_heatbath;
+	monomial_list[i].accfunction = &nddetratio_acc;
+	monomial_list[i].derivativefunction = NULL;
+	monomial_list[i].pf2 = __pf+no*V;
+	monomial_list[i].timescale = -5;
+	no++;
+	if(g_proc_id == 0 && g_debug_level > 1) {
+	  printf("# Initialised monomial of type NDCLOVERDETRATIO, no_monomials= %d, currently only available for reweighting!\n", no_monomials);
 	}
       }
     }

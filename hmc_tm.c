@@ -24,10 +24,12 @@
  *         urbach@physik.fu-berlin.de
  *
  *******************************************************************************/
-#include "lime.h"
 #if HAVE_CONFIG_H
-#include<config.h>
+#include "tmlqcd_config.h"
 #endif
+
+
+#include <lime.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -37,15 +39,15 @@
 #include <signal.h>
 #include <unistd.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
-# include <omp.h>
+#include <omp.h>
 #endif
 #include "global.h"
 #include "git_hash.h"
-#include <io/params.h>
-#include <io/gauge.h>
+#include "io/params.h"
+#include "io/gauge.h"
 #include "getopt.h"
 #include "ranlxd.h"
 #include "geometry_eo.h"
@@ -53,7 +55,7 @@
 #include "measure_gauge_action.h"
 #include "measure_rectangles.h"
 #ifdef TM_USE_MPI
-# include "xchange/xchange.h"
+#include "xchange/xchange.h"
 #endif
 #include "read_input.h"
 #include "mpi_init.h"
@@ -180,6 +182,8 @@ int main(int argc,char *argv[]) {
 #endif
   /* need temporary gauge field for gauge reread checks and in update_tm */
   status += init_gauge_tmp(VOLUME);
+
+  status += init_gauge_fg(VOLUME);
 
   if (status != 0) {
     fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
@@ -496,12 +500,22 @@ int main(int argc,char *argv[]) {
     }
 
     /* online measurements */
+#ifdef DDalphaAMG
+    // When the configuration is rejected, we have to update it in the MG and redo the setup.
+    int mg_update = accept ? 0:1;
+#endif
     for(imeas = 0; imeas < no_measurements; imeas++){
       meas = &measurement_list[imeas];
       if(trajectory_counter%meas->freq == 0){
         if (g_proc_id == 0) {
           fprintf(stdout, "#\n# Beginning online measurement.\n");
         }
+#ifdef DDalphaAMG
+        if( mg_update ) {
+          mg_update = 0;
+          MG_reset();
+        }
+#endif
         meas->measurefunc(trajectory_counter, imeas, even_odd_flag);
       }
     }
@@ -566,8 +580,8 @@ int main(int argc,char *argv[]) {
 
 static void usage(){
   fprintf(stdout, "HMC for Wilson twisted mass QCD\n");
-  fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
-  fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
+  fprintf(stdout, "Version %s \n\n", TMLQCD_PACKAGE_VERSION);
+  fprintf(stdout, "Please send bug reports to %s\n", TMLQCD_PACKAGE_BUGREPORT);
   fprintf(stdout, "Usage:   hmc_tm [options]\n");
   fprintf(stdout, "Options: [-f input-filename]  default: hmc.input\n");
   fprintf(stdout, "         [-o output-filename] default: output\n");
@@ -594,7 +608,7 @@ static void process_args(int argc, char *argv[], char ** input_filename, char **
         break;
       case 'V':
         if(g_proc_id == 0) {
-          fprintf(stdout,"%s %s\n",PACKAGE_STRING,git_hash);
+          fprintf(stdout,"%s %s\n",TMLQCD_PACKAGE_STRING,git_hash);
         }
         exit(0);
         break;

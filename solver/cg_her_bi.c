@@ -46,7 +46,7 @@
  **************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -59,7 +59,7 @@
 #include "sub_low_ev.h"
 #include "cg_her_bi.h"
 #include "solver_field.h"
-#include"solver/matrix_mult_typedef_bi.h"
+#include "solver/matrix_mult_typedef_bi.h"
 
 
 /* P output = solution , Q input = source */

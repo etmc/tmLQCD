@@ -28,6 +28,8 @@
 #include "solver/solver_params.h"
 #include "misc_types.h"
 
+#include <complex.h>
+
 #define DET 0
 #define DETRATIO 1
 #define GAUGE 2
@@ -50,6 +52,7 @@
 #define CLOVERRAT 19
 #define CLOVERRATCOR 20
 #define CLOVERDETRATIORW 21
+#define NDCLOVERDETRATIO 22
 
 #define max_no_monomials 30
 

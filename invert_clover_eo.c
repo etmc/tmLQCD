@@ -32,22 +32,22 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
-#include<stdlib.h>
-#include"global.h"
-#include"su3.h"
-#include"linalg_eo.h"
-#include"operator/tm_operators.h"
-#include"operator/Hopping_Matrix.h"
-#include"operator/clovertm_operators.h"
-#include"operator/clovertm_operators_32.h"
-#include"operator/D_psi.h"
-#include"gamma.h"
-#include"read_input.h"
-#include"solver/solver.h"
-#include"solver/solver_params.h"
-#include"invert_clover_eo.h"
+#include <stdlib.h>
+#include "global.h"
+#include "su3.h"
+#include "linalg_eo.h"
+#include "operator/tm_operators.h"
+#include "operator/Hopping_Matrix.h"
+#include "operator/clovertm_operators.h"
+#include "operator/clovertm_operators_32.h"
+#include "operator/D_psi.h"
+#include "gamma.h"
+#include "read_input.h"
+#include "solver/solver.h"
+#include "solver/solver_params.h"
+#include "invert_clover_eo.h"
 #include "solver/dirac_operator_eigenvectors.h"
 #include "solver/dfl_projector.h"
 #ifdef TM_USE_QUDA
@@ -79,7 +79,7 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
       return invert_eo_quda(Even_new, Odd_new, Even, Odd,
                             precision, max_iter,
                             solver_flag, rel_prec,
-                            1, solver_params,
+                            even_odd_flag, solver_params,
                             sloppy, compression);
     }
 #endif
@@ -167,6 +167,15 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
     if(g_proc_id == 0) {
       printf("# Not using even/odd preconditioning!\n"); fflush(stdout);
     }
+#ifdef TM_USE_QUDA
+    if( external_inverter==QUDA_INVERTER ) {
+      return invert_eo_quda(Even_new, Odd_new, Even, Odd,
+                            precision, max_iter,
+                            solver_flag, rel_prec,
+                            even_odd_flag, solver_params,
+                            sloppy, compression);
+    }
+#endif
     convert_eo_to_lexic(g_spinor_field[DUM_DERI], Even, Odd);
 
     if(solver_flag == DFLGCR) {

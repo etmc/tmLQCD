@@ -24,10 +24,10 @@
 #ifndef _CG_MMS_TM_H
 #define _CG_MMS_TM_H
 
-#include "solver.h"
-#include "matrix_mult_typedef.h"
+#include "solver/solver_params.h"
+#include "solver/matrix_mult_typedef.h"
 #include "su3.h"
 
-int cg_mms_tm(spinor ** const P,spinor * const Q, solver_params_t * const params, double * reached_prec);
+int cg_mms_tm(spinor ** const P,spinor * const Q, solver_params_t * const params);
 
 #endif

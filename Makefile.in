@@ -1,0 +1,172 @@
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+abs_top_srcdir = @abs_top_srcdir@
+top_builddir =  .
+abs_top_builddir = @abs_top_builddir@
+builddir = @builddir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+program_transform_name = @program_transform_name@
+subdir = .
+
+AR = @AR@
+RANLIB = @RANLIB@
+CC = @CC@
+CXX = @CXX@
+CCDEP = @CCDEP@
+CXXDEP = @CXXDEP@
+CFLAGS = @CFLAGS@
+CXXFLAGS = @CXXFLAGS@
+LDFLAGS = @LDFLAGS@
+DEPFLAGS = @DEPFLAGS@
+CXXDEPFLAGS = @CXXDEPFLAGS@
+CPPFLAGS = @CPPFLAGS@
+CCLD = @CCLD@
+LEX = @LEX@
+AUTOCONF = @AUTOCONF@
+LIBS = @LIBS@
+SHELL = @SHELL@
+OPTARGS = @OPTARGS@
+SOPTARGS = @SOPTARGS@
+DEFS = @DEFS@
+GPUDIR = @GPUDIR@
+USESUBDIRS = @USESUBDIRS@
+NVCC = @NVCC@
+GPUMPICOMPILER = @GPUMPICOMPILER@
+
+INCLUDES = @INCLUDES@
+LINK = $(CCLD) -o $@ ${LDFLAGS}
+
+COMPILE = ${CC} ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
+CXXCOMPILE = ${CXX} ${DEFS} ${INCLUDES} -o $@ ${CXXFLAGS} ${LDFLAGS}
+
+SMODULES = 
+
+MODULES = read_input gamma measure_gauge_action start \
+	expo matrix_utils get_staples update_backward_gauge \
+	measure_rectangles get_rectangle_staples  \
+	test/check_geometry test/check_xchange \
+	test/overlaptests \
+	invert_eo invert_doublet_eo update_gauge \
+	getopt sighandler reweighting_factor \
+	source_generation boundary update_tm ranlxd  \
+	mpi_init deriv_Sb deriv_Sb_D_psi ranlxs \
+	geometry_eo invert_overlap aligned_malloc \
+	prepare_source chebyshev_polynomial_nd Ptilde_nd  \
+	reweighting_factor_nd rnd_gauge_trafo \
+        update_momenta update_momenta_fg integrator  phmc \
+	little_D block operator \
+	temporalgauge spinor_fft X_psi P_M_eta \
+	jacobi fatal_error invert_clover_eo gettime \
+	tm_debug_printf \
+        @SPI_FILES@ @QUDA_INTERFACE@ @DDalphaAMG_INTERFACE@
+
+CXXMODULES = @QPHIX_INTERFACE@
+
+## the GPU modules (all .cu files in $GPUDIR)
+GPUSOURCES := $(wildcard $(srcdir)/$(GPUDIR)/*.cu)
+GPUOBJECTS := $(patsubst $(srcdir)/$(GPUDIR)/%.cu, $(GPUDIR)/%.o, $(GPUSOURCES))
+
+#GPUSOURCES_C := $(wildcard $(srcdir)/$(GPUDIR)/*.c)
+#GPUOBJECTS_C := $(patsubst $(srcdir)/$(GPUDIR)/%.c, $(GPUDIR)/%.o, $(GPUSOURCES_C))
+
+NOOPTMOD = test/check_xchange test/check_geometry
+
+PROGRAMS = hmc_tm benchmark invert gen_sources  \
+	check_locallity test_lemon hopping_test LapH_ev \
+	offline_measurement @QPHIX_PROGRAMS@
+
+ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES}
+SUBDIRS = ${USESUBDIRS}
+
+# delete the default suffix rules
+.SUFFIXES:
+
+# need to build modules before subdirs!
+all: Makefile dep $(SUBDIRS) hmc_tm invert benchmark offline_measurement @QPHIX_PROGRAMS@
+
+$(SUBDIRS):
+	$(MAKE) --directory=$@
+
+# run the GIT-VERSION-GEN script to generate version information in git_hash.h
+# making sure that we run in the correct directory
+${top_srcdir}/git_hash.h:
+	@ ( cd @srcdir@ && sh GIT-VERSION-GEN )
+
+-include $(addsuffix .d,$(ALLOBJ))
+-include $(addsuffix .d,$(CXXMODULES))
+
+include ${top_srcdir}/Makefile.global
+
+${top_srcdir}/read_input.c: ${top_srcdir}/read_input.l
+ifneq (,$(findstring lex,${LEX}))
+	${LEX} -Ptmlqcd -i -t ${top_srcdir}/read_input.l > ${top_srcdir}/read_input.c
+else
+	$(error Unable to find (f)lex, read_input.c not built. Please install (f)lex!)
+endif
+
+libhmc.a: ${addsuffix .o, ${MODULES} ${SMODULES}} Makefile
+	@rm -f libhmc.a
+	@${AR} cru libhmc.a ${addsuffix .o, ${MODULES} ${SMODULES}}
+	@$(RANLIB) libhmc.a
+	@cp libhmc.a ${top_builddir}/lib/libhmc.a
+
+$(addsuffix .o,$(filter-out ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/include/tmlqcd_config_internal.h
+	${COMPILE} ${OPTARGS} -c $<
+
+#here we don't need optimisation
+$(addsuffix .o,$(filter ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/include/tmlqcd_config_internal.h
+	${COMPILE} -c $<
+
+${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/include/tmlqcd_config_internal.h
+	${COMPILE} ${SOPTARGS} -c $<
+
+# C++ modules
+$(addsuffix .o,${CXXMODULES}): %.o: ${srcdir}/%.cpp %.d Makefile $(abs_top_builddir)/include/tmlqcd_config_internal.h
+	${CXXCOMPILE} -c $<
+	
+${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/include/tmlqcd_config_internal.h ${top_srcdir}/git_hash.h
+	${COMPILE} ${OPTARGS} -c $<
+
+${PROGRAMS}: %: %.o libhmc.a $(SUBDIRS) $(addsuffix .o,${CXXMODULES})
+	 ${LINK} $@.o $(addsuffix .o,${CXXMODULES}) $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS) ${LDFLAGS}
+
+
+# The rules for unit tests are kept in a separate file for tidyness
+include ${top_srcdir}/Makefile.tests
+
+dep: $(addsuffix .d,$(ALLOBJ)) $(addsuffix .d,$(CXXMODULES))
+	@ echo "...dependency files built"
+
+install: Makefile
+	@mkdir -p $(bindir); \
+	for p in hmc_tm invert; do \
+	  progname=`echo $$p | sed '$(program_transform_name)'`; \
+	  echo "Installing $$p as $$progname in $(bindir)..."; \
+	  cp $$p $(bindir)/$$progname; \
+	done; \
+	echo "done";
+
+uninstall: Makefile
+	for p in hmc_tm invert; do \
+	  progname=`echo $$p | sed '$(program_transform_name)'`; \
+	  echo "Un-Installing $$progname in $(bindir)..."; \
+	  rm $(bindir)/$$progname; \
+	done; \
+	echo "done";
+
+compile-clean: compile-clean-recursive Makefile
+	rm -f *.o *.d test/*.o test/*.d tests/*.o tests/*.d
+
+clean: clean-recursive Makefile
+	rm -f benchmark hmc_tm invert test_Dslash offline_measurement *.o *.d test/*.o test/*.d tests/*.o tests/*.d
+
+distclean: distclean-recursive Makefile
+	rm -f benchmark hmc_tm invert *.o *.d *~ Makefile config.log config.status fixed_volume.h
+	rm -f include/tmlqcd_config_internal.h
+
+.PHONY: all ${SUBDIRS} ${top_srcdir}/git_hash.h clean compile-clean distclean dep install \
+	all-recursive all-debug-recursive all-profile-recursive \
+	clean-recursive distclean-recursive \
+	compile-clean-recursive

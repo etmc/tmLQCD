@@ -1,4 +1,4 @@
-#include <config.h>
+#include "tmlqcd_config.h"
 #include <global.h>
 
 #include <cu/cu.h>

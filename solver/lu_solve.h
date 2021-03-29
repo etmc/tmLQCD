@@ -20,6 +20,8 @@
 #ifndef LU_SOLVE_H
 #define LU_SOLVE_H
 
+#include <complex.h>
+
 /* Solve M a = b by LU decomposition with partial pivoting */
 void LUSolve( const int Nvec, _Complex double * M, const int ldM, _Complex double * b);
 

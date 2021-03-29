@@ -24,6 +24,7 @@
  *
  *******************************************************************************/
 
+#include "tmlqcd_config.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -34,7 +35,7 @@
 #include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
-# include <omp.h>
+#include <omp.h>
 #endif
 #include "global.h"
 #include "git_hash.h"
@@ -43,6 +44,9 @@
 #include "geometry_eo.h"
 #ifdef TM_USE_MPI
 #include "xchange/xchange.h"
+#endif
+#ifdef TM_USE_QUDA
+#include "quda_interface.h"
 #endif
 #include <io/utils.h>
 #include <io/gauge.h>
@@ -71,6 +75,7 @@ extern void finalize_gpu_fields();
 #  endif
 #endif
 
+#define CONF_FILENAME_LENGTH 500
 
 static int tmLQCD_invert_initialised = 0;
 
@@ -97,6 +102,7 @@ int tmLQCD_invert_init(int argc, char *argv[], const int _verbose, const int ext
   /* Read the input file */
   if( (read_input("invert.input")) != 0) {
     fprintf(stderr, "tmLQCD_init_invert: Could not find input file: invert.input\nAborting...");
+    return(-1);
   }
 
 #ifndef TM_USE_MPI
@@ -196,18 +202,30 @@ int tmLQCD_invert_init(int argc, char *argv[], const int _verbose, const int ext
 #  endif
   }
 #endif
-  tmLQCD_invert_initialised = 1;  
+  tmLQCD_invert_initialised = 1;
+#ifdef TM_USE_MPI
+  MPI_Barrier(MPI_COMM_WORLD);
+#endif 
   return(0);
 }
 
 int tmLQCD_read_gauge(const int nconfig) {
-  char conf_filename[500];
+  char conf_filename[CONF_FILENAME_LENGTH];
   if(!tmLQCD_invert_initialised) {
     fprintf(stderr, "tmLQCD_read_gauge: tmLQCD_inver_init must be called first. Aborting...\n");
     return(-1);
   }
 
-  sprintf(conf_filename, "%s.%.4d", gauge_input_filename, nconfig);
+  int n_written = snprintf(conf_filename, CONF_FILENAME_LENGTH, "%s.%.4d", gauge_input_filename, nconfig);
+  if( n_written < 0 || n_written >= CONF_FILENAME_LENGTH ){
+    char error_message[500];
+    snprintf(error_message,
+             500,
+             "Encoding error or gauge configuration filename "
+             "longer than %d characters! See wrapper/lib_wrapper.c CONF_FILENAME_LENGTH\n", 
+             CONF_FILENAME_LENGTH);
+    fatal_error(error_message, "tmLQCD_read_gauge");
+  }
   int j=0;
   if (g_cart_id == 0) {
     printf("#\n# Trying to read gauge field from file %s.\n",
@@ -222,6 +240,10 @@ int tmLQCD_read_gauge(const int nconfig) {
     printf("# Finished reading gauge field.\n");
     fflush(stdout);
   }
+
+  // set the global nstore parameter
+  nstore = nconfig;
+
 #ifdef TM_USE_MPI
   if(!lowmem_flag){
     xchange_gauge(g_gauge_field);
@@ -296,6 +318,10 @@ int tmLQCD_finalise() {
 #  endif
   }
 #endif
+
+#ifdef TM_USE_QUDA
+  _endQuda();
+#endif
   
   free_gauge_field();
   free_geometry_indices();
@@ -348,7 +374,9 @@ int tmLQCD_get_mpi_params(tmLQCD_mpi_params * params) {
   params->proc_coords[1] = g_proc_coords[1];
   params->proc_coords[2] = g_proc_coords[2];
   params->proc_coords[3] = g_proc_coords[3];
-
+#ifdef TM_USE_MPI
+  params->cart_grid = g_cart_grid;
+#endif
   return(0);
 }
 

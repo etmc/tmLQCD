@@ -18,15 +18,15 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #ifdef _USE_SHMEM
-# include <mpp/shmem.h>
+#include <mpp/shmem.h>
 #endif
 #include "global.h"
 #include "read_input.h"

@@ -24,13 +24,13 @@
 
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #include "global.h"
 #include "mpi_init.h"
@@ -38,7 +38,7 @@
 #include "su3adj.h"
 #include "xchange_deri.h"
 
-inline void addup_ddummy(su3adj** const df, const int ix, const int iy) {
+static inline void addup_ddummy(su3adj** const df, const int ix, const int iy) {
   for(int mu = 0; mu < 4; mu++) {
     df[ix][mu].d1 += ddummy[iy][mu].d1;
     df[ix][mu].d2 += ddummy[iy][mu].d2;

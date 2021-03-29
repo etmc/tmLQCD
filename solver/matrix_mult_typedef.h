@@ -27,6 +27,8 @@
 #ifndef _MATRIX_MULT_TYPEDEF_H
 #define _MATRIX_MULT_TYPEDEF_H
 
+#include "su3.h"
+
 typedef void (*matrix_mult)(spinor * const, spinor * const);
 typedef void (*matrix_mult_full)(spinor * const, spinor * const, spinor * const, spinor * const);
 typedef void (*matrix_mult32)(spinor32 * const, spinor32 * const);

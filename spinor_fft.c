@@ -1,6 +1,6 @@
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -8,7 +8,7 @@
 #include <time.h>
 #include <assert.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #include "global.h"
 #include <io/params.h>

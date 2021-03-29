@@ -21,14 +21,14 @@
 #ifndef _OPERATOR_H
 #define _OPERATOR_H
 
-#include <io/utils.h>
+#include "io/utils.h"
 #include "solver/dirac_operator_eigenvectors.h"
 #include "su3.h"
 #include "solver/solver_params.h"
 #include "operator_types.h"
 #include "misc_types.h"
 
-#define max_no_operators 10
+#define max_no_operators 50
 
 typedef struct {
   /* ID of the operator */
@@ -48,6 +48,7 @@ typedef struct {
   int maxiter;
   int iterations;
   int prop_precision;
+  int write_prop_flag;
   int no_flavours;
   int DownProp;
   int no_ev_index;

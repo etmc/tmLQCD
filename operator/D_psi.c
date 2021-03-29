@@ -30,7 +30,7 @@
  *******************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
 #ifdef SSE2
 #  define OpSSE2
@@ -50,7 +50,7 @@
 #include "gamma.h"
 #include "linalg_eo.h"
 #ifdef TM_USE_MPI
-# include "xchange/xchange.h"
+#include "xchange/xchange.h"
 #endif
 #include "update_backward_gauge.h"
 #include "block.h"
@@ -64,7 +64,7 @@
 #define _PSWITCH(s) s ## _32
 #define _PTSWITCH(s) s ## 32
 
-#include"D_psi_body.c"
+#include "D_psi_body.c"
 
 #undef _C_TYPE
 #undef _F_TYPE
@@ -79,7 +79,7 @@
 #  define _PSWITCH(s) s
 #  define _PTSWITCH(s) s
 
-#  include"D_psi_body.c"
+#  include "D_psi_body.c"
 
 #  undef _C_TYPE
 #  undef _F_TYPE

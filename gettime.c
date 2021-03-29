@@ -20,7 +20,7 @@
 
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
 #ifdef HAVE_CLOCK_GETTIME
 #  ifndef _POSIX_C_SOURCE
@@ -34,7 +34,7 @@
 #  include <rts.h>
 #endif
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 
 #include "gettime.h"

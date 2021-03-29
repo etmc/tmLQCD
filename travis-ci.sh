@@ -44,6 +44,7 @@ if ! [[ -f git_hash.h ]]; then
 fi
 
 # Compile tmLQCD.
+sudo apt-get update
 sudo apt-get install -y flex libblas-dev liblapack-dev gfortran
 
 autoreconf --verbose --install --force
@@ -52,7 +53,6 @@ autoreconf --verbose --install --force
     --disable-mpi \
     --with-lapack='-llapack -lblas' \
     --with-limedir=$PWD/../c-lime \
-    #--with-qphixdir=$HOME/Build/local \
     CC=/usr/bin/gcc \
     CXX=/usr/bin/g++ \
     CFLAGS='-O2 --std=c99 -fopenmp -g -fPIC' \

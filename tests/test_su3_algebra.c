@@ -1,9 +1,9 @@
 #include <stdio.h>
-#include <config.h>
+#include "tmlqcd_config.h"
 #include <complex.h>
 #include <cu/cu.h>
 #if (defined SSE || defined SSE2 || defined SSE3)
-# include "sse.h"
+#include "sse.h"
 #endif
 #include "../su3.h"
 #include "../su3adj.h"

@@ -18,23 +18,23 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #ifdef MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
-#ifdef OMP
-# include <omp.h>
+#ifdef TM_USE_OMP
+#include <omp.h>
 #endif
 #include "global.h"
 #include "su3.h"
 #include "convert_odd_to_lexic.h"
 
 void convert_odd_to_lexic(spinor * const P, spinor * const r) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -42,7 +42,7 @@ void convert_odd_to_lexic(spinor * const P, spinor * const r) {
   int x, y, z, t, i, ix;
   spinor * p = NULL;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(x = 0; x < LX; x++) {
@@ -61,7 +61,7 @@ void convert_odd_to_lexic(spinor * const P, spinor * const r) {
     }
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /*OpenMP closing brace */
 #endif
 
@@ -73,7 +73,7 @@ void convert_odd_to_lexic(spinor * const P, spinor * const r) {
  *      r: new spinor odd 
  */
 void convert_lexic_to_odd(spinor * const r, spinor * const P) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -81,7 +81,7 @@ void convert_lexic_to_odd(spinor * const r, spinor * const P) {
   int x, y, z, t, i, ix;
   spinor * p = NULL;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for(x = 0; x < LX; x++) {
@@ -100,7 +100,7 @@ void convert_lexic_to_odd(spinor * const r, spinor * const P) {
     }
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 

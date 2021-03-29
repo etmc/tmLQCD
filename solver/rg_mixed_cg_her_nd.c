@@ -28,8 +28,8 @@
  *
  * in:
  *   Q: source
- * inout:
- *   P: result (initial guess currently not supported)
+ * input:
+ *   P: result
  *
  * POSSIBLE IMPROVEMENTS
  * There are still quite a few things that can be tried to make it better,
@@ -50,7 +50,7 @@
  **************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -67,6 +67,7 @@
 
 #include "solver_field.h"
 #include "solver/rg_mixed_cg_her.h"
+#include "solver/rg_mixed_cg_typedef.h"
 #include "gettime.h"
 
 static void output_flops(const double seconds, const unsigned int N, const unsigned int iter_out, 
@@ -193,7 +194,7 @@ int rg_mixed_cg_her_nd(spinor * const P_up, spinor * const P_dn, spinor * const 
   int iter_in_sp = 0, iter_in_dp = 0, iter_out = 0;
   float rho_sp, delta = solver_params.mcg_delta;
   double beta_dp, rho_dp;
-  double sourcesquarenorm, target_eps_sq;
+  double sourcesquarenorm, guesssquarenorm, target_eps_sq;
 
   spinor *xhigh_up, *xhigh_dn, *rhigh_up, *rhigh_dn, *qhigh_up, *qhigh_dn, *phigh_up, *phigh_dn;
   spinor32 *x_up, *x_dn, *p_up, *p_dn, *q_up, *q_dn, *r_up, *r_dn;
@@ -248,17 +249,24 @@ int rg_mixed_cg_her_nd(spinor * const P_up, spinor * const P_dn, spinor * const 
   if(g_debug_level > 0 && g_proc_id==0) 
     printf("#RG_Mixed CG_ND: N_outer: %d \n", N_outer);
   
-  // should compute real residual here, for now we always use a zero guess
   zero_spinor_field_32(x_up,N); zero_spinor_field_32(x_dn,N);
-  zero_spinor_field(P_up,N); zero_spinor_field(P_dn,N);
-  assign(phigh_up,Q_up,N); assign(phigh_dn,Q_dn,N);
-  assign(rhigh_up,Q_up,N); assign(rhigh_dn,Q_dn,N);
-  
-  rho_dp = ( square_norm(rhigh_up,N,1) + square_norm(rhigh_dn,N,1) );
+
+  if(solver_params.use_initial_guess == 0) {
+    assign(phigh_up,Q_up,N); assign(phigh_dn,Q_dn,N);
+    assign(rhigh_up,Q_up,N); assign(rhigh_dn,Q_dn,N);
+    rho_dp = sourcesquarenorm;
+  } else {
+    // computing initial guess
+    f(rhigh_up,rhigh_dn,P_up,P_dn);
+    diff(rhigh_up,Q_up,rhigh_up,N); diff(rhigh_dn,Q_dn,rhigh_dn,N);
+    assign(phigh_up,rhigh_up,N); assign(phigh_dn,rhigh_dn,N);
+    rho_dp = ( square_norm(rhigh_up,N,1) + square_norm(rhigh_dn,N,1) );
+  }
+
   assign_to_32(r_up,rhigh_up,N); assign_to_32(r_dn,rhigh_dn,N);
   rho_sp = rho_dp;
   assign_32(p_up,r_up,N); assign_32(p_dn,r_dn,N);
-  
+
   iter_in_sp += inner_loop(x_up, x_dn, p_up, p_dn, q_up, q_dn, r_up, r_dn, &rho_sp, delta, 
                            f32, (float)target_eps_sq, 
                            N, iter_out+iter_in_sp+iter_in_dp, max_iter, 0.0, 0.0, MCG_NO_PIPELINED, MCG_NO_PR);

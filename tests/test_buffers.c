@@ -1,6 +1,6 @@
 
 #include <global.h>
-#include <config.h>
+#include "tmlqcd_config.h"
 
 #ifdef TM_USE_MPI
 #include <mpi.h>

@@ -21,6 +21,48 @@
 #ifndef MISC_TYPES_H
 #define MISC_TYPES_H
 
+#ifdef HAVE_CONFIG_H
+#include "tmlqcd_config.h"
+#endif
+
+#ifdef TM_USE_MPI
+#include <mpi.h>
+#endif
+
+#ifdef TM_USE_QPHIX
+#include "qphix/qphix_config.h"
+#endif
+
+#ifdef QPHIX_QMP_COMMS
+#include <qmp.h>
+#endif
+
+#include "tm_debug_printf.h"
+
+#define TM_GAUGE_FIELD_NAME_LENGTH 100
+#define TM_GAUGE_PROPAGATE_THRESHOLD 10.0
+#define TM_GAUGE_PROPAGATE_MIN 0.01
+
+/* enumeration type for the identity of the program
+ * which is being executed
+ * this is useful to unify various utility functions which
+ * otherwise lead to a lot of code duplication */
+typedef enum tm_ProgramId_t {
+  TM_PROGRAM_HMC_TM = 0,
+  TM_PROGRAM_INVERT,
+  TM_PROGRAM_OFFLINE_MEASUREMENT,
+  TM_PROGRAM_BENCHMARK,
+  TM_PROGRAM_EXTERNAL
+} tm_ProgramId_t;
+
+/* enumeration type for return value 
+ * we follow http://tldp.org/LDP/abs/html/exitcodes.html for the starting 
+ * value */
+typedef enum tm_ExitCode_t {
+  TM_EXIT_SUCCESS = 0,
+  TM_EXIT_INVALID_CMDLINE_ARG = 166
+} tm_ExitCode_t;
+
 /* enumeration type for the sloppy prec. of the inverter */
 typedef enum SloppyPrecision_s {
   SLOPPY_DOUBLE = 0,

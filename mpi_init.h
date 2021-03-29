@@ -19,6 +19,10 @@
 #ifndef _MPI_INIT_H
 #define _MPI_INIT_H
 
+#ifdef HAVE_CONFIG_H
+#include "tmlqcd_config.h"
+#endif
+
 #ifdef TM_USE_MPI
 #include <mpi.h>
 

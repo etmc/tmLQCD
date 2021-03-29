@@ -20,7 +20,7 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -61,15 +61,11 @@ int init_measurements(){
     if(measurement_list[i].type == ONLINE) {
       measurement_list[i].measurefunc = &correlators_measurement;
       measurement_list[i].max_source_slice = g_nproc_t*T;
-      measurement_list[i].no_samples = 1;
-      measurement_list[i].all_time_slices = 0;
     }
 
     if(measurement_list[i].type == PIONNORM) {
       measurement_list[i].measurefunc = &pion_norm_measurement;
       measurement_list[i].max_source_slice = g_nproc_z*LZ;
-      measurement_list[i].no_samples = 1;
-      measurement_list[i].all_time_slices = 0;
     }
     
     if(measurement_list[i].type == POLYAKOV) {

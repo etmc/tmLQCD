@@ -20,13 +20,13 @@
  ************************************************************************/
 
 #if HAVE_CONFIG_H
-#include <config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <math.h>
 #include <complex.h> 
 
 #if (defined SSE || defined SSE2 || defined SSE3)
-# include "sse.h"
+#include "sse.h"
 #endif
 #include "su3.h"
 

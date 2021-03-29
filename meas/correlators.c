@@ -19,7 +19,7 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -53,6 +53,8 @@
  *
  ******************************************************/
 
+#define TM_OMEAS_FILENAME_LENGTH 100
+
 void correlators_measurement(const int traj, const int id, const int ieo) {
   int i, j, t, tt, t0;
   double *Cpp = NULL, *Cpa = NULL, *Cp4 = NULL;
@@ -66,10 +68,8 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
   double *sCpp = NULL, *sCpa = NULL, *sCp4 = NULL;
 #endif
   FILE *ofs;
-  char *filename;
-  char buf[100];
+  char filename[TM_OMEAS_FILENAME_LENGTH];
   spinor phi;
-  filename=buf;
 
   init_operators();
   if(no_operators < 1) {
@@ -106,11 +106,14 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
     for(int ts = 0; ts < max_time_slices; ts++){
 
       if( max_samples == 1 && max_time_slices == 1 ){
-        sprintf(filename,"%s%06d", "onlinemeas." ,traj);
+        snprintf(filename, TM_OMEAS_FILENAME_LENGTH, 
+                 "%s%06d", "onlinemeas." ,traj);
       } else if ( max_samples == 1 && max_time_slices > 1){
-        sprintf(filename,"%s%06d.t%03d", "onlinemeas.", traj, ts );
+        snprintf(filename, TM_OMEAS_FILENAME_LENGTH, 
+                 "%s.t%03d.%06d", "onlinemeas", ts, traj );
       } else {
-        sprintf(filename,"%s%06d.s%03d", "onlinemeas.", traj, sample);
+        snprintf(filename, TM_OMEAS_FILENAME_LENGTH,
+                 "%s.s%03d.%06d", "onlinemeas", sample, traj);
       }
       /* generate random timeslice */
       t0 = ts;
@@ -123,7 +126,7 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
 #endif
       if(g_debug_level > 1 && g_proc_id == 0) {
         printf("# timeslice set to %d (T=%d) for online measurement\n", t0, g_nproc_t*T);
-        printf("# online measurements parameters: kappa = %g, mu = %g\n", optr->kappa, optr->mu/2./optr->kappa);
+        printf("# online measurements parameters: kappa = %.12f, mu = %.12f\n", optr->kappa, optr->mu/2./optr->kappa);
       }
       atime = gettime();
 
@@ -237,8 +240,8 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
 #else
       free(Cpp); free(Cpa); free(Cp4);
 #endif
-    }
-  } 
+    } // for(max_time_slices)
+  } // for(max_samples)
   etime = gettime();
   if(g_proc_id == 0 && g_debug_level > 0) {
     printf("ONLINE: measurement done int t/s = %1.4e\n", etime - atime);

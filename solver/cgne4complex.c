@@ -18,18 +18,18 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+#include "tmlqcd_config.h"
 #endif
-#include<stdlib.h>
-#include<stdio.h>
-#include<math.h>
-#include<string.h>
-#include"global.h"
-#include"su3.h"
-#include"linalg_eo.h"
-#include"gettime.h"
-#include"gcr4complex.h"
-#include"cgne4complex.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+#include <string.h>
+#include "global.h"
+#include "su3.h"
+#include "linalg_eo.h"
+#include "gettime.h"
+#include "gcr4complex.h"
+#include "cgne4complex.h"
 
 int cgne4complex(_Complex double * const P, _Complex double * const Q, 
 		 const int max_iter, const double eps_sq, const int rel_prec,
