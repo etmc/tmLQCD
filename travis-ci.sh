@@ -47,7 +47,7 @@ fi
 sudo apt-get update
 sudo apt-get install -y flex libblas-dev liblapack-dev gfortran
 
-autoconf
+autoreconf --verbose --install --force
 
 ./configure \
     --disable-mpi \

@@ -269,6 +269,9 @@ static inline double fltlist_next_token(int * const list_end){
 %}
 
 %option never-interactive
+%option case-insensitive
+%option prefix="tmlqcd"
+%option outfile="read_input.c"
 
 %x STARTCOND
 %x THERMSWEEPS

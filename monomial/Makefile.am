@@ -1,0 +1,20 @@
+lib_libtmLQCD_a_SOURCES+= \
+        %D%/clover_trlog_monomial.c \
+        %D%/cloverdet_monomial.c \
+        %D%/cloverdetratio_monomial.c \
+        %D%/cloverdetratio_rwmonomial.c \
+        %D%/clovernd_trlog_monomial.c \
+        %D%/cloverndpoly_monomial.c \
+        %D%/det_monomial.c \
+        %D%/detratio_monomial.c \
+        %D%/gauge_monomial.c \
+        %D%/moment_energy.c \
+        %D%/monitor_forces.c \
+        %D%/monomial.c \
+        %D%/nddetratio_monomial.c \
+        %D%/ndpoly_monomial.c \
+        %D%/ndrat_monomial.c \
+        %D%/ndratcor_monomial.c \
+        %D%/poly_monomial.c \
+        %D%/rat_monomial.c \
+        %D%/ratcor_monomial.c
