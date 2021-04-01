@@ -167,7 +167,7 @@ clean: clean-recursive Makefile
 
 distclean: distclean-recursive Makefile
 	rm -f benchmark hmc_tm invert offline_measurement *.o *.d *~ Makefile config.log config.status fixed_volume.h
-	rm -f config.h
+	rm -f include/tmlqcd_config_internal.h
 
 .PHONY: all ${SUBDIRS} ${top_srcdir}/git_hash.h clean compile-clean distclean dep install \
 	all-recursive all-debug-recursive all-profile-recursive \
