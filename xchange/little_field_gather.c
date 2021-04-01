@@ -44,7 +44,7 @@ enum{
   Y_DN = 5,
   Z_UP = 6,
   Z_DN = 7
-} Direction;
+} GatherDirection;
 
 
 #ifdef TM_USE_MPI
