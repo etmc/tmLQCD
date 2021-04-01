@@ -47,6 +47,13 @@
 
 int init_blocks_geometry();
 
+int nb_blocks;
+int nblks_t;
+int nblks_x;
+int nblks_y;
+int nblks_z;
+int nblks_dir[4];
+int blk_gauge_eo;
 int **** block_ipt;
 int *** bipt__;
 int ** bipt_;
