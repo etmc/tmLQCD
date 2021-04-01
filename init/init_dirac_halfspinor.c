@@ -24,7 +24,7 @@
 #include <stdio.h>
 #include <errno.h>
 #if (defined SPI)
-# include "DirectPut.h"
+#include "DirectPut.h"
 #endif
 #include "global.h"
 #include "su3.h"

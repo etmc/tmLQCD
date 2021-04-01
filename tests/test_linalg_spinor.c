@@ -3,7 +3,6 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
-#include <tmlqcd_config.h>
 #include <complex.h>
 #include <time.h>
 #include <cu/cu.h>

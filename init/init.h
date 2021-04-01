@@ -20,6 +20,10 @@
 #ifndef _INIT_H
 #define _INIT_H
 
+#ifdef HAVE_CONFIG_H
+#include <tmlqcd_config.h>
+#endif
+
 #include "init/init_global_states.h"
 #include "init/init_bispinor_field.h"
 #include "init/init_chi_spinor_field.h"
@@ -37,9 +41,9 @@
 #include "init/init_spinor_field.h"
 #include "init/init_stout_smear_vars.h"
 #ifdef TM_USE_OMP
-# include <omp.h>
-# include "init/init_omp_accumulators.h"
-# include "init/init_openmp.h"
+#include <omp.h>
+#include "init/init_omp_accumulators.h"
+#include "init/init_openmp.h"
 #endif
 
 #endif

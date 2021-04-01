@@ -27,11 +27,12 @@
 #define JD_MINIMAL 0
 #endif
 
+#include "su3.h"
+#include "solver/solver_params.h"
+#include "solver/matrix_mult_typedef_bi.h"
+
 #include <stdlib.h>
 #include <stdio.h>
-#include "su3.h"
-#include "solver/solver.h"
-
 
 extern void jdher_bi(int n, int lda, double tau, double jdtol, 
 		     int kmax, int jmax, int jmin, int itmax,

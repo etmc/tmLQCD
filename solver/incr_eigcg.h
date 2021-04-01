@@ -30,9 +30,8 @@
 #ifndef _INCR_EIGCG_H
 #define _INCR_EIGCG_H
 
-#include "su3.h"
 #include "solver/matrix_mult_typedef.h"
-
+#include "su3.h"
 
 int incr_eigcg(
      const int N,      /*(IN) Number of lattice sites for this process*/

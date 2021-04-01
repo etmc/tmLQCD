@@ -49,7 +49,6 @@
 #define N_CHEBYMAX 49
 #define NTILDE_CHEBYMAX 2000
 
-
 /* size of the extra_masses array for operators using the CGMMS solver */
 #define MAX_EXTRA_MASSES 30
 
@@ -62,7 +61,7 @@
 #if ((defined SSE)||(defined SSE2)||(defined SSE3))
 #  include "sse.h"
 #elif defined BGL
-# include "bgl.h"
+#include "bgl.h"
 #endif
 
 EXTERN int DUM_DERI, DUM_MATRIX;

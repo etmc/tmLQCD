@@ -19,8 +19,6 @@
 #ifndef _RG_MIXED_CG_HER_H
 #define _RG_MIXED_CG_HER_H
 
-#include "operator/tm_operators_32.h"
-#include "solver/rg_mixed_cg_typedef.h"
 #include "solver/matrix_mult_typedef.h"
 #include "solver/solver_params.h"
 #include "su3.h"

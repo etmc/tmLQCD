@@ -21,20 +21,20 @@
 #ifdef HAVE_CONFIG_H
 # include<tmlqcd_config.h>
 #endif
-#include<stdlib.h>
-#include<stdio.h>
-#include<math.h>
-#include<string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+#include <string.h>
 #ifdef TM_USE_OMP
 #include <omp.h>
 #endif
-#include"global.h"
-#include"su3.h"
-#include"linalg_eo.h"
+#include "global.h"
+#include "su3.h"
+#include "linalg_eo.h"
 // needed for the dummy function little_mg_precon ...
-#include"block.h"
-#include"dfl_projector.h"
-#include"gcr4complex.h"
+#include "block.h"
+#include "dfl_projector.h"
+#include "gcr4complex.h"
 
 
 #define _PSWITCH(s) s 
@@ -42,7 +42,7 @@
 #define _C_TYPE _Complex double
 #define _F_TYPE double
 
-#include"gcr4complex_body.c"
+#include "gcr4complex_body.c"
 
 #undef _PSWITCH
 #undef _PTSWITCH
@@ -54,7 +54,7 @@
 #define _C_TYPE _Complex float
 #define _F_TYPE float
 
-#include"gcr4complex_body.c"
+#include "gcr4complex_body.c"
 
 #undef _PSWITCH
 #undef _PTSWITCH

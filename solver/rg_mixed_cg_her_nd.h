@@ -19,10 +19,8 @@
 #ifndef _RG_MIXED_CG_HER_ND_H
 #define _RG_MIXED_CG_HER_ND_H
 
-#include "operator/tm_operators_32.h"
 #include "solver/matrix_mult_typedef_nd.h"
 #include "solver/solver_params.h"
-#include "solver/rg_mixed_cg_typedef.h"
 #include "su3.h"
 
 int rg_mixed_cg_her_nd(spinor * const Pup, spinor * const Pdn, spinor * const Qup, spinor * const Qdn,

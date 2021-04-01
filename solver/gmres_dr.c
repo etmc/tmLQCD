@@ -38,21 +38,21 @@
 #ifdef HAVE_CONFIG_H
 # include<tmlqcd_config.h>
 #endif
-#include<stdlib.h>
-#include<stdio.h>
-#include<math.h>
-#include"global.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+#include "global.h"
 #include <complex.h>
-#include"su3.h"
-#include"linalg_eo.h"
-#include"diagonalise_general_matrix.h"
-#include"quicksort.h"
-#include"linalg/lapack.h"
-#include"linalg/blas.h"
-#include"solver/gram-schmidt.h"
-#include"solver/gmres.h"
+#include "su3.h"
+#include "linalg_eo.h"
+#include "diagonalise_general_matrix.h"
+#include "quicksort.h"
+#include "linalg/lapack.h"
+#include "linalg/blas.h"
+#include "solver/gram-schmidt.h"
+#include "solver/gmres.h"
 #include "solver/solver_field.h"
-#include"gmres_dr.h"
+#include "gmres_dr.h"
 
 #ifndef HAVE_LAPACK
 /* In case there is no lapack use normal gmres */

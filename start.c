@@ -68,7 +68,7 @@
 #include <string.h>
 #include <math.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #include "global.h"
 #include "read_input.h"
@@ -437,7 +437,6 @@ void unit_g_gauge_field(void)
     }
   }
   g_update_gauge_copy = 1;
-  update_tm_gauge_id(&g_gauge_state, TM_GAUGE_PROPAGATE_THRESHOLD);
   return;
 }
 
@@ -506,7 +505,6 @@ void random_gauge_field(const int repro, su3 ** const gf) {
   }
 
   g_update_gauge_copy = 1;
-  update_tm_gauge_id(&g_gauge_state, TM_GAUGE_PROPAGATE_THRESHOLD);
   return;
 }
 

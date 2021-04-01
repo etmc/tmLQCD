@@ -36,7 +36,7 @@
 #  include <rts.h>
 #endif
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #include "su3.h"
 #include "su3adj.h"
