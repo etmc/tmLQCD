@@ -17,7 +17,13 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+#ifndef _EOSPINOR_H
+#define _EOSPINOR_H
+
+#include "su3.h"
 
 int read_eospinor(spinor * const s, char * filename);
 int write_eospinor(spinor * const s, char * filename, 
 		   const double evalue, const double prec, const int nstore);
+
+#endif

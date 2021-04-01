@@ -213,8 +213,8 @@ void sw_invert(const int ieo, const double mu) {
       // here we need to catch the error! probably this check should be
       // performed by all processes?! 
       if(err > 0 && g_proc_id == 0) {
-	      printf("# inversion failed in six_invert code %d\n", err);
-	      err = 0;
+        printf("# inversion failed in six_invert code %d\n", err);
+        err = 0;
       }
 
       /*  copy "a" back to sw_inv */

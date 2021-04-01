@@ -41,55 +41,24 @@
 #endif
 #include "global.h"
 #include "git_hash.h"
+#include "read_input.h"
 #include "getopt.h"
-#include "linalg_eo.h"
 #include "geometry_eo.h"
 #include "start.h"
 #include "measure_gauge_action.h"
 #ifdef TM_USE_MPI
 #include "xchange/xchange.h"
 #endif
-#include <io/utils.h>
-#include "read_input.h"
 #include "mpi_init.h"
-#include "sighandler.h"
 #include "boundary.h"
-#include "solver/solver.h"
 #include "init/init.h"
-#include "invert_eo.h"
 #include "monomial/monomial.h"
-#include "ranlxd.h"
 #include "phmc.h"
-#include "operator/D_psi.h"
-#include "little_D.h"
-#include "reweighting_factor.h"
-#include "linalg/convert_eo_to_lexic.h"
 #include "block.h"
 #include "operator.h"
-#include "sighandler.h"
-#include "solver/dfl_projector.h"
 #include "solver/generate_dfl_subspace.h"
-#include "prepare_source.h"
-#include <io/params.h>
-#include <io/gauge.h>
-#include <io/spinor.h>
-#include <io/utils.h>
-#include "solver/dirac_operator_eigenvectors.h"
-#include "P_M_eta.h"
-#include "operator/tm_operators.h"
-#include "operator/Dov_psi.h"
-#include "gettime.h"
-#ifdef TM_USE_QUDA
-#  include "quda_interface.h"
-#endif
-#ifdef TM_USE_QPHIX
-#  include "qphix_interface.h"
-#endif
-#ifdef DDalphaAMG
-#  include "DDalphaAMG_interface.h"
-#endif
+#include "io/gauge.h"
 #include "meas/measurements.h"
-#include "misc_types.h"
 
 #define CONF_FILENAME_LENGTH 500
 
@@ -359,8 +328,8 @@ static void usage(const tm_ExitCode_t exit_code)
 { 
   if( g_proc_id == 0 ){
     fprintf(stdout, "Offline version of the online measurements for twisted mass QCD\n");
-    fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
-    fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
+    fprintf(stdout, "Version %s \n\n", TMLQCD_PACKAGE_VERSION);
+    fprintf(stdout, "Please send bug reports to %s\n", TMLQCD_PACKAGE_BUGREPORT);
     fprintf(stdout, "Usage:   invert [options]\n");
     fprintf(stdout, "Options: [-f input-filename]\n");
     fprintf(stdout, "         [-v] more verbosity\n");

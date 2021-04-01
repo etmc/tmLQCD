@@ -1,7 +1,6 @@
 /***********************************************************************
  *
  * Copyright (C) 2014 Carsten Urbach
- *               2018 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -25,48 +24,41 @@
  *
  *******************************************************************************/
 
-#include <math.h>
-#include <signal.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <stdio.h>
+#include <math.h>
 #include <time.h>
-#include <float.h>
+#include <string.h>
+#include <signal.h>
 #ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
 #include <omp.h>
 #endif
-#include "geometry_eo.h"
-#include "getopt.h"
-#include "git_hash.h"
 #include "global.h"
+#include "git_hash.h"
+#include "getopt.h"
 #include "linalg_eo.h"
+#include "geometry_eo.h"
 #ifdef TM_USE_MPI
 #include "xchange/xchange.h"
 #endif
 #ifdef TM_USE_QUDA
 #include "quda_interface.h"
 #endif
-#ifdef TM_USE_QPHIX
-#include "qphix_interface.h"
-#endif
-#include <io/gauge.h>
 #include <io/utils.h>
-#include "boundary.h"
-#include "fatal_error.h"
-#include "include/tmLQCD.h"
-#include "init/init.h"
-#include "invert_eo.h"
-#include "linalg/convert_eo_to_lexic.h"
-#include "measure_gauge_action.h"
-#include "mpi_init.h"
-#include "operator.h"
-#include "operator/clover_leaf.h"
+#include <io/gauge.h>
 #include "read_input.h"
+#include "mpi_init.h"
+#include "init/init.h"
 #include "sighandler.h"
+#include "boundary.h"
+#include "invert_eo.h"
 #include "start.h"
+#include "operator.h"
+#include "measure_gauge_action.h"
+#include "linalg/convert_eo_to_lexic.h"
 #include "include/tmLQCD.h"
 #include "fatal_error.h"
 #include "misc_types.h"
@@ -78,9 +70,9 @@ extern void finalize_mixedsolve();
 extern void init_gpu_fields(int need_momenta);
 extern void finalize_gpu_fields();
 #include "GPU/cudadefs.h"
-#ifdef TEMPORALGAUGE
-#include "temporalgauge.h"
-#endif
+#  ifdef TEMPORALGAUGE
+#  include "temporalgauge.h" 
+#  endif
 #endif
 
 #define CONF_FILENAME_LENGTH 500
@@ -183,7 +175,7 @@ int tmLQCD_invert_init(int argc, char* argv[], const int _verbose, const int ext
 
   // initialise the operators
   init_operators();
-
+  
 #ifdef HAVE_GPU
   if (usegpu_flag) {
     if (even_odd_flag) {
@@ -337,6 +329,7 @@ int tmLQCD_invert_eo(double* const Odd_out, double* const Odd_in, const int op_i
 }
 
 int tmLQCD_finalise() {
+
 #ifdef TM_USE_OMP
   free_omp_accumulators();
 #endif
@@ -356,7 +349,7 @@ int tmLQCD_finalise() {
 #ifdef TM_USE_QUDA
   _endQuda();
 #endif
-
+  
   free_gauge_field();
   free_geometry_indices();
   if (!lowmem_flag) {

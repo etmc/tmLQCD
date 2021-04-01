@@ -26,6 +26,8 @@
 #include "su3.h"
 #include "su3spinor.h"
 
+#include <complex.h>
+
 extern _Complex double * little_A;
 extern _Complex float * little_A32;
 extern _Complex double * little_A_eo;

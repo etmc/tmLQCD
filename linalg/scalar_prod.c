@@ -36,7 +36,7 @@
 #define _PSWITCH(s) s
 #define _PTSWITCH(s) s
 
-#include"scalar_prod_body.c"
+#include "scalar_prod_body.c"
 
 #undef _C_TYPE
 #undef _PSWITCH

@@ -70,7 +70,7 @@ include ${top_srcdir}/Makefile.global
 
 # rule to compile objects
 
-%.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/include/tmlqcd_config.h
+%.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/include/tmlqcd_config_internal.h
 	$(COMPILE) -c $<
 
 

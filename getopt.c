@@ -69,7 +69,7 @@
 
 #define GETOPT_INTERFACE_VERSION 2
 #if !defined _LIBC && defined __GLIBC__ && __GLIBC__ >= 2
-# include <gnu-versions.h>
+#include <gnu-versions.h>
 # if _GNU_GETOPT_INTERFACE_VERSION == GETOPT_INTERFACE_VERSION
 #  define ELIDE_CODE
 # endif
@@ -83,12 +83,12 @@
 #ifdef	__GNU_LIBRARY__
 /* Don't include stdlib.h for non-GNU C libraries because some of them
    contain conflicting prototypes for getopt.  */
-# include <stdlib.h>
-# include <unistd.h>
+#include <stdlib.h>
+#include <unistd.h>
 #endif	/* GNU C library.  */
 
 #ifdef VMS
-# include <unixlib.h>
+#include <unixlib.h>
 # if HAVE_STRING_H - 0
 #  include <string.h>
 # endif
@@ -212,7 +212,7 @@ static char *posixly_correct;
    because there are many ways it can cause trouble.
    On some systems, it contains special magic macros that don't work
    in GCC.  */
-# include <string.h>
+#include <string.h>
 # define my_index	strchr
 #else
 

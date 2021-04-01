@@ -35,15 +35,15 @@
 #  include <rts.h>
 #endif
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 # ifdef HAVE_LIBLEMON
 #  include <io/params.h>
 #  include <io/gauge.h>
 # endif
 #endif
 #ifdef TM_USE_OMP
-# include <omp.h>
-# include "init/init_openmp.h"
+#include <omp.h>
+#include "init/init_openmp.h"
 #endif
 #include "gettime.h"
 #include "su3.h"
@@ -113,8 +113,6 @@ int main(int argc,char *argv[])
 #endif
 
   g_rgi_C1 = 1.; 
-  
-  init_global_states();
 
     /* Read the input file */
   if((status = read_input("benchmark.input")) != 0) {
