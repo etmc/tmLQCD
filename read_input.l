@@ -1,4 +1,4 @@
-/**********************************************************************
+/***********************************************************************
  *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
@@ -52,7 +52,6 @@ EQL {SPC}*={SPC}*
 #include<stdlib.h>
 #include<stdio.h>
 #include<string.h>
-#include<ctype.h>
 #define INIT_GLOBALS
 #include"global.h"
 #include"read_input.h"

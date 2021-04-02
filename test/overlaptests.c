@@ -1,4 +1,4 @@
-#include"lime.h"
+#include "lime.h"
 #ifdef HAVE_CONFIG_H
 # include<tmlqcd_config.h>
 #endif
@@ -16,7 +16,7 @@
 #include "linalg_eo.h"
 #include "start.h"
 #ifdef TM_USE_MPI
-# include "xchange/xchange.h"
+#include "xchange/xchange.h"
 #endif
 #include "read_input.h"
 #include "boundary.h"

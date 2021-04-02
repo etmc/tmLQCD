@@ -115,21 +115,21 @@ libhmc.a: ${addsuffix .o, ${MODULES} ${SMODULES}} Makefile
 	@$(RANLIB) libhmc.a
 	@cp libhmc.a ${top_builddir}/lib/libhmc.a
 
-$(addsuffix .o,$(filter-out ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/include/tmlqcd_config.h
+$(addsuffix .o,$(filter-out ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/include/tmlqcd_config_internal.h
 	${COMPILE} ${OPTARGS} -c $<
 
 #here we don't need optimisation
-$(addsuffix .o,$(filter ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/include/tmlqcd_config.h
+$(addsuffix .o,$(filter ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/include/tmlqcd_config_internal.h
 	${COMPILE} -c $<
 
-${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/include/tmlqcd_config.h
+${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/include/tmlqcd_config_internal.h
 	${COMPILE} ${SOPTARGS} -c $<
 
 # C++ modules
-$(addsuffix .o,${CXXMODULES}): %.o: ${srcdir}/%.cpp %.d Makefile $(abs_top_builddir)/include/tmlqcd_config.h
+$(addsuffix .o,${CXXMODULES}): %.o: ${srcdir}/%.cpp %.d Makefile $(abs_top_builddir)/include/tmlqcd_config_internal.h
 	${CXXCOMPILE} -c $<
 	
-${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/include/tmlqcd_config.h ${top_srcdir}/git_hash.h
+${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/include/tmlqcd_config_internal.h ${top_srcdir}/git_hash.h
 	${COMPILE} ${OPTARGS} -c $<
 
 ${PROGRAMS}: %: %.o libhmc.a $(SUBDIRS) $(addsuffix .o,${CXXMODULES})
@@ -163,11 +163,11 @@ compile-clean: compile-clean-recursive Makefile
 	rm -f *.o *.d test/*.o test/*.d tests/*.o tests/*.d
 
 clean: clean-recursive Makefile
-	rm -f benchmark hmc_tm invert test_Dslash *.o *.d test/*.o test/*.d tests/*.o tests/*.d
+	rm -f benchmark hmc_tm invert offline_measurement test_Dslash *.o *.d test/*.o test/*.d tests/*.o tests/*.d
 
 distclean: distclean-recursive Makefile
-	rm -f benchmark hmc_tm invert *.o *.d *~ Makefile config.log config.status fixed_volume.h
-	rm -f include/tmlqcd_config.h
+	rm -f benchmark hmc_tm invert offline_measurement *.o *.d *~ Makefile config.log config.status fixed_volume.h
+	rm -f include/tmlqcd_config_internal.h
 
 .PHONY: all ${SUBDIRS} ${top_srcdir}/git_hash.h clean compile-clean distclean dep install \
 	all-recursive all-debug-recursive all-profile-recursive \

@@ -8,7 +8,7 @@
 #include <time.h>
 #include <assert.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #include "global.h"
 #include <io/params.h>

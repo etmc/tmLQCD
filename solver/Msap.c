@@ -48,7 +48,7 @@ void dummy_Di(spinor * const P, spinor * const Q, const int i) {
 #define _PTSWITCH(s) s
 #define _PSWITCH(s) s
 
-#include"M_plus_block_psi_body.c"
+#include "M_plus_block_psi_body.c"
 
 #undef _PTSWITCH
 #undef _PSWITCH
@@ -58,7 +58,7 @@ void dummy_Di(spinor * const P, spinor * const Q, const int i) {
 // this is ugly!
 #define DUM_MATRIX 0
 
-#include"M_plus_block_psi_body.c"
+#include "M_plus_block_psi_body.c"
 
 #undef _PTSWITCH
 #undef _PSWITCH

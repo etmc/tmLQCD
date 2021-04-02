@@ -28,6 +28,8 @@
 #ifndef _MATRIX_MULT_TYPEDEF_BI_H
 #define _MATRIX_MULT_TYPEDEF_BI_H
 
+#include "su3.h"
+
 typedef void (*matrix_mult_bi)(bispinor * const, bispinor * const);
 
 /*   SO FAR, THE CLOVER TERM IS NOT REALLY NEEDED FOR THE ND-CASE */

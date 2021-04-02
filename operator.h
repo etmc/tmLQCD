@@ -21,7 +21,7 @@
 #ifndef _OPERATOR_H
 #define _OPERATOR_H
 
-#include <io/utils.h>
+#include "io/utils.h"
 #include "solver/dirac_operator_eigenvectors.h"
 #include "su3.h"
 #include "solver/solver_params.h"

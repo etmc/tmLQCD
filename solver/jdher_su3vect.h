@@ -26,10 +26,7 @@
 #define JD_MINIMAL 0
 #endif
 
-#include <stdlib.h>
-#include <stdio.h>
-#include "su3.h"
-#include "solver/solver.h"
+#include "solver/matrix_mult_typedef.h"
 
 void jderrorhandler(const int i, char * message);
 

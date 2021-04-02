@@ -34,7 +34,7 @@
 #  include <rts.h>
 #endif
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 
 #include "gettime.h"

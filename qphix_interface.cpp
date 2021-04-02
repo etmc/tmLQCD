@@ -81,7 +81,6 @@ extern "C" {
 #include <cstdlib>
 #include <cstring>
 #include <vector>
-#include <complex>
 #include <cmath>
 
 using namespace tmlqcd;
@@ -150,20 +149,20 @@ void _initQphix(int argc, char **argv, tm_QPhiXParams_t params, int c12, QphixPr
     double dim_phase[2] = {1.0, 0.0};
     if (dim == 0) {
       dim_tbc = (fabs(X1) > DBL_EPSILON);
-      dim_phase[0] = creal(-phase_1 / g_kappa);
-      dim_phase[1] = cimag(-phase_1 / g_kappa);
+      dim_phase[0] = -((double*)(&phase_1))[0] / g_kappa;
+      dim_phase[1] = -((double*)(&phase_1))[1] / g_kappa;
     } else if (dim == 1) {
       dim_tbc = (fabs(X2) > DBL_EPSILON);
-      dim_phase[0] = creal(-phase_2 / g_kappa);
-      dim_phase[1] = cimag(-phase_2 / g_kappa);
+      dim_phase[0] = -((double*)(&phase_2))[0] / g_kappa;
+      dim_phase[1] = -((double*)(&phase_2))[1] / g_kappa;
     } else if (dim == 2) {
       dim_tbc = (fabs(X3) > DBL_EPSILON);
-      dim_phase[0] = creal(-phase_3 / g_kappa);
-      dim_phase[1] = cimag(-phase_3 / g_kappa);
+      dim_phase[0] = -((double*)(&phase_3))[0] / g_kappa;
+      dim_phase[1] = -((double*)(&phase_3))[1] / g_kappa;
     } else if (dim == 3) {
       dim_tbc = (fabs(X0) > DBL_EPSILON);
-      dim_phase[0] = creal(-phase_0 / g_kappa);
-      dim_phase[1] = cimag(-phase_0 / g_kappa);
+      dim_phase[0] = -((double*)(&phase_0))[0] / g_kappa;
+      dim_phase[1] = -((double*)(&phase_0))[1] / g_kappa;
     }
     use_tbc[dim] = dim_tbc;
     tbc_phases[dim][0] = dim_phase[0];

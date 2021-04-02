@@ -67,6 +67,7 @@
 
 #include "solver_field.h"
 #include "solver/rg_mixed_cg_her.h"
+#include "solver/rg_mixed_cg_typedef.h"
 #include "gettime.h"
 
 static void output_flops(const double seconds, const unsigned int N, const unsigned int iter_out, const unsigned int iter_in_sp, const unsigned int iter_in_dp, const double eps_sq);

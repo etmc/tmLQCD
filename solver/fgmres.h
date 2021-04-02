@@ -49,8 +49,8 @@
 #ifndef _FGMRES_H
 #define _FGMRES_H
 
-#include"solver/matrix_mult_typedef.h"
-#include"su3.h"
+#include "solver/matrix_mult_typedef.h"
+#include "su3.h"
 
 int fgmres(spinor * const P,spinor * const Q, 
 	   const int m, const int max_restarts,

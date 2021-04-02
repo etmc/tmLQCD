@@ -30,7 +30,7 @@
 #include <stdio.h>
 #include <math.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #include "global.h"
 #include "mpi_init.h"

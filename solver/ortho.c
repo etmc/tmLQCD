@@ -34,7 +34,7 @@
 #include <math.h>
 #include <time.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #include "global.h"
 #include "linalg_eo.h"

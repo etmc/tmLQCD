@@ -3,13 +3,13 @@
 #include <complex.h>
 #include <cu/cu.h>
 #if (defined SSE || defined SSE2 || defined SSE3)
-# include "sse.h"
+#include "sse.h"
 #endif
 #include "../su3.h"
 #include "../su3adj.h"
 #include "../expo.h"
 #if (!defined BGQ && defined XLC) 
-# include "../bgq.h"
+#include "../bgq.h"
 #endif
 
 #define EPS 5e-16

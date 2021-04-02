@@ -18,8 +18,8 @@
 #ifndef _CG_HERSU3V_H
 #define _CG_HERSU3V_H
 
-#include"solver/matrix_mult_typedef.h"
-#include"su3.h"
+#include "solver/matrix_mult_typedef.h"
+#include "su3.h"
 
 int cg_her_su3vect(su3_vector * const P, su3_vector * const Q, const int max_iter, double eps_sq, const int rel_prec, 
 		   const int N, const int tslice, matrix_mult_su3vect f);

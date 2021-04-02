@@ -42,7 +42,7 @@
 #define _PSWITCH(s) s
 #define _PTSWITCH(s) s
 
-#include"assign_add_mul_body.c"
+#include "assign_add_mul_body.c"
 
 #undef _C_TYPE
 #undef _PSWITCH
@@ -52,7 +52,7 @@
 #define _PSWITCH(s) s ## _32
 #define _PTSWITCH(s) s ## 32
 
-#include"assign_add_mul_body.c"
+#include "assign_add_mul_body.c"
 
 #undef _C_TYPE
 #undef _PSWITCH

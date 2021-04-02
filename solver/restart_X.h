@@ -32,6 +32,7 @@
 #ifndef _RESTART_X_H
 #define _RESTART_X_H
 
+#include <complex.h>
 
 /*double precision version */
 void Zrestart_X(_Complex double  *X, int ldx, _Complex double  *hVecs, int nLocal, 

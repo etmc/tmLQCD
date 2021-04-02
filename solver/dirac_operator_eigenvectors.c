@@ -35,7 +35,6 @@
 #include <stdlib.h>
 
 #include "global.h"
-#include "tmlqcd_config.h"
 #include "su3.h"
 #include "sse.h"
 #include "monomial/monomial.h"

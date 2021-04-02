@@ -8,7 +8,7 @@ read_input.c
 *~
 Makefile
 config.log
-tmlqcd_config.h
+tmlqcd_config_internal.h
 config.status
 *.mod.c
 *.opari.inc

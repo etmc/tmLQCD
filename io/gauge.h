@@ -24,10 +24,11 @@
 #include<tmlqcd_config.h>
 #endif
 
-#include <io/selector.h>
-#include <io/params.h>
-#include <io/utils.h>
+#include "io/selector.h"
+#include "io/params.h"
+#include "io/utils.h"
 
+#include "su3.h"
 
 int read_gauge_field(char *filename, su3 ** const gf);
 int read_binary_gauge_data(READER *reader, DML_Checksum *checksum, paramsIldgFormat * ildgformat, su3 ** const gf);

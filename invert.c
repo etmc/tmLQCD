@@ -304,7 +304,6 @@ int main(int argc, char *argv[])
       printf("# Finished reading gauge field.\n");
       fflush(stdout);
     }
-
 #ifdef TM_USE_MPI
     xchange_gauge(g_gauge_field);
     update_tm_gauge_exchange(&g_gauge_state);
@@ -481,8 +480,8 @@ static void usage(tm_ExitCode_t exit_code)
 {
   if( g_proc_id == 0 ){
     fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
-    fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
-    fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
+    fprintf(stdout, "Version %s \n\n", TMLQCD_PACKAGE_VERSION);
+    fprintf(stdout, "Please send bug reports to %s\n", TMLQCD_PACKAGE_BUGREPORT);
     fprintf(stdout, "Usage:   invert [options]\n");
     fprintf(stdout, "Options: [-f input-filename]\n");
     fprintf(stdout, "         [-o output-filename]\n");
@@ -511,7 +510,7 @@ static void process_args(int argc, char *argv[], char ** input_filename, char **
         break;
       case 'V':
         if(g_proc_id == 0) {
-          fprintf(stdout,"%s %s\n",PACKAGE_STRING,git_hash);
+          fprintf(stdout,"%s %s\n",TMLQCD_PACKAGE_STRING,git_hash);
         }
         exit(TM_EXIT_SUCCESS);
         break;

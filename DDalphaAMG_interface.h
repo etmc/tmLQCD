@@ -25,8 +25,8 @@
 #define DDalphaAMG_INTERFACE_H_
 #include "global.h"
 #include "su3.h"
-#include"solver/matrix_mult_typedef.h"
-#include"solver/matrix_mult_typedef_nd.h"
+#include "solver/matrix_mult_typedef.h"
+#include "solver/matrix_mult_typedef_nd.h"
 
 extern int mg_setup_iter;
 extern int mg_coarse_setup_iter;

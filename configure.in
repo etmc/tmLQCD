@@ -3,7 +3,7 @@
 #
 AC_PREREQ(2.59)
 AC_INIT(tmLQCD, 5.2.0, curbach@gmx.de)
-AC_CONFIG_HEADER(include/tmlqcd_config.h)
+AC_CONFIG_HEADER(include/tmlqcd_config_internal.h)
 AC_CONFIG_SRCDIR([hmc_tm.c])
 AC_CANONICAL_HOST()
 AC_PREFIX_DEFAULT($HOME)
@@ -387,7 +387,7 @@ AC_SUBST(QPHIX_INTERFACE)
 AC_SUBST(QPHIX_PROGRAMS)
 AC_SUBST(DDalphaAMG_INTERFACE)
 
-INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${abs_top_builddir}/  -I\${abs_top_builddir}/include/ -I\${abs_top_srcdir}/ -I${lime_dir}/include/ -I${lemon_dir}/include/"
+INCLUDES="$INCLUDES -I\$(HOME)/include/ -I. -I\${abs_top_builddir}/  -I\${abs_top_builddir}/include/ -I\${abs_top_srcdir}/ -I\${abs_top_srcdir}/include/ -I${lime_dir}/include/ -I${lemon_dir}/include/"
 DEPFLAGS="$DEPFLAGS"
 
 AC_MSG_CHECKING(what alignment we want for arrays)
@@ -985,16 +985,6 @@ AC_ARG_WITH(qudadir,
               )
 AC_SUBST([QUDA_AVAILABLE])
 
-AC_MSG_CHECKING(whether the QUDA version is experimental)
-AC_ARG_ENABLE(quda_experimental,
-  AS_HELP_STRING([--enable-quda_experimental], [enable support for experimental QUDA versions [default=no]]),
-  enable_quda_experimental=$enableval, enable_quda_experimental=no)
-if test $enable_quda_experimental = yes; then
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(TM_QUDA_EXPERIMENTAL,1,Experimental QUDA version in use)
-else
-  AC_MSG_RESULT(no)
-fi
 
 # QPhiX library for Intel Xeon and Xeon Phis
 AC_MSG_CHECKING(whether we want to use QPhiX)
