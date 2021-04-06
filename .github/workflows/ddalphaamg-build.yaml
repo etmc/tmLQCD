@@ -98,9 +98,10 @@ jobs:
         shell: bash
         working-directory: ${{github.workspace}}/main/build
         run: |
-          CC=mpicc CXX=mpicxx ../configure \
+          CC=mpicc CXX=mpicxx \
           CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
           CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
+          ../configure \
           --enable-mpi \
           --with-mpidimension=4 \
           --enable-omp \
@@ -111,4 +112,22 @@ jobs:
           --with-DDalphaAMG=${{github.workspace}}/ddalphaamg \
           --with-lapack="-lblas -llapack" && \
           make -j
+
+      - name: nf2_ddalphaamg_hmc_tmcloverdetratio
+        working-directory: ${{github.workspace}}/main/build
+        run: |
+          mpirun -np 2 ./hmc_tm \
+          -f ../sample-input/sample-hmc-ddalphaamg-tmcloverdetratio.input
+
+      - name: compare_nf2_ddalphaamg_hmc_tmcloverdetratio
+        working-directory: ${{github.workspace}}/main/build
+        run: |
+          refpath=${{github.workspace}}/main/sample-output/hmc-ddalphaamg-tmcloverdetratio; \
+          numdiff -r 1e-6 -X 1:10 -X 1:5-8 -X 2:10 -X 2:5-8 output.data ${refpath}/output.data; \
+          numdiff -r 1e-6 return_check.data ${refpath}/return_check.data; \
+          for i in $(seq 0 2 18); do \
+            f=onlinemeas.$(printf %06d $i); \
+            numdiff -r 1e-6 ${f} ${refpath}/${f}; \
+          done
+
 
