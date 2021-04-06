@@ -10,12 +10,23 @@ jobs:
       - name: get_lime
         uses: actions/checkout@v2
         with:
-          repository: usqcd/clime
+          repository: usqcd-software/c-lime
+          path: lime
+        run: cd ${{github.worksace}}/lime/ && ./autogen.sh
+      
+      - name: create_lime_builddir
+        run: mkdir ${{github.workspace}}/lime/build
 
       - name: get_lemon
         uses: actions/checkout@v2
         with:
           name: etmc/lemon
+          path: lemon
+
+      - name: get_tmlqcd
+        uses: actions/checkout@v2
+        with:
+          path: tmLQCD
 
       - name: create_builddir
         shell: bash
