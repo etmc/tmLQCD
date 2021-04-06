@@ -76,7 +76,7 @@ jobs:
       - name: build_ddalphaamg
         working-directory: ${{github.workspace}}/ddalphaamg
         run: |
-          sed -i 's/${CFLAGS_intel}/${CFLAGS_gnu}/g' Makefile; \
+          sed -i 's/$(CFLAGS_intel)/$(CFLAGS_gnu)/g' Makefile; \
           sed -i 's/mpiicc/mpicc/g' Makefile; \
           LIMEDIR=${{github.workspace}}/lime/build/install_dir \
           make -j lib/libDDalphaAMG.a
