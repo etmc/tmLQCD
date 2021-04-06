@@ -165,10 +165,10 @@ jobs:
         working-directory: ${{github.workspace}}/main/build
         run: |
           refpath=${{github.workspace}}/main/sample-output/hmc-qphix-cp_pacs_nf2_wilson_clover_beta1p95_csw1p53; \
-          numdiff -r 1e-8 -X 1:10 -X 2:10 output.data ${refpath}/output.data; \
-          numdiff -r 1e-8 return_check.data ${refpath}/return_check.data; \
+          numdiff -r 1e-6 -X 1:10 -X 1:5-8 -X 2:10 -X 2:5-8 output.data ${refpath}/output.data; \
+          numdiff -r 1e-6 return_check.data ${refpath}/return_check.data; \
           for i in $(seq 0 2 18); do \
             f=onlinemeas.$(printf %06d $i); \
-            numdiff -r 1e-8 ${f} ${refpath}/${f}; \
+            numdiff -r 1e-6 ${f} ${refpath}/${f}; \
           done
 
