@@ -153,7 +153,7 @@ jobs:
           --with-qmpdir=${{github.workspace}}/qmp/build/install_dir \
           --with-qphixdir=${{github.workspace}}/qphix/build/install_dir \
           --enable-qphix-soalen=4 \
-          && make -j
+          && make
 
       - name: nf2_wilson_clover_qphix_hmc
         working-directory: ${{github.workspace}}/main/build
