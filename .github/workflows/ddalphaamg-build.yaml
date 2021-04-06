@@ -98,6 +98,7 @@ jobs:
         shell: bash
         working-directory: ${{github.workspace}}/main/build
         run: |
+          ls -l ${{github.workspace}}/ddalphaamg/lib; \
           CC=mpicc CXX=mpicxx \
           CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
           CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
