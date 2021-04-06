@@ -1,0 +1,111 @@
+name: basic-build
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # handling of environment variable: https://stackoverflow.com/a/57969570
+      - name: lscpu
+        run: |
+          lscpu; \
+          echo "nb_cores=$(lscpu | grep \^CPU\(s\)\: | awk '{print $2}')" >> $GITHUB_ENV
+
+      - name: gcc_version
+        run: gcc --version
+
+      - name: echo_nb_cores
+        run: echo "Number of cores ${nb_cores}"
+
+      - name: get_packages
+        run: sudo apt install openmpi-bin openmpi-common
+
+      - name: get_lime
+        uses: actions/checkout@v2
+        with:
+          repository: usqcd-software/c-lime
+          path: lime
+
+      - name: autogen_lime
+        working-directory: ${{github.workspace}}/lime
+        run: ./autogen.sh
+      
+      - name: create_lime_builddir
+        run: mkdir ${{github.workspace}}/lime/build
+
+      - name: build_lime
+        working-directory: ${{github.workspace}}/lime/build
+        run: |
+          CC=gcc \
+          CFLAGS="-march=native -mtune=native -O2" \
+          ../configure --prefix=$(pwd)/install_dir && \
+          make -j && \
+          make install
+
+      - name: get_lemon
+        uses: actions/checkout@v2
+        with:
+          repository: etmc/lemon
+          path: lemon
+
+      - name: create_lemon_builddir
+        run: mkdir ${{github.workspace}}/lemon/build
+
+      - name: autogen_lemon
+        working-directory: ${{github.workspace}}/lemon
+        run: autoreconf -i -f
+
+      - name: build_lemon
+        working-directory: ${{github.workspace}}/lemon/build
+        run: |
+          CC=mpicc \
+          CFLAGS="-march=native -mtune=native -O2" \
+          ../configure \
+          --prefix=$(pwd)/install_dir && \
+          make -j && \
+          make install
+
+      - name: get_ddalphaamg
+        uses: actions/checkout@v2
+        with:
+          repository: sbacchio/ddalphaamg
+          path: ddalphaamg
+
+      - name: build_ddalphaamg
+        working-directory: ${{github.workspace}}/ddalphaamg
+        run: |
+          sed -i 's/${CFLAGS_intel}/${CFLAGS_gnu}/g' Makefile; \
+          LIMEDIR=${{github.workspace}}/lime/build/install_dir \
+          make -j lib/libDDalphaAMG.a
+
+      - name: get_tmlqcd
+        uses: actions/checkout@v2
+        with:
+          path: main
+
+      - name: create_builddir
+        shell: bash
+        run: mkdir ${{github.workspace}}/main/build
+
+      - name: autogen_tmlqcd
+        working-directory: ${{github.workspace}}/main
+        run: autoconf
+
+      - name: configure_and_build
+        shell: bash
+        working-directory: ${{github.workspace}}/main/build
+        run: |
+          CC=mpicc CXX=mpicxx ../configure \
+          --enable-mpi \
+          --with-mpidimension=4 \
+          --enable-omp \
+          --disable-sse2 \
+          --disable-sse3 \
+          --with-limedir=${{github.workspace}}/lime/build/install_dir \
+          --with-lemondir=${{github.workspace}}/lemon/build/install_dir \
+          --with-DDalphaAMG=${{github.workspace}}/ddalphaamg \
+          --with-lapack="-lblas -llapack" && \
+          make -j
+
