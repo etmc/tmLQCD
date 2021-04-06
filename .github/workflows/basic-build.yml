@@ -39,7 +39,7 @@ jobs:
         run: mkdir ${{github.workspace}}/lemon/build
 
       - name: autogen_lemon
-        working-directory: ${{github-workspace}}/lemon
+        working-directory: ${{github.workspace}}/lemon
         run: autoreconf -i -f
 
       - name: build_lemon
