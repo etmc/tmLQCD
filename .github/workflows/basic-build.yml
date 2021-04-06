@@ -36,7 +36,7 @@ jobs:
         working-directory: ${{github.workspace}}/lime/build
         run: |
           CC=gcc \
-          CFLAGS="-march=native -mtune=native -O2" \
+          CFLAGS="-march=haswell -mtune=haswell -O2" \
           ../configure --prefix=$(pwd)/install_dir && \
           make -j && \
           make install
@@ -55,7 +55,7 @@ jobs:
         working-directory: ${{github.workspace}}/lemon/build
         run: |
           CC=mpicc \
-          CFLAGS="-march=native -mtune=native -O2" \
+          CFLAGS="-march=haswell -mtune=haswell -O2" \
           ../configure \
           --prefix=$(pwd)/install_dir && \
           make -j && \
@@ -79,8 +79,8 @@ jobs:
         working-directory: ${{github.workspace}}/main/build
         run: |
           CC=mpicc CXX=mpicxx \
-          CFLAGS="-O2 -mtune=native -march=native -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
-          CXXFLAGS="-O2 -mtune=native -march=native -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
+          CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
+          CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
           ../configure \
           --enable-mpi \
           --with-mpidimension=4 \

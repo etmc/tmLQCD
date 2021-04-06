@@ -36,7 +36,7 @@ jobs:
         working-directory: ${{github.workspace}}/lime/build
         run: |
           CC=gcc \
-          CFLAGS="-march=native -mtune=native -O2" \
+          CFLAGS="-march=haswell -mtune=haswell -O2" \
           ../configure --prefix=$(pwd)/install_dir && \
           make -j && \
           make install
@@ -55,7 +55,7 @@ jobs:
         working-directory: ${{github.workspace}}/lemon/build
         run: |
           CC=mpicc \
-          CFLAGS="-march=native -mtune=native -O2" \
+          CFLAGS="-march=haswell -mtune=haswell -O2" \
           ../configure \
           --prefix=$(pwd)/install_dir && \
           make -j && \
@@ -75,7 +75,7 @@ jobs:
         working-directory: ${{github.workspace}}/qmp/build
         run: |
           CC=mpicc \
-          CFLAGS="-std=c99 -O2 -mtune=native -march=native" \
+          CFLAGS="-std=c99 -O2 -mtune=haswell -march=haswell" \
           ../configure \
           --prefix=$(pwd)/install_dir \
           --with-qmp-comms-type=MPI && \
@@ -98,7 +98,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: qphix/build
-          key: ${{ runner.os }}-qphix
+          key: ${{ runner.os }}-haswell-qphix
 
       - name: build_qphix
         working-directory: ${{github.workspace}}/qphix/build
@@ -113,12 +113,12 @@ jobs:
           -Dtwisted_mass=ON \
           -Dtesting=OFF \
           -DCMAKE_CXX_COMPILER=mpicxx \
-          -DCMAKE_CXX_FLAGS="-std=c++11 -O2 -mavx2 -mfma -mtune=native -march=native -fopenmp" \
+          -DCMAKE_CXX_FLAGS="-std=c++11 -O2 -mavx2 -mfma -mtune=haswell -march=haswell -fopenmp" \
           -DCMAKE_C_COMPILER=mpicc \
-          -DCMAKE_C_FLAGS="-std=c99 -O2 -mavx2 -mfma -mtune=native -march=native -fopenmp" \
+          -DCMAKE_C_FLAGS="-std=c99 -O2 -mavx2 -mfma -mtune=haswell -march=haswell -fopenmp" \
           -DCMAKE_INSTALL_PREFIX=$(pwd)/install_dir \
           .. && \
-          VERBOSE=1 make -j $(( ${nb_cores} + 2 )) && \
+          VERBOSE=1 make -j $(( ${nb_cores} + 3 )) && \
           make install
 
       - name: get_tmlqcd
@@ -139,8 +139,8 @@ jobs:
         working-directory: ${{github.workspace}}/main/build
         run: |
           CC=mpicc CXX=mpicxx \
-          CFLAGS="-O2 -mtune=native -march=native -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
-          CXXFLAGS="-O2 -mtune=native -march=native -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
+          CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
+          CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
           ../configure \
           --enable-mpi \
           --with-mpidimension=4 \
