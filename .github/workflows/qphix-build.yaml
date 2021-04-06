@@ -36,9 +36,9 @@ jobs:
         working-directory: ${{github.workspace}}/lime/build
         run: |
           CC=gcc \
-          CFLAGS="-march=haswell -mtune=haswell -O2" \
-          ../configure --prefix=$(pwd)/install_dir && \
-          make -j && \
+            CFLAGS="-march=haswell -mtune=haswell -O2" \
+            ../configure --prefix=$(pwd)/install_dir
+          make -j
           make install
 
       - name: get_lemon
@@ -49,16 +49,18 @@ jobs:
 
       - name: autogen_lemon
         working-directory: ${{github.workspace}}/lemon
-        run: autoreconf -i -f && mkdir build
+        run: |
+          autoreconf -i -f
+          mkdir build
 
       - name: build_lemon
         working-directory: ${{github.workspace}}/lemon/build
         run: |
           CC=mpicc \
-          CFLAGS="-march=haswell -mtune=haswell -O2" \
-          ../configure \
-          --prefix=$(pwd)/install_dir && \
-          make -j && \
+            CFLAGS="-march=haswell -mtune=haswell -O2" \
+            ../configure \
+            --prefix=$(pwd)/install_dir
+          make -j
           make install
 
       - name: get_qmp
@@ -69,17 +71,19 @@ jobs:
 
       - name: autogen_qmp
         working-directory: ${{github.workspace}}/qmp
-        run: autoreconf -i -f && mkdir build
+        run: |
+          autoreconf -i -f
+          mkdir build
 
       - name: build_qmp
         working-directory: ${{github.workspace}}/qmp/build
         run: |
           CC=mpicc \
-          CFLAGS="-std=c99 -O2 -mtune=haswell -march=haswell" \
-          ../configure \
-          --prefix=$(pwd)/install_dir \
-          --with-qmp-comms-type=MPI && \
-          make -j && \
+            CFLAGS="-std=c99 -O2 -mtune=haswell -march=haswell" \
+            ../configure \
+            --prefix=$(pwd)/install_dir \
+            --with-qmp-comms-type=MPI
+          make -j
           make install
 
       - name: get_qphix
@@ -105,20 +109,20 @@ jobs:
         if: steps.cache-qphix.outputs.cache-hit != 'true'
         run: |
           cmake \
-          -DQMP_DIR=${{github.workspace}}/qmp/build/install_dir \
-          -Disa=avx2 \
-          -Dparallel_arch=parscalar \
-          -Dhost_cxx=g++ \
-          -Dtm_clover=ON \
-          -Dtwisted_mass=ON \
-          -Dtesting=OFF \
-          -DCMAKE_CXX_COMPILER=mpicxx \
-          -DCMAKE_CXX_FLAGS="-std=c++11 -O2 -mavx2 -mfma -mtune=haswell -march=haswell -fopenmp" \
-          -DCMAKE_C_COMPILER=mpicc \
-          -DCMAKE_C_FLAGS="-std=c99 -O2 -mavx2 -mfma -mtune=haswell -march=haswell -fopenmp" \
-          -DCMAKE_INSTALL_PREFIX=$(pwd)/install_dir \
-          .. && \
-          VERBOSE=1 make -j $(( ${nb_cores} + 3 )) && \
+            -DQMP_DIR=${{github.workspace}}/qmp/build/install_dir \
+            -Disa=avx2 \
+            -Dparallel_arch=parscalar \
+            -Dhost_cxx=g++ \
+            -Dtm_clover=ON \
+            -Dtwisted_mass=ON \
+            -Dtesting=OFF \
+            -DCMAKE_CXX_COMPILER=mpicxx \
+            -DCMAKE_CXX_FLAGS="-std=c++11 -O2 -mavx2 -mfma -mtune=haswell -march=haswell -fopenmp" \
+            -DCMAKE_C_COMPILER=mpicc \
+            -DCMAKE_C_FLAGS="-std=c99 -O2 -mavx2 -mfma -mtune=haswell -march=haswell -fopenmp" \
+            -DCMAKE_INSTALL_PREFIX=$(pwd)/install_dir \
+            ..
+          VERBOSE=1 make -j $(( ${nb_cores} + 3 ))
           make install
 
       - name: get_tmlqcd
@@ -139,34 +143,34 @@ jobs:
         working-directory: ${{github.workspace}}/main/build
         run: |
           CC=mpicc CXX=mpicxx \
-          CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
-          CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
-          ../configure \
-          --enable-mpi \
-          --with-mpidimension=4 \
-          --enable-omp \
-          --disable-sse2 \
-          --disable-sse3 \
-          --with-limedir=${{github.workspace}}/lime/build/install_dir \
-          --with-lemondir=${{github.workspace}}/lemon/build/install_dir \
-          --with-lapack="-lblas -llapack" \
-          --with-qmpdir=${{github.workspace}}/qmp/build/install_dir \
-          --with-qphixdir=${{github.workspace}}/qphix/build/install_dir \
-          --enable-qphix-soalen=4 \
-          && make
+            CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
+            CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
+            ../configure \
+            --enable-mpi \
+            --with-mpidimension=4 \
+            --enable-omp \
+            --disable-sse2 \
+            --disable-sse3 \
+            --with-limedir=${{github.workspace}}/lime/build/install_dir \
+            --with-lemondir=${{github.workspace}}/lemon/build/install_dir \
+            --with-lapack="-lblas -llapack" \
+            --with-qmpdir=${{github.workspace}}/qmp/build/install_dir \
+            --with-qphixdir=${{github.workspace}}/qphix/build/install_dir \
+            --enable-qphix-soalen=4
+          make -j
 
       - name: nf2_wilson_clover_qphix_hmc
         working-directory: ${{github.workspace}}/main/build
         run: |
           mpirun -np 2 ./hmc_tm \
-          -f ../sample-input/sample-hmc-qphix-cp_pacs_nf2_wilson_clover_beta1p95_csw1p53.input
+            -f ../sample-input/sample-hmc-qphix-cp_pacs_nf2_wilson_clover_beta1p95_csw1p53.input
 
       - name: compare_nf2_wilson_clover_qphix_hmc
         working-directory: ${{github.workspace}}/main/build
         run: |
-          refpath=${{github.workspace}}/main/sample-output/hmc-qphix-cp_pacs_nf2_wilson_clover_beta1p95_csw1p53; \
-          numdiff -r 1e-6 -X 1:10 -X 1:5-8 -X 2:10 -X 2:5-8 output.data ${refpath}/output.data; \
-          numdiff -r 1e-6 return_check.data ${refpath}/return_check.data; \
+          refpath=${{github.workspace}}/main/sample-output/hmc-qphix-cp_pacs_nf2_wilson_clover_beta1p95_csw1p53
+          numdiff -r 1e-6 -X 1:10 -X 1:5-8 -X 2:10 -X 2:5-8 output.data ${refpath}/output.data
+          numdiff -r 1e-6 return_check.data ${refpath}/return_check.data
           for i in $(seq 0 2 18); do \
             f=onlinemeas.$(printf %06d $i); \
             numdiff -r 1e-6 ${f} ${refpath}/${f}; \

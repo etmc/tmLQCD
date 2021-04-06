@@ -36,9 +36,9 @@ jobs:
         working-directory: ${{github.workspace}}/lime/build
         run: |
           CC=gcc \
-          CFLAGS="-march=haswell -mtune=haswell -O2" \
-          ../configure --prefix=$(pwd)/install_dir && \
-          make -j && \
+            CFLAGS="-march=haswell -mtune=haswell -O2" \
+            ../configure --prefix=$(pwd)/install_dir
+          make -j
           make install
 
       - name: get_lemon
@@ -49,16 +49,17 @@ jobs:
 
       - name: autogen_lemon
         working-directory: ${{github.workspace}}/lemon
-        run: autoreconf -i -f && mkdir build
+        run: |
+          autoreconf -i -f
+          mkdir build
 
       - name: build_lemon
         working-directory: ${{github.workspace}}/lemon/build
         run: |
           CC=mpicc \
-          CFLAGS="-march=haswell -mtune=haswell -O2" \
-          ../configure \
-          --prefix=$(pwd)/install_dir && \
-          make -j && \
+            CFLAGS="-march=haswell -mtune=haswell -O2" \
+            ../configure --prefix=$(pwd)/install_dir
+          make -j
           make install
 
       - name: get_tmlqcd
@@ -79,16 +80,16 @@ jobs:
         working-directory: ${{github.workspace}}/main/build
         run: |
           CC=mpicc CXX=mpicxx \
-          CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
-          CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
-          ../configure \
-          --enable-mpi \
-          --with-mpidimension=4 \
-          --enable-omp \
-          --disable-sse2 \
-          --disable-sse3 \
-          --with-limedir=${{github.workspace}}/lime/build/install_dir \
-          --with-lemondir=${{github.workspace}}/lemon/build/install_dir \
-          --with-lapack="-lblas -llapack" \
-          && make -j
+            CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
+            CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
+            ../configure \
+            --enable-mpi \
+            --with-mpidimension=4 \
+            --enable-omp \
+            --disable-sse2 \
+            --disable-sse3 \
+            --with-limedir=${{github.workspace}}/lime/build/install_dir \
+            --with-lemondir=${{github.workspace}}/lemon/build/install_dir \
+            --with-lapack="-lblas -llapack"
+          make -j
 

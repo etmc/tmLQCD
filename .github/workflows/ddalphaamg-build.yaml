@@ -39,9 +39,9 @@ jobs:
         working-directory: ${{github.workspace}}/lime/build
         run: |
           CC=gcc \
-          CFLAGS="-march=haswell -mtune=haswell -O2" \
-          ../configure --prefix=$(pwd)/install_dir && \
-          make -j && \
+            CFLAGS="-march=haswell -mtune=haswell -O2" \
+            ../configure --prefix=$(pwd)/install_dir
+          make -j
           make install
 
       - name: get_lemon
@@ -61,10 +61,10 @@ jobs:
         working-directory: ${{github.workspace}}/lemon/build
         run: |
           CC=mpicc \
-          CFLAGS="-march=haswell -mtune=haswell -O2" \
-          ../configure \
-          --prefix=$(pwd)/install_dir && \
-          make -j && \
+            CFLAGS="-march=haswell -mtune=haswell -O2" \
+            ../configure \
+            --prefix=$(pwd)/install_dir
+          make -j
           make install
 
       - name: get_ddalphaamg
@@ -76,10 +76,10 @@ jobs:
       - name: build_ddalphaamg
         working-directory: ${{github.workspace}}/ddalphaamg
         run: |
-          sed -i 's/$(CFLAGS_intel)/$(CFLAGS_gnu)/g' Makefile; \
-          sed -i 's/mpiicc/mpicc/g' Makefile; \
+          sed -i 's/$(CFLAGS_intel)/$(CFLAGS_gnu)/g' Makefile
+          sed -i 's/mpiicc/mpicc/g' Makefile
           LIMEDIR=${{github.workspace}}/lime/build/install_dir \
-          make -j lib/libDDalphaAMG.a
+            make -j lib/libDDalphaAMG.a
 
       - name: get_tmlqcd
         uses: actions/checkout@v2
@@ -99,32 +99,32 @@ jobs:
         working-directory: ${{github.workspace}}/main/build
         run: |
           CC=mpicc CXX=mpicxx \
-          CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
-          CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
-          ../configure \
-          --enable-mpi \
-          --with-mpidimension=4 \
-          --enable-omp \
-          --disable-sse2 \
-          --disable-sse3 \
-          --with-limedir=${{github.workspace}}/lime/build/install_dir \
-          --with-lemondir=${{github.workspace}}/lemon/build/install_dir \
-          --with-DDalphaAMG=${{github.workspace}}/ddalphaamg \
-          --with-lapack="-lblas -llapack" && \
+            CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
+            CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
+            ../configure \
+            --enable-mpi \
+            --with-mpidimension=4 \
+            --enable-omp \
+            --disable-sse2 \
+            --disable-sse3 \
+            --with-limedir=${{github.workspace}}/lime/build/install_dir \
+            --with-lemondir=${{github.workspace}}/lemon/build/install_dir \
+            --with-DDalphaAMG=${{github.workspace}}/ddalphaamg \
+            --with-lapack="-lblas -llapack"
           make -j
 
       - name: nf2_ddalphaamg_hmc_tmcloverdetratio
         working-directory: ${{github.workspace}}/main/build
         run: |
           mpirun -np 2 ./hmc_tm \
-          -f ../sample-input/sample-hmc-ddalphaamg-tmcloverdetratio.input
+            -f ../sample-input/sample-hmc-ddalphaamg-tmcloverdetratio.input
 
       - name: compare_nf2_ddalphaamg_hmc_tmcloverdetratio
         working-directory: ${{github.workspace}}/main/build
         run: |
-          refpath=${{github.workspace}}/main/sample-output/hmc-ddalphaamg-tmcloverdetratio; \
-          numdiff -r 1e-6 -X 1:10 -X 1:5-8 -X 2:10 -X 2:5-8 output.data ${refpath}/output.data; \
-          numdiff -r 1e-6 return_check.data ${refpath}/return_check.data; \
+          refpath=${{github.workspace}}/main/sample-output/hmc-ddalphaamg-tmcloverdetratio
+          numdiff -r 1e-6 -X 1:10 -X 1:5-8 -X 2:10 -X 2:5-8 output.data ${refpath}/output.data
+          numdiff -r 1e-6 return_check.data ${refpath}/return_check.data
           for i in $(seq 0 2 18); do \
             f=onlinemeas.$(printf %06d $i); \
             numdiff -r 1e-6 ${f} ${refpath}/${f}; \
