@@ -79,9 +79,7 @@ jobs:
           sed -i 's/$(CFLAGS_intel)/$(CFLAGS_gnu)/g' Makefile; \
           sed -i 's/mpiicc/mpicc/g' Makefile; \
           LIMEDIR=${{github.workspace}}/lime/build/install_dir \
-          make -j lib/libDDalphaAMG.a; \
-          ls -l lib; \
-          ls -l ${{github.workspace}}/ddalphaamg/lib;  
+          make -j lib/libDDalphaAMG.a
 
       - name: get_tmlqcd
         uses: actions/checkout@v2
@@ -100,7 +98,6 @@ jobs:
         shell: bash
         working-directory: ${{github.workspace}}/main/build
         run: |
-          ls -l ${{github.workspace}}/ddalphaamg/lib; \
           CC=mpicc CXX=mpicxx \
           CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
           CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
