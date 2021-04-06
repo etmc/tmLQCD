@@ -116,8 +116,6 @@
 // uniquely 
 extern int nstore;
 
-double X0, X1, X2, X3;
-
 // define order of the spatial indices
 // default is LX-LY-LZ-T, see below def. of local lattice size, this is related to
 // the gamma basis transformation from tmLQCD -> UKQCD
