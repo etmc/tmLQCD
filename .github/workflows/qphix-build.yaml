@@ -138,7 +138,10 @@ jobs:
         shell: bash
         working-directory: ${{github.workspace}}/main/build
         run: |
-          CC=mpicc CXX=mpicxx ../configure \
+          CC=mpicc CXX=mpicxx \
+          CFLAGS="-O2 -mtune=native -march=native -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
+          CXXFLAGS="-O2 -mtune=native -march=native -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
+          ../configure \
           --enable-mpi \
           --with-mpidimension=4 \
           --enable-omp \
