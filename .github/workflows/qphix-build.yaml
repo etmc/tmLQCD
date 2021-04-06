@@ -152,3 +152,8 @@ jobs:
           --enable-qphix-soalen=4 \
           && make -j
 
+      - name: nf2_wilson_clover_qphix_hmc
+        working-directory: ${{github.workspace}}/main/build
+        run: |
+          mpirun -np 2 ./hmc_tm \
+          -f ../sample-input/sample-hmc-qphix-cp_pacs_nf2_wilson_clover_beta1p95_csw1p53.input
