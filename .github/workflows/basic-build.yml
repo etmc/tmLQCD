@@ -14,7 +14,7 @@ jobs:
           path: lime
 
       - name: autogen_lime
-        run: cd ${{github.worksace}}/lime && ./autogen.sh
+        run: cd ${{github.workspace}}/lime && ./autogen.sh
       
       - name: create_lime_builddir
         run: mkdir ${{github.workspace}}/lime/build
