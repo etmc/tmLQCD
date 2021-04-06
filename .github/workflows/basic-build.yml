@@ -19,6 +19,14 @@ jobs:
       - name: create_lime_builddir
         run: mkdir ${{github.workspace}}/lime/build
 
+      - name: build_lime
+        working-directory: ${{github.workspace}}/lime/build
+        run: CC=gcc \
+          CFLAGS="-march=native -mtune=native -O2" \
+          ../configure --prefix=$(pwd)/install_dir && \
+          make -j && \
+          make install
+
       - name: get_lemon
         uses: actions/checkout@v2
         with:
@@ -28,7 +36,7 @@ jobs:
       - name: get_tmlqcd
         uses: actions/checkout@v2
         with:
-          path: tmLQCD
+          path: main
 
       - name: create_builddir
         shell: bash
