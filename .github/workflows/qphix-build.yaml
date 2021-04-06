@@ -7,8 +7,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # handling of environment variable: https://stackoverflow.com/a/57969570
       - name: lscpu
-        run: lscpu
+        run: |
+          lscpu; \
+          echo "nb_cores=$(lscpu | grep \^CPU\(s\)\: | awk '{print $2}')" >> $GITHUB_ENV
+
+      - name: gcc_version
+        run: gcc --version
+
+      - name: echo_nb_cores
+        run: echo "Number of cores ${nb_cores}"
 
       - name: get_packages
         run: sudo apt install openmpi-bin openmpi-common
@@ -101,7 +110,7 @@ jobs:
           -DCMAKE_C_FLAGS="-std=c99 -O2 -mavx2 -mfma -mtune=native -march=native -fopenmp" \
           -DCMAKE_INSTALL_PREFIX=$(pwd)/install_dir \
           .. && \
-          VERBOSE=1 make && \
+          VERBOSE=1 make -j $(( ${nb_cores} + 1 )) && \
           make install
 
       - name: get_tmlqcd

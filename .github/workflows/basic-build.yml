@@ -11,8 +11,7 @@ jobs:
       - name: lscpu
         run: |
           lscpu; \
-          echo "nb_cores=$(lscpu | grep \^CPU\(s\)\: | awk '{print $2}')" >> $GITHUB_ENV \
-          echo "Number of cores: ${nb_cores}"
+          echo "nb_cores=$(lscpu | grep \^CPU\(s\)\: | awk '{print $2}')" >> $GITHUB_ENV
 
       - name: gcc_version
         run: gcc --version
