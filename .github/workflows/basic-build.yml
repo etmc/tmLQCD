@@ -1,0 +1,31 @@
+name: basic-build
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          name: usqcd/clime
+          name: etmc/lemon
+
+      - name: create_builddir
+        shell: bash
+        run: mkdir ${{github.workspace}}/build
+
+      - name: make_configure
+        run: autoconf
+
+      - name: configure
+        shell: bash
+        working-directory: ${{github.workspace}}/build
+        run: |
+          CC=mpicc CXX=mpicxx ../configure \
+          --enable-mpi \
+          --enable-omp \
+          --disable-sse2 \
+          --disable-sse3
+
