@@ -7,6 +7,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: get_packages
+        run: sudo apt install openmpi
+
       - name: get_lime
         uses: actions/checkout@v2
         with:
