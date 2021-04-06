@@ -30,6 +30,7 @@
 #include <time.h>
 #include <string.h>
 #include <signal.h>
+#include <float.h>
 #ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
