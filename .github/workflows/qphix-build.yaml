@@ -31,7 +31,7 @@ jobs:
       - name: autogen_lime
         working-directory: ${{github.workspace}}/lime
         run: ./autogen.sh && mkdir build
-      
+
       - name: build_lime
         working-directory: ${{github.workspace}}/lime/build
         run: |
@@ -93,8 +93,16 @@ jobs:
         working-directory: ${{github.workspace}}/qphix
         run: mkdir build
 
+      - name: cache_qphix
+        id: cache-qphix
+        uses: actions/cache@v2
+        with:
+          path: qphix/build
+          key: ${{ runner.os }}-qphix
+
       - name: build_qphix
         working-directory: ${{github.workspace}}/qphix/build
+        if: steps.cache-qphix.outputs.cache-hit != 'true'
         run: |
           cmake \
           -DQMP_DIR=${{github.workspace}}/qmp/build/install_dir \
