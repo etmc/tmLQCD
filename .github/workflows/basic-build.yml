@@ -7,10 +7,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # handling of environment variable: https://stackoverflow.com/a/57969570
       - name: lscpu
         run: |
           lscpu; \
-          export nb_cores=$(lscpu | grep \^CPU\(s\)\: | awk '{print $2}'); \
+          echo "nb_cores=$(lscpu | grep \^CPU\(s\)\: | awk '{print $2}')" >> $GITHUB_ENV \
           echo "Number of cores: ${nb_cores}"
 
       - name: gcc_version
