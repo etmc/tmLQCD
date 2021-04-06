@@ -68,7 +68,7 @@ jobs:
           --prefix=$(pwd)/install_dir \
           --with-qmp-comms-type=MPI && \
           make -j && \
-          maek install
+          make install
 
       - name: get_qphix
         uses: actions/checkout@v2
@@ -81,10 +81,25 @@ jobs:
         working-directory: ${{github.workspace}}/qphix
         run: mkdir build
 
-        #      - name: build_qphix
-        #working-directory: ${{github.workspace}}/qphix/build
-        #run: |
-        #  cmake ..
+      - name: build_qphix
+        working-directory: ${{github.workspace}}/qphix/build
+        run: |
+          cmake \
+          -DQMP_DIR=${{github.workspace}}/qmp/build/install_dir \
+          -Disa=avx2 \
+          -Dparallel_arch=parscalar \
+          -Dhost_cxx=g++ \
+          -Dtm_clover=ON \
+          -Dtwisted_mass=ON \
+          -Dtesting=OFF \
+          -DCMAKE_CXX_COMPILER=mpicxx \
+          -DCMAKE_CXX_FLAGS="-std=c++11 -O2 -mavx2 -mfma -mtune=native -march=native -fopenmp" \
+          -DCMAKE_C_COMPILER=mpicc \
+          -DCMAKE_C_FLAGS="-std=c99 -O2 -mavx2 -mfma -mtune=native -march=native -fopenmp" \
+          -DCMAKE_INSTALL_PREFIX=$(pwd)/install_dir \
+          .. && \
+          make -j && \
+          make install
 
       - name: get_tmlqcd
         uses: actions/checkout@v2
