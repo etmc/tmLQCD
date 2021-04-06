@@ -7,6 +7,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: lscpu
+        run: lscpu
+
       - name: get_packages
         run: sudo apt install openmpi-bin openmpi-common
 
@@ -98,7 +101,7 @@ jobs:
           -DCMAKE_C_FLAGS="-std=c99 -O2 -mavx2 -mfma -mtune=native -march=native -fopenmp" \
           -DCMAKE_INSTALL_PREFIX=$(pwd)/install_dir \
           .. && \
-          VERBOSE=1 make -j && \
+          VERBOSE=1 make && \
           make install
 
       - name: get_tmlqcd
