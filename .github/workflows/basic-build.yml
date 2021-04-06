@@ -10,7 +10,7 @@ jobs:
       - name: lscpu
         run: |
           lscpu; \
-          export nb_core=$(lscpu | grep \^CPU\(s\)\: | awk '{print $2}'); \
+          export nb_cores=$(lscpu | grep \^CPU\(s\)\: | awk '{print $2}'); \
           echo "Number of cores: ${nb_cores}"
 
       - name: gcc_version
@@ -18,7 +18,7 @@ jobs:
 
       - name: echo_nb_cores
         run: echo "Number of cores: ${nb_cores}"
-        
+
       - name: get_packages
         run: sudo apt install openmpi-bin openmpi-common
 
