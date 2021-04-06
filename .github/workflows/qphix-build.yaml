@@ -20,7 +20,7 @@ jobs:
         run: echo "Number of cores ${nb_cores}"
 
       - name: get_packages
-        run: sudo apt install openmpi-bin openmpi-common
+        run: sudo apt install openmpi-bin openmpi-common numdiff
 
       - name: get_lime
         uses: actions/checkout@v2
@@ -160,3 +160,15 @@ jobs:
         run: |
           mpirun -np 2 ./hmc_tm \
           -f ../sample-input/sample-hmc-qphix-cp_pacs_nf2_wilson_clover_beta1p95_csw1p53.input
+
+      - name: compare_nf2_wilson_clover_qphix_hmc
+        working-directory: ${{github.workspace}}/main/build
+        run: |
+          refpath=${{github.workspace}}/main/sample-output/hmc-qphix-cp_pacs_nf2_wilson_clover_beta1p95_csw1p53; \
+          numdiff -r 1e-8 -X 1:10 -X 2:10 output.data ${refpath}/output.data; \
+          numdiff -r 1e-8 return_check.data ${refpath}/return_check.data; \
+          for i in $(seq 0 2 18); do \
+            f=onlinemeas.$(printf %06d $i); \
+            numdiff -r 1e-8 ${f} ${refpath}/${f}; \
+          done
+

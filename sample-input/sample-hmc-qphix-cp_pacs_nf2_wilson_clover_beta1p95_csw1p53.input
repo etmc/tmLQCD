@@ -20,7 +20,7 @@ UseEvenOdd = yes
 ReversibilityCheck = yes
 ReversibilityCheckIntervall = 4
 InitialStoreCounter = 0
-DebugLevel = 2
+DebugLevel = 1
 
 # since this is a test file, we employ the reproducible random numbers mode
 ReproduceRandomNumbers = yes
