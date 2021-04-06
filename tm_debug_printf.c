@@ -34,6 +34,7 @@ void tm_debug_printf(const int proc_id,
     va_start(arglist, format);
     vprintf(format, arglist);
     va_end(arglist);
+    fflush(stdout);
   }
 }
 

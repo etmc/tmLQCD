@@ -99,9 +99,12 @@ ${top_srcdir}/git_hash.h:
 
 include ${top_srcdir}/Makefile.global
 
+# follow https://www.owlfolio.org/possibly-useful/flex-input-scanner-rules-are-too-complicated/
+# and pass the -Ca option such that more than 32k "NFA" states are allowed
+# our ruleset is so complicated that this has become necessary!
 ${top_srcdir}/read_input.c: ${top_srcdir}/read_input.l
 ifneq (,$(findstring lex,${LEX}))
-	${LEX} -Ptmlqcd -i -t ${top_srcdir}/read_input.l > ${top_srcdir}/read_input.c
+	${LEX} -Ca -Ptmlqcd -i -t ${top_srcdir}/read_input.l > ${top_srcdir}/read_input.c
 else
 	$(error Unable to find (f)lex, read_input.c not built. Please install (f)lex!)
 endif
@@ -160,10 +163,10 @@ compile-clean: compile-clean-recursive Makefile
 	rm -f *.o *.d test/*.o test/*.d tests/*.o tests/*.d
 
 clean: clean-recursive Makefile
-	rm -f benchmark hmc_tm invert test_Dslash offline_measurement *.o *.d test/*.o test/*.d tests/*.o tests/*.d
+	rm -f benchmark hmc_tm invert offline_measurement test_Dslash *.o *.d test/*.o test/*.d tests/*.o tests/*.d
 
 distclean: distclean-recursive Makefile
-	rm -f benchmark hmc_tm invert *.o *.d *~ Makefile config.log config.status fixed_volume.h
+	rm -f benchmark hmc_tm invert offline_measurement *.o *.d *~ Makefile config.log config.status fixed_volume.h
 	rm -f include/tmlqcd_config_internal.h
 
 .PHONY: all ${SUBDIRS} ${top_srcdir}/git_hash.h clean compile-clean distclean dep install \

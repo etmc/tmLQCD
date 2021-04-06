@@ -32,6 +32,10 @@
 #ifndef _DEFAULT_INPUT_VALUES_H
 #define _DEFAULT_INPUT_VALUES_H
 
+#include "misc_types.h"
+#include <float.h>
+
+
 #define _default_T_global 4
 #define _default_L 4
 #define _default_LX 0
@@ -206,7 +210,7 @@
 /* These follow the recommendations of https://github.com/lattice/quda/wiki/Multigrid-Solver */
 #define _default_quda_mg_n_level 2
 #define _default_quda_mg_n_vec 24
-#define _default_quda_mg_mu_factor 8.0
+#define _default_quda_mg_mu_factor 1.0
 #define _default_quda_mg_setup_tol 1e-6
 #define _default_quda_mg_setup_maxiter 1000
 #define _default_quda_mg_coarse_solver_tol 0.25
@@ -216,10 +220,13 @@
 #define _default_quda_mg_nu_post 4
 #define _default_quda_mg_omega 0.85
 #define _default_quda_mg_enable_size_three_blocks 0
-#define _default_quda_mg_reset_setup_threshold 0.0
+#define _default_quda_mg_reset_setup_threshold 2*DBL_EPSILON
+#define _default_quda_mg_reset_setup_mu_threshold 2*DBL_EPSILON
 
 // gradient flow measurement step size and maximum flow time
 #define _default_gf_eps 0.01
 #define _default_gf_tmax 9.99
+
+#define _default_g_mpi_thread_level TM_MPI_THREAD_SINGLE
 
 #endif

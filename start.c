@@ -61,7 +61,7 @@
  *******************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-#include "tmlqcd_config.h"
+# include<tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -77,6 +77,7 @@
 #include "ranlxd.h"
 #include "ranlxs.h"
 #include "start.h"
+#include "misc_types.h"
 
 static void gauss_vector(double v[],int n)
 {

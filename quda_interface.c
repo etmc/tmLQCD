@@ -2,6 +2,8 @@
  *
  * Copyright (C) 2015       Mario Schroeck
  *               2016, 2017 Bartosz Kostrzewa
+ *               2018       Bartosz Kostrzewa, Ferenc Pittler
+ *               2019       Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -27,9 +29,6 @@
 * Authors: Mario Schroeck <mario.schroeck@roma3.infn.it>
 *          Bartosz Kostrzewa <bartosz_kostrzewa@fastmail.com>
 * 
-* Last changes: 12/2017
-*
-*
 * Interface to QUDA for multi-GPU inverters
 *
 * The externally accessible functions are
@@ -117,8 +116,6 @@
 // uniquely 
 extern int nstore;
 
-double X0, X1, X2, X3;
-
 // define order of the spatial indices
 // default is LX-LY-LZ-T, see below def. of local lattice size, this is related to
 // the gamma basis transformation from tmLQCD -> UKQCD
@@ -138,6 +135,11 @@ QudaInvertParam inv_param;
 QudaMultigridParam quda_mg_param;
 QudaInvertParam inv_mg_param;
 void* quda_mg_preconditioner;
+// MGEigSolver params for all levels, these need to be around as they
+// will be populated in _setQudaMultigridParam and then assigned
+// on a per-level basis to QudaInvertParam members (if the EigSolver is enabled
+// on the given level)
+QudaEigParam mg_eig_param[QUDA_MAX_MG_LEVEL];
 
 // input params specific to tmLQCD QUDA interface
 tm_QudaParams_t quda_input;
@@ -222,11 +224,12 @@ void _setDefaultQudaParam(void){
   inv_param.mass_normalization = QUDA_KAPPA_NORMALIZATION;
   inv_param.solver_normalization = QUDA_DEFAULT_NORMALIZATION;
 
-  inv_param.pipeline = 0;
-  inv_param.gcrNkrylov = 20;
+  inv_param.pipeline = quda_input.pipeline;
+  inv_param.gcrNkrylov = quda_input.gcrNkrylov;
 
   inv_param.residual_type = (QudaResidualType)(QUDA_L2_RELATIVE_RESIDUAL);
   inv_param.tol_hq = 0.1;
+  inv_param.use_alternative_reliable = 0;
   inv_param.reliable_delta = 1e-3; // ignored by multi-shift solver
   inv_param.use_sloppy_partial_accumulator = 0;
 
@@ -307,6 +310,9 @@ void _initQuda() {
   inv_param = newQudaInvertParam();
   inv_mg_param = newQudaInvertParam();
   quda_mg_param = newQudaMultigridParam();
+  for( int level = 0; level < QUDA_MAX_MG_LEVEL; ++level ){
+    mg_eig_param[level] = newQudaEigParam();
+  }
 
   _setDefaultQudaParam();
 
@@ -383,7 +389,7 @@ void _loadCloverQuda(QudaInvertParam* inv_param){
 void _loadGaugeQuda( const int compression ) {
   // check if the currently loaded gauge field is also the current gauge field
   // and if so, return immediately
-  if( check_quda_gauge_state(&quda_gauge_state, nstore) ){
+  if( check_quda_gauge_state(&quda_gauge_state, nstore, X1, X2, X3, X0) ){
     return;
   } else {
     freeGaugeQuda();
@@ -396,7 +402,9 @@ void _loadGaugeQuda( const int compression ) {
       if( compression == 18 ){
         if( quda_input.fermionbc == TM_QUDA_THETABC ){
           printf("# QUDA: Theta boundary conditions will be applied to gauge field\n");
-        } else if ( quda_input.fermionbc == TM_QUDA_APBC ){
+        }
+      } else {
+        if( quda_input.fermionbc == TM_QUDA_APBC ){
           printf("# QUDA: Temporal ABPC will be applied to gauge field\n");
         }
       }
@@ -440,45 +448,45 @@ void _loadGaugeQuda( const int compression ) {
           memcpy( &(gauge_quda[2][quda_idx]), &(g_gauge_field[tm_idx][3]), 18*gSize);
           memcpy( &(gauge_quda[3][quda_idx]), &(g_gauge_field[tm_idx][0]), 18*gSize);
 #endif
-        if( compression == 18 ) {
-          // apply boundary conditions
-          if ( quda_input.fermionbc == TM_QUDA_THETABC ){
-            for( int i=0; i<9; i++ ) {
-              tmpcplx = gauge_quda[0][quda_idx+2*i] + I*gauge_quda[0][quda_idx+2*i+1];
-              tmpcplx *= -phase_1/g_kappa;
-              gauge_quda[0][quda_idx+2*i]   = creal(tmpcplx);
-              gauge_quda[0][quda_idx+2*i+1] = cimag(tmpcplx);
+        if( compression == 18 && quda_input.fermionbc == TM_QUDA_THETABC ) {
+          // apply theta boundary conditions if compression is not used
+          for( int i=0; i<9; i++ ) {
+            tmpcplx = gauge_quda[0][quda_idx+2*i] + I*gauge_quda[0][quda_idx+2*i+1];
+            tmpcplx *= -phase_1/g_kappa;
+            gauge_quda[0][quda_idx+2*i]   = creal(tmpcplx);
+            gauge_quda[0][quda_idx+2*i+1] = cimag(tmpcplx);
 
-              tmpcplx = gauge_quda[1][quda_idx+2*i] + I*gauge_quda[1][quda_idx+2*i+1];
-              tmpcplx *= -phase_2/g_kappa;
-              gauge_quda[1][quda_idx+2*i]   = creal(tmpcplx);
-              gauge_quda[1][quda_idx+2*i+1] = cimag(tmpcplx);
+            tmpcplx = gauge_quda[1][quda_idx+2*i] + I*gauge_quda[1][quda_idx+2*i+1];
+            tmpcplx *= -phase_2/g_kappa;
+            gauge_quda[1][quda_idx+2*i]   = creal(tmpcplx);
+            gauge_quda[1][quda_idx+2*i+1] = cimag(tmpcplx);
 
-              tmpcplx = gauge_quda[2][quda_idx+2*i] + I*gauge_quda[2][quda_idx+2*i+1];
-              tmpcplx *= -phase_3/g_kappa;
-              gauge_quda[2][quda_idx+2*i]   = creal(tmpcplx);
-              gauge_quda[2][quda_idx+2*i+1] = cimag(tmpcplx);
+            tmpcplx = gauge_quda[2][quda_idx+2*i] + I*gauge_quda[2][quda_idx+2*i+1];
+            tmpcplx *= -phase_3/g_kappa;
+            gauge_quda[2][quda_idx+2*i]   = creal(tmpcplx);
+            gauge_quda[2][quda_idx+2*i+1] = cimag(tmpcplx);
 
-              tmpcplx = gauge_quda[3][quda_idx+2*i] + I*gauge_quda[3][quda_idx+2*i+1];
-              tmpcplx *= -phase_0/g_kappa;
-              gauge_quda[3][quda_idx+2*i]   = creal(tmpcplx);
-              gauge_quda[3][quda_idx+2*i+1] = cimag(tmpcplx);
-            }
-          } else if ( quda_input.fermionbc == TM_QUDA_APBC && x0+g_proc_coords[0]*T == g_nproc_t*T-1 ) {
+            tmpcplx = gauge_quda[3][quda_idx+2*i] + I*gauge_quda[3][quda_idx+2*i+1];
+            tmpcplx *= -phase_0/g_kappa;
+            gauge_quda[3][quda_idx+2*i]   = creal(tmpcplx);
+            gauge_quda[3][quda_idx+2*i+1] = cimag(tmpcplx);
+          }
+          // when compression is not used, we can still force naive anti-periodic boundary conditions
+        } else {
+          if ( quda_input.fermionbc == TM_QUDA_APBC && x0+g_proc_coords[0]*T == g_nproc_t*T-1 ) {
             for( int i=0; i<18; i++ ) {
               gauge_quda[3][quda_idx+i]   = -gauge_quda[3][quda_idx+i];
             }
           } // quda_input.fermionbc
-        } // compression
+        } // if(compression & boundary conditions)
       } // volume loop
 #ifdef TM_USE_OMP
   } // OpenMP parallel closing brace 
 #endif
 
   loadGaugeQuda((void*)gauge_quda, &gauge_param);
-  set_quda_gauge_state(&quda_gauge_state, nstore);
+  set_quda_gauge_state(&quda_gauge_state, nstore, X1, X2, X3, X0);
 }
-
 
 // reorder spinor to QUDA format
 void reorder_spinor_toQuda( double* sp, QudaPrecision precision, int doublet, double* sp2 ) {
@@ -564,13 +572,14 @@ void reorder_spinor_fromQuda( double* sp, QudaPrecision precision, int doublet, 
 
   double endTime = gettime();
   double diffTime = endTime - startTime;
-  if(g_proc_id == 0)
-    printf("# QUDA: time spent in reorder_spinor_fromQuda: %f secs\n", diffTime);
+  tm_debug_printf(0,0,"# QUDA: time spent in reorder_spinor_fromQuda: %f secs\n", diffTime);
 }
 
 void set_boundary_conditions( CompressionType* compression ) {
-  // we can't have compression and theta-BC
-  if( fabs(X1)>0.0 || fabs(X2)>0.0 || fabs(X3)>0.0 || (fabs(X0)!=0.0 && fabs(X0)!=1.0) ) {
+  // we can't have compression and theta-BC, but we will support compression
+  // for theta_0 = 0.0 or theta_0 = 1.0 (using naive periodic or anti-periodic boundary conditions
+  // warning the user that the residual check will fail)
+  if( fabs(X1)>0.0 || fabs(X2)>0.0 || fabs(X3)>0.0 || (fabs(X0) > 2*DBL_EPSILON && fabs(fabs(X0)-1.0) > 2*DBL_EPSILON  ) ) {
     if( *compression!=NO_COMPRESSION ) {
       if(g_proc_id == 0) {
         printf("\n# QUDA: WARNING you can't use compression %d with boundary conditions for fermion fields (t,x,y,z)*pi: (%f,%f,%f,%f) \n", *compression,X0,X1,X2,X3);
@@ -580,31 +589,45 @@ void set_boundary_conditions( CompressionType* compression ) {
     }
   }
 
-  if( quda_input.fermionbc == TM_QUDA_APBC || quda_input.fermionbc == TM_QUDA_PBC ){
-    if( *compression!=NO_COMPRESSION ){
-      if(g_proc_id == 0){
-        printf("# QUDA: WARNING forced (A)PBC were selected in the input file.\n");
-        printf("# QUDA: Disabling compression to make sure that these are not lost due to gauge compression.\n");
-      }
-      *compression=NO_COMPRESSION;
-    }
-  }
-
   QudaReconstructType link_recon;
   QudaReconstructType link_recon_sloppy;
 
-  if( *compression==NO_COMPRESSION ) { // theta BC or "hard-coded" (A)PBC
-    gauge_param.t_boundary = QUDA_PERIODIC_T; // BC will be applied to gaugefield
+  if( *compression==NO_COMPRESSION ) {
+    // without compression, any kind of boundary conditions are supported
+    // and will be applied to the gauge field as required
+    if( quda_input.fermionbc != TM_QUDA_APBC ){
+      gauge_param.t_boundary = QUDA_PERIODIC_T;
+    } else {
+      gauge_param.t_boundary = QUDA_ANTI_PERIODIC_T;
+    }
     link_recon = 18;
     link_recon_sloppy = 18;
-  }
-  else { // trivial BC
-    gauge_param.t_boundary = ( fabs(X0)>0.0 ? QUDA_ANTI_PERIODIC_T : QUDA_PERIODIC_T );
+  } else {
+    // if we reach this point with compression (see logic above), theta_0 is either 0.0 or 1.0
+    // if it is 1.0, we explicitly enabled TM_QUDA_APBC to force simple anti-periodic boundary
+    // conditions
+    if( fabs(X0)>0.0 ){
+      quda_input.fermionbc = TM_QUDA_APBC;
+      tm_debug_printf(0, 0,
+          "# QUDA: WARNING You have set temporal theta-BC but gauge compression is enabled. "
+          "This will be overriden to use naive APBC instead. This works fine, but the residual "
+          "check on the host (CPU) will fail.\n");
+    }
+
+    if( quda_input.fermionbc == TM_QUDA_APBC ) {
+      gauge_param.t_boundary = QUDA_ANTI_PERIODIC_T;
+    } else {
+      gauge_param.t_boundary = QUDA_PERIODIC_T;
+    }
+
     link_recon = 12;
     link_recon_sloppy = *compression;
-    if( g_debug_level > 0 )
-      if(g_proc_id == 0)
-        printf("\n# QUDA: WARNING using %d compression with trivial (A)PBC instead of theta-BC ((t,x,y,z)*pi: (%f,%f,%f,%f))! This works fine but the residual check on the host (CPU) will fail.\n",*compression,X0,X1,X2,X3);
+
+    tm_debug_printf(0, 0, 
+        "\n# QUDA: WARNING using %d compression with trivial (A)PBC instead "
+        "of theta-BC ((t,x,y,z)*pi: (%f,%f,%f,%f))! This works fine but the residual "
+        "check on the host (CPU) will fail.\n",
+        *compression,X0,X1,X2,X3);
   }
 
   gauge_param.reconstruct = link_recon;
@@ -636,13 +659,20 @@ void set_sloppy_prec( const SloppyPrecision sloppy_precision ) {
   inv_param.clover_cuda_prec_refinement_sloppy = cuda_prec_sloppy;
 }
 
-int invert_quda_direct(double * const propagator, double * const source,
-                const int op_id) {
+
+
+int invert_quda_direct(double * const propagator, double const * const source,
+                       const int op_id) {
+  
+  spinor ** solver_field = NULL;
+  init_solver_field(&solver_field, VOLUME, 1);
+
+  memcpy((void*)(solver_field[0]), (void*)(source), VOLUME*sizeof(spinor));
 
   double atime, atotaltime = gettime();
-  void *spinorIn  = (void*)source; // source
+  void *spinorIn  = (void*)solver_field[0]; // source
   void *spinorOut = (void*)propagator; // solution
-  
+
   operator * optr = &operator_list[op_id];
   // g_kappa is necessary for the gauge field to be correctly translated from tmLQCD to QUDA
   g_kappa = optr->kappa;
@@ -665,7 +695,7 @@ int invert_quda_direct(double * const propagator, double * const source,
   set_sloppy_prec(optr->sloppy_precision);
  
   // load gauge after setting precision, this is a no-op if the current gauge field
-  // is already loaded
+  // is already loaded and the boundary conditions have not changed
   atime = gettime();
   _loadGaugeQuda(optr->compression_type);
   if(g_proc_id==0 && g_debug_level > 0 ) printf("# QUDA: Time for loadGaugeQuda: %.4e\n",gettime()-atime);
@@ -699,6 +729,8 @@ int invert_quda_direct(double * const propagator, double * const source,
   // since the rescaling is otherwise done in the operator inversion driver
   mul_r((spinor*)spinorOut, (2*optr->kappa), (spinor*)spinorOut, VOLUME );
 
+  finalize_solver(solver_field, 1);
+  
   if( g_proc_id==0 && g_debug_level > 0 )
     printf("# QUDA: Total time for invert_quda_direct: %.4e\n",gettime()-atotaltime); 
 
@@ -1020,14 +1052,16 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     // coarsening does not support QUDA_MATPC_EVEN_EVEN_ASYMMETRIC
     if( inv_param.matpc_type == QUDA_MATPC_EVEN_EVEN_ASYMMETRIC ) inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
     inv_param.inv_type = QUDA_GCR_INVERTER;
-    inv_param.gcrNkrylov = 20;
+    inv_param.gcrNkrylov = quda_input.gcrNkrylov;
     inv_param.inv_type_precondition = QUDA_MG_INVERTER;
     inv_param.schwarz_type = QUDA_ADDITIVE_SCHWARZ;
-    inv_param.reliable_delta = 1e-5;
+    inv_param.reliable_delta = quda_input.reliable_delta;
     inv_param.precondition_cycle = 1;
     inv_param.tol_precondition = 1e-1;
     inv_param.maxiter_precondition = 1;
-    inv_param.omega = quda_input.mg_omega;
+    // this under/overrelaxation parameter is not related to the ones
+    // used in the MG 
+    inv_param.omega = 1.0;
   }
   else {
     /* Here we invert the hermitean operator squared */
@@ -1089,34 +1123,29 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     if( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_RESET ){
       double atime = gettime();
       if( quda_mg_preconditioner != NULL ){
-        if(g_proc_id==0){ printf("# QUDA: Destroying MG Preconditioner Setup\n"); fflush(stdout); }
+        tm_debug_printf(0,0,"# QUDA: Destroying MG Preconditioner Setup\n");
         destroyMultigridQuda(quda_mg_preconditioner);
         reset_quda_mg_setup_state(&quda_mg_setup_state);
         quda_mg_preconditioner = NULL;
       }
-      if(g_proc_id==0){ printf("# QUDA: Performing MG Preconditioner Setup\n"); fflush(stdout); }
+      tm_debug_printf(0,0,"# QUDA: Performing MG Preconditioner Setup\n");
       quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
       inv_param.preconditioner = quda_mg_preconditioner;
       set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
-      if(g_proc_id == 0 && g_debug_level > 0){
-        printf("# QUDA: MG Preconditioner Setup took %.3f seconds\n", gettime()-atime);
-        fflush(stdout);
-      }
+      tm_debug_printf(0,1,"# QUDA: MG Preconditioner Setup took %.3f seconds\n", gettime()-atime);
     } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_UPDATE )  {
-      if(g_proc_id==0 && g_debug_level > 0){ 
-        printf("# QUDA: Updating MG Preconditioner Setup for gauge %d\n", quda_gauge_state.gauge_id); fflush(stdout); 
+      tm_debug_printf(0,0,"# QUDA: Updating MG Preconditioner Setup for gauge %d\n", quda_gauge_state.gauge_id);
+#ifdef TM_QUDA_EXPERIMENTAL
+      if( quda_input.mg_eig_preserve_deflation == QUDA_BOOLEAN_YES ){
+        tm_debug_printf(0,0,"# QUDA: Deflation subspace for gauge %d will be re-used!\n", quda_gauge_state.gauge_id);
       }
+#endif
       double atime = gettime();
       updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
       set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
-      if(g_proc_id == 0 && g_debug_level > 0){
-        printf("# QUDA: MG Preconditioner Setup Update took %.3f seconds\n", gettime()-atime);
-        fflush(stdout);
-      }
+      tm_debug_printf(0,1,"# QUDA: MG Preconditioner Setup Update took %.3f seconds\n", gettime()-atime);
      } else {
-      if(g_proc_id==0 && g_debug_level > 0){ 
-        printf("# QUDA: Reusing MG Preconditioner Setup for gauge %d\n", quda_gauge_state.gauge_id); fflush(stdout); 
-      }
+      tm_debug_printf(0,0,"# QUDA: Reusing MG Preconditioner Setup for gauge %d\n", quda_gauge_state.gauge_id);
     }
   }
   
@@ -1128,6 +1157,8 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     printf("----------------------------------------\n");
   }
 }
+
+
 
 void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   QudaInvertParam *mg_inv_param = mg_param->invert_param;
@@ -1163,26 +1194,12 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   mg_param->pre_orthonormalize = QUDA_BOOLEAN_NO;
   mg_param->post_orthonormalize = QUDA_BOOLEAN_YES;
 
+#ifdef TM_QUDA_EXPERIMENTAL
+  mg_param->preserve_deflation = quda_input.mg_eig_preserve_deflation;
+#endif
+
   mg_param->n_level = quda_input.mg_n_level;
   for (int level=0; level < mg_param->n_level; level++) {
-    mg_param->precision_null[level] = QUDA_HALF_PRECISION;
-    mg_param->setup_inv_type[level] = quda_input.mg_setup_inv_type;
-    // Kate says: experimental, leave at 1 (will be used for bootstrap-style setup later)
-    mg_param->num_setup_iter[level] = 1;
-    mg_param->setup_tol[level] = quda_input.mg_setup_tol;
-    mg_param->setup_maxiter[level] = quda_input.mg_setup_maxiter;
-    // If doing twisted mass, we can scale the twisted mass on the coarser grids
-    // which significantly increases speed of convergence as a result of making
-    // the coarsest grid solve a lot better conditioned.
-    // Dean Howarth has some RG arguments on why the coarse mass parameter should be
-    // rescaled for the coarse operator to be optimal.
-    if( fabs(mg_inv_param->mu) > 2*DBL_EPSILON ) {
-      mg_param->mu_factor[level] = quda_input.mg_mu_factor[level];
-      if( g_proc_id == 0 && g_debug_level >= 2 ){
-        printf("# QUDA: MG setting coarse mu scaling factor on level %d to %lf\n", level, mg_param->mu_factor[level]);
-      }
-    }
-    
     for (int dim=0; dim<4; dim++) {
       int extent;
       switch(dim){
@@ -1219,9 +1236,9 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
         // resulting in block sizes of:
         // - 4 if the extent is larger or equal to 16 and
         // - 2 otherwise
-        // When an extent is divisible by three and smaller than 16 and when we're
-        // not on the finest grid and when the user has explicitly enabled support 
-        // for these block lengths  (and therefore also adjusted QUDA to instantiate them), 
+        // When an extent is divisible by three, smaller or equal to 24 and when we're
+        // not on the finest grid [and the user has explicitly enabled support 
+        // for these block lengths  (and therefore also adjusted QUDA to instantiate them)],
         // we use a block length of 3.
         // If aggregation using an even number of lattice points (if size 3 is disabled)
         // is not possible or if the extent is 1 or some divisible only by some prime number
@@ -1247,37 +1264,59 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
       }
 
       // all lattice extents must be even after blocking on all levels
-      if( (extent / mg_param->geo_block_size[level][dim]) % 2 != 0 ){
+      if( level < mg_param->n_level-1 && 
+          (extent / mg_param->geo_block_size[level][dim]) % 2 != 0 ){
         tm_debug_printf(0, 0,
-                        "MG level %d, dim (xyzt) %d. Block size of %d would result "
+                        "MG level %d, dim %d (xyzt) has extent %d. Block size of %d would result "
                         "in odd extent on level %d, aborting!\n"
-                        "Adjust your block sizes or parallelisation!\n",
-                        level, dim, mg_param->geo_block_size[level][dim]);
+                        "Adjust your block sizes or parallelisation, all local lattice extents on all levels must be even!\n",
+                        level, dim, extent, mg_param->geo_block_size[level][dim], level+1);
         fflush(stdout);
         fatal_error("Blocking error.\n", "_setQudaMultigridParam");
       }
 
     } // for( dim=0 to dim=3 ) (space-time dimensions)
-
-    mg_param->coarse_solver[level] = QUDA_GCR_INVERTER;
-    mg_param->coarse_solver_tol[level] = quda_input.mg_coarse_solver_tol;
-    mg_param->coarse_solver_maxiter[level] = quda_input.mg_coarse_solver_maxiter;
+    
+    mg_param->verbosity[level] = quda_input.mg_verbosity[level];
+    mg_param->precision_null[level] = QUDA_HALF_PRECISION;
+    mg_param->setup_inv_type[level] = quda_input.mg_setup_inv_type;
+    // Kate says: experimental, leave at 1 (will be used for bootstrap-style setup later)
+    mg_param->num_setup_iter[level] = 1;
+    mg_param->setup_tol[level] = quda_input.mg_setup_tol[level];
+    mg_param->setup_maxiter[level] = quda_input.mg_setup_maxiter[level];
+    // If doing twisted mass, we can scale the twisted mass on the coarser grids
+    // which significantly increases speed of convergence as a result of making
+    // the coarsest grid solve a lot better conditioned.
+    // Dean Howarth has some RG arguments on why the coarse mass parameter should be
+    // rescaled for the coarse operator to be optimal.
+    if( fabs(mg_inv_param->mu) > 2*DBL_EPSILON ) {
+      mg_param->mu_factor[level] = quda_input.mg_mu_factor[level];
+      if( g_proc_id == 0 && g_debug_level >= 2 ){
+        printf("# QUDA: MG setting coarse mu scaling factor on level %d to %lf\n", level, mg_param->mu_factor[level]);
+      }
+    }
+    
+    mg_param->coarse_solver[level] = quda_input.mg_coarse_solver_type[level];
+    mg_param->coarse_solver_tol[level] = quda_input.mg_coarse_solver_tol[level];
+    mg_param->coarse_solver_maxiter[level] = quda_input.mg_coarse_solver_maxiter[level];
     // spin block size on level zero will be reset to 2 below
     mg_param->spin_block_size[level] = 1;
     mg_param->n_vec[level] = quda_input.mg_n_vec[level];
-    mg_param->nu_pre[level] = quda_input.mg_nu_pre;
-    mg_param->nu_post[level] = quda_input.mg_nu_post;
+    mg_param->nu_pre[level] = quda_input.mg_nu_pre[level];
+    mg_param->nu_post[level] = quda_input.mg_nu_post[level];
 
     mg_param->cycle_type[level] = QUDA_MG_CYCLE_RECURSIVE;
     mg_param->location[level] = QUDA_CUDA_FIELD_LOCATION;
+    mg_param->setup_location[level] = QUDA_CUDA_FIELD_LOCATION;
     
-    mg_param->smoother[level] = QUDA_MR_INVERTER;
-    mg_param->smoother_tol[level] = quda_input.mg_smoother_tol;
+    mg_param->smoother[level] = quda_input.mg_smoother_type[level];
+    mg_param->smoother_tol[level] = quda_input.mg_smoother_tol[level];
     // unless the Schwarz-alternating smoother is used, this should be 1
     mg_param->smoother_schwarz_cycle[level] = 1;
     // Kate says this should be EO always for performance
     mg_param->smoother_solve_type[level] = QUDA_DIRECT_PC_SOLVE;
     mg_param->smoother_schwarz_type[level] = QUDA_INVALID_SCHWARZ;
+    mg_param->smoother_halo_precision[level] = QUDA_HALF_PRECISION;
    
     // when the Schwarz-alternating smoother is used, this can be set to NO, otherwise it must be YES 
     mg_param->global_reduction[level] = QUDA_BOOLEAN_YES;
@@ -1288,9 +1327,72 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     // use single parity injection into the coarse grid
     mg_param->coarse_grid_solution_type[level] = inv_param.solve_type == QUDA_DIRECT_PC_SOLVE ? QUDA_MATPC_SOLUTION : QUDA_MAT_SOLUTION;
 
-    mg_param->omega[level] = quda_input.mg_omega; // over/under relaxation factor
+    mg_param->omega[level] = quda_input.mg_omega[level]; // over/under relaxation factor
 
     mg_param->location[level] = QUDA_CUDA_FIELD_LOCATION;
+
+    mg_param->setup_ca_basis[level]      = quda_input.mg_setup_ca_basis[level];
+    mg_param->setup_ca_basis_size[level] = quda_input.mg_setup_ca_basis_size[level];
+    mg_param->setup_ca_lambda_min[level] = quda_input.mg_setup_ca_lambda_min[level];
+    mg_param->setup_ca_lambda_max[level] = quda_input.mg_setup_ca_lambda_max[level];
+
+    mg_param->coarse_solver_ca_basis[level]      = quda_input.mg_coarse_solver_ca_basis[level];
+    mg_param->coarse_solver_ca_basis_size[level] = quda_input.mg_coarse_solver_ca_basis_size[level];
+    mg_param->coarse_solver_ca_lambda_min[level] = quda_input.mg_coarse_solver_ca_lambda_min[level];
+    mg_param->coarse_solver_ca_lambda_max[level] = quda_input.mg_coarse_solver_ca_lambda_max[level];
+    
+
+    // set the MG EigSolver parameters, almost equivalent to
+    // setEigParam from QUDA's multigrid_invert_test, except
+    // for cuda_prec_ritz (on 20190822)
+    if( quda_input.mg_use_eig_solver[level] == QUDA_BOOLEAN_YES ){
+      mg_param->use_eig_solver[level] = QUDA_BOOLEAN_YES;
+      mg_eig_param[level].eig_type = quda_input.mg_eig_type[level];
+      mg_eig_param[level].spectrum = quda_input.mg_eig_spectrum[level];
+      if ((quda_input.mg_eig_type[level] == QUDA_EIG_TR_LANCZOS || 
+           quda_input.mg_eig_type[level] == QUDA_EIG_IR_ARNOLDI)
+          && !(quda_input.mg_eig_spectrum[level] == QUDA_SPECTRUM_LR_EIG || 
+               quda_input.mg_eig_spectrum[level] == QUDA_SPECTRUM_SR_EIG)) {
+        tm_debug_printf(0, 0,
+                        "ERROR: MG level %d: Only real spectrum type (LR or SR)"
+                          "can be passed to the a Lanczos type solver!\n",
+                        level);
+        fflush(stdout);
+        fatal_error("Eigensolver parameter error.\n", "_setQudaMultigridParam");
+      }
+
+      mg_eig_param[level].n_ev = quda_input.mg_eig_nEv[level];
+      mg_eig_param[level].n_kr = quda_input.mg_eig_nKr[level];
+      mg_eig_param[level].n_conv = quda_input.mg_n_vec[level];
+      mg_eig_param[level].require_convergence = quda_input.mg_eig_require_convergence[level];
+
+      mg_eig_param[level].tol = quda_input.mg_eig_tol[level];
+      mg_eig_param[level].check_interval = quda_input.mg_eig_check_interval[level];
+      mg_eig_param[level].max_restarts = quda_input.mg_eig_max_restarts[level];
+			// in principle this can be set to a different precision, but we always
+      // use double precision in the outer solver
+      mg_eig_param[level].cuda_prec_ritz = QUDA_DOUBLE_PRECISION;
+
+      // this seems to be set to NO in multigrid_invert_test
+      mg_eig_param[level].compute_svd = QUDA_BOOLEAN_NO;
+      mg_eig_param[level].use_norm_op = quda_input.mg_eig_use_normop[level]; 
+      mg_eig_param[level].use_dagger = quda_input.mg_eig_use_dagger[level];
+      mg_eig_param[level].use_poly_acc = quda_input.mg_eig_use_poly_acc[level]; 
+      mg_eig_param[level].poly_deg = quda_input.mg_eig_poly_deg[level];
+      mg_eig_param[level].a_min = quda_input.mg_eig_amin[level];
+      mg_eig_param[level].a_max = quda_input.mg_eig_amax[level];
+
+      // set file i/o parameters
+      // Give empty strings, Multigrid will handle IO.
+      strcpy(mg_eig_param[level].vec_infile, "");
+      strcpy(mg_eig_param[level].vec_outfile, "");
+      strncpy(mg_eig_param[level].QUDA_logfile, "quda_eig.log", 512);
+
+      mg_param->eig_param[level] = &(mg_eig_param[level]);
+    } else {
+      mg_param->eig_param[level] = NULL;
+      mg_param->use_eig_solver[level] = QUDA_BOOLEAN_NO;
+    } // if(quda_input.mg_use_eig_solver[level] == QUDA_BOOLEAN_YES)
   } // for(i=0 to n_level-1)
 
   // only coarsen the spin on the first restriction
@@ -1299,6 +1401,8 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   mg_param->compute_null_vector = QUDA_COMPUTE_NULL_VECTOR_YES;
   mg_param->generate_all_levels = QUDA_BOOLEAN_YES;
 
+  mg_param->run_low_mode_check = quda_input.mg_run_low_mode_check;
+  mg_param->run_oblique_proj_check = quda_input.mg_run_oblique_proj_check;
   mg_param->run_verify = quda_input.mg_run_verify;
 
   // set file i/o parameters
@@ -1306,6 +1410,9 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   strcpy(mg_param->vec_outfile, "");
 
   mg_inv_param->verbosity = QUDA_SUMMARIZE;
+  if( g_debug_level >= 3 ){
+    mg_inv_param->verbosity = QUDA_VERBOSE;
+  }
   mg_inv_param->verbosity_precondition = QUDA_SUMMARIZE;;
 }
 

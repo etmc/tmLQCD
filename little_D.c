@@ -19,14 +19,14 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-#include "tmlqcd_config.h"
+# include<tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
 #ifdef TM_USE_MPI
-#include <mpi.h>
+# include <mpi.h>
 #endif
 #include "global.h"
 #include <complex.h>
@@ -58,17 +58,6 @@ static int ONE = 1;
 static _Complex double CONE, CZERO, CMONE;
 static _Complex float CONE_32, CZERO_32, CMONE_32;
 
-enum{
-  NONE = 0,
-  T_UP = 1,
-  T_DN = 2,
-  X_UP = 3,
-  X_DN = 4,
-  Y_UP = 5,
-  Y_DN = 6,
-  Z_UP = 7,
-  Z_DN = 8
-} Direction;
 
 void init_little_field_exchange(_Complex double * w);
 void wait_little_field_exchange(const int mu);
@@ -256,7 +245,7 @@ void apply_little_D_spinor(spinor *r, spinor *s){
 #endif
 #define _C_TYPE _Complex double
 
-#include "little_D_body.c"
+#include"little_D_body.c"
 
 #undef _C_TYPE
 #undef _PSWITCH
@@ -272,7 +261,7 @@ void apply_little_D_spinor(spinor *r, spinor *s){
 #endif
 #define _C_TYPE _Complex float
 
-#include "little_D_body.c"
+#include"little_D_body.c"
 
 #undef _C_TYPE
 #undef _PSWITCH

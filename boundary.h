@@ -22,6 +22,7 @@
 
 #include "su3.h"
 
+extern double X0, X1, X2, X3;
 extern _Complex double ka0, ka1, ka2, ka3;
 extern _Complex double phase_0, phase_1, phase_2, phase_3;
 void boundary(const double kappa);

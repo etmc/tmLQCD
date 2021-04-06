@@ -19,13 +19,10 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-#include "tmlqcd_config.h"
+# include<tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #include <math.h>
-#ifdef HAVE_CONFIG_H
-#include "tmlqcd_config.h"
-#endif
 #include "global.h"
 #include "su3.h"
 #include "linalg_eo.h"

@@ -99,13 +99,14 @@ void alt_block_compute_little_D();
 extern int dfl_field_iter;
 extern int dfl_poly_iter;
 
-int nb_blocks;
-int nblks_t;
-int nblks_x;
-int nblks_y;
-int nblks_z;
-int nblks_dir[4];
-int blk_gauge_eo;
+extern int nb_blocks;
+extern int nblks_t;
+extern int nblks_x;
+extern int nblks_y;
+extern int nblks_z;
+extern int nblks_dir[4];
+extern int blk_gauge_eo;
+
 void reconstruct_global_field_GEN(spinor * const rec_field, spinor ** const psi, int nb_blocks);
 void reconstruct_global_field_GEN_ID(spinor * const rec_field, block * const block_list, const int id, const int nb_blocks);
 int split_global_field_GEN(spinor ** const psi, spinor * const field, int nb_blocks);

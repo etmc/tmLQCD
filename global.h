@@ -31,7 +31,7 @@
  *
  ***************************************************************/
 #ifdef HAVE_CONFIG_H
-#include "tmlqcd_config.h"
+# include<tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -43,7 +43,8 @@
 #endif
 #include "su3.h"
 #include "su3adj.h"
-//#  include <tormpi_export.h>
+
+#include "misc_types.h"
 
 #define N_CHEBYMAX 49
 #define NTILDE_CHEBYMAX 2000
@@ -76,6 +77,8 @@ EXTERN int g_relative_precision_flag;
 EXTERN int g_debug_level;
 EXTERN int g_disable_IO_checks;
 EXTERN int g_disable_src_IO_checks;
+
+EXTERN tm_mpi_thread_level_t g_mpi_thread_level;
 
 EXTERN int T_global;
 #ifndef FIXEDVOLUME
@@ -278,12 +281,23 @@ EXTERN int tempT,tempV,tempR;
 EXTERN int ** g_iup3d;
 EXTERN int ** g_idn3d;
 #endif
- 
+
+/* keeping track of what the gauge, clover and inverse clover
+ * field contain in order to avoid unnecessary inversions
+ * of the latter */
+EXTERN tm_GaugeState_t g_gauge_state;
+EXTERN tm_GaugeState_t g_gauge_state_32;
+EXTERN tm_CloverState_t g_clover_state;
+EXTERN tm_CloverState_t g_clover_state_32;
+EXTERN tm_CloverInverseState_t g_clover_inverse_state;
+EXTERN tm_CloverInverseState_t g_clover_inverse_state_32;
+
 #undef EXTERN
 /* #undef ALIGN */
 
 void fatal_error(char const *error, char const *function);
 
+#endif
 
 /*
  * Comments: generic macro for swapping values or pointers.
@@ -296,5 +310,3 @@ void fatal_error(char const *error, char const *function);
   memcpy(&y,&x,       sizeof(x)); \
   memcpy(&x,swap_temp,sizeof(x)); \
 } while(0)
-
-#endif
