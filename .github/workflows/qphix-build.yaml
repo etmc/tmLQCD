@@ -118,7 +118,7 @@ jobs:
           -DCMAKE_C_FLAGS="-std=c99 -O2 -mavx2 -mfma -mtune=native -march=native -fopenmp" \
           -DCMAKE_INSTALL_PREFIX=$(pwd)/install_dir \
           .. && \
-          VERBOSE=1 make -j $(( ${nb_cores} + 1 )) && \
+          VERBOSE=1 make -j $(( ${nb_cores} + 2 )) && \
           make install
 
       - name: get_tmlqcd
@@ -146,6 +146,9 @@ jobs:
           --disable-sse3 \
           --with-limedir=${{github.workspace}}/lime/build/install_dir \
           --with-lemondir=${{github.workspace}}/lemon/build/install_dir \
-          --with-lapack="-lblas -llapack" && \
-          make -j
+          --with-lapack="-lblas -llapack" \
+          --with-qmpdir=${{github.workspace}}/qmp/build/install_dir \
+          --with-qphixdir=${{github.workspace}}/qphix/build/install_dir \
+          --enable-qphix-soalen=4 \
+          && make -j
 
