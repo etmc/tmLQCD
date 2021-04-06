@@ -1,0 +1,115 @@
+# this is a sample input file for a single cloverdet
+# monomial using QPhiX as a solver
+
+# for QPhiX with SoAlen=4, the X dimension must be at least of length 8
+L=8
+T=8
+Measurements = 20
+Startcondition = hot
+2KappaMu = 0.0
+
+# beta = 1.95, CP-PACS Nf=2
+# https://arxiv.org/abs/hep-lat/9810043
+CSW = 1.53
+kappa = 0.1375
+NSave = 500000
+ThetaT = 1.0
+UseEvenOdd = yes
+
+# check reversibility for completeness
+ReversibilityCheck = yes
+ReversibilityCheckIntervall = 4
+InitialStoreCounter = 0
+DebugLevel = 2
+
+# since this is a test file, we employ the reproducible random numbers mode
+ReproduceRandomNumbers = yes
+Seed = 87987
+
+OmpNumThreads = 1
+
+BeginMeasurement CORRELATORS
+  Frequency = 2
+EndMeasurement
+
+BeginMonomial GAUGE
+  Type = Iwasaki
+  beta = 1.95
+  Timescale = 0
+EndMonomial
+
+BeginExternalInverter QPHIX
+  # physical cores per MPI task
+  NCores = 1
+  
+  # block sizes (see qphix papers for details)
+  By = 4
+  Bz = 4
+
+  # minimum number of time slices per thread
+  MinCt = 1
+  
+  # thread geometry
+  # ompnumthreads = Ncores * Sy * Sz
+  # hyperthreads (if used) should be specified here
+  Sy = 1
+  Sz = 1
+  
+  # paddings in XY and XYZ blocks
+  PadXY = 0
+  PadXYZ = 0
+EndExternalInverter
+
+BeginMonomial CLOVERDET
+  Timescale = 1
+  CSW = 1.53
+  kappa = 0.1375
+  rho = 0.1
+  AcceptancePrecision =  1.e-20
+  ForcePrecision = 1.e-12
+  Name = cloverdet
+  solver = mixedcg
+  useexternalinverter = qphix
+  usecompression = 12
+  usesloppyprecision = single
+EndMonomial
+
+BeginMonomial CLOVERDETRATIO
+  Timescale = 2
+  CSW = 1.53
+  kappa = 0.1375
+  rho = 0.0
+  rho2 = 0.1
+  AcceptancePrecision =  1.e-20
+  ForcePrecision = 1.e-12
+  Name = cloverdet
+  solver = mixedcg
+  useexternalinverter = qphix
+  usecompression = 12
+  usesloppyprecision = single
+EndMonomial
+
+BeginIntegrator 
+  Type0 = 2MNFG
+  Type1 = 2MNFG
+  Type2 = 2MNFG
+  IntegrationSteps0 = 1
+  IntegrationSteps1 = 1
+  IntegrationSteps2 = 6
+  tau = 1.00
+  Lambda0 = 0.166666667
+  Lambda1 = 0.166666667
+  Lambda2 = 0.166666667
+  NumberOfTimescales = 3
+EndIntegrator
+
+BeginOperator CLOVER
+  CSW = 1.53
+  kappa = 0.1375
+  SolverPrecision = 1e-14
+  MaxSolverIterations = 1000
+  solver = mixedcg
+  useexternalinverter = qphix
+  usecompression = 12
+  usesloppyprecision = single
+EndOperator
