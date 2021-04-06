@@ -66,7 +66,7 @@ BeginMonomial CLOVERDET
   kappa = 0.1375
   rho = 0.1
   AcceptancePrecision =  1.e-20
-  ForcePrecision = 1.e-12
+  ForcePrecision = 1.e-15
   Name = cloverdet
   solver = mixedcg
   useexternalinverter = qphix
@@ -81,7 +81,7 @@ BeginMonomial CLOVERDETRATIO
   rho = 0.0
   rho2 = 0.1
   AcceptancePrecision =  1.e-20
-  ForcePrecision = 1.e-12
+  ForcePrecision = 1.e-15
   Name = cloverdet
   solver = mixedcg
   useexternalinverter = qphix
@@ -106,7 +106,7 @@ EndIntegrator
 BeginOperator CLOVER
   CSW = 1.53
   kappa = 0.1375
-  SolverPrecision = 1e-14
+  SolverPrecision = 1.e-18
   MaxSolverIterations = 1000
   solver = mixedcg
   useexternalinverter = qphix
