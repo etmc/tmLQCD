@@ -7,9 +7,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: get_lime
+        uses: actions/checkout@v2
         with:
-          name: usqcd/clime
+          repository: usqcd/clime
+
+      - name: get_lemon
+        uses: actions/checkout@v2
         with:
           name: etmc/lemon
 
