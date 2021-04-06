@@ -14,7 +14,8 @@ jobs:
           path: lime
 
       - name: autogen_lime
-        run: cd ${{github.workspace}}/lime && ./autogen.sh
+        working-directory: ${{github.workspace}}/lime
+        run: ./autogen.sh
       
       - name: create_lime_builddir
         run: mkdir ${{github.workspace}}/lime/build
@@ -33,6 +34,23 @@ jobs:
         with:
           name: etmc/lemon
           path: lemon
+
+      - name: create_lemon_builddir
+        run: mkdir ${{github.workspace}}/lemon/build
+
+      - name: autogen_lemon
+        working-directory: ${{github-workspace}}/lemon
+        run: autoreconf -i -f
+
+      - name: build_lemon
+        working-directory: ${{github.workspace}}/lemon/build
+        run: |
+          CC=mpicc \
+          CFLAGS="-march=native -mtune=native -O2" \
+          ../configure \
+          --prefix=$(pwd)/install_dir && \
+          make -j && \
+          make install
 
       - name: get_tmlqcd
         uses: actions/checkout@v2
