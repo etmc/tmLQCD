@@ -21,7 +21,8 @@ jobs:
 
       - name: build_lime
         working-directory: ${{github.workspace}}/lime/build
-        run: CC=gcc \
+        run: |
+          CC=gcc \
           CFLAGS="-march=native -mtune=native -O2" \
           ../configure --prefix=$(pwd)/install_dir && \
           make -j && \
