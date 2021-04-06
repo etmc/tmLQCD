@@ -1,0 +1,116 @@
+name: qphix-build
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: get_packages
+        run: sudo apt install openmpi-bin openmpi-common
+
+      - name: get_lime
+        uses: actions/checkout@v2
+        with:
+          repository: usqcd-software/c-lime
+          path: lime
+
+      - name: autogen_lime
+        working-directory: ${{github.workspace}}/lime
+        run: ./autogen.sh && mkdir build
+      
+      - name: build_lime
+        working-directory: ${{github.workspace}}/lime/build
+        run: |
+          CC=gcc \
+          CFLAGS="-march=native -mtune=native -O2" \
+          ../configure --prefix=$(pwd)/install_dir && \
+          make -j && \
+          make install
+
+      - name: get_lemon
+        uses: actions/checkout@v2
+        with:
+          repository: etmc/lemon
+          path: lemon
+
+      - name: autogen_lemon
+        working-directory: ${{github.workspace}}/lemon
+        run: autoreconf -i -f && mkdir build
+
+      - name: build_lemon
+        working-directory: ${{github.workspace}}/lemon/build
+        run: |
+          CC=mpicc \
+          CFLAGS="-march=native -mtune=native -O2" \
+          ../configure \
+          --prefix=$(pwd)/install_dir && \
+          make -j && \
+          make install
+
+      - name: get_qmp
+        uses: actions/checkout@v2
+        with:
+          repository: usqcd-software/qmp
+          path: qmp
+
+      - name: autogen_qmp
+        working-directory: ${{github.workspace}}/qmp
+        run: autoreconf -i -f && mkdir build
+
+      - name: build_qmp
+        working-directory: ${{github.workspace}}/qmp/build
+        run: |
+          CC=mpicc \
+          CFLAGS="-std=c99 -O2 -mtune=native -march=native" \
+          ../configure \
+          --prefix=$(pwd)/install_dir \
+          --with-qmp-comms-type=MPI && \
+          make -j && \
+          maek install
+
+      - name: get_qphix
+        uses: actions/checkout@v2
+        with:
+          repository: JeffersonLab/qphix
+          ref: fix_tmlqcd
+          path: qphix
+
+      - name: create_qphix_builddir
+        working-directory: ${{github.workspace}}/qphix
+        run: mkdir build
+
+        #      - name: build_qphix
+        #working-directory: ${{github.workspace}}/qphix/build
+        #run: |
+        #  cmake ..
+
+      - name: get_tmlqcd
+        uses: actions/checkout@v2
+        with:
+          path: main
+
+      - name: create_builddir
+        shell: bash
+        run: mkdir ${{github.workspace}}/main/build
+
+      - name: autogen_tmlqcd
+        working-directory: ${{github.workspace}}/main
+        run: autoconf
+
+      - name: configure_and_build
+        shell: bash
+        working-directory: ${{github.workspace}}/main/build
+        run: |
+          CC=mpicc CXX=mpicxx ../configure \
+          --enable-mpi \
+          --with-mpidimension=4 \
+          --enable-omp \
+          --disable-sse2 \
+          --disable-sse3 \
+          --with-limedir=${{github.workspace}}/lime/build/install_dir \
+          --with-lemondir=${{github.workspace}}/lemon/build/install_dir \
+          --with-lapack="-lblas -llapack" && \
+          make -j
+
