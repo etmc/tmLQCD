@@ -18,7 +18,7 @@ jobs:
         run: gcc --version
 
       - name: echo_nb_cores
-        run: echo "Number of cores: ${nb_cores}"
+        run: echo "Number of cores ${nb_cores}"
 
       - name: get_packages
         run: sudo apt install openmpi-bin openmpi-common
