@@ -8,7 +8,7 @@ jobs:
 
     steps:
       - name: get_packages
-        run: sudo apt install openmpi
+        run: sudo apt install openmpi-bin openmpi-common
 
       - name: get_lime
         uses: actions/checkout@v2
