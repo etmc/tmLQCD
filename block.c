@@ -65,17 +65,6 @@ _Complex float * little_A_eo_32 = NULL;
 int * block_idx;
 int * block_evenidx;
 int * block_oddidx;
-enum{
-  NONE = 0,
-  T_UP = 1,
-  T_DN = 2,
-  X_UP = 3,
-  X_DN = 4,
-  Y_UP = 5,
-  Y_DN = 6,
-  Z_UP = 7,
-  Z_DN = 8
-} Direction;
 
 static void (*boundary_D[8])(spinor * const r, spinor * const s, su3 *u) =
 {boundary_D_0, boundary_D_1, boundary_D_2, boundary_D_3, boundary_D_4, boundary_D_5, boundary_D_6, boundary_D_7};
