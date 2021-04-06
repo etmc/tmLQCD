@@ -62,18 +62,24 @@ jobs:
 
       - name: create_builddir
         shell: bash
-        run: mkdir ${{github.workspace}}/build
+        run: mkdir ${{github.workspace}}/main/build
 
-      - name: make_configure
+      - name: autogen_tmlqcd
+        working-directory: ${{github.workspace}}/main
         run: autoconf
 
-      - name: configure
+      - name: configure_and_build
         shell: bash
-        working-directory: ${{github.workspace}}/build
+        working-directory: ${{github.workspace}}/main/build
         run: |
           CC=mpicc CXX=mpicxx ../configure \
           --enable-mpi \
+          --with-mpidimension=4 \
           --enable-omp \
           --disable-sse2 \
-          --disable-sse3
+          --disable-sse3 \
+          --with-limedir=${{github.workspace}}/lime/build/install_dir \
+          --with-lemondir=${{github.workspace}}/lemon/build/install_dir \
+          --with-lapack="-lblas -llapack" && \
+          make -j
 
