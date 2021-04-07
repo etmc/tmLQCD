@@ -12,8 +12,6 @@ jobs:
         with:
           path: main
 
-      - name: list files
-        run: ls -l ${{ github.workspace }}/*
 
       # handling of environment variable: https://stackoverflow.com/a/57969570
       - name: lscpu
@@ -88,6 +86,11 @@ jobs:
           sed -i 's/mpiicc/mpicc/g' Makefile
           LIMEDIR=${{github.workspace}}/lime/build/install_dir \
             make -j lib/libDDalphaAMG.a
+
+      - name: list files
+        run: |
+          ls -d ${{ github.workspace }}/*
+          ld -l ${{ github.workspace }}/*
 
       - name: create_builddir
         shell: bash
