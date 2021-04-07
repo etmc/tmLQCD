@@ -1,0 +1,116 @@
+# this is a sample input file for cloverdet + cloverdetratio using
+# DDalphaAMG as a solver
+
+L=8
+T=8
+Measurements = 20
+Startcondition = hot
+2KappaMu = 0.01
+CSW = 1.00
+kappa = 0.138
+NSave = 500000
+ThetaT = 1.0
+UseEvenOdd = yes
+ReversibilityCheck = yes
+ReversibilityCheckIntervall = 4
+InitialStoreCounter = 0
+DebugLevel = 1
+
+# since this is a test file, we employ the reproducible random numbers mode
+ReproduceRandomNumbers = yes
+Seed = 127782
+
+ompnumthreads = 1
+
+BeginExternalInverter QPHIX
+  # physical cores per MPI task
+  NCores = 1
+  
+  # block sizes (see qphix papers for details)
+  By = 4
+  Bz = 4
+
+  # minimum number of time slices per thread
+  MinCt = 1
+  
+  # thread geometry
+  # ompnumthreads = Ncores * Sy * Sz
+  # hyperthreads (if used) should be specified here
+  Sy = 1
+  Sz = 1
+  
+  # paddings in XY and XYZ blocks
+  PadXY = 0
+  PadXYZ = 0
+EndExternalInverter
+
+BeginMeasurement CORRELATORS
+  Frequency = 2
+EndMeasurement
+
+BeginMonomial GAUGE
+  Type = Wilson
+  beta = 5.60
+  Timescale = 0
+EndMonomial
+
+BeginMonomial CLOVERDET
+  Timescale = 1
+  2KappaMu = 0.01
+  CSW = 1.00
+  # nominator shift
+  rho = 0.1
+  kappa = 0.138
+  AcceptancePrecision =  1.e-20
+  ForcePrecision = 1.e-14
+  Name = cloverdet
+  useexternalinverter = qphix
+  solver = mixedcg
+  usesloppyprecision = single
+  usecompression = 12
+EndMonomial
+
+BeginMonomial CLOVERDETRATIO
+  Timescale = 2
+  2KappaMu = 0.01
+  # nominator shift
+  rho = 0.0
+  # denominator shift, should match CLOVERDET shift
+  rho2 = 0.1
+  CSW = 1.00
+  kappa = 0.138
+  AcceptancePrecision =  1.e-20
+  ForcePrecision = 1.e-16
+  Name = cloverdetratio
+  useexternalinverter = qphix
+  solver = mixedcg
+  usesloppyprecision = single
+  usecompression = 12
+EndMonomial
+
+BeginIntegrator 
+  Type0 = 2MNFG
+  Type1 = 2MNFG
+  Type2 = 2MNFG
+  IntegrationSteps0 = 1
+  IntegrationSteps1 = 1
+  IntegrationSteps2 = 4
+  tau = 1.00
+  Lambda0 = 0.16666667
+  Lambda1 = 0.16666667
+  Lambda2 = 0.16666667
+  NumberOfTimescales = 3
+EndIntegrator
+
+BeginOperator CLOVER
+  2KappaMu = 0.01
+  CSW = 1.00
+  kappa = 0.138
+  SolverPrecision = 1e-16
+  MaxSolverIterations = 1000
+  useevenodd = yes
+  useexternalinverter = qphix
+  solver = mixedcg
+  usesloppyprecision = single
+  usecompression = 12
+EndOperator
