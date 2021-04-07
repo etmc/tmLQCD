@@ -109,7 +109,7 @@ jobs:
             --disable-sse3 \
             --with-limedir=${{github.workspace}}/lime/build/install_dir \
             --with-lemondir=${{github.workspace}}/lemon/build/install_dir \
-            --with-DDalphaAMG=${{github.workspace}}/ddalphaamg/lib \
+            --with-DDalphaAMG=${{github.workspace}}/ddalphaamg \
             --with-lapack="-lblas -llapack"
           make -j
 
