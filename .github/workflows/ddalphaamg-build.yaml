@@ -7,8 +7,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: list files
-        run: ls -l ${{ github.workspace }}/../*
+      - name: get_tmlqcd
+        uses: actions/checkout@v2
+        with:
+          path: main
+
+- name: list files
+        run: ls -l ${{ github.workspace }}/*
 
       # handling of environment variable: https://stackoverflow.com/a/57969570
       - name: lscpu
@@ -83,11 +88,6 @@ jobs:
           sed -i 's/mpiicc/mpicc/g' Makefile
           LIMEDIR=${{github.workspace}}/lime/build/install_dir \
             make -j lib/libDDalphaAMG.a
-
-      - name: get_tmlqcd
-        uses: actions/checkout@v2
-        with:
-          path: main
 
       - name: create_builddir
         shell: bash
