@@ -170,8 +170,8 @@ jobs:
         working-directory: ${{github.workspace}}/main/build
         run: |
           refpath=${{github.workspace}}/main/sample-output/hmc-qphix-tmcloverdetratio
-          numdiff -r 1e-6 -X 1:10 -X 1:5-8 -X 2:10 -X 2:5-8 output.data ${refpath}/output.data
-          numdiff -r 1e-6 return_check.data ${refpath}/return_check.data
+          numdiff -r 1e-4 -X 1:10 -X 1:5-8 -X 2:10 -X 2:5-8 output.data ${refpath}/output.data
+          numdiff -r 1e-4 return_check.data ${refpath}/return_check.data
           for i in $(seq 0 2 18); do \
             f=onlinemeas.$(printf %06d $i); \
             numdiff -r 1e-6 ${f} ${refpath}/${f}; \
