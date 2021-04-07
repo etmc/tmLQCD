@@ -8,7 +8,7 @@ jobs:
 
     steps:
       - name: list files
-        run: ls -l ${{ github.workspace }}/*
+        run: ls -l ${{ github.workspace }}/../*
 
       # handling of environment variable: https://stackoverflow.com/a/57969570
       - name: lscpu
