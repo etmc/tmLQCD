@@ -12,7 +12,7 @@ jobs:
         with:
           path: main
 
-- name: list files
+      - name: list files
         run: ls -l ${{ github.workspace }}/*
 
       # handling of environment variable: https://stackoverflow.com/a/57969570
