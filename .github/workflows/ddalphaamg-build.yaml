@@ -110,7 +110,7 @@ jobs:
             --with-limedir=${{github.workspace}}/lime/build/install_dir \
             --with-lemondir=${{github.workspace}}/lemon/build/install_dir \
             --with-DDalphaAMG=${{github.workspace}}/ddalphaamg \
-            --with-lapack="-lblas -llapack"
+            --with-lapack="-lblas -llapack" || cat config.log
           make -j
 
       - name: nf2_ddalphaamg_hmc_tmcloverdetratio
