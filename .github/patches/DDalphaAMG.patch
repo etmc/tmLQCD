@@ -9,7 +9,7 @@ index ae45ecc..7299fc7 100644
  
  # --- CFLAGS -----------------------------------------
 -CFLAGS_gnu = -std=gnu99 -Wall -pedantic -O3 -ffast-math -msse4.2 -fopenmp 
-+CFLAGS_gnu = -std=gnu99 -Wall -pedantic -O2 -mavx2 -mfma -mtune=haswell -march=haswell -fopenmp 
++CFLAGS_gnu = -std=gnu99 -Wall -pedantic -O3 -ffast-math -mavx2 -mfma -mtune=haswell -march=haswell -fopenmp 
  CFLAGS_intel = -std=gnu99 -Wall -pedantic -O3  -xHOST -qopenmp 
 -CFLAGS = $(CFLAGS_intel)
 +CFLAGS = ${CFLAGS_gnu}
