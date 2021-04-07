@@ -1,5 +1,5 @@
 # this is a sample input file for cloverdet + cloverdetratio using
-# DDalphaAMG as a solver
+# QPhiX mixed CG as a solver
 
 L=8
 T=8
