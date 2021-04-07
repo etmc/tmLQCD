@@ -89,7 +89,7 @@ jobs:
 
       - name: list files
         run: |
-          ls -l ${{ github.action_path }}/*
+          ls -l ${{ github.workspace }}/main/.github/*
 
       - name: create_builddir
         shell: bash
