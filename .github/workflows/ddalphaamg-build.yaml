@@ -90,7 +90,7 @@ jobs:
       - name: list files
         run: |
           ls -d ${{ github.workspace }}/*
-          ld -l ${{ github.workspace }}/*
+          ls -l ${{ github.workspace }}/*
 
       - name: create_builddir
         shell: bash
