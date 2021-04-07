@@ -7,6 +7,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: list files
+        run: ls -l ${{ github.workspace }}/*
+
       # handling of environment variable: https://stackoverflow.com/a/57969570
       - name: lscpu
         run: |
