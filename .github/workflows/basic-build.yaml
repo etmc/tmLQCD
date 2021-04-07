@@ -80,8 +80,9 @@ jobs:
         working-directory: ${{github.workspace}}/main/build
         run: |
           CC=mpicc CXX=mpicxx \
-            CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
-            CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
+            LDFLAGS="-fopenmp" \
+            CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
+            CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
             ../configure \
             --enable-mpi \
             --with-mpidimension=4 \
@@ -90,6 +91,6 @@ jobs:
             --disable-sse3 \
             --with-limedir=${{github.workspace}}/lime/build/install_dir \
             --with-lemondir=${{github.workspace}}/lemon/build/install_dir \
-            --with-lapack="-lblas -llapack"
+            --with-lapack="-lblas -llapack" || cat config.log
           make -j
 

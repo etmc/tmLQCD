@@ -143,8 +143,9 @@ jobs:
         working-directory: ${{github.workspace}}/main/build
         run: |
           CC=mpicc CXX=mpicxx \
-            CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
-            CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX" \
+            LDFLAGS="-fopenmp" \
+            CFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
+            CXXFLAGS="-O2 -mtune=haswell -march=haswell -mavx2 -mfma -DOMPI_SKIP_MPICXX -fopenmp" \
             ../configure \
             --enable-mpi \
             --with-mpidimension=4 \
@@ -156,7 +157,7 @@ jobs:
             --with-lapack="-lblas -llapack" \
             --with-qmpdir=${{github.workspace}}/qmp/build/install_dir \
             --with-qphixdir=${{github.workspace}}/qphix/build/install_dir \
-            --enable-qphix-soalen=4
+            --enable-qphix-soalen=4 || cat config.log
           make -j
 
       - name: nf2_wilson_clover_qphix_hmc
