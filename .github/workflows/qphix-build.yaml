@@ -160,16 +160,16 @@ jobs:
             --enable-qphix-soalen=4 || cat config.log
           make -j
 
-      - name: nf2_wilson_clover_qphix_hmc
+      - name: nf2_qphix_hmc_tmcloverdetratio
         working-directory: ${{github.workspace}}/main/build
         run: |
           mpirun -np 2 ./hmc_tm \
-            -f ../sample-input/sample-hmc-qphix-cp_pacs_nf2_wilson_clover_beta1p95_csw1p53.input
+            -f ../sample-input/sample-hmc-qphix-tmcloverdetratio.input
 
-      - name: compare_nf2_wilson_clover_qphix_hmc
+      - name: compare_nf2_qphix_hmc_tmcloverdetratio
         working-directory: ${{github.workspace}}/main/build
         run: |
-          refpath=${{github.workspace}}/main/sample-output/hmc-qphix-cp_pacs_nf2_wilson_clover_beta1p95_csw1p53
+          refpath=${{github.workspace}}/main/sample-output/hmc-qphix-tmcloverdetratio
           numdiff -r 1e-6 -X 1:10 -X 1:5-8 -X 2:10 -X 2:5-8 output.data ${refpath}/output.data
           numdiff -r 1e-6 return_check.data ${refpath}/return_check.data
           for i in $(seq 0 2 18); do \
