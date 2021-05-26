@@ -951,8 +951,7 @@ void M_full_quda(spinor * const Even_new, spinor * const Odd_new,  spinor * cons
   inv_param.epsilon = 0.0;
 
   inv_param.twist_flavor = QUDA_TWIST_SINGLET;
-  inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ||
-       inv_param.twist_flavor == QUDA_TWIST_DEG_DOUBLET ) ? 2 : 1;
+  inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ) ? 2 : 1;
 
   void *spinorIn  = (void*)g_spinor_field[DUM_DERI];   // source
   void *spinorOut = (void*)g_spinor_field[DUM_DERI+1]; // solution
@@ -978,8 +977,7 @@ void D_psi_quda(spinor * const P, spinor * const Q) {
   inv_param.epsilon = 0.0;
 
   inv_param.twist_flavor = QUDA_TWIST_SINGLET;
-  inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ||
-       inv_param.twist_flavor == QUDA_TWIST_DEG_DOUBLET ) ? 2 : 1;
+  inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ) ? 2 : 1;
 
   void *spinorIn  = (void*)Q;
   void *spinorOut = (void*)P;
