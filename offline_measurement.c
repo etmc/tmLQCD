@@ -49,6 +49,7 @@
 #ifdef TM_USE_MPI
 #include "xchange/xchange.h"
 #endif
+#include "sighandler.h"
 #include "mpi_init.h"
 #include "boundary.h"
 #include "init/init.h"
