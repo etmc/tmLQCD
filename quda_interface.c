@@ -750,7 +750,7 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 
   spinor ** solver_field = NULL;
   const int nr_sf = 2;
-  init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
+  init_solver_field(&solver_field, VOLUME, nr_sf);
 
   convert_eo_to_lexic(solver_field[0],  Even, Odd);
 
