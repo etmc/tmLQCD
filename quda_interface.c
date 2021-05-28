@@ -489,16 +489,10 @@ void _loadGaugeQuda( const int compression ) {
 }
 
 // reorder spinor to QUDA format
-void reorder_spinor_toQuda( double* sp, QudaPrecision precision, int doublet, double* sp2 ) {
+void reorder_spinor_toQuda( double* sp, QudaPrecision precision, int doublet ) {
   double startTime = gettime();
 
-  if( doublet ) {
-    memcpy( tempSpinor,           sp,  VOLUME*24*sizeof(double) );
-    memcpy( tempSpinor+VOLUME*24, sp2, VOLUME*24*sizeof(double) );
-  }
-  else {
-    memcpy( tempSpinor, sp, VOLUME*24*sizeof(double) );
-  }
+  memcpy( tempSpinor, sp, (1+doublet)*VOLUME*24*sizeof(double) );
 
   // now copy and reorder from tempSpinor to spinor
 #ifdef TM_USE_OMP
@@ -518,8 +512,8 @@ void reorder_spinor_toQuda( double* sp, QudaPrecision precision, int doublet, do
           int oddBit = (x0+x1+x2+x3) & 1;
 
           if( doublet ) {
-            memcpy( &(sp[24*(oddBit*VOLUME+j/2)]),          &(tempSpinor[24* tm_idx        ]), 24*sizeof(double));
-            memcpy( &(sp2[24*(oddBit*VOLUME+j/2+VOLUME/2)]), &(tempSpinor[24*(tm_idx+VOLUME)]), 24*sizeof(double));
+            memcpy( &(sp[24*(oddBit*VOLUME/2+j/2)]),        &(tempSpinor[24* tm_idx        ]), 24*sizeof(double));
+            memcpy( &(sp[24*(oddBit*VOLUME/2+j/2+VOLUME)]), &(tempSpinor[24*(tm_idx+VOLUME)]), 24*sizeof(double));
           }
           else {
             memcpy( &(sp[24*(oddBit*VOLUME/2+j/2)]), &(tempSpinor[24*tm_idx]), 24*sizeof(double));
@@ -534,15 +528,10 @@ void reorder_spinor_toQuda( double* sp, QudaPrecision precision, int doublet, do
 }
 
 // reorder spinor from QUDA format
-void reorder_spinor_fromQuda( double* sp, QudaPrecision precision, int doublet, double* sp2 ) {
+void reorder_spinor_fromQuda( double* sp, QudaPrecision precision, int doublet ) {
   double startTime = gettime();
 
-  if( doublet ) {
-    memcpy( tempSpinor, sp, 2*VOLUME*24*sizeof(double) );
-  }
-  else {
-    memcpy( tempSpinor, sp, VOLUME*24*sizeof(double) );
-  }
+  memcpy( tempSpinor, sp, (1+doublet)*VOLUME*24*sizeof(double) );
 
   // now copy and reorder from tempSpinor to spinor
 #ifdef TM_USE_OMP
@@ -562,8 +551,8 @@ void reorder_spinor_fromQuda( double* sp, QudaPrecision precision, int doublet, 
           int oddBit = (x0+x1+x2+x3) & 1;
 
           if( doublet ) {
-            memcpy( &(sp[24* tm_idx]),  &(tempSpinor[24*(oddBit*VOLUME+j/2)         ]), 24*sizeof(double));
-            memcpy( &(sp2[24*(tm_idx)]), &(tempSpinor[24*(oddBit*VOLUME+j/2+VOLUME/2)]), 24*sizeof(double));
+            memcpy( &(sp[24*tm_idx]),          &(tempSpinor[24*(oddBit*VOLUME/2+j/2)         ]), 24*sizeof(double));
+            memcpy( &(sp[24*(tm_idx+VOLUME)]), &(tempSpinor[24*(oddBit*VOLUME/2+j/2+VOLUME)]), 24*sizeof(double));
           }
           else {
             memcpy( &(sp[24*tm_idx]), &(tempSpinor[24*(oddBit*VOLUME/2+j/2)]), 24*sizeof(double));
@@ -711,7 +700,7 @@ int invert_quda_direct(double * const propagator, double const * const source,
                             optr->maxiter);
   
   // reorder spinor
-  reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0, NULL );
+  reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0 );
 
   // perform the inversion
   invertQuda(spinorOut, spinorIn, &inv_param);
@@ -724,7 +713,7 @@ int invert_quda_direct(double * const propagator, double const * const source,
   optr->iterations = inv_param.iter;
 
   // reorder spinor
-  reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, NULL );
+  reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0 );
   // propagator in usual normalisation, this is only necessary in invert_quda_direct
   // since the rescaling is otherwise done in the operator inversion driver
   mul_r((spinor*)spinorOut, (2*optr->kappa), (spinor*)spinorOut, VOLUME );
@@ -786,7 +775,7 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
                             max_iter);
 
   // reorder spinor
-  reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0, NULL );
+  reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0 );
 
   // perform the inversion
   invertQuda(spinorOut, spinorIn, &inv_param);
@@ -806,7 +795,7 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
   //reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, NULL );
   //convert_lexic_to_eo(Even,     Odd,     solver_field[0]);
   
-  reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, NULL );
+  reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0 );
   convert_lexic_to_eo(Even_new, Odd_new, solver_field[1]);
 
   finalize_solver(solver_field, nr_sf);
@@ -827,18 +816,17 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
                            CompressionType compression) {
 
   spinor ** solver_field = NULL;
-  const int nr_sf = 4;
-  init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
+  const int nr_sf = 2;
+  init_solver_field(&solver_field, 2*VOLUME, nr_sf);
 
-  convert_eo_to_lexic(solver_field[0],   Even_s,  Odd_s);
-  convert_eo_to_lexic(solver_field[1],   Even_c,  Odd_c);
-  // this would only be necessary if we wanted to use an initial guess
-  //  convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], Even_new, Odd_new);
+  convert_eo_to_lexic(solver_field[0],          Even_s,  Odd_s);
+  convert_eo_to_lexic(solver_field[0]+VOLUME,   Even_c,  Odd_c);
 
-  void *spinorIn    = (void*)solver_field[0]; // source
-  void *spinorIn_c  = (void*)solver_field[1]; // charme source
-  void *spinorOut   = (void*)solver_field[2]; // solution
-  void *spinorOut_c = (void*)solver_field[3]; // charme solution
+  // if we were to use an initial guess, we would need to also prepare the
+  // solution spinor here
+
+  void *spinorIn    = (void*)solver_field[0];
+  void *spinorOut   = (void*)solver_field[1];
 
   if ( rel_prec )
     inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
@@ -911,7 +899,7 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   }
 
   // reorder spinor
-  reorder_spinor_toQuda( (double*)spinorIn,   inv_param.cpu_prec, 1, (double*)spinorIn_c );
+  reorder_spinor_toQuda( (double*)spinorIn,   inv_param.cpu_prec, 1 );
 
   // perform the inversion
   invertQuda(spinorOut, spinorIn, &inv_param);
@@ -931,9 +919,9 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   //convert_lexic_to_eo(Even_s,     Odd_s,     solver_field[0]);
   //convert_lexic_to_eo(Even_c,     Odd_c,     solver_field[1]);
 
-  reorder_spinor_fromQuda( (double*)spinorOut,   inv_param.cpu_prec, 1, (double*)spinorOut_c );
-  convert_lexic_to_eo(Even_new_s, Odd_new_s, solver_field[2]);
-  convert_lexic_to_eo(Even_new_c, Odd_new_c, solver_field[3]);
+  reorder_spinor_fromQuda( (double*)spinorOut,   inv_param.cpu_prec, 1 );
+  convert_lexic_to_eo(Even_new_s, Odd_new_s, solver_field[1]);
+  convert_lexic_to_eo(Even_new_c, Odd_new_c, solver_field[1]+VOLUME);
 
   finalize_solver(solver_field, nr_sf);
 
@@ -958,14 +946,14 @@ void M_full_quda(spinor * const Even_new, spinor * const Odd_new,  spinor * cons
 
   // reorder spinor
   convert_eo_to_lexic( spinorIn, Even, Odd );
-  reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0, NULL );
+  reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0 );
 
   // multiply
   inv_param.solution_type = QUDA_MAT_SOLUTION;
   MatQuda( spinorOut, spinorIn, &inv_param);
 
   // reorder spinor
-  reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, NULL );
+  reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0 );
   convert_lexic_to_eo( Even_new, Odd_new, spinorOut );
 }
 
@@ -983,15 +971,15 @@ void D_psi_quda(spinor * const P, spinor * const Q) {
   void *spinorOut = (void*)P;
 
   // reorder spinor
-  reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0, NULL );
+  reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0 );
 
   // multiply
   inv_param.solution_type = QUDA_MAT_SOLUTION;
   MatQuda( spinorOut, spinorIn, &inv_param);
 
   // reorder spinor
-  reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, NULL );
-  reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, NULL );
+  reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0 );
+  reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0 );
 }
 
 void _setOneFlavourSolverParam(const double kappa, const double c_sw, const double mu, 
