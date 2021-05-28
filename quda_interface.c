@@ -512,8 +512,8 @@ void reorder_spinor_toQuda( double* sp, QudaPrecision precision, int doublet ) {
           int oddBit = (x0+x1+x2+x3) & 1;
 
           if( doublet ) {
-            memcpy( &(sp[24*(oddBit*VOLUME/2+j/2)]),        &(tempSpinor[24* tm_idx        ]), 24*sizeof(double));
-            memcpy( &(sp[24*(oddBit*VOLUME/2+j/2+VOLUME)]), &(tempSpinor[24*(tm_idx+VOLUME)]), 24*sizeof(double));
+            memcpy( &(sp[24*(oddBit*VOLUME+j/2)]),        &(tempSpinor[24* tm_idx        ]), 24*sizeof(double));
+            memcpy( &(sp[24*(oddBit*VOLUME+j/2+VOLUME/2)]), &(tempSpinor[24*(tm_idx+VOLUME)]), 24*sizeof(double));
           }
           else {
             memcpy( &(sp[24*(oddBit*VOLUME/2+j/2)]), &(tempSpinor[24*tm_idx]), 24*sizeof(double));
@@ -551,8 +551,8 @@ void reorder_spinor_fromQuda( double* sp, QudaPrecision precision, int doublet )
           int oddBit = (x0+x1+x2+x3) & 1;
 
           if( doublet ) {
-            memcpy( &(sp[24*tm_idx]),          &(tempSpinor[24*(oddBit*VOLUME/2+j/2)         ]), 24*sizeof(double));
-            memcpy( &(sp[24*(tm_idx+VOLUME)]), &(tempSpinor[24*(oddBit*VOLUME/2+j/2+VOLUME)]), 24*sizeof(double));
+            memcpy( &(sp[24*tm_idx]),          &(tempSpinor[24*(oddBit*VOLUME+j/2)       ]), 24*sizeof(double));
+            memcpy( &(sp[24*(tm_idx+VOLUME)]), &(tempSpinor[24*(oddBit*VOLUME+j/2+VOLUME/2)]), 24*sizeof(double));
           }
           else {
             memcpy( &(sp[24*tm_idx]), &(tempSpinor[24*(oddBit*VOLUME/2+j/2)]), 24*sizeof(double));
