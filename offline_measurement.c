@@ -49,6 +49,7 @@
 #ifdef TM_USE_MPI
 #include "xchange/xchange.h"
 #endif
+#include "sighandler.h"
 #include "mpi_init.h"
 #include "boundary.h"
 #include "init/init.h"
@@ -353,7 +354,7 @@ static void process_args(int argc, char *argv[], char ** input_filename, char **
         break;
       case 'V':
         if(g_proc_id == 0) {
-          fprintf(stdout,"%s %s\n",PACKAGE_STRING,git_hash);
+          fprintf(stdout,"%s %s\n",TMLQCD_PACKAGE_STRING,git_hash);
         }
         exit(TM_EXIT_SUCCESS);
         break;

@@ -77,7 +77,7 @@ AC_CHECK_LIB([lime], [limeReaderNextRecord],[],
 AC_MSG_CHECKING(whether we want to use lemon)
 AC_ARG_WITH(lemondir,
             AS_HELP_STRING([--with-lemondir[=dir]], [use lemon, to be found in dir]),
-             [echo yes
+             [echo $withval
               LEMON_AVAILABLE=1
               lemon_dir=$withval
               LDFLAGS="$LDFLAGS -L${lemon_dir}/lib"
@@ -113,7 +113,7 @@ fi
 AC_MSG_CHECKING(whether we want to use DDalphaAMG)
 AC_ARG_WITH(DDalphaAMG,
             AS_HELP_STRING([--with-DDalphaAMG[=dir]], [use DDalphaAMG, to be found in dir]),
-             [echo yes
+             [echo $withval
               DDalphaAMG_AVAILABLE=1
               DDalphaAMG_INTERFACE="DDalphaAMG_interface"
               AC_DEFINE(DDalphaAMG,1,Using DDalphaAMG)

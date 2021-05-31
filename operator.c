@@ -250,7 +250,11 @@ int init_operators() {
         optr->applyQp = &Qov_psi;
       }
       else if(optr->type == DBTMWILSON) {
-        optr->even_odd_flag = 1;
+        // QUDA also supports non-EO solves so we allow the user to set
+        // the UseEvenOdd operator parameter
+        if(optr->external_inverter != QUDA_INVERTER){
+          optr->even_odd_flag = 1;
+        }
         optr->applyDbQsq = &Qtm_pm_ndpsi;
         /* TODO: this should be here!       */
         /* Chi`s-spinors  memory allocation */
@@ -260,9 +264,12 @@ int init_operators() {
         /*       } */
       }
       else if(optr->type == DBCLOVER) {
-        optr->even_odd_flag = 1;
+        // QUDA also supports non-EO solves so we allow the user to set
+        // the UseEvenOdd operator parameter
+        if(optr->external_inverter != QUDA_INVERTER){
+          optr->even_odd_flag = 1;
+        }
         optr->applyDbQsq = &Qsw_pm_ndpsi;
-        //  optr->applyDbQsq = &Qtm_pm_ndpsi;
       }
       if(optr->external_inverter==QUDA_INVERTER ) {
 #ifdef TM_USE_QUDA
@@ -419,6 +426,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
                                               optr->sr0, optr->sr1, optr->sr2, optr->sr3,
                                               optr->eps_sq, optr->maxiter,
                                               optr->solver, optr->rel_prec,
+                                              optr->even_odd_flag,
                                               optr->solver_params, optr->external_inverter, 
                                               optr->sloppy_precision, optr->compression_type);
         // checking solution
@@ -431,6 +439,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
                                                     optr->sr0, optr->sr1, optr->sr2, optr->sr3,
                                                     optr->eps_sq, optr->maxiter,
                                                     optr->solver, optr->rel_prec,
+                                                    optr->even_odd_flag,
                                                     optr->solver_params, optr->external_inverter, 
                                                     optr->sloppy_precision, optr->compression_type);
         // checking solution

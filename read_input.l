@@ -1279,7 +1279,7 @@ static inline double fltlist_next_token(int * const list_end){
   }
 }
 
-<WILSONOP,TMOP,CLOVEROP>{
+<WILSONOP,TMOP,CLOVEROP,DBTMOP,DBCLOVEROP>{
   {SPC}*UseEvenOdd{EQL}yes {
     if(myverbose) printf("  Use even/odd preconditioning line %d operator %d\n", line_of_file, current_operator);
     optr->even_odd_flag = 1;

@@ -73,7 +73,8 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
                       spinor * const Even_s, spinor * const Odd_s,
                       spinor * const Even_c, spinor * const Odd_c,
                       const double precision, const int max_iter,
-                      const int solver_flag, const int rel_prec, 
+                      const int solver_flag, const int rel_prec,
+                      const int even_odd_flag,
                       solver_params_t solver_params, const ExternalInverter external_inverter, 
                       const SloppyPrecision sloppy, const CompressionType compression) {
 
@@ -84,7 +85,7 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
     return invert_doublet_eo_quda( Even_new_s, Odd_new_s, Even_new_c, Odd_new_c,
                                    Even_s, Odd_s, Even_c, Odd_c,
                                    precision, max_iter,
-                                   solver_flag, rel_prec, 1,
+                                   solver_flag, rel_prec, even_odd_flag,
                                    sloppy, compression );
   }
 #endif
@@ -208,8 +209,11 @@ int invert_cloverdoublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
                       spinor * const Even_s, spinor * const Odd_s,
                       spinor * const Even_c, spinor * const Odd_c,
                       const double precision, const int max_iter,
-                      const int solver_flag, const int rel_prec, solver_params_t solver_params,
-                      const ExternalInverter external_inverter, const SloppyPrecision sloppy, const CompressionType compression) {
+                      const int solver_flag, const int rel_prec,
+                      const int even_odd_flag,
+                      solver_params_t solver_params,
+                      const ExternalInverter external_inverter,
+                      const SloppyPrecision sloppy, const CompressionType compression) {
   
   int iter = 0;
 
@@ -218,7 +222,7 @@ int invert_cloverdoublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
     return invert_doublet_eo_quda( Even_new_s, Odd_new_s, Even_new_c, Odd_new_c,
                                    Even_s, Odd_s, Even_c, Odd_c,
                                    precision, max_iter,
-                                   solver_flag, rel_prec, 1,
+                                   solver_flag, rel_prec, even_odd_flag,
                                    sloppy, compression );
   }
 #endif
