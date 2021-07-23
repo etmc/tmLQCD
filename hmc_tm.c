@@ -71,6 +71,9 @@
 #ifdef DDalphaAMG
 #include "DDalphaAMG_interface.h"
 #endif
+#ifdef TM_USE_QUDA
+#  include "quda_interface.h"
+#endif
 
 extern int nstore;
 
@@ -574,6 +577,9 @@ int main(int argc,char *argv[]) {
   free(filename);
   free(SourceInfo.basename);
   free(PropInfo.basename);
+#ifdef TM_USE_QUDA
+  _endQuda();
+#endif
 #ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();

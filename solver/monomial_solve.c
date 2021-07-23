@@ -79,6 +79,10 @@
 #include <io/params.h>
 #include <io/spinor.h>
 
+#ifdef TM_USE_QUDA
+#  include "quda_interface.h"
+#endif
+
 #ifdef HAVE_GPU
 #include"../GPU/cudadefs.h"
 extern  int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int max_iter, 
@@ -99,12 +103,38 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
 
   // temporary field required by the QPhiX solve or by residual check
   spinor** temp;
-  if(g_debug_level > 2 || solver_params.external_inverter == QPHIX_INVERTER){
+  if(g_debug_level > 2 || solver_params.external_inverter == QPHIX_INVERTER || solver_params.external_inverter == QUDA_INVERTER ){
     init_solver_field(&temp, VOLUMEPLUSRAND/2, 1);
   }
-
+  
   solver_params.use_initial_guess = 0;
 
+
+#ifdef TM_USE_QUDA
+  if ( solver_params.external_inverter = QUDA_INVERTER){
+    
+    spinor** tempE;
+    init_solver_field(&tempE, VOLUMEPLUSRAND/2, 1);
+    
+
+    // using CG for the HMC, we always want to have the solution of (Q Q^dagger) x = b, which is equivalent to
+    // gamma_5 (M M^dagger)^{-1} gamma_5 b
+    gamma5(temp[0], Q, VOLUME/2);
+    iteration_count= invert_eo_MMd_quda(tempE[0],   P,//spinor * const Odd_new,
+                   tempE[0],   temp[0],
+                   eps_sq, // Marco: check this:   const double precision, 
+                   max_iter,
+                   solver_type,  rel_prec,
+                   1, // Marco: 0 or 1 ? int even_odd_flag,
+                   solver_params,
+                   solver_params.sloppy_precision,
+                   solver_params.compression_type);
+    //iteration_count =  cg_her(P, Q, max_iter, eps_sq, rel_prec, N, f);
+     mul_gamma5(P, VOLUME/2);
+     finalize_solver(tempE,1);
+
+  } else
+#endif
 #ifdef TM_USE_QPHIX
   if(solver_params.external_inverter == QPHIX_INVERTER){
     // using CG for the HMC, we always want to have the solution of (Q Q^dagger) x = b, which is equivalent to
@@ -175,7 +205,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
       printf("# solve_degenerate residual check: %e\n", diffnorm);
     }
   }
-  if(g_debug_level > 2 || solver_params.external_inverter == QPHIX_INVERTER){
+  if(g_debug_level > 2 || solver_params.external_inverter == QPHIX_INVERTER  || solver_params.external_inverter == QUDA_INVERTER){
     finalize_solver(temp, 1);
   }
 
