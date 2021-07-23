@@ -139,8 +139,8 @@ void D_psi_quda(spinor * const P, spinor * const Q);
 
 
 // to be called instead of tmLQCD functions to use the QUDA inverter in solve_degenerate
-int invert_eo_MMd_quda(spinor * const Even_new, spinor * const Odd_new,
-                   spinor * const Even, spinor * const Odd,
+int invert_eo_MMd_quda( spinor * const Odd_new,
+                    spinor * const Odd,
                    const double precision, const int max_iter,
                    const int solver_flag, const int rel_prec,
                    const int even_odd_flag, solver_params_t solver_params,

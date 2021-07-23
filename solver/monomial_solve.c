@@ -113,15 +113,12 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
 #ifdef TM_USE_QUDA
   if ( solver_params.external_inverter = QUDA_INVERTER){
     
-    spinor** tempE;
-    init_solver_field(&tempE, VOLUMEPLUSRAND/2, 1);
-    
-
     // using CG for the HMC, we always want to have the solution of (Q Q^dagger) x = b, which is equivalent to
     // gamma_5 (M M^dagger)^{-1} gamma_5 b
     gamma5(temp[0], Q, VOLUME/2);
-    iteration_count= invert_eo_MMd_quda(tempE[0],   P,//spinor * const Odd_new,
-                   tempE[0],   temp[0],
+    
+    iteration_count= invert_eo_MMd_quda(P,   //spinor * const Odd_new,
+                   temp[0],   
                    eps_sq, // Marco: check this:   const double precision, 
                    max_iter,
                    solver_type,  rel_prec,
@@ -129,9 +126,40 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
                    solver_params,
                    solver_params.sloppy_precision,
                    solver_params.compression_type);
-    //iteration_count =  cg_her(P, Q, max_iter, eps_sq, rel_prec, N, f);
+    
+    /*
+    /*
+    spinor** tempE;
+    init_solver_field(&tempE, VOLUMEPLUSRAND/2, 1);
+    
+    for(int x =0; x<VOLUMEPLUSRAND/2;x++){
+      double a=1;
+      tempE[0][x].s0.c0=a;
+      tempE[0][x].s0.c1=a;
+      tempE[0][x].s0.c2=a;
+      tempE[0][x].s1.c0=a;
+      tempE[0][x].s1.c1=a;
+      tempE[0][x].s1.c2=a;
+      tempE[0][x].s2.c0=a;
+      tempE[0][x].s2.c1=a;
+      tempE[0][x].s2.c2=a;
+      tempE[0][x].s3.c0=a;
+      tempE[0][x].s3.c1=a;
+      tempE[0][x].s3.c2=a;
+      // the final result is independent of a
+    }
+    iteration_count= invert_eo_MMd_quda_ref(P,  tempE[0], //spinor * const Odd_new,
+                    temp[0],  tempE[0],
+                   eps_sq, // Marco: check this:   const double precision, 
+                   max_iter,
+                   solver_type,  rel_prec,
+                   1, // Marco: 0 or 1 ? int even_odd_flag,
+                   solver_params,
+                   solver_params.sloppy_precision,
+                   solver_params.compression_type);
+    */
      mul_gamma5(P, VOLUME/2);
-     finalize_solver(tempE,1);
+    // finalize_solver(tempE,1);
 
   } else
 #endif
