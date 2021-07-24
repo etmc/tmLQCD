@@ -128,7 +128,6 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
                    solver_params.compression_type);
     
     /*
-    /*
     spinor** tempE;
     init_solver_field(&tempE, VOLUMEPLUSRAND/2, 1);
     
@@ -158,7 +157,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
                    solver_params.sloppy_precision,
                    solver_params.compression_type);
     */
-     mul_gamma5(P, VOLUME/2);
+    mul_gamma5(P, VOLUME/2);
     // finalize_solver(tempE,1);
 
   } else
