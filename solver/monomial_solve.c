@@ -102,9 +102,11 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
   int iteration_count = 0;
 
   // temporary field required by the QPhiX solve or by residual check
+  int nr_sf = 1;
+  if(g_debug_level > 3) nr_sf = 2;
   spinor** temp;
   if(g_debug_level > 2 || solver_params.external_inverter == QPHIX_INVERTER || solver_params.external_inverter == QUDA_INVERTER ){
-    init_solver_field(&temp, VOLUMEPLUSRAND/2, 1);
+    init_solver_field(&temp, VOLUMEPLUSRAND/2, nr_sf);
   }
   
   solver_params.use_initial_guess = 0;
@@ -226,6 +228,12 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
 
   if(g_debug_level > 2){
     f(temp[0], P);
+    if(g_debug_level > 3){
+      ratio(temp[1], temp[0], Q, VOLUME/2);
+      if(g_proc_id == 0){
+        print_spinor(temp[1], VOLUME/2);
+      }
+    }
     diff(temp[0], temp[0], Q, VOLUME/2);
     double diffnorm = square_norm(temp[0], VOLUME/2, 1); 
     if( g_proc_id == 0 ){
@@ -233,7 +241,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     }
   }
   if(g_debug_level > 2 || solver_params.external_inverter == QPHIX_INVERTER  || solver_params.external_inverter == QUDA_INVERTER){
-    finalize_solver(temp, 1);
+    finalize_solver(temp, nr_sf);
   }
 
   return(iteration_count);

@@ -1562,7 +1562,9 @@ int invert_eo_MMd_quda(spinor * const out,
   inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
   //inv_param.solve_type = QUDA_NORMERR_PC_SOLVE ;  // QUDA: ERROR: Unpreconditioned MATDAG_MAT solution_type requires an unpreconditioned solve_type
   inv_param.matpc_type = QUDA_MATPC_ODD_ODD_ASYMMETRIC;
+  //inv_param.matpc_type = QUDA_MATPC_ODD_ODD;
   //inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN_ASYMMETRIC;
+  //inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
 
   // reorder spinor
   reorder_spinor_eo_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0, 1);
