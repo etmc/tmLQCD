@@ -239,7 +239,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     double diffnorm = square_norm(temp[0], VOLUME/2, 1); 
     if( g_proc_id == 0 ){
       // checking the norm of the result to make sure it's not zero
-      printf("# solve_degenerate result norm: %e\n", square_norm(Q, VOLUME/2, 1));
+      printf("# solve_degenerate result norm: %e\n", square_norm(P, VOLUME/2, 1));
       printf("# solve_degenerate residual check: %e\n", diffnorm);
     }
   }
