@@ -606,6 +606,7 @@ void reorder_spinor_eo_toQuda(double* sp, QudaPrecision precision, int doublet, 
 #else
           int j = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
           int tm_idx   = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
+
 #endif
           int oddBit = (x0+x1+x2+x3) & 1;
           if( oddBit == odd ){
@@ -1073,6 +1074,48 @@ void D_psi_quda(spinor * const P, spinor * const Q) {
   reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0 );
   reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0 );
 }
+
+// even-odd
+void M_quda(spinor * const P, spinor * const Q) {
+
+  _initQuda();
+  inv_param.kappa = g_kappa;
+  // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
+  inv_param.mu = -g_mu;
+  inv_param.epsilon = 0.0;
+
+  inv_param.twist_flavor = QUDA_TWIST_SINGLET;
+  inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ) ? 2 : 1;
+  inv_param.Ls=1;
+  //custom
+  _setOneFlavourSolverParam(g_kappa,
+                            g_c_sw,
+                            g_mu,
+                            0,//solver flag
+                            1,//even_odd
+                            1e-12,
+                            1000);
+
+  inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION; 
+  inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
+  inv_param.matpc_type = QUDA_MATPC_ODD_ODD_ASYMMETRIC;
+
+  void *spinorIn  = (void*)Q;
+  void *spinorOut = (void*)P;
+
+  // reorder spinor
+  reorder_spinor_eo_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0 ,1);
+
+  // multiply
+
+  
+  MatQuda( spinorOut, spinorIn, &inv_param);
+
+  // reorder spinor
+  reorder_spinor_eo_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, 1);
+  reorder_spinor_eo_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
+}
+
 
 void _setOneFlavourSolverParam(const double kappa, const double c_sw, const double mu, 
                                const int solver_type, const int even_odd,
@@ -1645,8 +1688,8 @@ int invert_eo_MMd_quda_ref(spinor * const Even_new, spinor * const Odd_new,
                             even_odd_flag,
                             precision,
                             max_iter);
-
-  inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION; // # QUDA: ERROR: Source has zero norm
+  // overriting parameters set in _setOneFlavourSolverParam
+  inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION; 
   inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
   inv_param.matpc_type = QUDA_MATPC_ODD_ODD_ASYMMETRIC;
   

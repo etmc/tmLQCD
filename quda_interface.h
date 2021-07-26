@@ -136,6 +136,7 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
 // apply the TM operator using QUDA
 void M_full_quda(spinor * const Even_new, spinor * const Odd_new,  spinor * const Even, spinor * const Odd);
 void D_psi_quda(spinor * const P, spinor * const Q);
+void M_quda(spinor * const P, spinor * const Q);
 
 
 // to be called instead of tmLQCD functions to use the QUDA inverter in solve_degenerate
