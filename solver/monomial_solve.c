@@ -113,14 +113,14 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
 
 
 #ifdef TM_USE_QUDA
-  if ( solver_params.external_inverter = QUDA_INVERTER){
+  if ( solver_params.external_inverter == QUDA_INVERTER){
     
     // using CG for the HMC, we always want to have the solution of (Q Q^dagger) x = b, which is equivalent to
     // gamma_5 (M M^dagger)^{-1} gamma_5 b
     gamma5(temp[0], Q, VOLUME/2);
     
     iteration_count= invert_eo_MMd_quda(P,   //spinor * const Odd_new,
-                   temp[0],   
+                   temp[0],
                    eps_sq, // Marco: check this:   const double precision, 
                    max_iter,
                    solver_type,  rel_prec,
@@ -231,12 +231,15 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     if(g_debug_level > 3){
       ratio(temp[1], temp[0], Q, VOLUME/2);
       if(g_proc_id == 0){
+        //print_spinor_similar_components(temp[0], Q, VOLUME/2, 1.0e-8);
         print_spinor(temp[1], VOLUME/2);
       }
     }
     diff(temp[0], temp[0], Q, VOLUME/2);
     double diffnorm = square_norm(temp[0], VOLUME/2, 1); 
     if( g_proc_id == 0 ){
+      // checking the norm of the result to make sure it's not zero
+      printf("# solve_degenerate result norm: %e\n", square_norm(P, VOLUME/2, 1));
       printf("# solve_degenerate residual check: %e\n", diffnorm);
     }
   }
