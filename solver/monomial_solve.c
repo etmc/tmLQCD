@@ -232,7 +232,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
       ratio(temp[1], temp[0], Q, VOLUME/2);
       if(g_proc_id == 0){
         //print_spinor_similar_components(temp[0], Q, VOLUME/2, 1.0e-8);
-        print_spinor(temp[0], VOLUME/2);
+        print_spinor(temp[1], VOLUME/2);
       }
     }
     diff(temp[0], temp[0], Q, VOLUME/2);
