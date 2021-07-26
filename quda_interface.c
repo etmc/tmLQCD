@@ -245,6 +245,8 @@ void _setDefaultQudaParam(void){
   inv_param.tol_precondition = 1e-1;
   inv_param.maxiter_precondition = 10;
   inv_param.verbosity_precondition = QUDA_SILENT;
+  if( g_debug_level >= 3 )
+    inv_param.verbosity_precondition = QUDA_SUMMARIZE;
   if( g_debug_level >= 5 )
     inv_param.verbosity_precondition = QUDA_VERBOSE;
 
@@ -622,7 +624,7 @@ void reorder_spinor_eo_toQuda(double* sp, QudaPrecision precision, int doublet, 
   double endTime = gettime();
   double diffTime = endTime - startTime;
   if(g_proc_id == 0)
-    printf("# TM_QUDA: time spent in reorder_spinor_toQuda: %f secs\n", diffTime);
+    printf("# TM_QUDA: time spent in reorder_spinor_eo_toQuda: %f secs\n", diffTime);
 }
 
 // reorder spinor from QUDA format
@@ -659,7 +661,7 @@ void reorder_spinor_eo_fromQuda( double* sp, QudaPrecision precision, int double
 
   double endTime = gettime();
   double diffTime = endTime - startTime;
-  tm_debug_printf(0,0,"# TM_QUDA: time spent in reorder_spinor_fromQuda: %f secs\n", diffTime);
+  tm_debug_printf(0,0,"# TM_QUDA: time spent in reorder_spinor_eo_fromQuda: %f secs\n", diffTime);
 }
 
 
