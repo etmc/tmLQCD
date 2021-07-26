@@ -20,7 +20,7 @@ jobs:
         run: echo "Number of cores ${nb_cores}"
 
       - name: get_packages
-        run: sudo apt install openmpi-bin openmpi-common numdiff
+        run: sudo apt-get update && sudo apt install openmpi-bin openmpi-common numdiff
 
       - name: get_lime
         uses: actions/checkout@v2
