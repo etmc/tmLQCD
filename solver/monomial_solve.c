@@ -129,38 +129,41 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
                    solver_params.sloppy_precision,
                    solver_params.compression_type);
     
-    /*
+    mul_gamma5(P, VOLUME/2);
+
+    //////////////////////////////////////////////////////////////// test to be removed
+    // try matrix application directly
     spinor** tempE;
     init_solver_field(&tempE, VOLUMEPLUSRAND/2, 1);
-    
+    //point like source only if mpi=1
     for(int x =0; x<VOLUMEPLUSRAND/2;x++){
-      double a=1;
-      tempE[0][x].s0.c0=a;
-      tempE[0][x].s0.c1=a;
-      tempE[0][x].s0.c2=a;
-      tempE[0][x].s1.c0=a;
-      tempE[0][x].s1.c1=a;
-      tempE[0][x].s1.c2=a;
-      tempE[0][x].s2.c0=a;
-      tempE[0][x].s2.c1=a;
-      tempE[0][x].s2.c2=a;
-      tempE[0][x].s3.c0=a;
-      tempE[0][x].s3.c1=a;
-      tempE[0][x].s3.c2=a;
-      // the final result is independent of a
+      tempE[0][x].s0.c0=0;
+      tempE[0][x].s0.c1=0;
+      tempE[0][x].s0.c2=0;
+      tempE[0][x].s1.c0=0;
+      tempE[0][x].s1.c1=0;
+      tempE[0][x].s1.c2=0;
+      tempE[0][x].s2.c0=0;
+      tempE[0][x].s2.c1=0;
+      tempE[0][x].s2.c2=0;
+      tempE[0][x].s3.c0=0;
+      tempE[0][x].s3.c1=0;
+      tempE[0][x].s3.c2=0;
     }
-    iteration_count= invert_eo_MMd_quda_ref(P,  tempE[0], //spinor * const Odd_new,
-                    temp[0],  tempE[0],
-                   eps_sq, // Marco: check this:   const double precision, 
-                   max_iter,
-                   solver_type,  rel_prec,
-                   1, // Marco: 0 or 1 ? int even_odd_flag,
-                   solver_params,
-                   solver_params.sloppy_precision,
-                   solver_params.compression_type);
-    */
+    tempE[0][0].s0.c0=1.0;
+
+    gamma5(temp[0], tempE[0], VOLUME/2);
+    M_quda( P, temp[0]);
     mul_gamma5(P, VOLUME/2);
-    // finalize_solver(tempE,1);
+
+    //f(temp[0], tempE[0]);
+    Qsw_pm_psi(temp[0], tempE[0]);
+
+    print_spinor_similar_components(P,temp[0], 40, VOLUME/2);
+    exit(1);
+    //////////////////////////////////////////////////////////////// end of the test to be removed
+
+    finalize_solver(tempE,1);
 
   } else
 #endif
