@@ -134,9 +134,9 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     //////////////////////////////////////////////////////////////// test to be removed
     // try matrix application directly
     spinor** tempE;
-    init_solver_field(&tempE, VOLUMEPLUSRAND/2, 1);
+    init_solver_field(&tempE, VOLUMEPLUSRAND/2, 2);
     //point like source only if mpi=1
-    for(int x =0; x<VOLUMEPLUSRAND/2;x++){
+    for(int x =0; x < (VOLUMEPLUSRAND/2);x++){
       tempE[0][x].s0.c0=0;
       tempE[0][x].s0.c1=0;
       tempE[0][x].s0.c2=0;
@@ -150,20 +150,31 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
       tempE[0][x].s3.c1=0;
       tempE[0][x].s3.c2=0;
     }
-    tempE[0][0].s0.c0=1.0;
+    // set something other than component (0,0) to 1.0
+    tempE[0][0].s3.c1=1.0;
 
-    gamma5(temp[0], tempE[0], VOLUME/2);
-    M_quda( P, temp[0]);// quda changes the source
+    // just in case: copy the source
+    assign(tempE[1], tempE[0], VOLUMEPLUSRAND/2);
+
+    // Qhat_oo = gamma_5 * M^hat_oo * in
+    // calling MatQuda in M_quda should apply M^hat_oo
+    M_quda(P, tempE[0]); // quda changes the source
     mul_gamma5(P, VOLUME/2);
 
-    f(temp[0], tempE[0]);
+    // for now, use Qtm_plus_psi explicitly, this can be generalised later and
+    // placed into a proper driver for testing the various operators between tmLQCD
+    // and QUDA
+    // If I were to use f() here, it would be applying Q^hat_plus Q^hat_minus, which complicates matters
+    // as it involves more hops
+    Qtm_plus_psi(temp[0], tempE[1]);
     //Qsw_pm_psi(temp[0], tempE[0]);
 
+    // almost certainly we need to account for the gamma basis
     for (int ix=0;ix<VOLUME/2;ix++){
       spinor *hp=(spinor*) temp[0]+ix;
       spinor *dp=(spinor*) P+ix;
       double r= creal((hp+ix)->s0.c0)-creal((dp+ix)->s0.c0);
-      printf("ix=%d\n tmLQCD=(%.6f,%.6f,%.6f), (%.6f,%.6f,%.6f), (%.6f,%.6f,%.6f), (%.6f,%.6f,%.6f) \n quda=(%.6f,%.6f,%.6f), (%.6f,%.6f,%.6f), (%.6f,%.6f,%.6f), (%.6f,%.6f,%.6f)  \n",ix,r,
+      printf("ix=%d\n tmLQCD=(%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e) \n quda=(%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e)  \n",ix,r,
       creal((hp)->s0.c0), creal((hp)->s0.c1), creal((hp)->s0.c2),
       creal((hp)->s1.c0), creal((hp)->s1.c1), creal((hp)->s1.c2),
       creal((hp)->s2.c0), creal((hp)->s2.c1), creal((hp)->s2.c2),
@@ -178,7 +189,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     exit(1);
     //////////////////////////////////////////////////////////////// end of the test to be removed
 
-    finalize_solver(tempE,1);
+    finalize_solver(tempE,2);
 
   } else
 #endif
