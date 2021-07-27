@@ -1081,12 +1081,14 @@ void D_psi_quda(spinor * const P, spinor * const Q) {
 void M_quda(spinor * const P, spinor * const Q) {
 
   _initQuda();
+
   inv_param.kappa = g_kappa;
   // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
   inv_param.mu = -g_mu;
   inv_param.epsilon = 0.0;
 
   inv_param.twist_flavor = QUDA_TWIST_SINGLET;
+  inv_param.preserve_source = QUDA_PRESERVE_SOURCE_YES;
   inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ) ? 2 : 1;
   //inv_param.Ls=1;
   //custom
@@ -1112,7 +1114,7 @@ void M_quda(spinor * const P, spinor * const Q) {
   // multiply
 
   
-  MatQuda( spinorOut, spinorIn, &inv_param);
+  MatQuda(spinorOut, spinorIn, &inv_param);
 
   // reorder spinor
   reorder_spinor_eo_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, 1);
