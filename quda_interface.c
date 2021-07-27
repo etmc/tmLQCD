@@ -1088,16 +1088,17 @@ void M_quda(spinor * const P, spinor * const Q) {
 
   inv_param.twist_flavor = QUDA_TWIST_SINGLET;
   inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ) ? 2 : 1;
-  inv_param.Ls=1;
+  //inv_param.Ls=1;
   //custom
   _setOneFlavourSolverParam(g_kappa,
                             g_c_sw,
                             g_mu,
-                            0,//solver flag
+                            1,//solver flag
                             1,//even_odd
                             1e-12,
                             1000);
-
+  //inv_param.dslash_type = QUDA_TWISTED_MASS_DSLASH;
+  
   inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION; 
   inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
   inv_param.matpc_type = QUDA_MATPC_ODD_ODD_ASYMMETRIC;

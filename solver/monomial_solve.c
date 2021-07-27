@@ -153,13 +153,28 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     tempE[0][0].s0.c0=1.0;
 
     gamma5(temp[0], tempE[0], VOLUME/2);
-    M_quda( P, temp[0]);
+    M_quda( P, temp[0]);// quda changes the source
     mul_gamma5(P, VOLUME/2);
 
-    //f(temp[0], tempE[0]);
-    Qsw_pm_psi(temp[0], tempE[0]);
+    f(temp[0], tempE[0]);
+    //Qsw_pm_psi(temp[0], tempE[0]);
 
-    print_spinor_similar_components(P,temp[0], 40, VOLUME/2);
+    for (int ix=0;ix<VOLUME/2;ix++){
+      spinor *hp=(spinor*) temp[0]+ix;
+      spinor *dp=(spinor*) P+ix;
+      double r= creal((hp+ix)->s0.c0)-creal((dp+ix)->s0.c0);
+      printf("ix=%d\n tmLQCD=(%.6f,%.6f,%.6f), (%.6f,%.6f,%.6f), (%.6f,%.6f,%.6f), (%.6f,%.6f,%.6f) \n quda=(%.6f,%.6f,%.6f), (%.6f,%.6f,%.6f), (%.6f,%.6f,%.6f), (%.6f,%.6f,%.6f)  \n",ix,r,
+      creal((hp)->s0.c0), creal((hp)->s0.c1), creal((hp)->s0.c2),
+      creal((hp)->s1.c0), creal((hp)->s1.c1), creal((hp)->s1.c2),
+      creal((hp)->s2.c0), creal((hp)->s2.c1), creal((hp)->s2.c2),
+      creal((hp)->s3.c0), creal((hp)->s3.c1), creal((hp)->s3.c2),
+      creal((dp)->s0.c0), creal((dp)->s0.c1), creal((dp)->s0.c2),
+      creal((dp)->s1.c0), creal((dp)->s1.c1), creal((dp)->s1.c2),
+      creal((dp)->s2.c0), creal((dp)->s2.c1), creal((dp)->s2.c2),
+      creal((dp)->s3.c0), creal((dp)->s3.c1), creal((dp)->s3.c2)
+       );
+    }
+    print_spinor_similar_components(temp[0], P, VOLUME/2, 1e-4);
     exit(1);
     //////////////////////////////////////////////////////////////// end of the test to be removed
 
