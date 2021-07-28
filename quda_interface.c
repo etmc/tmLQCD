@@ -412,7 +412,7 @@ void _loadCloverQuda(QudaInvertParam* inv_param){
 void _loadGaugeQuda( const int compression ) {
   // check if the currently loaded gauge field is also the current gauge field
   // and if so, return immediately
-  if( check_quda_gauge_state(&quda_gauge_state, nstore, X1, X2, X3, X0) ){
+  if( check_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0) ){
     return;
   } else {
     freeGaugeQuda();
@@ -508,7 +508,7 @@ void _loadGaugeQuda( const int compression ) {
 #endif
 
   loadGaugeQuda((void*)gauge_quda, &gauge_param);
-  set_quda_gauge_state(&quda_gauge_state, nstore, X1, X2, X3, X0);
+  set_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0);
 }
 
 // reorder spinor to QUDA format
@@ -590,6 +590,10 @@ void reorder_spinor_fromQuda( double* sp, QudaPrecision precision, int doublet) 
 
 // reorder spinor to QUDA format
 void reorder_spinor_eo_toQuda(double* sp, QudaPrecision precision, int doublet, int odd) {
+  static const int change_sign[4] = {-1, 1, 1, -1};
+  static const int change_spin[4] = {3, 2, 1, 0};
+  const int Vh = VOLUME/2;
+
   double startTime = gettime();
 
   memcpy( tempSpinor, sp, (1+doublet)*(VOLUME/2)*24*sizeof(double) );
@@ -603,22 +607,34 @@ void reorder_spinor_eo_toQuda(double* sp, QudaPrecision precision, int doublet, 
       for( int x2=0; x2<LY; x2++ )
         for( int x3=0; x3<LZ; x3++ ) {
 #if USE_LZ_LY_LX_T
-          int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
-          int tm_idx = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
+          const int q_eo_idx = (x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0)/2;
+          const int tm_eo_idx = (x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0)/2;
 #else
-          int j = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
-          int tm_idx   = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
-
+          const int q_eo_idx = (x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0)/2;
+          const int tm_eo_idx  = (x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0)/2;
 #endif
-          int oddBit = (x0+x1+x2+x3) & 1;
+          const int oddBit = (x0+x1+x2+x3) & 1;
           if( oddBit == odd ){
-            if( doublet ) {
-              memcpy(&(sp[24*(j/2)]),        &(tempSpinor[24*tm_idx/2         ]), 24*sizeof(double));
-              memcpy(&(sp[24*(j+VOLUME)/2]), &(tempSpinor[24*(tm_idx+VOLUME)/2]), 24*sizeof(double));
+            for(int q_spin = 0; q_spin < 4; q_spin++){
+              const int tm_spin = change_spin[q_spin];
+              for(int col = 0; col < 3; col++){
+                for(int reim = 0; reim < 2; reim++){
+                  sp[24*q_eo_idx + 6*q_spin + 2*col + reim] = 
+                    change_sign[q_spin] * tempSpinor[24*tm_eo_idx + 6*tm_spin + 2*col + reim];
+                  if(doublet){
+                    sp[24*(q_eo_idx+Vh) + 6*q_spin + 2*col + reim] = 
+                      change_sign[q_spin] * tempSpinor[24*(tm_eo_idx+Vh) + 6*tm_spin + 2*col + reim];
+                  }
+                }
+              }
             }
-            else {
-              memcpy( &(sp[24*(j/2)]), &(tempSpinor[24*tm_idx/2]), 24*sizeof(double));
-            }
+            //if( doublet ) {
+            //  memcpy(&(sp[24*(j/2)]),        &(tempSpinor[24*tm_idx/2         ]), 24*sizeof(double));
+            //  memcpy(&(sp[24*(j+VOLUME)/2]), &(tempSpinor[24*(tm_idx+VOLUME)/2]), 24*sizeof(double));
+            //}
+            //else {
+            //  memcpy( &(sp[24*(j/2)]), &(tempSpinor[24*tm_idx/2]), 24*sizeof(double));
+            //}
           }
         }
 
@@ -630,6 +646,10 @@ void reorder_spinor_eo_toQuda(double* sp, QudaPrecision precision, int doublet, 
 
 // reorder spinor from QUDA format
 void reorder_spinor_eo_fromQuda( double* sp, QudaPrecision precision, int doublet, int odd) {
+  const int change_sign[4] = {-1, 1, 1, -1};
+  const int change_spin[4] = {3, 2, 1, 0};
+  const int Vh = VOLUME/2;
+
   double startTime = gettime();
 
   memcpy( tempSpinor, sp, (1+doublet)*(VOLUME/2)*24*sizeof(double) );
@@ -643,20 +663,33 @@ void reorder_spinor_eo_fromQuda( double* sp, QudaPrecision precision, int double
       for( int x2=0; x2<LY; x2++ )
         for( int x3=0; x3<LZ; x3++ ) {
 #if USE_LZ_LY_LX_T
-          int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
-          int tm_idx = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
+          const int q_eo_idx = (x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0)/2;
+          const int tm_eo_idx = (x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0)/2;
 #else
-          int j = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
-          int tm_idx = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
+          const int q_eo_idx = (x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0)/2;
+          const int tm_eo_idx = (x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0)/2;
 #endif
-          int oddBit = (x0+x1+x2+x3) & 1;
+          const int oddBit = (x0+x1+x2+x3) & 1;
           if( oddBit == odd ){
-            if( doublet ) {
-              memcpy(&(sp[24*tm_idx/2]),          &(tempSpinor[24*j/2         ]), 24*sizeof(double));
-              memcpy(&(sp[24*(tm_idx+VOLUME)/2]), &(tempSpinor[24*(j+VOLUME)/2]), 24*sizeof(double));
-            } else {
-              memcpy( &(sp[24*tm_idx/2]), &(tempSpinor[24*(j/2)]), 24*sizeof(double));
+            for(int q_spin = 0; q_spin < 4; q_spin++){
+              const int tm_spin = change_spin[q_spin];
+              for(int col = 0; col < 3; col++){
+                for(int reim = 0; reim < 2; reim++){
+                  sp[24*tm_eo_idx + 6*tm_spin + 2*col + reim] = 
+                    change_sign[q_spin] * tempSpinor[24*q_eo_idx + 6*q_spin + 2*col + reim];
+                  if(doublet){
+                    sp[24*(tm_eo_idx+Vh) + 6*tm_spin + 2*col + reim] = 
+                      change_sign[q_spin] * tempSpinor[24*(q_eo_idx+Vh) + 6*q_spin + 2*col + reim];
+                  }
+                }
+              }
             }
+            //if( doublet ) {
+            //  memcpy(&(sp[24*tm_idx/2]),          &(tempSpinor[24*j/2         ]), 24*sizeof(double));
+            //  memcpy(&(sp[24*(tm_idx+VOLUME)/2]), &(tempSpinor[24*(j+VOLUME)/2]), 24*sizeof(double));
+            //} else {
+            //  memcpy( &(sp[24*tm_idx/2]), &(tempSpinor[24*(j/2)]), 24*sizeof(double));
+            //}
           }
         }
 
@@ -1104,6 +1137,8 @@ void M_quda(spinor * const P, spinor * const Q) {
   inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION; 
   inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
   inv_param.matpc_type = QUDA_MATPC_ODD_ODD_ASYMMETRIC;
+  inv_param.dagger = QUDA_DAG_NO;
+  inv_param.gamma_basis = QUDA_DEGRAND_ROSSI_GAMMA_BASIS;
 
   void *spinorIn  = (void*)Q;
   void *spinorOut = (void*)P;
@@ -1300,7 +1335,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   // absolute or relative
   mg_inv_param->residual_type = QUDA_L2_RELATIVE_RESIDUAL;
 
-  mg_inv_param->preserve_source = QUDA_PRESERVE_SOURCE_NO;
+  mg_inv_param->preserve_source = QUDA_PRESERVE_SOURCE_YES;
   // the MG internal Gamma basis is always DEGRAND_ROSSI
   mg_inv_param->gamma_basis = QUDA_DEGRAND_ROSSI_GAMMA_BASIS;
   mg_inv_param->dirac_order = QUDA_DIRAC_ORDER;
@@ -1553,7 +1588,6 @@ int invert_eo_MMd_quda(spinor * const out,
   // it returns if quda is already init
   _initQuda();
 
-
   spinor ** solver_field = NULL;
   const int nr_sf = 2;
   init_solver_field(&solver_field, VOLUME/2, nr_sf);
@@ -1591,6 +1625,12 @@ int invert_eo_MMd_quda(spinor * const out,
                             precision,
                             max_iter);
   // overwriting  inv_param set by _setOneFlavourSolverParam
+ 
+  // let's do the same thing we do in the QPhiX interface 
+  inv_param.gamma_basis = QUDA_DEGRAND_ROSSI_GAMMA_BASIS;
+
+  // QUDA applies the MMdag operator, we need MdagM here
+  inv_param.dagger = QUDA_DAG_YES; 
 
   //solution_type    solve_type    Effect
   //  -------------    ----------    ------

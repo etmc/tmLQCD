@@ -110,7 +110,7 @@ typedef struct tm_QudaParams_t {
 } tm_QudaParams_t;
 
 typedef struct tm_QudaMGSetupState_t {
-  int gauge_id;
+  double gauge_id;
   double c_sw;
   double kappa;
   double mu;
@@ -122,7 +122,7 @@ typedef struct tm_QudaMGSetupState_t {
 } tm_QudaMGSetupState_t;
 
 typedef struct tm_QudaCloverState_t {
-  int gauge_id;
+  double gauge_id;
   double c_sw;
   double kappa;
   double mu;
@@ -130,7 +130,7 @@ typedef struct tm_QudaCloverState_t {
 } tm_QudaCloverState_t;
 
 typedef struct tm_QudaGaugeState_t {
-  int gauge_id;
+  double gauge_id;
   int loaded;
   double theta_x;
   double theta_y;
@@ -172,7 +172,7 @@ static inline void reset_quda_clover_state(tm_QudaCloverState_t * const quda_clo
 }
 
 static inline int check_quda_gauge_state(const tm_QudaGaugeState_t * const quda_gauge_state,
-                                         const int gauge_id,
+                                         const double gauge_id,
                                          const double theta_x,
                                          const double theta_y,
                                          const double theta_z,
@@ -182,11 +182,11 @@ static inline int check_quda_gauge_state(const tm_QudaGaugeState_t * const quda_
           (fabs(quda_gauge_state->theta_y - theta_y) < 2*DBL_EPSILON) &&
           (fabs(quda_gauge_state->theta_z - theta_z) < 2*DBL_EPSILON) &&
           (fabs(quda_gauge_state->theta_t - theta_t) < 2*DBL_EPSILON) &&
-          (quda_gauge_state->gauge_id == gauge_id) );
+          (fabs(quda_gauge_state->gauge_id - gauge_id) < 2*DBL_EPSILON) );
 }
 
 static inline void set_quda_gauge_state(tm_QudaGaugeState_t * const quda_gauge_state,
-                                        const int gauge_id,
+                                        const double gauge_id,
                                         const double theta_x,
                                         const double theta_y,
                                         const double theta_z,
