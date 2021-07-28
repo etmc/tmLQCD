@@ -2634,6 +2634,11 @@ static inline double fltlist_next_token(int * const list_end){
     mnl->solver=MIXEDBICGSTAB;
     BEGIN(name_caller);
   }
+  MG {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = MG;
+    BEGIN(name_caller);
+  }
   DDalphaAMG {
 #ifdef DDalphaAMG
     if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);

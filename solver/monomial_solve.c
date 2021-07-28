@@ -134,24 +134,27 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     //////////////////////////////////////////////////////////////// test to be removed
     // try matrix application directly
     spinor** tempE;
-    init_solver_field(&tempE, VOLUMEPLUSRAND/2, 2);
+    init_solver_field(&tempE, VOLUMEPLUSRAND/2, 3);
     //point like source only if mpi=1
     for(int x =0; x < (VOLUMEPLUSRAND/2);x++){
-      tempE[0][x].s0.c0=0;
-      tempE[0][x].s0.c1=0;
-      tempE[0][x].s0.c2=0;
-      tempE[0][x].s1.c0=0;
-      tempE[0][x].s1.c1=0;
-      tempE[0][x].s1.c2=0;
-      tempE[0][x].s2.c0=0;
-      tempE[0][x].s2.c1=0;
-      tempE[0][x].s2.c2=0;
-      tempE[0][x].s3.c0=0;
-      tempE[0][x].s3.c1=0;
-      tempE[0][x].s3.c2=0;
+      tempE[0][x].s0.c0=((double)rand())/RAND_MAX;  //0.0;
+      tempE[0][x].s0.c1=((double)rand())/RAND_MAX;  //0.0;
+      tempE[0][x].s0.c2=((double)rand())/RAND_MAX;  //0.0;
+      tempE[0][x].s1.c0=((double)rand())/RAND_MAX;  //0.0;
+      tempE[0][x].s1.c1=((double)rand())/RAND_MAX;  //0.0;
+      tempE[0][x].s1.c2=((double)rand())/RAND_MAX;  //0.0;
+      tempE[0][x].s2.c0=((double)rand())/RAND_MAX;  //0.0;
+      tempE[0][x].s2.c1=((double)rand())/RAND_MAX;  //0.0;
+      tempE[0][x].s2.c2=((double)rand())/RAND_MAX;  //0.0;
+      tempE[0][x].s3.c0=((double)rand())/RAND_MAX;  //0.0;
+      tempE[0][x].s3.c1=((double)rand())/RAND_MAX;  //0.0;
+      tempE[0][x].s3.c2=((double)rand())/RAND_MAX;  //0.0;
     }
     // set something other than component (0,0) to 1.0
-    tempE[0][0].s3.c1=1.0;
+    // tempE[0][0].s0.c0=1.0;
+    // tempE[0][0].s1.c0=1.0;
+    // tempE[0][0].s2.c0=1.0;
+    // tempE[0][0].s3.c0=1.0;
 
     // just in case: copy the source
     assign(tempE[1], tempE[0], VOLUMEPLUSRAND/2);
@@ -188,9 +191,10 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
                creal((dp)->s3.c0), creal((dp)->s3.c1), creal((dp)->s3.c2)
        );
     }
+    printf("\n\n\n");
     print_spinor_similar_components(temp[0], P, VOLUME/2, 1e-4);
     exit(1);
-    //////////////////////////////////////////////////////////////// end of the test to be removed
+    //////////////////////////////////////////////////////////// end of the test to be removed
 
     finalize_solver(tempE,2);
 
