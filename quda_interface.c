@@ -412,7 +412,7 @@ void _loadCloverQuda(QudaInvertParam* inv_param){
 void _loadGaugeQuda( const int compression ) {
   // check if the currently loaded gauge field is also the current gauge field
   // and if so, return immediately
-  if( check_quda_gauge_state(&quda_gauge_state, nstore, X1, X2, X3, X0) ){
+  if( check_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0) ){
     return;
   } else {
     freeGaugeQuda();
@@ -508,7 +508,7 @@ void _loadGaugeQuda( const int compression ) {
 #endif
 
   loadGaugeQuda((void*)gauge_quda, &gauge_param);
-  set_quda_gauge_state(&quda_gauge_state, nstore, X1, X2, X3, X0);
+  set_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0);
 }
 
 // reorder spinor to QUDA format
@@ -1335,7 +1335,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   // absolute or relative
   mg_inv_param->residual_type = QUDA_L2_RELATIVE_RESIDUAL;
 
-  mg_inv_param->preserve_source = QUDA_PRESERVE_SOURCE_NO;
+  mg_inv_param->preserve_source = QUDA_PRESERVE_SOURCE_YES;
   // the MG internal Gamma basis is always DEGRAND_ROSSI
   mg_inv_param->gamma_basis = QUDA_DEGRAND_ROSSI_GAMMA_BASIS;
   mg_inv_param->dirac_order = QUDA_DIRAC_ORDER;
@@ -1587,7 +1587,6 @@ int invert_eo_MMd_quda(spinor * const out,
 
   // it returns if quda is already init
   _initQuda();
-
 
   spinor ** solver_field = NULL;
   const int nr_sf = 2;
