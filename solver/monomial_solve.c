@@ -134,7 +134,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     //////////////////////////////////////////////////////////////// test to be removed
     // try matrix application directly
     spinor** tempE;
-    init_solver_field(&tempE, VOLUMEPLUSRAND/2, 3);
+    init_solver_field(&tempE, VOLUMEPLUSRAND/2, 2);
     //point like source only if mpi=1
     for(int x =0; x < (VOLUMEPLUSRAND/2);x++){
       tempE[0][x].s0.c0=((double)rand())/RAND_MAX;  //0.0;
