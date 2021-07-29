@@ -1681,7 +1681,6 @@ int invert_eo_MMd_quda(spinor * const out,
     if(solver_flag == MG){
       // this does not work, but it does not seem to be necessary
       //quda_mg_param.invert_param->dagger = QUDA_DAG_YES;
-      // not sure if this is necessary
       quda_mg_param.invert_param->mu = -quda_mg_param.invert_param->mu;
       double atime = gettime();
       updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
