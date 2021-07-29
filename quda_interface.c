@@ -1584,7 +1584,6 @@ int invert_eo_MMd_quda(spinor * const out,
                        const int even_odd_flag, solver_params_t solver_params,
                        SloppyPrecision sloppy_precision,
                        CompressionType compression) {
-
   // it returns if quda is already init
   _initQuda();
 
@@ -1626,7 +1625,8 @@ int invert_eo_MMd_quda(spinor * const out,
                             max_iter);
   // overwriting  inv_param set by _setOneFlavourSolverParam
  
-  // let's do the same thing we do in the QPhiX interface 
+  // let's do the same thing we do in the QPhiX interface
+  // and work directly in the DeGrand-Rossi gamma basis 
   inv_param.gamma_basis = QUDA_DEGRAND_ROSSI_GAMMA_BASIS;
 
   // QUDA applies the MMdag operator, we need MdagM here
@@ -1647,7 +1647,20 @@ int invert_eo_MMd_quda(spinor * const out,
   //inv_param.solution_type = QUDA_MATPCDAG_MATPC_SHIFT_SOLUTION; //# QUDA: ERROR: Solution type 5 not supported 
   //inv_param.solution_type = QUDA_MATDAG_MAT_SOLUTION ;
   //inv_param.solve_type = QUDA_NORMOP_SOLVE ;
-  inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
+
+  if(solver_params.type == MG || solver_params.type == BICGSTAB){
+    // for MG and BiCGstab, we solve MdagM in two steps
+    // we start with M^{-1}
+    inv_param.dagger = QUDA_DAG_NO; 
+    inv_param.solve_type = QUDA_DIRECT_PC_SOLVE;
+    inv_param.solution_type = QUDA_MATPC_SOLUTION;
+    if(solver_params.type == MG){
+      quda_mg_param.invert_param->gamma_basis = QUDA_DEGRAND_ROSSI_GAMMA_BASIS;
+    }
+  } else {
+    inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION;
+    inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
+  }
   //inv_param.solve_type = QUDA_NORMERR_PC_SOLVE ;  // QUDA: ERROR: Unpreconditioned MATDAG_MAT solution_type requires an unpreconditioned solve_type
   inv_param.matpc_type = QUDA_MATPC_ODD_ODD_ASYMMETRIC;
   //inv_param.matpc_type = QUDA_MATPC_ODD_ODD;
@@ -1660,6 +1673,23 @@ int invert_eo_MMd_quda(spinor * const out,
   // perform the inversion
   invertQuda(spinorOut, spinorIn, &inv_param);
 
+  if(solver_flag == MG || solver_flag == BICGSTAB){
+    inv_param.preserve_source = QUDA_PRESERVE_SOURCE_YES;
+    // for the MG and BiCGstab, we calculate the inverse of MdagM in two steps, now
+    // we do {Mdag}^{-1}
+    inv_param.dagger = QUDA_DAG_YES;
+    if(solver_flag == MG){
+      // this does not work, but it does not seem to be necessary
+      //quda_mg_param.invert_param->dagger = QUDA_DAG_YES;
+      // not sure if this is necessary
+      quda_mg_param.invert_param->mu = -quda_mg_param.invert_param->mu;
+      double atime = gettime();
+      updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
+      set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
+      tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup Update took %.3f seconds\n", gettime()-atime);
+    }
+    invertQuda(spinorOut, spinorOut, &inv_param);
+  }
 
   if( inv_param.verbosity > QUDA_SILENT )
     if(g_proc_id == 0)
@@ -1694,7 +1724,7 @@ int invert_eo_MMd_quda_ref(spinor * const Even_new, spinor * const Odd_new,
                    const int even_odd_flag, solver_params_t solver_params,
                    SloppyPrecision sloppy_precision,
                    CompressionType compression) {
-// it returns if quda is already init
+  // it returns if quda is already init
   _initQuda();
 
   spinor ** solver_field = NULL;
@@ -1703,8 +1733,8 @@ int invert_eo_MMd_quda_ref(spinor * const Even_new, spinor * const Odd_new,
 
   convert_eo_to_lexic(solver_field[0],  Even, Odd);
 
-// this is basically not necessary, but if we want to use an a nitial guess, it will be
-//  convert_eo_to_lexic(solver_field[1], Even_new, Odd_new);
+  // this is basically not necessary, but if we want to use an a nitial guess, it will be
+  //  convert_eo_to_lexic(solver_field[1], Even_new, Odd_new);
 
   void *spinorIn  = (void*)solver_field[0]; // source
   void *spinorOut = (void*)solver_field[1]; // solution
