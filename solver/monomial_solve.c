@@ -173,23 +173,23 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     //// //Qsw_pm_psi(temp[0], tempE[0]);
 
     //// // almost certainly we need to account for the gamma basis
-    //// for (int ix=0;ix<VOLUME/2;ix++){
-    ////   spinor *hp=(spinor*) temp[0]+ix;
-    ////   spinor *dp=(spinor*) P+ix;
-    ////   double r= creal((hp+ix)->s0.c0)-creal((dp+ix)->s0.c0);
+    //// for (int ix=0; ix < (VOLUME/2); ix++){
+    ////   spinor *hp=((spinor*)temp[0]) + ix;
+    ////   spinor *dp=((spinor*)P) + ix;
+    ////   double r=creal((hp)->s0.c0)-creal((dp)->s0.c0);
     ////   printf("ix=%d, r=%.3e\n"
     ////          "tmLQCD=(%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e)\n"
-    ////          "quda=(%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e)  \n",
-    ////            ix,r,
-    ////            creal((hp)->s0.c0), creal((hp)->s0.c1), creal((hp)->s0.c2),
-    ////            creal((hp)->s1.c0), creal((hp)->s1.c1), creal((hp)->s1.c2),
-    ////            creal((hp)->s2.c0), creal((hp)->s2.c1), creal((hp)->s2.c2),
-    ////            creal((hp)->s3.c0), creal((hp)->s3.c1), creal((hp)->s3.c2),
-    ////            creal((dp)->s0.c0), creal((dp)->s0.c1), creal((dp)->s0.c2),
-    ////            creal((dp)->s1.c0), creal((dp)->s1.c1), creal((dp)->s1.c2),
-    ////            creal((dp)->s2.c0), creal((dp)->s2.c1), creal((dp)->s2.c2),
-    ////            creal((dp)->s3.c0), creal((dp)->s3.c1), creal((dp)->s3.c2)
-    ////    );
+    ////          "  quda=(%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e)\n",
+    ////          ix,r,
+    ////          creal((hp)->s0.c0), creal((hp)->s0.c1), creal((hp)->s0.c2),
+    ////          creal((hp)->s1.c0), creal((hp)->s1.c1), creal((hp)->s1.c2),
+    ////          creal((hp)->s2.c0), creal((hp)->s2.c1), creal((hp)->s2.c2),
+    ////          creal((hp)->s3.c0), creal((hp)->s3.c1), creal((hp)->s3.c2),
+    ////          creal((dp)->s0.c0), creal((dp)->s0.c1), creal((dp)->s0.c2),
+    ////          creal((dp)->s1.c0), creal((dp)->s1.c1), creal((dp)->s1.c2),
+    ////          creal((dp)->s2.c0), creal((dp)->s2.c1), creal((dp)->s2.c2),
+    ////          creal((dp)->s3.c0), creal((dp)->s3.c1), creal((dp)->s3.c2)
+    ////         );
     //// }
     //// printf("\n\n\n");
     //// print_spinor_similar_components(temp[0], P, VOLUME/2, 1e-4);
@@ -263,6 +263,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
   }
 
   if(g_debug_level > 2){
+    if(g_proc_id == 0) printf("# solve_degenerate applying operator\n");
     f(temp[0], P);
     if(g_debug_level > 3){
       ratio(temp[1], temp[0], Q, VOLUME/2);
