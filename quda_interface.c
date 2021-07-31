@@ -213,8 +213,8 @@ void _setDefaultQudaParam(void){
   
   gauge_param.cuda_prec = cuda_prec;
   gauge_param.cuda_prec_sloppy = cuda_prec_sloppy;
-  gauge_param.cuda_prec_precondition = cuda_prec_precondition;
   gauge_param.cuda_prec_refinement_sloppy = cuda_prec_sloppy;
+  gauge_param.cuda_prec_precondition = cuda_prec_precondition;
   gauge_param.cuda_prec_eigensolver = cuda_prec_precondition;
   
   gauge_param.reconstruct = 18;
@@ -267,8 +267,8 @@ void _setDefaultQudaParam(void){
   inv_param.clover_cpu_prec = cpu_prec;
   inv_param.clover_cuda_prec = cuda_prec;
   inv_param.clover_cuda_prec_sloppy = cuda_prec_sloppy;
-  inv_param.clover_cuda_prec_precondition = cuda_prec_precondition;
   inv_param.clover_cuda_prec_refinement_sloppy = cuda_prec_sloppy;
+  inv_param.clover_cuda_prec_precondition = cuda_prec_precondition;
   inv_param.clover_cuda_prec_eigensolver = cuda_prec_precondition;
 
   inv_param.return_clover = QUDA_BOOLEAN_FALSE;
@@ -395,7 +395,7 @@ void _loadCloverQuda(QudaInvertParam* inv_param){
   // check if loaded clover and gauge fields agree
   if( check_quda_clover_state(&quda_clover_state, &quda_gauge_state) ){
     if(g_proc_id==0 && g_debug_level > 0 ) {
-      printf("# TM_QUDA: Clover field and inverse already loaded for gauge %d\n", quda_gauge_state.gauge_id);
+      printf("# TM_QUDA: Clover field and inverse already loaded for gauge %f\n", quda_gauge_state.gauge_id);
     }
   } else {
     double atime = gettime();
@@ -779,6 +779,8 @@ void set_sloppy_prec( const SloppyPrecision sloppy_precision ) {
   gauge_param.cuda_prec_refinement_sloppy = cuda_prec_sloppy;
   
   inv_param.cuda_prec_sloppy = cuda_prec_sloppy;
+  inv_param.cuda_prec_refinement_sloppy = cuda_prec_sloppy;
+  
   inv_param.clover_cuda_prec_sloppy = cuda_prec_sloppy;
   inv_param.clover_cuda_prec_refinement_sloppy = cuda_prec_sloppy;
 }
@@ -1339,6 +1341,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   // the MG internal Gamma basis is always DEGRAND_ROSSI
   mg_inv_param->gamma_basis = QUDA_DEGRAND_ROSSI_GAMMA_BASIS;
   mg_inv_param->dirac_order = QUDA_DIRAC_ORDER;
+  
   // just to be safe, we also set the input and output gamma basis again
   inv_param.gamma_basis = QUDA_CHIRAL_GAMMA_BASIS; // CHIRAL -> UKQCD does not seem to be supported right now...
 
@@ -1643,12 +1646,12 @@ int invert_eo_MMd_quda(spinor * const out,
   //inv_param.solution_type =QUDA_MATDAG_MAT_SOLUTION  ;  // no
   //inv_param.solution_type = QUDA_MATPC_SOLUTION ; // no
   //inv_param.solution_type = QUDA_MATPC_DAG_SOLUTION ;//no
-  inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION; // # QUDA: ERROR: Source has zero norm
+  //inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION; // # QUDA: ERROR: Source has zero norm
   //inv_param.solution_type = QUDA_MATPCDAG_MATPC_SHIFT_SOLUTION; //# QUDA: ERROR: Solution type 5 not supported 
   //inv_param.solution_type = QUDA_MATDAG_MAT_SOLUTION ;
   //inv_param.solve_type = QUDA_NORMOP_SOLVE ;
 
-  if(solver_params.type == MG || solver_params.type == BICGSTAB){
+  if(solver_flag == MG || solver_flag == BICGSTAB){
     // for MG and BiCGstab, we solve MdagM in two steps
     // we start with M^{-1}
     inv_param.dagger = QUDA_DAG_NO; 
