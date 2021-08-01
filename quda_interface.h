@@ -146,7 +146,8 @@ int invert_eo_MMd_quda( spinor * const Odd_new,
                    const int solver_flag, const int rel_prec,
                    const int even_odd_flag, solver_params_t solver_params,
                    const SloppyPrecision sloppy_precision,
-                   CompressionType compression);
+                   CompressionType compression,
+                   const int QmQp);
 
 
 #endif /* QUDA_INTERFACE_H_ */

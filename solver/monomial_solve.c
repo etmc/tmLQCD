@@ -114,22 +114,24 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
 
 #ifdef TM_USE_QUDA
   if ( solver_params.external_inverter == QUDA_INVERTER){
-    
-    // using CG for the HMC, we always want to have the solution of (Q Q^dagger) x = b, which is equivalent to
-    // gamma_5 (M M^dagger)^{-1} gamma_5 b
+
+    int MdagM = (f == Qsw_pm_psi || f == Qtm_pm_psi);
+   
     gamma5(temp[0], Q, VOLUME/2);
+    iteration_count = invert_eo_MMd_quda(P,   //spinor * const Odd_new,
+                                         temp[0],
+                                         eps_sq, // Marco: check this:   const double precision, 
+                                         max_iter,
+                                         solver_type,  rel_prec,
+                                         1, // Marco: 0 or 1 ? int even_odd_flag,
+                                         solver_params,
+                                         solver_params.sloppy_precision,
+                                         solver_params.compression_type,
+                                         MdagM);
     
-    iteration_count= invert_eo_MMd_quda(P,   //spinor * const Odd_new,
-                   temp[0],
-                   eps_sq, // Marco: check this:   const double precision, 
-                   max_iter,
-                   solver_type,  rel_prec,
-                   1, // Marco: 0 or 1 ? int even_odd_flag,
-                   solver_params,
-                   solver_params.sloppy_precision,
-                   solver_params.compression_type);
-    
-    mul_gamma5(P, VOLUME/2);
+    if( !(solver_type == MG || solver_type == BICGSTAB) ){
+      mul_gamma5(P, VOLUME/2);
+    }
 
     //// //////////////////////////////////////////////////////////////// test to be removed
     //// // try matrix application directly
@@ -277,7 +279,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     if( g_proc_id == 0 ){
       // checking the norm of the result to make sure it's not zero
       printf("# solve_degenerate result norm: %e\n", square_norm(P, VOLUME/2, 1));
-      printf("# solve_degenerate residual check: %e\n", diffnorm);
+      printf("# solve_degenerate residual check norm: %e\n", diffnorm);
     }
   }
   if(g_debug_level > 2 || solver_params.external_inverter == QPHIX_INVERTER  || solver_params.external_inverter == QUDA_INVERTER){
