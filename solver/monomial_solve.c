@@ -115,7 +115,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
 #ifdef TM_USE_QUDA
   if ( solver_params.external_inverter == QUDA_INVERTER){
 
-    int MdagM = (f == Qsw_pm_psi || f == Qtm_pm_psi);
+    int QmQp = (f == Qsw_pm_psi || f == Qtm_pm_psi);
    
     gamma5(temp[0], Q, VOLUME/2);
     iteration_count = invert_eo_MMd_quda(P,   //spinor * const Odd_new,
@@ -127,7 +127,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
                                          solver_params,
                                          solver_params.sloppy_precision,
                                          solver_params.compression_type,
-                                         MdagM);
+                                         QmQp);
     
     if( !(solver_type == MG || solver_type == BICGSTAB) ){
       mul_gamma5(P, VOLUME/2);

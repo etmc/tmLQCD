@@ -1708,7 +1708,7 @@ int invert_eo_MMd_quda(spinor * const out,
     // the diagonal operator on the given parity (not for clover
     // yet!)
     if( solver_flag == MG ){
-      mul_one_pm_imu_inv((spinor*)spinorOut, -1, VOLUME/2);
+      mul_one_pm_imu_inv((spinor*)spinorOut, +1, VOLUME/2);
     }
 
     // we multiply by gamma5 here to obtain the inverse of \hat{Q}^{-}
@@ -1732,7 +1732,7 @@ int invert_eo_MMd_quda(spinor * const out,
       // when using the MG, the symmetrically preconditioned operator is solved
       // we map to the asymmetric one by multiplying by the inverse of
       // the diagonal operator on the given parity (not for clover yet)
-      mul_one_pm_imu_inv((spinor*)spinorOut, +1, VOLUME/2);
+      mul_one_pm_imu_inv((spinor*)spinorOut, -1, VOLUME/2);
     }
   } else {
     reorder_spinor_eo_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
