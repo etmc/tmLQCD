@@ -172,7 +172,8 @@ static int quda_initialized = 0;
 void _setQudaMultigridParam(QudaMultigridParam* mg_param);
 void _setOneFlavourSolverParam(const double kappa, const double c_sw, const double mu, 
                                const int solver_type, const int even_odd,
-                               const double eps_sq, const int maxiter);
+                               const double eps_sq, const int maxiter,
+                               const int single_parity_solve, const int QpQm);
 
 void _setDefaultQudaParam(void){
   reset_quda_gauge_state(&quda_gauge_state);
@@ -213,8 +214,8 @@ void _setDefaultQudaParam(void){
   
   gauge_param.cuda_prec = cuda_prec;
   gauge_param.cuda_prec_sloppy = cuda_prec_sloppy;
-  gauge_param.cuda_prec_precondition = cuda_prec_precondition;
   gauge_param.cuda_prec_refinement_sloppy = cuda_prec_sloppy;
+  gauge_param.cuda_prec_precondition = cuda_prec_precondition;
   gauge_param.cuda_prec_eigensolver = cuda_prec_precondition;
   
   gauge_param.reconstruct = 18;
@@ -245,9 +246,9 @@ void _setDefaultQudaParam(void){
   inv_param.tol_precondition = 1e-1;
   inv_param.maxiter_precondition = 10;
   inv_param.verbosity_precondition = QUDA_SILENT;
-  if( g_debug_level >= 3 )
+  if( g_debug_level > 3 )
     inv_param.verbosity_precondition = QUDA_SUMMARIZE;
-  if( g_debug_level >= 5 )
+  if( g_debug_level > 5 )
     inv_param.verbosity_precondition = QUDA_VERBOSE;
 
   inv_param.omega = 1.0;
@@ -267,8 +268,8 @@ void _setDefaultQudaParam(void){
   inv_param.clover_cpu_prec = cpu_prec;
   inv_param.clover_cuda_prec = cuda_prec;
   inv_param.clover_cuda_prec_sloppy = cuda_prec_sloppy;
-  inv_param.clover_cuda_prec_precondition = cuda_prec_precondition;
   inv_param.clover_cuda_prec_refinement_sloppy = cuda_prec_sloppy;
+  inv_param.clover_cuda_prec_precondition = cuda_prec_precondition;
   inv_param.clover_cuda_prec_eigensolver = cuda_prec_precondition;
 
   inv_param.return_clover = QUDA_BOOLEAN_FALSE;
@@ -395,7 +396,7 @@ void _loadCloverQuda(QudaInvertParam* inv_param){
   // check if loaded clover and gauge fields agree
   if( check_quda_clover_state(&quda_clover_state, &quda_gauge_state) ){
     if(g_proc_id==0 && g_debug_level > 0 ) {
-      printf("# TM_QUDA: Clover field and inverse already loaded for gauge %d\n", quda_gauge_state.gauge_id);
+      printf("# TM_QUDA: Clover field and inverse already loaded for gauge %f\n", quda_gauge_state.gauge_id);
     }
   } else {
     double atime = gettime();
@@ -779,6 +780,8 @@ void set_sloppy_prec( const SloppyPrecision sloppy_precision ) {
   gauge_param.cuda_prec_refinement_sloppy = cuda_prec_sloppy;
   
   inv_param.cuda_prec_sloppy = cuda_prec_sloppy;
+  inv_param.cuda_prec_refinement_sloppy = cuda_prec_sloppy;
+  
   inv_param.clover_cuda_prec_sloppy = cuda_prec_sloppy;
   inv_param.clover_cuda_prec_refinement_sloppy = cuda_prec_sloppy;
 }
@@ -832,7 +835,8 @@ int invert_quda_direct(double * const propagator, double const * const source,
                             optr->solver,
                             optr->even_odd_flag,
                             optr->eps_sq,
-                            optr->maxiter);
+                            optr->maxiter,
+                            0, 0);
   
   // reorder spinor
   reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0 );
@@ -907,7 +911,8 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
                             solver_flag,
                             even_odd_flag,
                             precision,
-                            max_iter);
+                            max_iter,
+                            0, 0);
 
   // reorder spinor
   reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0 );
@@ -1131,7 +1136,8 @@ void M_quda(spinor * const P, spinor * const Q) {
                             1,//solver flag
                             1,//even_odd
                             1e-12,
-                            1000);
+                            1000,
+                            0, 0);
   //inv_param.dslash_type = QUDA_TWISTED_MASS_DSLASH;
   
   inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION; 
@@ -1159,7 +1165,9 @@ void M_quda(spinor * const P, spinor * const Q) {
 
 void _setOneFlavourSolverParam(const double kappa, const double c_sw, const double mu, 
                                const int solver_type, const int even_odd,
-                               const double eps_sq, const int maxiter) {
+                               const double eps_sq, const int maxiter,
+                               const int single_parity_solve,
+                               const int QpQm) {
 
   inv_param.tol = sqrt(eps_sq);
   inv_param.maxiter = maxiter;
@@ -1203,15 +1211,41 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     inv_param.solution_type = QUDA_MAT_SOLUTION;
   }
   
+  // set up for single parity solves (such as those in the HMC)
+  if( single_parity_solve ){
+    // when doing single parity, we change to the DeGrand-Rossi basis
+    inv_param.gamma_basis = QUDA_DEGRAND_ROSSI_GAMMA_BASIS;
+    if( solver_type == MG ){
+      // coarsening is only supported for symmetric preconditioning
+      inv_param.matpc_type = QUDA_MATPC_ODD_ODD;
+    } else {
+      inv_param.matpc_type = QUDA_MATPC_ODD_ODD_ASYMMETRIC;
+    }
+
+    if( QpQm ){
+      if( solver_type == MG || solver_type == BICGSTAB ){
+        // when we use MG or BiCGstab to solve the QpQm^{-1} problem, we will
+        // perform two solves
+        inv_param.solution_type = QUDA_MATPC_SOLUTION;
+      } else {
+        // otherwise we can get the solution in a single solve
+        inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION;
+      }
+    } else {
+      // when not inverting the squred operator, we always just need the MATPC solution
+      inv_param.solution_type = QUDA_MATPC_SOLUTION;
+    }
+  }
+
   // choose solver
   if( solver_type == BICGSTAB ) {
     if(g_proc_id == 0) {printf("# TM_QUDA: Using BiCGstab!\n"); fflush(stdout);}
     inv_param.inv_type = QUDA_BICGSTAB_INVERTER;
-  }
-  else if ( solver_type == MG ) {
+  } else if ( solver_type == MG ) {
     if(g_proc_id == 0) {printf("# TM_QUDA: Using MG!\n"); fflush(stdout);}
-    // coarsening does not support QUDA_MATPC_EVEN_EVEN_ASYMMETRIC
-    if( inv_param.matpc_type == QUDA_MATPC_EVEN_EVEN_ASYMMETRIC ) inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
+    // coarsening is only supported for symmetric preconditioning
+    if( inv_param.matpc_type = QUDA_MATPC_ODD_ODD_ASYMMETRIC ) inv_param.matpc_type = QUDA_MATPC_ODD_ODD;
+    if( inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN_ASYMMETRIC ) inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
     inv_param.inv_type = QUDA_GCR_INVERTER;
     inv_param.gcrNkrylov = quda_input.gcrNkrylov;
     inv_param.inv_type_precondition = QUDA_MG_INVERTER;
@@ -1223,8 +1257,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     // this under/overrelaxation parameter is not related to the ones
     // used in the MG 
     inv_param.omega = 1.0;
-  }
-  else {
+  } else {
     /* Here we invert the hermitean operator squared */
     inv_param.inv_type = QUDA_CG_INVERTER;
     if(g_proc_id == 0) {
@@ -1236,11 +1269,11 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
   // direct or norm-op. solve
   if( inv_param.inv_type == QUDA_CG_INVERTER ) {
     if( even_odd ) {
-      inv_param.solve_type = QUDA_NORMERR_PC_SOLVE;
+      inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
       if(g_proc_id == 0) printf("# TM_QUDA: Using EO preconditioning!\n");
     }
     else {
-      inv_param.solve_type = QUDA_NORMERR_SOLVE;
+      inv_param.solve_type = QUDA_NORMOP_SOLVE;
       if(g_proc_id == 0) printf("# TM_QUDA: Not using EO preconditioning!\n");
     }
   }
@@ -1278,6 +1311,25 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     // above would set a preconditioner for the MG smoothers, which is not allowed
     // so we set this to NULL explicitly
     inv_mg_param.preconditioner = NULL;
+   
+    // BaKo: I hoped that this would work: we coarsen the symmetric operator
+    // (by specifying the internal matpc_type to be symmetric) but request
+    // the solution of the asymmetric system
+    // unfortunately, this does not seem to work but it should be tested
+    // again to rule out that any mistakes in testing it out...
+    // (in particular related to the other stuff that is set
+    // in setOneFlavourParams)
+    //// // even if we use asymmetric preconditioning for the fine system
+    //// // we can simply coarsen the symmetric operator
+    //// // and the inverse of the diagonal will be applied
+    //// // before the result is returned to give the correct inverse
+    //// if( inv_param.matpc_type == QUDA_MATPC_ODD_ODD_ASYMMETRIC ){
+    ////   inv_mg_param.matpc_type = QUDA_MATPC_ODD_ODD;
+    //// }
+    //// if( inv_param.matpc_type == QUDA_MATPC_EVEN_EVEN_ASYMMETRIC ){
+    ////   inv_mg_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
+    //// }
+
     quda_mg_param.invert_param = &inv_mg_param;
     _setQudaMultigridParam(&quda_mg_param);
 
@@ -1289,16 +1341,16 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
         reset_quda_mg_setup_state(&quda_mg_setup_state);
         quda_mg_preconditioner = NULL;
       }
-      tm_debug_printf(0,0,"# TM_QUDA: Performing MG Preconditioner Setup\n");
+      tm_debug_printf(0,0,"# TM_QUDA: Performing MG Preconditioner Setup for guage %f\n", quda_gauge_state.gauge_id);
       quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
       inv_param.preconditioner = quda_mg_preconditioner;
       set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
       tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup took %.3f seconds\n", gettime()-atime);
     } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_UPDATE )  {
-      tm_debug_printf(0,0,"# TM_QUDA: Updating MG Preconditioner Setup for gauge %d\n", quda_gauge_state.gauge_id);
+      tm_debug_printf(0,0,"# TM_QUDA: Updating MG Preconditioner Setup for gauge %f\n", quda_gauge_state.gauge_id);
 #ifdef TM_QUDA_EXPERIMENTAL
       if( quda_input.mg_eig_preserve_deflation == QUDA_BOOLEAN_YES ){
-        tm_debug_printf(0,0,"# TM_QUDA: Deflation subspace for gauge %d will be re-used!\n", quda_gauge_state.gauge_id);
+        tm_debug_printf(0,0,"# TM_QUDA: Deflation subspace for gauge %f will be re-used!\n", quda_gauge_state.gauge_id);
       }
 #endif
       double atime = gettime();
@@ -1306,7 +1358,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
       set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
       tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup Update took %.3f seconds\n", gettime()-atime);
      } else {
-      tm_debug_printf(0,0,"# TM_QUDA: Reusing MG Preconditioner Setup for gauge %d\n", quda_gauge_state.gauge_id);
+      tm_debug_printf(0,0,"# TM_QUDA: Reusing MG Preconditioner Setup for gauge %f\n", quda_gauge_state.gauge_id);
     }
   }
   
@@ -1339,6 +1391,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   // the MG internal Gamma basis is always DEGRAND_ROSSI
   mg_inv_param->gamma_basis = QUDA_DEGRAND_ROSSI_GAMMA_BASIS;
   mg_inv_param->dirac_order = QUDA_DIRAC_ORDER;
+  
   // just to be safe, we also set the input and output gamma basis again
   inv_param.gamma_basis = QUDA_CHIRAL_GAMMA_BASIS; // CHIRAL -> UKQCD does not seem to be supported right now...
 
@@ -1553,7 +1606,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     } else {
       mg_param->eig_param[level] = NULL;
       mg_param->use_eig_solver[level] = QUDA_BOOLEAN_NO;
-    } // if(quda_input.mg_use_eig_solver[level] == QUDA_BOOLEAN_YES)
+    } // end of else branch of if(quda_input.mg_use_eig_solver[level] == QUDA_BOOLEAN_YES) above
   } // for(i=0 to n_level-1)
 
   // only coarsen the spin on the first restriction
@@ -1583,18 +1636,14 @@ int invert_eo_MMd_quda(spinor * const out,
                        const int solver_flag, const int rel_prec,
                        const int even_odd_flag, solver_params_t solver_params,
                        SloppyPrecision sloppy_precision,
-                       CompressionType compression) {
+                       CompressionType compression,
+                       const int QpQm) {
   // it returns if quda is already init
   _initQuda();
 
   spinor ** solver_field = NULL;
   const int nr_sf = 2;
   init_solver_field(&solver_field, VOLUME/2, nr_sf);
-
-  // no need anymore everithing is done in reorder_spinor_eo_toQuda
-  //convert_eo_to_lexic(solver_field[0],  Even, Odd);
-  // this is basically not necessary, but if we want to use an a nitial guess, it will be
-  //  convert_eo_to_lexic(solver_field[1], Even_new, Odd_new);
 
   void *spinorIn  = (void*)in; // source
   void *spinorOut = (void*)out; // solution
@@ -1616,71 +1665,61 @@ int invert_eo_MMd_quda(spinor * const out,
 
   // this will also construct the clover field and its inverse, if required
   // it will also run the MG setup
+  // internally, it decides about the preconditioning type
+  // depending on whether we do a single parity solve
+  // and decides further things depending on whether we're inverting
+  // ( \hat{Q}^{+} \hat{Q}^{-} ) or just one of \hat{Q}^{+/-} 
   _setOneFlavourSolverParam(g_kappa,
                             g_c_sw,
                             g_mu,
                             solver_flag,
                             even_odd_flag,
                             precision,
-                            max_iter);
-  // overwriting  inv_param set by _setOneFlavourSolverParam
- 
-  // let's do the same thing we do in the QPhiX interface
-  // and work directly in the DeGrand-Rossi gamma basis 
-  inv_param.gamma_basis = QUDA_DEGRAND_ROSSI_GAMMA_BASIS;
+                            max_iter,
+                            1, QpQm);
 
-  // QUDA applies the MMdag operator, we need MdagM here
-  inv_param.dagger = QUDA_DAG_YES; 
-
-  //solution_type    solve_type    Effect
-  //  -------------    ----------    ------
-  //  MAT              DIRECT        Solve Ax=b
-  //  MATDAG_MAT       DIRECT        Solve A^dag y = b, followed by Ax=y
-  //  MAT              NORMOP        Solve (A^dag A) x = (A^dag b)
-  //  MATDAG_MAT       NORMOP        Solve (A^dag A) x = b
-  
-  //inv_param.solution_type = QUDA_MAT_SOLUTION;   
-  //inv_param.solution_type =QUDA_MATDAG_MAT_SOLUTION  ;  // no
-  //inv_param.solution_type = QUDA_MATPC_SOLUTION ; // no
-  //inv_param.solution_type = QUDA_MATPC_DAG_SOLUTION ;//no
-  inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION; // # QUDA: ERROR: Source has zero norm
-  //inv_param.solution_type = QUDA_MATPCDAG_MATPC_SHIFT_SOLUTION; //# QUDA: ERROR: Solution type 5 not supported 
-  //inv_param.solution_type = QUDA_MATDAG_MAT_SOLUTION ;
-  //inv_param.solve_type = QUDA_NORMOP_SOLVE ;
-
-  if(solver_params.type == MG || solver_params.type == BICGSTAB){
-    // for MG and BiCGstab, we solve MdagM in two steps
+  if( solver_flag == MG || solver_flag == BICGSTAB){
+    // for MG and BiCGstab, we solve QpQm in two steps
     // we start with M^{-1}
     inv_param.dagger = QUDA_DAG_NO; 
-    inv_param.solve_type = QUDA_DIRECT_PC_SOLVE;
-    inv_param.solution_type = QUDA_MATPC_SOLUTION;
-    if(solver_params.type == MG){
+    if(solver_flag == MG){
       quda_mg_param.invert_param->gamma_basis = QUDA_DEGRAND_ROSSI_GAMMA_BASIS;
     }
   } else {
-    inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION;
-    inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
+    // QUDA applies the MMdag operator, we need QpQm^{-1) in the end
+    // so we want QUDA to use the MdagM operator
+    inv_param.dagger = QUDA_DAG_YES; 
   }
-  //inv_param.solve_type = QUDA_NORMERR_PC_SOLVE ;  // QUDA: ERROR: Unpreconditioned MATDAG_MAT solution_type requires an unpreconditioned solve_type
-  inv_param.matpc_type = QUDA_MATPC_ODD_ODD_ASYMMETRIC;
-  //inv_param.matpc_type = QUDA_MATPC_ODD_ODD;
-  //inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN_ASYMMETRIC;
-  //inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
 
-  // reorder spinor
   reorder_spinor_eo_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0, 1);
-
-  // perform the inversion
   invertQuda(spinorOut, spinorIn, &inv_param);
-
-  if(solver_flag == MG || solver_flag == BICGSTAB){
+  
+  // the second solve is only necessary in the derivative where we want the inverse of
+  // \hat{Q}^{+} \hat{Q}^{-}
+  // but we're using solvers that don't operate on the normal
+  // system
+  if( (solver_flag == MG || solver_flag == BICGSTAB) && QpQm ){
     inv_param.preserve_source = QUDA_PRESERVE_SOURCE_YES;
-    // for the MG and BiCGstab, we calculate the inverse of MdagM in two steps, now
-    // we do {Mdag}^{-1}
-    inv_param.dagger = QUDA_DAG_YES;
+
+    reorder_spinor_eo_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
+
+    // when using the MG, the symmetrically preconditioned operator is solved
+    // we map to the asymmetric one by multiplying by the inverse of
+    // the diagonal operator on the given parity (not for clover
+    // yet!)
+    if( solver_flag == MG ){
+      mul_one_pm_imu_inv((spinor*)spinorOut, +1, VOLUME/2);
+    }
+
+    // we multiply by gamma5 here to obtain the inverse of \hat{Q}^{-}
+    // in the next solve
+    mul_gamma5((spinor*)spinorOut, VOLUME/2);
+    reorder_spinor_eo_toQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
+   
+    // now we invert \hat{M}^{-} to get the inverse of \hat{Q}^{-} in the end
+    inv_param.mu = -inv_param.mu;
     if(solver_flag == MG){
-      // this does not work, but it does not seem to be necessary
-      //quda_mg_param.invert_param->dagger = QUDA_DAG_YES;
+      // flip the sign of the coarse operator and update the setup
       quda_mg_param.invert_param->mu = -quda_mg_param.invert_param->mu;
       double atime = gettime();
       updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
@@ -1688,6 +1727,15 @@ int invert_eo_MMd_quda(spinor * const out,
       tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup Update took %.3f seconds\n", gettime()-atime);
     }
     invertQuda(spinorOut, spinorOut, &inv_param);
+    reorder_spinor_eo_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
+    if( solver_flag == MG ){
+      // when using the MG, the symmetrically preconditioned operator is solved
+      // we map to the asymmetric one by multiplying by the inverse of
+      // the diagonal operator on the given parity (not for clover yet)
+      mul_one_pm_imu_inv((spinor*)spinorOut, -1, VOLUME/2);
+    }
+  } else {
+    reorder_spinor_eo_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
   }
 
   if( inv_param.verbosity > QUDA_SILENT )
@@ -1695,18 +1743,8 @@ int invert_eo_MMd_quda(spinor * const out,
       printf("# TM_QUDA: Done: %i iter / %g secs = %g Gflops\n",
              inv_param.iter, inv_param.secs, inv_param.gflops/inv_param.secs);
 
-  // number of CG iterations
+  // store number of iterations
   int iteration = inv_param.iter;
-
-  // reorder spinor
-  // BaKo 20170901: not sure why the source was also re-ordered after inversion
-  // we leave that commented out for now
-  //reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, NULL );
-  //convert_lexic_to_eo(Even,     Odd,     solver_field[0]);
-  
-  reorder_spinor_eo_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
-  //convert_lexic_to_eo(Even_new, Odd_new, solver_field[1]);
-
   finalize_solver(solver_field, nr_sf);
 
   if(iteration >= max_iter)
@@ -1716,86 +1754,87 @@ int invert_eo_MMd_quda(spinor * const out,
 }
 
 
-int invert_eo_MMd_quda_ref(spinor * const Even_new, spinor * const Odd_new,
-                   spinor * const Even, spinor * const Odd,
-                   const double precision, const int max_iter,
-                   const int solver_flag, const int rel_prec,
-                   const int even_odd_flag, solver_params_t solver_params,
-                   SloppyPrecision sloppy_precision,
-                   CompressionType compression) {
-  // it returns if quda is already init
-  _initQuda();
-
-  spinor ** solver_field = NULL;
-  const int nr_sf = 2;
-  init_solver_field(&solver_field, VOLUME, nr_sf);
-
-  convert_eo_to_lexic(solver_field[0],  Even, Odd);
-
-  // this is basically not necessary, but if we want to use an a nitial guess, it will be
-  //  convert_eo_to_lexic(solver_field[1], Even_new, Odd_new);
-
-  void *spinorIn  = (void*)solver_field[0]; // source
-  void *spinorOut = (void*)solver_field[1]; // solution
-
-  if ( rel_prec )
-    inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
-  else
-    inv_param.residual_type = QUDA_L2_ABSOLUTE_RESIDUAL;
-
-  inv_param.kappa = g_kappa;
-
-  // figure out which BC to use (theta, trivial...)
-  set_boundary_conditions(&compression);
-  // set the sloppy precision of the mixed prec solver
-  set_sloppy_prec(sloppy_precision);
-  
-  // load gauge after setting precision
-  _loadGaugeQuda(compression);
-
-  // this will also construct the clover field and its inverse, if required
-  // it will also run the MG setup
-  _setOneFlavourSolverParam(g_kappa,
-                            g_c_sw,
-                            g_mu,
-                            solver_flag,
-                            even_odd_flag,
-                            precision,
-                            max_iter);
-  // overriting parameters set in _setOneFlavourSolverParam
-  inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION; 
-  inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
-  inv_param.matpc_type = QUDA_MATPC_ODD_ODD_ASYMMETRIC;
-  
-
-  // reorder spinor
-  reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0 );
-
-  // perform the inversion
-  invertQuda(spinorOut, spinorIn, &inv_param);
-
-
-  if( inv_param.verbosity > QUDA_SILENT )
-    if(g_proc_id == 0)
-      printf("# TM_QUDA: Done: %i iter / %g secs = %g Gflops\n",
-             inv_param.iter, inv_param.secs, inv_param.gflops/inv_param.secs);
-
-  // number of CG iterations
-  int iteration = inv_param.iter;
-
-  // reorder spinor
-  // BaKo 20170901: not sure why the source was also re-ordered after inversion
-  // we leave that commented out for now
-  //reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, NULL );
-  //convert_lexic_to_eo(Even,     Odd,     solver_field[0]);
-  
-  reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0 );
-  convert_lexic_to_eo(Even_new, Odd_new, solver_field[1]);
-
-  finalize_solver(solver_field, nr_sf);
-
-  if(iteration >= max_iter)
-    return(-1);
-
-  return(iteration);
-}
+//// int invert_eo_MMd_quda_ref(spinor * const Even_new, spinor * const Odd_new,
+////                    spinor * const Even, spinor * const Odd,
+////                    const double precision, const int max_iter,
+////                    const int solver_flag, const int rel_prec,
+////                    const int even_odd_flag, solver_params_t solver_params,
+////                    SloppyPrecision sloppy_precision,
+////                    CompressionType compression) {
+////   // it returns if quda is already init
+////   _initQuda();
+//// 
+////   spinor ** solver_field = NULL;
+////   const int nr_sf = 2;
+////   init_solver_field(&solver_field, VOLUME, nr_sf);
+//// 
+////   convert_eo_to_lexic(solver_field[0],  Even, Odd);
+//// 
+////   // this is basically not necessary, but if we want to use an a nitial guess, it will be
+////   //  convert_eo_to_lexic(solver_field[1], Even_new, Odd_new);
+//// 
+////   void *spinorIn  = (void*)solver_field[0]; // source
+////   void *spinorOut = (void*)solver_field[1]; // solution
+//// 
+////   if ( rel_prec )
+////     inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
+////   else
+////     inv_param.residual_type = QUDA_L2_ABSOLUTE_RESIDUAL;
+//// 
+////   inv_param.kappa = g_kappa;
+//// 
+////   // figure out which BC to use (theta, trivial...)
+////   set_boundary_conditions(&compression);
+////   // set the sloppy precision of the mixed prec solver
+////   set_sloppy_prec(sloppy_precision);
+////   
+////   // load gauge after setting precision
+////   _loadGaugeQuda(compression);
+//// 
+////   // this will also construct the clover field and its inverse, if required
+////   // it will also run the MG setup
+////   _setOneFlavourSolverParam(g_kappa,
+////                             g_c_sw,
+////                             g_mu,
+////                             solver_flag,
+////                             even_odd_flag,
+////                             precision,
+////                             max_iter,
+////                             0, 0);
+////   // overriting parameters set in _setOneFlavourSolverParam
+////   inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION; 
+////   inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
+////   inv_param.matpc_type = QUDA_MATPC_ODD_ODD_ASYMMETRIC;
+////   
+//// 
+////   // reorder spinor
+////   reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0 );
+//// 
+////   // perform the inversion
+////   invertQuda(spinorOut, spinorIn, &inv_param);
+//// 
+//// 
+////   if( inv_param.verbosity > QUDA_SILENT )
+////     if(g_proc_id == 0)
+////       printf("# TM_QUDA: Done: %i iter / %g secs = %g Gflops\n",
+////              inv_param.iter, inv_param.secs, inv_param.gflops/inv_param.secs);
+//// 
+////   // number of CG iterations
+////   int iteration = inv_param.iter;
+//// 
+////   // reorder spinor
+////   // BaKo 20170901: not sure why the source was also re-ordered after inversion
+////   // we leave that commented out for now
+////   //reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, NULL );
+////   //convert_lexic_to_eo(Even,     Odd,     solver_field[0]);
+////   
+////   reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0 );
+////   convert_lexic_to_eo(Even_new, Odd_new, solver_field[1]);
+//// 
+////   finalize_solver(solver_field, nr_sf);
+//// 
+////   if(iteration >= max_iter)
+////     return(-1);
+//// 
+////   return(iteration);
+//// }

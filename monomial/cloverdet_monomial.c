@@ -89,10 +89,6 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
     sw_invert(EE, mnl->mu);
   }
   
-  if(mnl->solver != CG && g_proc_id == 0) {
-    fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (cloverdet_monomial.c)\n");
-  }
-  
   // Invert Q_{+} Q_{-}
   // X_o -> w_fields[1]
   chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
@@ -229,7 +225,7 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
 
   g_sloppy_precision_flag = 0;
 
-  if( mnl->solver == MG ){
+  if( mnl->solver == MG || mnl->solver == BICGSTAB ){
       chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 		   mnl->csg_N, mnl->csg_n, N, mnl->Qp);
       mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->pf, mnl->solver_params, mnl->maxiter, mnl->accprec,  
