@@ -1268,7 +1268,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
 
   // direct or norm-op. solve
   if( inv_param.inv_type == QUDA_CG_INVERTER ) {
-    if( even_odd ) {
+    if( even_odd || single_parity_solve ) {
       inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
       if(g_proc_id == 0) printf("# TM_QUDA: Using EO preconditioning!\n");
     }
@@ -1278,7 +1278,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     }
   }
   else {
-    if( even_odd ) {
+    if( even_odd || single_parity_solve ) {
       inv_param.solve_type = QUDA_DIRECT_PC_SOLVE;
       if(g_proc_id == 0) printf("# TM_QUDA: Using EO preconditioning!\n");
     }
@@ -1319,16 +1319,16 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     // again to rule out that any mistakes in testing it out...
     // (in particular related to the other stuff that is set
     // in setOneFlavourParams)
-    //// // even if we use asymmetric preconditioning for the fine system
-    //// // we can simply coarsen the symmetric operator
-    //// // and the inverse of the diagonal will be applied
-    //// // before the result is returned to give the correct inverse
-    //// if( inv_param.matpc_type == QUDA_MATPC_ODD_ODD_ASYMMETRIC ){
-    ////   inv_mg_param.matpc_type = QUDA_MATPC_ODD_ODD;
-    //// }
-    //// if( inv_param.matpc_type == QUDA_MATPC_EVEN_EVEN_ASYMMETRIC ){
-    ////   inv_mg_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
-    //// }
+    // even if we use asymmetric preconditioning for the fine system
+    // we can simply coarsen the symmetric operator
+    // and the inverse of the diagonal will be applied
+    // before the result is returned to give the correct inverse
+    // if( inv_param.matpc_type == QUDA_MATPC_ODD_ODD_ASYMMETRIC ){
+    //   inv_mg_param.matpc_type = QUDA_MATPC_ODD_ODD;
+    // }
+    // if( inv_param.matpc_type == QUDA_MATPC_EVEN_EVEN_ASYMMETRIC ){
+    //   inv_mg_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
+    // }
 
     quda_mg_param.invert_param = &inv_mg_param;
     _setQudaMultigridParam(&quda_mg_param);
@@ -1678,9 +1678,11 @@ int invert_eo_MMd_quda(spinor * const out,
                             max_iter,
                             1, QpQm);
 
-  if( solver_flag == MG || solver_flag == BICGSTAB){
+  if( solver_flag == MG || solver_flag == BICGSTAB ){
     // for MG and BiCGstab, we solve QpQm in two steps
-    // we start with M^{-1}
+    // we start with [ \hat{M}^{+} ]^{-1}
+    // also in the direct solve of just \hat{Q}^{+/-}, we don't
+    // want to invert the daggered operator
     inv_param.dagger = QUDA_DAG_NO; 
     if(solver_flag == MG){
       quda_mg_param.invert_param->gamma_basis = QUDA_DEGRAND_ROSSI_GAMMA_BASIS;
@@ -1691,33 +1693,44 @@ int invert_eo_MMd_quda(spinor * const out,
     inv_param.dagger = QUDA_DAG_YES; 
   }
 
+  // when using the MG, the symmetrically preconditioned operator is solved
+  // we map to the asymmetric one by multiplying by the inverse of
+  // the diagonal operator on the given parity (not for clover yet!)
+  //   (1 - M_oo^{-1} M_oe M_ee^{-1} M_eo )^{-1} M_oo^{-1} 
+  // = (M_oo * (1 - M_oo^{-1} M_oe M_ee^{-1} M_eo)^{-1}
+  // = (M_oo - Moe M_ee^{-1} M_eo)^{-1}
+  if( (inv_param.matpc_type == QUDA_MATPC_ODD_ODD || inv_param.matpc_type == QUDA_MATPC_EVEN_EVEN) &&
+      (solver_flag == MG || solver_flag == BICGSTAB) ){
+    tm_debug_printf(0, 0, "# TM_QUDA: QUDA running with symmetric precon\n");
+    mul_one_pm_imu_inv((spinor*)spinorIn, +1, VOLUME/2);
+  }
   reorder_spinor_eo_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0, 1);
   invertQuda(spinorOut, spinorIn, &inv_param);
   
   // the second solve is only necessary in the derivative where we want the inverse of
   // \hat{Q}^{+} \hat{Q}^{-}
-  // but we're using solvers that don't operate on the normal
-  // system
+  // but we're using solvers that don't operate on the normal system
   if( (solver_flag == MG || solver_flag == BICGSTAB) && QpQm ){
     inv_param.preserve_source = QUDA_PRESERVE_SOURCE_YES;
 
     reorder_spinor_eo_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
 
-    // when using the MG, the symmetrically preconditioned operator is solved
-    // we map to the asymmetric one by multiplying by the inverse of
-    // the diagonal operator on the given parity (not for clover
-    // yet!)
-    if( solver_flag == MG ){
-      mul_one_pm_imu_inv((spinor*)spinorOut, +1, VOLUME/2);
-    }
-
     // we multiply by gamma5 here to obtain the inverse of \hat{Q}^{-}
     // in the next solve
     mul_gamma5((spinor*)spinorOut, VOLUME/2);
+
+    if( (inv_param.matpc_type == QUDA_MATPC_ODD_ODD || inv_param.matpc_type == QUDA_MATPC_EVEN_EVEN) &&
+        (solver_flag == MG || solver_flag == BICGSTAB) ){
+      // when using the MG, the symmetrically preconditioned operator is solved
+      // we map to the asymmetric one by multiplying by the inverse of
+      // the diagonal operator on the given parity (not for clover yet)
+      mul_one_pm_imu_inv((spinor*)spinorOut, -1, VOLUME/2);
+    }
     reorder_spinor_eo_toQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
    
     // now we invert \hat{M}^{-} to get the inverse of \hat{Q}^{-} in the end
     inv_param.mu = -inv_param.mu;
+
     if(solver_flag == MG){
       // flip the sign of the coarse operator and update the setup
       quda_mg_param.invert_param->mu = -quda_mg_param.invert_param->mu;
@@ -1726,14 +1739,9 @@ int invert_eo_MMd_quda(spinor * const out,
       set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
       tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup Update took %.3f seconds\n", gettime()-atime);
     }
+    
     invertQuda(spinorOut, spinorOut, &inv_param);
     reorder_spinor_eo_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
-    if( solver_flag == MG ){
-      // when using the MG, the symmetrically preconditioned operator is solved
-      // we map to the asymmetric one by multiplying by the inverse of
-      // the diagonal operator on the given parity (not for clover yet)
-      mul_one_pm_imu_inv((spinor*)spinorOut, -1, VOLUME/2);
-    }
   } else {
     reorder_spinor_eo_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
   }
