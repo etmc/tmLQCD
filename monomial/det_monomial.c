@@ -69,17 +69,14 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
     chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 		 mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
 
-    if(mnl->solver==BICGSTAB) 
-    {      
-	  fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (det_monomial.c)\n");
-	  mnl->iter1 += solve_degenerate(mnl->w_fields[1], mnl->pf, mnl->solver_params, mnl->maxiter, mnl->forceprec, 
-			 g_relative_precision_flag, VOLUME/2, mnl->Qsq, CG);
+    if( mnl->solver_params.external_inverter == NO_EXT_INV && mnl->solver == BICGSTAB ){
+	    fprintf(stderr, "Bicgstab two-step solve not implemented using tmLQCD-native solvers, using CG instead! (det_monomial.c)\n");
+      mnl->iter1 += solve_degenerate(mnl->w_fields[1], mnl->pf, mnl->solver_params, mnl->maxiter, mnl->forceprec, 
+                                     g_relative_precision_flag, VOLUME/2, mnl->Qsq, CG);
+    } else {
+      mnl->iter1 += solve_degenerate(mnl->w_fields[1], mnl->pf, mnl->solver_params, mnl->maxiter, mnl->forceprec, 
+                                     g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver);
     }
-    else{
-	  mnl->iter1 += solve_degenerate(mnl->w_fields[1], mnl->pf, mnl->solver_params, mnl->maxiter, mnl->forceprec, 
-			 g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver);
-    }
-
 
     chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
