@@ -115,6 +115,7 @@
 #define _default_g_eps_sq_force3 -1.
 #define _default_g_eps_sq_acc3 -1.
 #define _default_g_relative_precision_flag 0
+#define _default_g_strict_residual_check 0
 #define _default_return_check_flag 0
 #define _default_return_check_interval 100
 #define _default_g_debug_level 1
@@ -208,6 +209,7 @@
 
 /* default input values for QUDA interface */
 /* These follow the recommendations of https://github.com/lattice/quda/wiki/Multigrid-Solver */
+#define _default_quda_mg_setup_2kappamu 0.0
 #define _default_quda_mg_n_level 2
 #define _default_quda_mg_n_vec 24
 #define _default_quda_mg_mu_factor 1.0
@@ -220,8 +222,11 @@
 #define _default_quda_mg_nu_post 4
 #define _default_quda_mg_omega 0.85
 #define _default_quda_mg_enable_size_three_blocks 0
+// by default, we always reset the MG setup
+// in the HMC, this needs to be set to a reasonable value
+// depending on the length of the integration step
 #define _default_quda_mg_reset_setup_threshold 2*DBL_EPSILON
-#define _default_quda_mg_reset_setup_mu_threshold 2*DBL_EPSILON
+#define _default_quda_mg_reuse_setup_mu_threshold 2*DBL_EPSILON
 
 // gradient flow measurement step size and maximum flow time
 #define _default_gf_eps 0.01

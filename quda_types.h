@@ -58,6 +58,7 @@ typedef struct tm_QudaParams_t {
   int                  mg_blocksize[QUDA_MAX_MG_LEVEL][4];
   double               mg_mu_factor[QUDA_MAX_MG_LEVEL];
   QudaInverterType     mg_setup_inv_type;
+  double               mg_setup_2kappamu;
   double               mg_setup_tol[QUDA_MAX_MG_LEVEL];
   int                  mg_setup_maxiter[QUDA_MAX_MG_LEVEL];
   QudaInverterType     mg_coarse_solver_type[QUDA_MAX_MG_LEVEL];
@@ -70,7 +71,7 @@ typedef struct tm_QudaParams_t {
   double               mg_omega[QUDA_MAX_MG_LEVEL];
   int                  mg_run_verify;
   int                  mg_enable_size_three_blocks;
-  double               mg_reset_setup_mu_threshold;
+  double               mg_reuse_setup_mu_threshold;
   double               mg_reset_setup_threshold;
   
   // parameters related to communication-avoiding
@@ -208,9 +209,11 @@ static inline int check_quda_mg_setup_state(const tm_QudaMGSetupState_t * const 
                                             const tm_QudaGaugeState_t * const quda_gauge_state,
                                             const tm_QudaParams_t * const quda_params){
   // when the MG setup has not been initialised or when the "gauge_id" has changed by more
-  // than the mg_redo_setup_threhold, we need to (re-)do the setup completely
+  // than the mg_reset_setup_threhold, we need to (re-)do the setup completely
   // similarly, if the boundary conditions for the gauge field change, we need
   // to redo the setup
+  // FIXME the last condition is very tricky to get right and in most cases, the setup
+  // should be *update* rather than reset
   if( (quda_mg_setup_state->initialised != 1) ||
       ( fabs(quda_mg_setup_state->theta_x - quda_gauge_state->theta_x) > 2*DBL_EPSILON ) || 
       ( fabs(quda_mg_setup_state->theta_y - quda_gauge_state->theta_y) > 2*DBL_EPSILON ) || 
@@ -228,7 +231,7 @@ static inline int check_quda_mg_setup_state(const tm_QudaMGSetupState_t * const 
   } else if( ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) < 2*DBL_EPSILON ) &&
              ( fabs(quda_mg_setup_state->c_sw - g_c_sw) < 2*DBL_EPSILON) &&
              ( fabs(quda_mg_setup_state->kappa - g_kappa) < 2*DBL_EPSILON) &&
-             ( fabs(quda_mg_setup_state->mu - g_mu) < quda_params->mg_reset_setup_mu_threshold) ){
+             ( fabs(quda_mg_setup_state->mu - g_mu) < quda_params->mg_reuse_setup_mu_threshold) ){
     return TM_QUDA_MG_SETUP_REUSE;
   } else {
     return TM_QUDA_MG_SETUP_UPDATE;

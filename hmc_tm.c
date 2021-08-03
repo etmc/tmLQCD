@@ -325,7 +325,6 @@ int main(int argc,char *argv[]) {
     
   /*Convert to a 32 bit gauge field, after xchange*/
   convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND + g_dbw2rand);
-  update_tm_gauge_id(&g_gauge_state_32, TM_GAUGE_PROPAGATE_THRESHOLD);
 #ifdef TM_USE_MPI
   update_tm_gauge_exchange(&g_gauge_state_32);
 #endif

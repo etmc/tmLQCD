@@ -236,6 +236,7 @@ void _setDefaultQudaParam(void){
   inv_param.residual_type = (QudaResidualType)(QUDA_L2_RELATIVE_RESIDUAL);
   inv_param.tol_hq = 0.1;
   inv_param.use_alternative_reliable = 0;
+  // anything smaller than this and we break down in double-half in most solves
   inv_param.reliable_delta = 1e-3; // ignored by multi-shift solver
   inv_param.use_sloppy_partial_accumulator = 0;
 
@@ -764,14 +765,18 @@ void set_sloppy_prec( const SloppyPrecision sloppy_precision ) {
   // choose sloppy prec.
   QudaPrecision cuda_prec_sloppy;
   if( sloppy_precision==SLOPPY_DOUBLE ) {
+    inv_param.reliable_delta = 1e-8;
     cuda_prec_sloppy = QUDA_DOUBLE_PRECISION;
     if(g_proc_id == 0) printf("# TM_QUDA: Using double prec. as sloppy!\n");
   }
   else if( sloppy_precision==SLOPPY_HALF ) {
+    // in double-half, we perform many reliable updates
+    inv_param.reliable_delta = 1e-2;
     cuda_prec_sloppy = QUDA_HALF_PRECISION;
     if(g_proc_id == 0) printf("# TM_QUDA: Using half prec. as sloppy!\n");
   }
   else {
+    inv_param.reliable_delta = 1e-4;
     cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
     if(g_proc_id == 0) printf("# TM_QUDA: Using single prec. as sloppy!\n");
   }
@@ -1229,7 +1234,8 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
         inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION;
       }
     } else {
-      // when not inverting the squred operator, we always just need the MATPC solution
+      // when not wanting the inverse of the squred operator explicitly, 
+      // we always just need the MATPC solution
       inv_param.solution_type = QUDA_MATPC_SOLUTION;
     }
   }
@@ -1244,7 +1250,6 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     inv_param.gcrNkrylov = quda_input.gcrNkrylov;
     inv_param.inv_type_precondition = QUDA_MG_INVERTER;
     inv_param.schwarz_type = QUDA_ADDITIVE_SCHWARZ;
-    inv_param.reliable_delta = quda_input.reliable_delta;
     inv_param.precondition_cycle = 1;
     inv_param.tol_precondition = 1e-1;
     inv_param.maxiter_precondition = 1;
@@ -1258,6 +1263,12 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
       printf("# TM_QUDA: Using mixed precision CG!\n");
       fflush(stdout);
     }
+  }
+
+  // make sure to reset the preconditioner if we've switched from MG to another
+  // solver (for example in the HMC or when doing light and heavy inversions)
+  if( solver_type != MG ){
+    inv_param.inv_type_precondition = QUDA_INVALID_INVERTER;
   }
 
   // direct or norm-op. solve
@@ -1299,12 +1310,16 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
 
     // run the MG setup if required
   if( inv_param.inv_type_precondition == QUDA_MG_INVERTER ){
+    tm_debug_printf(0,0,"# TM_QUDA: using MG solver to invert operator with 2kappamu = %.12f\n",
+                        -g_kappa*2.0*inv_param.mu);
     // we begin by setting the inverter params for the quda_mg_param struct equal to the outer inv_param
     inv_mg_param = inv_param;
-    // when the preconditioner for the outer solver has already been set below, the line just
-    // above would set a preconditioner for the MG smoothers, which is not allowed
-    // so we set this to NULL explicitly
+    // when the preconditioner for the outer solver has already been set below (in a previous
+    // run), the line just above would set a preconditioner for the MG smoothers, which is not allowed
+    // so we set this to NULL explicitly each time
     inv_mg_param.preconditioner = NULL;
+    inv_mg_param.deflation_op = NULL;
+    inv_mg_param.eig_param = NULL;
 
     // only the symmetric operator may be coarsened, so this
     // is what we use in the MG internal InvertParam
@@ -1323,7 +1338,24 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
         quda_mg_preconditioner = NULL;
       }
       tm_debug_printf(0,0,"# TM_QUDA: Performing MG Preconditioner Setup for gauge %f\n", quda_gauge_state.gauge_id);
-      quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
+
+      // if we have set an explicit mu value for the generation of our MG setup,
+      // we would like to use it here
+      if( fabs(quda_input.mg_setup_2kappamu) > 2*DBL_EPSILON ){
+        double save_mu = quda_mg_param.invert_param->mu;
+        // note the minus sign
+        quda_mg_param.invert_param->mu = -quda_input.mg_setup_2kappamu/2.0/g_kappa;
+        tm_debug_printf(0,0,"# TM_QUDA: Generating MG Setup with mu = %.12f instead of %.12f\n", 
+                            -quda_mg_param.invert_param->mu,
+                            -save_mu);
+        quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
+        // and now we switch to the mu value for the next solve
+        quda_mg_param.invert_param->mu = save_mu;
+        updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
+      } else {
+        quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
+      }
+      
       inv_param.preconditioner = quda_mg_preconditioner;
       set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
       tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup took %.3f seconds\n", gettime()-atime);
@@ -1336,11 +1368,21 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
 #endif
       double atime = gettime();
       updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
+      // if the precondioner was disabled because we switched solvers from MG to some other
+      // solver, re-enable it here
+      inv_param.preconditioner = quda_mg_preconditioner;
       set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
       tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup Update took %.3f seconds\n", gettime()-atime);
      } else {
+      // if the precondioner was disabled because we switched solvers from MG to some other
+      // solver, re-enable it here
+      inv_param.preconditioner = quda_mg_preconditioner;
       tm_debug_printf(0,0,"# TM_QUDA: Reusing MG Preconditioner Setup for gauge %f\n", quda_gauge_state.gauge_id);
     }
+  } else {
+    // if we were in an MG solve before and now switch to some other solver, we need
+    // to disable the preconditioner (it will be re-enabled the next time the MG is used) 
+    if(inv_param.preconditioner != NULL) inv_param.preconditioner = NULL;
   }
   
   if(g_proc_id == 0 && g_debug_level > 3 && inv_param.inv_type_precondition == QUDA_MG_INVERTER){
@@ -1618,12 +1660,10 @@ int invert_eo_MMd_quda(spinor * const out,
                        SloppyPrecision sloppy_precision,
                        CompressionType compression,
                        const int QpQm) {
+  int iterations = 0;
+
   // it returns if quda is already init
   _initQuda();
-
-  spinor ** solver_field = NULL;
-  const int nr_sf = 2;
-  init_solver_field(&solver_field, VOLUME/2, nr_sf);
 
   void *spinorIn  = (void*)in; // source
   void *spinorOut = (void*)out; // solution
@@ -1654,7 +1694,9 @@ int invert_eo_MMd_quda(spinor * const out,
                             g_mu,
                             solver_flag,
                             even_odd_flag,
-                            precision,
+                            // when doing a two-step solve, we are more stringent
+                            // FIXME: surely this needs to be fine-tuned
+                            (solver_flag == MG || solver_flag == BICGSTAB) && QpQm ? precision/10.0 : precision,
                             max_iter,
                             1, QpQm);
 
@@ -1680,6 +1722,8 @@ int invert_eo_MMd_quda(spinor * const out,
   // \hat{Q}^{+} \hat{Q}^{-}
   // but we're using solvers that don't operate on the normal system
   if( (solver_flag == MG || solver_flag == BICGSTAB) && QpQm ){
+    iterations += inv_param.iter;
+
     inv_param.preserve_source = QUDA_PRESERVE_SOURCE_YES;
 
     reorder_spinor_eo_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
@@ -1694,9 +1738,16 @@ int invert_eo_MMd_quda(spinor * const out,
     if(solver_flag == MG){
       // flip the sign of the coarse operator and update the setup
       quda_mg_param.invert_param->mu = -quda_mg_param.invert_param->mu;
+      // the fact that we have to do this is nasty
+      g_mu = -g_mu;
       double atime = gettime();
       updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
       set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
+      // the fact that we have to do this is nasty but otherwise the setup is
+      // reused when it should't be
+      // FIXME: maybe set_quda_mg_setup_state should not use g_mu for the mass
+      // but the one in quda_mg_param instead
+      g_mu = -g_mu;
       tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup Update took %.3f seconds\n", gettime()-atime);
     }
     
@@ -1711,14 +1762,12 @@ int invert_eo_MMd_quda(spinor * const out,
       printf("# TM_QUDA: Done: %i iter / %g secs = %g Gflops\n",
              inv_param.iter, inv_param.secs, inv_param.gflops/inv_param.secs);
 
-  // store number of iterations
-  int iteration = inv_param.iter;
-  finalize_solver(solver_field, nr_sf);
+  iterations += inv_param.iter;
 
-  if(iteration >= max_iter)
+  if(iterations >= max_iter)
     return(-1);
 
-  return(iteration);
+  return(iterations);
 }
 
 
