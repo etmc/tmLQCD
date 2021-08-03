@@ -105,7 +105,8 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
   int nr_sf = 1;
   if(g_debug_level > 3) nr_sf = 2;
   spinor** temp;
-  if(g_debug_level > 2 || solver_params.external_inverter == QPHIX_INVERTER || solver_params.external_inverter == QUDA_INVERTER ){
+  if(g_debug_level > 2 || g_strict_residual_check || 
+     solver_params.external_inverter == QPHIX_INVERTER || solver_params.external_inverter == QUDA_INVERTER ){
     init_solver_field(&temp, VOLUMEPLUSRAND/2, nr_sf);
   }
   
@@ -264,10 +265,10 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     fatal_error("Error: solver not allowed for degenerate solve. Aborting...\n", "solve_degenerate");
   }
 
-  if(g_debug_level > 2){
+  if(g_debug_level > 2 || g_strict_residual_check){
     if(g_proc_id == 0) printf("# solve_degenerate applying operator\n");
     f(temp[0], P);
-    if(g_debug_level > 3){
+    if(g_debug_level > 5){
       ratio(temp[1], temp[0], Q, VOLUME/2);
       if(g_proc_id == 0){
         //print_spinor_similar_components(temp[0], Q, VOLUME/2, 1.0e-8);
@@ -280,9 +281,17 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
       // checking the norm of the result to make sure it's not zero
       printf("# solve_degenerate result norm: %e\n", square_norm(P, VOLUME/2, 1));
       printf("# solve_degenerate residual check norm: %e\n", diffnorm);
+      fflush(stdout);
+    }
+    if( g_strict_residual_check ){
+      double rel_nrm = rel_prec ? square_norm(Q, VOLUME/2, 1) : 1.0;
+      if( diffnorm > 1.5*(eps_sq / rel_nrm) ){
+        fatal_error("Residual norm exceeds target by more than a factor of 1.5!", "solve_degenerate");
+      }
     }
   }
-  if(g_debug_level > 2 || solver_params.external_inverter == QPHIX_INVERTER  || solver_params.external_inverter == QUDA_INVERTER){
+  if(g_debug_level > 2 || g_strict_residual_check ||
+      solver_params.external_inverter == QPHIX_INVERTER  || solver_params.external_inverter == QUDA_INVERTER){
     finalize_solver(temp, nr_sf);
   }
 

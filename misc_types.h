@@ -40,8 +40,13 @@
 #include "tm_debug_printf.h"
 
 #define TM_GAUGE_FIELD_NAME_LENGTH 100
-#define TM_GAUGE_PROPAGATE_THRESHOLD 10.0
-#define TM_GAUGE_PROPAGATE_MIN 0.01
+
+// this number is completely arbitrary, but it's supposed to make sure that
+// for example the QUDA MG setup is reset when a trajectory was rejected in the HMC 
+#define TM_GAUGE_PROPAGATE_THRESHOLD 3.0
+// this number is used to advance the state of the gauge field when SU3-restoration
+// is done
+#define TM_GAUGE_PROPAGATE_MIN 0.001
 
 /* enumeration type for the identity of the program
  * which is being executed
