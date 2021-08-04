@@ -149,5 +149,12 @@ int invert_eo_MMd_quda( spinor * const Odd_new,
                    CompressionType compression,
                    const int QmQp);
 
+int invert_eo_quda_oneflavour_mshift(spinor ** const Odd_new,
+                                     spinor * const Odd,
+                                     const double precision, const int max_iter,
+                                     const int solver_flag, const int rel_prec,
+                                     const int even_odd_flag, solver_params_t solver_params,
+                                     const SloppyPrecision sloppy_precision,
+                                     CompressionType compression);
 
 #endif /* QUDA_INTERFACE_H_ */

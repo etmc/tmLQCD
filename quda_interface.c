@@ -111,6 +111,7 @@
 #include "global.h"
 #include "operator.h"
 #include "tm_debug_printf.h"
+#include "phmc.h"
 
 // nstore is generally like a gauge id, for measurements it identifies the gauge field
 // uniquely 
@@ -1212,6 +1213,15 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
   else {
     inv_param.twist_flavor = QUDA_TWIST_NO;
     inv_param.dslash_type = QUDA_WILSON_DSLASH;
+    if( single_parity_solve ){
+      // for single parity solves, we employ QUDA_MATPC_ODD_ODD_ASYMMETRIC below
+      // which is not supported for the plain Wilson operator
+      // so we work around this by using the twisted mass dslash with zero
+      // twisted mass
+      inv_param.dslash_type = QUDA_TWISTED_MASS_DSLASH;
+      inv_param.twist_flavor = QUDA_TWIST_SINGLET;
+      inv_param.mu = 0.0;
+    }
     inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
     inv_param.solution_type = QUDA_MAT_SOLUTION;
   }
@@ -1771,6 +1781,77 @@ int invert_eo_MMd_quda(spinor * const out,
   return(iterations);
 }
 
+int invert_eo_quda_oneflavour_mshift(spinor ** const out,
+                                     spinor * const in,
+                                     const double precision, const int max_iter,
+                                     const int solver_flag, const int rel_prec,
+                                     const int even_odd_flag, solver_params_t solver_params,
+                                     SloppyPrecision sloppy_precision,
+                                     CompressionType compression){
+  int iterations = 0;
+
+  // it returns if quda is already init
+  _initQuda();
+
+  void *spinorIn  = (void*)in; // source
+  void **spinorOut = (void**)out; // solution
+
+  if ( rel_prec )
+    inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
+  else
+    inv_param.residual_type = QUDA_L2_ABSOLUTE_RESIDUAL;
+
+  inv_param.kappa = g_kappa;
+
+  // figure out which BC to use (theta, trivial...)
+  set_boundary_conditions(&compression);
+  // set the sloppy precision of the mixed prec solver
+  set_sloppy_prec(sloppy_precision);
+  
+  // load gauge after setting precision
+  _loadGaugeQuda(compression);
+
+  _setOneFlavourSolverParam(g_kappa,
+                            g_c_sw,
+                            g_mu,
+                            solver_flag,
+                            even_odd_flag,
+                            precision,
+                            max_iter,
+                            1 /*single_parity_solve */,
+                            1 /*always QpQm*/);
+
+  // QUDA applies the MMdag operator, we need QpQm^{-1) in the end
+  // so we want QUDA to use the MdagM operator
+  inv_param.dagger = QUDA_DAG_YES;
+
+  // just to avoid any issues due to no_shifts being set to zero by accident
+  const int num_shifts = solver_params.no_shifts == 0 ? 1 : solver_params.no_shifts;
+  inv_param.num_offset = num_shifts;
+  for(int shift = 0; shift < num_shifts; shift++){
+    inv_param.offset[shift] = solver_params.shifts[shift]*solver_params.shifts[shift];
+    inv_param.tol_offset[shift] = sqrt(precision);
+  }
+
+  reorder_spinor_eo_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0, 1);
+  invertMultiShiftQuda(spinorOut, spinorIn, &inv_param);
+  
+  for(int shift = 0; shift < num_shifts; shift++){
+    reorder_spinor_eo_fromQuda( (double*)spinorOut[shift], inv_param.cpu_prec, 0, 1);
+  }
+
+  if( inv_param.verbosity > QUDA_SILENT )
+    if(g_proc_id == 0)
+      printf("# TM_QUDA: Done: %i iter / %g secs = %g Gflops\n",
+             inv_param.iter, inv_param.secs, inv_param.gflops/inv_param.secs);
+
+  iterations += inv_param.iter;
+
+  if(iterations >= max_iter)
+    return(-1);
+
+  return(iterations);
+}
 
 //// int invert_eo_MMd_quda_ref(spinor * const Even_new, spinor * const Odd_new,
 ////                    spinor * const Even, spinor * const Odd,

@@ -344,6 +344,12 @@ void Qtm_pm_psi(spinor * const l, spinor * const k){
   tm_sub_H_eo_gamma5(l, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], OE, +1);
 }
 
+void Qtm_pm_psi_shift(spinor * const l, spinor * const k){
+  Qtm_pm_psi(l,k);  
+  assign_add_mul_r(l, k, g_shift, VOLUME/2);
+  return;
+}
+
 void Qtm_pm_sym_psi(spinor * const l, spinor * const k){
   /* Q_{-} */
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
