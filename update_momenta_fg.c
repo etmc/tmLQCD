@@ -230,7 +230,7 @@ void update_momenta_fg(int * mnllist, double step, const int no,
 
   etime = gettime();
   if(g_debug_level > 1 && g_proc_id == 0) {
-    printf("# Time gauge update: %e s\n", etime-atime); 
+    printf("# Time force-gradient gauge update: %e s\n", etime-atime); 
   } 
   return;
 }
