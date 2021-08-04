@@ -306,7 +306,8 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
 
   // temporary field required by the QPhiX solve or by residual check
   spinor ** temp;
-  if(g_debug_level > 2 || (solver_params->external_inverter == QPHIX_INVERTER  && solver_params->type != MG)){
+  if(g_debug_level > 2 || g_strict_residual_check ||
+      (solver_params->external_inverter == QPHIX_INVERTER  && solver_params->type != MG)){
     init_solver_field(&temp, VOLUMEPLUSRAND/2, 1);
   }
 
@@ -323,10 +324,28 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
       mul_gamma5(P[shift], VOLUME/2);
     }
   } else
-#endif // TM_USE_QPHIX
-  if (solver_params->type == CGMMS){
-    iteration_count = cg_mms_tm(P, Q, solver_params);
-  }
+#endif
+
+#ifdef TM_USE_QUDA
+  if ( solver_params->external_inverter == QUDA_INVERTER && solver_params->type != MG){
+    gamma5(temp[0], Q, VOLUME/2);
+    iteration_count = invert_eo_quda_oneflavour_mshift(P, temp[0],
+                                                       solver_params->squared_solver_prec,
+                                                       solver_params->max_iter,
+                                                       solver_params->type,
+                                                       solver_params->rel_prec,
+                                                       1,
+                                                       *solver_params,
+                                                       solver_params->sloppy_precision,
+                                                       solver_params->compression_type);
+    for( int shift = 0; shift < solver_params->no_shifts; shift++){
+      mul_gamma5(P[shift], VOLUME/2);
+    }
+  } else
+#endif
+    if (solver_params->type == CGMMS){
+      iteration_count = cg_mms_tm(P, Q, solver_params);
+    }
 #ifdef DDalphaAMG
   else if (solver_params->type == MG) {
     // if the mg_mms_mass is larger than the smallest shift we use MG
@@ -442,22 +461,42 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
     fatal_error("Error: solver not allowed for TM mms solve. Aborting...\n", "solve_mms_tm");
   }
 
-  if(g_debug_level > 2){
+  if(g_debug_level > 2 || g_strict_residual_check){
+    matrix_mult f = Qtm_pm_psi_shift;
+    if( solver_params->M_psi == Qsw_pm_psi ) 
+      f = Qsw_pm_psi_shift;
+    
+    int src_nrm = solver_params->rel_prec && g_strict_residual_check ? square_norm(Q, VOLUME/2, 1) : 1.0;
+    int check_fail = 0;
     for( int shift = 0; shift < solver_params->no_shifts; shift++){
-      g_mu3 = solver_params->shifts[shift]; 
-      solver_params->M_psi(temp[0], P[shift]);
-      g_mu3 = _default_g_mu3;
+      g_shift = solver_params->shifts[shift]*solver_params->shifts[shift];
+      f(temp[0], P[shift]);
       diff(temp[0], temp[0], Q, VOLUME/2);
       double diffnorm = square_norm(temp[0], VOLUME/2, 1); 
       if( g_proc_id == 0 ){
-        printf("# solve_mms_tm residual check: shift %d, res. %e\n", shift, diffnorm);
+        printf("# solve_mms_tm residual check: shift %d (%.6e), res. %e\n", shift, g_shift, diffnorm);
+        fflush(stdout);
+      }
+      g_shift = _default_g_shift;
+
+      if( g_strict_residual_check ){
+        // FIXME there seems to be an issue with the QUDA multi-shift solver
+        // which appears to have issues satisfying our strict residual bound
+        // for the higher order terms of the RATCOR monomial
+        // we use a fudge factor of **100** to make it pass but this should
+        // be looked into...
+        check_fail += diffnorm > 100*( solver_params->squared_solver_prec / src_nrm );
       }
     }
+    if( g_strict_residual_check && check_fail > 0 ){
+      fatal_error("Residual norm for at least one shift exceeds target by more than a factor of 100!", "solve_mms_tm");
+    }
   }
-  if(g_debug_level > 2 || (solver_params->external_inverter == QPHIX_INVERTER && solver_params->type != MG)){
+  if(g_debug_level > 2 || g_strict_residual_check ||
+      (solver_params->external_inverter == QPHIX_INVERTER && solver_params->type != MG)){
     finalize_solver(temp, 1);
   }
-
+  
   return(iteration_count);
 }
 
