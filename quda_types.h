@@ -111,6 +111,7 @@ typedef struct tm_QudaParams_t {
 } tm_QudaParams_t;
 
 typedef struct tm_QudaMGSetupState_t {
+  double init_gauge_id;
   double gauge_id;
   double c_sw;
   double kappa;
@@ -219,7 +220,8 @@ static inline int check_quda_mg_setup_state(const tm_QudaMGSetupState_t * const 
       ( fabs(quda_mg_setup_state->theta_y - quda_gauge_state->theta_y) > 2*DBL_EPSILON ) || 
       ( fabs(quda_mg_setup_state->theta_z - quda_gauge_state->theta_z) > 2*DBL_EPSILON ) || 
       ( fabs(quda_mg_setup_state->theta_t - quda_gauge_state->theta_t) > 2*DBL_EPSILON ) || 
-      ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) > quda_params->mg_reset_setup_threshold ) ){
+      ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) > quda_params->mg_reset_setup_threshold ) ||
+      ( fabs(quda_mg_setup_state->init_gauge_id - quda_gauge_state->gauge_id) > quda_params->mg_reset_setup_threshold ) ){
     return TM_QUDA_MG_SETUP_RESET;
   // in other cases, e.g., when the operator parameters change or if the gauge_id has "moved" only a little,
   // we don't need to redo the setup, we can simply rebuild the coarse operators with the
@@ -238,6 +240,11 @@ static inline int check_quda_mg_setup_state(const tm_QudaMGSetupState_t * const 
   }
 }
 
+static inline void set_quda_mg_setup_init_gauge_id(tm_QudaMGSetupState_t * const quda_mg_setup_state,
+                                                   const tm_QudaGaugeState_t * const quda_gauge_state){
+  quda_mg_setup_state->init_gauge_id = quda_gauge_state->gauge_id;
+}
+
 static inline void set_quda_mg_setup_state(tm_QudaMGSetupState_t * const quda_mg_setup_state,
                                            const tm_QudaGaugeState_t * const quda_gauge_state){
   quda_mg_setup_state->gauge_id = quda_gauge_state->gauge_id;
@@ -252,6 +259,7 @@ static inline void set_quda_mg_setup_state(tm_QudaMGSetupState_t * const quda_mg
 }
 
 static inline void reset_quda_mg_setup_state(tm_QudaMGSetupState_t * const quda_mg_setup_state){
+  quda_mg_setup_state->init_gauge_id = -1;
   quda_mg_setup_state->gauge_id = -1;
   quda_mg_setup_state->initialised = 0;
   quda_mg_setup_state->mu = -1.0;

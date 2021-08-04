@@ -1358,6 +1358,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
       
       inv_param.preconditioner = quda_mg_preconditioner;
       set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
+      set_quda_mg_setup_init_gauge_id(&quda_mg_setup_state, &quda_gauge_state);
       tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup took %.3f seconds\n", gettime()-atime);
     } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_UPDATE )  {
       tm_debug_printf(0,0,"# TM_QUDA: Updating MG Preconditioner Setup for gauge %f\n", quda_gauge_state.gauge_id);
