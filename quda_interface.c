@@ -1127,9 +1127,6 @@ void M_quda(spinor * const P, spinor * const Q) {
   _initQuda();
 
   inv_param.kappa = g_kappa;
-  // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
-  inv_param.mu = -g_mu;
-  inv_param.epsilon = 0.0;
 
   inv_param.twist_flavor = QUDA_TWIST_SINGLET;
   inv_param.preserve_source = QUDA_PRESERVE_SOURCE_YES;
@@ -1143,10 +1140,9 @@ void M_quda(spinor * const P, spinor * const Q) {
                             1,//even_odd
                             1e-12,
                             1000,
-                            0, 0);
-  //inv_param.dslash_type = QUDA_TWISTED_MASS_DSLASH;
+                            1, 0);
   
-  inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION; 
+  inv_param.solution_type = QUDA_MATPC_SOLUTION; 
   inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
   inv_param.matpc_type = QUDA_MATPC_ODD_ODD_ASYMMETRIC;
   inv_param.dagger = QUDA_DAG_NO;
@@ -1159,8 +1155,6 @@ void M_quda(spinor * const P, spinor * const Q) {
   reorder_spinor_eo_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0 ,1);
 
   // multiply
-
-  
   MatQuda(spinorOut, spinorIn, &inv_param);
 
   // reorder spinor
@@ -1189,10 +1183,16 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
     inv_param.mu = -mu/2./kappa;
     inv_param.clover_coeff = c_sw*kappa;
+    inv_param.clover_rho = 0.0;
+    inv_param.tm_rho = -g_mu3/2./kappa;
     inv_param.compute_clover_inverse = 1;
     inv_param.compute_clover = 1;
   }
   else if( fabs(mu) > 0.0 ) {
+    inv_param.clover_coeff = 0.0;
+    inv_param.clover_rho = 0.0;
+    inv_param.tm_rho = 0.0;
+
     inv_param.twist_flavor = QUDA_TWIST_SINGLET;
     inv_param.dslash_type = QUDA_TWISTED_MASS_DSLASH;
     inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN_ASYMMETRIC;
@@ -1201,16 +1201,35 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     inv_param.mu = -mu/2./kappa;
   }
   else if( c_sw > 0.0 ) {
-    inv_param.twist_flavor = QUDA_TWIST_NO;
-    inv_param.dslash_type = QUDA_CLOVER_WILSON_DSLASH;
+    // when we are dealing with the 'rho' mass preconditioning parameter
+    // the way this is implemented in QUDA is not consistent with the
+    // way it is implemented in tmLQCD
+    // To get agreement, we use the twisted clover operator also
+    // for Wilson clover fermions in this case.
+    if( fabs(g_mu3) > 0.0 ){
+      inv_param.twist_flavor = QUDA_TWIST_SINGLET;
+      inv_param.dslash_type = QUDA_TWISTED_CLOVER_DSLASH;
+      inv_param.mu = 0.0;
+      inv_param.clover_rho = 0.0;
+      inv_param.tm_rho = -g_mu3/2./kappa;
+    } else {
+      inv_param.twist_flavor = QUDA_TWIST_NO;
+      inv_param.dslash_type = QUDA_CLOVER_WILSON_DSLASH;
+    }
     inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
     inv_param.solution_type = QUDA_MAT_SOLUTION;
     inv_param.clover_order = QUDA_PACKED_CLOVER_ORDER;
     inv_param.clover_coeff = c_sw*kappa;
+    inv_param.clover_rho = 0.0;
     inv_param.compute_clover_inverse = 1;
     inv_param.compute_clover = 1;
   }
   else {
+    inv_param.mu = 0.0;
+    inv_param.clover_coeff = 0.0;
+    inv_param.clover_rho = 0.0;
+    inv_param.tm_rho = 0.0;
+
     inv_param.twist_flavor = QUDA_TWIST_NO;
     inv_param.dslash_type = QUDA_WILSON_DSLASH;
     if( single_parity_solve ){
@@ -1220,7 +1239,6 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
       // twisted mass
       inv_param.dslash_type = QUDA_TWISTED_MASS_DSLASH;
       inv_param.twist_flavor = QUDA_TWIST_SINGLET;
-      inv_param.mu = 0.0;
     }
     inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
     inv_param.solution_type = QUDA_MAT_SOLUTION;
@@ -1745,6 +1763,7 @@ int invert_eo_MMd_quda(spinor * const out,
    
     // now we invert \hat{M}^{-} to get the inverse of \hat{Q}^{-} in the end
     inv_param.mu = -inv_param.mu;
+    inv_param.tm_rho = -inv_param.tm_rho;
 
     if(solver_flag == MG){
       // flip the sign of the coarse operator and update the setup
