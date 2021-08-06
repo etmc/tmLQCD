@@ -1763,6 +1763,7 @@ int invert_eo_MMd_quda(spinor * const out,
    
     // now we invert \hat{M}^{-} to get the inverse of \hat{Q}^{-} in the end
     inv_param.mu = -inv_param.mu;
+    inv_param.tm_rho = -inv_param.tm_rho;
 
     if(solver_flag == MG){
       // flip the sign of the coarse operator and update the setup
