@@ -30,13 +30,15 @@ double gettime(void);
 
 // tm_stopwatch will print the string
 //
-// # Time for %s : %e s\n
+// # %s Time for %s : %e s\n
 //
-// with the name and gettime()-startime inserted if the g_proc_id
+// with the prefix, name and gettime()-startime inserted if the g_proc_id
 // matches proc_id and the g_debug_level is equal or higher than
 // dbg_level_threshold
 void tm_stopwatch(const int proc_id, const int dbg_level_threshold,
-    const char * const name, const double starttime);
+    const char * const prefix,
+    const char * const name,
+    const double starttime);
 
 #endif /* _GETTIME_H */
 
