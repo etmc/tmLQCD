@@ -526,10 +526,10 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
     }
     // even-odd preconditioned mixed precision inversions with QPhiX cause the
     // target residual to be exceeded somewhat
-    // let's be generous and alow for a factor of 2.5
-    if( optr->eps_sq > 1.5*( optr->reached_prec / rel_nrm ) ){
-      fprintf(stdout, "# Inversion done in %d iterations, squared residue = %e!\n",
-              optr->iterations, optr->reached_prec);
+    // let's be generous and allow for a factor of 1.5
+    if( optr->reached_prec > 1.5*( optr->eps_sq / rel_nrm ) ){
+      fprintf(stdout, "# Inversion done in %d iterations, squared residue = %e rel_nrm = %e\n",
+              optr->iterations, optr->reached_prec, rel_nrm);
       fprintf(stdout, "# Inversion done in %1.2e sec. \n", etime - atime);
       fflush(stdout);
       fatal_error("Reached precision larger that target precision by a factor of more than 1.5!", "op_invert");
