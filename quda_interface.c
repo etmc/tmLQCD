@@ -2090,7 +2090,7 @@ int invert_eo_quda_oneflavour_mshift(spinor ** const out,
 
   if( inv_param.verbosity > QUDA_SILENT )
     if(g_proc_id == 0)
-      printf("# TM_QUDA: Done: %i iter / %g secs = %g Gflops\n",
+      printf("# TM_QUDA: QpQm solve done: %i iter / %g secs = %g Gflops\n",
              inv_param.iter, inv_param.secs, inv_param.gflops/inv_param.secs);
 
   iterations += inv_param.iter;
@@ -2185,7 +2185,7 @@ int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out
 
   if( inv_param.verbosity > QUDA_SILENT )
     if(g_proc_id == 0)
-      printf("# TM_QUDA: Done: %i iter / %g secs = %g Gflops\n",
+      printf("# TM_QUDA: QpQm solve done: %i iter / %g secs = %g Gflops\n",
              inv_param.iter, inv_param.secs, inv_param.gflops/inv_param.secs);
 
   iterations += inv_param.iter;
