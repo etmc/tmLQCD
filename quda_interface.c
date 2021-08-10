@@ -1976,6 +1976,10 @@ int invert_eo_MMd_quda(spinor * const out,
   // \hat{Q}^{+} \hat{Q}^{-}
   // but we're using solvers that don't operate on the normal system
   if( (solver_flag == MG || solver_flag == BICGSTAB) && QpQm ){
+    if(g_proc_id == 0)
+      printf("# TM_QUDA: Qp solve done: %i iter / %g secs = %g Gflops\n",
+             inv_param.iter, inv_param.secs, inv_param.gflops/inv_param.secs);
+    
     iterations += inv_param.iter;
 
     inv_param.preserve_source = QUDA_PRESERVE_SOURCE_YES;
@@ -2014,7 +2018,7 @@ int invert_eo_MMd_quda(spinor * const out,
 
   if( inv_param.verbosity > QUDA_SILENT )
     if(g_proc_id == 0)
-      printf("# TM_QUDA: Done: %i iter / %g secs = %g Gflops\n",
+      printf("# TM_QUDA: QpQm solve done: %i iter / %g secs = %g Gflops\n",
              inv_param.iter, inv_param.secs, inv_param.gflops/inv_param.secs);
 
   iterations += inv_param.iter;
@@ -2086,7 +2090,7 @@ int invert_eo_quda_oneflavour_mshift(spinor ** const out,
 
   if( inv_param.verbosity > QUDA_SILENT )
     if(g_proc_id == 0)
-      printf("# TM_QUDA: Done: %i iter / %g secs = %g Gflops\n",
+      printf("# TM_QUDA: QpQm solve done: %i iter / %g secs = %g Gflops\n",
              inv_param.iter, inv_param.secs, inv_param.gflops/inv_param.secs);
 
   iterations += inv_param.iter;
@@ -2181,7 +2185,7 @@ int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out
 
   if( inv_param.verbosity > QUDA_SILENT )
     if(g_proc_id == 0)
-      printf("# TM_QUDA: Done: %i iter / %g secs = %g Gflops\n",
+      printf("# TM_QUDA: QpQm solve done: %i iter / %g secs = %g Gflops\n",
              inv_param.iter, inv_param.secs, inv_param.gflops/inv_param.secs);
 
   iterations += inv_param.iter;
