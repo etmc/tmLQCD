@@ -16,6 +16,8 @@ ReversibilityCheckIntervall = 4
 InitialStoreCounter = 0
 DebugLevel = 1
 
+StrictResidualCheck = yes
+
 # since this is a test file, we employ the reproducible random numbers mode
 ReproduceRandomNumbers = yes
 Seed = 127782
