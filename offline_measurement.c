@@ -50,6 +50,7 @@
 #include "xchange/xchange.h"
 #endif
 #include "mpi_init.h"
+#include "sighandler.h"
 #include "boundary.h"
 #include "init/init.h"
 #include "monomial/monomial.h"
