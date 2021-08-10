@@ -1,6 +1,6 @@
 /***********************************************************************
  *
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ * Copyright (C) 2002,2003,2004,2005,2006,2007,2008,2021 Carsten Urbach
  *
  * Modified by Jenifer Gonzalez Lopez 2009/03/27
  *
@@ -21,13 +21,13 @@
  * This is the parser. (Dec 2002)
  * The .c-file is generated from .l using flex.
  * Please edit read_input.l instead of read_input.c!
- * flex should be said to be case insensitive!
+ * flex should be set to be case insensitive!
  *
- * After modifiing read_input.l please update read_input.c with
+ * the c source file is automatically updated via `make`
  * flex -Ptmlqcd -i -t read_input.l > read_input.c
  *
  * Autor: Carsten Urbach
- *        urbach@physik.fu-berlin.de
+ *        urbach@hiskp.uni-bonn.de
  ***********************************************************************/
 
 SPC [[:blank:]]+
@@ -37,8 +37,8 @@ DIGIT [[:digit:]]
 ZT [0-9(10)(11)]
 IDXEX ("-"{DIGIT}+)
 SIGN ("+"|"-")
-FLT {SIGN}?{DIGIT}+(".")?{DIGIT}*(e("-"|"+")?{DIGIT}+)?
-FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
+FLT {SIGN}?{DIGIT}+(\.)?{DIGIT}*(e(\-|\+)?{DIGIT}+)?
+FILENAME [a-zA-Z0-9_\.\-/][a-zA-z0-9\._\-/]+
 NAME [a-zA-Z0-9_]+
 CSTR \"[a-zA-Z0-9\-\._]+\"
 TYPE [0-9A-Z]+
