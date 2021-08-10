@@ -152,7 +152,7 @@ void sw_deriv(const int ieo, const double mu) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
-  tm_stopwatch(0, 2, __func__, swtime);
+  tm_stopwatch(0, 2, "", __func__, swtime);
   return;
 }
 
@@ -243,7 +243,7 @@ void sw_deriv_nd(const int ieo) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
-  tm_stopwatch(0, 2, __func__, swtime);
+  tm_stopwatch(0, 2, "", __func__, swtime);
   return;
 }
 
@@ -320,7 +320,7 @@ void sw_spinor_eo(const int ieo, const spinor * const kk, const spinor * const l
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
-  tm_stopwatch(0, 2, __func__, swtime);
+  tm_stopwatch(0, 2, "", __func__, swtime);
   return;
 }
 
@@ -379,7 +379,7 @@ void sw_spinor(const spinor * const kk, const spinor * const ll,
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
-  tm_stopwatch(0, 2, __func__, swtime);
+  tm_stopwatch(0, 2, "", __func__, swtime);
   return;
 }
 
