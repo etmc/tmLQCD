@@ -53,6 +53,7 @@
 #include "operator/clovertm_operators.h"
 #include "operator/clover_leaf.h"
 #include "operator/clover_inline.h"
+#include "gettime.h"
 
 /*
   !--------------------------------------------------------------!
@@ -168,6 +169,7 @@ void six_invert(int* ifail ,_Complex double a[6][6])
 // - is stored in sw_inv[VOLUME/2-(VOLUME-1)]
 
 void sw_invert(const int ieo, const double mu) {
+  double swtime = gettime();
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -257,6 +259,7 @@ void sw_invert(const int ieo, const double mu) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
+  tm_stopwatch(0, 2, __func__, swtime);
   return;
 }
 
@@ -274,6 +277,7 @@ void sw_invert(const int ieo, const double mu) {
  */ 
 
 void sw_invert_epsbar(const double epsbar) {
+  double swtime = gettime();
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -319,6 +323,7 @@ void sw_invert_epsbar(const double epsbar) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
+  tm_stopwatch(0, 2, __func__, swtime);
   return;
 }
 
@@ -336,6 +341,7 @@ void sw_invert_epsbar(const double epsbar) {
  */ 
 
 void sw_invert_mubar(const double mubar) {
+  double swtime = gettime();
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -422,6 +428,7 @@ void sw_invert_mubar(const double mubar) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
+  tm_stopwatch(0, 2, __func__, swtime);
   return;
 }
 
@@ -439,6 +446,7 @@ void sw_invert_mubar(const double mubar) {
 // must be done elsewhere because of flavour structure
 
 void sw_invert_nd(const double mshift) {
+  double swtime = gettime();
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -474,8 +482,8 @@ void sw_invert_nd(const double mshift) {
       six_invert(&err, b); 
       // here we need to catch the error! 
       if(err > 0 && g_proc_id == 0) {
-	printf("# inversion failed in six_invert_nd code %d\n", err);
-	err = 0;
+        printf("# inversion failed in six_invert_nd code %d\n", err);
+        err = 0;
       }
 
 #ifdef CLOVER_INVERT_DEBUG
@@ -492,5 +500,6 @@ void sw_invert_nd(const double mshift) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
+  tm_stopwatch(0, 2, __func__, swtime);
   return;
 }

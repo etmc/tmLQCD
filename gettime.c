@@ -38,6 +38,7 @@
 #endif
 
 #include "gettime.h"
+#include "global.h"
 
 double gettime(void) {
   double t;
@@ -77,3 +78,9 @@ double gettime(void) {
   return t;
 }
 
+void tm_stopwatch(const int proc_id, const int dbg_level_threshold,
+    const char * const name, const double starttime){
+  if( g_proc_id == proc_id && g_debug_level >= dbg_level_threshold ){
+    printf("# Time for %s : %e s\n", name, gettime()-starttime);
+  }
+}

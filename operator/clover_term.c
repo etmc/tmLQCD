@@ -52,6 +52,7 @@
 #include "operator/clovertm_operators.h"
 #include "operator/clover_leaf.h"
 #include "misc_types.h"
+#include "gettime.h"
 
 // the clover term is written as
 //
@@ -87,6 +88,7 @@
 // suppressing space-time indices
 
 void sw_term(const su3 ** const gf, const double kappa, const double c_sw) {
+  double swtime = gettime();
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -201,5 +203,6 @@ void sw_term(const su3 ** const gf, const double kappa, const double c_sw) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
+  tm_stopwatch(0, 2, __func__, swtime);
   return;
 }
