@@ -62,6 +62,7 @@ void Qsw_plus_psi(spinor * const l, spinor * const k);
 void Qsw_minus_psi(spinor * const l, spinor * const k);
 void Qsw_sq_psi(spinor * const l, spinor * const k);
 void Qsw_pm_psi(spinor * const l, spinor * const k);
+void Qsw_pm_psi_shift(spinor * const l, spinor * const k);
 void Msw_psi(spinor * const l, spinor * const k);
 void Msw_plus_psi(spinor * const l, spinor * const k);
 void Msw_minus_psi(spinor * const l, spinor * const k);

@@ -74,6 +74,7 @@ EXTERN int NO_OF_BISPINORFIELDS;
 EXTERN int g_update_gauge_copy;
 EXTERN int g_update_gauge_copy_32;
 EXTERN int g_relative_precision_flag;
+EXTERN int g_strict_residual_check;
 EXTERN int g_debug_level;
 EXTERN int g_disable_IO_checks;
 EXTERN int g_disable_src_IO_checks;

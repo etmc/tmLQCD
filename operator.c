@@ -518,6 +518,21 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
     if(write_prop) optr->write_prop(op_id, index_start, 0);
   }
   etime = gettime();
+
+  if( g_strict_residual_check ){
+    double rel_nrm = optr->rel_prec ? (square_norm(optr->sr0, VOLUME/2, 1) + square_norm(optr->sr1, VOLUME/2, 1)) : 1.0;
+    if( optr->type == DBTMWILSON || optr->type == DBCLOVER ){
+      rel_nrm += optr->rel_prec ? (square_norm(optr->sr2, VOLUME/2, 1) + square_norm(optr->sr3, VOLUME/2, 1)) : 1.0;
+    }
+    if( optr->eps_sq < 1.5*( optr->reached_prec / rel_nrm ) ){
+      fprintf(stdout, "# Inversion done in %d iterations, squared residue = %e!\n",
+              optr->iterations, optr->reached_prec);
+      fprintf(stdout, "# Inversion done in %1.2e sec. \n", etime - atime);
+      fflush(stdout);
+      fatal_error("Reached precision larger that target precision by a factor of more than 1.5!", "op_invert");
+    }
+  } 
+
   if (g_cart_id == 0 && g_debug_level > 0) {
     fprintf(stdout, "# Inversion done in %d iterations, squared residue = %e!\n",
             optr->iterations, optr->reached_prec);

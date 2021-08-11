@@ -165,6 +165,12 @@ void update_momenta_fg(int * mnllist, double step, const int no,
 #ifdef DDalphaAMG
      MG_update_gauge(0.0);
 #endif
+   
+   // ensure that the QUDA MG setup is updated
+   update_tm_gauge_id(&g_gauge_state, step_fg);
+   update_tm_gauge_id(&g_gauge_state_32, step_fg);
+   update_tm_gauge_exchange(&g_gauge_state);
+   update_tm_gauge_exchange(&g_gauge_state_32);
 
    /*Convert to a 32 bit gauge field, after xchange*/
    convert_32_gauge_field(g_gauge_field_32, hf->gaugefield, VOLUMEPLUSRAND + g_dbw2rand);
@@ -204,6 +210,11 @@ void update_momenta_fg(int * mnllist, double step, const int no,
 #ifdef DDalphaAMG
   MG_update_gauge(0.0);
 #endif
+   
+  update_tm_gauge_id(&g_gauge_state, -step_fg);
+  update_tm_gauge_id(&g_gauge_state_32, -step_fg);
+  update_tm_gauge_exchange(&g_gauge_state);
+  update_tm_gauge_exchange(&g_gauge_state_32);
 
   /*Convert to a 32 bit gauge field, after xchange*/
   convert_32_gauge_field(g_gauge_field_32, hf->gaugefield, VOLUMEPLUSRAND + g_dbw2rand);
@@ -219,7 +230,7 @@ void update_momenta_fg(int * mnllist, double step, const int no,
 
   etime = gettime();
   if(g_debug_level > 1 && g_proc_id == 0) {
-    printf("# Time gauge update: %e s\n", etime-atime); 
+    printf("# Time force-gradient gauge update: %e s\n", etime-atime); 
   } 
   return;
 }

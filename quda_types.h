@@ -58,6 +58,7 @@ typedef struct tm_QudaParams_t {
   int                  mg_blocksize[QUDA_MAX_MG_LEVEL][4];
   double               mg_mu_factor[QUDA_MAX_MG_LEVEL];
   QudaInverterType     mg_setup_inv_type;
+  double               mg_setup_2kappamu;
   double               mg_setup_tol[QUDA_MAX_MG_LEVEL];
   int                  mg_setup_maxiter[QUDA_MAX_MG_LEVEL];
   QudaInverterType     mg_coarse_solver_type[QUDA_MAX_MG_LEVEL];
@@ -70,7 +71,7 @@ typedef struct tm_QudaParams_t {
   double               mg_omega[QUDA_MAX_MG_LEVEL];
   int                  mg_run_verify;
   int                  mg_enable_size_three_blocks;
-  double               mg_reset_setup_mu_threshold;
+  double               mg_reuse_setup_mu_threshold;
   double               mg_reset_setup_threshold;
   
   // parameters related to communication-avoiding
@@ -110,7 +111,8 @@ typedef struct tm_QudaParams_t {
 } tm_QudaParams_t;
 
 typedef struct tm_QudaMGSetupState_t {
-  int gauge_id;
+  double init_gauge_id;
+  double gauge_id;
   double c_sw;
   double kappa;
   double mu;
@@ -122,7 +124,7 @@ typedef struct tm_QudaMGSetupState_t {
 } tm_QudaMGSetupState_t;
 
 typedef struct tm_QudaCloverState_t {
-  int gauge_id;
+  double gauge_id;
   double c_sw;
   double kappa;
   double mu;
@@ -130,7 +132,7 @@ typedef struct tm_QudaCloverState_t {
 } tm_QudaCloverState_t;
 
 typedef struct tm_QudaGaugeState_t {
-  int gauge_id;
+  double gauge_id;
   int loaded;
   double theta_x;
   double theta_y;
@@ -172,7 +174,7 @@ static inline void reset_quda_clover_state(tm_QudaCloverState_t * const quda_clo
 }
 
 static inline int check_quda_gauge_state(const tm_QudaGaugeState_t * const quda_gauge_state,
-                                         const int gauge_id,
+                                         const double gauge_id,
                                          const double theta_x,
                                          const double theta_y,
                                          const double theta_z,
@@ -182,11 +184,11 @@ static inline int check_quda_gauge_state(const tm_QudaGaugeState_t * const quda_
           (fabs(quda_gauge_state->theta_y - theta_y) < 2*DBL_EPSILON) &&
           (fabs(quda_gauge_state->theta_z - theta_z) < 2*DBL_EPSILON) &&
           (fabs(quda_gauge_state->theta_t - theta_t) < 2*DBL_EPSILON) &&
-          (quda_gauge_state->gauge_id == gauge_id) );
+          (fabs(quda_gauge_state->gauge_id - gauge_id) < 2*DBL_EPSILON) );
 }
 
 static inline void set_quda_gauge_state(tm_QudaGaugeState_t * const quda_gauge_state,
-                                        const int gauge_id,
+                                        const double gauge_id,
                                         const double theta_x,
                                         const double theta_y,
                                         const double theta_z,
@@ -208,15 +210,18 @@ static inline int check_quda_mg_setup_state(const tm_QudaMGSetupState_t * const 
                                             const tm_QudaGaugeState_t * const quda_gauge_state,
                                             const tm_QudaParams_t * const quda_params){
   // when the MG setup has not been initialised or when the "gauge_id" has changed by more
-  // than the mg_redo_setup_threhold, we need to (re-)do the setup completely
+  // than the mg_reset_setup_threhold, we need to (re-)do the setup completely
   // similarly, if the boundary conditions for the gauge field change, we need
   // to redo the setup
+  // FIXME the last condition is very tricky to get right and in most cases, the setup
+  // should be *update* rather than reset
   if( (quda_mg_setup_state->initialised != 1) ||
       ( fabs(quda_mg_setup_state->theta_x - quda_gauge_state->theta_x) > 2*DBL_EPSILON ) || 
       ( fabs(quda_mg_setup_state->theta_y - quda_gauge_state->theta_y) > 2*DBL_EPSILON ) || 
       ( fabs(quda_mg_setup_state->theta_z - quda_gauge_state->theta_z) > 2*DBL_EPSILON ) || 
       ( fabs(quda_mg_setup_state->theta_t - quda_gauge_state->theta_t) > 2*DBL_EPSILON ) || 
-      ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) > quda_params->mg_reset_setup_threshold ) ){
+      ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) > quda_params->mg_reset_setup_threshold ) ||
+      ( fabs(quda_mg_setup_state->init_gauge_id - quda_gauge_state->gauge_id) > quda_params->mg_reset_setup_threshold ) ){
     return TM_QUDA_MG_SETUP_RESET;
   // in other cases, e.g., when the operator parameters change or if the gauge_id has "moved" only a little,
   // we don't need to redo the setup, we can simply rebuild the coarse operators with the
@@ -228,11 +233,16 @@ static inline int check_quda_mg_setup_state(const tm_QudaMGSetupState_t * const 
   } else if( ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) < 2*DBL_EPSILON ) &&
              ( fabs(quda_mg_setup_state->c_sw - g_c_sw) < 2*DBL_EPSILON) &&
              ( fabs(quda_mg_setup_state->kappa - g_kappa) < 2*DBL_EPSILON) &&
-             ( fabs(quda_mg_setup_state->mu - g_mu) < quda_params->mg_reset_setup_mu_threshold) ){
+             ( fabs(quda_mg_setup_state->mu - g_mu) < quda_params->mg_reuse_setup_mu_threshold) ){
     return TM_QUDA_MG_SETUP_REUSE;
   } else {
     return TM_QUDA_MG_SETUP_UPDATE;
   }
+}
+
+static inline void set_quda_mg_setup_init_gauge_id(tm_QudaMGSetupState_t * const quda_mg_setup_state,
+                                                   const tm_QudaGaugeState_t * const quda_gauge_state){
+  quda_mg_setup_state->init_gauge_id = quda_gauge_state->gauge_id;
 }
 
 static inline void set_quda_mg_setup_state(tm_QudaMGSetupState_t * const quda_mg_setup_state,
@@ -249,6 +259,7 @@ static inline void set_quda_mg_setup_state(tm_QudaMGSetupState_t * const quda_mg
 }
 
 static inline void reset_quda_mg_setup_state(tm_QudaMGSetupState_t * const quda_mg_setup_state){
+  quda_mg_setup_state->init_gauge_id = -1;
   quda_mg_setup_state->gauge_id = -1;
   quda_mg_setup_state->initialised = 0;
   quda_mg_setup_state->mu = -1.0;

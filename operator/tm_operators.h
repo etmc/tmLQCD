@@ -38,6 +38,7 @@ void Mtm_plus_psi(spinor * const l, spinor * const k);
 void Mtm_plus_psi_nocom(spinor * const l, spinor * const k);
 void Mtm_minus_psi(spinor * const l, spinor * const k);
 void Qtm_pm_psi(spinor * const l, spinor * const k);
+void Qtm_pm_psi_shift(spinor * const l, spinor * const k);
 void Qtm_pm_psi_nocom(spinor * const l, spinor * const k);
 void H_eo_tm_inv_psi(spinor * const l, spinor * const k, const int ieo, const double sign);
 void mul_one_pm_imu_inv(spinor * const l, const double _sign, const int N);

@@ -1,6 +1,6 @@
 /***********************************************************************
  *
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ * Copyright (C) 2002,2003,2004,2005,2006,2007,2008,2021 Carsten Urbach
  *
  * Modified by Jenifer Gonzalez Lopez 2009/03/27
  *
@@ -21,13 +21,13 @@
  * This is the parser. (Dec 2002)
  * The .c-file is generated from .l using flex.
  * Please edit read_input.l instead of read_input.c!
- * flex should be said to be case insensitive!
+ * flex should be set to be case insensitive!
  *
- * After modifiing read_input.l please update read_input.c with
+ * the c source file is automatically updated via `make`
  * flex -Ptmlqcd -i -t read_input.l > read_input.c
  *
  * Autor: Carsten Urbach
- *        urbach@physik.fu-berlin.de
+ *        urbach@hiskp.uni-bonn.de
  ***********************************************************************/
 
 SPC [[:blank:]]+
@@ -37,8 +37,8 @@ DIGIT [[:digit:]]
 ZT [0-9(10)(11)]
 IDXEX ("-"{DIGIT}+)
 SIGN ("+"|"-")
-FLT {SIGN}?{DIGIT}+(".")?{DIGIT}*(e("-"|"+")?{DIGIT}+)?
-FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
+FLT {SIGN}?{DIGIT}+(\.)?{DIGIT}*(e(\-|\+)?{DIGIT}+)?
+FILENAME [a-zA-Z0-9_\.\-/][a-zA-z0-9\._\-/]+
 NAME [a-zA-Z0-9_]+
 CSTR \"[a-zA-Z0-9\-\._]+\"
 TYPE [0-9A-Z]+
@@ -532,6 +532,7 @@ static inline double fltlist_next_token(int * const list_end){
 %x PROPSPLIT
 %x NOSAMPLES
 %x RELPREC
+%x STRICTRESIDUALCHECK
 %x REVCHECK
 %x REVINT
 %x DEBUG
@@ -685,6 +686,7 @@ static inline double fltlist_next_token(int * const list_end){
 ^ThetaZ{EQL}                       BEGIN(BOUNDZ);
 ^ReadSource{EQL}                   BEGIN(READSOURCE);
 ^UseRelativePrecision{EQL}         BEGIN(RELPREC);
+^StrictResidualCheck{EQL}          BEGIN(STRICTRESIDUALCHECK);
 ^ReversibilityCheck{EQL}           BEGIN(REVCHECK);
 ^ReversibilityCheckIntervall{EQL}  BEGIN(REVINT);
 ^DebugLevel{EQL}                   BEGIN(DEBUG);
@@ -1781,6 +1783,11 @@ static inline double fltlist_next_token(int * const list_end){
     }
     free(input_copy);
   }
+  {SPC}*MGSetup2KappaMu{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z2] = %lf", name, &c);
+    quda_input.mg_setup_2kappamu = c;
+    if(myverbose) printf("  MGSetup2KappaMu set to %e line %d\n", quda_input.mg_setup_2kappamu, line_of_file);
+  }
   {SPC}*MGSetupSolver{EQL}cg {
     quda_input.mg_setup_inv_type = QUDA_CG_INVERTER;
     if(myverbose) printf("  MGSetupSolver set to CG line %d\n", line_of_file);
@@ -1845,10 +1852,10 @@ static inline double fltlist_next_token(int * const list_end){
     quda_input.mg_enable_size_three_blocks = 0;
     if(myverbose) printf("  MGEnableSizeThreeBlocks set to NO in line %d\n", line_of_file);
   }
-  {SPC}*MGResetSetupMuThreshold{EQL}{FLT}+ {
+  {SPC}*MGReuseSetupMuThreshold{EQL}{FLT}+ {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
-    quda_input.mg_reset_setup_mu_threshold = c;
-    if(myverbose) printf("  MGResetSetupMuThreshold set to %f line %d\n", quda_input.mg_reset_setup_mu_threshold, line_of_file);
+    quda_input.mg_reuse_setup_mu_threshold = c;
+    if(myverbose) printf("  MGReuseSetupMuThreshold set to %f line %d\n", quda_input.mg_reuse_setup_mu_threshold, line_of_file);
   }
   {SPC}*MGResetSetupThreshold{EQL}{FLT}+ {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
@@ -2634,6 +2641,11 @@ static inline double fltlist_next_token(int * const list_end){
     mnl->solver=MIXEDBICGSTAB;
     BEGIN(name_caller);
   }
+  MG {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = MG;
+    BEGIN(name_caller);
+  }
   DDalphaAMG {
 #ifdef DDalphaAMG
     if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
@@ -3296,6 +3308,14 @@ static inline double fltlist_next_token(int * const list_end){
   g_relative_precision_flag = 0;
   if(myverbose!=0) printf("Using absolute precision\n");
 }
+<STRICTRESIDUALCHECK>yes {
+  g_strict_residual_check = 1;
+  if(myverbose!=0) printf("g_strict_residual_check = %d!\n", g_strict_residual_check);
+}
+<STRICTRESIDUALCHECK>no {
+  g_strict_residual_check = 0;
+  if(myverbose!=0) printf("g_strict_residual_check = %d!\n", g_strict_residual_check);
+}
 <REVCHECK>yes {
   return_check_flag = 1;
   if(myverbose!=0) printf("Perform checks of Reversibility\n");
@@ -3632,6 +3652,7 @@ int read_input(char * conf_file){
   PropInfo.splitted = _default_propagator_splitted;
   SourceInfo.splitted = _default_source_splitted;
   g_relative_precision_flag = _default_g_relative_precision_flag;
+  g_strict_residual_check = _default_g_strict_residual_check;
   return_check_flag = _default_return_check_flag;
   return_check_interval = _default_return_check_interval;
   g_debug_level = _default_g_debug_level;
@@ -3686,8 +3707,9 @@ int read_input(char * conf_file){
   quda_input.fermionbc = TM_QUDA_THETABC;
   quda_input.pipeline = 0;
   quda_input.gcrNkrylov = 10;
-  quda_input.reliable_delta = 1e-5;
+  quda_input.reliable_delta = 1e-3; // anything smaller than this and we break down in double-half
   quda_input.mg_n_level = _default_quda_mg_n_level;
+  quda_input.mg_setup_2kappamu = _default_quda_mg_setup_2kappamu;
   for( int level = 0; level < QUDA_MAX_MG_LEVEL; ++level){
     quda_input.mg_verbosity[level] = QUDA_SILENT;
     quda_input.mg_omega[level] = _default_quda_mg_omega;
@@ -3740,7 +3762,7 @@ int read_input(char * conf_file){
   quda_input.mg_run_verify = QUDA_BOOLEAN_YES;
   quda_input.mg_enable_size_three_blocks = _default_quda_mg_enable_size_three_blocks;
   quda_input.mg_reset_setup_threshold = _default_quda_mg_reset_setup_threshold;
-  quda_input.mg_reset_setup_mu_threshold = _default_quda_mg_reset_setup_mu_threshold;
+  quda_input.mg_reuse_setup_mu_threshold = _default_quda_mg_reuse_setup_mu_threshold;
   quda_input.mg_run_low_mode_check = QUDA_BOOLEAN_NO;
   quda_input.mg_run_oblique_proj_check = QUDA_BOOLEAN_NO; 
 

@@ -136,5 +136,33 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
 // apply the TM operator using QUDA
 void M_full_quda(spinor * const Even_new, spinor * const Odd_new,  spinor * const Even, spinor * const Odd);
 void D_psi_quda(spinor * const P, spinor * const Q);
+void M_quda(spinor * const P, spinor * const Q);
+
+
+// to be called instead of tmLQCD functions to use the QUDA inverter in solve_degenerate
+int invert_eo_MMd_quda( spinor * const Odd_new,
+                    spinor * const Odd,
+                   const double precision, const int max_iter,
+                   const int solver_flag, const int rel_prec,
+                   const int even_odd_flag, solver_params_t solver_params,
+                   const SloppyPrecision sloppy_precision,
+                   CompressionType compression,
+                   const int QmQp);
+
+int invert_eo_quda_oneflavour_mshift(spinor ** const Odd_new,
+                                     spinor * const Odd,
+                                     const double precision, const int max_iter,
+                                     const int solver_flag, const int rel_prec,
+                                     const int even_odd_flag, solver_params_t solver_params,
+                                     const SloppyPrecision sloppy_precision,
+                                     CompressionType compression);
+
+int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out_dn,
+                                     spinor * const in_up, spinor * const in_dn,
+                                     const double precision, const int max_iter,
+                                     const int solver_flag, const int rel_prec,
+                                     const int even_odd_flag, solver_params_t solver_params,
+                                     SloppyPrecision sloppy_precision,
+                                     CompressionType compression);
 
 #endif /* QUDA_INTERFACE_H_ */
