@@ -1184,14 +1184,23 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     inv_param.mu = -mu/2./kappa;
     inv_param.clover_coeff = c_sw*kappa;
     inv_param.clover_rho = 0.0;
-    inv_param.tm_rho = -g_mu3/2./kappa;
+    if( fabs(g_mu3) > 2*DBL_EPSILON ){
+#ifdef TM_QUDA_EXPERIMENTAL
+      inv_param.tm_rho = -g_mu3/2./kappa;
+#else
+      fatal_error("Attempt to set inv_param.tm_rho but --enable-quda_experimental was not set!", __func__);
+#endif
+    }
+
     inv_param.compute_clover_inverse = 1;
     inv_param.compute_clover = 1;
   }
   else if( fabs(mu) > 0.0 ) {
     inv_param.clover_coeff = 0.0;
     inv_param.clover_rho = 0.0;
+#ifdef TM_QUDA_EXPERIMENTAL
     inv_param.tm_rho = 0.0;
+#endif
 
     inv_param.twist_flavor = QUDA_TWIST_SINGLET;
     inv_param.dslash_type = QUDA_TWISTED_MASS_DSLASH;
@@ -1206,12 +1215,16 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     // way it is implemented in tmLQCD
     // To get agreement, we use the twisted clover operator also
     // for Wilson clover fermions in this case.
-    if( fabs(g_mu3) > 0.0 ){
+    if( fabs(g_mu3) > 2*DBL_EPSILON ){
       inv_param.twist_flavor = QUDA_TWIST_SINGLET;
       inv_param.dslash_type = QUDA_TWISTED_CLOVER_DSLASH;
       inv_param.mu = 0.0;
       inv_param.clover_rho = 0.0;
+#ifdef TM_QUDA_EXPERIMENTAL
       inv_param.tm_rho = -g_mu3/2./kappa;
+#else
+    fatal_error("Attempt to set inv_param.tm_rho but --enable-quda_experimental was not set!", __func__);
+#endif
     } else {
       inv_param.twist_flavor = QUDA_TWIST_NO;
       inv_param.dslash_type = QUDA_CLOVER_WILSON_DSLASH;
@@ -1228,8 +1241,9 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     inv_param.mu = 0.0;
     inv_param.clover_coeff = 0.0;
     inv_param.clover_rho = 0.0;
+#ifdef TM_QUDA_EXPERIMENTAL
     inv_param.tm_rho = 0.0;
-
+#endif
     inv_param.twist_flavor = QUDA_TWIST_NO;
     inv_param.dslash_type = QUDA_WILSON_DSLASH;
     if( single_parity_solve ){
@@ -1345,6 +1359,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     // when the preconditioner for the outer solver has already been set below (in a previous
     // run), the line just above would set a preconditioner for the MG smoothers, which is not allowed
     // so we set this to NULL explicitly each time
+    inv_mg_param.inv_type_precondition = QUDA_INVALID_INVERTER;
     inv_mg_param.preconditioner = NULL;
     inv_mg_param.deflation_op = NULL;
     inv_mg_param.eig_param = NULL;
@@ -1386,8 +1401,23 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
       
       inv_param.preconditioner = quda_mg_preconditioner;
       set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
-      set_quda_mg_setup_init_gauge_id(&quda_mg_setup_state, &quda_gauge_state);
       tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup took %.3f seconds\n", gettime()-atime);
+    } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_REFRESH ) {
+      tm_debug_printf(0,0,"# TM_QUDA: Refreshing MG Preconditioner Setup for gauge %f\n", quda_gauge_state.gauge_id);
+      double atime = gettime();
+      for(int level = 0; level < (quda_input.mg_n_level-1); level++){
+        quda_mg_param.setup_maxiter_refresh[level] = quda_input.mg_setup_maxiter_refresh[level];
+      }
+      // update the parameters AND refresh the setup
+      updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
+      set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
+      // reset refresh iterations to zero such that the next call
+      // to updateMultigridQuda only updates parameters and coarse
+      // operator(s)
+      for(int level = 0; level < (quda_input.mg_n_level-1); level++){
+        quda_mg_param.setup_maxiter_refresh[level] = 0;
+      }
+      tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup Refresh took %.3f seconds\n", gettime()-atime);
     } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_UPDATE )  {
       tm_debug_printf(0,0,"# TM_QUDA: Updating MG Preconditioner Setup for gauge %f\n", quda_gauge_state.gauge_id);
 #ifdef TM_QUDA_EXPERIMENTAL
@@ -1400,7 +1430,6 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
       // if the precondioner was disabled because we switched solvers from MG to some other
       // solver, re-enable it here
       inv_param.preconditioner = quda_mg_preconditioner;
-      set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
       tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup Update took %.3f seconds\n", gettime()-atime);
      } else {
       // if the precondioner was disabled because we switched solvers from MG to some other
@@ -1446,7 +1475,9 @@ void _setTwoFlavourSolverParam(const double kappa, const double c_sw, const doub
     inv_param.epsilon = epsilon/2./kappa;
     inv_param.clover_coeff = c_sw*kappa;
     inv_param.clover_rho = 0.0;
+#ifdef TM_QUDA_EXPERIMENTAL
     inv_param.tm_rho = 0.0;
+#endif
     inv_param.compute_clover_inverse = 1;
     inv_param.compute_clover = 1;
   } else {
@@ -1456,7 +1487,9 @@ void _setTwoFlavourSolverParam(const double kappa, const double c_sw, const doub
     
     inv_param.clover_coeff = 0.0;
     inv_param.clover_rho = 0.0;
+#ifdef TM_QUDA_EXPERIMENTAL
     inv_param.tm_rho = 0.0;
+#endif
 
     // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
     inv_param.mu = -mu/2./kappa;
@@ -1571,6 +1604,7 @@ void _setTwoFlavourSolverParam(const double kappa, const double c_sw, const doub
     // when the preconditioner for the outer solver has already been set below (in a previous
     // run), the line just above would set a preconditioner for the MG smoothers, which is not allowed
     // so we set this to NULL explicitly each time
+    inv_mg_param.inv_type_precondition = QUDA_INVALID_INVERTER;
     inv_mg_param.preconditioner = NULL;
     inv_mg_param.deflation_op = NULL;
     inv_mg_param.eig_param = NULL;
@@ -1611,8 +1645,8 @@ void _setTwoFlavourSolverParam(const double kappa, const double c_sw, const doub
       }
       
       inv_param.preconditioner = quda_mg_preconditioner;
+      // the setup was reset, set the quda_mg_setup_state
       set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
-      set_quda_mg_setup_init_gauge_id(&quda_mg_setup_state, &quda_gauge_state);
       tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup took %.3f seconds\n", gettime()-atime);
     } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_UPDATE )  {
       tm_debug_printf(0,0,"# TM_QUDA: Updating MG Preconditioner Setup for gauge %f\n", quda_gauge_state.gauge_id);
@@ -1626,7 +1660,6 @@ void _setTwoFlavourSolverParam(const double kappa, const double c_sw, const doub
       // if the precondioner was disabled because we switched solvers from MG to some other
       // solver, re-enable it here
       inv_param.preconditioner = quda_mg_preconditioner;
-      set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
       tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup Update took %.3f seconds\n", gettime()-atime);
      } else {
       // if the precondioner was disabled because we switched solvers from MG to some other
@@ -1992,21 +2025,18 @@ int invert_eo_MMd_quda(spinor * const out,
    
     // now we invert \hat{M}^{-} to get the inverse of \hat{Q}^{-} in the end
     inv_param.mu = -inv_param.mu;
+#ifdef TM_QUDA_EXPERIMENTAL
     inv_param.tm_rho = -inv_param.tm_rho;
+#endif
 
     if(solver_flag == MG){
       // flip the sign of the coarse operator and update the setup
       quda_mg_param.invert_param->mu = -quda_mg_param.invert_param->mu;
-      // the fact that we have to do this is nasty
-      g_mu = -g_mu;
       double atime = gettime();
       updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
-      set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
-      // the fact that we have to do this is nasty but otherwise the setup is
-      // reused when it should't be
-      // FIXME: maybe set_quda_mg_setup_state should not use g_mu for the mass
-      // but the one in quda_mg_param instead
-      g_mu = -g_mu;
+      // we need to do this to make sure that the MG setup is updated at the next
+      // mu flip
+      set_quda_mg_setup_mu(&quda_mg_setup_state, -g_mu);
       tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup Update took %.3f seconds\n", gettime()-atime);
     }
     
