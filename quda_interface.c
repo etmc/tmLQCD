@@ -134,7 +134,7 @@ QudaGaugeParam  gauge_param;
 QudaInvertParam inv_param;
 // params to pass to MG
 QudaMultigridParam quda_mg_param;
-QudaInvertParam inv_mg_param;
+QudaInvertParam mg_inv_param;
 void* quda_mg_preconditioner;
 // MGEigSolver params for all levels, these need to be around as they
 // will be populated in _setQudaMultigridParam and then assigned
@@ -171,6 +171,8 @@ int commsMap(const int *coords, void *fdata) {
 static int quda_initialized = 0;
 
 void _setQudaMultigridParam(QudaMultigridParam* mg_param);
+void _setMGInvertParam(QudaInvertParam * mg_inv_param, const QudaInvertParam * const inv_param);
+void _updateQudaMultigridPreconditioner(void);
 void _setOneFlavourSolverParam(const double kappa, const double c_sw, const double mu, 
                                const int solver_type, const int even_odd,
                                const double eps_sq, const int maxiter,
@@ -330,7 +332,7 @@ void _initQuda() {
 
   gauge_param = newQudaGaugeParam();
   inv_param = newQudaInvertParam();
-  inv_mg_param = newQudaInvertParam();
+  mg_inv_param = newQudaInvertParam();
   quda_mg_param = newQudaMultigridParam();
   for( int level = 0; level < QUDA_MAX_MG_LEVEL; ++level ){
     mg_eig_param[level] = newQudaEigParam();
@@ -1311,6 +1313,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
   // solver (for example in the HMC or when doing light and heavy inversions)
   if( solver_type != MG ){
     inv_param.inv_type_precondition = QUDA_INVALID_INVERTER;
+    inv_param.preconditioner = NULL;
   }
 
   // direct or norm-op. solve
@@ -1350,99 +1353,95 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     printf("----------------------------------------\n");
   }
 
-    // run the MG setup if required
+    // run / refresh / update the MG setup if required
   if( inv_param.inv_type_precondition == QUDA_MG_INVERTER ){
     tm_debug_printf(0,0,"# TM_QUDA: using MG solver to invert operator with 2kappamu = %.12f\n",
                         -g_kappa*2.0*inv_param.mu);
-    // we begin by setting the inverter params for the quda_mg_param struct equal to the outer inv_param
-    inv_mg_param = inv_param;
-    // when the preconditioner for the outer solver has already been set below (in a previous
-    // run), the line just above would set a preconditioner for the MG smoothers, which is not allowed
-    // so we set this to NULL explicitly each time
-    inv_mg_param.inv_type_precondition = QUDA_INVALID_INVERTER;
-    inv_mg_param.preconditioner = NULL;
-    inv_mg_param.deflation_op = NULL;
-    inv_mg_param.eig_param = NULL;
-
-    // only the symmetric operator may be coarsened, so this
-    // is what we use in the MG internal InvertParam
-    if( inv_param.matpc_type == QUDA_MATPC_ODD_ODD_ASYMMETRIC ) inv_mg_param.matpc_type = QUDA_MATPC_ODD_ODD;
-    if( inv_param.matpc_type == QUDA_MATPC_EVEN_EVEN_ASYMMETRIC ) inv_mg_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
-   
-    quda_mg_param.invert_param = &inv_mg_param;
-    _setQudaMultigridParam(&quda_mg_param);
-
-    if( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_RESET ){
-      double atime = gettime();
-      if( quda_mg_preconditioner != NULL ){
-        tm_debug_printf(0,0,"# TM_QUDA: Destroying MG Preconditioner Setup\n");
-        destroyMultigridQuda(quda_mg_preconditioner);
-        reset_quda_mg_setup_state(&quda_mg_setup_state);
-        quda_mg_preconditioner = NULL;
-      }
-      tm_debug_printf(0,0,"# TM_QUDA: Performing MG Preconditioner Setup for gauge %f\n", quda_gauge_state.gauge_id);
-
-      // if we have set an explicit mu value for the generation of our MG setup,
-      // we would like to use it here
-      if( fabs(quda_input.mg_setup_2kappamu) > 2*DBL_EPSILON ){
-        double save_mu = quda_mg_param.invert_param->mu;
-        // note the minus sign
-        quda_mg_param.invert_param->mu = -quda_input.mg_setup_2kappamu/2.0/g_kappa;
-        tm_debug_printf(0,0,"# TM_QUDA: Generating MG Setup with mu = %.12f instead of %.12f\n", 
-                            -quda_mg_param.invert_param->mu,
-                            -save_mu);
-        quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
-        // and now we switch to the mu value for the next solve
-        quda_mg_param.invert_param->mu = save_mu;
-        updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
-      } else {
-        quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
-      }
-      
-      inv_param.preconditioner = quda_mg_preconditioner;
-      set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
-      tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup took %.3f seconds\n", gettime()-atime);
-    } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_REFRESH ) {
-      tm_debug_printf(0,0,"# TM_QUDA: Refreshing MG Preconditioner Setup for gauge %f\n", quda_gauge_state.gauge_id);
-      double atime = gettime();
-      for(int level = 0; level < (quda_input.mg_n_level-1); level++){
-        quda_mg_param.setup_maxiter_refresh[level] = quda_input.mg_setup_maxiter_refresh[level];
-      }
-      // update the parameters AND refresh the setup
-      updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
-      set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
-      // reset refresh iterations to zero such that the next call
-      // to updateMultigridQuda only updates parameters and coarse
-      // operator(s)
-      for(int level = 0; level < (quda_input.mg_n_level-1); level++){
-        quda_mg_param.setup_maxiter_refresh[level] = 0;
-      }
-      tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup Refresh took %.3f seconds\n", gettime()-atime);
-    } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_UPDATE )  {
-      tm_debug_printf(0,0,"# TM_QUDA: Updating MG Preconditioner Setup for gauge %f\n", quda_gauge_state.gauge_id);
-#ifdef TM_QUDA_EXPERIMENTAL
-      if( quda_input.mg_eig_preserve_deflation == QUDA_BOOLEAN_YES ){
-        tm_debug_printf(0,0,"# TM_QUDA: Deflation subspace for gauge %f will be re-used!\n", quda_gauge_state.gauge_id);
-      }
-#endif
-      double atime = gettime();
-      updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
-      // if the precondioner was disabled because we switched solvers from MG to some other
-      // solver, re-enable it here
-      inv_param.preconditioner = quda_mg_preconditioner;
-      tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup Update took %.3f seconds\n", gettime()-atime);
-     } else {
-      // if the precondioner was disabled because we switched solvers from MG to some other
-      // solver, re-enable it here
-      inv_param.preconditioner = quda_mg_preconditioner;
-      tm_debug_printf(0,0,"# TM_QUDA: Reusing MG Preconditioner Setup for gauge %f\n", quda_gauge_state.gauge_id);
-    }
-  } else {
-    // if we were in an MG solve before and now switch to some other solver, we need
-    // to disable the preconditioner (it will be re-enabled the next time the MG is used) 
-    if(inv_param.preconditioner != NULL) inv_param.preconditioner = NULL;
-  }
   
+    quda_mg_param.invert_param = &mg_inv_param;
+    _setQudaMultigridParam(&quda_mg_param);
+    _updateQudaMultigridPreconditioner();
+  }
+}
+
+void _updateQudaMultigridPreconditioner(){
+
+  if( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_RESET ){
+
+    double atime = gettime();
+    if( quda_mg_preconditioner != NULL ){
+      tm_debug_printf(0,0,"# TM_QUDA: Destroying MG Preconditioner Setup\n");
+      destroyMultigridQuda(quda_mg_preconditioner);
+      reset_quda_mg_setup_state(&quda_mg_setup_state);
+      quda_mg_preconditioner = NULL;
+    }
+    tm_debug_printf(0,0,"# TM_QUDA: Performing MG Preconditioner Setup for gauge %f\n", quda_gauge_state.gauge_id);
+
+    // if we have set an explicit mu value for the generation of our MG setup,
+    // we would like to use it here
+    if( fabs(quda_input.mg_setup_2kappamu) > 2*DBL_EPSILON ){
+      double save_mu = quda_mg_param.invert_param->mu;
+      // note the minus sign
+      quda_mg_param.invert_param->mu = -quda_input.mg_setup_2kappamu/2.0/g_kappa;
+      tm_debug_printf(0,0,"# TM_QUDA: Generating MG Setup with mu = %.12f instead of %.12f\n", 
+                          -quda_mg_param.invert_param->mu,
+                          -save_mu);
+      quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
+      // and now we switch to the mu value for the next solve
+      quda_mg_param.invert_param->mu = save_mu;
+      updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
+    } else {
+      quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
+    }
+    inv_param.preconditioner = quda_mg_preconditioner;
+    set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
+    tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup took %.3f seconds\n", gettime()-atime);
+
+  } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_REFRESH ) {
+
+    tm_debug_printf(0,0,"# TM_QUDA: Refreshing MG Preconditioner Setup for gauge %f\n", quda_gauge_state.gauge_id);
+    double atime = gettime();
+    for(int level = 0; level < (quda_input.mg_n_level-1); level++){
+      quda_mg_param.setup_maxiter_refresh[level] = quda_input.mg_setup_maxiter_refresh[level];
+    }
+    // update the parameters AND refresh the setup
+    updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
+    // reset refresh iterations to zero such that the next call
+    // to updateMultigridQuda only updates parameters and coarse
+    // operator(s) (unless another refresh is due)
+    for(int level = 0; level < (quda_input.mg_n_level-1); level++){
+      quda_mg_param.setup_maxiter_refresh[level] = 0;
+    }
+
+    inv_param.preconditioner = quda_mg_preconditioner;
+    set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
+
+    tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup Refresh took %.3f seconds\n", gettime()-atime);
+
+  } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_UPDATE )  {
+
+    tm_debug_printf(0,0,"# TM_QUDA: Updating MG Preconditioner Setup for gauge %f\n", quda_gauge_state.gauge_id);
+#ifdef TM_QUDA_EXPERIMENTAL
+    if( quda_input.mg_eig_preserve_deflation == QUDA_BOOLEAN_YES ){
+      tm_debug_printf(0,0,"# TM_QUDA: Deflation subspace for gauge %f will be re-used!\n", quda_gauge_state.gauge_id);
+    }
+#endif
+
+    double atime = gettime();
+    updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
+
+    // if the precondioner was disabled because we switched solvers from MG to some other
+    // solver, re-enable it here
+    inv_param.preconditioner = quda_mg_preconditioner;
+    tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup Update took %.3f seconds\n", gettime()-atime);
+
+  } else {
+    // if the precondioner was disabled because we switched solvers from MG to some other
+    // solver, re-enable it here
+    inv_param.preconditioner = quda_mg_preconditioner;
+    tm_debug_printf(0,0,"# TM_QUDA: Reusing MG Preconditioner Setup for gauge %f\n", quda_gauge_state.gauge_id);
+  }
+
   if(g_proc_id == 0 && g_debug_level > 3 && inv_param.inv_type_precondition == QUDA_MG_INVERTER){
     printf("--------------- MG InvertParam ------------------\n");
     printQudaInvertParam(quda_mg_param.invert_param);
@@ -1599,102 +1598,20 @@ void _setTwoFlavourSolverParam(const double kappa, const double c_sw, const doub
   if( inv_param.inv_type_precondition == QUDA_MG_INVERTER ){
     tm_debug_printf(0,0,"# TM_QUDA: using MG solver to invert operator with 2kappamu = %.12f 2kappaeps = %.12f\n",
                         mu, epsilon);
-    // we begin by setting the inverter params for the quda_mg_param struct equal to the outer inv_param
-    inv_mg_param = inv_param;
-    // when the preconditioner for the outer solver has already been set below (in a previous
-    // run), the line just above would set a preconditioner for the MG smoothers, which is not allowed
-    // so we set this to NULL explicitly each time
-    inv_mg_param.inv_type_precondition = QUDA_INVALID_INVERTER;
-    inv_mg_param.preconditioner = NULL;
-    inv_mg_param.deflation_op = NULL;
-    inv_mg_param.eig_param = NULL;
-
-    // only the symmetric operator may be coarsened, so this
-    // is what we use in the MG internal InvertParam
-    if( inv_param.matpc_type == QUDA_MATPC_ODD_ODD_ASYMMETRIC ) inv_mg_param.matpc_type = QUDA_MATPC_ODD_ODD;
-    if( inv_param.matpc_type == QUDA_MATPC_EVEN_EVEN_ASYMMETRIC ) inv_mg_param.matpc_type = QUDA_MATPC_EVEN_EVEN;
-   
-    quda_mg_param.invert_param = &inv_mg_param;
+    quda_mg_param.invert_param = &mg_inv_param;
     _setQudaMultigridParam(&quda_mg_param);
-
-    if( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_RESET ){
-      double atime = gettime();
-      if( quda_mg_preconditioner != NULL ){
-        tm_debug_printf(0,0,"# TM_QUDA: Destroying MG Preconditioner Setup\n");
-        destroyMultigridQuda(quda_mg_preconditioner);
-        reset_quda_mg_setup_state(&quda_mg_setup_state);
-        quda_mg_preconditioner = NULL;
-      }
-      tm_debug_printf(0,0,"# TM_QUDA: Performing MG Preconditioner Setup for gauge %f\n", quda_gauge_state.gauge_id);
-
-      // if we have set an explicit mu value for the generation of our MG setup,
-      // we would like to use it here
-      if( fabs(quda_input.mg_setup_2kappamu) > 2*DBL_EPSILON ){
-        double save_mu = quda_mg_param.invert_param->mu;
-        // note the minus sign
-        quda_mg_param.invert_param->mu = -quda_input.mg_setup_2kappamu/2.0/g_kappa;
-        tm_debug_printf(0,0,"# TM_QUDA: Generating MG Setup with mu = %.12f instead of %.12f\n", 
-                            -quda_mg_param.invert_param->mu,
-                            -save_mu);
-        quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
-        // and now we switch to the mu value for the next solve
-        quda_mg_param.invert_param->mu = save_mu;
-        updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
-      } else {
-        quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
-      }
-      
-      inv_param.preconditioner = quda_mg_preconditioner;
-      // the setup was reset, set the quda_mg_setup_state
-      set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
-      tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup took %.3f seconds\n", gettime()-atime);
-    } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_UPDATE )  {
-      tm_debug_printf(0,0,"# TM_QUDA: Updating MG Preconditioner Setup for gauge %f\n", quda_gauge_state.gauge_id);
-#ifdef TM_QUDA_EXPERIMENTAL
-      if( quda_input.mg_eig_preserve_deflation == QUDA_BOOLEAN_YES ){
-        tm_debug_printf(0,0,"# TM_QUDA: Deflation subspace for gauge %f will be re-used!\n", quda_gauge_state.gauge_id);
-      }
-#endif
-      double atime = gettime();
-      updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
-      // if the precondioner was disabled because we switched solvers from MG to some other
-      // solver, re-enable it here
-      inv_param.preconditioner = quda_mg_preconditioner;
-      tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup Update took %.3f seconds\n", gettime()-atime);
-     } else {
-      // if the precondioner was disabled because we switched solvers from MG to some other
-      // solver, re-enable it here
-      inv_param.preconditioner = quda_mg_preconditioner;
-      tm_debug_printf(0,0,"# TM_QUDA: Reusing MG Preconditioner Setup for gauge %f\n", quda_gauge_state.gauge_id);
-    }
-  } else {
-    // if we were in an MG solve before and now switch to some other solver, we need
-    // to disable the preconditioner (it will be re-enabled the next time the MG is used) 
-    if(inv_param.preconditioner != NULL) inv_param.preconditioner = NULL;
-  }
-  
-  if(g_proc_id == 0 && g_debug_level > 3 && inv_param.inv_type_precondition == QUDA_MG_INVERTER){
-    printf("--------------- MG InvertParam ------------------\n");
-    printQudaInvertParam(quda_mg_param.invert_param);
-    printf("---------------- MG MultigridParam ------------------------\n");
-    printQudaMultigridParam(&quda_mg_param);
-    printf("----------------------------------------\n");
+    _updateQudaMultigridPreconditioner();
   }
 }
 
+_setMGInvertParam(QudaInvertParam * mg_inv_param, const QudaInvertParam * const inv_param){
+  // reset the mg_inv_param to start from a clean slate
+  (*mg_inv_param) = newQudaInvertParam();
 
-void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
-  QudaInvertParam *mg_inv_param = mg_param->invert_param;
-
-  // FIXME: we also want to do MG for the ND operator, perhaps
   mg_inv_param->Ls = 1;
   mg_inv_param->sp_pad = 0;
   mg_inv_param->cl_pad = 0;
 
-  // in the MG, the residual type should always be relative,
-  // otherwisethe solver fails to converge
-  // in the outer solver, we are still free to choose
-  // absolute or relative
   mg_inv_param->residual_type = QUDA_L2_RELATIVE_RESIDUAL;
 
   mg_inv_param->preserve_source = QUDA_PRESERVE_SOURCE_YES;
@@ -1711,9 +1628,62 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
 
   mg_inv_param->dagger = QUDA_DAG_NO;
 
-  mg_param->setup_type = QUDA_NULL_VECTOR_SETUP;
-  mg_param->pre_orthonormalize = QUDA_BOOLEAN_NO;
-  mg_param->post_orthonormalize = QUDA_BOOLEAN_YES;
+  mg_inv_param->verbosity = QUDA_SUMMARIZE;
+  if( g_debug_level >= 3 ){
+    mg_inv_param->verbosity = QUDA_VERBOSE;
+  }
+  mg_inv_param->verbosity_precondition = QUDA_SUMMARIZE;
+
+  // now copy over relevant stuff from the outer solver
+  
+  // only the symmetric operator may be coarsened, so this
+  // is what we use in the MG internal InvertParam
+  //
+  // when the outer solve is not matpc, we still do matpc internally
+  if( inv_param->matpc_type == QUDA_MATPC_ODD_ODD_ASYMMETRIC || inv_param->matpc_type == QUDA_MATPC_ODD_ODD ){
+    mg_inv_param->matpc_type = QUDA_MATPC_ODD_ODD;
+  } else if( inv_param->matpc_type == QUDA_MATPC_EVEN_EVEN_ASYMMETRIC || inv_param->matpc_type == QUDA_MATPC_EVEN_EVEN ||
+             inv_param->matpc_type == QUDA_MATPC_INVALID ) {
+    mg_inv_param->matpc_type = QUDA_MATPC_EVEN_EVEN;
+  }
+
+  // now set the relevant MG-invernal inverter parameters
+  mg_inv_param->inv_type = inv_param->inv_type;
+  mg_inv_param->tol = inv_param->tol;
+  mg_inv_param->maxiter = inv_param->maxiter;
+  mg_inv_param->reliable_delta = inv_param->reliable_delta;
+  mg_inv_param->mass_normalization = inv_param->mass_normalization;
+
+  mg_inv_param->cpu_prec = inv_param->cpu_prec;
+  mg_inv_param->cuda_prec = inv_param->cuda_prec;
+  mg_inv_param->cuda_prec_sloppy = inv_param->cuda_prec_sloppy;
+  mg_inv_param->cuda_prec_refinement_sloppy = inv_param->cuda_prec_refinement_sloppy;
+  mg_inv_param->cuda_prec_precondition = inv_param->cuda_prec_precondition;
+  mg_inv_param->cuda_prec_eigensolver = inv_param->cuda_prec_eigensolver;
+  
+  mg_inv_param->clover_cpu_prec = inv_param->clover_cpu_prec;
+  mg_inv_param->clover_cuda_prec = inv_param->clover_cuda_prec;
+  mg_inv_param->clover_cuda_prec_sloppy = inv_param->clover_cuda_prec_sloppy;
+  mg_inv_param->clover_cuda_prec_refinement_sloppy = inv_param->clover_cuda_prec_refinement_sloppy;
+  mg_inv_param->clover_cuda_prec_precondition = inv_param->clover_cuda_prec_precondition;
+  mg_inv_param->clover_cuda_prec_eigensolver = inv_param->clover_cuda_prec_eigensolver;
+  
+  mg_inv_param->clover_order = inv_param->clover_order;
+  mg_inv_param->gcrNkrylov = inv_param->gcrNkrylov;
+
+  mg_inv_param->dslash_type = inv_param->dslash_type;
+  mg_inv_param->twist_flavor = inv_param->twist_flavor;
+  mg_inv_param->mu = inv_param->mu;
+  mg_inv_param->kappa = inv_param->kappa;
+  mg_inv_param->clover_coeff = inv_param->clover_coeff;
+#ifdef TM_QUDA_EXPERIMENTAL
+  mg_inv_param->tm_rho = inv_param->tm_rho;
+#endif
+}
+
+void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
+  QudaInvertParam * mg_inv_param = mg_param->invert_param;
+  _setMGInvertParam(mg_inv_param, &inv_param);
 
 #ifdef TM_QUDA_EXPERIMENTAL
   mg_param->preserve_deflation = quda_input.mg_eig_preserve_deflation;
@@ -1931,12 +1901,6 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   // set file i/o parameters
   strcpy(mg_param->vec_infile, "");
   strcpy(mg_param->vec_outfile, "");
-
-  mg_inv_param->verbosity = QUDA_SUMMARIZE;
-  if( g_debug_level >= 3 ){
-    mg_inv_param->verbosity = QUDA_VERBOSE;
-  }
-  mg_inv_param->verbosity_precondition = QUDA_SUMMARIZE;;
 }
 
 int invert_eo_MMd_quda(spinor * const out,
@@ -2028,7 +1992,6 @@ int invert_eo_MMd_quda(spinor * const out,
 #ifdef TM_QUDA_EXPERIMENTAL
     inv_param.tm_rho = -inv_param.tm_rho;
 #endif
-
     if(solver_flag == MG){
       // flip the sign of the coarse operator and update the setup
       quda_mg_param.invert_param->mu = -quda_mg_param.invert_param->mu;
@@ -2039,7 +2002,6 @@ int invert_eo_MMd_quda(spinor * const out,
       set_quda_mg_setup_mu(&quda_mg_setup_state, -g_mu);
       tm_debug_printf(0,1,"# TM_QUDA: MG Preconditioner Setup Update took %.3f seconds\n", gettime()-atime);
     }
-    
     invertQuda(spinorOut, spinorOut, &inv_param);
     reorder_spinor_eo_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
   } else {
@@ -2226,87 +2188,3 @@ int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out
   return(iterations);
 }
 
-//// int invert_eo_MMd_quda_ref(spinor * const Even_new, spinor * const Odd_new,
-////                    spinor * const Even, spinor * const Odd,
-////                    const double precision, const int max_iter,
-////                    const int solver_flag, const int rel_prec,
-////                    const int even_odd_flag, solver_params_t solver_params,
-////                    SloppyPrecision sloppy_precision,
-////                    CompressionType compression) {
-////   // it returns if quda is already init
-////   _initQuda();
-//// 
-////   spinor ** solver_field = NULL;
-////   const int nr_sf = 2;
-////   init_solver_field(&solver_field, VOLUME, nr_sf);
-//// 
-////   convert_eo_to_lexic(solver_field[0],  Even, Odd);
-//// 
-////   // this is basically not necessary, but if we want to use an a nitial guess, it will be
-////   //  convert_eo_to_lexic(solver_field[1], Even_new, Odd_new);
-//// 
-////   void *spinorIn  = (void*)solver_field[0]; // source
-////   void *spinorOut = (void*)solver_field[1]; // solution
-//// 
-////   if ( rel_prec )
-////     inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
-////   else
-////     inv_param.residual_type = QUDA_L2_ABSOLUTE_RESIDUAL;
-//// 
-////   inv_param.kappa = g_kappa;
-//// 
-////   // figure out which BC to use (theta, trivial...)
-////   set_boundary_conditions(&compression);
-////   // set the sloppy precision of the mixed prec solver
-////   set_sloppy_prec(sloppy_precision);
-////   
-////   // load gauge after setting precision
-////   _loadGaugeQuda(compression);
-//// 
-////   // this will also construct the clover field and its inverse, if required
-////   // it will also run the MG setup
-////   _setOneFlavourSolverParam(g_kappa,
-////                             g_c_sw,
-////                             g_mu,
-////                             solver_flag,
-////                             even_odd_flag,
-////                             precision,
-////                             max_iter,
-////                             0, 0);
-////   // overriting parameters set in _setOneFlavourSolverParam
-////   inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION; 
-////   inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
-////   inv_param.matpc_type = QUDA_MATPC_ODD_ODD_ASYMMETRIC;
-////   
-//// 
-////   // reorder spinor
-////   reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0 );
-//// 
-////   // perform the inversion
-////   invertQuda(spinorOut, spinorIn, &inv_param);
-//// 
-//// 
-////   if( inv_param.verbosity > QUDA_SILENT )
-////     if(g_proc_id == 0)
-////       printf("# TM_QUDA: Done: %i iter / %g secs = %g Gflops\n",
-////              inv_param.iter, inv_param.secs, inv_param.gflops/inv_param.secs);
-//// 
-////   // number of CG iterations
-////   int iteration = inv_param.iter;
-//// 
-////   // reorder spinor
-////   // BaKo 20170901: not sure why the source was also re-ordered after inversion
-////   // we leave that commented out for now
-////   //reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, NULL );
-////   //convert_lexic_to_eo(Even,     Odd,     solver_field[0]);
-////   
-////   reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0 );
-////   convert_lexic_to_eo(Even_new, Odd_new, solver_field[1]);
-//// 
-////   finalize_solver(solver_field, nr_sf);
-//// 
-////   if(iteration >= max_iter)
-////     return(-1);
-//// 
-////   return(iteration);
-//// }
