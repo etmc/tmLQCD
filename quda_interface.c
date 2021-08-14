@@ -449,7 +449,7 @@ void _loadGaugeQuda( const int compression ) {
   
   // now copy and reorder
 #ifdef TM_USE_OMP
-  #pragma omp for
+  #pragma omp for collapse(4)
 #endif
   for( int x0=0; x0<T; x0++ )
     for( int x1=0; x1<LX; x1++ )
@@ -524,7 +524,7 @@ void reorder_spinor_toQuda( double* sp, QudaPrecision precision, int doublet ) {
 
   // now copy and reorder from tempSpinor to spinor
 #ifdef TM_USE_OMP
-  #pragma omp parallel for
+  #pragma omp parallel for collapse(4)
 #endif
   for( int x0=0; x0<T; x0++ )
     for( int x1=0; x1<LX; x1++ )
@@ -563,7 +563,7 @@ void reorder_spinor_fromQuda( double* sp, QudaPrecision precision, int doublet) 
 
   // now copy and reorder from tempSpinor to spinor
 #ifdef TM_USE_OMP
-  #pragma omp parallel for
+  #pragma omp parallel for collapse(4)
 #endif
   for( int x0=0; x0<T; x0++ )
     for( int x1=0; x1<LX; x1++ )
@@ -605,7 +605,7 @@ void reorder_spinor_eo_toQuda(double* sp, QudaPrecision precision, int doublet, 
 
   // now copy and reorder from tempSpinor to spinor
 #ifdef TM_USE_OMP
-  #pragma omp parallel for
+  #pragma omp parallel for collapse(4)
 #endif
   for( int x0=0; x0<T; x0++ )
     for( int x1=0; x1<LX; x1++ )
@@ -633,13 +633,6 @@ void reorder_spinor_eo_toQuda(double* sp, QudaPrecision precision, int doublet, 
                 }
               }
             }
-            //if( doublet ) {
-            //  memcpy(&(sp[24*(j/2)]),        &(tempSpinor[24*tm_idx/2         ]), 24*sizeof(double));
-            //  memcpy(&(sp[24*(j+VOLUME)/2]), &(tempSpinor[24*(tm_idx+VOLUME)/2]), 24*sizeof(double));
-            //}
-            //else {
-            //  memcpy( &(sp[24*(j/2)]), &(tempSpinor[24*tm_idx/2]), 24*sizeof(double));
-            //}
           }
         }
 
@@ -661,7 +654,7 @@ void reorder_spinor_eo_fromQuda( double* sp, QudaPrecision precision, int double
 
   // now copy and reorder from tempSpinor to spinor
 #ifdef TM_USE_OMP
-  #pragma omp parallel for
+  #pragma omp parallel for collapse(4)
 #endif
   for( int x0=0; x0<T; x0++ )
     for( int x1=0; x1<LX; x1++ )
@@ -689,12 +682,6 @@ void reorder_spinor_eo_fromQuda( double* sp, QudaPrecision precision, int double
                 }
               }
             }
-            //if( doublet ) {
-            //  memcpy(&(sp[24*tm_idx/2]),          &(tempSpinor[24*j/2         ]), 24*sizeof(double));
-            //  memcpy(&(sp[24*(tm_idx+VOLUME)/2]), &(tempSpinor[24*(j+VOLUME)/2]), 24*sizeof(double));
-            //} else {
-            //  memcpy( &(sp[24*tm_idx/2]), &(tempSpinor[24*(j/2)]), 24*sizeof(double));
-            //}
           }
         }
 
