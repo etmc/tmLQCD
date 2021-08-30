@@ -20,3 +20,8 @@ invert
 offline_measurement
 lib/
 benchmark
+*.data
+*.para
+*.dat
+*.out
+.nstore_counter
