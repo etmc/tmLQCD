@@ -225,8 +225,12 @@
 // by default, we always reset the MG setup
 // in the HMC, this needs to be set to a reasonable value
 // depending on the length of the integration step
-#define _default_quda_mg_reset_setup_threshold 2*DBL_EPSILON
+#define _default_quda_mg_reset_setup_mdu_threshold 2*DBL_EPSILON
 #define _default_quda_mg_reuse_setup_mu_threshold 2*DBL_EPSILON
+// in the HMC, we can evolve the MG setup by refreshing it
+// at regular intervals as specified by this parameter 
+#define _default_quda_mg_refresh_setup_mdu_threshold 2*DBL_EPSILON
+
 
 // gradient flow measurement step size and maximum flow time
 #define _default_gf_eps 0.01
