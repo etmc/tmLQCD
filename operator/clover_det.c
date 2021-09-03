@@ -52,6 +52,7 @@
 #include "operator/clovertm_operators.h"
 #include "operator/clover_leaf.h"
 #include "operator/clover_inline.h"
+#include "gettime.h"
 
 #define nm1 5
 void six_det(_Complex double* const rval, _Complex double a[6][6])
