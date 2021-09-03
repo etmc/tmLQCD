@@ -423,6 +423,7 @@ void _loadGaugeQuda( const int compression ) {
     freeGaugeQuda();
     reset_quda_gauge_state(&quda_gauge_state);
   }
+  double atime = gettime();
 
   if( inv_param.verbosity > QUDA_SILENT ){
     if(g_proc_id == 0) {
@@ -514,6 +515,10 @@ void _loadGaugeQuda( const int compression ) {
 
   loadGaugeQuda((void*)gauge_quda, &gauge_param);
   set_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0);
+
+  if(g_proc_id==0 && g_debug_level > 0 ) {
+    printf("# TM_QUDA: Time for loadGaugeQuda: %.4e\n",gettime()-atime);
+  }
 }
 
 // reorder spinor to QUDA format
