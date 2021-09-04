@@ -300,16 +300,17 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     diff(temp[0], temp[0], Q, VOLUME/2);
     double diffnorm = square_norm(temp[0], VOLUME/2, 1); 
     double resnorm  = square_norm(P, VOLUME/2, 1); 
+    double rel_nrm = rel_prec ? square_norm(Q, VOLUME/2, 1) : 1.0;
     if( g_proc_id == 0 ){
       // checking the norm of the result to make sure it's not zero
       printf("# solve_degenerate result norm: %e\n", resnorm);
+      printf("# solve_degenerate target residual: %e\n", eps_sq * rel_nrm);
       printf("# solve_degenerate residual check norm: %e\n", diffnorm);
       fflush(stdout);
     }
     if( g_strict_residual_check ){
-      double rel_nrm = rel_prec ? square_norm(Q, VOLUME/2, 1) : 1.0;
-      if( diffnorm > 1.5*(eps_sq / rel_nrm) ){
-        fatal_error("Residual norm exceeds target by more than a factor of 1.5!", "solve_degenerate");
+      if( diffnorm > 1.1*(eps_sq * rel_nrm) ){
+        fatal_error("Residual norm exceeds target by more than a factor of 1.1!", "solve_degenerate");
       }
     }
   }
@@ -490,7 +491,7 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
     if( solver_params->M_psi == Qsw_pm_psi ) 
       f = Qsw_pm_psi_shift;
     
-    int src_nrm = solver_params->rel_prec && g_strict_residual_check ? square_norm(Q, VOLUME/2, 1) : 1.0;
+    int rel_nrm = solver_params->rel_prec && g_strict_residual_check ? square_norm(Q, VOLUME/2, 1) : 1.0;
     int check_fail = 0;
     for( int shift = 0; shift < solver_params->no_shifts; shift++){
       g_shift = solver_params->shifts[shift]*solver_params->shifts[shift];
@@ -504,16 +505,11 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
       g_shift = _default_g_shift;
 
       if( g_strict_residual_check ){
-        // FIXME there seems to be an issue with the QUDA multi-shift solver
-        // which appears to have issues satisfying our strict residual bound
-        // for the higher order terms of the RATCOR monomial
-        // we use a fudge factor of **100** to make it pass but this should
-        // be looked into...
-        check_fail += diffnorm > 100*( solver_params->squared_solver_prec / src_nrm );
+        check_fail += diffnorm > 1.1*( solver_params->squared_solver_prec * rel_nrm );
       }
     }
     if( g_strict_residual_check && check_fail > 0 ){
-      fatal_error("Residual norm for at least one shift exceeds target by more than a factor of 100!", "solve_mms_tm");
+      fatal_error("Residual norm for at least one shift exceeds target by more than a factor of 1.1!", "solve_mms_tm");
     }
   }
   if(g_debug_level > 2 || g_strict_residual_check ||
@@ -740,7 +736,7 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
     if( solver_params->M_ndpsi == Qsw_pm_ndpsi ) 
       f = Qsw_pm_ndpsi_shift;
     
-    int src_nrm = solver_params->rel_prec && g_strict_residual_check ? 
+    int rel_nrm = solver_params->rel_prec && g_strict_residual_check ? 
                     square_norm(Qup, VOLUME/2, 1) + square_norm(Qdn, VOLUME/2, 1) : 1.0;
     int check_fail = 0;
     for( int shift = 0; shift < solver_params->no_shifts; shift++){
@@ -756,16 +752,11 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
       g_shift = _default_g_shift;
 
       if( g_strict_residual_check ){
-        // FIXME there seems to be an issue with the QUDA multi-shift solver
-        // which appears to have issues satisfying our strict residual bound
-        // for the higher order terms of the RATCOR monomial
-        // we use a fudge factor of **100** to make it pass but this should
-        // be looked into...
-        check_fail += diffnorm > 100*( solver_params->squared_solver_prec / src_nrm );
+        check_fail += diffnorm > 1.1*( solver_params->squared_solver_prec * rel_nrm );
       }
     }
     if( g_strict_residual_check && check_fail > 0 ){
-      fatal_error("Residual norm for at least one shift exceeds target by more than a factor of 100!", "solve_mms_nd");
+      fatal_error("Residual norm for at least one shift exceeds target by more than a factor of 1.1!", "solve_mms_nd");
     }
   }
   if(g_debug_level > 2 || g_strict_residual_check ||
