@@ -42,6 +42,8 @@
 void update_momenta(int * mnllist, double step, const int no, 
 		    hamiltonian_field_t * const hf) {
 
+  tm_stopwatch_push(&g_timers);
+
 #ifdef TM_USE_OMP
 #pragma omp parallel for
 #endif
@@ -70,6 +72,8 @@ void update_momenta(int * mnllist, double step, const int no,
       _su3adj_minus_const_times_su3adj(hf->momenta[i][mu], step, hf->derivative[i][mu]); 
     }
   }
+
+  tm_stopwatch_pop(&g_timers, 0, 0, "", __func__);
 
   return;
 }

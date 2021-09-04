@@ -83,7 +83,6 @@ int main(int argc, char *argv[])
   double plaquette_energy;
 
   init_critical_globals(TM_PROGRAM_OFFLINE_MEASUREMENT);  
-  init_global_states();
 
 #ifdef _KOJAK_INST
 #pragma pomp inst init

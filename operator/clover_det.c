@@ -114,7 +114,7 @@ void six_det(_Complex double* const rval, _Complex double a[6][6])
 
 
 double sw_trace(const int ieo, const double mu) {
-  double atime = gettime();
+  tm_stopwatch_push(&g_timers);
   double ALIGN res = 0.0;
 #ifdef TM_USE_MPI
   double ALIGN mres;
@@ -184,10 +184,10 @@ double sw_trace(const int ieo, const double mu) {
 
 #ifdef TM_USE_MPI
   MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  tm_stopwatch(0, 2, "", __func__, atime);
+  tm_stopwatch_pop(&g_timers, 0, 2, "", __func__);
   return(mres);
 #else
-  tm_stopwatch(0, 2, "", __func__, atime);
+  tm_stopwatch_pop(&g_timers, 0, 2, "", __func__);
   return(res);
 #endif
 }
@@ -203,7 +203,7 @@ double sw_trace(const int ieo, const double mu) {
 // if eps is set to zero
 
 double sw_trace_nd(const int ieo, const double mu, const double eps) {
-  double atime = gettime();
+  tm_stopwatch_push(&g_timers);
   double ALIGN res = 0.0;
 #ifdef TM_USE_MPI
   double ALIGN mres;
@@ -276,10 +276,10 @@ double sw_trace_nd(const int ieo, const double mu, const double eps) {
 
 #ifdef TM_USE_MPI
   MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  tm_stopwatch(0, 2, "", __func__, atime);
+  tm_stopwatch_pop(&g_timers, 0, 2, "", __func__);
   return(mres);
 #else
-  tm_stopwatch(0, 2, "", __func__, atime);
+  tm_stopwatch_pop(&g_timers, 0, 2, "", __func__);
   return(res);
 #endif
 }

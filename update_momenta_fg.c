@@ -51,6 +51,7 @@
 
 inline void calculate_fg(const double step_fg,
                          hamiltonian_field_t * const hf){
+  tm_stopwatch_push(&g_timers);
 #ifdef TM_USE_OMP
 #define static
 #pragma omp parallel
@@ -88,10 +89,12 @@ inline void calculate_fg(const double step_fg,
   } // OpenMP parallel section closing brace
 #undef static
 #endif
+  tm_stopwatch_pop(&g_timers, 0, 0, "", __func__);
 }
 
 inline void fg_update_momenta_reset_gaugefield(const double step,
                                                hamiltonian_field_t * const hf){
+  tm_stopwatch_push(&g_timers);
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -116,6 +119,7 @@ inline void fg_update_momenta_reset_gaugefield(const double step,
 #ifdef TM_USE_OMP
   } // OpenMP parallel section closing brace
 #endif
+  tm_stopwatch_pop(&g_timers, 0, 0, "", __func__);
 }
 
 /*******************************************************
@@ -127,8 +131,7 @@ inline void fg_update_momenta_reset_gaugefield(const double step,
  *******************************************************/
 void update_momenta_fg(int * mnllist, double step, const int no,
 		       hamiltonian_field_t * const hf, double step0) {
-  double atime, etime;
-  atime = gettime();
+  tm_stopwatch_push(&g_timers);
 #ifdef DDalphaAMG
   MG_update_gauge(0.0);
 #endif
@@ -227,10 +230,6 @@ void update_momenta_fg(int * mnllist, double step, const int no,
   g_update_gauge_copy = 1;
   g_update_gauge_copy_32 = 1;
 
-
-  etime = gettime();
-  if(g_debug_level > 1 && g_proc_id == 0) {
-    printf("# Time force-gradient gauge update: %e s\n", etime-atime); 
-  } 
+  tm_stopwatch_pop(&g_timers, 0, 0, "", __func__);
   return;
 }
