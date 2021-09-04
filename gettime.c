@@ -38,6 +38,7 @@
 #endif
 
 #include "gettime.h"
+#include "fatal_error.h"
 #include "global.h"
 
 double gettime(void) {

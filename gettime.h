@@ -23,12 +23,14 @@
 
 #define TM_MAX_TIMING_LEVELS 100
 
-#include "fatal_error.h"
-
 /* gettime provides a time measurement with the BGL real time ticker,
    MPI_Wtime, clock_gettime and clock in decreasing order of preference
    depending on availability. Except for clock(), all these measurements
    are good representations of walltime */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 double gettime(void);
 
@@ -51,6 +53,10 @@ void tm_stopwatch_push(tm_timers_t * const timers);
 void tm_stopwatch_pop(tm_timers_t * const timers,
     const int proc_id, const int dbg_level_threshold,
     const char * const prefix, const char * const name);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _GETTIME_H */
 
