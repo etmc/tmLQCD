@@ -93,7 +93,7 @@ void tm_stopwatch_pop(tm_timers_t * const timers,
     fatal_error("attempted pop would let timers->lvl drop below the lowest possible value", "tm_stopwatch_pop");
   }
   if( g_proc_id == proc_id && g_debug_level >= dbg_level_threshold ){
-    printf("# %s Time for %s %e s level: %d proc_id: %d\n", prefix, name, gettime()-timers->t[timers->lvl], 
+    printf("# %s: Time for %s %e s level: %d proc_id: %d\n", prefix, name, gettime()-timers->t[timers->lvl], 
         timers->lvl, g_proc_id);
   }
   (timers->lvl)--;

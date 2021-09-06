@@ -51,12 +51,14 @@
 #include "su3adj.h"
 #include "operator/clovertm_operators.h"
 #include "operator/clover_leaf.h"
+#include "gettime.h"
 
 // now we sum up all term from the clover term
 // after sw_spinor and sw_deriv have been called
 
 void sw_all(hamiltonian_field_t * const hf, const double kappa, 
 	    const double c_sw) {
+  tm_stopwatch_push(&g_timers);
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -203,5 +205,6 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa,
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return;
 }
