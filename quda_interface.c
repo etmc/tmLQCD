@@ -1981,7 +1981,9 @@ int invert_eo_MMd_quda(spinor * const out,
     reorder_spinor_eo_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
     // we multiply by gamma5 here to obtain the inverse of \hat{Q}^{-}
     // in the next solve
+    tm_stopwatch_push(&g_timers);
     mul_gamma5((spinor*)spinorOut, VOLUME/2);
+    tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA", "mul_gamma5");
     reorder_spinor_eo_toQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
    
     // now we invert \hat{M}^{-} to get the inverse of \hat{Q}^{-} in the end
