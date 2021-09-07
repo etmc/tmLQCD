@@ -319,18 +319,20 @@ void check_C_ndpsi(spinor * const k_up, spinor * const k_dn,
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     // Q_h * tau^1 - i nu_j
     // this needs phmc_Cpol = 1 to work!
-    tm_stopwatch_push(&g_timers);
     if(mnl->type == NDCLOVERRATCOR || mnl->type == NDCLOVERRAT) {
+      tm_stopwatch_push(&g_timers);
       Qsw_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
 			       g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
 			       I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
+      tm_stopwatch_pop(&g_timers, 0, 1, __func__, "Qsw_tau1_sub_const_ndpsi");
     }
     else {
+      tm_stopwatch_push(&g_timers);
       Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
 			     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
 			     I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
+      tm_stopwatch_pop(&g_timers, 0, 1, __func__, "Q_tau1_sub_const_ndpsi");
     }
-    tm_stopwatch_pop(&g_timers, 0, 1, __func__, "Q[sw]_tau1_sub_const_ndpsi");
     assign_add_mul(k_up, g_chi_up_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
     assign_add_mul(k_dn, g_chi_dn_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
   }
@@ -351,18 +353,20 @@ void check_C_ndpsi(spinor * const k_up, spinor * const k_dn,
 	       k_up, k_dn, solver_params);
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     // Q_h * tau^1 + i nu_j
-    tm_stopwatch_push(&g_timers);
     if(mnl->type == NDCLOVERRATCOR || mnl->type == NDCLOVERRAT) {
+      tm_stopwatch_push(&g_timers);
       Qsw_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
 			     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
 			     -I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
+      tm_stopwatch_pop(&g_timers, 0, 1, __func__, "Qsw_tau1_sub_const_ndpsi");
     }
     else {
+      tm_stopwatch_push(&g_timers);
       Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
 			     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
 			     -I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
+      tm_stopwatch_pop(&g_timers, 0, 1, __func__, "Q_tau1_sub_const_ndpsi");
     }
-    tm_stopwatch_pop(&g_timers, 0, 1, __func__, "Q[sw]_tau1_sub_const_ndpsi");
     assign_add_mul(k_up, g_chi_up_spinor_field[mnl->rat.np], -I*mnl->rat.rnu[j], VOLUME/2);
     assign_add_mul(k_dn, g_chi_dn_spinor_field[mnl->rat.np], -I*mnl->rat.rnu[j], VOLUME/2);
   }

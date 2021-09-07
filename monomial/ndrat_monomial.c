@@ -153,16 +153,18 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
     deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1],
 	     hf, mnl->rat.rmu[j]*mnl->forcefactor);
 
-    tm_stopwatch_push(&g_timers);
     if(mnl->type == NDCLOVERRAT) {
       /* Get the even parts Y_j,e */
+      tm_stopwatch_push(&g_timers);
       H_eo_sw_ndpsi(mnl->w_fields[4], mnl->w_fields[5], mnl->w_fields[0], mnl->w_fields[1]);
+      tm_stopwatch_pop(&g_timers, 0, 1, __func__, "H_eo_sw_ndpsi");
     }
     else {
       /* Get the even parts Y_j,e */
+      tm_stopwatch_push(&g_timers);
       H_eo_tm_ndpsi(mnl->w_fields[4], mnl->w_fields[5], mnl->w_fields[0], mnl->w_fields[1], EO);
+      tm_stopwatch_pop(&g_timers, 0, 1, __func__, "H_eo_tm_ndpsi");
     }
-    tm_stopwatch_pop(&g_timers, 0, 1, __func__, "H_eo_[sw,tm]_ndpsi");
 
     /* X_j,o \delta M_oe Y_j,e */
     deriv_Sb(OE, g_chi_up_spinor_field[j], mnl->w_fields[4], 
