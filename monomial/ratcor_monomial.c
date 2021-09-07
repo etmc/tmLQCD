@@ -87,7 +87,7 @@ void ratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
   tm_stopwatch_push(&g_timers);
   random_spinor_field_eo(mnl->pf, mnl->rngrepro, RN_GAUSS);
   mnl->energy0 = square_norm(mnl->pf, VOLUME/2, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__, "random_energy0");
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "random_energy0");
 
   mnl->solver_params.max_iter = mnl->maxiter;
   mnl->solver_params.squared_solver_prec = mnl->accprec;
@@ -167,7 +167,7 @@ double ratcor_acc(const int id, hamiltonian_field_t * const hf) {
 
   tm_stopwatch_push(&g_timers);
   mnl->energy1 = scalar_prod_r(mnl->pf, mnl->w_fields[4], VOLUME/2, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__, "scalar_prod_r");
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "scalar_prod_r");
   if(g_proc_id == 0) {
     if(g_debug_level > 3) {
       printf("called ratcor_acc for id %d dH = %1.10e\n", id, mnl->energy1 - mnl->energy0);
@@ -209,12 +209,12 @@ double apply_Z_psi(spinor * const k_up,	spinor * const l_up,
   // apply Q^2 
   tm_stopwatch_push(&g_timers);
   solver_params->M_psi(k_up, g_chi_up_spinor_field[mnl->rat.np]);
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__, "M_psi");
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "M_psi");
   // compute the residue
   diff(k_up, k_up, l_up, VOLUME/2);
   tm_stopwatch_push(&g_timers);
   double resi = square_norm(k_up, VOLUME/2, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__, "square_norm");
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "square_norm");
   
   if(g_debug_level > 2 && g_proc_id == 0) {
     printf("# RATCOR: ||Z * phi|| = %e\n", resi);
@@ -277,7 +277,7 @@ void check_C_psi(spinor * const k_up, spinor * const l_up,
   diff(k_up, k_up, l_up, VOLUME/2);
   tm_stopwatch_push(&g_timers); 
   double resi = square_norm(k_up, VOLUME/2, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__, "square_norm");
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "square_norm");
   if(g_proc_id == 0) printf("|| (1-C^dagger R C)*phi|| = %e\n", resi);
   tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return;

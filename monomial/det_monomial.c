@@ -83,20 +83,20 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
     /* Y_o -> w_fields[0]  */
     tm_stopwatch_push(&g_timers);
     mnl->Qm(mnl->w_fields[0], mnl->w_fields[1]);
-    tm_stopwatch_pop(&g_timers, 0, 1, __func__, "Qm");
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "Qm");
     
     /* apply Hopping Matrix M_{eo} */
     /* to get the even sites of X_e */
     tm_stopwatch_push(&g_timers);
     H_eo_tm_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EO, -1.);
-    tm_stopwatch_pop(&g_timers, 0, 1, __func__, "H_eo_tm_inv_psi");
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "H_eo_tm_inv_psi");
     /* \delta Q sandwitched by Y_o^\dagger and X_e */
     deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
     
     /* to get the even sites of Y_e */
     tm_stopwatch_push(&g_timers);
     H_eo_tm_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1);
-    tm_stopwatch_pop(&g_timers, 0, 1, __func__, "H_eo_tm_inv_psi");
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "H_eo_tm_inv_psi");
     /* \delta Q sandwitched by Y_e^\dagger and X_o */
     deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor);
   } 
@@ -122,7 +122,7 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
       /* Y -> w_fields[0]  */
       tm_stopwatch_push(&g_timers);
       Q_minus_psi(mnl->w_fields[0], mnl->w_fields[1]);
-      tm_stopwatch_pop(&g_timers, 0, 1, __func__, "Q_minus_psi");
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "Q_minus_psi");
       
     }
     else {
@@ -176,11 +176,11 @@ void det_heatbath(const int id, hamiltonian_field_t * const hf) {
     tm_stopwatch_push(&g_timers);
     random_spinor_field_eo(mnl->w_fields[0], mnl->rngrepro, RN_GAUSS);
     mnl->energy0 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
-    tm_stopwatch_pop(&g_timers, 0, 1, __func__, "random_energy0");
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "random_energy0");
 
     tm_stopwatch_push(&g_timers);
     mnl->Qp(mnl->pf, mnl->w_fields[0]);
-    tm_stopwatch_pop(&g_timers, 0, 1, __func__, "Qp");
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "Qp");
 
     
     chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
@@ -194,11 +194,11 @@ void det_heatbath(const int id, hamiltonian_field_t * const hf) {
     tm_stopwatch_push(&g_timers);
     random_spinor_field_lexic(mnl->w_fields[0], mnl->rngrepro,RN_GAUSS);
     mnl->energy0 = square_norm(mnl->w_fields[0], VOLUME, 1);
-    tm_stopwatch_pop(&g_timers, 0, 1, __func__, "random_energy0");
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "random_energy0");
 
     tm_stopwatch_push(&g_timers);
     Q_plus_psi(mnl->pf, mnl->w_fields[0]);
-    tm_stopwatch_pop(&g_timers, 0, 1, __func__, "Q_plus_psi");
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "Q_plus_psi");
     
     chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME);
@@ -238,7 +238,7 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
       tm_stopwatch_push(&g_timers);
       /* Compute the energy contr. from second field */
       mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
-      tm_stopwatch_pop(&g_timers, 0, 1, __func__, "energy1");
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "energy1");
     } else {
       chrono_guess(mnl->w_fields[0], mnl->pf, mnl->csg_field, mnl->csg_index_array,
       mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
@@ -247,11 +247,11 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
       tm_stopwatch_push(&g_timers);
       mnl->Qm(mnl->w_fields[1], mnl->w_fields[0]);
       /* Compute the energy contr. from first field */
-      tm_stopwatch_pop(&g_timers, 0, 1, __func__, "Qm");
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "Qm");
 
       tm_stopwatch_push(&g_timers);
       mnl->energy1 = square_norm(mnl->w_fields[1], VOLUME/2, 1);
-      tm_stopwatch_pop(&g_timers, 0, 1, __func__, "energy1");
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "energy1");
     }
     g_sloppy_precision_flag = save_sloppy;
   }
@@ -266,11 +266,11 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
       tm_stopwatch_push(&g_timers);
       Q_minus_psi(mnl->w_fields[0], mnl->w_fields[1]);
       /* Compute the energy contr. from first field */
-      tm_stopwatch_pop(&g_timers, 0, 1, __func__, "Q_minus_psi");
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "Q_minus_psi");
       
       tm_stopwatch_push(&g_timers);
       mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME, 1);
-      tm_stopwatch_pop(&g_timers, 0, 1, __func__, "energy1");
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "energy1");
     }
     else {
       chrono_guess(mnl->w_fields[0], mnl->pf, mnl->csg_field, mnl->csg_index_array,
@@ -280,7 +280,7 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
 				     VOLUME,  &Q_plus_psi, mnl->solver);
       tm_stopwatch_push(&g_timers);
       mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME, 1);
-      tm_stopwatch_pop(&g_timers, 0, 1, __func__, "energy1");
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "energy1");
     }
   }
   mnl_backup_restore_globals(TM_RESTORE_GLOBALS);

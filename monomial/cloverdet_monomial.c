@@ -176,11 +176,11 @@ void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
   }
   tm_stopwatch_push(&g_timers);
   mnl->energy0 = square_norm(mnl->w_fields[0], N, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__, "energy0_square_norm");
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "energy0_square_norm");
   
   tm_stopwatch_push(&g_timers);
   mnl->Qp(mnl->pf, mnl->w_fields[0]);
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__, "Qp");
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "Qp");
 
   chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
                       mnl->csg_N, &mnl->csg_n, N);
@@ -232,13 +232,13 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
 				     g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver);
       tm_stopwatch_push(&g_timers); 
       mnl->Qm(mnl->w_fields[0], mnl->w_fields[0]);
-      tm_stopwatch_pop(&g_timers, 0, 1, __func__, "Qm");
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "Qm");
   }
   g_sloppy_precision_flag = save_sloppy;
   /* Compute the energy contr. from first field */
   tm_stopwatch_push(&g_timers);
   mnl->energy1 = square_norm(mnl->w_fields[0], N, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__, "energy1_square_norm"); 
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "energy1_square_norm"); 
 
   mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
   if(g_proc_id == 0) {
