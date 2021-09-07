@@ -36,7 +36,7 @@
 #include "phmc.h"
 #include "solver/matrix_mult_typedef_nd.h"
 #include "Ptilde_nd.h"
-
+#include "gettime.h"
 
 #define PI 3.141592653589793
 
@@ -101,6 +101,7 @@ void Ptilde_cheb_coefs(double aa, double bb, double dd[], int n, double exponent
 
 void Ptilde_ndpsi(spinor *R_s, spinor *R_c, double *dd, int n, 
 		  spinor *S_s, spinor *S_c, matrix_mult_nd Qsq) {
+  tm_stopwatch_push(&g_timers);
   
   int j;
   double fact1, fact2, temp1, temp2, temp3, temp4;
@@ -200,6 +201,7 @@ void Ptilde_ndpsi(spinor *R_s, spinor *R_c, double *dd, int n,
   free(auxc_);
   free(aux2c_);
   free(aux3c_);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
 }
 
 double chebtilde_eval(int M, double *dd, double s){
@@ -239,6 +241,7 @@ void degree_of_Ptilde(int * _degree, double ** coefs,
 		      const double EVMin, const double EVMax,
 		      const int sloppy_degree, const double acc, 
 		      matrix_mult_nd Qsq, const int repro) {
+  tm_stopwatch_push(&g_timers);
   int i, j;
   double temp, temp2;
   int degree;
@@ -347,5 +350,6 @@ void degree_of_Ptilde(int * _degree, double ** coefs,
   free(sc_);
   free(auxc_);
   free(aux2c_);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return;
 }

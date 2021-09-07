@@ -61,6 +61,9 @@
 #include "solver/generate_dfl_subspace.h"
 #include "io/gauge.h"
 #include "meas/measurements.h"
+#ifdef TM_USE_QUDA
+#include "quda_interface.h"
+#endif
 
 #define CONF_FILENAME_LENGTH 500
 

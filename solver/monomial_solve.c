@@ -1,7 +1,7 @@
 /***********************************************************************
  *
  * Copyright (C) 2014 Florian Burger
- *               2017 Bartosz Kostrzewa
+ *               2017,2018,2019,2020,2021 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -51,6 +51,7 @@
 #include "linalg/square_norm.h"
 #include "linalg/mul_r_gamma5.h"
 #include "gamma.h"
+#include "gettime.h"
 // for the non-degenerate operator normalisation
 #include "phmc.h"
 #include "solver/solver.h"
@@ -99,6 +100,7 @@ extern int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
 int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_params,
                      const int max_iter, double eps_sq, const int rel_prec, 
                      const int N, matrix_mult f, int solver_type){
+  tm_stopwatch_push(&g_timers);
   int iteration_count = 0;
 
   // temporary field required by the QPhiX solve or by residual check
@@ -118,7 +120,9 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
 
     int QmQp = (f == Qsw_pm_psi || f == Qtm_pm_psi);
 
+    tm_stopwatch_push(&g_timers);
     gamma5(temp[0], Q, VOLUME/2);
+    tm_stopwatch_pop(&g_timers, 0, 1, __func__, "gamma5");
     iteration_count = invert_eo_MMd_quda(P,   //spinor * const Odd_new,
                                          temp[0],
                                          eps_sq, // Marco: check this:   const double precision, 
@@ -131,7 +135,9 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
                                          QmQp);
     
     if( !(solver_type == MG || solver_type == BICGSTAB) ){
+      tm_stopwatch_push(&g_timers);
       mul_gamma5(P, VOLUME/2);
+      tm_stopwatch_pop(&g_timers, 0, 1, __func__, "mul_gamma5");
     }
 
     //// //////////////////////////////////////////////////////////////// test to be removed
@@ -263,7 +269,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
       if(f==Qtm_pm_psi){   
         iteration_count = msolver_fp(P, Q, solver_params, max_iter, eps_sq, rel_prec, N, f, &Qtm_pm_psi_32);
       } else if(f==Q_pm_psi){     
-	iteration_count = msolver_fp(P, Q, solver_params, max_iter, eps_sq, rel_prec, N, f, &Q_pm_psi_32);
+        iteration_count = msolver_fp(P, Q, solver_params, max_iter, eps_sq, rel_prec, N, f, &Q_pm_psi_32);
       } else if(f==Qsw_pm_psi){
         copy_32_sw_fields();
         iteration_count = msolver_fp(P, Q, solver_params, max_iter, eps_sq, rel_prec, N, f, &Qsw_pm_psi_32);
@@ -277,7 +283,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     iteration_count =  cg_her(P, Q, max_iter, eps_sq, rel_prec, N, f);
   }
   else if(solver_type == BICGSTAB){
-     iteration_count =  bicgstab_complex(P, Q, max_iter, eps_sq, rel_prec, N, f);     
+    iteration_count =  bicgstab_complex(P, Q, max_iter, eps_sq, rel_prec, N, f);     
   }
 #ifdef DDalphaAMG 
   else if (solver_type == MG)
@@ -318,12 +324,14 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
       solver_params.external_inverter == QPHIX_INVERTER  || solver_params.external_inverter == QUDA_INVERTER){
     finalize_solver(temp, nr_sf);
   }
-
+  
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return(iteration_count);
 }
 
 int solve_mms_tm(spinor ** const P, spinor * const Q,
-                 solver_params_t * solver_params){ 
+                 solver_params_t * solver_params){
+  tm_stopwatch_push(&g_timers); 
   int iteration_count = 0; 
 
   solver_params->use_initial_guess = 0;
@@ -353,7 +361,9 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
 
 #ifdef TM_USE_QUDA
   if ( solver_params->external_inverter == QUDA_INVERTER && solver_params->type != MG){
+    tm_stopwatch_push(&g_timers);
     gamma5(temp[0], Q, VOLUME/2);
+    tm_stopwatch_pop(&g_timers, 0, 1, __func__, "gamma5");
     iteration_count = invert_eo_quda_oneflavour_mshift(P, temp[0],
                                                        solver_params->squared_solver_prec,
                                                        solver_params->max_iter,
@@ -363,9 +373,11 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
                                                        *solver_params,
                                                        solver_params->sloppy_precision,
                                                        solver_params->compression_type);
+    tm_stopwatch_push(&g_timers);
     for( int shift = 0; shift < solver_params->no_shifts; shift++){
       mul_gamma5(P[shift], VOLUME/2);
     }
+    tm_stopwatch_pop(&g_timers, 0, 1, __func__, "mshift_mul_gamma5");
   } else
 #endif
     if (solver_params->type == CGMMS){
@@ -517,13 +529,14 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
       (solver_params->external_inverter == QPHIX_INVERTER && solver_params->type != MG)){
     finalize_solver(temp, 1);
   }
-  
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__); 
   return(iteration_count);
 }
 
 int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn, 
                  spinor * const Qup, spinor * const Qdn, 
-                 solver_params_t * solver_params){ 
+                 solver_params_t * solver_params){
+  tm_stopwatch_push(&g_timers); 
   int iteration_count = 0; 
   solver_params->use_initial_guess = 0;
 
@@ -538,8 +551,10 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
 #ifdef TM_USE_QUDA
   if(solver_params->external_inverter == QUDA_INVERTER ){
     //  gamma5 (M.M^dagger)^{-1} gamma5 = [ Q(+mu,eps) Q(-mu,eps) ]^{-1}
+    tm_stopwatch_push(&g_timers);
     gamma5(temp[0], Qup, VOLUME/2);
     gamma5(temp[1], Qdn, VOLUME/2);
+    tm_stopwatch_pop(&g_timers, 0, 1, __func__, "gamma5");
     iteration_count = invert_eo_quda_twoflavour_mshift(Pup, Pdn, temp[0], temp[1],
                                                        solver_params->squared_solver_prec, solver_params->max_iter,
                                                        solver_params->type, solver_params->rel_prec,
@@ -552,10 +567,12 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
     // or, equivalently, the square of the inverse of the inverse
     // note that in the QUDA interface, we also correctly normalise the shifts
     const double maxev_sq = (1.0/phmc_invmaxev)*(1.0/phmc_invmaxev);
+    tm_stopwatch_push(&g_timers);
     for( int shift = 0; shift < solver_params->no_shifts; shift++){
       mul_r_gamma5(Pup[shift], maxev_sq, VOLUME/2);
       mul_r_gamma5(Pdn[shift], maxev_sq, VOLUME/2);
     }
+    tm_stopwatch_pop(&g_timers, 0, 1, __func__, "mshift_mul_r_gamm5");
   } else
 #endif //TM_USE_QPHIX
 #ifdef TM_USE_QPHIX
@@ -764,13 +781,14 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
       (solver_params->external_inverter == QPHIX_INVERTER && solver_params->type != MG)){
     finalize_solver(temp, 2);
   }
-
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return(iteration_count);
 }
 
 int solve_mms_nd_plus(spinor ** const Pup, spinor ** const Pdn, 
                       spinor * const Qup, spinor * const Qdn, 
-                      solver_params_t * solver_params){ 
+                      solver_params_t * solver_params){
+  tm_stopwatch_push(&g_timers); 
 
   int iteration_count = 0; 
 
@@ -802,6 +820,7 @@ int solve_mms_nd_plus(spinor ** const Pup, spinor ** const Pdn,
       f = Qsw_tau1_ndpsi_sub_Ishift;
     spinor** temp;
     init_solver_field(&temp, VOLUMEPLUSRAND/2, 2);
+    tm_stopwatch_push(&g_timers);
     for(int i = solver_params->no_shifts-1; i>=0; i--){
       g_shift = solver_params->shifts[i]*solver_params->shifts[i]; 
       f(temp[0],temp[1],Pup[i],Pdn[i]);
@@ -809,7 +828,9 @@ int solve_mms_nd_plus(spinor ** const Pup, spinor ** const Pdn,
       assign(Pdn[i], temp[1], VOLUME/2);
       g_shift = _default_g_shift;
     }
+    tm_stopwatch_pop(&g_timers, 0, 1, __func__, "mshift_f_assign");
     finalize_solver(temp, 2);
   }
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return iteration_count;
 }

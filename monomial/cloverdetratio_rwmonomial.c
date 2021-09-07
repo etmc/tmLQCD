@@ -51,10 +51,9 @@
 #include "DDalphaAMG_interface.h"
 
 double cloverdetratio_rwacc(const int id, hamiltonian_field_t * const hf) {
+  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
   int save_sloppy = g_sloppy_precision_flag;
-  double atime, etime;
-  atime = gettime();
 
   g_mu = mnl->mu2;
   boundary(mnl->kappa2);
@@ -74,33 +73,34 @@ double cloverdetratio_rwacc(const int id, hamiltonian_field_t * const hf) {
   chrono_guess(mnl->w_fields[0], mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array, 
 	       mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_plus_psi);
   g_sloppy_precision_flag = 0;    
-  if( mnl->solver == MG ) {
+  if( mnl->solver == MG || mnl->solver == BICGSTAB ) {
     mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->solver_params, 
                                    mnl->maxiter, mnl->accprec,
 				   g_relative_precision_flag, VOLUME/2, mnl->Qp, mnl->solver);
   } else {
     mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->solver_params, mnl->maxiter, mnl->accprec,
 				   g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver);
+    tm_stopwatch_push(&g_timers);
     mnl->Qm(mnl->w_fields[0], mnl->w_fields[0]);
+    tm_stopwatch_pop(&g_timers, 0, 1, __func__, "Qm");
   }
 
   g_sloppy_precision_flag = save_sloppy;
 
   /* Compute the energy contr. from second field */
+  tm_stopwatch_push(&g_timers);
   mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
+  tm_stopwatch_pop(&g_timers, 0, 1, __func__, "energy1");
 
   g_mu = g_mu1;
   g_mu3 = 0.;
   boundary(g_kappa);
-  etime = gettime();
   if(g_proc_id == 0) {
-    if(g_debug_level > 1) {
-      printf("# Time for %s monomial rwacc step: %e s\n", mnl->name, etime-atime);
-    }
     if(g_debug_level > 3) {
       printf("called cloverdetratio_rwacc for id %d dH = %1.10e\n", 
 	     id, mnl->energy1 - mnl->energy0);
     }
   }
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return(mnl->energy1 - mnl->energy0);
 }

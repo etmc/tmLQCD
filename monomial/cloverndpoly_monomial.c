@@ -51,10 +51,10 @@
  ********************************************/
 
 void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
+  tm_stopwatch_push(&g_timers);
   int j, k;
   monomial * mnl = &monomial_list[id];
-  double atime, etime;
-  atime = gettime();
+  #pragma omp parallel for
   for(int i = 0; i < VOLUME; i++) { 
     for(int mu = 0; mu < 4; mu++) { 
       _su3_zero(swm[i][mu]);
@@ -80,13 +80,13 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
   
   assign(g_chi_up_spinor_field[0], mnl->pf, VOLUME/2);
   assign(g_chi_dn_spinor_field[0], mnl->pf2, VOLUME/2);
-  
+ 
   for(k = 1; k < (mnl->MDPolyDegree-1); k++) {
     Qsw_tau1_sub_const_ndpsi(g_chi_up_spinor_field[k], g_chi_dn_spinor_field[k], 
 			     g_chi_up_spinor_field[k-1], g_chi_dn_spinor_field[k-1], 
 			     mnl->MDPolyRoots[k-1], phmc_Cpol, phmc_invmaxev);
   }
-  
+
   /* Here comes the remaining fields  chi_k ; k=n,...,2n-1  */
   /*They are evaluated step-by-step overwriting the same field (mnl->MDPolyDegree)*/
   
@@ -130,20 +130,16 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
   // trlog part does not depend on the normalisation of the polynomial
   sw_deriv_nd(EE);
   sw_all(hf, mnl->kappa, mnl->c_sw);
-  etime = gettime();
-  if(g_debug_level > 1 && g_proc_id == 0) {
-    printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
-  }
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return;
 }
 
 
 void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
+  tm_stopwatch_push(&g_timers);
   int j;
   monomial * mnl = &monomial_list[id];
   spinor *up0, *dn0, *up1, *dn1, *dummy;
-  double atime, etime;
-  atime = gettime();
   ndpoly_set_global_parameter(mnl, 0);
   g_mu3 = 0.;
   init_sw_fields();
@@ -156,11 +152,13 @@ void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   }
 
   mnl->energy0 = 0.;
+  tm_stopwatch_push(&g_timers);
   random_spinor_field_eo(g_chi_up_spinor_field[0], mnl->rngrepro, RN_GAUSS);
   mnl->energy0 = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
 
   random_spinor_field_eo(g_chi_dn_spinor_field[0], mnl->rngrepro, RN_GAUSS);
   mnl->energy0 += square_norm(g_chi_dn_spinor_field[0], VOLUME/2, 1);
+  tm_stopwatch_pop(&g_timers, 0, 1, __func__, "random_energy0");
 
   Qsw_ndpsi(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
 	    g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0]);
@@ -182,25 +180,21 @@ void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   
   assign(mnl->pf, up0, VOLUME/2);
   assign(mnl->pf2, dn0, VOLUME/2);
-  etime = gettime();
   if(g_proc_id == 0) {
-    if(g_debug_level > 1) {
-      printf("# Time for %s monomial heatbath: %e s\n", mnl->name, etime-atime);
-    }
     if(g_debug_level > 3) {
       printf("called cloverndpoly_heatbath for id %d energy %f\n", id, mnl->energy0);
     }
   }
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return;
 }
 
 
 double cloverndpoly_acc(const int id, hamiltonian_field_t * const hf) {
+  tm_stopwatch_push(&g_timers);
   int j;
   monomial * mnl = &monomial_list[id];
   spinor *up0, *dn0, *up1, *dn1, *dummy;
-  double atime, etime;
-  atime = gettime();
   ndpoly_set_global_parameter(mnl, 0);
   g_mu3 = 0.;
   sw_term((const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
@@ -218,23 +212,21 @@ double cloverndpoly_acc(const int id, hamiltonian_field_t * const hf) {
 
   for(j = 1; j <= (mnl->MDPolyDegree-1); j++) {
     Qsw_tau1_sub_const_ndpsi(up1, dn1, up0, dn0, mnl->MDPolyRoots[j-1], phmc_Cpol, phmc_invmaxev);
-    
+
     dummy = up1; up1 = up0; up0 = dummy;
     dummy = dn1; dn1 = dn0; dn0 = dummy;
     /* result always in up0 and dn0 */
   }
-  
+  tm_stopwatch_push(&g_timers);
   mnl->energy1 = square_norm(up0, VOLUME/2, 1);
   mnl->energy1 += square_norm(dn0, VOLUME/2, 1);
-  etime = gettime();
+  tm_stopwatch_pop(&g_timers, 0, 1, __func__, "energy1");
   if(g_proc_id == 0) {
-    if(g_debug_level > 1) {
-      printf("# Time for %s monomial acc step: %e s\n", mnl->name, etime-atime);
-    }
     if(g_debug_level > 3) {
       printf("called cloverndpoly_acc for id %d dH = %1.10e\n", id, mnl->energy1 - mnl->energy0);
     }
   }
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return(mnl->energy1 - mnl->energy0);
 }
 
