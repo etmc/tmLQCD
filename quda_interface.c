@@ -2133,8 +2133,11 @@ int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out
   spinor ** in;
   spinor ** out;
   init_solver_field(&in, VOLUME, nr_sf_in);
+
+  tm_stopwatch_push(&g_timers);
   memcpy(in[0],      in_up, Vh*24*sizeof(double));
   memcpy(in[0] + Vh, in_dn, Vh*24*sizeof(double));
+  tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA", "twoflavour_input_overhead");
 
   const int nr_sf_out = solver_params.no_shifts;
   init_solver_field(&out, VOLUME, nr_sf_out);
@@ -2194,13 +2197,13 @@ int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out
   invertMultiShiftQuda(spinorOut, spinorIn, &inv_param);
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA", "invertMultiShiftQuda");
  
-  tm_stopwatch_push(&g_timers); 
   for(int shift = 0; shift < num_shifts; shift++){
     reorder_spinor_eo_fromQuda((double*)spinorOut[shift], inv_param.cpu_prec, 1, 1);
+    tm_stopwatch_push(&g_timers); 
     memcpy(out_up[shift], spinorOut[shift],                    24*Vh*sizeof(double));
     memcpy(out_dn[shift], ((double*)spinorOut[shift]) + 24*Vh, 24*Vh*sizeof(double));
+    tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA", "twoflavour_output_overhead");
   }
-  tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA", "multishift_output_overhead");
 
   finalize_solver(in, nr_sf_in);
   finalize_solver(out, nr_sf_out);
