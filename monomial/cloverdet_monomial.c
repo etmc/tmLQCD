@@ -56,12 +56,15 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
   int N = VOLUME/2;
+  tm_stopwatch_push(&g_timers);
+  #pragma omp parallel for
   for(int i = 0; i < VOLUME; i++) { 
     for(int mu = 0; mu < 4; mu++) { 
       _su3_zero(swm[i][mu]);
       _su3_zero(swp[i][mu]);
     }
   }
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "su3_zero");
 
   mnl->forcefactor = 1.;
   /*********************************************************************
@@ -99,16 +102,22 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
                       mnl->csg_N, &mnl->csg_n, N);
   
   // Y_o -> w_fields[0]
+  tm_stopwatch_push(&g_timers);
   mnl->Qm(mnl->w_fields[0], mnl->w_fields[1]);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "Qm");
   if(mnl->even_odd_flag) {
     // apply Hopping Matrix M_{eo}
     // to get the even sites of X_e
+    tm_stopwatch_push(&g_timers);
     H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EO, -1, mnl->mu);
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "H_eo_sw_inv_psi");
     // \delta Q sandwitched by Y_o^\dagger and X_e
     deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
     
     // to get the even sites of Y_e
+    tm_stopwatch_push(&g_timers);
     H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1, mnl->mu);
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "H_eo_sw_inv_psi");
     // \delta Q sandwitched by Y_e^\dagger and X_o
     // uses the gauge field in hf and changes the derivative fields in hf
     deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor);
@@ -168,15 +177,16 @@ void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   if(!mnl->even_odd_flag) {
     N = VOLUME;
+    tm_stopwatch_push(&g_timers);
     random_spinor_field_lexic(mnl->w_fields[0], mnl->rngrepro, RN_GAUSS);
   }
   else {
     sw_invert(EE, mnl->mu);
+    tm_stopwatch_push(&g_timers);
     random_spinor_field_eo(mnl->w_fields[0], mnl->rngrepro, RN_GAUSS);
   }
-  tm_stopwatch_push(&g_timers);
   mnl->energy0 = square_norm(mnl->w_fields[0], N, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, "", "energy0_square_norm");
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "random_energy0");
   
   tm_stopwatch_push(&g_timers);
   mnl->Qp(mnl->pf, mnl->w_fields[0]);
