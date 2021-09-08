@@ -421,9 +421,7 @@ void _loadGaugeQuda( const int compression ) {
   static int first_call = 1;
   // check if the currently loaded gauge field is also the current gauge field
   // and if so, return immediately
-  if( check_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0,
-        gauge_param.cuda_prec, gauge_param.cuda_prec_sloppy, gauge_param.cuda_prec_refinement_sloppy,
-        gauge_param.cuda_prec_precondition, gauge_param.cuda_prec_eigensolver) ){
+  if( check_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0) ){
     return;
   } else {
     if( first_call ){
@@ -528,9 +526,7 @@ void _loadGaugeQuda( const int compression ) {
   loadGaugeQuda((void*)gauge_quda, &gauge_param);
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA", "loadGaugeQuda");
 
-  set_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0,
-      gauge_param.cuda_prec, gauge_param.cuda_prec_sloppy, gauge_param.cuda_prec_refinement_sloppy,
-      gauge_param.cuda_prec_precondition, gauge_param.cuda_prec_eigensolver);
+  set_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0);
 }
 
 // reorder spinor to QUDA format
