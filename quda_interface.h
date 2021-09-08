@@ -131,6 +131,7 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
                            const double precision, const int max_iter,
                            const int solver_flag, const int rel_prec, const int even_odd_flag,
                            const SloppyPrecision sloppy_precision,
+                           const SloppyPrecision refinement_precision,
                            CompressionType compression);
 
 // apply the TM operator using QUDA
