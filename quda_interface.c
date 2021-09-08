@@ -753,10 +753,9 @@ void set_boundary_conditions( CompressionType* compression ) {
   gauge_param.reconstruct_precondition = link_recon_sloppy;
 }
 
-void set_sloppy_prec( const SloppyPrecision sloppy_precision, const SloppyPrecision refinement_precision ) {
+void set_sloppy_prec( const SloppyPrecision sloppy_precision ) {
   // choose sloppy prec.
   QudaPrecision cuda_prec_sloppy;
-  QudaPrecision cuda_prec_refinement_sloppy;
   if( sloppy_precision==SLOPPY_DOUBLE ) {
     inv_param.reliable_delta = 1e-8;
     cuda_prec_sloppy = QUDA_DOUBLE_PRECISION;
@@ -773,30 +772,18 @@ void set_sloppy_prec( const SloppyPrecision sloppy_precision, const SloppyPrecis
     cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
     if(g_proc_id == 0) printf("# TM_QUDA: Using single prec. as sloppy!\n");
   }
- 
-  if( refinement_precision == SLOPPY_DOUBLE ){
-    inv_param.reliable_delta_refinement = 1e-8;
-    cuda_prec_refinement_sloppy = QUDA_DOUBLE_PRECISION;
-  }
-  else if( refinement_precision == SLOPPY_HALF ){
-    inv_param.reliable_delta_refinement = 1e-2;
-    cuda_prec_refinement_sloppy = QUDA_HALF_PRECISION;
-    if(g_proc_id == 0) printf("# TM_QUDA: Using double-half refinement in mshift-solver!\n");
-  }
-  else {
-    inv_param.reliable_delta_refinement = 1e-4;
-    cuda_prec_refinement_sloppy = QUDA_SINGLE_PRECISION;
-    if(g_proc_id == 0) printf("# TM_QUDA: Using double-single refinement in mshift-solver!\n");
-  }
-
-  gauge_param.cuda_prec_sloppy = cuda_prec_sloppy;
-  inv_param.cuda_prec_sloppy = cuda_prec_sloppy;
-  inv_param.clover_cuda_prec_sloppy = cuda_prec_sloppy;
   
-  inv_param.cuda_prec_refinement_sloppy = cuda_prec_refinement_sloppy;
-  gauge_param.cuda_prec_refinement_sloppy = cuda_prec_refinement_sloppy;
-  inv_param.clover_cuda_prec_refinement_sloppy = cuda_prec_refinement_sloppy;
+  gauge_param.cuda_prec_sloppy = cuda_prec_sloppy;
+  gauge_param.cuda_prec_refinement_sloppy = cuda_prec_sloppy;
+  
+  inv_param.cuda_prec_sloppy = cuda_prec_sloppy;
+  inv_param.cuda_prec_refinement_sloppy = cuda_prec_sloppy;
+  
+  inv_param.clover_cuda_prec_sloppy = cuda_prec_sloppy;
+  inv_param.clover_cuda_prec_refinement_sloppy = cuda_prec_sloppy;
 }
+
+
 
 int invert_quda_direct(double * const propagator, double const * const source,
                        const int op_id) {
@@ -829,7 +816,7 @@ int invert_quda_direct(double * const propagator, double const * const source,
   set_boundary_conditions(&optr->compression_type);
 
   // set the sloppy precision of the mixed prec solver
-  set_sloppy_prec(optr->sloppy_precision, optr->solver_params.refinement_precision);
+  set_sloppy_prec(optr->sloppy_precision);
  
   // load gauge after setting precision, this is a no-op if the current gauge field
   // is already loaded and the boundary conditions have not changed
@@ -909,7 +896,7 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
   // figure out which BC to use (theta, trivial...)
   set_boundary_conditions(&compression);
   // set the sloppy precision of the mixed prec solver
-  set_sloppy_prec(sloppy_precision, solver_params.refinement_precision);
+  set_sloppy_prec(sloppy_precision);
   
   // load gauge after setting precision
   _loadGaugeQuda(compression);
@@ -965,7 +952,7 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
                            spinor * const Even_c, spinor * const Odd_c,
                            const double precision, const int max_iter,
                            const int solver_flag, const int rel_prec, const int even_odd_flag,
-                           const SloppyPrecision sloppy_precision, const SloppyPrecision refinement_precision,
+                           const SloppyPrecision sloppy_precision,
                            CompressionType compression) {
   tm_stopwatch_push(&g_timers);
 
@@ -1000,7 +987,7 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   set_boundary_conditions(&compression);
 
   // set the sloppy precision of the mixed prec solver
-  set_sloppy_prec(sloppy_precision, refinement_precision);
+  set_sloppy_prec(sloppy_precision);
 
   // load gauge after setting precision
    _loadGaugeQuda(compression);
@@ -1936,7 +1923,7 @@ int invert_eo_MMd_quda(spinor * const out,
   // figure out which BC to use (theta, trivial...)
   set_boundary_conditions(&compression);
   // set the sloppy precision of the mixed prec solver
-  set_sloppy_prec(sloppy_precision, solver_params.refinement_precision);
+  set_sloppy_prec(sloppy_precision);
   
   // load gauge after setting precision
   _loadGaugeQuda(compression);
@@ -2064,7 +2051,7 @@ int invert_eo_quda_oneflavour_mshift(spinor ** const out,
   // figure out which BC to use (theta, trivial...)
   set_boundary_conditions(&compression);
   // set the sloppy precision of the mixed prec solver
-  set_sloppy_prec(sloppy_precision, solver_params.refinement_precision);
+  set_sloppy_prec(sloppy_precision);
   
   // load gauge after setting precision
   _loadGaugeQuda(compression);
@@ -2158,7 +2145,7 @@ int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out
   // figure out which BC to use (theta, trivial...)
   set_boundary_conditions(&compression);
   // set the sloppy precision of the mixed prec solver
-  set_sloppy_prec(sloppy_precision, solver_params.refinement_precision);
+  set_sloppy_prec(sloppy_precision);
   
   // load gauge after setting precision
   _loadGaugeQuda(compression);

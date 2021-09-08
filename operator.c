@@ -91,7 +91,6 @@ int add_operator(const int type) {
   optr->mu = _default_g_mu;
   optr->c_sw = _default_c_sw;
   optr->sloppy_precision = _default_operator_sloppy_precision_flag;
-  optr->solver_params.refinement_precision = _default_operator_sloppy_precision_flag;
   optr->compression_type = _default_compression_type;
   optr->external_inverter = _default_external_inverter;
   optr->solver_params.solution_type = TM_SOLUTION_M;

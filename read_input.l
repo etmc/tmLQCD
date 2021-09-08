@@ -1370,22 +1370,6 @@ static inline double fltlist_next_token(int * const list_end){
     if(myverbose) printf("  Use sloppy precision (half) in the inverter (if supported by the inverter) line %d operator %d\n", line_of_file, current_operator);
     optr->sloppy_precision = SLOPPY_HALF;
   }
-  {SPC}*RefinementPrecision{EQL}float {
-    optr->solver_params.refinement_precision = SLOPPY_SINGLE;
-    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to single precision line %d operator %d\n", line_of_file, current_operator);
-  }
-  {SPC}*RefinementPrecision{EQL}single {
-    optr->solver_params.refinement_precision = SLOPPY_SINGLE;
-    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to single precision line %d operator %d\n", line_of_file, current_operator);
-  }
-  {SPC}*RefinementPrecision{EQL}half {
-    optr->solver_params.refinement_precision = SLOPPY_HALF;
-    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to half precision line %d operator %d\n", line_of_file, current_operator);
-  }
-  {SPC}*RefinementPrecision{EQL}double {
-    optr->solver_params.refinement_precision = SLOPPY_DOUBLE;
-    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to double precision line %d operator %d\n", line_of_file, current_operator);
-  }
   {SPC}*UseCompression{EQL}12 {
     if(myverbose) printf("  Use 12 compression in the inverter (if supported) line %d operator %d\n", line_of_file, current_operator);
     optr->compression_type = COMPRESSION_12;
@@ -2528,22 +2512,6 @@ static inline double fltlist_next_token(int * const list_end){
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->rat.order = a;
     if(myverbose!=0) printf("  Degree of rational approximation set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
-  }
-  {SPC}*RefinementPrecision{EQL}float {
-    mnl->solver_params.refinement_precision = SLOPPY_SINGLE;
-    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to single precision line %d monomial %d\n", line_of_file, current_monomial);
-  }
-  {SPC}*RefinementPrecision{EQL}single {
-    mnl->solver_params.refinement_precision = SLOPPY_SINGLE;
-    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to single precision line %d monomial %d\n", line_of_file, current_monomial);
-  }
-  {SPC}*RefinementPrecision{EQL}half {
-    mnl->solver_params.refinement_precision = SLOPPY_HALF;
-    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to half precision line %d monomial %d\n", line_of_file, current_monomial);
-  }
-  {SPC}*RefinementPrecision{EQL}double {
-    mnl->solver_params.refinement_precision = SLOPPY_DOUBLE;
-    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to double precision line %d monomial %d\n", line_of_file, current_monomial);
   }
 }
 <NDPOLYMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{

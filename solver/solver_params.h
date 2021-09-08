@@ -94,7 +94,6 @@ typedef struct {
   
   CompressionType compression_type;
   SloppyPrecision sloppy_precision;
-  SloppyPrecision refinement_precision;
   ExternalInverter external_inverter;
 
   int use_initial_guess;  

@@ -86,7 +86,7 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
                                    Even_s, Odd_s, Even_c, Odd_c,
                                    precision, max_iter,
                                    solver_flag, rel_prec, even_odd_flag,
-                                   sloppy, solver_params.refinement_precision, compression );
+                                   sloppy, compression );
   }
 #endif
 
@@ -223,7 +223,7 @@ int invert_cloverdoublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
                                    Even_s, Odd_s, Even_c, Odd_c,
                                    precision, max_iter,
                                    solver_flag, rel_prec, even_odd_flag,
-                                   sloppy, solver_params.refinement_precision, compression );
+                                   sloppy, compression );
   }
 #endif
 
