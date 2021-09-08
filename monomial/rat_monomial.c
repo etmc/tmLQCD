@@ -65,7 +65,9 @@ void rat_derivative(const int id, hamiltonian_field_t * const hf) {
   if(mnl->type == CLOVERRAT) {
     g_c_sw = mnl->c_sw;
     tm_stopwatch_push(&g_timers);
+#ifdef TM_USE_OMP
     #pragma omp parallel for
+#endif
     for(int i = 0; i < VOLUME; i++) { 
       for(int mu = 0; mu < 4; mu++) { 
         _su3_zero(swm[i][mu]);

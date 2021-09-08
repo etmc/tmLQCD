@@ -54,7 +54,9 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
   tm_stopwatch_push(&g_timers);
   int j, k;
   monomial * mnl = &monomial_list[id];
+#ifdef TM_USE_OMP
   #pragma omp parallel for
+#endif
   for(int i = 0; i < VOLUME; i++) { 
     for(int mu = 0; mu < 4; mu++) { 
       _su3_zero(swm[i][mu]);
