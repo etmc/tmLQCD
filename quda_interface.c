@@ -148,6 +148,9 @@ tm_QudaParams_t quda_input;
 // pointer to the QUDA gaugefield
 double *gauge_quda[4];
 
+// pointer to the QUDA momentum field
+double *mom_quda[4];
+
 // pointer to a temp. spinor, used for reordering etc.
 double *tempSpinor;
   
@@ -389,6 +392,10 @@ void _endQuda() {
       destroyMultigridQuda(quda_mg_preconditioner);
       quda_mg_preconditioner = NULL;
     }
+    for(int dir = 0; dir < 4; dir++){
+      if( (void*)gauge_quda[dir] != NULL ) free((void*)gauge_quda[dir]);
+      if( (void*)mom_quda[dir] != NULL ) free((void*)mom_quda[dir]);
+    }
     freeGaugeQuda();
     freeCloverQuda(); // this is safe even if there is no Clover field loaded, at least it was in QUDA v0.7.2
     free((void*)tempSpinor);
@@ -563,6 +570,19 @@ void reorder_spinor_toQuda( double* sp, QudaPrecision precision, int doublet ) {
         }
 
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA", __func__);
+}
+
+void _initMomQuda(void) {
+  static int first_call = 1;
+  if( first_call ){
+    first_call = 0;
+    for(int i = 0; i < 4; i++){
+      mom_quda[i] = (double*)malloc(VOLUME*18*sizeof(double));
+      if( (void*)mom_quda[i] == NULL ){
+        fatal_error("Memory allocation for host momentum field failed!", __func__);
+      }
+    }
+  }
 }
 
 // reorder spinor from QUDA format
@@ -2208,5 +2228,173 @@ int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out
     return(-1);
 
   return(iterations);
+}
+
+void compute_gauge_force(const CompressionType compression, int rect) {
+  static int plaq_rect_length = {
+    3, 3, 3, 3, 3,
+    5, 5, 5, 5, 5,
+    5, 5, 5, 5, 5,
+    5, 5, 5, 5, 5 
+  };
+
+  static double plaq_rect_coeff[] = {
+    1.1, 1.2, 1.3, 1.4, 1.5, 1.6,
+    2.1, 2.2, 2.3, 2.4, 2.5, 2.6,
+    3.1, 3.2, 3.3, 3.4, 3.5, 3.6,
+    4.1, 4.2, 4.3, 4.4, 4.5, 4.6
+  };
+
+  static int plaq_rect_path[4][24][5] = {
+    { {1, 7, 6 },
+      {6, 7, 1 },
+      {2, 7, 5 },
+      {5, 7, 2 },
+      {3, 7, 4 },
+      {4, 7, 3 }, 
+      {0, 1, 7, 7, 6 },
+      {1, 7, 7, 6, 0 },
+      {6, 7, 7, 1, 0 },
+      {0, 6, 7, 7, 1 },
+      {0, 2, 7, 7, 5 },
+      {2, 7, 7, 5, 0 },
+      {5, 7, 7, 2, 0 },
+      {0, 5, 7, 7, 2 },
+      {0, 3, 7, 7, 4 },
+      {3, 7, 7, 4, 0 },
+      {4, 7, 7, 3, 0 },
+      {0, 4, 7, 7, 3 },
+      {6, 6, 7, 1, 1 },
+      {1, 1, 7, 6, 6 },
+      {5, 5, 7, 2, 2 },
+      {2, 2, 7, 5, 5 },
+      {4, 4, 7, 3, 3 },
+      {3, 3, 7, 4, 4 } },
+    { { 2 ,6 ,5 },
+      { 5 ,6 ,2 },
+      { 3 ,6 ,4 },
+      { 4 ,6 ,3 },
+      { 0 ,6 ,7 },
+      { 7 ,6 ,0 },
+      { 1 ,2 ,6 ,6 ,5 },
+      { 2 ,6 ,6 ,5 ,1 },
+      { 5 ,6 ,6 ,2 ,1 },
+      { 1 ,5 ,6 ,6 ,2 },
+      { 1 ,3 ,6 ,6 ,4 },
+      { 3 ,6 ,6 ,4 ,1 },
+      { 4 ,6 ,6 ,3 ,1 },
+      { 1 ,4 ,6 ,6 ,3 },
+      { 1 ,0 ,6 ,6 ,7 },
+      { 0 ,6 ,6 ,7 ,1 },
+      { 7 ,6 ,6 ,0 ,1 },
+      { 1 ,7 ,6 ,6 ,0 },
+      { 5 ,5 ,6 ,2 ,2 },
+      { 2 ,2 ,6 ,5 ,5 },
+      { 4 ,4 ,6 ,3 ,3 },
+      { 3 ,3 ,6 ,4 ,4 },
+      { 7 ,7 ,6 ,0 ,0 },
+      { 0 ,0 ,6 ,7 ,7 } },
+    { {3, 5, 4},
+      {4, 5, 3},
+      {0, 5, 7},
+      {7, 5, 0},
+      {1, 5, 6},
+      {6, 5, 1},
+      {2, 3, 5, 5, 4},
+      {3, 5, 5, 4, 2}, 
+      {4, 5, 5, 3, 2}, 
+      {2, 4, 5, 5, 3}, 
+      {2, 0, 5, 5, 7}, 
+      {0, 5, 5, 7, 2}, 
+      {7, 5, 5, 0, 2}, 
+      {2, 7, 5, 5, 0},
+      {2, 1, 5, 5, 6}, 
+      {1, 5, 5, 6, 2}, 
+      {6, 5, 5, 1, 2}, 
+      {2, 6, 5, 5, 1}, 
+      {4, 4, 5, 3, 3}, 
+      {3, 3, 5, 4, 4}, 
+      {7, 7, 5, 0, 0},
+      {0, 0, 5, 7, 7}, 
+      {6, 6, 5, 1, 1}, 
+      {1, 1, 5, 6, 6}, 
+      {3, 0, 5, 4, 7} },
+    { { 0 ,4 ,7 },
+      { 7 ,4 ,0 },
+      { 1 ,4 ,6 },
+      { 6 ,4 ,1 },
+      { 2 ,4 ,5 },
+      { 5 ,4 ,2 },
+      { 3 ,0 ,4 ,4 ,7 },
+      { 0 ,4 ,4 ,7 ,3 },
+      { 7 ,4 ,4 ,0 ,3 },
+      { 3 ,7 ,4 ,4 ,0 },
+      { 3 ,1 ,4 ,4 ,6 },
+      { 1 ,4 ,4 ,6 ,3 },
+      { 6 ,4 ,4 ,1 ,3 },
+      { 3 ,6 ,4 ,4 ,1 },
+      { 3 ,2 ,4 ,4 ,5 },
+      { 2 ,4 ,4 ,5 ,3 },
+      { 5 ,4 ,4 ,2 ,3 },
+      { 3 ,5 ,4 ,4 ,2 },
+      { 7 ,7 ,4 ,0 ,0 },
+      { 0 ,0 ,4 ,7 ,7 },
+      { 6 ,6 ,4 ,1 ,1 },
+      { 1 ,1 ,4 ,6 ,6 },
+      { 5 ,5 ,4 ,2 ,2 },
+      { 2 ,2 ,4 ,5 ,5 } } 
+  };
+
+  static int plaq_length[] = {
+    3, 3, 3, 3, 3, 3 };
+
+  static int plaq_path[4][6][3] = {
+    { {1, 7, 6 },
+      {6, 7, 1 },
+      {2, 7, 5 },
+      {5, 7, 2 },
+      {3, 7, 4 },
+      {4, 7, 3 } },
+    { { 2 ,6 ,5 },
+      { 5 ,6 ,2 },
+      { 3 ,6 ,4 },
+      { 4 ,6 ,3 },
+      { 0 ,6 ,7 },
+      { 7 ,6 ,0 } },
+    { {3, 5, 4},
+      {4, 5, 3},
+      {0, 5, 7},
+      {7, 5, 0},
+      {1, 5, 6},
+      {6, 5, 1} },
+    { { 0 ,4 ,7 },
+      { 7 ,4 ,0 },
+      { 1 ,4 ,6 },
+      { 6 ,4 ,1 },
+      { 2 ,4 ,5 },
+      { 5 ,4 ,2 } } 
+  };
+
+  static double plaq_coeff[] = {
+    1.1, 1.2, 1.3, 1.4, 1.5, 1.6 
+  };
+  
+  _initQuda();
+  _initMomQuda();
+  _loadGaugeQuda(compression);
+
+  int *** path_buf = rect ? plaq_rect_path : plaq_path;
+  int * path_length = rect ? plaq_rect_length : plaq_length;
+  double * loop_coeff = rect ? plaq_coeff : plaq_rect_coeff;
+
+  int num_paths = rect ? 24 : 6;
+  int max_length = rect ? 6 : 4;
+
+  computeGaugeForceQuda((void*)mom_quda, 
+                        (void*)gauge_quda, 
+                        path_buf, path_length, loop_coeff, num_paths, max_length, 1.0,
+                        // TODO: to be replaced by new gauge_param just for gauge force 
+                        &gauge_param);
+  //reorder_derivative_fromQuda(mom_quda);
 }
 
