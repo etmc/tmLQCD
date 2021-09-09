@@ -2483,11 +2483,11 @@ static inline double fltlist_next_token(int * const list_end){
     if(myverbose) printf("  Gauge lambda parameter (Wilson plaquette only) set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*UseExternalLibrary{EQL}no {
-    mnl->use_external_lib = NO_EXT_LIB;
-    if(myverbose) printf("  UseExternalLibrary set to fase in line %d, monomial %d\n", line_of_file, current_monomial);
+    mnl->external_library = NO_EXT_LIB;
+    if(myverbose) printf("  UseExternalLibrary set to false in line %d, monomial %d\n", line_of_file, current_monomial);
   }
   {SPC}*UseExternalLibrary{EQL}quda {
-    mnl->use_external_lib = QUDA_LIB;
+    mnl->external_library = QUDA_LIB;
     if(myverbose) printf("  UseExternalLibrary set to quda in line %d, monomial %d\n", line_of_file, current_monomial);
   }
 }
