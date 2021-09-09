@@ -61,6 +61,9 @@
 #include "solver/generate_dfl_subspace.h"
 #include "io/gauge.h"
 #include "meas/measurements.h"
+#ifdef TM_USE_QUDA
+#include "quda_interface.h"
+#endif
 
 #define CONF_FILENAME_LENGTH 500
 
@@ -83,7 +86,6 @@ int main(int argc, char *argv[])
   double plaquette_energy;
 
   init_critical_globals(TM_PROGRAM_OFFLINE_MEASUREMENT);  
-  init_global_states();
 
 #ifdef _KOJAK_INST
 #pragma pomp inst init

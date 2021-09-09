@@ -72,7 +72,10 @@ typedef struct tm_QudaParams_t {
   int                  mg_run_verify;
   int                  mg_enable_size_three_blocks;
   double               mg_reuse_setup_mu_threshold;
-  double               mg_reset_setup_threshold;
+  double               mg_reset_setup_mdu_threshold;
+  double               mg_refresh_setup_mdu_threshold;
+
+  int                  mg_setup_maxiter_refresh[QUDA_MAX_MG_LEVEL];
   
   // parameters related to communication-avoiding
   // solvers  
@@ -111,7 +114,6 @@ typedef struct tm_QudaParams_t {
 } tm_QudaParams_t;
 
 typedef struct tm_QudaMGSetupState_t {
-  double init_gauge_id;
   double gauge_id;
   double c_sw;
   double kappa;
@@ -142,6 +144,7 @@ typedef struct tm_QudaGaugeState_t {
 
 typedef enum tm_QudaMGSetupState_enum_t {
   TM_QUDA_MG_SETUP_RESET = -1,
+  TM_QUDA_MG_SETUP_REFRESH,
   TM_QUDA_MG_SETUP_UPDATE,
   TM_QUDA_MG_SETUP_REUSE
 } tm_QudaMGSetupState_enum_t; 
@@ -209,40 +212,53 @@ static inline void reset_quda_gauge_state(tm_QudaGaugeState_t * const quda_gauge
 static inline int check_quda_mg_setup_state(const tm_QudaMGSetupState_t * const quda_mg_setup_state,
                                             const tm_QudaGaugeState_t * const quda_gauge_state,
                                             const tm_QudaParams_t * const quda_params){
+  tm_debug_printf(0, 3, "%s mu: %f, g_mu: %f, deltat: %f, reset: %f, refresh: %f\n",
+                        __func__,
+                        quda_mg_setup_state->mu,
+                        g_mu,
+                        fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id),
+                        quda_params->mg_reset_setup_mdu_threshold,
+                        quda_params->mg_refresh_setup_mdu_threshold);
+
   // when the MG setup has not been initialised or when the "gauge_id" has changed by more
   // than the mg_reset_setup_threhold, we need to (re-)do the setup completely
   // similarly, if the boundary conditions for the gauge field change, we need
   // to redo the setup
-  // FIXME the last condition is very tricky to get right and in most cases, the setup
-  // should be *update* rather than reset
   if( (quda_mg_setup_state->initialised != 1) ||
       ( fabs(quda_mg_setup_state->theta_x - quda_gauge_state->theta_x) > 2*DBL_EPSILON ) || 
       ( fabs(quda_mg_setup_state->theta_y - quda_gauge_state->theta_y) > 2*DBL_EPSILON ) || 
       ( fabs(quda_mg_setup_state->theta_z - quda_gauge_state->theta_z) > 2*DBL_EPSILON ) || 
       ( fabs(quda_mg_setup_state->theta_t - quda_gauge_state->theta_t) > 2*DBL_EPSILON ) || 
-      ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) > quda_params->mg_reset_setup_threshold ) ||
-      ( fabs(quda_mg_setup_state->init_gauge_id - quda_gauge_state->gauge_id) > quda_params->mg_reset_setup_threshold ) ){
+      ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) >= quda_params->mg_reset_setup_mdu_threshold ) ){
     return TM_QUDA_MG_SETUP_RESET;
+  // when in the HMC, we have to refresh the setup at regular intervals specified
+  // by mg_refresh_setup_mdu_threshold, which triggers a few setup iterations to be
+  // run with the existing null vectors as initial guesses, thus refreshing
+  // the MG setup for the evolved gauge
+  } else if ( ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) < 
+                       quda_params->mg_reset_setup_mdu_threshold ) &&
+              ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) >= 
+                       quda_params->mg_refresh_setup_mdu_threshold ) ) {
+    return TM_QUDA_MG_SETUP_REFRESH;
   // in other cases, e.g., when the operator parameters change or if the gauge_id has "moved" only a little,
   // we don't need to redo the setup, we can simply rebuild the coarse operators with the
   // new parameters (within reason).
   // Note that we use 2*DBL_EPSILON to have a little bit more wiggle room in case of badly
   // implemented floating point or something like that...
-  // TODO: perhaps introduce thresholds also for c_sw, kappa and mu, which might need some
+  // TODO: perhaps introduce thresholds also for c_sw, kappa, which might need some
   // more sophisticated logic tree...
-  } else if( ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) < 2*DBL_EPSILON ) &&
-             ( fabs(quda_mg_setup_state->c_sw - g_c_sw) < 2*DBL_EPSILON) &&
-             ( fabs(quda_mg_setup_state->kappa - g_kappa) < 2*DBL_EPSILON) &&
-             ( fabs(quda_mg_setup_state->mu - g_mu) < quda_params->mg_reuse_setup_mu_threshold) ){
+  } else if ( ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) < 2*DBL_EPSILON ) &&
+              ( fabs(quda_mg_setup_state->c_sw - g_c_sw) < 2*DBL_EPSILON) &&
+              ( fabs(quda_mg_setup_state->kappa - g_kappa) < 2*DBL_EPSILON) &&
+              ( fabs(quda_mg_setup_state->mu - g_mu) < quda_params->mg_reuse_setup_mu_threshold) ){
     return TM_QUDA_MG_SETUP_REUSE;
   } else {
     return TM_QUDA_MG_SETUP_UPDATE;
   }
 }
 
-static inline void set_quda_mg_setup_init_gauge_id(tm_QudaMGSetupState_t * const quda_mg_setup_state,
-                                                   const tm_QudaGaugeState_t * const quda_gauge_state){
-  quda_mg_setup_state->init_gauge_id = quda_gauge_state->gauge_id;
+static inline void set_quda_mg_setup_mu(tm_QudaMGSetupState_t * const quda_mg_setup_state, const double mu){
+  quda_mg_setup_state->mu = mu;
 }
 
 static inline void set_quda_mg_setup_state(tm_QudaMGSetupState_t * const quda_mg_setup_state,
@@ -259,7 +275,6 @@ static inline void set_quda_mg_setup_state(tm_QudaMGSetupState_t * const quda_mg
 }
 
 static inline void reset_quda_mg_setup_state(tm_QudaMGSetupState_t * const quda_mg_setup_state){
-  quda_mg_setup_state->init_gauge_id = -1;
   quda_mg_setup_state->gauge_id = -1;
   quda_mg_setup_state->initialised = 0;
   quda_mg_setup_state->mu = -1.0;

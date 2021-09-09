@@ -46,6 +46,7 @@
 
 /* this function calculates the derivative of the momenta: equation 13 of Gottlieb */
 void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
+  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
   double factor = -1. * g_beta/3.0;
   if(mnl->use_rectangles) {
@@ -53,8 +54,6 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
     factor = -mnl->c0 * g_beta/3.0;
   }
   
-  double atime, etime;
-  atime = gettime();
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -87,15 +86,13 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
-  etime = gettime();
-  if(g_debug_level > 1 && g_proc_id == 0) {
-    printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
-  }
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return;
 }
 
 /* this function calculates the derivative of the momenta: equation 13 of Gottlieb */
 void gauge_EMderivative(const int id, hamiltonian_field_t * const hf) {
+  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
   double factor = -1. * g_beta/3.0;
   if(mnl->use_rectangles) {
@@ -103,8 +100,6 @@ void gauge_EMderivative(const int id, hamiltonian_field_t * const hf) {
     factor = -mnl->c0 * g_beta/3.0;
   }
   
-  double atime, etime;
-  atime = gettime();
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -154,52 +149,41 @@ void gauge_EMderivative(const int id, hamiltonian_field_t * const hf) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
-  etime = gettime();
-  if(g_debug_level > 1 && g_proc_id == 0) {
-    printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
-  }
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return;
 }
 
 void gauge_heatbath(const int id, hamiltonian_field_t * const hf) {
+  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
-  double atime, etime;
-  atime = gettime();
   if(mnl->use_rectangles) mnl->c0 = 1. - 8.*mnl->c1;
   
   mnl->energy0 = g_beta*(mnl->c0 * measure_gauge_action( (const su3**) hf->gaugefield, mnl->glambda));
   if(mnl->use_rectangles) {
     mnl->energy0 += g_beta*(mnl->c1 * measure_rectangles( (const su3**) hf->gaugefield));
   }
-  etime = gettime();
   if(g_proc_id == 0) {
-    if(g_debug_level > 1) {
-      printf("# Time for %s monomial heatbath: %e s\n", mnl->name, etime-atime);
-    }
     if(g_debug_level > 3) {
       printf("called gauge_heatbath for id %d energy %f\n", id, mnl->energy0);
     }
   }
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return;
 }
 
 double gauge_acc(const int id, hamiltonian_field_t * const hf) {
+  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
-  double atime, etime;
-  atime = gettime();
   mnl->energy1 = g_beta*(mnl->c0 * measure_gauge_action( (const su3**) hf->gaugefield, mnl->glambda));
   if(mnl->use_rectangles) {
     mnl->energy1 += g_beta*(mnl->c1 * measure_rectangles( (const su3**) hf->gaugefield));
   }
-  etime = gettime();
   if(g_proc_id == 0) {
-    if(g_debug_level > 1) {
-      printf("# Time for %s monomial acc step: %e s\n", mnl->name, etime-atime);
-    }
     if(g_debug_level > 3) {
       printf("called gauge_acc for id %d dH = %1.10e\n", 
 	     id, mnl->energy0 - mnl->energy1);
     }
   }
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return(mnl->energy0 - mnl->energy1);
 }

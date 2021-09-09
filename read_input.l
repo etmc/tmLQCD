@@ -1857,10 +1857,18 @@ static inline double fltlist_next_token(int * const list_end){
     quda_input.mg_reuse_setup_mu_threshold = c;
     if(myverbose) printf("  MGReuseSetupMuThreshold set to %f line %d\n", quda_input.mg_reuse_setup_mu_threshold, line_of_file);
   }
-  {SPC}*MGResetSetupThreshold{EQL}{FLT}+ {
+  {SPC}*MGRefreshSetupMDUThreshold{EQL}{FLT}+ {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
-    quda_input.mg_reset_setup_threshold = c;
-    if(myverbose) printf("  MGResetSetupThreshold set to %f line %d\n", quda_input.mg_reset_setup_threshold, line_of_file);
+    quda_input.mg_refresh_setup_mdu_threshold = c;
+    if(myverbose) printf("  MGRefreshSetupMDUThreshold set to %f line %d\n", quda_input.mg_refresh_setup_mdu_threshold, line_of_file);
+  }
+  {SPC}*MGRefreshSetupMaxSolverIterations{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_setup_maxiter_refresh[0]));
+  }
+  {SPC}*MGResetSetupMDUThreshold{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    quda_input.mg_reset_setup_mdu_threshold = c;
+    if(myverbose) printf("  MGResetSetupMDUThreshold set to %f line %d\n", quda_input.mg_reset_setup_mdu_threshold, line_of_file);
   }
   {SPC}*MGUseEigSolver{EQL}{STRLIST} {
     parse_quda_mg_bool_par_array(yytext, &(quda_input.mg_use_eig_solver[0]));
@@ -3719,6 +3727,7 @@ int read_input(char * conf_file){
   quda_input.mg_n_level = _default_quda_mg_n_level;
   quda_input.mg_setup_2kappamu = _default_quda_mg_setup_2kappamu;
   for( int level = 0; level < QUDA_MAX_MG_LEVEL; ++level){
+    quda_input.mg_setup_maxiter_refresh[level] = 0;
     quda_input.mg_verbosity[level] = QUDA_SILENT;
     quda_input.mg_omega[level] = _default_quda_mg_omega;
     quda_input.mg_setup_maxiter[level] = _default_quda_mg_setup_maxiter;
@@ -3769,7 +3778,8 @@ int read_input(char * conf_file){
   quda_input.mg_setup_inv_type = QUDA_CG_INVERTER;
   quda_input.mg_run_verify = QUDA_BOOLEAN_YES;
   quda_input.mg_enable_size_three_blocks = _default_quda_mg_enable_size_three_blocks;
-  quda_input.mg_reset_setup_threshold = _default_quda_mg_reset_setup_threshold;
+  quda_input.mg_reset_setup_mdu_threshold = _default_quda_mg_reset_setup_mdu_threshold;
+  quda_input.mg_refresh_setup_mdu_threshold = _default_quda_mg_refresh_setup_mdu_threshold;
   quda_input.mg_reuse_setup_mu_threshold = _default_quda_mg_reuse_setup_mu_threshold;
   quda_input.mg_run_low_mode_check = QUDA_BOOLEAN_NO;
   quda_input.mg_run_oblique_proj_check = QUDA_BOOLEAN_NO; 

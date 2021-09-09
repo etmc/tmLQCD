@@ -40,8 +40,10 @@
 #include "sf_gauge_monomial.h"
 #include "hamiltonian_field.h"
 #include "sf_utils.h"
+#include "gettime.h"
 
 void sf_gauge_derivative(const int id, hamiltonian_field_t * const hf) {
+  tm_stopwatch_push(&g_timers);
 
   int i, mu;
   static su3 v, w;
@@ -70,11 +72,13 @@ void sf_gauge_derivative(const int id, hamiltonian_field_t * const hf) {
       }
     }
   }
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return;
 }
 
 void sf_gauge_heatbath( const int id, hamiltonian_field_t * const hf)
 {
+  tm_stopwatch_push(&g_timers);
   monomial* mnl = &(monomial_list[id]);
 
   if( mnl->use_rectangles ){ mnl->c0 = 1. - 8.*mnl->c1; }
@@ -87,10 +91,12 @@ void sf_gauge_heatbath( const int id, hamiltonian_field_t * const hf)
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called gauge_heatbath for id %d %d\n", id, mnl->even_odd_flag);
   }
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
 }
 
 double sf_gauge_acc( const int id, hamiltonian_field_t * const hf)
 {
+  tm_stopwatch_push(&g_timers);
   monomial* mnl = &(monomial_list[id]);
   double sq_plaq = 0;
   double sq_bulk_plaq = 0;
@@ -157,6 +163,6 @@ double sf_gauge_acc( const int id, hamiltonian_field_t * const hf)
     printf( "called sf_gauge_acc for id %d %d dH = %1.10e\n", 
 	    id, mnl->even_odd_flag, mnl->energy0 - mnl->energy1 );
   }
-
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return ( mnl->energy0 - mnl->energy1 );
 }

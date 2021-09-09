@@ -48,44 +48,36 @@ void clover_trlog_derivative(const int id, hamiltonian_field_t * const hf) {
 
 
 void clover_trlog_heatbath(const int id, hamiltonian_field_t * const hf) {
+  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
-  double atime, etime;
-  atime = gettime();
   mnl->energy0 = 0.;
 
   init_sw_fields();
   sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
   /*compute the contribution from the clover trlog term */
   mnl->energy0 = -sw_trace(EO, mnl->mu);
-  etime = gettime();
   if(g_proc_id == 0) {
-    if(g_debug_level > 1) {
-      printf("# Time for %s monomial heatbath: %e s\n", mnl->name, etime-atime);
-    }
     if(g_debug_level > 3) {
       printf("called clover_trlog_heatbath for id %d E = %e\n", id, mnl->energy0);
     }
   }
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return;
 }
 
 double clover_trlog_acc(const int id, hamiltonian_field_t * const hf) {
+  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
-  double atime, etime;
-  atime = gettime();
   mnl->energy1 = 0.;
   sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
   /*compute the contribution from the clover trlog term */
   mnl->energy1 = -sw_trace(EO, mnl->mu);
-  etime = gettime();
   if(g_proc_id == 0 && g_debug_level > 3) {
-    if(g_debug_level > 1) {
-      printf("# Time for %s monomial acc step: %e s\n", mnl->name, etime-atime);
-    }
     if(g_debug_level > 3) {
       printf("called clover_trlog_acc for id %d dH = %1.10e\n", 
 	     id, mnl->energy1 - mnl->energy0);
     }
   }
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return(mnl->energy1 - mnl->energy0);
 }

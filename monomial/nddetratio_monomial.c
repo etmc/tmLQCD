@@ -54,11 +54,10 @@
 
 
 double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
+  tm_stopwatch_push(&g_timers);
   int iter;
   monomial * mnl = &monomial_list[id];
-  double atime, etime;
   matrix_mult_nd Q_pm_ndpsi = Qtm_pm_ndpsi, Q_dagger_ndpsi = Qtm_dagger_ndpsi, Q_ndpsi = Qtm_ndpsi;
-  atime = gettime();
   
   g_mubar = mnl->mubar;
   g_epsbar = mnl->epsbar;
@@ -80,8 +79,10 @@ double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
     iter = cg_her_nd(mnl->w_fields[0], mnl->w_fields[1], mnl->pf, mnl->pf2,
                      mnl->maxiter, mnl->accprec, g_relative_precision_flag, 
                      VOLUME/2, Q_pm_ndpsi);
+    tm_stopwatch_push(&g_timers);
     Q_dagger_ndpsi(mnl->w_fields[2], mnl->w_fields[3],
                    mnl->w_fields[0], mnl->w_fields[1]);
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "Q_dagger_ndpsi");
   }
 
   g_mubar = mnl->mubar2;
@@ -92,20 +93,21 @@ double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
     sw_term((const su3**) hf->gaugefield, mnl->kappa2, mnl->c_sw); 
     sw_invert_nd(mnl->mubar2*mnl->mubar2 - mnl->epsbar2*mnl->epsbar2);
   }
+  tm_stopwatch_push(&g_timers);
   Q_ndpsi(mnl->w_fields[0], mnl->w_fields[1],
             mnl->w_fields[2], mnl->w_fields[3]);
-  
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "Q_ndpsi");
+ 
+  tm_stopwatch_push(&g_timers); 
   mnl->energy1  = scalar_prod_r(mnl->pf , mnl->w_fields[0], VOLUME/2, 1);
   mnl->energy1 += scalar_prod_r(mnl->pf2, mnl->w_fields[1], VOLUME/2, 1);
-  etime = gettime();
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "energy1");
   if(g_proc_id == 0) {
-    if(g_debug_level > 1) {
-      printf("# Time for %s monomial acc step: %e s\n", mnl->name, etime-atime);
-    }
     if(g_debug_level > 3) {
       printf("called nddetratio_acc for id %d dH = %1.10e\n", 
 	     id, mnl->energy0 - mnl->energy1);
     }
   }
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return(mnl->energy1 - mnl->energy0);
 }

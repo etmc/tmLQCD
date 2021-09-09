@@ -114,7 +114,6 @@ int main(int argc,char *argv[]) {
   int imeas;
 
   init_critical_globals(TM_PROGRAM_HMC_TM);  
-  init_global_states();
   
 #ifdef _KOJAK_INST
 #pragma pomp inst init

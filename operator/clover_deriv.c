@@ -71,7 +71,7 @@
 // this function depends on mu
 
 void sw_deriv(const int ieo, const double mu) {
-  double swtime = gettime();
+  tm_stopwatch_push(&g_timers);
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -152,12 +152,12 @@ void sw_deriv(const int ieo, const double mu) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
-  tm_stopwatch(0, 2, "", __func__, swtime);
+  tm_stopwatch_pop(&g_timers, 0, 2, "", __func__);
   return;
 }
 
 void sw_deriv_nd(const int ieo) {
-  double swtime = gettime();
+  tm_stopwatch_push(&g_timers);
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -243,7 +243,7 @@ void sw_deriv_nd(const int ieo) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
-  tm_stopwatch(0, 2, "", __func__, swtime);
+  tm_stopwatch_pop(&g_timers, 0, 2, "", __func__);
   return;
 }
 
@@ -256,7 +256,7 @@ void sw_deriv_nd(const int ieo) {
 
 void sw_spinor_eo(const int ieo, const spinor * const kk, const spinor * const ll, 
 		  const double fac) {
-  double swtime = gettime();
+  tm_stopwatch_push(&g_timers);
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -320,13 +320,13 @@ void sw_spinor_eo(const int ieo, const spinor * const kk, const spinor * const l
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
-  tm_stopwatch(0, 2, "", __func__, swtime);
+  tm_stopwatch_pop(&g_timers, 0, 2, "", __func__);
   return;
 }
 
 void sw_spinor(const spinor * const kk, const spinor * const ll, 
 	       const double fac) {
-  double swtime = gettime();
+  tm_stopwatch_push(&g_timers);
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -379,7 +379,7 @@ void sw_spinor(const spinor * const kk, const spinor * const ll,
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
-  tm_stopwatch(0, 2, "", __func__, swtime);
+  tm_stopwatch_pop(&g_timers, 0, 2, "", __func__);
   return;
 }
 

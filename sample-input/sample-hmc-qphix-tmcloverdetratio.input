@@ -16,6 +16,8 @@ ReversibilityCheckIntervall = 4
 InitialStoreCounter = 0
 DebugLevel = 1
 
+StrictResidualCheck = yes
+
 # since this is a test file, we employ the reproducible random numbers mode
 ReproduceRandomNumbers = yes
 Seed = 127782
@@ -106,7 +108,7 @@ BeginOperator CLOVER
   2KappaMu = 0.01
   CSW = 1.00
   kappa = 0.138
-  SolverPrecision = 1e-16
+  SolverPrecision = 1e-18
   MaxSolverIterations = 1000
   useevenodd = yes
   useexternalinverter = qphix

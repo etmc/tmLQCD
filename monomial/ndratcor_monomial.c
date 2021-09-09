@@ -64,12 +64,12 @@ void apply_Z_ndpsi(spinor * const k_up, spinor * const k_dn,
 
 
 void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
+  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
-  double atime, etime, delta;
+  double delta;
   spinor * up0, * dn0, * up1, * dn1, * tup, * tdn, * Zup, * Zdn;
   double coefs[6] = {1./4., -3./32., 7./128., -77./2048., 231./8192., -1463./65536.}; // series of (1+x)^(1/4)
   double coefs_check[6] = {1./2., -1./8., 1./16., -5./128., 7./256., -21./1024.}; // series of (1+x)^(1/2)
-  atime = gettime();
   nd_set_global_parameter(mnl);
   g_mu3 = 0.;
   mnl->iter0 = 0;
@@ -87,11 +87,13 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   // the Gaussian distributed random fields
   mnl->energy0 = 0.;
+  tm_stopwatch_push(&g_timers);
   random_spinor_field_eo(mnl->pf, mnl->rngrepro, RN_GAUSS);
   mnl->energy0 = square_norm(mnl->pf, VOLUME/2, 1);
 
   random_spinor_field_eo(mnl->pf2, mnl->rngrepro, RN_GAUSS);
   mnl->energy0 += square_norm(mnl->pf2, VOLUME/2, 1);
+  tm_stopwatch_pop(&g_timers, 0 ,1, "", "random_energy0");
 
   mnl->solver_params.max_iter = mnl->maxiter;
   mnl->solver_params.squared_solver_prec = mnl->accprec;
@@ -114,12 +116,16 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   apply_Z_ndpsi(up0, dn0, mnl->pf, mnl->pf2, id, hf, &(mnl->solver_params));
   // computing correction to energy1
+  tm_stopwatch_push(&g_timers);
   delta = coefs_check[0]*(scalar_prod_r(mnl->pf, up0, VOLUME/2, 1) + scalar_prod_r(mnl->pf2, dn0, VOLUME/2, 1));
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "sclar_prod_r");
   if(g_debug_level > 2 && g_proc_id == 0)
     printf("# NDRATCOR heatbath: c_%d*(R * Z^%d * R) = %e\n", 1, 1, delta);
   // debug for showing that the old check was giving a smaller delta
   if(g_debug_level > 3) {
+    tm_stopwatch_push(&g_timers);
     double delta_old = square_norm(up0, VOLUME/2, 1) + square_norm(dn0, VOLUME/2, 1);
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "square_norm");
     if(g_proc_id == 0) {
       printf("# NDRATCOR old check: || Z^%d * R ||^2 = %e\n", 1, delta_old);
       printf("# NDRATCOR new check: (c_%d*(R * Z^%d * R))^2 = %e\n", 1, 1, delta*delta);
@@ -137,12 +143,16 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
     
     for(int i = 2; i < 8; i++) {
       // computing next order correction to energy1
+      tm_stopwatch_push(&g_timers);
       delta = coefs_check[i-1]*(scalar_prod_r(Zup, up0, VOLUME/2, 1) + scalar_prod_r(Zup, dn0, VOLUME/2, 1)); 
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "scalar_prod_r");
       if(g_debug_level > 2 && g_proc_id == 0)
         printf("# NDRATCOR heatbath: c_%d*(R * Z^%d * R) = %e\n", i, i, delta);
       // debug for showing that the old check was giving a smaller delta
       if(g_debug_level > 3) {
+        tm_stopwatch_push(&g_timers);
         double delta_old = square_norm(up0, VOLUME/2, 1) + square_norm(dn0, VOLUME/2, 1);
+        tm_stopwatch_pop(&g_timers, 0, 1, "", "square_norm");
         if(g_proc_id == 0) {
           printf("# NDRATCOR old check: || Z^%d * R ||^2 = %e\n", 1, delta_old);
           printf("# NDRATCOR new check: (c_%d*(R * Z^%d * R))^2 = %e\n", 1, 1, delta*delta);
@@ -160,25 +170,22 @@ void ndratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
       up1 = tup; dn1 = tdn;
     }
   }
-  etime = gettime();
   if(g_proc_id == 0) {
-    if(g_debug_level > 1) {
-      printf("# Time for %s monomial heatbath: %e s\n", mnl->name, etime-atime);
-    }
     if(g_debug_level > 3) { 
       printf("called ndratcor_heatbath for id %d energy %f\n", id, mnl->energy0);
     }
   }
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return;
 }
 
 
 double ndratcor_acc(const int id, hamiltonian_field_t * const hf) {
+  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
-  double atime, etime, delta;
+  double delta;
   spinor * up0, * dn0, * up1, * dn1, * tup, * tdn;
   double coefs[6] = {-1./2., 3./8., -5./16., 35./128., -63./256., 231./1024.};
-  atime = gettime();
   nd_set_global_parameter(mnl);
   g_mu3 = 0.;
   if(mnl->type == NDCLOVERRATCOR) {
@@ -186,7 +193,9 @@ double ndratcor_acc(const int id, hamiltonian_field_t * const hf) {
     sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
     copy_32_sw_fields();
   }
+  tm_stopwatch_push(&g_timers);
   mnl->energy1 = square_norm(mnl->pf, VOLUME/2, 1) + square_norm(mnl->pf2, VOLUME/2, 1);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "square_norm");
 
   mnl->solver_params.max_iter = mnl->maxiter;
   mnl->solver_params.squared_solver_prec = mnl->accprec;
@@ -207,15 +216,19 @@ double ndratcor_acc(const int id, hamiltonian_field_t * const hf) {
   up1 = mnl->w_fields[2]; dn1 = mnl->w_fields[3];
 
   apply_Z_ndpsi(up0, dn0, mnl->pf, mnl->pf2, id, hf, &(mnl->solver_params));
+  tm_stopwatch_push(&g_timers);
   delta = coefs[0]*(scalar_prod_r(mnl->pf, up0, VOLUME/2, 1) + scalar_prod_r(mnl->pf2, dn0, VOLUME/2, 1));
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "scalar_prod_r");
   mnl->energy1 += delta;
   if(g_debug_level > 2 && g_proc_id == 0)
     printf("# NDRATCOR acc step: c_%d*(phi * Z^%d * phi) = %e\n", 1, 1, delta);
 
   for(int i = 2; i < 8; i++) {
     if(delta*delta < mnl->accprec) break;
-
-    delta = coefs[i-1]*(square_norm(up0, VOLUME/2, 1) + square_norm(dn0, VOLUME/2, 1)); 
+    
+    tm_stopwatch_push(&g_timers);
+    delta = coefs[i-1]*(square_norm(up0, VOLUME/2, 1) + square_norm(dn0, VOLUME/2, 1));
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "square_norm");
     mnl->energy1 += delta;
     if(g_debug_level > 2 && g_proc_id == 0)
       printf("# NDRATCOR acc step: c_%d*(phi * Z^%d * phi) = %e\n", i, i, delta);
@@ -223,7 +236,9 @@ double ndratcor_acc(const int id, hamiltonian_field_t * const hf) {
     if(delta*delta < mnl->accprec) break;
 
     apply_Z_ndpsi(up1, dn1, up0, dn0, id, hf, &(mnl->solver_params));
+    tm_stopwatch_push(&g_timers);
     delta = coefs[i-1]*(scalar_prod_r(up0, up1, VOLUME/2, 1) + scalar_prod_r(dn0, dn1, VOLUME/2, 1));
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "scalar_prod_r");
     mnl->energy1 += delta;
     if(g_debug_level > 2 && g_proc_id == 0)
       printf("# NDRATCOR acc step: c_%d*(phi * Z^%d * phi) = %e\n", i, i, delta);
@@ -233,15 +248,12 @@ double ndratcor_acc(const int id, hamiltonian_field_t * const hf) {
     up1 = tup; dn1 = tdn;
   }
 
-  etime = gettime();
   if(g_proc_id == 0) {
-    if(g_debug_level > 1) {
-      printf("# Time for %s monomial acc step: %e s\n", mnl->name, etime-atime);
-    }
     if(g_debug_level > 3) { // shoud be 3
       printf("called ndratcor_acc for id %d dH = %1.10e\n", id, mnl->energy1 - mnl->energy0);
     }
   }
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return(mnl->energy1 - mnl->energy0);
 }
 
@@ -250,6 +262,7 @@ void apply_Z_ndpsi(spinor * const k_up, spinor * const k_dn,
 		     spinor * const l_up, spinor * const l_dn,
 		     const int id, hamiltonian_field_t * const hf,
 		     solver_params_t * solver_params) {
+  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
 
   mnl->iter0 += solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
@@ -280,11 +293,13 @@ void apply_Z_ndpsi(spinor * const k_up, spinor * const k_dn,
   mul_r(g_chi_dn_spinor_field[mnl->rat.np], mnl->rat.A*mnl->rat.A, 
 	k_dn, VOLUME/2);
   // apply Q^2 and compute the residue
+  tm_stopwatch_push(&g_timers);
   solver_params->M_ndpsi(k_up, k_dn,
 		     g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np]);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "M_ndpsi");
   diff(k_up, k_up, l_up, VOLUME/2);
   diff(k_dn, k_dn, l_dn, VOLUME/2);
-  
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
 }
 
 // computes ||(1 - C^dagger R C) phi||
@@ -292,6 +307,7 @@ void check_C_ndpsi(spinor * const k_up, spinor * const k_dn,
 		   spinor * const l_up, spinor * const l_dn,
 		   const int id, hamiltonian_field_t * const hf,
 		   solver_params_t * solver_params) {
+  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
   mnl->iter0 = solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
 			     l_up, l_dn, solver_params);
@@ -304,14 +320,18 @@ void check_C_ndpsi(spinor * const k_up, spinor * const k_dn,
     // Q_h * tau^1 - i nu_j
     // this needs phmc_Cpol = 1 to work!
     if(mnl->type == NDCLOVERRATCOR || mnl->type == NDCLOVERRAT) {
+      tm_stopwatch_push(&g_timers);
       Qsw_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
 			       g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
 			       I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "Qsw_tau1_sub_const_ndpsi");
     }
     else {
+      tm_stopwatch_push(&g_timers);
       Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
 			     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
 			     I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "Q_tau1_sub_const_ndpsi");
     }
     assign_add_mul(k_up, g_chi_up_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
     assign_add_mul(k_dn, g_chi_dn_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
@@ -334,23 +354,29 @@ void check_C_ndpsi(spinor * const k_up, spinor * const k_dn,
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     // Q_h * tau^1 + i nu_j
     if(mnl->type == NDCLOVERRATCOR || mnl->type == NDCLOVERRAT) {
+      tm_stopwatch_push(&g_timers);
       Qsw_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
 			     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
 			     -I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "Qsw_tau1_sub_const_ndpsi");
     }
     else {
+      tm_stopwatch_push(&g_timers);
       Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np], g_chi_dn_spinor_field[mnl->rat.np],
 			     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
 			     -I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "Q_tau1_sub_const_ndpsi");
     }
     assign_add_mul(k_up, g_chi_up_spinor_field[mnl->rat.np], -I*mnl->rat.rnu[j], VOLUME/2);
     assign_add_mul(k_dn, g_chi_dn_spinor_field[mnl->rat.np], -I*mnl->rat.rnu[j], VOLUME/2);
   }
   diff(k_up, k_up, l_up, VOLUME/2);  
-  diff(k_dn, k_dn, l_dn, VOLUME/2);  
+  diff(k_dn, k_dn, l_dn, VOLUME/2);
+  tm_stopwatch_push(&g_timers); 
   double resi = square_norm(k_up, VOLUME/2, 1);
   resi += square_norm(k_dn, VOLUME/2, 1);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "square_norm");
   if(g_proc_id == 0) printf("|| (1-C^dagger R C)*phi|| = %e\n", resi);
-
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return;
 }
