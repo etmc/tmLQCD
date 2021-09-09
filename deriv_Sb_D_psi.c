@@ -38,7 +38,7 @@
 
 void deriv_Sb_D_psi(spinor * const l, spinor * const k, 
 		    hamiltonian_field_t * const hf, const double factor) {
-  double atime = gettime(); 
+  tm_stopwatch_push(&g_timers); 
   int ix,iy, iz;
   int ioff,ioff2,icx,icy, icz;
   su3 * restrict up ALIGN;
@@ -368,7 +368,7 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k,
 
     /****************** end of loop ************************/
   }
-  tm_stopwatch(0, 2, "", __func__, atime);
+  tm_stopwatch_pop(&g_timers, 0, 2, "", __func__);
 #ifdef _KOJAK_INST
 #pragma pomp inst end(derivSb)
 #endif
@@ -380,7 +380,7 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k,
 
 void deriv_Sb_D_psi(spinor * const l, spinor * const k, 
 		    hamiltonian_field_t * const hf, const double factor) {
-  double atime = gettime();
+  tm_stopwatch_push(&g_timers);
 #ifdef BGL
   __alignx(16, l);
   __alignx(16, k);
@@ -584,7 +584,7 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k,
 #ifdef TM_USE_OMP
   } /*OpenMP closing brace */
 #endif
-  tm_stopwatch(0, 2, "", __func__, atime);
+  tm_stopwatch_pop(&g_timers, 0, 2, "", __func__);
 }
 
 #endif

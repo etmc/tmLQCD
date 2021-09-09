@@ -60,10 +60,9 @@ extern int phmc_exact_poly;
  ********************************************/
 
 void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
-  double atime, etime;
+  tm_stopwatch_push(&g_timers);
   int j, k;
   monomial * mnl = &monomial_list[id];
-  atime = gettime();
   /* This factor 2 a missing factor 2 in trace_lambda */
   ndpoly_set_global_parameter(mnl, phmc_exact_poly);
   mnl->forcefactor = -phmc_Cpol*mnl->EVMaxInv;
@@ -135,7 +134,7 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
       Qtm_pm_sub_const_nrm_psi(g_chi_up_spinor_field[mnl->MDPolyDegree], 
 			       g_chi_up_spinor_field[mnl->MDPolyDegree-1],
 			       mnl->MDPolyRoots[2*mnl->MDPolyDegree-3-j]);
-      
+     
       Qtm_minus_psi(mnl->w_fields[3],g_chi_up_spinor_field[j-1]); 
       
       H_eo_tm_inv_psi(mnl->w_fields[2], g_chi_up_spinor_field[phmc_dop_n_cheby], EO, -1.);
@@ -145,6 +144,7 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
       deriv_Sb(EO, mnl->w_fields[2], g_chi_up_spinor_field[phmc_dop_n_cheby], hf, mnl->forcefactor);
       
       Qtm_minus_psi(mnl->w_fields[3],g_chi_up_spinor_field[mnl->MDPolyDegree]); 
+      
 
       H_eo_tm_inv_psi(mnl->w_fields[2],mnl->w_fields[3], EO, +1.);
       deriv_Sb(OE, g_chi_up_spinor_field[j-1] , mnl->w_fields[2], hf, mnl->forcefactor); 
@@ -156,16 +156,14 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
   /*
     Normalisation by the largest  EW  is done in update_momenta
     using mnl->forcefactor
-  */ 
-  etime = gettime();
-  if(g_debug_level > 1 && g_proc_id == 0) {
-    printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
-  }
+  */
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return;
 }
 
 
 void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
+  tm_stopwatch_push(&g_timers);
   int j;
   monomial * mnl = &monomial_list[id];
 
@@ -177,12 +175,16 @@ void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   }
 
   mnl->energy0 = 0.;
+  tm_stopwatch_push(&g_timers);
   random_spinor_field_eo(g_chi_up_spinor_field[0], mnl->rngrepro, RN_GAUSS);
   mnl->energy0 = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "random_energy0");
 
   if(g_epsbar!=0.0 || phmc_exact_poly == 0) {
+    tm_stopwatch_push(&g_timers);
     random_spinor_field_eo(g_chi_dn_spinor_field[0], mnl->rngrepro, RN_GAUSS);
     mnl->energy0 += square_norm(g_chi_dn_spinor_field[0], VOLUME/2, 1);
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "random_energy0");
   } 
   else {
     zero_spinor_field(g_chi_dn_spinor_field[0], VOLUME/2);
@@ -201,8 +203,8 @@ void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
       assign(g_chi_dn_spinor_field[0], g_chi_dn_spinor_field[1], VOLUME/2);
 
       Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
-			g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], 
-			mnl->MDPolyRoots[mnl->MDPolyDegree-2+j], phmc_Cpol, phmc_invmaxev);
+			                       g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], 
+                             mnl->MDPolyRoots[mnl->MDPolyDegree-2+j], phmc_Cpol, phmc_invmaxev);
     }
     Ptilde_ndpsi(g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0], mnl->PtildeCoefs, 
 		 mnl->PtildeDegree, g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], &Qtm_pm_ndpsi);
@@ -226,8 +228,8 @@ void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
       assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
       assign(g_chi_dn_spinor_field[0], g_chi_dn_spinor_field[1], VOLUME/2);
       Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1],
-			g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0],
-			mnl->MDPolyRoots[mnl->MDPolyDegree-2+j], phmc_Cpol, phmc_invmaxev);
+                             g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0],
+                             mnl->MDPolyRoots[mnl->MDPolyDegree-2+j], phmc_Cpol, phmc_invmaxev);
     }
 
     assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
@@ -245,9 +247,8 @@ void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
     /*  phi= Bdagger phi  */
     for(j = 1; j < (mnl->MDPolyDegree); j++){
       assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
-      Qtm_pm_sub_const_nrm_psi(g_chi_up_spinor_field[1],
-			    g_chi_up_spinor_field[0],
-			    mnl->MDPolyRoots[mnl->MDPolyDegree-2+j]);
+      Qtm_pm_sub_const_nrm_psi(g_chi_up_spinor_field[1], g_chi_up_spinor_field[0], 
+                               mnl->MDPolyRoots[mnl->MDPolyDegree-2+j]);
     }
     assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
   }
@@ -258,11 +259,13 @@ void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called ndpoly_heatbath for id %d \n", id);
   }
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return;
 }
 
 
 double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
+  tm_stopwatch_push(&g_timers);
   int j, ij=0;
   double temp, sgn, fact, Diff;
   double Ener[8];
@@ -317,52 +320,52 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
     for(j = 1; j < 8; j++){ /* To omit corrections just set  j<1 */
       
       if(j % 2){ /*  Chi[j] = ( Qdag P  Ptilde ) Chi[j-1]  */ 
-	Ptilde_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-		      mnl->PtildeCoefs, mnl->PtildeDegree, 
-		     g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], &Qtm_pm_ndpsi);
-	Ptilde_ndpsi(g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], 
-		     mnl->MDPolyCoefs, mnl->MDPolyDegree, 
-		     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], &Qtm_pm_ndpsi);
+        Ptilde_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], mnl->PtildeCoefs, 
+                     mnl->PtildeDegree, g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], 
+                     &Qtm_pm_ndpsi);
+        Ptilde_ndpsi(g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], 
+                     mnl->MDPolyCoefs, mnl->MDPolyDegree, g_chi_up_spinor_field[j], 
+                     g_chi_dn_spinor_field[j], &Qtm_pm_ndpsi);
 
-	Qtm_dagger_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-			      g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
+        Qtm_dagger_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], g_chi_up_spinor_field[j-1],
+                         g_chi_dn_spinor_field[j-1]);
       }
       else { /*  Chi[j] = ( Ptilde P Q ) Chi[j-1]  */ 
-	Qtm_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-			g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1]);
-	Ptilde_ndpsi(g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], 
-		     mnl->MDPolyCoefs, mnl->MDPolyDegree, g_chi_up_spinor_field[j], 
-		     g_chi_dn_spinor_field[j], &Qtm_pm_ndpsi);
-	Ptilde_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-		      mnl->PtildeCoefs, mnl->PtildeDegree, 
-		      g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], &Qtm_pm_ndpsi);
+        Qtm_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], g_chi_up_spinor_field[j-1],
+                  g_chi_dn_spinor_field[j-1]);
+        Ptilde_ndpsi(g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], mnl->MDPolyCoefs, 
+                     mnl->MDPolyDegree, g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], &Qtm_pm_ndpsi);
+        Ptilde_ndpsi(g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], mnl->PtildeCoefs,
+                     mnl->PtildeDegree, g_chi_up_spinor_field[j-1], g_chi_dn_spinor_field[j-1], &Qtm_pm_ndpsi);
       }
 
       Ener[j] = Ener[j-1] + Ener[0];
       sgn = -1.0;
       for(ij = 1; ij < j; ij++){
-	fact = factor[j] / (factor[ij] * factor[j-ij]);
-	if((g_proc_id == g_stdio_proc) && (g_debug_level > 4)) {
-	  printf("# NDPOLY: Here  j=%d  and  ij=%d   sign=%f  fact=%f \n", j ,ij, sgn, fact);
-	}
-	Ener[j] += sgn*fact*Ener[ij];
-	sgn = -sgn;
+        fact = factor[j] / (factor[ij] * factor[j-ij]);
+        if((g_proc_id == g_stdio_proc) && (g_debug_level > 4)) {
+          printf("# NDPOLY: Here  j=%d  and  ij=%d   sign=%f  fact=%f \n", j ,ij, sgn, fact);
+        }
+        Ener[j] += sgn*fact*Ener[ij];
+        sgn = -sgn;
       }
+      tm_stopwatch_push(&g_timers);
       temp = square_norm(g_chi_up_spinor_field[j], VOLUME/2, 1);
       temp += square_norm(g_chi_dn_spinor_field[j], VOLUME/2, 1);
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "square_norm");
       if((g_proc_id == g_stdio_proc) && (g_debug_level > 4)) {
-	printf("# NDPOLY: Here  j=%d   sign=%f  temp=%e \n", j, sgn, temp);
+        printf("# NDPOLY: Here  j=%d   sign=%f  temp=%e \n", j, sgn, temp);
       }
 
       Ener[j] += sgn*temp;
 
       Diff = fabs(Ener[j] - Ener[j-1]);
       if((g_proc_id == g_stdio_proc) && (g_debug_level > 0)) {
-	printf("# NDPOLY: H-Correction after %d steps: %e \n", j, Diff);
+        printf("# NDPOLY: H-Correction after %d steps: %e \n", j, Diff);
       }
 
       if(Diff < mnl->PrecisionHfinal) {
-	break;
+        break;
       }
     }
     mnl->energy1 += Ener[ij];  /* this is quite sticky */
@@ -380,12 +383,14 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
       assign(g_chi_up_spinor_field[0], up0, VOLUME/2);
       assign(g_chi_dn_spinor_field[0], dn0, VOLUME/2);
     }
-
+    
+    tm_stopwatch_push(&g_timers);
     temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
     Ener[0] = temp;
 
     temp = square_norm(g_chi_dn_spinor_field[0], VOLUME/2, 1);
     Ener[0] += temp;
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "square_norm");
 
     if((g_proc_id == g_stdio_proc) && (g_debug_level > 4)) {
       ij=0;
@@ -397,13 +402,14 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
   else if(phmc_exact_poly == 1 && g_epsbar == 0.0) {
     for(j = 1; j < (mnl->MDPolyDegree); j++) {
       assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
-      Qtm_pm_sub_const_nrm_psi(g_chi_up_spinor_field[1],
-			    g_chi_up_spinor_field[0],
-			    mnl->MDPolyRoots[j-1]);
+      Qtm_pm_sub_const_nrm_psi(g_chi_up_spinor_field[1], g_chi_up_spinor_field[0],
+			                         mnl->MDPolyRoots[j-1]);
     }
     assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
 
+    tm_stopwatch_push(&g_timers);
     temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "square_norm");
     Ener[0] = temp;
 
     if((g_proc_id == g_stdio_proc) && (g_debug_level > 4)) {
@@ -417,20 +423,20 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
     printf("called ndpoly_acc for id %d %d dH = %1.10e\n", id, g_running_phmc, mnl->energy1 - mnl->energy0);
   }
   /* END IF PHMC */
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return(mnl->energy1 - mnl->energy0);
 }
 
 
 int init_ndpoly_monomial(const int id) {
+  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
   int j, k, errcode;
   FILE * ifs;
   double *phmc_darray;
   char title[100];
   matrix_mult_nd Qsq = &Qtm_pm_ndpsi;
-  double atime, etime;
-
-  atime = gettime();
+  
   if(mnl->type == NDCLOVER) {
     Qsq = &Qsw_pm_ndpsi;
     init_sw_fields();
@@ -533,10 +539,7 @@ int init_ndpoly_monomial(const int id) {
 #endif
     exit(6);
   }
-  etime = gettime();
-  if(g_debug_level > 0 && g_proc_id == 0) {
-    printf("# Time for init %s monomial: %e s\n", mnl->name, etime-atime);
-  }
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return(0);
 }
 

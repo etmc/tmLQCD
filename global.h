@@ -45,6 +45,7 @@
 #include "su3adj.h"
 
 #include "misc_types.h"
+#include "gettime.h"
 
 #define N_CHEBYMAX 49
 #define NTILDE_CHEBYMAX 2000
@@ -80,6 +81,8 @@ EXTERN int g_disable_IO_checks;
 EXTERN int g_disable_src_IO_checks;
 
 EXTERN tm_mpi_thread_level_t g_mpi_thread_level;
+
+EXTERN tm_timers_t g_timers;
 
 EXTERN int T_global;
 #ifndef FIXEDVOLUME

@@ -50,8 +50,7 @@
  *******************************************************/
 
 void update_gauge(const double step, hamiltonian_field_t * const hf) {
-  double atime, etime;
-  atime = gettime();
+  tm_stopwatch_push(&g_timers);
   update_tm_gauge_id(&g_gauge_state, step);
 #ifdef DDalphaAMG
   MG_update_gauge(step);
@@ -107,7 +106,6 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
   update_tm_gauge_id(&g_gauge_state_32, step);
   update_tm_gauge_exchange(&g_gauge_state_32);
   
-  
   /*
    * The backward copy of the gauge field
    * is not updated here!
@@ -116,10 +114,7 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
   g_update_gauge_copy = 1;
   g_update_gauge_copy_32 = 1;
 
-  etime = gettime();
-  if(g_debug_level > 1 && g_proc_id == 0) {
-    printf("# Time gauge update: %e s\n", etime-atime); 
-  } 
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return;
 #ifdef _KOJAK_INST
 #pragma pomp inst end(updategauge)

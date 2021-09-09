@@ -56,14 +56,13 @@ inline void setPhmcVars(monomial *mnl){
 }
 
 void poly_derivative(const int id, hamiltonian_field_t * const hf){
-  double atime, etime;
+  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
   int k,j;
   int degreehalf=mnl->MDPolyDegree/2;
 
   spinor** chi_spinor_field=mnl->MDPoly_chi_spinor_fields;
 
-  atime = gettime();
   (*mnl).forcefactor = -mnl->MDPolyLocNormConst/mnl->MDPolyLmax;
 
 
@@ -173,21 +172,16 @@ void poly_derivative(const int id, hamiltonian_field_t * const hf){
   g_mu = g_mu1;
   boundary(g_kappa);
   popPhmcVars();
-  etime = gettime();
-  if(g_debug_level > 1 && g_proc_id == 0) {
-    printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
-  }
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return;
 }
 
 double poly_acc(const int id, hamiltonian_field_t * const hf){
-
+  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
   int j;
   double diff;
   int no_eigenvalues=-1;
-  double atime, etime;
-  atime = gettime();
   if(mnl->even_odd_flag) {
     if(mnl->MDPolyDetRatio==1) {
       g_mu = mnl->mu2;
@@ -254,24 +248,20 @@ double poly_acc(const int id, hamiltonian_field_t * const hf){
 
     return NAN;
   }
-  etime = gettime();
   if(g_proc_id == 0) {
-    if(g_debug_level > 1) {
-      printf("# Time for %s monomial acc step: %e s\n", mnl->name, etime-atime);
-    }
     if(g_debug_level > 3) {
       printf("called poly_acc for id %d dH = %1.10e\n", 
 	     id, mnl->energy1 - mnl->energy0);
     }
   }
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return (mnl->energy1 - mnl->energy0);
 }
 
 void poly_heatbath(const int id, hamiltonian_field_t * const hf){
+  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
   int j;
-  double atime, etime;
-  atime = gettime();
   mnl->csg_n = 0;
   mnl->csg_n2 = 0;
   mnl->iter0 = 0;
@@ -336,14 +326,11 @@ void poly_heatbath(const int id, hamiltonian_field_t * const hf){
   boundary(g_kappa);
   popPhmcVars();
 
-  etime = gettime();
   if(g_proc_id == 0) {
-    if(g_debug_level > 1) {
-      printf("# Time for %s monomial heatbath: %e s\n", mnl->name, etime-atime);
-    }
     if(g_debug_level > 3) {
       printf("called poly_heatbath for id %d energy %f\n", id, mnl->energy0);
     }
   }
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return;
 }

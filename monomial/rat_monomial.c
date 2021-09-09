@@ -54,9 +54,8 @@
  ********************************************/
 
 void rat_derivative(const int id, hamiltonian_field_t * const hf) {
+  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
-  double atime, etime;
-  atime = gettime();
   mnl_backup_restore_globals(TM_BACKUP_GLOBALS);
   g_kappa = mnl->kappa;
   g_mu = 0;
@@ -65,12 +64,17 @@ void rat_derivative(const int id, hamiltonian_field_t * const hf) {
 
   if(mnl->type == CLOVERRAT) {
     g_c_sw = mnl->c_sw;
+    tm_stopwatch_push(&g_timers);
+#ifdef TM_USE_OMP
+    #pragma omp parallel for
+#endif
     for(int i = 0; i < VOLUME; i++) { 
       for(int mu = 0; mu < 4; mu++) { 
-	_su3_zero(swm[i][mu]);
-	_su3_zero(swp[i][mu]);
+        _su3_zero(swm[i][mu]);
+        _su3_zero(swp[i][mu]);
       }
     }
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "su3_zero");
   
     // we compute the clover term (1 + T_ee(oo)) for all sites x
     sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
@@ -93,17 +97,24 @@ void rat_derivative(const int id, hamiltonian_field_t * const hf) {
                              &(mnl->solver_params) );
   
   for(int j = (mnl->rat.np-1); j > -1; j--) {
+    tm_stopwatch_push(&g_timers);
     mnl->Qp(mnl->w_fields[0], g_chi_up_spinor_field[j]);
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "Qp");
     if(mnl->type == CLOVERRAT) {
       // apply Hopping Matrix M_{eo}
       // to get the even sites of X_e
+      tm_stopwatch_push(&g_timers);
       H_eo_sw_inv_psi(mnl->w_fields[2], g_chi_up_spinor_field[j], EO, -1, mnl->mu);
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "H_eo_sw_inv_psi");
+
       // \delta Q sandwitched by Y_o^\dagger and X_e
       deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, 
 	       mnl->rat.rmu[j]*mnl->forcefactor); 
       
       // to get the even sites of Y_e
+      tm_stopwatch_push(&g_timers);
       H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1, mnl->mu);
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "H_eo_sw_inv_psi");
       // \delta Q sandwitched by Y_e^\dagger and X_o
       // uses the gauge field in hf and changes the derivative fields in hf
       deriv_Sb(EO, mnl->w_fields[3], g_chi_up_spinor_field[j], hf, 
@@ -119,14 +130,18 @@ void rat_derivative(const int id, hamiltonian_field_t * const hf) {
     else {
       /* apply Hopping Matrix M_{eo} */
       /* to get the even sites of X_e */
+      tm_stopwatch_push(&g_timers);
       H_eo_tm_inv_psi(mnl->w_fields[2], g_chi_up_spinor_field[j], EO, -1.);
       /* \delta Q sandwitched by Y_o^\dagger and X_e */
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "H_eo_tm_inv_psi");
       deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, 
 	       mnl->rat.rmu[j]*mnl->forcefactor); 
       
       /* to get the even sites of Y_e */
+      tm_stopwatch_push(&g_timers);
       H_eo_tm_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1);
       /* \delta Q sandwitched by Y_e^\dagger and X_o */
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "H_eo_tm_inv_psi");
       deriv_Sb(EO, mnl->w_fields[3], g_chi_up_spinor_field[j], hf, 
 	       mnl->rat.rmu[j]*mnl->forcefactor);
     }
@@ -137,19 +152,15 @@ void rat_derivative(const int id, hamiltonian_field_t * const hf) {
   if(mnl->type == CLOVERRAT) {
     sw_all(hf, mnl->kappa, mnl->c_sw);
   }
-  etime = gettime();
-  if(g_debug_level > 1 && g_proc_id == 0) {
-    printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
-  }
   mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return;
 }
 
 
 void rat_heatbath(const int id, hamiltonian_field_t * const hf) {
+  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
-  double atime, etime;
-  atime = gettime();
   mnl_backup_restore_globals(TM_BACKUP_GLOBALS);
   g_kappa = mnl->kappa;
   // only for non-twisted operators
@@ -172,9 +183,11 @@ void rat_heatbath(const int id, hamiltonian_field_t * const hf) {
   }
 
   // the Gaussian distributed random fields
+  tm_stopwatch_push(&g_timers);
   mnl->energy0 = 0.;
   random_spinor_field_eo(mnl->pf, mnl->rngrepro, RN_GAUSS);
   mnl->energy0 = square_norm(mnl->pf, VOLUME/2, 1);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "random_energy0");
 
   // set solver parameters
   mnl->solver_params.max_iter = mnl->maxiter;
@@ -194,29 +207,27 @@ void rat_heatbath(const int id, hamiltonian_field_t * const hf) {
   // apply C to the random field to generate pseudo-fermion fields
   for(int j = (mnl->rat.np-1); j > -1; j--) {
     // Q - i nu_j (not twisted mass term, so Qp=Qm=Q
+    tm_stopwatch_push(&g_timers);
     mnl->Qp(g_chi_up_spinor_field[mnl->rat.np], g_chi_up_spinor_field[j]);
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "Qp");
     assign_add_mul(g_chi_up_spinor_field[mnl->rat.np], g_chi_up_spinor_field[j], -I*mnl->rat.nu[j], VOLUME/2);
     assign_add_mul(mnl->pf, g_chi_up_spinor_field[mnl->rat.np], I*mnl->rat.rnu[j], VOLUME/2);
   }
 
-  etime = gettime();
   if(g_proc_id == 0) {
-    if(g_debug_level > 1) {
-      printf("# Time for %s monomial heatbath: %e s\n", mnl->name, etime-atime);
-    }
     if(g_debug_level > 3) { 
       printf("called rat_heatbath for id %d energy %f\n", id, mnl->energy0);
     }
   }
   mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return;
 }
 
 
 double rat_acc(const int id, hamiltonian_field_t * const hf) {
+  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
-  double atime, etime;
-  atime = gettime();
   mnl_backup_restore_globals(TM_BACKUP_GLOBALS);
   g_kappa = mnl->kappa;
   // only for non-twisted operators
@@ -248,17 +259,16 @@ double rat_acc(const int id, hamiltonian_field_t * const hf) {
 		     mnl->rat.rmu[j], VOLUME/2);
   }
   
+  tm_stopwatch_push(&g_timers);
   mnl->energy1 = scalar_prod_r(mnl->pf, mnl->w_fields[0], VOLUME/2, 1);
-  etime = gettime();
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "scalar_prod_r");
   if(g_proc_id == 0) {
-    if(g_debug_level > 1) {
-      printf("# Time for %s monomial acc step: %e s\n", mnl->name, etime-atime);
-    }
     if(g_debug_level > 3) {
       printf("called rat_acc for id %d dH = %1.10e\n", id, mnl->energy1 - mnl->energy0);
     }
   }
   mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
+  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return(mnl->energy1 - mnl->energy0);
 }
 

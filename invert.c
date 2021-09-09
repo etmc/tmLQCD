@@ -120,7 +120,6 @@ int main(int argc, char *argv[])
   struct stout_parameters params_smear;
 
   init_critical_globals(TM_PROGRAM_INVERT);
-  init_global_states();
 
 #ifdef _KOJAK_INST
 #pragma pomp inst init

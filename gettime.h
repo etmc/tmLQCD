@@ -21,24 +21,42 @@
 #ifndef _GETTIME_H
 #define _GETTIME_H
 
+#define TM_MAX_TIMING_LEVELS 100
+
 /* gettime provides a time measurement with the BGL real time ticker,
    MPI_Wtime, clock_gettime and clock in decreasing order of preference
    depending on availability. Except for clock(), all these measurements
    are good representations of walltime */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 double gettime(void);
 
-// tm_stopwatch will print the string
+typedef struct tm_timers_s {
+  int lvl;
+  double t[TM_MAX_TIMING_LEVELS];
+} tm_timers_t;
+
+// tm_stopwatch_push will increase the timing level and perform a gettime()
+// measurement
+void tm_stopwatch_push(tm_timers_t * const timers);
+
+// tm_stopwatch_pop will output and decrease the timing level 
 //
-// # %s Time for %s : %e s\n
+// # %s Time for %s : %e s level: %d g_proc_id: %d\n
 //
 // with the prefix, name and gettime()-startime inserted if the g_proc_id
 // matches proc_id and the g_debug_level is equal or higher than
 // dbg_level_threshold
-void tm_stopwatch(const int proc_id, const int dbg_level_threshold,
-    const char * const prefix,
-    const char * const name,
-    const double starttime);
+void tm_stopwatch_pop(tm_timers_t * const timers,
+    const int proc_id, const int dbg_level_threshold,
+    const char * const prefix, const char * const name);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _GETTIME_H */
 
