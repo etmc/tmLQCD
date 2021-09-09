@@ -2230,7 +2230,7 @@ int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out
   return(iterations);
 }
 
-void compute_gauge_force(const CompressionType compression, int rect) {
+void compute_gauge_force_quda(const CompressionType compression, int rect) {
   static int plaq_rect_length = {
     3, 3, 3, 3, 3,
     5, 5, 5, 5, 5,
