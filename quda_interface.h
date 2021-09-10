@@ -165,4 +165,6 @@ int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out
                                      SloppyPrecision sloppy_precision,
                                      CompressionType compression);
 
+void compute_gauge_force_quda(CompressionType compression, int rect);
+
 #endif /* QUDA_INTERFACE_H_ */

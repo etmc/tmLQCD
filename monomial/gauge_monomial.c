@@ -43,6 +43,10 @@
 #include "monomial/monomial.h"
 #include "hamiltonian_field.h"
 #include "gauge_monomial.h"
+#include "fatal_error.h"
+#ifdef TM_USE_QUDA
+#include "quda_interface.h"
+#endif
 
 /* this function calculates the derivative of the momenta: equation 13 of Gottlieb */
 void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
@@ -53,39 +57,46 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
     mnl->forcefactor = 1.;
     factor = -mnl->c0 * g_beta/3.0;
   }
-  
-#ifdef TM_USE_OMP
-#pragma omp parallel
-  {
+  if( mnl->external_library == QUDA_LIB ){
+#ifdef TM_USE_QUDA
+    compute_gauge_force_quda(NO_COMPRESSION, mnl->use_rectangles);
+#else
+    fatal_error("Attempted to use QUDA_LIB in gauge monomial but tmLQCD has been compiled without QUDA support!", __func__);
 #endif
-
-  su3 ALIGN v, w;
-  int i, mu;
-  su3 *z;
-  su3adj *xm;
-
-#ifdef TM_USE_OMP
-#pragma omp for
-#endif
-  for(i = 0; i < VOLUME; i++) { 
-    for(mu=0;mu<4;mu++) {
-      z=&hf->gaugefield[i][mu];
-      xm=&hf->derivative[i][mu];
-      get_staples(&v,i,mu, (const su3**) hf->gaugefield); 
-      _su3_times_su3d(w,*z,v);
-      _trace_lambda_mul_add_assign((*xm), factor, w);
-      
-      if(mnl->use_rectangles) {
-	get_rectangle_staples(&v, i, mu);
-	_su3_times_su3d(w, *z, v);
-	_trace_lambda_mul_add_assign((*xm), factor*mnl->c1/mnl->c0, w);
+  } else {
+    #ifdef TM_USE_OMP
+    #pragma omp parallel
+      {
+    #endif
+    
+      su3 ALIGN v, w;
+      int i, mu;
+      su3 *z;
+      su3adj *xm;
+    
+    #ifdef TM_USE_OMP
+    #pragma omp for
+    #endif
+      for(i = 0; i < VOLUME; i++) { 
+        for(mu=0;mu<4;mu++) {
+          z=&hf->gaugefield[i][mu];
+          xm=&hf->derivative[i][mu];
+          get_staples(&v,i,mu, (const su3**) hf->gaugefield); 
+          _su3_times_su3d(w,*z,v);
+          _trace_lambda_mul_add_assign((*xm), factor, w);
+          
+          if(mnl->use_rectangles) {
+            get_rectangle_staples(&v, i, mu);
+            _su3_times_su3d(w, *z, v);
+            _trace_lambda_mul_add_assign((*xm), factor*mnl->c1/mnl->c0, w);
+          }
+        }
       }
-    }
+    
+    #ifdef TM_USE_OMP
+      } /* OpenMP closing brace */
+    #endif
   }
-
-#ifdef TM_USE_OMP
-  } /* OpenMP closing brace */
-#endif
   tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return;
 }
