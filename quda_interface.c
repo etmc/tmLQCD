@@ -149,7 +149,7 @@ tm_QudaParams_t quda_input;
 double *gauge_quda[4];
 
 // pointer to the QUDA momentum field
-QudaGaugeParam  mom_param;
+QudaGaugeParam  f_gauge_param;
 double *mom_quda[4];
 double *mom_quda_reordered[4];
 
@@ -336,12 +336,10 @@ void _setDefaultQudaParam(void){
   setVerbosityQuda(gen_verb, "# QUDA: ", stdout);
 }
 
-void set_force_gauge_param(CompressionType * compression, QudaGaugeParam * f_gauge_param){
+void set_force_gauge_param( QudaGaugeParam * f_gauge_param){
   set_default_gauge_param(f_gauge_param);
 
-  pad_size = 0;
-  pad_size = 0;
-  gauge_param->ga_pad = 0;
+  f_gauge_param->ga_pad = 0;
 
   f_gauge_param->use_resident_gauge = QUDA_BOOLEAN_NO;
   f_gauge_param->make_resident_gauge = QUDA_BOOLEAN_NO;
@@ -643,7 +641,7 @@ void reorder_mom_fromQuda() {
 #endif
           int oddBit = (x0+x1+x2+x3) & 1;
 
-          memcpy( &(sp[10*tm_idx]), &(tempSpinor[10*(oddBit*VOLUME/2+j/2)]), 10*sizeof(double));
+          memcpy( &(mom_quda_reordered[10*tm_idx]), &(mom_quda[10*(oddBit*VOLUME/2+j/2)]), 10*sizeof(double));
         }
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA", __func__);
 }
@@ -2445,6 +2443,8 @@ void compute_gauge_force_quda(monomial * const mnl, hamiltonian_field_t * const 
   
   _initQuda();
   _initMomQuda();
+
+  int rect = mnl->use_rectangles;
 
   int *** path_buf = rect ? plaq_rect_path : plaq_path;
   int * path_length = rect ? plaq_rect_length : plaq_length;
