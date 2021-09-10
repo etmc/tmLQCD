@@ -454,21 +454,10 @@ void _loadCloverQuda(QudaInvertParam* inv_param){
   }
 }
 
-void _loadGaugeQuda( const int compression ) {
-  static int first_call = 1;
-  // check if the currently loaded gauge field is also the current gauge field
-  // and if so, return immediately
-  if( check_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0) ){
-    return;
-  } else {
-    if( first_call ){
-      first_call = 0;
-    } else {
-      freeGaugeQuda();
-    }
-    reset_quda_gauge_state(&quda_gauge_state);
-  }
+void reorder_gauge_toQuda( const su3 ** const gaugefield, const int compression ) {
 
+  // gaugefield to gauge_quda
+  
   tm_stopwatch_push(&g_timers);
   if( inv_param.verbosity > QUDA_SILENT ){
     if(g_proc_id == 0) {
@@ -512,15 +501,15 @@ void _loadGaugeQuda( const int compression ) {
           int quda_idx = 18*(oddBit*VOLUME/2+j/2);
 
 #if USE_LZ_LY_LX_T
-          memcpy( &(gauge_quda[0][quda_idx]), &(g_gauge_field[tm_idx][3]), 18*gSize);
-          memcpy( &(gauge_quda[1][quda_idx]), &(g_gauge_field[tm_idx][2]), 18*gSize);
-          memcpy( &(gauge_quda[2][quda_idx]), &(g_gauge_field[tm_idx][1]), 18*gSize);
-          memcpy( &(gauge_quda[3][quda_idx]), &(g_gauge_field[tm_idx][0]), 18*gSize);
+          memcpy( &(gauge_quda[0][quda_idx]), &(gaugefield[tm_idx][3]), 18*gSize);
+          memcpy( &(gauge_quda[1][quda_idx]), &(gaugefield[tm_idx][2]), 18*gSize);
+          memcpy( &(gauge_quda[2][quda_idx]), &(gaugefield[tm_idx][1]), 18*gSize);
+          memcpy( &(gauge_quda[3][quda_idx]), &(gaugefield[tm_idx][0]), 18*gSize);
 #else
-          memcpy( &(gauge_quda[0][quda_idx]), &(g_gauge_field[tm_idx][1]), 18*gSize);
-          memcpy( &(gauge_quda[1][quda_idx]), &(g_gauge_field[tm_idx][2]), 18*gSize);
-          memcpy( &(gauge_quda[2][quda_idx]), &(g_gauge_field[tm_idx][3]), 18*gSize);
-          memcpy( &(gauge_quda[3][quda_idx]), &(g_gauge_field[tm_idx][0]), 18*gSize);
+          memcpy( &(gauge_quda[0][quda_idx]), &(gaugefield[tm_idx][1]), 18*gSize);
+          memcpy( &(gauge_quda[1][quda_idx]), &(gaugefield[tm_idx][2]), 18*gSize);
+          memcpy( &(gauge_quda[2][quda_idx]), &(gaugefield[tm_idx][3]), 18*gSize);
+          memcpy( &(gauge_quda[3][quda_idx]), &(gaugefield[tm_idx][0]), 18*gSize);
 #endif
         if( compression == 18 && quda_input.fermionbc == TM_QUDA_THETABC ) {
           // apply theta boundary conditions if compression is not used
@@ -558,6 +547,24 @@ void _loadGaugeQuda( const int compression ) {
   } // OpenMP parallel closing brace 
 #endif
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA", "reorder_gauge");
+}
+
+void _loadGaugeQuda( const int compression ) {
+  static int first_call = 1;
+  // check if the currently loaded gauge field is also the current gauge field
+  // and if so, return immediately
+  if( check_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0) ){
+    return;
+  } else {
+    if( first_call ){
+      first_call = 0;
+    } else {
+      freeGaugeQuda();
+    }
+    reset_quda_gauge_state(&quda_gauge_state);
+  }
+
+  reorder_gauge_toQuda(g_gauge_field, compression);
 
   tm_stopwatch_push(&g_timers);
   loadGaugeQuda((void*)gauge_quda, &gauge_param);
@@ -2445,6 +2452,8 @@ void compute_gauge_force_quda(monomial * const mnl, hamiltonian_field_t * const 
 
   int num_paths = rect ? 24 : 6;
   int max_length = rect ? 5 : 3;
+
+  reorder_gauge_toQuda(hf->gaugefield, 18);
 
   computeGaugeForceQuda((void*)mom_quda, 
                         (void*)gauge_quda, 
