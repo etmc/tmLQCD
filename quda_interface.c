@@ -339,6 +339,7 @@ void _setDefaultQudaParam(void){
 void set_force_gauge_param( QudaGaugeParam * f_gauge_param){
   set_default_gauge_param(f_gauge_param);
 
+  f_gauge_param->t_boundary = QUDA_PERIODIC_T;
   f_gauge_param->ga_pad = 0;
 
   f_gauge_param->use_resident_gauge = QUDA_BOOLEAN_NO;
@@ -362,6 +363,7 @@ void _initQuda() {
   }
 
   gauge_param = newQudaGaugeParam();
+  f_gauge_param = newQudaGaugeParam();
   inv_param = newQudaInvertParam();
   mg_inv_param = newQudaInvertParam();
   quda_mg_param = newQudaMultigridParam();
@@ -611,6 +613,7 @@ void _initMomQuda(void) {
   static int first_call = 1;
   if( first_call ){
     first_call = 0;
+    set_force_gauge_param( &f_gauge_param);
     for(int i = 0; i < 4; i++){
       mom_quda[i] = (double*)malloc(VOLUME*10*sizeof(double));
       mom_quda_reordered[i] = (double*)malloc(VOLUME*10*sizeof(double));
@@ -2453,13 +2456,18 @@ void compute_gauge_force_quda(monomial * const mnl, hamiltonian_field_t * const 
   int num_paths = rect ? 24 : 6;
   int max_length = rect ? 5 : 3;
 
+  // prepares gauge_quda
   reorder_gauge_toQuda(hf->gaugefield, 18);
+
+  for(int i = 0; i < 4; i++){
+    memset(mom_quda[i], 0, VOLUME*10*sizeof(double));
+  }
 
   computeGaugeForceQuda((void*)mom_quda, 
                         (void*)gauge_quda, 
                         path_buf, path_length, loop_coeff, num_paths, max_length, 1.0,
                         // TODO: to be replaced by new gauge_param just for gauge force 
                         &f_gauge_param);
-  //reorder_derivative_fromQuda(mom_quda);
+  reorder_mom_fromQuda(mom_quda);
 }
 
