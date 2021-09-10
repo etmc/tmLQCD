@@ -149,7 +149,9 @@ tm_QudaParams_t quda_input;
 double *gauge_quda[4];
 
 // pointer to the QUDA momentum field
+QudaGaugeParam  mom_param;
 double *mom_quda[4];
+double *mom_quda_reordered[4];
 
 // pointer to a temp. spinor, used for reordering etc.
 double *tempSpinor;
@@ -337,16 +339,20 @@ void _setDefaultQudaParam(void){
 void set_force_gauge_param(CompressionType * compression, QudaGaugeParam * f_gauge_param){
   set_default_gauge_param(f_gauge_param);
 
-  f_gauge_param->mom_ga_pad = f_gauge_param->ga_pad;
-  f_gauge_param->site_ga_pad = f_gauge_param->ga_pad;
+  gauge_param->reconstruct = 10;
+  gauge_param->reconstruct_sloppy = 10;
+  gauge_param->reconstruct_precondition = 10;
+  gauge_param->reconstruct_refinement_sloppy = 10;
+  gauge_param->reconstruct_eigensolver = 10;
   
+  pad_size = 0;
+  pad_size = 0;
+  gauge_param->ga_pad = 0;
+
   f_gauge_param->use_resident_gauge = QUDA_BOOLEAN_NO;
   f_gauge_param->use_resident_mom = QUDA_BOOLEAN_NO;
   f_gauge_param->return_result_mom = QUDA_BOOLEAN_YES;
   f_gauge_param->overwrite_mom = QUDA_BOOLEAN_YES;
-  
-  set_boundary_conditions(compression, f_gauge_param);
-  set_sloppy_prec(SLOPPY_DOUBLE, f_gauge_param, &inv_param);
 }
 
 void _initQuda() {
@@ -605,13 +611,41 @@ void _initMomQuda(void) {
   if( first_call ){
     first_call = 0;
     for(int i = 0; i < 4; i++){
-      mom_quda[i] = (double*)malloc((VOLUMEPLUSRAND+g_dbw2rand)*18*sizeof(double));
-      if( (void*)mom_quda[i] == NULL ){
+      mom_quda[i] = (double*)malloc(VOLUME*10*sizeof(double));
+      mom_quda_reordered[i] = (double*)malloc(VOLUME*10*sizeof(double));
+      if( (void*)mom_quda[i] == NULL || (void*)mom_quda_reordered[i] == NULL ){
         fatal_error("Memory allocation for host momentum field failed!", __func__);
       }
     }
   }
 }
+
+void reorder_mom_fromQuda() {
+  // mom_quda -> mom_quda_reordered
+  tm_stopwatch_push(&g_timers);
+ 
+#ifdef TM_USE_OMP
+  #pragma omp parallel for collapse(4)
+#endif
+  for( int x0=0; x0<T; x0++ )
+    for( int x1=0; x1<LX; x1++ )
+      for( int x2=0; x2<LY; x2++ )
+        for( int x3=0; x3<LZ; x3++ ) {
+#if USE_LZ_LY_LX_T
+          int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
+          int tm_idx = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
+#else
+          int j = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
+          int tm_idx   = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
+#endif
+          int oddBit = (x0+x1+x2+x3) & 1;
+
+          memcpy( &(sp[10*tm_idx]), &(tempSpinor[10*(oddBit*VOLUME/2+j/2)]), 10*sizeof(double));
+        }
+  tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA", __func__);
+}
+
+
 
 // reorder spinor from QUDA format
 void reorder_spinor_fromQuda( double* sp, QudaPrecision precision, int doublet) {

@@ -59,7 +59,7 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
   }
   if( mnl->external_library == QUDA_LIB ){
 #ifdef TM_USE_QUDA
-    compute_gauge_force_quda(NO_COMPRESSION, mnl->use_rectangles);
+    compute_gauge_force_quda(mnl, hf);
 #else
     fatal_error("Attempted to use QUDA_LIB in gauge monomial but tmLQCD has been compiled without QUDA support!", __func__);
 #endif
