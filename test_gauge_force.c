@@ -234,11 +234,6 @@ int main(int argc,char *argv[]) {
   update_tm_gauge_exchange(&g_gauge_state);
 #endif
     
-  /*Convert to a 32 bit gauge field, after xchange*/
-  convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND + g_dbw2rand);
-#ifdef TM_USE_MPI
-  update_tm_gauge_exchange(&g_gauge_state_32);
-#endif
   
     
   if(even_odd_flag) {
@@ -275,24 +270,22 @@ int main(int argc,char *argv[]) {
     fclose(parameterfile);
   }
 
-  /* set ddummy to zero */
+  /* set df0 to zero */
   for(ix = 0; ix < VOLUMEPLUSRAND; ix++){
     for(mu=0; mu<4; mu++){
-      ddummy[ix][mu].d1=0.;
-      ddummy[ix][mu].d2=0.;
-      ddummy[ix][mu].d3=0.;
-      ddummy[ix][mu].d4=0.;
-      ddummy[ix][mu].d5=0.;
-      ddummy[ix][mu].d6=0.;
-      ddummy[ix][mu].d7=0.;
-      ddummy[ix][mu].d8=0.;
+      df0[ix][mu].d1=0.;
+      df0[ix][mu].d2=0.;
+      df0[ix][mu].d3=0.;
+      df0[ix][mu].d4=0.;
+      df0[ix][mu].d5=0.;
+      df0[ix][mu].d6=0.;
+      df0[ix][mu].d7=0.;
+      df0[ix][mu].d8=0.;
     }
   }
+  double c1=0.;
 
 
-
-  /* Loop for measurements */
-  for(j = 0; j < 1; j++) {
     if(g_proc_id == 0) {
       printf("#\n# Starting trajectory no %d\n", trajectory_counter);
     }
@@ -300,7 +293,6 @@ int main(int argc,char *argv[]) {
     return_check = return_check_flag && (trajectory_counter%return_check_interval == 0);
 
     hamiltonian_field_t hf;
-    paramsXlfInfo *xlfInfo;
 
     hf.gaugefield = g_gauge_field;
     hf.momenta = moment;
@@ -309,24 +301,32 @@ int main(int argc,char *argv[]) {
     hf.traj_counter = 0;
     integrator_set_fields(&hf);
 
-    monomial monomial_list[1];
+    monomial_list[0].c0=1-8*c1;
+    monomial_list[0].c1=c1;
+    if (c1!=0){
+     monomial_list[0].use_rectangles=1;
+    }
+    else{
+      monomial_list[0].use_rectangles=0;
+    }
+    g_beta=1;
+    
     monomial_list[0].derivativefunction = &gauge_derivative;
     monomial_list[0].derivativefunction(0, &hf);
 
     double sum2 =0.;
-    for(int i = 0; i < VOLUME; i++) {
-      for(int mu = 0; mu < 4; mu++) {
-        sum2 = _su3adj_square_norm(hf.derivative[i][mu]);
-        printf("i = %d  mu = %d sum %e \n", i, mu, sum2);
-      }
-    }
+   for(int i = 0; i < VOLUME; i++) {
+     for(int mu = 0; mu < 4; mu++) {
+       sum2 = _su3adj_square_norm(hf.derivative[i][mu]);
+       printf("i = %d  mu = %d sum %e \n", i, mu, sum2);
+     }
+   }
 
 
 
 #ifdef TM_USE_MPI
-    MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(MPI_COMM_WORLD);
 #endif
-  } /* end of loop over trajectories */
 
 #ifdef TM_USE_OMP
   free_omp_accumulators();
