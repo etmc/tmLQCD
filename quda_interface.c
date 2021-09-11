@@ -651,10 +651,17 @@ void reorder_mom_fromQuda() {
           int quda_idx = 10*(oddBit*VOLUME/2+j/2);
           tm_idx *= 10;
 
-          memcpy( &(mom_quda_reordered[0][tm_idx]), &(mom_quda[0][quda_idx]), 10*sizeof(double));
-          memcpy( &(mom_quda_reordered[1][tm_idx]), &(mom_quda[1][quda_idx]), 10*sizeof(double));
-          memcpy( &(mom_quda_reordered[2][tm_idx]), &(mom_quda[2][quda_idx]), 10*sizeof(double));
-          memcpy( &(mom_quda_reordered[3][tm_idx]), &(mom_quda[3][quda_idx]), 10*sizeof(double));
+#if USE_LZ_LY_LX_T
+          memcpy( &(mom_quda_reordered[3][tm_idx]), &(mom_quda[0][quda_idx]), 10*sizeof(double));
+          memcpy( &(mom_quda_reordered[2][tm_idx]), &(mom_quda[1][quda_idx]), 10*sizeof(double));
+          memcpy( &(mom_quda_reordered[1][tm_idx]), &(mom_quda[2][quda_idx]), 10*sizeof(double));
+          memcpy( &(mom_quda_reordered[0][tm_idx]), &(mom_quda[3][quda_idx]), 10*sizeof(double));
+#else
+          memcpy( &(mom_quda_reordered[1][tm_idx]), &(mom_quda[0][quda_idx]), 10*sizeof(double));
+          memcpy( &(mom_quda_reordered[2][tm_idx]), &(mom_quda[1][quda_idx]), 10*sizeof(double));
+          memcpy( &(mom_quda_reordered[3][tm_idx]), &(mom_quda[2][quda_idx]), 10*sizeof(double));
+          memcpy( &(mom_quda_reordered[0][tm_idx]), &(mom_quda[3][quda_idx]), 10*sizeof(double));
+#endif
         }
   
 #ifdef TM_USE_OMP
@@ -2460,20 +2467,20 @@ void add_mom_to_derivative(su3adj** der) {
 #ifdef TM_USE_OMP
 #pragma omp parallel for collapse(2)
 #endif
-  for( int i=0; i<4; i++ )
+  for( int mu=0; mu<4; mu++ )
     for( size_t v=0; v<VOLUME; v++ ){
-      der[i][v].d1 += mom_quda_reordered[i][10*v+1]; // imag 01
-      der[i][v].d2 += mom_quda_reordered[i][10*v+0]; // real 01
-      der[i][v].d4 += mom_quda_reordered[i][10*v+3]; // imag 02
-      der[i][v].d5 += mom_quda_reordered[i][10*v+2]; // real 02
-      der[i][v].d6 += mom_quda_reordered[i][10*v+5]; // imag 12
-      der[i][v].d7 += mom_quda_reordered[i][10*v+4]; // real 12
+      der[v][mu].d1 += mom_quda_reordered[mu][10*v+1]; // imag 01
+      der[v][mu].d2 += mom_quda_reordered[mu][10*v+0]; // real 01
+      der[v][mu].d4 += mom_quda_reordered[mu][10*v+3]; // imag 02
+      der[v][mu].d5 += mom_quda_reordered[mu][10*v+2]; // real 02
+      der[v][mu].d6 += mom_quda_reordered[mu][10*v+5]; // imag 12
+      der[v][mu].d7 += mom_quda_reordered[mu][10*v+4]; // real 12
 
-      double c00 = mom_quda_reordered[i][10*v+6];
-      double c11 = mom_quda_reordered[i][10*v+7];
-      double c22 = mom_quda_reordered[i][10*v+8];
-      der[i][v].d3 += c11-c00; // imag 11 - 00
-      der[i][v].d8 += (2*c22 - c00 - c11) * 0.577350269189625 // imag (2*22 - 00 - 11)/sqrt(3)
+      double c00 = mom_quda_reordered[mu][10*v+6];
+      double c11 = mom_quda_reordered[mu][10*v+7];
+      double c22 = mom_quda_reordered[mu][10*v+8];
+      der[v][mu].d3 += c11-c00; // imag 11 - 00
+      der[v][mu].d8 += (2*c22 - c00 - c11) * 0.577350269189625; // imag (2*22 - 00 - 11)/sqrt(3)
     }
   
 #ifdef TM_USE_OMP
