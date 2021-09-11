@@ -2460,12 +2460,12 @@ void compute_gauge_force_quda(monomial * const mnl, hamiltonian_field_t * const 
   int *** path_buf = malloc(4*(num_paths+1)*sizeof(void*));
   
   for(int i=0; i<4; i++) {
-    path_but[i] = (int**) path_buf+4+i*num_paths;
+    path_buf[i] = (int**) path_buf+4+i*num_paths;
     for(int j=0; j<num_paths; j++) {
       if(rect) 
-	path_but[i][j] = plaq_rect_path[i][j];
+	path_buf[i][j] = plaq_rect_path[i][j];
       else
-	path_but[i][j] = plaq_path[i][j];
+	path_buf[i][j] = plaq_path[i][j];
     }
   }
 
