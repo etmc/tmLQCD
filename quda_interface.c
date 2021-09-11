@@ -2296,46 +2296,46 @@ int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out
   return(iterations);
 }
 
-void compute_gauge_force_quda(monomial * const mnl, hamiltonian_field_t * const hf) {
-  static int plaq_rect_length[24] = {
+
+int plaq_rect_length[24] = {
     3, 3, 3, 3, 3, 3,
     5, 5, 5, 5, 5, 5,
     5, 5, 5, 5, 5, 5,
     5, 5, 5, 5, 5, 5,
   };
 
-  static double plaq_rect_coeff[24] = {
+double plaq_rect_coeff[24] = {
     1.1, 1.2, 1.3, 1.4, 1.5, 1.6,
     2.1, 2.2, 2.3, 2.4, 2.5, 2.6,
     3.1, 3.2, 3.3, 3.4, 3.5, 3.6,
     4.1, 4.2, 4.3, 4.4, 4.5, 4.6
   };
 
-  static int plaq_rect_path[4][24][5] = {
+int plaq_rect_path[4][24][5] = {
     { {1, 7, 6 },
       {6, 7, 1 },
       {2, 7, 5 },
       {5, 7, 2 },
       {3, 7, 4 },
       {4, 7, 3 }, 
+      {1, 1, 7, 6, 6 },
+      {6, 6, 7, 1, 1 },
+      {2, 2, 7, 5, 5 },
+      {5, 5, 7, 2, 2 },
+      {3, 3, 7, 4, 4 },
+      {4, 4, 7, 3, 3 },
       {0, 1, 7, 7, 6 },
-      {1, 7, 7, 6, 0 },
       {6, 7, 7, 1, 0 },
-      {0, 6, 7, 7, 1 },
       {0, 2, 7, 7, 5 },
-      {2, 7, 7, 5, 0 },
       {5, 7, 7, 2, 0 },
-      {0, 5, 7, 7, 2 },
       {0, 3, 7, 7, 4 },
-      {3, 7, 7, 4, 0 },
       {4, 7, 7, 3, 0 },
       {0, 4, 7, 7, 3 },
-      {6, 6, 7, 1, 1 },
-      {1, 1, 7, 6, 6 },
-      {5, 5, 7, 2, 2 },
-      {2, 2, 7, 5, 5 },
-      {4, 4, 7, 3, 3 },
-      {3, 3, 7, 4, 4 } },
+      {3, 7, 7, 4, 0 },
+      {0, 5, 7, 7, 2 },
+      {2, 7, 7, 5, 0 },
+      {0, 6, 7, 7, 1 },
+      {1, 7, 7, 6, 0 } },
     { { 2, 6, 5 },
       { 5, 6, 2 },
       { 3, 6, 4 },
@@ -2410,10 +2410,10 @@ void compute_gauge_force_quda(monomial * const mnl, hamiltonian_field_t * const 
       { 2, 2, 4, 5, 5 } } 
   };
 
-  static int plaq_length[] = {
+int plaq_length[] = {
     3, 3, 3, 3, 3, 3 };
 
-  static int plaq_path[4][6][3] = {
+int plaq_path[4][6][3] = {
     { { 1, 7, 6 },
       { 6, 7, 1 },
       { 2, 7, 5 },
@@ -2440,22 +2440,36 @@ void compute_gauge_force_quda(monomial * const mnl, hamiltonian_field_t * const 
       { 5, 4, 2 } } 
   };
 
-  static double plaq_coeff[] = {
+double plaq_coeff[] = {
     1.1, 1.2, 1.3, 1.4, 1.5, 1.6 
   };
+
+void compute_gauge_force_quda(monomial * const mnl, hamiltonian_field_t * const hf) {
   
   _initQuda();
   _initMomQuda();
 
   int rect = mnl->use_rectangles;
 
-  int *** path_buf = rect ? plaq_rect_path : plaq_path;
   int * path_length = rect ? plaq_rect_length : plaq_length;
   double * loop_coeff = rect ? plaq_rect_coeff : plaq_coeff;
 
   int num_paths = rect ? 24 : 6;
   int max_length = rect ? 5 : 3;
 
+  int *** path_buf = malloc(4*(num_paths+1)*sizeof(void*));
+  
+  for(int i=0; i<4; i++) {
+    path_but[i] = (int**) path_buf+4+i*num_paths;
+    for(int j=0; j<num_paths; j++) {
+      if(rect) 
+	path_but[i][j] = plaq_rect_path[i][j];
+      else
+	path_but[i][j] = plaq_path[i][j];
+    }
+  }
+
+  
   // prepares gauge_quda
   reorder_gauge_toQuda(hf->gaugefield, 18);
 
