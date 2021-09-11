@@ -151,6 +151,7 @@ void update_momenta_fg(int * mnllist, double step, const int no,
   // calculate derivatives to estimate force gradient
   for(int k = 0; k < no; k++) {
     if(monomial_list[ mnllist[k] ].derivativefunction != NULL) {
+      current_mnl=monomial_list[ mnllist[k] ].name;
       monomial_list[ mnllist[k] ].derivativefunction(mnllist[k], hf);
     }
   }
@@ -195,6 +196,7 @@ void update_momenta_fg(int * mnllist, double step, const int no,
 
   for(int k = 0; k < no; k++) {
     if(monomial_list[ mnllist[k] ].derivativefunction != NULL) {
+      current_mnl=monomial_list[ mnllist[k] ].name;
       monomial_list[ mnllist[k] ].derivativefunction(mnllist[k], hf);
     }
   }

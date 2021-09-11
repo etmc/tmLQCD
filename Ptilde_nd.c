@@ -201,7 +201,7 @@ void Ptilde_ndpsi(spinor *R_s, spinor *R_c, double *dd, int n,
   free(auxc_);
   free(aux2c_);
   free(aux3c_);
-  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, current_mnl, __func__);
 }
 
 double chebtilde_eval(int M, double *dd, double s){
@@ -350,6 +350,6 @@ void degree_of_Ptilde(int * _degree, double ** coefs,
   free(sc_);
   free(auxc_);
   free(aux2c_);
-  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, current_mnl, __func__);
   return;
 }

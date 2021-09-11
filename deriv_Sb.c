@@ -394,7 +394,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
 
     /****************** end of loop ************************/
   }
-  tm_stopwatch_pop(&g_timers, 0, 2, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 2, current_mnl , __func__);
 #ifdef _KOJAK_INST
 #pragma pomp inst end(derivSb)
 #endif
@@ -642,7 +642,7 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k,
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
-  tm_stopwatch_pop(&g_timers, 0, 2, "", __func__); 
+  tm_stopwatch_pop(&g_timers, 0, 2, current_mnl , __func__); 
 #ifdef _KOJAK_INST
 #pragma pomp inst end(derivSb)
 #endif

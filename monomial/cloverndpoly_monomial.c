@@ -160,7 +160,7 @@ void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   random_spinor_field_eo(g_chi_dn_spinor_field[0], mnl->rngrepro, RN_GAUSS);
   mnl->energy0 += square_norm(g_chi_dn_spinor_field[0], VOLUME/2, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, "", "random_energy0");
+  tm_stopwatch_pop(&g_timers, 0, 1, current_mnl, "random_energy0");
 
   Qsw_ndpsi(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
 	    g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0]);
@@ -222,7 +222,7 @@ double cloverndpoly_acc(const int id, hamiltonian_field_t * const hf) {
   tm_stopwatch_push(&g_timers);
   mnl->energy1 = square_norm(up0, VOLUME/2, 1);
   mnl->energy1 += square_norm(dn0, VOLUME/2, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, "", "energy1");
+  tm_stopwatch_pop(&g_timers, 0, 1, current_mnl, "energy1");
   if(g_proc_id == 0) {
     if(g_debug_level > 3) {
       printf("called cloverndpoly_acc for id %d dH = %1.10e\n", id, mnl->energy1 - mnl->energy0);

@@ -203,6 +203,6 @@ void sw_term(const su3 ** const gf, const double kappa, const double c_sw) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
-  tm_stopwatch_pop(&g_timers, 0, 2, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, current_mnl, __func__);
   return;
 }

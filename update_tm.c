@@ -127,6 +127,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   /* heatbath for all monomials */
   for(i = 0; i < Integrator.no_timescales; i++) {
     for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
+      current_mnl=monomial_list[ Integrator.mnls_per_ts[i][j] ].name;
       monomial_list[ Integrator.mnls_per_ts[i][j] ].hbfunction(Integrator.mnls_per_ts[i][j], &hf);
     }
   }
@@ -149,6 +150,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   dh = 0.;
   for(i = 0; i < Integrator.no_timescales; i++) {
     for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
+      current_mnl=monomial_list[ Integrator.mnls_per_ts[i][j] ].name;
       dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j], &hf);
     }
   }
@@ -220,6 +222,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     ret_dh = 0.;
     for(i = 0; i < Integrator.no_timescales; i++) {
       for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
+        current_mnl=monomial_list[ Integrator.mnls_per_ts[i][j] ].name;
         ret_dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j], &hf);
       }
     }
@@ -384,6 +387,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
             && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != NDCLOVER
             && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != CLOVERNDTRLOG
             && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != CLOVERTRLOG ) {
+    	  current_mnl=monomial_list[ Integrator.mnls_per_ts[i][j] ].name;
           fprintf(datafile,"%d %d ",  monomial_list[ Integrator.mnls_per_ts[i][j] ].iter0, 
                   monomial_list[ Integrator.mnls_per_ts[i][j] ].iter1);
         }

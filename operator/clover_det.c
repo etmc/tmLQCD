@@ -184,10 +184,10 @@ double sw_trace(const int ieo, const double mu) {
 
 #ifdef TM_USE_MPI
   MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  tm_stopwatch_pop(&g_timers, 0, 2, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, current_mnl, __func__);
   return(mres);
 #else
-  tm_stopwatch_pop(&g_timers, 0, 2, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, current_mnl, __func__);
   return(res);
 #endif
 }
@@ -276,10 +276,10 @@ double sw_trace_nd(const int ieo, const double mu, const double eps) {
 
 #ifdef TM_USE_MPI
   MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  tm_stopwatch_pop(&g_timers, 0, 2, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, current_mnl, __func__);
   return(mres);
 #else
-  tm_stopwatch_pop(&g_timers, 0, 2, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, current_mnl, __func__);
   return(res);
 #endif
 }

@@ -259,7 +259,7 @@ void sw_invert(const int ieo, const double mu) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
-  tm_stopwatch_pop(&g_timers, 0, 2, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, current_mnl, __func__);
   return;
 }
 
@@ -323,7 +323,7 @@ void sw_invert_epsbar(const double epsbar) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
-  tm_stopwatch_pop(&g_timers, 0, 2, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, current_mnl, __func__);
   return;
 }
 
@@ -428,7 +428,7 @@ void sw_invert_mubar(const double mubar) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
-  tm_stopwatch_pop(&g_timers, 0, 2, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, current_mnl, __func__);
   return;
 }
 
@@ -500,6 +500,6 @@ void sw_invert_nd(const double mshift) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
-  tm_stopwatch_pop(&g_timers, 0, 2, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, current_mnl, __func__);
   return;
 }

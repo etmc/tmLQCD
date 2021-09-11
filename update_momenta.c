@@ -55,6 +55,7 @@ void update_momenta(int * mnllist, double step, const int no,
   
   for(int k = 0; k < no; k++) {
     if(monomial_list[ mnllist[k] ].derivativefunction != NULL) {
+      current_mnl=monomial_list[ mnllist[k] ].name;
       monomial_list[ mnllist[k] ].derivativefunction(mnllist[k], hf);
     }
   }
