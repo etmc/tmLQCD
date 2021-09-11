@@ -627,7 +627,12 @@ void _initMomQuda(void) {
 void reorder_mom_fromQuda() {
   // mom_quda -> mom_quda_reordered
   tm_stopwatch_push(&g_timers);
- 
+
+#ifdef TM_USE_OMP
+#pragma omp parallel
+  {
+#endif
+
 #ifdef TM_USE_OMP
   #pragma omp parallel for collapse(4)
 #endif
@@ -643,9 +648,18 @@ void reorder_mom_fromQuda() {
           int tm_idx   = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
 #endif
           int oddBit = (x0+x1+x2+x3) & 1;
+          int quda_idx = 10*(oddBit*VOLUME/2+j/2);
+          tm_idx *= 10;
 
-          memcpy( &(mom_quda_reordered[10*tm_idx]), &(mom_quda[10*(oddBit*VOLUME/2+j/2)]), 10*sizeof(double));
+          memcpy( &(mom_quda_reordered[0][tm_idx]), &(mom_quda[0][quda_idx]), 10*sizeof(double));
+          memcpy( &(mom_quda_reordered[1][tm_idx]), &(mom_quda[1][quda_idx]), 10*sizeof(double));
+          memcpy( &(mom_quda_reordered[2][tm_idx]), &(mom_quda[2][quda_idx]), 10*sizeof(double));
+          memcpy( &(mom_quda_reordered[3][tm_idx]), &(mom_quda[3][quda_idx]), 10*sizeof(double));
         }
+  
+#ifdef TM_USE_OMP
+  }
+#endif
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA", __func__);
 }
 
@@ -2304,13 +2318,6 @@ int plaq_rect_length[24] = {
     5, 5, 5, 5, 5, 5,
   };
 
-double plaq_rect_coeff[24] = {
-    1.1, 1.2, 1.3, 1.4, 1.5, 1.6,
-    2.1, 2.2, 2.3, 2.4, 2.5, 2.6,
-    3.1, 3.2, 3.3, 3.4, 3.5, 3.6,
-    4.1, 4.2, 4.3, 4.4, 4.5, 4.6
-  };
-
 int plaq_rect_path[4][24][5] = {
     { {1, 7, 6 },
       {6, 7, 1 },
@@ -2440,9 +2447,41 @@ int plaq_path[4][6][3] = {
       { 5, 4, 2 } } 
   };
 
-double plaq_coeff[] = {
-    1.1, 1.2, 1.3, 1.4, 1.5, 1.6 
-  };
+
+void add_mom_to_derivative(su3adj** der) {
+  // mom_quda -> mom_quda_reordered
+  tm_stopwatch_push(&g_timers);
+
+#ifdef TM_USE_OMP
+#pragma omp parallel
+  {
+#endif
+
+#ifdef TM_USE_OMP
+#pragma omp parallel for collapse(2)
+#endif
+  for( int i=0; i<4; i++ )
+    for( size_t v=0; v<VOLUME; v++ ){
+      der[i][v].d1 += mom_quda_reordered[i][10*v+1]; // imag 01
+      der[i][v].d2 += mom_quda_reordered[i][10*v+0]; // real 01
+      der[i][v].d4 += mom_quda_reordered[i][10*v+3]; // imag 02
+      der[i][v].d5 += mom_quda_reordered[i][10*v+2]; // real 02
+      der[i][v].d6 += mom_quda_reordered[i][10*v+5]; // imag 12
+      der[i][v].d7 += mom_quda_reordered[i][10*v+4]; // real 12
+
+      double c00 = mom_quda_reordered[i][10*v+6];
+      double c11 = mom_quda_reordered[i][10*v+7];
+      double c22 = mom_quda_reordered[i][10*v+8];
+      der[i][v].d3 += c11-c00; // imag 11 - 00
+      der[i][v].d8 += (2*c22 - c00 - c11) * 0.577350269189625 // imag (2*22 - 00 - 11)/sqrt(3)
+    }
+  
+#ifdef TM_USE_OMP
+  }
+#endif
+  tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA", __func__);
+}
+
 
 void compute_gauge_force_quda(monomial * const mnl, hamiltonian_field_t * const hf) {
   
@@ -2452,7 +2491,6 @@ void compute_gauge_force_quda(monomial * const mnl, hamiltonian_field_t * const 
   int rect = mnl->use_rectangles;
 
   int * path_length = rect ? plaq_rect_length : plaq_length;
-  double * loop_coeff = rect ? plaq_rect_coeff : plaq_coeff;
 
   int num_paths = rect ? 24 : 6;
   int max_length = rect ? 5 : 3;
@@ -2469,6 +2507,16 @@ void compute_gauge_force_quda(monomial * const mnl, hamiltonian_field_t * const 
     }
   }
 
+  // TODO: assign correct coeffs using mnl->c0 and mnl->c1 and g_beta
+  double * loop_coeff = malloc(num_paths*sizeof(double));
+  for(int i=0; i<num_paths; i++) {
+    // Plaq coeffs
+    if(i<6)
+      loop_coeff[i] = 1;
+    // Rect coeffs
+    else
+      loop_coeff[i] = 1;      
+  }
   
   // prepares gauge_quda
   reorder_gauge_toQuda(hf->gaugefield, 18);
@@ -2482,6 +2530,12 @@ void compute_gauge_force_quda(monomial * const mnl, hamiltonian_field_t * const 
                         path_buf, path_length, loop_coeff, num_paths, max_length, 1.0,
                         // TODO: to be replaced by new gauge_param just for gauge force 
                         &f_gauge_param);
+
+  free(path_buf);
+  free(loop_coeff);
+  
   reorder_mom_fromQuda(mom_quda);
+
+  add_mom_to_derivative(hf->derivative);
 }
 
