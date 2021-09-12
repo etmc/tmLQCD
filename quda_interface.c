@@ -2519,10 +2519,10 @@ void compute_gauge_force_quda(monomial * const mnl, hamiltonian_field_t * const 
   for(int i=0; i<num_paths; i++) {
     // Plaq coeffs
     if(i<6)
-      loop_coeff[i] = 1;
+      loop_coeff[i] = -1.5 * g_beta * mnl->c0;
     // Rect coeffs
     else
-      loop_coeff[i] = 1;      
+      loop_coeff[i] = -1.5 * g_beta * mnl->c1;
   }
   
   // prepares gauge_quda
