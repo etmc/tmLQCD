@@ -52,10 +52,9 @@
 void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
   tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
-  double factor = -1. * g_beta/3.0;
+  double factor = -mnl->c0 * g_beta/3.0;
   if(mnl->use_rectangles) {
     mnl->forcefactor = 1.;
-    factor = -mnl->c0 * g_beta/3.0;
   }
   if( mnl->external_library == QUDA_LIB ){
 #ifdef TM_USE_QUDA
@@ -105,10 +104,9 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
 void gauge_EMderivative(const int id, hamiltonian_field_t * const hf) {
   tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
-  double factor = -1. * g_beta/3.0;
+  double factor = -mnl->c0 * g_beta/3.0;
   if(mnl->use_rectangles) {
     mnl->forcefactor = 1.;
-    factor = -mnl->c0 * g_beta/3.0;
   }
   
 #ifdef TM_USE_OMP
@@ -167,6 +165,7 @@ void gauge_EMderivative(const int id, hamiltonian_field_t * const hf) {
 void gauge_heatbath(const int id, hamiltonian_field_t * const hf) {
   tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
+  mnl->c0 = 1.;
   if(mnl->use_rectangles) mnl->c0 = 1. - 8.*mnl->c1;
   
   mnl->energy0 = g_beta*(mnl->c0 * measure_gauge_action( (const su3**) hf->gaugefield, mnl->glambda));
