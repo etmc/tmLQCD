@@ -85,6 +85,8 @@
 #include "global.h"
 #include "su3.h"
 #include "solver/solver_params.h"
+#include "monomial/monomial.h"
+#include "hamiltonian_field.h"
 
 
 // wrapper functions
@@ -165,6 +167,6 @@ int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out
                                      SloppyPrecision sloppy_precision,
                                      CompressionType compression);
 
-void compute_gauge_force_quda(const CompressionType compression, int rect);
+void compute_gauge_force_quda(monomial * const mnl, hamiltonian_field_t * const hf);
 
 #endif /* QUDA_INTERFACE_H_ */
