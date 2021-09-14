@@ -4,7 +4,7 @@
  *               2016, 2017 Bartosz Kostrzewa
  *               2018       Bartosz Kostrzewa, Ferenc Pittler
  *               2019, 2020 Bartosz Kostrzewa
- *               2021       Bartosz Kostrzewa, Ferenc Pittler, Simone Bacchio
+ *               2021       Bartosz Kostrzewa, Marco Garofalo, Ferenc Pittler, Simone Bacchio
  *
  * This file is part of tmLQCD.
  *
@@ -2003,14 +2003,14 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   strcpy(mg_param->vec_outfile, "");
 }
 
-int invert_eo_MMd_quda(spinor * const out,
-                       spinor * const in,
-                       const double precision, const int max_iter,
-                       const int solver_flag, const int rel_prec,
-                       const int even_odd_flag, solver_params_t solver_params,
-                       SloppyPrecision sloppy_precision,
-                       CompressionType compression,
-                       const int QpQm) {
+int invert_eo_degenerate_quda(spinor * const out,
+                              spinor * const in,
+                              const double precision, const int max_iter,
+                              const int solver_flag, const int rel_prec,
+                              const int even_odd_flag, solver_params_t solver_params,
+                              SloppyPrecision sloppy_precision,
+                              CompressionType compression,
+                              const int QpQm) {
   tm_stopwatch_push(&g_timers);
 
   int iterations = 0;

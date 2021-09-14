@@ -82,12 +82,15 @@
 
 #ifndef QUDA_INTERFACE_H_
 #define QUDA_INTERFACE_H_
+
 #include "global.h"
 #include "su3.h"
 #include "solver/solver_params.h"
 #include "monomial/monomial.h"
 #include "hamiltonian_field.h"
+#include "misc_types.h"
 
+#include "quda.h"
 
 // wrapper functions
 void _initQuda();
@@ -142,14 +145,14 @@ void M_quda(spinor * const P, spinor * const Q);
 
 
 // to be called instead of tmLQCD functions to use the QUDA inverter in solve_degenerate
-int invert_eo_MMd_quda(spinor * const Odd_new,
-                       spinor * const Odd,
-                       const double precision, const int max_iter,
-                       const int solver_flag, const int rel_prec,
-                       const int even_odd_flag, solver_params_t solver_params,
-                       const SloppyPrecision sloppy_precision,
-                       CompressionType compression,
-                       const int QmQp);
+int invert_eo_degenerate_quda(spinor * const Odd_new,
+                              spinor * const Odd,
+                              const double precision, const int max_iter,
+                              const int solver_flag, const int rel_prec,
+                              const int even_odd_flag, solver_params_t solver_params,
+                              const SloppyPrecision sloppy_precision,
+                              CompressionType compression,
+                              const int QmQp);
 
 int invert_eo_quda_oneflavour_mshift(spinor ** const Odd_new,
                                      spinor * const Odd,
