@@ -2460,15 +2460,10 @@ void add_mom_to_derivative(su3adj** der) {
   tm_stopwatch_push(&g_timers);
 
 #ifdef TM_USE_OMP
-#pragma omp parallel
-  {
-#endif
-
-#ifdef TM_USE_OMP
 #pragma omp parallel for collapse(2)
 #endif
-  for( int mu=0; mu<4; mu++ )
-    for( size_t v=0; v<VOLUME; v++ ){
+  for( size_t v=0; v<VOLUME; v++ )
+    for( int mu=0; mu<4; mu++ ){
       der[v][mu].d1 += mom_quda_reordered[mu][10*v+1]; // imag 01
       der[v][mu].d2 += mom_quda_reordered[mu][10*v+0]; // real 01
       der[v][mu].d4 += mom_quda_reordered[mu][10*v+3]; // imag 02
@@ -2483,9 +2478,6 @@ void add_mom_to_derivative(su3adj** der) {
       der[v][mu].d8 += (2*c22 - c00 - c11) * 0.577350269189625; // imag (2*22 - 00 - 11)/sqrt(3)
     }
   
-#ifdef TM_USE_OMP
-  }
-#endif
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA", __func__);
 }
 
