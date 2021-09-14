@@ -2318,7 +2318,6 @@ int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out
 }
 
 void add_mom_to_derivative(su3adj** der) {
-  // mom_quda -> mom_quda_reordered
   tm_stopwatch_push(&g_timers);
 
 #ifdef TM_USE_OMP
