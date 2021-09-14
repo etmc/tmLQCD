@@ -2344,7 +2344,7 @@ void add_mom_to_derivative(su3adj** der) {
 }
 
 
-void compute_gauge_force_quda(monomial * const mnl, hamiltonian_field_t * const hf) {
+void compute_gauge_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf) {
   tm_stopwatch_push(&g_timers);
   
   _initQuda();

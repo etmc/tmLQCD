@@ -167,6 +167,6 @@ int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out
                                      SloppyPrecision sloppy_precision,
                                      CompressionType compression);
 
-void compute_gauge_force_quda(monomial * const mnl, hamiltonian_field_t * const hf);
+void compute_gauge_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf);
 
 #endif /* QUDA_INTERFACE_H_ */
