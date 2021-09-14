@@ -461,7 +461,6 @@ void reorder_gauge_toQuda( const su3 ** const gaugefield, const int compression 
   tm_stopwatch_push(&g_timers);
   if( inv_param.verbosity > QUDA_SILENT ){
     if(g_proc_id == 0) {
-      printf("# TM_QUDA: Called _loadGaugeQuda\n");
       if( compression == 18 ){
         if( quda_input.fermionbc == TM_QUDA_THETABC ){
           printf("# TM_QUDA: Theta boundary conditions will be applied to gauge field\n");
@@ -546,13 +545,14 @@ void reorder_gauge_toQuda( const su3 ** const gaugefield, const int compression 
 #ifdef TM_USE_OMP
   } // OpenMP parallel closing brace 
 #endif
-  tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA", "reorder_gauge");
+  tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA", __func__);
 }
 
 void _loadGaugeQuda( const int compression ) {
   static int first_call = 1;
   // check if the currently loaded gauge field is also the current gauge field
   // and if so, return immediately
+  tm_debug_printf(0, 1, "# TM_QUDA: Called _loadGaugeQuda for gauge_id: %f\n", g_gauge_state.gauge_id);
   if( check_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0) ){
     return;
   } else {
@@ -2520,16 +2520,18 @@ void compute_gauge_force_quda(monomial * const mnl, hamiltonian_field_t * const 
   
   // prepares gauge_quda
   reorder_gauge_toQuda(hf->gaugefield, 18);
-
+  
+  #pragma omp parallel for
   for(int i = 0; i < 4; i++){
     memset(mom_quda[i], 0, VOLUME*10*sizeof(double));
   }
-
+  
+  tm_stopwatch_push(&g_timers); 
   computeGaugeForceQuda((void*)mom_quda, 
                         (void*)gauge_quda, 
                         path_buf, path_length, loop_coeff, num_paths, max_length, 1.0,
-                        // TODO: to be replaced by new gauge_param just for gauge force 
                         &f_gauge_param);
+  tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA", "computeGaugeForceQuda");
 
   free(path_buf);
   free(loop_coeff);
