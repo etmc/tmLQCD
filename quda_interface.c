@@ -206,11 +206,11 @@ void set_default_gauge_param(QudaGaugeParam * gauge_param){
   gauge_param->cpu_prec = QUDA_DOUBLE_PRECISION;
   gauge_param->cuda_prec = QUDA_DOUBLE_PRECISION;
   
-  gauge_param->reconstruct = 18;
-  gauge_param->reconstruct_sloppy = 18;
-  gauge_param->reconstruct_precondition = 18;
-  gauge_param->reconstruct_refinement_sloppy = 18;
-  gauge_param->reconstruct_eigensolver = 18;
+  gauge_param->reconstruct = NO_COMPRESSION;
+  gauge_param->reconstruct_sloppy = NO_COMPRESSION;
+  gauge_param->reconstruct_precondition = NO_COMPRESSION;
+  gauge_param->reconstruct_refinement_sloppy = NO_COMPRESSION;
+  gauge_param->reconstruct_eigensolver = NO_COMPRESSION;
   
   gauge_param->gauge_fix = QUDA_GAUGE_FIXED_NO;
 
@@ -457,9 +457,9 @@ void _loadCloverQuda(QudaInvertParam* inv_param){
   }
 }
 
-void reorder_gauge_toQuda( const su3 ** const gaugefield, const int compression ) {
-
+void reorder_gauge_toQuda( const su3 ** const gaugefield, const CompressionType compression ) {
   tm_stopwatch_push(&g_timers);
+
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -497,7 +497,7 @@ void reorder_gauge_toQuda( const su3 ** const gaugefield, const int compression 
           memcpy( &(gauge_quda[2][quda_idx]), &(gaugefield[tm_idx][3]), 18*gSize);
           memcpy( &(gauge_quda[3][quda_idx]), &(gaugefield[tm_idx][0]), 18*gSize);
 #endif
-        if( compression == 18 && quda_input.fermionbc == TM_QUDA_THETABC ) {
+        if( compression == NO_COMPRESSION && quda_input.fermionbc == TM_QUDA_THETABC ) {
           // apply theta boundary conditions if compression is not used
           for( int i=0; i<9; i++ ) {
             tmpcplx = gauge_quda[0][quda_idx+2*i] + I*gauge_quda[0][quda_idx+2*i+1];
@@ -532,10 +532,11 @@ void reorder_gauge_toQuda( const su3 ** const gaugefield, const int compression 
 #ifdef TM_USE_OMP
   } // OpenMP parallel closing brace 
 #endif
+
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA", __func__);
 }
 
-void _loadGaugeQuda( const int compression ) {
+void _loadGaugeQuda( const CompressionType compression ) {
   static int first_call = 1;
   // check if the currently loaded gauge field is also the current gauge field
   // and if so, return immediately
@@ -543,7 +544,7 @@ void _loadGaugeQuda( const int compression ) {
   
   if( inv_param.verbosity > QUDA_SILENT ){
     if(g_proc_id == 0) {
-      if( compression == 18 ){
+      if( compression == NO_COMPRESSION ){
         if( quda_input.fermionbc == TM_QUDA_THETABC ){
           printf("# TM_QUDA: Theta boundary conditions will be applied to gauge field\n");
         }
@@ -826,8 +827,8 @@ void set_boundary_conditions(CompressionType* compression, QudaGaugeParam * gaug
     } else {
       gauge_param->t_boundary = QUDA_ANTI_PERIODIC_T;
     }
-    link_recon = 18;
-    link_recon_sloppy = 18;
+    link_recon = NO_COMPRESSION;
+    link_recon_sloppy = NO_COMPRESSION;
   } else {
     // if we reach this point with compression (see logic above), theta_0 is either 0.0 or 1.0
     // if it is 1.0, we explicitly enabled TM_QUDA_APBC to force simple anti-periodic boundary
@@ -846,7 +847,7 @@ void set_boundary_conditions(CompressionType* compression, QudaGaugeParam * gaug
       gauge_param->t_boundary = QUDA_PERIODIC_T;
     }
 
-    link_recon = 12;
+    link_recon = COMPRESSION_12;
     link_recon_sloppy = *compression;
 
     tm_debug_printf(0, 0, 
