@@ -223,6 +223,9 @@ void set_default_gauge_param(QudaGaugeParam * gauge_param){
   pad_size = MAX(pad_size, z_face_size);
   pad_size = MAX(pad_size, t_face_size);
   gauge_param->ga_pad = pad_size;
+  
+  gauge_param->make_resident_gauge = QUDA_BOOLEAN_NO;
+  gauge_param->t_boundary = QUDA_PERIODIC_T;
 }
 
 void _setDefaultQudaParam(void){
@@ -2348,11 +2351,12 @@ void add_mom_to_derivative(su3adj** der) {
 
 
 void compute_gauge_force_quda(monomial * const mnl, hamiltonian_field_t * const hf) {
+  tm_stopwatch_push(&g_timers);
   
   _initQuda();
   _initMomQuda();
 
-  int rect = mnl->use_rectangles;
+  const int rect = mnl->use_rectangles;
 
   int * path_length = rect ? plaq_rect_length : plaq_length;
 
@@ -2365,9 +2369,9 @@ void compute_gauge_force_quda(monomial * const mnl, hamiltonian_field_t * const 
     path_buf[i] = (int**) path_buf+4+i*num_paths;
     for(int j=0; j<num_paths; j++) {
       if(rect) 
-	path_buf[i][j] = plaq_rect_path[i][j];
+        path_buf[i][j] = plaq_rect_path[i][j];
       else
-	path_buf[i][j] = plaq_path[i][j];
+        path_buf[i][j] = plaq_path[i][j];
     }
   }
 
@@ -2381,13 +2385,16 @@ void compute_gauge_force_quda(monomial * const mnl, hamiltonian_field_t * const 
       loop_coeff[i] = -0.66666666666 * g_beta * mnl->c1;
   }
   
-  // prepares gauge_quda
-  reorder_gauge_toQuda(hf->gaugefield, 18);
-  
   #pragma omp parallel for
   for(int i = 0; i < 4; i++){
     memset(mom_quda[i], 0, VOLUME*10*sizeof(double));
   }
+
+  reorder_gauge_toQuda(hf->gaugefield, NO_COMPRESSION);
+  // the reordering above overwrites gauge_quda
+  // to make sure that things become synchronised again at the
+  // next _loadGaugeQuda, we reset the QUDA gauge state here
+  reset_quda_gauge_state(&quda_gauge_state);
   
   tm_stopwatch_push(&g_timers); 
   computeGaugeForceQuda((void*)mom_quda, 
@@ -2400,7 +2407,8 @@ void compute_gauge_force_quda(monomial * const mnl, hamiltonian_field_t * const 
   free(loop_coeff);
   
   reorder_mom_fromQuda(mom_quda);
-
   add_mom_to_derivative(hf->derivative);
+
+  tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA", __func__);
 }
 
