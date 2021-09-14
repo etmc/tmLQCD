@@ -150,8 +150,8 @@ tm_QudaParams_t quda_input;
 // pointer to the QUDA gaugefield
 double *gauge_quda[4];
 
-// pointer to the QUDA momentum field
 QudaGaugeParam  f_gauge_param;
+// pointer to the QUDA momentum field
 double *mom_quda[4];
 double *mom_quda_reordered[4];
 
@@ -249,7 +249,6 @@ void _setDefaultQudaParam(void){
 
   set_default_gauge_param(&gauge_param);
   
-  gauge_param.cuda_prec = cuda_prec;
   gauge_param.cuda_prec_sloppy = cuda_prec_sloppy;
   gauge_param.cuda_prec_refinement_sloppy = cuda_prec_sloppy;
   gauge_param.cuda_prec_precondition = cuda_prec_precondition;
@@ -430,6 +429,7 @@ void _endQuda() {
     for(int dir = 0; dir < 4; dir++){
       if( (void*)gauge_quda[dir] != NULL ) free((void*)gauge_quda[dir]);
       if( (void*)mom_quda[dir] != NULL ) free((void*)mom_quda[dir]);
+      if( (void*)mom_quda_reordered[dir] != NULL ) free((void*)mom_quda_reordered[dir]);
     }
     freeGaugeQuda();
     freeCloverQuda(); // this is safe even if there is no Clover field loaded, at least it was in QUDA v0.7.2
@@ -442,9 +442,7 @@ void _loadCloverQuda(QudaInvertParam* inv_param){
   static int first_call = 1;
   // check if loaded clover and gauge fields agree
   if( check_quda_clover_state(&quda_clover_state, &quda_gauge_state) ){
-    if(g_proc_id==0 && g_debug_level > 0 ) {
-      printf("# TM_QUDA: Clover field and inverse already loaded for gauge %f\n", quda_gauge_state.gauge_id);
-    }
+      tm_debug_printf(0, 0, "# TM_QUDA: Clover field and inverse already loaded for gauge_id: %f\n", quda_gauge_state.gauge_id);
   } else {
     tm_stopwatch_push(&g_timers);
     if(first_call){
@@ -461,23 +459,7 @@ void _loadCloverQuda(QudaInvertParam* inv_param){
 
 void reorder_gauge_toQuda( const su3 ** const gaugefield, const int compression ) {
 
-  // gaugefield to gauge_quda
-  
   tm_stopwatch_push(&g_timers);
-  if( inv_param.verbosity > QUDA_SILENT ){
-    if(g_proc_id == 0) {
-      if( compression == 18 ){
-        if( quda_input.fermionbc == TM_QUDA_THETABC ){
-          printf("# TM_QUDA: Theta boundary conditions will be applied to gauge field\n");
-        }
-      } else {
-        if( quda_input.fermionbc == TM_QUDA_APBC ){
-          printf("# TM_QUDA: Temporal ABPC will be applied to gauge field\n");
-        }
-      }
-    }
-  }
-
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -558,6 +540,21 @@ void _loadGaugeQuda( const int compression ) {
   // check if the currently loaded gauge field is also the current gauge field
   // and if so, return immediately
   tm_debug_printf(0, 1, "# TM_QUDA: Called _loadGaugeQuda for gauge_id: %f\n", g_gauge_state.gauge_id);
+  
+  if( inv_param.verbosity > QUDA_SILENT ){
+    if(g_proc_id == 0) {
+      if( compression == 18 ){
+        if( quda_input.fermionbc == TM_QUDA_THETABC ){
+          printf("# TM_QUDA: Theta boundary conditions will be applied to gauge field\n");
+        }
+      } else {
+        if( quda_input.fermionbc == TM_QUDA_APBC ){
+          printf("# TM_QUDA: Temporal ABPC will be applied to gauge field\n");
+        }
+      }
+    }
+  }
+
   if( check_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0) ){
     return;
   } else {
@@ -618,7 +615,7 @@ void _initMomQuda(void) {
   static int first_call = 1;
   if( first_call ){
     first_call = 0;
-    set_force_gauge_param( &f_gauge_param);
+    set_force_gauge_param(&f_gauge_param);
     for(int i = 0; i < 4; i++){
       mom_quda[i] = (double*)malloc(VOLUME*10*sizeof(double));
       mom_quda_reordered[i] = (double*)malloc(VOLUME*10*sizeof(double));
@@ -674,7 +671,6 @@ void reorder_mom_fromQuda() {
 #endif
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA", __func__);
 }
-
 
 
 // reorder spinor from QUDA format
@@ -1028,7 +1024,9 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
   reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0 );
 
   // perform the inversion
+  tm_stopwatch_push(&g_timers);
   invertQuda(spinorOut, spinorIn, &inv_param);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "invertQuda");
 
 
   if( inv_param.verbosity > QUDA_SILENT )
@@ -1039,12 +1037,6 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
   // number of CG iterations
   int iteration = inv_param.iter;
 
-  // reorder spinor
-  // BaKo 20170901: not sure why the source was also re-ordered after inversion
-  // we leave that commented out for now
-  //reorder_spinor_fromQuda( (double*)spinorIn,  inv_param.cpu_prec, 0, NULL );
-  //convert_lexic_to_eo(Even,     Odd,     solver_field[0]);
-  
   reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0 );
   convert_lexic_to_eo(Even_new, Odd_new, solver_field[1]);
 
@@ -1287,6 +1279,9 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
   inv_param.tm_rho = 0.0;
 #endif
   inv_param.clover_rho = 0.0;
+  
+  // chiral by default, for single-parity, will switch to DEGRAND_ROSSI
+  inv_param.gamma_basis = QUDA_CHIRAL_GAMMA_BASIS;
 
   // choose dslash type
   if( fabs(mu) > 0.0 && c_sw > 0.0 ) {
@@ -1478,7 +1473,7 @@ void _updateQudaMultigridPreconditioner(){
       reset_quda_mg_setup_state(&quda_mg_setup_state);
       quda_mg_preconditioner = NULL;
     }
-    tm_debug_printf(0,0,"# TM_QUDA: Performing MG Preconditioner Setup for gauge %f\n", quda_gauge_state.gauge_id);
+    tm_debug_printf(0,0,"# TM_QUDA: Performing MG Preconditioner Setup for gauge_id: %f\n", quda_gauge_state.gauge_id);
 
     // if we have set an explicit mu value for the generation of our MG setup,
     // we would like to use it here
@@ -1504,7 +1499,7 @@ void _updateQudaMultigridPreconditioner(){
   } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_REFRESH ) {
 
     tm_stopwatch_push(&g_timers);
-    tm_debug_printf(0,0,"# TM_QUDA: Refreshing MG Preconditioner Setup for gauge %f\n", quda_gauge_state.gauge_id);
+    tm_debug_printf(0,0,"# TM_QUDA: Refreshing MG Preconditioner Setup for gauge_id: %f\n", quda_gauge_state.gauge_id);
     
     for(int level = 0; level < (quda_input.mg_n_level-1); level++){
       quda_mg_param.setup_maxiter_refresh[level] = quda_input.mg_setup_maxiter_refresh[level];
@@ -1527,10 +1522,10 @@ void _updateQudaMultigridPreconditioner(){
 
     tm_stopwatch_push(&g_timers);
 
-    tm_debug_printf(0,0,"# TM_QUDA: Updating MG Preconditioner Setup for gauge %f\n", quda_gauge_state.gauge_id);
+    tm_debug_printf(0,0,"# TM_QUDA: Updating MG Preconditioner Setup for gauge_id: %f\n", quda_gauge_state.gauge_id);
 #ifdef TM_QUDA_EXPERIMENTAL
     if( quda_input.mg_eig_preserve_deflation == QUDA_BOOLEAN_YES ){
-      tm_debug_printf(0,0,"# TM_QUDA: Deflation subspace for gauge %f will be re-used!\n", quda_gauge_state.gauge_id);
+      tm_debug_printf(0,0,"# TM_QUDA: Deflation subspace for gauge_id: %f will be re-used!\n", quda_gauge_state.gauge_id);
     }
 #endif
 
@@ -1546,7 +1541,7 @@ void _updateQudaMultigridPreconditioner(){
     // if the precondioner was disabled because we switched solvers from MG to some other
     // solver, re-enable it here
     inv_param.preconditioner = quda_mg_preconditioner;
-    tm_debug_printf(0,0,"# TM_QUDA: Reusing MG Preconditioner Setup for gauge %f\n", quda_gauge_state.gauge_id);
+    tm_debug_printf(0,0,"# TM_QUDA: Reusing MG Preconditioner Setup for gauge_id: %f\n", quda_gauge_state.gauge_id);
   }
 
   if(g_proc_id == 0 && g_debug_level > 3 && inv_param.inv_type_precondition == QUDA_MG_INVERTER){
@@ -2360,11 +2355,11 @@ void compute_gauge_force_quda(monomial * const mnl, hamiltonian_field_t * const 
 
   int * path_length = rect ? plaq_rect_length : plaq_length;
 
-  int num_paths = rect ? 24 : 6;
-  int max_length = rect ? 5 : 3;
+  const int num_paths = rect ? 24 : 6;
+  const int max_length = rect ? 5 : 3;
 
+  // can't use stack memory for this so we need to copy to a heap buffer
   int *** path_buf = malloc(4*(num_paths+1)*sizeof(void*));
-  
   for(int i=0; i<4; i++) {
     path_buf[i] = (int**) path_buf+4+i*num_paths;
     for(int j=0; j<num_paths; j++) {
