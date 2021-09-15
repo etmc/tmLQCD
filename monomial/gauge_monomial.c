@@ -48,6 +48,29 @@
 #include "quda_interface.h"
 #endif
 
+/* this function compares the gauge derivative calculated by Quda and tmLQCD */
+void compare_derivative(monomial *mnl, su3adj **arg1, su3adj **arg2 ){
+  if (g_proc_id==0){
+    for(int ix = 0; ix < VOLUME; ix++){
+      for(int mu=0; mu<4; mu++){
+        double *temp1=&(arg1[ix][mu].d1);
+        double *temp2=&(arg2[ix][mu].d1);
+        for(int j=0; j<8; ++j){
+          double diff=(temp1[j]-temp2[j])/temp1[j];
+          if (sqrt(diff*diff)>1e-10){
+            fprintf(stderr, "The derivative computed by QUDA and tmLQCD does not match for monomial: c0=%e c1=%e g_beta=%e\n",mnl->c0,
+                                                                           mnl->c1,
+                                                                           mnl->beta);
+            fprintf(stderr, "The difference is %e\n", diff);
+            exit(1);
+          }
+        }
+      }
+    }
+  }
+}
+
+
 /* this function calculates the derivative of the momenta: equation 13 of Gottlieb */
 void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
   tm_stopwatch_push(&g_timers);
@@ -58,7 +81,20 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
   }
   if( mnl->external_library == QUDA_LIB ){
 #ifdef TM_USE_QUDA
+    if (g_debug_level > 3) {
+     memcpy(ddummy[0], hf->derivative[0], (4*VOLUMEPLUSRAND+1)*sizeof(su3adj));
+    }
     compute_gauge_derivative_quda(mnl, hf);
+
+    if (g_debug_level > 3){
+     su3adj **given=hf->derivative;
+     hf->derivative=ddummy;
+     mnl->external_library=NO_EXT_LIB;
+     gauge_derivative(id, hf);
+     compare_derivative(mnl,given, ddummy);
+     mnl->external_library=QUDA_LIB;
+     hf->derivative=given;
+    }
 #else
     fatal_error("Attempted to use QUDA_LIB in gauge monomial but tmLQCD has been compiled without QUDA support!", __func__);
 #endif
