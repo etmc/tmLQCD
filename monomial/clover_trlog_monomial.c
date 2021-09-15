@@ -48,8 +48,8 @@ void clover_trlog_derivative(const int id, hamiltonian_field_t * const hf) {
 
 
 void clover_trlog_heatbath(const int id, hamiltonian_field_t * const hf) {
-  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
+  tm_stopwatch_push(&g_timers, mnl->name );
   mnl->energy0 = 0.;
 
   init_sw_fields();
@@ -61,13 +61,13 @@ void clover_trlog_heatbath(const int id, hamiltonian_field_t * const hf) {
       printf("called clover_trlog_heatbath for id %d E = %e\n", id, mnl->energy0);
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
   return;
 }
 
 double clover_trlog_acc(const int id, hamiltonian_field_t * const hf) {
-  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
+  tm_stopwatch_push(&g_timers, mnl->name );
   mnl->energy1 = 0.;
   sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
   /*compute the contribution from the clover trlog term */
@@ -78,6 +78,6 @@ double clover_trlog_acc(const int id, hamiltonian_field_t * const hf) {
 	     id, mnl->energy1 - mnl->energy0);
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
   return(mnl->energy1 - mnl->energy0);
 }

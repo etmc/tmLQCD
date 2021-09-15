@@ -60,9 +60,9 @@ extern int phmc_exact_poly;
  ********************************************/
 
 void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
-  tm_stopwatch_push(&g_timers);
   int j, k;
   monomial * mnl = &monomial_list[id];
+  tm_stopwatch_push(&g_timers, mnl->name);
   /* This factor 2 a missing factor 2 in trace_lambda */
   ndpoly_set_global_parameter(mnl, phmc_exact_poly);
   mnl->forcefactor = -phmc_Cpol*mnl->EVMaxInv;
@@ -157,13 +157,13 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
     Normalisation by the largest  EW  is done in update_momenta
     using mnl->forcefactor
   */
-  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
   return;
 }
 
 
 void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
-  tm_stopwatch_push(&g_timers);
+  tm_stopwatch_push(&g_timers, "");
   int j;
   monomial * mnl = &monomial_list[id];
 
@@ -175,16 +175,16 @@ void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   }
 
   mnl->energy0 = 0.;
-  tm_stopwatch_push(&g_timers);
+  tm_stopwatch_push(&g_timers, "");
   random_spinor_field_eo(g_chi_up_spinor_field[0], mnl->rngrepro, RN_GAUSS);
   mnl->energy0 = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, current_mnl, "random_energy0");
+  tm_stopwatch_pop(&g_timers, 0, 1, "random_energy0");
 
   if(g_epsbar!=0.0 || phmc_exact_poly == 0) {
-    tm_stopwatch_push(&g_timers);
+    tm_stopwatch_push(&g_timers, "");
     random_spinor_field_eo(g_chi_dn_spinor_field[0], mnl->rngrepro, RN_GAUSS);
     mnl->energy0 += square_norm(g_chi_dn_spinor_field[0], VOLUME/2, 1);
-    tm_stopwatch_pop(&g_timers, 0, 1, current_mnl, "random_energy0");
+    tm_stopwatch_pop(&g_timers, 0, 1, "random_energy0");
   } 
   else {
     zero_spinor_field(g_chi_dn_spinor_field[0], VOLUME/2);
@@ -259,13 +259,13 @@ void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called ndpoly_heatbath for id %d \n", id);
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
   return;
 }
 
 
 double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
-  tm_stopwatch_push(&g_timers);
+  tm_stopwatch_push(&g_timers, "");
   int j, ij=0;
   double temp, sgn, fact, Diff;
   double Ener[8];
@@ -349,10 +349,10 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
         Ener[j] += sgn*fact*Ener[ij];
         sgn = -sgn;
       }
-      tm_stopwatch_push(&g_timers);
+      tm_stopwatch_push(&g_timers, "");
       temp = square_norm(g_chi_up_spinor_field[j], VOLUME/2, 1);
       temp += square_norm(g_chi_dn_spinor_field[j], VOLUME/2, 1);
-      tm_stopwatch_pop(&g_timers, 0, 1, current_mnl, "square_norm");
+      tm_stopwatch_pop(&g_timers, 0, 1, "square_norm");
       if((g_proc_id == g_stdio_proc) && (g_debug_level > 4)) {
         printf("# NDPOLY: Here  j=%d   sign=%f  temp=%e \n", j, sgn, temp);
       }
@@ -384,13 +384,13 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
       assign(g_chi_dn_spinor_field[0], dn0, VOLUME/2);
     }
     
-    tm_stopwatch_push(&g_timers);
+    tm_stopwatch_push(&g_timers, "");
     temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
     Ener[0] = temp;
 
     temp = square_norm(g_chi_dn_spinor_field[0], VOLUME/2, 1);
     Ener[0] += temp;
-    tm_stopwatch_pop(&g_timers, 0, 1, current_mnl, "square_norm");
+    tm_stopwatch_pop(&g_timers, 0, 1, "square_norm");
 
     if((g_proc_id == g_stdio_proc) && (g_debug_level > 4)) {
       ij=0;
@@ -407,9 +407,9 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
     }
     assign(g_chi_up_spinor_field[0], g_chi_up_spinor_field[1], VOLUME/2);
 
-    tm_stopwatch_push(&g_timers);
+    tm_stopwatch_push(&g_timers, "");
     temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
-    tm_stopwatch_pop(&g_timers, 0, 1, current_mnl, "square_norm");
+    tm_stopwatch_pop(&g_timers, 0, 1, "square_norm");
     Ener[0] = temp;
 
     if((g_proc_id == g_stdio_proc) && (g_debug_level > 4)) {
@@ -423,13 +423,13 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
     printf("called ndpoly_acc for id %d %d dH = %1.10e\n", id, g_running_phmc, mnl->energy1 - mnl->energy0);
   }
   /* END IF PHMC */
-  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
   return(mnl->energy1 - mnl->energy0);
 }
 
 
 int init_ndpoly_monomial(const int id) {
-  tm_stopwatch_push(&g_timers);
+  tm_stopwatch_push(&g_timers, "");
   monomial * mnl = &monomial_list[id];
   int j, k, errcode;
   FILE * ifs;
@@ -539,7 +539,7 @@ int init_ndpoly_monomial(const int id) {
 #endif
     exit(6);
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
   return(0);
 }
 

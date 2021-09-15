@@ -37,11 +37,12 @@ double gettime(void);
 typedef struct tm_timers_s {
   int lvl;
   double t[TM_MAX_TIMING_LEVELS];
+  char context[TM_MAX_TIMING_LEVELS][100];
 } tm_timers_t;
 
 // tm_stopwatch_push will increase the timing level and perform a gettime()
 // measurement
-void tm_stopwatch_push(tm_timers_t * const timers);
+void tm_stopwatch_push(tm_timers_t * const timers, const char * const context);
 
 // tm_stopwatch_pop will output and decrease the timing level 
 //
@@ -52,7 +53,7 @@ void tm_stopwatch_push(tm_timers_t * const timers);
 // dbg_level_threshold
 void tm_stopwatch_pop(tm_timers_t * const timers,
     const int proc_id, const int dbg_level_threshold,
-    const char * const prefix, const char * const name);
+     const char * const name);
 
 #ifdef __cplusplus
 }
