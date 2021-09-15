@@ -73,7 +73,7 @@ void update_momenta(int * mnllist, double step, const int no,
     }
   }
 
-  tm_stopwatch_pop(&g_timers, 0, 0, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 0, "", __func__);
 
   return;
 }

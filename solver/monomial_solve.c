@@ -122,7 +122,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
 
     tm_stopwatch_push(&g_timers, "");
     gamma5(temp[0], Q, VOLUME/2);
-    tm_stopwatch_pop(&g_timers, 0, 1, "solve_degenerate:gamma5");
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "solve_degenerate:gamma5");
     iteration_count = invert_eo_MMd_quda(P,   //spinor * const Odd_new,
                                          temp[0],
                                          eps_sq, // Marco: check this:   const double precision, 
@@ -137,7 +137,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     if( !(solver_type == MG || solver_type == BICGSTAB) ){
       tm_stopwatch_push(&g_timers, "");
       mul_gamma5(P, VOLUME/2);
-      tm_stopwatch_pop(&g_timers, 0, 1, "solve_degenerate:gamma5");
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "solve_degenerate:gamma5");
     }
 
     //// //////////////////////////////////////////////////////////////// test to be removed
@@ -325,7 +325,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
     finalize_solver(temp, nr_sf);
   }
   
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return(iteration_count);
 }
 
@@ -363,7 +363,7 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
   if ( solver_params->external_inverter == QUDA_INVERTER && solver_params->type != MG){
     tm_stopwatch_push(&g_timers, "");
     gamma5(temp[0], Q, VOLUME/2);
-    tm_stopwatch_pop(&g_timers, 0, 1, "solve_mms_tm:gamma5");
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "solve_mms_tm:gamma5");
     iteration_count = invert_eo_quda_oneflavour_mshift(P, temp[0],
                                                        solver_params->squared_solver_prec,
                                                        solver_params->max_iter,
@@ -377,7 +377,7 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
     for( int shift = 0; shift < solver_params->no_shifts; shift++){
       mul_gamma5(P[shift], VOLUME/2);
     }
-    tm_stopwatch_pop(&g_timers, 0, 1, "solve_mms_tm:gamma5");
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "solve_mms_tm:gamma5");
   } else
 #endif
     if (solver_params->type == CGMMS){
@@ -529,7 +529,7 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
       (solver_params->external_inverter == QPHIX_INVERTER && solver_params->type != MG)){
     finalize_solver(temp, 1);
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__); 
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__); 
   return(iteration_count);
 }
 
@@ -554,7 +554,7 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
     tm_stopwatch_push(&g_timers, "");
     gamma5(temp[0], Qup, VOLUME/2);
     gamma5(temp[1], Qdn, VOLUME/2);
-    tm_stopwatch_pop(&g_timers, 0, 1, "solve_mms_nd:gamma5");
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "solve_mms_nd:gamma5");
     iteration_count = invert_eo_quda_twoflavour_mshift(Pup, Pdn, temp[0], temp[1],
                                                        solver_params->squared_solver_prec, solver_params->max_iter,
                                                        solver_params->type, solver_params->rel_prec,
@@ -572,7 +572,7 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
       mul_r_gamma5(Pup[shift], maxev_sq, VOLUME/2);
       mul_r_gamma5(Pdn[shift], maxev_sq, VOLUME/2);
     }
-    tm_stopwatch_pop(&g_timers, 0, 1, "solve_mms_nd:mul_r_gamm5");
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "solve_mms_nd:mul_r_gamm5");
   } else
 #endif //TM_USE_QPHIX
 #ifdef TM_USE_QPHIX
@@ -781,7 +781,7 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
       (solver_params->external_inverter == QPHIX_INVERTER && solver_params->type != MG)){
     finalize_solver(temp, 2);
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return(iteration_count);
 }
 
@@ -828,9 +828,9 @@ int solve_mms_nd_plus(spinor ** const Pup, spinor ** const Pdn,
       assign(Pdn[i], temp[1], VOLUME/2);
       g_shift = _default_g_shift;
     }
-    tm_stopwatch_pop(&g_timers, 0, 1, "solve_mms_nd_plus:f_assign");
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "solve_mms_nd_plus:f_assign");
     finalize_solver(temp, 2);
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return iteration_count;
 }

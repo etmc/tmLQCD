@@ -157,7 +157,7 @@ void ndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
     Normalisation by the largest  EW  is done in update_momenta
     using mnl->forcefactor
   */
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return;
 }
 
@@ -178,13 +178,13 @@ void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   tm_stopwatch_push(&g_timers, "");
   random_spinor_field_eo(g_chi_up_spinor_field[0], mnl->rngrepro, RN_GAUSS);
   mnl->energy0 = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, "random_energy0");
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "random_energy0");
 
   if(g_epsbar!=0.0 || phmc_exact_poly == 0) {
     tm_stopwatch_push(&g_timers, "");
     random_spinor_field_eo(g_chi_dn_spinor_field[0], mnl->rngrepro, RN_GAUSS);
     mnl->energy0 += square_norm(g_chi_dn_spinor_field[0], VOLUME/2, 1);
-    tm_stopwatch_pop(&g_timers, 0, 1, "random_energy0");
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "random_energy0");
   } 
   else {
     zero_spinor_field(g_chi_dn_spinor_field[0], VOLUME/2);
@@ -259,7 +259,7 @@ void ndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called ndpoly_heatbath for id %d \n", id);
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return;
 }
 
@@ -352,7 +352,7 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
       tm_stopwatch_push(&g_timers, "");
       temp = square_norm(g_chi_up_spinor_field[j], VOLUME/2, 1);
       temp += square_norm(g_chi_dn_spinor_field[j], VOLUME/2, 1);
-      tm_stopwatch_pop(&g_timers, 0, 1, "square_norm");
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "square_norm");
       if((g_proc_id == g_stdio_proc) && (g_debug_level > 4)) {
         printf("# NDPOLY: Here  j=%d   sign=%f  temp=%e \n", j, sgn, temp);
       }
@@ -390,7 +390,7 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
 
     temp = square_norm(g_chi_dn_spinor_field[0], VOLUME/2, 1);
     Ener[0] += temp;
-    tm_stopwatch_pop(&g_timers, 0, 1, "square_norm");
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "square_norm");
 
     if((g_proc_id == g_stdio_proc) && (g_debug_level > 4)) {
       ij=0;
@@ -409,7 +409,7 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
 
     tm_stopwatch_push(&g_timers, "");
     temp = square_norm(g_chi_up_spinor_field[0], VOLUME/2, 1);
-    tm_stopwatch_pop(&g_timers, 0, 1, "square_norm");
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "square_norm");
     Ener[0] = temp;
 
     if((g_proc_id == g_stdio_proc) && (g_debug_level > 4)) {
@@ -423,7 +423,7 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
     printf("called ndpoly_acc for id %d %d dH = %1.10e\n", id, g_running_phmc, mnl->energy1 - mnl->energy0);
   }
   /* END IF PHMC */
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return(mnl->energy1 - mnl->energy0);
 }
 
@@ -539,7 +539,7 @@ int init_ndpoly_monomial(const int id) {
 #endif
     exit(6);
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return(0);
 }
 

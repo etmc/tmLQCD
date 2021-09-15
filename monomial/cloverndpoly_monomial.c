@@ -132,7 +132,7 @@ void cloverndpoly_derivative(const int id, hamiltonian_field_t * const hf) {
   // trlog part does not depend on the normalisation of the polynomial
   sw_deriv_nd(EE);
   sw_all(hf, mnl->kappa, mnl->c_sw);
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return;
 }
 
@@ -160,7 +160,7 @@ void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   random_spinor_field_eo(g_chi_dn_spinor_field[0], mnl->rngrepro, RN_GAUSS);
   mnl->energy0 += square_norm(g_chi_dn_spinor_field[0], VOLUME/2, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, "random_energy0");
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "random_energy0");
 
   Qsw_ndpsi(g_chi_up_spinor_field[1], g_chi_dn_spinor_field[1], 
 	    g_chi_up_spinor_field[0], g_chi_dn_spinor_field[0]);
@@ -187,7 +187,7 @@ void cloverndpoly_heatbath(const int id, hamiltonian_field_t * const hf) {
       printf("called cloverndpoly_heatbath for id %d energy %f\n", id, mnl->energy0);
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return;
 }
 
@@ -222,13 +222,13 @@ double cloverndpoly_acc(const int id, hamiltonian_field_t * const hf) {
   tm_stopwatch_push(&g_timers, "");
   mnl->energy1 = square_norm(up0, VOLUME/2, 1);
   mnl->energy1 += square_norm(dn0, VOLUME/2, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, "energy1");
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "energy1");
   if(g_proc_id == 0) {
     if(g_debug_level > 3) {
       printf("called cloverndpoly_acc for id %d dH = %1.10e\n", id, mnl->energy1 - mnl->energy0);
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return(mnl->energy1 - mnl->energy0);
 }
 

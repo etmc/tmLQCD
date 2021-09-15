@@ -82,7 +82,7 @@ double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
     tm_stopwatch_push(&g_timers, "");
     Q_dagger_ndpsi(mnl->w_fields[2], mnl->w_fields[3],
                    mnl->w_fields[0], mnl->w_fields[1]);
-    tm_stopwatch_pop(&g_timers, 0, 1, "Q_dagger_ndpsi");
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "Q_dagger_ndpsi");
   }
 
   g_mubar = mnl->mubar2;
@@ -96,18 +96,18 @@ double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
   tm_stopwatch_push(&g_timers, "");
   Q_ndpsi(mnl->w_fields[0], mnl->w_fields[1],
             mnl->w_fields[2], mnl->w_fields[3]);
-  tm_stopwatch_pop(&g_timers, 0, 1, "Q_ndpsi");
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "Q_ndpsi");
  
   tm_stopwatch_push(&g_timers, ""); 
   mnl->energy1  = scalar_prod_r(mnl->pf , mnl->w_fields[0], VOLUME/2, 1);
   mnl->energy1 += scalar_prod_r(mnl->pf2, mnl->w_fields[1], VOLUME/2, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, "energy1");
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "energy1");
   if(g_proc_id == 0) {
     if(g_debug_level > 3) {
       printf("called nddetratio_acc for id %d dH = %1.10e\n", 
 	     id, mnl->energy0 - mnl->energy1);
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return(mnl->energy1 - mnl->energy0);
 }

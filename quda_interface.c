@@ -413,7 +413,7 @@ void _loadCloverQuda(QudaInvertParam* inv_param){
     reset_quda_clover_state(&quda_clover_state);
     loadCloverQuda(NULL, NULL, inv_param);
     set_quda_clover_state(&quda_clover_state, &quda_gauge_state);
-    tm_stopwatch_pop(&g_timers, 0, 1, "loadCloverQuda");
+    tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", "loadCloverQuda");
   }
 }
 
@@ -523,11 +523,11 @@ void _loadGaugeQuda( const int compression ) {
 #ifdef TM_USE_OMP
   } // OpenMP parallel closing brace 
 #endif
-  tm_stopwatch_pop(&g_timers, 0, 1, "reorder_gauge");
+  tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", "reorder_gauge");
 
   tm_stopwatch_push(&g_timers, "");
   loadGaugeQuda((void*)gauge_quda, &gauge_param);
-  tm_stopwatch_pop(&g_timers, 0, 1, "loadGaugeQuda");
+  tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", "loadGaugeQuda");
 
   set_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0);
 }
@@ -565,7 +565,7 @@ void reorder_spinor_toQuda( double* sp, QudaPrecision precision, int doublet ) {
 
         }
 
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", __func__);
 }
 
 // reorder spinor from QUDA format
@@ -599,7 +599,7 @@ void reorder_spinor_fromQuda( double* sp, QudaPrecision precision, int doublet) 
             memcpy( &(sp[24*tm_idx]), &(tempSpinor[24*(oddBit*VOLUME/2+j/2)]), 24*sizeof(double));
           }
         }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", __func__);
 }
 
 
@@ -645,7 +645,7 @@ void reorder_spinor_eo_toQuda(double* sp, QudaPrecision precision, int doublet, 
             }
           }
         }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", __func__);
 }
 
 // reorder spinor from QUDA format
@@ -692,7 +692,7 @@ void reorder_spinor_eo_fromQuda( double* sp, QudaPrecision precision, int double
           }
         }
 
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", __func__);
 }
 
 
@@ -859,7 +859,7 @@ int invert_quda_direct(double * const propagator, double const * const source,
 
   finalize_solver(solver_field, 1);
 
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", __func__);
 
   if(optr->iterations >= optr->maxiter)
     return(-1);
@@ -921,7 +921,7 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
   // perform the inversion
   tm_stopwatch_push(&g_timers, "");
   invertQuda(spinorOut, spinorIn, &inv_param);
-  tm_stopwatch_pop(&g_timers, 0, 1, "invertQuda");
+  tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", "invertQuda");
 
 
   if( inv_param.verbosity > QUDA_SILENT )
@@ -937,7 +937,7 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 
   finalize_solver(solver_field, nr_sf);
 
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", __func__);
 
   if(iteration >= max_iter)
     return(-1);
@@ -1044,7 +1044,7 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   // perform the inversion
   tm_stopwatch_push(&g_timers, "");
   invertQuda(spinorOut, spinorIn, &inv_param);
-  tm_stopwatch_pop(&g_timers, 0, 1, "invertQuda");
+  tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", "invertQuda");
 
   if( inv_param.verbosity > QUDA_SILENT )
     if(g_proc_id == 0)
@@ -1060,7 +1060,7 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
 
   finalize_solver(solver_field, nr_sf);
 
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", __func__);
 
   if(iteration >= max_iter)
     return(-1);
@@ -1389,7 +1389,7 @@ void _updateQudaMultigridPreconditioner(){
     inv_param.preconditioner = quda_mg_preconditioner;
     set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
 
-    tm_stopwatch_pop(&g_timers, 0, 1, "MG_Preconditioner_Setup");
+    tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", "MG_Preconditioner_Setup");
 
   } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_REFRESH ) {
 
@@ -1411,7 +1411,7 @@ void _updateQudaMultigridPreconditioner(){
     inv_param.preconditioner = quda_mg_preconditioner;
     set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
 
-    tm_stopwatch_pop(&g_timers, 0, 1, "MG_Preconditioner_Setup_Refresh");
+    tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", "MG_Preconditioner_Setup_Refresh");
 
   } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_UPDATE )  {
 
@@ -1430,7 +1430,7 @@ void _updateQudaMultigridPreconditioner(){
     // solver, re-enable it here
     inv_param.preconditioner = quda_mg_preconditioner;
 
-    tm_stopwatch_pop(&g_timers, 0, 1, "MG_Preconditioner_Setup_Update");
+    tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", "MG_Preconditioner_Setup_Update");
 
   } else {
     // if the precondioner was disabled because we switched solvers from MG to some other
@@ -1966,7 +1966,7 @@ int invert_eo_MMd_quda(spinor * const out,
 
   tm_stopwatch_push(&g_timers, "");
   invertQuda(spinorOut, spinorIn, &inv_param);
-  tm_stopwatch_pop(&g_timers, 0, 1, "invertQuda");
+  tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", "invertQuda");
   
   // the second solve is only necessary in the derivative where we want the inverse of
   // \hat{Q}^{+} \hat{Q}^{-}
@@ -1985,7 +1985,7 @@ int invert_eo_MMd_quda(spinor * const out,
     // in the next solve
     tm_stopwatch_push(&g_timers, "");
     mul_gamma5((spinor*)spinorOut, VOLUME/2);
-    tm_stopwatch_pop(&g_timers, 0, 1, "mul_gamma5");
+    tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", "mul_gamma5");
 
     reorder_spinor_eo_toQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
     // now we invert \hat{M}^{-} to get the inverse of \hat{Q}^{-} in the end
@@ -2001,11 +2001,11 @@ int invert_eo_MMd_quda(spinor * const out,
       // we need to do this to make sure that the MG setup is updated at the next
       // mu flip
       set_quda_mg_setup_mu(&quda_mg_setup_state, -g_mu);
-      tm_stopwatch_pop(&g_timers, 0, 1, "updateMultigridQuda_sign_flip");
+      tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", "updateMultigridQuda_sign_flip");
     }
     tm_stopwatch_push(&g_timers, "");
     invertQuda(spinorOut, spinorOut, &inv_param);
-    tm_stopwatch_pop(&g_timers, 0, 1, "invertQuda");
+    tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", "invertQuda");
     reorder_spinor_eo_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
     } else {
       reorder_spinor_eo_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
@@ -2019,7 +2019,7 @@ int invert_eo_MMd_quda(spinor * const out,
 
   iterations += inv_param.iter;
 
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", __func__);
 
   if(iterations >= max_iter)
     return(-1);
@@ -2085,7 +2085,7 @@ int invert_eo_quda_oneflavour_mshift(spinor ** const out,
 
   tm_stopwatch_push(&g_timers, "");
   invertMultiShiftQuda(spinorOut, spinorIn, &inv_param);
-  tm_stopwatch_pop(&g_timers, 0, 1, "invertMultiShiftQuda");
+  tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", "invertMultiShiftQuda");
   
   for(int shift = 0; shift < num_shifts; shift++){
     reorder_spinor_eo_fromQuda( (double*)spinorOut[shift], inv_param.cpu_prec, 0, 1);
@@ -2098,7 +2098,7 @@ int invert_eo_quda_oneflavour_mshift(spinor ** const out,
 
   iterations += inv_param.iter;
 
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", __func__);
 
   if(iterations >= max_iter)
     return(-1);
@@ -2127,7 +2127,7 @@ int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out
   tm_stopwatch_push(&g_timers, "");
   memcpy(in[0],      in_up, Vh*24*sizeof(double));
   memcpy(in[0] + Vh, in_dn, Vh*24*sizeof(double));
-  tm_stopwatch_pop(&g_timers, 0, 1, "twoflavour_input_overhead");
+  tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", "twoflavour_input_overhead");
 
   const int nr_sf_out = solver_params.no_shifts;
   init_solver_field(&out, VOLUME, nr_sf_out);
@@ -2185,14 +2185,14 @@ int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out
 
   tm_stopwatch_push(&g_timers, "");
   invertMultiShiftQuda(spinorOut, spinorIn, &inv_param);
-  tm_stopwatch_pop(&g_timers, 0, 1, "invertMultiShiftQuda");
+  tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", "invertMultiShiftQuda");
  
   for(int shift = 0; shift < num_shifts; shift++){
     reorder_spinor_eo_fromQuda((double*)spinorOut[shift], inv_param.cpu_prec, 1, 1);
     tm_stopwatch_push(&g_timers, ""); 
     memcpy(out_up[shift], spinorOut[shift],                    24*Vh*sizeof(double));
     memcpy(out_dn[shift], ((double*)spinorOut[shift]) + 24*Vh, 24*Vh*sizeof(double));
-    tm_stopwatch_pop(&g_timers, 0, 1, "twoflavour_output_overhead");
+    tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", "twoflavour_output_overhead");
   }
 
   finalize_solver(in, nr_sf_in);
@@ -2205,7 +2205,7 @@ int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out
 
   iterations += inv_param.iter;
 
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 2, "TM_QUDA", __func__);
 
   if(iterations >= max_iter)
     return(-1);

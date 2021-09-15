@@ -172,7 +172,7 @@ void poly_derivative(const int id, hamiltonian_field_t * const hf){
   g_mu = g_mu1;
   boundary(g_kappa);
   popPhmcVars();
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return;
 }
 
@@ -254,7 +254,7 @@ double poly_acc(const int id, hamiltonian_field_t * const hf){
 	     id, mnl->energy1 - mnl->energy0);
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return (mnl->energy1 - mnl->energy0);
 }
 
@@ -331,6 +331,6 @@ void poly_heatbath(const int id, hamiltonian_field_t * const hf){
       printf("called poly_heatbath for id %d energy %f\n", id, mnl->energy0);
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return;
 }

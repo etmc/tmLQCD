@@ -72,7 +72,7 @@ void sf_gauge_derivative(const int id, hamiltonian_field_t * const hf) {
       }
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return;
 }
 
@@ -91,7 +91,7 @@ void sf_gauge_heatbath( const int id, hamiltonian_field_t * const hf)
   if(g_proc_id == 0 && g_debug_level > 3) {
     printf("called gauge_heatbath for id %d %d\n", id, mnl->even_odd_flag);
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
 }
 
 double sf_gauge_acc( const int id, hamiltonian_field_t * const hf)
@@ -163,6 +163,6 @@ double sf_gauge_acc( const int id, hamiltonian_field_t * const hf)
     printf( "called sf_gauge_acc for id %d %d dH = %1.10e\n", 
 	    id, mnl->even_odd_flag, mnl->energy0 - mnl->energy1 );
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return ( mnl->energy0 - mnl->energy1 );
 }

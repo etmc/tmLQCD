@@ -53,7 +53,7 @@ void tm_stopwatch_push(tm_timers_t * const timers, const char * const context);
 // dbg_level_threshold
 void tm_stopwatch_pop(tm_timers_t * const timers,
     const int proc_id, const int dbg_level_threshold,
-     const char * const name);
+    const char * const prefix, const char * const name);
 
 #ifdef __cplusplus
 }

@@ -85,22 +85,22 @@ void tm_stopwatch_push(tm_timers_t * const timers, const char *context){
   }
   timers->t[++(timers->lvl)] = gettime();
   if (strcmp(context,"")==0)
-    sprintf(timers->context[timers->lvl],"%s", timers->context[timers->lvl-1] );
+    snprintf(timers->context[timers->lvl], 100,"%s", timers->context[timers->lvl-1] );
   else 
-    sprintf(timers->context[timers->lvl],"%s",context);
+    snprintf(timers->context[timers->lvl], 100,"%s",context);
 }
 
 void tm_stopwatch_pop(tm_timers_t * const timers,
     const int proc_id, const int dbg_level_threshold,
-    const char * const name){
+    const char * const prefix, const char * const name){
   if( (timers->lvl-1) < -1 ){
     fatal_error("attempted pop would let timers->lvl drop below the lowest possible value", "tm_stopwatch_pop");
   }
   if( g_proc_id == proc_id && g_debug_level >= dbg_level_threshold ){
-    printf("# %s: Time for %s %e s level: %d proc_id: %d\n", timers->context[timers->lvl], name, gettime()-timers->t[timers->lvl], 
+    printf("# %s: %s: Time for %s %e s level: %d proc_id: %d\n", timers->context[timers->lvl], prefix, name, gettime()-timers->t[timers->lvl], 
         timers->lvl, g_proc_id);
   }
-  sprintf(timers->context[timers->lvl],"lost_context");
+  snprintf(timers->context[timers->lvl], 100,"lost_context");
   (timers->lvl)--;
 }
 

@@ -88,7 +88,7 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
         _su3_zero(swp[i][mu]);
       }
     }
-    tm_stopwatch_pop(&g_timers, 0, 1, "su3_zero");
+    tm_stopwatch_pop(&g_timers, 0, 1, "", "su3_zero");
   
     // we compute the clover term (1 + T_ee(oo)) for all sites x
     sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
@@ -124,14 +124,14 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
       Qsw_tau1_sub_const_ndpsi(mnl->w_fields[0], mnl->w_fields[1],
 			       g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
 			       -I*mnl->rat.mu[j], 1., mnl->EVMaxInv);
-      tm_stopwatch_pop(&g_timers, 0, 1, "Qsw_tau1_sub_const_ndpsi");
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "Qsw_tau1_sub_const_ndpsi");
       
       /* Get the even parts X_j,e */
       /* H_eo_... includes tau_1 */
       tm_stopwatch_push(&g_timers, "");
       H_eo_sw_ndpsi(mnl->w_fields[2], mnl->w_fields[3], 
 		    g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j]);
-      tm_stopwatch_pop(&g_timers, 0, 1, "H_eo_sw_ndpsi");
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "H_eo_sw_ndpsi");
 
     } else {
       // multiply with Q_h * tau^1 + i mu_j to get Y_j,o (odd sites)
@@ -140,14 +140,14 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
       Q_tau1_sub_const_ndpsi(mnl->w_fields[0], mnl->w_fields[1],
 			     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
 			     -I*mnl->rat.mu[j], 1., mnl->EVMaxInv);
-      tm_stopwatch_pop(&g_timers, 0, 1, "Q_tau1_sub_const_ndpsi");
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "Q_tau1_sub_const_ndpsi");
       
       /* Get the even parts X_j,e */
       /* H_eo_... includes tau_1 */
       tm_stopwatch_push(&g_timers, "");
       H_eo_tm_ndpsi(mnl->w_fields[2], mnl->w_fields[3], 
 		    g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], EO);
-      tm_stopwatch_pop(&g_timers, 0, 1, "H_eo_tm_ndpsi");
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "H_eo_tm_ndpsi");
     }
     /* X_j,e^dagger \delta M_eo Y_j,o */
     deriv_Sb(EO, mnl->w_fields[2], mnl->w_fields[0], 
@@ -159,13 +159,13 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
       /* Get the even parts Y_j,e */
       tm_stopwatch_push(&g_timers, "");
       H_eo_sw_ndpsi(mnl->w_fields[4], mnl->w_fields[5], mnl->w_fields[0], mnl->w_fields[1]);
-      tm_stopwatch_pop(&g_timers, 0, 1, "H_eo_sw_ndpsi");
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "H_eo_sw_ndpsi");
     }
     else {
       /* Get the even parts Y_j,e */
       tm_stopwatch_push(&g_timers, "");
       H_eo_tm_ndpsi(mnl->w_fields[4], mnl->w_fields[5], mnl->w_fields[0], mnl->w_fields[1], EO);
-      tm_stopwatch_pop(&g_timers, 0, 1, "H_eo_tm_ndpsi");
+      tm_stopwatch_pop(&g_timers, 0, 1, "", "H_eo_tm_ndpsi");
     }
 
     /* X_j,o \delta M_oe Y_j,e */
@@ -197,7 +197,7 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   if(mnl->type == NDCLOVERRAT) {
     sw_all(hf, mnl->kappa, mnl->c_sw);
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return;
 }
 
@@ -227,7 +227,7 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   random_spinor_field_eo(mnl->pf2, mnl->rngrepro, RN_GAUSS);
   mnl->energy0 += square_norm(mnl->pf2, VOLUME/2, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, "random_energy0");
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "random_energy0");
   
   // set solver parameters
   mnl->solver_params.max_iter = mnl->maxiter;
@@ -260,7 +260,7 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
       printf("called ndrat_heatbath for id %d energy %f\n", id, mnl->energy0);
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return;
 }
 
@@ -306,13 +306,13 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
   tm_stopwatch_push(&g_timers, "");
   mnl->energy1 = scalar_prod_r(mnl->pf, mnl->w_fields[0], VOLUME/2, 1);
   mnl->energy1 += scalar_prod_r(mnl->pf2, mnl->w_fields[1], VOLUME/2, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, "scalar_prod_r");
+  tm_stopwatch_pop(&g_timers, 0, 1, "", "scalar_prod_r");
   if(g_proc_id == 0) {
     if(g_debug_level > 3) {
       printf("called ndrat_acc for id %d, H_1 = %.10e, dH = %1.10e\n", id, mnl->energy1,  mnl->energy1 - mnl->energy0);
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return(mnl->energy1 - mnl->energy0);
 }
 
@@ -359,7 +359,7 @@ int init_ndrat_monomial(const int id) {
       exit(0);
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return(0);
 }
 

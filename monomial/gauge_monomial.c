@@ -86,7 +86,7 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return;
 }
 
@@ -149,7 +149,7 @@ void gauge_EMderivative(const int id, hamiltonian_field_t * const hf) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return;
 }
 
@@ -167,7 +167,7 @@ void gauge_heatbath(const int id, hamiltonian_field_t * const hf) {
       printf("called gauge_heatbath for id %d energy %f\n", id, mnl->energy0);
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return;
 }
 
@@ -184,6 +184,6 @@ double gauge_acc(const int id, hamiltonian_field_t * const hf) {
 	     id, mnl->energy0 - mnl->energy1);
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return(mnl->energy0 - mnl->energy1);
 }

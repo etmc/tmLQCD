@@ -82,7 +82,7 @@ double cloverdetratio_rwacc(const int id, hamiltonian_field_t * const hf) {
 				   g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver);
     tm_stopwatch_push(&g_timers, "");
     mnl->Qm(mnl->w_fields[0], mnl->w_fields[0]);
-    tm_stopwatch_pop(&g_timers, 0, 1,  "Qm");
+    tm_stopwatch_pop(&g_timers, 0, 1, "",  "Qm");
   }
 
   g_sloppy_precision_flag = save_sloppy;
@@ -90,7 +90,7 @@ double cloverdetratio_rwacc(const int id, hamiltonian_field_t * const hf) {
   /* Compute the energy contr. from second field */
   tm_stopwatch_push(&g_timers, "");
   mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1,  "energy1");
+  tm_stopwatch_pop(&g_timers, 0, 1, "",  "energy1");
 
   g_mu = g_mu1;
   g_mu3 = 0.;
@@ -101,6 +101,6 @@ double cloverdetratio_rwacc(const int id, hamiltonian_field_t * const hf) {
 	     id, mnl->energy1 - mnl->energy0);
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return(mnl->energy1 - mnl->energy0);
 }

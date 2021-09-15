@@ -61,7 +61,7 @@ void clovernd_trlog_heatbath(const int id, hamiltonian_field_t * const hf) {
       printf("called clovernd_trlog_heatbath for id %d E = %e\n", id, mnl->energy0);
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return;
 }
 
@@ -78,6 +78,6 @@ double clovernd_trlog_acc(const int id, hamiltonian_field_t * const hf) {
 	   id, mnl->energy1 - mnl->energy0);
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
   return(mnl->energy1 - mnl->energy0);
 }
