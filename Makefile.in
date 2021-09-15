@@ -73,7 +73,7 @@ GPUOBJECTS := $(patsubst $(srcdir)/$(GPUDIR)/%.cu, $(GPUDIR)/%.o, $(GPUSOURCES))
 
 NOOPTMOD = test/check_xchange test/check_geometry
 
-PROGRAMS = hmc_tm test_gauge_force benchmark invert gen_sources  \
+PROGRAMS = hmc_tm benchmark invert gen_sources  \
 	check_locallity test_lemon hopping_test LapH_ev \
 	offline_measurement @QPHIX_PROGRAMS@
 
@@ -84,7 +84,7 @@ SUBDIRS = ${USESUBDIRS}
 .SUFFIXES:
 
 # need to build modules before subdirs!
-all: Makefile dep $(SUBDIRS) hmc_tm test_gauge_force invert benchmark offline_measurement @QPHIX_PROGRAMS@
+all: Makefile dep $(SUBDIRS) hmc_tm invert benchmark offline_measurement @QPHIX_PROGRAMS@
 
 $(SUBDIRS):
 	$(MAKE) --directory=$@
@@ -163,10 +163,10 @@ compile-clean: compile-clean-recursive Makefile
 	rm -f *.o *.d test/*.o test/*.d tests/*.o tests/*.d
 
 clean: clean-recursive Makefile
-	rm -f benchmark hmc_tm test_gauge_force invert offline_measurement test_Dslash *.o *.d test/*.o test/*.d tests/*.o tests/*.d
+	rm -f benchmark hmc_tm  invert offline_measurement test_Dslash *.o *.d test/*.o test/*.d tests/*.o tests/*.d
 
 distclean: distclean-recursive Makefile
-	rm -f benchmark hmc_tm test_gauge_force invert offline_measurement *.o *.d *~ Makefile config.log config.status fixed_volume.h
+	rm -f benchmark hmc_tm  invert offline_measurement *.o *.d *~ Makefile config.log config.status fixed_volume.h
 	rm -f include/tmlqcd_config_internal.h
 
 .PHONY: all ${SUBDIRS} ${top_srcdir}/git_hash.h clean compile-clean distclean dep install \
