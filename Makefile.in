@@ -163,10 +163,10 @@ compile-clean: compile-clean-recursive Makefile
 	rm -f *.o *.d test/*.o test/*.d tests/*.o tests/*.d
 
 clean: clean-recursive Makefile
-	rm -f benchmark hmc_tm  invert offline_measurement test_Dslash *.o *.d test/*.o test/*.d tests/*.o tests/*.d
+	rm -f benchmark hmc_tm invert offline_measurement test_Dslash *.o *.d test/*.o test/*.d tests/*.o tests/*.d
 
 distclean: distclean-recursive Makefile
-	rm -f benchmark hmc_tm  invert offline_measurement *.o *.d *~ Makefile config.log config.status fixed_volume.h
+	rm -f benchmark hmc_tm invert offline_measurement *.o *.d *~ Makefile config.log config.status fixed_volume.h
 	rm -f include/tmlqcd_config_internal.h
 
 .PHONY: all ${SUBDIRS} ${top_srcdir}/git_hash.h clean compile-clean distclean dep install \
