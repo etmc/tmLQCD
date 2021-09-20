@@ -89,6 +89,13 @@ typedef enum ExternalInverter_s {
   QPHIX_INVERTER
 } ExternalInverter;
 
+/* enumeration type for the external inverter */
+typedef enum ExternalLibrary_s {
+  NO_EXT_LIB = 0,
+  QUDA_LIB
+} ExternalLibrary;
+
+
 typedef enum backup_restore_t {
   TM_BACKUP_GLOBALS = 0,
   TM_RESTORE_GLOBALS

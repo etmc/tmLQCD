@@ -2,6 +2,7 @@
  *
  * Copyright (C) 2014 Florian Burger
  *               2017,2018,2019,2020,2021 Bartosz Kostrzewa
+ *               2021  Marco Garofalo
  *
  * This file is part of tmLQCD.
  *
@@ -122,112 +123,23 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
 
     tm_stopwatch_push(&g_timers, "");
     gamma5(temp[0], Q, VOLUME/2);
-    tm_stopwatch_pop(&g_timers, 0, 1, "", "solve_degenerate:gamma5");
-    iteration_count = invert_eo_MMd_quda(P,   //spinor * const Odd_new,
-                                         temp[0],
-                                         eps_sq, // Marco: check this:   const double precision, 
-                                         max_iter,
-                                         solver_type,  rel_prec,
-                                         1, // Marco: 0 or 1 ? int even_odd_flag,
-                                         solver_params,
-                                         solver_params.sloppy_precision,
-                                         solver_params.compression_type,
-                                         QmQp);
+    tm_stopwatch_pop(&g_timers, 0, 1, __func__, "gamma5");
+    iteration_count = invert_eo_degenerate_quda(P,
+                                                temp[0],
+                                                eps_sq,
+                                                max_iter,
+                                                solver_type,  rel_prec,
+                                                1, // we only support even-odd here
+                                                solver_params,
+                                                solver_params.sloppy_precision,
+                                                solver_params.compression_type,
+                                                QmQp);
     
     if( !(solver_type == MG || solver_type == BICGSTAB) ){
       tm_stopwatch_push(&g_timers, "");
       mul_gamma5(P, VOLUME/2);
       tm_stopwatch_pop(&g_timers, 0, 1, "", "solve_degenerate:gamma5");
     }
-
-    //// //////////////////////////////////////////////////////////////// test to be removed
-    //// // try matrix application directly
-    //// spinor** tempE;
-    //// init_solver_field(&tempE, VOLUMEPLUSRAND/2, 2);
-    //// //point like source only if mpi=1
-    //// for(int x =0; x < (VOLUMEPLUSRAND/2);x++){
-    ////   // tempE[0][x].s0.c0=0.0; 
-    ////   // tempE[0][x].s0.c1=0.0; 
-    ////   // tempE[0][x].s0.c2=0.0; 
-    ////   // tempE[0][x].s1.c0=0.0; 
-    ////   // tempE[0][x].s1.c1=0.0; 
-    ////   // tempE[0][x].s1.c2=0.0; 
-    ////   // tempE[0][x].s2.c0=0.0; 
-    ////   // tempE[0][x].s2.c1=0.0; 
-    ////   // tempE[0][x].s2.c2=0.0; 
-    ////   // tempE[0][x].s3.c0=0.0; 
-    ////   // tempE[0][x].s3.c1=0.0; 
-    ////   // tempE[0][x].s3.c2=0.0; 
-    ////   
-    ////   // random
-    ////   tempE[0][x].s0.c0=((double)rand())/RAND_MAX;
-    ////   tempE[0][x].s0.c1=((double)rand())/RAND_MAX;
-    ////   tempE[0][x].s0.c2=((double)rand())/RAND_MAX;
-    ////   tempE[0][x].s1.c0=((double)rand())/RAND_MAX;
-    ////   tempE[0][x].s1.c1=((double)rand())/RAND_MAX;
-    ////   tempE[0][x].s1.c2=((double)rand())/RAND_MAX;
-    ////   tempE[0][x].s2.c0=((double)rand())/RAND_MAX;
-    ////   tempE[0][x].s2.c1=((double)rand())/RAND_MAX;
-    ////   tempE[0][x].s2.c2=((double)rand())/RAND_MAX;
-    ////   tempE[0][x].s3.c0=((double)rand())/RAND_MAX;
-    ////   tempE[0][x].s3.c1=((double)rand())/RAND_MAX;
-    ////   tempE[0][x].s3.c2=((double)rand())/RAND_MAX;
-    //// }
-    //// // set something other than component (0,0) to 1.0
-    //// // tempE[0][0].s0.c1=1.0;
-    //// // tempE[0][0].s0.c1=1.0;
-    //// // tempE[0][0].s0.c2=1.0;
-    //// // tempE[0][0].s1.c1=1.0;
-    //// // tempE[0][0].s2.c1=1.0;
-    //// // tempE[0][0].s3.c1=1.0;
-
-    //// // just in case: copy the source
-    //// assign(tempE[1], tempE[0], VOLUMEPLUSRAND/2);
-
-    //// M_quda(P, tempE[0]); // quda changes the source
-    //// if( f == Qtm_pm_psi ){
-    ////   Mtm_plus_psi(temp[0], tempE[1]);
-    //// } else if ( f == Qsw_pm_psi ){
-    ////   Msw_plus_psi(temp[0], tempE[1]);
-    //// }
-
-    //// // almost certainly we need to account for the gamma basis
-    //// for (int ix=0; ix < (VOLUME/2); ix++){
-    ////   spinor *hp=((spinor*)temp[0]) + ix;
-    ////   spinor *dp=((spinor*)P) + ix;
-    ////   double r=creal((hp)->s0.c0)-creal((dp)->s0.c0);
-    ////   printf("ix=%d, r=%.3e\n"
-    ////          "re tmLQCD=(%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e)\n"
-    ////          "re  quda=(%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e)\n"
-    ////          "im tmLQCD=(%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e)\n"
-    ////          "im  quda=(%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e), (%.3e,%.3e,%.3e)\n",
-    ////          ix,r,
-    ////          creal((hp)->s0.c0), creal((hp)->s0.c1), creal((hp)->s0.c2),
-    ////          creal((hp)->s1.c0), creal((hp)->s1.c1), creal((hp)->s1.c2),
-    ////          creal((hp)->s2.c0), creal((hp)->s2.c1), creal((hp)->s2.c2),
-    ////          creal((hp)->s3.c0), creal((hp)->s3.c1), creal((hp)->s3.c2),
-
-    ////          creal((dp)->s0.c0), creal((dp)->s0.c1), creal((dp)->s0.c2),
-    ////          creal((dp)->s1.c0), creal((dp)->s1.c1), creal((dp)->s1.c2),
-    ////          creal((dp)->s2.c0), creal((dp)->s2.c1), creal((dp)->s2.c2),
-    ////          creal((dp)->s3.c0), creal((dp)->s3.c1), creal((dp)->s3.c2),
-    ////          
-    ////          cimag((hp)->s0.c0), cimag((hp)->s0.c1), cimag((hp)->s0.c2),
-    ////          cimag((hp)->s1.c0), cimag((hp)->s1.c1), cimag((hp)->s1.c2),
-    ////          cimag((hp)->s2.c0), cimag((hp)->s2.c1), cimag((hp)->s2.c2),
-    ////          cimag((hp)->s3.c0), cimag((hp)->s3.c1), cimag((hp)->s3.c2),
-
-    ////          cimag((dp)->s0.c0), cimag((dp)->s0.c1), cimag((dp)->s0.c2),
-    ////          cimag((dp)->s1.c0), cimag((dp)->s1.c1), cimag((dp)->s1.c2),
-    ////          cimag((dp)->s2.c0), cimag((dp)->s2.c1), cimag((dp)->s2.c2),
-    ////          cimag((dp)->s3.c0), cimag((dp)->s3.c1), cimag((dp)->s3.c2)
-    ////         );
-    //// }
-    //// printf("\n\n\n");
-    //// print_spinor_similar_components(temp[0], P, VOLUME/2, 1e-4);
-    //// finalize_solver(tempE,2);
-    //// exit(1);
-    //// //////////////////////////////////////////////////////////// end of the test to be removed
 
   } else
 #endif
@@ -369,7 +281,7 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
                                                        solver_params->max_iter,
                                                        solver_params->type,
                                                        solver_params->rel_prec,
-                                                       1,
+                                                       1, // we only support even-odd here
                                                        *solver_params,
                                                        solver_params->sloppy_precision,
                                                        solver_params->compression_type);
@@ -558,7 +470,8 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
     iteration_count = invert_eo_quda_twoflavour_mshift(Pup, Pdn, temp[0], temp[1],
                                                        solver_params->squared_solver_prec, solver_params->max_iter,
                                                        solver_params->type, solver_params->rel_prec,
-                                                       1 /*even-odd-flag*/, *solver_params,
+                                                       1, // we only support even-odd here
+                                                       *solver_params,
                                                        solver_params->sloppy_precision,
                                                        solver_params->compression_type);
     
