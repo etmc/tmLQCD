@@ -111,6 +111,7 @@ typedef struct {
   double PrecisionHfinal;
   double StildeMin, StildeMax;
   double EVMin, EVMax, EVMaxInv;
+  ExternalLibrary external_library;
   double * MDPolyCoefs, * PtildeCoefs;
   /* rational approximation */
   rational_t rat;

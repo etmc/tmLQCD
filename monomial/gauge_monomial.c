@@ -43,49 +43,110 @@
 #include "monomial/monomial.h"
 #include "hamiltonian_field.h"
 #include "gauge_monomial.h"
+#include "fatal_error.h"
+#ifdef TM_USE_QUDA
+#include "quda_interface.h"
+#endif
+
+/* this function compares the gauge derivative calculated by an external library and tmLQCD */
+void compare_derivative(monomial *mnl, su3adj **ext_lib, su3adj **native ){
+  const double threshold = 1e-7;
+  int n_diff = 0;
+
+  for(int ix = 0; ix < VOLUME; ix++){
+    for(int mu=0; mu<4; mu++){
+      double *ext=&(ext_lib[ix][mu].d1);
+      double *nat=&(native[ix][mu].d1);
+      for(int j=0; j<8; ++j){
+        double diff=(ext[j]-nat[j])/nat[j];
+        if (sqrt(diff*diff) > threshold){
+          n_diff++;
+          printf("gauge derivative relative deviation %e at (t,x,y,z,mu,j) %d,%d,%d,%d,%d,%d on proc_id %d, ext: %e, native: %e\n", 
+                 diff,
+                 g_coord[ix][0], g_coord[ix][1], g_coord[ix][2], g_coord[ix][3], mu, j,
+                 g_proc_id,
+                 ext[j], nat[j]);
+        }
+      }
+    }
+  }
+  if(n_diff > 0){
+    printf("gauge_derivative: the relative deviation between tmLQCD and the external library "
+           "exceeds the threshold %.1e in %d case(s) for parameters: c0=%e c1=%e g_beta=%e on proc_id: %d\n",
+           threshold,
+           n_diff,
+           mnl->c0,
+           mnl->c1,
+           mnl->beta,
+           g_proc_id);
+
+    if(g_strict_residual_check) fatal_error("Difference between external library and tmLQCD-native function!", 
+                                            "gauge_derivative");
+  }
+}
+
 
 /* this function calculates the derivative of the momenta: equation 13 of Gottlieb */
 void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
   tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
-  double factor = -1. * g_beta/3.0;
+  double factor = -mnl->c0 * g_beta/3.0;
   if(mnl->use_rectangles) {
     mnl->forcefactor = 1.;
-    factor = -mnl->c0 * g_beta/3.0;
   }
-  
-#ifdef TM_USE_OMP
-#pragma omp parallel
-  {
-#endif
-
-  su3 ALIGN v, w;
-  int i, mu;
-  su3 *z;
-  su3adj *xm;
-
-#ifdef TM_USE_OMP
-#pragma omp for
-#endif
-  for(i = 0; i < VOLUME; i++) { 
-    for(mu=0;mu<4;mu++) {
-      z=&hf->gaugefield[i][mu];
-      xm=&hf->derivative[i][mu];
-      get_staples(&v,i,mu, (const su3**) hf->gaugefield); 
-      _su3_times_su3d(w,*z,v);
-      _trace_lambda_mul_add_assign((*xm), factor, w);
-      
-      if(mnl->use_rectangles) {
-	get_rectangle_staples(&v, i, mu);
-	_su3_times_su3d(w, *z, v);
-	_trace_lambda_mul_add_assign((*xm), factor*mnl->c1/mnl->c0, w);
-      }
+  if( mnl->external_library == QUDA_LIB ){
+#ifdef TM_USE_QUDA
+    if (g_debug_level > 3) {
+     memcpy(ddummy[0], hf->derivative[0], (4*VOLUMEPLUSRAND+1)*sizeof(su3adj));
     }
-  }
+    compute_gauge_derivative_quda(mnl, hf);
 
-#ifdef TM_USE_OMP
-  } /* OpenMP closing brace */
+    if (g_debug_level > 3){
+     su3adj **given=hf->derivative;
+     hf->derivative=ddummy;
+     mnl->external_library=NO_EXT_LIB;
+     gauge_derivative(id, hf);
+     compare_derivative(mnl,given, ddummy);
+     mnl->external_library=QUDA_LIB;
+     hf->derivative=given;
+    }
+#else
+    fatal_error("Attempted to use QUDA_LIB in gauge monomial but tmLQCD has been compiled without QUDA support!", __func__);
 #endif
+  } else {
+    #ifdef TM_USE_OMP
+    #pragma omp parallel
+      {
+    #endif
+    
+      su3 ALIGN v, w;
+      int i, mu;
+      su3 *z;
+      su3adj *xm;
+    
+    #ifdef TM_USE_OMP
+    #pragma omp for
+    #endif
+      for(i = 0; i < VOLUME; i++) { 
+        for(mu=0;mu<4;mu++) {
+          z=&hf->gaugefield[i][mu];
+          xm=&hf->derivative[i][mu];
+          get_staples(&v,i,mu, (const su3**) hf->gaugefield); 
+          _su3_times_su3d(w,*z,v);
+          _trace_lambda_mul_add_assign((*xm), factor, w);
+          
+          if(mnl->use_rectangles) {
+            get_rectangle_staples(&v, i, mu);
+            _su3_times_su3d(w, *z, v);
+            _trace_lambda_mul_add_assign((*xm), factor*mnl->c1/mnl->c0, w);
+          }
+        }
+      }
+    
+    #ifdef TM_USE_OMP
+      } /* OpenMP closing brace */
+    #endif
+  }
   tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
   return;
 }
@@ -94,10 +155,9 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
 void gauge_EMderivative(const int id, hamiltonian_field_t * const hf) {
   tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
-  double factor = -1. * g_beta/3.0;
+  double factor = -mnl->c0 * g_beta/3.0;
   if(mnl->use_rectangles) {
     mnl->forcefactor = 1.;
-    factor = -mnl->c0 * g_beta/3.0;
   }
   
 #ifdef TM_USE_OMP
@@ -156,6 +216,7 @@ void gauge_EMderivative(const int id, hamiltonian_field_t * const hf) {
 void gauge_heatbath(const int id, hamiltonian_field_t * const hf) {
   tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
+  mnl->c0 = 1.;
   if(mnl->use_rectangles) mnl->c0 = 1. - 8.*mnl->c1;
   
   mnl->energy0 = g_beta*(mnl->c0 * measure_gauge_action( (const su3**) hf->gaugefield, mnl->glambda));
