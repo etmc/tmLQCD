@@ -2,6 +2,7 @@
  *
  * Copyright (C) 2008,2011,2012 Carsten Urbach
  *               2009 Jenifer Gonzalez Lopez
+ *               2017, 2018, 2019, 2020, 2021 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -56,7 +57,7 @@ spinor ** w_fields;
 const int no_wfields = 6;
 
 int add_monomial(const int type) {
-  
+
   if(no_monomials == max_no_monomials) {
     fprintf(stderr, "maximal number of monomials %d exceeded!\n", max_no_monomials);
     exit(-1);
@@ -94,10 +95,10 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].forceprec = _default_g_eps_sq_force;
   monomial_list[no_monomials].maxiter = _default_max_solver_iterations;
   if((monomial_list[no_monomials].type == NDRAT) ||
-     (monomial_list[no_monomials].type == NDRATCOR) ||
-     (monomial_list[no_monomials].type == NDCLOVERRAT) ||
-     (monomial_list[no_monomials].type == NDCLOVERRATCOR)
-  ) {
+      (monomial_list[no_monomials].type == NDRATCOR) ||
+      (monomial_list[no_monomials].type == NDCLOVERRAT) ||
+      (monomial_list[no_monomials].type == NDCLOVERRATCOR)
+    ) {
     monomial_list[no_monomials].solver = _default_nd_solver_flag;    
   }
   else{
@@ -145,7 +146,10 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].rat.crange[1] = 11;
 
   monomial_list[no_monomials].initialised = 1;
-  if(monomial_list[no_monomials].type == NDDETRATIO || monomial_list[no_monomials].type == NDCLOVERDETRATIO || monomial_list[no_monomials].type == CLOVERDETRATIORW) {
+  if(monomial_list[no_monomials].type == NDDETRATIO || 
+     monomial_list[no_monomials].type == NDCLOVERDETRATIO || 
+     monomial_list[no_monomials].type == CLOVERDETRATIORW)
+  {
     monomial_list[no_monomials].timescale = -5;
   }
 
@@ -162,14 +166,15 @@ int init_monomials(const int V, const int even_odd_flag) {
   double swn_mubar=0., swn_epsbar = 0., swn_k=0., swn_c=0.;
 
   if (g_exposu3_no_c == 0) init_exposu3();
-  
+
   for(int i = 0; i < no_monomials; i++) {
     if((monomial_list[i].type != GAUGE) && (monomial_list[i].type != SFGAUGE)) no++;
     /* non-degenerate monomials need two pseudo fermion fields */
-    if((monomial_list[i].type == NDPOLY) || (monomial_list[i].type == NDDETRATIO) || (monomial_list[i].type == NDCLOVERDETRATIO) || 
-       (monomial_list[i].type == NDCLOVER) || (monomial_list[i].type == NDRAT)||
-       (monomial_list[i].type == NDRATCOR) || (monomial_list[i].type == NDCLOVERRATCOR) ||
-       (monomial_list[i].type == NDCLOVERRAT)) no++;
+    if((monomial_list[i].type == NDPOLY) || (monomial_list[i].type == NDDETRATIO) || 
+        (monomial_list[i].type == NDCLOVERDETRATIO) || 
+        (monomial_list[i].type == NDCLOVER) || (monomial_list[i].type == NDRAT)||
+        (monomial_list[i].type == NDRATCOR) || (monomial_list[i].type == NDCLOVERRATCOR) ||
+        (monomial_list[i].type == NDCLOVERRAT)) no++;
   }
   if(no_monomials > 0) {
     if((void*)(_pf = (spinor*)calloc((no+no_wfields)*V+1, sizeof(spinor))) == NULL) {
@@ -189,7 +194,7 @@ int init_monomials(const int V, const int even_odd_flag) {
       w_fields[i] = __pf+(no+i)*V;
     }
   }
-  
+
   no = 0;
   for(int i = 0; i < no_monomials; i++) {
     monomial_list[i].rngrepro = reproduce_randomnumber_flag;
@@ -197,309 +202,351 @@ int init_monomials(const int V, const int even_odd_flag) {
       monomial_list[i].w_fields = w_fields;
       monomial_list[i].pf = __pf+no*V;
       no++;
-      
+
       if(monomial_list[i].type == DET) {
-	monomial_list[i].hbfunction = &det_heatbath;
-	monomial_list[i].accfunction = &det_acc;
-	monomial_list[i].derivativefunction = &det_derivative;
-	if(even_odd_flag) {
-	  monomial_list[i].Qsq = &Qtm_pm_psi;
-	  monomial_list[i].Qp = &Qtm_plus_psi;
-	  monomial_list[i].Qm = &Qtm_minus_psi;
-	}
-	else {
-	  monomial_list[i].Qsq = &Q_pm_psi;
-	  monomial_list[i].Qp = &Q_plus_psi;
-	  monomial_list[i].Qm = &Q_minus_psi;
-	}
-	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# Initialised monomial of type DET, no_monomials= %d\n", no_monomials);
-	}
+        monomial_list[i].hbfunction = &det_heatbath;
+        monomial_list[i].accfunction = &det_acc;
+        monomial_list[i].derivativefunction = &det_derivative;
+        if(even_odd_flag) {
+          monomial_list[i].Qsq = &Qtm_pm_psi;
+          monomial_list[i].Qp = &Qtm_plus_psi;
+          monomial_list[i].Qm = &Qtm_minus_psi;
+        }
+        else {
+          monomial_list[i].Qsq = &Q_pm_psi;
+          monomial_list[i].Qp = &Q_plus_psi;
+          monomial_list[i].Qm = &Q_minus_psi;
+        }
+        if(g_proc_id == 0 && g_debug_level > 1) {
+          printf("# Initialised monomial %s of type DET, no_monomials= %d\n",
+              monomial_list[i].name,
+              no_monomials);
+        }
       }
       else if(monomial_list[i].type == CLOVERDET) {
-	monomial_list[i].hbfunction = &cloverdet_heatbath;
-	monomial_list[i].accfunction = &cloverdet_acc;
-	monomial_list[i].derivativefunction = &cloverdet_derivative;
-	//monomial_list[i].derivativefunction = &det_derivative;
-	if(even_odd_flag) {
-	  monomial_list[i].Qsq = &Qsw_pm_psi;
-	  monomial_list[i].Qp = &Qsw_plus_psi;
-	  monomial_list[i].Qm = &Qsw_minus_psi;
-	}
-	else {
-	  monomial_list[i].Qsq = &Qsw_full_pm_psi;
-	  monomial_list[i].Qp = &Qsw_full_plus_psi;
-	  monomial_list[i].Qm = &Qsw_full_minus_psi;
-	}
-	init_swpm(VOLUME);
-	clover_monomials[no_clover_monomials] = i;
-	no_clover_monomials++;
-	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# Initialised monomial of type CLOVERDET, no_monomials= %d\n", no_monomials);
-	}
+        monomial_list[i].hbfunction = &cloverdet_heatbath;
+        monomial_list[i].accfunction = &cloverdet_acc;
+        monomial_list[i].derivativefunction = &cloverdet_derivative;
+        if(even_odd_flag) {
+          monomial_list[i].Qsq = &Qsw_pm_psi;
+          monomial_list[i].Qp = &Qsw_plus_psi;
+          monomial_list[i].Qm = &Qsw_minus_psi;
+        }
+        else {
+          monomial_list[i].Qsq = &Qsw_full_pm_psi;
+          monomial_list[i].Qp = &Qsw_full_plus_psi;
+          monomial_list[i].Qm = &Qsw_full_minus_psi;
+        }
+        init_swpm(VOLUME);
+        clover_monomials[no_clover_monomials] = i;
+        no_clover_monomials++;
+        if(g_proc_id == 0 && g_debug_level > 1) {
+          printf("# Initialised monomial %s of type CLOVERDET, no_monomials= %d\n",
+              monomial_list[i].name,
+              no_monomials);
+        }
       }
       else if(monomial_list[i].type == CLOVERDETRATIO) {
-	monomial_list[i].hbfunction = &cloverdetratio_heatbath;
-	monomial_list[i].accfunction = &cloverdetratio_acc;
-	monomial_list[i].derivativefunction = &cloverdetratio_derivative;
-	monomial_list[i].even_odd_flag = 1;
-	monomial_list[i].Qsq = &Qsw_pm_psi;
-	monomial_list[i].Qp = &Qsw_plus_psi;
-	monomial_list[i].Qm = &Qsw_minus_psi;
-	init_swpm(VOLUME);
-	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# Initialised monomial of type CLOVERDETRATIO, no_monomials= %d\n", no_monomials);
-	}
+        monomial_list[i].hbfunction = &cloverdetratio_heatbath;
+        monomial_list[i].accfunction = &cloverdetratio_acc;
+        monomial_list[i].derivativefunction = &cloverdetratio_derivative;
+        monomial_list[i].even_odd_flag = 1;
+        monomial_list[i].Qsq = &Qsw_pm_psi;
+        monomial_list[i].Qp = &Qsw_plus_psi;
+        monomial_list[i].Qm = &Qsw_minus_psi;
+        init_swpm(VOLUME);
+        if(g_proc_id == 0 && g_debug_level > 1) {
+          printf("# Initialised monomial %s of type CLOVERDETRATIO, no_monomials= %d\n",
+              monomial_list[i].name,
+              no_monomials);
+        }
       }
       else if(monomial_list[i].type == CLOVERDETRATIORW) {
-	monomial_list[i].accfunction = &cloverdetratio_rwacc;
-	monomial_list[i].even_odd_flag = 1;
-	monomial_list[i].Qsq = &Qsw_pm_psi;
-	monomial_list[i].Qp = &Qsw_plus_psi;
-	monomial_list[i].Qm = &Qsw_minus_psi;
-	init_swpm(VOLUME);
-	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# Initialised monomial of type CLOVERDETRATIORW, no_monomials= %d, currently only available for reweighting!\n", no_monomials);
-	}
+        monomial_list[i].accfunction = &cloverdetratio_rwacc;
+        monomial_list[i].even_odd_flag = 1;
+        monomial_list[i].Qsq = &Qsw_pm_psi;
+        monomial_list[i].Qp = &Qsw_plus_psi;
+        monomial_list[i].Qm = &Qsw_minus_psi;
+        init_swpm(VOLUME);
+        if(g_proc_id == 0 && g_debug_level > 1) {
+          printf("# Initialised monomial %s of type CLOVERDETRATIORW, no_monomials= %d."
+              " Currently only available for reweighting!\n",
+              monomial_list[i].name,
+              no_monomials);
+        }
       }
       else if(monomial_list[i].type == DETRATIO) {
-	monomial_list[i].hbfunction = &detratio_heatbath;
-	monomial_list[i].accfunction = &detratio_acc;
-	monomial_list[i].derivativefunction = &detratio_derivative;
-	monomial_list[i].Qsq = &Qtm_pm_psi;
-	monomial_list[i].Qsq32 = &Qtm_pm_psi_32;	
-	monomial_list[i].Qp = &Qtm_plus_psi;
-	monomial_list[i].Qm = &Qtm_minus_psi;
-	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# Initialised monomial of type DETRATIO, no_monomials= %d\n", no_monomials);
-	}
+        monomial_list[i].hbfunction = &detratio_heatbath;
+        monomial_list[i].accfunction = &detratio_acc;
+        monomial_list[i].derivativefunction = &detratio_derivative;
+        monomial_list[i].Qsq = &Qtm_pm_psi;
+        monomial_list[i].Qsq32 = &Qtm_pm_psi_32;	
+        monomial_list[i].Qp = &Qtm_plus_psi;
+        monomial_list[i].Qm = &Qtm_minus_psi;
+        if(g_proc_id == 0 && g_debug_level > 1) {
+          printf("# Initialised monomial %s of type DETRATIO, no_monomials= %d\n",
+              monomial_list[i].name,
+              no_monomials);
+        }
       }
       else if(monomial_list[i].type == POLY) {
-	monomial_list[i].hbfunction = &poly_heatbath;
-	monomial_list[i].accfunction = &poly_acc;
-	monomial_list[i].derivativefunction = &poly_derivative;
-	retval=init_poly_monomial(V,i);
-	if(retval != 0) {
-	  return retval;
-	}
-      	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# Initialised monomial of type POLY, no_monomials= %d\n", no_monomials);
-	}
+        monomial_list[i].hbfunction = &poly_heatbath;
+        monomial_list[i].accfunction = &poly_acc;
+        monomial_list[i].derivativefunction = &poly_derivative;
+        retval=init_poly_monomial(V,i);
+        if(retval != 0) {
+          return retval;
+        }
+        if(g_proc_id == 0 && g_debug_level > 1) {
+          printf("# Initialised monomial %s of type POLY, no_monomials= %d\n",
+              monomial_list[i].name,
+              no_monomials);
+        }
       }
       else if(monomial_list[i].type == POLYDETRATIO) {
-	monomial_list[i].hbfunction = &poly_heatbath;
-	monomial_list[i].accfunction = &poly_acc;
-	monomial_list[i].derivativefunction = &poly_derivative;
-	monomial_list[i].MDPolyDetRatio = 1;
-	retval=init_poly_monomial(V,i);
-	if(retval!=0) return retval;
-      	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# Initialised monomial of type POLYDETRATIO, no_monomials= %d\n", no_monomials);
-	}
+        monomial_list[i].hbfunction = &poly_heatbath;
+        monomial_list[i].accfunction = &poly_acc;
+        monomial_list[i].derivativefunction = &poly_derivative;
+        monomial_list[i].MDPolyDetRatio = 1;
+        retval=init_poly_monomial(V,i);
+        if(retval!=0) return retval;
+        if(g_proc_id == 0 && g_debug_level > 1) {
+          printf("# Initialised monomial %s of type POLYDETRATIO, no_monomials= %d\n",
+              monomial_list[i].name,
+              no_monomials);
+        }
       }
       else if(monomial_list[i].type == NDPOLY) {
-	monomial_list[i].hbfunction = &ndpoly_heatbath;
-	monomial_list[i].accfunction = &ndpoly_acc;
-	monomial_list[i].derivativefunction = &ndpoly_derivative;
-	monomial_list[i].even_odd_flag = 1;
-	monomial_list[i].pf2 = __pf+no*V;
-	no++;
-	retval = init_ndpoly_monomial(i);
-	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# Initialised monomial of type NDPOLY, no_monomials= %d\n", no_monomials);
-	}
+        monomial_list[i].hbfunction = &ndpoly_heatbath;
+        monomial_list[i].accfunction = &ndpoly_acc;
+        monomial_list[i].derivativefunction = &ndpoly_derivative;
+        monomial_list[i].even_odd_flag = 1;
+        monomial_list[i].pf2 = __pf+no*V;
+        no++;
+        retval = init_ndpoly_monomial(i);
+        if(g_proc_id == 0 && g_debug_level > 1) {
+          printf("# Initialised monomial %s of type NDPOLY, no_monomials= %d\n",
+              monomial_list[i].name,
+              no_monomials);
+        }
       }
       else if(monomial_list[i].type == NDCLOVER) {
-	init_swpm(VOLUME);
-	monomial_list[i].hbfunction = &cloverndpoly_heatbath;
-	monomial_list[i].accfunction = &cloverndpoly_acc;
-	monomial_list[i].derivativefunction = &cloverndpoly_derivative;
-	monomial_list[i].pf2 = __pf+no*V;
-	monomial_list[i].even_odd_flag = 1;
-	clovernd_monomials[no_clovernd_monomials] = i;
-	no_clovernd_monomials++;
-	//monomial_list[i].Qsq = &Qsw_pm_ndpsi;
-	//monomial_list[i].Qp = &Qsw_ndpsi;
-	//monomial_list[i].Qm = &Qsw_dagger_ndpsi;
-	no++;
-	retval = init_ndpoly_monomial(i);
-	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# Initialised monomial of type NDCLOVER, no_monomials= %d\n", no_monomials);
-	}
+        init_swpm(VOLUME);
+        monomial_list[i].hbfunction = &cloverndpoly_heatbath;
+        monomial_list[i].accfunction = &cloverndpoly_acc;
+        monomial_list[i].derivativefunction = &cloverndpoly_derivative;
+        monomial_list[i].pf2 = __pf+no*V;
+        monomial_list[i].even_odd_flag = 1;
+        clovernd_monomials[no_clovernd_monomials] = i;
+        no_clovernd_monomials++;
+        //monomial_list[i].Qsq = &Qsw_pm_ndpsi;
+        //monomial_list[i].Qp = &Qsw_ndpsi;
+        //monomial_list[i].Qm = &Qsw_dagger_ndpsi;
+        no++;
+        retval = init_ndpoly_monomial(i);
+        if(g_proc_id == 0 && g_debug_level > 1) {
+          printf("# Initialised monomial %s of type NDCLOVER, no_monomials= %d\n",
+              monomial_list[i].name,
+              no_monomials);
+        }
       }
       else if(monomial_list[i].type == NDRAT) {
-	monomial_list[i].hbfunction = &ndrat_heatbath;
-	monomial_list[i].accfunction = &ndrat_acc;
-	monomial_list[i].derivativefunction = &ndrat_derivative;
-	monomial_list[i].even_odd_flag = 1;
-	monomial_list[i].pf2 = __pf+no*V;
-	no++;
-	retval = init_ndrat_monomial(i);
-	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# Initialised monomial of type NDRAT, no_monomials= %d\n", no_monomials);
-	}
+        monomial_list[i].hbfunction = &ndrat_heatbath;
+        monomial_list[i].accfunction = &ndrat_acc;
+        monomial_list[i].derivativefunction = &ndrat_derivative;
+        monomial_list[i].even_odd_flag = 1;
+        monomial_list[i].pf2 = __pf+no*V;
+        no++;
+        retval = init_ndrat_monomial(i);
+        if(g_proc_id == 0 && g_debug_level > 1) {
+          printf("# Initialised monomial %s of type NDRAT, no_monomials= %d\n",
+              monomial_list[i].name,
+              no_monomials);
+        }
       }
       else if(monomial_list[i].type == RAT) {
-	monomial_list[i].hbfunction = &rat_heatbath;
-	monomial_list[i].accfunction = &rat_acc;
-	monomial_list[i].derivativefunction = &rat_derivative;
-	monomial_list[i].even_odd_flag = 1;
-	monomial_list[i].mu = 0.;
-	monomial_list[i].Qsq = &Qtm_pm_psi;
-	monomial_list[i].Qp = &Qtm_plus_psi;
-	monomial_list[i].Qm = &Qtm_minus_psi;
-	retval = init_ndrat_monomial(i);
-	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# Initialised monomial of type RAT, no_monomials= %d\n", no_monomials);
-	}
+        monomial_list[i].hbfunction = &rat_heatbath;
+        monomial_list[i].accfunction = &rat_acc;
+        monomial_list[i].derivativefunction = &rat_derivative;
+        monomial_list[i].even_odd_flag = 1;
+        monomial_list[i].mu = 0.;
+        monomial_list[i].Qsq = &Qtm_pm_psi;
+        monomial_list[i].Qp = &Qtm_plus_psi;
+        monomial_list[i].Qm = &Qtm_minus_psi;
+        retval = init_ndrat_monomial(i);
+        if(g_proc_id == 0 && g_debug_level > 1) {
+          printf("# Initialised monomial %s of type RAT, no_monomials= %d\n",
+              monomial_list[i].name,
+              no_monomials);
+        }
       }
       else if(monomial_list[i].type == CLOVERRAT) {
-	monomial_list[i].hbfunction = &rat_heatbath;
-	monomial_list[i].accfunction = &rat_acc;
-	monomial_list[i].derivativefunction = &rat_derivative;
-	monomial_list[i].even_odd_flag = 1;
-	monomial_list[i].mu = 0.;
-	monomial_list[i].Qsq = &Qsw_pm_psi;
-	monomial_list[i].Qp = &Qsw_plus_psi;
-	monomial_list[i].Qm = &Qsw_minus_psi;
-	init_swpm(VOLUME);
-	if(monomial_list[i].trlog) {
-	  clover_monomials[no_clover_monomials] = i;
-	  no_clover_monomials++;
-	}
-	retval = init_ndrat_monomial(i);
-	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# Initialised monomial of type CLOVERRAT, no_monomials= %d\n", no_monomials);
-	}
+        monomial_list[i].hbfunction = &rat_heatbath;
+        monomial_list[i].accfunction = &rat_acc;
+        monomial_list[i].derivativefunction = &rat_derivative;
+        monomial_list[i].even_odd_flag = 1;
+        monomial_list[i].mu = 0.;
+        monomial_list[i].Qsq = &Qsw_pm_psi;
+        monomial_list[i].Qp = &Qsw_plus_psi;
+        monomial_list[i].Qm = &Qsw_minus_psi;
+        init_swpm(VOLUME);
+        if(monomial_list[i].trlog) {
+          clover_monomials[no_clover_monomials] = i;
+          no_clover_monomials++;
+        }
+        retval = init_ndrat_monomial(i);
+        if(g_proc_id == 0 && g_debug_level > 1) {
+          printf("# Initialised monomial %s of type CLOVERRAT, no_monomials= %d\n",
+              monomial_list[i].name,
+              no_monomials);
+        }
       }
       else if(monomial_list[i].type == NDCLOVERRAT) {
-	init_swpm(VOLUME);
-	monomial_list[i].hbfunction = &ndrat_heatbath;
-	monomial_list[i].accfunction = &ndrat_acc;
-	monomial_list[i].derivativefunction = &ndrat_derivative;
-	monomial_list[i].even_odd_flag = 1;
-	monomial_list[i].pf2 = __pf+no*V;
-	no++;
-	if(monomial_list[i].trlog) {
-	  clovernd_monomials[no_clovernd_monomials] = i;
-	  no_clovernd_monomials++;
-	}
-	retval = init_ndrat_monomial(i);
-	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# Initialised monomial of type NDCLOVERRAT, no_monomials= %d\n", no_monomials);
-	}
+        init_swpm(VOLUME);
+        monomial_list[i].hbfunction = &ndrat_heatbath;
+        monomial_list[i].accfunction = &ndrat_acc;
+        monomial_list[i].derivativefunction = &ndrat_derivative;
+        monomial_list[i].even_odd_flag = 1;
+        monomial_list[i].pf2 = __pf+no*V;
+        no++;
+        if(monomial_list[i].trlog) {
+          clovernd_monomials[no_clovernd_monomials] = i;
+          no_clovernd_monomials++;
+        }
+        retval = init_ndrat_monomial(i);
+        if(g_proc_id == 0 && g_debug_level > 1) {
+          printf("# Initialised monomial %s of type NDCLOVERRAT, no_monomials= %d\n",
+              monomial_list[i].name,
+              no_monomials);
+        }
       }
       else if(monomial_list[i].type == NDRATCOR) {
-	monomial_list[i].hbfunction = &ndratcor_heatbath;
-	monomial_list[i].accfunction = &ndratcor_acc;
-	monomial_list[i].derivativefunction = NULL;
-	monomial_list[i].even_odd_flag = 1;
-	monomial_list[i].pf2 = __pf+no*V;
-	monomial_list[i].rat.crange[0] = 0;
+        monomial_list[i].hbfunction = &ndratcor_heatbath;
+        monomial_list[i].accfunction = &ndratcor_acc;
+        monomial_list[i].derivativefunction = NULL;
+        monomial_list[i].even_odd_flag = 1;
+        monomial_list[i].pf2 = __pf+no*V;
+        monomial_list[i].rat.crange[0] = 0;
         monomial_list[i].rat.crange[1] = monomial_list[i].rat.order-1;
-	
-	no++;
-	retval = init_ndrat_monomial(i);
-	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# Initialised monomial of type NDRATCOR, no_monomials= %d\n", no_monomials);
-	}
+
+        no++;
+        retval = init_ndrat_monomial(i);
+        if(g_proc_id == 0 && g_debug_level > 1) {
+          printf("# Initialised monomial %s of type NDRATCOR, no_monomials= %d\n",
+              monomial_list[i].name,
+              no_monomials);
+        }
       }
       else if(monomial_list[i].type == NDCLOVERRATCOR) {
-	init_swpm(VOLUME);
-	monomial_list[i].hbfunction = &ndratcor_heatbath;
-	monomial_list[i].accfunction = &ndratcor_acc;
-	monomial_list[i].derivativefunction = NULL;
-	monomial_list[i].even_odd_flag = 1;
-	monomial_list[i].pf2 = __pf+no*V;
-	monomial_list[i].rat.crange[0] = 0;
+        init_swpm(VOLUME);
+        monomial_list[i].hbfunction = &ndratcor_heatbath;
+        monomial_list[i].accfunction = &ndratcor_acc;
+        monomial_list[i].derivativefunction = NULL;
+        monomial_list[i].even_odd_flag = 1;
+        monomial_list[i].pf2 = __pf+no*V;
+        monomial_list[i].rat.crange[0] = 0;
         monomial_list[i].rat.crange[1] = monomial_list[i].rat.order-1;
-	
-	no++;
-	retval = init_ndrat_monomial(i);
-	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# Initialised monomial of type NDCLOVERRATCOR, no_monomials= %d\n", no_monomials);
-	}
+
+        no++;
+        retval = init_ndrat_monomial(i);
+        if(g_proc_id == 0 && g_debug_level > 1) {
+          printf("# Initialised monomial %s of type NDCLOVERRATCOR, no_monomials= %d\n",
+              monomial_list[i].name,
+              no_monomials);
+        }
       }
       else if(monomial_list[i].type == RATCOR) {
-	monomial_list[i].hbfunction = &ratcor_heatbath;
-	monomial_list[i].accfunction = &ratcor_acc;
-	monomial_list[i].derivativefunction = NULL;
-	monomial_list[i].even_odd_flag = 1;
-	monomial_list[i].Qsq = &Qtm_pm_psi;
-	monomial_list[i].Qp = &Qtm_plus_psi;
-	monomial_list[i].Qm = &Qtm_minus_psi;	
-	monomial_list[i].rat.crange[0] = 0;
+        monomial_list[i].hbfunction = &ratcor_heatbath;
+        monomial_list[i].accfunction = &ratcor_acc;
+        monomial_list[i].derivativefunction = NULL;
+        monomial_list[i].even_odd_flag = 1;
+        monomial_list[i].Qsq = &Qtm_pm_psi;
+        monomial_list[i].Qp = &Qtm_plus_psi;
+        monomial_list[i].Qm = &Qtm_minus_psi;	
+        monomial_list[i].rat.crange[0] = 0;
         monomial_list[i].rat.crange[1] = monomial_list[i].rat.order-1;
-	monomial_list[i].mu = 0.;
-	retval = init_ndrat_monomial(i);
-	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# Initialised monomial of type RATCOR, no_monomials= %d\n", no_monomials);
-	}
+        monomial_list[i].mu = 0.;
+        retval = init_ndrat_monomial(i);
+        if(g_proc_id == 0 && g_debug_level > 1) {
+          printf("# Initialised monomial %s of type RATCOR, no_monomials= %d\n",
+              monomial_list[i].name,
+              no_monomials);
+        }
       }
       else if(monomial_list[i].type == CLOVERRATCOR) {
-	init_swpm(VOLUME);
-	monomial_list[i].hbfunction = &ratcor_heatbath;
-	monomial_list[i].accfunction = &ratcor_acc;
-	monomial_list[i].derivativefunction = NULL;
-	monomial_list[i].even_odd_flag = 1;
-	monomial_list[i].Qsq = &Qsw_pm_psi;
-	monomial_list[i].Qp = &Qsw_plus_psi;
-	monomial_list[i].Qm = &Qsw_minus_psi;
-	monomial_list[i].mu = 0.;
-	monomial_list[i].rat.crange[0] = 0;
+        init_swpm(VOLUME);
+        monomial_list[i].hbfunction = &ratcor_heatbath;
+        monomial_list[i].accfunction = &ratcor_acc;
+        monomial_list[i].derivativefunction = NULL;
+        monomial_list[i].even_odd_flag = 1;
+        monomial_list[i].Qsq = &Qsw_pm_psi;
+        monomial_list[i].Qp = &Qsw_plus_psi;
+        monomial_list[i].Qm = &Qsw_minus_psi;
+        monomial_list[i].mu = 0.;
+        monomial_list[i].rat.crange[0] = 0;
         monomial_list[i].rat.crange[1] = monomial_list[i].rat.order-1;
-	retval = init_ndrat_monomial(i);
-	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# Initialised monomial of type CLOVERRATCOR, no_monomials= %d\n", no_monomials);
-	}
+        retval = init_ndrat_monomial(i);
+        if(g_proc_id == 0 && g_debug_level > 1) {
+          printf("# Initialised monomial %s of type CLOVERRATCOR, no_monomials= %d\n",
+              monomial_list[i].name,
+              no_monomials);
+        }
       }
       else if(monomial_list[i].type == NDDETRATIO) {
-	monomial_list[i].hbfunction = &dummy_heatbath;
-	monomial_list[i].accfunction = &nddetratio_acc;
-	monomial_list[i].derivativefunction = NULL;
-	monomial_list[i].pf2 = __pf+no*V;
-	monomial_list[i].timescale = -5;
-	no++;
-	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# Initialised monomial of type NDDETRATIO, no_monomials= %d, currently only available for reweighting!\n", no_monomials);
-	}
+        monomial_list[i].hbfunction = &dummy_heatbath;
+        monomial_list[i].accfunction = &nddetratio_acc;
+        monomial_list[i].derivativefunction = NULL;
+        monomial_list[i].pf2 = __pf+no*V;
+        monomial_list[i].timescale = -5;
+        no++;
+        if(g_proc_id == 0 && g_debug_level > 1) {
+          printf("# Initialised monomial %s of type NDDETRATIO, no_monomials= %d."
+              " Currently only available for reweighting!\n",
+              monomial_list[i].name,
+              no_monomials);
+        }
       }
       else if(monomial_list[i].type == NDCLOVERDETRATIO) {
-	monomial_list[i].hbfunction = &dummy_heatbath;
-	monomial_list[i].accfunction = &nddetratio_acc;
-	monomial_list[i].derivativefunction = NULL;
-	monomial_list[i].pf2 = __pf+no*V;
-	monomial_list[i].timescale = -5;
-	no++;
-	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# Initialised monomial of type NDCLOVERDETRATIO, no_monomials= %d, currently only available for reweighting!\n", no_monomials);
-	}
+        monomial_list[i].hbfunction = &dummy_heatbath;
+        monomial_list[i].accfunction = &nddetratio_acc;
+        monomial_list[i].derivativefunction = NULL;
+        monomial_list[i].pf2 = __pf+no*V;
+        monomial_list[i].timescale = -5;
+        no++;
+        if(g_proc_id == 0 && g_debug_level > 1) {
+          printf("# Initialised monomial %s of type NDCLOVERDETRATIO, no_monomials= %d."
+              " Currently only available for reweighting!\n",
+              monomial_list[i].name,
+              no_monomials);
+        }
       }
     }
     else {
       monomial_list[i].pf = NULL;
       if(no_gauge_monomials > 0) {
-	fprintf(stderr, "maximal number of gauge monomials exceeded!\n");
-	exit(-1);
+        fprintf(stderr, "maximal number of gauge monomials exceeded!\n");
+        exit(-1);
       }      
       else if(monomial_list[i].type == GAUGE) {
-	monomial_list[i].hbfunction = &gauge_heatbath;
-	monomial_list[i].accfunction = &gauge_acc;
-	monomial_list[i].derivativefunction = &gauge_derivative;
-	no_gauge_monomials++;
-	if(fabs( monomial_list[i].glambda) > 0) {
-	  monomial_list[i].derivativefunction = &gauge_EMderivative;
-	}
-	if(!monomial_list[i].use_rectangles) {
-	  monomial_list[i].c1 = 0.;
-	  monomial_list[i].c0 = 1.;
-	}
-	g_rgi_C1 = monomial_list[i].c1;
-	monomial_list[i].c0 = 1. - 8.*monomial_list[i].c1;
-	g_rgi_C0 = monomial_list[i].c0;
-	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# Initialised monomial of type GAUGE, no_monomials= %d\n", no_monomials);
-	}
+        monomial_list[i].hbfunction = &gauge_heatbath;
+        monomial_list[i].accfunction = &gauge_acc;
+        monomial_list[i].derivativefunction = &gauge_derivative;
+        no_gauge_monomials++;
+        if(fabs( monomial_list[i].glambda) > 0) {
+          monomial_list[i].derivativefunction = &gauge_EMderivative;
+        }
+        if(!monomial_list[i].use_rectangles) {
+          monomial_list[i].c1 = 0.;
+          monomial_list[i].c0 = 1.;
+        }
+        g_rgi_C1 = monomial_list[i].c1;
+        monomial_list[i].c0 = 1. - 8.*monomial_list[i].c1;
+        g_rgi_C0 = monomial_list[i].c0;
+        if(g_proc_id == 0 && g_debug_level > 1) {
+          printf("# Initialised monomial %s of type GAUGE, no_monomials= %d\n",
+              monomial_list[i].name,
+              no_monomials);
+        }
       }
     }
     monomial_list[i].id = i;
@@ -525,7 +572,9 @@ int init_monomials(const int V, const int even_odd_flag) {
       monomial_list[no_monomials-1].timescale = 0;
       monomial_list[no_monomials-1].even_odd_flag = even_odd_flag;
       if(g_proc_id == 0 && g_debug_level > 1) {
-        printf("# Initialised clover_trlog_monomial, no_monomials= %d\n", no_monomials);
+        printf("# Initialised monomial %s of type CLOVERTRLOG, no_monomials= %d\n",
+            monomial_list[no_monomials-1].name,
+            no_monomials);
       }
     }
     for( int j = 0; j < no_clovernd_monomials; j++ ) { 
@@ -547,7 +596,9 @@ int init_monomials(const int V, const int even_odd_flag) {
       monomial_list[no_monomials-1].timescale = 0;
       monomial_list[no_monomials-1].even_odd_flag = 1;
       if(g_proc_id == 0 && g_debug_level > 1) {
-        printf("# Initialised clovernd_trlog_monomial, no_monomials= %d\n", no_monomials);
+        printf("# Initialised monomial %s of type CLOVERNDTRLOG, no_monomials= %d\n",
+            monomial_list[no_monomials-1].name,
+            no_monomials);
       }
     }
   }
@@ -555,14 +606,14 @@ int init_monomials(const int V, const int even_odd_flag) {
 }
 
 void free_monomials() {
-  
+
   free(_pf);
   return;
 }
 
 
 int init_poly_monomial(const int V, const int id){
-  
+
   monomial * mnl = &monomial_list[id];
   int i,j,k;
   FILE* rootsFile=NULL;
@@ -573,42 +624,42 @@ int init_poly_monomial(const int V, const int id){
   double eps;
 
   spinor *_pf=(spinor*)NULL;
-  
+
   if((void*)(_pf = (spinor*)calloc((mnl->MDPolyDegree/2+2)*V+1, sizeof(spinor))) == NULL) {
     printf ("malloc errno in init_poly_monomial pf fields: %d\n",errno); 
     errno = 0;
     return(1);
   }
-  
+
   if((void*)(mnl->MDPoly_chi_spinor_fields=(spinor**)calloc(mnl->MDPolyDegree/2+2,sizeof(spinor*))) ==NULL ){
     printf ("malloc errno in init_poly_monomial pf fields: %d\n",errno); 
     errno = 0;
     return(2);
   }
-  
+
   (mnl->MDPoly_chi_spinor_fields)[0] = (spinor*)(((unsigned long int)(_pf)+ALIGN_BASE)&~ALIGN_BASE);
-  
+
   for(i = 1; i < (mnl->MDPolyDegree/2+2); i++){
     mnl->MDPoly_chi_spinor_fields[i] = mnl->MDPoly_chi_spinor_fields[i-1]+V;
   }
-  
+
   if(strlen(monomial_list[id].MDPolyRootsFile)==0){
     sprintf(monomial_list[id].MDPolyRootsFile,
-	    "%s_deg_%d_eps_%1.16e.roots",
-	    "1overX_poly",
-	    monomial_list[id].MDPolyDegree,
-	    monomial_list[id].MDPolyLmin/monomial_list[id].MDPolyLmax
-	    );
+        "%s_deg_%d_eps_%1.16e.roots",
+        "1overX_poly",
+        monomial_list[id].MDPolyDegree,
+        monomial_list[id].MDPolyLmin/monomial_list[id].MDPolyLmax
+        );
     fprintf(stderr,"Warning you didnt specify a rootsfilename -> guessing:\n%s\n",filename);
   }
   if(monomial_list[id].MDPolyLocNormConst==-1.0){
     eps=monomial_list[id].MDPolyLmin/monomial_list[id].MDPolyLmax;
     sprintf(filename,
-	    "%s_deg_%d_eps_%1.16e.const",
-	    "1overX_poly",
-	    monomial_list[id].MDPolyDegree,
-	    eps
-	    );
+        "%s_deg_%d_eps_%1.16e.const",
+        "1overX_poly",
+        monomial_list[id].MDPolyDegree,
+        eps
+        );
     fprintf(stderr,"Warning you didnt specify a local normalization: trying to read it from\n%s\n",filename);
     if((constFile=fopen(filename,"r"))!=NULL) {
       errcode = fscanf(constFile,"%lf\n",&(mnl->MDPolyLocNormConst));
@@ -623,15 +674,15 @@ int init_poly_monomial(const int V, const int id){
       exit(6);
     }
   }
-  
+
   /* read in the roots from the given file */
-  
+
   if((void*)(mnl->MDPolyRoots=(_Complex double*)calloc(mnl->MDPolyDegree,sizeof(_Complex double))) ==NULL ){
     printf ("malloc errno in init_poly_monomial roots array: %d\n",errno); 
     errno = 0;
     return(3);
   }
-  
+
   printf("reading roots...!\n");
   if((rootsFile=fopen(mnl->MDPolyRootsFile,"r")) != (FILE*)NULL) {
     if (fgets(title, 100, rootsFile) == NULL) {
@@ -641,7 +692,7 @@ int init_poly_monomial(const int V, const int id){
 #endif
       exit(6);
     }
-    
+
     /* Here we read in the 2n roots needed for the polinomial in sqrt(s) */
     for(j = 0; j < (mnl->MDPolyDegree); j++) {
       errcode = fscanf(rootsFile," %d %lf %lf \n", &k, (double*)&(mnl->MDPolyRoots[j]), (double*)&(mnl->MDPolyRoots[j]) + 1);
@@ -655,16 +706,16 @@ int init_poly_monomial(const int V, const int id){
 #endif
     exit(6);
   }
-  
+
   if(g_proc_id == 0 && g_debug_level > 2) {
     printf("# the root are:\n");
     for(j=0; j<(mnl->MDPolyDegree); j++){
       printf("# %lf %lf\n",  creal(mnl->MDPolyRoots[j]), cimag(mnl->MDPolyRoots[j]));
     }
   }
-  
+
   return 0;
-  
+
 }
 
 void dummy_derivative(const int id, hamiltonian_field_t * const hf) {
