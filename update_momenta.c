@@ -42,7 +42,7 @@
 void update_momenta(int * mnllist, double step, const int no, 
 		    hamiltonian_field_t * const hf) {
 
-  tm_stopwatch_push(&g_timers, "");
+  tm_stopwatch_push(&g_timers, __func__, "");
 
 #ifdef TM_USE_OMP
 #pragma omp parallel for
@@ -73,7 +73,7 @@ void update_momenta(int * mnllist, double step, const int no,
     }
   }
 
-  tm_stopwatch_pop(&g_timers, 0, 0, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 0, "");
 
   return;
 }

@@ -169,7 +169,7 @@ void six_invert(int* ifail ,_Complex double a[6][6])
 // - is stored in sw_inv[VOLUME/2-(VOLUME-1)]
 
 void sw_invert(const int ieo, const double mu) {
-  tm_stopwatch_push(&g_timers, "");
+  tm_stopwatch_push(&g_timers, __func__, "");
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -259,7 +259,7 @@ void sw_invert(const int ieo, const double mu) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
-  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
 }
 
@@ -277,7 +277,7 @@ void sw_invert(const int ieo, const double mu) {
  */ 
 
 void sw_invert_epsbar(const double epsbar) {
-  tm_stopwatch_push(&g_timers, "");
+  tm_stopwatch_push(&g_timers, __func__, "");
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -323,7 +323,7 @@ void sw_invert_epsbar(const double epsbar) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
-  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
 }
 
@@ -341,7 +341,7 @@ void sw_invert_epsbar(const double epsbar) {
  */ 
 
 void sw_invert_mubar(const double mubar) {
-  tm_stopwatch_push(&g_timers, "");
+  tm_stopwatch_push(&g_timers, __func__, "");
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -428,7 +428,7 @@ void sw_invert_mubar(const double mubar) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
-  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
 }
 
@@ -446,7 +446,7 @@ void sw_invert_mubar(const double mubar) {
 // must be done elsewhere because of flavour structure
 
 void sw_invert_nd(const double mshift) {
-  tm_stopwatch_push(&g_timers, "");
+  tm_stopwatch_push(&g_timers, __func__, "");
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -500,6 +500,6 @@ void sw_invert_nd(const double mshift) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
-  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
 }

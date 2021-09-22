@@ -59,7 +59,7 @@ double apply_Z_psi(spinor * const k_up, spinor * const l_up,
 
 void ratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
-  tm_stopwatch_push(&g_timers, mnl->name);
+  tm_stopwatch_push(&g_timers, __func__, mnl->name);
   double delta;
   spinor * up0, * up1, * tup;
   double coefs[6] = {1./4., -3./32., 7./128., -77./2048., 231./8192., -1463./65536.}; // series of (1+x)^(1/4)
@@ -84,10 +84,10 @@ void ratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   // the Gaussian distributed random fields
   mnl->energy0 = 0.;
-  tm_stopwatch_push(&g_timers, "");
+  tm_stopwatch_push(&g_timers, "random_energy0", "");
   random_spinor_field_eo(mnl->pf, mnl->rngrepro, RN_GAUSS);
   mnl->energy0 = square_norm(mnl->pf, VOLUME/2, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, "", "random_energy0");
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
 
   mnl->solver_params.max_iter = mnl->maxiter;
   mnl->solver_params.squared_solver_prec = mnl->accprec;
@@ -116,14 +116,14 @@ void ratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
       printf("called ratcor_heatbath for id %d energy %f\n", id, mnl->energy0);
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
 }
 
 
 double ratcor_acc(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
-  tm_stopwatch_push(&g_timers, mnl->name);
+  tm_stopwatch_push(&g_timers, __func__, mnl->name);
   double delta;
   spinor * up0, * up1, * tup;
   double coefs[6] = {-1./2., 3./8., -5./16., 35./128., -63./256., 231./1024.};
@@ -165,15 +165,15 @@ double ratcor_acc(const int id, hamiltonian_field_t * const hf) {
     up1 = tup;
   }
 
-  tm_stopwatch_push(&g_timers, "");
+  tm_stopwatch_push(&g_timers, "scalar_prod_r", "");
   mnl->energy1 = scalar_prod_r(mnl->pf, mnl->w_fields[4], VOLUME/2, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, "", "scalar_prod_r");
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   if(g_proc_id == 0) {
     if(g_debug_level > 3) {
       printf("called ratcor_acc for id %d dH = %1.10e\n", id, mnl->energy1 - mnl->energy0);
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return(mnl->energy1 - mnl->energy0);
 }
 
@@ -182,7 +182,7 @@ double ratcor_acc(const int id, hamiltonian_field_t * const hf) {
 double apply_Z_psi(spinor * const k_up,	spinor * const l_up, 
 		     const int id, hamiltonian_field_t * const hf,
 		     solver_params_t * solver_params) {
-  tm_stopwatch_push(&g_timers, "");
+  tm_stopwatch_push(&g_timers, __func__, "");
   monomial * mnl = &monomial_list[id];
 
   mnl->iter0 += solve_mms_tm(g_chi_up_spinor_field, l_up,
@@ -207,19 +207,19 @@ double apply_Z_psi(spinor * const k_up,	spinor * const l_up,
 	k_up, VOLUME/2);
 
   // apply Q^2 
-  tm_stopwatch_push(&g_timers, "");
+  tm_stopwatch_push(&g_timers, "M_psi", "");
   solver_params->M_psi(k_up, g_chi_up_spinor_field[mnl->rat.np]);
-  tm_stopwatch_pop(&g_timers, 0, 1, "", "M_psi");
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   // compute the residue
   diff(k_up, k_up, l_up, VOLUME/2);
-  tm_stopwatch_push(&g_timers, "");
+  tm_stopwatch_push(&g_timers, "square_norm", "");
   double resi = square_norm(k_up, VOLUME/2, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, "", "square_norm");
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   
   if(g_debug_level > 2 && g_proc_id == 0) {
     printf("# RATCOR: ||Z * phi|| = %e\n", resi);
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return(resi);
 }
 
@@ -228,7 +228,7 @@ double apply_Z_psi(spinor * const k_up,	spinor * const l_up,
 void check_C_psi(spinor * const k_up, spinor * const l_up,
 		 const int id, hamiltonian_field_t * const hf,
 		 solver_params_t * solver_params) {
-  tm_stopwatch_push(&g_timers, "");
+  tm_stopwatch_push(&g_timers, __func__, "");
   monomial * mnl = &monomial_list[id];
 
   mnl->iter0 = solve_mms_tm(g_chi_up_spinor_field, l_up, solver_params);
@@ -275,10 +275,10 @@ void check_C_psi(spinor * const k_up, spinor * const l_up,
     assign_add_mul(k_up, g_chi_up_spinor_field[mnl->rat.np], -I*mnl->rat.rnu[j], VOLUME/2);
   }
   diff(k_up, k_up, l_up, VOLUME/2);
-  tm_stopwatch_push(&g_timers, ""); 
+  tm_stopwatch_push(&g_timers, "square_norm", ""); 
   double resi = square_norm(k_up, VOLUME/2, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, "", "square_norm");
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   if(g_proc_id == 0) printf("|| (1-C^dagger R C)*phi|| = %e\n", resi);
-  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
 }

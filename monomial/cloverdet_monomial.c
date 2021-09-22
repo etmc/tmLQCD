@@ -55,8 +55,8 @@
 void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   int N = VOLUME/2;
-  tm_stopwatch_push(&g_timers, mnl->name);
-  tm_stopwatch_push(&g_timers, "");
+  tm_stopwatch_push(&g_timers, __func__, mnl->name);
+  tm_stopwatch_push(&g_timers, "su3_zero", "");
 #ifdef TM_USE_OMP
   #pragma omp parallel for
 #endif
@@ -66,7 +66,7 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
       _su3_zero(swp[i][mu]);
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, "", "su3_zero");
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
 
   mnl->forcefactor = 1.;
   /*********************************************************************
@@ -104,22 +104,22 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
                       mnl->csg_N, &mnl->csg_n, N);
   
   // Y_o -> w_fields[0]
-  tm_stopwatch_push(&g_timers, "");
+  tm_stopwatch_push(&g_timers, "Qm", "");
   mnl->Qm(mnl->w_fields[0], mnl->w_fields[1]);
-  tm_stopwatch_pop(&g_timers, 0, 1, "",  "Qm");
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   if(mnl->even_odd_flag) {
     // apply Hopping Matrix M_{eo}
     // to get the even sites of X_e
-    tm_stopwatch_push(&g_timers, "");
+    tm_stopwatch_push(&g_timers, "H_eo_sw_inv_psi", "");
     H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EO, -1, mnl->mu);
-    tm_stopwatch_pop(&g_timers, 0, 1, "",  "H_eo_sw_inv_psi");
+    tm_stopwatch_pop(&g_timers, 0, 1, "");
     // \delta Q sandwitched by Y_o^\dagger and X_e
     deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
     
     // to get the even sites of Y_e
-    tm_stopwatch_push(&g_timers, "");
+    tm_stopwatch_push(&g_timers, "H_eo_sw_inv_psi", "");
     H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1, mnl->mu);
-    tm_stopwatch_pop(&g_timers, 0, 1, "",  "H_eo_sw_inv_psi");
+    tm_stopwatch_pop(&g_timers, 0, 1, "");
     // \delta Q sandwitched by Y_e^\dagger and X_o
     // uses the gauge field in hf and changes the derivative fields in hf
     deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor);
@@ -153,14 +153,14 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   sw_all(hf, mnl->kappa, mnl->c_sw);
 
   mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
-  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
 }
 
 
 void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
-  tm_stopwatch_push(&g_timers, mnl->name );
+  tm_stopwatch_push(&g_timers, __func__, mnl->name);
   int N = VOLUME/2;
 
   mnl_backup_restore_globals(TM_BACKUP_GLOBALS);
@@ -179,20 +179,20 @@ void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   if(!mnl->even_odd_flag) {
     N = VOLUME;
-    tm_stopwatch_push(&g_timers, "" );
+    tm_stopwatch_push(&g_timers, "random_energy0", "");
     random_spinor_field_lexic(mnl->w_fields[0], mnl->rngrepro, RN_GAUSS);
   }
   else {
     sw_invert(EE, mnl->mu);
-    tm_stopwatch_push(&g_timers, "" );
+    tm_stopwatch_push(&g_timers, "random_energy0", "");
     random_spinor_field_eo(mnl->w_fields[0], mnl->rngrepro, RN_GAUSS);
   }
   mnl->energy0 = square_norm(mnl->w_fields[0], N, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, "",  "random_energy0");
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   
-  tm_stopwatch_push(&g_timers, "" );
+  tm_stopwatch_push(&g_timers, "Qp", "");
   mnl->Qp(mnl->pf, mnl->w_fields[0]);
-  tm_stopwatch_pop(&g_timers, 0, 1, "",  "Qp");
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
 
   chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
                       mnl->csg_N, &mnl->csg_n, N);
@@ -203,14 +203,14 @@ void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
       printf("called cloverdet_heatbath for id %d energy %f\n", id, mnl->energy0);
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
 }
 
 
 double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
-  tm_stopwatch_push(&g_timers, mnl->name );
+  tm_stopwatch_push(&g_timers, __func__, mnl->name);
   int save_sloppy = g_sloppy_precision_flag;
   int N = VOLUME/2;
 
@@ -242,15 +242,15 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
 		   mnl->csg_N, mnl->csg_n, N, mnl->Qsq);
       mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->pf, mnl->solver_params, mnl->maxiter, mnl->accprec,  
 				     g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver);
-      tm_stopwatch_push(&g_timers, "" );
+      tm_stopwatch_push(&g_timers, "Qm", "");
       mnl->Qm(mnl->w_fields[0], mnl->w_fields[0]);
-      tm_stopwatch_pop(&g_timers, 0, 1, "",  "Qm");
+      tm_stopwatch_pop(&g_timers, 0, 1, "");
   }
   g_sloppy_precision_flag = save_sloppy;
   /* Compute the energy contr. from first field */
-  tm_stopwatch_push(&g_timers, "" );
+  tm_stopwatch_push(&g_timers, "energy1_square_norm", "");
   mnl->energy1 = square_norm(mnl->w_fields[0], N, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, "",  "energy1_square_norm"); 
+  tm_stopwatch_pop(&g_timers, 0, 1, ""); 
 
   mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
   if(g_proc_id == 0) {
@@ -259,6 +259,6 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
              id, mnl->energy1 - mnl->energy0);
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__); 
+  tm_stopwatch_pop(&g_timers, 0, 1, ""); 
   return(mnl->energy1 - mnl->energy0);
 }
