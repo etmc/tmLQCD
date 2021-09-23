@@ -1,13 +1,4 @@
-require(dplyr)
-require(ggplot2)
-require(hadron)
-require(treemap)
-require(data.tree)
-
 args = commandArgs(trailingOnly=TRUE)
-
-stopifnot(length(args) > 0)
-stopifnot(file.exists(args[1]))
 
 mnl <- function () {
   mnl <- list()
@@ -51,61 +42,12 @@ sub_func_create<-function(.sub_func=sub_func(),name,time_in , level ){
   return(.sub_func)
 } 
 
-monomial_names <- system(paste("grep \"Initialised monomial\" ", args[1], "| awk '{print $4}'"),
-                         intern = TRUE)
 
-raw_data <- system(paste("grep \"Time for\"",
-                         args[1], 
-                         "| grep level",
-                         "| awk '{print $2 \" \" $5 \" \" $6 \" \" $9 \" \" $12}'"),
-                   intern = TRUE)
 
-#t_tree <- data.tree::Node$new("HMC")
-## read the log in reverse to get the right hierarchy
-#for( ln in rev(raw_data) ){
-#  lnvec <- unlist(strsplit(ln," "))
-#
-#  prefix <- lnvec[1]
-#  name <- lnvec[2]
-#  time <- lnvec[3]
-#  level <- lnvec[4]
-#  context <- lnvec[5]
-#
-#  if( is.null(data[[context]] ) ){
-#    data[[context]]
-#  } else {
-#
-#}
-#stop()
-
-data <- read.table(text = raw_data, stringsAsFactors = FALSE)
-colnames(data) <- c("prefix", "name", "time", "level", "context")
-
-data <- dplyr::mutate(data, context = gsub("[|,|]", "", context)) %>%
-        dplyr::group_by(prefix, context, name, level) %>%
-        dplyr::summarise(time = sum(time)) %>%
-        dplyr::ungroup() %>%
-        dplyr::mutate(pathString = paste("HMC", context, level, name, sep="/"))
-
-t_tree <- data.tree::as.Node(data)
-
-stop()
-
-w <- 0.5
-
-for( mnl in monomial_names ){
-  pdf(sprintf("%s.pdf", mnl))
-  p <- ggplot2::ggplot(data %>% dplyr::filter(context == mnl), 
-                       aes(xmin = level - w / 2, xmax = level + w/2,
-                            
-                           y = time, fill = name)) +
-       ggplot2::geom_rect(color = "black") +
-       ggplot2::theme_bw()
-  plot(p)
-  dev.off();
-}
-
-stop()
+string<-paste("grep -E \"initialising monomial with type|monomial named\" ",args[1]," > mnl_tmp.txt" )
+system(string) 
+file <- "mnl_tmp.txt"
+infile<- read.table(file, fill = TRUE ,comment.char = "")
 
 df<-data.frame("name"=c(),"type"=c())
 mnl_type<- c()
