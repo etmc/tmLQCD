@@ -95,6 +95,14 @@ type_per_mon <- dplyr::group_by(dplyr::filter(sum_data,
                                                                   extract = TRUE))) %>%
                 dplyr::ungroup()
 
+# if we're analysing an incomplete run or one which is still
+# in progress, then we estimate the total time by summing
+# all the time spent at level 1
+if( length(total_time) == 0 ){
+  warning("total time could not be determined, summing up all times at level 1 instead")
+  total_time <- sum(dplyr::filter(sum_data,level==1)$time)
+}
+
 total_per_mon <- dplyr::group_by(type_per_mon, monomial) %>%
                  dplyr::summarise(time = sum(time)) %>%
                  dplyr::ungroup() %>%
