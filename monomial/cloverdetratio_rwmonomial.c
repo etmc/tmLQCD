@@ -51,8 +51,8 @@
 #include "DDalphaAMG_interface.h"
 
 double cloverdetratio_rwacc(const int id, hamiltonian_field_t * const hf) {
-  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
+  tm_stopwatch_push(&g_timers, __func__, mnl->name);
   int save_sloppy = g_sloppy_precision_flag;
 
   g_mu = mnl->mu2;
@@ -80,17 +80,17 @@ double cloverdetratio_rwacc(const int id, hamiltonian_field_t * const hf) {
   } else {
     mnl->iter0 += solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->solver_params, mnl->maxiter, mnl->accprec,
 				   g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver);
-    tm_stopwatch_push(&g_timers);
+    tm_stopwatch_push(&g_timers, "Qm", "");
     mnl->Qm(mnl->w_fields[0], mnl->w_fields[0]);
-    tm_stopwatch_pop(&g_timers, 0, 1, "", "Qm");
+    tm_stopwatch_pop(&g_timers, 0, 1, "");
   }
 
   g_sloppy_precision_flag = save_sloppy;
 
   /* Compute the energy contr. from second field */
-  tm_stopwatch_push(&g_timers);
+  tm_stopwatch_push(&g_timers, "energy1", "");
   mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, "", "energy1");
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
 
   g_mu = g_mu1;
   g_mu3 = 0.;
@@ -101,6 +101,6 @@ double cloverdetratio_rwacc(const int id, hamiltonian_field_t * const hf) {
 	     id, mnl->energy1 - mnl->energy0);
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return(mnl->energy1 - mnl->energy0);
 }

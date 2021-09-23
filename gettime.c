@@ -41,6 +41,8 @@
 #include "fatal_error.h"
 #include "global.h"
 
+#include <string.h>
+
 double gettime(void) {
   double t;
 #if (defined BGL && !defined BGP)
@@ -79,22 +81,38 @@ double gettime(void) {
   return t;
 }
 
-void tm_stopwatch_push(tm_timers_t * const timers){
-  if( timers->lvl+1 >= TM_MAX_TIMING_LEVELS ){
-    fatal_error("attempted push would let timers->lvl exceed TM_MAX_TIMING_LEVELS", "tm_stopwatch_push");
+void tm_stopwatch_push(tm_timers_t * const timers, const char * const name, const char * group){
+  if( timers->lvl+1 >= TM_TIMING_MAX_LEVELS ){
+    fatal_error("attempted push would let timers->lvl exceed TM_TIMING_MAX_LEVELS", "tm_stopwatch_push");
   }
   timers->t[++(timers->lvl)] = gettime();
+  if( strcmp(name, "") == 0 ){
+    fatal_error("name may not be empty!", __func__);
+  } else {
+    const int empty_group = strcmp(group, "") == 0;
+    snprintf(timers->callstack[timers->lvl], TM_TIMING_STACK_PATH_LENGTH,
+             "%s/%s%s%s",
+             timers->lvl-1 >= 0 ? timers->callstack[timers->lvl-1] : "",
+             empty_group ? "" : group,
+             empty_group ? "" : ":",
+             name);
+    snprintf(timers->name[timers->lvl], TM_TIMING_NAME_LENGTH, "%s", name);
+  }
 }
 
 void tm_stopwatch_pop(tm_timers_t * const timers,
     const int proc_id, const int dbg_level_threshold,
-    const char * const prefix, const char * const name){
+    const char * const prefix){
   if( (timers->lvl-1) < -1 ){
     fatal_error("attempted pop would let timers->lvl drop below the lowest possible value", "tm_stopwatch_pop");
   }
   if( g_proc_id == proc_id && g_debug_level >= dbg_level_threshold ){
-    printf("# %s: Time for %s %e s level: %d proc_id: %d\n", prefix, name, gettime()-timers->t[timers->lvl], 
-        timers->lvl, g_proc_id);
+    printf("# %s: Time for %s %e s level: %d proc_id: %d %s\n", 
+           prefix,
+           timers->name[timers->lvl], 
+           gettime()-timers->t[timers->lvl], 
+           timers->lvl, g_proc_id,
+           timers->callstack[timers->lvl]);
   }
   (timers->lvl)--;
 }

@@ -154,6 +154,7 @@ int main(int argc,char *argv[]) {
   NO_OF_SPINORFIELDS_32 = 6;
   
   tmlqcd_mpi_init(argc, argv);
+  tm_stopwatch_push(&g_timers, "HMC", "");
 
   if(nstore == -1) {
     countfile = fopen(nstore_filename, "r");
@@ -575,6 +576,9 @@ int main(int argc,char *argv[]) {
   free(filename);
   free(SourceInfo.basename);
   free(PropInfo.basename);
+
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
+
 #ifdef TM_USE_QUDA
   _endQuda();
 #endif
@@ -582,6 +586,7 @@ int main(int argc,char *argv[]) {
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 #endif
+
   return(0);
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)

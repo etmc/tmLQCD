@@ -64,7 +64,6 @@
 #elif defined BGL
 #include "bgl.h"
 #endif
-
 EXTERN int DUM_DERI, DUM_MATRIX;
 EXTERN int NO_OF_SPINORFIELDS;
 EXTERN int NO_OF_SPINORFIELDS_32;
@@ -295,6 +294,7 @@ EXTERN tm_CloverState_t g_clover_state;
 EXTERN tm_CloverState_t g_clover_state_32;
 EXTERN tm_CloverInverseState_t g_clover_inverse_state;
 EXTERN tm_CloverInverseState_t g_clover_inverse_state_32;
+
 
 #undef EXTERN
 /* #undef ALIGN */

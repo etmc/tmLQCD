@@ -54,8 +54,9 @@ void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigne
   double zepsfac[3] = { 0.25, 1, 1 };
   su3** fields[4];
 
-  double t1;
-  if( g_debug_level >= 4 ) t1 = gettime();
+  if( g_debug_level >= 4 ){
+    tm_stopwatch_push(&g_timers, __func__, "");
+  }
 
   fields[0] = x0;
   fields[1] = x1;
@@ -123,18 +124,17 @@ void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigne
 
   } /* OpenMP parallel closing brace */
   
-  if( g_proc_id == 0 && g_debug_level >= 4 ){
-    printf("Time for gradient flow step: %lf\n", gettime()-t1);
+  if( g_debug_level >= 4 ){
+    tm_stopwatch_pop(&g_timers, 0, 4, "");
   }
 
 }
 
 void gradient_flow_measurement(const int traj, const int id, const int ieo) {
-
+  tm_stopwatch_push(&g_timers, __func__, "");
   double t[3], P[3];
   field_strength_obs_t fso[3];
   double W=0, tsqE=0;
-  double t1, t2;
 
   double eps = measurement_list[id].gf_eps;
   double tmax = measurement_list[id].gf_tmax;
@@ -173,13 +173,8 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
   t[1] = fso[1].E = fso[1].Q = P[1] = 0.0;
   t[2] = fso[2].E = fso[2].Q = P[2] = 0.0;
 
-  t1 = gettime();
   measure_clover_field_strength_observables(vt.field, &fso[2]);
   P[2] = measure_plaquette(vt.field)/(6.0*VOLUME*g_nproc);
-  t2 = gettime();
-  if(g_proc_id==0 && g_debug_level > 1) {
-    printf("# GRADFLOW: time for field strength observables measurement: %lf\n",t2-t1);
-  }
 
   while( t[1] < tmax ) {
     t[0] = t[2];
@@ -226,14 +221,11 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
   aligned_su3_field_free(&x2);
   aligned_su3_field_free(&z);
  
-  t2 = gettime();
   
   if( g_proc_id == 0 ) {
-    if(g_debug_level>1){
-      printf("# GRADFLOW: Gradient flow measurement done in %f seconds!\n",t2-t1);
-    }
     fclose(outfile);
   }
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
 
   return;
 }

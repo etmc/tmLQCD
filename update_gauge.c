@@ -50,7 +50,7 @@
  *******************************************************/
 
 void update_gauge(const double step, hamiltonian_field_t * const hf) {
-  tm_stopwatch_push(&g_timers);
+  tm_stopwatch_push(&g_timers, __func__, "");
   update_tm_gauge_id(&g_gauge_state, step);
 #ifdef DDalphaAMG
   MG_update_gauge(step);
@@ -114,7 +114,7 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
   g_update_gauge_copy = 1;
   g_update_gauge_copy_32 = 1;
 
-  tm_stopwatch_pop(&g_timers, 0, 1, "", __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
 #ifdef _KOJAK_INST
 #pragma pomp inst end(updategauge)

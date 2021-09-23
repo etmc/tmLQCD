@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 #ifdef TM_USE_OMP 
 # include <omp.h>
 #endif
@@ -88,8 +89,8 @@ void compare_derivative(monomial *mnl, su3adj **ext_lib, su3adj **native ){
 
 /* this function calculates the derivative of the momenta: equation 13 of Gottlieb */
 void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
-  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
+  tm_stopwatch_push(&g_timers, __func__, mnl->name);
   double factor = -mnl->c0 * g_beta/3.0;
   if(mnl->use_rectangles) {
     mnl->forcefactor = 1.;
@@ -147,14 +148,14 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
       } /* OpenMP closing brace */
     #endif
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
 }
 
 /* this function calculates the derivative of the momenta: equation 13 of Gottlieb */
 void gauge_EMderivative(const int id, hamiltonian_field_t * const hf) {
-  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
+  tm_stopwatch_push(&g_timers, __func__, mnl->name);
   double factor = -mnl->c0 * g_beta/3.0;
   if(mnl->use_rectangles) {
     mnl->forcefactor = 1.;
@@ -209,13 +210,13 @@ void gauge_EMderivative(const int id, hamiltonian_field_t * const hf) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
-  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
 }
 
 void gauge_heatbath(const int id, hamiltonian_field_t * const hf) {
-  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
+  tm_stopwatch_push(&g_timers, __func__, mnl->name);
   mnl->c0 = 1.;
   if(mnl->use_rectangles) mnl->c0 = 1. - 8.*mnl->c1;
   
@@ -228,13 +229,13 @@ void gauge_heatbath(const int id, hamiltonian_field_t * const hf) {
       printf("called gauge_heatbath for id %d energy %f\n", id, mnl->energy0);
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
 }
 
 double gauge_acc(const int id, hamiltonian_field_t * const hf) {
-  tm_stopwatch_push(&g_timers);
   monomial * mnl = &monomial_list[id];
+  tm_stopwatch_push(&g_timers, __func__, mnl->name);
   mnl->energy1 = g_beta*(mnl->c0 * measure_gauge_action( (const su3**) hf->gaugefield, mnl->glambda));
   if(mnl->use_rectangles) {
     mnl->energy1 += g_beta*(mnl->c1 * measure_rectangles( (const su3**) hf->gaugefield));
@@ -245,6 +246,6 @@ double gauge_acc(const int id, hamiltonian_field_t * const hf) {
 	     id, mnl->energy0 - mnl->energy1);
     }
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, mnl->name, __func__);
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return(mnl->energy0 - mnl->energy1);
 }
