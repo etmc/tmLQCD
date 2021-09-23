@@ -42,11 +42,11 @@
 #include "gettime.h"
 
 void pion_norm_measurement(const int traj, const int id, const int ieo) {
+  tm_stopwatch_push(&g_timers, __func__, "");
   int i, j, z, zz, z0;
   double *Cpp;
   double res = 0.;
   double pionnorm;
-  double atime, etime;
   float tmp;
   solver_params_t tmp_solver_params;
 #ifdef TM_USE_MPI
@@ -72,8 +72,6 @@ void pion_norm_measurement(const int traj, const int id, const int ieo) {
 #ifdef TM_USE_MPI
   MPI_Bcast(&z0, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif
-
-  atime = gettime();
 
   Cpp = (double*) calloc(g_nproc_z*LZ, sizeof(double));
 
@@ -150,10 +148,7 @@ void pion_norm_measurement(const int traj, const int id, const int ieo) {
   }
   
   free(Cpp);
-  etime = gettime();
-  if(g_proc_id == 0 && g_debug_level > 0) {
-    printf("PIONNORM : measurement done int t/s = %1.4e\n", etime - atime);
-  }
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
 }
 /*end  Florian Burger 4.11.2009 */

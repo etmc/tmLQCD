@@ -1,0 +1,123 @@
+require(dplyr)
+require(data.tree)
+require(stringr)
+require(microseq)
+
+args = commandArgs(trailingOnly=TRUE)
+
+stopifnot(length(args) > 0)
+stopifnot(file.exists(args[1]))
+
+monomial_names <- system(paste("grep \"Initialised monomial\" ", args[1], "| awk '{print $4}'"),
+                         intern = TRUE)
+
+raw_data <- system(paste("grep \"Time for\"",
+                         args[1], 
+                         "| grep level",
+                         "| awk '{print $2 \" \" $5 \" \" $6 \" \" $9 \" \" $12}'"),
+                   intern = TRUE)
+
+stopifnot(length(raw_data) > 0)
+
+data <- read.table(text = raw_data, stringsAsFactors = FALSE)
+colnames(data) <- c("prefix", "name", "time", "level", "pathString")
+
+extract_monomial <- function(str){
+  l1 <- microseq::gregexpr(text = str,
+                           pattern = '(?<=/)(.*?)(?=:)',
+                           perl = TRUE,
+                           extract = TRUE)
+  unlist(microseq::gregexpr(text = unlist(l1),
+                            pattern = '(?<=/).*',
+                            perl = TRUE,
+                            extract = TRUE))
+}
+
+extract_type <- function(str){
+  tmp <- str
+  tmp[!( grepl('acc', str) | grepl('heatbath',str) | grepl('derivative', str) )] <- 'other'
+  tmp[grepl('acc', str)] <- 'acc'
+  tmp[grepl('heatbath', str)] <- 'heatbath'
+  tmp[grepl('derivative', str)] <- 'derivative'
+  return(tmp)
+}
+
+data <- dplyr::mutate(data,
+                      ## R is 1-indexed, level starts at 0, hence 'level+1' is the parent level
+                      ## because we have a leading forward-slash (word 1 is ""),
+                      monomial = extract_monomial(pathString),
+                      type = extract_type(pathString), 
+                      parent = stringr::word(pathString, start = 1, end = level+1, sep='/'))
+
+sum_data <- dplyr::group_by(data, pathString) %>%
+            dplyr::summarise(time = sum(time),
+                             prefix = unique(prefix),
+                             name = unique(name),
+                             parent = unique(parent),
+                             monomial = unique(monomial),
+                             type = unique(type),
+                             level = unique(level)) %>%
+            dplyr::ungroup()
+
+t_tree <- data.tree::as.Node(sum_data)
+
+# at this level we want to produce summarised data so we collapse everthing
+# which accounts for less than 5% of the total time at each level
+# and logical unit
+sum_data_per_mon <- dplyr::filter(sum_data, nchar(monomial) > 0) %>%
+                    dplyr::group_by(monomial, type, level) %>%
+                    dplyr::mutate(name = ifelse(time < 0.05 * sum(time),
+                                                'other', name)) %>%
+                    dplyr::group_by(monomial, type, level, name) %>%
+                    dplyr::summarise(time = sum(time),
+                                     prefix = unique(prefix),
+                                     name = unique(name),
+                                     level = unique(level),
+                                     type = unique(type),
+                                     name = unique(name)) %>%
+                    dplyr::ungroup() %>%
+                    dplyr::group_by(monomial, type, level) %>%
+                    dplyr::mutate(prop = 100 * time / sum(time)) %>%
+                    dplyr::ungroup()
+
+total_time <- dplyr::filter(sum_data, name == 'HMC')$time
+
+type_per_mon <- dplyr::group_by(dplyr::filter(sum_data, 
+                                              level == 1 & 
+                                                nchar(monomial) > 0 & 
+                                                !grepl('init', name) &
+                                                !grepl('trlog', name) ),
+                                monomial, name) %>%
+                dplyr::summarise(time = sum(time),
+                                 type = unlist(microseq::gregexpr(text = unique(name),
+                                                                  pattern = '(?<=_).*',
+                                                                  perl = TRUE,
+                                                                  extract = TRUE))) %>%
+                dplyr::ungroup()
+
+total_per_mon <- dplyr::group_by(type_per_mon, monomial) %>%
+                 dplyr::summarise(time = sum(time)) %>%
+                 dplyr::ungroup() %>%
+                 dplyr::mutate(prop = 100 * time / sum(total_time)) %>%
+                 dplyr::arrange(desc(prop))
+
+hb_acc_der_data <- dplyr::filter(sum_data_per_mon, level == 1 &
+                                  !grepl('init', name) &
+                                  !grepl('trlog', name)) %>%
+                   dplyr::group_by(monomial) %>%
+                   dplyr::mutate(prop = 100 * (time / sum(time))) %>%
+                   dplyr::mutate(prop_label = sprintf("%.1f %%", prop)) %>%
+                   dplyr::ungroup()
+
+save(monomial_names,
+     raw_data,
+     data,
+     sum_data,
+     sum_data_per_mon,
+     hb_acc_der_data,
+     t_tree,
+     total_per_mon,
+     type_per_mon,
+     file = "profile.RData")
+
+rmarkdown::render("profile.Rmd")
