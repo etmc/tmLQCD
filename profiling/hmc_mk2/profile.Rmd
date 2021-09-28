@@ -45,6 +45,8 @@ load("profile.RData")
 plot_data <- rbind(total_per_mon,
                    data.frame(monomial = "other and unaccounted for",
                               time = total_time-sum(total_per_mon$time),
+                              invocations = NA,
+                              unit_time = NA,
                               prop = 100*(1 - sum(total_per_mon$time)/total_time)))
 p <- ggplot2::ggplot(plot_data,
                      aes(x = 0, y = time, fill = monomial)) +
@@ -107,7 +109,7 @@ p <- ggplot2::ggplot(hb_acc_der_data,
 plot(p)
 
 cat("\\par\n")
-cat(knitr::kable(dplyr::select(hb_acc_der_data, monomial, type, time, prop),
+cat(knitr::kable(dplyr::select(hb_acc_der_data, monomial, type, time, prop, invocations, unit_time),
                  format = 'latex',
                  booktabs = TRUE,
                  digits = 1,
@@ -145,7 +147,7 @@ for( mon in total_per_mon$monomial ){
                         axis.ticks.x = element_blank())
     plot(p)
     cat("\\par\n")
-    cat(knitr::kable(dplyr::select(type_data, level, name, time, prop),
+    cat(knitr::kable(dplyr::select(type_data, level, name, time, prop, invocations, unit_time),
                      format = 'latex',
                      booktabs = TRUE,
                      digits = 1,

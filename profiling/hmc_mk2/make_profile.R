@@ -51,6 +51,8 @@ data <- dplyr::mutate(data,
 
 sum_data <- dplyr::group_by(data, pathString) %>%
             dplyr::summarise(time = sum(time),
+                             invocations = n(),
+                             unit_time = sum(time)/n(),
                              prefix = unique(prefix),
                              name = unique(name),
                              parent = unique(parent),
@@ -70,6 +72,8 @@ sum_data_per_mon <- dplyr::filter(sum_data, nchar(monomial) > 0) %>%
                                                 'other', name)) %>%
                     dplyr::group_by(monomial, type, level, name) %>%
                     dplyr::summarise(time = sum(time),
+                                     invocations = sum(invocations),
+                                     unit_time = sum(time)/sum(invocations),
                                      prefix = unique(prefix),
                                      name = unique(name),
                                      level = unique(level),
@@ -89,6 +93,8 @@ type_per_mon <- dplyr::group_by(dplyr::filter(sum_data,
                                                 !grepl('trlog', name) ),
                                 monomial, name) %>%
                 dplyr::summarise(time = sum(time),
+                                 invocations = sum(invocations),
+                                 unit_time = sum(time)/sum(invocations),
                                  type = unlist(microseq::gregexpr(text = unique(name),
                                                                   pattern = '(?<=_).*',
                                                                   perl = TRUE,
@@ -104,7 +110,9 @@ if( length(total_time) == 0 ){
 }
 
 total_per_mon <- dplyr::group_by(type_per_mon, monomial) %>%
-                 dplyr::summarise(time = sum(time)) %>%
+                 dplyr::summarise(time = sum(time),
+                                  invocations = sum(invocations),
+                                  unit_time = sum(time)/sum(invocations)) %>%
                  dplyr::ungroup() %>%
                  dplyr::mutate(prop = 100 * time / sum(total_time)) %>%
                  dplyr::arrange(desc(prop))
