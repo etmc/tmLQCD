@@ -4,6 +4,7 @@ author: ""
 date: "`r Sys.Date()`"
 output:
   pdf_document: 
+    keep_md: true 
     toc: true
   html_document: 
     toc: true
@@ -49,7 +50,7 @@ plot_data <- rbind(total_per_mon,
                               unit_time = NA,
                               prop = 100*(1 - sum(total_per_mon$time)/total_time)))
 p <- ggplot2::ggplot(plot_data,
-                     aes(x = 0, y = time, fill = monomial)) +
+                     aes(x = 0, y = time, fill = reorder(monomial,prop))) +
      ggplot2::geom_bar(position = 'stack', stat = 'identity',
                        width = 1, colour = 'white') +
      ggrepel::geom_label_repel(aes(label = sprintf("%.1f%%",prop)),

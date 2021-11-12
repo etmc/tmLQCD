@@ -134,6 +134,7 @@ save(monomial_names,
      t_tree,
      total_per_mon,
      type_per_mon,
+     total_time,
      file = "profile.RData")
 
 rmarkdown::render("profile.Rmd")
