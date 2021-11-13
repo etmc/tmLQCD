@@ -3,25 +3,7 @@ require(data.tree)
 require(stringr)
 require(microseq)
 
-args = commandArgs(trailingOnly=TRUE)
-
-stopifnot(length(args) > 0)
-stopifnot(file.exists(args[1]))
-
-monomial_names <- system(paste("grep \"Initialised monomial\" ", args[1], "| awk '{print $4}'"),
-                         intern = TRUE)
-
-raw_data <- system(paste("grep \"Time for\"",
-                         args[1], 
-                         "| grep level",
-                         "| awk '{print $2 \" \" $5 \" \" $6 \" \" $9 \" \" $12}'"),
-                   intern = TRUE)
-
-stopifnot(length(raw_data) > 0)
-
-data <- read.table(text = raw_data, stringsAsFactors = FALSE)
-colnames(data) <- c("prefix", "name", "time", "level", "pathString")
-
+# extract the monomial name from the timing path string
 extract_monomial <- function(str){
   l1 <- microseq::gregexpr(text = str,
                            pattern = '(?<=/)(.*?)(?=:)',
@@ -33,6 +15,8 @@ extract_monomial <- function(str){
                             extract = TRUE))
 }
 
+# extract which part of the monomial cost the timing with this path string
+# belongs to
 extract_type <- function(str){
   tmp <- str
   tmp[!( grepl('acc', str) | grepl('heatbath',str) | grepl('derivative', str) )] <- 'other'
@@ -40,6 +24,41 @@ extract_type <- function(str){
   tmp[grepl('heatbath', str)] <- 'heatbath'
   tmp[grepl('derivative', str)] <- 'derivative'
   return(tmp)
+}
+
+args = commandArgs(trailingOnly=TRUE)
+
+stopifnot(length(args) > 0)
+stopifnot(file.exists(args[1]))
+
+# extract the different monomial names from the log file
+monomial_names <- system(paste("grep \"Initialised monomial\" ", args[1], "| awk '{print $4}'"),
+                         intern = TRUE)
+
+# extract the various timings from the log file
+raw_data <- system(paste("grep \"Time for\"",
+                         args[1], 
+                         "| grep level",
+                         "| awk '{print $2 \" \" $5 \" \" $6 \" \" $9 \" \" $12}'"),
+                   intern = TRUE)
+
+# extract QUDA's overall profiling data if present
+quda_raw_data <- system(paste("grep -A8 \"QUDA Total time\"",
+                              args[1],
+                              "| tail -n 8", # skip the first line
+                              "| awk '{print $1 \" \" $3}'"),
+                        intern = TRUE)
+
+quda_data <- NA
+
+stopifnot(length(raw_data) > 0)
+
+data <- read.table(text = raw_data, stringsAsFactors = FALSE)
+colnames(data) <- c("prefix", "name", "time", "level", "pathString")
+
+if(length(quda_raw_data) > 0){
+  quda_data <- read.table(text = quda_raw_data, stringsAsFactors = FALSE)
+  colnames(quda_data) <- c("name", "time")
 }
 
 data <- dplyr::mutate(data,
@@ -128,6 +147,7 @@ hb_acc_der_data <- dplyr::filter(sum_data_per_mon, level == 1 &
 save(monomial_names,
      raw_data,
      data,
+     quda_data,
      sum_data,
      sum_data_per_mon,
      hb_acc_der_data,

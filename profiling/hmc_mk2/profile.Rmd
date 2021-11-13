@@ -32,11 +32,13 @@ library(knitr)
 library(treemap)
 library(hadron)
 library(kableExtra)
+library(dplyr)
 ```
 
 ```{r reading,echo=FALSE}
 load("profile.RData")
 ```
+
 
 \clearpage
 
@@ -117,6 +119,42 @@ cat(knitr::kable(dplyr::select(hb_acc_der_data, monomial, type, time, prop, invo
                  linesep = "") %>%
     kableExtra::kable_styling(latex_options = "striped")
 )
+```
+
+```{r echo=FALSE, results="asis"}
+# Optional section if a QUDA profile was detected in the log file
+if(!all(is.na(quda_data))){
+  cat("\\clearpage")
+
+  cat("\\section{overall QUDA profile}")
+
+  plot_data <- dplyr::mutate(quda_data, prop = 100*time/sum(time))
+  p <- ggplot2::ggplot(plot_data,
+                       aes(x = 0, y = time, fill = reorder(name,prop))) +
+     ggplot2::geom_bar(position = 'stack', stat = 'identity',
+                       width = 1, colour = 'white') +
+     ggrepel::geom_label_repel(aes(label = sprintf("%.1f%%",prop)),
+                               position = position_stack(vjust = 0.5),
+                               min.segment.length = unit(0, 'lines'),
+                               colour = 'white', size = 4,
+                               hjust = 0.5,
+                               max.overlaps = 20) +
+     ggplot2::coord_polar('y', start = 0) +
+     ggplot2::theme_bw() +
+     ggplot2::labs(x = "", y = "") +
+     ggplot2::theme(axis.text.y = element_blank(),
+                    axis.ticks.y = element_blank())
+  plot(p)
+
+  cat(knitr::kable(plot_data,
+                   format = 'latex',
+                   booktabs = TRUE,
+                   digits = 1,
+                   caption = sprintf("Time spent in different QUDA regions. Compare to total time of %.1f seconds.",
+                                     total_time)) %>%
+      kableExtra::kable_styling(latex_options = "striped")
+     )
+}
 ```
 
 \clearpage
