@@ -58,7 +58,7 @@ p <- ggplot2::ggplot(plot_data,
      ggrepel::geom_label_repel(aes(label = sprintf("%.1f%%",prop)),
                         position = position_stack(vjust = 0.5),
                         min.segment.length = unit(0, 'lines'),
-                        colour = 'white', size = 4,
+                        colour = 'black', size = 4,
                         hjust = 0.5) +
      ggplot2::coord_polar('y', start = 0) +
      ggplot2::theme_bw() +
@@ -141,10 +141,11 @@ if(!all(is.na(quda_data))){
      ggrepel::geom_label_repel(aes(label = sprintf("%.1f%%",prop)),
                                position = position_stack(vjust = 0.5),
                                min.segment.length = unit(0, 'lines'),
-                               colour = 'white', size = 4,
+                               colour = 'black', size = 4,
                                hjust = 0.5,
                                max.overlaps = 20) +
      ggplot2::coord_polar('y', start = 0) +
+     ggplot2::scale_fill_brewer(palette = "Set3") +
      ggplot2::theme_bw() +
      ggplot2::labs(x = "", y = "") +
      ggplot2::theme(axis.text.y = element_blank(),
