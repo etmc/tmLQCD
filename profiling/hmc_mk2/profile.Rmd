@@ -128,6 +128,11 @@ if(!all(is.na(quda_data))){
 
   cat("\\section{overall QUDA profile}")
 
+  cat(
+    sprintf("The time spent in QUDA is %.1f seconds out of a total of %.1f seconds (%.1f %%).\\linebreak",
+            sum(quda_data$time), total_time, 100*sum(quda_data$time)/total_time)
+    )
+
   plot_data <- dplyr::mutate(quda_data, prop = 100*time/sum(time))
   p <- ggplot2::ggplot(plot_data,
                        aes(x = 0, y = time, fill = reorder(name,prop))) +
