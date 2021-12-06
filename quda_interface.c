@@ -1476,22 +1476,53 @@ void _updateQudaMultigridPreconditioner(){
     }
     tm_debug_printf(0,0,"# TM_QUDA: Performing MG Preconditioner Setup for gauge_id: %f\n", quda_gauge_state.gauge_id);
 
+    int update_required_after_setup = 0;
+
+    // if this call originates from a monomial with tm_rho set, we put this to zero
+    // for generting the setup
+#ifdef TM_QUDA_EXPERIMENTAL
+    double save_tm_rho = 0.0;
+    if( fabs(quda_mg_param.invert_param->tm_rho) > 2*DBL_EPSILON ){
+      save_tm_rho = quda_mg_param.invert_param->tm_rho;
+      quda_mg_param.invert_param->tm_rho = 0.0;
+      update_required_after_setup = 1;
+    }
+#endif
+
     // if we have set an explicit mu value for the generation of our MG setup,
-    // we would like to use it here
-    if( fabs(quda_input.mg_setup_2kappamu) > 2*DBL_EPSILON ){
-      double save_mu = quda_mg_param.invert_param->mu;
+    // we would like to use it here (but only if it really differs from the
+    // target mu)
+    double save_mu = 0.0;
+    if( fabs(quda_input.mg_setup_2kappamu) > 2*DBL_EPSILON && 
+        ( fabs(quda_input.mg_setup_2kappamu) - 2*g_kappa*fabs(quda_mg_param.invert_param->mu) ) > 2*DBL_EPSILON ){
+
+      save_mu = quda_mg_param.invert_param->mu;
       // note the minus sign
       quda_mg_param.invert_param->mu = -quda_input.mg_setup_2kappamu/2.0/g_kappa;
       tm_debug_printf(0,0,"# TM_QUDA: Generating MG Setup with mu = %.12f instead of %.12f\n", 
                           -quda_mg_param.invert_param->mu,
                           -save_mu);
-      quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
-      // and now we switch to the mu value for the next solve
-      quda_mg_param.invert_param->mu = save_mu;
-      updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
-    } else {
-      quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
+
+      update_required_after_setup = 1;
     }
+   
+    // perform the actual setup 
+    quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
+
+#ifdef TM_QUDA_EXPERIMENTAL
+    if( fabs(save_tm_rho) > 2*DBL_EPSILON ){
+      quda_mg_param.invert_param->tm_rho = save_tm_rho;
+    }
+#endif
+    if( fabs(save_mu) > 2*DBL_EPSILON ){
+      quda_mg_param.invert_param->mu = save_mu;
+    }
+   
+    // if either mu or tm_rho were changed during setup, we run an update now 
+    if( update_required_after_setup ){
+      updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
+    }
+
     inv_param.preconditioner = quda_mg_preconditioner;
     set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
 
@@ -1501,10 +1532,36 @@ void _updateQudaMultigridPreconditioner(){
 
     tm_stopwatch_push(&g_timers, "MG_Preconditioner_Setup_Refresh", "");
     tm_debug_printf(0,0,"# TM_QUDA: Refreshing MG Preconditioner Setup for gauge_id: %f\n", quda_gauge_state.gauge_id);
+  
+    int update_required_after_refresh = 0;
+
+    // the same spiel as we had for mu and tm_rho in the setup phase above
+#ifdef TM_QUDA_EXPERIMENTAL
+    double save_tm_rho = 0.0;
+    if( fabs(quda_mg_param.invert_param->tm_rho) > 2*DBL_EPSILON ){
+      save_tm_rho = quda_mg_param.invert_param->tm_rho;
+      quda_mg_param.invert_param->tm_rho = 0.0;
+      update_required_after_refresh = 1;
+    }
+#endif // TM_QUDA_EXPERIMENTAL
     
+    double save_mu = 0.0;
+    if( fabs(quda_input.mg_setup_2kappamu) > 2*DBL_EPSILON && 
+        ( fabs(quda_input.mg_setup_2kappamu) - 2*g_kappa*fabs(quda_mg_param.invert_param->mu) ) > 2*DBL_EPSILON ){
+
+      save_mu = quda_mg_param.invert_param->mu;
+      // note the minus sign
+      quda_mg_param.invert_param->mu = -quda_input.mg_setup_2kappamu/2.0/g_kappa;
+      tm_debug_printf(0,0,"# TM_QUDA: Refreshing MG Setup with mu = %.12f instead of %.12f\n", 
+                          -quda_mg_param.invert_param->mu,
+                          -save_mu);
+      update_required_after_refresh = 1;
+    }
+
     for(int level = 0; level < (quda_input.mg_n_level-1); level++){
       quda_mg_param.setup_maxiter_refresh[level] = quda_input.mg_setup_maxiter_refresh[level];
     }
+
     // update the parameters AND refresh the setup
     updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
     // reset refresh iterations to zero such that the next call
@@ -1512,6 +1569,21 @@ void _updateQudaMultigridPreconditioner(){
     // operator(s) (unless another refresh is due)
     for(int level = 0; level < (quda_input.mg_n_level-1); level++){
       quda_mg_param.setup_maxiter_refresh[level] = 0;
+    }
+
+#ifdef TM_QUDA_EXPERIMENTAL
+    if( fabs(save_tm_rho) > 2*DBL_EPSILON ){
+      quda_mg_param.invert_param->tm_rho = save_tm_rho;
+    }
+#endif // TM_QUDA_EXPERIMENTAL
+    if( fabs(save_mu) > 2*DBL_EPSILON ){
+      quda_mg_param.invert_param->mu = save_mu;
+    }
+
+    // if we used parameters different from the target parameters for the refresh.
+    // then we need to run the update again (without the refresh part)
+    if( update_required_after_refresh ){
+      updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
     }
 
     inv_param.preconditioner = quda_mg_preconditioner;
