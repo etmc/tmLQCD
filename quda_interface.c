@@ -2407,3 +2407,17 @@ void compute_gauge_derivative_quda(monomial * const mnl, hamiltonian_field_t * c
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 }
 
+void  compute_WFlow_quda(const double eps ,const double tmax){
+  tm_stopwatch_push(&g_timers, __func__, "");
+  
+  _initQuda();
+  _loadGaugeQuda(NO_COMPRESSION);//check here the input
+
+  const int measurement_interval = 1; // CPU code measure after 1,3,5,7 steps
+  const double step_size = eps;     // alias for 'eps'
+  const int n_steps = (int)(tmax / step_size);  // (number of steps) = (total time) / (step size)
+  QudaWFlowType wflow_type = QUDA_WFLOW_TYPE_WILSON;  // we are using the Wilson action
+  performWFlownStep(n_steps, step_size, measurement_interval, wflow_type);
+
+  tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
+}

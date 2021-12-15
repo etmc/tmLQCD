@@ -2960,6 +2960,14 @@ static inline double fltlist_next_token(int * const list_end){
     meas->freq = a;
     if(myverbose!=0) printf("  Frequency for measurement with id %d set to %d\n", meas->id, meas->freq);
   }
+  {SPC}*UseExternalLibrary{EQL}no {
+      meas->external_library = NO_EXT_LIB;
+      if(myverbose) printf("  UseExternalLibrary set to false in line %d, monomial %d\n", line_of_file, current_monomial);
+   }
+  {SPC}*UseExternalLibrary{EQL}quda {
+      meas->external_library = QUDA_LIB;
+      if(myverbose) printf("  UseExternalLibrary set to quda in line %d, monomial %d\n", line_of_file, current_monomial);
+   }
 }
 
 <ONLINEMEAS,PIONNORMMEAS>{
