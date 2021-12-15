@@ -2407,17 +2407,32 @@ void compute_gauge_derivative_quda(monomial * const mnl, hamiltonian_field_t * c
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 }
 
-void  compute_WFlow_quda(const double eps ,const double tmax){
+void  compute_WFlow_quda(const double eps, const double tmax){
   tm_stopwatch_push(&g_timers, __func__, "");
   
   _initQuda();
   _loadGaugeQuda(NO_COMPRESSION);//check here the input
 
-  const int measurement_interval = 1; // CPU code measure after 1,3,5,7 steps
+  const int meas_interval = 1; // CPU code measure after 1,3,5,7 steps
   const double step_size = eps;     // alias for 'eps'
   const int n_steps = (int)(tmax / step_size);  // (number of steps) = (total time) / (step size)
   QudaWFlowType wflow_type = QUDA_WFLOW_TYPE_WILSON;  // we are using the Wilson action
-  performWFlownStep(n_steps, step_size, measurement_interval, wflow_type);
+ 
+  performWFlownStep(n_steps, step_size, meas_interval, wflow_type);
 
+  // for(int  i=0 ; i< n_steps; i++ ){  
+    // performWFlownStep(2, step_size, meas_interval, wflow_type);
+    // // this function compute the observables for the last smearedgauge
+    // QudaGaugeObservableParam param = newQudaGaugeObservableParam();
+    // param.compute_plaquette = QUDA_BOOLEAN_TRUE;
+    // param.compute_qcharge = QUDA_BOOLEAN_TRUE;
+
+    // gaugeObservablesQuda(&param);
+    // if (g_proc_id==0){
+    //   // printf("check = %.16g\n",param.plaquette[0]);
+    //   printf("zzz = %.16e %+.16e %+.16e %+.16e %+.16e\n",  param.plaquette[0], param.energy[0], param.energy[1],
+    //            param.energy[2], param.qcharge);
+    // }
+  // }
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 }

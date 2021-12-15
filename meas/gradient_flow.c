@@ -160,15 +160,11 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
     fprintf(outfile, "traj t P Eplaq Esym tsqEplaq tsqEsym Wsym Qsym\n");
   }
 
-  aligned_su3_field_t vt = aligned_su3_field_alloc(VOLUMEPLUSRAND+g_dbw2rand);
-  aligned_su3_field_t x1 = aligned_su3_field_alloc(VOLUMEPLUSRAND+g_dbw2rand);
-  aligned_su3_field_t x2 = aligned_su3_field_alloc(VOLUMEPLUSRAND+g_dbw2rand);
-  aligned_su3_field_t z = aligned_su3_field_alloc(VOLUME);
+  
 
   if (meas->external_library == QUDA_LIB) {
 #ifdef TM_USE_QUDA
     compute_WFlow_quda( eps , tmax);
-    // fatal_error("SIAMO ARRIVATI QUA!", __func__);
 #else
     fatal_error(
         "Attempted to use QUDA_LIB in gradient flow measurement but tmLQCD has been compiled "
@@ -176,8 +172,13 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
         __func__);
 #endif
   } else {
+
+    aligned_su3_field_t vt = aligned_su3_field_alloc(VOLUMEPLUSRAND+g_dbw2rand);
+    aligned_su3_field_t x1 = aligned_su3_field_alloc(VOLUMEPLUSRAND+g_dbw2rand);
+    aligned_su3_field_t x2 = aligned_su3_field_alloc(VOLUMEPLUSRAND+g_dbw2rand);
+    aligned_su3_field_t z = aligned_su3_field_alloc(VOLUME);
 #ifdef TM_USE_MPI
-  xchange_gauge(g_gauge_field);
+    xchange_gauge(g_gauge_field);
 #endif
     memcpy(vt.field[0], g_gauge_field[0], sizeof(su3) * 4 * (VOLUMEPLUSRAND + g_dbw2rand));
 
@@ -216,12 +217,11 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
         fflush(outfile);
       }
     }
+    aligned_su3_field_free(&vt);
+    aligned_su3_field_free(&x1);
+    aligned_su3_field_free(&x2);
+    aligned_su3_field_free(&z);
   }
-
-  aligned_su3_field_free(&vt);
-  aligned_su3_field_free(&x1);
-  aligned_su3_field_free(&x2);
-  aligned_su3_field_free(&z);
 
   if (g_proc_id == 0) {
     fclose(outfile);
