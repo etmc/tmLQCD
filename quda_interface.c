@@ -315,8 +315,14 @@ void _setDefaultQudaParam(void){
 
   inv_param.tune = tune ? QUDA_TUNE_YES : QUDA_TUNE_NO;
 
+  // QUDA commit https://github.com/lattice/quda/commit/50864ffde1bd8f46fd4a2a2b2e6d44a5a588e2c2
+  // has removed these
+  // when running with a very recent QUDA version, TM_QUDA_EXPERIMENTAL should be set
+  // via --enable-quda_experimental so that these are not set 
+#ifndef TM_QUDA_EXPERIMENTAL
   inv_param.sp_pad = 0; // 24*24*24/2;
   inv_param.cl_pad = 0; // 24*24*24/2;
+#endif
 
   // solver verbosity and general verbosity
   QudaVerbosity gen_verb = QUDA_SUMMARIZE;
@@ -1709,8 +1715,11 @@ _setMGInvertParam(QudaInvertParam * mg_inv_param, const QudaInvertParam * const 
   (*mg_inv_param) = newQudaInvertParam();
 
   mg_inv_param->Ls = 1;
+
+#ifndef TM_QUDA_EXPERIMENTAL
   mg_inv_param->sp_pad = 0;
   mg_inv_param->cl_pad = 0;
+#endif
 
   mg_inv_param->residual_type = QUDA_L2_RELATIVE_RESIDUAL;
 
