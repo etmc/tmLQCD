@@ -1786,8 +1786,7 @@ _setMGInvertParam(QudaInvertParam * mg_inv_param, const QudaInvertParam * const 
   mg_inv_param->kappa = inv_param->kappa;
   mg_inv_param->clover_coeff = inv_param->clover_coeff;
 #ifdef TM_QUDA_EXPERIMENTAL
-  // the setup generation always uses the unshifted operator
-  mg_inv_param->tm_rho = 0.0;
+  mg_inv_param->tm_rho = inv_param->tm_rho;
 #endif
 }
 
