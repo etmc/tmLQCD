@@ -164,7 +164,7 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
 
   if (meas->external_library == QUDA_LIB) {
 #ifdef TM_USE_QUDA
-    compute_WFlow_quda( eps , tmax);
+    compute_WFlow_quda( eps , tmax, traj, outfile);
 #else
     fatal_error(
         "Attempted to use QUDA_LIB in gradient flow measurement but tmLQCD has been compiled "

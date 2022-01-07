@@ -99,6 +99,7 @@
 #include <string.h>
 #include <math.h>
 #include <float.h>
+#include <stdbool.h> // boolean types in C
 #include "quda_interface.h"
 #include "quda_types.h"
 #include "boundary.h"
@@ -2407,7 +2408,7 @@ void compute_gauge_derivative_quda(monomial * const mnl, hamiltonian_field_t * c
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 }
 
-void  compute_WFlow_quda(const double eps, const double tmax){
+void  compute_WFlow_quda(const double eps, const double tmax, const int traj, FILE* outfile){
   tm_stopwatch_push(&g_timers, __func__, "");
   
   _initQuda();
@@ -2418,21 +2419,48 @@ void  compute_WFlow_quda(const double eps, const double tmax){
   const int n_steps = (int)(tmax / step_size);  // (number of steps) = (total time) / (step size)
   QudaWFlowType wflow_type = QUDA_WFLOW_TYPE_WILSON;  // we are using the Wilson action
  
-  performWFlownStep(n_steps, step_size, meas_interval, wflow_type);
+  QudaGaugeObservableParam *param;
+  param = (QudaGaugeObservableParam*) malloc(sizeof(QudaGaugeObservableParam) * (n_steps+1));
+  for (int i=0;i<n_steps+1; i++){
+    param[i] = newQudaGaugeObservableParam();   
+    param[i].compute_plaquette = QUDA_BOOLEAN_TRUE;
+    param[i].compute_qcharge = QUDA_BOOLEAN_TRUE; 
+  }
+  performWFlownStep_param(n_steps, step_size, meas_interval, wflow_type, param);
 
-  // for(int  i=0 ; i< n_steps; i++ ){  
-    // performWFlownStep(2, step_size, meas_interval, wflow_type);
-    // // this function compute the observables for the last smearedgauge
-    // QudaGaugeObservableParam param = newQudaGaugeObservableParam();
-    // param.compute_plaquette = QUDA_BOOLEAN_TRUE;
-    // param.compute_qcharge = QUDA_BOOLEAN_TRUE;
+  const bool flag_0 = (g_proc_id == 0); // we are on the 1st node
+  const bool flag_0_3 = (flag_0 && g_debug_level >= 3); // call printf() --> print on stdout
+  
+  if (flag_0_3) {
+    printf("traj t P Eplaq Esym tsqEplaq tsqEsym Wsym Qsym\n");
+  }
 
-    // gaugeObservablesQuda(&param);
-    // if (g_proc_id==0){
-    //   // printf("check = %.16g\n",param.plaquette[0]);
-    //   printf("zzz = %.16e %+.16e %+.16e %+.16e %+.16e\n",  param.plaquette[0], param.energy[0], param.energy[1],
-    //            param.energy[2], param.qcharge);
-    // }
-  // }
+  for(int i=1; i< n_steps-1; i+=2){  
+    const double t1 = i*step_size;
+    const double P = param[i].plaquette[0];
+    const double E0 = param[i-1].energy[0]; // E(t=t0)
+    const double E1 = param[i].energy[0]; // E(t=t1)
+    const double E2 = param[i].energy[0]; // E(t=t2)
+    const double W = t1*t1 * (2 * E1 + t1 * ((E2 - E0) / (2 * step_size)));
+    const double Q = param[i].qcharge; // topological charge Q
+
+    if (flag_0_3) {
+      printf(
+        "# GRADFLOW: sym(plaq)  t=%lf 1-P(t)=%1.8lf E(t)=%2.8lf(%2.8lf) t^2E=%2.8lf(%2.8lf) "
+        "W(t)=%2.8lf Q(t)=%.8lf \n",
+        t1, 1 - P, E1, 36 * (1 - P), t1*t1*E1, t1*t1 * 36 * (1 - P), W,  Q);
+    }
+
+    if(flag_0)
+    {
+      if (g_proc_id == 0) {
+        fprintf(outfile, "%06d %f %2.12lf %2.12lf %2.12lf %2.12lf %2.12lf %2.12lf %.12lf \n", traj,
+                t1, P, 36 * (1 - P), E1, t1 * t1 * 36 * (1 - P), t1*t1*E1, W, Q);
+        fflush(outfile);
+      }
+    }
+  }
+
+  free(param);
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 }
