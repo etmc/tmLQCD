@@ -2451,7 +2451,7 @@ void  compute_WFlow_quda(const double eps, const double tmax, const int traj, FI
     const double E1 = param[i].energy[0]; // E(t=t1)
     const double E2 = param[i].energy[0]; // E(t=t2)
     const double W = t1*t1 * (2 * E1 + t1 * ((E2 - E0) / (2 * step_size)));
-    const double Q = param[i].qcharge; // topological charge Q
+    const double Q = -param[i].qcharge; // topological charge Q
 
     if (flag_0_3) {
       printf(
