@@ -46,6 +46,9 @@ typedef enum tm_quda_ferm_bc_t {
  * and the MG parameters are exposed like this, but a further refactoring might
  * turn this into a complete representation of the possible input parameters */
 typedef struct tm_QudaParams_t {
+  int                  enable_device_memory_pool;
+  int                  enable_pinned_memory_pool;
+
   tm_quda_ferm_bc_t fermionbc;
 
   int                  pipeline;

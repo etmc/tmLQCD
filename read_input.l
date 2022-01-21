@@ -2041,6 +2041,22 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*MGCoarseSolverCABasisLambdaMax{EQL}{STRLIST} {
     parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_coarse_solver_ca_lambda_max[0]));
   }
+  {SPC}*EnableDeviceMemoryPool{EQL}yes {
+    quda_input.enable_device_memory_pool = 1;
+    if(myverbose) printf("Enabling QUDA's device memory pool on line %d\n\n", line_of_file);
+  }
+  {SPC}*EnableDeviceMemoryPool{EQL}no {
+    quda_input.enable_device_memory_pool = 0;
+    if(myverbose) printf("Disabling QUDA's device memory pool on line %d\n\n", line_of_file);
+  }
+  {SPC}*EnablePinnedMemoryPool{EQL}yes {
+    quda_input.enable_pinned_memory_pool = 1;
+    if(myverbose) printf("Enabling QUDA's pinned memory pool on line %d\n\n", line_of_file);
+  }
+  {SPC}*EnablePinnedMemoryPool{EQL}no {
+    quda_input.enable_pinned_memory_pool = 0;
+    if(myverbose) printf("Disabling QUDA's pinned memory pool on line %d\n\n", line_of_file);
+  }
   ^EndExternalInverter{SPC}*  { 
     if(myverbose) printf("QUDA external inverter parameters parsed on line %d\n\n", line_of_file);
     BEGIN(0);
@@ -3720,6 +3736,8 @@ int read_input(char * conf_file){
   subprocess_flag = _default_subprocess_flag;
  
   /* default parameters for QUDA */
+  quda_input.enable_device_memory_pool = _default_quda_enable_device_memory_pool;
+  quda_input.enable_pinned_memory_pool = _default_quda_enable_pinned_memory_pool;
   quda_input.fermionbc = TM_QUDA_THETABC;
   quda_input.pipeline = 0;
   quda_input.gcrNkrylov = 10;

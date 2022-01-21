@@ -372,6 +372,22 @@ void _initQuda() {
     exit(-2);
   }
 
+  if( quda_input.enable_device_memory_pool ){
+    setenv("QUDA_ENABLE_DEVICE_MEMORY_POOL", "1", 1);
+    tm_debug_printf(0, 0, "# TM_QUDA: Setting environment variable QUDA_ENABLE_DEVICE_MEMORY_POOL=1\n");
+  } else {
+    setenv("QUDA_ENABLE_DEVICE_MEMORY_POOL", "0", 1);
+    tm_debug_printf(0, 0, "# TM_QUDA: Setting environment variable QUDA_ENABLE_DEVICE_MEMORY_POOL=0\n");
+  }
+
+  if( quda_input.enable_pinned_memory_pool ){
+    setenv("QUDA_ENABLE_PINNED_MEMORY_POOL", "1", 1);
+    tm_debug_printf(0, 0, "# TM_QUDA: Setting environment variable QUDA_ENABLE_PINNED_MEMORY_POOL=1\n");
+  } else {
+    setenv("QUDA_ENABLE_PINNED_MEMORY_POOL", "0", 1);
+    tm_debug_printf(0, 0, "# TM_QUDA: Setting environment variable QUDA_ENABLE_PINNED_MEMORY_POOL=0\n");
+  }
+
   gauge_param = newQudaGaugeParam();
   f_gauge_param = newQudaGaugeParam();
   inv_param = newQudaInvertParam();
