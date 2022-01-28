@@ -1003,25 +1003,14 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
                    SloppyPrecision sloppy_precision,
                    CompressionType compression) {
 
-  if(g_proc_id == 0) {
-    printf("hey1");
-  }
 
   tm_stopwatch_push(&g_timers, __func__, "");
 
   spinor ** solver_field = NULL;
   const int nr_sf = 2;
   init_solver_field(&solver_field, VOLUME, nr_sf);
-  if(g_proc_id == 0) {
-    printf("hey2");
-  }
 
   convert_eo_to_lexic(solver_field[0],  Even, Odd);
-
-  if(g_proc_id == 0) {
-    printf("hey3");
-  }
-
 
 // this is basically not necessary, but if we want to use an a nitial guess, it will be
 //  convert_eo_to_lexic(solver_field[1], Even_new, Odd_new);
@@ -1036,31 +1025,14 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
 
   inv_param.kappa = g_kappa;
 
-  if(g_proc_id == 0) {
-    printf("hey4");
-  }
-
   // figure out which BC to use (theta, trivial...)
   set_boundary_conditions(&compression, &gauge_param);
   // set the sloppy precision of the mixed prec solver
 
-  if(g_proc_id == 0) {
-    printf("hey5");
-  }
-
   set_sloppy_prec(sloppy_precision, &gauge_param, &inv_param);
   
-    if(g_proc_id == 0) {
-    printf("hey6");
-  }
-
   // load gauge after setting precision
   _loadGaugeQuda(compression);
-
-  if(g_proc_id == 0) {
-    printf("hey7");
-  }
-
 
   // this will also construct the clover field and its inverse, if required
   // it will also run the MG setup
@@ -1072,34 +1044,13 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
                             precision,
                             max_iter,
                             0, 0);
-
-  if(g_proc_id == 0) {
-    printf("hey8");
-  }
-
-
+  
   // reorder spinor
   reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0 );
 
-
-  if(g_proc_id == 0) {
-    printf("hey9");
-  }
-
   // perform the inversion
   tm_stopwatch_push(&g_timers, "invertQuda", "");
-
-  if(g_proc_id == 0) {
-    printf("hey10");
-  }
-
   invertQuda(spinorOut, spinorIn, &inv_param);
-
-  if(g_proc_id == 0) {
-    printf("hey11");
-  }
-
-
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 
 
@@ -1111,30 +1062,11 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
   // number of CG iterations
   int iteration = inv_param.iter;
 
-  if(g_proc_id == 0) {
-    printf("hey12");
-  }
-
-
   reorder_spinor_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0 );
-
-  if(g_proc_id == 0) {
-    printf("hey13");
-  }
 
   convert_lexic_to_eo(Even_new, Odd_new, solver_field[1]);
 
-  if(g_proc_id == 0) {
-    printf("hey14");
-  }
-
-
   finalize_solver(solver_field, nr_sf);
-
-
-  if(g_proc_id == 0) {
-    printf("hey15");
-  }
 
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
 
