@@ -159,6 +159,7 @@ static inline tm_GaugeState_t new_tm_GaugeState(const char * const name) {
   tm_GaugeState_t ret;
   ret.loaded = 0;
   ret.halo_state.exchanged = 0;
+  ret.gauge_id = 0;
   snprintf(ret.name, TM_GAUGE_FIELD_NAME_LENGTH, "%s", name);
   return(ret);
 }
