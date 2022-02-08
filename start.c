@@ -436,6 +436,10 @@ void unit_g_gauge_field(void)
       g_gauge_field[ix][mu]=unit_su3();
     }
   }
+  // resetting the gauge field to unity moves the gauge_id a long way
+  // to guarantee that the change is propagated 
+  update_tm_gauge_id(&g_gauge_state, TM_GAUGE_PROPAGATE_THRESHOLD);
+  update_tm_gauge_id(&g_gauge_state_32, TM_GAUGE_PROPAGATE_THRESHOLD);
   g_update_gauge_copy = 1;
   return;
 }
@@ -504,7 +508,13 @@ void random_gauge_field(const int repro, su3 ** const gf) {
     }
   }
 
-  g_update_gauge_copy = 1;
+  if((void*)gf == (void*)g_gauge_field){
+    // g_gauge_field was randomized, move the gauge_id a long way to make
+    // sure that the change is propagated
+    update_tm_gauge_id(&g_gauge_state, TM_GAUGE_PROPAGATE_THRESHOLD);
+    update_tm_gauge_id(&g_gauge_state_32, TM_GAUGE_PROPAGATE_THRESHOLD);
+    g_update_gauge_copy = 1;
+  }
   return;
 }
 
@@ -700,6 +710,8 @@ void set_gauge_field(const double c)
       g_gauge_field[ix][mu]=set_su3(c);
     }
   }
+  update_tm_gauge_id(&g_gauge_state, TM_GAUGE_PROPAGATE_THRESHOLD);
+  update_tm_gauge_id(&g_gauge_state_32, TM_GAUGE_PROPAGATE_THRESHOLD);
   g_update_gauge_copy = 1;
   return;
 }
