@@ -159,7 +159,7 @@ static inline tm_GaugeState_t new_tm_GaugeState(const char * const name) {
   tm_GaugeState_t ret;
   ret.loaded = 0;
   ret.halo_state.exchanged = 0;
-  ret.gauge_id = 0;
+  ret.gauge_id = -TM_GAUGE_PROPAGATE_THRESHOLD;
   snprintf(ret.name, TM_GAUGE_FIELD_NAME_LENGTH, "%s", name);
   return(ret);
 }
@@ -206,6 +206,7 @@ typedef struct tm_CloverState_t {
 static inline tm_CloverState_t new_tm_CloverState(void) {
   tm_CloverState_t ret;
   ret.loaded = 0;
+  ret.gauge_id = -TM_GAUGE_PROPAGATE_THRESHOLD;
   return(ret);
 }
 
@@ -236,6 +237,7 @@ typedef struct tm_CloverInverseState_t {
 static inline tm_CloverInverseState_t new_tm_CloverInverseState(void) {
   tm_CloverInverseState_t ret;
   ret.loaded = 0;
+  ret.gauge_id = -TM_GAUGE_PROPAGATE_THRESHOLD;
   return(ret);
 }
 
