@@ -1970,24 +1970,12 @@ static inline double fltlist_next_token(int * const list_end){
     free(input_copy);
   }
   {SPC}*MGEigPreserveDeflationSubspace{EQL}yes {
-#ifdef TM_QUDA_EXPERIMENTAL
     quda_input.mg_eig_preserve_deflation = QUDA_BOOLEAN_YES;
     if(myverbose) printf("  MGEigPreserveDeflationSubspace set to YES in line %d\n", line_of_file);
-#else
-    char error_message[ERR_MSG_LEN];
-    snprintf(error_message, ERR_MSG_LEN, "You attempted to set 'MGEigPreserveDeflationSubspace' even though tmLQCD was compiled with '--disable-quda-experimental'. In order to use experimental QUDA features, tmLQCD must be compiled with '--enable-quda-experimental'");
-    yy_fatal_error(error_message);
-#endif
   }
   {SPC}*MGEigPreserveDeflationSubspace{EQL}no {
-#ifdef TM_QUDA_EXPERIMENTAL
     quda_input.mg_eig_preserve_deflation = QUDA_BOOLEAN_YES;
     if(myverbose) printf("  MGEigPreserveDeflationSubspace set to YES in line %d\n", line_of_file);
-#else
-    char error_message[ERR_MSG_LEN];
-    snprintf(error_message, ERR_MSG_LEN, "You attempted to set 'MGEigPreserveDeflationSubspace' even though tmLQCD was compiled with '--disable-quda-experimental'. In order to use experimental QUDA features, tmLQCD must be compiled with '--enable-quda-experimental'");
-    yy_fatal_error(error_message);
-#endif
   }
   {SPC}*MGEigSolverCoarseGuess{EQL}yes {
     quda_input.mg_coarse_guess = QUDA_BOOLEAN_YES;
