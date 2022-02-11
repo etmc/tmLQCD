@@ -1559,11 +1559,9 @@ void _updateQudaMultigridPreconditioner(){
     tm_stopwatch_push(&g_timers, "MG_Preconditioner_Setup_Update", "");
 
     tm_debug_printf(0,0,"# TM_QUDA: Updating MG Preconditioner Setup for gauge_id: %f\n", quda_gauge_state.gauge_id);
-#ifdef TM_QUDA_EXPERIMENTAL
     if( quda_input.mg_eig_preserve_deflation == QUDA_BOOLEAN_YES ){
       tm_debug_printf(0,0,"# TM_QUDA: Deflation subspace for gauge_id: %f will be re-used!\n", quda_gauge_state.gauge_id);
     }
-#endif
 
     updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
 
@@ -1823,9 +1821,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   QudaInvertParam * mg_inv_param = mg_param->invert_param;
   _setMGInvertParam(mg_inv_param, &inv_param);
 
-#ifdef TM_QUDA_EXPERIMENTAL
   mg_param->preserve_deflation = quda_input.mg_eig_preserve_deflation;
-#endif
 
   mg_param->n_level = quda_input.mg_n_level;
   for (int level=0; level < mg_param->n_level; level++) {
