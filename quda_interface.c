@@ -463,7 +463,7 @@ void _endQuda() {
 void _loadCloverQuda(QudaInvertParam* inv_param){
   static int first_call = 1;
   // check if loaded clover and gauge fields agree
-  if( check_quda_clover_state(&quda_clover_state, &quda_gauge_state) ){
+  if( check_quda_clover_state(&quda_clover_state, &quda_gauge_state, inv_param) ){
       tm_debug_printf(0, 0, "# TM_QUDA: Clover field and inverse already loaded for gauge_id: %f\n", quda_gauge_state.gauge_id);
   } else {
     tm_stopwatch_push(&g_timers, "loadCloverQuda", "");
@@ -474,7 +474,7 @@ void _loadCloverQuda(QudaInvertParam* inv_param){
     }
     reset_quda_clover_state(&quda_clover_state);
     loadCloverQuda(NULL, NULL, inv_param);
-    set_quda_clover_state(&quda_clover_state, &quda_gauge_state);
+    set_quda_clover_state(&quda_clover_state, &quda_gauge_state, inv_param);
     tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
   }
 }
@@ -578,7 +578,7 @@ void _loadGaugeQuda( const CompressionType compression ) {
     }
   }
 
-  if( check_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0) ){
+  if( check_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0, &gauge_param) ){
     return;
   } else {
     if( first_call ){
@@ -595,7 +595,7 @@ void _loadGaugeQuda( const CompressionType compression ) {
   loadGaugeQuda((void*)gauge_quda, &gauge_param);
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
 
-  set_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0);
+  set_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0, &gauge_param);
 }
 
 // reorder spinor to QUDA format
