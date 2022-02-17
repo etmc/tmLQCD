@@ -881,7 +881,9 @@ void set_boundary_conditions(CompressionType* compression, QudaGaugeParam * gaug
 
   gauge_param->reconstruct = link_recon;
   gauge_param->reconstruct_sloppy = link_recon_sloppy;
+  gauge_param->reconstruct_refinement_sloppy = link_recon_sloppy;
   gauge_param->reconstruct_precondition = link_recon_sloppy;
+  gauge_param->reconstruct_eigensolver = link_recon;
 }
 
 void set_sloppy_prec(const SloppyPrecision sloppy_precision, const SloppyPrecision refinement_precision, QudaGaugeParam * gauge_param, QudaInvertParam * inv_param) {
@@ -1499,7 +1501,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
 
 void _updateQudaMultigridPreconditioner(){
 
-  if( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_RESET ){
+  if( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input, &gauge_param, &inv_param) == TM_QUDA_MG_SETUP_RESET ){
 
     tm_stopwatch_push(&g_timers, "MG_Preconditioner_Setup", "");
 
@@ -1528,11 +1530,11 @@ void _updateQudaMultigridPreconditioner(){
       quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
     }
     inv_param.preconditioner = quda_mg_preconditioner;
-    set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
+    set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &gauge_param, &inv_param);
 
     tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 
-  } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_REFRESH ) {
+  } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input, &gauge_param, &inv_param) == TM_QUDA_MG_SETUP_REFRESH ) {
 
     tm_stopwatch_push(&g_timers, "MG_Preconditioner_Setup_Refresh", "");
     tm_debug_printf(0,0,"# TM_QUDA: Refreshing MG Preconditioner Setup for gauge_id: %f\n", quda_gauge_state.gauge_id);
@@ -1550,11 +1552,11 @@ void _updateQudaMultigridPreconditioner(){
     }
 
     inv_param.preconditioner = quda_mg_preconditioner;
-    set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state);
+    set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &gauge_param, &inv_param);
 
     tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 
-  } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input) == TM_QUDA_MG_SETUP_UPDATE )  {
+  } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input, &gauge_param, &inv_param) == TM_QUDA_MG_SETUP_UPDATE )  {
 
     tm_stopwatch_push(&g_timers, "MG_Preconditioner_Setup_Update", "");
 
@@ -1564,6 +1566,7 @@ void _updateQudaMultigridPreconditioner(){
     }
 
     updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
+    set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &gauge_param, &inv_param);
 
     // if the precondioner was disabled because we switched solvers from MG to some other
     // solver, re-enable it here
