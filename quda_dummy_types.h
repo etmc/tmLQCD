@@ -65,11 +65,35 @@ typedef enum QudaEigType_s {
 } QudaEigType; 
 
 typedef enum QudaVerbosity_s {
-    QUDA_SILENT,
-    QUDA_SUMMARIZE,
-    QUDA_VERBOSE,
-    QUDA_DEBUG_VERBOSE,
-    QUDA_INVALID_VERBOSITY = QUDA_INVALID_ENUM
+  QUDA_SILENT,
+  QUDA_SUMMARIZE,
+  QUDA_VERBOSE,
+  QUDA_DEBUG_VERBOSE,
+  QUDA_INVALID_VERBOSITY = QUDA_INVALID_ENUM
 } QudaVerbosity;
+
+typedef enum QudaPrecision_s {
+  QUDA_QUARTER_PRECISION = 1,
+  QUDA_HALF_PRECISION = 2,
+  QUDA_SINGLE_PRECISION = 4,
+  QUDA_DOUBLE_PRECISION = 8,
+  QUDA_INVALID_PRECISION = QUDA_INVALID_ENUM
+} QudaPrecision;
+
+typedef struct QudaGaugeParam_s {
+  QudaPrecision cuda_prec;
+  QudaPrecision cuda_prec_sloppy;
+  QudaPrecision cuda_prec_refinement_sloppy;
+  QudaPrecision cuda_prec_precondition;
+  QudaPrecision cuda_prec_eigensolver;
+} QudaGaugeParam;
+
+typedef struct QudaInverParam_s {
+  QudaPrecision clover_cuda_prec;
+  QudaPrecision clover_cuda_prec_sloppy;
+  QudaPrecision clover_cuda_prec_refinement_sloppy;
+  QudaPrecision clover_cuda_prec_precondition;
+  QudaPrecision clover_cuda_prec_eigensolver;
+} QudaInvertParam;
 
 #endif
