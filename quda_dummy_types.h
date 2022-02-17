@@ -80,4 +80,20 @@ typedef enum QudaPrecision_s {
   QUDA_INVALID_PRECISION = QUDA_INVALID_ENUM
 } QudaPrecision;
 
+typedef struct QudaGaugeParam_s {
+  QudaPrecision cuda_prec;
+  QudaPrecision cuda_prec_sloppy;
+  QudaPrecision cuda_prec_refinement_sloppy;
+  QudaPrecision cuda_prec_precondition;
+  QudaPrecision cuda_prec_eigensolver;
+} QudaGaugeParam;
+
+typedef struct QudaInverParam_s {
+  QudaPrecision clover_cuda_prec;
+  QudaPrecision clover_cuda_prec_sloppy;
+  QudaPrecision clover_cuda_prec_refinement_sloppy;
+  QudaPrecision clover_cuda_prec_precondition;
+  QudaPrecision clover_cuda_prec_eigensolver;
+} QudaInvertParam;
+
 #endif
