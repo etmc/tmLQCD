@@ -343,16 +343,16 @@ static inline void set_quda_mg_setup_state(tm_QudaMGSetupState_t * const quda_mg
   quda_mg_setup_state->kappa = g_kappa;
   quda_mg_setup_state->mu = g_mu;
   quda_mg_setup_state->initialised = 1;
-  quda_mg_setup_state->gauge_prec == gauge_param->cuda_prec;
-  quda_mg_setup_state->gauge_prec_sloppy == gauge_param->cuda_prec_sloppy;
-  quda_mg_setup_state->gauge_prec_refinement_sloppy == gauge_param->cuda_prec_refinement_sloppy;
-  quda_mg_setup_state->gauge_prec_precondition == gauge_param->cuda_prec_precondition;
-  quda_mg_setup_state->gauge_prec_eigensolver == gauge_param->cuda_prec_eigensolver;
-  quda_mg_setup_state->clover_prec == inv_param->clover_cuda_prec;
-  quda_mg_setup_state->clover_prec_sloppy == inv_param->clover_cuda_prec_sloppy;
-  quda_mg_setup_state->clover_prec_refinement_sloppy == inv_param->clover_cuda_prec_refinement_sloppy;
-  quda_mg_setup_state->clover_prec_precondition == inv_param->clover_cuda_prec_precondition;
-  quda_mg_setup_state->clover_prec_eigensolver == inv_param->clover_cuda_prec_eigensolver;
+  quda_mg_setup_state->gauge_prec = gauge_param->cuda_prec;
+  quda_mg_setup_state->gauge_prec_sloppy = gauge_param->cuda_prec_sloppy;
+  quda_mg_setup_state->gauge_prec_refinement_sloppy = gauge_param->cuda_prec_refinement_sloppy;
+  quda_mg_setup_state->gauge_prec_precondition = gauge_param->cuda_prec_precondition;
+  quda_mg_setup_state->gauge_prec_eigensolver = gauge_param->cuda_prec_eigensolver;
+  quda_mg_setup_state->clover_prec = inv_param->clover_cuda_prec;
+  quda_mg_setup_state->clover_prec_sloppy = inv_param->clover_cuda_prec_sloppy;
+  quda_mg_setup_state->clover_prec_refinement_sloppy = inv_param->clover_cuda_prec_refinement_sloppy;
+  quda_mg_setup_state->clover_prec_precondition = inv_param->clover_cuda_prec_precondition;
+  quda_mg_setup_state->clover_prec_eigensolver = inv_param->clover_cuda_prec_eigensolver;
 }
 
 static inline void reset_quda_mg_setup_state(tm_QudaMGSetupState_t * const quda_mg_setup_state){
