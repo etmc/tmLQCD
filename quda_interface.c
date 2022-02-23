@@ -981,6 +981,10 @@ int invert_quda_direct(double * const propagator, double const * const source,
                             optr->maxiter,
                             0, 0);
   
+  // while the other solver interfaces may need to set this to QUDA_DAG_YES, we
+  // always want to set it to QUDA_DAG_NO
+  inv_param.dagger = QUDA_DAG_NO;
+  
   // reorder spinor
   reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0 );
 
@@ -1058,6 +1062,10 @@ int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
                             max_iter,
                             0, 0);
 
+  // while the other solver interfaces may need to set this to QUDA_DAG_YES, we
+  // always want to set it to QUDA_DAG_NO
+  inv_param.dagger = QUDA_DAG_NO;
+ 
   // reorder spinor
   reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec, 0 );
 
@@ -1180,6 +1188,10 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   if( g_c_sw > 0.0 ){
     _loadCloverQuda(&inv_param);
   }
+  
+  // while the other solver interfaces may need to set this to QUDA_DAG_YES, we
+  // always want to set it to QUDA_DAG_NO
+  inv_param.dagger = QUDA_DAG_NO;
 
   // reorder spinor
   reorder_spinor_toQuda( (double*)spinorIn,   inv_param.cpu_prec, 1 );
@@ -1239,6 +1251,7 @@ void M_full_quda(spinor * const Even_new, spinor * const Odd_new,  spinor * cons
 
 // no even-odd
 void D_psi_quda(spinor * const P, spinor * const Q) {
+  inv_param.dagger = QUDA_DAG_NO;
   inv_param.kappa = g_kappa;
   // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
   inv_param.mu = -g_mu;
@@ -1264,7 +1277,6 @@ void D_psi_quda(spinor * const P, spinor * const Q) {
 
 // even-odd
 void M_quda(spinor * const P, spinor * const Q) {
-
   _initQuda();
 
   inv_param.kappa = g_kappa;
