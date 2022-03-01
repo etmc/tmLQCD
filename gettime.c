@@ -87,7 +87,9 @@ void tm_stopwatch_push(tm_timers_t * const timers, const char * const name, cons
   }
   timers->t[++(timers->lvl)] = gettime();
   if( strcmp(name, "") == 0 ){
-    fatal_error("name may not be empty!", __func__);
+    char msg[200];
+    snprintf(msg, 200, "name may not be empty! (group: %s)", group);
+    fatal_error(msg, __func__);
   } else {
     const int empty_group = strcmp(group, "") == 0;
     snprintf(timers->callstack[timers->lvl], TM_TIMING_STACK_PATH_LENGTH,

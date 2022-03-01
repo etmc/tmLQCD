@@ -226,7 +226,7 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
   mnl->iter0 = 0;
   mnl->iter1 = 0;
   if(mnl->even_odd_flag) {
-    tm_stopwatch_push(&g_timers, "", "random_energy0");
+    tm_stopwatch_push(&g_timers, "random_energy0", "");
     random_spinor_field_eo(mnl->w_fields[0], mnl->rngrepro, RN_GAUSS);
     mnl->energy0  = square_norm(mnl->w_fields[0], VOLUME/2, 1);
     tm_stopwatch_pop(&g_timers, 0, 1, "");
