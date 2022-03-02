@@ -1370,6 +1370,22 @@ static inline double fltlist_next_token(int * const list_end){
     if(myverbose) printf("  Use sloppy precision (half) in the inverter (if supported by the inverter) line %d operator %d\n", line_of_file, current_operator);
     optr->sloppy_precision = SLOPPY_HALF;
   }
+  {SPC}*RefinementPrecision{EQL}float {
+    optr->solver_params.refinement_precision = SLOPPY_SINGLE;
+    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to single precision line %d operator %d\n", line_of_file, current_operator);
+  }
+  {SPC}*RefinementPrecision{EQL}single {
+    optr->solver_params.refinement_precision = SLOPPY_SINGLE;
+    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to single precision line %d operator %d\n", line_of_file, current_operator);
+  }
+  {SPC}*RefinementPrecision{EQL}half {
+    optr->solver_params.refinement_precision = SLOPPY_HALF;
+    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to half precision line %d operator %d\n", line_of_file, current_operator);
+  }
+  {SPC}*RefinementPrecision{EQL}double {
+    optr->solver_params.refinement_precision = SLOPPY_DOUBLE;
+    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to double precision line %d operator %d\n", line_of_file, current_operator);
+  }
   {SPC}*UseCompression{EQL}12 {
     if(myverbose) printf("  Use 12 compression in the inverter (if supported) line %d operator %d\n", line_of_file, current_operator);
     optr->compression_type = COMPRESSION_12;
@@ -1954,24 +1970,12 @@ static inline double fltlist_next_token(int * const list_end){
     free(input_copy);
   }
   {SPC}*MGEigPreserveDeflationSubspace{EQL}yes {
-#ifdef TM_QUDA_EXPERIMENTAL
     quda_input.mg_eig_preserve_deflation = QUDA_BOOLEAN_YES;
     if(myverbose) printf("  MGEigPreserveDeflationSubspace set to YES in line %d\n", line_of_file);
-#else
-    char error_message[ERR_MSG_LEN];
-    snprintf(error_message, ERR_MSG_LEN, "You attempted to set 'MGEigPreserveDeflationSubspace' even though tmLQCD was compiled with '--disable-quda-experimental'. In order to use experimental QUDA features, tmLQCD must be compiled with '--enable-quda-experimental'");
-    yy_fatal_error(error_message);
-#endif
   }
   {SPC}*MGEigPreserveDeflationSubspace{EQL}no {
-#ifdef TM_QUDA_EXPERIMENTAL
     quda_input.mg_eig_preserve_deflation = QUDA_BOOLEAN_YES;
     if(myverbose) printf("  MGEigPreserveDeflationSubspace set to YES in line %d\n", line_of_file);
-#else
-    char error_message[ERR_MSG_LEN];
-    snprintf(error_message, ERR_MSG_LEN, "You attempted to set 'MGEigPreserveDeflationSubspace' even though tmLQCD was compiled with '--disable-quda-experimental'. In order to use experimental QUDA features, tmLQCD must be compiled with '--enable-quda-experimental'");
-    yy_fatal_error(error_message);
-#endif
   }
   {SPC}*MGEigSolverCoarseGuess{EQL}yes {
     quda_input.mg_coarse_guess = QUDA_BOOLEAN_YES;
@@ -2040,6 +2044,22 @@ static inline double fltlist_next_token(int * const list_end){
   }
   {SPC}*MGCoarseSolverCABasisLambdaMax{EQL}{STRLIST} {
     parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_coarse_solver_ca_lambda_max[0]));
+  }
+  {SPC}*EnableDeviceMemoryPool{EQL}yes {
+    quda_input.enable_device_memory_pool = 1;
+    if(myverbose) printf("Enabling QUDA's device memory pool on line %d\n\n", line_of_file);
+  }
+  {SPC}*EnableDeviceMemoryPool{EQL}no {
+    quda_input.enable_device_memory_pool = 0;
+    if(myverbose) printf("Disabling QUDA's device memory pool on line %d\n\n", line_of_file);
+  }
+  {SPC}*EnablePinnedMemoryPool{EQL}yes {
+    quda_input.enable_pinned_memory_pool = 1;
+    if(myverbose) printf("Enabling QUDA's pinned memory pool on line %d\n\n", line_of_file);
+  }
+  {SPC}*EnablePinnedMemoryPool{EQL}no {
+    quda_input.enable_pinned_memory_pool = 0;
+    if(myverbose) printf("Disabling QUDA's pinned memory pool on line %d\n\n", line_of_file);
   }
   ^EndExternalInverter{SPC}*  { 
     if(myverbose) printf("QUDA external inverter parameters parsed on line %d\n\n", line_of_file);
@@ -2520,6 +2540,22 @@ static inline double fltlist_next_token(int * const list_end){
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->rat.order = a;
     if(myverbose!=0) printf("  Degree of rational approximation set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+  }
+  {SPC}*RefinementPrecision{EQL}float {
+    mnl->solver_params.refinement_precision = SLOPPY_SINGLE;
+    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to single precision line %d monomial %d\n", line_of_file, current_monomial);
+  }
+  {SPC}*RefinementPrecision{EQL}single {
+    mnl->solver_params.refinement_precision = SLOPPY_SINGLE;
+    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to single precision line %d monomial %d\n", line_of_file, current_monomial);
+  }
+  {SPC}*RefinementPrecision{EQL}half {
+    mnl->solver_params.refinement_precision = SLOPPY_HALF;
+    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to half precision line %d monomial %d\n", line_of_file, current_monomial);
+  }
+  {SPC}*RefinementPrecision{EQL}double {
+    mnl->solver_params.refinement_precision = SLOPPY_DOUBLE;
+    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to double precision line %d monomial %d\n", line_of_file, current_monomial);
   }
 }
 <NDPOLYMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
@@ -3728,6 +3764,8 @@ int read_input(char * conf_file){
   subprocess_flag = _default_subprocess_flag;
  
   /* default parameters for QUDA */
+  quda_input.enable_device_memory_pool = _default_quda_enable_device_memory_pool;
+  quda_input.enable_pinned_memory_pool = _default_quda_enable_pinned_memory_pool;
   quda_input.fermionbc = TM_QUDA_THETABC;
   quda_input.pipeline = 0;
   quda_input.gcrNkrylov = 10;
