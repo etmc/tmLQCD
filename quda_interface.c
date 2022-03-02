@@ -178,6 +178,7 @@ int commsMap(const int *coords, void *fdata) {
 // variable to check if quda has been initialized
 static int quda_initialized = 0;
 
+void _setVerbosityQuda();
 void _setQudaMultigridParam(QudaMultigridParam* mg_param);
 void _setMGInvertParam(QudaInvertParam * mg_inv_param, const QudaInvertParam * const inv_param);
 void _updateQudaMultigridPreconditioner(void);
@@ -325,6 +326,11 @@ void _setDefaultQudaParam(void){
   inv_param.cl_pad = 0; // 24*24*24/2;
 #endif
 
+  _setVerbosityQuda();
+
+}
+
+void _setVerbosityQuda(){
   // solver verbosity and general verbosity
   QudaVerbosity gen_verb = QUDA_SUMMARIZE;
   if( g_debug_level == 0 ) {
@@ -345,6 +351,7 @@ void _setDefaultQudaParam(void){
 
   // general verbosity
   setVerbosityQuda(gen_verb, "# QUDA: ", stdout);
+
 }
 
 void set_force_gauge_param( QudaGaugeParam * f_gauge_param){
@@ -2425,26 +2432,24 @@ void  compute_WFlow_quda(const double eps, const double tmax, const int traj, FI
 
   const int meas_interval = 1; // CPU code measure after 1,3,5,7 steps
   const double step_size = eps;     // alias for 'eps'
-  const int n_steps = (int)(tmax / step_size);  // (number of steps) = (total time) / (step size)
+  const int n_steps = (int)(tmax / step_size) + 3;  // (number of steps) = (total time) / (step size)
   QudaWFlowType wflow_type = QUDA_WFLOW_TYPE_WILSON;  // we are using the Wilson action
  
   QudaGaugeObservableParam *param;
-  param = (QudaGaugeObservableParam*) malloc(sizeof(QudaGaugeObservableParam) * (n_steps+1));
-  for (int i=0;i<n_steps+1; i++){
+  param = (QudaGaugeObservableParam*) malloc(sizeof(QudaGaugeObservableParam) * (n_steps/meas_interval+1));
+  for (int i=0;i<n_steps/meas_interval+1; i++){
     param[i] = newQudaGaugeObservableParam();   
     param[i].compute_plaquette = QUDA_BOOLEAN_TRUE;
     param[i].compute_qcharge = QUDA_BOOLEAN_TRUE; 
   }
-  performWFlownStep_param(n_steps, step_size, meas_interval, wflow_type, param);
 
-  const bool flag_0 = (g_proc_id == 0); // we are on the 1st node
-  const bool flag_0_3 = (flag_0 && g_debug_level >= 3); // call printf() --> print on stdout
-  
-  if (flag_0_3) {
-    printf("traj t P Eplaq Esym tsqEplaq tsqEsym Wsym Qsym\n");
-  }
+  setVerbosityQuda(QUDA_SILENT, "# QUDA: ", stdout);
+  performWFlownStep(n_steps, step_size, meas_interval, wflow_type, param);
+  _setVerbosityQuda();
 
-  for(int i=1; i< n_steps-1; i+=2){  
+  tm_debug_printf(0, 3, "traj t P Eplaq Esym tsqEplaq tsqEsym Wsym Qsym\n");  
+
+  for(int i=1; i< n_steps; i+=2){  
     const double t1 = i*step_size;
     const double P = param[i].plaquette[0];
     const double E0 = param[i-1].energy[0]; // E(t=t0)
@@ -2453,21 +2458,17 @@ void  compute_WFlow_quda(const double eps, const double tmax, const int traj, FI
     const double W = t1*t1 * (2 * E1 + t1 * ((E2 - E0) / (2 * step_size)));
     const double Q = -param[i].qcharge; // topological charge Q
 
-    if (flag_0_3) {
-      printf(
-        "# GRADFLOW: sym(plaq)  t=%lf 1-P(t)=%1.8lf E(t)=%2.8lf(%2.8lf) t^2E=%2.8lf(%2.8lf) "
-        "W(t)=%2.8lf Q(t)=%.8lf \n",
-        t1, 1 - P, E1, 36 * (1 - P), t1*t1*E1, t1*t1 * 36 * (1 - P), W,  Q);
-    }
+    tm_debug_printf(0, 3,
+      "# GRADFLOW: sym(plaq)  t=%lf 1-P(t)=%1.8lf E(t)=%2.8lf(%2.8lf) t^2E=%2.8lf(%2.8lf) "
+      "W(t)=%2.8lf Q(t)=%.8lf \n",
+      t1, 1 - P, E1, 36 * (1 - P), t1*t1*E1, t1*t1 * 36 * (1 - P), W,  Q);
 
-    if(flag_0)
-    {
-      if (g_proc_id == 0) {
-        fprintf(outfile, "%06d %f %2.12lf %2.12lf %2.12lf %2.12lf %2.12lf %2.12lf %.12lf \n", traj,
-                t1, P, 36 * (1 - P), E1, t1 * t1 * 36 * (1 - P), t1*t1*E1, W, Q);
-        fflush(outfile);
-      }
+    if (g_proc_id == 0) {
+      fprintf(outfile, "%06d %f %2.12lf %2.12lf %2.12lf %2.12lf %2.12lf %2.12lf %.12lf \n", traj,
+              t1, P, 36 * (1 - P), E1, t1 * t1 * 36 * (1 - P), t1*t1*E1, W, Q);
+      fflush(outfile);
     }
+    
   }
 
   free(param);
