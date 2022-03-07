@@ -143,6 +143,8 @@ extern "C"
 
   extern tm_mpi_thread_level_t g_mpi_thread_level;
 
+  extern int g_barrier_monomials_convergence; // 0 or 1. ==1 --> hcm aborts if any monomial_solve reports -1 iterations 
+
   int read_input(char *);
   int reread_input(char *);
   

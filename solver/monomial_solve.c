@@ -36,6 +36,10 @@
  *   int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn, 
  *                    spinor * const Qup, spinor * const Qdn, 
  *                    solver_params_t * solver_params)  
+ *   
+ *   int solve_mms_nd_plus(spinor ** const Pup, spinor ** const Pdn, 
+ *                         spinor * const Qup, spinor * const Qdn, 
+ *                         solver_params_t * solver_params)
  *
  **************************************************************************/
 
@@ -238,7 +242,12 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
   }
   
   tm_stopwatch_pop(&g_timers, 0, 1, "");
-  return(iteration_count);
+
+  if (iteration_count == -1 && g_barrier_monomials_convergence) {
+    fatal_error("Error: solver reported -1 iterations.", "solve_degenerate");
+  }
+
+  return (iteration_count);
 }
 
 int solve_mms_tm(spinor ** const P, spinor * const Q,
@@ -441,7 +450,12 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
       (solver_params->external_inverter == QPHIX_INVERTER && solver_params->type != MG)){
     finalize_solver(temp, 1);
   }
-  tm_stopwatch_pop(&g_timers, 0, 1, ""); 
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
+
+  if (iteration_count == -1 && g_barrier_monomials_convergence) {
+    fatal_error("Error: solver reported -1 iterations.", "solve_mms_tm");
+  }
+
   return(iteration_count);
 }
 
@@ -695,7 +709,12 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
     finalize_solver(temp, 2);
   }
   tm_stopwatch_pop(&g_timers, 0, 1, "");
-  return(iteration_count);
+
+  if (iteration_count == -1 && g_barrier_monomials_convergence) {
+    fatal_error("Error: solver reported -1 iterations.", "solve_mms_nd");
+  }
+
+  return (iteration_count);
 }
 
 int solve_mms_nd_plus(spinor ** const Pup, spinor ** const Pdn, 
@@ -745,5 +764,10 @@ int solve_mms_nd_plus(spinor ** const Pup, spinor ** const Pdn,
     finalize_solver(temp, 2);
   }
   tm_stopwatch_pop(&g_timers, 0, 1, "");
+
+  if (iteration_count == -1 && g_barrier_monomials_convergence) {
+    fatal_error("Error: solver reported -1 iterations.", "solve_mms_nd_plus");
+  }
+
   return iteration_count;
 }
