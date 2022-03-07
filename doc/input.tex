@@ -19,11 +19,6 @@ be called with
   makes the code a bit more verbose. Unrelated to input parameter
   {\ttfamily DebugLevel}.
 
-\item {\ttfamily -m}:\\
-  Controls whether support for multi-threaded MPI communication is to be
-  requested upon QMP or MPI initialisation. Posible values {\ttfamily single} 
-  or {\ttfamily multiple}. Default is {\ttfamily single}.
-
 \item {\ttfamily -?|-h}:\\
   This will produce help output and exit then.
 
@@ -190,8 +185,18 @@ supported general input paramters:
   OpenMP support. On some architectures, the {\ttfamily OMP\_NUM\_THREADS}
   environment variable needs to be set to the same value for correct
   operation. The default is 1.
-
-
+\item  {\ttfamily BarrierMonomialsConvergence}:\\
+  Possible values:  {\ttfamily yes} or  {\ttfamily no}. The default is  {\ttfamily no}. 
+  If set to  {\ttfamily yes} the convergence is checked for each monomial, 
+  and if any of the solvers returns a number of iterations equal to $-1$, 
+  the program is aborted.\\
+  %  
+  Corresponding variable in the code: {\ttfamily g\_barrier\_monomials\_convergence} 
+  ({\ttfamily==1} for  {\ttfamily yes} 
+  and  {\ttfamily ==0} for  {\ttfamily no}).
+  The convergence check is implemented with a conditional statement for each {\ttfamily solve\_*()} 
+  function in {\ttfamily tmLQCD/solver/monomial\_solve.c} which calls {\ttfamily fatal\_error()} 
+  if the solver didn't converge and if \mbox{\ttfamily g\_barrier\_monomials\_convergence \ttfamily == 1}.
 \end{enumerate}
 
 The following input parameters are {\ttfamily invert} specific:
