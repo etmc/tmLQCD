@@ -1325,9 +1325,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
   inv_param.tol = sqrt(eps_sq);
   inv_param.maxiter = maxiter;
   inv_param.Ls = 1;
-#ifdef TM_QUDA_EXPERIMENTAL
   inv_param.tm_rho = 0.0;
-#endif
   inv_param.clover_rho = 0.0;
   
   // chiral by default, for single-parity, will switch to DEGRAND_ROSSI
@@ -1344,11 +1342,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     inv_param.mu = -mu/2./kappa;
     inv_param.clover_coeff = c_sw*kappa;
     if( fabs(g_mu3) > 2*DBL_EPSILON ){
-#ifdef TM_QUDA_EXPERIMENTAL
       inv_param.tm_rho = -g_mu3/2./kappa;
-#else
-      fatal_error("Attempt to set inv_param.tm_rho but --enable-quda_experimental was not set!", __func__);
-#endif
     }
 
     inv_param.compute_clover_inverse = 1;
@@ -1374,11 +1368,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
       inv_param.twist_flavor = QUDA_TWIST_SINGLET;
       inv_param.dslash_type = QUDA_TWISTED_CLOVER_DSLASH;
       inv_param.mu = 0.0;
-#ifdef TM_QUDA_EXPERIMENTAL
       inv_param.tm_rho = -g_mu3/2./kappa;
-#else
-    fatal_error("Attempt to set inv_param.tm_rho but --enable-quda_experimental was not set!", __func__);
-#endif
     } else {
       inv_param.twist_flavor = QUDA_TWIST_NO;
       inv_param.dslash_type = QUDA_CLOVER_WILSON_DSLASH;
@@ -1578,7 +1568,8 @@ void _updateQudaMultigridPreconditioner(){
     }
 
     updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
-    set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state);
+    quda_mg_setup_state_update(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state,
+                               g_mu, g_kappa, g_c_sw);
 
     // if the precondioner was disabled because we switched solvers from MG to some other
     // solver, re-enable it here
@@ -1614,9 +1605,7 @@ void _setTwoFlavourSolverParam(const double kappa, const double c_sw, const doub
   
   inv_param.twist_flavor = QUDA_TWIST_NONDEG_DOUBLET;
 
-#ifdef TM_QUDA_EXPERIMENTAL
   inv_param.tm_rho = 0.0;
-#endif
   inv_param.clover_rho = 0.0;
 
   // choose dslash type
@@ -1827,9 +1816,7 @@ _setMGInvertParam(QudaInvertParam * mg_inv_param, const QudaInvertParam * const 
   mg_inv_param->mu = inv_param->mu;
   mg_inv_param->kappa = inv_param->kappa;
   mg_inv_param->clover_coeff = inv_param->clover_coeff;
-#ifdef TM_QUDA_EXPERIMENTAL
   mg_inv_param->tm_rho = inv_param->tm_rho;
-#endif
 }
 
 void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
@@ -2145,9 +2132,7 @@ int invert_eo_degenerate_quda(spinor * const out,
    
     // now we invert \hat{M}^{-} to get the inverse of \hat{Q}^{-} in the end
     inv_param.mu = -inv_param.mu;
-#ifdef TM_QUDA_EXPERIMENTAL
     inv_param.tm_rho = -inv_param.tm_rho;
-#endif
     if(solver_flag == MG){
       // flip the sign of the coarse operator and update the setup
       quda_mg_param.invert_param->mu = -quda_mg_param.invert_param->mu;
@@ -2155,7 +2140,8 @@ int invert_eo_degenerate_quda(spinor * const out,
       updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
       // we need to do this to make sure that the MG setup is updated at the next
       // mu flip
-      set_quda_mg_setup_mu(&quda_mg_setup_state, -g_mu);
+      quda_mg_setup_state_update(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state,
+                                 -g_mu, g_kappa, g_c_sw);
       tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
     }
     tm_stopwatch_push(&g_timers, "invertQuda", "");

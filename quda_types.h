@@ -313,8 +313,19 @@ static inline int check_quda_mg_setup_state(const tm_QudaMGSetupState_t * const 
   }
 }
 
-static inline void set_quda_mg_setup_mu(tm_QudaMGSetupState_t * const quda_mg_setup_state, const double mu){
+// when we update only the parameters, we are not allowed to touch
+// quda_mg_setup_state->gauge_id
+static inline void quda_mg_setup_state_update(tm_QudaMGSetupState_t * const quda_mg_setup_state,
+                                              tm_QudaGaugeState_t * const quda_gauge_state,
+                                              tm_QudaCloverState_t * const quda_clover_state,
+                                              const double mu,
+                                              const double kappa,
+                                              const double c_sw){
   quda_mg_setup_state->mu = mu;
+  quda_mg_setup_state->c_sw = c_sw;
+  quda_mg_setup_state->kappa = kappa;
+  quda_gauge_state->mg_needs_update = 0;
+  quda_clover_state->mg_needs_update = 0;
 }
 
 static inline void set_quda_mg_setup_state(tm_QudaMGSetupState_t * const quda_mg_setup_state,
