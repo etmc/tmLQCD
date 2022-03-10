@@ -3568,11 +3568,11 @@ static inline double fltlist_next_token(int * const list_end){
 
 <BARRIER_MONOMIALS_CONVERGE>yes {
   g_barrier_monomials_convergence = 1;
-  if(verbose) printf("Monomials convergence is checked\n");
+  if(myverbose) printf("Monomials convergence is checked\n");
 }
 <BARRIER_MONOMIALS_CONVERGE>no {
   g_barrier_monomials_convergence = 0;
-  if(verbose) printf("Monomials convergence won't be checked\n");
+  if(myverbose) printf("Monomials convergence won't be checked\n");
 }
 
 
