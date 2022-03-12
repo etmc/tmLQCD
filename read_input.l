@@ -3833,7 +3833,7 @@ int read_input(char * conf_file){
     }
   }
   quda_input.mg_setup_inv_type = QUDA_CG_INVERTER;
-  quda_input.mg_run_verify = QUDA_BOOLEAN_YES;
+  quda_input.mg_run_verify = QUDA_BOOLEAN_NO;
   quda_input.mg_enable_size_three_blocks = _default_quda_mg_enable_size_three_blocks;
   quda_input.mg_reset_setup_mdu_threshold = _default_quda_mg_reset_setup_mdu_threshold;
   quda_input.mg_refresh_setup_mdu_threshold = _default_quda_mg_refresh_setup_mdu_threshold;
