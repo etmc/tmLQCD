@@ -2239,6 +2239,10 @@ int invert_eo_degenerate_quda(spinor * const out,
       }
     }
     return (-1);
+  } else {
+    if (g_proc_id == 0) {
+      quda_mg_inversion_failed = 0; // resetting for the next solver call
+    }
   }
 
   return(iterations);
@@ -2340,6 +2344,10 @@ int invert_eo_quda_oneflavour_mshift(spinor ** const out,
       }
     }
     return(-1);
+  } else {
+    if (g_proc_id == 0) {
+      quda_mg_inversion_failed = 0; // resetting for the next solver call
+    }
   }
 
   return(iterations);
@@ -2470,6 +2478,10 @@ int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out
       }
     }
     return(-1);
+  } else {
+    if (g_proc_id == 0) {
+      quda_mg_inversion_failed = 0; // resetting for the next solver call
+    }
   }
 
   return(iterations);
