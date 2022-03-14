@@ -2176,26 +2176,36 @@ int invert_eo_degenerate_quda(spinor * const out,
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
 
   if (iterations >= max_iter) {
-    if (g_proc_id == 0) {
-      printf("# TM_QUDA: iterations == -1\n");
-    }
-
     if (solver_flag == MG) {
-      // re-running (once) the inversion which failed
-      quda_mg_setup_state.force_reset = 1;
-      size_t ret_value = invert_eo_degenerate_quda(out, in, precision, max_iter, solver_flag,
-                                                   rel_prec, even_odd_flag, solver_params,
-                                                   sloppy_precision, compression, QpQm);
-      if (ret_value == -1) {  // abort if the inversion failed too many times
-        fatal_error("MG solver failed for more than 2 times in a row.",
-                    "invert_eo_degenerate_quda");
-        return (-1);
-      } else {  // reset of MG worked. Restoring initial value of 'force_reset'
-        quda_mg_setup_state.force_reset = 0;
-        return ret_value;
+      // when the MG fails to converge, the reason may be a degenerated MG setup
+      // or, if this happens in the HMC, bad luck with the evolved setup
+      // we try to regenerate it once and abort if that doesn't help
+      // we use this variable to break out of the recursion 
+      static int quda_mg_setup_was_force_reset = 0;
+      if( quda_mg_setup_was_force_reset == 0 ){
+           tm_debug_printf(0, 0, 
+                        "# TM_QUDA: MG did not converge in %d iterations, resetting setup and trying again!\n",
+                        max_iter);
+        
+        quda_mg_setup_was_force_reset = 1;
+        quda_mg_setup_state.force_reset = 1;
+        int ret_value = invert_eo_degenerate_quda(out, in, precision, max_iter, solver_flag,
+                                                  rel_prec, even_odd_flag, solver_params,
+                                                  sloppy_precision, compression, QpQm);
+        if (ret_value >= max_iter) {
+          char errmsg[200];
+          snprintf(errmsg, 200, "QUDA-MG solver failed to converge in %d iterations even after setup reset. Terminating!",
+                   max_iter);
+          fatal_error(errmsg, __func__);
+          return -1;
+        } else {
+          quda_mg_setup_was_force_reset = 0;
+          return ret_value;
+        }
+      } else {
+        return iterations;
       }
     }
-
     return (-1);
   }
 
