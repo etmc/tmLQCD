@@ -126,7 +126,7 @@ typedef struct tm_QudaMGSetupState_t {
   double theta_y;
   double theta_z;
   double theta_t;
-  int force_reset = 0; // set to 1 when the MG doesn't converge
+  int force_reset; // set to 1 when the MG doesn't converge
 } tm_QudaMGSetupState_t;
 
 typedef struct tm_QudaCloverState_t {
@@ -332,6 +332,7 @@ static inline void set_quda_mg_setup_state(tm_QudaMGSetupState_t * const quda_mg
   quda_mg_setup_state->kappa = g_kappa;
   quda_mg_setup_state->mu = g_mu;
   quda_mg_setup_state->initialised = 1;
+  quda_mg_setup_state->force_reset = 0;
   quda_gauge_state->mg_needs_update = 0;
   quda_clover_state->mg_needs_update = 0;
 }
