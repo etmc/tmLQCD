@@ -144,12 +144,6 @@ void* quda_mg_preconditioner;
 // on the given level)
 QudaEigParam mg_eig_param[QUDA_MAX_MG_LEVEL];
 
-/**
- * When using the quda MG solver, this variable stores the number of failed inversions.
- * It is used in order to decide how many times to retry the inversion after regenerating the MG setup.
- */
-int quda_mg_inversion_failed = 0;
-
 // input params specific to tmLQCD QUDA interface
 tm_QudaParams_t quda_input;
 
@@ -190,14 +184,6 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
                                const int solver_type, const int even_odd,
                                const double eps_sq, const int maxiter,
                                const int single_parity_solve, const int QpQm);
-
-/**
- * Regenerate the MG setup. To be used e.g. when an MG-based solver in doesn't converge.
- * @param mg_param Contains all metadata regarding host and device
-   *               storage and solver parameters
- */
-void forceRegenerateMGSetupQuda(const CompressionType compression);
-
 
 void set_default_gauge_param(QudaGaugeParam * gauge_param){
   // local lattice size
@@ -2066,32 +2052,6 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   strcpy(mg_param->vec_outfile, "");
 }
 
-void forceRegenerateMGSetupQuda(const CompressionType compression){
-    if(g_proc_id == 0){ printf("# Regenerating the MG setup."); }
-
-    // calling loadGaugeQuda() just in case it hasn't been caled before
-    _loadGaugeQuda(compression);
-
-    // destroying the MG setup
-    if( quda_mg_preconditioner != NULL ){
-      destroyMultigridQuda(quda_mg_preconditioner);
-      quda_mg_preconditioner = NULL;
-    }
-    reset_quda_mg_setup_state(&quda_mg_setup_state);
-
-    // setup the MG according to the parameters in 'param'
-    mg_inv_param = newQudaInvertParam();
-    quda_mg_param = newQudaMultigridParam();
-    for( int level = 0; level < QUDA_MAX_MG_LEVEL; ++level ){
-      mg_eig_param[level] = newQudaEigParam();
-    }
-    newMultigridQuda(&quda_mg_param);
-    
-    return;
-}
-
-
-
 int invert_eo_degenerate_quda(spinor * const out,
                               spinor * const in,
                               const double precision, const int max_iter,
@@ -2219,23 +2179,19 @@ int invert_eo_degenerate_quda(spinor * const out,
     if (g_proc_id == 0) {
       printf("# TM_QUDA: iterations == -1\n");
     }
-    if (solver_flag == MG) {
-      // re-running the inversion which failed
-      if (g_proc_id == 0) {
-        quda_mg_inversion_failed += 1;
-      }
 
-      if (quda_mg_inversion_failed < 2) {
-        forceRegenerateMGSetupQuda(compression);  // regenerate the MG setup
+    if (solver_flag == MG) {
+      // re-running (once) the inversion which failed
+      if (quda_mg_setup_state->force_reset == 0) {
+        quda_mg_setup_state->force_reset = 1;
+        _updateQudaMultigridPreconditioner();  // regenerate the MG setup
         return invert_eo_degenerate_quda(out, in, precision, max_iter, solver_flag, rel_prec,
-                                  even_odd_flag, solver_params, sloppy_precision, compression,
-                                  QpQm);
+                                         even_odd_flag, solver_params, sloppy_precision,
+                                         compression, QpQm);
       } else {  // abort if the inversion failed too many times
-        if (g_proc_id == 0) {
-          fatal_error("MG solver failed for more than 2 times in a row.",
-                      "invert_eo_degenerate_quda");
-          return (-1);
-        }
+        fatal_error("MG solver failed for more than 2 times in a row.",
+                    "invert_eo_degenerate_quda");
+        return (-1);
       }
     }
     return (-1);
@@ -2322,32 +2278,7 @@ int invert_eo_quda_oneflavour_mshift(spinor ** const out,
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
 
   if(iterations >= max_iter){
-    if (g_proc_id == 0) {
-      printf("# TM_QUDA: iterations == -1\n");
-    }
-    if (solver_flag == MG) {
-      // re-running the inversion which failed
-      if (g_proc_id == 0) {
-        quda_mg_inversion_failed += 1;
-      }
-
-      if (quda_mg_inversion_failed < 2) {
-        forceRegenerateMGSetupQuda(compression);  // regenerate the MG setup
-        return invert_eo_quda_oneflavour_mshift(out, in, precision, max_iter, solver_flag, rel_prec,
-                                  even_odd_flag, solver_params, sloppy_precision, compression);
-      } else {  // abort if the inversion failed too many times
-        if (g_proc_id == 0) {
-          fatal_error("MG solver failed for more than 2 times in a row.",
-                      "invert_eo_quda_oneflavour_mshift");
-          return (-1);
-        }
-      }
-    }
     return(-1);
-  } else {
-    if (g_proc_id == 0) {
-      quda_mg_inversion_failed = 0; // resetting for the next solver call
-    }
   }
 
   return(iterations);
@@ -2455,33 +2386,7 @@ int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
 
   if(iterations >= max_iter){
-    if (g_proc_id == 0) {
-      printf("# TM_QUDA: iterations == -1\n");
-    }
-    if (solver_flag == MG) {
-      // re-running the inversion which failed
-      if (g_proc_id == 0) {
-        quda_mg_inversion_failed += 1;
-      }
-
-      if (quda_mg_inversion_failed < 2) {
-        forceRegenerateMGSetupQuda(compression);  // regenerate the MG setup
-        return invert_eo_quda_twoflavour_mshift(out_up, out_dn, in_up, in_dn, precision, max_iter,
-                                                solver_flag, rel_prec, even_odd_flag, solver_params,
-                                                sloppy_precision, compression);
-      } else {  // abort if the inversion failed too many times
-        if (g_proc_id == 0) {
-          fatal_error("MG solver failed for more than 2 times in a row.",
-                      "invert_eo_quda_twoflavour_mshift");
-          return (-1);
-        }
-      }
-    }
     return(-1);
-  } else {
-    if (g_proc_id == 0) {
-      quda_mg_inversion_failed = 0; // resetting for the next solver call
-    }
   }
 
   return(iterations);

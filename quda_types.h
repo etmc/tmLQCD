@@ -126,6 +126,7 @@ typedef struct tm_QudaMGSetupState_t {
   double theta_y;
   double theta_z;
   double theta_t;
+  int force_reset = 0; // set to 1 when the MG doesn't converge
 } tm_QudaMGSetupState_t;
 
 typedef struct tm_QudaCloverState_t {
@@ -283,7 +284,9 @@ static inline int check_quda_mg_setup_state(const tm_QudaMGSetupState_t * const 
       ( fabs(quda_mg_setup_state->theta_y - quda_gauge_state->theta_y) > 2*DBL_EPSILON ) || 
       ( fabs(quda_mg_setup_state->theta_z - quda_gauge_state->theta_z) > 2*DBL_EPSILON ) || 
       ( fabs(quda_mg_setup_state->theta_t - quda_gauge_state->theta_t) > 2*DBL_EPSILON ) || 
-      ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) >= quda_params->mg_reset_setup_mdu_threshold ) ){
+      ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) >= quda_params->mg_reset_setup_mdu_threshold ) ||
+      quda_mg_setup_state->force_reset == 1
+    ){
     return TM_QUDA_MG_SETUP_RESET;
   // when in the HMC, we have to refresh the setup at regular intervals specified
   // by mg_refresh_setup_mdu_threshold, which triggers a few setup iterations to be
