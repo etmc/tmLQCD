@@ -2182,17 +2182,20 @@ int invert_eo_degenerate_quda(spinor * const out,
 
     if (solver_flag == MG) {
       // re-running (once) the inversion which failed
-      if (quda_mg_setup_state.force_reset == 0) {
-        quda_mg_setup_state.force_reset = 1;
-        return invert_eo_degenerate_quda(out, in, precision, max_iter, solver_flag, rel_prec,
-                                         even_odd_flag, solver_params, sloppy_precision,
-                                         compression, QpQm);
-      } else {  // abort if the inversion failed too many times
+      quda_mg_setup_state.force_reset = 1;
+      size_t ret_value = invert_eo_degenerate_quda(out, in, precision, max_iter, solver_flag,
+                                                   rel_prec, even_odd_flag, solver_params,
+                                                   sloppy_precision, compression, QpQm);
+      if (ret_value == -1) {  // abort if the inversion failed too many times
         fatal_error("MG solver failed for more than 2 times in a row.",
                     "invert_eo_degenerate_quda");
         return (-1);
+      } else {  // reset of MG worked. Restoring initial value of 'force_reset'
+        quda_mg_setup_state.force_reset = 0;
+        return ret_value;
       }
     }
+
     return (-1);
   }
 
