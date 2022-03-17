@@ -319,8 +319,20 @@ static inline int check_quda_mg_setup_state(const tm_QudaMGSetupState_t * const 
   }
 }
 
-static inline void set_quda_mg_setup_mu(tm_QudaMGSetupState_t * const quda_mg_setup_state, const double mu){
+// when we update only the parameters, we are not allowed to touch
+// quda_mg_setup_state->gauge_id
+static inline void quda_mg_setup_state_update(tm_QudaMGSetupState_t * const quda_mg_setup_state,
+                                              tm_QudaGaugeState_t * const quda_gauge_state,
+                                              tm_QudaCloverState_t * const quda_clover_state,
+                                              const double mu,
+                                              const double kappa,
+                                              const double c_sw){
   quda_mg_setup_state->mu = mu;
+  quda_mg_setup_state->c_sw = c_sw;
+  quda_mg_setup_state->kappa = kappa;
+  quda_mg_setup_state->force_refresh = 0;
+  quda_gauge_state->mg_needs_update = 0;
+  quda_clover_state->mg_needs_update = 0;
 }
 
 static inline void set_quda_mg_setup_state(tm_QudaMGSetupState_t * const quda_mg_setup_state,
@@ -335,17 +347,6 @@ static inline void set_quda_mg_setup_state(tm_QudaMGSetupState_t * const quda_mg
   quda_mg_setup_state->kappa = g_kappa;
   quda_mg_setup_state->mu = g_mu;
   quda_mg_setup_state->initialised = 1;
-  quda_mg_setup_state->force_refresh = 0;
-  quda_gauge_state->mg_needs_update = 0;
-  quda_clover_state->mg_needs_update = 0;
-}
-
-static inline void set_quda_mg_setup_state_no_gauge_id(tm_QudaMGSetupState_t * const quda_mg_setup_state,
-                                                       tm_QudaGaugeState_t * const quda_gauge_state,
-                                                       tm_QudaCloverState_t * const quda_clover_state) {
-  quda_mg_setup_state->c_sw = g_c_sw;
-  quda_mg_setup_state->kappa = g_kappa;
-  quda_mg_setup_state->mu = g_mu;
   quda_mg_setup_state->force_refresh = 0;
   quda_gauge_state->mg_needs_update = 0;
   quda_clover_state->mg_needs_update = 0;

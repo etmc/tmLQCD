@@ -196,7 +196,9 @@ for( mon in total_per_mon$monomial ){
                      format = 'latex',
                      booktabs = TRUE,
                      digits = 1,
-                     linesep = "") %>%
+                     linesep = "",
+                     caption = sprintf("%s %s", mon, tp) ) %>%
+          kable_styling(latex_options = "HOLD_position") %>%
         kableExtra::kable_styling(latex_options = c("striped"),
                                   stripe_index = which( (type_data$level %% 2) == 1 ))
     )

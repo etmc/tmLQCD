@@ -1377,7 +1377,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
 #ifdef TM_QUDA_EXPERIMENTAL
       inv_param.tm_rho = -g_mu3/2./kappa;
 #else
-    fatal_error("Attempt to set inv_param.tm_rho but --enable-quda_experimental was not set!", __func__);
+      fatal_error("Attempt to set inv_param.tm_rho but --enable-quda_experimental was not set!", __func__);
 #endif
     } else {
       inv_param.twist_flavor = QUDA_TWIST_NO;
@@ -1547,7 +1547,8 @@ void _updateQudaMultigridPreconditioner(){
     // this is in order to not disrupt the normal sequence of update and refresh 
     // operations as a function of the gauge_id
     if(quda_mg_setup_state.force_refresh == 1){
-      set_quda_mg_setup_state_no_gauge_id(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state);
+      quda_mg_setup_state_update(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state,
+                                 g_mu, g_kappa, g_c_sw);
     } else {
       set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state);
     }
@@ -1577,7 +1578,8 @@ void _updateQudaMultigridPreconditioner(){
     // this is in order to not disrupt the normal sequence of update and refresh 
     // operations as a function of the gauge_id
     if(quda_mg_setup_state.force_refresh){
-      set_quda_mg_setup_state_no_gauge_id(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state);
+      quda_mg_setup_state_update(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state,
+                                 g_mu, g_kappa, g_c_sw);
     } else {
       set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state);
     }
@@ -1594,7 +1596,8 @@ void _updateQudaMultigridPreconditioner(){
     }
 
     updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
-    set_quda_mg_setup_state_no_gauge_id(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state);
+    quda_mg_setup_state_update(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state,
+                               g_mu, g_kappa, g_c_sw);
 
     // if the precondioner was disabled because we switched solvers from MG to some other
     // solver, re-enable it here
@@ -2171,7 +2174,8 @@ int invert_eo_degenerate_quda(spinor * const out,
       updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
       // we need to do this to make sure that the MG setup is updated at the next
       // mu flip
-      set_quda_mg_setup_mu(&quda_mg_setup_state, -g_mu);
+      quda_mg_setup_state_update(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state,
+                                 -g_mu, g_kappa, g_c_sw);
       tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
     }
     tm_stopwatch_push(&g_timers, "invertQuda", "");
