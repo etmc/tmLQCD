@@ -1542,7 +1542,15 @@ void _updateQudaMultigridPreconditioner(){
       quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
     }
     inv_param.preconditioner = quda_mg_preconditioner;
-    set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state);
+
+    // during a force reset we only update the parameters tracked in the MG state
+    // this is in order to not disrupt the normal sequence of update and refresh 
+    // operations as a function of the gauge_id
+    if(quda_mg_setup_state.force_refresh == 1){
+      set_quda_mg_setup_state_no_gauge_id(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state);
+    } else {
+      set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state);
+    }
 
     tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 
@@ -1564,7 +1572,15 @@ void _updateQudaMultigridPreconditioner(){
     }
 
     inv_param.preconditioner = quda_mg_preconditioner;
-    set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state);
+    
+    // during a force refresh we only update the parameters tracked in the MG state
+    // this is in order to not disrupt the normal sequence of update and refresh 
+    // operations as a function of the gauge_id
+    if(quda_mg_setup_state.force_refresh){
+      set_quda_mg_setup_state_no_gauge_id(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state);
+    } else {
+      set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state);
+    }
 
     tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 
@@ -1578,7 +1594,7 @@ void _updateQudaMultigridPreconditioner(){
     }
 
     updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
-    set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state);
+    set_quda_mg_setup_state_no_gauge_id(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state);
 
     // if the precondioner was disabled because we switched solvers from MG to some other
     // solver, re-enable it here
@@ -2181,25 +2197,25 @@ int invert_eo_degenerate_quda(spinor * const out,
       // or, if this happens in the HMC, bad luck with the evolved setup
       // we try to regenerate it once and abort if that doesn't help
       // we use this variable to break out of the recursion 
-      static int quda_mg_setup_was_force_reset = 0;
-      if( quda_mg_setup_was_force_reset == 0 ){
+      static int quda_mg_setup_was_force_refreshed = 0;
+      if( quda_mg_setup_was_force_refreshed == 0 ){
            tm_debug_printf(0, 0, 
-                        "# TM_QUDA: MG did not converge in %d iterations, resetting setup and trying again!\n",
+                        "# TM_QUDA: MG did not converge in %d iterations, force-refreshing setup and trying again!\n",
                         max_iter);
         
-        quda_mg_setup_was_force_reset = 1;
-        quda_mg_setup_state.force_reset = 1;
+        quda_mg_setup_was_force_refreshed = 1;
+        quda_mg_setup_state.force_refresh = 1;
         int ret_value = invert_eo_degenerate_quda(out, in, precision, max_iter, solver_flag,
                                                   rel_prec, even_odd_flag, solver_params,
                                                   sloppy_precision, compression, QpQm);
         if (ret_value >= max_iter) {
           char errmsg[200];
-          snprintf(errmsg, 200, "QUDA-MG solver failed to converge in %d iterations even after setup reset. Terminating!",
+          snprintf(errmsg, 200, "QUDA-MG solver failed to converge in %d iterations even after forced setup refresh. Terminating!",
                    max_iter);
           fatal_error(errmsg, __func__);
           return -1;
         } else {
-          quda_mg_setup_was_force_reset = 0;
+          quda_mg_setup_was_force_refreshed = 0;
           return ret_value;
         }
       } else {
