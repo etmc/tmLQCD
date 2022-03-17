@@ -1543,15 +1543,7 @@ void _updateQudaMultigridPreconditioner(){
     }
     inv_param.preconditioner = quda_mg_preconditioner;
 
-    // during a force reset we only update the parameters tracked in the MG state
-    // this is in order to not disrupt the normal sequence of update and refresh 
-    // operations as a function of the gauge_id
-    if(quda_mg_setup_state.force_refresh == 1){
-      quda_mg_setup_state_update(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state,
-                                 g_mu, g_kappa, g_c_sw);
-    } else {
-      set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state);
-    }
+    set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state);
 
     tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 
