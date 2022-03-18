@@ -2191,7 +2191,8 @@ int invert_eo_degenerate_quda(spinor * const out,
     if (solver_flag == MG) {
       // when the MG fails to converge, the reason may be a degenerated MG setup
       // or, if this happens in the HMC, bad luck with the evolved setup
-      // we try to regenerate it once and abort if that doesn't help
+      // we try to force refresh it once and abort if that doesn't help
+
       // we use this variable to break out of the recursion 
       static int quda_mg_setup_was_force_refreshed = 0;
       if( quda_mg_setup_was_force_refreshed == 0 ){
