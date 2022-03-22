@@ -208,11 +208,11 @@ void set_default_gauge_param(QudaGaugeParam * gauge_param){
   gauge_param->cpu_prec = QUDA_DOUBLE_PRECISION;
   gauge_param->cuda_prec = QUDA_DOUBLE_PRECISION;
   
-  gauge_param->reconstruct = NO_COMPRESSION;
-  gauge_param->reconstruct_sloppy = NO_COMPRESSION;
-  gauge_param->reconstruct_precondition = NO_COMPRESSION;
-  gauge_param->reconstruct_refinement_sloppy = NO_COMPRESSION;
-  gauge_param->reconstruct_eigensolver = NO_COMPRESSION;
+  gauge_param->reconstruct = QUDA_RECONSTRUCT_NO;
+  gauge_param->reconstruct_sloppy = QUDA_RECONSTRUCT_NO;
+  gauge_param->reconstruct_precondition = QUDA_RECONSTRUCT_NO;
+  gauge_param->reconstruct_refinement_sloppy = QUDA_RECONSTRUCT_NO;
+  gauge_param->reconstruct_eigensolver = QUDA_RECONSTRUCT_NO;
   
   gauge_param->gauge_fix = QUDA_GAUGE_FIXED_NO;
 
@@ -846,8 +846,8 @@ void set_boundary_conditions(CompressionType* compression, QudaGaugeParam * gaug
     }
   }
 
-  QudaReconstructType link_recon;
-  QudaReconstructType link_recon_sloppy;
+  QudaReconstructType link_recon = QUDA_RECONSTRUCT_NO;
+  QudaReconstructType link_recon_sloppy = QUDA_RECONSTRUCT_NO;
 
   if( *compression==NO_COMPRESSION ) {
     // without compression, any kind of boundary conditions are supported
@@ -857,8 +857,8 @@ void set_boundary_conditions(CompressionType* compression, QudaGaugeParam * gaug
     } else {
       gauge_param->t_boundary = QUDA_ANTI_PERIODIC_T;
     }
-    link_recon = NO_COMPRESSION;
-    link_recon_sloppy = NO_COMPRESSION;
+    link_recon = QUDA_RECONSTRUCT_NO;
+    link_recon_sloppy = QUDA_RECONSTRUCT_NO;
   } else {
     // if we reach this point with compression (see logic above), theta_0 is either 0.0 or 1.0
     // if it is 1.0, we explicitly enabled TM_QUDA_APBC to force simple anti-periodic boundary
@@ -877,8 +877,8 @@ void set_boundary_conditions(CompressionType* compression, QudaGaugeParam * gaug
       gauge_param->t_boundary = QUDA_PERIODIC_T;
     }
 
-    link_recon = COMPRESSION_12;
-    link_recon_sloppy = *compression;
+    link_recon = QUDA_RECONSTRUCT_12;
+    link_recon_sloppy = QUDA_RECONSTRUCT_12;
 
     tm_debug_printf(0, 0, 
         "\n# TM_QUDA: WARNING using %d compression with trivial (A)PBC instead "
@@ -1385,7 +1385,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
 #ifdef TM_QUDA_EXPERIMENTAL
       inv_param.tm_rho = -g_mu3/2./kappa;
 #else
-    fatal_error("Attempt to set inv_param.tm_rho but --enable-quda_experimental was not set!", __func__);
+      fatal_error("Attempt to set inv_param.tm_rho but --enable-quda_experimental was not set!", __func__);
 #endif
     } else {
       inv_param.twist_flavor = QUDA_TWIST_NO;
@@ -1521,7 +1521,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
 
 void _updateQudaMultigridPreconditioner(){
 
-  if( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input, &gauge_param, &inv_param) == TM_QUDA_MG_SETUP_RESET ){
+  if( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state, &quda_input) == TM_QUDA_MG_SETUP_RESET ){
 
     tm_stopwatch_push(&g_timers, "MG_Preconditioner_Setup", "");
 
@@ -1550,11 +1550,12 @@ void _updateQudaMultigridPreconditioner(){
       quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
     }
     inv_param.preconditioner = quda_mg_preconditioner;
-    set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &gauge_param, &inv_param);
+
+    set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state);
 
     tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 
-  } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input, &gauge_param, &inv_param) == TM_QUDA_MG_SETUP_REFRESH ) {
+  } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state, &quda_input) == TM_QUDA_MG_SETUP_REFRESH ) {
 
     tm_stopwatch_push(&g_timers, "MG_Preconditioner_Setup_Refresh", "");
     tm_debug_printf(0,0,"# TM_QUDA: Refreshing MG Preconditioner Setup for gauge_id: %f\n", quda_gauge_state.gauge_id);
@@ -1572,11 +1573,20 @@ void _updateQudaMultigridPreconditioner(){
     }
 
     inv_param.preconditioner = quda_mg_preconditioner;
-    set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &gauge_param, &inv_param);
+    
+    // during a force refresh we only update the parameters tracked in the MG state
+    // this is in order to not disrupt the normal sequence of update and refresh 
+    // operations as a function of the gauge_id
+    if(quda_mg_setup_state.force_refresh){
+      quda_mg_setup_state_update(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state,
+                                 g_mu, g_kappa, g_c_sw);
+    } else {
+      set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state);
+    }
 
     tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 
-  } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_input, &gauge_param, &inv_param) == TM_QUDA_MG_SETUP_UPDATE )  {
+  } else if ( check_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state, &quda_input) == TM_QUDA_MG_SETUP_UPDATE )  {
 
     tm_stopwatch_push(&g_timers, "MG_Preconditioner_Setup_Update", "");
 
@@ -1586,7 +1596,8 @@ void _updateQudaMultigridPreconditioner(){
     }
 
     updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
-    set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &gauge_param, &inv_param);
+    quda_mg_setup_state_update(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state,
+                               g_mu, g_kappa, g_c_sw);
 
     // if the precondioner was disabled because we switched solvers from MG to some other
     // solver, re-enable it here
@@ -2163,7 +2174,8 @@ int invert_eo_degenerate_quda(spinor * const out,
       updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
       // we need to do this to make sure that the MG setup is updated at the next
       // mu flip
-      set_quda_mg_setup_mu(&quda_mg_setup_state, -g_mu);
+      quda_mg_setup_state_update(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state,
+                                 -g_mu, g_kappa, g_c_sw);
       tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
     }
     tm_stopwatch_push(&g_timers, "invertQuda", "");
@@ -2183,8 +2195,41 @@ int invert_eo_degenerate_quda(spinor * const out,
 
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
 
-  if(iterations >= max_iter)
-    return(-1);
+  if (iterations >= max_iter) {
+    if (solver_flag == MG) {
+      // when the MG fails to converge, the reason may be a degenerated MG setup
+      // or, if this happens in the HMC, bad luck with the evolved setup
+      // we try to force refresh it once and abort if that doesn't help
+
+      // we use this variable to break out of the recursion 
+      static int quda_mg_setup_was_force_refreshed = 0;
+      if( quda_mg_setup_was_force_refreshed == 0 ){
+           tm_debug_printf(0, 0, 
+                        "# TM_QUDA: MG did not converge in %d iterations, force-refreshing setup and trying again!\n",
+                        max_iter);
+        
+        quda_mg_setup_was_force_refreshed = 1;
+        quda_mg_setup_state.force_refresh = 1;
+        int ret_value = invert_eo_degenerate_quda(out, in, precision, max_iter, solver_flag,
+                                                  rel_prec, even_odd_flag, solver_params,
+                                                  sloppy_precision, compression, QpQm);
+        if (ret_value >= max_iter) {
+          char errmsg[200];
+          snprintf(errmsg, 200, "QUDA-MG solver failed to converge in %d iterations even after forced setup refresh. Terminating!",
+                   max_iter);
+          fatal_error(errmsg, __func__);
+          return -1;
+        } else {
+          quda_mg_setup_was_force_refreshed = 0;
+          return ret_value;
+        }
+      } else {
+        // break out of the recursion here
+        return iterations;
+      }
+    }
+    return (-1);
+  }
 
   return(iterations);
 }
@@ -2262,8 +2307,9 @@ int invert_eo_quda_oneflavour_mshift(spinor ** const out,
 
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
 
-  if(iterations >= max_iter)
+  if(iterations >= max_iter){
     return(-1);
+  }
 
   return(iterations);
 }
@@ -2369,8 +2415,9 @@ int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out
 
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
 
-  if(iterations >= max_iter)
+  if(iterations >= max_iter){
     return(-1);
+  }
 
   return(iterations);
 }

@@ -271,6 +271,9 @@ static inline double fltlist_next_token(int * const list_end){
 
   int use_preconditioning;
 
+  int g_barrier_monomials_convergence;
+
+
   /* macro control over read_input.l is poor. In order to support compilation without
    * a given external library, we need to have these declared here as a dummy.
    * Note that no parameters will actually be passed, the input file reader will
@@ -646,6 +649,8 @@ static inline double fltlist_next_token(int * const list_end){
 
 %x INITEXTERNALINVERTER
 
+%x BARRIER_MONOMIALS_CONVERGE
+
 %%
 ^SourceFilename{EQL}               BEGIN(SOURCEFILE);
 ^PropagatorFilename{EQL}           BEGIN(PROPFILE);
@@ -751,6 +756,8 @@ static inline double fltlist_next_token(int * const list_end){
 
 ^EnableLowmem{EQL}                 BEGIN(LOWMEM);
 ^EnableSubprocess{EQL}             BEGIN(SUBPROCESS);
+
+^BarrierMonomialsConverge{EQL}     BEGIN(BARRIER_MONOMIALS_CONVERGE);
 
 
 <INITGPU>Init{SPC}* {
@@ -3567,6 +3574,16 @@ static inline double fltlist_next_token(int * const list_end){
   if(myverbose!=0) printf("MixedCG: setting inner solver eps to %s \n", yytext);
 }
 
+<BARRIER_MONOMIALS_CONVERGE>yes {
+  g_barrier_monomials_convergence = 1;
+  if(myverbose) printf("Monomials convergence is checked\n");
+}
+<BARRIER_MONOMIALS_CONVERGE>no {
+  g_barrier_monomials_convergence = 0;
+  if(myverbose) printf("Monomials convergence won't be checked\n");
+}
+
+
 <*>^#   {
    comment_caller = YY_START;
    BEGIN(COMMENT);
@@ -3763,6 +3780,8 @@ int read_input(char * conf_file){
   lowmem_flag = _default_lowmem_flag;
   subprocess_flag = _default_subprocess_flag;
  
+  g_barrier_monomials_convergence = _default_g_barrier_monomials_convergence;
+
   /* default parameters for QUDA */
   quda_input.enable_device_memory_pool = _default_quda_enable_device_memory_pool;
   quda_input.enable_pinned_memory_pool = _default_quda_enable_pinned_memory_pool;
@@ -3822,7 +3841,7 @@ int read_input(char * conf_file){
     }
   }
   quda_input.mg_setup_inv_type = QUDA_CG_INVERTER;
-  quda_input.mg_run_verify = QUDA_BOOLEAN_YES;
+  quda_input.mg_run_verify = QUDA_BOOLEAN_NO;
   quda_input.mg_enable_size_three_blocks = _default_quda_mg_enable_size_three_blocks;
   quda_input.mg_reset_setup_mdu_threshold = _default_quda_mg_reset_setup_mdu_threshold;
   quda_input.mg_refresh_setup_mdu_threshold = _default_quda_mg_refresh_setup_mdu_threshold;

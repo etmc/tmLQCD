@@ -126,16 +126,7 @@ typedef struct tm_QudaMGSetupState_t {
   double theta_y;
   double theta_z;
   double theta_t;
-  QudaPrecision gauge_prec;
-  QudaPrecision gauge_prec_sloppy;
-  QudaPrecision gauge_prec_refinement_sloppy;
-  QudaPrecision gauge_prec_precondition;
-  QudaPrecision gauge_prec_eigensolver;
-  QudaPrecision clover_prec;
-  QudaPrecision clover_prec_sloppy;
-  QudaPrecision clover_prec_refinement_sloppy;
-  QudaPrecision clover_prec_precondition;
-  QudaPrecision clover_prec_eigensolver;
+  int force_refresh; // set to 1 when the MG doesn't converge
 } tm_QudaMGSetupState_t;
 
 typedef struct tm_QudaCloverState_t {
@@ -149,6 +140,7 @@ typedef struct tm_QudaCloverState_t {
   QudaPrecision prec_refinement_sloppy;
   QudaPrecision prec_precondition;
   QudaPrecision prec_eigensolver;
+  int mg_needs_update;
 } tm_QudaCloverState_t;
 
 typedef struct tm_QudaGaugeState_t {
@@ -163,6 +155,7 @@ typedef struct tm_QudaGaugeState_t {
   QudaPrecision prec_refinement_sloppy;
   QudaPrecision prec_precondition;
   QudaPrecision prec_eigensolver;
+  int mg_needs_update;
 } tm_QudaGaugeState_t;
 
 typedef enum tm_QudaMGSetupState_enum_t {
@@ -201,6 +194,7 @@ static inline void set_quda_clover_state(tm_QudaCloverState_t * const quda_clove
   quda_clover_state->prec_refinement_sloppy = inv_param->clover_cuda_prec_refinement_sloppy;
   quda_clover_state->prec_precondition = inv_param->clover_cuda_prec_precondition;
   quda_clover_state->prec_eigensolver = inv_param->clover_cuda_prec_eigensolver;
+  quda_clover_state->mg_needs_update = 1;
 }
 
 static inline void reset_quda_clover_state(tm_QudaCloverState_t * const quda_clover_state){
@@ -214,6 +208,7 @@ static inline void reset_quda_clover_state(tm_QudaCloverState_t * const quda_clo
   quda_clover_state->prec_refinement_sloppy = QUDA_INVALID_PRECISION;
   quda_clover_state->prec_precondition = QUDA_INVALID_PRECISION;
   quda_clover_state->prec_eigensolver = QUDA_INVALID_PRECISION;
+  quda_clover_state->mg_needs_update = 1;
 }
 
 static inline int check_quda_gauge_state(const tm_QudaGaugeState_t * const quda_gauge_state,
@@ -254,6 +249,7 @@ static inline void set_quda_gauge_state(tm_QudaGaugeState_t * const quda_gauge_s
   quda_gauge_state->prec_refinement_sloppy = gauge_param->cuda_prec_refinement_sloppy;
   quda_gauge_state->prec_precondition = gauge_param->cuda_prec_precondition;
   quda_gauge_state->prec_eigensolver = gauge_param->cuda_prec_eigensolver;
+  quda_gauge_state->mg_needs_update = 1;
 }
 
 static inline void reset_quda_gauge_state(tm_QudaGaugeState_t * const quda_gauge_state){
@@ -264,13 +260,13 @@ static inline void reset_quda_gauge_state(tm_QudaGaugeState_t * const quda_gauge
   quda_gauge_state->prec_refinement_sloppy = QUDA_INVALID_PRECISION;
   quda_gauge_state->prec_precondition = QUDA_INVALID_PRECISION;
   quda_gauge_state->prec_eigensolver = QUDA_INVALID_PRECISION;
+  quda_gauge_state->mg_needs_update = 1;
 }
 
 static inline int check_quda_mg_setup_state(const tm_QudaMGSetupState_t * const quda_mg_setup_state,
                                             const tm_QudaGaugeState_t * const quda_gauge_state,
-                                            const tm_QudaParams_t * const quda_params,
-                                            const QudaGaugeParam * const gauge_param,
-                                            const QudaInvertParam * const inv_param){
+                                            const tm_QudaCloverState_t * const quda_clover_state,
+                                            const tm_QudaParams_t * const quda_params){
   tm_debug_printf(0, 3, "%s mu: %f, g_mu: %f, deltat: %f, reset: %f, refresh: %f\n",
                         __func__,
                         quda_mg_setup_state->mu,
@@ -288,16 +284,21 @@ static inline int check_quda_mg_setup_state(const tm_QudaMGSetupState_t * const 
       ( fabs(quda_mg_setup_state->theta_y - quda_gauge_state->theta_y) > 2*DBL_EPSILON ) || 
       ( fabs(quda_mg_setup_state->theta_z - quda_gauge_state->theta_z) > 2*DBL_EPSILON ) || 
       ( fabs(quda_mg_setup_state->theta_t - quda_gauge_state->theta_t) > 2*DBL_EPSILON ) || 
-      ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) >= quda_params->mg_reset_setup_mdu_threshold ) ){
+      ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) >= quda_params->mg_reset_setup_mdu_threshold )
+    ){
     return TM_QUDA_MG_SETUP_RESET;
   // when in the HMC, we have to refresh the setup at regular intervals specified
   // by mg_refresh_setup_mdu_threshold, which triggers a few setup iterations to be
   // run with the existing null vectors as initial guesses, thus refreshing
   // the MG setup for the evolved gauge
-  } else if ( ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) < 
+  // we also forcibly refresh the setup when the corresponding flag is set in the
+  // quda_mg_setup_state 
+  } else if ( ( ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) < 
                        quda_params->mg_reset_setup_mdu_threshold ) &&
               ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) >= 
-                       quda_params->mg_refresh_setup_mdu_threshold ) ) {
+                       quda_params->mg_refresh_setup_mdu_threshold ) ) ||
+              ( quda_mg_setup_state->force_refresh == 1) 
+    ){
     return TM_QUDA_MG_SETUP_REFRESH;
   // in other cases, e.g., when the operator parameters change or if the gauge_id has "moved" only a little,
   // we don't need to redo the setup, we can simply rebuild the coarse operators with the
@@ -310,30 +311,33 @@ static inline int check_quda_mg_setup_state(const tm_QudaMGSetupState_t * const 
               ( fabs(quda_mg_setup_state->c_sw - g_c_sw) < 2*DBL_EPSILON) &&
               ( fabs(quda_mg_setup_state->kappa - g_kappa) < 2*DBL_EPSILON) &&
               ( fabs(quda_mg_setup_state->mu - g_mu) < quda_params->mg_reuse_setup_mu_threshold) &&
-              ( quda_mg_setup_state->gauge_prec == gauge_param->cuda_prec) &&
-              ( quda_mg_setup_state->gauge_prec_sloppy == gauge_param->cuda_prec_sloppy) &&
-              ( quda_mg_setup_state->gauge_prec_refinement_sloppy == gauge_param->cuda_prec_refinement_sloppy) &&
-              ( quda_mg_setup_state->gauge_prec_precondition == gauge_param->cuda_prec_precondition) &&
-              ( quda_mg_setup_state->gauge_prec_eigensolver == gauge_param->cuda_prec_eigensolver) &&
-              ( quda_mg_setup_state->clover_prec == inv_param->clover_cuda_prec) &&
-              ( quda_mg_setup_state->clover_prec_sloppy == inv_param->clover_cuda_prec_sloppy) &&
-              ( quda_mg_setup_state->clover_prec_refinement_sloppy == inv_param->clover_cuda_prec_refinement_sloppy) &&
-              ( quda_mg_setup_state->clover_prec_precondition == inv_param->clover_cuda_prec_precondition) &&
-              ( quda_mg_setup_state->clover_prec_eigensolver == inv_param->clover_cuda_prec_eigensolver) ){
+              ( !quda_gauge_state->mg_needs_update ) &&
+              ( quda_clover_state->loaded ? !(quda_clover_state->mg_needs_update) : 1 ) ) {
     return TM_QUDA_MG_SETUP_REUSE;
   } else {
     return TM_QUDA_MG_SETUP_UPDATE;
   }
 }
 
-static inline void set_quda_mg_setup_mu(tm_QudaMGSetupState_t * const quda_mg_setup_state, const double mu){
+// when we update only the parameters, we are not allowed to touch
+// quda_mg_setup_state->gauge_id
+static inline void quda_mg_setup_state_update(tm_QudaMGSetupState_t * const quda_mg_setup_state,
+                                              tm_QudaGaugeState_t * const quda_gauge_state,
+                                              tm_QudaCloverState_t * const quda_clover_state,
+                                              const double mu,
+                                              const double kappa,
+                                              const double c_sw){
   quda_mg_setup_state->mu = mu;
+  quda_mg_setup_state->c_sw = c_sw;
+  quda_mg_setup_state->kappa = kappa;
+  quda_mg_setup_state->force_refresh = 0;
+  quda_gauge_state->mg_needs_update = 0;
+  quda_clover_state->mg_needs_update = 0;
 }
 
 static inline void set_quda_mg_setup_state(tm_QudaMGSetupState_t * const quda_mg_setup_state,
-                                           const tm_QudaGaugeState_t * const quda_gauge_state,
-                                           const QudaGaugeParam * const gauge_param,
-                                           const QudaInvertParam * const inv_param){
+                                           tm_QudaGaugeState_t * const quda_gauge_state,
+                                           tm_QudaCloverState_t * const quda_clover_state) {
   quda_mg_setup_state->gauge_id = quda_gauge_state->gauge_id;
   quda_mg_setup_state->theta_x = quda_gauge_state->theta_x;
   quda_mg_setup_state->theta_y = quda_gauge_state->theta_y;
@@ -343,34 +347,18 @@ static inline void set_quda_mg_setup_state(tm_QudaMGSetupState_t * const quda_mg
   quda_mg_setup_state->kappa = g_kappa;
   quda_mg_setup_state->mu = g_mu;
   quda_mg_setup_state->initialised = 1;
-  quda_mg_setup_state->gauge_prec = gauge_param->cuda_prec;
-  quda_mg_setup_state->gauge_prec_sloppy = gauge_param->cuda_prec_sloppy;
-  quda_mg_setup_state->gauge_prec_refinement_sloppy = gauge_param->cuda_prec_refinement_sloppy;
-  quda_mg_setup_state->gauge_prec_precondition = gauge_param->cuda_prec_precondition;
-  quda_mg_setup_state->gauge_prec_eigensolver = gauge_param->cuda_prec_eigensolver;
-  quda_mg_setup_state->clover_prec = inv_param->clover_cuda_prec;
-  quda_mg_setup_state->clover_prec_sloppy = inv_param->clover_cuda_prec_sloppy;
-  quda_mg_setup_state->clover_prec_refinement_sloppy = inv_param->clover_cuda_prec_refinement_sloppy;
-  quda_mg_setup_state->clover_prec_precondition = inv_param->clover_cuda_prec_precondition;
-  quda_mg_setup_state->clover_prec_eigensolver = inv_param->clover_cuda_prec_eigensolver;
+  quda_mg_setup_state->force_refresh = 0;
+  quda_gauge_state->mg_needs_update = 0;
+  quda_clover_state->mg_needs_update = 0;
 }
 
 static inline void reset_quda_mg_setup_state(tm_QudaMGSetupState_t * const quda_mg_setup_state){
   quda_mg_setup_state->gauge_id = -1;
   quda_mg_setup_state->initialised = 0;
+  quda_mg_setup_state->force_refresh = 0;
   quda_mg_setup_state->mu = -1.0;
   quda_mg_setup_state->c_sw = -1.0;
   quda_mg_setup_state->mu = -1.0;
-  quda_mg_setup_state->gauge_prec = QUDA_INVALID_PRECISION;
-  quda_mg_setup_state->gauge_prec_sloppy = QUDA_INVALID_PRECISION;
-  quda_mg_setup_state->gauge_prec_refinement_sloppy = QUDA_INVALID_PRECISION;
-  quda_mg_setup_state->gauge_prec_precondition = QUDA_INVALID_PRECISION;
-  quda_mg_setup_state->gauge_prec_eigensolver = QUDA_INVALID_PRECISION;
-  quda_mg_setup_state->clover_prec = QUDA_INVALID_PRECISION;
-  quda_mg_setup_state->clover_prec_sloppy = QUDA_INVALID_PRECISION;
-  quda_mg_setup_state->clover_prec_refinement_sloppy = QUDA_INVALID_PRECISION;
-  quda_mg_setup_state->clover_prec_precondition = QUDA_INVALID_PRECISION;
-  quda_mg_setup_state->clover_prec_eigensolver = QUDA_INVALID_PRECISION;
 }
 
 #endif // TM_QUDA_TYPES_H
