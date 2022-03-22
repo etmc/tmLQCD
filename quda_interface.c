@@ -2216,6 +2216,7 @@ int invert_eo_degenerate_quda(spinor * const out,
           return ret_value;
         }
       } else {
+        // break out of the recursion here
         return iterations;
       }
     }
