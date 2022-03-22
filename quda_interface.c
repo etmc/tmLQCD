@@ -2517,33 +2517,36 @@ void  compute_WFlow_quda(const double eps, const double tmax, const int traj, FI
   _initQuda();
   _loadGaugeQuda(NO_COMPRESSION);//check here the input
 
-  const int meas_interval = 1; // CPU code measure after 1,3,5,7 steps
-  const double step_size = eps;     // alias for 'eps'
-  const int n_steps = (int)(tmax / step_size) + 3;  // (number of steps) = (total time) / (step size)
-  QudaWFlowType wflow_type = QUDA_WFLOW_TYPE_WILSON;  // we are using the Wilson action
- 
-  QudaGaugeObservableParam *param;
-  param = (QudaGaugeObservableParam*) malloc(sizeof(QudaGaugeObservableParam) * (n_steps/meas_interval+1));
-  for (int i=0;i<n_steps/meas_interval+1; i++){
-    param[i] = newQudaGaugeObservableParam();   
-    param[i].compute_plaquette = QUDA_BOOLEAN_TRUE;
-    param[i].compute_qcharge = QUDA_BOOLEAN_TRUE; 
+  QudaGaugeSmearParam wflow_params = newQudaGaugeSmearParam();
+  wflow_params.smear_type = QUDA_GAUGE_SMEAR_WILSON_FLOW; 
+  wflow_params.n_steps = (int)(tmax / eps) + 3; 
+  wflow_params.epsilon = eps;
+  wflow_params.meas_interval = 1;
+
+  int n_meas= wflow_params.n_steps / wflow_params.meas_interval + 1 ;
+  QudaGaugeObservableParam *obs_param;
+  obs_param = (QudaGaugeObservableParam*) malloc(sizeof(QudaGaugeObservableParam) * n_meas);
+  for (int i=0; i<n_meas; i++){
+    obs_param[i] = newQudaGaugeObservableParam();   
+    obs_param[i].compute_plaquette = QUDA_BOOLEAN_TRUE;
+    obs_param[i].compute_qcharge = QUDA_BOOLEAN_TRUE; 
+    obs_param[i].su_project = QUDA_BOOLEAN_TRUE; 
   }
 
   setVerbosityQuda(QUDA_SILENT, "# QUDA: ", stdout);
-  performWFlownStep(n_steps, step_size, meas_interval, wflow_type, param);
+  performWFlowQuda(&wflow_params, obs_param);
   _setVerbosityQuda();
 
   tm_debug_printf(0, 3, "traj t P Eplaq Esym tsqEplaq tsqEsym Wsym Qsym\n");  
 
-  for(int i=1; i< n_steps; i+=2){  
-    const double t1 = i*step_size;
-    const double P = param[i].plaquette[0];
-    const double E0 = param[i-1].energy[0]; // E(t=t0)
-    const double E1 = param[i].energy[0]; // E(t=t1)
-    const double E2 = param[i+1].energy[0]; // E(t=t2)
-    const double W = t1*t1 * (2 * E1 + t1 * ((E2 - E0) / (2 * step_size)));
-    const double Q = -param[i].qcharge; // topological charge Q
+  for(int i=1; i< wflow_params.n_steps; i+=2){  
+    const double t1 = i*eps;
+    const double P = obs_param[i].plaquette[0];
+    const double E0 = obs_param[i-1].energy[0]; // E(t=t0)
+    const double E1 = obs_param[i].energy[0]; // E(t=t1)
+    const double E2 = obs_param[i+1].energy[0]; // E(t=t2)
+    const double W = t1*t1 * (2 * E1 + t1 * ((E2 - E0) / (2 * eps)));
+    const double Q = -obs_param[i].qcharge; // topological charge Q
 
     tm_debug_printf(0, 3,
       "# GRADFLOW: sym(plaq)  t=%lf 1-P(t)=%1.8lf E(t)=%2.8lf(%2.8lf) t^2E=%2.8lf(%2.8lf) "
@@ -2558,6 +2561,6 @@ void  compute_WFlow_quda(const double eps, const double tmax, const int traj, FI
     
   }
 
-  free(param);
+  free(obs_param);
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 }
