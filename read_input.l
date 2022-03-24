@@ -281,8 +281,10 @@ static inline double fltlist_next_token(int * const list_end){
    * been compiled without the interface in question. */
 #ifdef TM_USE_QUDA
   extern tm_QudaParams_t quda_input;
+  extern tm_QudaMGTuningPlan_t quda_mg_tuning_plan;
 #else
   tm_QudaParams_t quda_input;
+  tm_QudaMGTuningPlan_t quda_mg_tuning_plan;
 #endif
 
 #ifdef TM_USE_QPHIX
@@ -649,6 +651,9 @@ static inline double fltlist_next_token(int * const list_end){
 
 %x INITEXTERNALINVERTER
 
+%x TUNEMGPARAMS
+%x TUNEQUDAMGPARAMS
+
 %x BARRIER_MONOMIALS_CONVERGE
 
 %%
@@ -734,6 +739,8 @@ static inline double fltlist_next_token(int * const list_end){
 ^BeginOperator{SPC}+               BEGIN(INITOPERATOR);
 
 ^BeginExternalInverter{SPC}+       BEGIN(INITEXTERNALINVERTER);
+
+^BeginTuneMGParams                 BEGIN(TUNEMGPARAMS);
 
 ^PropagatorComparison{EQL}         BEGIN(PCOMP);
 ^NbCoresPerNode{EQL}               BEGIN(NBCORES);
@@ -2068,6 +2075,14 @@ static inline double fltlist_next_token(int * const list_end){
     quda_input.enable_pinned_memory_pool = 0;
     if(myverbose) printf("Disabling QUDA's pinned memory pool on line %d\n\n", line_of_file);
   }
+  {SPC}*TuneMGParams{EQL}yes {
+    quda_input.mg_tune_params = 1;
+    if(myverbose) printf("Enabling MG parameter tuning on line %d\n\n", line_of_file);
+  }
+  {SPC}*TuneMGParams{EQL}no {
+    quda_input.mg_tune_params = 0;
+    if(myverbose) printf("Disabling MG parameter tuning on line %d\n\n", line_of_file);
+  }
   ^EndExternalInverter{SPC}*  { 
     if(myverbose) printf("QUDA external inverter parameters parsed on line %d\n\n", line_of_file);
     BEGIN(0);
@@ -2119,6 +2134,97 @@ static inline double fltlist_next_token(int * const list_end){
     BEGIN(0);
   }
 }
+
+<TUNEMGPARAMS>{TYPE} {
+  if(strcmp(yytext, "QUDA")==0) {
+#ifdef TM_USE_QUDA
+    quda_input.mg_tune_params = 1;
+    if(myverbose) printf("Enabling QUDA MG parameter tuning line %d\n", line_of_file);
+    BEGIN(TUNEQUDAMGPARAMS);
+#else
+    printf("Attempted to enable QUDA MG parameter tuning but tmLQCD has not been built with QUDA support. Exiting!\n");
+    exit(1);
+#endif
+  } else {
+    printf("Error on line %d, MG type '%s' is unknown. Exiting!\n", line_of_file, yytext);
+    exit(1);
+  }
+}
+<TUNEQUDAMGPARAMS>{
+  {SPC}*MGCoarseMuFactorSteps{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_mu_factor_steps[0]));
+  }
+  {SPC}*MGCoarseMuFactorMin{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_mu_factor_min[0]));
+  }
+  {SPC}*MGCoarseMuFactorMax{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_mu_factor_max[0]));
+  }
+  {SPC}*MGCoarseMaxSolverIterationsSteps{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_coarse_solver_maxiter_steps[0]));
+  }
+  {SPC}*MGCoarseMaxSolverIterationsMin{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_coarse_solver_maxiter_min[0]));
+  }
+  {SPC}*MGCoarseMaxSolverIterationsMax{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_coarse_solver_maxiter_max[0]));
+  }
+  {SPC}*MGCoarseSolverToleranceSteps{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_coarse_solver_tol_steps[0]));
+  }
+  {SPC}*MGCoarseSolverToleranceMin{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_coarse_solver_tol_min[0]));
+  }
+  {SPC}*MGCoarseSolverToleranceMax{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_coarse_solver_tol_max[0]));
+  }
+  {SPC}*MGSmootherPreIterationsSteps{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_nu_pre_steps[0]));
+  }
+  {SPC}*MGSmootherPreIterationsMin{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_nu_pre_min[0]));
+  }
+  {SPC}*MGSmootherPreIterationsMax{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_nu_pre_max[0]));
+  }
+  {SPC}*MGSmootherPostIterationsSteps{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_nu_post_steps[0]));
+  }
+  {SPC}*MGSmootherPostIterationsMin{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_nu_post_min[0]));
+  }
+  {SPC}*MGSmootherPostIterationsMax{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_nu_post_max[0]));
+  }
+  {SPC}*MGSmootherToleranceSteps{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_smoother_tol_steps[0]));
+  }
+  {SPC}*MGSmootherToleranceMin{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_smoother_tol_min[0]));
+  }
+  {SPC}*MGSmootherToleranceMax{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_smoother_tol_max[0]));
+  }
+  {SPC}*MGOverUnderRelaxationFactorSteps{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_omega_steps[0]));
+  }
+  {SPC}*MGOverUnderRelaxationFactorMin{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_omega_min[0]));
+  }
+  {SPC}*MGOverUnderRelaxationFactorMax{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_omega_max[0]));
+  }
+  {SPC}*MGTuningIterations{EQL}{DIGIT} {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    quda_mg_tuning_plan.mg_tuning_iterations = a;
+    if(myverbose) printf(" Number of MG tuning iterations set to %d line %d\n", a, line_of_file);
+  }
+  ^EndTuneMGParams{SPC}*  {
+    if(myverbose) printf("QUDA-MG tuning parameters parsed on line %d\n\n", line_of_file);
+    BEGIN(0);
+  }
+}
+
 
 <INITMONOMIAL>{TYPE} {
   current_monomial++;
@@ -3783,6 +3889,7 @@ int read_input(char * conf_file){
   quda_input.reliable_delta = 1e-3; // anything smaller than this and we break down in double-half
   quda_input.mg_n_level = _default_quda_mg_n_level;
   quda_input.mg_setup_2kappamu = _default_quda_mg_setup_2kappamu;
+  quda_input.mg_tune_params = 0;
   for( int level = 0; level < QUDA_MAX_MG_LEVEL; ++level){
     quda_input.mg_setup_maxiter_refresh[level] = 0;
     quda_input.mg_verbosity[level] = QUDA_SILENT;

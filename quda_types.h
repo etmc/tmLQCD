@@ -113,8 +113,45 @@ typedef struct tm_QudaParams_t {
 
   int                  mg_run_low_mode_check;
   int                  mg_run_oblique_proj_check;
-
+  
+  int                  mg_tune_params;
 } tm_QudaParams_t;
+
+typedef struct tm_QudaMGTuningPlan_t {
+  int                  mg_mu_factor_steps[QUDA_MAX_MG_LEVEL];
+  double               mg_mu_factor_min[QUDA_MAX_MG_LEVEL];
+  double               mg_mu_factor_max[QUDA_MAX_MG_LEVEL];
+  int                  mg_coarse_solver_maxiter_steps[QUDA_MAX_MG_LEVEL];
+  int                  mg_coarse_solver_maxiter_min[QUDA_MAX_MG_LEVEL];
+  int                  mg_coarse_solver_maxiter_max[QUDA_MAX_MG_LEVEL];
+  int                  mg_coarse_solver_tol_steps[QUDA_MAX_MG_LEVEL];
+  double               mg_coarse_solver_tol_min[QUDA_MAX_MG_LEVEL];
+  double               mg_coarse_solver_tol_max[QUDA_MAX_MG_LEVEL];
+  int                  mg_nu_pre_steps[QUDA_MAX_MG_LEVEL];
+  int                  mg_nu_pre_min[QUDA_MAX_MG_LEVEL];
+  int                  mg_nu_pre_max[QUDA_MAX_MG_LEVEL];
+  int                  mg_nu_post_steps[QUDA_MAX_MG_LEVEL];
+  int                  mg_nu_post_min[QUDA_MAX_MG_LEVEL];
+  int                  mg_nu_post_max[QUDA_MAX_MG_LEVEL];
+  int                  mg_smoother_tol_steps[QUDA_MAX_MG_LEVEL];
+  double               mg_smoother_tol_min[QUDA_MAX_MG_LEVEL];
+  double               mg_smoother_tol_max[QUDA_MAX_MG_LEVEL];
+  int                  mg_omega_steps[QUDA_MAX_MG_LEVEL];
+  double               mg_omega_min[QUDA_MAX_MG_LEVEL];
+  double               mg_omega_max[QUDA_MAX_MG_LEVEL];
+  int                  mg_tuning_iterations;
+} tm_QudaMGTuningPlan_t;
+
+typedef struct tm_QudaMGTunableParams_t {
+  double               mg_mu_factor[QUDA_MAX_MG_LEVEL];
+  int                  mg_coarse_solver_maxiter[QUDA_MAX_MG_LEVEL];
+  double               mg_coarse_solver_tol[QUDA_MAX_MG_LEVEL];
+  int                  mg_nu_pre[QUDA_MAX_MG_LEVEL];
+  int                  mg_nu_post[QUDA_MAX_MG_LEVEL];
+  double               mg_smoother_tol[QUDA_MAX_MG_LEVEL];
+  double               mg_omega[QUDA_MAX_MG_LEVEL];
+  double               tts;
+} tm_QudaMGTunableParams_t;
 
 typedef struct tm_QudaMGSetupState_t {
   double gauge_id;
@@ -350,6 +387,32 @@ static inline void reset_quda_mg_setup_state(tm_QudaMGSetupState_t * const quda_
   quda_mg_setup_state->mu = -1.0;
   quda_mg_setup_state->c_sw = -1.0;
   quda_mg_setup_state->mu = -1.0;
+}
+
+static inline void copy_quda_mg_tunable_params_from_input(tm_QudaMGTunableParams_t * const tunable_params,
+                                                          const tm_QudaParams_t * const quda_input){
+  for(int lvl = 0; lvl <= QUDA_MAX_MG_LEVEL-1; lvl++){
+    tunable_params->mg_mu_factor[lvl] = quda_input->mg_mu_factor[lvl];
+    tunable_params->mg_coarse_solver_maxiter[lvl] = quda_input->mg_coarse_solver_maxiter[lvl];
+    tunable_params->mg_coarse_solver_tol[lvl] = quda_input->mg_coarse_solver_tol[lvl];
+    tunable_params->mg_nu_pre[lvl] = quda_input->mg_nu_pre[lvl];
+    tunable_params->mg_nu_post[lvl] = quda_input->mg_nu_post[lvl];
+    tunable_params->mg_smoother_tol[lvl] = quda_input->mg_smoother_tol[lvl];
+    tunable_params->mg_omega[lvl] = quda_input->mg_omega[lvl];
+  }
+}
+
+static inline void copy_quda_mg_tunable_params(tm_QudaMGTunableParams_t * const lhs,
+                                               const tm_QudaMGTunableParams_t * const rhs){
+  for(int lvl = 0; lvl <= QUDA_MAX_MG_LEVEL; lvl++){
+    lhs->mg_mu_factor[lvl] = rhs->mg_mu_factor[lvl];
+    lhs->mg_coarse_solver_maxiter[lvl] = rhs->mg_coarse_solver_maxiter[lvl];
+    lhs->mg_coarse_solver_tol[lvl] = rhs->mg_coarse_solver_tol[lvl];
+    lhs->mg_nu_pre[lvl] = rhs->mg_nu_pre[lvl];
+    lhs->mg_nu_post[lvl] = rhs->mg_nu_post[lvl];
+    lhs->mg_smoother_tol[lvl] = rhs->mg_smoother_tol[lvl];
+    lhs->mg_omega[lvl] = rhs->mg_omega[lvl];
+  }
 }
 
 #endif // TM_QUDA_TYPES_H

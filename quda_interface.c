@@ -147,6 +147,9 @@ QudaEigParam mg_eig_param[QUDA_MAX_MG_LEVEL];
 // input params specific to tmLQCD QUDA interface
 tm_QudaParams_t quda_input;
 
+// parameters to control the automatic tuning of the QUDA MG
+tm_QudaMGTuningPlan_t quda_mg_tuning_plan;
+
 // pointer to the QUDA gaugefield
 double *gauge_quda[4];
 
@@ -184,6 +187,8 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
                                const int solver_type, const int even_odd,
                                const double eps_sq, const int maxiter,
                                const int single_parity_solve, const int QpQm);
+
+void quda_mg_tune_params(void * spinorOut, void * spinorIn);
 
 void set_default_gauge_param(QudaGaugeParam * gauge_param){
   // local lattice size
@@ -2124,6 +2129,12 @@ int invert_eo_degenerate_quda(spinor * const out,
   invertQuda(spinorOut, spinorIn, &inv_param);
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
   
+  // at this point all QUDA auto-tuning should be complete and in case we want to tune
+  // the QUDA-MG params, we can do it now
+  if( solver_flag == MG && quda_input.mg_tune_params) {
+    quda_mg_tune_params(spinorOut, spinorIn);
+  }
+  
   // the second solve is only necessary in the derivative where we want the inverse of
   // \hat{Q}^{+} \hat{Q}^{-}
   // but we're using solvers that don't operate on the normal system
@@ -2457,4 +2468,20 @@ void compute_gauge_derivative_quda(monomial * const mnl, hamiltonian_field_t * c
 
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 }
+
+void quda_mg_tune_params(void * spinorOut, void * spinorIn){
+  tm_QudaMGTunableParams_t * tunable_params = calloc(quda_mg_tuning_plan.mg_tuning_iterations, sizeof(tm_QudaMGTunableParams_t));
+ 
+  copy_quda_mg_tunable_params_from_input(&tunable_params[0], &quda_input);
+  for(int i = 0; i < quda_mg_tuning_plan.mg_tuning_iterations; i++){
+    
+    updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
+    invertQuda(spinorOut, spinorIn, &inv_param);
+
+    copy_quda_mg_tunable_params(&tunable_params[1], &tunable_params[0]);
+  }
+
+  free(tunable_params); 
+}
+
 
