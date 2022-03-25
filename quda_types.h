@@ -151,7 +151,19 @@ typedef struct tm_QudaMGTunableParams_t {
   double               mg_smoother_tol[QUDA_MAX_MG_LEVEL];
   double               mg_omega[QUDA_MAX_MG_LEVEL];
   double               tts;
+  int                  iter;
 } tm_QudaMGTunableParams_t;
+
+typedef enum tm_QudaMGTuningDirection_t {
+  TM_MG_TUNE_MU_FACTOR = 0,
+  TM_MG_TUNE_COARSE_SOLVER_MAXITER,
+  TM_MG_TUNE_COARSE_SOLVER_TOL,
+  TM_MG_TUNE_NU_PRE,
+  TM_MG_TUNE_NU_POST,
+  TM_MG_TUNE_SMOOTHER_TOL,
+  TM_MG_TUNE_OMEGA,
+  TM_MG_TUNE_INVALID
+} tm_QudaMGTuningDirection_t;
 
 typedef struct tm_QudaMGSetupState_t {
   double gauge_id;

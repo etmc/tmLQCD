@@ -52,6 +52,8 @@
 #include "start.h"
 #include "measure_gauge_action.h"
 #include "measure_rectangles.h"
+#include "operator/clover_leaf.h"
+#include "operator/clovertm_operators.h"
 #ifdef TM_USE_MPI
 #include "xchange/xchange.h"
 #endif
