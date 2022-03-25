@@ -96,7 +96,7 @@ int main(int argc,char *argv[]) {
   char tmp_filename[50];
   char *input_filename = NULL;
   int status = 0, accept = 0;
-  int j,ix,mu, trajectory_counter=0;
+  int j,ix,mu;
   unsigned int const io_max_attempts = 5; /* Make this configurable? */
   unsigned int const io_timeout = 5; /* Make this configurable? */
   struct timeval t1;
@@ -127,8 +127,6 @@ int main(int argc,char *argv[]) {
 #endif
 
   strcpy(gauge_filename,"conf.save");
-  strcpy(nstore_filename,".nstore_counter");
-  strcpy(tmp_filename, ".conf.tmp");
 
   verbose = 1;
   g_use_clover_flag = 0;
@@ -158,20 +156,6 @@ int main(int argc,char *argv[]) {
   tmlqcd_mpi_init(argc, argv);
   tm_stopwatch_push(&g_timers, "DERIV_MG_TUNE", "");
 
-  if(nstore == -1) {
-    countfile = fopen(nstore_filename, "r");
-    if(countfile != NULL) {
-      j = fscanf(countfile, "%d %d %s\n", &nstore, &trajectory_counter, gauge_input_filename);
-      if(j < 1) nstore = 0;
-      if(j < 2) trajectory_counter = 0;
-      fclose(countfile);
-    }
-    else {
-      nstore = 0;
-      trajectory_counter = 0;
-    }
-  }
-  
 #ifndef TM_USE_MPI
   g_dbw2rand = 0;
 #endif
@@ -270,33 +254,20 @@ int main(int argc,char *argv[]) {
 #endif
 
   /* Initialise random number generator */
-  start_ranlux(rlxd_level, random_seed^trajectory_counter);
+  start_ranlux(rlxd_level, random_seed^nstore);
 
   /* Set up the gauge field */
-  /* continue and restart */
-  if(startoption==3 || startoption == 2) {
-    if(g_proc_id == 0) {
-      printf("# Trying to read gauge field from file %s in %s precision.\n",
-            gauge_input_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
-      fflush(stdout);
-    }
-    if( (status = read_gauge_field(gauge_input_filename,g_gauge_field)) != 0) {
-      fprintf(stderr, "Error %d while reading gauge field from %s\nAborting...\n", status, gauge_input_filename);
-      exit(-2);
-    }
-
-    if (g_proc_id == 0){
-      printf("# Finished reading gauge field.\n");
-      fflush(stdout);
-    }
+  snprintf(gauge_input_filename, 50, "conf.%04d", nstore);
+  printf("# Trying to read gauge field from file %s in %s precision.\n",
+        gauge_input_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
+  fflush(stdout);
+  if( (status = read_gauge_field(gauge_input_filename,g_gauge_field)) != 0) {
+    fprintf(stderr, "Error %d while reading gauge field from %s\nAborting...\n", status, gauge_input_filename);
+    exit(-2);
   }
-  else if (startoption == 1) {
-    /* hot */
-    random_gauge_field(reproduce_randomnumber_flag, g_gauge_field);
-  }
-  else if(startoption == 0) {
-    /* cold */
-    unit_g_gauge_field();
+  if (g_proc_id == 0){
+    printf("# Finished reading gauge field.\n");
+    fflush(stdout);
   }
 
   /*For parallelization: exchange the gaugefield */

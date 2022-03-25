@@ -2219,6 +2219,11 @@ static inline double fltlist_next_token(int * const list_end){
     quda_mg_tuning_plan.mg_tuning_iterations = a;
     if(myverbose) printf(" Number of MG tuning iterations set to %d line %d\n", a, line_of_file);
   }
+  {SPC}*MGTuningTolerance{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    quda_mg_tuning_plan.mg_tuning_tolerance = c;
+    if(myverbose) printf("  Tolerance for MG tuning set to %.3f line %d\n", c, line_of_file);
+  }
   ^EndTuneMGParams{SPC}*  {
     if(myverbose) printf("QUDA-MG tuning parameters parsed on line %d\n\n", line_of_file);
     BEGIN(0);
@@ -3946,7 +3951,10 @@ int read_input(char * conf_file){
   quda_input.mg_refresh_setup_mdu_threshold = _default_quda_mg_refresh_setup_mdu_threshold;
   quda_input.mg_reuse_setup_mu_threshold = _default_quda_mg_reuse_setup_mu_threshold;
   quda_input.mg_run_low_mode_check = QUDA_BOOLEAN_NO;
-  quda_input.mg_run_oblique_proj_check = QUDA_BOOLEAN_NO; 
+  quda_input.mg_run_oblique_proj_check = QUDA_BOOLEAN_NO;
+
+  quda_mg_tuning_plan.mg_tuning_iterations = _default_quda_mg_tuning_iterations;
+  quda_mg_tuning_plan.mg_tuning_tolerance = _default_quda_mg_tuning_tolerance; 
 
   /* Put -1 in PropInfo.format to see if parse_config() will
   change the value. If not then set it to source_format_flag */

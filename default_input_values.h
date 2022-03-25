@@ -238,6 +238,9 @@
 #define _default_quda_enable_device_memory_pool 0
 #define _default_quda_enable_pinned_memory_pool 0
 
+#define _default_quda_mg_tuning_iterations 1000
+#define _default_quda_mg_tuning_tolerance 0.99
+
 // gradient flow measurement step size and maximum flow time
 #define _default_gf_eps 0.01
 #define _default_gf_tmax 9.99

@@ -1,0 +1,119 @@
+NrXProcs = 1
+NrYProcs = 1
+NrZProcs = 1
+ompnumthreads = 3
+
+L=24
+T=48
+
+Measurements = 1
+InitialStoreCounter = 2000
+
+2KappaMu = 0.000224102400
+2KappaMuBar = 0.0394421632
+2KappaEpsBar = 0.0426076209
+CSW = 1.74
+kappa = 0.1400640
+
+NSave = 1
+ThetaT = 1.0
+UseEvenOdd = yes
+DebugLevel = 3
+
+UseRelativePrecision = yes
+
+BeginExternalInverter QUDA
+  Pipeline = 24
+  gcrNkrylov = 24
+  MGCoarseMuFactor = 1.0, 1.0, 18.0
+  MGNumberOfLevels = 3
+  MGNumberOfVectors = 24, 24
+  MGSetupSolver = cg
+  MGSetup2KappaMu = 0.000224102400
+  MGVerbosity = silent, silent, silent
+  MGSetupSolverTolerance = 5e-7, 5e-7
+  MGSetupMaxSolverIterations = 1500, 1500
+  MGCoarseSolverType = gcr, gcr, cagcr
+  MgCoarseSolverTolerance = 0.1, 0.1, 0.1
+  MGCoarseMaxSolverIterations = 15, 15, 15
+  MGSmootherType = cagcr, cagcr, cagcr
+  MGSmootherTolerance = 0.1, 0.1, 0.1
+  MGSmootherPreIterations = 0, 0, 0
+  MGSmootherPostIterations = 2, 2, 2
+  MGBlockSizesX = 4,3
+  MGBlockSizesY = 4,3
+  MGBlockSizesZ = 4,3
+  MGBlockSizesT = 3,2
+  MGOverUnderRelaxationFactor = 0.90, 0.90, 0.90
+  MGResetSetupMDUThreshold = 1.0
+  MGRefreshSetupMDUThreshold = 0.06249
+  MGRefreshSetupMaxSolverIterations = 25, 25
+  EnableDeviceMemoryPool = no
+  EnablePinnedMemoryPool = no
+EndExternalInverter
+
+BeginTuneMGParams QUDA
+  MGCoarseMuFactorSteps = 10, 10, 10
+  MGCoarseMuFactorMin = 1.0, 1.0, 10
+  MGCoarseMuFactorMax = 5.0, 10, 40
+
+  MGCoarseMaxSolverIterationsSteps = 10, 10, 10
+  MGCoarseMaxSolverIterationsMin = 10, 10, 10
+  MGCoarseMaxSolverIterationsMax = 50, 50, 50
+
+  MGCoarseSolverToleranceSteps = 10, 10, 10
+  MGCoarseSolverToleranceMin = 0.05, 0.05, 0.05
+  MGCoarseSolverToleranceMax = 0.3, 0.3, 0.3
+
+  MGSmootherPreIterationsSteps = 2, 2, 2
+  MGSmootherPreIterationsMin = 0, 0, 0
+  MGSmootherPreIterationsMax = 4, 4, 4
+
+  MGSmootherPostIterationsSteps = 2, 2, 2
+  MGSmootherPostIterationsMin = 0, 0, 0
+  MGSmootherPostIterationsMax = 4, 4, 4
+
+  MGSmootherToleranceSteps = 4, 4, 4
+  MGSmootherToleranceMin = 0.1, 0.1, 0.1
+  MGSmootherToleranceMax = 0.5, 0.5, 0.5
+
+  MGOverUnderRelaxationFactorSteps = 3, 3, 3
+  MGOverUnderRelaxationFactorMin = 0.9, 0.9, 0.9
+  MGOverUnderRelaxationFactorMax = 1.05, 1.05, 1.05
+
+  MGTuningIterations = 1000
+  MGTuningTolerance = 0.99
+EndTuneMGParams
+
+## can also be applied to determinant
+#BeginMonomial CLOVERDET
+#  Timescale = 0
+#  kappa = 0.1400640
+#  2KappaMu = 0.000224102400
+#  CSW = 1.74
+#  rho = 0.0
+#  MaxSolverIterations = 1000
+#  AcceptancePrecision =  1.e-21
+#  ForcePrecision = 1.e-16
+#  Name = cloverdetlight
+#  solver = mg
+#  useexternalinverter = quda
+#  usesloppyprecision = single
+#EndMonomial
+
+BeginMonomial CLOVERDETRATIO
+  Timescale = 0
+  kappa = 0.1400640
+  2KappaMu = 0.000224102400
+  rho = 0.0
+  rho2 = 0.01
+  CSW = 1.74
+  MaxSolverIterations = 400
+  AcceptancePrecision =  1.e-21
+  ForcePrecision = 1.e-18
+  Name = cloverdetratio2light
+  solver = mg
+  useexternalinverter = quda
+  usesloppyprecision = single
+EndMonomial
+

@@ -140,6 +140,7 @@ typedef struct tm_QudaMGTuningPlan_t {
   double               mg_omega_min[QUDA_MAX_MG_LEVEL];
   double               mg_omega_max[QUDA_MAX_MG_LEVEL];
   int                  mg_tuning_iterations;
+  double               mg_tuning_tolerance;
 } tm_QudaMGTuningPlan_t;
 
 typedef struct tm_QudaMGTunableParams_t {
@@ -158,8 +159,8 @@ typedef enum tm_QudaMGTuningDirection_t {
   TM_MG_TUNE_MU_FACTOR = 0,
   TM_MG_TUNE_COARSE_SOLVER_MAXITER,
   TM_MG_TUNE_COARSE_SOLVER_TOL,
-  TM_MG_TUNE_NU_PRE,
   TM_MG_TUNE_NU_POST,
+  TM_MG_TUNE_NU_PRE,
   TM_MG_TUNE_SMOOTHER_TOL,
   TM_MG_TUNE_OMEGA,
   TM_MG_TUNE_INVALID

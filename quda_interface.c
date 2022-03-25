@@ -2612,11 +2612,11 @@ void print_tunable_params_pair(const tm_QudaMGTunableParams_t * const old,
     printf("%25s: ", "mg_coarse_solver_tol");
     print_dbl_array_pair(old->mg_coarse_solver_tol, new->mg_coarse_solver_tol, n_level);
 
-    printf("%25s: ", "mg_nu_pre");
-    print_int_array_pair(old->mg_nu_pre, new->mg_nu_pre, n_level);
-
     printf("%25s: ", "mg_nu_post");
     print_int_array_pair(old->mg_nu_post, new->mg_nu_post, n_level);
+
+    printf("%25s: ", "mg_nu_pre");
+    print_int_array_pair(old->mg_nu_pre, new->mg_nu_pre, n_level);
 
     printf("%25s: ", "mg_smoother_tol");
     print_dbl_array_pair(old->mg_smoother_tol, new->mg_smoother_tol, n_level);
@@ -2626,6 +2626,60 @@ void print_tunable_params_pair(const tm_QudaMGTunableParams_t * const old,
     printf("\n");
   }
 }
+
+void print_tunable_params(const tm_QudaMGTunableParams_t * const par,
+                          const int n_level)
+{
+  if( g_proc_id == 0){
+    printf("\n");
+    printf("%25s: ", "mg_mu_factor"); 
+    print_dbl_array(par->mg_mu_factor, n_level);
+    printf("\n");
+    
+    printf("%25s: ", "mg_coarse_solver_maxiter");
+    print_int_array(par->mg_coarse_solver_maxiter, n_level);
+    printf("\n");
+
+    printf("%25s: ", "mg_coarse_solver_tol");
+    print_dbl_array(par->mg_coarse_solver_tol, n_level);
+    printf("\n");
+
+    printf("%25s: ", "mg_nu_post");
+    print_int_array(par->mg_nu_post, n_level);
+    printf("\n");
+
+    printf("%25s: ", "mg_nu_pre");
+    print_int_array(par->mg_nu_pre, n_level);
+    printf("\n");
+
+    printf("%25s: ", "mg_smoother_tol");
+    print_dbl_array(par->mg_smoother_tol, n_level);
+    printf("\n");
+
+    printf("%25s: ", "mg_omega");
+    print_dbl_array(par->mg_omega, n_level);
+    printf("\n");
+  }
+}
+
+int find_best_params(const tm_QudaMGTunableParams_t * const par_arr, const int n, const int n_level, const int print){
+  double best_time = par_arr[0].tts;
+  int best_idx = 0;
+  for(int i = 1; i < n; i++){
+    if( par_arr[i].tts < best_time ){
+      best_time = par_arr[i].tts;
+      best_idx = i;
+    }
+  }
+  if(print){
+    tm_debug_printf(0, 0, "\n\nQUDA-MG param tuner: BEST SET OF PARAMETERS\n-------------------------------------------");
+    print_tunable_params(&par_arr[best_idx], n_level);
+    tm_debug_printf(0, 0, "Timing: %.6f, Iters: %d\n", par_arr[best_idx].tts, par_arr[best_idx].iter);
+    tm_debug_printf(0, 0, "-------------------------------------------\n\n");
+  }
+  return best_idx;
+}
+
 
 tm_QudaMGTuningDirection_t update_tuning_dir(const tm_QudaMGTuningPlan_t * const tuning_plan,
                                              const tm_QudaMGTuningDirection_t tuning_dir,
@@ -2718,6 +2772,7 @@ void quda_mg_tune_params(void * spinorOut, void * spinorIn, const int max_iter){
   int cur_tuning_lvl = mg_n_level-1;
   int cur_lvl_tuning_steps = get_lvl_tuning_steps(&quda_mg_tuning_plan, cur_tuning_lvl);
   int steps_done_in_cur_dir = 0;
+  int i = 0;
   tm_QudaMGTuningDirection_t cur_tuning_dir = TM_MG_TUNE_MU_FACTOR;
 
   copy_quda_mg_tunable_params_from_input(&tunable_params[0], &quda_input);
@@ -2727,12 +2782,7 @@ void quda_mg_tune_params(void * spinorOut, void * spinorIn, const int max_iter){
   tunable_params[0].iter = inv_param.iter;
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 
-  for(int i = 1; i < quda_mg_tuning_plan.mg_tuning_iterations; i++){
-    if(i % cur_lvl_tuning_steps == 0){
-      if(cur_tuning_lvl > 0) cur_tuning_lvl--;
-      else break;
-    }
-    
+  for(i = 1; i < quda_mg_tuning_plan.mg_tuning_iterations; i++){
     copy_quda_mg_tunable_params(&tunable_params[i], &tunable_params[i-1]);
 
     int old_tuning_dir = cur_tuning_dir;
@@ -2770,19 +2820,23 @@ void quda_mg_tune_params(void * spinorOut, void * spinorIn, const int max_iter){
 
     tunable_params[i].tts = inv_param.secs;
     tunable_params[i].iter = inv_param.iter;
+
+    int best_idx = find_best_params(tunable_params, i, mg_n_level, 0);
     
     // when the time to solution becomes worse, we stop moving into this direction UNLESS
-    // the previous set of parameters was not able to solve the problem
-    if(tunable_params[i].tts/tunable_params[i-1].tts > 0.95 &&
+    // the previous AND current set of parameters were not able to solve the problem
+    if(tunable_params[i].tts/tunable_params[best_idx].tts > quda_mg_tuning_plan.mg_tuning_tolerance &&
        tunable_params[i-1].iter != max_iter){
-      if(tunable_params[i].tts/tunable_params[i-1].tts > 1.0){
-        copy_quda_mg_tunable_params(&tunable_params[i], &tunable_params[i-1]);
+      if(tunable_params[i].tts/tunable_params[best_idx].tts > 1.0){
+        copy_quda_mg_tunable_params(&tunable_params[i], &tunable_params[best_idx]);
       }
       adjust_tuning_plan(&quda_mg_tuning_plan, cur_tuning_dir, cur_tuning_lvl); 
     }
        
     cur_lvl_tuning_steps = get_lvl_tuning_steps(&quda_mg_tuning_plan, cur_tuning_lvl);
   }
+
+  find_best_params(tunable_params, i, mg_n_level, 1);
 
   free(tunable_params); 
 }
