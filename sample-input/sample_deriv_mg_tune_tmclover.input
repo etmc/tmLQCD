@@ -25,7 +25,6 @@ UseRelativePrecision = yes
 BeginExternalInverter QUDA
   Pipeline = 24
   gcrNkrylov = 24
-  MGCoarseMuFactor = 1.0, 1.0, 18.0
   MGNumberOfLevels = 3
   MGNumberOfVectors = 24, 24
   MGSetupSolver = cg
@@ -34,84 +33,60 @@ BeginExternalInverter QUDA
   MGSetupSolverTolerance = 5e-7, 5e-7
   MGSetupMaxSolverIterations = 1500, 1500
   MGCoarseSolverType = gcr, gcr, cagcr
-  MgCoarseSolverTolerance = 0.1, 0.1, 0.1
-  MGCoarseMaxSolverIterations = 15, 15, 15
   MGSmootherType = cagcr, cagcr, cagcr
-  MGSmootherTolerance = 0.1, 0.1, 0.1
-  MGSmootherPreIterations = 0, 0, 0
-  MGSmootherPostIterations = 2, 2, 2
   MGBlockSizesX = 4,3
   MGBlockSizesY = 4,3
   MGBlockSizesZ = 4,3
   MGBlockSizesT = 3,2
+  ## the following MG parameters can be tuned by the algorithm 
+  MGCoarseMuFactor = 1.0, 1.0, 18.0
+  MGCoarseMaxSolverIterations = 15, 15, 15
+  MGCoarseSolverTolerance = 0.1, 0.1, 0.1
+  MGSmootherPostIterations = 2, 2, 2
+  MGSmootherPreIterations = 0, 0, 0
+  MGSmootherTolerance = 0.1, 0.1, 0.1
   MGOverUnderRelaxationFactor = 0.90, 0.90, 0.90
-  MGResetSetupMDUThreshold = 1.0
-  MGRefreshSetupMDUThreshold = 0.06249
-  MGRefreshSetupMaxSolverIterations = 25, 25
-  EnableDeviceMemoryPool = no
-  EnablePinnedMemoryPool = no
 EndExternalInverter
 
 BeginTuneMGParams QUDA
   MGCoarseMuFactorSteps = 10, 10, 10
-  MGCoarseMuFactorMin = 1.0, 1.0, 10
-  MGCoarseMuFactorMax = 5.0, 10, 40
+  MGCoarseMuFactorDelta = 0.25, 0.5, 5
 
   MGCoarseMaxSolverIterationsSteps = 10, 10, 10
-  MGCoarseMaxSolverIterationsMin = 10, 10, 10
-  MGCoarseMaxSolverIterationsMax = 50, 50, 50
+  MGCoarseMaxSolverIterationsDelta = 5, 5, 5
 
   MGCoarseSolverToleranceSteps = 10, 10, 10
-  MGCoarseSolverToleranceMin = 0.05, 0.05, 0.05
-  MGCoarseSolverToleranceMax = 0.3, 0.3, 0.3
+  MGCoarseSolverToleranceDelta = 0.05, 0.05, 0.05
 
   MGSmootherPreIterationsSteps = 2, 2, 2
-  MGSmootherPreIterationsMin = 0, 0, 0
-  MGSmootherPreIterationsMax = 4, 4, 4
+  MGSmootherPreIterationsDelta = 2, 2, 2
 
   MGSmootherPostIterationsSteps = 2, 2, 2
-  MGSmootherPostIterationsMin = 0, 0, 0
-  MGSmootherPostIterationsMax = 4, 4, 4
+  MGSmootherPostIterationsDelat = 2, 2, 2
 
   MGSmootherToleranceSteps = 4, 4, 4
-  MGSmootherToleranceMin = 0.1, 0.1, 0.1
-  MGSmootherToleranceMax = 0.5, 0.5, 0.5
+  MGSmootherToleranceDelta = 0.1, 0.1, 0.1
 
   MGOverUnderRelaxationFactorSteps = 3, 3, 3
-  MGOverUnderRelaxationFactorMin = 0.9, 0.9, 0.9
-  MGOverUnderRelaxationFactorMax = 1.05, 1.05, 1.05
+  MGOverUnderRelaxationFactorDelta = 0.05, 0.05, 0.05
 
   MGTuningIterations = 1000
+
+  # when in a particular tuning step the improvement is less than 1%, we
+  # move on to the next parameter to be tuned
   MGTuningTolerance = 0.99
 EndTuneMGParams
 
-## can also be applied to determinant
-#BeginMonomial CLOVERDET
-#  Timescale = 0
-#  kappa = 0.1400640
-#  2KappaMu = 0.000224102400
-#  CSW = 1.74
-#  rho = 0.0
-#  MaxSolverIterations = 1000
-#  AcceptancePrecision =  1.e-21
-#  ForcePrecision = 1.e-16
-#  Name = cloverdetlight
-#  solver = mg
-#  useexternalinverter = quda
-#  usesloppyprecision = single
-#EndMonomial
-
-BeginMonomial CLOVERDETRATIO
+BeginMonomial CLOVERDET
   Timescale = 0
   kappa = 0.1400640
   2KappaMu = 0.000224102400
-  rho = 0.0
-  rho2 = 0.01
   CSW = 1.74
-  MaxSolverIterations = 400
+  rho = 0.0
+  MaxSolverIterations = 1000
   AcceptancePrecision =  1.e-21
-  ForcePrecision = 1.e-18
-  Name = cloverdetratio2light
+  ForcePrecision = 1.e-16
+  Name = cloverdetlight
   solver = mg
   useexternalinverter = quda
   usesloppyprecision = single

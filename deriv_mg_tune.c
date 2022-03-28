@@ -307,8 +307,10 @@ int main(int argc,char *argv[]) {
 
   const monomial * const mnl = &monomial_list[0];
   const int mnl_type = mnl->type;
-  if( !(mnl_type == DET || mnl_type == DETRATIO || mnl_type == CLOVERDET || mnl_type == CLOVERDETRATIO) ){
-    fprintf(stderr, "deriv_mg_tune: only DET, DETRATIO, CLOVERDET and CLOVERDETRATIO monomials are supported! Aborting...\n");
+  // we support only DET and CLOVERDET monomials because their heatbath-step can be performed
+  // without having to invert the Dirac operator
+  if( !(mnl_type == DET || mnl_type == CLOVERDET ) ){
+    fprintf(stderr, "deriv_mg_tune: only DET and CLOVERDET monomials are supported! Aborting...\n");
     exit(130);
   }
 
@@ -342,23 +344,10 @@ int main(int argc,char *argv[]) {
   hf.momenta = moment;
   hf.derivative = df0; 
 
-  if( mnl_type == CLOVERDET || mnl_type == CLOVERDETRATIO ){
-    mnl_backup_restore_globals(TM_BACKUP_GLOBALS);
-    g_mu = mnl->mu;
-    g_mu3 = mnl->rho;
-    g_c_sw = mnl->c_sw;
-    g_kappa = mnl->kappa;
-    boundary(mnl->kappa);
-    init_sw_fields();
-    sw_term((const su3**)hf.gaugefield, mnl->kappa, mnl->c_sw);
-    mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
-  }
-
-  /* Loop for measurements */
-  for(j = 0; j < Nmeas; j++) {
-    random_spinor_field_eo(mnl->pf, mnl->rngrepro, RN_GAUSS);
-    monomial_list[0].derivativefunction(0, &hf); 
-  }
+  // we need to properly initialise the PF field
+  monomial_list[0].hbfunction(0, &hf);
+  // and now we can move on to actually tuning the MG
+  monomial_list[0].derivativefunction(0, &hf); 
 
 #ifdef TM_USE_OMP
   free_omp_accumulators();

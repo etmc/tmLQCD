@@ -2499,54 +2499,37 @@ void update_tunable_params(tm_QudaMGTunableParams_t * tunable_params,
   switch(tuning_dir){
     case TM_MG_TUNE_MU_FACTOR:
       {
-        const double delta = (tuning_plan->mg_mu_factor_max[lvl] - tuning_plan->mg_mu_factor_min[lvl]) /
-                             (tuning_plan->mg_mu_factor_steps[lvl]);
-        tunable_params->mg_mu_factor[lvl] += delta;
+        tunable_params->mg_mu_factor[lvl] += tuning_plan->mg_mu_factor_delta[lvl];
         break;
       }
     case TM_MG_TUNE_COARSE_SOLVER_MAXITER:
       {
-        const int delta = (tuning_plan->mg_coarse_solver_maxiter_max[lvl] -
-                           tuning_plan->mg_coarse_solver_maxiter_min[lvl]) /
-                          (tuning_plan->mg_coarse_solver_maxiter_steps[lvl]);
-        tunable_params->mg_coarse_solver_maxiter[lvl] += delta; 
+        tunable_params->mg_coarse_solver_maxiter[lvl] += tuning_plan->mg_coarse_solver_maxiter_delta[lvl]; 
         break;
       }
     case TM_MG_TUNE_COARSE_SOLVER_TOL:
       {
-        const double delta = (tuning_plan->mg_coarse_solver_tol_max[lvl] -
-                              tuning_plan->mg_coarse_solver_tol_min[lvl]) /
-                             (tuning_plan->mg_coarse_solver_tol_steps[lvl]);
-        tunable_params->mg_coarse_solver_tol[lvl] += delta;
+        tunable_params->mg_coarse_solver_tol[lvl] += tuning_plan->mg_coarse_solver_tol_delta[lvl];
         break;
       }
     case TM_MG_TUNE_NU_PRE:
       {
-        const int delta = (tuning_plan->mg_nu_pre_max[lvl] - tuning_plan->mg_nu_pre_min[lvl]) /
-                          (tuning_plan->mg_nu_pre_steps[lvl]);
-        tunable_params->mg_nu_pre[lvl] += delta;
+        tunable_params->mg_nu_pre[lvl] += tuning_plan->mg_nu_pre_delta[lvl];
         break;
       }
     case TM_MG_TUNE_NU_POST:
       {
-        const int delta = (tuning_plan->mg_nu_post_max[lvl] - tuning_plan->mg_nu_post_min[lvl]) /
-                          (tuning_plan->mg_nu_post_steps[lvl]);
-        tunable_params->mg_nu_post[lvl] += delta;
+        tunable_params->mg_nu_post[lvl] += tuning_plan->mg_nu_post_delta[lvl];
         break;
       }
     case TM_MG_TUNE_SMOOTHER_TOL:
       {
-        const double delta = (tuning_plan->mg_smoother_tol_max[lvl] -
-                              tuning_plan->mg_smoother_tol_min[lvl]) /
-                             (tuning_plan->mg_smoother_tol_steps[lvl]);
-        tunable_params->mg_smoother_tol[lvl] += delta;
+        tunable_params->mg_smoother_tol[lvl] += tuning_plan->mg_smoother_tol_delta[lvl];
         break;
       }
     case TM_MG_TUNE_OMEGA:
       {
-        const double delta = (tuning_plan->mg_omega_max[lvl] - tuning_plan->mg_omega_min[lvl]) /
-                             (tuning_plan->mg_omega_steps[lvl]);
-        tunable_params->mg_omega[lvl] += delta;
+        tunable_params->mg_omega[lvl] += tuning_plan->mg_omega_delta[lvl];
         break;
       }
     case TM_MG_TUNE_INVALID:

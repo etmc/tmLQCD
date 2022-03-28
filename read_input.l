@@ -2154,65 +2154,44 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*MGCoarseMuFactorSteps{EQL}{STRLIST} {
     parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_mu_factor_steps[0]));
   }
-  {SPC}*MGCoarseMuFactorMin{EQL}{STRLIST} {
-    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_mu_factor_min[0]));
-  }
-  {SPC}*MGCoarseMuFactorMax{EQL}{STRLIST} {
-    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_mu_factor_max[0]));
+  {SPC}*MGCoarseMuFactorDelta{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_mu_factor_delta[0]));
   }
   {SPC}*MGCoarseMaxSolverIterationsSteps{EQL}{STRLIST} {
     parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_coarse_solver_maxiter_steps[0]));
   }
-  {SPC}*MGCoarseMaxSolverIterationsMin{EQL}{STRLIST} {
-    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_coarse_solver_maxiter_min[0]));
-  }
-  {SPC}*MGCoarseMaxSolverIterationsMax{EQL}{STRLIST} {
-    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_coarse_solver_maxiter_max[0]));
+  {SPC}*MGCoarseMaxSolverIterationsDelta{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_coarse_solver_maxiter_delta[0]));
   }
   {SPC}*MGCoarseSolverToleranceSteps{EQL}{STRLIST} {
     parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_coarse_solver_tol_steps[0]));
   }
-  {SPC}*MGCoarseSolverToleranceMin{EQL}{STRLIST} {
-    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_coarse_solver_tol_min[0]));
-  }
-  {SPC}*MGCoarseSolverToleranceMax{EQL}{STRLIST} {
-    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_coarse_solver_tol_max[0]));
+  {SPC}*MGCoarseSolverToleranceDelta{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_coarse_solver_tol_delta[0]));
   }
   {SPC}*MGSmootherPreIterationsSteps{EQL}{STRLIST} {
     parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_nu_pre_steps[0]));
   }
-  {SPC}*MGSmootherPreIterationsMin{EQL}{STRLIST} {
-    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_nu_pre_min[0]));
-  }
-  {SPC}*MGSmootherPreIterationsMax{EQL}{STRLIST} {
-    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_nu_pre_max[0]));
+  {SPC}*MGSmootherPreIterationsDelta{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_nu_pre_delta[0]));
   }
   {SPC}*MGSmootherPostIterationsSteps{EQL}{STRLIST} {
     parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_nu_post_steps[0]));
   }
-  {SPC}*MGSmootherPostIterationsMin{EQL}{STRLIST} {
-    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_nu_post_min[0]));
-  }
-  {SPC}*MGSmootherPostIterationsMax{EQL}{STRLIST} {
-    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_nu_post_max[0]));
+  {SPC}*MGSmootherPostIterationsDelta{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_nu_post_delta[0]));
   }
   {SPC}*MGSmootherToleranceSteps{EQL}{STRLIST} {
     parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_smoother_tol_steps[0]));
   }
-  {SPC}*MGSmootherToleranceMin{EQL}{STRLIST} {
-    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_smoother_tol_min[0]));
-  }
-  {SPC}*MGSmootherToleranceMax{EQL}{STRLIST} {
-    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_smoother_tol_max[0]));
+  {SPC}*MGSmootherToleranceDelta{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_smoother_tol_delta[0]));
   }
   {SPC}*MGOverUnderRelaxationFactorSteps{EQL}{STRLIST} {
     parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_omega_steps[0]));
   }
-  {SPC}*MGOverUnderRelaxationFactorMin{EQL}{STRLIST} {
-    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_omega_min[0]));
-  }
-  {SPC}*MGOverUnderRelaxationFactorMax{EQL}{STRLIST} {
-    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_omega_max[0]));
+  {SPC}*MGOverUnderRelaxationFactorDelta{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_omega_delta[0]));
   }
   {SPC}*MGTuningIterations{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);

@@ -119,26 +119,19 @@ typedef struct tm_QudaParams_t {
 
 typedef struct tm_QudaMGTuningPlan_t {
   int                  mg_mu_factor_steps[QUDA_MAX_MG_LEVEL];
-  double               mg_mu_factor_min[QUDA_MAX_MG_LEVEL];
-  double               mg_mu_factor_max[QUDA_MAX_MG_LEVEL];
+  double               mg_mu_factor_delta[QUDA_MAX_MG_LEVEL];
   int                  mg_coarse_solver_maxiter_steps[QUDA_MAX_MG_LEVEL];
-  int                  mg_coarse_solver_maxiter_min[QUDA_MAX_MG_LEVEL];
-  int                  mg_coarse_solver_maxiter_max[QUDA_MAX_MG_LEVEL];
+  int                  mg_coarse_solver_maxiter_delta[QUDA_MAX_MG_LEVEL];
   int                  mg_coarse_solver_tol_steps[QUDA_MAX_MG_LEVEL];
-  double               mg_coarse_solver_tol_min[QUDA_MAX_MG_LEVEL];
-  double               mg_coarse_solver_tol_max[QUDA_MAX_MG_LEVEL];
+  double               mg_coarse_solver_tol_delta[QUDA_MAX_MG_LEVEL];
   int                  mg_nu_pre_steps[QUDA_MAX_MG_LEVEL];
-  int                  mg_nu_pre_min[QUDA_MAX_MG_LEVEL];
-  int                  mg_nu_pre_max[QUDA_MAX_MG_LEVEL];
+  int                  mg_nu_pre_delta[QUDA_MAX_MG_LEVEL];
   int                  mg_nu_post_steps[QUDA_MAX_MG_LEVEL];
-  int                  mg_nu_post_min[QUDA_MAX_MG_LEVEL];
-  int                  mg_nu_post_max[QUDA_MAX_MG_LEVEL];
+  int                  mg_nu_post_delta[QUDA_MAX_MG_LEVEL];
   int                  mg_smoother_tol_steps[QUDA_MAX_MG_LEVEL];
-  double               mg_smoother_tol_min[QUDA_MAX_MG_LEVEL];
-  double               mg_smoother_tol_max[QUDA_MAX_MG_LEVEL];
+  double               mg_smoother_tol_delta[QUDA_MAX_MG_LEVEL];
   int                  mg_omega_steps[QUDA_MAX_MG_LEVEL];
-  double               mg_omega_min[QUDA_MAX_MG_LEVEL];
-  double               mg_omega_max[QUDA_MAX_MG_LEVEL];
+  double               mg_omega_delta[QUDA_MAX_MG_LEVEL];
   int                  mg_tuning_iterations;
   double               mg_tuning_tolerance;
 } tm_QudaMGTuningPlan_t;
