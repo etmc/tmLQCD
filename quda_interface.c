@@ -2796,21 +2796,25 @@ void quda_mg_tune_params(void * spinorOut, void * spinorIn, const int max_iter){
     cur_tuning_dir = update_tuning_dir(&quda_mg_tuning_plan, cur_tuning_dir, cur_tuning_lvl, steps_done_in_cur_dir);
     if( old_tuning_dir != cur_tuning_dir ){
       steps_done_in_cur_dir = 0;
-    }
-
-    // we've run through all parameters at this level and either move to the next finer level
-    // or reset the tuning plan to tune again until the maximum number of iterations is
-    // reached
-    if(cur_tuning_dir == TM_MG_TUNE_INVALID){
-      if(cur_tuning_lvl > 0){
-        cur_tuning_lvl--;
-      } else {
-        cur_tuning_lvl = mg_n_level-1;
-        quda_mg_tuning_plan = tuning_plan_backup;
+      // we've run through all parameters at this level and either move to the next finer level
+      // or reset the tuning plan to tune again until the maximum number of iterations is
+      // reached
+      if(cur_tuning_dir == TM_MG_TUNE_INVALID){
+        if(cur_tuning_lvl > 0){
+          cur_tuning_lvl--;
+        } else {
+          cur_tuning_lvl = mg_n_level-1;
+          quda_mg_tuning_plan = tuning_plan_backup;
+        }
+        cur_tuning_dir = TM_MG_TUNE_MU_FACTOR;
       }
-      cur_tuning_dir = TM_MG_TUNE_MU_FACTOR;
-      steps_done_in_cur_dir = 0;
+      // when we switch tuning direction, we make sure to start off from the currently
+      // best set of parameters 
+      int best_idx  = find_best_params(tunable_params, i, mg_n_level, 1);
+      copy_quda_mg_tunable_params(&cur_params, &tunable_params[best_idx]);
+      copy_quda_mg_tunable_params(&tunable_params[i], &cur_params);
     }
+    
     if(g_proc_id == 0){
       printf("\ncur_tuning_lvl: %d\n", cur_tuning_lvl);
       printf("cur_tuning_dir: %d\n", cur_tuning_dir);
