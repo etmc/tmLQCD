@@ -2788,6 +2788,9 @@ void quda_mg_tune_params(void * spinorOut, void * spinorIn, const int max_iter){
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 
   for(i = 1; i < quda_mg_tuning_plan.mg_tuning_iterations; i++){
+    // the best params from all previous iterations
+    int best_idx = find_best_params(tunable_params, i, mg_n_level, 0);
+
     copy_quda_mg_tunable_params(&tunable_params[i], &cur_params);
 
     // check if we should continue tuning in this direction and reset direction step counter
@@ -2810,7 +2813,6 @@ void quda_mg_tune_params(void * spinorOut, void * spinorIn, const int max_iter){
       }
       // when we switch tuning direction, we make sure to start off from the currently
       // best set of parameters 
-      int best_idx  = find_best_params(tunable_params, i, mg_n_level, 0);
       copy_quda_mg_tunable_params(&cur_params, &tunable_params[best_idx]);
       copy_quda_mg_tunable_params(&tunable_params[i], &cur_params);
     }
@@ -2838,8 +2840,6 @@ void quda_mg_tune_params(void * spinorOut, void * spinorIn, const int max_iter){
     tunable_params[i].tts = inv_param.secs;
     tunable_params[i].iter = inv_param.iter;
 
-    int best_idx = find_best_params(tunable_params, i+1, mg_n_level, 1);
-    
     // when the time to solution doesn't improve much, we stop moving into this direction UNLESS
     // the previous set of parameters was not even able to solve the problem
     // this is to ensure that we can actually reach parameter regions where
@@ -2859,6 +2859,9 @@ void quda_mg_tune_params(void * spinorOut, void * spinorIn, const int max_iter){
        
     cur_lvl_tuning_steps = get_lvl_tuning_steps(&quda_mg_tuning_plan, cur_tuning_lvl);
     steps_done_in_cur_dir++;
+
+    // status update
+    find_best_params(tunable_params, i+1, mg_n_level, 1);
   }
 
   find_best_params(tunable_params, i, mg_n_level, 1);
