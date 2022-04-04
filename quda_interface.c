@@ -2810,7 +2810,7 @@ void quda_mg_tune_params(void * spinorOut, void * spinorIn, const int max_iter){
       }
       // when we switch tuning direction, we make sure to start off from the currently
       // best set of parameters 
-      int best_idx  = find_best_params(tunable_params, i, mg_n_level, 1);
+      int best_idx  = find_best_params(tunable_params, i, mg_n_level, 0);
       copy_quda_mg_tunable_params(&cur_params, &tunable_params[best_idx]);
       copy_quda_mg_tunable_params(&tunable_params[i], &cur_params);
     }
