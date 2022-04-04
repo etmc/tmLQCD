@@ -2818,7 +2818,8 @@ void quda_mg_tune_params(void * spinorOut, void * spinorIn, const int max_iter){
     }
     
     if(g_proc_id == 0){
-      printf("\ncur_tuning_lvl: %d\n", cur_tuning_lvl);
+      printf("\ntuning_iteration: %d/%d\n", i+1, quda_mg_tuning_plan.mg_tuning_iterations);
+      printf("cur_tuning_lvl: %d\n", cur_tuning_lvl);
       printf("cur_tuning_dir: %d\n", cur_tuning_dir);
       printf("steps_done_in_cur_dir: %d\n\n", steps_done_in_cur_dir);
     }
