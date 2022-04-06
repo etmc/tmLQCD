@@ -375,7 +375,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
     fprintf(datafile, "%d %e", accept, etime-atime);
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0) {
-      fprintf(datafile, " %e", (*rectangle_energy)/(12*VOLUME*g_nproc));
+      fprintf(datafile, " %e", (*rectangle_energy)/(12.*VOLUME*g_nproc));
     }
     fprintf(datafile, "\n");
     fflush(datafile);
