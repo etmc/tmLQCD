@@ -101,6 +101,32 @@ case of a reread the time point can be found there.
 After every trajectory the program will save the current configuration
 in the file {\ttfamily conf.save}.
 
+At the end of each trajectory, the program edits the file {\ttfamily nstore\_counter} in the working directory.
+This file contains one line with $3$ space-separated values: {\ttfamily i j confname}.
+\begin{itemize}
+  \item
+  {\ttfamily i} is the index of the next gauge configuration that will be saved.
+  \item
+  {\ttfamily j} is the trajectory index of the latter.
+  \item
+  {\ttfamily confname} is the configuration name from which the HMC starts.
+  If the {\ttfamily Startcondition} parameter is set to {\ttfamily hot} or {\ttfamily cold},
+  the file is created or overwritten with the following content at each trajectory
+  \footnote{The trajectory index starts from $0$, but the $0$-th trajectory is not saved.}: 
+  %
+  \begin{enumerate}
+    \item 
+    {\ttfamily 0 1 conf.save}
+    \item 
+    {\ttfamily 1 2 conf.0000}
+    \item
+    {\ttfamily 2 3 conf.0001}
+    \item
+    ... (and so on depending on the value of {\ttfamily Measurements} in the input file)
+  \end{enumerate}
+  %
+\end{itemize}
+
 \subsection{{\ttfamily invert} and {\ttfamily invert\_doublet}}
 
 \begin{figure}[t]

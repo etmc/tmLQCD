@@ -136,7 +136,7 @@ supported general input paramters:
 \item {\ttfamily InitialStoreCounter}:\\
   Start with value to label measurements. Default is $0$. Can be also
   set to {\ttfamily readin} which causes to let the code check for a
-  file {\ttfamily .nstore\_counter} and reads the initial value from
+  file {\ttfamily nstore\_counter} and reads the initial value from
   this file. If it is not existing, the counter will be set to $0$.
 
 \item {\ttfamily GaugeConfigInputFile}:\\
@@ -332,7 +332,7 @@ The following input parameters are {\ttfamily hmc\_tm} specific:
     hot, cold, restart, continue}. Default is {\ttfamily
     cold}. Restart uses the seed to reset the random number
   generator. In case of {\ttfamily continue} the programme uses the
-  file {\ttfamily .nstore\_counter} to get the information about from
+  file {\ttfamily nstore\_counter} to get the information about from
   where to read the gauge and the random number status. If this file
   does not exist (its written in the course of the HMC) then the input
   parameter described here are used instead.
