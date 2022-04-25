@@ -24,7 +24,7 @@ benchmark
 *.para
 *.dat
 *.out
-.nstore_counter
+nstore_counter
 doc/*.bbl
 doc/*.blg
 doc/*.dvi

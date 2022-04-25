@@ -173,10 +173,10 @@ March.2010: parallel IO implemented and tested to work.
 	    The file conf.save is now almost always save: a new
 	    configuration is first stored in .conf.temp and then moved
 	    to conf.save. There might be still a problem in case the
-	    job chrashes when .nstore_counter is written...
+	    job chrashes when nstore_counter is written...
 
 28.03.2006: chronological solver guess now independent of lapack
-	    the current filename is now saved in .nstore_counter
+	    the current filename is now saved in nstore_counter
 	    last_configuration and last_state are therefore obsolet.
 	    random number state now saved in lime format in the gauge file
 	    rlxd_state files are not any longer produced, but will still be
@@ -388,7 +388,7 @@ March.2010: parallel IO implemented and tested to work.
 
 11.03.2004: third pseudo fermion field added and tested.
 
-09.03.2004: .nstore_counter file introduced to easily restart the
+09.03.2004: nstore_counter file introduced to easily restart the
 	    programm. Just set InitialStoreCounter = readin. Also a
 	    sighandler was added to savely finish the program.
 
