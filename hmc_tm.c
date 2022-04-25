@@ -125,7 +125,7 @@ int main(int argc,char *argv[]) {
 #endif
 
   strcpy(gauge_filename,"conf.save");
-  strcpy(nstore_filename,".nstore_counter");
+  strcpy(nstore_filename,"nstore_counter");
   strcpy(tmp_filename, ".conf.tmp");
 
   verbose = 1;

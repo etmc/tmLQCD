@@ -1547,6 +1547,7 @@ void _updateQudaMultigridPreconditioner(){
       quda_mg_preconditioner = newMultigridQuda(&quda_mg_param);
     }
     inv_param.preconditioner = quda_mg_preconditioner;
+
     set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state);
 
     tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
@@ -1569,7 +1570,16 @@ void _updateQudaMultigridPreconditioner(){
     }
 
     inv_param.preconditioner = quda_mg_preconditioner;
-    set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state);
+    
+    // during a force refresh we only update the parameters tracked in the MG state
+    // this is in order to not disrupt the normal sequence of update and refresh 
+    // operations as a function of the gauge_id
+    if(quda_mg_setup_state.force_refresh){
+      quda_mg_setup_state_update(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state,
+                                 g_mu, g_kappa, g_c_sw);
+    } else {
+      set_quda_mg_setup_state(&quda_mg_setup_state, &quda_gauge_state, &quda_clover_state);
+    }
 
     tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 
@@ -2188,8 +2198,41 @@ int invert_eo_degenerate_quda(spinor * const out,
 
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
 
-  if(iterations >= max_iter)
-    return(-1);
+  if (iterations >= max_iter) {
+    if (solver_flag == MG) {
+      // when the MG fails to converge, the reason may be a degenerated MG setup
+      // or, if this happens in the HMC, bad luck with the evolved setup
+      // we try to force refresh it once and abort if that doesn't help
+
+      // we use this variable to break out of the recursion 
+      static int quda_mg_setup_was_force_refreshed = 0;
+      if( quda_mg_setup_was_force_refreshed == 0 ){
+           tm_debug_printf(0, 0, 
+                        "# TM_QUDA: MG did not converge in %d iterations, force-refreshing setup and trying again!\n",
+                        max_iter);
+        
+        quda_mg_setup_was_force_refreshed = 1;
+        quda_mg_setup_state.force_refresh = 1;
+        int ret_value = invert_eo_degenerate_quda(out, in, precision, max_iter, solver_flag,
+                                                  rel_prec, even_odd_flag, solver_params,
+                                                  sloppy_precision, compression, QpQm);
+        if (ret_value >= max_iter) {
+          char errmsg[200];
+          snprintf(errmsg, 200, "QUDA-MG solver failed to converge in %d iterations even after forced setup refresh. Terminating!",
+                   max_iter);
+          fatal_error(errmsg, __func__);
+          return -1;
+        } else {
+          quda_mg_setup_was_force_refreshed = 0;
+          return ret_value;
+        }
+      } else {
+        // break out of the recursion here
+        return iterations;
+      }
+    }
+    return (-1);
+  }
 
   return(iterations);
 }
@@ -2267,8 +2310,9 @@ int invert_eo_quda_oneflavour_mshift(spinor ** const out,
 
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
 
-  if(iterations >= max_iter)
+  if(iterations >= max_iter){
     return(-1);
+  }
 
   return(iterations);
 }
@@ -2374,8 +2418,9 @@ int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out
 
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
 
-  if(iterations >= max_iter)
+  if(iterations >= max_iter){
     return(-1);
+  }
 
   return(iterations);
 }

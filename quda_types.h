@@ -169,6 +169,7 @@ typedef struct tm_QudaMGSetupState_t {
   double theta_y;
   double theta_z;
   double theta_t;
+  int force_refresh; // set to 1 when the MG doesn't converge
 } tm_QudaMGSetupState_t;
 
 typedef struct tm_QudaCloverState_t {
@@ -326,16 +327,21 @@ static inline int check_quda_mg_setup_state(const tm_QudaMGSetupState_t * const 
       ( fabs(quda_mg_setup_state->theta_y - quda_gauge_state->theta_y) > 2*DBL_EPSILON ) || 
       ( fabs(quda_mg_setup_state->theta_z - quda_gauge_state->theta_z) > 2*DBL_EPSILON ) || 
       ( fabs(quda_mg_setup_state->theta_t - quda_gauge_state->theta_t) > 2*DBL_EPSILON ) || 
-      ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) >= quda_params->mg_reset_setup_mdu_threshold ) ){
+      ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) >= quda_params->mg_reset_setup_mdu_threshold )
+    ){
     return TM_QUDA_MG_SETUP_RESET;
   // when in the HMC, we have to refresh the setup at regular intervals specified
   // by mg_refresh_setup_mdu_threshold, which triggers a few setup iterations to be
   // run with the existing null vectors as initial guesses, thus refreshing
   // the MG setup for the evolved gauge
-  } else if ( ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) < 
+  // we also forcibly refresh the setup when the corresponding flag is set in the
+  // quda_mg_setup_state 
+  } else if ( ( ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) < 
                        quda_params->mg_reset_setup_mdu_threshold ) &&
               ( fabs(quda_mg_setup_state->gauge_id - quda_gauge_state->gauge_id) >= 
-                       quda_params->mg_refresh_setup_mdu_threshold ) ) {
+                       quda_params->mg_refresh_setup_mdu_threshold ) ) ||
+              ( quda_mg_setup_state->force_refresh == 1) 
+    ){
     return TM_QUDA_MG_SETUP_REFRESH;
   // in other cases, e.g., when the operator parameters change or if the gauge_id has "moved" only a little,
   // we don't need to redo the setup, we can simply rebuild the coarse operators with the
@@ -367,6 +373,7 @@ static inline void quda_mg_setup_state_update(tm_QudaMGSetupState_t * const quda
   quda_mg_setup_state->mu = mu;
   quda_mg_setup_state->c_sw = c_sw;
   quda_mg_setup_state->kappa = kappa;
+  quda_mg_setup_state->force_refresh = 0;
   quda_gauge_state->mg_needs_update = 0;
   quda_clover_state->mg_needs_update = 0;
 }
@@ -383,6 +390,7 @@ static inline void set_quda_mg_setup_state(tm_QudaMGSetupState_t * const quda_mg
   quda_mg_setup_state->kappa = g_kappa;
   quda_mg_setup_state->mu = g_mu;
   quda_mg_setup_state->initialised = 1;
+  quda_mg_setup_state->force_refresh = 0;
   quda_gauge_state->mg_needs_update = 0;
   quda_clover_state->mg_needs_update = 0;
 }
@@ -390,6 +398,7 @@ static inline void set_quda_mg_setup_state(tm_QudaMGSetupState_t * const quda_mg
 static inline void reset_quda_mg_setup_state(tm_QudaMGSetupState_t * const quda_mg_setup_state){
   quda_mg_setup_state->gauge_id = -1;
   quda_mg_setup_state->initialised = 0;
+  quda_mg_setup_state->force_refresh = 0;
   quda_mg_setup_state->mu = -1.0;
   quda_mg_setup_state->c_sw = -1.0;
   quda_mg_setup_state->mu = -1.0;

@@ -3356,7 +3356,7 @@ static inline double fltlist_next_token(int * const list_end){
 }
 <NSTORE>readin {
   nstore=-1;
-  if(myverbose!=0) printf("Trying to read InitialStoreCounter from file .nstore_counter\n");
+  if(myverbose!=0) printf("Trying to read InitialStoreCounter from file nstore_counter\n");
 }
 <IOPROC>all         {
   g_stdio_proc = -1;
