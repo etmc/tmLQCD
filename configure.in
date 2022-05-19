@@ -916,11 +916,11 @@ AC_ARG_WITH(hipdir,
              [AC_MSG_RESULT($withval)
               HIP_AVAILABLE=1
               hip_dir=$withval
-              LDFLAGS="$LDFLAGS -L${hip_dir} -lhip",
-              AC_CHECK_LIB([hiprt],
+              LDFLAGS="$LDFLAGS -L${hip_dir} -lamdhip64"
+              AC_CHECK_LIB([amdhip64],
                            [hipMalloc],
                            [],
-                           [AC_MSG_ERROR([Can't link a simple program against library hiprt.])])],
+                           [AC_MSG_ERROR([Can't link a simple program against library amdhip64.])])],
              [AC_MSG_RESULT(no)
               HIP_AVAILABLE=0])
 
