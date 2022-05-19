@@ -944,6 +944,53 @@ AC_SUBST(GPUDIR)
 AC_SUBST(GPUCFLAGS)
 AC_SUBST(GPUMPICOMPILER)
 
+# check usage of cuda
+AC_MSG_CHECKING([whether we want to use CUDA GPU])
+AC_ARG_WITH(cudadir,
+  AS_HELP_STRING([--with-cudadir[=dir]], [if using CUDA, then set CUDA lib dir [default=/usr/local/cuda/lib]]),
+  [echo yes
+  cuda_dir=$withval
+  CUDA_AVAILABLE=1
+  ],
+  [echo no
+  cuda_dir=$withval
+  CUDA_AVAILABLE=0
+  ]
+)
+if $CUDA_AVAILABLE; then
+  AC_MSG_RESULT($cuda_dir)
+  LDFLAGS="$LDFLAGS -L$cuda_dir -lcuda -lcublas"
+  AC_CHECK_LIB([cudart],
+              [cudaMalloc],
+              [],
+              [AC_MSG_ERROR([Can't link a simple program against library cudart.])]
+              )
+fi
+
+# check usage of hip
+AC_MSG_CHECKING([whether we want to use HIP GPU])
+AC_ARG_WITH(hipdir,
+  AS_HELP_STRING([--with-hipdir[=dir]], [if using HIP, then set HIP lib dir [default=/usr/local/hip/lib]]),
+    [echo yes
+      hip_dir=$withval
+      HIP_AVAILABLE=1
+    ],
+    [echo no
+      hip_dir=$withval
+      HIP_AVAILABLE=0
+    ]
+  )
+
+if $HIP_AVAILABLE; then
+  AC_MSG_RESULT($hip_dir)
+  LDFLAGS="$LDFLAGS -L$hip_dir -lhip -lcublas"
+  AC_CHECK_LIB([hiprt],
+                [hipMalloc],
+                [],
+                [AC_MSG_ERROR([Can't link a simple program against library hiprt.])]
+                )
+fi
+
 
 # QUDA library for GPUs
 AC_MSG_CHECKING(whether we want to use QUDA GPU)
@@ -956,17 +1003,7 @@ AC_ARG_WITH(qudadir,
               LDFLAGS="$LDFLAGS -L${quda_dir}/lib"
               INCLUDES="$INCLUDES -I${quda_dir}/include/"
               QUDA_INTERFACE="quda_interface"
-              AC_MSG_CHECKING([where to search for CUDA libs])
-						  AC_ARG_WITH(cudadir,
-						    AS_HELP_STRING([--with-cudadir[=dir]], [if using QUDA, then set CUDA lib dir [default=/usr/local/cuda/lib]]),
-						    cuda_dir=$withval, cuda_dir="/usr/local/cuda/lib")
-						  AC_MSG_RESULT($cuda_dir)
-						  LDFLAGS="$LDFLAGS -L$cuda_dir -lcuda -lcublas"
-              AC_CHECK_LIB([cudart],
-                           [cudaMalloc],
-                           [],
-                           [AC_MSG_ERROR([Can't link a simple program against library cudart.])]
-                           )
+              
               # Perform test in C++
               AC_LANG_PUSH([C++])
               AC_CHECK_LIB([quda],
