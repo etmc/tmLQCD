@@ -26,9 +26,12 @@ extract_type <- function(str){
   return(tmp)
 }
 
-args = commandArgs(trailingOnly=TRUE)
+args <- commandArgs(trailingOnly=TRUE)
 
-stopifnot(length(args) > 0)
+if( length(args) < 2 ){
+  stop("usage: Rscript make_profile.R <logfile> <output_basename>")
+}
+
 stopifnot(file.exists(args[1]))
 
 # extract the different monomial names from the log file
@@ -158,3 +161,5 @@ save(monomial_names,
      file = "profile.RData")
 
 rmarkdown::render("profile.Rmd")
+# rename the report
+system(sprintf("mv profile.pdf %s.pdf", args[2]))
