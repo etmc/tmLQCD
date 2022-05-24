@@ -68,6 +68,8 @@ typedef struct {
 
   /* functions for the measurement */
   void (*measurefunc) (const int traj, const int id, const int ieo);
+ 
+  ExternalLibrary external_library;
 } measurement;
 
 
