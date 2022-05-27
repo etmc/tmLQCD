@@ -30,7 +30,6 @@ SHELL = @SHELL@
 OPTARGS = @OPTARGS@
 SOPTARGS = @SOPTARGS@
 DEFS = @DEFS@
-GPUDIR = @GPUDIR@
 USESUBDIRS = @USESUBDIRS@
 NVCC = @NVCC@
 GPUMPICOMPILER = @GPUMPICOMPILER@
@@ -57,19 +56,12 @@ MODULES = read_input gamma measure_gauge_action start \
 	reweighting_factor_nd rnd_gauge_trafo \
         update_momenta update_momenta_fg integrator  phmc \
 	little_D block operator \
-	temporalgauge spinor_fft X_psi P_M_eta \
+	spinor_fft X_psi P_M_eta \
 	jacobi fatal_error invert_clover_eo gettime \
 	tm_debug_printf \
         @SPI_FILES@ @QUDA_INTERFACE@ @DDalphaAMG_INTERFACE@
 
 CXXMODULES = @QPHIX_INTERFACE@
-
-## the GPU modules (all .cu files in $GPUDIR)
-GPUSOURCES := $(wildcard $(srcdir)/$(GPUDIR)/*.cu)
-GPUOBJECTS := $(patsubst $(srcdir)/$(GPUDIR)/%.cu, $(GPUDIR)/%.o, $(GPUSOURCES))
-
-#GPUSOURCES_C := $(wildcard $(srcdir)/$(GPUDIR)/*.c)
-#GPUOBJECTS_C := $(patsubst $(srcdir)/$(GPUDIR)/%.c, $(GPUDIR)/%.o, $(GPUSOURCES_C))
 
 NOOPTMOD = test/check_xchange test/check_geometry
 

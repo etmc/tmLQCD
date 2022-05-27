@@ -191,9 +191,6 @@
 /* Define to 1 if non-blocking MPI calls for spinor and gauge should be used */
 #undef _NON_BLOCKING
 
-/* Define if we want to use CUDA GPU */
-#undef HAVE_GPU
-
 /* Define if we want to compute the LapH eigenvectors */
 #undef WITHLAPH
 
