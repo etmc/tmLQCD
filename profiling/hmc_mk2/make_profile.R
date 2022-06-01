@@ -172,4 +172,5 @@ save(monomial_names,
 
 rmarkdown::render("profile.Rmd")
 # rename the report
+system(sprintf("mv profile.RData %s.RData", args[2]))
 system(sprintf("mv profile.pdf %s.pdf", args[2]))
