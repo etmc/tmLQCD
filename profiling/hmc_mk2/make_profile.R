@@ -1,18 +1,29 @@
 require(dplyr)
 require(data.tree)
 require(stringr)
-require(microseq)
+require(rmarkdown)
+require(treemap)
+require(ggplot2) 
+require(knitr) 
+require(hadron) 
+require(kableExtra) 
+require(ggrepel)
+
+# wrapper around base::gregexpr which makes it operate like microseq::gregexpr
+extract_gregexpr <- function(pattern, text, ignore.case = FALSE, perl = FALSE, fixed = FALSE, useBytes = FALSE){
+  lst <- base::gregexpr(pattern, text, ignore.case, perl, fixed, useBytes)
+  lapply(1:length(lst), function(i){substring(text[i], lst[[i]], lst[[i]]+attr(lst[[i]], "match.length") - 1)})
+}
 
 # extract the monomial name from the timing path string
 extract_monomial <- function(str){
-  l1 <- microseq::gregexpr(text = str,
-                           pattern = '(?<=/)(.*?)(?=:)',
-                           perl = TRUE,
-                           extract = TRUE)
-  unlist(microseq::gregexpr(text = unlist(l1),
-                            pattern = '(?<=/).*',
-                            perl = TRUE,
-                            extract = TRUE))
+  l1 <- extract_gregexpr(text = str,
+                         pattern = '(?<=/)(.*?)(?=:)',
+                         perl = TRUE)
+
+  unlist(extract_gregexpr(text = unlist(l1),
+                          pattern = '(?<=/).*',
+                          perl = TRUE))
 }
 
 # extract which part of the monomial cost the timing with this path string
@@ -117,10 +128,9 @@ type_per_mon <- dplyr::group_by(dplyr::filter(sum_data,
                 dplyr::summarise(time = sum(time),
                                  invocations = sum(invocations),
                                  unit_time = sum(time)/sum(invocations),
-                                 type = unlist(microseq::gregexpr(text = unique(name),
-                                                                  pattern = '(?<=_).*',
-                                                                  perl = TRUE,
-                                                                  extract = TRUE))) %>%
+                                 type = unlist(extract_gregexpr(text = unique(name),
+                                                                pattern = '(?<=_).*',
+                                                                perl = TRUE))) %>%
                 dplyr::ungroup()
 
 # if we're analysing an incomplete run or one which is still
