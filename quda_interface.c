@@ -1984,9 +1984,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     // set to QUDA_MATPC_SOLUTION to inject single parity field into coarse grid
     // if we are using an outer even-odd preconditioned solve, then we
     // use single parity injection into the coarse grid
-    // mg_param->coarse_grid_solution_type[level] = (level == 0 && inv_param.solve_type == QUDA_DIRECT_PC_SOLVE) ? 
-    //                                                 QUDA_MATPC_SOLUTION : 
-    //                                                 QUDA_MAT_SOLUTION;
+    // on all other levels than the fine one we always use QUDA_MATPC_SOLUTION
     mg_param->coarse_grid_solution_type[level] = (level == 0 && inv_param.solve_type == QUDA_DIRECT_SOLVE) ? 
                                                     QUDA_MAT_SOLUTION : 
                                                     QUDA_MATPC_SOLUTION;
