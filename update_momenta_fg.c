@@ -49,8 +49,8 @@
 #include "DDalphaAMG_interface.h"
 #endif
 
-inline void calculate_fg(const double step_fg,
-                         hamiltonian_field_t * const hf){
+void calculate_fg(const double step_fg,
+                  hamiltonian_field_t * const hf){
 #ifdef TM_USE_OMP
 #define static
 #pragma omp parallel
@@ -90,8 +90,8 @@ inline void calculate_fg(const double step_fg,
 #endif
 }
 
-inline void fg_update_momenta_reset_gaugefield(const double step,
-                                               hamiltonian_field_t * const hf){
+void fg_update_momenta_reset_gaugefield(const double step,
+                                        hamiltonian_field_t * const hf){
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
