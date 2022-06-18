@@ -236,7 +236,7 @@
 #define _default_quda_mg_refresh_setup_mdu_threshold 2*DBL_EPSILON
 
 #define _default_quda_enable_device_memory_pool 0
-#define _default_quda_enable_pinned_memory_pool 0
+#define _default_quda_enable_pinned_memory_pool 1
 
 // gradient flow measurement step size and maximum flow time
 #define _default_gf_eps 0.01
