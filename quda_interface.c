@@ -265,9 +265,17 @@ void _setDefaultQudaParam(void){
 
   inv_param.residual_type = (QudaResidualType)(QUDA_L2_RELATIVE_RESIDUAL);
   inv_param.tol_hq = 0.1;
+  // alternative reliable does not seem to work well with twisted mass (clover) fermions
   inv_param.use_alternative_reliable = 0;
-  // anything smaller than this and we break down in double-half in most solves
-  inv_param.reliable_delta = 1e-3; // ignored by multi-shift solver
+
+  // Tests show that setting reliable_delta = 1e-1 results in good time to solution and good
+  // convergence also in double-half mixed precision
+  // However, it is important to set 'max_res_increase' and 'max_res_increase_total'
+  // to sufficiently large values
+  inv_param.reliable_delta = 1e-1;
+  inv_param.reliable_delta_refinement = 1e-1;
+  inv_param.max_res_increase = 10;
+  inv_param.max_res_increase_total = 40;
   inv_param.use_sloppy_partial_accumulator = 0;
 
   // domain decomposition preconditioner parameters
@@ -899,33 +907,33 @@ void set_sloppy_prec(const SloppyPrecision sloppy_precision, const SloppyPrecisi
   QudaPrecision cuda_prec_sloppy;
   QudaPrecision cuda_prec_refinement_sloppy;
   if( sloppy_precision==SLOPPY_DOUBLE ) {
-    inv_param->reliable_delta = 1e-8;
+    inv_param->reliable_delta = 1e-4;
     cuda_prec_sloppy = QUDA_DOUBLE_PRECISION;
     if(g_proc_id == 0) printf("# TM_QUDA: Using double prec. as sloppy!\n");
   }
   else if( sloppy_precision==SLOPPY_HALF ) {
     // in double-half, we perform many reliable updates
-    inv_param->reliable_delta = 1e-2;
+    inv_param->reliable_delta = 1e-1;
     cuda_prec_sloppy = QUDA_HALF_PRECISION;
     if(g_proc_id == 0) printf("# TM_QUDA: Using half prec. as sloppy!\n");
   }
   else {
-    inv_param->reliable_delta = 1e-4;
+    inv_param->reliable_delta = 1e-2;
     cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
     if(g_proc_id == 0) printf("# TM_QUDA: Using single prec. as sloppy!\n");
   }
   
   if( refinement_precision == SLOPPY_DOUBLE ){
-    inv_param->reliable_delta_refinement = 1e-8;
+    inv_param->reliable_delta_refinement = 1e-4;
     cuda_prec_refinement_sloppy = QUDA_DOUBLE_PRECISION;
   }
   else if( refinement_precision == SLOPPY_HALF ){
-    inv_param->reliable_delta_refinement = 1e-2;
+    inv_param->reliable_delta_refinement = 1e-1;
     cuda_prec_refinement_sloppy = QUDA_HALF_PRECISION;
     if(g_proc_id == 0) printf("# TM_QUDA: Using double-half refinement in mshift-solver!\n");
   }
   else {
-    inv_param->reliable_delta_refinement = 1e-4;
+    inv_param->reliable_delta_refinement = 1e-2;
     cuda_prec_refinement_sloppy = QUDA_SINGLE_PRECISION;
     if(g_proc_id == 0) printf("# TM_QUDA: Using double-single refinement in mshift-solver!\n");
   }
