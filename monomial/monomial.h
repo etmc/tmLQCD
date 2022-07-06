@@ -66,6 +66,7 @@ typedef struct {
   int even_odd_flag;
   int rngrepro;
   int solver;
+  int HB_solver; // solver for the HB only (optional)
   
   int iter0, iter1, iter2;
   int csg_N, csg_N2;
@@ -90,6 +91,7 @@ typedef struct {
   double forceprec;
   double accprec;
   solver_params_t solver_params;
+  solver_params_t HB_solver_params; // parameters of the HB solver
   /* force normalisation */
   double forcefactor;
   /* some book-keeping */

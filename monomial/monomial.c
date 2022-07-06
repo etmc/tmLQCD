@@ -103,6 +103,7 @@ int add_monomial(const int type) {
   }
   else{
     monomial_list[no_monomials].solver = _default_solver_flag;
+    monomial_list[no_monomials].HB_solver = _default_HB_solver_flag;
   }
   monomial_list[no_monomials].solver_params.mcg_delta = _default_mixcg_innereps;
   monomial_list[no_monomials].solver_params.solution_type = TM_SOLUTION_M_MDAG;
@@ -248,6 +249,11 @@ int init_monomials(const int V, const int even_odd_flag) {
         }
       }
       else if(monomial_list[i].type == CLOVERDETRATIO) {
+        if (monomial_list[i].HB_solver == _default_HB_solver_flag) {
+          monomial_list[i].HB_solver = monomial_list[i].solver;
+          monomial_list[i].HB_solver_params = monomial_list[i].solver_params;
+        }
+
         monomial_list[i].hbfunction = &cloverdetratio_heatbath;
         monomial_list[i].accfunction = &cloverdetratio_acc;
         monomial_list[i].derivativefunction = &cloverdetratio_derivative;

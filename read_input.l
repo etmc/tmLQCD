@@ -615,6 +615,7 @@ static inline double fltlist_next_token(int * const list_end){
 %x MNAME
 %x MCSTR
 %x MSOLVER
+%x HB_MSOLVER
 %x RATMSOLVER
 %x NDMSOLVER
 %x GTYPE
@@ -2446,6 +2447,10 @@ static inline double fltlist_next_token(int * const list_end){
    solver_caller=YY_START;
    BEGIN(NDMSOLVER);
   }
+  {SPC}*HB_Solver{EQL} {
+   solver_caller=YY_START;
+   BEGIN(NDMSOLVER);
+  }
 }
 
 <RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
@@ -2475,6 +2480,10 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*Solver{EQL} {
    solver_caller=YY_START;
    BEGIN(MSOLVER);
+  }
+  {SPC}*HB_Solver{EQL} {
+   solver_caller=YY_START;
+   BEGIN(HB_MSOLVER);
   }
 }
 
@@ -2716,6 +2725,51 @@ static inline double fltlist_next_token(int * const list_end){
 #endif
   }
 }
+
+<HB_MSOLVER>{
+  CG {
+    if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->HB_solver = CG;
+    BEGIN(solver_caller);
+  }
+  mixedCG {
+    if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->HB_solver = MIXEDCG;
+    BEGIN(solver_caller);
+  }
+  rgmixedCG {
+    if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->HB_solver = RGMIXEDCG;
+    BEGIN(solver_caller);
+  }
+  BICGSTAB {
+    if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->HB_solver = BICGSTAB;
+    BEGIN(solver_caller);
+  }
+  mixedbicgstab {
+    if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->HB_solver=MIXEDBICGSTAB;
+    BEGIN(name_caller);
+  }
+  MG {
+    if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->HB_solver = MG;
+    BEGIN(name_caller);
+  }
+  DDalphaAMG {
+#ifdef DDalphaAMG
+    if(myverbose) printf("  HB Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
+    mnl->HB_solver = MG;
+    BEGIN(solver_caller);
+#else
+    printf("ERROR line %d operator %d: DDalphaAMG library not included\n", line_of_file, current_operator);
+    exit(1);
+#endif
+  }
+}
+
+
 
 <RATMSOLVER>{
   rgmixedCG {

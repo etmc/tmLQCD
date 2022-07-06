@@ -47,7 +47,8 @@ typedef enum SOLVER_TYPE {
  MG,
  MIXEDBICGSTAB,
  DUMMYHERMTEST,
- CA_GCR
+ CA_GCR,
+ INVALID_SOLVER
 } SOLVER_TYPE;
 
 int solver_is_mixed( const int solver_type );

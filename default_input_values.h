@@ -85,6 +85,7 @@
 #define _default_rlxd_level 1
 #define _default_solver_flag 1 // this is CG (see solver/solver_types.h)
 #define _default_nd_solver_flag 15 // this is CGMMSND (see solver/solver_types.h)
+#define _default_HB_solver_flag 26 // this is INVALID_SOLVER (see solver/solver_types.h)
 #define _default_startoption 0
 #define _default_Ntherm 0
 #define _default_Nmeas 1
