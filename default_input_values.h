@@ -187,12 +187,6 @@
 #define _default_MDPolyLocNormConst -1.0
 #define _default_MDPolyDetRatio 0
 
-/* default GPU values */
-#define _default_device_num -1
-
-#define _default_min_innersolver_it 10
-#define _default_max_mms_shifts 6
-
 /* default OpenMP values */
 #define _default_omp_num_threads 0
 

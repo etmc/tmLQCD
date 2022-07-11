@@ -89,19 +89,6 @@
 #  include "quda_interface.h"
 #endif
 
-#ifdef HAVE_GPU
-#include"../GPU/cudadefs.h"
-extern  int linsolve_eo_gpu (spinor * const P, spinor * const Q, const int max_iter, 
-                            double eps, const int rel_prec, const int N, matrix_mult f);
-extern int dev_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn, 
-		 spinor * const Qup, spinor * const Qdn, 
-		 solver_params_t * solver_params);
-   #ifdef TEMPORALGAUGE
-     #include "../temporalgauge.h" 
-   #endif
-#include "read_input.h" 
-#endif
-
 int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_params,
                      const int max_iter, double eps_sq, const int rel_prec, 
                      const int N, matrix_mult f, int solver_type){
@@ -168,31 +155,16 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
       msolver_fp = mixed_cg_her;
     }
 
-    // FIXME: this GPU stuff needs to go...
-    if(usegpu_flag){   
-      #ifdef HAVE_GPU     
-        #ifdef TEMPORALGAUGE
-          to_temporalgauge(g_gauge_field, Q , P);
-        #endif          
-        iteration_count = linsolve_eo_gpu(P, Q, max_iter, eps_sq, rel_prec, N, f);
-        #ifdef TEMPORALGAUGE
-          from_temporalgauge(Q, P);
-        #endif
-      #endif
-      return(iteration_count);
-    }
-    else{
-      if(f==Qtm_pm_psi){   
-        iteration_count = msolver_fp(P, Q, solver_params, max_iter, eps_sq, rel_prec, N, f, &Qtm_pm_psi_32);
-      } else if(f==Q_pm_psi){     
-        iteration_count = msolver_fp(P, Q, solver_params, max_iter, eps_sq, rel_prec, N, f, &Q_pm_psi_32);
-      } else if(f==Qsw_pm_psi){
-        copy_32_sw_fields();
-        iteration_count = msolver_fp(P, Q, solver_params, max_iter, eps_sq, rel_prec, N, f, &Qsw_pm_psi_32);
-      } else {
-        if(g_proc_id==0) printf("Warning: 32 bit matrix not available. Falling back to CG in 64 bit\n"); 
-        solver_type = CG;
-      }
+    if(f==Qtm_pm_psi){   
+      iteration_count = msolver_fp(P, Q, solver_params, max_iter, eps_sq, rel_prec, N, f, &Qtm_pm_psi_32);
+    } else if(f==Q_pm_psi){     
+      iteration_count = msolver_fp(P, Q, solver_params, max_iter, eps_sq, rel_prec, N, f, &Q_pm_psi_32);
+    } else if(f==Qsw_pm_psi){
+      copy_32_sw_fields();
+      iteration_count = msolver_fp(P, Q, solver_params, max_iter, eps_sq, rel_prec, N, f, &Qsw_pm_psi_32);
+    } else {
+      if(g_proc_id==0) printf("Warning: 32 bit matrix not available. Falling back to CG in 64 bit\n"); 
+      solver_type = CG;
     }
   } 
   else if(solver_type == CG){
@@ -526,19 +498,7 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
   } else
 #endif //TM_USE_QPHIX
   if(solver_params->type==MIXEDCGMMSND){
-    if(usegpu_flag){
-    #ifdef HAVE_GPU      
-      #ifdef TEMPORALGAUGE
-      to_temporalgauge_mms(g_gauge_field , Qup, Qdn, Pup, Pdn, solver_params->no_shifts);
-      #endif        
-      iteration_count = dev_cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_params);  
-      #ifdef TEMPORALGAUGE
-      from_temporalgauge_mms(Qup, Qdn, Pup, Pdn, solver_params->no_shifts);
-      #endif 
-    #endif
-    } else {
-      iteration_count = mixed_cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_params);
-    }
+    iteration_count = mixed_cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_params);
   } else if (solver_params->type == CGMMSND){
     iteration_count = cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_params);
   }
