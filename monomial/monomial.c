@@ -283,6 +283,11 @@ int init_monomials(const int V, const int even_odd_flag) {
         }
       }
       else if(monomial_list[i].type == DETRATIO) {
+        if (monomial_list[i].HB_solver == _default_HB_solver_flag) {
+          monomial_list[i].HB_solver = monomial_list[i].solver;
+          monomial_list[i].HB_solver_params = monomial_list[i].solver_params;
+        }
+
         monomial_list[i].hbfunction = &detratio_heatbath;
         monomial_list[i].accfunction = &detratio_acc;
         monomial_list[i].derivativefunction = &detratio_derivative;
