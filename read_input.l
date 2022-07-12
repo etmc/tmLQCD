@@ -2498,10 +2498,6 @@ static inline double fltlist_next_token(int * const list_end){
    solver_caller=YY_START;
    BEGIN(NDMSOLVER);
   }
-  {SPC}*HB_Solver{EQL} {
-   solver_caller=YY_START;
-   BEGIN(NDMSOLVER);
-  }
 }
 
 <RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
