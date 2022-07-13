@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../quda"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"*.c": "c",
+			"*.ipynb": "jupyter",
+			"random": "c"
+		}
+	}
+}
