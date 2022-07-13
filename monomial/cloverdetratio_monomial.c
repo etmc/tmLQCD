@@ -284,13 +284,13 @@ void cloverdetratio_heatbath(const int id, hamiltonian_field_t * const hf) {
   tm_stopwatch_pop(&g_timers, 0, 1, ""); 
 
   if( mnl->HB_solver == MG ){
-      mnl->iter0 = solve_degenerate(mnl->pf, mnl->w_fields[1], mnl->HB_solver_params, mnl->maxiter, mnl->accprec,  
+      mnl->iter0 = solve_degenerate(mnl->pf, mnl->w_fields[1], mnl->HB_solver_params, mnl->HB_maxiter, mnl->accprec,  
 				    g_relative_precision_flag, VOLUME/2, mnl->Qp, mnl->HB_solver); 
       
       chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
   } else {
-      mnl->iter0 = solve_degenerate(mnl->pf, mnl->w_fields[1], mnl->HB_solver_params, mnl->maxiter, mnl->accprec,  
+      mnl->iter0 = solve_degenerate(mnl->pf, mnl->w_fields[1], mnl->HB_solver_params, mnl->HB_maxiter, mnl->accprec,  
 				    g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->HB_solver); 
       
       chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,

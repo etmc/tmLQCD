@@ -62,6 +62,7 @@ typedef struct {
   int initialised;
   int timescale;
   int maxiter;
+  int HB_maxiter; // as maxiter, but for the HB solver
   int id;
   int even_odd_flag;
   int rngrepro;

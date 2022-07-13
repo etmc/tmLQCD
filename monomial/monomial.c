@@ -94,6 +94,7 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].accprec = _default_g_eps_sq_acc;
   monomial_list[no_monomials].forceprec = _default_g_eps_sq_force;
   monomial_list[no_monomials].maxiter = _default_max_solver_iterations;
+  monomial_list[no_monomials].HB_maxiter = _default_max_solver_iterations;
   if((monomial_list[no_monomials].type == NDRAT) ||
       (monomial_list[no_monomials].type == NDRATCOR) ||
       (monomial_list[no_monomials].type == NDCLOVERRAT) ||

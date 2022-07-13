@@ -2425,6 +2425,11 @@ static inline double fltlist_next_token(int * const list_end){
    solver_caller=YY_START;
    BEGIN(HB_MSOLVER);
   }
+  {SPC}*HB_MaxSolverIterations{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mnl->HB_maxiter = a;
+    if(myverbose) printf("  MaxSolverIterations set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+  }
   {SPC}*HB_UseExternalInverter{EQL}quda {
     if(myverbose) printf("  Use Quda inverter line %d monomial %d\n", line_of_file, current_monomial);
     mnl->HB_solver_params.external_inverter = QUDA_INVERTER;
@@ -2778,38 +2783,38 @@ static inline double fltlist_next_token(int * const list_end){
   CG {
     if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->HB_solver = CG;
-    BEGIN(solver_caller);
+    /*BEGIN(solver_caller);*/
   }
   mixedCG {
     if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->HB_solver = MIXEDCG;
-    BEGIN(solver_caller);
+    /*BEGIN(solver_caller);*/
   }
   rgmixedCG {
     if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->HB_solver = RGMIXEDCG;
-    BEGIN(solver_caller);
+    /*BEGIN(solver_caller);*/
   }
   BICGSTAB {
     if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->HB_solver = BICGSTAB;
-    BEGIN(solver_caller);
+    /*BEGIN(solver_caller);*/
   }
   mixedbicgstab {
     if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->HB_solver=MIXEDBICGSTAB;
-    BEGIN(name_caller);
+    /*BEGIN(solver_caller);*/
   }
   MG {
     if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->HB_solver = MG;
-    BEGIN(name_caller);
+    /*BEGIN(solver_caller);*/
   }
   DDalphaAMG {
 #ifdef DDalphaAMG
     if(myverbose) printf("  HB Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
     mnl->HB_solver = MG;
-    BEGIN(solver_caller);
+    /*BEGIN(solver_caller);*/
 #else
     printf("ERROR line %d operator %d: DDalphaAMG library not included\n", line_of_file, current_operator);
     exit(1);
