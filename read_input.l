@@ -2814,7 +2814,7 @@ static inline double fltlist_next_token(int * const list_end){
 #ifdef DDalphaAMG
     if(myverbose) printf("  HB Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
     mnl->HB_solver = MG;
-    /*BEGIN(solver_caller);*/
+    BEGIN(solver_caller);
 #else
     printf("ERROR line %d operator %d: DDalphaAMG library not included\n", line_of_file, current_operator);
     exit(1);
