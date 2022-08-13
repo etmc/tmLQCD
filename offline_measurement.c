@@ -49,7 +49,9 @@
 #ifdef TM_USE_MPI
 #include "xchange/xchange.h"
 #endif
+#include "sighandler.h"
 #include "mpi_init.h"
+#include "sighandler.h"
 #include "boundary.h"
 #include "init/init.h"
 #include "monomial/monomial.h"
@@ -59,6 +61,9 @@
 #include "solver/generate_dfl_subspace.h"
 #include "io/gauge.h"
 #include "meas/measurements.h"
+#ifdef TM_USE_QUDA
+#include "quda_interface.h"
+#endif
 
 #define CONF_FILENAME_LENGTH 500
 
@@ -81,7 +86,6 @@ int main(int argc, char *argv[])
   double plaquette_energy;
 
   init_critical_globals(TM_PROGRAM_OFFLINE_MEASUREMENT);  
-  init_global_states();
 
 #ifdef _KOJAK_INST
 #pragma pomp inst init
@@ -353,7 +357,7 @@ static void process_args(int argc, char *argv[], char ** input_filename, char **
         break;
       case 'V':
         if(g_proc_id == 0) {
-          fprintf(stdout,"%s %s\n",PACKAGE_STRING,git_hash);
+          fprintf(stdout,"%s %s\n",TMLQCD_PACKAGE_STRING,git_hash);
         }
         exit(TM_EXIT_SUCCESS);
         break;

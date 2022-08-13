@@ -185,7 +185,7 @@ int read_gauge_field(char * filename, su3 ** const gf) {
 
   g_update_gauge_copy = 1;
 
-  if(gf==g_gauge_field){
+  if((void*)gf==(void*)g_gauge_field){
     // reading a new gauge configuration moves the gauge_id a long way
     // to guarantee that the change is propagated 
     update_tm_gauge_id(&g_gauge_state, TM_GAUGE_PROPAGATE_THRESHOLD);

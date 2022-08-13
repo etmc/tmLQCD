@@ -243,6 +243,12 @@ void Qsw_pm_psi(spinor * const l, spinor * const k) {
   clover_gamma5(OO, l, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], +(g_mu + g_mu3));
 }
 
+void Qsw_pm_psi_shift(spinor * const l, spinor * const k){
+  Qsw_pm_psi(l,k);  
+  assign_add_mul_r(l, k, g_shift, VOLUME/2);
+  return;
+}
+
 // this is the clover Mhat with mu = 0
 void Msw_psi(spinor * const l, spinor * const k) {
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);

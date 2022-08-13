@@ -31,13 +31,14 @@
 #include "sse.h"
 #include "hamiltonian_field.h"
 #include "deriv_Sb_D_psi.h"
+#include "gettime.h"
 
 
 #if (defined BGLnotchecked && defined XLC)
 
 void deriv_Sb_D_psi(spinor * const l, spinor * const k, 
 		    hamiltonian_field_t * const hf, const double factor) {
-
+  tm_stopwatch_push(&g_timers, __func__, ""); 
   int ix,iy, iz;
   int ioff,ioff2,icx,icy, icz;
   su3 * restrict up ALIGN;
@@ -367,6 +368,7 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k,
 
     /****************** end of loop ************************/
   }
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
 #ifdef _KOJAK_INST
 #pragma pomp inst end(derivSb)
 #endif
@@ -378,6 +380,7 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k,
 
 void deriv_Sb_D_psi(spinor * const l, spinor * const k, 
 		    hamiltonian_field_t * const hf, const double factor) {
+  tm_stopwatch_push(&g_timers, __func__, "");
 #ifdef BGL
   __alignx(16, l);
   __alignx(16, k);
@@ -581,6 +584,7 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k,
 #ifdef TM_USE_OMP
   } /*OpenMP closing brace */
 #endif
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
 }
 
 #endif

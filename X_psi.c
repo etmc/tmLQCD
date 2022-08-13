@@ -93,25 +93,8 @@ void X_psi(spinor * const R, spinor * const S, double const mstarsq){
   double g_muWithoutMStarSquare=g_mu;
 
   /*cg_her(out spinor, in spinor, max iter, solver precision, flag relative precision default 0, volume, operator to invert)*/
-  #ifdef HAVE_GPU
-    if(usegpu_flag)
-    {
-      if(g_proc_id == 0) printf("Using GPU for inversion\n");
-      // call mixed_solve_DiracDaggerDaggerD for double precision calculations on gpu - may be faster if the device supports compute capability >= 2.0 (fermi generation)
-      {//include M^{*2} into twisted mass g_mu => saves one assign_multiply_add;
-        g_mu=sqrt(g_mu*g_mu+mstarsq);
-        mixed_solve_DiracDaggerDirac ( R, S, X_psiSIterations, X_psiSPrecision, 0/*!rel_prec*/, VOLUME);
-        //mixed_solve_DiracDaggerDiracD( R, S, X_psiSIterations, X_psiSPrecision, 0/*!rel_prec*/, VOLUME);
-        g_mu=g_muWithoutMStarSquare;
-      }
-    }
-    else
-  #endif
-  {
-    if(g_proc_id == 0) printf("Using CPU for inversion\n");
-    cg_her( R, S, X_psiSIterations, X_psiSPrecision, 0, VOLUME, &DdaggerD_plus_M);
-  }
-  fflush(stdout);
+  if(g_proc_id == 0) printf("Using CPU for inversion\n");
+  cg_her( R, S, X_psiSIterations, X_psiSPrecision, 0, VOLUME, &DdaggerD_plus_M);
 
 /*//// Test
   spinor *aux_ = NULL, *aux;
@@ -149,36 +132,8 @@ void X_psiSquare(spinor * const R, spinor * const S, double const mstarsq)
     #endif
   }
 
-  #ifdef HAVE_GPU
-    if(usegpu_flag)
-    {
-      if(g_proc_id == 0) printf("Using GPU for inversion\n");
-      // call mixed_solve_DiracDaggerDaggerD for double precision calculations on gpu - may be faster if the device supports compute capability >= 2.0 (fermi generation)
-      
-      {//include M^{*2} into twisted mass g_mu => saves one assign_multiply_add;
-        double g_muWithoutMStarSquare=g_mu;
-
-        g_mu=sqrt(g_mu*g_mu+mstarsq);
-        mixed_solve_DiracDaggerDiracDiracDaggerDirac ( R, S, X_psiSIterations, X_psiSPrecision, 0/*!rel_prec*/, VOLUME);
-        //mixed_solve_DiracDaggerDiracDiracDagerDiracD( R, S, X_psiSIterations, X_psiSPrecision, 0/*!rel_prec*/, VOLUME);
-        g_mu=g_muWithoutMStarSquare;
-      }//R holds now the value of (D^+DD^+D)^-1 !
-
-      DdaggerD_plus_M(aux,R);
-      
-      assign_mul_add_mul_r( R, aux, mstarsq, -1, VOLUME);
-      assign_mul_add_mul_r( R, S, 4*mstarsq,  1, VOLUME);//1-4mstarsq(-(D^+D+mstarsq)^-1 + mstarsq*(D^+D+mstarsq)^-2)
-
-
-      free(aux_);
-      fflush(stdout);
-    }
-    else
-  #endif
-  {
-    X_psi(aux, S, mstarsq);
-    X_psi(R, aux, mstarsq);
-  }
+  X_psi(aux, S, mstarsq);
+  X_psi(R, aux, mstarsq);
 
   free(aux_);
 }

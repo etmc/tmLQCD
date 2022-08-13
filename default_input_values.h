@@ -115,6 +115,7 @@
 #define _default_g_eps_sq_force3 -1.
 #define _default_g_eps_sq_acc3 -1.
 #define _default_g_relative_precision_flag 0
+#define _default_g_strict_residual_check 0
 #define _default_return_check_flag 0
 #define _default_return_check_interval 100
 #define _default_g_debug_level 1
@@ -186,12 +187,6 @@
 #define _default_MDPolyLocNormConst -1.0
 #define _default_MDPolyDetRatio 0
 
-/* default GPU values */
-#define _default_device_num -1
-
-#define _default_min_innersolver_it 10
-#define _default_max_mms_shifts 6
-
 /* default OpenMP values */
 #define _default_omp_num_threads 0
 
@@ -203,11 +198,16 @@
 
 #define _default_external_inverter 0
 
+#define _default_external_library 0
+
 #define _default_subprocess_flag 0
 #define _default_lowmem_flag 0
 
+#define _default_g_barrier_monomials_convergence 0
+
 /* default input values for QUDA interface */
 /* These follow the recommendations of https://github.com/lattice/quda/wiki/Multigrid-Solver */
+#define _default_quda_mg_setup_2kappamu 0.0
 #define _default_quda_mg_n_level 2
 #define _default_quda_mg_n_vec 24
 #define _default_quda_mg_mu_factor 1.0
@@ -220,8 +220,17 @@
 #define _default_quda_mg_nu_post 4
 #define _default_quda_mg_omega 0.85
 #define _default_quda_mg_enable_size_three_blocks 0
-#define _default_quda_mg_reset_setup_threshold 2*DBL_EPSILON
-#define _default_quda_mg_reset_setup_mu_threshold 2*DBL_EPSILON
+// by default, we always reset the MG setup
+// in the HMC, this needs to be set to a reasonable value
+// depending on the length of the integration step
+#define _default_quda_mg_reset_setup_mdu_threshold 2*DBL_EPSILON
+#define _default_quda_mg_reuse_setup_mu_threshold 2*DBL_EPSILON
+// in the HMC, we can evolve the MG setup by refreshing it
+// at regular intervals as specified by this parameter 
+#define _default_quda_mg_refresh_setup_mdu_threshold 2*DBL_EPSILON
+
+#define _default_quda_enable_device_memory_pool 0
+#define _default_quda_enable_pinned_memory_pool 1
 
 // gradient flow measurement step size and maximum flow time
 #define _default_gf_eps 0.01

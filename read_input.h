@@ -98,19 +98,6 @@ extern "C"
   extern int compute_topsus;
   extern double mstarsq;
   extern int no_sources_z2;
-  extern int usegpu_flag;
-  extern int max_innersolver_it;
-  extern double innersolver_precision;
-  extern int device_num;
-
-  extern int max_mms_shifts;
-  extern int use_mixed_mms; 
-  
-  extern double innersolver_precision_abs;
-  extern double innersolver_precision_rel;
-  extern int innersolver_precision_check_abs;
-  extern int innersolver_precision_check_rel;
-  extern int min_innersolver_it;  
 
   extern double mixcg_innereps;
   extern int mixcg_maxinnersolverit;
@@ -142,6 +129,8 @@ extern "C"
   extern int mg_omp_num_threads;
 
   extern tm_mpi_thread_level_t g_mpi_thread_level;
+
+  extern int g_barrier_monomials_convergence; // 0 or 1. ==1 --> hcm aborts if any monomial_solve reports -1 iterations 
 
   int read_input(char *);
   int reread_input(char *);

@@ -35,8 +35,10 @@
 #include "oriented_plaquettes.h"
 #include "fatal_error.h"
 #include "measurements.h"
+#include "gettime.h"
 
 void measure_oriented_plaquettes(const su3 ** const gf, double *plaq) {
+  tm_stopwatch_push(&g_timers, __func__, "");
 #ifdef TM_USE_MPI
   double ALIGN mplaq[6];
 #endif
@@ -82,6 +84,7 @@ void measure_oriented_plaquettes(const su3 ** const gf, double *plaq) {
   for(int j = 0; j < 6; j++)
     plaq[j] = mplaq[j];
 #endif
+  tm_stopwatch_pop(&g_timers, 0, 2, "");
   return;
 }
 

@@ -56,6 +56,7 @@
 #define TM_OMEAS_FILENAME_LENGTH 100
 
 void correlators_measurement(const int traj, const int id, const int ieo) {
+  tm_stopwatch_push(&g_timers, __func__, "");
   int i, j, t, tt, t0;
   double *Cpp = NULL, *Cpa = NULL, *Cp4 = NULL;
   double res = 0., respa = 0., resp4 = 0.;
@@ -76,6 +77,7 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
     if(g_proc_id == 0) {
       fprintf(stderr, "Warning! no operators defined in input file, cannot perform online correlator mesurements!\n");
     }
+    tm_stopwatch_pop(&g_timers, 0, 0, "");
     return;
   }
   if(no_operators > 1 && g_proc_id == 0) {
@@ -89,6 +91,7 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
       fprintf(stderr, "Warning! correlator online measurement currently only implemented for TMWILSON, WILSON and CLOVER\n");
       fprintf(stderr, "Cannot perform correlator online measurement!\n");
     }
+    tm_stopwatch_pop(&g_timers, 0, 0, "");
     return;
   }
   
@@ -128,7 +131,7 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
         printf("# timeslice set to %d (T=%d) for online measurement\n", t0, g_nproc_t*T);
         printf("# online measurements parameters: kappa = %.12f, mu = %.12f\n", optr->kappa, optr->mu/2./optr->kappa);
       }
-      atime = gettime();
+      //atime = gettime();
 
 #ifdef TM_USE_MPI
       sCpp = (double*) calloc(T, sizeof(double));
@@ -242,9 +245,10 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
 #endif
     } // for(max_time_slices)
   } // for(max_samples)
-  etime = gettime();
-  if(g_proc_id == 0 && g_debug_level > 0) {
-    printf("ONLINE: measurement done int t/s = %1.4e\n", etime - atime);
-  }
+  //etime = gettime();
+  //if(g_proc_id == 0 && g_debug_level > 0) {
+  //  printf("ONLINE: measurement done int t/s = %1.4e\n", etime - atime);
+  //}
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
 }

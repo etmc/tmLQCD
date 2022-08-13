@@ -82,7 +82,7 @@ int main(int argc,char *argv[]) {
   char datafilename[50];
   char parameterfilename[50];
   char gauge_filename[50];
-  char * nstore_filename = ".nstore_counter";
+  char * nstore_filename = "nstore_counter";
   char * input_filename = NULL;
   int rlxd_state[105];
   int j,ix,mu;

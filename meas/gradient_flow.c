@@ -54,8 +54,9 @@ void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigne
   double zepsfac[3] = { 0.25, 1, 1 };
   su3** fields[4];
 
-  double t1;
-  if( g_debug_level >= 4 ) t1 = gettime();
+  if( g_debug_level >= 4 ){
+    tm_stopwatch_push(&g_timers, __func__, "");
+  }
 
   fields[0] = x0;
   fields[1] = x1;
@@ -123,21 +124,21 @@ void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigne
 
   } /* OpenMP parallel closing brace */
   
-  if( g_proc_id == 0 && g_debug_level >= 4 ){
-    printf("Time for gradient flow step: %lf\n", gettime()-t1);
+  if( g_debug_level >= 4 ){
+    tm_stopwatch_pop(&g_timers, 0, 4, "");
   }
-
 }
 
 void gradient_flow_measurement(const int traj, const int id, const int ieo) {
-
+  tm_stopwatch_push(&g_timers, __func__, "");
   double t[3], P[3];
   field_strength_obs_t fso[3];
   double W=0, tsqE=0;
-  double t1, t2;
-
-  double eps = measurement_list[id].gf_eps;
-  double tmax = measurement_list[id].gf_tmax;
+  
+  measurement *meas=&measurement_list[id];
+  double eps = meas->gf_eps;
+  double tmax = meas->gf_tmax;
+  
 
   if( g_proc_id == 0 ) {
     printf("# Doing gradient flow measurement. id=%d\n", id);
@@ -159,82 +160,73 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
     fprintf(outfile, "traj t P Eplaq Esym tsqEplaq tsqEsym Wsym Qsym\n");
   }
 
-  aligned_su3_field_t vt = aligned_su3_field_alloc(VOLUMEPLUSRAND+g_dbw2rand);
-  aligned_su3_field_t x1 = aligned_su3_field_alloc(VOLUMEPLUSRAND+g_dbw2rand);
-  aligned_su3_field_t x2 = aligned_su3_field_alloc(VOLUMEPLUSRAND+g_dbw2rand);
-  aligned_su3_field_t z = aligned_su3_field_alloc(VOLUME);
-
-#ifdef TM_USE_MPI
-  xchange_gauge(g_gauge_field);
-#endif
-  memcpy(vt.field[0],g_gauge_field[0],sizeof(su3)*4*(VOLUMEPLUSRAND+g_dbw2rand));
-
-  t[0] = fso[0].E = fso[0].Q = P[0] = 0.0;
-  t[1] = fso[1].E = fso[1].Q = P[1] = 0.0;
-  t[2] = fso[2].E = fso[2].Q = P[2] = 0.0;
-
-  t1 = gettime();
-  measure_clover_field_strength_observables(vt.field, &fso[2]);
-  P[2] = measure_plaquette(vt.field)/(6.0*VOLUME*g_nproc);
-  t2 = gettime();
-  if(g_proc_id==0 && g_debug_level > 1) {
-    printf("# GRADFLOW: time for field strength observables measurement: %lf\n",t2-t1);
-  }
-
-  while( t[1] < tmax ) {
-    t[0] = t[2];
-    fso[0].E = fso[2].E;
-    fso[0].Q = fso[2].Q;
-    P[0] = P[2];
-    for(int step = 1; step < 3; ++step) {
-      t[step] = t[step-1]+eps;
-      step_gradient_flow(vt.field,x1.field,x2.field,z.field,0,eps);
-      measure_clover_field_strength_observables(vt.field, &fso[step]);
-      P[step] = measure_plaquette(vt.field)/(6.0*VOLUME*g_nproc);
-    }
-    W = t[1]*t[1]*( 2*fso[1].E + t[1]*((fso[2].E - fso[0].E)/(2*eps)) ) ;
-    tsqE = t[1]*t[1]*fso[1].E;
-    
-    if(g_proc_id==0 && g_debug_level >= 3){
-      printf("# GRADFLOW: sym(plaq)  t=%lf 1-P(t)=%1.8lf E(t)=%2.8lf(%2.8lf) t^2E=%2.8lf(%2.8lf) W(t)=%2.8lf Q(t)=%.8lf \n",
-             t[1],
-             1-P[1],
-             fso[1].E,
-             36*(1-P[1]),
-             tsqE,
-             t[1]*t[1]*36*(1-P[1]),
-             W, 
-             fso[1].Q );
-    }
-    if(g_proc_id==0){
-      fprintf(outfile,"%06d %f %2.12lf %2.12lf %2.12lf %2.12lf %2.12lf %2.12lf %.12lf \n",
-                      traj,
-                      t[1],
-                      P[1],
-                      36*(1-P[1]),
-                      fso[1].E,
-                      t[1]*t[1]*36*(1-P[1]),
-                      tsqE,
-                      W,
-                      fso[1].Q );
-      fflush(outfile);
-    }
-  }
-
-  aligned_su3_field_free(&vt);
-  aligned_su3_field_free(&x1);
-  aligned_su3_field_free(&x2);
-  aligned_su3_field_free(&z);
- 
-  t2 = gettime();
   
-  if( g_proc_id == 0 ) {
-    if(g_debug_level>1){
-      printf("# GRADFLOW: Gradient flow measurement done in %f seconds!\n",t2-t1);
+
+  if (meas->external_library == QUDA_LIB) {
+#ifdef TM_USE_QUDA
+    compute_WFlow_quda( eps , tmax, traj, outfile);
+#else
+    fatal_error(
+        "Attempted to use QUDA_LIB in gradient flow measurement but tmLQCD has been compiled "
+        "without QUDA support!",
+        __func__);
+#endif
+  } else {
+
+    aligned_su3_field_t vt = aligned_su3_field_alloc(VOLUMEPLUSRAND+g_dbw2rand);
+    aligned_su3_field_t x1 = aligned_su3_field_alloc(VOLUMEPLUSRAND+g_dbw2rand);
+    aligned_su3_field_t x2 = aligned_su3_field_alloc(VOLUMEPLUSRAND+g_dbw2rand);
+    aligned_su3_field_t z = aligned_su3_field_alloc(VOLUME);
+#ifdef TM_USE_MPI
+    xchange_gauge(g_gauge_field);
+#endif
+    memcpy(vt.field[0], g_gauge_field[0], sizeof(su3) * 4 * (VOLUMEPLUSRAND + g_dbw2rand));
+
+    t[0] = fso[0].E = fso[0].Q = P[0] = 0.0;
+    t[1] = fso[1].E = fso[1].Q = P[1] = 0.0;
+    t[2] = fso[2].E = fso[2].Q = P[2] = 0.0;
+
+    measure_clover_field_strength_observables(vt.field, &fso[2]);
+    P[2] = measure_plaquette(vt.field) / (6.0 * VOLUME * g_nproc);
+
+    while (t[1] < tmax) {
+      t[0] = t[2];
+      fso[0].E = fso[2].E;
+      fso[0].Q = fso[2].Q;
+      P[0] = P[2];
+      for (int step = 1; step < 3; ++step) {
+        t[step] = t[step - 1] + eps;
+        step_gradient_flow(vt.field, x1.field, x2.field, z.field, 0, eps);
+        measure_clover_field_strength_observables(vt.field, &fso[step]);
+        P[step] = measure_plaquette(vt.field) / (6.0 * VOLUME * g_nproc);
+      }
+      W = t[1] * t[1] * (2 * fso[1].E + t[1] * ((fso[2].E - fso[0].E) / (2 * eps)));
+      tsqE = t[1] * t[1] * fso[1].E;
+  
+      if (g_proc_id == 0 && g_debug_level >= 3) {
+        printf(
+            "# GRADFLOW: sym(plaq)  t=%lf 1-P(t)=%1.8lf E(t)=%2.8lf(%2.8lf) t^2E=%2.8lf(%2.8lf) "
+            "W(t)=%2.8lf Q(t)=%.8lf \n",
+            t[1], 1 - P[1], fso[1].E, 36 * (1 - P[1]), tsqE, t[1] * t[1] * 36 * (1 - P[1]), W,
+            fso[1].Q);
+      }
+      if (g_proc_id == 0) {
+        fprintf(outfile, "%06d %f %2.12lf %2.12lf %2.12lf %2.12lf %2.12lf %2.12lf %.12lf \n", traj,
+                t[1], P[1], 36 * (1 - P[1]), fso[1].E, t[1] * t[1] * 36 * (1 - P[1]), tsqE, W,
+                fso[1].Q);
+        fflush(outfile);
+      }
     }
+    aligned_su3_field_free(&vt);
+    aligned_su3_field_free(&x1);
+    aligned_su3_field_free(&x2);
+    aligned_su3_field_free(&z);
+  }
+
+  if (g_proc_id == 0) {
     fclose(outfile);
   }
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
 
   return;
 }
-

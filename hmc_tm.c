@@ -71,6 +71,9 @@
 #ifdef DDalphaAMG
 #include "DDalphaAMG_interface.h"
 #endif
+#ifdef TM_USE_QUDA
+#  include "quda_interface.h"
+#endif
 
 extern int nstore;
 
@@ -111,7 +114,6 @@ int main(int argc,char *argv[]) {
   int imeas;
 
   init_critical_globals(TM_PROGRAM_HMC_TM);  
-  init_global_states();
   
 #ifdef _KOJAK_INST
 #pragma pomp inst init
@@ -123,7 +125,7 @@ int main(int argc,char *argv[]) {
 #endif
 
   strcpy(gauge_filename,"conf.save");
-  strcpy(nstore_filename,".nstore_counter");
+  strcpy(nstore_filename,"nstore_counter");
   strcpy(tmp_filename, ".conf.tmp");
 
   verbose = 1;
@@ -152,6 +154,7 @@ int main(int argc,char *argv[]) {
   NO_OF_SPINORFIELDS_32 = 6;
   
   tmlqcd_mpi_init(argc, argv);
+  tm_stopwatch_push(&g_timers, "HMC", "");
 
   if(nstore == -1) {
     countfile = fopen(nstore_filename, "r");
@@ -322,7 +325,6 @@ int main(int argc,char *argv[]) {
     
   /*Convert to a 32 bit gauge field, after xchange*/
   convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND + g_dbw2rand);
-  update_tm_gauge_id(&g_gauge_state_32, TM_GAUGE_PROPAGATE_THRESHOLD);
 #ifdef TM_USE_MPI
   update_tm_gauge_exchange(&g_gauge_state_32);
 #endif
@@ -574,10 +576,17 @@ int main(int argc,char *argv[]) {
   free(filename);
   free(SourceInfo.basename);
   free(PropInfo.basename);
+
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
+
+#ifdef TM_USE_QUDA
+  _endQuda();
+#endif
 #ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 #endif
+
   return(0);
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)

@@ -45,6 +45,7 @@
 #include "su3adj.h"
 
 #include "misc_types.h"
+#include "gettime.h"
 
 #define N_CHEBYMAX 49
 #define NTILDE_CHEBYMAX 2000
@@ -63,7 +64,6 @@
 #elif defined BGL
 #include "bgl.h"
 #endif
-
 EXTERN int DUM_DERI, DUM_MATRIX;
 EXTERN int NO_OF_SPINORFIELDS;
 EXTERN int NO_OF_SPINORFIELDS_32;
@@ -74,11 +74,14 @@ EXTERN int NO_OF_BISPINORFIELDS;
 EXTERN int g_update_gauge_copy;
 EXTERN int g_update_gauge_copy_32;
 EXTERN int g_relative_precision_flag;
+EXTERN int g_strict_residual_check;
 EXTERN int g_debug_level;
 EXTERN int g_disable_IO_checks;
 EXTERN int g_disable_src_IO_checks;
 
 EXTERN tm_mpi_thread_level_t g_mpi_thread_level;
+
+EXTERN tm_timers_t g_timers;
 
 EXTERN int T_global;
 #ifndef FIXEDVOLUME
@@ -189,9 +192,6 @@ EXTERN su3 ** g_gauge_field_copy;
 EXTERN su3_32 ** g_gauge_field_copy_32;
 #endif
 
-/*for temporalgauge in GPU part*/
-EXTERN su3 ** g_tempgauge_field;
-
 EXTERN su3adj ** moment;
 EXTERN su3adj ** df0;
 EXTERN su3adj ** ddummy;
@@ -291,6 +291,7 @@ EXTERN tm_CloverState_t g_clover_state;
 EXTERN tm_CloverState_t g_clover_state_32;
 EXTERN tm_CloverInverseState_t g_clover_inverse_state;
 EXTERN tm_CloverInverseState_t g_clover_inverse_state_32;
+
 
 #undef EXTERN
 /* #undef ALIGN */

@@ -120,7 +120,6 @@ int main(int argc, char *argv[])
   struct stout_parameters params_smear;
 
   init_critical_globals(TM_PROGRAM_INVERT);
-  init_global_states();
 
 #ifdef _KOJAK_INST
 #pragma pomp inst init
@@ -310,7 +309,6 @@ int main(int argc, char *argv[])
 #endif
     /*Convert to a 32 bit gauge field, after xchange*/
     convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND);
-    update_tm_gauge_id(&g_gauge_state_32, TM_GAUGE_PROPAGATE_THRESHOLD);
     update_tm_gauge_exchange(&g_gauge_state_32);
 
     /*compute the energy of the gauge field*/
