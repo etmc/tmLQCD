@@ -60,6 +60,7 @@
 #include "hamiltonian_field.h"
 #include "update_tm.h"
 #include "gettime.h"
+#include "tm_debug_printf.h"
 #ifdef DDalphaAMG
 #include "DDalphaAMG_interface.h"
 #endif
@@ -124,9 +125,40 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   MG_reset();
 #endif
 
+  double muflip_p[1];
+  ranlxd(muflip_p,1);
+#ifdef TM_USE_MPI
+  MPI_Bcast(&muflip_p[0], 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+  tm_debug_printf(0, 0, "# muflip_p = %.2f\n", muflip_p[0]);
+
   /* heatbath for all monomials */
   for(i = 0; i < Integrator.no_timescales; i++) {
     for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
+      // flipping the sign of mu in the HB step should help with ergodicity
+      // at coarse lattice spacings
+      if( muflip_p[0] >= 0.5 &&
+          (monomial_list[ Integrator.mnls_per_ts[i][j] ].type == DET ||
+           monomial_list[ Integrator.mnls_per_ts[i][j] ].type == DETRATIO ||
+           monomial_list[ Integrator.mnls_per_ts[i][j] ].type == CLOVERDET ||
+           monomial_list[ Integrator.mnls_per_ts[i][j] ].type == CLOVERDETRATIO ||
+           monomial_list[ Integrator.mnls_per_ts[i][j] ].type == CLOVERTRLOG) ) {
+
+        monomial_list[ Integrator.mnls_per_ts[i][j] ].mu *= -1.0;
+
+        if( monomial_list[ Integrator.mnls_per_ts[i][j] ].type == DETRATIO ){
+          monomial_list[ Integrator.mnls_per_ts[i][j] ].mu2 *= -1.0;
+        }
+        if( monomial_list[ Integrator.mnls_per_ts[i][j] ].type == CLOVERDET ||
+            monomial_list[ Integrator.mnls_per_ts[i][j] ].type == CLOVERDETRATIO ){
+          monomial_list[ Integrator.mnls_per_ts[i][j] ].rho *= -1.0;
+          if( monomial_list[ Integrator.mnls_per_ts[i][j] ].type == CLOVERDETRATIO ){
+            monomial_list[ Integrator.mnls_per_ts[i][j] ].rho2 *= -1.0;
+          }
+        }
+      }
+
+
       monomial_list[ Integrator.mnls_per_ts[i][j] ].hbfunction(Integrator.mnls_per_ts[i][j], &hf);
     }
   }
