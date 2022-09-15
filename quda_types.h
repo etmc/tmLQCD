@@ -42,14 +42,16 @@ typedef enum tm_quda_ferm_bc_t {
 } tm_quda_ferm_bc_t;
 
 /* tm_QudaParams_t provides an interface between the tmLQCD input file and the
- * available QUDA parameters. At the moment, only the fermionic bounday conditions
- * and the MG parameters are exposed like this, but a further refactoring might
- * turn this into a complete representation of the possible input parameters */
+ * available QUDA parameters for those where we don't
+ * a) rely on the defaults supplied by the various newQuda****Param() functions  
+ * b) hard-code in quda_interface.c 
+ * c) generate dynamically in quda_interface.c
+ * */
 typedef struct tm_QudaParams_t {
   int                  enable_device_memory_pool;
   int                  enable_pinned_memory_pool;
 
-  tm_quda_ferm_bc_t fermionbc;
+  tm_quda_ferm_bc_t    fermionbc;
 
   int                  pipeline;
   double               reliable_delta;
