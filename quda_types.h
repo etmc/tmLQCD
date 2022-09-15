@@ -82,7 +82,7 @@ typedef struct tm_QudaParams_t {
 
   int                      mg_setup_maxiter_refresh[QUDA_MAX_MG_LEVEL];
  
-  QudaNullVectorSetupType  mg_setup_type[QUDA_MG_MAX_LEVEL];
+  QudaNullVectorSetupType  mg_setup_type[QUDA_MAX_MG_LEVEL];
 
   // parameters related to communication-avoiding
   // solvers  
