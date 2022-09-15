@@ -5,6 +5,7 @@
  *               2018       Bartosz Kostrzewa, Ferenc Pittler
  *               2019, 2020 Bartosz Kostrzewa
  *               2021       Bartosz Kostrzewa, Marco Garofalo, Ferenc Pittler, Simone Bacchio
+ *               2022       Bartosz Kostrzewa, Marco Garofalo, Simone Romiti
  *
  * This file is part of tmLQCD.
  *
@@ -2067,9 +2068,6 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
 
   // only coarsen the spin on the first restriction
   mg_param->spin_block_size[0] = 2;
-
-  mg_param->compute_null_vector = QUDA_COMPUTE_NULL_VECTOR_YES;
-  mg_param->generate_all_levels = QUDA_BOOLEAN_YES;
 
   mg_param->run_low_mode_check = quda_input.mg_run_low_mode_check;
   mg_param->run_oblique_proj_check = quda_input.mg_run_oblique_proj_check;
