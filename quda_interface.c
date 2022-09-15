@@ -1947,6 +1947,13 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     
     mg_param->verbosity[level] = quda_input.mg_verbosity[level];
     mg_param->precision_null[level] = QUDA_HALF_PRECISION;
+    // different setup types exist but inverse iterations are the default
+    // in the future we might explore also the Chebyshev filter with refinement to
+    // generate null vectors
+    mg_param->setup_type[level] = QUDA_SETUP_NULL_VECTOR_INVERSE_ITERATIONS;
+    mg_param->setup_restrict_remaining_type[level] = QUDA_SETUP_NULL_VECTOR_INVERSE_ITERATIONS;
+    mg_param->setup_maxiter_inverse_iterations_refinement[level] = 0;
+
     mg_param->setup_inv_type[level] = quda_input.mg_setup_inv_type;
     // Kate says: experimental, leave at 1 (will be used for bootstrap-style setup later)
     mg_param->num_setup_iter[level] = 1;
