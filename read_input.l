@@ -437,7 +437,7 @@ static inline double fltlist_next_token(int * const list_end){
     free(input_copy);
   }
   
-  static inline void parse_quda_mg_cabasis_par_array(char const * const input, QudaCABasis * par_array){
+  static inline void parse_quda_mg_polybasis_par_array(char const * const input, QudaPolynomialBasis * par_array){
     char paramname[100];
     char token[100];
     char error_message[ERR_MSG_LEN];
@@ -1947,7 +1947,7 @@ static inline double fltlist_next_token(int * const list_end){
     parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_eig_amax[0]));
   }
   {SPC}*MGSetupCABasisType{EQL}{STRLIST} {
-    parse_quda_mg_cabasis_par_array(yytext, &(quda_input.mg_setup_ca_basis[0]));
+    parse_quda_mg_polybasis_par_array(yytext, &(quda_input.mg_setup_ca_basis[0]));
   }
   {SPC}*MGSetupCABasisSize{EQL}{STRLIST} {
     parse_quda_mg_int_par_array(yytext, &(quda_input.mg_setup_ca_basis_size[0]));
@@ -1959,7 +1959,7 @@ static inline double fltlist_next_token(int * const list_end){
     parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_setup_ca_lambda_max[0]));
   }
   {SPC}*MGCoarseSolverCABasisType{EQL}{STRLIST} {
-    parse_quda_mg_cabasis_par_array(yytext, &(quda_input.mg_coarse_solver_ca_basis[0]));
+    parse_quda_mg_polybasis_par_array(yytext, &(quda_input.mg_coarse_solver_ca_basis[0]));
   }
   {SPC}*MGCoarseSolverCABasisSize{EQL}{STRLIST} {
     parse_quda_mg_int_par_array(yytext, &(quda_input.mg_coarse_solver_ca_basis_size[0]));
