@@ -1945,6 +1945,12 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
 
     } // for( dim=0 to dim=3 ) (space-time dimensions)
     
+    // set file i/o parameters to a default which imples that no null-vector I/O is performed
+    strcpy(mg_param->vec_infile[level], "");
+    strcpy(mg_param->vec_outfile[level], "");
+    mg_param->vec_store[level] = QUDA_BOOLEAN_NO;
+    mg_param->vec_load[level] = QUDA_BOOLEAN_NO;
+
     mg_param->verbosity[level] = quda_input.mg_verbosity[level];
     mg_param->precision_null[level] = QUDA_HALF_PRECISION;
     // different setup types exist but inverse iterations are the default
@@ -2080,9 +2086,6 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   mg_param->run_oblique_proj_check = quda_input.mg_run_oblique_proj_check;
   mg_param->run_verify = quda_input.mg_run_verify;
 
-  // set file i/o parameters
-  strcpy(mg_param->vec_infile, "");
-  strcpy(mg_param->vec_outfile, "");
 }
 
 int invert_eo_degenerate_quda(spinor * const out,
