@@ -2092,11 +2092,12 @@ int invert_eo_degenerate_quda(spinor * const out,
 
   int iterations = 0;
 
+  void *spinorIn  = (void*)in; // source
+  void *spinorOut = (void*)out; // solution
+
   // it returns if quda is already init
   _initQuda();
 
-  void *spinorIn  = (void*)in; // source
-  void *spinorOut = (void*)out; // solution
 
   if ( rel_prec )
     inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
