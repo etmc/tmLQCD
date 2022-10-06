@@ -146,6 +146,7 @@ void M_quda(spinor * const P, spinor * const Q);
 
 
 // to be called instead of tmLQCD functions to use the QUDA inverter in solve_degenerate
+// NOTE: the global struct inv_param is initialized inside this function
 int invert_eo_degenerate_quda(spinor * const Odd_new,
                               spinor * const Odd,
                               const double precision, const int max_iter,
@@ -172,6 +173,7 @@ int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out
                                      CompressionType compression);
 
 void compute_gauge_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf);
+void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf, spinor ** const X_o);
 void compute_WFlow_quda(const double eps ,const double tmax, const int traj, FILE* outfile);
 
 #endif /* QUDA_INTERFACE_H_ */

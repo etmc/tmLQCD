@@ -151,7 +151,9 @@ tm_QudaParams_t quda_input;
 // pointer to the QUDA gaugefield
 double *gauge_quda[4];
 
-QudaGaugeParam  f_gauge_param;
+
+// re-initialized each time by _initMomQuda()
+QudaGaugeParam  f_gauge_param; 
 // pointer to the QUDA momentum field
 double *mom_quda[4];
 double *mom_quda_reordered[4];
@@ -2520,6 +2522,81 @@ void compute_gauge_derivative_quda(monomial * const mnl, hamiltonian_field_t * c
 
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 }
+
+void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf, spinor ** const X_o) {
+  tm_stopwatch_push(&g_timers, __func__, "");
+  
+  _initQuda();
+  _initMomQuda();
+
+  // const int rect = mnl->use_rectangles;
+
+//  int * path_length = rect ? plaq_rect_length : plaq_length;
+
+  // const int num_paths = rect ? 24 : 6;
+  // const int max_length = rect ? 5 : 3;
+
+  // // can't use stack memory for this so we need to copy to a heap buffer
+  // int *** path_buf = malloc(4*(num_paths+1)*sizeof(void*));
+  // for(int i=0; i<4; i++) {
+  //   path_buf[i] = (int**) path_buf+4+i*num_paths;
+  //   for(int j=0; j<num_paths; j++) {
+  //     if(rect) 
+  //       path_buf[i][j] = plaq_rect_path[i][j];
+  //     else
+  //       path_buf[i][j] = plaq_path[i][j];
+  //   }
+  // }
+
+  // double * loop_coeff = malloc(num_paths*sizeof(double));
+  // for(int i=0; i<num_paths; i++) {
+  //   // Plaq coeffs
+  //   if(i<6)
+  //     loop_coeff[i] = -0.66666666666 * g_beta * mnl->c0; //2/3 conversion factor to match tmLQCD results
+  //   // Rect coeffs
+  //   else
+  //     loop_coeff[i] = -0.66666666666 * g_beta * mnl->c1;
+  // }
+  
+  #pragma omp parallel for
+  for(int i = 0; i < 4; i++){
+    memset(mom_quda[i], 0, VOLUME*10*sizeof(double));
+  }
+
+  reorder_gauge_toQuda(hf->gaugefield, NO_COMPRESSION);
+  // the reordering above overwrites gauge_quda
+  // to make sure that things become synchronised again at the
+  // next _loadGaugeQuda, we reset the QUDA gauge state here
+  reset_quda_gauge_state(&quda_gauge_state);
+  
+  tm_stopwatch_push(&g_timers, "computeGaugeForceQuda", ""); 
+  // computeGaugeForceQuda((void*)mom_quda, 
+  //                       (void*)gauge_quda, 
+  //                       path_buf, path_length, loop_coeff, num_paths, max_length, 1.0,
+  //                       &f_gauge_param);
+  void ** foo1 = NULL; // not used by quda
+  void * foo2 = NULL; // not used by quda
+  const int nvector = 1; // number of rational approximants
+  double coeff[1] = {1.0};  
+  double kappa2_quda = - mnl->kappa*mnl->kappa; // -kappa*kappa
+  double ck_quda = - mnl->c_sw * mnl->kappa / 8.0;
+  const double multiplicity = 1.0; 
+  computeCloverForceQuda(mom_quda, /*dt=*/1.0, X_o, foo1, coeff, kappa2_quda, ck_quda,
+                            nvector, multiplicity, foo2, &f_gauge_param,
+                            &inv_param);
+
+  tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
+
+  // free(path_buf);
+  // free(loop_coeff);
+  
+  reorder_mom_fromQuda(mom_quda);
+  add_mom_to_derivative(hf->derivative);
+
+  tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
+}
+
+
 
 void  compute_WFlow_quda(const double eps, const double tmax, const int traj, FILE* outfile){
   tm_stopwatch_push(&g_timers, __func__, "");

@@ -107,50 +107,75 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   tm_stopwatch_push(&g_timers, "Qm", "");
   mnl->Qm(mnl->w_fields[0], mnl->w_fields[1]);
   tm_stopwatch_pop(&g_timers, 0, 1, "");
-  if(mnl->even_odd_flag) {
-    // apply Hopping Matrix M_{eo}
-    // to get the even sites of X_e
-    tm_stopwatch_push(&g_timers, "H_eo_sw_inv_psi", "");
-    H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EO, -1, mnl->mu);
-    tm_stopwatch_pop(&g_timers, 0, 1, "");
-    // \delta Q sandwitched by Y_o^\dagger and X_e
-    deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
-    
-    // to get the even sites of Y_e
-    tm_stopwatch_push(&g_timers, "H_eo_sw_inv_psi", "");
-    H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1, mnl->mu);
-    tm_stopwatch_pop(&g_timers, 0, 1, "");
-    // \delta Q sandwitched by Y_e^\dagger and X_o
-    // uses the gauge field in hf and changes the derivative fields in hf
-    deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor);
-    
-    // here comes the clover term...
-    // computes the insertion matrices for S_eff
-    // result is written to swp and swm
-    // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
-    sw_spinor_eo(EE, mnl->w_fields[2], mnl->w_fields[3], mnl->forcefactor);
-    
-    // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-    sw_spinor_eo(OO, mnl->w_fields[0], mnl->w_fields[1], mnl->forcefactor);
-  
-    // compute the contribution for the det-part
-    // we again compute only the insertion matrices for S_det
-    // the result is added to swp and swm
-    // even sites only!
-    sw_deriv(EE, mnl->mu);
-  }
-  else {
-    /* \delta Q sandwitched by Y^\dagger and X */
-    deriv_Sb_D_psi(mnl->w_fields[0], mnl->w_fields[1], hf, mnl->forcefactor);
 
-    sw_spinor(mnl->w_fields[0], mnl->w_fields[1], mnl->forcefactor);
+  if ( mnl->solver_params.external_inverter == QUDA_INVERTER){
+  #ifdef TM_USE_QUDA
+
+    if (g_debug_level > 3) {
+     memcpy(ddummy[0], hf->derivative[0], (4*VOLUMEPLUSRAND+1)*sizeof(su3adj));
+    }
+
+    compute_cloverdet_derivative_quda(mnl, hf, mnl->w_fields[1]);
+
+    if (g_debug_level > 3){
+      su3adj **given=hf->derivative;
+      hf->derivative=ddummy;
+      mnl->solver_params.external_inverter = NO_EXT_INV;
+      cloverdet_derivative(id, hf);
+      compare_derivative(mnl,given, ddummy);
+      mnl->solver_params.external_inverter = QUDA_INVERTER;
+      hf->derivative=given;
+    }
+
+  #endif // no other option, TM_USE_QUDA already checked by solver
   }
-  
-  // now we compute
-  // finally, using the insertion matrices stored in swm and swp
-  // we compute the terms F^{det} and F^{sw} at once
-  // uses the gaugefields in hf and changes the derivative field in hf
-  sw_all(hf, mnl->kappa, mnl->c_sw);
+  else{
+    if(mnl->even_odd_flag) {
+      // apply Hopping Matrix M_{eo}
+      // to get the even sites of X_e
+      tm_stopwatch_push(&g_timers, "H_eo_sw_inv_psi", "");
+      H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EO, -1, mnl->mu);
+      tm_stopwatch_pop(&g_timers, 0, 1, "");
+      // \delta Q sandwitched by Y_o^\dagger and X_e
+      deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
+      
+      // to get the even sites of Y_e
+      tm_stopwatch_push(&g_timers, "H_eo_sw_inv_psi", "");
+      H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1, mnl->mu);
+      tm_stopwatch_pop(&g_timers, 0, 1, "");
+      // \delta Q sandwitched by Y_e^\dagger and X_o
+      // uses the gauge field in hf and changes the derivative fields in hf
+      deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor);
+      
+      // here comes the clover term...
+      // computes the insertion matrices for S_eff
+      // result is written to swp and swm
+      // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e
+      sw_spinor_eo(EE, mnl->w_fields[2], mnl->w_fields[3], mnl->forcefactor);
+      
+      // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
+      sw_spinor_eo(OO, mnl->w_fields[0], mnl->w_fields[1], mnl->forcefactor);
+    
+      // compute the contribution for the det-part
+      // we again compute only the insertion matrices for S_det
+      // the result is added to swp and swm
+      // even sites only!
+      sw_deriv(EE, mnl->mu);
+    }
+    else {
+      /* \delta Q sandwitched by Y^\dagger and X */
+      deriv_Sb_D_psi(mnl->w_fields[0], mnl->w_fields[1], hf, mnl->forcefactor);
+
+      sw_spinor(mnl->w_fields[0], mnl->w_fields[1], mnl->forcefactor);
+    }
+    
+    // now we compute
+    // finally, using the insertion matrices stored in swm and swp
+    // we compute the terms F^{det} and F^{sw} at once
+    // uses the gaugefields in hf and changes the derivative field in hf
+    sw_all(hf, mnl->kappa, mnl->c_sw);
+
+  }
 
   mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
   tm_stopwatch_pop(&g_timers, 0, 1, "");
