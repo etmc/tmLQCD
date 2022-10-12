@@ -2528,6 +2528,21 @@ void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t
   
   _initQuda();
   _initMomQuda();
+  void *spinorIn;
+  const int nr_sf_in = 1;
+  spinor ** in_o;
+
+  if (g_debug_level > 3){ // here we need to copy the initial vector to compare with the CPU
+    const int Vh = VOLUME/2;
+    init_solver_field(&in_o, Vh, nr_sf_in);
+    memcpy(in_o[0],      X_o, Vh*24*sizeof(double));
+    spinorIn  = (void*)in_o[0];
+  }
+  else{
+    spinorIn  = (void*)X_o;
+  }
+
+  reorder_spinor_eo_toQuda((double*)spinorIn, inv_param.cpu_prec, 0, 1);
 
   // const int rect = mnl->use_rectangles;
 
@@ -2581,12 +2596,14 @@ void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t
   double kappa2_quda = - mnl->kappa*mnl->kappa; // -kappa*kappa
   double ck_quda = - mnl->c_sw * mnl->kappa / 8.0;
   const double multiplicity = 1.0; 
-  computeCloverForceQuda(mom_quda, /*dt=*/1.0, X_o, foo1, coeff, kappa2_quda, ck_quda,
+  computeCloverForceQuda(mom_quda, /*dt=*/1.0, spinorIn, foo1, coeff, kappa2_quda, ck_quda,
                             nvector, multiplicity, foo2, &f_gauge_param,
                             &inv_param);
 
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
-
+  if (g_debug_level > 3){
+    finalize_solver(in_o, nr_sf_in);
+  }
   // free(path_buf);
   // free(loop_coeff);
   
