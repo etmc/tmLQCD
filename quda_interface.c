@@ -2596,7 +2596,7 @@ void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t
   double kappa2_quda = - mnl->kappa*mnl->kappa; // -kappa*kappa
   double ck_quda = - mnl->c_sw * mnl->kappa / 8.0;
   const double multiplicity = 1.0; 
-  computeCloverForceQuda(mom_quda, /*dt=*/1.0, spinorIn, foo1, coeff, kappa2_quda, ck_quda,
+  computeCloverForceQuda(mom_quda, /*dt=*/1.0, &spinorIn, foo1, coeff, kappa2_quda, ck_quda,
                             nvector, multiplicity, foo2, &f_gauge_param,
                             &inv_param);
 
