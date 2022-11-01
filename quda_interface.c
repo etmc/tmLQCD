@@ -2608,7 +2608,6 @@ static const char * string_mg_tuning_direction(const tm_QudaMGTuningDirection_t 
       }
   }
 }
-}
 
 void update_tunable_params(tm_QudaMGTunableParams_t * tunable_params,
                            const tm_QudaMGTuningPlan_t * const tuning_plan,
