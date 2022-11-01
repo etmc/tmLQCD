@@ -2551,6 +2551,65 @@ int get_lvl_tuning_steps(const tm_QudaMGTuningPlan_t * const tuning_plan, const 
          tuning_plan->mg_omega_steps[lvl];
 }
 
+static const char * string_mg_tuning_direction(const tm_QudaMGTuningDirection_t tuning_dir)
+{
+  switch(tuning_dir){
+    case TM_MG_TUNE_MU_FACTOR:
+      {
+        static const char * ret = "mg_mu_factor";
+        return ret;
+        break;
+      }
+    case TM_MG_TUNE_COARSE_SOLVER_MAXITER:
+      {
+        static const char * ret = "mg_coarse_solver_maxiter";
+        return ret;
+        break;
+      }
+    case TM_MG_TUNE_COARSE_SOLVER_TOL:
+      {
+        static const char * ret = "mg_coarse_solver_tol";
+        return ret;
+        break;
+      }
+    case TM_MG_TUNE_NU_PRE:
+      {
+        static const char * ret = "mg_nu_pre";
+        return ret;
+        break;
+      }
+    case TM_MG_TUNE_NU_POST:
+      {
+        static const char * ret = "mg_nu_post";
+        return ret;
+        break;
+      }
+    case TM_MG_TUNE_SMOOTHER_TOL:
+      {
+        static const char * ret = "mg_smoother_tol";
+        return ret;
+        break;
+      }
+    case TM_MG_TUNE_OMEGA:
+      {
+        static const char * ret = "mg_omega";
+        return ret;
+        break;
+      }
+    case TM_MG_TUNE_INVALID:
+    default:
+      {
+        char err_msg[200];
+        snprintf(err_msg, 200, 
+                 "QUDA-MG Tuning direction %d is not valid. See definition of tm_QudaMGTuningDirection_t",
+                 (int)tuning_dir);
+        fatal_error(err_msg, __func__);
+        break;
+      }
+  }
+}
+}
+
 void update_tunable_params(tm_QudaMGTunableParams_t * tunable_params,
                            const tm_QudaMGTuningPlan_t * const tuning_plan,
                            const tm_QudaMGTuningDirection_t tuning_dir,
@@ -2599,6 +2658,7 @@ void update_tunable_params(tm_QudaMGTunableParams_t * tunable_params,
                  "QUDA-MG Tuning direction %d is not valid. See definition of tm_QudaMGTuningDirection_t",
                  (int)tuning_dir);
         fatal_error(err_msg, __func__);
+        break;
       }
   }
 }
@@ -2879,7 +2939,7 @@ void quda_mg_tune_params(void * spinorOut, void * spinorIn, const int max_iter){
     if(g_proc_id == 0){
       printf("\ntuning_iteration: %d/%d\n", i+1, quda_mg_tuning_plan.mg_tuning_iterations);
       printf("cur_tuning_lvl: %d\n", cur_tuning_lvl);
-      printf("cur_tuning_dir: %d\n", cur_tuning_dir);
+      printf("cur_tuning_dir: %s\n", string_mg_tuning_direction(cur_tuning_dir));
       printf("steps_done_in_cur_dir: %d\n\n", steps_done_in_cur_dir);
     }
 

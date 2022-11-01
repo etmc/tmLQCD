@@ -1,6 +1,7 @@
 /***********************************************************************
  *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ * Copyright (C) 2022                               Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -17,13 +18,8 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  *
- *
- * Hybrid-Monte-Carlo for twisted mass QCD
- *
- * Author: Carsten Urbach
- *         urbach@physik.fu-berlin.de
- *
  *******************************************************************************/
+
 #include "lime.h"
 #if HAVE_CONFIG_H
 #include<tmlqcd_config.h>
@@ -69,7 +65,6 @@
 #include "monomial/monomial.h"
 #include "integrator.h"
 #include "sighandler.h"
-#include "meas/measurements.h"
 #ifdef DDalphaAMG
 #include "DDalphaAMG_interface.h"
 #endif
@@ -102,18 +97,9 @@ int main(int argc,char *argv[]) {
   struct timeval t1;
 
   /* Energy corresponding to the Gauge part */
-  double plaquette_energy = 0., rectangle_energy = 0.;
-  /* Acceptance rate */
-  int Rate=0;
-  /* Do we want to perform reversibility checks */
-  /* See also return_check_flag in read_input.h */
-  int return_check = 0;
+  double plaquette_energy = 0.;
 
   paramsXlfInfo *xlfInfo;
-
-/* For online measurements */
-  measurement * meas;
-  int imeas;
 
   init_critical_globals(TM_PROGRAM_DERIV_MG_TUNE);  
   
@@ -428,7 +414,7 @@ static void process_args(int argc, char *argv[], char ** input_filename, char **
         } else if ( !strcmp(optarg, "multiple") ) {
           g_mpi_thread_level = TM_MPI_THREAD_MULTIPLE;
         } else {
-          tm_debug_printf(0, 0, "[hmc_tm process_args]: invalid input for -m command line argument\n");
+          tm_debug_printf(0, 0, "[deriv_mg_tune process_args]: invalid input for -m command line argument\n");
           usage(TM_EXIT_INVALID_CMDLINE_ARG);
         }
         break;
