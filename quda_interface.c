@@ -180,6 +180,7 @@ int commsMap(const int *coords, void *fdata) {
 // variable to check if quda has been initialized
 static int quda_initialized = 0;
 
+void _setVerbosityQuda();
 void _setQudaMultigridParam(QudaMultigridParam* mg_param);
 void _setMGInvertParam(QudaInvertParam * mg_inv_param, const QudaInvertParam * const inv_param);
 void _updateQudaMultigridPreconditioner(void);
@@ -269,8 +270,15 @@ void _setDefaultQudaParam(void){
   inv_param.residual_type = (QudaResidualType)(QUDA_L2_RELATIVE_RESIDUAL);
   inv_param.tol_hq = 0.1;
   inv_param.use_alternative_reliable = 0;
-  // anything smaller than this and we break down in double-half in most solves
-  inv_param.reliable_delta = 1e-3; // ignored by multi-shift solver
+
+  // Tests show that setting reliable_delta = 1e-1 results in good time to solution and good
+  // convergence also in double-half mixed precision
+  // However, it is important to set 'max_res_increase' and 'max_res_increase_total'
+  // to sufficiently large values
+  inv_param.reliable_delta = 1e-1;
+  inv_param.reliable_delta_refinement = 1e-1;
+  inv_param.max_res_increase = 10;
+  inv_param.max_res_increase_total = 40;
   inv_param.use_sloppy_partial_accumulator = 0;
 
   // domain decomposition preconditioner parameters
@@ -329,6 +337,11 @@ void _setDefaultQudaParam(void){
   inv_param.cl_pad = 0; // 24*24*24/2;
 #endif
 
+  _setVerbosityQuda();
+
+}
+
+void _setVerbosityQuda(){
   // solver verbosity and general verbosity
   QudaVerbosity gen_verb = QUDA_SUMMARIZE;
   if( g_debug_level == 0 ) {
@@ -896,33 +909,33 @@ void set_sloppy_prec(const SloppyPrecision sloppy_precision, const SloppyPrecisi
   QudaPrecision cuda_prec_sloppy;
   QudaPrecision cuda_prec_refinement_sloppy;
   if( sloppy_precision==SLOPPY_DOUBLE ) {
-    inv_param->reliable_delta = 1e-8;
+    inv_param->reliable_delta = 1e-4;
     cuda_prec_sloppy = QUDA_DOUBLE_PRECISION;
     if(g_proc_id == 0) printf("# TM_QUDA: Using double prec. as sloppy!\n");
   }
   else if( sloppy_precision==SLOPPY_HALF ) {
     // in double-half, we perform many reliable updates
-    inv_param->reliable_delta = 1e-2;
+    inv_param->reliable_delta = 1e-1;
     cuda_prec_sloppy = QUDA_HALF_PRECISION;
     if(g_proc_id == 0) printf("# TM_QUDA: Using half prec. as sloppy!\n");
   }
   else {
-    inv_param->reliable_delta = 1e-4;
+    inv_param->reliable_delta = 1e-2;
     cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
     if(g_proc_id == 0) printf("# TM_QUDA: Using single prec. as sloppy!\n");
   }
   
   if( refinement_precision == SLOPPY_DOUBLE ){
-    inv_param->reliable_delta_refinement = 1e-8;
+    inv_param->reliable_delta_refinement = 1e-4;
     cuda_prec_refinement_sloppy = QUDA_DOUBLE_PRECISION;
   }
   else if( refinement_precision == SLOPPY_HALF ){
-    inv_param->reliable_delta_refinement = 1e-2;
+    inv_param->reliable_delta_refinement = 1e-1;
     cuda_prec_refinement_sloppy = QUDA_HALF_PRECISION;
     if(g_proc_id == 0) printf("# TM_QUDA: Using double-half refinement in mshift-solver!\n");
   }
   else {
-    inv_param->reliable_delta_refinement = 1e-4;
+    inv_param->reliable_delta_refinement = 1e-2;
     cuda_prec_refinement_sloppy = QUDA_SINGLE_PRECISION;
     if(g_proc_id == 0) printf("# TM_QUDA: Using double-single refinement in mshift-solver!\n");
   }
@@ -1981,9 +1994,10 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     // set to QUDA_MATPC_SOLUTION to inject single parity field into coarse grid
     // if we are using an outer even-odd preconditioned solve, then we
     // use single parity injection into the coarse grid
-    mg_param->coarse_grid_solution_type[level] = (level == 0 && inv_param.solve_type == QUDA_DIRECT_PC_SOLVE) ? 
-                                                    QUDA_MATPC_SOLUTION : 
-                                                    QUDA_MAT_SOLUTION;
+    // on all other levels than the fine one we always use QUDA_MATPC_SOLUTION
+    mg_param->coarse_grid_solution_type[level] = (level == 0 && inv_param.solve_type == QUDA_DIRECT_SOLVE) ? 
+                                                    QUDA_MAT_SOLUTION : 
+                                                    QUDA_MATPC_SOLUTION;
 
     mg_param->omega[level] = quda_input.mg_omega[level]; // over/under relaxation factor
 
@@ -2915,4 +2929,57 @@ void quda_mg_tune_params(void * spinorOut, void * spinorIn, const int max_iter){
   free(tunable_params); 
 }
 
+void  compute_WFlow_quda(const double eps, const double tmax, const int traj, FILE* outfile){
+  tm_stopwatch_push(&g_timers, __func__, "");
+  
+  _initQuda();
+  _loadGaugeQuda(NO_COMPRESSION);//check here the input
+
+  QudaGaugeSmearParam wflow_params = newQudaGaugeSmearParam();
+  wflow_params.smear_type = QUDA_GAUGE_SMEAR_WILSON_FLOW; 
+  wflow_params.n_steps = (int)(tmax / eps) + 3; 
+  wflow_params.epsilon = eps;
+  wflow_params.meas_interval = 1;
+
+  int n_meas= wflow_params.n_steps / wflow_params.meas_interval + 1 ;
+  QudaGaugeObservableParam *obs_param;
+  obs_param = (QudaGaugeObservableParam*) malloc(sizeof(QudaGaugeObservableParam) * n_meas);
+  for (int i=0; i<n_meas; i++){
+    obs_param[i] = newQudaGaugeObservableParam();   
+    obs_param[i].compute_plaquette = QUDA_BOOLEAN_TRUE;
+    obs_param[i].compute_qcharge = QUDA_BOOLEAN_TRUE; 
+    obs_param[i].su_project = QUDA_BOOLEAN_TRUE; 
+  }
+
+  setVerbosityQuda(QUDA_SILENT, "# QUDA: ", stdout);
+  performWFlowQuda(&wflow_params, obs_param);
+  _setVerbosityQuda();
+
+  tm_debug_printf(0, 3, "traj t P Eplaq Esym tsqEplaq tsqEsym Wsym Qsym\n");  
+
+  for(int i=1; i< wflow_params.n_steps; i+=2){  
+    const double t1 = i*eps;
+    const double P = obs_param[i].plaquette[0];
+    const double E0 = obs_param[i-1].energy[0]; // E(t=t0)
+    const double E1 = obs_param[i].energy[0]; // E(t=t1)
+    const double E2 = obs_param[i+1].energy[0]; // E(t=t2)
+    const double W = t1*t1 * (2 * E1 + t1 * ((E2 - E0) / (2 * eps)));
+    const double Q = -obs_param[i].qcharge; // topological charge Q
+
+    tm_debug_printf(0, 3,
+      "# GRADFLOW: sym(plaq)  t=%lf 1-P(t)=%1.8lf E(t)=%2.8lf(%2.8lf) t^2E=%2.8lf(%2.8lf) "
+      "W(t)=%2.8lf Q(t)=%.8lf \n",
+      t1, 1 - P, E1, 36 * (1 - P), t1*t1*E1, t1*t1 * 36 * (1 - P), W,  Q);
+
+    if (g_proc_id == 0) {
+      fprintf(outfile, "%06d %f %2.12lf %2.12lf %2.12lf %2.12lf %2.12lf %2.12lf %.12lf \n", traj,
+              t1, P, 36 * (1 - P), E1, t1 * t1 * 36 * (1 - P), t1*t1*E1, W, Q);
+      fflush(outfile);
+    }
+    
+  }
+
+  free(obs_param);
+  tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
+}
 

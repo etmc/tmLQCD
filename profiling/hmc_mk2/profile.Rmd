@@ -1,5 +1,6 @@
 ---
 title: "tmLQCD HMC profile"
+subtitle: "`r args[2]`"
 author: ""
 date: "`r Sys.Date()`"
 output:
@@ -185,6 +186,7 @@ for( mon in total_per_mon$monomial ){
                             #min.segment.length = unit(0, 'lines'),
                             colour = 'white', size = 2,
                             hjust = 0.5) +
+         ggplot2::labs(x = "call tree level") +
          ggplot2::ggtitle(sprintf("%s %s", mon, tp)) +
          ggplot2::theme_bw() +
          ggplot2::theme(legend.position = "none",
