@@ -777,9 +777,21 @@ where {\ttfamily TYPE} can be currently one of the following:
   \begin{itemize}
   \item {\ttfamily Directions} can be either $0$ for time- or $3$ for z-direction.
   \end{itemize}
+
+\item {\ttfamily GRADIENTFLOW}:
+  \begin{itemize}
+    \item {\ttfamily UseExternalLibrary} \\
+    Equal to either {\ttfamily no} (default value) or {\ttfamily quda}.
+    \item {\ttfamily StepSize} \\
+    ({\ttfamily floating point}) - Gradient flow step size for the numerical integration of the flow equation.
+    \item {\ttfamily MaxFlowTime} \\
+    ({\ttfamily floating point}) - Maximum gradient flow time.
+  \end{itemize}
+
 \end{itemize}
 The frequency of measuring all of these can be adjusted with the
 Option {\ttfamily Frequency}. 
+
 
 \subsubsection{Example Input File}
 

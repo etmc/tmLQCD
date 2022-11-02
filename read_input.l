@@ -47,22 +47,23 @@ EQL {SPC}*={SPC}*
 
 %{
 #ifdef HAVE_CONFIG_H
-#  include<tmlqcd_config.h>
+#  include "tmlqcd_config.h"
 #endif
-#include<stdlib.h>
-#include<stdio.h>
-#include<string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #define INIT_GLOBALS
-#include"global.h"
-#include"read_input.h"
-#include"default_input_values.h"
-#include"monomial/monomial.h"
-#include"solver/solver_types.h"
-#include"meas/measurements.h"
-#include"integrator.h"
-#include"operator.h"
-#include"phmc.h"
-#include<io/params.h>
+#include "global.h"
+#undef INIT_GLOBALS
+#include "read_input.h"
+#include "default_input_values.h"
+#include "monomial/monomial.h"
+#include "solver/solver_types.h"
+#include "meas/measurements.h"
+#include "integrator.h"
+#include "operator.h"
+#include "phmc.h"
+#include <io/params.h>
 #include "qphix_types.h"
 #include "quda_types.h"
 #include "misc_types.h"
@@ -233,19 +234,6 @@ static inline double fltlist_next_token(int * const list_end){
   int compute_topsus;
   double mstarsq;
   int no_sources_z2;
-  int usegpu_flag;
-  int max_innersolver_it;
-  int device_num;
-  double innersolver_precision;
-
-  double innersolver_precision_abs;
-  double innersolver_precision_rel;
-  int innersolver_precision_check_abs;
-  int innersolver_precision_check_rel;
-
-  int max_mms_shifts;
-  int use_mixed_mms;
-  int min_innersolver_it;
 
   double mixcg_innereps;
   int mixcg_maxinnersolverit;
@@ -572,9 +560,6 @@ static inline double fltlist_next_token(int * const list_end){
 %x INITINTEGRATOR
 %x INTEGRATOR
 
-%x GPU
-%x INITGPU
-
 %x DEFLATION
 %x INITDEFLATION
 
@@ -750,9 +735,8 @@ static inline double fltlist_next_token(int * const list_end){
 ^DflFieldIter{EQL}                 BEGIN(DFLFIELDITER);
 ^DflPolyIter{EQL}                  BEGIN(DFLPOLYITER);
 
-^BeginGPU                          BEGIN(INITGPU);
-^BeginDeflation		                 BEGIN(INITDEFLATION);
-^BeginDDalpha       	             BEGIN(INITMULTIGRID);
+^BeginDeflation		           BEGIN(INITDEFLATION);
+^BeginDDalpha       	           BEGIN(INITMULTIGRID);
 ^MixCGInnerEps{EQL}                BEGIN(MIXCGEPS);
 ^MixCGMaxIter{EQL}                 BEGIN(MIXCGIT);
 
@@ -761,71 +745,6 @@ static inline double fltlist_next_token(int * const list_end){
 
 ^BarrierMonomialsConverge{EQL}     BEGIN(BARRIER_MONOMIALS_CONVERGE);
 
-
-<INITGPU>Init{SPC}* {
- if(myverbose) printf("Initialising GPU line %d\n", line_of_file); 
- usegpu_flag = 1;
-  if(myverbose!=0) printf("  Using help of GPU for inversions\n"); 
- BEGIN(GPU);
- }
-<GPU>{
-  {SPC}*InnersolverPrecision{EQL}{FLT} {
-    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
-    innersolver_precision = c;
-    if(myverbose) printf("  Inner solver precision set to %e line %d\n", c, line_of_file);
-  }
-  {SPC}*MaxInnersolverIteration{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
-    max_innersolver_it = a;
-    if(myverbose) printf("  Inner solver iterations set to %d line %d\n", a, line_of_file);
-  }
-  {SPC}*DeviceNum{EQL}{DIGIT}+ {
-      sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
-      device_num = a;
-      if(myverbose) printf("  Device Number set to %d line %d\n", a, line_of_file);
-  }
-  {SPC}*InnersolverPrecisionAbs{EQL}{FLT} {
-    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
-    innersolver_precision_abs = c;
-    if(myverbose) printf("  innersolver_precision_abs set to %e line %d\n", c, line_of_file);
-  }
-  {SPC}*InnersolverPrecisionRel{EQL}{FLT} {
-    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
-    innersolver_precision_rel = c;
-    if(myverbose) printf("  innersolver_precision_rel set to %e line %d\n", c, line_of_file);
-  }
-  {SPC}*InnersolverPrecisionCheckAbs{EQL}{DIGIT}+ {
-      sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
-      innersolver_precision_check_abs = a;
-      if(myverbose) printf("  innersolver_precision_check_abs set to %d line %d\n", a, line_of_file);
-  }
-  {SPC}*InnersolverPrecisionCheckRel{EQL}{DIGIT}+ {
-      sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
-      innersolver_precision_check_rel = a;
-      if(myverbose) printf("  innersolver_precision_check_rel set to %d line %d\n", a, line_of_file);
-  }
-  {SPC}*MinInnerSolverIterations{EQL}{DIGIT}+ {
-      sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
-      min_innersolver_it = a;
-      if(myverbose) printf("  min_innersolver_it set to %d line %d\n", a, line_of_file);
-  }
-  {SPC}*MaxMmsShifts{EQL}{DIGIT}+ {
-      sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
-      max_mms_shifts = a;
-      if(myverbose) printf("  max_mms_shifts set to %d line %d\n", a, line_of_file);
-  }
-  {SPC}*UseMixedMms{EQL}yes {
-    use_mixed_mms = 1;
-    if(myverbose) printf("  Using mixed solver for smallest shifts\n");  }
-  {SPC}*UseMixedMms{EQL}no {
-    use_mixed_mms = 0;
-    if(myverbose) printf("  Not using mixed solver for smallest shifts\n");
-  }
-  EndGPUInit{SPC}* {
-  if(myverbose) printf("GPU parsed in line %d\n\n", line_of_file);
-  BEGIN(0);
-  }
-}
 
 <INITDEFLATION>Init{SPC}* {
  if(myverbose) printf("Initialising DEFLATION line %d\n", line_of_file); 
@@ -1448,13 +1367,6 @@ static inline double fltlist_next_token(int * const list_end){
   }
 }
 
-<TMSOLVER,CSWSOLVER>{
-  mg {
-    optr->solver=MG;
-    if(myverbose) printf("  Solver set to MG line %d operator %d\n", line_of_file, current_operator);
-    BEGIN(name_caller);
-  }
-}
 
 <DBTMSOLVER,TMSOLVER,CSWSOLVER>{
   cg {
@@ -1596,6 +1508,14 @@ static inline double fltlist_next_token(int * const list_end){
     printf("ERROR line %d operator %d: DDalphaAMG library not included\n", line_of_file, current_operator);
     exit(1);
 #endif
+  }
+}
+
+<TMSOLVER,CSWSOLVER>{
+  mg {
+    optr->solver=MG;
+    if(myverbose) printf("  Solver set to MG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
   }
 }
 
@@ -3703,7 +3623,7 @@ static inline double fltlist_next_token(int * const list_end){
   BEGIN(comment_caller);
 }
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID,INITEXTERNALINVERTER,QUDAINVERTER,QPHIXINVERTER,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{SPC}*\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID,INITEXTERNALINVERTER,QUDAINVERTER,QPHIXINVERTER,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{SPC}*\n   {
   line_of_file++;
 }
 <*>{SPC}*\n                       {
@@ -3874,12 +3794,6 @@ int read_input(char * conf_file){
   compute_topsus = _default_compute_topsus;
   mstarsq = _default_mstarsq;
   no_sources_z2 = _default_no_sources_z2;
-  device_num = _default_device_num;
-  min_innersolver_it = _default_min_innersolver_it;
-  max_mms_shifts = _default_max_mms_shifts;
-  use_mixed_mms = 0;
-  innersolver_precision_rel = 1.e-4;
-  innersolver_precision_abs = 1.e-4;
 
   mixcg_innereps = _default_mixcg_innereps;
   mixcg_maxinnersolverit = _default_mixcg_maxinnersolverit;
