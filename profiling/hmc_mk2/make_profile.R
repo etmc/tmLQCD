@@ -37,31 +37,48 @@ extract_type <- function(str){
   return(tmp)
 }
 
-args <- commandArgs(trailingOnly=TRUE)
-
-if( length(args) < 2 ){
-  stop("usage: Rscript make_profile.R <logfile> <output_basename>")
+if(!interactive()){
+  args <- commandArgs(trailingOnly=TRUE)
+  if( length(args) < 2 ){
+    stop("usage: Rscript make_profile.R <logfile> <output_basename>")
+  }
+  infile <<- args[1]
+  outbase <<- args[2]
+} else {
+  if( !exists("infile") | !exists("outbase") ){
+    stop("When not running interactively, the variables 'infile' (path to log file) and 'outbase' (basename for ouput files) must be defined!")
+  }
 }
 
-stopifnot(file.exists(args[1]))
+stopifnot(file.exists(infile))
 
 # extract the different monomial names from the log file
-monomial_names <- system(paste("grep \"Initialised monomial\" ", args[1], "| awk '{print $4}'"),
+monomial_names <- system(paste("grep \"Initialised monomial\" ", infile, "| awk '{print $4}'"),
                          intern = TRUE)
 
 # extract the various timings from the log file
 raw_data <- system(paste("grep \"Time for\"",
-                         args[1], 
+                         infile, 
                          "| grep level",
                          "| awk '{print $2 \" \" $5 \" \" $6 \" \" $9 \" \" $12}'"),
                    intern = TRUE)
 
 # extract QUDA's overall profiling data if present
 quda_raw_data <- system(paste("grep -A8 \"QUDA Total time\"",
-                              args[1],
+                              infile,
                               "| tail -n 8", # skip the first line
-                              "| awk '{print $1 \" \" $3}'"),
+                              "| awk '{print $3 \" \" $5}'"),
                         intern = TRUE)
+
+## the format of the QUDA output has changed historically
+## if the above has not worked, try again in the old format
+if( strsplit(quda_raw_data[1], split=' ')[[1]][1] != "download" ){
+  quda_raw_data <- system(paste("grep -A8 \"QUDA Total time\"",
+                                infile,
+                                "| tail -n 8", # skip the first line
+                                "| awk '{print $1 \" \" $3}'"),
+                          intern = TRUE)
+}
 
 quda_data <- NA
 
@@ -172,5 +189,5 @@ save(monomial_names,
 
 rmarkdown::render("profile.Rmd")
 # rename the report
-system(sprintf("mv profile.RData %s.RData", args[2]))
-system(sprintf("mv profile.pdf %s.pdf", args[2]))
+system(sprintf("mv profile.RData %s.RData", outbase))
+system(sprintf("mv profile.pdf %s.pdf", outbase))
