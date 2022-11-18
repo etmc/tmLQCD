@@ -47,22 +47,23 @@ EQL {SPC}*={SPC}*
 
 %{
 #ifdef HAVE_CONFIG_H
-#  include<tmlqcd_config.h>
+#  include "tmlqcd_config.h"
 #endif
-#include<stdlib.h>
-#include<stdio.h>
-#include<string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #define INIT_GLOBALS
-#include"global.h"
-#include"read_input.h"
-#include"default_input_values.h"
-#include"monomial/monomial.h"
-#include"solver/solver_types.h"
-#include"meas/measurements.h"
-#include"integrator.h"
-#include"operator.h"
-#include"phmc.h"
-#include<io/params.h>
+#include "global.h"
+#undef INIT_GLOBALS
+#include "read_input.h"
+#include "default_input_values.h"
+#include "monomial/monomial.h"
+#include "solver/solver_types.h"
+#include "meas/measurements.h"
+#include "integrator.h"
+#include "operator.h"
+#include "phmc.h"
+#include <io/params.h>
 #include "qphix_types.h"
 #include "quda_types.h"
 #include "misc_types.h"
@@ -732,8 +733,8 @@ static inline double fltlist_next_token(int * const list_end){
 ^DflFieldIter{EQL}                 BEGIN(DFLFIELDITER);
 ^DflPolyIter{EQL}                  BEGIN(DFLPOLYITER);
 
-^BeginDeflation		                 BEGIN(INITDEFLATION);
-^BeginDDalpha       	             BEGIN(INITMULTIGRID);
+^BeginDeflation		           BEGIN(INITDEFLATION);
+^BeginDDalpha       	           BEGIN(INITMULTIGRID);
 ^MixCGInnerEps{EQL}                BEGIN(MIXCGEPS);
 ^MixCGMaxIter{EQL}                 BEGIN(MIXCGIT);
 
@@ -1364,13 +1365,6 @@ static inline double fltlist_next_token(int * const list_end){
   }
 }
 
-<TMSOLVER,CSWSOLVER>{
-  mg {
-    optr->solver=MG;
-    if(myverbose) printf("  Solver set to MG line %d operator %d\n", line_of_file, current_operator);
-    BEGIN(name_caller);
-  }
-}
 
 <DBTMSOLVER,TMSOLVER,CSWSOLVER>{
   cg {
@@ -1512,6 +1506,14 @@ static inline double fltlist_next_token(int * const list_end){
     printf("ERROR line %d operator %d: DDalphaAMG library not included\n", line_of_file, current_operator);
     exit(1);
 #endif
+  }
+}
+
+<TMSOLVER,CSWSOLVER>{
+  mg {
+    optr->solver=MG;
+    if(myverbose) printf("  Solver set to MG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
   }
 }
 
