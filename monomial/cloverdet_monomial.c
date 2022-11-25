@@ -118,12 +118,15 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
     compute_cloverdet_derivative_quda(mnl, hf, mnl->w_fields[1]);
 
     if (g_debug_level > 3){
-      su3adj **given=hf->derivative;
-      hf->derivative=ddummy;
+      su3adj **given = hf->derivative;
+      hf->derivative = ddummy;
+      int store_solver = mnl->solver;
       mnl->solver_params.external_inverter = NO_EXT_INV;
+      mnl->solver = CG;
       cloverdet_derivative(id, hf);
       compare_derivative(mnl,given, ddummy);
       mnl->solver_params.external_inverter = QUDA_INVERTER;
+      mnl->solver = store_solver;
       hf->derivative=given;
     }
 
