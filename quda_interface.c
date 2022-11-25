@@ -2596,9 +2596,11 @@ void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t
   double kappa2_quda = - mnl->kappa*mnl->kappa; // -kappa*kappa
   double ck_quda = - mnl->c_sw * mnl->kappa / 8.0;
   const double multiplicity = 1.0; 
-  computeCloverForceQuda(mom_quda, /*dt=*/1.0, &spinorIn, foo1, coeff, kappa2_quda, ck_quda,
-                            nvector, multiplicity, foo2, &f_gauge_param,
-                            &inv_param);
+  // computeCloverForceQuda(mom_quda, /*dt=*/1.0, &spinorIn, foo1, coeff, kappa2_quda, ck_quda,
+  //                           nvector, multiplicity, foo2, &f_gauge_param,
+  //                           &inv_param);
+  computeTMCloverForceQuda(mom_quda, &spinorIn, coeff,  nvector, 
+    foo2/* void *h_gauge */, &f_gauge_param,   &inv_param);
 
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
   if (g_debug_level > 3){
