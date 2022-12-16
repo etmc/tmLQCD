@@ -453,16 +453,25 @@ Each of them has different options:
   \item {\ttfamily Name}: a name to be assigned to the monomial. The
     default is {\ttfamily DET}
   \end{itemize}
+%
 \item {\ttfamily DETRATIO}: the same as for {\ttfamily DET}, but in
   addition:
   \begin{itemize}
   \item {\ttfamily 2KappaMu2}
   \item {\ttfamily Kappa2}
-  \item {\ttfamily Name}: a name to be assigned to the monomial. The
-    default is {\ttfamily DETRATIO}
+  \item {\ttfamily Name}: 
+    a name to be assigned to the monomial. 
+    The default is {\ttfamily DETRATIO}
+  \item {\ttfamily HB\_solver}: 
+    Optional parameter. It's the solver to be used in the heatbath. 
+    If not specified, the MD solver is used.    
+    Supported values: MG, BICGSTAB.
   \end{itemize}
-
-
+%
+\item {\ttfamily CLOVERDETRATIO}: 
+  the same as for {\ttfamily CLOVERDET} and {\ttfamily DETRATIO}.
+  Supported values for {\ttfamily HB\_solver}: MG.
+%
 \item {\ttfamily GAUGE}: 
   \begin{itemize}
   \item {\ttfamily Timescale}: the timescale on which to integrate
