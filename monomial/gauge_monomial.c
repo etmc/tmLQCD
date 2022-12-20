@@ -60,7 +60,7 @@ void compare_derivative(monomial *mnl, su3adj **ext_lib, su3adj **native ){
       double *nat=&(native[ix][mu].d1);
       for(int j=0; j<8; ++j){
         double diff=(ext[j]-nat[j])/nat[j];
-        if (sqrt(diff*diff) > threshold){
+        if (sqrt(diff*diff) > threshold || isnan( ext[j] ) || isinf(ext[j]) ){
           n_diff++;
           printf("gauge derivative relative deviation %e at (t,x,y,z,mu,j) %d,%d,%d,%d,%d,%d on proc_id %d, ext: %e, native: %e\n", 
                  diff,
