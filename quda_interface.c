@@ -2532,16 +2532,16 @@ void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t
   const int nr_sf_in = 1;
   spinor ** in_o;
 
-  if (g_debug_level > 3){ // here we need to copy the initial vector to compare with the CPU
-    const int Vh = VOLUME/2;
-    init_solver_field(&in_o, Vh, nr_sf_in);
-    memcpy(in_o[0],      X_o, Vh*24*sizeof(double));
-    spinorIn  = (void*)in_o[0];
-  }
-  else{
-    spinorIn  = (void*)X_o;
-  }
-
+  // if (g_debug_level > 3){ // here we need to copy the initial vector to compare with the CPU
+  //   const int Vh = VOLUME/2;
+  //   init_solver_field(&in_o, Vh, nr_sf_in);
+  //   memcpy(in_o[0],      X_o, Vh*24*sizeof(double));
+  //   spinorIn  = (void*)in_o[0];
+  // }
+  // else{
+    
+  // }
+  spinorIn  = (void*)X_o;
   reorder_spinor_eo_toQuda((double*)spinorIn, inv_param.cpu_prec, 0, 1);
 
   // const int rect = mnl->use_rectangles;
@@ -2578,12 +2578,13 @@ void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t
     memset(mom_quda[i], 0, VOLUME*10*sizeof(double));
   }
 
-  reorder_gauge_toQuda(hf->gaugefield, NO_COMPRESSION);
-  // the reordering above overwrites gauge_quda
-  // to make sure that things become synchronised again at the
-  // next _loadGaugeQuda, we reset the QUDA gauge state here
-  reset_quda_gauge_state(&quda_gauge_state);
-  
+  // reorder_gauge_toQuda(hf->gaugefield, NO_COMPRESSION);
+  // // the reordering above overwrites gauge_quda
+  // // to make sure that things become synchronised again at the
+  // // next _loadGaugeQuda, we reset the QUDA gauge state here
+  // reset_quda_gauge_state(&quda_gauge_state);
+  // _loadGaugeQuda(NO_COMPRESSION);
+
   tm_stopwatch_push(&g_timers, "computeGaugeForceQuda", ""); 
   // computeGaugeForceQuda((void*)mom_quda, 
   //                       (void*)gauge_quda, 
@@ -2603,9 +2604,9 @@ void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t
     foo2/* void *h_gauge */, &f_gauge_param,   &inv_param);
 
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
-  if (g_debug_level > 3){
-    finalize_solver(in_o, nr_sf_in);
-  }
+  // if (g_debug_level > 3){
+  //   finalize_solver(in_o, nr_sf_in);
+  // }
   // free(path_buf);
   // free(loop_coeff);
   
