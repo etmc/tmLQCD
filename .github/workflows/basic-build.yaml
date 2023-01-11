@@ -120,7 +120,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: lemon_config_output
+          name: tmlqcd_config_output
           path: ${{github.workspace}}/main/build/config.log 
       
       - name: nf2_rgmixedcg_hmc_tmcloverdetratio
@@ -133,7 +133,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: lemon_config_output
+          name: tmlqcd_test_output
           path: ${{github.workspace}}/main/build/output.data
 
       - name: compare_nf2_rgmixedcg_hmc_tmcloverdetratio
