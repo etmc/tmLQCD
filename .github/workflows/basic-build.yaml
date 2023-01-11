@@ -47,8 +47,9 @@ jobs:
       - name: Archive lime config.log
         #        working-directory: ${{github.workspace}}/lime/build
         uses: actions/upload-artifact@v3
-        name: lime_config.log
-        path: ${{github.workspace}}/lime/build/config.log 
+        with:
+          name: lime_config.log
+          path: ${{github.workspace}}/lime/build/config.log 
 
       - name: get_lemon
         uses: actions/checkout@v2
