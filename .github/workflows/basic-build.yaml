@@ -45,10 +45,9 @@ jobs:
           make install
 
       - name: Archive lime config.log
-        #        working-directory: ${{github.workspace}}/lime/build
         uses: actions/upload-artifact@v3
         with:
-          name: lime_config.log
+          name: lime_config_output
           path: ${{github.workspace}}/lime/build/config.log 
 
       - name: get_lemon
@@ -71,6 +70,12 @@ jobs:
             ../configure --prefix=$(pwd)/install_dir
           make -j
           make install
+      
+      - name: Archive lemon config.log
+        uses: actions/upload-artifact@v3
+        with:
+          name: lemon_config_output
+          path: ${{github.workspace}}/lemon/build/config.log 
 
       - name: get_tmlqcd
         uses: actions/checkout@v3
@@ -104,11 +109,23 @@ jobs:
             --with-lapack="-lblas -llapack" || cat config.log
           make -j
 
+      - name: Archive tmLQCD config.log
+        uses: actions/upload-artifact@v3
+        with:
+          name: lemon_config_output
+          path: ${{github.workspace}}/main/build/config.log 
+      
       - name: nf2_rgmixedcg_hmc_tmcloverdetratio
         working-directory: ${{github.workspace}}/main/build
         run: |
           mpirun -np 2 ./hmc_tm \
             -f ../sample-input/sample-hmc-rgmixedcg-tmcloverdetratio.input
+      
+      - name: Archive nf2_rgmixedcg_hmc_tmcloverdetratio output
+        uses: actions/upload-artifact@v3
+        with:
+          name: lemon_config_output
+          path: ${{github.workspace}}/main/build/output.data
 
       - name: compare_nf2_rgmixedcg_hmc_tmcloverdetratio
         working-directory: ${{github.workspace}}/main/build
