@@ -22,7 +22,7 @@ jobs:
       - name: get_packages
         run: sudo apt-get update && sudo apt install openmpi-bin openmpi-common numdiff
 
-      -name: mpicc_version
+      - name: mpicc_version
         run: mpicc --version
 
       - name: get_lime
