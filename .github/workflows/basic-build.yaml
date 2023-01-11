@@ -44,6 +44,12 @@ jobs:
           make -j
           make install
 
+      - name: Archive lime config.log
+        working-directory: ${{github.workspace}}/lime/build
+        uses: actions/upload-artifact@v3
+        name: lime_config.log
+        path: config.log 
+
       - name: get_lemon
         uses: actions/checkout@v2
         with:
