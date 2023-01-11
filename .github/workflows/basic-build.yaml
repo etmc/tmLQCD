@@ -71,6 +71,7 @@ jobs:
         working-directory: ${{github.workspace}}/lemon/build
         run: |
           CC=mpicc \
+          LD=mpicc \
             CFLAGS="-march=haswell -mtune=haswell -O2" \
             ../configure --prefix=$(pwd)/install_dir
           make -j
