@@ -48,7 +48,7 @@ void full_source_spinor_field_spin_diluted_oet_ts(spinor * const full_spinor,
                                                   const int nstore,
                                                   const unsigned int oet_seed);
 
-void eo_source_spinor_fied_spin_diluted_oet_ts(spinor * const even_cb_spinor,
+void eo_source_spinor_field_spin_diluted_oet_ts(spinor * const even_cb_spinor,
                                                spinor * const odd_cb_spinor,
                                                const int src_ts,
                                                const int src_d,
