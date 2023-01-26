@@ -2583,8 +2583,8 @@ void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t
   // // to make sure that things become synchronised again at the
   // // next _loadGaugeQuda, we reset the QUDA gauge state here
   // reset_quda_gauge_state(&quda_gauge_state);
-  // _loadGaugeQuda(NO_COMPRESSION);
-
+  _loadGaugeQuda(NO_COMPRESSION);
+  _loadCloverQuda(&inv_param);
   tm_stopwatch_push(&g_timers, "computeGaugeForceQuda", ""); 
   // computeGaugeForceQuda((void*)mom_quda, 
   //                       (void*)gauge_quda, 
@@ -2593,7 +2593,7 @@ void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t
   void ** foo1 = NULL; // not used by quda
   void * foo2 = NULL; // not used by quda
   const int nvector = 1; // number of rational approximants
-  double coeff[1] = {1.0};  
+  double coeff[1] = {4.*mnl->kappa*mnl->kappa}; // minus because in p(QUDA)=-Y (tmLQCD) , the factor 4 is experimentally observed
   double kappa2_quda = - mnl->kappa*mnl->kappa; // -kappa*kappa
   double ck_quda = - mnl->c_sw * mnl->kappa / 8.0;
   const double multiplicity = 1.0; 

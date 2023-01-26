@@ -59,14 +59,14 @@ void compare_derivative(monomial *mnl, su3adj **ext_lib, su3adj **native ){
       double *ext=&(ext_lib[ix][mu].d1);
       double *nat=&(native[ix][mu].d1);
       for(int j=0; j<8; ++j){
-        double diff=(ext[j]-nat[j])/nat[j];
+        double diff;
+        if (fabs(nat[j])>1e-7) diff=(ext[j]-nat[j])/nat[j];
+        else diff=ext[j]-nat[j];
         if (sqrt(diff*diff) > threshold || isnan( ext[j] ) || isinf(ext[j]) ){
-          n_diff++;
-          printf("gauge derivative relative deviation %e at (t,x,y,z,mu,j) %d,%d,%d,%d,%d,%d on proc_id %d, ext: %e, native: %e\n", 
-                 diff,
-                 g_coord[ix][0], g_coord[ix][1], g_coord[ix][2], g_coord[ix][3], mu, j,
-                 g_proc_id,
-                 ext[j], nat[j]);
+            n_diff++;
+            printf("derivative at (t,x,y,z,mu,j) %d,%d,%d,%d,%d,%d, ext: %-14e, native: %-14e ratio: %-14g diff %-14g  on proc_id %d\n", 
+                  g_coord[ix][0], g_coord[ix][1], g_coord[ix][2], g_coord[ix][3], mu, j,
+                  ext[j], nat[j], ext[j]/nat[j], ext[j]-nat[j], g_proc_id);
         }
       }
     }

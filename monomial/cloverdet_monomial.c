@@ -103,36 +103,49 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
                       mnl->csg_N, &mnl->csg_n, N);
   
-  // Y_o -> w_fields[0]
-  tm_stopwatch_push(&g_timers, "Qm", "");
-  mnl->Qm(mnl->w_fields[0], mnl->w_fields[1]);
-  tm_stopwatch_pop(&g_timers, 0, 1, "");
+  
 
   if ( mnl->solver_params.external_inverter == QUDA_INVERTER){
   #ifdef TM_USE_QUDA
 
     if (g_debug_level > 3) {
-     memcpy(ddummy[0], hf->derivative[0], (4*VOLUMEPLUSRAND+1)*sizeof(su3adj));
+#ifdef TM_USE_MPI
+      for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand);i++) { 
+        for(int mu=0;mu<4;mu++) { 
+          _zero_su3adj(debug_derivative[i][mu]);
+        }
+      }
+#endif
+      memcpy(debug_derivative[0], hf->derivative[0], 4*VOLUME*sizeof(su3adj));
     }
 
     compute_cloverdet_derivative_quda(mnl, hf, mnl->w_fields[1]);
 
     if (g_debug_level > 3){
       su3adj **given = hf->derivative;
-      hf->derivative = ddummy;
+      hf->derivative = debug_derivative;
       int store_solver = mnl->solver;
       mnl->solver_params.external_inverter = NO_EXT_INV;
       mnl->solver = CG;
+      tm_debug_printf( 0, 3, "Recomputing the derivative from tmLQCD\n");
       cloverdet_derivative(id, hf);
-      compare_derivative(mnl,given, ddummy);
+      #ifdef TM_USE_MPI
+        xchange_deri(hf->derivative);// this function use ddummy inside
+      #endif
+      compare_derivative(mnl, given, hf->derivative);
       mnl->solver_params.external_inverter = QUDA_INVERTER;
       mnl->solver = store_solver;
-      hf->derivative=given;
+      hf->derivative = given;
     }
-
   #endif // no other option, TM_USE_QUDA already checked by solver
   }
   else{
+    // Y_o -> w_fields[0]
+    tm_stopwatch_push(&g_timers, "Qm", "");
+    mnl->Qm(mnl->w_fields[0], mnl->w_fields[1]);
+    tm_stopwatch_pop(&g_timers, 0, 1, "");
+    // print_spinor(mnl->w_fields[0], 0 , 1);
+
     if(mnl->even_odd_flag) {
       // apply Hopping Matrix M_{eo}
       // to get the even sites of X_e
