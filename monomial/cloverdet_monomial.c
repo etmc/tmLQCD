@@ -106,8 +106,10 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   
 
   if ( mnl->solver_params.external_inverter == QUDA_INVERTER){
+    if(!mnl->even_odd_flag) {
+      fatal_error("QUDA support only even_odd_flag",__func__);
+    }
   #ifdef TM_USE_QUDA
-
     if (g_debug_level > 3) {
 #ifdef TM_USE_MPI
       for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand);i++) { 
