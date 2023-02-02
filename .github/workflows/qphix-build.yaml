@@ -145,6 +145,7 @@ jobs:
             -Dtm_clover=ON \
             -Dtwisted_mass=ON \
             -Dtesting=OFF \
+            -Drecursive_jN=$(( ${nb_cores} + 3 )) \
             -DCMAKE_CXX_COMPILER=mpicxx \
             -DCMAKE_CXX_FLAGS="-std=c++11 -O2 -mavx2 -mfma -mtune=haswell -march=haswell -fopenmp" \
             -DCMAKE_C_COMPILER=mpicc \
