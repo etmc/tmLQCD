@@ -96,7 +96,8 @@ jobs:
       - name: get_ddalphaamg
         uses: actions/checkout@v3
         with:
-          repository: sbacchio/ddalphaamg
+          repository: kostrzewa/ddalphaamg #sbacchio/ddalphaamg
+          ref: fix_main_build
           path: ddalphaamg
 
       - name: build_ddalphaamg
