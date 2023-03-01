@@ -254,7 +254,7 @@ int init_monomials(const int V, const int even_odd_flag) {
         if (monomial_list[i].HB_solver == _default_HB_solver_flag) {
           monomial_list[i].HB_solver = monomial_list[i].solver;
           monomial_list[i].HB_solver_params = monomial_list[i].solver_params;
-          monomial_list[no_monomials].HB_maxiter = monomial_list[no_monomials].maxiter;
+          monomial_list[i].HB_maxiter = monomial_list[i].maxiter;
         }
 
         monomial_list[i].hbfunction = &cloverdetratio_heatbath;
@@ -289,7 +289,7 @@ int init_monomials(const int V, const int even_odd_flag) {
         if (monomial_list[i].HB_solver == _default_HB_solver_flag) {
           monomial_list[i].HB_solver = monomial_list[i].solver;
           monomial_list[i].HB_solver_params = monomial_list[i].solver_params;
-          monomial_list[no_monomials].HB_maxiter =monomial_list[no_monomials].maxiter;
+          monomial_list[i].HB_maxiter =monomial_list[i].maxiter;
         }
 
         monomial_list[i].hbfunction = &detratio_heatbath;
