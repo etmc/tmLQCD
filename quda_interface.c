@@ -148,6 +148,10 @@ QudaEigParam mg_eig_param[QUDA_MAX_MG_LEVEL];
 // input params specific to tmLQCD QUDA interface
 tm_QudaParams_t quda_input;
 
+
+// parameters for the eigensolver
+QudaEigParam eig_param;
+
 // pointer to the QUDA gaugefield
 double *gauge_quda[4];
 
@@ -2323,6 +2327,47 @@ int invert_eo_quda_oneflavour_mshift(spinor ** const out,
   return(iterations);
 }
 
+void initQudaforEig(const double precision, const int max_iter, 
+                    const int solver_flag, const int rel_prec,
+                    const int even_odd_flag, const SloppyPrecision refinement_precision, 
+                    SloppyPrecision sloppy_precision, CompressionType compression) {
+  
+
+  // it returns if quda is already init
+  _initQuda();
+
+  if ( rel_prec )
+    inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
+  else
+    inv_param.residual_type = QUDA_L2_ABSOLUTE_RESIDUAL;
+
+  inv_param.kappa = g_kappa;
+
+  // figure out which BC to use (theta, trivial...)
+  set_boundary_conditions(&compression, &gauge_param);
+  // set the sloppy precision of the mixed prec solver
+  set_sloppy_prec(sloppy_precision, refinement_precision, &gauge_param, &inv_param);
+  
+  // load gauge after setting precision
+  _loadGaugeQuda(compression);
+
+  _setTwoFlavourSolverParam(g_kappa,
+                            g_c_sw,
+                            g_mubar,
+                            g_epsbar,
+                            solver_flag,
+                            even_odd_flag,
+                            precision,
+                            max_iter,
+                            1 /*single_parity_solve */,
+                            1 /*always QpQm*/);
+
+  // QUDA applies the MMdag operator, we need QpQm^{-1) in the end
+  // so we want QUDA to use the MdagM operator
+  inv_param.dagger = QUDA_DAG_YES;
+
+}
+
 int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out_dn,
                                      spinor * const in_up, spinor * const in_dn,
                                      const double precision, const int max_iter,
@@ -2572,4 +2617,65 @@ void  compute_WFlow_quda(const double eps, const double tmax, const int traj, FI
 
   free(obs_param);
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
+}
+
+
+
+
+/********************************************************
+
+Interface function for Eigensolver on Quda
+
+*********************************************************/
+
+
+void eigsolveQuda(int n, int lda, double tau, double tol, 
+        int kmax, int jmax, int jmin, int itmax,
+        int blksize, int blkwise, 
+        int V0dim, _Complex double *V0, 
+        int solver_flag, 
+        int linitmax, double eps_tr, double toldecay,
+        int verbosity,
+        int *k_conv, _Complex double ** host_evecs, _Complex double *host_evals, int *it,
+        int maxmin, const int shift_mode) {
+
+  eig_param = newQudaEigParam();
+
+  eig_param.invert_param = &inv_param;
+  eig_param.tol = tol;
+  eig_param.qr_tol = tol;
+  //eig_param.invert_param->verbosity = QUDA_DEBUG_VERBOSE;
+  if(blkwise == 1) {
+    eig_param.eig_type = QUDA_EIG_BLK_IR_ARNOLDI;
+    eig_param.block_size = blksize;
+  }else {
+    eig_param.eig_type = QUDA_EIG_IR_ARNOLDI;
+    eig_param.block_size = 1;
+  }
+  eig_param.use_poly_acc = QUDA_BOOLEAN_FALSE;
+  eig_param.preserve_deflation = QUDA_BOOLEAN_FALSE;
+  eig_param.use_dagger = QUDA_BOOLEAN_TRUE;
+  eig_param.use_norm_op = QUDA_BOOLEAN_TRUE;
+  eig_param.use_pc = QUDA_BOOLEAN_FALSE;
+  eig_param.use_eigen_qr = QUDA_BOOLEAN_FALSE;
+  eig_param.compute_svd = QUDA_BOOLEAN_FALSE;
+  eig_param.compute_gamma5 = QUDA_BOOLEAN_FALSE;
+  if(maxmin == 1) eig_param.spectrum = QUDA_SPECTRUM_LM_EIG;
+  else eig_param.spectrum = QUDA_SPECTRUM_SM_EIG;
+
+  //eig_param.save_prec = inv_param.cuda_prec_eigensolver;
+  eig_param.invert_param->cuda_prec_eigensolver = inv_param.cuda_prec;
+  eig_param.invert_param->clover_cuda_prec_eigensolver = inv_param.cuda_prec;
+
+  strncpy(eig_param.vec_outfile,"",256);
+  
+
+  eig_param.n_conv = 1;
+  eig_param.n_ev = 1;
+  eig_param.n_kr = 96;
+
+  eig_param.max_restarts = linitmax;
+
+  eigensolveQuda((void **)host_evecs, host_evals, &eig_param);
+
 }
