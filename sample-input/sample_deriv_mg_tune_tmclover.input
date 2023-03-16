@@ -62,7 +62,7 @@ BeginTuneMGParams QUDA
   MGSmootherPreIterationsDelta = 2, 2, 2
 
   MGSmootherPostIterationsSteps = 2, 2, 2
-  MGSmootherPostIterationsDelat = 2, 2, 2
+  MGSmootherPostIterationsDelta = 2, 2, 2
 
   MGSmootherToleranceSteps = 4, 4, 4
   MGSmootherToleranceDelta = 0.1, 0.1, 0.1
