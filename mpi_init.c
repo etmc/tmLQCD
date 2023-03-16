@@ -213,7 +213,8 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   int dims[] = {0,0,0,0};
   int ndims = 0;
   int nalldims = 4;
-  int reorder = 1, namelen;
+  /* BK 2023/02/03 - for correct functioning on LUMI-G, we disable task reordering */
+  int reorder = 0, namelen;
   char processor_name[MPI_MAX_PROCESSOR_NAME];
 #endif
   g_proc_coords[0] = 0;

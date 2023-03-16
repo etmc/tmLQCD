@@ -29,7 +29,7 @@
 #include "su3spinor.h"
 #include "source_generation.h"
 #include "solver/solver_field.h"
-#include "linalg/convert_eo_to_lexic.c"
+#include "linalg/convert_eo_to_lexic.h"
 
 #ifndef M_PI
 # define M_PI           3.14159265358979323846
