@@ -40,3 +40,4 @@ doc/*.txt
 doc/*.gpl
 doc/wrapper*
 history_hmc_tm
+.vscode/*
