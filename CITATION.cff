@@ -122,6 +122,12 @@ identifiers:
     value: 10.22323/1.187.0414
     description: Recent developments in the tmLQCD software suite
   - type: doi
+    value: 10.1016/j.cpc.2018.10.013
+    description: Multigrid approach in shifted linear systems for the non-degenerated twisted mass operator
+  - type: doi
+    value: 10.1103/PhysRevD.94.114509
+    description: Adaptive aggregation-based domain decomposition multigrid for twisted mass fermions
+  - type: doi
     value: 10.22323/1.430.0340
     description: Twisted mass ensemble generation on GPU machines
 repository-code: 'https://github.com/etmc/tmLQCD'
