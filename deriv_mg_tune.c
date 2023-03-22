@@ -72,6 +72,8 @@
 #  include "quda_interface.h"
 #endif
 
+#define CONF_FILENAME_LENGTH 500
+
 extern int nstore;
 
 int const rlxdsize = 105;
@@ -242,33 +244,6 @@ int main(int argc,char *argv[]) {
   /* Initialise random number generator */
   start_ranlux(rlxd_level, random_seed^nstore);
 
-  /* Set up the gauge field */
-  snprintf(gauge_input_filename, 50, "conf.%04d", nstore);
-  printf("# Trying to read gauge field from file %s in %s precision.\n",
-        gauge_input_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
-  fflush(stdout);
-  if( (status = read_gauge_field(gauge_input_filename,g_gauge_field)) != 0) {
-    fprintf(stderr, "Error %d while reading gauge field from %s\nAborting...\n", status, gauge_input_filename);
-    exit(-2);
-  }
-  if (g_proc_id == 0){
-    printf("# Finished reading gauge field.\n");
-    fflush(stdout);
-  }
-
-  /*For parallelization: exchange the gaugefield */
-#ifdef TM_USE_MPI
-  xchange_gauge(g_gauge_field);
-  update_tm_gauge_exchange(&g_gauge_state);
-#endif
-    
-  /*Convert to a 32 bit gauge field, after xchange*/
-  convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND + g_dbw2rand);
-#ifdef TM_USE_MPI
-  update_tm_gauge_exchange(&g_gauge_state_32);
-#endif
-  
-    
   if(even_odd_flag) {
     j = init_monomials(VOLUMEPLUSRAND/2, even_odd_flag);
   }
@@ -278,6 +253,21 @@ int main(int argc,char *argv[]) {
   if (j != 0) {
     fprintf(stderr, "Not enough memory for monomial pseudo fermion fields! Aborting...\n");
     exit(0);
+  }
+
+  /* set ddummy to zero */
+  # pragma omp parallel for
+  for(int ix = 0; ix < VOLUMEPLUSRAND; ix++){
+    for(mu=0; mu<4; mu++){
+      ddummy[ix][mu].d1=0.;
+      ddummy[ix][mu].d2=0.;
+      ddummy[ix][mu].d3=0.;
+      ddummy[ix][mu].d4=0.;
+      ddummy[ix][mu].d5=0.;
+      ddummy[ix][mu].d6=0.;
+      ddummy[ix][mu].d7=0.;
+      ddummy[ix][mu].d8=0.;
+    }
   }
 
   if( no_monomials > 1 ){
@@ -306,34 +296,61 @@ int main(int argc,char *argv[]) {
     }
   }
 
-  plaquette_energy = measure_plaquette( (const su3**) g_gauge_field);
-  if(g_proc_id == 0) {
-    printf("# Computed plaquette value: %14.12f.\n", plaquette_energy/(6.*VOLUME*g_nproc));
-  }
-
-  /* set ddummy to zero */
-  for(ix = 0; ix < VOLUMEPLUSRAND; ix++){
-    for(mu=0; mu<4; mu++){
-      ddummy[ix][mu].d1=0.;
-      ddummy[ix][mu].d2=0.;
-      ddummy[ix][mu].d3=0.;
-      ddummy[ix][mu].d4=0.;
-      ddummy[ix][mu].d5=0.;
-      ddummy[ix][mu].d6=0.;
-      ddummy[ix][mu].d7=0.;
-      ddummy[ix][mu].d8=0.;
+  for (int meas_idx = 0; meas_idx < Nmeas; meas_idx++){
+    /* Set up the gauge field */
+    int n_written = snprintf(gauge_input_filename, CONF_FILENAME_LENGTH, "%s.%04d", gauge_input_filename, nstore);
+    if( n_written < 0 || n_written >= CONF_FILENAME_LENGTH ){
+      char error_message[500];
+      snprintf(error_message,
+               500,
+               "Encoding error or gauge configuration filename "
+               "longer than %d characters! See invert.c CONF_FILENAME_LENGTH\n", 
+               CONF_FILENAME_LENGTH);
+      fatal_error(error_message, "deriv_mg_tune.c");
     }
+    
+    printf("# Trying to read gauge field from file %s in %s precision.\n",
+          gauge_input_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
+    fflush(stdout);
+    if( (status = read_gauge_field(gauge_input_filename,g_gauge_field)) != 0) {
+      fprintf(stderr, "Error %d while reading gauge field from %s\nAborting...\n", status, gauge_input_filename);
+      exit(-2);
+    }
+    if (g_proc_id == 0){
+      printf("# Finished reading gauge field.\n");
+      fflush(stdout);
+    }
+
+    /*For parallelization: exchange the gaugefield */
+  #ifdef TM_USE_MPI
+    xchange_gauge(g_gauge_field);
+    update_tm_gauge_exchange(&g_gauge_state);
+  #endif
+      
+    /*Convert to a 32 bit gauge field, after xchange*/
+    convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND + g_dbw2rand);
+  #ifdef TM_USE_MPI
+    update_tm_gauge_exchange(&g_gauge_state_32);
+  #endif
+  
+    plaquette_energy = measure_plaquette( (const su3**) g_gauge_field);
+    if(g_proc_id == 0) {
+      printf("# Computed plaquette value: %14.12f.\n", plaquette_energy/(6.*VOLUME*g_nproc));
+    }
+
+
+    hamiltonian_field_t hf;
+    hf.gaugefield = g_gauge_field;
+    hf.momenta = moment;
+    hf.derivative = df0; 
+
+    // we need to properly initialise the PF field
+    monomial_list[0].hbfunction(0, &hf);
+    // and now we can move on to actually tuning the MG
+    monomial_list[0].derivativefunction(0, &hf);
+
+    nstore += Nsave;
   }
-
-  hamiltonian_field_t hf;
-  hf.gaugefield = g_gauge_field;
-  hf.momenta = moment;
-  hf.derivative = df0; 
-
-  // we need to properly initialise the PF field
-  monomial_list[0].hbfunction(0, &hf);
-  // and now we can move on to actually tuning the MG
-  monomial_list[0].derivativefunction(0, &hf); 
 
 #ifdef TM_USE_OMP
   free_omp_accumulators();

@@ -2880,24 +2880,37 @@ void adjust_tuning_plan(tm_QudaMGTuningPlan_t * tuning_plan,
 }
 
 void quda_mg_tune_params(void * spinorOut, void * spinorIn, const int max_iter){
+  static tm_QudaMGTunableParams_t cur_params;
+  static int first_call = 1;
+  
   tm_QudaMGTunableParams_t * tunable_params = calloc(quda_mg_tuning_plan.mg_tuning_iterations,
                                                      sizeof(tm_QudaMGTunableParams_t));
-
 
   // we back up the original tuning plan as we're going to be running through
   // it multiple times and need to be able to restore it
   const tm_QudaMGTuningPlan_t tuning_plan_backup = quda_mg_tuning_plan;
  
   const int mg_n_level = quda_mg_param.n_level;
-  tm_QudaMGTunableParams_t cur_params;
   int cur_tuning_lvl = mg_n_level-1;
   int cur_lvl_tuning_steps = get_lvl_tuning_steps(&quda_mg_tuning_plan, cur_tuning_lvl);
   int steps_done_in_cur_dir = 0;
   int i = 0;
   tm_QudaMGTuningDirection_t cur_tuning_dir = TM_MG_TUNE_MU_FACTOR;
-
-  copy_quda_mg_tunable_params_from_input(&tunable_params[0], &quda_input);
-  copy_quda_mg_tunable_params(&cur_params, &tunable_params[0]);
+  
+  // when tuning over multiple configurations, we tune on the first config based
+  // on the parameters defined in the input file 
+  if( first_call ){
+    copy_quda_mg_tunable_params_from_input(&tunable_params[0], &quda_input);
+    copy_quda_mg_tunable_params(&cur_params, &tunable_params[0]);
+  // otherwise we continue from the best parameters found on the previous config
+  } else {
+    set_mg_params_from_tunable_params(&quda_mg_param, &cur_params);
+    copy_quda_mg_tunable_params(&tunable_params[0], &cur_params);
+   
+    tm_stopwatch_push(&g_timers, "updateMultigridQuda", ""); 
+    updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
+    tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
+  }
 
   tm_stopwatch_push(&g_timers, "invertQuda", ""); 
   invertQuda(spinorOut, spinorIn, &inv_param);
