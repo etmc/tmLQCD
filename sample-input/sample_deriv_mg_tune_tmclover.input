@@ -83,7 +83,7 @@ BeginMonomial CLOVERDET
   2KappaMu = 0.000224102400
   CSW = 1.74
   rho = 0.0
-  MaxSolverIterations = 1000
+  MaxSolverIterations = 150
   AcceptancePrecision =  1.e-21
   ForcePrecision = 1.e-16
   Name = cloverdetlight

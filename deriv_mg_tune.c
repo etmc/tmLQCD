@@ -88,7 +88,7 @@ int main(int argc,char *argv[]) {
   char *filename = NULL;
   char datafilename[206];
   char parameterfilename[206];
-  char gauge_filename[50];
+  char conf_filename[CONF_FILENAME_LENGTH];
   char nstore_filename[50];
   char tmp_filename[50];
   char *input_filename = NULL;
@@ -113,8 +113,6 @@ int main(int argc,char *argv[]) {
 #if (defined SSE || defined SSE2 || SSE3)
   signal(SIGILL,&catch_ill_inst);
 #endif
-
-  strcpy(gauge_filename,"conf.save");
 
   verbose = 1;
   g_use_clover_flag = 0;
@@ -298,7 +296,7 @@ int main(int argc,char *argv[]) {
 
   for (int meas_idx = 0; meas_idx < Nmeas; meas_idx++){
     /* Set up the gauge field */
-    int n_written = snprintf(gauge_input_filename, CONF_FILENAME_LENGTH, "%s.%04d", gauge_input_filename, nstore);
+    int n_written = snprintf(conf_filename, CONF_FILENAME_LENGTH, "%s.%04d", gauge_input_filename, nstore);
     if( n_written < 0 || n_written >= CONF_FILENAME_LENGTH ){
       char error_message[500];
       snprintf(error_message,
@@ -308,11 +306,12 @@ int main(int argc,char *argv[]) {
                CONF_FILENAME_LENGTH);
       fatal_error(error_message, "deriv_mg_tune.c");
     }
-    
-    printf("# Trying to read gauge field from file %s in %s precision.\n",
-          gauge_input_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
-    fflush(stdout);
-    if( (status = read_gauge_field(gauge_input_filename,g_gauge_field)) != 0) {
+    if(g_proc_id == 0){ 
+      printf("# Trying to read gauge field from file %s in %s precision.\n",
+            conf_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
+      fflush(stdout);
+    }
+    if( (status = read_gauge_field(conf_filename,g_gauge_field)) != 0) {
       fprintf(stderr, "Error %d while reading gauge field from %s\nAborting...\n", status, gauge_input_filename);
       exit(-2);
     }

@@ -2902,10 +2902,13 @@ void quda_mg_tune_params(void * spinorOut, void * spinorIn, const int max_iter){
   if( first_call ){
     copy_quda_mg_tunable_params_from_input(&tunable_params[0], &quda_input);
     copy_quda_mg_tunable_params(&cur_params, &tunable_params[0]);
+    first_call = 0;
   // otherwise we continue from the best parameters found on the previous config
   } else {
     set_mg_params_from_tunable_params(&quda_mg_param, &cur_params);
     copy_quda_mg_tunable_params(&tunable_params[0], &cur_params);
+    
+    print_tunable_params_pair(&cur_params, &tunable_params[0], mg_n_level);
    
     tm_stopwatch_push(&g_timers, "updateMultigridQuda", ""); 
     updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
