@@ -239,12 +239,7 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
   }
   mnl->solver_params.sdim = VOLUME/2;
   mnl->solver_params.rel_prec = g_relative_precision_flag;
-  initQudaforEig(mnl->solver_params.squared_solver_prec, mnl->solver_params.max_iter,
-                                                       mnl->solver_params.type, mnl->solver_params.rel_prec,
-                                                       1, // we only support even-odd here
-                                                       mnl->solver_params.refinement_precision,
-                                                       mnl->solver_params.sloppy_precision,
-                                                       mnl->solver_params.compression_type);
+  
   // we measure before the trajectory!
   if((mnl->rec_ev != 0) && (hf->traj_counter%mnl->rec_ev == 0)) {
     if(mnl->type != NDCLOVERRAT) phmc_compute_ev(hf->traj_counter-1, id, &Qtm_pm_ndbipsi);
