@@ -69,7 +69,6 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
   static bispinor  *eigenvectors_bi = NULL;
   static double * eigenvls_bi = NULL;
   static _Complex double * eigenvls_quda = NULL;
-  static _Complex double ** eigenvectors_quda = NULL;
 
   /**********************
    * For Jacobi-Davidson 
@@ -134,7 +133,6 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
 
   eigenvls_quda = (_Complex double *)malloc((*nr_of_eigenvalues)*sizeof(_Complex double));
   eigenvectors_bi_= calloc((VOLUME)/2*(*nr_of_eigenvalues), sizeof(bispinor));
-  eigenvectors_quda = calloc((VOLUME)/2*(*nr_of_eigenvalues), sizeof(bispinor));
 
   /* compute eigenvalues */
 
@@ -142,10 +140,24 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
     printf(" Values of   mu = %e     mubar = %e     eps = %e     precision = %e  \n \n", g_mu, g_mubar, g_epsbar, precision);
   }
 
+  /* For now, using the TM_USE_QUDA flag
+   * Ideally, one would use an operator flag
+   * like useExternalEigSolver. */
+#ifdef TM_USE_QUDA
+
+  if(g_proc_id == g_stdio_proc) {
+    printf("Using external eigensolver on QUDA.\n");
+  }
+
+  eigsolveQuda((*nr_of_eigenvalues), eigenvls_quda, prec, 
+                blocksize, blockwise, max_iterations, maxmin);
+
+#else
+
   /* here n and lda are equal, because Q_Qdagger_ND_BI does an internal */
   /* conversion to non _bi fields which are subject to xchange_fields   */
   /* so _bi fields do not need boundary                                 */
-  /*jdher_bi((VOLUME)/2*sizeof(bispinor)/sizeof(_Complex double), (VOLUME)/2*sizeof(bispinor)/sizeof(_Complex double),
+  jdher_bi((VOLUME)/2*sizeof(bispinor)/sizeof(_Complex double), (VOLUME)/2*sizeof(bispinor)/sizeof(_Complex double),
 	   startvalue, prec, 
 	   (*nr_of_eigenvalues), j_max, j_min, 
 	   max_iterations, blocksize, blockwise, v0dim, (_Complex double*) eigenvectors_bi,
@@ -155,28 +167,7 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
 	   &returncode, maxmin, 1,
 	   Qsq);
 
-  if(g_proc_id == g_stdio_proc) {
-    printf("\n*****************************\nThis is for testing\n\n");
-    printf("Eigenvalue from tmLQCD = %e\n\n",eigenvls_bi[0]);
-  }*/
-
-  if(g_proc_id == g_stdio_proc) {
-    printf("Using QUDA now.\n");
-  }
-
-  eigsolveQuda((VOLUME)/2*sizeof(bispinor)/sizeof(_Complex double), (VOLUME)/2*sizeof(bispinor)/sizeof(_Complex double),
-     startvalue, prec, 
-     (*nr_of_eigenvalues), j_max, j_min, 
-     max_iterations, blocksize, blockwise, v0dim, (_Complex double*) eigenvectors_bi,
-     BICGSTAB, solver_it_max,
-     threshold, decay, verbosity,
-     &converged, (_Complex double**) eigenvectors_quda, eigenvls_quda,
-     &returncode, maxmin, 1);
-
-  if(g_proc_id == g_stdio_proc) {
-    printf("Eigenvalue from Quda = %e\n\n",eigenvls_quda[0]);
-  }
-
+#endif
   
   *nr_of_eigenvalues = converged;
 
