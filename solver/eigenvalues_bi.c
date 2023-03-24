@@ -68,7 +68,6 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
   static int allocated = 0;
   static bispinor  *eigenvectors_bi = NULL;
   static double * eigenvls_bi = NULL;
-  static _Complex double * eigenvls_quda = NULL;
 
   /**********************
    * For Jacobi-Davidson 
@@ -128,11 +127,12 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
     eigenvectors_bi_= calloc((VOLUME)/2*(*nr_of_eigenvalues), sizeof(bispinor));
     eigenvectors_bi = eigenvectors_bi_;
 #endif
+#ifdef TM_USE_QUDA
+    eigenvls_bi = (_Complex double *)malloc((*nr_of_eigenvalues)*sizeof(_Complex double));
+#else
     eigenvls_bi = (double*)malloc((*nr_of_eigenvalues)*sizeof(double));
+#endif
   }
-
-  eigenvls_quda = (_Complex double *)malloc((*nr_of_eigenvalues)*sizeof(_Complex double));
-  eigenvectors_bi_= calloc((VOLUME)/2*(*nr_of_eigenvalues), sizeof(bispinor));
 
   /* compute eigenvalues */
 
@@ -149,7 +149,7 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
     printf("Using external eigensolver on QUDA.\n");
   }
 
-  eigsolveQuda((*nr_of_eigenvalues), eigenvls_quda, prec, 
+  eigsolveQuda((*nr_of_eigenvalues), eigenvls_bi, prec, 
                 blocksize, blockwise, max_iterations, maxmin);
 
 #else
@@ -171,6 +171,6 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
   
   *nr_of_eigenvalues = converged;
 
-  returnvalue = eigenvls_quda[0];
+  returnvalue = eigenvls_bi[0];
   return(returnvalue);
 }
