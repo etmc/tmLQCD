@@ -2629,53 +2629,79 @@ Interface function for Eigensolver on Quda
 *********************************************************/
 
 
-void eigsolveQuda(int n, int lda, double tau, double tol, 
-        int kmax, int jmax, int jmin, int itmax,
-        int blksize, int blkwise, 
-        int V0dim, _Complex double *V0, 
-        int solver_flag, 
-        int linitmax, double eps_tr, double toldecay,
-        int verbosity,
-        int *k_conv, _Complex double ** host_evecs, _Complex double *host_evals, int *it,
-        int maxmin, const int shift_mode) {
+void eigsolveQuda(int n, _Complex double *host_evals, double tol, 
+                  int blksize, int blkwise,
+                  int max_iterations,  int maxmin) {
 
   eig_param = newQudaEigParam();
 
   eig_param.invert_param = &inv_param;
   eig_param.tol = tol;
   eig_param.qr_tol = tol;
-  //eig_param.invert_param->verbosity = QUDA_DEBUG_VERBOSE;
+
+    
   if(blkwise == 1) {
-    eig_param.eig_type = QUDA_EIG_BLK_IR_ARNOLDI;
+    eig_param.eig_type = QUDA_EIG_BLK_TR_LANCZOS;
     eig_param.block_size = blksize;
   }else {
-    eig_param.eig_type = QUDA_EIG_IR_ARNOLDI;
+    eig_param.eig_type = QUDA_EIG_TR_LANCZOS;
     eig_param.block_size = 1;
   }
-  eig_param.use_poly_acc = QUDA_BOOLEAN_FALSE;
-  eig_param.preserve_deflation = QUDA_BOOLEAN_FALSE;
-  eig_param.use_dagger = QUDA_BOOLEAN_TRUE;
-  eig_param.use_norm_op = QUDA_BOOLEAN_TRUE;
-  eig_param.use_pc = QUDA_BOOLEAN_FALSE;
-  eig_param.use_eigen_qr = QUDA_BOOLEAN_FALSE;
-  eig_param.compute_svd = QUDA_BOOLEAN_FALSE;
-  eig_param.compute_gamma5 = QUDA_BOOLEAN_FALSE;
-  if(maxmin == 1) eig_param.spectrum = QUDA_SPECTRUM_LM_EIG;
-  else eig_param.spectrum = QUDA_SPECTRUM_SM_EIG;
 
-  //eig_param.save_prec = inv_param.cuda_prec_eigensolver;
+  if(eig_param.invert_param->solve_type == QUDA_NORMOP_PC_SOLVE) {
+    eig_param.use_pc = QUDA_BOOLEAN_TRUE;
+    eig_param.use_norm_op = QUDA_BOOLEAN_TRUE;
+  }else if(eig_param.invert_param->solve_type == QUDA_DIRECT_PC_SOLVE) {
+    eig_param.use_pc = QUDA_BOOLEAN_TRUE;
+    eig_param.use_norm_op = QUDA_BOOLEAN_FALSE;
+  }else if(eig_param.invert_param->solve_type == QUDA_NORMOP_SOLVE) {
+    eig_param.use_pc = QUDA_BOOLEAN_FALSE;
+    eig_param.use_norm_op = QUDA_BOOLEAN_TRUE;
+  }else {
+    eig_param.use_pc = QUDA_BOOLEAN_FALSE;
+    eig_param.use_norm_op = QUDA_BOOLEAN_FALSE;
+  }
+
+  /* Not using polynomial acceleration for now.
+   * Might be useful to add the support. */
+  eig_param.use_poly_acc = QUDA_BOOLEAN_FALSE;
+  
+  /* Daggers the operator. Not necessary for 
+   * most cases. */
+  eig_param.use_dagger = QUDA_BOOLEAN_FALSE;
+  
+  /* Most likely not necessary. Set TRUE to use 
+   * Eigen routines to eigensolve the upper Hessenberg via QR */
+  eig_param.use_eigen_qr = QUDA_BOOLEAN_FALSE;    
+
+  eig_param.compute_svd = QUDA_BOOLEAN_FALSE;
+
+  /* Set TRUE to performs the \gamma_5 OP solve by 
+   * post multipling the eignvectors with \gamma_5 
+   * before computing the eigenvalues */
+  eig_param.compute_gamma5 = QUDA_BOOLEAN_FALSE;
+
+
+  if(maxmin == 1) eig_param.spectrum = QUDA_SPECTRUM_LR_EIG;
+  else eig_param.spectrum = QUDA_SPECTRUM_SR_EIG;
+
+  /* The following two are set to cuda_prec, otherwise 
+   * it gives an error. Such high precision might not be
+   * necessary. But have not found a way to consistently set
+   * the different precisions. */
   eig_param.invert_param->cuda_prec_eigensolver = inv_param.cuda_prec;
   eig_param.invert_param->clover_cuda_prec_eigensolver = inv_param.cuda_prec;
 
   strncpy(eig_param.vec_outfile,"",256);
+  strncpy(eig_param.vec_infile,"",256);
   
 
-  eig_param.n_conv = 1;
-  eig_param.n_ev = 1;
+  eig_param.n_conv = n;
+  eig_param.n_ev = n;
   eig_param.n_kr = 96;
 
-  eig_param.max_restarts = linitmax;
+  eig_param.max_restarts = max_iterations;
 
-  eigensolveQuda((void **)host_evecs, host_evals, &eig_param);
+  eigensolveQuda(NULL, host_evals, &eig_param);
 
 }
