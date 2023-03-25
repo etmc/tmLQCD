@@ -2771,7 +2771,7 @@ int find_best_params(const tm_QudaMGTuningPlan_t * const tuning_plan,
   for(int i = 1; i < n; i++){
     // to account for fluctuations, we ignore improvements below a
     // certain threshold (default is 5 per-mille)
-    if( par_arr[i].tts < tuning_plan.mg_tuning_ignore_threshold*best_time ){
+    if( par_arr[i].tts < tuning_plan->mg_tuning_ignore_threshold*best_time ){
       best_time = par_arr[i].tts;
       best_idx = i;
     }
