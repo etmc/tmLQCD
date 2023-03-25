@@ -2763,11 +2763,15 @@ void print_tunable_params(const tm_QudaMGTunableParams_t * const par,
   }
 }
 
-int find_best_params(const tm_QudaMGTunableParams_t * const par_arr, const int n, const int n_level, const int print){
+int find_best_params(const tm_QudaMGTuningPlan_t * const tuning_plan,
+                     const tm_QudaMGTunableParams_t * const par_arr,
+                     const int n, const int n_level, const int print){
   double best_time = par_arr[0].tts;
   int best_idx = 0;
   for(int i = 1; i < n; i++){
-    if( par_arr[i].tts < best_time ){
+    // to account for fluctuations, we ignore improvements below a
+    // certain threshold (default is 5 per-mille)
+    if( par_arr[i].tts < tuning_plan.mg_tuning_ignore_threshold*best_time ){
       best_time = par_arr[i].tts;
       best_idx = i;
     }
@@ -2923,7 +2927,7 @@ void quda_mg_tune_params(void * spinorOut, void * spinorIn, const int max_iter){
 
   for(i = 1; i < quda_mg_tuning_plan.mg_tuning_iterations; i++){
     // the best params from all previous iterations
-    int best_idx = find_best_params(tunable_params, i, mg_n_level, 0);
+    int best_idx = find_best_params(&quda_mg_tuning_plan, tunable_params, i, mg_n_level, 0);
 
     copy_quda_mg_tunable_params(&tunable_params[i], &cur_params);
 
@@ -2996,10 +3000,10 @@ void quda_mg_tune_params(void * spinorOut, void * spinorIn, const int max_iter){
     steps_done_in_cur_dir++;
 
     // status update
-    find_best_params(tunable_params, i+1, mg_n_level, 1);
+    find_best_params(&quda_mg_tuning_plan, tunable_params, i+1, mg_n_level, 1);
   }
 
-  find_best_params(tunable_params, i, mg_n_level, 1);
+  find_best_params(&quda_mg_tuning_plan, tunable_params, i, mg_n_level, 1);
 
   free(tunable_params); 
 }

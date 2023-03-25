@@ -2124,6 +2124,11 @@ static inline double fltlist_next_token(int * const list_end){
     quda_mg_tuning_plan.mg_tuning_tolerance = c;
     if(myverbose) printf("  Tolerance for MG tuning set to %.3f line %d\n", c, line_of_file);
   }
+  {SPC}*MGTuningIgnoreThreshold{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    quda_mg_tuning_plan.mg_tuning_ignore_threshold = c;
+    if(myverbose) printf("  Threshold for ignoring improvement for MG tuning (to ignore fluctuations) set to %.3f line %d\n", c, line_of_file);
+  }
   ^EndTuneMGParams{SPC}*  {
     if(myverbose) printf("QUDA-MG tuning parameters parsed on line %d\n\n", line_of_file);
     BEGIN(0);
@@ -3960,7 +3965,8 @@ int read_input(char * conf_file){
   quda_input.mg_run_oblique_proj_check = QUDA_BOOLEAN_NO;
 
   quda_mg_tuning_plan.mg_tuning_iterations = _default_quda_mg_tuning_iterations;
-  quda_mg_tuning_plan.mg_tuning_tolerance = _default_quda_mg_tuning_tolerance; 
+  quda_mg_tuning_plan.mg_tuning_tolerance = _default_quda_mg_tuning_tolerance;
+  quda_mg_tuning_plan.mg_tuning_ignore_threshold = _default_quda_mg_tuning_ignore_threshold; 
 
   /* Put -1 in PropInfo.format to see if parse_config() will
   change the value. If not then set it to source_format_flag */

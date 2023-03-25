@@ -235,6 +235,7 @@
 
 #define _default_quda_mg_tuning_iterations 1000
 #define _default_quda_mg_tuning_tolerance 0.99
+#define _default_quda_mg_tuning_ignore_threshold 0.995
 
 // gradient flow measurement step size and maximum flow time
 #define _default_gf_eps 0.01

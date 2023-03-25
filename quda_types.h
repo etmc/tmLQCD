@@ -134,6 +134,7 @@ typedef struct tm_QudaMGTuningPlan_t {
   double               mg_omega_delta[QUDA_MAX_MG_LEVEL];
   int                  mg_tuning_iterations;
   double               mg_tuning_tolerance;
+  double               mg_tuning_ignore_threshold;
 } tm_QudaMGTuningPlan_t;
 
 typedef struct tm_QudaMGTunableParams_t {
