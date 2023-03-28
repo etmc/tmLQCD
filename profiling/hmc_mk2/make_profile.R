@@ -190,6 +190,11 @@ save(monomial_names,
      file = "profile.RData")
 
 rmarkdown::render("profile.Rmd")
+
+message(sprintf("Renaming the output data and report to %s.[RData, pdf]", outbase))
+
 # rename the report
 system(sprintf("mv profile.RData %s.RData", outbase))
 system(sprintf("mv profile.pdf %s.pdf", outbase))
+
+
