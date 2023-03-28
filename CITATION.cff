@@ -1,0 +1,160 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: tmLQCD
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Carsten
+    family-names: Urbach
+    email: urbach@hiskp.uni-bonn.de
+    affiliation: 'HISKP, University of Bonn'
+    orcid: 'https://orcid.org/0000-0003-1412-7582'
+  - given-names: Bartosz
+    family-names: Kostrzewa
+    email: bkostrze@uni-bonn.de
+    affiliation: >-
+      High Performance Computing and Analytics Lab,
+      University of Bonn
+    orcid: 'https://orcid.org/0000-0003-4434-6022'
+  - given-names: Siebren
+    family-names: Reker
+  - given-names: Albert
+    family-names: Deuzeman
+  - orcid: 'https://orcid.org/0000-0002-5532-450X'
+    given-names: Simone
+    family-names: Bacchio
+    email: s.bacchio@cyi.ac.cy
+    affiliation: Cyprus Institute
+  - given-names: Mario
+    family-names: Schröck
+    orcid: 'https://orcid.org/0000-0002-3058-1892'
+  - given-names: Abdou
+    family-names: Abdel-Rehim
+    orcid: 'https://orcid.org/0000-0001-8337-7214'
+  - given-names: Martin
+    family-names: Ueding
+    orcid: 'https://orcid.org/0000-0003-2341-1075'
+  - given-names: Jacob
+    family-names: Finkenrath
+    orcid: 'https://orcid.org/0000-0002-2122-2249'
+    affiliation: Cyprus Institute
+    email: j.finkenrath@cyi.ac.cy
+  - orcid: 'https://orcid.org/0000-0002-4508-6421'
+    given-names: Marco
+    family-names: Garofalo
+    email: garofalo@hiskp.uni-bonn.de
+    affiliation: 'HISKP, University of Bonn'
+  - given-names: Simone
+    family-names: Romiti
+    affiliation: 'HISKP, University of Bonn'
+    orcid: 'https://orcid.org/0000-0002-6509-447X'
+    email: sromiti@uni-bonn.de
+  - given-names: Ferenc
+    family-names: Pittler
+    affiliation: Cyprus Institute
+    orcid: 'https://orcid.org/0000-0003-4100-4289'
+    email: f.pittler@cyi.ac.cy
+  - given-names: Andreas
+    family-names: Ammon
+  - given-names: Remi
+    family-names: Baron
+  - given-names: Benoit
+    family-names: Blossier
+  - given-names: Florian
+    family-names: Burger
+  - given-names: Thomas
+    family-names: Chiarappa
+  - given-names: Nils
+    family-names: Christian
+  - given-names: Elena
+    family-names: Garcia Ramos
+  - given-names: Jennifer
+    family-names: Gonzalez Lopez
+  - given-names: Gilbert
+    family-names: Grosdidier
+  - given-names: Karl
+    family-names: Jansen
+    affiliation: 'DESY, Zeuthen'
+  - given-names: Peter
+    family-names: Labus
+  - given-names: Joseph
+    family-names: Nagel
+  - given-names: David
+    family-names: Palao
+  - given-names: Olivier
+    family-names: Pene
+  - given-names: Marcus
+    family-names: Petschlies
+  - given-names: Dru
+    family-names: Renner
+  - orcid: 'https://orcid.org/0000-0002-1333-745X'
+    given-names: Francesco
+    family-names: Sanfilippo
+    email: francesco.sanfilippo@infn.it
+    affiliation: 'INFN - Sezione Roma Tre '
+  - given-names: Luigi
+    family-names: Scorzato
+  - given-names: Andrea
+    family-names: Shindler
+  - given-names: Jan
+    family-names: Volkholz
+  - given-names: Urs
+    family-names: Wenger
+    email: wenger@itp.unibe.ch
+    affiliation: 'Institute for Theoretical Physics, University of Bern'
+    orcid: 'https://orcid.org/0000-0002-7754-9590'
+  - given-names: Falk
+    family-names: Zimmermann
+identifiers:
+  - type: doi
+    value: 10.1016/j.cpc.2009.05.016
+    description: >-
+      tmLQCD: A Program suite to simulate Wilson Twisted
+      mass Lattice QCD
+  - type: doi
+    value: 10.22323/1.187.0416
+    description: Experiences with OpenMP in tmLQCD
+  - type: doi
+    value: 10.22323/1.187.0414
+    description: Recent developments in the tmLQCD software suite
+  - type: doi
+    value: 10.1016/j.cpc.2018.10.013
+    description: Multigrid approach in shifted linear systems for the non-degenerated twisted mass operator
+  - type: doi
+    value: 10.1103/PhysRevD.94.114509
+    description: Adaptive aggregation-based domain decomposition multigrid for twisted mass fermions
+  - type: doi
+    value: 10.22323/1.430.0340
+    description: Twisted mass ensemble generation on GPU machines
+repository-code: 'https://github.com/etmc/tmLQCD'
+doi: 10.1016/j.cpc.2009.05.016, 10.22323/1.187.0416, 10.22323/1.187.0414, 10.1016/j.cpc.2018.10.013, 10.1103/PhysRevD.94.114509, 10.22323/1.430.0340
+abstract: >-
+  tmLQCD is a freely available software suite providing a
+  set of tools to be used in lattice QCD simulations. This
+  is mainly a HMC implementation (including PHMC and RHMC)
+  for Wilson, Wilson Clover and Wilson twisted mass fermions
+  and inverter for different versions of the Dirac
+  operator.  The code is fully parallelised using OpenMP and
+  MPI and features interfaces to the lattice QCD libraries
+  QPhiX, DDalphaAMG and QUDA, allowing their highly
+  optimised operators and solvers to be used.
+
+  A key feature of tmLQCD is its easily human-readable input
+  file format which also allows tmLQCD to be used as a piece
+  of glue code from within other programs to employ the
+  solvers from these various libraries.
+keywords:
+  - lattice QCD
+  - HMC
+  - RHMC
+  - PHMC
+  - twisted mass
+  - wilson
+  - clover
+  - simulation
+  - GPU
+license: GPL-3.0-or-later
