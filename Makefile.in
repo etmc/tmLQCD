@@ -136,7 +136,7 @@ dep: $(addsuffix .d,$(ALLOBJ)) $(addsuffix .d,$(CXXMODULES))
 
 install: Makefile
 	@mkdir -p $(bindir); \
-	for p in hmc_tm invert; do \
+	for p in hmc_tm invert benchmark offline_measurement deriv_mg_tune; do \
 	  progname=`echo $$p | sed '$(program_transform_name)'`; \
 	  echo "Installing $$p as $$progname in $(bindir)..."; \
 	  cp $$p $(bindir)/$$progname; \
@@ -144,7 +144,7 @@ install: Makefile
 	echo "done";
 
 uninstall: Makefile
-	for p in hmc_tm invert; do \
+	for p in hmc_tm invert benchmark offline_measurement deriv_mg_tune; do \
 	  progname=`echo $$p | sed '$(program_transform_name)'`; \
 	  echo "Un-Installing $$progname in $(bindir)..."; \
 	  rm $(bindir)/$$progname; \
