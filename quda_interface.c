@@ -5,6 +5,7 @@
  *               2018       Bartosz Kostrzewa, Ferenc Pittler
  *               2019, 2020 Bartosz Kostrzewa
  *               2021       Bartosz Kostrzewa, Marco Garofalo, Ferenc Pittler, Simone Bacchio
+ *               2022       Bartosz Kostrzewa, Marco Garofalo, Simone Romiti
  *
  * This file is part of tmLQCD.
  *
@@ -1944,8 +1945,21 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
 
     } // for( dim=0 to dim=3 ) (space-time dimensions)
     
+    // set file i/o parameters to a default which imples that no null-vector I/O is performed
+    strcpy(mg_param->vec_infile[level], "");
+    strcpy(mg_param->vec_outfile[level], "");
+    mg_param->vec_store[level] = QUDA_BOOLEAN_NO;
+    mg_param->vec_load[level] = QUDA_BOOLEAN_NO;
+
     mg_param->verbosity[level] = quda_input.mg_verbosity[level];
     mg_param->precision_null[level] = QUDA_HALF_PRECISION;
+    // different setup types exist but inverse iterations are the default
+    // in the future we might explore also the Chebyshev filter with refinement to
+    // generate null vectors
+    mg_param->setup_type[level] = QUDA_SETUP_NULL_VECTOR_INVERSE_ITERATIONS;
+    mg_param->setup_restrict_remaining_type[level] = QUDA_SETUP_NULL_VECTOR_INVERSE_ITERATIONS;
+    mg_param->setup_maxiter_inverse_iterations_refinement[level] = 0;
+
     mg_param->setup_inv_type[level] = quda_input.mg_setup_inv_type;
     // Kate says: experimental, leave at 1 (will be used for bootstrap-style setup later)
     mg_param->num_setup_iter[level] = 1;
@@ -2068,16 +2082,10 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   // only coarsen the spin on the first restriction
   mg_param->spin_block_size[0] = 2;
 
-  mg_param->compute_null_vector = QUDA_COMPUTE_NULL_VECTOR_YES;
-  mg_param->generate_all_levels = QUDA_BOOLEAN_YES;
-
   mg_param->run_low_mode_check = quda_input.mg_run_low_mode_check;
   mg_param->run_oblique_proj_check = quda_input.mg_run_oblique_proj_check;
   mg_param->run_verify = quda_input.mg_run_verify;
 
-  // set file i/o parameters
-  strcpy(mg_param->vec_infile, "");
-  strcpy(mg_param->vec_outfile, "");
 }
 
 int invert_eo_degenerate_quda(spinor * const out,

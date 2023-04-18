@@ -42,11 +42,11 @@ typedef enum QudaInverterType_s {
  QUDA_CA_GCR_INVERTER = CA_GCR
 } QudaInverterType;
 
-typedef enum QudaCABasis_s {
+typedef enum QudaPolynomialBasis_s {
   QUDA_POWER_BASIS,
   QUDA_CHEBYSHEV_BASIS,
   QUDA_INVALID_BASIS = QUDA_INVALID_ENUM
-} QudaCABasis;
+} QudaPolynomialBasis;
 
 typedef enum QudaEigSpectrumType_s {
   QUDA_SPECTRUM_SR_EIG,
@@ -95,5 +95,15 @@ typedef struct QudaInverParam_s {
   QudaPrecision clover_cuda_prec_precondition;
   QudaPrecision clover_cuda_prec_eigensolver;
 } QudaInvertParam;
+
+typedef enum QudaNullVectorSetupType_s {
+  QUDA_SETUP_NULL_VECTOR_INVERSE_ITERATIONS,
+  QUDA_SETUP_NULL_VECTOR_CHEBYSHEV_FILTER,
+  QUDA_SETUP_NULL_VECTOR_EIGENVECTORS,
+  QUDA_SETUP_NULL_VECTOR_TEST_VECTORS,
+  QUDA_SETUP_NULL_VECTOR_RESTRICT_FINE,
+  QUDA_SETUP_NULL_VECTOR_FREE_FIELD,
+  QUDA_SETUP_NULL_VECTOR_INVALID = QUDA_INVALID_ENUM
+} QudaNullVectorSetupType;
 
 #endif
