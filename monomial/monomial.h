@@ -112,6 +112,7 @@ typedef struct {
   double StildeMin, StildeMax;
   double EVMin, EVMax, EVMaxInv;
   ExternalLibrary external_library;
+  ExternalEigSolver external_eigsolver;
   double * MDPolyCoefs, * PtildeCoefs;
   /* rational approximation */
   rational_t rat;
