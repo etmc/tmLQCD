@@ -226,31 +226,27 @@ void phmc_compute_ev(const int trajectory_counter,
     printf("# Computing eigenvalues for heavy doublet\n");
   }
 
-#ifdef TM_USE_QUDA
-  /* Here we initialize QUDA */
-  initQudaforEig(mnl->solver_params.squared_solver_prec, mnl->solver_params.max_iter,
-                 mnl->solver_params.type, mnl->solver_params.rel_prec, 1, // we only support even-odd here
-                 mnl->solver_params.refinement_precision, mnl->solver_params.sloppy_precision, mnl->solver_params.compression_type);
-
-#endif
-
   no_eigenvalues = 1;
-  temp = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0, Qsq);
-
-#ifdef TM_USE_QUDA
-  if(mnl->EVMax == 1.) {
-    temp = temp / mnl->StildeMax;
+  if(mnl->external_eigsolver == QUDA_EIGSOLVER) {
+    temp = eigsolveQuda(no_eigenvalues, eigenvalue_precision, 1, 0, max_iter_ev, 0);
+    if(mnl->EVMax == 1.) {
+      temp = temp / mnl->StildeMax;
+    }
+  }else {
+    temp = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0, Qsq);
   }
-#endif
+  
   
   no_eigenvalues = 1;
-  temp2 = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, Qsq);
-
-#ifdef TM_USE_QUDA
-  if(mnl->EVMax == 1.) {
-    temp2 = temp2 / mnl->StildeMax;
+  if(mnl->external_eigsolver == QUDA_EIGSOLVER) {
+    temp2 = eigsolveQuda(no_eigenvalues, eigenvalue_precision, 1, 0, max_iter_ev, 1);
+    if(mnl->EVMax == 1.) {
+      temp2 = temp2 / mnl->StildeMax;
+    }
+  }else {
+    temp2 = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, Qsq);
   }
-#endif
+  
   
   if((g_proc_id == 0) && (g_debug_level > 1)) {
     printf("# %s: lowest eigenvalue end of trajectory %d = %e\n", 
