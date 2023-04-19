@@ -175,13 +175,8 @@ void compute_gauge_derivative_quda(monomial * const mnl, hamiltonian_field_t * c
 void compute_WFlow_quda(const double eps ,const double tmax, const int traj, FILE* outfile);
 
 
-void eigsolveQuda(int n, _Complex double *host_evals, double tol, 
+double eigsolveQuda(int n, double tol, 
                   int blksize, int blkwise,
                   int max_iterations,  int maxmin);
-
-void initQudaforEig(const double precision, const int max_iter, 
-                    const int solver_flag, const int rel_prec,
-                    const int even_odd_flag, const SloppyPrecision refinement_precision, 
-                    SloppyPrecision sloppy_precision, CompressionType compression);
 
 #endif /* QUDA_INTERFACE_H_ */

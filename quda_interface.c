@@ -2327,47 +2327,6 @@ int invert_eo_quda_oneflavour_mshift(spinor ** const out,
   return(iterations);
 }
 
-void initQudaforEig(const double precision, const int max_iter, 
-                    const int solver_flag, const int rel_prec,
-                    const int even_odd_flag, const SloppyPrecision refinement_precision, 
-                    SloppyPrecision sloppy_precision, CompressionType compression) {
-  
-
-  // it returns if quda is already init
-  _initQuda();
-
-  if ( rel_prec )
-    inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
-  else
-    inv_param.residual_type = QUDA_L2_ABSOLUTE_RESIDUAL;
-
-  inv_param.kappa = g_kappa;
-
-  // figure out which BC to use (theta, trivial...)
-  set_boundary_conditions(&compression, &gauge_param);
-  // set the sloppy precision of the mixed prec solver
-  set_sloppy_prec(sloppy_precision, refinement_precision, &gauge_param, &inv_param);
-  
-  // load gauge after setting precision
-  _loadGaugeQuda(compression);
-
-  _setTwoFlavourSolverParam(g_kappa,
-                            g_c_sw,
-                            g_mubar,
-                            g_epsbar,
-                            solver_flag,
-                            even_odd_flag,
-                            precision,
-                            max_iter,
-                            1 /*single_parity_solve */,
-                            1 /*always QpQm*/);
-
-  // QUDA applies the MMdag operator, we need QpQm^{-1) in the end
-  // so we want QUDA to use the MdagM operator
-  inv_param.dagger = QUDA_DAG_YES;
-
-}
-
 int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out_dn,
                                      spinor * const in_up, spinor * const in_dn,
                                      const double precision, const int max_iter,
@@ -2629,10 +2588,25 @@ Interface function for Eigensolver on Quda
 *********************************************************/
 
 
-void eigsolveQuda(int n, _Complex double *host_evals, double tol, 
+double eigsolveQuda(int n, double tol, 
                   int blksize, int blkwise,
                   int max_iterations,  int maxmin) {
+  
+  // check if QUDA is initialized
+  if (!quda_initialized) {
+    fatal_error("QUDA must be initialized.","eigsolveQuda");
+    return -1;
+  }
 
+  tm_stopwatch_push(&g_timers, __func__, "");
+
+  _Complex double * eigenvls;
+  double returnvalue;
+
+  // allocate memory for eigenvalues
+  eigenvls = (_Complex double *)malloc((n)*sizeof(_Complex double));
+
+  // create new eig_param
   eig_param = newQudaEigParam();
 
   eig_param.invert_param = &inv_param;
@@ -2692,16 +2666,32 @@ void eigsolveQuda(int n, _Complex double *host_evals, double tol,
   eig_param.invert_param->cuda_prec_eigensolver = inv_param.cuda_prec;
   eig_param.invert_param->clover_cuda_prec_eigensolver = inv_param.cuda_prec;
 
+  /* At the moment, the eigenvalues and eigenvectors are neither 
+   * written to or read from disk, but if necessary, can be added
+   * as a feature in future, by setting the following filenames */
   strncpy(eig_param.vec_outfile,"",256);
   strncpy(eig_param.vec_infile,"",256);
   
 
+  /* The size of eigenvector search space and
+   * the number of required converged eigenvectors 
+   * is both set to n */
   eig_param.n_conv = n;
   eig_param.n_ev = n;
+  /* The size of the Krylov space is set to 96.
+   * From my understanding, QUDA automatically scales
+   * this search space, however more testing on this 
+   * might be necessary */
   eig_param.n_kr = 96;
 
   eig_param.max_restarts = max_iterations;
 
-  eigensolveQuda(NULL, host_evals, &eig_param);
+  eigensolveQuda(NULL, eigenvls, &eig_param);
+
+  returnvalue = eigenvls[0];
+
+  tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
+
+  return(returnvalue);
 
 }
