@@ -198,6 +198,8 @@
 
 #define _default_external_inverter 0
 
+#define _default_external_eigsolver 0
+
 #define _default_external_library 0
 
 #define _default_subprocess_flag 0

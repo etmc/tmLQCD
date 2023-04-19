@@ -2505,6 +2505,14 @@ static inline double fltlist_next_token(int * const list_end){
     mnl->rec_ev = a;
     if(myverbose!=0) printf("  Frequency for computing EV's set to %d in line %d monomial %d\n", mnl->rec_ev, line_of_file, current_monomial);
   }
+  {SPC}*UseExternalEigSolver{EQL}quda {
+    if(myverbose) printf("  Use Quda eigensolver line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->external_eigsolver = QUDA_EIGSOLVER;
+  }
+  {SPC}*UseExternalEigSolver{EQL}no {
+    if(myverbose) printf("  Do not use external eigensolver line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->external_eigsolver = NO_EXT_EIGSOLVER;
+  }
 }
 <NDPOLYMONOMIAL,CLPOLYMONOMIAL>{
   {SPC}*MaxPtildeDegree{EQL}{DIGIT}+ {
