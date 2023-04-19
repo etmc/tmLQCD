@@ -54,10 +54,6 @@
 #include "eigenvalues_bi.h"
 #include "operator/tm_operators_nd.h"
 
-#ifdef TM_USE_QUDA
-#  include "quda_interface.h"
-#endif
-
 
 double eigenvalues_bi(int * nr_of_eigenvalues,  
 		      const int max_iterations, const double precision,
@@ -127,11 +123,7 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
     eigenvectors_bi_= calloc((VOLUME)/2*(*nr_of_eigenvalues), sizeof(bispinor));
     eigenvectors_bi = eigenvectors_bi_;
 #endif
-#ifdef TM_USE_QUDA
-    eigenvls_bi = (_Complex double *)malloc((*nr_of_eigenvalues)*sizeof(_Complex double));
-#else
     eigenvls_bi = (double*)malloc((*nr_of_eigenvalues)*sizeof(double));
-#endif
   }
 
   /* compute eigenvalues */
@@ -139,20 +131,6 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
   if((g_proc_id==0) && (g_debug_level > 4)) {
     printf(" Values of   mu = %e     mubar = %e     eps = %e     precision = %e  \n \n", g_mu, g_mubar, g_epsbar, precision);
   }
-
-  /* For now, using the TM_USE_QUDA flag
-   * Ideally, one would use an operator flag
-   * like useExternalEigSolver. */
-#ifdef TM_USE_QUDA
-
-  if(g_proc_id == g_stdio_proc) {
-    printf("Using external eigensolver on QUDA.\n");
-  }
-
-  eigsolveQuda((*nr_of_eigenvalues), eigenvls_bi, prec, 
-                blocksize, blockwise, max_iterations, maxmin);
-
-#else
 
   /* here n and lda are equal, because Q_Qdagger_ND_BI does an internal */
   /* conversion to non _bi fields which are subject to xchange_fields   */
@@ -166,8 +144,6 @@ double eigenvalues_bi(int * nr_of_eigenvalues,
 	   &converged, (_Complex double*) eigenvectors_bi, eigenvls_bi,
 	   &returncode, maxmin, 1,
 	   Qsq);
-
-#endif
   
   *nr_of_eigenvalues = converged;
 
