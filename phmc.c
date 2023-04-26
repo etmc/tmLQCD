@@ -25,6 +25,7 @@
 #include <math.h>
 #include <string.h>
 #include <time.h>
+#include <float.h>
 
 #include "global.h"
 
@@ -228,8 +229,13 @@ void phmc_compute_ev(const int trajectory_counter,
 
   no_eigenvalues = 1;
   if(mnl->external_eigsolver == QUDA_EIGSOLVER) {
-    temp = eigsolveQuda(no_eigenvalues, eigenvalue_precision, 1, 0, max_iter_ev, 0);
-    if(mnl->EVMax == 1.) {
+    temp = eigsolveQuda(no_eigenvalues, eigenvalue_precision, 1, 0, max_iter_ev, 0,
+                        mnl->accprec, mnl->maxiter, mnl->solver, g_relative_precision_flag,
+                                                       1, // we only support even-odd here
+                                                       mnl->solver_params.refinement_precision,
+                                                       mnl->solver_params.sloppy_precision,
+                                                       mnl->solver_params.compression_type);
+    if( fabs(mnl->EVMax - 1) < 2*DBL_EPSILON ) {
       temp = temp / mnl->StildeMax;
     }
   }else {
@@ -239,8 +245,13 @@ void phmc_compute_ev(const int trajectory_counter,
   
   no_eigenvalues = 1;
   if(mnl->external_eigsolver == QUDA_EIGSOLVER) {
-    temp2 = eigsolveQuda(no_eigenvalues, eigenvalue_precision, 1, 0, max_iter_ev, 1);
-    if(mnl->EVMax == 1.) {
+    temp2 = eigsolveQuda(no_eigenvalues, eigenvalue_precision, 1, 0, max_iter_ev, 1,
+                         mnl->accprec, mnl->maxiter, mnl->solver, g_relative_precision_flag,
+                                                       1, // we only support even-odd here
+                                                       mnl->solver_params.refinement_precision,
+                                                       mnl->solver_params.sloppy_precision,
+                                                       mnl->solver_params.compression_type);
+    if( fabs(mnl->EVMax - 1.) < 2*DBL_EPSILON ) {
       temp2 = temp2 / mnl->StildeMax;
     }
   }else {

@@ -2588,17 +2588,42 @@ Interface function for Eigensolver on Quda
 *********************************************************/
 
 
-double eigsolveQuda(int n, double tol, 
-                  int blksize, int blkwise,
-                  int max_iterations,  int maxmin) {
+double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterations, int maxmin,
+                    const double precision, const int max_iter, const int solver_flag, const int rel_prec,
+                    const int even_odd_flag, const SloppyPrecision refinement_precision,
+                    SloppyPrecision sloppy_precision, CompressionType compression) {
+
+  tm_stopwatch_push(&g_timers, __func__, "");
   
   // check if QUDA is initialized
   if (!quda_initialized) {
-    fatal_error("QUDA must be initialized.","eigsolveQuda");
-    return -1;
+    // it returns if quda is already init
+    _initQuda();
   }
 
-  tm_stopwatch_push(&g_timers, __func__, "");
+    if ( rel_prec )
+      inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
+    else
+      inv_param.residual_type = QUDA_L2_ABSOLUTE_RESIDUAL;
+
+    inv_param.kappa = g_kappa;
+    
+    // figure out which BC tu use (theta, trivial...)
+    set_boundary_conditions(&compression, &gauge_param);
+
+    set_sloppy_prec(sloppy_precision, refinement_precision, &gauge_param, &inv_param);
+
+  // load gauge after setting precision
+  _loadGaugeQuda(compression);
+
+  _setTwoFlavourSolverParam(g_kappa, g_c_sw, g_mubar, g_epsbar, solver_flag, even_odd_flag, precision, max_iter,
+                            1 /*single_parity_solve */,
+                            1 /*always QpQm*/);
+
+  // QUDA applies the MMdag operator, we need QpQm^{-1) in the end
+  // so we want QUDA to use the MdagM operator
+  inv_param.dagger = QUDA_DAG_YES;
+
 
   _Complex double * eigenvls;
   double returnvalue;
