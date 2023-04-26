@@ -2595,11 +2595,9 @@ double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterati
 
   tm_stopwatch_push(&g_timers, __func__, "");
   
-  // check if QUDA is initialized
-  if (!quda_initialized) {
-    // it returns if quda is already init
-    _initQuda();
-  }
+  
+  // it returns if quda is already init
+  _initQuda();
 
     if ( rel_prec )
       inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
