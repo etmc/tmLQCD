@@ -240,14 +240,14 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
     boundary(g_kappa);
     
     zero_spinor_field(mnl->w_fields[0], VOLUME/2);
-    if( mnl->solver == MG || mnl->solver == BICGSTAB ){
-      mnl->iter0 = solve_degenerate(mnl->pf, mnl->w_fields[1], mnl->solver_params, mnl->maxiter, mnl->accprec,
-				    g_relative_precision_flag, VOLUME/2, mnl->Qp, mnl->solver);
+    if( mnl->HB_solver == MG || mnl->HB_solver == BICGSTAB ){
+      mnl->iter0 = solve_degenerate(mnl->pf, mnl->w_fields[1], mnl->HB_solver_params, mnl->HB_maxiter, mnl->accprec,
+				    g_relative_precision_flag, VOLUME/2, mnl->Qp, mnl->HB_solver);
       chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);      
     } else {
-      mnl->iter0 = solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->solver_params, mnl->maxiter,
-				    mnl->accprec, g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver);
+      mnl->iter0 = solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->HB_solver_params, mnl->HB_maxiter,
+				    mnl->accprec, g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->HB_solver);
       tm_stopwatch_push(&g_timers, "Qm", "");
       mnl->Qm(mnl->pf, mnl->w_fields[0]);
       tm_stopwatch_pop(&g_timers, 0, 1, "");
@@ -271,23 +271,23 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
     boundary(g_kappa);
     
     zero_spinor_field(mnl->pf,VOLUME);
-    if((mnl->solver == CG) || (mnl->solver == MIXEDCG) || (mnl->solver == RGMIXEDCG)){
-      mnl->iter0 = solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->solver_params,
-                                    mnl->maxiter, mnl->accprec, g_relative_precision_flag, VOLUME, Q_pm_psi, mnl->solver);
+    if((mnl->HB_solver == CG) || (mnl->HB_solver == MIXEDCG) || (mnl->HB_solver == RGMIXEDCG)){
+      mnl->iter0 = solve_degenerate(mnl->w_fields[0], mnl->w_fields[1], mnl->HB_solver_params,
+                                    mnl->HB_maxiter, mnl->accprec, g_relative_precision_flag, VOLUME, Q_pm_psi, mnl->HB_solver);
       tm_stopwatch_push(&g_timers, "Q_minus_psi", "");
       Q_minus_psi(mnl->pf, mnl->w_fields[0]);
       tm_stopwatch_pop(&g_timers, 0, 1, "");
       chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
       // FIXME why only MG here?
-    } else if( mnl->solver == MG ){
-      mnl->iter0 = solve_degenerate(mnl->pf, mnl->w_fields[1], mnl->solver_params, mnl->maxiter, mnl->accprec,
-				    g_relative_precision_flag, VOLUME, Q_plus_psi, mnl->solver);
+    } else if( mnl->HB_solver == MG ){
+      mnl->iter0 = solve_degenerate(mnl->pf, mnl->w_fields[1], mnl->HB_solver_params, mnl->HB_maxiter, mnl->accprec,
+				    g_relative_precision_flag, VOLUME, Q_plus_psi, mnl->HB_solver);
       chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
     } else {
-      mnl->iter0 = solve_degenerate(mnl->pf, mnl->w_fields[1], mnl->solver_params, mnl->maxiter, mnl->accprec, 
-				    g_relative_precision_flag, VOLUME, Q_plus_psi, mnl->solver);
+      mnl->iter0 = solve_degenerate(mnl->pf, mnl->w_fields[1], mnl->HB_solver_params, mnl->HB_maxiter, mnl->accprec, 
+				    g_relative_precision_flag, VOLUME, Q_plus_psi, mnl->HB_solver);
       chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
       chrono_add_solution(mnl->pf, mnl->csg_field2, mnl->csg_index_array2,

@@ -185,7 +185,7 @@ supported general input paramters:
   OpenMP support. On some architectures, the {\ttfamily OMP\_NUM\_THREADS}
   environment variable needs to be set to the same value for correct
   operation. The default is 1.
-\item  {\ttfamily BarrierMonomialsConvergence}:\\
+\item  {\ttfamily BarrierMonomialsConverge}:\\
   Possible values:  {\ttfamily yes} or  {\ttfamily no}. The default is  {\ttfamily no}. 
   If set to  {\ttfamily yes} the convergence is checked for each monomial, 
   and if any of the solvers returns a number of iterations equal to $-1$, 
@@ -422,7 +422,8 @@ EndMonomial
   \left[\det(P_{n}(Q^2(\kappa) + \mu^2)) det(Q^2(\kappa_2) + \mu^2_2)\right]^{-1}
   \]
 \end{itemize}
-Each of them has different options:
+Each of them has different options
+:
 \begin{itemize}
 \item {\ttfamily DET, CLOVERDET}:
   \begin{itemize}
@@ -450,19 +451,24 @@ Each of them has different options:
   \item {\ttfamily MaxSolverIterations}: default is $5000$
   \item {\ttfamily Solver}: the solver to be used, either CG or
     BiCGstab. Default is CG.
+  \item {\ttfamily HB\_Solver}: the solver to be used in the heatbath step, see section \ref{sec:hb.solver} for details.
   \item {\ttfamily Name}: a name to be assigned to the monomial. The
     default is {\ttfamily DET}
   \end{itemize}
+%
 \item {\ttfamily DETRATIO}: the same as for {\ttfamily DET}, but in
   addition:
   \begin{itemize}
   \item {\ttfamily 2KappaMu2}
   \item {\ttfamily Kappa2}
-  \item {\ttfamily Name}: a name to be assigned to the monomial. The
-    default is {\ttfamily DETRATIO}
+  \item {\ttfamily Name}: 
+    a name to be assigned to the monomial. 
+    The default is {\ttfamily DETRATIO}
   \end{itemize}
-
-
+%
+\item {\ttfamily CLOVERDETRATIO}: 
+  see {\ttfamily CLOVERDET} and {\ttfamily DETRATIO}.
+%
 \item {\ttfamily GAUGE}: 
   \begin{itemize}
   \item {\ttfamily Timescale}: the timescale on which to integrate
@@ -640,6 +646,24 @@ This monomial needs a valid {\ttfamily RootsFile} and {\ttfamily LocNormConst} p
 {\ttfamily \$ oox -d <degree> -e <epsilon>}\\
 {\ttfamily <epsilon>} is to be replaced by the ratio  {\ttfamily Lmin/Lmax}.
 \end{itemize}
+
+\subsubsection{The heatbath solver}
+\label{sec:hb.solver}
+
+Inside each monomial the user specifies the solver for the inversion of the Dirac operator.
+The solver used in the HB (heatbath) can be different from the MD (Molecular Dynamics) and ACC step (acceptance step).
+%
+This is determined by the {\ttfamily HB\_solver} parameter inside the {\ttfamily BeginMonomial}-{\ttfamily EndMonomial}.
+Supported values: CG, MIXEDCG, RGMIXEDCG, BICGSTAB, MIXEDBICGSTAB, MG.
+If specified, the following (optional) parameters of the HB solver are parsed:
+\begin{itemize}
+    \item {\ttfamily HB\_MaxSolverIterations}: analogous to {\ttfamily MaxSolverIterations}
+    \item {\ttfamily HB\_UseExternalInverter}: analogous to {\ttfamily UseExternalInverter}
+    \item {\ttfamily HB\_UseSloppyPrecision}: analogous to {\ttfamily UseSloppyPrecision}
+    \item {\ttfamily HB\_UseCompression}: analogous to {\ttfamily UseCompression} 
+\end{itemize}
+%
+Their default values are taken from the corresponding MD solver parameters.
 
 \subsubsection{The Integrator}
 

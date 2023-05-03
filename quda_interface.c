@@ -1783,7 +1783,7 @@ void _setTwoFlavourSolverParam(const double kappa, const double c_sw, const doub
   }
 }
 
-_setMGInvertParam(QudaInvertParam * mg_inv_param, const QudaInvertParam * const inv_param){
+void _setMGInvertParam(QudaInvertParam * mg_inv_param, const QudaInvertParam * const inv_param){
   // reset the mg_inv_param to start from a clean slate
   (*mg_inv_param) = newQudaInvertParam();
 

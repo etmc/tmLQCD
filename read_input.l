@@ -581,6 +581,7 @@ static inline double fltlist_next_token(int * const list_end){
 %x INITMONOMIAL
 %x DETMONOMIAL
 %x CLDETMONOMIAL
+%x DETRATMONOMIAL
 %x CLDETRATMONOMIAL
 %x CLDETRATRWMONOMIAL
 %x GAUGEMONOMIAL
@@ -600,6 +601,7 @@ static inline double fltlist_next_token(int * const list_end){
 %x MNAME
 %x MCSTR
 %x MSOLVER
+%x HB_MSOLVER
 %x RATMSOLVER
 %x NDMSOLVER
 %x GTYPE
@@ -2170,13 +2172,13 @@ static inline double fltlist_next_token(int * const list_end){
   }
   else if(mnl->type == CLOVERDET) BEGIN(CLDETMONOMIAL);
   else if(mnl->type == CLOVERDETRATIO) BEGIN(CLDETRATMONOMIAL);
+  else if(mnl->type == DETRATIO) BEGIN(DETRATMONOMIAL);
   else if(mnl->type == CLOVERDETRATIORW) BEGIN(CLDETRATRWMONOMIAL);
   else BEGIN(DETMONOMIAL);
 }
 
 
-
-<DETMONOMIAL,GAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,CLRATMONOMIAL,RATCORMONOMIAL,CLRATCORMONOMIAL,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{
+<DETMONOMIAL,GAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,CLRATMONOMIAL,RATCORMONOMIAL,CLRATCORMONOMIAL,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL,DETRATMONOMIAL>{
   {SPC}*Timescale{EQL}{DIGIT}+ {
     if(mnl->type == NDDETRATIO || mnl->type == NDCLOVERDETRATIO) {
       mnl->timescale = -5;
@@ -2338,7 +2340,67 @@ static inline double fltlist_next_token(int * const list_end){
   }
 }
 
-<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{
+<CLDETRATMONOMIAL,DETRATMONOMIAL>{
+  {SPC}*HB_Solver{EQL} {
+   solver_caller=YY_START;
+   BEGIN(HB_MSOLVER);
+  }
+  {SPC}*HB_MaxSolverIterations{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z_] = %d", name, &a);
+    mnl->HB_maxiter = a;
+    if(myverbose) printf("  HB_MaxSolverIterations set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+  }
+  {SPC}*HB_UseExternalInverter{EQL}quda {
+    if(myverbose) printf("  HB Use Quda inverter line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.external_inverter = QUDA_INVERTER;
+  }
+  {SPC}*HB_UseExternalInverter{EQL}qphix {
+    if(myverbose) printf("  HB Use QPhiX inverter line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.external_inverter = QPHIX_INVERTER;
+  }
+  {SPC}*HB_UseExternalInverter{EQL}no {
+    if(myverbose) printf("  HB Use QPhiX inverter line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.external_inverter = NO_EXT_INV;
+  }
+  {SPC}*HB_UseSloppyPrecision{EQL}yes {
+    if(myverbose) printf("  HB Use sloppy precision (single) in the inverter (if supported) line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.sloppy_precision = SLOPPY_SINGLE;
+  }
+  {SPC}*HB_UseSloppyPrecision{EQL}float {
+    if(myverbose) printf("  HB Use sloppy precision (single) in the inverter (if supported) line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.sloppy_precision = SLOPPY_SINGLE;
+  }
+  {SPC}*HB_UseSloppyPrecision{EQL}single {
+    if(myverbose) printf("  HB Use sloppy precision (single) in the inverter (if supported) line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.sloppy_precision = SLOPPY_SINGLE;
+  }
+  {SPC}*HB_UseSloppyPrecision{EQL}no {
+    if(myverbose) printf("  HB Use sloppy precision (double) in the inverter line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.sloppy_precision = SLOPPY_DOUBLE;
+  }
+  {SPC}*HB_UseSloppyPrecision{EQL}double {
+    if(myverbose) printf("  HB Use sloppy precision (double) in the inverter line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.sloppy_precision = SLOPPY_DOUBLE;
+  }
+  {SPC}*HB_UseSloppyPrecision{EQL}half {
+    if(myverbose) printf("  HB Use sloppy precision (half) in the inverter (if supported) line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.sloppy_precision = SLOPPY_HALF;
+  }
+  {SPC}*HB_UseCompression{EQL}12 {
+    if(myverbose) printf("  HB Use 12 compression in the inverter (if supported) line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.compression_type = COMPRESSION_12;
+  }
+  {SPC}*HB_UseCompression{EQL}8 {
+    if(myverbose) printf("  HB Use 8 compression in the inverter (if supported) line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.compression_type = COMPRESSION_8;
+  }
+  {SPC}*HB_UseCompression{EQL}18 {
+    if(myverbose) printf("  HB Not using compression in the inverter line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.compression_type = NO_COMPRESSION;
+  }
+}
+
+<DETMONOMIAL,DETRATMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{
   {SPC}*ForcePrecision{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     mnl->forceprec = c;
@@ -2644,6 +2706,51 @@ static inline double fltlist_next_token(int * const list_end){
 #endif
   }
 }
+
+<HB_MSOLVER>{
+  CG {
+    if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->HB_solver = CG;
+    BEGIN(solver_caller);
+  }
+  mixedCG {
+    if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->HB_solver = MIXEDCG;
+    BEGIN(solver_caller);
+  }
+  rgmixedCG {
+    if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->HB_solver = RGMIXEDCG;
+    BEGIN(solver_caller);
+  }
+  BICGSTAB {
+    if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->HB_solver = BICGSTAB;
+    BEGIN(solver_caller);
+  }
+  mixedbicgstab {
+    if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->HB_solver=MIXEDBICGSTAB;
+    BEGIN(solver_caller);
+  }
+  MG {
+    if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->HB_solver = MG;
+    BEGIN(solver_caller);
+  }
+  DDalphaAMG {
+#ifdef DDalphaAMG
+    if(myverbose) printf("  HB Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
+    mnl->HB_solver = MG;
+    BEGIN(solver_caller);
+#else
+    printf("ERROR line %d operator %d: DDalphaAMG library not included\n", line_of_file, current_operator);
+    exit(1);
+#endif
+  }
+}
+
+
 
 <RATMSOLVER>{
   rgmixedCG {

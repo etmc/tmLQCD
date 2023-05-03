@@ -8,7 +8,7 @@ jobs:
 
     steps:
       - name: get_tmlqcd
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: main
 
@@ -20,16 +20,22 @@ jobs:
           echo "nb_cores=$(lscpu | grep \^CPU\(s\)\: | awk '{print $2}')" >> $GITHUB_ENV
 
       - name: gcc_version
+        if: ${{ always() }}
         run: gcc --version
 
       - name: echo_nb_cores
+        if: ${{ always() }}
         run: echo "Number of cores ${nb_cores}"
 
       - name: get_packages
-        run: sudo apt update && sudo apt install openmpi-bin openmpi-common numdiff
+        run: sudo apt update && sudo apt install openmpi-bin openmpi-common libopenmpi3 libopenmpi-dev numdiff
+
+      - name: mpicc_version
+        if: ${{ always() }}
+        run: mpicc --version
 
       - name: get_lime
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: usqcd-software/c-lime
           path: lime
@@ -50,8 +56,15 @@ jobs:
           make -j
           make install
 
+      - name: Archive lime config.log
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: lime_config_output
+          path: ${{github.workspace}}/lime/build/config.log 
+
       - name: get_lemon
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: etmc/lemon
           path: lemon
@@ -73,10 +86,18 @@ jobs:
           make -j
           make install
 
-      - name: get_ddalphaamg
-        uses: actions/checkout@v2
+      - name: Archive lemon config.log
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
         with:
-          repository: sbacchio/ddalphaamg
+          name: lemon_config_output
+          path: ${{github.workspace}}/lemon/build/config.log 
+
+      - name: get_ddalphaamg
+        uses: actions/checkout@v3
+        with:
+          repository: kostrzewa/ddalphaamg #sbacchio/ddalphaamg
+          ref: fix_main_build
           path: ddalphaamg
 
       - name: build_ddalphaamg
@@ -119,6 +140,13 @@ jobs:
         run: |
           mpirun -np 2 ./hmc_tm \
             -f ../sample-input/sample-hmc-ddalphaamg-tmcloverdetratio.input
+
+      - name: Archive nf2_ddalphaamg_hmc_tmcloverdetratio output
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: tmlqcd_test_output
+          path: ${{github.workspace}}/main/build/output.data
 
       - name: compare_nf2_ddalphaamg_hmc_tmcloverdetratio
         working-directory: ${{github.workspace}}/main/build

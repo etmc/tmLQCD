@@ -70,14 +70,16 @@ quda_raw_data <- system(paste("grep -A8 \"QUDA Total time\"",
                               "| awk '{print $3 \" \" $5}'"),
                         intern = TRUE)
 
-## the format of the QUDA output has changed historically
-## if the above has not worked, try again in the old format
-if( strsplit(quda_raw_data[1], split=' ')[[1]][1] != "download" ){
-  quda_raw_data <- system(paste("grep -A8 \"QUDA Total time\"",
-                                infile,
-                                "| tail -n 8", # skip the first line
-                                "| awk '{print $1 \" \" $3}'"),
-                          intern = TRUE)
+if( length(quda_raw_data) > 1 ){
+  ## the format of the QUDA output has changed historically
+  ## if the above has not worked, try again in the old format
+  if( strsplit(quda_raw_data[1], split=' ')[[1]][1] != "download" ){
+    quda_raw_data <- system(paste("grep -A8 \"QUDA Total time\"",
+                                  infile,
+                                  "| tail -n 8", # skip the first line
+                                  "| awk '{print $1 \" \" $3}'"),
+                            intern = TRUE)
+  }
 }
 
 quda_data <- NA
@@ -188,6 +190,11 @@ save(monomial_names,
      file = "profile.RData")
 
 rmarkdown::render("profile.Rmd")
+
+message(sprintf("Renaming the output data and report to %s.[RData, pdf]", outbase))
+
 # rename the report
 system(sprintf("mv profile.RData %s.RData", outbase))
 system(sprintf("mv profile.pdf %s.pdf", outbase))
+
+
