@@ -116,32 +116,44 @@ EndOperator
 
 \paragraph{Basic MG parameters:} The MG setup can be tuned using the following parameters in the \texttt{BeginExternalInverter QUDA} section:
 \begin{itemize}
-  \item{ \texttt{MGNumberOfLevels}: number of levels to be used in the MG, $3$ is usually ideal but $2$ can be similarly efficient depending on the quark mass (positive integer, default: $3$) }
-  \item{ \texttt{MGSetupSolver}: solver used for generating null vectors. \texttt{CG} or \texttt{BiCGstab} (default \texttt{CG}). Usage of \texttt{BiCGstab} may be recommended for Wilson or clover Wilson quarks. }
+  \item{ \texttt{MGNumberOfLevels}: Number of levels to be used in the MG, $3$ is usually ideal but $2$ can be similarly efficient depending on the quark mass (positive integer, default: $3$) }
+  \item{ \texttt{MGSetupSolver}: Solver used for generating null vectors. Possible values:
+    \begin{itemize}
+      \item \texttt{CG} (conjugate gradient)
+      \item \texttt{CGNE} (conjugate gradient normal equations)
+      \item \texttt{CGNR} (conjugate gradient normal residuals)
+      \item \texttt{CACG} (communication-avoiding conjugate gradient)
+      \item \texttt{CACGNE} (communication-avoiding conjugate gradient normal equations)
+      \item \texttt{CACGNR} (communication-avoiding conjugate gradient normal residuals)
+      \item \texttt{BiCGstab} (stabilised bi-conjugate gradient)
+    \end{itemize}
+    Usage of \texttt{BiCGstab} may be recommended for Wilson or clover Wilson quarks while \texttt{CG} should always be used for twised mass or twisted clover quarks. \texttt{CACG} may be beneficial at the strong-scaling limit. At the time of writing (May 2023), this cannot be set on a per-level basis so the effect of the communication-avoiding setup solver on the setup time may be limited or even detrimental.
+        (default: \texttt{CG})}
   \item{ \texttt{MGSetupSolverTolerance}: relative target residual (unsquared!) during setup phase on a per-level basis. (comma-separated list of positive floats, default: $1\cdot10^{-6}, 1\cdot10^{-6}, \ldots$) }
   \item{ \texttt{MGSetupMaxSolverIterations}: maximum number of iterations during setup phase on a per-level basis. (comma-separated list of positive integers, default: $1000, 1000, \ldots$) }
   \item{ \texttt{MGCoarseSolverTolerance}: unsquared relative target residual on the coarse grids on a per-level basis. (comma-separated list of positive floats, default: $0.25, 0.25, \ldots$) }
   \item{ \texttt{MGNumberOfVectors}: number of null vectors to compute on a per-level basis. (comma-separated list of integers, possible values $\left[ 24, 32 \right]$, default: $24, 24, \ldots$)}
   \item{ \texttt{MGCoarseMaxSolveriterations}: maximum number of iterations on coarse grids on a per-level basis. (comma-separated list of positive integers, default: $75, 75, \ldots$) }
   \item{ \texttt{MGEnableSizeThreeBlocks}: Historically and by default, QUDA has had limited support for size $3$ aggregates. If set to \emph{yes}, the automatic blocking algorithm will attempt to use them for lattice extents divisible by $3$ when the local lattice extent at a given level is smaller than $16$ aggregate sites. This may require you to instantiate the necessary block sizes in QUDA (see comments below). In recent (2022 and later) commits of the QUDA \texttt{develop} branch, this can usually be set to \emph{yes} without having to modify QUDA. (boolean \emph{yes} or \emph{no}, default: \emph{no}) }
-  \item{ \texttt{MGBlockSizes[X,Y,Z,T]}: aggregate sizes on each level. When these are set for a given lattice dimension, the automatic blocking algorithm for that dimension is overridden and the specified blockings are forced. When the required aggregate sizes are not instantiated in QUDA, the setup phase will fail with an informative error message. (comma-separated list of positive integers, for a three level solver, for example, two numbers needs to be specified: aggregate size on the finest and intermediate level)}
+  \item{ \texttt{MGBlockSizes[X,Y,Z,T]}: aggregate sizes on each level. When these are set non-zero for a given lattice dimension and a given level, the automatic blocking algorithm for that dimension and level is overridden and the specified blockings are forced. When the required aggregate sizes are not instantiated in QUDA, the setup phase will fail with an informative error message. (comma-separated list of positive integers, for a three level solver, for example, two numbers needs to be specified: aggregate size on the finest and intermediate level, default: \texttt{0, 0})}
 \end{itemize}
 
 \paragraph*{Automatic blocking:} If no blocking is specified manually, the aggregation parameters are set automatically as follows:
 \begin{itemize}
-  \item{ A default block size of $4$ is attempted if the MPI-partitioned fine or aggregate lattice extent is larger or equal to $16$ lattice sites. }
-  \item{ If the number of aggregate lattice sites in a given direction is even and smaller than $16$, a block size of $2$ is used. }
-  \item{ The option \texttt{MGEnableSizeThreeBlocks} can be set to \texttt{yes}. Then, for levels coarser than the fine grid, extents smaller than $16$ and divisible by $3$, a block size of $3$ will be used. This will almost certainly require the addition of instantiations of block sizes to QUDA in the restrictor and transfer operator. (\texttt{lib/restrictor.cu} and \texttt{lib/transfer\_util.cu}) }
-  \item{ In all other cases, aggregation is disabled for this direction and level. This includes, for instance, extents divisible by primes other than $2$ or $3$. }
+  \item{ A default block size of $4$ is attempted if the MPI-partitioned local lattice extent on the current level is even and larger than or equal to $16$ lattice sites. }
+  \item{ If the number of lattice sites in a given direction on the current level is even and smaller than $16$, a block size of $2$ is used. }
+  \item{ The option \texttt{MGEnableSizeThreeBlocks} can be set to \texttt{yes}. Then, for levels coarser than the fine grid, extents smaller than $16$ and divisible by $3$, a block size of $3$ will be used. This might require the addition of instantiations of block sizes to QUDA in the restrictor and transfer operator. (\texttt{lib/restrictor.cu} and \texttt{lib/transfer\_util.cu}) }
+  \item{ In all other cases, aggregation is disabled for this direction and level. This includes, for instance, extents divisible by primes other than $2$ or $3$. This means that if you need blocks of $5$ or $7$ for geometry reasons, you will need to choose a setup manually.}
 \end{itemize}
 
-\paragraph{Further MG parameters:}
+\paragraph{Further basic MG parameters:}
 \begin{itemize}
   \item{ \texttt{MGSmootherTolerance}: unsquared relative target residual of the smoother on a per-level basis. (comma-separated list of positive floats, default: $0.25, 0.25, \ldots$) }
   \item{ \texttt{MGSmootherPreIterations}: number of smoothing steps before coarse grid correction on a per-level basis. (comma-separated list of zero or positive integers, default: $0, 0, \ldots$)}
   \item{ \texttt{MGSmootherPostIterations}: number of smoothing steps after prolongation on a per-level basis. (comma-separated list of zero or positive integers, default: $4, 4, \ldots$)}
   \item{ \texttt{MGOverUnderRelaxationFactor}: Over- or under-relaxation factor on a per-level basis. (comma-separated list of positive floats, default: $0.85, 0.85, \ldots$)}
   \item{ \texttt{MGCoarseMuFactor}: Scaling factor for twisted mass on a per-level basis, accelerates convergence and reduces condition numer of coarse grid solves. From experience it seems that it's reasonable to set this $>1.0$ only on the coarsest level, but sometimes it might also help on intermediate levels. If running with twisted mass, this should always be set and tuned for maximum efficiency. When using coarse-grid deflation (see \texttt{MGEigSolverRequireConvergence}), this should usually be set to $1.0$ on all levels. (comma-separated list of positive floats, usually $ > 1.0$, default $8.0$ from the second level upwards).}
+  \item{ \texttt{MGSetup2KappaMu}: The value of $2\kappa\mu$ which should be used during the MG setup process. This is important in the HMC for standard twisted mass fermions, for example, because the setup should always be performed with the smallest quark mass to be employed in a simulation and it might be that a monomial with a heavier twisted quark mass is the first to call to MG and to thus trigger the setup. Generally this is set to the target light twisted quark mass. Setting this to $0.0$ implies that it is ignored. (float, default: $0.0$) }
   \item{ \texttt{MGReuseSetupMuThreshold}: When the twisted quark mass is changed between solves using the MG solver, the MG setup is usually \emph{updated} for this new $\mu$ value. One can attempt to reuse the MG setup for solves with different mu values up to this threshold, i.e., when the condition $x < 2\kappa\cdot|\mu_\mathrm{old} - \mu_\mathrm{new}|$ holds. (positive float, default: \texttt{2*DBL\_EPSILON})}
   \item{ \texttt{MGRefreshSetupMDUThreshold}: When the MG is used in the HMC, the MG setup must be regularly refreshed by running a few iterations of the setup solver on the current set of approximate null vectors in order to evolve these with the changing gauge field. A good rule of thumb is to perform this setup refresh about twice per coarsest time step. In other words: for a trajectory length $\tau$ and $N$ integration steps on the coarsest time scale, the refresh should be performed at intervals of $(\tau/(2N)-\epsilon)$ MDUs, where $\epsilon$ is a small number to make sure that the threshold is hit at every half-step of the integrator. (positive float, default: \texttt{2*DBL\_EPSILON})}
   \item{ \texttt{MGRefreshSetupMaxSolverIterations}: Number of setup iterations to be performed on a per-level basis when a setup refresh is required, see also \texttt{MGRefreshSetupMDUThreshold} above. (comma-separated list of positive integers, default: $0, 0, \ldots$}
@@ -151,7 +163,41 @@ EndOperator
   \item{ \texttt{MGLowModeCheck}: Measure how well the null vector subspace overlaps with the low eigenmode subspace. (boolean \emph{yes} or \emph{no}, default: \emph{no}) }
 \end{itemize}
 
-The default parameters and an automatically determined aggregation will generally produce a solver which will outperform mixed-precision CG by about two orders of magnitude (at the physical point) as long as the value for \texttt{MGCoarseMuFactor} on the coarsest grid is tuned appropriately. Further refinements are possible and improvements by up to another order of magnitude are achievable through smart choices for parameters related to the smoother, the number of vectors used on each level and the tolerances related to the smoother and coarse-grid solvers. These details are dependent on the target quark mass and the used ensemble and they may be dependent on the particular configuration (for certain ensembles, time to solution fluctuates quite strongly depending on the point in the molecular dynamics history). Finally, the tuning of the algorithmic parameters depends on the characteristics of the particular machine as one may compensate, for example, a poorly performing coarsest-grid operator through more iterations on the intermediate and fine grids.
+The default parameters and an automatically determined aggregation will generally produce a solver which will outperform mixed-precision CG by about one to two orders of magnitude (at the physical point) as long as the value for \texttt{MGCoarseMuFactor} on the coarsest grid is tuned appropriately. Further refinements are possible and improvements by up to another order of magnitude are achievable through smart choices for parameters related to the smoother, the number of vectors used on each level and the tolerances related to the smoother and coarse-grid solvers. These details are dependent on the target quark mass and the used ensemble and they may be dependent on the particular configuration (for certain ensembles, time to solution fluctuates quite strongly depending on the point in the molecular dynamics history). Finally, the tuning of the algorithmic parameters depends on the characteristics of the particular machine as one may compensate, for example, a poorly performing coarsest-grid operator through more iterations on the intermediate and fine grids. This kind of compensation will lead to a setup which is algorithmically less efficient (more matrix-vector products) but may have a lower overall time-to-solution.
+
+\paragraph{Advanced MG parameters:}
+\begin{itemize}
+  \item{ \texttt{MGCoarseSolverType}: The type of solver to be used on the intermediate and coarse grids. While this has to be specified for all levels, it will be ignored on the fine grid. Possible values:
+    \begin{itemize}
+      \item \texttt{cagcr} (communication-avoiding generalised conjugate residual)
+      \item \texttt{gcr} (generalised conjugate residual)
+      \item \texttt{mr} (minimal residual)
+    \end{itemize}
+    The recommendation is to use \texttt{gcr} on all intermediate and \texttt{cagcr} on the coarsest level.
+    (comma-separated list of strings, default: \texttt{gcr} on all levels)}
+  \item{ \texttt{MGCoarseSolverCABasisType}: The type of basis to use for the communication-avoiding solver on a per-level basis. Ignored unless \texttt{cagcr} is set for \texttt{MGCoarseSolverType} for the given level. Possible values:
+  \begin{itemize}
+    \item \texttt{power} (power basis)
+    \item \texttt{chebyshev} (Chebyshev basis)
+  \end{itemize}
+    (comma-separated list of strings, default: \texttt{power} on all levels)}
+  \item{ \texttt{MGCoarseSolverCABasisSize}: The size of the polynomial basis to use if a communication-avoiding solver is used on a per-level basis. Ignored unless \texttt{cagcr} is set for \texttt{MGCoarseSolverType} for the given level. Values larger than $4$ require \texttt{chebyshev} to be set for the corresponding \texttt{MGCoarseSolverCABasisType}. (comma-separated list of positive integers, default: $4$ on all levels)}
+  \item{ \texttt{MGCoarseSolverCABasisLambdaMin}: Minimum eigenvalue specified for each level if the Chebyshev basis is used for the corresponding \texttt{MGCoarseSolverCABasisType}. The default value of $0.0$ is recommened for safety. (comma-separated list of postitive floats, default: $0.0$ on all levels)}
+  \item{ \texttt{MGCoarseSolverCABasisLambdaMax}: Maximum eigenvalue specified for each level if the Chebyshev basis is used for the corresponding \texttt{MGCoarseSolverCABasisType}. The default value of $-1.0$ triggers power iterations which estimate this automatically. (comma-separated list of positive floats, default: $-1.0$ on all levels)}
+  \item{ \texttt{MGSetupCABasisType}: The type of polynomial basis to use if a communication-avoiding solver is used in the setup on a per-level basis. Possible values:
+  \begin{itemize}
+    \item \texttt{power} (power basis)
+    \item \texttt{chebyshev} (Chebyshev)
+  \end{itemize}
+    The recommendation is to use \texttt{chebyshev} for stability reasons. (comma-separated list of strings, default: \texttt{power} on all levels)}
+  \item{ \texttt{MGSmootherType}: The type of algorithm used as a smoother on a per-level basis. Possible values:
+    \begin{itemize}
+      \item \texttt{cagcr} (communication-avoiding generalised conjugate residual)
+      \item \texttt{gcr} (generalised conjugate residual)
+      \item \texttt{mr} (minimal residual)
+    \end{itemize}
+    (comma-separated list of strings, default: \texttt{cagcr} on all levels)}
+\end{itemize}
 
 \paragraph{Coarse-grid-deflated solver:}
 Especially with twisted mass quarks, the coarse-grid operator is very poorly conditioned. One way of improving the convergence of the solver is the scaling of the $\mu$ parameter on the coarsest and intermediate grid as described in \texttt{MGCoarseMuFactor} above. A different and more potent way which pays off for propagator inversions (but is not suitable for the HMC) is to use coarse-grid deflation. In this case, the first $n_\mathrm{ev}$ eigenvectors of the coarse-grid operator are computed and the resulting deflation subspace is used to precondition the system. In this case, experience seems to indicate that \texttt{MGCoarseMuFactor} should be set to $1.0$ everywhere as it is no longer required to improve convergence. The options of QUDA's eigensolver are set via the following set of parameters:
