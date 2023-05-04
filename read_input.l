@@ -1733,9 +1733,32 @@ static inline double fltlist_next_token(int * const list_end){
     quda_input.mg_setup_2kappamu = c;
     if(myverbose) printf("  MGSetup2KappaMu set to %e line %d\n", quda_input.mg_setup_2kappamu, line_of_file);
   }
+  /* TODO: the MGSetupSolver should be set on a per-level basis
+           allowing communication-avoiding solvers to be used
+           on the coarser grids */
   {SPC}*MGSetupSolver{EQL}cg {
     quda_input.mg_setup_inv_type = QUDA_CG_INVERTER;
     if(myverbose) printf("  MGSetupSolver set to CG line %d\n", line_of_file);
+  }
+  {SPC}*MGSetupSolver{EQL}cgne {
+    quda_input.mg_setup_inv_type = QUDA_CGNE_INVERTER;
+    if(myverbose) printf("  MGSetupSolver set to CGNE line %d\n", line_of_file);
+  }
+  {SPC}*MGSetupSolver{EQL}cgnr {
+    quda_input.mg_setup_inv_type = QUDA_CGNE_INVERTER;
+    if(myverbose) printf("  MGSetupSolver set to CGNR line %d\n", line_of_file);
+  }
+  {SPC}*MGSetupSolver{EQL}cacg {
+    quda_input.mg_setup_inv_type = QUDA_CA_CG_INVERTER;
+    if(myverbose) printf("  MGSetupSolver set to CA-CG line %d\n", line_of_file);
+  }
+  {SPC}*MGSetupSolver{EQL}cacgne {
+    quda_input.mg_setup_inv_type = QUDA_CA_CGNE_INVERTER;
+    if(myverbose) printf("  MGSetupSolver set to CA-CGNE line %d\n", line_of_file);
+  }
+  {SPC}*MGSetupSolver{EQL}cacgnr {
+    quda_input.mg_setup_inv_type = QUDA_CA_CGNR_INVERTER;
+    if(myverbose) printf("  MGSetupSolver set to CA-CGNR line %d\n", line_of_file);
   }
   {SPC}*MGSetupSolver{EQL}bicgstab {
     quda_input.mg_setup_inv_type = QUDA_BICGSTAB_INVERTER;
@@ -3827,7 +3850,7 @@ int read_input(char * conf_file){
     quda_input.mg_n_vec[level] = _default_quda_mg_n_vec;
     quda_input.mg_mu_factor[level] = 1.0;
     quda_input.mg_coarse_solver_type[level] = QUDA_GCR_INVERTER;
-    quda_input.mg_smoother_type[level] = QUDA_MR_INVERTER ;
+    quda_input.mg_smoother_type[level] = QUDA_CA_GCR_INVERTER;
 
     quda_input.mg_use_eig_solver[level] = QUDA_BOOLEAN_NO;
     quda_input.mg_eig_preserve_deflation = QUDA_BOOLEAN_NO;
