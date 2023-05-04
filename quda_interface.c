@@ -1863,6 +1863,8 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   QudaInvertParam * mg_inv_param = mg_param->invert_param;
   _setMGInvertParam(mg_inv_param, &inv_param);
 
+  mg_param->setup_type = QUDA_NULL_VECTOR_SETUP;
+
   mg_param->preserve_deflation = quda_input.mg_eig_preserve_deflation;
 
   mg_param->n_level = quda_input.mg_n_level;
