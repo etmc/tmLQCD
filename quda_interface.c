@@ -2013,6 +2013,11 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     mg_param->coarse_solver_ca_lambda_min[level] = quda_input.mg_coarse_solver_ca_lambda_min[level];
     mg_param->coarse_solver_ca_lambda_max[level] = quda_input.mg_coarse_solver_ca_lambda_max[level];
     
+    mg_param->smoother_solver_ca_basis[level]      = quda_input.mg_smoother_solver_ca_basis[level];
+    mg_param->smoother_solver_ca_basis_size[level] = quda_input.mg_smoother_solver_ca_basis_size[level];
+    mg_param->smoother_solver_ca_lambda_min[level] = quda_input.mg_smoother_solver_ca_lambda_min[level];
+    mg_param->smoother_solver_ca_lambda_max[level] = quda_input.mg_smoother_solver_ca_lambda_max[level];
+   
 
     // set the MG EigSolver parameters, almost equivalent to
     // setEigParam from QUDA's multigrid_invert_test, except

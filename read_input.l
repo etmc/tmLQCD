@@ -1985,6 +1985,18 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*MGSetupCABasisLambdaMax{EQL}{STRLIST} {
     parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_setup_ca_lambda_max[0]));
   }
+  {SPC}*MGSmootherSolverCABasisType{EQL}{STRLIST} {
+    parse_quda_mg_cabasis_par_array(yytext, &(quda_input.mg_smoother_solver_ca_basis[0]));
+  }
+  {SPC}*MGSmootherSolverCABasisSize{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_smoother_solver_ca_basis_size[0]));
+  }
+  {SPC}*MGSmootherSolverCABasisLambdaMin{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_smoother_solver_ca_lambda_min[0]));
+  }
+  {SPC}*MGSmootherSolverCABasisLambdaMax{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_smoother_solver_ca_lambda_max[0]));
+  }
   {SPC}*MGCoarseSolverCABasisType{EQL}{STRLIST} {
     parse_quda_mg_cabasis_par_array(yytext, &(quda_input.mg_coarse_solver_ca_basis[0]));
   }
@@ -3876,6 +3888,11 @@ int read_input(char * conf_file){
     quda_input.mg_coarse_solver_ca_basis_size[level] = 4;
     quda_input.mg_coarse_solver_ca_lambda_min[level] = 0.0;
     quda_input.mg_coarse_solver_ca_lambda_max[level] = -1.0;
+    
+    quda_input.mg_smoother_solver_ca_basis[level] = QUDA_POWER_BASIS;
+    quda_input.mg_smoother_solver_ca_basis_size[level] = 4;
+    quda_input.mg_smoother_solver_ca_lambda_min[level] = 0.0;
+    quda_input.mg_smoother_solver_ca_lambda_max[level] = -1.0;
 
     /* note: when the user does not specify any blocking parameters,
      * a reasonable set will be computed automatically in the MG setup
