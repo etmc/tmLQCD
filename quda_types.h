@@ -93,7 +93,6 @@ typedef struct tm_QudaParams_t {
   double               mg_coarse_solver_ca_lambda_max[QUDA_MAX_MG_LEVEL];
   
   QudaCABasis          mg_smoother_solver_ca_basis[QUDA_MAX_MG_LEVEL];
-  int                  mg_smoother_solver_ca_basis_size[QUDA_MAX_MG_LEVEL];
   double               mg_smoother_solver_ca_lambda_min[QUDA_MAX_MG_LEVEL];
   double               mg_smoother_solver_ca_lambda_max[QUDA_MAX_MG_LEVEL];
 

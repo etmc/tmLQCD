@@ -1865,6 +1865,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
 
   mg_param->setup_type = QUDA_NULL_VECTOR_SETUP;
 
+  mg_param->coarse_guess = quda_input.mg_coarse_guess;
   mg_param->preserve_deflation = quda_input.mg_eig_preserve_deflation;
 
   mg_param->n_level = quda_input.mg_n_level;
