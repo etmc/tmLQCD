@@ -2633,8 +2633,15 @@ double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterati
   eig_param = newQudaEigParam();
 
   eig_param.invert_param = &inv_param;
-  eig_param.tol = tol;
-  eig_param.qr_tol = tol;
+  
+  if(tol < 1.e-14) {
+    eig_param.tol = 1.e-14;
+    eig_param.qr_tol = 1.e-14;
+  }else {
+    eig_param.tol = tol;
+    eig_param.qr_tol = tol;
+  }
+  
 
     
   if(blkwise == 1) {
