@@ -229,6 +229,7 @@ void phmc_compute_ev(const int trajectory_counter,
 
   no_eigenvalues = 1;
   if(mnl->external_eigsolver == QUDA_EIGSOLVER) {
+  #ifdef TM_USE_QUDA
     temp = eigsolveQuda(no_eigenvalues, eigenvalue_precision, 1, 0, max_iter_ev, 0,
                         mnl->accprec, mnl->maxiter, mnl->solver, g_relative_precision_flag,
                                                        1, // we only support even-odd here
@@ -238,6 +239,15 @@ void phmc_compute_ev(const int trajectory_counter,
     if( fabs(mnl->EVMax - 1) < 2*DBL_EPSILON ) {
       temp = temp / mnl->StildeMax;
     }
+  #else
+    if(g_proc_id == 0) {
+      fprintf(stderr, "Error: Attempted to use QUDA eigensolver but this build was not configured for QUDA usage.\n");
+    #ifdef TM_USE_MPI
+      MPI_Finalize();
+    #endif
+      exit(-2);
+    }
+  #endif
   }else {
     temp = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0, Qsq);
   }
@@ -245,6 +255,7 @@ void phmc_compute_ev(const int trajectory_counter,
   
   no_eigenvalues = 1;
   if(mnl->external_eigsolver == QUDA_EIGSOLVER) {
+  #ifdef TM_USE_QUDA
     temp2 = eigsolveQuda(no_eigenvalues, eigenvalue_precision, 1, 0, max_iter_ev, 1,
                          mnl->accprec, mnl->maxiter, mnl->solver, g_relative_precision_flag,
                                                        1, // we only support even-odd here
@@ -254,6 +265,15 @@ void phmc_compute_ev(const int trajectory_counter,
     if( fabs(mnl->EVMax - 1.) < 2*DBL_EPSILON ) {
       temp2 = temp2 / mnl->StildeMax;
     }
+  #else
+    if(g_proc_id == 0) {
+      fprintf(stderr, "Error: Attempted to use QUDA eigensolver but this build was not configured for QUDA usage.\n");
+    #ifdef TM_USE_MPI
+      MPI_Finalize();
+    #endif
+      exit(-2);
+    }
+  #endif
   }else {
     temp2 = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, Qsq);
   }
