@@ -2543,7 +2543,7 @@ void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t
   }
 
 
-  _loadGaugeQuda(NO_COMPRESSION);
+  _loadGaugeQuda(mnl->solver_params.compression_type);
   _loadCloverQuda(&inv_param);
   tm_stopwatch_push(&g_timers, "computeGaugeForceQuda", ""); 
   
