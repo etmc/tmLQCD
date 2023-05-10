@@ -1,6 +1,6 @@
 ---
 title: "tmLQCD HMC profile"
-subtitle: "`r args[2]`"
+subtitle: "`r outbase`"
 author: ""
 date: "`r Sys.Date()`"
 output:
