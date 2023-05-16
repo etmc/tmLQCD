@@ -82,8 +82,10 @@
 #endif
 #include "fatal_error.h"
 
-#include <io/params.h>
-#include <io/spinor.h>
+#include "io/params.h"
+#include "io/spinor.h"
+#include "io/gauge.h"
+#include "measure_gauge_action.h"
 
 #ifdef TM_USE_QUDA
 #  include "quda_interface.h"
@@ -216,6 +218,11 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
   tm_stopwatch_pop(&g_timers, 0, 1, "");
 
   if (iteration_count == -1 && g_barrier_monomials_convergence) {
+    char outname[200];
+    snprintf(outname, 200, "conf_monomial_solve_fail.%04d.%.6f", nstore, g_gauge_state.gauge_id);
+    paramsXlfInfo * xlfInfo = construct_paramsXlfInfo(measure_plaquette((const su3**)g_gauge_field)/(6.*VOLUME*g_nproc), nstore);
+    int status = write_gauge_field(outname, 64, xlfInfo);
+    free(xlfInfo);
     fatal_error("Error: solver reported -1 iterations.", "solve_degenerate");
   }
 
@@ -425,6 +432,11 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
   tm_stopwatch_pop(&g_timers, 0, 1, "");
 
   if (iteration_count == -1 && g_barrier_monomials_convergence) {
+    char outname[200];
+    snprintf(outname, 200, "conf_monomial_solve_fail.%04d.%.6f", nstore, g_gauge_state.gauge_id);
+    paramsXlfInfo * xlfInfo = construct_paramsXlfInfo(measure_plaquette((const su3**)g_gauge_field)/(6.*VOLUME*g_nproc), nstore);
+    int status = write_gauge_field(outname, 64, xlfInfo);
+    free(xlfInfo);
     fatal_error("Error: solver reported -1 iterations.", "solve_mms_tm");
   }
 
@@ -671,6 +683,11 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
   tm_stopwatch_pop(&g_timers, 0, 1, "");
 
   if (iteration_count == -1 && g_barrier_monomials_convergence) {
+    char outname[200];
+    snprintf(outname, 200, "conf_monomial_solve_fail.%04d.%.6f", nstore, g_gauge_state.gauge_id);
+    paramsXlfInfo * xlfInfo = construct_paramsXlfInfo(measure_plaquette((const su3**)g_gauge_field)/(6.*VOLUME*g_nproc), nstore);
+    int status = write_gauge_field(outname, 64, xlfInfo);
+    free(xlfInfo);
     fatal_error("Error: solver reported -1 iterations.", "solve_mms_nd");
   }
 
@@ -726,6 +743,11 @@ int solve_mms_nd_plus(spinor ** const Pup, spinor ** const Pdn,
   tm_stopwatch_pop(&g_timers, 0, 1, "");
 
   if (iteration_count == -1 && g_barrier_monomials_convergence) {
+    char outname[200];
+    snprintf(outname, 200, "conf_monomial_solve_fail.%04d.%.6f", nstore, g_gauge_state.gauge_id);
+    paramsXlfInfo * xlfInfo = construct_paramsXlfInfo(measure_plaquette((const su3**)g_gauge_field)/(6.*VOLUME*g_nproc), nstore);
+    int status = write_gauge_field(outname, 64, xlfInfo);
+    free(xlfInfo);
     fatal_error("Error: solver reported -1 iterations.", "solve_mms_nd_plus");
   }
 
