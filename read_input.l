@@ -3841,7 +3841,7 @@ int read_input(char * conf_file){
   quda_input.fermionbc = TM_QUDA_THETABC;
   quda_input.pipeline = 0;
   quda_input.gcrNkrylov = 10;
-  quda_input.coarse_guess = QUDA_BOOLEAN_NO;
+  quda_input.mg_coarse_guess = QUDA_BOOLEAN_NO;
   quda_input.reliable_delta = 1e-3; // anything smaller than this and we break down in double-half
   quda_input.mg_n_level = _default_quda_mg_n_level;
   quda_input.mg_setup_2kappamu = _default_quda_mg_setup_2kappamu;
