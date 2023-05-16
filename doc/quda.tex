@@ -1,20 +1,20 @@
 %author: Mario Schroeck <mario.schroeck@roma3.infn.it>
 %author: Bartosz Kostrzewa <bartosz_kostrzewa@fastmail.com>
 %date: 04/2015
-%date: 06/2017, 12/2017, 06/2018
+%date: 06/2017, 12/2017, 06/2018, 08/2019, 05/2022, 05/2023
 
 \subsection{QUDA: A library for QCD on GPUs}\label{subsec:quda}
 
 
-The QUDA \cite{Clark:2009wm, Babich:2011np, Strelchenko:2013vaa} interface provides access to QUDA's solvers both in the HMC and as a solver interface for propagator production.
+The QUDA \cite{Clark:2009wm, Babich:2011np, Strelchenko:2013vaa} interface provides access to QUDA's solvers both in the HMC~\cite{Kostrzewa:2022hsv} and as a solver interface for propagator production.
 
 \subsubsection{Design goals of the interface}
 The QUDA interface has been designed with the following goals in mind, sorted by priority:
 \begin{enumerate}
 	\item \emph{Safety.} Naturally, highest priority is given to the correctness of the output of the interface. 
 	This is trivially achieved by always checking the final residual on the CPU with the default tmLQCD routines.
-	\item \emph{Ease of use.} Within the operator declarations of the input file (between {\ttfamily BeginOperator} and {\ttfamily EndOperator}) a simple flag {\ttfamily UseQudaInverter} is introduced which, when set to {\ttfamily yes}, will let QUDA perform the inversion of that operator. The operators {\ttfamily TMWILSON, WILSON, DBTMWILSON} and {\ttfamily CLOVER} are supported.\footnote{{\ttfamily DBCLOVER} is supported by the interface but not by QUDA as of version 0.7.0.}
-	\item \emph{Minimality.} Minimal changes in the form of {\ttfamily \#ifdef QUDA} precompiler directives to the tmLQCD code base. The main bulk of the interface lies in a single separate file {\ttfamily quda\_interface.c} (with corresponding header file). In the file {\ttfamily operators.c}, the QUDA library is initialized when an operator is initialized which has set {\ttfamily UseQudaInverter = yes}. There, the actual call to the inverter is conditionally replaced with a call to the QUDA interface.
+\item \emph{Ease of use.} Within the operator declarations of the input file (between {\ttfamily BeginOperator} and {\ttfamily EndOperator}) a simple flag {\ttfamily UseExternalInverter} is introduced which, when set to {\ttfamily quda}, will let QUDA perform the inversion of that operator. The operators {\ttfamily TMWILSON, WILSON, DBTMWILSON} and {\ttfamily CLOVER, DBCLOVER} are supported. In the HMC, the same flag can be used to offload solves for the \texttt{DET, DETRATIO, CLOVERDET, CLOVERDETRATIO, RAT, RATCOR, NDRAT, NDRATCOR, NDCLOVERRAT} and \texttt{NDCLOVERRATCOR} monomials.
+	\item \emph{Minimality.} Minimal changes in the form of {\ttfamily \#ifdef QUDA} precompiler directives to the tmLQCD code base. The main bulk of the interface lies in a single separate file {\ttfamily quda\_interface.c} (with corresponding header file). The QUDA interface is entered .
 	\item \emph{Performance.} The higher priority of the previous items results in small performance detriments. In particular:
 	\begin{itemize}
 		\item tmLQCD's $\theta$-boundary conditions are not compatible with QUDA's 8 and 12 parameter reconstruction of the gauge fields (as of QUDA-1.1.0). Therefore reconstruction/compression is deactivated by default, although it may be activated via the input file, see below.
@@ -125,10 +125,24 @@ Some properties of the QUDA interface can be configured via the {\ttfamily Exter
   \item \texttt{ReliableDelta}
 \end{itemize}
 
+\subsubsection{More advanced settings}
+To achieve higher performance you may choose single (default) or even half precision as sloppy precision for the inner solver of the mixed precision inverter with reliable updates. After {\ttfamily BeginOperator} and before {\ttfamily EndOperator} set {\ttfamily UseSloppyPrecision = double|single|half}.
+The MG-preconditioned GCR solver only works in double-single mixed precision, but the null vectors are stored in half precision as recommended by Kate Clark.
+
+To activate compression of the gauge fields (in order to save bandwidth and thus to achieve higher performance), set {\ttfamily UseCompression = 8|12|18} within {\ttfamily BeginOperator} and {\ttfamily EndOperator}. 
+The default is 18 which corresponds to no compression. 
+Note that if you use compression, trivial (anti)periodic boundary conditions will be applied to the gauge fields, instead of the default $\theta$-boundary conditions. 
+As a consequence, the residual check on tmLQCD side will fail. 
+Moreover, compression is not applicable when using general $\theta$-boundary conditions in the spatial directions. 
+If trying to do so, compression will be de-activated automatically and the user gets informed via the standard output.
+The \texttt{FermionBC} setting can be used to force particular temporal boundary conditions to be applied to the gauge field in the Dirac operator.
+
+\subsubsection{Functionality}
+The QUDA interface can currently be used to invert {\ttfamily TMWILSON, WILSON, DBTMWILSON} and {\ttfamily CLOVER} within a 4D multi-GPU (MPI) parallel environment with CG, BICGSTAB or MG-preconditioned GCR. QUDA uses even-odd preconditioning, if wanted ({\ttfamily UseEvenOdd = yes}), and the interface is set up to use a mixed precision solver by default. For more details on the QUDA settings check the function {\ttfamily \_initQuda()} in {\ttfamily quda\_interface.c}.
+
 \subsubsection{QUDA-MG interface}
 The interface has support for the QUDA Multigrid (MG) solver implementation and allows a number of parameters to be adjusted in order to tune the MG setup.
 The defaults for these parameters follow the recommendations of \url{https://github.com/lattice/quda/wiki/Multigrid-Solver}, which also provides useful hints for further tuning.
-Although some of the parameters can be set on a per-level basis, the interface currently only exposes a single setting for all levels, where appropriate.
 The K-cycle is used by default and there is currently no user-exposed option for changing this.
 
 The MG-preconditioned GCR solver is selected as follows:
@@ -185,6 +199,52 @@ EndOperator
   \item{ In all other cases, aggregation is disabled for this direction and level. This includes, for instance, extents divisible by primes other than $2$ or $3$. This means that if you need blocks of $5$ or $7$ for geometry reasons, you will need to choose a setup manually.}
 \end{itemize}
 
+A typical MG setup might look like this for twisted mass clover quarks: 
+
+\begin{verbatim}
+BeginExternalInverter QUDA
+  MGNumberOfLevels = 3
+  MGSetupSolver = cg
+  MGSetupSolverTolerance = 1e-6, 1e-6
+  MGSetupMaxSolverIterations = 1000, 1000
+  MGCoarseSolverTolerance = 0.25, 0.25, 0.25
+  MGCoarseSolverIterations = 75, 75, 75
+  MGSmootherTolerance = 0.25, 0.25, 0.25
+  MGSmootherPreIterations = 2, 2, 2
+  MGSmootherPostIterations = 4, 4, 4
+  MGOverUnderRelaxationFactor = 0.85, 0.85, 0.85
+  MGCoarseMuFactor = 1.0, 1.0, 12.0
+  MGNumberOfVectors = 24, 24, 32
+  MGRunVerify = yes
+  MGEnableSizeThreeBlocks = no
+EndExternalInverter
+\end{verbatim}
+
+Alternatively, a blocking can be specified manually:
+
+\begin{verbatim}
+BeginExternalInverter QUDA
+  MGNumberOfLevels = 3
+  MGBlockSizesX = 4, 3
+  MGBlockSizesY = 4, 3
+  MGBlockSizesZ = 6, 4
+  MGBlockSizesT = 6, 4
+  MGSetupSolver = cg
+  MGSetupSolverTolerance = 1e-6, 1e-6
+  MGSetupMaxSolverIterations = 1000, 1000
+  MGCoarseSolverTolerance = 0.25, 0.25, 0.25
+  MGCoarseSolverIterations = 75, 75, 75
+  MGSmootherTolerance = 0.25, 0.25, 0.25
+  MGSmootherPreIterations = 2, 2, 2
+  MGSmootherPostIterations = 4, 4, 4
+  MGOverUnderRelaxationFactor = 0.85, 0.85, 0.85
+  MGCoarseMuFactor = 1.0, 1.0, 12.0
+  MGRunVerify = yes
+EndExternalInverter
+\end{verbatim}
+
+Note that at the time of writing (2017.12.28), only double-single mixed-precision is supported for the MG-preconditioned GCR solver and the solve will abort if a double-half precision solve is attempted. It should be noted that the null vectors are kept in half precision as recommended, however.
+
 \paragraph{Further basic MG parameters:}
 \begin{itemize}
   \item{ \texttt{MGSmootherTolerance}: unsquared relative target residual of the smoother on a per-level basis. (comma-separated list of positive floats, default: $0.25$ on all levels) }
@@ -203,6 +263,47 @@ EndOperator
 \end{itemize}
 
 The default parameters and an automatically determined aggregation will generally produce a solver which will outperform mixed-precision CG by about one to two orders of magnitude (at the physical point) as long as the value for \texttt{MGCoarseMuFactor} on the coarsest grid is tuned appropriately. Further refinements are possible and improvements by up to another order of magnitude are achievable through smart choices for parameters related to the smoother, the number of vectors used on each level and the tolerances related to the smoother and coarse-grid solvers. These details are dependent on the target quark mass as well as the underlying ensemble and they may be dependent on the particular configuration (for certain ensembles, time to solution fluctuates quite strongly depending on the point in the molecular dynamics history). Finally, the tuning of the algorithmic parameters depends on the characteristics of the particular machine as one may compensate, for example, a poorly performing coarsest-grid operator through more iterations on the intermediate and fine grids. This kind of compensation will lead to a setup which is algorithmically less efficient (more matrix-vector products) but may have a lower overall time-to-solution.
+
+For use in the HMC, a typical MG setup might look something like:
+
+\begin{verbatim}
+BeginExternalInverter QUDA
+  EnablePinnedMemoryPool = yes 
+  EnableDeviceMemoryPool = no
+
+  Pipeline = 16
+  gcrNkrylov = 24
+  MGRunVerify = no
+  MGNumberOfLevels = 3
+  MGNumberOfVectors = 24, 32
+  MGSetupSolver = cg
+  MGSetup2KappaMu = 0.00014900994792
+  MGVerbosity = silent, silent, silent
+  MGSetupSolverTolerance = 5e-7, 5e-7
+  MGSetupMaxSolverIterations = 1500, 1500
+  MGCoarseSolverType = gcr, gcr, cagcr
+
+  MGCoarseMuFactor = 1.0, 1.75, 130.0
+  MgCoarseSolverTolerance = 0.1, 0.25, 0.25
+  MGCoarseMaxSolverIterations = 15, 10, 10
+
+  MGSmootherType = cagcr, cagcr, cagcr
+  MGSmootherTolerance = 0.15, 0.15, 0.1
+
+  MGSmootherPreIterations = 0, 0, 1
+  MGSmootherPostIterations = 1, 3, 1
+
+  MGBlockSizesX = 4, 4
+  MGBlockSizesY = 4, 4
+  MGBlockSizesZ = 4, 2
+  MGBlockSizesT = 4, 2
+
+  MGOverUnderRelaxationFactor = 0.95, 0.95, 0.95
+  MGRefreshSetupMDUThreshold = 0.03124
+  MGRefreshSetupMaxSolverIterations = 35, 35
+  MGResetSetupMDUThreshold = 1.0
+EndExternalInverter
+\end{verbatim}
 
 \paragraph{Advanced MG parameters:}
 \begin{itemize}
@@ -248,10 +349,15 @@ The fine-tuning parameters for the communication-avoiding solvers used in the MG
 \end{itemize}
 
 \paragraph{Coarse-grid-deflated MG solver:}
-Especially with twisted mass quarks, the coarse-grid operator is very poorly conditioned. One way of improving the convergence of the solver is the scaling of the $\mu$ parameter on the coarsest and intermediate grid as described in \texttt{MGCoarseMuFactor} above. A different and more potent way which pays off for propagator inversions (but is not suitable for the HMC) is to use coarse-grid deflation. In this case, the first $n_\mathrm{ev}$ eigenvectors of the coarse-grid operator are computed and the resulting deflation subspace is used to precondition the system. In this case, experience seems to indicate that \texttt{MGCoarseMuFactor} should be set to $1.0$ everywhere as it is no longer required to improve convergence. The options of QUDA's eigensolver are set via the following set of parameters:
+Especially with twisted mass quarks, the coarse-grid operator is very poorly conditioned. One way of improving the convergence of the solver is the scaling of the $\mu$ parameter on the coarsest and intermediate grid as described in \texttt{MGCoarseMuFactor} above. A different and more potent way which pays off for propagator inversions (but is not suitable for the HMC) is to use coarse-grid deflation. In this case, the first $n_\mathrm{ev}$ eigenvectors of the coarse-grid operator are computed and the resulting deflation subspace is used to precondition the system. In this case, experience seems to indicate that \texttt{MGCoarseMuFactor} should be set to $1.0$ everywhere as it is no longer required to improve convergence.
+An example for twisted mass Wilson-clover multigrid can be found at \url{https://github.com/lattice/quda/wiki/Twisted-clover-deflated-multigrid} and some further documentation is to be found at \url{https://github.com/lattice/quda/wiki/QUDA's-eigensolvers}.
+
+The options of QUDA's eigensolver are set via the following set of parameters:
 \begin{itemize}
   \item{ \texttt{MGUseEigSolver}: Whether or not the eigensolver should be run for the operator on a per-level basis. The most common use-case would be to enable the eigensolver on the coarsest grid. (comma-separated list of booleans \emph{yes} or \emph{no}, default: \emph{no} on all levels)}
   \item{ \texttt{MGEigSolverRequireConvergence}: Require that the eigensolver actually must converge for the requested number of eigenvectors on a per-level basis as specified by \texttt{MGEigSolverNumberOfVectors}. Ignored if the corresponding \texttt{MGUseEigSolver} is set to \texttt{no}. (comma-separated list of booleans, default: \texttt{yes} on all levels)}
+  \item{ \texttt{MGEigSolverUseNormOp}: When set to \texttt{yes} on a per-level basis, the eigensolver uses $MM^\dagger$ instead of $M$. (comma-separated list of booleans, default: \texttt{no} on all levels)}
+  \item{ \texttt{MGEigSolverUseDagger}: When set to \texttt{yes} on a per-level basis, the eigensolver uses $M^\dagger$ instead of $M$ (or $M^\dagger M$ when \texttt{MGEigSolverUseNormOp} is set to \texttt{yes} on the respective level). (comma-separated list of booleans, defaullt: \texttt{no} on all levels)}
   \item{ \texttt{MGEigSolverType}: Type of eigensolver to use on a per-level basis. Possible values:
     \begin{itemize}
       \item \texttt{tr\_lanczos} (truncated Lanczos)
@@ -273,71 +379,60 @@ Especially with twisted mass quarks, the coarse-grid operator is very poorly con
   \item{ \texttt{MGEigSolverMaxRestarts}: Perform at most this many restarts in the eigensolver specified on a per-level basis. (comma-separated list of positive integers, default: $100$ on all levels)}
   \item{ \texttt{MGEigSolverTolerance}: The tolerance to use in the eigensolver on a per-level basis. (comma-separated list of floats, default: $1.0\cdot10^{-6}$ on all levels)}
   \item{ \texttt{MGEigPreserveDeflationSubspace}: When a coarse-grid-deflated MG setup is updated between a change of the $\mu$ parameter, setting this to \texttt{yes} will preserve the deflation subspace. If set to \texttt{no}, the deflation subspace would be destroyed and regenerated upon a change of $\mu$. (boolean, default: \texttt{yes})}
-  \item{ \texttt{MGEigSolverNumberOfVectors}: Number of eigenvectors to compute on a per-level basis. Usually, this is intended for the coarsest level where, depending on the lattice size and physical parameters, numbers between $512$ and $3072$ may be required. (comma-separated list of positive integers, default: $0$ on all levels)}
+  \item{ \texttt{MGEigSolverNumberOfVectors}: Number of eigenvectors to compute on a per-level basis. Usually, this is intended for the coarsest level where, depending on the lattice size and physical parameters, numbers between $512$ and $3072$ may be required. On the levels where \texttt{MGEigSolverRequireConvergence = no} is set, this should be set to the value of \texttt{MGNumberOfVectors} on that level. (comma-separated list of positive integers, default: $0$ on all levels)}
+  \item{ \texttt{MGEigSolverKrylovSubspaceSize}: Size of the Krylov subspace to be used to be built using the eigenvectors. A good rule of thumb is to set this to a small multiple ($2\times$ or $3\times$) of the corresponding value for \texttt{MGEigSolverNumberOfVectors} for the respective level. On levels where \texttt{MGEigSolverRequireConvergence = no} is set, this should be set to the corresponding value of \texttt{MGNumberOfVectors}. (comma-separated list of positive integers, default: $0$ on all levels)}
   \item{ \texttt{MGEigSolverUsePolynomialAcceleration}: Whether or not to use polynomial acceleration in the eigensolver on a per-level basis. (comma-separated list of booleans, default: \texttt{yes} everywhere)}
+  \item{ \texttt{MGEigSolverPolynomialDegree}: Degree of the polynomial used for polynomial acceleration of the eigensolver, specified on a per-level basis. This will be ignored except if \texttt{MGEigSolverUsePolynomialAcceleration = yes} is set on a given level. Values between $50$ to $100$ seem to work well. (comma-separated list of postive integers, default: $100$ on all levels)}
+  \item{ \texttt{MGEigSolverPolyMin}: Smallest eigenvalue to suppress via polynomial acceleration. It should not be set too low and only lowered step by step from its default value. Has a large impact on the rate of convergence of the eigensolver when set correctly. Ignored unless \texttt{MGEigSolverUsePolynomialAcceleration = yes} is set on the corresponding level. (comma-separated list of positive real numbers, default: $1.0$ on all levels)}
+  \item{ \texttt{MGEigSolverPolyMax}: Largest eigenvalue which should be suppressed via polynomial acceleration. This should be set about 10\% larger than the actual largest eigenvalue of the operator. Ignored unless \texttt{MGEigSolverUsePolynomialAcceleration = yes} is set. (comma-separated list of positive real numbers, default: $5.0$ on all levels)}
 \end{itemize}
 
-Note that at the time of writing (2017.12.28), only double-single mixed-precision is supported for the MG-preconditioned GCR solver and the solve will abort if a double-half precision solve is attempted. It should be noted that the null vectors are kept in half precision as recommended, however.
-
-A typical MG setup might look like this for twisted mass clover quarks: 
+A typical coarse-grid-deflated setup might look something like:
 
 \begin{verbatim}
 BeginExternalInverter QUDA
+  EnablePinnedMemoryPool = yes
+  EnableDeviceMemoryPool = no
+  Pipeline = 16
+  gcrNkrylov = 24
+  MGRunVerify = no
+  MGCoarseMuFactor = 1.0, 1.0, 1.0
   MGNumberOfLevels = 3
+  MGNumberOfVectors = 24, 32
   MGSetupSolver = cg
-  MGSetupSolverTolerance = 1e-6
-  MGSetupMaxSolverIterations = 1000
-  MGCoarseSolverTolerance = 0.25
-  MGCoarseSolverIterations = 75
-  MGSmootherTolerance = 0.25
-  MGSmootherPreIterations = 2
-  MGSmootherPostIterations = 4
-  MGOverUnderRelaxationFactor = 0.85
-  MGCoarseMuFactor = 1.0, 1.0, 12.0
-  MGNumberOfVectors = 24, 24, 32
-  MGRunVerify = yes
-  MGEnableSizeThreeBlocks = no
+  MGSetup2KappaMu = 0.000200774448
+  MGVerbosity = silent, silent, silent
+  MGBlockSizesX = 4, 2
+  MGBlockSizesY = 4, 2
+  MGBlockSizesZ = 4, 2
+  MGBlockSizesT = 4, 2
+  MGSetupSolverTolerance = 5e-7, 5e-7
+  MGSetupMaxSolverIterations = 1500, 1500
+  MGCoarseSolverType = gcr, gcr, cagcr
+  MgCoarseSolverTolerance = 0.1, 0.1, 0.1
+  MGCoarseMaxSolverIterations = 10, 10, 10
+  MGSmootherType = cagcr, cagcr, cagcr
+  MGSmootherTolerance = 0.1, 0.1, 0.1
+  MGSmootherPreIterations = 0, 0, 0
+  MGSmootherPostIterations = 2, 2, 2
+  MGOverUnderRelaxationFactor = 0.90, 0.90, 0.90
+
+  MGUseEigSolver = no, no, yes
+  MGEigSolverType = tr_lanczos, tr_lanczos, tr_lanczos
+  MGEigSolverSpectrum = smallest_real, smallest_real, smallest_real
+  MGEigPreserveDeflationSubspace = yes
+  MGEigSolverNumberOfVectors = 24, 32, 1024
+  MGEigSolverKrylovSubspaceSize = 24, 32, 2048
+  MGEigSolverRequireConvergence = no, no, yes
+  MGEigSolverMaxRestarts = 100, 100, 100
+  MGEigSolverTolerance = 1e-4, 1e-4, 1e-4
+  MGEigSolverUseNormOp  = no, no, yes
+  MGEigSolverUseDagger = no, no, no
+  MGEigSolverUsePolynomialAcceleration = no, no, yes
+  MGEigSolverPolynomialDegree = 100, 100, 100
+  MGEigSolverPolyMin = 0.6, 0.6, 0,6
+  MGEigSolverPolyMax = 8.0, 8.0, 8.0
+  MGCoarseSolverCABasisSize = 8, 8, 8
 EndExternalInverter
 \end{verbatim}
-
-Alternatively, a blocking can be specified manually:
-
-\begin{verbatim}
-BeginExternalInverter QUDA
-  MGNumberOfLevels = 3
-  MGBlockSizesX = 4, 3
-  MGBlockSizesY = 4, 3
-  MGBlockSizesZ = 6, 4
-  MGBlockSizesT = 6, 4
-  MGSetupSolver = cg
-  MGSetupSolverTolerance = 1e-6, 1e-6, 
-  MGSetupMaxSolverIterations = 1000
-  MGCoarseSolverTolerance = 0.25
-  MGCoarseSolverIterations = 75
-  MGSmootherTolerance = 0.25
-  MGSmootherPreIterations = 2
-  MGSmootherPostIterations = 4
-  MGOverUnderRelaxationFactor = 0.85
-  MGCoarseMuFactor = 1.0, 1.0, 12.0
-  MGRunVerify = yes
-  MGEnableSizeThreeBlocks = no
-EndExternalInverter
-\end{verbatim}
-
-\subsubsection{More advanced settings}
-To achieve higher performance you may choose single (default) or even half precision as sloppy precision for the inner solver of the mixed precision inverter with reliable updates. After {\ttfamily BeginOperator} and before {\ttfamily EndOperator} set {\ttfamily UseSloppyPrecision = double|single|half}.
-The MG-preconditioned GCR solver only works in double-single mixed precision, but the null vectors are stored in half precision as recommended by Kate Clark.
-
-To activate compression of the gauge fields (in order to save bandwidth and thus to achieve higher performance), set {\ttfamily UseCompression = 8|12|18} within {\ttfamily BeginOperator} and {\ttfamily EndOperator}. 
-The default is 18 which corresponds to no compression. 
-Note that if you use compression, trivial (anti)periodic boundary conditions will be applied to the gauge fields, instead of the default $\theta$-boundary conditions. 
-As a consequence, the residual check on tmLQCD side will fail. 
-Moreover, compression is not applicable when using general $\theta$-boundary conditions in the spatial directions. 
-If trying to do so, compression will be de-activated automatically and the user gets informed via the standard output.
-The \texttt{FermionBC} setting can be used to force particular temporal boundary conditions to be applied to the gauge field in the Dirac operator.
-
-\subsubsection{Functionality}
-The QUDA interface can currently be used to invert {\ttfamily TMWILSON, WILSON, DBTMWILSON} and {\ttfamily CLOVER} within a 4D multi-GPU (MPI) parallel environment with CG, BICGSTAB or MG-preconditioned GCR. QUDA uses even-odd preconditioning, if wanted ({\ttfamily UseEvenOdd = yes}), and the interface is set up to use a mixed precision solver by default. For more details on the QUDA settings check the function {\ttfamily \_initQuda()} in {\ttfamily quda\_interface.c}.
-
-
 
