@@ -204,7 +204,7 @@
 #define _default_subprocess_flag 0
 #define _default_lowmem_flag 0
 
-#define _default_g_barrier_monomials_convergence 0
+#define _default_g_barrier_monomials_convergence 1
 
 /* default input values for QUDA interface */
 /* These follow the recommendations of https://github.com/lattice/quda/wiki/Multigrid-Solver */
