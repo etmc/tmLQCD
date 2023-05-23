@@ -3038,6 +3038,14 @@ static inline double fltlist_next_token(int * const list_end){
       meas->external_library = QUDA_LIB;
       if(myverbose) printf("  UseExternalLibrary set to quda in line %d, monomial %d\n", line_of_file, current_monomial);
    }
+  {SPC}*HeavyMesons{EQL}yes {
+      meas->measure_heavy_mesons = 1;
+      if(myverbose) printf("  HeavyMesons set to yes in line %d, monomial %d\n", line_of_file, current_monomial);
+   }
+  {SPC}*HeavyMesons{EQL}no {
+      meas->measure_heavy_mesons = 0;
+      if(myverbose) printf("  HeavyMesons set to no in line %d, monomial %d\n", line_of_file, current_monomial);
+   }
 }
 
 <ONLINEMEAS,PIONNORMMEAS>{
