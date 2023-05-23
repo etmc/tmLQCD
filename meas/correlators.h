@@ -21,6 +21,21 @@
 #ifndef _ONLINE_MEASUREMENT_H
 #define _ONLINE_MEASUREMENT_H
 
+/* measurement of the correlators involving the light doublet (see tmLQCD documentation)*/
+void light_quarks_correlators_measurement(const int traj, const int t0, const int ieo);
+
+/* [TO BE IMPLEMENTED !!!]
+
+measurement of the 4x4 matrix for the heavy doublet: eq. 20 of https://arxiv.org/pdf/1005.2042.pdf 
+*/
+void heavy_quarks_correlators_measurement(const int traj, const int t0, const int ieo);
+
+
+/* 
+ Function that is called when the correlator measurement is specified in the input file.
+ Internally, it calls the functions for the measure of the light and (optionally) the heavy mesons correlators
+ */
 void correlators_measurement(const int traj, const int t0, const int ieo);
+
 
 #endif

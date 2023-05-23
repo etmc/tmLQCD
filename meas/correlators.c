@@ -55,7 +55,7 @@
 
 #define TM_OMEAS_FILENAME_LENGTH 100
 
-void correlators_measurement(const int traj, const int id, const int ieo) {
+void light_correlators_measurement(const int traj, const int id, const int ieo) {
   tm_stopwatch_push(&g_timers, __func__, "");
   int i, j, t, tt, t0;
   double *Cpp = NULL, *Cpa = NULL, *Cp4 = NULL;
@@ -251,4 +251,20 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
   //}
   tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
+}
+
+
+void heavy_quarks_correlators_measurement(const int traj, const int t0, const int ieo){
+  // WRITE IMPLEMENTATION HERE !!!
+}
+
+
+void correlators_measurement(const int traj, const int id, const int ieo) {
+
+  light_correlators_measurement(traj, id, ieo);
+
+  if(measurement_list[id].measure_heavy_mesons == 1){
+    heavy_correlators_measurement(traj, id, ieo);
+  }
+
 }
