@@ -5,6 +5,8 @@
  *               2018       Bartosz Kostrzewa, Ferenc Pittler
  *               2019, 2020 Bartosz Kostrzewa
  *               2021       Bartosz Kostrzewa, Marco Garofalo, Ferenc Pittler, Simone Bacchio
+ *               2022       Simone Romiti, Bartosz Kostrzewa
+ *               2023       Aniket Sen, Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -2673,9 +2675,14 @@ double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterati
     eig_param.use_norm_op = QUDA_BOOLEAN_FALSE;
   }
 
-  /* Not using polynomial acceleration for now.
-   * Might be useful to add the support. */
-  eig_param.use_poly_acc = QUDA_BOOLEAN_FALSE;
+  // BK: these defaults seem to work on a 32c64 ensemble
+  // at a relatively coarse lattice spacing for the eigenvalues
+  // of the twisted-clover ND operator with values of musigma / mudelta
+  // reproducing physical sea strange and charm quark masses
+  eig_param.use_poly_acc = maxmin == 1 ? QUDA_BOOLEAN_FALSE : QUDA_BOOLEAN_TRUE;
+  eig_param.poly_deg = 128;
+  eig_param.a_min = 1e-3;
+  eig_param.a_max = 4;
   
   /* Daggers the operator. Not necessary for 
    * most cases. */
@@ -2726,6 +2733,7 @@ double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterati
   eigensolveQuda(NULL, eigenvls, &eig_param);
 
   returnvalue = eigenvls[0];
+  free(eigenvls);
 
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 
