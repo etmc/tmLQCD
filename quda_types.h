@@ -91,6 +91,10 @@ typedef struct tm_QudaParams_t {
   int                  mg_coarse_solver_ca_basis_size[QUDA_MAX_MG_LEVEL];
   double               mg_coarse_solver_ca_lambda_min[QUDA_MAX_MG_LEVEL];
   double               mg_coarse_solver_ca_lambda_max[QUDA_MAX_MG_LEVEL];
+  
+  QudaCABasis          mg_smoother_solver_ca_basis[QUDA_MAX_MG_LEVEL];
+  double               mg_smoother_solver_ca_lambda_min[QUDA_MAX_MG_LEVEL];
+  double               mg_smoother_solver_ca_lambda_max[QUDA_MAX_MG_LEVEL];
 
   // parameters related to coarse grid deflation in the MG
   int                  mg_use_eig_solver[QUDA_MAX_MG_LEVEL];
