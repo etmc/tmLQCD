@@ -247,7 +247,7 @@ void _setDefaultQudaParam(void){
   QudaPrecision cpu_prec  = QUDA_DOUBLE_PRECISION;
   QudaPrecision cuda_prec = QUDA_DOUBLE_PRECISION;
   QudaPrecision cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
-  QudaPrecision cuda_prec_precondition = QUDA_HALF_PRECISION;
+  QudaPrecision cuda_prec_precondition = QUDA_SINGLE_PRECISION;
 
   QudaTune tune = QUDA_TUNE_YES;
 
@@ -2608,17 +2608,17 @@ double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterati
   // it returns if quda is already init
   _initQuda();
 
-    if ( rel_prec )
-      inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
-    else
-      inv_param.residual_type = QUDA_L2_ABSOLUTE_RESIDUAL;
+  if ( rel_prec )
+    inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
+  else
+    inv_param.residual_type = QUDA_L2_ABSOLUTE_RESIDUAL;
 
-    inv_param.kappa = g_kappa;
-    
-    // figure out which BC tu use (theta, trivial...)
-    set_boundary_conditions(&compression, &gauge_param);
+  inv_param.kappa = g_kappa;
+  
+  // figure out which BC tu use (theta, trivial...)
+  set_boundary_conditions(&compression, &gauge_param);
 
-    set_sloppy_prec(sloppy_precision, refinement_precision, &gauge_param, &inv_param);
+  set_sloppy_prec(sloppy_precision, refinement_precision, &gauge_param, &inv_param);
 
   // load gauge after setting precision
   _loadGaugeQuda(compression);
@@ -2640,8 +2640,18 @@ double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterati
 
   // create new eig_param
   eig_param = newQudaEigParam();
-
-  eig_param.invert_param = &inv_param;
+  
+  // need our own QudaInvertParam for passing the operator properties
+  // as we modify the precision below 
+  QudaInvertParam eig_invert_param = newQudaInvertParam();
+  eig_invert_param = inv_param;
+  eig_param.invert_param = &eig_invert_param;
+  /* AS The following two are set to cuda_prec, otherwise 
+   * it gives an error. Such high precision might not be
+   * necessary. But have not found a way to consistently set
+   * the different precisions. */
+  eig_param.invert_param->cuda_prec_eigensolver = inv_param.cuda_prec;
+  eig_param.invert_param->clover_cuda_prec_eigensolver = inv_param.clover_cuda_prec;
   
   if(tol < 1.e-14) {
     eig_param.tol = 1.e-14;
@@ -2703,12 +2713,6 @@ double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterati
   if(maxmin == 1) eig_param.spectrum = QUDA_SPECTRUM_LR_EIG;
   else eig_param.spectrum = QUDA_SPECTRUM_SR_EIG;
 
-  /* The following two are set to cuda_prec, otherwise 
-   * it gives an error. Such high precision might not be
-   * necessary. But have not found a way to consistently set
-   * the different precisions. */
-  eig_param.invert_param->cuda_prec_eigensolver = inv_param.cuda_prec;
-  eig_param.invert_param->clover_cuda_prec_eigensolver = inv_param.cuda_prec;
 
   /* At the moment, the eigenvalues and eigenvectors are neither 
    * written to or read from disk, but if necessary, can be added
