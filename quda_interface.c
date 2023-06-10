@@ -241,7 +241,7 @@ void _setDefaultQudaParam(void){
   QudaPrecision cpu_prec  = QUDA_DOUBLE_PRECISION;
   QudaPrecision cuda_prec = QUDA_DOUBLE_PRECISION;
   QudaPrecision cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
-  QudaPrecision cuda_prec_precondition = QUDA_HALF_PRECISION;
+  QudaPrecision cuda_prec_precondition = QUDA_SINGLE_PRECISION;
 
   QudaTune tune = QUDA_TUNE_YES;
 
@@ -1836,15 +1836,18 @@ void _setMGInvertParam(QudaInvertParam * mg_inv_param, const QudaInvertParam * c
   mg_inv_param->cuda_prec = inv_param->cuda_prec;
   mg_inv_param->cuda_prec_sloppy = inv_param->cuda_prec_sloppy;
   mg_inv_param->cuda_prec_refinement_sloppy = inv_param->cuda_prec_refinement_sloppy;
-  mg_inv_param->cuda_prec_precondition = inv_param->cuda_prec_precondition;
-  mg_inv_param->cuda_prec_eigensolver = inv_param->cuda_prec_eigensolver;
   
   mg_inv_param->clover_cpu_prec = inv_param->clover_cpu_prec;
   mg_inv_param->clover_cuda_prec = inv_param->clover_cuda_prec;
   mg_inv_param->clover_cuda_prec_sloppy = inv_param->clover_cuda_prec_sloppy;
   mg_inv_param->clover_cuda_prec_refinement_sloppy = inv_param->clover_cuda_prec_refinement_sloppy;
-  mg_inv_param->clover_cuda_prec_precondition = inv_param->clover_cuda_prec_precondition;
-  mg_inv_param->clover_cuda_prec_eigensolver = inv_param->clover_cuda_prec_eigensolver;
+  
+  // it seems that the MG-internal preconditioner and eigensolver need to be
+  // consistent with sloppy precision
+  mg_inv_param->cuda_prec_precondition = inv_param->cuda_prec_sloppy;
+  mg_inv_param->cuda_prec_eigensolver = inv_param->cuda_prec_sloppy;
+  mg_inv_param->clover_cuda_prec_precondition = inv_param->clover_cuda_prec_sloppy;
+  mg_inv_param->clover_cuda_prec_eigensolver = inv_param->clover_cuda_prec_sloppy;
   
   mg_inv_param->clover_order = inv_param->clover_order;
   mg_inv_param->gcrNkrylov = inv_param->gcrNkrylov;
@@ -2040,7 +2043,9 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
 
       mg_eig_param[level].n_ev = quda_input.mg_eig_nEv[level];
       mg_eig_param[level].n_kr = quda_input.mg_eig_nKr[level];
-      mg_eig_param[level].n_conv = quda_input.mg_n_vec[level];
+      mg_eig_param[level].n_conv = quda_input.mg_eig_nEv[level]; // require convergence of all eigenvalues
+      mg_eig_param[level].n_ev_deflate = mg_eig_param[level].n_conv; // deflate all converged eigenvalues
+      // TODO expose this setting: mg_eig_param[level].batched_rotate = 128;
       mg_eig_param[level].require_convergence = quda_input.mg_eig_require_convergence[level];
 
       mg_eig_param[level].tol = quda_input.mg_eig_tol[level];
