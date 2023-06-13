@@ -359,19 +359,26 @@ void heavy_quarks_correlators_measurement(const int traj, const int t0, const in
       // Cpa = (double*) calloc(T, sizeof(double));
       // Cp4 = (double*) calloc(T, sizeof(double));
 #endif
-      source_generation_pion_only(g_spinor_field[0], g_spinor_field[1], t0, sample, traj,
-                                  measurement_list[id].seed);
+      // /// ??? what to use here
+      // source_generation_pion_only(g_spinor_field[0], g_spinor_field[1], t0, sample, traj,
+      //                             measurement_list[id].seed);
+      // initialize the random sources
+      for (size_t srd_d = 0; srd_d < 2; srd_d++) {
+        full_source_spinor_field_spin_diluted_oet_ts(g_bispinor_field[i1][src_d], t0, src_d, sample, traj,
+                                                     measurement_list[id].seed);
+      }
 
-      spinor *up_spinors = &g_bispinor_field[0][0];
+      // ??? not sure how to use g_bispinor
+      spinor *up_spinors = &g_bispinor_field[i1][0][0];
       spinor *down_spinors = &g_bispinor_field[0][1];
       // sources
-      optr1->sr0 = up_spinors[0];
-      optr1->sr1 = up_spinors[1];
+      optr1->sr0 = g_bispinor_field[i1][0][0];
+      optr1->sr1 = g_bispinor_field[i1][0][1];
       optr1->sr2 = down_spinors[0];
       optr1->sr3 = down_spinors[1];
       // propagators, i.e. D^{-1}*eta (eta = stochastic vector for the inversion)
-      optr1->prop0 = up_spinors[2];
-      optr1->prop1 = up_spinors[3];
+      optr1->prop0 = g_bispinor_field[i1][0][2];
+      optr1->prop1 = g_bispinor_field[i1][0][3];
       optr1->prop2 = down_spinors[2];
       optr1->prop3 = down_spinors[3];
 
@@ -487,7 +494,7 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
   light_correlators_measurement(traj, id, ieo);
 
   if (measurement_list[id].measure_heavy_mesons == 1) {
-    const int i1 = 1;
+    const int i1 = 1; // ??? is it?
     heavy_correlators_measurement(i1, traj, id, ieo);
   }
 }
