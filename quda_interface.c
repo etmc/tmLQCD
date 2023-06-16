@@ -115,6 +115,8 @@
 #include "tm_debug_printf.h"
 #include "phmc.h"
 #include "quda_gauge_paths.inc"
+#include "io/gauge.h"
+#include "measure_gauge_action.h"
 
 // nstore is generally like a gauge id, for measurements it identifies the gauge field
 // uniquely 
@@ -2235,9 +2237,16 @@ int invert_eo_degenerate_quda(spinor * const out,
                                                   rel_prec, even_odd_flag, solver_params,
                                                   sloppy_precision, compression, QpQm);
         if (ret_value >= max_iter) {
+          char outname[200];
+          snprintf(outname, 200, "conf_mg_refresh_fail.%.6f.%04d", g_gauge_state.gauge_id, nstore);
+          paramsXlfInfo * xlfInfo = construct_paramsXlfInfo(
+              measure_plaquette((const su3**)g_gauge_field)/(6.*VOLUME*g_nproc), nstore);
+          int status = write_gauge_field(outname, 64, xlfInfo);
+          free(xlfInfo);
+
           char errmsg[200];
           snprintf(errmsg, 200, "QUDA-MG solver failed to converge in %d iterations even after forced setup refresh. Terminating!",
-                   max_iter);
+                 max_iter);
           fatal_error(errmsg, __func__);
           return -1;
         } else {
