@@ -268,7 +268,53 @@ void heavy_quarks_correlators_measurement(const int traj, const int t0, const in
                                           const int i2) {
   tm_stopwatch_push(&g_timers, __func__, "");  // timer for profiling
 
-  /* building the stichastic propagator spinors needed for the correlators */
+  spinor phi;                                  // dummy spinor
+  int i, j, t, tt, t0;                         // dummy indices
+  float tmp;                                   // dummy variable
+
+  
+   /* light-light correlators: dummy variables */
+
+  // array of the values of the correlator C(t)
+  double *Cpp = NULL, *Cpa = NULL, *Cp4 = NULL;
+  // result of the accumulation of MPI partial sums
+  double res = 0., respa = 0., resp4 = 0.;
+#ifdef TM_USE_MPI
+  double mpi_res = 0., mpi_respa = 0., mpi_resp4 = 0.;
+  // send buffer for MPI_Gather
+  double *sCpp = NULL, *sCpa = NULL, *sCp4 = NULL;
+#endif
+
+#ifdef TM_USE_MPI
+  sCpp = (double *)calloc(T, sizeof(double));
+  sCpa = (double *)calloc(T, sizeof(double));
+  sCp4 = (double *)calloc(T, sizeof(double));
+  if (g_mpi_time_rank == 0) {
+    Cpp = (double *)calloc(g_nproc_t * T, sizeof(double));
+    Cpa = (double *)calloc(g_nproc_t * T, sizeof(double));
+    Cp4 = (double *)calloc(g_nproc_t * T, sizeof(double));
+  }
+#else
+  Cpp = (double *)calloc(T, sizeof(double));
+  Cpa = (double *)calloc(T, sizeof(double));
+  Cp4 = (double *)calloc(T, sizeof(double));
+#endif
+
+  /* heavy-light correlator: dummy variables */
+
+  // the number of independent correlators is 6=4*(4-1)/2
+  double **C_ij = (double *)calloc(6*T, sizeof(double)); // C[i][]
+  double **res_ij = (double *)calloc(6*T, sizeof(double));
+#ifdef TM_USE_MPI
+  double **mpi_res_ij = (double *)calloc(6*T, sizeof(double));
+  // send buffer for MPI_Gather
+  double **sC_ij = (double *)calloc(6*T, sizeof(double));
+#endif
+
+  FILE *ofs;                                // output file stream
+  char filename[TM_OMEAS_FILENAME_LENGTH];  // file path
+
+  /* building the stochastic propagator spinors needed for the correlators */
 
   init_operators();  // initialize the operators in the action (if not already done)
   if (no_operators < 1) {
@@ -283,8 +329,8 @@ void heavy_quarks_correlators_measurement(const int traj, const int t0, const in
   }
 
   // selecting the operators i1 and i2 from the list of operators initialized before
-  operator* optr1 = &operator_list[i1];
-  operator* optr2 = &operator_list[i2];
+  operator* optr1 = & operator_list[i1];
+  operator* optr2 = & operator_list[i2];
 
   bool b1 = (optr1->type != DBTMWILSON && optr1->type != DBCLOVER);
   if (b1) {
@@ -335,7 +381,6 @@ void heavy_quarks_correlators_measurement(const int traj, const int t0, const in
                optr1->kappa, optr1->mubar, optr1->epsbar);
       }
 
-
       // even-odd spinor fields for the light and heavy doublet correlators
       // source+propagator, even-odd, 2 flavors
       // psi = psi[(s,p)][eo][f][x][alpha][c]
@@ -376,12 +421,14 @@ void heavy_quarks_correlators_measurement(const int traj, const int t0, const in
       // --> I will multiply later by the inverse, namely at the end of the inversion
       for (size_t i_eo = 0; i_eo < 2; i_eo++) {
         for (size_t i_f = 0; i_f < 2; i_f++) {
-        // (u,d) --> [(1+i*tau_2)/sqrt(2)] * (u,d) , stored at temporarely in the propagator spinors (used as dummy spinors)
-        mul_one_pm_itau2(h_eo_spinor_field[1][i_eo][i_f], h_eo_spinor_field[1][i_eo][i_f+1],
-                         h_eo_spinor_field[0][i_eo][i_f], h_eo_spinor_field[0][i_eo][i_f+1], +1.0, VOLUME / 2);
-        // assigning the result to the first components (the sources). 
-        // The propagators will be overwritten with the inversion
-        assign(h_eo_spinor_field[0][i_eo][i_f], h_eo_spinor_field[1][i_eo][i_f], VOLUME / 2);
+          // (u,d) --> [(1+i*tau_2)/sqrt(2)] * (u,d) , stored at temporarely in the propagator
+          // spinors (used as dummy spinors)
+          mul_one_pm_itau2(h_eo_spinor_field[1][i_eo][i_f], h_eo_spinor_field[1][i_eo][i_f + 1],
+                           h_eo_spinor_field[0][i_eo][i_f], h_eo_spinor_field[0][i_eo][i_f + 1],
+                           +1.0, VOLUME / 2);
+          // assigning the result to the first components (the sources).
+          // The propagators will be overwritten with the inversion
+          assign(h_eo_spinor_field[0][i_eo][i_f], h_eo_spinor_field[1][i_eo][i_f], VOLUME / 2);
         }
       }
 
@@ -420,12 +467,14 @@ void heavy_quarks_correlators_measurement(const int traj, const int t0, const in
       // conclude the change of basis for the heavy doublet
       for (size_t i_eo = 0; i_eo < 2; i_eo++) {
         for (size_t i_f = 0; i_f < 2; i_f++) {
-        // (u,d) --> [(1+i*tau_2)/sqrt(2)] * (u,d) , stored at temporarely in the propagator spinors (used as dummy spinors)
-        mul_one_pm_itau2(h_eo_spinor_field[1][i_eo][i_f], h_eo_spinor_field[1][i_eo][i_f+1],
-                         h_eo_spinor_field[0][i_eo][i_f], h_eo_spinor_field[0][i_eo][i_f+1], -1.0, VOLUME / 2);
-        // assigning the result to the first components (the sources). 
-        // The propagators will be overwritten with the inversion
-        assign(h_eo_spinor_field[0][i_eo][i_f], h_eo_spinor_field[1][i_eo][i_f], VOLUME / 2);
+          // (u,d) --> [(1+i*tau_2)/sqrt(2)] * (u,d) , stored at temporarely in the propagator
+          // spinors (used as dummy spinors)
+          mul_one_pm_itau2(h_eo_spinor_field[1][i_eo][i_f], h_eo_spinor_field[1][i_eo][i_f + 1],
+                           h_eo_spinor_field[0][i_eo][i_f], h_eo_spinor_field[0][i_eo][i_f + 1],
+                           -1.0, VOLUME / 2);
+          // assigning the result to the first components (the sources).
+          // The propagators will be overwritten with the inversion
+          assign(h_eo_spinor_field[0][i_eo][i_f], h_eo_spinor_field[1][i_eo][i_f], VOLUME / 2);
         }
       }
 
@@ -434,8 +483,10 @@ void heavy_quarks_correlators_measurement(const int traj, const int t0, const in
       spinor ***l_propagator = (spinor ****)malloc(2 * VOLUME);
       spinor ***h_propagator = (spinor ****)malloc(2 * VOLUME);
       for (size_t i_f = 0; i_f < 2; i_f++) {
-        convert_eo_to_lexic(l_propagator[i_f], l_spinor_field[1][0][i_f],  l_spinor_field[1][1][i_f]);
-        convert_eo_to_lexic(h_propagator[i_f], h_spinor_field[1][0][i_f],  h_spinor_field[1][1][i_f]);
+        convert_eo_to_lexic(l_propagator[i_f], l_spinor_field[1][0][i_f],
+                            l_spinor_field[1][1][i_f]);
+        convert_eo_to_lexic(h_propagator[i_f], h_spinor_field[1][0][i_f],
+                            h_spinor_field[1][1][i_f]);
       }
 
       /*
@@ -443,71 +494,40 @@ void heavy_quarks_correlators_measurement(const int traj, const int t0, const in
         https://arxiv.org/pdf/1005.2042.pdf) I can build the correlators of eq. 20
       */
 
-      spinor phi; // dummy spinor
-
-      // light-light
-
-      int i, j, t, tt, t0;  // dummy indices
-      double *Cpp = NULL;   // array of the values of the correlator C(t)
-      double res = 0.;      // result of the accumulation of MPI partial sums
-      float tmp;            // dummy variable
-#ifdef TM_USE_MPI
-      double mpi_res = 0., mpi_respa = 0., mpi_resp4 = 0.;
-      // send buffer for MPI_Gather
-      double *sCpp = NULL;                      //, *sCpa = NULL, *sCp4 = NULL;
-#endif
-      FILE *ofs;                                // output file stream
-      char filename[TM_OMEAS_FILENAME_LENGTH];  // file path
-#ifdef TM_USE_MPI
-      sCpp = (double *)calloc(T, sizeof(double));
-      // sCpa = (double*) calloc(T, sizeof(double));
-      // sCp4 = (double*) calloc(T, sizeof(double));
-      if (g_mpi_time_rank == 0) {
-        Cpp = (double *)calloc(g_nproc_t * T, sizeof(double));
-        // Cpa = (double*) calloc(g_nproc_t*T, sizeof(double));
-        // Cp4 = (double*) calloc(g_nproc_t*T, sizeof(double));
-      }
-#else
-      Cpp = (double *)calloc(T, sizeof(double));
-      // Cpa = (double*) calloc(T, sizeof(double));
-      // Cp4 = (double*) calloc(T, sizeof(double));// INIT SOME SPINOR FIELD FOR THE LIGHT
-
-#endif
-
-      // heavy-light
-
-      
-
       /* now we sum only over local space for every t */
       for (t = 0; t < T; t++) {
         j = g_ipt[t][0][0][0];
         res = 0.;
-        // respa = 0.;
-        // resp4 = 0.;
+        respa = 0.;
+        resp4 = 0.;
         for (i = j; i < j + LX * LY * LZ; i++) {
-          res += _spinor_prod_re(up_spinors[DUM_MATRIX][i], up_spinors[DUM_MATRIX][i]);
-          // _gamma0(phi, g_spinor_field[DUM_MATRIX][i]);
-          // respa += _spinor_prod_re(g_spinor_field[DUM_MATRIX][i], phi);
-          // _gamma5(phi, phi);
-          // resp4 += _spinor_prod_im(g_spinor_field[DUM_MATRIX][i], phi);
+          res += _spinor_prod_re(l_propagator[0][i], l_propagator[0][i]);
+          _gamma0(phi, l_propagator[0][i]);
+          respa += _spinor_prod_re(l_propagator[0][i], phi);
+          _gamma5(phi, phi);
+          resp4 += _spinor_prod_im(l_propagator[0][i], phi);
         }
 
 #if defined TM_USE_MPI
         MPI_Reduce(&res, &mpi_res, 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
         res = mpi_res;
-        // MPI_Reduce(&respa, &mpi_respa, 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
-        // respa = mpi_respa;
-        // MPI_Reduce(&resp4, &mpi_resp4, 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
-        // resp4 = mpi_resp4;
+        MPI_Reduce(&respa, &mpi_respa, 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
+        respa = mpi_respa;
+        MPI_Reduce(&resp4, &mpi_resp4, 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
+        resp4 = mpi_resp4;
         sCpp[t] = +res / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ) / 2. / optr->kappa /
                   optr->kappa;
-        // sCpa[t] = -respa/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
-        // sCp4[t] = +resp4/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
+        sCpa[t] = -respa / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ) / 2. /
+                  optr->kappa / optr->kappa;
+        sCp4[t] = +resp4 / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ) / 2. /
+                  optr->kappa / optr->kappa;
 #else
         Cpp[t] = +res / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ) / 2. / optr->kappa /
                  optr->kappa;
-        // Cpa[t] = -respa/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
-        // Cp4[t] = +resp4/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
+        Cpa[t] = -respa / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ) / 2. /
+                 optr->kappa / optr->kappa;
+        Cp4[t] = +resp4 / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ) / 2. /
+                 optr->kappa / optr->kappa;
 #endif
       }
 
@@ -515,8 +535,8 @@ void heavy_quarks_correlators_measurement(const int traj, const int t0, const in
       /* some gymnastics needed in case of parallelisation */
       if (g_mpi_time_rank == 0) {
         MPI_Gather(sCpp, T, MPI_DOUBLE, Cpp, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
-        // MPI_Gather(sCpa, T, MPI_DOUBLE, Cpa, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
-        // MPI_Gather(sCp4, T, MPI_DOUBLE, Cp4, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
+        MPI_Gather(sCpa, T, MPI_DOUBLE, Cpa, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
+        MPI_Gather(sCp4, T, MPI_DOUBLE, Cp4, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
       }
 #endif
 
@@ -533,48 +553,58 @@ void heavy_quarks_correlators_measurement(const int traj, const int t0, const in
         tt = (t0 + g_nproc_t * T / 2) % (g_nproc_t * T);
         fprintf(ofs, "1  1  %d  %e  %e\n", t, Cpp[tt], 0.);
 
-        // fprintf( ofs, "2  1  0  %e  %e\n", Cpa[t0], 0.);
-        // for(t = 1; t < g_nproc_t*T/2; t++) {
-        //   tt = (t0+t)%(g_nproc_t*T);
-        //   fprintf( ofs, "2  1  %d  %e  ", t, Cpa[tt]);
-        //   tt = (t0+g_nproc_t*T-t)%(g_nproc_t*T);
-        //   fprintf( ofs, "%e\n", Cpa[tt]);
-        // }
-        // tt = (t0+g_nproc_t*T/2)%(g_nproc_t*T);
-        // fprintf( ofs, "2  1  %d  %e  %e\n", t, Cpa[tt], 0.);
+        fprintf(ofs, "2  1  0  %e  %e\n", Cpa[t0], 0.);
+        for (t = 1; t < g_nproc_t * T / 2; t++) {
+          tt = (t0 + t) % (g_nproc_t * T);
+          fprintf(ofs, "2  1  %d  %e  ", t, Cpa[tt]);
+          tt = (t0 + g_nproc_t * T - t) % (g_nproc_t * T);
+          fprintf(ofs, "%e\n", Cpa[tt]);
+        }
+        tt = (t0 + g_nproc_t * T / 2) % (g_nproc_t * T);
+        fprintf(ofs, "2  1  %d  %e  %e\n", t, Cpa[tt], 0.);
 
-        // fprintf( ofs, "6  1  0  %e  %e\n", Cp4[t0], 0.);
-        // for(t = 1; t < g_nproc_t*T/2; t++) {
-        //   tt = (t0+t)%(g_nproc_t*T);
-        //   fprintf( ofs, "6  1  %d  %e  ", t, Cp4[tt]);
-        //   tt = (t0+g_nproc_t*T-t)%(g_nproc_t*T);
-        //   fprintf( ofs, "%e\n", Cp4[tt]);
-        // }
-        // tt = (t0+g_nproc_t*T/2)%(g_nproc_t*T);
-        // fprintf( ofs, "6  1  %d  %e  %e\n", t, Cp4[tt], 0.);
-
+        fprintf(ofs, "6  1  0  %e  %e\n", Cp4[t0], 0.);
+        for (t = 1; t < g_nproc_t * T / 2; t++) {
+          tt = (t0 + t) % (g_nproc_t * T);
+          fprintf(ofs, "6  1  %d  %e  ", t, Cp4[tt]);
+          tt = (t0 + g_nproc_t * T - t) % (g_nproc_t * T);
+          fprintf(ofs, "%e\n", Cp4[tt]);
+        }
+        tt = (t0 + g_nproc_t * T / 2) % (g_nproc_t * T);
+        fprintf(ofs, "6  1  %d  %e  %e\n", t, Cp4[tt], 0.);
         fclose(ofs);
       }
 #ifdef TM_USE_MPI
       if (g_mpi_time_rank == 0) {
-        free(Cpp);  // free(Cpa); free(Cp4);
+        free(Cpp);
+        free(Cpa);
+        free(Cp4);
+        free(C_ij)
       }
-      free(sCpp);   // free(sCpa); free(sCp4);
+      free(sCpp);
+      free(sCpa);
+      free(sCp4);
+      free(sC_ij)
 #else
-      free(Cpp);  // free(Cpa); free(Cp4);
+      free(Cpp);
+      free(Cpa);
+      free(Cp4);
+      free(C_ij)
 #endif
     }  // for(max_time_slices)
   }    // for(max_samples)
 
   tm_stopwatch_pop(&g_timers, 0, 1, "");
+
   return;
 }
 
 void correlators_measurement(const int traj, const int id, const int ieo) {
   light_correlators_measurement(traj, id, ieo);
 
+    // ??? maybe add a double check?
   if (measurement_list[id].measure_heavy_mesons == 1) {
-    const int i1 = 1; // ??? is it?
-    heavy_correlators_measurement(i1, traj, id, ieo);
+    const unsigned int i1 = 0, i2 = 1; 
+    heavy_correlators_measurement(traj, id, ieo, i1, i2);
   }
 }
