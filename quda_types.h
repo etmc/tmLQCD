@@ -118,6 +118,10 @@ typedef struct tm_QudaParams_t {
   int                  mg_run_low_mode_check;
   int                  mg_run_oblique_proj_check;
 
+  int                  eig_use_poly_acc;
+  int                  eig_poly_deg;
+  double               eig_amin;
+  double               eig_amax;
 } tm_QudaParams_t;
 
 typedef struct tm_QudaMGSetupState_t {

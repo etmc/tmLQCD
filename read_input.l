@@ -2008,22 +2008,51 @@ static inline double fltlist_next_token(int * const list_end){
   }
   {SPC}*EnableDeviceMemoryPool{EQL}yes {
     quda_input.enable_device_memory_pool = 1;
-    if(myverbose) printf("Enabling QUDA's device memory pool on line %d\n\n", line_of_file);
+    if(myverbose) printf("Enabling QUDA's device memory pool on line %d\n", line_of_file);
   }
   {SPC}*EnableDeviceMemoryPool{EQL}no {
     quda_input.enable_device_memory_pool = 0;
-    if(myverbose) printf("Disabling QUDA's device memory pool on line %d\n\n", line_of_file);
+    if(myverbose) printf("Disabling QUDA's device memory pool on line %d\n", line_of_file);
   }
   {SPC}*EnablePinnedMemoryPool{EQL}yes {
     quda_input.enable_pinned_memory_pool = 1;
-    if(myverbose) printf("Enabling QUDA's pinned memory pool on line %d\n\n", line_of_file);
+    if(myverbose) printf("Enabling QUDA's pinned memory pool on line %d\n", line_of_file);
   }
   {SPC}*EnablePinnedMemoryPool{EQL}no {
     quda_input.enable_pinned_memory_pool = 0;
-    if(myverbose) printf("Disabling QUDA's pinned memory pool on line %d\n\n", line_of_file);
+    if(myverbose) printf("Disabling QUDA's pinned memory pool on line %d\n", line_of_file);
+  }
+  {SPC}*EigSolverUsePolyomialAcceleration{EQL}yes {
+    quda_input.eig_use_poly_acc = 1;
+    if(myvberbose) printf("Enabling QUDA eigensolver polynomial acceleration on line %d \n", line_of_file);
+  }
+  {SPC}*EigSolverUsePolyomialAcceleration{EQL}no {
+    quda_input.eig_use_poly_acc = 1;
+    if(myverbose) printf("Disabling QUDA eigensolver polynomial acceleration on line %d \n", line_of_file);
+  }
+  {SPC}*EigSolverPolynomialDegree{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    quda_input.eig_poly_deg = a;
+    if(myverbose) printf("QUDA eigensolver polynomial degree set to %d on line %d \n", quda_input.eig_poly_deg, line_of_file);
+  }
+  {SPC}*EigSolverPolyMin{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    quda_input.eig_amin = c;
+    if(myverbose) {
+      printf("Lower eigenvalue bound for polynomial acceleration of QUDA eigensolver set to %lf on line %d \n",
+             quda_input.eig_amin, line_of_file);
+    }
+  }
+  {SPC}*EigSolverPolyMax{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    quda_input.eig_amax = c;
+    if(myverbose) {
+      printf("Upper eigenvalue bound for polynomial acceleration of QUDA eigensolver set to %lf on line %d \n",
+             quda_input.eig_amax, line_of_file);
+    }
   }
   ^EndExternalInverter{SPC}*  { 
-    if(myverbose) printf("QUDA external inverter parameters parsed on line %d\n\n", line_of_file);
+    if(myverbose) printf("QUDA external inverter parameters parsed on line %d\n", line_of_file);
     BEGIN(0);
   }
 }
@@ -3915,7 +3944,12 @@ int read_input(char * conf_file){
   quda_input.mg_refresh_setup_mdu_threshold = _default_quda_mg_refresh_setup_mdu_threshold;
   quda_input.mg_reuse_setup_mu_threshold = _default_quda_mg_reuse_setup_mu_threshold;
   quda_input.mg_run_low_mode_check = QUDA_BOOLEAN_NO;
-  quda_input.mg_run_oblique_proj_check = QUDA_BOOLEAN_NO; 
+  quda_input.mg_run_oblique_proj_check = QUDA_BOOLEAN_NO;
+
+  quda_input.eig_use_poly_acc = _default_quda_eig_use_poly_acc;
+  quda_input.eig_poly_deg = _default_quda_eig_poly_deg;
+  quda_input.eig_amin = _default_quda_eig_amin;
+  quda_input.eig_amax = _default_quda_eig_amax;
 
   /* Put -1 in PropInfo.format to see if parse_config() will
   change the value. If not then set it to source_format_flag */
