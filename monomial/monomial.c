@@ -144,6 +144,11 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].PrecisionHfinal = _default_g_acc_Hfin;
   monomial_list[no_monomials].PrecisionPtilde = _default_g_acc_Ptilde;
 
+  monomial_list[no_monomials].eig_polydeg = _default_eig_polydeg;
+  monomial_list[no_monomials].eig_amin = _default_eig_amin;
+  monomial_list[no_monomials].eig_amax = _default_eig_amax;
+  monomial_list[no_monomials].eig_n_kr = _default_eig_n_kr;
+
   monomial_list[no_monomials].rat.order = 12;
   monomial_list[no_monomials].rat.range[0] = _default_stilde_min;
   monomial_list[no_monomials].rat.range[1] = _default_stilde_max;

@@ -2598,7 +2598,8 @@ Interface function for Eigensolver on Quda
 
 
 double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterations, int maxmin,
-                    const double precision, const int max_iter, const int solver_flag, const int rel_prec,
+                    const double precision, const int max_iter, const int polydeg, const double amin, 
+                    const double amax, const int n_kr, const int solver_flag, const int rel_prec,
                     const int even_odd_flag, const SloppyPrecision refinement_precision,
                     SloppyPrecision sloppy_precision, CompressionType compression) {
 
@@ -2646,6 +2647,7 @@ double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterati
   QudaInvertParam eig_invert_param = newQudaInvertParam();
   eig_invert_param = inv_param;
   eig_param.invert_param = &eig_invert_param;
+  eig_param.invert_param->verbosity = QUDA_VERBOSE;
   /* AS The following two are set to cuda_prec, otherwise 
    * it gives an error. Such high precision might not be
    * necessary. But have not found a way to consistently set
@@ -2689,10 +2691,10 @@ double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterati
   // at a relatively coarse lattice spacing for the eigenvalues
   // of the twisted-clover ND operator with values of musigma / mudelta
   // reproducing physical sea strange and charm quark masses
-  eig_param.use_poly_acc = maxmin == 1 ? QUDA_BOOLEAN_FALSE : QUDA_BOOLEAN_TRUE;
-  eig_param.poly_deg = 128;
-  eig_param.a_min = 1e-3;
-  eig_param.a_max = 4;
+  eig_param.use_poly_acc = (maxmin == 1) && (polydeg != 0) ? QUDA_BOOLEAN_FALSE : QUDA_BOOLEAN_TRUE;
+  eig_param.poly_deg = polydeg;
+  eig_param.a_min = amin;
+  eig_param.a_max = amax;
   
   /* Daggers the operator. Not necessary for 
    * most cases. */
@@ -2730,7 +2732,7 @@ double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterati
    * From my understanding, QUDA automatically scales
    * this search space, however more testing on this 
    * might be necessary */
-  eig_param.n_kr = 96;
+  eig_param.n_kr = n_kr;
 
   eig_param.max_restarts = max_iterations;
 

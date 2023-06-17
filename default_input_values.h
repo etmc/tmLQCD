@@ -147,6 +147,10 @@
 #define _default_phmc_pure_phmc 0
 #define _default_stilde_max 3.
 #define _default_stilde_min 0.01
+#define _default_eig_polydeg 128
+#define _default_eig_amin 0.001
+#define _default_eig_amax 4
+#define _default_eig_n_kr 96
 #define _default_degree_of_p 48
 #define _default_propagator_splitted 1
 #define _default_source_splitted 1
