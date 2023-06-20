@@ -60,7 +60,7 @@ void light_correlators_measurement(const int traj, const int id, const int ieo) 
   int i, j, t, tt, t0;
   double *Cpp = NULL, *Cpa = NULL, *Cp4 = NULL;
   double res = 0., respa = 0., resp4 = 0.;
-  double atime, etime;
+  // double atime, etime;
   float tmp;
   operator * optr;
 #ifdef TM_USE_MPI
@@ -264,7 +264,7 @@ void light_correlators_measurement(const int traj, const int id, const int ieo) 
  *
  *
  ******************************************************/
-void heavy_quarks_correlators_measurement(const int traj, const int t0, const int ieo, const int i1,
+void heavy_correlators_measurement(const int traj, const int id, const int ieo, const int i1,
                                           const int i2) {
   tm_stopwatch_push(&g_timers, __func__, "");  // timer for profiling
 
@@ -480,13 +480,13 @@ void heavy_quarks_correlators_measurement(const int traj, const int t0, const in
 
       // now we switch from even-odd representation to standard
       // propagator, 2 flavors : psi = psi[f][x][alpha][c]
-      spinor ***l_propagator = (spinor ****)malloc(2 * VOLUME);
-      spinor ***h_propagator = (spinor ****)malloc(2 * VOLUME);
+      spinor **l_propagator = (spinor **)malloc(2 * VOLUME * sizeof(spinor));
+      spinor **h_propagator = (spinor **)malloc(2 * VOLUME * sizeof(spinor));
       for (size_t i_f = 0; i_f < 2; i_f++) {
-        convert_eo_to_lexic(l_propagator[i_f], l_spinor_field[1][0][i_f],
-                            l_spinor_field[1][1][i_f]);
-        convert_eo_to_lexic(h_propagator[i_f], h_spinor_field[1][0][i_f],
-                            h_spinor_field[1][1][i_f]);
+        convert_eo_to_lexic(l_propagator[i_f], l_eo_spinor_field[1][0][i_f],
+                            l_eo_spinor_field[1][1][i_f]);
+        convert_eo_to_lexic(h_propagator[i_f], h_eo_spinor_field[1][0][i_f],
+                            h_eo_spinor_field[1][1][i_f]);
       }
 
       /*
@@ -515,19 +515,19 @@ void heavy_quarks_correlators_measurement(const int traj, const int t0, const in
         respa = mpi_respa;
         MPI_Reduce(&resp4, &mpi_resp4, 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
         resp4 = mpi_resp4;
-        sCpp[t] = +res / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ) / 2. / optr->kappa /
-                  optr->kappa;
+        sCpp[t] = +res / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ) / 2. / optr1->kappa /
+                  optr1->kappa;
         sCpa[t] = -respa / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ) / 2. /
-                  optr->kappa / optr->kappa;
+                  optr1->kappa / optr1->kappa;
         sCp4[t] = +resp4 / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ) / 2. /
-                  optr->kappa / optr->kappa;
+                  optr1->kappa / optr1->kappa;
 #else
-        Cpp[t] = +res / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ) / 2. / optr->kappa /
-                 optr->kappa;
+        Cpp[t] = +res / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ) / 2. / optr1->kappa /
+                 optr1->kappa;
         Cpa[t] = -respa / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ) / 2. /
-                 optr->kappa / optr->kappa;
+                 optr1->kappa / optr1->kappa;
         Cp4[t] = +resp4 / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ) / 2. /
-                 optr->kappa / optr->kappa;
+                 optr1->kappa / optr1->kappa;
 #endif
       }
 
@@ -579,17 +579,17 @@ void heavy_quarks_correlators_measurement(const int traj, const int t0, const in
         free(Cpp);
         free(Cpa);
         free(Cp4);
-        free(C_ij)
+        free(C_ij);
       }
       free(sCpp);
       free(sCpa);
       free(sCp4);
-      free(sC_ij)
+      free(sC_ij);
 #else
       free(Cpp);
       free(Cpa);
       free(Cp4);
-      free(C_ij)
+      free(C_ij);
 #endif
     }  // for(max_time_slices)
   }    // for(max_samples)

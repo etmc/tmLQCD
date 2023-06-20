@@ -75,7 +75,7 @@ static void set_default_filenames(char ** input_filename, char ** filename);
 int main(int argc, char *argv[])
 {
   FILE *parameterfile = NULL;
-  int j, i, ix = 0, isample = 0, op_id = 0;
+  int j, i; //, ix = 0, isample = 0, op_id = 0;
   char datafilename[206];
   char parameterfilename[206];
   char conf_filename[CONF_FILENAME_LENGTH];

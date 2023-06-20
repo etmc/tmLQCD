@@ -68,11 +68,11 @@ typedef struct {
 
   /* functions for the measurement */
   void (*measurefunc) (const int traj, const int id, const int ieo);
- 
-  ExternalLibrary external_library;
 
+  ExternalLibrary external_library;
+ 
   // measuring the 4x4 matrix of correlators in the 1+1 sector: https://arxiv.org/abs/1005.2042
-  int measure_heavy_mesons = 0; // default: heavy mesons not measured
+  int measure_heavy_mesons; // 1 or 0: heavy mesons measured or not
 
 } measurement;
 
