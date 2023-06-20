@@ -22,6 +22,7 @@
 #ifndef _TM_OPERATTORS_ND_H
 #define _TM_OPERATTORS_ND_H
 
+// \frac{1}{\sqrt(2)} (1 \pm \tau_2)
 void mul_one_pm_itau2_and_div_by_sqrt2(spinor * const p, spinor * const q,
                       spinor * const r, spinor * const s,
                       const double sign, const int N);
