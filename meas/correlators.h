@@ -23,6 +23,11 @@
 
 #include <stdbool.h>
 
+#include "init/init_spinor_field.h"
+#include "linalg/assign.h"
+#include "operator/tm_operators.h"
+
+
 /* measurement of the correlators involving the light doublet (see tmLQCD documentation)*/
 void light_correlators_measurement(const int traj, const int id, const int ieo);
 

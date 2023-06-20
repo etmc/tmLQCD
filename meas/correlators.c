@@ -258,7 +258,10 @@ void light_correlators_measurement(const int traj, const int id, const int ieo) 
  * This routine computes the correlator matrix <G1,G2> (<source sink>),
  * where G1 and G2 are 2 gamma matrices from the set {1, gamma5} --> {S,P} (scalar and pseudoscalar
  *current), <S,S>, <S,P>, <P,P> for all the choices of h1 and h2 (see eq. 18 and 20 of
- *https://arxiv.org/pdf/1005.2042.pdf)
+ *https://arxiv.org/pdf/1005.2042.pdf):
+ *
+ * C = Tr[S_l * Gamma_1 * S_h * Gamma_2]
+ * where S_l, S_h are the propagators of the light and heavy quark of the meson (e.g. K --> u, )
  *
  * i1, i2 = operator indices from the list of the operators in the input file.
  *
@@ -302,13 +305,15 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 
   /* heavy-light correlator: dummy variables */
 
-  // the number of independent correlators is 6=4*(4-1)/2
-  double **C_ij = (double *)calloc(6*T, sizeof(double)); // C[i][]
-  double **res_ij = (double *)calloc(6*T, sizeof(double));
+  // the number of independent correlators is 8 = 2 * (2*2)
+  // 2: strange or charm flavor
+  // 2*2: all combinations of (1, gamma_5)
+  double ****C_ij = (double ****)calloc(8*T, sizeof(double)); // C[i_f][gamma1][gamma2][t]
+  double ****res_ij = (double ****)calloc(8*T, sizeof(double));
 #ifdef TM_USE_MPI
-  double **mpi_res_ij = (double *)calloc(6*T, sizeof(double));
+  double ****mpi_res_ij = (double ****)calloc(8*T, sizeof(double));
   // send buffer for MPI_Gather
-  double **sC_ij = (double *)calloc(6*T, sizeof(double));
+  double ****sC_ij = (double ****)calloc(8*T, sizeof(double));
 #endif
 
   FILE *ofs;                                // output file stream
@@ -382,113 +387,130 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
       }
 
       // even-odd spinor fields for the light and heavy doublet correlators
-      // source+propagator, even-odd, 2 flavors
-      // psi = psi[(s,p)][eo][f][x][alpha][c]
+      // the gamma matrix in front specifies if we are working with 
+      // psi_1 or psi_2 of eqs. (2.7, 2.8) https://arxiv.org/pdf/0804.1501.pdf
+      // INDICES: gamma matrix in front, source+propagator, even-odd, 2 flavors
+      // psi = psi[i_gamma][(s,p)][eo][f][x][alpha][c]
       // Note: propagator in th sense that it is D^{-1}*source after the inversion
       init_spinor_field(VOLUMEPLUSRAND / 2, 1);  // initialize g_spinor_field so that I can copy it
-      spinor ****l_eo_spinor_field = (spinor ****)malloc(8 * VOLUME / 2);
-      spinor ****h_eo_spinor_field = (spinor ****)malloc(8 * VOLUME / 2);
-      // initalize to zero the source spinor fields (necessary??? isn't it enough to use the source
-      // generator?)
-      for (size_t i_sp = 0; i_sp < 2; i_sp++) {    // source or propagator
+      spinor *****l_eo_spinor_field = (spinor *****)malloc(16 * VOLUME / 2);
+      spinor *****h_eo_spinor_field = (spinor *****)malloc(16 * VOLUME / 2);
+      
+      // propagator: gamma matrix in front, 2 flavors : psi = psi[i_gamma][f][x][alpha][c]
+      spinor ***l_propagator = (spinor ***)calloc(4 * VOLUME, sizeof(spinor));
+      spinor ***h_propagator = (spinor ***)calloc(4 * VOLUME, sizeof(spinor));
 
-        for (size_t i_eo = 0; i_eo < 2; i_eo++) {  // even-odd
-          for (size_t i_f = 0; i_f < 2; i++) {     // up-down flavor
-            assign(l_eo_spinor_field[0][i_eo][i_f], g_spinor_field[0], VOLUME / 2);
-            assign(h_eo_spinor_field[0][i_eo][i_f], g_spinor_field[0], VOLUME / 2);
+      // loop over (1, gamma_5) multiplying the stochastic source by it
+      for (size_t i_gamma = 0; i_gamma < 2; i_gamma++){  // psi_1 or psi_2
+
+        /* initalize the random sources: one source for each --> spin dilution */
+        for (size_t i_f = 0; i_f < 2; i_f++) {
+          for (size_t src_d = 0; src_d < 4; src_d++) {
+            const unsigned int seed_i = src_d + measurement_list[id].seed;
+            // light doublet
+            eo_source_spinor_field_spin_diluted_oet_ts(l_eo_spinor_field[i_gamma][0][0][i_f],
+                                                       l_eo_spinor_field[i_gamma][0][1][i_f], t0,
+                                                       src_d, sample, traj, seed_i);
+            // heavy doublet
+            eo_source_spinor_field_spin_diluted_oet_ts(h_eo_spinor_field[i_gamma][0][0][i_f],
+                                                       h_eo_spinor_field[i_gamma][0][1][i_f], t0,
+                                                       src_d, sample, traj, seed_i);
           }
         }
-      }
 
-      // initalize the random sources
-      // one source for each --> spin dilution
-      for (size_t i_f = 0; i_f < 2; i_f++) {
-        for (size_t src_d = 0; src_d < 4; src_d++) {
-          const unsigned int seed_i = src_d + measurement_list[id].seed;
+        // heavy doublet: for each even-odd block, I multiply by (1 + i*tau_2)
+        // the basis for the inversion should be the same as for the light
+        // --> I will multiply later by the inverse, namely at the end of the inversion
+        for (size_t i_eo = 0; i_eo < 2; i_eo++) {
+          for (size_t i_f = 0; i_f < 2; i_f++) {
+            // (u,d) --> [(1+i*tau_2)/sqrt(2)] * (u,d) , stored at temporarely in the propagator
+            // spinors (used as dummy spinors)
+            mul_one_pm_itau2_and_div_by_sqrt2(h_eo_spinor_field[i_gamma][1][i_eo][i_f],
+                                              h_eo_spinor_field[i_gamma][1][i_eo][i_f + 1],
+                                              h_eo_spinor_field[i_gamma][0][i_eo][i_f],
+                                              h_eo_spinor_field[i_gamma][0][i_eo][i_f + 1], +1.0,
+                                              VOLUME / 2);
+            // assigning the result to the first components (the sources).
+            // The propagators will be overwritten with the inversion
+            assign(h_eo_spinor_field[i_gamma][0][i_eo][i_f],
+                   h_eo_spinor_field[i_gamma][1][i_eo][i_f], VOLUME / 2);
+          }
+        }
+
+        if (i_gamma == 1) { // multiply by gamma_5
+          for (size_t i_eo = 0; i_eo < 2; i_eo++) {
+            for (size_t i_f = 0; i_f < 2; i_f++) {
+              for (t = 0; t < T; t++) {
+                j = g_ipt[t][0][0][0];
+                for (i = j; i < j + LX * LY * LZ; i++) {
+                  _gamma5(phi, l_eo_spinor_field[i_gamma][0][i_eo][i_f][i]);
+                  l_eo_spinor_field[i_gamma][1][i_eo][i_f][i] = phi;
+                  _gamma5(phi, h_eo_spinor_field[i_gamma][0][i_eo][i_f][i]);
+                  h_eo_spinor_field[i_gamma][1][i_eo][i_f][i] = phi;
+                }
+              }
+            }
+          }
+        }
+
+          /*
+          assign the sources and propagator pointes for the operators
+          these need to be know when calling the inverter() method
+          */
+
           // light doublet
-          eo_source_spinor_field_spin_diluted_oet_ts(l_eo_spinor_field[0][0][i_f],
-                                                     l_eo_spinor_field[0][1][i_f], t0, src_d,
-                                                     sample, traj, seed_i);
+          optr1->sr0 = l_eo_spinor_field[i_gamma][0][0][0];
+          optr1->sr1 = l_eo_spinor_field[i_gamma][0][0][1];
+          optr1->sr2 = l_eo_spinor_field[i_gamma][0][1][0];
+          optr1->sr3 = l_eo_spinor_field[i_gamma][0][1][1];
+
+          optr1->prop0 = l_eo_spinor_field[i_gamma][1][0][0];
+          optr1->prop1 = l_eo_spinor_field[i_gamma][1][0][1];
+          optr1->prop2 = l_eo_spinor_field[i_gamma][1][1][0];
+          optr1->prop3 = l_eo_spinor_field[i_gamma][1][1][1];
+
           // heavy doublet
-          eo_source_spinor_field_spin_diluted_oet_ts(h_eo_spinor_field[0][0][i_f],
-                                                     h_eo_spinor_field[0][1][i_f], t0, src_d,
-                                                     sample, traj, seed_i);
-        }
-      }
+          optr2->sr0 = h_eo_spinor_field[i_gamma][0][0][0];
+          optr2->sr1 = h_eo_spinor_field[i_gamma][0][0][1];
+          optr2->sr2 = h_eo_spinor_field[i_gamma][0][1][0];
+          optr2->sr3 = h_eo_spinor_field[i_gamma][0][1][1];
 
-      // heavy doublet: for each even-odd block, I multiply by (1 + i*tau_2)
-      // the basis for the inversion should be the same as for the light
-      // --> I will multiply later by the inverse, namely at the end of the inversion
-      for (size_t i_eo = 0; i_eo < 2; i_eo++) {
+          optr2->prop0 = h_eo_spinor_field[i_gamma][1][0][0];
+          optr2->prop1 = h_eo_spinor_field[i_gamma][1][0][1];
+          optr2->prop2 = h_eo_spinor_field[i_gamma][1][1][0];
+          optr2->prop3 = h_eo_spinor_field[i_gamma][1][1][1];
+
+          // inverting the Dirac operators for the light and heavy doublet
+          // op_id = i1 or i2, index_start = 0, write_prop = 0
+          optr1->inverter(i1, 0, 0);
+          optr2->inverter(i2, 0, 0);
+
+          // conclude the change of basis for the heavy doublet
+          for (size_t i_eo = 0; i_eo < 2; i_eo++) {
+            for (size_t i_f = 0; i_f < 2; i_f++) {
+              // (u,d) --> [(1+i*tau_2)/sqrt(2)] * (u,d) , stored at temporarely in the propagator
+              // spinors (used as dummy spinors)
+              mul_one_pm_itau2_and_div_by_sqrt2(h_eo_spinor_field[i_gamma][1][i_eo][i_f],
+                                                h_eo_spinor_field[i_gamma][1][i_eo][i_f + 1],
+                                                h_eo_spinor_field[i_gamma][0][i_eo][i_f],
+                                                h_eo_spinor_field[i_gamma][0][i_eo][i_f + 1], -1.0,
+                                                VOLUME / 2);
+              // assigning the result to the first components (the sources).
+              // The propagators will be overwritten with the inversion
+              assign(h_eo_spinor_field[i_gamma][0][i_eo][i_f],
+                     h_eo_spinor_field[i_gamma][1][i_eo][i_f], VOLUME / 2);
+            }
+          }
+        
+
+        // now we switch from even-odd representation to standard
         for (size_t i_f = 0; i_f < 2; i_f++) {
-          // (u,d) --> [(1+i*tau_2)/sqrt(2)] * (u,d) , stored at temporarely in the propagator
-          // spinors (used as dummy spinors)
-          mul_one_pm_itau2_and_div_by_sqrt2(
-            h_eo_spinor_field[1][i_eo][i_f], h_eo_spinor_field[1][i_eo][i_f + 1],
-            h_eo_spinor_field[0][i_eo][i_f], h_eo_spinor_field[0][i_eo][i_f + 1],
-            +1.0, VOLUME / 2);
-          // assigning the result to the first components (the sources).
-          // The propagators will be overwritten with the inversion
-          assign(h_eo_spinor_field[0][i_eo][i_f], h_eo_spinor_field[1][i_eo][i_f], VOLUME / 2);
+          convert_eo_to_lexic(l_propagator[i_gamma][i_f], l_eo_spinor_field[i_gamma][1][0][i_f],
+                              l_eo_spinor_field[i_gamma][1][1][i_f]);
+          convert_eo_to_lexic(h_propagator[i_gamma][i_f], h_eo_spinor_field[i_gamma][1][0][i_f],
+                              h_eo_spinor_field[i_gamma][1][1][i_f]);
         }
-      }
 
-      /*
-      assign the sources and propagator pointes for the operators
-      these need to be know when calling the inverter() method
-      */
-
-      // light doublet
-      optr1->sr0 = l_eo_spinor_field[0][0][0];
-      optr1->sr1 = l_eo_spinor_field[0][0][1];
-      optr1->sr2 = l_eo_spinor_field[0][1][0];
-      optr1->sr3 = l_eo_spinor_field[0][1][1];
-
-      optr1->prop0 = l_eo_spinor_field[1][0][0];
-      optr1->prop1 = l_eo_spinor_field[1][0][1];
-      optr1->prop2 = l_eo_spinor_field[1][1][0];
-      optr1->prop3 = l_eo_spinor_field[1][1][1];
-
-      // heavy doublet
-      optr2->sr0 = h_eo_spinor_field[0][0][0];
-      optr2->sr1 = h_eo_spinor_field[0][0][1];
-      optr2->sr2 = h_eo_spinor_field[0][1][0];
-      optr2->sr3 = h_eo_spinor_field[0][1][1];
-
-      optr2->prop0 = h_eo_spinor_field[1][0][0];
-      optr2->prop1 = h_eo_spinor_field[1][0][1];
-      optr2->prop2 = h_eo_spinor_field[1][1][0];
-      optr2->prop3 = h_eo_spinor_field[1][1][1];
-
-      // inverting the Dirac operators for the light and heavy doublet
-      // op_id = i1 or i2, index_start = 0, write_prop = 0
-      optr1->inverter(i1, 0, 0);
-      optr2->inverter(i2, 0, 0);
-
-      // conclude the change of basis for the heavy doublet
-      for (size_t i_eo = 0; i_eo < 2; i_eo++) {
-        for (size_t i_f = 0; i_f < 2; i_f++) {
-          // (u,d) --> [(1+i*tau_2)/sqrt(2)] * (u,d) , stored at temporarely in the propagator
-          // spinors (used as dummy spinors)
-          mul_one_pm_itau2_and_div_by_sqrt2(
-            h_eo_spinor_field[1][i_eo][i_f], h_eo_spinor_field[1][i_eo][i_f + 1],
-            h_eo_spinor_field[0][i_eo][i_f], h_eo_spinor_field[0][i_eo][i_f + 1],
-            -1.0, VOLUME / 2);
-          // assigning the result to the first components (the sources).
-          // The propagators will be overwritten with the inversion
-          assign(h_eo_spinor_field[0][i_eo][i_f], h_eo_spinor_field[1][i_eo][i_f], VOLUME / 2);
-        }
-      }
-
-      // now we switch from even-odd representation to standard
-      // propagator, 2 flavors : psi = psi[f][x][alpha][c]
-      spinor **l_propagator = (spinor **)malloc(2 * VOLUME * sizeof(spinor));
-      spinor **h_propagator = (spinor **)malloc(2 * VOLUME * sizeof(spinor));
-      for (size_t i_f = 0; i_f < 2; i_f++) {
-        convert_eo_to_lexic(l_propagator[i_f], l_eo_spinor_field[1][0][i_f],
-                            l_eo_spinor_field[1][1][i_f]);
-        convert_eo_to_lexic(h_propagator[i_f], h_eo_spinor_field[1][0][i_f],
-                            h_eo_spinor_field[1][1][i_f]);
       }
 
       /*
@@ -503,11 +525,27 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         respa = 0.;
         resp4 = 0.;
         for (i = j; i < j + LX * LY * LZ; i++) {
-          res += _spinor_prod_re(l_propagator[0][i], l_propagator[0][i]);
-          _gamma0(phi, l_propagator[0][i]);
-          respa += _spinor_prod_re(l_propagator[0][i], phi);
+          res += _spinor_prod_re(l_propagator[0][0][i], l_propagator[0][0][i]);
+          _gamma0(phi, l_propagator[0][0][i]);
+          respa += _spinor_prod_re(l_propagator[0][0][i], phi);
           _gamma5(phi, phi);
-          resp4 += _spinor_prod_im(l_propagator[0][i], phi);
+          resp4 += _spinor_prod_im(l_propagator[0][0][i], phi);
+
+          // if (measurement_list[id].measure_heavy_mesons == 1) {
+          //     for (size_t i_f = 0; i_f < 2; i_f++) {
+          //     for (size_t i_gamma = 0; i_gamma < 2; i_gamma++) {
+          //       for (size_t j_gamma = 0; j_gamma < 2; j_gamma++) {
+          //         // phi = h_propagator[i_gamma][1 - i_f][i];
+          //         // if (i_gammaj_gamma == 1) {  // gamma_5
+          //         //   _gamma5(phi, phi);
+          //         // }
+
+          //         // C_ij[i_f][i_gamma][j_gamma][t] +=
+          //         //     _spinor_prod_re(l_propagator[i_gamma][i_f][i], phi);
+          //       }
+          //     }
+          //     }
+          // }
         }
 
 #if defined TM_USE_MPI
