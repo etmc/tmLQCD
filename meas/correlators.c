@@ -423,9 +423,10 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         for (size_t i_f = 0; i_f < 2; i_f++) {
           // (u,d) --> [(1+i*tau_2)/sqrt(2)] * (u,d) , stored at temporarely in the propagator
           // spinors (used as dummy spinors)
-          mul_one_pm_itau2(h_eo_spinor_field[1][i_eo][i_f], h_eo_spinor_field[1][i_eo][i_f + 1],
-                           h_eo_spinor_field[0][i_eo][i_f], h_eo_spinor_field[0][i_eo][i_f + 1],
-                           +1.0, VOLUME / 2);
+          mul_one_pm_itau2_and_div_by_sqrt2(
+            h_eo_spinor_field[1][i_eo][i_f], h_eo_spinor_field[1][i_eo][i_f + 1],
+            h_eo_spinor_field[0][i_eo][i_f], h_eo_spinor_field[0][i_eo][i_f + 1],
+            +1.0, VOLUME / 2);
           // assigning the result to the first components (the sources).
           // The propagators will be overwritten with the inversion
           assign(h_eo_spinor_field[0][i_eo][i_f], h_eo_spinor_field[1][i_eo][i_f], VOLUME / 2);
@@ -469,9 +470,10 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         for (size_t i_f = 0; i_f < 2; i_f++) {
           // (u,d) --> [(1+i*tau_2)/sqrt(2)] * (u,d) , stored at temporarely in the propagator
           // spinors (used as dummy spinors)
-          mul_one_pm_itau2(h_eo_spinor_field[1][i_eo][i_f], h_eo_spinor_field[1][i_eo][i_f + 1],
-                           h_eo_spinor_field[0][i_eo][i_f], h_eo_spinor_field[0][i_eo][i_f + 1],
-                           -1.0, VOLUME / 2);
+          mul_one_pm_itau2_and_div_by_sqrt2(
+            h_eo_spinor_field[1][i_eo][i_f], h_eo_spinor_field[1][i_eo][i_f + 1],
+            h_eo_spinor_field[0][i_eo][i_f], h_eo_spinor_field[0][i_eo][i_f + 1],
+            -1.0, VOLUME / 2);
           // assigning the result to the first components (the sources).
           // The propagators will be overwritten with the inversion
           assign(h_eo_spinor_field[0][i_eo][i_f], h_eo_spinor_field[1][i_eo][i_f], VOLUME / 2);
