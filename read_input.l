@@ -2607,25 +2607,25 @@ static inline double fltlist_next_token(int * const list_end){
     if(myverbose) printf("  Do not use external eigensolver line %d monomial %d\n", line_of_file, current_monomial);
     mnl->external_eigsolver = NO_EXT_EIGSOLVER;
   }
-  {SPC}*EigAmin{EQL}{FLT} {
+  {SPC}*EigSolverPolyMin{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mnl->eig_amin = c;
-    if(myverbose!=0) printf("  eig_amin set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose!=0) printf("  min for polynomial acceleration in eigensolver set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*EigAmax{EQL}{FLT} {
+  {SPC}*EigSolverPolyMax{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mnl->eig_amax = c;
-    if(myverbose!=0) printf("  eig_amax set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose!=0) printf("  max for polynomial acceleration in eigensolver set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
-  {SPC}*EigPolyDeg{EQL}{DIGIT}+ {
+  {SPC}*EigSolverPolynomialDegree{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->eig_polydeg = a;
-    if(myverbose!=0) printf("  eig_polydeg set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+    if(myverbose!=0) printf("  degree of polynomial acceleration in eigensolver set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
   }
-  {SPC}*EigNkr{EQL}{DIGIT}+ {
+  {SPC}*EigSolverKrylovSubspaceSize{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->eig_n_kr = a;
-    if(myverbose!=0) printf("  eig_n_kr set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+    if(myverbose!=0) printf("  Krylov subspace size for eigensolver set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
   }
 }
 <NDPOLYMONOMIAL,CLPOLYMONOMIAL>{
