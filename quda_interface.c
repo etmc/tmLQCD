@@ -2601,7 +2601,7 @@ double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterati
                     const double precision, const int max_iter, const int polydeg, const double amin, 
                     const double amax, const int n_kr, const int solver_flag, const int rel_prec,
                     const int even_odd_flag, const SloppyPrecision refinement_precision,
-                    SloppyPrecision sloppy_precision, CompressionType compression) {
+                    SloppyPrecision sloppy_precision, CompressionType compression, const int oneFlavourFlag) {
 
   tm_stopwatch_push(&g_timers, __func__, "");
   
@@ -2624,9 +2624,15 @@ double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterati
   // load gauge after setting precision
   _loadGaugeQuda(compression);
 
-  _setTwoFlavourSolverParam(g_kappa, g_c_sw, g_mubar, g_epsbar, solver_flag, even_odd_flag, precision, max_iter,
-                            1 /*single_parity_solve */,
-                            1 /*always QpQm*/);
+  if ( oneFlavourFlag ) {
+    _setOneFlavourSolverParam(g_kappa, g_c_sw, g_mu, solver_flag, even_odd_flag, precision, max_iter,
+                              1 /*single_parity_solve */,
+                              1 /*always QpQm*/);
+  }else {
+    _setTwoFlavourSolverParam(g_kappa, g_c_sw, g_mubar, g_epsbar, solver_flag, even_odd_flag, precision, max_iter,
+                              1 /*single_parity_solve */,
+                              1 /*always QpQm*/);
+  }
 
   // QUDA applies the MMdag operator, we need QpQm^{-1) in the end
   // so we want QUDA to use the MdagM operator

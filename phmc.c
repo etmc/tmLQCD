@@ -236,7 +236,7 @@ void phmc_compute_ev(const int trajectory_counter,
                                                        1, // we only support even-odd here
                                                        mnl->solver_params.refinement_precision,
                                                        mnl->solver_params.sloppy_precision,
-                                                       mnl->solver_params.compression_type);
+                                                       mnl->solver_params.compression_type, 0);
     if( fabs(mnl->EVMax - 1) < 2*DBL_EPSILON ) {
       temp = temp / mnl->StildeMax;
     }
@@ -263,7 +263,7 @@ void phmc_compute_ev(const int trajectory_counter,
                                                        1, // we only support even-odd here
                                                        mnl->solver_params.refinement_precision,
                                                        mnl->solver_params.sloppy_precision,
-                                                       mnl->solver_params.compression_type);
+                                                       mnl->solver_params.compression_type, 0);
     if( fabs(mnl->EVMax - 1.) < 2*DBL_EPSILON ) {
       temp2 = temp2 / mnl->StildeMax;
     }

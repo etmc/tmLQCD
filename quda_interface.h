@@ -179,6 +179,6 @@ double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterati
                     const double precision, const int max_iter, const int polydeg, const double amin, 
                     const double amax, const int n_kr, const int solver_flag, const int rel_prec,
                     const int even_odd_flag, const SloppyPrecision refinement_precision,
-                    SloppyPrecision sloppy_precision, CompressionType compression);
+                    SloppyPrecision sloppy_precision, CompressionType compression, const int oneFlavourFlag);
 
 #endif /* QUDA_INTERFACE_H_ */
