@@ -1,0 +1,279 @@
+---
+title: Online measurements of heavy meson correlators
+author: Simone Romiti
+date: last-modified
+jupyter: python3
+format-links: false # hide the existence of other formats
+format:
+  html:
+    embed-resources: true # standalon html
+    html-math-method: mathjax # use the common latex commands
+    include-in-header: mathjax-config.html # equation numbering with sections
+    fontsize: 14pt
+  pdf:
+    pdf-engine: pdflatex
+    fontsize: 12pt
+bibliography: bibliography.bib
+csl: acta-ecologica-sinica.csl
+fontsize: 16pt
+---
+
+`tmLQCD`can compute the correlators for the heavy mesons $K$ and $D$.
+The twisted mass formulation of the heavy doublet $(s, c)$ is such that $K$ and $D$ mix in the correlators @baron2011computing.
+In fact, the Dirac operator is not diagonal in flavor,
+and the extraction of their masses requires the evaluation of a $(2 \times 2) \otimes (2 \times 2)$ matrix of correlators.
+In the following we use the twisted basis $\chi$ for fermion fields:
+<!--  -->
+\begin{align}
+\label{eq:LightFlavorSpinorFields}
+\chi_{\ell} &= 
+\chi_{u} + \chi_{d} =
+    \begin{bmatrix}
+    \hat{\chi}_{u} \\
+    0
+    \end{bmatrix}
+    +
+    \begin{bmatrix}
+    0 \\
+    \hat{\chi}_{d}
+    \end{bmatrix}
+\, , \\[1em] 
+\label{eq:HeavyFlavorSpinorFields}
+\chi_{h} &= 
+\chi_{c} + \chi_{s} =
+    \begin{bmatrix}
+    \hat{\chi}_{c} \\
+    0
+    \end{bmatrix}
+    +
+    \begin{bmatrix}
+    0 \\
+    \hat{\chi}_{s}
+    \end{bmatrix}
+\, .
+\end{align}
+<!--  -->
+
+## Correlators for the $K$ and $D$
+
+The required correlators are given by the following
+expectation values on the interacting vacuum
+${\bra{\Omega} \cdot \ket{\Omega} = \braket{\cdot}}$:
+<!--  -->
+\begin{equation}
+\begin{split}
+{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t) &=
+\eta_1 \frac{1}{V} 
+\sum_{\vec{x}} 
+\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x})
+\\
+&=
+- \eta_{1} \eta_{2}
+\frac{1}{V} 
+\sum_{\vec{x}} 
+\braket{
+[\bar{\chi}_{\ell_{\bar{i}}} \Gamma_1 \chi_{h_i}](x)
+[\bar{\chi}_{\ell_{\bar{j}}} \Gamma_2 \chi_{h_j}]^{\dagger}(0)
+}
+\, ,
+\end{split}
+\end{equation}
+<!--  -->
+where $h_i=c,s$, $\Gamma_i = 1, \gamma_5$.
+The minus sign will vanish when doing the Wick contractions,
+while
+$\eta_{\mathbb{1}} = \pm 1$ and $\eta_{\gamma_5} = \pm i$ 
+are used just to compensate the sign change when daggering the spinor bilinears at the source:
+<!--  -->
+\begin{equation}
+\eta_\Gamma (\bar{\chi}_a \Gamma \chi_b)^\dagger = 
+\eta_\Gamma \bar{\chi}_b \gamma_0 \Gamma^\dagger \gamma_0 \chi_a =
+\bar{\chi}_b \Gamma \chi_a 
+\, .
+\end{equation}
+<!--  -->
+The index $\bar{i}$ ($\bar{j}$) is the flavor index in the doublet that is opposite to $i$ ($j$):
+<!--  -->
+\begin{equation}
+h_i=c,s \to i = 0,1 \to \bar{i} = 1,0 \to \ell_{\bar{i}} = d,u
+\, .
+\end{equation}
+
+We now write the explicit Wick contractions for the object:
+<!--  -->
+\begin{equation}
+\begin{split}
+\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) &=
+- \eta_{2}
+\braket{
+[\bar{\chi}_{\ell_{\bar{i}}} \Gamma_1 \chi_{h_i}](x)
+[\bar{\chi}_{\ell_{\bar{j}}} \Gamma_2 \chi_{h_j}]^{\dagger}(0)
+}
+\\
+&= - \braket{
+[\bar{\chi}_{\ell_{\bar{i}}} \Gamma_1 \chi_{h_i}](x)
+[\bar{\chi}_{h_j} \Gamma_2 \chi_{\ell_{\bar{j}}}](0)
+}
+\end{split}
+\end{equation}
+<!--  -->
+
+A few observations are useful here:
+
+- In flavor space, 
+    ${\sigma_1 = 
+    \begin{bmatrix}
+    0 & 1 \\
+    1 & 0
+    \end{bmatrix}
+    }$
+    switches between the up and down flavor. 
+    Moreover, $\sigma_1 = \sigma_1^\dagger$.
+
+- The spinor fields $\chi_{u,d}$ and $\chi_{c,s}$ of eq. 
+\eqref{eq:LightFlavorSpinorFields} and 
+\eqref{eq:HeavyFlavorSpinorFields} 
+can be obtained with the projector:
+<!--  -->
+\begin{equation}
+P_{i} = \frac{1}{2} [1 + (-1)^i \sigma_3] \, , \, i=0,1
+\, ,
+\end{equation}
+<!--  -->
+where ${\sigma_3 = 
+    \begin{bmatrix}
+    1 & 0 \\
+    0 & -1
+    \end{bmatrix}
+    }$.
+    As a projector, it satisfies $P_i^2 = P_i$.
+    Moreover, $\sigma_3 = \sigma_3^\dagger$, 
+    hence $P_i^\dagger = P_i$.
+
+- Obviously, $P_i$ commutes with the $\gamma$ matrices asthey act on different spaces.
+
+## Wick contractions
+
+Using the above remarks,
+we can write:
+<!--  -->
+\begin{equation}
+\begin{split}
+\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) &=
+- \braket{
+[\bar{\chi}_{\ell_{\bar{i}}} \Gamma_1 \chi_{h_i}](x)
+[\bar{\chi}_{h_j} \Gamma_2 \chi_{\ell_{\bar{j}}}](0)
+}
+\\
+&= 
+- \braket{
+[\bar{\chi}_{\ell} (\tau_1 P_i) \Gamma_1 \chi_{h}](x)
+[\bar{\chi}_{h} (P_j \tau_1) \Gamma_2 \chi_{\ell}](0)
+}
+\, .
+\end{split}
+\end{equation}
+<!--  -->
+An implicit summation on flavor indices is understood:
+<!--  -->
+\begin{equation}
+\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) =
+- \braket{
+[(\bar{\chi}_{\ell})_{f_1} (\tau_1 P_i)_{f_1 f_2} \Gamma_1 (\chi_{h})_{f_2}](x)
+[(\bar{\chi}_{h})_{f_3} (P_j \tau_1)_{f_3 f_4} \Gamma_2 (\chi_{\ell})_{f_4}](0)
+}
+\, .
+\end{equation}
+<!--  -->
+
+If we now call $S = D^{-1}$ the inverse of the Dirac operator,
+and use Wick's theorem:
+<!--  -->
+\begin{equation}
+\braket{\psi_{a}(x) \bar{\psi}_{b}(0)} = S_{ab}(x|0) \, ,
+\end{equation}
+<!--  -->
+where $a$ and $b$ are a shortcut for the other indices of the spinor (spin, flavor, color, etc.).
+we write:
+<!--  -->
+\begin{equation}
+\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) =
+(S_\ell)_{\substack{f_1 f_2 \\ \alpha_1 \alpha_2}} (0|x)
+(\tau_1 P_i)_{f_1 f_2} (\Gamma_1)_{\alpha_2 \alpha_3}
+(S_h)_{\substack{f_2 f_3 \\ \alpha_3 \alpha_4}} (x|0)
+(P_j \tau_1)_{f_3 f_4} (\Gamma_2)_{\alpha_4 \alpha_1}
+\, .
+\end{equation}
+<!--  -->
+
+## Stochastic sampling
+
+Analogously to @foley2005practical,
+we now use $N_r$ stochastic samples in order to approximate $S$.
+The difference here is that the dilution is not on time but on Dirac index (spin).
+Therefore, our estimator for $S$ is 
+(cf. eqs. (5) and (7) of @foley2005practical):
+<!--  -->
+\begin{equation}
+(S_\phi)_{\substack{f_1 f_2 \\ \alpha_1 \alpha_2}}(x|y)
+\approx 
+\sum_{\beta=1}^{N_D=4} 
+\braket{
+    (\psi_\phi^{(\beta)})_{\substack{f_1 \\ \alpha_1}}(x) 
+    (\eta_\phi^{(\beta)})^*_{\substack{f_2 \\ \alpha_2}}(y) 
+}
+\, ,
+\end{equation}
+<!--  -->
+where $\braket{\cdot}$ here denotes the expectation value over the $N_r$ stochastic samples.
+The sources are such that 
+${\eta^{(\beta)}_{\alpha} = \delta_{\alpha \beta}}$,
+and $\psi^{\beta}$ are the solutions to:
+<!--  -->
+\begin{equation}
+\begin{split}
+&(D_{\phi})_{\substack{f_1 f_2 \\ \alpha_1 \alpha_2}}(x|y) 
+\,
+(\psi_\phi)^{\beta}_{\substack{f_2 \\ \alpha_2}}(y) = 
+(\eta_\phi)^{\beta}_{\substack{f_1 \\ \alpha_1}}(x)
+\\[1em]
+& \implies \, \,
+(\psi_\phi)^{\beta}_{\substack{f_1 \\ \alpha_1}}(x) = 
+(S_{\phi})_{\substack{f_1 f_2 \\ \alpha_1 \alpha_2}}(x|y)
+\, 
+(\eta_\phi)^{\beta}_{\substack{f_2 \\ \alpha_1}}(y)
+\end{split}
+\end{equation}
+<!--  -->
+
+
+Therefore, back to our correlators, we can write:
+<!--  -->
+\begin{equation}
+\begin{split}
+\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
+=
+\sum_{\beta_1, \beta_2}
+&
+(\psi_{\ell}^{(\beta_1)})_{\substack{f_1 \\ \alpha_1}}(0) 
+(\eta_{\ell}^{(\beta_1)})^*_{\substack{f_2 \\ \alpha_2}}(x) 
+(\tau_1 P_i)_{f_1 f_2} (\Gamma_1)_{\alpha_2 \alpha_3}
+\\
+\times
+&
+(\psi_{h}^{(\beta_2)})_{\substack{f_2 \\ \alpha_2}}(x) 
+(\eta_{h}^{(\beta_2)})^*_{\substack{f_3 \\ \alpha_3}}(0) 
+(P_j \tau_1)_{f_3 f_4} (\Gamma_2)_{\alpha_4 \alpha_1}
+\, .
+\end{split}
+\end{equation}
+<!--  -->
+
+## Implementation
+
+See comments in the code: `correlators.c`.
+
+
+
+
+
