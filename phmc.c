@@ -231,7 +231,8 @@ void phmc_compute_ev(const int trajectory_counter,
   if(mnl->external_eigsolver == QUDA_EIGSOLVER) {
   #ifdef TM_USE_QUDA
     temp = eigsolveQuda(no_eigenvalues, eigenvalue_precision, 1, 0, max_iter_ev, 0,
-                        mnl->accprec, mnl->maxiter, mnl->solver, g_relative_precision_flag,
+                        mnl->accprec, mnl->maxiter, mnl->eig_polydeg, mnl->eig_amin, 
+                        mnl->eig_amax, mnl->eig_n_kr, mnl->solver, g_relative_precision_flag,
                                                        1, // we only support even-odd here
                                                        mnl->solver_params.refinement_precision,
                                                        mnl->solver_params.sloppy_precision,
@@ -257,7 +258,8 @@ void phmc_compute_ev(const int trajectory_counter,
   if(mnl->external_eigsolver == QUDA_EIGSOLVER) {
   #ifdef TM_USE_QUDA
     temp2 = eigsolveQuda(no_eigenvalues, eigenvalue_precision, 1, 0, max_iter_ev, 1,
-                         mnl->accprec, mnl->maxiter, mnl->solver, g_relative_precision_flag,
+                         mnl->accprec, mnl->maxiter, mnl->eig_polydeg, mnl->eig_amin, 
+                         mnl->eig_amax, mnl->eig_n_kr, mnl->solver, g_relative_precision_flag,
                                                        1, // we only support even-odd here
                                                        mnl->solver_params.refinement_precision,
                                                        mnl->solver_params.sloppy_precision,

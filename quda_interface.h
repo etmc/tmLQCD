@@ -176,7 +176,8 @@ void compute_WFlow_quda(const double eps ,const double tmax, const int traj, FIL
 
 
 double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterations, int maxmin,
-                    const double precision, const int max_iter, const int solver_flag, const int rel_prec,
+                    const double precision, const int max_iter, const int polydeg, const double amin, 
+                    const double amax, const int n_kr, const int solver_flag, const int rel_prec,
                     const int even_odd_flag, const SloppyPrecision refinement_precision,
                     SloppyPrecision sloppy_precision, CompressionType compression);
 
