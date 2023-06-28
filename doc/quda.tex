@@ -384,7 +384,7 @@ The options of QUDA's eigensolver are set via the following set of parameters:
   \item{ \texttt{MGEigSolverUsePolynomialAcceleration}: Whether or not to use polynomial acceleration in the eigensolver on a per-level basis. (comma-separated list of booleans, default: \texttt{yes} everywhere)}
   \item{ \texttt{MGEigSolverPolynomialDegree}: Degree of the polynomial used for polynomial acceleration of the eigensolver, specified on a per-level basis. This will be ignored except if \texttt{MGEigSolverUsePolynomialAcceleration = yes} is set on a given level. Values between $50$ to $100$ seem to work well. (comma-separated list of postive integers, default: $100$ on all levels)}
   \item{ \texttt{MGEigSolverPolyMin}: Smallest eigenvalue to suppress via polynomial acceleration. It should not be set too low and only lowered step by step from its default value. Has a large impact on the rate of convergence of the eigensolver when set correctly. Ignored unless \texttt{MGEigSolverUsePolynomialAcceleration = yes} is set on the corresponding level. (comma-separated list of positive real numbers, default: $1.0$ on all levels)}
-  \item{ \texttt{MGEigSolverPolyMax}: Largest eigenvalue which should be suppressed via polynomial acceleration. This should be set about 10\% larger than the actual largest eigenvalue of the operator. Ignored unless \texttt{MGEigSolverUsePolynomialAcceleration = yes} is set. (comma-separated list of positive real numbers, default: $5.0$ on all levels)}
+  \item{ \texttt{MGEigSolverPolyMax}: Largest eigenvalue which should be suppressed via polynomial acceleration. This should be set about 20\% larger than the actual largest eigenvalue of the operator. Ignored unless \texttt{MGEigSolverUsePolynomialAcceleration = yes} is set. (comma-separated list of positive real numbers, default: $5.0$ on all levels)}
 \end{itemize}
 
 A typical coarse-grid-deflated setup might look something like:
@@ -421,18 +421,26 @@ BeginExternalInverter QUDA
   MGEigSolverType = tr_lanczos, tr_lanczos, tr_lanczos
   MGEigSolverSpectrum = smallest_real, smallest_real, smallest_real
   MGEigPreserveDeflationSubspace = yes
-  MGEigSolverNumberOfVectors = 24, 32, 1024
-  MGEigSolverKrylovSubspaceSize = 24, 32, 2048
+  MGEigSolverNumberOfVectors = 0, 0, 1024
+  MGEigSolverKrylovSubspaceSize = 0, 0, 3072
   MGEigSolverRequireConvergence = no, no, yes
-  MGEigSolverMaxRestarts = 100, 100, 100
+  MGEigSolverMaxRestarts = 0, 0, 100
   MGEigSolverTolerance = 1e-4, 1e-4, 1e-4
   MGEigSolverUseNormOp  = no, no, yes
   MGEigSolverUseDagger = no, no, no
   MGEigSolverUsePolynomialAcceleration = no, no, yes
-  MGEigSolverPolynomialDegree = 100, 100, 100
-  MGEigSolverPolyMin = 0.6, 0.6, 0,6
-  MGEigSolverPolyMax = 8.0, 8.0, 8.0
-  MGCoarseSolverCABasisSize = 8, 8, 8
+  MGEigSolverPolynomialDegree = 0, 0, 100
+  MGEigSolverPolyMin = 0.0, 0.0, 0.01
+  MGEigSolverPolyMax = 0.0, 0.0, 3.6
+  MGCoarseSolverCABasisSize = 4, 4, 4
 EndExternalInverter
 \end{verbatim}
 
+In order to determine approppriate values for \texttt{MGEigSolverPolyMin} and \texttt{MGEigSolverPolyMax}, one should run the eigensolver once without polynomial acceleration (\texttt{MGEigSolverUsePolynomialAcceleration = no}) and run tmLQCD at \texttt{DebugLevel = 3} to trigger the eigenvalues to be printed by the eigensolver.
+Then, setting \texttt{MGEigSolverSpectrum = largest\_real}, \texttt{MGEigSolverNumberOfVectors = 1} and \texttt{MGEigSolverKrylovSubspaceSize = 16} (all on the coarsest grid, the third number in the example above), one can easily obtain the largest eigenvalue of the coarse grid operator for a particular configuration or set of configurations.
+Increasing this number by 20\% or so gives a good value for \texttt{MGEigSolverPolyMax}.
+Subsequently, setting \texttt{MGEigSolverSpectrum = smallest\_real}, \texttt{MGEigSolverNumberOfVectors = 0, 0, 1024}, \texttt{MGEigSolverKrylovSubspaceSize = 0, 0, 3072} will give the requisite 1024 smallest eigenvalues.
+Noting the largest of these, the next largest order of magnitude can be used for \texttt{MGEigSolverPolyMin}.
+In other words, if the largest of these smallest eigenvalues is $4\cdot10^{-3}$, for example, then \texttt{MGEigSolverPolyMin} can be set to 0.01.
+This ensures that the desired (smallest) part of the spectrum is smaller than \texttt{MGEigSolverPolyMin} and that the entire spectrum is contained in the range up to \texttt{MGEigSolverPolyMax}.
+After this, polynomial acceleration can be enabled, which should reduce setup time significantly.
