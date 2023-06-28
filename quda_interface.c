@@ -2697,7 +2697,7 @@ double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterati
   // at a relatively coarse lattice spacing for the eigenvalues
   // of the twisted-clover ND operator with values of musigma / mudelta
   // reproducing physical sea strange and charm quark masses
-  eig_param.use_poly_acc = (maxmin == 1) && (polydeg != 0) ? QUDA_BOOLEAN_FALSE : QUDA_BOOLEAN_TRUE;
+  eig_param.use_poly_acc = (maxmin == 1) || (polydeg == 0) ? QUDA_BOOLEAN_FALSE : QUDA_BOOLEAN_TRUE;
   eig_param.poly_deg = polydeg;
   eig_param.a_min = amin;
   eig_param.a_max = amax;
