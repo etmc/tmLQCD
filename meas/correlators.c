@@ -342,7 +342,8 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
   Cp4 = (double *)calloc(T, sizeof(double));
 #endif
 
-  /* heavy-light correlator: dummy variables */
+  /* heavy-light correlators variables */
+  double eta_Gamma[2] = {1.0, -1.0}; // sign change compensation from daggering bilinear with Gamma = 1,gamma_5
 
   // the number of independent correlators is 16 = (2*2)_{h_1 h_2} * (2*2)_{Gamma_1 Gamma_2}
   // h_i: c,s 
@@ -532,9 +533,9 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
             // (c,s) --> [(1-i*tau_2)/sqrt(2)] * (c,s) , stored at temporarely in the propagator
             // spinors (used as dummy spinors)
             mul_one_pm_itau2_and_div_by_sqrt2(arr_eo_spinor[1][1][src_d][i_eo][0],
-                                              arr_eo_spinor[1][1][src_d][i_eo][0 + 1],
+                                              arr_eo_spinor[1][1][src_d][i_eo][1],
                                               arr_eo_spinor[0][1][src_d][i_eo][0],
-                                              arr_eo_spinor[0][1][src_d][i_eo][0 + 1], -1.0,
+                                              arr_eo_spinor[0][1][src_d][i_eo][1], -1.0,
                                               VOLUME / 2);
           for (size_t i_f = 0; i_f < 2; i_f++) {
             // assigning the result to the first components (the sources).
@@ -603,11 +604,11 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
                       _spinor_scalar_prod(dum1, arr_spinor[0][0][beta_1][1 - i_f][i], phi);
 
                       // 2nd contribution
-                      phi = arr_spinor[1][0][beta_1][1 - i_f][i];
+                      phi = arr_spinor[1][0][beta_1][1 - j_f][i];
                       if (Gamma_2 == 1) {  // Gamma_1 = gamma_5
                         _gamma5(phi, phi);
                       }
-                      _spinor_scalar_prod(dum2, arr_spinor[0][1][beta_2][i_f][i], phi);
+                      _spinor_scalar_prod(dum2, arr_spinor[0][1][beta_2][j_f][i], phi);
 
                       res_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2] += dum1 * dum2;
                     }
@@ -655,7 +656,8 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
             }
           }
         }
-      }
+
+      } //end loop over "t"
 
 #ifdef TM_USE_MPI
       /* some gymnastics needed in case of parallelisation */
@@ -710,6 +712,26 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         }
         tt = (t0 + g_nproc_t * T / 2) % (g_nproc_t * T);
         fprintf(ofs, "6  1  %d  %e  %e\n", t, Cp4[tt], 0.);
+
+
+          for (size_t i_f = 0; i_f < 2; i_f++) {
+            for (size_t j_f = 0; j_f < 2; j_f++) {
+              for (size_t i_Gamma1 = 0; i_Gamma1 < 2; i_Gamma1++) {
+                for (size_t i_Gamma2 = 0; i_Gamma2 < 2; i_Gamma2++) {
+                   fprintf(ofs, "%d  %d  %d  %d 0  %e  %e\n", i_f, j_f, i_Gamma1, i_Gamma2, C_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2][t0], 0.);
+                    for (t = 1; t < g_nproc_t * T / 2; t++) {
+                      tt = (t0 + t) % (g_nproc_t * T);
+                      fprintf(ofs, "%d  %d  %d  %d  %d  %e  ", i_f, j_f, i_Gamma1, i_Gamma2, t, C_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2][tt]);
+                      tt = (t0 + g_nproc_t * T - t) % (g_nproc_t * T);
+                      fprintf(ofs, "%e\n", C_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2][tt]);
+                    }
+                    tt = (t0 + g_nproc_t * T / 2) % (g_nproc_t * T);
+                    fprintf(ofs, "%d  %d  %d  %d  %d  %d  %e  %e\n", i_f, j_f, i_Gamma1, i_Gamma2, t, C_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2][tt], 0.0);
+                }
+              }
+            }
+          }
+
         fclose(ofs);
       }
 #ifdef TM_USE_MPI
