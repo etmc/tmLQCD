@@ -255,9 +255,9 @@ void light_correlators_measurement(const int traj, const int id, const int ieo) 
 
 
 // Function to allocate memory for a pointer of pointers for an array of d dimensions
-void* allocateMultiDimensionalArray(int* sizes, int numDimensions, size_t elementSize) {
+void* callocMultiDimensional(int* sizes, int numDimensions, size_t elementSize) {
     if (numDimensions == 1) {
-        void* array = malloc(sizes[0] * sizeof(elementSize));
+        void* array = calloc(sizes[0], sizeof(elementSize));
         
         if (array == NULL) {
             printf("Memory allocation failed for dimension 0!");
@@ -267,7 +267,7 @@ void* allocateMultiDimensionalArray(int* sizes, int numDimensions, size_t elemen
         return array;
     }
     
-    void** pointerArray = (void**)malloc(sizes[0] * sizeof(void*));
+    void** pointerArray = (void**)calloc(sizes[0], sizeof(void*));
     
     if (pointerArray == NULL) {
         printf("Memory allocation failed for dimension %d!", numDimensions - 1);
@@ -275,7 +275,7 @@ void* allocateMultiDimensionalArray(int* sizes, int numDimensions, size_t elemen
     }
     
     for (int i = 0; i < sizes[0]; i++) {
-        pointerArray[i] = allocateMultiDimensionalArray(sizes + 1, numDimensions - 1);
+        pointerArray[i] = callocMultiDimensional(sizes + 1, numDimensions - 1);
         
         if (pointerArray[i] == NULL) {
             printf("Memory allocation failed for subarray %d in dimension %d!", i, numDimensions - 1);
@@ -345,13 +345,14 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
   /* heavy-light correlator: dummy variables */
 
   // the number of independent correlators is 16 = (2*2)_{h_1 h_2} * (2*2)_{Gamma_1 Gamma_2}
-  // h_i: c,s, Gamma = (1, gamma_5)
-  double *****C_hihj_Gamma1Gamma2 = (double *****) allocateMultiDimensionalArray({2,2,2,2,T}, 5, sizeof(double));
-  double *****res_hihj_Gamma1Gamma2 = (double *****) allocateMultiDimensionalArray({2,2,2,2,T}, 5, sizeof(double));
+  // h_i: c,s 
+  // Gamma = 1, gamma_5
+  double *****C_hihj_Gamma1Gamma2 = (double *****) callocMultiDimensional({2,2,2,2,T}, 5, sizeof(double));
+  double ****res_hihj_Gamma1Gamma2 = (double ****) callocMultiDimensional({2,2,2,2}, 4, sizeof(double));
 #ifdef TM_USE_MPI
-  double *****mpi_res_ij = (double *****) allocateMultiDimensionalArray({2,2,2,2,T}, 5, sizeof(double));
+  double ****mpi_res_hihj_Gamma1Gamma2 = (double ****) callocMultiDimensional({2,2,2,2}, 4, sizeof(double));
   // send buffer for MPI_Gather
-  double *****sC_ij = (double *****) allocateMultiDimensionalArray({2,2,2,2,T}, 5, sizeof(double));
+  double *****sC_hihj_Gamma1Gamma2 = (double *****) callocMultiDimensional({2,2,2,2,T}, 5, sizeof(double));
 #endif
 
   FILE *ofs;                                // output file stream
@@ -438,18 +439,9 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
       // psi = (psi[(s,p)][phi][beta][eo][f][x])[alpha][c] // last 3 indices are proper of the spinor struct
       // Note: propagator in the sense that it is D^{-1}*source after the inversion
 
-      // unnecessary: // init_spinor_field(VOLUMEPLUSRAND / 2, 1);  // initialize g_spinor_field so that I can copy it
+      spinor ******arr_eo_spinor = (spinor ******)callocMultiDimensional({2,2,4,2,2,VOLUME/2}, 6, sizeof(spinor));
       
-      spinor ******arr_eo_spinor = (spinor ******)allocateMultiDimensionalArray({2,2,4,2,2,VOLUME/2}, 6, sizeof(spinor));
-//      spinor ******h_arr_eo_spinor = (spinor ******)allocateMultiDimensionalArray({2,2,4,2,2,VOLUME/2}, 6, sizeof(spinor));
-      
-      // (no even-odd): source+propagator, doublet, spin dilution index, even-odd, flavor, position (+ Dirac, color)
-      // (psi[phi][beta][f][x])[alpha][c] // last 3 indices are proper of the spinor struct
-      spinor ****arr_spinor = (spinor ****) allocateMultiDimensionalArray({2,4,2,VOLUME}, 4, sizeof(spinor));
-//      spinor ****h_propagator = (spinor ****) allocateMultiDimensionalArray({2,4,2,VOLUME/2}, 4, sizeof(spinor));
-
-      /* initalize the random sources: one source for each Dirc index beta=src_d --> spin dilution
-       */
+      /* initalize the random sources: one source for each Dirac index beta=src_d --> spin dilution */
       for (size_t i_phi = 0; i_phi < 2; i_phi++) {    // doublet: light or heavy
         for (size_t src_d = 0; src_d < 4; src_d++) {  // spin dilution index
           for (size_t i_f = 0; i_f < 2; i_f++) {      // flavor index of the doublet
@@ -553,6 +545,10 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         }
       }
 
+      // (no even-odd): source+propagator, doublet, spin dilution index, even-odd, flavor, position (+ Dirac, color)
+      // (psi[i_sp][phi][beta][f][x])[alpha][c] // last 3 indices are proper of the spinor struct
+      spinor *****arr_spinor = (spinor *****) callocMultiDimensional({2,2,4,2,VOLUME}, 5, sizeof(spinor));
+
       // now we switch from even-odd representation to standard
       for (size_t i_sp = 0; i_sp < 2; i_sp++) {         // source or sink
         for (size_t i_phi = 0; i_phi < 2; i_phi++) {    // doublet index
@@ -575,23 +571,45 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
       /* now we sum only over local space for every t */
       for (t = 0; t < T; t++) {
         j = g_ipt[t][0][0][0];
+
+        // dummy variables
         res = 0.;
         respa = 0.;
         resp4 = 0.;
-        for (i = j; i < j + LX * LY * LZ; i++) {
-          res += _spinor_prod_re(l_propagator[0][0][i], l_propagator[0][0][i]);
-          _gamma0(phi, l_propagator[0][0][i]);
-          respa += _spinor_prod_re(l_propagator[0][0][i], phi);
-          _gamma5(phi, phi);
-          resp4 += _spinor_prod_im(l_propagator[0][0][i], phi);
 
-          for (size_t beta1 = 0; beta1 < 4; beta1++) {
-            for (size_t beta2 = 0; beta2 < 4; beta2++) {
-              for (size_t i = 0; i < 2; i++) {
-                for (size_t j = 0; j < 2; j++) {
-                  for (size_t i_Gamma1 = 0; i_Gamma1 < 2; i_Gamma1++) {
-                    for (size_t i_Gamma2 = 0; i_Gamma2 < 2; i_Gamma2++) {
-                      res_hihj_Gamma1Gamma2 += _spinor_scalar_prod(); // COMPLETE HERE
+        for (i = j; i < j + LX * LY * LZ; i++) {
+          // light correlators
+          for (size_t beta = 0; beta < 4; beta++) {  // spin dilution
+            res += _spinor_prod_re(arr_spinor[1][0][beta][0][i], arr_spinor[1][0][beta][0][i]);
+            _gamma0(phi, arr_spinor[1][0][beta][0][i]);
+            respa += _spinor_prod_re(arr_spinor[1][0][beta][0][i], phi);
+            _gamma5(phi, phi);
+            resp4 += _spinor_prod_im(arr_spinor[1][0][beta][0][i], phi);
+          }
+
+          for (size_t i_f = 0; i_f < 2; i_f++) {
+            for (size_t j_f = 0; j_f < 2; j_f++) {
+              for (size_t i_Gamma1 = 0; i_Gamma1 < 2; i_Gamma1++) {
+                for (size_t i_Gamma2 = 0; i_Gamma2 < 2; i_Gamma2++) {
+                  for (size_t beta1 = 0; beta1 < 4; beta1++) {
+                    for (size_t beta2 = 0; beta2 < 4; beta2++) {
+                      double dum1, dum2 = 0.0, 0.0;  // dummy variables
+
+                      // 1st  contribution
+                      phi = arr_spinor[1][1][beta_2][i_f][i];
+                      if (Gamma_1 == 1) {  // Gamma_1 = 1
+                        _gamma5(phi, phi);
+                      }
+                      _spinor_scalar_prod(dum1, arr_spinor[0][0][beta_1][1 - i_f][i], phi);
+
+                      // 2nd contribution
+                      phi = arr_spinor[1][0][beta_1][1 - i_f][i];
+                      if (Gamma_2 == 1) {  // Gamma_1 = gamma_5
+                        _gamma5(phi, phi);
+                      }
+                      _spinor_scalar_prod(dum2, arr_spinor[0][1][beta_2][i_f][i], phi);
+
+                      res_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2] += dum1 * dum2;
                     }
                   }
                 }
@@ -621,14 +639,42 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         Cp4[t] = +resp4 / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ) / 2. /
                  optr1->kappa / optr1->kappa;
 #endif
+
+        for (size_t i_f = 0; i_f < 2; i_f++) {
+          for (size_t j_f = 0; j_f < 2; j_f++) {
+            for (size_t i_Gamma1 = 0; i_Gamma1 < 2; i_Gamma1++) {
+              for (size_t i_Gamma2 = 0; i_Gamma2 < 2; i_Gamma2++) {
+#if defined TM_USE_MPI
+                MPI_Reduce(&res_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2], &mpi_res_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2], 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
+                res_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2] = mpi_res_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2];
+                C_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2][t] = -eta_Gamma[i_Gamma1]*res / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ);
+#else
+                C_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2][t] = -eta_Gamma[i_Gamma1]*res / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ);
+#endif
+              }
+            }
+          }
+        }
       }
 
 #ifdef TM_USE_MPI
       /* some gymnastics needed in case of parallelisation */
       if (g_mpi_time_rank == 0) {
+        // light correlators
         MPI_Gather(sCpp, T, MPI_DOUBLE, Cpp, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
         MPI_Gather(sCpa, T, MPI_DOUBLE, Cpa, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
         MPI_Gather(sCp4, T, MPI_DOUBLE, Cp4, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
+
+        // heavy mesons
+        for (size_t i_f = 0; i_f < 2; i_f++) {
+          for (size_t j_f = 0; j_f < 2; j_f++) {
+            for (size_t i_Gamma1 = 0; i_Gamma1 < 2; i_Gamma1++) {
+              for (size_t i_Gamma2 = 0; i_Gamma2 < 2; i_Gamma2++) {
+                MPI_Gather(sC_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2], T, MPI_DOUBLE, C_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2], T, MPI_DOUBLE, 0, g_mpi_SV_slices);
+              }
+            }
+          }
+        }
       }
 #endif
 
@@ -671,17 +717,17 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         free(Cpp);
         free(Cpa);
         free(Cp4);
-        free(C_ij);
+        free(C_hihj_Gamma1Gamma2);
       }
       free(sCpp);
       free(sCpa);
       free(sCp4);
-      free(sC_ij);
+      free(sC_hihj_Gamma1Gamma2);
 #else
       free(Cpp);
       free(Cpa);
       free(Cp4);
-      free(C_ij);
+      free(C_hihj_Gamma1Gamma2);
 #endif
     }  // for(max_time_slices)
   }    // for(max_samples)

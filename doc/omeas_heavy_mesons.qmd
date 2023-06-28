@@ -6,6 +6,8 @@ jupyter: python3
 format-links: false # hide the existence of other formats
 format:
   html:
+    toc: true
+    toc-location: body
     embed-resources: true # standalone html
     html-math-method: mathjax # use the common latex commands
     include-in-header: mathjax-config.html # equation numbering with sections
@@ -63,12 +65,12 @@ ${\bra{\Omega} \cdot \ket{\Omega} = \braket{\cdot}}$:
 \begin{equation}
 \begin{split}
 {C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t) &=
-\eta_1 \frac{1}{V} 
+- \eta_1 \frac{1}{V} 
 \sum_{\vec{x}} 
 \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x})
 \\
 &=
-- \eta_{1} \eta_{2}
+\eta_{1} \eta_{2}
 \frac{1}{V} 
 \sum_{\vec{x}} 
 \braket{
@@ -82,7 +84,7 @@ ${\bra{\Omega} \cdot \ket{\Omega} = \braket{\cdot}}$:
 where $h_i=c,s$, $\Gamma_i = 1, \gamma_5$.
 The minus sign will vanish when doing the Wick contractions,
 while
-$\eta_{\mathbb{1}} = \pm 1$ and $\eta_{\gamma_5} = \pm i$ 
+$\eta_{\mathbb{1}} = 1$ and $\eta_{\gamma_5} = -1$ 
 are used just to compensate the sign change when daggering the spinor bilinears at the source:
 <!--  -->
 \begin{equation}
@@ -147,7 +149,7 @@ where ${\sigma_3 =
     \end{bmatrix}
     }$.
     As a projector, it satisfies $P_i^2 = P_i$.
-    Moreover, $\sigma_3 = \sigma_3^\dagger$, 
+    Moreover $\sigma_3 = \sigma_3^\dagger$, 
     hence $P_i^\dagger = P_i$.
 
 - Obviously, $P_i$ commutes with the $\gamma$ matrices asthey act on different spaces.
@@ -190,7 +192,7 @@ If we now call $S = D^{-1}$ the inverse of the Dirac operator,
 and use Wick's theorem:
 <!--  -->
 \begin{equation}
-\braket{\psi_{a}(x) \bar{\psi}_{b}(0)} = S_{ab}(x|0) \, ,
+\braket{\Psi_{a}(x) \bar{\Psi}_{b}(0)} = S_{ab}(x|0) \, ,
 \end{equation}
 <!--  -->
 where $a$ and $b$ are a shortcut for the other indices of the spinor (spin, flavor, color, etc.),
@@ -261,13 +263,35 @@ Therefore, back to our correlators, we can write:
 \\
 \times
 &
-(\psi_{h}^{(\beta_2)})_{\substack{f_2 \\ \alpha_2}}(x) 
-(\eta_{h}^{(\beta_2)})^*_{\substack{f_3 \\ \alpha_3}}(0) 
+(\psi_{h}^{(\beta_2)})_{\substack{f_2 \\ \alpha_3}}(x) 
+(\eta_{h}^{(\beta_2)})^*_{\substack{f_3 \\ \alpha_4}}(0) 
 (P_j \tau_1)_{f_3 f_4} (\Gamma_2)_{\alpha_4 \alpha_1}
 \, .
 \end{split}
 \end{equation}
 <!--  -->
+
+In terms of dot products (flavor and Dirac indices contracted):
+<!--  -->
+\begin{equation}
+\begin{split}
+\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
+=
+\sum_{\beta_1, \beta_2}
+&
+\left[
+(\eta_\ell^{(\beta_1)}(x))^{\dagger} (\tau_1 P_i) \Gamma_1 \psi_h^{(\beta_2)}(x) 
+\right]
+\\
+\times&
+\left[
+(\eta_h^{(\beta_2)}(0))^{\dagger} (P_j \tau_1) \Gamma_2 \psi_\ell^{(\beta_1)}(0)
+\right]
+\end{split}
+\end{equation}
+<!--  -->
+
+
 
 ## Implementation
 
