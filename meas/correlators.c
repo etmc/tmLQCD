@@ -443,10 +443,10 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
       spinor ******arr_eo_spinor = (spinor ******)callocMultiDimensional({2,2,4,2,2,VOLUME/2}, 6, sizeof(spinor));
       
       /* initalize the random sources: one source for each Dirac index beta=src_d --> spin dilution */
+      const unsigned int seed_i = measurement_list[id].seed; // has to be same seed
       for (size_t i_phi = 0; i_phi < 2; i_phi++) {    // doublet: light or heavy
         for (size_t src_d = 0; src_d < 4; src_d++) {  // spin dilution index
           for (size_t i_f = 0; i_f < 2; i_f++) {      // flavor index of the doublet
-            const unsigned int seed_i = src_d + measurement_list[id].seed;
             // light doublet
             eo_source_spinor_field_spin_diluted_oet_ts(arr_eo_spinor[0][i_phi][src_d][0][i_f],
                                                        arr_eo_spinor[0][i_phi][src_d][1][i_f], t0,
@@ -501,15 +501,15 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
           optr1->DownProp = 1;
 
           // sources
-          optr1->sr2 = arr_eo_spinor[0][0][src_d][0][1];
-          optr1->sr3 = arr_eo_spinor[0][0][src_d][1][1];
+          optr1->sr0 = arr_eo_spinor[0][0][src_d][0][1];
+          optr1->sr1 = arr_eo_spinor[0][0][src_d][1][1];
           //propagator
-          optr1->prop2 = arr_eo_spinor[1][0][src_d][0][1];
-          optr1->prop3 = arr_eo_spinor[1][0][src_d][1][1];
-
-          optr1->DownProp = 0; //restoring to default
+          optr1->prop0 = arr_eo_spinor[1][0][src_d][0][1];
+          optr1->prop1 = arr_eo_spinor[1][0][src_d][1][1];
 
           optr1->inverter(i1, 0, 0); //inversion for the down
+
+          optr1->DownProp = 0; //restoring to default
 
           /* heavy doublet */
           
@@ -581,11 +581,15 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         for (i = j; i < j + LX * LY * LZ; i++) {
           // light correlators
           for (size_t beta = 0; beta < 4; beta++) {  // spin dilution
-            res += _spinor_prod_re(arr_spinor[1][0][beta][0][i], arr_spinor[1][0][beta][0][i]);
+            double sign = 1.0; // the light source sould be multiplied by gamma_5
+            if(beta >= 2){
+              sign = -1.0;
+            }
+            res += sign*_spinor_prod_re(arr_spinor[1][0][beta][0][i], arr_spinor[1][0][beta][0][i]);
             _gamma0(phi, arr_spinor[1][0][beta][0][i]);
-            respa += _spinor_prod_re(arr_spinor[1][0][beta][0][i], phi);
+            respa += sign*_spinor_prod_re(arr_spinor[1][0][beta][0][i], phi);
             _gamma5(phi, phi);
-            resp4 += _spinor_prod_im(arr_spinor[1][0][beta][0][i], phi);
+            resp4 += sign*_spinor_prod_im(arr_spinor[1][0][beta][0][i], phi);
           }
 
           for (size_t i_f = 0; i_f < 2; i_f++) {
