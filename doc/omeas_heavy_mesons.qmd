@@ -152,7 +152,7 @@ where ${\sigma_3 =
     Moreover $\sigma_3 = \sigma_3^\dagger$, 
     hence $P_i^\dagger = P_i$.
 
-- Obviously, $P_i$ commutes with the $\gamma$ matrices asthey act on different spaces.
+- Obviously, $P_i$ commutes with the $\gamma$ matrices as they act on different spaces.
 
 ## Wick contractions
 
@@ -169,8 +169,8 @@ we can write:
 \\
 &= 
 - \braket{
-[\bar{\chi}_{\ell} (\tau_1 P_i) \Gamma_1 \chi_{h}](x)
-[\bar{\chi}_{h} (P_j \tau_1) \Gamma_2 \chi_{\ell}](0)
+[\bar{\chi}_{\ell} (\sigma_1 P_i) \Gamma_1 \chi_{h}](x)
+[\bar{\chi}_{h} (P_j \sigma_1) \Gamma_2 \chi_{\ell}](0)
 }
 \, .
 \end{split}
@@ -181,42 +181,71 @@ An implicit summation on flavor indices is understood:
 \begin{equation}
 \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) =
 - \braket{
-[(\bar{\chi}_{\ell})_{f_1} (\tau_1 P_i)_{f_1 f_2} \Gamma_1 (\chi_{h})_{f_2}](x)
-[(\bar{\chi}_{h})_{f_3} (P_j \tau_1)_{f_3 f_4} \Gamma_2 (\chi_{\ell})_{f_4}](0)
+[(\bar{\chi}_{\ell})_{f_1} (\sigma_1 P_i)_{f_1 f_2} \Gamma_1 (\chi_{h})_{f_2}](x)
+[(\bar{\chi}_{h})_{f_3} (P_j \sigma_1)_{f_3 f_4} \Gamma_2 (\chi_{\ell})_{f_4}](0)
 }
 \, .
 \end{equation}
 <!--  -->
 
-If we now call $S = D^{-1}$ the inverse of the Dirac operator,
+We now call $S = D^{-1}$ the inverse of the Dirac operator
 and use Wick's theorem:
 <!--  -->
 \begin{equation}
 \braket{\Psi_{a}(x) \bar{\Psi}_{b}(0)} = S_{ab}(x|0) \, ,
 \end{equation}
 <!--  -->
-where $a$ and $b$ are a shortcut for the other indices of the spinor (spin, flavor, color, etc.),
-we write:
+where $a$ and $b$ are a shortcut for the other indices of the spinor (spin, flavor, color, etc.).
+The correlator is:
 <!--  -->
 \begin{equation}
-\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) =
+\begin{split}
+\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
+&=
 (S_\ell)_{\substack{f_4 f_1 \\ \alpha_1 \alpha_2}} (0|x)
-(\tau_1 P_i)_{f_1 f_2} (\Gamma_1)_{\alpha_2 \alpha_3}
+(\sigma_1 P_i)_{f_1 f_2} (\Gamma_1)_{\alpha_2 \alpha_3}
 (S_h)_{\substack{f_2 f_3 \\ \alpha_3 \alpha_4}} (x|0)
-(P_j \tau_1)_{f_3 f_4} (\Gamma_2)_{\alpha_4 \alpha_1}
+(P_j \sigma_1)_{f_3 f_4} (\Gamma_2)_{\alpha_4 \alpha_1}
+\\
+&=
+\operatorname{Tr}_f
+\operatorname{Tr}
+\left[
+    S_h(x|0) (P_j \sigma_1) \Gamma_2 S_\ell(0|x) (\sigma_1 P_i) \Gamma_1
+    \right]
 \, .
+\end{split}
 \end{equation}
 <!--  -->
+
+Using $\gamma_5$ hermiticity, 
+${(S_\ell)_{f_1 f_2} = (\sigma_1)_{f_1 g_1} \gamma_5 (S_\ell)_{g_1 g_2}^\dagger \gamma_5 (\sigma_1)_{g_2  f_2}}$,
+we find:
+<!--  -->
+\begin{equation}
+\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
+=
+\operatorname{Tr}_f
+\operatorname{Tr}
+\left[
+    S_h(x|0) P_j \Gamma_2 S_\ell (x|0) P_i \Gamma_1
+\right]
+\end{equation}
+
+**Check: does this vanish for $i\neq j$ !?!?**
+
 
 ## Stochastic sampling
 
 Analogously to @foley2005practical,
 we now use $N_r$ stochastic samples in order to approximate $S$.
 The difference here is that the dilution is not on time but on Dirac index (spin).
-Therefore, our estimator for $S$ is 
+Therefore, our estimators for $S$ and $S^{\dagger}$ are 
 (cf. eqs. (5) and (7) of @foley2005practical):
 <!--  -->
 \begin{equation}
+\label{eq:StochasticPropagator}
+\begin{split}
 (S_\phi)_{\substack{f_1 f_2 \\ \alpha_1 \alpha_2}}(x|y)
 \approx 
 \sum_{\beta=1}^{N_D=4} 
@@ -225,25 +254,35 @@ Therefore, our estimator for $S$ is
     (\eta_\phi^{(\beta)})^*_{\substack{f_2 \\ \alpha_2}}(y) 
 }
 \, ,
+\\
+(S_\phi^{\dagger})_{\substack{f_1 f_2 \\ \alpha_1 \alpha_2}}(x|y)
+\approx 
+\sum_{\beta=1}^{N_D=4} 
+\braket{
+    (\eta_\phi^{(\beta)})_{\substack{f_1 \\ \alpha_1}}(x) 
+    (\psi_\phi^{(\beta)})^{*}_{\substack{f_2 \\ \alpha_2}}(y) 
+}
+\, ,
+\end{split}
 \end{equation}
 <!--  -->
 where $\braket{\cdot}$ here denotes the expectation value over the $N_r$ stochastic samples.
 The sources are such that 
 ${\eta^{(\beta)}_{\alpha} = \delta_{\alpha \beta}}$,
-and $\psi^{\beta}$ are the solutions to:
+and $\psi^{(\beta)}$ are the solutions to:
 <!--  -->
 \begin{equation}
 \begin{split}
 &(D_{\phi})_{\substack{f_1 f_2 \\ \alpha_1 \alpha_2}}(x|y) 
 \,
-(\psi_\phi)^{\beta}_{\substack{f_2 \\ \alpha_2}}(y) = 
-(\eta_\phi)^{\beta}_{\substack{f_1 \\ \alpha_1}}(x)
+(\psi_\phi^{(\beta)})_{\substack{f_2 \\ \alpha_2}}(y) = 
+(\eta_\phi^{(\beta)})_{\substack{f_1 \\ \alpha_1}}(x)
 \\[1em]
 & \implies \, \,
-(\psi_\phi)^{\beta}_{\substack{f_1 \\ \alpha_1}}(x) = 
+(\psi_\phi^{(\beta)})_{\substack{f_1 \\ \alpha_1}}(x) = 
 (S_{\phi})_{\substack{f_1 f_2 \\ \alpha_1 \alpha_2}}(x|y)
 \, 
-(\eta_\phi)^{\beta}_{\substack{f_2 \\ \alpha_1}}(y)
+(\eta_\phi^{(\beta)})_{\substack{f_2 \\ \alpha_1}}(y)
 \end{split}
 \end{equation}
 <!--  -->
@@ -259,13 +298,13 @@ Therefore, back to our correlators, we can write:
 &
 (\psi_{\ell}^{(\beta_1)})_{\substack{f_4 \\ \alpha_1}}(0) 
 (\eta_{\ell}^{(\beta_1)})^*_{\substack{f_1 \\ \alpha_2}}(x) 
-(\tau_1 P_i)_{f_1 f_2} (\Gamma_1)_{\alpha_2 \alpha_3}
+(\sigma_1 P_i)_{f_1 f_2} (\Gamma_1)_{\alpha_2 \alpha_3}
 \\
 \times
 &
 (\psi_{h}^{(\beta_2)})_{\substack{f_2 \\ \alpha_3}}(x) 
 (\eta_{h}^{(\beta_2)})^*_{\substack{f_3 \\ \alpha_4}}(0) 
-(P_j \tau_1)_{f_3 f_4} (\Gamma_2)_{\alpha_4 \alpha_1}
+(P_j \sigma_1)_{f_3 f_4} (\Gamma_2)_{\alpha_4 \alpha_1}
 \, .
 \end{split}
 \end{equation}
@@ -280,22 +319,109 @@ In terms of dot products (flavor and Dirac indices contracted):
 \sum_{\beta_1, \beta_2}
 &
 \left[
-(\eta_\ell^{(\beta_1)}(x))^{\dagger} (\tau_1 P_i) \Gamma_1 \psi_h^{(\beta_2)}(x) 
+(\eta_\ell^{(\beta_1)}(x))^{\dagger} (\sigma_1 P_i) \Gamma_1 \psi_h^{(\beta_2)}(x) 
 \right]
 \\
 \times&
 \left[
-(\eta_h^{(\beta_2)}(0))^{\dagger} (P_j \tau_1) \Gamma_2 \psi_\ell^{(\beta_1)}(0)
+(\eta_h^{(\beta_2)}(0))^{\dagger} (P_j \sigma_1) \Gamma_2 \psi_\ell^{(\beta_1)}(0)
 \right]
 \end{split}
 \end{equation}
 <!--  -->
 
 
+## Stochastic improvements
+
+There are some tricks we can use in order to enhance the signal-to-noise ratio.
+
+- Use the $\gamma_5$ hermiticity of the Dirac operator:
+
+\begin{equation}
+\gamma_5 (S_\ell)_{f_1 f_2} \gamma_5 
+= (\sigma_1)_{f_1 g_1} (S_\ell)_{g_1 g_2}^\dagger (\sigma_1)_{g_2 f_2}
+\, ,
+\end{equation}
+
+<!-- and write:
+\begin{equation}
+\begin{split}
+\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
+=&
+(\sigma_1)_{f_4 g_1}
+(\gamma_5)_{\alpha_2 \alpha_5} 
+(S_\ell)^{*}_{\substack{g_1 g_2 \\ \alpha_5 \alpha_6 \\ c_1 c_2}} (x|0)
+(\gamma_5)_{\alpha_6 \alpha_1}
+(\sigma_1)_{g_2 f_1}
+(\sigma_1 P_i)_{f_1 f_2} (\Gamma_1)_{\alpha_2 \alpha_3} \\
+&\times 
+(S_h)_{\substack{f_2 f_3 \\ \alpha_3 \alpha_4 \\ c_2 c_1}} (x|0)
+(P_j \sigma_1)_{f_3 f_4} (\Gamma_2)_{\alpha_4 \alpha_1}
+\, .
+\end{split}
+\end{equation} -->
+
+
+- We also use the "one-end-trick", namely use the same source for each flavor:
+<!--  -->
+\begin{equation}
+\eta_\phi = \eta \, ,
+\end{equation}
+<!--  -->
+
+
+Therefore (cf. eq. \eqref{eq:StochasticPropagator}):
+<!--  -->
+\begin{equation}
+\begin{split}
+&\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
+=
+\\[1em]
+&\sum_{\beta_1 \beta_2}
+(\sigma_1)_{f_1 g_1}
+(\gamma_5)_{\alpha_1 \alpha_5} 
+(\eta^{(\beta_1)})_{\substack{g_1 \\ \alpha_5}} (0)
+(\psi_\ell^{(\beta_1)})^{*}_{\substack{g_2 \\ \alpha_6}} (x)
+(\gamma_5)_{\alpha_6 \alpha_2}
+(\sigma_1)_{g_2 f_4}
+(\sigma_1 P_i)_{f_1 f_2} (\Gamma_1)_{\alpha_2 \alpha_3} \\
+&\times 
+(\psi_h^{(\beta_2)})_{\substack{f_2\\ \alpha_3}} (x)
+(\eta^{(\beta_2)})^{*}_{\substack{f_3 \\ \alpha_4}} (0)
+(P_j \sigma_1)_{f_3 f_4} (\Gamma_2)_{\alpha_4 \alpha_1} 
+\\[1em]
+=&
+\sum_{\beta}
+(\sigma_1)_{f_1 g_1}
+(\gamma_5)_{\alpha_1 \alpha_4} 
+(\psi_\ell^{(\beta)})^{*}_{\substack{g_2 \\ \alpha_6}} (x)
+(\gamma_5)_{\alpha_6 \alpha_2}
+(\sigma_1)_{g_2 f_4}
+(\sigma_1 P_i)_{f_1 f_2} (\Gamma_1)_{\alpha_2 \alpha_3} \\
+&\times 
+(\psi_h^{(\beta)})_{\substack{f_2\\ \alpha_3}} (x)
+(P_j \sigma_1)_{g_1 f_4} (\Gamma_2)_{\alpha_4 \alpha_1} 
+\, .
+\end{split}
+\end{equation}
+<!--  -->
+
+The stochastic sources $\eta$ are such that:
+<!--  -->
+\begin{equation}
+\braket{
+    (\eta^{\beta_1})_{\substack{f_1 \\ \alpha_1}}^{*} (x)
+    (\eta^{\beta_2})_{\substack{f_2 \\ \alpha_2}}^{*} (y)
+    }=
+    \delta_{xy} \delta_{f_1 f_2} \delta_{\alpha_1 \alpha_2} \delta_{\beta_1 \alpha_1} \delta_{\beta_2 \alpha_2}
+    \,
+\end{equation}
+<!--  -->
+
 
 ## Implementation
 
-See comments in the code: `correlators.c`.
+See comments in the code: `tmLQCD/meas/correlators.c`.
 
 
 
