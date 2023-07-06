@@ -296,7 +296,7 @@ Our correlator is given by the following expectation value
 &=
 \sum_{\beta=1}^{N_D}
 \braket{
-    (\psi_\ell^{(\beta, 0)})_{f_0}^\dagger (x) 
+    (\psi_\ell^{(\beta, f_0)})_{f_0}^\dagger (x) 
     \gamma_5 \Gamma_1
     (\psi_h^{(\beta, f_j)})_{f_i}(x)
 }
