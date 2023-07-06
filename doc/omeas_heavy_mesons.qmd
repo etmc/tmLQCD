@@ -21,7 +21,7 @@ fontsize: 16pt
 ---
 
 `tmLQCD`can compute the correlators for the heavy mesons $K$ and $D$.
-The twisted mass formulation of the heavy doublet $(s, c)$ is such that $K$ and $D$ mix in the correlators @baron2011computing.
+The twisted mass formulation of the heavy doublet $(s, c)$ is such that $K$ and $D$ mix in the spectral decomposition @baron2011computing.
 In fact, the Dirac operator is not diagonal in flavor,
 and the extraction of their masses requires the evaluation of a $(2 \times 2) \otimes (2 \times 2)$ matrix of correlators.
 In the following we use the twisted basis $\chi$ for fermion fields:
