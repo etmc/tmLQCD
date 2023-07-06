@@ -29,28 +29,26 @@ In the following we use the twisted basis $\chi$ for fermion fields:
 \begin{align}
 \label{eq:LightFlavorSpinorFields}
 \chi_{\ell} &= 
-\chi_{u} + \chi_{d} =
     \begin{bmatrix}
-    \hat{\chi}_{u} \\
+    {\chi}_{u} \\
     0
     \end{bmatrix}
     +
     \begin{bmatrix}
     0 \\
-    \hat{\chi}_{d}
+    {\chi}_{d}
     \end{bmatrix}
 \, , \\[1em] 
 \label{eq:HeavyFlavorSpinorFields}
 \chi_{h} &= 
-\chi_{c} + \chi_{s} =
     \begin{bmatrix}
-    \hat{\chi}_{c} \\
+    {\chi}_{c} \\
     0
     \end{bmatrix}
     +
     \begin{bmatrix}
     0 \\
-    \hat{\chi}_{s}
+    {\chi}_{s}
     \end{bmatrix}
 \, .
 \end{align}
@@ -74,8 +72,8 @@ ${\bra{\Omega} \cdot \ket{\Omega} = \braket{\cdot}}$:
 \frac{1}{V} 
 \sum_{\vec{x}} 
 \braket{
-[\bar{\chi}_{\ell_{\bar{i}}} \Gamma_1 \chi_{h_i}](x)
-[\bar{\chi}_{\ell_{\bar{j}}} \Gamma_2 \chi_{h_j}]^{\dagger}(0)
+[\bar{\chi}_{d} \Gamma_1 \chi_{h_i}](x)
+[\bar{\chi}_{d} \Gamma_2 \chi_{h_j}]^{\dagger}(0)
 }
 \, ,
 \end{split}
@@ -94,12 +92,6 @@ are used just to compensate the sign change when daggering the spinor bilinears 
 \, .
 \end{equation}
 <!--  -->
-The index $\bar{i}$ ($\bar{j}$) is the flavor index in the doublet that is opposite to $i$ ($j$):
-<!--  -->
-\begin{equation}
-h_i=c,s \to i = 0,1 \to \bar{i} = 1,0 \to \ell_{\bar{i}} = d,u
-\, .
-\end{equation}
 
 We now write the explicit Wick contractions for the object:
 <!--  -->
@@ -108,31 +100,21 @@ We now write the explicit Wick contractions for the object:
 \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) &=
 - \eta_{2}
 \braket{
-[\bar{\chi}_{\ell_{\bar{i}}} \Gamma_1 \chi_{h_i}](x)
-[\bar{\chi}_{\ell_{\bar{j}}} \Gamma_2 \chi_{h_j}]^{\dagger}(0)
+[\bar{\chi}_{d} \Gamma_1 \chi_{h_i}](x)
+[\bar{\chi}_{d} \Gamma_2 \chi_{h_j}]^{\dagger}(0)
 }
 \\
 &= - \braket{
-[\bar{\chi}_{\ell_{\bar{i}}} \Gamma_1 \chi_{h_i}](x)
-[\bar{\chi}_{h_j} \Gamma_2 \chi_{\ell_{\bar{j}}}](0)
+[\bar{\chi}_{d} \Gamma_1 \chi_{h_i}](x)
+[\bar{\chi}_{h_j} \Gamma_2 \chi_{d}](0)
 }
 \end{split}
 \end{equation}
 <!--  -->
 
-A few observations are useful here:
+::: {.remark}
 
-- In flavor space, 
-    ${\sigma_1 = 
-    \begin{bmatrix}
-    0 & 1 \\
-    1 & 0
-    \end{bmatrix}
-    }$
-    switches between the up and down flavor. 
-    Moreover, $\sigma_1 = \sigma_1^\dagger$.
-
-- The spinor fields $\chi_{u,d}$ and $\chi_{c,s}$ of eq. 
+1. The spinor fields $\chi_{u,d}$ and $\chi_{c,s}$ of eq. 
 \eqref{eq:LightFlavorSpinorFields} and 
 \eqref{eq:HeavyFlavorSpinorFields} 
 can be obtained with the projector:
@@ -152,7 +134,10 @@ where ${\sigma_3 =
     Moreover $\sigma_3 = \sigma_3^\dagger$, 
     hence $P_i^\dagger = P_i$.
 
-- Obviously, $P_i$ commutes with the $\gamma$ matrices as they act on different spaces.
+2. Obviously, $P_i$ commutes with the $\gamma$ matrices as they act on different spaces.
+
+3. The action of $\sigma_1$ swaps the up and down flavor components of a spinor.
+:::
 
 ## Wick contractions
 
@@ -163,30 +148,20 @@ we can write:
 \begin{split}
 \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) &=
 - \braket{
-[\bar{\chi}_{\ell_{\bar{i}}} \Gamma_1 \chi_{h_i}](x)
-[\bar{\chi}_{h_j} \Gamma_2 \chi_{\ell_{\bar{j}}}](0)
+[\bar{\chi}_{d} \Gamma_1 \chi_{h_i}](x)
+[\bar{\chi}_{h_j} \Gamma_2 \chi_{d}](0)
 }
 \\
 &= 
 - \braket{
-[\bar{\chi}_{\ell} (\sigma_1 P_i) \Gamma_1 \chi_{h}](x)
-[\bar{\chi}_{h} (P_j \sigma_1) \Gamma_2 \chi_{\ell}](0)
+[\bar{\chi}_{\ell} \Gamma_1 (\sigma_1)^{1-i} P_i \chi_{h}](x)
+[\bar{\chi}_{h} P_j (\sigma_1)^{1-j} \Gamma_2 \chi_{\ell}](0)
 }
 \, .
 \end{split}
 \end{equation}
 <!--  -->
-An implicit summation on flavor indices is understood:
-<!--  -->
-\begin{equation}
-\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) =
-- \braket{
-[(\bar{\chi}_{\ell})_{f_1} (\sigma_1 P_i)_{f_1 f_2} \Gamma_1 (\chi_{h})_{f_2}](x)
-[(\bar{\chi}_{h})_{f_3} (P_j \sigma_1)_{f_3 f_4} \Gamma_2 (\chi_{\ell})_{f_4}](0)
-}
-\, .
-\end{equation}
-<!--  -->
+An implicit summation on flavor indices is understood.
 
 We now call $S = D^{-1}$ the inverse of the Dirac operator
 and use Wick's theorem:
@@ -199,222 +174,133 @@ where $a$ and $b$ are a shortcut for the other indices of the spinor (spin, flav
 The correlator is:
 <!--  -->
 \begin{equation}
+\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
+=
+S_\ell(0|x) 
+(\sigma_1)^{1-i} P_i \Gamma_1
+S_h(x|0)
+P_j (\sigma_1)^{1-j} \Gamma_2
+\end{equation}
+<!--  -->
+
+We now use $\gamma_5$ hermiticity:
+$(S_\ell) = \sigma_1 \gamma_5 S_\ell^\dagger \gamma_5 \sigma_1$.
+Please note that the $\dagger$ is not on flavor space indices,
+but here it makes no difference because $S_\ell$ is diagonal in flavor.
+Our correlator becomes:
+<!--  -->
+\begin{equation}
+\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
+=
+\operatorname{Tr}
+\left[
+    S_h(x|0) 
+    \Gamma_2 \gamma_5 
+    P_j (\sigma_1)^{j} 
+    (S_\ell)^\dagger (x|0) 
+    (\sigma_1)^i P_i 
+    \gamma_5 \Gamma_1
+\right]
+\, .
+\end{equation}
+<!--  -->
+Upon a careful calculation for all values $i,j = 0,1$ we find, equivalently:
+<!--  -->
+\begin{equation}
+\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
+=
+\operatorname{Tr}
+\left[
+    (S_h)_{f_i f_j} (x|0) 
+    \Gamma_2 \gamma_5 
+    (S_u)^\dagger (x|0) 
+    \gamma_5 \Gamma_1
+\right]
+\, .
+\end{equation}
+<!--  -->
+
+We now approximate the propagator using stochastic sources.
+Additionally, we use:
+
+- The one-end-trick @Boucaud:2008xu: non vanishing source only at $x=0$.
+- Same source for light and heavy doublet
+- Spin dilution (cf. @foley2005practical): one source for each Dirac index $\beta$. The components with index different from the dilution index are set to zero.
+- Flavor projection: sources have an additional flavor index $\phi$, such that their flavor component different from the index vanish. The value of the flavor component however is the same, it changes only its position in the doublet:
+
+<!--  -->
+\begin{equation}
+\eta^{(\phi=0)} = 
+    \begin{bmatrix}
+    \eta \\
+    0
+    \end{bmatrix}
+\, , \,
+\eta^{(\phi=1)} = 
+    \begin{bmatrix}
+    0 \\
+    \eta
+    \end{bmatrix}
+\, .
+\end{equation}
+<!--  -->
+
+Since $\Gamma_2=1,\gamma_5$ we always have $\Gamma_2 = \Gamma_2^\dagger$.
+In this way, if $\eta^{(\beta, \phi)}$ is the diluted source,
+we can define:
+<!--  -->
+\begin{equation}
+\begin{split}
+&D_{\ell} {\psi}_{\ell}^{(\beta, \phi)} 
+= \gamma_5 \Gamma_2 \eta^{(\beta, \phi)}
+\, \implies \,
+(\psi_{\ell}^{(\beta, \phi)})^\dagger 
+= 
+(\eta^{(\beta, \phi)})^\dagger 
+\Gamma_2 \gamma_5 S_{\ell}^\dagger
+\\
+&D_{h} \psi_{h}^{(\beta, \phi)} 
+= \eta^{(\beta, \phi)}
+\, \implies \,
+\psi_{h}^{(\beta, \phi)} 
+= S_{h} \eta^{(\beta, \phi)}
+\, .
+\end{split}
+\end{equation}
+<!--  -->
+This means that for our matrix of correlators we have to do ${4_D \times 2_f \times 2_{h,\ell}} = 16$ inversions.
+
+::: {.remark}
+1. For the light doublet `tmLQCD` computes only $S_u$, which is obtained with $(\psi_h^{(\beta, f_0)})_{f_0}$. This is the only propagator we need.
+
+2. For the heavy propagator, we can access the $(i,j)$ component of $S_h$ with $(\psi_h^{(\beta, f_j)})_{f_i}$.
+:::
+
+Our correlator is given by the following expectation value
+(no summation on flavor indices):
+<!--  -->
+\begin{equation}
 \begin{split}
 \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
 &=
-(S_\ell)_{\substack{f_4 f_1 \\ \alpha_1 \alpha_2}} (0|x)
-(\sigma_1 P_i)_{f_1 f_2} (\Gamma_1)_{\alpha_2 \alpha_3}
-(S_h)_{\substack{f_2 f_3 \\ \alpha_3 \alpha_4}} (x|0)
-(P_j \sigma_1)_{f_3 f_4} (\Gamma_2)_{\alpha_4 \alpha_1}
+\sum_{\beta=1}^{N_D}
+\langle
+\operatorname{Tr}
+\left[
+    (\psi_h^{(\beta, f_i)})_{f_j}(x)
+    (\psi_\ell^{(\beta, f_0)})_{f_0}^\dagger (x) 
+    \gamma_5 \Gamma_1
+\right]
+\rangle
 \\
 &=
-\operatorname{Tr}_f
-\operatorname{Tr}
-\left[
-    S_h(x|0) (P_j \sigma_1) \Gamma_2 S_\ell(0|x) (\sigma_1 P_i) \Gamma_1
-    \right]
-\, .
-\end{split}
-\end{equation}
-<!--  -->
-
-Using $\gamma_5$ hermiticity, 
-${(S_\ell)_{f_1 f_2} = (\sigma_1)_{f_1 g_1} \gamma_5 (S_\ell)_{g_1 g_2}^\dagger \gamma_5 (\sigma_1)_{g_2  f_2}}$,
-we find:
-<!--  -->
-\begin{equation}
-\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
-=
-\operatorname{Tr}_f
-\operatorname{Tr}
-\left[
-    S_h(x|0) P_j \Gamma_2 S_\ell (x|0) P_i \Gamma_1
-\right]
-\end{equation}
-
-**Check: does this vanish for $i\neq j$ !?!?**
-
-
-## Stochastic sampling
-
-Analogously to @foley2005practical,
-we now use $N_r$ stochastic samples in order to approximate $S$.
-The difference here is that the dilution is not on time but on Dirac index (spin).
-Therefore, our estimators for $S$ and $S^{\dagger}$ are 
-(cf. eqs. (5) and (7) of @foley2005practical):
-<!--  -->
-\begin{equation}
-\label{eq:StochasticPropagator}
-\begin{split}
-(S_\phi)_{\substack{f_1 f_2 \\ \alpha_1 \alpha_2}}(x|y)
-\approx 
-\sum_{\beta=1}^{N_D=4} 
+\sum_{\beta=1}^{N_D}
 \braket{
-    (\psi_\phi^{(\beta)})_{\substack{f_1 \\ \alpha_1}}(x) 
-    (\eta_\phi^{(\beta)})^*_{\substack{f_2 \\ \alpha_2}}(y) 
+    (\psi_\ell^{(\beta, 0)})_{f_0}^\dagger (x) 
+    \gamma_5 \Gamma_1
+    (\psi_h^{(\beta, f_j)})_{f_i}(x)
 }
-\, ,
-\\
-(S_\phi^{\dagger})_{\substack{f_1 f_2 \\ \alpha_1 \alpha_2}}(x|y)
-\approx 
-\sum_{\beta=1}^{N_D=4} 
-\braket{
-    (\eta_\phi^{(\beta)})_{\substack{f_1 \\ \alpha_1}}(x) 
-    (\psi_\phi^{(\beta)})^{*}_{\substack{f_2 \\ \alpha_2}}(y) 
-}
-\, ,
 \end{split}
-\end{equation}
-<!--  -->
-where $\braket{\cdot}$ here denotes the expectation value over the $N_r$ stochastic samples.
-The sources are such that 
-${\eta^{(\beta)}_{\alpha} = \delta_{\alpha \beta}}$,
-and $\psi^{(\beta)}$ are the solutions to:
-<!--  -->
-\begin{equation}
-\begin{split}
-&(D_{\phi})_{\substack{f_1 f_2 \\ \alpha_1 \alpha_2}}(x|y) 
-\,
-(\psi_\phi^{(\beta)})_{\substack{f_2 \\ \alpha_2}}(y) = 
-(\eta_\phi^{(\beta)})_{\substack{f_1 \\ \alpha_1}}(x)
-\\[1em]
-& \implies \, \,
-(\psi_\phi^{(\beta)})_{\substack{f_1 \\ \alpha_1}}(x) = 
-(S_{\phi})_{\substack{f_1 f_2 \\ \alpha_1 \alpha_2}}(x|y)
-\, 
-(\eta_\phi^{(\beta)})_{\substack{f_2 \\ \alpha_1}}(y)
-\end{split}
-\end{equation}
-<!--  -->
-
-
-Therefore, back to our correlators, we can write:
-<!--  -->
-\begin{equation}
-\begin{split}
-\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
-=
-\sum_{\beta_1, \beta_2}
-&
-(\psi_{\ell}^{(\beta_1)})_{\substack{f_4 \\ \alpha_1}}(0) 
-(\eta_{\ell}^{(\beta_1)})^*_{\substack{f_1 \\ \alpha_2}}(x) 
-(\sigma_1 P_i)_{f_1 f_2} (\Gamma_1)_{\alpha_2 \alpha_3}
-\\
-\times
-&
-(\psi_{h}^{(\beta_2)})_{\substack{f_2 \\ \alpha_3}}(x) 
-(\eta_{h}^{(\beta_2)})^*_{\substack{f_3 \\ \alpha_4}}(0) 
-(P_j \sigma_1)_{f_3 f_4} (\Gamma_2)_{\alpha_4 \alpha_1}
-\, .
-\end{split}
-\end{equation}
-<!--  -->
-
-In terms of dot products (flavor and Dirac indices contracted):
-<!--  -->
-\begin{equation}
-\begin{split}
-\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
-=
-\sum_{\beta_1, \beta_2}
-&
-\left[
-(\eta_\ell^{(\beta_1)}(x))^{\dagger} (\sigma_1 P_i) \Gamma_1 \psi_h^{(\beta_2)}(x) 
-\right]
-\\
-\times&
-\left[
-(\eta_h^{(\beta_2)}(0))^{\dagger} (P_j \sigma_1) \Gamma_2 \psi_\ell^{(\beta_1)}(0)
-\right]
-\end{split}
-\end{equation}
-<!--  -->
-
-
-## Stochastic improvements
-
-There are some tricks we can use in order to enhance the signal-to-noise ratio.
-
-- Use the $\gamma_5$ hermiticity of the Dirac operator:
-
-\begin{equation}
-\gamma_5 (S_\ell)_{f_1 f_2} \gamma_5 
-= (\sigma_1)_{f_1 g_1} (S_\ell)_{g_1 g_2}^\dagger (\sigma_1)_{g_2 f_2}
-\, ,
-\end{equation}
-
-<!-- and write:
-\begin{equation}
-\begin{split}
-\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
-=&
-(\sigma_1)_{f_4 g_1}
-(\gamma_5)_{\alpha_2 \alpha_5} 
-(S_\ell)^{*}_{\substack{g_1 g_2 \\ \alpha_5 \alpha_6 \\ c_1 c_2}} (x|0)
-(\gamma_5)_{\alpha_6 \alpha_1}
-(\sigma_1)_{g_2 f_1}
-(\sigma_1 P_i)_{f_1 f_2} (\Gamma_1)_{\alpha_2 \alpha_3} \\
-&\times 
-(S_h)_{\substack{f_2 f_3 \\ \alpha_3 \alpha_4 \\ c_2 c_1}} (x|0)
-(P_j \sigma_1)_{f_3 f_4} (\Gamma_2)_{\alpha_4 \alpha_1}
-\, .
-\end{split}
-\end{equation} -->
-
-
-- We also use the "one-end-trick", namely use the same source for each flavor:
-<!--  -->
-\begin{equation}
-\eta_\phi = \eta \, ,
-\end{equation}
-<!--  -->
-
-
-Therefore (cf. eq. \eqref{eq:StochasticPropagator}):
-<!--  -->
-\begin{equation}
-\begin{split}
-&\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
-=
-\\[1em]
-&\sum_{\beta_1 \beta_2}
-(\sigma_1)_{f_1 g_1}
-(\gamma_5)_{\alpha_1 \alpha_5} 
-(\eta^{(\beta_1)})_{\substack{g_1 \\ \alpha_5}} (0)
-(\psi_\ell^{(\beta_1)})^{*}_{\substack{g_2 \\ \alpha_6}} (x)
-(\gamma_5)_{\alpha_6 \alpha_2}
-(\sigma_1)_{g_2 f_4}
-(\sigma_1 P_i)_{f_1 f_2} (\Gamma_1)_{\alpha_2 \alpha_3} \\
-&\times 
-(\psi_h^{(\beta_2)})_{\substack{f_2\\ \alpha_3}} (x)
-(\eta^{(\beta_2)})^{*}_{\substack{f_3 \\ \alpha_4}} (0)
-(P_j \sigma_1)_{f_3 f_4} (\Gamma_2)_{\alpha_4 \alpha_1} 
-\\[1em]
-=&
-\sum_{\beta}
-(\sigma_1)_{f_1 g_1}
-(\gamma_5)_{\alpha_1 \alpha_4} 
-(\psi_\ell^{(\beta)})^{*}_{\substack{g_2 \\ \alpha_6}} (x)
-(\gamma_5)_{\alpha_6 \alpha_2}
-(\sigma_1)_{g_2 f_4}
-(\sigma_1 P_i)_{f_1 f_2} (\Gamma_1)_{\alpha_2 \alpha_3} \\
-&\times 
-(\psi_h^{(\beta)})_{\substack{f_2\\ \alpha_3}} (x)
-(P_j \sigma_1)_{g_1 f_4} (\Gamma_2)_{\alpha_4 \alpha_1} 
-\, .
-\end{split}
-\end{equation}
-<!--  -->
-
-The stochastic sources $\eta$ are such that:
-<!--  -->
-\begin{equation}
-\braket{
-    (\eta^{\beta_1})_{\substack{f_1 \\ \alpha_1}}^{*} (x)
-    (\eta^{\beta_2})_{\substack{f_2 \\ \alpha_2}}^{*} (y)
-    }=
-    \delta_{xy} \delta_{f_1 f_2} \delta_{\alpha_1 \alpha_2} \delta_{\beta_1 \alpha_1} \delta_{\beta_2 \alpha_2}
-    \,
 \end{equation}
 <!--  -->
 
