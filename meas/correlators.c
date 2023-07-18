@@ -346,14 +346,14 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
   double eta_Gamma[2] = {1.0, -1.0}; // sign change compensation from daggering bilinear with Gamma = 1,gamma_5
 
   // the number of independent correlators is 16 = (2*2)_{h_1 h_2} * (2*2)_{Gamma_1 Gamma_2}
-  // h_i: c,s 
+  // hi: c,s 
   // Gamma = 1, gamma_5
-  double *****C_hihj_Gamma1Gamma2 = (double *****) callocMultiDimensional({2,2,2,2,T}, 5, sizeof(double));
-  double ****res_hihj_Gamma1Gamma2 = (double ****) callocMultiDimensional({2,2,2,2}, 4, sizeof(double));
+  double *****C_hihj_g1g2 = (double *****) callocMultiDimensional({2,2,2,2,T}, 5, sizeof(double));
+  double ****res_hihj_g1g2 = (double ****) callocMultiDimensional({2,2,2,2}, 4, sizeof(double));
 #ifdef TM_USE_MPI
-  double ****mpi_res_hihj_Gamma1Gamma2 = (double ****) callocMultiDimensional({2,2,2,2}, 4, sizeof(double));
+  double ****mpi_res_hihj_g1g2 = (double ****) callocMultiDimensional({2,2,2,2}, 4, sizeof(double));
   // send buffer for MPI_Gather
-  double *****sC_hihj_Gamma1Gamma2 = (double *****) callocMultiDimensional({2,2,2,2,T}, 5, sizeof(double));
+  double *****sC_hihj_g1g2 = (double *****) callocMultiDimensional({2,2,2,2,T}, 5, sizeof(double));
 #endif
 
   FILE *ofs;                                // output file stream
@@ -594,8 +594,8 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 
           for (size_t i_f = 0; i_f < 2; i_f++) {
             for (size_t j_f = 0; j_f < 2; j_f++) {
-              for (size_t i_Gamma1 = 0; i_Gamma1 < 2; i_Gamma1++) {
-                for (size_t i_Gamma2 = 0; i_Gamma2 < 2; i_Gamma2++) {
+              for (size_t g1 = 0; g1 < 2; g1++) {
+                for (size_t g2 = 0; g2 < 2; g2++) {
                   for (size_t beta1 = 0; beta1 < 4; beta1++) {
                     for (size_t beta2 = 0; beta2 < 4; beta2++) {
                       double dum1, dum2 = 0.0, 0.0;  // dummy variables
@@ -614,7 +614,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
                       }
                       _spinor_scalar_prod(dum2, arr_spinor[0][1][beta_2][j_f][i], phi);
 
-                      res_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2] += dum1 * dum2;
+                      res_hihj_g1g2[i_f][j_f][beta_1][beta_2] += dum1 * dum2;
                     }
                   }
                 }
@@ -647,14 +647,14 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 
         for (size_t i_f = 0; i_f < 2; i_f++) {
           for (size_t j_f = 0; j_f < 2; j_f++) {
-            for (size_t i_Gamma1 = 0; i_Gamma1 < 2; i_Gamma1++) {
-              for (size_t i_Gamma2 = 0; i_Gamma2 < 2; i_Gamma2++) {
+            for (size_t g1 = 0; g1 < 2; g1++) {
+              for (size_t g2 = 0; g2 < 2; g2++) {
 #if defined TM_USE_MPI
-                MPI_Reduce(&res_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2], &mpi_res_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2], 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
-                res_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2] = mpi_res_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2];
-                C_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2][t] = -eta_Gamma[i_Gamma1]*res / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ);
+                MPI_Reduce(&res_hihj_g1g2[i_f][j_f][beta_1][beta_2], &mpi_res_hihj_g1g2[i_f][j_f][beta_1][beta_2], 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
+                res_hihj_g1g2[i_f][j_f][beta_1][beta_2] = mpi_res_hihj_g1g2[i_f][j_f][beta_1][beta_2];
+                C_hihj_g1g2[i_f][j_f][beta_1][beta_2][t] = -eta_Gamma[g1]*res / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ);
 #else
-                C_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2][t] = -eta_Gamma[i_Gamma1]*res / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ);
+                C_hihj_g1g2[i_f][j_f][beta_1][beta_2][t] = -eta_Gamma[g1]*res / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ);
 #endif
               }
             }
@@ -674,9 +674,9 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         // heavy mesons
         for (size_t i_f = 0; i_f < 2; i_f++) {
           for (size_t j_f = 0; j_f < 2; j_f++) {
-            for (size_t i_Gamma1 = 0; i_Gamma1 < 2; i_Gamma1++) {
-              for (size_t i_Gamma2 = 0; i_Gamma2 < 2; i_Gamma2++) {
-                MPI_Gather(sC_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2], T, MPI_DOUBLE, C_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2], T, MPI_DOUBLE, 0, g_mpi_SV_slices);
+            for (size_t g1 = 0; g1 < 2; g1++) {
+              for (size_t g2 = 0; g2 < 2; g2++) {
+                MPI_Gather(sC_hihj_g1g2[i_f][j_f][beta_1][beta_2], T, MPI_DOUBLE, C_hihj_g1g2[i_f][j_f][beta_1][beta_2], T, MPI_DOUBLE, 0, g_mpi_SV_slices);
               }
             }
           }
@@ -718,19 +718,20 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         fprintf(ofs, "6  1  %d  %e  %e\n", t, Cp4[tt], 0.);
 
 
-          for (size_t i_f = 0; i_f < 2; i_f++) {
-            for (size_t j_f = 0; j_f < 2; j_f++) {
-              for (size_t i_Gamma1 = 0; i_Gamma1 < 2; i_Gamma1++) {
-                for (size_t i_Gamma2 = 0; i_Gamma2 < 2; i_Gamma2++) {
-                   fprintf(ofs, "%d  %d  %d  %d 0  %e  %e\n", i_f, j_f, i_Gamma1, i_Gamma2, C_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2][t0], 0.);
+          // heavy meson correlators
+          for (size_t hi = 0; hi < 2; hi++) {
+            for (size_t hj = 0; hj < 2; hj++) {
+              for (size_t g1 = 0; g1 < 2; g1++) {
+                for (size_t g2 = 0; g2 < 2; g2++) {
+                   fprintf(ofs, "%d  %d  %d  %d 0  %e  %e\n", hi, hj, g1, g2, C_hihj_g1g2[hi][hj][g1][g1][t0], 0.);
                     for (t = 1; t < g_nproc_t * T / 2; t++) {
                       tt = (t0 + t) % (g_nproc_t * T);
-                      fprintf(ofs, "%d  %d  %d  %d  %d  %e  ", i_f, j_f, i_Gamma1, i_Gamma2, t, C_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2][tt]);
+                      fprintf(ofs, "%d  %d  %d  %d  %d  %e  ", hi, hj, g1, g2, t, C_hihj_g1g2[hi][hj][g1][g2][tt]);
                       tt = (t0 + g_nproc_t * T - t) % (g_nproc_t * T);
-                      fprintf(ofs, "%e\n", C_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2][tt]);
+                      fprintf(ofs, "%e\n", C_hihj_g1g2[hi][hj][g1][g2][tt]);
                     }
                     tt = (t0 + g_nproc_t * T / 2) % (g_nproc_t * T);
-                    fprintf(ofs, "%d  %d  %d  %d  %d  %d  %e  %e\n", i_f, j_f, i_Gamma1, i_Gamma2, t, C_hihj_Gamma1Gamma2[i_f][j_f][beta_1][beta_2][tt], 0.0);
+                    fprintf(ofs, "%d  %d  %d  %d  %d  %d  %e  %e\n", hi, hj, g1, g2, t, C_hihj_g1g2[hi][hj][g1][g2][tt], 0.0);
                 }
               }
             }
@@ -743,17 +744,17 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         free(Cpp);
         free(Cpa);
         free(Cp4);
-        free(C_hihj_Gamma1Gamma2);
+        free(C_hihj_g1g2);
       }
       free(sCpp);
       free(sCpa);
       free(sCp4);
-      free(sC_hihj_Gamma1Gamma2);
+      free(sC_hihj_g1g2);
 #else
       free(Cpp);
       free(Cpa);
       free(Cp4);
-      free(C_hihj_Gamma1Gamma2);
+      free(C_hihj_g1g2);
 #endif
     }  // for(max_time_slices)
   }    // for(max_samples)
