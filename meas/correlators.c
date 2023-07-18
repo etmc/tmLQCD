@@ -546,9 +546,9 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         }
       }
 
-      // (no even-odd): source+propagator, doublet, spin dilution index, even-odd, flavor, position (+ Dirac, color)
-      // (psi[i_sp][phi][beta][f][x])[alpha][c] // last 3 indices are proper of the spinor struct
-      spinor *****arr_spinor = (spinor *****) callocMultiDimensional({2,2,4,2,VOLUME}, 5, sizeof(spinor));
+      // (no even-odd): source+propagator, doublet, spin dilution index, flavor proj, flavor index, position (+ Dirac, color)
+      // (psi[i_sp][d][beta][F][f][x])[alpha][c] // last 3 indices are proper of the spinor struct
+      spinor ******arr_spinor = (spinor ******) callocMultiDimensional({2,2,4,2,2,VOLUME}, 6, sizeof(spinor));
 
       // now we switch from even-odd representation to standard
       for (size_t i_sp = 0; i_sp < 2; i_sp++) {         // source or sink
@@ -581,40 +581,36 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         for (i = j; i < j + LX * LY * LZ; i++) {
           // light correlators
           for (size_t beta = 0; beta < 4; beta++) {  // spin dilution
-            double sign = 1.0; // the light source sould be multiplied by gamma_5
-            if(beta >= 2){
+            double sign = 1.0;  // the light source sould be multiplied by gamma_5
+            if (beta >= 2) {
               sign = -1.0;
             }
-            res += sign*_spinor_prod_re(arr_spinor[1][0][beta][0][i], arr_spinor[1][0][beta][0][i]);
+            res +=
+                sign * _spinor_prod_re(arr_spinor[1][0][beta][0][i], arr_spinor[1][0][beta][0][i]);
             _gamma0(phi, arr_spinor[1][0][beta][0][i]);
-            respa += sign*_spinor_prod_re(arr_spinor[1][0][beta][0][i], phi);
+            respa += sign * _spinor_prod_re(arr_spinor[1][0][beta][0][i], phi);
             _gamma5(phi, phi);
-            resp4 += sign*_spinor_prod_im(arr_spinor[1][0][beta][0][i], phi);
+            resp4 += sign * _spinor_prod_im(arr_spinor[1][0][beta][0][i], phi);
           }
 
-          for (size_t i_f = 0; i_f < 2; i_f++) {
-            for (size_t j_f = 0; j_f < 2; j_f++) {
-              for (size_t g1 = 0; g1 < 2; g1++) {
-                for (size_t g2 = 0; g2 < 2; g2++) {
-                  for (size_t beta1 = 0; beta1 < 4; beta1++) {
-                    for (size_t beta2 = 0; beta2 < 4; beta2++) {
-                      double dum1, dum2 = 0.0, 0.0;  // dummy variables
+          const int f0 = 0; // flavor index of the up
+          for (size_t F = 0; F < 4; F++) {             // flavor projection
+            for (size_t beta = 0; beta < 4; beta++) {  // spin dilution
+              spinor psi_u = arr_spinor[1][0][beta][f0][f0][i];
+              for (size_t hi = 0; hi < 2; hi++) {
+                for (size_t hj = 0; hj < 2; hj++) {
+                  for (size_t g1 = 0; g1 < 2; g1++) {
+                    for (size_t g2 = 0; g2 < 2; g2++) {
+                      double dum = 0.0;  // dummy variable
 
-                      // 1st  contribution
-                      phi = arr_spinor[1][1][beta_2][i_f][i];
-                      if (Gamma_1 == 1) {  // Gamma_1 = 1
+                      // heavy doublet spinor propagator
+                      phi = arr_spinor[1][1][beta][hj][hi][i];
+                      if (g1 == 1) {  // Gamma_1 = 1
                         _gamma5(phi, phi);
                       }
-                      _spinor_scalar_prod(dum1, arr_spinor[0][0][beta_1][1 - i_f][i], phi);
+                      _spinor_scalar_prod(dum, psi_u, phi);
 
-                      // 2nd contribution
-                      phi = arr_spinor[1][0][beta_1][1 - j_f][i];
-                      if (Gamma_2 == 1) {  // Gamma_1 = gamma_5
-                        _gamma5(phi, phi);
-                      }
-                      _spinor_scalar_prod(dum2, arr_spinor[0][1][beta_2][j_f][i], phi);
-
-                      res_hihj_g1g2[i_f][j_f][beta_1][beta_2] += dum1 * dum2;
+                      res_hihj_g1g2[hi][hj][g1][g2] += dum;
                     }
                   }
                 }
@@ -652,7 +648,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 #if defined TM_USE_MPI
                 MPI_Reduce(&res_hihj_g1g2[hi][hj][g1][g2], &mpi_res_hihj_g1g2[hi][hj][g1][g2], 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
                 res_hihj_g1g2[hi][hj][g1][g2] = mpi_res_hihj_g1g2[hi][hj][g1][g2];
-                C_hihj_g1g2[hi][hj][g1][g2][t] = -eta_Gamma[g1] * res / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ);
+                sC_hihj_g1g2[hi][hj][g1][g2][t] = -eta_Gamma[g1] * res / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ);
 #else
                 C_hihj_g1g2[hi][hj][g1][g2][t] = -eta_Gamma[g1] * res / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ);
 #endif
