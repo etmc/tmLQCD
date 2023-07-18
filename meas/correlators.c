@@ -645,16 +645,16 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
                  optr1->kappa / optr1->kappa;
 #endif
 
-        for (size_t i_f = 0; i_f < 2; i_f++) {
-          for (size_t j_f = 0; j_f < 2; j_f++) {
+        for (size_t hi = 0; hi < 2; hi++) {
+          for (size_t hj = 0; hj < 2; hj++) {
             for (size_t g1 = 0; g1 < 2; g1++) {
               for (size_t g2 = 0; g2 < 2; g2++) {
 #if defined TM_USE_MPI
-                MPI_Reduce(&res_hihj_g1g2[i_f][j_f][beta_1][beta_2], &mpi_res_hihj_g1g2[i_f][j_f][beta_1][beta_2], 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
-                res_hihj_g1g2[i_f][j_f][beta_1][beta_2] = mpi_res_hihj_g1g2[i_f][j_f][beta_1][beta_2];
-                C_hihj_g1g2[i_f][j_f][beta_1][beta_2][t] = -eta_Gamma[g1]*res / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ);
+                MPI_Reduce(&res_hihj_g1g2[hi][hj][g1][g2], &mpi_res_hihj_g1g2[hi][hj][g1][g2], 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
+                res_hihj_g1g2[hi][hj][g1][g2] = mpi_res_hihj_g1g2[hi][hj][g1][g2];
+                C_hihj_g1g2[hi][hj][g1][g2][t] = -eta_Gamma[g1] * res / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ);
 #else
-                C_hihj_g1g2[i_f][j_f][beta_1][beta_2][t] = -eta_Gamma[g1]*res / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ);
+                C_hihj_g1g2[hi][hj][g1][g2][t] = -eta_Gamma[g1] * res / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_z * LZ);
 #endif
               }
             }
@@ -672,11 +672,11 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         MPI_Gather(sCp4, T, MPI_DOUBLE, Cp4, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
 
         // heavy mesons
-        for (size_t i_f = 0; i_f < 2; i_f++) {
-          for (size_t j_f = 0; j_f < 2; j_f++) {
+        for (size_t hi = 0; hi < 2; hi++) {
+          for (size_t hj = 0; hj < 2; hj++) {
             for (size_t g1 = 0; g1 < 2; g1++) {
               for (size_t g2 = 0; g2 < 2; g2++) {
-                MPI_Gather(sC_hihj_g1g2[i_f][j_f][beta_1][beta_2], T, MPI_DOUBLE, C_hihj_g1g2[i_f][j_f][beta_1][beta_2], T, MPI_DOUBLE, 0, g_mpi_SV_slices);
+                MPI_Gather(sC_hihj_g1g2[hi][hj][g1][g2], T, MPI_DOUBLE, C_hihj_g1g2[hi][hj][g1][g2], T, MPI_DOUBLE, 0, g_mpi_SV_slices);
               }
             }
           }
