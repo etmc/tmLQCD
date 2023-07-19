@@ -212,8 +212,8 @@ void phmc_compute_ev(const int trajectory_counter,
 		     const int id,
 		     matrix_mult_bi Qsq) {
   double atime, etime;
-  double eval_min = 0.;
-  double eval_max = 0.;
+  _Complex double eval_min = 0.0;
+  _Complex double eval_max = 0.0;
   int max_iter_ev, no_eigenvalues;
   char buf[100];
   char * phmcfilename = buf;
@@ -285,20 +285,20 @@ void phmc_compute_ev(const int trajectory_counter,
   
   if((g_proc_id == 0) && (g_debug_level > 1)) {
     printf("# %s: lowest eigenvalue end of trajectory %d = %e\n", 
-	   mnl->name, trajectory_counter, eval_min);
+	   mnl->name, trajectory_counter, creal(eval_min));
     printf("# %s: maximal eigenvalue end of trajectory %d = %e\n", 
-	   mnl->name, trajectory_counter, eval_max);
+	   mnl->name, trajectory_counter, creal(eval_max));
   }
   if(g_proc_id == 0) {
-    if(eval_max > mnl->EVMax) {
-      fprintf(stderr, "\nWarning: largest eigenvalue for monomial %s: %.6f is larger than upper bound: %.6f\n\n", mnl->name, eval_max, mnl->EVMax);
+    if(creal(eval_max) > mnl->EVMax) {
+      fprintf(stderr, "\nWarning: largest eigenvalue for monomial %s: %.6f is larger than upper bound: %.6f\n\n", mnl->name, creal(eval_max), mnl->EVMax);
     }
-    if(eval_min < mnl->EVMin) {
-      fprintf(stderr, "\nWarning: smallest eigenvalue for monomial %s: %.6f is smaller than lower bound: %.6f\n\n", mnl->name, eval_min, mnl->EVMin);
+    if(creal(eval_min) < mnl->EVMin) {
+      fprintf(stderr, "\nWarning: smallest eigenvalue for monomial %s: %.6f is smaller than lower bound: %.6f\n\n", mnl->name, creal(eval_min), mnl->EVMin);
     }
     countfile = fopen(phmcfilename, "a");
     fprintf(countfile, "%.8d %1.5e %1.5e %1.5e %1.5e\n", 
-	    trajectory_counter, eval_min, eval_max, mnl->EVMin, mnl->EVMax);
+	    trajectory_counter, creal(eval_min), creal(eval_max), mnl->EVMin, mnl->EVMax);
     fclose(countfile);
   }
   etime = gettime();

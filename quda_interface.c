@@ -2611,7 +2611,7 @@ Interface function for Eigensolver on Quda
 *********************************************************/
 
 
-void eigsolveQuda(double * evals, int n_evals, double tol, int blksize, int blkwise, int max_iterations, int maxmin,
+void eigsolveQuda(_Complex double * evals, int n_evals, double tol, int blksize, int blkwise, int max_iterations, int maxmin,
                   const double precision, const int max_iter, const int polydeg, const double amin, 
                   const double amax, const int n_kr, const int solver_flag, const int rel_prec,
                   const int even_odd_flag, const SloppyPrecision refinement_precision,
