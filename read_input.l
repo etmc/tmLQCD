@@ -2610,17 +2610,17 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*EigSolverPolyMin{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mnl->eig_amin = c;
-    if(myverbose!=0) printf("  min for polynomial acceleration in eigensolver set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose!=0) printf("  Minimum eigenvalue to exclude using polynomial acceleration in eigensolver set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*EigSolverPolyMax{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mnl->eig_amax = c;
-    if(myverbose!=0) printf("  max for polynomial acceleration in eigensolver set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose!=0) printf("  Maximum eigenvalues to exclude using polynomial acceleration in eigensolver set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*EigSolverPolynomialDegree{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->eig_polydeg = a;
-    if(myverbose!=0) printf("  degree of polynomial acceleration in eigensolver set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+    if(myverbose!=0) printf("  Degree of polynomial acceleration in eigensolver set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
   }
   {SPC}*EigSolverKrylovSubspaceSize{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
