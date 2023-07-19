@@ -211,7 +211,9 @@ void init_phmc() {
 void phmc_compute_ev(const int trajectory_counter,
 		     const int id,
 		     matrix_mult_bi Qsq) {
-  double atime, etime, temp=0., temp2=0.;
+  double atime, etime;
+  double eval_min = 0.;
+  double eval_max = 0.;
   int max_iter_ev, no_eigenvalues;
   char buf[100];
   char * phmcfilename = buf;
@@ -230,15 +232,15 @@ void phmc_compute_ev(const int trajectory_counter,
   no_eigenvalues = 1;
   if(mnl->external_eigsolver == QUDA_EIGSOLVER) {
   #ifdef TM_USE_QUDA
-    temp = eigsolveQuda(no_eigenvalues, eigenvalue_precision, 1, 0, max_iter_ev, 0,
-                        mnl->accprec, mnl->maxiter, mnl->eig_polydeg, mnl->eig_amin, 
-                        mnl->eig_amax, mnl->eig_n_kr, mnl->solver, g_relative_precision_flag,
-                                                       1, // we only support even-odd here
-                                                       mnl->solver_params.refinement_precision,
-                                                       mnl->solver_params.sloppy_precision,
-                                                       mnl->solver_params.compression_type, 0);
+    eigsolveQuda(&eval_min, no_eigenvalues, eigenvalue_precision, 1, 0, max_iter_ev, 0,
+                 mnl->accprec, mnl->maxiter, mnl->eig_polydeg, mnl->eig_amin, 
+                 mnl->eig_amax, mnl->eig_n_kr, mnl->solver, g_relative_precision_flag,
+                 1, // we only support even-odd here
+                 mnl->solver_params.refinement_precision,
+                 mnl->solver_params.sloppy_precision,
+                 mnl->solver_params.compression_type, 0);
     if( fabs(mnl->EVMax - 1) < 2*DBL_EPSILON ) {
-      temp = temp / mnl->StildeMax;
+      eval_min /= mnl->StildeMax;
     }
   #else
     if(g_proc_id == 0) {
@@ -250,22 +252,22 @@ void phmc_compute_ev(const int trajectory_counter,
     }
   #endif
   }else {
-    temp = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0, Qsq);
+    eval_min = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 0, Qsq);
   }
   
   
   no_eigenvalues = 1;
   if(mnl->external_eigsolver == QUDA_EIGSOLVER) {
   #ifdef TM_USE_QUDA
-    temp2 = eigsolveQuda(no_eigenvalues, eigenvalue_precision, 1, 0, max_iter_ev, 1,
-                         mnl->accprec, mnl->maxiter, mnl->eig_polydeg, mnl->eig_amin, 
-                         mnl->eig_amax, mnl->eig_n_kr, mnl->solver, g_relative_precision_flag,
-                                                       1, // we only support even-odd here
-                                                       mnl->solver_params.refinement_precision,
-                                                       mnl->solver_params.sloppy_precision,
-                                                       mnl->solver_params.compression_type, 0);
+    eigsolveQuda(&eval_max, no_eigenvalues, eigenvalue_precision, 1, 0, max_iter_ev, 1,
+                 mnl->accprec, mnl->maxiter, mnl->eig_polydeg, mnl->eig_amin, 
+                 mnl->eig_amax, mnl->eig_n_kr, mnl->solver, g_relative_precision_flag,
+                 1, // we only support even-odd here
+                 mnl->solver_params.refinement_precision,
+                 mnl->solver_params.sloppy_precision,
+                 mnl->solver_params.compression_type, 0);
     if( fabs(mnl->EVMax - 1.) < 2*DBL_EPSILON ) {
-      temp2 = temp2 / mnl->StildeMax;
+      eval_max /= mnl->StildeMax;
     }
   #else
     if(g_proc_id == 0) {
@@ -277,26 +279,26 @@ void phmc_compute_ev(const int trajectory_counter,
     }
   #endif
   }else {
-    temp2 = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, Qsq);
+    eval_max = eigenvalues_bi(&no_eigenvalues, max_iter_ev, eigenvalue_precision, 1, Qsq);
   }
   
   
   if((g_proc_id == 0) && (g_debug_level > 1)) {
     printf("# %s: lowest eigenvalue end of trajectory %d = %e\n", 
-	   mnl->name, trajectory_counter, temp);
+	   mnl->name, trajectory_counter, eval_min);
     printf("# %s: maximal eigenvalue end of trajectory %d = %e\n", 
-	   mnl->name, trajectory_counter, temp2);
+	   mnl->name, trajectory_counter, eval_max);
   }
   if(g_proc_id == 0) {
-    if(temp2 > mnl->EVMax) {
-      fprintf(stderr, "\nWarning: largest eigenvalue for monomial %s larger than upper bound!\n\n", mnl->name);
+    if(eval_max > mnl->EVMax) {
+      fprintf(stderr, "\nWarning: largest eigenvalue for monomial %s: %.6f is larger than upper bound: %.6f\n\n", mnl->name, eval_max, mnl->EVMax);
     }
-    if(temp < mnl->EVMin) {
-      fprintf(stderr, "\nWarning: smallest eigenvalue for monomial %s smaller than lower bound!\n\n", mnl->name);
+    if(eval_min < mnl->EVMin) {
+      fprintf(stderr, "\nWarning: smallest eigenvalue for monomial %s: %.6f is smaller than lower bound: %.6f\n\n", mnl->name, eval_min, mnl->EVMin);
     }
     countfile = fopen(phmcfilename, "a");
     fprintf(countfile, "%.8d %1.5e %1.5e %1.5e %1.5e\n", 
-	    trajectory_counter, temp, temp2, mnl->EVMin, mnl->EVMax);
+	    trajectory_counter, eval_min, eval_max, mnl->EVMin, mnl->EVMax);
     fclose(countfile);
   }
   etime = gettime();

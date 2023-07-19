@@ -2611,11 +2611,11 @@ Interface function for Eigensolver on Quda
 *********************************************************/
 
 
-double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterations, int maxmin,
-                    const double precision, const int max_iter, const int polydeg, const double amin, 
-                    const double amax, const int n_kr, const int solver_flag, const int rel_prec,
-                    const int even_odd_flag, const SloppyPrecision refinement_precision,
-                    SloppyPrecision sloppy_precision, CompressionType compression, const int oneFlavourFlag) {
+void eigsolveQuda(double * evals, int n_evals, double tol, int blksize, int blkwise, int max_iterations, int maxmin,
+                  const double precision, const int max_iter, const int polydeg, const double amin, 
+                  const double amax, const int n_kr, const int solver_flag, const int rel_prec,
+                  const int even_odd_flag, const SloppyPrecision refinement_precision,
+                  SloppyPrecision sloppy_precision, CompressionType compression, const int oneFlavourFlag) {
 
   tm_stopwatch_push(&g_timers, __func__, "");
   
@@ -2648,17 +2648,6 @@ double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterati
                               1 /*always QpQm*/);
   }
 
-  // QUDA applies the MMdag operator, we need QpQm^{-1) in the end
-  // so we want QUDA to use the MdagM operator
-  inv_param.dagger = QUDA_DAG_YES;
-
-
-  _Complex double * eigenvls;
-  double returnvalue;
-
-  // allocate memory for eigenvalues
-  eigenvls = (_Complex double *)malloc((n)*sizeof(_Complex double));
-
   // create new eig_param
   eig_param = newQudaEigParam();
   
@@ -2675,6 +2664,8 @@ double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterati
   eig_param.invert_param->cuda_prec_eigensolver = inv_param.cuda_prec;
   eig_param.invert_param->clover_cuda_prec_eigensolver = inv_param.clover_cuda_prec;
   
+  // for consistency with tmLQCD's own eigensolver we require a precision of at least
+  // 1e-14
   if(tol < 1.e-14) {
     eig_param.tol = 1.e-14;
     eig_param.qr_tol = 1.e-14;
@@ -2683,8 +2674,6 @@ double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterati
     eig_param.qr_tol = tol;
   }
   
-
-    
   if(blkwise == 1) {
     eig_param.eig_type = QUDA_EIG_BLK_TR_LANCZOS;
     eig_param.block_size = blksize;
@@ -2707,10 +2696,6 @@ double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterati
     eig_param.use_norm_op = QUDA_BOOLEAN_FALSE;
   }
 
-  // BK: these defaults seem to work on a 32c64 ensemble
-  // at a relatively coarse lattice spacing for the eigenvalues
-  // of the twisted-clover ND operator with values of musigma / mudelta
-  // reproducing physical sea strange and charm quark masses
   eig_param.use_poly_acc = (maxmin == 1) || (polydeg == 0) ? QUDA_BOOLEAN_FALSE : QUDA_BOOLEAN_TRUE;
   eig_param.poly_deg = polydeg;
   eig_param.a_min = amin;
@@ -2745,9 +2730,9 @@ double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterati
 
   /* The size of eigenvector search space and
    * the number of required converged eigenvectors 
-   * is both set to n */
-  eig_param.n_conv = n;
-  eig_param.n_ev = n;
+   * is both set to n_evals */
+  eig_param.n_conv = n_evals;
+  eig_param.n_ev = n_evals;
   /* The size of the Krylov space is set to 96.
    * From my understanding, QUDA automatically scales
    * this search space, however more testing on this 
@@ -2756,13 +2741,7 @@ double eigsolveQuda(int n, double tol, int blksize, int blkwise, int max_iterati
 
   eig_param.max_restarts = max_iterations;
 
-  eigensolveQuda(NULL, eigenvls, &eig_param);
-
-  returnvalue = eigenvls[0];
-  free(eigenvls);
+  eigensolveQuda(NULL, evals, &eig_param);
 
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
-
-  return(returnvalue);
-
 }
