@@ -444,7 +444,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
             // even-odd spinor fields for the light and heavy doublet correlators
             // INDICES: source+propagator, doublet, spin dilution index, flavor projection, even-odd, flavor, position
             // (+ Dirac, color) psi = (psi[(s,p)][db][beta][F][eo][f][x])[alpha][c] 
-            // last 3 indices come from spinor struct 
+            // last 2 indices come from spinor struct 
             // Note: propagator in the sense that it is D^{-1}*source after the inversion
             spinor *******arr_eo_spinor = (spinor *******)callocMultiDimensional(
                 {2, 2, 4, 2, 2, 2, VOLUME / 2}, 7, sizeof(spinor));
@@ -454,14 +454,16 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
             const unsigned int seed_i = measurement_list[id].seed; // has to be same seed
             for (size_t db = 0; db < 2; db++) { // doublet: light or heavy
               for (size_t beta = 0; beta < 4; beta++) { // spin dilution index
-                for (size_t F = 0; F < 2; F++) { // flavor index of the doublet
+                for (size_t F = 0; F < 2; F++) { // flavor dilution index
                   for (size_t i_f = 0; i_f < 2; i_f++) { // flavor index of the doublet
                     // light doublet
-                    eo_source_spinor_field_spin_diluted_oet_ts(arr_eo_spinor[0][db][beta][0][i_f],
-                                                            arr_eo_spinor[0][db][beta][1][i_f], t0,
-                                                            beta, sample, traj, seed_i);
-                    }
-                  }
+                    eo_source_spinor_field_spin_diluted_oet_ts(
+                      arr_eo_spinor[0][db][beta][F][0][i_f], arr_eo_spinor[0][db][beta][F][1][i_f], 
+                      t0, beta, sample, traj, seed_i
+                    );
+
+                  }                
+                }
                }
             }
 
@@ -505,6 +507,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 
                 optr1->inverter(i1, 0, 0);  // inversion for the up flavor
 
+                // PLEASE KEEP THESE LINES COMMENTED, MAY BE USEFUL IN THE FUTURE
                 // // inversion of the light doublet only inverts the up block (the operator is
                 // // diagonal in flavor) down components in flavor will be empty
                 // optr1->DownProp = 1;
@@ -522,15 +525,15 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 
                 /* heavy doublet */
 
-                optr1->sr0 = arr_eo_spinor[0][1][beta][0][0];
-                optr1->sr1 = arr_eo_spinor[0][1][beta][1][0];
-                optr1->sr2 = arr_eo_spinor[0][1][beta][0][1];
-                optr1->sr3 = arr_eo_spinor[0][1][beta][1][1];
+                optr2->sr0 = arr_eo_spinor[0][1][beta][0][0];
+                optr2->sr1 = arr_eo_spinor[0][1][beta][1][0];
+                optr2->sr2 = arr_eo_spinor[0][1][beta][0][1];
+                optr2->sr3 = arr_eo_spinor[0][1][beta][1][1];
 
-                optr1->prop0 = arr_eo_spinor[1][1][beta][0][0];
-                optr1->prop1 = arr_eo_spinor[1][1][beta][1][0];
-                optr1->prop2 = arr_eo_spinor[1][1][beta][0][1];
-                optr1->prop3 = arr_eo_spinor[1][1][beta][1][1];
+                optr2->prop0 = arr_eo_spinor[1][1][beta][0][0];
+                optr2->prop1 = arr_eo_spinor[1][1][beta][1][0];
+                optr2->prop2 = arr_eo_spinor[1][1][beta][0][1];
+                optr2->prop3 = arr_eo_spinor[1][1][beta][1][1];
 
                 optr2->inverter(i2, 0, 0);  // inversion for both flavor components
             }

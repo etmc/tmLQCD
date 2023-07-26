@@ -219,15 +219,22 @@ Upon a careful calculation for all values $i,j = 0,1$ we find, equivalently:
 \, .
 \end{equation}
 <!--  -->
+This is a generalized case of eq. (A9) of @PhysRevD.59.074503.
 
 We now approximate the propagator using stochastic sources.
 Additionally, we use:
 
 - The one-end-trick @Boucaud:2008xu: non vanishing source only at $x=0$.
 - Same source for light and heavy doublet
-- Spin dilution (cf. @foley2005practical): one source for each Dirac index $\beta$. The components with index different from the dilution index are set to zero.
-- Flavor projection: sources have an additional flavor index $\phi$, such that their flavor component different from the index vanish. The value of the flavor component however is the same, it changes only its position in the doublet:
-
+- Spin dilution (cf. @foley2005practical): one source for each Dirac index $\beta$, with unit norm in color space. The components with index different from the dilution index are set to zero:
+    <!--  -->
+    \begin{equation}
+    \eta^{(\alpha)}_{\beta, c} = 
+    \eta_c \, \delta^\alpha_\beta \,\, , \, \, 
+    \eta^\dagger_c \eta_c = 1 \, .
+    \end{equation}
+    <!--  -->
+- Flavor dilution: sources have an additional flavor index $\phi$, such that their flavor component different from the index vanish. The value of the flavor component however is the same, it changes only its position in the doublet:
 <!--  -->
 \begin{equation}
 \eta^{(\phi=0)} = 
@@ -245,34 +252,44 @@ Additionally, we use:
 \end{equation}
 <!--  -->
 
-Since $\Gamma_2=1,\gamma_5$ we always have $\Gamma_2 = \Gamma_2^\dagger$.
-In this way, if $\eta^{(\beta, \phi)}$ is the diluted source,
-we can define:
+
+Therefore, we can use spin dilutions to rephrase the correlator in a form which will turn out to be convenient later
+($c$ is the color index):
 <!--  -->
 \begin{equation}
-\begin{split}
-&D_{\ell} {\psi}_{\ell}^{(\beta, \phi)} 
-= \gamma_5 \Gamma_2 \eta^{(\beta, \phi)}
-\, \implies \,
-(\psi_{\ell}^{(\beta, \phi)})^\dagger 
-= 
-(\eta^{(\beta, \phi)})^\dagger 
-\Gamma_2 \gamma_5 S_{\ell}^\dagger
-\\
-&D_{h} \psi_{h}^{(\beta, \phi)} 
-= \eta^{(\beta, \phi)}
-\, \implies \,
-\psi_{h}^{(\beta, \phi)} 
-= S_{h} \eta^{(\beta, \phi)}
+\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
+=
+[(S_h)_{f_i f_j}]_{\alpha_1 \beta_1} (x|0) 
+[\eta^{(\alpha_2)}_{\beta_1}]_c
+(\Gamma_2 \gamma_5)_{\alpha_2 \alpha_3} 
+[{(\eta^\dagger)}^{(\alpha_3)}_{\beta_2}]_c
+[(S_u)^\dagger]_{\beta_2 \alpha_4} (x|0) 
+(\gamma_5 \Gamma_1)_{\alpha_4 \alpha_1}
 \, .
-\end{split}
+\end{equation}
+<!--  -->
+
+
+<!-- Since $\Gamma_2=1,\gamma_5$ we always have $\Gamma_2 = \Gamma_2^\dagger$. -->
+<!-- In this way,  -->
+
+We now define our spinor propagators.
+If $\eta^{(\beta, \phi)}$ is the diluted source:
+<!--  -->
+\begin{equation}
+(D_{\ell/h})_{\alpha_1 \alpha_2} ({\psi}_{\ell/h}^{(\beta, \phi)})_{\alpha_2} 
+= (\eta^{(\beta, \phi)})_{\alpha_1}
+\, \implies \,
+(\psi_{\ell/h}^{(\beta, \phi)})^\dagger_{\alpha_1} 
+= 
+(\eta^{(\beta, \phi)})^\dagger_{\alpha_2} 
+(S_{\ell/h}^\dagger)_{\alpha_2 \alpha_1}
 \end{equation}
 <!--  -->
 This means that for our matrix of correlators we have to do ${4_D \times 2_f \times 2_{h,\ell}} = 16$ inversions.
 
 ::: {.remark}
 1. For the light doublet `tmLQCD` computes only $S_u$, which is obtained with $(\psi_h^{(\beta, f_0)})_{f_0}$. This is the only propagator we need.
-
 2. For the heavy propagator, we can access the $(i,j)$ component of $S_h$ with $(\psi_h^{(\beta, f_j)})_{f_i}$.
 :::
 
@@ -283,26 +300,43 @@ Our correlator is given by the following expectation value
 \begin{split}
 \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
 &=
-\sum_{\beta=1}^{N_D}
 \langle
-\operatorname{Tr}
-\left[
-    (\psi_h^{(\beta, f_i)})_{f_j}(x)
-    (\psi_\ell^{(\beta, f_0)})_{f_0}^\dagger (x) 
-    \gamma_5 \Gamma_1
-\right]
+[(\psi_h^{(\alpha_2, f_i)})_{f_j}]_{\alpha_1}(x)
+(\Gamma_2 \gamma_5)_{\alpha_2 \alpha_3}
+[(\psi_\ell^{(\alpha_3, f_0)})_{f_0}^\dagger]_{\alpha_4} (x) 
+(\gamma_5 \Gamma_1)_{\alpha_4 \alpha_1}
 \rangle
 \\
 &=
-\sum_{\beta=1}^{N_D}
 \braket{
-    (\psi_\ell^{(\beta, f_0)})_{f_0}^\dagger (x) 
-    \gamma_5 \Gamma_1
-    (\psi_h^{(\beta, f_j)})_{f_i}(x)
+(\psi_\ell^{(\alpha_3, f_0)})_{f_0}^\dagger (x) 
+\cdot
+(\gamma_5 \Gamma_1)
+\cdot
+(\psi_h^{(\alpha_2, f_j)})_{f_i}(x)
 }
+\,
+(\Gamma_2 \gamma_5)_{\alpha_2 \alpha_3} 
+\\
+&=
+\mathcal{S}^{\alpha_2 \alpha_3} (\Gamma_2 \gamma_5)_{\alpha_2 \alpha_3}
 \end{split}
 \end{equation}
 <!--  -->
+
+More explicitly:
+<!--  -->
+\begin{equation}
+\begin{split}
+\Gamma_2=1 &\implies \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
+= S^{00}+S^{11}-S^{22}-S^{33}
+\\
+\Gamma_2=\gamma_5 &\implies \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
+= S^{00}+S^{11}+S^{22}+S^{33}
+\end{split}
+\end{equation}
+<!--  -->
+
 
 
 ## Implementation
