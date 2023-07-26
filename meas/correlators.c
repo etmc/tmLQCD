@@ -601,14 +601,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 
               for (i = j; i < j + LX * LY * LZ; i++) {
                 for (size_t beta = 0; beta < 4; beta++) {  // spin dilution
-                  // spinor psi_00 = arr_spinor_gamma5_Gamma2[1][0][beta][f0][f0][i];
                   spinor psi_u = arr_spinor[1][0][beta][f0][f0][i];
-
-                  // // light correlators
-                  // double sign = 1.0;  // the light source sould be multiplied by gamma_5
-                  // if (beta >= 2) { sign = -1.0; }
-
-                  // CORRECT HERE! psi_up can't be used as is for the poin correlator
 
                   res += sign * _spinor_prod_re(psi_u, psi_u);
                   _gamma0(phi, psi_u);
@@ -616,7 +609,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
                   _gamma5(phi, phi);
                   resp4 += sign * _spinor_prod_im(psi_u, phi);
 
-                  for (size_t F = 0; F < 4; F++) {             // flavor projection
+                  for (size_t F = 0; F < 2; F++) { // flavor projection
                     for (size_t hi = 0; hi < 2; hi++) {
                       for (size_t hj = 0; hj < 2; hj++) {
                         for (size_t g1 = 0; g1 < 2; g1++) {
@@ -625,12 +618,16 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 
                             // heavy doublet spinor propagator
                             phi = arr_spinor[1][1][beta][hj][hi][i];
-                            if (g1 == 1) {  // Gamma_1 = 1
+                            if (g1 == 0) { // Gamma_1 = \mathbb{1}
                               _gamma5(phi, phi);
                             }
-                            _spinor_scalar_prod(dum, psi_00, phi);
+                            _spinor_scalar_prod(dum, psi_u, phi);
 
-                            res_hihj_g1g2[hi][hj][g1][g2] += dum;
+                            double sign_beta = +1;
+                            if(g2 == 0 /* Gamma_2 == \mathbb{1} */ && beta>2){
+                              sign_beta = -1;
+                            }
+                            res_hihj_g1g2[hi][hj][g1][g2] += sign_beta*dum;
                           }
                         }
                       }
