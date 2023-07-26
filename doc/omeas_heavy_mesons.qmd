@@ -301,7 +301,7 @@ Our correlator is given by the following expectation value
 \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
 &=
 \langle
-[(\psi_h^{(\alpha_2, f_i)})_{f_j}]_{\alpha_1}(x)
+[(\psi_h^{(\alpha_2, f_j)})_{f_i}]_{\alpha_1}(x)
 (\Gamma_2 \gamma_5)_{\alpha_2 \alpha_3}
 [(\psi_\ell^{(\alpha_3, f_0)})_{f_0}^\dagger]_{\alpha_4} (x) 
 (\gamma_5 \Gamma_1)_{\alpha_4 \alpha_1}
@@ -319,7 +319,7 @@ Our correlator is given by the following expectation value
 (\Gamma_2 \gamma_5)_{\alpha_2 \alpha_3} 
 \\
 &=
-\mathcal{S}^{\alpha_2 \alpha_3} (\Gamma_2 \gamma_5)_{\alpha_2 \alpha_3}
+\mathcal{S}^{\alpha_3 \alpha_2} (\Gamma_2 \gamma_5)_{\alpha_2 \alpha_3}
 \end{split}
 \end{equation}
 <!--  -->
@@ -329,10 +329,10 @@ More explicitly:
 \begin{equation}
 \begin{split}
 \Gamma_2=1 &\implies \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
-= S^{00}+S^{11}-S^{22}-S^{33}
+= \mathcal{S}^{00}+\mathcal{S}^{11}-\mathcal{S}^{22}-\mathcal{S}^{33}
 \\
 \Gamma_2=\gamma_5 &\implies \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
-= S^{00}+S^{11}+S^{22}+S^{33}
+= \mathcal{S}^{00}+\mathcal{S}^{11}+\mathcal{S}^{22}+\mathcal{S}^{33}
 \end{split}
 \end{equation}
 <!--  -->
