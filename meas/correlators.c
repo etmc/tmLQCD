@@ -275,7 +275,7 @@ void* callocMultiDimensional(int* sizes, int numDimensions, size_t elementSize) 
     }
     
     for (int i = 0; i < sizes[0]; i++) {
-        pointerArray[i] = callocMultiDimensional(sizes + 1, numDimensions - 1);
+      pointerArray[i] = callocMultiDimensional(sizes + 1, numDimensions - 1, elementSize);
         
         if (pointerArray[i] == NULL) {
             printf("Memory allocation failed for subarray %d in dimension %d!", i, numDimensions - 1);
@@ -342,21 +342,23 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 #endif
 
     /* heavy-light correlators variables */
-    double eta_Gamma[2] = {
-        1.0, -1.0};  // sign change compensation from daggering bilinear with Gamma = 1,gamma_5
+    double eta_Gamma[2] = {1.0, -1.0};  // sign change bilinear^\dagger, with Gamma = 1,gamma_5
 
     // the number of independent correlators is 16 = (2*2)_{h_1 h_2} * (2*2)_{Gamma_1 Gamma_2}
     // hi: c,s
     // Gamma = 1, gamma_5
-    double *****C_hihj_g1g2 =
-        (double *****)callocMultiDimensional({2, 2, 2, 2, T}, 5, sizeof(double));
-    double ****res_hihj_g1g2 = (double ****)callocMultiDimensional({2, 2, 2, 2}, 4, sizeof(double));
+    const int sizes_C_hihj_g1g2[5] = {2, 2, 2, 2, T};
+    double *****C_hihj_g1g2 = 
+        (double *****)callocMultiDimensional(sizes_C_hihj_g1g2, 5, sizeof(double));
+
+    const int sizes_res_hihj_g1g2[4] = {2, 2, 2, 2};
+    double ****res_hihj_g1g2 = (double ****)callocMultiDimensional(sizes_res_hihj_g1g2, 4, sizeof(double));
 #ifdef TM_USE_MPI
     double ****mpi_res_hihj_g1g2 =
-        (double ****)callocMultiDimensional({2, 2, 2, 2}, 4, sizeof(double));
+        (double ****)callocMultiDimensional(sizes_res_hihj_g1g2, 4, sizeof(double));
     // send buffer for MPI_Gather
     double *****sC_hihj_g1g2 =
-        (double *****)callocMultiDimensional({2, 2, 2, 2, T}, 5, sizeof(double));
+        (double *****)callocMultiDimensional(sizes_C_hihj_g1g2, 5, sizeof(double));
 #endif
 
     FILE *ofs;                                // output file stream
@@ -380,7 +382,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
     operator* optr1 = & operator_list[i1];  // light doublet
     operator* optr2 = & operator_list[i2];  // heavy c,s doublet
 
-    bool b1 = (optr->type != TMWILSON && optr->type != WILSON && optr->type != CLOVER);
+    bool b1 = (optr1->type != TMWILSON && optr1->type != WILSON && optr1->type != CLOVER);
     bool b2 = (optr2->type != DBTMWILSON && optr2->type != DBCLOVER);
     if (b1 || b2) {
         if (g_proc_id == 0) {
@@ -446,8 +448,9 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
             // (+ Dirac, color) psi = (psi[(s,p)][db][beta][F][eo][f][x])[alpha][c] 
             // last 2 indices come from spinor struct 
             // Note: propagator in the sense that it is D^{-1}*source after the inversion
-            spinor *******arr_eo_spinor = (spinor *******)callocMultiDimensional(
-                {2, 2, 4, 2, 2, 2, VOLUME / 2}, 7, sizeof(spinor));
+	    const int sizes_arr_eo_spinor[7] = {2, 2, 4, 2, 2, 2, VOLUME / 2};
+	    spinor *******arr_eo_spinor =
+	      (spinor *******)callocMultiDimensional(sizes_arr_eo_spinor, 7, sizeof(spinor));
 
             /* initalize the random sources: one source for each Dirac index beta=src_d --> spin
              * dilution */
@@ -562,8 +565,9 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
             // (no even-odd): source+propagator, doublet, spin dilution index, flavor proj, flavor
             // index, position (+ Dirac, color) (psi[i_sp][d][beta][F][f][x])[alpha][c] 
             // last 3 indices come from the spinor struct
+	    const int sizes_arr_spinor = {2, 2, 4, 2, 2, VOLUME};
             spinor ******arr_spinor =
-                (spinor ******)callocMultiDimensional({2, 2, 4, 2, 2, VOLUME}, 6, sizeof(spinor));
+	      (spinor ******)callocMultiDimensional(sizes_arr_spinor, 6, sizeof(spinor));
 
             // now we switch from even-odd representation to standard
 
@@ -603,11 +607,11 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
                 for (size_t beta = 0; beta < 4; beta++) {  // spin dilution
                   spinor psi_u = arr_spinor[1][0][beta][f0][f0][i];
 
-                  res += sign * _spinor_prod_re(psi_u, psi_u);
+                  res += _spinor_prod_re(psi_u, psi_u);
                   _gamma0(phi, psi_u);
-                  respa += sign * _spinor_prod_re(psi_u, phi);
+                  respa +=  _spinor_prod_re(psi_u, phi);
                   _gamma5(phi, phi);
-                  resp4 += sign * _spinor_prod_im(psi_u, phi);
+                  resp4 += _spinor_prod_im(psi_u, phi);
 
                   for (size_t F = 0; F < 2; F++) { // flavor projection
                     for (size_t hi = 0; hi < 2; hi++) {
