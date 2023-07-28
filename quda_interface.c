@@ -2542,13 +2542,13 @@ void set_mg_params_from_tunable_params(QudaMultigridParam * mg_param,
 }
 
 int get_lvl_tuning_steps(const tm_QudaMGTuningPlan_t * const tuning_plan, const int lvl){
-  return tuning_plan->mg_mu_factor_steps[lvl] *
-         tuning_plan->mg_coarse_solver_maxiter_steps[lvl] *
-         tuning_plan->mg_coarse_solver_tol_steps[lvl] *
-         tuning_plan->mg_nu_pre_steps[lvl] *
-         tuning_plan->mg_nu_post_steps[lvl] *
-         tuning_plan->mg_smoother_tol_steps[lvl] *
-         tuning_plan->mg_omega_steps[lvl];
+  return (tuning_plan->mg_mu_factor_steps[lvl] > 0 ? tuning_plan->mg_mu_factor_steps[lvl] : 1) *
+         (tuning_plan->mg_coarse_solver_maxiter_steps[lvl] > 0 ? tuning_plan->mg_coarse_solver_maxiter_steps[lvl] : 1) *
+         (tuning_plan->mg_coarse_solver_tol_steps[lvl] > 0 ? tuning_plan->mg_coarse_solver_tol_steps[lvl] : 1) *
+         (tuning_plan->mg_nu_pre_steps[lvl] > 0 ? tuning_plan->mg_nu_pre_steps[lvl] : 1 ) *
+         (tuning_plan->mg_nu_post_steps[lvl] > 0 ? tuning_plan->mg_nu_post_steps[lvl] : 1) *
+         (tuning_plan->mg_smoother_tol_steps[lvl] > 0 ? tuning_plan->mg_smoother_tol_steps[lvl] : 1 ) *
+         (tuning_plan->mg_omega_steps[lvl] > 0 ? tuning_plan->mg_omega_steps[lvl] : 1);
 }
 
 static const char * string_mg_tuning_direction(const tm_QudaMGTuningDirection_t tuning_dir)
@@ -2797,49 +2797,49 @@ tm_QudaMGTuningDirection_t update_tuning_dir(const tm_QudaMGTuningPlan_t * const
         if( (i == (int)tuning_dir && 
              tuning_plan->mg_mu_factor_steps[lvl] > cur_dir_steps_done) ||
             (i != (int)tuning_dir &&
-             tuning_plan->mg_mu_factor_steps[lvl] > 1 ) )
+             tuning_plan->mg_mu_factor_steps[lvl] > 0 ) )
           return TM_MG_TUNE_MU_FACTOR;
         break;
       case TM_MG_TUNE_COARSE_SOLVER_MAXITER:
         if( (i == (int)tuning_dir &&
              tuning_plan->mg_coarse_solver_maxiter_steps[lvl] > cur_dir_steps_done ) ||
             (i != (int)tuning_dir &&
-             tuning_plan->mg_coarse_solver_maxiter_steps[lvl] > 1 ) )
+             tuning_plan->mg_coarse_solver_maxiter_steps[lvl] > 0 ) )
           return TM_MG_TUNE_COARSE_SOLVER_MAXITER;
         break;
       case TM_MG_TUNE_COARSE_SOLVER_TOL:
         if( (i == (int)tuning_dir &&
              tuning_plan->mg_coarse_solver_tol_steps[lvl] > cur_dir_steps_done ) ||
             (i != (int)tuning_dir &&
-             tuning_plan->mg_coarse_solver_tol_steps[lvl] > 1 ) )
+             tuning_plan->mg_coarse_solver_tol_steps[lvl] > 0 ) )
           return TM_MG_TUNE_COARSE_SOLVER_TOL;
         break;
       case TM_MG_TUNE_NU_POST:
         if( (i == (int)tuning_dir && 
              tuning_plan->mg_nu_post_steps[lvl] > cur_dir_steps_done ) ||
             (i != tuning_dir &&
-             tuning_plan->mg_nu_post_steps[lvl] > 1 ) )
+             tuning_plan->mg_nu_post_steps[lvl] > 0 ) )
           return TM_MG_TUNE_NU_POST;
         break;
       case TM_MG_TUNE_NU_PRE:
         if( (i == (int)tuning_dir &&
              tuning_plan->mg_nu_pre_steps[lvl] > cur_dir_steps_done ) ||
             (i != (int)tuning_dir &&
-             tuning_plan->mg_nu_pre_steps[lvl] > 1 ) )
+             tuning_plan->mg_nu_pre_steps[lvl] > 0 ) )
           return TM_MG_TUNE_NU_PRE;
         break;
       case TM_MG_TUNE_SMOOTHER_TOL:
         if( (i == (int)tuning_dir && 
              tuning_plan->mg_smoother_tol_steps[lvl] > cur_dir_steps_done ) ||
             (i != (int)tuning_dir &&
-             tuning_plan->mg_smoother_tol_steps[lvl] > 1 ) )
+             tuning_plan->mg_smoother_tol_steps[lvl] > 0 ) )
           return TM_MG_TUNE_SMOOTHER_TOL;
         break;
       case TM_MG_TUNE_OMEGA:
         if( (i == (int)tuning_dir &&
              tuning_plan->mg_omega_steps[lvl] > cur_dir_steps_done ) ||
             (i != (int)tuning_dir &&
-             tuning_plan->mg_omega_steps[lvl] > 1 ) )
+             tuning_plan->mg_omega_steps[lvl] > 0 ) )
           return TM_MG_TUNE_OMEGA;
         break;
       case TM_MG_TUNE_INVALID:
@@ -2856,25 +2856,25 @@ void adjust_tuning_plan(tm_QudaMGTuningPlan_t * tuning_plan,
                         const int lvl){
   switch(tuning_dir){
     case TM_MG_TUNE_MU_FACTOR:
-      tuning_plan->mg_mu_factor_steps[lvl] = 1;
+      tuning_plan->mg_mu_factor_steps[lvl] = 0;
       break;
     case TM_MG_TUNE_COARSE_SOLVER_MAXITER:
-      tuning_plan->mg_coarse_solver_maxiter_steps[lvl] = 1;
+      tuning_plan->mg_coarse_solver_maxiter_steps[lvl] = 0;
       break;
     case TM_MG_TUNE_COARSE_SOLVER_TOL:
-      tuning_plan->mg_coarse_solver_tol_steps[lvl] = 1;
+      tuning_plan->mg_coarse_solver_tol_steps[lvl] = 0;
       break;
     case TM_MG_TUNE_NU_PRE:
-      tuning_plan->mg_nu_pre_steps[lvl] = 1;
+      tuning_plan->mg_nu_pre_steps[lvl] = 0;
       break;
     case TM_MG_TUNE_NU_POST:
-      tuning_plan->mg_nu_post_steps[lvl] = 1;
+      tuning_plan->mg_nu_post_steps[lvl] = 0;
       break;
     case TM_MG_TUNE_SMOOTHER_TOL:
-      tuning_plan->mg_smoother_tol_steps[lvl] = 1;
+      tuning_plan->mg_smoother_tol_steps[lvl] = 0;
       break;
     case TM_MG_TUNE_OMEGA:
-      tuning_plan->mg_omega_steps[lvl] = 1;
+      tuning_plan->mg_omega_steps[lvl] = 0;
       break;
     case TM_MG_TUNE_INVALID:
     default:
@@ -2886,13 +2886,11 @@ void adjust_tuning_plan(tm_QudaMGTuningPlan_t * tuning_plan,
 void quda_mg_tune_params(void * spinorOut, void * spinorIn, const int max_iter){
   static tm_QudaMGTunableParams_t cur_params;
   static int first_call = 1;
+  static tm_QudaMGTuningPlan_t tuning_plan_backup;
   
   tm_QudaMGTunableParams_t * tunable_params = calloc(quda_mg_tuning_plan.mg_tuning_iterations,
                                                      sizeof(tm_QudaMGTunableParams_t));
 
-  // we back up the original tuning plan as we're going to be running through
-  // it multiple times and need to be able to restore it
-  const tm_QudaMGTuningPlan_t tuning_plan_backup = quda_mg_tuning_plan;
  
   const int mg_n_level = quda_mg_param.n_level;
   int cur_tuning_lvl = mg_n_level-1;
@@ -2904,14 +2902,17 @@ void quda_mg_tune_params(void * spinorOut, void * spinorIn, const int max_iter){
   // when tuning over multiple configurations, we tune on the first config based
   // on the parameters defined in the input file 
   if( first_call ){
+    // we back up the original tuning plan as we're going to be running through
+    // it multiple times and need to be able to restore it
+    tuning_plan_backup = quda_mg_tuning_plan;
     copy_quda_mg_tunable_params_from_input(&tunable_params[0], &quda_input);
     copy_quda_mg_tunable_params(&cur_params, &tunable_params[0]);
     first_call = 0;
   // otherwise we continue from the best parameters found on the previous config
   } else {
+    quda_mg_tuning_plan = tuning_plan_backup;
     set_mg_params_from_tunable_params(&quda_mg_param, &cur_params);
     copy_quda_mg_tunable_params(&tunable_params[0], &cur_params);
-    
     print_tunable_params_pair(&cur_params, &tunable_params[0], mg_n_level);
    
     tm_stopwatch_push(&g_timers, "updateMultigridQuda", ""); 
