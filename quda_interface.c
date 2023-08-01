@@ -2985,17 +2985,18 @@ void quda_mg_tune_params(void * spinorOut, void * spinorIn, const int max_iter){
     // this is to ensure that we can actually reach parameter regions where
     // the solver is able to converge
     if(tunable_params[i].tts/tunable_params[best_idx].tts > quda_mg_tuning_plan.mg_tuning_tolerance &&
-       tunable_params[i-1].iter != max_iter){
+       tunable_params[i-1].iter < max_iter){
       // when the timing acutally got worse, we also reset to the best parameters
-      // found so far
-      if(tunable_params[i].tts/tunable_params[best_idx].tts > 1.0){
+      // found so far unless these were not even able to solve
+      // the problem
+      if(tunable_params[i].tts/tunable_params[best_idx].tts > 1.0 &&
+         tunable_params[best_idx].iter < max_iter){
         copy_quda_mg_tunable_params(&cur_params, &tunable_params[best_idx]);
       }
       adjust_tuning_plan(&quda_mg_tuning_plan, cur_tuning_dir, cur_tuning_lvl); 
     } else {
       copy_quda_mg_tunable_params(&cur_params, &tunable_params[i]);
     }
-
        
     cur_lvl_tuning_steps = get_lvl_tuning_steps(&quda_mg_tuning_plan, cur_tuning_lvl);
     steps_done_in_cur_dir++;
