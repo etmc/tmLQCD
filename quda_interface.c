@@ -114,6 +114,8 @@
 #include "tm_debug_printf.h"
 #include "phmc.h"
 #include "quda_gauge_paths.inc"
+#include "io/gauge.h"
+#include "measure_gauge_action.h"
 
 // nstore is generally like a gauge id, for measurements it identifies the gauge field
 // uniquely 
@@ -245,7 +247,7 @@ void _setDefaultQudaParam(void){
   QudaPrecision cpu_prec  = QUDA_DOUBLE_PRECISION;
   QudaPrecision cuda_prec = QUDA_DOUBLE_PRECISION;
   QudaPrecision cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
-  QudaPrecision cuda_prec_precondition = QUDA_HALF_PRECISION;
+  QudaPrecision cuda_prec_precondition = QUDA_SINGLE_PRECISION;
 
   QudaTune tune = QUDA_TUNE_YES;
 
@@ -1838,15 +1840,18 @@ void _setMGInvertParam(QudaInvertParam * mg_inv_param, const QudaInvertParam * c
   mg_inv_param->cuda_prec = inv_param->cuda_prec;
   mg_inv_param->cuda_prec_sloppy = inv_param->cuda_prec_sloppy;
   mg_inv_param->cuda_prec_refinement_sloppy = inv_param->cuda_prec_refinement_sloppy;
-  mg_inv_param->cuda_prec_precondition = inv_param->cuda_prec_precondition;
-  mg_inv_param->cuda_prec_eigensolver = inv_param->cuda_prec_eigensolver;
   
   mg_inv_param->clover_cpu_prec = inv_param->clover_cpu_prec;
   mg_inv_param->clover_cuda_prec = inv_param->clover_cuda_prec;
   mg_inv_param->clover_cuda_prec_sloppy = inv_param->clover_cuda_prec_sloppy;
   mg_inv_param->clover_cuda_prec_refinement_sloppy = inv_param->clover_cuda_prec_refinement_sloppy;
-  mg_inv_param->clover_cuda_prec_precondition = inv_param->clover_cuda_prec_precondition;
-  mg_inv_param->clover_cuda_prec_eigensolver = inv_param->clover_cuda_prec_eigensolver;
+  
+  // it seems that the MG-internal preconditioner and eigensolver need to be
+  // consistent with sloppy precision
+  mg_inv_param->cuda_prec_precondition = inv_param->cuda_prec_sloppy;
+  mg_inv_param->cuda_prec_eigensolver = inv_param->cuda_prec_sloppy;
+  mg_inv_param->clover_cuda_prec_precondition = inv_param->clover_cuda_prec_sloppy;
+  mg_inv_param->clover_cuda_prec_eigensolver = inv_param->clover_cuda_prec_sloppy;
   
   mg_inv_param->clover_order = inv_param->clover_order;
   mg_inv_param->gcrNkrylov = inv_param->gcrNkrylov;
@@ -1865,6 +1870,9 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   QudaInvertParam * mg_inv_param = mg_param->invert_param;
   _setMGInvertParam(mg_inv_param, &inv_param);
 
+  mg_param->setup_type = QUDA_NULL_VECTOR_SETUP;
+
+  mg_param->coarse_guess = quda_input.mg_coarse_guess;
   mg_param->preserve_deflation = quda_input.mg_eig_preserve_deflation;
 
   mg_param->n_level = quda_input.mg_n_level;
@@ -2013,6 +2021,10 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     mg_param->coarse_solver_ca_lambda_min[level] = quda_input.mg_coarse_solver_ca_lambda_min[level];
     mg_param->coarse_solver_ca_lambda_max[level] = quda_input.mg_coarse_solver_ca_lambda_max[level];
     
+    mg_param->smoother_solver_ca_basis[level]      = quda_input.mg_smoother_solver_ca_basis[level];
+    mg_param->smoother_solver_ca_lambda_min[level] = quda_input.mg_smoother_solver_ca_lambda_min[level];
+    mg_param->smoother_solver_ca_lambda_max[level] = quda_input.mg_smoother_solver_ca_lambda_max[level];
+   
 
     // set the MG EigSolver parameters, almost equivalent to
     // setEigParam from QUDA's multigrid_invert_test, except
@@ -2035,7 +2047,9 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
 
       mg_eig_param[level].n_ev = quda_input.mg_eig_nEv[level];
       mg_eig_param[level].n_kr = quda_input.mg_eig_nKr[level];
-      mg_eig_param[level].n_conv = quda_input.mg_n_vec[level];
+      mg_eig_param[level].n_conv = quda_input.mg_eig_nEv[level]; // require convergence of all eigenvalues
+      mg_eig_param[level].n_ev_deflate = mg_eig_param[level].n_conv; // deflate all converged eigenvalues
+      // TODO expose this setting: mg_eig_param[level].batched_rotate = 128;
       mg_eig_param[level].require_convergence = quda_input.mg_eig_require_convergence[level];
 
       mg_eig_param[level].tol = quda_input.mg_eig_tol[level];
@@ -2231,9 +2245,16 @@ int invert_eo_degenerate_quda(spinor * const out,
                                                   rel_prec, even_odd_flag, solver_params,
                                                   sloppy_precision, compression, QpQm);
         if (ret_value >= max_iter) {
+          char outname[200];
+          snprintf(outname, 200, "conf_mg_refresh_fail.%.6f.%04d", g_gauge_state.gauge_id, nstore);
+          paramsXlfInfo * xlfInfo = construct_paramsXlfInfo(
+              measure_plaquette((const su3**)g_gauge_field)/(6.*VOLUME*g_nproc), nstore);
+          int status = write_gauge_field(outname, 64, xlfInfo);
+          free(xlfInfo);
+
           char errmsg[200];
           snprintf(errmsg, 200, "QUDA-MG solver failed to converge in %d iterations even after forced setup refresh. Terminating!",
-                   max_iter);
+                 max_iter);
           fatal_error(errmsg, __func__);
           return -1;
         } else {
