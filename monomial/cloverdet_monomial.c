@@ -112,12 +112,14 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   #ifdef TM_USE_QUDA
     if (g_debug_level > 3) {
 #ifdef TM_USE_MPI
+      // FIXME: here we do not need to set to zero the interior but only the halo
       for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand);i++) { 
         for(int mu=0;mu<4;mu++) { 
           _zero_su3adj(debug_derivative[i][mu]);
         }
       }
 #endif
+      // we copy only the interior
       memcpy(debug_derivative[0], hf->derivative[0], 4*VOLUME*sizeof(su3adj));
     }
 
@@ -293,7 +295,7 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
   /* Compute the energy contr. from first field */
   tm_stopwatch_push(&g_timers, "energy1_square_norm", "");
   mnl->energy1 = square_norm(mnl->w_fields[0], N, 1);
-  tm_stopwatch_pop(&g_timers, 0, 1, ""); 
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
 
   mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
   if(g_proc_id == 0) {
