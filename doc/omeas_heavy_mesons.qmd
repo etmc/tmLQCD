@@ -204,11 +204,12 @@ Our correlator becomes:
 \, .
 \end{equation}
 <!--  -->
-Upon a careful calculation for all values $i,j = 0,1$ we find, equivalently:
+Upon a careful calculation for all values $i,j = 0,1$ we find, equivalently (using spacetime translational symmetry):
 <!--  -->
 \begin{equation}
+\begin{split}
 \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
-=
+&=
 \operatorname{Tr}
 \left[
     (S_h)_{f_i f_j} (x|0) 
@@ -216,7 +217,19 @@ Upon a careful calculation for all values $i,j = 0,1$ we find, equivalently:
     (S_u)^\dagger (x|0) 
     \gamma_5 \Gamma_1
 \right]
+\\
+&=
+\sum_{y,z}
+\operatorname{Tr}
+\left[
+    (S_h)_{f_i f_j} (x+y|y) 
+    \Gamma_2 \gamma_5 
+    (S_u)^\dagger (x+z|z) 
+    \gamma_5 \Gamma_1
+    \delta_{yz}
+\right]
 \, .
+\end{split}
 \end{equation}
 <!--  -->
 This is a generalized case of eq. (A9) of @PhysRevD.59.074503.
@@ -269,22 +282,31 @@ Therefore, we can use spin dilutions to rephrase the correlator in a form which 
 \end{equation}
 <!--  -->
 
-
-<!-- Since $\Gamma_2=1,\gamma_5$ we always have $\Gamma_2 = \Gamma_2^\dagger$. -->
-<!-- In this way,  -->
-
 We now define our spinor propagators.
 If $\eta^{(\beta, \phi)}$ is the diluted source:
 <!--  -->
-\begin{equation}
-(D_{\ell/h})_{\alpha_1 \alpha_2} ({\psi}_{\ell/h}^{(\beta, \phi)})_{\alpha_2} 
-= (\eta^{(\beta, \phi)})_{\alpha_1}
-\, \implies \,
-(\psi_{\ell/h}^{(\beta, \phi)})^\dagger_{\alpha_1} 
+\begin{align}
+& (D_{\ell/h})_{\alpha_1 \alpha_2} (x|y) ({\psi}_{\ell/h}^{(\beta, \phi)})_{\alpha_2} (y)
+= (\eta^{(\beta, \phi)})_{\alpha_1} (x)
+\\
+& \, \implies \,
+(\psi_{\ell/h}^{(\beta, \phi)})_{\alpha_1} (x) 
 = 
-(\eta^{(\beta, \phi)})^\dagger_{\alpha_2} 
-(S_{\ell/h}^\dagger)_{\alpha_2 \alpha_1}
-\end{equation}
+(S_{\ell/h})_{\alpha_2 \alpha_1} (x | y)
+\eta^{(\beta, \phi)}_{\alpha_2} (y)
+= 
+(S_{\ell/h})_{\alpha_2 \alpha_1} (x | 0)
+\eta^{(\beta, \phi)}_{\alpha_2} (0)
+\\
+& \, \implies \,
+(\psi_{\ell/h}^{(\beta, \phi)})^{*}_{\alpha_1} (x) 
+= 
+(\eta^{(\beta, \phi)})^{*}_{\alpha_2} (y)
+(S_{\ell/h}^\dagger)_{\alpha_2 \alpha_1} (x | y)
+= 
+(\eta^{(\beta, \phi)})^\dagger_{\alpha_2} (0)
+(S_{\ell/h}^\dagger)_{\alpha_2 \alpha_1} (x | 0)
+\end{align}
 <!--  -->
 This means that for our matrix of correlators we have to do ${4_D \times 2_f \times 2_{h,\ell}} = 16$ inversions.
 
@@ -319,7 +341,7 @@ Our correlator is given by the following expectation value
 (\Gamma_2 \gamma_5)_{\alpha_2 \alpha_3} 
 \\
 &=
-\mathcal{S}^{\alpha_3 \alpha_2} (\Gamma_2 \gamma_5)_{\alpha_2 \alpha_3}
+\mathcal{R}^{\alpha_3 \alpha_2} (\Gamma_2 \gamma_5)_{\alpha_2 \alpha_3}
 \end{split}
 \end{equation}
 <!--  -->
@@ -329,10 +351,10 @@ More explicitly:
 \begin{equation}
 \begin{split}
 \Gamma_2=1 &\implies \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
-= \mathcal{S}^{00}+\mathcal{S}^{11}-\mathcal{S}^{22}-\mathcal{S}^{33}
+= \mathcal{R}^{00}+\mathcal{R}^{11}-\mathcal{R}^{22}-\mathcal{R}^{33}
 \\
 \Gamma_2=\gamma_5 &\implies \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
-= \mathcal{S}^{00}+\mathcal{S}^{11}+\mathcal{S}^{22}+\mathcal{S}^{33}
+= \mathcal{R}^{00}+\mathcal{R}^{11}+\mathcal{R}^{22}+\mathcal{R}^{33}
 \end{split}
 \end{equation}
 <!--  -->
@@ -343,7 +365,7 @@ More explicitly:
 
 See comments in the code: `tmLQCD/meas/correlators.c`.
 
-
+**NOTE**: test if `invert_doublet_eo_quda` works (do one inversion and check the residual)
 
 
 
