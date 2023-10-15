@@ -444,3 +444,18 @@ Noting the largest of these, the next largest order of magnitude can be used for
 In other words, if the largest of these smallest eigenvalues is $4\cdot10^{-3}$, for example, then \texttt{MGEigSolverPolyMin} can be set to 0.01.
 This ensures that the desired (smallest) part of the spectrum is smaller than \texttt{MGEigSolverPolyMin} and that the entire spectrum is contained in the range up to \texttt{MGEigSolverPolyMax}.
 After this, polynomial acceleration can be enabled, which should reduce setup time significantly.
+
+\subsubsection{Using the QUDA eigensolver in the HMC}
+
+When employing the rational approximation, in order to make sure that the eigenvalue bounds are chosen appropriately, it is necessary to measure the maximal and minimal eigenvalues of the operator involved in the given monomial.
+For the monomials \texttt{NDRAT, NDRATCOR, NDCLOVERRAT} and \texttt{NDCLOVERRATCOR}, this can be done using QUDA's eigensolver when, in addition to a non-zero setting for \texttt{ComputeEVFreq}, \texttt{UseExternalEigSolver = quda} is set.
+
+The eigensolver further offers the following parameters:
+\begin{itemize}
+  \item{ \texttt{EigSolverPolynomialDegree}: Once appropriate parameters for the polynomial filter have been determined (see \texttt{EigSolverPolyMin} and \texttt{EigSolverPolyMax} below), when \texttt{EigSolverPolynomialDegree} is set to a non-zero value, polynomial acceleration will be used in the measurent of the smallest eigenvalue. (integer, default: \texttt{128}) }
+  \item{ \texttt{EigSolverPolyMin}: Smallest eigenvalue to be excluded by the polynomial filter when polynomial acceleration is used. A good value for this should be determined by first running the eigensolver without acceleration (\texttt{EigSolverPolynomialDegree = 0}). \texttt{EigSolverPolyMin} should then be set to about $3\lambda_\mathrm{min}$. Note that this is specified in the operator normalisation, such that $\lambda_\mathrm{min}$ obtained from the measurement should be multiplied by \texttt{StildeMax} to get an appropriate value for \texttt{EigSolverPolyMin}.  (positive real number, default: \texttt{0.001})}
+  \item{ \texttt{EigSolverPolyMax}: Largest eigenvalue to be excluded by the polynomial filter when polynomial acceleration is used. This should be set to a value in excess of the measured largest eigenvalue, $1.5\lambda_\mathrm{max}$, say. Note that this is specified in the operator normalisation such that the measured $\lambda_\mathrm{max}$ should be multiplied by \texttt{StildeMax} to obtain an appropriate value for \texttt{EigSolverPolyMax}. (positive real number, defaullt: \texttt{4.0})}
+  \item{ \texttt{EigSolverKrylovSubspaceSize}: Size of the Krylov space used for the determination of the smallest and largest eigenvalues. The default seems to work well even for large lattices. (integer, default: \texttt{96})}
+\end{itemize}
+
+

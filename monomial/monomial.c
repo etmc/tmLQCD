@@ -116,6 +116,7 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].solver_params.external_inverter = _default_external_inverter;
   monomial_list[no_monomials].solver_params.sloppy_precision = _default_operator_sloppy_precision_flag;
   monomial_list[no_monomials].external_library = _default_external_library;
+  monomial_list[no_monomials].external_eigsolver = _default_external_eigsolver;
   monomial_list[no_monomials].solver_params.refinement_precision = _default_operator_sloppy_precision_flag;
   monomial_list[no_monomials].HB_solver_params = monomial_list[no_monomials].solver_params;
   monomial_list[no_monomials].even_odd_flag = _default_even_odd_flag;
@@ -142,6 +143,11 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].StildeMax = _default_stilde_max;
   monomial_list[no_monomials].PrecisionHfinal = _default_g_acc_Hfin;
   monomial_list[no_monomials].PrecisionPtilde = _default_g_acc_Ptilde;
+
+  monomial_list[no_monomials].eig_polydeg = _default_eig_polydeg;
+  monomial_list[no_monomials].eig_amin = _default_eig_amin;
+  monomial_list[no_monomials].eig_amax = _default_eig_amax;
+  monomial_list[no_monomials].eig_n_kr = _default_eig_n_kr;
 
   monomial_list[no_monomials].rat.order = 12;
   monomial_list[no_monomials].rat.range[0] = _default_stilde_min;

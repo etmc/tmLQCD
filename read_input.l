@@ -2693,6 +2693,34 @@ static inline double fltlist_next_token(int * const list_end){
     mnl->rec_ev = a;
     if(myverbose!=0) printf("  Frequency for computing EV's set to %d in line %d monomial %d\n", mnl->rec_ev, line_of_file, current_monomial);
   }
+  {SPC}*UseExternalEigSolver{EQL}quda {
+    if(myverbose) printf("  Use Quda eigensolver line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->external_eigsolver = QUDA_EIGSOLVER;
+  }
+  {SPC}*UseExternalEigSolver{EQL}no {
+    if(myverbose) printf("  Do not use external eigensolver line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->external_eigsolver = NO_EXT_EIGSOLVER;
+  }
+  {SPC}*EigSolverPolyMin{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mnl->eig_amin = c;
+    if(myverbose!=0) printf("  Minimum eigenvalue to exclude using polynomial acceleration in eigensolver set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*EigSolverPolyMax{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mnl->eig_amax = c;
+    if(myverbose!=0) printf("  Maximum eigenvalues to exclude using polynomial acceleration in eigensolver set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*EigSolverPolynomialDegree{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mnl->eig_polydeg = a;
+    if(myverbose!=0) printf("  Degree of polynomial acceleration in eigensolver set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+  }
+  {SPC}*EigSolverKrylovSubspaceSize{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mnl->eig_n_kr = a;
+    if(myverbose!=0) printf("  Krylov subspace size for eigensolver set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+  }
 }
 <NDPOLYMONOMIAL,CLPOLYMONOMIAL>{
   {SPC}*MaxPtildeDegree{EQL}{DIGIT}+ {
