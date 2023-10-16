@@ -461,9 +461,12 @@ In this case, however, one may find that the resulting setup does not perform we
 As a result, it is recommended to use 5 to 8 well-separated configurations.
 
 Rather than performing an exhaustive search, the algorithm iterates through the different search directions at different levels of the grid hierarchy, always starting at the coarsest grid and working towards the finest.
+The metric is time to solution ($t_\mathrm{new}$). 
 If the initial setup fails to successfully invert the problem the algorith will continue going into a particular direction until an improvement is found.
-The metric is time to solution ($t_\mathrm{new}$) and the algorithm will abandon a particular search direction in a given iteration of the search when the improvement factor $c$ is less than \texttt{MGTuningTolerance}, that is, $t_\mathrm{new} \leq c \cdot t_\mathrm{old}$.
-In order to avoid stopping tuning into a particular direction too early, the parameter \texttt{MGTuningIgnoreThreshold} sets a threshold below which improvements are simply ignored.
+If improvement is found going into a particular search direction, the algorithm will accept this improvement only if the improvement factor $c$ is better than \texttt{MGTuningTolerance}, that is, $t_\mathrm{new} \leq c \cdot t_\mathrm{old}$.
+If this is not the case, the current search direction is abandoned for the next one in line.
+This is balanced by the fact that it might be necessary to perform multiple tuning iterations in a particular direction to even see sufficient improvement.
+Thus, in order to avoid stopping tuning into a particular direction too early, the parameter \texttt{MGTuningIgnoreThreshold} sets a threshold below which improvements are simply ignored.
 The algorithm then behaves as if no improvement had taken place in that particular iteration and may continue tuning into this direction to see what happens if the tuning parameter is increased or decreased further.
 
 The number of iterations to be performed at most in a particular direction is given by parameters of the form \texttt{MG[...]Steps} and the direction and step size is given by parameters of the form \texttt{MG[...]Delta}, which can either be postive or negative.
