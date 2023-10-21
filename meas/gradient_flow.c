@@ -167,13 +167,13 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
   const int gauge_config_output_filename_max_length = sizeof(meas->output_filename)/sizeof(char) +
                                                       strlen(".000000_t0.000000");
   char gauge_config_output_filename[gauge_config_output_filename_max_length];
-  if( meas->gf_write_interval > FLT_EPSILON && strlen(meas->output_filename) == 0 ){
+  if( fabs(meas->gf_write_interval) > FLT_EPSILON && strlen(meas->output_filename) == 0 ){
     strcpy(meas->output_filename, "flowed_conf");
   }
 
   if (meas->external_library == QUDA_LIB) {
 #ifdef TM_USE_QUDA
-    if( meas->gf_write_interval > FLT_EPSILON ){
+    if( fabs(meas->gf_write_interval) > FLT_EPSILON ){
       tm_debug_printf(0, 0, "WARNING: QUDA-based gradient flow, writing out flowed gauge field not yet supported!\n");
     }
     compute_WFlow_quda( eps , tmax, traj, outfile);
@@ -212,7 +212,7 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
         measure_clover_field_strength_observables(vt.field, &fso[step]);
         P[step] = measure_plaquette(vt.field) / (6.0 * VOLUME * g_nproc);
 
-        if( t[step] - last_write > meas->gf_write_interval ){
+        if( fabs(meas->gf_write_interval) > FLT_EPSILON && t[step] - last_write > meas->gf_write_interval ){
           last_write = t[step];
           snprintf(gauge_config_output_filename, gauge_config_output_filename_max_length,
                    "%s.%06d_t%1.6lf", meas->output_filename, traj, t[step]);
