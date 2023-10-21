@@ -3063,6 +3063,8 @@ static inline double fltlist_next_token(int * const list_end){
 
   meas->gf_eps = _default_gf_eps;
   meas->gf_tmax = _default_gf_tmax;
+  meas->gf_write_interval = 0.0;
+  strcpy(meas->output_filename, "");
 
   if(!reread) {
     if(add_measurement(meas->type) < 0) {
@@ -3131,6 +3133,37 @@ static inline double fltlist_next_token(int * const list_end){
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     meas->gf_tmax = c;
     if(myverbose) printf("  Maximum gradient flow time size set to %lf line %d, measurement id=%d\n", meas->gf_tmax, line_of_file, meas->id);
+  }
+  {SPC}*GaugeConfigOutputFile{EQL}{FILENAME} {
+    char * argpos = strchr(yytext, '=');
+    if( argpos == NULL ){
+      char error_message[200];
+      snprintf(error_message, 200,
+              "Error in parsing of GaugeConfigOutputFile in line %d, measurement id=%d!\n",
+              line_of_file, meas->id);
+      fatal_error(error_message, __func__);
+    }
+    // we check length, allowing for some extraneous whitespace
+    if( strlen(argpos) >= (sizeof(meas->output_filename)/sizeof(char) + 20) ){
+      char error_message[200];
+      snprintf(error_message, 200,
+               "Filename passed as GaugeConfigOutputFile too long, line %d, measurement id=%d "
+               "(see read_input.l and meas/measurement.h)\n",
+               line_of_file, meas->id);
+      fatal_error(error_message, __func__); 
+    }
+    // this is not 100% safe but should be okay
+    sscanf(argpos, "= %s", meas->output_filename);
+    if(myverbose){
+      printf("  Gradient flow GaugeConfigOutputFile filename set to %s, line %d, measurement id=%d\n",
+             meas->output_filename, line_of_file, meas->id);
+    }
+  }
+  {SPC}*GaugeConfigOutputInterval{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    meas->gf_write_interval = c;
+    if(myverbose) printf("  Gradient flow gauge config output interval set to %lf line %d, measurement id=%d\n",
+                         meas->gf_write_interval, line_of_file, meas->id);
   }
 } 
 

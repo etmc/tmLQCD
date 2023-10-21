@@ -23,7 +23,7 @@
          Probably should be done better in the future. AD. */
 
 #ifdef HAVE_LIBLEMON
-int write_binary_gauge_data(LemonWriter * lemonwriter, const int prec, DML_Checksum * checksum)
+int write_binary_gauge_data(LemonWriter * lemonwriter, const int prec, DML_Checksum * checksum, su3 ** const gf)
 {
   int x, xG, y, yG, z, zG, t, tG, status = 0;
   su3 tmp3[4];
@@ -60,10 +60,10 @@ int write_binary_gauge_data(LemonWriter * lemonwriter, const int prec, DML_Check
       for(y = 0; y < LY; y++) {
         for(x = 0; x < LX; x++) {
           rank = (DML_SiteRank) ((((tG + t)*L + zG + z)*L + yG + y)*L + xG + x);
-          memcpy(&tmp3[0], &g_gauge_field[ g_ipt[t][x][y][z] ][1], sizeof(su3));
-          memcpy(&tmp3[1], &g_gauge_field[ g_ipt[t][x][y][z] ][2], sizeof(su3));
-          memcpy(&tmp3[2], &g_gauge_field[ g_ipt[t][x][y][z] ][3], sizeof(su3));
-          memcpy(&tmp3[3], &g_gauge_field[ g_ipt[t][x][y][z] ][0], sizeof(su3));
+          memcpy(&tmp3[0], &gf[ g_ipt[t][x][y][z] ][1], sizeof(su3));
+          memcpy(&tmp3[1], &gf[ g_ipt[t][x][y][z] ][2], sizeof(su3));
+          memcpy(&tmp3[2], &gf[ g_ipt[t][x][y][z] ][3], sizeof(su3));
+          memcpy(&tmp3[3], &gf[ g_ipt[t][x][y][z] ][0], sizeof(su3));
           if(prec == 32)
             be_to_cpu_assign_double2single(filebuffer + bufoffset, tmp3, 4*sizeof(su3)/8);
           else
@@ -121,7 +121,7 @@ int write_binary_gauge_data(LemonWriter * lemonwriter, const int prec, DML_Check
 
 #else /* HAVE_LIBLEMON */
 
-int write_binary_gauge_data(LimeWriter * limewriter, const int prec, DML_Checksum * checksum)
+int write_binary_gauge_data(LimeWriter * limewriter, const int prec, DML_Checksum * checksum, su3 ** const gf)
 {
   int x, X, y, Y, z, Z, tt, t0, tag=0, id=0, status=0;
   int latticeSize[] = {T_global, g_nproc_x*LX, g_nproc_y*LY, g_nproc_z*LZ};
@@ -168,10 +168,10 @@ int write_binary_gauge_data(LimeWriter * limewriter, const int prec, DML_Checksu
             /* Rank should be computed by proc 0 only */
             rank = (DML_SiteRank) (((t0*LZ*g_nproc_z + z)*LY*g_nproc_y + y)*LX*g_nproc_x + x);
             if(g_cart_id == id) {
-              memcpy(&tmp3[0], &g_gauge_field[ g_ipt[tt][X][Y][Z] ][1], sizeof(su3));
-              memcpy(&tmp3[1], &g_gauge_field[ g_ipt[tt][X][Y][Z] ][2], sizeof(su3));
-              memcpy(&tmp3[2], &g_gauge_field[ g_ipt[tt][X][Y][Z] ][3], sizeof(su3));
-              memcpy(&tmp3[3], &g_gauge_field[ g_ipt[tt][X][Y][Z] ][0], sizeof(su3));
+              memcpy(&tmp3[0], &gf[ g_ipt[tt][X][Y][Z] ][1], sizeof(su3));
+              memcpy(&tmp3[1], &gf[ g_ipt[tt][X][Y][Z] ][2], sizeof(su3));
+              memcpy(&tmp3[2], &gf[ g_ipt[tt][X][Y][Z] ][3], sizeof(su3));
+              memcpy(&tmp3[3], &gf[ g_ipt[tt][X][Y][Z] ][0], sizeof(su3));
 
               if(prec == 32) {
                 be_to_cpu_assign_double2single(tmp2, tmp3, 4*sizeof(su3)/8);
@@ -212,10 +212,10 @@ int write_binary_gauge_data(LimeWriter * limewriter, const int prec, DML_Checksu
 #ifdef TM_USE_MPI
           else {
             if(g_cart_id == id){
-              memcpy(&tmp3[0], &g_gauge_field[ g_ipt[tt][X][Y][Z] ][1], sizeof(su3));
-              memcpy(&tmp3[1], &g_gauge_field[ g_ipt[tt][X][Y][Z] ][2], sizeof(su3));
-              memcpy(&tmp3[2], &g_gauge_field[ g_ipt[tt][X][Y][Z] ][3], sizeof(su3));
-              memcpy(&tmp3[3], &g_gauge_field[ g_ipt[tt][X][Y][Z] ][0], sizeof(su3));
+              memcpy(&tmp3[0], &gf[ g_ipt[tt][X][Y][Z] ][1], sizeof(su3));
+              memcpy(&tmp3[1], &gf[ g_ipt[tt][X][Y][Z] ][2], sizeof(su3));
+              memcpy(&tmp3[2], &gf[ g_ipt[tt][X][Y][Z] ][3], sizeof(su3));
+              memcpy(&tmp3[3], &gf[ g_ipt[tt][X][Y][Z] ][0], sizeof(su3));
               if(prec == 32) {
                 be_to_cpu_assign_double2single(tmp2, tmp3, 4*sizeof(su3)/8);
                 MPI_Send((void*) tmp2, 4*sizeof(su3)/8, MPI_FLOAT, 0, tag, g_cart_grid);
