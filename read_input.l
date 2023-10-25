@@ -3886,7 +3886,7 @@ int read_input(char * conf_file){
     quda_input.mg_smoother_tol[level] = _default_quda_mg_smoother_tol;
 
     quda_input.mg_n_vec[level] = _default_quda_mg_n_vec;
-    quda_input.mg_mu_factor[level] = 1.0;
+    quda_input.mg_mu_factor[level] = _default_quda_mg_mu_factor;
     quda_input.mg_coarse_solver_type[level] = QUDA_GCR_INVERTER;
     quda_input.mg_smoother_type[level] = QUDA_CA_GCR_INVERTER;
 
