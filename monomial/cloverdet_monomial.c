@@ -123,7 +123,7 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
       memcpy(debug_derivative[0], hf->derivative[0], 4*VOLUME*sizeof(su3adj));
     }
 
-    compute_cloverdet_derivative_quda(mnl, hf, mnl->w_fields[1]);
+    compute_cloverdet_derivative_quda(mnl, hf, mnl->w_fields[1], NULL, 0);
 
     if (g_debug_level > 3){
       su3adj **given = hf->derivative;

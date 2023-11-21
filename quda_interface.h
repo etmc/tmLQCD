@@ -173,7 +173,8 @@ int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out
                                      CompressionType compression);
 
 void compute_gauge_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf);
-void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf, spinor ** const X_o);
+void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf,
+                                     spinor ** const X_o, spinor ** const phi, int ratio);
 void compute_WFlow_quda(const double eps ,const double tmax, const int traj, FILE* outfile);
 
 #endif /* QUDA_INTERFACE_H_ */

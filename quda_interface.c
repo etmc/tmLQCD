@@ -2523,19 +2523,23 @@ void compute_gauge_derivative_quda(monomial * const mnl, hamiltonian_field_t * c
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 }
 
-void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf, spinor ** const X_o) {
+void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf, spinor ** const X_o, spinor ** const phi, int detratio) {
   tm_stopwatch_push(&g_timers, __func__, "");
   
   _initQuda();
   _initMomQuda();
   void *spinorIn;
+  void *spinorPhi;
   const int nr_sf_in = 1;
   spinor ** in_o;
 
   
   spinorIn  = (void*)X_o;
   reorder_spinor_eo_toQuda((double*)spinorIn, inv_param.cpu_prec, 0, 1);
-
+  if (detratio){
+    spinorPhi  = (void*)phi;
+    reorder_spinor_eo_toQuda((double*)spinorPhi, inv_param.cpu_prec, 0, 1);
+  }
   
   #pragma omp parallel for
   for(int i = 0; i < 4; i++){
@@ -2559,13 +2563,17 @@ void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t
   //                           &inv_param);
   inv_param.kappa= mnl->kappa;
   inv_param.clover_csw= mnl->c_sw;
-  computeTMCloverForceQuda(mom_quda, &spinorIn, coeff,  nvector, &f_gauge_param,   &inv_param);
+  computeTMCloverForceQuda(mom_quda, &spinorIn, &spinorPhi, coeff,  nvector, &f_gauge_param,   &inv_param, detratio);
 
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
   
   reorder_mom_fromQuda(mom_quda);
   add_mom_to_derivative(hf->derivative);
 
+  // if we want to compare the force to tmLQCD native implementation we should restore the source
+  if (detratio && g_debug_level > 3){
+    reorder_spinor_eo_fromQuda((double*)spinorPhi, inv_param.cpu_prec, 0, 1);
+  }
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 }
 
