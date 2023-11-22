@@ -2194,6 +2194,10 @@ int invert_eo_degenerate_quda(spinor * const out,
     invertQuda(spinorOut, spinorOut, &inv_param);
     tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
     reorder_spinor_eo_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
+    inv_param.mu = -inv_param.mu;
+#ifdef TM_QUDA_EXPERIMENTAL
+    inv_param.tm_rho = -inv_param.tm_rho;
+#endif
   } else {
     reorder_spinor_eo_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
   }
