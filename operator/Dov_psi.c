@@ -58,20 +58,20 @@
 #include "solver/dirac_operator_eigenvectors.h"
 
 void addproj_q_invsqrt(spinor * const Q, spinor * const P, const int n, const int N);
-/* |R>=rnorm^2 Q^2 |S> */
+/* |R>=r_norm^2 Q^2 |S> */
 void norm_Q_sqr_psi(spinor * const R, spinor * const S, 
-		    const double rnorm);
-/* void norm_Q_n_psi(spinor *R, spinor *S, double m, int n, double rnorm)  */
+		    const double r_norm);
+/* void norm_Q_n_psi(spinor *R, spinor *S, double m, int n, double r_norm)  */
 /*  norm_Q_n_psi makes multiplication of any power of                      */
 /*  Q== gamma5*D_W, initial vector S, final R, finally the                 */
-/* vector R is multiplied by a factor rnorm^n                              */
-/* |R>=rnorm^n Q^n |S>  where m is a mass                                  */
+/* vector R is multiplied by a factor r_norm^n                              */
+/* |R>=r_norm^n Q^n |S>  where m is a mass                                  */
 void norm_Q_n_psi(spinor * const R, spinor * const S, 
-		  const int n, const double rnorm);
+		  const int n, const double r_norm);
 /* this is Q/sqrt(Q^2) */
 void Q_over_sqrt_Q_sqr(spinor * const R, double * const c, 
 		       const int n, spinor * const S,
-		       const double rnorm, const double minev);
+		       const double r_norm, const double minev);
 
 double ov_s = 0.6;
 double m_ov = 0.;
@@ -287,9 +287,9 @@ void addproj_q_invsqrt(spinor * const Q, spinor * const P, const int n, const in
 }
 
 
-/* |R>=rnorm^2 Q^2 |S> */
+/* |R>=r_norm^2 Q^2 |S> */
 void norm_Q_sqr_psi(spinor * const R, spinor * const S, 
-		    const double rnorm) { 
+		    const double r_norm) { 
 
   spinor *aux;
   aux=lock_Dov_WS_spinor(1);
@@ -301,19 +301,19 @@ void norm_Q_sqr_psi(spinor * const R, spinor * const S,
   gamma5(aux, R, VOLUME);
   D_psi(R, aux);
   gamma5(R, R, VOLUME);
-  mul_r(R, rnorm*rnorm, R, VOLUME);
+  mul_r(R, r_norm*r_norm, R, VOLUME);
 
   unlock_Dov_WS_spinor(1);
   return;
 }
 
-/* void norm_Q_n_psi(spinor *R, spinor *S, double m, int n, double rnorm)  */
+/* void norm_Q_n_psi(spinor *R, spinor *S, double m, int n, double r_norm)  */
 /*  norm_Q_n_psi makes multiplication of any power of                      */
 /*  Q== gamma5*D_W, initial vector S, final R, finally the                 */
-/* vector R is multiplied by a factor rnorm^n                              */
-/* |R>=rnorm^n Q^n |S>                                                     */
+/* vector R is multiplied by a factor r_norm^n                              */
+/* |R>=r_norm^n Q^n |S>                                                     */
 void norm_Q_n_psi(spinor * const R, spinor * const S, 
-		  const int n, const double rnorm) { 
+		  const int n, const double r_norm) { 
 
   int i;
   double npar = 1.;
@@ -328,7 +328,7 @@ void norm_Q_n_psi(spinor * const R, spinor * const S,
     D_psi(R, aux);
     /* Term -1-s is done in D_psi! does this comment make sense for HMC? */
     gamma5(aux, R, VOLUME);
-    npar *= rnorm;
+    npar *= r_norm;
   }
   mul_r(R, npar, aux, VOLUME);
   unlock_Dov_WS_spinor(1);
@@ -337,7 +337,7 @@ void norm_Q_n_psi(spinor * const R, spinor * const S,
 
 void Q_over_sqrt_Q_sqr(spinor * const R, double * const c, 
 		       const int n, spinor * const S,
-		       const double rnorm, const double minev) {
+		       const double r_norm, const double minev) {
   
   int j;
   double fact1, fact2, temp1, temp2, temp3, temp4, maxev, tnorm;
@@ -380,7 +380,7 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
 	assign(aux, d, VOLUME);
       }
       
-      norm_Q_sqr_psi(R, aux, rnorm);
+      norm_Q_sqr_psi(R, aux, r_norm);
       temp1=-1.0;
       temp2=c[j];
       assign_mul_add_mul_add_mul_add_mul_r(d, R, dd, aux3, fact2, fact1, temp1, temp2, VOLUME);
@@ -390,13 +390,13 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
     if(1) assign_sub_lowest_eigenvalues(R, d, no_eigenvalues-1, VOLUME);
     else assign(R, d, VOLUME);
     
-    norm_Q_sqr_psi(aux, R, rnorm);
+    norm_Q_sqr_psi(aux, R, r_norm);
     temp1=-1.0;
     temp2=c[0]/2.;
     temp3=fact1/2.;
     temp4=fact2/2.;
     assign_mul_add_mul_add_mul_add_mul_r(aux, d, dd, aux3, temp3, temp4, temp1, temp2, VOLUME);
-    norm_Q_n_psi(R, aux, 1, rnorm);
+    norm_Q_n_psi(R, aux, 1, r_norm);
   }
   else {
     /* Use the adaptive precision version using the forward recursion 
@@ -406,7 +406,7 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
     /* d = T_0(Q^2) */
     assign(d, aux3, VOLUME);
     /* dd = T_1(Q^2) */
-    norm_Q_sqr_psi(dd, d, rnorm);
+    norm_Q_sqr_psi(dd, d, r_norm);
     temp3 = fact1/2.;
     temp4 = fact2/2.;  
     assign_mul_add_mul_r(dd, d, temp3, temp4, VOLUME);
@@ -418,7 +418,7 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
     temp1=-1.0;
     for (j = 2; j <= n-1; j++) {
       /* aux = T_j(Q^2) = 2 Q^2 T_{j-1}(Q^2) - T_{j-2}(Q^2) */
-      norm_Q_sqr_psi(aux, dd, rnorm);
+      norm_Q_sqr_psi(aux, dd, r_norm);
       assign_mul_add_mul_add_mul_r(aux, dd, d, fact1, fact2, temp1, VOLUME);
       /* r = r + c_j T_j(Q^2) */
       temp2 = c[j];
@@ -444,7 +444,7 @@ void Q_over_sqrt_Q_sqr(spinor * const R, double * const c,
      
     /* r = Q r */
     assign(aux, R, VOLUME); 
-    norm_Q_n_psi(R, aux, 1, rnorm);
+    norm_Q_n_psi(R, aux, 1, r_norm);
 
   }
   /* add in piece from projected subspace */

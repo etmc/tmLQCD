@@ -68,7 +68,7 @@ void Qov_sq_psi_prec(spinor * const P, spinor * const S);
 
 void Q_over_sqrt_Q_sqr(spinor * const R, double * const c, 
 		       const int n, spinor * const S,
-		       const double rnorm, const double minev);
+		       const double r_norm, const double minev);
 
 void calculateOverlapPolynomial();
 

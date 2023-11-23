@@ -129,7 +129,7 @@ void poly_precon(spinor * const R, spinor * const S, const double prec, const in
   /* dd = T_1(Q^2) */
   Q_pm_psi(&dd[0], &d[0]);
 /*   mul_r(dd, invmaxev, dd, N); */
-  /*    norm_Q_sqr_psi(&dd[0], &d[0], g_m_D_psi, rnorm); */
+  /*    norm_Q_sqr_psi(&dd[0], &d[0], g_m_D_psi, r_norm); */
   temp3 = fact1/2;
   temp4 = fact2/2;  
   assign_mul_add_mul_r(&dd[0], &d[0], temp3, temp4, N);
@@ -143,7 +143,7 @@ void poly_precon(spinor * const R, spinor * const S, const double prec, const in
     /* aux = T_j(Q^2) = 2 Q^2 T_{j-1}(Q^2) - T_{j-2}(Q^2) */
     Q_pm_psi(&aux[0], &dd[0]);
 /*     mul_r(aux, invmaxev, aux, N); */
-    /*        norm_Q_sqr_psi(&aux[0], &dd[0], g_m_D_psi, rnorm); */
+    /*        norm_Q_sqr_psi(&aux[0], &dd[0], g_m_D_psi, r_norm); */
     assign_mul_add_mul_add_mul_r(&aux[0],&dd[0],&d[0],fact1,fact2,temp1, N);
     /* r = r + c_j T_j(Q^2) */
     temp2=c[j];
