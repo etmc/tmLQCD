@@ -95,15 +95,16 @@ int tmLQCD_get_lat_params(tmLQCD_lat_params *params);
 int tmLQCD_set_op_params(tmLQCD_op_params const *const params, const int op_id);
 int tmLQCD_get_op_params(tmLQCD_op_params *params, const int op_id);
 
-  // need interfaces with (double*) pointers for these since we don't want to export
-  // all of tmLQCDs data types
 //// generates a point source at the global coordinates passed via the
 //// four element vector global_txyz_src_pos in the ordering {t,x,y,z}
 //// the spin index 'is' and the colour index 'ic'
-//void full_source_spinor_field_point(spinor * const full_spinor,
-//                                    const int is, const int ic,
-//                                    const int * const global_txyz_src_pos);
-//
+void tmLQCD_full_source_spinor_field_point(double * const full_spinor,
+                                           const int is, const int ic,
+                                           const int * const global_txyz_src_pos);
+
+void tmLQCD_read_spinor(double * full_spinor, const char * fname, int idx);
+void tmLQCD_write_spinor(double * const full_spinor, const char * fname, const int append, const int flavours);
+
 //// as full_source_spinor_field_point but with output directly to checkerboarded
 //// spinors
 //void eo_source_spinor_field_point(spinor * const even_cb_spinor,

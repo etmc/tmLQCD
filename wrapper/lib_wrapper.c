@@ -61,6 +61,7 @@
 #include "measure_gauge_action.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "include/tmLQCD.h"
+#include "source_generation.h"
 #include "fatal_error.h"
 #include "misc_types.h"
 
@@ -428,6 +429,29 @@ int tmLQCD_set_op_params(tmLQCD_op_params const* const params, const int op_id) 
   X0 = params->theta_t;
   boundary(params->kappa);
   return (0);
+}
+
+void tmLQCD_full_source_spinor_field_point(double * const full_spinor,
+                                           const int is, const int ic,
+                                           const int * const global_txyz_src_pos)
+{
+  full_source_spinor_field_point((spinor* const) full_spinor,
+                                 is, ic, global_txyz_src_pos);  
+}
+
+void tmLQCD_read_spinor(double * const full_spinor, const char * fname, const int idx)
+{
+   read_spinor(g_spinor_field[0], g_spinor_field[1], fname, idx);
+   convert_eo_to_lexic((spinor*) full_spinor, g_spinor_field[0], g_spinor_field[1]);
+}
+
+void tmLQCD_write_spinor(double * const full_spinor, const char * fname, const int append, const int flavours)
+{
+   convert_lexic_to_eo(g_spinor_field[0], g_spinor_field[1], (spinor*) full_spinor);
+   WRITER *writer = NULL;
+   construct_writer(&writer, fname, append);
+   write_spinor(writer, g_spinor_field[0], g_spinor_field[1], flavours, 64);
+   destruct_writer(writer);
 }
 
 #ifdef TM_USE_QPHIX
