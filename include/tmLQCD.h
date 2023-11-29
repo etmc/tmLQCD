@@ -83,6 +83,9 @@ int tmLQCD_read_gauge(const int nconfig);
 int tmLQCD_invert(double *const propagator, double *const source, const int op_id,
                   const int write_prop);
 
+int tmLQCD_invert_doublet(double* const propagator0, double* const propagator1, double* const source0, 
+                  double* const source1, const int op_id, const int write_prop);
+
 // invert on odd part of lattice with prepared source
 int tmLQCD_invert_eo(double *const Odd_out, double *const Odd_in, const int op_id);
 

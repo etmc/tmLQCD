@@ -278,6 +278,55 @@ int tmLQCD_invert(double* const propagator, double* const source, const int op_i
   return (0);
 }
 
+int tmLQCD_invert_doublet(double* const propagator0, double* const propagator1, double* const source0, 
+                  double* const source1, const int op_id, const int write_prop) {
+  unsigned int index_start = 0;
+  g_mu = 0.;
+
+  if (lowmem_flag && g_proc_id == 0) {
+    printf(
+        "!!! WARNING: you are calling tmLQCD_invert_doublet in \'lowmem\' mode.\n Did you make sure that "
+        "all required fields are allocated and initialised??\n");
+  }
+
+  if (!tmLQCD_invert_initialised) {
+    fprintf(stderr, "tmLQCD_invert: tmLQCD_inver_init must be called first. Aborting...\n");
+    return (-1);
+  }
+
+  if (op_id < 0 || op_id >= no_operators) {
+    fprintf(stderr, "tmLQCD_invert: op_id=%d not in valid range. Aborting...\n", op_id);
+    return (-1);
+  }
+
+  operator_list[op_id].sr0 = g_spinor_field[0];
+  operator_list[op_id].sr1 = g_spinor_field[1];
+  operator_list[op_id].sr2 = g_spinor_field[2];
+  operator_list[op_id].sr3 = g_spinor_field[3];
+  operator_list[op_id].prop0 = g_spinor_field[4];
+  operator_list[op_id].prop1 = g_spinor_field[5];
+  operator_list[op_id].prop2 = g_spinor_field[6];
+  operator_list[op_id].prop3 = g_spinor_field[7];
+
+  zero_spinor_field(operator_list[op_id].prop0, VOLUME / 2);
+  zero_spinor_field(operator_list[op_id].prop1, VOLUME / 2);
+  zero_spinor_field(operator_list[op_id].prop2, VOLUME / 2);
+  zero_spinor_field(operator_list[op_id].prop3, VOLUME / 2);
+
+  // convert to even/odd order
+  convert_lexic_to_eo(operator_list[op_id].sr0, operator_list[op_id].sr1, (spinor*)source0);
+  convert_lexic_to_eo(operator_list[op_id].sr2, operator_list[op_id].sr3, (spinor*)source1);
+
+  // invert
+  operator_list[op_id].inverter(op_id, index_start, write_prop);
+
+  // convert back to lexicographic order
+  convert_eo_to_lexic((spinor*)propagator0, operator_list[op_id].prop0, operator_list[op_id].prop1);
+  convert_eo_to_lexic((spinor*)propagator1, operator_list[op_id].prop2, operator_list[op_id].prop3);
+
+  return (0);
+}
+
 int tmLQCD_invert_eo(double* const Odd_out, double* const Odd_in, const int op_id){
   unsigned int index_start = 0;
   if (!tmLQCD_invert_initialised) {
