@@ -264,14 +264,14 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
     /* apply Hopping Matrix M_{eo} */
     /* to get the even sites of X */
     tm_stopwatch_push(&g_timers, "H_eo_sw_inv_psi", "");
-    H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EE, -1, mnl->mu);
+    H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EO, -1, mnl->mu);
     tm_stopwatch_pop(&g_timers, 0, 1, "");
     /* \delta Q sandwitched by Y_o^\dagger and X_e */
     deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
     
     /* to get the even sites of Y */
     tm_stopwatch_push(&g_timers, "H_eo_sw_inv_psi", "");
-    H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EE, +1, mnl->mu);
+    H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1, mnl->mu);
     tm_stopwatch_pop(&g_timers, 0, 1, "");
     /* \delta Q sandwitched by Y_e^\dagger and X_o */
     deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor); 
@@ -280,10 +280,10 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
     // computes the insertion matrices for S_eff
     // result is written to swp and swm
     // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e  
-    sw_spinor_eo(EO, mnl->w_fields[2], mnl->w_fields[3], mnl->forcefactor);
+    sw_spinor_eo(EE, mnl->w_fields[2], mnl->w_fields[3], mnl->forcefactor);
     
     // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-    sw_spinor_eo(OE, mnl->w_fields[0], mnl->w_fields[1], mnl->forcefactor);
+    sw_spinor_eo(OO, mnl->w_fields[0], mnl->w_fields[1], mnl->forcefactor);
 
     sw_all(hf, mnl->kappa, mnl->c_sw);
   }
