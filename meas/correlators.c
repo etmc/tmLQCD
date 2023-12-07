@@ -256,39 +256,82 @@ void light_correlators_measurement(const int traj, const int id, const int ieo) 
 
 // Function to allocate memory for a pointer of pointers for an array of d dimensions
 void* callocMultiDimensional(int* sizes, int numDimensions, size_t elementSize) {
-    if (numDimensions == 1) {
-        void* array = calloc(sizes[0], sizeof(elementSize));
-        
-        if (array == NULL) {
-            printf("Memory allocation failed for dimension 0!");
-            return NULL;
-        }
-        
-        return array;
+
+  if (numDimensions == 1) {
+    return (void *)malloc(elementSize);
+  } else {
+
+    int totSize = 1;
+    for (int i = 0; i < numDimensions; i++) {
+      totSize *= sizes[i];
     }
-    
-    void** pointerArray = (void**)calloc(sizes[0], sizeof(void*));
-    
-    if (pointerArray == NULL) {
-        printf("Memory allocation failed for dimension %d!", numDimensions - 1);
-        return NULL;
+
+    void ***multiArray = malloc(totSize * elementSize);
+    for (int i = 0; i < totSize; i++) {
+      multiArray[i] = callocMultiDimensional(sizes + 1, numDimensions - 1, elementSize);
     }
-    
-    for (int i = 0; i < sizes[0]; i++) {
-      pointerArray[i] = callocMultiDimensional(sizes + 1, numDimensions - 1, elementSize);
+
+    return multiArray;
+  }
+
+
+
+	
+	/* printf("for loop\n"); */
+	/* for (int i=0; i<numDimensions; ++i){ */
+	/* 	printf("size i =  %d , elementsize= %d\n", sizes[i], sizeof(elementSize)); */
+	/* } */
+	
+  /*   if (numDimensions == 1) { */
+  /*       void* array = calloc(sizes[0], sizeof(elementSize)); */
         
-        if (pointerArray[i] == NULL) {
-            printf("Memory allocation failed for subarray %d in dimension %d!", i, numDimensions - 1);
-            // Free memory allocated so far
-            for (int j = 0; j < i; j++) {
-                free(pointerArray[j]);
-            }
-            free(pointerArray);
-            return NULL;
-        }
-    }
+  /*       if (array == NULL) { */
+  /*           printf("Memory allocation failed for dimension 0!"); */
+  /*           return NULL; */
+  /*       } */
+        
+  /*       return array; */
+  /*   } */
+
+	/* 	int prodSizes = elementSize; */
+	/* 	printf("prodSizes(before)=%d\n", prodSizes); */
+	/* 	for (int i=1; i<numDimensions; ++i){ */
+	/* 		prodSizes *= sizes[i]; */
+	/* 		printf("calculating prodSizes, %d, %d\n", i, sizes[i]); */
+	/* 		// exit(1); */
+	/* 	} */
+	/* 	printf("prodSizes=%d\n", prodSizes); */
+	/* 	//exit(1); */
+
+  /*   //void** pointerArray = (void**)calloc(sizes[0], sizeof(void*)); */
+  /*   void** pointerArray = (void**)calloc(sizes[0], prodSizes); */
     
-    return pointerArray;
+  /*   if (pointerArray == NULL) { */
+  /*       printf("Memory allocation failed for dimension %d!", numDimensions - 1); */
+  /*       return NULL; */
+  /*   } */
+    
+
+
+	/* 	for (int i = 0; i < sizes[0]; i++) { */
+	/* 		// printf("pointerArray[i] \n"); */
+	/* 		//exit(1); */
+			
+  /*     pointerArray[i] = */
+	/* 			callocMultiDimensional(sizes + 1, numDimensions - 1, elementSize); */
+        
+  /*       if (pointerArray[i] == NULL) { */
+  /*           printf("Memory allocation failed for subarray %d in dimension %d!", i, numDimensions - 1); */
+  /*           // Free memory allocated so far */
+  /*           for (int j = 0; j < i; j++) { */
+  /*               free(pointerArray[j]); */
+  /*           } */
+  /*           free(pointerArray); */
+  /*           return NULL; */
+  /*       } */
+  /*   } */
+  /*   printf("pointerArray %d\n", sizeof(pointerArray)); */
+  /*   return pointerArray; */
 }
 
 
@@ -405,6 +448,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
     rlxs_init(1, 123456);  // initializing random number generator RANLUX
   }
 
+
   // there are three modes of operation
   // 1) one single time-slice source (default)
   // 2) no_samples time-slice sources on random time-slices
@@ -447,8 +491,11 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
       // last 2 indices come from spinor struct
       // Note: propagator in the sense that it is D^{-1}*source after the inversion
       const int sizes_arr_eo_spinor[7] = {2, 2, 4, 2, 2, 2, VOLUME / 2};
-      spinor *******arr_eo_spinor =
+
+
+			spinor *******arr_eo_spinor =
           (spinor *******)callocMultiDimensional(sizes_arr_eo_spinor, 7, sizeof(spinor));
+
 
       /* initalize the random sources: one source for each Dirac index beta=src_d --> spin
        * dilution */
@@ -701,6 +748,9 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
       }
 #endif
 
+			printf("ciao Simone\n");
+			exit(1);
+
       /* and write everything into a file */
       if (g_mpi_time_rank == 0 && g_proc_coords[0] == 0) {
         ofs = fopen(filename, "w");
@@ -783,11 +833,11 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 }
 
 void correlators_measurement(const int traj, const int id, const int ieo) {
-  light_correlators_measurement(traj, id, ieo);
+  //light_correlators_measurement(traj, id, ieo);
 
     // ??? maybe add a double check?
   if (measurement_list[id].measure_heavy_mesons == 1) {
-    const unsigned int i1 = 0, i2 = 1; 
+    const unsigned int i1 = 0, i2 = 1;
     heavy_correlators_measurement(traj, id, ieo, i1, i2);
   }
 }
