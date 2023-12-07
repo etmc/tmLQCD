@@ -672,11 +672,6 @@ void reorder_mom_fromQuda() {
   tm_stopwatch_push(&g_timers, __func__, "");
 
 #ifdef TM_USE_OMP
-#pragma omp parallel
-  {
-#endif
-
-#ifdef TM_USE_OMP
   #pragma omp parallel for collapse(4)
 #endif
   for( int x0=0; x0<T; x0++ )
@@ -707,9 +702,6 @@ void reorder_mom_fromQuda() {
 #endif
         }
   
-#ifdef TM_USE_OMP
-  }
-#endif
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
 }
 
