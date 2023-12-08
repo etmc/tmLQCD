@@ -219,10 +219,13 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
     if(!mnl->even_odd_flag) {
       fatal_error("QUDA support only even_odd_flag",__func__);
     }
-  #ifdef TM_USE_QUDA
+#ifdef TM_USE_QUDA
     if (g_debug_level > 3) {
 #ifdef TM_USE_MPI
       // FIXME: here we do not need to set to zero the interior but only the halo
+#ifdef TM_USE_OMP
+      # pragma omp parallel for
+#endif // end setting to zero the halo when using MPI
       for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand);i++) { 
         for(int mu=0;mu<4;mu++) { 
           _zero_su3adj(debug_derivative[i][mu]);
