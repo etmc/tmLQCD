@@ -2566,8 +2566,8 @@ void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t
   reorder_mom_fromQuda(mom_quda);
   add_mom_to_derivative(hf->derivative);
 
-  // if we want to compare the force to tmLQCD native implementation we should restore the source
-  if (detratio && g_debug_level > 3){
+  // we always need to restore the source
+  if (detratio){
     reorder_spinor_eo_fromQuda((double*)spinorPhi, inv_param.cpu_prec, 0, 1);
   }
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
