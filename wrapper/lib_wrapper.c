@@ -290,12 +290,12 @@ int tmLQCD_invert_doublet(double* const propagator0, double* const propagator1, 
   }
 
   if (!tmLQCD_invert_initialised) {
-    fprintf(stderr, "tmLQCD_invert: tmLQCD_inver_init must be called first. Aborting...\n");
+    fprintf(stderr, "tmLQCD_invert_doublet: tmLQCD_inver_init must be called first. Aborting...\n");
     return (-1);
   }
 
   if (op_id < 0 || op_id >= no_operators) {
-    fprintf(stderr, "tmLQCD_invert: op_id=%d not in valid range. Aborting...\n", op_id);
+    fprintf(stderr, "tmLQCD_invert_doublet: op_id=%d not in valid range. Aborting...\n", op_id);
     return (-1);
   }
 
