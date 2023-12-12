@@ -105,6 +105,14 @@ void tmLQCD_full_source_spinor_field_point(double * const full_spinor,
 void tmLQCD_read_spinor(double * full_spinor, const char * fname, int idx);
 void tmLQCD_write_spinor(double * const full_spinor, const char * fname, const int append, const int flavours);
 
+double tmLQCD_su3_get_elem_linear(const double * su3_matrix, int cc, int reim);
+double tmLQCD_su3_get_elem(const double * su3_matrix, int c0, int c1, int reim);
+double tmLQCD_spinor_get_elem_linear(const double * sp, int sc, int reim);
+double tmLQCD_spinor_get_elem(const double * sp, int s, int c, int reim);
+void tmLQCD_spinor_set_elem_linear(double * sp, int sc, const double rein, const double imin);
+void tmLQCD_spinor_set_elem(double * sp, int s, int c, const double rein, const double imin);
+int tmLQCD_idx(const int t, const int x, const int y, const int z);
+
 //// as full_source_spinor_field_point but with output directly to checkerboarded
 //// spinors
 //void eo_source_spinor_field_point(spinor * const even_cb_spinor,

@@ -50,6 +50,7 @@
 #endif
 #include <io/utils.h>
 #include <io/gauge.h>
+#include <io/spinor.h>
 #include "read_input.h"
 #include "mpi_init.h"
 #include "init/init.h"
@@ -64,6 +65,8 @@
 #include "source_generation.h"
 #include "fatal_error.h"
 #include "misc_types.h"
+#include "struct_accessors.h"
+#include "operator/clover_leaf.h"
 
 #define CONF_FILENAME_LENGTH 500
 
@@ -507,5 +510,46 @@ int tmLQCD_invert_qphix_direct(double * const Odd_out, double * const Odd_in, co
                                          );
   op_backup_restore_globals(TM_RESTORE_GLOBALS);
   return(niter);
+}
+
+double tmLQCD_su3_get_elem_linear(const double * su3_matrix, int cc, int reim)
+{
+  const su3* cast = (const su3*) su3_matrix;
+  return su3_get_elem_linear(cast, cc, reim);
+}
+
+double tmLQCD_su3_get_elem(const double * su3_matrix, int c0, int c1, int reim)
+{
+  const su3* cast = (const su3*) su3_matrix;
+  return su3_get_elem(cast, c0, c1, reim);
+}
+
+double tmLQCD_spinor_get_elem_linear(const double * sp, int sc, int reim)
+{
+  const spinor* cast = (const spinor*) sp;
+  return spinor_get_elem_linear(cast, sc, reim);
+}
+
+double tmLQCD_spinor_get_elem(const double * sp, int s, int c, int reim)
+{
+  const spinor* cast = (const spinor*) sp;
+  return spinor_get_elem(cast, s, c, reim);
+}
+
+void tmLQCD_spinor_set_elem_linear(double * sp, int sc, const double rein, const double imin)
+{
+  spinor * const cast = (spinor* const) sp;
+  spinor_set_elem_linear(cast, sc, rein, imin);
+}
+
+void tmLQCD_spinor_set_elem(double * sp, int s, int c, const double rein, const double imin)
+{
+  spinor * const cast = (spinor* const) sp;
+  spinor_set_elem(cast, s, c, rein, imin);
+}
+
+int tmLQCD_idx(const int t, const int x, const int y, const int z)
+{
+  return g_ipt[t][x][y][z];
 }
 #endif
