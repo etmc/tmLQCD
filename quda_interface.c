@@ -2536,12 +2536,6 @@ void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t
     spinorPhi  = (void*)phi;
     reorder_spinor_eo_toQuda((double*)spinorPhi, inv_param.cpu_prec, 0, 1);
   }
-  
-  #pragma omp parallel for
-  for(int i = 0; i < 4; i++){
-    memset(mom_quda[i], 0, VOLUME*10*sizeof(double));
-  }
-
 
   _loadGaugeQuda(mnl->solver_params.compression_type);
   _loadCloverQuda(&inv_param);
