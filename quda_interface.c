@@ -2541,16 +2541,9 @@ void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t
   _loadCloverQuda(&inv_param);
   tm_stopwatch_push(&g_timers, "computeTMCloverForceQuda", ""); 
   
-  void ** foo1 = NULL; // not used by quda
-  void * foo2 = NULL; // not used by quda
   const int nvector = 1; // number of rational approximants
   double coeff[1] = {4.*mnl->kappa*mnl->kappa}; // minus because in p(QUDA)=-Y (tmLQCD) , the factor 4 is experimentally observed
-  double kappa2_quda = - mnl->kappa*mnl->kappa; // -kappa*kappa
-  double ck_quda = - mnl->c_sw * mnl->kappa / 8.0;
-  const double multiplicity = 1.0; 
-  // computeCloverForceQuda(mom_quda, /*dt=*/1.0, &spinorIn, foo1, coeff, kappa2_quda, ck_quda,
-  //                           nvector, multiplicity, foo2, &f_gauge_param,
-  //                           &inv_param);
+  
   inv_param.kappa= mnl->kappa;
   inv_param.clover_csw= mnl->c_sw;
   inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION;
