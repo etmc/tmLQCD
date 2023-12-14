@@ -2559,6 +2559,7 @@ void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t
   //                           &inv_param);
   inv_param.kappa= mnl->kappa;
   inv_param.clover_csw= mnl->c_sw;
+  inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION;
   computeTMCloverForceQuda(mom_quda, &spinorIn, &spinorPhi, coeff,  nvector, &f_gauge_param,   &inv_param, detratio);
 
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
