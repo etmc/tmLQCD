@@ -2511,11 +2511,6 @@ void compute_gauge_derivative_quda(monomial * const mnl, hamiltonian_field_t * c
     else
       loop_coeff[i] = -0.66666666666 * g_beta * mnl->c1;
   }
-  
-  #pragma omp parallel for
-  for(int i = 0; i < 4; i++){
-    memset(mom_quda[i], 0, VOLUME*10*sizeof(double));
-  }
 
   reorder_gauge_toQuda(hf->gaugefield, NO_COMPRESSION);
   // the reordering above overwrites gauge_quda
