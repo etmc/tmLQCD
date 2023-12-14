@@ -108,6 +108,17 @@ void tmLQCD_full_source_spinor_field_point(double * const full_spinor,
                                            const int is, const int ic,
                                            const int * const global_txyz_src_pos);
 
+// generates a spin-diluted timeslice source intended for OET computations
+// the same random numbers are used for all src_d
+// the RNG is initialised using a combination of oet_seed, nstore, src_ts and sample
+// and then its state is reset at the end of the function call
+void tmLQCD_full_source_spinor_field_spin_diluted_oet_ts(double * full_spinor,
+                                                         const int src_ts,
+                                                         const int src_d,
+                                                         const int sample,
+                                                         const int nstore,
+                                                         const unsigned int oet_seed);
+
 void tmLQCD_read_spinor(double * full_spinor, const char * fname, int idx);
 void tmLQCD_write_spinor(double * const full_spinor, const char * fname, const int append, const int flavours);
 

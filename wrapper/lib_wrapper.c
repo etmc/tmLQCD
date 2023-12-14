@@ -491,6 +491,21 @@ void tmLQCD_full_source_spinor_field_point(double * const full_spinor,
                                  is, ic, global_txyz_src_pos);  
 }
 
+void tmLQCD_full_source_spinor_field_spin_diluted_oet_ts(double * full_spinor,
+                                                         const int src_ts,
+                                                         const int src_d,
+                                                         const int sample,
+                                                         const int nstore,
+                                                         const unsigned int oet_seed)
+{
+  full_source_spinor_field_spin_diluted_oet_ts((spinor * const) full_spinor,
+                                               src_ts,
+                                               src_d,
+                                               sample,
+                                               nstore,
+                                               oet_seed);
+}
+
 void tmLQCD_read_spinor(double * const full_spinor, const char * fname, const int idx)
 {
    read_spinor(g_spinor_field[0], g_spinor_field[1], fname, idx);
