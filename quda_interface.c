@@ -2556,13 +2556,13 @@ void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 }
 
-void compute_ndcloverrat_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf, spinor * const Qup, spinor * const Qdn, solver_params_t * solver_params) {
+void compute_ndcloverrat_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf, spinor ** const Qup, spinor ** const Qdn, solver_params_t * solver_params) {
   tm_stopwatch_push(&g_timers, __func__, "");
   
   _initQuda();
   _initMomQuda();
   spinor ** in;
-  // void *spinorPhi;
+  void *spinorPhi;
   const int num_shifts = solver_params->no_shifts;
   const int Vh = VOLUME/2;
   
@@ -2571,33 +2571,29 @@ void compute_ndcloverrat_derivative_quda(monomial * const mnl, hamiltonian_field
   void **spinorIn = (void**)in; 
   for(int shift = 0; shift < num_shifts; shift++){
     tm_stopwatch_push(&g_timers, "twoflavour_input_overhead", ""); 
-    memcpy(in[shift],      Qup, Vh*24*sizeof(double));
-    memcpy(in[shift] + Vh, Qdn, Vh*24*sizeof(double));
+    memcpy(in[shift],      Qup[shift], Vh*24*sizeof(double));
+    memcpy(in[shift] + Vh, Qdn[shift], Vh*24*sizeof(double));
     tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
 
-    reorder_spinor_eo_fromQuda((double*)spinorIn[shift], inv_param.cpu_prec, 1, 1);
+    spinorIn[shift]=in[shift];
+    reorder_spinor_eo_toQuda((double*)spinorIn[shift], inv_param.cpu_prec, 1, 1);
   }
 
 
   _loadGaugeQuda(mnl->solver_params.compression_type);
   _loadCloverQuda(&inv_param);
-  // tm_stopwatch_push(&g_timers, "computeTMCloverForceQuda", ""); 
+  tm_stopwatch_push(&g_timers, "compute_ndcloverrat_derivative_quda", ""); 
   
-  // void ** foo1 = NULL; // not used by quda
-  // void * foo2 = NULL; // not used by quda
-  // const int nvector = 1; // number of rational approximants
-  // double coeff[1] = {4.*mnl->kappa*mnl->kappa}; // minus because in p(QUDA)=-Y (tmLQCD) , the factor 4 is experimentally observed
-  // double kappa2_quda = - mnl->kappa*mnl->kappa; // -kappa*kappa
-  // double ck_quda = - mnl->c_sw * mnl->kappa / 8.0;
-  // const double multiplicity = 1.0; 
-  // // computeCloverForceQuda(mom_quda, /*dt=*/1.0, &spinorIn, foo1, coeff, kappa2_quda, ck_quda,
-  // //                           nvector, multiplicity, foo2, &f_gauge_param,
-  // //                           &inv_param);
-  // inv_param.kappa= mnl->kappa;
-  // inv_param.clover_csw= mnl->c_sw;
-  // computeTMCloverForceQuda(mom_quda, &spinorIn, &spinorPhi, coeff,  nvector, &f_gauge_param,   &inv_param, detratio);
+  double coeff[1] = {4.*mnl->kappa*mnl->kappa}; // minus because in p(QUDA)=-Y (tmLQCD) , the factor 4 is experimentally observed
+  double kappa2_quda = - mnl->kappa*mnl->kappa; // -kappa*kappa
+  double ck_quda = - mnl->c_sw * mnl->kappa / 8.0;
+  const double multiplicity = 1.0; 
+  
+  inv_param.kappa= mnl->kappa;
+  inv_param.clover_csw= mnl->c_sw;
+  computeTMCloverNdgForceQuda(mom_quda, spinorIn, &spinorPhi, coeff,  num_shifts, &f_gauge_param,   &inv_param, 0);
 
-  // tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
+  tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
   
   reorder_mom_fromQuda(mom_quda);
   add_mom_to_derivative(hf->derivative);

@@ -176,7 +176,7 @@ void compute_gauge_derivative_quda(monomial * const mnl, hamiltonian_field_t * c
 void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf,
                                      spinor ** const X_o, spinor ** const phi, int ratio);
 void compute_ndcloverrat_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf,
-                                        spinor * const Qup, spinor * const Qdn, solver_params_t * solver_params);
+                                        spinor ** const Qup, spinor ** const Qdn, solver_params_t * solver_params);
 
 void compute_WFlow_quda(const double eps ,const double tmax, const int traj, FILE* outfile);
 
