@@ -502,7 +502,7 @@ The available parameters for the autotuner are (all of them must be set to somet
 \end{itemize}
 
 A possible strategy for successfully tuning a setup could be to begin with a set of parameters which are not quite or just barely able to solve a particular linear system.
-The overall goal is to minimize the number of iterations performed on the coarsest and intermediate grids \emph{without} sacrifcing the algorithmic efficiency of the MG or the stability of the solver with changing gauge configurations while minimizing total time to solution.
+The overall goal is to minimize the number of iterations performed on the coarsest and intermediate grids \emph{without} sacrificing the algorithmic efficiency of the MG or the stability of the solver with changing gauge configurations while minimizing total time to solution.
 
 \begin{itemize}
   \item \texttt{MGCoarseMuFactor}: should be set too low (or \texttt{1.0} when coarse-grid deflation is used) and \texttt{MGCoarseMuFactorDelta} should be set positive and increase with grid coarseness (see example below)
