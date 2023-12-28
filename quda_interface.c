@@ -679,11 +679,6 @@ void reorder_mom_fromQuda() {
   tm_stopwatch_push(&g_timers, __func__, "");
 
 #ifdef TM_USE_OMP
-#pragma omp parallel
-  {
-#endif
-
-#ifdef TM_USE_OMP
   #pragma omp parallel for collapse(4)
 #endif
   for( int x0=0; x0<T; x0++ )
@@ -714,9 +709,6 @@ void reorder_mom_fromQuda() {
 #endif
         }
   
-#ifdef TM_USE_OMP
-  }
-#endif
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
 }
 
@@ -2525,11 +2517,6 @@ void compute_gauge_derivative_quda(monomial * const mnl, hamiltonian_field_t * c
     // Rect coeffs
     else
       loop_coeff[i] = -0.66666666666 * g_beta * mnl->c1;
-  }
-  
-  #pragma omp parallel for
-  for(int i = 0; i < 4; i++){
-    memset(mom_quda[i], 0, VOLUME*10*sizeof(double));
   }
 
   reorder_gauge_toQuda(hf->gaugefield, NO_COMPRESSION);

@@ -410,6 +410,12 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
         break;
     }
   } else if(optr->type == DBTMWILSON || optr->type == DBCLOVER) {
+    // there is no default for this set anywhere other than prepare_source.c
+    // such that calling this branch from an external program via tmLQCD_invert_doublet
+    // would result in undefined behaviour
+    // we thus set a default here unless it's explicitly set to 2
+    if( SourceInfo.no_flavours != 2 ) SourceInfo.no_flavours = 1;
+
     if(optr->type == DBCLOVER) {
       if (g_cart_id == 0 && g_debug_level > 1) {
         printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
