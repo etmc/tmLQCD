@@ -479,20 +479,27 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
       // (+ Dirac, color) psi = (psi[(s,p)][db][beta][F][eo][f][x])[alpha][c]
       // last 2 indices come from spinor struct
       // Note: propagator in the sense that it is D^{-1}*source after the inversion
-      const int sizes_arr_eo_spinor[7] = {2, 2, 4, 2, 2, 2, VOLUME / 2};
-
-
-			
-			//spinor *******arr_eo_spinor = (spinor *******) callocMultiDimensional(&sizes_arr_eo_spinor[0], 7, sizeof(spinor));
-			printf("HELLO Simone\n");
+      // const int sizes_arr_eo_spinor[7] = {2, 2, 4, 2, 2, 2, VOLUME / 2};
+			// spinor *******arr_eo_spinor = (spinor *******) callocMultiDimensional(&sizes_arr_eo_spinor[0], 7, sizeof(spinor));
 			spinor* arr_eo_spinor[2][2][4][2][2][2];
+      spinor* arr_spinor[2][2][4][2][2];
 
-			MPI_Barrier(MPI_COMM_WORLD);
-			printf("HELLO\n");
-
-			MPI_Barrier(MPI_COMM_WORLD);
-			if (g_proc_id == 0){
-				//printf("s1=%d, s2=%d\n", sizeof(arr_eo_spinor[0][0][0][0][0][0][1]), sizeof(spinor));
+			// allocating memory
+      for (size_t i_sp = 0; i_sp < 2; i_sp++) { // source or propagator
+				for (size_t db = 0; db < 2; db++) { // doublet: light or heavy
+					for (size_t beta = 0; beta < 4; beta++) { // spin dilution index
+						for (size_t F = 0; F < 2; F++) { // flavor dilution index
+							for (size_t i_eo = 0; i_eo < 2; i_eo++) { // even-odd index
+								for (size_t i_f = 0; i_f < 2; i_f++){// flavor index of the doublet
+									arr_eo_spinor[i_sp][db][beta][F][i_eo][i_f] = (spinor*) malloc((VOLUME/2)*sizeof(spinor));
+									if (i_eo ==0){ // doing it only once -> no eo index
+										arr_spinor[i_sp][db][beta][F][i_f] = (spinor*) malloc((VOLUME/2)*sizeof(spinor));
+									}
+								}
+							}
+						}
+					}
+				}
 			}
 
       /* initalize the random sources: one source for each Dirac index beta=src_d --> spin
@@ -503,22 +510,9 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
           for (size_t F = 0; F < 2; F++) {                    // flavor dilution index
             for (size_t i_f = 0; i_f < 2; i_f++) {            // flavor index of the doublet
               // light doublet
-							MPI_Barrier(MPI_COMM_WORLD);
-							spinor* sp1 = malloc((VOLUME/2)*sizeof(spinor));
-							spinor* sp2 = malloc((VOLUME/2)*sizeof(spinor));
-							arr_eo_spinor[0][db][beta][F][0][i_f][0] = (spinor*) malloc((VOLUME/2)*sizeof(spinor));
-							arr_eo_spinor[0][db][beta][F][1][i_f][0] = (spinor*) malloc((VOLUME/2)*sizeof(spinor));
-              eo_source_spinor_field_spin_diluted_oet_ts(sp1, sp2, t0, beta, sample, traj, seed_i);
-
-              /* eo_source_spinor_field_spin_diluted_oet_ts(&arr_eo_spinor[0][db][beta][F][0][i_f][0], */
-              /*                                            &arr_eo_spinor[0][db][beta][F][1][i_f][0], t0, */
-              /*                                            beta, sample, traj, seed_i); */
-							for (size_t isp = 0; isp < VOLUME/2; isp++) {
-								//arr_eo_spinor[0][db][beta][F][1][i_f][isp] = sp1[isp];
-							}
-							if (g_proc_id == 0){
-								printf("size sp1=%d, spinor_size=%d, volume_half=%d\n", sizeof(sp1), sizeof(spinor),  VOLUME/2);
-							}
+              eo_source_spinor_field_spin_diluted_oet_ts(arr_eo_spinor[0][db][beta][F][0][i_f],
+                                                         arr_eo_spinor[0][db][beta][F][1][i_f], t0,
+                                                         beta, sample, traj, seed_i);
             }
           }
         }
@@ -552,6 +546,11 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         }
       }
 
+			MPI_Barrier(MPI_COMM_WORLD);
+			if (g_proc_id == 0){
+				printf("Checkpoint 6\n");
+			}
+
       /*
       assign the sources and propagator pointes for the operators
       these need to be know when calling the inverter() method */
@@ -560,12 +559,17 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 
         // up
 
-        // sorces
-        optr1->sr0 = arr_eo_spinor[0][0][beta][0][0];
-        optr1->sr1 = arr_eo_spinor[0][0][beta][1][0];
+        // sources
+        optr1->sr0 = arr_eo_spinor[0][0][beta][0][0][0];
+        optr1->sr1 = arr_eo_spinor[0][0][beta][0][1][0];
+			MPI_Barrier(MPI_COMM_WORLD);
+			if (g_proc_id == 0){
+				printf("Checkpoint 7\n");
+			}
+
         // propagators
-        optr1->prop0 = arr_eo_spinor[1][0][beta][0][0];
-        optr1->prop1 = arr_eo_spinor[1][0][beta][1][0];
+        optr1->prop0 = arr_eo_spinor[1][0][beta][0][0][0];
+        optr1->prop1 = arr_eo_spinor[1][0][beta][0][1][0];
 
 				printf("inverting the light doublet\n");
         optr1->inverter(i1, 0, 0);  // inversion for the up flavor
@@ -587,19 +591,20 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         // optr1->DownProp = 0;        // restoring to default
 
         /* heavy doublet */
-
-        optr2->sr0 = arr_eo_spinor[0][1][beta][0][0];
-        optr2->sr1 = arr_eo_spinor[0][1][beta][1][0];
-        optr2->sr2 = arr_eo_spinor[0][1][beta][0][1];
-        optr2->sr3 = arr_eo_spinor[0][1][beta][1][1];
-
-        optr2->prop0 = arr_eo_spinor[1][1][beta][0][0];
-        optr2->prop1 = arr_eo_spinor[1][1][beta][1][0];
-        optr2->prop2 = arr_eo_spinor[1][1][beta][0][1];
-        optr2->prop3 = arr_eo_spinor[1][1][beta][1][1];
-
 				printf("Inverting the heavy doublet\n");
-        optr2->inverter(i2, 0, 0);  // inversion for both flavor components
+        for (size_t F = 0; F < 2; F++) {             // flavor projection index
+					optr2->sr0 = arr_eo_spinor[0][1][beta][F][0][0];
+					optr2->sr1 = arr_eo_spinor[0][1][beta][F][1][0];
+					optr2->sr2 = arr_eo_spinor[0][1][beta][F][0][1];
+					optr2->sr3 = arr_eo_spinor[0][1][beta][F][1][1];
+					
+					optr2->prop0 = arr_eo_spinor[1][1][beta][F][0][0];
+					optr2->prop1 = arr_eo_spinor[1][1][beta][F][1][0];
+					optr2->prop2 = arr_eo_spinor[1][1][beta][F][0][1];
+					optr2->prop3 = arr_eo_spinor[1][1][beta][F][1][1];
+				
+					optr2->inverter(i2, 0, 0);  // inversion for both flavor components
+				}
       }
 
       // conclude the change of basis for the heavy doublet
@@ -626,9 +631,9 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
       // (no even-odd): source+propagator, doublet, spin dilution index, flavor proj, flavor
       // index, position (+ Dirac, color) (psi[i_sp][d][beta][F][f][x])[alpha][c]
       // last 3 indices come from the spinor struct
-      const int sizes_arr_spinor = {2, 2, 4, 2, 2, VOLUME};
-      spinor ******arr_spinor =
-          (spinor ******)callocMultiDimensional(sizes_arr_spinor, 6, sizeof(spinor));
+      /* const int sizes_arr_spinor = {2, 2, 4, 2, 2, VOLUME}; */
+      /* spinor ******arr_spinor = */
+      /*     (spinor ******)callocMultiDimensional(sizes_arr_spinor, 6, sizeof(spinor)); */
 
       // now we switch from even-odd representation to standard
 
