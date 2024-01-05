@@ -43,7 +43,7 @@ int no_measurements = 0;
 int add_measurement(const enum MEAS_TYPE meas_type) {
  
   if(no_measurements == max_no_measurements) {
-    fprintf(stderr, "maximal number of measurementss %d exceeded!\n", max_no_measurements);
+    fprintf(stderr, "maximal number of measurements %d exceeded!\n", max_no_measurements);
     exit(-1);
   }
   measurement_list[no_measurements].measurefunc = &dummy_meas;

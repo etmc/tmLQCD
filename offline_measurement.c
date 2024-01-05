@@ -83,6 +83,7 @@ int main(int argc, char *argv[])
   char * filename = NULL;
   double plaquette_energy;
 
+
   init_critical_globals(TM_PROGRAM_OFFLINE_MEASUREMENT);  
 
 #ifdef _KOJAK_INST
@@ -292,7 +293,9 @@ int main(int argc, char *argv[])
       if (g_proc_id == 0) {
         fprintf(stdout, "#\n# Beginning offline measurement.\n");
       }
+			//printf("Ciao Simone4!\n");
       meas->measurefunc(nstore, imeas, even_odd_flag);
+			printf("Ciao Simone5!\n");
     }      
     nstore += Nsave;
   }
