@@ -356,12 +356,12 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 			for (int g1=0; g1<2; g1++){
 				for (int g2=0; g2<2; g2++){
 #ifdef TM_USE_MPI
-					sC_hihj_g1g2[h1][h2][g1][g2] = (double*) malloc(T*sizeof(double));
+					sC_hihj_g1g2[h1][h2][g1][g2] = (double*) calloc(T, sizeof(double));
 					if (g_mpi_time_rank == 0) {
-						C_hihj_g1g2[h1][h2][g1][g2] = (double*) malloc(g_nproc_t*T*sizeof(double));
+						C_hihj_g1g2[h1][h2][g1][g2] = (double*) calloc(g_nproc_t*T, sizeof(double));
 					}
 #else
-					C_hihj_g1g2[h1][h2][g1][g2] = (double*) malloc(T*sizeof(double));
+					C_hihj_g1g2[h1][h2][g1][g2] = (double*) calloc(T, sizeof(double));
 #endif
 				}
 			}
@@ -580,9 +580,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         optr1->prop1 = arr_eo_spinor[1][0][beta][0][1][0];
 
 				printf("inverting the light doublet\n");
-
-				// Simone: uncomment the next line
-        // optr1->inverter(i1, 0, 0);  // inversion for the up flavor
+        //optr1->inverter(i1, 0, 0);  // inversion for the up flavor
 
         // PLEASE KEEP THESE LINES COMMENTED, MAY BE USEFUL IN THE FUTURE
         // // inversion of the light doublet only inverts the up block (the operator is
@@ -614,8 +612,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 					optr2->prop2 = arr_eo_spinor[1][1][beta][F][0][1];
 					optr2->prop3 = arr_eo_spinor[1][1][beta][F][1][1];
 
-					// Simone: uncomment the next line
-					// optr2->inverter(i2, 0, 0);  // inversion for both flavor components
+					//optr2->inverter(i2, 0, 0);  // inversion for both flavor components
 				}
       }
 
@@ -817,6 +814,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
             }
           }
         }
+				
       }
 #endif
 
@@ -858,22 +856,22 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         tt = (t0 + g_nproc_t * T / 2) % (g_nproc_t * T);
         fprintf(ofs, "6  1  %d  %e  %e\n", t, Cp4[tt], 0.);
 
-        // heavy meson correlators
+        // heavy mesons correlators
         for (size_t hi = 0; hi < 2; hi++) {
           for (size_t hj = 0; hj < 2; hj++) {
             for (size_t g1 = 0; g1 < 2; g1++) {
               for (size_t g2 = 0; g2 < 2; g2++) {
-                fprintf(ofs, "%d  %d  %d  %d 0  %e  %e\n", hi, hj, g1, g2,
+                fprintf(ofs, "%u  %u  %u  %u  0  %e  %e\n", hi, hj, g1, g2,
                         C_hihj_g1g2[hi][hj][g1][g1][t0], 0.);
                 for (t = 1; t < g_nproc_t * T / 2; t++) {
                   tt = (t0 + t) % (g_nproc_t * T);
-                  fprintf(ofs, "%d  %d  %d  %d  %d  %e  ", hi, hj, g1, g2, t,
+                  fprintf(ofs, "%u  %u  %u  %u  %d  %e  ", hi, hj, g1, g2, t,
                           C_hihj_g1g2[hi][hj][g1][g2][tt]);
                   tt = (t0 + g_nproc_t * T - t) % (g_nproc_t * T);
                   fprintf(ofs, "%e\n", C_hihj_g1g2[hi][hj][g1][g2][tt]);
                 }
                 tt = (t0 + g_nproc_t * T / 2) % (g_nproc_t * T);
-                fprintf(ofs, "%d  %d  %d  %d  %d  %d  %e  %e\n", hi, hj, g1, g2, t,
+                fprintf(ofs, "%u  %u  %u  %u  %d  %e  %e\n", hi, hj, g1, g2, t,
                         C_hihj_g1g2[hi][hj][g1][g2][tt], 0.0);
               }
             }
@@ -881,6 +879,11 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         }
         fclose(ofs);
       }
+
+			MPI_Barrier(MPI_COMM_WORLD);
+			if (g_proc_id == 0){
+				printf("Checkpoint 13\n");
+			}
 
 			// freeing memory: light correlators
 #ifdef TM_USE_MPI
@@ -897,7 +900,12 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
       free(Cpa);
       free(Cp4);
 #endif
-			
+
+			MPI_Barrier(MPI_COMM_WORLD);
+			if (g_proc_id == 0){
+				printf("Checkpoint 14\n");
+			}
+
 			// freeing memory: heavy-light correlators
 			for (int h1=0; h1<2; h1++){
 				for (int h2=0; h2<2; h2++){
@@ -915,6 +923,12 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 					}
 				}
 			}
+
+			MPI_Barrier(MPI_COMM_WORLD);
+			if (g_proc_id == 0){
+				printf("Checkpoint 15\n");
+			}
+
 			
 		}  // for(max_time_slices)
   }    // for(max_samples)
