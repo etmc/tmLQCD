@@ -347,17 +347,36 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
   // the number of independent correlators is 16 = (2*2)_{h_1 h_2} * (2*2)_{Gamma_1 Gamma_2}
   // hi: c,s
   // Gamma = 1, gamma_5
-	double *****C_hihj_g1g2 = NULL;
+	double* C_hihj_g1g2[2][2][2][2];
+	double *sC_hihj_g1g2[2][2][2][2];
 
+	// allocating memory
+	for (int h1=0; h1<2; h1++){
+		for (int h2=0; h2<2; h2++){
+			for (int g1=0; g1<2; g1++){
+				for (int g2=0; g2<2; g2++){
 #ifdef TM_USE_MPI
-	const int sizes_C_hihj_g1g2[5] = {2, 2, 2, 2, g_nproc_t*T};
-  if (g_mpi_time_rank == 0) {
-		C_hihj_g1g2 = (double *****)callocMultiDimensional(&sizes_C_hihj_g1g2[0], 5, sizeof(double));
-	}
+					sC_hihj_g1g2[h1][h2][g1][g2] = (double*) malloc(T*sizeof(double));
+					if (g_mpi_time_rank == 0) {
+						C_hihj_g1g2[h1][h2][g1][g2] = (double*) malloc(g_nproc_t*T*sizeof(double));
+					}
 #else
-  const int sizes_C_hihj_g1g2[5] = {2, 2, 2, 2, T};
-	C_hihj_g1g2 = (double *****)callocMultiDimensional(&sizes_C_hihj_g1g2[0], 5, sizeof(double));
+					C_hihj_g1g2[h1][h2][g1][g2] = (double*) malloc(T*sizeof(double));
 #endif
+				}
+			}
+		}
+	}
+	
+/* #ifdef TM_USE_MPI */
+/* 	const int sizes_C_hihj_g1g2[5] = {2, 2, 2, 2, g_nproc_t*T}; */
+/*   if (g_mpi_time_rank == 0) { */
+/* 		C_hihj_g1g2 = (double *****)callocMultiDimensional(&sizes_C_hihj_g1g2[0], 5, sizeof(double)); */
+/* 	} */
+/* #else */
+/*   const int sizes_C_hihj_g1g2[5] = {2, 2, 2, 2, T}; */
+/* 	C_hihj_g1g2 = (double *****)callocMultiDimensional(&sizes_C_hihj_g1g2[0], 5, sizeof(double)); */
+/* #endif */
 
 
 	if (g_proc_id  == 0){
@@ -365,26 +384,12 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 		printf("Checkpoint 2 - T=%d\n", T);
 	}
 
-  const int sizes_res_hihj_g1g2[4] = {2, 2, 2, 2};
-  double ****res_hihj_g1g2 = NULL;
-	/* = (double ****)callocMultiDimensional(&sizes_res_hihj_g1g2[0], 4, sizeof(double)); */
+  double res_hihj_g1g2[2][2][2][2];
+  double mpi_res_hihj_g1g2[2][2][2][2];
 
 	if (g_proc_id  == 0){
 		printf("Checkpoint 3\n");
 	}
-
-#ifdef TM_USE_MPI
-  double ****mpi_res_hihj_g1g2 =
-      (double ****)callocMultiDimensional(&sizes_res_hihj_g1g2[0], 4, sizeof(double));
-  // send buffer for MPI_Gather
-  double *****sC_hihj_g1g2 =
-      (double *****)callocMultiDimensional(&sizes_C_hihj_g1g2[0], 5, sizeof(double));
-  if (g_mpi_time_rank == 0) {
-		res_hihj_g1g2 = (double ****)callocMultiDimensional(&sizes_res_hihj_g1g2[0], 4, sizeof(double));
-	}
-#else
-  res_hihj_g1g2 = (double ****)callocMultiDimensional(&sizes_res_hihj_g1g2[0], 4, sizeof(double));
-#endif
 
 
   FILE *ofs;                                // output file stream
@@ -482,6 +487,9 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
       // const int sizes_arr_eo_spinor[7] = {2, 2, 4, 2, 2, 2, VOLUME / 2};
 			// spinor *******arr_eo_spinor = (spinor *******) callocMultiDimensional(&sizes_arr_eo_spinor[0], 7, sizeof(spinor));
 			spinor* arr_eo_spinor[2][2][4][2][2][2];
+
+      // (no even-odd): source+propagator, doublet, spin dilution index, flavor proj, flavor
+      // index, position (+ Dirac, color) (psi[i_sp][d][beta][F][f][x])[alpha][c]
       spinor* arr_spinor[2][2][4][2][2];
 
 			// allocating memory
@@ -492,8 +500,8 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 							for (size_t i_eo = 0; i_eo < 2; i_eo++) { // even-odd index
 								for (size_t i_f = 0; i_f < 2; i_f++){// flavor index of the doublet
 									arr_eo_spinor[i_sp][db][beta][F][i_eo][i_f] = (spinor*) malloc((VOLUME/2)*sizeof(spinor));
-									if (i_eo ==0){ // doing it only once -> no eo index
-										arr_spinor[i_sp][db][beta][F][i_f] = (spinor*) malloc((VOLUME/2)*sizeof(spinor));
+									if (i_eo == 0){ // doing it only once -> no eo index
+										arr_spinor[i_sp][db][beta][F][i_f] = (spinor*) malloc(VOLUME*sizeof(spinor));
 									}
 								}
 							}
@@ -572,7 +580,9 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         optr1->prop1 = arr_eo_spinor[1][0][beta][0][1][0];
 
 				printf("inverting the light doublet\n");
-        optr1->inverter(i1, 0, 0);  // inversion for the up flavor
+
+				// Simone: uncomment the next line
+        // optr1->inverter(i1, 0, 0);  // inversion for the up flavor
 
         // PLEASE KEEP THESE LINES COMMENTED, MAY BE USEFUL IN THE FUTURE
         // // inversion of the light doublet only inverts the up block (the operator is
@@ -593,6 +603,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         /* heavy doublet */
 				printf("Inverting the heavy doublet\n");
         for (size_t F = 0; F < 2; F++) {             // flavor projection index
+					printf("F=%d\n", F);
 					optr2->sr0 = arr_eo_spinor[0][1][beta][F][0][0];
 					optr2->sr1 = arr_eo_spinor[0][1][beta][F][1][0];
 					optr2->sr2 = arr_eo_spinor[0][1][beta][F][0][1];
@@ -602,11 +613,18 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 					optr2->prop1 = arr_eo_spinor[1][1][beta][F][1][0];
 					optr2->prop2 = arr_eo_spinor[1][1][beta][F][0][1];
 					optr2->prop3 = arr_eo_spinor[1][1][beta][F][1][1];
-				
-					optr2->inverter(i2, 0, 0);  // inversion for both flavor components
+
+					// Simone: uncomment the next line
+					// optr2->inverter(i2, 0, 0);  // inversion for both flavor components
 				}
       }
 
+			MPI_Barrier(MPI_COMM_WORLD);
+			if (g_proc_id == 0){
+				printf("Checkpoint 8\n");
+			}
+
+			
       // conclude the change of basis for the heavy doublet
       for (size_t beta = 0; beta < 4; beta++) {      // spin dilution index
         for (size_t F = 0; F < 2; F++) {             // flavor projection index
@@ -624,9 +642,16 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
               assign(arr_eo_spinor[0][1][beta][F][i_eo][i_f],
                      arr_eo_spinor[1][1][beta][F][i_eo][i_f], VOLUME / 2);
             }
+
           }
         }
       }
+
+			MPI_Barrier(MPI_COMM_WORLD);
+			if (g_proc_id == 0){
+				printf("Checkpoint 9\n");
+			}
+
 
       // (no even-odd): source+propagator, doublet, spin dilution index, flavor proj, flavor
       // index, position (+ Dirac, color) (psi[i_sp][d][beta][F][f][x])[alpha][c]
@@ -636,13 +661,12 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
       /*     (spinor ******)callocMultiDimensional(sizes_arr_spinor, 6, sizeof(spinor)); */
 
       // now we switch from even-odd representation to standard
-
       for (size_t i_sp = 0; i_sp < 2; i_sp++) {        // source or sink
         for (size_t db = 0; db < 2; db++) {            // doublet: light of heavy
           for (size_t F = 0; F < 2; F++) {             // flavor projection index
             for (size_t beta = 0; beta < 4; beta++) {  // spin dilution index
               for (size_t i_f = 0; i_f < 2; i_f++) {
-                convert_eo_to_lexic(arr_spinor[i_sp][db][F][beta][i_f],
+								convert_eo_to_lexic(arr_spinor[i_sp][db][F][beta][i_f],
                                     arr_eo_spinor[i_sp][db][F][beta][0][i_f],
                                     arr_eo_spinor[i_sp][db][F][beta][1][i_f]);
               }
@@ -651,8 +675,33 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         }
       }
 
-      free(arr_eo_spinor);  // freeing up space: eo spinors not needed anymore
+			MPI_Barrier(MPI_COMM_WORLD);
+			if (g_proc_id == 0){
+				printf("Checkpoint 10\n");
+			}
 
+			// freeing up memory
+      for (size_t i_sp = 0; i_sp < 2; i_sp++) { // source or propagator
+				for (size_t db = 0; db < 2; db++) { // doublet: light or heavy
+					for (size_t beta = 0; beta < 4; beta++) { // spin dilution index
+						for (size_t F = 0; F < 2; F++) { // flavor dilution index
+							for (size_t i_eo = 0; i_eo < 2; i_eo++) { // even-odd index
+								for (size_t i_f = 0; i_f < 2; i_f++){// flavor index of the doublet
+									free(arr_eo_spinor[i_sp][db][beta][F][i_eo][i_f]);
+								}
+							}
+						}
+					}
+				}
+			}
+
+      // free(arr_eo_spinor);  // freeing up space: eo spinors not needed anymore
+
+			MPI_Barrier(MPI_COMM_WORLD);
+			if (g_proc_id == 0){
+				printf("Checkpoint 11\n");
+			}
+			
       /*
         Now that I have all the propagators (all in the basis of
         https://arxiv.org/pdf/1005.2042.pdf) I can build the correlators of eq. (20)
@@ -771,8 +820,10 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
       }
 #endif
 
-			printf("ciao Simone, I'm exiting\n");
-			exit(1);
+			MPI_Barrier(MPI_COMM_WORLD);
+			if (g_proc_id == 0){
+				printf("Checkpoint 12\n");
+			}
 
       /* and write everything into a file */
       if (g_mpi_time_rank == 0 && g_proc_coords[0] == 0) {
@@ -830,35 +881,53 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
         }
         fclose(ofs);
       }
+
+			// freeing memory: light correlators
 #ifdef TM_USE_MPI
       if (g_mpi_time_rank == 0) {
         free(Cpp);
         free(Cpa);
         free(Cp4);
-        free(C_hihj_g1g2);
       }
       free(sCpp);
       free(sCpa);
       free(sCp4);
-      free(sC_hihj_g1g2);
 #else
       free(Cpp);
       free(Cpa);
       free(Cp4);
-      free(C_hihj_g1g2);
 #endif
-    }  // for(max_time_slices)
+			
+			// freeing memory: heavy-light correlators
+			for (int h1=0; h1<2; h1++){
+				for (int h2=0; h2<2; h2++){
+					for (int g1=0; g1<2; g1++){
+						for (int g2=0; g2<2; g2++){
+#ifdef TM_USE_MPI
+							free(sC_hihj_g1g2[h1][h2][g1][g2]);
+							if (g_mpi_time_rank == 0) {
+								free(C_hihj_g1g2[h1][h2][g1][g2]);
+							}
+#else
+							free(C_hihj_g1g2[h1][h2][g1][g2]);
+#endif
+						}
+					}
+				}
+			}
+			
+		}  // for(max_time_slices)
   }    // for(max_samples)
-
+	
   tm_stopwatch_pop(&g_timers, 0, 1, "");
-
+	
   return;
 }
 
 void correlators_measurement(const int traj, const int id, const int ieo) {
   //light_correlators_measurement(traj, id, ieo);
 	
-	// ??? maybe add a double check?
+	// ??? maybe add a double check? does i1 --> light and i2 --> heavy?
 	if (measurement_list[id].measure_heavy_mesons == 1) {
 		const unsigned int i1 = 0, i2 = 1;
 		heavy_correlators_measurement(traj, id, ieo, i1, i2);
