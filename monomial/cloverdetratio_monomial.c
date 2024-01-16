@@ -215,7 +215,7 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
 		      mnl->csg_N, &mnl->csg_n, VOLUME/2);
 
-    if ( mnl->solver_params.external_inverter == QUDA_INVERTER){
+  if ( mnl->external_library == QUDA_LIB){
     if(!mnl->even_odd_flag) {
       fatal_error("QUDA support only even_odd_flag",__func__);
     }
@@ -241,20 +241,19 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
     if (g_debug_level > 3){
       su3adj **given = hf->derivative;
       hf->derivative = debug_derivative;
-      int store_solver = mnl->solver;
-      mnl->solver_params.external_inverter = NO_EXT_INV;
-      mnl->solver = CG;
+      mnl->external_library = NO_EXT_LIB;
       tm_debug_printf( 0, 3, "Recomputing the derivative from tmLQCD\n");
       cloverdetratio_derivative(no, hf);
       #ifdef TM_USE_MPI
         xchange_deri(hf->derivative);// this function use ddummy inside
       #endif
       compare_derivative(mnl, given, hf->derivative);
-      mnl->solver_params.external_inverter = QUDA_INVERTER;
-      mnl->solver = store_solver;
+      mnl->external_library = QUDA_LIB;
       hf->derivative = given;
     }
-  #endif // no other option, TM_USE_QUDA already checked by solver
+#else
+      fatal_error("in %s  external_library == QUDA_LIB requires TM_USE_QUDA to be true",__func__);
+#endif // end ifdef TM_USE_QUDA
   }
   else{
     // Apply Q_{-} to get Y_W -> w_fields[0]
