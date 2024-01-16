@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include <string.h>
 #include "global.h"
 #include "su3.h"
 #include "start.h"
@@ -45,6 +46,11 @@
 #include "monomial/monomial.h"
 #include "boundary.h"
 #include "cloverdetratio_monomial.h"
+#include "xchange/xchange_deri.h"
+#include "monomial/gauge_monomial.h"
+#ifdef TM_USE_QUDA
+#  include "quda_interface.h"
+#endif
 
 /* think about chronological solver ! */
 

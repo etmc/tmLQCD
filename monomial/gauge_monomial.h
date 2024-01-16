@@ -26,5 +26,6 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf);
 void gauge_EMderivative(const int id, hamiltonian_field_t * const hf);
 void gauge_heatbath(const int id, hamiltonian_field_t * const hf);
 double gauge_acc(const int id, hamiltonian_field_t * const hf);
+void compare_derivative(monomial *mnl, su3adj **ext_lib, su3adj **native );
 
 #endif

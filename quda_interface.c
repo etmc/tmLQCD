@@ -2514,16 +2514,13 @@ void compute_gauge_derivative_quda(monomial * const mnl, hamiltonian_field_t * c
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 }
 
-void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf, spinor ** const X_o, spinor ** const phi, int detratio) {
+void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf, spinor * const X_o, spinor * const phi, int detratio) {
   tm_stopwatch_push(&g_timers, __func__, "");
   
   _initQuda();
   _initMomQuda();
   void *spinorIn;
   void *spinorPhi;
-  const int nr_sf_in = 1;
-  spinor ** in_o;
-
   
   spinorIn  = (void*)X_o;
   reorder_spinor_eo_toQuda((double*)spinorIn, inv_param.cpu_prec, 0, 1);

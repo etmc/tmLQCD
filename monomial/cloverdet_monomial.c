@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 #include "global.h"
 #include "su3.h"
 #include "su3adj.h"
@@ -49,6 +50,11 @@
 #include "operator/clovertm_operators.h"
 #include "operator/clovertm_operators_32.h"
 #include "cloverdet_monomial.h"
+#include "xchange/xchange_deri.h"
+#include "monomial/gauge_monomial.h"
+#ifdef TM_USE_QUDA
+#  include "quda_interface.h"
+#endif
 
 /* think about chronological solver ! */
 
