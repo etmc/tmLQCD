@@ -63,5 +63,17 @@ void compare_derivative(monomial *mnl, su3adj **ext_lib, su3adj **native,
     if(g_strict_residual_check) fatal_error("Difference between external library and tmLQCD-native function!", 
                                             name);
   }
+
+  int red_n_diff = 0;
+#ifdef TM_USE_MPI
+  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Reduce(&n_diff, &red_n_diff, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
+#else
+  red_n_diff = n_diff;
+#endif
+  if(g_proc_id == 0){
+    printf("The maximum number of deviations in %s exceeding the threshold %.1e was %d\n",
+           name, threshold, red_n_diff);
+  }
 }
 
