@@ -48,6 +48,7 @@
 #include "cloverdetratio_monomial.h"
 #include "xchange/xchange_deri.h"
 #include "monomial/gauge_monomial.h"
+#include "compare_derivative.h"
 #ifdef TM_USE_QUDA
 #  include "quda_interface.h"
 #endif
@@ -253,7 +254,7 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
       #ifdef TM_USE_MPI
         xchange_deri(hf->derivative);// this function use ddummy inside
       #endif
-      compare_derivative(mnl, given, hf->derivative);
+      compare_derivative(mnl, given, hf->derivative, 1e-9, "cloverdetratio_derivative");
       mnl->external_library = QUDA_LIB;
       hf->derivative = given;
     }

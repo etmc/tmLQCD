@@ -1,6 +1,6 @@
 /***********************************************************************
  *
- * Copyright (C) 2008 Carsten Urbach
+ * Copyright (C) 2024 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -17,14 +17,13 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-#ifndef _GAUGE_MONOMIAL_H
-#define _GAUGE_MONOMIAL_H
 
-#include "hamiltonian_field.h"
+#ifndef COMPARE_DERIVATIVE_H
+#define COMPARE_DERIVATIVE_H
 
-void gauge_derivative(const int id, hamiltonian_field_t * const hf);
-void gauge_EMderivative(const int id, hamiltonian_field_t * const hf);
-void gauge_heatbath(const int id, hamiltonian_field_t * const hf);
-double gauge_acc(const int id, hamiltonian_field_t * const hf);
+#include "monomial/monomial.h"
+#include "su3adj.h"
+
+void compare_derivative(monomial *mnl, su3adj **ext_lib, su3adj **native, const double threshold, const char * name);
 
 #endif
