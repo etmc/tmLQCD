@@ -427,19 +427,8 @@ Each of them has different options
 \begin{itemize}
 \item {\ttfamily DET, CLOVERDET}:
   \begin{itemize}
-  \item {\ttfamily 2KappaMu}
-  \end{itemize}
-\item {\ttfamily CLOVERDET}:
-  \begin{itemize}
-  \item {\ttfamily csw}
-  \item {\ttfamily UseExternalInverter} 
-  Equal to either {\ttfamily no} (default value) or {\ttfamily quda}.
-  \item {\ttfamily UseExternalLibrary} 
-  Equal to either {\ttfamily no} (default value) or {\ttfamily quda}.
-  \end{itemize}
-\item {\ttfamily DET, CLOVERDET}:
-  \begin{itemize}
   \item {\ttfamily Kappa}
+  \item {\ttfamily 2KappaMu}
   \item {\ttfamily Timescale}: the timescale on which to integrate
     this monomial. Counting starts from zero up to the total number of
     timescales minus 1.
@@ -459,6 +448,15 @@ Each of them has different options
   \item {\ttfamily Name}: a name to be assigned to the monomial. The
     default is {\ttfamily DET}
   \end{itemize}
+%
+\item {\ttfamily CLOVERDET}:
+\begin{itemize}
+	\item {\ttfamily csw}
+	\item {\ttfamily UseExternalInverter} 
+	Equal to either {\ttfamily no} (default value) or {\ttfamily quda}.
+	\item {\ttfamily UseExternalLibrary} 
+	Equal to either {\ttfamily no} (default value) or {\ttfamily quda}.
+\end{itemize}
 %
 \item {\ttfamily DETRATIO}: the same as for {\ttfamily DET}, but in
   addition:
