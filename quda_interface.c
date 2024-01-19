@@ -5,6 +5,8 @@
  *               2018       Bartosz Kostrzewa, Ferenc Pittler
  *               2019, 2020 Bartosz Kostrzewa
  *               2021       Bartosz Kostrzewa, Marco Garofalo, Ferenc Pittler, Simone Bacchio
+ *               2022       Simone Romiti, Bartosz Kostrzewa
+ *               2023       Aniket Sen, Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -115,6 +117,8 @@
 #include "tm_debug_printf.h"
 #include "phmc.h"
 #include "quda_gauge_paths.inc"
+#include "io/gauge.h"
+#include "measure_gauge_action.h"
 
 // nstore is generally like a gauge id, for measurements it identifies the gauge field
 // uniquely 
@@ -147,6 +151,10 @@ QudaEigParam mg_eig_param[QUDA_MAX_MG_LEVEL];
 
 // input params specific to tmLQCD QUDA interface
 tm_QudaParams_t quda_input;
+
+
+// parameters for the eigensolver
+QudaEigParam eig_param;
 
 // pointer to the QUDA gaugefield
 double *gauge_quda[4];
@@ -243,7 +251,7 @@ void _setDefaultQudaParam(void){
   QudaPrecision cpu_prec  = QUDA_DOUBLE_PRECISION;
   QudaPrecision cuda_prec = QUDA_DOUBLE_PRECISION;
   QudaPrecision cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
-  QudaPrecision cuda_prec_precondition = QUDA_HALF_PRECISION;
+  QudaPrecision cuda_prec_precondition = QUDA_SINGLE_PRECISION;
 
   QudaTune tune = QUDA_TUNE_YES;
 
@@ -1830,15 +1838,18 @@ void _setMGInvertParam(QudaInvertParam * mg_inv_param, const QudaInvertParam * c
   mg_inv_param->cuda_prec = inv_param->cuda_prec;
   mg_inv_param->cuda_prec_sloppy = inv_param->cuda_prec_sloppy;
   mg_inv_param->cuda_prec_refinement_sloppy = inv_param->cuda_prec_refinement_sloppy;
-  mg_inv_param->cuda_prec_precondition = inv_param->cuda_prec_precondition;
-  mg_inv_param->cuda_prec_eigensolver = inv_param->cuda_prec_eigensolver;
   
   mg_inv_param->clover_cpu_prec = inv_param->clover_cpu_prec;
   mg_inv_param->clover_cuda_prec = inv_param->clover_cuda_prec;
   mg_inv_param->clover_cuda_prec_sloppy = inv_param->clover_cuda_prec_sloppy;
   mg_inv_param->clover_cuda_prec_refinement_sloppy = inv_param->clover_cuda_prec_refinement_sloppy;
-  mg_inv_param->clover_cuda_prec_precondition = inv_param->clover_cuda_prec_precondition;
-  mg_inv_param->clover_cuda_prec_eigensolver = inv_param->clover_cuda_prec_eigensolver;
+  
+  // it seems that the MG-internal preconditioner and eigensolver need to be
+  // consistent with sloppy precision
+  mg_inv_param->cuda_prec_precondition = inv_param->cuda_prec_sloppy;
+  mg_inv_param->cuda_prec_eigensolver = inv_param->cuda_prec_sloppy;
+  mg_inv_param->clover_cuda_prec_precondition = inv_param->clover_cuda_prec_sloppy;
+  mg_inv_param->clover_cuda_prec_eigensolver = inv_param->clover_cuda_prec_sloppy;
   
   mg_inv_param->clover_order = inv_param->clover_order;
   mg_inv_param->gcrNkrylov = inv_param->gcrNkrylov;
@@ -1857,6 +1868,9 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   QudaInvertParam * mg_inv_param = mg_param->invert_param;
   _setMGInvertParam(mg_inv_param, &inv_param);
 
+  mg_param->setup_type = QUDA_NULL_VECTOR_SETUP;
+
+  mg_param->coarse_guess = quda_input.mg_coarse_guess;
   mg_param->preserve_deflation = quda_input.mg_eig_preserve_deflation;
 
   mg_param->n_level = quda_input.mg_n_level;
@@ -2005,6 +2019,10 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     mg_param->coarse_solver_ca_lambda_min[level] = quda_input.mg_coarse_solver_ca_lambda_min[level];
     mg_param->coarse_solver_ca_lambda_max[level] = quda_input.mg_coarse_solver_ca_lambda_max[level];
     
+    mg_param->smoother_solver_ca_basis[level]      = quda_input.mg_smoother_solver_ca_basis[level];
+    mg_param->smoother_solver_ca_lambda_min[level] = quda_input.mg_smoother_solver_ca_lambda_min[level];
+    mg_param->smoother_solver_ca_lambda_max[level] = quda_input.mg_smoother_solver_ca_lambda_max[level];
+   
 
     // set the MG EigSolver parameters, almost equivalent to
     // setEigParam from QUDA's multigrid_invert_test, except
@@ -2027,7 +2045,9 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
 
       mg_eig_param[level].n_ev = quda_input.mg_eig_nEv[level];
       mg_eig_param[level].n_kr = quda_input.mg_eig_nKr[level];
-      mg_eig_param[level].n_conv = quda_input.mg_n_vec[level];
+      mg_eig_param[level].n_conv = quda_input.mg_eig_nEv[level]; // require convergence of all eigenvalues
+      mg_eig_param[level].n_ev_deflate = mg_eig_param[level].n_conv; // deflate all converged eigenvalues
+      // TODO expose this setting: mg_eig_param[level].batched_rotate = 128;
       mg_eig_param[level].require_convergence = quda_input.mg_eig_require_convergence[level];
 
       mg_eig_param[level].tol = quda_input.mg_eig_tol[level];
@@ -2222,9 +2242,16 @@ int invert_eo_degenerate_quda(spinor * const out,
                                                   rel_prec, even_odd_flag, solver_params,
                                                   sloppy_precision, compression, QpQm);
         if (ret_value >= max_iter) {
+          char outname[200];
+          snprintf(outname, 200, "conf_mg_refresh_fail.%.6f.%04d", g_gauge_state.gauge_id, nstore);
+          paramsXlfInfo * xlfInfo = construct_paramsXlfInfo(
+              measure_plaquette((const su3**)g_gauge_field)/(6.*VOLUME*g_nproc), nstore);
+          int status = write_gauge_field(outname, 64, xlfInfo);
+          free(xlfInfo);
+
           char errmsg[200];
           snprintf(errmsg, 200, "QUDA-MG solver failed to converge in %d iterations even after forced setup refresh. Terminating!",
-                   max_iter);
+                 max_iter);
           fatal_error(errmsg, __func__);
           return -1;
         } else {
@@ -2609,5 +2636,150 @@ void  compute_WFlow_quda(const double eps, const double tmax, const int traj, FI
   }
 
   free(obs_param);
+  tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
+}
+
+
+
+
+/********************************************************
+
+Interface function for Eigensolver on Quda
+
+*********************************************************/
+
+
+void eigsolveQuda(_Complex double * evals, int n_evals, double tol, int blksize, int blkwise, int max_iterations, int maxmin,
+                  const double precision, const int max_iter, const int polydeg, const double amin, 
+                  const double amax, const int n_kr, const int solver_flag, const int rel_prec,
+                  const int even_odd_flag, const SloppyPrecision refinement_precision,
+                  SloppyPrecision sloppy_precision, CompressionType compression, const int oneFlavourFlag) {
+
+  tm_stopwatch_push(&g_timers, __func__, "");
+  
+  
+  // it returns if quda is already init
+  _initQuda();
+
+  if ( rel_prec )
+    inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
+  else
+    inv_param.residual_type = QUDA_L2_ABSOLUTE_RESIDUAL;
+
+  inv_param.kappa = g_kappa;
+  
+  // figure out which BC tu use (theta, trivial...)
+  set_boundary_conditions(&compression, &gauge_param);
+
+  set_sloppy_prec(sloppy_precision, refinement_precision, &gauge_param, &inv_param);
+
+  // load gauge after setting precision
+  _loadGaugeQuda(compression);
+
+  if ( oneFlavourFlag ) {
+    _setOneFlavourSolverParam(g_kappa, g_c_sw, g_mu, solver_flag, even_odd_flag, precision, max_iter,
+                              1 /*single_parity_solve */,
+                              1 /*always QpQm*/);
+  }else {
+    _setTwoFlavourSolverParam(g_kappa, g_c_sw, g_mubar, g_epsbar, solver_flag, even_odd_flag, precision, max_iter,
+                              1 /*single_parity_solve */,
+                              1 /*always QpQm*/);
+  }
+
+  // create new eig_param
+  eig_param = newQudaEigParam();
+  
+  // need our own QudaInvertParam for passing the operator properties
+  // as we modify the precision below 
+  QudaInvertParam eig_invert_param = newQudaInvertParam();
+  eig_invert_param = inv_param;
+  eig_param.invert_param = &eig_invert_param;
+  eig_param.invert_param->verbosity = QUDA_VERBOSE;
+  /* AS The following two are set to cuda_prec, otherwise 
+   * it gives an error. Such high precision might not be
+   * necessary. But have not found a way to consistently set
+   * the different precisions. */
+  eig_param.invert_param->cuda_prec_eigensolver = inv_param.cuda_prec;
+  eig_param.invert_param->clover_cuda_prec_eigensolver = inv_param.clover_cuda_prec;
+  
+  // for consistency with tmLQCD's own eigensolver we require a precision of at least
+  // 1e-14
+  if(tol < 1.e-14) {
+    eig_param.tol = 1.e-14;
+    eig_param.qr_tol = 1.e-14;
+  }else {
+    eig_param.tol = tol;
+    eig_param.qr_tol = tol;
+  }
+  
+  if(blkwise == 1) {
+    eig_param.eig_type = QUDA_EIG_BLK_TR_LANCZOS;
+    eig_param.block_size = blksize;
+  }else {
+    eig_param.eig_type = QUDA_EIG_TR_LANCZOS;
+    eig_param.block_size = 1;
+  }
+
+  if(eig_param.invert_param->solve_type == QUDA_NORMOP_PC_SOLVE) {
+    eig_param.use_pc = QUDA_BOOLEAN_TRUE;
+    eig_param.use_norm_op = QUDA_BOOLEAN_TRUE;
+  }else if(eig_param.invert_param->solve_type == QUDA_DIRECT_PC_SOLVE) {
+    eig_param.use_pc = QUDA_BOOLEAN_TRUE;
+    eig_param.use_norm_op = QUDA_BOOLEAN_FALSE;
+  }else if(eig_param.invert_param->solve_type == QUDA_NORMOP_SOLVE) {
+    eig_param.use_pc = QUDA_BOOLEAN_FALSE;
+    eig_param.use_norm_op = QUDA_BOOLEAN_TRUE;
+  }else {
+    eig_param.use_pc = QUDA_BOOLEAN_FALSE;
+    eig_param.use_norm_op = QUDA_BOOLEAN_FALSE;
+  }
+
+  eig_param.use_poly_acc = (maxmin == 1) || (polydeg == 0) ? QUDA_BOOLEAN_FALSE : QUDA_BOOLEAN_TRUE;
+  eig_param.poly_deg = polydeg;
+  eig_param.a_min = amin;
+  eig_param.a_max = amax;
+  
+  /* Daggers the operator. Not necessary for 
+   * most cases. */
+  eig_param.use_dagger = QUDA_BOOLEAN_FALSE;
+  
+  /* Most likely not necessary. Set TRUE to use 
+   * Eigen routines to eigensolve the upper Hessenberg via QR */
+  eig_param.use_eigen_qr = QUDA_BOOLEAN_FALSE;    
+
+  eig_param.compute_svd = QUDA_BOOLEAN_FALSE;
+
+  /* Set TRUE to performs the \gamma_5 OP solve by 
+   * post multipling the eignvectors with \gamma_5 
+   * before computing the eigenvalues */
+  eig_param.compute_gamma5 = QUDA_BOOLEAN_FALSE;
+
+
+  if(maxmin == 1) eig_param.spectrum = QUDA_SPECTRUM_LR_EIG;
+  else eig_param.spectrum = QUDA_SPECTRUM_SR_EIG;
+
+
+  /* At the moment, the eigenvalues and eigenvectors are neither 
+   * written to or read from disk, but if necessary, can be added
+   * as a feature in future, by setting the following filenames */
+  strncpy(eig_param.vec_outfile,"",256);
+  strncpy(eig_param.vec_infile,"",256);
+  
+
+  /* The size of eigenvector search space and
+   * the number of required converged eigenvectors 
+   * is both set to n_evals */
+  eig_param.n_conv = n_evals;
+  eig_param.n_ev = n_evals;
+  /* The size of the Krylov space is set to 96.
+   * From my understanding, QUDA automatically scales
+   * this search space, however more testing on this 
+   * might be necessary */
+  eig_param.n_kr = n_kr;
+
+  eig_param.max_restarts = max_iterations;
+
+  eigensolveQuda(NULL, evals, &eig_param);
+
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 }

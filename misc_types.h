@@ -89,6 +89,12 @@ typedef enum ExternalInverter_s {
   QPHIX_INVERTER
 } ExternalInverter;
 
+/* enumeration type for the external eigensolver */
+typedef enum ExternalEigSolver_s {
+  NO_EXT_EIGSOLVER = 0,
+  QUDA_EIGSOLVER
+} ExternalEigSolver;
+
 /* enumeration type for the external inverter */
 typedef enum ExternalLibrary_s {
   NO_EXT_LIB = 0,
