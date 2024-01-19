@@ -2340,6 +2340,10 @@ static inline double fltlist_next_token(int * const list_end){
   }
   {SPC}*UseExternalLibrary{EQL}quda {
     mnl->external_library = QUDA_LIB;
+    if(mnl->solver_params.external_inverter != QUDA_INVERTER){
+       printf("Error:  usage of UseExternalLibrary = quda in line %d, monomial %d is not supported without UseExternalInverter = quda\n", line_of_file, current_monomial);
+       exit(1);
+    }
     if(myverbose) printf("  UseExternalLibrary set to quda in line %d, monomial %d\n", line_of_file, current_monomial);
   }
   {SPC}*UseSloppyPrecision{EQL}yes {
