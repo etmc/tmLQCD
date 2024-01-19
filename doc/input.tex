@@ -447,13 +447,13 @@ Each of them has different options
   \item {\ttfamily HB\_Solver}: the solver to be used in the heatbath step, see section \ref{sec:hb.solver} for details.
   \item {\ttfamily Name}: a name to be assigned to the monomial. The
     default is {\ttfamily DET}
+  \item {\ttfamily UseExternalInverter} 
+  Equal to either {\ttfamily no} (default value) or {\ttfamily quda}.
   \end{itemize}
 %
 \item {\ttfamily CLOVERDET}:
 \begin{itemize}
 	\item {\ttfamily csw}
-	\item {\ttfamily UseExternalInverter} 
-	Equal to either {\ttfamily no} (default value) or {\ttfamily quda}.
 	\item {\ttfamily UseExternalLibrary} 
 	Equal to either {\ttfamily no} (default value) or {\ttfamily quda}.
 \end{itemize}
@@ -466,16 +466,13 @@ Each of them has different options
   \item {\ttfamily Name}: 
     a name to be assigned to the monomial. 
     The default is {\ttfamily DETRATIO}
+  \item {\ttfamily UseExternalInverter} 
+  Equal to either {\ttfamily no} (default value) or {\ttfamily quda}.
   \end{itemize}
 %
 \item {\ttfamily CLOVERDETRATIO}: 
   see {\ttfamily CLOVERDET} and {\ttfamily DETRATIO}.
-  \begin{itemize}
-    \item {\ttfamily UseExternalInverter} 
-  Equal to either {\ttfamily no} (default value) or {\ttfamily quda}.
-  \item {\ttfamily UseExternalLibrary} 
-  Equal to either {\ttfamily no} (default value) or {\ttfamily quda}.
-  \end{itemize}
+ 
 %
 \item {\ttfamily GAUGE}: 
   \begin{itemize}
