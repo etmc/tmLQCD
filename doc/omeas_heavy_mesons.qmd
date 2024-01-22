@@ -176,10 +176,12 @@ The correlator is:
 \begin{equation}
 \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
 =
+\operatorname{Tr} \left[
 S_\ell(0|x) 
 (\sigma_1)^{1-i} P_i \Gamma_1
 S_h(x|0)
 P_j (\sigma_1)^{1-j} \Gamma_2
+\right]
 \end{equation}
 <!--  -->
 
