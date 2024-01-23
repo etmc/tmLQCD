@@ -256,7 +256,7 @@ D_{ij} \psi_{j} = \eta_{i} \, \implies
 \psi_{i} = S_{ij} \eta_{j} \, .
 \end{equation}
 
-If $\eta_i \eta_i^{*} = 1$ we have:
+If $\eta_i \eta_j^{*} = \delta_{ij}$ we have:
 
 \begin{equation}
 S_{ij} = \psi_{i} \eta_{j}^{*} \, .
@@ -268,8 +268,9 @@ We can also use **index dilution** in order to select the components we want. In
 
 \begin{equation}
 S_{ab} = S_{ij} \delta_{i}^{a} \delta_{j}^{b} = 
-S_{ij} (\eta* \delta_{i}^{a}) (\eta \delta_{j}^{b}) =
-(\psi_{i}^{(b)})^{*} \eta_{i}^{a} = \psi^{(b)} \cdot \eta^{(a)} \, .
+S_{ij} (\eta^{*} \delta_{i}^{a}) (\eta \delta_{j}^{b}) =
+\psi_{i}^{(b)} (\eta_{i}^{a})^{*} 
+= \eta^{(a)} \cdot \psi^{(b)} \, .
 \end{equation}
 
 </details>
@@ -289,7 +290,7 @@ Additionally, we use:
     \begin{equation}
     \eta^{(\alpha)}_{\beta, c} = 
     \eta_c \, \delta^\alpha_\beta \,\, , \, \, 
-    \eta^\dagger_c \eta_c = 1 \, .
+    \eta_c \otimes \eta^\dagger_c = \mathbb{1}_{N_c \times N_c} \, .
     \end{equation}
     <!--  -->
 - Flavor dilution: sources have an additional flavor index $\phi$, such that their flavor component different from the index vanish. The value of the flavor component however is the same, it changes only its position in the doublet:
@@ -319,22 +320,53 @@ Therefore, we can approximate the correlators of eq. \eqref{eq:C.hihj.Gamma1Gamm
 =
 &
 \left(
-    (\psi_h)^{(f_j, \alpha_2)}(x) 
-    \cdot 
     \eta^{(f_i, \alpha_1)}(0)
+    \cdot 
+    \psi_h^{(f_j, \alpha_2)}(x) 
 \right)
 (\Gamma_2 \gamma_5)_{\alpha_2 \alpha_3}
 \\
 &
 \left(
-    (\psi_u)^{(0, \alpha_4)}(x) 
-    \cdot 
     \eta^{(0, \alpha_3)}(0)
+    \cdot 
+    \psi_u^{(0, \alpha_4)}(x) 
 \right)
 (\gamma_5 \Gamma_1)_{\alpha_4 \alpha_1}
 \end{split}
 \end{equation}
 <!--  -->
+
+In our case $\Gamma_{1/2} = 1, \gamma_5$, so that $\Gamma_i \gamma_5$ is diagonal in the Dirac indices.
+Thus the correlator can be written as (explicit summation over the indices):
+
+<!--  -->
+\begin{equation}
+\begin{split}
+\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
+=
+&
+\sum_{\alpha_{1}, \alpha_{2}}
+\left(
+    \eta^{(f_i, \alpha_1)}(0)
+    \cdot 
+    \psi_h^{(f_j, \alpha_2)}(x) 
+\right)
+(\Gamma_2 \gamma_5)_{\alpha_2 \alpha_2}
+\\
+&
+\left(
+    \eta^{(0, \alpha_2)}(0)
+    \cdot 
+    \psi_u^{(0, \alpha_1)}(x) 
+\right)
+(\gamma_5 \Gamma_1)_{\alpha_1 \alpha_1}
+\end{split}
+\end{equation}
+<!--  -->
+
+
+
 
 </details>
 
