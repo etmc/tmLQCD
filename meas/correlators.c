@@ -292,7 +292,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 #endif
 	
 	/* heavy-light correlators variables */
-	// sign change bilinear^\dagger, with Gamma = 1,gamma_
+	// sign change bilinear^\dagger, with Gamma = 1,gamma_5
 	double eta_Gamma[2] = {1.0, -1.0};
 
 	// even-odd spinor fields for the light and heavy doublet correlators
@@ -904,11 +904,12 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 }
 
 void correlators_measurement(const int traj, const int id, const int ieo) {
-	//light_correlators_measurement(traj, id, ieo);
 	
 	// ??? maybe add a double check? does i1 --> light and i2 --> heavy?
 	if (measurement_list[id].measure_heavy_mesons == 1) {
 		const int i1 = 0, i2 = 1;
 		heavy_correlators_measurement(traj, id, ieo, i1, i2);
 	}
+
+	light_correlators_measurement(traj, id, ieo);
 }
