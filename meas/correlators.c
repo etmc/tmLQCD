@@ -682,7 +682,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 								for (size_t g2 = 0; g2 < 2; g2++) {
 									// heavy doublet spinor propagator
 									for (int alpha_1=0; alpha_1 < 4; alpha_1++){
-										spinor eta_h = arr_spinor[1][1][alpha_1][hj][hi][0];
+										spinor eta_h = arr_spinor[0][1][alpha_1][hj][hi][0];
 										spinor psi_u = arr_spinor[1][0][alpha_1][f0][f0][i];
 										for (int alpha_2=0; alpha_2 < 4; alpha_2++){
 											spinor eta_u = arr_spinor[0][0][alpha_2][f0][f0][0];
