@@ -659,33 +659,52 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 				for (i = j; i < j + LX * LY * LZ; i++) {
 					for (size_t beta = 0; beta < 4; beta++) {  // spin dilution
 						spinor psi_u = arr_spinor[1][0][beta][f0][f0][i];
+						spinor eta_u = arr_spinor[0][0][beta][f0][f0][0];
 						
 						res += _spinor_prod_re(psi_u, psi_u);
 						_gamma0(phi, psi_u);
 						respa += _spinor_prod_re(psi_u, phi);
 						_gamma5(phi, phi);
 						resp4 += _spinor_prod_im(psi_u, phi);
+					}
+					
+					// diagonal elements of Gamma_i*gamma_5
+					double diag_G1g5[4] = {1.0, 1.0, 1.0, 1.0};
+					double diag_G2g5[4] = {1.0, 1.0, 1.0, 1.0};
 						
-						for (size_t hi = 0; hi < 2; hi++) {
-							for (size_t hj = 0; hj < 2; hj++) {
-								for (size_t g1 = 0; g1 < 2; g1++) {
-									for (size_t g2 = 0; g2 < 2; g2++) {
-										double dum = 0.0;  // dummy variable
-											
-										// heavy doublet spinor propagator
-										phi = arr_spinor[1][1][beta][hj][hi][i];
-										if (g1 == 0) {  // Gamma_1 = \mathbb{1}
-											_gamma5(phi, phi);
-										}
-										_spinor_scalar_prod(dum, psi_u, phi);
-											
-										double sign_beta = +1.0;
-										if (g2 == 0 /* Gamma_2 == \mathbb{1} */ && beta >= 2) {
-											sign_beta = -1.0;
-										}
-										res_hihj_g1g2[hi][hj][g1][g2] += sign_beta * dum;
-									}
+					for (size_t hi = 0; hi < 2; hi++) {
+						for (size_t hj = 0; hj < 2; hj++) {
+							for (size_t g1 = 0; g1 < 2; g1++) {
+								if (g1 == 0) {  // Gamma_1 = \mathbb{1}
+									diag_G1g5[2] = -1;
+									diag_G1g5[3] = -1;
 								}
+								for (size_t g2 = 0; g2 < 2; g2++) {
+									// heavy doublet spinor propagator
+									for (int alpha_1=0; alpha_1 < 4; alpha_1++){
+										spinor eta_h = arr_spinor[1][1][alpha_1][hj][hi][0];
+										spinor psi_u = arr_spinor[1][0][alpha_1][f0][f0][i];
+										for (int alpha_2=0; alpha_2 < 4; alpha_2++){
+											spinor eta_u = arr_spinor[0][0][alpha_2][f0][f0][0];
+											double dum1 = 0.0;  // dummy variable
+											_spinor_scalar_prod(dum1, eta_u, psi_u);
+											double dum2 = 0.0;  // dummy variable
+											spinor psi_h = arr_spinor[1][1][alpha_2][hj][hi][i];
+											if (g2 == 0) {  // Gamma_2 = \mathbb{1}
+												diag_G2g5[2] = -1.0;
+												diag_G2g5[3] = -1.0;
+											}
+											_spinor_scalar_prod(dum2, eta_h, psi_h);
+											res_hihj_g1g2[hi][hj][g1][g2] += dum2*diag_G2g5[alpha_2]*dum1*diag_G1g5[alpha_1];
+										}
+									}
+									// restoring to default
+									diag_G2g5[2] = 1.0;
+									diag_G2g5[3] = 1.0;
+								}
+								// restoring to default
+								diag_G1g5[2] = 1.0;
+								diag_G1g5[3] = 1.0;
 							}
 						}
 						
