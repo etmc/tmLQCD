@@ -70,6 +70,22 @@ CXX=mpiCC \
 \end{verbatim}
 Note that a {\ttfamily C++} compiler is required for linking against the QUDA library, therefore set {\ttfamily CXX} appropriately. {\ttfamily \${QUDADIR}} is where you installed QUDA in the previous step and {\ttfamily \${CUDADIR}} is required again for linking.
 
+\subsubsection{QUDA versions}
+
+If you need a version of QUDA after https://github.com/lattice/quda/commit/50864ffde1bd8f46fd4a2a2b2e6d44a5a588e2c2 you nee to configure with 
+\begin{verbatim}
+  --enable-quda_experimental=yes
+\end{verbatim}
+
+If you need a version of QUDA before \url{https://github.com/lattice/quda/commit/fd50676db06fc36efb3a791a3059c57cca70bb55} you need to add in the configuration script the option
+\begin{verbatim}
+  --enable-quda_fermionic_forces=no
+\end{verbatim}
+so that the wrapper to the QUDA fermionic forces is not compiled,
+thus if \texttt{--enable-quda_fermionic_forces=no} setting {\ttfamily UseExternalLibrary=yes} in the inputfile for the {\ttfamily  CLOVERDET, CLOVERDETRATIO} monomials
+is not supported and tmLQCD will stop with an error.
+
+
 \subsubsection{Usage}
 Any main program that reads and handles the operator declaration from an input file can easily be set up to use the QUDA inverter by setting the {\ttfamily UseExternalInverter} flag to {\ttfamily quda}. For example, in the input file for the {\ttfamily invert} executable, add the flag to the operator declaration as
 \begin{verbatim}

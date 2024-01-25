@@ -250,7 +250,7 @@ int init_monomials(const int V, const int even_odd_flag) {
         init_swpm(VOLUME);
         if(monomial_list[i].external_library==QUDA_LIB){
           if(monomial_list[i].solver_params.external_inverter != QUDA_INVERTER){
-            tm_debug_printf(0,0,"Error:  CLOVERDET monomial of UseExternalLibrary = quda is not supported without UseExternalInverter = quda\n");
+            tm_debug_printf(0,0,"Error: CLOVERDET monomial of UseExternalLibrary = quda is not supported without UseExternalInverter = quda\n");
             exit(1);
           }
         }
@@ -279,7 +279,7 @@ int init_monomials(const int V, const int even_odd_flag) {
         init_swpm(VOLUME);
         if(monomial_list[i].external_library==QUDA_LIB){
           if(monomial_list[i].solver_params.external_inverter != QUDA_INVERTER){
-            tm_debug_printf(0,0,"Error:  CLOVERDETRATIO monomial of UseExternalLibrary = quda is not supported without UseExternalInverter = quda\n");
+            tm_debug_printf(0,0,"Error: CLOVERDETRATIO monomial of UseExternalLibrary = quda is not supported without UseExternalInverter = quda\n");
             exit(1);
           }
         }

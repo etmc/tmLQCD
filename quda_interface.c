@@ -2541,6 +2541,7 @@ void compute_gauge_derivative_quda(monomial * const mnl, hamiltonian_field_t * c
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 }
 
+#ifdef TM_QUDA_FERMIONIC_FORCES
 void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf, spinor * const X_o, spinor * const phi, int detratio) {
   tm_stopwatch_push(&g_timers, __func__, "");
   
@@ -2582,7 +2583,12 @@ void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t
   }
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 }
-
+#else 
+void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf, spinor * const X_o, spinor * const phi, int detratio) {
+  tm_debug_printf(0,0,"Error:   UseExternalLibrary = quda requires that tmLQCD is compiled with --enable-quda_fermionic=yes\n");
+  exit(1);
+}
+#endif
 
 
 void  compute_WFlow_quda(const double eps, const double tmax, const int traj, FILE* outfile){
