@@ -317,7 +317,7 @@ Therefore, we can approximate the correlators of eq. \eqref{eq:C.hihj.Gamma1Gamm
 \begin{equation}
 \begin{split}
 \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
-=
+&=
 \left(
     \eta^{(f_i, \alpha_1)}(0)
     \cdot 
@@ -328,37 +328,39 @@ Therefore, we can approximate the correlators of eq. \eqref{eq:C.hihj.Gamma1Gamm
     \eta^{(0, \alpha_3)}(0)
     \cdot 
     \psi_u^{(0, \alpha_4)}(x) 
-\right)
+\right)^{*}
+(\gamma_5 \Gamma_1)_{\alpha_4 \alpha_1}
+\\
+&= 
+(\psi_h)_{f_i, \alpha_1}^{(f_j, \alpha_2)}(x) 
+(\Gamma_2 \gamma_5)_{\alpha_2 \alpha_3}
+(\psi_u)_{\alpha_3}^{(0, \alpha_4)}(x)^{*}
 (\gamma_5 \Gamma_1)_{\alpha_4 \alpha_1}
 \end{split}
 \end{equation}
 <!--  -->
 
-In our case $\Gamma_{1/2} = 1, \gamma_5$, so that $\Gamma_i \gamma_5$ is diagonal in the Dirac indices.
-Thus the correlator can be written as (explicit summation over the indices):
+In the end we have:
 
-<!--  -->
 \begin{equation}
-\begin{split}
 \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
 =
-\sum_{\alpha_{1}, \alpha_{2}}
-\left(
-    \eta^{(f_i, \alpha_1)}(0)
-    \cdot 
-    \psi_h^{(f_j, \alpha_2)}(x) 
-\right)
-(\Gamma_2 \gamma_5)_{\alpha_2 \alpha_2}
-\left(
-    \eta^{(0, \alpha_2)}(0)
-    \cdot 
-    \psi_u^{(0, \alpha_1)}(x) 
-\right)
-(\gamma_5 \Gamma_1)_{\alpha_1 \alpha_1}
-\end{split}
+[\Gamma_2 \gamma_5  (\psi_u)^{(0, \alpha_2)}(x)^{*}]_{\alpha_1}
+[\gamma_5 \Gamma_1 (\psi_h)_{f_i}^{(f_j, \alpha_1)}(x) ]_{\alpha_2}
 \end{equation}
-<!--  -->
 
+In our case $\Gamma_{1,2}  = 1,\gamma_5$. Since we use the chiral basis ${\Gamma_{1,2}^{*} = (\Gamma_{1,2}^{T})^\dagger = \Gamma_{1,2}}$. 
+Therefore we can equivalently write the correlator as:
+
+\begin{equation}
+\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
+=
+[\Gamma_2 \gamma_5  (\psi_u)^{(0, \alpha_2)}(x)]^{*}_{\alpha_1}
+\cdot 
+[\gamma_5 \Gamma_1 (\psi_h)_{f_i}^{(f_j, \alpha_1)}(x) ]_{\alpha_2} \,
+\end{equation}
+
+where $\cdot$  is the dot product in color space (NOTE: it complex-conjugates the 1st vector).
 
 
 
