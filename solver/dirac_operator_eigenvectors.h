@@ -265,6 +265,14 @@ int cyclicDiff(int a,int b, int period);
 	   conj((r).s3.c2) * (s).s3.c2;
 
 
+
+#define _colorvec_scalar_prod(proj,r,s)\
+  (proj) = conj((r).c0) * (s).c0 + \
+	   conj((r).c1) * (s).c1; + \
+	   conj((r).c2) * (s).c2;
+
+
+
 #define PROJECTSPLIT(p_plus,up_plus,col_proj,phi_o,phi_plus,col_phi)\
         p_plus = 0; \
 	p_plus += conj(up_plus->s0.col_proj) * (phi_o->s0.col_phi); \
