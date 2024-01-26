@@ -318,15 +318,12 @@ Therefore, we can approximate the correlators of eq. \eqref{eq:C.hihj.Gamma1Gamm
 \begin{split}
 \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
 =
-&
 \left(
     \eta^{(f_i, \alpha_1)}(0)
     \cdot 
     \psi_h^{(f_j, \alpha_2)}(x) 
 \right)
 (\Gamma_2 \gamma_5)_{\alpha_2 \alpha_3}
-\\
-&
 \left(
     \eta^{(0, \alpha_3)}(0)
     \cdot 
@@ -345,7 +342,6 @@ Thus the correlator can be written as (explicit summation over the indices):
 \begin{split}
 \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
 =
-&
 \sum_{\alpha_{1}, \alpha_{2}}
 \left(
     \eta^{(f_i, \alpha_1)}(0)
@@ -353,8 +349,6 @@ Thus the correlator can be written as (explicit summation over the indices):
     \psi_h^{(f_j, \alpha_2)}(x) 
 \right)
 (\Gamma_2 \gamma_5)_{\alpha_2 \alpha_2}
-\\
-&
 \left(
     \eta^{(0, \alpha_2)}(0)
     \cdot 
