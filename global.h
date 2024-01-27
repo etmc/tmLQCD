@@ -194,7 +194,7 @@ EXTERN su3_32 ** g_gauge_field_copy_32;
 
 EXTERN su3adj ** moment;
 EXTERN su3adj ** df0;
-EXTERN su3adj ** ddummy;
+EXTERN su3adj ** ddummy, ** debug_derivative;
 
 EXTERN int count00,count01,count10,count11,count20,count21;
 EXTERN double g_kappa, g_c_sw, g_beta;

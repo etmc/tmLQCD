@@ -203,6 +203,9 @@
 /* Using experimental QUDA version */
 #undef TM_QUDA_EXPERIMENTAL
 
+/* Using QUDA fermionic forces */
+#undef TM_QUDA_FERMIONIC_FORCES
+
 /* Using DDalphaAMG */
 #undef DDalphaAMG
 
