@@ -13,7 +13,9 @@ The QUDA interface has been designed with the following goals in mind, sorted by
 \begin{enumerate}
 	\item \emph{Safety.} Naturally, highest priority is given to the correctness of the output of the interface. 
 	This is trivially achieved by always checking the final residual on the CPU with the default tmLQCD routines.
-\item \emph{Ease of use.} Within the operator declarations of the input file (between {\ttfamily BeginOperator} and {\ttfamily EndOperator}) a simple flag {\ttfamily UseExternalInverter} is introduced which, when set to {\ttfamily quda}, will let QUDA perform the inversion of that operator. The operators {\ttfamily TMWILSON, WILSON, DBTMWILSON} and {\ttfamily CLOVER, DBCLOVER} are supported. In the HMC, the same flag can be used to offload solves for the \texttt{DET, DETRATIO, CLOVERDET, CLOVERDETRATIO, RAT, RATCOR, NDRAT, NDRATCOR, NDCLOVERRAT} and \texttt{NDCLOVERRATCOR} monomials.
+\item \emph{Ease of use.} Within the operator declarations of the input file (between {\ttfamily BeginOperator} and {\ttfamily EndOperator}) a simple flag {\ttfamily UseExternalInverter} is introduced which, when set to {\ttfamily quda}, will let QUDA perform the inversion of that operator. The operators {\ttfamily TMWILSON, WILSON, DBTMWILSON} and {\ttfamily CLOVER, DBCLOVER} are supported. 
+    Within the monomial declarations of the input file (between {\ttfamily BeginMonomial} and {\ttfamily EndMonomial}) the same flag can be used to offload solves for the \texttt{DET, DETRATIO, CLOVERDET, CLOVERDETRATIO, RAT, RATCOR, NDRAT, NDRATCOR, NDCLOVERRAT} and \texttt{NDCLOVERRATCOR} monomials in the HMC.
+    Further, the flag {\ttfamily UseExternalLibrary} is introduced which, when set to {\ttfamily quda}, will let QUDA perform the force calculation for the given monomial with support currently limited to {\ttfamily GAUGE, CLOVERDET, CLOVERDETRATIO}.
 	\item \emph{Minimality.} Minimal changes in the form of {\ttfamily \#ifdef QUDA} precompiler directives to the tmLQCD code base. The main bulk of the interface lies in a single separate file {\ttfamily quda\_interface.c} (with corresponding header file). The QUDA interface is entered .
 	\item \emph{Performance.} The higher priority of the previous items results in small performance detriments. In particular:
 	\begin{itemize}
@@ -67,6 +69,22 @@ CXX=mpiCC \
 --with-cudadir=${CUDADIR}/lib
 \end{verbatim}
 Note that a {\ttfamily C++} compiler is required for linking against the QUDA library, therefore set {\ttfamily CXX} appropriately. {\ttfamily \${QUDADIR}} is where you installed QUDA in the previous step and {\ttfamily \${CUDADIR}} is required again for linking.
+
+\subsubsection{QUDA versions}
+
+If you need a version of QUDA after https://github.com/lattice/quda/commit/50864ffde1bd8f46fd4a2a2b2e6d44a5a588e2c2 you nee to configure with 
+\begin{verbatim}
+  --enable-quda_experimental=yes
+\end{verbatim}
+
+If you need a version of QUDA before \url{https://github.com/lattice/quda/commit/fd50676db06fc36efb3a791a3059c57cca70bb55} you need to add in the configuration script the option
+\begin{verbatim}
+  --enable-quda_fermionic_forces=no
+\end{verbatim}
+so that the wrapper to the QUDA fermionic forces is not compiled,
+thus if \texttt{--enable-quda_fermionic_forces=no} setting {\ttfamily UseExternalLibrary=yes} in the inputfile for the {\ttfamily  CLOVERDET, CLOVERDETRATIO} monomials
+is not supported and tmLQCD will stop with an error.
+
 
 \subsubsection{Usage}
 Any main program that reads and handles the operator declaration from an input file can easily be set up to use the QUDA inverter by setting the {\ttfamily UseExternalInverter} flag to {\ttfamily quda}. For example, in the input file for the {\ttfamily invert} executable, add the flag to the operator declaration as

@@ -28,7 +28,7 @@
 #include "su3adj.h"
 #include "sse.h"
 
-su3adj * mo=NULL, *df=NULL, *du=NULL;
+su3adj * mo=NULL, *df=NULL, *du=NULL, *du_internal=NULL;
 
 int init_moment_field(const int V, const int VR) {
   int i = 0;
@@ -94,6 +94,27 @@ int init_moment_field(const int V, const int VR) {
     ddummy[i] = ddummy[i-1]+4;
   }
 
+  if(g_debug_level>3){
+    if((void*)(du_internal = (su3adj*)calloc(4*VR+1, sizeof(su3adj))) == NULL) {
+      printf ("malloc errno : %d\n",errno); 
+      errno = 0;
+      return(5);
+    }
+    if((void*)(debug_derivative = (su3adj**)calloc(VR,sizeof(su3adj*))) == NULL) {
+      printf ("malloc errno : %d\n",errno); 
+      errno = 0;
+      return(6);
+    }
+#if ( defined SSE || defined SSE2 || defined SSE3)
+    debug_derivative[0] = (su3adj*)(((unsigned long int)(du_internal)+ALIGN_BASE)&~ALIGN_BASE);
+#else
+    debug_derivative[0] = du_internal;
+#endif
+    
+    for(i = 1; i < VR; i++){
+      debug_derivative[i] = debug_derivative[i-1]+4;
+    }
+  }
   return(0);
 }
 
