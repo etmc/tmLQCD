@@ -1147,7 +1147,6 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   // IMPORTANT: use opposite TM mu-flavor since gamma5 -> -gamma5
   inv_param.mu           = -g_mubar /2./g_kappa;
   inv_param.epsilon      =  g_epsbar/2./g_kappa;
-  // FIXME: in principle, there is also QUDA_TWIST_DEG_DOUBLET
   inv_param.twist_flavor =  QUDA_TWIST_NONDEG_DOUBLET; 
   inv_param.Ls = 2;
 
@@ -1178,17 +1177,21 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
 
   // choose solver
   if(solver_flag == BICGSTAB) {
-    if(g_proc_id == 0) {printf("# TM_QUDA: Using BiCGstab!\n"); fflush(stdout);}
     inv_param.inv_type = QUDA_BICGSTAB_INVERTER;
+    if(g_proc_id == 0) {printf("# TM_QUDA: Using BiCGstab!\n"); fflush(stdout);}
   }
   else {
     /* Here we invert the hermitean operator squared */
     inv_param.inv_type = QUDA_CG_INVERTER;
     if(g_proc_id == 0) {
       printf("# TM_QUDA: Using mixed precision CG!\n");
-      printf("# TM_QUDA: mu = %.12f, kappa = %.12f\n", g_mu/2./g_kappa, g_kappa);
       fflush(stdout);
     }
+  }
+  if(g_proc_id == 0) {
+    printf("# TM_QUDA: mubar = %.12f, epsbar = %.12f, kappa = %.12f, csw = %.12f\n", 
+           -inv_param.mu, inv_param.epsilon, inv_param.kappa, inv_param.clover_coeff/inv_param.kappa);
+    fflush(stdout);
   }
 
   if( even_odd_flag ) {
