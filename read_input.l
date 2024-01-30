@@ -2334,6 +2334,14 @@ static inline double fltlist_next_token(int * const list_end){
     if(myverbose) printf("  Use QPhiX inverter line %d monomial %d\n", line_of_file, current_monomial);
     mnl->solver_params.external_inverter = NO_EXT_INV;
   }
+  {SPC}*UseExternalLibrary{EQL}no {
+    mnl->external_library = NO_EXT_LIB;
+    if(myverbose) printf("  UseExternalLibrary set to false in line %d, monomial %d\n", line_of_file, current_monomial);
+  }
+  {SPC}*UseExternalLibrary{EQL}quda {
+    mnl->external_library = QUDA_LIB;
+    if(myverbose) printf("  UseExternalLibrary set to quda in line %d, monomial %d\n", line_of_file, current_monomial);
+  }
   {SPC}*UseSloppyPrecision{EQL}yes {
     if(myverbose) printf("  Use sloppy precision (single) in the inverter (if supported) line %d monomial %d\n", line_of_file, current_monomial);
     mnl->solver_params.sloppy_precision = SLOPPY_SINGLE;

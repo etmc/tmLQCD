@@ -44,48 +44,11 @@
 #include "monomial/monomial.h"
 #include "hamiltonian_field.h"
 #include "gauge_monomial.h"
+#include "compare_derivative.h"
 #include "fatal_error.h"
 #ifdef TM_USE_QUDA
 #include "quda_interface.h"
 #endif
-
-/* this function compares the gauge derivative calculated by an external library and tmLQCD */
-void compare_derivative(monomial *mnl, su3adj **ext_lib, su3adj **native ){
-  const double threshold = 1e-7;
-  int n_diff = 0;
-
-  for(int ix = 0; ix < VOLUME; ix++){
-    for(int mu=0; mu<4; mu++){
-      double *ext=&(ext_lib[ix][mu].d1);
-      double *nat=&(native[ix][mu].d1);
-      for(int j=0; j<8; ++j){
-        double diff=(ext[j]-nat[j])/nat[j];
-        if (sqrt(diff*diff) > threshold){
-          n_diff++;
-          printf("gauge derivative relative deviation %e at (t,x,y,z,mu,j) %d,%d,%d,%d,%d,%d on proc_id %d, ext: %e, native: %e\n", 
-                 diff,
-                 g_coord[ix][0], g_coord[ix][1], g_coord[ix][2], g_coord[ix][3], mu, j,
-                 g_proc_id,
-                 ext[j], nat[j]);
-        }
-      }
-    }
-  }
-  if(n_diff > 0){
-    printf("gauge_derivative: the relative deviation between tmLQCD and the external library "
-           "exceeds the threshold %.1e in %d case(s) for parameters: c0=%e c1=%e g_beta=%e on proc_id: %d\n",
-           threshold,
-           n_diff,
-           mnl->c0,
-           mnl->c1,
-           mnl->beta,
-           g_proc_id);
-
-    if(g_strict_residual_check) fatal_error("Difference between external library and tmLQCD-native function!", 
-                                            "gauge_derivative");
-  }
-}
-
 
 /* this function calculates the derivative of the momenta: equation 13 of Gottlieb */
 void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
@@ -107,7 +70,7 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
      hf->derivative=ddummy;
      mnl->external_library=NO_EXT_LIB;
      gauge_derivative(id, hf);
-     compare_derivative(mnl,given, ddummy);
+     compare_derivative(mnl, given, ddummy, 1e-9, "gauge_derivative");
      mnl->external_library=QUDA_LIB;
      hf->derivative=given;
     }

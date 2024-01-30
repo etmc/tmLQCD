@@ -159,7 +159,9 @@ QudaEigParam eig_param;
 // pointer to the QUDA gaugefield
 double *gauge_quda[4];
 
-QudaGaugeParam  f_gauge_param;
+
+// re-initialized each time by _initMomQuda()
+QudaGaugeParam  f_gauge_param; 
 // pointer to the QUDA momentum field
 double *mom_quda[4];
 double *mom_quda_reordered[4];
@@ -1145,7 +1147,6 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   // IMPORTANT: use opposite TM mu-flavor since gamma5 -> -gamma5
   inv_param.mu           = -g_mubar /2./g_kappa;
   inv_param.epsilon      =  g_epsbar/2./g_kappa;
-  // FIXME: in principle, there is also QUDA_TWIST_DEG_DOUBLET
   inv_param.twist_flavor =  QUDA_TWIST_NONDEG_DOUBLET; 
   inv_param.Ls = 2;
 
@@ -1176,17 +1177,21 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
 
   // choose solver
   if(solver_flag == BICGSTAB) {
-    if(g_proc_id == 0) {printf("# TM_QUDA: Using BiCGstab!\n"); fflush(stdout);}
     inv_param.inv_type = QUDA_BICGSTAB_INVERTER;
+    if(g_proc_id == 0) {printf("# TM_QUDA: Using BiCGstab!\n"); fflush(stdout);}
   }
   else {
     /* Here we invert the hermitean operator squared */
     inv_param.inv_type = QUDA_CG_INVERTER;
     if(g_proc_id == 0) {
       printf("# TM_QUDA: Using mixed precision CG!\n");
-      printf("# TM_QUDA: mu = %.12f, kappa = %.12f\n", g_mu/2./g_kappa, g_kappa);
       fflush(stdout);
     }
+  }
+  if(g_proc_id == 0) {
+    printf("# TM_QUDA: mubar = %.12f, epsbar = %.12f, kappa = %.12f, csw = %.12f\n", 
+           -inv_param.mu, inv_param.epsilon, inv_param.kappa, inv_param.clover_coeff/inv_param.kappa);
+    fflush(stdout);
   }
 
   if( even_odd_flag ) {
@@ -2104,11 +2109,12 @@ int invert_eo_degenerate_quda(spinor * const out,
 
   int iterations = 0;
 
+  void *spinorIn  = (void*)in; // source
+  void *spinorOut = (void*)out; // solution
+
   // it returns if quda is already init
   _initQuda();
 
-  void *spinorIn  = (void*)in; // source
-  void *spinorOut = (void*)out; // solution
 
   if ( rel_prec )
     inv_param.residual_type = QUDA_L2_RELATIVE_RESIDUAL;
@@ -2203,6 +2209,10 @@ int invert_eo_degenerate_quda(spinor * const out,
     invertQuda(spinorOut, spinorOut, &inv_param);
     tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
     reorder_spinor_eo_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
+    inv_param.mu = -inv_param.mu;
+#ifdef TM_QUDA_EXPERIMENTAL
+    inv_param.tm_rho = -inv_param.tm_rho;
+#endif
   } else {
     reorder_spinor_eo_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
   }
@@ -2511,11 +2521,6 @@ void compute_gauge_derivative_quda(monomial * const mnl, hamiltonian_field_t * c
     else
       loop_coeff[i] = -0.66666666666 * g_beta * mnl->c1;
   }
-  
-  #pragma omp parallel for
-  for(int i = 0; i < 4; i++){
-    memset(mom_quda[i], 0, VOLUME*10*sizeof(double));
-  }
 
   reorder_gauge_toQuda(hf->gaugefield, NO_COMPRESSION);
   // the reordering above overwrites gauge_quda
@@ -2538,6 +2543,56 @@ void compute_gauge_derivative_quda(monomial * const mnl, hamiltonian_field_t * c
 
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 }
+
+#ifdef TM_QUDA_FERMIONIC_FORCES
+void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf, spinor * const X_o, spinor * const phi, int detratio) {
+  tm_stopwatch_push(&g_timers, __func__, "");
+  
+  _initQuda();
+  _initMomQuda();
+  void *spinorIn;
+  void *spinorPhi;
+  
+  spinorIn  = (void*)X_o;
+  reorder_spinor_eo_toQuda((double*)spinorIn, inv_param.cpu_prec, 0, 1);
+  if (detratio){
+    spinorPhi  = (void*)phi;
+    reorder_spinor_eo_toQuda((double*)spinorPhi, inv_param.cpu_prec, 0, 1);
+  }
+
+  _loadGaugeQuda(mnl->solver_params.compression_type);
+  _loadCloverQuda(&inv_param);
+  tm_stopwatch_push(&g_timers, "computeTMCloverForceQuda", ""); 
+  
+  const int nvector = 1; // number of rational approximants
+  double coeff[1] = {4.*mnl->kappa*mnl->kappa}; // minus because in p(QUDA)=-Y (tmLQCD) , the factor 4 is experimentally observed
+  
+  inv_param.kappa= mnl->kappa;
+  inv_param.clover_csw= mnl->c_sw;
+  inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION;
+  // when using QUDA MG the following parameter need to be set 
+  inv_param.matpc_type = QUDA_MATPC_ODD_ODD_ASYMMETRIC;
+  inv_param.dagger = QUDA_DAG_YES;
+  computeTMCloverForceQuda(mom_quda, &spinorIn, &spinorPhi, coeff,  nvector, &f_gauge_param,   &inv_param, detratio);
+
+  tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
+  
+  reorder_mom_fromQuda(mom_quda);
+  add_mom_to_derivative(hf->derivative);
+
+  // we always need to restore the source
+  if (detratio){
+    reorder_spinor_eo_fromQuda((double*)spinorPhi, inv_param.cpu_prec, 0, 1);
+  }
+  tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
+}
+#else 
+void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf, spinor * const X_o, spinor * const phi, int detratio) {
+  tm_debug_printf(0,0,"Error:   UseExternalLibrary = quda requires that tmLQCD is compiled with --enable-quda_fermionic=yes\n");
+  exit(1);
+}
+#endif
+
 
 void  compute_WFlow_quda(const double eps, const double tmax, const int traj, FILE* outfile){
   tm_stopwatch_push(&g_timers, __func__, "");
