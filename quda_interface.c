@@ -1160,8 +1160,9 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
                             precision,
                             max_iter,
                             0 /* not a single parity solve */,
-                            1);
-  inv_param.dagger = QUDA_DAG_YES;
+                            0 /* not a QpQm solve */);
+  // in contrast to the HMC we always want QUDA_DAG_NO here
+  inv_param.dagger = QUDA_DAG_NO;
 
   // reorder spinor
   reorder_spinor_toQuda( (double*)spinorIn,   inv_param.cpu_prec, 1 );
@@ -1680,6 +1681,7 @@ void _setTwoFlavourSolverParam(const double kappa, const double c_sw, const doub
   // solver (for example in the HMC or when doing light and heavy inversions)
   if( solver_type != MG ){
     inv_param.inv_type_precondition = QUDA_INVALID_INVERTER;
+    inv_param.preconditioner = NULL;
   }
 
   // direct or norm-op. solve
