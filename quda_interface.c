@@ -1142,14 +1142,6 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   else
     inv_param.residual_type = QUDA_L2_ABSOLUTE_RESIDUAL;
 
-  inv_param.kappa = g_kappa;
-
-  // IMPORTANT: use opposite TM mu-flavor since gamma5 -> -gamma5
-  inv_param.mu           = -g_mubar /2./g_kappa;
-  inv_param.epsilon      =  g_epsbar/2./g_kappa;
-  inv_param.twist_flavor =  QUDA_TWIST_NONDEG_DOUBLET; 
-  inv_param.Ls = 2;
-
   // figure out which BC to use (theta, trivial...)
   set_boundary_conditions(&compression, &gauge_param);
 
@@ -1159,59 +1151,17 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   // load gauge after setting precision
    _loadGaugeQuda(compression);
 
-  // choose dslash type
-  if( g_c_sw > 0.0 ) {
-    inv_param.dslash_type = QUDA_TWISTED_CLOVER_DSLASH;
-    inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN; // FIXME: note sure if this is the correct PC type
-    inv_param.solution_type = QUDA_MAT_SOLUTION;
-    inv_param.clover_order = QUDA_PACKED_CLOVER_ORDER;
-    inv_param.clover_coeff = g_c_sw*g_kappa;
-    inv_param.compute_clover = 1;
-    inv_param.compute_clover_inverse = 1;
-  }
-  else {
-    inv_param.dslash_type = QUDA_TWISTED_MASS_DSLASH;
-    inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN_ASYMMETRIC;
-    inv_param.solution_type = QUDA_MAT_SOLUTION;
-  }
-
-  // choose solver
-  if(solver_flag == BICGSTAB) {
-    inv_param.inv_type = QUDA_BICGSTAB_INVERTER;
-    if(g_proc_id == 0) {printf("# TM_QUDA: Using BiCGstab!\n"); fflush(stdout);}
-  }
-  else {
-    /* Here we invert the hermitean operator squared */
-    inv_param.inv_type = QUDA_CG_INVERTER;
-    if(g_proc_id == 0) {
-      printf("# TM_QUDA: Using mixed precision CG!\n");
-      fflush(stdout);
-    }
-  }
-  if(g_proc_id == 0) {
-    printf("# TM_QUDA: mubar = %.12f, epsbar = %.12f, kappa = %.12f, csw = %.12f\n", 
-           -inv_param.mu, inv_param.epsilon, inv_param.kappa, inv_param.clover_coeff/inv_param.kappa);
-    fflush(stdout);
-  }
-
-  if( even_odd_flag ) {
-    inv_param.solve_type = QUDA_NORMERR_PC_SOLVE;
-    if(g_proc_id == 0) printf("# TM_QUDA: Using EO preconditioning!\n");
-  }
-  else {
-    inv_param.solve_type = QUDA_NORMERR_SOLVE;
-    if(g_proc_id == 0) printf("# TM_QUDA: Not using EO preconditioning!\n");
-  }
-
-  inv_param.tol = sqrt(precision);
-  inv_param.maxiter = max_iter;
-
-  if( g_c_sw > 0.0 ){
-    _loadCloverQuda(&inv_param);
-  }
-  
-  // while the other solver interfaces may need to set this to QUDA_DAG_YES, we
-  // always want to set it to QUDA_DAG_NO
+  _setTwoFlavourSolverParam(g_kappa,
+                            g_c_sw,
+                            g_mubar,
+                            g_epsbar,
+                            solver_flag,
+                            even_odd_flag,
+                            precision,
+                            max_iter,
+                            0 /* not a single parity solve */,
+                            0 /* not a QpQm solve */);
+  // in contrast to the HMC we always want QUDA_DAG_NO here
   inv_param.dagger = QUDA_DAG_NO;
 
   // reorder spinor
@@ -1731,6 +1681,7 @@ void _setTwoFlavourSolverParam(const double kappa, const double c_sw, const doub
   // solver (for example in the HMC or when doing light and heavy inversions)
   if( solver_type != MG ){
     inv_param.inv_type_precondition = QUDA_INVALID_INVERTER;
+    inv_param.preconditioner = NULL;
   }
 
   // direct or norm-op. solve
