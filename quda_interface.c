@@ -2545,7 +2545,7 @@ void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t
 #endif
 
 
-void  compute_WFlow_quda(const double eps, const double tmax, const int traj, FILE* outfile){
+void compute_WFlow_quda(const double eps, const double tmax, const double t0, const int traj, const int restart, FILE* outfile){
   tm_stopwatch_push(&g_timers, __func__, "");
   
   _initQuda();
@@ -2553,9 +2553,15 @@ void  compute_WFlow_quda(const double eps, const double tmax, const int traj, FI
 
   QudaGaugeSmearParam wflow_params = newQudaGaugeSmearParam();
   wflow_params.smear_type = QUDA_GAUGE_SMEAR_WILSON_FLOW; 
-  wflow_params.n_steps = (int)(tmax / eps) + 3; 
+  wflow_params.n_steps = round((tmax - t0) / eps); 
   wflow_params.epsilon = eps;
   wflow_params.meas_interval = 1;
+  if (restart) {
+    wflow_params.restart = QUDA_BOOLEAN_YES;
+  } else {
+    wflow_params.restart = QUDA_BOOLEAN_NO;
+  }
+  wflow_params.t0 = t0;
 
   int n_meas= wflow_params.n_steps / wflow_params.meas_interval + 1 ;
   QudaGaugeObservableParam *obs_param;
@@ -2574,7 +2580,7 @@ void  compute_WFlow_quda(const double eps, const double tmax, const int traj, FI
   tm_debug_printf(0, 3, "traj t P Eplaq Esym tsqEplaq tsqEsym Wsym Qsym\n");  
 
   for(int i=1; i< wflow_params.n_steps; i+=2){  
-    const double t1 = i*eps;
+    const double t1 = t0 + i*eps;
     const double P = obs_param[i].plaquette[0];
     const double E0 = obs_param[i-1].energy[0]; // E(t=t0)
     const double E1 = obs_param[i].energy[0]; // E(t=t1)
