@@ -58,7 +58,7 @@ double * eigenvls = NULL;
 double max_eigenvalue;
 double * inv_eigenvls = NULL;
 int eigenvalues_for_cg_computed = 0;
-int no_eigenvalues, evlength;
+int nr_eigenvalues, evlength;
 
 /* the folowing two are needed for the overlap */
 double ev_minev=-1., ev_qnorm=-1.;
@@ -102,7 +102,7 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
   char eigenvalue_prefix[512];
 
 
-  no_eigenvalues = *nr_of_eigenvalues;
+  nr_eigenvalues = *nr_of_eigenvalues;
 
   sprintf(eigenvector_prefix,"eigenvector.%%s.%%.2d.%%.4d");
   sprintf(eigenvalue_prefix,"eigenvalues.%%s.%%.4d");
@@ -246,7 +246,7 @@ double eigenvalues(int * nr_of_eigenvalues, const int max_iterations,
   }
 
   (*nr_of_eigenvalues) = converged;
-  no_eigenvalues = converged;
+  nr_eigenvalues = converged;
   ev_minev = eigenvls[(*nr_of_eigenvalues)-1];
   eigenvalues_for_cg_computed = converged;
 

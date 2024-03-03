@@ -35,18 +35,6 @@
 #include "block.h"
 #include "little_field_gather.h"
 
-enum{
-  T_UP = 0,
-  T_DN = 1,
-  X_UP = 2,
-  X_DN = 3,
-  Y_UP = 4,
-  Y_DN = 5,
-  Z_UP = 6,
-  Z_DN = 7
-} Direction;
-
-
 #ifdef TM_USE_MPI
 MPI_Request lrequests[16];
 MPI_Status lstatus[16];
