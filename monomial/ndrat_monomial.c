@@ -105,6 +105,44 @@ void print_spinor_updow_shift( double** up, double** down,   int odd, int num_sh
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
 }      
 
+void print_spinor_updow( double* up, double* down,   int odd , int shift) {
+  tm_stopwatch_push(&g_timers, __func__, "");
+
+  const int change_sign[4] = {-1, 1, 1, -1};
+  const int change_spin[4] = {3, 2, 1, 0};
+  const int Vh = VOLUME/2;
+
+  // now copy and reorder from tempSpinor to spinor
+  
+  for(int ud = 0; ud < 2; ud++){
+    double *sp;
+    if (ud==0) sp=up;
+    if (ud==1) sp=down;
+    for( int x0=0; x0<T; x0++ )
+      for( int x1=0; x1<LX; x1++ )
+        for( int x2=0; x2<LY; x2++ )
+          for( int x3=0; x3<LZ; x3++ ) {
+            const int q_eo_idx = (x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0)/2;
+            const int tm_eo_idx = (x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0)/2;
+
+            const int oddBit = (x0+x1+x2+x3) & 1;
+            if( oddBit == odd ){
+              for(int tm_spin = 0; tm_spin < 4; tm_spin++){
+                for(int col = 0; col < 3; col++){
+                  if (g_proc_id==0) printf("MARCOfrom TMLQCD (%d %d %d %d),  %d %d, s=%d  ud=%d    %g  %g\n",x0,x1,x2,x3, tm_spin, col ,
+                    shift, ud,
+                    sp[24*tm_eo_idx + 6*tm_spin + 2*col + 0],
+                    sp[24*tm_eo_idx + 6*tm_spin + 2*col + 1]);
+                }
+              }
+            }
+  
+  }
+  }
+  tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
+}      
+
+
 void set_spinor_updow_shift( double** up, double** down,   int odd, int num_shifts) {
   tm_stopwatch_push(&g_timers, __func__, "");
 
@@ -242,8 +280,8 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   #endif // no other option, TM_USE_QUDA already checked by solver
   }
   else{
-    print_spinor_updow_shift(  g_chi_up_spinor_field,  g_chi_dn_spinor_field,   1, mnl->rat.np);
-    for(int j = (mnl->rat.np-1); j > -1; j--) {
+    print_spinor_updow_shift( g_chi_up_spinor_field, g_chi_dn_spinor_field,   1, mnl->rat.np);
+    for(int j = 0; j < mnl->rat.np; j++) {
       if(mnl->type == NDCLOVERRAT) {
         // multiply with Q_h * tau^1 + i mu_j to get Y_j,o (odd sites)
         // needs phmc_Cpol = 1 to work for ndrat!
@@ -259,6 +297,7 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
         H_eo_sw_ndpsi(mnl->w_fields[2], mnl->w_fields[3], 
           g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j]);
         tm_stopwatch_pop(&g_timers, 0, 1, "");
+        // print_spinor_updow( mnl->w_fields[2], mnl->w_fields[3],   0, j);
 
       } else {
         // multiply with Q_h * tau^1 + i mu_j to get Y_j,o (odd sites)
