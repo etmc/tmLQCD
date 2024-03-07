@@ -136,7 +136,7 @@ identifiers:
     value: "10.22323/1.430.0340"
     description: "Twisted mass ensemble generation on GPU machines"
 repository-code: 'https://github.com/etmc/tmLQCD'
-doi: "10.1016/j.cpc.2009.05.016, 10.22323/1.187.0416, 10.22323/1.187.0414, 10.1016/j.cpc.2018.10.013, 10.1103/PhysRevD.94.114509, 10.22323/1.430.0340"
+## doi: "10.1016/j.cpc.2009.05.016, 10.22323/1.187.0416, 10.22323/1.187.0414, 10.1016/j.cpc.2018.10.013, 10.1103/PhysRevD.94.114509, 10.22323/1.430.0340"
 abstract: >-
   tmLQCD is a freely available software suite providing a
   set of tools to be used in lattice QCD simulations. This
