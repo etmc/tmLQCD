@@ -964,6 +964,16 @@ if test $enable_quda_experimental = yes; then
 else
   AC_MSG_RESULT(no)
 fi
+AC_MSG_CHECKING(whether the QUDA force is enabled)
+AC_ARG_ENABLE(quda_fermionic_forces,
+  AS_HELP_STRING([--enable-quda_fermionic_forces], [enable support for fermionic forces using QUDA [default=yes]]),
+  enable_quda_fermionic_forces=$enableval, enable_quda_fermionic_forces=yes)
+if test $enable_quda_fermionic_forces = no; then
+  AC_MSG_RESULT(no)
+else
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(TM_QUDA_FERMIONIC_FORCES,1, fermionic forces with QUDA are enabled)
+fi
 
 # QPhiX library for Intel Xeon and Xeon Phis
 AC_MSG_CHECKING(whether we want to use QPhiX)

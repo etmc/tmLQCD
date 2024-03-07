@@ -1733,9 +1733,32 @@ static inline double fltlist_next_token(int * const list_end){
     quda_input.mg_setup_2kappamu = c;
     if(myverbose) printf("  MGSetup2KappaMu set to %e line %d\n", quda_input.mg_setup_2kappamu, line_of_file);
   }
+  /* TODO: the MGSetupSolver should be set on a per-level basis
+           allowing communication-avoiding solvers to be used
+           on the coarser grids */
   {SPC}*MGSetupSolver{EQL}cg {
     quda_input.mg_setup_inv_type = QUDA_CG_INVERTER;
     if(myverbose) printf("  MGSetupSolver set to CG line %d\n", line_of_file);
+  }
+  {SPC}*MGSetupSolver{EQL}cgne {
+    quda_input.mg_setup_inv_type = QUDA_CGNE_INVERTER;
+    if(myverbose) printf("  MGSetupSolver set to CGNE line %d\n", line_of_file);
+  }
+  {SPC}*MGSetupSolver{EQL}cgnr {
+    quda_input.mg_setup_inv_type = QUDA_CGNE_INVERTER;
+    if(myverbose) printf("  MGSetupSolver set to CGNR line %d\n", line_of_file);
+  }
+  {SPC}*MGSetupSolver{EQL}cacg {
+    quda_input.mg_setup_inv_type = QUDA_CA_CG_INVERTER;
+    if(myverbose) printf("  MGSetupSolver set to CA-CG line %d\n", line_of_file);
+  }
+  {SPC}*MGSetupSolver{EQL}cacgne {
+    quda_input.mg_setup_inv_type = QUDA_CA_CGNE_INVERTER;
+    if(myverbose) printf("  MGSetupSolver set to CA-CGNE line %d\n", line_of_file);
+  }
+  {SPC}*MGSetupSolver{EQL}cacgnr {
+    quda_input.mg_setup_inv_type = QUDA_CA_CGNR_INVERTER;
+    if(myverbose) printf("  MGSetupSolver set to CA-CGNR line %d\n", line_of_file);
   }
   {SPC}*MGSetupSolver{EQL}bicgstab {
     quda_input.mg_setup_inv_type = QUDA_BICGSTAB_INVERTER;
@@ -1814,6 +1837,14 @@ static inline double fltlist_next_token(int * const list_end){
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     quda_input.mg_reset_setup_mdu_threshold = c;
     if(myverbose) printf("  MGResetSetupMDUThreshold set to %f line %d\n", quda_input.mg_reset_setup_mdu_threshold, line_of_file);
+  }
+  {SPC}*MGCoarseGuess{EQL}yes {
+    quda_input.mg_coarse_guess = QUDA_BOOLEAN_YES;
+    if(myverbose) printf("  MGCoarseGuess set to YES in line %d\n", line_of_file);
+  }
+  {SPC}*MGCoarseGuess{EQL}no {
+    quda_input.mg_coarse_guess = QUDA_BOOLEAN_NO;
+    if(myverbose) printf("  MGCoarseGuess set to NO in line %d\n", line_of_file);
   }
   {SPC}*MGUseEigSolver{EQL}{STRLIST} {
     parse_quda_mg_bool_par_array(yytext, &(quda_input.mg_use_eig_solver[0]));
@@ -1906,14 +1937,6 @@ static inline double fltlist_next_token(int * const list_end){
     quda_input.mg_eig_preserve_deflation = QUDA_BOOLEAN_YES;
     if(myverbose) printf("  MGEigPreserveDeflationSubspace set to YES in line %d\n", line_of_file);
   }
-  {SPC}*MGEigSolverCoarseGuess{EQL}yes {
-    quda_input.mg_coarse_guess = QUDA_BOOLEAN_YES;
-    if(myverbose) printf("  MGEigSolverCoarseGuess set to YES in line %d\n", line_of_file);
-  }
-  {SPC}*MGEigSolverCoarseGuess{EQL}no {
-    quda_input.mg_coarse_guess = QUDA_BOOLEAN_NO;
-    if(myverbose) printf("  MGEigSolverCoarseGuess set to NO in line %d\n", line_of_file);
-  }
   {SPC}*MGEigSolverNumberOfVectors{EQL}{STRLIST} {
     parse_quda_mg_int_par_array(yytext, &(quda_input.mg_eig_nEv[0]));
   }
@@ -1961,6 +1984,15 @@ static inline double fltlist_next_token(int * const list_end){
   }
   {SPC}*MGSetupCABasisLambdaMax{EQL}{STRLIST} {
     parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_setup_ca_lambda_max[0]));
+  }
+  {SPC}*MGSmootherSolverCABasisType{EQL}{STRLIST} {
+    parse_quda_mg_cabasis_par_array(yytext, &(quda_input.mg_smoother_solver_ca_basis[0]));
+  }
+  {SPC}*MGSmootherSolverCABasisLambdaMin{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_smoother_solver_ca_lambda_min[0]));
+  }
+  {SPC}*MGSmootherSolverCABasisLambdaMax{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_smoother_solver_ca_lambda_max[0]));
   }
   {SPC}*MGCoarseSolverCABasisType{EQL}{STRLIST} {
     parse_quda_mg_cabasis_par_array(yytext, &(quda_input.mg_coarse_solver_ca_basis[0]));
@@ -2302,6 +2334,14 @@ static inline double fltlist_next_token(int * const list_end){
     if(myverbose) printf("  Use QPhiX inverter line %d monomial %d\n", line_of_file, current_monomial);
     mnl->solver_params.external_inverter = NO_EXT_INV;
   }
+  {SPC}*UseExternalLibrary{EQL}no {
+    mnl->external_library = NO_EXT_LIB;
+    if(myverbose) printf("  UseExternalLibrary set to false in line %d, monomial %d\n", line_of_file, current_monomial);
+  }
+  {SPC}*UseExternalLibrary{EQL}quda {
+    mnl->external_library = QUDA_LIB;
+    if(myverbose) printf("  UseExternalLibrary set to quda in line %d, monomial %d\n", line_of_file, current_monomial);
+  }
   {SPC}*UseSloppyPrecision{EQL}yes {
     if(myverbose) printf("  Use sloppy precision (single) in the inverter (if supported) line %d monomial %d\n", line_of_file, current_monomial);
     mnl->solver_params.sloppy_precision = SLOPPY_SINGLE;
@@ -2566,6 +2606,34 @@ static inline double fltlist_next_token(int * const list_end){
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->rec_ev = a;
     if(myverbose!=0) printf("  Frequency for computing EV's set to %d in line %d monomial %d\n", mnl->rec_ev, line_of_file, current_monomial);
+  }
+  {SPC}*UseExternalEigSolver{EQL}quda {
+    if(myverbose) printf("  Use Quda eigensolver line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->external_eigsolver = QUDA_EIGSOLVER;
+  }
+  {SPC}*UseExternalEigSolver{EQL}no {
+    if(myverbose) printf("  Do not use external eigensolver line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->external_eigsolver = NO_EXT_EIGSOLVER;
+  }
+  {SPC}*EigSolverPolyMin{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mnl->eig_amin = c;
+    if(myverbose!=0) printf("  Minimum eigenvalue to exclude using polynomial acceleration in eigensolver set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*EigSolverPolyMax{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mnl->eig_amax = c;
+    if(myverbose!=0) printf("  Maximum eigenvalues to exclude using polynomial acceleration in eigensolver set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*EigSolverPolynomialDegree{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mnl->eig_polydeg = a;
+    if(myverbose!=0) printf("  Degree of polynomial acceleration in eigensolver set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+  }
+  {SPC}*EigSolverKrylovSubspaceSize{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mnl->eig_n_kr = a;
+    if(myverbose!=0) printf("  Krylov subspace size for eigensolver set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
   }
 }
 <NDPOLYMONOMIAL,CLPOLYMONOMIAL>{
@@ -3809,6 +3877,7 @@ int read_input(char * conf_file){
   quda_input.fermionbc = TM_QUDA_THETABC;
   quda_input.pipeline = 0;
   quda_input.gcrNkrylov = 10;
+  quda_input.mg_coarse_guess = QUDA_BOOLEAN_NO;
   quda_input.reliable_delta = 1e-3; // anything smaller than this and we break down in double-half
   quda_input.mg_n_level = _default_quda_mg_n_level;
   quda_input.mg_setup_2kappamu = _default_quda_mg_setup_2kappamu;
@@ -3825,13 +3894,13 @@ int read_input(char * conf_file){
     quda_input.mg_smoother_tol[level] = _default_quda_mg_smoother_tol;
 
     quda_input.mg_n_vec[level] = _default_quda_mg_n_vec;
-    quda_input.mg_mu_factor[level] = 1.0;
+    quda_input.mg_mu_factor[level] = _default_quda_mg_mu_factor;
     quda_input.mg_coarse_solver_type[level] = QUDA_GCR_INVERTER;
-    quda_input.mg_smoother_type[level] = QUDA_MR_INVERTER ;
+    quda_input.mg_smoother_type[level] = QUDA_CA_GCR_INVERTER;
 
     quda_input.mg_use_eig_solver[level] = QUDA_BOOLEAN_NO;
     quda_input.mg_eig_preserve_deflation = QUDA_BOOLEAN_NO;
-    quda_input.mg_eig_tol[level] = 1.0e-3;
+    quda_input.mg_eig_tol[level] = 1.0e-6;
     quda_input.mg_eig_require_convergence[level] = QUDA_BOOLEAN_YES;
     quda_input.mg_eig_type[level] = QUDA_EIG_TR_LANCZOS;
     quda_input.mg_eig_spectrum[level] = QUDA_SPECTRUM_SR_EIG;
@@ -3843,6 +3912,8 @@ int read_input(char * conf_file){
     quda_input.mg_eig_poly_deg[level] = 100;
     quda_input.mg_eig_amin[level] = 1.0;
     quda_input.mg_eig_amax[level] = 5.0;
+    quda_input.mg_eig_nEv[level] = 0;
+    quda_input.mg_eig_nKr[level] = 0;
 
     quda_input.mg_setup_ca_basis[level] = QUDA_POWER_BASIS;
     quda_input.mg_setup_ca_basis_size[level] = 4;
@@ -3853,6 +3924,10 @@ int read_input(char * conf_file){
     quda_input.mg_coarse_solver_ca_basis_size[level] = 4;
     quda_input.mg_coarse_solver_ca_lambda_min[level] = 0.0;
     quda_input.mg_coarse_solver_ca_lambda_max[level] = -1.0;
+    
+    quda_input.mg_smoother_solver_ca_basis[level] = QUDA_POWER_BASIS;
+    quda_input.mg_smoother_solver_ca_lambda_min[level] = 0.0;
+    quda_input.mg_smoother_solver_ca_lambda_max[level] = -1.0;
 
     /* note: when the user does not specify any blocking parameters,
      * a reasonable set will be computed automatically in the MG setup

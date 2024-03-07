@@ -116,6 +116,7 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].solver_params.external_inverter = _default_external_inverter;
   monomial_list[no_monomials].solver_params.sloppy_precision = _default_operator_sloppy_precision_flag;
   monomial_list[no_monomials].external_library = _default_external_library;
+  monomial_list[no_monomials].external_eigsolver = _default_external_eigsolver;
   monomial_list[no_monomials].solver_params.refinement_precision = _default_operator_sloppy_precision_flag;
   monomial_list[no_monomials].HB_solver_params = monomial_list[no_monomials].solver_params;
   monomial_list[no_monomials].even_odd_flag = _default_even_odd_flag;
@@ -142,6 +143,11 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].StildeMax = _default_stilde_max;
   monomial_list[no_monomials].PrecisionHfinal = _default_g_acc_Hfin;
   monomial_list[no_monomials].PrecisionPtilde = _default_g_acc_Ptilde;
+
+  monomial_list[no_monomials].eig_polydeg = _default_eig_polydeg;
+  monomial_list[no_monomials].eig_amin = _default_eig_amin;
+  monomial_list[no_monomials].eig_amax = _default_eig_amax;
+  monomial_list[no_monomials].eig_n_kr = _default_eig_n_kr;
 
   monomial_list[no_monomials].rat.order = 12;
   monomial_list[no_monomials].rat.range[0] = _default_stilde_min;
@@ -242,6 +248,12 @@ int init_monomials(const int V, const int even_odd_flag) {
           monomial_list[i].Qm = &Qsw_full_minus_psi;
         }
         init_swpm(VOLUME);
+        if(monomial_list[i].external_library==QUDA_LIB){
+          if(monomial_list[i].solver_params.external_inverter != QUDA_INVERTER){
+            tm_debug_printf(0,0,"Error: CLOVERDET monomial of UseExternalLibrary = quda is not supported without UseExternalInverter = quda\n");
+            exit(1);
+          }
+        }
         clover_monomials[no_clover_monomials] = i;
         no_clover_monomials++;
         if(g_proc_id == 0 && g_debug_level > 1) {
@@ -265,6 +277,12 @@ int init_monomials(const int V, const int even_odd_flag) {
         monomial_list[i].Qp = &Qsw_plus_psi;
         monomial_list[i].Qm = &Qsw_minus_psi;
         init_swpm(VOLUME);
+        if(monomial_list[i].external_library==QUDA_LIB){
+          if(monomial_list[i].solver_params.external_inverter != QUDA_INVERTER){
+            tm_debug_printf(0,0,"Error: CLOVERDETRATIO monomial of UseExternalLibrary = quda is not supported without UseExternalInverter = quda\n");
+            exit(1);
+          }
+        }
         if(g_proc_id == 0 && g_debug_level > 1) {
           printf("# Initialised monomial %s of type CLOVERDETRATIO, no_monomials= %d\n",
               monomial_list[i].name,
