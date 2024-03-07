@@ -7,7 +7,7 @@ message: >-
   If you use this software, please cite it using the
   metadata from this file.
 type: "software"
-version: "5.9.0"
+version: "5.9.1"
 authors:
   - given-names: "Carsten"
     family-names: "Urbach"
