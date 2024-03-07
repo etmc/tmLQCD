@@ -15,7 +15,7 @@ on:
   # See the events you can react to at https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows
   push:
     branches:
-      - master
+      - zenodo
   # NOTE: Do not delete the trigger on closed pull requests, the HERMES workflow needs this.
   pull_request:
     types:
