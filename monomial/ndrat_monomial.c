@@ -281,6 +281,8 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   }
   else{
     print_spinor_updow_shift( g_chi_up_spinor_field, g_chi_dn_spinor_field,   1, mnl->rat.np);
+    // TODO: check that we did not breack anything rearranging the loop
+    // for(int j = (mnl->rat.np-1); j > -1; j--) {
     for(int j = 0; j < mnl->rat.np; j++) {
       if(mnl->type == NDCLOVERRAT) {
         // multiply with Q_h * tau^1 + i mu_j to get Y_j,o (odd sites)
