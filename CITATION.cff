@@ -4,8 +4,8 @@
 cff-version: 1.2.0
 title: tmLQCD
 message: >-
-  "If you use this software, please cite it using the
-  metadata from this file."
+  If you use this software, please cite it using the
+  metadata from this file.
 type: "software"
 version: "5.9.0"
 authors:
@@ -18,8 +18,8 @@ authors:
     family-names: "Kostrzewa"
     email: "bkostrze@uni-bonn.de"
     affiliation: >-
-      "High Performance Computing and Analytics Lab,
-      University of Bonn"
+      High Performance Computing and Analytics Lab,
+      University of Bonn
     orcid: 'https://orcid.org/0000-0003-4434-6022'
   - given-names: "Siebren"
     family-names: "Reker"
@@ -118,8 +118,8 @@ identifiers:
   - type: "doi"
     value: "10.1016/j.cpc.2009.05.016"
     description: >-
-      "tmLQCD: A Program suite to simulate Wilson Twisted
-      mass Lattice QCD"
+      tmLQCD: A Program suite to simulate Wilson Twisted
+      mass Lattice QCD
   - type: "doi"
     value: "10.22323/1.187.0416"
     description: "Experiences with OpenMP in tmLQCD"
@@ -138,7 +138,7 @@ identifiers:
 repository-code: 'https://github.com/etmc/tmLQCD'
 #doi: "10.1016/j.cpc.2009.05.016", "10.22323/1.187.0416", "10.22323/1.187.0414", "10.1016/j.cpc.2018.10.013", "10.1103/PhysRevD.94.114509", "10.22323/1.430.0340"
 abstract: >-
-  "tmLQCD is a freely available software suite providing a
+  tmLQCD is a freely available software suite providing a
   set of tools to be used in lattice QCD simulations. This
   is mainly a HMC implementation (including PHMC and RHMC)
   for Wilson, Wilson Clover and Wilson twisted mass fermions
@@ -151,7 +151,7 @@ abstract: >-
   A key feature of tmLQCD is its easily human-readable input
   file format which also allows tmLQCD to be used as a piece
   of glue code from within other programs to employ the
-  solvers from these various libraries."
+  solvers from these various libraries.
 keywords:
   - "lattice QCD"
   - "HMC"
