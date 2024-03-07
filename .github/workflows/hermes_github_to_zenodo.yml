@@ -93,7 +93,8 @@ jobs:
           python-version: '3.10'
       - run: pip install hermes
 
-      - run: sudo apt-get update && sudo apt install latexmk texlive-base texlive-base-bin texlive-common texlive-latex-base texlive-latex-extra texlive-latex-recommended texlive-science texlive-binaries texlive-lang-english texlive-binaries texlive-bibtex-extra
+      - name: install LaTeX
+        - run: sudo apt-get update && sudo apt install latexmk texlive-base texlive-base-bin texlive-common texlive-latex-base texlive-latex-extra texlive-latex-recommended texlive-science texlive-binaries texlive-lang-english texlive-binaries texlive-bibtex-extra
 
       - run: cd doc && make
 
