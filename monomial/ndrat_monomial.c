@@ -90,19 +90,59 @@ void print_spinor_updow_shift( double** up, double** down,   int odd, int num_sh
 
             const int oddBit = (x0+x1+x2+x3) & 1;
             if( oddBit == odd ){
-              for(int q_spin = 0; q_spin < 4; q_spin++){
-                const int tm_spin = change_spin[q_spin];
+              for(int tm_spin = 0; tm_spin < 4; tm_spin++){
                 for(int col = 0; col < 3; col++){
-                  if (g_proc_id==0) printf("MARCOfrom TMLQCD (%d %d %d %d),  %d %d, s=%d  ud=%d    %g  %g\n",x0,x1,x2,x3, q_spin, col ,
+                  if (g_proc_id==0) printf("MARCOfrom TMLQCD (%d %d %d %d),  %d %d, s=%d  ud=%d    %g  %g\n",x0,x1,x2,x3, tm_spin, col ,
                     shift, ud,
-                    change_sign[q_spin]*sp[shift][24*tm_eo_idx + 6*tm_spin + 2*col + 0],
-                    change_sign[q_spin]*sp[shift][24*tm_eo_idx + 6*tm_spin + 2*col + 1 + Vh]);
+                    sp[shift][24*tm_eo_idx + 6*tm_spin + 2*col + 0],
+                    sp[shift][24*tm_eo_idx + 6*tm_spin + 2*col + 1]);
                 }
               }
             }
           }
   }
   }
+  tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
+}      
+
+void set_spinor_updow_shift( double** up, double** down,   int odd, int num_shifts) {
+  tm_stopwatch_push(&g_timers, __func__, "");
+
+  const int change_sign[4] = {-1, 1, 1, -1};
+  const int change_spin[4] = {3, 2, 1, 0};
+  const int Vh = VOLUME/2;
+
+  // now copy and reorder from tempSpinor to spinor
+  for(int shift = 0; shift < num_shifts; shift++){
+  for(int ud = 0; ud < 2; ud++){
+    double **sp;
+    if (ud==0) sp=up;
+    if (ud==1) sp=down;
+    for( int x0=0; x0<T; x0++ )
+      for( int x1=0; x1<LX; x1++ )
+        for( int x2=0; x2<LY; x2++ )
+          for( int x3=0; x3<LZ; x3++ ) {
+            const int q_eo_idx = (x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0)/2;
+            const int tm_eo_idx = (x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0)/2;
+
+            const int oddBit = (x0+x1+x2+x3) & 1;
+            if( oddBit == odd ){
+              for(int q_spin = 0; q_spin < 4; q_spin++){
+                const int tm_spin = change_spin[q_spin];
+                for(int col = 0; col < 3; col++){
+                    sp[shift][24*tm_eo_idx + 6*tm_spin + 2*col + 0]=0;
+                    sp[shift][24*tm_eo_idx + 6*tm_spin + 2*col + 1 + Vh]=0;
+                }
+              }
+            }
+          }
+  }
+  }
+  
+  up[0][24*0 + 6*0 + 2*0 + 0]=1;
+  up[0][24*0 + 6*0 + 2*0 + 1]=3;
+  up[0][24*0 + 6*0 + 2*1 + 0]=4;
+  down[0][24*0 + 6*0 + 2*0 + 0]=2;
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
 }      
 
@@ -155,8 +195,9 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   mnl->iter1 += solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
                              mnl->pf, mnl->pf2, &(mnl->solver_params) );
 
+  // set_spinor_updow_shift(  g_chi_up_spinor_field,  g_chi_dn_spinor_field,   1, mnl->rat.np);
 
-  if ( mnl->solver_params.external_inverter == QUDA_INVERTER){
+  if ( mnl->external_library == QUDA_LIB){
     if(!mnl->even_odd_flag) {
       fatal_error("QUDA support only even_odd_flag",__func__);
     }
@@ -185,17 +226,17 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
     if (g_debug_level > 3){
       su3adj **given = hf->derivative;
       hf->derivative = debug_derivative;
-      int store_solver = mnl->solver;
-      mnl->solver_params.external_inverter = NO_EXT_INV;
-      mnl->solver = CGMMSND;
+      // int store_solver = mnl->solver;
+      // mnl->solver_params.external_inverter = NO_EXT_INV;
+      // mnl->solver = CGMMSND;
+      mnl->external_library = NO_EXT_LIB;
       tm_debug_printf( 0, 3, "Recomputing the derivative from tmLQCD\n");
       ndrat_derivative(id, hf);
       #ifdef TM_USE_MPI
         xchange_deri(hf->derivative);// this function use ddummy inside
       #endif
-      compare_derivative(mnl, given, hf->derivative);
-      mnl->solver_params.external_inverter = QUDA_INVERTER;
-      mnl->solver = store_solver;
+      compare_derivative(mnl, given, hf->derivative, 1e-9, "ndrat_derivative");
+      mnl->external_library = QUDA_LIB;
       hf->derivative = given;
     }
   #endif // no other option, TM_USE_QUDA already checked by solver

@@ -2619,7 +2619,11 @@ void compute_ndcloverrat_derivative_quda(monomial * const mnl, hamiltonian_field
   
   inv_param.kappa= mnl->kappa;
   inv_param.clover_csw= mnl->c_sw;
-  computeTMCloverNdgForceQuda(mom_quda, spinorIn, &spinorPhi, coeff,  num_shifts, &f_gauge_param,   &inv_param, 0);
+  inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION;
+  // when using QUDA MG the following parameter need to be set 
+  inv_param.matpc_type = QUDA_MATPC_ODD_ODD_ASYMMETRIC;
+  inv_param.dagger = QUDA_DAG_YES;
+  computeTMCloverForceQuda(mom_quda, spinorIn, &spinorPhi, coeff,  num_shifts, &f_gauge_param,   &inv_param, 0);
 
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
   
