@@ -94,7 +94,7 @@ jobs:
       - run: pip install hermes
 
       - name: install LaTeX
-        run: sudo apt-get update && sudo apt install latexmk texlive-base texlive-base-bin texlive-common texlive-latex-base texlive-latex-extra texlive-latex-recommended texlive-science texlive-binaries texlive-lang-english texlive-binaries texlive-bibtex-extra
+        run: sudo apt-get update && sudo apt install latexmk texlive-base texlive-base-bin texlive-latex-base texlive-latex-extra texlive-latex-recommended texlive-science texlive-binaries texlive-lang-english texlive-binaries texlive-bibtex-extra
 
       - run: cd doc && make
 
