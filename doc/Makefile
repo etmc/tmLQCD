@@ -4,8 +4,7 @@ all: main.pdf
 
 
 main.pdf: $(wildcard *.tex) bibliography.bib Makefile
-	bibtex main
-	latexmk -bibtex -pdf -pdflatex="pdflatex -interaction=nonstopmode" -use-make main.tex
+	latexmk -f -bibtex -pdf -pdflatex="pdflatex -interaction=nonstopmode" -use-make main.tex
 
 clean:
 	latexmk -CA
