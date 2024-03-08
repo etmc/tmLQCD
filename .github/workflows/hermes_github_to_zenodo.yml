@@ -136,26 +136,26 @@ jobs:
       #       Please carefully review the changes and finally merge them into your
 
       # Delete all the curation branches
-      - run: |
-          for BRANCH in $(git ls-remote origin 'refs/heads/hermes/curate-*' | cut -f2 | cut -d'/' -f'3-'); do
-            git push origin --delete "$BRANCH"
-          done
+      ### - run: |
+      ###     for BRANCH in $(git ls-remote origin 'refs/heads/hermes/curate-*' | cut -f2 | cut -d'/' -f'3-'); do
+      ###       git push origin --delete "$BRANCH"
+      ###     done
       # TODO: if: failure() --- delete the curation branches when the deposition failed
 
 
-  hermes-cleanup:
-    name: Cleanup aborted curation branches
-    if: github.event.pull_request.merged == false && startsWith( github.base_ref , 'hermes/curate-')
+      ###  hermes-cleanup:
+      ###    name: Cleanup aborted curation branches
+      ###    if: github.event.pull_request.merged == false && startsWith( github.base_ref , 'hermes/curate-')
 
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write # Allow creation of new branches
-      pull-requests: write # Postprocessing should be able to create a pull request with changes
+      ###    runs-on: ubuntu-latest
+      ###    permissions:
+      ###      contents: write # Allow creation of new branches
+      ###      pull-requests: write # Postprocessing should be able to create a pull request with changes
 
-    steps:
-      - uses: actions/checkout@v3
-      # Delete all the curation branches
-      - run: |
-          for BRANCH in $(git ls-remote origin 'refs/heads/hermes/curate-*' | cut -f2 | cut -d'/' -f'3-'); do
-            git push origin --delete "$BRANCH"
-          done
+      ###    steps:
+      ###      - uses: actions/checkout@v3
+      ###      # Delete all the curation branches
+      ###      - run: |
+      ###          for BRANCH in $(git ls-remote origin 'refs/heads/hermes/curate-*' | cut -f2 | cut -d'/' -f'3-'); do
+      ###            git push origin --delete "$BRANCH"
+      ###          done
