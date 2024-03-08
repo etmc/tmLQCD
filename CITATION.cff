@@ -114,27 +114,27 @@ authors:
     orcid: 'https://orcid.org/0000-0002-7754-9590'
   - given-names: "Falk"
     family-names: "Zimmermann"
-identifiers:
-  - type: "doi"
-    value: "10.1016/j.cpc.2009.05.016"
-    description: >-
-      tmLQCD: A Program suite to simulate Wilson Twisted
-      mass Lattice QCD
-  - type: "doi"
-    value: "10.22323/1.187.0416"
-    description: "Experiences with OpenMP in tmLQCD"
-  - type: "doi"
-    value: "10.22323/1.187.0414"
-    description: "Recent developments in the tmLQCD software suite"
-  - type: "doi"
-    value: "10.1016/j.cpc.2018.10.013"
-    description: "Multigrid approach in shifted linear systems for the non-degenerated twisted mass operator"
-  - type: "doi"
-    value: "10.1103/PhysRevD.94.114509"
-    description: "Adaptive aggregation-based domain decomposition multigrid for twisted mass fermions"
-  - type: "doi"
-    value: "10.22323/1.430.0340"
-    description: "Twisted mass ensemble generation on GPU machines"
+## identifiers:
+##   - type: "doi"
+##     value: "10.22323/1.187.0416"
+##     description: "Experiences with OpenMP in tmLQCD"
+##   - type: "doi"
+##     value: "10.22323/1.187.0414"
+##     description: "Recent developments in the tmLQCD software suite"
+##   - type: "doi"
+##     value: "10.1016/j.cpc.2018.10.013"
+##     description: "Multigrid approach in shifted linear systems for the non-degenerated twisted mass operator"
+##   - type: "doi"
+##     value: "10.1103/PhysRevD.94.114509"
+##     description: "Adaptive aggregation-based domain decomposition multigrid for twisted mass fermions"
+##   - type: "doi"
+##     value: "10.22323/1.430.0340"
+##     description: "Twisted mass ensemble generation on GPU machines"
+##   - type: "doi"
+##     value: "10.1016/j.cpc.2009.05.016"
+##     description: >-
+##       tmLQCD: A Program suite to simulate Wilson Twisted
+##       mass Lattice QCD
 repository-code: 'https://github.com/etmc/tmLQCD'
 ## doi: "10.1016/j.cpc.2009.05.016, 10.22323/1.187.0416, 10.22323/1.187.0414, 10.1016/j.cpc.2018.10.013, 10.1103/PhysRevD.94.114509, 10.22323/1.430.0340"
 abstract: >-
