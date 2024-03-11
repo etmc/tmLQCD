@@ -1,0 +1,270 @@
+{
+  "@context": [
+    "https://doi.org/10.5063/schema/codemeta-2.0",
+    {
+      "hermes": "https://software-metadata.pub/ns/hermes/"
+    }
+  ],
+  "@type": "SoftwareSourceCode",
+  "author": [
+    {
+      "@id": "https://orcid.org/0000-0003-1412-7582",
+      "@type": "Person",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "HISKP, University of Bonn"
+      },
+      "familyName": "Urbach",
+      "givenName": "Carsten",
+      "email": "urbach@hiskp.uni-bonn.de"
+    },
+    {
+      "@id": "https://orcid.org/0000-0003-4434-6022",
+      "@type": "Person",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "High Performance Computing and Analytics Lab, University of Bonn"
+      },
+      "familyName": "Kostrzewa",
+      "givenName": "Bartosz",
+      "email": "bkostrze@uni-bonn.de"
+    },
+    {
+      "@type": "Person",
+      "familyName": "Reker",
+      "givenName": "Siebren"
+    },
+    {
+      "@type": "Person",
+      "familyName": "Deuzeman",
+      "givenName": "Albert"
+    },
+    {
+      "@id": "https://orcid.org/0000-0002-5532-450X",
+      "@type": "Person",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "Cyprus Institute"
+      },
+      "familyName": "Bacchio",
+      "givenName": "Simone",
+      "email": "s.bacchio@cyi.ac.cy"
+    },
+    {
+      "@id": "https://orcid.org/0000-0002-3058-1892",
+      "@type": "Person",
+      "familyName": "Schr\u00f6ck",
+      "givenName": "Mario"
+    },
+    {
+      "@id": "https://orcid.org/0000-0001-8337-7214",
+      "@type": "Person",
+      "familyName": "Abdel-Rehim",
+      "givenName": "Abdou"
+    },
+    {
+      "@id": "https://orcid.org/0000-0003-2341-1075",
+      "@type": "Person",
+      "familyName": "Ueding",
+      "givenName": "Martin"
+    },
+    {
+      "@id": "https://orcid.org/0000-0002-2122-2249",
+      "@type": "Person",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "University of Wuppertal"
+      },
+      "familyName": "Finkenrath",
+      "givenName": "Jacob",
+      "email": "j.finkenrath@cyi.ac.cy"
+    },
+    {
+      "@id": "https://orcid.org/0000-0002-4508-6421",
+      "@type": "Person",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "HISKP, University of Bonn"
+      },
+      "familyName": "Garofalo",
+      "givenName": "Marco",
+      "email": "garofalo@hiskp.uni-bonn.de"
+    },
+    {
+      "@id": "https://orcid.org/0000-0002-6509-447X",
+      "@type": "Person",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "HISKP, University of Bonn"
+      },
+      "familyName": "Romiti",
+      "givenName": "Simone",
+      "email": "sromiti@uni-bonn.de"
+    },
+    {
+      "@id": "https://orcid.org/0000-0003-4100-4289",
+      "@type": "Person",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "Cyprus Institute"
+      },
+      "familyName": "Pittler",
+      "givenName": "Ferenc",
+      "email": "f.pittler@cyi.ac.cy"
+    },
+    {
+      "@type": "Person",
+      "familyName": "Ammon",
+      "givenName": "Andreas"
+    },
+    {
+      "@type": "Person",
+      "familyName": "Baron",
+      "givenName": "Remi"
+    },
+    {
+      "@type": "Person",
+      "familyName": "Blossier",
+      "givenName": "Benoit"
+    },
+    {
+      "@type": "Person",
+      "familyName": "Burger",
+      "givenName": "Florian"
+    },
+    {
+      "@type": "Person",
+      "familyName": "Chiarappa",
+      "givenName": "Thomas"
+    },
+    {
+      "@type": "Person",
+      "familyName": "Christian",
+      "givenName": "Nils"
+    },
+    {
+      "@type": "Person",
+      "familyName": "Garcia Ramos",
+      "givenName": "Elena"
+    },
+    {
+      "@type": "Person",
+      "familyName": "Gonzalez Lopez",
+      "givenName": "Jennifer"
+    },
+    {
+      "@type": "Person",
+      "familyName": "Grosdidier",
+      "givenName": "Gilbert"
+    },
+    {
+      "@type": "Person",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "DESY, Zeuthen"
+      },
+      "familyName": "Jansen",
+      "givenName": "Karl"
+    },
+    {
+      "@type": "Person",
+      "familyName": "Labus",
+      "givenName": "Peter"
+    },
+    {
+      "@type": "Person",
+      "familyName": "Nagel",
+      "givenName": "Joseph"
+    },
+    {
+      "@type": "Person",
+      "familyName": "Palao",
+      "givenName": "David"
+    },
+    {
+      "@type": "Person",
+      "familyName": "Pene",
+      "givenName": "Olivier"
+    },
+    {
+      "@type": "Person",
+      "familyName": "Petschlies",
+      "givenName": "Marcus"
+    },
+    {
+      "@type": "Person",
+      "familyName": "Renner",
+      "givenName": "Dru"
+    },
+    {
+      "@id": "https://orcid.org/0000-0002-1333-745X",
+      "@type": "Person",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "INFN - Sezione Roma Tre "
+      },
+      "familyName": "Sanfilippo",
+      "givenName": "Francesco",
+      "email": "francesco.sanfilippo@infn.it"
+    },
+    {
+      "@type": "Person",
+      "familyName": "Scorzato",
+      "givenName": "Luigi"
+    },
+    {
+      "@type": "Person",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "HISKP, University of Bonn"
+      },
+      "familyName": "Sen",
+      "givenName": "Aniket",
+      "email": "sen@hiskp.uni-bonn.de"
+    },
+    {
+      "@type": "Person",
+      "familyName": "Shindler",
+      "givenName": "Andrea"
+    },
+    {
+      "@type": "Person",
+      "familyName": "Volkholz",
+      "givenName": "Jan"
+    },
+    {
+      "@id": "https://orcid.org/0000-0002-7754-9590",
+      "@type": "Person",
+      "affiliation": {
+        "@type": "Organization",
+        "legalName": "Institute for Theoretical Physics, University of Bern"
+      },
+      "familyName": "Wenger",
+      "givenName": "Urs",
+      "email": "wenger@itp.unibe.ch"
+    },
+    {
+      "@type": "Person",
+      "familyName": "Zimmermann",
+      "givenName": "Falk"
+    }
+  ],
+  "codeRepository": "https://github.com/etmc/tmLQCD",
+  "description": "tmLQCD is a freely available software suite providing a set of tools to be used in lattice QCD simulations. This is mainly a HMC implementation (including PHMC and RHMC) for Wilson, Wilson Clover and Wilson twisted mass fermions and inverter for different versions of the Dirac operator.  The code is fully parallelised using OpenMP and MPI and features interfaces to the lattice QCD libraries QPhiX, DDalphaAMG and QUDA, allowing their highly optimised operators and solvers to be used.\nA key feature of tmLQCD is its easily human-readable input file format which also allows tmLQCD to be used as a piece of glue code from within other programs to employ the solvers from these various libraries.",
+  "identifier": "https://doi.org/10.5072/zenodo.34084",
+  "keywords": [
+    "lattice QCD",
+    "HMC",
+    "RHMC",
+    "PHMC",
+    "twisted mass",
+    "wilson",
+    "clover",
+    "simulation",
+    "GPU"
+  ],
+  "license": "https://spdx.org/licenses/GPL-3.0-or-later",
+  "name": "tmLQCD",
+  "url": "https://github.com/etmc/tmLQCD",
+  "version": "5.9.3"
+}
