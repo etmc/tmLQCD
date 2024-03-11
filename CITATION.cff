@@ -137,8 +137,8 @@ authors:
 ##       mass Lattice QCD
 repository-code: 'https://github.com/etmc/tmLQCD'
 identifiers:
-  - type: "doi"
-    value: "10.5072/zenodo.34084"
+  - type: "url"
+    value: "https://sandbox.zenodo.org/records/34085"
     description: "Zenodo record"
 ## doi: "10.1016/j.cpc.2009.05.016, 10.22323/1.187.0416, 10.22323/1.187.0414, 10.1016/j.cpc.2018.10.013, 10.1103/PhysRevD.94.114509, 10.22323/1.430.0340"
 abstract: >-
