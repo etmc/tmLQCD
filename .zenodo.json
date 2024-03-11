@@ -1,0 +1,149 @@
+{
+  "creators": [
+    {
+      "affiliation": "HISKP, University of Bonn",
+      "name": "Urbach, Carsten",
+      "orcid": "0000-0003-1412-7582"
+    },
+    {
+      "affiliation": "High Performance Computing and Analytics Lab, University of Bonn",
+      "name": "Kostrzewa, Bartosz",
+      "orcid": "0000-0003-4434-6022"
+    },
+    {
+      "name": "Reker, Siebren"
+    },
+    {
+      "name": "Deuzeman, Albert"
+    },
+    {
+      "affiliation": "Cyprus Institute",
+      "name": "Bacchio, Simone",
+      "orcid": "0000-0002-5532-450X"
+    },
+    {
+      "name": "Schröck, Mario",
+      "orcid": "0000-0002-3058-1892"
+    },
+    {
+      "name": "Abdel-Rehim, Abdou",
+      "orcid": "0000-0001-8337-7214"
+    },
+    {
+      "name": "Ueding, Martin",
+      "orcid": "0000-0003-2341-1075"
+    },
+    {
+      "affiliation": "University of Wuppertal",
+      "name": "Finkenrath, Jacob",
+      "orcid": "0000-0002-2122-2249"
+    },
+    {
+      "affiliation": "HISKP, University of Bonn",
+      "name": "Garofalo, Marco",
+      "orcid": "0000-0002-4508-6421"
+    },
+    {
+      "affiliation": "HISKP, University of Bonn",
+      "name": "Romiti, Simone",
+      "orcid": "0000-0002-6509-447X"
+    },
+    {
+      "affiliation": "Cyprus Institute",
+      "name": "Pittler, Ferenc",
+      "orcid": "0000-0003-4100-4289"
+    },
+    {
+      "name": "Ammon, Andreas"
+    },
+    {
+      "name": "Baron, Remi"
+    },
+    {
+      "name": "Blossier, Benoit"
+    },
+    {
+      "name": "Burger, Florian"
+    },
+    {
+      "name": "Chiarappa, Thomas"
+    },
+    {
+      "name": "Christian, Nils"
+    },
+    {
+      "name": "Garcia Ramos, Elena"
+    },
+    {
+      "name": "Gonzalez Lopez, Jennifer"
+    },
+    {
+      "name": "Grosdidier, Gilbert"
+    },
+    {
+      "affiliation": "DESY, Zeuthen",
+      "name": "Jansen, Karl"
+    },
+    {
+      "name": "Labus, Peter"
+    },
+    {
+      "name": "Nagel, Joseph"
+    },
+    {
+      "name": "Palao, David"
+    },
+    {
+      "name": "Pene, Olivier"
+    },
+    {
+      "name": "Petschlies, Marcus"
+    },
+    {
+      "name": "Renner, Dru"
+    },
+    {
+      "affiliation": "INFN - Sezione Roma Tre ",
+      "name": "Sanfilippo, Francesco",
+      "orcid": "0000-0002-1333-745X"
+    },
+    {
+      "name": "Scorzato, Luigi"
+    },
+    {
+      "affiliation": "HISKP, University of Bonn",
+      "name": "Sen, Aniket"
+    },
+    {
+      "name": "Shindler, Andrea"
+    },
+    {
+      "name": "Volkholz, Jan"
+    },
+    {
+      "affiliation": "Institute for Theoretical Physics, University of Bern",
+      "name": "Wenger, Urs",
+      "orcid": "0000-0002-7754-9590"
+    },
+    {
+      "name": "Zimmermann, Falk"
+    }
+  ],
+  "description": "tmLQCD is a freely available software suite providing a set of tools to be used in lattice QCD simulations. This is mainly a HMC implementation (including PHMC and RHMC) for Wilson, Wilson Clover and Wilson twisted mass fermions and inverter for different versions of the Dirac operator.  The code is fully parallelised using OpenMP and MPI and features interfaces to the lattice QCD libraries QPhiX, DDalphaAMG and QUDA, allowing their highly optimised operators and solvers to be used.\nA key feature of tmLQCD is its easily human-readable input file format which also allows tmLQCD to be used as a piece of glue code from within other programs to employ the solvers from these various libraries.",
+  "keywords": [
+    "lattice QCD",
+    "HMC",
+    "RHMC",
+    "PHMC",
+    "twisted mass",
+    "wilson",
+    "clover",
+    "simulation",
+    "GPU"
+  ],
+  "license": {
+    "id": "GPL-3.0-or-later"
+  },
+  "title": "tmLQCD",
+  "version": "5.9.3"
+}
