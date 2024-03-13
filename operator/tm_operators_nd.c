@@ -722,7 +722,7 @@ void Q_test_epsilon(spinor * const l_strange, spinor * const l_charm,
 }
 
 
-void mul_one_pm_itau2(spinor * const p, spinor * const q,
+void mul_one_pm_itau2_and_div_by_sqrt2(spinor * const p, spinor * const q,
 		      spinor * const r, spinor * const s,
 		      const double sign, const int N) {
   double fac = 1./sqrt(2.);

@@ -75,13 +75,14 @@ static void set_default_filenames(char ** input_filename, char ** filename);
 int main(int argc, char *argv[])
 {
   FILE *parameterfile = NULL;
-  int j, i, ix = 0, isample = 0, op_id = 0;
+  int j, i; //, ix = 0, isample = 0, op_id = 0;
   char datafilename[206];
   char parameterfilename[206];
   char conf_filename[CONF_FILENAME_LENGTH];
   char * input_filename = NULL;
   char * filename = NULL;
   double plaquette_energy;
+
 
   init_critical_globals(TM_PROGRAM_OFFLINE_MEASUREMENT);  
 
@@ -292,7 +293,9 @@ int main(int argc, char *argv[])
       if (g_proc_id == 0) {
         fprintf(stdout, "#\n# Beginning offline measurement.\n");
       }
+			//printf("Ciao Simone4!\n");
       meas->measurefunc(nstore, imeas, even_odd_flag);
+			printf("Ciao Simone5!\n");
     }      
     nstore += Nsave;
   }
