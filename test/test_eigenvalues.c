@@ -25,7 +25,7 @@
  *******************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-#include "tmlqcd_config.h"
+# include<tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -82,7 +82,7 @@ int main(int argc,char *argv[]) {
   char datafilename[50];
   char parameterfilename[50];
   char gauge_filename[50];
-  char * nstore_filename = ".nstore_counter";
+  char * nstore_filename = "nstore_counter";
   char * input_filename = NULL;
   int rlxd_state[105];
   int j,ix,mu;

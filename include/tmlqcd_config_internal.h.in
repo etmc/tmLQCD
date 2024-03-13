@@ -1,6 +1,7 @@
-/* Hand-written "config.h.in". Note that it's no this file which should be
- * include, but rather the "tmlqcd_config.h" which renames a few of the defines
- * into static const variables. */
+/* Hand-written "config.h.in". Note that it's not this file which should be
+ * included, but rather the "tmlqcd_config.h" which renames a few of the defines
+ * into static const variables, following the convention used by the USQCD build
+ * systems, for example. */
 
 /* We are on a CRAY */
 #undef CRAY
@@ -190,9 +191,6 @@
 /* Define to 1 if non-blocking MPI calls for spinor and gauge should be used */
 #undef _NON_BLOCKING
 
-/* Define if we want to use CUDA GPU */
-#undef HAVE_GPU
-
 /* Define if we want to compute the LapH eigenvectors */
 #undef WITHLAPH
 
@@ -201,6 +199,12 @@
 
 /* Using QUDA GPU */
 #undef TM_USE_QUDA
+
+/* Using experimental QUDA version */
+#undef TM_QUDA_EXPERIMENTAL
+
+/* Using QUDA fermionic forces */
+#undef TM_QUDA_FERMIONIC_FORCES
 
 /* Using DDalphaAMG */
 #undef DDalphaAMG

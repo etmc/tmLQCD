@@ -18,15 +18,15 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-#include "tmlqcd_config.h"
+# include<tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
 #ifdef TM_USE_MPI
-#include <mpi.h>
+# include <mpi.h>
 #endif
 #ifdef _USE_SHMEM
-#include <mpp/shmem.h>
+# include <mpp/shmem.h>
 #endif
 #include "global.h"
 #include "read_input.h"
@@ -213,7 +213,8 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
   int dims[] = {0,0,0,0};
   int ndims = 0;
   int nalldims = 4;
-  int reorder = 1, namelen;
+  /* BK 2023/02/03 - for correct functioning on LUMI-G, we disable task reordering */
+  int reorder = 0, namelen;
   char processor_name[MPI_MAX_PROCESSOR_NAME];
 #endif
   g_proc_coords[0] = 0;

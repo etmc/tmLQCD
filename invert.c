@@ -24,9 +24,9 @@
  *
  *******************************************************************************/
 
-#include "lime.h"
+#include"lime.h"
 #ifdef HAVE_CONFIG_H
-#include "tmlqcd_config.h"
+# include<tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -38,7 +38,7 @@
 #include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
-#include <omp.h>
+# include <omp.h>
 #endif
 #include "global.h"
 #include "git_hash.h"
@@ -94,6 +94,7 @@
 #endif
 #include "meas/measurements.h"
 #include "source_generation.h"
+#include "misc_types.h"
 #include "expo.h"
 
 #define CONF_FILENAME_LENGTH 500
@@ -101,7 +102,7 @@
 extern int nstore;
 int check_geometry();
 
-static void usage();
+static void usage(const tm_ExitCode_t exit_code);
 static void process_args(int argc, char *argv[], char ** input_filename, char ** filename);
 static void set_default_filenames(char ** input_filename, char ** filename);
 static void invert_compute_modenumber();
@@ -117,6 +118,8 @@ int main(int argc, char *argv[])
   char * filename = NULL;
   double plaquette_energy;
   struct stout_parameters params_smear;
+
+  init_critical_globals(TM_PROGRAM_INVERT);
 
 #ifdef _KOJAK_INST
 #pragma pomp inst init
@@ -302,9 +305,12 @@ int main(int argc, char *argv[])
     }
 #ifdef TM_USE_MPI
     xchange_gauge(g_gauge_field);
+    update_tm_gauge_exchange(&g_gauge_state);
 #endif
     /*Convert to a 32 bit gauge field, after xchange*/
     convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND);
+    update_tm_gauge_exchange(&g_gauge_state_32);
+
     /*compute the energy of the gauge field*/
     plaquette_energy = measure_plaquette( (const su3**) g_gauge_field);
 
@@ -468,23 +474,26 @@ int main(int argc, char *argv[])
 #endif
 }
 
-static void usage()
+static void usage(tm_ExitCode_t exit_code)
 {
-  fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
-  fprintf(stdout, "Version %s \n\n", TMLQCD_PACKAGE_VERSION);
-  fprintf(stdout, "Please send bug reports to %s\n", TMLQCD_PACKAGE_BUGREPORT);
-  fprintf(stdout, "Usage:   invert [options]\n");
-  fprintf(stdout, "Options: [-f input-filename]\n");
-  fprintf(stdout, "         [-o output-filename]\n");
-  fprintf(stdout, "         [-v] more verbosity\n");
-  fprintf(stdout, "         [-h|-? this help]\n");
-  fprintf(stdout, "         [-V] print version information and exit\n");
-  exit(0);
+  if( g_proc_id == 0 ){
+    fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
+    fprintf(stdout, "Version %s \n\n", TMLQCD_PACKAGE_VERSION);
+    fprintf(stdout, "Please send bug reports to %s\n", TMLQCD_PACKAGE_BUGREPORT);
+    fprintf(stdout, "Usage:   invert [options]\n");
+    fprintf(stdout, "Options: [-f input-filename]\n");
+    fprintf(stdout, "         [-o output-filename]\n");
+    fprintf(stdout, "         [-v] more verbosity\n");
+    fprintf(stdout, "         [-V] print version information and exit\n");
+    fprintf(stdout, "         [-m] request MPI thread level 'single' or 'multiple' (default: 'single')\n");
+    fprintf(stdout, "         [-h|-? this help]\n");
+  }
+  exit(exit_code);
 }
 
 static void process_args(int argc, char *argv[], char ** input_filename, char ** filename) {
   int c;
-  while ((c = getopt(argc, argv, "h?vVf:o:")) != -1) {
+  while ((c = getopt(argc, argv, "h?vVf:o:m:")) != -1) {
     switch (c) {
       case 'f':
         *input_filename = calloc(200, sizeof(char));
@@ -501,14 +510,22 @@ static void process_args(int argc, char *argv[], char ** input_filename, char **
         if(g_proc_id == 0) {
           fprintf(stdout,"%s %s\n",TMLQCD_PACKAGE_STRING,git_hash);
         }
-        exit(0);
+        exit(TM_EXIT_SUCCESS);
+        break;
+      case 'm':
+        if( !strcmp(optarg, "single") ){
+          g_mpi_thread_level = TM_MPI_THREAD_SINGLE;
+        } else if ( !strcmp(optarg, "multiple") ) {
+          g_mpi_thread_level = TM_MPI_THREAD_MULTIPLE;
+        } else {
+          tm_debug_printf(0, 0, "[invert process_args]: invalid input for -m command line argument\n");
+          usage(TM_EXIT_INVALID_CMDLINE_ARG);
+        }
         break;
       case 'h':
       case '?':
       default:
-        if( g_proc_id == 0 ) {
-          usage();
-        }
+        usage(TM_EXIT_SUCCESS);
         break;
     }
   }

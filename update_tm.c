@@ -29,7 +29,7 @@
 
 #include <lime.h>
 #ifdef HAVE_CONFIG_H
-#include "tmlqcd_config.h"
+# include<tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -304,6 +304,9 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       if(g_proc_id == 0 && g_debug_level > 0) {
         fprintf(stdout, "# Reading done.\n");
       }
+      // when we've read back the gauge field, we do a large step
+      update_tm_gauge_id(&g_gauge_state, TM_GAUGE_PROPAGATE_THRESHOLD);
+      update_tm_gauge_id(&g_gauge_state_32, TM_GAUGE_PROPAGATE_THRESHOLD);
     }
     if(g_proc_id == 0) {
       fprintf(stdout, "# Reversibility check done.\n");
@@ -325,6 +328,11 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
         }
       }
     }
+    // su3 restoration should also trigger the updated gauge field to be
+    // propagated, but we're not too harsh here
+    // FIXME: this may need more thought
+    update_tm_gauge_id(&g_gauge_state, TM_GAUGE_PROPAGATE_MIN);
+    update_tm_gauge_id(&g_gauge_state_32, TM_GAUGE_PROPAGATE_MIN);
   }
   else { /* reject: copy gauge_tmp to hf.gaugefield */
 #ifdef TM_USE_OMP
@@ -337,6 +345,10 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
         _su3_assign(*v,*w);
       }
     }
+    // by default we use a large step here to make sure that any checks
+    // will result in the updated gauge field to be propagated
+    update_tm_gauge_id(&g_gauge_state, TM_GAUGE_PROPAGATE_THRESHOLD);
+    update_tm_gauge_id(&g_gauge_state_32, TM_GAUGE_PROPAGATE_THRESHOLD);
 #ifdef DDalphaAMG
     MG_reset();
 #endif
@@ -346,10 +358,14 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   g_update_gauge_copy_32 = 1;  
 #ifdef TM_USE_MPI
   xchange_gauge(hf.gaugefield);
+  update_tm_gauge_exchange(&g_gauge_state);
 #endif
   
   /*Convert to a 32 bit gauge field, after xchange*/
-  convert_32_gauge_field(g_gauge_field_32, hf.gaugefield, VOLUMEPLUSRAND + g_dbw2rand); 
+  convert_32_gauge_field(g_gauge_field_32, hf.gaugefield, VOLUMEPLUSRAND + g_dbw2rand);
+#ifdef TM_USE_MPI
+  update_tm_gauge_exchange(&g_gauge_state_32);
+#endif
   
   etime=gettime();
 

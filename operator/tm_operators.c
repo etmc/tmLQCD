@@ -25,7 +25,7 @@
  **************************************************************/
 
 #ifdef HAVE_CONFIG_H
-#include "tmlqcd_config.h"
+# include<tmlqcd_config.h>
 #endif
 #ifdef SSE2
 # undef SSE2
@@ -342,6 +342,12 @@ void Qtm_pm_psi(spinor * const l, spinor * const k){
   /* Q_{+} */
   H_eo_tm_inv_psi(g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX], EO, +1);
   tm_sub_H_eo_gamma5(l, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], OE, +1);
+}
+
+void Qtm_pm_psi_shift(spinor * const l, spinor * const k){
+  Qtm_pm_psi(l,k);  
+  assign_add_mul_r(l, k, g_shift, VOLUME/2);
+  return;
 }
 
 void Qtm_pm_sym_psi(spinor * const l, spinor * const k){

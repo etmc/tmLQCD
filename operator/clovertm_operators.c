@@ -20,7 +20,7 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-#include "tmlqcd_config.h"
+# include<tmlqcd_config.h>
 #endif
 #ifdef SSE
 # undef SSE
@@ -39,7 +39,7 @@
 #include <errno.h>
 #include <time.h>
 #ifdef TM_USE_MPI
-#include <mpi.h>
+# include <mpi.h>
 #endif
 #include "global.h"
 #include "su3.h"
@@ -74,7 +74,7 @@ su3 *** sw_inv;
 #define _PTSWITCH(s) s
 #define _PSWITCH(s) s
 
-#include "assign_mul_one_sw_pm_imu_site_lexic_body.c"
+#include"assign_mul_one_sw_pm_imu_site_lexic_body.c"
 
 #undef _F_TYPE
 #undef _PSWITCH
@@ -84,7 +84,7 @@ su3 *** sw_inv;
 #define _PTSWITCH(s) s ## 32
 #define _PSWITCH(s) s ## _32
 
-#include "assign_mul_one_sw_pm_imu_site_lexic_body.c"
+#include"assign_mul_one_sw_pm_imu_site_lexic_body.c"
 
 #undef _F_TYPE
 #undef _PSWITCH
@@ -241,6 +241,12 @@ void Qsw_pm_psi(spinor * const l, spinor * const k) {
   clover_inv(l, +1, g_mu); 
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+1], l);
   clover_gamma5(OO, l, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], +(g_mu + g_mu3));
+}
+
+void Qsw_pm_psi_shift(spinor * const l, spinor * const k){
+  Qsw_pm_psi(l,k);  
+  assign_add_mul_r(l, k, g_shift, VOLUME/2);
+  return;
 }
 
 // this is the clover Mhat with mu = 0

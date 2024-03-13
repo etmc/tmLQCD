@@ -82,22 +82,44 @@
 
 #ifndef QUDA_INTERFACE_H_
 #define QUDA_INTERFACE_H_
+
 #include "global.h"
 #include "su3.h"
 #include "solver/solver_params.h"
+#include "monomial/monomial.h"
+#include "hamiltonian_field.h"
+#include "misc_types.h"
 
+#include "quda.h"
 
 // wrapper functions
 void _initQuda();
 void _endQuda();
-void _loadGaugeQuda();
-void _loadCloverQuda();
+void _loadGaugeQuda(const CompressionType);
+void _loadCloverQuda(QudaInvertParam * inv_param);
+void _saveGaugeQuda( const su3 ** const gaugefield, const int savegaugetype, const CompressionType compression );
 
 // direct line to QUDA inverter, no messing about with even/odd reordering
 // source and propagator  Should be full VOLUME spinor fields 
 // op_id                  Index of the operator to be inverted (0 to N-1)
-int invert_quda_direct(double * const propgator, double * const source,
+int invert_quda_direct(double * const propgator, double const * const source,
                 const int op_id);
+
+// direct line to QUDA inverter, no messing about with even/odd reordering
+// source and propagator  Should be full VOLUME spinor fields 
+// op_id                  Index of the operator to be inverted (0 to N-1)
+// theta_[x,y,z,t]        theta angles for twisted boundary conditions to be
+//                        set before the gauge field is uploaded to the card
+//                        overriding input file these are specified
+//                        like Theta[X,Y,Z,T] in the input file as a fraction
+//                        of \pi/L
+//                        Anti-periodic in T would correspond to theta_t = 1.0
+int invert_quda_direct_theta(double * const propgator, double * const source,
+                const int op_id,
+                const double theta_x,
+                const double theta_y,
+                const double theta_z,
+                const double theta_t);
 
 // to be called instead of tmLQCD functions to use the QUDA inverter
 int invert_eo_quda(spinor * const Even_new, spinor * const Odd_new,
@@ -115,10 +137,52 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
                            const double precision, const int max_iter,
                            const int solver_flag, const int rel_prec, const int even_odd_flag,
                            const SloppyPrecision sloppy_precision,
+                           const SloppyPrecision refinement_precision,
                            CompressionType compression);
 
 // apply the TM operator using QUDA
 void M_full_quda(spinor * const Even_new, spinor * const Odd_new,  spinor * const Even, spinor * const Odd);
 void D_psi_quda(spinor * const P, spinor * const Q);
+void M_quda(spinor * const P, spinor * const Q);
+
+
+// to be called instead of tmLQCD functions to use the QUDA inverter in solve_degenerate
+// NOTE: the global struct inv_param is initialized inside this function
+int invert_eo_degenerate_quda(spinor * const Odd_new,
+                              spinor * const Odd,
+                              const double precision, const int max_iter,
+                              const int solver_flag, const int rel_prec,
+                              const int even_odd_flag, solver_params_t solver_params,
+                              const SloppyPrecision sloppy_precision,
+                              CompressionType compression,
+                              const int QmQp);
+
+int invert_eo_quda_oneflavour_mshift(spinor ** const Odd_new,
+                                     spinor * const Odd,
+                                     const double precision, const int max_iter,
+                                     const int solver_flag, const int rel_prec,
+                                     const int even_odd_flag, solver_params_t solver_params,
+                                     const SloppyPrecision sloppy_precision,
+                                     CompressionType compression);
+
+int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out_dn,
+                                     spinor * const in_up, spinor * const in_dn,
+                                     const double precision, const int max_iter,
+                                     const int solver_flag, const int rel_prec,
+                                     const int even_odd_flag, solver_params_t solver_params,
+                                     SloppyPrecision sloppy_precision,
+                                     CompressionType compression);
+
+void compute_gauge_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf);
+void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf,
+                                     spinor * const X_o, spinor * const phi, int ratio);
+void compute_WFlow_quda(const double eps ,const double tmax, const int traj, FILE* outfile);
+
+
+void eigsolveQuda(_Complex double * evals, int n_evals, double tol, int blksize, int blkwise, int max_iterations, int maxmin,
+                  const double precision, const int max_iter, const int polydeg, const double amin, 
+                  const double amax, const int n_kr, const int solver_flag, const int rel_prec,
+                  const int even_odd_flag, const SloppyPrecision refinement_precision,
+                  SloppyPrecision sloppy_precision, CompressionType compression, const int oneFlavourFlag);
 
 #endif /* QUDA_INTERFACE_H_ */

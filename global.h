@@ -31,7 +31,7 @@
  *
  ***************************************************************/
 #ifdef HAVE_CONFIG_H
-#include "tmlqcd_config.h"
+# include<tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -43,7 +43,9 @@
 #endif
 #include "su3.h"
 #include "su3adj.h"
-//#  include <tormpi_export.h>
+
+#include "misc_types.h"
+#include "gettime.h"
 
 #define N_CHEBYMAX 49
 #define NTILDE_CHEBYMAX 2000
@@ -62,7 +64,6 @@
 #elif defined BGL
 #include "bgl.h"
 #endif
-
 EXTERN int DUM_DERI, DUM_MATRIX;
 EXTERN int NO_OF_SPINORFIELDS;
 EXTERN int NO_OF_SPINORFIELDS_32;
@@ -73,9 +74,14 @@ EXTERN int NO_OF_BISPINORFIELDS;
 EXTERN int g_update_gauge_copy;
 EXTERN int g_update_gauge_copy_32;
 EXTERN int g_relative_precision_flag;
+EXTERN int g_strict_residual_check;
 EXTERN int g_debug_level;
 EXTERN int g_disable_IO_checks;
 EXTERN int g_disable_src_IO_checks;
+
+EXTERN tm_mpi_thread_level_t g_mpi_thread_level;
+
+EXTERN tm_timers_t g_timers;
 
 EXTERN int T_global;
 #ifndef FIXEDVOLUME
@@ -186,12 +192,9 @@ EXTERN su3 ** g_gauge_field_copy;
 EXTERN su3_32 ** g_gauge_field_copy_32;
 #endif
 
-/*for temporalgauge in GPU part*/
-EXTERN su3 ** g_tempgauge_field;
-
 EXTERN su3adj ** moment;
 EXTERN su3adj ** df0;
-EXTERN su3adj ** ddummy;
+EXTERN su3adj ** ddummy, ** debug_derivative;
 
 EXTERN int count00,count01,count10,count11,count20,count21;
 EXTERN double g_kappa, g_c_sw, g_beta;
@@ -278,12 +281,24 @@ EXTERN int tempT,tempV,tempR;
 EXTERN int ** g_iup3d;
 EXTERN int ** g_idn3d;
 #endif
- 
+
+/* keeping track of what the gauge, clover and inverse clover
+ * field contain in order to avoid unnecessary inversions
+ * of the latter */
+EXTERN tm_GaugeState_t g_gauge_state;
+EXTERN tm_GaugeState_t g_gauge_state_32;
+EXTERN tm_CloverState_t g_clover_state;
+EXTERN tm_CloverState_t g_clover_state_32;
+EXTERN tm_CloverInverseState_t g_clover_inverse_state;
+EXTERN tm_CloverInverseState_t g_clover_inverse_state_32;
+
+
 #undef EXTERN
 /* #undef ALIGN */
 
 void fatal_error(char const *error, char const *function);
 
+#endif
 
 /*
  * Comments: generic macro for swapping values or pointers.
@@ -296,5 +311,3 @@ void fatal_error(char const *error, char const *function);
   memcpy(&y,&x,       sizeof(x)); \
   memcpy(&x,swap_temp,sizeof(x)); \
 } while(0)
-
-#endif

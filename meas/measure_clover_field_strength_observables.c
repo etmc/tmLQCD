@@ -23,7 +23,7 @@
 ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-#include "tmlqcd_config.h"
+# include<tmlqcd_config.h>
 #endif
 
 #include <stdlib.h>
@@ -33,10 +33,10 @@
 #include <errno.h>
 #include <time.h>
 #ifdef TM_USE_MPI
-#include <mpi.h>
+# include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
-#include <omp.h>
+# include <omp.h>
 #endif
 #include "global.h"
 #include "su3.h"
@@ -47,6 +47,7 @@
 #include "kahan_summation.h"
 #include "omp_accumulator.h"
 #include "tensors.h"
+#include "gettime.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -54,6 +55,7 @@
 
 void measure_clover_field_strength_observables(const su3 ** const gf, field_strength_obs_t * const fso)
 {
+  tm_stopwatch_push(&g_timers, __func__, "");
   // we have iG_\mu\nu = 1/4 P_T.A. [clover] where P is the projection to the
   // traceless anti-hermitian part
   // the minus sign compensates for the i^2 in the lattice definition of G_\mu\nu
@@ -222,4 +224,5 @@ void measure_clover_field_strength_observables(const su3 ** const gf, field_stre
 #endif
   fso->E = energy_density_normalization * Eres;
   fso->Q = topo_charge_normalization * Qres;
+  tm_stopwatch_pop(&g_timers, 0, 2, "");
 }
