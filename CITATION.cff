@@ -115,10 +115,6 @@ authors:
   - given-names: "Falk"
     family-names: "Zimmermann"
 repository-code: 'https://github.com/etmc/tmLQCD'
-identifiers:
-  - type: "url"
-    value: "https://sandbox.zenodo.org/records/34085"
-    description: "Zenodo record"
 abstract: >-
   tmLQCD is a freely available software suite providing a
   set of tools to be used in lattice QCD simulations. This
