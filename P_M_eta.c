@@ -37,13 +37,13 @@
 #include "X_psi.h"
 #include "gamma.h"
 
-double rnorm=-1;
+double r_norm=-1;
 
-/* |R>=rnorm^2 Q^2 |S> */
+/* |R>=r_norm^2 Q^2 |S> */
 void norm_X_sqr_psi(spinor * const R, spinor * const S,
                     double const mstar);
 
-/* |R>=rnorm Q|S> */
+/* |R>=r_norm Q|S> */
 void norm_X_n_psi(spinor * const R, spinor * const S,
                   const int n, double const mstar);
 
@@ -214,7 +214,7 @@ void norm_X_sqr_psi(spinor * const R, spinor * const S, double const mstar) {
     printf("using X_psiSquare.\n");
     X_psiSquare(R, S, mstar);
   }
-  mul_r(R, rnorm*rnorm, R, VOLUME);
+  mul_r(R, r_norm*r_norm, R, VOLUME);
 
 
   free(aux_);
@@ -241,7 +241,7 @@ void norm_X_n_psi(spinor * const R, spinor * const S,
   /* Here is where we have to include our operator which in this case is
      X = 1 - (2M^2)/(D_m^dagger*D_m + M^2)  */
     X_psi(R, aux, mstar);
-    npar *= rnorm;
+    npar *= r_norm;
   }
   mul_r(R, npar, R, VOLUME);
 
@@ -312,7 +312,7 @@ void X_over_sqrt_X_sqr(spinor * const R, double * const c,
 	assign(R, aux, VOLUME);//=0
       }
       else{
-      /*|R>=rnorm^2 X^2|aux> -> since aux=d -> |R>=rnorm^2 Q^2|d>*/
+      /*|R>=r_norm^2 X^2|aux> -> since aux=d -> |R>=r_norm^2 Q^2|d>*/
         norm_X_sqr_psi(R, aux, mstar);//WARNING: - maybe we have to pass this point only when j=n-2, because R is not manipulated  in the loop body.
                                       //         - seems to setup d_n-1=0
       }
@@ -333,7 +333,7 @@ void X_over_sqrt_X_sqr(spinor * const R, double * const c,
     if(0) assign_sub_lowest_eigenvalues(R, d, no_eigenvalues-1, VOLUME);
     else assign(R, d, VOLUME);
     
-    /*|aux>=rnorm^2 Q^2|R> */
+    /*|aux>=r_norm^2 Q^2|R> */
     norm_X_sqr_psi(aux, R, mstar);
     temp1=-1.0;
     temp2=c[0]/2.;

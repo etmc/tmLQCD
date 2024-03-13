@@ -433,7 +433,7 @@ int main(int argc,char *argv[]) {
             fprintf(stdout, "# Writing gauge field to %s.\n", tmp_filename);
 
           xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
-          status = write_gauge_field( tmp_filename, gauge_precision_write_flag, xlfInfo);
+          status = write_gauge_field( tmp_filename, gauge_precision_write_flag, xlfInfo, g_gauge_field);
           free(xlfInfo);
           
           if (status) {

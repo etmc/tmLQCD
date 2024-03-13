@@ -19,7 +19,7 @@
 
 #include "gauge.ih"
 
-int write_gauge_field(char * filename, const int prec, paramsXlfInfo const *xlfInfo)
+int write_gauge_field(char * filename, const int prec, paramsXlfInfo const *xlfInfo, su3 ** const gf)
 {
   WRITER * writer = NULL;
   uint64_t bytes;
@@ -40,7 +40,7 @@ int write_gauge_field(char * filename, const int prec, paramsXlfInfo const *xlfI
 
   /* Both begin and end bit are 0, the message is begun with the format, and will end with the checksum */
   write_header(writer, 0, 0, "ildg-binary-data", bytes);
-  status = write_binary_gauge_data(writer, prec, &checksum);
+  status = write_binary_gauge_data(writer, prec, &checksum, gf);
   write_checksum(writer, &checksum, NULL);
 
   if (g_cart_id == 0 && g_debug_level > 0)
