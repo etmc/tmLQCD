@@ -22,6 +22,8 @@
 #ifndef _MEASUREMENTS_H
 #define _MEASUREMENTS_H
 
+#include "misc_types.h"
+
 #define max_no_measurements 20
 
 /* Give the measurement types an unambiguous ID*/
@@ -30,8 +32,22 @@ enum MEAS_TYPE {
   PIONNORM, 
   POLYAKOV, 
   ORIENTED_PLAQUETTES,
-  GRADIENT_FLOW 
+  GRADIENT_FLOW,
+  EIGENVALUES
   };
+
+typedef struct {
+  int n_evals;
+  int blksize;
+  int blkwise;
+  int max_iterations;
+  double tol;
+  int maxmin;
+  int polydeg;
+  double amin;
+  double amax;
+  int n_kr;
+} eig_param_t;
 
 typedef struct {
   enum MEAS_TYPE type;
@@ -70,6 +86,8 @@ typedef struct {
   void (*measurefunc) (const int traj, const int id, const int ieo);
  
   ExternalLibrary external_library;
+
+  eig_param_t eig; 
 } measurement;
 
 
