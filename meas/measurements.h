@@ -40,7 +40,7 @@ typedef struct {
   int n_evals;
   int blksize;
   int blkwise;
-  int max_iterations;
+  int max_iter;
   double tol;
   int maxmin;
   int polydeg;

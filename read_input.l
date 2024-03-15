@@ -553,6 +553,7 @@ static inline double fltlist_next_token(int * const list_end){
 %x PLOOP
 %x ORIENTEDPLAQUETTESMEAS
 %x GRADIENTFLOWMEAS
+%x EIGENVALUESMEAS
 
 %x REWEIGH
 %x REWSAMPLES
@@ -3058,6 +3059,10 @@ static inline double fltlist_next_token(int * const list_end){
     meas->type = GRADIENT_FLOW;
     strcpy(meas->name, "GRADIENTFLOW");
   }
+  else if(strcmp(yytext, "EIGENVALUES")==0) {
+    meas->type = EIGENVALUES;
+    strcpy(meas->name, "EIGENVALUES");
+  }
   else {
     fprintf(stderr, "Unknown measurement type %s in line %d\n", yytext, line_of_file);
     exit(1);
@@ -3086,9 +3091,10 @@ static inline double fltlist_next_token(int * const list_end){
   else if(meas->type == POLYAKOV) BEGIN(PLOOP);
   else if(meas->type == ORIENTED_PLAQUETTES) BEGIN(ORIENTEDPLAQUETTESMEAS);
   else if(meas->type == GRADIENT_FLOW) BEGIN(GRADIENTFLOWMEAS);
+  else if(meas->type == EIGENVALUES) BEGIN(EIGENVALUESMEAS);
 }
 
-<ONLINEMEAS,PIONNORMMEAS,PLOOP,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS>{
+<ONLINEMEAS,PIONNORMMEAS,PLOOP,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,EIGENVALUESMEAS>{
   ^EndMeasurement{SPC}* {
     if(myverbose) printf("Measurement with id %d parsed in line %d\n\n", meas->id, line_of_file);
     BEGIN(0);
@@ -3141,6 +3147,65 @@ static inline double fltlist_next_token(int * const list_end){
     if(myverbose) printf("  Maximum gradient flow time size set to %lf line %d, measurement id=%d\n", meas->gf_tmax, line_of_file, meas->id);
   }
 } 
+
+<EIGENVALUESMEAS>{
+  {SPC}*Tolerance{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    meas->eig.tol = c;
+    if(myverbose) printf("  Eigenvalue measurement tolerance set to %lf line %d, measurement id=%d\n", meas->eig.tol, line_of_file, meas->id);
+  }
+  {SPC}*NoEigenvalues{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    meas->eig.n_evals = a;
+    if(myverbose) printf("  Number of eigenvalues to be determined set to %d, line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+  {SPC}*BlockSize{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    meas->eig.blksize = a;
+    if(myverbose) printf("  Block size for eigensolver set to %d, line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+  {SPC}*Blockwise{EQL}yes {
+    meas->eig.blkwise = 1;
+    if(myverbose) printf("  Blockwise eigenvalue determination, line %d, measurement id=%d\n", line_of_file, meas->id);
+  }
+  {SPC}*Blockwise{EQL}no {
+    meas->eig.blkwise = 0;
+    if(myverbose) printf("  NO blockwise eigenvalue deterination, line %d, measurement id=%d\n", line_of_file, meas->id);
+  }
+  {SPC}*LargestEigenvalues{EQL}yes {
+    meas->eig.maxmin = 1;
+    if(myverbose) printf("  Largest eigenvalues to be determined, line %d, measurement id=%d\n", line_of_file, meas->id);
+  }
+  {SPC}*LargestEigenvalues{EQL}no {
+    meas->eig.maxmin = 0;
+    if(myverbose) printf("  Smallest eigenvalues to be determined, line %d, measurement id=%d\n", line_of_file, meas->id);
+  }
+  {SPC}*MaxIterations{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    meas->eig.max_iter = a;
+    if(myverbose) printf("  Maximum number of iterations for eigensolver set to %d, line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+  {SPC}*PolynomialDegree{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    meas->eig.polydeg = a;
+    if(myverbose) printf("  Degree of polynomial for eigensolver set to %d, line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+  {SPC}*PolyMin{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    meas->eig.amin = c;
+    if(myverbose) printf("  Minimum eigenvalue to exclude using polynomial acceleration in eigensolver set to %e line %d, measurement id=%d\n", c, line_of_file, meas->id);
+  }
+  {SPC}*PolyMax{EQL}{FLT} {
+    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
+    meas->eig.amax = c;
+    if(myverbose) printf("  Maximum eigenvalue to exclude using polynomial acceleration in eigensolver set to %e line %d, measurement id=%d\n", c, line_of_file, meas->id);
+  }
+  {SPC}*KrylovSubspaceSize{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    meas->eig.n_kr = a;
+    if(myverbose) printf("  Krylov subspace size for polynomial acceleration in eigensolver set to %d, line %d measurement id=%d\n", a, line_of_file, meas->id);
+  }
+}
 
 <PLOOP>{
   {SPC}*Direction{EQL}[03] {
@@ -3691,7 +3756,7 @@ static inline double fltlist_next_token(int * const list_end){
   BEGIN(comment_caller);
 }
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID,INITEXTERNALINVERTER,QUDAINVERTER,QPHIXINVERTER,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{SPC}*\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,EIGENVALUESMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID,INITEXTERNALINVERTER,QUDAINVERTER,QPHIXINVERTER,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{SPC}*\n   {
   line_of_file++;
 }
 <*>{SPC}*\n                       {

@@ -37,7 +37,8 @@ libmeas_TARGETS = measurements \
 	pion_norm \
 	polyakov_loop \
 	measure_clover_field_strength_observables \
-	gradient_flow
+	gradient_flow \
+	eigenvalues
 
 libmeas_OBJECTS = $(addsuffix .o, ${libmeas_TARGETS})
 

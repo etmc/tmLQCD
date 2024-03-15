@@ -49,7 +49,7 @@ void eigenvalues_measurement(const int traj, const int id, const int ieo) {
   if(no_operators < 1){
     tm_debug_printf(0, 0, "Error: no operators defined in input file, cannot perform eigenvalues online measurement!\n");
 #ifdef TM_USE_MPI
-    MPI_Finallize();
+    MPI_Finalize();
 #endif
     exit(1);
   }
@@ -61,9 +61,9 @@ void eigenvalues_measurement(const int traj, const int id, const int ieo) {
   for( int op_id = 0; op_id < no_operators; op_id++ ){
     operator * optr = &operator_list[op_id];
 
-    if( optr->type != TMWILSON || optr->type != WILSON ||
-        optr->type != CLOVER || optr->type != DBTMWILSON ||
-        optr->type != DBCLOVER ){
+    if( !(optr->type == TMWILSON || optr->type == WILSON ||
+          optr->type == CLOVER || optr->type == DBTMWILSON ||
+          optr->type == DBCLOVER) ){
       tm_debug_printf(0, 0, "Error: only operator types WILSON, TMWILSON, CLOVER, DBTMWILSON and DBCLOVER are supported.\n");
 #ifdef TM_USE_MPI
       MPI_Finalize();
@@ -76,7 +76,7 @@ void eigenvalues_measurement(const int traj, const int id, const int ieo) {
 
     if( measurement_list[id].external_library == QUDA_LIB ){
 #ifdef TM_USE_QUDA
-      eigsolveQuda(evals, eig.n_evals, eig.tol, 1, 0, eig.max_iterations, eig.maxmin,
+      eigsolveQuda(evals, eig.n_evals, eig.tol, 1, 0, eig.max_iter, eig.maxmin,
                    optr->eps_sq, optr->maxiter, eig.polydeg, eig.amin, eig.amax, eig.n_kr,
                    optr->solver, optr->solver, optr->rel_prec, ieo,
                    optr->sloppy_precision, optr->sloppy_precision, optr->compression_type,
