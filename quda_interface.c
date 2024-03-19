@@ -2614,7 +2614,7 @@ void compute_ndcloverrat_derivative_quda(monomial * const mnl, hamiltonian_field
   
   double *coeff=(double*) malloc(sizeof(double)*num_shifts );
   for(int shift = 0; shift < num_shifts; shift++){
-      coeff[i] = 4.*mnl->kappa*mnl->kappa;
+      coeff[shift] = 4.*mnl->kappa*mnl->kappa;
   }
   double kappa2_quda = - mnl->kappa*mnl->kappa; // -kappa*kappa
   double ck_quda = - mnl->c_sw * mnl->kappa / 8.0;
@@ -2628,7 +2628,7 @@ void compute_ndcloverrat_derivative_quda(monomial * const mnl, hamiltonian_field
   inv_param.dagger = QUDA_DAG_YES;
   computeTMCloverForceQuda(mom_quda, spinorIn, &spinorPhi, coeff,  num_shifts, &f_gauge_param,   &inv_param, 0);
 
-  free(coeff)
+  free(coeff);
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
   
   reorder_mom_fromQuda(mom_quda);
