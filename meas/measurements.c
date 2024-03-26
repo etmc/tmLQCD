@@ -30,6 +30,7 @@
 #include "default_input_values.h"
 #include "read_input.h"
 
+#include "eigenvalues.h"
 #include "pion_norm.h"
 #include "correlators.h"
 #include "polyakov_loop.h"
@@ -78,6 +79,10 @@ int init_measurements(){
 
     if(measurement_list[i].type == GRADIENT_FLOW) {
       measurement_list[i].measurefunc = &gradient_flow_measurement;
+    }
+    
+    if(measurement_list[i].type == EIGENVALUES) {
+      measurement_list[i].measurefunc = &eigenvalues_measurement;
     }
     
     measurement_list[i].id = i;
