@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include <string.h>
 #include "global.h"
 #include "su3.h"
 #include "linalg_eo.h"
@@ -48,6 +49,10 @@
 #include "phmc.h"
 #include "ndrat_monomial.h"
 #include "default_input_values.h"
+#include "compare_derivative.h"
+#ifdef TM_USE_QUDA
+#  include "quda_interface.h"
+#endif
 
 void nd_set_global_parameter(monomial * const mnl) {
 
@@ -152,7 +157,7 @@ void set_spinor_updow_shift( double** up, double** down,   int odd, int num_shif
 
   // now copy and reorder from tempSpinor to spinor
   for(int shift = 0; shift < num_shifts; shift++){
-  for(int ud = 0; ud < 2; ud++){
+  for(int ud = 1; ud < 2; ud++){
     double **sp;
     if (ud==0) sp=up;
     if (ud==1) sp=down;
@@ -169,18 +174,47 @@ void set_spinor_updow_shift( double** up, double** down,   int odd, int num_shif
                 const int tm_spin = change_spin[q_spin];
                 for(int col = 0; col < 3; col++){
                     sp[shift][24*tm_eo_idx + 6*tm_spin + 2*col + 0]=0;
-                    sp[shift][24*tm_eo_idx + 6*tm_spin + 2*col + 1 + Vh]=0;
+                    sp[shift][24*tm_eo_idx + 6*tm_spin + 2*col + 1]=0;
                 }
               }
             }
           }
   }
   }
-  
-  up[0][24*0 + 6*0 + 2*0 + 0]=1;
-  up[0][24*0 + 6*0 + 2*0 + 1]=3;
-  up[0][24*0 + 6*0 + 2*1 + 0]=4;
-  down[0][24*0 + 6*0 + 2*0 + 0]=2;
+  // for(int shift = 0; shift < num_shifts; shift++){
+  // for(int ud = 0; ud < 1; ud++){
+  //   double **sp;
+  //   if (ud==0) sp=up;
+  //   if (ud==1) sp=down;
+  //   for( int x0=0; x0<T; x0++ )
+  //     for( int x1=0; x1<LX; x1++ )
+  //       for( int x2=0; x2<LY; x2++ )
+  //         for( int x3=0; x3<LZ; x3++ ) {
+  //           const int q_eo_idx = (x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0)/2;
+  //           const int tm_eo_idx = (x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0)/2;
+
+  //           const int oddBit = (x0+x1+x2+x3) & 1;
+  //           if( oddBit == odd ){
+  //             for(int q_spin = 0; q_spin < 4; q_spin++){
+  //               const int tm_spin = change_spin[q_spin];
+  //               for(int col = 0; col < 3; col++){
+  //                   sp[shift][24*tm_eo_idx + 6*3 + 2*0 + 0]=1;
+  //                   sp[shift][24*tm_eo_idx + 6*tm_spin + 2*col + 1]=0;
+  //               }
+  //             }
+  //           }
+  //         }
+  // }
+  // }
+  // up[0][24*0 + 6*0 + 2*0 + 0]=1;
+  // up[0][24*0 + 6*0 + 2*0 + 1]=2;
+  // up[0][24*0 + 6*0 + 2*1 + 0]=3;
+  // up[0][24*1 + 6*0 + 2*0 + 0]=1;
+  // up[0][24*2 + 6*0 + 2*0 + 0]=1;
+  // up[0][24*3 + 6*0 + 2*0 + 0]=1;
+  // up[0][24*4 + 6*0 + 2*0 + 0]=1;
+  // up[0][24*5 + 6*0 + 2*0 + 0]=1;
+  // down[0][24*0 + 6*0 + 2*0 + 0]=2;
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
 }      
 
@@ -259,7 +293,13 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
       fatal_error("QUDA support only mnl->type = NDCLOVERRAT",__func__);
     }
     printf("are the same? mnl->rat.np =%d  mnl->solver_params->no_shifts=%d\n",mnl->rat.np,  mnl->solver_params.no_shifts);
-    compute_ndcloverrat_derivative_quda(mnl, hf, g_chi_up_spinor_field, g_chi_dn_spinor_field, &(mnl->solver_params) );
+    // corrispondence tmLQCD with QUDA:
+    // g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j] = x[i][parity] 
+    // mnl->w_fields[2], mnl->w_fields[3] = x[i][other_parity] *kappa
+    // mnl->w_fields[0], mnl->w_fields[1] = p[i][parity] 
+    // mnl->w_fields[4], mnl->w_fields[5] = p[i][other_parity] *kappa
+    // further in quda parity = odd and other_parity = even
+    compute_ndcloverrat_derivative_quda(mnl, hf, g_chi_up_spinor_field, g_chi_dn_spinor_field, &(mnl->solver_params), !mnl->trlog );
 
     if (g_debug_level > 3){
       su3adj **given = hf->derivative;
@@ -280,7 +320,7 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   #endif // no other option, TM_USE_QUDA already checked by solver
   }
   else{
-    print_spinor_updow_shift( g_chi_up_spinor_field, g_chi_dn_spinor_field,   1, mnl->rat.np);
+    // print_spinor_updow_shift( g_chi_up_spinor_field, g_chi_dn_spinor_field,   1, mnl->rat.np);
     // TODO: check that we did not breack anything rearranging the loop
     // for(int j = (mnl->rat.np-1); j > -1; j--) {
     for(int j = 0; j < mnl->rat.np; j++) {
@@ -291,6 +331,9 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
         Qsw_tau1_sub_const_ndpsi(mnl->w_fields[0], mnl->w_fields[1],
               g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
               -I*mnl->rat.mu[j], 1., mnl->EVMaxInv);
+        printf("MARCO:printpar mnl->rat.mu[%d] =%g\n",j,mnl->rat.mu[j]);
+        printf("MARCO:printpar mnl->rat.rmu[%d] =%g\n",j,mnl->rat.rmu[j]);
+        printf("MARCO:printpar mnl->EVMaxInv =%g\n",mnl->EVMaxInv);
         tm_stopwatch_pop(&g_timers, 0, 1, "");
         
         /* Get the even parts X_j,e */
@@ -299,8 +342,11 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
         H_eo_sw_ndpsi(mnl->w_fields[2], mnl->w_fields[3], 
           g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j]);
         tm_stopwatch_pop(&g_timers, 0, 1, "");
-        // print_spinor_updow( mnl->w_fields[2], mnl->w_fields[3],   0, j);
-
+        // mul_gamma5(g_chi_up_spinor_field[j], VOLUME/2);
+        // mul_gamma5(g_chi_dn_spinor_field[j], VOLUME/2);
+        // print_spinor_updow( g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j],   1, j); //x[i][parity]
+        // print_spinor_updow( mnl->w_fields[2], mnl->w_fields[3],   0, j); // x[i][other_parity]
+        // print_spinor_updow( mnl->w_fields[0], mnl->w_fields[1],   1, j); // p[i][parity] 
       } else {
         // multiply with Q_h * tau^1 + i mu_j to get Y_j,o (odd sites)
         // needs phmc_Cpol = 1 to work for ndrat!
@@ -335,6 +381,7 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
         H_eo_tm_ndpsi(mnl->w_fields[4], mnl->w_fields[5], mnl->w_fields[0], mnl->w_fields[1], EO);
         tm_stopwatch_pop(&g_timers, 0, 1, "");
       }
+      print_spinor_updow( mnl->w_fields[4], mnl->w_fields[5],   0, j); // p[i][other_parity] // p_e
 
       /* X_j,o \delta M_oe Y_j,e */
       deriv_Sb(OE, g_chi_up_spinor_field[j], mnl->w_fields[4], 
