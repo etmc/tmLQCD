@@ -2595,7 +2595,6 @@ void compute_ndcloverrat_derivative_quda(monomial * const mnl, hamiltonian_field
   const int Vh = VOLUME/2;
   
   init_solver_field(&in, VOLUME, num_shifts);
-
   void **spinorIn = (void**)in; 
   for(int shift = 0; shift < num_shifts; shift++){
     tm_stopwatch_push(&g_timers, "twoflavour_input_overhead", ""); 
@@ -2614,8 +2613,12 @@ void compute_ndcloverrat_derivative_quda(monomial * const mnl, hamiltonian_field
   
   double *coeff=(double*) malloc(sizeof(double)*num_shifts );
   for(int shift = 0; shift < num_shifts; shift++){
-      coeff[shift] = 4.*mnl->kappa*mnl->kappa;
+      coeff[shift] = 4. * mnl->kappa * mnl->kappa * mnl->rat.rmu[shift] * mnl->EVMaxInv;
+      inv_param.offset[shift] = mnl->rat.mu[shift];
   }
+  // FIXME: we use an existing paremeter of QUDA to pass the max eigenvalue, maybe in the future you want create a new parameter for this
+  inv_param.ca_lambda_max= 1.0/mnl->EVMaxInv;
+  
   double kappa2_quda = - mnl->kappa*mnl->kappa; // -kappa*kappa
   double ck_quda = - mnl->c_sw * mnl->kappa / 8.0;
   const double multiplicity = 1.0; 
