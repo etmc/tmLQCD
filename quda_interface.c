@@ -2584,7 +2584,7 @@ void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 }
 
-void compute_ndcloverrat_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf, spinor ** const Qup, spinor ** const Qdn, solver_params_t * solver_params) {
+void compute_ndcloverrat_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf, spinor ** const Qup, spinor ** const Qdn, solver_params_t * solver_params, int detratio) {
   tm_stopwatch_push(&g_timers, __func__, "");
   
   _initQuda();
@@ -2629,7 +2629,7 @@ void compute_ndcloverrat_derivative_quda(monomial * const mnl, hamiltonian_field
   // when using QUDA MG the following parameter need to be set 
   inv_param.matpc_type = QUDA_MATPC_ODD_ODD_ASYMMETRIC;
   inv_param.dagger = QUDA_DAG_YES;
-  computeTMCloverForceQuda(mom_quda, spinorIn, &spinorPhi, coeff,  num_shifts, &f_gauge_param,   &inv_param, 0);
+  computeTMCloverForceQuda(mom_quda, spinorIn, &spinorPhi, coeff,  num_shifts, &f_gauge_param,   &inv_param, detratio);
 
   free(coeff);
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
@@ -2644,7 +2644,7 @@ void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t
   tm_debug_printf(0,0,"Error:   UseExternalLibrary = quda requires that tmLQCD is compiled with --enable-quda_fermionic=yes\n");
   exit(1);
 }
-void compute_ndcloverrat_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf, spinor ** const Qup, spinor ** const Qdn, solver_params_t * solver_params) {
+void compute_ndcloverrat_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf, spinor ** const Qup, spinor ** const Qdn, solver_params_t * solver_params, int detratio) {
   tm_stopwatch_push(&g_timers, __func__, "");
   tm_debug_printf(0,0,"Error:   UseExternalLibrary = quda requires that tmLQCD is compiled with --enable-quda_fermionic=yes\n");
   exit(1);
