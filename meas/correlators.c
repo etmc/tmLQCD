@@ -829,7 +829,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 					for (size_t hj = 0; hj < 2; hj++) {
 						for (size_t g1 = 0; g1 < 2; g1++) {
 							for (size_t g2 = 0; g2 < 2; g2++) {
-								fprintf(ofs, "%u  %u  %u  %u  0  %e  %e\n", hi, hj, g1, g2, C_hihj_g1g2[hi][hj][g1][g1][t0], 0.0);
+								fprintf(ofs, "%u  %u  %u  %u  0  %e  %e\n", hi, hj, g1, g2, C_hihj_g1g2[hi][hj][g1][g2][t0], 0.0);
 								for (t = 1; t < g_nproc_t * T / 2; t++) {
 									tt = (t0 + t) % (g_nproc_t * T);
 									fprintf(ofs, "%u  %u  %u  %u  %d  %e  ", hi, hj, g1, g2, t, C_hihj_g1g2[hi][hj][g1][g2][tt]);
