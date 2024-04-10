@@ -679,21 +679,20 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 						resp4 += _spinor_prod_im(psi_u, phi);
 					}
 					
-					// heavy correlators						
+					// heavy correlators
 					for (size_t hi = 0; hi < 2; hi++) {
 						for (size_t hj = 0; hj < 2; hj++) {
 							for (size_t g1 = 0; g1 < 2; g1++) {
 								for (size_t g2 = 0; g2 < 2; g2++) {
 									double complex dum_tot = 0.0;
 									for (int alpha_1 = 0; alpha_1 < 4; alpha_1++){
+										spinor psi_h = arr_spinor[1][1][alpha_1][hj][hi][i];
+										if (g1 == 0){ // Gamma_1 = Id
+											_gamma5(psi_h, psi_h);
+										}
+										su3_vector psi_h_su3[4];
+										spinor_dirac_array(&psi_h_su3[0], psi_h);
 										for (int alpha_2 = 0; alpha_2 < 4; alpha_2++){
-											// S_\ell
-											spinor psi_h = arr_spinor[1][1][alpha_1][hj][hi][i];
-											if (g1 == 0){ // Gamma_1 = Id
-												_gamma5(psi_h, psi_h);
-											}
-											su3_vector psi_h_su3[4];
-											spinor_dirac_array(&psi_h_su3[0], psi_h);
 											spinor psi_u_star = arr_spinor[1][0][alpha_2][f0][f0][i];
 											if (g2 == 0){ // Gamma_2 = Id. NOTE: works because Gamma_2=Gamma_2* for Gamma_2=1,gamma_5
 												_gamma5(psi_u_star, psi_u_star);
@@ -702,10 +701,24 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 											spinor_dirac_array(&psi_u_star_su3[0], psi_u_star);
 											complex double dum_12 = 0.0;
 											_colorvec_scalar_prod(dum_12, psi_u_star_su3[alpha_1], psi_h_su3[alpha_2]);
-											dum_tot =+ dum_12;
+											dum_tot += dum_12;
 										}
 									}
-									res_hihj_g1g2[hi][hj][g1][g2] = creal(dum_tot); // correlators are real
+									// if (g_proc_id == 0){
+									// printf("dum_tot = %d %d %d %d %d %e %e \n", t, hi, hj, g1, g2, creal(dum_tot), cimag(dum_tot));
+									// }
+									if (hi != hj){
+										dum_tot *= -1;
+									}
+									if (g1==g2){
+										res_hihj_g1g2[hi][hj][g1][g2] = creal(dum_tot); // correlators is real
+									}
+									else{
+										if (g2==1){
+											dum_tot *= -1;
+										}
+										res_hihj_g1g2[hi][hj][g1][g2] = cimag(dum_tot); // correlator is imaginary
+									}
 								}
 							}
 						}
@@ -829,6 +842,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 					for (size_t hj = 0; hj < 2; hj++) {
 						for (size_t g1 = 0; g1 < 2; g1++) {
 							for (size_t g2 = 0; g2 < 2; g2++) {
+								printf("check matrix: %e\n", C_hihj_g1g2[hi][hj][g1][g2][3]);
 								fprintf(ofs, "%u  %u  %u  %u  0  %e  %e\n", hi, hj, g1, g2, C_hihj_g1g2[hi][hj][g1][g2][t0], 0.0);
 								for (t = 1; t < g_nproc_t * T / 2; t++) {
 									tt = (t0 + t) % (g_nproc_t * T);
