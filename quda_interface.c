@@ -2616,8 +2616,7 @@ void compute_ndcloverrat_derivative_quda(monomial * const mnl, hamiltonian_field
       coeff[shift] = 4. * mnl->kappa * mnl->kappa * mnl->rat.rmu[shift] * mnl->EVMaxInv;
       inv_param.offset[shift] = mnl->rat.mu[shift];
   }
-  // FIXME: we use an existing paremeter of QUDA to pass the max eigenvalue, maybe in the future you want create a new parameter for this
-  inv_param.ca_lambda_max= 1.0/mnl->EVMaxInv;
+  inv_param.evmax= 1.0/mnl->EVMaxInv;
   
   double kappa2_quda = - mnl->kappa*mnl->kappa; // -kappa*kappa
   double ck_quda = - mnl->c_sw * mnl->kappa / 8.0;
