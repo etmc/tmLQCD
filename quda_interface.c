@@ -2636,6 +2636,8 @@ void compute_ndcloverrat_derivative_quda(monomial * const mnl, hamiltonian_field
   reorder_mom_fromQuda(mom_quda);
   add_mom_to_derivative(hf->derivative);
 
+  finalize_solver(in, num_shifts);
+
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 }
 #else 
