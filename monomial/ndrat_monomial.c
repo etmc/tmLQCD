@@ -50,6 +50,7 @@
 #include "ndrat_monomial.h"
 #include "default_input_values.h"
 #include "compare_derivative.h"
+#include "xchange/xchange_deri.h"
 #ifdef TM_USE_QUDA
 #  include "quda_interface.h"
 #endif
@@ -143,7 +144,6 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
     if(! (mnl->type == NDCLOVERRAT)){
       fatal_error("QUDA support only mnl->type = NDCLOVERRAT",__func__);
     }
-    printf("are the same? mnl->rat.np =%d  mnl->solver_params->no_shifts=%d\n",mnl->rat.np,  mnl->solver_params.no_shifts);
     // corrispondence tmLQCD with QUDA:
     // g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j] = x[i][parity] 
     // mnl->w_fields[2], mnl->w_fields[3] = x[i][other_parity] *kappa
@@ -168,8 +168,6 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   #endif // no other option, TM_USE_QUDA already checked by solver
   }
   else{
-    // TODO: check that we did not breack anything rearranging the loop
-    // for(int j = (mnl->rat.np-1); j > -1; j--) {
     for(int j = 0; j < mnl->rat.np; j++) {
       if(mnl->type == NDCLOVERRAT) {
         // multiply with Q_h * tau^1 + i mu_j to get Y_j,o (odd sites)
