@@ -107,6 +107,7 @@
 #include "boundary.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "linalg/mul_r.h"
+#include "linalg/mul_gamma5.h"
 #include "solver/solver.h"
 #include "solver/solver_field.h"
 #include "gettime.h"
@@ -2618,9 +2619,6 @@ void compute_ndcloverrat_derivative_quda(monomial * const mnl, hamiltonian_field
   }
   inv_param.evmax= 1.0/mnl->EVMaxInv;
   
-  double kappa2_quda = - mnl->kappa*mnl->kappa; // -kappa*kappa
-  double ck_quda = - mnl->c_sw * mnl->kappa / 8.0;
-  const double multiplicity = 1.0; 
   
   inv_param.kappa= mnl->kappa;
   inv_param.clover_csw= mnl->c_sw;
