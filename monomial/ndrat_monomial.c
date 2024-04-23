@@ -83,23 +83,25 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   tm_stopwatch_push(&g_timers, __func__, mnl->name);
   nd_set_global_parameter(mnl);
   if(mnl->type == NDCLOVERRAT) {
-    tm_stopwatch_push(&g_timers, "su3_zero", "");
-#ifdef TM_USE_OMP
-    #pragma omp parallel for
-#endif
-    for(int i = 0; i < VOLUME; i++) { 
-      for(int mu = 0; mu < 4; mu++) { 
-        _su3_zero(swm[i][mu]);
-        _su3_zero(swp[i][mu]);
+    if( g_debug_level > 2 || g_strict_residual_check || !(mnl->external_library == QUDA_LIB && mnl->solver_params.external_inverter == QUDA_INVERTER) ){
+      tm_stopwatch_push(&g_timers, "su3_zero", "");
+  #ifdef TM_USE_OMP
+      #pragma omp parallel for
+  #endif
+      for(int i = 0; i < VOLUME; i++) { 
+        for(int mu = 0; mu < 4; mu++) { 
+          _su3_zero(swm[i][mu]);
+          _su3_zero(swp[i][mu]);
+        }
       }
+      tm_stopwatch_pop(&g_timers, 0, 1, "");
+
+      // we compute the clover term (1 + T_ee(oo)) for all sites x
+      sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
+      // we invert it for the even sites only
+      sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
+      copy_32_sw_fields();
     }
-    tm_stopwatch_pop(&g_timers, 0, 1, "");
-  
-    // we compute the clover term (1 + T_ee(oo)) for all sites x
-    sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
-    // we invert it for the even sites only
-    sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
-    copy_32_sw_fields();
   }
   mnl->forcefactor = mnl->EVMaxInv;
 
@@ -323,9 +325,11 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
   tm_stopwatch_push(&g_timers, __func__, mnl->name);
   nd_set_global_parameter(mnl);
   if(mnl->type == NDCLOVERRAT) {
-    sw_term((const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
-    sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
-    copy_32_sw_fields();
+    if( g_debug_level > 2 || g_strict_residual_check || !(mnl->external_library == QUDA_LIB && mnl->solver_params.external_inverter == QUDA_INVERTER) ){
+      sw_term((const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
+      sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
+      copy_32_sw_fields();
+    }
   }
   mnl->energy1 = 0.;
 
