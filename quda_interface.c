@@ -7,6 +7,7 @@
  *               2021       Bartosz Kostrzewa, Marco Garofalo, Ferenc Pittler, Simone Bacchio
  *               2022       Simone Romiti, Bartosz Kostrzewa
  *               2023       Aniket Sen, Bartosz Kostrzewa
+ *               2024       Aniket Sen, Marco Garofalo, Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -2716,7 +2717,6 @@ void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t
   exit(1);
 }
 void compute_ndcloverrat_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf, spinor ** const Qup, spinor ** const Qdn, solver_params_t * solver_params, int detratio) {
-  tm_stopwatch_push(&g_timers, __func__, "");
   tm_debug_printf(0,0,"Error:   UseExternalLibrary = quda requires that tmLQCD is compiled with --enable-quda_fermionic=yes\n");
   exit(1);
 }
