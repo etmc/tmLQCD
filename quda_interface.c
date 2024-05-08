@@ -7,6 +7,7 @@
  *               2021       Bartosz Kostrzewa, Marco Garofalo, Ferenc Pittler, Simone Bacchio
  *               2022       Simone Romiti, Bartosz Kostrzewa
  *               2023       Aniket Sen, Bartosz Kostrzewa
+ *               2024       Aniket Sen, Marco Garofalo, Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -107,6 +108,7 @@
 #include "boundary.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "linalg/mul_r.h"
+#include "linalg/mul_gamma5.h"
 #include "solver/solver.h"
 #include "solver/solver_field.h"
 #include "gettime.h"
@@ -2655,12 +2657,71 @@ void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t
   }
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 }
+
+void compute_ndcloverrat_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf, spinor ** const Qup, spinor ** const Qdn, solver_params_t * solver_params, int detratio) {
+  tm_stopwatch_push(&g_timers, __func__, "");
+  
+  _initQuda();
+  _initMomQuda();
+  spinor ** in;
+  void *spinorPhi;
+  const int num_shifts = solver_params->no_shifts;
+  const int Vh = VOLUME/2;
+  
+  init_solver_field(&in, VOLUME, num_shifts);
+  void **spinorIn = (void**)in; 
+  for(int shift = 0; shift < num_shifts; shift++){
+    tm_stopwatch_push(&g_timers, "twoflavour_input_overhead", ""); 
+    memcpy(in[shift],      Qup[shift], Vh*24*sizeof(double));
+    memcpy(in[shift] + Vh, Qdn[shift], Vh*24*sizeof(double));
+    tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
+
+    spinorIn[shift]=in[shift];
+    reorder_spinor_eo_toQuda((double*)spinorIn[shift], inv_param.cpu_prec, 1, 1);
+  }
+
+
+  _loadGaugeQuda(mnl->solver_params.compression_type);
+  _loadCloverQuda(&inv_param);
+  tm_stopwatch_push(&g_timers, "computeTMCloverForceQuda", ""); 
+  
+  double *coeff=(double*) malloc(sizeof(double)*num_shifts );
+  for(int shift = 0; shift < num_shifts; shift++){
+      coeff[shift] = 4. * mnl->kappa * mnl->kappa * mnl->rat.rmu[shift] * mnl->EVMaxInv;
+      inv_param.offset[shift] = mnl->rat.mu[shift];
+  }
+  inv_param.evmax= 1.0/mnl->EVMaxInv;
+  
+  
+  inv_param.kappa= mnl->kappa;
+  inv_param.clover_csw= mnl->c_sw;
+  inv_param.solution_type = QUDA_MATPCDAG_MATPC_SOLUTION;
+  // when using QUDA MG the following parameter need to be set 
+  inv_param.matpc_type = QUDA_MATPC_ODD_ODD_ASYMMETRIC;
+  inv_param.dagger = QUDA_DAG_YES;
+  computeTMCloverForceQuda(mom_quda, spinorIn, &spinorPhi, coeff,  num_shifts, &f_gauge_param,   &inv_param, detratio);
+
+  free(coeff);
+  tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
+  
+  reorder_mom_fromQuda(mom_quda);
+  add_mom_to_derivative(hf->derivative);
+
+  finalize_solver(in, num_shifts);
+
+  tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
+}
 #else 
 void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf, spinor * const X_o, spinor * const phi, int detratio) {
   tm_debug_printf(0,0,"Error:   UseExternalLibrary = quda requires that tmLQCD is compiled with --enable-quda_fermionic=yes\n");
   exit(1);
 }
+void compute_ndcloverrat_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf, spinor ** const Qup, spinor ** const Qdn, solver_params_t * solver_params, int detratio) {
+  tm_debug_printf(0,0,"Error:   UseExternalLibrary = quda requires that tmLQCD is compiled with --enable-quda_fermionic=yes\n");
+  exit(1);
+}
 #endif
+
 
 
 void  compute_WFlow_quda(const double eps, const double tmax, const int traj, FILE* outfile){

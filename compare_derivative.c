@@ -25,6 +25,7 @@
 # include <omp.h>
 #endif
 #include <stdio.h>
+#include <math.h>
 #include "global.h"
 #include "monomial/monomial.h"
 

@@ -453,6 +453,12 @@ int init_monomials(const int V, const int even_odd_flag) {
               monomial_list[i].name,
               no_monomials);
         }
+        if(monomial_list[i].external_library==QUDA_LIB){
+          if(monomial_list[i].solver_params.external_inverter != QUDA_INVERTER){
+            tm_debug_printf(0,0,"Error: NDCLOVERRAT monomial of UseExternalLibrary = quda is not supported without UseExternalInverter = quda\n");
+            exit(1);
+          }
+        }
       }
       else if(monomial_list[i].type == NDRATCOR) {
         monomial_list[i].hbfunction = &ndratcor_heatbath;

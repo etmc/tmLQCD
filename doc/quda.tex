@@ -12,11 +12,11 @@ The QUDA \cite{Clark:2009wm, Babich:2011np, Strelchenko:2013vaa} interface provi
 The QUDA interface has been designed with the following goals in mind, sorted by priority:
 \begin{enumerate}
 	\item \emph{Safety.} Naturally, highest priority is given to the correctness of the output of the interface. 
-	This is trivially achieved by always checking the final residual on the CPU with the default tmLQCD routines.
+    For pure inversions this is trivially achieved by always checking the final residual on the CPU with the default tmLQCD routines. When QUDA is used in the HMC, however, the residual is only checked for {\ttfamily DebugLevel > 2} or when {\ttfamily StrictResidualCheck} is enabled.
 \item \emph{Ease of use.} Within the operator declarations of the input file (between {\ttfamily BeginOperator} and {\ttfamily EndOperator}) a simple flag {\ttfamily UseExternalInverter} is introduced which, when set to {\ttfamily quda}, will let QUDA perform the inversion of that operator. The operators {\ttfamily TMWILSON, WILSON, DBTMWILSON} and {\ttfamily CLOVER, DBCLOVER} are supported. 
     Within the monomial declarations of the input file (between {\ttfamily BeginMonomial} and {\ttfamily EndMonomial}) the same flag can be used to offload solves for the \texttt{DET, DETRATIO, CLOVERDET, CLOVERDETRATIO, RAT, RATCOR, NDRAT, NDRATCOR, NDCLOVERRAT} and \texttt{NDCLOVERRATCOR} monomials in the HMC.
-    Further, the flag {\ttfamily UseExternalLibrary} is introduced which, when set to {\ttfamily quda}, will let QUDA perform the force calculation for the given monomial with support currently limited to {\ttfamily GAUGE, CLOVERDET, CLOVERDETRATIO}.
-	\item \emph{Minimality.} Minimal changes in the form of {\ttfamily \#ifdef QUDA} precompiler directives to the tmLQCD code base. The main bulk of the interface lies in a single separate file {\ttfamily quda\_interface.c} (with corresponding header file). The QUDA interface is entered .
+    Further, the flag {\ttfamily UseExternalLibrary} is introduced which, when set to {\ttfamily quda}, will let QUDA perform the force calculation for the given monomial with support currently limited to {\ttfamily GAUGE, CLOVERDET, CLOVERDETRATIO} and {\ttfamily NDCLOVERRAT}.
+	\item \emph{Minimality.} Minimal changes in the form of {\ttfamily \#ifdef TM\_USE\_QUDA} precompiler directives to the tmLQCD code base. The main bulk of the interface lies in a single separate file {\ttfamily quda\_interface.c} (with corresponding header file). The QUDA interface is entered .
 	\item \emph{Performance.} The higher priority of the previous items results in small performance detriments. In particular:
 	\begin{itemize}
 		\item tmLQCD's $\theta$-boundary conditions are not compatible with QUDA's 8 and 12 parameter reconstruction of the gauge fields (as of QUDA-1.1.0). Therefore reconstruction/compression is deactivated by default, although it may be activated via the input file, see below.
@@ -83,9 +83,7 @@ If you need a version of QUDA before \url{https://github.com/lattice/quda/commit
 \end{verbatim}
 so that the wrapper to the QUDA fermionic forces is not compiled.
 
-Thus, if \texttt{--enable-quda\_fermionic\_forces=no} setting {\ttfamily UseExternalLibrary=yes} in the inputfile for the {\ttfamily  CLOVERDET, CLOVERDETRATIO} monomials
-is not supported and tmLQCD will stop with an error.
-
+Thus, if \texttt{--enable-quda\_fermionic\_forces=no}, setting {\ttfamily UseExternalLibrary=yes} in the inputfile for the {\ttfamily  CLOVERDET, CLOVERDETRATIO} and {\ttfamily NDCLOVERRAT} monomials is not supported and tmLQCD will stop with an error.
 
 \subsubsection{Usage}
 Any main program that reads and handles the operator declaration from an input file can easily be set up to use the QUDA inverter by setting the {\ttfamily UseExternalInverter} flag to {\ttfamily quda}. For example, in the input file for the {\ttfamily invert} executable, add the flag to the operator declaration as
@@ -131,7 +129,7 @@ At the operator level as well as for fermionic monomials in the HMC, the followi
   \item \texttt{RefinementPrecision}: When the operator or monomial uses the multishift (\texttt{cgmms[nd]}) solver and offloads to QUDA, this parameter sets the inner solver precision of shift-by-shift refinement solves. In practice, one might set \texttt{UseSloppyPrecision = single} and \texttt{RefinementPrecision = half}. This will iterate the residuals in the multishift solver up to single precision and then refine each solution using a double-half mixed-precision CG.
 \end{itemize}
 
-In additition, for the gauge monomial, the parameter \texttt{UseExternalLibrary = quda} can be used to offload the gauge force to QUDA.
+In additition, for the \texttt{GAUGE, CLOVERDET, CLOVERDETRATIO} and \texttt{NDCLOVERRAT} monomials, the parameter \texttt{UseExternalLibrary = quda} can be used to offload the force calculation to QUDA.
 
 Finally, for the \texttt{GRADIENTFLOW} online measurement, the parameter \texttt{UseExternalLibrary = quda} will offload the gradient flow to QUDA.
 
