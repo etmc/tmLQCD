@@ -585,6 +585,86 @@ void reorder_gauge_toQuda( const su3 ** const gaugefield, const CompressionType 
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
 }
 
+void reorder_gauge_fromQuda( const su3 ** const gaugefield, const CompressionType compression ) {
+  tm_stopwatch_push(&g_timers, __func__, "");
+
+#ifdef TM_USE_OMP
+#pragma omp parallel
+  {
+#endif
+  _Complex double tmpcplx;
+
+  size_t gSize = (gauge_param.cpu_prec == QUDA_DOUBLE_PRECISION) ? sizeof(double) : sizeof(float);
+  
+  // now copy and reorder
+#ifdef TM_USE_OMP
+  #pragma omp for collapse(4)
+#endif
+  for( int x0=0; x0<T; x0++ )
+    for( int x1=0; x1<LX; x1++ )
+      for( int x2=0; x2<LY; x2++ )
+        for( int x3=0; x3<LZ; x3++ ) {
+#if USE_LZ_LY_LX_T
+          int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
+          int tm_idx = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
+#else
+          int j = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
+          int tm_idx = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
+#endif
+          int oddBit = (x0+x1+x2+x3) & 1;
+          int quda_idx = 18*(oddBit*VOLUME/2+j/2);
+
+          if( compression == NO_COMPRESSION && quda_input.fermionbc == TM_QUDA_THETABC ) {
+            // apply theta boundary conditions if compression is not used
+            for( int i=0; i<9; i++ ) {
+              tmpcplx = gauge_quda[0][quda_idx+2*i] + I*gauge_quda[0][quda_idx+2*i+1];
+              tmpcplx *= -g_kappa/phase_1;
+              gauge_quda[0][quda_idx+2*i]   = creal(tmpcplx);
+              gauge_quda[0][quda_idx+2*i+1] = cimag(tmpcplx);
+
+              tmpcplx = gauge_quda[1][quda_idx+2*i] + I*gauge_quda[1][quda_idx+2*i+1];
+              tmpcplx *= -g_kappa/phase_2;
+              gauge_quda[1][quda_idx+2*i]   = creal(tmpcplx);
+              gauge_quda[1][quda_idx+2*i+1] = cimag(tmpcplx);
+
+              tmpcplx = gauge_quda[2][quda_idx+2*i] + I*gauge_quda[2][quda_idx+2*i+1];
+              tmpcplx *= -g_kappa/phase_3;
+              gauge_quda[2][quda_idx+2*i]   = creal(tmpcplx);
+              gauge_quda[2][quda_idx+2*i+1] = cimag(tmpcplx);
+
+              tmpcplx = gauge_quda[3][quda_idx+2*i] + I*gauge_quda[3][quda_idx+2*i+1];
+              tmpcplx *= -g_kappa/phase_0;
+              gauge_quda[3][quda_idx+2*i]   = creal(tmpcplx);
+              gauge_quda[3][quda_idx+2*i+1] = cimag(tmpcplx);
+            }
+            // when compression is not used, we can still force naive anti-periodic boundary conditions
+          } else {
+            if ( quda_input.fermionbc == TM_QUDA_APBC && x0+g_proc_coords[0]*T == g_nproc_t*T-1 ) {
+              for( int i=0; i<18; i++ ) {
+                gauge_quda[3][quda_idx+i]   = -gauge_quda[3][quda_idx+i];
+              }
+            } // quda_input.fermionbc
+          } // if(compression & boundary conditions)
+
+#if USE_LZ_LY_LX_T
+          memcpy( &(gaugefield[tm_idx][3]), &(gauge_quda[0][quda_idx]), 18*gSize);
+          memcpy( &(gaugefield[tm_idx][2]), &(gauge_quda[1][quda_idx]), 18*gSize);
+          memcpy( &(gaugefield[tm_idx][1]), &(gauge_quda[2][quda_idx]), 18*gSize);
+          memcpy( &(gaugefield[tm_idx][0]), &(gauge_quda[3][quda_idx]), 18*gSize);
+#else
+          memcpy( &(gaugefield[tm_idx][1]), &(gauge_quda[0][quda_idx]), 18*gSize);
+          memcpy( &(gaugefield[tm_idx][2]), &(gauge_quda[1][quda_idx]), 18*gSize);
+          memcpy( &(gaugefield[tm_idx][3]), &(gauge_quda[2][quda_idx]), 18*gSize);
+          memcpy( &(gaugefield[tm_idx][0]), &(gauge_quda[3][quda_idx]), 18*gSize);
+#endif
+      } // volume loop
+#ifdef TM_USE_OMP
+  } // OpenMP parallel closing brace
+#endif
+
+  tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
+}  /* reorder_gauge_fromQuda */
+
 void _loadGaugeQuda( const CompressionType compression ) {
   static int first_call = 1;
   // check if the currently loaded gauge field is also the current gauge field
@@ -623,6 +703,44 @@ void _loadGaugeQuda( const CompressionType compression ) {
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
 
   set_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0, &gauge_param);
+}
+
+void _saveGaugeQuda( const su3 ** const gaugefield, const int savegaugetype, const CompressionType compression ) {
+
+  if( !quda_initialized ) {
+    if(g_proc_id == 0) {
+      fprintf(stderr, "Error: QUDA must be initialized to call _saveGaugeQuda\n");
+      exit(2);
+    }
+  }
+
+  if( !quda_gauge_state.loaded ) {
+    if(g_proc_id == 0) {
+      fprintf(stderr, "Error: gauge must be loaded in QUDA\n");
+      exit(2);
+    }
+  }
+
+  QudaGaugeParam savegauge_param = newQudaGaugeParam();
+  savegauge_param = gauge_param;
+  savegauge_param.location = QUDA_CPU_FIELD_LOCATION;
+
+  if(savegaugetype == 0) {
+    savegauge_param.type = QUDA_WILSON_LINKS;
+    tm_debug_printf(0, 1, "# TM_QUDA: Called _saveGaugeQuda for gauge type: QUDA_WILSON_LINKS\n");
+  } else if(savegaugetype == 1) {
+    savegauge_param.type = QUDA_SMEARED_LINKS;
+    tm_debug_printf(0, 1, "# TM_QUDA: Called _saveGaugeQuda for gauge type: QUDA_SMEARED_LINKS\n");
+  } else {
+    fprintf(stderr, "Error: Invalid gauge type\n");
+    exit(2);
+  }
+
+  tm_stopwatch_push(&g_timers, "saveGaugeQuda", "");
+  saveGaugeQuda((void *)gauge_quda, &savegauge_param);
+  tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
+  reorder_gauge_fromQuda(gaugefield, compression);
+
 }
 
 // reorder spinor to QUDA format
@@ -1143,15 +1261,6 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   else
     inv_param.residual_type = QUDA_L2_ABSOLUTE_RESIDUAL;
 
-  inv_param.kappa = g_kappa;
-
-  // IMPORTANT: use opposite TM mu-flavor since gamma5 -> -gamma5
-  inv_param.mu           = -g_mubar /2./g_kappa;
-  inv_param.epsilon      =  g_epsbar/2./g_kappa;
-  // FIXME: in principle, there is also QUDA_TWIST_DEG_DOUBLET
-  inv_param.twist_flavor =  QUDA_TWIST_NONDEG_DOUBLET; 
-  inv_param.Ls = 2;
-
   // figure out which BC to use (theta, trivial...)
   set_boundary_conditions(&compression, &gauge_param);
 
@@ -1161,55 +1270,17 @@ int invert_doublet_eo_quda(spinor * const Even_new_s, spinor * const Odd_new_s,
   // load gauge after setting precision
    _loadGaugeQuda(compression);
 
-  // choose dslash type
-  if( g_c_sw > 0.0 ) {
-    inv_param.dslash_type = QUDA_TWISTED_CLOVER_DSLASH;
-    inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN; // FIXME: note sure if this is the correct PC type
-    inv_param.solution_type = QUDA_MAT_SOLUTION;
-    inv_param.clover_order = QUDA_PACKED_CLOVER_ORDER;
-    inv_param.clover_coeff = g_c_sw*g_kappa;
-    inv_param.compute_clover = 1;
-    inv_param.compute_clover_inverse = 1;
-  }
-  else {
-    inv_param.dslash_type = QUDA_TWISTED_MASS_DSLASH;
-    inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN_ASYMMETRIC;
-    inv_param.solution_type = QUDA_MAT_SOLUTION;
-  }
-
-  // choose solver
-  if(solver_flag == BICGSTAB) {
-    if(g_proc_id == 0) {printf("# TM_QUDA: Using BiCGstab!\n"); fflush(stdout);}
-    inv_param.inv_type = QUDA_BICGSTAB_INVERTER;
-  }
-  else {
-    /* Here we invert the hermitean operator squared */
-    inv_param.inv_type = QUDA_CG_INVERTER;
-    if(g_proc_id == 0) {
-      printf("# TM_QUDA: Using mixed precision CG!\n");
-      printf("# TM_QUDA: mu = %.12f, kappa = %.12f\n", g_mu/2./g_kappa, g_kappa);
-      fflush(stdout);
-    }
-  }
-
-  if( even_odd_flag ) {
-    inv_param.solve_type = QUDA_NORMERR_PC_SOLVE;
-    if(g_proc_id == 0) printf("# TM_QUDA: Using EO preconditioning!\n");
-  }
-  else {
-    inv_param.solve_type = QUDA_NORMERR_SOLVE;
-    if(g_proc_id == 0) printf("# TM_QUDA: Not using EO preconditioning!\n");
-  }
-
-  inv_param.tol = sqrt(precision);
-  inv_param.maxiter = max_iter;
-
-  if( g_c_sw > 0.0 ){
-    _loadCloverQuda(&inv_param);
-  }
-  
-  // while the other solver interfaces may need to set this to QUDA_DAG_YES, we
-  // always want to set it to QUDA_DAG_NO
+  _setTwoFlavourSolverParam(g_kappa,
+                            g_c_sw,
+                            g_mubar,
+                            g_epsbar,
+                            solver_flag,
+                            even_odd_flag,
+                            precision,
+                            max_iter,
+                            0 /* not a single parity solve */,
+                            0 /* not a QpQm solve */);
+  // in contrast to the HMC we always want QUDA_DAG_NO here
   inv_param.dagger = QUDA_DAG_NO;
 
   // reorder spinor
@@ -1546,7 +1617,7 @@ void _updateQudaMultigridPreconditioner(){
 
     // if we have set an explicit mu value for the generation of our MG setup,
     // we would like to use it here
-    if( fabs(quda_input.mg_setup_2kappamu) > 2*DBL_EPSILON ){
+    if( fabs( fabs(quda_input.mg_setup_2kappamu/2.0/g_kappa) - fabs(quda_mg_param.invert_param->mu) ) > 2*DBL_EPSILON ){
       double save_mu = quda_mg_param.invert_param->mu;
       // note the minus sign
       quda_mg_param.invert_param->mu = -quda_input.mg_setup_2kappamu/2.0/g_kappa;
@@ -1729,6 +1800,7 @@ void _setTwoFlavourSolverParam(const double kappa, const double c_sw, const doub
   // solver (for example in the HMC or when doing light and heavy inversions)
   if( solver_type != MG ){
     inv_param.inv_type_precondition = QUDA_INVALID_INVERTER;
+    inv_param.preconditioner = NULL;
   }
 
   // direct or norm-op. solve
