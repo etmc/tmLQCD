@@ -62,17 +62,6 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   int N = VOLUME/2;
   tm_stopwatch_push(&g_timers, __func__, mnl->name);
-  tm_stopwatch_push(&g_timers, "su3_zero", "");
-#ifdef TM_USE_OMP
-  #pragma omp parallel for
-#endif
-  for(int i = 0; i < VOLUME; i++) { 
-    for(int mu = 0; mu < 4; mu++) { 
-      _su3_zero(swm[i][mu]);
-      _su3_zero(swp[i][mu]);
-    }
-  }
-  tm_stopwatch_pop(&g_timers, 0, 1, "");
 
   mnl->forcefactor = 1.;
   /*********************************************************************
@@ -89,16 +78,29 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   g_kappa = mnl->kappa;
   boundary(mnl->kappa);
   
-  // we compute the clover term (1 + T_ee(oo)) for all sites x
-  sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
-  // we invert it for the even sites only
-  if(!mnl->even_odd_flag) {
-    N = VOLUME;
+  if( g_debug_level > 2 || g_strict_residual_check || !(mnl->external_library == QUDA_LIB && mnl->solver_params.external_inverter == QUDA_INVERTER) ){
+    tm_stopwatch_push(&g_timers, "su3_zero", "");
+  #ifdef TM_USE_OMP
+    #pragma omp parallel for
+  #endif
+    for(int i = 0; i < VOLUME; i++) { 
+      for(int mu = 0; mu < 4; mu++) { 
+        _su3_zero(swm[i][mu]);
+        _su3_zero(swp[i][mu]);
+      }
+    }
+    tm_stopwatch_pop(&g_timers, 0, 1, "");
+
+    // we compute the clover term (1 + T_ee(oo)) for all sites x
+    sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
+    // we invert it for the even sites only
+    if(!mnl->even_odd_flag) {
+      N = VOLUME;
+    }
+    else {
+      sw_invert(EE, mnl->mu);
+    }
   }
-  else {
-    sw_invert(EE, mnl->mu);
-  }
-  
   // Invert Q_{+} Q_{-}
   // X_o -> w_fields[1]
   chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
@@ -274,15 +276,17 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
   g_kappa = mnl->kappa;
   boundary(mnl->kappa);
 
-  sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
+  if( g_debug_level > 2 || g_strict_residual_check || !(mnl->external_library == QUDA_LIB && mnl->solver_params.external_inverter == QUDA_INVERTER) ){
 
-  if(!mnl->even_odd_flag) {
-    N = VOLUME;
-  }
-  else {
-    sw_invert(EE, mnl->mu);
-  }
+    sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
 
+    if(!mnl->even_odd_flag) {
+      N = VOLUME;
+    }
+    else {
+      sw_invert(EE, mnl->mu);
+    }
+  }
   g_sloppy_precision_flag = 0;
 
   if( mnl->solver == MG || mnl->solver == BICGSTAB ){

@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include <string.h>
 #include "global.h"
 #include "su3.h"
 #include "linalg_eo.h"
@@ -48,6 +49,11 @@
 #include "phmc.h"
 #include "ndrat_monomial.h"
 #include "default_input_values.h"
+#include "compare_derivative.h"
+#include "xchange/xchange_deri.h"
+#ifdef TM_USE_QUDA
+#  include "quda_interface.h"
+#endif
 
 void nd_set_global_parameter(monomial * const mnl) {
 
@@ -66,7 +72,6 @@ void nd_set_global_parameter(monomial * const mnl) {
   return;
 }
 
-
 /********************************************
  *
  * Here \delta S_b is computed
@@ -78,23 +83,25 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   tm_stopwatch_push(&g_timers, __func__, mnl->name);
   nd_set_global_parameter(mnl);
   if(mnl->type == NDCLOVERRAT) {
-    tm_stopwatch_push(&g_timers, "su3_zero", "");
-#ifdef TM_USE_OMP
-    #pragma omp parallel for
-#endif
-    for(int i = 0; i < VOLUME; i++) { 
-      for(int mu = 0; mu < 4; mu++) { 
-        _su3_zero(swm[i][mu]);
-        _su3_zero(swp[i][mu]);
+    if( g_debug_level > 2 || g_strict_residual_check || !(mnl->external_library == QUDA_LIB && mnl->solver_params.external_inverter == QUDA_INVERTER) ){
+      tm_stopwatch_push(&g_timers, "su3_zero", "");
+  #ifdef TM_USE_OMP
+      #pragma omp parallel for
+  #endif
+      for(int i = 0; i < VOLUME; i++) { 
+        for(int mu = 0; mu < 4; mu++) { 
+          _su3_zero(swm[i][mu]);
+          _su3_zero(swp[i][mu]);
+        }
       }
+      tm_stopwatch_pop(&g_timers, 0, 1, "");
+
+      // we compute the clover term (1 + T_ee(oo)) for all sites x
+      sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
+      // we invert it for the even sites only
+      sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
+      copy_32_sw_fields();
     }
-    tm_stopwatch_pop(&g_timers, 0, 1, "");
-  
-    // we compute the clover term (1 + T_ee(oo)) for all sites x
-    sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
-    // we invert it for the even sites only
-    sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
-    copy_32_sw_fields();
   }
   mnl->forcefactor = mnl->EVMaxInv;
 
@@ -116,87 +123,135 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   mnl->iter1 += solve_mms_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
                              mnl->pf, mnl->pf2, &(mnl->solver_params) );
 
-  for(int j = (mnl->rat.np-1); j > -1; j--) {
-    if(mnl->type == NDCLOVERRAT) {
-      // multiply with Q_h * tau^1 + i mu_j to get Y_j,o (odd sites)
-      // needs phmc_Cpol = 1 to work for ndrat!
-      tm_stopwatch_push(&g_timers, "Qsw_tau1_sub_const_ndpsi", "");
-      Qsw_tau1_sub_const_ndpsi(mnl->w_fields[0], mnl->w_fields[1],
-			       g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-			       -I*mnl->rat.mu[j], 1., mnl->EVMaxInv);
-      tm_stopwatch_pop(&g_timers, 0, 1, "");
-      
-      /* Get the even parts X_j,e */
-      /* H_eo_... includes tau_1 */
-      tm_stopwatch_push(&g_timers, "H_eo_sw_ndpsi", "");
-      H_eo_sw_ndpsi(mnl->w_fields[2], mnl->w_fields[3], 
-		    g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j]);
-      tm_stopwatch_pop(&g_timers, 0, 1, "");
-
-    } else {
-      // multiply with Q_h * tau^1 + i mu_j to get Y_j,o (odd sites)
-      // needs phmc_Cpol = 1 to work for ndrat!
-      tm_stopwatch_push(&g_timers, "Q_tau1_sub_const_ndpsi", "");
-      Q_tau1_sub_const_ndpsi(mnl->w_fields[0], mnl->w_fields[1],
-			     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
-			     -I*mnl->rat.mu[j], 1., mnl->EVMaxInv);
-      tm_stopwatch_pop(&g_timers, 0, 1, "");
-      
-      /* Get the even parts X_j,e */
-      /* H_eo_... includes tau_1 */
-      tm_stopwatch_push(&g_timers, "H_eo_tm_ndpsi", "");
-      H_eo_tm_ndpsi(mnl->w_fields[2], mnl->w_fields[3], 
-		    g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], EO);
-      tm_stopwatch_pop(&g_timers, 0, 1, "");
+  if ( mnl->external_library == QUDA_LIB){
+    if(!mnl->even_odd_flag) {
+      fatal_error("QUDA support only even_odd_flag",__func__);
     }
-    /* X_j,e^dagger \delta M_eo Y_j,o */
-    deriv_Sb(EO, mnl->w_fields[2], mnl->w_fields[0], 
-	     hf, mnl->rat.rmu[j]*mnl->forcefactor);
-    deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1],
-	     hf, mnl->rat.rmu[j]*mnl->forcefactor);
-
-    if(mnl->type == NDCLOVERRAT) {
-      /* Get the even parts Y_j,e */
-      tm_stopwatch_push(&g_timers, "H_eo_sw_ndpsi", "");
-      H_eo_sw_ndpsi(mnl->w_fields[4], mnl->w_fields[5], mnl->w_fields[0], mnl->w_fields[1]);
-      tm_stopwatch_pop(&g_timers, 0, 1, "");
+#ifdef TM_USE_QUDA
+    if (g_debug_level > 3) {
+#ifdef TM_USE_MPI
+      // FIXME: here we do not need to set to zero the interior but only the halo
+#ifdef TM_USE_OMP
+      # pragma omp parallel for
+#endif // end setting to zero the halo when using MPI
+      for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand);i++) { 
+        for(int mu=0;mu<4;mu++) { 
+          _zero_su3adj(debug_derivative[i][mu]);
+        }
+      }
+#endif
+      // we copy only the interior
+      memcpy(debug_derivative[0], hf->derivative[0], 4*VOLUME*sizeof(su3adj));
     }
-    else {
-      /* Get the even parts Y_j,e */
-      tm_stopwatch_push(&g_timers, "H_eo_tm_ndpsi", "");
-      H_eo_tm_ndpsi(mnl->w_fields[4], mnl->w_fields[5], mnl->w_fields[0], mnl->w_fields[1], EO);
-      tm_stopwatch_pop(&g_timers, 0, 1, "");
+    if(! (mnl->type == NDCLOVERRAT)){
+      fatal_error("QUDA support only mnl->type = NDCLOVERRAT",__func__);
     }
+    // corrispondence tmLQCD with QUDA:
+    // g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j] = x[i][parity] 
+    // mnl->w_fields[2], mnl->w_fields[3] = x[i][other_parity] *kappa
+    // mnl->w_fields[0], mnl->w_fields[1] = p[i][parity] 
+    // mnl->w_fields[4], mnl->w_fields[5] = p[i][other_parity] *kappa
+    // further in quda parity = odd and other_parity = even
+    compute_ndcloverrat_derivative_quda(mnl, hf, g_chi_up_spinor_field, g_chi_dn_spinor_field, &(mnl->solver_params), !mnl->trlog );
 
-    /* X_j,o \delta M_oe Y_j,e */
-    deriv_Sb(OE, g_chi_up_spinor_field[j], mnl->w_fields[4], 
-	     hf, mnl->rat.rmu[j]*mnl->forcefactor);
-    deriv_Sb(OE, g_chi_dn_spinor_field[j], mnl->w_fields[5], 
-	     hf, mnl->rat.rmu[j]*mnl->forcefactor);
+    if (g_debug_level > 3){
+      su3adj **given = hf->derivative;
+      hf->derivative = debug_derivative;
+      mnl->external_library = NO_EXT_LIB;
+      tm_debug_printf( 0, 3, "Recomputing the derivative from tmLQCD\n");
+      ndrat_derivative(id, hf);
+      #ifdef TM_USE_MPI
+        xchange_deri(hf->derivative);// this function use ddummy inside
+      #endif
+      compare_derivative(mnl, given, hf->derivative, 1e-9, "ndrat_derivative");
+      mnl->external_library = QUDA_LIB;
+      hf->derivative = given;
+    }
+  #endif // no other option, TM_USE_QUDA already checked by solver
+  }
+  else{
+    for(int j = 0; j < mnl->rat.np; j++) {
+      if(mnl->type == NDCLOVERRAT) {
+        // multiply with Q_h * tau^1 + i mu_j to get Y_j,o (odd sites)
+        // needs phmc_Cpol = 1 to work for ndrat!
+        tm_stopwatch_push(&g_timers, "Qsw_tau1_sub_const_ndpsi", "");
+        Qsw_tau1_sub_const_ndpsi(mnl->w_fields[0], mnl->w_fields[1],
+              g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
+              -I*mnl->rat.mu[j], 1., mnl->EVMaxInv);
+        tm_stopwatch_pop(&g_timers, 0, 1, "");
+        
+        /* Get the even parts X_j,e */
+        /* H_eo_... includes tau_1 */
+        tm_stopwatch_push(&g_timers, "H_eo_sw_ndpsi", "");
+        H_eo_sw_ndpsi(mnl->w_fields[2], mnl->w_fields[3], 
+          g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j]);
+        tm_stopwatch_pop(&g_timers, 0, 1, "");
+       } else {
+        // multiply with Q_h * tau^1 + i mu_j to get Y_j,o (odd sites)
+        // needs phmc_Cpol = 1 to work for ndrat!
+        tm_stopwatch_push(&g_timers, "Q_tau1_sub_const_ndpsi", "");
+        Q_tau1_sub_const_ndpsi(mnl->w_fields[0], mnl->w_fields[1],
+            g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], 
+            -I*mnl->rat.mu[j], 1., mnl->EVMaxInv);
+        tm_stopwatch_pop(&g_timers, 0, 1, "");
+        
+        /* Get the even parts X_j,e */
+        /* H_eo_... includes tau_1 */
+        tm_stopwatch_push(&g_timers, "H_eo_tm_ndpsi", "");
+        H_eo_tm_ndpsi(mnl->w_fields[2], mnl->w_fields[3], 
+          g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j], EO);
+        tm_stopwatch_pop(&g_timers, 0, 1, "");
+      }
+      /* X_j,e^dagger \delta M_eo Y_j,o */
+      deriv_Sb(EO, mnl->w_fields[2], mnl->w_fields[0], 
+        hf, mnl->rat.rmu[j]*mnl->forcefactor);
+      deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1],
+        hf, mnl->rat.rmu[j]*mnl->forcefactor);
 
+      if(mnl->type == NDCLOVERRAT) {
+        /* Get the even parts Y_j,e */
+        tm_stopwatch_push(&g_timers, "H_eo_sw_ndpsi", "");
+        H_eo_sw_ndpsi(mnl->w_fields[4], mnl->w_fields[5], mnl->w_fields[0], mnl->w_fields[1]);
+        tm_stopwatch_pop(&g_timers, 0, 1, "");
+      }
+      else {
+        /* Get the even parts Y_j,e */
+        tm_stopwatch_push(&g_timers, "H_eo_tm_ndpsi", "");
+        H_eo_tm_ndpsi(mnl->w_fields[4], mnl->w_fields[5], mnl->w_fields[0], mnl->w_fields[1], EO);
+        tm_stopwatch_pop(&g_timers, 0, 1, "");
+      }
+
+      /* X_j,o \delta M_oe Y_j,e */
+      deriv_Sb(OE, g_chi_up_spinor_field[j], mnl->w_fields[4], 
+        hf, mnl->rat.rmu[j]*mnl->forcefactor);
+      deriv_Sb(OE, g_chi_dn_spinor_field[j], mnl->w_fields[5], 
+        hf, mnl->rat.rmu[j]*mnl->forcefactor);
+
+      if(mnl->type == NDCLOVERRAT) {
+        // even/even sites sandwiched by tau_1 gamma_5 Y_e and gamma_5 X_e
+        sw_spinor_eo(EE, mnl->w_fields[5], mnl->w_fields[2], 
+        mnl->rat.rmu[j]*mnl->forcefactor);
+        // odd/odd sites sandwiched by tau_1 gamma_5 Y_o and gamma_5 X_o
+        sw_spinor_eo(OO, g_chi_up_spinor_field[j], mnl->w_fields[1],
+        mnl->rat.rmu[j]*mnl->forcefactor);
+        
+        // even/even sites sandwiched by tau_1 gamma_5 Y_e and gamma_5 X_e
+        sw_spinor_eo(EE, mnl->w_fields[4], mnl->w_fields[3], 
+        mnl->rat.rmu[j]*mnl->forcefactor);
+        // odd/odd sites sandwiched by tau_1 gamma_5 Y_o and gamma_5 X_o
+        sw_spinor_eo(OO, g_chi_dn_spinor_field[j], mnl->w_fields[0],
+        mnl->rat.rmu[j]*mnl->forcefactor);
+      }
+    }
+    // trlog part does not depend on the normalisation
+    if(mnl->type == NDCLOVERRAT && mnl->trlog) {
+      sw_deriv_nd(EE);
+    }
     if(mnl->type == NDCLOVERRAT) {
-      // even/even sites sandwiched by tau_1 gamma_5 Y_e and gamma_5 X_e
-      sw_spinor_eo(EE, mnl->w_fields[5], mnl->w_fields[2], 
-		   mnl->rat.rmu[j]*mnl->forcefactor);
-      // odd/odd sites sandwiched by tau_1 gamma_5 Y_o and gamma_5 X_o
-      sw_spinor_eo(OO, g_chi_up_spinor_field[j], mnl->w_fields[1],
-		   mnl->rat.rmu[j]*mnl->forcefactor);
-      
-      // even/even sites sandwiched by tau_1 gamma_5 Y_e and gamma_5 X_e
-      sw_spinor_eo(EE, mnl->w_fields[4], mnl->w_fields[3], 
-		   mnl->rat.rmu[j]*mnl->forcefactor);
-      // odd/odd sites sandwiched by tau_1 gamma_5 Y_o and gamma_5 X_o
-      sw_spinor_eo(OO, g_chi_dn_spinor_field[j], mnl->w_fields[0],
-		   mnl->rat.rmu[j]*mnl->forcefactor);
+      sw_all(hf, mnl->kappa, mnl->c_sw);
     }
   }
-  // trlog part does not depend on the normalisation
-  if(mnl->type == NDCLOVERRAT && mnl->trlog) {
-    sw_deriv_nd(EE);
-  }
-  if(mnl->type == NDCLOVERRAT) {
-    sw_all(hf, mnl->kappa, mnl->c_sw);
-  }
+  
   tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
 }
@@ -270,9 +325,11 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
   tm_stopwatch_push(&g_timers, __func__, mnl->name);
   nd_set_global_parameter(mnl);
   if(mnl->type == NDCLOVERRAT) {
-    sw_term((const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
-    sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
-    copy_32_sw_fields();
+    if( g_debug_level > 2 || g_strict_residual_check || !(mnl->external_library == QUDA_LIB && mnl->solver_params.external_inverter == QUDA_INVERTER) ){
+      sw_term((const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
+      sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
+      copy_32_sw_fields();
+    }
   }
   mnl->energy1 = 0.;
 
