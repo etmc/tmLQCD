@@ -2605,7 +2605,67 @@ void compute_WFlow_quda(const double eps, const double tmax, const double t0, co
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 }
 
+void compute_GFlow_quda(spinor * const f_out, spinor * const f_in, const double eps, const double tmax, const double t0, const int traj, const int restart){
+  tm_stopwatch_push(&g_timers, __func__, "");
+  
+  _initQuda();
+  _loadGaugeQuda(NO_COMPRESSION);//check here the input
 
+  QudaInvertParam wflow_invert_param = newQudaInvertParam();
+  wflow_invert_param = inv_param;
+
+  void *spinorIn = (void*)f_in;
+  void *spinorOut = (void*)f_out;
+  reorder_spinor_toQuda((double*)spinorIn, wflow_invert_param.cpu_prec, 0);
+
+  QudaGaugeSmearParam gflow_params = newQudaGaugeSmearParam();
+  gflow_params.smear_type = QUDA_GAUGE_SMEAR_WILSON_FLOW; 
+  gflow_params.n_steps = round((tmax - t0) / eps); 
+  gflow_params.epsilon = eps;
+  gflow_params.meas_interval = 1;
+  if (restart) {
+    gflow_params.restart = QUDA_BOOLEAN_YES;
+  } else {
+    gflow_params.restart = QUDA_BOOLEAN_NO;
+  }
+  gflow_params.t0 = t0;
+
+  int n_meas= gflow_params.n_steps / gflow_params.meas_interval + 1 ;
+  QudaGaugeObservableParam *obs_param;
+  obs_param = (QudaGaugeObservableParam*) malloc(sizeof(QudaGaugeObservableParam) * n_meas);
+  for (int i=0; i<n_meas; i++){
+    obs_param[i] = newQudaGaugeObservableParam();   
+    obs_param[i].compute_plaquette = QUDA_BOOLEAN_TRUE;
+    obs_param[i].compute_qcharge = QUDA_BOOLEAN_TRUE; 
+    obs_param[i].su_project = QUDA_BOOLEAN_TRUE; 
+  }
+
+  setVerbosityQuda(QUDA_VERBOSE, "# QUDA: ", stdout);
+  performGFlowQuda((void*)spinorOut, (void*)spinorIn, &wflow_invert_param, &gflow_params, obs_param);
+  _setVerbosityQuda();
+  reorder_spinor_fromQuda((double*)spinorOut, inv_param.cpu_prec, 0);
+
+  tm_debug_printf(0, 3, "traj t P Eplaq Esym tsqEplaq tsqEsym Wsym Qsym\n");  
+
+  for(int i=1; i< gflow_params.n_steps; i+=2){  
+    const double t1 = t0 + i*eps;
+    const double P = obs_param[i].plaquette[0];
+    const double E0 = obs_param[i-1].energy[0]; // E(t=t0)
+    const double E1 = obs_param[i].energy[0]; // E(t=t1)
+    const double E2 = obs_param[i+1].energy[0]; // E(t=t2)
+    const double W = t1*t1 * (2 * E1 + t1 * ((E2 - E0) / (2 * eps)));
+    const double Q = -obs_param[i].qcharge; // topological charge Q
+
+    tm_debug_printf(0, 3,
+      "# GRADFLOW: sym(plaq)  t=%lf 1-P(t)=%1.8lf E(t)=%2.8lf(%2.8lf) t^2E=%2.8lf(%2.8lf) "
+      "W(t)=%2.8lf Q(t)=%.8lf \n",
+      t1, 1 - P, E1, 36 * (1 - P), t1*t1*E1, t1*t1 * 36 * (1 - P), W,  Q);
+    
+  }
+
+  free(obs_param);
+  tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
+}
 
 
 /********************************************************
