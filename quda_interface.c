@@ -2715,7 +2715,9 @@ void update_tunable_params(tm_QudaMGTunableParams_t * tunable_params,
       }
     case TM_MG_TUNE_COARSE_SOLVER_MAXITER:
       {
-        tunable_params->mg_coarse_solver_maxiter[lvl] += tuning_plan->mg_coarse_solver_maxiter_delta[lvl]; 
+        if( tunable_params->mg_coarse_solver_maxiter[lvl] + tuning_plan->mg_coarse_solver_maxiter_delta[lvl] >= 0 ){
+          tunable_params->mg_coarse_solver_maxiter[lvl] += tuning_plan->mg_coarse_solver_maxiter_delta[lvl]; 
+        }
         break;
       }
     case TM_MG_TUNE_COARSE_SOLVER_TOL:
@@ -2725,12 +2727,16 @@ void update_tunable_params(tm_QudaMGTunableParams_t * tunable_params,
       }
     case TM_MG_TUNE_NU_PRE:
       {
-        tunable_params->mg_nu_pre[lvl] += tuning_plan->mg_nu_pre_delta[lvl];
+        if( tunable_params->mg_nu_pre[lvl] + tuning_plan->mg_nu_pre_delta[lvl] >= 0 ){
+          tunable_params->mg_nu_pre[lvl] += tuning_plan->mg_nu_pre_delta[lvl];
+        }
         break;
       }
     case TM_MG_TUNE_NU_POST:
-      {
-        tunable_params->mg_nu_post[lvl] += tuning_plan->mg_nu_post_delta[lvl];
+      { 
+        if( tunable_params->mg_nu_post[lvl] + tuning_plan->mg_nu_post_delta[lvl] >= 0 ){
+          tunable_params->mg_nu_post[lvl] += tuning_plan->mg_nu_post_delta[lvl];
+        }
         break;
       }
     case TM_MG_TUNE_SMOOTHER_TOL:
@@ -2894,19 +2900,19 @@ tm_QudaMGTuningDirection_t update_tuning_dir(const tm_QudaMGTuningPlan_t * const
              tuning_plan->mg_mu_factor_steps[lvl] > 0 ) )
           return TM_MG_TUNE_MU_FACTOR;
         break;
-      case TM_MG_TUNE_COARSE_SOLVER_MAXITER:
-        if( (i == (int)tuning_dir &&
-             tuning_plan->mg_coarse_solver_maxiter_steps[lvl] > cur_dir_steps_done ) ||
-            (i != (int)tuning_dir &&
-             tuning_plan->mg_coarse_solver_maxiter_steps[lvl] > 0 ) )
-          return TM_MG_TUNE_COARSE_SOLVER_MAXITER;
-        break;
       case TM_MG_TUNE_COARSE_SOLVER_TOL:
         if( (i == (int)tuning_dir &&
              tuning_plan->mg_coarse_solver_tol_steps[lvl] > cur_dir_steps_done ) ||
             (i != (int)tuning_dir &&
              tuning_plan->mg_coarse_solver_tol_steps[lvl] > 0 ) )
           return TM_MG_TUNE_COARSE_SOLVER_TOL;
+        break;
+      case TM_MG_TUNE_COARSE_SOLVER_MAXITER:
+        if( (i == (int)tuning_dir &&
+             tuning_plan->mg_coarse_solver_maxiter_steps[lvl] > cur_dir_steps_done ) ||
+            (i != (int)tuning_dir &&
+             tuning_plan->mg_coarse_solver_maxiter_steps[lvl] > 0 ) )
+          return TM_MG_TUNE_COARSE_SOLVER_MAXITER;
         break;
       case TM_MG_TUNE_NU_POST:
         if( (i == (int)tuning_dir && 
@@ -2952,11 +2958,11 @@ void adjust_tuning_plan(tm_QudaMGTuningPlan_t * tuning_plan,
     case TM_MG_TUNE_MU_FACTOR:
       tuning_plan->mg_mu_factor_steps[lvl] = 0;
       break;
-    case TM_MG_TUNE_COARSE_SOLVER_MAXITER:
-      tuning_plan->mg_coarse_solver_maxiter_steps[lvl] = 0;
-      break;
     case TM_MG_TUNE_COARSE_SOLVER_TOL:
       tuning_plan->mg_coarse_solver_tol_steps[lvl] = 0;
+      break;
+    case TM_MG_TUNE_COARSE_SOLVER_MAXITER:
+      tuning_plan->mg_coarse_solver_maxiter_steps[lvl] = 0;
       break;
     case TM_MG_TUNE_NU_PRE:
       tuning_plan->mg_nu_pre_steps[lvl] = 0;
@@ -2972,7 +2978,6 @@ void adjust_tuning_plan(tm_QudaMGTuningPlan_t * tuning_plan,
       break;
     case TM_MG_TUNE_INVALID:
     default:
-      return TM_MG_TUNE_INVALID;
       break;
   }
 }
