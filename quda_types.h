@@ -124,10 +124,10 @@ typedef struct tm_QudaParams_t {
 typedef struct tm_QudaMGTuningPlan_t {
   int                  mg_mu_factor_steps[QUDA_MAX_MG_LEVEL];
   double               mg_mu_factor_delta[QUDA_MAX_MG_LEVEL];
-  int                  mg_coarse_solver_maxiter_steps[QUDA_MAX_MG_LEVEL];
-  int                  mg_coarse_solver_maxiter_delta[QUDA_MAX_MG_LEVEL];
   int                  mg_coarse_solver_tol_steps[QUDA_MAX_MG_LEVEL];
   double               mg_coarse_solver_tol_delta[QUDA_MAX_MG_LEVEL];
+  int                  mg_coarse_solver_maxiter_steps[QUDA_MAX_MG_LEVEL];
+  int                  mg_coarse_solver_maxiter_delta[QUDA_MAX_MG_LEVEL];
   int                  mg_nu_pre_steps[QUDA_MAX_MG_LEVEL];
   int                  mg_nu_pre_delta[QUDA_MAX_MG_LEVEL];
   int                  mg_nu_post_steps[QUDA_MAX_MG_LEVEL];
@@ -143,8 +143,8 @@ typedef struct tm_QudaMGTuningPlan_t {
 
 typedef struct tm_QudaMGTunableParams_t {
   double               mg_mu_factor[QUDA_MAX_MG_LEVEL];
-  int                  mg_coarse_solver_maxiter[QUDA_MAX_MG_LEVEL];
   double               mg_coarse_solver_tol[QUDA_MAX_MG_LEVEL];
+  int                  mg_coarse_solver_maxiter[QUDA_MAX_MG_LEVEL];
   int                  mg_nu_pre[QUDA_MAX_MG_LEVEL];
   int                  mg_nu_post[QUDA_MAX_MG_LEVEL];
   double               mg_smoother_tol[QUDA_MAX_MG_LEVEL];
@@ -155,8 +155,8 @@ typedef struct tm_QudaMGTunableParams_t {
 
 typedef enum tm_QudaMGTuningDirection_t {
   TM_MG_TUNE_MU_FACTOR = 0,
-  TM_MG_TUNE_COARSE_SOLVER_MAXITER,
   TM_MG_TUNE_COARSE_SOLVER_TOL,
+  TM_MG_TUNE_COARSE_SOLVER_MAXITER,
   TM_MG_TUNE_NU_POST,
   TM_MG_TUNE_NU_PRE,
   TM_MG_TUNE_SMOOTHER_TOL,
@@ -424,7 +424,7 @@ static inline void copy_quda_mg_tunable_params_from_input(tm_QudaMGTunableParams
 
 static inline void copy_quda_mg_tunable_params(tm_QudaMGTunableParams_t * const lhs,
                                                const tm_QudaMGTunableParams_t * const rhs){
-  for(int lvl = 0; lvl <= QUDA_MAX_MG_LEVEL; lvl++){
+  for(int lvl = 0; lvl <= QUDA_MAX_MG_LEVEL-1; lvl++){
     lhs->mg_mu_factor[lvl] = rhs->mg_mu_factor[lvl];
     lhs->mg_coarse_solver_maxiter[lvl] = rhs->mg_coarse_solver_maxiter[lvl];
     lhs->mg_coarse_solver_tol[lvl] = rhs->mg_coarse_solver_tol[lvl];
