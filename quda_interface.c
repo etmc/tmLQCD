@@ -3014,16 +3014,20 @@ void quda_mg_tune_params(void * spinorOut, void * spinorIn, const int max_iter){
     copy_quda_mg_tunable_params(&tunable_params[0], &cur_params);
     print_tunable_params_pair(&cur_params, &tunable_params[0], mg_n_level);
    
+    MPI_Barrier(MPI_COMM_WORLD);
     tm_stopwatch_push(&g_timers, "updateMultigridQuda", ""); 
     updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
     tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
+    MPI_Barrier(MPI_COMM_WORLD);
   }
 
+  MPI_Barrier(MPI_COMM_WORLD);
   tm_stopwatch_push(&g_timers, "invertQuda", ""); 
   invertQuda(spinorOut, spinorIn, &inv_param);
   tunable_params[0].tts = inv_param.secs;
   tunable_params[0].iter = inv_param.iter;
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
+  MPI_Barrier(MPI_COMM_WORLD);
 
   for(i = 1; i < quda_mg_tuning_plan.mg_tuning_iterations; i++){
     // the best params from all previous iterations
@@ -3068,13 +3072,16 @@ void quda_mg_tune_params(void * spinorOut, void * spinorIn, const int max_iter){
    
     print_tunable_params_pair(&cur_params, &tunable_params[i], mg_n_level);
 
+    MPI_Barrier(MPI_COMM_WORLD);
     tm_stopwatch_push(&g_timers, "updateMultigridQuda", ""); 
     updateMultigridQuda(quda_mg_preconditioner, &quda_mg_param);
     tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
+    MPI_Barrier(MPI_COMM_WORLD);
     
     tm_stopwatch_push(&g_timers, "invertQuda", ""); 
     invertQuda(spinorOut, spinorIn, &inv_param);
     tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
+    MPI_Barrier(MPI_COMM_WORLD);
 
     tunable_params[i].tts = inv_param.secs;
     tunable_params[i].iter = inv_param.iter;
