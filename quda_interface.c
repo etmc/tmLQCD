@@ -2710,7 +2710,9 @@ void update_tunable_params(tm_QudaMGTunableParams_t * tunable_params,
   switch(tuning_dir){
     case TM_MG_TUNE_MU_FACTOR:
       {
-        tunable_params->mg_mu_factor[lvl] += tuning_plan->mg_mu_factor_delta[lvl];
+        if( tunable_params->mg_mu_factor[lvl] + tuning_plan->mg_mu_factor_delta[lvl] > 0){
+          tunable_params->mg_mu_factor[lvl] += tuning_plan->mg_mu_factor_delta[lvl];
+        }
         break;
       }
     case TM_MG_TUNE_COARSE_SOLVER_MAXITER:
@@ -2722,7 +2724,9 @@ void update_tunable_params(tm_QudaMGTunableParams_t * tunable_params,
       }
     case TM_MG_TUNE_COARSE_SOLVER_TOL:
       {
-        tunable_params->mg_coarse_solver_tol[lvl] += tuning_plan->mg_coarse_solver_tol_delta[lvl];
+        if( tunable_params->mg_coarse_solver_tol[lvl] + tuning_plan->mg_coarse_solver_tol_delta[lvl] > 0 ){
+          tunable_params->mg_coarse_solver_tol[lvl] += tuning_plan->mg_coarse_solver_tol_delta[lvl];
+        }
         break;
       }
     case TM_MG_TUNE_NU_PRE:
@@ -2741,12 +2745,16 @@ void update_tunable_params(tm_QudaMGTunableParams_t * tunable_params,
       }
     case TM_MG_TUNE_SMOOTHER_TOL:
       {
-        tunable_params->mg_smoother_tol[lvl] += tuning_plan->mg_smoother_tol_delta[lvl];
+        if( tunable_params->mg_smoother_tol[lvl] + tuning_plan->mg_smoother_tol_delta[lvl] > 0 ){
+          tunable_params->mg_smoother_tol[lvl] += tuning_plan->mg_smoother_tol_delta[lvl];
+        }
         break;
       }
     case TM_MG_TUNE_OMEGA:
       {
-        tunable_params->mg_omega[lvl] += tuning_plan->mg_omega_delta[lvl];
+        if( tunable_params->mg_omega[lvl] + tuning_plan->mg_omega_delta[lvl] > 0){
+          tunable_params->mg_omega[lvl] += tuning_plan->mg_omega_delta[lvl];
+        }
         break;
       }
     case TM_MG_TUNE_INVALID:
