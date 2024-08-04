@@ -65,9 +65,14 @@ typedef struct {
   double gf_eps;
   // maximum flow time for gf measuremnt
   double gf_tmax;
+  // interval at which the gradient flow routine should write the flowed gauge field to disk
+  double gf_write_interval;
 
   /* functions for the measurement */
   void (*measurefunc) (const int traj, const int id, const int ieo);
+
+  /* output filename, optionally used by the gradient flow measurement, for example */
+  char output_filename[500];
  
   ExternalLibrary external_library;
 } measurement;

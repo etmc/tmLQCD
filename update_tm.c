@@ -193,7 +193,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       if(g_proc_id == 0 && g_debug_level > 0) {
         fprintf(stdout, "# Writing gauge field to file %s.\n", tmp_filename);
       }
-      if((iostatus = write_gauge_field( tmp_filename, 64, xlfInfo) != 0 )) {
+      if((iostatus = write_gauge_field( tmp_filename, 64, xlfInfo, g_gauge_field) != 0 )) {
         /* Writing failed directly */
         fprintf(stderr, "Error %d while writing gauge field to %s\nAborting...\n", iostatus, tmp_filename);
         exit(-2);
