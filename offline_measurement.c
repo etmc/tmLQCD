@@ -293,9 +293,7 @@ int main(int argc, char *argv[])
       if (g_proc_id == 0) {
         fprintf(stdout, "#\n# Beginning offline measurement.\n");
       }
-			//printf("Ciao Simone4!\n");
       meas->measurefunc(nstore, imeas, even_odd_flag);
-			printf("Ciao Simone5!\n");
     }      
     nstore += Nsave;
   }

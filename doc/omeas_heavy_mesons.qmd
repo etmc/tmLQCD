@@ -20,6 +20,10 @@ csl: acta-ecologica-sinica.csl
 fontsize: 16pt
 ---
 
+### Preamble and notation
+<details>
+  <summary>Show Content</summary>
+
 `tmLQCD`can compute the correlators for the heavy mesons $K$ and $D$.
 The twisted mass formulation of the heavy doublet $(s, c)$ is such that $K$ and $D$ mix in the spectral decomposition @baron2011computing.
 In fact, the Dirac operator is not diagonal in flavor,
@@ -54,7 +58,12 @@ In the following we use the twisted basis $\chi$ for fermion fields:
 \end{align}
 <!--  -->
 
+</details>
+
 ## Correlators for the $K$ and $D$
+
+<details>
+  <summary>Show Content</summary>
 
 The required correlators are given by the following
 expectation values on the interacting vacuum
@@ -139,7 +148,12 @@ where ${\sigma_3 =
 3. The action of $\sigma_1$ swaps the up and down flavor components of a spinor.
 :::
 
+</details>
+
 ## Wick contractions
+
+<details>
+  <summary>Show Content</summary>
 
 Using the above remarks,
 we can write:
@@ -208,7 +222,7 @@ Our correlator becomes:
 <!--  -->
 Upon a careful calculation for all values $i,j = 0,1$ we find, equivalently (using spacetime translational symmetry):
 <!--  -->
-\begin{equation}
+\begin{equation} \label{eq:C.hihj.Gamma1Gamma2}
 \begin{split}
 \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
 &=
@@ -219,22 +233,52 @@ Upon a careful calculation for all values $i,j = 0,1$ we find, equivalently (usi
     (S_u)^\dagger (x|0) 
     \gamma_5 \Gamma_1
 \right]
-\\
-&=
-\sum_{y,z}
-\operatorname{Tr}
-\left[
-    (S_h)_{f_i f_j} (x+y|y) 
-    \Gamma_2 \gamma_5 
-    (S_u)^\dagger (x+z|z) 
-    \gamma_5 \Gamma_1
-    \delta_{yz}
-\right]
-\, .
 \end{split}
 \end{equation}
 <!--  -->
 This is a generalized case of eq. (A9) of @PhysRevD.59.074503.
+
+</details>
+
+
+## Stochastic approximation of the correlators
+
+### Index dilution
+
+<details>
+  <summary>Show Content</summary>
+
+
+We now make the following remark. If we want to invert numerically the system $D_{ij} \psi_{j} = \eta_{i}$ (where the $i,j$ indices include all internal indices), we have:
+
+\begin{equation}
+D_{ij} \psi_{j} = \eta_{i} \, \implies 
+\psi_{i} = S_{ij} \eta_{j} \, .
+\end{equation}
+
+If $\eta_i \eta_j^{*} = \delta_{ij}$ we have:
+
+\begin{equation}
+S_{ij} = \psi_{i} \eta_{j}^{*} \, .
+\end{equation}
+
+---
+
+We can also use **index dilution** in order to select the components we want. In fact, if we define: $\eta_i^{(a)} = \eta \delta_{i}^{a}$, with $\eta^{*} \eta =1$ we have:
+
+\begin{equation}
+S_{ab} = S_{ij} \delta_{i}^{a} \delta_{j}^{b} = 
+S_{ij} (\eta^{*} \delta_{i}^{a}) (\eta \delta_{j}^{b}) =
+\psi_{i}^{(b)} (\eta_{i}^{a})^{*} 
+= \eta^{(a)} \cdot \psi^{(b)} \, .
+\end{equation}
+
+</details>
+
+### Stochastic expression of the correlators
+
+<details>
+  <summary>Show Content</summary>
 
 We now approximate the propagator using stochastic sources.
 Additionally, we use:
@@ -246,7 +290,7 @@ Additionally, we use:
     \begin{equation}
     \eta^{(\alpha)}_{\beta, c} = 
     \eta_c \, \delta^\alpha_\beta \,\, , \, \, 
-    \eta^\dagger_c \eta_c = 1 \, .
+    \eta_c \otimes \eta^\dagger_c = \mathbb{1}_{N_c \times N_c} \, .
     \end{equation}
     <!--  -->
 - Flavor dilution: sources have an additional flavor index $\phi$, such that their flavor component different from the index vanish. The value of the flavor component however is the same, it changes only its position in the doublet:
@@ -267,99 +311,63 @@ Additionally, we use:
 \end{equation}
 <!--  -->
 
+Therefore, we can approximate the correlators of eq. \eqref{eq:C.hihj.Gamma1Gamma2} above with:
 
-Therefore, we can use spin dilutions to rephrase the correlator in a form which will turn out to be convenient later
-($c$ is the color index):
 <!--  -->
+\begin{equation}
+\begin{split}
+\mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
+&=
+\left(
+    \eta^{(f_i, \alpha_1)}(0)
+    \cdot 
+    \psi_h^{(f_j, \alpha_2)}(x) 
+\right)
+(\Gamma_2 \gamma_5)_{\alpha_2 \alpha_3}
+\left(
+    \eta^{(0, \alpha_3)}(0)
+    \cdot 
+    \psi_u^{(0, \alpha_4)}(x) 
+\right)^{*}
+(\gamma_5 \Gamma_1)_{\alpha_4 \alpha_1}
+\\
+&= 
+(\psi_h)_{f_i, \alpha_1}^{(f_j, \alpha_2)}(x) 
+(\Gamma_2 \gamma_5)_{\alpha_2 \alpha_3}
+(\psi_u)_{\alpha_3}^{(0, \alpha_4)}(x)^{*}
+(\gamma_5 \Gamma_1)_{\alpha_4 \alpha_1}
+\end{split}
+\end{equation}
+<!--  -->
+
+In the end we have:
+
 \begin{equation}
 \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
 =
-[(S_h)_{f_i f_j}]_{\alpha_1 \beta_1} (x|0) 
-[\eta^{(\alpha_2)}_{\beta_1}]_c
-(\Gamma_2 \gamma_5)_{\alpha_2 \alpha_3} 
-[{(\eta^\dagger)}^{(\alpha_3)}_{\beta_2}]_c
-[(S_u)^\dagger]_{\beta_2 \alpha_4} (x|0) 
-(\gamma_5 \Gamma_1)_{\alpha_4 \alpha_1}
-\, .
+[\Gamma_2 \gamma_5  (\psi_u)^{(0, \alpha_2)}(x)^{*}]_{\alpha_1}
+[\gamma_5 \Gamma_1 (\psi_h)_{f_i}^{(f_j, \alpha_1)}(x) ]_{\alpha_2}
 \end{equation}
-<!--  -->
 
-We now define our spinor propagators.
-If $\eta^{(\beta, \phi)}$ is the diluted source:
-<!--  -->
-\begin{align}
-& (D_{\ell/h})_{\alpha_1 \alpha_2} (x|y) ({\psi}_{\ell/h}^{(\beta, \phi)})_{\alpha_2} (y)
-= (\eta^{(\beta, \phi)})_{\alpha_1} (x)
-\\
-& \, \implies \,
-(\psi_{\ell/h}^{(\beta, \phi)})_{\alpha_1} (x) 
-= 
-(S_{\ell/h})_{\alpha_2 \alpha_1} (x | y)
-\eta^{(\beta, \phi)}_{\alpha_2} (y)
-= 
-(S_{\ell/h})_{\alpha_2 \alpha_1} (x | 0)
-\eta^{(\beta, \phi)}_{\alpha_2} (0)
-\\
-& \, \implies \,
-(\psi_{\ell/h}^{(\beta, \phi)})^{*}_{\alpha_1} (x) 
-= 
-(\eta^{(\beta, \phi)})^{*}_{\alpha_2} (y)
-(S_{\ell/h}^\dagger)_{\alpha_2 \alpha_1} (x | y)
-= 
-(\eta^{(\beta, \phi)})^\dagger_{\alpha_2} (0)
-(S_{\ell/h}^\dagger)_{\alpha_2 \alpha_1} (x | 0)
-\end{align}
-<!--  -->
-This means that for our matrix of correlators we have to do ${4_D \times 2_f \times 2_{h,\ell}} = 16$ inversions.
+In our case $\Gamma_{1,2}  = 1,\gamma_5$. Since we use the chiral basis ${\Gamma_{1,2}^{*} = (\Gamma_{1,2}^{T})^\dagger = \Gamma_{1,2}}$. 
+Therefore we can equivalently write the correlator as:
 
-::: {.remark}
-1. For the light doublet `tmLQCD` computes only $S_u$, which is obtained with $(\psi_h^{(\beta, f_0)})_{f_0}$. This is the only propagator we need.
-2. For the heavy propagator, we can access the $(i,j)$ component of $S_h$ with $(\psi_h^{(\beta, f_j)})_{f_i}$.
-:::
-
-Our correlator is given by the following expectation value
-(no summation on flavor indices):
-<!--  -->
 \begin{equation}
-\begin{split}
 \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
-&=
-\langle
-[(\psi_h^{(\alpha_2, f_j)})_{f_i}]_{\alpha_1}(x)
-(\Gamma_2 \gamma_5)_{\alpha_2 \alpha_3}
-[(\psi_\ell^{(\alpha_3, f_0)})_{f_0}^\dagger]_{\alpha_4} (x) 
-(\gamma_5 \Gamma_1)_{\alpha_4 \alpha_1}
-\rangle
-\\
-&=
-\braket{
-(\psi_\ell^{(\alpha_3, f_0)})_{f_0}^\dagger (x) 
-\cdot
-(\gamma_5 \Gamma_1)
-\cdot
-(\psi_h^{(\alpha_2, f_j)})_{f_i}(x)
-}
-\,
-(\Gamma_2 \gamma_5)_{\alpha_2 \alpha_3} 
-\\
-&=
-\mathcal{R}^{\alpha_3 \alpha_2} (\Gamma_2 \gamma_5)_{\alpha_2 \alpha_3}
-\end{split}
+=
+[\Gamma_2 \gamma_5  (\psi_u)^{(0, \alpha_2)}(x)]^{*}_{\alpha_1}
+\cdot 
+[\gamma_5 \Gamma_1 (\psi_h)_{f_i}^{(f_j, \alpha_1)}(x) ]_{\alpha_2} \,
 \end{equation}
-<!--  -->
 
-More explicitly:
-<!--  -->
-\begin{equation}
-\begin{split}
-\Gamma_2=1 &\implies \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
-= \mathcal{R}^{00}+\mathcal{R}^{11}-\mathcal{R}^{22}-\mathcal{R}^{33}
-\\
-\Gamma_2=\gamma_5 &\implies \mathcal{C}^{h_i, h_j}_{\Gamma_1, \Gamma_2}(t, \vec{x}) 
-= \mathcal{R}^{00}+\mathcal{R}^{11}+\mathcal{R}^{22}+\mathcal{R}^{33}
-\end{split}
-\end{equation}
-<!--  -->
+where $\cdot$  is the dot product in color space (NOTE: it complex-conjugates the 1st vector).
+
+
+
+</details>
+
+
+
 
 
 

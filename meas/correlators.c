@@ -40,7 +40,6 @@
 #include "gettime.h"
 
 
-
 #define TM_OMEAS_FILENAME_LENGTH 100
 
 /******************************************************
@@ -253,6 +252,15 @@ void light_correlators_measurement(const int traj, const int id, const int ieo) 
   return;
 }
 
+
+void spinor_dirac_array(su3_vector* phi, spinor psi){
+	phi[0] = psi.s0;
+	phi[1] = psi.s1;
+	phi[2] = psi.s2;
+	phi[3] = psi.s3;
+}
+
+
 /******************************************************
  *
  * This routine computes the correlator matrix <G1,G2> (<source sink>),
@@ -292,7 +300,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 #endif
 	
 	/* heavy-light correlators variables */
-	// sign change bilinear^\dagger, with Gamma = 1,gamma_
+	// sign change bilinear^\dagger, with Gamma = 1,gamma_5
 	double eta_Gamma[2] = {1.0, -1.0};
 
 	// even-odd spinor fields for the light and heavy doublet correlators
@@ -473,9 +481,10 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 				for (size_t beta = 0; beta < 4; beta++) {             // spin dilution index
 					for (size_t F = 0; F < 2; F++) {                    // flavor dilution index
 						for (size_t i_f = 0; i_f < 2; i_f++) {            // flavor index of the doublet
-							eo_source_spinor_field_spin_diluted_oet_ts(arr_eo_spinor[0][db][beta][F][0][i_f],
-																												 arr_eo_spinor[0][db][beta][F][1][i_f], t0,
-																												 beta, sample, traj, seed_i);
+							eo_source_spinor_field_spin_diluted_oet_ts(
+								arr_eo_spinor[0][db][beta][F][0][i_f],
+								arr_eo_spinor[0][db][beta][F][1][i_f], t0,
+								beta, sample, traj, seed_i);
 						}
 					}
 				}
@@ -498,15 +507,15 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 						// stored temporarely in the propagator spinors (used as dummy)
 						if (F==0){
 							mul_one_pm_itau2_and_div_by_sqrt2(
-																								arr_eo_spinor[1][1][beta][F][i_eo][0], arr_eo_spinor[1][1][beta][F][i_eo][1],
-																								arr_eo_spinor[0][1][beta][F][i_eo][0], phi1, +1.0,
-																								VOLUME / 2);
+							arr_eo_spinor[1][1][beta][F][i_eo][0], arr_eo_spinor[1][1][beta][F][i_eo][1],
+							arr_eo_spinor[0][1][beta][F][i_eo][0], phi1, +1.0,
+							VOLUME / 2);
 						}
 						if (F==1){
 							mul_one_pm_itau2_and_div_by_sqrt2(
-																								arr_eo_spinor[1][1][beta][F][i_eo][0], arr_eo_spinor[1][1][beta][F][i_eo][1],
-																								phi2, arr_eo_spinor[0][1][beta][F][i_eo][1], +1.0,
-																								VOLUME / 2);
+							arr_eo_spinor[1][1][beta][F][i_eo][0], arr_eo_spinor[1][1][beta][F][i_eo][1],
+							phi2, arr_eo_spinor[0][1][beta][F][i_eo][1], +1.0,
+							VOLUME / 2);
 						}
 						
 						for (size_t i_f = 0; i_f < 2; i_f++) {
@@ -598,9 +607,9 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 						// (c,s) --> [(1-i*tau_2)/sqrt(2)] * (c,s)
 						// stored temporarely in phi1, phi2
 						mul_one_pm_itau2_and_div_by_sqrt2(phi1, phi2,
-																							arr_eo_spinor[1][1][beta][F][i_eo][0], arr_eo_spinor[1][1][beta][F][i_eo][1], -1.0,
-																							VOLUME / 2);
-						
+							arr_eo_spinor[1][1][beta][F][i_eo][0], arr_eo_spinor[1][1][beta][F][i_eo][1], -1.0,
+							VOLUME / 2);
+
 						assign(arr_eo_spinor[1][1][beta][F][i_eo][0], phi1, VOLUME / 2);
 						assign(arr_eo_spinor[1][1][beta][F][i_eo][1], phi2, VOLUME / 2);
 					}
@@ -616,19 +625,19 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 			}
 			
 			// now we switch from even-odd representation to standard
-			//for (size_t i_sp = 0; i_sp < 2; i_sp++) {      // source or sink
-			for (size_t db = 0; db < 2; db++) {          // doublet: light of heavy
-				for (size_t beta = 0; beta < 4; beta++) {  // spin dilution index
-					for (size_t F = 0; F < 2; F++) {         // flavor projection index
-						for (size_t i_f = 0; i_f < 2; i_f++) { //  flavor index
-							convert_eo_to_lexic(arr_spinor[1][db][beta][F][i_f],
-																	arr_eo_spinor[1][db][beta][F][0][i_f],
-																	arr_eo_spinor[1][db][beta][F][1][i_f]);
+			for (size_t i_sp = 0; i_sp < 2; i_sp++) {      // source or sink
+				for (size_t db = 0; db < 2; db++) {          // doublet: light of heavy
+					for (size_t beta = 0; beta < 4; beta++) {  // spin dilution index
+						for (size_t F = 0; F < 2; F++) {         // flavor projection index
+							for (size_t i_f = 0; i_f < 2; i_f++) { //  flavor index
+								convert_eo_to_lexic(arr_spinor[i_sp][db][beta][F][i_f],
+									arr_eo_spinor[i_sp][db][beta][F][0][i_f],
+									arr_eo_spinor[i_sp][db][beta][F][1][i_f]);
+							}
 						}
 					}
 				}
 			}
-			// }
 			
 			//MPI_Barrier(MPI_COMM_WORLD);
 			if (g_proc_id == 0){
@@ -637,7 +646,7 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 			
 			//MPI_Barrier(MPI_COMM_WORLD);
 			if (g_proc_id == 0){
-				printf("Checkpoint 11\n");
+				printf("Checkpoint 11.0\n");
 			}
 			
 			/*
@@ -645,18 +654,21 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 				https://arxiv.org/pdf/1005.2042.pdf) I can build the correlators of eq. (20)
 			*/
 			const int f0 = 0;  // flavor index of the up
+
 			/* now we sum only over local space for every t */
+			const int j_ts = t0-g_proc_coords[0]*T; // checkerboard index of the time at the source
 
 			for (t = 0; t < T; t++) {
-				j = g_ipt[t][0][0][0];
+				j = g_ipt[t][0][0][0]; // source and sink separated by "t"
 
 				// dummy variables
 				res = 0.0;
 				respa = 0.0;
 				resp4 = 0.0;
 
-				
 				for (i = j; i < j + LX * LY * LZ; i++) {
+
+					// light correlators
 					for (size_t beta = 0; beta < 4; beta++) {  // spin dilution
 						spinor psi_u = arr_spinor[1][0][beta][f0][f0][i];
 						
@@ -665,25 +677,47 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 						respa += _spinor_prod_re(psi_u, phi);
 						_gamma5(phi, phi);
 						resp4 += _spinor_prod_im(psi_u, phi);
-						
-						for (size_t hi = 0; hi < 2; hi++) {
-							for (size_t hj = 0; hj < 2; hj++) {
-								for (size_t g1 = 0; g1 < 2; g1++) {
-									for (size_t g2 = 0; g2 < 2; g2++) {
-										double dum = 0.0;  // dummy variable
-											
-										// heavy doublet spinor propagator
-										phi = arr_spinor[1][1][beta][hj][hi][i];
-										if (g1 == 0) {  // Gamma_1 = \mathbb{1}
-											_gamma5(phi, phi);
+					}
+					
+					// heavy correlators
+					for (size_t hi = 0; hi < 2; hi++) {
+						for (size_t hj = 0; hj < 2; hj++) {
+							for (size_t g1 = 0; g1 < 2; g1++) {
+								for (size_t g2 = 0; g2 < 2; g2++) {
+									double complex dum_tot = 0.0;
+									for (int alpha_1 = 0; alpha_1 < 4; alpha_1++){
+										spinor psi_h = arr_spinor[1][1][alpha_1][hj][hi][i];
+										if (g1 == 0){ // Gamma_1 = Id
+											_gamma5(psi_h, psi_h);
 										}
-										_spinor_scalar_prod(dum, psi_u, phi);
-											
-										double sign_beta = +1.0;
-										if (g2 == 0 /* Gamma_2 == \mathbb{1} */ && beta >= 2) {
-											sign_beta = -1.0;
+										su3_vector psi_h_su3[4];
+										spinor_dirac_array(&psi_h_su3[0], psi_h);
+										for (int alpha_2 = 0; alpha_2 < 4; alpha_2++){
+											spinor psi_u_star = arr_spinor[1][0][alpha_2][f0][f0][i];
+											if (g2 == 0){ // Gamma_2 = Id. NOTE: works because Gamma_2=Gamma_2* for Gamma_2=1,gamma_5
+												_gamma5(psi_u_star, psi_u_star);
+											}
+											su3_vector psi_u_star_su3[4];
+											spinor_dirac_array(&psi_u_star_su3[0], psi_u_star);
+											complex double dum_12 = 0.0;
+											_colorvec_scalar_prod(dum_12, psi_u_star_su3[alpha_1], psi_h_su3[alpha_2]);
+											dum_tot += dum_12;
 										}
-										res_hihj_g1g2[hi][hj][g1][g2] += sign_beta * dum;
+									}
+									// if (g_proc_id == 0){
+									// printf("dum_tot = %d %d %d %d %d %e %e \n", t, hi, hj, g1, g2, creal(dum_tot), cimag(dum_tot));
+									// }
+									if (hi != hj){
+										dum_tot *= -1;
+									}
+									if (g1==g2){
+										res_hihj_g1g2[hi][hj][g1][g2] = creal(dum_tot); // correlators is real
+									}
+									else{
+										if (g2==1){
+											dum_tot *= -1;
+										}
+										res_hihj_g1g2[hi][hj][g1][g2] = cimag(dum_tot); // correlator is imaginary
 									}
 								}
 							}
@@ -808,7 +842,8 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 					for (size_t hj = 0; hj < 2; hj++) {
 						for (size_t g1 = 0; g1 < 2; g1++) {
 							for (size_t g2 = 0; g2 < 2; g2++) {
-								fprintf(ofs, "%u  %u  %u  %u  0  %e  %e\n", hi, hj, g1, g2, C_hihj_g1g2[hi][hj][g1][g1][t0], 0.0);
+								printf("check matrix: %e\n", C_hihj_g1g2[hi][hj][g1][g2][3]);
+								fprintf(ofs, "%u  %u  %u  %u  0  %e  %e\n", hi, hj, g1, g2, C_hihj_g1g2[hi][hj][g1][g2][t0], 0.0);
 								for (t = 1; t < g_nproc_t * T / 2; t++) {
 									tt = (t0 + t) % (g_nproc_t * T);
 									fprintf(ofs, "%u  %u  %u  %u  %d  %e  ", hi, hj, g1, g2, t, C_hihj_g1g2[hi][hj][g1][g2][tt]);
@@ -904,11 +939,12 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 }
 
 void correlators_measurement(const int traj, const int id, const int ieo) {
-	//light_correlators_measurement(traj, id, ieo);
 	
 	// ??? maybe add a double check? does i1 --> light and i2 --> heavy?
 	if (measurement_list[id].measure_heavy_mesons == 1) {
 		const int i1 = 0, i2 = 1;
 		heavy_correlators_measurement(traj, id, ieo, i1, i2);
 	}
+
+	light_correlators_measurement(traj, id, ieo);
 }
