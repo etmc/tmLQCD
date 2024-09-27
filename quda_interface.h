@@ -97,6 +97,7 @@ void _initQuda();
 void _endQuda();
 void _loadGaugeQuda(const CompressionType);
 void _loadCloverQuda(QudaInvertParam * inv_param);
+void _saveGaugeQuda( const su3 ** const gaugefield, const int savegaugetype, const CompressionType compression );
 
 // direct line to QUDA inverter, no messing about with even/odd reordering
 // source and propagator  Should be full VOLUME spinor fields 
@@ -146,6 +147,7 @@ void M_quda(spinor * const P, spinor * const Q);
 
 
 // to be called instead of tmLQCD functions to use the QUDA inverter in solve_degenerate
+// NOTE: the global struct inv_param is initialized inside this function
 int invert_eo_degenerate_quda(spinor * const Odd_new,
                               spinor * const Odd,
                               const double precision, const int max_iter,
@@ -172,6 +174,18 @@ int invert_eo_quda_twoflavour_mshift(spinor ** const out_up, spinor ** const out
                                      CompressionType compression);
 
 void compute_gauge_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf);
+void compute_cloverdet_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf,
+                                     spinor * const X_o, spinor * const phi, int detratio);
+void compute_ndcloverrat_derivative_quda(monomial * const mnl, hamiltonian_field_t * const hf,
+                                        spinor ** const Qup, spinor ** const Qdn, solver_params_t * solver_params, int detratio);
+
 void compute_WFlow_quda(const double eps ,const double tmax, const int traj, FILE* outfile);
+
+
+void eigsolveQuda(_Complex double * evals, int n_evals, double tol, int blksize, int blkwise, int max_iterations, int maxmin,
+                  const double precision, const int max_iter, const int polydeg, const double amin, 
+                  const double amax, const int n_kr, const int solver_flag, const int rel_prec,
+                  const int even_odd_flag, const SloppyPrecision refinement_precision,
+                  SloppyPrecision sloppy_precision, CompressionType compression, const int oneFlavourFlag);
 
 #endif /* QUDA_INTERFACE_H_ */

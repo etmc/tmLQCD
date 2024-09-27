@@ -147,6 +147,10 @@
 #define _default_phmc_pure_phmc 0
 #define _default_stilde_max 3.
 #define _default_stilde_min 0.01
+#define _default_eig_polydeg 128
+#define _default_eig_amin 0.001
+#define _default_eig_amax 4
+#define _default_eig_n_kr 96
 #define _default_degree_of_p 48
 #define _default_propagator_splitted 1
 #define _default_source_splitted 1
@@ -199,12 +203,14 @@
 
 #define _default_external_inverter 0
 
+#define _default_external_eigsolver 0
+
 #define _default_external_library 0
 
 #define _default_subprocess_flag 0
 #define _default_lowmem_flag 0
 
-#define _default_g_barrier_monomials_convergence 0
+#define _default_g_barrier_monomials_convergence 1
 
 /* default input values for QUDA interface */
 /* These follow the recommendations of https://github.com/lattice/quda/wiki/Multigrid-Solver */

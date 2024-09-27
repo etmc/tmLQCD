@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include <string.h>
 #include "global.h"
 #include "su3.h"
 #include "start.h"
@@ -45,6 +46,12 @@
 #include "monomial/monomial.h"
 #include "boundary.h"
 #include "cloverdetratio_monomial.h"
+#include "xchange/xchange_deri.h"
+#include "monomial/gauge_monomial.h"
+#include "compare_derivative.h"
+#ifdef TM_USE_QUDA
+#  include "quda_interface.h"
+#endif
 
 /* think about chronological solver ! */
 
@@ -214,39 +221,81 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
 		       mnl->forceprec, g_relative_precision_flag, VOLUME/2, mnl->Qsq, mnl->solver);
   chrono_add_solution(mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array,
 		      mnl->csg_N, &mnl->csg_n, VOLUME/2);
-  // Apply Q_{-} to get Y_W -> w_fields[0]
-  tm_stopwatch_push(&g_timers, "Qm_diff", "");
-  mnl->Qm(mnl->w_fields[0], mnl->w_fields[1]);
-  // Compute phi - Y_W -> w_fields[0]
-  diff(mnl->w_fields[0], mnl->w_fields[0], mnl->pf, VOLUME/2);
-  tm_stopwatch_pop(&g_timers, 0, 1, "");
 
-  /* apply Hopping Matrix M_{eo} */
-  /* to get the even sites of X */
-  tm_stopwatch_push(&g_timers, "H_eo_sw_inv_psi", "");
-  H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EE, -1, mnl->mu);
-  tm_stopwatch_pop(&g_timers, 0, 1, "");
-  /* \delta Q sandwitched by Y_o^\dagger and X_e */
-  deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
-  
-  /* to get the even sites of Y */
-  tm_stopwatch_push(&g_timers, "H_eo_sw_inv_psi", "");
-  H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EE, +1, mnl->mu);
-  tm_stopwatch_pop(&g_timers, 0, 1, "");
-  /* \delta Q sandwitched by Y_e^\dagger and X_o */
-  deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor); 
+  if ( mnl->external_library == QUDA_LIB){
+    if(!mnl->even_odd_flag) {
+      fatal_error("QUDA support only even_odd_flag",__func__);
+    }
+#ifdef TM_USE_QUDA
+    if (g_debug_level > 3) {
+#ifdef TM_USE_MPI
+      // FIXME: here we do not need to set to zero the interior but only the halo
+#ifdef TM_USE_OMP
+      # pragma omp parallel for
+#endif // end setting to zero the halo when using MPI
+      for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand);i++) { 
+        for(int mu=0;mu<4;mu++) { 
+          _zero_su3adj(debug_derivative[i][mu]);
+        }
+      }
+#endif
+      // we copy only the interior
+      memcpy(debug_derivative[0], hf->derivative[0], 4*VOLUME*sizeof(su3adj));
+    }
 
-  // here comes the clover term...
-  // computes the insertion matrices for S_eff
-  // result is written to swp and swm
-  // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e  
-  sw_spinor_eo(EO, mnl->w_fields[2], mnl->w_fields[3], mnl->forcefactor);
-  
-  // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
-  sw_spinor_eo(OE, mnl->w_fields[0], mnl->w_fields[1], mnl->forcefactor);
+    compute_cloverdet_derivative_quda(mnl, hf, mnl->w_fields[1], mnl->pf, 1 );
 
-  sw_all(hf, mnl->kappa, mnl->c_sw);
+    if (g_debug_level > 3){
+      su3adj **given = hf->derivative;
+      hf->derivative = debug_derivative;
+      mnl->external_library = NO_EXT_LIB;
+      tm_debug_printf( 0, 3, "Recomputing the derivative from tmLQCD\n");
+      cloverdetratio_derivative(no, hf);
+      #ifdef TM_USE_MPI
+        xchange_deri(hf->derivative);// this function use ddummy inside
+      #endif
+      compare_derivative(mnl, given, hf->derivative, 1e-9, "cloverdetratio_derivative");
+      mnl->external_library = QUDA_LIB;
+      hf->derivative = given;
+    }
+#else
+      fatal_error("in %s  external_library == QUDA_LIB requires TM_USE_QUDA to be true",__func__);
+#endif // end ifdef TM_USE_QUDA
+  }
+  else{
+    // Apply Q_{-} to get Y_W -> w_fields[0]
+    tm_stopwatch_push(&g_timers, "Qm_diff", "");
+    mnl->Qm(mnl->w_fields[0], mnl->w_fields[1]);
+    // Compute phi - Y_W -> w_fields[0]
+    diff(mnl->w_fields[0], mnl->w_fields[0], mnl->pf, VOLUME/2);
+    tm_stopwatch_pop(&g_timers, 0, 1, "");
 
+    /* apply Hopping Matrix M_{eo} */
+    /* to get the even sites of X */
+    tm_stopwatch_push(&g_timers, "H_eo_sw_inv_psi", "");
+    H_eo_sw_inv_psi(mnl->w_fields[2], mnl->w_fields[1], EO, -1, mnl->mu);
+    tm_stopwatch_pop(&g_timers, 0, 1, "");
+    /* \delta Q sandwitched by Y_o^\dagger and X_e */
+    deriv_Sb(OE, mnl->w_fields[0], mnl->w_fields[2], hf, mnl->forcefactor); 
+    
+    /* to get the even sites of Y */
+    tm_stopwatch_push(&g_timers, "H_eo_sw_inv_psi", "");
+    H_eo_sw_inv_psi(mnl->w_fields[3], mnl->w_fields[0], EO, +1, mnl->mu);
+    tm_stopwatch_pop(&g_timers, 0, 1, "");
+    /* \delta Q sandwitched by Y_e^\dagger and X_o */
+    deriv_Sb(EO, mnl->w_fields[3], mnl->w_fields[1], hf, mnl->forcefactor); 
+
+    // here comes the clover term...
+    // computes the insertion matrices for S_eff
+    // result is written to swp and swm
+    // even/even sites sandwiched by gamma_5 Y_e and gamma_5 X_e  
+    sw_spinor_eo(EE, mnl->w_fields[2], mnl->w_fields[3], mnl->forcefactor);
+    
+    // odd/odd sites sandwiched by gamma_5 Y_o and gamma_5 X_o
+    sw_spinor_eo(OO, mnl->w_fields[0], mnl->w_fields[1], mnl->forcefactor);
+
+    sw_all(hf, mnl->kappa, mnl->c_sw);
+  }
   mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
   tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
