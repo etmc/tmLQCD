@@ -82,12 +82,23 @@
 #endif
 #include "fatal_error.h"
 
-#include <io/params.h>
-#include <io/spinor.h>
+#include "io/params.h"
+#include "io/spinor.h"
+#include "io/gauge.h"
+#include "measure_gauge_action.h"
 
 #ifdef TM_USE_QUDA
 #  include "quda_interface.h"
 #endif
+
+void solve_fail_write_config_and_abort(const char * const solver) {
+  char outname[200];
+  snprintf(outname, 200, "conf_monomial_solve_fail.%.6f.%04d", g_gauge_state.gauge_id, nstore);
+  paramsXlfInfo * xlfInfo = construct_paramsXlfInfo(measure_plaquette((const su3**)g_gauge_field)/(6.*VOLUME*g_nproc), nstore);
+  int status = write_gauge_field(outname, 64, xlfInfo);
+  free(xlfInfo);
+  fatal_error("Error: solver reported -1 iterations.", solver);
+}
 
 int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_params,
                      const int max_iter, double eps_sq, const int rel_prec, 
@@ -216,7 +227,7 @@ int solve_degenerate(spinor * const P, spinor * const Q, solver_params_t solver_
   tm_stopwatch_pop(&g_timers, 0, 1, "");
 
   if (iteration_count == -1 && g_barrier_monomials_convergence) {
-    fatal_error("Error: solver reported -1 iterations.", "solve_degenerate");
+    solve_fail_write_config_and_abort("solve_degenerate");
   }
 
   return (iteration_count);
@@ -425,7 +436,7 @@ int solve_mms_tm(spinor ** const P, spinor * const Q,
   tm_stopwatch_pop(&g_timers, 0, 1, "");
 
   if (iteration_count == -1 && g_barrier_monomials_convergence) {
-    fatal_error("Error: solver reported -1 iterations.", "solve_mms_tm");
+    solve_fail_write_config_and_abort("solve_mms_tm");
   }
 
   return(iteration_count);
@@ -671,7 +682,7 @@ int solve_mms_nd(spinor ** const Pup, spinor ** const Pdn,
   tm_stopwatch_pop(&g_timers, 0, 1, "");
 
   if (iteration_count == -1 && g_barrier_monomials_convergence) {
-    fatal_error("Error: solver reported -1 iterations.", "solve_mms_nd");
+    solve_fail_write_config_and_abort("solve_mms_nd");
   }
 
   return (iteration_count);
@@ -726,7 +737,7 @@ int solve_mms_nd_plus(spinor ** const Pup, spinor ** const Pdn,
   tm_stopwatch_pop(&g_timers, 0, 1, "");
 
   if (iteration_count == -1 && g_barrier_monomials_convergence) {
-    fatal_error("Error: solver reported -1 iterations.", "solve_mms_nd_plus");
+    solve_fail_write_config_and_abort("solve_mms_nd_plus");
   }
 
   return iteration_count;

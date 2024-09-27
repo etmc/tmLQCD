@@ -9,6 +9,7 @@ require(hadron)
 require(kableExtra) 
 require(ggrepel)
 
+
 # wrapper around base::gregexpr which makes it operate like microseq::gregexpr
 extract_gregexpr <- function(pattern, text, ignore.case = FALSE, perl = FALSE, fixed = FALSE, useBytes = FALSE){
   lst <- base::gregexpr(pattern, text, ignore.case, perl, fixed, useBytes)
@@ -40,14 +41,21 @@ extract_type <- function(str){
 if(!interactive()){
   args <- commandArgs(trailingOnly=TRUE)
   if( length(args) < 2 ){
-    stop("usage: Rscript make_profile.R <logfile> <output_basename>")
+    stop("usage: Rscript make_profile.R <logfile> <output_basename> [include_all]")
   }
   infile <<- args[1]
   outbase <<- args[2]
+  if( length(args) == 3 ){
+    other_threshold <<- 0.0
+  }
 } else {
   if( !exists("infile") | !exists("outbase") ){
     stop("When not running interactively, the variables 'infile' (path to log file) and 'outbase' (basename for ouput files) must be defined!")
   }
+}
+
+if( !exists("other_threshold") ){
+  other_threshold <<- 0.05
 }
 
 stopifnot(file.exists(infile))
@@ -120,7 +128,7 @@ t_tree <- data.tree::as.Node(sum_data)
 # and logical unit
 sum_data_per_mon <- dplyr::filter(sum_data, nchar(monomial) > 0) %>%
                     dplyr::group_by(monomial, type, level) %>%
-                    dplyr::mutate(name = ifelse(time < 0.05 * sum(time),
+                    dplyr::mutate(name = ifelse(time < other_threshold * sum(time),
                                                 'other', name)) %>%
                     dplyr::group_by(monomial, type, level, name) %>%
                     dplyr::summarise(time = sum(time),

@@ -116,7 +116,7 @@ cat("\\par\n")
 cat(knitr::kable(dplyr::select(hb_acc_der_data, monomial, type, time, prop, invocations, unit_time),
                  format = 'latex',
                  booktabs = TRUE,
-                 digits = 1,
+                 digits = 3,
                  linesep = "") %>%
     kableExtra::kable_styling(latex_options = "striped")
 )
@@ -156,7 +156,7 @@ if(!all(is.na(quda_data))){
   cat(knitr::kable(plot_data,
                    format = 'latex',
                    booktabs = TRUE,
-                   digits = 1,
+                   digits = 2,
                    caption = sprintf("Time spent in different QUDA regions. Compare to total time of %.1f seconds.",
                                      total_time)) %>%
       kableExtra::kable_styling(latex_options = "striped")
@@ -197,7 +197,7 @@ for( mon in total_per_mon$monomial ){
     cat(knitr::kable(dplyr::select(type_data, level, name, time, prop, invocations, unit_time),
                      format = 'latex',
                      booktabs = TRUE,
-                     digits = 1,
+                     digits = 3,
                      linesep = "",
                      caption = sprintf("%s %s", mon, tp) ) %>%
           kable_styling(latex_options = "HOLD_position") %>%
