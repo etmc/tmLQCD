@@ -665,7 +665,15 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 				res = 0.0;
 				respa = 0.0;
 				resp4 = 0.0;
-
+				for (size_t hi = 0; hi < 2; hi++) {
+					for (size_t hj = 0; hj < 2; hj++) {
+						for (size_t g1 = 0; g1 < 2; g1++) {
+							for (size_t g2 = 0; g2 < 2; g2++) {
+								res_hihj_g1g2[hi][hj][g1][g2] = 0.0;
+							}
+						}
+					}
+				}
 				for (i = j; i < j + LX * LY * LZ; i++) {
 
 					// light correlators
@@ -711,13 +719,13 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 										dum_tot *= -1;
 									}
 									if (g1==g2){
-										res_hihj_g1g2[hi][hj][g1][g2] = creal(dum_tot); // correlators is real
+										res_hihj_g1g2[hi][hj][g1][g2] += creal(dum_tot); // correlators is real
 									}
 									else{
 										if (g2==1){
 											dum_tot *= -1;
 										}
-										res_hihj_g1g2[hi][hj][g1][g2] = cimag(dum_tot); // correlator is imaginary
+										res_hihj_g1g2[hi][hj][g1][g2] += cimag(dum_tot); // correlator is imaginary
 									}
 								}
 							}
@@ -744,7 +752,6 @@ void heavy_correlators_measurement(const int traj, const int id, const int ieo, 
 				Cp4[t] = +resp4 / vol_fact / 2.0 / optr1->kappa / optr1->kappa;
 #endif
 				
-				printf("%d: Checkpoint 11.5\n", g_proc_id);
 				
 				for (size_t hi = 0; hi < 2; hi++) {
 					for (size_t hj = 0; hj < 2; hj++) {
