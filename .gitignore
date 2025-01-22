@@ -39,5 +39,6 @@ doc/*.ps
 doc/*.txt
 doc/*.gpl
 doc/wrapper*
+doc/omeas_heavy_mesons.html
 history_hmc_tm
 .vscode/*
