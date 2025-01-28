@@ -126,7 +126,7 @@ void reweighting_factor(const int N, const int nstore) {
 	double y = mnl->accfunction(j, &hf);
 	data[i*no_monomials + j] = y;
 	if(g_proc_id == 0 && g_debug_level > 0) {
-	  printf("# monomial[%d] %s, stochastic part: w_%d=%e exp(w_%d)=%e\n", j, mnl->name, j, j, y, exp(y));
+	  printf("# monomial[%d] %s, stochastic part: w_%d=%e exp(w_%d)=%e\n", j, mnl->name, j, y, j, exp(y));
 	}
       }
     }
