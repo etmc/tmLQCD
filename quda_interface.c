@@ -258,7 +258,6 @@ void _setDefaultQudaParam(void){
   QudaPrecision cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
   QudaPrecision cuda_prec_precondition = QUDA_SINGLE_PRECISION;
 
-  QudaTune tune = QUDA_TUNE_YES;
 
   // *** the remainder should not be changed for this application
 
@@ -337,7 +336,6 @@ void _setDefaultQudaParam(void){
   inv_param.input_location = QUDA_CPU_FIELD_LOCATION;
   inv_param.output_location = QUDA_CPU_FIELD_LOCATION;
 
-  inv_param.tune = tune ? QUDA_TUNE_YES : QUDA_TUNE_NO;
 
   // QUDA commit https://github.com/lattice/quda/commit/50864ffde1bd8f46fd4a2a2b2e6d44a5a588e2c2
   // has removed these
