@@ -465,7 +465,7 @@ After this, polynomial acceleration can be enabled, which should reduce setup ti
 \subsubsection{Autotuning MG parameters}
 
 The performance of the MG solver is sensitively dependent on the machine configuration, the local volume, the ensemble parameters as well as the combination of MG parameters.
-Parameter sets which are efficient on a particular machine for a particular ensemble may be very inefficient on another machine or for another ensemble.
+Parameter sets which are efficient on a particular machine for a particular ensemble may not be very inefficient on another machine or for another ensemble.
 This is the case, for example, when parameter sets tuned on NVIDIA-based machines are re-used on maches based on AMD accelerators, which show much lower coarse-grid performance and hence require a different balance of work on the coarse, intermediate and fine grids.
 
 The \texttt{deriv\_mg\_tune} executable hijacks the inversions required for the calculation of the derivative of \texttt{DET} monomials in order to provide a mechanism for tuning the MG parameters.
