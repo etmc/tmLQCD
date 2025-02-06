@@ -23,7 +23,7 @@ jobs:
         run: echo "Number of cores ${nb_cores}"
 
       - name: get_packages
-        run: sudo apt-get update && sudo apt install openmpi-bin openmpi-common libopenmpi3 libopenmpi-dev numdiff
+        run: sudo apt-get update && sudo apt install openmpi-bin openmpi-common libopenmpi3 libopenmpi-dev numdiff libblas-dev liblapack-dev
 
       - name: mpicc_version
         if: ${{ always() }}
