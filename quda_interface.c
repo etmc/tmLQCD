@@ -2096,6 +2096,8 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     mg_param->smoother_solver_ca_lambda_min[level] = quda_input.mg_smoother_solver_ca_lambda_min[level];
     mg_param->smoother_solver_ca_lambda_max[level] = quda_input.mg_smoother_solver_ca_lambda_max[level];
    
+    // this is needed after QUDA commit https://github.com/lattice/quda/commit/7903288629f0fcc474989fec5a1393ecc17a4b42
+    mg_param->n_vec_batch[level] = 1;
 
     // set the MG EigSolver parameters, almost equivalent to
     // setEigParam from QUDA's multigrid_invert_test, except
@@ -2161,6 +2163,8 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   mg_param->run_low_mode_check = quda_input.mg_run_low_mode_check;
   mg_param->run_oblique_proj_check = quda_input.mg_run_oblique_proj_check;
   mg_param->run_verify = quda_input.mg_run_verify;
+
+  
 
   // set file i/o parameters
   strcpy(mg_param->vec_infile, "");
