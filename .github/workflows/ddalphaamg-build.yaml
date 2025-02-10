@@ -8,7 +8,7 @@ jobs:
 
     steps:
       - name: get_tmlqcd
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: main
 
@@ -28,14 +28,14 @@ jobs:
         run: echo "Number of cores ${nb_cores}"
 
       - name: get_packages
-        run: sudo apt update && sudo apt install openmpi-bin openmpi-common libopenmpi3 libopenmpi-dev numdiff
+        run: sudo apt update && sudo apt install openmpi-bin openmpi-common libopenmpi3 libopenmpi-dev numdiff libblas-dev liblapack-dev
 
       - name: mpicc_version
         if: ${{ always() }}
         run: mpicc --version
 
       - name: get_lime
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: usqcd-software/c-lime
           path: lime
@@ -58,13 +58,13 @@ jobs:
 
       - name: Archive lime config.log
         if: ${{ always() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: lime_config_output
           path: ${{github.workspace}}/lime/build/config.log 
 
       - name: get_lemon
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: etmc/lemon
           path: lemon
@@ -88,13 +88,13 @@ jobs:
 
       - name: Archive lemon config.log
         if: ${{ always() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: lemon_config_output
           path: ${{github.workspace}}/lemon/build/config.log 
 
       - name: get_ddalphaamg
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: kostrzewa/ddalphaamg #sbacchio/ddalphaamg
           ref: fix_main_build
@@ -143,7 +143,7 @@ jobs:
 
       - name: Archive nf2_ddalphaamg_hmc_tmcloverdetratio output
         if: ${{ always() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: tmlqcd_test_output
           path: ${{github.workspace}}/main/build/output.data
