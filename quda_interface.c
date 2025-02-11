@@ -2097,7 +2097,9 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     mg_param->smoother_solver_ca_lambda_max[level] = quda_input.mg_smoother_solver_ca_lambda_max[level];
    
     // this is needed after QUDA commit https://github.com/lattice/quda/commit/7903288629f0fcc474989fec5a1393ecc17a4b42
+#ifdef TM_QUDA_EXPERIMENTAL
     mg_param->n_vec_batch[level] = 1;
+#endif // TM_QUDA_EXPERIMENTAL
 
     // set the MG EigSolver parameters, almost equivalent to
     // setEigParam from QUDA's multigrid_invert_test, except
