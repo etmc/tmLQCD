@@ -8,6 +8,7 @@
  *               2022       Simone Romiti, Bartosz Kostrzewa
  *               2023       Aniket Sen, Bartosz Kostrzewa
  *               2024       Aniket Sen, Marco Garofalo, Bartosz Kostrzewa
+ *               2025       Marco Garofalo, Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
