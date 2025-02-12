@@ -2159,6 +2159,9 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
       mg_param->eig_param[level] = NULL;
       mg_param->use_eig_solver[level] = QUDA_BOOLEAN_NO;
     } // end of else branch of if(quda_input.mg_use_eig_solver[level] == QUDA_BOOLEAN_YES) above
+    // set file i/o parameters
+    strcpy(mg_param->vec_infile[level], "");
+    strcpy(mg_param->vec_outfile[level], "");
   } // for(i=0 to n_level-1)
 
   // only coarsen the spin on the first restriction
@@ -2171,9 +2174,6 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   mg_param->run_oblique_proj_check = quda_input.mg_run_oblique_proj_check;
   mg_param->run_verify = quda_input.mg_run_verify;
 
-  // set file i/o parameters
-  strcpy(mg_param->vec_infile, "");
-  strcpy(mg_param->vec_outfile, "");
 }
 
 int invert_eo_degenerate_quda(spinor * const out,
