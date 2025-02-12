@@ -2170,9 +2170,7 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   mg_param->run_low_mode_check = quda_input.mg_run_low_mode_check;
   mg_param->run_oblique_proj_check = quda_input.mg_run_oblique_proj_check;
   mg_param->run_verify = quda_input.mg_run_verify;
-
-  
-
+ 
   // set file i/o parameters
   strcpy(mg_param->vec_infile, "");
   strcpy(mg_param->vec_outfile, "");
