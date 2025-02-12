@@ -199,7 +199,12 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
                                const int solver_type, const int even_odd,
                                const double eps_sq, const int maxiter,
                                const int single_parity_solve, const int QpQm);
-
+void _setTwoFlavourSolverParam(const double kappa, const double c_sw, const double mu,
+                                const double epsilon, const int solver_type, const int even_odd,
+                                const double eps_sq, const int maxiter,
+                                const int single_parity_solve,
+                                const int QpQm);
+ 
 void quda_mg_tune_params(void * spinorOut, void * spinorIn, const int max_iter);
 
 void set_default_gauge_param(QudaGaugeParam * gauge_param){
@@ -336,15 +341,6 @@ void _setDefaultQudaParam(void){
   inv_param.input_location = QUDA_CPU_FIELD_LOCATION;
   inv_param.output_location = QUDA_CPU_FIELD_LOCATION;
 
-
-  // QUDA commit https://github.com/lattice/quda/commit/50864ffde1bd8f46fd4a2a2b2e6d44a5a588e2c2
-  // has removed these
-  // when running with a very recent QUDA version, TM_QUDA_EXPERIMENTAL should be set
-  // via --enable-quda_experimental so that these are not set 
-#ifndef TM_QUDA_EXPERIMENTAL
-  inv_param.sp_pad = 0; // 24*24*24/2;
-  inv_param.cl_pad = 0; // 24*24*24/2;
-#endif
 
   _setVerbosityQuda();
 
@@ -1076,7 +1072,7 @@ int invert_quda_direct(double * const propagator, double const * const source,
 
   memcpy((void*)(solver_field[0]), (void*)(source), VOLUME*sizeof(spinor));
 
-  double atime, atotaltime = gettime();
+  double atime;
   void *spinorIn  = (void*)solver_field[0]; // source
   void *spinorOut = (void*)propagator; // solution
 
@@ -1415,9 +1411,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
   inv_param.tol = sqrt(eps_sq);
   inv_param.maxiter = maxiter;
   inv_param.Ls = 1;
-#ifdef TM_QUDA_EXPERIMENTAL
   inv_param.tm_rho = 0.0;
-#endif
   inv_param.clover_rho = 0.0;
   
   // chiral by default, for single-parity, will switch to DEGRAND_ROSSI
@@ -1434,11 +1428,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
     inv_param.mu = -mu/2./kappa;
     inv_param.clover_coeff = c_sw*kappa;
     if( fabs(g_mu3) > 2*DBL_EPSILON ){
-#ifdef TM_QUDA_EXPERIMENTAL
       inv_param.tm_rho = -g_mu3/2./kappa;
-#else
-      fatal_error("Attempt to set inv_param.tm_rho but --enable-quda_experimental was not set!", __func__);
-#endif
     }
 
     inv_param.compute_clover_inverse = 1;
@@ -1464,11 +1454,7 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
       inv_param.twist_flavor = QUDA_TWIST_SINGLET;
       inv_param.dslash_type = QUDA_TWISTED_CLOVER_DSLASH;
       inv_param.mu = 0.0;
-#ifdef TM_QUDA_EXPERIMENTAL
       inv_param.tm_rho = -g_mu3/2./kappa;
-#else
-      fatal_error("Attempt to set inv_param.tm_rho but --enable-quda_experimental was not set!", __func__);
-#endif
     } else {
       inv_param.twist_flavor = QUDA_TWIST_NO;
       inv_param.dslash_type = QUDA_CLOVER_WILSON_DSLASH;
@@ -1715,9 +1701,7 @@ void _setTwoFlavourSolverParam(const double kappa, const double c_sw, const doub
   
   inv_param.twist_flavor = QUDA_TWIST_NONDEG_DOUBLET;
 
-#ifdef TM_QUDA_EXPERIMENTAL
   inv_param.tm_rho = 0.0;
-#endif
   inv_param.clover_rho = 0.0;
 
   // choose dslash type
@@ -1860,11 +1844,6 @@ void _setMGInvertParam(QudaInvertParam * mg_inv_param, const QudaInvertParam * c
 
   mg_inv_param->Ls = 1;
 
-#ifndef TM_QUDA_EXPERIMENTAL
-  mg_inv_param->sp_pad = 0;
-  mg_inv_param->cl_pad = 0;
-#endif
-
   mg_inv_param->residual_type = QUDA_L2_RELATIVE_RESIDUAL;
 
   mg_inv_param->preserve_source = QUDA_PRESERVE_SOURCE_YES;
@@ -1932,9 +1911,7 @@ void _setMGInvertParam(QudaInvertParam * mg_inv_param, const QudaInvertParam * c
   mg_inv_param->mu = inv_param->mu;
   mg_inv_param->kappa = inv_param->kappa;
   mg_inv_param->clover_coeff = inv_param->clover_coeff;
-#ifdef TM_QUDA_EXPERIMENTAL
   mg_inv_param->tm_rho = inv_param->tm_rho;
-#endif
 }
 
 void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
@@ -2096,6 +2073,10 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
     mg_param->smoother_solver_ca_lambda_min[level] = quda_input.mg_smoother_solver_ca_lambda_min[level];
     mg_param->smoother_solver_ca_lambda_max[level] = quda_input.mg_smoother_solver_ca_lambda_max[level];
    
+    // this is needed after QUDA commit https://github.com/lattice/quda/commit/7903288629f0fcc474989fec5a1393ecc17a4b42
+#ifdef TM_QUDA_EXPERIMENTAL
+    mg_param->n_vec_batch[level] = 1;
+#endif 
 
     // set the MG EigSolver parameters, almost equivalent to
     // setEigParam from QUDA's multigrid_invert_test, except
@@ -2150,6 +2131,9 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
       mg_param->eig_param[level] = NULL;
       mg_param->use_eig_solver[level] = QUDA_BOOLEAN_NO;
     } // end of else branch of if(quda_input.mg_use_eig_solver[level] == QUDA_BOOLEAN_YES) above
+    // set file i/o parameters
+    strcpy(mg_param->vec_infile[level], "");
+    strcpy(mg_param->vec_outfile[level], "");
   } // for(i=0 to n_level-1)
 
   // only coarsen the spin on the first restriction
@@ -2162,9 +2146,6 @@ void _setQudaMultigridParam(QudaMultigridParam* mg_param) {
   mg_param->run_oblique_proj_check = quda_input.mg_run_oblique_proj_check;
   mg_param->run_verify = quda_input.mg_run_verify;
 
-  // set file i/o parameters
-  strcpy(mg_param->vec_infile, "");
-  strcpy(mg_param->vec_outfile, "");
 }
 
 int invert_eo_degenerate_quda(spinor * const out,
@@ -2267,9 +2248,8 @@ int invert_eo_degenerate_quda(spinor * const out,
    
     // now we invert \hat{M}^{-} to get the inverse of \hat{Q}^{-} in the end
     inv_param.mu = -inv_param.mu;
-#ifdef TM_QUDA_EXPERIMENTAL
     inv_param.tm_rho = -inv_param.tm_rho;
-#endif
+
     if(solver_flag == MG){
       // flip the sign of the coarse operator and update the setup
       quda_mg_param.invert_param->mu = -quda_mg_param.invert_param->mu;
@@ -2286,9 +2266,7 @@ int invert_eo_degenerate_quda(spinor * const out,
     tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
     reorder_spinor_eo_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
     inv_param.mu = -inv_param.mu;
-#ifdef TM_QUDA_EXPERIMENTAL
     inv_param.tm_rho = -inv_param.tm_rho;
-#endif
   } else {
     reorder_spinor_eo_fromQuda( (double*)spinorOut, inv_param.cpu_prec, 0, 1);
   }
