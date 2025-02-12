@@ -199,7 +199,12 @@ void _setOneFlavourSolverParam(const double kappa, const double c_sw, const doub
                                const int solver_type, const int even_odd,
                                const double eps_sq, const int maxiter,
                                const int single_parity_solve, const int QpQm);
-
+void _setTwoFlavourSolverParam(const double kappa, const double c_sw, const double mu,
+                                const double epsilon, const int solver_type, const int even_odd,
+                                const double eps_sq, const int maxiter,
+                                const int single_parity_solve,
+                                const int QpQm);
+ 
 void quda_mg_tune_params(void * spinorOut, void * spinorIn, const int max_iter);
 
 void set_default_gauge_param(QudaGaugeParam * gauge_param){
