@@ -1081,7 +1081,7 @@ int invert_quda_direct(double * const propagator, double const * const source,
 
   memcpy((void*)(solver_field[0]), (void*)(source), VOLUME*sizeof(spinor));
 
-  double atime, atotaltime = gettime();
+  double atime;
   void *spinorIn  = (void*)solver_field[0]; // source
   void *spinorOut = (void*)propagator; // solution
 
