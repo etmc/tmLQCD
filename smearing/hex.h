@@ -6,6 +6,8 @@
 /* Just to have a consistent look to the interface  */
 typedef struct hyp_parameters hex_parameters;
 
+/* NOTE(gkanwar): Temporarily disable the new gauge_field_t interfaces to enable
+ * compilation with old su3_tuple array signatures. */
 #if 0
 /* All defined in terms of arrays of tuples -- needed to allow for g_gauge_field as input */
 void stout_exclude_none(gauge_field_t buff_out, double const coeff, gauge_field_array_t staples, gauge_field_t buff_in);

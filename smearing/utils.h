@@ -30,6 +30,8 @@ enum I2
   I2_3_02 = 10, I2_3_20 = 10, I2_3_12 = 11, I2_3_21 = 11
 };
 
+/* NOTE(gkanwar): Temporarily disable the new gauge_field_t interface to enable
+ * compilation with old su3_tuple array signatures. */
 #if 0
 void generic_staples(gauge_field_t buff_out, int x, int mu, gauge_field_t buff_in);
 #endif
