@@ -1604,7 +1604,8 @@ void _updateQudaMultigridPreconditioner(){
 
     // if we have set an explicit mu value for the generation of our MG setup,
     // we would like to use it here
-    if( fabs( fabs(quda_input.mg_setup_2kappamu/2.0/g_kappa) - fabs(quda_mg_param.invert_param->mu) ) > 2*DBL_EPSILON ){
+    if( fabs( quda_input.mg_setup_2kappamu ) > 2*DBL_EPSILON &&
+        fabs( fabs(quda_input.mg_setup_2kappamu/2.0/g_kappa) - fabs(quda_mg_param.invert_param->mu) ) > 2*DBL_EPSILON ){
       double save_mu = quda_mg_param.invert_param->mu;
       // note the minus sign
       quda_mg_param.invert_param->mu = -quda_input.mg_setup_2kappamu/2.0/g_kappa;
