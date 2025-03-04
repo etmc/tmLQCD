@@ -30,7 +30,6 @@ SHELL = @SHELL@
 OPTARGS = @OPTARGS@
 SOPTARGS = @SOPTARGS@
 DEFS = @DEFS@
-GPUDIR = @GPUDIR@
 USESUBDIRS = @USESUBDIRS@
 NVCC = @NVCC@
 GPUMPICOMPILER = @GPUMPICOMPILER@
@@ -57,25 +56,18 @@ MODULES = read_input gamma measure_gauge_action start \
 	reweighting_factor_nd rnd_gauge_trafo \
         update_momenta update_momenta_fg integrator  phmc \
 	little_D block operator \
-	temporalgauge spinor_fft X_psi P_M_eta \
+	spinor_fft X_psi P_M_eta \
 	jacobi fatal_error invert_clover_eo gettime \
-	tm_debug_printf \
+	tm_debug_printf compare_derivative \
         @SPI_FILES@ @QUDA_INTERFACE@ @DDalphaAMG_INTERFACE@
 
 CXXMODULES = @QPHIX_INTERFACE@
-
-## the GPU modules (all .cu files in $GPUDIR)
-GPUSOURCES := $(wildcard $(srcdir)/$(GPUDIR)/*.cu)
-GPUOBJECTS := $(patsubst $(srcdir)/$(GPUDIR)/%.cu, $(GPUDIR)/%.o, $(GPUSOURCES))
-
-#GPUSOURCES_C := $(wildcard $(srcdir)/$(GPUDIR)/*.c)
-#GPUOBJECTS_C := $(patsubst $(srcdir)/$(GPUDIR)/%.c, $(GPUDIR)/%.o, $(GPUSOURCES_C))
 
 NOOPTMOD = test/check_xchange test/check_geometry
 
 PROGRAMS = hmc_tm benchmark invert gen_sources  \
 	check_locallity test_lemon hopping_test LapH_ev \
-	offline_measurement @QPHIX_PROGRAMS@
+	offline_measurement deriv_mg_tune @QPHIX_PROGRAMS@
 
 ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES}
 SUBDIRS = ${USESUBDIRS}
@@ -84,7 +76,7 @@ SUBDIRS = ${USESUBDIRS}
 .SUFFIXES:
 
 # need to build modules before subdirs!
-all: Makefile dep $(SUBDIRS) hmc_tm invert benchmark offline_measurement @QPHIX_PROGRAMS@
+all: Makefile dep $(SUBDIRS) hmc_tm invert benchmark offline_measurement deriv_mg_tune @QPHIX_PROGRAMS@
 
 $(SUBDIRS):
 	$(MAKE) --directory=$@
@@ -99,9 +91,12 @@ ${top_srcdir}/git_hash.h:
 
 include ${top_srcdir}/Makefile.global
 
+# follow https://www.owlfolio.org/possibly-useful/flex-input-scanner-rules-are-too-complicated/
+# and pass the -Ca option such that more than 32k "NFA" states are allowed
+# our ruleset is so complicated that this has become necessary!
 ${top_srcdir}/read_input.c: ${top_srcdir}/read_input.l
 ifneq (,$(findstring lex,${LEX}))
-	${LEX} -Ptmlqcd -i -t ${top_srcdir}/read_input.l > ${top_srcdir}/read_input.c
+	${LEX} -Ca -Ptmlqcd -i -t ${top_srcdir}/read_input.l > ${top_srcdir}/read_input.c
 else
 	$(error Unable to find (f)lex, read_input.c not built. Please install (f)lex!)
 endif
@@ -112,21 +107,21 @@ libhmc.a: ${addsuffix .o, ${MODULES} ${SMODULES}} Makefile
 	@$(RANLIB) libhmc.a
 	@cp libhmc.a ${top_builddir}/lib/libhmc.a
 
-$(addsuffix .o,$(filter-out ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h
+$(addsuffix .o,$(filter-out ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/include/tmlqcd_config_internal.h
 	${COMPILE} ${OPTARGS} -c $<
 
 #here we don't need optimisation
-$(addsuffix .o,$(filter ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h
+$(addsuffix .o,$(filter ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/include/tmlqcd_config_internal.h
 	${COMPILE} -c $<
 
-${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h
+${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/include/tmlqcd_config_internal.h
 	${COMPILE} ${SOPTARGS} -c $<
 
 # C++ modules
-$(addsuffix .o,${CXXMODULES}): %.o: ${srcdir}/%.cpp %.d Makefile $(abs_top_builddir)/config.h
+$(addsuffix .o,${CXXMODULES}): %.o: ${srcdir}/%.cpp %.d Makefile $(abs_top_builddir)/include/tmlqcd_config_internal.h
 	${CXXCOMPILE} -c $<
 	
-${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h ${top_srcdir}/git_hash.h
+${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/include/tmlqcd_config_internal.h ${top_srcdir}/git_hash.h
 	${COMPILE} ${OPTARGS} -c $<
 
 ${PROGRAMS}: %: %.o libhmc.a $(SUBDIRS) $(addsuffix .o,${CXXMODULES})
@@ -141,7 +136,7 @@ dep: $(addsuffix .d,$(ALLOBJ)) $(addsuffix .d,$(CXXMODULES))
 
 install: Makefile
 	@mkdir -p $(bindir); \
-	for p in hmc_tm invert; do \
+	for p in hmc_tm invert benchmark offline_measurement deriv_mg_tune; do \
 	  progname=`echo $$p | sed '$(program_transform_name)'`; \
 	  echo "Installing $$p as $$progname in $(bindir)..."; \
 	  cp $$p $(bindir)/$$progname; \
@@ -149,7 +144,7 @@ install: Makefile
 	echo "done";
 
 uninstall: Makefile
-	for p in hmc_tm invert; do \
+	for p in hmc_tm invert benchmark offline_measurement deriv_mg_tune; do \
 	  progname=`echo $$p | sed '$(program_transform_name)'`; \
 	  echo "Un-Installing $$progname in $(bindir)..."; \
 	  rm $(bindir)/$$progname; \
@@ -160,11 +155,11 @@ compile-clean: compile-clean-recursive Makefile
 	rm -f *.o *.d test/*.o test/*.d tests/*.o tests/*.d
 
 clean: clean-recursive Makefile
-	rm -f benchmark hmc_tm invert test_Dslash *.o *.d test/*.o test/*.d tests/*.o tests/*.d
+	rm -f benchmark hmc_tm invert offline_measurement test_Dslash deriv_mg_tune @QPHIX_PROGRAMS@ *.o *.d test/*.o test/*.d tests/*.o tests/*.d
 
 distclean: distclean-recursive Makefile
-	rm -f benchmark hmc_tm invert *.o *.d *~ Makefile config.log config.status fixed_volume.h
-	rm -f config.h
+	rm -f benchmark hmc_tm invert offline_measurement *.o *.d *~ Makefile config.log config.status fixed_volume.h
+	rm -f include/tmlqcd_config_internal.h
 
 .PHONY: all ${SUBDIRS} ${top_srcdir}/git_hash.h clean compile-clean distclean dep install \
 	all-recursive all-debug-recursive all-profile-recursive \

@@ -61,14 +61,14 @@
  *******************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #include "global.h"
 #include "read_input.h"
@@ -77,6 +77,7 @@
 #include "ranlxd.h"
 #include "ranlxs.h"
 #include "start.h"
+#include "misc_types.h"
 
 static void gauss_vector(double v[],int n)
 {
@@ -435,6 +436,10 @@ void unit_g_gauge_field(void)
       g_gauge_field[ix][mu]=unit_su3();
     }
   }
+  // resetting the gauge field to unity moves the gauge_id a long way
+  // to guarantee that the change is propagated 
+  update_tm_gauge_id(&g_gauge_state, TM_GAUGE_PROPAGATE_THRESHOLD);
+  update_tm_gauge_id(&g_gauge_state_32, TM_GAUGE_PROPAGATE_THRESHOLD);
   g_update_gauge_copy = 1;
   return;
 }
@@ -503,7 +508,13 @@ void random_gauge_field(const int repro, su3 ** const gf) {
     }
   }
 
-  g_update_gauge_copy = 1;
+  if((void*)gf == (void*)g_gauge_field){
+    // g_gauge_field was randomized, move the gauge_id a long way to make
+    // sure that the change is propagated
+    update_tm_gauge_id(&g_gauge_state, TM_GAUGE_PROPAGATE_THRESHOLD);
+    update_tm_gauge_id(&g_gauge_state_32, TM_GAUGE_PROPAGATE_THRESHOLD);
+    g_update_gauge_copy = 1;
+  }
   return;
 }
 
@@ -699,6 +710,8 @@ void set_gauge_field(const double c)
       g_gauge_field[ix][mu]=set_su3(c);
     }
   }
+  update_tm_gauge_id(&g_gauge_state, TM_GAUGE_PROPAGATE_THRESHOLD);
+  update_tm_gauge_id(&g_gauge_state_32, TM_GAUGE_PROPAGATE_THRESHOLD);
   g_update_gauge_copy = 1;
   return;
 }

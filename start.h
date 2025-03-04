@@ -20,6 +20,8 @@
 #ifndef _START_H
 #define _START_H
 
+#include "su3.h"
+#include "su3adj.h"
 
 /* functions requesting random numbers can request different distributions by calling _rn_switch
    with the first argument set to a random number type as defined below and a function pointer

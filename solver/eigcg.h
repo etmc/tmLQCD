@@ -26,9 +26,8 @@
 #ifndef _EIGCG_H
 #define _EIGCG_H
 
-#include "su3.h"
 #include "solver/matrix_mult_typedef.h"
-
+#include "su3.h"
 
 void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb, const double eps_sq, 
            double restart_eps_sq, const int rel_prec, int maxit, int *iter, double *reshist, int *flag,  

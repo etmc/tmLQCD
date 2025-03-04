@@ -19,7 +19,7 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -48,7 +48,7 @@
 
 
 
-inline void setPhmcVars(monomial *mnl){
+static inline void setPhmcVars(monomial *mnl){
   phmc_invmaxev=1.0/mnl->MDPolyLmax;
   phmc_dop_n_cheby=(mnl->MDPolyDegree/2)+1;
   phmc_Cpol=mnl->MDPolyLocNormConst;
@@ -56,14 +56,13 @@ inline void setPhmcVars(monomial *mnl){
 }
 
 void poly_derivative(const int id, hamiltonian_field_t * const hf){
-  double atime, etime;
   monomial * mnl = &monomial_list[id];
+  tm_stopwatch_push(&g_timers, __func__, mnl->name);
   int k,j;
   int degreehalf=mnl->MDPolyDegree/2;
 
   spinor** chi_spinor_field=mnl->MDPoly_chi_spinor_fields;
 
-  atime = gettime();
   (*mnl).forcefactor = -mnl->MDPolyLocNormConst/mnl->MDPolyLmax;
 
 
@@ -173,21 +172,16 @@ void poly_derivative(const int id, hamiltonian_field_t * const hf){
   g_mu = g_mu1;
   boundary(g_kappa);
   popPhmcVars();
-  etime = gettime();
-  if(g_debug_level > 1 && g_proc_id == 0) {
-    printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
-  }
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
 }
 
 double poly_acc(const int id, hamiltonian_field_t * const hf){
-
   monomial * mnl = &monomial_list[id];
+  tm_stopwatch_push(&g_timers, __func__, mnl->name);
   int j;
   double diff;
   int no_eigenvalues=-1;
-  double atime, etime;
-  atime = gettime();
   if(mnl->even_odd_flag) {
     if(mnl->MDPolyDetRatio==1) {
       g_mu = mnl->mu2;
@@ -254,24 +248,20 @@ double poly_acc(const int id, hamiltonian_field_t * const hf){
 
     return NAN;
   }
-  etime = gettime();
   if(g_proc_id == 0) {
-    if(g_debug_level > 1) {
-      printf("# Time for %s monomial acc step: %e s\n", mnl->name, etime-atime);
-    }
     if(g_debug_level > 3) {
       printf("called poly_acc for id %d dH = %1.10e\n", 
 	     id, mnl->energy1 - mnl->energy0);
     }
   }
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return (mnl->energy1 - mnl->energy0);
 }
 
 void poly_heatbath(const int id, hamiltonian_field_t * const hf){
   monomial * mnl = &monomial_list[id];
+  tm_stopwatch_push(&g_timers, __func__, mnl->name);
   int j;
-  double atime, etime;
-  atime = gettime();
   mnl->csg_n = 0;
   mnl->csg_n2 = 0;
   mnl->iter0 = 0;
@@ -336,14 +326,11 @@ void poly_heatbath(const int id, hamiltonian_field_t * const hf){
   boundary(g_kappa);
   popPhmcVars();
 
-  etime = gettime();
   if(g_proc_id == 0) {
-    if(g_debug_level > 1) {
-      printf("# Time for %s monomial heatbath: %e s\n", mnl->name, etime-atime);
-    }
     if(g_debug_level > 3) {
       printf("called poly_heatbath for id %d energy %f\n", id, mnl->energy0);
     }
   }
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
 }

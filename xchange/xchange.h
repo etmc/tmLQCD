@@ -19,6 +19,10 @@
 #ifndef _XCHANGE_H
 #define _XCHANGE_H
 
+#ifdef HAVE_CONFIG_H
+#include "tmlqcd_config.h"
+#endif
+
 #include "xchange/xchange_field.h"
 #include "xchange/xchange_gauge.h"
 #include "xchange/xchange_deri.h"

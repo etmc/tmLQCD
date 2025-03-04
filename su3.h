@@ -34,7 +34,7 @@
 
 #include <complex.h>
 #if (defined XLC && defined BGL)
-# include "bgl.h"
+#include "bgl.h"
 #endif
 
 typedef struct 

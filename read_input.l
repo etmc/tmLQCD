@@ -1,6 +1,6 @@
 /***********************************************************************
  *
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ * Copyright (C) 2002,2003,2004,2005,2006,2007,2008,2021 Carsten Urbach
  *
  * Modified by Jenifer Gonzalez Lopez 2009/03/27
  *
@@ -21,13 +21,13 @@
  * This is the parser. (Dec 2002)
  * The .c-file is generated from .l using flex.
  * Please edit read_input.l instead of read_input.c!
- * flex should be said to be case insensitive!
+ * flex should be set to be case insensitive!
  *
- * After modifiing read_input.l please update read_input.c with
+ * the c source file is automatically updated via `make`
  * flex -Ptmlqcd -i -t read_input.l > read_input.c
  *
  * Autor: Carsten Urbach
- *        urbach@physik.fu-berlin.de
+ *        urbach@hiskp.uni-bonn.de
  ***********************************************************************/
 
 SPC [[:blank:]]+
@@ -37,34 +37,40 @@ DIGIT [[:digit:]]
 ZT [0-9(10)(11)]
 IDXEX ("-"{DIGIT}+)
 SIGN ("+"|"-")
-FLT {SIGN}?{DIGIT}+(".")?{DIGIT}*(e("-"|"+")?{DIGIT}+)?
-FILENAME [a-zA-Z0-9_".""-""/"][a-zA-z0-9"."_"-""/"]+
+FLT {SIGN}?{DIGIT}+(\.)?{DIGIT}*(e(\-|\+)?{DIGIT}+)?
+FILENAME [a-zA-Z0-9_\.\-/][a-zA-z0-9\._\-/]+
 NAME [a-zA-Z0-9_]+
 CSTR \"[a-zA-Z0-9\-\._]+\"
 TYPE [0-9A-Z]+
-FLTLIST [0-9"."","" "]*
+STRLIST [0-9,\-\._a-zA-Z\ \t]*
 EQL {SPC}*={SPC}*
 
 %{
 #ifdef HAVE_CONFIG_H
-#  include<config.h>
+#  include "tmlqcd_config.h"
 #endif
-#include<stdlib.h>
-#include<stdio.h>
-#include<string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #define INIT_GLOBALS
-#include"global.h"
-#include"read_input.h"
-#include"default_input_values.h"
-#include"monomial/monomial.h"
-#include"solver/solver_types.h"
-#include"meas/measurements.h"
-#include"integrator.h"
-#include"operator.h"
-#include"phmc.h"
-#include<io/params.h>
+#include "global.h"
+#undef INIT_GLOBALS
+#include "read_input.h"
+#include "default_input_values.h"
+#include "monomial/monomial.h"
+#include "solver/solver_types.h"
+#include "meas/measurements.h"
+#include "integrator.h"
+#include "operator.h"
+#include "phmc.h"
+#include <io/params.h>
 #include "qphix_types.h"
 #include "quda_types.h"
+#include "misc_types.h"
+
+#include <ctype.h>
+
+#define ERR_MSG_LEN 500
 
 // some general parsing helpers
 
@@ -81,14 +87,38 @@ static inline void rmQuotes(char *str){
   *strsave='\0';
 }
 
-static inline void fltlist_tokenize(const char * const str, char * const paramname, const int paramname_length){
-  char error_message[200];
+/* tokenize the comma-delimited list 'input' of the form
+    'list = token1, token2, ...'
+   and return the first token, which is the name of the list
+   via the 'paramname' parameter
+   'input' is copied and the memory pointed to by 'input_copy' has to be
+   freed after all operations on this particular input string have completed.
+   the length of the array holding 'paramname' parameter must be passed */
+static inline void strlist_tokenize(char const * const input,
+                                    char ** input_copy,
+                                    char * const paramname,
+                                    const int paramname_length)
+{
+  char error_message[ERR_MSG_LEN];
   char * token = (char*)NULL;
+  
+  const int input_length = strlen(input) + 1;
+  if( input_length > 20000 ){
+    yy_fatal_error("Likely overflow bug in 'strlist_tokenize' of 'read_input.l'.\n"
+                   "Encountered string of length exceeding 20k characters!\n");
+  }
+  (*input_copy) = malloc(input_length);
+  if( (*input_copy) == NULL ){
+    yy_fatal_error("Could not allocate memory for 'input_copy' in 'strlist_tokenize' of 'read_input.l'!\n");
+  }
+  strncpy((*input_copy), input, input_length);
+
   // the first token is the parameter name, we will return it, 
+  // note that we include space and tab as characters to be omitted
   // but first check if tokenization was successful
-  token = strtok(str, "\n\t =,\\");
+  token = strtok((*input_copy), "= \t");
   if( (void*)token == NULL ){
-    snprintf(error_message, 200, "Unable to parse '%s' in fltlist_tokenize!\n", paramname);
+    snprintf(error_message, ERR_MSG_LEN, "Unable to parse '%s' in strlist_tokenize!\n", paramname);
     yy_fatal_error(error_message);
   } else {
     // return what we parsed
@@ -96,9 +126,29 @@ static inline void fltlist_tokenize(const char * const str, char * const paramna
   }
 }
 
+/* obtain the next token in the list of comma-separated strings
+   'list_end' is a parameter which is set to 1 if the end of the list is reached
+   'token' will hold the value of the token
+   'token_length' is the length of the array to which the token should be written */
+static inline void strlist_next_token(int * const list_end, char * const token_out, const int token_length){
+  char * token = (char*)NULL;
+  token = strtok(NULL,", \t=");
+  if( (void*)token == NULL ){
+    *list_end = 1;
+  } else {
+    *list_end = 0;
+    snprintf(token_out, token_length, "%s", token);
+  }
+}
+
+/* when the list of tokens is a list of doubles or integers, this function
+   can be used to obtain the next token in the list directly as a double
+   'list_end' is a parameter which is set to 1 if the end of the list 
+   has been reached */
 static inline double fltlist_next_token(int * const list_end){
   double retval;
-  char * token = strtok(NULL," =,\t");
+  char * token = (char*)NULL;
+  token = strtok(NULL,", \t=");
   if( (void*)token == NULL ){
     *list_end = 1;
     return(0.0);
@@ -184,19 +234,6 @@ static inline double fltlist_next_token(int * const list_end){
   int compute_topsus;
   double mstarsq;
   int no_sources_z2;
-  int usegpu_flag;
-  int max_innersolver_it;
-  int device_num;
-  double innersolver_precision;
-
-  double innersolver_precision_abs;
-  double innersolver_precision_rel;
-  int innersolver_precision_check_abs;
-  int innersolver_precision_check_rel;
-
-  int max_mms_shifts;
-  int use_mixed_mms;
-  int min_innersolver_it;
 
   double mixcg_innereps;
   int mixcg_maxinnersolverit;
@@ -222,6 +259,9 @@ static inline double fltlist_next_token(int * const list_end){
 
   int use_preconditioning;
 
+  int g_barrier_monomials_convergence;
+
+
   /* macro control over read_input.l is poor. In order to support compilation without
    * a given external library, we need to have these declared here as a dummy.
    * Note that no parameters will actually be passed, the input file reader will
@@ -229,8 +269,10 @@ static inline double fltlist_next_token(int * const list_end){
    * been compiled without the interface in question. */
 #ifdef TM_USE_QUDA
   extern tm_QudaParams_t quda_input;
+  extern tm_QudaMGTuningPlan_t quda_mg_tuning_plan;
 #else
   tm_QudaParams_t quda_input;
+  tm_QudaMGTuningPlan_t quda_mg_tuning_plan;
 #endif
 
 #ifdef TM_USE_QPHIX
@@ -239,19 +281,20 @@ static inline double fltlist_next_token(int * const list_end){
   tm_QPhiXParams_t qphix_input;
 #endif
 
-// specific parsing helpers
-  static inline void parse_quda_mg_blocksize(const char * const input, const int dim){
+  // specific parsing helpers
+  static inline void parse_quda_mg_blocksize(char const * const input, const int dim){
     char paramname[100];
-    char error_message[200];
+    char error_message[ERR_MSG_LEN];
     int list_end = 0;
     int level = 0;
     int blocksize = 0;
     
-    fltlist_tokenize(input, paramname, 100);
+    char * input_copy = (char*)NULL;
+    strlist_tokenize(input, &input_copy, paramname, 100);
     blocksize = (int)fltlist_next_token(&list_end);
     while( list_end != 1 ){
-      if( level >= (QUDA_MAX_MG_LEVEL-1) ){
-        snprintf(error_message, 200, "Exceeded maximum number of levels (%d-1) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+      if( level >= QUDA_MAX_MG_LEVEL ){
+        snprintf(error_message, ERR_MSG_LEN, "Exceeded maximum number of levels (%d-1) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
         yy_fatal_error(error_message);
       }
       
@@ -264,6 +307,174 @@ static inline double fltlist_next_token(int * const list_end){
       level++;
       blocksize = (int)fltlist_next_token(&list_end);
     }
+    free(input_copy);
+  }
+  
+  static inline void parse_quda_mg_int_par_array(char const * const input, int * par_array){
+    char paramname[100];
+    char error_message[ERR_MSG_LEN];
+    int list_end = 0;
+    int level = 0;
+    char * input_copy = (char*)NULL;
+    strlist_tokenize(input, &input_copy, paramname, 100);
+    int parval = (int)fltlist_next_token(&list_end);
+    while( list_end != 1 ){
+      if( level >= QUDA_MAX_MG_LEVEL ){
+        snprintf(error_message, ERR_MSG_LEN, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+        yy_fatal_error(error_message);
+      }
+      
+      par_array[level] = parval;
+      if(myverbose){ 
+        printf("  %s, level %d set to %d line %d\n", paramname,
+                level, par_array[level], line_of_file);
+      }
+      
+      level++;
+      parval = (int)fltlist_next_token(&list_end);
+    }
+    free(input_copy);
+  }
+  
+  static inline void parse_quda_mg_dbl_par_array(char const * const input, double * par_array){
+    char paramname[100];
+    char error_message[ERR_MSG_LEN];
+    int list_end = 0;
+    int level = 0;
+    
+    char * input_copy = (char*)NULL;
+    strlist_tokenize(input, &input_copy, paramname, 100);
+    double parval = fltlist_next_token(&list_end);
+    while( list_end != 1 ){
+      if( level >= QUDA_MAX_MG_LEVEL ){
+        snprintf(error_message, ERR_MSG_LEN, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+        yy_fatal_error(error_message);
+      }
+      
+      par_array[level] = parval;
+      if(myverbose){ 
+        printf("  %s, level %d set to %e line %d\n", paramname,
+                level, par_array[level], line_of_file);
+      }
+      
+      level++;
+      parval = fltlist_next_token(&list_end);
+    }
+    free(input_copy);
+  }
+
+  static inline void parse_quda_mg_bool_par_array(char const * const input, int * par_array){
+    char paramname[100];
+    char token[100];
+    char error_message[ERR_MSG_LEN];
+    int list_end = 0;
+    int level = 0;
+    char * input_copy = (char*)NULL;
+    strlist_tokenize(input, &input_copy, paramname, 100);
+    strlist_next_token(&list_end, token, 100);
+    while( list_end != 1 ){
+      if( level >= QUDA_MAX_MG_LEVEL ){
+        snprintf(error_message, ERR_MSG_LEN, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+        yy_fatal_error(error_message);
+      }
+      for(int i = 0; token[i]; i++){
+        token[i] = tolower(token[i]);
+      }
+      if( strcmp(token, "yes") == 0 ){
+        par_array[level] = QUDA_BOOLEAN_YES;
+      }
+      else if( strcmp(token, "no") == 0 ){
+        par_array[level] = QUDA_BOOLEAN_NO;
+      }
+      else {
+        snprintf(error_message, ERR_MSG_LEN, "ERROR: Only 'yes' and 'no' are possible for %s!\n", paramname);
+        yy_fatal_error(error_message);
+      }
+      if(myverbose) printf("  %s on level %d set to '%s' line %d\n", paramname, level, token, line_of_file);
+      level++;
+      strlist_next_token(&list_end, token, 100);
+    }
+    free(input_copy);
+  }
+  
+  static inline void parse_quda_mg_verbosity_par_array(char const * const input, QudaVerbosity * par_array){
+    char paramname[100];
+    char token[100];
+    char error_message[ERR_MSG_LEN];
+    int list_end = 0;
+    int level = 0;
+    char * input_copy = (char*)NULL;
+    strlist_tokenize(input, &input_copy, paramname, 100);
+    strlist_next_token(&list_end, token, 100);
+    while( list_end != 1 ){
+      if( level >= QUDA_MAX_MG_LEVEL ){
+        snprintf(error_message, ERR_MSG_LEN, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+        yy_fatal_error(error_message);
+      }
+      for(int i = 0; token[i]; i++){
+        token[i] = tolower(token[i]);
+      }
+      if( strcmp(token, "silent") == 0 ){
+        par_array[level] = QUDA_SILENT;
+      }
+      else if( strcmp(token, "summarize") == 0 ){
+        par_array[level] = QUDA_SUMMARIZE;
+      }
+      else if( strcmp(token, "verbose") == 0 ){
+        par_array[level] = QUDA_VERBOSE;
+      }
+      else if( strcmp(token, "debug_verbose") == 0 ){
+        par_array[level] = QUDA_DEBUG_VERBOSE;
+      }
+      else {
+        snprintf(error_message, ERR_MSG_LEN, 
+                 "ERROR: Unknown verbosity level '%s' for '%s'!"
+                   " Only 'silent', 'summarize', 'verbose' and 'debug_verbose' supported!\n",
+                 token, paramname);
+        yy_fatal_error(error_message);
+      }
+      if(myverbose) printf("  %s on level %d set to '%s' line %d\n", paramname, level, token, line_of_file);
+      level++;
+      strlist_next_token(&list_end, token, 100);
+    }
+    free(input_copy);
+  }
+  
+  static inline void parse_quda_mg_cabasis_par_array(char const * const input, QudaCABasis * par_array){
+    char paramname[100];
+    char token[100];
+    char error_message[ERR_MSG_LEN];
+    int list_end = 0;
+    int level = 0;
+    char * input_copy = (char*)NULL;
+    strlist_tokenize(input, &input_copy, paramname, 100);
+    strlist_next_token(&list_end, token, 100);
+    while( list_end != 1 ){
+      if( level >= QUDA_MAX_MG_LEVEL ){
+        snprintf(error_message, ERR_MSG_LEN, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+        yy_fatal_error(error_message);
+      }
+      for(int i = 0; token[i]; i++){
+        token[i] = tolower(token[i]);
+      }
+      if( strcmp(token, "power") == 0 ){
+        par_array[level] = QUDA_POWER_BASIS;
+      }
+      else if( strcmp(token, "chebyshev") == 0 ){
+        par_array[level] = QUDA_CHEBYSHEV_BASIS;
+      }
+      else {
+        snprintf(error_message, ERR_MSG_LEN, 
+                 "ERROR: Unknown CA basis '%s' for '%s'!"
+                   " Only 'power' and 'chebyshev' supported!\n",
+                 token, paramname);
+        yy_fatal_error(error_message);
+      }
+      if(myverbose) printf("  %s on level %d set to '%s' line %d\n", paramname, level, token, line_of_file);
+      level++;
+      strlist_next_token(&list_end, token, 100);
+    }
+    free(input_copy);
   }
   
 %}
@@ -314,6 +525,7 @@ static inline double fltlist_next_token(int * const list_end){
 %x PROPSPLIT
 %x NOSAMPLES
 %x RELPREC
+%x STRICTRESIDUALCHECK
 %x REVCHECK
 %x REVINT
 %x DEBUG
@@ -350,9 +562,6 @@ static inline double fltlist_next_token(int * const list_end){
 %x INITINTEGRATOR
 %x INTEGRATOR
 
-%x GPU
-%x INITGPU
-
 %x DEFLATION
 %x INITDEFLATION
 
@@ -374,6 +583,7 @@ static inline double fltlist_next_token(int * const list_end){
 %x INITMONOMIAL
 %x DETMONOMIAL
 %x CLDETMONOMIAL
+%x DETRATMONOMIAL
 %x CLDETRATMONOMIAL
 %x CLDETRATRWMONOMIAL
 %x GAUGEMONOMIAL
@@ -393,6 +603,7 @@ static inline double fltlist_next_token(int * const list_end){
 %x MNAME
 %x MCSTR
 %x MSOLVER
+%x HB_MSOLVER
 %x RATMSOLVER
 %x NDMSOLVER
 %x GTYPE
@@ -426,6 +637,11 @@ static inline double fltlist_next_token(int * const list_end){
 %x SUBPROCESS 
 
 %x INITEXTERNALINVERTER
+
+%x TUNEMGPARAMS
+%x TUNEQUDAMGPARAMS
+
+%x BARRIER_MONOMIALS_CONVERGE
 
 %%
 ^SourceFilename{EQL}               BEGIN(SOURCEFILE);
@@ -467,6 +683,7 @@ static inline double fltlist_next_token(int * const list_end){
 ^ThetaZ{EQL}                       BEGIN(BOUNDZ);
 ^ReadSource{EQL}                   BEGIN(READSOURCE);
 ^UseRelativePrecision{EQL}         BEGIN(RELPREC);
+^StrictResidualCheck{EQL}          BEGIN(STRICTRESIDUALCHECK);
 ^ReversibilityCheck{EQL}           BEGIN(REVCHECK);
 ^ReversibilityCheckIntervall{EQL}  BEGIN(REVINT);
 ^DebugLevel{EQL}                   BEGIN(DEBUG);
@@ -510,6 +727,8 @@ static inline double fltlist_next_token(int * const list_end){
 
 ^BeginExternalInverter{SPC}+       BEGIN(INITEXTERNALINVERTER);
 
+^BeginTuneMGParams{SPC}+           BEGIN(TUNEMGPARAMS);
+
 ^PropagatorComparison{EQL}         BEGIN(PCOMP);
 ^NbCoresPerNode{EQL}               BEGIN(NBCORES);
 
@@ -523,82 +742,16 @@ static inline double fltlist_next_token(int * const list_end){
 ^DflFieldIter{EQL}                 BEGIN(DFLFIELDITER);
 ^DflPolyIter{EQL}                  BEGIN(DFLPOLYITER);
 
-^BeginGPU                          BEGIN(INITGPU);
-^BeginDeflation		                 BEGIN(INITDEFLATION);
-^BeginDDalpha       	             BEGIN(INITMULTIGRID);
+^BeginDeflation		           BEGIN(INITDEFLATION);
+^BeginDDalpha       	           BEGIN(INITMULTIGRID);
 ^MixCGInnerEps{EQL}                BEGIN(MIXCGEPS);
 ^MixCGMaxIter{EQL}                 BEGIN(MIXCGIT);
 
 ^EnableLowmem{EQL}                 BEGIN(LOWMEM);
 ^EnableSubprocess{EQL}             BEGIN(SUBPROCESS);
 
+^BarrierMonomialsConverge{EQL}     BEGIN(BARRIER_MONOMIALS_CONVERGE);
 
-<INITGPU>Init{SPC}* {
- if(myverbose) printf("Initialising GPU line %d\n", line_of_file); 
- usegpu_flag = 1;
-  if(myverbose!=0) printf("  Using help of GPU for inversions\n"); 
- BEGIN(GPU);
- }
-<GPU>{
-  {SPC}*InnersolverPrecision{EQL}{FLT} {
-    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
-    innersolver_precision = c;
-    if(myverbose) printf("  Inner solver precision set to %lf line %d\n", c, line_of_file);
-  }
-  {SPC}*MaxInnersolverIteration{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
-    max_innersolver_it = a;
-    if(myverbose) printf("  Inner solver iterations set to %d line %d\n", a, line_of_file);
-  }
-  {SPC}*DeviceNum{EQL}{DIGIT}+ {
-      sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
-      device_num = a;
-      if(myverbose) printf("  Device Number set to %d line %d\n", a, line_of_file);
-  }
-  {SPC}*InnersolverPrecisionAbs{EQL}{FLT} {
-    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
-    innersolver_precision_abs = c;
-    if(myverbose) printf("  innersolver_precision_abs set to %lf line %d\n", c, line_of_file);
-  }
-  {SPC}*InnersolverPrecisionRel{EQL}{FLT} {
-    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
-    innersolver_precision_rel = c;
-    if(myverbose) printf("  innersolver_precision_rel set to %lf line %d\n", c, line_of_file);
-  }
-  {SPC}*InnersolverPrecisionCheckAbs{EQL}{DIGIT}+ {
-      sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
-      innersolver_precision_check_abs = a;
-      if(myverbose) printf("  innersolver_precision_check_abs set to %d line %d\n", a, line_of_file);
-  }
-  {SPC}*InnersolverPrecisionCheckRel{EQL}{DIGIT}+ {
-      sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
-      innersolver_precision_check_rel = a;
-      if(myverbose) printf("  innersolver_precision_check_rel set to %d line %d\n", a, line_of_file);
-  }
-  {SPC}*MinInnerSolverIterations{EQL}{DIGIT}+ {
-      sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
-      min_innersolver_it = a;
-      if(myverbose) printf("  min_innersolver_it set to %d line %d\n", a, line_of_file);
-  }
-  {SPC}*MaxMmsShifts{EQL}{DIGIT}+ {
-      sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
-      max_mms_shifts = a;
-      if(myverbose) printf("  max_mms_shifts set to %d line %d\n", a, line_of_file);
-  }
-  {SPC}*UseMixedMms{EQL}yes {
-    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
-    use_mixed_mms = 1;
-    if(myverbose) printf("  Using mixed solver for smallest shifts\n");  }
-  {SPC}*UseMixedMms{EQL}no {
-    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
-    use_mixed_mms = 0;
-    if(myverbose) printf("  Not using mixed solver for smallest shifts\n");
-  }
-  EndGPUInit{SPC}* {
-  if(myverbose) printf("GPU parsed in line %d\n\n", line_of_file);
-  BEGIN(0);
-  }
-}
 
 <INITDEFLATION>Init{SPC}* {
  if(myverbose) printf("Initialising DEFLATION line %d\n", line_of_file); 
@@ -765,32 +918,30 @@ static inline double fltlist_next_token(int * const list_end){
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mg_setup_mu=c;
     mg_setup_mu_set=1;
-    if(myverbose) printf("  MGSetup2KappaMu set to %f line %d operator %d\n", mg_setup_mu, line_of_file, current_operator);
+    if(myverbose) printf("  MGSetup2KappaMu set to %.16f line %d operator %d\n", mg_setup_mu, line_of_file, current_operator);
   }
   {SPC}*MGCoarseMuFactor{EQL}{FLT}+ {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mg_cmu_factor=c;
-    if(myverbose) printf("  MGCoarseMuFactor set to %f line %d operator %d\n", mg_cmu_factor, line_of_file, current_operator);
+    if(myverbose) printf("  MGCoarseMuFactor set to %.16f line %d operator %d\n", mg_cmu_factor, line_of_file, current_operator);
   }
   {SPC}*MGMixedPrecision{EQL}yes {
-    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mg_mixed_prec = 1;
     if(myverbose) printf("  MGMixedPrecision set to YES line %d operator %d\n",  line_of_file, current_operator);
   }
   {SPC}*MGMixedPrecision{EQL}no {
-    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mg_mixed_prec = 0;
     if(myverbose) printf("  MGMixedPrecision set to NO line %d operator %d\n",  line_of_file, current_operator);
   }
   {SPC}*MGdtauUpdate{EQL}{FLT}+ {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mg_dtau_update=c;
-    if(myverbose) printf("  MGdtauUpdate set to %f line %d operator %d\n", mg_dtau_update, line_of_file, current_operator);
+    if(myverbose) printf("  MGdtauUpdate set to %.16f line %d operator %d\n", mg_dtau_update, line_of_file, current_operator);
   }
   {SPC}*MGrhoUpdate{EQL}{FLT}+ {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mg_rho_update=c;
-    if(myverbose) printf("  MG_rho_Update set to %f line %d operator %d\n", mg_rho_update, line_of_file, current_operator);
+    if(myverbose) printf("  MG_rho_Update set to %.16f line %d operator %d\n", mg_rho_update, line_of_file, current_operator);
   }
   {SPC}*MGUpdateSetupIter{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
@@ -814,7 +965,7 @@ static inline double fltlist_next_token(int * const list_end){
     mg_mms_mass=c;
     // when mg_mms_mass is specified, mg_no_shifts should be set to zero!
     mg_no_shifts=0;
-    if(myverbose) printf("  MG_MMS_Mass set to %f line %d operator %d\n", mg_mms_mass, line_of_file, current_operator);
+    if(myverbose) printf("  MG_MMS_Mass set to %.16f line %d operator %d\n", mg_mms_mass, line_of_file, current_operator);
   }
   EndDDalphaAMG{SPC}* {
   if(myverbose) printf("DDalphaAMG parsed in line %d\n\n", line_of_file);
@@ -889,12 +1040,10 @@ static inline double fltlist_next_token(int * const list_end){
     if(myverbose) printf("  PropagatorPrecision set to 64 line %d operator %d\n", line_of_file, current_operator);
   }
   {SPC}*WritePropagator{EQL}yes {
-    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->write_prop_flag = 1;
     if(myverbose) printf("  WritePropagator set to YES line %d operator %d\n",  line_of_file, current_operator);
   }
   {SPC}*WritePropagator{EQL}no {
-    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->write_prop_flag = 0;
     if(myverbose) printf("  WritePropagator set to NO line %d operator %d\n",  line_of_file, current_operator);
   }
@@ -902,23 +1051,21 @@ static inline double fltlist_next_token(int * const list_end){
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->eps_sq = c;
     (optr->solver_params).eigcg_tolsq = c;
-    if(myverbose) printf("  SolverPrecision set to %lf line %d operator %d\n", c, line_of_file, current_operator);
-    if(myverbose) printf("  EigCGtolsq set to %lf line %d operator %d\n", c, line_of_file, current_operator);
+    if(myverbose) printf("  SolverPrecision set to %e line %d operator %d\n", c, line_of_file, current_operator);
+    if(myverbose) printf("  EigCGtolsq set to %e line %d operator %d\n", c, line_of_file, current_operator);
   }
   {SPC}*SolverRelativePrecision{EQL}yes {
-    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->rel_prec = 1;
     if(myverbose) printf("  SolverRelativePrecision set to YES line %d operator %d\n",  line_of_file, current_operator);
   }
   {SPC}*SolverRelativePrecision{EQL}no {
-    sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->rel_prec = 0;
     if(myverbose) printf("  SolverRelativePrecision set to NO line %d operator %d\n",  line_of_file, current_operator);
   }
   {SPC}*mcgdelta{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z1] = %lf", name, &c);
     (optr->solver_params).mcg_delta = c;
-    if(myverbose) printf("  mcg_delta set to %lf line %d operator %d\n", c, line_of_file, current_operator);
+    if(myverbose) printf("  mcg_delta set to %e line %d operator %d\n", c, line_of_file, current_operator);
   }
   {SPC}*EigCGnrhs{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
@@ -948,23 +1095,34 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*EigCGtolsq1{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z1] = %lf", name, &c);
     (optr->solver_params).eigcg_tolsq1 = c;
-    if(myverbose) printf("  EigCGtolsq1 set to %lf line %d operator %d\n", c, line_of_file, current_operator);
+    if(myverbose) printf("  EigCGtolsq1 set to %.16f line %d operator %d\n", c, line_of_file, current_operator);
   }
   {SPC}*EigCGrestolsq{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     (optr->solver_params).eigcg_restolsq = c;
-    if(myverbose) printf("  EigCGrestolsq set to %lf line %d operator %d\n", c, line_of_file, current_operator);
+    if(myverbose) printf("  EigCGrestolsq set to %.16f line %d operator %d\n", c, line_of_file, current_operator);
   }
   {SPC}*EigCGRandGuessOpt{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     (optr->solver_params).eigcg_rand_guess_opt = a;
     if(myverbose) printf("  EigCGrand_guess_opt set to %d line %d operator %d\n", a, line_of_file, current_operator);
   }  
-  {SPC}*ExtraMasses{EQL}{FLTLIST} {
+  {SPC}*ExtraMasses{EQL}{STRLIST} {
     char * token = NULL;
     optr->no_extra_masses = 0;
     double mass;
-    if( strtok(yytext,"\n\t =,\\") != NULL ) {
+    
+    const int input_length = strlen(yytext) + 1;
+    if( input_length > 20000 ){
+      yy_fatal_error("Likely overflow bug in parsing of 'ExtraMasses{STRLIST}' of 'read_input.l'.\n"
+                     "Encountered string of length exceeding 20k characters!\n");
+    }
+    char * input_copy = malloc(input_length);
+    if( input_copy == NULL ){
+      yy_fatal_error("Could not allocate memory for 'input_copy' in parsing of 'ExtraMasses{STRLIST}' of 'read_input.l'!\n");
+    }
+    strncpy(input_copy, yytext, input_length);
+    if( strtok(input_copy,"\n\t =,\\") != NULL ) {
        /* Implicitly drop the first token, it is "ExtraMasses" */
       token = strtok(NULL," =,\t");
 
@@ -974,7 +1132,7 @@ static inline double fltlist_next_token(int * const list_end){
         }
         sscanf(token,"%lf",&mass);
         optr->extra_masses[optr->no_extra_masses] = mass;
-        if(myverbose) printf("  CGMMS extra mass %d = %lf (2*kappa*mu) added line %d operator %d\n",optr->no_extra_masses,mass,line_of_file,current_operator);
+        if(myverbose) printf("  CGMMS extra mass %d = %.16f (2*kappa*mu) added line %d operator %d\n",optr->no_extra_masses,mass,line_of_file,current_operator);
         ++(optr->no_extra_masses);
         token = strtok(NULL," =,\t");
       }
@@ -987,13 +1145,24 @@ static inline double fltlist_next_token(int * const list_end){
     } else {    
       if(myverbose) printf("  CGMMS %d extra masses added line %d operator %d\n",optr->no_extra_masses,line_of_file,current_operator);
     }
+    free(input_copy);
   }
   {SPC}*ExtraMasses{EQL}{FILENAME} {
     FILE * ifs;
     double tempmass = 0.0;
     optr->no_extra_masses = 0;
     char * token = NULL;
-    if( strtok(yytext,"\n\t =,\\") != NULL ) {
+    const int input_length = strlen(yytext) + 1;
+    if( input_length > 20000 ){
+      yy_fatal_error("Likely overflow bug in parsing of 'ExtraMasses{FILENAME}' of 'read_input.l'.\n"
+                     "Encountered string of length exceeding 20k characters!\n");
+    }
+    char * input_copy = malloc(input_length);
+    if( input_copy == NULL ){
+      yy_fatal_error("Could not allocate memory for 'input_copy' in parsing of 'ExtraMasses{FILENAME}' of 'read_input.l'!\n");
+    }
+    strncpy(input_copy, yytext, input_length);
+    if( strtok(input_copy,"\n\t =,\\") != NULL ) {
       /* drop the first token, it is ExtraMasses */
       token = strtok(NULL," =\t");
       if( token != NULL ) {
@@ -1005,7 +1174,7 @@ static inline double fltlist_next_token(int * const list_end){
             } 
             optr->extra_masses[optr->no_extra_masses] = tempmass;
             if (myverbose) {
-              printf("  CGMMS Extra mass %d = %lf (2*kappa*mu) added line %d operator %d\n",
+              printf("  CGMMS Extra mass %d = %.16f (2*kappa*mu) added line %d operator %d\n",
                 optr->no_extra_masses, optr->extra_masses[optr->no_extra_masses],line_of_file,current_operator);
             }
             ++(optr->no_extra_masses);
@@ -1025,6 +1194,7 @@ static inline double fltlist_next_token(int * const list_end){
         }
       }
     }
+    free(input_copy);
   }
   ^EndOperator{SPC}* {
     if(myverbose) printf("operator %d parsed line %d\n\n", current_operator, line_of_file);
@@ -1046,7 +1216,7 @@ static inline double fltlist_next_token(int * const list_end){
   }
 }
 
-<WILSONOP,TMOP,CLOVEROP>{
+<WILSONOP,TMOP,CLOVEROP,DBTMOP,DBCLOVEROP>{
   {SPC}*UseEvenOdd{EQL}yes {
     if(myverbose) printf("  Use even/odd preconditioning line %d operator %d\n", line_of_file, current_operator);
     optr->even_odd_flag = 1;
@@ -1061,12 +1231,12 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*2KappaMubar{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->mubar = c;
-    if(myverbose) printf("  2KappaMubar set to %f line %d operator %d\n", c, line_of_file, current_operator);
+    if(myverbose) printf("  2KappaMubar set to %.16f line %d operator %d\n", c, line_of_file, current_operator);
   }
   {SPC}*2KappaEpsbar{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->epsbar = c;
-    if(myverbose) printf("  2KappaEpsbar set to %f line %d operator %d\n", c, line_of_file, current_operator);
+    if(myverbose) printf("  2KappaEpsbar set to %.16f line %d operator %d\n", c, line_of_file, current_operator);
   }
   {SPC}*Solver{EQL} {
     name_caller = YY_START; 
@@ -1078,7 +1248,7 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*2KappaMu{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->mu = c;
-    if(myverbose) printf("  2KappaMu set to %f line %d operator %d\n", c, line_of_file, current_operator);
+    if(myverbose) printf("  2KappaMu set to %.16f line %d operator %d\n", c, line_of_file, current_operator);
   }
   {SPC}*AddDownPropagator{EQL}yes {
     optr->DownProp = 1;
@@ -1094,7 +1264,7 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*csw{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->c_sw = c;
-    if(myverbose) printf("  Set c_sw set to %lf in line %d for operator %d\n", optr->c_sw, line_of_file, current_operator);
+    if(myverbose) printf("  Set c_sw set to %.16f in line %d for operator %d\n", optr->c_sw, line_of_file, current_operator);
   }
 }
 
@@ -1112,28 +1282,44 @@ static inline double fltlist_next_token(int * const list_end){
     optr->external_inverter = NO_EXT_INV;
   }
   {SPC}*UseSloppyPrecision{EQL}yes {
-    if(myverbose) printf("  Use use sloppy precision (single) in the inverter (if supported by the inverter) line %d operator %d\n", line_of_file, current_operator);
+    if(myverbose) printf("  Use sloppy precision (single) in the inverter (if supported) line %d operator %d\n", line_of_file, current_operator);
     optr->sloppy_precision = SLOPPY_SINGLE;
   }
   {SPC}*UseSloppyPrecision{EQL}float {
-    if(myverbose) printf("  Use use sloppy precision (single) in the inverter (if supported by the inverter) line %d operator %d\n", line_of_file, current_operator);
+    if(myverbose) printf("  Use sloppy precision (single) in the inverter (if supported) line %d operator %d\n", line_of_file, current_operator);
     optr->sloppy_precision = SLOPPY_SINGLE;
   }
   {SPC}*UseSloppyPrecision{EQL}single {
-    if(myverbose) printf("  Use use sloppy precision (single) in the inverter (if supported by the inverter) line %d operator %d\n", line_of_file, current_operator);
+    if(myverbose) printf("  Use sloppy precision (single) in the inverter (if supported) line %d operator %d\n", line_of_file, current_operator);
     optr->sloppy_precision = SLOPPY_SINGLE;
   }
   {SPC}*UseSloppyPrecision{EQL}no {
-    if(myverbose) printf("  Use use sloppy precision (single) in the inverter line %d operator %d\n", line_of_file, current_operator);
+    if(myverbose) printf("  Use sloppy precision (double) in the inverter line %d operator %d\n", line_of_file, current_operator);
     optr->sloppy_precision = SLOPPY_DOUBLE;
   }
   {SPC}*UseSloppyPrecision{EQL}double {
-    if(myverbose) printf("  Use use sloppy precision (single) in the inverter line %d operator %d\n", line_of_file, current_operator);
+    if(myverbose) printf("  Use sloppy precision (double) in the inverter line %d operator %d\n", line_of_file, current_operator);
     optr->sloppy_precision = SLOPPY_DOUBLE;
   }
   {SPC}*UseSloppyPrecision{EQL}half {
-    if(myverbose) printf("  Use use sloppy precision (half) in the inverter (if supported by the inverter) line %d operator %d\n", line_of_file, current_operator);
+    if(myverbose) printf("  Use sloppy precision (half) in the inverter (if supported by the inverter) line %d operator %d\n", line_of_file, current_operator);
     optr->sloppy_precision = SLOPPY_HALF;
+  }
+  {SPC}*RefinementPrecision{EQL}float {
+    optr->solver_params.refinement_precision = SLOPPY_SINGLE;
+    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to single precision line %d operator %d\n", line_of_file, current_operator);
+  }
+  {SPC}*RefinementPrecision{EQL}single {
+    optr->solver_params.refinement_precision = SLOPPY_SINGLE;
+    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to single precision line %d operator %d\n", line_of_file, current_operator);
+  }
+  {SPC}*RefinementPrecision{EQL}half {
+    optr->solver_params.refinement_precision = SLOPPY_HALF;
+    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to half precision line %d operator %d\n", line_of_file, current_operator);
+  }
+  {SPC}*RefinementPrecision{EQL}double {
+    optr->solver_params.refinement_precision = SLOPPY_DOUBLE;
+    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to double precision line %d operator %d\n", line_of_file, current_operator);
   }
   {SPC}*UseCompression{EQL}12 {
     if(myverbose) printf("  Use 12 compression in the inverter (if supported) line %d operator %d\n", line_of_file, current_operator);
@@ -1156,12 +1342,12 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*m{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->m = c;
-    if(myverbose) printf("  m set to %f line %d operator %d\n", c, line_of_file, current_operator);
+    if(myverbose) printf("  m set to %.16f line %d operator %d\n", c, line_of_file, current_operator);
   }
   {SPC}*s{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->s = c;
-    if(myverbose) printf("  s set to %f line %d operator %d\n", c, line_of_file, current_operator);
+    if(myverbose) printf("  s set to %.16f line %d operator %d\n", c, line_of_file, current_operator);
   }
   {SPC}*DegreeOfPolynomial{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
@@ -1176,7 +1362,7 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*KernelEigenvaluePrecision{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     optr->ev_prec = c;
-    if(myverbose) printf("  KernelEigenvaluePrecision set to %f line %d operator %d\n", c, line_of_file, current_operator);
+    if(myverbose) printf("  KernelEigenvaluePrecision set to %e line %d operator %d\n", c, line_of_file, current_operator);
   }
   {SPC}*KernelEigenvectorsReadWrite{EQL}yes {
     optr->ev_readwrite = 1;
@@ -1331,6 +1517,14 @@ static inline double fltlist_next_token(int * const list_end){
   }
 }
 
+<TMSOLVER,CSWSOLVER>{
+  mg {
+    optr->solver=MG;
+    if(myverbose) printf("  Solver set to MG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+}
+
 <CSWSOLVER>{
   bicgstab {
     optr->solver = BICGSTAB;
@@ -1395,7 +1589,7 @@ static inline double fltlist_next_token(int * const list_end){
     if(myverbose) printf("Setting QPHIX external inverter parameters line %d\n", line_of_file);
     BEGIN(QPHIXINVERTER);
 #else
-    printf("tmLQCD built withtout QPHIX support. Exiting!\n");
+    printf("Attempted to set QPHIX parameters but tmLQCD built withtout QPHIX support. Exiting!\n");
     exit(1);
 #endif
   } else if ( strcmp(yytext, "QUDA")==0) {
@@ -1403,7 +1597,7 @@ static inline double fltlist_next_token(int * const list_end){
     if(myverbose) printf("Setting QUDA external inverter parameters line %d\n", line_of_file);
     BEGIN(QUDAINVERTER);
 #else
-    printf("tmLQCD built withtout QUDA support. Exiting!\n");
+    printf("Attempted to set QUDA parameters but tmLQCD built withtout QUDA support. Exiting!\n");
     exit(1);
 #endif
   } else {
@@ -1424,117 +1618,181 @@ static inline double fltlist_next_token(int * const list_end){
     quda_input.fermionbc = TM_QUDA_PBC;
     if(myverbose) printf("  Force periodic temporal fermionic boundary conditions for QUDA inversions, line %d\n", line_of_file);
   }
+  {SPC}*Pipeline{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    quda_input.pipeline = a;
+    if(myverbose) printf("  Pipeline length set to %d line %d\n", quda_input.pipeline, line_of_file);
+  }
+  {SPC}*gcrNkrylov{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    quda_input.gcrNkrylov = a;
+    if(myverbose) printf("  gcrNkrylov set to %d line %d\n", quda_input.gcrNkrylov, line_of_file);
+  }
+  {SPC}*ReliableDelta{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    quda_input.reliable_delta = c;
+    if(myverbose) printf("  ReliableDelta set to %e line %d\n", quda_input.reliable_delta, line_of_file);
+  }
   {SPC}*MGNumberOfLevels{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    quda_input.mg_n_level=a;
+    quda_input.mg_n_level = a;
     if(myverbose) printf("  MGNumberOfLevels set to %d line %d\n", quda_input.mg_n_level, line_of_file);
   }
-  {SPC}*MGNumberOfVectors{EQL}{FLTLIST} {
-    char paramname[100];
-    char error_message[200];
-    int list_end = 0;
-    int level = 0;
-
-    fltlist_tokenize(yytext, paramname, 100);
-    int n_vec = (int)fltlist_next_token(&list_end);
-    while( list_end != 1 ){
-      if( level >= (QUDA_MAX_MG_LEVEL-1) ){
-        snprintf(error_message, 200, "Exceeded maximum number of levels (%d-1) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
-        yy_fatal_error(error_message);
-      }
-      
-      quda_input.mg_n_vec[level] = n_vec;
-      if(myverbose){ 
-        printf("  %s, level %d set to %d line %d\n", paramname,
-                level, quda_input.mg_n_vec[level], line_of_file);
-      }
-      level++;
-      n_vec = fltlist_next_token(&list_end);
-    }
+  {SPC}*MGVerbosity{EQL}{STRLIST} {
+    parse_quda_mg_verbosity_par_array(yytext, &(quda_input.mg_verbosity[0]));
   }
-  {SPC}*MGBlockSizesX{EQL}{FLTLIST} {
+  {SPC}*MGNumberOfVectors{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_n_vec[0]) );
+  }
+  {SPC}*MGBlockSizesX{EQL}{STRLIST} {
     // note the dimensions here are in QUDA order (XYZT!)
     parse_quda_mg_blocksize(yytext, 0);
   }
-  {SPC}*MGBlockSizesY{EQL}{FLTLIST} {
+  {SPC}*MGBlockSizesY{EQL}{STRLIST} {
     parse_quda_mg_blocksize(yytext, 1);
   }
-  {SPC}*MGBlockSizesZ{EQL}{FLTLIST} {
+  {SPC}*MGBlockSizesZ{EQL}{STRLIST} {
     parse_quda_mg_blocksize(yytext, 2);
   }
-  {SPC}*MGBlockSizesT{EQL}{FLTLIST} {
+  {SPC}*MGBlockSizesT{EQL}{STRLIST} {
     parse_quda_mg_blocksize(yytext, 3);
   }
-  {SPC}*MGCoarseMuFactor{EQL}{FLTLIST} {
+  {SPC}*MGCoarseMuFactor{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_mu_factor[0]));
+  }
+  {SPC}*MGCoarseSolverType{EQL}{STRLIST} {
     char paramname[100];
-    char error_message[200];
+    char token[100];
+    char error_message[ERR_MSG_LEN];
     int list_end = 0;
     int level = 0;
-
-    fltlist_tokenize(yytext, paramname, 100);
-    double mu_factor = fltlist_next_token(&list_end);
+    char * input_copy = (char*)NULL;
+    strlist_tokenize(yytext, &input_copy, paramname, 100);
+    strlist_next_token(&list_end, token, 100);
     while( list_end != 1 ){
-      if( level > QUDA_MAX_MG_LEVEL ){
-        snprintf(error_message, 200, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
+      if( level >= QUDA_MAX_MG_LEVEL ){
+        snprintf(error_message, ERR_MSG_LEN, "Exceeded maximum number of levels (%d) parsing %s!\n", QUDA_MAX_MG_LEVEL, paramname);
         yy_fatal_error(error_message);
       }
-      
-      quda_input.mg_mu_factor[level] = mu_factor;
-      if(myverbose){ 
-        printf("  %s, level %d set to %lf line %d\n", paramname,
-                level, quda_input.mg_mu_factor[level], line_of_file);
+      /* Make token to lower case */
+      for(int i = 0; token[i]; i++){
+        token[i] = tolower(token[i]);
       }
+      if( strcmp(token, "cagcr") == 0 ){
+        quda_input.mg_coarse_solver_type[level] = QUDA_CA_GCR_INVERTER;
+      }
+      else if( strcmp(token, "gcr") == 0 ){
+        quda_input.mg_coarse_solver_type[level] = QUDA_GCR_INVERTER;
+      }
+      else if( strcmp(token, "mr") == 0){
+        quda_input.mg_coarse_solver_type[level] = QUDA_MR_INVERTER;
+      }
+      else {
+        snprintf(error_message, ERR_MSG_LEN, "Unknown inverter '%s' passed in the parsing of %s!\n", token, paramname);
+        yy_fatal_error(error_message);
+      }
+      if(myverbose) printf("  %s on level %d set to '%s' line %d\n", paramname, level, token, line_of_file);
       level++;
-      mu_factor = fltlist_next_token(&list_end);
+      strlist_next_token(&list_end, token, 100);
     }
+    free(input_copy);
   }
+  {SPC}*MGSmootherType{EQL}{STRLIST} {
+    char paramname[100];
+    char token[100];
+    char error_message[ERR_MSG_LEN];
+    int list_end = 0;
+    int level = 0;
+    char * input_copy = (char*)NULL;
+    strlist_tokenize(yytext, &input_copy, paramname, 100);
+    strlist_next_token(&list_end, token, 100);
+    while( list_end != 1 ){
+      if( level >= QUDA_MAX_MG_LEVEL ){
+        snprintf(error_message, ERR_MSG_LEN, "Exceeded maximum number of levels (%d) parsing '%s'!\n", QUDA_MAX_MG_LEVEL, paramname);
+        yy_fatal_error(error_message);
+      }
+      /* Make token to lower case */
+      for(int i = 0; token[i]; i++){
+        token[i] = tolower(token[i]);
+      }
+      if( strcmp(token, "cagcr") == 0 ){
+        quda_input.mg_smoother_type[level] = QUDA_CA_GCR_INVERTER;
+      }
+      else if( strcmp(token, "gcr") == 0 ){
+        quda_input.mg_smoother_type[level] = QUDA_GCR_INVERTER;
+      }
+      else if( strcmp(token, "mr") == 0){
+        quda_input.mg_smoother_type[level] = QUDA_MR_INVERTER;
+      }
+      else {
+        snprintf(error_message, ERR_MSG_LEN, "Unknown inverter '%s' passed in the parsing of '%s'!\n", token, paramname);
+        yy_fatal_error(error_message);
+      }
+      if(myverbose) printf("  %s on level %d set to '%s' line %d\n", paramname, level, token, line_of_file);
+      level++;
+      strlist_next_token(&list_end, token, 100);
+    }
+    free(input_copy);
+  }
+  {SPC}*MGSetup2KappaMu{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z2] = %lf", name, &c);
+    quda_input.mg_setup_2kappamu = c;
+    if(myverbose) printf("  MGSetup2KappaMu set to %e line %d\n", quda_input.mg_setup_2kappamu, line_of_file);
+  }
+  /* TODO: the MGSetupSolver should be set on a per-level basis
+           allowing communication-avoiding solvers to be used
+           on the coarser grids */
   {SPC}*MGSetupSolver{EQL}cg {
     quda_input.mg_setup_inv_type = QUDA_CG_INVERTER;
     if(myverbose) printf("  MGSetupSolver set to CG line %d\n", line_of_file);
+  }
+  {SPC}*MGSetupSolver{EQL}cgne {
+    quda_input.mg_setup_inv_type = QUDA_CGNE_INVERTER;
+    if(myverbose) printf("  MGSetupSolver set to CGNE line %d\n", line_of_file);
+  }
+  {SPC}*MGSetupSolver{EQL}cgnr {
+    quda_input.mg_setup_inv_type = QUDA_CGNE_INVERTER;
+    if(myverbose) printf("  MGSetupSolver set to CGNR line %d\n", line_of_file);
+  }
+  {SPC}*MGSetupSolver{EQL}cacg {
+    quda_input.mg_setup_inv_type = QUDA_CA_CG_INVERTER;
+    if(myverbose) printf("  MGSetupSolver set to CA-CG line %d\n", line_of_file);
+  }
+  {SPC}*MGSetupSolver{EQL}cacgne {
+    quda_input.mg_setup_inv_type = QUDA_CA_CGNE_INVERTER;
+    if(myverbose) printf("  MGSetupSolver set to CA-CGNE line %d\n", line_of_file);
+  }
+  {SPC}*MGSetupSolver{EQL}cacgnr {
+    quda_input.mg_setup_inv_type = QUDA_CA_CGNR_INVERTER;
+    if(myverbose) printf("  MGSetupSolver set to CA-CGNR line %d\n", line_of_file);
   }
   {SPC}*MGSetupSolver{EQL}bicgstab {
     quda_input.mg_setup_inv_type = QUDA_BICGSTAB_INVERTER;
     if(myverbose) printf("  MGSetupSolver set to BiCGstab line %d\n", line_of_file);
   }
-  {SPC}*MGSetupSolverTolerance{EQL}{FLT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
-    quda_input.mg_setup_tol=c;
-    if(myverbose) printf("  MGSetupSolverTolerance set to %f line %d\n", quda_input.mg_setup_tol, line_of_file);
+  {SPC}*MGSetupSolverTolerance{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_setup_tol[0]));
   }
-  {SPC}*MGSetupMaxSolverIterations{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    quda_input.mg_setup_maxiter=a;
-    if(myverbose) printf("  MGSetupMaxSolverIterations set to %d line %d\n", quda_input.mg_setup_maxiter, line_of_file);
+  {SPC}*MGSetupMaxSolverIterations{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_setup_maxiter[0]));
   }
-  {SPC}*MGCoarseSolverTolerance{EQL}{FLT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
-    quda_input.mg_coarse_solver_tol=c;
-    if(myverbose) printf("  MGCoarseSolverTolerance set to %f line %d\n", quda_input.mg_coarse_solver_tol, line_of_file);
+  {SPC}*MGCoarseSolverTolerance{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_coarse_solver_tol[0]));
   }
-  {SPC}*MGCoarseMaxSolverIterations{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    quda_input.mg_coarse_solver_maxiter=a;
-    if(myverbose) printf("  MGCoarseMaxSolverIterations set to %d line %d\n", quda_input.mg_coarse_solver_maxiter, line_of_file);
+  {SPC}*MGCoarseMaxSolverIterations{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_coarse_solver_maxiter[0]));
   }
-  {SPC}*MGSmootherTolerance{EQL}{FLT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
-    quda_input.mg_smoother_tol=c;
-    if(myverbose) printf("  MGSmootherTolerance set to %f line %d\n", quda_input.mg_smoother_tol, line_of_file);
+  {SPC}*MGSmootherTolerance{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_smoother_tol[0]));
   }
-  {SPC}*MGSmootherPreIterations{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    quda_input.mg_nu_pre=a;
-    if(myverbose) printf("  MGSmootherPreIterations set to %d line %d\n", quda_input.mg_nu_pre, line_of_file);
+  {SPC}*MGSmootherPreIterations{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_nu_pre[0]));
   }
-  {SPC}*MGSmootherPostIterations{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    quda_input.mg_nu_post=a;
-    if(myverbose) printf("  MGSmootherPostIterations set to %d line %d\n", quda_input.mg_nu_post, line_of_file);
+  {SPC}*MGSmootherPostIterations{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_nu_post[0]));
   }
-  {SPC}*MGOverUnderRelaxationFactor{EQL}{FLT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
-    quda_input.mg_omega=c;
-    if(myverbose) printf("  MGOverUnderRelaxationFactor set to %f line %d\n", quda_input.mg_omega, line_of_file);
+  {SPC}*MGOverUnderRelaxationFactor{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_omega[0]));
   }
   {SPC}*MGRunVerify{EQL}yes {
     quda_input.mg_run_verify = QUDA_BOOLEAN_YES;
@@ -1544,6 +1802,22 @@ static inline double fltlist_next_token(int * const list_end){
     quda_input.mg_run_verify = QUDA_BOOLEAN_NO;
     if(myverbose) printf("  MGRunVerify set to NO in line %d\n", line_of_file);
   }
+  {SPC}*MGRunLowModeCheck{EQL}yes {
+    quda_input.mg_run_low_mode_check = QUDA_BOOLEAN_YES;
+    if(myverbose) printf("  MGRunLowModeCheck set to YES in line %d\n", line_of_file);
+  }
+  {SPC}*MGRunLowModeCheck{EQL}no {
+    quda_input.mg_run_low_mode_check = QUDA_BOOLEAN_NO;
+    if(myverbose) printf("  MGRunLowModeCheck set to NO in line %d\n", line_of_file);
+  }
+  {SPC}*MGRunObliqueProjectionCheck{EQL}yes {
+    quda_input.mg_run_oblique_proj_check = QUDA_BOOLEAN_YES;
+    if(myverbose) printf("  MGRunObliqueProjectionCheck set to YES in line %d\n", line_of_file);
+  }
+  {SPC}*MGRunObliqueProjectionCheck{EQL}no {
+    quda_input.mg_run_oblique_proj_check = QUDA_BOOLEAN_NO;
+    if(myverbose) printf("  MGRunObliqueProjectionCheck set to NO in line %d\n", line_of_file);
+  }
   {SPC}*MGEnableSizeThreeBlocks{EQL}yes {
     quda_input.mg_enable_size_three_blocks = 1;
     if(myverbose) printf("  MGEnableSizeThreeBlocks set to YES in line %d\n", line_of_file);
@@ -1552,10 +1826,215 @@ static inline double fltlist_next_token(int * const list_end){
     quda_input.mg_enable_size_three_blocks = 0;
     if(myverbose) printf("  MGEnableSizeThreeBlocks set to NO in line %d\n", line_of_file);
   }
-  {SPC}*MGResetSetupThreshold{EQL}{FLT}+ {
+  {SPC}*MGReuseSetupMuThreshold{EQL}{FLT}+ {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
-    quda_input.mg_reset_setup_threshold=c;
-    if(myverbose) printf("  MGResetSetupThreshold set to %f line %d\n", quda_input.mg_reset_setup_threshold, line_of_file);
+    quda_input.mg_reuse_setup_mu_threshold = c;
+    if(myverbose) printf("  MGReuseSetupMuThreshold set to %f line %d\n", quda_input.mg_reuse_setup_mu_threshold, line_of_file);
+  }
+  {SPC}*MGRefreshSetupMDUThreshold{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    quda_input.mg_refresh_setup_mdu_threshold = c;
+    if(myverbose) printf("  MGRefreshSetupMDUThreshold set to %f line %d\n", quda_input.mg_refresh_setup_mdu_threshold, line_of_file);
+  }
+  {SPC}*MGRefreshSetupMaxSolverIterations{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_setup_maxiter_refresh[0]));
+  }
+  {SPC}*MGResetSetupMDUThreshold{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    quda_input.mg_reset_setup_mdu_threshold = c;
+    if(myverbose) printf("  MGResetSetupMDUThreshold set to %f line %d\n", quda_input.mg_reset_setup_mdu_threshold, line_of_file);
+  }
+  {SPC}*MGCoarseGuess{EQL}yes {
+    quda_input.mg_coarse_guess = QUDA_BOOLEAN_YES;
+    if(myverbose) printf("  MGCoarseGuess set to YES in line %d\n", line_of_file);
+  }
+  {SPC}*MGCoarseGuess{EQL}no {
+    quda_input.mg_coarse_guess = QUDA_BOOLEAN_NO;
+    if(myverbose) printf("  MGCoarseGuess set to NO in line %d\n", line_of_file);
+  }
+  {SPC}*MGUseEigSolver{EQL}{STRLIST} {
+    parse_quda_mg_bool_par_array(yytext, &(quda_input.mg_use_eig_solver[0]));
+  }
+  {SPC}*MGEigSolverType{EQL}{STRLIST} {
+    char paramname[100];
+    char token[100];
+    char error_message[ERR_MSG_LEN];
+    int list_end = 0;
+    int level = 0;
+    char * input_copy = (char*)NULL;
+    strlist_tokenize(yytext, &input_copy, paramname, 100);
+    strlist_next_token(&list_end, token, 100);
+    while( list_end != 1 ){
+      if( level >= QUDA_MAX_MG_LEVEL ){
+        snprintf(error_message, ERR_MSG_LEN, "Exceeded maximum number of levels (%d) parsing '%s'!\n", QUDA_MAX_MG_LEVEL, paramname);
+        yy_fatal_error(error_message);
+      }
+      /* Make token to lower case */
+      for(int i = 0; token[i]; i++){
+        token[i] = tolower(token[i]);
+      }
+      if( strcmp(token, "tr_lanczos") == 0 ){
+        quda_input.mg_eig_type[level] = QUDA_EIG_TR_LANCZOS;
+      }
+      else if( strcmp(token, "ir_arnoldi") == 0){
+        quda_input.mg_eig_type[level] = QUDA_EIG_IR_ARNOLDI;
+      }
+      else {
+        snprintf(error_message, ERR_MSG_LEN, "Unknown type '%s' passed in the parsing of '%s'!\n", token, paramname);
+        yy_fatal_error(error_message);
+      }
+      if(myverbose) printf("  MGEigSolverType on level %d set to '%s' line %d\n", level, token, line_of_file);
+      level++;
+      strlist_next_token(&list_end, token, 100);
+    }
+    free(input_copy);
+  }
+  {SPC}*MGEigSolverSpectrum{EQL}{STRLIST} {
+    char paramname[100];
+    char token[100];
+    char error_message[ERR_MSG_LEN];
+    int list_end = 0;
+    int level = 0;
+    char * input_copy = (char*)NULL;
+    strlist_tokenize(yytext, &input_copy, paramname, 100);
+    strlist_next_token(&list_end, token, 100);
+    while( list_end != 1 ){
+      if( level >= QUDA_MAX_MG_LEVEL ){
+        snprintf(error_message, ERR_MSG_LEN, "Exceeded maximum number of levels (%d) parsing '%s'!\n", QUDA_MAX_MG_LEVEL, paramname);
+        yy_fatal_error(error_message);
+      }
+      /* Make token to lower case */
+      for(int i = 0; token[i]; i++){
+        token[i] = tolower(token[i]);
+      }
+      if( strcmp(token, "smallest_real") == 0 ){
+        quda_input.mg_eig_spectrum[level] = QUDA_SPECTRUM_SR_EIG;
+      }
+      else if( strcmp(token, "largest_real") == 0 ){
+        quda_input.mg_eig_spectrum[level] = QUDA_SPECTRUM_LR_EIG;
+      }
+      else if( strcmp(token, "smallest_modulus") == 0){
+        quda_input.mg_eig_spectrum[level] = QUDA_SPECTRUM_SM_EIG;
+      }
+      else if( strcmp(token, "largest_modulus") == 0){
+        quda_input.mg_eig_spectrum[level] = QUDA_SPECTRUM_LM_EIG;
+      }
+      else if( strcmp(token, "smallest_imaginary") == 0){
+        quda_input.mg_eig_spectrum[level] = QUDA_SPECTRUM_SI_EIG;
+      }
+      else if( strcmp(token, "largest_imaginary") == 0){
+        quda_input.mg_eig_spectrum[level] = QUDA_SPECTRUM_LI_EIG;
+      }
+      else {
+        snprintf(error_message, ERR_MSG_LEN, "Unknown spectrum type '%s' passed in the parsing of '%s'!\n", token, paramname);
+        yy_fatal_error(error_message);
+      }
+      if(myverbose) printf("  %s on level %d set to '%s' line %d\n", paramname, level, token, line_of_file);
+      level++;
+      strlist_next_token(&list_end, token, 100);
+    }
+    free(input_copy);
+  }
+  {SPC}*MGEigPreserveDeflationSubspace{EQL}yes {
+    quda_input.mg_eig_preserve_deflation = QUDA_BOOLEAN_YES;
+    if(myverbose) printf("  MGEigPreserveDeflationSubspace set to YES in line %d\n", line_of_file);
+  }
+  {SPC}*MGEigPreserveDeflationSubspace{EQL}no {
+    quda_input.mg_eig_preserve_deflation = QUDA_BOOLEAN_YES;
+    if(myverbose) printf("  MGEigPreserveDeflationSubspace set to YES in line %d\n", line_of_file);
+  }
+  {SPC}*MGEigSolverNumberOfVectors{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_eig_nEv[0]));
+  }
+  {SPC}*MGEigSolverKrylovSubspaceSize{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_eig_nKr[0]));
+  }
+  {SPC}*MGEigSolverRequireConvergence{EQL}{STRLIST} {
+    parse_quda_mg_bool_par_array(yytext, &(quda_input.mg_eig_require_convergence[0]));
+  }
+  {SPC}*MGEigSolverCheckConvergenceInterval{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_eig_check_interval[0]));
+  }
+  {SPC}*MGEigSolverMaxRestarts{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_eig_max_restarts[0]));
+  }
+  {SPC}*MGEigSolverTolerance{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_eig_tol[0]));
+  }
+  {SPC}*MGEigSolverUseNormOp{EQL}{STRLIST} {
+    parse_quda_mg_bool_par_array(yytext, &(quda_input.mg_eig_use_normop[0]));
+  }
+  {SPC}*MGEigSolverUseDagger{EQL}{STRLIST} {
+    parse_quda_mg_bool_par_array(yytext, &(quda_input.mg_eig_use_dagger[0]));
+  }
+  {SPC}*MGEigSolverUsePolynomialAcceleration{EQL}{STRLIST} {
+    parse_quda_mg_bool_par_array(yytext, &(quda_input.mg_eig_use_poly_acc[0]));
+  }
+  {SPC}*MGEigSolverPolynomialDegree{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_eig_poly_deg[0]));
+  }
+  {SPC}*MGEigSolverPolyMin{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_eig_amin[0]));
+  }
+  {SPC}*MGEigSolverPolyMax{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_eig_amax[0]));
+  }
+  {SPC}*MGSetupCABasisType{EQL}{STRLIST} {
+    parse_quda_mg_cabasis_par_array(yytext, &(quda_input.mg_setup_ca_basis[0]));
+  }
+  {SPC}*MGSetupCABasisSize{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_setup_ca_basis_size[0]));
+  }
+  {SPC}*MGSetupCABasisLambdaMin{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_setup_ca_lambda_min[0]));
+  }
+  {SPC}*MGSetupCABasisLambdaMax{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_setup_ca_lambda_max[0]));
+  }
+  {SPC}*MGSmootherSolverCABasisType{EQL}{STRLIST} {
+    parse_quda_mg_cabasis_par_array(yytext, &(quda_input.mg_smoother_solver_ca_basis[0]));
+  }
+  {SPC}*MGSmootherSolverCABasisLambdaMin{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_smoother_solver_ca_lambda_min[0]));
+  }
+  {SPC}*MGSmootherSolverCABasisLambdaMax{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_smoother_solver_ca_lambda_max[0]));
+  }
+  {SPC}*MGCoarseSolverCABasisType{EQL}{STRLIST} {
+    parse_quda_mg_cabasis_par_array(yytext, &(quda_input.mg_coarse_solver_ca_basis[0]));
+  }
+  {SPC}*MGCoarseSolverCABasisSize{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_input.mg_coarse_solver_ca_basis_size[0]));
+  }
+  {SPC}*MGCoarseSolverCABasisLambdaMin{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_coarse_solver_ca_lambda_min[0]));
+  }
+  {SPC}*MGCoarseSolverCABasisLambdaMax{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_input.mg_coarse_solver_ca_lambda_max[0]));
+  }
+  {SPC}*EnableDeviceMemoryPool{EQL}yes {
+    quda_input.enable_device_memory_pool = 1;
+    if(myverbose) printf("Enabling QUDA's device memory pool on line %d\n\n", line_of_file);
+  }
+  {SPC}*EnableDeviceMemoryPool{EQL}no {
+    quda_input.enable_device_memory_pool = 0;
+    if(myverbose) printf("Disabling QUDA's device memory pool on line %d\n\n", line_of_file);
+  }
+  {SPC}*EnablePinnedMemoryPool{EQL}yes {
+    quda_input.enable_pinned_memory_pool = 1;
+    if(myverbose) printf("Enabling QUDA's pinned memory pool on line %d\n\n", line_of_file);
+  }
+  {SPC}*EnablePinnedMemoryPool{EQL}no {
+    quda_input.enable_pinned_memory_pool = 0;
+    if(myverbose) printf("Disabling QUDA's pinned memory pool on line %d\n\n", line_of_file);
+  }
+  {SPC}*TuneMGParams{EQL}yes {
+    quda_input.mg_tune_params = 1;
+    if(myverbose) printf("Enabling MG parameter tuning on line %d\n\n", line_of_file);
+  }
+  {SPC}*TuneMGParams{EQL}no {
+    quda_input.mg_tune_params = 0;
+    if(myverbose) printf("Disabling MG parameter tuning on line %d\n\n", line_of_file);
   }
   ^EndExternalInverter{SPC}*  { 
     if(myverbose) printf("QUDA external inverter parameters parsed on line %d\n\n", line_of_file);
@@ -1608,6 +2087,86 @@ static inline double fltlist_next_token(int * const list_end){
     BEGIN(0);
   }
 }
+
+<TUNEMGPARAMS>{TYPE} {
+  if(strcmp(yytext, "QUDA")==0) {
+#ifdef TM_USE_QUDA
+    quda_input.mg_tune_params = 1;
+    if(myverbose) printf("Enabling QUDA MG parameter tuning line %d\n", line_of_file);
+    BEGIN(TUNEQUDAMGPARAMS);
+#else
+    printf("Attempted to enable QUDA MG parameter tuning but tmLQCD has not been built with QUDA support. Exiting!\n");
+    exit(1);
+#endif
+  } else {
+    printf("Error on line %d, MG type '%s' is unknown. Exiting!\n", line_of_file, yytext);
+    exit(1);
+  }
+}
+<TUNEQUDAMGPARAMS>{
+  {SPC}*MGCoarseMuFactorSteps{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_mu_factor_steps[0]));
+  }
+  {SPC}*MGCoarseMuFactorDelta{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_mu_factor_delta[0]));
+  }
+  {SPC}*MGCoarseMaxSolverIterationsSteps{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_coarse_solver_maxiter_steps[0]));
+  }
+  {SPC}*MGCoarseMaxSolverIterationsDelta{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_coarse_solver_maxiter_delta[0]));
+  }
+  {SPC}*MGCoarseSolverToleranceSteps{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_coarse_solver_tol_steps[0]));
+  }
+  {SPC}*MGCoarseSolverToleranceDelta{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_coarse_solver_tol_delta[0]));
+  }
+  {SPC}*MGSmootherPreIterationsSteps{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_nu_pre_steps[0]));
+  }
+  {SPC}*MGSmootherPreIterationsDelta{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_nu_pre_delta[0]));
+  }
+  {SPC}*MGSmootherPostIterationsSteps{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_nu_post_steps[0]));
+  }
+  {SPC}*MGSmootherPostIterationsDelta{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_nu_post_delta[0]));
+  }
+  {SPC}*MGSmootherToleranceSteps{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_smoother_tol_steps[0]));
+  }
+  {SPC}*MGSmootherToleranceDelta{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_smoother_tol_delta[0]));
+  }
+  {SPC}*MGOverUnderRelaxationFactorSteps{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_omega_steps[0]));
+  }
+  {SPC}*MGOverUnderRelaxationFactorDelta{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_omega_delta[0]));
+  }
+  {SPC}*MGTuningIterations{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    quda_mg_tuning_plan.mg_tuning_iterations = a;
+    if(myverbose) printf(" Number of MG tuning iterations set to %d line %d\n", a, line_of_file);
+  }
+  {SPC}*MGTuningTolerance{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    quda_mg_tuning_plan.mg_tuning_tolerance = c;
+    if(myverbose) printf("  Tolerance for MG tuning set to %.3f line %d\n", c, line_of_file);
+  }
+  {SPC}*MGTuningIgnoreThreshold{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    quda_mg_tuning_plan.mg_tuning_ignore_threshold = c;
+    if(myverbose) printf("  Threshold for ignoring improvement for MG tuning (to ignore fluctuations) set to %.3f line %d\n", c, line_of_file);
+  }
+  ^EndTuneMGParams{SPC}*  {
+    if(myverbose) printf("QUDA-MG tuning parameters parsed on line %d\n\n", line_of_file);
+    BEGIN(0);
+  }
+}
+
 
 <INITMONOMIAL>{TYPE} {
   current_monomial++;
@@ -1739,13 +2298,13 @@ static inline double fltlist_next_token(int * const list_end){
   }
   else if(mnl->type == CLOVERDET) BEGIN(CLDETMONOMIAL);
   else if(mnl->type == CLOVERDETRATIO) BEGIN(CLDETRATMONOMIAL);
+  else if(mnl->type == DETRATIO) BEGIN(DETRATMONOMIAL);
   else if(mnl->type == CLOVERDETRATIORW) BEGIN(CLDETRATRWMONOMIAL);
   else BEGIN(DETMONOMIAL);
 }
 
 
-
-<DETMONOMIAL,GAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,CLRATMONOMIAL,RATCORMONOMIAL,CLRATCORMONOMIAL,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{
+<DETMONOMIAL,GAUGEMONOMIAL,NDPOLYMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,CLRATMONOMIAL,RATCORMONOMIAL,CLRATCORMONOMIAL,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL,DETRATMONOMIAL>{
   {SPC}*Timescale{EQL}{DIGIT}+ {
     if(mnl->type == NDDETRATIO || mnl->type == NDCLOVERDETRATIO) {
       mnl->timescale = -5;
@@ -1771,7 +2330,7 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*CSW{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mnl->c_sw = c;
-    if(myverbose) printf("  CSW set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  CSW set to %.16f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
 }
 
@@ -1779,7 +2338,7 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*rho{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mnl->rho = c;
-    if(myverbose) printf("  mass shift rho set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  mass shift rho set to %.16f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
 }
 
@@ -1787,7 +2346,7 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*rho2{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z]2 = %lf", name, &c);
     mnl->rho2 = c;
-    if(myverbose) printf("  mass shift rho2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  mass shift rho2 set to %.16f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
 }
 
@@ -1795,7 +2354,7 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*Kappa{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     mnl->kappa = c;
-    if(myverbose) printf("  Kappa set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  Kappa set to %.16f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
 }
 
@@ -1803,12 +2362,12 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*2KappaMu2{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mu2 = c;
-    if(myverbose) printf("  2KappaMu2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  2KappaMu2 set to %.16f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*Kappa2{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->kappa2 = c;
-    if(myverbose) printf("  kappa2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  kappa2 set to %.16f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
 }
 
@@ -1816,7 +2375,7 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*Kappa2{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->kappa2 = c;
-    if(myverbose) printf("  kappa2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  kappa2 set to %.16f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
 }
 
@@ -1835,12 +2394,12 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*2KappaMubar{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mubar = c;
-    if(myverbose) printf("  2KappaMubar set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  2KappaMubar set to %.16f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*2KappaEpsbar{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->epsbar = c;
-    if(myverbose) printf("  2KappaEpsbar set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  2KappaEpsbar set to %.16f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
 }
 
@@ -1848,12 +2407,12 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*2KappaMubar2{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mubar2 = c;
-    if(myverbose) printf("  2KappaMubar2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  2KappaMubar2 set to %.16f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*2KappaEpsbar2{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->epsbar2 = c;
-    if(myverbose) printf("  2KappaEpsbar2 set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  2KappaEpsbar2 set to %.16f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
 }
 <DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{
@@ -1869,28 +2428,36 @@ static inline double fltlist_next_token(int * const list_end){
     if(myverbose) printf("  Use QPhiX inverter line %d monomial %d\n", line_of_file, current_monomial);
     mnl->solver_params.external_inverter = NO_EXT_INV;
   }
+  {SPC}*UseExternalLibrary{EQL}no {
+    mnl->external_library = NO_EXT_LIB;
+    if(myverbose) printf("  UseExternalLibrary set to false in line %d, monomial %d\n", line_of_file, current_monomial);
+  }
+  {SPC}*UseExternalLibrary{EQL}quda {
+    mnl->external_library = QUDA_LIB;
+    if(myverbose) printf("  UseExternalLibrary set to quda in line %d, monomial %d\n", line_of_file, current_monomial);
+  }
   {SPC}*UseSloppyPrecision{EQL}yes {
-    if(myverbose) printf("  Use use sloppy precision (single) in the inverter (if supported by the inverter) line %d monomial %d\n", line_of_file, current_monomial);
+    if(myverbose) printf("  Use sloppy precision (single) in the inverter (if supported) line %d monomial %d\n", line_of_file, current_monomial);
     mnl->solver_params.sloppy_precision = SLOPPY_SINGLE;
   }
   {SPC}*UseSloppyPrecision{EQL}float {
-    if(myverbose) printf("  Use use sloppy precision (single) in the inverter (if supported by the inverter) line %d monomial %d\n", line_of_file, current_monomial);
+    if(myverbose) printf("  Use sloppy precision (single) in the inverter (if supported) line %d monomial %d\n", line_of_file, current_monomial);
     mnl->solver_params.sloppy_precision = SLOPPY_SINGLE;
   }
   {SPC}*UseSloppyPrecision{EQL}single {
-    if(myverbose) printf("  Use use sloppy precision (single) in the inverter (if supported by the inverter) line %d monomial %d\n", line_of_file, current_monomial);
+    if(myverbose) printf("  Use sloppy precision (single) in the inverter (if supported) line %d monomial %d\n", line_of_file, current_monomial);
     mnl->solver_params.sloppy_precision = SLOPPY_SINGLE;
   }
   {SPC}*UseSloppyPrecision{EQL}no {
-    if(myverbose) printf("  Use use sloppy precision (single) in the inverter line %d monomial %d\n", line_of_file, current_monomial);
+    if(myverbose) printf("  Use sloppy precision (double) in the inverter line %d monomial %d\n", line_of_file, current_monomial);
     mnl->solver_params.sloppy_precision = SLOPPY_DOUBLE;
   }
   {SPC}*UseSloppyPrecision{EQL}double {
-    if(myverbose) printf("  Use use sloppy precision (single) in the inverter line %d monomial %d\n", line_of_file, current_monomial);
+    if(myverbose) printf("  Use sloppy precision (double) in the inverter line %d monomial %d\n", line_of_file, current_monomial);
     mnl->solver_params.sloppy_precision = SLOPPY_DOUBLE;
   }
   {SPC}*UseSloppyPrecision{EQL}half {
-    if(myverbose) printf("  Use use sloppy precision (half) in the inverter (if supported by the inverter) line %d monomial %d\n", line_of_file, current_monomial);
+    if(myverbose) printf("  Use sloppy precision (half) in the inverter (if supported) line %d monomial %d\n", line_of_file, current_monomial);
     mnl->solver_params.sloppy_precision = SLOPPY_HALF;
   }
   {SPC}*UseCompression{EQL}12 {
@@ -1907,7 +2474,67 @@ static inline double fltlist_next_token(int * const list_end){
   }
 }
 
-<DETMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{
+<CLDETRATMONOMIAL,DETRATMONOMIAL>{
+  {SPC}*HB_Solver{EQL} {
+   solver_caller=YY_START;
+   BEGIN(HB_MSOLVER);
+  }
+  {SPC}*HB_MaxSolverIterations{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z_] = %d", name, &a);
+    mnl->HB_maxiter = a;
+    if(myverbose) printf("  HB_MaxSolverIterations set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+  }
+  {SPC}*HB_UseExternalInverter{EQL}quda {
+    if(myverbose) printf("  HB Use Quda inverter line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.external_inverter = QUDA_INVERTER;
+  }
+  {SPC}*HB_UseExternalInverter{EQL}qphix {
+    if(myverbose) printf("  HB Use QPhiX inverter line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.external_inverter = QPHIX_INVERTER;
+  }
+  {SPC}*HB_UseExternalInverter{EQL}no {
+    if(myverbose) printf("  HB Use QPhiX inverter line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.external_inverter = NO_EXT_INV;
+  }
+  {SPC}*HB_UseSloppyPrecision{EQL}yes {
+    if(myverbose) printf("  HB Use sloppy precision (single) in the inverter (if supported) line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.sloppy_precision = SLOPPY_SINGLE;
+  }
+  {SPC}*HB_UseSloppyPrecision{EQL}float {
+    if(myverbose) printf("  HB Use sloppy precision (single) in the inverter (if supported) line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.sloppy_precision = SLOPPY_SINGLE;
+  }
+  {SPC}*HB_UseSloppyPrecision{EQL}single {
+    if(myverbose) printf("  HB Use sloppy precision (single) in the inverter (if supported) line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.sloppy_precision = SLOPPY_SINGLE;
+  }
+  {SPC}*HB_UseSloppyPrecision{EQL}no {
+    if(myverbose) printf("  HB Use sloppy precision (double) in the inverter line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.sloppy_precision = SLOPPY_DOUBLE;
+  }
+  {SPC}*HB_UseSloppyPrecision{EQL}double {
+    if(myverbose) printf("  HB Use sloppy precision (double) in the inverter line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.sloppy_precision = SLOPPY_DOUBLE;
+  }
+  {SPC}*HB_UseSloppyPrecision{EQL}half {
+    if(myverbose) printf("  HB Use sloppy precision (half) in the inverter (if supported) line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.sloppy_precision = SLOPPY_HALF;
+  }
+  {SPC}*HB_UseCompression{EQL}12 {
+    if(myverbose) printf("  HB Use 12 compression in the inverter (if supported) line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.compression_type = COMPRESSION_12;
+  }
+  {SPC}*HB_UseCompression{EQL}8 {
+    if(myverbose) printf("  HB Use 8 compression in the inverter (if supported) line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.compression_type = COMPRESSION_8;
+  }
+  {SPC}*HB_UseCompression{EQL}18 {
+    if(myverbose) printf("  HB Not using compression in the inverter line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->HB_solver_params.compression_type = NO_COMPRESSION;
+  }
+}
+
+<DETMONOMIAL,DETRATMONOMIAL,POLYMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{
   {SPC}*ForcePrecision{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf",name , &c);
     mnl->forceprec = c;
@@ -1948,7 +2575,7 @@ static inline double fltlist_next_token(int * const list_end){
   {SPC}*2KappaMu{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     mnl->mu = c;
-    if(myverbose) printf("  2KappaMu set to %f line %d monomial %d\n", c, line_of_file, current_monomial);
+    if(myverbose) printf("  2KappaMu set to %.16f line %d monomial %d\n", c, line_of_file, current_monomial);
   }
   {SPC}*CSGHistory{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
@@ -1998,6 +2625,14 @@ static inline double fltlist_next_token(int * const list_end){
     mnl->glambda = c;
     if(myverbose) printf("  Gauge lambda parameter (Wilson plaquette only) set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
   }
+  {SPC}*UseExternalLibrary{EQL}no {
+    mnl->external_library = NO_EXT_LIB;
+    if(myverbose) printf("  UseExternalLibrary set to false in line %d, monomial %d\n", line_of_file, current_monomial);
+  }
+  {SPC}*UseExternalLibrary{EQL}quda {
+    mnl->external_library = QUDA_LIB;
+    if(myverbose) printf("  UseExternalLibrary set to quda in line %d, monomial %d\n", line_of_file, current_monomial);
+  }
 }
 
 <NDPOLYMONOMIAL>{
@@ -2029,6 +2664,22 @@ static inline double fltlist_next_token(int * const list_end){
     mnl->rat.order = a;
     if(myverbose!=0) printf("  Degree of rational approximation set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
   }
+  {SPC}*RefinementPrecision{EQL}float {
+    mnl->solver_params.refinement_precision = SLOPPY_SINGLE;
+    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to single precision line %d monomial %d\n", line_of_file, current_monomial);
+  }
+  {SPC}*RefinementPrecision{EQL}single {
+    mnl->solver_params.refinement_precision = SLOPPY_SINGLE;
+    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to single precision line %d monomial %d\n", line_of_file, current_monomial);
+  }
+  {SPC}*RefinementPrecision{EQL}half {
+    mnl->solver_params.refinement_precision = SLOPPY_HALF;
+    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to half precision line %d monomial %d\n", line_of_file, current_monomial);
+  }
+  {SPC}*RefinementPrecision{EQL}double {
+    mnl->solver_params.refinement_precision = SLOPPY_DOUBLE;
+    if(myverbose!=0) printf("  Refinement precision (if supported by the chosen solver) set to double precision line %d monomial %d\n", line_of_file, current_monomial);
+  }
 }
 <NDPOLYMONOMIAL,CLPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
   {SPC}*StildeMax{EQL}{FLT} {
@@ -2049,6 +2700,34 @@ static inline double fltlist_next_token(int * const list_end){
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->rec_ev = a;
     if(myverbose!=0) printf("  Frequency for computing EV's set to %d in line %d monomial %d\n", mnl->rec_ev, line_of_file, current_monomial);
+  }
+  {SPC}*UseExternalEigSolver{EQL}quda {
+    if(myverbose) printf("  Use Quda eigensolver line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->external_eigsolver = QUDA_EIGSOLVER;
+  }
+  {SPC}*UseExternalEigSolver{EQL}no {
+    if(myverbose) printf("  Do not use external eigensolver line %d monomial %d\n", line_of_file, current_monomial);
+    mnl->external_eigsolver = NO_EXT_EIGSOLVER;
+  }
+  {SPC}*EigSolverPolyMin{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mnl->eig_amin = c;
+    if(myverbose!=0) printf("  Minimum eigenvalue to exclude using polynomial acceleration in eigensolver set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*EigSolverPolyMax{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mnl->eig_amax = c;
+    if(myverbose!=0) printf("  Maximum eigenvalues to exclude using polynomial acceleration in eigensolver set to %e line %d monomial %d\n", c, line_of_file, current_monomial);
+  }
+  {SPC}*EigSolverPolynomialDegree{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mnl->eig_polydeg = a;
+    if(myverbose!=0) printf("  Degree of polynomial acceleration in eigensolver set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
+  }
+  {SPC}*EigSolverKrylovSubspaceSize{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mnl->eig_n_kr = a;
+    if(myverbose!=0) printf("  Krylov subspace size for eigensolver set to %d line %d monomial %d\n", a, line_of_file, current_monomial);
   }
 }
 <NDPOLYMONOMIAL,CLPOLYMONOMIAL>{
@@ -2165,6 +2844,11 @@ static inline double fltlist_next_token(int * const list_end){
     mnl->solver=MIXEDBICGSTAB;
     BEGIN(name_caller);
   }
+  MG {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = MG;
+    BEGIN(name_caller);
+  }
   DDalphaAMG {
 #ifdef DDalphaAMG
     if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
@@ -2176,6 +2860,51 @@ static inline double fltlist_next_token(int * const list_end){
 #endif
   }
 }
+
+<HB_MSOLVER>{
+  CG {
+    if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->HB_solver = CG;
+    BEGIN(solver_caller);
+  }
+  mixedCG {
+    if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->HB_solver = MIXEDCG;
+    BEGIN(solver_caller);
+  }
+  rgmixedCG {
+    if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->HB_solver = RGMIXEDCG;
+    BEGIN(solver_caller);
+  }
+  BICGSTAB {
+    if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->HB_solver = BICGSTAB;
+    BEGIN(solver_caller);
+  }
+  mixedbicgstab {
+    if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->HB_solver=MIXEDBICGSTAB;
+    BEGIN(solver_caller);
+  }
+  MG {
+    if(myverbose) printf("  HB Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->HB_solver = MG;
+    BEGIN(solver_caller);
+  }
+  DDalphaAMG {
+#ifdef DDalphaAMG
+    if(myverbose) printf("  HB Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
+    mnl->HB_solver = MG;
+    BEGIN(solver_caller);
+#else
+    printf("ERROR line %d operator %d: DDalphaAMG library not included\n", line_of_file, current_operator);
+    exit(1);
+#endif
+  }
+}
+
+
 
 <RATMSOLVER>{
   rgmixedCG {
@@ -2463,6 +3192,14 @@ static inline double fltlist_next_token(int * const list_end){
     meas->freq = a;
     if(myverbose!=0) printf("  Frequency for measurement with id %d set to %d\n", meas->id, meas->freq);
   }
+  {SPC}*UseExternalLibrary{EQL}no {
+      meas->external_library = NO_EXT_LIB;
+      if(myverbose) printf("  UseExternalLibrary set to false in line %d, monomial %d\n", line_of_file, current_monomial);
+   }
+  {SPC}*UseExternalLibrary{EQL}quda {
+      meas->external_library = QUDA_LIB;
+      if(myverbose) printf("  UseExternalLibrary set to quda in line %d, monomial %d\n", line_of_file, current_monomial);
+   }
 }
 
 <ONLINEMEAS,PIONNORMMEAS>{
@@ -2726,7 +3463,7 @@ static inline double fltlist_next_token(int * const list_end){
 }
 <NSTORE>readin {
   nstore=-1;
-  if(myverbose!=0) printf("Trying to read InitialStoreCounter from file .nstore_counter\n");
+  if(myverbose!=0) printf("Trying to read InitialStoreCounter from file nstore_counter\n");
 }
 <IOPROC>all         {
   g_stdio_proc = -1;
@@ -2826,6 +3563,14 @@ static inline double fltlist_next_token(int * const list_end){
 <RELPREC>no  {
   g_relative_precision_flag = 0;
   if(myverbose!=0) printf("Using absolute precision\n");
+}
+<STRICTRESIDUALCHECK>yes {
+  g_strict_residual_check = 1;
+  if(myverbose!=0) printf("g_strict_residual_check = %d!\n", g_strict_residual_check);
+}
+<STRICTRESIDUALCHECK>no {
+  g_strict_residual_check = 0;
+  if(myverbose!=0) printf("g_strict_residual_check = %d!\n", g_strict_residual_check);
 }
 <REVCHECK>yes {
   return_check_flag = 1;
@@ -3018,6 +3763,16 @@ static inline double fltlist_next_token(int * const list_end){
   if(myverbose!=0) printf("MixedCG: setting inner solver eps to %s \n", yytext);
 }
 
+<BARRIER_MONOMIALS_CONVERGE>yes {
+  g_barrier_monomials_convergence = 1;
+  if(myverbose) printf("Monomials convergence is checked\n");
+}
+<BARRIER_MONOMIALS_CONVERGE>no {
+  g_barrier_monomials_convergence = 0;
+  if(myverbose) printf("Monomials convergence won't be checked\n");
+}
+
+
 <*>^#   {
    comment_caller = YY_START;
    BEGIN(COMMENT);
@@ -3030,7 +3785,7 @@ static inline double fltlist_next_token(int * const list_end){
   BEGIN(comment_caller);
 }
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID,INITEXTERNALINVERTER,QUDAINVERTER,QPHIXINVERTER,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{SPC}*\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID,INITEXTERNALINVERTER,QUDAINVERTER,QPHIXINVERTER,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL,TUNEQUDAMGPARAMS>{SPC}*\n   {
   line_of_file++;
 }
 <*>{SPC}*\n                       {
@@ -3163,6 +3918,7 @@ int read_input(char * conf_file){
   PropInfo.splitted = _default_propagator_splitted;
   SourceInfo.splitted = _default_source_splitted;
   g_relative_precision_flag = _default_g_relative_precision_flag;
+  g_strict_residual_check = _default_g_strict_residual_check;
   return_check_flag = _default_return_check_flag;
   return_check_interval = _default_return_check_interval;
   g_debug_level = _default_g_debug_level;
@@ -3200,12 +3956,6 @@ int read_input(char * conf_file){
   compute_topsus = _default_compute_topsus;
   mstarsq = _default_mstarsq;
   no_sources_z2 = _default_no_sources_z2;
-  device_num = _default_device_num;
-  min_innersolver_it = _default_min_innersolver_it;
-  max_mms_shifts = _default_max_mms_shifts;
-  use_mixed_mms = 0;
-  innersolver_precision_rel = 1.e-4;
-  innersolver_precision_abs = 1.e-4;
 
   mixcg_innereps = _default_mixcg_innereps;
   mixcg_maxinnersolverit = _default_mixcg_maxinnersolverit;
@@ -3213,16 +3963,65 @@ int read_input(char * conf_file){
   lowmem_flag = _default_lowmem_flag;
   subprocess_flag = _default_subprocess_flag;
  
+  g_barrier_monomials_convergence = _default_g_barrier_monomials_convergence;
+
   /* default parameters for QUDA */
+  quda_input.enable_device_memory_pool = _default_quda_enable_device_memory_pool;
+  quda_input.enable_pinned_memory_pool = _default_quda_enable_pinned_memory_pool;
   quda_input.fermionbc = TM_QUDA_THETABC;
+  quda_input.pipeline = 0;
+  quda_input.gcrNkrylov = 10;
+  quda_input.mg_coarse_guess = QUDA_BOOLEAN_NO;
+  quda_input.reliable_delta = 1e-3; // anything smaller than this and we break down in double-half
   quda_input.mg_n_level = _default_quda_mg_n_level;
+  quda_input.mg_setup_2kappamu = _default_quda_mg_setup_2kappamu;
   for( int level = 0; level < QUDA_MAX_MG_LEVEL; ++level){
+    quda_input.mg_setup_maxiter_refresh[level] = 0;
+    quda_input.mg_verbosity[level] = QUDA_SILENT;
+    quda_input.mg_omega[level] = _default_quda_mg_omega;
+    quda_input.mg_setup_maxiter[level] = _default_quda_mg_setup_maxiter;
+    quda_input.mg_setup_tol[level] = _default_quda_mg_setup_tol;
+    quda_input.mg_coarse_solver_tol[level] = _default_quda_mg_coarse_solver_tol;
+    quda_input.mg_coarse_solver_maxiter[level] = _default_quda_mg_coarse_solver_maxiter;
+    quda_input.mg_nu_pre[level] = _default_quda_mg_nu_pre;
+    quda_input.mg_nu_post[level] = _default_quda_mg_nu_post;
+    quda_input.mg_smoother_tol[level] = _default_quda_mg_smoother_tol;
+
     quda_input.mg_n_vec[level] = _default_quda_mg_n_vec;
-    if( level > 0 ){
-      quda_input.mg_mu_factor[level] = _default_quda_mg_mu_factor;
-    } else {
-      quda_input.mg_mu_factor[level] = 1.0;
-    }
+    quda_input.mg_mu_factor[level] = _default_quda_mg_mu_factor;
+    quda_input.mg_coarse_solver_type[level] = QUDA_GCR_INVERTER;
+    quda_input.mg_smoother_type[level] = QUDA_CA_GCR_INVERTER;
+
+    quda_input.mg_use_eig_solver[level] = QUDA_BOOLEAN_NO;
+    quda_input.mg_eig_preserve_deflation = QUDA_BOOLEAN_NO;
+    quda_input.mg_eig_tol[level] = 1.0e-6;
+    quda_input.mg_eig_require_convergence[level] = QUDA_BOOLEAN_YES;
+    quda_input.mg_eig_type[level] = QUDA_EIG_TR_LANCZOS;
+    quda_input.mg_eig_spectrum[level] = QUDA_SPECTRUM_SR_EIG;
+    quda_input.mg_eig_check_interval[level] = 5;
+    quda_input.mg_eig_max_restarts[level] = 100;
+    quda_input.mg_eig_use_normop[level] = QUDA_BOOLEAN_NO;
+    quda_input.mg_eig_use_dagger[level] = QUDA_BOOLEAN_NO;
+    quda_input.mg_eig_use_poly_acc[level] = QUDA_BOOLEAN_YES;
+    quda_input.mg_eig_poly_deg[level] = 100;
+    quda_input.mg_eig_amin[level] = 1.0;
+    quda_input.mg_eig_amax[level] = 5.0;
+    quda_input.mg_eig_nEv[level] = 0;
+    quda_input.mg_eig_nKr[level] = 0;
+
+    quda_input.mg_setup_ca_basis[level] = QUDA_POWER_BASIS;
+    quda_input.mg_setup_ca_basis_size[level] = 4;
+    quda_input.mg_setup_ca_lambda_min[level] = 0.0;
+    quda_input.mg_setup_ca_lambda_max[level] = -1.0;
+  
+    quda_input.mg_coarse_solver_ca_basis[level] = QUDA_POWER_BASIS;
+    quda_input.mg_coarse_solver_ca_basis_size[level] = 4;
+    quda_input.mg_coarse_solver_ca_lambda_min[level] = 0.0;
+    quda_input.mg_coarse_solver_ca_lambda_max[level] = -1.0;
+    
+    quda_input.mg_smoother_solver_ca_basis[level] = QUDA_POWER_BASIS;
+    quda_input.mg_smoother_solver_ca_lambda_min[level] = 0.0;
+    quda_input.mg_smoother_solver_ca_lambda_max[level] = -1.0;
 
     /* note: when the user does not specify any blocking parameters,
      * a reasonable set will be computed automatically in the MG setup
@@ -3232,17 +4031,17 @@ int read_input(char * conf_file){
     }
   }
   quda_input.mg_setup_inv_type = QUDA_CG_INVERTER;
-  quda_input.mg_setup_maxiter = _default_quda_mg_setup_maxiter;
-  quda_input.mg_setup_tol = _default_quda_mg_setup_tol;
-  quda_input.mg_coarse_solver_tol = _default_quda_mg_coarse_solver_tol;
-  quda_input.mg_coarse_solver_maxiter = _default_quda_mg_coarse_solver_maxiter;
-  quda_input.mg_nu_pre = _default_quda_mg_nu_pre;
-  quda_input.mg_nu_post = _default_quda_mg_nu_post;
-  quda_input.mg_smoother_tol = _default_quda_mg_smoother_tol;
-  quda_input.mg_omega = _default_quda_mg_omega;
-  quda_input.mg_run_verify = QUDA_BOOLEAN_YES;
+  quda_input.mg_run_verify = QUDA_BOOLEAN_NO;
   quda_input.mg_enable_size_three_blocks = _default_quda_mg_enable_size_three_blocks;
-  quda_input.mg_reset_setup_threshold = _default_quda_mg_reset_setup_threshold;
+  quda_input.mg_reset_setup_mdu_threshold = _default_quda_mg_reset_setup_mdu_threshold;
+  quda_input.mg_refresh_setup_mdu_threshold = _default_quda_mg_refresh_setup_mdu_threshold;
+  quda_input.mg_reuse_setup_mu_threshold = _default_quda_mg_reuse_setup_mu_threshold;
+  quda_input.mg_run_low_mode_check = QUDA_BOOLEAN_NO;
+  quda_input.mg_run_oblique_proj_check = QUDA_BOOLEAN_NO;
+
+  quda_mg_tuning_plan.mg_tuning_iterations = _default_quda_mg_tuning_iterations;
+  quda_mg_tuning_plan.mg_tuning_tolerance = _default_quda_mg_tuning_tolerance;
+  quda_mg_tuning_plan.mg_tuning_ignore_threshold = _default_quda_mg_tuning_ignore_threshold; 
 
   /* Put -1 in PropInfo.format to see if parse_config() will
   change the value. If not then set it to source_format_flag */

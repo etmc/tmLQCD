@@ -4,7 +4,7 @@
 */
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #ifdef TM_USE_MPI
 # include <mpi.h>

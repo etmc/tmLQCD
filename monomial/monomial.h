@@ -28,6 +28,8 @@
 #include "solver/solver_params.h"
 #include "misc_types.h"
 
+#include <complex.h>
+
 #define DET 0
 #define DETRATIO 1
 #define GAUGE 2
@@ -60,10 +62,12 @@ typedef struct {
   int initialised;
   int timescale;
   int maxiter;
+  int HB_maxiter; // as maxiter, but for the HB solver
   int id;
   int even_odd_flag;
   int rngrepro;
   int solver;
+  int HB_solver; // solver for the HB only (optional)
   
   int iter0, iter1, iter2;
   int csg_N, csg_N2;
@@ -88,6 +92,7 @@ typedef struct {
   double forceprec;
   double accprec;
   solver_params_t solver_params;
+  solver_params_t HB_solver_params; // parameters of the HB solver
   /* force normalisation */
   double forcefactor;
   /* some book-keeping */
@@ -109,6 +114,10 @@ typedef struct {
   double PrecisionHfinal;
   double StildeMin, StildeMax;
   double EVMin, EVMax, EVMaxInv;
+  int eig_polydeg, eig_n_kr;
+  double eig_amin, eig_amax;
+  ExternalLibrary external_library;
+  ExternalEigSolver external_eigsolver;
   double * MDPolyCoefs, * PtildeCoefs;
   /* rational approximation */
   rational_t rat;

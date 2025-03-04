@@ -21,7 +21,7 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #ifdef SSE
 # undef SSE
@@ -52,6 +52,7 @@
 #include "operator/clovertm_operators.h"
 #include "operator/clover_leaf.h"
 #include "operator/clover_inline.h"
+#include "gettime.h"
 
 #define nm1 5
 void six_det(_Complex double* const rval, _Complex double a[6][6])
@@ -113,6 +114,7 @@ void six_det(_Complex double* const rval, _Complex double a[6][6])
 
 
 double sw_trace(const int ieo, const double mu) {
+  tm_stopwatch_push(&g_timers, __func__, "");
   double ALIGN res = 0.0;
 #ifdef TM_USE_MPI
   double ALIGN mres;
@@ -182,11 +184,12 @@ double sw_trace(const int ieo, const double mu) {
 
 #ifdef TM_USE_MPI
   MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return(mres);
 #else
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return(res);
 #endif
-
 }
 
 
@@ -200,6 +203,7 @@ double sw_trace(const int ieo, const double mu) {
 // if eps is set to zero
 
 double sw_trace_nd(const int ieo, const double mu, const double eps) {
+  tm_stopwatch_push(&g_timers, __func__, "");
   double ALIGN res = 0.0;
 #ifdef TM_USE_MPI
   double ALIGN mres;
@@ -272,8 +276,10 @@ double sw_trace_nd(const int ieo, const double mu, const double eps) {
 
 #ifdef TM_USE_MPI
   MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return(mres);
 #else
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return(res);
 #endif
 }

@@ -47,11 +47,11 @@ int write_eospinor(spinor * const s, char * filename,
   if(g_cart_id == 0){  
     if(g_kappa > 0. || g_kappa < 0.) {
       sprintf(message,"\n eigenvalue = %e\n prec = %e\n conf nr = %d\n beta = %.12f, kappa = %.12f, mu = %.12f, c2_rec = %f\n hmcversion = %s", 
-	      evalue, prec, nstore, g_beta, g_kappa, g_mu/2./g_kappa, g_rgi_C1, PACKAGE_VERSION);
+	      evalue, prec, nstore, g_beta, g_kappa, g_mu/2./g_kappa, g_rgi_C1, TMLQCD_PACKAGE_VERSION);
     }
     else {
       sprintf(message,"\n eigenvalue = %e\n prec = %e\n conf nr = %d\n beta = %.12f, kappa = %.12f, 2*kappa*mu = %.12f, c2_rec = %f\n hmcversion = %s", 
-	      evalue, prec, nstore, g_beta, g_kappa, g_mu, g_rgi_C1, PACKAGE_VERSION);
+	      evalue, prec, nstore, g_beta, g_kappa, g_mu, g_rgi_C1, TMLQCD_PACKAGE_VERSION);
     }
     bytes = strlen( message );
     

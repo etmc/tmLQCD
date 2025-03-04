@@ -31,8 +31,6 @@
 #ifndef _ORTHO_NEW_H
 #define _ORTHO_NEW_H
 
-#include "su3.h"
-
 /* Given a set of orthonormal vectors Vecs such that the first nv_old vectors
  * are othonormal, it applies gram-schmit orthogonalization for the new vectors
  * nv_new such that the whole set of nv_old+nv_new are orthonormal. It returns how

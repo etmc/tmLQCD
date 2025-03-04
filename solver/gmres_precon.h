@@ -49,8 +49,8 @@
 #ifndef _GMRES_PRECON_H
 #define _GMRES_PRECON_H
 
-#include"solver/matrix_mult_typedef.h"
-#include"su3.h"
+#include "solver/matrix_mult_typedef.h"
+#include "su3.h"
 
 int gmres_precon(spinor * const P,spinor * const Q, 
 	   const int m, const int max_restarts,

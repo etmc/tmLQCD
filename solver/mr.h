@@ -45,6 +45,9 @@
 #ifndef _MR_H
 #define _MR_H
 
+#include "su3.h"
+#include "solver/matrix_mult_typedef.h"
+
 int mr(spinor * const P, spinor * const Q,
        const int max_iter, const double eps_sq,
        const int rel_prec, const int N, 

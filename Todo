@@ -23,7 +23,6 @@ cannot read the source, probably. To be fixed!
 - source generation inside the code
 - deflation
 - mixed precision solver, single precision Dirac operator
-- GPU implementation...
 - test RHMC?
 - dynamical overlap code
 - create simpler test suite

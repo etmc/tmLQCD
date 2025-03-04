@@ -20,8 +20,8 @@
 #ifndef _CR_H
 #define _CR_H
 
-#include"solver/matrix_mult_typedef.h"
-#include"su3.h"
+#include "solver/matrix_mult_typedef.h"
+#include "su3.h"
 
 int cr(spinor * const P, spinor * const Q, 
 	const int m, const int max_restarts,

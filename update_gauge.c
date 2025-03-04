@@ -22,13 +22,14 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
 #include "global.h"
+#include "misc_types.h"
 #include "gettime.h"
 #include "su3.h"
 #include "su3adj.h"
@@ -49,8 +50,8 @@
  *******************************************************/
 
 void update_gauge(const double step, hamiltonian_field_t * const hf) {
-  double atime, etime;
-  atime = gettime();
+  tm_stopwatch_push(&g_timers, __func__, "");
+  update_tm_gauge_id(&g_gauge_state, step);
 #ifdef DDalphaAMG
   MG_update_gauge(step);
 #endif
@@ -97,10 +98,13 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
 #ifdef TM_USE_MPI
   /* for parallelization */
   xchange_gauge(hf->gaugefield);
+  update_tm_gauge_exchange(&g_gauge_state);
 #endif
   
   /*Convert to a 32 bit gauge field, after xchange*/
   convert_32_gauge_field(g_gauge_field_32, hf->gaugefield, VOLUMEPLUSRAND + g_dbw2rand);
+  update_tm_gauge_id(&g_gauge_state_32, step);
+  update_tm_gauge_exchange(&g_gauge_state_32);
   
   /*
    * The backward copy of the gauge field
@@ -110,10 +114,7 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
   g_update_gauge_copy = 1;
   g_update_gauge_copy_32 = 1;
 
-  etime = gettime();
-  if(g_debug_level > 1 && g_proc_id == 0) {
-    printf("# Time gauge update: %e s\n", etime-atime); 
-  } 
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
 #ifdef _KOJAK_INST
 #pragma pomp inst end(updategauge)

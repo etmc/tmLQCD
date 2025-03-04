@@ -47,7 +47,7 @@ liblinalg_TARGETS = assign_add_mul_r_add_mul \
 	addto_32 scalar_prod_r_32 assign_mul_add_r_32 assign_add_mul_r_32 \
 	square_norm_32 assign_to_32 diff_32 \
 	convert_odd_to_lexic convert_even_to_lexic set_even_to_zero \
-	mul_gamma5 mul_r_gamma5
+	mul_gamma5 mul_r_gamma5 ratio print_spinor print_spinor_similar_components
 
 liblinalg_STARGETS = diff assign_add_mul_r assign_mul_add_r square_norm
 
@@ -75,10 +75,10 @@ include ${top_srcdir}/Makefile.global
 
 # rule to compile objects
 
-${liblinalg_OBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/config.h
+${liblinalg_OBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/include/tmlqcd_config_internal.h
 	$(COMPILE) ${OPTARGS} -c $<
 
-${liblinalg_SOBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/config.h
+${liblinalg_SOBJECTS}: %.o: ${srcdir}/%.c %.d Makefile ${abs_top_builddir}/include/tmlqcd_config_internal.h
 	$(COMPILE) ${SOPTARGS} -c $<
 
 # rule to make liblinalg

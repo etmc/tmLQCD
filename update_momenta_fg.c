@@ -21,7 +21,7 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -49,8 +49,8 @@
 #include "DDalphaAMG_interface.h"
 #endif
 
-inline void calculate_fg(const double step_fg,
-                         hamiltonian_field_t * const hf){
+void calculate_fg(const double step_fg,
+                  hamiltonian_field_t * const hf){
 #ifdef TM_USE_OMP
 #define static
 #pragma omp parallel
@@ -90,8 +90,8 @@ inline void calculate_fg(const double step_fg,
 #endif
 }
 
-inline void fg_update_momenta_reset_gaugefield(const double step,
-                                               hamiltonian_field_t * const hf){
+void fg_update_momenta_reset_gaugefield(const double step,
+                                        hamiltonian_field_t * const hf){
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -127,8 +127,6 @@ inline void fg_update_momenta_reset_gaugefield(const double step,
  *******************************************************/
 void update_momenta_fg(int * mnllist, double step, const int no,
 		       hamiltonian_field_t * const hf, double step0) {
-  double atime, etime;
-  atime = gettime();
 #ifdef DDalphaAMG
   MG_update_gauge(0.0);
 #endif
@@ -165,6 +163,12 @@ void update_momenta_fg(int * mnllist, double step, const int no,
 #ifdef DDalphaAMG
      MG_update_gauge(0.0);
 #endif
+   
+   // ensure that the QUDA MG setup is updated
+   update_tm_gauge_id(&g_gauge_state, step_fg);
+   update_tm_gauge_id(&g_gauge_state_32, step_fg);
+   update_tm_gauge_exchange(&g_gauge_state);
+   update_tm_gauge_exchange(&g_gauge_state_32);
 
    /*Convert to a 32 bit gauge field, after xchange*/
    convert_32_gauge_field(g_gauge_field_32, hf->gaugefield, VOLUMEPLUSRAND + g_dbw2rand);
@@ -204,6 +208,11 @@ void update_momenta_fg(int * mnllist, double step, const int no,
 #ifdef DDalphaAMG
   MG_update_gauge(0.0);
 #endif
+   
+  update_tm_gauge_id(&g_gauge_state, -step_fg);
+  update_tm_gauge_id(&g_gauge_state_32, -step_fg);
+  update_tm_gauge_exchange(&g_gauge_state);
+  update_tm_gauge_exchange(&g_gauge_state_32);
 
   /*Convert to a 32 bit gauge field, after xchange*/
   convert_32_gauge_field(g_gauge_field_32, hf->gaugefield, VOLUMEPLUSRAND + g_dbw2rand);
@@ -216,10 +225,5 @@ void update_momenta_fg(int * mnllist, double step, const int no,
   g_update_gauge_copy = 1;
   g_update_gauge_copy_32 = 1;
 
-
-  etime = gettime();
-  if(g_debug_level > 1 && g_proc_id == 0) {
-    printf("# Time gauge update: %e s\n", etime-atime); 
-  } 
   return;
 }

@@ -32,7 +32,7 @@
  **************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -58,7 +58,7 @@ double * eigenvls = NULL;
 double max_eigenvalue;
 double * inv_eigenvls = NULL;
 int eigenvalues_for_cg_computed = 0;
-int no_eigenvalues, evlength;
+int evlength;
 
 /* the folowing two are needed for the overlap */
 double ev_minev=-1., ev_qnorm=-1.;

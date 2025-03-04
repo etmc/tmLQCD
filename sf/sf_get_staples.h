@@ -20,7 +20,7 @@
 #ifndef _SF_GET_STAPLES_H
 #define _SF_GET_STAPLES_H
 
-#include"su3.h"
+#include "su3.h"
 
 su3 sf_get_staples(int x, int mu, su3 ** in_gauge_field);
 

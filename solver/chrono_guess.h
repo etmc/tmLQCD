@@ -21,6 +21,7 @@
 #define _CHRONO_GUESS_H
 
 #include "solver/matrix_mult_typedef.h"
+#include "su3.h"
 
 void chrono_add_solution(spinor * const trial, spinor ** const v, int index_array[],
 			const int _N, int * _n, const int V);

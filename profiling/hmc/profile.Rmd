@@ -1,0 +1,161 @@
+---
+title: "Profile tmLQCD"
+author: ""
+date: "`r Sys.Date()`"
+output:
+  pdf_document: 
+    toc: true
+  html_document: 
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(knitr)
+
+```
+
+
+```{r reading,echo=FALSE}
+#cache=TRUE, cache.extra = tools::md5sum('profile.RData')
+#source("timing.R")
+load("profile.RData")
+```
+
+# Total time per monomial
+
+```{r, echo=FALSE}
+Nm <- length(mnl_list)
+df <- data.frame("mon" =c(0), "func" =c(0), "time" =c(0) )
+
+count=1
+for(i in c(1:Nm) ) {
+  for(j in c(1:length(mnl_list[[i]]$sub_func)) ) {
+    # df[i+j*(Nm+1),1]<-mnl_list[[i]]$name
+    # df[i+j*(Nm+1),2]<-mnl_list[[i]]$sub_func[[j]]$name
+    # df[i+j*(Nm+1),3]<-sum(mnl_list[[i]]$sub_func[[j]]$time)
+    df[count,]<-list(mnl_list[[i]]$name,
+                           mnl_list[[i]]$sub_func[[j]]$name,
+                           sum(mnl_list[[i]]$sub_func[[j]]$time))
+    count=count+1
+  }
+  
+}
+kable(df)
+```
+
+
+```{r,echo=FALSE}
+th<- theme_bw()+theme(axis.text.x = element_text(angle = -90, vjust = 0., hjust=0.),
+                legend.position = "none")
+gg<-ggplot(df)
+lab<- paste0(df$mon,":",df$func)
+gg<- gg + geom_col( aes(x=lab, y=time, fill=lab) )+ ggtitle("total time")
+#gg<- gg + geom_errorbar( aes(x=mon, ymin=hb-hb_err,ymax=hb+hb_err) )
+gg<- gg +th
+#gg
+
+gg
+
+```
+# Average time 
+
+
+# Total time per monomial
+
+```{r, echo=FALSE}
+Nm <- length(mnl_list)
+df <- data.frame("mon" =c(0), "func" =c(0), "time" =c(0), "error"=c(0) )
+
+count=1
+for(i in c(1:Nm) ) {
+  for(j in c(1:length(mnl_list[[i]]$sub_func)) ) {
+    # df[i+j*(Nm+1),1]<-mnl_list[[i]]$name
+    # df[i+j*(Nm+1),2]<-mnl_list[[i]]$sub_func[[j]]$name
+    # df[i+j*(Nm+1),3]<-sum(mnl_list[[i]]$sub_func[[j]]$time)
+    df[count,]<-list(mnl_list[[i]]$name,
+                           mnl_list[[i]]$sub_func[[j]]$name,
+                           ave(mnl_list[[i]]$sub_func[[j]]$time)[1],
+                           sd(mnl_list[[i]]$sub_func[[j]]$time)
+                     )
+    count=count+1
+  }
+  
+}
+kable(df)
+```
+
+
+
+```{r,echo=FALSE}
+th<- theme_bw()+theme(axis.text.x = element_text(angle = -90, vjust = 0., hjust=0.),
+                legend.position = "none")
+gg<-ggplot(df)
+lab<- paste0(df$mon,":",df$func)
+gg<- gg + geom_col( aes(x=lab, y=time, fill=lab) ) + ggtitle("average time")
+#gg<- gg + geom_errorbar( aes(x=mon, ymin=hb-hb_err,ymax=hb+hb_err) )
+gg<- gg +th
+#gg
+
+gg
+
+```
+
+
+# Average time per monomial
+
+```{r,echo=FALSE, results='asis'}
+N <- length(mnl_list)
+df <- data.frame( "func" =c(0), "time" =c(0) )
+
+for(m in c(1:N)){
+  cat("\n\n## ",mnl_list[[m]]$name, "\n\n")
+  Nf <- length( mnl_list[[m]]$sub_func )
+  df <- data.frame( "func" =c(0), "time" =c(0) )
+  df1 <- data.frame( "func"=c(0), "sub_func" =c(0), "time" =c(0),  "error"=c(0), 
+                     "time-single"=c(0),
+                     "Ncalls"=c(0))
+
+  gg1<-ggplot()
+
+  f=1
+  f1=1
+  for(sf in  mnl_list[[m]]$sub_func ){
+    df[f,]<-list(sf$name,    ave(sf$time)[1]   )
+    Nf1<-  length( sf$sub_func )
+    mysum=0
+    for(sf1 in sf$sub_func){
+      time_sin<-ave(sf1$time)[1]
+      repetition<-length(sf1$time)/length(sf$time)
+      df1[f1,]<-list(sf$name,  sf1$name,
+                     time_sin*repetition ,
+                     sd(sf1$time)*repetition ,
+                     time_sin,
+                     repetition               )
+      
+      mysum=mysum+as.numeric(df1[f1,3] )
+      f1=f1+1
+    }
+    df1[f1,]<-list(sf$name, "unknown", as.numeric( df[f,2])- mysum , 0 ,as.numeric( df[f,2])- mysum,1)
+    f1=f1+1
+  
+     #plot(gg1)
+     f=f+1
+  }
+   
+    gg1<- gg1 + geom_bar(data=df1, aes(x=func, y=time ,fill=sub_func ),width = 1, stat = "identity" )
+    
+    gg1<-gg1+theme_bw() +ggtitle("average time")
+
+  print(kable(df1))
+  print(kable(df))
+  plot(gg1)
+  gg<-ggplot(df)
+  gg<- gg + geom_col( aes(x=func, y=time, fill=func) )+ ggtitle("average time")
+  gg<- gg +th
+  plot(gg)
+
+}
+
+```

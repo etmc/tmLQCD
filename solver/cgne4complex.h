@@ -20,6 +20,7 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+#include "solver/matrix_mult_typedef.h"
 
 int cgne4complex(_Complex double * const P, _Complex double * const Q, 
 		 const int max_iter, const double eps_sq, const int rel_prec,

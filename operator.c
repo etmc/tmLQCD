@@ -19,7 +19,7 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -91,6 +91,7 @@ int add_operator(const int type) {
   optr->mu = _default_g_mu;
   optr->c_sw = _default_c_sw;
   optr->sloppy_precision = _default_operator_sloppy_precision_flag;
+  optr->solver_params.refinement_precision = _default_operator_sloppy_precision_flag;
   optr->compression_type = _default_compression_type;
   optr->external_inverter = _default_external_inverter;
   optr->solver_params.solution_type = TM_SOLUTION_M;
@@ -250,7 +251,11 @@ int init_operators() {
         optr->applyQp = &Qov_psi;
       }
       else if(optr->type == DBTMWILSON) {
-        optr->even_odd_flag = 1;
+        // QUDA also supports non-EO solves so we allow the user to set
+        // the UseEvenOdd operator parameter
+        if(optr->external_inverter != QUDA_INVERTER){
+          optr->even_odd_flag = 1;
+        }
         optr->applyDbQsq = &Qtm_pm_ndpsi;
         /* TODO: this should be here!       */
         /* Chi`s-spinors  memory allocation */
@@ -260,9 +265,12 @@ int init_operators() {
         /*       } */
       }
       else if(optr->type == DBCLOVER) {
-        optr->even_odd_flag = 1;
+        // QUDA also supports non-EO solves so we allow the user to set
+        // the UseEvenOdd operator parameter
+        if(optr->external_inverter != QUDA_INVERTER){
+          optr->even_odd_flag = 1;
+        }
         optr->applyDbQsq = &Qsw_pm_ndpsi;
-        //  optr->applyDbQsq = &Qtm_pm_ndpsi;
       }
       if(optr->external_inverter==QUDA_INVERTER ) {
 #ifdef TM_USE_QUDA
@@ -402,6 +410,12 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
         break;
     }
   } else if(optr->type == DBTMWILSON || optr->type == DBCLOVER) {
+    // there is no default for this set anywhere other than prepare_source.c
+    // such that calling this branch from an external program via tmLQCD_invert_doublet
+    // would result in undefined behaviour
+    // we thus set a default here unless it's explicitly set to 2
+    if( SourceInfo.no_flavours != 2 ) SourceInfo.no_flavours = 1;
+
     if(optr->type == DBCLOVER) {
       if (g_cart_id == 0 && g_debug_level > 1) {
         printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
@@ -419,6 +433,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
                                               optr->sr0, optr->sr1, optr->sr2, optr->sr3,
                                               optr->eps_sq, optr->maxiter,
                                               optr->solver, optr->rel_prec,
+                                              optr->even_odd_flag,
                                               optr->solver_params, optr->external_inverter, 
                                               optr->sloppy_precision, optr->compression_type);
         // checking solution
@@ -431,6 +446,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
                                                     optr->sr0, optr->sr1, optr->sr2, optr->sr3,
                                                     optr->eps_sq, optr->maxiter,
                                                     optr->solver, optr->rel_prec,
+                                                    optr->even_odd_flag,
                                                     optr->solver_params, optr->external_inverter, 
                                                     optr->sloppy_precision, optr->compression_type);
         // checking solution
@@ -509,6 +525,24 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
     if(write_prop) optr->write_prop(op_id, index_start, 0);
   }
   etime = gettime();
+
+  if( g_strict_residual_check ){
+    double rel_nrm = optr->rel_prec ? (square_norm(optr->sr0, VOLUME/2, 1) + square_norm(optr->sr1, VOLUME/2, 1)) : 1.0;
+    if( optr->type == DBTMWILSON || optr->type == DBCLOVER ){
+      rel_nrm += optr->rel_prec ? (square_norm(optr->sr2, VOLUME/2, 1) + square_norm(optr->sr3, VOLUME/2, 1)) : 1.0;
+    }
+    // even-odd preconditioned mixed precision inversions with QPhiX cause the
+    // target residual to be exceeded somewhat
+    // let's be generous and allow for a factor of 1.5
+    if( optr->reached_prec > 1.5*( optr->eps_sq / rel_nrm ) ){
+      fprintf(stdout, "# Inversion done in %d iterations, squared residue = %e rel_nrm = %e\n",
+              optr->iterations, optr->reached_prec, rel_nrm);
+      fprintf(stdout, "# Inversion done in %1.2e sec. \n", etime - atime);
+      fflush(stdout);
+      fatal_error("Reached precision larger that target precision by a factor of more than 1.5!", "op_invert");
+    }
+  } 
+
   if (g_cart_id == 0 && g_debug_level > 0) {
     fprintf(stdout, "# Inversion done in %d iterations, squared residue = %e!\n",
             optr->iterations, optr->reached_prec);

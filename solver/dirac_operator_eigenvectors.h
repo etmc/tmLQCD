@@ -22,7 +22,7 @@
 #define _DIRAC_EIGENVALUES_H
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include "tmlqcd_config.h"
 #endif
 #ifdef HAVE_FFTW
   #include <fftw3.h>

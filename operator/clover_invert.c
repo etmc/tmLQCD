@@ -22,7 +22,7 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #ifdef SSE
 # undef SSE
@@ -53,6 +53,7 @@
 #include "operator/clovertm_operators.h"
 #include "operator/clover_leaf.h"
 #include "operator/clover_inline.h"
+#include "gettime.h"
 
 /*
   !--------------------------------------------------------------!
@@ -168,6 +169,7 @@ void six_invert(int* ifail ,_Complex double a[6][6])
 // - is stored in sw_inv[VOLUME/2-(VOLUME-1)]
 
 void sw_invert(const int ieo, const double mu) {
+  tm_stopwatch_push(&g_timers, __func__, "");
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -210,10 +212,11 @@ void sw_invert(const int ieo, const double mu) {
       // and invert the resulting matrix
 
       six_invert(&err,a); 
-      // here we need to catch the error! 
+      // here we need to catch the error! probably this check should be
+      // performed by all processes?! 
       if(err > 0 && g_proc_id == 0) {
-	printf("# inversion failed in six_invert code %d\n", err);
-	err = 0;
+        printf("# inversion failed in six_invert code %d\n", err);
+        err = 0;
       }
 
       /*  copy "a" back to sw_inv */
@@ -225,28 +228,28 @@ void sw_invert(const int ieo, const double mu) {
 
     if(fabs(mu) > 0.) {
       for(i = 0; i < 2; i++) {
-	populate_6x6_matrix(a, &sw[x][0][i], 0, 0);
-	populate_6x6_matrix(a, &sw[x][1][i], 0, 3);
-	_su3_dagger(v, sw[x][1][i]); 
-	populate_6x6_matrix(a, &v, 3, 0);
-	populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
+        populate_6x6_matrix(a, &sw[x][0][i], 0, 0);
+        populate_6x6_matrix(a, &sw[x][1][i], 0, 3);
+        _su3_dagger(v, sw[x][1][i]); 
+        populate_6x6_matrix(a, &v, 3, 0);
+        populate_6x6_matrix(a, &sw[x][2][i], 3, 3);
 
-	// we add the twisted mass term
-	if(i == 0) add_tm(a, -mu);
-	else add_tm(a, +mu);
-	// and invert the resulting matrix
-	six_invert(&err,a); 
-	// here we need to catch the error! 
-	if(err > 0 && g_proc_id == 0) {
-	  printf("# %d\n", err);
-	  err = 0;
-	}
+        // we add the twisted mass term
+        if(i == 0) add_tm(a, -mu);
+        else add_tm(a, +mu);
+        // and invert the resulting matrix
+        six_invert(&err,a); 
+        // here we need to catch the error! 
+        if(err > 0 && g_proc_id == 0) {
+          printf("# %d\n", err);
+          err = 0;
+        }
 
-	/*  copy "a" back to sw_inv */
-	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][0][i], a, 0, 0);
-	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][1][i], a, 0, 3);
-	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][2][i], a, 3, 3);
-	get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][3][i], a, 3, 0);
+        /*  copy "a" back to sw_inv */
+        get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][0][i], a, 0, 0);
+        get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][1][i], a, 0, 3);
+        get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][2][i], a, 3, 3);
+        get_3x3_block_matrix(&sw_inv[icy+VOLUME/2][3][i], a, 3, 0);
       }
     }
 #ifndef TM_USE_OMP
@@ -256,6 +259,7 @@ void sw_invert(const int ieo, const double mu) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
 }
 
@@ -273,6 +277,7 @@ void sw_invert(const int ieo, const double mu) {
  */ 
 
 void sw_invert_epsbar(const double epsbar) {
+  tm_stopwatch_push(&g_timers, __func__, "");
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -318,6 +323,7 @@ void sw_invert_epsbar(const double epsbar) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
 }
 
@@ -335,6 +341,7 @@ void sw_invert_epsbar(const double epsbar) {
  */ 
 
 void sw_invert_mubar(const double mubar) {
+  tm_stopwatch_push(&g_timers, __func__, "");
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -421,6 +428,7 @@ void sw_invert_mubar(const double mubar) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
 }
 
@@ -438,6 +446,7 @@ void sw_invert_mubar(const double mubar) {
 // must be done elsewhere because of flavour structure
 
 void sw_invert_nd(const double mshift) {
+  tm_stopwatch_push(&g_timers, __func__, "");
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
@@ -473,8 +482,8 @@ void sw_invert_nd(const double mshift) {
       six_invert(&err, b); 
       // here we need to catch the error! 
       if(err > 0 && g_proc_id == 0) {
-	printf("# inversion failed in six_invert_nd code %d\n", err);
-	err = 0;
+        printf("# inversion failed in six_invert_nd code %d\n", err);
+        err = 0;
       }
 
 #ifdef CLOVER_INVERT_DEBUG
@@ -491,5 +500,6 @@ void sw_invert_nd(const double mshift) {
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
+  tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
 }

@@ -136,7 +136,7 @@ supported general input paramters:
 \item {\ttfamily InitialStoreCounter}:\\
   Start with value to label measurements. Default is $0$. Can be also
   set to {\ttfamily readin} which causes to let the code check for a
-  file {\ttfamily .nstore\_counter} and reads the initial value from
+  file {\ttfamily nstore\_counter} and reads the initial value from
   this file. If it is not existing, the counter will be set to $0$.
 
 \item {\ttfamily GaugeConfigInputFile}:\\
@@ -185,7 +185,18 @@ supported general input paramters:
   OpenMP support. On some architectures, the {\ttfamily OMP\_NUM\_THREADS}
   environment variable needs to be set to the same value for correct
   operation. The default is 1.
-
+\item  {\ttfamily BarrierMonomialsConverge}:\\
+  Possible values:  {\ttfamily yes} or  {\ttfamily no}. The default is  {\ttfamily no}. 
+  If set to  {\ttfamily yes} the convergence is checked for each monomial, 
+  and if any of the solvers returns a number of iterations equal to $-1$, 
+  the program is aborted.\\
+  %  
+  Corresponding variable in the code: {\ttfamily g\_barrier\_monomials\_convergence} 
+  ({\ttfamily==1} for  {\ttfamily yes} 
+  and  {\ttfamily ==0} for  {\ttfamily no}).
+  The convergence check is implemented with a conditional statement for each {\ttfamily solve\_*()} 
+  function in {\ttfamily tmLQCD/solver/monomial\_solve.c} which calls {\ttfamily fatal\_error()} 
+  if the solver didn't converge and if \mbox{\ttfamily g\_barrier\_monomials\_convergence \ttfamily == 1}.
 \end{enumerate}
 
 The following input parameters are {\ttfamily invert} specific:
@@ -321,7 +332,7 @@ The following input parameters are {\ttfamily hmc\_tm} specific:
     hot, cold, restart, continue}. Default is {\ttfamily
     cold}. Restart uses the seed to reset the random number
   generator. In case of {\ttfamily continue} the programme uses the
-  file {\ttfamily .nstore\_counter} to get the information about from
+  file {\ttfamily nstore\_counter} to get the information about from
   where to read the gauge and the random number status. If this file
   does not exist (its written in the course of the HMC) then the input
   parameter described here are used instead.
@@ -411,19 +422,13 @@ EndMonomial
   \left[\det(P_{n}(Q^2(\kappa) + \mu^2)) det(Q^2(\kappa_2) + \mu^2_2)\right]^{-1}
   \]
 \end{itemize}
-Each of them has different options:
+Each of them has different options
+:
 \begin{itemize}
 \item {\ttfamily DET, CLOVERDET}:
   \begin{itemize}
-  \item {\ttfamily 2KappaMu}
-  \end{itemize}
-\item {\ttfamily CLOVERDET}:
-  \begin{itemize}
-  \item {\ttfamily csw}
-  \end{itemize}
-\item {\ttfamily DET, CLOVERDET}:
-  \begin{itemize}
   \item {\ttfamily Kappa}
+  \item {\ttfamily 2KappaMu}
   \item {\ttfamily Timescale}: the timescale on which to integrate
     this monomial. Counting starts from zero up to the total number of
     timescales minus 1.
@@ -439,19 +444,36 @@ Each of them has different options:
   \item {\ttfamily MaxSolverIterations}: default is $5000$
   \item {\ttfamily Solver}: the solver to be used, either CG or
     BiCGstab. Default is CG.
+  \item {\ttfamily HB\_Solver}: the solver to be used in the heatbath step, see section \ref{sec:hb.solver} for details.
   \item {\ttfamily Name}: a name to be assigned to the monomial. The
     default is {\ttfamily DET}
+  \item {\ttfamily UseExternalInverter} 
+  Equal to either {\ttfamily no} (default value) or {\ttfamily quda}.
   \end{itemize}
+%
+\item {\ttfamily CLOVERDET}:
+\begin{itemize}
+	\item {\ttfamily csw}
+	\item {\ttfamily UseExternalLibrary} 
+	Equal to either {\ttfamily no} (default value) or {\ttfamily quda}.
+\end{itemize}
+%
 \item {\ttfamily DETRATIO}: the same as for {\ttfamily DET}, but in
   addition:
   \begin{itemize}
   \item {\ttfamily 2KappaMu2}
   \item {\ttfamily Kappa2}
-  \item {\ttfamily Name}: a name to be assigned to the monomial. The
-    default is {\ttfamily DETRATIO}
+  \item {\ttfamily Name}: 
+    a name to be assigned to the monomial. 
+    The default is {\ttfamily DETRATIO}
+  \item {\ttfamily UseExternalInverter} 
+  Equal to either {\ttfamily no} (default value) or {\ttfamily quda}.
   \end{itemize}
-
-
+%
+\item {\ttfamily CLOVERDETRATIO}: 
+  see {\ttfamily CLOVERDET} and {\ttfamily DETRATIO}.
+ 
+%
 \item {\ttfamily GAUGE}: 
   \begin{itemize}
   \item {\ttfamily Timescale}: the timescale on which to integrate
@@ -473,6 +495,8 @@ Each of them has different options:
   \item {\ttfamily RectangleCoefficient}: the value of the parameter
     $c_1$. The coefficient $c_0$ is computed from $c_0 = 1-8c_1$. Is
     effective only for {\ttfamily type = user}.
+   \item {\ttfamily UseExternalLibrary} 
+  Equal to either {\ttfamily no} (default value) or {\ttfamily quda}.
   \end{itemize}
   There is maximally one instance allowed of this type.
   
@@ -630,6 +654,24 @@ This monomial needs a valid {\ttfamily RootsFile} and {\ttfamily LocNormConst} p
 {\ttfamily <epsilon>} is to be replaced by the ratio  {\ttfamily Lmin/Lmax}.
 \end{itemize}
 
+\subsubsection{The heatbath solver}
+\label{sec:hb.solver}
+
+Inside each monomial the user specifies the solver for the inversion of the Dirac operator.
+The solver used in the HB (heatbath) can be different from the MD (Molecular Dynamics) and ACC step (acceptance step).
+%
+This is determined by the {\ttfamily HB\_solver} parameter inside the {\ttfamily BeginMonomial}-{\ttfamily EndMonomial}.
+Supported values: CG, MIXEDCG, RGMIXEDCG, BICGSTAB, MIXEDBICGSTAB, MG.
+If specified, the following (optional) parameters of the HB solver are parsed:
+\begin{itemize}
+    \item {\ttfamily HB\_MaxSolverIterations}: analogous to {\ttfamily MaxSolverIterations}
+    \item {\ttfamily HB\_UseExternalInverter}: analogous to {\ttfamily UseExternalInverter}
+    \item {\ttfamily HB\_UseSloppyPrecision}: analogous to {\ttfamily UseSloppyPrecision}
+    \item {\ttfamily HB\_UseCompression}: analogous to {\ttfamily UseCompression} 
+\end{itemize}
+%
+Their default values are taken from the corresponding MD solver parameters.
+
 \subsubsection{The Integrator}
 
 The Integrator can be specified similar to the monomials:
@@ -766,9 +808,21 @@ where {\ttfamily TYPE} can be currently one of the following:
   \begin{itemize}
   \item {\ttfamily Directions} can be either $0$ for time- or $3$ for z-direction.
   \end{itemize}
+
+\item {\ttfamily GRADIENTFLOW}:
+  \begin{itemize}
+    \item {\ttfamily UseExternalLibrary} \\
+    Equal to either {\ttfamily no} (default value) or {\ttfamily quda}.
+    \item {\ttfamily StepSize} \\
+    ({\ttfamily floating point}) - Gradient flow step size for the numerical integration of the flow equation.
+    \item {\ttfamily MaxFlowTime} \\
+    ({\ttfamily floating point}) - Maximum gradient flow time.
+  \end{itemize}
+
 \end{itemize}
 The frequency of measuring all of these can be adjusted with the
 Option {\ttfamily Frequency}. 
+
 
 \subsubsection{Example Input File}
 

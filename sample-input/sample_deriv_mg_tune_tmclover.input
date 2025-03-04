@@ -1,0 +1,98 @@
+NrXProcs = 1
+NrYProcs = 1
+NrZProcs = 1
+ompnumthreads = 3
+
+L=24
+T=48
+
+Measurements = 5
+NSave = 1
+InitialStoreCounter = 2000
+
+2KappaMu = 0.000224102400
+2KappaMuBar = 0.0394421632
+2KappaEpsBar = 0.0426076209
+CSW = 1.74
+kappa = 0.1400640
+
+ThetaT = 1.0
+UseEvenOdd = yes
+DebugLevel = 3
+
+UseRelativePrecision = yes
+
+BeginExternalInverter QUDA
+  Pipeline = 24
+  gcrNkrylov = 24
+  MGNumberOfLevels = 3
+  MGNumberOfVectors = 24, 24
+  MGSetupSolver = cg
+  MGSetup2KappaMu = 0.000224102400
+  MGVerbosity = silent, silent, silent
+  MGSetupSolverTolerance = 5e-7, 5e-7
+  MGSetupMaxSolverIterations = 1500, 1500
+  MGCoarseSolverType = gcr, gcr, cagcr
+  MGSmootherType = cagcr, cagcr, cagcr
+  MGBlockSizesX = 4,3
+  MGBlockSizesY = 4,3
+  MGBlockSizesZ = 4,3
+  MGBlockSizesT = 3,2
+
+  ## the following MG parameters can be tuned by the algorithm 
+  MGCoarseMuFactor = 1.0, 1.0, 18.0
+  MGCoarseMaxSolverIterations = 10, 10, 10
+  MGCoarseSolverTolerance = 0.1, 0.1, 0.1
+  MGSmootherPostIterations = 2, 2, 2
+  MGSmootherPreIterations = 0, 0, 0
+  MGSmootherTolerance = 0.1, 0.1, 0.1
+  MGOverUnderRelaxationFactor = 0.85, 0.85, 0.85
+EndExternalInverter
+
+BeginTuneMGParams QUDA
+  MGCoarseMuFactorSteps = 10, 10, 10
+  MGCoarseMuFactorDelta = 0.125, 0.25, 5
+
+  MGCoarseMaxSolverIterationsSteps = 10, 10, 10
+  MGCoarseMaxSolverIterationsDelta = 5, 5, 5
+
+  MGCoarseSolverToleranceSteps = 10, 10, 10
+  MGCoarseSolverToleranceDelta = 0.05, 0.05, 0.05
+
+  MGSmootherPreIterationsSteps = 4, 4, 4
+  MGSmootherPreIterationsDelta = 1, 1, 1
+
+  MGSmootherPostIterationsSteps = 6, 6, 6
+  MGSmootherPostIterationsDelta = 1, 1, 1
+
+  MGSmootherToleranceSteps = 4, 4, 4
+  MGSmootherToleranceDelta = 0.05, 0.05, 0.05
+
+  MGOverUnderRelaxationFactorSteps = 4, 4, 4
+  MGOverUnderRelaxationFactorDelta = 0.05, 0.05, 0.05
+
+  MGTuningIterations = 150
+
+  # when in a particular tuning step the improvement is less than 4 per-mille, we
+  # move on to the next parameter to be tuned
+  MGTuningTolerance = 0.996
+  # in the calculation of the best time to solution, we ignore "improvements" at the
+  # 1 per-mille level to avoid being affected by performance fluctuations
+  MGTuningIgnoreThreshold = 0.999 
+EndTuneMGParams
+
+BeginMonomial CLOVERDET
+  Timescale = 0
+  kappa = 0.1400640
+  2KappaMu = 0.000224102400
+  CSW = 1.74
+  rho = 0.0
+  MaxSolverIterations = 250
+  AcceptancePrecision =  1.e-21
+  ForcePrecision = 1.e-16
+  Name = cloverdetlight
+  solver = mg
+  useexternalinverter = quda
+  usesloppyprecision = single
+EndMonomial
+

@@ -19,7 +19,7 @@
  ************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-#include<config.h>
+#include<tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -35,7 +35,6 @@
 #include <stdlib.h>
 
 #include "global.h"
-#include "config.h"
 #include "su3.h"
 #include "sse.h"
 #include "monomial/monomial.h"

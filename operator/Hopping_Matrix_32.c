@@ -48,7 +48,7 @@
  ****************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 
 // work-around for missing single precision implementation of inline SSE

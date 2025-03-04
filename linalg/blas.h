@@ -25,7 +25,7 @@
 
 #if defined CRAY || defined HITACHI
 /* On the CRAY is all different, of course... */
-#include"fortran.h"
+#include "fortran.h"
 #define zgemm ZGEMM
 #define zgemv ZGEMV
 #define cgemv CGEMV

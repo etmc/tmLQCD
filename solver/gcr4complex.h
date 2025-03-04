@@ -20,8 +20,8 @@
 #ifndef _GCR4COMPLEX_H
 #define _GCR4COMPLEX_H
 
-#include"solver/matrix_mult_typedef.h"
-#include"su3.h"
+#include "solver/matrix_mult_typedef.h"
+#include "su3.h"
 
 
 #define _PSWITCH(s) s 
@@ -29,7 +29,7 @@
 #define _C_TYPE _Complex double
 #define _F_TYPE double
 
-#include"gcr4complex_body.h"
+#include "gcr4complex_body.h"
 
 #undef _PSWITCH
 #undef _PTSWITCH
@@ -41,7 +41,7 @@
 #define _C_TYPE _Complex float
 #define _F_TYPE float
 
-#include"gcr4complex_body.h"
+#include "gcr4complex_body.h"
 
 #undef _PSWITCH
 #undef _PTSWITCH

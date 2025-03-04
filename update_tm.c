@@ -29,17 +29,17 @@
 
 #include <lime.h>
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
-# include <omp.h>
+#include <omp.h>
 #endif
 #include "global.h"
 #include "start.h"
@@ -188,7 +188,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
     if(accept) {
       /* save gauge file to disk before performing reversibility check */
-      xlfInfo = construct_paramsXlfInfo((*plaquette_energy)/(6.*VOLUME*g_nproc), traj_counter);
+      xlfInfo = construct_paramsXlfInfo((new_plaquette_energy)/(6.*VOLUME*g_nproc), traj_counter);
       // Should write this to temporary file first, and then check
       if(g_proc_id == 0 && g_debug_level > 0) {
         fprintf(stdout, "# Writing gauge field to file %s.\n", tmp_filename);
@@ -304,6 +304,9 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       if(g_proc_id == 0 && g_debug_level > 0) {
         fprintf(stdout, "# Reading done.\n");
       }
+      // when we've read back the gauge field, we do a large step
+      update_tm_gauge_id(&g_gauge_state, TM_GAUGE_PROPAGATE_THRESHOLD);
+      update_tm_gauge_id(&g_gauge_state_32, TM_GAUGE_PROPAGATE_THRESHOLD);
     }
     if(g_proc_id == 0) {
       fprintf(stdout, "# Reversibility check done.\n");
@@ -325,6 +328,11 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
         }
       }
     }
+    // su3 restoration should also trigger the updated gauge field to be
+    // propagated, but we're not too harsh here
+    // FIXME: this may need more thought
+    update_tm_gauge_id(&g_gauge_state, TM_GAUGE_PROPAGATE_MIN);
+    update_tm_gauge_id(&g_gauge_state_32, TM_GAUGE_PROPAGATE_MIN);
   }
   else { /* reject: copy gauge_tmp to hf.gaugefield */
 #ifdef TM_USE_OMP
@@ -337,6 +345,10 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
         _su3_assign(*v,*w);
       }
     }
+    // by default we use a large step here to make sure that any checks
+    // will result in the updated gauge field to be propagated
+    update_tm_gauge_id(&g_gauge_state, TM_GAUGE_PROPAGATE_THRESHOLD);
+    update_tm_gauge_id(&g_gauge_state_32, TM_GAUGE_PROPAGATE_THRESHOLD);
 #ifdef DDalphaAMG
     MG_reset();
 #endif
@@ -346,10 +358,14 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   g_update_gauge_copy_32 = 1;  
 #ifdef TM_USE_MPI
   xchange_gauge(hf.gaugefield);
+  update_tm_gauge_exchange(&g_gauge_state);
 #endif
   
   /*Convert to a 32 bit gauge field, after xchange*/
-  convert_32_gauge_field(g_gauge_field_32, hf.gaugefield, VOLUMEPLUSRAND + g_dbw2rand); 
+  convert_32_gauge_field(g_gauge_field_32, hf.gaugefield, VOLUMEPLUSRAND + g_dbw2rand);
+#ifdef TM_USE_MPI
+  update_tm_gauge_exchange(&g_gauge_state_32);
+#endif
   
   etime=gettime();
 
@@ -375,7 +391,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     }
     fprintf(datafile, "%d %e", accept, etime-atime);
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0) {
-      fprintf(datafile, " %e", (*rectangle_energy)/(12*VOLUME*g_nproc));
+      fprintf(datafile, " %e", (*rectangle_energy)/(12.*VOLUME*g_nproc));
     }
     fprintf(datafile, "\n");
     fflush(datafile);

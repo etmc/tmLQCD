@@ -1,9 +1,8 @@
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
-#include <config.h>
 #include <complex.h>
 #include <time.h>
 #include <cu/cu.h>

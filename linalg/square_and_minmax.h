@@ -26,7 +26,7 @@
  *     Returns the square norm of *P and the local minimal/maximal norm */
 
 /* double square_and_minmax(spinor * const P, spinor * const Q )
- *     Returns the square norm of *P/*Q (locally) and the local minimal/maximal norm */
+ *     Returns the square norm of *P / *Q (locally) and the local minimal/maximal norm */
 
 void square_and_minmax(double * const sum, double * const min, double * const max, const spinor * const P, const int N);
 void square_and_minmax_rel(double * const sum, double * const min, double * const max, const spinor * const P,  const spinor * const Q, const int N);

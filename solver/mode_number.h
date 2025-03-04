@@ -1,4 +1,7 @@
 
+#ifndef _MODE_NUMBER_H
+#define _MODE_NUMBER_H
+
 #include "su3.h"
 
 extern int x_n_cheby;
@@ -8,4 +11,4 @@ void mode_number(spinor * const, double const mstar);
 
 void Check_Approximation(double const mstar, const int repro);
 
-
+#endif

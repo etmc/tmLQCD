@@ -20,10 +20,10 @@
 #ifndef _SPINOR_H
 #define _SPINOR_H
 
-#include <su3.h>
+#include "su3.h"
 
-#include <io/selector.h>
-#include <io/utils.h>
+#include "io/selector.h"
+#include "io/utils.h"
 
 int read_spinor(spinor * const s, spinor * const r, char * filename, const int position);
 int read_binary_spinor_data(spinor * const s, spinor * const r, READER * reader, DML_Checksum * checksum);
