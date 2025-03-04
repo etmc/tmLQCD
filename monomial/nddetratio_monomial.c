@@ -114,12 +114,9 @@ double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
 	     id, mnl->energy0 - mnl->energy1);
     }
   }
-<<<<<<< HEAD
   
   g_kappa=kappa_tmp;
   
-=======
   tm_stopwatch_pop(&g_timers, 0, 1, "");
->>>>>>> master
   return(mnl->energy1 - mnl->energy0);
 }
