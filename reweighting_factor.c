@@ -96,38 +96,38 @@ void reweighting_factor(const int N, const int nstore) {
     for(int j = 0; j < no_monomials; j++) {
       mnl = &monomial_list[j];
       if(mnl->type != GAUGE) {
-	if(mnl->even_odd_flag) {
-	  random_spinor_field_eo(mnl->pf, mnl->rngrepro, RN_GAUSS);
+	      if(mnl->even_odd_flag) {
+	        random_spinor_field_eo(mnl->pf, mnl->rngrepro, RN_GAUSS);
           mnl->energy0 = square_norm(mnl->pf, n/2, 1);
-	}
-	else {
+	      }
+	      else {
           random_spinor_field_lexic(mnl->pf, mnl->rngrepro, RN_GAUSS);
           mnl->energy0 = square_norm(mnl->pf, n, 1);
         }
-	if(mnl->type == NDDETRATIO || mnl->type == NDCLOVERRATCOR) {
-	  if(mnl->even_odd_flag) {
-	    random_spinor_field_eo(mnl->pf2, mnl->rngrepro, RN_GAUSS);
+	      if(mnl->type == NDDETRATIO || mnl->type == NDCLOVERRATCOR) {
+	        if(mnl->even_odd_flag) {
+	          random_spinor_field_eo(mnl->pf2, mnl->rngrepro, RN_GAUSS);
             mnl->energy0 += square_norm(mnl->pf2, n/2, 1);
-	  }
-	  else {
+	        }
+	        else {
             random_spinor_field_lexic(mnl->pf2, mnl->rngrepro, RN_GAUSS);
             mnl->energy0 += square_norm(mnl->pf2, n, 1);
           }
-	}
-	if(g_proc_id == 0 && g_debug_level > 1) {
-	  printf("# monomial[%d] %s, energy0 = %e\n", j, mnl->name, mnl->energy0);
-	}
+	      }
+	      if(g_proc_id == 0 && g_debug_level > 1) {
+	        printf("# monomial[%d] %s, energy0 = %e\n", j, mnl->name, mnl->energy0);
+	      }
       }
     }
 
     for(int j = 0; j < no_monomials; j++) {
       mnl = &monomial_list[j];
       if(mnl->type != GAUGE) {
-	double y = mnl->accfunction(j, &hf);
-	data[i*no_monomials + j] = y;
-	if(g_proc_id == 0 && g_debug_level > 0) {
-	  printf("# monomial[%d] %s, stochastic part: w_%d=%e exp(w_%d)=%e\n", j, mnl->name, j, y, j, exp(y));
-	}
+	      double y = mnl->accfunction(j, &hf);
+	      data[i*no_monomials + j] = y;
+	      if(g_proc_id == 0 && g_debug_level > 0) {
+	        printf("# monomial[%d] %s, stochastic part: w_%d=%e exp(w_%d)=%e\n", j, mnl->name, j, y, j, exp(y));
+	      }
       }
     }
   }
