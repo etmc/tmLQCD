@@ -133,6 +133,18 @@ void reweighting_factor(const int N, const int nstore) {
   }
   
   if(g_proc_id == 0) {
+    // summing all stochastic sources e^(ws)= sum_i e^(w_i+trlog)
+    // trying to not lose precision by summing the exponentials as ws = w_0 + trlog + log(sum_i e^(w_i - w_0))
+    for(int j = 0; j < no_monomials; j++) {
+      double ws = 0;
+      for(int i = 0; i < N; i++) {
+        ws += exp(data[i*no_monomials + j] - data[0*no_monomials + j]);
+      }
+      ws = log(ws);
+      ws += data[0*no_monomials + j] + trlog[j];
+      printf("# monomial[%d] %s, reweighting_factor for conf %.5d, ws = %.12e\n", j, monomial_list[j].name, nstore, ws);
+    }
+
     char filename[50];
     sprintf(filename, "reweighting_factor.data.%.5d", nstore);
     if((ofs = fopen(filename, "w")) == NULL) {
@@ -142,7 +154,7 @@ void reweighting_factor(const int N, const int nstore) {
       for(int j = 0; j < no_monomials; j++) {
         mnl = &monomial_list[j];
         for(int i = 0; i < N; i++) {
-          fprintf(ofs, "%.2d %.5d %.12f %.12f %.12f %.12f %.10e\n", j, i, mnl->kappa, mnl->kappa2, mnl->mu, mnl->mu2, data[i*no_monomials + j] + trlog[j]);
+          fprintf(ofs, "%.2d %.5d %.12f %.12f %.12f %.12f %.12e\n", j, i, mnl->kappa, mnl->kappa2, mnl->mu, mnl->mu2, data[i*no_monomials + j] + trlog[j]);
         }
       }
       fclose(ofs);
