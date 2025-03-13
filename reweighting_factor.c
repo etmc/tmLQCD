@@ -56,15 +56,15 @@ void reweighting_factor(const int N, const int nstore) {
       init_sw_fields();
 
       if(mnl->type != NDCLOVERRATCOR && (mnl->kappa != mnl->kappa2
-                                       || (mnl->type == NDDETRATIO 
+                                       || (mnl->type == NDCLOVERDETRATIO
                                            && (mnl->mubar != mnl->mubar2 || mnl->epsbar != mnl->epsbar2))
-                                       || (mnl->type != NDDETRATIO
+                                       || (mnl->type == CLOVERDETRATIORW
                                            && (mnl->mu != mnl->mu2)))) {
         double c_sw = mnl->c_sw;
         if(c_sw < 0.) c_sw = 0.;
         
         sw_term( (const su3**) hf.gaugefield, mnl->kappa, c_sw); 
-        if(mnl->type != NDDETRATIO) {
+        if(mnl->type == CLOVERDETRATIORW) {
           trlog[j] = -sw_trace(0, mnl->mu);
         }
         else {
@@ -72,7 +72,7 @@ void reweighting_factor(const int N, const int nstore) {
         }
         
         sw_term( (const su3**) hf.gaugefield, mnl->kappa2, c_sw);
-        if(mnl->type != NDDETRATIO) {
+        if(mnl->type == CLOVERDETRATIORW) {
           trlog[j] -= -sw_trace(0, mnl->mu2);
         }
         else {
