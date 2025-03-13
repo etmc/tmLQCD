@@ -538,6 +538,7 @@ int init_monomials(const int V, const int even_odd_flag) {
         monomial_list[i].derivativefunction = NULL;
         monomial_list[i].pf2 = __pf+no*V;
         monomial_list[i].timescale = -5;
+        retval = init_nddetratio(&(monomial_list[i].rat));
         no++;
         if(g_proc_id == 0 && g_debug_level > 1) {
           printf("# Initialised monomial %s of type NDDETRATIO, no_monomials= %d."
@@ -552,8 +553,8 @@ int init_monomials(const int V, const int even_odd_flag) {
         monomial_list[i].derivativefunction = NULL;
         monomial_list[i].pf2 = __pf+no*V;
         monomial_list[i].timescale = -5;
-        no++;
         retval = init_nddetratio(&(monomial_list[i].rat));
+        no++;
         if(g_proc_id == 0 && g_debug_level > 1) {
           printf("# Initialised monomial %s of type NDCLOVERDETRATIO, no_monomials= %d."
               " Currently only available for reweighting!\n",
