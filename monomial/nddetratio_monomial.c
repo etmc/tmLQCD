@@ -58,6 +58,7 @@ int init_nddetratio(rational_t * rat) {
     fprintf(stderr, "Could not allocate memory for coefficients in init_rational\n");
     return(-2);
   }
+  rat->mu[0] = 0;
 }
 
 double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
@@ -97,11 +98,10 @@ double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
     mnl->solver_params.rel_prec = g_relative_precision_flag;               
     mnl->solver_params.sdim = VOLUME/2;
     mnl->solver_params.no_shifts = mnl->rat.np; // set to 1 by init_nddetratio
-    mnl->solver_params.shifts = mnl->rat.mu;
-    printf("MARCO mnl->rat.np %d  mnl->rat.mu %d   %d  %d\n", mnl->solver_params.no_shifts, mnl->solver_params.shifts, mnl->solver_params.external_inverter, QUDA_INVERTER );
+    mnl->solver_params.shifts = mnl->rat.mu; // set to 0 by init_nddetratio
     mnl->solver_params.type = mnl->solver;
-    mnl->solver_params.M_ndpsi = &Q_pm_ndpsi;
-    mnl->solver_params.M_ndpsi32 = &Q_pm_ndpsi_32; 
+    mnl->solver_params.M_ndpsi = Q_pm_ndpsi;
+    mnl->solver_params.M_ndpsi32 = Q_pm_ndpsi_32; 
     spinor ** out0 = (spinor**)malloc((mnl->rat.np)*sizeof(spinor*));
     spinor ** out1 = (spinor**)malloc((mnl->rat.np)*sizeof(spinor*));
     for (int j=0;j<mnl->rat.np;j++) {
@@ -110,6 +110,11 @@ double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
     }
     iter = solve_mms_nd(out0, out1, mnl->pf, mnl->pf2,
                         &(mnl->solver_params));
+    for (int j=0;j<mnl->rat.np;j++) {
+      out0[j] = NULL;
+      out1[j] = NULL;
+    }
+    free(out0); free(out1);
     tm_stopwatch_push(&g_timers, "Q_dagger_ndpsi", "");
     Q_dagger_ndpsi(mnl->w_fields[2], mnl->w_fields[3],
                    mnl->w_fields[0], mnl->w_fields[1]);
