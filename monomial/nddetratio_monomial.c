@@ -66,16 +66,22 @@ double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   
   double kappa_tmp;
+  double csw_tmp;
   tm_stopwatch_push(&g_timers, __func__, mnl->name);
-  matrix_mult_nd Q_pm_ndpsi = Qtm_pm_ndpsi, Q_pm_ndpsi_32 = Qtm_pm_ndpsi_32, Q_dagger_ndpsi = Qtm_dagger_ndpsi, Q_ndpsi = Qtm_ndpsi;
+  matrix_mult_nd Q_pm_ndpsi = Qtm_pm_ndpsi, Q_dagger_ndpsi = Qtm_dagger_ndpsi, Q_ndpsi = Qtm_ndpsi;
+  matrix_mult_nd32 Q_pm_ndpsi_32 = Qtm_pm_ndpsi_32;
   
   kappa_tmp=g_kappa;
-  
+  csw_tmp=g_c_sw;
+
   g_kappa=mnl->kappa;
   g_mubar = mnl->mubar;
   g_epsbar = mnl->epsbar;
   boundary(mnl->kappa);
-
+  if(mnl->type == NDDETRATIO) {
+    // NDDETRATIO does not have clover term so we need to set c_sw to zero otherwise QUDA will use it
+    g_c_sw = 0;
+  }
   if(mnl->type == NDCLOVERDETRATIO) {
     Q_pm_ndpsi = Qsw_pm_ndpsi;
     Q_pm_ndpsi_32 = Qsw_pm_ndpsi_32;
@@ -146,7 +152,8 @@ double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
     }
   }
   
-  g_kappa=kappa_tmp;
+  g_kappa = kappa_tmp;
+  g_c_sw = csw_tmp;
   
   tm_stopwatch_pop(&g_timers, 0, 1, "");
   return(mnl->energy1 - mnl->energy0);
