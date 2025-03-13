@@ -50,8 +50,15 @@
 #include "hamiltonian_field.h"
 #include "nddetratio_monomial.h"
 #include "DDalphaAMG_interface.h"
+#include "operator/tm_operators_nd_32.h"
 
-
+int init_nddetratio(rational_t * rat) {
+  rat->np = 1;
+  if((rat->mu = (double*)malloc(rat->np*sizeof(double))) == NULL)  {
+    fprintf(stderr, "Could not allocate memory for coefficients in init_rational\n");
+    return(-2);
+  }
+}
 
 double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
   int iter;
@@ -59,7 +66,7 @@ double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
   
   double kappa_tmp;
   tm_stopwatch_push(&g_timers, __func__, mnl->name);
-  matrix_mult_nd Q_pm_ndpsi = Qtm_pm_ndpsi, Q_dagger_ndpsi = Qtm_dagger_ndpsi, Q_ndpsi = Qtm_ndpsi;
+  matrix_mult_nd Q_pm_ndpsi = Qtm_pm_ndpsi, Q_pm_ndpsi_32 = Qtm_pm_ndpsi_32, Q_dagger_ndpsi = Qtm_dagger_ndpsi, Q_ndpsi = Qtm_ndpsi;
   
   kappa_tmp=g_kappa;
   
@@ -70,6 +77,7 @@ double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
 
   if(mnl->type == NDCLOVERDETRATIO) {
     Q_pm_ndpsi = Qsw_pm_ndpsi;
+    Q_pm_ndpsi_32 = Qsw_pm_ndpsi_32;
     Q_dagger_ndpsi = Qsw_dagger_ndpsi;
     Q_ndpsi = Qsw_ndpsi;
     init_sw_fields();
@@ -81,9 +89,27 @@ double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
                         mnl->accprec, mnl->maxiter, g_relative_precision_flag, 
                         VOLUME/2, g_gauge_field, Q_ndpsi);
   } else {
-    iter = cg_her_nd(mnl->w_fields[0], mnl->w_fields[1], mnl->pf, mnl->pf2,
-                     mnl->maxiter, mnl->accprec, g_relative_precision_flag, 
-                     VOLUME/2, Q_pm_ndpsi);
+    // iter = cg_her_nd(mnl->w_fields[0], mnl->w_fields[1], mnl->pf, mnl->pf2,
+    //                  mnl->maxiter, mnl->accprec, g_relative_precision_flag, 
+    //                  VOLUME/2, Q_pm_ndpsi);
+    mnl->solver_params.max_iter = mnl->maxiter;
+    mnl->solver_params.squared_solver_prec = mnl->accprec;
+    mnl->solver_params.rel_prec = g_relative_precision_flag;               
+    mnl->solver_params.sdim = VOLUME/2;
+    mnl->solver_params.no_shifts = mnl->rat.np; // set to 1 by init_nddetratio
+    mnl->solver_params.shifts = mnl->rat.mu;
+    printf("MARCO mnl->rat.np %d  mnl->rat.mu %d   %d  %d\n", mnl->solver_params.no_shifts, mnl->solver_params.shifts, mnl->solver_params.external_inverter, QUDA_INVERTER );
+    mnl->solver_params.type = mnl->solver;
+    mnl->solver_params.M_ndpsi = &Q_pm_ndpsi;
+    mnl->solver_params.M_ndpsi32 = &Q_pm_ndpsi_32; 
+    spinor ** out0 = (spinor**)malloc((mnl->rat.np)*sizeof(spinor*));
+    spinor ** out1 = (spinor**)malloc((mnl->rat.np)*sizeof(spinor*));
+    for (int j=0;j<mnl->rat.np;j++) {
+      out0[j] = mnl->w_fields[0];
+      out1[j] = mnl->w_fields[1];
+    }
+    iter = solve_mms_nd(out0, out1, mnl->pf, mnl->pf2,
+                        &(mnl->solver_params));
     tm_stopwatch_push(&g_timers, "Q_dagger_ndpsi", "");
     Q_dagger_ndpsi(mnl->w_fields[2], mnl->w_fields[3],
                    mnl->w_fields[0], mnl->w_fields[1]);

@@ -250,7 +250,7 @@ int init_monomials(const int V, const int even_odd_flag) {
         init_swpm(VOLUME);
         if(monomial_list[i].external_library==QUDA_LIB){
           if(monomial_list[i].solver_params.external_inverter != QUDA_INVERTER){
-            tm_debug_printf(0,0,"Error: CLOVERDET monomial of UseExternalLibrary = quda is not supported without UseExternalInverter = quda\n");
+            tm_debug_printf(0,0,"Error: CLOVERDET monomial with UseExternalLibrary = quda is not supported without UseExternalInverter = quda\n");
             exit(1);
           }
         }
@@ -279,7 +279,7 @@ int init_monomials(const int V, const int even_odd_flag) {
         init_swpm(VOLUME);
         if(monomial_list[i].external_library==QUDA_LIB){
           if(monomial_list[i].solver_params.external_inverter != QUDA_INVERTER){
-            tm_debug_printf(0,0,"Error: CLOVERDETRATIO monomial of UseExternalLibrary = quda is not supported without UseExternalInverter = quda\n");
+            tm_debug_printf(0,0,"Error: CLOVERDETRATIO monomial with UseExternalLibrary = quda is not supported without UseExternalInverter = quda\n");
             exit(1);
           }
         }
@@ -455,7 +455,7 @@ int init_monomials(const int V, const int even_odd_flag) {
         }
         if(monomial_list[i].external_library==QUDA_LIB){
           if(monomial_list[i].solver_params.external_inverter != QUDA_INVERTER){
-            tm_debug_printf(0,0,"Error: NDCLOVERRAT monomial of UseExternalLibrary = quda is not supported without UseExternalInverter = quda\n");
+            tm_debug_printf(0,0,"Error: NDCLOVERRAT monomial with UseExternalLibrary = quda is not supported without UseExternalInverter = quda\n");
             exit(1);
           }
         }
@@ -553,6 +553,7 @@ int init_monomials(const int V, const int even_odd_flag) {
         monomial_list[i].pf2 = __pf+no*V;
         monomial_list[i].timescale = -5;
         no++;
+        retval = init_nddetratio(&(monomial_list[i].rat));
         if(g_proc_id == 0 && g_debug_level > 1) {
           printf("# Initialised monomial %s of type NDCLOVERDETRATIO, no_monomials= %d."
               " Currently only available for reweighting!\n",
