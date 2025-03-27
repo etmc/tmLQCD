@@ -104,7 +104,7 @@ void reweighting_factor(const int N, const int nstore) {
           random_spinor_field_lexic(mnl->pf, mnl->rngrepro, RN_GAUSS);
           mnl->energy0 = square_norm(mnl->pf, n, 1);
         }
-	      if(mnl->type == NDDETRATIO || mnl->type == NDCLOVERRATCOR) {
+	      if(mnl->type == NDDETRATIO || mnl->type == NDCLOVERDETRATIO  || mnl->type == NDCLOVERRATCOR) {
 	        if(mnl->even_odd_flag) {
 	          random_spinor_field_eo(mnl->pf2, mnl->rngrepro, RN_GAUSS);
             mnl->energy0 += square_norm(mnl->pf2, n/2, 1);
