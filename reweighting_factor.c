@@ -147,6 +147,7 @@ void reweighting_factor(const int N, const int nstore) {
 
     char filename[50];
     sprintf(filename, "reweighting_factor.data.%.5d", nstore);
+    printf("# writing reweighting factors to %s\n", filename);
     if((ofs = fopen(filename, "w")) == NULL) {
       fatal_error("Could not open file for data output", "reweighting_factor");
     }
@@ -162,5 +163,8 @@ void reweighting_factor(const int N, const int nstore) {
   }
   free(data);
   free(trlog);
+#ifdef TM_USE_MPI
+  MPI_Barrier(MPI_COMM_WORLD);
+#endif // TM_USE_MPI
 }
 
