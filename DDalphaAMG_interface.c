@@ -1135,7 +1135,8 @@ void MG_update_mu(double mu_tmLQCD, double shift_tmLQCD)
       mg_params.print=1;
     else
       mg_params.print=0;
-
+    
+	 mg_params.kappa = g_kappa;
     mg_params.mu = mu;
     mg_params.mu_even_shift = 0.0;
     mg_params.mu_odd_shift = shift;
@@ -1165,6 +1166,7 @@ void MG_update_mubar_epsbar(double mubar_tmLQCD, double epsbar_tmLQCD, double sh
     else
       mg_params.print=0;
 
+	 mg_params.kappa = g_kappa;
     mg_params.mu = mubar;
     mg_params.mu_even_shift = 0.0;
     mg_params.mu_odd_shift = 0.0;
