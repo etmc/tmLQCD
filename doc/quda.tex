@@ -1,7 +1,7 @@
 %author: Mario Schroeck <mario.schroeck@roma3.infn.it>
 %author: Bartosz Kostrzewa <bartosz_kostrzewa@fastmail.com>
 %date: 04/2015
-%date: 06/2017, 12/2017, 06/2018, 08/2019, 05/2022, 05/2023
+%date: 06/2017, 12/2017, 06/2018, 08/2019, 05/2022, 05/2023, 06/2023, 07/2023, 10/2023
 
 \subsection{QUDA: A library for QCD on GPUs}\label{subsec:quda}
 
@@ -461,6 +461,248 @@ Noting the largest of these, the next largest order of magnitude can be used for
 In other words, if the largest of these smallest eigenvalues is $4\cdot10^{-3}$, for example, then \texttt{MGEigSolverPolyMin} can be set to 0.01.
 This ensures that the desired (smallest) part of the spectrum is smaller than \texttt{MGEigSolverPolyMin} and that the entire spectrum is contained in the range up to \texttt{MGEigSolverPolyMax}.
 After this, polynomial acceleration can be enabled, which should reduce setup time significantly.
+
+\subsubsection{Autotuning MG parameters}
+
+The performance of the MG solver is sensitively dependent on the machine configuration, the local volume, the ensemble parameters as well as the combination of MG parameters.
+Parameter sets which are efficient on a particular machine for a particular ensemble may not be very inefficient on another machine or for another ensemble.
+This is the case, for example, when parameter sets tuned on NVIDIA-based machines are re-used on maches based on AMD accelerators, which show much lower coarse-grid performance and hence require a different balance of work on the coarse, intermediate and fine grids.
+
+The \texttt{deriv\_mg\_tune} executable hijacks the inversions required for the calculation of the derivative of \texttt{DET} monomials in order to provide a mechanism for tuning the MG parameters.
+It also supports tuning setups with coarse-grid deflation, even though this would of course not be used in the HMC.
+The parameters which can be tuned by the autotuner are: 
+\begin{itemize}
+  \item \texttt{MGCoarseMuFactor} (most relevant for twisted mass fermions),
+  \item \texttt{MGCoarseMaxSolverIterations},
+  \item \texttt{MGCoarseSolverTolerance},
+  \item \texttt{MGSmootherPostIterations},
+  \item \texttt{MGSmootherPreIterations},
+  \item \texttt{MGSmootherTolerance},
+  \item \texttt{MGOverUnderRelaxationFactor}.
+\end{itemize}
+
+The algorithm is designed to iterate through a number of configurations from the ensemble in question, although tuning is in principle possible also on a single one.
+In this case, however, one may find that the resulting setup does not perform well on different configurations of the same ensemble.
+As a result, it is recommended to use 5 to 8 well-separated configurations.
+
+Rather than performing an exhaustive search, the algorithm iterates through the different search directions at different levels of the grid hierarchy, always starting at the coarsest grid and working towards the finest.
+The metric is time to solution ($t_\mathrm{new}$). 
+If the initial setup fails to successfully invert the problem the algorith will continue going into a particular direction until an improvement is found.
+If improvement is found going into a particular search direction, the algorithm will accept this improvement only if the improvement factor $c$ is better than \texttt{MGTuningTolerance}, that is, $t_\mathrm{new} \leq c \cdot t_\mathrm{old}$.
+If this is not the case, the current search direction is abandoned for the next one in line.
+This is balanced by the fact that it might be necessary to perform multiple tuning iterations in a particular direction to even see sufficient improvement.
+Thus, in order to avoid stopping tuning into a particular direction too early, the parameter \texttt{MGTuningIgnoreThreshold} sets a threshold below which improvements are simply ignored.
+The algorithm then behaves as if no improvement had taken place in that particular iteration and may continue tuning into this direction to see what happens if the tuning parameter is increased or decreased further.
+
+The number of iterations to be performed at most in a particular direction is given by parameters of the form \texttt{MG[...]Steps} and the direction and step size is given by parameters of the form \texttt{MG[...]Delta}, which can either be postive or negative.
+When a particular search direction at a particular level should be skipped entirely, the corresponding \texttt{MG[...]Steps} should be set to \texttt{0}.
+
+The available parameters for the autotuner are (all of them must be set to something):
+
+\begin{itemize}
+  \item \texttt{MGTuningIterations}: Number of tuning iterations to perform for each gauge configuration in the current run. (positive integer, default \texttt{1000})
+  \item \texttt{MGTuningTolerance}: Improvement threshold which determines if a particular setup is better than the previous best setup. (postive real number $< 1.0$, default: \texttt{0.996})
+  \item \texttt{MGTuningIgnoreThreshold}: Treshold above which improvemets are ignored and a particular direction may be explored further. (positive real number $< 1.0$, should be larger than \texttt{MGTuningTolerance}, default: \texttt{0.999}) 
+  \item \texttt{MGCoarseMuFactorSteps}: Number of tuning steps to perform for the coarse $\mu$ factor at each level. (comma-separated list of positive integers or zero, one for each level, no default)
+  \item \texttt{MGCoarseMuFactorDelta}: Step size in the $\mu$ factor direction at each level. (comma-separated list of real numbers, one for each level, no default)
+  \item \texttt{MGCoarseMaxSolverIterationsSteps}: Number of tuning steps to perform for the number of coarse grid solver iterations. (comma-separated list of postive integers or zero, one for each level, no default)
+  \item \texttt{MGCoarseMaxSolverIterationsDelta}: Step size in the direction of the coarse grid solver iterations. (comma-separated list of integers, one for each level, no default)
+  \item \texttt{MGCoarseSolverToleranceSteps}: Number of tuning steps to perform for the coarse grid solver tolerance. (comma-separated list of positive integers or zero, one for each level, no default)
+  \item \texttt{MGCoarseSolverToleranceDelta}: Step size in the direction of the coarse grid solver tolerance. (comma-separated list of real numbers, one for each level, no default)
+  \item \texttt{MGSmootherPreIterationsSteps}: Number of tuning steps to perform for the number of pre-smoothing iterations. (comma-separated list of positive integers or zero, one for each level, no default)
+  \item \texttt{MGSmootherPreIterationsDelta}: Step size in the direction of pre-smoothing iterations. (comma-separated list of integers, one for each level, no default)
+  \item \texttt{MGSmootherPostIterationsSteps}: Number of tuning steps to perform for the number of post-smoothing iterations. (comma-separated list of positive integers or zero, one for each level, no default)
+  \item \texttt{MGSmootherToleranceSteps}: Number of tuning steps to perform for the smoother tolerance. (comma-separated list of intergers or zero, one for each level, no default)
+  \item \texttt{MGSmootherToleranceDelta}: Step size in the direction of the smoother tolarence. (comma-separated list of real numbers, one for each level, no default)
+  \item \texttt{MGOverUnderRelaxationFactorSteps}: Number of tuning steps to perform for the under-relaxation factor. (comma-separated list of positive integers or zero, one for each level, no default)
+  \item \texttt{MGOverUnderRelaxationFactorDelta}: Step size in the direction of the under-relaxation factor. (comma-separated list of real numbers, one for each level, no default)
+\end{itemize}
+
+A possible strategy for successfully tuning a setup could be to begin with a set of parameters which are not quite or just barely able to solve a particular linear system.
+The overall goal is to minimize the number of iterations performed on the coarsest and intermediate grids \emph{without} sacrificing the algorithmic efficiency of the MG or the stability of the solver with changing gauge configurations while minimizing total time to solution.
+
+\begin{itemize}
+  \item \texttt{MGCoarseMuFactor}: should be set too low (or \texttt{1.0} when coarse-grid deflation is used) and \texttt{MGCoarseMuFactorDelta} should be set positive and increase with grid coarseness (see example below)
+  \item \texttt{MGCoarseSolverTolerance}: should be set too low and \texttt{MGCoarseSolverToleranceDelta} should be set to a small positive number, such that the coarse-grid solver tolerance is increased (and hence the time spent on the coarse grid reduced) without sacrificing overall solver quality
+  \item \texttt{MGCoarseMaxSolverIterations}: should be set too low and \\
+    \texttt{MGCoarseMaxSolverIterationsDelta} should be set small and positive, hence slowly increasing the number of iterations for situations where \texttt{MGCoarseSolverTolerance} is not reached sufficiently quickly by the solver
+  \item \texttt{MGSmootherTolerance}: should be set too low and \texttt{MGSmootherToleranceDelta} small and positive, such that the smoother tolerance is increased (and hence the time spent in the smoother reduced) without sacrificing overall solver quality
+  \item \texttt{MGSmootherPostIterations}: should be set too low (to \texttt{2} on all levels, for example) and \texttt{MGSmootherPostIterationsDelta} to \texttt{1} or \texttt{2}, such that the number of iterations performed in the post-smoother is increased until the smoother reduces the error just enough for the setup to perform well
+  \item \texttt{MGSmootherPreIterations}: should be set too low (to \texttt{0} on all levels, for example) and \texttt{MGSmootherPreIterationsDelta} to \texttt{1} or \texttt{2}, such that the number of iterations performed in the pre-smoother is increased until the error is reduced just enough for the setup to perform well
+  \item \texttt{MGOverUnderRelaxationFactor}: should be set too low (to \texttt{0.85} on all levels, for example) and \texttt{MGOverUnderRelaxationFactorDelta} small and positive, such that the smoothing factor is increased slowly. Arguably the parameter with the smallest effect on time to solution.
+\end{itemize}
+
+As a full example, tuning a coarse-grid deflated setup on the \texttt{cB211.072.64} ETMC physical point ensemble might, as first attempt, start with the parameters below.
+Note that it is important that the \texttt{CLOVERDET} monomial below has \texttt{rho} set to \texttt{0.0} and that \texttt{MaxSolverIterations} is relatively high but not too large.
+The latter ensures that first successful solves will occur when the setup is still quite poor, such that the algorithm can find improvements early on.
+At the same time, setting it too high (to \texttt{1000}, say), will increase the time required for each tuning iteration as non-converging solver setups will run until \texttt{MaxSolverIterations} are reached.
+
+\begin{verbatim}
+BeginExternalInverter QUDA
+  Pipeline = 24
+  gcrNkrylov = 24
+  MGNumberOfLevels = 3
+  MGNumberOfVectors = 24, 32
+  MGSetupSolver = cg
+  MGSetup2KappaMu = 0.000200774160
+  MGVerbosity = silent, silent, silent
+  MGSetupSolverTolerance = 5e-7, 5e-7
+  MGSetupMaxSolverIterations = 1500, 1500
+  MGCoarseSolverType = gcr, gcr, cagcr
+  MGSmootherType = cagcr, cagcr, cagcr
+  MGBlockSizesX = 4,2
+  MGBlockSizesY = 4,2
+  MGBlockSizesZ = 4,2
+  MGBlockSizesT = 4,2
+ 
+  MGCoarseMuFactor = 1.0, 1.0, 1.0
+  MGCoarseMaxSolverIterations = 5, 5, 10
+  MGCoarseSolverTolerance = 0.1, 0.1, 0.1
+  MGSmootherPostIterations = 2, 2, 2
+  MGSmootherPreIterations = 0, 0, 0
+  MGSmootherTolerance = 0.1, 0.1, 0.1
+  MGOverUnderRelaxationFactor = 0.85, 0.85, 0.85  
+
+  MGUseEigSolver = no, no, yes 
+  MGEigSolverType = tr_lanczos, tr_lanczos, tr_lanczos
+  MGEigSolverSpectrum = smallest_real, smallest_real, smallest_real
+  MGEigPreserveDeflationSubspace = yes 
+  MGEigSolverNumberOfVectors = 0, 0, 1024
+  MGEigSolverKrylovSubspaceSize = 0, 0, 3072
+  MGEigSolverRequireConvergence = no, no, yes 
+  MGEigSolverMaxRestarts = 100, 100, 200 
+  MGEigSolverTolerance = 1e-4, 1e-4, 1e-4
+  MGEigSolverUseNormOp = no, no, yes 
+  MGEigSolverUseDagger = no, no, no
+  MGEigSolverUsePolynomialAcceleration = no, no, yes 
+  MGEigSolverPolynomialDegree = 100, 100, 100 
+  MGEigSolverPolyMin = 0.6, 0.6, 0.01
+  MGEigSolverPolyMax = 3.2, 3.2, 3.6 
+  MGCoarseSolverCABasisSize = 4, 4, 4
+EndExternalInverter
+
+BeginTuneMGParams QUDA
+  MGCoarseMuFactorSteps = 10, 10, 11
+  MGCoarseMuFactorDelta = 0.125, 0.25, 5.0
+
+  MGCoarseMaxSolverIterationsSteps = 10, 10, 10
+  MGCoarseMaxSolverIterationsDelta = 5, 5, 5
+
+  MGCoarseSolverToleranceSteps = 10, 10, 10
+  MGCoarseSolverToleranceDelta = 0.05, 0.05, 0.05
+
+  MGSmootherPreIterationsSteps = 3, 3, 3
+  MGSmootherPreIterationsDelta = 1, 1, 1
+
+  MGSmootherPostIterationsSteps = 5, 5, 5
+  MGSmootherPostIterationsDelta = 1, 1, 1
+
+  MGSmootherToleranceSteps = 4, 4, 4
+  MGSmootherToleranceDelta = 0.05, 0.05, 0.05
+
+  MGOverUnderRelaxationFactorSteps = 4, 4, 4
+  MGOverUnderRelaxationFactorDelta = 0.05, 0.05, 0.05
+
+  MGTuningIterations = 250
+
+  MGTuningTolerance = 0.992
+  MGTuningIgnoreThreshold = 0.998
+EndTuneMGParams
+
+BeginMonomial CLOVERDET
+  Timescale = 0
+  kappa =    0.1394265
+  2KappaMu = 0.000200774160
+  CSW = 1.69
+  rho = 0.0
+  MaxSolverIterations = 250
+  AcceptancePrecision =  1.e-21
+  ForcePrecision = 1.e-20
+  Name = cloverdetlight
+  solver= mg
+  UseExternalInverter = quda
+  UseSloppyPrecision = single
+EndMonomial
+\end{verbatim}
+
+The output of such a run could look as follows:
+
+\begin{SaveVerbatim}{tuning_log}
+[...]
+# TM_QUDA: Time for MG_Preconditioner_Setup 8.786779e+01 s level: 4 proc_id: 0 /DERIV_MG_TUNE/clover[...]
+# TM_QUDA: Time for reorder_spinor_eo_toQuda 4.243788e-02 s level: 4 proc_id: 0 /DERIV_MG_TUNE/clove[...]
+GCR: Convergence at 200 iterations, L2 relative residual: iterated = 2.339185e-04, true = 2.339185e-[...]
+# TM_QUDA: Time for invertQuda 8.447295e+00 s level: 4 proc_id: 0 /DERIV_MG_TUNE/cloverdetlight:clov[...]
+GCR: Convergence at 200 iterations, L2 relative residual: iterated = 2.339185e-04, true = 2.339185e-[...]
+# TM_QUDA: Time for invertQuda 8.348222e+00 s level: 4 proc_id: 0 /DERIV_MG_TUNE/cloverdetlight:clov[...]
+update_tuning_dir -- tuning_dir: mg_mu_factor, lvl: 2, cur_dir_steps_done: 0
+tuning_iteration: 2/150
+cur_tuning_lvl: 2
+cur_tuning_dir: mg_mu_factor
+steps_done_in_cur_dir: 0
+
+             mg_mu_factor: (1.000000, 1.000000, 60.000000) -> (1.000000, 1.000000, 65.000000)
+ mg_coarse_solver_maxiter: (5, 5, 10) -> (5, 5, 10)
+     mg_coarse_solver_tol: (0.100000, 0.100000, 0.100000) -> (0.100000, 0.100000, 0.100000)
+               mg_nu_post: (2, 2, 2) -> (2, 2, 2)
+                mg_nu_pre: (0, 0, 0) -> (0, 0, 0)
+          mg_smoother_tol: (0.100000, 0.100000, 0.100000) -> (0.100000, 0.100000, 0.100000)
+                 mg_omega: (0.850000, 0.850000, 0.850000) -> (0.850000, 0.850000, 0.850000)
+
+# TM_QUDA: Time for updateMultigridQuda 8.434204e-01 s level: 4 proc_id: 0 /DERIV_MG_TUNE/cloverdetl[...]
+GCR: Convergence at 200 iterations, L2 relative residual: iterated = 1.561599e-04, true = 1.561599e-[...]
+# TM_QUDA: Time for invertQuda 8.322407e+00 s level: 4 proc_id: 0 /DERIV_MG_TUNE/cloverdetlight:clov[...]
+
+QUDA-MG param tuner: BEST SET OF PARAMETERS
+-------------------------------------------
+             mg_mu_factor: (1.000000, 1.000000, 60.000000)
+ mg_coarse_solver_maxiter: (5, 5, 10)
+     mg_coarse_solver_tol: (0.100000, 0.100000, 0.100000)
+               mg_nu_post: (2, 2, 2)
+                mg_nu_pre: (0, 0, 0)
+          mg_smoother_tol: (0.100000, 0.100000, 0.100000)
+                 mg_omega: (0.850000, 0.850000, 0.850000)
+Timing: 8.138301, Iters: 200
+-------------------------------------------
+
+[...]
+
+QUDA-MG param tuner: BEST SET OF PARAMETERS
+-------------------------------------------
+             mg_mu_factor: (1.000000, 1.000000, 95.000000)
+ mg_coarse_solver_maxiter: (5, 5, 10)
+     mg_coarse_solver_tol: (0.100000, 0.100000, 0.100000)
+               mg_nu_post: (2, 2, 2)
+                mg_nu_pre: (0, 0, 0)
+          mg_smoother_tol: (0.100000, 0.100000, 0.100000)
+                 mg_omega: (0.850000, 0.850000, 0.850000)
+Timing: 5.237746, Iters: 130
+-------------------------------------------
+
+update_tuning_dir -- tuning_dir: mg_mu_factor, lvl: 2, cur_dir_steps_done: 7
+
+tuning_iteration: 9/150
+cur_tuning_lvl: 2
+cur_tuning_dir: mg_mu_factor
+steps_done_in_cur_dir: 7
+[...]
+
+tuning_iteration: 150/150
+
+[...]
+QUDA-MG param tuner: BEST SET OF PARAMETERS
+-------------------------------------------
+             mg_mu_factor: (1.750000, 2.500000, 140.000000)
+ mg_coarse_solver_maxiter: (5, 15, 20)
+     mg_coarse_solver_tol: (0.100000, 0.150000, 0.500000)
+               mg_nu_post: (3, 3, 2)
+                mg_nu_pre: (0, 1, 1)
+          mg_smoother_tol: (0.100000, 0.100000, 0.100000)
+                 mg_omega: (0.900000, 0.850000, 0.900000)
+Timing: 2.303901, Iters: 57
+-------------------------------------------
+\end{SaveVerbatim}
+\resizebox{\textwidth}{!}{\BUseVerbatim{tuning_log}}
 
 \subsubsection{Using the QUDA eigensolver in the HMC}
 

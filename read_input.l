@@ -269,8 +269,10 @@ static inline double fltlist_next_token(int * const list_end){
    * been compiled without the interface in question. */
 #ifdef TM_USE_QUDA
   extern tm_QudaParams_t quda_input;
+  extern tm_QudaMGTuningPlan_t quda_mg_tuning_plan;
 #else
   tm_QudaParams_t quda_input;
+  tm_QudaMGTuningPlan_t quda_mg_tuning_plan;
 #endif
 
 #ifdef TM_USE_QPHIX
@@ -636,6 +638,9 @@ static inline double fltlist_next_token(int * const list_end){
 
 %x INITEXTERNALINVERTER
 
+%x TUNEMGPARAMS
+%x TUNEQUDAMGPARAMS
+
 %x BARRIER_MONOMIALS_CONVERGE
 
 %%
@@ -721,6 +726,8 @@ static inline double fltlist_next_token(int * const list_end){
 ^BeginOperator{SPC}+               BEGIN(INITOPERATOR);
 
 ^BeginExternalInverter{SPC}+       BEGIN(INITEXTERNALINVERTER);
+
+^BeginTuneMGParams{SPC}+           BEGIN(TUNEMGPARAMS);
 
 ^PropagatorComparison{EQL}         BEGIN(PCOMP);
 ^NbCoresPerNode{EQL}               BEGIN(NBCORES);
@@ -1366,7 +1373,6 @@ static inline double fltlist_next_token(int * const list_end){
     if(myverbose) printf("  KernelEigenvectorsReadWrite set to 0 line %d operator %d\n", line_of_file, current_operator);
   }
 }
-
 
 <DBTMSOLVER,TMSOLVER,CSWSOLVER>{
   cg {
@@ -2022,6 +2028,14 @@ static inline double fltlist_next_token(int * const list_end){
     quda_input.enable_pinned_memory_pool = 0;
     if(myverbose) printf("Disabling QUDA's pinned memory pool on line %d\n\n", line_of_file);
   }
+  {SPC}*TuneMGParams{EQL}yes {
+    quda_input.mg_tune_params = 1;
+    if(myverbose) printf("Enabling MG parameter tuning on line %d\n\n", line_of_file);
+  }
+  {SPC}*TuneMGParams{EQL}no {
+    quda_input.mg_tune_params = 0;
+    if(myverbose) printf("Disabling MG parameter tuning on line %d\n\n", line_of_file);
+  }
   ^EndExternalInverter{SPC}*  { 
     if(myverbose) printf("QUDA external inverter parameters parsed on line %d\n\n", line_of_file);
     BEGIN(0);
@@ -2073,6 +2087,86 @@ static inline double fltlist_next_token(int * const list_end){
     BEGIN(0);
   }
 }
+
+<TUNEMGPARAMS>{TYPE} {
+  if(strcmp(yytext, "QUDA")==0) {
+#ifdef TM_USE_QUDA
+    quda_input.mg_tune_params = 1;
+    if(myverbose) printf("Enabling QUDA MG parameter tuning line %d\n", line_of_file);
+    BEGIN(TUNEQUDAMGPARAMS);
+#else
+    printf("Attempted to enable QUDA MG parameter tuning but tmLQCD has not been built with QUDA support. Exiting!\n");
+    exit(1);
+#endif
+  } else {
+    printf("Error on line %d, MG type '%s' is unknown. Exiting!\n", line_of_file, yytext);
+    exit(1);
+  }
+}
+<TUNEQUDAMGPARAMS>{
+  {SPC}*MGCoarseMuFactorSteps{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_mu_factor_steps[0]));
+  }
+  {SPC}*MGCoarseMuFactorDelta{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_mu_factor_delta[0]));
+  }
+  {SPC}*MGCoarseMaxSolverIterationsSteps{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_coarse_solver_maxiter_steps[0]));
+  }
+  {SPC}*MGCoarseMaxSolverIterationsDelta{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_coarse_solver_maxiter_delta[0]));
+  }
+  {SPC}*MGCoarseSolverToleranceSteps{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_coarse_solver_tol_steps[0]));
+  }
+  {SPC}*MGCoarseSolverToleranceDelta{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_coarse_solver_tol_delta[0]));
+  }
+  {SPC}*MGSmootherPreIterationsSteps{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_nu_pre_steps[0]));
+  }
+  {SPC}*MGSmootherPreIterationsDelta{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_nu_pre_delta[0]));
+  }
+  {SPC}*MGSmootherPostIterationsSteps{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_nu_post_steps[0]));
+  }
+  {SPC}*MGSmootherPostIterationsDelta{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_nu_post_delta[0]));
+  }
+  {SPC}*MGSmootherToleranceSteps{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_smoother_tol_steps[0]));
+  }
+  {SPC}*MGSmootherToleranceDelta{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_smoother_tol_delta[0]));
+  }
+  {SPC}*MGOverUnderRelaxationFactorSteps{EQL}{STRLIST} {
+    parse_quda_mg_int_par_array(yytext, &(quda_mg_tuning_plan.mg_omega_steps[0]));
+  }
+  {SPC}*MGOverUnderRelaxationFactorDelta{EQL}{STRLIST} {
+    parse_quda_mg_dbl_par_array(yytext, &(quda_mg_tuning_plan.mg_omega_delta[0]));
+  }
+  {SPC}*MGTuningIterations{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    quda_mg_tuning_plan.mg_tuning_iterations = a;
+    if(myverbose) printf(" Number of MG tuning iterations set to %d line %d\n", a, line_of_file);
+  }
+  {SPC}*MGTuningTolerance{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    quda_mg_tuning_plan.mg_tuning_tolerance = c;
+    if(myverbose) printf("  Tolerance for MG tuning set to %.3f line %d\n", c, line_of_file);
+  }
+  {SPC}*MGTuningIgnoreThreshold{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    quda_mg_tuning_plan.mg_tuning_ignore_threshold = c;
+    if(myverbose) printf("  Threshold for ignoring improvement for MG tuning (to ignore fluctuations) set to %.3f line %d\n", c, line_of_file);
+  }
+  ^EndTuneMGParams{SPC}*  {
+    if(myverbose) printf("QUDA-MG tuning parameters parsed on line %d\n\n", line_of_file);
+    BEGIN(0);
+  }
+}
+
 
 <INITMONOMIAL>{TYPE} {
   current_monomial++;
@@ -2564,7 +2658,7 @@ static inline double fltlist_next_token(int * const list_end){
   }
 }
 
-<NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL>{
+<NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{
   {SPC}*DegreeOfRational{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     mnl->rat.order = a;
@@ -3699,7 +3793,7 @@ static inline double fltlist_next_token(int * const list_end){
   BEGIN(comment_caller);
 }
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID,INITEXTERNALINVERTER,QUDAINVERTER,QPHIXINVERTER,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL>{SPC}*\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID,INITEXTERNALINVERTER,QUDAINVERTER,QPHIXINVERTER,NDDETRATMONOMIAL,NDCLDETRATMONOMIAL,TUNEQUDAMGPARAMS>{SPC}*\n   {
   line_of_file++;
 }
 <*>{SPC}*\n                       {
@@ -3951,7 +4045,11 @@ int read_input(char * conf_file){
   quda_input.mg_refresh_setup_mdu_threshold = _default_quda_mg_refresh_setup_mdu_threshold;
   quda_input.mg_reuse_setup_mu_threshold = _default_quda_mg_reuse_setup_mu_threshold;
   quda_input.mg_run_low_mode_check = QUDA_BOOLEAN_NO;
-  quda_input.mg_run_oblique_proj_check = QUDA_BOOLEAN_NO; 
+  quda_input.mg_run_oblique_proj_check = QUDA_BOOLEAN_NO;
+
+  quda_mg_tuning_plan.mg_tuning_iterations = _default_quda_mg_tuning_iterations;
+  quda_mg_tuning_plan.mg_tuning_tolerance = _default_quda_mg_tuning_tolerance;
+  quda_mg_tuning_plan.mg_tuning_ignore_threshold = _default_quda_mg_tuning_ignore_threshold; 
 
   /* Put -1 in PropInfo.format to see if parse_config() will
   change the value. If not then set it to source_format_flag */
