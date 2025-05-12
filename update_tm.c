@@ -41,25 +41,26 @@
 #ifdef TM_USE_OMP
 #include <omp.h>
 #endif
+#include "expo.h"
+#include "gettime.h"
 #include "global.h"
-#include "start.h"
-#include "sighandler.h"
-#include "operator/tm_operators.h"
-#include "linalg_eo.h"
+#include "hamiltonian_field.h"
+#include "init/init_gauge_field.h"
+#include "init/init_gauge_tmp.h"
+#include "integrator.h"
 #include "io/gauge.h"
 #include "io/params.h"
+#include "linalg_eo.h"
 #include "measure_gauge_action.h"
+#include "measure_rectangles.h"
+#include "monomial/monomial.h"
+#include "operator/tm_operators.h"
 #include "ranlxd.h"
 #include "read_input.h"
-#include "expo.h"
-#include "xchange/xchange.h"
-#include "measure_rectangles.h"
-#include "init/init_gauge_tmp.h"
-#include "monomial/monomial.h"
-#include "integrator.h"
-#include "hamiltonian_field.h"
+#include "sighandler.h"
+#include "start.h"
 #include "update_tm.h"
-#include "gettime.h"
+#include "xchange/xchange.h"
 #ifdef DDalphaAMG
 #include "DDalphaAMG_interface.h"
 #endif
@@ -69,9 +70,8 @@ extern su3 ** g_gauge_field_saved;
 int update_tm(double *plaquette_energy, double *rectangle_energy, 
               char * filename, const int return_check, const int acctest, 
               const int traj_counter) {
-
-  su3 *v, *w;
-  int accept, i=0, j=0, iostatus=0;
+  // su3 *v, *w;
+  int accept, iostatus = 0;
 
   double yy[1];
   double dh, expmdh, ret_dh=0., ret_gauge_diff=0., tmp;
@@ -110,12 +110,12 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
    *  copy the gauge field to gauge_tmp 
    */
 #ifdef TM_USE_OMP
-#pragma omp parallel for private(w,v)
+#pragma omp parallel for
 #endif
   for(int ix=0;ix<VOLUME;ix++) { 
     for(int mu=0;mu<4;mu++) {
-      v=&hf.gaugefield[ix][mu];
-      w=&gauge_tmp[ix][mu];
+      su3 *v = &hf.gaugefield[ix][mu];
+      su3 *w = &gauge_tmp[ix][mu];
       _su3_assign(*w,*v);
     }
   }
@@ -125,8 +125,8 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 #endif
 
   /* heatbath for all monomials */
-  for(i = 0; i < Integrator.no_timescales; i++) {
-    for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
+  for (int i = 0; i < Integrator.no_timescales; i++) {
+    for (int j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
       monomial_list[ Integrator.mnls_per_ts[i][j] ].hbfunction(Integrator.mnls_per_ts[i][j], &hf);
     }
   }
@@ -147,8 +147,8 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 
   /* compute the final energy contributions for all monomials */
   dh = 0.;
-  for(i = 0; i < Integrator.no_timescales; i++) {
-    for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
+  for (int i = 0; i < Integrator.no_timescales; i++) {
+    for (int j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
       dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j], &hf);
     }
   }
@@ -218,8 +218,8 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 
     /*   compute the energy contributions from the pseudo-fermions  */
     ret_dh = 0.;
-    for(i = 0; i < Integrator.no_timescales; i++) {
-      for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
+    for (int i = 0; i < Integrator.no_timescales; i++) {
+      for (int j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
         ret_dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j], &hf);
       }
     }
@@ -234,7 +234,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     kc = 0.;
 
 #ifdef TM_USE_OMP
-#pragma omp parallel private(w,v,tt,tr,ts,ds,ks,kc)
+#pragma omp parallel private(tt, tr, ts, ds, ks, kc)
     {
     int thread_num = omp_get_thread_num();
 #endif
@@ -246,8 +246,8 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     {
       for(int mu = 0; mu < 4; ++mu)
       {
-        v=&hf.gaugefield[ix][mu];
-        w=&gauge_tmp[ix][mu];
+        su3 *v = &hf.gaugefield[ix][mu];
+        su3 *w = &gauge_tmp[ix][mu];
         _su3_minus_su3(v0, *v, *w);
         _su3_square_norm(ds, v0);
 
@@ -277,8 +277,8 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 #endif
     /* compute the total H */
     tmp = enep;
-    for(i = 0; i < Integrator.no_timescales; i++) {
-      for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
+    for (int i = 0; i < Integrator.no_timescales; i++) {
+      for (int j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
         tmp += monomial_list[ Integrator.mnls_per_ts[i][j] ].energy0;
       }
     }
@@ -319,12 +319,12 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     /* put the links back to SU(3) group */
     if (!bc_flag) { /* periodic boundary conditions */
 #ifdef TM_USE_OMP
-#pragma omp parallel for private(v)
+#pragma omp parallel for
 #endif
-      for(int ix=0;ix<VOLUME;ix++) { 
-        for(int mu=0;mu<4;mu++) { 
-          v=&hf.gaugefield[ix][mu];
-          restoresu3_in_place(v); 
+      for (int ix = 0; ix < VOLUME; ix++) {
+        for (int mu = 0; mu < 4; mu++) {
+          su3 *v = &hf.gaugefield[ix][mu];
+          restoresu3_in_place(v);
         }
       }
     }
@@ -336,12 +336,12 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
   else { /* reject: copy gauge_tmp to hf.gaugefield */
 #ifdef TM_USE_OMP
-#pragma omp parallel for private(w) private(v)
+#pragma omp parallel for
 #endif
     for(int ix=0;ix<VOLUME;ix++) {
       for(int mu=0;mu<4;mu++){
-        v=&hf.gaugefield[ix][mu];
-        w=&gauge_tmp[ix][mu];
+        su3 *v = &hf.gaugefield[ix][mu];
+        su3 *w = &gauge_tmp[ix][mu];
         _su3_assign(*v,*w);
       }
     }
@@ -376,8 +376,8 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       fprintf(datafile, "%.8d %14.12f %14.12f %e ", traj_counter,
               (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
     }
-    for(i = 0; i < Integrator.no_timescales; i++) {
-      for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
+    for (int i = 0; i < Integrator.no_timescales; i++) {
+      for (int j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
         if(monomial_list[ Integrator.mnls_per_ts[i][j] ].type != GAUGE
             && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != SFGAUGE 
             && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != NDPOLY

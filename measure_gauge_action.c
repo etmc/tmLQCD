@@ -43,7 +43,7 @@
 #include <io/params.h>
 #include "measure_gauge_action.h"
 
-double measure_plaquette(const su3 ** const gf) {
+double measure_plaquette(const su3 *const *const gf) {
   static double res;
 #ifdef TM_USE_MPI
   double ALIGN mres;
@@ -105,7 +105,7 @@ double measure_plaquette(const su3 ** const gf) {
   return res;
 }
 
-double measure_gauge_action(const su3 ** const gf, const double lambda) {
+double measure_gauge_action(const su3 *const *const const gf, const double lambda) {
   static double res;
 #ifdef TM_USE_MPI
   double ALIGN mres;
@@ -187,5 +187,3 @@ double measure_gauge_action(const su3 ** const gf, const double lambda) {
   GaugeInfo.plaquetteEnergy = res;
   return res;
 }
-
-

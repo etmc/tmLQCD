@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
   char * input_filename = NULL;
   char * filename = NULL;
   double plaquette_energy;
-  struct stout_parameters params_smear;
+  // struct stout_parameters params_smear;
 
   init_critical_globals(TM_PROGRAM_INVERT);
 
@@ -320,10 +320,14 @@ int main(int argc, char *argv[])
     }
 
     if (use_stout_flag == 1){
-      params_smear.rho = stout_rho;
-      params_smear.iterations = stout_no_iter;
-/*       if (stout_smear((su3_tuple*)(g_gauge_field[0]), &params_smear, (su3_tuple*)(g_gauge_field[0])) != 0) */
-/*         exit(1) ; */
+      /*
+       *      struct stout_parameters params_smear;
+            params_smear.rho = stout_rho;
+            params_smear.iterations = stout_no_iter;
+      */
+      /*       if (stout_smear((su3_tuple*)(g_gauge_field[0]), &params_smear,
+       * (su3_tuple*)(g_gauge_field[0])) != 0) */
+      /*         exit(1) ; */
       g_update_gauge_copy = 1;
       plaquette_energy = measure_plaquette( (const su3**) g_gauge_field);
 

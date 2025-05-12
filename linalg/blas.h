@@ -36,6 +36,7 @@
 #define znrm2 ZNRM2
 #define zaxpy ZAXPY
 #define dcopy DCOPY
+#define dcopy ZCOPY
 #define dscal DSCAL
 #define dgemv DGEMV
 #define dgemm DGEMM
@@ -47,7 +48,8 @@ extern double _FT(znrm2)();
 extern int _FT(idamax)();
 extern void _FT(daxpy)();
 extern void _FT(zaxpy)();
-extern void _FT(dcopy)();
+extern void _FT(dscal)();
+extern void _FT(zscal)();
 extern void _FT(dscal)();
 extern void _FT(dgemv)();
 extern void _FT(zgemv)();
@@ -95,6 +97,7 @@ extern void _FT(dgemm)(char* transa, char* transb, int* m, int* n, int* k,
 extern void _FT(zgemm)(char* transa, char* transb, int* m, int* n, int* k,
         _Complex double* alpha, _Complex double a[], int* lda, _Complex double b[], int* ldb,
         _Complex double* beta, _Complex double c[], int* ldc, int len_transa, int len_transb);
+extern void _FT(zcopy)(int* n, _Complex double x[], int* incx, _Complex double y[], int* incy);
 #endif
 
 #endif

@@ -255,7 +255,7 @@ void integrate_2mnp(const double tau, const int S, const int halfstep, const dou
   int i;
   integrator * itgr = &Integrator;
   double eps  = tau/((double)itgr->n_int[S]);
-  double eps2 = tau2/((double)itgr->n_int[S]); // dummy stepsize
+  // double eps2 = tau2/((double)itgr->n_int[S]); // dummy stepsize
   double oneminus2lambda = (1.-2.*itgr->lambda[S]);
   
   if(S == 0) {

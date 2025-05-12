@@ -97,7 +97,7 @@ void _initQuda();
 void _endQuda();
 void _loadGaugeQuda(const CompressionType);
 void _loadCloverQuda(QudaInvertParam * inv_param);
-void _saveGaugeQuda( const su3 ** const gaugefield, const int savegaugetype, const CompressionType compression );
+void _saveGaugeQuda(su3** gaugefield, const int savegaugetype, const CompressionType compression);
 
 // direct line to QUDA inverter, no messing about with even/odd reordering
 // source and propagator  Should be full VOLUME spinor fields 

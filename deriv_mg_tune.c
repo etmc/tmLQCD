@@ -82,26 +82,20 @@ static void usage(const tm_ExitCode_t exit_code);
 static void process_args(int argc, char *argv[], char ** input_filename, char ** filename);
 static void set_default_filenames(char ** input_filename, char ** filename);
 
-int main(int argc,char *argv[]) {
-
-  FILE *parameterfile=NULL, *countfile=NULL;
+int main(int argc, char *argv[]) {
   char *filename = NULL;
-  char datafilename[206];
-  char parameterfilename[206];
   char conf_filename[CONF_FILENAME_LENGTH];
-  char nstore_filename[50];
-  char tmp_filename[50];
   char *input_filename = NULL;
-  int status = 0, accept = 0;
-  int j,ix,mu;
-  unsigned int const io_max_attempts = 5; /* Make this configurable? */
-  unsigned int const io_timeout = 5; /* Make this configurable? */
-  struct timeval t1;
+  int status = 0;
+  int j, mu;
+
+  // unsigned int const io_max_attempts = 5; /* Make this configurable? */
+  // unsigned int const io_timeout = 5; /* Make this configurable? */
 
   /* Energy corresponding to the Gauge part */
   double plaquette_energy = 0.;
 
-  paramsXlfInfo *xlfInfo;
+  //  paramsXlfInfo *xlfInfo;
 
   init_critical_globals(TM_PROGRAM_DERIV_MG_TUNE);  
   

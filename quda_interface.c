@@ -503,7 +503,7 @@ void _loadCloverQuda(QudaInvertParam* inv_param){
   }
 }
 
-void reorder_gauge_toQuda( const su3 ** const gaugefield, const CompressionType compression ) {
+void reorder_gauge_toQuda(su3 **gaugefield, const CompressionType compression) {
   tm_stopwatch_push(&g_timers, __func__, "");
 
 #ifdef TM_USE_OMP
@@ -582,7 +582,7 @@ void reorder_gauge_toQuda( const su3 ** const gaugefield, const CompressionType 
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
 }
 
-void reorder_gauge_fromQuda( const su3 ** const gaugefield, const CompressionType compression ) {
+void reorder_gauge_fromQuda(su3 **gaugefield, const CompressionType compression) {
   tm_stopwatch_push(&g_timers, __func__, "");
 
 #ifdef TM_USE_OMP
@@ -660,7 +660,7 @@ void reorder_gauge_fromQuda( const su3 ** const gaugefield, const CompressionTyp
 #endif
 
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
-}  /* reorder_gauge_fromQuda */
+} /* reorder_gauge_fromQuda */
 
 void _loadGaugeQuda( const CompressionType compression ) {
   static int first_call = 1;
@@ -702,8 +702,7 @@ void _loadGaugeQuda( const CompressionType compression ) {
   set_quda_gauge_state(&quda_gauge_state, g_gauge_state.gauge_id, X1, X2, X3, X0, &gauge_param);
 }
 
-void _saveGaugeQuda( const su3 ** const gaugefield, const int savegaugetype, const CompressionType compression ) {
-
+void _saveGaugeQuda(su3 **gaugefield, const int savegaugetype, const CompressionType compression) {
   if( !quda_initialized ) {
     if(g_proc_id == 0) {
       fprintf(stderr, "Error: QUDA must be initialized to call _saveGaugeQuda\n");
@@ -737,7 +736,6 @@ void _saveGaugeQuda( const su3 ** const gaugefield, const int savegaugetype, con
   saveGaugeQuda((void *)gauge_quda, &savegauge_param);
   tm_stopwatch_pop(&g_timers, 0, 0, "TM_QUDA");
   reorder_gauge_fromQuda(gaugefield, compression);
-
 }
 
 // reorder spinor to QUDA format
@@ -2305,7 +2303,7 @@ int invert_eo_degenerate_quda(spinor * const out,
           snprintf(outname, 200, "conf_mg_refresh_fail.%.6f.%04d", g_gauge_state.gauge_id, nstore);
           paramsXlfInfo * xlfInfo = construct_paramsXlfInfo(
               measure_plaquette((const su3**)g_gauge_field)/(6.*VOLUME*g_nproc), nstore);
-          int status = write_gauge_field(outname, 64, xlfInfo);
+          write_gauge_field(outname, 64, xlfInfo);
           free(xlfInfo);
 
           char errmsg[200];
@@ -2551,7 +2549,7 @@ void compute_gauge_derivative_quda(monomial * const mnl, hamiltonian_field_t * c
 
   const int rect = mnl->use_rectangles;
 
-  int * path_length = rect ? plaq_rect_length : plaq_length;
+  const int *path_length = rect ? plaq_rect_length : plaq_length;
 
   const int num_paths = rect ? 24 : 6;
   const int max_length = rect ? 5 : 3;
@@ -2676,6 +2674,7 @@ static const char * string_mg_tuning_direction(const tm_QudaMGTuningDirection_t 
                  "QUDA-MG Tuning direction %d is not valid. See definition of tm_QudaMGTuningDirection_t",
                  (int)tuning_dir);
         fatal_error(err_msg, __func__);
+        return 0;
         break;
       }
   }

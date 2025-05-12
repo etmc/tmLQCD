@@ -431,7 +431,6 @@ double ndpoly_acc(const int id, hamiltonian_field_t * const hf) {
 int init_ndpoly_monomial(const int id) {
   monomial * mnl = &monomial_list[id];
   tm_stopwatch_push(&g_timers, __func__, mnl->name);
-  int j, k, errcode;
   FILE * ifs;
   double *phmc_darray;
   char title[100];
@@ -484,8 +483,8 @@ int init_ndpoly_monomial(const int id) {
   }
 
   /* Chi`s-spinors  memory allocation */
-  j = init_chi_spinor_field(VOLUMEPLUSRAND/2, (mnl->MDPolyDegree+1));
-  if ( j!= 0) {
+  const int status = init_chi_spinor_field(VOLUMEPLUSRAND / 2, (mnl->MDPolyDegree + 1));
+  if (status != 0) {
     fprintf(stderr, "Not enough memory for PHMC Chi fields! Aborting...\n");
     exit(0);
   }
@@ -527,8 +526,9 @@ int init_ndpoly_monomial(const int id) {
     
     /* Here we read in the 2n roots needed for the polinomial in sqrt(s) */
     phmc_darray = (double*)mnl->MDPolyRoots;
-    for(j = 0; j< 2 * mnl->MDPolyDegree - 2; ++j) {
-      errcode = fscanf(ifs, " %d %lf %lf \n", &k, &phmc_darray[2 * j], &phmc_darray[2 * j + 1]);
+    for (int j = 0; j < 2 * mnl->MDPolyDegree - 2; ++j) {
+      const int k = 0;
+      fscanf(ifs, " %d %lf %lf \n", &k, &phmc_darray[2 * j], &phmc_darray[2 * j + 1]);
     }
     fclose(ifs);
   }

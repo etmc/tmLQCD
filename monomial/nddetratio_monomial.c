@@ -51,10 +51,7 @@
 #include "nddetratio_monomial.h"
 #include "DDalphaAMG_interface.h"
 
-
-
-double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
-  int iter;
+double nddetratio_acc(const int id, hamiltonian_field_t* const hf) {
   monomial * mnl = &monomial_list[id];
   tm_stopwatch_push(&g_timers, __func__, mnl->name);
   matrix_mult_nd Q_pm_ndpsi = Qtm_pm_ndpsi, Q_dagger_ndpsi = Qtm_dagger_ndpsi, Q_ndpsi = Qtm_ndpsi;
@@ -72,13 +69,11 @@ double nddetratio_acc(const int id, hamiltonian_field_t * const hf) {
     sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
   }
   if( mnl->solver == MG ) {
-    iter = MG_solver_nd(mnl->w_fields[2], mnl->w_fields[3], mnl->pf, mnl->pf2,
-                        mnl->accprec, mnl->maxiter, g_relative_precision_flag, 
-                        VOLUME/2, g_gauge_field, Q_ndpsi);
+    MG_solver_nd(mnl->w_fields[2], mnl->w_fields[3], mnl->pf, mnl->pf2, mnl->accprec, mnl->maxiter,
+                 g_relative_precision_flag, VOLUME / 2, g_gauge_field, Q_ndpsi);
   } else {
-    iter = cg_her_nd(mnl->w_fields[0], mnl->w_fields[1], mnl->pf, mnl->pf2,
-                     mnl->maxiter, mnl->accprec, g_relative_precision_flag, 
-                     VOLUME/2, Q_pm_ndpsi);
+    cg_her_nd(mnl->w_fields[0], mnl->w_fields[1], mnl->pf, mnl->pf2, mnl->maxiter, mnl->accprec,
+              g_relative_precision_flag, VOLUME / 2, Q_pm_ndpsi);
     tm_stopwatch_push(&g_timers, "Q_dagger_ndpsi", "");
     Q_dagger_ndpsi(mnl->w_fields[2], mnl->w_fields[3],
                    mnl->w_fields[0], mnl->w_fields[1]);

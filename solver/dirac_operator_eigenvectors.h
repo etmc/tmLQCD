@@ -29,8 +29,8 @@
 #endif
 
 #include <complex.h>
+#include "init/init_spinor_field.h"
 #include "linalg/lapack.h"
-
 /* some macros for 4d loops */
 #define FORXYZT(t,x,y,z,tt,ll) for(t=0;t<tt;t++){ for(x=0;x<ll;x++){ for(y=0;y<ll;y++){ for(z=0;z<ll;z++){ 
 #define ENDFORXYZT }}}}

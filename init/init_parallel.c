@@ -42,7 +42,7 @@
 #include "read_input.h"
 #include "tm_debug_printf.h"
 
-void init_parallel_and_read_input(int argc, char *argv[], char input_filename[]) {
+void init_parallel_and_read_input(int argc, char *argv[], const char input_filename[]) {
 #ifdef QPHIX_QMP_COMMS
   // Initialize QMP
   QMP_thread_level_t prv;

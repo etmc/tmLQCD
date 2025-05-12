@@ -27,13 +27,13 @@
 #include "get_rectangle_staples.h"
 
 void get_rectangle_staples(su3 * const v, const int x, const int mu) {
-  get_rectangle_staples_general(v,x,mu,g_gauge_field);
+  get_rectangle_staples_general(v, x, mu, (const su3 *const *const)g_gauge_field);
 }
 
-void get_rectangle_staples_general(su3 * const v, const int x, const int mu, const su3** const gf) {
+void get_rectangle_staples_general(su3 *const v, const int x, const int mu,
+                                   const su3 *const *const gf) {
   su3 ALIGN tmp1, tmp2;
-  int y, z, nu;
-  su3 * a, * b, * c, * d, * e;
+  const su3 *a, *b, *c, *d, *e;
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(rectstaples)
 #endif
@@ -41,9 +41,10 @@ void get_rectangle_staples_general(su3 * const v, const int x, const int mu, con
 #pragma disjoint(*v, tmp1, tmp2, *a, *b, *c, *d, *e)
 #endif
   _su3_zero((*v));
-  for(nu = 0; nu < 4; nu++) {
+  for (int nu = 0; nu < 4; nu++) {
     if(mu != nu) {
-      /* first contr. starting from x 
+      int y, z;
+      /* first contr. starting from x
        * a b c e^+ d^+
        *   c
        *   _
@@ -184,4 +185,3 @@ void get_rectangle_staples_general(su3 * const v, const int x, const int mu, con
 #pragma pomp inst end(rectstaples)
 #endif
 }
-

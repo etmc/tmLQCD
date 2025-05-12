@@ -140,32 +140,23 @@ int incr_eigcg(const int N, const int nrhs,  const int nrhs1, spinor * const x, 
 
   static spinor **evecs;        /* accumulated eigenvectors for deflation. */
 
-  static void *_evals;
   static double *evals;         /* Ritz values */
 
-  static void *_v;
   static spinor  *V;            /* work array for eigenvector search basis in eigCG */
 
-  static void *_h;
-  static _Complex double  *H;            /* The ncurEvals^2 matrix: H=evecs'*A*evecs */ 
+  static _Complex double *H; /* The ncurEvals^2 matrix: H=evecs'*A*evecs */
 
-  static void *_hu;
   static _Complex double  *HU;           /* used for diagonalization of H if eigenvalues requested
                                    also used as a copy of H if needed*/
-  static void *_initwork;                            
-  static _Complex double  *initwork;     /* vector of size ldh using with init-CG */ 
+  static _Complex double *initwork;      /* vector of size ldh using with init-CG */
 
-  static void *_ework;
   static _Complex double  *ework;
   /* end of the thinking part */
 
-  static void *_work;
   static _Complex double  *work;
 
-  static void *_rwork;
   static double *rwork;
-  
-  static void *_IPIV;
+
   static int *IPIV;        /*integer array to store permutations when solving the small linear system*/
 
   /* some constants */
@@ -297,7 +288,7 @@ int incr_eigcg(const int N, const int nrhs,  const int nrhs1, spinor * const x, 
     initwork = calloc(ldh, sizeof(_Complex double ));
     ework = calloc(esize, sizeof(_Complex double ));
     work = calloc(lwork,sizeof(_Complex double ));
-    rwork= calloc(3*ldh,sizeof(double));
+    rwork = calloc(3 * ldh, sizeof(double));
     IPIV = calloc(ldh, sizeof(int));
     evals = (double *) calloc(ldh, sizeof(double));
 
@@ -353,7 +344,7 @@ int incr_eigcg(const int N, const int nrhs,  const int nrhs1, spinor * const x, 
       /* solve the linear system H y = c */
       tmpsize=ldh*ncurEvals;
       _FT(zcopy) (&tmpsize,H,&ONE,HU,&ONE); /* copy H into HU */
-      _FT(zgesv) (&ncurEvals,&ONE,HU,&ldh,IPIV,initwork,&ldh,&info);
+      _FT(zgesv)(&ncurEvals, &ONE, HU, (int *)&ldh, IPIV, initwork, (int *)&ldh, &info);
 
       if(info != 0)
       {
@@ -497,7 +488,7 @@ int incr_eigcg(const int N, const int nrhs,  const int nrhs1, spinor * const x, 
       _FT(zcopy) (&tmpsize,H,&ONE,HU,&ONE);
 
       /* compute eigenvalues and eigenvectors of HU (using V and spinor fields as tmp work spaces)*/
-      _FT(zheev)(&cV, &cU, &ncurEvals, HU, &ldh, evals, work, &lwork, rwork, &info,1,1);
+      _FT(zheev)(&cV, &cU, &ncurEvals, HU, (int *)&ldh, evals, work, &lwork, rwork, &info, 1, 1);
 
       if(info != 0)
       {

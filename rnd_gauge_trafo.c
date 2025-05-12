@@ -25,13 +25,13 @@
 #if HAVE_CONFIG_H
 #include<tmlqcd_config.h>
 #endif
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "global.h"
-#include "su3.h"
-#include "start.h"
 #include "rnd_gauge_trafo.h"
-
+#include "start.h"
+#include "su3.h"
+#include "xchange/xchange_gauge.h"
 void rnd_gauge_trafo(const int repro, su3 ** const gf){
   int ix,iy,mu;
   static su3 u,v,w,x,y;
@@ -44,10 +44,10 @@ void rnd_gauge_trafo(const int repro, su3 ** const gf){
   }
   gauge_trafo = (su3*)(((unsigned long int)(gauge_trafo)+ALIGN_BASE)&~ALIGN_BASE);
 
-  random_gauge_field(repro, gauge_trafo);
+  random_gauge_field(repro, &gauge_trafo);
 
 #ifdef TM_USE_MPI
-  xchange_gauge(gauge_trafo);
+  xchange_gauge(&gauge_trafo);
 #endif
 
   for (ix=0;ix<VOLUME;ix++){

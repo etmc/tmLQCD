@@ -172,17 +172,17 @@ static void random_su3_vector( su3_vector * const s, const enum RN_TYPE rn_type 
    return;
 }
 
-static void random_spinor(spinor * const s, const enum RN_TYPE rn_type) {
-   random_su3_vector(&s->s0, rn_type);
-   random_su3_vector(&s->s1, rn_type);
-   random_su3_vector(&s->s2, rn_type);
-   random_su3_vector(&s->s3, rn_type);
+void random_spinor(spinor *const s, const enum RN_TYPE rn_type) {
+  random_su3_vector(&s->s0, rn_type);
+  random_su3_vector(&s->s1, rn_type);
+  random_su3_vector(&s->s2, rn_type);
+  random_su3_vector(&s->s3, rn_type);
 
-   _vector_mul(s->s0, 0.5, s->s0);
-   _vector_mul(s->s1, 0.5, s->s1);
-   _vector_mul(s->s2, 0.5, s->s2);
-   _vector_mul(s->s3, 0.5, s->s3);
-   return;
+  _vector_mul(s->s0, 0.5, s->s0);
+  _vector_mul(s->s1, 0.5, s->s1);
+  _vector_mul(s->s2, 0.5, s->s2);
+  _vector_mul(s->s3, 0.5, s->s3);
+  return;
 }
 
 spinor unit_spinor()
@@ -522,16 +522,16 @@ void random_gauge_field(const int repro, su3 ** const gf) {
    and returns their energy contribution */
 double random_su3adj_field(const int repro, su3adj ** const momenta) {
   su3adj *xm;
-  int i, mu, t0, x, y, z, X, Y, Z, t, id = 0;
+  // mu, t0, x, y, z, X, Y, Z, t,
+  int id = 0;
   int coords[4];
 #ifdef TM_USE_MPI
-  int k;
   int rlxd_state[105];
   int rlxd_state_backup[105];
 #endif
   double ALIGN yy[8];
-  double ALIGN tt, tr, ts, kc = 0., ks = 0., sum;
-  
+  double ALIGN tt, tr, ts, kc = 0., ks = 0.;
+
   if(repro) {
 #ifdef TM_USE_MPI
     if(g_proc_id != 0) {
@@ -542,31 +542,32 @@ double random_su3adj_field(const int repro, su3adj ** const momenta) {
     MPI_Bcast(rlxd_state, 105, MPI_INT, 0, MPI_COMM_WORLD);
     rlxd_reset(rlxd_state);
 #endif
-    for(t0 = 0; t0 < g_nproc_t*T; t0++) {
-      t = t0 - T*g_proc_coords[0];
+    for (int t0 = 0; t0 < g_nproc_t * T; t0++) {
+      int t = t0 - T * g_proc_coords[0];
       coords[0] = t0 / T;
-      for(x = 0; x < g_nproc_x*LX; x++) {
-	X = x - g_proc_coords[1]*LX;
-	coords[1] = x / LX;
-	for(y = 0; y < g_nproc_y*LY; y++) {
-	  Y = y - g_proc_coords[2]*LY;
-	  coords[2] = y / LY;
-	  for(z = 0; z < g_nproc_z*LZ; z++) {
-	    Z = z - g_proc_coords[3]*LZ;
-	    coords[3] = z / LZ;
+      for (int x = 0; x < g_nproc_x * LX; x++) {
+        int X = x - g_proc_coords[1] * LX;
+        coords[1] = x / LX;
+        for (int y = 0; y < g_nproc_y * LY; y++) {
+          int Y = y - g_proc_coords[2] * LY;
+          coords[2] = y / LY;
+          for (int z = 0; z < g_nproc_z * LZ; z++) {
+            int Z = z - g_proc_coords[3] * LZ;
+            coords[3] = z / LZ;
 #ifdef TM_USE_MPI
 	    MPI_Cart_rank(g_cart_grid, coords, &id);
 #endif
-	    if(g_cart_id == id) i = g_ipt[t][X][Y][Z];
-	    for(mu = 0; mu < 4; mu++) {
-	      gauss_vector(yy,8);
-	      if(g_cart_id == id) {
-		sum = 0.;
-		xm = &momenta[i][mu];
-		(*xm).d1 = 1.4142135623731*yy[0];
-		(*xm).d2 = 1.4142135623731*yy[1];
-		sum += (*xm).d1*(*xm).d1+(*xm).d2*(*xm).d2;
-		(*xm).d3 = 1.4142135623731*yy[2];
+            int i = 0;
+            if (g_cart_id == id) i = g_ipt[t][X][Y][Z];
+            for (int mu = 0; mu < 4; mu++) {
+              gauss_vector(yy, 8);
+              if (g_cart_id == id) {
+                double sum = 0.;
+                xm = &momenta[i][mu];
+                (*xm).d1 = 1.4142135623731 * yy[0];
+                (*xm).d2 = 1.4142135623731 * yy[1];
+                sum += (*xm).d1 * (*xm).d1 + (*xm).d2 * (*xm).d2;
+                (*xm).d3 = 1.4142135623731*yy[2];
 		(*xm).d4 = 1.4142135623731*yy[3];
 		sum += (*xm).d3*(*xm).d3+(*xm).d4*(*xm).d4;
 		(*xm).d5 = 1.4142135623731*yy[4];
@@ -581,10 +582,10 @@ double random_su3adj_field(const int repro, su3adj ** const momenta) {
 		tt = ts-ks;
 		ks = ts;
 		kc = tr-tt;
-	      }
-	    }
-	  }
-	}
+              }
+            }
+          }
+        }
       }
     }
     kc=0.5*(ks+kc);
@@ -595,14 +596,14 @@ double random_su3adj_field(const int repro, su3adj ** const momenta) {
 #endif
   }
   else {
-    for(i = 0; i < VOLUME; i++) { 
-      for(mu = 0; mu < 4; mu++) {
-	sum=0.;
-	xm=&momenta[i][mu];
-	gauss_vector(yy,8);
-	(*xm).d1=1.4142135623731*yy[0];
-	(*xm).d2=1.4142135623731*yy[1];
-	sum+=(*xm).d1*(*xm).d1+(*xm).d2*(*xm).d2;
+    for (int i = 0; i < VOLUME; i++) {
+      for (int mu = 0; mu < 4; mu++) {
+        double sum = 0.;
+        xm = &momenta[i][mu];
+        gauss_vector(yy, 8);
+        (*xm).d1 = 1.4142135623731 * yy[0];
+        (*xm).d2 = 1.4142135623731 * yy[1];
+        sum+=(*xm).d1*(*xm).d1+(*xm).d2*(*xm).d2;
 	(*xm).d3=1.4142135623731*yy[2];
 	(*xm).d4=1.4142135623731*yy[3];
 	sum+=(*xm).d3*(*xm).d3+(*xm).d4*(*xm).d4;
