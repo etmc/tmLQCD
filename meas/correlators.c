@@ -240,6 +240,7 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
         free(Cpp); free(Cpa); free(Cp4);
       }
       free(sCpp); free(sCpa); free(sCp4);
+      MPI_Barrier(MPI_COMM_WORLD);
 #else
       free(Cpp); free(Cpa); free(Cp4);
 #endif
