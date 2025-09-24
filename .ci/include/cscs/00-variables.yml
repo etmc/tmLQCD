@@ -1,0 +1,13 @@
+# This file defines the uenv image built and deployed to CSCS. The variables
+# have the following meaning:
+#
+# * UENV_NAME: the base name of the uenv image to generate
+# * UENV_VERSION: its version identifier
+# * UENV_TAG: a tag
+#
+
+variables:
+  UENV_NAME: tmlqcd
+  UENV_VERSION: experimental
+  UENV_TAG: v0.1
+

@@ -1,0 +1,23 @@
+gcc-env:
+  compiler:
+      - toolchain: gcc
+        spec: gcc
+  mpi:
+      spec: cray-mpich@8.1.30
+      gpu: cuda
+  unify: true
+  specs:
+  - python@3.12
+  - quda@develop +qdp +multigrid +twisted_clover +twisted_mass +usqcd
+  - lemon
+  - c-lime
+  variants: # adds these variants to all of specs that support it
+  - +mpi
+  - +cuda
+  - cuda_arch=90
+  views:
+    default:
+      link: roots
+      uenv:
+        prefix_paths:
+          LD_LIBRARY_PATH: [lib, lib64]
