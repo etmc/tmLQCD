@@ -14,7 +14,7 @@ build-quda/uenv/daint-gh200:
     UENV_RECIPE: .ci/uenv-recipes/tmlqcd/daint-gh200
 
 test/daint-gh200:
-  extends: .test/base:
+  extends: .test/base
   variables:
     TEST: "blabla"
 
