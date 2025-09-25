@@ -5,13 +5,14 @@ gcc-env:
   unify: true
   specs:
   - python@3.12
+  - numdiff
   - quda@develop +qdp +multigrid +twisted_clover +twisted_mass
   - lemon
   - c-lime
   variants:
   - +mpi
   - +cuda
-  - cuda_arch=90a
+  - cuda_arch=90
   views:
     default:
       link: roots
