@@ -454,13 +454,7 @@ void _initQuda() {
 #ifdef TM_USE_MPI
   initQuda(-1); //sets device numbers automatically
 #else
-  // when running in 'subprocess' mode, the external program should have provided us with a unique
-  // id in the range 0 to (N-1), where N is the number of NVIDIA devices available (see wrapper/lib_wrapper.c)
-  if(subprocess_flag){
-    initQuda(g_external_id);
-  }else{
-    initQuda(0);  //scalar build without subprocess: use device 0
-  }
+  initQuda(0);  //scalar build: use device 0  
 #endif
   quda_initialized = 1;
 }

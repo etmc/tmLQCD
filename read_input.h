@@ -106,9 +106,6 @@ extern "C"
 
   extern int use_preconditioning;
 
-  extern int subprocess_flag;
-  extern int lowmem_flag; 
-
   extern int nblocks_t, nblocks_x, nblocks_y, nblocks_z;
   extern double kappa_dflgen, mu_dflgen, kappa_dfl, mu_dfl, kappa_Msap, mu_Msap;
 
