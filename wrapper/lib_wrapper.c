@@ -110,9 +110,6 @@ int tmLQCD_invert_init(int argc, char* argv[], const int _verbose, const int ext
     tmLQCD_input_read = 1;
   }
 
-#ifndef TM_USE_MPI
-  if (subprocess_flag) g_external_id = external_id;
-#endif
 
 #ifdef TM_USE_OMP
   init_openmp();

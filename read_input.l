@@ -634,7 +634,6 @@ static inline double fltlist_next_token(int * const list_end){
 %x MIXCGIT
 
 %x LOWMEM
-%x SUBPROCESS 
 
 %x INITEXTERNALINVERTER
 
@@ -748,7 +747,6 @@ static inline double fltlist_next_token(int * const list_end){
 ^MixCGMaxIter{EQL}                 BEGIN(MIXCGIT);
 
 ^EnableLowmem{EQL}                 BEGIN(LOWMEM);
-^EnableSubprocess{EQL}             BEGIN(SUBPROCESS);
 
 ^BarrierMonomialsConverge{EQL}     BEGIN(BARRIER_MONOMIALS_CONVERGE);
 
@@ -3413,14 +3411,7 @@ static inline double fltlist_next_token(int * const list_end){
   write_cp_flag=0;
   if(myverbose!=0) printf("Don't write Checkpoints\n");
 }
-<SUBPROCESS>yes     {
-  subprocess_flag=1;
-  if(myverbose!=0) printf("Running in \'subprocess\' mode\n");
-}
-<SUBPROCESS>no     {
-  subprocess_flag=0;
-  if(myverbose!=0) printf("Not running in \'subprocess\' mode\n");
-}
+
 <LOWMEM>yes     {
   lowmem_flag=1;
   if(g_proc_id==0) printf("!!! WARNING: running in \'lowmem\' mode, most functionality will NOT work without explicit memory allocations!\n");
@@ -3961,8 +3952,7 @@ int read_input(char * conf_file){
   mixcg_maxinnersolverit = _default_mixcg_maxinnersolverit;
 
   lowmem_flag = _default_lowmem_flag;
-  subprocess_flag = _default_subprocess_flag;
- 
+
   g_barrier_monomials_convergence = _default_g_barrier_monomials_convergence;
 
   /* default parameters for QUDA */
