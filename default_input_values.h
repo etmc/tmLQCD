@@ -207,8 +207,6 @@
 
 #define _default_external_library 0
 
-#define _default_lowmem_flag 0
-
 #define _default_g_barrier_monomials_convergence 1
 
 /* default input values for QUDA interface */
