@@ -5,7 +5,7 @@ gcc-env:
   unify: true
   specs:
   - python@3.12
-  - quda@develop +mpi +qdp +multigrid +twisted_clover +twisted_mass +usqcd
+  - quda@develop ~qdpjit ~qmp ~qio +qdp +multigrid +twisted_clover +twisted_mass +usqcd
   - lemon
   - c-lime
   variants:
