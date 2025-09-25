@@ -17,4 +17,3 @@ test/daint-gh200:
   extends: .test/base
   variables:
     TEST: "blabla"
-
