@@ -44,7 +44,7 @@ int cr(spinor * const P, spinor * const Q,
         const double eps_sq, const int rel_prec,
         const int N, const int precon, matrix_mult f) {
 
-    int k, l, restart, i, iter = 0;
+    int k, iter = 0;
     double norm_sq, err;
     spinor * xi, * Axi, * chi, * Achi, *tmp;
     _Complex double alpha, beta;

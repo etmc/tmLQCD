@@ -946,7 +946,7 @@ void compute_little_D(const int mul_g5) {
      Adaptation by Claude Tadonki (claude.tadonki@u-psud.fr)
      Date: May 2010
   */
-  spinor *scratch, *temp, *_scratch;
+  spinor *scratch, *_scratch;
   int mu=0;
   double atime, etime;
   // the block volume
@@ -986,8 +986,6 @@ void compute_little_D(const int mul_g5) {
     exit(-1);
   }
   scratch = (spinor*)(((unsigned long int)(_scratch)+ALIGN_BASE)&~ALIGN_BASE);
-  // not needed?
-  temp = scratch + VOLUMEPLUSRAND;
   // NEEDs TO BE REWRITTEN
   atime = gettime();
 #ifdef TM_USE_OMP

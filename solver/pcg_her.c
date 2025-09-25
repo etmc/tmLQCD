@@ -38,8 +38,7 @@
 /* P output = solution , Q input = source */
 int pcg_her(spinor * const P, spinor * const Q, const int max_iter, 
 	    double eps_sq, const int rel_prec, const int N, matrix_mult f) {
-  double normsp, pro, pro2, err, alpha_cg, beta_cg, squarenorm;
-  int iteration;
+  double pro, pro2, err, alpha_cg, beta_cg, squarenorm;
   spinor ** solver_field = NULL;
   const int nr_sf = 5;
 
@@ -52,7 +51,7 @@ int pcg_her(spinor * const P, spinor * const Q, const int max_iter,
   squarenorm = square_norm(Q, N, 1);
   /* x_0 = P */
   assign(solver_field[0], P, N);
-  normsp = square_norm(P, N, 1);
+  //normsp = square_norm(P, N, 1);
 
   /* initialize residue r and search vector p */
   /* r0 = b - A x0 */
@@ -66,7 +65,7 @@ int pcg_her(spinor * const P, spinor * const Q, const int max_iter,
   /* (r_0, z_0) */
   pro2 = scalar_prod_r(solver_field[1], solver_field[3], N, 1);  
   /* main loop */
-  for(iteration = 0; iteration < max_iter; iteration++) {
+  for(int iteration = 0; iteration < max_iter; iteration++) {
     /* w_i = A p_i */
     f(solver_field[4], solver_field[2]);
     /* (p_i, w_i) */

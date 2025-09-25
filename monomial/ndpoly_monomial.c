@@ -527,7 +527,7 @@ int init_ndpoly_monomial(const int id) {
     /* Here we read in the 2n roots needed for the polinomial in sqrt(s) */
     phmc_darray = (double*)mnl->MDPolyRoots;
     for (int j = 0; j < 2 * mnl->MDPolyDegree - 2; ++j) {
-      const int k = 0;
+      int k = 0;
       fscanf(ifs, " %d %lf %lf \n", &k, &phmc_darray[2 * j], &phmc_darray[2 * j + 1]);
     }
     fclose(ifs);

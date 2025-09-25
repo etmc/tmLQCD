@@ -76,7 +76,6 @@ double mode_number(spinor * const S, double const mstarsq){
 
 void top_sus(spinor * const S, double const mstarsq){
   
-  double mode_num, topo_sus = 0.0;
   double A = 0.0, B = 0.0, C = 0.0;
   spinor **s, *s_;
 

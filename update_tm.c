@@ -76,8 +76,6 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   double yy[1];
   double dh, expmdh, ret_dh=0., ret_gauge_diff=0., tmp;
   double atime=0., etime=0.;
-  double ks = 0., kc = 0., ds, tr, ts, tt;
-
   char tmp_filename[50];
 
   /* Energy corresponding to the Gauge part */
@@ -229,16 +227,17 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     /* Compute the energy difference */
     ret_dh += ret_enep - enep ;
 
-    /* Compute Differences in the fields */
-    ks = 0.;
-    kc = 0.;
 
 #ifdef TM_USE_OMP
-#pragma omp parallel private(tt, tr, ts, ds, ks, kc)
+#pragma omp parallel
     {
     int thread_num = omp_get_thread_num();
 #endif
     su3 ALIGN v0;
+    /* Compute Differences in the fields */
+    double ks = 0.;
+    double kc = 0.;
+
 #ifdef TM_USE_OMP
 #pragma omp for
 #endif
@@ -248,12 +247,13 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
       {
         su3 *v = &hf.gaugefield[ix][mu];
         su3 *w = &gauge_tmp[ix][mu];
+        double ds = 0.0;
         _su3_minus_su3(v0, *v, *w);
         _su3_square_norm(ds, v0);
 
-        tr = sqrt(ds) + kc;
-        ts = tr + ks;
-        tt = ts-ks;
+        double tr = sqrt(ds) + kc;
+        double ts = tr + ks;
+        double tt = ts-ks;
         ks = ts;
         kc = tr-tt;
       }

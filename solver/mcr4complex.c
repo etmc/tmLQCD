@@ -46,9 +46,8 @@ int mcr4complex(_Complex double * const P, _Complex double * const Q,
                 const int N, const int parallel, 
                 const int lda, c_matrix_mult f) {
 
-  int k, l, restart, i, p=0;
-  double norm_sq, norm,err;
-  _Complex double ctmp;
+  int restart, p=0;
+  double norm_sq, norm, err;
   _Complex double alpha,beta;
   _Complex double one = 1.0;
 
@@ -67,6 +66,7 @@ int mcr4complex(_Complex double * const P, _Complex double * const Q,
   atime = ((double)clock())/((double)(CLOCKS_PER_SEC));
 #endif
 
+  err = -1.0;
 
   for(restart = 0; restart < max_restarts; restart++) {
 
@@ -86,7 +86,7 @@ int mcr4complex(_Complex double * const P, _Complex double * const Q,
       return (p);
     }
 
-    for(k = 0;k<m ; k++) {
+    for(int k = 0;k<m ; k++) {
       alpha = lscalar_prod(Axi, chi, N, parallel);
       norm = lsquare_norm(Axi, N, parallel);
 
@@ -155,7 +155,6 @@ static void init_lmcr(const int _M, const int _V){
   static int Vo = -1;
   static int M = -1;
 
-  int i;
   if((M != _M)||(lmcr_init == 0)||(Vo != _V)){
     if(lmcr_init == 1) free_lmcr();
     Vo = _V;
@@ -185,8 +184,7 @@ static void free_lmcr()
 
 void lmul_add_mul(_Complex double * const R, _Complex double * const S, _Complex double * const T,const _Complex double c, const _Complex double d, const int N) 
 {
-  int i;
-  for(i = 0; i < N; i++) {
+  for(int i = 0; i < N; i++) {
     R[i] = c * S[i] + d * T[i];
   }
   return;
@@ -195,8 +193,7 @@ void lmul_add_mul(_Complex double * const R, _Complex double * const S, _Complex
 
 void lmul_diff_mul(_Complex double * const R, _Complex double * const S, _Complex double * const T,const _Complex double c, const _Complex double d, const int N) 
 {
-  int i;
-  for(i = 0; i < N; i++) {
+  for(int i = 0; i < N; i++) {
     R[i] = c * S[i] - d * T[i];
   }
   return;

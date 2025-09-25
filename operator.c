@@ -335,7 +335,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       if (g_cart_id == 0 && g_debug_level > 1) {
         printf("#\n# csw = %.12f, computing clover leafs\n", g_c_sw);
       }
-      init_sw_fields(VOLUME);
+      init_sw_fields();
       sw_term( (const su3**) g_gauge_field, optr->kappa, optr->c_sw); 
     }
     
@@ -420,7 +420,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       if (g_cart_id == 0 && g_debug_level > 1) {
         printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
       }
-      init_sw_fields(VOLUME);
+      init_sw_fields();
       sw_term( (const su3**) g_gauge_field, optr->kappa, optr->c_sw); 
       sw_invert_nd(optr->mubar*optr->mubar-optr->epsbar*optr->epsbar);
       /* now copy double sw and sw_inv fields to 32bit versions */

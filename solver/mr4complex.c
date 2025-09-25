@@ -39,7 +39,7 @@ int mr4complex(_Complex double * const P, _Complex double * const Q,
   int i=0;
   double norm_r, norm_sq, beta;
   _Complex double alpha;
-  _Complex double *w_f[3], * _w_f, *stmp;
+  _Complex double *w_f[3], * _w_f;
   _Complex double *r;
   
   _w_f = (_Complex double *)malloc(3*lda*sizeof(_Complex double));

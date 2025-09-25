@@ -33,7 +33,6 @@ spinor * sp_up = NULL;
 static int chi_initialised = 0;
 
 int init_chi_spinor_field(const int V, const int nr) {
-  int i = 0;
   static int _nr = 0;
 
   if(!chi_initialised || nr > _nr) {

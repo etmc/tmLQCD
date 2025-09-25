@@ -90,11 +90,10 @@ int mixed_cg_mms_tm_nd(spinor ** const Pup, spinor ** const Pdn,
     check_abs = 1;     
   }
   
-  int use_eo=1, eofactor=2;
+  int eofactor=2;
   //not even-odd?
   if(solver_params->sdim == VOLUME) {
     eofactor = 1;
-    use_eo = 0;
   }
   
   int N = VOLUME/eofactor;

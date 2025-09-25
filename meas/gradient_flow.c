@@ -46,7 +46,11 @@
 #include "meas/measurements.h"
 #include "measure_clover_field_strength_observables.h"
 #include "measure_gauge_action.h"
+
+#ifdef TM_USE_QUDA
 #include "quda_interface.h"
+#endif
+
 #include "xchange/xchange_gauge.h"
 
 void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigned int type, const double eps ) {

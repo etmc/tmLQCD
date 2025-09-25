@@ -346,8 +346,8 @@ void sw_invert_mubar(const double mubar) {
 #pragma omp parallel
   {
 #endif
-  int err=0;
-  int icy, i, x;
+//  int err=0;
+  int icy;
   su3 ALIGN v;
   _Complex double ALIGN a[6][6];
   _Complex double ALIGN b[6][6];
@@ -365,9 +365,9 @@ void sw_invert_mubar(const double mubar) {
 #ifdef TM_USE_OMP
     icy = icx + VOLUME/2;
 #endif
-    x = g_eo2lexic[icx];
+    int x = g_eo2lexic[icx];
     
-    for(i = 0; i < 2; i++) {
+    for(int i = 0; i < 2; i++) {
       // extract (1+Tee)
       populate_6x6_matrix(a, &sw[x][0][i], 0, 0);
       populate_6x6_matrix(a, &sw[x][1][i], 0, 3);

@@ -90,7 +90,6 @@ void X_psi(spinor * const R, spinor * const S, double const mstarsq){
   //  double a = -2*mstar*mstar;
   double a = -2*mstarsq;
   double b = 1.;
-  double g_muWithoutMStarSquare=g_mu;
 
   /*cg_her(out spinor, in spinor, max iter, solver precision, flag relative precision default 0, volume, operator to invert)*/
   if(g_proc_id == 0) printf("Using CPU for inversion\n");

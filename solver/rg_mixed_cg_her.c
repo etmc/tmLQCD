@@ -197,7 +197,7 @@ int rg_mixed_cg_her(spinor * const P, spinor * const Q, solver_params_t solver_p
   
   int high_control = 0;
 
-  double atime, etime, flops;
+  double atime, etime;
   
   if(N == VOLUME) {
     init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);    

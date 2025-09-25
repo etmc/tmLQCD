@@ -38,19 +38,17 @@ void set_even_to_zero(spinor * const P) {
 #pragma omp parallel
   {
 #endif
-
-  int x, y, z, t, i, ix;
-  spinor * p = NULL;
+	spinor * p = NULL;
 
 #ifdef TM_USE_OMP
 #pragma omp for
 #endif
-  for(x = 0; x < LX; x++) {
-    for(y = 0; y < LY; y++) {
-      for(z = 0; z < LZ; z++) {
-	for(t = 0; t < T; t++) {
-	  ix = g_ipt[t][x][y][z];
-	  i = g_lexic2eosub[ ix ];
+  for(int x = 0; x < LX; x++) {
+    for(int y = 0; y < LY; y++) {
+      for(int z = 0; z < LZ; z++) {
+	for(int t = 0; t < T; t++) {
+	  const int ix = g_ipt[t][x][y][z];
+
 	  if((t+x+y+z+g_proc_coords[3]*LZ+g_proc_coords[2]*LY 
 	      + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 == 0) {
 	     

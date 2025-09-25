@@ -105,7 +105,7 @@ double measure_plaquette(const su3 *const *const gf) {
   return res;
 }
 
-double measure_gauge_action(const su3 *const *const const gf, const double lambda) {
+double measure_gauge_action(const su3 *const *const gf, const double lambda) {
   static double res;
 #ifdef TM_USE_MPI
   double ALIGN mres;

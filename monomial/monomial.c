@@ -57,6 +57,8 @@ static spinor * _pf;
 spinor ** w_fields;
 const int no_wfields = 6;
 
+extern int init_nddetratio(rational_t * rat); 
+
 int add_monomial(const int type) {
 
   if(no_monomials == max_no_monomials) {

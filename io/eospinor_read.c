@@ -21,13 +21,13 @@
 
 int read_eospinor(spinor * const s, char * filename) {
   FILE * ifs;
-  int t, x, y , z, i = 0, status=0;
+  int status=0;
   n_uint64_t bytes;
   char * header_type;
   LimeReader * limereader;
-#ifdef TM_USE_MPI
-  int position;
-#endif
+//#ifdef TM_USE_MPI
+//  int position;
+//#endif
   spinor tmp[1];
   
   if((ifs = fopen(filename, "r")) == (FILE*)NULL) {
@@ -70,9 +70,9 @@ int read_eospinor(spinor * const s, char * filename) {
   }
 
   bytes = sizeof(spinor);
-  for(x = 0; x < LX; x++) {
-    for(y = 0; y < LY; y++) {
-      for(z = 0; z < LZ; z++) {
+  for(int x = 0; x < LX; x++) {
+    for(int y = 0; y < LY; y++) {
+      for(int z = 0; z < LZ; z++) {
 #if (defined TM_USE_MPI)
 	limeReaderSeek(limereader, (n_uint64_t)
 		       (g_proc_coords[0]*T+
@@ -80,8 +80,8 @@ int read_eospinor(spinor * const s, char * filename) {
 			 + g_proc_coords[3]*LZ+z)*T*g_nproc_t)*sizeof(spinor)/2,
 		       SEEK_SET);
 #endif
-	for(t = 0; t < T; t++){
-	  i = g_lexic2eosub[ g_ipt[t][x][y][z] ];
+	for(int t = 0; t < T; t++){
+	  int i = g_lexic2eosub[ g_ipt[t][x][y][z] ];
 	  if((t+x+y+z+
 	      g_proc_coords[3]*LZ+g_proc_coords[2]*LY
 	      +g_proc_coords[0]*T+g_proc_coords[1]*LX)%2==0) {
