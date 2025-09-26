@@ -477,9 +477,9 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       /* this requires multiplication of source with                 */
       /* (1+itau_2)/sqrt(2) and the result with (1-itau_2)/sqrt(2)   */
 
-      mul_one_pm_itau2(optr->prop0, optr->prop2, g_spinor_field[DUM_DERI], 
+      mul_one_pm_itau2_and_div_by_sqrt2(optr->prop0, optr->prop2, g_spinor_field[DUM_DERI], 
                        g_spinor_field[DUM_DERI+2], -1., VOLUME/2);
-      mul_one_pm_itau2(optr->prop1, optr->prop3, g_spinor_field[DUM_DERI+1], 
+      mul_one_pm_itau2_and_div_by_sqrt2(optr->prop1, optr->prop3, g_spinor_field[DUM_DERI+1], 
                        g_spinor_field[DUM_DERI+3], -1., VOLUME/2);
       /* write propagator */
       if(write_prop) optr->write_prop(op_id, index_start, i);
@@ -495,11 +495,11 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
           fprintf(stdout, "# Inversion done in %d iterations, squared residue = %e!\n",
                   optr->iterations, optr->reached_prec);
         }
-        mul_one_pm_itau2(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], optr->sr0, optr->sr2, -1., VOLUME/2);
-        mul_one_pm_itau2(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+3], optr->sr1, optr->sr3, -1., VOLUME/2);
+        mul_one_pm_itau2_and_div_by_sqrt2(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+2], optr->sr0, optr->sr2, -1., VOLUME/2);
+        mul_one_pm_itau2_and_div_by_sqrt2(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+3], optr->sr1, optr->sr3, -1., VOLUME/2);
 
-        mul_one_pm_itau2(optr->sr0, optr->sr2, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI], +1., VOLUME/2);
-        mul_one_pm_itau2(optr->sr1, optr->sr3, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], +1., VOLUME/2);
+        mul_one_pm_itau2_and_div_by_sqrt2(optr->sr0, optr->sr2, g_spinor_field[DUM_DERI+2], g_spinor_field[DUM_DERI], +1., VOLUME/2);
+        mul_one_pm_itau2_and_div_by_sqrt2(optr->sr1, optr->sr3, g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+1], +1., VOLUME/2);
       }
       /* volume sources need only one inversion */
       else if(SourceInfo.type == SRC_TYPE_VOL) i++;

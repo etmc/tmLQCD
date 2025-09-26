@@ -311,8 +311,8 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
       gaussian_volume_source(g_spinor_field[2], g_spinor_field[3],
                              isample, nstore, 2);
     }
-    mul_one_pm_itau2(g_spinor_field[4], g_spinor_field[6], g_spinor_field[0], g_spinor_field[2], +1., VOLUME/2);
-    mul_one_pm_itau2(g_spinor_field[5], g_spinor_field[7], g_spinor_field[1], g_spinor_field[3], +1., VOLUME/2);
+    mul_one_pm_itau2_and_div_by_sqrt2(g_spinor_field[4], g_spinor_field[6], g_spinor_field[0], g_spinor_field[2], +1., VOLUME/2);
+    mul_one_pm_itau2_and_div_by_sqrt2(g_spinor_field[5], g_spinor_field[7], g_spinor_field[1], g_spinor_field[3], +1., VOLUME/2);
     assign(g_spinor_field[0], g_spinor_field[4], VOLUME/2);
     assign(g_spinor_field[1], g_spinor_field[5], VOLUME/2);
     assign(g_spinor_field[2], g_spinor_field[6], VOLUME/2);

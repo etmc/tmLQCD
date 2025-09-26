@@ -47,6 +47,7 @@ typedef struct
    _Complex float c00, c01, c02, c10, c11, c12, c20, c21, c22;
 } su3_32;
 
+// vector in color space
 typedef struct
 {
    _Complex double c0,c1,c2;
@@ -57,6 +58,7 @@ typedef struct
     _Complex float c0,c1,c2;
 } su3_vector32;
 
+// 4 Dirac components of the (colored) spinor (vector in color space)
 typedef struct
 {
    su3_vector s0,s1,s2,s3;
