@@ -452,7 +452,7 @@ int main(int argc,char *argv[])
     printf("# Performing parallel IO test ...\n");
   }
   xlfInfo = construct_paramsXlfInfo(0.5, 0);
-  write_gauge_field( "conf.test", 64, xlfInfo);
+  write_gauge_field( "conf.test", 64, xlfInfo, g_gauge_field);
   free(xlfInfo);
   if(g_proc_id==0) {
     printf("# done ...\n");

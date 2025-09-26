@@ -33,6 +33,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+#include <float.h>
 #include "global.h"
 #include "fatal_error.h"
 #include "aligned_malloc.h"
@@ -47,6 +48,7 @@
 #include "measure_clover_field_strength_observables.h"
 #include "meas/field_strength_types.h"
 #include "meas/measurements.h"
+#include "io/gauge.h"
 
 
 void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigned int type, const double eps ) {
@@ -138,7 +140,7 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
   measurement *meas=&measurement_list[id];
   double eps = meas->gf_eps;
   double tmax = meas->gf_tmax;
-  
+  double last_write = 0.0;
 
   if( g_proc_id == 0 ) {
     printf("# Doing gradient flow measurement. id=%d\n", id);
@@ -160,10 +162,20 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
     fprintf(outfile, "traj t P Eplaq Esym tsqEplaq tsqEsym Wsym Qsym\n");
   }
 
-  
+  // if we choose to write out the gauge field, we need extra characters 
+  // to append the trajectory id and the flow time  
+  const int gauge_config_output_filename_max_length = sizeof(meas->output_filename)/sizeof(char) +
+                                                      strlen(".000000_t0.000000");
+  char gauge_config_output_filename[gauge_config_output_filename_max_length];
+  if( fabs(meas->gf_write_interval) > FLT_EPSILON && strlen(meas->output_filename) == 0 ){
+    strcpy(meas->output_filename, "flowed_conf");
+  }
 
   if (meas->external_library == QUDA_LIB) {
 #ifdef TM_USE_QUDA
+    if( fabs(meas->gf_write_interval) > FLT_EPSILON ){
+      tm_debug_printf(0, 0, "WARNING: QUDA-based gradient flow, writing out flowed gauge field not yet supported!\n");
+    }
     compute_WFlow_quda( eps , tmax, traj, outfile);
 #else
     fatal_error(
@@ -199,6 +211,15 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
         step_gradient_flow(vt.field, x1.field, x2.field, z.field, 0, eps);
         measure_clover_field_strength_observables(vt.field, &fso[step]);
         P[step] = measure_plaquette(vt.field) / (6.0 * VOLUME * g_nproc);
+
+        if( fabs(meas->gf_write_interval) > FLT_EPSILON && t[step] - last_write > meas->gf_write_interval ){
+          last_write = t[step];
+          snprintf(gauge_config_output_filename, gauge_config_output_filename_max_length,
+                   "%s.%06d_t%1.6lf", meas->output_filename, traj, t[step]);
+          paramsXlfInfo *xlfInfo = construct_paramsXlfInfo(P[step], traj); 
+          write_gauge_field(gauge_config_output_filename, 64, xlfInfo, vt.field);
+          free(xlfInfo);
+        }
       }
       W = t[1] * t[1] * (2 * fso[1].E + t[1] * ((fso[2].E - fso[0].E) / (2 * eps)));
       tsqE = t[1] * t[1] * fso[1].E;

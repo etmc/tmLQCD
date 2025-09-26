@@ -95,7 +95,7 @@ void solve_fail_write_config_and_abort(const char * const solver) {
   char outname[200];
   snprintf(outname, 200, "conf_monomial_solve_fail.%.6f.%04d", g_gauge_state.gauge_id, nstore);
   paramsXlfInfo * xlfInfo = construct_paramsXlfInfo(measure_plaquette((const su3**)g_gauge_field)/(6.*VOLUME*g_nproc), nstore);
-  int status = write_gauge_field(outname, 64, xlfInfo);
+  int status = write_gauge_field(outname, 64, xlfInfo, g_gauge_field);
   free(xlfInfo);
   fatal_error("Error: solver reported -1 iterations.", solver);
 }
