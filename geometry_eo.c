@@ -751,10 +751,6 @@ void geometry(){
   int startvaluey = 0;
   int startvaluez = 0;
   int * xeven;
-#if defined TM_USE_MPI
-  int isp, *ones, *oneS, *oneL;
-  int lsliceS, lsliceL, check_struct_zt;
-#endif
 
   xeven = malloc(VOLUMEPLUSRAND*sizeof(int));
 
@@ -1102,10 +1098,14 @@ void geometry(){
 #endif
 
 #if ( defined PARALLELXYZT || defined PARALLELXYZ )
-  check_struct_zt=0;
+#  if defined _USE_TSPLITPAR
+  int check_struct_zt=0;
+#endif
   ix = 0;
   for(x0 = 0; x0 < T; x0++) {
-    isp = 0;
+#  if defined _USE_TSPLITPAR
+    int isp = 0;
+#endif
     for(x1 = 0; x1 < LX; x1++) {
       for(x2 = 0; x2 < LY; x2++) {
 	if((x0 + x1 + x2 +  
@@ -1128,7 +1128,9 @@ void geometry(){
     }
   }
   for(x0 = 0; x0 < T; x0++) {
-    isp = 0;
+#  if defined _USE_TSPLITPAR
+    int isp = 0;
+#endif
     for(x1 = 0; x1 < LX; x1++) {
       for(x2 = 0; x2 < LY; x2++) {
 	if((x0 + x1 + x2 + (LZ-1) + 
@@ -1152,7 +1154,9 @@ void geometry(){
   }
   ix = 0;
   for(x0 = 0; x0 < T; x0++) {
-    isp = 0;
+#  if defined _USE_TSPLITPAR
+    int isp = 0;
+#endif
     for(x1 = 0; x1 < LX; x1++) {
       for(x2 = 0; x2 < LY; x2++) {
 	if((x0 + x1 + x2 +  
@@ -1175,7 +1179,9 @@ void geometry(){
     }
   }
   for(x0 = 0; x0 < T; x0++) {
-    isp = 0;
+#  if defined _USE_TSPLITPAR
+    int isp = 0;
+#endif
     for(x1 = 0; x1 < LX; x1++) {
       for(x2 = 0; x2 < LY; x2++) {
 	if((x0 + x1 + x2 + (LZ-1) + 

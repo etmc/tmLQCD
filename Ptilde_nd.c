@@ -101,46 +101,35 @@ void Ptilde_cheb_coefs(double aa, double bb, double dd[], int n, double exponent
 
 void Ptilde_ndpsi(spinor *R_s, spinor *R_c, double *dd, int n, 
 		  spinor *S_s, spinor *S_c, matrix_mult_nd Qsq) {
-  tm_stopwatch_push(&g_timers, __func__, "");
+  tm_stopwatch_push(&g_timers, __func__, "");  
   
-  int j;
-  double fact1, fact2, temp1, temp2, temp3, temp4;
+  spinor *svs_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+  spinor *svs   = (spinor *)(((unsigned long int)(svs_)+ALIGN_BASE)&~ALIGN_BASE);
+  spinor *ds_   = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+  spinor *ds    = (spinor *)(((unsigned long int)(ds_)+ALIGN_BASE)&~ALIGN_BASE);
+  spinor *dds_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+  spinor *dds   = (spinor *)(((unsigned long int)(dds_)+ALIGN_BASE)&~ALIGN_BASE);
+  spinor *auxs_ = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+  spinor *auxs  = (spinor *)(((unsigned long int)(auxs_)+ALIGN_BASE)&~ALIGN_BASE);
+  spinor *aux2s_= calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+  //spinor *aux2s = (spinor *)(((unsigned long int)(aux2s_)+ALIGN_BASE)&~ALIGN_BASE);
+  spinor *aux3s_= calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+  spinor *aux3s = (spinor *)(((unsigned long int)(aux3s_)+ALIGN_BASE)&~ALIGN_BASE);
+  spinor *svc_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+  spinor *svc   = (spinor *)(((unsigned long int)(svc_)+ALIGN_BASE)&~ALIGN_BASE);
+  spinor *dc_   = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+  spinor *dc    = (spinor *)(((unsigned long int)(dc_)+ALIGN_BASE)&~ALIGN_BASE);
+  spinor *ddc_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+  spinor *ddc   = (spinor *)(((unsigned long int)(ddc_)+ALIGN_BASE)&~ALIGN_BASE);
+  spinor *auxc_ = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+  spinor *auxc  = (spinor *)(((unsigned long int)(auxc_)+ALIGN_BASE)&~ALIGN_BASE);
+  spinor *aux2c_= calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+  //spinor *aux2c = (spinor *)(((unsigned long int)(aux2c_)+ALIGN_BASE)&~ALIGN_BASE);
+  spinor *aux3c_= calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
+  spinor *aux3c = (spinor *)(((unsigned long int)(aux3c_)+ALIGN_BASE)&~ALIGN_BASE);
   
-  spinor *svs_=NULL, *svs=NULL, *ds_=NULL, *ds=NULL, *dds_=NULL, *dds=NULL, 
-    *auxs_=NULL, *auxs=NULL, *aux2s_=NULL, *aux2s=NULL, *aux3s_=NULL, 
-    *aux3s=NULL;
-  spinor *svc_=NULL, *svc=NULL, *dc_=NULL, *dc=NULL, *ddc_=NULL, 
-    *ddc=NULL, *auxc_=NULL, *auxc=NULL, *aux2c_=NULL, *aux2c=NULL, 
-    *aux3c_=NULL, *aux3c=NULL;
-  
-  
-  svs_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-  svs   = (spinor *)(((unsigned long int)(svs_)+ALIGN_BASE)&~ALIGN_BASE);
-  ds_   = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-  ds    = (spinor *)(((unsigned long int)(ds_)+ALIGN_BASE)&~ALIGN_BASE);
-  dds_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-  dds   = (spinor *)(((unsigned long int)(dds_)+ALIGN_BASE)&~ALIGN_BASE);
-  auxs_ = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-  auxs  = (spinor *)(((unsigned long int)(auxs_)+ALIGN_BASE)&~ALIGN_BASE);
-  aux2s_= calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-  aux2s = (spinor *)(((unsigned long int)(aux2s_)+ALIGN_BASE)&~ALIGN_BASE);
-  aux3s_= calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-  aux3s = (spinor *)(((unsigned long int)(aux3s_)+ALIGN_BASE)&~ALIGN_BASE);
-  svc_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-  svc   = (spinor *)(((unsigned long int)(svc_)+ALIGN_BASE)&~ALIGN_BASE);
-  dc_   = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-  dc    = (spinor *)(((unsigned long int)(dc_)+ALIGN_BASE)&~ALIGN_BASE);
-  ddc_  = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-  ddc   = (spinor *)(((unsigned long int)(ddc_)+ALIGN_BASE)&~ALIGN_BASE);
-  auxc_ = calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-  auxc  = (spinor *)(((unsigned long int)(auxc_)+ALIGN_BASE)&~ALIGN_BASE);
-  aux2c_= calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-  aux2c = (spinor *)(((unsigned long int)(aux2c_)+ALIGN_BASE)&~ALIGN_BASE);
-  aux3c_= calloc(VOLUMEPLUSRAND+1, sizeof(spinor));
-  aux3c = (spinor *)(((unsigned long int)(aux3c_)+ALIGN_BASE)&~ALIGN_BASE);
-  
-  fact1=4/(phmc_cheb_evmax-phmc_cheb_evmin);
-  fact2=-2*(phmc_cheb_evmax+phmc_cheb_evmin)/(phmc_cheb_evmax-phmc_cheb_evmin);
+  double fact1=4/(phmc_cheb_evmax-phmc_cheb_evmin);
+  double fact2=-2*(phmc_cheb_evmax+phmc_cheb_evmin)/(phmc_cheb_evmax-phmc_cheb_evmin);
   
   zero_spinor_field(&ds[0],VOLUME/2);
   zero_spinor_field(&dds[0],VOLUME/2); 
@@ -152,7 +141,7 @@ void Ptilde_ndpsi(spinor *R_s, spinor *R_c, double *dd, int n,
   assign(&aux3c[0], &S_c[0],VOLUME/2);  
   
   /*  Use the Clenshaw's recursion for the Chebysheff polynomial */
-  for (j=n-1; j>=1; j--) {
+  for (int j=n-1; j>=1; j--) {
     assign(&svs[0],&ds[0],VOLUME/2);
     assign(&svc[0],&dc[0],VOLUME/2); 
     
@@ -167,8 +156,8 @@ void Ptilde_ndpsi(spinor *R_s, spinor *R_c, double *dd, int n,
 
     Qsq(&R_s[0], &R_c[0], &auxs[0], &auxc[0]);
 
-    temp1=-1.0;
-    temp2=dd[j];
+    double temp1=-1.0;
+    double temp2=dd[j];
     assign_mul_add_mul_add_mul_add_mul_r(&ds[0] , &R_s[0], &dds[0], &aux3s[0], fact2, fact1, temp1, temp2,VOLUME/2);
     assign_mul_add_mul_add_mul_add_mul_r(&dc[0] , &R_c[0], &ddc[0], &aux3c[0], fact2, fact1, temp1, temp2,VOLUME/2);
     assign(&dds[0], &svs[0],VOLUME/2);
@@ -180,10 +169,10 @@ void Ptilde_ndpsi(spinor *R_s, spinor *R_c, double *dd, int n,
 
   Qsq(&auxs[0], &auxc[0], &R_s[0], &R_c[0]);
 
-  temp1=-1.0;
-  temp2=dd[0]/2;
-  temp3=fact1/2;
-  temp4=fact2/2;
+  double temp1=-1.0;
+  double temp2=dd[0]/2;
+  double temp3=fact1/2;
+  double temp4=fact2/2;
   assign_mul_add_mul_add_mul_add_mul_r(&auxs[0], &ds[0], &dds[0], &aux3s[0], temp3, temp4, temp1, temp2,VOLUME/2);
   assign_mul_add_mul_add_mul_add_mul_r(&auxc[0], &dc[0], &ddc[0], &aux3c[0], temp3, temp4, temp1, temp2,VOLUME/2);
   assign(&R_s[0], &auxs[0],VOLUME/2);
