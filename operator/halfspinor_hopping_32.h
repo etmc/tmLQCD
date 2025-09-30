@@ -400,7 +400,9 @@
 
 #define _declare_hregs()				\
   spinor32 ALIGN32 rs;					\
-  su3_vector32 ALIGN32 psi, chi, psi2, chi2;
+  su3_vector32 ALIGN32 psi, chi; 
+
+//, psi2, chi2;
 
 #endif
 

@@ -43,7 +43,7 @@ int read_message(READER * reader, char **buffer) {
     return(-1);
   }
 
-  status = ReaderReadData(*buffer, &bytesRead, reader);
+  status = ReaderReadData(*buffer, (MPI_Offset *)&bytesRead, reader);
 #if TM_USE_MPI
   MPI_Barrier(g_cart_grid);
 #endif

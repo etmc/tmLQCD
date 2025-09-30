@@ -63,7 +63,7 @@ extern double g_prec_sequence_d_dagger_d[3];
 
 
 #ifdef HAVE_FFTW
-  fftw_plan spinor_fftw_plan(spinor *spinor_in,spinor *spinor_out,int tt,int ll,unsigned int forward,int fftw_flags);
+  fftw_plan spinor_fftw_plan(const spinor *spinor_in,spinor *spinor_out,int tt,int ll,unsigned int forward,int fftw_flags);
 #endif
 
 /* translates a tm_operator value to a human readable string */

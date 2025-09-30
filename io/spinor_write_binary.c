@@ -67,8 +67,8 @@ int write_binary_spinor_data(spinor * const s, spinor * const r,
             be_to_cpu_assign_double2single((float*)(filebuffer + bufoffset), (double*)(p + i), sizeof(spinor) / 8);
           else
             be_to_cpu_assign((double*)(filebuffer + bufoffset), (double*)(p + i),  sizeof(spinor) / 8);
-            DML_checksum_accum(checksum, rank, (char*) filebuffer + bufoffset, bytes);
-            bufoffset += bytes;
+          DML_checksum_accum(checksum, rank, (char*) filebuffer + bufoffset, bytes);
+          bufoffset += bytes;
         }
       }
     }
@@ -295,8 +295,8 @@ int write_binary_spinor_data_l(spinor * const s,
             be_to_cpu_assign_double2single((float*)(filebuffer + bufoffset), (double*)(s + i), sizeof(spinor) / 8);
           else
             be_to_cpu_assign((double*)(filebuffer + bufoffset), (double*)(s + i),  sizeof(spinor) / 8);
-            DML_checksum_accum(checksum, rank, (char*) filebuffer + bufoffset, bytes);
-            bufoffset += bytes;
+          DML_checksum_accum(checksum, rank, (char*) filebuffer + bufoffset, bytes);
+          bufoffset += bytes;
         }
       }
     }
