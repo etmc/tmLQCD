@@ -1,11 +1,72 @@
 include:
   - remote: 'https://gitlab.com/cscs-ci/recipes/-/raw/master/templates/v2/.ci-ext.yml'
 
+
 .test/base:
   stage: test
   extends: .uenv-runner-daint-gh200
   image: ${UENV_NAME}/${UENV_VERSION}:${UENV_TAG}
   variables:
     TEST: "default"
+    REFPATH: "ref_data/cscs-test"
+    CFLAGS: "-O3 -fopenmp -mtune=neoverse-v2 -mcpu=neoverse-v2"
+    CXXFLAGS: "-O3 -fopenmp -mtune=neoverse-v2 -mcpu=neoverse-v2"
+    LDFLAGS: "-fopenmp"
+  before_script:
+    - |
+      if test "${SLURM_PROCID}" -eq "0"; then
+        export CC="$(which mpicc)"
+        export CXX="$(which mpicxx)"
+        export qudadir="$(spack location -i quda)"
+        export limedir="$(spack location -i c-lime)"
+        export lemondir="$(spack location -i lemonio)"
+        export blasdir="$(spack location -i openblas)"
+        export cudadir="$(spack location -i cuda)"
+        echo "env"
+        env
+        echo "spack --version"
+        spack --version
+        ls -la "${qudadir}"
+        ls -la "${limedir}"
+        ls -la "${lemondir}"
+        ls -la "${blasdir}/lib/libopenblas.a"
+        ls -la "${cudadir}/lib64"
+        mkdir install_dir
+        ./configure \
+          --enable-quda_experimental \
+          --enable-mpi \
+          --enable-omp \
+          --with-mpidimension=4 \
+          --disable-sse2 \
+          --disable-sse3 \
+          --enable-alignment=32 \
+          --with-qudadir="${qudadir}" \
+          --with-limedir="${limedir}" \
+          --with-lemondir="${lemondir}" \
+          --with-lapack="${blasdir}/lib/libopenblas.a" \
+          --with-cudadir="${cudadir}/lib64" \
+          --prefix="$(pwd)/install_dir"
+        touch preparation-done-${CI_JOB_ID}
+      fi
+    - while test ! -f preparation-done-${CI_JOB_ID}; do sleep 5; done
   script:
-    - echo $TEST
+    - echo "Now run binary on SLURM_PROCID=${SLURM_PROCID} with INPUT_FILE=${INPUT_FILE} ..."
+  after_script:
+    - echo "Now check results on SLURM_PROCID=${SLURM_PROCID} ..."
+
+
+.test/hmc:
+  extends: .test/base
+  script:
+    - echo "TEST = $TEST"
+    - echo "REFPATH = $REFPATH"
+    - ls -la install_dir
+    - echo "Now run binary on SLURM_PROCID=${SLURM_PROCID} with INPUT_FILE=${INPUT_FILE} ..."
+  after_script:
+    - echo "Now check results on SLURM_PROCID=${SLURM_PROCID} ..."
+    - numdiff -r 1e-4 -X 1:10 -X 1:5-8 -X 2:10 -X 2:5-8 output.data ${REFPATH}/output.data
+    - |
+      for i in $(seq 0 2 18); do \
+        f=onlinemeas.$(printf %06d $i); \
+        numdiff -r 1e-5 ${f} ${REFPATH}/${f}; \
+      done

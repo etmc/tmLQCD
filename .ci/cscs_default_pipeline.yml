@@ -14,6 +14,11 @@ build-quda/uenv/daint-gh200:
     UENV_RECIPE: .ci/uenv-recipes/tmlqcd/daint-gh200
 
 test/daint-gh200:
-  extends: .test/base
+  extends: .test/hmc
   variables:
     TEST: "blabla"
+    INPUT_FILE: "input/quda.in"
+    QUDA_ENABLE_TUNING: 0 # disable tuning
+    SLURM_JOB_NUM_NODES: 2
+    SLURM_NTASKS: 8
+    SLURM_TIMELIMIT: "00:30:00"
