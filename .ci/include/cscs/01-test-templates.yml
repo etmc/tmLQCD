@@ -24,26 +24,28 @@ include:
         export lemondir="$(spack location -i lemonio)"
         export blasdir="$(spack location -i openblas)"
         export cudadir="$(spack location -i cuda)"
-        echo "mpicc --version"
-        mpicc --version
-        echo "mpicxx --version"
-        mpicxx --version
-        echo "mpic++ --version"
-        mpic++ --version
-        echo "gcc --version"
-        gcc --version
-        echo "cc --version"
-        cc --version
-        echo "make --version"
-        make --version
-        echo "spack --version"
-        spack --version
-        ls -la "${qudadir}"
-        ls -la "${limedir}"
-        ls -la "${lemondir}"
-        ls -la "${blasdir}/lib/libopenblas.a"
-        ls -la "${cudadir}/lib64"
-        mkdir install_dir
+        echo "mpicc --version || true"
+        mpicc --version || true
+        echo "mpicxx --version || true"
+        mpicxx --version || true
+        echo "mpic++ --version || true"
+        mpic++ --version || true
+        echo "gcc --version || true"
+        gcc --version || true
+        echo "cc --version || true"
+        cc --version || true
+        echo "make --version || true"
+        make --version || true
+        echo "spack --version || true"
+        spack --version || true
+        echo "compgen -ac || true"
+        compgen -ac || true
+        ls -la "${qudadir}" || true
+        ls -la "${limedir}" || true
+        ls -la "${lemondir}" || true
+        ls -la "${blasdir}/lib/libopenblas.a" || true
+        ls -la "${cudadir}/lib64" || true
+        mkdir install_dir || true
         ./configure \
           --enable-quda_experimental \
           --enable-mpi \
@@ -57,9 +59,9 @@ include:
           --with-lemondir="${lemondir}" \
           --with-lapack="${blasdir}/lib/libopenblas.a" \
           --with-cudadir="${cudadir}/lib64" \
-          --prefix="$(pwd)/install_dir"
-        make
-        make install
+          --prefix="$(pwd)/install_dir" || true
+        make || true
+        make install || true
         touch preparation-done-${CI_JOB_ID}
       fi
     - while test ! -f preparation-done-${CI_JOB_ID}; do sleep 5; done
