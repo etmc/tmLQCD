@@ -15,6 +15,8 @@ include:
   before_script:
     - |
       if test "${SLURM_PROCID}" -eq "0"; then
+        echo "env"
+        env
         export CC="$(which mpicc)"
         export CXX="$(which mpicxx)"
         export qudadir="$(spack location -i quda)"
@@ -22,8 +24,18 @@ include:
         export lemondir="$(spack location -i lemonio)"
         export blasdir="$(spack location -i openblas)"
         export cudadir="$(spack location -i cuda)"
-        echo "env"
-        env
+        echo "mpicc --version"
+        mpicc --version
+        echo "mpicxx --version"
+        mpicxx --version
+        echo "mpic++ --version"
+        mpic++ --version
+        echo "gcc --version"
+        gcc --version
+        echo "cc --version"
+        cc --version
+        echo "make --version"
+        make --version
         echo "spack --version"
         spack --version
         ls -la "${qudadir}"
@@ -46,6 +58,8 @@ include:
           --with-lapack="${blasdir}/lib/libopenblas.a" \
           --with-cudadir="${cudadir}/lib64" \
           --prefix="$(pwd)/install_dir"
+        make
+        make install
         touch preparation-done-${CI_JOB_ID}
       fi
     - while test ! -f preparation-done-${CI_JOB_ID}; do sleep 5; done
