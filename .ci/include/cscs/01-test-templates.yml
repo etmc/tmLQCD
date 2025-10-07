@@ -66,6 +66,11 @@ include:
           --prefix="$(pwd)/install_dir" || true
         make || true
         make install || true
+        spack repo add .ci/uenv-recipes/tmlqcd/daint-gh200/repo || true
+        spack repo list || true
+        spack info tmlqcd || true
+        spack install tmlqcd dev_path=.
+        ls -la
         touch preparation-done-${CI_JOB_ID}
       fi
     - while test ! -f preparation-done-${CI_JOB_ID}; do sleep 5; done

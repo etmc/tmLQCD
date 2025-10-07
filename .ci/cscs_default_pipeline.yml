@@ -17,7 +17,7 @@ test/daint-gh200:
   extends: .test/hmc
   variables:
     TEST: "blabla"
-    INPUT_FILE: "input/quda.in"
+    INPUT_FILE: ".ci/input/quda.in"
     QUDA_ENABLE_TUNING: 0 # disable tuning
     SLURM_JOB_NUM_NODES: 2
     SLURM_NTASKS: 8
