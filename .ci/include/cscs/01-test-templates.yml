@@ -9,7 +9,7 @@ include:
   variables:
     WITH_UENV_VIEW: "default"
     TEST: "default"
-    REFPATH: "ref_data/cscs-test"
+    REFPATH: ".ci/ref_data/cscs-test"
     CFLAGS: "-O3 -fopenmp -mtune=neoverse-v2 -mcpu=neoverse-v2"
     CXXFLAGS: "-O3 -fopenmp -mtune=neoverse-v2 -mcpu=neoverse-v2"
     LDFLAGS: "-fopenmp"
@@ -20,11 +20,13 @@ include:
         env
         export CC="$(which mpicc)"
         export CXX="$(which mpicxx)"
-        export qudadir="$(spack location -i quda)"
-        export limedir="$(spack location -i c-lime)"
-        export lemondir="$(spack location -i lemonio)"
-        export blasdir="$(spack location -i openblas)"
-        export cudadir="$(spack location -i cuda)"
+        export qudadir="$(spack find --format '{prefix}' quda)"
+        export limedir="$(spack find --format '{prefix}' c-lime)"
+        export lemondir="$(spack find --format '{prefix}' lemonio)"
+        export blasdir="$(spack find --format '{prefix}' openblas)"
+        export cudadir="$(spack find --format '{prefix}' cuda)"
+        echo "env"
+        env
         echo "mpicc --version || true"
         mpicc --version || true
         echo "mpicxx --version || true"
@@ -47,6 +49,7 @@ include:
         ls -la "${blasdir}/lib/libopenblas.a" || true
         ls -la "${cudadir}/lib64" || true
         mkdir install_dir || true
+        autoconf || true
         ./configure \
           --enable-quda_experimental \
           --enable-mpi \
@@ -78,6 +81,8 @@ include:
     - echo "TEST = $TEST"
     - echo "REFPATH = $REFPATH"
     - ls -la install_dir
+    - echo "running ./install_dir/hmc_tm -f ${INPUT_FILE}"
+    - ./install_dir/hmc_tm -f "${INPUT_FILE}"
     - echo "Now run binary on SLURM_PROCID=${SLURM_PROCID} with INPUT_FILE=${INPUT_FILE} ..."
   after_script:
     - echo "Now check results on SLURM_PROCID=${SLURM_PROCID} ..."
