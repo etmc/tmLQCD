@@ -7,6 +7,7 @@ include:
   extends: .uenv-runner-daint-gh200
   image: ${UENV_NAME}/${UENV_VERSION}:${UENV_TAG}
   variables:
+    WITH_UENV_VIEW: "default"
     TEST: "default"
     REFPATH: "ref_data/cscs-test"
     CFLAGS: "-O3 -fopenmp -mtune=neoverse-v2 -mcpu=neoverse-v2"
