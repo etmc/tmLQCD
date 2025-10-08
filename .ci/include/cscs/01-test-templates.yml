@@ -41,8 +41,8 @@ include:
         make --version || true
         echo "spack --version || true"
         spack --version || true
-        echo "compgen -ac || true"
-        compgen -ac || true
+        echo "find /user-environment || true"
+        find /user-environment || true
         ls -la "${qudadir}" || true
         ls -la "${limedir}" || true
         ls -la "${lemondir}" || true
