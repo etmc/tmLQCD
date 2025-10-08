@@ -18,9 +18,10 @@ include:
       if test "${SLURM_PROCID}" -eq "0"; then
         export CC="$(which mpicc)"
         export CXX="$(which mpicxx)"
+        export LIBS="-llapack -lblas"
         mkdir -p install_dir
         autoconf
-        ./configure LIBS="-llapack -lblas" \
+        ./configure \
           --enable-quda_experimental \
           --enable-mpi \
           --enable-omp \
