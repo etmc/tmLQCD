@@ -16,41 +16,10 @@ include:
   before_script:
     - |
       if test "${SLURM_PROCID}" -eq "0"; then
-        echo "env"
-        env
         export CC="$(which mpicc)"
         export CXX="$(which mpicxx)"
-        export qudadir="/user-environment/env/default"
-        export limedir="/user-environment/env/default"
-        export lemondir="/user-environment/env/default"
-        export blasdir="/user-environment/env/default"
-        export cudadir="/user-environment/env/default"
-        echo "env"
-        env
-        echo "mpicc --version || true"
-        mpicc --version || true
-        echo "mpicxx --version || true"
-        mpicxx --version || true
-        echo "mpic++ --version || true"
-        mpic++ --version || true
-        echo "gcc --version || true"
-        gcc --version || true
-        echo "cc --version || true"
-        cc --version || true
-        echo "make --version || true"
-        make --version || true
-        echo "spack --version || true"
-        spack --version || true
-        echo "find /user-environment/env/default || true"
-        find /user-environment/env/default || true
-        ls -la "${qudadir}" || true
-        ls -la "${limedir}" || true
-        ls -la "${lemondir}" || true
-        ls -la "${blasdir}/lib/libopenblas.a" || true
-        ls -la "${cudadir}/lib64" || true
-        ls -la "${cudadir}/lib" || true
-        mkdir install_dir || true
-        autoconf || true
+        mkdir -p install_dir
+        autoconf
         ./configure \
           --enable-quda_experimental \
           --enable-mpi \
@@ -59,26 +28,21 @@ include:
           --disable-sse2 \
           --disable-sse3 \
           --enable-alignment=32 \
-          --with-qudadir="${qudadir}" \
-          --with-limedir="${limedir}" \
-          --with-lemondir="${lemondir}" \
-          --with-lapack="${blasdir}/lib/libopenblas.a" \
-          --with-cudadir="${cudadir}/lib64" \
-          --prefix="$(pwd)/install_dir" || true
-        make || true
-        make install || true
-        spack repo add .ci/uenv-recipes/tmlqcd/daint-gh200/repo || true
-        spack repo list || true
-        spack info tmlqcd || true
-        spack install tmlqcd dev_path=.
-        ls -la
+          --with-qudadir="/user-environment/env/default" \
+          --with-limedir="/user-environment/env/default" \
+          --with-lemondir="/user-environment/env/default" \
+          --with-lapack="/user-environment/env/default/lib/libopenblas.a" \
+          --with-cudadir="/user-environment/env/default/lib64" \
+          --prefix="$(pwd)/install_dir"
+        make
+        make install
         touch preparation-done-${CI_JOB_ID}
       fi
     - while test ! -f preparation-done-${CI_JOB_ID}; do sleep 5; done
   script:
-    - echo "Now run binary on SLURM_PROCID=${SLURM_PROCID} with INPUT_FILE=${INPUT_FILE} ..."
+    - echo "--> Now run binary on SLURM_PROCID=${SLURM_PROCID} with INPUT_FILE=${INPUT_FILE} ..."
   after_script:
-    - echo "Now check results on SLURM_PROCID=${SLURM_PROCID} ..."
+    - echo "--> Now check results on SLURM_PROCID=${SLURM_PROCID} ..."
 
 
 .test/hmc:
