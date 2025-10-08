@@ -9,7 +9,8 @@ gcc-env:
   - quda@develop +qdp +multigrid +twisted_clover +twisted_mass
   - lemonio
   - c-lime
-  - spack
+  - openblas
+  - cuda
   variants:
   - +mpi
   - +cuda

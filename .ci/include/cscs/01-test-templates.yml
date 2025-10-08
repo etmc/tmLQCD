@@ -20,11 +20,11 @@ include:
         env
         export CC="$(which mpicc)"
         export CXX="$(which mpicxx)"
-        export qudadir="$(spack find --format '{prefix}' quda)"
-        export limedir="$(spack find --format '{prefix}' c-lime)"
-        export lemondir="$(spack find --format '{prefix}' lemonio)"
-        export blasdir="$(spack find --format '{prefix}' openblas)"
-        export cudadir="$(spack find --format '{prefix}' cuda)"
+        export qudadir="/user-environment/env/default"
+        export limedir="/user-environment/env/default"
+        export lemondir="/user-environment/env/default"
+        export blasdir="/user-environment/env/default"
+        export cudadir="/user-environment/env/default"
         echo "env"
         env
         echo "mpicc --version || true"
@@ -48,6 +48,7 @@ include:
         ls -la "${lemondir}" || true
         ls -la "${blasdir}/lib/libopenblas.a" || true
         ls -la "${cudadir}/lib64" || true
+        ls -la "${cudadir}/lib" || true
         mkdir install_dir || true
         autoconf || true
         ./configure \
