@@ -20,7 +20,7 @@ include:
         export CXX="$(which mpicxx)"
         mkdir -p install_dir
         autoconf
-        ./configure \
+        ./configure LIBS="-llapack -lblas" \
           --enable-quda_experimental \
           --enable-mpi \
           --enable-omp \
