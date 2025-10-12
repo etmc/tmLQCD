@@ -2,6 +2,6 @@
 #ifndef _RND_GAUGE_TRAFO_H
 #define _RND_GAUGE_TRAFO_H
  
-extern void rnd_gauge_trafo();
+extern void rnd_gauge_trafo(const int repro, su3 ** const gf);
 
 #endif

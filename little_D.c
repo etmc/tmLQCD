@@ -28,17 +28,17 @@
 #ifdef TM_USE_MPI
 # include <mpi.h>
 #endif
-#include "global.h"
 #include <complex.h>
+#include "aligned_malloc.h"
 #include "block.h"
+#include "gamma.h"
+#include "global.h"
 #include "linalg/blas.h"
+#include "linalg_eo.h"
+#include "little_D.h"
 #include "solver/gcr4complex.h"
 #include "solver/generate_dfl_subspace.h"
 #include "xchange/little_field_gather.h"
-#include "gamma.h"
-#include "linalg_eo.h"
-#include "little_D.h"
-
 
 /* assume we have a little field w                       */
 /* which has length 9*nb_blocks*N_s                      */
@@ -70,34 +70,35 @@ void unit_little_D(_Complex double *v, _Complex double *w) {
 
 /** ANOTHER TESTING FUNCTION */
 void invert_little_D_spinor(spinor *r, spinor *s){
-  int i, j;
+  int status = 0;
   spinor **psi;
   _Complex double *v, *w;
   psi = calloc(nb_blocks, sizeof(spinor));
   v = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
   w = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
   psi[0] = calloc(VOLUME+nb_blocks, sizeof(spinor));
-  for(i = 1; i < nb_blocks; i++) {
+  for (int i = 1; i < nb_blocks; i++) {
     psi[i] = psi[i-1] + (VOLUME / nb_blocks) +1;
   }
   split_global_field_GEN(psi, s, nb_blocks); // ADAPT THIS
-     
-  for (j = 0; j < g_N_s; ++j) {/*loop over block.basis */
-    for(i=0;i<nb_blocks;i++) {
+
+  for (int j = 0; j < g_N_s; ++j) { /*loop over block.basis */
+    for (int i = 0; i < nb_blocks; i++) {
       v[j + i*g_N_s] = scalar_prod(block_list[i].basis[j], psi[i], VOLUME/nb_blocks, 0);
     }
   }
 
-  i = gcr4complex(w, v, 10, 100, little_solver_high_prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, 0, &little_D);
+  status = gcr4complex(w, v, 10, 100, little_solver_high_prec, 1, nb_blocks * g_N_s, 1,
+                       nb_blocks * 9 * g_N_s, 0, &little_D);
   if(g_proc_id == 0 && g_debug_level > 0) {
-    printf("lgcr: %d iterations in invert_little_D_spinor\n", i);
+    printf("lgcr: %d iterations in invert_little_D_spinor\n", status);
   }
-  
-  for(i = 0; i < nb_blocks; i++) {
+
+  for (int i = 0; i < nb_blocks; i++) {
     mul(psi[i], w[i*g_N_s], block_list[i].basis[0], VOLUME/nb_blocks);
   }
-  for(j = 1; j < g_N_s; ++j) {
-    for(i = 0; i < nb_blocks; i++) {
+  for (int j = 1; j < g_N_s; ++j) {
+    for (int i = 0; i < nb_blocks; i++) {
       assign_add_mul(psi[i], block_list[i].basis[j], w[j+i*g_N_s], VOLUME/nb_blocks);
     }
   }
@@ -112,7 +113,7 @@ void invert_little_D_spinor(spinor *r, spinor *s){
 
 /** ANOTHER TESTING FUNCTION */
 void invert_little_D_eo_spinor(spinor *r, spinor *s){
-  int i, j, iter,i_o, i_e;
+  int i_o, i_e;
   spinor **psi;
   _Complex double *v, *w, *v_o, *v_e, * v_eo, * w_eo, * ctmp2;
   psi = calloc(nb_blocks, sizeof(spinor));
@@ -124,15 +125,15 @@ void invert_little_D_eo_spinor(spinor *r, spinor *s){
   w_eo = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
   ctmp2 = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
   psi[0] = calloc(VOLUME+nb_blocks, sizeof(spinor));
-  for(i = 1; i < nb_blocks; i++) {
+  for (int i = 1; i < nb_blocks; i++) {
     psi[i] = psi[i-1] + (VOLUME / nb_blocks) +1;
   }
-  split_global_field_GEN(psi, s, nb_blocks); // ADAPT THIS 
-  
-  for (j = 0; j < g_N_s; ++j) {/*loop over block.basis */
+  split_global_field_GEN(psi, s, nb_blocks);  // ADAPT THIS
+
+  for (int j = 0; j < g_N_s; ++j) { /*loop over block.basis */
     i_e=0;
     i_o=0;
-    for(i=0;i<nb_blocks;i++) {
+    for (int i = 0; i < nb_blocks; i++) {
       v[j + i*g_N_s] = scalar_prod(block_list[i].basis[j], psi[i], VOLUME/nb_blocks, 0);
       if (block_list[i].evenodd==0) {
 	v_eo[j+i_e*g_N_s] = v[j+i*g_N_s];
@@ -144,21 +145,22 @@ void invert_little_D_eo_spinor(spinor *r, spinor *s){
       }
     }
   }
-  
+
   little_D_ee_inv(v_e,v_eo);
   little_D_hop(1,v_o,v_e);
   little_Dhat_rhs(1,v_o,-1,v_eo);
-  
-  iter = gcr4complex(w_eo, v_o, 10, 100, 1e-31, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, 0, &little_D_sym);
+
+  int status = gcr4complex(w_eo, v_o, 10, 100, 1e-31, 1, nb_blocks * g_N_s, 1,
+                           nb_blocks * 9 * g_N_s, 0, &little_D_sym);
 
   little_D_hop(0,ctmp2, w_eo);   
   little_D_ee_inv(w_eo,ctmp2);
   little_Dhat_rhs(0,w_eo, -1., v_e);
-            
-  for (j = 0; j < g_N_s; j++) {
+
+  for (int j = 0; j < g_N_s; j++) {
     i_o=0;
     i_e=0;
-    for(i = 0; i < nb_blocks; i++) {
+    for (int i = 0; i < nb_blocks; i++) {
       if (block_list[i].evenodd==0) {
 	w[j + i*g_N_s] = w_eo[j + i_e*g_N_s];
 	i_e++;
@@ -171,14 +173,14 @@ void invert_little_D_eo_spinor(spinor *r, spinor *s){
   }
 
   if(g_proc_id == 0 && g_debug_level > 0) {
-    printf("lgcr: %d iterations in invert_little_D_eo_spinor\n", iter);
+    printf("lgcr: %d iterations in invert_little_D_eo_spinor\n", status);
   }
-  
-  for(i = 0; i < nb_blocks; i++) {
+
+  for (int i = 0; i < nb_blocks; i++) {
     mul(psi[i], w[i*g_N_s], block_list[i].basis[0], VOLUME/nb_blocks);
   }
-  for(j = 1; j < g_N_s; ++j) {
-    for(i = 0; i < nb_blocks; i++) {
+  for (int j = 1; j < g_N_s; ++j) {
+    for (int i = 0; i < nb_blocks; i++) {
       assign_add_mul(psi[i], block_list[i].basis[j], w[j+i*g_N_s], VOLUME/nb_blocks);
     }
   }
@@ -199,8 +201,7 @@ void invert_little_D_eo_spinor(spinor *r, spinor *s){
 void project2(spinor * const out, spinor * const in);
 
 /** ANOTHER TESTING FUNCTION */
-void apply_little_D_spinor(spinor *r, spinor *s){
-  int i,j, k;
+void apply_little_D_spinor(spinor *r, spinor *s) {
   spinor **psi;
   _Complex double *v, *w;
 
@@ -208,22 +209,23 @@ void apply_little_D_spinor(spinor *r, spinor *s){
   v = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
   w = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
   psi[0] = calloc(VOLUME + nb_blocks, sizeof(spinor));
-  for(i = 1; i < nb_blocks; i++) {
+  for (int i = 1; i < nb_blocks; i++) {
     psi[i] = psi[i-1] + (VOLUME / nb_blocks) + 1;
   }
-  split_global_field_GEN(psi, s, nb_blocks);  
+  split_global_field_GEN(psi, s, nb_blocks);
 
-  for (j = 0; j < g_N_s; ++j) {
-    for(i = 0; i < nb_blocks; i++) v[j + i*g_N_s] = scalar_prod(block_list[i].basis[j], psi[i], VOLUME/nb_blocks, 0);
+  for (int j = 0; j < g_N_s; ++j) {
+    for (int i = 0; i < nb_blocks; i++)
+      v[j + i * g_N_s] = scalar_prod(block_list[i].basis[j], psi[i], VOLUME / nb_blocks, 0);
   }
 
   little_D(w, v);
 
-  for(i = 0; i < nb_blocks; i++) {
+  for (int i = 0; i < nb_blocks; i++) {
     mul(psi[i], w[i*g_N_s], block_list[i].basis[0], VOLUME/nb_blocks);
   }
-  for(j = 1; j < g_N_s; ++j) {
-    for(i = 0; i < nb_blocks; i++){
+  for (int j = 1; j < g_N_s; ++j) {
+    for (int i = 0; i < nb_blocks; i++) {
       assign_add_mul(psi[i], block_list[i].basis[j], w[i*g_N_s + j], VOLUME/nb_blocks);
     }
   }
@@ -234,7 +236,6 @@ void apply_little_D_spinor(spinor *r, spinor *s){
   free(psi[0]);
   free(psi);
 }
-
 
 #define _PSWITCH(s) s
 #define _PTSWITCH(s) s
@@ -328,8 +329,7 @@ void init_little_field_exchange(_Complex double * w) {
 
 void wait_little_field_exchange(const int mu) {
 #ifdef TM_USE_MPI
-  int err;
-  err = MPI_Waitall(2, &lrequests[2*mu], &lstatus[2*mu]);
+  MPI_Waitall(2, &lrequests[2 * mu], &lstatus[2 * mu]);
   waitcount -= 2;
 #endif
   return;

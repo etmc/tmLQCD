@@ -194,7 +194,7 @@ int rg_mixed_cg_her_nd(spinor * const P_up, spinor * const P_dn, spinor * const 
   int iter_in_sp = 0, iter_in_dp = 0, iter_out = 0;
   float rho_sp, delta = solver_params.mcg_delta;
   double beta_dp, rho_dp;
-  double sourcesquarenorm, guesssquarenorm, target_eps_sq;
+  double sourcesquarenorm, target_eps_sq;
 
   spinor *xhigh_up, *xhigh_dn, *rhigh_up, *rhigh_dn, *qhigh_up, *qhigh_dn, *phigh_up, *phigh_dn;
   spinor32 *x_up, *x_dn, *p_up, *p_dn, *q_up, *q_dn, *r_up, *r_dn;
@@ -206,7 +206,7 @@ int rg_mixed_cg_her_nd(spinor * const P_up, spinor * const P_dn, spinor * const 
   
   int high_control = 0;
 
-  double atime, etime, flops;
+  double atime, etime;
   
   if(N == VOLUME) {
     init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);    

@@ -44,7 +44,7 @@ int mcr(spinor * const P, spinor * const Q,
 		const double eps_sq, const int rel_prec,
 		const int N, const int precon, matrix_mult f) {
 
-	int k, l, restart, i, iter = 0;
+	int restart, iter = 0;
 	double norm_sq, err;
 	spinor * xi, * Axi, * chi, * Achi, *tmp;
 	_Complex double alpha, beta;
@@ -96,7 +96,7 @@ int mcr(spinor * const P, spinor * const Q,
 			return(iter);
 		}
 
-		for(k = 0; k < m; k++) {
+		for(int k = 0; k < m; k++) {
 
 			if(precon == 0) {
 				assign(tmp, chi, N);

@@ -687,7 +687,7 @@ void eigenvector_Dtm(spinor *spin,double mu,int epsilon,int k,int color,int rawp
 
 
 #ifdef HAVE_FFTW
-fftw_plan spinor_fftw_plan(spinor *spinor_in,spinor *spinor_out,int T,int ll,unsigned int forward,int fftw_flags){
+fftw_plan spinor_fftw_plan(const spinor *spinor_in,spinor *spinor_out,int T,int ll,unsigned int forward,int fftw_flags){
 
 /*    int index_s = gsi(get_index(it, ix, iy, iz, tt, ll)); */
 /*    double *xi_ = xi + index_s; */
@@ -704,7 +704,7 @@ fftw_plan spinor_fftw_plan(spinor *spinor_in,spinor *spinor_out,int T,int ll,uns
   fftw_plan plan;
 
 
-  Dim1[0]=tt;
+  Dim1[0]=T;
   Dim1[1]=LX;Dim1[2]=LY;Dim1[3]=LZ;
 
 
@@ -1502,8 +1502,7 @@ _Complex double calcMatrixElement(spinor *field1,spinor *field2,_Complex double 
 
 
 void diagMatrixElement(_Complex double mat[144]){
-
-  const int const N=12;
+  const int N = 12;
 
   char  JOBVL[]="N";
   char  JOBVR[]="N";

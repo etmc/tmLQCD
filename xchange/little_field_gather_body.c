@@ -38,7 +38,6 @@ void _PSWITCH(little_field_gather)(_C_TYPE * w) {
 
 #ifdef TM_USE_MPI
   int request = 0;
-  int err;
   w_buf = calloc(8 * nb_blocks * g_N_s, sizeof(_C_TYPE)); // +-t +-x +-y +-z
 
   wt_buf = w_buf + ( 0*(2*nb_blocks)) * g_N_s; // Were data in the direction t starts
@@ -97,7 +96,7 @@ void _PSWITCH(little_field_gather)(_C_TYPE * w) {
     MPI_Irecv(wz_buf, nb_blocks * g_N_s, _MPI_C_TYPE, g_nb_z_up, Z_DN, g_cart_grid, &lrequests[request]);
     request++;
   }
-  err = MPI_Waitall(request, lrequests, lstatus);
+  MPI_Waitall(request, lrequests, lstatus);
 
 #endif
   
@@ -254,7 +253,6 @@ void _PSWITCH(little_field_gather_eo)(const int eo, _C_TYPE * w) {
 
 #ifdef TM_USE_MPI
   int request = 0;
-  int err;
   w_buf = calloc(8 * nb_blocks * g_N_s, sizeof(_C_TYPE)); // +-t +-x +-y +-z
 
   wt_buf = w_buf + ( 0*(2*nb_blocks)) * g_N_s; // Were data in the direction t starts
@@ -313,7 +311,7 @@ void _PSWITCH(little_field_gather_eo)(const int eo, _C_TYPE * w) {
     MPI_Irecv(wz_buf, nb_blocks * g_N_s, _MPI_C_TYPE, g_nb_z_up, Z_DN, g_cart_grid, &lrequests[request]);
     request++;
   }
-  err = MPI_Waitall(request, lrequests, lstatus);
+  MPI_Waitall(request, lrequests, lstatus);
 
 #endif
   

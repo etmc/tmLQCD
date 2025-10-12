@@ -23,6 +23,7 @@
 
 #include "meas/field_strength_types.h"
 
-void measure_clover_field_strength_observables(const su3 ** const gf, field_strength_obs_t * const ret);
+void measure_clover_field_strength_observables(const su3 *const *const gf,
+                                               field_strength_obs_t *const ret);
 
 #endif  

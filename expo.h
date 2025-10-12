@@ -19,6 +19,9 @@
 #ifndef _EXPO_H
 #define _EXPO_H
 
+#include "su3.h"
+#include "su3adj.h"
+
 void init_exposu3();
 void exposu3(su3* const vr, const su3adj* const p);
 void exposu3_check(su3* const vr, const su3adj* const p, int im);

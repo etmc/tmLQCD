@@ -61,7 +61,7 @@ int cg_her_nd(spinor * const P_up,spinor * P_dn, spinor * const Q_up, spinor * c
   double normsp, normsq, pro, err, alpha_cg, beta_cg, squarenorm;
   int iteration;
   double err1, err2;
-  double atime, etime, flops;
+  double atime, etime;
   spinor ** up_field = NULL;
   spinor ** dn_field = NULL;  
   const int nr_sf = 5;

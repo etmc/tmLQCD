@@ -24,7 +24,6 @@
 
 paramsInverterInfo *construct_paramsInverterInfo(double const epssq, const int iter, 
 						 const int solver, const int noflavours) {
-  int i;
   struct timeval t1;
   paramsInverterInfo *info = malloc(sizeof(paramsInverterInfo));
 

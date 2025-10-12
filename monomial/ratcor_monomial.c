@@ -63,7 +63,6 @@ void ratcor_heatbath(const int id, hamiltonian_field_t * const hf) {
   double delta;
   spinor * up0, * up1, * tup;
   double coefs[6] = {1./4., -3./32., 7./128., -77./2048., 231./8192., -1463./65536.}; // series of (1+x)^(1/4)
-  double coefs_check[6] = {1./2., -1./8., 1./16., -5./128., 7./256., -21./1024.}; // series of (1+x)^(1/2)
   nd_set_global_parameter(mnl);
   g_mu = 0.;
   g_mu3 = 0.;

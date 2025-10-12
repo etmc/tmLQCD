@@ -60,7 +60,7 @@ void spinor_fft_reduce_2d(spinor *localSpinorField,int *collectionRank,spinor***
   char logFileName[512];
   FILE *logFile;
   const int MSG_LOCALDATA = 457;
-  MPI_Status ierr;
+  
   MPI_Datatype mpi_local_spinor;
   const int which[]={0,1};
 
@@ -202,16 +202,14 @@ void spinor_fft_redist_2d(spinor *localSpinorField,int collectionRank,spinor** f
 #if ( defined PARALLELXYZT && defined TM_USE_MPI && defined HAVE_FFTW)
 
   int sendRecvCoord[4];
-  int i;
   int dims[]={g_nproc_t,g_nproc_x,g_nproc_y,g_nproc_z};
 
 
   /* logfile variables */
   char *logFilePrefix="Process";
   char logFileName[512];
-  FILE *logFile;
   const int MSG_LOCALDATA = 5687;
-  MPI_Status ierr;
+  
   MPI_Datatype mpi_local_spinor;
   const int which[]={0,1};
 
@@ -219,7 +217,7 @@ void spinor_fft_redist_2d(spinor *localSpinorField,int collectionRank,spinor** f
 
 /*   int result; */
   sprintf(logFileName,"./%s_%02d.log",logFilePrefix,g_cart_id);
-  logFile=fopen(logFileName,"a");
+  FILE *logFile=fopen(logFileName,"a");
 
 
   /* new mpi type */
@@ -227,116 +225,116 @@ void spinor_fft_redist_2d(spinor *localSpinorField,int collectionRank,spinor** f
   MPI_Type_commit(&mpi_local_spinor);
 
 
-  for(i=0;i<4;i++)
+  for(int i=0; i<4; i++)
     sendRecvCoord[i]=g_proc_coords[i];
 
-    if( collectionRank == TRUE ){
-
-      /* i am one of the nodes where data is accumulated */
-      spinor **accu_field=field_collection;
-      spinor **fft_field;
-      spinor *memory_buffer_accu_field=membuff;
-      spinor *memory_buffer_fft_field;
-      int REDUCTIONVOLUME=1;
-      int sendRank;
-      MPI_Request *requests;
-      MPI_Status *status;
-      int request_count=0;
-      int num_requests;
-      fftw_plan local_2d_fft_backward;
-
-
-      /* calculate the number of reduced 2d volume accumulated in this node */
-      
-      /* number of spinor fields in local units */
-      REDUCTIONVOLUME*=dims[which[0]]*dims[which[1]];
-
-      /* number of receive messages */
-      num_requests=REDUCTIONVOLUME-1;
-
-      /* reserve space for receive messages */
-      requests=(MPI_Request*)malloc(sizeof(MPI_Request)*num_requests);
-      status=(MPI_Status*)malloc(sizeof(MPI_Status)*num_requests);
-
-      fprintf(logFile,"reduction volume = %d\n",REDUCTIONVOLUME);
-
-      /* allocate space for spinor field collection */
-      allocate_spinor_field_array(&fft_field,&memory_buffer_fft_field,VOLUME,REDUCTIONVOLUME);
-
-
-
-      /* create fftw plan */
-      local_2d_fft_backward=spinor_fftw_plan2d(accu_field[0],fft_field[0],T*dims[0],LX*dims[1],LY*LZ,0,FFTW_ESTIMATE);
-      fftw_execute(local_2d_fft_backward);
-      fftw_destroy_plan(local_2d_fft_backward);
-
-
-/*       assign(fft_field[0],accu_field[0],VOLUME*REDUCTIONVOLUME); */
-
-      /* transpose in xp-t space */
-      spinor_fft_transpose_xp_t(accu_field[0],fft_field[0],dims[0],dims[1],FALSE,1./(double)(T*dims[0] * LX*dims[1]));
-
-
-
-      /* receive from certain nodes pieces of the spinor field */
-      for(sendRecvCoord[which[0]] = 0 ; sendRecvCoord[which[0]]< dims[which[0]] ; sendRecvCoord[which[0]]++){
-	for(sendRecvCoord[which[1]] = 0 ; sendRecvCoord[which[1]]< dims[which[1]] ; sendRecvCoord[which[1]]++){
-	  if( sendRecvCoord[which[0]] != 0 || sendRecvCoord[which[1]]  != 0){
-
-	    MPI_Cart_rank(g_cart_grid,sendRecvCoord,&sendRank);
-
-	    MPI_Isend(accu_field[sendRecvCoord[which[0]]*dims[which[1]]+sendRecvCoord[which[1]] ] /* buffer */,
-		     1, /* how may */
-		     mpi_local_spinor, /* mpi data type */
-		     sendRank, /* from whom i get it */
-		     MSG_LOCALDATA, /* msg id */
-		     g_cart_grid, /* communicator , status */
-		     requests+request_count);
-	    ++request_count;
-
-	  }
-	}
+  if( collectionRank == TRUE ){
+    
+    /* i am one of the nodes where data is accumulated */
+    spinor **accu_field=field_collection;
+    spinor **fft_field;
+    spinor *memory_buffer_accu_field=membuff;
+    spinor *memory_buffer_fft_field;
+    int REDUCTIONVOLUME=1;
+    int sendRank;
+    MPI_Request *requests;
+    MPI_Status *status;
+    int request_count=0;
+    int num_requests;
+    fftw_plan local_2d_fft_backward;
+    
+    
+    /* calculate the number of reduced 2d volume accumulated in this node */
+    
+    /* number of spinor fields in local units */
+    REDUCTIONVOLUME*=dims[which[0]]*dims[which[1]];
+    
+    /* number of receive messages */
+    num_requests=REDUCTIONVOLUME-1;
+    
+    /* reserve space for receive messages */
+    requests=(MPI_Request*)malloc(sizeof(MPI_Request)*num_requests);
+    status=(MPI_Status*)malloc(sizeof(MPI_Status)*num_requests);
+    
+    fprintf(logFile,"reduction volume = %d\n",REDUCTIONVOLUME);
+    
+    /* allocate space for spinor field collection */
+    allocate_spinor_field_array(&fft_field,&memory_buffer_fft_field,VOLUME,REDUCTIONVOLUME);
+    
+    
+    
+    /* create fftw plan */
+    local_2d_fft_backward=spinor_fftw_plan2d(accu_field[0],fft_field[0],T*dims[0],LX*dims[1],LY*LZ,0,FFTW_ESTIMATE);
+    fftw_execute(local_2d_fft_backward);
+    fftw_destroy_plan(local_2d_fft_backward);
+    
+    
+    /*       assign(fft_field[0],accu_field[0],VOLUME*REDUCTIONVOLUME); */
+    
+    /* transpose in xp-t space */
+    spinor_fft_transpose_xp_t(accu_field[0],fft_field[0],dims[0],dims[1],FALSE,1./(double)(T*dims[0] * LX*dims[1]));
+    
+    
+    
+    /* receive from certain nodes pieces of the spinor field */
+    for(sendRecvCoord[which[0]] = 0 ; sendRecvCoord[which[0]]< dims[which[0]] ; sendRecvCoord[which[0]]++){
+      for(sendRecvCoord[which[1]] = 0 ; sendRecvCoord[which[1]]< dims[which[1]] ; sendRecvCoord[which[1]]++){
+        if( sendRecvCoord[which[0]] != 0 || sendRecvCoord[which[1]]  != 0){
+          
+          MPI_Cart_rank(g_cart_grid,sendRecvCoord,&sendRank);
+          
+          MPI_Isend(accu_field[sendRecvCoord[which[0]]*dims[which[1]]+sendRecvCoord[which[1]] ] /* buffer */,
+                    1, /* how may */
+                    mpi_local_spinor, /* mpi data type */
+                    sendRank, /* from whom i get it */
+                    MSG_LOCALDATA, /* msg id */
+                    g_cart_grid, /* communicator , status */
+                    requests+request_count);
+          ++request_count;
+          
+        }
       }
-
-      assign(localSpinorField,accu_field[0],VOLUME);
-
-
-
-      /* wait until all request finished */
-      MPI_Waitall(num_requests, requests, status);
-
-
-      free_spinor_field_array(&memory_buffer_fft_field); memory_buffer_fft_field=NULL; fft_field=NULL;
-      free_spinor_field_array(&memory_buffer_accu_field); memory_buffer_accu_field=NULL; accu_field=NULL;
-
-      free(requests); requests = NULL;
-      free(status); status=NULL;
-
-    } else {
-      int recvRank;
-      MPI_Request request;
-      MPI_Status status;
-
-
-      /* coordinates of the "root" */
-      sendRecvCoord[which[0]]=0;
-      sendRecvCoord[which[1]]=0;
-
-      MPI_Cart_rank(g_cart_grid,sendRecvCoord,&recvRank); 
-
-      MPI_Irecv(localSpinorField,1,mpi_local_spinor,recvRank,MSG_LOCALDATA,g_cart_grid,&request);
-
-      MPI_Wait(&request,&status);
-
     }
+    
+    assign(localSpinorField,accu_field[0],VOLUME);
+    
+    
+    
+    /* wait until all request finished */
+    MPI_Waitall(num_requests, requests, status);
+    
+    
+    free_spinor_field_array(&memory_buffer_fft_field); memory_buffer_fft_field=NULL; fft_field=NULL;
+    free_spinor_field_array(&memory_buffer_accu_field); memory_buffer_accu_field=NULL; accu_field=NULL;
+    
+    free(requests); requests = NULL;
+    free(status); status=NULL;
+    
+  } else {
+    int recvRank;
+    MPI_Request request;
+    MPI_Status status;
+    
+    
+      /* coordinates of the "root" */
+    sendRecvCoord[which[0]]=0;
+    sendRecvCoord[which[1]]=0;
+    
+    MPI_Cart_rank(g_cart_grid,sendRecvCoord,&recvRank); 
+    
+    MPI_Irecv(localSpinorField,1,mpi_local_spinor,recvRank,MSG_LOCALDATA,g_cart_grid,&request);
+    
+    MPI_Wait(&request,&status);
+    
+  }
+  
+  MPI_Type_free(&mpi_local_spinor);
 
-    MPI_Type_free(&mpi_local_spinor);
-
-    fclose(logFile);
-
+  fclose(logFile);
+  
 #else
-    if(g_proc_id==0)
-      fprintf(stderr,"Error: Please choose FOUR dimensional parallelization!!!\n");
+  if(g_proc_id==0)
+    fprintf(stderr,"Error: Please choose FOUR dimensional parallelization!!!\n");
 
 #endif
 }

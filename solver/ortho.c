@@ -49,7 +49,6 @@ int ortho_new_vectors(spinor **Vecs, int N, int nv_old, int nv_new, double ortht
 {
 
     //modified Gram-Schmidt orthogonalization 
-    int i,j,k;
     int parallel;
     _Complex double alpha;
     int nadded=0;
@@ -61,9 +60,9 @@ int ortho_new_vectors(spinor **Vecs, int N, int nv_old, int nv_new, double ortht
     parallel=0;
     #endif
    
-    for(i=nv_old; i< (nv_old+nv_new); i++)
+    for(int i=nv_old; i< (nv_old+nv_new); i++)
     {
-      for(j=0; j<i; j++)
+      for(int j=0; j<i; j++)
       {
 	       alpha=scalar_prod(Vecs[j], Vecs[i],N,parallel);
 	       assign_diff_mul(Vecs[i],Vecs[j],alpha,N);

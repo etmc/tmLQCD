@@ -54,8 +54,9 @@ halfspinor32 * sendBuffer32_, * recvBuffer32_;
 
 
 int init_dirac_halfspinor() {
-  int j=0, k;
-  int x, y, z, t;
+  //int j=0,
+  int k;
+  //int x, y, z, t;
 
   NBPointer = (halfspinor***) calloc(4,sizeof(halfspinor**));
   NBPointer_ = (halfspinor**) calloc(16,(VOLUME+RAND)*sizeof(halfspinor*));
@@ -89,12 +90,12 @@ int init_dirac_halfspinor() {
 
   for(int ieo = 0; ieo < 2; ieo++) {
     for(int i = 0; i < VOLUME/2; i++) {
-      j = g_eo2lexic[i + ((ieo+1)%2)*(VOLUME+RAND)/2];
+      int j = g_eo2lexic[i + ((ieo+1)%2)*(VOLUME+RAND)/2];
       /* get (t,x,y,z) from j */
-      t = j/(LX*LY*LZ);
-      x = (j-t*(LX*LY*LZ))/(LY*LZ);
-      y = (j-t*(LX*LY*LZ)-x*(LY*LZ))/(LZ);
-      z = (j-t*(LX*LY*LZ)-x*(LY*LZ) - y*LZ);
+      int t = j/(LX*LY*LZ);
+      int x = (j-t*(LX*LY*LZ))/(LY*LZ);
+      int y = (j-t*(LX*LY*LZ)-x*(LY*LZ))/(LZ);
+      int z = (j-t*(LX*LY*LZ)-x*(LY*LZ) - y*LZ);
       for(int mu = 0; mu < 4; mu++) {
         NBPointer[ieo][8*i + 2*mu + 0] = &HalfSpinor[ 8*g_lexic2eosub[ g_idn[j][mu] ] + 2*mu + 0];
         NBPointer[ieo][8*i + 2*mu + 1] = &HalfSpinor[ 8*g_lexic2eosub[ g_iup[j][mu] ] + 2*mu + 1];
@@ -148,12 +149,12 @@ int init_dirac_halfspinor() {
   }
   for(int ieo = 2; ieo < 4; ieo++) {
     for(int i = 0; i < VOLUME/2; i++) {
-      j = g_eo2lexic[i + ((ieo+0)%2)*(VOLUME+RAND)/2];
+      int j = g_eo2lexic[i + ((ieo+0)%2)*(VOLUME+RAND)/2];
       /* get (t,x,y,z) from j */
-      t = j/(LX*LY*LZ);
-      x = (j-t*(LX*LY*LZ))/(LY*LZ);
-      y = (j-t*(LX*LY*LZ)-x*(LY*LZ))/(LZ);
-      z = (j-t*(LX*LY*LZ)-x*(LY*LZ) - y*LZ);
+      int t = j/(LX*LY*LZ);
+      int x = (j-t*(LX*LY*LZ))/(LY*LZ);
+      int y = (j-t*(LX*LY*LZ)-x*(LY*LZ))/(LZ);
+      int z = (j-t*(LX*LY*LZ)-x*(LY*LZ) - y*LZ);
       for(int mu = 0; mu < 8; mu++) {
         NBPointer[ieo][8*i + mu] = &HalfSpinor[8*i + mu];
       }

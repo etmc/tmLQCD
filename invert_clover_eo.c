@@ -67,7 +67,7 @@ int invert_clover_eo(spinor * const Even_new, spinor * const Odd_new,
 		     solver_params_t solver_params,
                      su3 *** gf, matrix_mult Qsq, matrix_mult Qm,
                      const ExternalInverter external_inverter, const SloppyPrecision sloppy, const CompressionType compression) {
-  int iter;
+  int iter = 0;
 
   if(even_odd_flag) {  
     if(g_proc_id == 0 && g_debug_level > 0) {

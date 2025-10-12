@@ -57,10 +57,10 @@
 
 void correlators_measurement(const int traj, const int id, const int ieo) {
   tm_stopwatch_push(&g_timers, __func__, "");
-  int i, j, t, tt, t0;
+  // int i, j, t, tt, t0;
   double *Cpp = NULL, *Cpa = NULL, *Cp4 = NULL;
   double res = 0., respa = 0., resp4 = 0.;
-  double atime, etime;
+
   float tmp;
   operator * optr;
 #ifdef TM_USE_MPI
@@ -119,7 +119,7 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
                  "%s.s%03d.%06d", "onlinemeas", sample, traj);
       }
       /* generate random timeslice */
-      t0 = ts;
+      int t0 = ts;
       if( !measurement_list[id].all_time_slices ){
         ranlxs(&tmp, 1);
         t0 = (int)(measurement_list[id].max_source_slice*tmp);
@@ -162,12 +162,12 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
       convert_eo_to_lexic(g_spinor_field[DUM_MATRIX], g_spinor_field[2], g_spinor_field[3]);
       
       /* now we sum only over local space for every t */
-      for(t = 0; t < T; t++) {
-        j = g_ipt[t][0][0][0];
+      for (int t = 0; t < T; t++) {
+        int j = g_ipt[t][0][0][0];
         res = 0.;
         respa = 0.;
         resp4 = 0.;
-        for(i = j; i < j+LX*LY*LZ; i++) {
+        for (int i = j; i < j + LX * LY * LZ; i++) {
           res += _spinor_prod_re(g_spinor_field[DUM_MATRIX][i], g_spinor_field[DUM_MATRIX][i]);
           _gamma0(phi, g_spinor_field[DUM_MATRIX][i]);
           respa += _spinor_prod_re(g_spinor_field[DUM_MATRIX][i], phi);
@@ -203,6 +203,7 @@ void correlators_measurement(const int traj, const int id, const int ieo) {
 
       /* and write everything into a file */
       if(g_mpi_time_rank == 0 && g_proc_coords[0] == 0) {
+        int tt, t;
         ofs = fopen(filename, "w");
         fprintf( ofs, "1  1  0  %e  %e\n", Cpp[t0], 0.);
         for(t = 1; t < g_nproc_t*T/2; t++) {

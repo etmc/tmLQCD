@@ -21,6 +21,8 @@
 #ifndef MISC_TYPES_H
 #define MISC_TYPES_H
 
+#include <stdio.h>
+
 #ifdef HAVE_CONFIG_H
 #include <tmlqcd_config.h>
 #endif

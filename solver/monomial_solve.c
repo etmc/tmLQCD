@@ -47,16 +47,19 @@
 #ifdef HAVE_CONFIG_H
 # include<tmlqcd_config.h>
 #endif
-#include "global.h"
-#include "start.h"
-#include "read_input.h"
 #include "default_input_values.h"
-#include "linalg/mul_gamma5.h"
-#include "linalg/diff.h"
-#include "linalg/square_norm.h"
-#include "linalg/mul_r_gamma5.h"
+#include "expo.h"
 #include "gamma.h"
 #include "gettime.h"
+#include "global.h"
+#include "linalg/diff.h"
+#include "linalg/mul_gamma5.h"
+#include "linalg/mul_r_gamma5.h"
+#include "linalg/print_spinor.h"
+#include "linalg/ratio.h"
+#include "linalg/square_norm.h"
+#include "read_input.h"
+#include "start.h"
 // for the non-degenerate operator normalisation
 #include "phmc.h"
 #include "solver/solver.h"
@@ -74,6 +77,7 @@
 #include "misc_types.h"
 #include "monomial_solve.h"
 #include "linalg_eo.h"
+
 #ifdef DDalphaAMG
 #include "DDalphaAMG_interface.h"
 #endif
@@ -95,7 +99,7 @@ void solve_fail_write_config_and_abort(const char * const solver) {
   char outname[200];
   snprintf(outname, 200, "conf_monomial_solve_fail.%.6f.%04d", g_gauge_state.gauge_id, nstore);
   paramsXlfInfo * xlfInfo = construct_paramsXlfInfo(measure_plaquette((const su3**)g_gauge_field)/(6.*VOLUME*g_nproc), nstore);
-  int status = write_gauge_field(outname, 64, xlfInfo);
+  write_gauge_field(outname, 64, xlfInfo);
   free(xlfInfo);
   fatal_error("Error: solver reported -1 iterations.", solver);
 }

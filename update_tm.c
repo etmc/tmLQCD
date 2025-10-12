@@ -8,12 +8,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -29,11 +29,11 @@
 
 #include <lime.h>
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include <tmlqcd_config.h>
 #endif
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #ifdef TM_USE_MPI
 #include <mpi.h>
@@ -41,53 +41,53 @@
 #ifdef TM_USE_OMP
 #include <omp.h>
 #endif
+#include "expo.h"
+#include "gettime.h"
 #include "global.h"
-#include "start.h"
-#include "sighandler.h"
-#include "operator/tm_operators.h"
-#include "linalg_eo.h"
+#include "hamiltonian_field.h"
+#include "init/init_gauge_field.h"
+#include "init/init_gauge_tmp.h"
+#include "integrator.h"
 #include "io/gauge.h"
 #include "io/params.h"
+#include "linalg_eo.h"
 #include "measure_gauge_action.h"
+#include "measure_rectangles.h"
+#include "monomial/moment_energy.h"
+#include "monomial/monitor_forces.h"
+#include "monomial/monomial.h"
+#include "operator/tm_operators.h"
 #include "ranlxd.h"
 #include "read_input.h"
-#include "expo.h"
-#include "xchange/xchange.h"
-#include "measure_rectangles.h"
-#include "init/init_gauge_tmp.h"
-#include "monomial/monomial.h"
-#include "integrator.h"
-#include "hamiltonian_field.h"
+#include "sighandler.h"
+#include "start.h"
+#include "su3.h"
 #include "update_tm.h"
-#include "gettime.h"
+#include "xchange/xchange.h"
 #ifdef DDalphaAMG
 #include "DDalphaAMG_interface.h"
 #endif
 
-extern su3 ** g_gauge_field_saved;
+extern su3 **g_gauge_field_saved;
 
-int update_tm(double *plaquette_energy, double *rectangle_energy, 
-              char * filename, const int return_check, const int acctest, 
-              const int traj_counter) {
-
-  su3 *v, *w;
-  int accept, i=0, j=0, iostatus=0;
+int update_tm(double *plaquette_energy, double *rectangle_energy, char *filename,
+              const int return_check, const int acctest, const int traj_counter) {
+  // su3 *v, *w;
+  int accept, iostatus = 0;
 
   double yy[1];
-  double dh, expmdh, ret_dh=0., ret_gauge_diff=0., tmp;
-  double atime=0., etime=0.;
-  double ks = 0., kc = 0., ds, tr, ts, tt;
-
+  double dh, expmdh, ret_dh = 0., ret_gauge_diff = 0., tmp;
+  double atime = 0., etime = 0.;
   char tmp_filename[50];
 
   /* Energy corresponding to the Gauge part */
-  double new_plaquette_energy=0., new_rectangle_energy = 0.;
+  double new_plaquette_energy = 0., new_rectangle_energy = 0.;
 
   /* Energy corresponding to the Momenta part */
-  double enep=0., enepx=0., ret_enep = 0.;
+  double enep = 0., enepx = 0., ret_enep = 0.;
 
   /* Energy corresponding to the pseudo fermion part(s) */
-  FILE * datafile=NULL, * ret_check_file=NULL;
+  FILE *datafile = NULL, *ret_check_file = NULL;
   hamiltonian_field_t hf;
   paramsXlfInfo *xlfInfo;
 
@@ -98,25 +98,25 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   hf.traj_counter = traj_counter;
   integrator_set_fields(&hf);
 
-  sprintf(tmp_filename, ".conf.t%05d.tmp",traj_counter);
+  sprintf(tmp_filename, ".conf.t%05d.tmp", traj_counter);
   atime = gettime();
 
   /*
-   *  here the momentum and spinor fields are initialized 
+   *  here the momentum and spinor fields are initialized
    *  and their respective actions are calculated
    */
 
-  /* 
-   *  copy the gauge field to gauge_tmp 
+  /*
+   *  copy the gauge field to gauge_tmp
    */
 #ifdef TM_USE_OMP
-#pragma omp parallel for private(w,v)
+#pragma omp parallel for
 #endif
-  for(int ix=0;ix<VOLUME;ix++) { 
-    for(int mu=0;mu<4;mu++) {
-      v=&hf.gaugefield[ix][mu];
-      w=&gauge_tmp[ix][mu];
-      _su3_assign(*w,*v);
+  for (int ix = 0; ix < VOLUME; ix++) {
+    for (int mu = 0; mu < 4; mu++) {
+      su3 *v = &hf.gaugefield[ix][mu];
+      su3 *w = &gauge_tmp[ix][mu];
+      _su3_assign(*w, *v);
     }
   }
 
@@ -125,82 +125,87 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 #endif
 
   /* heatbath for all monomials */
-  for(i = 0; i < Integrator.no_timescales; i++) {
-    for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
-      monomial_list[ Integrator.mnls_per_ts[i][j] ].hbfunction(Integrator.mnls_per_ts[i][j], &hf);
+  for (int i = 0; i < Integrator.no_timescales; i++) {
+    for (int j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
+      monomial_list[Integrator.mnls_per_ts[i][j]].hbfunction(Integrator.mnls_per_ts[i][j], &hf);
     }
   }
 
-  if(Integrator.monitor_forces) monitor_forces(&hf);
+  if (Integrator.monitor_forces) monitor_forces(&hf);
   /* initialize the momenta  */
   enep = random_su3adj_field(reproduce_randomnumber_flag, hf.momenta);
-  
+
   g_sloppy_precision = 1;
 
   /* run the trajectory */
-  if(Integrator.n_int[Integrator.no_timescales-1] > 0) {
-    Integrator.integrate[Integrator.no_timescales-1](Integrator.tau, 
-                 Integrator.no_timescales-1, 1, Integrator.tau);
+  if (Integrator.n_int[Integrator.no_timescales - 1] > 0) {
+    Integrator.integrate[Integrator.no_timescales - 1](Integrator.tau, Integrator.no_timescales - 1,
+                                                       1, Integrator.tau);
   }
 
   g_sloppy_precision = 0;
 
   /* compute the final energy contributions for all monomials */
   dh = 0.;
-  for(i = 0; i < Integrator.no_timescales; i++) {
-    for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
-      dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j], &hf);
+  for (int i = 0; i < Integrator.no_timescales; i++) {
+    for (int j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
+      dh += monomial_list[Integrator.mnls_per_ts[i][j]].accfunction(Integrator.mnls_per_ts[i][j],
+                                                                    &hf);
     }
   }
 
   enepx = moment_energy(hf.momenta);
 
   if (!bc_flag) { /* if PBC */
-    new_plaquette_energy = measure_plaquette( (const su3**) hf.gaugefield);
-    if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
-      new_rectangle_energy = measure_rectangles( (const su3**) hf.gaugefield);
+    new_plaquette_energy = measure_plaquette((const su3 **)hf.gaugefield);
+    if (g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
+      new_rectangle_energy = measure_rectangles((const su3 **)hf.gaugefield);
     }
   }
-  if(g_proc_id == 0 && g_debug_level > 3) printf("called moment_energy: dh = %1.10e\n", (enepx - enep));
+  if (g_proc_id == 0 && g_debug_level > 3)
+    printf("called moment_energy: dh = %1.10e\n", (enepx - enep));
   /* Compute the energy difference */
   dh = dh + (enepx - enep);
-  if(g_proc_id == 0 && g_debug_level > 3) {
+  if (g_proc_id == 0 && g_debug_level > 3) {
     printf("called momenta_acc dH = %e\n", (enepx - enep));
   }
   expmdh = exp(-dh);
-  /* the random number is only taken at node zero and then distributed to 
+  /* the random number is only taken at node zero and then distributed to
      the other sites */
-  ranlxd(yy,1);
+  ranlxd(yy, 1);
 #ifdef TM_USE_MPI
   MPI_Bcast(&yy[0], 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
 
-  /* when acctest is 0 (i.e. do not perform acceptance test), the trajectory is accepted whatever the energy difference */
+  /* when acctest is 0 (i.e. do not perform acceptance test), the trajectory is accepted whatever
+   * the energy difference */
   accept = (!acctest | (expmdh > yy[0]));
-  if(g_proc_id == 0) {
+  if (g_proc_id == 0) {
     fprintf(stdout, "# Trajectory is %saccepted.\n", (accept ? "" : "not "));
   }
   /* Here a reversibility test is performed */
   /* The trajectory is integrated back      */
-  if(return_check) {
-    if(g_proc_id == 0) {
+  if (return_check) {
+    if (g_proc_id == 0) {
       fprintf(stdout, "# Performing reversibility check.\n");
     }
-    if(accept) {
+    if (accept) {
       /* save gauge file to disk before performing reversibility check */
-      xlfInfo = construct_paramsXlfInfo((new_plaquette_energy)/(6.*VOLUME*g_nproc), traj_counter);
+      xlfInfo =
+          construct_paramsXlfInfo((new_plaquette_energy) / (6. * VOLUME * g_nproc), traj_counter);
       // Should write this to temporary file first, and then check
-      if(g_proc_id == 0 && g_debug_level > 0) {
+      if (g_proc_id == 0 && g_debug_level > 0) {
         fprintf(stdout, "# Writing gauge field to file %s.\n", tmp_filename);
       }
-      if((iostatus = write_gauge_field( tmp_filename, 64, xlfInfo) != 0 )) {
+      if ((iostatus = write_gauge_field(tmp_filename, 64, xlfInfo) != 0)) {
         /* Writing failed directly */
-        fprintf(stderr, "Error %d while writing gauge field to %s\nAborting...\n", iostatus, tmp_filename);
+        fprintf(stderr, "Error %d while writing gauge field to %s\nAborting...\n", iostatus,
+                tmp_filename);
         exit(-2);
       }
       /* There is double writing of the gauge field, also in hmc_tm.c in this case */
       /* No reading back check needed here, as reading back is done further down */
-      if(g_proc_id == 0 && g_debug_level > 0) {
+      if (g_proc_id == 0 && g_debug_level > 0) {
         fprintf(stdout, "# Writing done.\n");
       }
       free(xlfInfo);
@@ -212,61 +217,60 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 
     g_sloppy_precision = 1;
     /* run the trajectory back */
-    Integrator.integrate[Integrator.no_timescales-1](-Integrator.tau, 
-                         Integrator.no_timescales-1, 1, -Integrator.tau);
+    Integrator.integrate[Integrator.no_timescales - 1](
+        -Integrator.tau, Integrator.no_timescales - 1, 1, -Integrator.tau);
     g_sloppy_precision = 0;
 
     /*   compute the energy contributions from the pseudo-fermions  */
     ret_dh = 0.;
-    for(i = 0; i < Integrator.no_timescales; i++) {
-      for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
-        ret_dh += monomial_list[ Integrator.mnls_per_ts[i][j] ].accfunction(Integrator.mnls_per_ts[i][j], &hf);
+    for (int i = 0; i < Integrator.no_timescales; i++) {
+      for (int j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
+        ret_dh += monomial_list[Integrator.mnls_per_ts[i][j]].accfunction(
+            Integrator.mnls_per_ts[i][j], &hf);
       }
     }
 
     ret_enep = moment_energy(hf.momenta);
 
     /* Compute the energy difference */
-    ret_dh += ret_enep - enep ;
-
-    /* Compute Differences in the fields */
-    ks = 0.;
-    kc = 0.;
+    ret_dh += ret_enep - enep;
 
 #ifdef TM_USE_OMP
-#pragma omp parallel private(w,v,tt,tr,ts,ds,ks,kc)
+#pragma omp parallel
     {
-    int thread_num = omp_get_thread_num();
+      int thread_num = omp_get_thread_num();
 #endif
-    su3 ALIGN v0;
+      su3 ALIGN v0;
+      /* Compute Differences in the fields */
+      double ks = 0.;
+      double kc = 0.;
+
 #ifdef TM_USE_OMP
 #pragma omp for
 #endif
-    for(int ix = 0; ix < VOLUME; ++ix)
-    {
-      for(int mu = 0; mu < 4; ++mu)
-      {
-        v=&hf.gaugefield[ix][mu];
-        w=&gauge_tmp[ix][mu];
-        _su3_minus_su3(v0, *v, *w);
-        _su3_square_norm(ds, v0);
+      for (int ix = 0; ix < VOLUME; ++ix) {
+        for (int mu = 0; mu < 4; ++mu) {
+          su3 *v = &hf.gaugefield[ix][mu];
+          su3 *w = &gauge_tmp[ix][mu];
+          double ds = 0.0;
+          _su3_minus_su3(v0, *v, *w);
+          _su3_square_norm(ds, v0);
 
-        tr = sqrt(ds) + kc;
-        ts = tr + ks;
-        tt = ts-ks;
-        ks = ts;
-        kc = tr-tt;
+          double tr = sqrt(ds) + kc;
+          double ts = tr + ks;
+          double tt = ts - ks;
+          ks = ts;
+          kc = tr - tt;
+        }
       }
-    }
-    kc=ks+kc;
+      kc = ks + kc;
 #ifdef TM_USE_OMP
-    g_omp_acc_re[thread_num] = kc;
-      
+      g_omp_acc_re[thread_num] = kc;
+
     } /* OpenMP parallel section closing brace */
 
     /* sum up contributions from thread-local kahan summations */
-    for(int k = 0; k < omp_num_threads; ++k)
-      ret_gauge_diff += g_omp_acc_re[k];
+    for (int k = 0; k < omp_num_threads; ++k) ret_gauge_diff += g_omp_acc_re[k];
 #else
     ret_gauge_diff = kc;
 #endif
@@ -277,54 +281,56 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
 #endif
     /* compute the total H */
     tmp = enep;
-    for(i = 0; i < Integrator.no_timescales; i++) {
-      for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
-        tmp += monomial_list[ Integrator.mnls_per_ts[i][j] ].energy0;
+    for (int i = 0; i < Integrator.no_timescales; i++) {
+      for (int j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
+        tmp += monomial_list[Integrator.mnls_per_ts[i][j]].energy0;
       }
     }
     /* Output */
-    if(g_proc_id == 0) {
-      ret_check_file = fopen("return_check.data","a");
-      fprintf(ret_check_file,"%08d ddh = %1.4e ddh/dh = %1.4e ddh/H = %1.4e ddU= %1.4e\n", traj_counter,
-              ret_dh, ret_dh/dh, ret_dh/tmp, ret_gauge_diff/4./((double)(VOLUME*g_nproc))/3.);
+    if (g_proc_id == 0) {
+      ret_check_file = fopen("return_check.data", "a");
+      fprintf(ret_check_file, "%08d ddh = %1.4e ddh/dh = %1.4e ddh/H = %1.4e ddU= %1.4e\n",
+              traj_counter, ret_dh, ret_dh / dh, ret_dh / tmp,
+              ret_gauge_diff / 4. / ((double)(VOLUME * g_nproc)) / 3.);
       fclose(ret_check_file);
     }
 
-    if(accept) {
+    if (accept) {
       /* Read back gauge field
          FIXME unlike in hmc_tm we abort immediately if there is a failure */
-      if(g_proc_id == 0 && g_debug_level > 0) {
+      if (g_proc_id == 0 && g_debug_level > 0) {
         fprintf(stdout, "# Trying to read gauge field from file %s.\n", tmp_filename);
       }
 
-      if((iostatus = read_gauge_field(tmp_filename,g_gauge_field) != 0)) {
-        fprintf(stderr, "Error %d while reading gauge field from %s\nAborting...\n", iostatus, tmp_filename);
+      if ((iostatus = read_gauge_field(tmp_filename, g_gauge_field) != 0)) {
+        fprintf(stderr, "Error %d while reading gauge field from %s\nAborting...\n", iostatus,
+                tmp_filename);
         exit(-2);
       }
-      if(g_proc_id == 0 && g_debug_level > 0) {
+      if (g_proc_id == 0 && g_debug_level > 0) {
         fprintf(stdout, "# Reading done.\n");
       }
       // when we've read back the gauge field, we do a large step
       update_tm_gauge_id(&g_gauge_state, TM_GAUGE_PROPAGATE_THRESHOLD);
       update_tm_gauge_id(&g_gauge_state_32, TM_GAUGE_PROPAGATE_THRESHOLD);
     }
-    if(g_proc_id == 0) {
+    if (g_proc_id == 0) {
       fprintf(stdout, "# Reversibility check done.\n");
     }
   } /* end of reversibility check */
 
-  if(accept) {
+  if (accept) {
     *plaquette_energy = new_plaquette_energy;
     *rectangle_energy = new_rectangle_energy;
     /* put the links back to SU(3) group */
     if (!bc_flag) { /* periodic boundary conditions */
 #ifdef TM_USE_OMP
-#pragma omp parallel for private(v)
+#pragma omp parallel for
 #endif
-      for(int ix=0;ix<VOLUME;ix++) { 
-        for(int mu=0;mu<4;mu++) { 
-          v=&hf.gaugefield[ix][mu];
-          restoresu3_in_place(v); 
+      for (int ix = 0; ix < VOLUME; ix++) {
+        for (int mu = 0; mu < 4; mu++) {
+          su3 *v = &hf.gaugefield[ix][mu];
+          restoresu3_in_place(v);
         }
       }
     }
@@ -333,16 +339,15 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     // FIXME: this may need more thought
     update_tm_gauge_id(&g_gauge_state, TM_GAUGE_PROPAGATE_MIN);
     update_tm_gauge_id(&g_gauge_state_32, TM_GAUGE_PROPAGATE_MIN);
-  }
-  else { /* reject: copy gauge_tmp to hf.gaugefield */
+  } else { /* reject: copy gauge_tmp to hf.gaugefield */
 #ifdef TM_USE_OMP
-#pragma omp parallel for private(w) private(v)
+#pragma omp parallel for
 #endif
-    for(int ix=0;ix<VOLUME;ix++) {
-      for(int mu=0;mu<4;mu++){
-        v=&hf.gaugefield[ix][mu];
-        w=&gauge_tmp[ix][mu];
-        _su3_assign(*v,*w);
+    for (int ix = 0; ix < VOLUME; ix++) {
+      for (int mu = 0; mu < 4; mu++) {
+        su3 *v = &hf.gaugefield[ix][mu];
+        su3 *w = &gauge_tmp[ix][mu];
+        _su3_assign(*v, *w);
       }
     }
     // by default we use a large step here to make sure that any checks
@@ -355,48 +360,47 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
   hf.update_gauge_copy = 1;
   g_update_gauge_copy = 1;
-  g_update_gauge_copy_32 = 1;  
+  g_update_gauge_copy_32 = 1;
 #ifdef TM_USE_MPI
   xchange_gauge(hf.gaugefield);
   update_tm_gauge_exchange(&g_gauge_state);
 #endif
-  
+
   /*Convert to a 32 bit gauge field, after xchange*/
   convert_32_gauge_field(g_gauge_field_32, hf.gaugefield, VOLUMEPLUSRAND + g_dbw2rand);
 #ifdef TM_USE_MPI
   update_tm_gauge_exchange(&g_gauge_state_32);
 #endif
-  
-  etime=gettime();
+
+  etime = gettime();
 
   /* printing data in the .data file */
-  if(g_proc_id==0) {
+  if (g_proc_id == 0) {
     datafile = fopen(filename, "a");
     if (!bc_flag) { /* if Periodic Boundary Conditions */
       fprintf(datafile, "%.8d %14.12f %14.12f %e ", traj_counter,
-              (*plaquette_energy)/(6.*VOLUME*g_nproc), dh, expmdh);
+              (*plaquette_energy) / (6. * VOLUME * g_nproc), dh, expmdh);
     }
-    for(i = 0; i < Integrator.no_timescales; i++) {
-      for(j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
-        if(monomial_list[ Integrator.mnls_per_ts[i][j] ].type != GAUGE
-            && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != SFGAUGE 
-            && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != NDPOLY
-            && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != NDCLOVER
-            && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != CLOVERNDTRLOG
-            && monomial_list[ Integrator.mnls_per_ts[i][j] ].type != CLOVERTRLOG ) {
-          fprintf(datafile,"%d %d ",  monomial_list[ Integrator.mnls_per_ts[i][j] ].iter0, 
-                  monomial_list[ Integrator.mnls_per_ts[i][j] ].iter1);
+    for (int i = 0; i < Integrator.no_timescales; i++) {
+      for (int j = 0; j < Integrator.no_mnls_per_ts[i]; j++) {
+        if (monomial_list[Integrator.mnls_per_ts[i][j]].type != GAUGE &&
+            monomial_list[Integrator.mnls_per_ts[i][j]].type != SFGAUGE &&
+            monomial_list[Integrator.mnls_per_ts[i][j]].type != NDPOLY &&
+            monomial_list[Integrator.mnls_per_ts[i][j]].type != NDCLOVER &&
+            monomial_list[Integrator.mnls_per_ts[i][j]].type != CLOVERNDTRLOG &&
+            monomial_list[Integrator.mnls_per_ts[i][j]].type != CLOVERTRLOG) {
+          fprintf(datafile, "%d %d ", monomial_list[Integrator.mnls_per_ts[i][j]].iter0,
+                  monomial_list[Integrator.mnls_per_ts[i][j]].iter1);
         }
       }
     }
-    fprintf(datafile, "%d %e", accept, etime-atime);
-    if(g_rgi_C1 > 0. || g_rgi_C1 < 0) {
-      fprintf(datafile, " %e", (*rectangle_energy)/(12.*VOLUME*g_nproc));
+    fprintf(datafile, "%d %e", accept, etime - atime);
+    if (g_rgi_C1 > 0. || g_rgi_C1 < 0) {
+      fprintf(datafile, " %e", (*rectangle_energy) / (12. * VOLUME * g_nproc));
     }
     fprintf(datafile, "\n");
     fflush(datafile);
     fclose(datafile);
   }
-  return(accept);
+  return (accept);
 }
-

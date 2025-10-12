@@ -23,27 +23,28 @@
 #ifdef HAVE_CONFIG_H
 # include<tmlqcd_config.h>
 #endif
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
 #include <errno.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include "global.h"
 #include "boundary.h"
+#include "default_input_values.h"
+#include "expo.h"
+#include "global.h"
+#include "linalg_eo.h"
+#include "monomial/monomial.h"
+#include "operator/clover_leaf.h"
+#include "operator/clovertm_operators.h"
+#include "operator/clovertm_operators_32.h"
+#include "operator/tm_operators.h"
+#include "operator/tm_operators_32.h"
+#include "ranlxd.h"
+#include "read_input.h"
+#include "sse.h"
 #include "su3.h"
 #include "su3adj.h"
 #include "su3spinor.h"
-#include "operator/tm_operators.h"
-#include "operator/tm_operators_32.h"
-#include "operator/clovertm_operators.h"
-#include "operator/clovertm_operators_32.h"
-#include "operator/clover_leaf.h"
-#include "ranlxd.h"
-#include "sse.h"
-#include "linalg_eo.h"
-#include "default_input_values.h"
-#include "read_input.h"
-#include "monomial/monomial.h"
 
 monomial monomial_list[max_no_monomials];
 int no_monomials = 0;
@@ -55,6 +56,8 @@ int no_clovernd_monomials = 0;
 static spinor * _pf;
 spinor ** w_fields;
 const int no_wfields = 6;
+
+extern int init_nddetratio(rational_t * rat); 
 
 int add_monomial(const int type) {
 
@@ -172,8 +175,8 @@ int init_monomials(const int V, const int even_odd_flag) {
   int no=0;
   int retval;
   spinor * __pf = NULL;
-  double sw_mu=0., sw_k=0., sw_c=0.;
-  double swn_mubar=0., swn_epsbar = 0., swn_k=0., swn_c=0.;
+  //  double sw_mu=0., sw_k=0., sw_c=0.;
+  //  double swn_mubar=0., swn_epsbar = 0., swn_k=0., swn_c=0.;
 
   if (g_exposu3_no_c == 0) init_exposu3();
 
@@ -655,14 +658,11 @@ void free_monomials() {
 
 
 int init_poly_monomial(const int V, const int id){
-
-  monomial * mnl = &monomial_list[id];
-  int i,j,k;
+  monomial* mnl = &monomial_list[id];
   FILE* rootsFile=NULL;
   char title[101];
   char filename[257];
   FILE* constFile;
-  int errcode;
   double eps;
 
   spinor *_pf=(spinor*)NULL;
@@ -681,7 +681,7 @@ int init_poly_monomial(const int V, const int id){
 
   (mnl->MDPoly_chi_spinor_fields)[0] = (spinor*)(((unsigned long int)(_pf)+ALIGN_BASE)&~ALIGN_BASE);
 
-  for(i = 1; i < (mnl->MDPolyDegree/2+2); i++){
+  for (int i = 1; i < (mnl->MDPolyDegree / 2 + 2); i++) {
     mnl->MDPoly_chi_spinor_fields[i] = mnl->MDPoly_chi_spinor_fields[i-1]+V;
   }
 
@@ -704,7 +704,7 @@ int init_poly_monomial(const int V, const int id){
         );
     fprintf(stderr,"Warning you didnt specify a local normalization: trying to read it from\n%s\n",filename);
     if((constFile=fopen(filename,"r"))!=NULL) {
-      errcode = fscanf(constFile,"%lf\n",&(mnl->MDPolyLocNormConst));
+      fscanf(constFile, "%lf\n", &(mnl->MDPolyLocNormConst));
       fclose(constFile);
       fprintf(stderr, "normierung local succesfully read -> lnc =  %e \n", mnl->MDPolyLocNormConst);
     } 
@@ -720,8 +720,7 @@ int init_poly_monomial(const int V, const int id){
   /* read in the roots from the given file */
 
   if((void*)(mnl->MDPolyRoots=(_Complex double*)calloc(mnl->MDPolyDegree,sizeof(_Complex double))) ==NULL ){
-    printf ("malloc errno in init_poly_monomial roots array: %d\n",errno); 
-    errno = 0;
+    printf("malloc errno in init_poly_monomial roots array: %d\n", errno);
     return(3);
   }
 
@@ -736,8 +735,10 @@ int init_poly_monomial(const int V, const int id){
     }
 
     /* Here we read in the 2n roots needed for the polinomial in sqrt(s) */
-    for(j = 0; j < (mnl->MDPolyDegree); j++) {
-      errcode = fscanf(rootsFile," %d %lf %lf \n", &k, (double*)&(mnl->MDPolyRoots[j]), (double*)&(mnl->MDPolyRoots[j]) + 1);
+    for (int j = 0; j < (mnl->MDPolyDegree); j++) {
+      int k;
+      fscanf(rootsFile, " %d %lf %lf \n", &k, (double*)&(mnl->MDPolyRoots[j]),
+             (double*)&(mnl->MDPolyRoots[j]) + 1);
     }
     fclose(rootsFile);
   }
@@ -751,7 +752,7 @@ int init_poly_monomial(const int V, const int id){
 
   if(g_proc_id == 0 && g_debug_level > 2) {
     printf("# the root are:\n");
-    for(j=0; j<(mnl->MDPolyDegree); j++){
+    for (int j = 0; j < (mnl->MDPolyDegree); j++) {
       printf("# %lf %lf\n",  creal(mnl->MDPolyRoots[j]), cimag(mnl->MDPolyRoots[j]));
     }
   }

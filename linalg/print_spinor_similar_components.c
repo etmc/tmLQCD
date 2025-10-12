@@ -1,6 +1,7 @@
-#include "su3.h"
-#include <stdio.h>
 #include <float.h>
+#include <math.h>
+#include <stdio.h>
+#include "su3.h"
 
 int static inline match(const complex double a, const complex double b, const double thresh){
   // either a and b are zero or very close to zero or they satisfy our threshold

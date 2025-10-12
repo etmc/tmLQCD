@@ -53,13 +53,11 @@ void pion_norm_measurement(const int traj, const int id, const int ieo) {
   double mpi_res = 0.;
 #endif
   FILE *ofs, *ofs2;
-  char *filename, *filename2, *sourcefilename;
+  char *filename, *filename2;
   char buf[100];
   char buf2[100];
-  char buf3[100];
   filename=buf;
   filename2=buf2;
-  sourcefilename=buf3;
   sprintf(filename,"pionnormcorrelator_finiteT.%.6d",traj);
   sprintf(filename2,"%s", "pion_norm.data");
 

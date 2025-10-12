@@ -65,10 +65,8 @@
 int mixed_cg_her(spinor * const P, spinor * const Q, solver_params_t solver_params, 
                  const int max_iter, double eps_sq, const int rel_prec, const int N,
                  matrix_mult f, matrix_mult32 f32) {
-
-  int i = 0, iter = 0, j = 0;
-  float sqnrm = 0., sqnrm2, squarenorm;
-  float pro, err, alpha_cg, beta_cg;
+  float sqnrm = 0., sqnrm2, err = 0;
+  float pro, alpha_cg, beta_cg;
   double sourcesquarenorm, sqnrm_d, squarenorm_d;
   spinor *delta, *y, *xhigh;
   spinor32 *x, *stmp;
@@ -108,8 +106,8 @@ int mixed_cg_her(spinor * const P, spinor * const Q, solver_params_t solver_para
   zero_spinor_field(P, N);
   
   atime = gettime();
-  for(i = 0; i < N_outer; i++) {
-
+  for (int i = 0; i < N_outer; i++) {
+    int iter = 0, j = 0;
     /* main CG loop in lower precision */
     zero_spinor_field_32(x, N);
     zero_spinor_field_32(solver_field32[0], N);   

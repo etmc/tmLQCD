@@ -29,8 +29,8 @@
 #endif
 
 #include <complex.h>
+#include "init/init_spinor_field.h"
 #include "linalg/lapack.h"
-
 /* some macros for 4d loops */
 #define FORXYZT(t,x,y,z,tt,ll) for(t=0;t<tt;t++){ for(x=0;x<ll;x++){ for(y=0;y<ll;y++){ for(z=0;z<ll;z++){ 
 #define ENDFORXYZT }}}}
@@ -63,7 +63,7 @@ extern double g_prec_sequence_d_dagger_d[3];
 
 
 #ifdef HAVE_FFTW
-  fftw_plan spinor_fftw_plan(spinor *spinor_in,spinor *spinor_out,int tt,int ll,unsigned int forward,int fftw_flags);
+  fftw_plan spinor_fftw_plan(const spinor *spinor_in,spinor *spinor_out,int tt,int ll,unsigned int forward,int fftw_flags);
 #endif
 
 /* translates a tm_operator value to a human readable string */

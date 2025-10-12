@@ -30,24 +30,28 @@
 # include <mpi.h>
 #endif
 
-#include <string.h>
-#include <stdio.h>
 #include <math.h>
-#include "global.h"
-#include "fatal_error.h"
+#include <stdio.h>
+#include <string.h>
 #include "aligned_malloc.h"
 #include "expo.h"
-#include "get_staples.h"
+#include "fatal_error.h"
 #include "get_rectangle_staples.h"
+#include "get_staples.h"
 #include "gettime.h"
-#include "measure_gauge_action.h"
-#include "matrix_utils.h"
-#include "xchange/xchange_gauge.h"
+#include "global.h"
 #include "gradient_flow.h"
-#include "measure_clover_field_strength_observables.h"
+#include "matrix_utils.h"
 #include "meas/field_strength_types.h"
 #include "meas/measurements.h"
+#include "measure_clover_field_strength_observables.h"
+#include "measure_gauge_action.h"
 
+#ifdef TM_USE_QUDA
+#include "quda_interface.h"
+#endif
+
+#include "xchange/xchange_gauge.h"
 
 void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigned int type, const double eps ) {
   double zfac[5] = { 1, (8.0)/(9.0), (-17.0)/(36.0), (3.0)/(4.0), -1 };
@@ -71,20 +75,18 @@ void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigne
 #pragma omp parallel
 #endif
   {
- 
-  su3 ALIGN w,w1,w2;
-  su3 ALIGN z_tmp,z_tmp1;
+    // implementation of third-order Runge-Kutta integrator following Luescher's hep-lat/1006.4518
+    // this can probably be improved...
 
-  // implementation of third-order Runge-Kutta integrator following Luescher's hep-lat/1006.4518
-  // this can probably be improved...
-
-  for( int f = 0; f < 3; ++f ){
+    for (int f = 0; f < 3; ++f) {
 #ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for( int x = 0; x < VOLUME; ++x ){
       for( int mu = 0; mu < 4; ++mu ){
-        get_staples(&w1, x, mu, fields[f]);
+        su3 ALIGN z_tmp;
+        su3 ALIGN w, w1;
+        get_staples(&w1, x, mu, (const su3 **)fields[f]);
         // usually we dagger the staples, but the sign convention seems to require this
         _su3_times_su3d(z_tmp,w1,fields[f][x][mu]);
         project_traceless_antiherm(&z_tmp);
@@ -120,10 +122,10 @@ void step_gradient_flow(su3 ** x0, su3 ** x1, su3 ** x2, su3 ** z, const unsigne
       }
     }
 #endif
-  }
+    }
 
   } /* OpenMP parallel closing brace */
-  
+
   if( g_debug_level >= 4 ){
     tm_stopwatch_pop(&g_timers, 0, 4, "");
   }
@@ -144,8 +146,8 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
     printf("# Doing gradient flow measurement. id=%d\n", id);
     printf("# eps=%lf, tmax=%lf\n", eps, tmax);
   }
-  
-  FILE *outfile;
+
+  FILE *outfile = NULL;
   if( g_proc_id == 0 ) {
     char filename[100];
     snprintf(filename,100,"gradflow.%06d",traj);
@@ -186,8 +188,8 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
     t[1] = fso[1].E = fso[1].Q = P[1] = 0.0;
     t[2] = fso[2].E = fso[2].Q = P[2] = 0.0;
 
-    measure_clover_field_strength_observables(vt.field, &fso[2]);
-    P[2] = measure_plaquette(vt.field) / (6.0 * VOLUME * g_nproc);
+    measure_clover_field_strength_observables((const su3 *const *const)vt.field, &fso[2]);
+    P[2] = measure_plaquette((const su3 *const *const)vt.field) / (6.0 * VOLUME * g_nproc);
 
     while (t[1] < tmax) {
       t[0] = t[2];
@@ -197,8 +199,8 @@ void gradient_flow_measurement(const int traj, const int id, const int ieo) {
       for (int step = 1; step < 3; ++step) {
         t[step] = t[step - 1] + eps;
         step_gradient_flow(vt.field, x1.field, x2.field, z.field, 0, eps);
-        measure_clover_field_strength_observables(vt.field, &fso[step]);
-        P[step] = measure_plaquette(vt.field) / (6.0 * VOLUME * g_nproc);
+        measure_clover_field_strength_observables((const su3 *const *const)vt.field, &fso[step]);
+        P[step] = measure_plaquette((const su3 *const *const)vt.field) / (6.0 * VOLUME * g_nproc);
       }
       W = t[1] * t[1] * (2 * fso[1].E + t[1] * ((fso[2].E - fso[0].E) / (2 * eps)));
       tsqE = t[1] * t[1] * fso[1].E;

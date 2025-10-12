@@ -144,19 +144,16 @@ static void displayInfo(float tol,
 
 }
 
-
-void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb, 
-           const double eps_sq, double restart_eps_sq, const int rel_prec, int maxit, int *iter, 
-           double *reshist, int *flag, spinor **work, matrix_mult f, 
-           int nev, int v_max, spinor *V, int esize, _Complex double *ework)
-{
-  double tolb;        
+void eigcg(int n, int lde, spinor *const x, spinor *const b, double *normb, const double eps_sq,
+           double restart_eps_sq, const int rel_prec, int maxit, int *iter, double *reshist,
+           int *flag, spinor **work, matrix_mult f, int nev, int v_max, spinor *V, int esize,
+           _Complex double *ework) {
   double alpha, beta; /* CG scalars */
   double rho, rhoprev;
   double pAp;
   int it;   /* current iteration number */
   int i, j; /* loop variables */
-  int zs,ds,tmpsize;
+  int zs, ds;
   spinor *r, *p, *Ap;   /* ptrs in work for CG vectors */
   _Complex double tempz;        /* double precision complex temp var */
   double tempd;         /* double temp var */
@@ -171,23 +168,15 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
   double betaprev, alphaprev;     /* remember the previous iterations scalars */
   int v_size;                     /* tracks the size of V */
   int lwork = 3*v_max;            /* the size of zwork */
-  spinor *Ap_prev;
-  void *_h;     
-  _Complex double *H;         /* the V'AV projection matrix */
-  void *_hevecs;
-  _Complex double *Hevecs;    /* the eigenvectors of H */
-  void *_hevecsold;
-  _Complex double *Hevecsold; /* the eigenvectors of H(v_max-1,v_max-1) */
-  void *_hevals;
-  double    *Hevals;    /* the eigenvalues of H */
-  void *_hevalsold;
-  double    *Hevalsold; /* the eigenvalues of H(m-1,m-1) */
-  void *_tau;
-  _Complex double *TAU;	         
-  void *_zwork;
-  _Complex double *zwork;        /* double complex work array needed by zheev */
-  void *_rwork;
-  double *rwork;        /* double work array needed by zheev */
+  spinor *Ap_prev = NULL;
+  _Complex double *H = NULL;         /* the V'AV projection matrix */
+  _Complex double *Hevecs = NULL;    /* the eigenvectors of H */
+  _Complex double *Hevecsold = NULL; /* the eigenvectors of H(v_max-1,v_max-1) */
+  double *Hevals = NULL;             /* the eigenvalues of H */
+  double *Hevalsold = NULL;          /* the eigenvalues of H(m-1,m-1) */
+  _Complex double *TAU = NULL;
+  _Complex double *zwork = NULL; /* double complex work array needed by zheev */
+  double *rwork = NULL;          /* double work array needed by zheev */
 
   int parallel;
   
@@ -375,7 +364,7 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
   
   /* Set up for the method */
   *flag = 1;
-  tolb = eps_sq * (*normb)*(*normb);	/* Relative to b tolerance */
+  // double tolb = eps_sq * (*normb)*(*normb);	/* Relative to b tolerance */
 
   /* Zero-th residual: r = b - A*x  */
   f(r,x);
@@ -419,6 +408,7 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
        }
     }
 
+    betaprev = 0;
     if (it == 0)
       assign(p,r,n);
     else {
@@ -621,7 +611,7 @@ void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb,
   }
 
  return;
-} 
+}
 /* end of EIGPCG ************************************************************/
 
 

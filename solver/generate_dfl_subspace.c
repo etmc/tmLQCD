@@ -167,7 +167,8 @@ int generate_dfl_subspace(const int Ns, const int N, const int repro) {
     if (g_cart_id == 0 && g_debug_level > 1) {
       printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
     }
-    init_sw_fields(VOLUME);
+//    init_sw_fields(VOLUME);
+    init_sw_fields();
     sw_term( (const su3**) g_gauge_field, g_kappa, g_c_sw);
     // this must be EE = 0, this is needed for Msap_eo!?
     sw_invert(0, g_mu);

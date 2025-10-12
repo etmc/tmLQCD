@@ -73,7 +73,7 @@ static int tmLQCD_invert_initialised = 0;
 static int tmLQCD_input_read = 0;
 
 int tmLQCD_init_parallel_and_read_input(int argc, char* argv[], const int _verbose,
-                                        char const * const input_filename){
+                                        char const* const input_filename) {
   verbose = _verbose;
   init_parallel_and_read_input(argc, argv, input_filename);
   tmLQCD_input_read = 1;
@@ -306,7 +306,7 @@ int tmLQCD_invert_doublet(double* const propagator0, double* const propagator1, 
 }
 
 int tmLQCD_invert_eo(double* const Odd_out, double* const Odd_in, const int op_id){
-  unsigned int index_start = 0;
+  // unsigned int index_start = 0;
   if (!tmLQCD_invert_initialised) {
     fprintf(stderr, "tmLQCD_invert_eo: tmLQCD_inver_init must be called first. Aborting...\n");
     return (-1);
