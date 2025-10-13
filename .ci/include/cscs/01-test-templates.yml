@@ -55,8 +55,11 @@ include:
     - ./install_dir/hmc_tm -f "${INPUT_FILE}"
     - echo "Now run binary on SLURM_PROCID=${SLURM_PROCID} with INPUT_FILE=${INPUT_FILE} ..."
   after_script:
-    - echo "Now check results on SLURM_PROCID=${SLURM_PROCID} ..."
-    - cat config.log || true
+    - |
+      if test "${SLURM_PROCID}" -eq "0"; then
+        echo "Now check results on SLURM_PROCID=${SLURM_PROCID} ..."
+        cat config.log || true
+      fi
     - numdiff -r 1e-4 -X 1:10 -X 1:5-8 -X 2:10 -X 2:5-8 output.data ${REFPATH}/output.data
     - |
       for i in $(seq 0 2 18); do \
