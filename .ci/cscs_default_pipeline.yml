@@ -16,9 +16,9 @@ build-quda/uenv/daint-gh200:
 test/daint-gh200:
   extends: .test/hmc
   variables:
-    TEST: "blabla"
-    INPUT_FILE: ".ci/input/quda.in"
+    INPUT_FILE: ".ci/sample-input/quda.in"
+    REFPATH: ".ci/sample-output/cscs-test"
     QUDA_ENABLE_TUNING: 0 # disable tuning
     SLURM_JOB_NUM_NODES: 2
     SLURM_NTASKS: 8
-    SLURM_TIMELIMIT: "00:30:00"
+    SLURM_TIMELIMIT: "01:00:00"

@@ -8,8 +8,6 @@ include:
   image: ${UENV_NAME}/${UENV_VERSION}:${UENV_TAG}
   variables:
     WITH_UENV_VIEW: "default"
-    TEST: "default"
-    REFPATH: ".ci/ref_data/cscs-test"
     CFLAGS: "-O3 -fopenmp -mtune=neoverse-v2 -mcpu=neoverse-v2"
     CXXFLAGS: "-O3 -fopenmp -mtune=neoverse-v2 -mcpu=neoverse-v2"
     LDFLAGS: "-fopenmp"
@@ -39,30 +37,19 @@ include:
         touch preparation-done-${CI_JOB_ID}
       fi
     - while test ! -f preparation-done-${CI_JOB_ID}; do sleep 5; done
-  script:
-    - echo "--> Now run binary on SLURM_PROCID=${SLURM_PROCID} with INPUT_FILE=${INPUT_FILE} ..."
-  after_script:
-    - echo "--> Now check results on SLURM_PROCID=${SLURM_PROCID} ..."
 
 
 .test/hmc:
   extends: .test/base
   script:
-    - echo "TEST = $TEST"
-    - echo "REFPATH = $REFPATH"
-    - ls -la install_dir
-    - echo "running ./install_dir/bin/hmc_tm -f ${INPUT_FILE}"
     - ./install_dir/bin/hmc_tm -f "${INPUT_FILE}"
-    - echo "Now run binary on SLURM_PROCID=${SLURM_PROCID} with INPUT_FILE=${INPUT_FILE} ..."
   after_script:
     - |
       if test "${SLURM_PROCID}" -eq "0"; then
         echo "Now check results on SLURM_PROCID=${SLURM_PROCID} ..."
-        cat config.log || true
+        numdiff -r 1e-4 -X 1:10 -X 1:5-8 -X 2:10 -X 2:5-8 output.data ${REFPATH}/output.data
+        for i in $(seq 0 2 18); do \
+          f=onlinemeas.$(printf %06d $i); \
+          numdiff -r 1e-5 ${f} ${REFPATH}/${f}; \
+        done
       fi
-    - numdiff -r 1e-4 -X 1:10 -X 1:5-8 -X 2:10 -X 2:5-8 output.data ${REFPATH}/output.data
-    - |
-      for i in $(seq 0 2 18); do \
-        f=onlinemeas.$(printf %06d $i); \
-        numdiff -r 1e-5 ${f} ${REFPATH}/${f}; \
-      done
