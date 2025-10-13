@@ -51,8 +51,8 @@ include:
     - echo "TEST = $TEST"
     - echo "REFPATH = $REFPATH"
     - ls -la install_dir
-    - echo "running ./install_dir/hmc_tm -f ${INPUT_FILE}"
-    - ./install_dir/hmc_tm -f "${INPUT_FILE}"
+    - echo "running ./install_dir/bin/hmc_tm -f ${INPUT_FILE}"
+    - ./install_dir/bin/hmc_tm -f "${INPUT_FILE}"
     - echo "Now run binary on SLURM_PROCID=${SLURM_PROCID} with INPUT_FILE=${INPUT_FILE} ..."
   after_script:
     - |
