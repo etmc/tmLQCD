@@ -57,7 +57,7 @@ BeginExternalInverter QUDA
   MGBlockSizesZ = 4,3
   MGBlockSizesT = 3,2
   MGResetSetupMDUThreshold = 1.0
-  MGRefreshSetupMDUThreshold = 0.03846
+  MGRefreshSetupMDUThreshold = 0.0149
   MGRefreshSetupMaxSolverIterations = 40, 40
  
   MGCoarseMuFactor = 1.4, 2.4, 110.0
@@ -242,20 +242,20 @@ BeginMonomial NDCLOVERRATCOR
   MaxSolverIterations = 15000
 EndMonomial
 
-BeginIntegrator 
-  Type0 = 2MNFG
-  Type1 = 2MNFG
-  Type2 = 2MNFG
-  Type3 = 2MNFG
+BeginIntegrator
+  Type0 = 2MN
+  Type1 = 2MN
+  Type2 = 2MN
+  Type3 = 2MN
   IntegrationSteps0 = 1
   IntegrationSteps1 = 1
   IntegrationSteps2 = 1
-  IntegrationSteps3 = 2
-  tau = 0.1538462
-  Lambda0 = 0.16666667
-  Lambda1 = 0.16666667
-  Lambda2 = 0.16666667
-  Lambda2 = 0.16666667
+  IntegrationSteps3 = 1
+  tau = 0.03
+  Lambda0 =  0.19318332750
+  Lambda1 = 0.194
+  Lambda2 = 0.196
+  Lambda2 = 0.198
   NumberOfTimescales =  4
   MonitorForces = no
 EndIntegrator

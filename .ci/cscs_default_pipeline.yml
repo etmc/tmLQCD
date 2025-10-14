@@ -19,6 +19,7 @@ test/daint-gh200:
     INPUT_FILE: ".ci/sample-input/quda.in"
     REFPATH: ".ci/sample-output/cscs-test"
     QUDA_ENABLE_TUNING: 0 # disable tuning
+    QUDA_ENABLE_GDR: 1 # enable GPU-Direct RDMA
     SLURM_JOB_NUM_NODES: 2
     SLURM_NTASKS: 8
     SLURM_TIMELIMIT: "01:00:00"
