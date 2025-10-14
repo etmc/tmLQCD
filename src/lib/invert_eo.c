@@ -34,6 +34,7 @@
 #ifdef HAVE_CONFIG_H
 #include <tmlqcd_config.h>
 #endif
+
 #include <stdlib.h>
 #include "gamma.h"
 #include "global.h"

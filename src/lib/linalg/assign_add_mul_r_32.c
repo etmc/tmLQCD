@@ -28,16 +28,13 @@
 #ifdef HAVE_CONFIG_H
 #include <tmlqcd_config.h>
 #endif
-#ifdef TM_USE_OMP
-#include <omp.h>
-#endif
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "assign_add_mul_r_32.h"
 #include "su3.h"
 
-inline void assign_add_mul_r_32_orphaned(spinor32 *const R, spinor32 *const S, const float c,
+void assign_add_mul_r_32_orphaned(spinor32 *const R, spinor32 *const S, const float c,
                                          const int N) {
 #ifdef TM_USE_OMP
 #pragma omp parallel for

@@ -1,4 +1,5 @@
 #include "utils.ih"
+#include <complex.h>
 
 /* No reunitarization code seems to be available, so I've adapted (stolen) this routine from the
  * MILC code (who stole it elsewhere, I think ;]) -- AD. */
@@ -35,12 +36,11 @@ void reunitarize(su3 *omega) {
   bj2 = omega->c02;
 
   omega->c20 = bj1 * omega->c12;
-  omega->c20 -= bj2 *omega
-                    ->c11
+  omega->c20 -= bj2 *omega->c11;
 
-                        omega->c21 = bj2 * omega->c10;
+  omega->c21 = bj2 * omega->c10;
   omega->c21 -= bj0 * omega->c12;
 
   omega->c22 = bj0 * omega->c11;
-  omega->c22 -= bj1r * omega->c10;
+  omega->c22 -= bj1 * omega->c10;
 }
