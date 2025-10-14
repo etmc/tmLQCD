@@ -280,11 +280,11 @@ void degree_of_polynomial(const int repro) {
           printf("||auxc_3||=%e\n",temp); */
 
     diff(&auxs[0], &auxs[0], &aux3s[0], VOLUME / 2);
-    temp = square_norm(&auxs[0], VOLUME / 2) / square_norm(&aux3s[0], VOLUME / 2, 1) / 4.0;
+    temp = square_norm(&auxs[0], VOLUME / 2, 1) / square_norm(&aux3s[0], VOLUME / 2, 1) / 4.0;
     if (g_proc_id == g_stdio_proc) {
       printf("difference=%e\n", temp);
       diff(&auxc[0], &auxc[0], &aux3c[0], VOLUME / 2);
-      temp = square_norm(&auxc[0], VOLUME / 2) / square_norm(&aux3c[0], VOLUME / 2, 1) / 4.0;
+      temp = square_norm(&auxc[0], VOLUME / 2, 1) / square_norm(&aux3c[0], VOLUME / 2, 1) / 4.0;
       printf("difference=%e\n", temp);
     }
     if (temp < stopeps) break;
