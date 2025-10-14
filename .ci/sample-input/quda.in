@@ -33,7 +33,7 @@ ReversibilityCheckIntervall = 10
 
 DebugLevel = 2
 
-ReproduceRandomNumbers = no
+ReproduceRandomNumbers = yes
 RanluxdLevel = 2
 
 BeginMeasurement CORRELATORS
