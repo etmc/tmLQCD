@@ -1,0 +1,390 @@
+cmake_minimum_required(VERSION 3.24)
+
+project(
+  tmlqcd
+  DESCRIPTION "tmlQCD"
+  HOMEPAGE_URL "http://www.itkp.uni-bonn.de/~urbach/software.html"
+  VERSION "6.0.0"
+  LANGUAGES C CXX)
+
+# include our cmake snippets
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
+# =================================================================================================
+# REQUIRE OUT-OF-SOURCE BUILDS
+file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
+if(EXISTS "${LOC_PATH}")
+  message(
+    FATAL_ERROR
+      "You cannot build in a source directory (or any directory with a CMakeLists.txt file). Please make a build subdirectory."
+  )
+endif()
+
+# =================================================================================================
+# PROJECT AND VERSION
+include(CMakeDependentOption)
+include(CheckSymbolExists)
+include(CheckLibraryExists)
+include(CheckFunctionExists)
+include(GNUInstallDirs)
+
+cmake_policy(SET CMP0048 NEW)
+
+if(POLICY CMP0144)
+  cmake_policy(SET CMP0144 NEW)
+endif()
+
+if(NOT DEFINED CMAKE_CUDA_STANDARD)
+  set(CMAKE_CUDA_STANDARD 14)
+  set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+endif()
+
+if(NOT DEFINED CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+endif()
+
+if(NOT DEFINED CMAKE_C_STANDARD)
+  set(CMAKE_C_STANDARD 11)
+  set(CMAKE_C_STANDARD_REQUIRED ON)
+endif()
+
+if(NOT DEFINED CMAKE_HIP_STANDARD)
+  set(CMAKE_HIP_STANDARD 14)
+  set(CMAKE_HIP_STANDARD_REQUIRED ON)
+endif()
+
+find_package(PkgConfig)
+
+# ##############################################################################
+# Define the paths for static libraries and executables
+# ##############################################################################
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
+    ${cp2k_BINARY_DIR}/lib
+    CACHE PATH "Single output directory for building all libraries.")
+
+# Search for rocm in common locations
+foreach(__var ROCM_ROOT CRAY_ROCM_ROOT ORNL_ROCM_ROOT CRAY_ROCM_PREFIX
+              ROCM_PREFIX CRAY_ROCM_DIR)
+  if($ENV{${__var}})
+    list(APPEND CMAKE_PREFIX_PATH $ENV{__var})
+    set(ROCM_PATH
+        $ENV{__var}
+        CACHE PATH "Path to ROCm installation")
+  endif()
+endforeach()
+
+option(CMAKE_POSITION_INDEPENDENT_CODE "Enable position independent code" ON)
+option(BUILD_SHARED_LIBS "Enable shared library" ON)
+option(TM_USE_FFTW "Enable fftw support" OFF)
+option(TM_USE_MPI "Enable MPI support" OFF)
+option(TM_USE_CUDA "Enable QUDA support" OFF)
+option(TM_USE_HIP "Enable HIP support" OFF)
+option(TM_USE_DDALPHAAMG "Enable DDalphaAMG support" OFF)
+option(TM_USE_OPENMP "Enable openMP" ON)
+option(TM_FIXED_VOLUME "fix volume at compile time" OFF)
+set(
+  TM_ENABLE_ALIGNMENT
+  "auto"
+  CACHE STRING   "Automatically or expliclty align arrays to byte number. auto, none, 16, 32, 64")
+
+set_property(
+  CACHE TM_ENABLE_ALIGNMENT
+  PROPERTY STRINGS
+  "auto"
+  "none"
+  "16"
+  "32"
+  "64")
+
+option(TM_BGL_DRAM "use BGL dram window (BGL only!)" ON)
+option(TM_USE_OPTIMIZATION "enable optimisation" ON)
+option(TM_USE_GAUGE_COPY "Enable use of a copy of the gauge field" ON)
+option(TM_USE_HALFSPINOR "Use a Dirac Op. with halfspinor exchange" ON)
+option(TM_USE_TSPLITPAR "Enable timeslice-splitted communications" ON)
+option(TM_USE_QPHIX "enable QPhiX" OFF)
+option(TM_USE_SHMEM "Use shmem API" OFF)
+option(TM_USE_QUDA "Enable QUDA support" OFF)
+option(TM_USE_GPROF "Enable gprof profiler" OFF)
+option(TM_ENABLE_WARNINGS "Enable all warnings" ON)
+
+# MPI dependent options
+cmake_dependent_option(
+  TM_PERSISTENT_MPI "Use persistent MPI calls for halfspinor [default=no]"
+  OFF "TM_USE_MPI" OFF)
+cmake_dependent_option(
+  TM_NONBLOCKING_MPI "Use non-blocking MPI calls for spinor and gaug" ON
+  "TM_USE_MPI" OFF)
+
+# need to do it properly. Just a place holder
+cmake_dependent_option(
+  TM_MPI_DIMENSION "Use n dimensional parallelisation [default=4]" 4
+  "TM_USE_MPI" OFF)
+
+# HIP dependent options
+cmake_dependent_option(TM_USE_CUDA_HIP "Enable CUDA support in HIP" OFF
+                       "TM_USE_HIP" OFF)
+
+# clime and lemon depend on MPI
+cmake_dependent_option(TM_USE_LEMON "Use the lemon io library" OFF
+                       "TM_USE_MPI" ON)
+
+# GPU dependent options
+cmake_dependent_option(TM_USE_QUDA_EXPERIMENTAL "Enable QUDA support" ON
+                       "TM_USE_QUDA" OFF)
+cmake_dependent_option(
+  TM_QUDA_FERMIONIC_FORCES "Enable support for fermionic forces using QUDA"
+  ON "TM_USE_QUDA" OFF)
+
+cmake_dependent_option(TM_USE_NVHPC "Enable Nvidia HPC toolkit" OFF
+                       "TM_USE_CUDA" OFF)
+
+# search for blas and lapack
+find_package(BLAS REQUIRED)
+#
+find_package(LAPACK REQUIRED)
+set(HAVE_LAPACK ON)
+find_package(FLEX REQUIRED)
+# do we need bison ?
+find_package(BISON REQUIRED)
+
+set(PACKAGE_NAME ${PROJECT_DESCRIPTION})
+set(PACKAGE_VERSION ${PROJECT_VERSION})
+set(PACKAGE_TARNAME "tmlqcd")
+set(PACKAGE_BUGREPORT "curbach@gmx.de")
+set(PACKAGE_STRING "${PROJECT_DESCRIPTION} ${PROJECT_VERSION}")
+
+unset(TM_USE_MPI)
+unset(TM_USE_OMP)
+unset(HAVE_LIBLEMON)
+unset(HAVE_LIBLIME)
+unset(FIXEDVOLUME)
+unset(_PERSISTENT)
+unset(_NON_BLOCKING)
+unset(HAVE_LIBQUDA)
+unset(TM_USE_QUDA)
+unset(TM_QUDA_EXPERIMENTAL)
+unset(TM_QUDA_FERMIONIC_FORCES)
+unset(DDalphaAMG)
+unset(TM_USE_QPHIX)
+unset(QPHIX_SOALEN)
+unset(_NEW_GEOMETRY)
+unset(_NON_BLOCKING)
+unset(_USE_SHMEM)
+unset(_USE_HALFSPINOR)
+set(ALIGN " ")
+set(ALIGN_BASE "0")
+set(ALIGN_BASE32 "0")
+set(ALIGN32 " ")
+
+message("${TM_ENABLE_ALIGNMENT}")
+if (${TM_ENABLE_ALIGNMENT} STREQUAL "auto")
+  set(ALIGN_BASE "0x00")
+  set(ALIGN " ")
+  set(ALIGN_BASE32 "0x00")
+  set(ALIGN32 " ")
+elseif (TM_ENABLE_ALIGNMENT EQUAL 16)
+  set(ALIGN_BASE "0x0F")
+  set(ALIGN "__attribute__ ((aligned (16)))")
+  set(ALIGN_BASE32 "0x0F")
+  set(ALIGN32 "__attribute__ ((aligned (16)))")
+elseif (TM_ENABLE_ALIGNMENT EQUAL 32)
+  set(ALIGN_BASE "0x2F")
+  set(ALIGN "__attribute__ ((aligned (32)))")
+  set(ALIGN_BASE32 "0x2F")
+  set(ALIGN32 "__attribute__ ((aligned (32)))")
+elseif (TM_ENABLE_ALIGNMENT EQUAL 64)
+  set(ALIGN_BASE "0x3F")
+  set(ALIGN "__attribute__ ((aligned (64)))")
+  set(ALIGN_BASE32 "0x3F")
+  set(ALIGN32 "__attribute__ ((aligned (64)))")
+else()
+  message(FATAL_ERROR "Unusable value for array alignment. Allowed values are: auto, none, 16, 32, 64")
+endif()
+
+if(TM_USE_HALFSPINOR)
+  set(_USE_HALFSPINOR ON)
+endif()
+
+if(TM_FIXED_VOLUME)
+  set(FIXEDVOLUME ON)
+endif()
+
+if(TM_PERSISTENT_MPI)
+  set(_PERSISTENT ON)
+endif()
+
+if(TM_USE_MPI)
+  find_package(MPI REQUIRED)
+  set(TM_USE_MPI ON)
+  if(TM_NONBLOCKING_MPI)
+    set(_NON_BLOCKING ON)
+  endif()
+endif()
+
+if(TM_USE_OPENMP)
+  find_package(OpenMP REQUIRED COMPONENTS C CXX)
+  set(TM_USE_OMP ON)
+endif()
+
+if(TM_USE_HDF5)
+  find_package(HDF5 REQUIRED COMPONENTS C)
+endif()
+
+if(TM_USE_LEMON)
+  find_package(Clemon REQUIRED)
+  set(HAVE_LIBLEMON ON)
+endif()
+
+find_package(CLime REQUIRED)
+set(HAVE_LIBLIME ON)
+
+if(TM_USE_QUDA)
+  find_package(QUDA REQUIRED config)
+  set(HAVE_LIBQUDA ON)
+  if(TM_USE_QUDA_EXPERIMENTAL)
+    set(TM_QUDA_EXPERIMENTAL ON)
+  endif()
+  if(TM_QUDA_FERMIONIC_FORCES)
+    set(TM_QUDA_FERMIONIC_FORCES ON)
+  endif()
+  if(TM_USE_CUDA OR TM_USE_HIP)
+    set(TM_USE_QUDA ON)
+  endif()
+endif()
+
+if(TM_USE_CUDA AND TM_USE_HIP)
+  message(
+    ERROR
+    "HIP and CUDA are mutually exclusive. Please choose one GPU support only")
+endif()
+
+if(TM_USE_CUDA OR QUDA_TARGET_CUDA)
+  enable_language(CUDA)
+  if(TM_USE_NVHPC)
+    find_package(NVHPC REQUIRED COMPONENTS CUDA MATH HOSTUTILS NCCL)
+  else()
+    find_package(CUDAToolkit REQUIRED)
+  endif()
+endif()
+
+message("QUDA_TARGET: ${QUDA_TARGET_CUDA}")
+if(TM_USE_HIP OR QUDA_TARGET_HIP)
+  enable_language(hip)
+
+  # we may want to use hip-cuda for development or debugging purposes especially
+  # if AMD GPU access is not possible. So allow it
+  if(TM_USE_CUDA_HIP)
+    find_package(CUDA)
+  endif()
+
+  if(CMAKE_HIP_PLATFORM MATCHES "amd")
+    set(TM_GPU_PLATFORM_DFLAGS "__HIP_PLATFORM_AMD__")
+  else()
+    set(TM_GPU_PLATFORM_DFLAGS "__HIP_PLATFORM_NVIDIA__")
+  endif()
+endif()
+
+if(TM_USE_SHMEM)
+  set(_USE_SHMEM ON)
+endif()
+
+if(TM_USE_QPIHX)
+  find_package(QPhiX REQUIRED)
+  if(NOT TARGET tmlqcd::qphix)
+    add_library(tmlqcd::qphix INTERFACE IMPORTED)
+    set_target_properties(tmlqcd::qphix PROPERTIES INTERFACE_LINK_LIBRARIES
+      "${QPHIX_LIBRARIES}")
+    set_target_properties(tmlqcd::qphix PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
+      "${QPHIX_INCLUDE_DIRS}")
+  endif()
+  set(TM_USE_QPHIX ON)
+endif()
+
+# check for fftw3 (rely on pkgconfig).
+if(TM_USE_FFTW)
+  pkg_search_module(tmlqcd_fftw3 IMPORTED_TARGET GLOBAL fftw3)
+  if(tmlqcd_fftw3_FOUND)
+    add_library(tmlqcd::fftw3 ALIAS PkgConfig::tmlqcd_fftw3)
+  endif()
+endif()
+
+# gprofiler
+
+if (TM_USE_GPROF)
+  set(PROFILE_FLAGS "-pg;-g")
+  if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "powerpc|powerpc64")
+    list(APPEND PROFILE_FLAGS "-qfullpath")
+  endif()
+  add_compile_options($<BOOL:$<COMPILE_LANGUAGE:C>:$PROFILE_FLAGS>)
+endif()
+
+if (TM_ENABLE_WARNINGS)
+  add_compile_options(
+    $<$<COMPILE_LANG_AND_ID:C,GNU>:-Wall>
+    $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-Wall>)
+endif()
+
+# check for the presence of clock_gettime in libc or librt
+check_symbol_exists(clock_gettime "time.h" HAVE_CLOCK_GETTIME)
+check_library_exists(rt clock_gettime "" HAVE_CLOCK_GETTIME_IN_RT)
+check_function_exists(fseeko HAVE_FSEEKO)
+
+# set the parallelization
+
+if(TM_USE_MPI)
+  if(TM_MPI_DIMENSION EQUAL "1")
+    # T parallelisation
+    set(PARALLELT ON)
+  elseif(TM_MPI_DIMENSION EQUAL "2")
+    # XT parallelisation
+    set(PARALLELXT ON)
+  elseif(TM_MPI_DIMENSION EQUAL "3")
+    set(PARALLELXYT ON)
+    # XYZ parallelisation
+  elseif(TM_MPI_DIMENSION EQUAL "4")
+    # timeslice-splitted communications
+    set(PARALLELXYZT ON)
+  elseif(TM_MPI_DIMENSION EQUAL "X")
+    set(PARALLELX ON)
+  elseif(TM_MPI_DIMENSION EQUAL "XY")
+    set(PARALLELXY ON)
+  elseif(TM_MPI_DIMENSION EQUAL "XYZ")
+    set(PARALLELXYZ ON)
+  else()
+    set(PARALLELXYZT ON)
+  endif()
+endif()
+
+# keep the autotool config.h header.
+configure_file("${PROJECT_SOURCE_DIR}/cmake/tmlqcd_config_internal.h.in"
+               "${PROJECT_BINARY_DIR}/tmlqcd_config_internal.h" @ONLY)
+configure_file("${PROJECT_SOURCE_DIR}/fixed_volume.h.in"
+               "${PROJECT_BINARY_DIR}/fixed_volume.h" @ONLY)
+# check if git command exists
+find_program(GIT_EXE NAMES git)
+
+# generate version header
+string(TIMESTAMP TM_TIMESTAMP "%Y-%m-%d %H:%M:%S")
+if(DEFINED GIT_EXE AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
+  execute_process(
+    COMMAND git rev-parse HEAD
+    OUTPUT_VARIABLE TM_SHA
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+  execute_process(
+    COMMAND git describe --all
+    OUTPUT_VARIABLE TM_GIT_BRANCH
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+  message(STATUS "git hash ${TM_SHA}")
+else()
+  # set(TM_GIT_BRANCH "release v${SIRIUS_VERSION}")
+  set(TM_SHA
+      "https://github.com/etmc/tmLQCD/releases/tag/rel-${TMLQCD_VERSION_MAJOR}-${TMLQCD_VERSION_MINOR}"
+  )
+endif()
+
+configure_file(cmake/git_hash.h.in git_hash.h @ONLY)
+add_subdirectory(src/lib)
+add_subdirectory(src/bin)

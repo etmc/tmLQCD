@@ -4,177 +4,139 @@
  * systems, for example. */
 
 /* We are on a CRAY */
-#undef CRAY
+#cmakedefine CRAY
 
 /* lapack available */
-#undef HAVE_LAPACK
+#cmakedefine HAVE_LAPACK 
 
 /* Define to 1 if you have the `lime' library (-llime). */
-#undef HAVE_LIBLIME
+#cmakedefine HAVE_LIBLIME 
 
 /* Define to 1 if you have the `lemon' library (-llemon). */
-#undef HAVE_LIBLEMON
+#cmakedefine HAVE_LIBLEMON 
 
 /* 1 if clock_gettime is available for use in benchmark */
-#undef HAVE_CLOCK_GETTIME
+#cmakedefine HAVE_CLOCK_GETTIME 
 
 /* Compile with MPI support */
-#undef TM_USE_MPI
+#cmakedefine TM_USE_MPI
 
 /* Compile with OpenMP support */
-#undef TM_USE_OMP
+#cmakedefine TM_USE_OMP
 
 /* Compile with FFTW support */
-#undef HAVE_FFTW
+#cmakedefine HAVE_FFTW 
 
 /* Fortran has not extra _ */
-#undef NOF77_
+#cmakedefine NOF77_
 
 /* Define to the address where bug reports for this package should be sent. */
-#undef PACKAGE_BUGREPORT
+#define PACKAGE_BUGREPORT "@PACKAGE_BUGREPORT@"
 
 /* Define to the full name of this package. */
-#undef PACKAGE_NAME
-
+#define PACKAGE_NAME "@PROJECT_DESCRIPTION@"
 /* Define to the full name and version of this package. */
-#undef PACKAGE_STRING
+#define PACKAGE_STRING "@PROJECT_VERSION@"
 
 /* Define to the one symbol short name of this package. */
-#undef PACKAGE_TARNAME
+#define PACKAGE_TARNAME "@PACKAGE_TARNAME@"
 
 /* Define to the version of this package. */
-#undef PACKAGE_VERSION
+#define PACKAGE_VERSION "@PROJECT_DESCRIPTION@ @PROJECT_VERSION@"
 
 /* X parallelisation */
-#undef PARALLELX
+#cmakedefine PARALLELX 
 
 /* XY parallelisation */
-#undef PARALLELXY
+#cmakedefine PARALLELXY 
 
 /* XYZ parallelisation */
-#undef PARALLELXYZ
+#cmakedefine PARALLELXYZ
 
 /* One dimensional parallelisation */
-#undef PARALLELT
+#cmakedefine PARALLELT
 
 /* Two dimensional parallelisation */
-#undef PARALLELXT
+#cmakedefine PARALLELXT
 
 /* Three dimensional parallelisation */
-#undef PARALLELXYT
+#cmakedefine PARALLELXYT
 
 /* Four dimensional parallelisation */
-#undef PARALLELXYZT
+#cmakedefine PARALLELXYZT
 
 /* Fixed volume at compiletime */
-#undef FIXEDVOLUME
+#cmakedefine FIXEDVOLUME
 
 /* Define to 1 if fseeko (and presumably ftello) exists and is declared. */
-#undef HAVE_FSEEKO
+#cmakedefine HAVE_FSEEKO
 
 /* Alignment for arrays -- necessary for SSE and automated vectorization */
-#undef ALIGN_BASE
+#define ALIGN_BASE @ALIGN_BASE@
 
 /* Alignment compiler hint macro */
-#undef ALIGN
+#cmakedefine ALIGN @ALIGN@
 
 /* Alignment for 32bit arrays -- necessary for SSE and automated vectorization */
-#undef ALIGN_BASE32
+#define ALIGN_BASE32 @ALIGN_BASE32@
 
 /* Alignment of 32bit fields, compiler hint macro */
-#undef ALIGN32
+#define ALIGN32 @ALIGN32@
 
 /* Define to 1 if `lex' declares `yytext' as a `char *' by default, not a
    `char[]'. */
-#undef YYTEXT_POINTER
+#cmakedefine YYTEXT_POINTER
 
 /* Number of bits in a file offset, on hosts where this is settable. */
-#undef _FILE_OFFSET_BITS
+#cmakedefine _FILE_OFFSET_BITS @TMLQCD_FILE_OFFSET_BITS@
 
 /* Construct an extra copy of the gauge fields */
-#undef _GAUGE_COPY
+#cmakedefine _GAUGE_COPY
 
 /* Define to 1 to make fseeko visible on some hosts (e.g. glibc 2.2). */
-#undef _LARGEFILE_SOURCE
+#cmakedefine _LARGEFILE_SOURCE
 
 /* Define for large files, on AIX-style hosts. */
-#undef _LARGE_FILES
+#cmakedefine _LARGE_FILES 
 
 /* Use even/odd geometry in the gauge fields */
-#undef _NEW_GEOMETRY
+#cmakedefine _NEW_GEOMETRY
 
 /* x86 64 Bit architecture */
-#undef _x86_64
-
-/* Define to empty if `const' does not conform to ANSI C. */
-#undef const
-
-/* Define to `__inline__' or `__inline' if that's what the C compiler
-   calls it, or to nothing if 'inline' is not supported under any name.  */
-#ifndef __cplusplus
-#undef inline
-#endif
-
-/* Define to `long' if <sys/types.h> does not define. */
-#undef off_t
-
-/* Define to `unsigned' if <sys/types.h> does not define. */
-#undef size_t
-
-/* Define to 1 if you have the <stdint.h> header file. */
-#undef HAVE_STDINT_H
-
-/* Define to 1 if you have the <sys/types.h> header file. */
-#undef HAVE_SYS_TYPES_H
-
-/* Define to 1 if the system has the type `uint16_t'. */
-#undef HAVE_UINT16_T
-
-/* Define to 1 if the system has the type `uint32_t'. */
-#undef HAVE_UINT32_T
-
-/* Define to 1 if the system has the type `uint64_t'. */
-#undef HAVE_UINT64_T
-
-/* Define to 1 if you have the <unistd.h> header file. */
-#undef HAVE_UNISTD_H
+#cmakedefine _x86_64
 
 /* Define to 1 if Dirac operator with halfspinor should be used */
-#undef _USE_HALFSPINOR
+#cmakedefine _USE_HALFSPINOR 
 
 /* Define to 1 if shmem API should be used */
-#undef _USE_SHMEM
+#cmakedefine _USE_SHMEM
 
 /* Define to 1 if KOJAK instrumentalisation should be done*/
-#undef _KOJAK_INST
-
-/* Define to equivalent of C99 restrict keyword, or to nothing if this is not
-   supported. Do not define if restrict is supported directly. */
-#undef restrict
+#cmakedefine _KOJAK_INST
 
 /* Define to 1 if persistent MPI calls for halfspinor should be used */
-#undef _PERSISTENT
+#cmakedefine _PERSISTENT
 
 /* Define to 1 if non-blocking MPI calls for spinor and gauge should be used */
-#undef _NON_BLOCKING
+#cmakedefine _NON_BLOCKING
 
 /* Define to 1 if you have the `quda' library (-lquda). */
-#undef HAVE_LIBQUDA
+#cmakedefine HAVE_LIBQUDA
 
 /* Using QUDA GPU */
-#undef TM_USE_QUDA
+#cmakedefine TM_USE_QUDA 
 
 /* Using experimental QUDA version */
-#undef TM_QUDA_EXPERIMENTAL
+#cmakedefine TM_QUDA_EXPERIMENTAL
 
 /* Using QUDA fermionic forces */
-#undef TM_QUDA_FERMIONIC_FORCES
+#cmakedefine TM_QUDA_FERMIONIC_FORCES
 
 /* Using DDalphaAMG */
-#undef DDalphaAMG
+#cmakedefine DDalphaAMG
 
 /* Using QPHIX */
-#undef TM_USE_QPHIX
+#cmakedefine TM_USE_QPHIX 
 
 /* Structure of Array length to use with QPhiX */
-#undef QPHIX_SOALEN
+#cmakedefine QPHIX_SOALEN @TMLQCD_QPHIX_SOALEN@
