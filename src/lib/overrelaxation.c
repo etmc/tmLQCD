@@ -205,7 +205,7 @@ void overrel_sweep() {
   static su3 v;
   for (mu = 0; mu < 4; mu++) {
     for (ix = 0; ix < VOLUME; ix++) {
-      get_staples(&v, ix, mu, g_gauge_field);
+      get_staples(&v, ix, mu, (const su3 **)g_gauge_field);
       flip_subgroup(ix, mu, v, 1);
       flip_subgroup(ix, mu, v, 2);
       flip_subgroup(ix, mu, v, 3);

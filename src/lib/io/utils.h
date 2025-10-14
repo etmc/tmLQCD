@@ -20,9 +20,7 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
-#ifdef HAVE_CONFIG_H
 #include <tmlqcd_config.h>
-#endif
 
 #include "io/dml.h"
 #include "io/params.h"

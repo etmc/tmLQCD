@@ -1,5 +1,7 @@
 #include "utils.ih"
 
+extern MPI_Comm g_cart_grid;
+
 void construct_reader(READER **reader, char *filename) {
   LIME_FILE *fh = NULL;
   int status = 0;

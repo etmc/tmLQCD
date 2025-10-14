@@ -17,10 +17,8 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#include "lime.h"
-#ifdef HAVE_CONFIG_H
+#include <lime.h>
 #include <tmlqcd_config.h>
-#endif
 #include <math.h>
 #include <signal.h>
 #include <stdio.h>

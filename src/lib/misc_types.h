@@ -101,7 +101,7 @@ typedef enum tm_mpi_thread_level_t {
   TM_MPI_THREAD_SINGLE = QMP_THREAD_SINGLE,
   TM_MPI_THREAD_MULTIPLE = QMP_THREAD_MULTIPLE
 } tm_mpi_thread_level_t;
-#elif TM_USE_MPI
+#elif defined(TM_USE_MPI) 
 typedef enum tm_mpi_thread_level_t {
   TM_MPI_THREAD_SINGLE = MPI_THREAD_SERIALIZED,
   TM_MPI_THREAD_MULTIPLE = MPI_THREAD_MULTIPLE
