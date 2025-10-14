@@ -18,7 +18,6 @@ tags*
 hmc_tm
 invert
 offline_measurement
-lib/
 benchmark
 *.data
 *.para
