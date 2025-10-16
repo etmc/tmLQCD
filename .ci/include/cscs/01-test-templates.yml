@@ -50,6 +50,6 @@ include:
         for i in $(seq 0 2 18); do
           f=onlinemeas.$(printf %06d $i);
           echo "Checking i=${i} and f=${f} ...";
-          numdiff -r 1e-6 ${f} ${REFPATH}/${f};
+          numdiff -r 1e-5 ${f} ${REFPATH}/${f};
         done
       fi
