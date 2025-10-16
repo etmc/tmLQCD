@@ -46,10 +46,10 @@ include:
     - |
       if test "${SLURM_PROCID}" -eq "0"; then
         echo "Now check the results on SLURM_PROCID=${SLURM_PROCID} ..."
-        numdiff -r 1e-4 -X 1:10 -X 1:5-8 -X 2:10 -X 2:5-8 output.data ${REFPATH}/output.data
+        numdiff -r 1e-8 -X 1:22 -X 1:5-21 -X 2:22 -X 2:5-21 output.data ${REFPATH}/output.data
         for i in $(seq 0 2 18); do
           f=onlinemeas.$(printf %06d $i);
           echo "Checking i=${i} and f=${f} ...";
-          numdiff -r 1e-5 ${f} ${REFPATH}/${f};
+          numdiff -r 1e-8 ${f} ${REFPATH}/${f};
         done
       fi
