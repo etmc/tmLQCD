@@ -22,4 +22,4 @@ test/daint-gh200:
     QUDA_ENABLE_GDR: 1 # enable GPU-Direct RDMA
     SLURM_JOB_NUM_NODES: 2
     SLURM_NTASKS: 8
-    SLURM_TIMELIMIT: "01:00:00"
+    SLURM_TIMELIMIT: "00:30:00"
