@@ -13,7 +13,7 @@ config.status
 *.mod.c
 *.opari.inc
 build/*
-tags
+tags*
 *.a
 hmc_tm
 invert
