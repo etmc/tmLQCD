@@ -1,0 +1,1 @@
+This directory contains reference data for acceptane tests.

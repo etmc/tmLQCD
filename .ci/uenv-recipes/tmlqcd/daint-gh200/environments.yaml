@@ -1,0 +1,24 @@
+gcc-env:
+  compiler: [gcc]
+  network:
+      mpi: cray-mpich@8.1.32 +cuda
+  unify: true
+  specs:
+  - python@3.12
+  - numdiff
+  - quda@develop +qdp +multigrid +twisted_clover +twisted_mass
+  - lemonio
+  - c-lime
+  - openblas
+  - cuda
+  variants:
+  - +mpi
+  - +cuda
+  - cuda_arch=90
+  views:
+    default:
+      link: roots
+      uenv:
+        add_compilers: true
+        prefix_paths:
+          LD_LIBRARY_PATH: [lib, lib64]

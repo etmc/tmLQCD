@@ -1,0 +1,25 @@
+include:
+  - remote: 'https://gitlab.com/cscs-ci/recipes/-/raw/master/templates/v2/.ci-ext.yml'
+  - local: '/.ci/include/cscs/00-variables.yml'
+  - local: '/.ci/include/cscs/01-test-templates.yml'
+
+stages:
+  - build
+  - test
+
+build-quda/uenv/daint-gh200:
+  stage: build
+  extends: .uenv-builder-daint-gh200
+  variables:
+    UENV_RECIPE: .ci/uenv-recipes/tmlqcd/daint-gh200
+
+test/daint-gh200:
+  extends: .test/hmc
+  variables:
+    INPUT_FILE: ".ci/sample-input/quda.in"
+    REFPATH: ".ci/sample-output/cscs-test"
+    QUDA_ENABLE_TUNING: 0 # disable tuning
+    QUDA_ENABLE_GDR: 1 # enable GPU-Direct RDMA
+    SLURM_JOB_NUM_NODES: 2
+    SLURM_NTASKS: 8
+    SLURM_TIMELIMIT: "00:30:00"
