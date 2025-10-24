@@ -1,11 +1,10 @@
 #include "io/params.ih"
 
-paramsXlfInfo *construct_paramsXlfInfo(double const plaq, int const counter)
-{
+paramsXlfInfo *construct_paramsXlfInfo(double const plaq, int const counter) {
   struct timeval t1;
   paramsXlfInfo *info = malloc(sizeof(paramsXlfInfo));
 
-  if (info == (paramsXlfInfo*)NULL)
+  if (info == (paramsXlfInfo *)NULL)
     kill_with_error(NULL, g_cart_id, "Could not allocate paramsXlfInfo.");
 
   gettimeofday(&t1, NULL);
@@ -25,5 +24,5 @@ paramsXlfInfo *construct_paramsXlfInfo(double const plaq, int const counter)
   info->epsilonbar = g_epsbar / 2. / g_kappa;
 
   strcpy(info->date, ctime(&t1.tv_sec));
-  return(info);
+  return (info);
 }

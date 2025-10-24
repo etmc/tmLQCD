@@ -1,21 +1,21 @@
 #include "hyp.ih"
 
-void hyp_staples_exclude_two(su3_tuple **buff_out, su3_tuple *buff_in)
-{
+void hyp_staples_exclude_two(su3_tuple **buff_out, su3_tuple *buff_in) {
   static su3 tmp;
   for (int idx = 0; idx < 3; ++idx)
-    memset(buff_out[idx], 0, sizeof(su3_tuple) * VOLUMEPLUSRAND); /* Brutal but fast zeroing of buffer... */
+    memset(buff_out[idx], 0,
+           sizeof(su3_tuple) * VOLUMEPLUSRAND); /* Brutal but fast zeroing of buffer... */
 
-  #define _ADD_STAPELS_TO_COMPONENT(component, to, via, x) \
-  { \
-    _su3_times_su3d(tmp, buff_in[g_iup[x][via]][to], buff_in[g_iup[x][to]][via]); \
-    _su3_times_su3_acc(buff_out[component / 4][x][component % 4], buff_in[x][via], tmp); \
-    _su3_times_su3(tmp, buff_in[g_idn[x][via]][to], buff_in[g_idn[g_iup[x][to]][via]][via]); \
-    _su3d_times_su3_acc(buff_out[component / 4][x][component % 4], buff_in[g_idn[x][via]][via], tmp); \
+#define _ADD_STAPELS_TO_COMPONENT(component, to, via, x)                                        \
+  {                                                                                             \
+    _su3_times_su3d(tmp, buff_in[g_iup[x][via]][to], buff_in[g_iup[x][to]][via]);               \
+    _su3_times_su3_acc(buff_out[component / 4][x][component % 4], buff_in[x][via], tmp);        \
+    _su3_times_su3(tmp, buff_in[g_idn[x][via]][to], buff_in[g_idn[g_iup[x][to]][via]][via]);    \
+    _su3d_times_su3_acc(buff_out[component / 4][x][component % 4], buff_in[g_idn[x][via]][via], \
+                        tmp);                                                                   \
   }
 
-  for (int x = 0; x < VOLUME; ++x)
-  {
+  for (int x = 0; x < VOLUME; ++x) {
     _ADD_STAPELS_TO_COMPONENT(I2_0_12, 0, 3, x);
     _ADD_STAPELS_TO_COMPONENT(I2_0_13, 0, 2, x);
     _ADD_STAPELS_TO_COMPONENT(I2_0_23, 0, 1, x);

@@ -7,16 +7,16 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-/* 
+/*
  *  Routine for the computation of the Jacobi operator (for use into LapH_ev)
  *  Authors Luigi Scorzato, Marco Cristoforetti
  *
@@ -27,6 +27,6 @@
 
 #include "su3.h"
 
-void Jacobi(su3_vector * const l, su3_vector * const k,int t);
+void Jacobi(su3_vector* const l, su3_vector* const k, int t);
 
 #endif
