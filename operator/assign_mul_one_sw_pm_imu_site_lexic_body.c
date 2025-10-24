@@ -1,9 +1,8 @@
-void _PSWITCH(assign_mul_one_sw_pm_imu_site_lexic)(const int ix,
-						    _PTSWITCH(spinor) * const k, const _PTSWITCH(spinor) * const l, 
-						    const _F_TYPE mu) {
-
+void _PSWITCH(assign_mul_one_sw_pm_imu_site_lexic)(const int ix, _PTSWITCH(spinor) * const k,
+                                                   const _PTSWITCH(spinor) * const l,
+                                                   const _F_TYPE mu) {
   _PTSWITCH(su3_vector) ALIGN chi, psi1, psi2;
-  const _PSWITCH(su3) *w1, *w2, *w3;
+  const _PSWITCH(su3) * w1, *w2, *w3;
 
   // upper two spin components first
   w1 = &_PSWITCH(sw)[ix][0][0];

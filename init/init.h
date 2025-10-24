@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
@@ -24,18 +24,18 @@
 #include <tmlqcd_config.h>
 #endif
 
-#include "init/init_global_states.h"
 #include "init/init_bispinor_field.h"
 #include "init/init_chi_spinor_field.h"
+#include "init/init_critical_globals.h"
 #include "init/init_dirac_halfspinor.h"
+#include "init/init_gauge_fg.h"
 #include "init/init_gauge_field.h"
 #include "init/init_gauge_tmp.h"
-#include "init/init_gauge_fg.h"
 #include "init/init_geometry_indices.h"
+#include "init/init_global_states.h"
 #include "init/init_parallel.h"
-#include "init/init_critical_globals.h"
 #ifdef WITHLAP
-#  include "init/init_jacobi_field.h"
+#include "init/init_jacobi_field.h"
 #endif
 #include "init/init_moment_field.h"
 #include "init/init_spinor_field.h"

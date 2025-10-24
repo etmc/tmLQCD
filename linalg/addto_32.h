@@ -4,7 +4,6 @@
 #include "su3.h"
 
 /* Makes the sum (*Q) = (*Q) + (*S) */
-void addto_32(spinor * const Q, const spinor32 * const R, const int N);
-
+void addto_32(spinor* const Q, const spinor32* const R, const int N);
 
 #endif

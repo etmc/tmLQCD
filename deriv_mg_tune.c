@@ -22,15 +22,15 @@
 
 #include "lime.h"
 #if HAVE_CONFIG_H
-#include<tmlqcd_config.h>
+#include <tmlqcd_config.h>
 #endif
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
-#include <time.h>
-#include <sys/time.h>
-#include <string.h>
 #include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/time.h>
+#include <time.h>
 #include <unistd.h>
 #ifdef TM_USE_MPI
 #include <mpi.h>
@@ -38,38 +38,37 @@
 #ifdef TM_USE_OMP
 #include <omp.h>
 #endif
-#include "global.h"
-#include "git_hash.h"
-#include "io/params.h"
-#include "io/gauge.h"
-#include "getopt.h"
-#include "ranlxd.h"
 #include "geometry_eo.h"
-#include "start.h"
+#include "getopt.h"
+#include "git_hash.h"
+#include "global.h"
+#include "io/gauge.h"
+#include "io/params.h"
 #include "measure_gauge_action.h"
 #include "measure_rectangles.h"
 #include "operator/clover_leaf.h"
 #include "operator/clovertm_operators.h"
+#include "ranlxd.h"
+#include "start.h"
 #ifdef TM_USE_MPI
 #include "xchange/xchange.h"
 #endif
-#include "read_input.h"
-#include "mpi_init.h"
-#include "sighandler.h"
-#include "update_tm.h"
-#include "init/init.h"
-#include "test/check_geometry.h"
 #include "boundary.h"
-#include "phmc.h"
-#include "solver/solver.h"
-#include "monomial/monomial.h"
+#include "init/init.h"
 #include "integrator.h"
+#include "monomial/monomial.h"
+#include "mpi_init.h"
+#include "phmc.h"
+#include "read_input.h"
 #include "sighandler.h"
+#include "solver/solver.h"
+#include "test/check_geometry.h"
+#include "update_tm.h"
 #ifdef DDalphaAMG
 #include "DDalphaAMG_interface.h"
 #endif
 #ifdef TM_USE_QUDA
-#  include "quda_interface.h"
+#include "quda_interface.h"
 #endif
 
 #define CONF_FILENAME_LENGTH 500
@@ -79,8 +78,8 @@ extern int nstore;
 int const rlxdsize = 105;
 
 static void usage(const tm_ExitCode_t exit_code);
-static void process_args(int argc, char *argv[], char ** input_filename, char ** filename);
-static void set_default_filenames(char ** input_filename, char ** filename);
+static void process_args(int argc, char *argv[], char **input_filename, char **filename);
+static void set_default_filenames(char **input_filename, char **filename);
 
 int main(int argc, char *argv[]) {
   char *filename = NULL;
@@ -97,58 +96,56 @@ int main(int argc, char *argv[]) {
 
   //  paramsXlfInfo *xlfInfo;
 
-  init_critical_globals(TM_PROGRAM_DERIV_MG_TUNE);  
-  
+  init_critical_globals(TM_PROGRAM_DERIV_MG_TUNE);
+
 #ifdef _KOJAK_INST
 #pragma pomp inst init
 #pragma pomp inst begin(main)
 #endif
 
 #if (defined SSE || defined SSE2 || SSE3)
-  signal(SIGILL,&catch_ill_inst);
+  signal(SIGILL, &catch_ill_inst);
 #endif
 
   verbose = 1;
   g_use_clover_flag = 0;
 
-  process_args(argc,argv,&input_filename,&filename);
-  set_default_filenames(&input_filename,&filename);
+  process_args(argc, argv, &input_filename, &filename);
+  set_default_filenames(&input_filename, &filename);
 
   init_parallel_and_read_input(argc, argv, input_filename);
 
   DUM_DERI = 4;
-  DUM_MATRIX = DUM_DERI+7;
-  if(g_running_phmc) {
-    NO_OF_SPINORFIELDS = DUM_MATRIX+8;
-  }
-  else {
-    NO_OF_SPINORFIELDS = DUM_MATRIX+6;
+  DUM_MATRIX = DUM_DERI + 7;
+  if (g_running_phmc) {
+    NO_OF_SPINORFIELDS = DUM_MATRIX + 8;
+  } else {
+    NO_OF_SPINORFIELDS = DUM_MATRIX + 6;
   }
   DUM_BI_DERI = 6;
-  DUM_BI_SOLVER = DUM_BI_DERI+7;
+  DUM_BI_SOLVER = DUM_BI_DERI + 7;
 
-  DUM_BI_MATRIX = DUM_BI_SOLVER+6;
-  NO_OF_BISPINORFIELDS = DUM_BI_MATRIX+6;
-  
-  //4 extra fields (corresponding to DUM_MATRIX+0..5) for deg. and ND matrix mult.
+  DUM_BI_MATRIX = DUM_BI_SOLVER + 6;
+  NO_OF_BISPINORFIELDS = DUM_BI_MATRIX + 6;
+
+  // 4 extra fields (corresponding to DUM_MATRIX+0..5) for deg. and ND matrix mult.
   NO_OF_SPINORFIELDS_32 = 6;
-  
+
   tmlqcd_mpi_init(argc, argv);
   tm_stopwatch_push(&g_timers, "DERIV_MG_TUNE", "");
 
 #ifndef TM_USE_MPI
   g_dbw2rand = 0;
 #endif
-  
-  
+
   g_mu = g_mu1;
-  
+
 #ifdef _GAUGE_COPY
   status = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
   status += init_gauge_field_32(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
   status = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
-  status += init_gauge_field_32(VOLUMEPLUSRAND + g_dbw2rand, 0);   
+  status += init_gauge_field_32(VOLUMEPLUSRAND + g_dbw2rand, 0);
 #endif
   /* need temporary gauge field for gauge reread checks and in update_tm */
   status += init_gauge_tmp(VOLUME);
@@ -164,22 +161,20 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "Not enough memory for geometry_indices! Aborting...\n");
     exit(0);
   }
-  if(even_odd_flag) {
-    j = init_spinor_field(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS);
-    j += init_spinor_field_32(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS_32);      
-  }
-  else {
+  if (even_odd_flag) {
+    j = init_spinor_field(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS);
+    j += init_spinor_field_32(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS_32);
+  } else {
     j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
-    j += init_spinor_field_32(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS_32);    
+    j += init_spinor_field_32(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS_32);
   }
   if (j != 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
     exit(0);
   }
-  if(even_odd_flag) {
-    j = init_csg_field(VOLUMEPLUSRAND/2);
-  }
-  else {
+  if (even_odd_flag) {
+    j = init_csg_field(VOLUMEPLUSRAND / 2);
+  } else {
     j = init_csg_field(VOLUMEPLUSRAND);
   }
   if (j != 0) {
@@ -192,9 +187,9 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
 
-  if(g_running_phmc) {
-    j = init_bispinor_field(VOLUME/2, NO_OF_BISPINORFIELDS);
-    if (j!= 0) {
+  if (g_running_phmc) {
+    j = init_bispinor_field(VOLUME / 2, NO_OF_BISPINORFIELDS);
+    if (j != 0) {
       fprintf(stderr, "Not enough memory for bi-spinor fields! Aborting...\n");
       exit(0);
     }
@@ -213,33 +208,30 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-
 #ifdef _USE_HALFSPINOR
   j = init_dirac_halfspinor();
-  if (j!= 0) {
+  if (j != 0) {
     fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
     exit(-1);
   }
 
   j = init_dirac_halfspinor32();
-  if (j != 0)
-  {
+  if (j != 0) {
     fprintf(stderr, "Not enough memory for 32-bit halffield! Aborting...\n");
     exit(-1);
-  } 
-  
-#  if (defined _PERSISTENT)
+  }
+
+#if (defined _PERSISTENT)
   init_xchange_halffield();
-#  endif
+#endif
 #endif
 
   /* Initialise random number generator */
-  start_ranlux(rlxd_level, random_seed^nstore);
+  start_ranlux(rlxd_level, random_seed ^ nstore);
 
-  if(even_odd_flag) {
-    j = init_monomials(VOLUMEPLUSRAND/2, even_odd_flag);
-  }
-  else {
+  if (even_odd_flag) {
+    j = init_monomials(VOLUMEPLUSRAND / 2, even_odd_flag);
+  } else {
     j = init_monomials(VOLUMEPLUSRAND, even_odd_flag);
   }
   if (j != 0) {
@@ -247,95 +239,98 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
 
-  /* set ddummy to zero */
-  # pragma omp parallel for
-  for(int ix = 0; ix < VOLUMEPLUSRAND; ix++){
-    for(mu=0; mu<4; mu++){
-      ddummy[ix][mu].d1=0.;
-      ddummy[ix][mu].d2=0.;
-      ddummy[ix][mu].d3=0.;
-      ddummy[ix][mu].d4=0.;
-      ddummy[ix][mu].d5=0.;
-      ddummy[ix][mu].d6=0.;
-      ddummy[ix][mu].d7=0.;
-      ddummy[ix][mu].d8=0.;
+/* set ddummy to zero */
+#pragma omp parallel for
+  for (int ix = 0; ix < VOLUMEPLUSRAND; ix++) {
+    for (mu = 0; mu < 4; mu++) {
+      ddummy[ix][mu].d1 = 0.;
+      ddummy[ix][mu].d2 = 0.;
+      ddummy[ix][mu].d3 = 0.;
+      ddummy[ix][mu].d4 = 0.;
+      ddummy[ix][mu].d5 = 0.;
+      ddummy[ix][mu].d6 = 0.;
+      ddummy[ix][mu].d7 = 0.;
+      ddummy[ix][mu].d8 = 0.;
     }
   }
 
-  if( no_monomials > 1 ){
+  if (no_monomials > 1) {
     int have_cltrlog = 0;
-    for ( int mnl = 0; mnl < no_monomials; mnl++ ){
+    for (int mnl = 0; mnl < no_monomials; mnl++) {
       have_cltrlog = (monomial_list[mnl].type == CLOVERTRLOG) || have_cltrlog;
     }
-    if( (have_cltrlog && no_monomials > 2) || (!have_cltrlog && no_monomials > 1) ){ 
-      fprintf(stderr, "deriv_mg_tune: only one determinant or determinant ratio monomial may be defined! Aborting...\n");
+    if ((have_cltrlog && no_monomials > 2) || (!have_cltrlog && no_monomials > 1)) {
+      fprintf(stderr,
+              "deriv_mg_tune: only one determinant or determinant ratio monomial may be defined! "
+              "Aborting...\n");
       exit(129);
     }
   }
 
-  const monomial * const mnl = &monomial_list[0];
+  const monomial *const mnl = &monomial_list[0];
   const int mnl_type = mnl->type;
   // we support only DET and CLOVERDET monomials because their heatbath-step can be performed
   // without having to invert the Dirac operator
-  if( !(mnl_type == DET || mnl_type == CLOVERDET ) ){
+  if (!(mnl_type == DET || mnl_type == CLOVERDET)) {
     fprintf(stderr, "deriv_mg_tune: only DET and CLOVERDET monomials are supported! Aborting...\n");
     exit(130);
   }
 
-  if(g_proc_id == 0) {
-    for(j = 0; j < no_monomials; j++) {
-      printf("# monomial id %d type = %d timescale %d\n", j, monomial_list[j].type, monomial_list[j].timescale);
+  if (g_proc_id == 0) {
+    for (j = 0; j < no_monomials; j++) {
+      printf("# monomial id %d type = %d timescale %d\n", j, monomial_list[j].type,
+             monomial_list[j].timescale);
     }
   }
 
-  for (int meas_idx = 0; meas_idx < Nmeas; meas_idx++){
+  for (int meas_idx = 0; meas_idx < Nmeas; meas_idx++) {
     /* Set up the gauge field */
-    int n_written = snprintf(conf_filename, CONF_FILENAME_LENGTH, "%s.%04d", gauge_input_filename, nstore);
-    if( n_written < 0 || n_written >= CONF_FILENAME_LENGTH ){
+    int n_written =
+        snprintf(conf_filename, CONF_FILENAME_LENGTH, "%s.%04d", gauge_input_filename, nstore);
+    if (n_written < 0 || n_written >= CONF_FILENAME_LENGTH) {
       char error_message[500];
-      snprintf(error_message,
-               500,
+      snprintf(error_message, 500,
                "Encoding error or gauge configuration filename "
-               "longer than %d characters! See invert.c CONF_FILENAME_LENGTH\n", 
+               "longer than %d characters! See invert.c CONF_FILENAME_LENGTH\n",
                CONF_FILENAME_LENGTH);
       fatal_error(error_message, "deriv_mg_tune.c");
     }
-    if(g_proc_id == 0){ 
-      printf("# Trying to read gauge field from file %s in %s precision.\n",
-            conf_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
+    if (g_proc_id == 0) {
+      printf("# Trying to read gauge field from file %s in %s precision.\n", conf_filename,
+             (gauge_precision_read_flag == 32 ? "single" : "double"));
       fflush(stdout);
     }
-    if( (status = read_gauge_field(conf_filename,g_gauge_field)) != 0) {
-      fprintf(stderr, "Error %d while reading gauge field from %s\nAborting...\n", status, gauge_input_filename);
+    if ((status = read_gauge_field(conf_filename, g_gauge_field)) != 0) {
+      fprintf(stderr, "Error %d while reading gauge field from %s\nAborting...\n", status,
+              gauge_input_filename);
       exit(-2);
     }
-    if (g_proc_id == 0){
+    if (g_proc_id == 0) {
       printf("# Finished reading gauge field.\n");
       fflush(stdout);
     }
 
     /*For parallelization: exchange the gaugefield */
-  #ifdef TM_USE_MPI
+#ifdef TM_USE_MPI
     xchange_gauge(g_gauge_field);
     update_tm_gauge_exchange(&g_gauge_state);
-  #endif
-      
+#endif
+
     /*Convert to a 32 bit gauge field, after xchange*/
     convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND + g_dbw2rand);
-  #ifdef TM_USE_MPI
+#ifdef TM_USE_MPI
     update_tm_gauge_exchange(&g_gauge_state_32);
-  #endif
-  
-    plaquette_energy = measure_plaquette( (const su3**) g_gauge_field);
-    if(g_proc_id == 0) {
-      printf("# Computed plaquette value: %14.12f.\n", plaquette_energy/(6.*VOLUME*g_nproc));
-    }
+#endif
 
+    plaquette_energy = measure_plaquette((const su3 **)g_gauge_field);
+    if (g_proc_id == 0) {
+      printf("# Computed plaquette value: %14.12f.\n", plaquette_energy / (6. * VOLUME * g_nproc));
+    }
 
     hamiltonian_field_t hf;
     hf.gaugefield = g_gauge_field;
     hf.momenta = moment;
-    hf.derivative = df0; 
+    hf.derivative = df0;
 
     // we need to properly initialise the PF field
     monomial_list[0].hbfunction(0, &hf);
@@ -350,13 +345,13 @@ int main(int argc, char *argv[]) {
 #endif
   free_gauge_tmp();
   free_gauge_field();
-  free_gauge_field_32();  
+  free_gauge_field_32();
   free_geometry_indices();
   free_spinor_field();
-  free_spinor_field_32();  
+  free_spinor_field_32();
   free_moment_field();
   free_monomials();
-  if(g_running_phmc) {
+  if (g_running_phmc) {
     free_bispinor_field();
     free_chi_spinor_field();
   }
@@ -375,14 +370,14 @@ int main(int argc, char *argv[]) {
   MPI_Finalize();
 #endif
 
-  return(0);
+  return (0);
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)
 #endif
 }
 
-static void usage(const tm_ExitCode_t exit_code){
-  if(g_proc_id == 0){
+static void usage(const tm_ExitCode_t exit_code) {
+  if (g_proc_id == 0) {
     fprintf(stdout, "MG tuner for derivative monomials in Wilson twisted mass QCD\n");
     fprintf(stdout, "Version %s \n\n", TMLQCD_PACKAGE_VERSION);
     fprintf(stdout, "Please send bug reports to %s\n", TMLQCD_PACKAGE_BUGREPORT);
@@ -391,13 +386,15 @@ static void usage(const tm_ExitCode_t exit_code){
     fprintf(stdout, "         [-o output-filename] default: output\n");
     fprintf(stdout, "         [-v] more verbosity\n");
     fprintf(stdout, "         [-V] print version information and exit\n");
-    fprintf(stdout, "         [-m level] request MPI thread level 'single' or 'multiple' (default: 'single')\n");
+    fprintf(stdout,
+            "         [-m level] request MPI thread level 'single' or 'multiple' (default: "
+            "'single')\n");
     fprintf(stdout, "         [-h|-? this help]\n");
   }
   exit(exit_code);
 }
 
-static void process_args(int argc, char *argv[], char ** input_filename, char ** filename) {
+static void process_args(int argc, char *argv[], char **input_filename, char **filename) {
   int c;
   while ((c = getopt(argc, argv, "h?vVf:o:m:")) != -1) {
     switch (c) {
@@ -413,18 +410,19 @@ static void process_args(int argc, char *argv[], char ** input_filename, char **
         verbose = 1;
         break;
       case 'V':
-        if(g_proc_id == 0) {
-          fprintf(stdout,"%s %s\n",TMLQCD_PACKAGE_STRING,git_hash);
+        if (g_proc_id == 0) {
+          fprintf(stdout, "%s %s\n", TMLQCD_PACKAGE_STRING, git_hash);
         }
         exit(TM_EXIT_SUCCESS);
         break;
       case 'm':
-        if( !strcmp(optarg, "single") ){
+        if (!strcmp(optarg, "single")) {
           g_mpi_thread_level = TM_MPI_THREAD_SINGLE;
-        } else if ( !strcmp(optarg, "multiple") ) {
+        } else if (!strcmp(optarg, "multiple")) {
           g_mpi_thread_level = TM_MPI_THREAD_MULTIPLE;
         } else {
-          tm_debug_printf(0, 0, "[deriv_mg_tune process_args]: invalid input for -m command line argument\n");
+          tm_debug_printf(
+              0, 0, "[deriv_mg_tune process_args]: invalid input for -m command line argument\n");
           usage(TM_EXIT_INVALID_CMDLINE_ARG);
         }
         break;
@@ -437,15 +435,14 @@ static void process_args(int argc, char *argv[], char ** input_filename, char **
   }
 }
 
-static void set_default_filenames(char ** input_filename, char ** filename) {
-  if( *input_filename == NULL ) {
+static void set_default_filenames(char **input_filename, char **filename) {
+  if (*input_filename == NULL) {
     *input_filename = calloc(13, sizeof(char));
-    strcpy(*input_filename,"hmc.input");
+    strcpy(*input_filename, "hmc.input");
   }
-  
-  if( *filename == NULL ) {
-    *filename = calloc(7, sizeof(char));
-    strcpy(*filename,"output");
-  } 
-}
 
+  if (*filename == NULL) {
+    *filename = calloc(7, sizeof(char));
+    strcpy(*filename, "output");
+  }
+}

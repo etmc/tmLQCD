@@ -1,19 +1,18 @@
 #include "hex.ih"
 
-void stout_exclude_two(su3_tuple **buff_out, double const coeff, su3_tuple **staples, su3_tuple *buff_in)
-{
+void stout_exclude_two(su3_tuple **buff_out, double const coeff, su3_tuple **staples,
+                       su3_tuple *buff_in) {
   static su3 tmp;
 
-#define _MULTIPLY_AND_EXPONENTIATE(x, principal, component) \
-  { \
+#define _MULTIPLY_AND_EXPONENTIATE(x, principal, component)                                \
+  {                                                                                        \
     _su3_times_su3d(tmp, staples[component / 4][x][component % 4], buff_in[x][principal]); \
-    project_antiherm(&tmp); \
-    _real_times_su3(buff_out[component / 4][x][component % 4], coeff, tmp); \
-    exposu3_in_place(&buff_out[component / 4][x][component % 4]); \
+    project_antiherm(&tmp);                                                                \
+    _real_times_su3(buff_out[component / 4][x][component % 4], coeff, tmp);                \
+    exposu3_in_place(&buff_out[component / 4][x][component % 4]);                          \
   }
 
-  for (int x = 0; x < VOLUME; ++x)
-  {
+  for (int x = 0; x < VOLUME; ++x) {
     _MULTIPLY_AND_EXPONENTIATE(x, I0_0, I2_0_12);
     _MULTIPLY_AND_EXPONENTIATE(x, I0_0, I2_0_23);
     _MULTIPLY_AND_EXPONENTIATE(x, I0_0, I2_0_13);

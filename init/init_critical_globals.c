@@ -19,19 +19,17 @@
  *
  *******************************************************************************/
 
-#include "misc_types.h"
 #include "global.h"
-#include "read_input.h"
 #include "init/init_global_states.h"
+#include "misc_types.h"
+#include "read_input.h"
 
-void init_critical_globals(const tm_ProgramId_t program_id)
-{
+void init_critical_globals(const tm_ProgramId_t program_id) {
   verbose = 1;
   g_mpi_thread_level = TM_MPI_THREAD_SINGLE;
   g_timers.lvl = -1;
-  
+
   init_global_states();
 
   /* further, program-specific initialisations might go here */
 }
-

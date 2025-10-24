@@ -1,27 +1,26 @@
 /*******************************************
-*
-* FILE: sf_observables.c
-*
-* Author: Jenifer Gonzalez Lopez
-*
-********************************************/
+ *
+ * FILE: sf_observables.c
+ *
+ * Author: Jenifer Gonzalez Lopez
+ *
+ ********************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include <tmlqcd_config.h>
 #endif
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "geometry_eo.h"
+#include "global.h"
+#include "sf_calc_action.h"
+#include "sf_observables.h"
 #include "sse.h"
 #include "su3.h"
 #include "su3adj.h"
-#include "global.h"
-#include "geometry_eo.h"
-#include "sf_calc_action.h"
-#include "sf_observables.h"
 
 void sf_observables() {
-
   double plaquette_energy;
   double rectangle_energy;
   double wilson_action;
@@ -33,92 +32,150 @@ void sf_observables() {
   plaquette_energy = measure_plaquette_sf_weights(g_Tbsf);
   wilson_action = measure_wilson_action_sf(g_Tbsf, g_beta);
   wilson_action_sepbound = measure_wilson_action_sf_separate_boundary(g_Tbsf, g_beta);
-  if(g_proc_id==0){
-    printf("\n"); fflush(stdout);
-    printf("SF b.c. abelian and standard sf weight factors included (only plaquette): \n"); fflush(stdout);
-    printf("The plaquette value is %e\n", plaquette_energy/(3.*6.*VOLUME*g_nproc)); fflush(stdout);
-    printf("The Wilson action value is %e\n", wilson_action); fflush(stdout);
-    printf("The Wilson action value sep bound is %e\n", wilson_action_sepbound); fflush(stdout); 
+  if (g_proc_id == 0) {
+    printf("\n");
+    fflush(stdout);
+    printf("SF b.c. abelian and standard sf weight factors included (only plaquette): \n");
+    fflush(stdout);
+    printf("The plaquette value is %e\n", plaquette_energy / (3. * 6. * VOLUME * g_nproc));
+    fflush(stdout);
+    printf("The Wilson action value is %e\n", wilson_action);
+    fflush(stdout);
+    printf("The Wilson action value sep bound is %e\n", wilson_action_sepbound);
+    fflush(stdout);
   }
   /* sf b.c. abelian field and weight factors for O(a)-improvement included (only plaquette here) */
-  plaquette_energy = measure_plaquette_sf_weights_improvement(g_Tbsf, g_Cs, g_Ct) ;
+  plaquette_energy = measure_plaquette_sf_weights_improvement(g_Tbsf, g_Cs, g_Ct);
   wilson_action = measure_wilson_action_sf_weights_improvement(g_Tbsf, g_beta, g_Cs, g_Ct);
-  wilson_action_sepbound = measure_wilson_action_sf_weights_improvement_separate_boundary(g_Tbsf, g_beta, g_Cs, g_Ct);
-  if(g_proc_id==0){
-    printf("\n"); fflush(stdout);
-    printf("SF b.c. abelian and weight factors for O(a)-improvement included (only plaquette): \n"); fflush(stdout);
-    printf("The plaquette value is %e\n", plaquette_energy/(3.*6.*VOLUME*g_nproc)); fflush(stdout);
-    printf("The Wilson action value is %e\n", wilson_action); fflush(stdout);
-    printf("The Wilson action value sep bound is %e\n", wilson_action_sepbound); fflush(stdout);
-  }    
-  /* sf b.c. abelian field and weight factors for O(a)-improvement included (plaquette and rectangle) */
-  plaquette_energy = measure_plaquette_sf_iwasaki(g_Tbsf, g_Cs, g_Ct, g_rgi_C0) ;
-  rectangle_energy = measure_rectangle_sf_iwasaki(g_Tbsf, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
-  iwasaki_action = measure_iwasaki_action_sf(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
-  if(g_proc_id==0){    
-    printf("\n"); fflush(stdout);
-    printf("SF b.c. abelian and weight factors for O(a)-improvement included (Iwasaki = plaquette and rectangle): \n");
+  wilson_action_sepbound =
+      measure_wilson_action_sf_weights_improvement_separate_boundary(g_Tbsf, g_beta, g_Cs, g_Ct);
+  if (g_proc_id == 0) {
+    printf("\n");
     fflush(stdout);
-    printf("The plaquette value is %e\n", plaquette_energy/(3.*6.*VOLUME*g_nproc)); fflush(stdout);
-    printf("The rectangle value is %e\n", rectangle_energy/(2.*3.*6.*VOLUME*g_nproc)); fflush(stdout);
-    printf("The Iwasaki action value is %e\n", iwasaki_action); fflush(stdout);
-  }  
+    printf("SF b.c. abelian and weight factors for O(a)-improvement included (only plaquette): \n");
+    fflush(stdout);
+    printf("The plaquette value is %e\n", plaquette_energy / (3. * 6. * VOLUME * g_nproc));
+    fflush(stdout);
+    printf("The Wilson action value is %e\n", wilson_action);
+    fflush(stdout);
+    printf("The Wilson action value sep bound is %e\n", wilson_action_sepbound);
+    fflush(stdout);
+  }
+  /* sf b.c. abelian field and weight factors for O(a)-improvement included (plaquette and
+   * rectangle) */
+  plaquette_energy = measure_plaquette_sf_iwasaki(g_Tbsf, g_Cs, g_Ct, g_rgi_C0);
+  rectangle_energy = measure_rectangle_sf_iwasaki(g_Tbsf, g_rgi_C1, g_C1ss, g_C1tss, g_C1tts);
+  iwasaki_action = measure_iwasaki_action_sf(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0, g_rgi_C1, g_C1ss,
+                                             g_C1tss, g_C1tts);
+  if (g_proc_id == 0) {
+    printf("\n");
+    fflush(stdout);
+    printf(
+        "SF b.c. abelian and weight factors for O(a)-improvement included (Iwasaki = plaquette and "
+        "rectangle): \n");
+    fflush(stdout);
+    printf("The plaquette value is %e\n", plaquette_energy / (3. * 6. * VOLUME * g_nproc));
+    fflush(stdout);
+    printf("The rectangle value is %e\n", rectangle_energy / (2. * 3. * 6. * VOLUME * g_nproc));
+    fflush(stdout);
+    printf("The Iwasaki action value is %e\n", iwasaki_action);
+    fflush(stdout);
+  }
 
   /* COUPLING CALCULATION */
 
-  if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
-
-    /* print the value of the leading order effective action \Gamma[V] and its derivative \Gamma'[V] (plaquette case) */
-    /* note that the derivative is precisely the constant factor in the definition of the coupling constant */
-    if(g_proc_id==0){
-      printf("\n"); fflush(stdout);
+  if (g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
+    /* print the value of the leading order effective action \Gamma[V] and its derivative \Gamma'[V]
+     * (plaquette case) */
+    /* note that the derivative is precisely the constant factor in the definition of the coupling
+     * constant */
+    if (g_proc_id == 0) {
+      printf("\n");
+      fflush(stdout);
       printf("Constant factor K: \n");
-      printf("K = %e\n", partial_lattice_lo_effective_iwasaki_action_sf_k(g_Tbsf, g_beta, g_rgi_C0, g_rgi_C1, g_eta)); fflush(stdout);
+      printf("K = %e\n", partial_lattice_lo_effective_iwasaki_action_sf_k(g_Tbsf, g_beta, g_rgi_C0,
+                                                                          g_rgi_C1, g_eta));
+      fflush(stdout);
     }
 
-    /* print the value of the "\partial(S)/\partial(eta)" which will have to be averaged later on to obtain the coupling constant */ 
-    if(g_proc_id==0){
-      printf("\n"); fflush(stdout);
-      printf("'Definition' of the coupling constant, partial(S)/partial(eta)\n"); fflush(stdout);
-      printf("S'[V,U] = %e\n", partial_iwasaki_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0,
-						g_rgi_C1, g_C1ss, g_C1tss, g_C1tts)); fflush(stdout);
-      printf("S'[V,U]/K = %e\n",partial_iwasaki_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0,
-									 g_rgi_C1, g_C1ss, g_C1tss, g_C1tts)/partial_lattice_lo_effective_iwasaki_action_sf_k(g_Tbsf, g_beta, g_rgi_C0, g_rgi_C1, g_eta)); fflush(stdout);
-      printf("\n"); fflush(stdout);
+    /* print the value of the "\partial(S)/\partial(eta)" which will have to be averaged later on to
+     * obtain the coupling constant */
+    if (g_proc_id == 0) {
+      printf("\n");
+      fflush(stdout);
+      printf("'Definition' of the coupling constant, partial(S)/partial(eta)\n");
+      fflush(stdout);
+      printf("S'[V,U] = %e\n",
+             partial_iwasaki_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0,
+                                                      g_rgi_C1, g_C1ss, g_C1tss, g_C1tts));
+      fflush(stdout);
+      printf("S'[V,U]/K = %e\n",
+             partial_iwasaki_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct, g_rgi_C0,
+                                                      g_rgi_C1, g_C1ss, g_C1tss, g_C1tts) /
+                 partial_lattice_lo_effective_iwasaki_action_sf_k(g_Tbsf, g_beta, g_rgi_C0,
+                                                                  g_rgi_C1, g_eta));
+      fflush(stdout);
+      printf("\n");
+      fflush(stdout);
     }
-    
+
   }
-  
+
   else {
-    
-    factor = 1./(1. - (1. - g_Ct)*(2./((double)g_Tbsf)));
-    
-    /* print the value of the leading order effective action \Gamma[V] and its derivative \Gamma'[V] (plaquette case) */
-    /* note that the derivative is precisely the constant factor in the definition of the coupling constant */
-    if(g_proc_id==0){
-      printf("\n"); fflush(stdout);
+    factor = 1. / (1. - (1. - g_Ct) * (2. / ((double)g_Tbsf)));
+
+    /* print the value of the leading order effective action \Gamma[V] and its derivative \Gamma'[V]
+     * (plaquette case) */
+    /* note that the derivative is precisely the constant factor in the definition of the coupling
+     * constant */
+    if (g_proc_id == 0) {
+      printf("\n");
+      fflush(stdout);
       printf("Effective action and its derivative with respect to eta, at leading order: \n");
-      printf("Gamma[V] = %e\n", lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
-      printf("Gamma'[V] = %e\n", partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
-      printf("factor*Gamma'[V] = %e\n", factor*partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
-      printf("K_plaquette = %e\n", partial_lattice_lo_effective_plaquette_action_sf_k(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
+      printf("Gamma[V] = %e\n",
+             lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta));
+      fflush(stdout);
+      printf("Gamma'[V] = %e\n",
+             partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta));
+      fflush(stdout);
+      printf("factor*Gamma'[V] = %e\n", factor * partial_lattice_lo_effective_plaquette_action_sf(
+                                                     g_Tbsf, g_beta, g_Ct, g_eta));
+      fflush(stdout);
+      printf("K_plaquette = %e\n",
+             partial_lattice_lo_effective_plaquette_action_sf_k(g_Tbsf, g_beta, g_Ct, g_eta));
+      fflush(stdout);
     }
-    
-    /* print the value of the "\partial(S)/\partial(eta)" which will have to be averaged later on to obtain the coupling constant */ 
-    if(g_proc_id==0){
-      printf("\n"); fflush(stdout);
-      printf("'Definition' of the coupling constant, partial(S)/partial(eta)\n"); fflush(stdout);
-      printf("S'[V,U] = %e\n",partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct)); fflush(stdout);
-      printf("S'[V,U]/Gamma'[V] = %e\n",partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct)/partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
-      printf("S'[V,U]/(factor*Gamma'[V]) = %e\n",partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct)/(factor*partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta))); fflush(stdout);
-      printf("S'[V,U]/K_plaquette = %e\n",partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct)/partial_lattice_lo_effective_plaquette_action_sf_k(g_Tbsf, g_beta, g_Ct, g_eta)); fflush(stdout);
-      printf("\n"); fflush(stdout);
+
+    /* print the value of the "\partial(S)/\partial(eta)" which will have to be averaged later on to
+     * obtain the coupling constant */
+    if (g_proc_id == 0) {
+      printf("\n");
+      fflush(stdout);
+      printf("'Definition' of the coupling constant, partial(S)/partial(eta)\n");
+      fflush(stdout);
+      printf("S'[V,U] = %e\n", partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct));
+      fflush(stdout);
+      printf("S'[V,U]/Gamma'[V] = %e\n",
+             partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct) /
+                 partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta));
+      fflush(stdout);
+      printf("S'[V,U]/(factor*Gamma'[V]) = %e\n",
+             partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct) /
+                 (factor *
+                  partial_lattice_lo_effective_plaquette_action_sf(g_Tbsf, g_beta, g_Ct, g_eta)));
+      fflush(stdout);
+      printf("S'[V,U]/K_plaquette = %e\n",
+             partial_wilson_action_sf_respect_to_eta(g_Tbsf, g_beta, g_Cs, g_Ct) /
+                 partial_lattice_lo_effective_plaquette_action_sf_k(g_Tbsf, g_beta, g_Ct, g_eta));
+      fflush(stdout);
+      printf("\n");
+      fflush(stdout);
     }
   }
-  
-  /*****************************************************************************************************************************/ 
-  /*****************************************************************************************************************************/ 
-  /*****************************************************************************************************************************/ 
+
+  /*****************************************************************************************************************************/
+  /*****************************************************************************************************************************/
+  /*****************************************************************************************************************************/
 
 #if 0
   /* (1): identifying the gauge fields "g_gauge_fields = V" and then calculating the plaquette as usually */
@@ -226,5 +283,4 @@ void sf_observables() {
   printf("\n"); fflush(stdout);
 
 #endif
-
 }

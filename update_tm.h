@@ -7,20 +7,19 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 #ifndef _UPDATE_TM_H
 #define _UPDATE_TM_H
 
-int update_tm(double *plaquette_energy, double *rectangle_energy, 
-	      char * filename, const int return_check, const int acctest, 
-	      const int traj_counter);
+int update_tm(double *plaquette_energy, double *rectangle_energy, char *filename,
+              const int return_check, const int acctest, const int traj_counter);
 
 #endif

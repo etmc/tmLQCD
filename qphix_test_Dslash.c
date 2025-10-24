@@ -56,7 +56,6 @@
 #include "gettime.h"
 #include "global.h"
 #include "init/init.h"
-#include "init/init.h"
 #include "invert_clover_eo.h"
 #include "invert_eo.h"
 #include "linalg/assign_add_mul_r.h"
@@ -70,7 +69,6 @@
 #include "operator/Hopping_Matrix_nocom.h"
 #include "operator/clover_leaf.h"
 #include "operator/clovertm_operators.h"
-#include "operator/clovertm_operators.h"
 #include "operator/tm_operators.h"
 #include "prepare_source.h"
 #include "qphix_interface.h"
@@ -79,12 +77,12 @@
 #include "solver/cg_her.h"
 #include "solver/solver_field.h"
 #include "start.h"
+#include "struct_accessors.h"
 #include "su3.h"
 #include "su3adj.h"
 #include "test/check_geometry.h"
 #include "update_backward_gauge.h"
 #include "xchange/xchange.h"
-#include "struct_accessors.h"
 
 int check_xchange();
 double compare_spinors(spinor* s1, spinor* s2);
@@ -169,15 +167,15 @@ int main(int argc, char* argv[]) {
     random_gauge_field(1, g_gauge_field);
   }
 
-// g_gauge_field[ g_ipt[0][0][0][1] ][0].c00 = 1.0;
-// g_gauge_field[ g_ipt[0][0][0][1] ][0].c01 = 0.0;
-// g_gauge_field[ g_ipt[0][0][0][1] ][0].c02 = 0.0;
-// g_gauge_field[ g_ipt[0][0][0][1] ][0].c10 = 0.0;
-// g_gauge_field[ g_ipt[0][0][0][1] ][0].c11 = 1.0;
-// g_gauge_field[ g_ipt[0][0][0][1] ][0].c12 = 0.0;
-// g_gauge_field[ g_ipt[0][0][0][1] ][0].c20 = 0.0;
-// g_gauge_field[ g_ipt[0][0][0][1] ][0].c21 = 0.0;
-// g_gauge_field[ g_ipt[0][0][0][1] ][0].c22 = 1.0;
+  // g_gauge_field[ g_ipt[0][0][0][1] ][0].c00 = 1.0;
+  // g_gauge_field[ g_ipt[0][0][0][1] ][0].c01 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][0][1] ][0].c02 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][0][1] ][0].c10 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][0][1] ][0].c11 = 1.0;
+  // g_gauge_field[ g_ipt[0][0][0][1] ][0].c12 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][0][1] ][0].c20 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][0][1] ][0].c21 = 0.0;
+  // g_gauge_field[ g_ipt[0][0][0][1] ][0].c22 = 1.0;
 
 #ifdef TM_USE_MPI
   /*For parallelization: exchange the gaugefield */
@@ -203,7 +201,7 @@ int main(int argc, char* argv[]) {
    * and first apply the tmLQCD operator to the test spinor, then
    * the QPhiX operator and then compare */
   for (int op_id = 0; op_id < no_operators; ++op_id) {
-    operator* op =& operator_list[op_id];
+    operator* op = & operator_list[op_id];
     op_set_globals(op_id);
     if (op->type == CLOVER || op->type == DBCLOVER) {
       sw_term((const su3**)g_gauge_field, op->kappa, op->c_sw);
@@ -342,15 +340,13 @@ double compare_spinors(spinor* s1, spinor* s2) {
               z = z_global - g_proc_coords[3] * LZ;
               int idx = g_ipt[t][x][y][z];
               for (int sc = 0; sc < 24; sc++) {
-                double e_tmlqcd = spinor_get_elem_linear(&s2[idx],sc/2,sc%2);
-                double e_qphix = spinor_get_elem_linear(&s1[idx],sc/2,sc%2);
-                
-                if (fabs(e_tmlqcd) > 2 * DBL_EPSILON ||
-                    fabs(e_qphix) > 2 * DBL_EPSILON) {
+                double e_tmlqcd = spinor_get_elem_linear(&s2[idx], sc / 2, sc % 2);
+                double e_qphix = spinor_get_elem_linear(&s1[idx], sc / 2, sc % 2);
+
+                if (fabs(e_tmlqcd) > 2 * DBL_EPSILON || fabs(e_qphix) > 2 * DBL_EPSILON) {
                   fflush(stdout);
                   printf("%9d | %5d %6d %6d %6d s%1d c%1d reim%1d : %+5lf %2s", g_proc_id, t_global,
-                         x_global, y_global, z_global, sc / 6, (sc / 2) % 3, sc % 2, e_tmlqcd ,
-                         " ");
+                         x_global, y_global, z_global, sc / 6, (sc / 2) % 3, sc % 2, e_tmlqcd, " ");
                   printf("%5d %6d %6d %6d s%1d c%1d reim%1d : %+5lf", t_global, x_global, y_global,
                          z_global, sc / 6, (sc / 2) % 3, sc % 2, e_qphix);
                   if (fabs(e_tmlqcd - e_qphix) > 2 * DBL_EPSILON) printf(" !!! ");
@@ -362,10 +358,10 @@ double compare_spinors(spinor* s1, spinor* s2) {
             MPI_Barrier(MPI_COMM_WORLD);
 #endif
           }  // z
-        }    // y
-      }      // x
-    }        // t
-  }          // if( SourceInfo.type == SRC_TYPE_POINT )
+        }  // y
+      }  // x
+    }  // t
+  }  // if( SourceInfo.type == SRC_TYPE_POINT )
 
 #ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
@@ -404,7 +400,7 @@ double compare_spinors(spinor* s1, spinor* s2) {
             z = z_global - g_proc_coords[3] * LZ;
             int idx = g_ipt[t][x][y][z];
             for (int sc = 0; sc < 24; sc++) {
-              double e_diff = spinor_get_elem_linear(&s1[idx],sc/2,sc%2);
+              double e_diff = spinor_get_elem_linear(&s1[idx], sc / 2, sc % 2);
               // when a volume source is used, these will be zero up to significant rounding
               // we account for that by the scaling of DBL_EPSILON
               if (fabs(e_diff) > 8 * 24 * DBL_EPSILON) {
@@ -418,9 +414,9 @@ double compare_spinors(spinor* s1, spinor* s2) {
           MPI_Barrier(MPI_COMM_WORLD);
 #endif
         }  // z
-      }    // y
-    }      // x
-  }        // t
+      }  // y
+    }  // x
+  }  // t
 
   if (g_proc_id == 0) {
     printf("\n  ||result_1 - result_2||^2 = %e\n\n", squarenorm);

@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
@@ -27,22 +27,17 @@
 #define JD_MINIMAL 0
 #endif
 
-#include "su3.h"
-#include "solver/solver_params.h"
 #include "solver/matrix_mult_typedef_bi.h"
+#include "solver/solver_params.h"
+#include "su3.h"
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-extern void jdher_bi(int n, int lda, double tau, double jdtol, 
-		     int kmax, int jmax, int jmin, int itmax,
-		     int blksize, int blkwise, 
-		     int V0dim, _Complex double *V0, 
-		     int linsolver,  
-		     int linitmax, double eps_tr, double toldecay,
-		     int clvl,
-		     int *k_conv, _Complex double *Q, double *lambda, int *it,
-		     int maxmin, const int shift_mode,
-		     matrix_mult_bi domatveca);
+extern void jdher_bi(int n, int lda, double tau, double jdtol, int kmax, int jmax, int jmin,
+                     int itmax, int blksize, int blkwise, int V0dim, _Complex double *V0,
+                     int linsolver, int linitmax, double eps_tr, double toldecay, int clvl,
+                     int *k_conv, _Complex double *Q, double *lambda, int *it, int maxmin,
+                     const int shift_mode, matrix_mult_bi domatveca);
 
 #endif

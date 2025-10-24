@@ -1,5 +1,5 @@
 /****************************************************************************
- * Copyright (C) 2008,2009,2010,2011,2012  
+ * Copyright (C) 2008,2009,2010,2011,2012
  * Andreas Stathopoulos, Kostas Orginos, Abdou M. Abdel-Rehim
  *
  * This program is based on interfacing the eigCG solver to the tmLQCD code.
@@ -13,12 +13,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
@@ -29,10 +29,9 @@
 #include "solver/matrix_mult_typedef.h"
 #include "su3.h"
 
-void eigcg(int n, int lde, spinor * const x, spinor * const b, double *normb, const double eps_sq, 
-           double restart_eps_sq, const int rel_prec, int maxit, int *iter, double *reshist, int *flag,  
-           spinor **work, matrix_mult f, int nev, int v_max, spinor *V, int esize, _Complex double *ework);
-
-
+void eigcg(int n, int lde, spinor *const x, spinor *const b, double *normb, const double eps_sq,
+           double restart_eps_sq, const int rel_prec, int maxit, int *iter, double *reshist,
+           int *flag, spinor **work, matrix_mult f, int nev, int v_max, spinor *V, int esize,
+           _Complex double *ework);
 
 #endif

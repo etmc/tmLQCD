@@ -1,5 +1,5 @@
 /***********************************************************************
- *  
+ *
  * Copyright (C) 2008 Carsten Urbach
  *
  * Adapted from monomial.h by Florian Burger 2009/12/16
@@ -10,12 +10,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
@@ -25,19 +25,13 @@
 #define max_no_measurements 20
 
 /* Give the measurement types an unambiguous ID*/
-enum MEAS_TYPE { 
-  ONLINE, 
-  PIONNORM, 
-  POLYAKOV, 
-  ORIENTED_PLAQUETTES,
-  GRADIENT_FLOW 
-  };
+enum MEAS_TYPE { ONLINE, PIONNORM, POLYAKOV, ORIENTED_PLAQUETTES, GRADIENT_FLOW };
 
 typedef struct {
   enum MEAS_TYPE type;
   int initialised;
   int id;
-  
+
   /* frequency of the measurement */
   int freq;
   /* for maximal iterations in inversions for correlators */
@@ -52,7 +46,7 @@ typedef struct {
   char name[100];
 
   /* maximum number of slice, the source can be put
-    if the correlator is measured in T(Z)-direction this will be set to 
+    if the correlator is measured in T(Z)-direction this will be set to
     T(LZ) by init_measurements
   */
   int max_source_slice;
@@ -67,11 +61,10 @@ typedef struct {
   double gf_tmax;
 
   /* functions for the measurement */
-  void (*measurefunc) (const int traj, const int id, const int ieo);
- 
+  void (*measurefunc)(const int traj, const int id, const int ieo);
+
   ExternalLibrary external_library;
 } measurement;
-
 
 /* list of all monomials */
 extern measurement measurement_list[max_no_measurements];

@@ -26,39 +26,39 @@
 #endif /* HAVE_LIBLEMON */
 
 #ifdef HAVE_LIBLEMON
-#  define LIME_FILE MPI_File
-#  define WRITER LemonWriter
-#  define READER LemonReader
-#  define RECORD_HEADER LemonRecordHeader
-#  define CreateReader lemonCreateReader
-#  define CreateHeader lemonCreateHeader
-#  define ReaderBytes lemonReaderBytes
-#  define ReaderNextRecord lemonReaderNextRecord
-#  define ReaderType lemonReaderType
-#  define ReaderCloseRecord lemonReaderCloseRecord
-#  define ReaderReadData lemonReaderReadData
-#  define WriteRecordHeader lemonWriteRecordHeader
-#  define WriteRecordData lemonWriteRecordData
-#  define WriterCloseRecord lemonWriterCloseRecord
-#  define DestroyReader lemonDestroyReader
-#  define DestroyHeader lemonDestroyHeader
+#define LIME_FILE MPI_File
+#define WRITER LemonWriter
+#define READER LemonReader
+#define RECORD_HEADER LemonRecordHeader
+#define CreateReader lemonCreateReader
+#define CreateHeader lemonCreateHeader
+#define ReaderBytes lemonReaderBytes
+#define ReaderNextRecord lemonReaderNextRecord
+#define ReaderType lemonReaderType
+#define ReaderCloseRecord lemonReaderCloseRecord
+#define ReaderReadData lemonReaderReadData
+#define WriteRecordHeader lemonWriteRecordHeader
+#define WriteRecordData lemonWriteRecordData
+#define WriterCloseRecord lemonWriterCloseRecord
+#define DestroyReader lemonDestroyReader
+#define DestroyHeader lemonDestroyHeader
 #else /* HAVE_LIBLEMON */
-#  define LIME_FILE FILE
-#  define WRITER LimeWriter
-#  define READER LimeReader
-#  define RECORD_HEADER LimeRecordHeader
-#  define CreateReader limeCreateReader
-#  define CreateHeader limeCreateHeader
-#  define ReaderBytes limeReaderBytes
-#  define ReaderNextRecord limeReaderNextRecord
-#  define ReaderType limeReaderType
-#  define ReaderCloseRecord limeReaderCloseRecord
-#  define ReaderReadData limeReaderReadData
-#  define WriteRecordData limeWriteRecordData
-#  define WriteRecordHeader limeWriteRecordHeader
-#  define WriterCloseRecord limeWriterCloseRecord
-#  define DestroyReader limeDestroyReader
-#  define DestroyHeader limeDestroyHeader
+#define LIME_FILE FILE
+#define WRITER LimeWriter
+#define READER LimeReader
+#define RECORD_HEADER LimeRecordHeader
+#define CreateReader limeCreateReader
+#define CreateHeader limeCreateHeader
+#define ReaderBytes limeReaderBytes
+#define ReaderNextRecord limeReaderNextRecord
+#define ReaderType limeReaderType
+#define ReaderCloseRecord limeReaderCloseRecord
+#define ReaderReadData limeReaderReadData
+#define WriteRecordData limeWriteRecordData
+#define WriteRecordHeader limeWriteRecordHeader
+#define WriterCloseRecord limeWriterCloseRecord
+#define DestroyReader limeDestroyReader
+#define DestroyHeader limeDestroyHeader
 #endif
 
 #endif

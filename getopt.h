@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
@@ -38,10 +38,10 @@
 #ifndef _GETOPT_H
 
 #ifndef __need_getopt
-# define _GETOPT_H 1
+#define _GETOPT_H 1
 #endif
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -98,13 +98,12 @@ extern int optopt;
    one).  For long options that have a zero `flag' field, `getopt'
    returns the contents of the `val' field.  */
 
-struct option
-{
-# if defined __STDC__ && __STDC__
+struct option {
+#if defined __STDC__ && __STDC__
   const char *name;
-# else
+#else
   char *name;
-# endif
+#endif
   /* has_arg can't be an enum because some compilers complain about
      type mismatches in all the code that assumes it is an int.  */
   int has_arg;
@@ -114,11 +113,10 @@ struct option
 
 /* Names for the values of the `has_arg' field of `struct option'.  */
 
-# define no_argument		0
-# define required_argument	1
-# define optional_argument	2
-#endif	/* need getopt */
-
+#define no_argument 0
+#define required_argument 1
+#define optional_argument 2
+#endif /* need getopt */
 
 /* Get definitions and prototypes for functions to process the
    arguments in ARGV (ARGC of them, minus the program name) for
@@ -144,40 +142,37 @@ struct option
    arguments to the option '\0'.  This behavior is specific to the GNU
    `getopt'.  */
 
-#if defined(__cplusplus) || (defined (__STDC__) && __STDC__)
-# ifdef __GNU_LIBRARY__
+#if defined(__cplusplus) || (defined(__STDC__) && __STDC__)
+#ifdef __GNU_LIBRARY__
 /* Many other libraries have conflicting prototypes for getopt, with
    differences in the consts, in stdlib.h.  To avoid compilation
    errors, only prototype getopt for the GNU C library.  */
-extern int getopt (int __argc, char *const *__argv, const char *__shortopts);
-# else /* not __GNU_LIBRARY__ */
+extern int getopt(int __argc, char *const *__argv, const char *__shortopts);
+#else  /* not __GNU_LIBRARY__ */
 /*extern int getopt ();*/
-# endif /* __GNU_LIBRARY__ */
+#endif /* __GNU_LIBRARY__ */
 
-# ifndef __need_getopt
-extern int getopt_long (int __argc, char *const *__argv, const char *__shortopts,
-		        const struct option *__longopts, int *__longind);
-extern int getopt_long_only (int __argc, char *const *__argv,
-			     const char *__shortopts,
-		             const struct option *__longopts, int *__longind);
+#ifndef __need_getopt
+extern int getopt_long(int __argc, char *const *__argv, const char *__shortopts,
+                       const struct option *__longopts, int *__longind);
+extern int getopt_long_only(int __argc, char *const *__argv, const char *__shortopts,
+                            const struct option *__longopts, int *__longind);
 
 /* Internal only.  Users should not call this directly.  */
-extern int _getopt_internal (int __argc, char *const *__argv,
-			     const char *__shortopts,
-		             const struct option *__longopts, int *__longind,
-			     int __long_only);
-# endif
+extern int _getopt_internal(int __argc, char *const *__argv, const char *__shortopts,
+                            const struct option *__longopts, int *__longind, int __long_only);
+#endif
 #else /* not __STDC__ */
-extern int getopt ();
-# ifndef __need_getopt
-extern int getopt_long ();
-extern int getopt_long_only ();
+extern int getopt();
+#ifndef __need_getopt
+extern int getopt_long();
+extern int getopt_long_only();
 
-extern int _getopt_internal ();
-# endif
+extern int _getopt_internal();
+#endif
 #endif /* __STDC__ */
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
 #endif
 

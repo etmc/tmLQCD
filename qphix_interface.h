@@ -42,8 +42,9 @@ int invert_eo_qphix_oneflavour(spinor* const Odd_out, spinor* const Odd_in, cons
                                const CompressionType compression);
 
 int invert_eo_qphix_oneflavour_mshift(spinor** Odd_out, spinor* const Odd_in, const int max_iter,
-                                      const double precision, const int solver_flag, const int rel_prec,
-                                      solver_params_t solver_params, const SloppyPrecision sloppy,
+                                      const double precision, const int solver_flag,
+                                      const int rel_prec, solver_params_t solver_params,
+                                      const SloppyPrecision sloppy,
                                       const CompressionType compression);
 
 int invert_eo_qphix_twoflavour(spinor* Odd_out_s, spinor* Odd_out_c, spinor* Odd_in_s,

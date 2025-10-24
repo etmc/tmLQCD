@@ -1,33 +1,33 @@
 /***********************************************************************
-* Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
-*
-* This file is part of tmLQCD.
-*
-* tmLQCD is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* tmLQCD is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
-***********************************************************************/
+ * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ *
+ * This file is part of tmLQCD.
+ *
+ * tmLQCD is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * tmLQCD is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
+ ***********************************************************************/
 
 #include "io/params.ih"
 #include "solver/solver_types.h"
 
 /* This needs fixing */
 
-paramsInverterInfo *construct_paramsInverterInfo(double const epssq, const int iter, 
-						 const int solver, const int noflavours) {
+paramsInverterInfo *construct_paramsInverterInfo(double const epssq, const int iter,
+                                                 const int solver, const int noflavours) {
   struct timeval t1;
   paramsInverterInfo *info = malloc(sizeof(paramsInverterInfo));
 
-  if (info == (paramsInverterInfo*)NULL)
+  if (info == (paramsInverterInfo *)NULL)
     kill_with_error(NULL, g_cart_id, "Could not allocate paramsInverterInfo.");
 
   gettimeofday(&t1, NULL);
@@ -41,11 +41,10 @@ paramsInverterInfo *construct_paramsInverterInfo(double const epssq, const int i
 
   strcpy(info->package_version, TMLQCD_PACKAGE_VERSION);
 
-  if(noflavours == 2) {
+  if (noflavours == 2) {
     info->mubar = g_mubar / 2. / g_kappa;
     info->epsbar = g_epsbar / 2. / g_kappa;
-  }
-  else {
+  } else {
     info->mubar = 0.;
     info->epsbar = 0.;
   }
@@ -54,25 +53,25 @@ paramsInverterInfo *construct_paramsInverterInfo(double const epssq, const int i
   info->heavy = 0;
   info->cgmms_mass = 0;
   switch (solver) {
-  case CG:
-    strcpy(info->inverter, "CG");
-    break;
-  case BICGSTAB:
-    strcpy(info->inverter, "BiCGstab");
-    break;
-  case GMRES:
-    strcpy(info->inverter, "GMRES");
-    break;
-  case CGMMS:
-    strcpy(info->inverter, "CGMMS");
-    info->mms = 1;
-    break;
-  case CGS:
-    strcpy(info->inverter, "CGS");
-    break;
-  default:
-    strcpy(info->inverter, "other");
-    break;
+    case CG:
+      strcpy(info->inverter, "CG");
+      break;
+    case BICGSTAB:
+      strcpy(info->inverter, "BiCGstab");
+      break;
+    case GMRES:
+      strcpy(info->inverter, "GMRES");
+      break;
+    case CGMMS:
+      strcpy(info->inverter, "CGMMS");
+      info->mms = 1;
+      break;
+    case CGS:
+      strcpy(info->inverter, "CGS");
+      break;
+    default:
+      strcpy(info->inverter, "other");
+      break;
   }
-  return(info);
+  return (info);
 }

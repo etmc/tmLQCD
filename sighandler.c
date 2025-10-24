@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
@@ -33,18 +33,17 @@
  ************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include <tmlqcd_config.h>
 #endif
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #ifdef TM_USE_MPI
-#  include <mpi.h>
+#include <mpi.h>
 #endif
-
 
 /* Catch an illegal instruction in order */
 /* to give the user a hint what was wrong */
-void catch_ill_inst(int s){
+void catch_ill_inst(int s) {
   fprintf(stderr, "An illegal instruction occured!\n");
 #ifdef SSE
   fprintf(stderr, "Your code was compiled to use SSE1 instructions.\n");
@@ -65,4 +64,3 @@ void catch_ill_inst(int s){
 #endif
   exit(0);
 }
-

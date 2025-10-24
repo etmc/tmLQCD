@@ -5,9 +5,6 @@
 
 TEST(rat_init);
 
-TEST_SUITE(RAT){
-  TEST_ADD(rat_init),
-    TEST_SUITE_CLOSURE
-};
+TEST_SUITE(RAT){TEST_ADD(rat_init), TEST_SUITE_CLOSURE};
 
 #endif

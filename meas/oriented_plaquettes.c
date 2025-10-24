@@ -8,81 +8,80 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  *
  ************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include <tmlqcd_config.h>
+#include <tmlqcd_config.h>
 #endif
 #ifdef TM_USE_OMP
-# include <omp.h>
+#include <omp.h>
 #endif
 
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
-#include "global.h"
-#include "su3.h"
-#include "geometry_eo.h"
-#include "oriented_plaquettes.h"
 #include "fatal_error.h"
-#include "measurements.h"
+#include "geometry_eo.h"
 #include "gettime.h"
+#include "global.h"
+#include "measurements.h"
+#include "oriented_plaquettes.h"
+#include "su3.h"
 
-void measure_oriented_plaquettes(const su3 ** const gf, double *plaq) {
+void measure_oriented_plaquettes(const su3 **const gf, double *plaq) {
   tm_stopwatch_push(&g_timers, __func__, "");
 #ifdef TM_USE_MPI
   double ALIGN mplaq[6];
 #endif
 
-  int ix,ix1,ix2,mu1,mu2,plane;
-  su3 ALIGN pr1,pr2; 
-  const su3 *v,*w;
-  double ALIGN pl; 
-  double ALIGN ks[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
-  double ALIGN kc[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
-  double ALIGN tr[6],ts[6],tt[6];
+  int ix, ix1, ix2, mu1, mu2, plane;
+  su3 ALIGN pr1, pr2;
+  const su3 *v, *w;
+  double ALIGN pl;
+  double ALIGN ks[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  double ALIGN kc[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  double ALIGN tr[6], ts[6], tt[6];
 
-  for (ix=0;ix<VOLUME;ix++){
+  for (ix = 0; ix < VOLUME; ix++) {
     plane = 0;
-    for (mu1=0;mu1<3;mu1++){ 
-      ix1=g_iup[ix][mu1];
-      for (mu2=mu1+1;mu2<4;mu2++){ 
-        ix2=g_iup[ix][mu2];
-        v=&gf[ix][mu1];
-        w=&gf[ix1][mu2];
-        _su3_times_su3(pr1,*v,*w);
-        v=&gf[ix][mu2];
-        w=&gf[ix2][mu1];
-        _su3_times_su3(pr2,*v,*w);
-        _trace_su3_times_su3d(pl,pr1,pr2);
-        tr[plane]=pl+kc[plane];
-        ts[plane]=tr[plane]+ks[plane];
-        tt[plane]=ts[plane]-ks[plane];
-        ks[plane]=ts[plane];
-        kc[plane]=tr[plane]-tt[plane];
+    for (mu1 = 0; mu1 < 3; mu1++) {
+      ix1 = g_iup[ix][mu1];
+      for (mu2 = mu1 + 1; mu2 < 4; mu2++) {
+        ix2 = g_iup[ix][mu2];
+        v = &gf[ix][mu1];
+        w = &gf[ix1][mu2];
+        _su3_times_su3(pr1, *v, *w);
+        v = &gf[ix][mu2];
+        w = &gf[ix2][mu1];
+        _su3_times_su3(pr2, *v, *w);
+        _trace_su3_times_su3d(pl, pr1, pr2);
+        tr[plane] = pl + kc[plane];
+        ts[plane] = tr[plane] + ks[plane];
+        tt[plane] = ts[plane] - ks[plane];
+        ks[plane] = ts[plane];
+        kc[plane] = tr[plane] - tt[plane];
         ++plane;
       }
     }
   }
 
-  for(int j = 0; j < 6; ++j) {
-    kc[j]=(kc[j]+ks[j])/3.0;
-    plaq[j] = kc[j]/(g_nproc*VOLUME);
+  for (int j = 0; j < 6; ++j) {
+    kc[j] = (kc[j] + ks[j]) / 3.0;
+    plaq[j] = kc[j] / (g_nproc * VOLUME);
   }
 
 #ifdef TM_USE_MPI
   MPI_Allreduce(plaq, mplaq, 6, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  for(int j = 0; j < 6; j++)
-    plaq[j] = mplaq[j];
+  for (int j = 0; j < 6; j++) plaq[j] = mplaq[j];
 #endif
   tm_stopwatch_pop(&g_timers, 0, 2, "");
   return;
@@ -91,26 +90,27 @@ void measure_oriented_plaquettes(const su3 ** const gf, double *plaq) {
 void oriented_plaquettes_measurement(const int traj, const int id, const int ieo) {
   double plaq[6];
 
-  if( g_proc_id == 0 ) {
+  if (g_proc_id == 0) {
     printf("# Doing oriented plaquettes measurement.\n");
   }
-  measure_oriented_plaquettes((const su3** const)g_gauge_field,plaq);
+  measure_oriented_plaquettes((const su3 **const)g_gauge_field, plaq);
 
-  if( g_proc_id == 0 ) {
+  if (g_proc_id == 0) {
     FILE *outfile;
     char filename[] = "oriented_plaquettes.data";
-    outfile = fopen(filename,"a");
+    outfile = fopen(filename, "a");
 
-    if( outfile == NULL ) {
+    if (outfile == NULL) {
       char error_message[200];
-      snprintf(error_message,200,"Couldn't open %s for appending during measurement %d!",filename, id);
-      fatal_error(error_message,"oriented_plaquettes_measurement");
+      snprintf(error_message, 200, "Couldn't open %s for appending during measurement %d!",
+               filename, id);
+      fatal_error(error_message, "oriented_plaquettes_measurement");
     }
 
-    fprintf(outfile, "%.8d %14.12lf %14.12lf %14.12lf %14.12lf %14.12lf %14.12lf\n",traj,plaq[0],plaq[1],plaq[2],plaq[3],plaq[4],plaq[5]);
+    fprintf(outfile, "%.8d %14.12lf %14.12lf %14.12lf %14.12lf %14.12lf %14.12lf\n", traj, plaq[0],
+            plaq[1], plaq[2], plaq[3], plaq[4], plaq[5]);
     fclose(outfile);
   }
 
   return;
 }
-

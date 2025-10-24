@@ -22,11 +22,10 @@
 
 #include "io/dml.h"
 
-typedef struct
-{
-  char   date[64];
-  char   package_version[32];
-  char   inverter[32];
+typedef struct {
+  char date[64];
+  char package_version[32];
+  char inverter[32];
 
   double epssq;
   double epsbar;
@@ -38,41 +37,35 @@ typedef struct
 
   double cgmms_mass;
 
-  int    mms;
-  int    iter;
-  int    heavy;
-  int    noflavours;
-}
-paramsInverterInfo;
+  int mms;
+  int iter;
+  int heavy;
+  int noflavours;
+} paramsInverterInfo;
 
-typedef struct
-{
-  int    flavours;
-  int    prec;
-  int    lx;
-  int    ly;
-  int    lz;
-  int    lt;
-}
-paramsPropagatorFormat;
+typedef struct {
+  int flavours;
+  int prec;
+  int lx;
+  int ly;
+  int lz;
+  int lt;
+} paramsPropagatorFormat;
 
-typedef struct
-{
-  int    colours;
-  int    flavours;
-  int    prec;
-  int    lx;
-  int    ly;
-  int    lz;
-  int    lt;
-  int    spins;
-}
-paramsSourceFormat;
+typedef struct {
+  int colours;
+  int flavours;
+  int prec;
+  int lx;
+  int ly;
+  int lz;
+  int lt;
+  int spins;
+} paramsSourceFormat;
 
-typedef struct
-{
-  char   date[64];
-  char   package_version[32];
+typedef struct {
+  char date[64];
+  char package_version[32];
 
   double beta;
   double c2_rec;
@@ -82,35 +75,32 @@ typedef struct
   double mubar;
   double plaq;
 
-  int    counter;
+  int counter;
 
   long int time;
-}
-paramsXlfInfo;
+} paramsXlfInfo;
 
-typedef struct
-{
-  int    lx;
-  int    ly;
-  int    lz;
-  int    lt;
-  int    prec;
-}
-paramsIldgFormat;
+typedef struct {
+  int lx;
+  int ly;
+  int lz;
+  int lt;
+  int prec;
+} paramsIldgFormat;
 
 typedef struct {
   double plaquetteEnergy;
   int gaugeRead;
   DML_Checksum checksum;
-  char * xlfInfo;
-  char * ildg_data_lfn;
+  char* xlfInfo;
+  char* ildg_data_lfn;
 } paramsGaugeInfo;
 
 typedef struct {
   int splitted;
   int format;
   int precision;
-  char * basename;
+  char* basename;
 } paramsPropInfo;
 
 typedef struct {
@@ -131,7 +121,7 @@ typedef struct {
   /* is this a 2 flavour source */
   int no_flavours;
   /* the base filename */
-  char * basename;
+  char* basename;
 } paramsSourceInfo;
 
 typedef enum SRC_TYPE {
@@ -148,10 +138,11 @@ extern paramsGaugeInfo GaugeInfo;
 extern paramsPropInfo PropInfo;
 extern paramsSourceInfo SourceInfo;
 
-paramsIldgFormat       * construct_paramsIldgFormat(int const prec);
-paramsPropagatorFormat * construct_paramsPropagatorFormat(int const prec, int const flavours);
-paramsSourceFormat     * construct_paramsSourceFormat(int const prec, int const flavours, int const spins, int const sources);
-paramsXlfInfo          * construct_paramsXlfInfo(double const plaq, int const counter);
-paramsInverterInfo     * construct_paramsInverterInfo(double const epssq, const int iter, 
-                                                      const int solver, const int noflavours);
+paramsIldgFormat* construct_paramsIldgFormat(int const prec);
+paramsPropagatorFormat* construct_paramsPropagatorFormat(int const prec, int const flavours);
+paramsSourceFormat* construct_paramsSourceFormat(int const prec, int const flavours,
+                                                 int const spins, int const sources);
+paramsXlfInfo* construct_paramsXlfInfo(double const plaq, int const counter);
+paramsInverterInfo* construct_paramsInverterInfo(double const epssq, const int iter,
+                                                 const int solver, const int noflavours);
 #endif

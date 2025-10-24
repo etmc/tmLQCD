@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
@@ -22,11 +22,16 @@
 
 #include "su3.h"
 /*  <S,R>=SxR^* */
-_Complex double scalar_prod(const spinor * const S, const spinor * const R, const int N, const int parallel);
-_Complex double scalar_prod_32(const spinor32 * const S, const spinor32 * const R, const int N, const int parallel);
-_Complex double scalar_prod_ts(const spinor * const S, const spinor * const R, const int N, const int parallel);
-_Complex double scalar_prod_ts_32(const spinor32 * const S, const spinor32 * const R, const int N, const int parallel);
+_Complex double scalar_prod(const spinor* const S, const spinor* const R, const int N,
+                            const int parallel);
+_Complex double scalar_prod_32(const spinor32* const S, const spinor32* const R, const int N,
+                               const int parallel);
+_Complex double scalar_prod_ts(const spinor* const S, const spinor* const R, const int N,
+                               const int parallel);
+_Complex double scalar_prod_ts_32(const spinor32* const S, const spinor32* const R, const int N,
+                                  const int parallel);
 
-_Complex double scalar_prod_su3vect(su3_vector * const S,su3_vector * const R, const int N, const int parallel);
+_Complex double scalar_prod_su3vect(su3_vector* const S, su3_vector* const R, const int N,
+                                    const int parallel);
 
 #endif

@@ -1,4 +1,4 @@
-/***********************************************************************                                                             
+/***********************************************************************
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  * Copyright (C) 2012 Bartosz Kostrzewa (gettime.[c,h])
  *
@@ -8,15 +8,15 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
-***********************************************************************/
+ ***********************************************************************/
 
 #ifndef _GETTIME_H
 #define _GETTIME_H
@@ -53,10 +53,9 @@ typedef struct tm_timers_s {
 //
 //   callstack[lvl-1]/[group:]name
 //
-void tm_stopwatch_push(tm_timers_t * const timers, const char * const name,
-    const char * const group);
+void tm_stopwatch_push(tm_timers_t* const timers, const char* const name, const char* const group);
 
-// tm_stopwatch_pop will output and decrease the timing level 
+// tm_stopwatch_pop will output and decrease the timing level
 //
 // # %s: Time for %s : %e s level: %d g_proc_id: %d %s \n
 //
@@ -64,13 +63,11 @@ void tm_stopwatch_push(tm_timers_t * const timers, const char * const name,
 // matches proc_id and the g_debug_level is equal or higher than
 // dbg_level_threshold
 // The call stack is given by the last field.
-void tm_stopwatch_pop(tm_timers_t * const timers,
-    const int proc_id, const int dbg_level_threshold,
-    const char * const prefix);
+void tm_stopwatch_pop(tm_timers_t* const timers, const int proc_id, const int dbg_level_threshold,
+                      const char* const prefix);
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* _GETTIME_H */
-

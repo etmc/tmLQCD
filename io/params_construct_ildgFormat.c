@@ -1,10 +1,9 @@
 #include "params.ih"
 
-paramsIldgFormat *construct_paramsIldgFormat(int const prec)
-{
+paramsIldgFormat *construct_paramsIldgFormat(int const prec) {
   paramsIldgFormat *format = malloc(sizeof(paramsIldgFormat));
 
-  if (format == (paramsIldgFormat*)NULL)
+  if (format == (paramsIldgFormat *)NULL)
     kill_with_error(NULL, g_cart_id, "Could not allocate paramsIldgFormat.");
 
   format->prec = prec;

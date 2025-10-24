@@ -9,24 +9,24 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 #ifndef _MONOMIAL_H
 #define _MONOMIAL_H
 
-#include "su3.h"
-#include "su3spinor.h"
 #include "hamiltonian_field.h"
+#include "misc_types.h"
 #include "rational/rational.h"
 #include "solver/solver_params.h"
-#include "misc_types.h"
+#include "su3.h"
+#include "su3spinor.h"
 
 #include <complex.h>
 
@@ -62,20 +62,20 @@ typedef struct {
   int initialised;
   int timescale;
   int maxiter;
-  int HB_maxiter; // as maxiter, but for the HB solver
+  int HB_maxiter;  // as maxiter, but for the HB solver
   int id;
   int even_odd_flag;
   int rngrepro;
   int solver;
-  int HB_solver; // solver for the HB only (optional)
-  
+  int HB_solver;  // solver for the HB only (optional)
+
   int iter0, iter1, iter2;
   int csg_N, csg_N2;
   int csg_n, csg_n2;
   int use_rectangles;
   /* trlog */
   int trlog;
-  int * csg_index_array, *csg_index_array2;
+  int *csg_index_array, *csg_index_array2;
   /* det or detratio related */
   double mu, mu2, kappa, kappa2;
   /* clover coefficient */
@@ -83,7 +83,7 @@ typedef struct {
   /* polynomial related, not yet in use */
   double mubar, epsbar, mubar2, epsbar2;
   /* energies at beginning and end of trajectory */
-  double energy0; 
+  double energy0;
   double energy1;
   /* gauge related */
   double c0, c1, beta, glambda;
@@ -92,14 +92,14 @@ typedef struct {
   double forceprec;
   double accprec;
   solver_params_t solver_params;
-  solver_params_t HB_solver_params; // parameters of the HB solver
+  solver_params_t HB_solver_params;  // parameters of the HB solver
   /* force normalisation */
   double forcefactor;
   /* some book-keeping */
   char name[100];
   /* pseudo fermion field */
   /* second one needed for ND monomials */
-  spinor * pf, * pf2;
+  spinor *pf, *pf2;
   /* parameters for the POLY Monomial*/
   int rec_ev;
   int MDPolyDegree, MaxPtildeDegree, PtildeDegree;
@@ -118,43 +118,43 @@ typedef struct {
   double eig_amin, eig_amax;
   ExternalLibrary external_library;
   ExternalEigSolver external_eigsolver;
-  double * MDPolyCoefs, * PtildeCoefs;
+  double *MDPolyCoefs, *PtildeCoefs;
   /* rational approximation */
   rational_t rat;
   /* chronological solver fields */
-  spinor ** csg_field;
-  spinor ** csg_field2;
-  spinor ** w_fields;
+  spinor **csg_field;
+  spinor **csg_field2;
+  spinor **w_fields;
   /* functions for the HMC update */
-  void (*hbfunction) (const int no, hamiltonian_field_t * const hf);
-  double (*accfunction) (const int no, hamiltonian_field_t * const hf);
-  void (*derivativefunction) (const int no, hamiltonian_field_t * const hf);
+  void (*hbfunction)(const int no, hamiltonian_field_t *const hf);
+  double (*accfunction)(const int no, hamiltonian_field_t *const hf);
+  void (*derivativefunction)(const int no, hamiltonian_field_t *const hf);
   /* the operator definitions */
-  void (*Qsq) (spinor * const, spinor * const);
-  void (*Qsq32) (spinor32 * const, spinor32 * const);  
-  void (*Qp) (spinor * const, spinor * const);
-  void (*Qm) (spinor * const, spinor * const);
+  void (*Qsq)(spinor *const, spinor *const);
+  void (*Qsq32)(spinor32 *const, spinor32 *const);
+  void (*Qp)(spinor *const, spinor *const);
+  void (*Qm)(spinor *const, spinor *const);
 } monomial;
 
-#include "monomial/det_monomial.h"
-#include "monomial/detratio_monomial.h"
-#include "monomial/poly_monomial.h"
-#include "monomial/ndpoly_monomial.h"
-#include "monomial/nddetratio_monomial.h"
-#include "monomial/gauge_monomial.h"
-#include "monomial/sf_gauge_monomial.h"
 #include "monomial/clover_trlog_monomial.h"
-#include "monomial/clovernd_trlog_monomial.h"
 #include "monomial/cloverdet_monomial.h"
 #include "monomial/cloverdetratio_monomial.h"
 #include "monomial/cloverdetratio_rwmonomial.h"
+#include "monomial/clovernd_trlog_monomial.h"
 #include "monomial/cloverndpoly_monomial.h"
-#include "monomial/ndrat_monomial.h"
-#include "monomial/rat_monomial.h"
-#include "monomial/ndratcor_monomial.h"
-#include "monomial/ratcor_monomial.h"
+#include "monomial/det_monomial.h"
+#include "monomial/detratio_monomial.h"
+#include "monomial/gauge_monomial.h"
 #include "monomial/moment_energy.h"
 #include "monomial/monitor_forces.h"
+#include "monomial/nddetratio_monomial.h"
+#include "monomial/ndpoly_monomial.h"
+#include "monomial/ndrat_monomial.h"
+#include "monomial/ndratcor_monomial.h"
+#include "monomial/poly_monomial.h"
+#include "monomial/rat_monomial.h"
+#include "monomial/ratcor_monomial.h"
+#include "monomial/sf_gauge_monomial.h"
 
 /* list of all monomials */
 extern monomial monomial_list[max_no_monomials];
@@ -173,13 +173,12 @@ int init_monomials(const int V, const int even_odd_flag);
 void free_monomials();
 
 /* initialisation function for a poly monomial */
-int init_poly_monomial(const int V,const int id);
-
+int init_poly_monomial(const int V, const int id);
 
 /* some dummy functions */
-void dummy_derivative(const int id, hamiltonian_field_t * const hf);
-void dummy_heatbath(const int id, hamiltonian_field_t * const hf);
-double dummy_acc(const int id, hamiltonian_field_t * const hf);
+void dummy_derivative(const int id, hamiltonian_field_t *const hf);
+void dummy_heatbath(const int id, hamiltonian_field_t *const hf);
+double dummy_acc(const int id, hamiltonian_field_t *const hf);
 
 void mnl_set_globals(const int id);
 void mnl_backup_restore_globals(const backup_restore_t mode);

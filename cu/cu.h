@@ -27,72 +27,55 @@
 /**
  * Define test
  */
-#define TEST(name) \
-    void name(void)
+#define TEST(name) void name(void)
 
 /**
  * Define testsuite
  */
-#define TEST_SUITE(name) \
-    cu_test_suite_t test_suite_##name[] =
+#define TEST_SUITE(name) cu_test_suite_t test_suite_##name[] =
 /**
  * Must be on the end of list of tests.
  */
-#define TEST_SUITE_CLOSURE \
-    { NULL, NULL }
+#define TEST_SUITE_CLOSURE {NULL, NULL}
 
-#define TEST_SUITES \
-    cu_test_suites_t cu_test_suites[] =
-#define TEST_SUITES_CLOSURE \
-    { NULL, NULL }
-#define TEST_SUITE_ADD(name) \
-    { #name, test_suite_##name }
+#define TEST_SUITES cu_test_suites_t cu_test_suites[] =
+#define TEST_SUITES_CLOSURE {NULL, NULL}
+#define TEST_SUITE_ADD(name) {#name, test_suite_##name}
 
 /**
  * Add test to testsuite
  */
-#define TEST_ADD(name) \
-    { #name, name }
+#define TEST_ADD(name) {#name, name}
 
-#define CU_RUN(argc, argv) \
-    cu_run(argc, argv)
+#define CU_RUN(argc, argv) cu_run(argc, argv)
 
 /**
  * Set prefix for files printed out. Must contain trailing /.
  */
-#define CU_SET_OUT_PREFIX(str) \
-    cu_set_out_prefix(str)
+#define CU_SET_OUT_PREFIX(str) cu_set_out_prefix(str)
 
 /**
  * Assertations
  * Assertations with suffix 'M' (e.g. assertTrueM) is variation of macro
  * where is possible to specify error message.
  */
-#define assertTrueM(a, message) \
-    if (a){ \
-        cu_success_assertation(); \
-    }else{ \
-        cu_fail_assertation(__FILE__, __LINE__, message); \
-    }
-#define assertTrue(a) \
-    assertTrueM((a), #a " is not true")
+#define assertTrueM(a, message)                       \
+  if (a) {                                            \
+    cu_success_assertation();                         \
+  } else {                                            \
+    cu_fail_assertation(__FILE__, __LINE__, message); \
+  }
+#define assertTrue(a) assertTrueM((a), #a " is not true")
 
-#define assertFalseM(a, message) \
-    assertTrueM(!(a), message)
-#define assertFalse(a) \
-    assertFalseM((a), #a " is not false")
+#define assertFalseM(a, message) assertTrueM(!(a), message)
+#define assertFalse(a) assertFalseM((a), #a " is not false")
 
-#define assertEqualsM(a,b,message) \
-    assertTrueM((a) == (b), message)
-#define assertEquals(a,b) \
-    assertEqualsM((a), (b), #a " not equals " #b)
+#define assertEqualsM(a, b, message) assertTrueM((a) == (b), message)
+#define assertEquals(a, b) assertEqualsM((a), (b), #a " not equals " #b)
 
-#define assertNotEqualsM(a,b,message) \
-    assertTrueM((a) != (b), message)
-#define assertNotEquals(a,b) \
-    assertNotEqualsM((a), (b), #a " equals " #b)
+#define assertNotEqualsM(a, b, message) assertTrueM((a) != (b), message)
+#define assertNotEquals(a, b) assertNotEqualsM((a), (b), #a " equals " #b)
 /***** PUBLIC API END *****/
-
 
 #include <unistd.h>
 
@@ -100,12 +83,12 @@
 
 typedef void (*cu_test_func_t)(void);
 typedef struct _cu_test_suite_t {
-    const char *name;
-    cu_test_func_t func;
+  const char *name;
+  cu_test_func_t func;
 } cu_test_suite_t;
 typedef struct _cu_test_suites_t {
-    const char *name;
-    cu_test_suite_t *test_suite;
+  const char *name;
+  cu_test_suite_t *test_suite;
 } cu_test_suites_t;
 
 extern cu_test_suites_t cu_test_suites[];
@@ -121,7 +104,7 @@ extern int cu_success_checks;
 extern int cu_fail_checks;
 
 #define CU_OUT_PREFIX_LENGTH 30
-extern char cu_out_prefix[CU_OUT_PREFIX_LENGTH+1];
+extern char cu_out_prefix[CU_OUT_PREFIX_LENGTH + 1];
 
 void cu_run(int argc, char *argv[]);
 void cu_success_assertation(void);

@@ -7,16 +7,16 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-/* 
+/*
  *  Program for computing the eigensystem of the Laplacian operator
  * Authors Luigi Scorzato, Marco Cristoforetti
  *
@@ -24,49 +24,48 @@
  *******************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include "tmlqcd_config.h"
+#include "tmlqcd_config.h"
 #else
 #error "no tmlqcd_config.h"
 #endif
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
-#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #if (defined BGL && !defined BGP)
-#  include <rts.h>
+#include <rts.h>
 #endif
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
-#include "global.h"
-#include <io/params.h>
 #include <io/gauge.h>
-#include "su3.h"
-#include "ranlxd.h"
+#include <io/params.h>
 #include "geometry_eo.h"
-#include "read_input.h"
-#include "start.h"
-#include "xchange/xchange.h"
+#include "global.h"
 #include "init/init.h"
 #include "mpi_init.h"
+#include "ranlxd.h"
+#include "read_input.h"
 #include "solver/eigenvalues_Jacobi.h"
+#include "start.h"
+#include "su3.h"
+#include "xchange/xchange.h"
 
-int main(int argc,char *argv[])
-{
-  int tslice,j,k;
+int main(int argc, char *argv[]) {
+  int tslice, j, k;
   char conf_filename[50];
-  
+
 #ifdef TM_USE_MPI
   MPI_Init(&argc, &argv);
 #endif
-  
+
   /* Read the input file */
   read_input("LapH.input");
-  
+
   tmlqcd_mpi_init(argc, argv);
-  
-  if(g_proc_id==0) {
+
+  if (g_proc_id == 0) {
 #ifdef SSE
     printf("# The code was compiled with SSE instructions\n");
 #endif
@@ -93,22 +92,21 @@ int main(int argc,char *argv[])
 #endif
 #ifdef _USE_HALFSPINOR
     printf("# The code was compiled with -D_USE_HALFSPINOR\n");
-#endif    
+#endif
 #ifdef _USE_SHMEM
     printf("# the code was compiled with -D_USE_SHMEM\n");
-#  ifdef _PERSISTENT
+#ifdef _PERSISTENT
     printf("# the code was compiled for persistent MPI calls (halfspinor only)\n");
-#  endif
+#endif
 #endif
 #ifdef TM_USE_MPI
-#  ifdef _NON_BLOCKING
+#ifdef _NON_BLOCKING
     printf("# the code was compiled for non-blocking MPI calls (spinor and gauge)\n");
-#  endif
+#endif
 #endif
     printf("\n");
     fflush(stdout);
   }
-  
 
 #ifndef WITHLAPH
   printf(" Error: WITHLAPH not defined");
@@ -129,21 +127,20 @@ int main(int argc,char *argv[])
   exit(0);
 #endif
 
-  
   init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
   init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
 
-  if(g_proc_id == 0) {
-    fprintf(stdout,"The number of processes is %d \n",g_nproc);
-    printf("# The lattice size is %d x %d x %d x %d\n",
-	   (int)(T*g_nproc_t), (int)(LX*g_nproc_x), (int)(LY*g_nproc_y), (int)(g_nproc_z*LZ));
-    printf("# The local lattice size is %d x %d x %d x %d\n", 
-	   (int)(T), (int)(LX), (int)(LY),(int) LZ);
+  if (g_proc_id == 0) {
+    fprintf(stdout, "The number of processes is %d \n", g_nproc);
+    printf("# The lattice size is %d x %d x %d x %d\n", (int)(T * g_nproc_t), (int)(LX * g_nproc_x),
+           (int)(LY * g_nproc_y), (int)(g_nproc_z * LZ));
+    printf("# The local lattice size is %d x %d x %d x %d\n", (int)(T), (int)(LX), (int)(LY),
+           (int)LZ);
     printf("# Computing LapH eigensystem \n");
 
     fflush(stdout);
   }
-  
+
   /* define the geometry */
   geometry();
 
@@ -152,40 +149,39 @@ int main(int argc,char *argv[])
   /* Read Gauge field */
   sprintf(conf_filename, "%s.%.4d", gauge_input_filename, nstore);
   if (g_cart_id == 0) {
-    printf("#\n# Trying to read gauge field from file %s in %s precision.\n",
-	   conf_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
+    printf("#\n# Trying to read gauge field from file %s in %s precision.\n", conf_filename,
+           (gauge_precision_read_flag == 32 ? "single" : "double"));
     fflush(stdout);
   }
-  if( (j = read_gauge_field(conf_filename,g_gauge_field)) !=0) {
+  if ((j = read_gauge_field(conf_filename, g_gauge_field)) != 0) {
     fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", j, conf_filename);
     exit(-2);
   }
 
-  
   if (g_cart_id == 0) {
     printf("# Finished reading gauge field.\n");
     fflush(stdout);
   }
-  
+
 #ifdef TM_USE_MPI
   /*For parallelization: exchange the gaugefield */
   xchange_gauge(g_gauge_field);
 #endif
-  
+
   /* Init Jacobi field */
-  init_jacobi_field(SPACEVOLUME+SPACERAND,3);
+  init_jacobi_field(SPACEVOLUME + SPACERAND, 3);
 
 #ifdef TM_USE_MPI
   {
-     /* for debugging in parallel set i_gdb = 0 */
+    /* for debugging in parallel set i_gdb = 0 */
     volatile int i_gdb = 8;
     char hostname[256];
     gethostname(hostname, sizeof(hostname));
     printf("PID %d on %s ready for attach\n", getpid(), hostname);
     fflush(stdout);
-    if(g_cart_id == 0){
-      while (0 == i_gdb){
-	sleep(5);
+    if (g_cart_id == 0) {
+      while (0 == i_gdb) {
+        sleep(5);
       }
     }
   }
@@ -193,18 +189,16 @@ int main(int argc,char *argv[])
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
 
-  for (k=0 ; k<3 ; k++)
-    random_jacobi_field(g_jacobi_field[k],SPACEVOLUME);
-
+  for (k = 0; k < 3; k++) random_jacobi_field(g_jacobi_field[k], SPACEVOLUME);
 
   /* Compute LapH Eigensystem */
-  
-  for(tslice=0; tslice<T; tslice++){ 
-    eigenvalues_Jacobi(&no_eigenvalues,5000, eigenvalue_precision,0,tslice,nstore);
+
+  for (tslice = 0; tslice < T; tslice++) {
+    eigenvalues_Jacobi(&no_eigenvalues, 5000, eigenvalue_precision, 0, tslice, nstore);
   }
-  
+
 #ifdef TM_USE_MPI
   MPI_Finalize();
 #endif
-  return(0);
+  return (0);
 }

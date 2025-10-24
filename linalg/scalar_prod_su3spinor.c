@@ -7,28 +7,29 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include <tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
-#include "su3.h"
 #include "scalar_prod_su3spinor.h"
+#include "su3.h"
 
 #ifdef WITHLAPH
-complex_spinor scalar_prod_su3spinor(su3_vector * const S, spinor * const R, const int N, const int parallel){
+complex_spinor scalar_prod_su3spinor(su3_vector *const S, spinor *const R, const int N,
+                                     const int parallel) {
   int ix;
   static _Complex double ks, kc, ds, tr, ts, tt;
   su3_vector *s, *r;
@@ -40,14 +41,13 @@ complex_spinor scalar_prod_su3spinor(su3_vector * const S, spinor * const R, con
   /* sc0 */
   ks = 0.0;
   kc = 0.0;
-  for (ix = 0; ix < N; ix++)
-  {
-    s = (su3_vector *) S + ix;
+  for (ix = 0; ix < N; ix++) {
+    s = (su3_vector *)S + ix;
     r = &(R[ix].s0);
-  
+
     ds = r->c0 * conj(s->c0) + r->c1 * conj(s->c1) + r->c2 * conj(s->c2);
 
-    /* Kahan Summation */    
+    /* Kahan Summation */
     tr = ds + kc;
     ts = tr + ks;
     tt = ts - ks;
@@ -60,14 +60,13 @@ complex_spinor scalar_prod_su3spinor(su3_vector * const S, spinor * const R, con
   /* sc1 */
   ks = 0.0;
   kc = 0.0;
-  for (ix = 0; ix < N; ix++)
-  {
-    s = (su3_vector *) S + ix;
+  for (ix = 0; ix < N; ix++) {
+    s = (su3_vector *)S + ix;
     r = &(R[ix].s1);
-  
+
     ds = r->c0 * conj(s->c0) + r->c1 * conj(s->c1) + r->c2 * conj(s->c2);
 
-    /* Kahan Summation */    
+    /* Kahan Summation */
     tr = ds + kc;
     ts = tr + ks;
     tt = ts - ks;
@@ -80,14 +79,13 @@ complex_spinor scalar_prod_su3spinor(su3_vector * const S, spinor * const R, con
   /* sc2 */
   ks = 0.0;
   kc = 0.0;
-  for (ix = 0; ix < N; ix++)
-  {
-    s = (su3_vector *) S + ix;
+  for (ix = 0; ix < N; ix++) {
+    s = (su3_vector *)S + ix;
     r = &(R[ix].s2);
-  
+
     ds = r->c0 * conj(s->c0) + r->c1 * conj(s->c1) + r->c2 * conj(s->c2);
 
-    /* Kahan Summation */    
+    /* Kahan Summation */
     tr = ds + kc;
     ts = tr + ks;
     tt = ts - ks;
@@ -100,14 +98,13 @@ complex_spinor scalar_prod_su3spinor(su3_vector * const S, spinor * const R, con
   /* sc3 */
   ks = 0.0;
   kc = 0.0;
-  for (ix = 0; ix < N; ix++)
-  {
-    s = (su3_vector *) S + ix;
+  for (ix = 0; ix < N; ix++) {
+    s = (su3_vector *)S + ix;
     r = &(R[ix].s3);
-  
+
     ds = r->c0 * conj(s->c0) + r->c1 * conj(s->c1) + r->c2 * conj(s->c2);
 
-    /* Kahan Summation */    
+    /* Kahan Summation */
     tr = ds + kc;
     ts = tr + ks;
     tt = ts - ks;
@@ -118,12 +115,12 @@ complex_spinor scalar_prod_su3spinor(su3_vector * const S, spinor * const R, con
   c.sc3 = kc;
 
 #ifdef TM_USE_MPI
-  if(parallel == 1) {
+  if (parallel == 1) {
     d = c;
-    MPI_Allreduce(&d, &c, 4, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD); //???
+    MPI_Allreduce(&d, &c, 4, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);  //???
   }
 #endif
 
-  return(c);
+  return (c);
 }
-#endif // WITHLAPH
+#endif  // WITHLAPH

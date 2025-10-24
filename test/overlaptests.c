@@ -1,85 +1,78 @@
 #include "lime.h"
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include <tmlqcd_config.h>
 #endif
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
-#include <time.h>
-#include <string.h>
 #include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 #ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
 #include "global.h"
-#include "su3spinor.h"
 #include "linalg_eo.h"
 #include "start.h"
+#include "su3spinor.h"
 #ifdef TM_USE_MPI
 #include "xchange/xchange.h"
 #endif
-#include "read_input.h"
 #include "boundary.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "operator/Dov_psi.h"
+#include "read_input.h"
 
-#include "overlaptests.h"
 #include "gamma.h"
+#include "overlaptests.h"
 
-void ov_check_alloc(void * pS) {
-
-  if (pS==NULL) {
+void ov_check_alloc(void *pS) {
+  if (pS == NULL) {
     fprintf(stderr, "Error: could not allocate memory for spinor field");
     exit(EXIT_FAILURE);
   }
-
 }
 
-spinor** ov_alloc_spinors(int n) {
+spinor **ov_alloc_spinors(int n) {
+  // spinor *_s, **s;
+  //  int i;
 
- // spinor *_s, **s;
-//  int i;
-
-  spinor **s  = (spinor**)calloc(n, sizeof(spinor*));
+  spinor **s = (spinor **)calloc(n, sizeof(spinor *));
   ov_check_alloc(s);
-#if ( defined SSE || defined SSE2 || defined SSE3)
-  spinor *_s = malloc((n*VOLUMEPLUSRAND)*sizeof(spinor)+ALIGN_BASE+sizeof(spinor*));
+#if (defined SSE || defined SSE2 || defined SSE3)
+  spinor *_s = malloc((n * VOLUMEPLUSRAND) * sizeof(spinor) + ALIGN_BASE + sizeof(spinor *));
   ov_check_alloc(_s);
-  s[0] = (spinor *)(((unsigned long int)(_s) + sizeof(spinor*) + ALIGN_BASE)&~ALIGN_BASE);
-  *(((spinor**)s[0])-1) = _s;
+  s[0] = (spinor *)(((unsigned long int)(_s) + sizeof(spinor *) + ALIGN_BASE) & ~ALIGN_BASE);
+  *(((spinor **)s[0]) - 1) = _s;
 #else
-  s[0] = malloc(n*VOLUMEPLUSRAND*sizeof(spinor));
+  s[0] = malloc(n * VOLUMEPLUSRAND * sizeof(spinor));
   ov_check_alloc(s[0]);
 #endif
 
-  for(int i = 1; i < n; i++)
-    s[i] = s[0]+VOLUMEPLUSRAND;
+  for (int i = 1; i < n; i++) s[i] = s[0] + VOLUMEPLUSRAND;
 
   return s;
 }
 
-void ov_free_spinors(spinor** s) {
-	
+void ov_free_spinors(spinor **s) {
 #if (defined SSE3 || defined SSE2 || defined SSE)
-  free(*(((spinor**)s[0])-1));
+  free(*(((spinor **)s[0]) - 1));
 #else
   free(s[0]);
 #endif
   free(s);
-
 }
 
-spinor* ov_alloc_spinor(void) {
-
+spinor *ov_alloc_spinor(void) {
   spinor *s = NULL;
 
-#if ( defined SSE || defined SSE2 || defined SSE3)
-  spinor *_s = malloc(sizeof(spinor*)+VOLUMEPLUSRAND*sizeof(spinor)+ALIGN_BASE);
+#if (defined SSE || defined SSE2 || defined SSE3)
+  spinor *_s = malloc(sizeof(spinor *) + VOLUMEPLUSRAND * sizeof(spinor) + ALIGN_BASE);
   ov_check_alloc(_s);
-  s = (spinor *)(((unsigned long int)(_s) + sizeof(spinor*) + ALIGN_BASE)&~ALIGN_BASE);
-  *(((spinor**)s)-1) = _s;
+  s = (spinor *)(((unsigned long int)(_s) + sizeof(spinor *) + ALIGN_BASE) & ~ALIGN_BASE);
+  *(((spinor **)s) - 1) = _s;
 #else
-  s = malloc(VOLUMEPLUSRAND*sizeof(spinor));
+  s = malloc(VOLUMEPLUSRAND * sizeof(spinor));
   ov_check_alloc(s);
 #endif
 
@@ -87,27 +80,21 @@ spinor* ov_alloc_spinor(void) {
 }
 
 void ov_free_spinor(spinor *s) {
-
-#if ( defined SSE || defined SSE2 || defined SSE3)
-  free(*(((spinor**)s)-1));
+#if (defined SSE || defined SSE2 || defined SSE3)
+  free(*(((spinor **)s) - 1));
 #else
   free(s);
 #endif
-
 }
 
-
 /* col sum norm of operator in colour and spinor space */
-double ov_operator_colsumnorm(spinor *s[4][3], int k)
-{
+double ov_operator_colsumnorm(spinor *s[4][3], int k) {
   double norm = 0.0, nrm;
 
-  for (int i=0; i<4; ++i)
-    for (int j=0; j<3; ++j)
-    {
+  for (int i = 0; i < 4; ++i)
+    for (int j = 0; j < 3; ++j) {
       _spinor_norm_l1(nrm, s[i][j][k]);
-      if (nrm > norm)
-	norm = nrm;
+      if (nrm > norm) norm = nrm;
     }
   return norm;
 }
@@ -116,9 +103,8 @@ void ov_check_locality() {
   spinor *s[4][3];
 
   /* evaluate Dov(psi) */
-  for (int i=0; i<4; i++)
-    for (int j=0; j<3; j++) {
-
+  for (int i = 0; i < 4; i++)
+    for (int j = 0; j < 3; j++) {
       /* get memory for the spinor */
       s[i][j] = ov_alloc_spinor();
 
@@ -131,12 +117,12 @@ void ov_check_locality() {
     }
 
   /* init locality table */
-  const int maxtaxi = (LX/2)+(LY/2)+(LZ/2)+T/2;
-  double *maxnorm = (double*)calloc(maxtaxi+1, sizeof(double));
-  double *minnorm = (double*)calloc(maxtaxi+1, sizeof(double));
-  double *avgnorm = (double*)calloc(maxtaxi+1, sizeof(double));
-  int *samples = (int*)calloc(maxtaxi+1, sizeof(int));
-  for(int i = 0; i <= maxtaxi; i++) {
+  const int maxtaxi = (LX / 2) + (LY / 2) + (LZ / 2) + T / 2;
+  double *maxnorm = (double *)calloc(maxtaxi + 1, sizeof(double));
+  double *minnorm = (double *)calloc(maxtaxi + 1, sizeof(double));
+  double *avgnorm = (double *)calloc(maxtaxi + 1, sizeof(double));
+  int *samples = (int *)calloc(maxtaxi + 1, sizeof(int));
+  for (int i = 0; i <= maxtaxi; i++) {
     maxnorm[i] = 0.;
     minnorm[i] = 1.0e100;
     avgnorm[i] = 0.;
@@ -145,27 +131,25 @@ void ov_check_locality() {
 
   /* fill locality table */
   printf("// beginning locality test\n");
-  for(int x=0; x<LX; x++) {
-    const int x_taxi = (x > LX/2) ? LX-x : x;
-    for(int y = 0; y < LY; y++){
-      const int y_taxi =  (y > LY/2) ? LY-y : y;
-      for(int z = 0; z < LZ; z++){
-	const int z_taxi = (z > LZ/2) ? LZ-z : z;
-	for(int t = 0; t < T; t++){
-	  const int t_taxi = (t > T/2) ? T - t : t;
-	  const int taxi = x_taxi + y_taxi + z_taxi + t_taxi;
-	  const int k = g_ipt[t][x][y][z];
+  for (int x = 0; x < LX; x++) {
+    const int x_taxi = (x > LX / 2) ? LX - x : x;
+    for (int y = 0; y < LY; y++) {
+      const int y_taxi = (y > LY / 2) ? LY - y : y;
+      for (int z = 0; z < LZ; z++) {
+        const int z_taxi = (z > LZ / 2) ? LZ - z : z;
+        for (int t = 0; t < T; t++) {
+          const int t_taxi = (t > T / 2) ? T - t : t;
+          const int taxi = x_taxi + y_taxi + z_taxi + t_taxi;
+          const int k = g_ipt[t][x][y][z];
 
-	  const double norm = ov_operator_colsumnorm(s, k);
+          const double norm = ov_operator_colsumnorm(s, k);
 
-	  // statistics
-	  if (norm > maxnorm[taxi])
-	    maxnorm[taxi] = norm;
-	  if (norm < minnorm[taxi])
-	    minnorm[taxi] = norm;
-	  avgnorm[taxi] += norm;
-	  samples[taxi]++;
-	}
+          // statistics
+          if (norm > maxnorm[taxi]) maxnorm[taxi] = norm;
+          if (norm < minnorm[taxi]) minnorm[taxi] = norm;
+          avgnorm[taxi] += norm;
+          samples[taxi]++;
+        }
       }
     }
   }
@@ -173,8 +157,9 @@ void ov_check_locality() {
   /* print locality table */
   printf("// locality check of overlap operator\n");
   printf("// taxi | max norm     | avg norm     | min norm     | #samples\n");
-  for(int i = 0; i <= maxtaxi; i++)
-    printf("%7d   %10.6le   %10.6le   %10.6le   %8d\n", i, maxnorm[i], (double)(avgnorm[i]/samples[i]), minnorm[i], samples[i]);
+  for (int i = 0; i <= maxtaxi; i++)
+    printf("%7d   %10.6le   %10.6le   %10.6le   %8d\n", i, maxnorm[i],
+           (double)(avgnorm[i] / samples[i]), minnorm[i], samples[i]);
   printf("\n");
 
   /* free memory */
@@ -182,68 +167,53 @@ void ov_check_locality() {
   free(minnorm);
   free(avgnorm);
   free(samples);
-  for (int i=0; i<4; i++)
-    for (int j=0; j<3; j++)
-      ov_free_spinor(s[i][j]);
-
+  for (int i = 0; i < 4; i++)
+    for (int j = 0; j < 3; j++) ov_free_spinor(s[i][j]);
 }
 
-void ov_matrix4x4_diff(matrix4x4 result, matrix4x4 left, matrix4x4 right)
-{
+void ov_matrix4x4_diff(matrix4x4 result, matrix4x4 left, matrix4x4 right) {
   for (int i = 0; i < 4; ++i)
-    for (int j = 0; j < 4; ++j)
-      result[i][j] = left[i][j] - right[i][j];
+    for (int j = 0; j < 4; ++j) result[i][j] = left[i][j] - right[i][j];
 }
-
 
 double ov_matrix4x4_rowsumnorm(matrix4x4 A) {
- double norm = 0.0;
+  double norm = 0.0;
 
- for (int i=0; i<4; i++) {
-
+  for (int i = 0; i < 4; i++) {
     double nrm = 0.0;
-    for (int j=0; j<4; j++)
-      nrm += cabs(A[i][j]);
+    for (int j = 0; j < 4; j++) nrm += cabs(A[i][j]);
 
-    if (nrm > norm)
-      norm = nrm;
+    if (nrm > norm) norm = nrm;
   }
 
   return norm;
 }
 
-void ov_matrix12x12_diff(matrix12x12 result, matrix12x12 left, matrix12x12 right)
-{
+void ov_matrix12x12_diff(matrix12x12 result, matrix12x12 left, matrix12x12 right) {
   for (int i = 0; i < 12; ++i)
-    for (int j = 0; j < 12; ++j)
-      result[i][j] = left[i][j] - right[i][j];
+    for (int j = 0; j < 12; ++j) result[i][j] = left[i][j] - right[i][j];
 }
 
 double ov_matrix12x12_rowsumnorm(matrix12x12 A) {
-
   double norm = 0.0;
-  for (int i=0; i<12; i++) {
-
+  for (int i = 0; i < 12; i++) {
     double nrm = 0.0;
-    for (int j=0; j<12; j++)
-      nrm += cabs(A[i][j]);
+    for (int j = 0; j < 12; j++) nrm += cabs(A[i][j]);
 
-    if (nrm > norm)
-      norm = nrm;
+    if (nrm > norm) norm = nrm;
   }
 
   return norm;
 }
 /* compares the operator with the one given in pFileName */
-void ov_compare_4x4(const char * pFileName) {
+void ov_compare_4x4(const char *pFileName) {
   double Max_rel = 0.0, Max_abs = 0.0;
   spinor *s[4];
   matrix4x4 mat, mat2, diff;
-  FILE * pCompare;
+  FILE *pCompare;
 
   /* evaluate Dov(psi) */
-  for (int i=0; i<4; i++) {
-
+  for (int i = 0; i < 4; i++) {
     /* get memory for the spinor */
     s[i] = ov_alloc_spinor();
 
@@ -256,11 +226,11 @@ void ov_compare_4x4(const char * pFileName) {
   }
 
   /* init locality table */
-  const int maxtaxi = (LX/2)+(LY/2)+(LZ/2)+T/2;
-  double *max_abs = (double*)calloc(maxtaxi+1, sizeof(double));
-  double *max_rel = (double*)calloc(maxtaxi+1, sizeof(double));
+  const int maxtaxi = (LX / 2) + (LY / 2) + (LZ / 2) + T / 2;
+  double *max_abs = (double *)calloc(maxtaxi + 1, sizeof(double));
+  double *max_rel = (double *)calloc(maxtaxi + 1, sizeof(double));
 
-  for(int i = 0; i <= maxtaxi; i++) {
+  for (int i = 0; i <= maxtaxi; i++) {
     max_abs[i] = 0.0;
     max_rel[i] = 0.0;
   }
@@ -277,47 +247,45 @@ void ov_compare_4x4(const char * pFileName) {
     printf("// beginning comparison\n");
     fflush(stdout);
   }
-  for(int t = 0; t < T; t++){
-    const int t_taxi = (t > T/2) ? T - t : t;
-    for(int x = 0; x < LX; x++){
-      const int x_taxi =  (x > LX/2) ? LX-x : x;
-      for(int y = 0; y < LY; y++){
-	const int y_taxi = (y > LY/2) ? LY-y : y;
-	for(int z=0; z<LZ; z++) {
-	  const int z_taxi = (z > LZ/2) ? LZ-z : z;
-	  const int taxi = x_taxi + y_taxi + z_taxi + t_taxi;
-	  const int k = g_ipt[t][x][y][z];
+  for (int t = 0; t < T; t++) {
+    const int t_taxi = (t > T / 2) ? T - t : t;
+    for (int x = 0; x < LX; x++) {
+      const int x_taxi = (x > LX / 2) ? LX - x : x;
+      for (int y = 0; y < LY; y++) {
+        const int y_taxi = (y > LY / 2) ? LY - y : y;
+        for (int z = 0; z < LZ; z++) {
+          const int z_taxi = (z > LZ / 2) ? LZ - z : z;
+          const int taxi = x_taxi + y_taxi + z_taxi + t_taxi;
+          const int k = g_ipt[t][x][y][z];
 
-	  for (int i=0; i<4; i++) {
-	    mat[0][i] = s[i][k].s0.c0;
-	    mat[1][i] = s[i][k].s1.c0;
-	    mat[2][i] = s[i][k].s2.c0;
-	    mat[3][i] = s[i][k].s3.c0;
-	  }
+          for (int i = 0; i < 4; i++) {
+            mat[0][i] = s[i][k].s0.c0;
+            mat[1][i] = s[i][k].s1.c0;
+            mat[2][i] = s[i][k].s2.c0;
+            mat[3][i] = s[i][k].s3.c0;
+          }
 
-	  for (int i=0;i<4; i++)
-	    for (int j=0; j<4; j++)
-	      fscanf(pCompare, "%le %le", (double*)&mat2[i][j], (double*)&mat2[i][j] + 1);
+          for (int i = 0; i < 4; i++)
+            for (int j = 0; j < 4; j++)
+              fscanf(pCompare, "%le %le", (double *)&mat2[i][j], (double *)&mat2[i][j] + 1);
 
-	  ov_matrix4x4_diff(diff, mat, mat2);
+          ov_matrix4x4_diff(diff, mat, mat2);
 
-	  /* statistics */
-	  double norm = ov_matrix4x4_rowsumnorm(diff);
-	  if (norm > max_abs[taxi]) {
-	    max_abs[taxi] = norm;
-	    if (norm > Max_abs)
-	      Max_abs = norm;
-	  }
-	  double rel = (ov_matrix4x4_rowsumnorm(mat) + ov_matrix4x4_rowsumnorm(mat2))/2;
-	  if (rel>0.0) {
-	    rel = norm/rel;
-	    if (rel > max_rel[taxi]) {
-	      max_rel[taxi] = rel;
-	      if (rel > Max_rel)
-		Max_rel = rel;
-	    }
-	  }
-	}
+          /* statistics */
+          double norm = ov_matrix4x4_rowsumnorm(diff);
+          if (norm > max_abs[taxi]) {
+            max_abs[taxi] = norm;
+            if (norm > Max_abs) Max_abs = norm;
+          }
+          double rel = (ov_matrix4x4_rowsumnorm(mat) + ov_matrix4x4_rowsumnorm(mat2)) / 2;
+          if (rel > 0.0) {
+            rel = norm / rel;
+            if (rel > max_rel[taxi]) {
+              max_rel[taxi] = rel;
+              if (rel > Max_rel) Max_rel = rel;
+            }
+          }
+        }
       }
     }
   }
@@ -327,8 +295,7 @@ void ov_compare_4x4(const char * pFileName) {
   printf(" - maximum absolute deviation: %.4le\n", Max_abs);
   printf(" - maximum relative deviation: %.4le\n", Max_rel);
   printf("// taxi | max abs     | max rel\n");
-  for(int i = 0; i <= maxtaxi; i++)
-    printf("%7d   %10.6le   %10.6le\n", i, max_abs[i], max_rel[i]);
+  for (int i = 0; i <= maxtaxi; i++) printf("%7d   %10.6le   %10.6le\n", i, max_abs[i], max_rel[i]);
   printf("\n");
 
   /* close file */
@@ -337,22 +304,18 @@ void ov_compare_4x4(const char * pFileName) {
   /* free memory */
   free(max_abs);
   free(max_rel);
-  for (int i=0; i<4; i++)
-    ov_free_spinor(s[i]);
-
+  for (int i = 0; i < 4; i++) ov_free_spinor(s[i]);
 }
 
 /* compares the operator with the one given in pFileName */
-void ov_compare_12x12(const char * pFileName) {
-
+void ov_compare_12x12(const char *pFileName) {
   double Max_rel = 0.0, Max_abs = 0.0;
   spinor *s[4][3];
   matrix12x12 mat, mat2, diff;
 
   /* evaluate Dov(psi) */
-  for (int i=0; i<4; i++) {
-    for (int j=0; j<3; j++) {
-
+  for (int i = 0; i < 4; i++) {
+    for (int j = 0; j < 3; j++) {
       /* get memory for the spinor */
       s[i][j] = ov_alloc_spinor();
 
@@ -366,11 +329,11 @@ void ov_compare_12x12(const char * pFileName) {
   }
 
   /* init locality table */
-  const int maxtaxi = (LX/2)+(LY/2)+(LZ/2)+T/2;
-  double *max_abs = (double*)calloc(maxtaxi+1, sizeof(double));
-  double *max_rel = (double*)calloc(maxtaxi+1, sizeof(double));
+  const int maxtaxi = (LX / 2) + (LY / 2) + (LZ / 2) + T / 2;
+  double *max_abs = (double *)calloc(maxtaxi + 1, sizeof(double));
+  double *max_rel = (double *)calloc(maxtaxi + 1, sizeof(double));
 
-  for(int i = 0; i <= maxtaxi; i++) {
+  for (int i = 0; i <= maxtaxi; i++) {
     max_abs[i] = 0.0;
     max_rel[i] = 0.0;
   }
@@ -387,56 +350,54 @@ void ov_compare_12x12(const char * pFileName) {
     printf("// beginning comparison\n");
     fflush(stdout);
   }
-  for(int t = 0; t < T; t++){
-    const int t_taxi = (t > T/2) ? T - t : t;
-    for(int x = 0; x < LX; x++){
-      const int x_taxi =  (x > LX/2) ? LX-x : x;
-      for(int y = 0; y < LY; y++){
-	const int y_taxi = (y > LY/2) ? LY-y : y;
-	for(int z=0; z<LZ; z++) {
-	  const int z_taxi = (z > LZ/2) ? LZ-z : z;
-	  const int taxi = x_taxi + y_taxi + z_taxi + t_taxi;
-	  const int k = g_ipt[t][x][y][z];
+  for (int t = 0; t < T; t++) {
+    const int t_taxi = (t > T / 2) ? T - t : t;
+    for (int x = 0; x < LX; x++) {
+      const int x_taxi = (x > LX / 2) ? LX - x : x;
+      for (int y = 0; y < LY; y++) {
+        const int y_taxi = (y > LY / 2) ? LY - y : y;
+        for (int z = 0; z < LZ; z++) {
+          const int z_taxi = (z > LZ / 2) ? LZ - z : z;
+          const int taxi = x_taxi + y_taxi + z_taxi + t_taxi;
+          const int k = g_ipt[t][x][y][z];
 
-	  for (int j=0; j<3; j++)
-	    for (int i=0; i<4; i++) {
-	      mat[0][i+4*j] = s[i][j][k].s0.c0;
-	      mat[1][i+4*j] = s[i][j][k].s1.c0;
-	      mat[2][i+4*j] = s[i][j][k].s2.c0;
-	      mat[3][i+4*j] = s[i][j][k].s3.c0;
-	      mat[4][i+4*j] = s[i][j][k].s0.c1;
-	      mat[5][i+4*j] = s[i][j][k].s0.c1;
-	      mat[6][i+4*j] = s[i][j][k].s1.c1;
-	      mat[7][i+4*j] = s[i][j][k].s2.c1;
-	      mat[8][i+4*j] = s[i][j][k].s3.c2;
-	      mat[9][i+4*j] = s[i][j][k].s1.c2;
-	      mat[10][i+4*j] = s[i][j][k].s2.c2;
-	      mat[11][i+4*j] = s[i][j][k].s3.c2;
-	    }
+          for (int j = 0; j < 3; j++)
+            for (int i = 0; i < 4; i++) {
+              mat[0][i + 4 * j] = s[i][j][k].s0.c0;
+              mat[1][i + 4 * j] = s[i][j][k].s1.c0;
+              mat[2][i + 4 * j] = s[i][j][k].s2.c0;
+              mat[3][i + 4 * j] = s[i][j][k].s3.c0;
+              mat[4][i + 4 * j] = s[i][j][k].s0.c1;
+              mat[5][i + 4 * j] = s[i][j][k].s0.c1;
+              mat[6][i + 4 * j] = s[i][j][k].s1.c1;
+              mat[7][i + 4 * j] = s[i][j][k].s2.c1;
+              mat[8][i + 4 * j] = s[i][j][k].s3.c2;
+              mat[9][i + 4 * j] = s[i][j][k].s1.c2;
+              mat[10][i + 4 * j] = s[i][j][k].s2.c2;
+              mat[11][i + 4 * j] = s[i][j][k].s3.c2;
+            }
 
-	  for (int i=0;i<12; i++)
-	    for (int j=0; j<12; j++)
-	      fscanf(pCompare, "%le %le", (double*)&mat2[i][j], (double*)&mat2[i][j] + 1);
+          for (int i = 0; i < 12; i++)
+            for (int j = 0; j < 12; j++)
+              fscanf(pCompare, "%le %le", (double *)&mat2[i][j], (double *)&mat2[i][j] + 1);
 
-	  ov_matrix12x12_diff(diff, mat, mat2);
+          ov_matrix12x12_diff(diff, mat, mat2);
 
-	  /* statistics */
-	  double norm = ov_matrix12x12_rowsumnorm(diff);
-	  if (norm > max_abs[taxi]) {
-	    max_abs[taxi] = norm;
-	    if (norm > Max_abs)
-	      Max_abs = norm;
-	  }
-	  double rel = (ov_matrix12x12_rowsumnorm(mat) + ov_matrix12x12_rowsumnorm(mat2))/2;
-	  if (rel>0.0) {
-	    rel = norm/rel;
-	    if (rel > max_rel[taxi]) {
-	      max_rel[taxi] = rel;
-	      if (rel > Max_rel)
-		Max_rel = rel;
-	    }
-	  }
-	}
+          /* statistics */
+          double norm = ov_matrix12x12_rowsumnorm(diff);
+          if (norm > max_abs[taxi]) {
+            max_abs[taxi] = norm;
+            if (norm > Max_abs) Max_abs = norm;
+          }
+          double rel = (ov_matrix12x12_rowsumnorm(mat) + ov_matrix12x12_rowsumnorm(mat2)) / 2;
+          if (rel > 0.0) {
+            rel = norm / rel;
+            if (rel > max_rel[taxi]) {
+              max_rel[taxi] = rel;
+              if (rel > Max_rel) Max_rel = rel;
+            }
+          }
+        }
       }
     }
   }
@@ -446,8 +407,7 @@ void ov_compare_12x12(const char * pFileName) {
   printf(" - maximum absolute deviation: %.4le\n", Max_abs);
   printf(" - maximum relative deviation: %.4le\n", Max_rel);
   printf("// taxi | max abs     | max rel\n");
-  for(int i = 0; i <= maxtaxi; i++)
-    printf("%7d   %10.6le   %10.6le\n", i, max_abs[i], max_rel[i]);
+  for (int i = 0; i <= maxtaxi; i++) printf("%7d   %10.6le   %10.6le\n", i, max_abs[i], max_rel[i]);
   printf("\n");
 
   /* close file */
@@ -456,22 +416,18 @@ void ov_compare_12x12(const char * pFileName) {
   /* free memory */
   free(max_abs);
   free(max_rel);
-  for (int i=0; i<4; i++)
-    for (int j=0; j<3; j++)
-      ov_free_spinor(s[i][j]);
-
+  for (int i = 0; i < 4; i++)
+    for (int j = 0; j < 3; j++) ov_free_spinor(s[i][j]);
 }
 
 /* saves the operator to the given filename */
-void ov_save_12x12(const char * pFileName) {
-
+void ov_save_12x12(const char *pFileName) {
   spinor *s[4][3];
   matrix12x12 mat;
 
   /* evaluate Dov(psi) */
-  for (int i=0; i<4; i++)
-    for (int j=0; j<3; j++) {
-
+  for (int i = 0; i < 4; i++)
+    for (int j = 0; j < 3; j++) {
       /* get memory for the spinor */
       s[i][j] = ov_alloc_spinor();
 
@@ -490,32 +446,32 @@ void ov_save_12x12(const char * pFileName) {
     exit(1);
   }
 
-  for(int t = 0; t < T; t++){
-    for(int x = 0; x < LX; x++){
-      for(int y = 0; y < LY; y++){
-	for(int z=0; z<LZ; z++) {
-	  const int k = g_ipt[t][x][y][z];
+  for (int t = 0; t < T; t++) {
+    for (int x = 0; x < LX; x++) {
+      for (int y = 0; y < LY; y++) {
+        for (int z = 0; z < LZ; z++) {
+          const int k = g_ipt[t][x][y][z];
 
-	  for (int j=0; j<3; j++)
-	    for (int i=0; i<4; i++) {
-	      mat[0][i+4*j] = s[i][j][k].s0.c0;
-	      mat[1][i+4*j] = s[i][j][k].s1.c0;
-	      mat[2][i+4*j] = s[i][j][k].s2.c0;
-	      mat[3][i+4*j] = s[i][j][k].s3.c0;
-	      mat[4][i+4*j] = s[i][j][k].s0.c1;
-	      mat[5][i+4*j] = s[i][j][k].s0.c1;
-	      mat[6][i+4*j] = s[i][j][k].s1.c1;
-	      mat[7][i+4*j] = s[i][j][k].s2.c1;
-	      mat[8][i+4*j] = s[i][j][k].s3.c2;
-	      mat[9][i+4*j] = s[i][j][k].s1.c2;
-	      mat[10][i+4*j] = s[i][j][k].s2.c2;
-	      mat[11][i+4*j] = s[i][j][k].s3.c2;
-	    }
+          for (int j = 0; j < 3; j++)
+            for (int i = 0; i < 4; i++) {
+              mat[0][i + 4 * j] = s[i][j][k].s0.c0;
+              mat[1][i + 4 * j] = s[i][j][k].s1.c0;
+              mat[2][i + 4 * j] = s[i][j][k].s2.c0;
+              mat[3][i + 4 * j] = s[i][j][k].s3.c0;
+              mat[4][i + 4 * j] = s[i][j][k].s0.c1;
+              mat[5][i + 4 * j] = s[i][j][k].s0.c1;
+              mat[6][i + 4 * j] = s[i][j][k].s1.c1;
+              mat[7][i + 4 * j] = s[i][j][k].s2.c1;
+              mat[8][i + 4 * j] = s[i][j][k].s3.c2;
+              mat[9][i + 4 * j] = s[i][j][k].s1.c2;
+              mat[10][i + 4 * j] = s[i][j][k].s2.c2;
+              mat[11][i + 4 * j] = s[i][j][k].s3.c2;
+            }
 
-	  for (int i=0;i<12; i++)
-	    for (int j=0; j<12; j++)
-	      fprintf(pCompare, "%.20le %.20le ", creal(mat[i][j]), cimag(mat[i][j]));
-	}
+          for (int i = 0; i < 12; i++)
+            for (int j = 0; j < 12; j++)
+              fprintf(pCompare, "%.20le %.20le ", creal(mat[i][j]), cimag(mat[i][j]));
+        }
       }
     }
   }
@@ -524,12 +480,10 @@ void ov_save_12x12(const char * pFileName) {
   fclose(pCompare);
 
   /* free memory */
-  for (int i=0; i<4; i++)
-    for (int j=0; j<3; j++)
-      ov_free_spinor(s[i][j]);
-
+  for (int i = 0; i < 4; i++)
+    for (int j = 0; j < 3; j++) ov_free_spinor(s[i][j]);
 }
-void ov_check_q_over_sqrt_q_sqr(spinor * const P, spinor * const S) {
+void ov_check_q_over_sqrt_q_sqr(spinor *const P, spinor *const S) {
   /*
     spinor *s;
     static int n_cheby = 0;
@@ -555,20 +509,28 @@ void ov_check_q_over_sqrt_q_sqr(spinor * const P, spinor * const S) {
   */
 }
 
-void ov_print_spinor(spinor * pS) {
-
-  printf("Color 0:                            | Color 1:                            | Color 2:                            \n");
-  printf("------------------------------------+-------------------------------------+-------------------------------------\n");
-  printf("%16.19le %+16.19le I | %16.9le %+16.9le I | %16.9le %+16.9le I\n", (double)creal(pS->s0.c0), (double)cimag(pS->s0.c0), (double)creal(pS->s0.c1), (double)cimag(pS->s0.c1), (double)creal(pS->s0.c2), (double)cimag(pS->s0.c2));
-  printf("%16.19le %+16.19le I | %16.9le %+16.9le I | %16.9le %+16.9le I\n", (double)creal(pS->s1.c0), (double)cimag(pS->s1.c0), (double)creal(pS->s1.c1), (double)cimag(pS->s1.c1), (double)creal(pS->s1.c2), (double)cimag(pS->s1.c2));
-  printf("%16.19le %+16.19le I | %16.9le %+16.9le I | %16.9le %+16.9le I\n", (double)creal(pS->s2.c0), (double)cimag(pS->s2.c0), (double)creal(pS->s2.c1), (double)cimag(pS->s2.c1), (double)creal(pS->s2.c2), (double)cimag(pS->s2.c2));
-  printf("%16.19le %+16.19le I | %16.9le %+16.9le I | %16.9le %+16.9le I\n", (double)creal(pS->s3.c0), (double)cimag(pS->s3.c0), (double)creal(pS->s3.c1), (double)cimag(pS->s3.c1), (double)creal(pS->s3.c2), (double)cimag(pS->s3.c2));
-
+void ov_print_spinor(spinor *pS) {
+  printf(
+      "Color 0:                            | Color 1:                            | Color 2:        "
+      "                    \n");
+  printf(
+      "------------------------------------+-------------------------------------+-----------------"
+      "--------------------\n");
+  printf("%16.19le %+16.19le I | %16.9le %+16.9le I | %16.9le %+16.9le I\n",
+         (double)creal(pS->s0.c0), (double)cimag(pS->s0.c0), (double)creal(pS->s0.c1),
+         (double)cimag(pS->s0.c1), (double)creal(pS->s0.c2), (double)cimag(pS->s0.c2));
+  printf("%16.19le %+16.19le I | %16.9le %+16.9le I | %16.9le %+16.9le I\n",
+         (double)creal(pS->s1.c0), (double)cimag(pS->s1.c0), (double)creal(pS->s1.c1),
+         (double)cimag(pS->s1.c1), (double)creal(pS->s1.c2), (double)cimag(pS->s1.c2));
+  printf("%16.19le %+16.19le I | %16.9le %+16.9le I | %16.9le %+16.9le I\n",
+         (double)creal(pS->s2.c0), (double)cimag(pS->s2.c0), (double)creal(pS->s2.c1),
+         (double)cimag(pS->s2.c1), (double)creal(pS->s2.c2), (double)cimag(pS->s2.c2));
+  printf("%16.19le %+16.19le I | %16.9le %+16.9le I | %16.9le %+16.9le I\n",
+         (double)creal(pS->s3.c0), (double)cimag(pS->s3.c0), (double)creal(pS->s3.c1),
+         (double)cimag(pS->s3.c1), (double)creal(pS->s3.c2), (double)cimag(pS->s3.c2));
 }
 
-
 void ov_check_operator(int t, int x, int y, int z) {
-
   /* Create delta source at origin */
   source_spinor_field(g_spinor_field[1], g_spinor_field[0], 0, 0);
   convert_eo_to_lexic(g_spinor_field[2], g_spinor_field[1], g_spinor_field[0]);
@@ -576,31 +538,28 @@ void ov_check_operator(int t, int x, int y, int z) {
   /* Evaluate Dov(psi) */
   Dov_psi(g_spinor_field[3], g_spinor_field[2]);
   ov_print_spinor(&g_spinor_field[3][g_ipt[t][x][y][z]]);
-
 }
 
 /* Check GW relation with operator norm over the full lattice */
 void ov_check_ginsparg_wilson_relation_strong(void) {
-
-  double max_rel = 0.0, min_left = 1.0e100, min_right = 1.0e100,  max_diff = 0.0, min_norm = 1.0e100;
+  double max_rel = 0.0, min_left = 1.0e100, min_right = 1.0e100, max_diff = 0.0, min_norm = 1.0e100;
   spinor *S_left[4][3], *S_right[4][3], *S_diff[4][3];
 
-  if (g_debug_level>0) {
+  if (g_debug_level > 0) {
     printf("// creating spinor fields and calculating {gamma_5,D} psi and a D gamma_5 D psi\n");
     fflush(stdout);
   }
-  for (int i=0; i<4; i++)
-    for (int j=0; j<3; j++) {
-			
-      if (g_debug_level>1) {
-	printf("// spinor field: delta_dirac at %d, delta_color at %d\n", i, j);
-	fflush(stdout);
+  for (int i = 0; i < 4; i++)
+    for (int j = 0; j < 3; j++) {
+      if (g_debug_level > 1) {
+        printf("// spinor field: delta_dirac at %d, delta_color at %d\n", i, j);
+        fflush(stdout);
       }
-			
+
       /* get memory for the spinor */
-      S_left[i][j]  = ov_alloc_spinor();
+      S_left[i][j] = ov_alloc_spinor();
       S_right[i][j] = ov_alloc_spinor();
-      S_diff[i][j]  = ov_alloc_spinor();
+      S_diff[i][j] = ov_alloc_spinor();
 
       /* Create delta source at origin */
       source_spinor_field(g_spinor_field[1], g_spinor_field[0], i, j);
@@ -622,40 +581,38 @@ void ov_check_ginsparg_wilson_relation_strong(void) {
 
   /* scan the whole lattice and check GW relation */
   printf("// test of the Ginsparg-Wilson relation:\n");
-  if (g_debug_level>0)
-    fflush(stdout);
-  for(int x=0; x<LX; x++)
-    for(int y = 0; y < LY; y++)
-      for(int z = 0; z < LZ; z++)
-	for(int t = 0; t < T; t++) {
-	  const int k = g_ipt[t][x][y][z];
-	  const double norm_diff  = ov_operator_colsumnorm(S_diff, k);
-	  const double norm_left  = ov_operator_colsumnorm(S_left, k);
-	  const double norm_right = ov_operator_colsumnorm(S_right, k);
-	  double norm = (norm_left+norm_right)/2.;
-	  if (norm < min_norm)
-	    min_norm = norm;
-	  if (norm > 0.0) {
-	    norm = norm_diff/norm;
-	    if (norm > max_rel)
-	      max_rel = norm;
-	    if ((norm > 1.8) && (g_debug_level)>=5) {
-	      printf("(%d,%d,%d,%d): taxi = %d, rel = %.20le, lr = [%.4le, %.4le], diff = %.4le\n", t, x, y, z, ((x>LX/2) ? LX-x : x)+((y>LY/2) ? LY-y : y)+((z>LZ/2) ? LZ-z : z)+((t>T/2) ? T-t : t), norm, norm_left, norm_right, norm_diff);
-	      printf("// left[0][0]:\n");
-	      ov_print_spinor(&S_left[0][0][k]);
-	      printf("// right[0][0]:\n");
-	      ov_print_spinor(&S_right[0][0][k]);
-	      printf("// diff[0][0]:\n");
-	      ov_print_spinor(&S_diff[0][0][k]);
-	    }
-	  }
-	  if (norm_left < min_left)
-	    min_left = norm_left;
-	  if (norm_right < min_right)
-	    min_right = norm_right;
-	  if (norm_diff > max_diff)
-	    max_diff = norm_diff;
-	}
+  if (g_debug_level > 0) fflush(stdout);
+  for (int x = 0; x < LX; x++)
+    for (int y = 0; y < LY; y++)
+      for (int z = 0; z < LZ; z++)
+        for (int t = 0; t < T; t++) {
+          const int k = g_ipt[t][x][y][z];
+          const double norm_diff = ov_operator_colsumnorm(S_diff, k);
+          const double norm_left = ov_operator_colsumnorm(S_left, k);
+          const double norm_right = ov_operator_colsumnorm(S_right, k);
+          double norm = (norm_left + norm_right) / 2.;
+          if (norm < min_norm) min_norm = norm;
+          if (norm > 0.0) {
+            norm = norm_diff / norm;
+            if (norm > max_rel) max_rel = norm;
+            if ((norm > 1.8) && (g_debug_level) >= 5) {
+              printf("(%d,%d,%d,%d): taxi = %d, rel = %.20le, lr = [%.4le, %.4le], diff = %.4le\n",
+                     t, x, y, z,
+                     ((x > LX / 2) ? LX - x : x) + ((y > LY / 2) ? LY - y : y) +
+                         ((z > LZ / 2) ? LZ - z : z) + ((t > T / 2) ? T - t : t),
+                     norm, norm_left, norm_right, norm_diff);
+              printf("// left[0][0]:\n");
+              ov_print_spinor(&S_left[0][0][k]);
+              printf("// right[0][0]:\n");
+              ov_print_spinor(&S_right[0][0][k]);
+              printf("// diff[0][0]:\n");
+              ov_print_spinor(&S_diff[0][0][k]);
+            }
+          }
+          if (norm_left < min_left) min_left = norm_left;
+          if (norm_right < min_right) min_right = norm_right;
+          if (norm_diff > max_diff) max_diff = norm_diff;
+        }
 
   /* print results */
   printf(" - maximum absolute deviation: %.4le\n", max_diff);
@@ -665,8 +622,8 @@ void ov_check_ginsparg_wilson_relation_strong(void) {
   printf(" - minimum norm D gamma_5 D: %.4le\n", min_right);
 
   /* free memory */
-  for (int i=0; i<4; i++)
-    for (int j=0; j<3; j++) {
+  for (int i = 0; i < 4; i++)
+    for (int j = 0; j < 3; j++) {
       ov_free_spinor(S_left[i][j]);
       ov_free_spinor(S_right[i][j]);
       ov_free_spinor(S_diff[i][j]);
@@ -675,13 +632,12 @@ void ov_check_ginsparg_wilson_relation_strong(void) {
 
 /* Checks GW relation only by applying Dov to delta(0,0) */
 void ov_check_ginsparg_wilson_relation(void) {
-
   double max_rel = 0.0, min_left = 1.0e100, min_right = 1.0e100, max_diff = 0.0, min_norm = 1.0e100;
 
   /* get memory for the spinor fields */
-  spinor *S_left  = ov_alloc_spinor();
+  spinor *S_left = ov_alloc_spinor();
   spinor *S_right = ov_alloc_spinor();
-  spinor *S_diff  = ov_alloc_spinor();
+  spinor *S_diff = ov_alloc_spinor();
 
   /* Create delta source at origin */
   source_spinor_field(g_spinor_field[1], g_spinor_field[0], 0, 0);
@@ -702,35 +658,30 @@ void ov_check_ginsparg_wilson_relation(void) {
 
   /* scan the whole lattice */
   printf("// test of the Ginsparg-Wilson relation\n");
-  for(int x=0; x<LX; x++)
-    for(int y = 0; y < LY; y++)
-      for(int z = 0; z < LZ; z++)
-	for(int t = 0; t < T; t++) {
-	  const int i = g_ipt[t][x][y][z];
-      double norm_diff, norm_left, norm_right;
-      _spinor_norm_sq(norm_diff, S_diff[i]);
- 	  _spinor_norm_sq(norm_left, S_left[i]); 
- 	  _spinor_norm_sq(norm_right, S_right[i]); 
-	  norm_diff = sqrt(norm_diff);
-	  norm_left = sqrt(norm_left);
-	  norm_right = sqrt(norm_right);
+  for (int x = 0; x < LX; x++)
+    for (int y = 0; y < LY; y++)
+      for (int z = 0; z < LZ; z++)
+        for (int t = 0; t < T; t++) {
+          const int i = g_ipt[t][x][y][z];
+          double norm_diff, norm_left, norm_right;
+          _spinor_norm_sq(norm_diff, S_diff[i]);
+          _spinor_norm_sq(norm_left, S_left[i]);
+          _spinor_norm_sq(norm_right, S_right[i]);
+          norm_diff = sqrt(norm_diff);
+          norm_left = sqrt(norm_left);
+          norm_right = sqrt(norm_right);
 
-      double norm = norm_left+norm_right;
+          double norm = norm_left + norm_right;
 
-      if (norm < min_norm)
-	    min_norm = norm;
-	  if (norm > 0.0) {
-	    norm = 2.*norm_diff/norm;
-	    if (norm > max_rel)
-	      max_rel = norm;
-	  }
-	  if (norm_left < min_left)
-	    min_left = norm_left;
-	  if (norm_right < min_right)
-	    min_right = norm_right;
-	  if (norm_diff > max_diff)
-	    max_diff = norm_diff;
-	}
+          if (norm < min_norm) min_norm = norm;
+          if (norm > 0.0) {
+            norm = 2. * norm_diff / norm;
+            if (norm > max_rel) max_rel = norm;
+          }
+          if (norm_left < min_left) min_left = norm_left;
+          if (norm_right < min_right) min_right = norm_right;
+          if (norm_diff > max_diff) max_diff = norm_diff;
+        }
 
   /* print results */
   printf(" - maximum absoulte deviation: %.4le\n", max_diff);
@@ -744,4 +695,3 @@ void ov_check_ginsparg_wilson_relation(void) {
   ov_free_spinor(S_right);
   ov_free_spinor(S_diff);
 }
-

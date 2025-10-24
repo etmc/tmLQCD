@@ -8,36 +8,36 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include <tmlqcd_config.h>
 #endif
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
-#include "global.h"
-#include "linalg_eo.h"
-#include "start.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include "fatal_error.h"
-#include "monomial/monomial.h"
+#include "global.h"
 #include "hamiltonian_field.h"
-#include "operator/clovertm_operators.h"
+#include "linalg_eo.h"
+#include "monomial/monomial.h"
 #include "operator/clover_leaf.h"
+#include "operator/clovertm_operators.h"
 #include "reweighting_factor.h"
+#include "start.h"
 
 void reweighting_factor(const int N, const int nstore) {
   int n = VOLUME;
-  monomial * mnl;
-  FILE * ofs;
+  monomial* mnl;
+  FILE* ofs;
   hamiltonian_field_t hf;
 
   hf.gaugefield = g_gauge_field;
@@ -45,117 +45,116 @@ void reweighting_factor(const int N, const int nstore) {
   hf.derivative = NULL;
   hf.update_gauge_copy = g_update_gauge_copy;
 
-  double * data = (double*)calloc(no_monomials*N, sizeof(double));
-  double * trlog = (double*)calloc(no_monomials, sizeof(double));
+  double* data = (double*)calloc(no_monomials * N, sizeof(double));
+  double* trlog = (double*)calloc(no_monomials, sizeof(double));
 
-  // we compute the trlog part first, because they are independent of 
+  // we compute the trlog part first, because they are independent of
   // stochastic noise. This is only needed for even/odd monomials
-  for(int j = 0; j < no_monomials; j++) {
+  for (int j = 0; j < no_monomials; j++) {
     mnl = &monomial_list[j];
-    if(mnl->even_odd_flag) {
+    if (mnl->even_odd_flag) {
       init_sw_fields();
 
-      if(mnl->type != NDCLOVERRATCOR && (mnl->kappa != mnl->kappa2
-                                       || (mnl->type == NDCLOVERDETRATIO
-                                           && (mnl->mubar != mnl->mubar2 || mnl->epsbar != mnl->epsbar2))
-                                       || (mnl->type == CLOVERDETRATIORW
-                                           && (mnl->mu != mnl->mu2)))) {
+      if (mnl->type != NDCLOVERRATCOR &&
+          (mnl->kappa != mnl->kappa2 ||
+           (mnl->type == NDCLOVERDETRATIO &&
+            (mnl->mubar != mnl->mubar2 || mnl->epsbar != mnl->epsbar2)) ||
+           (mnl->type == CLOVERDETRATIORW && (mnl->mu != mnl->mu2)))) {
         double c_sw = mnl->c_sw;
-        if(c_sw < 0.) c_sw = 0.;
-        
-        sw_term( (const su3**) hf.gaugefield, mnl->kappa, c_sw); 
-        if(mnl->type == CLOVERDETRATIORW) {
+        if (c_sw < 0.) c_sw = 0.;
+
+        sw_term((const su3**)hf.gaugefield, mnl->kappa, c_sw);
+        if (mnl->type == CLOVERDETRATIORW) {
           trlog[j] = -sw_trace(0, mnl->mu);
-        }
-        else {
+        } else {
           trlog[j] = -sw_trace_nd(0, mnl->mubar, mnl->epsbar);
         }
-        
-        sw_term( (const su3**) hf.gaugefield, mnl->kappa2, c_sw);
-        if(mnl->type == CLOVERDETRATIORW) {
+
+        sw_term((const su3**)hf.gaugefield, mnl->kappa2, c_sw);
+        if (mnl->type == CLOVERDETRATIORW) {
           trlog[j] -= -sw_trace(0, mnl->mu2);
-        }
-        else {
+        } else {
           trlog[j] -= -sw_trace_nd(0, mnl->mubar2, mnl->epsbar2);
         }
       } else
         trlog[j] = 0.;
-    }
-    else {
+    } else {
       trlog[j] = 0.;
     }
-    if(g_proc_id == 0 && g_debug_level > 0) {
+    if (g_proc_id == 0 && g_debug_level > 0) {
       printf("# monomial[%d] %s, trlog = %e\n", j, mnl->name, trlog[j]);
     }
   }
 
-  for(int i = 0; i < N; i++) {
-    if(g_proc_id == 0 && g_debug_level > 0) {
+  for (int i = 0; i < N; i++) {
+    if (g_proc_id == 0 && g_debug_level > 0) {
       printf("# computing reweighting factors for sample %d\n", i);
     }
-    for(int j = 0; j < no_monomials; j++) {
+    for (int j = 0; j < no_monomials; j++) {
       mnl = &monomial_list[j];
-      if(mnl->type != GAUGE) {
-	      if(mnl->even_odd_flag) {
-	        random_spinor_field_eo(mnl->pf, mnl->rngrepro, RN_GAUSS);
-          mnl->energy0 = square_norm(mnl->pf, n/2, 1);
-	      }
-	      else {
+      if (mnl->type != GAUGE) {
+        if (mnl->even_odd_flag) {
+          random_spinor_field_eo(mnl->pf, mnl->rngrepro, RN_GAUSS);
+          mnl->energy0 = square_norm(mnl->pf, n / 2, 1);
+        } else {
           random_spinor_field_lexic(mnl->pf, mnl->rngrepro, RN_GAUSS);
           mnl->energy0 = square_norm(mnl->pf, n, 1);
         }
-	      if(mnl->type == NDDETRATIO || mnl->type == NDCLOVERDETRATIO  || mnl->type == NDCLOVERRATCOR) {
-	        if(mnl->even_odd_flag) {
-	          random_spinor_field_eo(mnl->pf2, mnl->rngrepro, RN_GAUSS);
-            mnl->energy0 += square_norm(mnl->pf2, n/2, 1);
-	        }
-	        else {
+        if (mnl->type == NDDETRATIO || mnl->type == NDCLOVERDETRATIO ||
+            mnl->type == NDCLOVERRATCOR) {
+          if (mnl->even_odd_flag) {
+            random_spinor_field_eo(mnl->pf2, mnl->rngrepro, RN_GAUSS);
+            mnl->energy0 += square_norm(mnl->pf2, n / 2, 1);
+          } else {
             random_spinor_field_lexic(mnl->pf2, mnl->rngrepro, RN_GAUSS);
             mnl->energy0 += square_norm(mnl->pf2, n, 1);
           }
-	      }
-	      if(g_proc_id == 0 && g_debug_level > 1) {
-	        printf("# monomial[%d] %s, energy0 = %e\n", j, mnl->name, mnl->energy0);
-	      }
+        }
+        if (g_proc_id == 0 && g_debug_level > 1) {
+          printf("# monomial[%d] %s, energy0 = %e\n", j, mnl->name, mnl->energy0);
+        }
       }
     }
 
-    for(int j = 0; j < no_monomials; j++) {
+    for (int j = 0; j < no_monomials; j++) {
       mnl = &monomial_list[j];
-      if(mnl->type != GAUGE) {
-	      double y = mnl->accfunction(j, &hf);
-	      data[i*no_monomials + j] = y;
-	      if(g_proc_id == 0 && g_debug_level > 0) {
-	        printf("# monomial[%d] %s, stochastic part: w_%d=%e exp(w_%d)=%e\n", j, mnl->name, j, y, j, exp(y));
-	      }
+      if (mnl->type != GAUGE) {
+        double y = mnl->accfunction(j, &hf);
+        data[i * no_monomials + j] = y;
+        if (g_proc_id == 0 && g_debug_level > 0) {
+          printf("# monomial[%d] %s, stochastic part: w_%d=%e exp(w_%d)=%e\n", j, mnl->name, j, y,
+                 j, exp(y));
+        }
       }
     }
   }
-  
-  if(g_proc_id == 0) {
+
+  if (g_proc_id == 0) {
     // summing all stochastic sources e^(ws)= sum_i e^(w_i+trlog)
-    // trying to not lose precision by summing the exponentials as ws = w_0 + trlog + log(sum_i e^(w_i - w_0))
-    for(int j = 0; j < no_monomials; j++) {
+    // trying to not lose precision by summing the exponentials as ws = w_0 + trlog + log(sum_i
+    // e^(w_i - w_0))
+    for (int j = 0; j < no_monomials; j++) {
       double ws = 0;
-      for(int i = 0; i < N; i++) {
-        ws += exp(data[i*no_monomials + j] - data[0*no_monomials + j]);
+      for (int i = 0; i < N; i++) {
+        ws += exp(data[i * no_monomials + j] - data[0 * no_monomials + j]);
       }
       ws = log(ws);
-      ws += data[0*no_monomials + j] + trlog[j];
-      printf("# monomial[%d] %s, reweighting_factor for conf %.5d, ws = %.12e\n", j, monomial_list[j].name, nstore, ws);
+      ws += data[0 * no_monomials + j] + trlog[j];
+      printf("# monomial[%d] %s, reweighting_factor for conf %.5d, ws = %.12e\n", j,
+             monomial_list[j].name, nstore, ws);
     }
 
     char filename[50];
     sprintf(filename, "reweighting_factor.data.%.5d", nstore);
     printf("# writing reweighting factors to %s\n", filename);
-    if((ofs = fopen(filename, "w")) == NULL) {
+    if ((ofs = fopen(filename, "w")) == NULL) {
       fatal_error("Could not open file for data output", "reweighting_factor");
-    }
-    else {
-      for(int j = 0; j < no_monomials; j++) {
+    } else {
+      for (int j = 0; j < no_monomials; j++) {
         mnl = &monomial_list[j];
-        for(int i = 0; i < N; i++) {
-          fprintf(ofs, "%.2d %.5d %.12f %.12f %.12f %.12f %.12e\n", j, i, mnl->kappa, mnl->kappa2, mnl->mu, mnl->mu2, data[i*no_monomials + j] + trlog[j]);
+        for (int i = 0; i < N; i++) {
+          fprintf(ofs, "%.2d %.5d %.12f %.12f %.12f %.12f %.12e\n", j, i, mnl->kappa, mnl->kappa2,
+                  mnl->mu, mnl->mu2, data[i * no_monomials + j] + trlog[j]);
         }
       }
       fclose(ofs);
@@ -165,6 +164,5 @@ void reweighting_factor(const int N, const int nstore) {
   free(trlog);
 #ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
-#endif // TM_USE_MPI
+#endif  // TM_USE_MPI
 }
-
