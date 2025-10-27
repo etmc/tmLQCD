@@ -31,6 +31,8 @@
 #include <complex.h>
 #include "init/init_spinor_field.h"
 #include "linalg/lapack.h"
+#include "su3.h"
+
 /* some macros for 4d loops */
 #define FORXYZT(t, x, y, z, tt, ll) \
   for (t = 0; t < tt; t++) {        \

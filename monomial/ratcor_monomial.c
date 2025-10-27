@@ -230,7 +230,8 @@ void check_C_psi(spinor* const k_up, spinor* const l_up, const int id,
       //			       I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
     } else {
       // Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np],
-      // g_chi_dn_spinor_field[mnl->rat.np], 			     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j],
+      // g_chi_dn_spinor_field[mnl->rat.np], 			     g_chi_up_spinor_field[j],
+      // g_chi_dn_spinor_field[j],
       //		     I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
     }
     assign_add_mul(k_up, g_chi_up_spinor_field[mnl->rat.np], I * mnl->rat.rnu[j], VOLUME / 2);
@@ -248,11 +249,13 @@ void check_C_psi(spinor* const k_up, spinor* const l_up, const int id,
   for (int j = (mnl->rat.np - 1); j > -1; j--) {
     if (mnl->type == NDCLOVERRATCOR || mnl->type == NDCLOVERRAT) {
       // Qsw_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np],
-      // g_chi_dn_spinor_field[mnl->rat.np], 			     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j],
+      // g_chi_dn_spinor_field[mnl->rat.np], 			     g_chi_up_spinor_field[j],
+      // g_chi_dn_spinor_field[j],
       //			     -I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
     } else {
       // Q_tau1_sub_const_ndpsi(g_chi_up_spinor_field[mnl->rat.np],
-      // g_chi_dn_spinor_field[mnl->rat.np], 			     g_chi_up_spinor_field[j], g_chi_dn_spinor_field[j],
+      // g_chi_dn_spinor_field[mnl->rat.np], 			     g_chi_up_spinor_field[j],
+      // g_chi_dn_spinor_field[j],
       //			     -I*mnl->rat.nu[j], 1., mnl->EVMaxInv);
     }
     assign_add_mul(k_up, g_chi_up_spinor_field[mnl->rat.np], -I * mnl->rat.rnu[j], VOLUME / 2);

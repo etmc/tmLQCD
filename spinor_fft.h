@@ -30,6 +30,8 @@
 #define FALSE 0
 #endif
 
+#include "su3.h"
+
 void spinor_fft_reduce_2d(spinor *localSpinorField, int *collectionRank, spinor ***field_collection,
                           spinor **membuff);
 void spinor_fft_redist_2d(spinor *localSpinorField, int collectionRank, spinor **field_collection,

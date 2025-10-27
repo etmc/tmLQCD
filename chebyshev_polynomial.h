@@ -21,6 +21,8 @@
 #ifndef _CHEBYSHEV_POLYNOMIAL_H
 #define _CHEBYSHEV_POLYNOMIAL_H
 
+#include "su3.h"
+
 extern double cheb_evmin, cheb_evmax;
 extern int dop_n_cheby;
 extern double *dop_cheby_coef;

@@ -20,6 +20,8 @@
 #ifndef _CONVERT_EVEN_TO_LEXIC_H
 #define _CONVERT_EVEN_TO_LEXIC_H
 
+#include "su3.h"
+
 void convert_even_to_lexic(spinor* const P, spinor* const r);
 void convert_lexic_to_even(spinor* const r, spinor* const P);
 

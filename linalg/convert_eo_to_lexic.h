@@ -20,6 +20,8 @@
 #ifndef _CONVERT_EO_TO_LEXIC_H
 #define _CONVERT_EO_TO_LEXIC_H
 
+#include "su3.h"
+
 void convert_eo_to_lexic(spinor* const P, const spinor* const s, const spinor* const r);
 void convert_lexic_to_eo(spinor* const s, spinor* const r, const spinor* const P);
 

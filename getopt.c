@@ -613,7 +613,8 @@ int long_only;
     int indfound = -1;
     int option_index;
 
-    for (nameend = nextchar; *nameend && *nameend != '='; nameend++) /* Do nothing.  */;
+    for (nameend = nextchar; *nameend && *nameend != '='; nameend++) /* Do nothing.  */
+      ;
 
     /* Test all long options for either exact match
        or abbreviated matches.  */
@@ -760,7 +761,8 @@ int long_only;
       /* optarg is now the argument, see if it's in the
          table of longopts.  */
 
-      for (nextchar = nameend = optarg; *nameend && *nameend != '='; nameend++) /* Do nothing.  */;
+      for (nextchar = nameend = optarg; *nameend && *nameend != '='; nameend++) /* Do nothing.  */
+        ;
 
       /* Test all long options for either exact match
          or abbreviated matches.  */

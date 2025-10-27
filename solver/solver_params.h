@@ -52,10 +52,10 @@ typedef struct {
   double eigcg_tolsq;  /*squared tolerance for the rest of the linear systems*/
   double eigcg_restolsq;    /*tolerance squared for restarting eigcg after eigenvectors has been
                               computed    Typically this is the square root of the tolerance squared
-                              requested for the linear system.    Example, to solve the linear systems to
-                              squared residual 1e-16, one chooses eigcg_restolsq=1e-8 or smaller    This
-                              will specify how many times deflated CG restaretd in the second phase
-                              (after eigenvectors has been computed)*/
+                              requested for the linear system.    Example, to solve the linear systems
+                              to    squared residual 1e-16, one chooses eigcg_restolsq=1e-8 or smaller
+                              This    will specify how many times deflated CG restaretd in the second
+                              phase    (after eigenvectors has been computed)*/
   int eigcg_rand_guess_opt; /*set to 0 to use 0 initial guesses or non-zero values if you want to
                                use random initial guess as a volume source */
 

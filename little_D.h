@@ -22,6 +22,7 @@
 #define _LITTLE_D_H
 
 #include <complex.h>
+#include "su3.h"
 
 extern int dfl_subspace_updated;
 void little_D(_Complex double *v, _Complex double *w);

@@ -19,6 +19,8 @@
 #ifndef _SOURCE_GENERATION_H
 #define _SOURCE_GENERATION_H
 
+#include "su3.h"
+
 void gaussian_volume_source(spinor* const P, spinor* const Q, const int sample, const int nstore,
                             const int f);
 

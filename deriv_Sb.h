@@ -20,6 +20,7 @@
 #define _DERIV_SB_H
 
 #include "hamiltonian_field.h"
+#include "su3.h"
 
 void deriv_Sb(const int ieo, spinor* const l, spinor* const k, hamiltonian_field_t* const hf,
               const double factor);

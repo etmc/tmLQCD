@@ -19,6 +19,8 @@
 #ifndef _GET_RECTANGLE_STAPLES_H
 #define _GET_RECTANGLE_STAPLES_H
 
+#include "su3.h"
+
 void get_rectangle_staples(su3 *const v, const int x, const int mu);
 void get_rectangle_staples_general(su3 *const v, const int x, const int mu,
                                    const su3 *const *const gf);

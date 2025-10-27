@@ -23,6 +23,8 @@
 #include "tmlqcd_config.h"
 #endif
 
+#include "su3.h"
+
 #ifdef TM_USE_MPI
 #include <mpi.h>
 

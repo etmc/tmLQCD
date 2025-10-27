@@ -20,6 +20,8 @@
 #ifndef _CONVERT_ODD_TO_LEXIC_H
 #define _CONVERT_ODD_TO_LEXIC_H
 
+#include "su3.h"
+
 void convert_odd_to_lexic(spinor* const P, spinor* const r);
 void convert_lexic_to_odd(spinor* const r, spinor* const P);
 

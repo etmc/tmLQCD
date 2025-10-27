@@ -19,6 +19,8 @@
 #ifndef _EIGENVALUES_H
 #define _EIGENVALUES_H
 
+#include "su3.h"
+
 extern spinor* eigenvectors;
 extern double* eigenvls;
 extern double* inv_eigenvls;

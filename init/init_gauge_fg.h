@@ -19,6 +19,8 @@
 #ifndef _INIT_GAUGE_FG_H
 #define _INIT_GAUGE_FG_H
 
+#include "su3.h"
+
 extern su3** gauge_fg;
 
 int init_gauge_fg(const int V);
