@@ -36,11 +36,9 @@
 #include "ranlxd.h"
 #include "read_input.h"
 #include "sf_gauge_monomial.h"
-#include "sf_utils.h"
 #include "sse.h"
 #include "start.h"
 #include "su3.h"
-#include "su3adj.h"
 
 void sf_gauge_derivative(const int id, hamiltonian_field_t* const hf) {
   int i, mu;
