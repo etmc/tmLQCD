@@ -43,14 +43,16 @@ extern "C" {
 #include "linalg/diff.h"
 #include "linalg/square_norm.h"
 #include "misc_types.h"
-#include "struct_accessors.h"
-// for the normalisation of the heavy doublet when running
-// RHMC
 #include "operator/Hopping_Matrix.h"
 #include "operator/clover_leaf.h"
 #include "operator/clovertm_operators.h"
 #include "operator_types.h"
+#include "struct_accessors.h"
+
+// for the normalisation of the heavy doublet when running
+// RHMC
 #include "phmc.h"
+
 #include "solver/matrix_mult_typedef.h"
 #include "solver/solver.h"
 #include "solver/solver_field.h"
@@ -1132,7 +1134,7 @@ void pack_nd_clover(
 ////   reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Even_in),
 ////                              qphix_in[cb_even], cb_even);
 ////   reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Odd_in),
-///qphix_in[cb_odd], /                              cb_odd);
+/// qphix_in[cb_odd], /                              cb_odd);
 //  reorder_eo_spinor_to_QPhiX(geom, Even_in,
 //                             qphix_in[cb_even], cb_even);
 //  reorder_eo_spinor_to_QPhiX(geom, Odd_in, qphix_in[cb_odd],
