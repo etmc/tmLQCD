@@ -43,9 +43,11 @@ int read_message(READER * reader, char **buffer) {
     return(-1);
   }
 
+#ifdef TM_USE_MPI
   status = ReaderReadData(*buffer, (MPI_Offset *)&bytesRead, reader);
-#if TM_USE_MPI
   MPI_Barrier(g_cart_grid);
+#else
+  status = limeReaderReadData(*buffer, &bytesRead, reader);
 #endif
 
   if (status != LIME_SUCCESS || bytes != bytesRead)
