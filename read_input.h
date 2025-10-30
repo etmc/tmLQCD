@@ -94,10 +94,6 @@ extern "C"
   extern int reweighting_flag;
   extern int reweighting_samples; 
   extern int no_samples;
-  extern int compute_modenumber;
-  extern int compute_topsus;
-  extern double mstarsq;
-  extern int no_sources_z2;
 
   extern double mixcg_innereps;
   extern int mixcg_maxinnersolverit;

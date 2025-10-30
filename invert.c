@@ -79,10 +79,8 @@
 #include <io/utils.h>
 #include "solver/dirac_operator_eigenvectors.h"
 #include "source_generation.h"
-#include "P_M_eta.h"
 #include "operator/tm_operators.h"
 #include "operator/Dov_psi.h"
-#include "solver/spectral_proj.h"
 #ifdef TM_USE_QUDA
 #  include "quda_interface.h"
 #endif
@@ -105,7 +103,6 @@ int check_geometry();
 static void usage(const tm_ExitCode_t exit_code);
 static void process_args(int argc, char *argv[], char ** input_filename, char ** filename);
 static void set_default_filenames(char ** input_filename, char ** filename);
-static void invert_compute_modenumber();
 
 int main(int argc, char *argv[])
 {
@@ -363,11 +360,6 @@ int main(int argc, char *argv[])
       return(0);
     }
 
-    /* Compute the mode number or topological susceptibility using spectral projectors, if wanted*/
-    if(compute_modenumber != 0 || compute_topsus !=0){
-      invert_compute_modenumber(); 
-    }
-
     //  set up blocks if Deflation is used 
     if (g_dflgcr_flag) 
       init_blocks(nblocks_t, nblocks_x, nblocks_y, nblocks_z);
@@ -546,33 +538,3 @@ static void set_default_filenames(char ** input_filename, char ** filename) {
     strcpy(*filename,"output");
   } 
 }
-
-static void invert_compute_modenumber() {
-  spinor * s_ = calloc(no_sources_z2*VOLUMEPLUSRAND+1, sizeof(spinor));
-  spinor ** s  = calloc(no_sources_z2, sizeof(spinor*));
-  if(s_ == NULL) { 
-    printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
-  }
-  if(s == NULL) { 
-    printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
-  }
-  for(int i = 0; i < no_sources_z2; i++) {
-    s[i] = (spinor*)(((unsigned long int)(s_)+ALIGN_BASE)&~ALIGN_BASE)+i*VOLUMEPLUSRAND;
-    random_spinor_field_lexic(s[i], reproduce_randomnumber_flag,RN_Z2);
-	
-    if(g_proc_id == 0) {
-      printf("source %d \n", i);
-    }
-	
-    if(compute_modenumber != 0){
-      mode_number(s[i], mstarsq);
-    }
-	  
-    if(compute_topsus !=0) {
-      top_sus(s[i], mstarsq);
-    }
-  }
-  free(s);
-  free(s_);
-}
-
