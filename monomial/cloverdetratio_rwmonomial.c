@@ -54,8 +54,11 @@ double cloverdetratio_rwacc(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   tm_stopwatch_push(&g_timers, __func__, mnl->name);
   int save_sloppy = g_sloppy_precision_flag;
+  double c_sw_tmp;
   double kappa_tmp;
 
+  c_sw_tmp = g_c_sw;
+  g_c_sw = mnl->c_sw;
   kappa_tmp=g_kappa;
   
   g_kappa=mnl->kappa2;
@@ -74,6 +77,7 @@ double cloverdetratio_rwacc(const int id, hamiltonian_field_t * const hf) {
   boundary(mnl->kappa);
   sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
   sw_invert(EE, mnl->mu);
+
 
   chrono_guess(mnl->w_fields[0], mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array, 
 	       mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_plus_psi);
@@ -97,6 +101,7 @@ double cloverdetratio_rwacc(const int id, hamiltonian_field_t * const hf) {
   mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
   tm_stopwatch_pop(&g_timers, 0, 1, "");
 
+  g_c_sw = c_sw_tmp;
   g_kappa=kappa_tmp;
   g_mu = g_mu1;
   g_mu3 = 0.;
