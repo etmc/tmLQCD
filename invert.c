@@ -55,7 +55,6 @@
 #include <io/params.h>
 #include <io/spinor.h>
 #include <io/utils.h>
-#include "P_M_eta.h"
 #include "block.h"
 #include "boundary.h"
 #include "init/init.h"
