@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
@@ -32,23 +32,22 @@
  *******************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include <tmlqcd_config.h>
 #endif
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #ifdef TM_USE_OMP
-# include <omp.h>
+#include <omp.h>
 #endif
+#include "geometry_eo.h"
 #include "global.h"
+#include "measure_rectangles.h"
 #include "sse.h"
 #include "su3.h"
 #include "su3adj.h"
-#include "geometry_eo.h"
-#include "measure_rectangles.h"
 
-
-double measure_rectangles(const su3 ** const gf) {
+double measure_rectangles(const su3 **const gf) {
   static double res;
 #ifdef TM_USE_MPI
   double ALIGN mres;
@@ -57,78 +56,77 @@ double measure_rectangles(const su3 ** const gf) {
 #ifdef TM_USE_OMP
 #pragma omp parallel
   {
-  int thread_num = omp_get_thread_num();
+    int thread_num = omp_get_thread_num();
 #endif
 
-  int i, j, k, mu, nu;
-  su3 ALIGN pr1, pr2, tmp; 
-  const su3 *v = NULL , *w = NULL;
-  double ALIGN ac, ks, kc, tr, ts, tt;
+    int i, j, k, mu, nu;
+    su3 ALIGN pr1, pr2, tmp;
+    const su3 *v = NULL, *w = NULL;
+    double ALIGN ac, ks, kc, tr, ts, tt;
 
-  kc = 0.0;
-  ks = 0.0;
+    kc = 0.0;
+    ks = 0.0;
 #ifdef TM_USE_OMP
 #pragma omp for
 #endif
-  for (i = 0; i < VOLUME; i++) {
-    for (mu = 0; mu < 4; mu++) {
-      for (nu = 0; nu < 4; nu++) { 
-	if(nu != mu) {
-	  /*
-	    ^
-	    |
-	    ^
-	    |
-	    ->
-	  */
-	  j = g_iup[i][mu];
-	  k = g_iup[j][nu];
-	  v = &gf[i][mu];
-	  w = &gf[j][nu];
-	  _su3_times_su3(tmp, *v, *w);
-	  v = &gf[k][nu];
-	  _su3_times_su3(pr1, tmp, *v);
-	  /*
-	    ->
-	    ^
-	    |
-	    ^
-	    |
-	  */
-	  j = g_iup[i][nu];
-	  k = g_iup[j][nu];
-	  v = &gf[i][nu];
-	  w = &gf[j][nu];
-	  _su3_times_su3(tmp, *v, *w);
-	  v = &gf[k][mu];
-	  _su3_times_su3(pr2, tmp, *v);
-	  
-	  /* Trace it */
-	  _trace_su3_times_su3d(ac,pr1,pr2);
-	  /* 	  printf("i mu nu: %d %d %d, ac = %e\n", i, mu, nu, ac); */
-	  /* Kahan summation */
-	  tr=ac+kc;
-	  ts=tr+ks;
-	  tt=ts-ks;
-	  ks=ts;
-	  kc=tr-tt;
-	}
+    for (i = 0; i < VOLUME; i++) {
+      for (mu = 0; mu < 4; mu++) {
+        for (nu = 0; nu < 4; nu++) {
+          if (nu != mu) {
+            /*
+              ^
+              |
+              ^
+              |
+              ->
+            */
+            j = g_iup[i][mu];
+            k = g_iup[j][nu];
+            v = &gf[i][mu];
+            w = &gf[j][nu];
+            _su3_times_su3(tmp, *v, *w);
+            v = &gf[k][nu];
+            _su3_times_su3(pr1, tmp, *v);
+            /*
+              ->
+              ^
+              |
+              ^
+              |
+            */
+            j = g_iup[i][nu];
+            k = g_iup[j][nu];
+            v = &gf[i][nu];
+            w = &gf[j][nu];
+            _su3_times_su3(tmp, *v, *w);
+            v = &gf[k][mu];
+            _su3_times_su3(pr2, tmp, *v);
+
+            /* Trace it */
+            _trace_su3_times_su3d(ac, pr1, pr2);
+            /* 	  printf("i mu nu: %d %d %d, ac = %e\n", i, mu, nu, ac); */
+            /* Kahan summation */
+            tr = ac + kc;
+            ts = tr + ks;
+            tt = ts - ks;
+            ks = ts;
+            kc = tr - tt;
+          }
+        }
       }
     }
-  }
-  kc=(kc+ks)/3.0;
+    kc = (kc + ks) / 3.0;
 #ifdef TM_USE_OMP
-  g_omp_acc_re[thread_num] = kc;
+    g_omp_acc_re[thread_num] = kc;
 #else
   res = kc;
 #endif
 
 #ifdef TM_USE_OMP
   } /* OpenMP parallel closing brace */
-  
+
   res = 0.0;
-  for(int i = 0; i < omp_num_threads; ++i)
-    res += g_omp_acc_re[i];
+  for (int i = 0; i < omp_num_threads; ++i) res += g_omp_acc_re[i];
 #else
 #endif
 #ifdef TM_USE_MPI

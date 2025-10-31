@@ -7,21 +7,21 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 #ifndef _INTEGRATOR_H
 #define _INTEGRATOR_H
 
+#include <hamiltonian_field.h>
 #include <su3.h>
 #include <su3adj.h>
-#include <hamiltonian_field.h>
 
 #define LEAPFROG 1
 #define SEXTON 2
@@ -64,7 +64,7 @@ extern integrator Integrator;
 /* function to initialise the integrator, to be called once at the beginning */
 int init_integrator();
 /* function to set the gauge and momenta fields for the integration */
-void integrator_set_fields(hamiltonian_field_t * hf);
+void integrator_set_fields(hamiltonian_field_t* hf);
 /* and unsets again (to NULL pointer ) */
 void integrator_unset_fields();
 

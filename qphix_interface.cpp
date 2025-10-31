@@ -39,25 +39,26 @@ extern "C" {
 #include "geometry_eo.h"
 #include "gettime.h"
 #include "global.h"
-#include "struct_accessors.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "linalg/diff.h"
 #include "linalg/square_norm.h"
-#include "linalg/square_norm.h"
 #include "misc_types.h"
-// for the normalisation of the heavy doublet when running
-// RHMC
-#include "phmc.h"
-#include "start.h"
+#include "operator/Hopping_Matrix.h"
 #include "operator/clover_leaf.h"
 #include "operator/clovertm_operators.h"
 #include "operator_types.h"
-#include "operator/Hopping_Matrix.h"
+#include "struct_accessors.h"
+
+// for the normalisation of the heavy doublet when running
+// RHMC
+#include "phmc.h"
+
 #include "solver/matrix_mult_typedef.h"
-#include "solver/solver_types.h"
 #include "solver/solver.h"
 #include "solver/solver_field.h"
 #include "solver/solver_params.h"
+#include "solver/solver_types.h"
+#include "start.h"
 #include "xchange/xchange_gauge.h"
 }
 #ifdef TM_USE_OMP
@@ -65,10 +66,10 @@ extern "C" {
 #endif
 #include <qphix/blas_new_c.h>
 #include <qphix/clover.h>
+#include <qphix/inv_dummy_hermtest.h>
+#include <qphix/inv_richardson_multiprec.h>
 #include <qphix/invbicgstab.h>
 #include <qphix/invcg.h>
-#include <qphix/inv_richardson_multiprec.h>
-#include <qphix/inv_dummy_hermtest.h>
 #include <qphix/minvcg.h>
 #include <qphix/ndtm_reuse_operator.h>
 #include <qphix/ndtm_reuse_operator_clover.h>
@@ -78,10 +79,10 @@ extern "C" {
 #include <qphix/twisted_mass_clover.h>
 #include <qphix/wilson.h>
 #include <cfloat>
+#include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <vector>
-#include <cmath>
 
 using namespace tmlqcd;
 
@@ -99,7 +100,6 @@ int N_simt;
 bool compress12;
 QphixPrec_t qphix_precision;
 QphixPrec_t qphix_inner_precision;
-
 
 int subLattSize[4];
 int lattSize[4];
@@ -127,8 +127,8 @@ const double rsdTarget<QPhiX::half>::value = 1.0e-3;
 template <>
 const double rsdTarget<float>::value = 1.0e-8;
 
-
-void _initQphix(int argc, char **argv, tm_QPhiXParams_t params, int c12, QphixPrec_t precision_, QphixPrec_t inner_precision_) {
+void _initQphix(int argc, char **argv, tm_QPhiXParams_t params, int c12, QphixPrec_t precision_,
+                QphixPrec_t inner_precision_) {
   static bool qmp_topo_initialised = false;
 
   // Global Lattice Size
@@ -149,20 +149,20 @@ void _initQphix(int argc, char **argv, tm_QPhiXParams_t params, int c12, QphixPr
     double dim_phase[2] = {1.0, 0.0};
     if (dim == 0) {
       dim_tbc = (fabs(X1) > DBL_EPSILON);
-      dim_phase[0] = -((double*)(&phase_1))[0] / g_kappa;
-      dim_phase[1] = -((double*)(&phase_1))[1] / g_kappa;
+      dim_phase[0] = -((double *)(&phase_1))[0] / g_kappa;
+      dim_phase[1] = -((double *)(&phase_1))[1] / g_kappa;
     } else if (dim == 1) {
       dim_tbc = (fabs(X2) > DBL_EPSILON);
-      dim_phase[0] = -((double*)(&phase_2))[0] / g_kappa;
-      dim_phase[1] = -((double*)(&phase_2))[1] / g_kappa;
+      dim_phase[0] = -((double *)(&phase_2))[0] / g_kappa;
+      dim_phase[1] = -((double *)(&phase_2))[1] / g_kappa;
     } else if (dim == 2) {
       dim_tbc = (fabs(X3) > DBL_EPSILON);
-      dim_phase[0] = -((double*)(&phase_3))[0] / g_kappa;
-      dim_phase[1] = -((double*)(&phase_3))[1] / g_kappa;
+      dim_phase[0] = -((double *)(&phase_3))[0] / g_kappa;
+      dim_phase[1] = -((double *)(&phase_3))[1] / g_kappa;
     } else if (dim == 3) {
       dim_tbc = (fabs(X0) > DBL_EPSILON);
-      dim_phase[0] = -((double*)(&phase_0))[0] / g_kappa;
-      dim_phase[1] = -((double*)(&phase_0))[1] / g_kappa;
+      dim_phase[0] = -((double *)(&phase_0))[0] / g_kappa;
+      dim_phase[1] = -((double *)(&phase_0))[1] / g_kappa;
     }
     use_tbc[dim] = dim_tbc;
     tbc_phases[dim][0] = dim_phase[0];
@@ -242,7 +242,7 @@ void _initQphix(int argc, char **argv, tm_QPhiXParams_t params, int c12, QphixPr
 #endif
 }
 
-void _initQphix(int argc, char **argv, tm_QPhiXParams_t params, int c12, QphixPrec_t precision_){
+void _initQphix(int argc, char **argv, tm_QPhiXParams_t params, int c12, QphixPrec_t precision_) {
   _initQphix(argc, argv, params, c12, precision_, precision_);
 }
 
@@ -305,12 +305,12 @@ void reorder_clover_to_QPhiX(
    *                               sw_inv[3][1] sw_inv[2][1]
    *
    * where blocks sw_inv[3][0] and sw_inv[3][1] are relevant only when mu > 0
-   * 
-   * There is a special case for the non-degenerate twisted clover operator. The flavour-off-diagonal
-   * components of the inverse clover term do not have an imaginary part on the spin-colour diagonal.
-   * They can thus be stored as CloverBlock, which is done in the QPhiX implementation
-   * of the ND tmclover operator.
-   * 
+   *
+   * There is a special case for the non-degenerate twisted clover operator. The
+   * flavour-off-diagonal components of the inverse clover term do not have an imaginary part on the
+   * spin-colour diagonal. They can thus be stored as CloverBlock, which is done in the QPhiX
+   * implementation of the ND tmclover operator.
+   *
    * As a hack, this inverse is prepared by sw_invert_epsbar and placed in to the last
    * VOLUME/2 sites of sw_inv. Reading from there is triggered by the boolean
    * fl_offdiag.
@@ -334,31 +334,31 @@ void reorder_clover_to_QPhiX(
 
   // packer for Wilson clover (real diagonal + complex upper-triangular)
   /* for the index in the off_diagN arrays, we map to an index in the su3 struct
-  * keeping in mind complex conjugation
-  * The off-diagonal in QPhiX is stored as follows:
-  *
-  * 0 1 3 6 10
-  *   2 4 7 11
-  *     5 8 12
-  *       9 13
-  *         14
-  *
-  * which we are going to map to su3 in blocks
-  *
-  *     0* 1*
-  *        2*
-  *
-  * 3   4  5
-  * 6   7  8
-  * 10 11 12
-  *
-  *   9* 13*
-  *      14*
-  *
-  * where the asterisk indicates complex conjugation. As a linear array then,
-  * these mappings are:
-  *
-  */
+   * keeping in mind complex conjugation
+   * The off-diagonal in QPhiX is stored as follows:
+   *
+   * 0 1 3 6 10
+   *   2 4 7 11
+   *     5 8 12
+   *       9 13
+   *         14
+   *
+   * which we are going to map to su3 in blocks
+   *
+   *     0* 1*
+   *        2*
+   *
+   * 3   4  5
+   * 6   7  8
+   * 10 11 12
+   *
+   *   9* 13*
+   *      14*
+   *
+   * where the asterisk indicates complex conjugation. As a linear array then,
+   * these mappings are:
+   *
+   */
   const int od_su3_offsets[15] = {Nz,
                                   2 * Nz,            //     0 1
                                   Nc * Nz + 2 * Nz,  //       2
@@ -393,11 +393,11 @@ void reorder_clover_to_QPhiX(
 
             // the inverse of the clover term is in even-odd ordering
             // while the clover term itself is lexicographically ordered
-            // for the special case of the nd tmclover operator, the inverse of the flavour off-diagonal
-            // components is stored in the last VOLUME/2 elements of sw_inv
+            // for the special case of the nd tmclover operator, the inverse of the flavour
+            // off-diagonal components is stored in the last VOLUME/2 elements of sw_inv
             int64_t tm_idx =
                 (inverse ? g_lexic2eosub[g_ipt[t][tm_x_coord][y][z]] : g_ipt[t][tm_x_coord][y][z]) +
-                ( (inverse && fl_offdiag) ? VOLUME/2 : 0 );
+                ((inverse && fl_offdiag) ? VOLUME / 2 : 0);
 
             int b_idx;
 
@@ -406,87 +406,71 @@ void reorder_clover_to_QPhiX(
               //               choose the block in sw which corresponds to the block in T'
               b_idx = d < 3 ? 2 : 0;
               //               get the right colour components
-              qphix_clover[block].diag1[d][xx] =
-                QPhiX::rep<FT, double>(
+              qphix_clover[block].diag1[d][xx] = QPhiX::rep<FT, double>(
                   *(reinterpret_cast<double const *const>(&tm_clover[tm_idx][b_idx][1].c00) +
                     (Nc * Nz + Nz) * (d % 3)) *
-                  scale
-                );
+                  scale);
 
-              qphix_clover[block].diag2[d][xx] =
-                QPhiX::rep<FT, double>(
+              qphix_clover[block].diag2[d][xx] = QPhiX::rep<FT, double>(
                   *(reinterpret_cast<double const *const>(&tm_clover[tm_idx][b_idx][0].c00) +
                     (Nc * Nz + Nz) * (d % 3)) *
-                  scale
-                );
+                  scale);
             }
 
             b_idx = 2;  // s33 and s11
             for (int od : {0, 1, 2}) {
               for (int reim : {0, 1}) {
-                qphix_clover[block].off_diag1[od][reim][xx] =
-                  QPhiX::rep<FT, double>(
+                qphix_clover[block].off_diag1[od][reim][xx] = QPhiX::rep<FT, double>(
                     (reim == 1 ? -1.0 : 1.0) *
                     *(reinterpret_cast<double const *const>(&tm_clover[tm_idx][b_idx][1].c00) +
                       od_su3_offsets[od] + reim) *
-                    scale
-                  );
+                    scale);
 
-                qphix_clover[block].off_diag2[od][reim][xx] =
-                  QPhiX::rep<FT, double>( 
+                qphix_clover[block].off_diag2[od][reim][xx] = QPhiX::rep<FT, double>(
                     (reim == 1 ? -1.0 : 1.0) *
                     *(reinterpret_cast<double const *const>(&tm_clover[tm_idx][b_idx][0].c00) +
                       od_su3_offsets[od] + reim) *
-                    scale 
-                  ); 
+                    scale);
               }
             }
 
             b_idx = 1;  // s32 and s10
             for (int od : {3, 4, 5, 6, 7, 8, 10, 11, 12}) {
               for (int reim : {0, 1}) {
-                qphix_clover[block].off_diag1[od][reim][xx] = 
-                  QPhiX::rep<FT, double>(
+                qphix_clover[block].off_diag1[od][reim][xx] = QPhiX::rep<FT, double>(
                     *(reinterpret_cast<double const *const>(&tm_clover[tm_idx][b_idx][1].c00) +
                       od_su3_offsets[od] + reim) *
-                    (-scale) 
-                  );
+                    (-scale));
 
-                qphix_clover[block].off_diag2[od][reim][xx] =
-                  QPhiX::rep<FT, double>(
+                qphix_clover[block].off_diag2[od][reim][xx] = QPhiX::rep<FT, double>(
                     *(reinterpret_cast<double const *const>(&tm_clover[tm_idx][b_idx][0].c00) +
                       od_su3_offsets[od] + reim) *
-                    (-scale)
-                  );
+                    (-scale));
               }
             }
 
             b_idx = 0;  // s22 and s00
             for (int od : {9, 13, 14}) {
               for (int reim : {0, 1}) {
-                qphix_clover[block].off_diag1[od][reim][xx] =
-                  QPhiX::rep<FT, double>(
+                qphix_clover[block].off_diag1[od][reim][xx] = QPhiX::rep<FT, double>(
                     (reim == 1 ? -1.0 : 1.0) *
                     *(reinterpret_cast<double const *const>(&tm_clover[tm_idx][b_idx][1].c00) +
                       od_su3_offsets[od] + reim) *
-                    scale
-                  );
+                    scale);
 
-                qphix_clover[block].off_diag2[od][reim][xx] =
-                  QPhiX::rep<FT, double>(
+                qphix_clover[block].off_diag2[od][reim][xx] = QPhiX::rep<FT, double>(
                     (reim == 1 ? -1.0 : 1.0) *
                     *(reinterpret_cast<double const *const>(&tm_clover[tm_idx][b_idx][0].c00) +
                       od_su3_offsets[od] + reim) *
-                    scale
-                  );
+                    scale);
               }
             }
 
           }  // x_soa
-        }    // for(v)
-      }      // for(y)
-    }        // for(z)
-  }          // for(t)
+        }  // for(v)
+      }  // for(y)
+    }  // for(z)
+  }  // for(t)
 
   const double diffTime = gettime() - startTime;
   if (g_debug_level > 1) {
@@ -612,8 +596,7 @@ void reorder_clover_to_QPhiX(
                     // there are four blocks also on the tmLQCD side, otherwise there are just three
                     const int t_b_idx = t_s1 + t_s2 + ((inverse && t_s1 == 1 && t_s2 == 0) ? 2 : 0);
                     for (int reim : {0, 1}) {
-                      hs_block[q_sc1][q_sc2][reim][xx] =
-                        QPhiX::rep<FT,double>(
+                      hs_block[q_sc1][q_sc2][reim][xx] = QPhiX::rep<FT, double>(
                           scale *
                               // off-diagonal (odd-numbered) blocks change sign
                               (t_b_idx & 1 ? (-1.0) : 1.0) *
@@ -636,19 +619,18 @@ void reorder_clover_to_QPhiX(
                                : 0) +
                           ((!inverse && q_sc1 == q_sc2 && q_hs == 1 && reim == 1)
                                ? amu * (1 - 2 * fl)
-                               : 0)
-                        );
+                               : 0));
                     }
                   }  // q_sc2
-                }    // q_sc1
-              }      // q_hs
-            }        // fl
+                }  // q_sc1
+              }  // q_hs
+            }  // fl
 
           }  // x_soa
-        }    // for(v)
-      }      // for(y)
-    }        // for(z)
-  }          // for(t)
+        }  // for(v)
+      }  // for(y)
+    }  // for(z)
+  }  // for(t)
 
   const double diffTime = gettime() - startTime;
   if (g_debug_level > 1) {
@@ -733,14 +715,16 @@ void reorder_gauge_to_QPhiX(
                       //    ordering of the dimensions.
                       int q_mu = 2 * dim + dir;
 
-                      qphix_gauge_cb0[block][q_mu][c1][c2][reim][xx] = QPhiX::rep<FT, double>(
-                        su3_get_elem(&(g_gauge_field[tm_idx_cb0][change_dim[dim]]), c2, c1, reim ) );
-                      qphix_gauge_cb1[block][q_mu][c1][c2][reim][xx] = QPhiX::rep<FT, double>(
-                        su3_get_elem(&(g_gauge_field[tm_idx_cb1][change_dim[dim]]), c2, c1, reim ) );
+                      qphix_gauge_cb0[block][q_mu][c1][c2][reim][xx] =
+                          QPhiX::rep<FT, double>(su3_get_elem(
+                              &(g_gauge_field[tm_idx_cb0][change_dim[dim]]), c2, c1, reim));
+                      qphix_gauge_cb1[block][q_mu][c1][c2][reim][xx] =
+                          QPhiX::rep<FT, double>(su3_get_elem(
+                              &(g_gauge_field[tm_idx_cb1][change_dim[dim]]), c2, c1, reim));
                     }
                   }
                 }  // for(dim,c1,c2,x_soa)
-        }          // outer loop (t,z,y,v)
+        }  // outer loop (t,z,y,v)
 
   const double diffTime = gettime() - startTime;
   if (g_debug_level > 1) {
@@ -791,14 +775,9 @@ void reorder_eo_spinor_to_QPhiX(
                 int64_t tm_eo_ind = g_lexic2eosub[g_ipt[t][tm_x_coord][y][z]];
 
                 for (int reim = 0; reim < 2; reim++) {
-                  qphix_spinor[q_ind][col][q_spin][reim][x_soa] =
-                    QPhiX::rep<FT, double>(
-                         change_sign[q_spin] * spinor_get_elem( &(tm_eo_spinor[tm_eo_ind]), 
-                                                                change_spin[q_spin],
-                                                                col,
-                                                                reim
-                                                              )
-                    );
+                  qphix_spinor[q_ind][col][q_spin][reim][x_soa] = QPhiX::rep<FT, double>(
+                      change_sign[q_spin] *
+                      spinor_get_elem(&(tm_eo_spinor[tm_eo_ind]), change_spin[q_spin], col, reim));
                 }
               }
             }
@@ -816,7 +795,7 @@ void reorder_eo_spinor_to_QPhiX(
 
 template <typename FT, int VECLEN, int SOALEN, bool compress12>
 void reorder_eo_spinor_from_QPhiX(
-    QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom, spinor* tm_eo_spinor,
+    QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &geom, spinor *tm_eo_spinor,
     typename QPhiX::Geometry<FT, VECLEN, SOALEN, compress12>::FourSpinorBlock *qphix_spinor,
     const int cb, double normFac = 1.0) {
   const double startTime = gettime();
@@ -854,16 +833,12 @@ void reorder_eo_spinor_from_QPhiX(
                 // exchange x and z dimensions
                 int64_t tm_eo_ind = g_lexic2eosub[g_ipt[t][tm_x_coord][y][z]];
 
-                spinor_set_elem( &(tm_eo_spinor[tm_eo_ind]),
-                                 change_spin[q_spin],
-                                 col,
-                                 change_sign[q_spin] * normFac * QPhiX::rep<double, FT>(
-                                  qphix_spinor[q_ind][col][q_spin][0][x_soa]
-                                 ),
-                                 change_sign[q_spin] * normFac * QPhiX::rep<double, FT>(
-                                  qphix_spinor[q_ind][col][q_spin][1][x_soa]
-                                 )
-                               );
+                spinor_set_elem(
+                    &(tm_eo_spinor[tm_eo_ind]), change_spin[q_spin], col,
+                    change_sign[q_spin] * normFac *
+                        QPhiX::rep<double, FT>(qphix_spinor[q_ind][col][q_spin][0][x_soa]),
+                    change_sign[q_spin] * normFac *
+                        QPhiX::rep<double, FT>(qphix_spinor[q_ind][col][q_spin][1][x_soa]));
               }
             }
           }
@@ -935,7 +910,7 @@ void reorder_spinor_to_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &ge
                     x_internal + z * SOALEN + spin * SOALEN * Nz + color * SOALEN * Nz * Ns;
                 const uint64_t tId = z + color * Nz + change_spin[spin] * Nz * Nc;
 
-                out[qId] = QPhiX::rep<FT, double>( change_sign[spin] * in[tId] ); 
+                out[qId] = QPhiX::rep<FT, double>(change_sign[spin] * in[tId]);
               }
 
         }  // volume
@@ -1005,7 +980,7 @@ void reorder_spinor_from_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &
                                      color * SOALEN * Nz * Ns;
                 const uint64_t tId = z + color * Nz + spin * Nz * Nc;
 
-                out[tId] = QPhiX::rep<double, FT>( normFac * change_sign[spin] * in[qId] );
+                out[tId] = QPhiX::rep<double, FT>(normFac * change_sign[spin] * in[qId]);
               }
 
         }  // volume
@@ -1017,48 +992,52 @@ void reorder_spinor_from_QPhiX(QPhiX::Geometry<FT, VECLEN, SOALEN, compress12> &
   }
 }
 
-template <typename FT, int V, int S, bool compress12,
-          typename FT_inner, int V_inner, int S_inner, bool compress12_inner>
-void pack_nd_clover(QPhiX::Geometry<FT, V, S, compress12> &geom,
-                   QPhiX::Geometry<FT_inner, V_inner, S_inner, compress12_inner> &geom_inner,
-                   typename QPhiX::Geometry<FT, V, S, compress12>::FullCloverBlock *full_invclov[2],
-                   typename QPhiX::Geometry<FT, V, S, compress12>::CloverBlock *invclov_odiag,
-                   typename QPhiX::Geometry<FT, V, S, compress12>::CloverBlock *clov,
-                   typename QPhiX::Geometry<FT_inner, V_inner, S_inner, compress12_inner>::FullCloverBlock *full_invclov_inner[2],
-                   typename QPhiX::Geometry<FT_inner, V_inner, S_inner, compress12_inner>::CloverBlock *invclov_odiag_inner,
-                   typename QPhiX::Geometry<FT_inner, V_inner, S_inner, compress12_inner>::CloverBlock *clov_inner,
-                   const int cb,
-                   bool pack_inner){
-  
+template <typename FT, int V, int S, bool compress12, typename FT_inner, int V_inner, int S_inner,
+          bool compress12_inner>
+void pack_nd_clover(
+    QPhiX::Geometry<FT, V, S, compress12> &geom,
+    QPhiX::Geometry<FT_inner, V_inner, S_inner, compress12_inner> &geom_inner,
+    typename QPhiX::Geometry<FT, V, S, compress12>::FullCloverBlock *full_invclov[2],
+    typename QPhiX::Geometry<FT, V, S, compress12>::CloverBlock *invclov_odiag,
+    typename QPhiX::Geometry<FT, V, S, compress12>::CloverBlock *clov,
+    typename QPhiX::Geometry<FT_inner, V_inner, S_inner, compress12_inner>::FullCloverBlock
+        *full_invclov_inner[2],
+    typename QPhiX::Geometry<FT_inner, V_inner, S_inner, compress12_inner>::CloverBlock
+        *invclov_odiag_inner,
+    typename QPhiX::Geometry<FT_inner, V_inner, S_inner, compress12_inner>::CloverBlock *clov_inner,
+    const int cb, bool pack_inner) {
   typedef typename QPhiX::Geometry<FT, V, S, compress12>::CloverBlock QClover;
   typedef typename QPhiX::Geometry<FT, V, S, compress12>::FullCloverBlock QFullClover;
-  typedef typename QPhiX::Geometry<FT_inner, V_inner, S_inner, compress12_inner>::CloverBlock QClover_inner;
-  typedef typename QPhiX::Geometry<FT_inner, V_inner, S_inner, compress12_inner>::FullCloverBlock QFullClover_inner;
+  typedef typename QPhiX::Geometry<FT_inner, V_inner, S_inner, compress12_inner>::CloverBlock
+      QClover_inner;
+  typedef typename QPhiX::Geometry<FT_inner, V_inner, S_inner, compress12_inner>::FullCloverBlock
+      QFullClover_inner;
 
-  double start = gettime(); 
+  double start = gettime();
   reorder_clover_to_QPhiX(geom, clov, cb, false);
-  if(pack_inner){
+  if (pack_inner) {
     reorder_clover_to_QPhiX(geom_inner, clov_inner, cb, false);
   }
-  
+
   sw_invert_epsbar(g_epsbar);
-  reorder_clover_to_QPhiX(geom, invclov_odiag, 1-cb, true, true);
-  if(pack_inner){
-    reorder_clover_to_QPhiX(geom_inner, invclov_odiag_inner, 1-cb, true, true);
+  reorder_clover_to_QPhiX(geom, invclov_odiag, 1 - cb, true, true);
+  if (pack_inner) {
+    reorder_clover_to_QPhiX(geom_inner, invclov_odiag_inner, 1 - cb, true, true);
   }
 
-  // no minus sign here, the difference in the sign of gamma5 
+  // no minus sign here, the difference in the sign of gamma5
   // is taken care of internally
   sw_invert_mubar(g_mubar);
-  reorder_clover_to_QPhiX(geom, full_invclov, 1-cb, true);
-  if(pack_inner){
-    reorder_clover_to_QPhiX(geom_inner, full_invclov_inner, 1-cb, true);
+  reorder_clover_to_QPhiX(geom, full_invclov, 1 - cb, true);
+  if (pack_inner) {
+    reorder_clover_to_QPhiX(geom_inner, full_invclov_inner, 1 - cb, true);
   }
 
-  sw_invert_nd(g_mubar*g_mubar-g_epsbar*g_epsbar);
-  
-  if(g_debug_level > 1){
-    QPhiX::masterPrintf("# QPHIX-inteface: ND TMClover clover-field packing took %.4lf seconds\n", gettime()-start);
+  sw_invert_nd(g_mubar * g_mubar - g_epsbar * g_epsbar);
+
+  if (g_debug_level > 1) {
+    QPhiX::masterPrintf("# QPHIX-inteface: ND TMClover clover-field packing took %.4lf seconds\n",
+                        gettime() - start);
   }
 }
 
@@ -1068,8 +1047,8 @@ void pack_nd_clover(QPhiX::Geometry<FT, V, S, compress12> &geom,
 // rather than the base classes in qphix_base_classes.hpp
 
 // Apply the full QPhiX fermion matrix to checkerboarded tm spinors
-//template <typename FT, int V, int S, bool compress>
-//void Mfull_helper(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, const spinor *Odd_in,
+// template <typename FT, int V, int S, bool compress>
+// void Mfull_helper(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, const spinor *Odd_in,
 //                  const op_type_t op_type) {
 //  // TODO: this should use handles for gauge and spinors because these are definitely temporary
 //  // objects
@@ -1154,8 +1133,8 @@ void pack_nd_clover(QPhiX::Geometry<FT, V, S, compress12> &geom,
 //
 ////   reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Even_in),
 ////                              qphix_in[cb_even], cb_even);
-////   reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Odd_in), qphix_in[cb_odd],
-////                              cb_odd);
+////   reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Odd_in),
+/// qphix_in[cb_odd], /                              cb_odd);
 //  reorder_eo_spinor_to_QPhiX(geom, Even_in,
 //                             qphix_in[cb_even], cb_even);
 //  reorder_eo_spinor_to_QPhiX(geom, Odd_in, qphix_in[cb_odd],
@@ -1190,10 +1169,10 @@ void pack_nd_clover(QPhiX::Geometry<FT, V, S, compress12> &geom,
 //}
 
 // Templated even-odd preconditioned solver using QPhiX Library
-template <typename FT, int V, int S, bool compress, 
-          typename FT_inner = FT, int V_inner = V, int S_inner = S, bool compress_inner = compress>
-int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_out, 
-                           std::vector< std::vector < spinor* > > &tmlqcd_odd_in,
+template <typename FT, int V, int S, bool compress, typename FT_inner = FT, int V_inner = V,
+          int S_inner = S, bool compress_inner = compress>
+int invert_eo_qphix_helper(std::vector<std::vector<spinor *> > &tmlqcd_odd_out,
+                           std::vector<std::vector<spinor *> > &tmlqcd_odd_in,
                            const double target_precision, const int max_iter, const int solver_flag,
                            solver_params_t solver_params, const int num_flavour) {
   // TODO: it would perhaps be beneficial to keep the fields resident
@@ -1203,17 +1182,22 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
   typedef typename QPhiX::Geometry<FT, V, S, compress>::CloverBlock QClover;
   typedef typename QPhiX::Geometry<FT, V, S, compress>::FullCloverBlock QFullClover;
 
-  typedef typename QPhiX::Geometry<FT_inner, V_inner, S_inner, compress_inner>::SU3MatrixBlock QGauge_inner;
-  typedef typename QPhiX::Geometry<FT_inner, V_inner, S_inner, compress_inner>::FourSpinorBlock QSpinor_inner;
-  typedef typename QPhiX::FourSpinorHandle<FT_inner, V_inner, S_inner, compress_inner> QSpinorHandle_inner;
-  typedef typename QPhiX::Geometry<FT_inner, V_inner, S_inner, compress_inner>::CloverBlock QClover_inner;
-  typedef typename QPhiX::Geometry<FT_inner, V_inner, S_inner, compress_inner>::FullCloverBlock QFullClover_inner;
+  typedef typename QPhiX::Geometry<FT_inner, V_inner, S_inner, compress_inner>::SU3MatrixBlock
+      QGauge_inner;
+  typedef typename QPhiX::Geometry<FT_inner, V_inner, S_inner, compress_inner>::FourSpinorBlock
+      QSpinor_inner;
+  typedef typename QPhiX::FourSpinorHandle<FT_inner, V_inner, S_inner, compress_inner>
+      QSpinorHandle_inner;
+  typedef typename QPhiX::Geometry<FT_inner, V_inner, S_inner, compress_inner>::CloverBlock
+      QClover_inner;
+  typedef typename QPhiX::Geometry<FT_inner, V_inner, S_inner, compress_inner>::FullCloverBlock
+      QFullClover_inner;
 
   /************************
    *                      *
    *    SETUP GEOMETRY    *
    *                      *
-  ************************/
+   ************************/
 
   if (g_debug_level > 1) {
     tmlqcd::printQphixDiagnostics(V, S, compress, V_inner, S_inner, compress_inner);
@@ -1249,16 +1233,19 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
   uint64_t site_flops2 = 0;
   uint64_t mv_apps = 0;
   uint64_t mv_apps2 = 0;
-  
+
   double start_time;
   double end_time;
-  
+
   // support for multi-shift solves via the length of the output vector,
   // which counts the shifts on the outer index and the flavour on the inner index
   const int num_shifts = tmlqcd_odd_out.size();
-  std::vector < double > shifts; shifts.resize( num_shifts );
-  std::vector <double> RsdTargetArr; RsdTargetArr.resize(num_shifts);
-  std::vector <double> RsdFinalArr; RsdFinalArr.resize(num_shifts);
+  std::vector<double> shifts;
+  shifts.resize(num_shifts);
+  std::vector<double> RsdTargetArr;
+  RsdTargetArr.resize(num_shifts);
+  std::vector<double> RsdFinalArr;
+  RsdFinalArr.resize(num_shifts);
 
   double rescale = 0.5 / g_kappa;
   // the inverse of M M^dag, as required for the HMC, comes with a factor of alpha^2
@@ -1275,10 +1262,10 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
   }
   // Reorder (global) input gauge field from tmLQCD to QPhiX
   reorder_gauge_to_QPhiX(geom, u_packed[cb_even], u_packed[cb_odd]);
-  
+
   // for mixed solvers, we also need the gauge field in the inner precision
-  if( solver_is_mixed(solver_flag) ){
-    for(int cb : {0, 1}) {
+  if (solver_is_mixed(solver_flag)) {
+    for (int cb : {0, 1}) {
       u_packed_inner[cb] = (QGauge_inner *)geom_inner.allocCBGauge();
     }
     reorder_gauge_to_QPhiX(geom_inner, u_packed_inner[cb_even], u_packed_inner[cb_odd]);
@@ -1286,24 +1273,26 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
 
   if (num_flavour == 1) {
     constexpr int nf = 1;
-    std::vector < QSpinor* > qphix_in; qphix_in.resize( 1 );
-    std::vector < QSpinor* > qphix_out; qphix_out.resize( num_shifts );
+    std::vector<QSpinor *> qphix_in;
+    qphix_in.resize(1);
+    std::vector<QSpinor *> qphix_out;
+    qphix_out.resize(num_shifts);
     QSpinor *qphix_buffer;
 
     QClover *qphix_clover = nullptr;
     QClover *qphix_inv_clover = nullptr;
-    
+
     QClover_inner *qphix_clover_inner = nullptr;
     QClover_inner *qphix_inv_clover_inner = nullptr;
 
     QFullClover *qphix_inv_fullclover[2] = {nullptr, nullptr};
-    
+
     QFullClover_inner *qphix_inv_fullclover_inner[2] = {nullptr, nullptr};
 
     q_spinor_handles.push_back(makeFourSpinorHandle(geom));
     qphix_in[0] = q_spinor_handles.back().get();
 
-    for( int shift = 0; shift < num_shifts; shift++ ) {
+    for (int shift = 0; shift < num_shifts; shift++) {
       q_spinor_handles.push_back(makeFourSpinorHandle(geom));
       qphix_out[shift] = q_spinor_handles.back().get();
     }
@@ -1312,40 +1301,44 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     qphix_buffer = q_spinor_handles.back().get();
 
     QPhiX::EvenOddLinearOperator<FT, V, S, compress> *FermionMatrixQPhiX = nullptr;
-    QPhiX::EvenOddLinearOperator<FT_inner, V_inner, S_inner, compress_inner> *InnerFermionMatrixQPhiX = nullptr;
-    if ( ( fabs(g_mu) > DBL_EPSILON ) && g_c_sw > DBL_EPSILON) {  // TWISTED-MASS-CLOVER
+    QPhiX::EvenOddLinearOperator<FT_inner, V_inner, S_inner, compress_inner>
+        *InnerFermionMatrixQPhiX = nullptr;
+    if ((fabs(g_mu) > DBL_EPSILON) && g_c_sw > DBL_EPSILON) {  // TWISTED-MASS-CLOVER
       qphix_clover = (QClover *)geom.allocCBClov();
       for (int fl : {0, 1}) {
-        qphix_inv_fullclover[fl] = (QFullClover *)geom.allocCBFullClov(); 
+        qphix_inv_fullclover[fl] = (QFullClover *)geom.allocCBFullClov();
       }
       reorder_clover_to_QPhiX(geom, qphix_clover, cb_odd, false);
       reorder_clover_to_QPhiX(geom, qphix_inv_fullclover, cb_even, true);
-      
+
       QPhiX::masterPrintf("# Creating QPhiX Twisted Clover Fermion Matrix...\n");
       FermionMatrixQPhiX = new QPhiX::EvenOddTMCloverOperator<FT, V, S, compress>(
           u_packed, qphix_clover, qphix_inv_fullclover, &geom, t_boundary, coeff_s, coeff_t,
-          use_tbc, tbc_phases, -0.5*(g_mu3+g_mu)/g_kappa);
-      if( solver_is_mixed(solver_flag) ){
+          use_tbc, tbc_phases, -0.5 * (g_mu3 + g_mu) / g_kappa);
+      if (solver_is_mixed(solver_flag)) {
         qphix_clover_inner = (QClover_inner *)geom_inner.allocCBClov();
-        for( int fl : {0, 1} ){
+        for (int fl : {0, 1}) {
           qphix_inv_fullclover_inner[fl] = (QFullClover_inner *)geom_inner.allocCBFullClov();
         }
-        reorder_clover_to_QPhiX(geom_inner, qphix_clover_inner, cb_odd, false);        
+        reorder_clover_to_QPhiX(geom_inner, qphix_clover_inner, cb_odd, false);
         reorder_clover_to_QPhiX(geom_inner, qphix_inv_fullclover_inner, cb_even, true);
-        InnerFermionMatrixQPhiX = new QPhiX::EvenOddTMCloverOperator<FT_inner, V_inner, S_inner, compress_inner>(
-          u_packed_inner, qphix_clover_inner, qphix_inv_fullclover_inner, &geom_inner, t_boundary, coeff_s, coeff_t,
-          use_tbc, tbc_phases, -0.5*(g_mu3+g_mu)/g_kappa);
+        InnerFermionMatrixQPhiX =
+            new QPhiX::EvenOddTMCloverOperator<FT_inner, V_inner, S_inner, compress_inner>(
+                u_packed_inner, qphix_clover_inner, qphix_inv_fullclover_inner, &geom_inner,
+                t_boundary, coeff_s, coeff_t, use_tbc, tbc_phases, -0.5 * (g_mu3 + g_mu) / g_kappa);
       }
       QPhiX::masterPrintf("# ...done.\n");
-    } else if ( fabs(g_mu) > DBL_EPSILON ) {  // TWISTED-MASS
+    } else if (fabs(g_mu) > DBL_EPSILON) {  // TWISTED-MASS
       const double TwistedMass = -g_mu / (2.0 * g_kappa);
       QPhiX::masterPrintf("# Creating QPhiX Twisted Mass Wilson Fermion Matrix...\n");
       FermionMatrixQPhiX = new QPhiX::EvenOddTMWilsonOperator<FT, V, S, compress>(
           mass, TwistedMass, u_packed, &geom, t_boundary, coeff_s, coeff_t, use_tbc, tbc_phases);
       QPhiX::masterPrintf("# ...done.\n");
-      if( solver_is_mixed(solver_flag) ){
-        InnerFermionMatrixQPhiX = new QPhiX::EvenOddTMWilsonOperator<FT_inner, V_inner, S_inner, compress_inner>(
-            mass, TwistedMass, u_packed_inner, &geom_inner, t_boundary, coeff_s, coeff_t, use_tbc, tbc_phases);
+      if (solver_is_mixed(solver_flag)) {
+        InnerFermionMatrixQPhiX =
+            new QPhiX::EvenOddTMWilsonOperator<FT_inner, V_inner, S_inner, compress_inner>(
+                mass, TwistedMass, u_packed_inner, &geom_inner, t_boundary, coeff_s, coeff_t,
+                use_tbc, tbc_phases);
       }
     } else if (g_c_sw > DBL_EPSILON) {  // WILSON CLOVER
       qphix_clover = (QClover *)geom.allocCBClov();
@@ -1357,15 +1350,16 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
       QPhiX::masterPrintf("# Creating QPhiX Wilson Clover Fermion Matrix...\n");
       FermionMatrixQPhiX = new QPhiX::EvenOddCloverOperator<FT, V, S, compress>(
           u_packed, qphix_clover, qphix_inv_clover, &geom, t_boundary, coeff_s, coeff_t, use_tbc,
-          tbc_phases, -0.5*g_mu3/g_kappa);
-      if( solver_is_mixed(solver_flag) ){
+          tbc_phases, -0.5 * g_mu3 / g_kappa);
+      if (solver_is_mixed(solver_flag)) {
         qphix_clover_inner = (QClover_inner *)geom_inner.allocCBClov();
         qphix_inv_clover_inner = (QClover_inner *)geom_inner.allocCBClov();
-        reorder_clover_to_QPhiX(geom_inner, qphix_clover_inner, cb_odd, false);        
+        reorder_clover_to_QPhiX(geom_inner, qphix_clover_inner, cb_odd, false);
         reorder_clover_to_QPhiX(geom_inner, qphix_inv_clover_inner, cb_even, true);
-        InnerFermionMatrixQPhiX = new QPhiX::EvenOddCloverOperator<FT_inner, V_inner, S_inner, compress_inner>(
-          u_packed_inner, qphix_clover_inner, qphix_inv_clover_inner, &geom_inner, t_boundary, coeff_s, coeff_t,
-          use_tbc, tbc_phases, -0.5*g_mu3/g_kappa);
+        InnerFermionMatrixQPhiX =
+            new QPhiX::EvenOddCloverOperator<FT_inner, V_inner, S_inner, compress_inner>(
+                u_packed_inner, qphix_clover_inner, qphix_inv_clover_inner, &geom_inner, t_boundary,
+                coeff_s, coeff_t, use_tbc, tbc_phases, -0.5 * g_mu3 / g_kappa);
       }
       QPhiX::masterPrintf("# ...done.\n");
 
@@ -1373,9 +1367,11 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
       QPhiX::masterPrintf("# Creating QPhiX Wilson Fermion Matrix...\n");
       FermionMatrixQPhiX = new QPhiX::EvenOddWilsonOperator<FT, V, S, compress>(
           mass, u_packed, &geom, t_boundary, coeff_s, coeff_t, use_tbc, tbc_phases);
-      if( solver_is_mixed(solver_flag) ){
-        InnerFermionMatrixQPhiX = new QPhiX::EvenOddWilsonOperator<FT_inner, V_inner, S_inner, compress_inner>(
-            mass, u_packed_inner, &geom_inner, t_boundary, coeff_s, coeff_t, use_tbc, tbc_phases);
+      if (solver_is_mixed(solver_flag)) {
+        InnerFermionMatrixQPhiX =
+            new QPhiX::EvenOddWilsonOperator<FT_inner, V_inner, S_inner, compress_inner>(
+                mass, u_packed_inner, &geom_inner, t_boundary, coeff_s, coeff_t, use_tbc,
+                tbc_phases);
       }
       QPhiX::masterPrintf("# ...done.\n");
     }
@@ -1384,11 +1380,11 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     QPhiX::AbstractSolver<FT, V, S, compress> *SolverQPhiX = nullptr;
     QPhiX::AbstractSolver<FT_inner, V_inner, S_inner, compress_inner> *InnerSolverQPhiX = nullptr;
     QPhiX::AbstractMultiSolver<FT, V, S, compress, nf> *MultiSolverQPhiX = nullptr;
-    if( solver_flag == DUMMYHERMTEST ) {
+    if (solver_flag == DUMMYHERMTEST) {
       QPhiX::masterPrintf("# QPHIX: Creating dummy solver for hermiticity test...\n");
       SolverQPhiX =
-        new QPhiX::InvDummyHermTest<FT, V, S, compress,
-                                    typename QPhiX::EvenOddLinearOperator<FT, V, S, compress> >(
+          new QPhiX::InvDummyHermTest<FT, V, S, compress,
+                                      typename QPhiX::EvenOddLinearOperator<FT, V, S, compress> >(
               *FermionMatrixQPhiX, max_iter);
     } else if (solver_flag == CG) {
       QPhiX::masterPrintf("# QPHIX: Creating CG solver...\n");
@@ -1396,22 +1392,27 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     } else if (solver_flag == BICGSTAB) {
       QPhiX::masterPrintf("# QPHIX: Creating BiCGStab solver...\n");
       SolverQPhiX = new QPhiX::InvBiCGStab<FT, V, S, compress>(*FermionMatrixQPhiX, max_iter);
-    } else if ( solver_flag == MIXEDCG ) {
+    } else if (solver_flag == MIXEDCG) {
       // TODO: probably need to adjust inner solver iterations here...
       QPhiX::masterPrintf("# QPHIX: Creating mixed-precision CG solver...\n");
-      InnerSolverQPhiX = new QPhiX::InvCG<FT_inner, V_inner, S_inner, compress_inner>(*InnerFermionMatrixQPhiX, max_iter);
+      InnerSolverQPhiX = new QPhiX::InvCG<FT_inner, V_inner, S_inner, compress_inner>(
+          *InnerFermionMatrixQPhiX, max_iter);
       const bool MMdag = true;
-      SolverQPhiX = new QPhiX::InvRichardsonMultiPrec<FT, V, S, compress, FT_inner, V_inner, S_inner, compress_inner, MMdag>(
+      SolverQPhiX = new QPhiX::InvRichardsonMultiPrec<FT, V, S, compress, FT_inner, V_inner,
+                                                      S_inner, compress_inner, MMdag>(
           *FermionMatrixQPhiX, *InnerSolverQPhiX, solver_params.mcg_delta, max_iter);
-    } else if (solver_flag == MIXEDBICGSTAB ) {
+    } else if (solver_flag == MIXEDBICGSTAB) {
       QPhiX::masterPrintf("# QPHIX: Creating mixed-precision BICGCGSTAB solver...\n");
-      InnerSolverQPhiX = new QPhiX::InvBiCGStab<FT_inner, V_inner, S_inner, compress_inner>(*InnerFermionMatrixQPhiX, max_iter);
+      InnerSolverQPhiX = new QPhiX::InvBiCGStab<FT_inner, V_inner, S_inner, compress_inner>(
+          *InnerFermionMatrixQPhiX, max_iter);
       const bool MMdag = false;
-      SolverQPhiX = new QPhiX::InvRichardsonMultiPrec<FT, V, S, compress, FT_inner, V_inner, S_inner, compress_inner, MMdag>(
+      SolverQPhiX = new QPhiX::InvRichardsonMultiPrec<FT, V, S, compress, FT_inner, V_inner,
+                                                      S_inner, compress_inner, MMdag>(
           *FermionMatrixQPhiX, *InnerSolverQPhiX, solver_params.mcg_delta, max_iter);
-    } else if (solver_flag == CGMMS ) {
+    } else if (solver_flag == CGMMS) {
       QPhiX::masterPrintf("# QPHIX: Creating multi-shift CG solver ...\n");
-      MultiSolverQPhiX = new QPhiX::MInvCG<FT, V, S, compress>( *FermionMatrixQPhiX, max_iter, num_shifts );
+      MultiSolverQPhiX =
+          new QPhiX::MInvCG<FT, V, S, compress>(*FermionMatrixQPhiX, max_iter, num_shifts);
     } else {
       QPhiX::masterPrintf(" Solver not yet supported by QPhiX!\n");
       QPhiX::masterPrintf(" Aborting...\n");
@@ -1419,10 +1420,10 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     }
     QPhiX::masterPrintf("# ...done.\n");
 
-//     reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(tmlqcd_odd_in[0][0]),
-//                                qphix_in[0], cb_odd);
-    reorder_eo_spinor_to_QPhiX(geom, tmlqcd_odd_in[0][0],
-                               qphix_in[0], cb_odd);
+    //     reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const
+    //     *const>(tmlqcd_odd_in[0][0]),
+    //                                qphix_in[0], cb_odd);
+    reorder_eo_spinor_to_QPhiX(geom, tmlqcd_odd_in[0][0], qphix_in[0], cb_odd);
     QPhiX::masterPrintf("# Calling the solver...\n");
 
     // Set the right precision for the QPhiX solver
@@ -1431,19 +1432,19 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     // Most QPhiX solvers allow setting absolute or relative residual
     // by passing an appropriate flag, but this is not true for the multi-shift solver.
     // As a result, we follow that solver and call ALL solvers with
-    // QPhiX::RELATIVE, which gives results consistent with tmLQCD in all cases. 
+    // QPhiX::RELATIVE, which gives results consistent with tmLQCD in all cases.
     double rhs_norm2 = 1.0;
     QPhiX::norm2Spinor(rhs_norm2, qphix_in[0], geom, n_blas_simt);
     const double RsdTarget = sqrt(target_precision / rhs_norm2);
 
     // Calling the solver
     start_time = gettime();
-    if ( solver_flag == DUMMYHERMTEST ){
+    if (solver_flag == DUMMYHERMTEST) {
       random_spinor_field_eo(tmlqcd_odd_out[0][0], 0, RN_GAUSS);
-      reorder_eo_spinor_to_QPhiX(geom, tmlqcd_odd_out[0][0], qphix_buffer, cb_odd);      
-      for(int isign : {-1, 1} ){
-        (*SolverQPhiX)(qphix_buffer, qphix_in[0], RsdTarget, niters, rsd_final, site_flops, mv_apps, isign,
-                       verbose, cb_odd, QPhiX::RELATIVE);
+      reorder_eo_spinor_to_QPhiX(geom, tmlqcd_odd_out[0][0], qphix_buffer, cb_odd);
+      for (int isign : {-1, 1}) {
+        (*SolverQPhiX)(qphix_buffer, qphix_in[0], RsdTarget, niters, rsd_final, site_flops, mv_apps,
+                       isign, verbose, cb_odd, QPhiX::RELATIVE);
       }
       QPhiX::copySpinor(qphix_out[0], qphix_buffer, geom, n_blas_simt);
     } else if (solver_flag == CG || solver_flag == MIXEDCG || solver_flag == RGMIXEDCG) {
@@ -1451,8 +1452,8 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
       // We are solving
       //   M M^dagger qphix_buffer = qphix_in_prepared
       // here, that is, isign = -1 for the QPhiX CG solver.
-      (*SolverQPhiX)(qphix_buffer, qphix_in[0], RsdTarget, niters, rsd_final, site_flops, mv_apps, -1,
-                     verbose, cb_odd, QPhiX::RELATIVE);
+      (*SolverQPhiX)(qphix_buffer, qphix_in[0], RsdTarget, niters, rsd_final, site_flops, mv_apps,
+                     -1, verbose, cb_odd, QPhiX::RELATIVE);
       // After that. if required by the solution type, multiply with M^dagger:
       //   qphix_out[1] = M^dagger ( M^dagger^-1 M^-1 ) qphix_in_prepared
       if (solver_params.solution_type == TM_SOLUTION_M) {
@@ -1461,35 +1462,38 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
       } else {
         QPhiX::copySpinor(qphix_out[0], qphix_buffer, geom, n_blas_simt);
       }
-    } else if (solver_flag == CGMMS ){
+    } else if (solver_flag == CGMMS) {
       // TODO: handle the residuals properly
-      if(g_debug_level > 2 ) QPhiX::masterPrintf("# QPHIX CGMMS: shifts: \n");
-      for( int shift = 0; shift < num_shifts; shift++ ){
+      if (g_debug_level > 2) QPhiX::masterPrintf("# QPHIX CGMMS: shifts: \n");
+      for (int shift = 0; shift < num_shifts; shift++) {
         RsdTargetArr[shift] = RsdTarget;
         RsdFinalArr[shift] = -1.0;
-        shifts[shift] = solver_params.shifts[shift]*solver_params.shifts[shift]/(4*g_kappa*g_kappa);
-        if(g_debug_level > 2 ) QPhiX::masterPrintf("# QPHIX CGMMS: shift[%d] = %.6e\n", shift, shifts[shift]);
+        shifts[shift] =
+            solver_params.shifts[shift] * solver_params.shifts[shift] / (4 * g_kappa * g_kappa);
+        if (g_debug_level > 2)
+          QPhiX::masterPrintf("# QPHIX CGMMS: shift[%d] = %.6e\n", shift, shifts[shift]);
       }
-      if(g_debug_level > 2 ) QPhiX::masterPrintf("\n");
-      (*MultiSolverQPhiX)(qphix_out.data(), qphix_in[0], num_shifts, shifts.data(), 
-                          RsdTargetArr.data(), niters, RsdFinalArr.data(), site_flops, mv_apps, -1, verbose );
+      if (g_debug_level > 2) QPhiX::masterPrintf("\n");
+      (*MultiSolverQPhiX)(qphix_out.data(), qphix_in[0], num_shifts, shifts.data(),
+                          RsdTargetArr.data(), niters, RsdFinalArr.data(), site_flops, mv_apps, -1,
+                          verbose);
       rsd_final = RsdFinalArr[0];
     } else if (solver_flag == BICGSTAB || solver_flag == MIXEDBICGSTAB) {
-      (*SolverQPhiX)(qphix_buffer, qphix_in[0], RsdTarget, niters, rsd_final, site_flops, mv_apps, 1,
-                     verbose, cb_odd, QPhiX::RELATIVE);
+      (*SolverQPhiX)(qphix_buffer, qphix_in[0], RsdTarget, niters, rsd_final, site_flops, mv_apps,
+                     1, verbose, cb_odd, QPhiX::RELATIVE);
       // for M^dagger^-1 M^-1 solution type, need to call BiCGstab twice
       if (solver_params.solution_type == TM_SOLUTION_M_MDAG) {
-        (*SolverQPhiX)(qphix_out[0], qphix_buffer, RsdTarget, niters2, rsd_final, site_flops, mv_apps2,
-                       -1, verbose, cb_odd, QPhiX::RELATIVE);
+        (*SolverQPhiX)(qphix_out[0], qphix_buffer, RsdTarget, niters2, rsd_final, site_flops,
+                       mv_apps2, -1, verbose, cb_odd, QPhiX::RELATIVE);
       } else {
         QPhiX::copySpinor(qphix_out[0], qphix_buffer, geom, n_blas_simt);
       }
     }
     end_time = gettime();
-    
-    for(int shift = 0; shift < num_shifts; shift++ ){
-      reorder_eo_spinor_from_QPhiX(geom, tmlqcd_odd_out[shift][0],
-                                   qphix_out[shift], cb_odd, rescale);
+
+    for (int shift = 0; shift < num_shifts; shift++) {
+      reorder_eo_spinor_from_QPhiX(geom, tmlqcd_odd_out[shift][0], qphix_out[shift], cb_odd,
+                                   rescale);
     }
 
     QPhiX::masterPrintf("# QPHIX: ...done.\n");
@@ -1500,13 +1504,13 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     delete (InnerSolverQPhiX);
     delete (MultiSolverQPhiX);
     // on KNL, it seems that munmap is problematic, so we check for nullptr
-    if(qphix_clover) geom.free(qphix_clover);
-    if(qphix_inv_clover) geom.free(qphix_inv_clover);
-    if(qphix_clover_inner) geom_inner.free(qphix_clover_inner);
-    if(qphix_inv_clover_inner) geom_inner.free(qphix_inv_clover_inner);
+    if (qphix_clover) geom.free(qphix_clover);
+    if (qphix_inv_clover) geom.free(qphix_inv_clover);
+    if (qphix_clover_inner) geom_inner.free(qphix_clover_inner);
+    if (qphix_inv_clover_inner) geom_inner.free(qphix_inv_clover_inner);
     for (int fl : {0, 1}) {
-      if(qphix_inv_fullclover[fl]) geom.free(qphix_inv_fullclover[fl]);
-      if(qphix_inv_fullclover_inner[fl]) geom_inner.free(qphix_inv_fullclover_inner[fl]);
+      if (qphix_inv_fullclover[fl]) geom.free(qphix_inv_fullclover[fl]);
+      if (qphix_inv_fullclover_inner[fl]) geom_inner.free(qphix_inv_fullclover_inner[fl]);
     }
     QPhiX::masterPrintf("# QPHIX: ...done.\n\n");
 
@@ -1515,16 +1519,16 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     constexpr int nf = 2;
 
     QSpinor *qphix_in[2];
-    std::vector < QSpinor** > qphix_out;
-    qphix_out.resize( num_shifts );
-    for( int shift = 0; shift < num_shifts; shift++ ){
-      qphix_out[shift] = new QSpinor*[2];
+    std::vector<QSpinor **> qphix_out;
+    qphix_out.resize(num_shifts);
+    for (int shift = 0; shift < num_shifts; shift++) {
+      qphix_out[shift] = new QSpinor *[2];
       for (int fl : {0, 1}) {
         q_spinor_handles.push_back(makeFourSpinorHandle(geom));
         qphix_out[shift][fl] = q_spinor_handles.back().get();
       }
     }
-    
+
     QSpinor *qphix_buffer[2];
     for (int fl : {0, 1}) {
       q_spinor_handles.push_back(makeFourSpinorHandle(geom));
@@ -1532,10 +1536,10 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
       q_spinor_handles.push_back(makeFourSpinorHandle(geom));
       qphix_buffer[fl] = q_spinor_handles.back().get();
     }
-    
+
     QClover *qphix_clover = nullptr;
     QClover_inner *qphix_clover_inner = nullptr;
-    
+
     QClover *qphix_invclov_odiag = nullptr;
     QClover_inner *qphix_invclov_odiag_inner = nullptr;
 
@@ -1543,65 +1547,65 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     QFullClover_inner *qphix_inv_fullclover_inner[2] = {nullptr, nullptr};
 
     QPhiX::TwoFlavEvenOddLinearOperator<FT, V, S, compress> *TwoFlavFermionMatrixQPhiX = nullptr;
-    QPhiX::TwoFlavEvenOddLinearOperator<FT_inner, V_inner, S_inner, compress_inner> *InnerTwoFlavFermionMatrixQPhiX = nullptr;
-    
+    QPhiX::TwoFlavEvenOddLinearOperator<FT_inner, V_inner, S_inner, compress_inner>
+        *InnerTwoFlavFermionMatrixQPhiX = nullptr;
+
     if (g_c_sw > DBL_EPSILON) {  // DBCLOVER
       qphix_clover = (QClover *)geom.allocCBClov();
       qphix_invclov_odiag = (QClover *)geom.allocCBClov();
-      if( solver_is_mixed(solver_flag) ){
+      if (solver_is_mixed(solver_flag)) {
         qphix_clover_inner = (QClover_inner *)geom_inner.allocCBClov();
         qphix_invclov_odiag_inner = (QClover_inner *)geom_inner.allocCBClov();
       }
 
       for (int fl : {0, 1}) {
         qphix_inv_fullclover[fl] = (QFullClover *)geom.allocCBFullClov();
-        if( solver_is_mixed(solver_flag) ){
-          qphix_inv_fullclover_inner[fl] = (QFullClover_inner*)geom_inner.allocCBFullClov();
+        if (solver_is_mixed(solver_flag)) {
+          qphix_inv_fullclover_inner[fl] = (QFullClover_inner *)geom_inner.allocCBFullClov();
         }
       }
 
-      pack_nd_clover(geom, geom_inner, 
-                     qphix_inv_fullclover, qphix_invclov_odiag, qphix_clover,
+      pack_nd_clover(geom, geom_inner, qphix_inv_fullclover, qphix_invclov_odiag, qphix_clover,
                      qphix_inv_fullclover_inner, qphix_invclov_odiag_inner, qphix_clover_inner,
-                     cb_odd,
-                     solver_is_mixed(solver_flag));
+                     cb_odd, solver_is_mixed(solver_flag));
 
-      QPhiX::masterPrintf("# QPHIX: Creating two-flavour QPhiX Wilson Twisted Clover Fermion Matrix...\n");
+      QPhiX::masterPrintf(
+          "# QPHIX: Creating two-flavour QPhiX Wilson Twisted Clover Fermion Matrix...\n");
       TwoFlavFermionMatrixQPhiX = new QPhiX::EvenOddNDTMCloverReuseOperator<FT, V, S, compress>(
-          -0.5 * g_mubar / g_kappa, 0.5 * g_epsbar / g_kappa, 
-          u_packed, qphix_clover, qphix_invclov_odiag, qphix_inv_fullclover,
-          &geom, t_boundary,
-          coeff_s, coeff_t, use_tbc, tbc_phases);
-      if( solver_is_mixed(solver_flag) ){
-        InnerTwoFlavFermionMatrixQPhiX = new QPhiX::EvenOddNDTMCloverReuseOperator<FT_inner, V_inner, S_inner, compress_inner>(
-            -0.5 * g_mubar / g_kappa, 0.5 * g_epsbar / g_kappa, 
-            u_packed_inner, qphix_clover_inner, qphix_invclov_odiag_inner, qphix_inv_fullclover_inner,
-            &geom_inner, t_boundary,
-            coeff_s, coeff_t, use_tbc, tbc_phases);
+          -0.5 * g_mubar / g_kappa, 0.5 * g_epsbar / g_kappa, u_packed, qphix_clover,
+          qphix_invclov_odiag, qphix_inv_fullclover, &geom, t_boundary, coeff_s, coeff_t, use_tbc,
+          tbc_phases);
+      if (solver_is_mixed(solver_flag)) {
+        InnerTwoFlavFermionMatrixQPhiX =
+            new QPhiX::EvenOddNDTMCloverReuseOperator<FT_inner, V_inner, S_inner, compress_inner>(
+                -0.5 * g_mubar / g_kappa, 0.5 * g_epsbar / g_kappa, u_packed_inner,
+                qphix_clover_inner, qphix_invclov_odiag_inner, qphix_inv_fullclover_inner,
+                &geom_inner, t_boundary, coeff_s, coeff_t, use_tbc, tbc_phases);
       }
     } else {  // DBTMWILSON
-      QPhiX::masterPrintf("# QPHIX: Creating two-flavour QPhiX Wilson Twisted Mass Fermion Matrix...\n");
+      QPhiX::masterPrintf(
+          "# QPHIX: Creating two-flavour QPhiX Wilson Twisted Mass Fermion Matrix...\n");
       TwoFlavFermionMatrixQPhiX = new QPhiX::EvenOddNDTMWilsonReuseOperator<FT, V, S, compress>(
           mass, -0.5 * g_mubar / g_kappa, 0.5 * g_epsbar / g_kappa, u_packed, &geom, t_boundary,
           coeff_s, coeff_t, use_tbc, tbc_phases);
-      if( solver_is_mixed(solver_flag) ){
-        InnerTwoFlavFermionMatrixQPhiX = new QPhiX::EvenOddNDTMWilsonReuseOperator<
-                                               FT_inner, V_inner, S_inner, compress_inner>(
-          mass, -0.5 * g_mubar / g_kappa, 0.5 * g_epsbar / g_kappa, u_packed_inner, &geom_inner, t_boundary,
-          coeff_s, coeff_t, use_tbc, tbc_phases);
+      if (solver_is_mixed(solver_flag)) {
+        InnerTwoFlavFermionMatrixQPhiX =
+            new QPhiX::EvenOddNDTMWilsonReuseOperator<FT_inner, V_inner, S_inner, compress_inner>(
+                mass, -0.5 * g_mubar / g_kappa, 0.5 * g_epsbar / g_kappa, u_packed_inner,
+                &geom_inner, t_boundary, coeff_s, coeff_t, use_tbc, tbc_phases);
       }
     }
 
     //
     QPhiX::AbstractSolver<FT, V, S, compress, nf> *TwoFlavSolverQPhiX = nullptr;
-    QPhiX::AbstractSolver<FT_inner, V_inner, S_inner, compress_inner, nf> *InnerTwoFlavSolverQPhiX = nullptr;
+    QPhiX::AbstractSolver<FT_inner, V_inner, S_inner, compress_inner, nf> *InnerTwoFlavSolverQPhiX =
+        nullptr;
     QPhiX::AbstractMultiSolver<FT, V, S, compress, nf> *TwoFlavMultiSolverQPhiX = nullptr;
-    if( solver_flag == DUMMYHERMTEST ) {
+    if (solver_flag == DUMMYHERMTEST) {
       QPhiX::masterPrintf("# QPHIX: Creating dummy solver for hermiticity test...\n");
-      TwoFlavSolverQPhiX =
-        new QPhiX::InvDummyHermTest<FT, V, S, compress,
-                                    typename QPhiX::TwoFlavEvenOddLinearOperator<FT, V, S, compress> >(
-              *TwoFlavFermionMatrixQPhiX, max_iter);
+      TwoFlavSolverQPhiX = new QPhiX::InvDummyHermTest<
+          FT, V, S, compress, typename QPhiX::TwoFlavEvenOddLinearOperator<FT, V, S, compress> >(
+          *TwoFlavFermionMatrixQPhiX, max_iter);
     } else if (solver_flag == CG) {
       QPhiX::masterPrintf("# QPHIX: Creating CG solver...\n");
       TwoFlavSolverQPhiX =
@@ -1616,29 +1620,22 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
               *TwoFlavFermionMatrixQPhiX, max_iter);
     } else if (solver_flag == MIXEDCG) {
       QPhiX::masterPrintf("# QPHIX: Creating mixed-precision CG solver...\n");
-      InnerTwoFlavSolverQPhiX = new QPhiX::InvCG<
-          FT_inner, V_inner, S_inner, compress_inner,
-          typename QPhiX::TwoFlavEvenOddLinearOperator<FT_inner, V_inner, S_inner, compress_inner> 
-        >(
-            *InnerTwoFlavFermionMatrixQPhiX, max_iter
-         );
+      InnerTwoFlavSolverQPhiX =
+          new QPhiX::InvCG<FT_inner, V_inner, S_inner, compress_inner,
+                           typename QPhiX::TwoFlavEvenOddLinearOperator<FT_inner, V_inner, S_inner,
+                                                                        compress_inner> >(
+              *InnerTwoFlavFermionMatrixQPhiX, max_iter);
       const bool MMdag = true;
-      TwoFlavSolverQPhiX = new QPhiX::InvRichardsonMultiPrec
-        <
-          FT, V, S, compress, 
-          FT_inner, V_inner, S_inner, compress_inner,
-          MMdag, typename QPhiX::TwoFlavEvenOddLinearOperator<FT, V, S, compress> 
-        >(
-            *TwoFlavFermionMatrixQPhiX,
-            *InnerTwoFlavSolverQPhiX,
-            solver_params.mcg_delta,
-            max_iter
-        );
-    } else if ( solver_flag == CGMMSND ) {
+      TwoFlavSolverQPhiX = new QPhiX::InvRichardsonMultiPrec<
+          FT, V, S, compress, FT_inner, V_inner, S_inner, compress_inner, MMdag,
+          typename QPhiX::TwoFlavEvenOddLinearOperator<FT, V, S, compress> >(
+          *TwoFlavFermionMatrixQPhiX, *InnerTwoFlavSolverQPhiX, solver_params.mcg_delta, max_iter);
+    } else if (solver_flag == CGMMSND) {
       QPhiX::masterPrintf("# QPHIX: Creating multi-shift CG solver...\n");
-      TwoFlavMultiSolverQPhiX = new QPhiX::MInvCG<FT, V, S, compress, 
-                                                  typename QPhiX::TwoFlavEvenOddLinearOperator<FT, V, S, compress>
-                                                  >( *TwoFlavFermionMatrixQPhiX, max_iter, num_shifts );
+      TwoFlavMultiSolverQPhiX =
+          new QPhiX::MInvCG<FT, V, S, compress,
+                            typename QPhiX::TwoFlavEvenOddLinearOperator<FT, V, S, compress> >(
+              *TwoFlavFermionMatrixQPhiX, max_iter, num_shifts);
     } else {
       QPhiX::masterPrintf(" Solver not yet supported by QPhiX!\n");
       QPhiX::masterPrintf(" Aborting...\n");
@@ -1647,10 +1644,10 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     QPhiX::masterPrintf("# QPHIX: ...done.\n");
 
     for (int fl : {0, 1}) {
-//       reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(tmlqcd_odd_in[0][fl]),
-//                                  qphix_in[fl], cb_odd);
-      reorder_eo_spinor_to_QPhiX(geom, tmlqcd_odd_in[0][fl],
-                                 qphix_in[fl], cb_odd);      
+      //       reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const
+      //       *const>(tmlqcd_odd_in[0][fl]),
+      //                                  qphix_in[fl], cb_odd);
+      reorder_eo_spinor_to_QPhiX(geom, tmlqcd_odd_in[0][fl], qphix_in[fl], cb_odd);
     }
 
     QPhiX::masterPrintf("# QPHIX: Calling the solver...\n");
@@ -1661,21 +1658,21 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     // Most QPhiX solvers allow setting absolute or relative residual
     // by passing an appropriate flag, but this is not true for the multi-shift solver.
     // As a result, we follow that solver and call ALL solvers with
-    // QPhiX::RELATIVE, which gives results consistent with tmLQCD in all cases. 
+    // QPhiX::RELATIVE, which gives results consistent with tmLQCD in all cases.
     double rhs_norm2 = 1.0;
     QPhiX::norm2Spinor<FT, V, S, compress, nf>(rhs_norm2, qphix_in, geom, n_blas_simt);
     const double RsdTarget = sqrt(target_precision / rhs_norm2);
 
     // Calling the solver
     start_time = gettime();
-    if ( solver_flag == DUMMYHERMTEST ){
-      for(int fl : {0, 1}){
+    if (solver_flag == DUMMYHERMTEST) {
+      for (int fl : {0, 1}) {
         random_spinor_field_eo(tmlqcd_odd_out[0][fl], 0, RN_GAUSS);
-        reorder_eo_spinor_to_QPhiX(geom, tmlqcd_odd_out[0][fl], qphix_buffer[fl], cb_odd);      
+        reorder_eo_spinor_to_QPhiX(geom, tmlqcd_odd_out[0][fl], qphix_buffer[fl], cb_odd);
       }
-      for( int isign : {-1, 1} ){
-        (*TwoFlavSolverQPhiX)(qphix_buffer, qphix_in, RsdTarget, niters, rsd_final, site_flops, mv_apps, isign,
-                       verbose, cb_odd, QPhiX::RELATIVE);
+      for (int isign : {-1, 1}) {
+        (*TwoFlavSolverQPhiX)(qphix_buffer, qphix_in, RsdTarget, niters, rsd_final, site_flops,
+                              mv_apps, isign, verbose, cb_odd, QPhiX::RELATIVE);
       }
       QPhiX::copySpinor<FT, V, S, compress, nf>(qphix_out[0], qphix_buffer, geom, n_blas_simt);
     } else if (solver_flag == CG || solver_flag == MIXEDCG) {
@@ -1683,8 +1680,8 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
       // We are solving
       //   M M^dagger qphix_buffer = qphix_in_prepared
       // here, that is, isign = -1 for the QPhiX CG solver.
-      (*TwoFlavSolverQPhiX)(qphix_buffer, qphix_in, RsdTarget, niters, rsd_final, site_flops, mv_apps, -1,
-                     verbose, cb_odd, QPhiX::RELATIVE);
+      (*TwoFlavSolverQPhiX)(qphix_buffer, qphix_in, RsdTarget, niters, rsd_final, site_flops,
+                            mv_apps, -1, verbose, cb_odd, QPhiX::RELATIVE);
       // After that. if required by the solution type, multiply with M^dagger:
       //   qphix_out[1] = M^dagger M^dagger^-1 M^-1 qphix_in_prepared
       if (solver_params.solution_type == TM_SOLUTION_M) {
@@ -1694,41 +1691,41 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
         QPhiX::copySpinor<FT, V, S, compress, nf>(qphix_out[0], qphix_buffer, geom, n_blas_simt);
       }
     } else if (solver_flag == BICGSTAB || solver_flag == MIXEDBICGSTAB) {
-      (*TwoFlavSolverQPhiX)(qphix_buffer, qphix_in, RsdTarget, niters, rsd_final, site_flops, mv_apps, 1,
-                            verbose, cb_odd, QPhiX::RELATIVE);
+      (*TwoFlavSolverQPhiX)(qphix_buffer, qphix_in, RsdTarget, niters, rsd_final, site_flops,
+                            mv_apps, 1, verbose, cb_odd, QPhiX::RELATIVE);
       // for M^dagger^-1 M^-1 solution type, need to call BiCGstab twice
       if (solver_params.solution_type == TM_SOLUTION_M_MDAG) {
-        (*TwoFlavSolverQPhiX)(qphix_out[0], qphix_buffer, RsdTarget, niters2, rsd_final, site_flops, mv_apps2,
-                              -1, verbose, cb_odd, QPhiX::RELATIVE);
+        (*TwoFlavSolverQPhiX)(qphix_out[0], qphix_buffer, RsdTarget, niters2, rsd_final, site_flops,
+                              mv_apps2, -1, verbose, cb_odd, QPhiX::RELATIVE);
       } else {
         QPhiX::copySpinor<FT, V, S, compress, nf>(qphix_out[0], qphix_buffer, geom, n_blas_simt);
       }
-    } else if (solver_flag == CGMMSND ){
+    } else if (solver_flag == CGMMSND) {
       // TODO: handle the residuals properly
-      if(g_debug_level > 2 ) QPhiX::masterPrintf("# QPHIX CGMMSND: shifts: \n");
+      if (g_debug_level > 2) QPhiX::masterPrintf("# QPHIX CGMMSND: shifts: \n");
       // tmLQCD weights the operator with 1/maxev in the RHMC relative to the shifts
       // we will do this externally on the inverse (in monomial_solve) and thus need to weight
       // the shifts by maxev^2
-      const double maxev_sq = (1.0/phmc_invmaxev)*(1.0/phmc_invmaxev);
-      for( int shift = 0; shift < num_shifts; shift++ ){
+      const double maxev_sq = (1.0 / phmc_invmaxev) * (1.0 / phmc_invmaxev);
+      for (int shift = 0; shift < num_shifts; shift++) {
         RsdTargetArr[shift] = RsdTarget;
         RsdFinalArr[shift] = -1.0;
-        shifts[shift] = maxev_sq *
-                        solver_params.shifts[shift]*solver_params.shifts[shift] /
-                        (4*g_kappa*g_kappa); 
-        if(g_debug_level > 2 ) QPhiX::masterPrintf("# [%d] = %lf\n", shift, shifts[shift]);
+        shifts[shift] = maxev_sq * solver_params.shifts[shift] * solver_params.shifts[shift] /
+                        (4 * g_kappa * g_kappa);
+        if (g_debug_level > 2) QPhiX::masterPrintf("# [%d] = %lf\n", shift, shifts[shift]);
       }
-      if(g_debug_level > 2 ) QPhiX::masterPrintf("\n");
-      (*TwoFlavMultiSolverQPhiX)(qphix_out.data(), qphix_in, num_shifts, shifts.data(), 
-                          RsdTargetArr.data(), niters, RsdFinalArr.data(), site_flops, mv_apps, -1, verbose );
+      if (g_debug_level > 2) QPhiX::masterPrintf("\n");
+      (*TwoFlavMultiSolverQPhiX)(qphix_out.data(), qphix_in, num_shifts, shifts.data(),
+                                 RsdTargetArr.data(), niters, RsdFinalArr.data(), site_flops,
+                                 mv_apps, -1, verbose);
       rsd_final = RsdFinalArr[0];
     }
     end_time = gettime();
 
-    for(int shift = 0; shift < num_shifts; shift++){
+    for (int shift = 0; shift < num_shifts; shift++) {
       for (int fl : {0, 1}) {
-        reorder_eo_spinor_from_QPhiX(geom, tmlqcd_odd_out[shift][fl],
-                                    qphix_out[shift][fl], cb_odd, rescale);
+        reorder_eo_spinor_from_QPhiX(geom, tmlqcd_odd_out[shift][fl], qphix_out[shift][fl], cb_odd,
+                                     rescale);
       }
     }
 
@@ -1737,26 +1734,26 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
     delete InnerTwoFlavSolverQPhiX;
     delete TwoFlavMultiSolverQPhiX;
     delete TwoFlavSolverQPhiX;
-    for( int shift = 0; shift < num_shifts; shift++ ){
+    for (int shift = 0; shift < num_shifts; shift++) {
       delete[] qphix_out[shift];
     }
-    
-    if(qphix_clover) geom.free(qphix_clover);
-    if(qphix_invclov_odiag) geom.free(qphix_invclov_odiag);
-    if(qphix_clover_inner) geom_inner.free(qphix_clover_inner);
-    if(qphix_invclov_odiag_inner) geom_inner.free(qphix_invclov_odiag_inner);
-    for (int fl : {0, 1}) {
-      if(qphix_inv_fullclover[fl]) geom.free(qphix_inv_fullclover[fl]);
-      if(qphix_inv_fullclover_inner[fl]) geom_inner.free(qphix_inv_fullclover_inner[fl]);
-    }    
 
-  } else { // if(num_flavour)
+    if (qphix_clover) geom.free(qphix_clover);
+    if (qphix_invclov_odiag) geom.free(qphix_invclov_odiag);
+    if (qphix_clover_inner) geom_inner.free(qphix_clover_inner);
+    if (qphix_invclov_odiag_inner) geom_inner.free(qphix_invclov_odiag_inner);
+    for (int fl : {0, 1}) {
+      if (qphix_inv_fullclover[fl]) geom.free(qphix_inv_fullclover[fl]);
+      if (qphix_inv_fullclover_inner[fl]) geom_inner.free(qphix_inv_fullclover_inner[fl]);
+    }
+
+  } else {  // if(num_flavour)
     // complain, this number of flavours is not valid
-  } // if(num_flavour)
+  }  // if(num_flavour)
 
   for (int cb : {0, 1}) {
-    if(u_packed[cb]) geom.free(u_packed[cb]);
-    if(u_packed_inner[cb]) geom_inner.free(u_packed_inner[cb]);
+    if (u_packed[cb]) geom.free(u_packed[cb]);
+    if (u_packed_inner[cb]) geom_inner.free(u_packed_inner[cb]);
   }
 
   // FIXME: This should be called properly somewhere else
@@ -1767,26 +1764,28 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
   uint64_t num_cb_sites = lattSize[0] / 2 * lattSize[1] * lattSize[2] * lattSize[3];
   // FIXME: this needs to be adjusted depending on the operator used
   uint64_t op_flops_per_site = 1320;
-  uint64_t total_flops = (site_flops + site_flops2 + 
-                          (2 * num_flavour * op_flops_per_site) * (mv_apps+mv_apps2) ) * num_cb_sites;
+  uint64_t total_flops =
+      (site_flops + site_flops2 + (2 * num_flavour * op_flops_per_site) * (mv_apps + mv_apps2)) *
+      num_cb_sites;
   QPhiX::masterPrintf("# QPHIX: Solver Time = %g sec\n", (end_time - start_time));
-  QPhiX::masterPrintf("# QPHIX: Performance in GFLOPS = %g\n\n", 1.0e-9 * total_flops / (end_time - start_time));  
+  QPhiX::masterPrintf("# QPHIX: Performance in GFLOPS = %g\n\n",
+                      1.0e-9 * total_flops / (end_time - start_time));
 
-  if( solver_is_mixed(solver_flag) ){
+  if (solver_is_mixed(solver_flag)) {
     // the mixed solver reports the outer iterations, we would like to get
     // some better total
     niters = mv_apps / 2;
-    if( solver_flag == MIXEDBICGSTAB && solver_params.solution_type == TM_SOLUTION_M_MDAG ){
+    if (solver_flag == MIXEDBICGSTAB && solver_params.solution_type == TM_SOLUTION_M_MDAG) {
       niters2 = mv_apps2 / 2;
     }
   }
   // solver did not converge in maximum number of iterations
   // FIXME: non-convergence does not work correctly yet
-  if( (niters+niters2) > max_iter ){
+  if ((niters + niters2) > max_iter) {
     niters = -1;
     niters2 = 0;
   }
-  return (niters+niters2);
+  return (niters + niters2);
 }
 
 // Due to github issue #404, the helper functions to apply the full QPhiX operator
@@ -1795,7 +1794,7 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
 // rather than the base classes in qphix_base_classes.hpp
 
 // Template wrapper for the Dslash operator call-able from C code
-//void Mfull_qphix(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, const spinor *Odd_in,
+// void Mfull_qphix(spinor *Even_out, spinor *Odd_out, const spinor *Even_in, const spinor *Odd_in,
 //                 const op_type_t op_type) {
 //  tmlqcd::checkQphixInputParameters(qphix_input);
 //  // FIXME: two-row gauge compression and double precision hard-coded
@@ -1830,7 +1829,7 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
 //                                                          op_type);
 //    }
 //  }
-//#if (defined(QPHIX_MIC_SOURCE) || defined(QPHIX_AVX512_SOURCE))
+// #if (defined(QPHIX_MIC_SOURCE) || defined(QPHIX_AVX512_SOURCE))
 //  else if (qphix_precision == QPHIX_HALF_PREC) {
 //    if (QPHIX_SOALEN > VECLEN_HP) {
 //      QPhiX::masterPrintf("SOALEN=%d is greater than the half prec VECLEN=%d\n", QPHIX_SOALEN,
@@ -1842,11 +1841,12 @@ int invert_eo_qphix_helper(std::vector< std::vector < spinor* > > &tmlqcd_odd_ou
 //      Mfull_helper<QPhiX::half, VECLEN_HP, QPHIX_SOALEN, true>(Even_out, Odd_out, Even_in, Odd_in,
 //                                                               op_type);
 //    } else {
-//      Mfull_helper<QPhiX::half, VECLEN_HP, QPHIX_SOALEN, false>(Even_out, Odd_out, Even_in, Odd_in,
+//      Mfull_helper<QPhiX::half, VECLEN_HP, QPHIX_SOALEN, false>(Even_out, Odd_out, Even_in,
+//      Odd_in,
 //                                                                op_type);
 //    }
 //  }
-//#endif
+// #endif
 //}
 
 // we have a unified interface for n-flavour inversions, but we need to provide wrappers
@@ -1857,42 +1857,44 @@ int invert_eo_qphix_oneflavour(spinor *Odd_out_1f, spinor *Odd_in_1f, const int 
                                const CompressionType compression) {
   const int num_flavour = 1;
   const int num_shifts = 1;
-  std::vector< std::vector < spinor* > > Odd_out;
-  std::vector< std::vector < spinor* > > Odd_in;
-  
-  Odd_out.resize( num_shifts ); Odd_out[0].resize( num_flavour );
-  Odd_in.resize( 1 ); Odd_in[0].resize( num_flavour );
-  
+  std::vector<std::vector<spinor *> > Odd_out;
+  std::vector<std::vector<spinor *> > Odd_in;
+
+  Odd_out.resize(num_shifts);
+  Odd_out[0].resize(num_flavour);
+  Odd_in.resize(1);
+  Odd_in[0].resize(num_flavour);
+
   Odd_in[0][0] = Odd_in_1f;
   Odd_out[0][0] = Odd_out_1f;
-  
-  return invert_eo_qphix_nflavour_mshift(Odd_out, Odd_in, precision, max_iter,
-                                         solver_flag, rel_prec,
-                                         solver_params, sloppy, compression, num_flavour);
+
+  return invert_eo_qphix_nflavour_mshift(Odd_out, Odd_in, precision, max_iter, solver_flag,
+                                         rel_prec, solver_params, sloppy, compression, num_flavour);
 }
 
 int invert_eo_qphix_oneflavour_mshift(spinor **Odd_out_1f, spinor *Odd_in_1f, const int max_iter,
-                                      const double precision, const int solver_flag, const int rel_prec,
-                                      const solver_params_t solver_params, const SloppyPrecision sloppy,
+                                      const double precision, const int solver_flag,
+                                      const int rel_prec, const solver_params_t solver_params,
+                                      const SloppyPrecision sloppy,
                                       const CompressionType compression) {
   // even though the default is set to 1, guard against zeroes
   const int num_shifts = solver_params.no_shifts == 0 ? 1 : solver_params.no_shifts;
   const int num_flavour = 1;
-  std::vector< std::vector < spinor* > > Odd_out;
-  std::vector< std::vector < spinor* > > Odd_in;
-  
-  Odd_out.resize( num_shifts );
-  Odd_in.resize( 1 ); Odd_in[0].resize( num_flavour );
-  
+  std::vector<std::vector<spinor *> > Odd_out;
+  std::vector<std::vector<spinor *> > Odd_in;
+
+  Odd_out.resize(num_shifts);
+  Odd_in.resize(1);
+  Odd_in[0].resize(num_flavour);
+
   Odd_in[0][0] = Odd_in_1f;
-  for( int shift = 0; shift < num_shifts; shift++ ){
-    Odd_out[shift].resize( num_flavour );
+  for (int shift = 0; shift < num_shifts; shift++) {
+    Odd_out[shift].resize(num_flavour);
     Odd_out[shift][0] = Odd_out_1f[shift];
   }
 
-  return invert_eo_qphix_nflavour_mshift(Odd_out, Odd_in, precision, max_iter,
-                                        solver_flag, rel_prec,
-                                        solver_params, sloppy, compression, num_flavour);
+  return invert_eo_qphix_nflavour_mshift(Odd_out, Odd_in, precision, max_iter, solver_flag,
+                                         rel_prec, solver_params, sloppy, compression, num_flavour);
 }
 
 // Template wrapper for QPhiX solvers callable from C code, return number of iterations
@@ -1903,62 +1905,61 @@ int invert_eo_qphix_twoflavour(spinor *Odd_out_s, spinor *Odd_out_c, spinor *Odd
                                const CompressionType compression) {
   const int num_flavour = 2;
   const int num_shifts = 1;
-  std::vector< std::vector < spinor* > > Odd_out;
-  std::vector< std::vector < spinor* > > Odd_in;
-  
-  Odd_out.resize( num_shifts ); Odd_out[0].resize( num_flavour );
-  Odd_in.resize( 1 ); Odd_in[0].resize( num_flavour );
-  
-  Odd_in[0][0] = Odd_in_s; 
+  std::vector<std::vector<spinor *> > Odd_out;
+  std::vector<std::vector<spinor *> > Odd_in;
+
+  Odd_out.resize(num_shifts);
+  Odd_out[0].resize(num_flavour);
+  Odd_in.resize(1);
+  Odd_in[0].resize(num_flavour);
+
+  Odd_in[0][0] = Odd_in_s;
   Odd_in[0][1] = Odd_in_c;
-  
+
   Odd_out[0][0] = Odd_out_s;
   Odd_out[0][1] = Odd_out_c;
-  
-  return invert_eo_qphix_nflavour_mshift(Odd_out, Odd_in, precision, max_iter,
-                                         solver_flag, rel_prec,
-                                         solver_params, sloppy, compression, num_flavour);
+
+  return invert_eo_qphix_nflavour_mshift(Odd_out, Odd_in, precision, max_iter, solver_flag,
+                                         rel_prec, solver_params, sloppy, compression, num_flavour);
 }
 
 int invert_eo_qphix_twoflavour_mshift(spinor **Odd_out_s, spinor **Odd_out_c, spinor *Odd_in_s,
                                       spinor *Odd_in_c, const int max_iter, const double precision,
                                       const int solver_flag, const int rel_prec,
-                                      const solver_params_t solver_params, const SloppyPrecision sloppy,
+                                      const solver_params_t solver_params,
+                                      const SloppyPrecision sloppy,
                                       const CompressionType compression) {
   // even though the default is set to 1, guard against zeroes
-  const int num_shifts = solver_params.no_shifts == 0 ? 1 : solver_params.no_shifts;  
+  const int num_shifts = solver_params.no_shifts == 0 ? 1 : solver_params.no_shifts;
   const int num_flavour = 2;
-  std::vector< std::vector < spinor* > > Odd_out;
-  std::vector< std::vector < spinor* > > Odd_in;
-  
-  Odd_out.resize( num_shifts );
-  Odd_in.resize( 1 ); Odd_in[0].resize( num_flavour );
-  
-  Odd_in[0][0] = Odd_in_s; 
+  std::vector<std::vector<spinor *> > Odd_out;
+  std::vector<std::vector<spinor *> > Odd_in;
+
+  Odd_out.resize(num_shifts);
+  Odd_in.resize(1);
+  Odd_in[0].resize(num_flavour);
+
+  Odd_in[0][0] = Odd_in_s;
   Odd_in[0][1] = Odd_in_c;
-  
-  for( int shift = 0; shift < num_shifts; shift++ ){
-    Odd_out[shift].resize( num_flavour );
+
+  for (int shift = 0; shift < num_shifts; shift++) {
+    Odd_out[shift].resize(num_flavour);
     Odd_out[shift][0] = Odd_out_s[shift];
     Odd_out[shift][1] = Odd_out_c[shift];
   }
-  
-  return invert_eo_qphix_nflavour_mshift(Odd_out, Odd_in, precision, max_iter,
-                                         solver_flag, rel_prec,
-                                         solver_params, sloppy, compression, num_flavour);
+
+  return invert_eo_qphix_nflavour_mshift(Odd_out, Odd_in, precision, max_iter, solver_flag,
+                                         rel_prec, solver_params, sloppy, compression, num_flavour);
 }
 
 // Template wrapper for QPhiX solvers callable from C code, return number of iterations
 // the interface is prepared for multi-rhs solves, hence the double vector for the input
-int invert_eo_qphix_nflavour_mshift(std::vector< std::vector< spinor* > > &Odd_out, 
-                                    std::vector< std::vector< spinor* > > &Odd_in, 
-                                    const double precision,
-                                    const int max_iter,
-                                    const int solver_flag, 
-                                    const int rel_prec,
-                                    solver_params_t solver_params,
-                                    const SloppyPrecision sloppy, const CompressionType compression,
-                                    const int num_flavour) {
+int invert_eo_qphix_nflavour_mshift(std::vector<std::vector<spinor *> > &Odd_out,
+                                    std::vector<std::vector<spinor *> > &Odd_in,
+                                    const double precision, const int max_iter,
+                                    const int solver_flag, const int rel_prec,
+                                    solver_params_t solver_params, const SloppyPrecision sloppy,
+                                    const CompressionType compression, const int num_flavour) {
   tmlqcd::checkQphixInputParameters(qphix_input);
   double target_precision = precision;
   double src_norm = 0.0;
@@ -1977,24 +1978,25 @@ int invert_eo_qphix_nflavour_mshift(std::vector< std::vector< spinor* > > &Odd_o
                       target_precision);
 
   // mixed solvers require inner and outer precisions, which we specify explicitly here
-  if( solver_is_mixed(solver_flag) ){
+  if (solver_is_mixed(solver_flag)) {
 #if (defined(QPHIX_MIC_SOURCE) || defined(QPHIX_AVX512_SOURCE))
-    if( sloppy == SLOPPY_HALF ){
-      if( QPHIX_SOALEN > VECLEN_DP || QPHIX_SOALEN > VECLEN_HP ){
-        QPhiX::masterPrintf("SOALEN=%d is greater than the half prec VECLEN=%d or the double prec VECLEN=%d\n", QPHIX_SOALEN,
-                            VECLEN_HP, VECLEN_DP);
+    if (sloppy == SLOPPY_HALF) {
+      if (QPHIX_SOALEN > VECLEN_DP || QPHIX_SOALEN > VECLEN_HP) {
+        QPhiX::masterPrintf(
+            "SOALEN=%d is greater than the half prec VECLEN=%d or the double prec VECLEN=%d\n",
+            QPHIX_SOALEN, VECLEN_HP, VECLEN_DP);
         abort();
       }
       QPhiX::masterPrintf("# INITIALIZING QPHIX MIXED SOLVER\n");
       QPhiX::masterPrintf("# USING DOUBLE-HALF PRECISION\n");
       _initQphix(0, nullptr, qphix_input, compression, QPHIX_DOUBLE_PREC, QPHIX_HALF_PREC);
-      if(compress12) {
-        return invert_eo_qphix_helper<
-          double, VECLEN_DP, QPHIX_SOALEN, true, QPhiX::half, VECLEN_HP, QPHIX_SOALEN, true>(
+      if (compress12) {
+        return invert_eo_qphix_helper<double, VECLEN_DP, QPHIX_SOALEN, true, QPhiX::half, VECLEN_HP,
+                                      QPHIX_SOALEN, true>(
             Odd_out, Odd_in, target_precision, max_iter, solver_flag, solver_params, num_flavour);
       } else {
-        return invert_eo_qphix_helper<
-          double, VECLEN_DP, QPHIX_SOALEN, false, QPhiX::half, VECLEN_HP, QPHIX_SOALEN, false>(
+        return invert_eo_qphix_helper<double, VECLEN_DP, QPHIX_SOALEN, false, QPhiX::half,
+                                      VECLEN_HP, QPHIX_SOALEN, false>(
             Odd_out, Odd_in, target_precision, max_iter, solver_flag, solver_params, num_flavour);
       }
     } else
@@ -2004,26 +2006,27 @@ int invert_eo_qphix_nflavour_mshift(std::vector< std::vector< spinor* > > &Odd_o
       abort();
     } else
 #endif
-    if( sloppy == SLOPPY_SINGLE ) {
-      if( QPHIX_SOALEN > VECLEN_DP || QPHIX_SOALEN > VECLEN_SP ){
-        QPhiX::masterPrintf("SOALEN=%d is greater than the single prec VECLEN=%d or the double prec VECLEN=%d\n", QPHIX_SOALEN,
-                            VECLEN_SP, VECLEN_DP);
+        if (sloppy == SLOPPY_SINGLE) {
+      if (QPHIX_SOALEN > VECLEN_DP || QPHIX_SOALEN > VECLEN_SP) {
+        QPhiX::masterPrintf(
+            "SOALEN=%d is greater than the single prec VECLEN=%d or the double prec VECLEN=%d\n",
+            QPHIX_SOALEN, VECLEN_SP, VECLEN_DP);
         abort();
       }
       QPhiX::masterPrintf("# INITIALIZING QPHIX MIXED SOLVER\n");
       QPhiX::masterPrintf("# USING DOUBLE-SINGLE PRECISION\n");
       _initQphix(0, nullptr, qphix_input, compression, QPHIX_DOUBLE_PREC, QPHIX_FLOAT_PREC);
-      if(compress12) {
-        return invert_eo_qphix_helper<
-          double, VECLEN_DP, QPHIX_SOALEN, true, float, VECLEN_SP, QPHIX_SOALEN, true>(
+      if (compress12) {
+        return invert_eo_qphix_helper<double, VECLEN_DP, QPHIX_SOALEN, true, float, VECLEN_SP,
+                                      QPHIX_SOALEN, true>(
             Odd_out, Odd_in, target_precision, max_iter, solver_flag, solver_params, num_flavour);
       } else {
-        return invert_eo_qphix_helper<
-          double, VECLEN_DP, QPHIX_SOALEN, false, float, VECLEN_SP, QPHIX_SOALEN, false>(
+        return invert_eo_qphix_helper<double, VECLEN_DP, QPHIX_SOALEN, false, float, VECLEN_SP,
+                                      QPHIX_SOALEN, false>(
             Odd_out, Odd_in, target_precision, max_iter, solver_flag, solver_params, num_flavour);
       }
-    } else { // if(sloppy)
-      if( QPHIX_SOALEN > VECLEN_DP ){
+    } else {  // if(sloppy)
+      if (QPHIX_SOALEN > VECLEN_DP) {
         QPhiX::masterPrintf("SOALEN=%d is greater than the double prec VECLEN=%d\n", QPHIX_SOALEN,
                             VECLEN_DP);
         abort();
@@ -2031,17 +2034,15 @@ int invert_eo_qphix_nflavour_mshift(std::vector< std::vector< spinor* > > &Odd_o
       QPhiX::masterPrintf("# INITIALIZING QPHIX MIXED SOLVER\n");
       QPhiX::masterPrintf("# USING DOUBLE-DOUBLE PRECISION\n");
       _initQphix(0, nullptr, qphix_input, compression, QPHIX_DOUBLE_PREC, QPHIX_DOUBLE_PREC);
-      if(compress12) {
-        return invert_eo_qphix_helper<
-          double, VECLEN_DP, QPHIX_SOALEN, true>(
+      if (compress12) {
+        return invert_eo_qphix_helper<double, VECLEN_DP, QPHIX_SOALEN, true>(
             Odd_out, Odd_in, target_precision, max_iter, solver_flag, solver_params, num_flavour);
       } else {
-        return invert_eo_qphix_helper<
-          double, VECLEN_DP, QPHIX_SOALEN, false>(
+        return invert_eo_qphix_helper<double, VECLEN_DP, QPHIX_SOALEN, false>(
             Odd_out, Odd_in, target_precision, max_iter, solver_flag, solver_params, num_flavour);
       }
-    } // if( sloppy )
-  } else { // if( solver_is_mixed )
+    }  // if( sloppy )
+  } else {  // if( solver_is_mixed )
 #if (defined(QPHIX_MIC_SOURCE) || defined(QPHIX_AVX512_SOURCE))
     if (sloppy == SLOPPY_HALF || precision_lambda >= rsdTarget<QPhiX::half>::value) {
       if (QPHIX_SOALEN > VECLEN_HP) {
@@ -2052,7 +2053,7 @@ int invert_eo_qphix_nflavour_mshift(std::vector< std::vector< spinor* > > &Odd_o
       QPhiX::masterPrintf("# INITIALIZING QPHIX SOLVER\n");
       QPhiX::masterPrintf("# USING HALF PRECISION\n");
       _initQphix(0, nullptr, qphix_input, compression, QPHIX_HALF_PREC);
-  
+
       if (compress12) {
         return invert_eo_qphix_helper<QPhiX::half, VECLEN_HP, QPHIX_SOALEN, true>(
             Odd_out, Odd_in, target_precision, max_iter, solver_flag, solver_params, num_flavour);
@@ -2061,13 +2062,13 @@ int invert_eo_qphix_nflavour_mshift(std::vector< std::vector< spinor* > > &Odd_o
             Odd_out, Odd_in, target_precision, max_iter, solver_flag, solver_params, num_flavour);
       }
     } else
- #else
+#else
     if (sloppy == SLOPPY_HALF) {
       QPhiX::masterPrintf("QPHIX interface: half precision not supported on this architecture!\n");
       abort();
     } else
- #endif
-    if (sloppy == SLOPPY_SINGLE || precision_lambda >= rsdTarget<float>::value) {
+#endif
+        if (sloppy == SLOPPY_SINGLE || precision_lambda >= rsdTarget<float>::value) {
       if (QPHIX_SOALEN > VECLEN_SP) {
         QPhiX::masterPrintf("SOALEN=%d is greater than the single prec VECLEN=%d\n", QPHIX_SOALEN,
                             VECLEN_SP);
@@ -2076,7 +2077,7 @@ int invert_eo_qphix_nflavour_mshift(std::vector< std::vector< spinor* > > &Odd_o
       QPhiX::masterPrintf("# INITIALIZING QPHIX SOLVER\n");
       QPhiX::masterPrintf("# USING SINGLE PRECISION\n");
       _initQphix(0, nullptr, qphix_input, compression, QPHIX_FLOAT_PREC);
-  
+
       if (compress12) {
         return invert_eo_qphix_helper<float, VECLEN_SP, QPHIX_SOALEN, true>(
             Odd_out, Odd_in, target_precision, max_iter, solver_flag, solver_params, num_flavour);
@@ -2093,7 +2094,7 @@ int invert_eo_qphix_nflavour_mshift(std::vector< std::vector< spinor* > > &Odd_o
       QPhiX::masterPrintf("# INITIALIZING QPHIX SOLVER\n");
       QPhiX::masterPrintf("# USING DOUBLE PRECISION\n");
       _initQphix(0, nullptr, qphix_input, compression, QPHIX_DOUBLE_PREC);
-  
+
       if (compress12) {
         return invert_eo_qphix_helper<double, VECLEN_DP, QPHIX_SOALEN, true>(
             Odd_out, Odd_in, target_precision, max_iter, solver_flag, solver_params, num_flavour);
@@ -2102,7 +2103,7 @@ int invert_eo_qphix_nflavour_mshift(std::vector< std::vector< spinor* > > &Odd_o
             Odd_out, Odd_in, target_precision, max_iter, solver_flag, solver_params, num_flavour);
       }
     }  // if( sloppy || target_precision )
-  } // if ( solver_flag == *MIXEDCG )
+  }  // if ( solver_flag == *MIXEDCG )
   return -1;
 }
 
@@ -2121,8 +2122,10 @@ void tmlqcd::checkQphixInputParameters(const tm_QPhiXParams_t &params) {
   }
 }
 
-void tmlqcd::printQphixDiagnostics(int VECLEN, int SOALEN, bool compress, int VECLEN_inner, int SOALEN_inner, bool compress_inner) {
-  QPhiX::masterPrintf("# QphiX: VECLEN=%d SOALEN=%d VECLEN_inner=%d, SOALEN_inner=%d\n", VECLEN, SOALEN, VECLEN_inner, SOALEN_inner);
+void tmlqcd::printQphixDiagnostics(int VECLEN, int SOALEN, bool compress, int VECLEN_inner,
+                                   int SOALEN_inner, bool compress_inner) {
+  QPhiX::masterPrintf("# QphiX: VECLEN=%d SOALEN=%d VECLEN_inner=%d, SOALEN_inner=%d\n", VECLEN,
+                      SOALEN, VECLEN_inner, SOALEN_inner);
 
   QPhiX::masterPrintf("# QphiX: Declared QMP Topology (xyzt):");
   for (int mu = 0; mu < 4; mu++) QPhiX::masterPrintf(" %d", qmp_geom[mu]);
@@ -2171,19 +2174,15 @@ void testSpinorPackers(spinor *Even_out, spinor *Odd_out, const spinor *const Ev
   spinor **tmp;
   init_solver_field(&tmp, VOLUME / 2, 2);
 
-//   reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Even_in),
-//                              qphix_cb_even.get(), cb_even);
-//   reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Odd_in),
-//                              qphix_cb_odd.get(), cb_odd);
-  reorder_eo_spinor_to_QPhiX(geom, Even_in,
-                             qphix_cb_even.get(), cb_even);
-  reorder_eo_spinor_to_QPhiX(geom, Odd_in,
-                             qphix_cb_odd.get(), cb_odd);
-  
-  reorder_eo_spinor_from_QPhiX(geom, Even_out, qphix_cb_even.get(),
-                               cb_even, 1.0);
-  reorder_eo_spinor_from_QPhiX(geom, Odd_out, qphix_cb_odd.get(),
-                               cb_odd, 1.0);
+  //   reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Even_in),
+  //                              qphix_cb_even.get(), cb_even);
+  //   reorder_eo_spinor_to_QPhiX(geom, reinterpret_cast<double const *const>(Odd_in),
+  //                              qphix_cb_odd.get(), cb_odd);
+  reorder_eo_spinor_to_QPhiX(geom, Even_in, qphix_cb_even.get(), cb_even);
+  reorder_eo_spinor_to_QPhiX(geom, Odd_in, qphix_cb_odd.get(), cb_odd);
+
+  reorder_eo_spinor_from_QPhiX(geom, Even_out, qphix_cb_even.get(), cb_even, 1.0);
+  reorder_eo_spinor_from_QPhiX(geom, Odd_out, qphix_cb_odd.get(), cb_odd, 1.0);
 
   diff(tmp[0], Even_out, Even_in, VOLUME / 2);
   diff(tmp[1], Odd_out, Odd_in, VOLUME / 2);

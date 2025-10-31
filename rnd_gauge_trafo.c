@@ -23,7 +23,7 @@
  *******************************************************************************/
 
 #if HAVE_CONFIG_H
-#include<tmlqcd_config.h>
+#include <tmlqcd_config.h>
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,17 +32,17 @@
 #include "start.h"
 #include "su3.h"
 #include "xchange/xchange_gauge.h"
-void rnd_gauge_trafo(const int repro, su3 ** const gf){
-  int ix,iy,mu;
-  static su3 u,v,w,x,y;
-  su3 * _gauge_trafo = NULL;
-  su3 * gauge_trafo = NULL;
+void rnd_gauge_trafo(const int repro, su3** const gf) {
+  int ix, iy, mu;
+  static su3 u, v, w, x, y;
+  su3* _gauge_trafo = NULL;
+  su3* gauge_trafo = NULL;
 
-  if((_gauge_trafo = calloc(VOLUMEPLUSRAND+1, sizeof(su3))) == NULL) {
+  if ((_gauge_trafo = calloc(VOLUMEPLUSRAND + 1, sizeof(su3))) == NULL) {
     fprintf(stderr, "Could not allocate memory in rnd_gauge_trafo. Exiting!\n");
     exit(0);
   }
-  gauge_trafo = (su3*)(((unsigned long int)(gauge_trafo)+ALIGN_BASE)&~ALIGN_BASE);
+  gauge_trafo = (su3*)(((unsigned long int)(gauge_trafo) + ALIGN_BASE) & ~ALIGN_BASE);
 
   random_gauge_field(repro, &gauge_trafo);
 
@@ -50,23 +50,21 @@ void rnd_gauge_trafo(const int repro, su3 ** const gf){
   xchange_gauge(&gauge_trafo);
 #endif
 
-  for (ix=0;ix<VOLUME;ix++){
+  for (ix = 0; ix < VOLUME; ix++) {
+    u = gauge_trafo[ix];
 
-    u=gauge_trafo[ix];
+    for (mu = 0; mu < 4; mu++) {
+      iy = g_iup[ix][mu];
+      w = gauge_trafo[iy];
+      _su3_dagger(v, w);
+      w = g_gauge_field[ix][mu];
 
-    for (mu=0;mu<4;mu++){
-      iy=g_iup[ix][mu];
-      w=gauge_trafo[iy];
-      _su3_dagger(v,w);
-      w=g_gauge_field[ix][mu];
+      _su3_times_su3(x, w, v);
+      _su3_times_su3(y, u, x);
 
-      _su3_times_su3(x,w,v);
-      _su3_times_su3(y,u,x);
-
-      gf[ix][mu]=y;
+      gf[ix][mu] = y;
     }
   }
-      
+
   free(_gauge_trafo);
 }
-

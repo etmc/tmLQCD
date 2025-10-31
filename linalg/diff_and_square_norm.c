@@ -7,76 +7,74 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include <tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
-#include "su3.h"
 #include "diff_and_square_norm.h"
+#include "su3.h"
 
-double diff_and_square_norm(spinor * const Q, spinor * const R, const int N) {
+double diff_and_square_norm(spinor *const Q, spinor *const R, const int N) {
   int ix;
-  static double ks,kc,ds,tr,ts,tt;
-  spinor *q,*r;
-  
-  ks=0.0;
-  kc=0.0;
-  
-  /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */   
-  for (ix = 0; ix < N; ix++)
-  {
-    q=Q+ix;
-    r=R+ix;
-    
+  static double ks, kc, ds, tr, ts, tt;
+  spinor *q, *r;
+
+  ks = 0.0;
+  kc = 0.0;
+
+  /* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */
+  for (ix = 0; ix < N; ix++) {
+    q = Q + ix;
+    r = R + ix;
+
     q->s0.c0 = r->s0.c0 - q->s0.c0;
     q->s0.c1 = r->s0.c1 - q->s0.c1;
     q->s0.c2 = r->s0.c2 - q->s0.c2;
-    
+
     ds = q->s0.c0 * conj(q->s0.c0) + q->s0.c1 * conj(q->s0.c1) + q->s0.c2 * conj(q->s0.c2);
-    
+
     q->s1.c0 = r->s1.c0 - q->s1.c0;
     q->s1.c1 = r->s1.c1 - q->s1.c1;
-    q->s1.c2 = r->s1.c2 - q->s1.c2;     
-    
+    q->s1.c2 = r->s1.c2 - q->s1.c2;
+
     ds += q->s1.c0 * conj(q->s1.c0) + q->s1.c1 * conj(q->s1.c1) + q->s1.c2 * conj(q->s1.c2);
-    
+
     q->s2.c0 = r->s2.c0 - q->s2.c0;
     q->s2.c1 = r->s2.c1 - q->s2.c1;
-    q->s2.c2 = r->s2.c2 - q->s2.c2;     
-    
+    q->s2.c2 = r->s2.c2 - q->s2.c2;
+
     ds += q->s2.c0 * conj(q->s2.c0) + q->s2.c1 * conj(q->s2.c1) + q->s2.c2 * conj(q->s2.c2);
-    
+
     q->s3.c0 = r->s3.c0 - q->s3.c0;
     q->s3.c1 = r->s3.c1 - q->s3.c1;
-    q->s3.c2 = r->s3.c2 - q->s3.c2;     
-    
+    q->s3.c2 = r->s3.c2 - q->s3.c2;
+
     ds += q->s3.c0 * conj(q->s3.c0) + q->s3.c1 * conj(q->s3.c1) + q->s3.c2 * conj(q->s3.c2);
-    
-    tr = ds+kc;
-    ts = tr+ks;
-    tt = ts-ks;
+
+    tr = ds + kc;
+    ts = tr + ks;
+    tt = ts - ks;
     ks = ts;
-    kc = tr-tt;
+    kc = tr - tt;
   }
-  kc = ks+kc;
+  kc = ks + kc;
 #ifdef TM_USE_MPI
   MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   return ks;
 #else
   return kc;
 #endif
-
 }

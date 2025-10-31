@@ -8,9 +8,7 @@
 #define RESTART_RITZ_JACOBI 6
 #endif
 
-void index_jd(int * nr_of_eigenvalues, 
-	      const int max_iterations, const double precision, 
-	      char * conf_filename, const int nstore,
-	      const int method);
+void index_jd(int* nr_of_eigenvalues, const int max_iterations, const double precision,
+              char* conf_filename, const int nstore, const int method);
 
 #endif

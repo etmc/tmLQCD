@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
@@ -20,12 +20,12 @@
 #ifndef _INIT_DIRAC_HALFSPINOR_H
 #define _INIT_DIRAC_HALFSPINOR_H
 
-extern halfspinor * HalfSpinor ALIGN;
-extern halfspinor *** NBPointer;
-extern halfspinor32 * HalfSpinor32 ALIGN;
-extern halfspinor32 *** NBPointer32;
-extern halfspinor * ALIGN sendBuffer, * ALIGN recvBuffer;
-extern halfspinor32 * ALIGN sendBuffer32, * ALIGN recvBuffer32;
+extern halfspinor* HalfSpinor ALIGN;
+extern halfspinor*** NBPointer;
+extern halfspinor32* HalfSpinor32 ALIGN;
+extern halfspinor32*** NBPointer32;
+extern halfspinor *ALIGN sendBuffer, *ALIGN recvBuffer;
+extern halfspinor32 *ALIGN sendBuffer32, *ALIGN recvBuffer32;
 
 int init_dirac_halfspinor();
 int init_dirac_halfspinor32();

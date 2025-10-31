@@ -26,60 +26,58 @@
 
 #include "lime.h"
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include <tmlqcd_config.h>
 #endif
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
-#include <time.h>
-#include <string.h>
 #include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 #ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
-#include "global.h"
-#include "getopt.h"
-#include "linalg_eo.h"
 #include "geometry_eo.h"
+#include "getopt.h"
+#include "global.h"
+#include "linalg_eo.h"
 #include "start.h"
 /*#include "eigenvalues.h"*/
 #include "observables.h"
 #ifdef TM_USE_MPI
 #include "xchange.h"
 #endif
+#include "D_psi.h"
+#include "Dov_psi.h"
+#include "block.h"
+#include "boundary.h"
+#include "gauge_io.h"
+#include "init/init.h"
+#include "invert_eo.h"
 #include "io.h"
 #include "io_utils.h"
-#include "propagator_io.h"
-#include "gauge_io.h"
-#include "read_input.h"
-#include "mpi_init.h"
-#include "sighandler.h"
-#include "boundary.h"
-#include "solver/solver.h"
-#include "init/init.h"
-#include "xchange_halffield.h"
-#include "stout_smear.h"
-#include "invert_eo.h"
-#include "monomial.h"
-#include "ranlxd.h"
-#include "phmc.h"
-#include "D_psi.h"
-#include "little_D.h"
-#include "reweighting_factor.h"
 #include "linalg/convert_eo_to_lexic.h"
-#include "block.h"
+#include "little_D.h"
+#include "monomial.h"
+#include "mpi_init.h"
+#include "phmc.h"
+#include "propagator_io.h"
+#include "ranlxd.h"
+#include "read_input.h"
+#include "reweighting_factor.h"
 #include "sighandler.h"
 #include "solver/dfl_projector.h"
 #include "solver/generate_dfl_subspace.h"
-#include "Dov_psi.h"
+#include "solver/solver.h"
+#include "stout_smear.h"
+#include "xchange_halffield.h"
 
-#include <io/params.h>
 #include <io/gauge.h>
+#include <io/params.h>
 
 #include "overlaptests.h"
 
-void usage()
-{
+void usage() {
   fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
   fprintf(stdout, "Version %s \n\n", TMLQCD_PACKAGE_VERSION);
   fprintf(stdout, "Please send bug reports to %s\n", TMLQCD_PACKAGE_BUGREPORT);
@@ -94,19 +92,17 @@ extern int nstore;
 int check_geometry();
 double delta = 1.0e-12;
 
-int main(int argc, char *argv[])
-{
-
+int main(int argc, char *argv[]) {
   FILE *parameterfile = NULL;
   int c, j;
-  char * filename = NULL;
+  char *filename = NULL;
   char datafilename[50];
   char parameterfilename[50];
   char conf_filename[50];
-  char * input_filename = NULL;
-  char * xlfmessage = NULL;
-  char * gaugelfn = NULL;
-  char * gaugecksum = NULL;
+  char *input_filename = NULL;
+  char *xlfmessage = NULL;
+  char *gaugelfn = NULL;
+  char *gaugecksum = NULL;
   double plaquette_energy;
 
 #ifdef _KOJAK_INST
@@ -180,7 +176,7 @@ int main(int argc, char *argv[])
     Nsave = 1;
   }
 
-  if(g_running_phmc) {
+  if (g_running_phmc) {
     NO_OF_SPINORFIELDS = DUM_MATRIX + 8;
   }
 
@@ -201,53 +197,51 @@ int main(int argc, char *argv[])
 #else
   j = init_gauge_field(VOLUMEPLUSRAND, 0);
 #endif
-  if(j != 0) {
+  if (j != 0) {
     fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
     exit(-1);
   }
   j = init_geometry_indices(VOLUMEPLUSRAND);
-  if(j != 0) {
+  if (j != 0) {
     fprintf(stderr, "Not enough memory for geometry indices! Aborting...\n");
     exit(-1);
   }
-  if(no_monomials > 0) {
-    if(even_odd_flag) {
+  if (no_monomials > 0) {
+    if (even_odd_flag) {
       j = init_monomials(VOLUMEPLUSRAND / 2, even_odd_flag);
-    }
-    else {
+    } else {
       j = init_monomials(VOLUMEPLUSRAND, even_odd_flag);
     }
-    if(j != 0) {
+    if (j != 0) {
       fprintf(stderr, "Not enough memory for monomial pseudo fermion  fields! Aborting...\n");
       exit(0);
     }
   }
-  if(even_odd_flag) {
+  if (even_odd_flag) {
     j = init_spinor_field(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS);
-  }
-  else {
+  } else {
     j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
   }
-  if(j != 0) {
+  if (j != 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
     exit(-1);
   }
 
-  if(g_running_phmc) {
+  if (g_running_phmc) {
     j = init_chi_up_spinor_field(VOLUMEPLUSRAND / 2, 20);
-    if(j != 0) {
+    if (j != 0) {
       fprintf(stderr, "Not enough memory for PHMC Chi_up fields! Aborting...\n");
       exit(0);
     }
     j = init_chi_dn_spinor_field(VOLUMEPLUSRAND / 2, 20);
-    if(j != 0) {
+    if (j != 0) {
       fprintf(stderr, "Not enough memory for PHMC Chi_dn fields! Aborting...\n");
       exit(0);
     }
   }
 
   g_mu = g_mu1;
-  if(g_proc_id == 0) {
+  if (g_proc_id == 0) {
     /*construct the filenames for the observables and the parameters*/
     strcpy(datafilename, filename);
     strcat(datafilename, ".data");
@@ -269,8 +263,7 @@ int main(int argc, char *argv[])
         }
       }
       fclose(parameterfile);
-    }
-    else {
+    } else {
       fprintf(stderr, "Could not open file extra_masses.input!\n");
       g_no_extra_masses = 0;
     }
@@ -283,7 +276,6 @@ int main(int argc, char *argv[])
   boundary(g_kappa);
 
   phmc_invmaxev = 1.;
-
 
 #ifdef _USE_HALFSPINOR
   j = init_dirac_halfspinor();
@@ -298,11 +290,11 @@ int main(int argc, char *argv[])
       exit(-1);
     }
   }
-#  if (defined _PERSISTENT)
+#if (defined _PERSISTENT)
   if (even_odd_flag) {
     init_xchange_halffield();
   }
-#  endif
+#endif
 #endif
 
   for (j = 0; j < Nmeas; j++) {
@@ -313,13 +305,10 @@ int main(int argc, char *argv[])
     }
 #ifdef HAVE_LIBLEMON
     read_lemon_gauge_field_parallel(conf_filename, &gaugecksum, &xlfmessage, &gaugelfn);
-#else /* HAVE_LIBLEMON */
-    if (xlfmessage != (char*)NULL)
-      free(xlfmessage);
-    if (gaugelfn != (char*)NULL)
-      free(gaugelfn);
-    if (gaugecksum != (char*)NULL)
-      free(gaugecksum);
+#else  /* HAVE_LIBLEMON */
+    if (xlfmessage != (char *)NULL) free(xlfmessage);
+    if (gaugelfn != (char *)NULL) free(gaugelfn);
+    if (gaugecksum != (char *)NULL) free(gaugecksum);
     read_lime_gauge_field(conf_filename);
     xlfmessage = read_message(conf_filename, "xlf-info");
     gaugelfn = read_message(conf_filename, "ildg-data-lfn");
@@ -339,50 +328,53 @@ int main(int argc, char *argv[])
     plaquette_energy = measure_gauge_action();
 
     if (g_proc_id == 0) {
-      printf("The plaquette value is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
+      printf("The plaquette value is %e\n", plaquette_energy / (6. * VOLUME * g_nproc));
       fflush(stdout);
     }
 
     if (use_stout_flag == 1) {
-      if (stout_smear_gauge_field(stout_rho , stout_no_iter) != 0) {
-        exit(1) ;
+      if (stout_smear_gauge_field(stout_rho, stout_no_iter) != 0) {
+        exit(1);
       }
       plaquette_energy = measure_gauge_action();
 
       if (g_proc_id == 0) {
-        printf("The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
+        printf("The plaquette value after stouting is %e\n",
+               plaquette_energy / (6. * VOLUME * g_nproc));
         fflush(stdout);
       }
     }
 
-	/* Compute minimal eigenvalues, necessary for overlap! */
-	if (compute_evs != 0)
-		eigenvalues(&no_eigenvalues, max_solver_iterations, eigenvalue_precision, 0, compute_evs, nstore, even_odd_flag);
-	else {
-		compute_evs = 1;
-		no_eigenvalues = 1;
-		eigenvalues(&no_eigenvalues, max_solver_iterations, eigenvalue_precision, 0, compute_evs, nstore, even_odd_flag);
-		no_eigenvalues = 0;
-		compute_evs = 0;
-	}
+    /* Compute minimal eigenvalues, necessary for overlap! */
+    if (compute_evs != 0)
+      eigenvalues(&no_eigenvalues, max_solver_iterations, eigenvalue_precision, 0, compute_evs,
+                  nstore, even_odd_flag);
+    else {
+      compute_evs = 1;
+      no_eigenvalues = 1;
+      eigenvalues(&no_eigenvalues, max_solver_iterations, eigenvalue_precision, 0, compute_evs,
+                  nstore, even_odd_flag);
+      no_eigenvalues = 0;
+      compute_evs = 0;
+    }
 
-	if (phmc_compute_evs != 0) {
+    if (phmc_compute_evs != 0) {
 #ifdef TM_USE_MPI
-		MPI_Finalize();
+      MPI_Finalize();
 #endif
-		return (0);
-	}
+      return (0);
+    }
 
-	/* here we can do something */
-	ov_n_cheby = (-log(delta))/(2*sqrt(ev_minev));
-	printf("// Degree of cheby polynomial: %d\n", ov_n_cheby);
-//    g_mu = 0.;
-	ov_check_locality();
-//	ov_check_ginsparg_wilson_relation_strong();
-//	ov_compare_4x4("overlap.mat");
-//	ov_compare_12x12("overlap.mat");
-//	ov_save_12x12("overlap.mat");
-//	ov_check_operator(1,0,0,0);
+    /* here we can do something */
+    ov_n_cheby = (-log(delta)) / (2 * sqrt(ev_minev));
+    printf("// Degree of cheby polynomial: %d\n", ov_n_cheby);
+    //    g_mu = 0.;
+    ov_check_locality();
+    //	ov_check_ginsparg_wilson_relation_strong();
+    //	ov_compare_4x4("overlap.mat");
+    //	ov_compare_12x12("overlap.mat");
+    //	ov_save_12x12("overlap.mat");
+    //	ov_check_operator(1,0,0,0);
 
     nstore += Nsave;
   }
@@ -400,7 +392,7 @@ int main(int argc, char *argv[])
     free_chi_up_spinor_field();
     free_chi_dn_spinor_field();
   }
-  return(0);
+  return (0);
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)
 #endif

@@ -7,26 +7,26 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include <tmlqcd_config.h>
 #endif
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include "get_rectangle_staples.h"
 #include "global.h"
 #include "su3.h"
-#include "get_rectangle_staples.h"
 
-void get_rectangle_staples(su3 * const v, const int x, const int mu) {
+void get_rectangle_staples(su3 *const v, const int x, const int mu) {
   get_rectangle_staples_general(v, x, mu, (const su3 *const *const)g_gauge_field);
 }
 
@@ -42,7 +42,7 @@ void get_rectangle_staples_general(su3 *const v, const int x, const int mu,
 #endif
   _su3_zero((*v));
   for (int nu = 0; nu < 4; nu++) {
-    if(mu != nu) {
+    if (mu != nu) {
       int y, z;
       /* first contr. starting from x
        * a b c e^+ d^+
@@ -66,7 +66,7 @@ void get_rectangle_staples_general(su3 *const v, const int x, const int mu,
       _su3_times_su3(tmp1, *d, *e);
       _su3_times_su3d_acc((*v), tmp2, tmp1);
 
-      /* 1 contr. starting idn[idn[x][nu]][nu] 
+      /* 1 contr. starting idn[idn[x][nu]][nu]
        * e^+ d^+ a b c
        *
        *e| |c
@@ -88,7 +88,7 @@ void get_rectangle_staples_general(su3 *const v, const int x, const int mu,
       _su3_times_su3(tmp1, *b, *c);
       _su3_times_su3_acc((*v), tmp2, tmp1);
 
-      /* second contr. starting from x 
+      /* second contr. starting from x
        * a b c e^+ d^+
        *
        *   bc
@@ -111,7 +111,7 @@ void get_rectangle_staples_general(su3 *const v, const int x, const int mu,
       _su3_times_su3(tmp1, *d, *e);
       _su3_times_su3d_acc((*v), tmp2, tmp1);
 
-      /* 1 contr. starting idn[x][nu] 
+      /* 1 contr. starting idn[x][nu]
        * d^+ a b c e^+
        *
        *    e
@@ -134,7 +134,7 @@ void get_rectangle_staples_general(su3 *const v, const int x, const int mu,
       _su3_times_su3d(tmp1, *c, *e);
       _su3_times_su3_acc((*v), tmp2, tmp1);
 
-      /* 1 contr. starting idn[idn[x][mu]][nu] 
+      /* 1 contr. starting idn[idn[x][mu]][nu]
        *  e^+ d^+ a b c
        *
        *  e
@@ -155,9 +155,9 @@ void get_rectangle_staples_general(su3 *const v, const int x, const int mu,
       z = g_iup[y][mu];
       c = &gf[z][nu];
       _su3_times_su3(tmp1, *b, *c);
-      _su3_times_su3_acc((*v), tmp2, tmp1); 
+      _su3_times_su3_acc((*v), tmp2, tmp1);
 
-      /* 1 contr. starting idn[x][mu] 
+      /* 1 contr. starting idn[x][mu]
        * d^+ a b c e^+
        *
        *  bc

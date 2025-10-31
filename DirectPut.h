@@ -7,38 +7,38 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
 #ifndef _DIRECT_PUT_H
 #define _DIRECT_PUT_H
-#  ifdef SPI
+#ifdef SPI
 // Basic SPI and HWI includes
-#  include <hwi/include/bqc/A2_core.h>
-#  include <hwi/include/bqc/A2_inlines.h>
-#  include <hwi/include/bqc/MU_PacketCommon.h>
-#  include <firmware/include/personality.h>
-#  include <spi/include/mu/Descriptor.h>
-#  include <spi/include/mu/Descriptor_inlines.h>
-#  include <spi/include/mu/InjFifo.h>
-#  include <spi/include/mu/Addressing.h>
-#  include <spi/include/mu/Addressing_inlines.h>
-#  include <spi/include/mu/GIBarrier.h>
-#  include <spi/include/kernel/MU.h>
-#  include <spi/include/kernel/process.h>
-#  include <spi/include/kernel/location.h>
+#include <firmware/include/personality.h>
+#include <hwi/include/bqc/A2_core.h>
+#include <hwi/include/bqc/A2_inlines.h>
+#include <hwi/include/bqc/MU_PacketCommon.h>
+#include <spi/include/kernel/MU.h>
+#include <spi/include/kernel/location.h>
+#include <spi/include/kernel/process.h>
+#include <spi/include/mu/Addressing.h>
+#include <spi/include/mu/Addressing_inlines.h>
+#include <spi/include/mu/Descriptor.h>
+#include <spi/include/mu/Descriptor_inlines.h>
+#include <spi/include/mu/GIBarrier.h>
+#include <spi/include/mu/InjFifo.h>
 
 // maximal number of directions
-#  define NUM_DIRS               8
+#define NUM_DIRS 8
 // we have four directions and forward/backward
-#  define INJ_MEMORY_FIFO_SIZE  ((64*NUM_DIRS) -1)
+#define INJ_MEMORY_FIFO_SIZE ((64 * NUM_DIRS) - 1)
 
 // total message size summed over all directions
 extern uint64_t totalMessageSize;
@@ -47,12 +47,12 @@ extern uint64_t totalMessageSize;
 extern unsigned int spi_num_dirs;
 
 // pointers to send and receive buffers
-extern char * SPIrecvBuffers;
-extern char * SPIsendBuffers;
-extern char SPIDescriptorsMemory[ NUM_DIRS * sizeof(MUHWI_Descriptor_t) + 64 ];
-extern char SPIDescriptorsMemory32[ NUM_DIRS * sizeof(MUHWI_Descriptor_t) + 64 ];
-extern MUHWI_Descriptor_t * SPIDescriptors;
-extern MUHWI_Descriptor_t * SPIDescriptors32;
+extern char *SPIrecvBuffers;
+extern char *SPIsendBuffers;
+extern char SPIDescriptorsMemory[NUM_DIRS * sizeof(MUHWI_Descriptor_t) + 64];
+extern char SPIDescriptorsMemory32[NUM_DIRS * sizeof(MUHWI_Descriptor_t) + 64];
+extern MUHWI_Descriptor_t *SPIDescriptors;
+extern MUHWI_Descriptor_t *SPIDescriptors32;
 
 // physical address of send buffers
 extern uint64_t sendBufPAddr;
@@ -65,10 +65,11 @@ extern uint64_t descCount[NUM_DIRS];
 
 // get the destinations for all neighbours
 // will be saved in nb2dest
-int get_destinations(int * mypers);
+int get_destinations(int *mypers);
 
 // Call to create the descriptors for all eight directions
-void create_descriptors(MUHWI_Descriptor_t * descriptors, uint64_t *, uint64_t *, uint64_t *, const unsigned int);
+void create_descriptors(MUHWI_Descriptor_t *descriptors, uint64_t *, uint64_t *, uint64_t *,
+                        const unsigned int);
 
 // Call to set up the base address table id and memory regions
 void setup_mregions_bats_counters(const int bufferSize);
@@ -85,28 +86,24 @@ void global_barrier();
  * msg_InjFifoXXXX() functions to anchor resources that have been allocated.
  */
 typedef struct {
-  void* pOpaqueObject;
+  void *pOpaqueObject;
 } msg_InjFifoHandle_t;
 
 // Fifo handles
 extern msg_InjFifoHandle_t injFifoHandle;
 
-int msg_InjFifoInit ( msg_InjFifoHandle_t *injFifoHandlePtr,
-                      uint32_t             startingSubgroupId,
-                      uint32_t             startingFifoId,
-                      uint32_t             numFifos,
-                      size_t               fifoSize,
-                      Kernel_InjFifoAttributes_t  *injFifoAttrs );
+int msg_InjFifoInit(msg_InjFifoHandle_t *injFifoHandlePtr, uint32_t startingSubgroupId,
+                    uint32_t startingFifoId, uint32_t numFifos, size_t fifoSize,
+                    Kernel_InjFifoAttributes_t *injFifoAttrs);
 
 // basically a dummy routine for termination
-void msg_InjFifoTerm ( msg_InjFifoHandle_t injFifoHandle );
-
+void msg_InjFifoTerm(msg_InjFifoHandle_t injFifoHandle);
 
 /**
  * \brief Inject Descriptor into Injection Fifo
- * 
+ *
  * Inject the specified descriptor into the specified injection fifo.
- * 
+ *
  * \param [in]  injFifoHandle  The handle returned from msg_InjFifoInit().
  *                             It must be passed into this function untouched
  *                             from when it was returned from msg_InjFifoInit().
@@ -119,15 +116,13 @@ void msg_InjFifoTerm ( msg_InjFifoHandle_t injFifoHandle );
  * \param [in]  descPtr         Pointer to the descriptor to be injected.
  *
  * \retval  positiveNumber  The descriptor was successfully injected.  The
- *                          returned value is the sequence number of this 
+ *                          returned value is the sequence number of this
  *                          descriptor.
  * \retval  -1              The descriptor was not injected, most likely because
  *                          there is no room in the fifo.
  */
-uint64_t msg_InjFifoInject ( msg_InjFifoHandle_t injFifoHandle,
-                             uint32_t            relativeFifoId,
-                             MUHWI_Descriptor_t *descPtr );
+uint64_t msg_InjFifoInject(msg_InjFifoHandle_t injFifoHandle, uint32_t relativeFifoId,
+                           MUHWI_Descriptor_t *descPtr);
 
-
-#  endif // SPI
+#endif  // SPI
 #endif

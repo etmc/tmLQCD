@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
@@ -23,6 +23,6 @@
 #include "su3.h"
 
 /*   multiply the spinor R with gamma5  (*R) = gamma5*(*R)  with gamma5 = [1 0 ; 0 -1]*/
-void mul_gamma5(spinor * const R, const int N);
+void mul_gamma5(spinor* const R, const int N);
 
 #endif

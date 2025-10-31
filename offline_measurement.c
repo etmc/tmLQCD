@@ -25,40 +25,39 @@
 #ifdef HAVE_CONFIG_H
 #include "tmlqcd_config.h"
 #endif
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
-#include <time.h>
-#include <string.h>
 #include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 #ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
 #include <omp.h>
 #endif
-#include "global.h"
-#include "git_hash.h"
-#include "read_input.h"
-#include "getopt.h"
 #include "geometry_eo.h"
-#include "start.h"
+#include "getopt.h"
+#include "git_hash.h"
+#include "global.h"
 #include "measure_gauge_action.h"
+#include "read_input.h"
+#include "start.h"
 #ifdef TM_USE_MPI
 #include "xchange/xchange.h"
 #endif
-#include "sighandler.h"
-#include "mpi_init.h"
-#include "sighandler.h"
+#include "block.h"
 #include "boundary.h"
 #include "init/init.h"
-#include "monomial/monomial.h"
-#include "phmc.h"
-#include "block.h"
-#include "operator.h"
-#include "solver/generate_dfl_subspace.h"
 #include "io/gauge.h"
 #include "meas/measurements.h"
+#include "monomial/monomial.h"
+#include "mpi_init.h"
+#include "operator.h"
+#include "phmc.h"
+#include "sighandler.h"
+#include "solver/generate_dfl_subspace.h"
 #ifdef TM_USE_QUDA
 #include "quda_interface.h"
 #endif
@@ -69,21 +68,20 @@ extern int nstore;
 int check_geometry();
 
 static void usage(const tm_ExitCode_t exit_code);
-static void process_args(int argc, char *argv[], char ** input_filename, char ** filename);
-static void set_default_filenames(char ** input_filename, char ** filename);
+static void process_args(int argc, char *argv[], char **input_filename, char **filename);
+static void set_default_filenames(char **input_filename, char **filename);
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   FILE *parameterfile = NULL;
   int j, i;
   char datafilename[206];
   char parameterfilename[206];
   char conf_filename[CONF_FILENAME_LENGTH];
-  char * input_filename = NULL;
-  char * filename = NULL;
+  char *input_filename = NULL;
+  char *filename = NULL;
   double plaquette_energy;
 
-  init_critical_globals(TM_PROGRAM_OFFLINE_MEASUREMENT);  
+  init_critical_globals(TM_PROGRAM_OFFLINE_MEASUREMENT);
 
 #ifdef _KOJAK_INST
 #pragma pomp inst init
@@ -105,7 +103,7 @@ int main(int argc, char *argv[])
   verbose = 0;
   g_use_clover_flag = 0;
 
-  process_args(argc,argv,&input_filename,&filename);
+  process_args(argc, argv, &input_filename, &filename);
   set_default_filenames(&input_filename, &filename);
   init_parallel_and_read_input(argc, argv, input_filename);
 
@@ -125,12 +123,13 @@ int main(int argc, char *argv[])
 
   /* starts the single and double precision random number */
   /* generator                                            */
-  start_ranlux(rlxd_level, random_seed^nstore);
-  
+  start_ranlux(rlxd_level, random_seed ^ nstore);
+
   /* we need to make sure that we don't have even_odd_flag = 1 */
   /* if any of the operators doesn't use it                    */
   /* in this way even/odd can still be used by other operators */
-  for(j = 0; j < no_operators; j++) if(!operator_list[j].even_odd_flag) even_odd_flag = 0;
+  for (j = 0; j < no_operators; j++)
+    if (!operator_list[j].even_odd_flag) even_odd_flag = 0;
 
 #ifndef TM_USE_MPI
   g_dbw2rand = 0;
@@ -153,8 +152,7 @@ int main(int argc, char *argv[])
   if (no_monomials > 0) {
     if (even_odd_flag) {
       j = init_monomials(VOLUMEPLUSRAND / 2, even_odd_flag);
-    }
-    else {
+    } else {
       j = init_monomials(VOLUMEPLUSRAND, even_odd_flag);
     }
     if (j != 0) {
@@ -164,8 +162,7 @@ int main(int argc, char *argv[])
   }
   if (even_odd_flag) {
     j = init_spinor_field(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS);
-  }
-  else {
+  } else {
     j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
   }
   if (j != 0) {
@@ -210,15 +207,15 @@ int main(int argc, char *argv[])
   phmc_invmaxev = 1.;
 
   init_operators();
-  
+
   /* list and initialize measurements*/
-  if(g_proc_id == 0) {
+  if (g_proc_id == 0) {
     printf("\n");
-    for(int j = 0; j < no_measurements; j++) {
+    for (int j = 0; j < no_measurements; j++) {
       printf("# measurement id %d, type = %d\n", j, measurement_list[j].type);
     }
   }
-  init_measurements();  
+  init_measurements();
 
   /* this could be maybe moved to init_operators */
 #ifdef _USE_HALFSPINOR
@@ -229,39 +226,38 @@ int main(int argc, char *argv[])
   }
   if (g_sloppy_precision_flag == 1) {
     j = init_dirac_halfspinor32();
-    if (j != 0)
-    {
+    if (j != 0) {
       fprintf(stderr, "Not enough memory for 32-bit halffield! Aborting...\n");
       exit(-1);
     }
   }
-#  if (defined _PERSISTENT)
-  if (even_odd_flag)
-    init_xchange_halffield();
-#  endif
+#if (defined _PERSISTENT)
+  if (even_odd_flag) init_xchange_halffield();
+#endif
 #endif
 
   for (j = 0; j < Nmeas; j++) {
-    int n_written = snprintf(conf_filename, CONF_FILENAME_LENGTH, "%s.%.4d", gauge_input_filename, nstore);
-    if( n_written < 0 || n_written > CONF_FILENAME_LENGTH ){
+    int n_written =
+        snprintf(conf_filename, CONF_FILENAME_LENGTH, "%s.%.4d", gauge_input_filename, nstore);
+    if (n_written < 0 || n_written > CONF_FILENAME_LENGTH) {
       char error_message[500];
-      snprintf(error_message,
-               500,
+      snprintf(error_message, 500,
                "Encoding error or gauge configuration filename "
-               "longer than %d characters! See offline_measurement.c CONF_FILENAME_LENGTH\n", 
+               "longer than %d characters! See offline_measurement.c CONF_FILENAME_LENGTH\n",
                CONF_FILENAME_LENGTH);
       fatal_error(error_message, "offline_measurement.c");
     }
     if (g_cart_id == 0) {
-      printf("#\n# Trying to read gauge field from file %s in %s precision.\n",
-            conf_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
+      printf("#\n# Trying to read gauge field from file %s in %s precision.\n", conf_filename,
+             (gauge_precision_read_flag == 32 ? "single" : "double"));
       fflush(stdout);
     }
-    if( (i = read_gauge_field(conf_filename,g_gauge_field)) !=0) {
-      fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", i, conf_filename);
+    if ((i = read_gauge_field(conf_filename, g_gauge_field)) != 0) {
+      fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", i,
+              conf_filename);
       exit(-2);
     }
-  
+
     if (g_cart_id == 0) {
       printf("# Finished reading gauge field.\n");
       fflush(stdout);
@@ -273,10 +269,10 @@ int main(int argc, char *argv[])
 #endif
 
     /*compute the energy of the gauge field*/
-    plaquette_energy = measure_plaquette( (const su3** const) g_gauge_field);
+    plaquette_energy = measure_plaquette((const su3 **const)g_gauge_field);
 
     if (g_cart_id == 0) {
-      printf("# The computed plaquette value is %e.\n", plaquette_energy / (6.*VOLUME*g_nproc));
+      printf("# The computed plaquette value is %e.\n", plaquette_energy / (6. * VOLUME * g_nproc));
       fflush(stdout);
     }
 
@@ -284,16 +280,15 @@ int main(int argc, char *argv[])
       fprintf(stdout, "#\n"); /*Indicate starting of the operator part*/
     }
 
-    
     /* offline measurements */
-    measurement * meas;
-    for(int imeas = 0; imeas < no_measurements; imeas++){
+    measurement *meas;
+    for (int imeas = 0; imeas < no_measurements; imeas++) {
       meas = &measurement_list[imeas];
       if (g_proc_id == 0) {
         fprintf(stdout, "#\n# Beginning offline measurement.\n");
       }
       meas->measurefunc(nstore, imeas, even_odd_flag);
-    }      
+    }
     nstore += Nsave;
   }
 
@@ -318,17 +313,15 @@ int main(int argc, char *argv[])
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 #endif
-  return(0);
-  
-  
+  return (0);
+
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)
 #endif
 }
 
-static void usage(const tm_ExitCode_t exit_code)
-{ 
-  if( g_proc_id == 0 ){
+static void usage(const tm_ExitCode_t exit_code) {
+  if (g_proc_id == 0) {
     fprintf(stdout, "Offline version of the online measurements for twisted mass QCD\n");
     fprintf(stdout, "Version %s \n\n", TMLQCD_PACKAGE_VERSION);
     fprintf(stdout, "Please send bug reports to %s\n", TMLQCD_PACKAGE_BUGREPORT);
@@ -336,13 +329,15 @@ static void usage(const tm_ExitCode_t exit_code)
     fprintf(stdout, "Options: [-f input-filename]\n");
     fprintf(stdout, "         [-v] more verbosity\n");
     fprintf(stdout, "         [-V] print version information and exit\n");
-    fprintf(stdout, "         [-m level] request MPI thread level 'single' or 'multiple' (default: 'single')\n");
+    fprintf(stdout,
+            "         [-m level] request MPI thread level 'single' or 'multiple' (default: "
+            "'single')\n");
     fprintf(stdout, "         [-h|-? this help]\n");
   }
   exit(exit_code);
 }
 
-static void process_args(int argc, char *argv[], char ** input_filename, char ** filename) {
+static void process_args(int argc, char *argv[], char **input_filename, char **filename) {
   int c;
   while ((c = getopt(argc, argv, "h?vVf:o:")) != -1) {
     switch (c) {
@@ -354,18 +349,20 @@ static void process_args(int argc, char *argv[], char ** input_filename, char **
         verbose = 1;
         break;
       case 'V':
-        if(g_proc_id == 0) {
-          fprintf(stdout,"%s %s\n",TMLQCD_PACKAGE_STRING,git_hash);
+        if (g_proc_id == 0) {
+          fprintf(stdout, "%s %s\n", TMLQCD_PACKAGE_STRING, git_hash);
         }
         exit(TM_EXIT_SUCCESS);
         break;
       case 'm':
-        if( !strcmp(optarg, "single") ){
+        if (!strcmp(optarg, "single")) {
           g_mpi_thread_level = TM_MPI_THREAD_SINGLE;
-        } else if ( !strcmp(optarg, "multiple") ) {
+        } else if (!strcmp(optarg, "multiple")) {
           g_mpi_thread_level = TM_MPI_THREAD_MULTIPLE;
         } else {
-          tm_debug_printf(0, 0, "[offline_measurement process_args]: invalid input for -m command line argument\n");
+          tm_debug_printf(
+              0, 0,
+              "[offline_measurement process_args]: invalid input for -m command line argument\n");
           usage(TM_EXIT_INVALID_CMDLINE_ARG);
         }
         break;
@@ -378,15 +375,14 @@ static void process_args(int argc, char *argv[], char ** input_filename, char **
   }
 }
 
-static void set_default_filenames(char ** input_filename, char ** filename) {
-  if( *input_filename == NULL ) {
+static void set_default_filenames(char **input_filename, char **filename) {
+  if (*input_filename == NULL) {
     *input_filename = calloc(28, sizeof(char));
-    strcpy(*input_filename,"offline_measurement.input");
+    strcpy(*input_filename, "offline_measurement.input");
   }
-  
-  if( *filename == NULL ) {
-    *filename = calloc(7, sizeof(char));
-    strcpy(*filename,"output");
-  } 
-}
 
+  if (*filename == NULL) {
+    *filename = calloc(7, sizeof(char));
+    strcpy(*filename, "output");
+  }
+}
