@@ -44,7 +44,6 @@
 #include "mpi_init.h"
 #include "polyakov_loop.h"
 #include "read_input.h"
-#include "sse.h"
 #include "start.h"
 #include "su3.h"
 

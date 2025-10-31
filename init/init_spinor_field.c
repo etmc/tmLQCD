@@ -28,7 +28,6 @@
 #endif
 #include "global.h"
 #include "monomial/monomial.h"
-#include "sse.h"
 #include "su3.h"
 
 spinor *sp = NULL;
@@ -56,11 +55,7 @@ int init_spinor_field(const int V, const int nr) {
     errno = 0;
     return (2);
   }
-#if (defined SSE || defined SSE2 || defined SSE3)
-  g_spinor_field[0] = (spinor *)(((unsigned long int)(sp) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
   g_spinor_field[0] = sp;
-#endif
 
   for (i = 1; i < nr; i++) {
     g_spinor_field[i] = g_spinor_field[i - 1] + V;
@@ -101,11 +96,7 @@ int init_spinor_field_32(const int V, const int nr) {
     errno = 0;
     return (2);
   }
-#if (defined SSE || defined SSE2 || defined SSE3)
   g_spinor_field32[0] = (spinor32 *)(((unsigned long int)(sp32) + ALIGN_BASE32) & ~ALIGN_BASE32);
-#else
-  g_spinor_field32[0] = (spinor32 *)(((unsigned long int)(sp32) + ALIGN_BASE32) & ~ALIGN_BASE32);
-#endif
 
   for (i = 1; i < nr; i++) {
     g_spinor_field32[i] = g_spinor_field32[i - 1] + V;
@@ -146,11 +137,7 @@ int allocate_spinor_field_array(spinor ***spinors, spinor **sp, const int V, con
     errno = 0;
     return (2);
   }
-#if (defined SSE || defined SSE2 || defined SSE3)
-  (*spinors)[0] = (spinor *)(((unsigned long int)(*sp) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
   (*spinors)[0] = *sp;
-#endif
 
   for (i = 1; i < nr; i++) {
     (*spinors)[i] = (*spinors)[i - 1] + V;
@@ -196,11 +183,7 @@ int init_csg_field(const int V) {
         return (2);
       }
     }
-#if (defined SSE || defined SSE2 || defined SSE3)
-    s = (spinor *)(((unsigned long int)(sp_csg) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
     s = sp_csg;
-#endif
     for (j = 0; j < no_monomials; j++) {
       if (monomial_list[j].csg_N != 0) {
         for (i = 0; i < monomial_list[j].csg_N; i++) {
@@ -242,11 +225,7 @@ int init_timslice_buffer_field(const int t_slice) {
     return (3);
   }
 
-#if ((defined SSE || defined SSE2 || defined SSE3) && defined _USE_TSPLITPAR)
-  g_tbuff = (spinor *)(((unsigned long int)(sp_tbuff) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
   g_tbuff = sp_tbuff;
-#endif
 
   return (0);
 }

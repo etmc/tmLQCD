@@ -21,28 +21,11 @@
 #include <tmlqcd_config.h>
 #endif
 
-// work-around for missing single precision implementation of inline SSE
-#ifdef SSE
-#define REDEFSSE
-#undef SSE
-#endif
-
-#ifdef SSE2
-#define REDEFSSE2
-#undef SSE2
-#endif
-
-#ifdef SSE3
-#define REDEFSSE3
-#undef SSE3
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include "boundary.h"
 #include "global.h"
 #include "operator/Hopping_Matrix_32.h"
-#include "sse.h"
 #include "su3.h"
 #include "xchange/xchange.h"
 

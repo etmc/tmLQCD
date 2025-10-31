@@ -47,7 +47,6 @@
 #include "operator/Dov_psi.h"
 #include "operator/tm_operators.h"
 #include "ranlxd.h"
-#include "sse.h"
 #include "su3.h"
 
 /*   typedef enum tm_operator_ {PRECWS_DTM,PRECWS_QTM,PRECWS_D_DAGGER_D} tm_operator; */

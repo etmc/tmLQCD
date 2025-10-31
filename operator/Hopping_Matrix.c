@@ -70,17 +70,13 @@
 #if defined _USE_HALFSPINOR
 #include "operator/halfspinor_hopping.h"
 
-#if ((defined SSE2) || (defined SSE3))
-#include "sse.h"
-
-#elif (defined BGL && defined XLC)
+#if (defined BGL && defined XLC)
 #include "bgl.h"
 
 #elif (defined BGQ && defined XLC)
 #include "bgq.h"
 #include "bgq2.h"
 #include "xlc_prefetch.h"
-
 #endif
 
 void Hopping_Matrix(const int ieo, spinor* const l, spinor* const k) {
@@ -106,16 +102,9 @@ void Hopping_Matrix(const int ieo, spinor* const l, spinor* const k) {
 
 #else /* thats _USE_HALFSPINOR */
 
-#if (((defined SSE2) || (defined SSE3)) && defined _USE_TSPLITPAR)
-#include "operator/hopping_sse_dbl.c"
-#include "sse.h"
-
-#else
 #include "operator/hopping.h"
-#if ((defined SSE2) || (defined SSE3))
-#include "sse.h"
 
-#elif (defined BGL && defined XLC)
+#if (defined BGL && defined XLC)
 #include "bgl.h"
 
 #elif (defined BGQ && defined XLC)
@@ -125,12 +114,14 @@ void Hopping_Matrix(const int ieo, spinor* const l, spinor* const k) {
 
 #elif defined XLC
 #include "xlc_prefetch.h"
-
 #endif
+
 void Hopping_Matrix(const int ieo, spinor* const l, spinor* const k) {
+
 #ifdef XLC
 #pragma disjoint(*l, *k)
 #endif
+
 #ifdef _GAUGE_COPY
   if (g_update_gauge_copy) {
     update_backward_gauge(g_gauge_field);
@@ -153,6 +144,5 @@ void Hopping_Matrix(const int ieo, spinor* const l, spinor* const k) {
 #endif
   return;
 }
-#endif
 
 #endif /* thats _USE_HALFSPINOR */

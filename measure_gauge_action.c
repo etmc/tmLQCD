@@ -39,7 +39,6 @@
 #include "geometry_eo.h"
 #include "global.h"
 #include "measure_gauge_action.h"
-#include "sse.h"
 #include "su3.h"
 #include "su3adj.h"
 

@@ -49,7 +49,6 @@
 #include "global.h"
 #include "operator/clover_leaf.h"
 #include "operator/clovertm_operators.h"
-#include "sse.h"
 #include "su3.h"
 #include "su3adj.h"
 

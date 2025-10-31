@@ -46,7 +46,6 @@
 #include "solver/chrono_guess.h"
 #include "solver/monomial_solve.h"
 #include "solver/solver.h"
-#include "sse.h"
 #include "start.h"
 #include "su3.h"
 #include "su3adj.h"

@@ -26,7 +26,6 @@
 #include "expo.h"
 #include "global.h"
 #include "init_gauge_field.h"
-#include "sse.h"
 #include "su3.h"
 
 su3* gauge_field = NULL;
