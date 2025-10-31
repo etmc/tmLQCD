@@ -25,15 +25,20 @@
 #include "io/selector.h"
 #include "io/utils.h"
 
-int read_spinor(spinor * const s, spinor * const r, char * filename, const int position);
-int read_binary_spinor_data(spinor * const s, spinor * const r, READER * reader, DML_Checksum * checksum);
-int read_binary_spinor_data_l(spinor * const s, READER * reader, DML_Checksum * checksum);
+int read_spinor(spinor *const s, spinor *const r, char *filename, const int position);
+int read_binary_spinor_data(spinor *const s, spinor *const r, READER *reader,
+                            DML_Checksum *checksum);
+int read_binary_spinor_data_l(spinor *const s, READER *reader, DML_Checksum *checksum);
 
-int write_spinor(WRITER * writer, spinor ** const s, spinor ** const r, const int flavours, const int prec);
-int write_binary_spinor_data(spinor * const s, spinor * const r, WRITER * writer, DML_Checksum *checksum, int const prec);
-int write_binary_spinor_data_l(spinor * const s, WRITER * writer, DML_Checksum * checksum, const int prec);
+int write_spinor(WRITER *writer, spinor **const s, spinor **const r, const int flavours,
+                 const int prec);
+int write_binary_spinor_data(spinor *const s, spinor *const r, WRITER *writer,
+                             DML_Checksum *checksum, int const prec);
+int write_binary_spinor_data_l(spinor *const s, WRITER *writer, DML_Checksum *checksum,
+                               const int prec);
 
-void write_spinor_info(WRITER * writer, const int write_prop_format_flag, paramsInverterInfo * InverterInfo, int append);
+void write_spinor_info(WRITER *writer, const int write_prop_format_flag,
+                       paramsInverterInfo *InverterInfo, int append);
 void write_source_format(WRITER *writer, paramsSourceFormat const *format);
 void write_propagator_format(WRITER *writer, paramsPropagatorFormat const *format);
 void write_propagator_type(WRITER *writer, const int type);

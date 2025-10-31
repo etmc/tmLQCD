@@ -9,37 +9,37 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include <tmlqcd_config.h>
 #endif
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
-#include "global.h"
-#include "start.h"
-#include "ranlxd.h"
-#include "ranlxs.h"
-#include "su3spinor.h"
-#include "source_generation.h"
-#include "invert_eo.h"
-#include "solver/solver.h"
-#include "solver/solver_params.h"
 #include "geometry_eo.h"
+#include "gettime.h"
+#include "global.h"
+#include "invert_eo.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "measurements.h"
 #include "pion_norm.h"
-#include "gettime.h"
+#include "ranlxd.h"
+#include "ranlxs.h"
+#include "solver/solver.h"
+#include "solver/solver_params.h"
+#include "source_generation.h"
+#include "start.h"
+#include "su3spinor.h"
 
 void pion_norm_measurement(const int traj, const int id, const int ieo) {
   tm_stopwatch_push(&g_timers, __func__, "");
@@ -56,98 +56,93 @@ void pion_norm_measurement(const int traj, const int id, const int ieo) {
   char *filename, *filename2;
   char buf[100];
   char buf2[100];
-  filename=buf;
-  filename2=buf2;
-  sprintf(filename,"pionnormcorrelator_finiteT.%.6d",traj);
-  sprintf(filename2,"%s", "pion_norm.data");
+  filename = buf;
+  filename2 = buf2;
+  sprintf(filename, "pionnormcorrelator_finiteT.%.6d", traj);
+  sprintf(filename2, "%s", "pion_norm.data");
 
   /* generate random source point */
-  if(ranlxs_init == 0) {
+  if (ranlxs_init == 0) {
     rlxs_init(1, 123456);
   }
   ranlxs(&tmp, 1);
-  z0 = (int)(measurement_list[id].max_source_slice*tmp);
+  z0 = (int)(measurement_list[id].max_source_slice * tmp);
 #ifdef TM_USE_MPI
   MPI_Bcast(&z0, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif
 
-  Cpp = (double*) calloc(g_nproc_z*LZ, sizeof(double));
+  Cpp = (double *)calloc(g_nproc_z * LZ, sizeof(double));
 
   printf("Doing finite Temperature online measurement\n");
-  
+
   /* stochastic source in z-slice */
-  source_generation_pion_zdir(g_spinor_field[0], g_spinor_field[1], 
-                            z0, 0, traj);
-  
+  source_generation_pion_zdir(g_spinor_field[0], g_spinor_field[1], z0, 0, traj);
 
   /* invert on the stochastic source */
-  invert_eo(g_spinor_field[2], g_spinor_field[3], 
-            g_spinor_field[0], g_spinor_field[1],
-            1.e-14, measurement_list[id].max_iter, CG, 1, 0, ieo, 0, NULL,tmp_solver_params, -1,
+  invert_eo(g_spinor_field[2], g_spinor_field[3], g_spinor_field[0], g_spinor_field[1], 1.e-14,
+            measurement_list[id].max_iter, CG, 1, 0, ieo, 0, NULL, tmp_solver_params, -1,
             NO_EXT_INV, SLOPPY_DOUBLE, NO_COMPRESSION);
 
   /* now we bring it to normal format */
   /* here we use implicitly DUM_MATRIX and DUM_MATRIX+1 */
   convert_eo_to_lexic(g_spinor_field[DUM_MATRIX], g_spinor_field[2], g_spinor_field[3]);
-  
+
   /* now we sums only over local space for every z */
-  for(z = 0; z < LZ; z++) {
+  for (z = 0; z < LZ; z++) {
     res = 0.;
-    /* sum here over all points in one z-slice 
+    /* sum here over all points in one z-slice
        we have to look up g_ipt*/
 
     j = g_ipt[0][0][0][z];
-    for(i = 0; i < T*LX*LY ; i++) {
-           res += _spinor_prod_re(g_spinor_field[DUM_MATRIX][j], g_spinor_field[DUM_MATRIX][j]);
-           j += LZ; /* jump LZ sites in array, z ist fastest index */
+    for (i = 0; i < T * LX * LY; i++) {
+      res += _spinor_prod_re(g_spinor_field[DUM_MATRIX][j], g_spinor_field[DUM_MATRIX][j]);
+      j += LZ; /* jump LZ sites in array, z ist fastest index */
     }
 
-
-    
 #if defined TM_USE_MPI
     MPI_Reduce(&res, &mpi_res, 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_z_slices);
     res = mpi_res;
 #endif
-    Cpp[z+g_proc_coords[3]*LZ] = +res/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_t*T)*2.;
+    Cpp[z + g_proc_coords[3] * LZ] =
+        +res / (g_nproc_x * LX) / (g_nproc_y * LY) / (g_nproc_t * T) * 2.;
   }
 
 #ifdef TM_USE_MPI
   /* some gymnastics needed in case of parallelisation */
-  if(g_mpi_z_rank == 0) {
-    MPI_Gather(&Cpp[g_proc_coords[3]*LZ], LZ, MPI_DOUBLE, Cpp, LZ, MPI_DOUBLE, 0, g_mpi_ST_slices);
+  if (g_mpi_z_rank == 0) {
+    MPI_Gather(&Cpp[g_proc_coords[3] * LZ], LZ, MPI_DOUBLE, Cpp, LZ, MPI_DOUBLE, 0,
+               g_mpi_ST_slices);
   }
 #endif
 
-
   /* and write everything into a file */
-  if(g_mpi_z_rank == 0 && g_proc_coords[3] == 0) {
+  if (g_mpi_z_rank == 0 && g_proc_coords[3] == 0) {
     ofs = fopen(filename, "w");
-    fprintf( ofs, "1  1  0  %e  %e\n", Cpp[z0], 0.);
-    for(z = 1; z < g_nproc_z*LZ/2; z++) {
-      zz = (z0+z)%(g_nproc_z*LZ);
-      fprintf( ofs, "1  1  %d  %e  ", z, Cpp[zz]);
-      zz = (z0+g_nproc_z*LZ-z)%(g_nproc_z*LZ);
-      fprintf( ofs, "%e\n", Cpp[zz]);
+    fprintf(ofs, "1  1  0  %e  %e\n", Cpp[z0], 0.);
+    for (z = 1; z < g_nproc_z * LZ / 2; z++) {
+      zz = (z0 + z) % (g_nproc_z * LZ);
+      fprintf(ofs, "1  1  %d  %e  ", z, Cpp[zz]);
+      zz = (z0 + g_nproc_z * LZ - z) % (g_nproc_z * LZ);
+      fprintf(ofs, "%e\n", Cpp[zz]);
     }
-    zz = (z0+g_nproc_z*LZ/2)%(g_nproc_z*LZ);
-    fprintf( ofs, "1  1  %d  %e  %e\n", z, Cpp[zz], 0.);
+    zz = (z0 + g_nproc_z * LZ / 2) % (g_nproc_z * LZ);
+    fprintf(ofs, "1  1  %d  %e  %e\n", z, Cpp[zz], 0.);
     fclose(ofs);
-    
+
     /* sum over all Cpp to get pionnorm*/
     ofs2 = fopen(filename2, "a");
     pionnorm = 0.;
-    for(z=0; z<g_nproc_z*LZ; z++){
+    for (z = 0; z < g_nproc_z * LZ; z++) {
       pionnorm += Cpp[z];
     }
     /* normalize */
-    pionnorm = pionnorm/(g_nproc_z*LZ); 
-    fprintf(ofs2,"%d\t %.16e\n",traj,pionnorm);
+    pionnorm = pionnorm / (g_nproc_z * LZ);
+    fprintf(ofs2, "%d\t %.16e\n", traj, pionnorm);
     fclose(ofs2);
   }
-  
+
   free(Cpp);
   tm_stopwatch_pop(&g_timers, 0, 1, "");
   return;
 }
 /*end  Florian Burger 4.11.2009 */
-

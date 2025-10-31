@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
@@ -23,9 +23,10 @@
 #include "tmlqcd_config.h"
 #endif
 
+#include "su3.h"
+
 #ifdef TM_USE_MPI
 #include <mpi.h>
-
 
 /* Datatypes for the data exchange */
 extern MPI_Datatype mpi_su3;
@@ -111,7 +112,7 @@ extern MPI_Datatype field_xt_slice_int;
 extern MPI_Datatype field_yt_slice_int;
 extern MPI_Datatype field_xt_slice_ext;
 extern MPI_Datatype field_yt_slice_ext;
-# ifdef PARALLELXYZ
+#ifdef PARALLELXYZ
 extern MPI_Datatype field_zt_slice_ext_L;
 extern MPI_Datatype field_zt_slice_ext_S;
 extern MPI_Datatype field_zt_slice_even_dn_et;
@@ -122,7 +123,7 @@ extern MPI_Datatype field_zt_slice_even_dn_ot;
 extern MPI_Datatype field_zt_slice_even_up_ot;
 extern MPI_Datatype field_zt_slice_odd_dn_ot;
 extern MPI_Datatype field_zt_slice_odd_up_ot;
-# endif
+#endif
 #endif
 #ifdef WITHLAPH
 extern MPI_Datatype su3vect_point;
@@ -135,33 +136,34 @@ extern MPI_Datatype jfield_z_slice_gath;
 extern MPI_Datatype jfield_y_subslice;
 #endif
 
-#if ( defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELXYZ )
+#if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || \
+     defined PARALLELXYZ)
 extern MPI_Datatype field_z_slice_even_dn;
 extern MPI_Datatype field_z_slice_even_up;
 extern MPI_Datatype field_z_slice_odd_dn;
 extern MPI_Datatype field_z_slice_odd_up;
 
-# if (!defined _INDEX_INDEP_GEOM)
-extern spinor * field_buffer_z ALIGN;
-extern spinor * field_buffer_z2 ALIGN;
-extern spinor * field_buffer_z3 ALIGN;
-extern spinor * field_buffer_z4 ALIGN;
-extern spinor * field_buffer_y ALIGN;
-extern spinor * field_buffer_y2 ALIGN;
-extern spinor * field_buffer_y3 ALIGN;
-extern spinor * field_buffer_y4 ALIGN;
-extern spinor * field_buffer_x ALIGN;
-extern spinor * field_buffer_x2 ALIGN;
-extern spinor * field_buffer_x3 ALIGN;
-extern spinor * field_buffer_x4 ALIGN;
-extern spinor * field_buffer_t ALIGN;
-extern spinor * field_buffer_t2 ALIGN;
-extern spinor * field_buffer_t3 ALIGN;
-extern spinor * field_buffer_t4 ALIGN;
+#if (!defined _INDEX_INDEP_GEOM)
+extern spinor *field_buffer_z ALIGN;
+extern spinor *field_buffer_z2 ALIGN;
+extern spinor *field_buffer_z3 ALIGN;
+extern spinor *field_buffer_z4 ALIGN;
+extern spinor *field_buffer_y ALIGN;
+extern spinor *field_buffer_y2 ALIGN;
+extern spinor *field_buffer_y3 ALIGN;
+extern spinor *field_buffer_y4 ALIGN;
+extern spinor *field_buffer_x ALIGN;
+extern spinor *field_buffer_x2 ALIGN;
+extern spinor *field_buffer_x3 ALIGN;
+extern spinor *field_buffer_x4 ALIGN;
+extern spinor *field_buffer_t ALIGN;
+extern spinor *field_buffer_t2 ALIGN;
+extern spinor *field_buffer_t3 ALIGN;
+extern spinor *field_buffer_t4 ALIGN;
 
-extern halfspinor * halffield_buffer_z ALIGN;
-extern halfspinor * halffield_buffer_z2 ALIGN;
-# endif
+extern halfspinor *halffield_buffer_z ALIGN;
+extern halfspinor *halffield_buffer_z2 ALIGN;
+#endif
 #endif
 
 extern MPI_Op mpi_reduce_su3_ray;

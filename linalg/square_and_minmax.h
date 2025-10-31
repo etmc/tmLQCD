@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
@@ -28,14 +28,15 @@
 /* double square_and_minmax(spinor * const P, spinor * const Q )
  *     Returns the square norm of *P / *Q (locally) and the local minimal/maximal norm */
 
-void square_and_minmax(double * const sum, double * const min, double * const max, const spinor * const P, const int N);
-void square_and_minmax_rel(double * const sum, double * const min, double * const max, const spinor * const P,  const spinor * const Q, const int N);
-void square_and_minmax_abs(double * const sum, double * const min, double * const max, double * const min_abs, double * const max_abs, const spinor * const P, const int N);
-void square_and_minmax_rel_abs(double * const sum, double * const min, double * const max, double * const min_abs, double * const max_abs, const spinor * const P,  const spinor * const Q, const int N);
-
-
+void square_and_minmax(double* const sum, double* const min, double* const max,
+                       const spinor* const P, const int N);
+void square_and_minmax_rel(double* const sum, double* const min, double* const max,
+                           const spinor* const P, const spinor* const Q, const int N);
+void square_and_minmax_abs(double* const sum, double* const min, double* const max,
+                           double* const min_abs, double* const max_abs, const spinor* const P,
+                           const int N);
+void square_and_minmax_rel_abs(double* const sum, double* const min, double* const max,
+                               double* const min_abs, double* const max_abs, const spinor* const P,
+                               const spinor* const Q, const int N);
 
 #endif
-
-
-

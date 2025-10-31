@@ -37,8 +37,8 @@
 #endif
 
 #include "fatal_error.h"
-#include "init_parallel.h"
 #include "global.h"
+#include "init_parallel.h"
 #include "read_input.h"
 #include "tm_debug_printf.h"
 
@@ -50,7 +50,7 @@ void init_parallel_and_read_input(int argc, char *argv[], const char input_filen
     QMP_error("Failed to initialize QMP\n");
     abort();
   }
-  if( prv != g_mpi_thread_level ) {
+  if (prv != g_mpi_thread_level) {
     QMP_error("Provided thread level does not match requested thread level!\n");
     abort();
   }
@@ -61,8 +61,9 @@ void init_parallel_and_read_input(int argc, char *argv[], const char input_filen
 #ifdef TM_USE_OMP
   int mpi_thread_provided;
   MPI_Init_thread(&argc, &argv, g_mpi_thread_level, &mpi_thread_provided);
-  if( mpi_thread_provided != g_mpi_thread_level ){
-    fatal_error("Provided thread level does not match requested one!", "init_parallel_and_read_input");
+  if (mpi_thread_provided != g_mpi_thread_level) {
+    fatal_error("Provided thread level does not match requested one!",
+                "init_parallel_and_read_input");
   }
 #else
   MPI_Init(&argc, &argv);
@@ -75,14 +76,14 @@ void init_parallel_and_read_input(int argc, char *argv[], const char input_filen
   g_proc_id = 0;
 #endif
 
-  print_mpi_thread_level(g_mpi_thread_level);  
+  print_mpi_thread_level(g_mpi_thread_level);
 
-// Read the input file
-int status = read_input(input_filename);
-if (status != 0) {
-  fprintf(stderr, "Could not find input file: %s\nAborting...\n", input_filename);
-  exit(-1);
-}
+  // Read the input file
+  int status = read_input(input_filename);
+  if (status != 0) {
+    fprintf(stderr, "Could not find input file: %s\nAborting...\n", input_filename);
+    exit(-1);
+  }
 
 #ifdef TM_USE_OMP
   init_openmp();

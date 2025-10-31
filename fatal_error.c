@@ -1,5 +1,5 @@
 /***********************************************************************
- *  
+ *
  * Copyright (C) 2012 Carsten Urbach
  *
  * This file is part of tmLQCD.
@@ -8,12 +8,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
@@ -22,8 +22,8 @@
 #include <tmlqcd_config.h>
 #endif
 
-#include <stdio.h>
 #include <global.h>
+#include <stdio.h>
 
 #ifdef TM_USE_MPI
 #include <mpi.h>
@@ -31,13 +31,10 @@
 
 #include "fatal_error.h"
 
-void fatal_error(char const *error, char const *function)
-{
-  if (error != NULL)
-  {
+void fatal_error(char const *error, char const *function) {
+  if (error != NULL) {
     fprintf(stderr, "FATAL ERROR\n");
-    if (function != NULL)
-    {
+    if (function != NULL) {
 #ifdef TM_USE_MPI
       fprintf(stderr, "  Within %s (reported by node %d):\n", function, g_proc_id);
 #else
@@ -47,7 +44,7 @@ void fatal_error(char const *error, char const *function)
     fprintf(stderr, "    %s\n", error);
     fflush(stderr);
   }
-  
+
 #ifdef TM_USE_MPI
   MPI_Abort(MPI_COMM_WORLD, 1);
   MPI_Finalize();

@@ -24,45 +24,45 @@
  *
  *******************************************************************************/
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include <time.h>
-#include <string.h>
-#include <signal.h>
 #include <float.h>
+#include <math.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 #ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
 #include <omp.h>
 #endif
-#include "global.h"
-#include "git_hash.h"
-#include "getopt.h"
-#include "linalg_eo.h"
 #include "geometry_eo.h"
+#include "getopt.h"
+#include "git_hash.h"
+#include "global.h"
+#include "linalg_eo.h"
 #ifdef TM_USE_MPI
 #include "xchange/xchange.h"
 #endif
 #ifdef TM_USE_QUDA
 #include "quda_interface.h"
 #endif
-#include <io/utils.h>
 #include <io/gauge.h>
-#include "read_input.h"
-#include "mpi_init.h"
-#include "init/init.h"
-#include "sighandler.h"
+#include <io/utils.h>
 #include "boundary.h"
-#include "invert_eo.h"
-#include "start.h"
-#include "operator.h"
-#include "measure_gauge_action.h"
-#include "linalg/convert_eo_to_lexic.h"
-#include "include/tmLQCD.h"
 #include "fatal_error.h"
+#include "include/tmLQCD.h"
+#include "init/init.h"
+#include "invert_eo.h"
+#include "linalg/convert_eo_to_lexic.h"
+#include "measure_gauge_action.h"
 #include "misc_types.h"
+#include "mpi_init.h"
+#include "operator.h"
+#include "read_input.h"
+#include "sighandler.h"
+#include "start.h"
 
 #define CONF_FILENAME_LENGTH 500
 
@@ -77,12 +77,12 @@ int tmLQCD_init_parallel_and_read_input(int argc, char* argv[], const int _verbo
   verbose = _verbose;
   init_parallel_and_read_input(argc, argv, input_filename);
   tmLQCD_input_read = 1;
-  return(0);
+  return (0);
 }
 
 int tmLQCD_invert_init(int argc, char* argv[], const int _verbose, const int external_id) {
-  init_critical_globals(TM_PROGRAM_EXTERNAL); 
-  
+  init_critical_globals(TM_PROGRAM_EXTERNAL);
+
   DUM_DERI = 8;
   DUM_MATRIX = DUM_DERI + 5;
   NO_OF_SPINORFIELDS = DUM_MATRIX + 3;
@@ -101,7 +101,7 @@ int tmLQCD_invert_init(int argc, char* argv[], const int _verbose, const int ext
   g_proc_id = 0;
 #endif
 
-  if( !tmLQCD_input_read ){
+  if (!tmLQCD_input_read) {
     /* Read the input file */
     if ((read_input("invert.input")) != 0) {
       fprintf(stderr, "tmLQCD_init_invert: Could not find input file: invert.input\nAborting...");
@@ -109,7 +109,6 @@ int tmLQCD_invert_init(int argc, char* argv[], const int _verbose, const int ext
     }
     tmLQCD_input_read = 1;
   }
-
 
 #ifdef TM_USE_OMP
   init_openmp();
@@ -159,7 +158,7 @@ int tmLQCD_invert_init(int argc, char* argv[], const int _verbose, const int ext
 
   // initialise the operators
   init_operators();
-  
+
 #ifdef _USE_HALFSPINOR
   j = init_dirac_halfspinor();
   if (j != 0) {
@@ -172,7 +171,7 @@ int tmLQCD_invert_init(int argc, char* argv[], const int _verbose, const int ext
     return (-1);
   }
 #if (defined _PERSISTENT)
-    if (even_odd_flag) init_xchange_halffield();
+  if (even_odd_flag) init_xchange_halffield();
 #endif
 #endif
   tmLQCD_invert_initialised = 1;
@@ -216,7 +215,7 @@ int tmLQCD_read_gauge(const int nconfig) {
 
 #ifdef TM_USE_MPI
   xchange_gauge(g_gauge_field);
-  
+
 #endif
   convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND);
 
@@ -262,8 +261,9 @@ int tmLQCD_invert(double* const propagator, double* const source, const int op_i
   return (0);
 }
 
-int tmLQCD_invert_doublet(double* const propagator0, double* const propagator1, double* const source0, 
-                  double* const source1, const int op_id, const int write_prop) {
+int tmLQCD_invert_doublet(double* const propagator0, double* const propagator1,
+                          double* const source0, double* const source1, const int op_id,
+                          const int write_prop) {
   unsigned int index_start = 0;
   g_mu = 0.;
 
@@ -305,7 +305,7 @@ int tmLQCD_invert_doublet(double* const propagator0, double* const propagator1, 
   return (0);
 }
 
-int tmLQCD_invert_eo(double* const Odd_out, double* const Odd_in, const int op_id){
+int tmLQCD_invert_eo(double* const Odd_out, double* const Odd_in, const int op_id) {
   // unsigned int index_start = 0;
   if (!tmLQCD_invert_initialised) {
     fprintf(stderr, "tmLQCD_invert_eo: tmLQCD_inver_init must be called first. Aborting...\n");
@@ -323,7 +323,6 @@ int tmLQCD_invert_eo(double* const Odd_out, double* const Odd_in, const int op_i
 }
 
 int tmLQCD_finalise() {
-
 #ifdef TM_USE_OMP
   free_omp_accumulators();
 #endif
@@ -331,7 +330,7 @@ int tmLQCD_finalise() {
 #ifdef TM_USE_QUDA
   _endQuda();
 #endif
-  
+
   free_gauge_field();
   free_geometry_indices();
   free_gauge_field_32();
@@ -386,7 +385,7 @@ int tmLQCD_get_mpi_params(tmLQCD_mpi_params* params) {
 #else
   params->cart_grid = -1;
 #endif
-  return(0);
+  return (0);
 }
 
 int tmLQCD_get_gauge_field_pointer(double** gf) {
@@ -400,7 +399,6 @@ int tmLQCD_get_gauge_field_pointer(double** gf) {
   xchange_gauge(g_gauge_field);
 #endif
   convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND);
-  
 
   *gf = (double*)g_gauge_field[0];
 
@@ -455,11 +453,11 @@ int tmLQCD_set_op_params(tmLQCD_op_params const* const params, const int op_id) 
 }
 
 #ifdef TM_USE_QPHIX
-int tmLQCD_invert_qphix_direct(double * const Odd_out, double * const Odd_in, const int op_id){
+int tmLQCD_invert_qphix_direct(double* const Odd_out, double* const Odd_in, const int op_id) {
   static double clover_term_c_sw = -1.0;
   static double clover_term_kappa = -1.0;
   static double inv_clover_term_mu = 0.0;
-  
+
   if (!tmLQCD_invert_initialised) {
     fprintf(stderr, "tmLQCD_invert: tmLQCD_inver_init must be called first. Aborting...\n");
     return (-1);
@@ -473,20 +471,18 @@ int tmLQCD_invert_qphix_direct(double * const Odd_out, double * const Odd_in, co
   op_backup_restore_globals(TM_BACKUP_GLOBALS);
   op_set_globals(op_id);
   boundary(g_kappa);
-  
+
   // if this is a clover operator, we check if the clover term and its inverse
   // which might be currently in memory are consistent with the requested parameters
   // if not, we recompute them
-  if( operator_list[op_id].type == CLOVER ){
-    if( (fabs(g_c_sw - clover_term_c_sw) > 2*DBL_EPSILON ) ||
-        (fabs(g_kappa - clover_term_kappa) > 2*DBL_EPSILON ) ){
-      sw_term((const su3**)g_gauge_field,
-              g_kappa,
-              g_c_sw);
+  if (operator_list[op_id].type == CLOVER) {
+    if ((fabs(g_c_sw - clover_term_c_sw) > 2 * DBL_EPSILON) ||
+        (fabs(g_kappa - clover_term_kappa) > 2 * DBL_EPSILON)) {
+      sw_term((const su3**)g_gauge_field, g_kappa, g_c_sw);
       clover_term_kappa = g_kappa;
       clover_term_c_sw = g_c_sw;
     }
-    if( fabs(g_mu - inv_clover_term_mu) > 2*DBL_EPSILON ){
+    if (fabs(g_mu - inv_clover_term_mu) > 2 * DBL_EPSILON) {
       // in the hopping matrix and elsewhere "even_even" is called "EE"
       // but it's only defined in operator/HoppingMatrix.h, we don't want to
       // include that here
@@ -495,17 +491,13 @@ int tmLQCD_invert_qphix_direct(double * const Odd_out, double * const Odd_in, co
       inv_clover_term_mu = g_mu;
     }
   }
-  
-  int niter = invert_eo_qphix_oneflavour((spinor *const) Odd_out, (spinor* const) Odd_in,
-                                         operator_list[op_id].maxiter,
-                                         operator_list[op_id].eps_sq,
-                                         operator_list[op_id].solver,
-                                         operator_list[op_id].rel_prec,
-                                         operator_list[op_id].solver_params,
-                                         operator_list[op_id].sloppy_precision,
-                                         operator_list[op_id].compression_type
-                                         );
+
+  int niter = invert_eo_qphix_oneflavour(
+      (spinor* const)Odd_out, (spinor* const)Odd_in, operator_list[op_id].maxiter,
+      operator_list[op_id].eps_sq, operator_list[op_id].solver, operator_list[op_id].rel_prec,
+      operator_list[op_id].solver_params, operator_list[op_id].sloppy_precision,
+      operator_list[op_id].compression_type);
   op_backup_restore_globals(TM_RESTORE_GLOBALS);
-  return(niter);
+  return (niter);
 }
 #endif
