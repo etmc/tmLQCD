@@ -61,8 +61,6 @@
 #undef _PSWITCH
 #undef _PTSWITCH
 
-#if (!defined SSE2 && !defined SSE3)
-
 #define _C_TYPE _Complex double
 #define _F_TYPE double
 #define _PSWITCH(s) s
@@ -74,8 +72,6 @@
 #undef _F_TYPE
 #undef _PSWITCH
 #undef _PTSWITCH
-
-#endif
 
 void D_psi_prec(spinor *const P, spinor *const Q) {
   /* todo: do preconditioning */

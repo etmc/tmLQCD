@@ -2,9 +2,6 @@
 #include <cu/cu.h>
 #include <stdio.h>
 #include <tmlqcd_config.h>
-#if (defined SSE || defined SSE2 || defined SSE3)
-#include "sse.h"
-#endif
 #include "../expo.h"
 #include "../su3.h"
 #include "../su3adj.h"

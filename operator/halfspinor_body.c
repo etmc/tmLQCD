@@ -63,9 +63,6 @@ if (ieo == 0) {
   u0 = g_gauge_field_copy[1][0];
 }
 #endif
-#if (defined SSE2 || defined SSE3)
-g_sloppy_precision = 0;
-#endif
 if (g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
   phi32 = NBPointer32[ieo];
 

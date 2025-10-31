@@ -78,32 +78,6 @@ void QdaggerQ_power(spinor *R_s, spinor *R_c, double *c, int n, spinor *S_s, spi
   spinor *svc_ = NULL, *svc = NULL, *dc_ = NULL, *dc = NULL, *ddc_ = NULL, *ddc = NULL,
          *auxc_ = NULL, *auxc = NULL, *aux2c_ = NULL, *aux2c = NULL, *aux3c_ = NULL, *aux3c = NULL;
 
-#if (defined SSE || defined SSE2)
-  svs_ = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
-  svs = (spinor *)(((unsigned long int)(svs_) + ALIGN_BASE) & ~ALIGN_BASE);
-  ds_ = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
-  ds = (spinor *)(((unsigned long int)(ds_) + ALIGN_BASE) & ~ALIGN_BASE);
-  dds_ = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
-  dds = (spinor *)(((unsigned long int)(dds_) + ALIGN_BASE) & ~ALIGN_BASE);
-  auxs_ = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
-  auxs = (spinor *)(((unsigned long int)(auxs_) + ALIGN_BASE) & ~ALIGN_BASE);
-  aux2s_ = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
-  aux2s = (spinor *)(((unsigned long int)(aux2s_) + ALIGN_BASE) & ~ALIGN_BASE);
-  aux3s_ = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
-  aux3s = (spinor *)(((unsigned long int)(aux3s_) + ALIGN_BASE) & ~ALIGN_BASE);
-  svc_ = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
-  svc = (spinor *)(((unsigned long int)(svc_) + ALIGN_BASE) & ~ALIGN_BASE);
-  dc_ = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
-  dc = (spinor *)(((unsigned long int)(dc_) + ALIGN_BASE) & ~ALIGN_BASE);
-  ddc_ = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
-  ddc = (spinor *)(((unsigned long int)(ddc_) + ALIGN_BASE) & ~ALIGN_BASE);
-  auxc_ = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
-  auxc = (spinor *)(((unsigned long int)(auxc_) + ALIGN_BASE) & ~ALIGN_BASE);
-  aux2c_ = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
-  aux2c = (spinor *)(((unsigned long int)(aux2c_) + ALIGN_BASE) & ~ALIGN_BASE);
-  aux3c_ = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
-  aux3c = (spinor *)(((unsigned long int)(aux3c_) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
   svs_ = calloc(VOLUMEPLUSRAND, sizeof(spinor));
   svs = svs_;
   ds_ = calloc(VOLUMEPLUSRAND, sizeof(spinor));
@@ -128,7 +102,6 @@ void QdaggerQ_power(spinor *R_s, spinor *R_c, double *c, int n, spinor *S_s, spi
   aux2c = aux2c_;
   aux3c_ = calloc(VOLUMEPLUSRAND, sizeof(spinor));
   aux3c = aux3c_;
-#endif
 
   cheb_evmax = 1.;
 
@@ -245,24 +218,6 @@ void degree_of_polynomial(const int repro) {
     ini = 1;
   }
 
-#if (defined SSE || defined SSE2 || defined SSE3)
-  ss_ = calloc(VOLUMEPLUSRAND / 2 + 1, sizeof(spinor));
-  auxs_ = calloc(VOLUMEPLUSRAND / 2 + 1, sizeof(spinor));
-  aux2s_ = calloc(VOLUMEPLUSRAND / 2 + 1, sizeof(spinor));
-  aux3s_ = calloc(VOLUMEPLUSRAND / 2 + 1, sizeof(spinor));
-  ss = (spinor *)(((unsigned long int)(ss_) + ALIGN_BASE) & ~ALIGN_BASE);
-  auxs = (spinor *)(((unsigned long int)(auxs_) + ALIGN_BASE) & ~ALIGN_BASE);
-  aux2s = (spinor *)(((unsigned long int)(aux2s_) + ALIGN_BASE) & ~ALIGN_BASE);
-  aux3s = (spinor *)(((unsigned long int)(aux3s_) + ALIGN_BASE) & ~ALIGN_BASE);
-  sc_ = calloc(VOLUMEPLUSRAND / 2 + 1, sizeof(spinor));
-  auxc_ = calloc(VOLUMEPLUSRAND / 2 + 1, sizeof(spinor));
-  aux2c_ = calloc(VOLUMEPLUSRAND / 2 + 1, sizeof(spinor));
-  aux3c_ = calloc(VOLUMEPLUSRAND / 2 + 1, sizeof(spinor));
-  sc = (spinor *)(((unsigned long int)(sc_) + ALIGN_BASE) & ~ALIGN_BASE);
-  auxc = (spinor *)(((unsigned long int)(auxc_) + ALIGN_BASE) & ~ALIGN_BASE);
-  aux2c = (spinor *)(((unsigned long int)(aux2c_) + ALIGN_BASE) & ~ALIGN_BASE);
-  aux3c = (spinor *)(((unsigned long int)(aux3c_) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
   ss = calloc(VOLUMEPLUSRAND / 2, sizeof(spinor));
   auxs = calloc(VOLUMEPLUSRAND / 2, sizeof(spinor));
   aux2s = calloc(VOLUMEPLUSRAND / 2, sizeof(spinor));
@@ -271,7 +226,6 @@ void degree_of_polynomial(const int repro) {
   auxc = calloc(VOLUMEPLUSRAND / 2, sizeof(spinor));
   aux2c = calloc(VOLUMEPLUSRAND / 2, sizeof(spinor));
   aux3c = calloc(VOLUMEPLUSRAND / 2, sizeof(spinor));
-#endif
 
   chebyshev_polynomial(cheb_evmin, cheb_evmax, dop_cheby_coef, N_CHEBYMAX, 0.25);
 

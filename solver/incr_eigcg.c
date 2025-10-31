@@ -71,9 +71,7 @@
  * 5. Calls to LAPACK and BLAS are adjusted to be the same as in tmLQCD.
  *
  *
- * 6. To use SSE,SSE2,etc. type of instructions, we need to align the memory
- *    for certain variables, specially the long vectors, on a given boundary.
- *    Also, to be able to use LAPACK and BLAS routines which are written in
+ * 6. To be able to use LAPACK and BLAS routines which are written in
  *    FORTRAN, we have to allocate 2 dimensional matrices coulumns. This is
  *    done for a matrix of spinors for example as is used in allocating a
  *    solver_field. It is also recommended to use the same alignment for small
@@ -237,47 +235,6 @@ int incr_eigcg(const int N, const int nrhs, const int nrhs1, spinor *const x, sp
   {
     init_solver_field(&evecs, LDN, ldh);
 
-#if (defined SSE || defined SSE2 || defined SSE3)
-
-    /*Extra elements are needed for allignment */
-    //_v = malloc(LDN*v_max*sizeof(spinor)+ALIGN_BASE);
-    _v = calloc(LDN * v_max + ALIGN_BASE, sizeof(spinor));
-    V = (spinor *)(((unsigned long int)(_v) + ALIGN_BASE) & ~ALIGN_BASE);
-
-    //_h=malloc(ldh*ldh*sizeof(_Complex double )+ALIGN_BASE);
-    _h = calloc(ldh * ldh + ALIGN_BASE, sizeof(_Complex double));
-    H = (_Complex double *)(((unsigned long int)(_h) + ALIGN_BASE) & ~ALIGN_BASE);
-
-    //_hu=malloc(ldh*ldh*sizeof(_Complex double )+ALIGN_BASE);
-    _hu = calloc(ldh * ldh + ALIGN_BASE, sizeof(_Complex double));
-    HU = (_Complex double *)(((unsigned long int)(_hu) + ALIGN_BASE) & ~ALIGN_BASE);
-
-    //_ework = malloc(esize*sizeof(_Complex double )+ALIGN_BASE);
-    _ework = calloc(esize + ALIGN_BASE, sizeof(_Complex double));
-    ework = (_Complex double *)(((unsigned long int)(_ework) + ALIGN_BASE) & ~ALIGN_BASE);
-
-    //_initwork = malloc(ldh*sizeof(_Complex double )+ALIGN_BASE);
-    _initwork = calloc(ldh + ALIGN_BASE, sizeof(_Complex double));
-    initwork = (_Complex double *)(((unsigned long int)(_initwork) + ALIGN_BASE) & ~ALIGN_BASE);
-
-    //_work = malloc(lwork*sizeof(_Complex double )+ALIGN_BASE);
-    _work = calloc(lwork + ALIGN_BASE, sizeof(_Complex double));
-    work = (_Complex double *)(((unsigned long int)(_work) + ALIGN_BASE) & ~ALIGN_BASE);
-
-    //_rwork = malloc(3*ldh*sizeof(double)+ALIGN_BASE);
-    _rwork = calloc(3 * ldh + ALIGN_BASE, sizeof(double));
-    rwork = (double *)(((unsigned long int)(_rwork) + ALIGN_BASE) & ~ALIGN_BASE);
-
-    //_IPIV = malloc(ldh*sizeof(int)+ALIGN_BASE);
-    _IPIV = calloc(ldh + ALIGN_BASE, sizeof(int));
-    IPIV = (int *)(((unsigned long int)(_IPIV) + ALIGN_BASE) & ~ALIGN_BASE);
-
-    //_evals = malloc(ldh*sizeof(double)+ALIGN_BASE);
-    _evals = calloc(ldh + ALIGN_BASE, sizeof(double));
-    evals = (double *)(((unsigned long int)(_evals) + ALIGN_BASE) & ~ALIGN_BASE);
-
-#else
-
     V = (spinor *)calloc(LDN * v_max, sizeof(spinor));
     H = calloc(ldh * ldh, sizeof(_Complex double));
     HU = calloc(ldh * ldh, sizeof(_Complex double));
@@ -287,8 +244,6 @@ int incr_eigcg(const int N, const int nrhs, const int nrhs1, spinor *const x, sp
     rwork = calloc(3 * ldh, sizeof(double));
     IPIV = calloc(ldh, sizeof(int));
     evals = (double *)calloc(ldh, sizeof(double));
-
-#endif
 
   } /*if(ncurRHS==1)*/
 
@@ -523,17 +478,6 @@ int incr_eigcg(const int N, const int nrhs, const int nrhs1, spinor *const x, sp
                                          allocated memory for eigenvector computation*/
   {
     finalize_solver(evecs, ldh);
-#if (defined SSE || defined SSE2 || defined SSE3)
-    free(_v);
-    free(_h);
-    free(_hu);
-    free(_ework);
-    free(_initwork);
-    free(_IPIV);
-    free(_evals);
-    free(_rwork);
-    free(_work);
-#else
     free(V);
     free(H);
     free(HU);
@@ -543,7 +487,6 @@ int incr_eigcg(const int N, const int nrhs, const int nrhs1, spinor *const x, sp
     free(evals);
     free(rwork);
     free(work);
-#endif
   }
 
   return numIts;

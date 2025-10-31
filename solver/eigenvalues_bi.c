@@ -108,14 +108,8 @@ double eigenvalues_bi(int *nr_of_eigenvalues, const int max_iterations, const do
 
   if (allocated == 0) {
     allocated = 1;
-#if (defined SSE || defined SSE2 || defined SSE3)
-    eigenvectors_bi_ = calloc((VOLUME) / 2 * (*nr_of_eigenvalues) + 1, sizeof(bispinor));
-    eigenvectors_bi =
-        (bispinor *)(((unsigned long int)(eigenvectors_bi_) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
     eigenvectors_bi_ = calloc((VOLUME) / 2 * (*nr_of_eigenvalues), sizeof(bispinor));
     eigenvectors_bi = eigenvectors_bi_;
-#endif
     eigenvls_bi = (double *)malloc((*nr_of_eigenvalues) * sizeof(double));
   }
 

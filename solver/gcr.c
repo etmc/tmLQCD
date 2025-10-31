@@ -164,21 +164,12 @@ static void init_gcr(const int _M, const int _V) {
     a = calloc(M + 1, sizeof(_Complex double *));
     chi = calloc(M, sizeof(spinor *));
     xi = calloc(M, sizeof(spinor *));
-#if (defined SSE || defined SSE2 || defined SSE3)
-    _a = calloc((M + 2) * M, sizeof(_Complex double));
-    a[0] = (_Complex double *)(((unsigned long int)(_a) + ALIGN_BASE) & ~ALIGN_BASE);
-    _chi = calloc(M * Vo + 1, sizeof(spinor));
-    chi[0] = (spinor *)(((unsigned long int)(_chi) + ALIGN_BASE) & ~ALIGN_BASE);
-    _xi = calloc(M * Vo + 1, sizeof(spinor));
-    xi[0] = (spinor *)(((unsigned long int)(_xi) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
     _a = calloc((M + 1) * M, sizeof(_Complex double));
     a[0] = _a;
     _chi = calloc(M * Vo, sizeof(spinor));
     chi[0] = _chi;
     _xi = calloc(M * Vo, sizeof(spinor));
     xi[0] = _xi;
-#endif
     if (_xi == NULL) {
       printf("Unable to allocated space for GCR iterations\n");
       exit(0);

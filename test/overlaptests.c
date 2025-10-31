@@ -39,15 +39,8 @@ spinor **ov_alloc_spinors(int n) {
 
   spinor **s = (spinor **)calloc(n, sizeof(spinor *));
   ov_check_alloc(s);
-#if (defined SSE || defined SSE2 || defined SSE3)
-  spinor *_s = malloc((n * VOLUMEPLUSRAND) * sizeof(spinor) + ALIGN_BASE + sizeof(spinor *));
-  ov_check_alloc(_s);
-  s[0] = (spinor *)(((unsigned long int)(_s) + sizeof(spinor *) + ALIGN_BASE) & ~ALIGN_BASE);
-  *(((spinor **)s[0]) - 1) = _s;
-#else
   s[0] = malloc(n * VOLUMEPLUSRAND * sizeof(spinor));
   ov_check_alloc(s[0]);
-#endif
 
   for (int i = 1; i < n; i++) s[i] = s[0] + VOLUMEPLUSRAND;
 
@@ -55,37 +48,20 @@ spinor **ov_alloc_spinors(int n) {
 }
 
 void ov_free_spinors(spinor **s) {
-#if (defined SSE3 || defined SSE2 || defined SSE)
-  free(*(((spinor **)s[0]) - 1));
-#else
   free(s[0]);
-#endif
   free(s);
 }
 
 spinor *ov_alloc_spinor(void) {
   spinor *s = NULL;
 
-#if (defined SSE || defined SSE2 || defined SSE3)
-  spinor *_s = malloc(sizeof(spinor *) + VOLUMEPLUSRAND * sizeof(spinor) + ALIGN_BASE);
-  ov_check_alloc(_s);
-  s = (spinor *)(((unsigned long int)(_s) + sizeof(spinor *) + ALIGN_BASE) & ~ALIGN_BASE);
-  *(((spinor **)s) - 1) = _s;
-#else
   s = malloc(VOLUMEPLUSRAND * sizeof(spinor));
   ov_check_alloc(s);
-#endif
 
   return s;
 }
 
-void ov_free_spinor(spinor *s) {
-#if (defined SSE || defined SSE2 || defined SSE3)
-  free(*(((spinor **)s) - 1));
-#else
-  free(s);
-#endif
-}
+void ov_free_spinor(spinor *s) { free(s); }
 
 /* col sum norm of operator in colour and spinor space */
 double ov_operator_colsumnorm(spinor *s[4][3], int k) {

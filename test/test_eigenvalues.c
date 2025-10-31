@@ -281,21 +281,6 @@ int main(int argc, char *argv[]) {
 
     parameterfile = fopen(parameterfilename, "w");
     printf("# This is the hmc code for twisted Mass Wilson QCD\n\nVersion %s\n", Version);
-#ifdef SSE
-    printf("# The code was compiled with SSE instructions\n");
-#endif
-#ifdef SSE2
-    printf("# The code was compiled with SSE2 instructions\n");
-#endif
-#ifdef SSE3
-    printf("# The code was compiled with SSE3 instructions\n");
-#endif
-#ifdef P4
-    printf("# The code was compiled for Pentium4\n");
-#endif
-#ifdef OPTERON
-    printf("# The code was compiled for AMD Opteron\n");
-#endif
 #ifdef _NEW_GEOMETRY
     printf("# The code was compiled with -D_NEW_GEOMETRY\n");
 #endif

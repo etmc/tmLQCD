@@ -45,17 +45,7 @@
 /* to give the user a hint what was wrong */
 void catch_ill_inst(int s) {
   fprintf(stderr, "An illegal instruction occured!\n");
-#ifdef SSE
-  fprintf(stderr, "Your code was compiled to use SSE1 instructions.\n");
-#endif
-#ifdef SSE2
-  fprintf(stderr, "Your code was compiled to use SSE2 instructions.\n");
-#endif
-#ifdef SSE3
-  fprintf(stderr, "Your code was compiled to use SSE3 instructions.\n");
-#endif
   fprintf(stderr, "Probably this caused the exception.\n");
-  fprintf(stderr, "Please check whether your processor supports SSE1/2/3) instructions!\n");
   fprintf(stderr, "Aborting...\n");
   fflush(stdout);
 #ifdef TM_USE_MPI
