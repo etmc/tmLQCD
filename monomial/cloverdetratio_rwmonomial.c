@@ -54,12 +54,9 @@ double cloverdetratio_rwacc(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   tm_stopwatch_push(&g_timers, __func__, mnl->name);
   int save_sloppy = g_sloppy_precision_flag;
-  double c_sw_tmp;
-  double kappa_tmp;
+  mnl_backup_restore_globals(TM_BACKUP_GLOBALS);
 
-  c_sw_tmp = g_c_sw;
   g_c_sw = mnl->c_sw;
-  kappa_tmp=g_kappa;
   
   g_kappa=mnl->kappa2;
   g_mu = mnl->mu2;
@@ -101,10 +98,7 @@ double cloverdetratio_rwacc(const int id, hamiltonian_field_t * const hf) {
   mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
   tm_stopwatch_pop(&g_timers, 0, 1, "");
 
-  g_c_sw = c_sw_tmp;
-  g_kappa=kappa_tmp;
-  g_mu = g_mu1;
-  g_mu3 = 0.;
+  mnl_backup_restore_globals(TM_RESTORE_GLOBALS);
   boundary(g_kappa);
   if(g_proc_id == 0) {
     if(g_debug_level > 3) {
