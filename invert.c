@@ -24,76 +24,74 @@
  *
  *******************************************************************************/
 
-#include"lime.h"
+#include "lime.h"
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include <tmlqcd_config.h>
 #endif
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
-#include <time.h>
-#include <string.h>
 #include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 #ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
 #ifdef TM_USE_OMP
-# include <omp.h>
+#include <omp.h>
 #endif
-#include "global.h"
-#include "git_hash.h"
-#include "getopt.h"
-#include "linalg_eo.h"
 #include "geometry_eo.h"
+#include "getopt.h"
+#include "git_hash.h"
+#include "global.h"
+#include "linalg_eo.h"
 #include "start.h"
 /*#include "eigenvalues.h"*/
 #include "measure_gauge_action.h"
 #ifdef TM_USE_MPI
 #include "xchange/xchange.h"
 #endif
-#include <io/utils.h>
-#include "source_generation.h"
-#include "read_input.h"
-#include "mpi_init.h"
-#include "sighandler.h"
-#include "boundary.h"
-#include "solver/solver.h"
-#include "init/init.h"
-#include "smearing/stout.h"
-#include "invert_eo.h"
-#include "monomial/monomial.h"
-#include "ranlxd.h"
-#include "phmc.h"
-#include "operator/D_psi.h"
-#include "little_D.h"
-#include "reweighting_factor.h"
-#include "linalg/convert_eo_to_lexic.h"
-#include "block.h"
-#include "operator.h"
-#include "sighandler.h"
-#include "solver/generate_dfl_subspace.h"
-#include "prepare_source.h"
-#include <io/params.h>
 #include <io/gauge.h>
+#include <io/params.h>
 #include <io/spinor.h>
 #include <io/utils.h>
-#include "solver/dirac_operator_eigenvectors.h"
-#include "source_generation.h"
-#include "operator/tm_operators.h"
+#include "P_M_eta.h"
+#include "block.h"
+#include "boundary.h"
+#include "init/init.h"
+#include "invert_eo.h"
+#include "linalg/convert_eo_to_lexic.h"
+#include "little_D.h"
+#include "monomial/monomial.h"
+#include "mpi_init.h"
+#include "operator.h"
+#include "operator/D_psi.h"
 #include "operator/Dov_psi.h"
+#include "operator/tm_operators.h"
+#include "phmc.h"
+#include "prepare_source.h"
+#include "ranlxd.h"
+#include "read_input.h"
+#include "reweighting_factor.h"
+#include "sighandler.h"
+#include "smearing/stout.h"
+#include "solver/dirac_operator_eigenvectors.h"
+#include "solver/generate_dfl_subspace.h"
+#include "solver/solver.h"
+#include "source_generation.h"
 #ifdef TM_USE_QUDA
-#  include "quda_interface.h"
+#include "quda_interface.h"
 #endif
 #ifdef TM_USE_QPHIX
-#  include "qphix_interface.h"
+#include "qphix_interface.h"
 #endif
 #ifdef DDalphaAMG
-#  include "DDalphaAMG_interface.h"
+#include "DDalphaAMG_interface.h"
 #endif
-#include "meas/measurements.h"
-#include "source_generation.h"
-#include "misc_types.h"
 #include "expo.h"
+#include "meas/measurements.h"
+#include "misc_types.h"
+#include "source_generation.h"
 
 #define CONF_FILENAME_LENGTH 500
 
@@ -101,18 +99,17 @@ extern int nstore;
 int check_geometry();
 
 static void usage(const tm_ExitCode_t exit_code);
-static void process_args(int argc, char *argv[], char ** input_filename, char ** filename);
-static void set_default_filenames(char ** input_filename, char ** filename);
+static void process_args(int argc, char *argv[], char **input_filename, char **filename);
+static void set_default_filenames(char **input_filename, char **filename);
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   FILE *parameterfile = NULL;
   int j, i, ix = 0, isample = 0, op_id = 0;
   char datafilename[206];
   char parameterfilename[206];
   char conf_filename[CONF_FILENAME_LENGTH];
-  char * input_filename = NULL;
-  char * filename = NULL;
+  char *input_filename = NULL;
+  char *filename = NULL;
   double plaquette_energy;
   // struct stout_parameters params_smear;
 
@@ -131,14 +128,13 @@ int main(int argc, char *argv[])
   DUM_MATRIX = DUM_DERI + 5;
   NO_OF_SPINORFIELDS = DUM_MATRIX + 4;
 
-  //4 extra fields (corresponding to DUM_MATRIX+0..5) for deg. and ND matrix mult.  
+  // 4 extra fields (corresponding to DUM_MATRIX+0..5) for deg. and ND matrix mult.
   NO_OF_SPINORFIELDS_32 = 6;
 
   verbose = 0;
   g_use_clover_flag = 0;
 
-
-  process_args(argc,argv,&input_filename,&filename);
+  process_args(argc, argv, &input_filename, &filename);
   set_default_filenames(&input_filename, &filename);
 
   init_parallel_and_read_input(argc, argv, input_filename);
@@ -162,12 +158,13 @@ int main(int argc, char *argv[])
 
   /* starts the single and double precision random number */
   /* generator                                            */
-  start_ranlux(rlxd_level, random_seed^nstore);
+  start_ranlux(rlxd_level, random_seed ^ nstore);
 
   /* we need to make sure that we don't have even_odd_flag = 1 */
   /* if any of the operators doesn't use it                    */
   /* in this way even/odd can still be used by other operators */
-  for(j = 0; j < no_operators; j++) if(!operator_list[j].even_odd_flag) even_odd_flag = 0;
+  for (j = 0; j < no_operators; j++)
+    if (!operator_list[j].even_odd_flag) even_odd_flag = 0;
 
 #ifndef TM_USE_MPI
   g_dbw2rand = 0;
@@ -178,7 +175,7 @@ int main(int argc, char *argv[])
   j += init_gauge_field_32(VOLUMEPLUSRAND, 1);
 #else
   j = init_gauge_field(VOLUMEPLUSRAND, 0);
-  j += init_gauge_field_32(VOLUMEPLUSRAND, 0);  
+  j += init_gauge_field_32(VOLUMEPLUSRAND, 0);
 #endif
   if (j != 0) {
     fprintf(stderr, "Not enough memory for gauge_fields! Aborting...\n");
@@ -192,8 +189,7 @@ int main(int argc, char *argv[])
   if (no_monomials > 0) {
     if (even_odd_flag) {
       j = init_monomials(VOLUMEPLUSRAND / 2, even_odd_flag);
-    }
-    else {
+    } else {
       j = init_monomials(VOLUMEPLUSRAND, even_odd_flag);
     }
     if (j != 0) {
@@ -203,11 +199,10 @@ int main(int argc, char *argv[])
   }
   if (even_odd_flag) {
     j = init_spinor_field(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS);
-    j += init_spinor_field_32(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS_32);   
-  }
-  else {
+    j += init_spinor_field_32(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS_32);
+  } else {
     j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
-    j += init_spinor_field_32(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS_32);   
+    j += init_spinor_field_32(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS_32);
   }
   if (j != 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
@@ -247,13 +242,13 @@ int main(int argc, char *argv[])
   init_operators();
 
   /* list and initialize measurements*/
-  if(g_proc_id == 0) {
+  if (g_proc_id == 0) {
     printf("\n");
-    for(int j = 0; j < no_measurements; j++) {
+    for (int j = 0; j < no_measurements; j++) {
       printf("# measurement id %d, type = %d\n", j, measurement_list[j].type);
     }
   }
-  init_measurements();  
+  init_measurements();
 
   /* this could be maybe moved to init_operators */
 #ifdef _USE_HALFSPINOR
@@ -264,35 +259,34 @@ int main(int argc, char *argv[])
   }
   /* for mixed precision solvers, the 32 bit halfspinor field must always be there */
   j = init_dirac_halfspinor32();
-  if (j != 0)
-  {
+  if (j != 0) {
     fprintf(stderr, "Not enough memory for 32-bit halffield! Aborting...\n");
     exit(-1);
   }
-#  if (defined _PERSISTENT)
-  if (even_odd_flag)
-    init_xchange_halffield();
-#  endif
+#if (defined _PERSISTENT)
+  if (even_odd_flag) init_xchange_halffield();
+#endif
 #endif
 
   for (j = 0; j < Nmeas; j++) {
-    int n_written = snprintf(conf_filename, CONF_FILENAME_LENGTH, "%s.%.4d", gauge_input_filename, nstore);
-    if( n_written < 0 || n_written >= CONF_FILENAME_LENGTH ){
+    int n_written =
+        snprintf(conf_filename, CONF_FILENAME_LENGTH, "%s.%.4d", gauge_input_filename, nstore);
+    if (n_written < 0 || n_written >= CONF_FILENAME_LENGTH) {
       char error_message[500];
-      snprintf(error_message,
-               500,
+      snprintf(error_message, 500,
                "Encoding error or gauge configuration filename "
-               "longer than %d characters! See invert.c CONF_FILENAME_LENGTH\n", 
+               "longer than %d characters! See invert.c CONF_FILENAME_LENGTH\n",
                CONF_FILENAME_LENGTH);
       fatal_error(error_message, "invert.c");
     }
     if (g_cart_id == 0) {
-      printf("#\n# Trying to read gauge field from file %s in %s precision.\n",
-            conf_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
+      printf("#\n# Trying to read gauge field from file %s in %s precision.\n", conf_filename,
+             (gauge_precision_read_flag == 32 ? "single" : "double"));
       fflush(stdout);
     }
-    if( (i = read_gauge_field(conf_filename,g_gauge_field)) !=0) {
-      fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", i, conf_filename);
+    if ((i = read_gauge_field(conf_filename, g_gauge_field)) != 0) {
+      fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", i,
+              conf_filename);
       exit(-2);
     }
 
@@ -309,14 +303,14 @@ int main(int argc, char *argv[])
     update_tm_gauge_exchange(&g_gauge_state_32);
 
     /*compute the energy of the gauge field*/
-    plaquette_energy = measure_plaquette( (const su3**) g_gauge_field);
+    plaquette_energy = measure_plaquette((const su3 **)g_gauge_field);
 
     if (g_cart_id == 0) {
-      printf("# The computed plaquette value is %e.\n", plaquette_energy / (6.*VOLUME*g_nproc));
+      printf("# The computed plaquette value is %e.\n", plaquette_energy / (6. * VOLUME * g_nproc));
       fflush(stdout);
     }
 
-    if (use_stout_flag == 1){
+    if (use_stout_flag == 1) {
       /*
        *      struct stout_parameters params_smear;
             params_smear.rho = stout_rho;
@@ -326,17 +320,18 @@ int main(int argc, char *argv[])
        * (su3_tuple*)(g_gauge_field[0])) != 0) */
       /*         exit(1) ; */
       g_update_gauge_copy = 1;
-      plaquette_energy = measure_plaquette( (const su3**) g_gauge_field);
+      plaquette_energy = measure_plaquette((const su3 **)g_gauge_field);
 
       if (g_cart_id == 0) {
-        printf("# The plaquette value after stouting is %e\n", plaquette_energy / (6.*VOLUME*g_nproc));
+        printf("# The plaquette value after stouting is %e\n",
+               plaquette_energy / (6. * VOLUME * g_nproc));
         fflush(stdout);
       }
     }
 
     /* if any measurements are defined in the input file, do them here */
-    measurement * meas;
-    for(int imeas = 0; imeas < no_measurements; imeas++){
+    measurement *meas;
+    for (int imeas = 0; imeas < no_measurements; imeas++) {
       meas = &measurement_list[imeas];
       if (g_proc_id == 0) {
         fprintf(stdout, "#\n# Beginning online measurement.\n");
@@ -350,66 +345,66 @@ int main(int argc, char *argv[])
 
     /* Compute minimal eigenvalues, if wanted */
     if (compute_evs != 0) {
-      eigenvalues(&no_eigenvalues, 5000, eigenvalue_precision,
-                  0, compute_evs, nstore, even_odd_flag);
+      eigenvalues(&no_eigenvalues, 5000, eigenvalue_precision, 0, compute_evs, nstore,
+                  even_odd_flag);
     }
     if (phmc_compute_evs != 0) {
 #ifdef TM_USE_MPI
       MPI_Finalize();
 #endif
-      return(0);
+      return (0);
     }
 
-    //  set up blocks if Deflation is used 
-    if (g_dflgcr_flag) 
-      init_blocks(nblocks_t, nblocks_x, nblocks_y, nblocks_z);
-    
-    if(SourceInfo.type == SRC_TYPE_VOL || SourceInfo.type == SRC_TYPE_PION_TS || SourceInfo.type == SRC_TYPE_GEN_PION_TS) {
+    //  set up blocks if Deflation is used
+    if (g_dflgcr_flag) init_blocks(nblocks_t, nblocks_x, nblocks_y, nblocks_z);
+
+    if (SourceInfo.type == SRC_TYPE_VOL || SourceInfo.type == SRC_TYPE_PION_TS ||
+        SourceInfo.type == SRC_TYPE_GEN_PION_TS) {
       index_start = 0;
       index_end = 1;
     }
 
-    g_precWS=NULL;
-    if(use_preconditioning == 1){
+    g_precWS = NULL;
+    if (use_preconditioning == 1) {
       /* todo load fftw wisdom */
-#if (defined HAVE_FFTW ) && !( defined TM_USE_MPI)
-      loadFFTWWisdom(g_spinor_field[0],g_spinor_field[1],T,LX);
+#if (defined HAVE_FFTW) && !(defined TM_USE_MPI)
+      loadFFTWWisdom(g_spinor_field[0], g_spinor_field[1], T, LX);
 #else
-      use_preconditioning=0;
+      use_preconditioning = 0;
 #endif
     }
 
     if (g_cart_id == 0) {
       fprintf(stdout, "#\n"); /*Indicate starting of the operator part*/
     }
-    for(op_id = 0; op_id < no_operators; op_id++) {
+    for (op_id = 0; op_id < no_operators; op_id++) {
       boundary(operator_list[op_id].kappa);
-      g_kappa = operator_list[op_id].kappa; 
+      g_kappa = operator_list[op_id].kappa;
       g_mu = operator_list[op_id].mu;
       g_c_sw = operator_list[op_id].c_sw;
       // DFLGCR and DFLFGMRES
-      if(operator_list[op_id].solver == DFLGCR || operator_list[op_id].solver == DFLFGMRES) {
+      if (operator_list[op_id].solver == DFLGCR || operator_list[op_id].solver == DFLFGMRES) {
         generate_dfl_subspace(g_N_s, VOLUME, reproduce_randomnumber_flag);
       }
 
-      if(use_preconditioning==1 && PRECWSOPERATORSELECT[operator_list[op_id].solver]!=PRECWS_NO ){
+      if (use_preconditioning == 1 &&
+          PRECWSOPERATORSELECT[operator_list[op_id].solver] != PRECWS_NO) {
         printf("# Using preconditioning with treelevel preconditioning operator: %s \n",
-              precWSOpToString(PRECWSOPERATORSELECT[operator_list[op_id].solver]));
+               precWSOpToString(PRECWSOPERATORSELECT[operator_list[op_id].solver]));
         /* initial preconditioning workspace */
-        operator_list[op_id].precWS=(spinorPrecWS*)malloc(sizeof(spinorPrecWS));
-        spinorPrecWS_Init(operator_list[op_id].precWS,
-                  operator_list[op_id].kappa,
-                  operator_list[op_id].mu/2./operator_list[op_id].kappa,
-                  -(0.5/operator_list[op_id].kappa-4.),
-                  PRECWSOPERATORSELECT[operator_list[op_id].solver]);
+        operator_list[op_id].precWS = (spinorPrecWS *)malloc(sizeof(spinorPrecWS));
+        spinorPrecWS_Init(operator_list[op_id].precWS, operator_list[op_id].kappa,
+                          operator_list[op_id].mu / 2. / operator_list[op_id].kappa,
+                          -(0.5 / operator_list[op_id].kappa - 4.),
+                          PRECWSOPERATORSELECT[operator_list[op_id].solver]);
         g_precWS = operator_list[op_id].precWS;
 
-        if(PRECWSOPERATORSELECT[operator_list[op_id].solver] == PRECWS_D_DAGGER_D) {
+        if (PRECWSOPERATORSELECT[operator_list[op_id].solver] == PRECWS_D_DAGGER_D) {
           fitPrecParams(op_id);
         }
       }
 
-      for(isample = 0; isample < no_samples; isample++) {
+      for (isample = 0; isample < no_samples; isample++) {
         for (ix = index_start; ix < index_end; ix++) {
           if (g_cart_id == 0) {
             fprintf(stdout, "#\n"); /*Indicate starting of new index*/
@@ -417,26 +412,28 @@ int main(int argc, char *argv[])
           /* we use g_spinor_field[0-7] for sources and props for the moment */
           /* 0-3 in case of 1 flavour  */
           /* 0-7 in case of 2 flavours */
-          prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location, random_seed);
-          //randmize initial guess for eigcg if needed-----experimental
-          if( (operator_list[op_id].solver == INCREIGCG) && (operator_list[op_id].solver_params.eigcg_rand_guess_opt) ){ //randomize the initial guess
-              gaussian_volume_source( operator_list[op_id].prop0, operator_list[op_id].prop1,isample,ix,0); //need to check this
-          } 
+          prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location,
+                         random_seed);
+          // randmize initial guess for eigcg if needed-----experimental
+          if ((operator_list[op_id].solver == INCREIGCG) &&
+              (operator_list[op_id]
+                   .solver_params.eigcg_rand_guess_opt)) {  // randomize the initial guess
+            gaussian_volume_source(operator_list[op_id].prop0, operator_list[op_id].prop1, isample,
+                                   ix, 0);  // need to check this
+          }
           operator_list[op_id].inverter(op_id, index_start, operator_list[op_id].write_prop_flag);
         }
       }
 
-
-      if(use_preconditioning==1 && operator_list[op_id].precWS!=NULL ){
+      if (use_preconditioning == 1 && operator_list[op_id].precWS != NULL) {
         /* free preconditioning workspace */
         spinorPrecWS_Free(operator_list[op_id].precWS);
         free(operator_list[op_id].precWS);
       }
 
-      if(operator_list[op_id].type == OVERLAP){
+      if (operator_list[op_id].type == OVERLAP) {
         free_Dov_WS();
       }
-
     }
     nstore += Nsave;
   }
@@ -450,7 +447,7 @@ int main(int argc, char *argv[])
   free_gauge_field_32();
   free_geometry_indices();
   free_spinor_field();
-  free_spinor_field_32();  
+  free_spinor_field_32();
   free_moment_field();
   free_chi_spinor_field();
   free(filename);
@@ -464,15 +461,14 @@ int main(int argc, char *argv[])
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 #endif
-  return(0);
+  return (0);
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)
 #endif
 }
 
-static void usage(tm_ExitCode_t exit_code)
-{
-  if( g_proc_id == 0 ){
+static void usage(tm_ExitCode_t exit_code) {
+  if (g_proc_id == 0) {
     fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
     fprintf(stdout, "Version %s \n\n", TMLQCD_PACKAGE_VERSION);
     fprintf(stdout, "Please send bug reports to %s\n", TMLQCD_PACKAGE_BUGREPORT);
@@ -481,13 +477,14 @@ static void usage(tm_ExitCode_t exit_code)
     fprintf(stdout, "         [-o output-filename]\n");
     fprintf(stdout, "         [-v] more verbosity\n");
     fprintf(stdout, "         [-V] print version information and exit\n");
-    fprintf(stdout, "         [-m] request MPI thread level 'single' or 'multiple' (default: 'single')\n");
+    fprintf(stdout,
+            "         [-m] request MPI thread level 'single' or 'multiple' (default: 'single')\n");
     fprintf(stdout, "         [-h|-? this help]\n");
   }
   exit(exit_code);
 }
 
-static void process_args(int argc, char *argv[], char ** input_filename, char ** filename) {
+static void process_args(int argc, char *argv[], char **input_filename, char **filename) {
   int c;
   while ((c = getopt(argc, argv, "h?vVf:o:m:")) != -1) {
     switch (c) {
@@ -503,18 +500,19 @@ static void process_args(int argc, char *argv[], char ** input_filename, char **
         verbose = 1;
         break;
       case 'V':
-        if(g_proc_id == 0) {
-          fprintf(stdout,"%s %s\n",TMLQCD_PACKAGE_STRING,git_hash);
+        if (g_proc_id == 0) {
+          fprintf(stdout, "%s %s\n", TMLQCD_PACKAGE_STRING, git_hash);
         }
         exit(TM_EXIT_SUCCESS);
         break;
       case 'm':
-        if( !strcmp(optarg, "single") ){
+        if (!strcmp(optarg, "single")) {
           g_mpi_thread_level = TM_MPI_THREAD_SINGLE;
-        } else if ( !strcmp(optarg, "multiple") ) {
+        } else if (!strcmp(optarg, "multiple")) {
           g_mpi_thread_level = TM_MPI_THREAD_MULTIPLE;
         } else {
-          tm_debug_printf(0, 0, "[invert process_args]: invalid input for -m command line argument\n");
+          tm_debug_printf(0, 0,
+                          "[invert process_args]: invalid input for -m command line argument\n");
           usage(TM_EXIT_INVALID_CMDLINE_ARG);
         }
         break;
@@ -527,14 +525,44 @@ static void process_args(int argc, char *argv[], char ** input_filename, char **
   }
 }
 
-static void set_default_filenames(char ** input_filename, char ** filename) {
-  if( *input_filename == NULL ) {
+static void set_default_filenames(char **input_filename, char **filename) {
+  if (*input_filename == NULL) {
     *input_filename = calloc(13, sizeof(char));
-    strcpy(*input_filename,"invert.input");
+    strcpy(*input_filename, "invert.input");
   }
-  
-  if( *filename == NULL ) {
+
+  if (*filename == NULL) {
     *filename = calloc(7, sizeof(char));
-    strcpy(*filename,"output");
-  } 
+    strcpy(*filename, "output");
+  }
 }
+
+static void invert_compute_modenumber() {
+  spinor * s_ = calloc(no_sources_z2*VOLUMEPLUSRAND+1, sizeof(spinor));
+  spinor ** s  = calloc(no_sources_z2, sizeof(spinor*));
+  if(s_ == NULL) { 
+    printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
+  }
+  if(s == NULL) { 
+    printf("Not enough memory in %s: %d",__FILE__,__LINE__); exit(42); 
+  }
+  for(int i = 0; i < no_sources_z2; i++) {
+    s[i] = (spinor*)(((unsigned long int)(s_)+ALIGN_BASE)&~ALIGN_BASE)+i*VOLUMEPLUSRAND;
+    random_spinor_field_lexic(s[i], reproduce_randomnumber_flag,RN_Z2);
+	
+    if(g_proc_id == 0) {
+      printf("source %d \n", i);
+    }
+	
+    if(compute_modenumber != 0){
+      mode_number(s[i], mstarsq);
+    }
+	  
+    if(compute_topsus !=0) {
+      top_sus(s[i], mstarsq);
+    }
+  }
+  free(s);
+  free(s_);
+}
+

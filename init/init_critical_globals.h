@@ -26,7 +26,7 @@
 
 /* function to initialise global variables which always need to be defined
  * but which are not initialised by the input file reader, for example, but
- * rather via the command line or explicitly inside some of the 'main' functions 
+ * rather via the command line or explicitly inside some of the 'main' functions
  * This means that in order to initialise these to some defaults in case tmLQCD
  * is used as a library, it is necessary to initialise them explicitly using
  * this function, which is done in tmLQCD_invert_init (wrapper/lib_wrapper.c) */

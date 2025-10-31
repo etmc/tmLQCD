@@ -3,26 +3,23 @@
 #include "su3.h"
 
 #ifndef ALIGN_BASE
-#  define ALIGN_BASE 0x0f
+#define ALIGN_BASE 0x0f
 #endif
 
 typedef su3 su3_tuple[4];
 
-typedef struct
-{
+typedef struct {
   su3_tuple **reserve;
   unsigned int max;
   unsigned int allocated;
   unsigned int free;
 } gauge_buffers_t;
 
-typedef struct
-{
+typedef struct {
   su3_tuple *field;
 } gauge_field_t;
 
-typedef struct
-{
+typedef struct {
   gauge_field_t *field_array;
   unsigned int length;
 } gauge_field_array_t;

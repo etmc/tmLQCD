@@ -26,15 +26,15 @@
  *******************************************************************************/
 #include "lime.h"
 #if HAVE_CONFIG_H
-#include<tmlqcd_config.h>
+#include <tmlqcd_config.h>
 #endif
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
-#include <time.h>
-#include <sys/time.h>
-#include <string.h>
 #include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/time.h>
+#include <time.h>
 #include <unistd.h>
 #ifdef TM_USE_MPI
 #include <mpi.h>
@@ -42,37 +42,36 @@
 #ifdef TM_USE_OMP
 #include <omp.h>
 #endif
-#include "global.h"
-#include "git_hash.h"
-#include "io/params.h"
-#include "io/gauge.h"
-#include "getopt.h"
-#include "ranlxd.h"
 #include "geometry_eo.h"
-#include "start.h"
+#include "getopt.h"
+#include "git_hash.h"
+#include "global.h"
+#include "io/gauge.h"
+#include "io/params.h"
 #include "measure_gauge_action.h"
 #include "measure_rectangles.h"
+#include "ranlxd.h"
+#include "start.h"
 #ifdef TM_USE_MPI
 #include "xchange/xchange.h"
 #endif
-#include "read_input.h"
-#include "mpi_init.h"
-#include "sighandler.h"
-#include "update_tm.h"
-#include "init/init.h"
-#include "test/check_geometry.h"
 #include "boundary.h"
-#include "phmc.h"
-#include "solver/solver.h"
-#include "monomial/monomial.h"
+#include "init/init.h"
 #include "integrator.h"
-#include "sighandler.h"
 #include "meas/measurements.h"
+#include "monomial/monomial.h"
+#include "mpi_init.h"
+#include "phmc.h"
+#include "read_input.h"
+#include "sighandler.h"
+#include "solver/solver.h"
+#include "test/check_geometry.h"
+#include "update_tm.h"
 #ifdef DDalphaAMG
 #include "DDalphaAMG_interface.h"
 #endif
 #ifdef TM_USE_QUDA
-#  include "quda_interface.h"
+#include "quda_interface.h"
 #endif
 
 extern int nstore;
@@ -80,12 +79,11 @@ extern int nstore;
 int const rlxdsize = 105;
 
 static void usage(const tm_ExitCode_t exit_code);
-static void process_args(int argc, char *argv[], char ** input_filename, char ** filename);
-static void set_default_filenames(char ** input_filename, char ** filename);
+static void process_args(int argc, char *argv[], char **input_filename, char **filename);
+static void set_default_filenames(char **input_filename, char **filename);
 
-int main(int argc,char *argv[]) {
-
-  FILE *parameterfile=NULL, *countfile=NULL;
+int main(int argc, char *argv[]) {
+  FILE *parameterfile = NULL, *countfile = NULL;
   char *filename = NULL;
   char datafilename[206];
   char parameterfilename[206];
@@ -94,95 +92,92 @@ int main(int argc,char *argv[]) {
   char tmp_filename[50];
   char *input_filename = NULL;
   int status = 0, accept = 0;
-  int j,ix,mu, trajectory_counter=0;
+  int j, ix, mu, trajectory_counter = 0;
   unsigned int const io_max_attempts = 5; /* Make this configurable? */
-  unsigned int const io_timeout = 5; /* Make this configurable? */
+  unsigned int const io_timeout = 5;      /* Make this configurable? */
   struct timeval t1;
 
   /* Energy corresponding to the Gauge part */
   double plaquette_energy = 0., rectangle_energy = 0.;
   /* Acceptance rate */
-  int Rate=0;
+  int Rate = 0;
   /* Do we want to perform reversibility checks */
   /* See also return_check_flag in read_input.h */
   int return_check = 0;
 
   paramsXlfInfo *xlfInfo;
 
-/* For online measurements */
-  measurement * meas;
+  /* For online measurements */
+  measurement *meas;
   int imeas;
 
-  init_critical_globals(TM_PROGRAM_HMC_TM);  
-  
+  init_critical_globals(TM_PROGRAM_HMC_TM);
+
 #ifdef _KOJAK_INST
 #pragma pomp inst init
 #pragma pomp inst begin(main)
 #endif
 
 #if (defined SSE || defined SSE2 || SSE3)
-  signal(SIGILL,&catch_ill_inst);
+  signal(SIGILL, &catch_ill_inst);
 #endif
 
-  strcpy(gauge_filename,"conf.save");
-  strcpy(nstore_filename,"nstore_counter");
+  strcpy(gauge_filename, "conf.save");
+  strcpy(nstore_filename, "nstore_counter");
   strcpy(tmp_filename, ".conf.tmp");
 
   verbose = 1;
   g_use_clover_flag = 0;
 
-  process_args(argc,argv,&input_filename,&filename);
-  set_default_filenames(&input_filename,&filename);
+  process_args(argc, argv, &input_filename, &filename);
+  set_default_filenames(&input_filename, &filename);
 
   init_parallel_and_read_input(argc, argv, input_filename);
 
   DUM_DERI = 4;
-  DUM_MATRIX = DUM_DERI+7;
-  if(g_running_phmc) {
-    NO_OF_SPINORFIELDS = DUM_MATRIX+8;
-  }
-  else {
-    NO_OF_SPINORFIELDS = DUM_MATRIX+6;
+  DUM_MATRIX = DUM_DERI + 7;
+  if (g_running_phmc) {
+    NO_OF_SPINORFIELDS = DUM_MATRIX + 8;
+  } else {
+    NO_OF_SPINORFIELDS = DUM_MATRIX + 6;
   }
   DUM_BI_DERI = 6;
-  DUM_BI_SOLVER = DUM_BI_DERI+7;
+  DUM_BI_SOLVER = DUM_BI_DERI + 7;
 
-  DUM_BI_MATRIX = DUM_BI_SOLVER+6;
-  NO_OF_BISPINORFIELDS = DUM_BI_MATRIX+6;
-  
-  //4 extra fields (corresponding to DUM_MATRIX+0..5) for deg. and ND matrix mult.
+  DUM_BI_MATRIX = DUM_BI_SOLVER + 6;
+  NO_OF_BISPINORFIELDS = DUM_BI_MATRIX + 6;
+
+  // 4 extra fields (corresponding to DUM_MATRIX+0..5) for deg. and ND matrix mult.
   NO_OF_SPINORFIELDS_32 = 6;
-  
+
   tmlqcd_mpi_init(argc, argv);
   tm_stopwatch_push(&g_timers, "HMC", "");
 
-  if(nstore == -1) {
+  if (nstore == -1) {
     countfile = fopen(nstore_filename, "r");
-    if(countfile != NULL) {
+    if (countfile != NULL) {
       j = fscanf(countfile, "%d %d %s\n", &nstore, &trajectory_counter, gauge_input_filename);
-      if(j < 1) nstore = 0;
-      if(j < 2) trajectory_counter = 0;
+      if (j < 1) nstore = 0;
+      if (j < 2) trajectory_counter = 0;
       fclose(countfile);
-    }
-    else {
+    } else {
       nstore = 0;
       trajectory_counter = 0;
     }
   }
-  
+
 #ifndef TM_USE_MPI
   g_dbw2rand = 0;
 #endif
-  
-  
+
   g_mu = g_mu1;
-  
+
 #ifdef _GAUGE_COPY
   status = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
   status += init_gauge_field_32(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
   status = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
-  status += init_gauge_field_32(VOLUMEPLUSRAND + g_dbw2rand, 0);   
+  status += init_gauge_field_32(VOLUMEPLUSRAND + g_dbw2rand, 0);
 #endif
   /* need temporary gauge field for gauge reread checks and in update_tm */
   status += init_gauge_tmp(VOLUME);
@@ -198,22 +193,20 @@ int main(int argc,char *argv[]) {
     fprintf(stderr, "Not enough memory for geometry_indices! Aborting...\n");
     exit(0);
   }
-  if(even_odd_flag) {
-    j = init_spinor_field(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS);
-    j += init_spinor_field_32(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS_32);      
-  }
-  else {
+  if (even_odd_flag) {
+    j = init_spinor_field(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS);
+    j += init_spinor_field_32(VOLUMEPLUSRAND / 2, NO_OF_SPINORFIELDS_32);
+  } else {
     j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
-    j += init_spinor_field_32(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS_32);    
+    j += init_spinor_field_32(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS_32);
   }
   if (j != 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
     exit(0);
   }
-  if(even_odd_flag) {
-    j = init_csg_field(VOLUMEPLUSRAND/2);
-  }
-  else {
+  if (even_odd_flag) {
+    j = init_csg_field(VOLUMEPLUSRAND / 2);
+  } else {
     j = init_csg_field(VOLUMEPLUSRAND);
   }
   if (j != 0) {
@@ -226,30 +219,31 @@ int main(int argc,char *argv[]) {
     exit(0);
   }
 
-  if(g_running_phmc) {
-    j = init_bispinor_field(VOLUME/2, NO_OF_BISPINORFIELDS);
-    if (j!= 0) {
+  if (g_running_phmc) {
+    j = init_bispinor_field(VOLUME / 2, NO_OF_BISPINORFIELDS);
+    if (j != 0) {
       fprintf(stderr, "Not enough memory for bi-spinor fields! Aborting...\n");
       exit(0);
     }
   }
 
   /* list and initialize measurements*/
-  if(g_proc_id == 0) {
+  if (g_proc_id == 0) {
     printf("\n");
-    for(j = 0; j < no_measurements; j++) {
-      printf("# measurement id %d, type = %d: Frequency %d\n", j, measurement_list[j].type, measurement_list[j].freq);
+    for (j = 0; j < no_measurements; j++) {
+      printf("# measurement id %d, type = %d: Frequency %d\n", j, measurement_list[j].type,
+             measurement_list[j].freq);
     }
   }
   init_measurements();
 
   /*construct the filenames for the observables and the parameters*/
-  strncpy(datafilename,filename,200);  
-  strcat(datafilename,".data");
-  strncpy(parameterfilename,filename,200);  
-  strcat(parameterfilename,".para");
+  strncpy(datafilename, filename, 200);
+  strcat(datafilename, ".data");
+  strncpy(parameterfilename, filename, 200);
+  strcat(parameterfilename, ".para");
 
-  if(g_proc_id == 0){
+  if (g_proc_id == 0) {
     parameterfile = fopen(parameterfilename, "a");
     write_first_messages(parameterfile, "hmc", git_hash);
   }
@@ -267,52 +261,49 @@ int main(int argc,char *argv[]) {
     exit(1);
   }
 
-
 #ifdef _USE_HALFSPINOR
   j = init_dirac_halfspinor();
-  if (j!= 0) {
+  if (j != 0) {
     fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
     exit(-1);
   }
 
   j = init_dirac_halfspinor32();
-  if (j != 0)
-  {
+  if (j != 0) {
     fprintf(stderr, "Not enough memory for 32-bit halffield! Aborting...\n");
     exit(-1);
-  } 
-  
-#  if (defined _PERSISTENT)
+  }
+
+#if (defined _PERSISTENT)
   init_xchange_halffield();
-#  endif
+#endif
 #endif
 
   /* Initialise random number generator */
-  start_ranlux(rlxd_level, random_seed^trajectory_counter);
+  start_ranlux(rlxd_level, random_seed ^ trajectory_counter);
 
   /* Set up the gauge field */
   /* continue and restart */
-  if(startoption==3 || startoption == 2) {
-    if(g_proc_id == 0) {
-      printf("# Trying to read gauge field from file %s in %s precision.\n",
-            gauge_input_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
+  if (startoption == 3 || startoption == 2) {
+    if (g_proc_id == 0) {
+      printf("# Trying to read gauge field from file %s in %s precision.\n", gauge_input_filename,
+             (gauge_precision_read_flag == 32 ? "single" : "double"));
       fflush(stdout);
     }
-    if( (status = read_gauge_field(gauge_input_filename,g_gauge_field)) != 0) {
-      fprintf(stderr, "Error %d while reading gauge field from %s\nAborting...\n", status, gauge_input_filename);
+    if ((status = read_gauge_field(gauge_input_filename, g_gauge_field)) != 0) {
+      fprintf(stderr, "Error %d while reading gauge field from %s\nAborting...\n", status,
+              gauge_input_filename);
       exit(-2);
     }
 
-    if (g_proc_id == 0){
+    if (g_proc_id == 0) {
       printf("# Finished reading gauge field.\n");
       fflush(stdout);
     }
-  }
-  else if (startoption == 1) {
+  } else if (startoption == 1) {
     /* hot */
     random_gauge_field(reproduce_randomnumber_flag, g_gauge_field);
-  }
-  else if(startoption == 0) {
+  } else if (startoption == 0) {
     /* cold */
     unit_g_gauge_field();
   }
@@ -322,18 +313,16 @@ int main(int argc,char *argv[]) {
   xchange_gauge(g_gauge_field);
   update_tm_gauge_exchange(&g_gauge_state);
 #endif
-    
+
   /*Convert to a 32 bit gauge field, after xchange*/
   convert_32_gauge_field(g_gauge_field_32, g_gauge_field, VOLUMEPLUSRAND + g_dbw2rand);
 #ifdef TM_USE_MPI
   update_tm_gauge_exchange(&g_gauge_state_32);
 #endif
-  
-    
-  if(even_odd_flag) {
-    j = init_monomials(VOLUMEPLUSRAND/2, even_odd_flag);
-  }
-  else {
+
+  if (even_odd_flag) {
+    j = init_monomials(VOLUMEPLUSRAND / 2, even_odd_flag);
+  } else {
     j = init_monomials(VOLUMEPLUSRAND, even_odd_flag);
   }
   if (j != 0) {
@@ -343,105 +332,110 @@ int main(int argc,char *argv[]) {
 
   init_integrator();
 
-  if(g_proc_id == 0) {
-    for(j = 0; j < no_monomials; j++) {
-      printf("# monomial id %d type = %d timescale %d\n", j, monomial_list[j].type, monomial_list[j].timescale);
+  if (g_proc_id == 0) {
+    for (j = 0; j < no_monomials; j++) {
+      printf("# monomial id %d type = %d timescale %d\n", j, monomial_list[j].type,
+             monomial_list[j].timescale);
     }
   }
 
-  plaquette_energy = measure_plaquette( (const su3**) g_gauge_field);
-  if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
-    rectangle_energy = measure_rectangles( (const su3**) g_gauge_field);
-    if(g_proc_id == 0){
-      fprintf(parameterfile,"# Computed rectangle value: %14.12f.\n",rectangle_energy/(12.*VOLUME*g_nproc));
+  plaquette_energy = measure_plaquette((const su3 **)g_gauge_field);
+  if (g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
+    rectangle_energy = measure_rectangles((const su3 **)g_gauge_field);
+    if (g_proc_id == 0) {
+      fprintf(parameterfile, "# Computed rectangle value: %14.12f.\n",
+              rectangle_energy / (12. * VOLUME * g_nproc));
     }
   }
-  //eneg = g_rgi_C0 * plaquette_energy + g_rgi_C1 * rectangle_energy;
+  // eneg = g_rgi_C0 * plaquette_energy + g_rgi_C1 * rectangle_energy;
 
-  if(g_proc_id == 0) {
-    fprintf(parameterfile,"# Computed plaquette value: %14.12f.\n", plaquette_energy/(6.*VOLUME*g_nproc));
-    printf("# Computed plaquette value: %14.12f.\n", plaquette_energy/(6.*VOLUME*g_nproc));
+  if (g_proc_id == 0) {
+    fprintf(parameterfile, "# Computed plaquette value: %14.12f.\n",
+            plaquette_energy / (6. * VOLUME * g_nproc));
+    printf("# Computed plaquette value: %14.12f.\n", plaquette_energy / (6. * VOLUME * g_nproc));
     fclose(parameterfile);
   }
 
   /* set ddummy to zero */
-  for(ix = 0; ix < VOLUMEPLUSRAND; ix++){
-    for(mu=0; mu<4; mu++){
-      ddummy[ix][mu].d1=0.;
-      ddummy[ix][mu].d2=0.;
-      ddummy[ix][mu].d3=0.;
-      ddummy[ix][mu].d4=0.;
-      ddummy[ix][mu].d5=0.;
-      ddummy[ix][mu].d6=0.;
-      ddummy[ix][mu].d7=0.;
-      ddummy[ix][mu].d8=0.;
+  for (ix = 0; ix < VOLUMEPLUSRAND; ix++) {
+    for (mu = 0; mu < 4; mu++) {
+      ddummy[ix][mu].d1 = 0.;
+      ddummy[ix][mu].d2 = 0.;
+      ddummy[ix][mu].d3 = 0.;
+      ddummy[ix][mu].d4 = 0.;
+      ddummy[ix][mu].d5 = 0.;
+      ddummy[ix][mu].d6 = 0.;
+      ddummy[ix][mu].d7 = 0.;
+      ddummy[ix][mu].d8 = 0.;
     }
   }
 
-  if(g_proc_id == 0) {
-    gettimeofday(&t1,NULL);
+  if (g_proc_id == 0) {
+    gettimeofday(&t1, NULL);
     countfile = fopen("history_hmc_tm", "a");
-    fprintf(countfile, "!!! Timestamp %ld, Nsave = %d, g_mu = %.12f, g_mu1 = %.12f, g_mu_2 = %.12f, g_mu3 = %.12f, beta = %.12f, kappa = %.12f, C1 = %f, ",
+    fprintf(countfile,
+            "!!! Timestamp %ld, Nsave = %d, g_mu = %.12f, g_mu1 = %.12f, g_mu_2 = %.12f, g_mu3 = "
+            "%.12f, beta = %.12f, kappa = %.12f, C1 = %f, ",
             t1.tv_sec, Nsave, g_mu, g_mu1, g_mu2, g_mu3, g_beta, g_kappa, g_rgi_C1);
-    for(j = 0; j < Integrator.no_timescales; j++) {
+    for (j = 0; j < Integrator.no_timescales; j++) {
       fprintf(countfile, "n_int[%d] = %d ", j, Integrator.no_mnls_per_ts[j]);
     }
     fprintf(countfile, "\n");
     fclose(countfile);
   }
 
-
   /* Loop for measurements */
-  for(j = 0; j < Nmeas; j++) {
-    if(g_proc_id == 0) {
+  for (j = 0; j < Nmeas; j++) {
+    if (g_proc_id == 0) {
       printf("#\n# Starting trajectory no %d\n", trajectory_counter);
     }
 
-    return_check = return_check_flag && (trajectory_counter%return_check_interval == 0);
+    return_check = return_check_flag && (trajectory_counter % return_check_interval == 0);
 
-    accept = update_tm(&plaquette_energy, &rectangle_energy, datafilename, 
-		       return_check, trajectory_counter>=Ntherm, trajectory_counter);
+    accept = update_tm(&plaquette_energy, &rectangle_energy, datafilename, return_check,
+                       trajectory_counter >= Ntherm, trajectory_counter);
     Rate += accept;
 
     /* Save gauge configuration all Nsave times */
-    if((Nsave !=0) && (trajectory_counter%Nsave == 0) && (trajectory_counter!=0)) {
-      sprintf(gauge_filename,"conf.%.4d", nstore);
-      if(g_proc_id == 0) {
+    if ((Nsave != 0) && (trajectory_counter % Nsave == 0) && (trajectory_counter != 0)) {
+      sprintf(gauge_filename, "conf.%.4d", nstore);
+      if (g_proc_id == 0) {
         countfile = fopen("history_hmc_tm", "a");
-        fprintf(countfile, "%.4d, measurement %d of %d, Nsave = %d, Plaquette = %e, trajectory nr = %d\n",
-            nstore, j, Nmeas, Nsave, plaquette_energy/(6.*VOLUME*g_nproc),
-            trajectory_counter);
+        fprintf(countfile,
+                "%.4d, measurement %d of %d, Nsave = %d, Plaquette = %e, trajectory nr = %d\n",
+                nstore, j, Nmeas, Nsave, plaquette_energy / (6. * VOLUME * g_nproc),
+                trajectory_counter);
         fclose(countfile);
       }
-      nstore ++;
+      nstore++;
+    } else {
+      sprintf(gauge_filename, "conf.save");
     }
-    else {
-      sprintf(gauge_filename,"conf.save");
-    }
-    if(((Nsave !=0) && (trajectory_counter%Nsave == 0) && (trajectory_counter!=0)) || (write_cp_flag == 1) || (j >= (Nmeas - 1))) {
+    if (((Nsave != 0) && (trajectory_counter % Nsave == 0) && (trajectory_counter != 0)) ||
+        (write_cp_flag == 1) || (j >= (Nmeas - 1))) {
       /* If a reversibility check was performed this trajectory, and the trajectory was accepted,
        * then the configuration is currently stored in .conf.tmp, written out by update_tm.
        * In that case also a readback was performed, so no need to test .conf.tmp
        * In all other cases the gauge configuration still needs to be written out here. */
 
-      sprintf(tmp_filename,".conf.t%05d.tmp",trajectory_counter);
+      sprintf(tmp_filename, ".conf.t%05d.tmp", trajectory_counter);
 
       if (!(return_check && accept))
-        for (unsigned int attempt = 1; attempt <= io_max_attempts; ++attempt)
-        {
-          if (g_proc_id == 0)
-            fprintf(stdout, "# Writing gauge field to %s.\n", tmp_filename);
+        for (unsigned int attempt = 1; attempt <= io_max_attempts; ++attempt) {
+          if (g_proc_id == 0) fprintf(stdout, "# Writing gauge field to %s.\n", tmp_filename);
 
-          xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
-          status = write_gauge_field( tmp_filename, gauge_precision_write_flag, xlfInfo);
+          xlfInfo = construct_paramsXlfInfo(plaquette_energy / (6. * VOLUME * g_nproc),
+                                            trajectory_counter);
+          status = write_gauge_field(tmp_filename, gauge_precision_write_flag, xlfInfo);
           free(xlfInfo);
-          
+
           if (status) {
             /* Writing the gauge field failed directly */
-            fprintf(stderr, "Error %d while writing gauge field to %s\nAborting...\n", status, tmp_filename);
+            fprintf(stderr, "Error %d while writing gauge field to %s\nAborting...\n", status,
+                    tmp_filename);
             exit(-2);
           }
-          
+
           if (g_disable_IO_checks) {
             if (g_proc_id == 0)
               fprintf(stdout, "# Write completed successfully. Write not verified!\n");
@@ -449,35 +443,39 @@ int main(int argc,char *argv[]) {
           }
 
           /* Read gauge field back to verify the writeout */
-          if (g_proc_id == 0) 
-            fprintf(stdout, "# Write completed, verifying write...\n");
+          if (g_proc_id == 0) fprintf(stdout, "# Write completed, verifying write...\n");
 
-          for(int read_attempt = 0; read_attempt < 2; ++read_attempt) {
-            status = read_gauge_field(tmp_filename,gauge_tmp);        
+          for (int read_attempt = 0; read_attempt < 2; ++read_attempt) {
+            status = read_gauge_field(tmp_filename, gauge_tmp);
             if (!status) {
-              if (g_proc_id == 0)
-                fprintf(stdout, "# Write successfully verified.\n");
+              if (g_proc_id == 0) fprintf(stdout, "# Write successfully verified.\n");
               break;
             } else {
-              if(g_proc_id==0) {
-                if(read_attempt+1 < 2) {
-                  fprintf(stdout, "# Reread attempt %d out of %d failed, trying again in %d seconds!\n", read_attempt+1, 2, 2);
-                } 
-		else {
-                  fprintf(stdout, "# Reread attempt %d out of %d failed, write will be reattempted!\n", read_attempt+1, 2);
+              if (g_proc_id == 0) {
+                if (read_attempt + 1 < 2) {
+                  fprintf(stdout,
+                          "# Reread attempt %d out of %d failed, trying again in %d seconds!\n",
+                          read_attempt + 1, 2, 2);
+                } else {
+                  fprintf(stdout,
+                          "# Reread attempt %d out of %d failed, write will be reattempted!\n",
+                          read_attempt + 1, 2);
                 }
               }
               sleep(2);
             }
           }
 
-          /* we broke out of the read attempt loop, still need to break out of the write attempt loop ! */
-          if(!status) {
+          /* we broke out of the read attempt loop, still need to break out of the write attempt
+           * loop ! */
+          if (!status) {
             break;
-          } 
+          }
 
           if (g_proc_id == 0) {
-            fprintf(stdout, "# Writeout of %s returned no error, but verification discovered errors.\n", tmp_filename);
+            fprintf(stdout,
+                    "# Writeout of %s returned no error, but verification discovered errors.\n",
+                    tmp_filename);
             fprintf(stdout, "# Potential disk or MPI I/O error.\n");
             fprintf(stdout, "# This was writing attempt %d out of %d.\n", attempt, io_max_attempts);
           }
@@ -487,22 +485,24 @@ int main(int argc,char *argv[]) {
 
           if (g_proc_id == 0)
             fprintf(stdout, "# Will attempt to write again in %d seconds.\n", io_timeout);
-          
+
           sleep(io_timeout);
 #ifdef TM_USE_MPI
           MPI_Barrier(MPI_COMM_WORLD);
 #endif
         }
       /* Now move .conf.tmp into place */
-      if(g_proc_id == 0) {
+      if (g_proc_id == 0) {
         fprintf(stdout, "# Renaming %s to %s.\n", tmp_filename, gauge_filename);
         if (rename(tmp_filename, gauge_filename) != 0) {
           /* Errno can be inspected here for more descriptive error reporting */
-          fprintf(stderr, "Error while trying to rename temporary file %s to %s. Unable to proceed.\n", tmp_filename, gauge_filename);
+          fprintf(stderr,
+                  "Error while trying to rename temporary file %s to %s. Unable to proceed.\n",
+                  tmp_filename, gauge_filename);
           exit(-2);
         }
         countfile = fopen(nstore_filename, "w");
-        fprintf(countfile, "%d %d %s\n", nstore, trajectory_counter+1, gauge_filename);
+        fprintf(countfile, "%d %d %s\n", nstore, trajectory_counter + 1, gauge_filename);
         fclose(countfile);
       }
     }
@@ -510,16 +510,16 @@ int main(int argc,char *argv[]) {
     /* online measurements */
 #ifdef DDalphaAMG
     // When the configuration is rejected, we have to update it in the MG and redo the setup.
-    int mg_update = accept ? 0:1;
+    int mg_update = accept ? 0 : 1;
 #endif
-    for(imeas = 0; imeas < no_measurements; imeas++){
+    for (imeas = 0; imeas < no_measurements; imeas++) {
       meas = &measurement_list[imeas];
-      if(trajectory_counter%meas->freq == 0){
+      if (trajectory_counter % meas->freq == 0) {
         if (g_proc_id == 0) {
           fprintf(stdout, "#\n# Beginning online measurement.\n");
         }
 #ifdef DDalphaAMG
-        if( mg_update ) {
+        if (mg_update) {
           mg_update = 0;
           MG_reset();
         }
@@ -528,32 +528,39 @@ int main(int argc,char *argv[]) {
       }
     }
 
-    if(g_proc_id == 0) {
+    if (g_proc_id == 0) {
       verbose = 1;
     }
     ix = reread_input("hmc.reread");
-    if(g_proc_id == 0) {
+    if (g_proc_id == 0) {
       verbose = 0;
     }
 
 #ifdef TM_USE_MPI
     MPI_Barrier(MPI_COMM_WORLD);
 #endif
-    if(ix == 0 && g_proc_id == 0) {
+    if (ix == 0 && g_proc_id == 0) {
       countfile = fopen("history_hmc_tm", "a");
-      fprintf(countfile, "# Changed input parameters according to hmc.reread: measurement %d of %d\n", j, Nmeas);
+      fprintf(countfile,
+              "# Changed input parameters according to hmc.reread: measurement %d of %d\n", j,
+              Nmeas);
       fclose(countfile);
-      printf("# Changed input parameters according to hmc.reread (see stdout): measurement %d of %d\n", j, Nmeas);
+      printf(
+          "# Changed input parameters according to hmc.reread (see stdout): measurement %d of %d\n",
+          j, Nmeas);
       remove("hmc.reread");
     }
     trajectory_counter++;
   } /* end of loop over trajectories */
 
-  if(g_proc_id == 0 && Nmeas != 0) {
-    printf("# Acceptance rate was %3.2f percent, %d out of %d trajectories accepted.\n", 100.*(double)Rate/(double)Nmeas, Rate, Nmeas);
+  if (g_proc_id == 0 && Nmeas != 0) {
+    printf("# Acceptance rate was %3.2f percent, %d out of %d trajectories accepted.\n",
+           100. * (double)Rate / (double)Nmeas, Rate, Nmeas);
     fflush(stdout);
     parameterfile = fopen(parameterfilename, "a");
-    fprintf(parameterfile, "# Acceptance rate was %3.2f percent, %d out of %d trajectories accepted.\n", 100.*(double)Rate/(double)Nmeas, Rate, Nmeas);
+    fprintf(parameterfile,
+            "# Acceptance rate was %3.2f percent, %d out of %d trajectories accepted.\n",
+            100. * (double)Rate / (double)Nmeas, Rate, Nmeas);
     fclose(parameterfile);
   }
 
@@ -562,13 +569,13 @@ int main(int argc,char *argv[]) {
 #endif
   free_gauge_tmp();
   free_gauge_field();
-  free_gauge_field_32();  
+  free_gauge_field_32();
   free_geometry_indices();
   free_spinor_field();
-  free_spinor_field_32();  
+  free_spinor_field_32();
   free_moment_field();
   free_monomials();
-  if(g_running_phmc) {
+  if (g_running_phmc) {
     free_bispinor_field();
     free_chi_spinor_field();
   }
@@ -587,14 +594,14 @@ int main(int argc,char *argv[]) {
   MPI_Finalize();
 #endif
 
-  return(0);
+  return (0);
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)
 #endif
 }
 
-static void usage(const tm_ExitCode_t exit_code){
-  if(g_proc_id == 0){
+static void usage(const tm_ExitCode_t exit_code) {
+  if (g_proc_id == 0) {
     fprintf(stdout, "HMC for Wilson twisted mass QCD\n");
     fprintf(stdout, "Version %s \n\n", TMLQCD_PACKAGE_VERSION);
     fprintf(stdout, "Please send bug reports to %s\n", TMLQCD_PACKAGE_BUGREPORT);
@@ -603,13 +610,15 @@ static void usage(const tm_ExitCode_t exit_code){
     fprintf(stdout, "         [-o output-filename] default: output\n");
     fprintf(stdout, "         [-v] more verbosity\n");
     fprintf(stdout, "         [-V] print version information and exit\n");
-    fprintf(stdout, "         [-m level] request MPI thread level 'single' or 'multiple' (default: 'single')\n");
+    fprintf(stdout,
+            "         [-m level] request MPI thread level 'single' or 'multiple' (default: "
+            "'single')\n");
     fprintf(stdout, "         [-h|-? this help]\n");
   }
   exit(exit_code);
 }
 
-static void process_args(int argc, char *argv[], char ** input_filename, char ** filename) {
+static void process_args(int argc, char *argv[], char **input_filename, char **filename) {
   int c;
   while ((c = getopt(argc, argv, "h?vVf:o:m:")) != -1) {
     switch (c) {
@@ -625,18 +634,19 @@ static void process_args(int argc, char *argv[], char ** input_filename, char **
         verbose = 1;
         break;
       case 'V':
-        if(g_proc_id == 0) {
-          fprintf(stdout,"%s %s\n",TMLQCD_PACKAGE_STRING,git_hash);
+        if (g_proc_id == 0) {
+          fprintf(stdout, "%s %s\n", TMLQCD_PACKAGE_STRING, git_hash);
         }
         exit(TM_EXIT_SUCCESS);
         break;
       case 'm':
-        if( !strcmp(optarg, "single") ){
+        if (!strcmp(optarg, "single")) {
           g_mpi_thread_level = TM_MPI_THREAD_SINGLE;
-        } else if ( !strcmp(optarg, "multiple") ) {
+        } else if (!strcmp(optarg, "multiple")) {
           g_mpi_thread_level = TM_MPI_THREAD_MULTIPLE;
         } else {
-          tm_debug_printf(0, 0, "[hmc_tm process_args]: invalid input for -m command line argument\n");
+          tm_debug_printf(0, 0,
+                          "[hmc_tm process_args]: invalid input for -m command line argument\n");
           usage(TM_EXIT_INVALID_CMDLINE_ARG);
         }
         break;
@@ -649,15 +659,14 @@ static void process_args(int argc, char *argv[], char ** input_filename, char **
   }
 }
 
-static void set_default_filenames(char ** input_filename, char ** filename) {
-  if( *input_filename == NULL ) {
+static void set_default_filenames(char **input_filename, char **filename) {
+  if (*input_filename == NULL) {
     *input_filename = calloc(13, sizeof(char));
-    strcpy(*input_filename,"hmc.input");
+    strcpy(*input_filename, "hmc.input");
   }
-  
-  if( *filename == NULL ) {
-    *filename = calloc(7, sizeof(char));
-    strcpy(*filename,"output");
-  } 
-}
 
+  if (*filename == NULL) {
+    *filename = calloc(7, sizeof(char));
+    strcpy(*filename, "output");
+  }
+}

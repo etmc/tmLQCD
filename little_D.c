@@ -8,25 +8,25 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<tmlqcd_config.h>
+#include <tmlqcd_config.h>
 #endif
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #ifdef TM_USE_MPI
-# include <mpi.h>
+#include <mpi.h>
 #endif
 #include <complex.h>
 #include "aligned_malloc.h"
@@ -58,64 +58,62 @@ static int ONE = 1;
 static _Complex double CONE, CZERO, CMONE;
 static _Complex float CONE_32, CZERO_32, CMONE_32;
 
-
-void init_little_field_exchange(_Complex double * w);
+void init_little_field_exchange(_Complex double *w);
 void wait_little_field_exchange(const int mu);
 
 void unit_little_D(_Complex double *v, _Complex double *w) {
-  memcpy(v, w, nb_blocks*g_N_s*sizeof(_Complex double));
+  memcpy(v, w, nb_blocks * g_N_s * sizeof(_Complex double));
 
   return;
 }
 
 /** ANOTHER TESTING FUNCTION */
-void invert_little_D_spinor(spinor *r, spinor *s){
+void invert_little_D_spinor(spinor *r, spinor *s) {
   int status = 0;
   spinor **psi;
   _Complex double *v, *w;
   psi = calloc(nb_blocks, sizeof(spinor));
   v = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
   w = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
-  psi[0] = calloc(VOLUME+nb_blocks, sizeof(spinor));
+  psi[0] = calloc(VOLUME + nb_blocks, sizeof(spinor));
   for (int i = 1; i < nb_blocks; i++) {
-    psi[i] = psi[i-1] + (VOLUME / nb_blocks) +1;
+    psi[i] = psi[i - 1] + (VOLUME / nb_blocks) + 1;
   }
-  split_global_field_GEN(psi, s, nb_blocks); // ADAPT THIS
+  split_global_field_GEN(psi, s, nb_blocks);  // ADAPT THIS
 
   for (int j = 0; j < g_N_s; ++j) { /*loop over block.basis */
     for (int i = 0; i < nb_blocks; i++) {
-      v[j + i*g_N_s] = scalar_prod(block_list[i].basis[j], psi[i], VOLUME/nb_blocks, 0);
+      v[j + i * g_N_s] = scalar_prod(block_list[i].basis[j], psi[i], VOLUME / nb_blocks, 0);
     }
   }
 
   status = gcr4complex(w, v, 10, 100, little_solver_high_prec, 1, nb_blocks * g_N_s, 1,
                        nb_blocks * 9 * g_N_s, 0, &little_D);
-  if(g_proc_id == 0 && g_debug_level > 0) {
+  if (g_proc_id == 0 && g_debug_level > 0) {
     printf("lgcr: %d iterations in invert_little_D_spinor\n", status);
   }
 
   for (int i = 0; i < nb_blocks; i++) {
-    mul(psi[i], w[i*g_N_s], block_list[i].basis[0], VOLUME/nb_blocks);
+    mul(psi[i], w[i * g_N_s], block_list[i].basis[0], VOLUME / nb_blocks);
   }
   for (int j = 1; j < g_N_s; ++j) {
     for (int i = 0; i < nb_blocks; i++) {
-      assign_add_mul(psi[i], block_list[i].basis[j], w[j+i*g_N_s], VOLUME/nb_blocks);
+      assign_add_mul(psi[i], block_list[i].basis[j], w[j + i * g_N_s], VOLUME / nb_blocks);
     }
   }
-  reconstruct_global_field_GEN(r, psi, nb_blocks); // ADAPT THIS
-      
+  reconstruct_global_field_GEN(r, psi, nb_blocks);  // ADAPT THIS
+
   free(v);
   free(w);
   free(psi[0]);
   free(psi);
 }
 
-
 /** ANOTHER TESTING FUNCTION */
-void invert_little_D_eo_spinor(spinor *r, spinor *s){
+void invert_little_D_eo_spinor(spinor *r, spinor *s) {
   int i_o, i_e;
   spinor **psi;
-  _Complex double *v, *w, *v_o, *v_e, * v_eo, * w_eo, * ctmp2;
+  _Complex double *v, *w, *v_o, *v_e, *v_eo, *w_eo, *ctmp2;
   psi = calloc(nb_blocks, sizeof(spinor));
   v = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
   w = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
@@ -124,67 +122,67 @@ void invert_little_D_eo_spinor(spinor *r, spinor *s){
   v_eo = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
   w_eo = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
   ctmp2 = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
-  psi[0] = calloc(VOLUME+nb_blocks, sizeof(spinor));
+  psi[0] = calloc(VOLUME + nb_blocks, sizeof(spinor));
   for (int i = 1; i < nb_blocks; i++) {
-    psi[i] = psi[i-1] + (VOLUME / nb_blocks) +1;
+    psi[i] = psi[i - 1] + (VOLUME / nb_blocks) + 1;
   }
   split_global_field_GEN(psi, s, nb_blocks);  // ADAPT THIS
 
   for (int j = 0; j < g_N_s; ++j) { /*loop over block.basis */
-    i_e=0;
-    i_o=0;
+    i_e = 0;
+    i_o = 0;
     for (int i = 0; i < nb_blocks; i++) {
-      v[j + i*g_N_s] = scalar_prod(block_list[i].basis[j], psi[i], VOLUME/nb_blocks, 0);
-      if (block_list[i].evenodd==0) {
-	v_eo[j+i_e*g_N_s] = v[j+i*g_N_s];
-	i_e++;
+      v[j + i * g_N_s] = scalar_prod(block_list[i].basis[j], psi[i], VOLUME / nb_blocks, 0);
+      if (block_list[i].evenodd == 0) {
+        v_eo[j + i_e * g_N_s] = v[j + i * g_N_s];
+        i_e++;
       }
-      if (block_list[i].evenodd==1) {
-	v_eo[j+nb_blocks*g_N_s/2+i_o*g_N_s] = v[j+i*g_N_s];
-	i_o++; 
+      if (block_list[i].evenodd == 1) {
+        v_eo[j + nb_blocks * g_N_s / 2 + i_o * g_N_s] = v[j + i * g_N_s];
+        i_o++;
       }
     }
   }
 
-  little_D_ee_inv(v_e,v_eo);
-  little_D_hop(1,v_o,v_e);
-  little_Dhat_rhs(1,v_o,-1,v_eo);
+  little_D_ee_inv(v_e, v_eo);
+  little_D_hop(1, v_o, v_e);
+  little_Dhat_rhs(1, v_o, -1, v_eo);
 
   int status = gcr4complex(w_eo, v_o, 10, 100, 1e-31, 1, nb_blocks * g_N_s, 1,
                            nb_blocks * 9 * g_N_s, 0, &little_D_sym);
 
-  little_D_hop(0,ctmp2, w_eo);   
-  little_D_ee_inv(w_eo,ctmp2);
-  little_Dhat_rhs(0,w_eo, -1., v_e);
+  little_D_hop(0, ctmp2, w_eo);
+  little_D_ee_inv(w_eo, ctmp2);
+  little_Dhat_rhs(0, w_eo, -1., v_e);
 
   for (int j = 0; j < g_N_s; j++) {
-    i_o=0;
-    i_e=0;
+    i_o = 0;
+    i_e = 0;
     for (int i = 0; i < nb_blocks; i++) {
-      if (block_list[i].evenodd==0) {
-	w[j + i*g_N_s] = w_eo[j + i_e*g_N_s];
-	i_e++;
+      if (block_list[i].evenodd == 0) {
+        w[j + i * g_N_s] = w_eo[j + i_e * g_N_s];
+        i_e++;
       }
-      if (block_list[i].evenodd==1) {
-	w[j + i*g_N_s] = w_eo[j + nb_blocks*g_N_s/2+i_o*g_N_s];
-	i_o++;
+      if (block_list[i].evenodd == 1) {
+        w[j + i * g_N_s] = w_eo[j + nb_blocks * g_N_s / 2 + i_o * g_N_s];
+        i_o++;
       }
     }
   }
 
-  if(g_proc_id == 0 && g_debug_level > 0) {
+  if (g_proc_id == 0 && g_debug_level > 0) {
     printf("lgcr: %d iterations in invert_little_D_eo_spinor\n", status);
   }
 
   for (int i = 0; i < nb_blocks; i++) {
-    mul(psi[i], w[i*g_N_s], block_list[i].basis[0], VOLUME/nb_blocks);
+    mul(psi[i], w[i * g_N_s], block_list[i].basis[0], VOLUME / nb_blocks);
   }
   for (int j = 1; j < g_N_s; ++j) {
     for (int i = 0; i < nb_blocks; i++) {
-      assign_add_mul(psi[i], block_list[i].basis[j], w[j+i*g_N_s], VOLUME/nb_blocks);
+      assign_add_mul(psi[i], block_list[i].basis[j], w[j + i * g_N_s], VOLUME / nb_blocks);
     }
   }
-  reconstruct_global_field_GEN(r, psi, nb_blocks); // ADAPT THIS
+  reconstruct_global_field_GEN(r, psi, nb_blocks);  // ADAPT THIS
 
   free(v);
   free(w);
@@ -197,8 +195,7 @@ void invert_little_D_eo_spinor(spinor *r, spinor *s){
   free(psi);
 }
 
-
-void project2(spinor * const out, spinor * const in);
+void project2(spinor *const out, spinor *const in);
 
 /** ANOTHER TESTING FUNCTION */
 void apply_little_D_spinor(spinor *r, spinor *s) {
@@ -210,7 +207,7 @@ void apply_little_D_spinor(spinor *r, spinor *s) {
   w = calloc(nb_blocks * 9 * g_N_s, sizeof(_Complex double));
   psi[0] = calloc(VOLUME + nb_blocks, sizeof(spinor));
   for (int i = 1; i < nb_blocks; i++) {
-    psi[i] = psi[i-1] + (VOLUME / nb_blocks) + 1;
+    psi[i] = psi[i - 1] + (VOLUME / nb_blocks) + 1;
   }
   split_global_field_GEN(psi, s, nb_blocks);
 
@@ -222,15 +219,15 @@ void apply_little_D_spinor(spinor *r, spinor *s) {
   little_D(w, v);
 
   for (int i = 0; i < nb_blocks; i++) {
-    mul(psi[i], w[i*g_N_s], block_list[i].basis[0], VOLUME/nb_blocks);
+    mul(psi[i], w[i * g_N_s], block_list[i].basis[0], VOLUME / nb_blocks);
   }
   for (int j = 1; j < g_N_s; ++j) {
     for (int i = 0; i < nb_blocks; i++) {
-      assign_add_mul(psi[i], block_list[i].basis[j], w[i*g_N_s + j], VOLUME/nb_blocks);
+      assign_add_mul(psi[i], block_list[i].basis[j], w[i * g_N_s + j], VOLUME / nb_blocks);
     }
   }
   reconstruct_global_field_GEN(r, psi, nb_blocks);
-  
+
   free(v);
   free(w);
   free(psi[0]);
@@ -246,15 +243,15 @@ void apply_little_D_spinor(spinor *r, spinor *s) {
 #endif
 #define _C_TYPE _Complex double
 
-#include"little_D_body.c"
+#include "little_D_body.c"
 
 #undef _C_TYPE
 #undef _PSWITCH
 #undef _PTSWITCH
 #undef _MV
 
-#define _PSWITCH(s) s ## _32
-#define _PTSWITCH(s) s ## 32
+#define _PSWITCH(s) s##_32
+#define _PTSWITCH(s) s##32
 #if (defined NOF77UNDERSCORE || defined NOF77_)
 #define _MV(x) cgemv
 #else
@@ -262,7 +259,7 @@ void apply_little_D_spinor(spinor *r, spinor *s) {
 #endif
 #define _C_TYPE _Complex float
 
-#include"little_D_body.c"
+#include "little_D_body.c"
 
 #undef _C_TYPE
 #undef _PSWITCH
@@ -276,53 +273,52 @@ extern MPI_Status lstatus[16];
 extern int waitcount;
 #endif
 
-
-void init_little_field_exchange(_Complex double * w) {
+void init_little_field_exchange(_Complex double *w) {
 #ifdef TM_USE_MPI
   int i = 0;
-#  if (defined PARALLELT || defined PARALLELX)
+#if (defined PARALLELT || defined PARALLELX)
   int no_dirs = 2;
-#  elif (defined PARALLELXT || defined PARALLELXY || defined PARALLELXYZ)
+#elif (defined PARALLELXT || defined PARALLELXY || defined PARALLELXYZ)
   int no_dirs = 4;
-#  elif (defined PARALLELXYT || defined PARALLELXYZT)
+#elif (defined PARALLELXYT || defined PARALLELXYZT)
   int no_dirs = 6;
-#  endif
-  if(waitcount != 0) {
-    if(g_proc_id == 0) {
+#endif
+  if (waitcount != 0) {
+    if (g_proc_id == 0) {
       fprintf(stderr, "last little_field_exchange not finished! Aborting...\n");
     }
     exit(-1);
   }
   /* z-dir requires special treatment! */
-  for(i = 0; i < no_dirs; i+=nb_blocks) {
+  for (i = 0; i < no_dirs; i += nb_blocks) {
     /* send to the right, receive from the left */
-    MPI_Isend((void*)w, nb_blocks*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i], 
-              i, g_cart_grid, &lrequests[2*i]);
-    MPI_Irecv((void*)(w + nb_blocks*(i+2)*g_N_s), nb_blocks*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i+1], 
-              i, g_cart_grid, &lrequests[2*i+1]);
-    
+    MPI_Isend((void *)w, nb_blocks * g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i], i, g_cart_grid,
+              &lrequests[2 * i]);
+    MPI_Irecv((void *)(w + nb_blocks * (i + 2) * g_N_s), nb_blocks * g_N_s, MPI_DOUBLE_COMPLEX,
+              g_nb_list[i + 1], i, g_cart_grid, &lrequests[2 * i + 1]);
+
     /* send to the left, receive from the right */
-    MPI_Isend((void*)w, nb_blocks*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i+1], 
-              i+1, g_cart_grid, &lrequests[2*i+2]);
-    MPI_Irecv((void*)(w + nb_blocks*(i+1)*g_N_s), nb_blocks*g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i], 
-              i+1, g_cart_grid, &lrequests[2*i+3]);
+    MPI_Isend((void *)w, nb_blocks * g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i + 1], i + 1,
+              g_cart_grid, &lrequests[2 * i + 2]);
+    MPI_Irecv((void *)(w + nb_blocks * (i + 1) * g_N_s), nb_blocks * g_N_s, MPI_DOUBLE_COMPLEX,
+              g_nb_list[i], i + 1, g_cart_grid, &lrequests[2 * i + 3]);
     waitcount += 4;
   }
-#  ifdef PARALLELXYZT
+#ifdef PARALLELXYZT
   /* send to the right, receive from the left */
   i = 6;
-  MPI_Isend((void*)(w + g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i], 
-            i, g_cart_grid, &lrequests[2*i]);
-  MPI_Irecv((void*)(w + (nb_blocks*(i+1)+1)*g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i+1], 
-            i, g_cart_grid, &lrequests[2*i+1]);
-  
+  MPI_Isend((void *)(w + g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i], i, g_cart_grid,
+            &lrequests[2 * i]);
+  MPI_Irecv((void *)(w + (nb_blocks * (i + 1) + 1) * g_N_s), g_N_s, MPI_DOUBLE_COMPLEX,
+            g_nb_list[i + 1], i, g_cart_grid, &lrequests[2 * i + 1]);
+
   /* send to the left, receive from the right */
-  MPI_Isend((void*)w, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i+1], 
-            i+1, g_cart_grid, &lrequests[2*i+2]);
-  MPI_Irecv((void*)(w + nb_blocks*(i+1)*g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i], 
-            i+1, g_cart_grid, &lrequests[2*i+3]);
+  MPI_Isend((void *)w, g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i + 1], i + 1, g_cart_grid,
+            &lrequests[2 * i + 2]);
+  MPI_Irecv((void *)(w + nb_blocks * (i + 1) * g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i],
+            i + 1, g_cart_grid, &lrequests[2 * i + 3]);
   waitcount += 4;
-#  endif
+#endif
 #endif
   return;
 }
@@ -334,5 +330,3 @@ void wait_little_field_exchange(const int mu) {
 #endif
   return;
 }
-
-

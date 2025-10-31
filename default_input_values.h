@@ -9,12 +9,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * tmLQCD is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
@@ -32,9 +32,8 @@
 #ifndef _DEFAULT_INPUT_VALUES_H
 #define _DEFAULT_INPUT_VALUES_H
 
-#include "misc_types.h"
 #include <float.h>
-
+#include "misc_types.h"
 
 #define _default_T_global 4
 #define _default_L 4
@@ -83,9 +82,9 @@
 
 #define _default_random_seed 123456
 #define _default_rlxd_level 1
-#define _default_solver_flag 1 // this is CG (see solver/solver_types.h)
-#define _default_nd_solver_flag 15 // this is CGMMSND (see solver/solver_types.h)
-#define _default_HB_solver_flag 26 // this is INVALID_SOLVER (see solver/solver_types.h)
+#define _default_solver_flag 1      // this is CG (see solver/solver_types.h)
+#define _default_nd_solver_flag 15  // this is CGMMSND (see solver/solver_types.h)
+#define _default_HB_solver_flag 26  // this is INVALID_SOLVER (see solver/solver_types.h)
 #define _default_startoption 0
 #define _default_Ntherm 0
 #define _default_Nmeas 1
@@ -223,11 +222,11 @@
 // by default, we always reset the MG setup
 // in the HMC, this needs to be set to a reasonable value
 // depending on the length of the integration step
-#define _default_quda_mg_reset_setup_mdu_threshold 2*DBL_EPSILON
-#define _default_quda_mg_reuse_setup_mu_threshold 2*DBL_EPSILON
+#define _default_quda_mg_reset_setup_mdu_threshold 2 * DBL_EPSILON
+#define _default_quda_mg_reuse_setup_mu_threshold 2 * DBL_EPSILON
 // in the HMC, we can evolve the MG setup by refreshing it
-// at regular intervals as specified by this parameter 
-#define _default_quda_mg_refresh_setup_mdu_threshold 2*DBL_EPSILON
+// at regular intervals as specified by this parameter
+#define _default_quda_mg_refresh_setup_mdu_threshold 2 * DBL_EPSILON
 
 #define _default_quda_enable_device_memory_pool 0
 #define _default_quda_enable_pinned_memory_pool 1
