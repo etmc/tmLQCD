@@ -33,9 +33,6 @@
  *******************************************************************************/
 
 #include <complex.h>
-#if (defined XLC && defined BGL)
-#include "bgl.h"
-#endif
 
 typedef struct {
   _Complex double c00, c01, c02, c10, c11, c12, c20, c21, c22;
@@ -149,22 +146,6 @@ typedef struct {
   (r).c1 += I * (c) * (s).c1;      \
   (r).c2 += I * (c) * (s).c2;
 
-#if (defined XLC && defined BGLNOTCHECKED)
-
-#define _vector_add(r, s1, s2) \
-  _bgl_load(s1);               \
-  _bgl_load_up(s2);            \
-  _bgl_vector_add();           \
-  _bgl_store(r);
-
-#define _vector_sub(r, s1, s2) \
-  _bgl_load(s1);               \
-  _bgl_load_up(s2);            \
-  _bgl_vector_sub();           \
-  _bgl_store(r);
-
-#else
-
 #define _vector_add(r, s1, s2) \
   (r).c0 = (s1).c0 + (s2).c0;  \
   (r).c1 = (s1).c1 + (s2).c1;  \
@@ -174,7 +155,6 @@ typedef struct {
   (r).c0 = (s1).c0 - (s2).c0;  \
   (r).c1 = (s1).c1 - (s2).c1;  \
   (r).c2 = (s1).c2 - (s2).c2;
-#endif
 
 #define _vector_i_add(r, s1, s2)  \
   (r).c0 = (s1).c0 + I * (s2).c0; \
@@ -230,20 +210,6 @@ typedef struct {
   (r).c1 -= z * (s).c1;          \
   (r).c2 -= z * (s).c2;
 
-#if (defined XLC && defined BGLNOTCHECKED)
-
-#define _su3_multiply(r, u, s) \
-  _bgl_load(s);                \
-  _bgl_su3_multiply(u);        \
-  _bgl_store_up(r);
-
-#define _su3_inverse_multiply(r, u, s) \
-  _bgl_load(s);                        \
-  _bgl_su3_inverse_multiply(u);        \
-  _bgl_store_up(r);
-
-#else
-
 #define _su3_multiply(r, u, s)                                     \
   (r).c0 = (u).c00 * (s).c0 + (u).c01 * (s).c1 + (u).c02 * (s).c2; \
   (r).c1 = (u).c10 * (s).c0 + (u).c11 * (s).c1 + (u).c12 * (s).c2; \
@@ -253,8 +219,6 @@ typedef struct {
   (r).c0 = conj((u).c00) * (s).c0 + conj((u).c10) * (s).c1 + conj((u).c20) * (s).c2; \
   (r).c1 = conj((u).c01) * (s).c0 + conj((u).c11) * (s).c1 + conj((u).c21) * (s).c2; \
   (r).c2 = conj((u).c02) * (s).c0 + conj((u).c12) * (s).c1 + conj((u).c22) * (s).c2;
-
-#endif
 
 /*******************************************************************************
  *

@@ -21,9 +21,6 @@
 #endif
 
 #include "global.h"
-#if (defined XLC && defined BGL)
-#include "bgl.h"
-#endif
 #include "mpi_init.h"
 #include "su3.h"
 #include "xchange_field_tslice.h"
@@ -34,9 +31,6 @@ void xchange_field_open(spinor* const l, const int ieo, const int x0, MPI_Reques
                         MPI_Status* status) {
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(xchangetslicefield)
-#endif
-#if (defined BGL && defined XLC)
-  __alignx(16, l); /* ?!? */
 #endif
 
 #ifdef TM_USE_MPI
@@ -159,9 +153,6 @@ void xchange_field_close(MPI_Request* requests, MPI_Status* status, int reqcount
 void xchange_field_slice(spinor* const l, const int ieo, const int x0) {
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(xchangetslicefield)
-#endif
-#if (defined BGL && defined XLC)
-  __alignx(16, l); /* ?!? */
 #endif
 
 #ifdef TM_USE_MPI

@@ -73,12 +73,6 @@
 #include "operator/halfspinor_hopping_32.h"
 #endif
 
-#if (defined BGQ && defined XLC)
-#include "bgq.h"
-#include "bgq2.h"
-#include "xlc_prefetch.h"
-#endif
-
 void Hopping_Matrix_32_orphaned(const int ieo, spinor32* const l, spinor32* const k) {
 #if defined _USE_HALFSPINOR
 #ifdef _GAUGE_COPY

@@ -40,10 +40,8 @@
 
 void square_and_prod_r(double *const x1, double *const x2, spinor *const S, spinor *const R,
                        const int N) {
-  int ix;
   double ALIGN ks, kc, ds, tr, ts, tt;
   double ALIGN xks, xkc, xds, xtr, xts, xtt;
-  spinor *s, *r;
 
   ks = 0.0;
   kc = 0.0;
@@ -51,14 +49,9 @@ void square_and_prod_r(double *const x1, double *const x2, spinor *const S, spin
   xks = 0.0;
   xkc = 0.0;
 
-#if (defined BGL && defined XLC)
-  __alignx(16, S);
-  __alignx(16, R);
-#endif
-
-  for (ix = 0; ix < N; ix++) {
-    s = (spinor *)S + ix;
-    r = (spinor *)R + ix;
+  for (int ix = 0; ix < N; ix++) {
+    spinor *s = (spinor *)S + ix;
+    spinor *r = (spinor *)R + ix;
 
     ds = r->s0.c0 * conj(s->s0.c0) + r->s0.c1 * conj(s->s0.c1) + r->s0.c2 * conj(s->s0.c2) +
          r->s1.c0 * conj(s->s1.c0) + r->s1.c1 * conj(s->s1.c1) + r->s1.c2 * conj(s->s1.c2) +

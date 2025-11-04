@@ -29,19 +29,6 @@ spinor32* restrict s ALIGN32;
 halfspinor32* restrict* phi2 ALIGN32;
 _declare_hregs();
 
-#ifdef XLC
-#pragma disjoint(*l, *k)
-#pragma disjoint(*k, *U)
-#pragma disjoint(*l, *U)
-#pragma disjoint(*U, *s)
-#pragma disjoint(*k, *s)
-#pragma disjoint(*l, *s)
-__alignx(16, l);
-__alignx(16, k);
-__alignx(16, U);
-__alignx(16, s);
-#endif
-
 // convert kappas to float locally
 _Complex float ALIGN32 ka0_32 = (_Complex float)ka0;
 _Complex float ALIGN32 ka1_32 = (_Complex float)ka1;

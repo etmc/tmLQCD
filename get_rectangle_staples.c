@@ -37,9 +37,6 @@ void get_rectangle_staples_general(su3 *const v, const int x, const int mu,
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(rectstaples)
 #endif
-#ifdef XLC
-#pragma disjoint(*v, tmp1, tmp2, *a, *b, *c, *d, *e)
-#endif
   _su3_zero((*v));
   for (int nu = 0; nu < 4; nu++) {
     if (mu != nu) {

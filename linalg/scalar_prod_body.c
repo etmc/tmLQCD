@@ -17,8 +17,8 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-_Complex double _PSWITCH(scalar_prod)(const _PTSWITCH(spinor) * const S,
-                                      const _PTSWITCH(spinor) * const R, const int N,
+_Complex double _PSWITCH(scalar_prod)(const _PTSWITCH(spinor) *const S,
+                                      const _PTSWITCH(spinor) *const R, const int N,
                                       const int parallel) {
   _Complex double ALIGN res = 0.0;
 #ifdef TM_USE_MPI
@@ -32,22 +32,16 @@ _Complex double _PSWITCH(scalar_prod)(const _PTSWITCH(spinor) * const S,
 #endif
 
     _Complex double ALIGN ds, tr, ts, tt, ks, kc;
-    const _PTSWITCH(spinor) * s, *r;
 
     ks = 0.0;
     kc = 0.0;
-
-#if (defined BGL && defined XLC)
-    __alignx(16, S);
-    __alignx(16, R);
-#endif
 
 #ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for (int ix = 0; ix < N; ix++) {
-      s = S + ix;
-      r = R + ix;
+      const _PTSWITCH(spinor) *s = S + ix;
+      const _PTSWITCH(spinor) *r = R + ix;
 
       ds = r->s0.c0 * conj(s->s0.c0) + r->s0.c1 * conj(s->s0.c1) + r->s0.c2 * conj(s->s0.c2) +
            r->s1.c0 * conj(s->s1.c0) + r->s1.c1 * conj(s->s1.c1) + r->s1.c2 * conj(s->s1.c2) +
@@ -85,8 +79,8 @@ _Complex double _PSWITCH(scalar_prod)(const _PTSWITCH(spinor) * const S,
 }
 
 // threadsafe versions
-_Complex double _PSWITCH(scalar_prod_ts)(const _PTSWITCH(spinor) * const S,
-                                         const _PTSWITCH(spinor) * const R, const int N,
+_Complex double _PSWITCH(scalar_prod_ts)(const _PTSWITCH(spinor) *const S,
+                                         const _PTSWITCH(spinor) *const R, const int N,
                                          const int parallel) {
   _Complex double ALIGN res = 0.0;
 #ifdef TM_USE_MPI
@@ -94,19 +88,12 @@ _Complex double _PSWITCH(scalar_prod_ts)(const _PTSWITCH(spinor) * const S,
 #endif
 
   _Complex double ALIGN ds, tr, ts, tt, ks, kc;
-  const _PTSWITCH(spinor) * s, *r;
-
   ks = 0.0;
   kc = 0.0;
 
-#if (defined BGL && defined XLC)
-  __alignx(16, S);
-  __alignx(16, R);
-#endif
-
   for (int ix = 0; ix < N; ix++) {
-    s = S + ix;
-    r = R + ix;
+    const _PTSWITCH(spinor) *s = S + ix;
+    const _PTSWITCH(spinor) *r = R + ix;
 
     ds = r->s0.c0 * conj(s->s0.c0) + r->s0.c1 * conj(s->s0.c1) + r->s0.c2 * conj(s->s0.c2) +
          r->s1.c0 * conj(s->s1.c0) + r->s1.c1 * conj(s->s1.c1) + r->s1.c2 * conj(s->s1.c2) +

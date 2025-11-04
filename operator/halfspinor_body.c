@@ -30,19 +30,6 @@ halfspinor* restrict* phi ALIGN;
 halfspinor32* restrict* phi32 ALIGN;
 _declare_hregs();
 
-#ifdef XLC
-#pragma disjoint(*l, *k)
-#pragma disjoint(*k, *U)
-#pragma disjoint(*l, *U)
-#pragma disjoint(*U, *s)
-#pragma disjoint(*k, *s)
-#pragma disjoint(*l, *s)
-__alignx(32, l);
-__alignx(32, k);
-__alignx(32, U);
-__alignx(32, s);
-#endif
-
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(hoppingmatrix)
 #endif

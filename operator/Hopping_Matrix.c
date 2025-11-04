@@ -61,23 +61,11 @@
 #endif
 #include "boundary.h"
 #include "init/init_dirac_halfspinor.h"
-#include "update_backward_gauge.h"
-#ifdef BGQ
-#include "DirectPut.h"
-#endif
 #include "operator/Hopping_Matrix.h"
+#include "update_backward_gauge.h"
 
 #if defined _USE_HALFSPINOR
 #include "operator/halfspinor_hopping.h"
-
-#if (defined BGL && defined XLC)
-#include "bgl.h"
-
-#elif (defined BGQ && defined XLC)
-#include "bgq.h"
-#include "bgq2.h"
-#include "xlc_prefetch.h"
-#endif
 
 void Hopping_Matrix(const int ieo, spinor* const l, spinor* const k) {
 #ifdef _GAUGE_COPY
@@ -101,26 +89,7 @@ void Hopping_Matrix(const int ieo, spinor* const l, spinor* const k) {
 }
 
 #else /* thats _USE_HALFSPINOR */
-
-#include "operator/hopping.h"
-
-#if (defined BGL && defined XLC)
-#include "bgl.h"
-
-#elif (defined BGQ && defined XLC)
-#include "bgq.h"
-#include "bgq2.h"
-#include "xlc_prefetch.h"
-
-#elif defined XLC
-#include "xlc_prefetch.h"
-#endif
-
 void Hopping_Matrix(const int ieo, spinor* const l, spinor* const k) {
-
-#ifdef XLC
-#pragma disjoint(*l, *k)
-#endif
 
 #ifdef _GAUGE_COPY
   if (g_update_gauge_copy) {

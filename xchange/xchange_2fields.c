@@ -37,18 +37,11 @@
 #endif
 
 #include "global.h"
-#if (defined XLC && defined BGL)
-#include "bgl.h"
-#endif
 #include "mpi_init.h"
 #include "su3.h"
 #include "xchange_2fields.h"
 
 #if (defined _NON_BLOCKING)
-
-#if ((defined XLC) && (defined PARALLELXYZT))
-#pragma disjoint(*field_buffer_z2, *field_buffer_z, *field_buffer_z3, *field_buffer_z4)
-#endif
 
 /* this version uses non-blocking MPI calls */
 
@@ -72,10 +65,6 @@ void xchange_2fields(spinor* const l, spinor* const k, const int ieo) {
 #endif
 
 #ifdef TM_USE_MPI
-
-#if (defined BGL && defined XLC)
-  __alignx(16, l);
-#endif
 
 #if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
   /* send the data to the neighbour on the left */
@@ -265,16 +254,6 @@ void xchange_2fields(spinor* const l, spinor* const k, const int ieo) {
 #endif
 
 #ifdef TM_USE_MPI
-
-#if (defined BGL && defined XLC)
-#ifdef PARALLELXYZT
-  __alignx(16, field_buffer_z);
-  __alignx(16, field_buffer_z2);
-  __alignx(16, field_buffer_z3);
-  __alignx(16, field_buffer_z4);
-#endif
-  __alignx(16, l);
-#endif
 
   /* send the data to the neighbour on the left */
   /* recieve the data from the neighbour on the right */

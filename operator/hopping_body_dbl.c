@@ -32,9 +32,6 @@ spinor* restrict ALIGN sp;
 spinor* restrict ALIGN sm;
 spinor* restrict ALIGN rn;
 
-#ifdef XLC
-#pragma disjoint(*sp, *sm, *rn, *up, *um, *l)
-#endif
 _declare_regs();
 
 if (ieo == 0) {

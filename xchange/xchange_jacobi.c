@@ -36,9 +36,6 @@
 #endif
 
 #include "global.h"
-#if (defined XLC && defined BGL)
-#include "bgl.h"
-#endif
 #include "mpi_init.h"
 #include "su3.h"
 #include "xchange_jacobi.h"

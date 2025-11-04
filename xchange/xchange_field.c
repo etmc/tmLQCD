@@ -40,14 +40,11 @@
 #endif
 
 #include "global.h"
-#if (defined XLC && defined BGL)
-#include "bgl.h"
-#endif
 #include "mpi_init.h"
 #include "su3.h"
 #include "xchange_field.h"
 
-#if (defined XLC && defined PARALLELXYZT)
+#if (defined PARALLELXYZT)
 #pragma disjoint(*field_buffer_z2, *field_buffer_z)
 #endif
 
@@ -77,9 +74,6 @@ void xchange_field(spinor* const l, const int ieo) {
 
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(xchangefield)
-#endif
-#if (defined BGL && defined XLC)
-  __alignx(16, l);
 #endif
 
 #ifdef TM_USE_MPI
@@ -321,13 +315,6 @@ void xchange_field(spinor* const l, const int ieo) {
 
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(xchangefield)
-#endif
-#if (defined BGL && defined XLC)
-#ifdef PARALLELXYZT
-  __alignx(16, field_buffer_z);
-  __alignx(16, field_buffer_z2);
-#endif
-  __alignx(16, l);
 #endif
 
 #ifdef TM_USE_MPI

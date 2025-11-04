@@ -30,23 +30,6 @@ int write_first_messages(FILE* parameterfile, char const* const executable,
            TMLQCD_PACKAGE_VERSION, git_hash);
   printf("%s", message);
   fprintf(parameterfile, "%s", message);
-
-#if (defined BGL && !defined BGP)
-  printf("# The code is compiled for Blue Gene/L\n");
-  fprintf(parameterfile, "# The code is compiled for Blue Gene/L\n");
-#endif
-#ifdef BGP
-  printf("# The code is compiled for Blue Gene/P\n");
-  fprintf(parameterfile, "# The code is compiled for Blue Gene/P\n");
-#endif
-#if (defined BGQ && defined XLC)
-  printf("# The code is compiled with QPX intrinsics for Blue Gene/Q\n");
-  fprintf(parameterfile, "# The code is compiled with QPX intrinsics for Blue Gene/Q\n");
-#endif
-#ifdef SPI
-  printf("# Compiled with BG/Q SPI communication\n");
-  fprintf(parameterfile, "# Compiled with IBM Blue Gene/Q SPI communication\n");
-#endif
 #ifdef _GAUGE_COPY
   printf("# The code is compiled with -D_GAUGE_COPY\n");
   fprintf(parameterfile, "# The code is compiled with -D_GAUGE_COPY\n");
