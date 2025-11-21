@@ -56,7 +56,7 @@ MODULES = read_input gamma measure_gauge_action start \
 	reweighting_factor_nd rnd_gauge_trafo \
         update_momenta update_momenta_fg integrator  phmc \
 	little_D block operator \
-	spinor_fft X_psi P_M_eta \
+	spinor_fft \
 	jacobi fatal_error invert_clover_eo gettime \
 	tm_debug_printf compare_derivative \
         @SPI_FILES@ @QUDA_INTERFACE@ @DDalphaAMG_INTERFACE@

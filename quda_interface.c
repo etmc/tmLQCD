@@ -2555,7 +2555,7 @@ void compute_gauge_derivative_quda(monomial *const mnl, hamiltonian_field_t *con
   free(path_buf);
   free(loop_coeff);
 
-  reorder_mom_fromQuda(mom_quda);
+  reorder_mom_fromQuda();
   add_mom_to_derivative(hf->derivative);
 
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
@@ -3067,7 +3067,7 @@ void compute_cloverdet_derivative_quda(monomial *const mnl, hamiltonian_field_t 
 
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 
-  reorder_mom_fromQuda(mom_quda);
+  reorder_mom_fromQuda();
   add_mom_to_derivative(hf->derivative);
 
   // we always need to restore the source
@@ -3124,7 +3124,7 @@ void compute_ndcloverrat_derivative_quda(monomial *const mnl, hamiltonian_field_
   free(coeff);
   tm_stopwatch_pop(&g_timers, 0, 1, "TM_QUDA");
 
-  reorder_mom_fromQuda(mom_quda);
+  reorder_mom_fromQuda();
   add_mom_to_derivative(hf->derivative);
 
   finalize_solver(in, num_shifts);
