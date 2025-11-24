@@ -1,0 +1,91 @@
+
+srcdir = @srcdir@
+top_builddir =  @top_builddir@
+abs_top_builddir = @abs_top_builddir@
+top_srcdir = @top_srcdir@
+abs_top_srcdir = @abs_top_srcdir@
+subdir = qphix
+builddir = @builddir@
+
+CFLAGS = @CFLAGS@
+DEPFLAGS = @DEPFLAGS@
+LDFLAGS = @LDFLAGS@
+DEFS = @DEFS@
+OPTARGS = @OPTARGS@
+SOPTARGS = @SOPTARGS@
+
+AR = @AR@
+RANLIB = @RANLIB@
+CC = @CC@
+CXX = @CXX@
+CCDEP = @CCDEP@
+CCLD = ${CXX}
+LINK = ${CCLD} ${CFLAGS} ${LDFLAGS} ${OPTARGS} -o $@
+LEX = @LEX@
+AUTOCONF = @AUTOCONF@
+DEFS = @DEFS@
+
+INCLUDES = @INCLUDES@
+LDADD =
+#COMPILE = ${CC} ${DEFS} ${INCLUDES} ${CFLAGS}
+COMPILE = ${CXX} $(DEFS) ${INCLUDES} ${CXXFLAGS}
+
+LIBRARIES = libqphix_module
+libqphix_module_TARGETS = qphix_interface
+
+libqphix_module_STARGETS = qphix_interface
+
+libqphix_module_OBJECTS = $(addsuffix .o, ${libqphix_module_TARGETS})
+libqphix_module_SOBJECTS = $(addsuffix .o, ${libqphix_module_STARGETS})
+
+# default rule
+
+all: Makefile dep libqphix_module.a
+
+# rules for debugging
+debug all-debug: CFLAGS := $(CFLAGS) @DEBUG_FLAG@
+debug all-debug: all
+
+# rules for profiling information
+profile all-profile: CFLAGS := $(filter-out -fomit-frame-pointer,${CFLAGS}) @PROFILE_FLAG@
+profile all-profile: all
+
+#include dep rules
+-include $(addsuffix .d,${libqphix_module_TARGETS})
+
+include ${top_srcdir}/Makefile.global
+
+# rule to compile objects
+${libqphix_module_OBJECTS}: %.o: ${srcdir}/%.cpp %.d Makefile ${abs_top_builddir}/include/tmlqcd_config_internal.h
+	$(COMPILE) ${OPTARGS} -c $<
+
+${libqphix_module_SOBJECTS}: %.o: ${srcdir}/%.cpp %.d Makefile ${abs_top_builddir}/include/tmlqcd_config_internal.h
+	$(COMPILE) ${SOPTARGS} -c $<
+
+# rule to make libqphix_module
+libqphix_module.a: ${libqphix_module_OBJECTS} ${libqphix_module_SOBJECTS} Makefile
+	@rm -f libqphix_module.a
+	@${AR} cru libqphix_module.a ${libqphix_module_OBJECTS} ${libqphix_module_SOBJECTS}
+	@$(RANLIB) libqphix_module.a
+	@cp libqphix_module.a ../lib/libqphix_module.a
+
+# rule to generate .d files
+$(addsuffix .d, $(libqphix_module_TARGETS) ${libqphix_module_STARGETS}): %.d: ${srcdir}/%.cpp Makefile
+	@${CCDEP} ${DEFS} ${DEPFLAGS} ${INCLUDES} $< > $@
+
+# rule to make dependencies
+dep: ${addsuffix .d, ${libqphix_module_TARGETS} ${libqphix_module_STARGETS}}
+
+# rules to clean
+
+compile-clean: Makefile
+	rm -f ${$(addsuffix _OBJECTS, ${LIBRARIES})} ${$(addsuffix _SOBJECTS, ${LIBRARIES})} *.d
+
+clean: compile-clean 
+	rm -f $(addsuffix .a, ${LIBRARIES})
+	rm -f ../lib/libqphix_module.a
+
+distclean: clean
+	rm -f Makefile
+
+.PHONY: all dep clean compile-clean distclean profile all-profile debug all-debug

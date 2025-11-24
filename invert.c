@@ -82,7 +82,7 @@
 #include "quda_interface.h"
 #endif
 #ifdef TM_USE_QPHIX
-#include "qphix_interface.h"
+#include "qpphix/qphix_interface.h"
 #endif
 #ifdef DDalphaAMG
 #include "DDalphaAMG_interface.h"
