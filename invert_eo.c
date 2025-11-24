@@ -58,7 +58,7 @@
 #include "quda_interface.h"
 #endif
 #ifdef TM_USE_QPHIX
-#include "qphix_interface.h"
+#include "qphix/qphix_interface.h"
 #endif
 #ifdef DDalphaAMG
 #include "DDalphaAMG_interface.h"

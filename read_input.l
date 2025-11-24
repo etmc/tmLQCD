@@ -64,7 +64,7 @@ EQL {SPC}*={SPC}*
 #include "operator.h"
 #include "phmc.h"
 #include <io/params.h>
-#include "qphix_types.h"
+#include "qphix/qphix_types.h"
 #include "quda_types.h"
 #include "misc_types.h"
 
