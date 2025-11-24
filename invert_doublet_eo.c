@@ -54,7 +54,7 @@
 #include "DDalphaAMG_interface.h"
 #endif
 #ifdef TM_USE_QPHIX
-#include "qphix_interface.h"
+#include "qphix/qphix_interface.h"
 #endif
 
 int invert_doublet_eo(spinor* const Even_new_s, spinor* const Odd_new_s, spinor* const Even_new_c,
