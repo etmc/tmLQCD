@@ -325,7 +325,7 @@ int polyakov_loop_dir(const int nstore /* in  */, const int dir /* in  */) {
 #ifdef TM_USE_MPI
   int rank_slice, rank_ray;
   MPI_Comm slice, ray;
-  su3 *tmp_ray;
+  su3 *tmp_ray = NULL;
 #endif
 
   if (dir != 0 && dir != 3 && g_proc_id == 0) {
