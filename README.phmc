@@ -1,7 +1,7 @@
 See doc/2+1+1_howto.text for more details
 
 as a test the following parameter set can be used (see also
-sample-input/sample-hmc2.input):
+doc/sample-input/sample-hmc2.input):
 Kappa = 0.170
 2KappaMu = 0.01
 2Kappamubar = 0.1105

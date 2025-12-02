@@ -103,7 +103,7 @@ EndMonomial
 
 Now you should have a proper hmc.input file. For a complete example
 see the file
-hmc/sample-input/sample-hmc2.input
+hmc/doc/sample-input/sample-hmc2.input
 and the comments therein.
 
 2. Creating a polynomial
