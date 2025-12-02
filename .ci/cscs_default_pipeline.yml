@@ -16,8 +16,8 @@ build-quda/uenv/daint-gh200:
 test/daint-gh200:
   extends: .test/hmc
   variables:
-    INPUT_FILE: ".ci/sample-input/quda.in"
-    REFPATH: ".ci/sample-output/cscs-test"
+    INPUT_FILE: "doc/sample-input/sample-hmc-quda-cscs.input"
+    REFPATH: "doc/sample-output/hmc-quda-cscs"
     QUDA_ENABLE_TUNING: 0 # disable tuning
     QUDA_ENABLE_GDR: 1 # enable GPU-Direct RDMA
     SLURM_JOB_NUM_NODES: 2
