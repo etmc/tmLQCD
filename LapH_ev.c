@@ -113,10 +113,6 @@ int main(int argc, char *argv[]) {
   exit(0);
 #endif
 #ifdef TM_USE_MPI
-#ifndef _INDEX_INDEP_GEOM
-  printf(" Error: _INDEX_INDEP_GEOM not defined");
-  exit(0);
-#endif
 #ifndef _USE_TSPLITPAR
   printf(" Error: _USE_TSPLITPAR not defined");
   exit(0);
