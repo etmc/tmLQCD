@@ -88,17 +88,6 @@ AC_ARG_WITH(lemondir,
              [echo no
               LEMON_AVAILABLE=0])
 
-AC_MSG_CHECKING(whether we use the general geometry)
-AC_ARG_ENABLE(indexindepgeom,
-  AS_HELP_STRING([--enable-indexindepgeom], [enable Index independent addressing [default=no]]),
-  enable_iig=$enableval, enable_iig=no)
-if test $enable_iig = yes; then
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(_INDEX_INDEP_GEOM,1,Index independent addressing)
-else
-  AC_MSG_RESULT(no)
-fi
-
 AC_MSG_CHECKING(whether we want to use MPI)
 AC_ARG_ENABLE(mpi,
   AS_HELP_STRING([--enable-mpi], [enable use of mpi [default=yes]]),

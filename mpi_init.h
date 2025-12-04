@@ -141,7 +141,6 @@ extern MPI_Datatype field_z_slice_even_up;
 extern MPI_Datatype field_z_slice_odd_dn;
 extern MPI_Datatype field_z_slice_odd_up;
 
-# if (!defined _INDEX_INDEP_GEOM)
 extern spinor * field_buffer_z ALIGN;
 extern spinor * field_buffer_z2 ALIGN;
 extern spinor * field_buffer_z3 ALIGN;
@@ -161,7 +160,6 @@ extern spinor * field_buffer_t4 ALIGN;
 
 extern halfspinor * halffield_buffer_z ALIGN;
 extern halfspinor * halffield_buffer_z2 ALIGN;
-# endif
 #endif
 
 extern MPI_Op mpi_reduce_su3_ray;
