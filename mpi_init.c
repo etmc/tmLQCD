@@ -169,14 +169,12 @@ MPI_Datatype field_z_slice_even_up;
 MPI_Datatype field_z_slice_odd_dn;
 MPI_Datatype field_z_slice_odd_up;
 
-#if (!defined _INDEX_INDEP_GEOM)
 spinor *field_buffer_z ALIGN;
 spinor *field_buffer_z2 ALIGN;
 spinor *field_buffer_z3 ALIGN;
 spinor *field_buffer_z4 ALIGN;
 halfspinor *halffield_buffer_z ALIGN;
 halfspinor *halffield_buffer_z2 ALIGN;
-#endif
 #endif
 
 MPI_Op mpi_reduce_su3_ray;
@@ -355,7 +353,6 @@ void tmlqcd_mpi_init(int argc, char *argv[]) {
 #endif /* ifndef FIXEDVOLUME */
   g_dbw2rand = (RAND + 2 * EDGES);
 
-#if (!defined _INDEX_INDEP_GEOM)
 #if (defined PARALLELXYZT || defined PARALLELXYZ)
   field_buffer_z = (spinor *)malloc(T * LX * LY / 2 * sizeof(spinor));
   field_buffer_z2 = (spinor *)malloc(T * LX * LY / 2 * sizeof(spinor));
@@ -365,7 +362,6 @@ void tmlqcd_mpi_init(int argc, char *argv[]) {
 #endif
   halffield_buffer_z = (halfspinor *)malloc(T * LX * LY / 2 * sizeof(halfspinor));
   halffield_buffer_z2 = (halfspinor *)malloc(T * LX * LY / 2 * sizeof(halfspinor));
-#endif
 #endif
 
   MPI_Cart_create(MPI_COMM_WORLD, nalldims, dims, periods, reorder, &g_cart_grid);
@@ -403,21 +399,6 @@ void tmlqcd_mpi_init(int argc, char *argv[]) {
   MPI_Cart_shift(g_cart_grid, 3, 1, &g_nb_z_dn, &g_nb_z_up);
   g_nb_list[6] = g_nb_z_up;
   g_nb_list[7] = g_nb_z_dn;
-#endif
-
-#if ((defined _INDEX_INDEP_GEOM) && (defined _USE_HALFSPINOR))
-#if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
-  g_HS_shift_t = 0;
-  g_HS_shift_x = LX * LY * LZ;
-  g_HS_shift_y = LX * LY * LZ + T * LY * LZ;
-  g_HS_shift_z = LX * LY * LZ + T * LY * LZ + T * LX * LZ;
-#endif
-#if (defined PARALLELX || defined PARALLELXY || defined PARALLELXYZ)
-  g_HS_shift_t = 0;
-  g_HS_shift_x = 0;
-  g_HS_shift_y = T * LY * LZ;
-  g_HS_shift_z = T * LY * LZ + T * LX * LZ;
-#endif
 #endif
 
   /* With internal boundary we mean the fields that are send */

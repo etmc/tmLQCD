@@ -126,17 +126,9 @@ void generic_exchange(void *field_in, int bytes_per_site) {
 
   /* Following are implementations using different compile time flags */
 #if defined _NON_BLOCKING
-#if defined _INDEX_INDEP_GEOM
-#include "utils_generic_exchange.1.inc"
-#else /* _INDEX_INDEP_GEOM */
 #include "utils_generic_exchange.2.inc"
-#endif /* _INDEX_INDEP_GEOM */
 #else  /* _NON_BLOCKING */
-#if defined _INDEX_INDEP_GEOM
-#include "utils_generic_exchange.3.inc"
-#else /* _INDEX_INDEP_GEOM */
 #include "utils_generic_exchange.4.inc"
-#endif /* _INDEX_INDEP_GEOM */
 #endif /* _NON_BLOCKING */
 }
 

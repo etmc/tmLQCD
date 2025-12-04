@@ -150,9 +150,6 @@ int main(int argc, char *argv[]) {
     printf("# the code was compiled for persistent MPI calls (halfspinor only)\n");
 #endif
 #endif
-#ifdef _INDEX_INDEP_GEOM
-    printf("# the code was compiled with index independent geometry\n");
-#endif
 #ifdef TM_USE_MPI
 #ifdef _NON_BLOCKING
     printf("# the code was compiled for non-blocking MPI calls (spinor and gauge)\n");

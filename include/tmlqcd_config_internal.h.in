@@ -51,9 +51,6 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* Index independent addressing */
-#undef _INDEX_INDEP_GEOM
-
 /* X parallelisation */
 #undef PARALLELX
 
