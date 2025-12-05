@@ -25,7 +25,7 @@
  *
  * Incremental eigCG for solving linear systems multiple right-hand sides
  ****************************************************************************/
-/* A sample input is given in the sample-input folder */
+/* A sample input is given in the doc/sample-input folder */
 
 #ifndef _INCR_EIGCG_H
 #define _INCR_EIGCG_H

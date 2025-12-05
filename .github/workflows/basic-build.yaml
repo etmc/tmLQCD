@@ -126,7 +126,7 @@ jobs:
         working-directory: ${{github.workspace}}/main/build
         run: |
           mpirun -np 2 ./hmc_tm \
-            -f ../sample-input/sample-hmc-rgmixedcg-tmcloverdetratio.input
+            -f ../doc/sample-input/sample-hmc-rgmixedcg-tmcloverdetratio.input
       
       - name: Archive nf2_rgmixedcg_hmc_tmcloverdetratio output
         if: ${{ always() }}
@@ -138,7 +138,7 @@ jobs:
       - name: compare_nf2_rgmixedcg_hmc_tmcloverdetratio
         working-directory: ${{github.workspace}}/main/build
         run: |
-          refpath=${{github.workspace}}/main/sample-output/hmc-rgmixedcg-tmcloverdetratio
+          refpath=${{github.workspace}}/main/doc/sample-output/hmc-rgmixedcg-tmcloverdetratio
           numdiff -r 1e-4 -X 1:10 -X 1:5-8 -X 2:10 -X 2:5-8 output.data ${refpath}/output.data
           for i in $(seq 0 2 18); do \
             f=onlinemeas.$(printf %06d $i); \

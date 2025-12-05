@@ -63,6 +63,6 @@ autoconf
 make -j $(nproc)
 
 # Run some tests.
-cp sample-input/sample-hmc0.input travis.input
+cp doc/sample-input/sample-hmc0.input travis.input
 sed -i 's/Measurements = 1000/Measurements = 1/' travis.input
 ./hmc_tm -f travis.input

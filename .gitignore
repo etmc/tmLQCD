@@ -41,3 +41,5 @@ doc/*.gpl
 doc/wrapper*
 history_hmc_tm
 .vscode/*
+*.sublime-project
+*.sublime-workspace
