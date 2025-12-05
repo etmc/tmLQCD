@@ -49,7 +49,6 @@
 #include "gettime.h"
 #include "global.h"
 #include "hamiltonian_field.h"
-#include "sse.h"
 #include "su3.h"
 #include "update_backward_gauge.h"
 #include "xchange/xchange.h"

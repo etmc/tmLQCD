@@ -495,20 +495,6 @@ static void init_gmres_dr(const int _M, const int _V) {
     V = calloc(M + 1, sizeof(spinor *));
     work = calloc(M + 1, sizeof(_Complex double *));
     work2 = calloc(M + 1, sizeof(_Complex double *));
-#if (defined SSE || defined SSE2)
-    _h = calloc((M + 2) * (M + 1), sizeof(_Complex double));
-    H[0] = (_Complex double *)(((unsigned long int)(_h) + ALIGN_BASE) & ~ALIGN_BASE);
-    _work = calloc((M + 2) * (M + 1), sizeof(_Complex double));
-    work[0] = (_Complex double *)(((unsigned long int)(_work) + ALIGN_BASE) & ~ALIGN_BASE);
-    _work2 = calloc((M + 2) * (M + 1), sizeof(_Complex double));
-    work2[0] = (_Complex double *)(((unsigned long int)(_work2) + ALIGN_BASE) & ~ALIGN_BASE);
-    _g = calloc((M + 2) * (M + 1), sizeof(_Complex double));
-    G[0] = (_Complex double *)(((unsigned long int)(_g) + ALIGN_BASE) & ~ALIGN_BASE);
-    _v = calloc((M + 1) * Vo + 1, sizeof(spinor));
-    V[0] = (spinor *)(((unsigned long int)(_v) + ALIGN_BASE) & ~ALIGN_BASE);
-    _z = calloc((M + 1) * Vo + 1, sizeof(spinor));
-    Z[0] = (spinor *)(((unsigned long int)(_z) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
     _h = calloc((M + 1) * (M + 1), sizeof(_Complex double));
     H[0] = _h;
     _work = calloc((M + 1) * (M + 1), sizeof(_Complex double));
@@ -521,7 +507,6 @@ static void init_gmres_dr(const int _M, const int _V) {
     V[0] = _v;
     _z = calloc((M + 1) * Vo, sizeof(spinor));
     Z[0] = _z;
-#endif
     s = calloc(M, sizeof(double));
     c = calloc(M + 1, sizeof(_Complex double));
     alpha = calloc(M + 1, sizeof(_Complex double));

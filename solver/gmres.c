@@ -216,17 +216,10 @@ static void init_gmres(const int _M, const int _V) {
     M = _M;
     H = calloc(M + 1, sizeof(_Complex double *));
     V = calloc(M, sizeof(spinor *));
-#if (defined SSE || defined SSE2)
-    _h = calloc((M + 2) * M + 8, sizeof(_Complex double));
-    H[0] = (_Complex double *)(((unsigned long int)(_h) + ALIGN_BASE) & ~ALIGN_BASE);
-    _v = calloc(M * Vo + 1, sizeof(spinor));
-    V[0] = (spinor *)(((unsigned long int)(_v) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
     _h = calloc((M + 1) * M, sizeof(_Complex double));
     H[0] = _h;
     _v = calloc(M * Vo, sizeof(spinor));
     V[0] = _v;
-#endif
     s = calloc(M, sizeof(double));
     c = calloc(M, sizeof(_Complex double));
     alpha = calloc(M + 1, sizeof(_Complex double));

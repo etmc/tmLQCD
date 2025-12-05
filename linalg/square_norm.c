@@ -37,11 +37,8 @@
 #include "global.h"
 #endif
 #include <complex.h>
-#include "su3.h"
-#if (defined SSE || defined SSE2 || defined SSE3)
-#include "sse.h"
-#endif
 #include "square_norm.h"
+#include "su3.h"
 
 #if ((defined BGL) && (defined XLC))
 
@@ -325,7 +322,7 @@ double square_norm_ts(const spinor *const P, const int N, const int parallel) {
     ks = 0.0;
     kc = 0.0;
 
-#ifdef TM_USE_OMP2
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for (int ix = 0; ix < N; ix++) {

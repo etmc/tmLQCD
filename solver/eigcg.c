@@ -197,78 +197,6 @@ void eigcg(int n, int lde, spinor *const x, spinor *const b, double *normb, cons
 
   if (nev > 0) /*allocate memory only if eigenvalues will be used */
   {
-#if (defined SSE || defined SSE2 || defined SSE3)
-    if ((_h = calloc(v_max * v_max + ALIGN_BASE, zs)) == NULL) {
-      if (g_proc_id == g_stdio_proc) {
-        fprintf(stderr, "ERROR Could not allocate H\n");
-        exit(1);
-      }
-    } else
-      H = (_Complex double *)(((unsigned long int)(_h) + ALIGN_BASE) & ~ALIGN_BASE);
-
-    if ((_hevecs = calloc(v_max * v_max + ALIGN_BASE, zs)) == NULL) {
-      if (g_proc_id == g_stdio_proc) {
-        fprintf(stderr, "ERROR Could not allocate Hevecs\n");
-        exit(1);
-      }
-    } else
-      Hevecs = (_Complex double *)(((unsigned long int)(_hevecs) + ALIGN_BASE) & ~ALIGN_BASE);
-
-    if ((_hevecsold = calloc(v_max * v_max + ALIGN_BASE, zs)) == NULL) {
-      if (g_proc_id == g_stdio_proc) {
-        fprintf(stderr, "ERROR Could not allocate Hevecsold\n");
-        exit(1);
-      }
-    } else
-      Hevecsold = (_Complex double *)(((unsigned long int)(_hevecsold) + ALIGN_BASE) & ~ALIGN_BASE);
-
-    if ((_hevals = calloc(v_max + ALIGN_BASE, ds)) == NULL) {
-      if (g_proc_id == g_stdio_proc) {
-        fprintf(stderr, "ERROR Could not allocate Hevals\n");
-        exit(1);
-      }
-
-    } else
-      Hevals = (double *)(((unsigned long int)(_hevals) + ALIGN_BASE) & ~ALIGN_BASE);
-
-    if ((_hevalsold = calloc(v_max + ALIGN_BASE, ds)) == NULL) {
-      if (g_proc_id == g_stdio_proc) {
-        fprintf(stderr, "ERROR Could not allocate Hevalsold\n");
-        exit(1);
-      }
-
-    } else
-      Hevalsold = (double *)(((unsigned long int)(_hevalsold) + ALIGN_BASE) & ~ALIGN_BASE);
-
-    if ((_tau = calloc(2 * nev + ALIGN_BASE, zs)) == NULL) {
-      if (g_proc_id == g_stdio_proc) {
-        fprintf(stderr, "ERROR Could not allocate TAU\n");
-        exit(1);
-      }
-
-    } else
-      TAU = (_Complex double *)(((unsigned long int)(_tau) + ALIGN_BASE) & ~ALIGN_BASE);
-
-    if ((_zwork = calloc(lwork + ALIGN_BASE, zs)) == NULL) {
-      if (g_proc_id == g_stdio_proc) {
-        fprintf(stderr, "ERROR Could not allocate zwork\n");
-        exit(1);
-      }
-
-    } else
-      zwork = (_Complex double *)(((unsigned long int)(_zwork) + ALIGN_BASE) & ~ALIGN_BASE);
-
-    if ((_rwork = calloc(3 * v_max + ALIGN_BASE, ds)) == NULL) {
-      if (g_proc_id == g_stdio_proc) {
-        fprintf(stderr, "ERROR Could not allocate rwork\n");
-        exit(1);
-      }
-
-    } else
-      rwork = (double *)(((unsigned long int)(_rwork) + ALIGN_BASE) & ~ALIGN_BASE);
-
-#else
-
     if ((H = (_Complex double *)calloc(v_max * v_max, zs)) == NULL) {
       if (g_proc_id == g_stdio_proc) {
         fprintf(stderr, "ERROR Could not allocate H\n");
@@ -324,8 +252,6 @@ void eigcg(int n, int lde, spinor *const x, spinor *const b, double *normb, cons
         exit(1);
       }
     }
-
-#endif
   } /* end if (nev > 0) */
 
   /*----------------------------------------------------------------------*/
@@ -586,24 +512,6 @@ void eigcg(int n, int lde, spinor *const x, spinor *const b, double *normb, cons
     displayInfo(eps_sq, maxit, *flag, *iter - 1, *reshist);
 
   if (nev > 0) {
-#if (defined SSE || defined SSE2 || defined SSE3)
-    H = NULL;
-    free(_h);
-    Hevecs = NULL;
-    free(_hevecs);
-    Hevecsold = NULL;
-    free(_hevecsold);
-    Hevals = NULL;
-    free(_hevals);
-    Hevalsold = NULL;
-    free(_hevalsold);
-    TAU = NULL;
-    free(_tau);
-    zwork = NULL;
-    free(_zwork);
-    rwork = NULL;
-    free(_rwork);
-#else
     free(H);
     free(Hevecs);
     free(Hevecsold);
@@ -612,7 +520,6 @@ void eigcg(int n, int lde, spinor *const x, spinor *const b, double *normb, cons
     free(TAU);
     free(zwork);
     free(rwork);
-#endif
   }
 
   return;

@@ -885,22 +885,15 @@ void block_contract_basis(int const idx, int const vecnum, int const dir, spinor
 
 /* checked CU */
 void compute_little_D_diagonal(const int mul_g5) {
-  int i, j, blk;
-  spinor *tmp, *_tmp;
   _Complex double *M;
-  _tmp = calloc(block_list[0].volume + block_list[0].spinpad + 1, sizeof(spinor));
-#if (defined SSE || defined SSE2 || defined SSE3)
-  tmp = (spinor *)(((unsigned long int)(_tmp) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
-  tmp = _tmp;
-#endif
+  spinor *tmp = calloc(block_list[0].volume + block_list[0].spinpad + 1, sizeof(spinor));
 
-  for (blk = 0; blk < nb_blocks; blk++) {
+  for (int blk = 0; blk < nb_blocks; blk++) {
     M = block_list[blk].little_dirac_operator;
-    for (i = 0; i < g_N_s; i++) {
+    for (int i = 0; i < g_N_s; i++) {
       Block_D_psi(&block_list[blk], tmp, block_list[blk].basis[i]);
       if (mul_g5) gamma5(tmp, tmp, block_list[blk].volume);
-      for (j = 0; j < g_N_s; j++) {
+      for (int j = 0; j < g_N_s; j++) {
         M[i * g_N_s + j] = scalar_prod(block_list[blk].basis[j], tmp, block_list[blk].volume, 0);
         block_list[blk].little_dirac_operator_32[i * g_N_s + j] = (_Complex float)M[i * g_N_s + j];
       }
@@ -911,9 +904,9 @@ void compute_little_D_diagonal(const int mul_g5) {
     if (g_N_s <= 5 && !g_cart_id) {
       printf("\n\n  *** CHECKING LITTLE D ***\n");
       printf("\n  ** node 0, lower block **\n");
-      for (i = 0 * g_N_s; i < 9 * g_N_s; ++i) {
+      for (int i = 0 * g_N_s; i < 9 * g_N_s; ++i) {
         printf(" [ ");
-        for (j = 0; j < g_N_s; ++j) {
+        for (int j = 0; j < g_N_s; ++j) {
           printf("%s%1.3e %s %1.3e i",
                  creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ",
                  creal(block_list[0].little_dirac_operator[i * g_N_s + j]) >= 0
@@ -933,9 +926,9 @@ void compute_little_D_diagonal(const int mul_g5) {
 
       printf("\n\n  *** CHECKING LITTLE D ***\n");
       printf("\n  ** node 0, upper block **\n");
-      for (i = 0 * g_N_s; i < 9 * g_N_s; ++i) {
+      for (int i = 0 * g_N_s; i < 9 * g_N_s; ++i) {
         printf(" [ ");
-        for (j = 0; j < g_N_s; ++j) {
+        for (int j = 0; j < g_N_s; ++j) {
           printf("%s%1.3e %s %1.3e i",
                  creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0 ? "  " : "- ",
                  creal(block_list[1].little_dirac_operator[i * g_N_s + j]) >= 0
@@ -955,7 +948,7 @@ void compute_little_D_diagonal(const int mul_g5) {
     }
   }
 
-  free(_tmp);
+  free(tmp);
   return;
 }
 

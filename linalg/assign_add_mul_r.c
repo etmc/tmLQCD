@@ -33,62 +33,7 @@
 #include "assign_add_mul_r.h"
 #include "su3.h"
 
-#if (defined SSE2 || defined SSE3)
-#include "sse.h"
-
-/*   (*P) = (*P) + c(*Q)        c is a real constant   */
-
-void assign_add_mul_r(spinor *const P, spinor *const Q, const double c, const int N) {
-#ifdef TM_USE_OMP
-#pragma omp parallel
-  {
-#endif
-    int ix;
-    su3_vector *s, *r;
-    __asm__ __volatile__(
-        "movsd %0, %%xmm7 \n\t"
-        "unpcklpd %%xmm7, %%xmm7"
-        :
-        : "m"(c));
-#ifndef TM_USE_OMP
-    s = &P[0].s0;
-    r = &Q[0].s0;
-#endif
-
-#ifdef TM_USE_OMP
-#pragma omp for
-#endif
-    for (ix = 0; ix < 4 * N; ix++) {
-#ifdef TM_USE_OMP
-      s = &P[0].s0 + ix;
-      r = &Q[0].s0 + ix;
-#endif
-      _sse_load_up(*r);
-      __asm__ __volatile__(
-          "mulpd %%xmm7, %%xmm3 \n\t"
-          "mulpd %%xmm7, %%xmm4 \n\t"
-          "mulpd %%xmm7, %%xmm5"
-          :
-          :);
-      _sse_load(*s);
-      __asm__ __volatile__(
-          "addpd %%xmm3, %%xmm0 \n\t"
-          "addpd %%xmm4, %%xmm1 \n\t"
-          "addpd %%xmm5, %%xmm2"
-          :
-          :);
-      _sse_store(*s);
-#ifndef TM_USE_OMP
-      s++;
-      r++;
-#endif
-    }
-#ifdef TM_USE_OMP
-  } /* OpenMP closing brace */
-#endif
-}
-
-#elif (defined BGQ && defined XLC)
+#if (defined BGQ && defined XLC)
 
 void assign_add_mul_r(spinor *const R, spinor *const S, const double c, const int N) {
 #ifdef TM_USE_OMP

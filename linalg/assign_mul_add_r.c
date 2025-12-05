@@ -28,60 +28,7 @@
 #include "assign_mul_add_r.h"
 #include "su3.h"
 
-#if (defined SSE2 || defined SSE3)
-#include "sse.h"
-
-/* k input , l output*/
-void assign_mul_add_r(spinor *const R, const double c, const spinor *const S, const int N) {
-#ifdef TM_USE_OMP
-#pragma omp parallel
-  {
-#endif
-    int ix;
-    su3_vector *s, *r;
-    __asm__ __volatile__(
-        "movsd %0, %%xmm7 \n\t"
-        "unpcklpd %%xmm7, %%xmm7"
-        :
-        : "m"(c));
-#ifndef TM_USE_OMP
-    s = &S[0].s0;
-    r = &R[0].s0;
-#else
-#pragma omp for
-#endif
-    for (ix = 0; ix < 4 * N; ix++) {
-#ifdef TM_USE_OMP
-      s = &S[0].s0 + ix;
-      r = &R[0].s0 + ix;
-#endif
-      _sse_load(*r);
-      __asm__ __volatile__(
-          "mulpd %%xmm7, %%xmm0 \n\t"
-          "mulpd %%xmm7, %%xmm1 \n\t"
-          "mulpd %%xmm7, %%xmm2"
-          :
-          :);
-      _sse_load_up(*s);
-      __asm__ __volatile__(
-          "addpd %%xmm3, %%xmm0 \n\t"
-          "addpd %%xmm4, %%xmm1 \n\t"
-          "addpd %%xmm5, %%xmm2"
-          :
-          :);
-      _sse_store(*r);
-#ifndef TM_USE_OMP
-      s++;
-      r++;
-#endif
-    }
-
-#ifdef TM_USE_OMP
-  } /* OpenMP closing brace */
-#endif
-}
-
-#elif (defined BGQ && defined XLC)
+#if (defined BGQ && defined XLC)
 
 void assign_mul_add_r(spinor *const R, const double c, const spinor *const S, const int N) {
 #ifdef TM_USE_OMP

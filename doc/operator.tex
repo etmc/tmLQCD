@@ -119,12 +119,8 @@ Ref.~\cite{Chiarappa:2006hz} for the overlap operator.
 The various implementation of the Dirac operator can be found in the
 file {\ttfamily D\_psi.c} and -- as needed for even/odd
 preconditioning -- the hopping matrix in the file {\ttfamily
-  Hopping\_Matrix.c}. There are many different versions of these two
-routines available, each optimised for a particular architecture,
-e.g. for the Blue Gene/P double hummer processor or the streaming SIMD
-extensions of modern PC processors (SSE2 and SSE3), see also
-Ref.~\cite{Luscher:2001tx}. Martin L{\"u}scher has made available his
-standard C and SSE/SSE2 Dirac operator~\cite{Luscher:sse} under the
+  Hopping\_Matrix.c}. Martin L{\"u}scher has made available his
+standard C Dirac operator~\cite{Luscher:2001tx,Luscher:sse} under the
 GNU General Public License, which are partly included into the tmLQCD
 package.
 

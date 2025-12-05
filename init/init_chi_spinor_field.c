@@ -25,7 +25,6 @@
 #include <stdlib.h>
 #include "global.h"
 #include "init_chi_spinor_field.h"
-#include "sse.h"
 #include "su3.h"
 
 spinor* sp_up = NULL;

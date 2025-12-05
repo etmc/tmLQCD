@@ -4,19 +4,6 @@ Example commands to compile the program you can find at the end of this
 file. You may paste them into a file ccc and use it to compile the
 benchmark tool.
 
-The examples from below need to be edited in order to give the proper path for
-the mpicc or cc. Maybe also the compile-option has to be adopted.
-In particular
--DSSE2 -DP4  
-should only be given for a Pentium4 (R) system,
--DSSE3 -DP4
-only for Petium4 prescott (R).
-And
--DSSE2 -DOPTERON
-should only be given for a AMD Opteron (R) system. -DSSE2|3 is tested
-only to work with the gnu compiler. SSE3 work for gcc version >= 3.3.4 
-(3.3.3 on x86_64).
-
 You should allways set -D_GAUGE_COPY and -D_NEW_GEOMERY.
 
 There are two different parallelisations available, a one dimensionale
@@ -73,11 +60,6 @@ Compilation commands (you need a c-compiler with c99 standard, otherwise you may
 in general (gcc)
 gcc -std=c99 -I. -I./ -I.. -o benchmark -D_GAUGE_COPY -O Hopping_Matrix.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c init_gauge_field.c init_geometry_indices.c init_moment_field.c init_spinor_field.c read_input.c benchmark.c update_backward_gauge.c D_psi.c ranlxs.c -lm
 
-gcc and OPTERON (64 Bit architecture):
-gcc -std=c99 -I. -I./ -I.. -o benchmark -DOPTERON -DSSE2 -mfpmath=387 -fomit-frame-pointer -ffloat-store -D_GAUGE_COPY  -O Hopping_Matrix.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c init_gauge_field.c init_geometry_indices.c init_moment_field.c init_spinor_field.c read_input.c benchmark.c update_backward_gauge.c D_psi.c ranlxs.c -lm
-
-gcc and pentium4:
-gcc -std=c99 -I. -I./ -I.. -o benchmark -DSSE2 -DP4 -march=pentium4  -malign-double -fomit-frame-pointer -ffloat-store -D_GAUGE_COPY  -O Hopping_Matrix.c mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c init_gauge_field.c init_geometry_indices.c init_moment_field.c init_spinor_field.c read_input.c benchmark.c update_backward_gauge.c D_psi.c ranlxs.c -lm
 
 mpicc (gcc) general, four dimensional parallelisation:
 mpicc -std=c99 -I. -I./ -I.. -o benchmark -O3  -DMPI -DPARALLELXYZT -D_GAUGE_COPY  -O Hopping_Matrix.c Hopping_Matrix_nocom.c xchange_deri.c xchange_field.c xchange_gauge.c xchange_halffield.c xchange_lexicfield.c  mpi_init.c geometry_eo.c test/check_xchange.c test/check_geometry.c boundary.c start.c ranlxd.c init_gauge_field.c init_geometry_indices.c init_moment_field.c init_spinor_field.c read_input.c benchmark.c update_backward_gauge.c D_psi.c ranlxs.c init_dirac_halfspinor.c -lm

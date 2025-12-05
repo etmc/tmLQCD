@@ -30,12 +30,6 @@
 /* Fortran has not extra _ */
 #undef NOF77_
 
-/* Use Opteron instructions */
-#undef OPTERON
-
-/* Use Pentium4 instructions */
-#undef P4
-
 /* Define to the address where bug reports for this package should be sent. */
 #undef PACKAGE_BUGREPORT
 
@@ -95,12 +89,6 @@
 
 /* Alignment of 32bit fields, compiler hint macro */
 #undef ALIGN32
-
-/* Compile with SSE2 support */
-#undef SSE2
-
-/* Compile with SSE3 support */
-#undef SSE3
 
 /* Optimize for Blue Gene/L */
 #undef BGL
@@ -214,4 +202,3 @@
 
 /* Structure of Array length to use with QPhiX */
 #undef QPHIX_SOALEN
-

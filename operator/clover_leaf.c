@@ -23,15 +23,6 @@
 #ifdef HAVE_CONFIG_H
 #include <tmlqcd_config.h>
 #endif
-#ifdef SSE
-#undef SSE
-#endif
-#ifdef SSE2
-#undef SSE2
-#endif
-#ifdef SSE3
-#undef SSE3
-#endif
 
 #include <errno.h>
 #include <math.h>
@@ -48,7 +39,6 @@
 #include "global.h"
 #include "operator/clover_leaf.h"
 #include "operator/clovertm_operators.h"
-#include "sse.h"
 #include "su3.h"
 #include "su3adj.h"
 
@@ -155,11 +145,7 @@ int init_swpm(const int V) {
       errno = 0;
       return (2);
     }
-#if (defined SSE || defined SSE2 || defined SSE3)
-    swp[0] = (su3*)(((unsigned long int)(_swp) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
     swp[0] = _swp;
-#endif
     swm[0] = swp[0] + 4 * V;
     for (i = 1; i < V; i++) {
       swp[i] = swp[i - 1] + 4;

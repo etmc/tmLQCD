@@ -42,7 +42,6 @@
 #include "monomial/monomial.h"
 #include "ranlxd.h"
 #include "read_input.h"
-#include "sse.h"
 #include "start.h"
 #include "su3.h"
 #include "su3adj.h"

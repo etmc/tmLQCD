@@ -69,7 +69,6 @@ double eigenvalues(int *nr_of_eigenvalues, const int max_iterations, const doubl
   double returnvalue;
   _Complex double norm2;
 #ifdef HAVE_LAPACK
-  static spinor *eigenvectors_ = NULL;
   static int allocated = 0;
   char filename[200];
   FILE *ofs;
@@ -88,7 +87,7 @@ double eigenvalues(int *nr_of_eigenvalues, const int max_iterations, const doubl
   int v0dim = 0;
   matrix_mult f;
   int N = (VOLUME) / 2, N2 = (VOLUMEPLUSRAND) / 2;
-  spinor *max_eigenvector_ = NULL, *max_eigenvector;
+  spinor *max_eigenvector;
 
   /**********************
    * General variables
@@ -130,23 +129,12 @@ double eigenvalues(int *nr_of_eigenvalues, const int max_iterations, const doubl
   } else {
     prec = precision;
   }
-#if (defined SSE || defined SSE2 || defined SSE3)
-  max_eigenvector_ = calloc(N2 + 1, sizeof(spinor));
-  max_eigenvector = (spinor *)(((unsigned long int)(max_eigenvector_) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
-  max_eigenvector_ = calloc(N2, sizeof(spinor));
-  max_eigenvector = max_eigenvector_;
-#endif
+  max_eigenvector = calloc(N2, sizeof(spinor));
 
   if (allocated == 0) {
     allocated = 1;
-#if (defined SSE || defined SSE2 || defined SSE3)
-    eigenvectors_ = calloc(N2 * (*nr_of_eigenvalues) + 1, sizeof(spinor));
-    eigenvectors = (spinor *)(((unsigned long int)(eigenvectors_) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
-    eigenvectors_ = calloc(N2 * (*nr_of_eigenvalues), sizeof(spinor));
-    eigenvectors = eigenvectors_;
-#endif
+    eigenvectors = calloc(N2 * (*nr_of_eigenvalues), sizeof(spinor));
+
     eigenvls = (double *)malloc((*nr_of_eigenvalues) * sizeof(double));
     inv_eigenvls = (double *)malloc((*nr_of_eigenvalues) * sizeof(double));
   }
@@ -301,7 +289,7 @@ double eigenvalues(int *nr_of_eigenvalues, const int max_iterations, const doubl
   ev_minev *= ev_qnorm * ev_qnorm;
   /* ov_n_cheby is initialized in Dov_psi.c */
   returnvalue = eigenvls[0];
-  free(max_eigenvector_);
+  free(max_eigenvector);
 #else
   fprintf(stderr, "lapack not available, so JD method for EV computation not available \n");
 #endif

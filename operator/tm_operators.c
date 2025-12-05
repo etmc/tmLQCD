@@ -27,12 +27,6 @@
 #ifdef HAVE_CONFIG_H
 #include <tmlqcd_config.h>
 #endif
-#ifdef SSE2
-#undef SSE2
-#endif
-#ifdef SSE3
-#undef SSE3
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include "gamma.h"
@@ -43,7 +37,6 @@
 #include "operator/Hopping_Matrix_nocom.h"
 #include "operator/tm_sub_Hopping_Matrix.h"
 #include "operator/tm_times_Hopping_Matrix.h"
-#include "sse.h"
 #include "su3.h"
 #ifdef BGL
 #include "bgl.h"
@@ -56,9 +49,6 @@
 
 #include "tm_operators.h"
 
-#if (defined SSE2 || defined SSE3 || defined BGL)
-const int predist = 2;
-#endif
 /* internal */
 
 /******************************************
@@ -666,27 +656,10 @@ void assign_mul_one_pm_imu(spinor *const l, spinor *const k, const double _sign,
       r = k + ix;
 
       /* Multiply the spinorfield with of 1+imu\gamma_5 */
-#if (defined SSE2 || defined SSE3)
-      _prefetch_spinor((r + predist));
-      _prefetch_spinor((s + predist));
-      _sse_load_up(r->s0);
-      _sse_vector_cmplx_mul(z);
-      _sse_store_nt_up(s->s0);
-      _sse_load_up(r->s1);
-      _sse_vector_cmplx_mul_two();
-      _sse_store_nt_up(s->s1);
-      _sse_load_up(r->s2);
-      _sse_vector_cmplx_mul(w);
-      _sse_store_nt_up(s->s2);
-      _sse_load_up(r->s3);
-      _sse_vector_cmplx_mul_two();
-      _sse_store_nt_up(s->s3);
-#else
-    _complex_times_vector(s->s0, z, r->s0);
-    _complex_times_vector(s->s1, z, r->s1);
-    _complex_times_vector(s->s2, w, r->s2);
-    _complex_times_vector(s->s3, w, r->s3);
-#endif
+      _complex_times_vector(s->s0, z, r->s0);
+      _complex_times_vector(s->s1, z, r->s1);
+      _complex_times_vector(s->s2, w, r->s2);
+      _complex_times_vector(s->s3, w, r->s3);
     }
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
@@ -720,27 +693,10 @@ void Mee_psi(spinor *const l, spinor *const k, const double mu) {
       r = k + ix;
 
       /* Multiply the spinorfield with of 1+imu\gamma_5 */
-#if (defined SSE2 || defined SSE3)
-      _prefetch_spinor((r + predist));
-      _prefetch_spinor((s + predist));
-      _sse_load_up(r->s0);
-      _sse_vector_cmplx_mul(z);
-      _sse_store_nt_up(s->s0);
-      _sse_load_up(r->s1);
-      _sse_vector_cmplx_mul_two();
-      _sse_store_nt_up(s->s1);
-      _sse_load_up(r->s2);
-      _sse_vector_cmplx_mul(w);
-      _sse_store_nt_up(s->s2);
-      _sse_load_up(r->s3);
-      _sse_vector_cmplx_mul_two();
-      _sse_store_nt_up(s->s3);
-#else
-    _complex_times_vector(s->s0, z, r->s0);
-    _complex_times_vector(s->s1, z, r->s1);
-    _complex_times_vector(s->s2, w, r->s2);
-    _complex_times_vector(s->s3, w, r->s3);
-#endif
+      _complex_times_vector(s->s0, z, r->s0);
+      _complex_times_vector(s->s1, z, r->s1);
+      _complex_times_vector(s->s2, w, r->s2);
+      _complex_times_vector(s->s3, w, r->s3);
     }
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */

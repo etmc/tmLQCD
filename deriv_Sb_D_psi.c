@@ -29,7 +29,6 @@
 #include "gettime.h"
 #include "global.h"
 #include "hamiltonian_field.h"
-#include "sse.h"
 #include "su3.h"
 #include "xchange/xchange.h"
 

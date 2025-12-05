@@ -60,7 +60,6 @@
 #include "solver/gram-schmidt.h"
 #include "solver/quicksort.h"
 #include "solver/solver.h"
-#include "sse.h"
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define max(a, b) ((a) < (b) ? (b) : (a))
@@ -195,31 +194,20 @@ void jdher(int n, int lda, double tau, double tol, int kmax, int jmax, int jmin,
 
   /* Allocating memory for matrices & vectors */
 
-  if ((void *)(V_ = (_Complex double *)malloc((lda * jmax + 4) * sizeof(_Complex double))) ==
-      NULL) {
+  if ((void *)(V = (_Complex double *)malloc((lda * jmax + 4) * sizeof(_Complex double))) == NULL) {
     errno = 0;
     jderrorhandler(300, "V in jdher");
   }
-#if (defined SSE || defined SSE2 || defined SSE3)
-  V = (_Complex double *)(((unsigned long int)(V_) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
-  V = V_;
-#endif
   if ((void *)(U = (_Complex double *)malloc(jmax * jmax * sizeof(_Complex double))) == NULL) {
     jderrorhandler(300, "U in jdher");
   }
   if ((void *)(s = (double *)malloc(jmax * sizeof(double))) == NULL) {
     jderrorhandler(300, "s in jdher");
   }
-  if ((void *)(Res_ = (_Complex double *)malloc((lda * blksize + 4) * sizeof(_Complex double))) ==
+  if ((void *)(Res = (_Complex double *)malloc((lda * blksize + 4) * sizeof(_Complex double))) ==
       NULL) {
     jderrorhandler(300, "Res in jdher");
   }
-#if (defined SSE || defined SSE2 || defined SSE3)
-  Res = (_Complex double *)(((unsigned long int)(Res_) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
-  Res = Res_;
-#endif
   if ((void *)(resnrm = (double *)malloc(blksize * sizeof(double))) == NULL) {
     jderrorhandler(300, "resnrm in jdher");
   }
@@ -264,14 +252,9 @@ void jdher(int n, int lda, double tau, double tol, int kmax, int jmax, int jmin,
   if ((void *)(rwork = (double *)malloc(3 * jmax * sizeof(double))) == NULL) {
     jderrorhandler(300, "rwork in jdher");
   }
-  if ((void *)(temp1_ = (_Complex double *)malloc((lda + 4) * sizeof(_Complex double))) == NULL) {
+  if ((void *)(temp1 = (_Complex double *)malloc((lda + 4) * sizeof(_Complex double))) == NULL) {
     jderrorhandler(300, "temp1 in jdher");
   }
-#if (defined SSE || defined SSE2 || defined SSE3)
-  temp1 = (_Complex double *)(((unsigned long int)(temp1_) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
-  temp1 = temp1_;
-#endif
   if ((void *)(dtemp = (double *)malloc(lda * sizeof(_Complex double))) == NULL) {
     jderrorhandler(300, "dtemp in jdher");
   }
@@ -670,11 +653,11 @@ void jdher(int n, int lda, double tau, double tol, int kmax, int jmax, int jmin,
     fflush(stdout);
   }
 
-  free(V_);
+  free(V);
   free(Vtmp);
   free(U);
   free(s);
-  free(Res_);
+  free(Res);
   free(resnrm);
   free(resnrm_old);
   free(M);
