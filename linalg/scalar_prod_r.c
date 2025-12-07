@@ -197,37 +197,3 @@ double scalar_prod_r(const spinor *const S, const spinor *const R, const int N,
 }
 
 #endif
-
-#ifdef WITHLAPH
-double scalar_prod_r_su3vect(su3_vector *const S, su3_vector *const R, const int N,
-                             const int parallel) {
-  int ix;
-  double ALIGN ks, kc, ds, tr, ts, tt;
-  su3_vector *s, *r;
-
-  ks = 0.0;
-  kc = 0.0;
-  for (int ix = 0; ix < N; ++ix) {
-    s = (su3_vector *)S + ix;
-    r = (su3_vector *)R + ix;
-
-    ds = creal(r->c0) * creal(s->c0) + cimag(r->c0) * cimag(s->c0) + creal(r->c1) * creal(s->c1) +
-         cimag(r->c1) * cimag(s->c1) + creal(r->c2) * creal(s->c2) + cimag(r->c2) * cimag(s->c2);
-
-    tr = ds + kc;
-    ts = tr + ks;
-    tt = ts - ks;
-    ks = ts;
-    kc = tr - tt;
-  }
-  kc = ks + kc;
-#if defined TM_USE_MPI
-  if (parallel) {
-    MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    return ks;
-  }
-#endif
-  return kc;
-}
-
-#endif  // WITHLAPH

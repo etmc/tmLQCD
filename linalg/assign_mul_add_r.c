@@ -374,28 +374,3 @@ void assign_mul_add_r(spinor *const R, const double c, const spinor *const S, co
 }
 
 #endif
-
-#ifdef WITHLAPH
-void assign_mul_add_r_su3vect(su3_vector *const R, const double c, su3_vector *const S,
-                              const int N) {
-#ifdef TM_USE_OMP
-#pragma omp parallel
-  {
-#endif
-    su3_vector *r, *s;
-
-#ifdef TM_USE_OMP
-#pragma omp for
-#endif
-    for (int ix = 0; ix < N; ++ix) {
-      r = R + ix;
-      s = S + ix;
-      r->c0 = c * r->c0 + s->c0;
-      r->c1 = c * r->c1 + s->c1;
-      r->c2 = c * r->c2 + s->c2;
-    }
-#ifdef TM_USE_OMP
-  } /* OpenMP closing brace */
-#endif
-}
-#endif

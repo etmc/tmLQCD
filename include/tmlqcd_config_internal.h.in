@@ -188,9 +188,6 @@
 /* Define to 1 if non-blocking MPI calls for spinor and gauge should be used */
 #undef _NON_BLOCKING
 
-/* Define if we want to compute the LapH eigenvectors */
-#undef WITHLAPH
-
 /* Define to 1 if you have the `quda' library (-lquda). */
 #undef HAVE_LIBQUDA
 

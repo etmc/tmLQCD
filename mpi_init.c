@@ -152,16 +152,6 @@ MPI_Datatype field_zt_slice_odd_dn_ot;
 MPI_Datatype field_zt_slice_odd_up_ot;
 #endif
 #endif
-#ifdef WITHLAPH
-MPI_Datatype su3vect_point;
-MPI_Datatype jfield_x_slice_cont;
-MPI_Datatype jfield_y_slice_cont;
-MPI_Datatype jfield_z_slice_cont;
-MPI_Datatype jfield_x_slice_gath;
-MPI_Datatype jfield_y_slice_gath;
-MPI_Datatype jfield_z_slice_gath;
-MPI_Datatype jfield_y_subslice;
-#endif
 
 #if (defined PARALLELXYZT || defined PARALLELXYZ)
 MPI_Datatype field_z_slice_even_dn;
@@ -602,23 +592,6 @@ void tmlqcd_mpi_init(int argc, char *argv[]) {
 #endif
 #endif
 
-#ifdef WITHLAPH
-  MPI_Type_contiguous(6, MPI_DOUBLE, &su3vect_point);
-
-  MPI_Type_contiguous(LY * LZ, su3vect_point, &jfield_x_slice_cont);
-  MPI_Type_contiguous(LX * LZ, su3vect_point, &jfield_y_slice_cont);
-  MPI_Type_contiguous(LX * LY, su3vect_point, &jfield_z_slice_cont);
-  MPI_Type_contiguous(LY * LZ, su3vect_point, &jfield_x_slice_gath);
-  MPI_Type_contiguous(LZ, su3vect_point, &jfield_y_subslice);
-  MPI_Type_vector(LX, 1, LY, jfield_y_subslice, &jfield_y_slice_gath);
-  MPI_Type_vector(LX * LY, 1, LZ, su3vect_point, &jfield_z_slice_gath);
-  MPI_Type_commit(&jfield_x_slice_gath);
-  MPI_Type_commit(&jfield_x_slice_cont);
-  MPI_Type_commit(&jfield_y_slice_cont);
-  MPI_Type_commit(&jfield_y_slice_gath);
-  MPI_Type_commit(&jfield_z_slice_cont);
-  MPI_Type_commit(&jfield_z_slice_gath);
-#endif
 
   /* The internal z_ and zt_ slices are constructed in geometry() with MPI_Type_indexed() */
 

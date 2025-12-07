@@ -48,17 +48,3 @@ void assign_32(spinor32 *const R, spinor32 *const S, const int N) {
   return;
 }
 
-#ifdef WITHLAPH
-void assign_su3vect(su3_vector *const R, su3_vector *const S, const int N) {
-  su3_vector *r, *s;
-
-  for (int ix = 0; ix < N; ++ix) {
-    r = R + ix;
-    s = S + ix;
-
-    r->c0 = s->c0;
-    r->c1 = s->c1;
-    r->c2 = s->c2;
-  }
-}
-#endif

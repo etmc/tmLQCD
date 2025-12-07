@@ -871,17 +871,6 @@ else
  AC_MSG_RESULT(no)
 fi
 
-AC_MSG_CHECKING(whether we want to compute the LapH eigenvalues)
-AC_ARG_ENABLE(laph,
-  AS_HELP_STRING([--enable-laph], [enable computation of LapH eigensystem [default=no]]),
-  enable_laph=$enableval, enable_laph=no)
-if test $enable_laph = yes; then
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(WITHLAPH,1,LapH eigensystem)
-else
- AC_MSG_RESULT(no)
-fi
-
 
 AC_SUBST(USESUBDIRS)
 
@@ -1025,9 +1014,6 @@ if test $enable_mpi = yes ; then
  fi
  if test $enable_tsp = yes && test $enable_gaugecopy != yes ; then
    AC_MSG_ERROR(ERROR! tsplitpar needs gaugecopy)
- fi
- if test $enable_laph = yes && test $enable_tsp != yes ; then
-   AC_MSG_ERROR(ERROR! laph needs tsplitpar)
  fi
 fi
 

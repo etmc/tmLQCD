@@ -223,16 +223,6 @@ EXTERN int counter_Spsi;
 
 EXTERN void *g_precWS;
 
-#ifdef WITHLAPH
-/* Jacobi operator per Laplacian Heaviside (LapH) */
-EXTERN su3_vector **g_jacobi_field;
-EXTERN int gI_0_0_0, gI_L_0_0, gI_Lm1_0_0, gI_m1_0_0, gI_0_L_0, gI_0_Lm1_0, gI_0_m1_0, gI_0_0_L,
-    gI_0_0_Lm1, gI_0_0_m1;
-EXTERN int tempT, tempV, tempR;
-EXTERN int **g_iup3d;
-EXTERN int **g_idn3d;
-#endif
-
 /* keeping track of what the gauge, clover and inverse clover
  * field contain in order to avoid unnecessary inversions
  * of the latter */

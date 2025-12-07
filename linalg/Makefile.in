@@ -42,7 +42,6 @@ liblinalg_TARGETS = assign_add_mul_r_add_mul \
         comp_decomp assign_mul_add_mul \
 	convert_eo_to_lexic assign_mul_add_mul_r assign_mul_add_mul_r_32 \
 	mul_add_mul_r assign_mul_add_mul_add_mul_r mattimesvec \
-	scalar_prod_su3spinor \
 	assign_mul_add_r_and_square \
 	addto_32 scalar_prod_r_32 assign_mul_add_r_32 assign_add_mul_r_32 \
 	square_norm_32 assign_to_32 diff_32 \

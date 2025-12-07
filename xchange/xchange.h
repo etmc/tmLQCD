@@ -28,7 +28,6 @@
 #include "xchange/xchange_field.h"
 #include "xchange/xchange_gauge.h"
 #include "xchange/xchange_halffield.h"
-#include "xchange/xchange_jacobi.h"
 #include "xchange/xchange_lexicfield.h"
 
 #ifdef _USE_TSPLITPAR

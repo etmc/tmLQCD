@@ -150,17 +150,6 @@ int init_geometry_indices(const int V) {
   g_hi = (int *)calloc(16 * (VOLUME + RAND) + 2, sizeof(int));
   if ((void *)g_hi == NULL) return (40);
 
-#ifdef WITHLAPH
-  g_idn3d = (int **)calloc(SPACEVOLUME, sizeof(int *));
-  if ((void *)g_idn == NULL) return (31);
-  g_iup3d = (int **)calloc(SPACEVOLUME, sizeof(int *));
-  if ((void *)g_iup == NULL) return (32);
-  for (i = 0; i < SPACEVOLUME; i++) {
-    g_idn3d[i] = (int *)calloc(4, sizeof(int));
-    g_iup3d[i] = (int *)calloc(4, sizeof(int));
-  }
-#endif
-
   return (0);
 }
 

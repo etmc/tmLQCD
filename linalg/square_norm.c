@@ -357,35 +357,3 @@ double square_norm_ts(const spinor *const P, const int N, const int parallel) {
 
   return res;
 }
-
-#ifdef WITHLAPH
-double square_norm_su3vect(su3_vector *const P, const int N, const int parallel) {
-  int ix;
-  double ALIGN ks, kc, ds, tr, ts, tt;
-  su3_vector *s;
-
-  ks = 0.0;
-  kc = 0.0;
-
-  for (ix = 0; ix < N; ix++) {
-    s = P + ix;
-
-    ds = creal(s->c0) * creal(s->c0) + cimag(s->c0) * cimag(s->c0) + creal(s->c1) * creal(s->c1) +
-         cimag(s->c1) * cimag(s->c1) + creal(s->c2) * creal(s->c2) + cimag(s->c2) * cimag(s->c2);
-
-    tr = ds + kc;
-    ts = tr + ks;
-    tt = ts - ks;
-    ks = ts;
-    kc = tr - tt;
-  }
-  kc = ks + kc;
-#ifdef TM_USE_MPI
-  if (parallel) {
-    MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    return ks;
-  }
-#endif
-  return kc;
-}
-#endif
