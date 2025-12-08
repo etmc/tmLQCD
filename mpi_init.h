@@ -107,24 +107,6 @@ extern MPI_Datatype halffield_y_slice_cont;
 extern MPI_Datatype halffield_y_slice_gath;
 extern MPI_Datatype halffield_z_slice_cont;
 
-#ifdef _USE_TSPLITPAR
-extern MPI_Datatype field_xt_slice_int;
-extern MPI_Datatype field_yt_slice_int;
-extern MPI_Datatype field_xt_slice_ext;
-extern MPI_Datatype field_yt_slice_ext;
-#ifdef PARALLELXYZ
-extern MPI_Datatype field_zt_slice_ext_L;
-extern MPI_Datatype field_zt_slice_ext_S;
-extern MPI_Datatype field_zt_slice_even_dn_et;
-extern MPI_Datatype field_zt_slice_even_up_et;
-extern MPI_Datatype field_zt_slice_odd_dn_et;
-extern MPI_Datatype field_zt_slice_odd_up_et;
-extern MPI_Datatype field_zt_slice_even_dn_ot;
-extern MPI_Datatype field_zt_slice_even_up_ot;
-extern MPI_Datatype field_zt_slice_odd_dn_ot;
-extern MPI_Datatype field_zt_slice_odd_up_ot;
-#endif
-#endif
 
 #if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || \
      defined PARALLELXYZ)

@@ -241,12 +241,7 @@ int init_timslice_buffer_field(const int t_slice) {
     errno = 0;
     return (3);
   }
-
-#if ((defined SSE || defined SSE2 || defined SSE3) && defined _USE_TSPLITPAR)
-  g_tbuff = (spinor *)(((unsigned long int)(sp_tbuff) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
   g_tbuff = sp_tbuff;
-#endif
 
   return (0);
 }

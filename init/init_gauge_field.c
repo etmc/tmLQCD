@@ -31,23 +31,12 @@
 
 su3* gauge_field = NULL;
 su3_32* gauge_field_32 = NULL;
-#ifdef _USE_TSPLITPAR
-su3* gauge_field_copyt = NULL;
-su3* gauge_field_copys = NULL;
-#else
 su3* gauge_field_copy = NULL;
 su3_32* gauge_field_copy_32 = NULL;
-#endif
 
 int init_gauge_field(const int V, const int back) {
   int i = 0;
-
-#ifdef _USE_TSPLITPAR
-  g_gauge_field_copyt = NULL;
-  g_gauge_field_copys = NULL;
-#else
   g_gauge_field_copy = NULL;
-#endif
 
   if (g_exposu3_no_c == 0) init_exposu3();
 
@@ -105,43 +94,7 @@ int init_gauge_field(const int V, const int back) {
       g_gauge_field_copy[1][i] = g_gauge_field_copy[1][i - 1] + 4;
     }
   }
-#elif defined _USE_TSPLITPAR
-  if (back == 1) {
-    if ((void*)(g_gauge_field_copyt = (su3**)calloc((VOLUME + RAND), sizeof(su3*))) == NULL) {
-      printf("malloc errno : %d\n", errno);
-      errno = 0;
-      return (3);
-    }
-    if ((void*)(g_gauge_field_copys = (su3**)calloc((VOLUME + RAND), sizeof(su3*))) == NULL) {
-      printf("malloc errno : %d\n", errno);
-      errno = 0;
-      return (3);
-    }
-    if ((void*)(gauge_field_copyt = (su3*)calloc(2 * (VOLUME + RAND) + 1, sizeof(su3))) == NULL) {
-      printf("malloc errno : %d\n", errno);
-      errno = 0;
-      return (4);
-    }
-    if ((void*)(gauge_field_copys = (su3*)calloc(6 * (VOLUME + RAND) + 1, sizeof(su3))) == NULL) {
-      printf("malloc errno : %d\n", errno);
-      errno = 0;
-      return (4);
-    }
-#if (defined SSE || defined SSE2 || defined SSE3)
-    g_gauge_field_copyt[0] =
-        (su3*)(((unsigned long int)(gauge_field_copyt) + ALIGN_BASE) & ~ALIGN_BASE);
-    g_gauge_field_copys[0] =
-        (su3*)(((unsigned long int)(gauge_field_copys) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
-    g_gauge_field_copyt[0] = gauge_field_copyt;
-    g_gauge_field_copys[0] = gauge_field_copys;
-#endif
-    for (i = 1; i < (VOLUME + RAND); i++) {
-      g_gauge_field_copyt[i] = g_gauge_field_copyt[i - 1] + 2;
-      g_gauge_field_copys[i] = g_gauge_field_copys[i - 1] + 6;
-    }
-  }
-#else /* than _USE_HALFSPINOR or _USE_TSPLITPAR */
+#else /* than _USE_HALFSPINOR */
   if (back == 1) {
     if ((void*)(g_gauge_field_copy = (su3**)calloc((VOLUME + RAND), sizeof(su3*))) == NULL) {
       printf("malloc errno : %d\n", errno);
@@ -171,12 +124,7 @@ int init_gauge_field(const int V, const int back) {
 void free_gauge_field() {
   free(gauge_field);
   free(g_gauge_field);
-#if defined _USE_TSPLITPAR
-  free(gauge_field_copys);
-  free(gauge_field_copyt);
-#else
   free(gauge_field_copy);
-#endif
 }
 
 int init_gauge_field_32(const int V, const int back) {

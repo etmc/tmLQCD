@@ -105,12 +105,6 @@ void Hopping_Matrix(const int ieo, spinor* const l, spinor* const k) {
 }
 
 #else /* thats _USE_HALFSPINOR */
-
-#if (((defined SSE2) || (defined SSE3)) && defined _USE_TSPLITPAR)
-#include "operator/hopping_sse_dbl.c"
-#include "sse.h"
-
-#else
 #include "operator/hopping.h"
 #if ((defined SSE2) || (defined SSE3))
 #include "sse.h"
@@ -153,6 +147,5 @@ void Hopping_Matrix(const int ieo, spinor* const l, spinor* const k) {
 #endif
   return;
 }
-#endif
 
 #endif /* thats _USE_HALFSPINOR */

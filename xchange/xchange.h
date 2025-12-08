@@ -30,8 +30,4 @@
 #include "xchange/xchange_halffield.h"
 #include "xchange/xchange_lexicfield.h"
 
-#ifdef _USE_TSPLITPAR
-#include "xchange/xchange_field_tslice.h"
-#endif
-
 #endif

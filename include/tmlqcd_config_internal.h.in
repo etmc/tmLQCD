@@ -72,9 +72,6 @@
 /* Four dimensional parallelisation */
 #undef PARALLELXYZT
 
-/* timeslice-splitted communications */
-#undef _USE_TSPLITPAR
-
 /* Fixed volume at compiletime */
 #undef FIXEDVOLUME
 

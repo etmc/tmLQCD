@@ -134,25 +134,6 @@ MPI_Datatype halffield_y_slice_gath;
 
 MPI_Datatype halffield_z_slice_cont;
 
-#ifdef _USE_TSPLITPAR
-MPI_Datatype field_xt_slice_int;
-MPI_Datatype field_xt_slice_ext;
-MPI_Datatype field_yt_slice_int;
-MPI_Datatype field_yt_slice_ext;
-#ifdef PARALLELXYZ
-MPI_Datatype field_zt_slice_ext_L;
-MPI_Datatype field_zt_slice_ext_S;
-MPI_Datatype field_zt_slice_even_dn_et;
-MPI_Datatype field_zt_slice_even_up_et;
-MPI_Datatype field_zt_slice_odd_dn_et;
-MPI_Datatype field_zt_slice_odd_up_et;
-MPI_Datatype field_zt_slice_even_dn_ot;
-MPI_Datatype field_zt_slice_even_up_ot;
-MPI_Datatype field_zt_slice_odd_dn_ot;
-MPI_Datatype field_zt_slice_odd_up_ot;
-#endif
-#endif
-
 #if (defined PARALLELXYZT || defined PARALLELXYZ)
 MPI_Datatype field_z_slice_even_dn;
 MPI_Datatype field_z_slice_even_up;
@@ -308,9 +289,6 @@ void tmlqcd_mpi_init(int argc, char *argv[]) {
   LZ = LZ / g_nproc_z;
   VOLUME = (T * LX * LY * LZ);
   SPACEVOLUME = VOLUME / T;
-#ifdef _USE_TSPLITPAR
-  TEOSLICE = (LX * LY * LZ) / 2;
-#endif
 #ifdef PARALLELT
   RAND = (2 * LX * LY * LZ);
   EDGES = 0;
@@ -574,24 +552,6 @@ void tmlqcd_mpi_init(int argc, char *argv[]) {
   MPI_Type_commit(&lfield_z_slice_cont32);
   MPI_Type_commit(&lfield_z_slice_gath32);
 
-#ifdef _USE_TSPLITPAR
-  /* here I construct the xt yt zt edges for use in _USE_TSPLITPAR  */
-  MPI_Type_contiguous(LY * LZ / 2, field_point, &field_xt_slice_int);         /* OK */
-  MPI_Type_vector(LX, LZ / 2, LY * LZ / 2, field_point, &field_yt_slice_int); /* OK */
-  MPI_Type_contiguous(LY * LZ / 2, field_point, &field_xt_slice_ext);         /* OK */
-  MPI_Type_contiguous(LX * LZ / 2, field_point, &field_yt_slice_ext);         /* OK */
-  MPI_Type_commit(&field_xt_slice_int);
-  MPI_Type_commit(&field_xt_slice_ext);
-  MPI_Type_commit(&field_yt_slice_int);
-  MPI_Type_commit(&field_yt_slice_ext);
-#ifdef PARALLELXYZ
-  MPI_Type_contiguous((LX * LY + 1) / 2, field_point, &field_zt_slice_ext_L); /* OK */
-  MPI_Type_contiguous(LX * LY / 2, field_point, &field_zt_slice_ext_S);       /* OK */
-  MPI_Type_commit(&field_zt_slice_ext_L);
-  MPI_Type_commit(&field_zt_slice_ext_S);
-#endif
-#endif
-
 
   /* The internal z_ and zt_ slices are constructed in geometry() with MPI_Type_indexed() */
 
@@ -713,9 +673,6 @@ void tmlqcd_mpi_init(int argc, char *argv[]) {
   T = T_global;
   VOLUME = (T * LX * LY * LZ);
   SPACEVOLUME = VOLUME / T;
-#ifdef _USE_TSPLITPAR
-  TEOSLICE = (LX * LY * LZ) / 2;
-#endif
   RAND = 0;
   EDGES = 0;
   VOLUMEPLUSRAND = VOLUME;

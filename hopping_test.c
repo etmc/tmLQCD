@@ -154,9 +154,6 @@ int main(int argc, char *argv[]) {
 #ifdef _NON_BLOCKING
     printf("# the code was compiled for non-blocking MPI calls (spinor and gauge)\n");
 #endif
-#ifdef _USE_TSPLITPAR
-    printf("# the code was compiled with tsplit parallelization\n");
-#endif
 #endif
     printf("\n");
     fflush(stdout);

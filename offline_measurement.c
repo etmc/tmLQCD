@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
 
   DUM_DERI = 8;
   DUM_MATRIX = DUM_DERI + 5;
-#if ((defined BGL && defined XLC) || defined _USE_TSPLITPAR)
+#if ((defined BGL && defined XLC))
   NO_OF_SPINORFIELDS = DUM_MATRIX + 3;
 #else
   NO_OF_SPINORFIELDS = DUM_MATRIX + 3;

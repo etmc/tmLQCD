@@ -796,14 +796,8 @@ void geometry() {
   }
 
 #if (defined PARALLELXYZT || defined PARALLELXYZ)
-#if defined _USE_TSPLITPAR
-  int check_struct_zt = 0;
-#endif
   ix = 0;
   for (x0 = 0; x0 < T; x0++) {
-#if defined _USE_TSPLITPAR
-    int isp = 0;
-#endif
     for (x1 = 0; x1 < LX; x1++) {
       for (x2 = 0; x2 < LY; x2++) {
         if ((x0 + x1 + x2 + g_proc_coords[0] * T + g_proc_coords[1] * LX + g_proc_coords[2] * LY +
@@ -817,9 +811,6 @@ void geometry() {
     }
   }
   for (x0 = 0; x0 < T; x0++) {
-#if defined _USE_TSPLITPAR
-    int isp = 0;
-#endif
     for (x1 = 0; x1 < LX; x1++) {
       for (x2 = 0; x2 < LY; x2++) {
         if ((x0 + x1 + x2 + (LZ - 1) + g_proc_coords[0] * T + g_proc_coords[1] * LX +
@@ -834,9 +825,6 @@ void geometry() {
   }
   ix = 0;
   for (x0 = 0; x0 < T; x0++) {
-#if defined _USE_TSPLITPAR
-    int isp = 0;
-#endif
     for (x1 = 0; x1 < LX; x1++) {
       for (x2 = 0; x2 < LY; x2++) {
         if ((x0 + x1 + x2 + g_proc_coords[0] * T + g_proc_coords[1] * LX + g_proc_coords[2] * LY +
@@ -850,9 +838,6 @@ void geometry() {
     }
   }
   for (x0 = 0; x0 < T; x0++) {
-#if defined _USE_TSPLITPAR
-    int isp = 0;
-#endif
     for (x1 = 0; x1 < LX; x1++) {
       for (x2 = 0; x2 < LY; x2++) {
         if ((x0 + x1 + x2 + (LZ - 1) + g_proc_coords[0] * T + g_proc_coords[1] * LX +
@@ -865,17 +850,6 @@ void geometry() {
       }
     }
   }
-
-#if defined _USE_TSPLITPAR
-  if (check_struct_zt != 0) {
-    if (g_proc_id == 0) {
-      fprintf(stderr, "Error in assuming the structure of dispacements of zt slice\n");
-      fflush(stderr);
-      MPI_Finalize();
-      exit(-1);
-    }
-  }
-#endif
 
 
 #endif /* PARALLELXYZ || PARALLELXYZT*/
