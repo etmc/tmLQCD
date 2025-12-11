@@ -89,11 +89,6 @@ void deriv_Sb(const int ieo, spinor* const l, spinor* const k, hamiltonian_field
 #pragma pomp inst begin(derivSb)
 #endif
 
-#ifdef BGL
-    __alignx(16, l);
-    __alignx(16, k);
-#endif
-
     if (ieo == 0) {
       ioff = 0;
     } else {

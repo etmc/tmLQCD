@@ -31,9 +31,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#if (defined BGL && !defined BGP)
-#include <rts.h>
-#endif
 #ifdef TM_USE_MPI
 #include <mpi.h>
 #ifdef HAVE_LIBLEMON
@@ -128,12 +125,6 @@ int main(int argc, char *argv[]) {
   if (g_proc_id == 0) {
 #ifdef _GAUGE_COPY
     printf("# The code was compiled with -D_GAUGE_COPY\n");
-#endif
-#ifdef BGL
-    printf("# The code was compiled for Blue Gene/L\n");
-#endif
-#ifdef BGP
-    printf("# The code was compiled for Blue Gene/P\n");
 #endif
 #ifdef _USE_HALFSPINOR
     printf("# The code was compiled with -D_USE_HALFSPINOR\n");

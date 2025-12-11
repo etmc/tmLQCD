@@ -90,21 +90,6 @@
 /* Alignment of 32bit fields, compiler hint macro */
 #undef ALIGN32
 
-/* Optimize for Blue Gene/L */
-#undef BGL
-
-/* Optimize for Blue Gene/P */
-#undef BGP
-
-/* Compile with QPX intrinsics */
-#undef BGQ
-
-/* Compile with SPI for communications */
-#undef SPI
-
-/* Are we using the IBM xlc compiler? */
-#undef XLC
-
 /* Define to 1 if `lex' declares `yytext' as a `char *' by default, not a
    `char[]'. */
 #undef YYTEXT_POINTER

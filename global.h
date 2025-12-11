@@ -59,9 +59,6 @@
 #define EXTERN extern
 #endif
 
-#if defined BGL
-#include "bgl.h"
-#endif
 EXTERN int DUM_DERI, DUM_MATRIX;
 EXTERN int NO_OF_SPINORFIELDS;
 EXTERN int NO_OF_SPINORFIELDS_32;

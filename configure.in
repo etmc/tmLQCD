@@ -461,17 +461,6 @@ else
   PROFILE_FLAG=
 fi
 
-AC_MSG_CHECKING(whether we shall use rts dram window)
-AC_ARG_WITH([bgldram],
-  AS_HELP_STRING([--with-bgldram], [use BGL dram window (BGL only!) [default=yes]]),
-  with_bgldram=$withval, with_bgldram=yes)
-if test $with_bgldram = yes; then
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(_USE_BGLDRAM,1,use BGL dram window)
-else
-  AC_MSG_RESULT(no)
-fi
-
 dnl Now we have to set all Flags and compiler properly
 PGCC=`$CC -V 2>&1 | grep pgcc`
 ICC=`$CC -V 2>&1 | grep -i intel`

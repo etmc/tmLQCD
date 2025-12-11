@@ -32,9 +32,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#if (defined BGL && !defined BGP)
-#include <rts.h>
-#endif
 #ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
