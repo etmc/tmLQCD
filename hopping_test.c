@@ -78,12 +78,6 @@
 #define MAX(A, B) ((A) > (B) ? (A) : (B))
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
 
-#ifdef TM_USE_MPI
-double bgl_wtime() { return (MPI_Wtime()); }
-#else
-double bgl_wtime() { return (0); }
-#endif
-
 int check_xchange();
 
 int main(int argc, char *argv[]) {
