@@ -64,9 +64,6 @@
 #include "boundary.h"
 #include "init/init_dirac_halfspinor.h"
 #include "update_backward_gauge.h"
-#ifdef SPI
-#include "DirectPut.h"
-#endif
 #include "operator/Hopping_Matrix_32.h"
 
 #if defined _USE_HALFSPINOR

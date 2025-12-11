@@ -103,28 +103,7 @@ if (g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #endif
 
 #if (defined TM_USE_MPI && !defined _NO_COMM)
-#ifdef SPI
-
-    // Initialize the barrier, resetting the hardware.
-    int rc = MUSPI_GIBarrierInit(&GIBarrier, 0 /*comm world class route */);
-    if (rc) {
-      printf("MUSPI_GIBarrierInit returned rc = %d\n", rc);
-      exit(__LINE__);
-    }
-    // reset the recv counter
-    recvCounter = totalMessageSize / 2;
-    global_barrier();  // make sure everybody is set recv counter
-
-    // #pragma omp for nowait
-    for (unsigned int j = 0; j < spi_num_dirs; j++) {
-      descCount[j] = msg_InjFifoInject(injFifoHandle, j, &SPIDescriptors32[j]);
-    }
-    // wait for receive completion
-    while (recvCounter > 0);
-    _bgq_msync();
-#else
-    xchange_halffield32();
-#endif
+  xchange_halffield32();
 #endif
 
 #ifdef TM_USE_OMP
@@ -258,29 +237,7 @@ if (g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #endif
 
 #if (defined TM_USE_MPI && !defined _NO_COMM)
-#ifdef SPI
-
-    // Initialize the barrier, resetting the hardware.
-    int rc = MUSPI_GIBarrierInit(&GIBarrier, 0 /*comm world class route */);
-    if (rc) {
-      printf("MUSPI_GIBarrierInit returned rc = %d\n", rc);
-      exit(__LINE__);
-    }
-    // reset the recv counter
-    recvCounter = totalMessageSize;
-    global_barrier();  // make sure everybody is set recv counter
-
-    // #pragma omp for nowait
-    for (unsigned int j = 0; j < spi_num_dirs; j++) {
-      descCount[j] = msg_InjFifoInject(injFifoHandle, j, &SPIDescriptors[j]);
-    }
-    // wait for receive completion
-    while (recvCounter > 0);
-    _bgq_msync();
-
-#else   // SPI
-    xchange_halffield();
-#endif  // SPI
+  xchange_halffield();
 #endif
 
 #ifdef TM_USE_OMP
