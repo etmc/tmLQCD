@@ -38,9 +38,6 @@
 #include <complex.h>
 #include "global.h"
 #include "su3.h"
-#ifdef BGQ
-#include "DirectPut.h"
-#endif
 #ifdef TM_USE_MPI
 #include "xchange/xchange.h"
 #endif

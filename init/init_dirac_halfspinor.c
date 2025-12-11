@@ -31,12 +31,6 @@
 #include "init_dirac_halfspinor.h"
 #include "su3.h"
 
-#ifdef BGQ
-#define SPI_ALIGN_BASE 0x7f
-#else
-#define SPI_ALIGN_BASE ALIGN_BASE
-#endif
-
 halfspinor **NBPointer_;
 halfspinor *HalfSpinor_;
 halfspinor *HalfSpinor ALIGN;
@@ -79,14 +73,14 @@ int init_dirac_halfspinor() {
     return (1);
   }
   sendBuffer =
-      (halfspinor *)(((unsigned long int)(sendBuffer_) + SPI_ALIGN_BASE + 1) & ~SPI_ALIGN_BASE);
+      (halfspinor *)(((unsigned long int)(sendBuffer_) + ALIGN_BASE + 1) & ~ALIGN_BASE);
   if ((void *)(recvBuffer_ = (halfspinor *)calloc(RAND / 2 + 8, sizeof(halfspinor))) == NULL) {
     printf("malloc errno : %d\n", errno);
     errno = 0;
     return (1);
   }
   recvBuffer =
-      (halfspinor *)(((unsigned long int)(recvBuffer_) + SPI_ALIGN_BASE + 1) & ~SPI_ALIGN_BASE);
+      (halfspinor *)(((unsigned long int)(recvBuffer_) + ALIGN_BASE + 1) & ~ALIGN_BASE);
 #endif
 
   for (int ieo = 0; ieo < 2; ieo++) {
