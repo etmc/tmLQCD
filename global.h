@@ -59,11 +59,6 @@
 #define EXTERN extern
 #endif
 
-#if ((defined SSE) || (defined SSE2) || (defined SSE3))
-#include "sse.h"
-#elif defined BGL
-#include "bgl.h"
-#endif
 EXTERN int DUM_DERI, DUM_MATRIX;
 EXTERN int NO_OF_SPINORFIELDS;
 EXTERN int NO_OF_SPINORFIELDS_32;

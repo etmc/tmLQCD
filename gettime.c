@@ -29,9 +29,6 @@
 // #  include <bits/time.h>
 #endif
 #include <time.h>
-#if (defined BGL && !defined BGP)
-#include <rts.h>
-#endif
 #ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
@@ -44,28 +41,15 @@
 
 double gettime(void) {
   double t;
-#if (defined BGL && !defined BGP)
-
-  const double clockspeed = 1.0e-6 / 700.0;
-  t = rts_get_timebase() * clockspeed;
-
-#elif defined TM_USE_MPI
+#if defined TM_USE_MPI
 
   t = MPI_Wtime();
 
-  /* clock_gettime is detected on BGL/BGP but it is an unsupported system call so we can't use it!
-   */
-#elif (defined HAVE_CLOCK_GETTIME && !defined BGL)
+#elif (defined HAVE_CLOCK_GETTIME)
 
   struct timespec ts;
 
-  /* on the BGQ the monotonic clock is directly connected to the hardware counters
-  and reports process CPU time, that is not a good measurement for threaded applications */
-#ifdef BGQ
-  clock_gettime(CLOCK_REALTIME, &ts);
-#else
   clock_gettime(CLOCK_MONOTONIC, &ts);
-#endif
   t = ts.tv_sec + 1.0e-9 * ts.tv_nsec;
 
 #else

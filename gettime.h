@@ -25,10 +25,9 @@
 #define TM_TIMING_STACK_PATH_LENGTH 500
 #define TM_TIMING_NAME_LENGTH 50
 
-/* gettime provides a time measurement with the BGL real time ticker,
-   MPI_Wtime, clock_gettime and clock in decreasing order of preference
-   depending on availability. Except for clock(), all these measurements
-   are good representations of walltime */
+/* gettime provides a time measurement with MPI_Wtime, clock_gettime and clock
+   in decreasing order of preference depending on availability. Except for
+   clock(), all these measurements are good representations of walltime */
 
 #ifdef __cplusplus
 extern "C" {

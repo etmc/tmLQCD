@@ -46,9 +46,6 @@
 #if defined _INDEX_INDEP_GEOM
 
 int check_geometry() {
-#ifdef XLC
-#pragma execution_frequency(very_low)
-#endif
   int ix, j;
   int* stest;
   int* itest;
@@ -1517,9 +1514,6 @@ int check_geometry() {
 #else /* _INDEX_INDEP_GEOM */
 
 int check_geometry() {
-#ifdef XLC
-#pragma execution_frequency(very_low)
-#endif
   int ix, j;
   int* stest;
   int* itest;

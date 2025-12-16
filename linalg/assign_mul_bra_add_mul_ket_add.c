@@ -36,7 +36,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "assign_mul_bra_add_mul_ket_add.h"
-#include "sse.h"
 #include "su3.h"
 
 /* (*R) =  c2*(*R + c1*(*S)) + (*U) */

@@ -154,7 +154,6 @@ typedef struct {
 #include "monomial/poly_monomial.h"
 #include "monomial/rat_monomial.h"
 #include "monomial/ratcor_monomial.h"
-#include "monomial/sf_gauge_monomial.h"
 
 /* list of all monomials */
 extern monomial monomial_list[max_no_monomials];

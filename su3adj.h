@@ -184,34 +184,6 @@ typedef struct {
   (r).d7 = 0.;          \
   (r).d8 = 0.;
 
-#if defined SSE2
-#define _su3adj_assign_const_times_su3adj(res, c, in)            \
-  __asm__ __volatile__(                                          \
-      "movsd %0, %%xmm0 \n\t"                                    \
-      "unpcklpd %%xmm0, %%xmm0 \n\t"                             \
-      "movapd %%xmm0, %%xmm1 \n\t"                               \
-      "movapd %%xmm0, %%xmm2 \n\t"                               \
-      "movapd %%xmm0, %%xmm3"                                    \
-      :                                                          \
-      : "m"(c));                                                 \
-  __asm__ __volatile__(                                          \
-      "movapd %0, %%xmm4 \n\t"                                   \
-      "movapd %1, %%xmm5 \n\t"                                   \
-      "movapd %2, %%xmm6 \n\t"                                   \
-      "movapd %3, %%xmm7 \n\t"                                   \
-      "mulpd %%xmm4, %%xmm0 \n\t"                                \
-      "mulpd %%xmm5, %%xmm1 \n\t"                                \
-      "mulpd %%xmm6, %%xmm2 \n\t"                                \
-      "mulpd %%xmm7, %%xmm3"                                     \
-      :                                                          \
-      : "m"((in).d1), "m"((in).d3), "m"((in).d5), "m"((in).d7)); \
-  __asm__ __volatile__(                                          \
-      "movapd %%xmm0, %0 \n\t"                                   \
-      "movapd %%xmm1, %1 \n\t"                                   \
-      "movapd %%xmm2, %2 \n\t"                                   \
-      "movapd %%xmm3, %3"                                        \
-      : "=m"((res).d1), "=m"((res).d3), "=m"((res).d5), "=m"((res).d7))
-#else
 #define _su3adj_assign_const_times_su3adj(res, c, in) \
   (res).d1 = (c) * (in).d1;                           \
   (res).d2 = (c) * (in).d2;                           \
@@ -221,47 +193,7 @@ typedef struct {
   (res).d6 = (c) * (in).d6;                           \
   (res).d7 = (c) * (in).d7;                           \
   (res).d8 = (c) * (in).d8;
-#endif
 
-#if defined SSE2
-#define _su3adj_minus_const_times_su3adj(res, c, in)                 \
-  __asm__ __volatile__(                                              \
-      "movsd %0, %%xmm0 \n\t"                                        \
-      "unpcklpd %%xmm0, %%xmm0 \n\t"                                 \
-      "movapd %%xmm0, %%xmm1 \n\t"                                   \
-      "movapd %%xmm0, %%xmm2 \n\t"                                   \
-      "movapd %%xmm0, %%xmm3"                                        \
-      :                                                              \
-      : "m"(c));                                                     \
-  __asm__ __volatile__(                                              \
-      "movapd %0, %%xmm4 \n\t"                                       \
-      "movapd %1, %%xmm5 \n\t"                                       \
-      "movapd %2, %%xmm6 \n\t"                                       \
-      "movapd %3, %%xmm7 \n\t"                                       \
-      "mulpd %%xmm4, %%xmm0 \n\t"                                    \
-      "mulpd %%xmm5, %%xmm1 \n\t"                                    \
-      "mulpd %%xmm6, %%xmm2 \n\t"                                    \
-      "mulpd %%xmm7, %%xmm3"                                         \
-      :                                                              \
-      : "m"((in).d1), "m"((in).d3), "m"((in).d5), "m"((in).d7));     \
-  __asm__ __volatile__(                                              \
-      "movapd %0, %%xmm4 \n\t"                                       \
-      "movapd %1, %%xmm5 \n\t"                                       \
-      "movapd %2, %%xmm6 \n\t"                                       \
-      "movapd %3, %%xmm7 \n\t"                                       \
-      "subpd %%xmm0, %%xmm4 \n\t"                                    \
-      "subpd %%xmm1, %%xmm5 \n\t"                                    \
-      "subpd %%xmm2, %%xmm6 \n\t"                                    \
-      "subpd %%xmm3, %%xmm7"                                         \
-      :                                                              \
-      : "m"((res).d1), "m"((res).d3), "m"((res).d5), "m"((res).d7)); \
-  __asm__ __volatile__(                                              \
-      "movapd %%xmm4, %0 \n\t"                                       \
-      "movapd %%xmm5, %1 \n\t"                                       \
-      "movapd %%xmm6, %2 \n\t"                                       \
-      "movapd %%xmm7, %3"                                            \
-      : "=m"((res).d1), "=m"((res).d3), "=m"((res).d5), "=m"((res).d7))
-#else
 #define _su3adj_minus_const_times_su3adj(res, c, in) \
   (res).d1 -= (c) * (in).d1;                         \
   (res).d2 -= (c) * (in).d2;                         \
@@ -271,6 +203,5 @@ typedef struct {
   (res).d6 -= (c) * (in).d6;                         \
   (res).d7 -= (c) * (in).d7;                         \
   (res).d8 -= (c) * (in).d8;
-#endif
 
 #endif

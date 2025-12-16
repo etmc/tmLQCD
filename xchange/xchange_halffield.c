@@ -36,9 +36,6 @@
 #include <mpi.h>
 #endif
 #include "global.h"
-#if (defined XLC && defined BGL)
-#include "bgl.h"
-#endif
 #include "init/init_dirac_halfspinor.h"
 #include "mpi_init.h"
 #include "su3.h"
@@ -63,9 +60,6 @@ void init_xchange_halffield() {
 #elif defined PARALLELXYZT
   int x0 = 0, x1 = 0, x2 = 0, ix = 0;
   int reqcount = 16;
-#endif
-#if (defined XLC && defined BGL)
-  __alignx(16, HalfSpinor);
 #endif
 
   /* send the data to the neighbour on the right in t direction */
@@ -157,9 +151,6 @@ void xchange_halffield() {
   int x0 = 0, x1 = 0, x2 = 0, ix = 0;
   int reqcount = 16;
 #endif
-#if (defined XLC && defined BGL)
-  __alignx(16, HalfSpinor);
-#endif
   MPI_Startall(reqcount, prequests);
 
   MPI_Waitall(reqcount, prequests, status);
@@ -186,9 +177,6 @@ void xchange_halffield() {
   int reqcount = 12;
 #elif defined PARALLELXYZT
   int reqcount = 16;
-#endif
-#if (defined XLC && defined BGL)
-  __alignx(16, HalfSpinor);
 #endif
 
 #ifdef _KOJAK_INST
@@ -279,9 +267,6 @@ void xchange_halffield() {
   int reqcount = 12;
 #elif defined PARALLELXYZT
   int reqcount = 16;
-#endif
-#if (defined XLC && defined BGL)
-  __alignx(16, HalfSpinor);
 #endif
 
 #ifdef _KOJAK_INST
@@ -384,9 +369,6 @@ void xchange_halffield32() {
 #endif
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(xchangehalf32)
-#endif
-#if (defined XLC && defined BGL)
-  __alignx(16, HalfSpinor32);
 #endif
 
   /* send the data to the neighbour on the right in t direction */

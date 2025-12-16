@@ -51,22 +51,6 @@
 #include <tmlqcd_config.h>
 #endif
 
-// work-around for missing single precision implementation of inline SSE
-#ifdef SSE
-#define REDEFSSE
-#undef SSE
-#endif
-
-#ifdef SSE2
-#define REDEFSSE2
-#undef SSE2
-#endif
-
-#ifdef SSE3
-#define REDEFSSE3
-#undef SSE3
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef TM_USE_OMP
@@ -80,19 +64,10 @@
 #include "boundary.h"
 #include "init/init_dirac_halfspinor.h"
 #include "update_backward_gauge.h"
-#ifdef SPI
-#include "DirectPut.h"
-#endif
 #include "operator/Hopping_Matrix_32.h"
 
 #if defined _USE_HALFSPINOR
 #include "operator/halfspinor_hopping_32.h"
-#endif
-
-#if (defined BGQ && defined XLC)
-#include "bgq.h"
-#include "bgq2.h"
-#include "xlc_prefetch.h"
 #endif
 
 void Hopping_Matrix_32_orphaned(const int ieo, spinor32* const l, spinor32* const k) {
@@ -125,18 +100,3 @@ void Hopping_Matrix_32(const int ieo, spinor32* const l, spinor32* const k) {
 #endif
   return;
 }
-
-#ifdef REDEFSSE
-#undef REDEFSSE
-#define SSE
-#endif
-
-#ifdef REDEFSSE2
-#undef REDEFSSE2
-#define SSE2
-#endif
-
-#ifdef REDEFSSE3
-#undef REDEFSSE3
-#define SSE3
-#endif

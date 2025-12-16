@@ -74,18 +74,6 @@ void poly_precon(spinor *const R, spinor *const S, const double prec, const int 
 
   if (initp == 0) {
     c = (double *)calloc(1000, sizeof(double));
-#if (defined SSE || defined SSE2 || defined SSE3)
-    sv_ = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
-    sv = (spinor *)(((unsigned long int)(sv_) + ALIGN_BASE) & ~ALIGN_BASE);
-    d_ = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
-    d = (spinor *)(((unsigned long int)(d_) + ALIGN_BASE) & ~ALIGN_BASE);
-    dd_ = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
-    dd = (spinor *)(((unsigned long int)(dd_) + ALIGN_BASE) & ~ALIGN_BASE);
-    aux_ = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
-    aux = (spinor *)(((unsigned long int)(aux_) + ALIGN_BASE) & ~ALIGN_BASE);
-    aux3_ = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
-    aux3 = (spinor *)(((unsigned long int)(aux3_) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
     // sv_ = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
     //  sv = sv_;
     d_ = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
@@ -96,7 +84,6 @@ void poly_precon(spinor *const R, spinor *const S, const double prec, const int 
     aux = aux_;
     aux3_ = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
     aux3 = aux3_;
-#endif
     get_c(minev, maxev, c, 100);
     initp = 1;
   }
@@ -172,17 +159,12 @@ void poly_nonherm_precon(spinor *const R, spinor *const S, const double e, const
                          const int n, const int N) {
   int j;
   double a1, a2, dtmp;
-  static spinor *work, *work_;
+  static spinor *work;
   static int initpnH = 0;
   spinor *psi, *chi, *tmp0, *tmp1, *cptmp;
 
   if (initpnH == 0) {
-    work_ = calloc(4 * VOLUMEPLUSRAND + 1, sizeof(spinor));
-#if (defined SSE || defined SSE2 || defined SSE3)
-    work = (spinor *)(((unsigned long int)(work_) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
-    work = work_;
-#endif
+    work = calloc(4 * VOLUMEPLUSRAND + 1, sizeof(spinor));
     initpnH = 1;
   }
   psi = work;

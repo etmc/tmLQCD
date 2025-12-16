@@ -119,10 +119,6 @@ int main(int argc, char *argv[]) {
 #pragma pomp inst begin(main)
 #endif
 
-#if (defined SSE || defined SSE2 || SSE3)
-  signal(SIGILL, &catch_ill_inst);
-#endif
-
   DUM_DERI = 8;
   DUM_MATRIX = DUM_DERI + 5;
   NO_OF_SPINORFIELDS = DUM_MATRIX + 4;

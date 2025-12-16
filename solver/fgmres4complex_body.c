@@ -213,21 +213,12 @@ static void _PSWITCH(init_lgmres)(const int _M, const int _V) {
     _PSWITCH(H) = calloc(M + 1, sizeof(_Complex _F_TYPE *));
     _PSWITCH(V) = calloc(M, sizeof(_Complex _F_TYPE *));
     _PSWITCH(Z) = calloc(M, sizeof(_Complex _F_TYPE *));
-#if (defined SSE || defined SSE2)
-    _h = calloc((M + 2) * M, sizeof(_Complex _F_TYPE));
-    _PSWITCH(H)[0] = (_Complex _F_TYPE *)(((unsigned long int)(_h) + ALIGN_BASE) & ~ALIGN_BASE);
-    _v = calloc(M * Vo + 1, sizeof(_Complex _F_TYPE));
-    _PSWITCH(V)[0] = (_Complex _F_TYPE *)(((unsigned long int)(_v) + ALIGN_BASE) & ~ALIGN_BASE);
-    _z = calloc(M * Vo + 1, sizeof(_Complex _F_TYPE));
-    _PSWITCH(Z)[0] = (_Complex _F_TYPE *)(((unsigned long int)(_z) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
     _h = calloc((M + 1) * M, sizeof(_Complex _F_TYPE));
     _PSWITCH(H)[0] = _h;
     _v = calloc(M * Vo, sizeof(_Complex _F_TYPE));
     _PSWITCH(V)[0] = _v;
     _z = calloc(M * Vo, sizeof(_Complex _F_TYPE));
     _PSWITCH(Z)[0] = _z;
-#endif
     _PSWITCH(s) = calloc(M, sizeof(_F_TYPE));
     _PSWITCH(c) = calloc(M, sizeof(_Complex _F_TYPE));
     _PSWITCH(alpha) = calloc(M + 1, sizeof(_Complex _F_TYPE));

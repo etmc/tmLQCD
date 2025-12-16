@@ -33,9 +33,6 @@
  *******************************************************************************/
 
 #include <complex.h>
-#if (defined XLC && defined BGL)
-#include "bgl.h"
-#endif
 
 typedef struct {
   _Complex double c00, c01, c02, c10, c11, c12, c20, c21, c22;
@@ -149,36 +146,6 @@ typedef struct {
   (r).c1 += I * (c) * (s).c1;      \
   (r).c2 += I * (c) * (s).c2;
 
-#if ((defined SSE2) || (defined SSE3))
-
-#define _vector_add(r, s1, s2) \
-  _sse_load(s1);               \
-  _sse_load_up(s2);            \
-  _sse_vector_add();           \
-  _sse_store(r);
-
-#define _vector_sub(r, s1, s2) \
-  _sse_load(s1);               \
-  _sse_load_up(s2);            \
-  _sse_vector_sub();           \
-  _sse_store(r);
-
-#elif (defined XLC && defined BGLNOTCHECKED)
-
-#define _vector_add(r, s1, s2) \
-  _bgl_load(s1);               \
-  _bgl_load_up(s2);            \
-  _bgl_vector_add();           \
-  _bgl_store(r);
-
-#define _vector_sub(r, s1, s2) \
-  _bgl_load(s1);               \
-  _bgl_load_up(s2);            \
-  _bgl_vector_sub();           \
-  _bgl_store(r);
-
-#else
-
 #define _vector_add(r, s1, s2) \
   (r).c0 = (s1).c0 + (s2).c0;  \
   (r).c1 = (s1).c1 + (s2).c1;  \
@@ -188,7 +155,6 @@ typedef struct {
   (r).c0 = (s1).c0 - (s2).c0;  \
   (r).c1 = (s1).c1 - (s2).c1;  \
   (r).c2 = (s1).c2 - (s2).c2;
-#endif
 
 #define _vector_i_add(r, s1, s2)  \
   (r).c0 = (s1).c0 + I * (s2).c0; \
@@ -208,22 +174,6 @@ typedef struct {
   (r1).c2 = (s1).c2 + (s).c2;                         \
   (r2).c2 = (s2).c2 + I * (s).c2;
 
-#if ((defined SSE2) || (defined SSE3))
-
-#define _vector_add_assign(r, s) \
-  _sse_load(r);                  \
-  _sse_load_up(s);               \
-  _sse_vector_add();             \
-  _sse_store(r);
-
-#define _vector_sub_assign(r, s) \
-  _sse_load(r);                  \
-  _sse_load_up(s);               \
-  _sse_vector_sub();             \
-  _sse_store(r);
-
-#else
-
 #define _vector_add_assign(r, s) \
   (r).c0 += (s).c0;              \
   (r).c1 += (s).c1;              \
@@ -233,8 +183,6 @@ typedef struct {
   (r).c0 -= (s).c0;              \
   (r).c1 -= (s).c1;              \
   (r).c2 -= (s).c2;
-
-#endif
 
 #define _vector_i_add_assign(r, s) \
   (r).c0 += I * (s).c0;            \
@@ -262,32 +210,6 @@ typedef struct {
   (r).c1 -= z * (s).c1;          \
   (r).c2 -= z * (s).c2;
 
-#if ((defined SSE2) || (defined SSE3))
-
-#define _su3_multiply(r, u, s) \
-  _sse_load(s);                \
-  _sse_su3_multiply(u);        \
-  _sse_store_up(r);
-
-#define _su3_inverse_multiply(r, u, s) \
-  _sse_load(s);                        \
-  _sse_su3_inverse_multiply(u);        \
-  _sse_store_up(r);
-
-#elif (defined XLC && defined BGLNOTCHECKED)
-
-#define _su3_multiply(r, u, s) \
-  _bgl_load(s);                \
-  _bgl_su3_multiply(u);        \
-  _bgl_store_up(r);
-
-#define _su3_inverse_multiply(r, u, s) \
-  _bgl_load(s);                        \
-  _bgl_su3_inverse_multiply(u);        \
-  _bgl_store_up(r);
-
-#else
-
 #define _su3_multiply(r, u, s)                                     \
   (r).c0 = (u).c00 * (s).c0 + (u).c01 * (s).c1 + (u).c02 * (s).c2; \
   (r).c1 = (u).c10 * (s).c0 + (u).c11 * (s).c1 + (u).c12 * (s).c2; \
@@ -297,8 +219,6 @@ typedef struct {
   (r).c0 = conj((u).c00) * (s).c0 + conj((u).c10) * (s).c1 + conj((u).c20) * (s).c2; \
   (r).c1 = conj((u).c01) * (s).c0 + conj((u).c11) * (s).c1 + conj((u).c21) * (s).c2; \
   (r).c2 = conj((u).c02) * (s).c0 + conj((u).c12) * (s).c1 + conj((u).c22) * (s).c2;
-
-#endif
 
 /*******************************************************************************
  *
@@ -504,9 +424,6 @@ typedef struct {
 /* M. Hasenbusch
  * su3_acc
  */
-#if ((defined SSE2) || (defined SSE3))
-#define _su3_acc(u, v) _sse_su3_acc(u, v)
-#else
 #define _su3_acc(u, v) \
   (u).c00 += (v).c00;  \
   (u).c01 += (v).c01;  \
@@ -517,7 +434,6 @@ typedef struct {
   (u).c20 += (v).c20;  \
   (u).c21 += (v).c21;  \
   (u).c22 += (v).c22;
-#endif
 
 /*
  * su3_refac_acc
@@ -551,17 +467,6 @@ typedef struct {
   s = conj(v.c00) * (v.c00) + conj(v.c01) * (v.c01) + conj(v.c02) * (v.c02) + \
       conj(v.c10) * (v.c10) + conj(v.c11) * (v.c11) + conj(v.c12) * (v.c12) + \
       conj(v.c20) * (v.c20) + conj(v.c21) * (v.c21) + conj(v.c22) * (v.c22);
-
-#if ((defined SSE2) || (defined SSE3))
-
-#define _su3_times_su3(u, v, w) _sse_su3_times_su3(u, v, w)
-#define _su3_times_su3_acc(u, v, w) _sse_su3_times_su3_acc(u, v, w)
-#define _su3d_times_su3(u, v, w) _sse_su3d_times_su3(u, v, w)
-#define _su3d_times_su3_acc(u, v, w) _sse_su3d_times_su3_acc(u, v, w)
-#define _su3_times_su3d(u, v, w) _sse_su3_times_su3d(u, v, w)
-#define _su3_times_su3d_acc(u, v, w) _sse_su3_times_su3d_acc(u, v, w)
-
-#else
 
 #define _su3_times_su3(u, v, w)                                        \
   (u).c00 = (v).c00 * (w).c00 + (v).c01 * (w).c10 + (v).c02 * (w).c20; \
@@ -628,8 +533,6 @@ typedef struct {
   (u).c20 += conj((v).c02) * (w).c00 + conj((v).c12) * (w).c10 + conj((v).c22) * (w).c20; \
   (u).c21 += conj((v).c02) * (w).c01 + conj((v).c12) * (w).c11 + conj((v).c22) * (w).c21; \
   (u).c22 += conj((v).c02) * (w).c02 + conj((v).c12) * (w).c12 + conj((v).c22) * (w).c22;
-
-#endif
 
 #define _su3_minus_const_times_im_trace_su3(w, c, v)                     \
   (w).c00 -= I * c * (cimag((v).c00) + cimag((v).c11) + cimag((v).c22)); \

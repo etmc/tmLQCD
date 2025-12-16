@@ -21,39 +21,27 @@
 #include "su3.h"
 
 void Dov_proj_plus(spinor *const R, spinor *const S) {
-  spinor *aux_ = NULL, *aux;
+  spinor *aux;
   int N = VOLUMEPLUSRAND;
 
-#if (defined SSE || defined SSE2 || defined SSE3)
-  aux_ = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
-  aux = (spinor *)(((unsigned long int)(aux_) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
-  aux_ = calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  aux = aux_;
-#endif
+  aux = calloc(VOLUMEPLUSRAND, sizeof(spinor));
 
   Proj(aux, S, N, _PLUS);
   Dov_psi(R, aux);
   Proj(R, R, N, _PLUS);
 
-  free(aux_);
+  free(aux);
 }
 
 void Dov_proj_minus(spinor *const R, spinor *const S) {
-  spinor *aux_ = NULL, *aux;
+  spinor *aux;
   int N = VOLUMEPLUSRAND;
 
-#if (defined SSE || defined SSE2 || defined SSE3)
-  aux_ = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
-  aux = (spinor *)(((unsigned long int)(aux_) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
-  aux_ = calloc(VOLUMEPLUSRAND, sizeof(spinor));
-  aux = aux_;
-#endif
+  aux = calloc(VOLUMEPLUSRAND, sizeof(spinor));
 
   Proj(aux, S, N, _MINUS);
   Dov_psi(R, aux);
   Proj(R, R, N, _MINUS);
 
-  free(aux_);
+  free(aux);
 }

@@ -38,9 +38,6 @@
 #endif
 
 #include "global.h"
-#if (defined XLC && defined BGL)
-#include "bgl.h"
-#endif
 #include "mpi_init.h"
 #include "su3.h"
 #include "xchange_lexicfield.h"
@@ -72,9 +69,6 @@ void xchange_lexicfield(spinor* const l) {
 
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(xchange_lexicfield)
-#endif
-#if (defined BGL && defined XLC)
-  __alignx(16, l);
 #endif
 
 #ifdef TM_USE_MPI
@@ -188,9 +182,6 @@ void xchange_lexicfield(spinor* const l) {
 #endif
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(xchange_lexicfield)
-#endif
-#if (defined BGL && defined XLC)
-  __alignx(16, l);
 #endif
 
 #ifdef TM_USE_MPI
@@ -472,9 +463,6 @@ void xchange_lexicfield32(spinor32* const l) {
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(xchange_lexicfield32)
 #endif
-#if (defined BGL && defined XLC)
-  __alignx(16, l);
-#endif
 
 #ifdef TM_USE_MPI
 
@@ -587,9 +575,6 @@ void xchange_lexicfield32(spinor32* const l) {
 #endif
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(xchange_lexicfield32)
-#endif
-#if (defined BGL && defined XLC)
-  __alignx(16, l);
 #endif
 
 #ifdef TM_USE_MPI

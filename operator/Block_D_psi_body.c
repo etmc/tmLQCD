@@ -4,7 +4,6 @@
 /* the block local gauge field is assumed to be in the order  */
 /* that is needed int local_D, which means also that it is a  */
 /* double copy                                                */
-// CU: has problems with SSE2,3
 void _PSWITCH(Block_D_psi)(block *blk, _PTSWITCH(spinor) *const rr, _PTSWITCH(spinor) *const s) {
   if (g_c_sw > 0)
     _PSWITCH(Block_Dsw_psi)(blk, rr, s);
@@ -56,7 +55,6 @@ void _PSWITCH(Block_Dtm_psi)(block *blk, _PTSWITCH(spinor) *const rr, _PTSWITCH(
 /* the block local gauge field is assumed to be in the order  */
 /* that is needed int local_D, which means also that it is a  */
 /* double copy                                                */
-// CU: has problems with SSE2,3
 void _PSWITCH(Block_Dsw_psi)(block *blk, _PTSWITCH(spinor) *const rr, _PTSWITCH(spinor) *const s) {
   _PTSWITCH(spinor) *r = rr;
   _PTSWITCH(spinor) *t = s;

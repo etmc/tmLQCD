@@ -14,12 +14,6 @@ int hex_smear(su3_tuple *m_field_out, hex_parameters const *params, su3_tuple *m
       v_buffer[idx] = (su3_tuple *)malloc(sizeof(su3_tuple) * VOLUMEPLUSRAND + 1);
       if ((gamma_buffer[idx] == (su3_tuple *)NULL) || (v_buffer[idx] == (su3_tuple *)NULL))
         return -1;
-#if (defined SSE || defined SSE2 || defined SSE3)
-      gamma_buffer[idx] =
-          (su3_tuple *)(((unsigned long int)(gamma_buffer[idx]) + ALIGN_BASE) & ~ALIGN_BASE);
-      v_buffer[idx] =
-          (su3_tuple *)(((unsigned long int)(v_buffer[idx]) + ALIGN_BASE) & ~ALIGN_BASE);
-#endif
     }
     initialized = 1;
   }

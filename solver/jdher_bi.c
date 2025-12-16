@@ -64,7 +64,6 @@
 #include "solver/gram-schmidt.h"
 #include "solver/quicksort.h"
 #include "solver/solver.h"
-#include "sse.h"
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define max(a, b) ((a) < (b) ? (b) : (a))
@@ -125,8 +124,8 @@ void jdher_bi(int n, int lda, double tau, double tol, int kmax, int jmax, int jm
    * initialize with NULL, so we can free even unallocated ptrs */
   double *s = NULL, *resnrm = NULL, *resnrm_old = NULL, *dtemp = NULL, *rwork = NULL;
 
-  _Complex double *V_ = NULL, *V, *Vtmp = NULL, *U = NULL, *M = NULL, *Z = NULL, *Res_ = NULL, *Res,
-                  *eigwork = NULL, *temp1_ = NULL, *temp1;
+  _Complex double *V, *Vtmp = NULL, *U = NULL, *M = NULL, *Z = NULL, *Res = NULL, *eigwork = NULL,
+                      *temp1 = NULL;
 
   int *idx1 = NULL, *idx2 = NULL, *convind = NULL, *keepind = NULL, *solvestep = NULL,
       *actcorrits = NULL;
@@ -193,31 +192,20 @@ void jdher_bi(int n, int lda, double tau, double tol, int kmax, int jmax, int jm
   eigworklen = (2 + _FT(ilaenv)(&ONE, filaenv, fvu, &jmax, &MONE, &MONE, &MONE, 6, 2)) * jmax;
 
   /* Allocating memory for matrices & vectors */
-  if ((void *)(V_ = (_Complex double *)malloc((lda * jmax + 4) * sizeof(_Complex double))) ==
-      NULL) {
+  if ((void *)(V = (_Complex double *)malloc((lda * jmax + 4) * sizeof(_Complex double))) == NULL) {
     errno = 0;
     jderrorhandler(300, "V in jdher_bi");
   }
-#if (defined SSE || defined SSE2 || defined SSE3)
-  V = (_Complex double *)(((unsigned long int)(V_) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
-  V = V_;
-#endif
   if ((void *)(U = (_Complex double *)malloc(jmax * jmax * sizeof(_Complex double))) == NULL) {
     jderrorhandler(300, "U in jdher_bi");
   }
   if ((void *)(s = (double *)malloc(jmax * sizeof(double))) == NULL) {
     jderrorhandler(300, "s in jdher_bi");
   }
-  if ((void *)(Res_ = (_Complex double *)malloc((lda * blksize + 4) * sizeof(_Complex double))) ==
+  if ((void *)(Res = (_Complex double *)malloc((lda * blksize + 4) * sizeof(_Complex double))) ==
       NULL) {
     jderrorhandler(300, "Res in jdher_bi");
   }
-#if (defined SSE || defined SSE2 || defined SSE3)
-  Res = (_Complex double *)(((unsigned long int)(Res_) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
-  Res = Res_;
-#endif
   if ((void *)(resnrm = (double *)malloc(blksize * sizeof(double))) == NULL) {
     jderrorhandler(300, "resnrm in jdher_bi");
   }
@@ -262,14 +250,9 @@ void jdher_bi(int n, int lda, double tau, double tol, int kmax, int jmax, int jm
   if ((void *)(rwork = (double *)malloc(3 * jmax * sizeof(double))) == NULL) {
     jderrorhandler(300, "rwork in jdher_bi");
   }
-  if ((void *)(temp1_ = (_Complex double *)malloc((lda + 4) * sizeof(_Complex double))) == NULL) {
+  if ((void *)(temp1 = (_Complex double *)malloc((lda + 4) * sizeof(_Complex double))) == NULL) {
     jderrorhandler(300, "temp1 in jdher_bi");
   }
-#if (defined SSE || defined SSE2 || defined SSE3)
-  temp1 = (_Complex double *)(((unsigned long int)(temp1_) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
-  temp1 = temp1_;
-#endif
   if ((void *)(dtemp = (double *)malloc(lda * sizeof(_Complex double))) == NULL) {
     jderrorhandler(300, "dtemp in jdher_bi");
   }
@@ -658,17 +641,17 @@ void jdher_bi(int n, int lda, double tau, double tol, int kmax, int jmax, int jm
     }
   }
 
-  free(V_);
+  free(V);
   free(Vtmp);
   free(U);
   free(s);
-  free(Res_);
+  free(Res);
   free(resnrm);
   free(resnrm_old);
   free(M);
   free(Z);
   free(eigwork);
-  free(temp1_);
+  free(temp1);
   free(dtemp);
   free(rwork);
   free(p_work_bi);

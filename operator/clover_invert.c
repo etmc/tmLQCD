@@ -24,15 +24,6 @@
 #ifdef HAVE_CONFIG_H
 #include <tmlqcd_config.h>
 #endif
-#ifdef SSE
-#undef SSE
-#endif
-#ifdef SSE2
-#undef SSE2
-#endif
-#ifdef SSE3
-#undef SSE3
-#endif
 
 #include <errno.h>
 #include <math.h>
@@ -51,7 +42,6 @@
 #include "operator/clover_inline.h"
 #include "operator/clover_leaf.h"
 #include "operator/clovertm_operators.h"
-#include "sse.h"
 #include "su3.h"
 #include "su3adj.h"
 

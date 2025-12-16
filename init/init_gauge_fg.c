@@ -25,7 +25,6 @@
 #include <stdlib.h>
 #include "global.h"
 #include "init_gauge_fg.h"
-#include "sse.h"
 #include "su3.h"
 
 su3* gauge_fg_ = NULL;
@@ -44,11 +43,7 @@ int init_gauge_fg(const int V) {
     errno = 0;
     return (1);
   }
-#if (defined SSE || defined SSE2 || defined SSE3)
-  gauge_fg[0] = (su3*)(((unsigned long int)(gauge_fg_) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
   gauge_fg[0] = gauge_fg_;
-#endif
   for (i = 1; i < V; i++) {
     gauge_fg[i] = gauge_fg[i - 1] + 4;
   }

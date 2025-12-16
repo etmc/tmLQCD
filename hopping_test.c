@@ -32,9 +32,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#if (defined BGL && !defined BGP)
-#include <rts.h>
-#endif
 #ifdef TM_USE_MPI
 #include <mpi.h>
 #ifdef HAVE_LIBLEMON
@@ -81,18 +78,6 @@
 #define MAX(A, B) ((A) > (B) ? (A) : (B))
 #define MIN(A, B) ((A) < (B) ? (A) : (B))
 
-#if (defined BGL && !defined BGP)
-static double clockspeed = 1.0e-6 / 700.0;
-
-double bgl_wtime() { return (rts_get_timebase() * clockspeed); }
-#else
-#ifdef TM_USE_MPI
-double bgl_wtime() { return (MPI_Wtime()); }
-#else
-double bgl_wtime() { return (0); }
-#endif
-#endif
-
 int check_xchange();
 
 int main(int argc, char *argv[]) {
@@ -117,29 +102,8 @@ int main(int argc, char *argv[]) {
   tmlqcd_mpi_init(argc, argv);
 
   if (g_proc_id == 0) {
-#ifdef SSE
-    printf("# The code was compiled with SSE instructions\n");
-#endif
-#ifdef SSE2
-    printf("# The code was compiled with SSE2 instructions\n");
-#endif
-#ifdef SSE3
-    printf("# The code was compiled with SSE3 instructions\n");
-#endif
-#ifdef P4
-    printf("# The code was compiled for Pentium4\n");
-#endif
-#ifdef OPTERON
-    printf("# The code was compiled for AMD Opteron\n");
-#endif
 #ifdef _GAUGE_COPY
     printf("# The code was compiled with -D_GAUGE_COPY\n");
-#endif
-#ifdef BGL
-    printf("# The code was compiled for Blue Gene/L\n");
-#endif
-#ifdef BGP
-    printf("# The code was compiled for Blue Gene/P\n");
 #endif
 #ifdef _USE_HALFSPINOR
     printf("# The code was compiled with -D_USE_HALFSPINOR\n");

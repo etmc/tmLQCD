@@ -43,7 +43,6 @@
 #include "geometry_eo.h"
 #include "global.h"
 #include "measure_rectangles.h"
-#include "sse.h"
 #include "su3.h"
 #include "su3adj.h"
 

@@ -57,7 +57,7 @@ double cloverdetratio_rwacc(const int id, hamiltonian_field_t* const hf) {
   mnl_backup_restore_globals(TM_BACKUP_GLOBALS);
 
   g_c_sw = mnl->c_sw;
-  
+
   g_kappa = mnl->kappa2;
   g_mu = mnl->mu2;
   boundary(mnl->kappa2);

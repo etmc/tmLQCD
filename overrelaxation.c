@@ -80,7 +80,6 @@
 #include "monomial/moment_energy.h"
 #include "overrelaxation.h"
 #include "ranlxd.h"
-#include "sse.h"
 #include "su3.h"
 #include "su3adj.h"
 
