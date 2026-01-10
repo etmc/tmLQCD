@@ -121,14 +121,17 @@ void fg_update_momenta_reset_gaugefield(const double step, hamiltonian_field_t *
  * the momenta
  *
  *******************************************************/
-void update_momenta_fg(int *mnllist, double step, const int no, hamiltonian_field_t *const hf,
-                       double step0) {
+void update_momenta_fg(int *mnllist, double eps, double stepB, double stepC, 
+		      const int no, hamiltonian_field_t *const hf) {
 #ifdef DDalphaAMG
   MG_update_gauge(0.0);
 #endif
   if (g_exposu3_no_c == 0) init_exposu3();
 
-  double step_fg = -step0 * step0 / 24;
+  double step_fg,step;
+ 
+  step = eps*stepB;
+  step_fg=-eps*eps*2.0*stepC/stepB;
 
 #ifdef TM_USE_OMP
 #pragma omp parallel for

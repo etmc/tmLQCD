@@ -34,11 +34,33 @@
 #include "update_momenta_fg.h"
 
 integrator Integrator;
+static const double fg_chi = 0.0138888888888889;
+static const double lambda_2mnfg = 0.166666666666667;
 
 static const double omf4_rho = 0.2539785108410595;
 static const double omf4_theta = -0.03230286765269967;
 static const double omf4_vartheta = 0.08398315262876693;
 static const double omf4_lamb = 0.6822365335719091;
+
+/*ABADABA - https://arxiv.org/pdf/2403.10370 - eq. 48*/
+static const double abadaba_a[4]={
+   0.089775972994422,
+   0.410224027005578,
+   0.410224027005578,
+   0.089775972994422
+};
+static const double abadaba_b[4]={
+   0.0,
+   0.247597680043986,
+   0.504804639912028,
+   0.247597680043986
+};
+static const double abadaba_c[4]={
+   0.0,
+   0.0,
+   0.006911440413815,
+   0.0
+};
 
 /* second order minimal norm integration scheme */
 void integrate_2mn(const double tau, const int S, const int halfstep, const double tau2);
@@ -50,6 +72,8 @@ void integrate_2mnfg(const double tau, const int S, const int halfstep, const do
 void integrate_leap_frog(const double tau, const int S, const int halfstep, const double tau2);
 /* fourth order OMF scheme */
 void integrate_omf4(const double tau, const int S, const int halfstep, const double tau2);
+/* ABADABA fourth order force gradient integration scheme in position version - eq. 48 - 2403.10370 */
+void integrate_abadaba(const double tau, const int S, const int halfstep, const double tau2);
 /* half step function */
 void dohalfstep(const double tau, const int S);
 
@@ -63,10 +87,14 @@ int init_integrator() {
   for (i = 0; i < 10; i++) {
     Integrator.no_mnls_per_ts[i] = 0;
   }
-  if (Integrator.type[Integrator.no_timescales - 1] == MN2p) {
+  if ((Integrator.type[Integrator.no_timescales - 1] == MN2p) ||(Integrator.type[Integrator.no_timescales-1] == ABADABA) ) {
     for (i = 0; i < Integrator.no_timescales; i++) {
-      Integrator.type[i] = MN2p;
-      Integrator.integrate[i] = &integrate_2mnp;
+      if (Integrator.type[i] == MN2p) {
+	    Integrator.integrate[i] = &integrate_2mnp;
+      }
+      else if (Integrator.type[i] == ABADABA) {
+            Integrator.integrate[i] = &integrate_abadaba;
+      }
     }
   } else {
     for (i = 0; i < Integrator.no_timescales; i++) {
@@ -297,7 +325,7 @@ void integrate_2mnp(const double tau, const int S, const int halfstep, const dou
 void integrate_2mnfg(const double tau, const int S, const int halfstep, const double tau2) {
   int i, j = 0;
   integrator *itgr = &Integrator;
-  double eps, eps2, oneminus2lambda = (1. - 2. * itgr->lambda[S]);
+  double eps, eps2, oneminus2lambda = (1. - 2. * lambda_2mnfg);
 
   if (S == itgr->no_timescales - 1) {
     dohalfstep(tau, S);
@@ -308,15 +336,15 @@ void integrate_2mnfg(const double tau, const int S, const int halfstep, const do
   if (S == 0) {
     for (j = 1; j < itgr->n_int[0]; j++) {
       update_gauge(0.5 * eps, &itgr->hf);
-      update_momenta_fg(itgr->mnls_per_ts[0], oneminus2lambda * eps, itgr->no_mnls_per_ts[0],
-                        &itgr->hf, eps);
+      update_momenta_fg(itgr->mnls_per_ts[0], eps, oneminus2lambda, fg_chi, itgr->no_mnls_per_ts[0],
+                        &itgr->hf);
       update_gauge(0.5 * eps, &itgr->hf);
       update_momenta(itgr->mnls_per_ts[0], 2. * itgr->lambda[0] * eps, itgr->no_mnls_per_ts[0],
                      &itgr->hf);
     }
     update_gauge(0.5 * eps, &itgr->hf);
-    update_momenta_fg(itgr->mnls_per_ts[0], oneminus2lambda * eps, itgr->no_mnls_per_ts[0],
-                      &itgr->hf, eps);
+    update_momenta_fg(itgr->mnls_per_ts[0], eps, oneminus2lambda, fg_chi, itgr->no_mnls_per_ts[0],
+                      &itgr->hf);
     update_gauge(0.5 * eps, &itgr->hf);
     if (halfstep != 1) {
       update_momenta(itgr->mnls_per_ts[0], itgr->lambda[0] * (eps + eps2), itgr->no_mnls_per_ts[0],
@@ -325,15 +353,15 @@ void integrate_2mnfg(const double tau, const int S, const int halfstep, const do
   } else {
     for (i = 1; i < itgr->n_int[S]; i++) {
       itgr->integrate[S - 1](eps / 2., S - 1, 0, eps / 2);
-      update_momenta_fg(itgr->mnls_per_ts[S], oneminus2lambda * eps, itgr->no_mnls_per_ts[S],
-                        &itgr->hf, eps);
+      update_momenta_fg(itgr->mnls_per_ts[S], eps, oneminus2lambda, fg_chi, itgr->no_mnls_per_ts[S],
+                        &itgr->hf);
       itgr->integrate[S - 1](eps / 2., S - 1, 0, eps / 2);
       update_momenta(itgr->mnls_per_ts[S], 2 * itgr->lambda[S] * eps, itgr->no_mnls_per_ts[S],
                      &itgr->hf);
     }
     itgr->integrate[S - 1](eps / 2., S - 1, 0, eps / 2);
-    update_momenta_fg(itgr->mnls_per_ts[S], oneminus2lambda * eps, itgr->no_mnls_per_ts[S],
-                      &itgr->hf, eps);
+    update_momenta_fg(itgr->mnls_per_ts[S], eps, oneminus2lambda, fg_chi, itgr->no_mnls_per_ts[S],
+                      &itgr->hf);
     if (S == itgr->no_timescales - 1) {
       itgr->integrate[S - 1](eps / 2., S - 1, 1, eps / 2.);
     } else
@@ -388,6 +416,56 @@ void integrate_leap_frog(const double tau, const int S, const int halfstep, cons
     dohalfstep(tau, S);
   }
 }
+
+void integrate_abadaba(const double tau, const int S, const int halfstep, const double tau2){
+  int i,k;
+  integrator * itgr = &Integrator;
+  double eps  = tau/((double)itgr->n_int[S]);
+  double eps2 = tau2/((double)itgr->n_int[S]); // dummy stepsize
+
+  if(S == 0) {
+    update_gauge(abadaba_a[0]*eps, &itgr->hf);
+    for(i = 1; i < itgr->n_int[0]; i++) {
+      for(k=1;k<3;k++){
+        if (abadaba_c[k]==0.0)
+            update_momenta(itgr->mnls_per_ts[0], abadaba_b[k]*eps, itgr->no_mnls_per_ts[0], &itgr->hf);
+        else
+            update_momenta_fg(itgr->mnls_per_ts[0],eps , abadaba_b[k], abadaba_c[k] , itgr->no_mnls_per_ts[0], &itgr->hf);
+
+            update_gauge(abadaba_a[k]*eps, &itgr->hf);
+       }
+      //update_momenta_fg(itgr->mnls_per_ts[0],eps , abadaba_b[3], abadaba_c[3] , itgr->no_mnls_per_ts[0], &itgr->hf);
+      update_momenta(itgr->mnls_per_ts[0], abadaba_b[k]*eps, itgr->no_mnls_per_ts[0], &itgr->hf);
+      update_gauge(abadaba_a[3]*eps, &itgr->hf);
+      update_gauge(abadaba_a[3]*eps, &itgr->hf);
+    }
+
+   for(k=1;k<4;k++){
+      if (abadaba_c[k]==0.0)
+        update_momenta(itgr->mnls_per_ts[S], abadaba_b[k]*eps, itgr->no_mnls_per_ts[S], &itgr->hf);
+      else
+        update_momenta_fg(itgr->mnls_per_ts[S],eps , abadaba_b[k], abadaba_c[k] , itgr->no_mnls_per_ts[S], &itgr->hf);
+
+        update_gauge(abadaba_a[k]*eps, &itgr->hf);
+    }
+  }
+  else {
+    for(i = 0; i < itgr->n_int[S]; i++) {
+
+      itgr->integrate[S-1](abadaba_a[0]*eps, S-1, halfstep, abadaba_a[1]*eps);
+
+      for(k=1;k<4;k++){
+          if (abadaba_c[k]==0.0)
+            update_momenta(itgr->mnls_per_ts[S], abadaba_b[k]*eps, itgr->no_mnls_per_ts[S], &itgr->hf);
+          else
+            update_momenta_fg(itgr->mnls_per_ts[S],eps , abadaba_b[k], abadaba_c[k] , itgr->no_mnls_per_ts[S], &itgr->hf);
+
+          itgr->integrate[S-1](abadaba_a[k]*eps, S-1, halfstep, abadaba_a[(k+1)%4]*eps);
+          }
+    }
+  }
+}
+
 
 void dohalfstep(const double tau, const int S) {
   integrator *itgr = &Integrator;

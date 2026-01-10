@@ -32,6 +32,7 @@
 #define MN2p 7
 #define OMF4 8
 #define MN2FG 9
+#define ABADABA 10
 
 typedef void (*integratefk)(const double, const int, const int, const double);
 
