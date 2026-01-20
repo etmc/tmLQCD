@@ -30,19 +30,6 @@ halfspinor* restrict* phi ALIGN;
 halfspinor32* restrict* phi32 ALIGN;
 _declare_hregs();
 
-#ifdef XLC
-#pragma disjoint(*l, *k)
-#pragma disjoint(*k, *U)
-#pragma disjoint(*l, *U)
-#pragma disjoint(*U, *s)
-#pragma disjoint(*k, *s)
-#pragma disjoint(*l, *s)
-__alignx(32, l);
-__alignx(32, k);
-__alignx(32, U);
-__alignx(32, s);
-#endif
-
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(hoppingmatrix)
 #endif
@@ -62,9 +49,6 @@ if (ieo == 0) {
 } else {
   u0 = g_gauge_field_copy[1][0];
 }
-#endif
-#if (defined SSE2 || defined SSE3)
-g_sloppy_precision = 0;
 #endif
 if (g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
   phi32 = NBPointer32[ieo];
@@ -119,28 +103,7 @@ if (g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #endif
 
 #if (defined TM_USE_MPI && !defined _NO_COMM)
-#ifdef SPI
-
-    // Initialize the barrier, resetting the hardware.
-    int rc = MUSPI_GIBarrierInit(&GIBarrier, 0 /*comm world class route */);
-    if (rc) {
-      printf("MUSPI_GIBarrierInit returned rc = %d\n", rc);
-      exit(__LINE__);
-    }
-    // reset the recv counter
-    recvCounter = totalMessageSize / 2;
-    global_barrier();  // make sure everybody is set recv counter
-
-    // #pragma omp for nowait
-    for (unsigned int j = 0; j < spi_num_dirs; j++) {
-      descCount[j] = msg_InjFifoInject(injFifoHandle, j, &SPIDescriptors32[j]);
-    }
-    // wait for receive completion
-    while (recvCounter > 0);
-    _bgq_msync();
-#else
-    xchange_halffield32();
-#endif
+  xchange_halffield32();
 #endif
 
 #ifdef TM_USE_OMP
@@ -274,29 +237,7 @@ if (g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #endif
 
 #if (defined TM_USE_MPI && !defined _NO_COMM)
-#ifdef SPI
-
-    // Initialize the barrier, resetting the hardware.
-    int rc = MUSPI_GIBarrierInit(&GIBarrier, 0 /*comm world class route */);
-    if (rc) {
-      printf("MUSPI_GIBarrierInit returned rc = %d\n", rc);
-      exit(__LINE__);
-    }
-    // reset the recv counter
-    recvCounter = totalMessageSize;
-    global_barrier();  // make sure everybody is set recv counter
-
-    // #pragma omp for nowait
-    for (unsigned int j = 0; j < spi_num_dirs; j++) {
-      descCount[j] = msg_InjFifoInject(injFifoHandle, j, &SPIDescriptors[j]);
-    }
-    // wait for receive completion
-    while (recvCounter > 0);
-    _bgq_msync();
-
-#else   // SPI
-    xchange_halffield();
-#endif  // SPI
+  xchange_halffield();
 #endif
 
 #ifdef TM_USE_OMP

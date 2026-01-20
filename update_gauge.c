@@ -34,7 +34,6 @@
 #include "hamiltonian_field.h"
 #include "init/init_gauge_field.h"
 #include "misc_types.h"
-#include "sse.h"
 #include "su3.h"
 #include "su3adj.h"
 #include "su3spinor.h"

@@ -59,7 +59,7 @@ MODULES = read_input gamma measure_gauge_action start \
 	spinor_fft \
 	fatal_error invert_clover_eo gettime \
 	tm_debug_printf compare_derivative \
-        @SPI_FILES@ @QUDA_INTERFACE@ @DDalphaAMG_INTERFACE@
+        @QUDA_INTERFACE@ @DDalphaAMG_INTERFACE@
 
 CXXMODULES = @QPHIX_INTERFACE@
 

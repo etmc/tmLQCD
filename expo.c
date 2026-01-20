@@ -36,22 +36,12 @@
 #ifdef HAVE_CONFIG_H
 #include <tmlqcd_config.h>
 #endif
-#ifdef SSE
-#undef SSE
-#endif
-#ifdef SSE2
-#undef SSE2
-#endif
-#ifdef SSE3
-#undef SSE3
-#endif
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "expo.h"
 #include "float.h"
 #include "global.h"
-#include "sse.h"
 #include "su3.h"
 #include "su3adj.h"
 

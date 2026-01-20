@@ -105,12 +105,7 @@ int init_stout_smear_vars(const int V, const int stout_no_iter) {
     return (1);
   }
 
-#if (defined SSE || defined SSE2 || defined SSE3)
-  g_gauge_field_smeared[0] =
-      (su3*)(((unsigned long int)(gauge_field_smeared) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
   g_gauge_field_smeared[0] = gauge_field_smeared;
-#endif
 
   for (x = 1; x < V; x++) {
     g_gauge_field_smeared[x] = g_gauge_field_smeared[x - 1] + 4;
@@ -129,12 +124,7 @@ int init_stout_smear_vars(const int V, const int stout_no_iter) {
     return (1);
   }
 
-#if (defined SSE || defined SSE2 || defined SSE3)
-  g_gauge_field_saved[0] =
-      (su3*)(((unsigned long int)(gauge_field_saved) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
   g_gauge_field_saved[0] = gauge_field_saved;
-#endif
 
   for (x = 1; x < V; x++) {
     g_gauge_field_saved[x] = g_gauge_field_saved[x - 1] + 4;
@@ -153,11 +143,7 @@ int init_stout_smear_vars(const int V, const int stout_no_iter) {
     return (1);
   }
 
-#if (defined SSE || defined SSE2 || defined SSE3)
-  g_C_smearing[0] = (su3*)(((unsigned long int)(C_smearing) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
   g_C_smearing[0] = C_smearing;
-#endif
 
   for (x = 1; x < V; x++) {
     g_C_smearing[x] = g_C_smearing[x - 1] + 4;
@@ -176,11 +162,7 @@ int init_stout_smear_vars(const int V, const int stout_no_iter) {
     return (1);
   }
 
-#if (defined SSE || defined SSE2 || defined SSE3)
-  g_Q_smearing[0] = (su3*)(((unsigned long int)(Q_smearing) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
   g_Q_smearing[0] = Q_smearing;
-#endif
 
   for (x = 1; x < V; x++) {
     g_Q_smearing[x] = g_Q_smearing[x - 1] + 4;
@@ -199,12 +181,7 @@ int init_stout_smear_vars(const int V, const int stout_no_iter) {
     return (1);
   }
 
-#if (defined SSE || defined SSE2 || defined SSE3)
-  g_Q_squared_smearing[0] =
-      (su3*)(((unsigned long int)(Q_squared_smearing) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
   g_Q_squared_smearing[0] = Q_squared_smearing;
-#endif
 
   for (x = 1; x < V; x++) {
     g_Q_squared_smearing[x] = g_Q_squared_smearing[x - 1] + 4;
@@ -231,13 +208,9 @@ int init_stout_smear_vars(const int V, const int stout_no_iter) {
     return (1);
   }
 
-#if (defined SSE || defined SSE2 || defined SSE3)
-  g_B1_smearing[0] = (su3*)(((unsigned long int)(B1_smearing) + ALIGN_BASE) & ~ALIGN_BASE);
-  g_B2_smearing[0] = (su3*)(((unsigned long int)(B2_smearing) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
   g_B1_smearing[0] = B1_smearing;
   g_B2_smearing[0] = B2_smearing;
-#endif
+
   for (x = 1; x < V; x++) {
     g_B1_smearing[x] = g_B1_smearing[x - 1] + 4;
     g_B2_smearing[x] = g_B2_smearing[x - 1] + 4;
@@ -256,11 +229,7 @@ int init_stout_smear_vars(const int V, const int stout_no_iter) {
     return (1);
   }
 
-#if (defined SSE || defined SSE2 || defined SSE3)
-  g_Gamma_smearing[0] = (su3*)(((unsigned long int)(Gamma_smearing) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
   g_Gamma_smearing[0] = Gamma_smearing;
-#endif
 
   for (x = 1; x < V; x++) {
     g_Gamma_smearing[x] = g_Gamma_smearing[x - 1] + 4;
@@ -279,11 +248,7 @@ int init_stout_smear_vars(const int V, const int stout_no_iter) {
     return (1);
   }
 
-#if (defined SSE || defined SSE2 || defined SSE3)
-  g_Lambda_smearing[0] = (su3*)(((unsigned long int)(Lambda_smearing) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
   g_Lambda_smearing[0] = Lambda_smearing;
-#endif
 
   for (x = 1; x < V; x++) {
     g_Lambda_smearing[x] = g_Lambda_smearing[x - 1] + 4;
@@ -399,12 +364,7 @@ int init_stout_smear_vars(const int V, const int stout_no_iter) {
     return (1);
   }
 
-#if (defined SSE || defined SSE2 || defined SSE3)
-  g_stout_force_field[0] =
-      (su3*)(((unsigned long int)(stout_force_field) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
   g_stout_force_field[0] = stout_force_field;
-#endif
 
   for (x = 1; x < V; x++) {
     g_stout_force_field[x] = g_stout_force_field[x - 1] + 4;
@@ -424,12 +384,7 @@ int init_stout_smear_vars(const int V, const int stout_no_iter) {
     return (1);
   }
 
-#if (defined SSE || defined SSE2 || defined SSE3)
-  g_previous_stout_force_field[0] =
-      (su3*)(((unsigned long int)(previous_stout_force_field) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
   g_previous_stout_force_field[0] = previous_stout_force_field;
-#endif
 
   for (x = 1; x < V; x++) {
     g_previous_stout_force_field[x] = g_previous_stout_force_field[x - 1] + 4;

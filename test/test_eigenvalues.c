@@ -108,13 +108,6 @@ int main(int argc, char *argv[]) {
   g_use_clover_flag = 0;
   g_nr_of_psf = 1;
 
-#ifndef XLC
-  signal(SIGUSR1, &catch_del_sig);
-  signal(SIGUSR2, &catch_del_sig);
-  signal(SIGTERM, &catch_del_sig);
-  signal(SIGXCPU, &catch_del_sig);
-#endif
-
   while ((c = getopt(argc, argv, "h?f:o:")) != -1) {
     switch (c) {
       case 'f':
@@ -281,21 +274,6 @@ int main(int argc, char *argv[]) {
 
     parameterfile = fopen(parameterfilename, "w");
     printf("# This is the hmc code for twisted Mass Wilson QCD\n\nVersion %s\n", Version);
-#ifdef SSE
-    printf("# The code was compiled with SSE instructions\n");
-#endif
-#ifdef SSE2
-    printf("# The code was compiled with SSE2 instructions\n");
-#endif
-#ifdef SSE3
-    printf("# The code was compiled with SSE3 instructions\n");
-#endif
-#ifdef P4
-    printf("# The code was compiled for Pentium4\n");
-#endif
-#ifdef OPTERON
-    printf("# The code was compiled for AMD Opteron\n");
-#endif
 #ifdef _NEW_GEOMETRY
     printf("# The code was compiled with -D_NEW_GEOMETRY\n");
 #endif

@@ -30,43 +30,6 @@ int write_first_messages(FILE* parameterfile, char const* const executable,
            TMLQCD_PACKAGE_VERSION, git_hash);
   printf("%s", message);
   fprintf(parameterfile, "%s", message);
-
-#ifdef SSE
-  printf("# The code is compiled with SSE instructions\n");
-  fprintf(parameterfile, "# The code is compiled with SSE instructions\n");
-#endif
-#ifdef SSE2
-  printf("# The code is compiled with SSE2 instructions\n");
-  fprintf(parameterfile, "# The code is compiled with SSE2 instructions\n");
-#endif
-#ifdef SSE3
-  printf("# The code is compiled with SSE3 instructions\n");
-  fprintf(parameterfile, "# The code is compiled with SSE3 instructions\n");
-#endif
-#ifdef P4
-  printf("# The code is compiled for Pentium4\n");
-  fprintf(parameterfile, "# The code is compiled for Pentium4\n");
-#endif
-#if (defined BGL && !defined BGP)
-  printf("# The code is compiled for Blue Gene/L\n");
-  fprintf(parameterfile, "# The code is compiled for Blue Gene/L\n");
-#endif
-#ifdef BGP
-  printf("# The code is compiled for Blue Gene/P\n");
-  fprintf(parameterfile, "# The code is compiled for Blue Gene/P\n");
-#endif
-#if (defined BGQ && defined XLC)
-  printf("# The code is compiled with QPX intrinsics for Blue Gene/Q\n");
-  fprintf(parameterfile, "# The code is compiled with QPX intrinsics for Blue Gene/Q\n");
-#endif
-#ifdef SPI
-  printf("# Compiled with BG/Q SPI communication\n");
-  fprintf(parameterfile, "# Compiled with IBM Blue Gene/Q SPI communication\n");
-#endif
-#ifdef OPTERON
-  printf("# The code is compiled for AMD Opteron\n");
-  fprintf(parameterfile, "# The code is compiled for AMD Opteron\n");
-#endif
 #ifdef _GAUGE_COPY
   printf("# The code is compiled with -D_GAUGE_COPY\n");
   fprintf(parameterfile, "# The code is compiled with -D_GAUGE_COPY\n");

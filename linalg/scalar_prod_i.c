@@ -42,18 +42,12 @@
 
 double scalar_prod_i(spinor *const S, spinor *const R, const int N, const int parallel) {
   static double ks, kc, ds, tr, ts, tt;
-  spinor *s, *r;
   ks = 0.0;
   kc = 0.0;
 
-#if (defined BGL && defined XLC)
-  __alignx(16, S);
-  __alignx(16, R);
-#endif
-
   for (int ix = 0; ix < N; ++ix) {
-    s = (spinor *)S + ix;
-    r = (spinor *)R + ix;
+    spinor *s = (spinor *)S + ix;
+    spinor *r = (spinor *)R + ix;
 
     ds = cimag(r->s0.c0 * conj(s->s0.c0) + r->s0.c1 * conj(s->s0.c1) + r->s0.c2 * conj(s->s0.c2) +
                r->s1.c0 * conj(s->s1.c0) + r->s1.c1 * conj(s->s1.c1) + r->s1.c2 * conj(s->s1.c2) +

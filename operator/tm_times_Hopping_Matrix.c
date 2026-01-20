@@ -38,9 +38,6 @@
 #include <complex.h>
 #include "global.h"
 #include "su3.h"
-#ifdef BGQ
-#include "DirectPut.h"
-#endif
 #ifdef TM_USE_MPI
 #include "xchange/xchange.h"
 #endif
@@ -57,19 +54,6 @@
 #if (defined _USE_HALFSPINOR && !defined _NO_COMM)
 #include "operator/halfspinor_hopping.h"
 
-#if ((defined SSE2) || (defined SSE3))
-#include "sse.h"
-
-#elif (defined BGL && defined XLC)
-#include "bgl.h"
-
-#elif (defined BGQ && defined XLC)
-#include "bgq.h"
-#include "bgq2.h"
-#include "xlc_prefetch.h"
-
-#endif
-
 void tm_times_Hopping_Matrix(const int ieo, spinor* const l, spinor* const k,
                              complex double const cfactor) {
 #ifdef _GAUGE_COPY
@@ -85,14 +69,9 @@ void tm_times_Hopping_Matrix(const int ieo, spinor* const l, spinor* const k,
 #endif
 
 #define _MUL_G5_CMPLX
-#if (defined BGQ && defined XLC)
-    complex double ALIGN bla = cfactor;
-    vector4double ALIGN cf = vec_ld2(0, (double*)&bla);
-#elif (defined SSE2 || defined SSE3)
-  _Complex double ALIGN cf = cfactor;
-#endif
 #include "operator/halfspinor_body.c"
 #undef _MUL_G5_CMPLX
+
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
@@ -100,27 +79,8 @@ void tm_times_Hopping_Matrix(const int ieo, spinor* const l, spinor* const k,
 }
 
 #elif (!defined _NO_COMM && !defined _USE_HALFSPINOR)
-#include "operator/hopping.h"
-#if ((defined SSE2) || (defined SSE3))
-#include "sse.h"
-
-#elif (defined BGL && defined XLC)
-#include "bgl.h"
-
-#elif (defined BGQ && defined XLC)
-#include "bgq.h"
-#include "bgq2.h"
-#include "xlc_prefetch.h"
-
-#elif defined XLC
-#include "xlc_prefetch.h"
-
-#endif
 void tm_times_Hopping_Matrix(const int ieo, spinor* const l, spinor* const k,
                              double complex const cfactor) {
-#ifdef XLC
-#pragma disjoint(*l, *k)
-#endif
 #ifdef _GAUGE_COPY
   if (g_update_gauge_copy) {
     update_backward_gauge(g_gauge_field);
@@ -136,12 +96,6 @@ void tm_times_Hopping_Matrix(const int ieo, spinor* const l, spinor* const k,
   {
 #endif
 #define _MUL_G5_CMPLX
-#if (defined BGQ && defined XLC)
-    complex double ALIGN bla = cfactor;
-    vector4double ALIGN cf = vec_ld2(0, (double*)&bla);
-#elif (defined SSE2 || defined SSE3)
-  _Complex double ALIGN cf = cfactor;
-#endif
 #include "operator/hopping_body_dbl.c"
 #undef _MUL_G5_CMPLX
 #ifdef TM_USE_OMP
@@ -149,4 +103,4 @@ void tm_times_Hopping_Matrix(const int ieo, spinor* const l, spinor* const k,
 #endif
   return;
 }
-#endif
+#endif  //_USE_HALFSPINOR && !defined _NO_COMM

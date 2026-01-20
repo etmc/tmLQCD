@@ -117,10 +117,6 @@ int main(int argc, char *argv[]) {
   paramsPropagatorFormat *propagatorFormat;
 #endif
 
-#if (defined SSE || defined SSE2 || SSE3)
-  signal(SIGILL, &catch_ill_inst);
-#endif
-
   DUM_DERI = 6;
   /* DUM_DERI + 2 is enough (not 7) */
   DUM_MATRIX = DUM_DERI + 11;

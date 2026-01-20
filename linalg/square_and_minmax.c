@@ -53,11 +53,6 @@ void square_and_minmax(double *const sum, double *const min, double *const max,
   *max = 0.0;
   *min = -1;
 
-#if (defined BGL && defined XLC)
-  __alignx(16, S);
-  __alignx(16, R);
-#endif
-
   for (ix = 0; ix < N; ix++) {
     s = (spinor *)P + ix;
 
@@ -103,11 +98,6 @@ void square_and_minmax_rel(double *const sum, double *const min, double *const m
   kc = 0.0;
   *max = 0.0;
   *min = -1;
-
-#if (defined BGL && defined XLC)
-  __alignx(16, S);
-  __alignx(16, R);
-#endif
 
   for (ix = 0; ix < N; ix++) {
     s = (spinor *)P + ix;
@@ -155,7 +145,6 @@ void square_and_minmax_rel(double *const sum, double *const min, double *const m
 void square_and_minmax_abs(double *const sum, double *const min, double *const max,
                            double *const min_abs, double *const max_abs, const spinor *const P,
                            const int N) {
-  int ix;
   double ALIGN ks, kc, ds, dds, tr, ts, tt;
   spinor *s;
 
@@ -166,12 +155,7 @@ void square_and_minmax_abs(double *const sum, double *const min, double *const m
   *max_abs = 0.0;
   *min_abs = -1;
 
-#if (defined BGL && defined XLC)
-  __alignx(16, S);
-  __alignx(16, R);
-#endif
-
-  for (ix = 0; ix < N; ix++) {
+  for (int ix = 0; ix < N; ix++) {
     s = (spinor *)P + ix;
 
     dds = s->s0.c0 * conj(s->s0.c0);
@@ -294,7 +278,6 @@ void square_and_minmax_abs(double *const sum, double *const min, double *const m
 void square_and_minmax_rel_abs(double *const sum, double *const min, double *const max,
                                double *const min_abs, double *const max_abs, const spinor *const P,
                                const spinor *const Q, const int N) {
-  int ix;
   double ALIGN ks, kc, ds, dds, dr, ddr, tr, ts, tt;
   spinor *s, *r;
 
@@ -305,12 +288,7 @@ void square_and_minmax_rel_abs(double *const sum, double *const min, double *con
   *max_abs = 0.0;
   *min_abs = -1;
 
-#if (defined BGL && defined XLC)
-  __alignx(16, S);
-  __alignx(16, R);
-#endif
-
-  for (ix = 0; ix < N; ix++) {
+  for (int ix = 0; ix < N; ix++) {
     s = (spinor *)P + ix;
     r = (spinor *)Q + ix;
 

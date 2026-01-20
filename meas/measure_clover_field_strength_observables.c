@@ -44,7 +44,6 @@
 #include "kahan_summation.h"
 #include "matrix_utils.h"
 #include "omp_accumulator.h"
-#include "sse.h"
 #include "su3.h"
 #include "su3adj.h"
 #include "tensors.h"

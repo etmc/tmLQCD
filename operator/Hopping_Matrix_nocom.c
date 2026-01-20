@@ -43,7 +43,6 @@
 #include "boundary.h"
 #include "global.h"
 #include "operator/Hopping_Matrix.h"
-#include "sse.h"
 #include "su3.h"
 #include "xchange/xchange.h"
 

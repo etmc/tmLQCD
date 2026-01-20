@@ -23,19 +23,10 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#if (defined SPI)
-#include "DirectPut.h"
-#endif
 #include "fatal_error.h"
 #include "global.h"
 #include "init_dirac_halfspinor.h"
 #include "su3.h"
-
-#ifdef BGQ
-#define SPI_ALIGN_BASE 0x7f
-#else
-#define SPI_ALIGN_BASE ALIGN_BASE
-#endif
 
 halfspinor **NBPointer_;
 halfspinor *HalfSpinor_;
@@ -79,14 +70,14 @@ int init_dirac_halfspinor() {
     return (1);
   }
   sendBuffer =
-      (halfspinor *)(((unsigned long int)(sendBuffer_) + SPI_ALIGN_BASE + 1) & ~SPI_ALIGN_BASE);
+      (halfspinor *)(((unsigned long int)(sendBuffer_) + ALIGN_BASE + 1) & ~ALIGN_BASE);
   if ((void *)(recvBuffer_ = (halfspinor *)calloc(RAND / 2 + 8, sizeof(halfspinor))) == NULL) {
     printf("malloc errno : %d\n", errno);
     errno = 0;
     return (1);
   }
   recvBuffer =
-      (halfspinor *)(((unsigned long int)(recvBuffer_) + SPI_ALIGN_BASE + 1) & ~SPI_ALIGN_BASE);
+      (halfspinor *)(((unsigned long int)(recvBuffer_) + ALIGN_BASE + 1) & ~ALIGN_BASE);
 #endif
 
   for (int ieo = 0; ieo < 2; ieo++) {
@@ -204,147 +195,7 @@ int init_dirac_halfspinor() {
       }
     }
   }
-#if (defined SPI && defined TM_USE_MPI)
-  // here comes the SPI initialisation
-  uint64_t messageSizes[NUM_DIRS];
-  uint64_t roffsets[NUM_DIRS], soffsets[NUM_DIRS];
 
-#if (defined PARALLELT)
-  spi_num_dirs = 2;
-#endif
-#if (defined PARALLELXT)
-  spi_num_dirs = 4;
-#endif
-#if (defined PARALLELXYT)
-  spi_num_dirs = 6;
-#endif
-#if (defined PARALLELXYZT)
-  spi_num_dirs = 8;
-#endif
-
-  totalMessageSize = 0;
-  for (unsigned int i = 0; i < spi_num_dirs; i++) {
-    // message sizes in Bytes
-    if (i == 0 || i == 1)
-      messageSizes[i] = LX * LY * LZ * 6 * sizeof(double);
-    else if (i == 2 || i == 3)
-      messageSizes[i] = T * LY * LZ * 6 * sizeof(double);
-    else if (i == 4 || i == 5)
-      messageSizes[i] = T * LX * LZ * 6 * sizeof(double);
-    else if (i == 6 || i == 7)
-      messageSizes[i] = T * LX * LY * 6 * sizeof(double);
-
-    soffsets[i] = totalMessageSize;
-    totalMessageSize += messageSizes[i];
-  }
-  for (unsigned int i = 0; i < spi_num_dirs; i++) {
-    // forward here is backward on the right neighbour
-    // and the other way around...
-    if (i % 2 == 0) {
-      roffsets[i] = soffsets[i] + messageSizes[i];
-    } else {
-      roffsets[i] = soffsets[i] - messageSizes[i - 1];
-    }
-  }
-
-  Personality_t pers;
-  int rc = 0;
-  // get the CNK personality
-  Kernel_GetPersonality(&pers, sizeof(pers));
-  int mypers[6];
-  mypers[0] = pers.Network_Config.Acoord;
-  mypers[1] = pers.Network_Config.Bcoord;
-  mypers[2] = pers.Network_Config.Ccoord;
-  mypers[3] = pers.Network_Config.Dcoord;
-  mypers[4] = pers.Network_Config.Ecoord;
-
-  get_destinations(mypers);
-
-  // adjust the SPI pointers to the send and receive buffers
-  SPIrecvBuffers = (char *)(recvBuffer);
-  SPIsendBuffers = (char *)(sendBuffer);
-
-  // Setup the FIFO handles
-  rc = msg_InjFifoInit(&injFifoHandle, 0,        /* startingSubgroupId */
-                       0,                        /* startingFifoId     */
-                       spi_num_dirs,             /* numFifos   */
-                       INJ_MEMORY_FIFO_SIZE + 1, /* fifoSize */
-                       NULL                      /* Use default attributes */
-  );
-  if (rc != 0) {
-    fprintf(stderr, "msg_InjFifoInit failed with rc=%d\n", rc);
-    exit(1);
-  }
-
-  // Set up base address table for reception counter and buffer
-  setup_mregions_bats_counters(totalMessageSize);
-
-  // Create descriptors
-  // Injection Direct Put Descriptor, one for each neighbour
-  SPIDescriptors = (MUHWI_Descriptor_t *)(((uint64_t)SPIDescriptorsMemory + 64) & ~(64 - 1));
-  create_descriptors(SPIDescriptors, messageSizes, soffsets, roffsets, spi_num_dirs);
-
-  // test communication
-  for (unsigned int i = 0; i < RAND / 2; i++) {
-    sendBuffer[i].s0.c0 = (double)g_cart_id;
-    sendBuffer[i].s0.c1 = (double)g_cart_id;
-    sendBuffer[i].s0.c2 = (double)g_cart_id;
-    sendBuffer[i].s1.c0 = (double)g_cart_id;
-    sendBuffer[i].s1.c1 = (double)g_cart_id;
-    sendBuffer[i].s1.c2 = (double)g_cart_id;
-  }
-
-  // Initialize the barrier, resetting the hardware.
-  rc = MUSPI_GIBarrierInit(&GIBarrier, 0 /*comm world class route */);
-  if (rc) {
-    printf("MUSPI_GIBarrierInit returned rc = %d\n", rc);
-    exit(__LINE__);
-  }
-  // reset the recv counter
-  recvCounter = totalMessageSize;
-  global_barrier();  // make sure everybody is set recv counter
-
-  // #pragma omp for nowait
-  for (unsigned int j = 0; j < spi_num_dirs; j++) {
-    descCount[j] = msg_InjFifoInject(injFifoHandle, j, &SPIDescriptors[j]);
-  }
-  // wait for receive completion
-  while (recvCounter > 0);
-
-  _bgq_msync();
-
-  j = 0;
-  for (unsigned int i = 0; i < spi_num_dirs; i++) {
-    if (i == 0) k = g_nb_t_up;
-    if (i == 1) k = g_nb_t_dn;
-    if (i == 2) k = g_nb_x_up;
-    if (i == 3) k = g_nb_x_dn;
-    if (i == 4) k = g_nb_y_up;
-    if (i == 5) k = g_nb_y_dn;
-    if (i == 6) k = g_nb_z_up;
-    if (i == 7) k = g_nb_z_dn;
-    for (int mu = 0; mu < messageSizes[i] / sizeof(halfspinor); mu++) {
-      if (k != (int)creal(recvBuffer[soffsets[i] / sizeof(halfspinor) + mu].s0.c0) ||
-          k != (int)creal(recvBuffer[soffsets[i] / sizeof(halfspinor) + mu].s0.c1) ||
-          k != (int)creal(recvBuffer[soffsets[i] / sizeof(halfspinor) + mu].s0.c2) ||
-          k != (int)creal(recvBuffer[soffsets[i] / sizeof(halfspinor) + mu].s1.c0) ||
-          k != (int)creal(recvBuffer[soffsets[i] / sizeof(halfspinor) + mu].s1.c1) ||
-          k != (int)creal(recvBuffer[soffsets[i] / sizeof(halfspinor) + mu].s1.c2)) {
-        if (g_cart_id == 0) {
-          printf("SPI exchange doesn't work for dir %d: %d != %d at point %d\n", i, k,
-                 (int)creal(recvBuffer[soffsets[i] / sizeof(halfspinor) + mu].s0.c0), mu);
-        }
-        j++;
-      }
-    }
-  }
-  if (j > 0) {
-    printf("hmm, SPI exchange failed on proc %d...\n!", g_cart_id);
-  } else {
-    if (g_cart_id == 0) printf("# SPI exchange successfully tested\n");
-  }
-
-#endif  // SPI
   return (0);
 }
 
@@ -490,103 +341,6 @@ int init_dirac_halfspinor32() {
       }
     }
   }
-#if (defined SPI && defined TM_USE_MPI)
-  // here comes the SPI initialisation
-  uint64_t messageSizes[NUM_DIRS];
-  uint64_t roffsets[NUM_DIRS], soffsets[NUM_DIRS];
 
-  uint64_t tMS = 0;
-  for (unsigned int i = 0; i < spi_num_dirs; i++) {
-    // message sizes in Bytes
-    if (i == 0 || i == 1)
-      messageSizes[i] = LX * LY * LZ * 6 * sizeof(float);
-    else if (i == 2 || i == 3)
-      messageSizes[i] = T * LY * LZ * 6 * sizeof(float);
-    else if (i == 4 || i == 5)
-      messageSizes[i] = T * LX * LZ * 6 * sizeof(float);
-    else if (i == 6 || i == 7)
-      messageSizes[i] = T * LX * LY * 6 * sizeof(float);
-
-    soffsets[i] = tMS;
-    tMS += messageSizes[i];
-  }
-  for (unsigned int i = 0; i < spi_num_dirs; i++) {
-    // forward here is backward on the right neighbour
-    // and the other way around...
-    if (i % 2 == 0) {
-      roffsets[i] = soffsets[i] + messageSizes[i];
-    } else {
-      roffsets[i] = soffsets[i] - messageSizes[i - 1];
-    }
-  }
-
-  // Create descriptors
-  // Injection Direct Put Descriptor, one for each neighbour
-  SPIDescriptors32 = (MUHWI_Descriptor_t *)(((uint64_t)SPIDescriptorsMemory32 + 64) & ~(64 - 1));
-  create_descriptors(SPIDescriptors32, messageSizes, soffsets, roffsets, spi_num_dirs);
-
-  // test communication
-  for (unsigned int i = 0; i < RAND / 2; i++) {
-    sendBuffer32[i].s0.c0 = (float)g_cart_id;
-    sendBuffer32[i].s0.c1 = (float)g_cart_id;
-    sendBuffer32[i].s0.c2 = (float)g_cart_id;
-    sendBuffer32[i].s1.c0 = (float)g_cart_id;
-    sendBuffer32[i].s1.c1 = (float)g_cart_id;
-    sendBuffer32[i].s1.c2 = (float)g_cart_id;
-  }
-
-  // Initialize the barrier, resetting the hardware.
-  int rc = MUSPI_GIBarrierInit(&GIBarrier, 0 /*comm world class route */);
-  if (rc) {
-    printf("MUSPI_GIBarrierInit returned rc = %d\n", rc);
-    exit(__LINE__);
-  }
-  // reset the recv counter, note the division by 2, totalMessageSize has been set in
-  // init_dirac_halfspinor which must be called first!
-  recvCounter = totalMessageSize / 2;
-  global_barrier();  // make sure everybody is set recv counter
-
-  // could do communication with multiple threads
-  // #pragma omp for nowait
-  for (unsigned int j = 0; j < spi_num_dirs; j++) {
-    descCount[j] = msg_InjFifoInject(injFifoHandle, j, &SPIDescriptors32[j]);
-  }
-  // wait for receive completion
-  while (recvCounter > 0);
-
-  _bgq_msync();
-
-  j = 0;
-  for (unsigned int i = 0; i < spi_num_dirs; i++) {
-    if (i == 0) k = g_nb_t_up;
-    if (i == 1) k = g_nb_t_dn;
-    if (i == 2) k = g_nb_x_up;
-    if (i == 3) k = g_nb_x_dn;
-    if (i == 4) k = g_nb_y_up;
-    if (i == 5) k = g_nb_y_dn;
-    if (i == 6) k = g_nb_z_up;
-    if (i == 7) k = g_nb_z_dn;
-    for (int mu = 0; mu < messageSizes[i] / sizeof(halfspinor32); mu++) {
-      if (k != (int)creal(recvBuffer32[soffsets[i] / sizeof(halfspinor32) + mu].s0.c0) ||
-          k != (int)creal(recvBuffer32[soffsets[i] / sizeof(halfspinor32) + mu].s0.c1) ||
-          k != (int)creal(recvBuffer32[soffsets[i] / sizeof(halfspinor32) + mu].s0.c2) ||
-          k != (int)creal(recvBuffer32[soffsets[i] / sizeof(halfspinor32) + mu].s1.c0) ||
-          k != (int)creal(recvBuffer32[soffsets[i] / sizeof(halfspinor32) + mu].s1.c1) ||
-          k != (int)creal(recvBuffer32[soffsets[i] / sizeof(halfspinor32) + mu].s1.c2)) {
-        if (g_cart_id == 0) {
-          printf("32 Bit SPI exchange doesn't work for dir %d: %d != %d at point %d\n", i, k,
-                 (int)creal(recvBuffer32[soffsets[i] / sizeof(halfspinor32) + mu].s0.c0), mu);
-        }
-        j++;
-      }
-    }
-  }
-  if (j > 0) {
-    printf("hmm, SPI exchange failed for 32 Bit halfspinor on proc %d...\n!", g_cart_id);
-  } else {
-    if (g_cart_id == 0) printf("# 32 Bit SPI exchange successfully tested\n");
-  }
-
-#endif
   return (0);
 }

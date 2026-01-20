@@ -26,7 +26,6 @@
 #include "expo.h"
 #include "global.h"
 #include "init_gauge_field.h"
-#include "sse.h"
 #include "su3.h"
 
 su3* gauge_field = NULL;
@@ -50,12 +49,8 @@ int init_gauge_field(const int V, const int back) {
     errno = 0;
     return (2);
   }
-#if (defined SSE || defined SSE2 || defined SSE3)
-  g_gauge_field[0] = (su3*)(((unsigned long int)(gauge_field) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
   g_gauge_field[0] = gauge_field;
-#endif
-  for (i = 1; i < V; i++) {
+  for (int i = 1; i < V; i++) {
     g_gauge_field[i] = g_gauge_field[i - 1] + 4;
   }
 
@@ -80,21 +75,16 @@ int init_gauge_field(const int V, const int back) {
       errno = 0;
       return (4);
     }
-#if (defined SSE || defined SSE2 || defined SSE3)
-    g_gauge_field_copy[0][0] =
-        (su3*)(((unsigned long int)(gauge_field_copy) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
     g_gauge_field_copy[0][0] = gauge_field_copy;
-#endif
-    for (i = 1; i < (VOLUME) / 2; i++) {
+    for (int i = 1; i < (VOLUME) / 2; i++) {
       g_gauge_field_copy[0][i] = g_gauge_field_copy[0][i - 1] + 4;
     }
     g_gauge_field_copy[1][0] = g_gauge_field_copy[0][0] + 2 * VOLUME;
-    for (i = 1; i < (VOLUME) / 2; i++) {
+    for (int i = 1; i < (VOLUME) / 2; i++) {
       g_gauge_field_copy[1][i] = g_gauge_field_copy[1][i - 1] + 4;
     }
   }
-#else /* than _USE_HALFSPINOR */
+#else
   if (back == 1) {
     if ((void*)(g_gauge_field_copy = (su3**)calloc((VOLUME + RAND), sizeof(su3*))) == NULL) {
       printf("malloc errno : %d\n", errno);
@@ -106,13 +96,8 @@ int init_gauge_field(const int V, const int back) {
       errno = 0;
       return (4);
     }
-#if (defined SSE || defined SSE2 || defined SSE3)
-    g_gauge_field_copy[0] =
-        (su3*)(((unsigned long int)(gauge_field_copy) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
     g_gauge_field_copy[0] = gauge_field_copy;
-#endif
-    for (i = 1; i < (VOLUME + RAND); i++) {
+    for (int i = 1; i < (VOLUME + RAND); i++) {
       g_gauge_field_copy[i] = g_gauge_field_copy[i - 1] + 8;
     }
   }
@@ -128,8 +113,6 @@ void free_gauge_field() {
 }
 
 int init_gauge_field_32(const int V, const int back) {
-  int i = 0;
-
   g_gauge_field_copy_32 = NULL;
 
   if ((void*)(g_gauge_field_32 = (su3_32**)calloc(V, sizeof(su3_32*))) == NULL) {
@@ -147,7 +130,7 @@ int init_gauge_field_32(const int V, const int back) {
   g_gauge_field_32[0] =
       (su3_32*)(((unsigned long int)(gauge_field_32) + ALIGN_BASE32) & ~ALIGN_BASE32);
 
-  for (i = 1; i < V; i++) {
+  for (int i = 1; i < V; i++) {
     g_gauge_field_32[i] = g_gauge_field_32[i - 1] + 4;
   }
 
@@ -176,11 +159,11 @@ int init_gauge_field_32(const int V, const int back) {
     g_gauge_field_copy_32[0][0] =
         (su3_32*)(((unsigned long int)(gauge_field_copy_32) + ALIGN_BASE32) & ~ALIGN_BASE32);
 
-    for (i = 1; i < (VOLUME) / 2; i++) {
+    for (int i = 1; i < (VOLUME) / 2; i++) {
       g_gauge_field_copy_32[0][i] = g_gauge_field_copy_32[0][i - 1] + 4;
     }
     g_gauge_field_copy_32[1][0] = g_gauge_field_copy_32[0][0] + 2 * VOLUME;
-    for (i = 1; i < (VOLUME) / 2; i++) {
+    for (int i = 1; i < (VOLUME) / 2; i++) {
       g_gauge_field_copy_32[1][i] = g_gauge_field_copy_32[1][i - 1] + 4;
     }
   }
@@ -203,7 +186,7 @@ int init_gauge_field_32(const int V, const int back) {
     g_gauge_field_copy_32[0] =
         (su3_32*)(((unsigned long int)(gauge_field_copy_32) + ALIGN_BASE32) & ~ALIGN_BASE32);
 
-    for (i = 1; i < (VOLUME + RAND); i++) {
+    for (int i = 1; i < (VOLUME + RAND); i++) {
       g_gauge_field_copy_32[i] = g_gauge_field_copy_32[i - 1] + 8;
     }
   }
@@ -219,9 +202,8 @@ void free_gauge_field_32() {
 }
 
 void convert_32_gauge_field(su3_32** gf32, su3** gf, int V) {
-  int i, mu;
-  for (i = 0; i < V; i++) {
-    for (mu = 0; mu < 4; mu++) {
+  for (int i = 0; i < V; i++) {
+    for (int mu = 0; mu < 4; mu++) {
       gf32[i][mu].c00 = (_Complex float)gf[i][mu].c00;
       gf32[i][mu].c01 = (_Complex float)gf[i][mu].c01;
       gf32[i][mu].c02 = (_Complex float)gf[i][mu].c02;

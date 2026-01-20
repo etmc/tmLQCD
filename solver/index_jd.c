@@ -23,7 +23,6 @@
 #include "solver/eigenvalues.h"
 #include "solver/jdher.h"
 #include "solver/solver.h"
-#include "sse.h"
 #include "start.h"
 #include "su3.h"
 
@@ -39,8 +38,8 @@ double shift;
 void index_jd(int *nr_of_eigenvalues_ov, const int max_iterations, const double precision_ov,
               char *conf_filename, const int nstore, const int method) {
   _Complex double *eval;
-  spinor *eigenvectors_ov, *eigenvectors_ov_;
-  spinor *lowvectors, *lowvectors_;
+  spinor *eigenvectors_ov;
+  spinor *lowvectors;
   int i = 0, k = 0, returncode = 0, index = 0, determined = 0, signed_index = 0;
   char filename[120];
   FILE *ifs = NULL;
@@ -82,18 +81,9 @@ void index_jd(int *nr_of_eigenvalues_ov, const int max_iterations, const double 
   //  ov_s = 0.5*(1./g_kappa - 8.) - 1.;
   ap_eps_sq = precision_ov * precision_ov;
 
-#if (defined SSE || defined SSE2)
-  eigenvectors_ov_ = calloc(VOLUMEPLUSRAND * (*nr_of_eigenvalues_ov) + 1, sizeof(spinor));
-  eigenvectors_ov = (spinor *)(((unsigned long int)(eigenvectors_ov_) + ALIGN_BASE) & ~ALIGN_BASE);
-  lowvectors_ = calloc(2 * first_blocksize * VOLUMEPLUSRAND + 1, sizeof(spinor));
-  lowvectors = (spinor *)(((unsigned long int)(lowvectors_) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
   //  eigenvectors_ov_ = calloc(VOLUMEPLUSRAND*(*nr_of_eigenvalues_ov), sizeof(spinor));
-  eigenvectors_ov_ = calloc(VOLUMEPLUSRAND * (*nr_of_eigenvalues_ov), sizeof(spinor));
-  lowvectors_ = calloc(2 * first_blocksize * VOLUMEPLUSRAND, sizeof(spinor));
-  eigenvectors_ov = eigenvectors_ov_;
-  lowvectors = lowvectors_;
-#endif
+  eigenvectors_ov = calloc(VOLUMEPLUSRAND * (*nr_of_eigenvalues_ov), sizeof(spinor));
+  lowvectors = calloc(2 * first_blocksize * VOLUMEPLUSRAND, sizeof(spinor));
 
   //  idx = malloc((*nr_of_eigenvalues_ov)*sizeof(int));
   idx = malloc((*nr_of_eigenvalues_ov) * sizeof(int));
@@ -422,8 +412,8 @@ void index_jd(int *nr_of_eigenvalues_ov, const int max_iterations, const double 
 
   switch_on_adaptive_precision = 0;
   /* Free memory */
-  free(eigenvectors_ov_);
-  free(lowvectors_);
+  free(eigenvectors_ov);
+  free(lowvectors);
   free(eval);
   free(eigenvalues_ov);
   free(idx);

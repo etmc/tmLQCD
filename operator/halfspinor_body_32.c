@@ -29,19 +29,6 @@ spinor32* restrict s ALIGN32;
 halfspinor32* restrict* phi2 ALIGN32;
 _declare_hregs();
 
-#ifdef XLC
-#pragma disjoint(*l, *k)
-#pragma disjoint(*k, *U)
-#pragma disjoint(*l, *U)
-#pragma disjoint(*U, *s)
-#pragma disjoint(*k, *s)
-#pragma disjoint(*l, *s)
-__alignx(16, l);
-__alignx(16, k);
-__alignx(16, U);
-__alignx(16, s);
-#endif
-
 // convert kappas to float locally
 _Complex float ALIGN32 ka0_32 = (_Complex float)ka0;
 _Complex float ALIGN32 ka1_32 = (_Complex float)ka1;
@@ -117,28 +104,7 @@ for (unsigned int i = 0; i < (VOLUME) / 2; i++) {
 #endif
 
 #if (defined TM_USE_MPI && !defined _NO_COMM)
-#ifdef SPI
-
-  // Initialize the barrier, resetting the hardware.
-  int rc = MUSPI_GIBarrierInit(&GIBarrier, 0 /*comm world class route*/);
-  if (rc) {
-    printf("MUSPI_GIBarrierInit returned rc = %d\n", rc);
-    exit(__LINE__);
-  }
-  // reset the recv counter
-  recvCounter = totalMessageSize / 2;
-  global_barrier();  // make sure everybody is set recv counter
-
-  // #pragma omp for nowait
-  for (unsigned int j = 0; j < spi_num_dirs; j++) {
-    descCount[j] = msg_InjFifoInject(injFifoHandle, j, &SPIDescriptors32[j]);
-  }
-  // wait for receive completion
-  while (recvCounter > 0);
-  _bgq_msync();
-#else
   xchange_halffield32();
-#endif
 #endif
 
 #ifdef TM_USE_OMP

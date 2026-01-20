@@ -171,11 +171,7 @@ void Dov_psi(spinor *const P, spinor *const S) {
 
   /*   s_ = calloc(VOLUMEPLUSRAND+1, sizeof(spinor)); */
 
-  /* #if (defined SSE3 || defined SSE2 || defined SSE) */
-  /*   s = (spinor*)(((unsigned long int)(s_)+ALIGN_BASE)&~ALIGN_BASE); */
-  /* #else */
   /*   s = s_; */
-  /* #endif */
 
   s = lock_Dov_WS_spinor(0);
 
@@ -443,7 +439,7 @@ void Q_over_sqrt_Q_sqr(spinor *const R, double *const c, const int n, spinor *co
 }
 
 void CheckApproximation(spinor *const P, spinor *const S) {
-  spinor *s, *s_;
+  spinor *s;
   static int n_cheby = 0;
   static int rec_coefs = 1;
 
@@ -455,13 +451,7 @@ void CheckApproximation(spinor *const P, spinor *const S) {
     rec_coefs = 0;
   }
 
-  s_ = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
-
-#if (defined SSE3 || defined SSE2 || defined SSE)
-  s = (spinor *)(((unsigned long int)(s_) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
-  s = s_;
-#endif
+  s = calloc(VOLUMEPLUSRAND + 1, sizeof(spinor));
 
   Q_over_sqrt_Q_sqr(s, ov_cheby_coef, ov_n_cheby, S, ev_qnorm, ev_minev);
   Q_over_sqrt_Q_sqr(P, ov_cheby_coef, ov_n_cheby, s, ev_qnorm, ev_minev);

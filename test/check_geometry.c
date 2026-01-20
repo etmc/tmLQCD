@@ -44,9 +44,6 @@
 #endif
 
 int check_geometry() {
-#ifdef XLC
-#pragma execution_frequency(very_low)
-#endif
   int ix, j;
   int* stest;
   int* itest;

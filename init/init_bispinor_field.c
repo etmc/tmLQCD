@@ -24,7 +24,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "global.h"
-#include "sse.h"
 #include "su3.h"
 
 bispinor* bisp = NULL;
@@ -42,11 +41,7 @@ int init_bispinor_field(const int V, const int nr) {
     errno = 0;
     return (2);
   }
-#if (defined SSE || defined SSE2 || defined SSE3)
-  g_bispinor_field[0] = (bispinor*)(((unsigned long int)(bisp) + ALIGN_BASE) & ~ALIGN_BASE);
-#else
   g_bispinor_field[0] = bisp;
-#endif
 
   for (i = 1; i < nr; i++) {
     g_bispinor_field[i] = g_bispinor_field[i - 1] + V;

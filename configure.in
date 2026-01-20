@@ -118,35 +118,6 @@ AC_ARG_WITH(DDalphaAMG,
               DDalphaAMG_INTERFACE="DDalphaAMG_interface"
               ])
 
-
-AC_MSG_CHECKING(whether to use QPX intrinsics)
-AC_ARG_ENABLE(qpx,
-  AS_HELP_STRING([--enable-qpx], [enable use of qpx intrinsics [default=no]]),
-  enable_qpx=$enableval, enable_qpx=no)
-if test $enable_qpx = yes; then
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(BGQ,1,Compile with QPX intrinsics)
-  AC_MSG_NOTICE([Compiling with QPX intrinsics on BGQ, enabling compiler optimizations for XLC.])
-  OPTARGS="-O2 -qstrict=all -qtune=qp -qarch=qp -qmaxmem=-1"
-  SOPTARGS="$OPTARGS" 
-else
-  AC_MSG_RESULT(no)
-fi
-
-AC_MSG_CHECKING(whether to use IBM BG/Q SPI for communications)
-AC_ARG_ENABLE(spi,
-  AS_HELP_STRING([--enable-spi], [enable use of SPI [default=no]]),
-  enable_spi=$enableval, enable_spi=no)
-if test $enable_spi = yes; then
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(SPI,1,Compile with SPI for communications)
-  SPI_FILES="DirectPut"
-else
-  AC_MSG_RESULT(no)
-  SPI_FILES=""
-fi
-
-
 AC_MSG_CHECKING(whether we want to use OpenMP)
 AC_ARG_ENABLE(omp,
   AS_HELP_STRING([--enable-omp], [enable use of OpenMP [default=yes]]),
@@ -157,17 +128,9 @@ if test $enable_omp = yes; then
   AC_CHECK_HEADERS([omp.h],,[AC_MSG_ERROR([Cannot find OpenMP headers!])])
   AC_OPENMP
 # -- AC_OPENMP provides a compiler-dependent OPENMP_CFLAGS so we can set it here
-# on the BG/Q with XLC we force a special set of options for OpenMP support
-  if test $enable_qpx = yes; then
-    AC_MSG_NOTICE([Using OpenMP with XLC on BG/Q. Compiling with "-qsmp=omp:noauto:schedule=static -qthreaded".])
-    CFLAGS="$CFLAGS -qsmp=omp:noauto:schedule=static -qthreaded"
-    CPPFLAGS="$CPPFLAGS -qsmp=omp:noauto:schedule=static -qthreaded"
-    LDFLAGS="$LDFLAGS -qsmp=omp:noauto:schedule=static -qthreaded" 
-  else
     CFLAGS="$CFLAGS $OPENMP_CFLAGS"
     CPPFLAGS="$CPPFLAGS $OPENMP_CFLAGS"
     LDFLAGS="$LDFLAGS $OPENMP_CFLAGS"
-  fi
 else
   AC_MSG_RESULT(no)
 fi
@@ -370,7 +333,6 @@ AC_SUBST(XCHANGEDIR)
 AC_SUBST(MEASDIR)
 AC_SUBST(XLIB)
 AC_SUBST([LEMON_AVAILABLE])
-AC_SUBST(SPI_FILES)
 AC_SUBST(QUDA_INTERFACE)
 AC_SUBST(QPHIX_INTERFACE)
 AC_SUBST(QPHIX_PROGRAMS)
@@ -418,98 +380,6 @@ elif test $withalign = auto; then
 else
   AC_MSG_RESULT(Unusable value for array alignment)
   AC_MSG_ERROR([Allowed values are: auto, none, 16, 32, 64])
-fi
-
-dnl in the following we check for extra options
-if test "$host_cpu" = "i686" || test "$host_cpu" = "x86_64"; then
-
-  AC_MSG_CHECKING(whether we want to use P4 instructions)
-  AC_ARG_ENABLE(p4,
-    AS_HELP_STRING([--enable-p4],[enable use of P4 instructions [default=no]]),
-    enable_p4=$enableval, enable_p4=no)
-  if test $enable_p4 = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(P4,1,Use Pentium4 instructions)
-    if test $withalign = auto; then
-      if test $withautoalign -lt 16; then
-        AC_MSG_RESULT(increasing array alignment to 16 bytes for P4 instructions)
-        AC_DEFINE(ALIGN_BASE, 0x0F, [Align base])
-        AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
-        AC_MSG_RESULT(increasing array 32 bit alignment to 16 bytes for P4 instructions)
-        AC_DEFINE(ALIGN_BASE32, 0x0F, [Align base])
-        AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))])
-        withautoalign=16
-      fi
-    elif test $withalign -lt 16; then
-      AC_MSG_ERROR([alignment incompatible with P4 instructions (16 bytes required)!])
-    fi
-  else
-    AC_MSG_RESULT(no)
-  fi
-
-  AC_MSG_CHECKING(whether we want to use Opteron instructions)
-  AC_ARG_ENABLE(opteron,
-    AS_HELP_STRING([--enable-opteron], [enable use of Opteron instructions [default=no]]),
-    enable_opteron=$enableval, enable_opteron=no)
-  if test $enable_opteron = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(OPTERON,1,Use Opteron instructions)
-    if test $withalign = auto; then
-      if test $withautoalign -lt 16; then
-        AC_MSG_RESULT(increasing array alignment to 16 bytes for Opteron instructions)
-        AC_DEFINE(ALIGN_BASE, 0x0F, [Align base])
-        AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
-        AC_MSG_RESULT(increasing array 32 bit alignment to 16 bytes for Opteron instructions)
-        AC_DEFINE(ALIGN_BASE32, 0x0F, [Align base32])
-        AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))])
-        withautoalign=16
-      fi
-    elif test $withalign -lt 16; then
-      AC_MSG_ERROR([alignment incompatible with Opteron instructions (16 bytes required)!])
-    fi
-  else
-    AC_MSG_RESULT(no)
-  fi
-
-  AC_MSG_CHECKING(whether we want to use SSE2 instructions)
-  AC_ARG_ENABLE(sse2,
-    AS_HELP_STRING([--enable-sse2], [enable use of SSE2 instructions [default=no]]),
-    enable_sse2=$enableval, enable_sse2=no)
-  if test $enable_sse2 = yes; then
-    AC_MSG_RESULT(yes)
-    if test $withalign != auto && test $withalign -lt 16; then
-      AC_MSG_ERROR([alignment incompatible with SSE2 instructions (16 bytes required)])
-    fi
-  else
-    AC_MSG_RESULT(no)
-  fi
-
-  AC_MSG_CHECKING(whether we want to use SSE3 instructions)
-  AC_ARG_ENABLE(sse3,
-    AS_HELP_STRING([--enable-sse3], [enable use of SSE3 instructions [default=no]]),
-    enable_sse3=$enableval, enable_sse3=no)
-  if test $enable_sse3 = yes; then
-    AC_MSG_RESULT(yes)
-    if test $withalign != auto && $withalign -lt 16; then
-      AC_MSG_ERROR([alignment incompatible with SSE3 instructions (16 bytes required)])
-    fi
-  else
-    AC_MSG_RESULT(no)
-  fi
-
-  if test "$enable_sse2" = "yes" || test "$enable_sse3" = "yes"; then
-    if test $withalign = auto; then
-      if test $withautoalign -lt 16; then
-        AC_MSG_RESULT(increasing array alignment to 16 bytes for SSE instructions)
-        AC_DEFINE(ALIGN_BASE, 0x0F, [Align base])
-        AC_DEFINE(ALIGN, [__attribute__ ((aligned (16)))])
-        AC_MSG_RESULT(increasing 32bit array alignment to 16 bytes for SSE instructions)
-        AC_DEFINE(ALIGN_BASE32, 0x0F, [Align base32])	
-        AC_DEFINE(ALIGN32, [__attribute__ ((aligned (16)))])
-        withautoalign=16
-      fi
-    fi
-  fi
 fi
 
 dnl We here check for alignment issues with QPX instructions -- this flag has been set earlier
@@ -579,23 +449,7 @@ else
   PROFILE_FLAG=
 fi
 
-AC_MSG_CHECKING(whether we shall use rts dram window)
-AC_ARG_WITH([bgldram],
-  AS_HELP_STRING([--with-bgldram], [use BGL dram window (BGL only!) [default=yes]]),
-  with_bgldram=$withval, with_bgldram=yes)
-if test $with_bgldram = yes; then
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(_USE_BGLDRAM,1,use BGL dram window)
-else
-  AC_MSG_RESULT(no)
-fi
-
 dnl Now we have to set all Flags and compiler properly
-XLCGREP=`$CC -V 2>&1 | grep -i xlc`
-if test "$XLCGREP" != ""; then
-  XLC="yes"
-  AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
-fi
 PGCC=`$CC -V 2>&1 | grep pgcc`
 ICC=`$CC -V 2>&1 | grep -i intel`
 
@@ -607,21 +461,6 @@ dnl the GNU compiler
     CFLAGS="$CFLAGS -pedantic -Wall"
     OPTARGS='-O'
     SOPTARGS='-O'
-
-    if test $enable_sse3 = yes; then
-      echo Using SSE3 and SSE2 macros!
-      AC_DEFINE(SSE3,1,Compile with SSE3 support)
-      DEPFLAGS="$DEPFLAGS -DSSE3"
-      if test "$host_cpu" = "x86_64"; then
-        CFLAGS="$CFLAGS -mfpmath=387"
-      fi
-    elif test $enable_sse2 = yes; then
-      DEPFLAGS="$DEPFLAGS -DSSE2"
-      AC_DEFINE(SSE2,1,Compile with SSE2 support)
-      if test "$host_cpu" = "x86_64"; then
-        CFLAGS="$CFLAGS -mfpmath=387"
-      fi
-    fi
 
     if test "$host_cpu" = "x86_64"; then
       AC_DEFINE(_x86_64,1,x86 64 Bit architecture)
@@ -657,18 +496,7 @@ dnl check for icc
       PROFILE_FLAG="-p -g"
       CCDEP="$CC"
       CXXDEP="$CXX"
-
     else
-      # other compilers might support SSE inline assembly too
-      # (the cray compiler, for example)
-      if test $enable_sse3 = yes; then
-        echo Using SSE3 and SSE2 macros!
-        AC_DEFINE(SSE3,1,Compile with SSE3 support)
-      elif test $enable_sse2 = yes; then
-        echo Using SSE2 macros only!
-        AC_DEFINE(SSE2,1,Compile with SSE2 support)
-      fi
-
       DEPFLAGS="-M"
       CFLAGS="$CFLAGS -O"
       DEBUG_FLAG="-g"
@@ -676,113 +504,6 @@ dnl check for icc
       CXXDEP="$CXX"
     fi
   fi
-
-# The MareNostrum: powerpc on a linux system
-# this will also evaluate to "true" on BG/Q with XLC
-elif test "$host_cpu" = "powerpc64" && test "$host_vendor" = "unknown" && test "$host_os" = "linux-gnu"; then
-
-  DEBUGFLAG="-g"
-  if test "$XLC" = "yes"; then
-    CFLAGS="-qsrcmsg $CFLAGS"
-    DEBUGFLAG="$DEBUGFLAG -qfullpath"
-  fi
-
-  OPTARGS="$OPTARGS"
-  SOPTARGS="$OPTARGS"
-  if test "$CCDEP" = "gcc"; then
-    DEPFLAGS="-MM"
-  else
-    DEPFLAGS="-M"
-  fi
-
-#The BLue Gene/L
-elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" = "blrts"; then
-  if test "$with_bgldram" = yes; then
-    if (test -e /bgl/local/bin/blrts_gcc); then
-      BLRTSGCC=/bgl/local/bin/blrts_gcc
-    elif (test -e /bgl/BlueLight/ppcfloor/blrts-gnu/bin/powerpc-bgl-blrts-gnu-gcc); then
-      BLRTSGCC=/bgl/BlueLight/ppcfloor/blrts-gnu/bin/powerpc-bgl-blrts-gnu-gcc
-    else
-      AC_MSG_ERROR([Sorry, don't know where to find blrts_gcc, see README.bgl!])
-    fi
-    CCLD="$BLRTSGCC -Xlinker --script=./elf32ppcblrts.x"
-    if (!(test -s ./elf32ppcblrts.x)); then
-      AC_MSG_ERROR([Sorry, elf32ppcblrts.x is missing, see README.bgl!])
-    fi
-  fi
-  DEBUGFLAG="-g"
-  OPTARGS="-O3"
-  SOPTARGS="-O3"
-  AC_DEFINE(BGL,1,[Optimize for Blue Gene/L])
-
-  if test "$XLC" = "yes"; then
-    CFLAGS="-qsrcmsg $CFLAGS"
-    OPTARGS="$OPTARGS -qarch=440d -qtune=440"
-    SOPTARGS="$SOPTARGS -qarch=440d -qtune=440"
-    DEBUGFLAG="$DEBUGFLAG -qfullpath"
-# OPTARGS="-qhot" leads to wrong code
-  fi
-  LIBS="-lmpich.rts -lfmpich.rts -lmsglayer.rts -lrts.rts -ldevices.rts $LIBS"
-  LDFLAGS="$LDFLAGS -L/bgl/BlueLight/ppcfloor/bglsys/lib"
-  if test $with_lapack = yes; then
-    LIBS="-lesslbg -llapack.rts -lesslbg -lxlf90 -lxlfmath -lxl -lxlopt $LIBS"
-    LDFLAGS="$LDFLAGS -L/opt/ibmcmp/xlf/bg/10.1/blrts_lib -L/bgl/local/lib/ -L/opt/ibmmath/lib/"
-  fi
-
-  if test "$CCDEP" = "gcc"; then
-    DEPFLAGS="-MM"
-  else
-    DEPFLAGS="-M"
-  fi
-  CPPFLAGS="-I/bgl/BlueLight/ppcfloor/bglsys/include"
-  INCLUDES="$INCLUDES -I/bgl/BlueLight/ppcfloor/bglsys/include/"
-
-#The BLue Gene/P
-elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_os" = "bprts"; then
-  CFLAGS="$CFLAGS"
-  DEBUGFLAG="-g"
-  OPTARGS="-O3"
-  SOPTARGS="-O3"
-  AC_DEFINE(BGL,1,[Optimize for Blue Gene/L])
-  AC_DEFINE(BGP,1,[Optimize for Blue Gene/P])
-
-  if test "$XLC" = "yes"; then
-    CFLAGS="-qsrcmsg $CFLAGS"
-    OPTARGS="$OPTARGS -qarch=450d -qtune=450"
-    SOPTARGS="$SOPTARGS -qarch=450d -qtune=450"
-    DEBUGFLAG="$DEBUGFLAG -qfullpath"
-# OPTARGS="-qhot" leads to wrong code
-  fi
-#  LIBS="-lxlf90_r -lxlomp_ser -lxl -lxlopt -lxlfmath -ldl -lrt -lpthread  $LIBS"
-#  LDFLAGS="$LDFLAGS -L/bgsys/local/lib/ -L/opt/ibmcmp/xlf/bg/11.1/lib  -L/bgsys/drivers/ppcfloor/comm/"
-#  if test $with_lapack = yes; then
-#    LIBS="-lesslbg -llapack -lesslbg $LIBS"
-#    LDFLAGS="$LDFLAGS -L/opt/ibmmath/lib/"
-#  fi
-
-  if test "$CCDEP" = "gcc"; then
-    DEPFLAGS="-MM"
-  else
-    DEPFLAGS="-M"
-  fi
-  CPPFLAGS="-I/bgsys/drivers/ppcfloor/arch/include/ -I/bgsys/drivers/ppcfloor/comm/include"
-  INCLUDES="$INCLUDES -I/bgsys/local/include/ -I/bgsys/drivers/ppcfloor/arch/include/ -I/bgsys/drivers/ppcfloor/comm/include"
-
-
-
-# The IBM Power PC
-elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm"; then
-  CFLAGS="$CFLAGS -q64 -qsrcmsg"
-  LDFLAGS="$LDFLAGS -q64"
-  OPTARGS="-O2"
-  SOPTARGS="-O2"
-  DEBUG_FLAG="-qfullpath -g"
-  if test "$CCDEP" = "gcc"; then
-    DEPFLAGS="-MM"
-  else
-    DEPFLAGS="-M"
-  fi
-
 # The CRAY
 elif test "$host_vendor" = "cray"; then
   echo
@@ -796,7 +517,6 @@ elif test "$host_vendor" = "cray"; then
   DEBUG_FLAG="-g"
   CCDEP="$CC"
   DEPFLAGS="-M"
-
 else
   AC_CHECK_PROG(CCDEP, gcc, "gcc", "$CC")
   if test "$CCDEP" = "gcc"; then

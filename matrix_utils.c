@@ -25,9 +25,6 @@
 #include <complex.h>
 #include <math.h>
 
-#if (defined SSE || defined SSE2 || defined SSE3)
-#include "sse.h"
-#endif
 #include "su3.h"
 
 #ifndef TM_USE_OMP

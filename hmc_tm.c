@@ -118,10 +118,6 @@ int main(int argc, char *argv[]) {
 #pragma pomp inst begin(main)
 #endif
 
-#if (defined SSE || defined SSE2 || SSE3)
-  signal(SIGILL, &catch_ill_inst);
-#endif
-
   strcpy(gauge_filename, "conf.save");
   strcpy(nstore_filename, "nstore_counter");
   strcpy(tmp_filename, ".conf.tmp");

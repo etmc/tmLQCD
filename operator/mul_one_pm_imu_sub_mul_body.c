@@ -10,11 +10,7 @@ void _PSWITCH(mul_one_pm_imu_sub_mul)(_PTSWITCH(spinor) * const l, _PTSWITCH(spi
     double sign = 1.;
     _PTSWITCH(spinor) * r, *s, *t;
 
-#if (!defined SSE2 && !defined SSE3)
-
     _PTSWITCH(su3_vector) ALIGN phi1, phi2, phi3, phi4;
-
-#endif
 
     if (_sign < 0.) {
       sign = -1.;

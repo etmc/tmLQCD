@@ -31,8 +31,7 @@
 /* v,w complex vectors of length N */
 /* M a NxN complex matrix with     */
 /* leading dimension ldM >= N      */
-/* we should provide special SSE2  */
-/* and BG/P versions               */
+/* we should provide BG/P versions */
 
 void mattimesvec(_Complex double* const v, _Complex double* const M, _Complex double* const w,
                  const int N, const int ldM) {

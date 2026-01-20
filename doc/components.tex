@@ -126,59 +126,7 @@ Ref.~\cite{Chiarappa:2006hz} for the overlap operator.
 The various implementations of the Dirac operator can be found in the
 file {\ttfamily D\_psi.c} and -- as needed for even/odd
 preconditioning -- the hopping matrix in the file {\ttfamily
-  Hopping\_Matrix.c}. There are many different versions of these two
-routines available, each optimised for a particular architecture,
-e.g. for the Blue Gene/P double hummer processor or the streaming SIMD
-extensions of modern PC processors (SSE2 and SSE3), see also
-Ref.~\cite{Luscher:2001tx}. Martin L{\"u}scher has made available his
-standard C and SSE/SSE2 Dirac operator~\cite{Luscher:sse} under the
-GNU General Public License, which are partly included into the tmLQCD
-package.
-
-\subsubsection{Blue Gene Version}
-
-The IBM PowerPC 450d processor used on the Blue Gene architecture
-provides a dual FPU, which supports a set of SIMD operations working
-on 32 special registers useful for lattice QCD. These operations can
-be accessed using build in functions of the IBM XLC compiler.
-The file {\ttfamily bgl.h} contains all macros relevant for the Blue
-Gene version of the hopping matrix and the Dirac operator. 
-
-\begin{algorithm}[t]
-  \caption{$\varphi^+ = \kappa\, U\, P_{+0}^{4\to2}(1+\gamma_0)\psi$}
-  \begin{algorithmic}[1]
-    \STATE // load components of $\psi$ into registers
-    \STATE \_bgl\_load\_rs0((*s).s0);
-    \STATE \_bgl\_load\_rs1((*s).s1);
-    \STATE \_bgl\_load\_rs2((*s).s2);
-    \STATE \_bgl\_load\_rs3((*s).s3);
-    \STATE // prefetch gauge field for next direction $(1+\gamma_1)$
-    \STATE \_prefetch\_su3(U+1);
-    \STATE // do now first $P_{+0}^{4\to2}(1+\gamma_0)\psi$
-    \STATE \_bgl\_vector\_add\_rs2\_to\_rs0\_reg0();
-    \STATE \_bgl\_vector\_add\_rs3\_to\_rs1\_reg1();
-    \STATE //now multiply both components at once with gauge field $U$ and $\kappa$
-    \STATE \_bgl\_su3\_multiply\_double((*U));
-    \STATE \_bgl\_vector\_cmplx\_mul\_double(ka0); 
-    \STATE // store the result
-    \STATE \_bgl\_store\_reg0\_up((*phi[ix]).s0);
-    \STATE \_bgl\_store\_reg1\_up((*phi[ix]).s1);
-  \end{algorithmic}
-  \label{alg:bluegene}
-\end{algorithm}
-
-A small fraction of half spinor version (see above) is given in
-algorithm \ref{alg:bluegene}, which represents the operation
-$\varphi^+ = \kappa\, U\, P_{+0}^{4\to2}(1+\gamma_0)\psi$. After
-loading the components of $\psi$ into the special registers and 
-prefetching the gauge field for the next direction (in this case
-$1+\gamma_1$), $P_{+0}^{4\to2}(1+\gamma_0)\psi$ is performed. It is
-then important to load the gauge field $U$ only once from memory to
-registers and multiply both spinor components in parallel. 
-
-Finally the result is multiplied with $\kappa$ (which inherits also a
-phase factor due to the way we implement the boundary conditions, see
-next sub-section) and stored in memory.
+  Hopping\_Matrix.c}.
 
 
 \subsubsection{Boundary Conditions}

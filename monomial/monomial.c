@@ -41,7 +41,6 @@
 #include "operator/tm_operators_32.h"
 #include "ranlxd.h"
 #include "read_input.h"
-#include "sse.h"
 #include "su3.h"
 #include "su3adj.h"
 #include "su3spinor.h"

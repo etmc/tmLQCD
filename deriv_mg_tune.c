@@ -103,10 +103,6 @@ int main(int argc, char *argv[]) {
 #pragma pomp inst begin(main)
 #endif
 
-#if (defined SSE || defined SSE2 || SSE3)
-  signal(SIGILL, &catch_ill_inst);
-#endif
-
   verbose = 1;
   g_use_clover_flag = 0;
 

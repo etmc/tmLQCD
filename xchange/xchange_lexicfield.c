@@ -38,15 +38,16 @@
 #endif
 
 #include "global.h"
-#if (defined XLC && defined BGL)
-#include "bgl.h"
-#endif
 #include "mpi_init.h"
 #include "su3.h"
 #include "xchange_lexicfield.h"
 
 /* this version uses non-blocking MPI calls */
 #if (defined _NON_BLOCKING)
+
+/* this is the version independent of the content of the function Index (only available with
+ * non-blocking)) */
+
 void xchange_lexicfield(spinor* const l) {
   MPI_Request requests[16];
   MPI_Status status[16];
@@ -61,9 +62,6 @@ void xchange_lexicfield(spinor* const l) {
 #endif
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(xchange_lexicfield)
-#endif
-#if (defined BGL && defined XLC)
-  __alignx(16, l);
 #endif
 
 #ifdef TM_USE_MPI
@@ -141,7 +139,6 @@ void xchange_lexicfield(spinor* const l) {
 #pragma pomp inst end(xchange_lexicfield)
 #endif
 }
-
 
 /* Here comes the naive version */
 /* Using MPI_Sendrecv */
@@ -222,7 +219,6 @@ void xchange_lexicfield(spinor* const l) {
 #endif
 }
 
-
 #endif
 
 /***********************************************************************
@@ -245,9 +241,6 @@ void xchange_lexicfield32(spinor32* const l) {
 #endif
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(xchange_lexicfield32)
-#endif
-#if (defined BGL && defined XLC)
-  __alignx(16, l);
 #endif
 
 #ifdef TM_USE_MPI
@@ -325,7 +318,6 @@ void xchange_lexicfield32(spinor32* const l) {
 #pragma pomp inst end(xchange_lexicfield32)
 #endif
 }
-
 
 /* Here comes the naive version */
 /* Using MPI_Sendrecv */

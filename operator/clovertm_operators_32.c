@@ -23,22 +23,6 @@
 #include <tmlqcd_config.h>
 #endif
 
-// work-around for missing single precision implementation of inline SSE
-#ifdef SSE
-#define REDEFSSE
-#undef SSE
-#endif
-
-#ifdef SSE2
-#define REDEFSSE2
-#undef SSE2
-#endif
-
-#ifdef SSE3
-#define REDEFSSE3
-#undef SSE3
-#endif
-
 #include <errno.h>
 #include <math.h>
 #include <stdio.h>
@@ -52,7 +36,6 @@
 #include "linalg_eo.h"
 #include "operator/Hopping_Matrix.h"
 #include "operator/Hopping_Matrix_32.h"
-#include "sse.h"
 #include "su3.h"
 
 #include "tm_operators.h"
@@ -565,18 +548,3 @@ void assign_mul_one_sw_pm_imu_eps_32(const int ieo, spinor32 *const k_s, spinor3
   } /* OpenMP parallel closing brace */
 #endif
 }
-
-#ifdef REDEFSSE
-#undef REDEFSSE
-#define SSE
-#endif
-
-#ifdef REDEFSSE2
-#undef REDEFSSE2
-#define SSE2
-#endif
-
-#ifdef REDEFSSE3
-#undef REDEFSSE3
-#define SSE3
-#endif
