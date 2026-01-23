@@ -35,12 +35,10 @@
 
 /*   (*P) = (*P) + c(*Q)        c is a real constant   */
 
-
 void assign_add_mul_r(spinor *const P, spinor *const Q, const double c, const int N) {
 #ifdef TM_USE_OMP
 #pragma omp parallel for
 #endif
-/* Change due to even-odd preconditioning : VOLUME   to VOLUME/2 */
   for (int ix = 0; ix < N; ++ix) {
     register spinor *p = P + ix;
     register spinor *q = Q + ix;
