@@ -74,37 +74,6 @@ int init_geometry_indices(const int V) {
   if ((void *)g_field_z_disp_odd_up == NULL) return (17);
 #endif
 
-#ifdef _USE_TSPLITPAR
-  g_1st_eot = (int **)calloc(T, sizeof(int *));
-  if ((void *)g_1st_eot == NULL) return (18);
-  for (i = 0; i < T; i++) {
-    g_1st_eot[i] = (int *)calloc(2, sizeof(int));
-  }
-  g_1st_xt_int_dn = (int *)calloc(T, sizeof(int));
-  g_1st_xt_int_up = (int *)calloc(T, sizeof(int));
-  g_1st_xt_ext_dn = (int *)calloc(T, sizeof(int));
-  g_1st_xt_ext_up = (int *)calloc(T, sizeof(int));
-  g_1st_yt_int_dn = (int *)calloc(T, sizeof(int));
-  g_1st_yt_int_up = (int *)calloc(T, sizeof(int));
-  g_1st_yt_ext_dn = (int *)calloc(T, sizeof(int));
-  g_1st_yt_ext_up = (int *)calloc(T, sizeof(int));
-  g_1st_zt_int_dn = (int *)calloc(T, sizeof(int));
-  g_1st_zt_int_up = (int *)calloc(T, sizeof(int));
-  g_1st_zt_ext_dn = (int *)calloc(T, sizeof(int));
-  g_1st_zt_ext_up = (int *)calloc(T, sizeof(int));
-
-  g_field_zt_disp_even_dn = (int **)calloc(T, sizeof(int *));
-  g_field_zt_disp_even_up = (int **)calloc(T, sizeof(int *));
-  g_field_zt_disp_odd_dn = (int **)calloc(T, sizeof(int *));
-  g_field_zt_disp_odd_up = (int **)calloc(T, sizeof(int *));
-  for (i = 0; i < T; i++) {
-    g_field_zt_disp_even_dn[i] = (int *)calloc((LX * LY + 1) / 2, sizeof(int));
-    g_field_zt_disp_even_up[i] = (int *)calloc((LX * LY + 1) / 2, sizeof(int));
-    g_field_zt_disp_odd_dn[i] = (int *)calloc((LX * LY + 1) / 2, sizeof(int));
-    g_field_zt_disp_odd_up[i] = (int *)calloc((LX * LY + 1) / 2, sizeof(int));
-  }
-
-#endif
 
   g_coord = (int **)calloc(VOLUME, sizeof(int *));
   if ((void *)g_coord == NULL) return (19);
@@ -149,17 +118,6 @@ int init_geometry_indices(const int V) {
   }
   g_hi = (int *)calloc(16 * (VOLUME + RAND) + 2, sizeof(int));
   if ((void *)g_hi == NULL) return (40);
-
-#ifdef WITHLAPH
-  g_idn3d = (int **)calloc(SPACEVOLUME, sizeof(int *));
-  if ((void *)g_idn == NULL) return (31);
-  g_iup3d = (int **)calloc(SPACEVOLUME, sizeof(int *));
-  if ((void *)g_iup == NULL) return (32);
-  for (i = 0; i < SPACEVOLUME; i++) {
-    g_idn3d[i] = (int *)calloc(4, sizeof(int));
-    g_iup3d[i] = (int *)calloc(4, sizeof(int));
-  }
-#endif
 
   return (0);
 }

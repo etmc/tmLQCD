@@ -87,20 +87,3 @@ void diff_ts(spinor *const Q, const spinor *const R, const spinor *const S, cons
     q->s3.c2 = r->s3.c2 - s->s3.c2;
   }
 }
-
-#ifdef WITHLAPH
-void diff_su3vect(su3_vector *const Q, su3_vector *const R, su3_vector *const S, const int N) {
-#ifdef TM_USE_OMP
-#pragma omp parallel for
-#endif
-  for (int ix = 0; ix < N; ++ix) {
-    su3_vector *q = (su3_vector *)Q + ix;
-    const su3_vector *r = (su3_vector *)R + ix;
-    const su3_vector *s = (su3_vector *)S + ix;
-
-    q->c0 = r->c0 - s->c0;
-    q->c1 = r->c1 - s->c1;
-    q->c2 = r->c2 - s->c2;
-  }
-}
-#endif

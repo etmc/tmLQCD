@@ -57,7 +57,7 @@ MODULES = read_input gamma measure_gauge_action start \
         update_momenta update_momenta_fg integrator  phmc \
 	little_D block operator \
 	spinor_fft \
-	jacobi fatal_error invert_clover_eo gettime \
+	fatal_error invert_clover_eo gettime \
 	tm_debug_printf compare_derivative \
         @QUDA_INTERFACE@ @DDalphaAMG_INTERFACE@
 
@@ -66,7 +66,7 @@ CXXMODULES = @QPHIX_INTERFACE@
 NOOPTMOD = test/check_xchange test/check_geometry
 
 PROGRAMS = hmc_tm benchmark invert gen_sources  \
-	check_locallity test_lemon hopping_test LapH_ev \
+	check_locallity test_lemon hopping_test \
 	offline_measurement deriv_mg_tune @QPHIX_PROGRAMS@
 
 ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES}

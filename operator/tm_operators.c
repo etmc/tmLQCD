@@ -469,10 +469,6 @@ void Q_plus_psi(spinor *const l, spinor *const k) {
  ******************************************/
 
 void H_eo_tm_inv_psi(spinor *const l, spinor *const k, const int ieo, const double _sign) {
-#if (defined _USE_TSPLITPAR)
-  Hopping_Matrix(ieo, l, k);
-  mul_one_pm_imu_inv(l, _sign, VOLUME / 2);
-#else
   double ALIGN nrm = 1. / (1. + g_mu * g_mu);
   double sign = -1.;
   complex double ALIGN z;
@@ -483,15 +479,10 @@ void H_eo_tm_inv_psi(spinor *const l, spinor *const k, const int ieo, const doub
   z = nrm + (sign * nrm * g_mu) * I;
   tm_times_Hopping_Matrix(ieo, l, k, z);
   return;
-#endif
 }
 
 void tm_sub_H_eo_gamma5(spinor *const l, spinor *const p, spinor *const k, const int ieo,
                         const double _sign) {
-#if (defined _USE_TSPLITPAR)
-  Hopping_Matrix(ieo, g_spinor_field[DUM_MATRIX + 2], k);
-  mul_one_pm_imu_sub_mul_gamma5(l, p, g_spinor_field[DUM_MATRIX + 2], _sign);
-#else
   _Complex double ALIGN z;
   double sign = 1.;
 
@@ -501,7 +492,6 @@ void tm_sub_H_eo_gamma5(spinor *const l, spinor *const p, spinor *const k, const
 
   z = 1. + (sign * g_mu) * I;
   tm_sub_Hopping_Matrix(ieo, l, p, k, z);
-#endif
 
   return;
 }

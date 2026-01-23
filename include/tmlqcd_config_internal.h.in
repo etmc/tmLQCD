@@ -45,9 +45,6 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* Index independent addressing */
-#undef _INDEX_INDEP_GEOM
-
 /* X parallelisation */
 #undef PARALLELX
 
@@ -68,9 +65,6 @@
 
 /* Four dimensional parallelisation */
 #undef PARALLELXYZT
-
-/* timeslice-splitted communications */
-#undef _USE_TSPLITPAR
 
 /* Fixed volume at compiletime */
 #undef FIXEDVOLUME
@@ -163,9 +157,6 @@
 
 /* Define to 1 if non-blocking MPI calls for spinor and gauge should be used */
 #undef _NON_BLOCKING
-
-/* Define if we want to compute the LapH eigenvectors */
-#undef WITHLAPH
 
 /* Define to 1 if you have the `quda' library (-lquda). */
 #undef HAVE_LIBQUDA

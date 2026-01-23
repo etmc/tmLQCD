@@ -59,20 +59,3 @@ void assign_add_mul_r(spinor *const P, spinor *const Q, const double c, const in
     p->s3.c2 += c * q->s3.c2;
   }
 }
-
-#ifdef WITHLAPH
-void assign_add_mul_r_su3vect(su3_vector *const P, su3_vector *const Q, const double c,
-                              const int N) {
-#ifdef TM_USE_OMP
-#pragma omp parallel for
-#endif
-  for (int ix = 0; ix < N; ++ix) {
-    su3_vector *p = P + ix;
-    su3_vector *q = Q + ix;
-
-    p->c0 += c * q->c0;
-    p->c1 += c * q->c1;
-    p->c2 += c * q->c2;
-  }
-}
-#endif

@@ -224,7 +224,6 @@ int init_timslice_buffer_field(const int t_slice) {
     errno = 0;
     return (3);
   }
-
   g_tbuff = sp_tbuff;
 
   return (0);

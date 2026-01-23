@@ -268,12 +268,7 @@ int Index(const int x0, const int x1, const int x2, const int x3) {
 
 int Index(const int x0, const int x1, const int x2, const int x3) {
   int y0, y1, y2, y3, ix;
-
-#ifdef WITHLAPH
-  y0 = x0;
-#else
   y0 = (x0 + T) % T;
-#endif
   y1 = (x1 + LX) % LX;
   y2 = (x2 + LY) % LY;
   y3 = (x3 + LZ) % LZ;
@@ -772,34 +767,6 @@ void geometry() {
     }
   }
 
-#ifdef WITHLAPH
-  tempT = T;
-  T = 1;
-  tempV = VOLUME;
-  VOLUME = SPACEVOLUME;
-  tempR = RAND;
-  RAND = SPACERAND;
-  x0 = 0;
-  for (x1 = 0; x1 < (LX); x1++) {
-    for (x2 = 0; x2 < (LY); x2++) {
-      for (x3 = 0; x3 < (LZ); x3++) {
-        ix = Index(x0, x1, x2, x3);
-        g_iup3d[ix][0] = -1;
-        g_idn3d[ix][0] = -1;
-        g_iup3d[ix][1] = Index(x0, x1 + 1, x2, x3);
-        g_idn3d[ix][1] = Index(x0, x1 - 1, x2, x3);
-        g_iup3d[ix][2] = Index(x0, x1, x2 + 1, x3);
-        g_idn3d[ix][2] = Index(x0, x1, x2 - 1, x3);
-        g_iup3d[ix][3] = Index(x0, x1, x2, x3 + 1);
-        g_idn3d[ix][3] = Index(x0, x1, x2, x3 - 1);
-      }
-    }
-  }
-  T = tempT;
-  VOLUME = tempV;
-  RAND = tempR;
-#endif
-
   i_even = 0;
   i_odd = 0;
   /*For the spinor fields we need only till VOLUME+RAND */
@@ -828,221 +795,9 @@ void geometry() {
     }
   }
 
-/* this if statement will be removed in future and _INDEX_INDEP_GEOM will be the default */
-#if defined _INDEX_INDEP_GEOM
-#ifdef _USE_TSPLITPAR
-  /* compute the first point (in eo system) of each timeslice */
-  for (x0 = 0; x0 < T; x0++) {
-    ix = Index(x0, 0, 0, 0);
-    if (xeven[ix] == 1) {
-      g_1st_eot[x0][0] = g_lexic2eo[ix];
-      g_1st_eot[x0][1] = g_lexic2eo[ix + 1];
-    } else {
-      g_1st_eot[x0][0] = g_lexic2eo[ix + 1];
-      g_1st_eot[x0][1] = g_lexic2eo[ix];
-    }
-
-    /* Starting points of ?t slices (eo) */
-    g_1st_xt_int_dn[x0] = g_lexic2eosub[Index(x0, 0, 0, 0)];
-    g_1st_xt_int_up[x0] = g_lexic2eosub[Index(x0, LX - 1, 0, 0)];
-    g_1st_xt_ext_dn[x0] = g_lexic2eosub[Index(x0, -1, 0, 0)];
-    g_1st_xt_ext_up[x0] = g_lexic2eosub[Index(x0, LX, 0, 0)];
-
-    g_1st_yt_int_dn[x0] = g_lexic2eosub[Index(x0, 0, 0, 0)];
-    g_1st_yt_int_up[x0] = g_lexic2eosub[Index(x0, 0, LY - 1, 0)];
-    g_1st_yt_ext_dn[x0] = g_lexic2eosub[Index(x0, 0, -1, 0)];
-    g_1st_yt_ext_up[x0] = g_lexic2eosub[Index(x0, 0, LY, 0)];
-
-    g_1st_zt_int_dn[x0] = g_lexic2eosub[Index(x0, 0, 0, 0)];
-    g_1st_zt_int_up[x0] = g_lexic2eosub[Index(x0, 0, 0, LZ - 1)];
-    g_1st_zt_ext_dn[x0] = g_lexic2eosub[Index(x0, 0, 0, -1)];
-    g_1st_zt_ext_up[x0] = g_lexic2eosub[Index(x0, 0, 0, LZ)];
-  }
-#endif
-  /* Starting points of the t, x, y, z slices at the borders (eo) */
-  g_1st_t_int_dn = g_lexic2eosub[Index(0, 0, 0, 0)];
-  g_1st_t_int_up = g_lexic2eosub[Index(T - 1, 0, 0, 0)];
-  g_1st_t_ext_dn = g_lexic2eosub[Index(-1, 0, 0, 0)];
-  g_1st_t_ext_up = g_lexic2eosub[Index(T, 0, 0, 0)];
-
-  g_1st_x_int_dn = g_lexic2eosub[Index(0, 0, 0, 0)];
-  g_1st_x_int_up = g_lexic2eosub[Index(0, LX - 1, 0, 0)];
-  g_1st_x_ext_dn = g_lexic2eosub[Index(0, -1, 0, 0)];
-  g_1st_x_ext_up = g_lexic2eosub[Index(0, LX, 0, 0)];
-
-  g_1st_y_int_dn = g_lexic2eosub[Index(0, 0, 0, 0)];
-  g_1st_y_int_up = g_lexic2eosub[Index(0, 0, LY - 1, 0)];
-  g_1st_y_ext_dn = g_lexic2eosub[Index(0, 0, -1, 0)];
-  g_1st_y_ext_up = g_lexic2eosub[Index(0, 0, LY, 0)];
-
-  g_1st_z_int_dn = g_lexic2eosub[Index(0, 0, 0, 0)];
-  g_1st_z_int_up = g_lexic2eosub[Index(0, 0, 0, LZ - 1)];
-  g_1st_z_ext_dn = g_lexic2eosub[Index(0, 0, 0, -1)];
-  g_1st_z_ext_up = g_lexic2eosub[Index(0, 0, 0, LZ)];
-
-  /* non even-odd */
-  gI_0_0_0_0 = Index(0, 0, 0, 0);
-
-  gI_L_0_0_0 = Index(T, 0, 0, 0);
-  gI_Lm1_0_0_0 = Index(T - 1, 0, 0, 0);
-  gI_m1_0_0_0 = Index(-1, 0, 0, 0);
-  gI_p1_0_0_0 = Index(1, 0, 0, 0);
-  gI_Lp1_0_0_0 = Index(T + 1, 0, 0, 0);
-  gI_Lm2_0_0_0 = Index(T - 2, 0, 0, 0);
-  gI_m2_0_0_0 = Index(-2, 0, 0, 0);
-
-  gI_0_L_0_0 = Index(0, LX, 0, 0);
-  gI_0_Lm1_0_0 = Index(0, LX - 1, 0, 0);
-  gI_0_m1_0_0 = Index(0, -1, 0, 0);
-  gI_0_p1_0_0 = Index(0, 1, 0, 0);
-  gI_0_Lp1_0_0 = Index(0, LX + 1, 0, 0);
-  gI_0_Lm2_0_0 = Index(0, LX - 2, 0, 0);
-  gI_0_m2_0_0 = Index(0, -2, 0, 0);
-
-  gI_0_0_L_0 = Index(0, 0, LY, 0);
-  gI_0_0_Lm1_0 = Index(0, 0, LY - 1, 0);
-  gI_0_0_m1_0 = Index(0, 0, -1, 0);
-  gI_0_0_p1_0 = Index(0, 0, 1, 0);
-  gI_0_0_Lp1_0 = Index(0, 0, LY + 1, 0);
-  gI_0_0_Lm2_0 = Index(0, 0, LY - 2, 0);
-  gI_0_0_m2_0 = Index(0, 0, -2, 0);
-
-  gI_0_0_0_L = Index(0, 0, 0, LZ);
-  gI_0_0_0_Lm1 = Index(0, 0, 0, LZ - 1);
-  gI_0_0_0_m1 = Index(0, 0, 0, -1);
-  gI_0_0_0_p1 = Index(0, 0, 0, 1);
-  gI_0_0_0_Lp1 = Index(0, 0, 0, LZ + 1);
-  gI_0_0_0_Lm2 = Index(0, 0, 0, LZ - 2);
-  gI_0_0_0_m2 = Index(0, 0, 0, -2);
-
-  gI_L_L_0_0 = Index(T, LX, 0, 0);
-  gI_Lm1_L_0_0 = Index(T - 1, LX, 0, 0);
-  gI_m1_L_0_0 = Index(-1, LX, 0, 0);
-
-  gI_p1_L_0_0 = Index(1, LX, 0, 0);
-  gI_Lp1_L_0_0 = Index(T + 1, LX, 0, 0);
-  gI_Lm2_L_0_0 = Index(T - 2, LX, 0, 0);
-  gI_m2_L_0_0 = Index(-2, LX, 0, 0);
-
-  gI_L_Lp1_0_0 = Index(T, LX + 1, 0, 0);
-  gI_Lm1_Lp1_0_0 = Index(T - 1, LX + 1, 0, 0);
-  gI_m1_Lp1_0_0 = Index(-1, LX + 1, 0, 0);
-
-  gI_0_L_L_0 = Index(0, LX, LY, 0);
-  gI_0_Lm1_L_0 = Index(0, LX - 1, LY, 0);
-  gI_0_m1_L_0 = Index(0, -1, LY, 0);
-
-  gI_L_0_L_0 = Index(T, 0, LY, 0);
-  gI_L_0_Lm1_0 = Index(T, 0, LY - 1, 0);
-  gI_L_0_m1_0 = Index(T, 0, -1, 0);
-
-  gI_0_p1_L_0 = Index(0, 1, LY, 0);
-  gI_0_Lp1_L_0 = Index(0, LX + 1, LY, 0);
-  gI_0_Lm2_L_0 = Index(0, LX - 2, LY, 0);
-  gI_0_m2_L_0 = Index(0, -2, LY, 0);
-
-  gI_0_L_Lp1_0 = Index(0, LX, LY + 1, 0);
-  gI_0_Lm1_Lp1_0 = Index(0, LX - 1, LY + 1, 0);
-  gI_0_m1_Lp1_0 = Index(0, -1, LY + 1, 0);
-
-  gI_Lp1_0_L_0 = Index(T + 1, 0, LY, 0);
-  gI_Lp1_0_Lm1_0 = Index(T + 1, 0, LY - 1, 0);
-  gI_Lp1_0_m1_0 = Index(T + 1, 0, -1, 0);
-
-  gI_L_0_p1_0 = Index(T, 0, 1, 0);
-  gI_L_0_Lp1_0 = Index(T, 0, LY + 1, 0);
-  gI_L_0_Lm2_0 = Index(T, 0, LY - 2, 0);
-  gI_L_0_m2_0 = Index(T, 0, -2, 0);
-
-  gI_0_L_0_L = Index(0, LX, 0, LZ);
-  gI_0_Lm1_0_L = Index(0, LX - 1, 0, LZ);
-  gI_0_m1_0_L = Index(0, -1, 0, LZ);
-
-  gI_L_0_0_L = Index(T, 0, 0, LZ);
-  gI_L_0_0_Lm1 = Index(T, 0, 0, LZ - 1);
-  gI_L_0_0_m1 = Index(T, 0, 0, -1);
-
-  gI_0_L_0_L = Index(0, LX, 0, LZ);
-  gI_0_Lm1_0_L = Index(0, LX - 1, 0, LZ);
-  gI_0_m1_0_L = Index(0, -1, 0, LZ);
-
-  gI_Lp1_0_0_L = Index(T + 1, 0, 0, LZ);
-  gI_Lp1_0_0_Lm1 = Index(T + 1, 0, 0, LZ - 1);
-  gI_Lp1_0_0_m1 = Index(T + 1, 0, 0, -1);
-
-  gI_L_0_0_p1 = Index(T, 0, 0, 1);
-  gI_L_0_0_Lp1 = Index(T, 0, 0, LZ + 1);
-  gI_L_0_0_Lm2 = Index(T, 0, 0, LZ - 2);
-  gI_L_0_0_m2 = Index(T, 0, 0, -2);
-
-  gI_0_L_0_Lp1 = Index(0, LX, 0, LZ + 1);
-  gI_0_Lm1_0_Lp1 = Index(0, LX - 1, 0, LZ + 1);
-  gI_0_m1_0_Lp1 = Index(0, -1, 0, LZ + 1);
-
-  gI_0_p1_0_L = Index(0, 1, 0, LZ);
-  gI_0_Lp1_0_L = Index(0, LX + 1, 0, LZ);
-  gI_0_Lm2_0_L = Index(0, LX - 2, 0, LZ);
-  gI_0_m2_0_L = Index(0, -2, 0, LZ);
-
-  gI_0_0_L_L = Index(0, 0, LY, LZ);
-  gI_0_0_Lm1_L = Index(0, 0, LY - 1, LZ);
-  gI_0_0_m1_L = Index(0, 0, -1, LZ);
-
-  gI_0_0_L_Lp1 = Index(0, 0, LY, LZ + 1);
-  gI_0_0_Lm1_Lp1 = Index(0, 0, LY - 1, LZ + 1);
-  gI_0_0_m1_Lp1 = Index(0, 0, -1, LZ + 1);
-
-  gI_0_0_p1_L = Index(0, 0, 1, LZ);
-  gI_0_0_Lp1_L = Index(0, 0, LY + 1, LZ);
-  gI_0_0_Lm2_L = Index(0, 0, LY - 2, LZ);
-  gI_0_0_m2_L = Index(0, 0, -2, LZ);
-
-  gI_Lp1_m1_0_0 = Index(T + 1, -1, 0, 0);
-  gI_m2_m1_0_0 = Index(-2, -1, 0, 0);
-  gI_m2_0_L_0 = Index(-2, 0, LY, 0);
-  gI_m2_0_m1_0 = Index(-2, 0, -1, 0);
-  gI_0_Lp1_m1_0 = Index(0, LX + 1, -1, 0);
-  gI_0_m2_m1_0 = Index(0, -2, -1, 0);
-  gI_m2_0_0_L = Index(-2, 0, 0, LZ);
-  gI_m2_0_0_m1 = Index(-2, 0, 0, -1);
-  gI_0_Lp1_0_m1 = Index(0, LX + 1, 0, -1);
-  gI_0_m2_0_m1 = Index(0, -2, 0, -1);
-  gI_0_0_Lp1_m1 = Index(0, 0, LY + 1, -1);
-  gI_0_0_m2_m1 = Index(0, 0, -2, -1);
-  gI_m1_0_0_m2 = Index(-1, 0, 0, -2);
-#endif /* _INDEX_INDEP_GEOM */
-
-#ifdef WITHLAPH
-  tempT = T;
-  T = 1;
-  tempV = VOLUME;
-  VOLUME = SPACEVOLUME;
-  tempR = RAND;
-  RAND = SPACERAND;
-  gI_0_0_0 = Index(0, 0, 0, 0);
-  gI_L_0_0 = Index(0, LX, 0, 0);
-  gI_Lm1_0_0 = Index(0, LX - 1, 0, 0);
-  gI_m1_0_0 = Index(0, -1, 0, 0);
-  gI_0_L_0 = Index(0, 0, LY, 0);
-  gI_0_Lm1_0 = Index(0, 0, LY - 1, 0);
-  gI_0_m1_0 = Index(0, 0, -1, 0);
-  gI_0_0_L = Index(0, 0, 0, LZ);
-  gI_0_0_Lm1 = Index(0, 0, 0, LZ - 1);
-  gI_0_0_m1 = Index(0, 0, 0, -1);
-  T = tempT;
-  VOLUME = tempV;
-  RAND = tempR;
-#endif
-
 #if (defined PARALLELXYZT || defined PARALLELXYZ)
-#if defined _USE_TSPLITPAR
-  int check_struct_zt = 0;
-#endif
   ix = 0;
   for (x0 = 0; x0 < T; x0++) {
-#if defined _USE_TSPLITPAR
-    int isp = 0;
-#endif
     for (x1 = 0; x1 < LX; x1++) {
       for (x2 = 0; x2 < LY; x2++) {
         if ((x0 + x1 + x2 + g_proc_coords[0] * T + g_proc_coords[1] * LX + g_proc_coords[2] * LY +
@@ -1050,26 +805,12 @@ void geometry() {
                 2 ==
             0) {
           g_field_z_ipt_even[ix] = g_lexic2eosub[g_ipt[x0][x1][x2][0]];
-#ifdef _INDEX_INDEP_GEOM
-          g_field_z_disp_even_dn[ix] = g_field_z_ipt_even[ix] - g_1st_z_int_dn;
-#if defined _USE_TSPLITPAR
-          g_field_zt_disp_even_dn[x0][isp] =
-              g_lexic2eosub[g_ipt[x0][x1][x2][0]] - g_1st_zt_int_dn[x0];
-          if (g_field_zt_disp_even_dn[x0][isp] != g_field_zt_disp_even_dn[x0 % 2][isp]) {
-            check_struct_zt = 1;
-          }
-          isp++;
-#endif
-#endif
           ix++;
         }
       }
     }
   }
   for (x0 = 0; x0 < T; x0++) {
-#if defined _USE_TSPLITPAR
-    int isp = 0;
-#endif
     for (x1 = 0; x1 < LX; x1++) {
       for (x2 = 0; x2 < LY; x2++) {
         if ((x0 + x1 + x2 + (LZ - 1) + g_proc_coords[0] * T + g_proc_coords[1] * LX +
@@ -1077,17 +818,6 @@ void geometry() {
                 2 ==
             0) {
           g_field_z_ipt_even[ix] = g_lexic2eosub[g_ipt[x0][x1][x2][LZ - 1]];
-#ifdef _INDEX_INDEP_GEOM
-          g_field_z_disp_even_up[ix - T * LX * LY / 2] = g_field_z_ipt_even[ix] - g_1st_z_int_up;
-#if defined _USE_TSPLITPAR
-          g_field_zt_disp_even_up[x0][isp] =
-              g_lexic2eosub[g_ipt[x0][x1][x2][LZ - 1]] - g_1st_zt_int_up[x0];
-          if (g_field_zt_disp_even_up[x0][isp] != g_field_zt_disp_even_up[x0 % 2][isp]) {
-            check_struct_zt = 1;
-          }
-          isp++;
-#endif
-#endif
           ix++;
         }
       }
@@ -1095,9 +825,6 @@ void geometry() {
   }
   ix = 0;
   for (x0 = 0; x0 < T; x0++) {
-#if defined _USE_TSPLITPAR
-    int isp = 0;
-#endif
     for (x1 = 0; x1 < LX; x1++) {
       for (x2 = 0; x2 < LY; x2++) {
         if ((x0 + x1 + x2 + g_proc_coords[0] * T + g_proc_coords[1] * LX + g_proc_coords[2] * LY +
@@ -1105,26 +832,12 @@ void geometry() {
                 2 ==
             1) {
           g_field_z_ipt_odd[ix] = g_lexic2eosub[g_ipt[x0][x1][x2][0]];
-#ifdef _INDEX_INDEP_GEOM
-          g_field_z_disp_odd_dn[ix] = g_field_z_ipt_odd[ix] - g_1st_z_int_dn;
-#if defined _USE_TSPLITPAR
-          g_field_zt_disp_odd_dn[x0][isp] =
-              g_lexic2eosub[g_ipt[x0][x1][x2][0]] - g_1st_zt_int_dn[x0];
-          if (g_field_zt_disp_odd_dn[x0][isp] != g_field_zt_disp_odd_dn[x0 % 2][isp]) {
-            check_struct_zt = 1;
-          }
-          isp++;
-#endif
-#endif
           ix++;
         }
       }
     }
   }
   for (x0 = 0; x0 < T; x0++) {
-#if defined _USE_TSPLITPAR
-    int isp = 0;
-#endif
     for (x1 = 0; x1 < LX; x1++) {
       for (x2 = 0; x2 < LY; x2++) {
         if ((x0 + x1 + x2 + (LZ - 1) + g_proc_coords[0] * T + g_proc_coords[1] * LX +
@@ -1132,90 +845,12 @@ void geometry() {
                 2 ==
             1) {
           g_field_z_ipt_odd[ix] = g_lexic2eosub[g_ipt[x0][x1][x2][LZ - 1]];
-#ifdef _INDEX_INDEP_GEOM
-          g_field_z_disp_odd_up[ix - T * LX * LY / 2] = g_field_z_ipt_odd[ix] - g_1st_z_int_up;
-#if defined _USE_TSPLITPAR
-          g_field_zt_disp_odd_up[x0][isp] =
-              g_lexic2eosub[g_ipt[x0][x1][x2][LZ - 1]] - g_1st_zt_int_up[x0];
-          if (g_field_zt_disp_odd_up[x0][isp] != g_field_zt_disp_odd_up[x0 % 2][isp]) {
-            check_struct_zt = 1;
-          }
-          isp++;
-#endif
-#endif
           ix++;
         }
       }
     }
   }
 
-#if defined _USE_TSPLITPAR
-  if (check_struct_zt != 0) {
-    if (g_proc_id == 0) {
-      fprintf(stderr, "Error in assuming the structure of dispacements of zt slice\n");
-      fflush(stderr);
-      MPI_Finalize();
-      exit(-1);
-    }
-  }
-#endif
-
-#ifdef _INDEX_INDEP_GEOM
-  /* Define the MPI_Types using the displacement vectors above and MPI_Type_indexed() */
-  ones = malloc(T * LX * LY / 2 * sizeof(int));
-  for (j = 0; j < T * LX * LY / 2; j++) ones[j] = 1;
-  MPI_Type_indexed(T * LX * LY / 2, ones, g_field_z_disp_even_dn, field_point,
-                   &field_z_slice_even_dn);
-  MPI_Type_indexed(T * LX * LY / 2, ones, g_field_z_disp_even_up, field_point,
-                   &field_z_slice_even_up);
-  MPI_Type_indexed(T * LX * LY / 2, ones, g_field_z_disp_odd_dn, field_point,
-                   &field_z_slice_odd_dn);
-  MPI_Type_indexed(T * LX * LY / 2, ones, g_field_z_disp_odd_up, field_point,
-                   &field_z_slice_odd_up);
-  MPI_Type_commit(&field_z_slice_even_dn);
-  MPI_Type_commit(&field_z_slice_even_up);
-  MPI_Type_commit(&field_z_slice_odd_dn);
-  MPI_Type_commit(&field_z_slice_odd_up);
-  free(ones);
-
-#if defined _USE_TSPLITPAR
-  /* LZ and T*LX*LY are required to be even, but LX*LY does not need to */
-  /* length zt slice=ceil(LX*LY/2) = (LX*LY+1)/2, if parity(t)*parity(z)*globalparity=1   */
-  /* length zt slice=floor(LX*LY/2) = LX*LY/2, if parity(t)*parity(z)*globalparity=-1   */
-  lsliceL = (LX * LY + 1) / 2;
-  lsliceS = (LX * LY / 2);
-  oneL = malloc(lsliceL * sizeof(int));
-  oneS = malloc(lsliceS * sizeof(int));
-  for (j = 0; j < lsliceL; j++) oneL[j] = 1;
-  for (j = 0; j < lsliceS; j++) oneS[j] = 1;
-
-  MPI_Type_indexed(lsliceL, oneL, g_field_zt_disp_even_dn[0], field_point,
-                   &field_zt_slice_even_dn_et);
-  MPI_Type_commit(&field_zt_slice_even_dn_et);
-  MPI_Type_indexed(lsliceS, oneS, g_field_zt_disp_even_up[0], field_point,
-                   &field_zt_slice_even_up_et);
-  MPI_Type_commit(&field_zt_slice_even_up_et);
-  MPI_Type_indexed(lsliceS, oneS, g_field_zt_disp_odd_dn[0], field_point,
-                   &field_zt_slice_odd_dn_et);
-  MPI_Type_commit(&field_zt_slice_odd_dn_et);
-  MPI_Type_indexed(lsliceL, oneL, g_field_zt_disp_odd_up[0], field_point,
-                   &field_zt_slice_odd_up_et);
-  MPI_Type_commit(&field_zt_slice_odd_up_et);
-  MPI_Type_indexed(lsliceS, oneS, g_field_zt_disp_even_dn[1], field_point,
-                   &field_zt_slice_even_dn_ot);
-  MPI_Type_commit(&field_zt_slice_even_dn_ot);
-  MPI_Type_indexed(lsliceL, oneL, g_field_zt_disp_even_up[1], field_point,
-                   &field_zt_slice_even_up_ot);
-  MPI_Type_commit(&field_zt_slice_even_up_ot);
-  MPI_Type_indexed(lsliceL, oneL, g_field_zt_disp_odd_dn[1], field_point,
-                   &field_zt_slice_odd_dn_ot);
-  MPI_Type_commit(&field_zt_slice_odd_dn_ot);
-  MPI_Type_indexed(lsliceS, oneS, g_field_zt_disp_odd_up[1], field_point,
-                   &field_zt_slice_odd_up_ot);
-  MPI_Type_commit(&field_zt_slice_odd_up_ot);
-
-#endif
-#endif
 
 #endif /* PARALLELXYZ || PARALLELXYZT*/
 
