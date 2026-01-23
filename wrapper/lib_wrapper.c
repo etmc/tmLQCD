@@ -63,6 +63,8 @@
 #include "read_input.h"
 #include "sighandler.h"
 #include "start.h"
+#include "operator/clover_leaf.h"
+#include "qphix_interface.h"
 
 #define CONF_FILENAME_LENGTH 500
 
