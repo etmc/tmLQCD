@@ -43,7 +43,7 @@ if (ieo == 0) {
 #ifndef TM_USE_OMP
 hi = &g_hi[16 * ioff];
 
-#if ((defined _GAUGE_COPY))
+#if ((defined TM_GAUGE_COPY))
 up = &g_gauge_field_copy[ioff][0];
 #else
 up = &g_gauge_field[(*hi)][0];
@@ -60,7 +60,7 @@ hi++;
 for (int icx = ioff; icx < (VOLUME / 2 + ioff); icx++) {
 #ifdef TM_USE_OMP
   hi = &g_hi[16 * icx];
-#if ((defined _GAUGE_COPY))
+#if ((defined TM_GAUGE_COPY))
   up = &g_gauge_field_copy[icx][0];
 #else
   up = &g_gauge_field[(*hi)][0];
@@ -74,7 +74,7 @@ for (int icx = ioff; icx < (VOLUME / 2 + ioff); icx++) {
   pn = p + (icx - ioff);
 #endif
   /*********************** direction +t ************************/
-#if (!defined _GAUGE_COPY)
+#if (!defined TM_GAUGE_COPY)
   um = &g_gauge_field[(*hi)][0];
 #else
   um = up + 1;
@@ -86,7 +86,7 @@ for (int icx = ioff; icx < (VOLUME / 2 + ioff); icx++) {
   _hop_t_p();
 
   /*********************** direction -t ************************/
-#if ((defined _GAUGE_COPY))
+#if ((defined TM_GAUGE_COPY))
   up = um + 1;
 #else
   up += 1;
@@ -97,7 +97,7 @@ for (int icx = ioff; icx < (VOLUME / 2 + ioff); icx++) {
   _hop_t_m();
 
   /*********************** direction +1 ************************/
-#ifndef _GAUGE_COPY
+#ifndef TM_GAUGE_COPY
   um = &g_gauge_field[(*hi)][1];
 #else
   um = up + 1;
@@ -109,7 +109,7 @@ for (int icx = ioff; icx < (VOLUME / 2 + ioff); icx++) {
   _hop_x_p();
 
   /*********************** direction -1 ************************/
-#if ((defined _GAUGE_COPY))
+#if ((defined TM_GAUGE_COPY))
   up = um + 1;
 #else
   up += 1;
@@ -120,7 +120,7 @@ for (int icx = ioff; icx < (VOLUME / 2 + ioff); icx++) {
   _hop_x_m();
 
   /*********************** direction +2 ************************/
-#ifndef _GAUGE_COPY
+#ifndef TM_GAUGE_COPY
   um = &g_gauge_field[(*hi)][2];
 #else
   um = up + 1;
@@ -132,7 +132,7 @@ for (int icx = ioff; icx < (VOLUME / 2 + ioff); icx++) {
   _hop_y_p();
 
   /*********************** direction -2 ************************/
-#if ((defined _GAUGE_COPY))
+#if ((defined TM_GAUGE_COPY))
   up = um + 1;
 #else
   up += 1;
@@ -143,7 +143,7 @@ for (int icx = ioff; icx < (VOLUME / 2 + ioff); icx++) {
   _hop_y_m();
 
   /*********************** direction +3 ************************/
-#ifndef _GAUGE_COPY
+#ifndef TM_GAUGE_COPY
   um = &g_gauge_field[(*hi)][3];
 #else
   um = up + 1;
@@ -156,7 +156,7 @@ for (int icx = ioff; icx < (VOLUME / 2 + ioff); icx++) {
 
   /*********************** direction -3 ************************/
 #ifndef TM_USE_OMP
-#if ((defined _GAUGE_COPY))
+#if ((defined TM_GAUGE_COPY))
   up = um + 1;
 #else
   up = &g_gauge_field[(*hi)][0];

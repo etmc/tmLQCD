@@ -21,7 +21,7 @@
 #ifdef HAVE_CONFIG_H
 #include <tmlqcd_config.h>
 #endif
-#ifdef HAVE_CLOCK_GETTIME
+#ifdef TM_CLOCK_GETTIME
 #ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 199309L
 #endif
@@ -45,7 +45,7 @@ double gettime(void) {
 
   t = MPI_Wtime();
 
-#elif (defined HAVE_CLOCK_GETTIME)
+#elif (defined TM_CLOCK_GETTIME)
 
   struct timespec ts;
 

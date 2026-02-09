@@ -276,11 +276,11 @@ extern int waitcount;
 void init_little_field_exchange(_Complex double *w) {
 #ifdef TM_USE_MPI
   int i = 0;
-#if (defined PARALLELT || defined PARALLELX)
+#if (defined TM_PARALLELT || defined TM_PARALLELX)
   int no_dirs = 2;
-#elif (defined PARALLELXT || defined PARALLELXY || defined PARALLELXYZ)
+#elif (defined TM_PARALLELXT || defined TM_PARALLELXY || defined TM_PARALLELXYZ)
   int no_dirs = 4;
-#elif (defined PARALLELXYT || defined PARALLELXYZT)
+#elif (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   int no_dirs = 6;
 #endif
   if (waitcount != 0) {
@@ -304,7 +304,7 @@ void init_little_field_exchange(_Complex double *w) {
               g_nb_list[i], i + 1, g_cart_grid, &lrequests[2 * i + 3]);
     waitcount += 4;
   }
-#ifdef PARALLELXYZT
+#ifdef TM_PARALLELXYZT
   /* send to the right, receive from the left */
   i = 6;
   MPI_Isend((void *)(w + g_N_s), g_N_s, MPI_DOUBLE_COMPLEX, g_nb_list[i], i, g_cart_grid,

@@ -22,7 +22,7 @@
 /* FIXME I will first fix this function by using referral.
          Probably should be done better in the future. AD. */
 
-#ifdef HAVE_LIBLEMON
+#ifdef TM_USE_LEMON
 int read_binary_gauge_data(LemonReader* lemonreader, DML_Checksum* checksum,
                            paramsIldgFormat* input, su3** const gf) {
   int t, x, y, z, status = 0;
@@ -144,7 +144,7 @@ int read_binary_gauge_data(LemonReader* lemonreader, DML_Checksum* checksum,
   free(filebuffer);
   return (0);
 }
-#else /* HAVE_LIBLEMON */
+#else /* TM_USE_LEMON */
 int read_binary_gauge_data(LimeReader *limereader, DML_Checksum *checksum, paramsIldgFormat *input,
                            su3 **const gf) {
   int t, x, y, z, status = 0;
@@ -273,4 +273,4 @@ int read_binary_gauge_data(LimeReader *limereader, DML_Checksum *checksum, param
 #endif
   return (0);
 }
-#endif /* HAVE_LIBLEMON */
+#endif /* TM_USE_LEMON */

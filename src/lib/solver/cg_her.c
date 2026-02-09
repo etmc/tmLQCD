@@ -102,7 +102,7 @@ int cg_her(spinor* const P, spinor* const Q, const int max_iter, double eps_sq, 
     if (((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq * squarenorm) && (rel_prec == 1))) {
       break;
     }
-#ifdef _USE_HALFSPINOR
+#ifdef TM_USE_HALFSPINOR
     if (((err * err <= eps_sq) && (rel_prec == 0)) ||
         ((err * err <= eps_sq * squarenorm) && (rel_prec == 1))) {
       g_sloppy_precision = 1;

@@ -369,11 +369,11 @@ list(
 
 list(APPEND TEST_SRC_C test/check_xchange.c test/check_geometry.c
      test/overlaptests.c)
-if(TMLQCD_USE_QPHIX)
+if(TM_USE_QPHIX)
   list(APPEND MAIN_SRC_C QphiX/qphix_interface.cpp)
 endif()
 
-if(TMLQCD_USE_QUDA)
+if(TM_USE_QUDA)
   list(APPEND MAIN_SRC_C quda_interface.c)
 endif()
 
@@ -392,7 +392,8 @@ list(
   ${INIT_SRC_C}
   ${SOLVER_SRC_C}
   ${TEST_SRC_C}
-  ${MEAS_SRC_C})
+  ${MEAS_SRC_C}
+  ${PROJECT_BINARY_DIR}/git_hash.c)
 
 include_directories(
   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
@@ -424,13 +425,10 @@ set_target_properties(hmc PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 1)
 # define a library and add the dependencies
 target_link_libraries(
   hmc
-  PUBLIC $<$<BOOL:${HAVE_CLOCK_GETTIME_IN_RT}>:rt>
-         $<$<BOOL:${TM_USE_LEMON}>:tmlqcd::clime>
-         $<$<BOOL:${TM_USE_LEMON}>:clemon::lemon>
+  PUBLIC $<$<BOOL:${TM_CLOCK_GETTIME_IN_RT}>:rt>
+         $<$<BOOL:${TM_DDalphaAMG}>:tmlqcd::DDalphaAMG>
          $<$<BOOL:${TM_USE_QPHIX}>:tmlqcd::qphix>
          $<$<BOOL:${TM_USE_FFTW}>:tmlqcd::fftw3>
-         $<$<BOOL:${TM_USE_MPI}>:MPI::MPI_C
-         MPI::MPI_CXX>
          $<$<BOOL:${TM_USE_QUDA}>:QUDA::quda>
          $<$<BOOL:${TM_USE_CUDA}>:CUDA::cufft
          CUDA::cufftw
@@ -440,9 +438,13 @@ target_link_libraries(
          $<$<BOOL:${TM_USE_HIP}>:hip::hipfft
          roc::hipblas
          hip::host>
+         tmlqcd::clime
+         $<$<BOOL:${TM_USE_LEMON}>:clemon::lemon>
          ${LAPACK_LIBRARIES}
          ${BLAS_LIBRARIES}
-         $<$<BOOL:${TM_USE_OPENMP}>:OpenMP::OpenMP_C
+         $<$<BOOL:${TM_USE_MPI}>:MPI::MPI_C
+         MPI::MPI_CXX>
+         $<$<BOOL:${TM_USE_OMP}>:OpenMP::OpenMP_C
          OpenMP::OpenMP_CXX>
          m)
 

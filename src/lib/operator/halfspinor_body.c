@@ -30,7 +30,7 @@ halfspinor* restrict* phi ALIGN;
 halfspinor32* restrict* phi32 ALIGN;
 _declare_hregs();
 
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst begin(hoppingmatrix)
 #endif
 
@@ -320,6 +320,6 @@ if (g_sloppy_precision == 1 && g_sloppy_precision_flag == 1) {
 #endif
   }
 }
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst end(hoppingmatrix)
 #endif

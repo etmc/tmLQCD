@@ -55,7 +55,7 @@ void xchange_deri(su3adj** const df) {
 #ifdef TM_USE_MPI
   int ix, iy, t, y, z, x;
   MPI_Status status;
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* The edges need to come first */
 
   /* send the data to the neighbour on the left in t direction */
@@ -96,9 +96,9 @@ void xchange_deri(su3adj** const df) {
     }
   }
 
-#endif /* (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT) */
+#endif /* (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT) */
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* edges */
 
   /* send the data to the neighbour on the left in x direction */
@@ -178,9 +178,9 @@ void xchange_deri(su3adj** const df) {
     }
   }
 
-#endif /* (defined PARALLELXYT || defined PARALLELXYZT) */
+#endif /* (defined TM_PARALLELXYT || defined TM_PARALLELXYZT) */
 
-#ifdef PARALLELXYZT
+#ifdef TM_PARALLELXYZT
 
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
@@ -305,7 +305,7 @@ void xchange_deri(su3adj** const df) {
     }
   }
 
-#endif /* PARALLELXYZT */
+#endif /* TM_PARALLELXYZT */
 
   // now the normal boundaries
 
@@ -341,7 +341,7 @@ void xchange_deri(su3adj** const df) {
     }
   }
 
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
   MPI_Sendrecv((void*)df[(T + 2) * LX * LY * LZ + T * LY * LZ], 1, deri_x_slice_cont, g_nb_x_dn, 42,
@@ -372,9 +372,9 @@ void xchange_deri(su3adj** const df) {
     }
   }
 
-#endif /* (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT) */
+#endif /* (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT) */
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
 
   /* send the data to the neighbour on the left in y direction */
   /* recieve the data from the neighbour on the right in y direction */
@@ -406,9 +406,9 @@ void xchange_deri(su3adj** const df) {
     }
   }
 
-#endif /* (defined PARALLELXYT || defined PARALLELXYZT) */
+#endif /* (defined TM_PARALLELXYT || defined TM_PARALLELXYZT) */
 
-#ifdef PARALLELXYZT
+#ifdef TM_PARALLELXYZT
   /* send the data to the neighbour on the left in y direction */
   /* recieve the data from the neighbour on the right in y direction */
   MPI_Sendrecv(
@@ -441,7 +441,7 @@ void xchange_deri(su3adj** const df) {
     }
   }
 
-#endif /* PARALLELXYZT */
+#endif /* TM_PARALLELXYZT */
 #endif /* MPI */
   return;
 }

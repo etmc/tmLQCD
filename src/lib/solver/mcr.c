@@ -127,7 +127,7 @@ int mcr(spinor* const P, spinor* const Q, const int m, const int max_restarts, c
         break;
       }
 
-#ifdef _USE_HALFSPINOR
+#ifdef TM_USE_HALFSPINOR
       if (((err * err <= eps_sq) && (rel_prec == 0)) ||
           ((err * err <= eps_sq * norm_sq) && (rel_prec == 1))) {
         if (g_sloppy_precision_flag == 1) {

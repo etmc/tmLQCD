@@ -56,7 +56,7 @@
 void deriv_Sb(const int ieo, spinor* const l, spinor* const k, hamiltonian_field_t* const hf,
               const double factor) {
   tm_stopwatch_push(&g_timers, __func__, "");
-#ifdef _GAUGE_COPY
+#ifdef TM_GAUGE_COPY
   if (g_update_gauge_copy) {
     update_backward_gauge(hf->gaugefield);
   }
@@ -85,7 +85,7 @@ void deriv_Sb(const int ieo, spinor* const l, spinor* const k, hamiltonian_field
 #undef static
 #endif
 
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst begin(derivSb)
 #endif
 
@@ -114,7 +114,7 @@ void deriv_Sb(const int ieo, spinor* const l, spinor* const k, hamiltonian_field
       icy = g_lexic2eosub[iy];
 
       sp = k + icy;
-#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR)
+#if (defined TM_GAUGE_COPY && !defined TM_USE_HALFSPINOR)
       up = &g_gauge_field_copy[icx][0];
 #else
     up = &hf->gaugefield[ix][0];
@@ -136,7 +136,7 @@ void deriv_Sb(const int ieo, spinor* const l, spinor* const k, hamiltonian_field
       icy = g_lexic2eosub[iy];
 
       sm = k + icy;
-#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR)
+#if (defined TM_GAUGE_COPY && !defined TM_USE_HALFSPINOR)
       um = up + 1;
 #else
     um = &hf->gaugefield[iy][0];
@@ -159,7 +159,7 @@ void deriv_Sb(const int ieo, spinor* const l, spinor* const k, hamiltonian_field
       icy = g_lexic2eosub[iy];
 
       sp = k + icy;
-#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR)
+#if (defined TM_GAUGE_COPY && !defined TM_USE_HALFSPINOR)
       up = um + 1;
 #else
     up = &hf->gaugefield[ix][1];
@@ -181,7 +181,7 @@ void deriv_Sb(const int ieo, spinor* const l, spinor* const k, hamiltonian_field
       icy = g_lexic2eosub[iy];
 
       sm = k + icy;
-#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR)
+#if (defined TM_GAUGE_COPY && !defined TM_USE_HALFSPINOR)
       um = up + 1;
 #else
     um = &hf->gaugefield[iy][1];
@@ -203,7 +203,7 @@ void deriv_Sb(const int ieo, spinor* const l, spinor* const k, hamiltonian_field
       icy = g_lexic2eosub[iy];
 
       sp = k + icy;
-#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR)
+#if (defined TM_GAUGE_COPY && !defined TM_USE_HALFSPINOR)
       up = um + 1;
 #else
     up = &hf->gaugefield[ix][2];
@@ -225,7 +225,7 @@ void deriv_Sb(const int ieo, spinor* const l, spinor* const k, hamiltonian_field
       icy = g_lexic2eosub[iy];
 
       sm = k + icy;
-#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR)
+#if (defined TM_GAUGE_COPY && !defined TM_USE_HALFSPINOR)
       um = up + 1;
 #else
     um = &hf->gaugefield[iy][2];
@@ -247,7 +247,7 @@ void deriv_Sb(const int ieo, spinor* const l, spinor* const k, hamiltonian_field
       icy = g_lexic2eosub[iy];
 
       sp = k + icy;
-#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR)
+#if (defined TM_GAUGE_COPY && !defined TM_USE_HALFSPINOR)
       up = um + 1;
 #else
     up = &hf->gaugefield[ix][3];
@@ -269,7 +269,7 @@ void deriv_Sb(const int ieo, spinor* const l, spinor* const k, hamiltonian_field
       icy = g_lexic2eosub[iy];
 
       sm = k + icy;
-#if (defined _GAUGE_COPY && !defined _USE_HALFSPINOR)
+#if (defined TM_GAUGE_COPY && !defined TM_USE_HALFSPINOR)
       um = up + 1;
 #else
     um = &hf->gaugefield[iy][3];
@@ -292,7 +292,7 @@ void deriv_Sb(const int ieo, spinor* const l, spinor* const k, hamiltonian_field
   } /* OpenMP closing brace */
 #endif
   tm_stopwatch_pop(&g_timers, 0, 1, "");
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst end(derivSb)
 #endif
 }

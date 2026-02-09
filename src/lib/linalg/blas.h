@@ -23,8 +23,8 @@
 #include <complex.h>
 #include "linalg/fortran.h"
 
-#if defined CRAY || defined HITACHI
-/* On the CRAY is all different, of course... */
+#if defined TM_CRAY || defined HITACHI
+/* On the TM_CRAY is all different, of course... */
 #include "fortran.h"
 #define zgemm ZGEMM
 #define zgemv ZGEMV
