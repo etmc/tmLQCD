@@ -34,7 +34,7 @@ void get_rectangle_staples_general(su3 *const v, const int x, const int mu,
                                    const su3 *const *const gf) {
   su3 ALIGN tmp1, tmp2;
   const su3 *a, *b, *c, *d, *e;
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst begin(rectstaples)
 #endif
   _su3_zero((*v));
@@ -178,7 +178,7 @@ void get_rectangle_staples_general(su3 *const v, const int x, const int mu,
       _su3_times_su3_acc((*v), tmp2, tmp1);
     }
   }
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst end(rectstaples)
 #endif
 }

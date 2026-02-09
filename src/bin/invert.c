@@ -84,7 +84,7 @@
 #ifdef TM_USE_QPHIX
 #include "qphix_interface.h"
 #endif
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
 #include "DDalphaAMG_interface.h"
 #endif
 #include "expo.h"
@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
 
   init_critical_globals(TM_PROGRAM_INVERT);
 
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst init
 #pragma pomp inst begin(main)
 #endif
@@ -165,7 +165,7 @@ int main(int argc, char *argv[]) {
   g_dbw2rand = 0;
 #endif
 
-#ifdef _GAUGE_COPY
+#ifdef TM_GAUGE_COPY
   j = init_gauge_field(VOLUMEPLUSRAND, 1);
   j += init_gauge_field_32(VOLUMEPLUSRAND, 1);
 #else
@@ -246,7 +246,7 @@ int main(int argc, char *argv[]) {
   init_measurements();
 
   /* this could be maybe moved to init_operators */
-#ifdef _USE_HALFSPINOR
+#ifdef TM_USE_HALFSPINOR
   j = init_dirac_halfspinor();
   if (j != 0) {
     fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
@@ -258,7 +258,7 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "Not enough memory for 32-bit halffield! Aborting...\n");
     exit(-1);
   }
-#if (defined _PERSISTENT)
+#if (defined TM_PERSISTENT)
   if (even_odd_flag) init_xchange_halffield();
 #endif
 #endif
@@ -362,7 +362,7 @@ int main(int argc, char *argv[]) {
     g_precWS = NULL;
     if (use_preconditioning == 1) {
       /* todo load fftw wisdom */
-#if (defined HAVE_FFTW) && !(defined TM_USE_MPI)
+#if (defined TM_USE_FFTW) && !(defined TM_USE_MPI)
       loadFFTWWisdom(g_spinor_field[0], g_spinor_field[1], T, LX);
 #else
       use_preconditioning = 0;
@@ -457,7 +457,7 @@ int main(int argc, char *argv[]) {
   MPI_Finalize();
 #endif
   return (0);
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst end(main)
 #endif
 }

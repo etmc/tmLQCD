@@ -4,13 +4,13 @@
 void generic_exchange(void *field_in, int bytes_per_site) {}
 #else /* MPI */
 void generic_exchange(void *field_in, int bytes_per_site) {
-#if defined _NON_BLOCKING
+#if defined TM_NON_BLOCKING
   int cntr = 0;
   MPI_Request request[108];
   MPI_Status status[108];
-#else  /* _NON_BLOCKING */
+#else  /* TM_NON_BLOCKING */
   MPI_Status status;
-#endif /* _NON_BLOCKING */
+#endif /* TM_NON_BLOCKING */
   static int initialized = 0;
 
   /* We start by defining all the MPI datatypes required */
@@ -125,11 +125,11 @@ void generic_exchange(void *field_in, int bytes_per_site) {
   }
 
   /* Following are implementations using different compile time flags */
-#if defined _NON_BLOCKING
+#if defined TM_NON_BLOCKING
 #include "utils_generic_exchange.nonblocking.inc"
-#else  /* _NON_BLOCKING */
+#else  /* TM_NON_BLOCKING */
 #include "utils_generic_exchange.blocking.inc"
-#endif /* _NON_BLOCKING */
+#endif /* TM_NON_BLOCKING */
 }
 
 #endif /* MPI */

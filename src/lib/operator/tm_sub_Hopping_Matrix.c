@@ -51,12 +51,12 @@
 // where cfactor = a + i b
 //
 
-#if (defined _USE_HALFSPINOR)
+#if (defined TM_USE_HALFSPINOR)
 #include "operator/halfspinor_hopping.h"
 
 void tm_sub_Hopping_Matrix(const int ieo, spinor* const l, spinor* const p, spinor* const k,
                            complex double const cfactor) {
-#ifdef _GAUGE_COPY
+#ifdef TM_GAUGE_COPY
   if (g_update_gauge_copy) {
     update_backward_gauge(g_gauge_field);
   }
@@ -78,10 +78,10 @@ void tm_sub_Hopping_Matrix(const int ieo, spinor* const l, spinor* const p, spin
   return;
 }
 
-#elif (!defined _NO_COMM && !defined _USE_HALFSPINOR)
+#elif (!defined _NO_COMM && !defined TM_USE_HALFSPINOR)
 void tm_sub_Hopping_Matrix(const int ieo, spinor* const l, spinor* p, spinor* const k,
                            complex double const cfactor) {
-#ifdef _GAUGE_COPY
+#ifdef TM_GAUGE_COPY
   if (g_update_gauge_copy) {
     update_backward_gauge(g_gauge_field);
   }

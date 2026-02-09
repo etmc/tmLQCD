@@ -108,8 +108,8 @@ extern MPI_Datatype halffield_y_slice_gath;
 extern MPI_Datatype halffield_z_slice_cont;
 
 
-#if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || \
-     defined PARALLELXYZ)
+#if (defined TM_PARALLELT || defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT || \
+     defined TM_PARALLELXYZ)
 extern MPI_Datatype field_z_slice_even_dn;
 extern MPI_Datatype field_z_slice_even_up;
 extern MPI_Datatype field_z_slice_odd_dn;

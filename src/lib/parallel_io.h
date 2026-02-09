@@ -17,8 +17,8 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _PARALLEL_IO_H
-#define _PARALLEL_IO_H
+#ifndef _TM_PARALLEL_IO_H
+#define _TM_PARALLEL_IO_H
 
 #include <lemon.h>
 #include "dml.h"

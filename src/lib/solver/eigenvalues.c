@@ -68,7 +68,7 @@ double eigenvalues(int *nr_of_eigenvalues, const int max_iterations, const doubl
                    const int even_odd_flag) {
   double returnvalue;
   _Complex double norm2;
-#ifdef HAVE_LAPACK
+#ifdef TM_LAPACK
   static int allocated = 0;
   char filename[200];
   FILE *ofs;

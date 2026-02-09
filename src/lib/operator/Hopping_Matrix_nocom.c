@@ -48,8 +48,8 @@
 
 #define Hopping_Matrix Hopping_Matrix_nocom
 #define _NO_COMM 1
-#ifdef _KOJAK_INST
-#undef _KOJAK_INST
+#ifdef TM_KOJAK_INST
+#undef TM_KOJAK_INST
 #endif
 
 #include "Hopping_Matrix.c"

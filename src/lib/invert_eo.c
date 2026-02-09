@@ -61,7 +61,7 @@
 #ifdef TM_USE_QPHIX
 #include "qphix_interface.h"
 #endif
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
 #include "DDalphaAMG_interface.h"
 #endif
 
@@ -84,7 +84,7 @@ int invert_eo(spinor *const Even_new, spinor *const Odd_new, spinor *const Even,
   }
 #endif
 
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
   if (solver_flag == MG)
     return MG_solver_eo(Even_new, Odd_new, Even, Odd, precision, max_iter, rel_prec, VOLUME / 2,
                         g_gauge_field, &M_full);

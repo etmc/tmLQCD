@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
 
   init_critical_globals(TM_PROGRAM_OFFLINE_MEASUREMENT);
 
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst init
 #pragma pomp inst begin(main)
 #endif
@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
   g_dbw2rand = 0;
 #endif
 
-#ifdef _GAUGE_COPY
+#ifdef TM_GAUGE_COPY
   j = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
   j = init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
@@ -210,7 +210,7 @@ int main(int argc, char *argv[]) {
   init_measurements();
 
   /* this could be maybe moved to init_operators */
-#ifdef _USE_HALFSPINOR
+#ifdef TM_USE_HALFSPINOR
   j = init_dirac_halfspinor();
   if (j != 0) {
     fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
@@ -223,7 +223,7 @@ int main(int argc, char *argv[]) {
       exit(-1);
     }
   }
-#if (defined _PERSISTENT)
+#if (defined TM_PERSISTENT)
   if (even_odd_flag) init_xchange_halffield();
 #endif
 #endif
@@ -307,7 +307,7 @@ int main(int argc, char *argv[]) {
 #endif
   return (0);
 
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst end(main)
 #endif
 }

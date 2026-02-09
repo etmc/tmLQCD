@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.24)
 project(
   tmlqcd
   DESCRIPTION "tmlQCD"
-  HOMEPAGE_URL "http://www.itkp.uni-bonn.de/~urbach/software.html"
+  HOMEPAGE_URL "https://github.com/etmc/tmLQCD"
   VERSION "6.0.0"
   LANGUAGES C CXX)
 
@@ -80,26 +80,22 @@ option(TM_USE_FFTW "Enable fftw support" OFF)
 option(TM_USE_MPI "Enable MPI support" OFF)
 option(TM_USE_CUDA "Enable QUDA support" OFF)
 option(TM_USE_HIP "Enable HIP support" OFF)
-option(TM_USE_DDALPHAAMG "Enable DDalphaAMG support" OFF)
-option(TM_USE_OPENMP "Enable openMP" ON)
-option(TM_FIXED_VOLUME "fix volume at compile time" OFF)
-set(
-  TM_ENABLE_ALIGNMENT
-  "auto"
-  CACHE STRING   "Automatically or expliclty align arrays to byte number. auto, none, 16, 32, 64")
+option(TM_USE_DDalphaAMG "Enable DDalphaAMG support" OFF)
+option(TM_USE_OMP "Enable openMP" ON)
+option(TM_FIXEDVOLUME "fix volume at compile time" OFF)
+set(TM_ENABLE_ALIGNMENT
+    "auto"
+    CACHE
+      STRING
+      "Automatically or expliclty align arrays to byte number. auto, none, 16, 32, 64"
+)
 
-set_property(
-  CACHE TM_ENABLE_ALIGNMENT
-  PROPERTY STRINGS
-  "auto"
-  "none"
-  "16"
-  "32"
-  "64")
+set_property(CACHE TM_ENABLE_ALIGNMENT PROPERTY STRINGS "auto" "none" "16" "32"
+                                                "64")
 
 option(TM_BGL_DRAM "use BGL dram window (BGL only!)" ON)
 option(TM_USE_OPTIMIZATION "enable optimisation" ON)
-option(TM_USE_GAUGE_COPY "Enable use of a copy of the gauge field" ON)
+option(TM_USE_GAUGECOPY "Enable use of a copy of the gauge field" ON)
 option(TM_USE_HALFSPINOR "Use a Dirac Op. with halfspinor exchange" ON)
 option(TM_USE_TSPLITPAR "Enable timeslice-splitted communications" ON)
 option(TM_USE_QPHIX "enable QPhiX" OFF)
@@ -110,8 +106,8 @@ option(TM_ENABLE_WARNINGS "Enable all warnings" ON)
 
 # MPI dependent options
 cmake_dependent_option(
-  TM_PERSISTENT_MPI "Use persistent MPI calls for halfspinor [default=no]"
-  OFF "TM_USE_MPI" OFF)
+  TM_PERSISTENT_MPI "Use persistent MPI calls for halfspinor [default=no]" OFF
+  "TM_USE_MPI" OFF)
 cmake_dependent_option(
   TM_NONBLOCKING_MPI "Use non-blocking MPI calls for spinor and gaug" ON
   "TM_USE_MPI" OFF)
@@ -126,15 +122,15 @@ cmake_dependent_option(TM_USE_CUDA_HIP "Enable CUDA support in HIP" OFF
                        "TM_USE_HIP" OFF)
 
 # clime and lemon depend on MPI
-cmake_dependent_option(TM_USE_LEMON "Use the lemon io library" OFF
-                       "TM_USE_MPI" ON)
+cmake_dependent_option(TM_USE_LEMON "Use the lemon io library" OFF "TM_USE_MPI"
+                       ON)
 
 # GPU dependent options
 cmake_dependent_option(TM_USE_QUDA_EXPERIMENTAL "Enable QUDA support" ON
                        "TM_USE_QUDA" OFF)
 cmake_dependent_option(
-  TM_QUDA_FERMIONIC_FORCES "Enable support for fermionic forces using QUDA"
-  ON "TM_USE_QUDA" OFF)
+  TM_QUDA_FERMIONIC_FORCES "Enable support for fermionic forces using QUDA" ON
+  "TM_USE_QUDA" OFF)
 
 cmake_dependent_option(TM_USE_NVHPC "Enable Nvidia HPC toolkit" OFF
                        "TM_USE_CUDA" OFF)
@@ -143,7 +139,7 @@ cmake_dependent_option(TM_USE_NVHPC "Enable Nvidia HPC toolkit" OFF
 find_package(BLAS REQUIRED)
 #
 find_package(LAPACK REQUIRED)
-set(HAVE_LAPACK ON)
+set(TM_LAPACK ON)
 find_package(FLEX REQUIRED)
 # do we need bison ?
 find_package(BISON REQUIRED)
@@ -154,77 +150,51 @@ set(PACKAGE_TARNAME "tmlqcd")
 set(PACKAGE_BUGREPORT "curbach@gmx.de")
 set(PACKAGE_STRING "${PROJECT_DESCRIPTION} ${PROJECT_VERSION}")
 
-unset(TM_USE_MPI)
-unset(TM_USE_OMP)
-unset(HAVE_LIBLEMON)
-unset(HAVE_LIBLIME)
-unset(FIXEDVOLUME)
-unset(_PERSISTENT)
-unset(_NON_BLOCKING)
-unset(HAVE_LIBQUDA)
-unset(TM_USE_QUDA)
-unset(TM_QUDA_EXPERIMENTAL)
-unset(TM_QUDA_FERMIONIC_FORCES)
-unset(DDalphaAMG)
-unset(TM_USE_QPHIX)
-unset(QPHIX_SOALEN)
-unset(_NEW_GEOMETRY)
-unset(_NON_BLOCKING)
-unset(_USE_SHMEM)
-unset(_USE_HALFSPINOR)
 set(ALIGN " ")
 set(ALIGN_BASE "0")
 set(ALIGN_BASE32 "0")
 set(ALIGN32 " ")
 
 message("${TM_ENABLE_ALIGNMENT}")
-if (${TM_ENABLE_ALIGNMENT} STREQUAL "auto")
+if(${TM_ENABLE_ALIGNMENT} STREQUAL "auto")
   set(ALIGN_BASE "0x00")
   set(ALIGN " ")
   set(ALIGN_BASE32 "0x00")
   set(ALIGN32 " ")
-elseif (TM_ENABLE_ALIGNMENT EQUAL 16)
+elseif(TM_ENABLE_ALIGNMENT EQUAL 16)
   set(ALIGN_BASE "0x0F")
   set(ALIGN "__attribute__ ((aligned (16)))")
   set(ALIGN_BASE32 "0x0F")
   set(ALIGN32 "__attribute__ ((aligned (16)))")
-elseif (TM_ENABLE_ALIGNMENT EQUAL 32)
+elseif(TM_ENABLE_ALIGNMENT EQUAL 32)
   set(ALIGN_BASE "0x2F")
   set(ALIGN "__attribute__ ((aligned (32)))")
   set(ALIGN_BASE32 "0x2F")
   set(ALIGN32 "__attribute__ ((aligned (32)))")
-elseif (TM_ENABLE_ALIGNMENT EQUAL 64)
+elseif(TM_ENABLE_ALIGNMENT EQUAL 64)
   set(ALIGN_BASE "0x3F")
   set(ALIGN "__attribute__ ((aligned (64)))")
   set(ALIGN_BASE32 "0x3F")
   set(ALIGN32 "__attribute__ ((aligned (64)))")
 else()
-  message(FATAL_ERROR "Unusable value for array alignment. Allowed values are: auto, none, 16, 32, 64")
-endif()
-
-if(TM_USE_HALFSPINOR)
-  set(_USE_HALFSPINOR ON)
-endif()
-
-if(TM_FIXED_VOLUME)
-  set(FIXEDVOLUME ON)
-endif()
-
-if(TM_PERSISTENT_MPI)
-  set(_PERSISTENT ON)
+  message(
+    FATAL_ERROR
+      "Unusable value for array alignment. Allowed values are: auto, none, 16, 32, 64"
+  )
 endif()
 
 if(TM_USE_MPI)
   find_package(MPI REQUIRED)
-  set(TM_USE_MPI ON)
   if(TM_NONBLOCKING_MPI)
-    set(_NON_BLOCKING ON)
+    set(TM_NONBLOCKING ON)
+  endif()
+  if(TM_PERSISTENT_MPI)
+    set(TM_PERSISTENT ON)
   endif()
 endif()
 
-if(TM_USE_OPENMP)
+if(TM_USE_OMP)
   find_package(OpenMP REQUIRED COMPONENTS C CXX)
-  set(TM_USE_OMP ON)
 endif()
 
 if(TM_USE_HDF5)
@@ -233,24 +203,23 @@ endif()
 
 if(TM_USE_LEMON)
   find_package(Clemon REQUIRED)
-  set(HAVE_LIBLEMON ON)
 endif()
 
 find_package(CLime REQUIRED)
-set(HAVE_LIBLIME ON)
+set(TM_USE_LIME ON)
 
 if(TM_USE_QUDA)
   find_package(QUDA REQUIRED config)
-  set(HAVE_LIBQUDA ON)
   if(TM_USE_QUDA_EXPERIMENTAL)
     set(TM_QUDA_EXPERIMENTAL ON)
   endif()
   if(TM_QUDA_FERMIONIC_FORCES)
     set(TM_QUDA_FERMIONIC_FORCES ON)
   endif()
-  if(TM_USE_CUDA OR TM_USE_HIP)
-    set(TM_USE_QUDA ON)
-  endif()
+endif()
+
+if(TM_USE_SHMEM)
+  message(INFO "SHMEM needs to be included")
 endif()
 
 if(TM_USE_CUDA AND TM_USE_HIP)
@@ -268,7 +237,6 @@ if(TM_USE_CUDA OR QUDA_TARGET_CUDA)
   endif()
 endif()
 
-message("QUDA_TARGET: ${QUDA_TARGET_CUDA}")
 if(TM_USE_HIP OR QUDA_TARGET_HIP)
   enable_language(hip)
 
@@ -285,20 +253,15 @@ if(TM_USE_HIP OR QUDA_TARGET_HIP)
   endif()
 endif()
 
-if(TM_USE_SHMEM)
-  set(_USE_SHMEM ON)
-endif()
-
 if(TM_USE_QPIHX)
   find_package(QPhiX REQUIRED)
   if(NOT TARGET tmlqcd::qphix)
     add_library(tmlqcd::qphix INTERFACE IMPORTED)
     set_target_properties(tmlqcd::qphix PROPERTIES INTERFACE_LINK_LIBRARIES
-      "${QPHIX_LIBRARIES}")
+                                                   "${QPHIX_LIBRARIES}")
     set_target_properties(tmlqcd::qphix PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
-      "${QPHIX_INCLUDE_DIRS}")
+                                                   "${QPHIX_INCLUDE_DIRS}")
   endif()
-  set(TM_USE_QPHIX ON)
 endif()
 
 # check for fftw3 (rely on pkgconfig).
@@ -309,57 +272,60 @@ if(TM_USE_FFTW)
   endif()
 endif()
 
+if(TM_USE_DDalphaAMG)
+  find_package(DDAlphaAMG REQUIRED)
+endif()
+
 # gprofiler
 
-if (TM_USE_GPROF)
+if(TM_USE_GPROF)
   set(PROFILE_FLAGS "-pg;-g")
-  if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "powerpc|powerpc64")
+  if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "powerpc|powerpc64")
     list(APPEND PROFILE_FLAGS "-qfullpath")
   endif()
   add_compile_options($<BOOL:$<COMPILE_LANGUAGE:C>:$PROFILE_FLAGS>)
 endif()
 
-if (TM_ENABLE_WARNINGS)
-  add_compile_options(
-    $<$<COMPILE_LANG_AND_ID:C,GNU>:-Wall>
-    $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-Wall>)
+if(TM_ENABLE_WARNINGS)
+  add_compile_options($<$<COMPILE_LANG_AND_ID:C,GNU>:-Wall>
+                      $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-Wall>)
 endif()
 
 # check for the presence of clock_gettime in libc or librt
-check_symbol_exists(clock_gettime "time.h" HAVE_CLOCK_GETTIME)
-check_library_exists(rt clock_gettime "" HAVE_CLOCK_GETTIME_IN_RT)
-check_function_exists(fseeko HAVE_FSEEKO)
+check_symbol_exists(clock_gettime "time.h" TM_CLOCK_GETTIME)
+check_library_exists(rt clock_gettime "" TM_CLOCK_GETTIME_IN_RT)
+check_function_exists(fseeko TM_FSEEKO)
 
 # set the parallelization
 
 if(TM_USE_MPI)
   if(TM_MPI_DIMENSION EQUAL "1")
     # T parallelisation
-    set(PARALLELT ON)
+    set(TM_PARALLELT ON)
   elseif(TM_MPI_DIMENSION EQUAL "2")
     # XT parallelisation
-    set(PARALLELXT ON)
+    set(TM_PARALLELXT ON)
   elseif(TM_MPI_DIMENSION EQUAL "3")
-    set(PARALLELXYT ON)
+    set(TM_PARALLELXYT ON)
     # XYZ parallelisation
   elseif(TM_MPI_DIMENSION EQUAL "4")
     # timeslice-splitted communications
-    set(PARALLELXYZT ON)
+    set(TM_PARALLELXYZT ON)
   elseif(TM_MPI_DIMENSION EQUAL "X")
-    set(PARALLELX ON)
+    set(TM_PARALLELX ON)
   elseif(TM_MPI_DIMENSION EQUAL "XY")
-    set(PARALLELXY ON)
+    set(TM_PARALLELXY ON)
   elseif(TM_MPI_DIMENSION EQUAL "XYZ")
-    set(PARALLELXYZ ON)
+    set(TM_PARALLELXYZ ON)
   else()
-    set(PARALLELXYZT ON)
+    set(TM_PARALLELXYZT ON)
   endif()
 endif()
 
 # keep the autotool config.h header.
 configure_file("${PROJECT_SOURCE_DIR}/cmake/tmlqcd_config_internal.h.in"
                "${PROJECT_BINARY_DIR}/tmlqcd_config_internal.h" @ONLY)
-configure_file("${PROJECT_SOURCE_DIR}/fixed_volume.h.in"
+configure_file("${PROJECT_SOURCE_DIR}/src/lib/fixed_volume.h.in"
                "${PROJECT_BINARY_DIR}/fixed_volume.h" @ONLY)
 # check if git command exists
 find_program(GIT_EXE NAMES git)
@@ -385,6 +351,6 @@ else()
   )
 endif()
 
-configure_file(cmake/git_hash.h.in git_hash.h @ONLY)
+configure_file(cmake/git_hash.c.in git_hash.c @ONLY)
 add_subdirectory(src/lib)
 add_subdirectory(src/bin)

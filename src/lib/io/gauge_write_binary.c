@@ -22,7 +22,7 @@
 /* FIXME I will first fix this function by using referral.
          Probably should be done better in the future. AD. */
 
-#ifdef HAVE_LIBLEMON
+#ifdef TM_USE_LEMON
 int write_binary_gauge_data(LemonWriter* lemonwriter, const int prec, DML_Checksum* checksum) {
   int x, xG, y, yG, z, zG, t, tG, status = 0;
   su3 tmp3[4];
@@ -133,7 +133,7 @@ int write_binary_gauge_data(LemonWriter* lemonwriter, const int prec, DML_Checks
   return 0;
 }
 
-#else /* HAVE_LIBLEMON */
+#else /* TM_USE_LEMON */
 
 int write_binary_gauge_data(LimeWriter* limewriter, const int prec, DML_Checksum* checksum) {
   int x, X, y, Y, z, Z, tt, t0, tag = 0, id = 0, status = 0;
@@ -281,4 +281,4 @@ int write_binary_gauge_data(LimeWriter* limewriter, const int prec, DML_Checksum
 
   return (0);
 }
-#endif /* HAVE_LIBLEMON */
+#endif /* TM_USE_LEMON */

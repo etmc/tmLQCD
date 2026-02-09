@@ -50,7 +50,7 @@
 #ifdef TM_USE_QUDA
 #include "quda_interface.h"
 #endif
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
 #include "DDalphaAMG_interface.h"
 #endif
 #ifdef TM_USE_QPHIX
@@ -75,7 +75,7 @@ int invert_doublet_eo(spinor* const Even_new_s, spinor* const Odd_new_s, spinor*
   }
 #endif
 
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
   if (solver_flag == MG) {
     return MG_solver_nd_eo(Even_new_s, Odd_new_s, Even_new_c, Odd_new_c, Even_s, Odd_s, Even_c,
                            Odd_c, precision, max_iter, rel_prec, VOLUME / 2, g_gauge_field,
@@ -162,7 +162,7 @@ int invert_cloverdoublet_eo(spinor* const Even_new_s, spinor* const Odd_new_s,
   }
 #endif
 
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
   if (solver_flag == MG) {
     return MG_solver_nd_eo(Even_new_s, Odd_new_s, Even_new_c, Odd_new_c, Even_s, Odd_s, Even_c,
                            Odd_c, precision, max_iter, rel_prec, VOLUME / 2, g_gauge_field,

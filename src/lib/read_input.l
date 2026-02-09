@@ -849,8 +849,8 @@ static inline double fltlist_next_token(int * const list_end){
 }
 
 <INITMULTIGRID>AMG{SPC}* {
-#ifdef DDalphaAMG
- if(myverbose) printf("Initialising DDalphaAMG line %d\n", line_of_file); 
+#ifdef TM_USE_DDalphaAMG
+ if(myverbose) printf("Initialising DDalphaAMG line %d\n", line_of_file);
  BEGIN(MULTIGRID);
 #else
  printf("ERROR line %d: DDalphaAMG library not included\n", line_of_file);
@@ -951,7 +951,7 @@ static inline double fltlist_next_token(int * const list_end){
     mg_no_shifts=0;
     if(myverbose) printf("  MG_MMS_Mass set to %.16f line %d operator %d\n", mg_mms_mass, line_of_file, current_operator);
   }
-  EndDDalphaAMG{SPC}* {
+  End_DDalphaAMG{SPC}* {
   if(myverbose) printf("DDalphaAMG parsed in line %d\n\n", line_of_file);
   BEGIN(0);
   }
@@ -1385,7 +1385,7 @@ static inline double fltlist_next_token(int * const list_end){
     BEGIN(name_caller);
   }
   DDalphaAMG {
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
     optr->solver = MG;
     if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
@@ -1490,7 +1490,7 @@ static inline double fltlist_next_token(int * const list_end){
     BEGIN(name_caller);
   }
   DDalphaAMG {
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
     optr->solver = MG;
     if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
@@ -1543,7 +1543,7 @@ static inline double fltlist_next_token(int * const list_end){
     BEGIN(name_caller);
   }
   DDalphaAMG {
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
     optr->solver = MG;
     if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
@@ -2834,7 +2834,7 @@ static inline double fltlist_next_token(int * const list_end){
     BEGIN(name_caller);
   }
   DDalphaAMG {
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
     if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
     mnl->solver = MG;
     BEGIN(solver_caller);
@@ -2877,7 +2877,7 @@ static inline double fltlist_next_token(int * const list_end){
     BEGIN(solver_caller);
   }
   DDalphaAMG {
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
     if(myverbose) printf("  HB Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
     mnl->HB_solver = MG;
     BEGIN(solver_caller);
@@ -2902,7 +2902,7 @@ static inline double fltlist_next_token(int * const list_end){
     BEGIN(solver_caller);
   }
   DDalphaAMG {
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
     if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
     mnl->solver = MG;
     BEGIN(solver_caller);
@@ -2935,7 +2935,7 @@ static inline double fltlist_next_token(int * const list_end){
     BEGIN(solver_caller);
   }
   DDalphaAMG {
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
     if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
     mnl->solver = MG;
     BEGIN(solver_caller);
@@ -3229,49 +3229,49 @@ static inline double fltlist_next_token(int * const list_end){
 }
 
 <TT>{DIGIT}+                  {
-#ifndef FIXEDVOLUME
+#ifndef TM_FIXEDVOLUME
   T_global = atoi(yytext);
   if(myverbose!=0) printf("T =%s\n", yytext);
 #endif
 }
 <LL>{DIGIT}+                  {
-#ifndef FIXEDVOLUME
+#ifndef TM_FIXEDVOLUME
   L = atoi(yytext);
   if(myverbose!=0) printf("L =%s\n", yytext);
 #endif
 }
 <LLX>{DIGIT}+                  {
-#ifndef FIXEDVOLUME
+#ifndef TM_FIXEDVOLUME
   LX = atoi(yytext);
   if(myverbose!=0) printf("LX =%s\n", yytext);
 #endif
 }
 <LLY>{DIGIT}+                  {
-#ifndef FIXEDVOLUME
+#ifndef TM_FIXEDVOLUME
   LY = atoi(yytext);
   if(myverbose!=0) printf("LY =%s\n", yytext);
 #endif
 }
 <LLZ>{DIGIT}+                  {
-#ifndef FIXEDVOLUME
+#ifndef TM_FIXEDVOLUME
   LZ = atoi(yytext);
   if(myverbose!=0) printf("LZ =%s\n", yytext);
 #endif
 }
 <NPROCX>{DIGIT}+              {
-#ifndef FIXEDVOLUME
+#ifndef TM_FIXEDVOLUME
   N_PROC_X = atoi(yytext);
   if(myverbose!=0) printf("Nr of processors in x direction = %s\n", yytext);
 #endif
 }
 <NPROCY>{DIGIT}+              {
-#ifndef FIXEDVOLUME
+#ifndef TM_FIXEDVOLUME
   N_PROC_Y = atoi(yytext);
   if(myverbose!=0) printf("Nr of processors in y direction = %s\n", yytext);
 #endif
 }
 <NPROCZ>{DIGIT}+              {
-#ifndef FIXEDVOLUME
+#ifndef TM_FIXEDVOLUME
   N_PROC_Z = atoi(yytext);
   if(myverbose!=0) printf("Nr of processors in z direction = %s\n", yytext);
 #endif
@@ -3776,7 +3776,7 @@ int read_input(const char * conf_file){
    * Setting default values!
    ********************************************/
   reread = 0;
-#ifndef FIXEDVOLUME
+#ifndef TM_FIXEDVOLUME
   T_global = _default_T_global;
   L = _default_L;
   LX = _default_LX;
@@ -3994,7 +3994,7 @@ int read_input(const char * conf_file){
   yyout = fopen("/dev/null", "w");
 
   parse_config();  
-#ifndef FIXEDVOLUME
+#ifndef TM_FIXEDVOLUME
   if(LX == 0) {
     LX = L;
   }
@@ -4029,7 +4029,7 @@ int read_input(const char * conf_file){
  */
 
 int reread_input(const char * conf_file){
-#ifndef FIXEDVOLUME
+#ifndef TM_FIXEDVOLUME
   int tt=T, ll=L, lx = LX, ly = LY, lz = LZ, 
       np=N_PROC_X, npy = N_PROC_Y;
 #endif
@@ -4054,7 +4054,7 @@ int reread_input(const char * conf_file){
 
   parse_config();  
 
-#ifndef FIXEDVOLUME
+#ifndef TM_FIXEDVOLUME
   T = tt;
   L = ll;
   LX = lx;
