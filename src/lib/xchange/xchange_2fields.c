@@ -41,18 +41,18 @@
 #include "su3.h"
 #include "xchange_2fields.h"
 
-#if (defined _NON_BLOCKING)
+#if (defined TM_NON_BLOCKING)
 
 /* this version uses non-blocking MPI calls */
 void xchange_2fields(spinor* const l, spinor* const k, const int ieo) {
   MPI_Request requests[32];
   MPI_Status status[32];
   int reqcount = 0;
-#if defined PARALLELXYZT
+#if defined TM_PARALLELXYZT
   int ix = 0;
 #endif
 
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst begin(xchange2fields)
 #endif
 
@@ -88,7 +88,7 @@ void xchange_2fields(spinor* const l, spinor* const k, const int ieo) {
             g_cart_grid, &requests[reqcount + 1]);
   reqcount = reqcount + 2;
 
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
   MPI_Isend((void*)l, 1, field_x_slice_gath, g_nb_x_dn, 91, g_cart_grid, &requests[reqcount]);
@@ -120,7 +120,7 @@ void xchange_2fields(spinor* const l, spinor* const k, const int ieo) {
   reqcount = reqcount + 2;
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the left in y direction */
   /* recieve the data from the neighbour on the right in y direction */
   MPI_Isend((void*)l, 1, field_y_slice_gath, g_nb_y_dn, 101, g_cart_grid, &requests[reqcount]);
@@ -153,7 +153,7 @@ void xchange_2fields(spinor* const l, spinor* const k, const int ieo) {
 
 #endif
 
-#if (defined PARALLELXYZT)
+#if (defined TM_PARALLELXYZT)
   /* fill buffer ! */
   /* This is now depending on whether the field is */
   /* even or odd */
@@ -237,8 +237,8 @@ void xchange_2fields(spinor* const l, spinor* const k, const int ieo) {
   MPI_Waitall(reqcount, requests, status);
 #endif
   return;
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst end(xchange2fields)
 #endif
 }
-#endif /*  _NON_BLOCKING */
+#endif /*  TM_NON_BLOCKING */

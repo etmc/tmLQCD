@@ -283,7 +283,7 @@ void _PSWITCH(D_psi)(_PTSWITCH(spinor) *const P, _PTSWITCH(spinor) *const Q) {
   _C_TYPE ALIGN32 phase_2l = (_C_TYPE)phase_2;
   _C_TYPE ALIGN32 phase_3l = (_C_TYPE)phase_3;
 
-#ifdef _GAUGE_COPY
+#ifdef TM_GAUGE_COPY
   if (_PSWITCH(g_update_gauge_copy)) {
     _PSWITCH(update_backward_gauge)(_PSWITCH(g_gauge_field));
   }

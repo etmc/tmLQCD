@@ -23,7 +23,7 @@
 #include <complex.h>
 #include "linalg/fortran.h"
 
-#if defined CRAY || defined HITACHI
+#if defined TM_CRAY || defined HITACHI
 #define zgels CGELS
 #define zgesv CGESV
 #define zgeevx CGEEVX

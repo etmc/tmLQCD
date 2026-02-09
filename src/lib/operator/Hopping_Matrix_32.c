@@ -39,11 +39,11 @@
  *
  *  Structure of top level precompiler directives
  *
- * - defining _USE_HALFSPINOR implies that we also use
+ * - defining TM_USE_HALFSPINOR implies that we also use
  *   a "gauge copy"
  *
  * - such that we are checking for the _USE_GAUGECOPY feature seperatly in the
- *   ELSE branch of the "if defined _USE_HALFSPINOR" statement
+ *   ELSE branch of the "if defined TM_USE_HALFSPINOR" statement
  *
  ****************************************************************/
 
@@ -66,13 +66,13 @@
 #include "update_backward_gauge.h"
 #include "operator/Hopping_Matrix_32.h"
 
-#if defined _USE_HALFSPINOR
+#if defined TM_USE_HALFSPINOR
 #include "operator/halfspinor_hopping_32.h"
 #endif
 
 void Hopping_Matrix_32_orphaned(const int ieo, spinor32* const l, spinor32* const k) {
-#if defined _USE_HALFSPINOR
-#ifdef _GAUGE_COPY
+#if defined TM_USE_HALFSPINOR
+#ifdef TM_GAUGE_COPY
   if (g_update_gauge_copy_32) {
     update_backward_gauge_32_orphaned(g_gauge_field_32);
   }

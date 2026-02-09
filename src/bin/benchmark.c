@@ -33,7 +33,7 @@
 #include <time.h>
 #ifdef TM_USE_MPI
 #include <mpi.h>
-#ifdef HAVE_LIBLEMON
+#ifdef TM_USE_LEMON
 #include <io/gauge.h>
 #include <io/params.h>
 #endif
@@ -61,19 +61,19 @@
 #include "test/check_geometry.h"
 #include "xchange/xchange.h"
 
-#ifdef PARALLELT
+#ifdef TM_PARALLELT
 #define SLICE (LX * LY * LZ / 2)
-#elif defined PARALLELXT
+#elif defined TM_PARALLELXT
 #define SLICE ((LX * LY * LZ / 2) + (T * LY * LZ / 2))
-#elif defined PARALLELXYT
+#elif defined TM_PARALLELXYT
 #define SLICE ((LX * LY * LZ / 2) + (T * LY * LZ / 2) + (T * LX * LZ / 2))
-#elif defined PARALLELXYZT
+#elif defined TM_PARALLELXYZT
 #define SLICE ((LX * LY * LZ / 2) + (T * LY * LZ / 2) + (T * LX * LZ / 2) + (T * LX * LY / 2))
-#elif defined PARALLELX
+#elif defined TM_PARALLELX
 #define SLICE ((LY * LZ * T / 2))
-#elif defined PARALLELXY
+#elif defined TM_PARALLELXY
 #define SLICE ((LY * LZ * T / 2) + (LX * LZ * T / 2))
-#elif defined PARALLELXYZ
+#elif defined TM_PARALLELXYZ
 #define SLICE ((LY * LZ * T / 2) + (LX * LZ * T / 2) + (LX * LY * T / 2))
 #endif
 
@@ -81,7 +81,7 @@ int check_xchange();
 
 int main(int argc, char *argv[]) {
   int j, j_max, k, k_max = 1;
-#ifdef HAVE_LIBLEMON
+#ifdef TM_USE_LEMON
   paramsXlfInfo *xlfInfo;
 #endif
   int status = 0;
@@ -123,20 +123,20 @@ int main(int argc, char *argv[]) {
   tmlqcd_mpi_init(argc, argv);
 
   if (g_proc_id == 0) {
-#ifdef _GAUGE_COPY
-    printf("# The code was compiled with -D_GAUGE_COPY\n");
+#ifdef TM_GAUGE_COPY
+    printf("# The code was compiled with -DTM_GAUGE_COPY\n");
 #endif
-#ifdef _USE_HALFSPINOR
-    printf("# The code was compiled with -D_USE_HALFSPINOR\n");
+#ifdef TM_USE_HALFSPINOR
+    printf("# The code was compiled with -DTM_USE_HALFSPINOR\n");
 #endif
-#ifdef _USE_SHMEM
-    printf("# The code was compiled with -D_USE_SHMEM\n");
-#ifdef _PERSISTENT
+#ifdef TM_USE_SHMEM
+    printf("# The code was compiled with -DTM_USE_SHMEM\n");
+#ifdef TM_PERSISTENT
     printf("# The code was compiled for persistent MPI calls (halfspinor only)\n");
 #endif
 #endif
 #ifdef TM_USE_MPI
-#ifdef _NON_BLOCKING
+#ifdef TM_NON_BLOCKING
     printf("# The code was compiled for non-blocking MPI calls (spinor and gauge)\n");
 #endif
 #endif
@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
     fflush(stdout);
   }
 
-#ifdef _GAUGE_COPY
+#ifdef TM_GAUGE_COPY
   init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
 #else
   init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 0);
@@ -186,7 +186,7 @@ int main(int argc, char *argv[]) {
   /* define the boundary conditions for the fermion fields */
   boundary(g_kappa);
 
-#ifdef _USE_HALFSPINOR
+#ifdef TM_USE_HALFSPINOR
   j = init_dirac_halfspinor();
   if (j != 0) {
     fprintf(stderr, "Not enough memory for halfspinor fields! Aborting...\n");
@@ -200,7 +200,7 @@ int main(int argc, char *argv[]) {
       exit(0);
     }
   }
-#if (defined _PERSISTENT)
+#if (defined TM_PERSISTENT)
   init_xchange_halffield();
 #endif
 #endif
@@ -210,7 +210,7 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "Checking of geometry failed. Unable to proceed.\nAborting....\n");
     exit(1);
   }
-#if (defined TM_USE_MPI && !(defined _USE_SHMEM))
+#if (defined TM_USE_MPI && !(defined TM_USE_SHMEM))
   check_xchange();
 #endif
 
@@ -344,7 +344,7 @@ int main(int argc, char *argv[]) {
     sdt = sdt / ((double)(2 * SLICE));
     if (g_proc_id == 0) {
       printf("# The size of the package is %d bytes.\n", (SLICE) * 192);
-#ifdef _USE_HALFSPINOR
+#ifdef TM_USE_HALFSPINOR
       printf("# The bandwidth is %5.2f + %5.2f MB/sec\n", 192. / sdt / 1024 / 1024,
              192. / sdt / 1024. / 1024);
 #else
@@ -431,7 +431,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-#ifdef HAVE_LIBLEMON
+#ifdef TM_USE_LEMON
   if (g_proc_id == 0) {
     printf("# Performing parallel IO test ...\n");
   }

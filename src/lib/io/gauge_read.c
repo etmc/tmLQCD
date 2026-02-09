@@ -19,7 +19,7 @@
  ***********************************************************************/
 
 #include "gauge.ih"
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
 #include "DDalphaAMG_interface.h"
 #endif
 
@@ -209,7 +209,7 @@ int read_gauge_field(char *filename, su3 **const gf) {
     // reading a new gauge configuration moves the gauge_id a long way
     // to guarantee that the change is propagated
     update_tm_gauge_id(&g_gauge_state, TM_GAUGE_PROPAGATE_THRESHOLD);
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
     MG_reset();
 #endif
   }

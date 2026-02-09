@@ -133,7 +133,7 @@ int cg_her_nd(spinor* const P_up, spinor* P_dn, spinor* const Q_up, spinor* cons
     if (((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq * squarenorm) && (rel_prec == 1))) {
       break;
     }
-#ifdef _USE_HALFSPINOR
+#ifdef TM_USE_HALFSPINOR
     if (((err * err <= eps_sq) && (rel_prec == 0)) ||
         ((err * err <= eps_sq * squarenorm) && (rel_prec == 1))) {
       g_sloppy_precision = 1;

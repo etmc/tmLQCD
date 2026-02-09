@@ -37,7 +37,7 @@ int init_solver_field(spinor*** const solver_field, const int V, const int nr) {
   }
 
   /* allocate the full chunk of memory to solver_field[nr] */
-#if (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
+#if (defined TM_USE_SHMEM && !(defined TM_USE_HALFSPINOR))
   if ((void*)((*solver_field)[nr] = (spinor*)shmalloc((nr * V + 1) * sizeof(spinor))) == NULL) {
     fprintf(stderr, "malloc errno in init_solver_field: %d\n", errno);
     errno = 0;
@@ -74,7 +74,7 @@ int init_solver_field_32(spinor32*** const solver_field, const int V, const int 
   }
 
   /* allocate the full chunk of memory to solver_field[nr] */
-#if (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
+#if (defined TM_USE_SHMEM && !(defined TM_USE_HALFSPINOR))
   if ((void*)((*solver_field)[nr] = (spinor32*)shmalloc((nr * V + 1) * sizeof(spinor32))) == NULL) {
     fprintf(stderr, "malloc errno in init_solver_field: %d\n", errno);
     errno = 0;
@@ -143,7 +143,7 @@ int init_lsolver_field(_Complex double*** const solver_field, const int V, const
   }
 
   /* allocate the full chunk of memory to solver_field[nr] */
-#if (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
+#if (defined TM_USE_SHMEM && !(defined TM_USE_HALFSPINOR))
   if ((void*)((*solver_field)[nr] =
                   (_Complex double*)shmalloc((nr * V + 1) * sizeof(_Complex double))) == NULL) {
     fprintf(stderr, "malloc errno in init_solver_field: %d\n", errno);
@@ -184,7 +184,7 @@ int init_lsolver_field_32(_Complex float*** const solver_field, const int V, con
   }
 
   /* allocate the full chunk of memory to solver_field[nr] */
-#if (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
+#if (defined TM_USE_SHMEM && !(defined TM_USE_HALFSPINOR))
   if ((void*)((*solver_field)[nr] =
                   (_Complex float*)shmalloc((nr * V + 1) * sizeof(_Complex float))) == NULL) {
     fprintf(stderr, "malloc errno in init_solver_field: %d\n", errno);

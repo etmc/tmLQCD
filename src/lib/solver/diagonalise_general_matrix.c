@@ -70,7 +70,7 @@ void diagonalise_general_matrix(int n, _Complex double *A, int lda, _Complex dou
 
   /* Query call to get the optimal lwork */
   lwork = -1;
-#ifdef HAVE_LAPACK
+#ifdef TM_LAPACK
   _FT(zgeevx)("N", "N", "V", "N", &n, A, &lda, evalues, vl, &n, vr, &n, &ilo, &ihi, scale, &abnrm,
               rcone, rconv, &dummy, &lwork, rwork, &info, 1, 1, 1, 1);
   lwork = (int)(creal(dummy));
