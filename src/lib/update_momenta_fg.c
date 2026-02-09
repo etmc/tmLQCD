@@ -44,7 +44,7 @@
 #include "su3adj.h"
 #include "su3spinor.h"
 #include "xchange/xchange.h"
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
 #include "DDalphaAMG_interface.h"
 #endif
 
@@ -123,7 +123,7 @@ void fg_update_momenta_reset_gaugefield(const double step, hamiltonian_field_t *
  *******************************************************/
 void update_momenta_fg(int *mnllist, double step, const int no, hamiltonian_field_t *const hf,
                        double step0) {
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
   MG_update_gauge(0.0);
 #endif
   if (g_exposu3_no_c == 0) init_exposu3();
@@ -156,7 +156,7 @@ void update_momenta_fg(int *mnllist, double step, const int no, hamiltonian_fiel
   /* for parallelization */
   xchange_gauge(hf->gaugefield);
 #endif
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
   MG_update_gauge(0.0);
 #endif
 
@@ -201,7 +201,7 @@ void update_momenta_fg(int *mnllist, double step, const int no, hamiltonian_fiel
   /* for parallelization */
   xchange_gauge(hf->gaugefield);
 #endif
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
   MG_update_gauge(0.0);
 #endif
 

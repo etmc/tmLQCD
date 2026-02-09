@@ -90,7 +90,7 @@ int check_geometry() {
           ix = g_ipt[x0][x1][x2][x3];
 
           iy0 = g_iup[ix][0];
-#if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELT || defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
           if (x0 != T - 1) {
             iz0 = g_ipt[(x0 + 1) % T][x1][x2][x3];
           } else {
@@ -107,7 +107,7 @@ int check_geometry() {
 #endif
 
           iy1 = g_iup[ix][1];
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
           if (x1 != LX - 1) {
             iz1 = g_ipt[x0][(x1 + 1) % LX][x2][x3];
           } else {
@@ -125,7 +125,7 @@ int check_geometry() {
 #endif
 
           iy2 = g_iup[ix][2];
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
           if (x2 != LY - 1) {
             iz2 = g_ipt[x0][x1][(x2 + 1) % LY][x3];
           } else {
@@ -145,7 +145,7 @@ int check_geometry() {
 #endif
 
           iy3 = g_iup[ix][3];
-#if defined PARALLELXYZT
+#if defined TM_PARALLELXYZT
           if (x3 != LZ - 1) {
             iz3 = g_ipt[x0][x1][x2][(x3 + 1) % LZ];
           } else {
@@ -176,7 +176,7 @@ int check_geometry() {
           }
 
           iy0 = g_idn[ix][0];
-#if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELT || defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
           if (x0 != 0) {
             iz0 = g_ipt[(x0 + T - 1) % T][x1][x2][x3];
           } else {
@@ -194,7 +194,7 @@ int check_geometry() {
 #endif
 
           iy1 = g_idn[ix][1];
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
           if (x1 != 0) {
             iz1 = g_ipt[x0][(x1 + LX - 1) % LX][x2][x3];
           } else {
@@ -212,7 +212,7 @@ int check_geometry() {
           iz1 = g_ipt[x0][(x1 + LX - 1) % LX][x2][x3];
 #endif
           iy2 = g_idn[ix][2];
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
           if (x2 != 0) {
             iz2 = g_ipt[x0][x1][(x2 + LY - 1) % LY][x3];
           } else {
@@ -231,7 +231,7 @@ int check_geometry() {
 #endif
 
           iy3 = g_idn[ix][3];
-#if defined PARALLELXYZT
+#if defined TM_PARALLELXYZT
           if (x3 != 0) {
             iz3 = g_ipt[x0][x1][x2][(x3 + LZ - 1) % LZ];
           } else {
@@ -262,8 +262,8 @@ int check_geometry() {
           }
 
           /* The edges */
-          /* In case of PARALLELT there is actually no edge to take care of */
-#if ((defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
+          /* In case of TM_PARALLELT there is actually no edge to take care of */
+#if ((defined TM_PARALLELXT) || (defined TM_PARALLELXYT) || (defined TM_PARALLELXYZT))
           if (x0 == 0) {
             iy0 = g_idn[g_idn[ix][1]][0];
             if (x1 != 0) {
@@ -318,7 +318,7 @@ int check_geometry() {
 
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
           if (x0 == 0) {
             iy0 = g_idn[g_idn[ix][2]][0];
             if (x2 != 0) {
@@ -421,7 +421,7 @@ int check_geometry() {
             }
           }
 #endif
-#if defined PARALLELXYZT
+#if defined TM_PARALLELXYZT
           if (x0 == 0) {
             iy0 = g_idn[g_idn[ix][3]][0];
             if (x3 != 0) {
@@ -700,7 +700,7 @@ int check_geometry() {
       }
     }
 
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     for (x0 = 0; x0 < T + 2; x0++) {
       for (x2 = 0; x2 < LY; x2++) {
         for (x3 = 0; x3 < LZ; x3++) {
@@ -827,7 +827,7 @@ int check_geometry() {
     }
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
 
     for (x0 = 0; x0 < T + 2; x0++) {
       for (x1 = 0; x1 < LX + 2; x1++) {
@@ -1027,7 +1027,7 @@ int check_geometry() {
       }
     }
 #endif
-#ifdef PARALLELXYZT
+#ifdef TM_PARALLELXYZT
     for (x0 = 0; x0 < T + 2; x0++) {
       for (x1 = 0; x1 < LX + 2; x1++) {
         for (x2 = 0; x2 < LY + 2; x2++) {

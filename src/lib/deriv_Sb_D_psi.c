@@ -63,7 +63,7 @@ void deriv_Sb_D_psi(spinor* const l, spinor* const k, hamiltonian_field_t* const
 #undef static
 #endif
 
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst begin(derivSb)
 #endif
 
@@ -225,7 +225,7 @@ void deriv_Sb_D_psi(spinor* const l, spinor* const k, hamiltonian_field_t* const
 
       /****************** end of loop ************************/
     }
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst end(derivSb)
 #endif
 

@@ -54,7 +54,7 @@ int init_gauge_field(const int V, const int back) {
     g_gauge_field[i] = g_gauge_field[i - 1] + 4;
   }
 
-#if defined _USE_HALFSPINOR
+#if defined TM_USE_HALFSPINOR
   if (back == 1) {
     /*
       g_gauge_field_copy[ieo][PM][sites/2][mu]
@@ -134,7 +134,7 @@ int init_gauge_field_32(const int V, const int back) {
     g_gauge_field_32[i] = g_gauge_field_32[i - 1] + 4;
   }
 
-#if defined _USE_HALFSPINOR
+#if defined TM_USE_HALFSPINOR
   if (back == 1) {
     /*
       g_gauge_field_copy[ieo][PM][sites/2][mu]
@@ -167,7 +167,7 @@ int init_gauge_field_32(const int V, const int back) {
       g_gauge_field_copy_32[1][i] = g_gauge_field_copy_32[1][i - 1] + 4;
     }
   }
-#else /* than _USE_HALFSPINOR  */
+#else /* than TM_USE_HALFSPINOR  */
   if (back == 1) {
     if ((void*)(g_gauge_field_copy_32 = (su3_32**)calloc((VOLUME + RAND), sizeof(su3_32*))) ==
         NULL) {
@@ -217,7 +217,7 @@ void convert_32_gauge_field(su3_32** gf32, su3** gf, int V) {
       gf32[i][mu].c22 = (_Complex float)gf[i][mu].c22;
     }
   }
-#if defined _USE_HALFSPINOR
+#if defined TM_USE_HALFSPINOR
 
 #endif
 }

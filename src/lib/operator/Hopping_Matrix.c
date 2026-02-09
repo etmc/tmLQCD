@@ -38,11 +38,11 @@
  *
  *  Structure of top level precompiler directives
  *
- * - defining _USE_HALFSPINOR implies that we also use
+ * - defining TM_USE_HALFSPINOR implies that we also use
  *   a "gauge copy"
  *
  * - such that we are checking for the _USE_GAUGECOPY feature seperatly in the
- *   ELSE branch of the "if defined _USE_HALFSPINOR" statement
+ *   ELSE branch of the "if defined TM_USE_HALFSPINOR" statement
  *
  ****************************************************************/
 
@@ -64,11 +64,11 @@
 #include "operator/Hopping_Matrix.h"
 #include "update_backward_gauge.h"
 
-#if defined _USE_HALFSPINOR
+#if defined TM_USE_HALFSPINOR
 #include "operator/halfspinor_hopping.h"
 
 void Hopping_Matrix(const int ieo, spinor* const l, spinor* const k) {
-#ifdef _GAUGE_COPY
+#ifdef TM_GAUGE_COPY
   if (g_update_gauge_copy) {
     update_backward_gauge(g_gauge_field);
   }
@@ -88,10 +88,10 @@ void Hopping_Matrix(const int ieo, spinor* const l, spinor* const k) {
   return;
 }
 
-#else /* thats _USE_HALFSPINOR */
+#else /* thats TM_USE_HALFSPINOR */
 void Hopping_Matrix(const int ieo, spinor* const l, spinor* const k) {
 
-#ifdef _GAUGE_COPY
+#ifdef TM_GAUGE_COPY
   if (g_update_gauge_copy) {
     update_backward_gauge(g_gauge_field);
   }
@@ -114,4 +114,4 @@ void Hopping_Matrix(const int ieo, spinor* const l, spinor* const k) {
   return;
 }
 
-#endif /* thats _USE_HALFSPINOR */
+#endif /* thats TM_USE_HALFSPINOR */

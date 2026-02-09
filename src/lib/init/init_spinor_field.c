@@ -23,7 +23,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef _USE_SHMEM
+#ifdef TM_USE_SHMEM
 #include <mpp/shmem.h>
 #endif
 #include "global.h"
@@ -37,7 +37,7 @@ spinor *sp_tbuff = NULL;
 int init_spinor_field(const int V, const int nr) {
   int i = 0;
 
-#if (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
+#if (defined TM_USE_SHMEM && !(defined TM_USE_HALFSPINOR))
   if ((void *)(sp = (spinor *)shmalloc((nr * V + 1) * sizeof(spinor))) == NULL) {
     printf("malloc errno : %d\n", errno);
     errno = 0;
@@ -65,7 +65,7 @@ int init_spinor_field(const int V, const int nr) {
 }
 
 void free_spinor_field() {
-#if (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
+#if (defined TM_USE_SHMEM && !(defined TM_USE_HALFSPINOR))
   shfree(sp);
   shfree(sp_csg);
 #else
@@ -78,7 +78,7 @@ spinor32 *sp32 = NULL;
 int init_spinor_field_32(const int V, const int nr) {
   int i = 0;
 
-#if (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
+#if (defined TM_USE_SHMEM && !(defined TM_USE_HALFSPINOR))
   if ((void *)(sp32 = (spinor32 *)shmalloc((nr * V + 1) * sizeof(spinor32))) == NULL) {
     printf("malloc errno : %d\n", errno);
     errno = 0;
@@ -106,7 +106,7 @@ int init_spinor_field_32(const int V, const int nr) {
 }
 
 void free_spinor_field_32() {
-#if (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
+#if (defined TM_USE_SHMEM && !(defined TM_USE_HALFSPINOR))
   shfree(sp32);
 #else
   free(sp32);
@@ -119,7 +119,7 @@ void free_spinor_field_32() {
 int allocate_spinor_field_array(spinor ***spinors, spinor **sp, const int V, const int nr) {
   int i = 0;
 
-#if (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
+#if (defined TM_USE_SHMEM && !(defined TM_USE_HALFSPINOR))
   if ((void *)((*sp) = (spinor *)shmalloc((nr * V + 1) * sizeof(spinor))) == NULL) {
     printf("malloc errno : %d\n", errno);
     errno = 0;
@@ -147,7 +147,7 @@ int allocate_spinor_field_array(spinor ***spinors, spinor **sp, const int V, con
 }
 
 void free_spinor_field_array(spinor **sp) {
-#if (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
+#if (defined TM_USE_SHMEM && !(defined TM_USE_HALFSPINOR))
   shfree(*sp);
 #else
   free(*sp);
@@ -165,7 +165,7 @@ int init_csg_field(const int V) {
 
   /* if all histories are zero, we do not need initialisation */
   if (sum != 0) {
-#if (defined _USE_SHMEM && !(defined _USE_HALFSPINOR))
+#if (defined TM_USE_SHMEM && !(defined TM_USE_HALFSPINOR))
     sp_csg = (spinor *)shmalloc((sum * V + 1) * sizeof(spinor));
 #else
     sp_csg = (spinor *)calloc(sum * V + 1, sizeof(spinor));

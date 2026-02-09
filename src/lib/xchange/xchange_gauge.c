@@ -38,7 +38,7 @@
 #include "su3adj.h"
 #include "xchange_gauge.h"
 
-#if defined _NON_BLOCKING
+#if defined TM_NON_BLOCKING
 void xchange_gauge(su3** const gf) {
   int cntr = 0;
 #ifdef TM_USE_MPI
@@ -80,7 +80,7 @@ void xchange_gauge(su3** const gf) {
     cntr = cntr + 2;
   }
 
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
   MPI_Isend(gf[0], 1, gauge_x_slice_gath, g_nb_x_dn, 87, g_cart_grid, &request[cntr]);
@@ -117,7 +117,7 @@ void xchange_gauge(su3** const gf) {
 #endif
   MPI_Waitall(cntr, request, status);
   cntr = 0;
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* The edges */
 
   /* send the data to the neighbour on the left in t direction */
@@ -175,10 +175,10 @@ void xchange_gauge(su3** const gf) {
               g_cart_grid, &request[cntr + 1]);
     cntr = cntr + 2;
   }
-  /* end of if defined PARALLELXT || PARALLELXYT || PARALLELXYZT*/
+  /* end of if defined TM_PARALLELXT || TM_PARALLELXYT || TM_PARALLELXYZT*/
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the left in y direction */
   /* recieve the data from the neighbour on the right in y direction */
   MPI_Isend(gf[0], 1, gauge_y_slice_gath, g_nb_y_dn, 106, g_cart_grid, &request[cntr]);
@@ -212,7 +212,7 @@ void xchange_gauge(su3** const gf) {
 #endif
   MPI_Waitall(cntr, request, status);
   cntr = 0;
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
 
   /* jetzt wirds richtig eklig ... */
 
@@ -326,9 +326,9 @@ void xchange_gauge(su3** const gf) {
     cntr = cntr + 2;
   }
 
-  /* end of if defined PARALLELXYT || PARALLELXYZT */
+  /* end of if defined TM_PARALLELXYT || TM_PARALLELXYZT */
 #endif
-#if defined PARALLELXYZT
+#if defined TM_PARALLELXYZT
   /* z-Rand */
   /* send the data to the neighbour on the left in z direction */
   /* recieve the data from the neighbour on the right in z direction */
@@ -361,7 +361,7 @@ void xchange_gauge(su3** const gf) {
   }
 #endif
   MPI_Waitall(cntr, request, status);
-#if defined PARALLELXYZT
+#if defined TM_PARALLELXYZT
   cntr = 0;
   /* edges */
 
@@ -538,13 +538,13 @@ void xchange_gauge(su3** const gf) {
   }
   MPI_Waitall(cntr, request, status);
 
-  /* end of if defined PARALLELXYZT */
+  /* end of if defined TM_PARALLELXYZT */
 #endif
 #endif
   return;
 }
 
-#else /* _NON_BLOCKING */
+#else /* TM_NON_BLOCKING */
 void xchange_gauge(su3** const gf) {
 
 #ifdef TM_USE_MPI
@@ -576,7 +576,7 @@ void xchange_gauge(su3** const gf) {
                  g_cart_grid, &status);
   }
 
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
   MPI_Sendrecv(gf[0], 1, gauge_x_slice_gath, g_nb_x_dn, 93, gf[(T + 2) * LX * LY * LZ], 1,
@@ -648,10 +648,10 @@ void xchange_gauge(su3** const gf) {
                  g_nb_t_up, 98, gf[VOLUMEPLUSRAND + RAND + 6 * LY * LZ], 1, gauge_xt_edge_cont,
                  g_nb_t_dn, 98, g_cart_grid, &status);
   }
-  /* end of if defined PARALLELXT || PARALLELXYT || PARALLELXYZT*/
+  /* end of if defined TM_PARALLELXT || TM_PARALLELXYT || TM_PARALLELXYZT*/
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the left in y direction */
   /* recieve the data from the neighbour on the right in y direction */
   MPI_Sendrecv(gf[0], 1, gauge_y_slice_gath, g_nb_y_dn, 103,
@@ -770,9 +770,9 @@ void xchange_gauge(su3** const gf) {
                  gauge_ty_edge_cont, g_nb_y_dn, 298, g_cart_grid, &status);
   }
 
-  /* end of if defined PARALLELXYT || PARALLELXYZT */
+  /* end of if defined TM_PARALLELXYT || TM_PARALLELXYZT */
 #endif
-#if defined PARALLELXYZT
+#if defined TM_PARALLELXYZT
   /* z-Rand */
   /* send the data to the neighbour on the left in z direction */
   /* recieve the data from the neighbour on the right in z direction */
@@ -954,11 +954,11 @@ void xchange_gauge(su3** const gf) {
                  1, gauge_zy_edge_cont, g_nb_y_dn, 510, g_cart_grid, &status);
   }
 
-  /* end of if defined PARALLELXYZT */
+  /* end of if defined TM_PARALLELXYZT */
 #endif
 #endif
   return;
 }
 
 
-#endif /* _NON_BLOCKING */
+#endif /* TM_NON_BLOCKING */

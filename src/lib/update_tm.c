@@ -64,7 +64,7 @@
 #include "su3.h"
 #include "update_tm.h"
 #include "xchange/xchange.h"
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
 #include "DDalphaAMG_interface.h"
 #endif
 
@@ -120,7 +120,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy, char *filename
     }
   }
 
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
   MG_reset();
 #endif
 
@@ -211,7 +211,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy, char *filename
       free(xlfInfo);
     }
 
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
     MG_reset();
 #endif
 
@@ -354,7 +354,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy, char *filename
     // will result in the updated gauge field to be propagated
     update_tm_gauge_id(&g_gauge_state, TM_GAUGE_PROPAGATE_THRESHOLD);
     update_tm_gauge_id(&g_gauge_state_32, TM_GAUGE_PROPAGATE_THRESHOLD);
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
     MG_reset();
 #endif
   }

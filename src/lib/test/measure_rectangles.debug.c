@@ -61,10 +61,10 @@ double measure_rectangles() {
   char filename[100];
 
   sprintf(filename, "debug_mr.s");
-#ifdef PARALLELT
+#ifdef TM_PARALLELT
   sprintf(filename, "debug_mr.pt.%d", g_proc_id);
 #endif
-#ifdef PARALLELXT
+#ifdef TM_PARALLELXT
   sprintf(filename, "debug_mr.pxt.%d", g_proc_id);
 #endif
   debugfile = fopen(filename, "w");

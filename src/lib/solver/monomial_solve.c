@@ -77,7 +77,7 @@
 #include "solver/solver_params.h"
 #include "solver/solver_types.h"
 
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
 #include "DDalphaAMG_interface.h"
 #endif
 #ifdef TM_USE_QPHIX
@@ -184,7 +184,7 @@ int solve_degenerate(spinor* const P, spinor* const Q, solver_params_t solver_pa
   } else if (solver_type == BICGSTAB) {
     iteration_count = bicgstab_complex(P, Q, max_iter, eps_sq, rel_prec, N, f);
   }
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
   else if (solver_type == MG)
     iteration_count = MG_solver(P, Q, eps_sq, max_iter, rel_prec, N, g_gauge_field, f);
 #endif
@@ -283,7 +283,7 @@ int solve_mms_tm(spinor** const P, spinor* const Q, solver_params_t* solver_para
       if (solver_params->type == CGMMS) {
     iteration_count = cg_mms_tm(P, Q, solver_params);
   }
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
   else if (solver_params->type == MG) {
     // if the mg_mms_mass is larger than the smallest shift we use MG
     if (mg_no_shifts > 0 || mg_mms_mass >= solver_params->shifts[0]) {
@@ -507,7 +507,7 @@ int solve_mms_nd(spinor** const Pup, spinor** const Pdn, spinor* const Qup, spin
     } else if (solver_params->type == CGMMSND) {
       iteration_count = cg_mms_tm_nd(Pup, Pdn, Qup, Qdn, solver_params);
     }
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
     else if (solver_params->type == MG) {
       // if the mg_mms_mass is larger than the smallest shift we use MG
       if (mg_no_shifts > 0 || mg_mms_mass >= solver_params->shifts[0]) {
@@ -691,7 +691,7 @@ int solve_mms_nd_plus(spinor** const Pup, spinor** const Pdn, spinor* const Qup,
 
   int iteration_count = 0;
 
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
   // With MG we can solve directly the unsquared operator
   if (solver_params->type == MG) {
     matrix_mult_nd f = Qtm_tau1_ndpsi_add_Ishift;

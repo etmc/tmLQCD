@@ -58,7 +58,7 @@ int init_geometry_indices(const int V) {
   g_eo2lexic = (int *)calloc(V, sizeof(int));
   if ((void *)g_eo2lexic == NULL) return (11);
 
-#if (defined PARALLELXYZT || defined PARALLELXYZ)
+#if (defined TM_PARALLELXYZT || defined TM_PARALLELXYZ)
   g_field_z_ipt_even = (int *)calloc(T * LX * LY, sizeof(int));
   if ((void *)g_field_z_ipt_even == NULL) return (12);
   g_field_z_ipt_odd = (int *)calloc(T * LX * LY, sizeof(int));
@@ -136,7 +136,7 @@ void free_geometry_indices() {
   free(g_eo2lexic);
   free(g_lexic2eosub);
   free(g_lexic2eo);
-#if (defined PARALLELXYZT || defined PARALLELXYZ)
+#if (defined TM_PARALLELXYZT || defined TM_PARALLELXYZ)
   free(g_field_z_ipt_odd);
   free(g_field_z_ipt_even);
 #endif

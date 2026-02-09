@@ -25,7 +25,7 @@
 #ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
-#ifdef _USE_SHMEM
+#ifdef TM_USE_SHMEM
 #include <mpp/shmem.h>
 #endif
 #include "global.h"
@@ -134,7 +134,7 @@ MPI_Datatype halffield_y_slice_gath;
 
 MPI_Datatype halffield_z_slice_cont;
 
-#if (defined PARALLELXYZT || defined PARALLELXYZ)
+#if (defined TM_PARALLELXYZT || defined TM_PARALLELXYZ)
 MPI_Datatype field_z_slice_even_dn;
 MPI_Datatype field_z_slice_even_up;
 MPI_Datatype field_z_slice_odd_dn;
@@ -188,60 +188,60 @@ void tmlqcd_mpi_init(int argc, char *argv[]) {
   }
 
 #ifdef TM_USE_MPI
-#ifdef _USE_SHMEM
+#ifdef TM_USE_SHMEM
   /* we need that the PE number in MPI_COMM_WORL  */
   /* exactly correspond to the one in g_cart_grid */
   reorder = 0;
 #endif
 
-#ifndef FIXEDVOLUME
+#ifndef TM_FIXEDVOLUME
   N_PROC_T = 0; /* the other N_PROC_? are read from input, if not constraint below */
                 /* N_PROC_T will be set by MPI_Dims_create, if not constraint below */
 #endif
 
-#if defined PARALLELT
+#if defined TM_PARALLELT
   ndims = 1;
-#ifndef FIXEDVOLUME
+#ifndef TM_FIXEDVOLUME
   N_PROC_X = 1;
   N_PROC_Y = 1;
   N_PROC_Z = 1;
 #endif
 #endif
-#if defined PARALLELX
+#if defined TM_PARALLELX
   ndims = 1;
-#ifndef FIXEDVOLUME
+#ifndef TM_FIXEDVOLUME
   N_PROC_T = 1;
   N_PROC_Y = 1;
   N_PROC_Z = 1;
 #endif
 #endif
-#if defined PARALLELXT
+#if defined TM_PARALLELXT
   ndims = 2;
-#ifndef FIXEDVOLUME
+#ifndef TM_FIXEDVOLUME
   N_PROC_Y = 1;
   N_PROC_Z = 1;
 #endif
 #endif
-#if defined PARALLELXY
+#if defined TM_PARALLELXY
   ndims = 2;
-#ifndef FIXEDVOLUME
+#ifndef TM_FIXEDVOLUME
   N_PROC_T = 1;
   N_PROC_Z = 1;
 #endif
 #endif
-#if defined PARALLELXYT
+#if defined TM_PARALLELXYT
   ndims = 3;
-#ifndef FIXEDVOLUME
+#ifndef TM_FIXEDVOLUME
   N_PROC_Z = 1;
 #endif
 #endif
-#if defined PARALLELXYZ
+#if defined TM_PARALLELXYZ
   ndims = 3;
-#ifndef FIXEDVOLUME
+#ifndef TM_FIXEDVOLUME
   N_PROC_T = 1;
 #endif
 #endif
-#if defined PARALLELXYZT
+#if defined TM_PARALLELXYZT
   ndims = 4;
 #endif
   dims[0] = N_PROC_T;
@@ -278,7 +278,7 @@ void tmlqcd_mpi_init(int argc, char *argv[]) {
     exit(-1);
   }
 
-#ifndef FIXEDVOLUME
+#ifndef TM_FIXEDVOLUME
   N_PROC_T = g_nproc_t;
   N_PROC_X = g_nproc_x;
   N_PROC_Y = g_nproc_y;
@@ -289,42 +289,42 @@ void tmlqcd_mpi_init(int argc, char *argv[]) {
   LZ = LZ / g_nproc_z;
   VOLUME = (T * LX * LY * LZ);
   SPACEVOLUME = VOLUME / T;
-#ifdef PARALLELT
+#ifdef TM_PARALLELT
   RAND = (2 * LX * LY * LZ);
   EDGES = 0;
-#elif defined PARALLELX
+#elif defined TM_PARALLELX
   RAND = (2 * T * LY * LZ);
   EDGES = 0;
-#elif defined PARALLELXT
+#elif defined TM_PARALLELXT
   RAND = 2 * LZ * (LY * LX + T * LY);
   EDGES = 4 * LZ * LY;
-#elif defined PARALLELXY
+#elif defined TM_PARALLELXY
   RAND = 2 * LZ * T * (LX + LY);
   EDGES = 4 * LZ * T;
-#elif defined PARALLELXYT
+#elif defined TM_PARALLELXYT
   RAND = 2 * LZ * (LY * LX + T * LY + T * LX);
   EDGES = 4 * LZ * (LY + T + LX);
-#elif defined PARALLELXYZ
+#elif defined TM_PARALLELXYZ
   RAND = 2 * T * (LY * LZ + LX * LZ + LX * LY);
   EDGES = 4 * T * (LX + LY + LZ);
-#elif defined PARALLELXYZT
+#elif defined TM_PARALLELXYZT
   RAND = 2 * LZ * LY * LX + 2 * LZ * T * LY + 2 * LZ * T * LX + 2 * T * LX * LY;
   EDGES = 4 * LZ * LY + 4 * LZ * T + 4 * LZ * LX + 4 * LY * T + 4 * LY * LX + 4 * T * LX;
-#else  /* ifdef PARALLELT */
+#else  /* ifdef TM_PARALLELT */
   RAND = 0;
   EDGES = 0;
-#endif /* ifdef PARALLELT */
+#endif /* ifdef TM_PARALLELT */
   /* Note that VOLUMEPLUSRAND is not always equal to VOLUME+RAND */
   /* VOLUMEPLUSRAND rather includes the edges */
   VOLUMEPLUSRAND = VOLUME + RAND + EDGES;
   SPACERAND = RAND / T;
-#endif /* ifndef FIXEDVOLUME */
+#endif /* ifndef TM_FIXEDVOLUME */
   g_dbw2rand = (RAND + 2 * EDGES);
 
-#if (defined PARALLELXYZT || defined PARALLELXYZ)
+#if (defined TM_PARALLELXYZT || defined TM_PARALLELXYZ)
   field_buffer_z = (spinor *)malloc(T * LX * LY / 2 * sizeof(spinor));
   field_buffer_z2 = (spinor *)malloc(T * LX * LY / 2 * sizeof(spinor));
-#ifdef _NON_BLOCKING
+#ifdef TM_NON_BLOCKING
   field_buffer_z3 = (spinor *)malloc(T * LX * LY / 2 * sizeof(spinor));
   field_buffer_z4 = (spinor *)malloc(T * LX * LY / 2 * sizeof(spinor));
 #endif
@@ -347,23 +347,23 @@ void tmlqcd_mpi_init(int argc, char *argv[]) {
   for (i = 0; i < 8; i++) {
     g_nb_list[i] = g_cart_id;
   }
-#if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELT || defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   MPI_Cart_shift(g_cart_grid, 0, 1, &g_nb_t_dn, &g_nb_t_up);
   g_nb_list[0] = g_nb_t_up;
   g_nb_list[1] = g_nb_t_dn;
 #endif
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELX || \
-     defined PARALLELXY || defined PARALLELXYZ)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT || defined TM_PARALLELX || \
+     defined TM_PARALLELXY || defined TM_PARALLELXYZ)
   MPI_Cart_shift(g_cart_grid, 1, 1, &g_nb_x_dn, &g_nb_x_up);
   g_nb_list[2] = g_nb_x_up;
   g_nb_list[3] = g_nb_x_dn;
 #endif
-#if (defined PARALLELXYT || defined PARALLELXYZT || defined PARALLELXY || defined PARALLELXYZ)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT || defined TM_PARALLELXY || defined TM_PARALLELXYZ)
   MPI_Cart_shift(g_cart_grid, 2, 1, &g_nb_y_dn, &g_nb_y_up);
   g_nb_list[4] = g_nb_y_up;
   g_nb_list[5] = g_nb_y_dn;
 #endif
-#if (defined PARALLELXYZT || defined PARALLELXYZ)
+#if (defined TM_PARALLELXYZT || defined TM_PARALLELXYZ)
   MPI_Cart_shift(g_cart_grid, 3, 1, &g_nb_z_dn, &g_nb_z_up);
   g_nb_list[6] = g_nb_z_up;
   g_nb_list[7] = g_nb_z_dn;
@@ -669,7 +669,7 @@ void tmlqcd_mpi_init(int argc, char *argv[]) {
   g_mpi_ST_rank = 0;
   g_stdio_proc = 0;
 
-#ifndef FIXEDVOLUME
+#ifndef TM_FIXEDVOLUME
   T = T_global;
   VOLUME = (T * LX * LY * LZ);
   SPACEVOLUME = VOLUME / T;
@@ -687,7 +687,7 @@ void tmlqcd_mpi_init(int argc, char *argv[]) {
 
   /* Here we perform some checks in order not to */
   /* run into trouble later                      */
-#if (defined PARALLELXYZT || defined PARALLELXYZ)
+#if (defined TM_PARALLELXYZT || defined TM_PARALLELXYZ)
   if ((T * LX * LY) % 2 != 0 && even_odd_flag == 1) {
     fprintf(stderr, "T*LX*LY must be even!\nAborting prgram...\n");
 #ifdef TM_USE_MPI

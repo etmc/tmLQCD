@@ -35,7 +35,7 @@
 #ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
-#ifdef _USE_SHMEM
+#ifdef TM_USE_SHMEM
 #include <mpp/shmem.h>
 #endif
 
@@ -44,30 +44,30 @@
 #include "su3.h"
 #include "xchange_field.h"
 
-#if (defined PARALLELXYZT)
+#if (defined TM_PARALLELXYZT)
 #pragma disjoint(*field_buffer_z2, *field_buffer_z)
 #endif
 
 /* this version uses non-blocking MPI calls */
-#if (defined _NON_BLOCKING)
+#if (defined TM_NON_BLOCKING)
 
 void xchange_field(spinor* const l, const int ieo) {
 #ifdef TM_USE_MPI
   MPI_Request requests[16];
   MPI_Status status[16];
 #endif
-#ifdef PARALLELT
+#ifdef TM_PARALLELT
   int reqcount = 4;
-#elif defined PARALLELXT
+#elif defined TM_PARALLELXT
   int reqcount = 8;
-#elif defined PARALLELXYT
+#elif defined TM_PARALLELXYT
   int reqcount = 12;
-#elif defined PARALLELXYZT
+#elif defined TM_PARALLELXYZT
   int ix = 0;
   int reqcount = 16;
 #endif
 
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst begin(xchangefield)
 #endif
 
@@ -84,7 +84,7 @@ void xchange_field(spinor* const l, const int ieo) {
     MPI_Isend((void*)l, 1, field_time_slice_cont, g_nb_t_dn, 81, g_cart_grid, &requests[0]);
     MPI_Irecv((void*)(l + T * LX * LY * LZ / 2), 1, field_time_slice_cont, g_nb_t_up, 81,
               g_cart_grid, &requests[1]);
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     /* send the data to the neighbour on the left in x direction */
     /* recieve the data from the neighbour on the right in x direction */
     MPI_Isend((void*)l, 1, field_x_slice_gath, g_nb_x_dn, 91, g_cart_grid, &requests[4]);
@@ -92,7 +92,7 @@ void xchange_field(spinor* const l, const int ieo) {
               g_cart_grid, &requests[5]);
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     /* send the data to the neighbour on the left in y direction */
     /* recieve the data from the neighbour on the right in y direction */
     MPI_Isend((void*)l, 1, field_y_slice_gath, g_nb_y_dn, 101, g_cart_grid, &requests[8]);
@@ -100,7 +100,7 @@ void xchange_field(spinor* const l, const int ieo) {
               g_nb_y_up, 101, g_cart_grid, &requests[9]);
 #endif
 
-#if (defined PARALLELXYZT)
+#if (defined TM_PARALLELXYZT)
     /* fill buffer ! */
     /* This is now depending on whether the field is */
     /* even or odd */
@@ -129,7 +129,7 @@ void xchange_field(spinor* const l, const int ieo) {
     MPI_Irecv((void*)(l + (T + 1) * LX * LY * LZ / 2), 1, field_time_slice_cont, g_nb_t_dn, 82,
               g_cart_grid, &requests[3]);
 
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     /* send the data to the neighbour on the right in x direction */
     /* recieve the data from the neighbour on the left in x direction */
     MPI_Isend((void*)(l + (LX - 1) * LY * LZ / 2), 1, field_x_slice_gath, g_nb_x_up, 92,
@@ -138,7 +138,7 @@ void xchange_field(spinor* const l, const int ieo) {
               g_nb_x_dn, 92, g_cart_grid, &requests[7]);
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     /* send the data to the neighbour on the right in y direction */
     /* recieve the data from the neighbour on the left in y direction */
     MPI_Isend((void*)(l + (LY - 1) * LZ / 2), 1, field_y_slice_gath, g_nb_y_up, 102, g_cart_grid,
@@ -147,7 +147,7 @@ void xchange_field(spinor* const l, const int ieo) {
               field_y_slice_cont, g_nb_y_dn, 102, g_cart_grid, &requests[11]);
 #endif
 
-#if defined PARALLELXYZT
+#if defined TM_PARALLELXYZT
     if (ieo == 1) {
       for (ix = T * LX * LY / 2; ix < T * LX * LY; ix++) {
         field_buffer_z2[ix - T * LX * LY / 2] = l[g_field_z_ipt_even[ix]];
@@ -174,7 +174,7 @@ void xchange_field(spinor* const l, const int ieo) {
               g_cart_grid, &requests[0]);
     MPI_Irecv((void*)(l + (T + 1) * LX * LY * LZ / 2), 1, field_time_slice_cont, g_nb_t_dn, 82,
               g_cart_grid, &requests[1]);
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     /* send the data to the neighbour on the right in x direction */
     /* recieve the data from the neighbour on the left in x direction */
     MPI_Isend((void*)(l + (LX - 1) * LY * LZ / 2), 1, field_x_slice_gath, g_nb_x_up, 92,
@@ -183,7 +183,7 @@ void xchange_field(spinor* const l, const int ieo) {
               g_nb_x_dn, 92, g_cart_grid, &requests[5]);
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     /* send the data to the neighbour on the right in y direction */
     /* recieve the data from the neighbour on the left in y direction */
     MPI_Isend((void*)(l + (LY - 1) * LZ / 2), 1, field_y_slice_gath, g_nb_y_up, 102, g_cart_grid,
@@ -192,7 +192,7 @@ void xchange_field(spinor* const l, const int ieo) {
               field_y_slice_cont, g_nb_y_dn, 102, g_cart_grid, &requests[9]);
 #endif
 
-#if (defined PARALLELXYZT)
+#if (defined TM_PARALLELXYZT)
     /* fill buffer ! */
     /* This is now depending on whether the field is */
     /* even or odd */
@@ -218,7 +218,7 @@ void xchange_field(spinor* const l, const int ieo) {
     MPI_Isend((void*)l, 1, field_time_slice_cont, g_nb_t_dn, 81, g_cart_grid, &requests[2]);
     MPI_Irecv((void*)(l + T * LX * LY * LZ / 2), 1, field_time_slice_cont, g_nb_t_up, 81,
               g_cart_grid, &requests[3]);
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     /* send the data to the neighbour on the left in x direction */
     /* recieve the data from the neighbour on the right in x direction */
     MPI_Isend((void*)l, 1, field_x_slice_gath, g_nb_x_dn, 91, g_cart_grid, &requests[6]);
@@ -226,7 +226,7 @@ void xchange_field(spinor* const l, const int ieo) {
               g_cart_grid, &requests[7]);
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
     /* send the data to the neighbour on the left in y direction */
     /* recieve the data from the neighbour on the right in y direction */
     MPI_Isend((void*)l, 1, field_y_slice_gath, g_nb_y_dn, 101, g_cart_grid, &requests[10]);
@@ -234,7 +234,7 @@ void xchange_field(spinor* const l, const int ieo) {
               g_nb_y_up, 101, g_cart_grid, &requests[11]);
 #endif
 
-#if defined PARALLELXYZT
+#if defined TM_PARALLELXYZT
     if (ieo == 1) {
       for (ix = T * LX * LY / 2; ix < T * LX * LY; ix++) {
         field_buffer_z2[ix - T * LX * LY / 2] = l[g_field_z_ipt_even[ix]];
@@ -259,12 +259,12 @@ void xchange_field(spinor* const l, const int ieo) {
 #endif
 
   return;
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst end(xchangefield)
 #endif
 }
 
-#elif (defined _USE_SHMEM) /* _NON_BLOCKING */
+#elif (defined TM_USE_SHMEM) /* TM_NON_BLOCKING */
 
 /* Here comes the version with shared memory */
 /* exchanges the field  l */
@@ -273,7 +273,7 @@ void xchange_field(spinor* const l, const int ieo) {
 #ifdef TM_USE_MPI
   int i, ix, mu, x0, x1, x2, x3, k;
 
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst begin(xchangefield)
 #endif
 
@@ -283,7 +283,7 @@ void xchange_field(spinor* const l, const int ieo) {
   shmem_double_put((double*)(l + (T + 1) * LX * LY * LZ / 2),
                    (double*)(l + (T - 1) * LX * LY * LZ / 2), (LX * LY * LZ * 12), g_nb_t_up);
 
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   k = (T + 2) * LX * LY * LZ / 2;
   for (x0 = 0; x0 < T; x0++) {
     shmem_double_put((double*)(l + k), (double*)(l + g_lexic2eo[g_ipt[x0][0][0][0]]), 12 * LZ * LY,
@@ -298,7 +298,7 @@ void xchange_field(spinor* const l, const int ieo) {
   }
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   k = ((T + 2) * LX * LY * LZ + 2 * T * LY * LZ) / 2;
   for (x0 = 0; x0 < T; x0++) {
     for (x1 = 0; x1 < LX; x1++) {
@@ -317,7 +317,7 @@ void xchange_field(spinor* const l, const int ieo) {
   }
 #endif
 
-#if (defined PARALLELXYZT)
+#if (defined TM_PARALLELXYZT)
   x0 = (VOLUME / 2 + LX * LY * LZ + T * LY * LZ + T * LX * LZ);
   if (ieo == 1) {
     for (k = 0; k < T * LX * LY / 2; k++) {
@@ -347,21 +347,21 @@ void xchange_field(spinor* const l, const int ieo) {
   shmem_barrier_all();
 #endif  // MPI
   return;
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst end(xchangefield)
 #endif
 }
 
 /* Here comes the naive version */
 /* Using MPI_Sendrecv */
-#else /* _NON_BLOCKING _USE_SHMEM */
+#else /* TM_NON_BLOCKING TM_USE_SHMEM */
 /* exchanges the field  l */
 void xchange_field(spinor* const l, const int ieo) {
 
-#ifdef PARALLELXYZT
+#ifdef TM_PARALLELXYZT
   int x0 = 0, x1 = 0, x2 = 0, ix = 0;
 #endif
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst begin(xchangefield)
 #endif
 
@@ -379,7 +379,7 @@ void xchange_field(spinor* const l, const int ieo) {
                (void*)(l + (T + 1) * LX * LY * LZ / 2), 1, field_time_slice_cont, g_nb_t_dn, 82,
                g_cart_grid, &status);
 
-#if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXT || defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the left in x direction */
   /* recieve the data from the neighbour on the right in x direction */
   MPI_Sendrecv((void*)l, 1, field_x_slice_gath, g_nb_x_dn, 91,
@@ -394,7 +394,7 @@ void xchange_field(spinor* const l, const int ieo) {
 
 #endif
 
-#if (defined PARALLELXYT || defined PARALLELXYZT)
+#if (defined TM_PARALLELXYT || defined TM_PARALLELXYZT)
   /* send the data to the neighbour on the left in y direction */
   /* recieve the data from the neighbour on the right in y direction */
   MPI_Sendrecv((void*)l, 1, field_y_slice_gath, g_nb_y_dn, 101,
@@ -409,7 +409,7 @@ void xchange_field(spinor* const l, const int ieo) {
 
 #endif
 
-#if (defined PARALLELXYZT)
+#if (defined TM_PARALLELXYZT)
   /* fill buffer ! */
   /* This is now depending on whether the field is */
   /* even or odd */
@@ -448,9 +448,9 @@ void xchange_field(spinor* const l, const int ieo) {
 #endif
 #endif  // MPI
   return;
-#ifdef _KOJAK_INST
+#ifdef TM_KOJAK_INST
 #pragma pomp inst end(xchangefield)
 #endif
 }
 
-#endif /* _NON_BLOCKING */
+#endif /* TM_NON_BLOCKING */

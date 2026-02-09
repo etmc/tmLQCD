@@ -54,7 +54,7 @@
 #include "solver/solver_field.h"
 #include "su3.h"
 
-#ifndef HAVE_LAPACK
+#ifndef TM_LAPACK
 /* In case there is no lapack use normal gmres */
 int gmres_dr(spinor* const P, spinor* const Q, const int m, const int nr_ev, const int max_restarts,
              const double eps_sq, const int rel_prec, const int N, matrix_mult f) {

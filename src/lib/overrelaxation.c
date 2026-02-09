@@ -153,7 +153,7 @@ void flip_subgroup(int ix, int mu, su3 vv, int i) {
   *z = w;
 }
 
-#if defined PARALLEL1
+#if defined TM_PARALLEL1
 void overrel_sweep() {
   int x0, x1, x2, x3;
   int mu, ix;

@@ -28,7 +28,7 @@
 #ifdef FFTW
 #include <fftw3.h>
 #endif
-#ifdef _USE_SHMEM
+#ifdef TM_USE_SHMEM
 #include <mpp/shmem.h>
 #endif
 #include <stdlib.h>
@@ -330,7 +330,7 @@ _Complex double calcDDaggerDovEvalue(const int *praw, double kappa, double rho, 
 }
 
 void spinor_fft(spinor *spinor_in, spinor *spinor_out, int tt, int ll, unsigned int forward) {
-#ifdef HAVE_FFTW
+#ifdef TM_USE_FFTW
   fftw_plan plan = spinor_fftw_plan(spinor_in, spinor_out, tt, ll, forward, FFTW_WISDOM_ONLY);
   fftw_execute(plan);
 #else
@@ -555,7 +555,7 @@ void spinorPrecWS_Free(spinorPrecWS *ws) {
  */
 
 void eigenvector_Dtm(spinor *spin, double mu, int epsilon, int k, int color, int rawp[4]) {
-#ifdef HAVE_FFTW
+#ifdef TM_USE_FFTW
   fftw_plan p1bw;
 #endif
   int i = 0;
@@ -630,7 +630,7 @@ void eigenvector_Dtm(spinor *spin, double mu, int epsilon, int k, int color, int
 
   _spinor_muleq_real(*phi, 1.0 / sqrt((double)(VOLUME)));
 
-#ifdef HAVE_FFTW
+#ifdef TM_USE_FFTW
   p1bw = spinor_fftw_plan(spin, spin, T, L, 0, FFTW_WISDOM_ONLY);
   fftw_execute(p1bw);
 #endif
@@ -638,7 +638,7 @@ void eigenvector_Dtm(spinor *spin, double mu, int epsilon, int k, int color, int
   /* spinor mulp half phase */
 }
 
-#ifdef HAVE_FFTW
+#ifdef TM_USE_FFTW
 fftw_plan spinor_fftw_plan(const spinor *spinor_in, spinor *spinor_out, int T, int ll,
                            unsigned int forward, int fftw_flags) {
   /*    int index_s = gsi(get_index(it, ix, iy, iz, tt, ll)); */
@@ -760,13 +760,13 @@ void spinorPrecondition(spinor *spinor_out, const spinor *spinor_in, spinorPrecW
   spinor phi_plus;
   double OOVOL = 1. / (double)(VOLUME);
 
-#ifdef HAVE_FFTW
+#ifdef TM_USE_FFTW
   fftw_plan plan_fw;
   fftw_plan plan_bw;
 #endif
 
   if (autofft == 1) {
-#ifdef HAVE_FFTW
+#ifdef TM_USE_FFTW
     /*     spinor_mulp_half_phase(spinor_out,spinor_in,ws->c_table, ws->s_table,1,1.); */
     plan_fw = spinor_fftw_plan(spinor_in, spinor_out, tt, ll, 1 /* = true */, FFTW_WISDOM_ONLY);
     fftw_execute(plan_fw);
@@ -889,7 +889,7 @@ void spinorPrecondition(spinor *spinor_out, const spinor *spinor_in, spinorPrecW
   }
 
   if (autofft == 1) {
-#ifdef HAVE_FFTW
+#ifdef TM_USE_FFTW
     plan_bw = spinor_fftw_plan(spinor_out, spinor_out, tt, LX, 0, FFTW_WISDOM_ONLY);
     fftw_execute(plan_bw);
 #endif
@@ -1292,7 +1292,7 @@ void spinor_mulp_half_phase(spinor *spinor_out, const spinor *spinor_in, double 
  * loading and storing of fftw wisdoms
  */
 
-#ifdef HAVE_FFTW
+#ifdef TM_USE_FFTW
 void loadFFTWWisdom(spinor *spinor_in, spinor *spinor_out, int tt, int ll) {
   /*   ostringstream filename_fftw_wisdom; */
   /*   filename_fftw_wisdom << "fftw_wisdom_" << setw(2) << setfill('0') << T << "x"<< setw(2) <<
@@ -2050,7 +2050,7 @@ void calculateDiagFalloffElements(const int op_id) {
   if (g_precWS == NULL) {
     /* we are going to need fft*/
 
-#ifdef HAVE_FFTW
+#ifdef TM_USE_FFTW
     loadFFTWWisdom(g_spinor_field[0], g_spinor_field[1], T, LX);
 #endif
   }

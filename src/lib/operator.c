@@ -63,7 +63,7 @@
 #ifdef TM_USE_QUDA
 #include "quda_interface.h"
 #endif
-#ifdef DDalphaAMG
+#ifdef TM_USE_DDalphaAMG
 #include "DDalphaAMG_interface.h"
 #endif
 

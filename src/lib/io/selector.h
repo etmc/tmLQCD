@@ -21,11 +21,11 @@
 #define _IO_SELECTOR_H
 
 #include <lime.h>
-#ifdef HAVE_LIBLEMON
+#ifdef TM_USE_LEMON
 #include <lemon.h>
-#endif /* HAVE_LIBLEMON */
+#endif /* TM_USE_LEMON */
 
-#ifdef HAVE_LIBLEMON
+#ifdef TM_USE_LEMON
 #define LIME_FILE MPI_File
 #define WRITER LemonWriter
 #define READER LemonReader
@@ -42,7 +42,7 @@
 #define WriterCloseRecord lemonWriterCloseRecord
 #define DestroyReader lemonDestroyReader
 #define DestroyHeader lemonDestroyHeader
-#else /* HAVE_LIBLEMON */
+#else /* TM_USE_LEMON */
 #define LIME_FILE FILE
 #define WRITER LimeWriter
 #define READER LimeReader

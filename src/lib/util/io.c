@@ -36,7 +36,7 @@
  *
  */
 
-#define _FILE_OFFSET_BITS 64
+#define TM_FILE_OFFSET_BITS 64
 
 #include "io.h"
 #include <stdio.h>
